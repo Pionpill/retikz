@@ -1,5 +1,5 @@
-import { Axis, Quadrant } from '../types/coordinate';
-import { Point } from '../types/TikZ';
+import { Axis, Quadrant } from '../types/coordinate.type';
+import { Point } from '../types/tikz.type';
 
 /** 计算 point2 相对于 point1 的平面直角坐标系象限位置 */
 export const getRelatedPointLocation = (point1: Point, point2: Point) => {

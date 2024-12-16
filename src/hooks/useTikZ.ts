@@ -1,7 +1,7 @@
 import { createContext, useContext } from 'react';
-import TikZSvgElement from '../model/TikZSvgElement';
+import RectNodeElement from '../model/RectNodeElement';
 
-export const TikZContext = createContext<{ elements: Map<string, TikZSvgElement> }>({
+export const TikZContext = createContext<{ elements: Map<string, RectNodeElement> }>({
   elements: new Map(),
 });
 

@@ -1,34 +1,21 @@
+import { Direction } from '../types/coordinate.type';
+import { LayoutExpandDistance, LayoutDistance, AllLayoutDistance } from '../types/tikz.type';
 import { convertDimension2Px } from './css.utils';
 
-type DistanceType =
-  | 'distance'
-  | 'distanceX'
-  | 'distanceY'
-  | 'distanceLeft'
-  | 'distanceRight'
-  | 'distanceTop'
-  | 'distanceBottom';
-
-export enum LayoutDistance {
-  TOP = 0,
-  RIGHT = 1,
-  BOTTOM = 2,
-  LEFT = 3,
-}
-
-export const getLayoutDistance = (
-  distanceConfig: Record<DistanceType, string | number | undefined>,
+/** 获取布局距离，传入 element 支持解析css常规字符串 */
+export const transferLayoutDistance = (
+  distanceConfig: LayoutExpandDistance<number | string | undefined>,
   element?: HTMLElement,
-): [number, number, number, number] => {
-  const result: [number, number, number, number] = [0, 0, 0, 0];
+): LayoutDistance<number> => {
+  const result: LayoutDistance = { left: 0, right: 0, top: 0, bottom: 0 };
   if (Object.keys(distanceConfig).length === 0) return result;
 
-  const { distance, distanceX, distanceY, distanceLeft, distanceRight, distanceTop, distanceBottom } = distanceConfig;
+  const { defaultVal, x, y, left, right, top, bottom } = distanceConfig;
 
-  const left = distanceLeft || distanceX || distance;
-  const right = distanceRight || distanceX || distance;
-  const top = distanceTop || distanceY || distance;
-  const bottom = distanceBottom || distanceY || distance;
+  const realLeft = left || x || defaultVal;
+  const realRight = right || x || defaultVal;
+  const realTop = top || y || defaultVal;
+  const realBottom = bottom || y || defaultVal;
 
   const remSize = parseFloat(getComputedStyle(document.documentElement).fontSize);
   const sizeConfig = {
@@ -36,18 +23,27 @@ export const getLayoutDistance = (
     emSize: element ? parseFloat(getComputedStyle(element).fontSize) : remSize,
   };
 
-  if (left) {
-    result[LayoutDistance.LEFT] = convertDimension2Px(left, { ...sizeConfig, elementSize: element?.offsetHeight });
+  if (realLeft) {
+    result.left = convertDimension2Px(realLeft, { ...sizeConfig, elementSize: element?.offsetHeight });
   }
-  if (right) {
-    result[LayoutDistance.RIGHT] = convertDimension2Px(right, { ...sizeConfig, elementSize: element?.offsetHeight });
+  if (realRight) {
+    result.right = convertDimension2Px(realRight, { ...sizeConfig, elementSize: element?.offsetHeight });
   }
-  if (top) {
-    result[LayoutDistance.TOP] = convertDimension2Px(top, { ...sizeConfig, elementSize: element?.offsetWidth });
+  if (realTop) {
+    result.top = convertDimension2Px(realTop, { ...sizeConfig, elementSize: element?.offsetWidth });
   }
-  if (bottom) {
-    result[LayoutDistance.BOTTOM] = convertDimension2Px(bottom, { ...sizeConfig, elementSize: element?.offsetWidth });
+  if (realBottom) {
+    result.bottom = convertDimension2Px(realBottom, { ...sizeConfig, elementSize: element?.offsetWidth });
   }
 
   return result;
+};
+
+/** 计算某个方向的距离总和 */
+export const sumLayoutDistance = (allLayoutDistance: AllLayoutDistance, direction: Direction | Direction[]) => {
+  if (!Array.isArray(direction)) direction = [direction];
+  return Object.values(allLayoutDistance).reduce(
+    (acc, cur) => acc + direction.reduce((acc2, cur2) => acc2 + cur[cur2], 0),
+    0,
+  );
 };
