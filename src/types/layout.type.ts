@@ -1,31 +1,31 @@
-export type LayoutPaddingProps = {
-  padding?: string | number;
-  paddingX?: string | number;
-  paddingY?: string | number;
-  paddingLeft?: string | number;
-  paddingRight?: string | number;
-  paddingTop?: string | number;
-  paddingBottom?: string | number;
+export type LayoutPaddingDistanceProps = {
+  p?: string | number;
+  px?: string | number;
+  py?: string | number;
+  pl?: string | number;
+  pr?: string | number;
+  pt?: string | number;
+  pb?: string | number;
 };
 
-export type LayoutMarginProps = {
-  margin?: string | number;
-  marginX?: string | number;
-  marginY?: string | number;
-  marginLeft?: string | number;
-  marginRight?: string | number;
-  marginTop?: string | number;
-  marginBottom?: string | number;
+export type LayoutMarginDistanceProps = {
+  m?: string | number;
+  mx?: string | number;
+  my?: string | number;
+  ml?: string | number;
+  mr?: string | number;
+  mt?: string | number;
+  mb?: string | number;
 };
 
-export type LayoutBorderProps = {
-  border?: string | number;
-  borderX?: string | number;
-  borderY?: string | number;
-  borderLeft?: string | number;
-  borderRight?: string | number;
-  borderTop?: string | number;
-  borderBottom?: string | number;
+export type LayoutBorderDistanceProps = {
+  b?: string | number;
+  bx?: string | number;
+  by?: string | number;
+  bl?: string | number;
+  br?: string | number;
+  bt?: string | number;
+  bb?: string | number;
 };
 
-export type LayoutProps = LayoutPaddingProps & LayoutMarginProps & LayoutBorderProps;
+export type LayoutDistanceProps = LayoutPaddingDistanceProps & LayoutMarginDistanceProps & LayoutBorderDistanceProps;

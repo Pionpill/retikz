@@ -13,14 +13,14 @@ export enum Axis {
   CENTER = 'center', // 中心
 }
 
-export enum RectEdgeCenterLocation {
+export enum Direction {
   TOP = 'top',
   BOTTOM = 'bottom',
   LEFT = 'left',
   RIGHT = 'right',
 }
 
-export enum RectEndPointLocation {
+export enum RectEndPoint {
   LEFT_TOP = 'left-top',
   LEFT_BOTTOM = 'left-bottom',
   RIGHT_TOP = 'right-top',

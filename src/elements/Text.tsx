@@ -1,5 +1,5 @@
 import { FC, PropsWithChildren, ReactNode, Ref, SVGProps, useMemo } from 'react';
-import { DominantBaseline } from '../types/svg';
+import { DominantBaseline } from '../types/svg.type';
 import { textWrapParse } from '../utils/string.utils';
 
 type TextVerticalAlign = 'top' | 'middle' | 'bottom';
