@@ -2,7 +2,7 @@ import { FC, PropsWithChildren, ReactNode, Ref, SVGProps, useMemo } from 'react'
 import { DominantBaseline } from '../types/svg.type';
 import { textWrapParse } from '../utils/string.utils';
 
-type TextVerticalAlign = 'top' | 'middle' | 'bottom';
+type TextVerticalAlign = 'top' | 'center' | 'bottom';
 
 export type TextProps = {
   x?: SVGProps<SVGTextElement>['x'];
@@ -27,6 +27,8 @@ const Text: FC<PropsWithChildren<TextProps>> = props => {
         return 'text-top';
       case 'bottom':
         return 'text-bottom';
+      case 'center':
+        return 'central';
       default:
         return verticalAlign;
     }
@@ -34,7 +36,7 @@ const Text: FC<PropsWithChildren<TextProps>> = props => {
 
   const textProps = {
     textAnchor: align || 'middle',
-    dominantBaseline: dominantBaseline || 'middle',
+    dominantBaseline: dominantBaseline || 'central',
     fontSize: fontSize || '1em',
     fill: fill || 'currentColor',
     ...otherProps,
