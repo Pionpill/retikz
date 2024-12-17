@@ -10,11 +10,13 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "d3-shape": "^3.2.0",
     "react": "^19",
     "react-dom": "^19"
   },
   "devDependencies": {
     "@eslint/js": "^9.15.0",
+    "@types/d3-shape": "^3.1.6",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "@vitejs/plugin-react": "^4.3.4",
