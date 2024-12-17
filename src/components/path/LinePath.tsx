@@ -1,15 +1,16 @@
-import { FC, useEffect, useState } from 'react';
+import { FC, SVGProps, useEffect, useState } from 'react';
 import useTikZ from '../../hooks/useTikZ';
 import { getLinePath } from '../../utils/equation';
+import Path from '../../elements/Path';
 
 export type LinePathProps = {
   from: string;
   to: string;
-};
+} & Omit<SVGProps<SVGPathElement>, 'p'>;
 
 /** 支持响应 */
 const LinePath: FC<LinePathProps> = props => {
-  const { from, to } = props;
+  const { from, to, ...pathProps } = props;
 
   const tikz = useTikZ();
   const [d, setD] = useState('');
@@ -33,7 +34,7 @@ const LinePath: FC<LinePathProps> = props => {
     });
   });
 
-  return <path d={d} fill="currentColor" strokeWidth={1} stroke="currentColor" />;
+  return <Path d={d} {...pathProps} />;
 };
 
 export default LinePath;
