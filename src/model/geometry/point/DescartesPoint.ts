@@ -11,13 +11,18 @@ export default class DescartesPoint {
   }
 
   /** 获取极坐标 */
-  getPolarPosition(): PolarPosition {
-    const [x, y] = this.position;
-    return { radius: Math.sqrt(x * x + y * y), angle: Math.atan2(y, x) };
+  getPolarPosition() {
+    return DescartesPoint.convertPolarToDescartesPosition(this.position)
   }
 
   /** 获取极点 */
-  getPolarPoint(): PolarPoint {
+  getPolarPoint() {
     return new PolarPoint(this.getPolarPosition());
+  }
+
+  /** 将笛卡尔坐标点转换为极坐标点 */
+  static convertPolarToDescartesPosition = (position: Position) => {
+    const [x, y] = position;
+    return { radius: Math.sqrt(x * x + y * y), angle: Math.atan2(y, x) } as PolarPosition;
   }
 }
