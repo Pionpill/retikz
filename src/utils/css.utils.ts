@@ -1,4 +1,5 @@
-export const convertDimension2Px = (
+/** 将 CSS 长度转换为像素 */
+export const convertCssToPx = (
   dimension?: string | number,
   sizeConfig?: { remSize?: number; emSize?: number; elementSize?: number },
 ) => {
