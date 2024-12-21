@@ -17,5 +17,8 @@ export enum Axis {
 /** 笛卡尔坐标系位置 */
 export type DescartesLocation = Quadrant | Axis | 'center';
 
+/** 笛卡尔坐标 */
+export type Position = [number, number];
+
 /** 笛卡尔坐标（对象形式） */
 export type DescartesPosition = { x: number; y: number };
