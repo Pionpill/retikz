@@ -1,6 +1,8 @@
 import { Ref } from "react";
 
+export type TikZKey = string;
+
 export type TikZProps = {
-  name?: string;
+  name?: TikZKey;
   ref?: Ref<SVGGElement>;
 };
