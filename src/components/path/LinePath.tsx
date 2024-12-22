@@ -1,5 +1,5 @@
 import { FC, SVGProps, useEffect, useState } from 'react';
-import useTikZ from '../../hooks/useTikZ';
+import useNodes from '../../hooks/useNodes';
 import { getLinePath } from '../../utils/equation';
 import Path from '../../elements/Path';
 
@@ -12,13 +12,13 @@ export type LinePathProps = {
 const LinePath: FC<LinePathProps> = props => {
   const { from, to, ...pathProps } = props;
 
-  const tikz = useTikZ();
+  const tikz = useNodes();
   const [d, setD] = useState('');
 
   useEffect(() => {
     setTimeout(() => {
-      const fromNode = tikz.elements.get(from);
-      const toNode = tikz.elements.get(to);
+      const fromNode = tikz.models.get(from);
+      const toNode = tikz.models.get(to);
       if (!fromNode || !toNode) {
         console.error(`no node named ${from || to}, you must defined it before using`);
         return;

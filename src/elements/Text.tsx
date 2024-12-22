@@ -1,6 +1,6 @@
 import { FC, PropsWithChildren, ReactNode, Ref, SVGProps, useMemo } from 'react';
-import { DominantBaseline } from '../types/svg.type';
 import { textWrapParse } from '../utils/string.utils';
+import { DominantBaseline } from '../types/svg/text';
 
 type TextVerticalAlign = 'top' | 'center' | 'bottom';
 
