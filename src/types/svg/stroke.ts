@@ -4,7 +4,7 @@ export type StrokeProps = {
   strokeDasharray?: string;
   strokeDashOffset?: string;
   strokeLinecap?: 'butt' | 'round' | 'square' | 'inherit';
-  strokeLinejoin?: 'arcs' | 'bevel' | 'miter' | 'miter-clip' | 'round';
+  strokeLinejoin?: "round" | "inherit" | "bevel" | "miter";
   strokeMiterlimit?: number;
   strokeOpacity?: number;
 };

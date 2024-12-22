@@ -19,6 +19,8 @@ export type NodeProps = {
   height?: CssDistanceType;
   /** 内容(文本)颜色 */
   color?: string;
+  /** 内容(文本)字体大小 */
+  size?: string | number;
   /** 内容 */
   children?: ReactNode;
   /** 边框形状 */
@@ -53,7 +55,7 @@ const Node: FC<NodeProps> = props => {
     r,
     rx,
     ry,
-    stroke = 'currentColor',
+    stroke = 'transparent',
     strokeWidth = 1,
     strokeType = 'solid',
     innerSep,
@@ -113,12 +115,15 @@ const Node: FC<NodeProps> = props => {
       } as DirectionDistance<number | string>;
     }
     return {
-      left: sep.left ?? defaultVal,
-      right: sep.right ?? defaultVal,
-      top: sep.top ?? defaultVal,
-      bottom: sep.bottom ?? defaultVal,
+      left: sep.left ?? sep.x ?? defaultVal,
+      right: sep.right ?? sep.x ?? defaultVal,
+      top: sep.top ?? sep.y ?? defaultVal,
+      bottom: sep.bottom ?? sep.y ?? defaultVal,
     } as DirectionDistance<number | string>;
   };
+
+  const adjustedInnerSep = useMemo(() => getSep(innerSep, '0.3333em'), [innerSep]);
+  const adjustedOuterSep = useMemo(() => getSep(innerSep, 0), [outerSep]);
 
   return (
     <InnerNode
@@ -127,14 +132,14 @@ const Node: FC<NodeProps> = props => {
       shape={shape}
       position={realPosition}
       color={realColor}
-      fill={fill}
+      fill={fill || 'transparent'}
       fillOpacity={fillOpacity}
       rx={realRx}
       ry={realRy}
       stroke={stroke}
       strokeWidth={strokeWidth}
-      innerSep={getSep(innerSep, '0.3333em')}
-      outerSep={getSep(outerSep, 0)}
+      innerSep={adjustedInnerSep}
+      outerSep={adjustedOuterSep}
       {...stokeAttributes}
       {...otherProps}
     />
