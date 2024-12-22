@@ -7,9 +7,10 @@ import { SepProps } from '../../types/distance/sep';
 import { color as d3Color, hsl } from 'd3-color';
 import { StrokeProps } from '../../types/svg/stroke';
 import { convertCssToPx } from '../../utils/css.utils';
+import { TikZKey } from '../../types/tikz';
 
 export type NodeProps = {
-  name?: string;
+  name?: TikZKey;
   ref?: Ref<SVGGElement>;
   /** 位置 */
   position?: Position | DescartesPosition | PolarPosition;
