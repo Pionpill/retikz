@@ -8,6 +8,7 @@ import { color as d3Color, hsl } from 'd3-color';
 import { StrokeProps } from '../../types/svg/stroke';
 import { convertCssToPx } from '../../utils/css.utils';
 import { TikZKey } from '../../types/tikz';
+import { convertStrokeType } from '../../utils/stroke.utils';
 
 export type NodeProps = {
   name?: TikZKey;
@@ -94,17 +95,7 @@ const Node: FC<NodeProps> = props => {
   const realRx = rx || r;
   const realRy = ry || r;
 
-  const stokeAttributes = useMemo(() => {
-    switch (strokeType) {
-      case undefined:
-      case 'solid':
-        return {};
-      case 'dashed':
-        return { strokeDasharray: `${strokeWidth * 3} ${strokeWidth * 2}` };
-      case 'dotted':
-        return { strokeDasharray: `0 ${strokeWidth * 2}`, strokeLinecap: 'round' as StrokeProps['strokeLinecap'] };
-    }
-  }, [strokeType]);
+  const stokeAttributes = useMemo(() => convertStrokeType(strokeType, strokeWidth), [strokeType]);
 
   const getSep = (sep?: CssDistanceType | SepProps, defaultVal?: number | string) => {
     if (typeof sep !== 'object') {
