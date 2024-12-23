@@ -1,6 +1,5 @@
 import { createContext, useContext } from 'react';
-import NodeModel from '../model/component/node';
-import { NodeConfig } from '../components/node/_hooks/useNodeConfig';
+import NodeModel, { NodeConfig, StateListener } from '../model/component/node';
 
 export const TikZContext = createContext({
   // 存储元素对应的 Model 和 DOM
@@ -8,18 +7,28 @@ export const TikZContext = createContext({
 });
 
 const useNodes = () => {
-  const context = useContext(TikZContext);
+  const { nodes } = useContext(TikZContext);
   return {
-    getModel: (name: string) => context.nodes.get(name),
-    updateModel: (name: string, config: NodeConfig) => {
-      const model = context.nodes.get(name);
+    subscribeModel: (name: string, listener: StateListener) => {
+      const model = nodes.get(name);
+      if (!model) return false;
+      return model.subscribe(listener);
+    },
+    getModel: (name: string) => nodes.get(name),
+    updateModel: (name: string, config: NodeConfig, init = true) => {
+      const model = nodes.get(name);
       if (model) {
-        model.update(config)
+        model.update(config, init);
       } else {
-        context.nodes.set(name, new NodeModel(config));
+        nodes.set(name, new NodeModel(config, init));
       }
     },
-    deleteModel: (name: string) => context.nodes.delete(name),
+    deleteModel: (name: string) => {
+      const model = nodes.get(name);
+      if (!model) return;
+      model.dispose();
+      model.notify();
+      nodes.delete(name)},
   };
 };
 

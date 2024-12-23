@@ -1,18 +1,5 @@
 import { useRef } from 'react';
-import { DirectionDistance } from '../../../types/distance';
-import { Size } from '../../../types/shape';
-import { Position } from '../../../types/coordinate/descartes';
-
-export type NodeConfig = {
-  /** 内容中心位置 */
-  position: Position;
-  /** 内容（文本）尺寸 */
-  contentSize: Size;
-  /** 内边框距离 */
-  innerSep: DirectionDistance;
-  /** 外边框距离 */
-  outerSep: DirectionDistance;
-};
+import { NodeConfig } from '../../../model/component/node';
 
 const useNodeConfig = () => {
   const configRef = useRef<NodeConfig>({
