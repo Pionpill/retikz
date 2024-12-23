@@ -1,6 +1,6 @@
 export type StrokeProps = {
-  stroke: string;
-  strokeWidth: number;
+  stroke?: string;
+  strokeWidth?: number;
   strokeDasharray?: string;
   strokeDashOffset?: string;
   strokeLinecap?: 'butt' | 'round' | 'square' | 'inherit';
