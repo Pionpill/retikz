@@ -6,15 +6,16 @@ import { CssDistanceType, DirectionDistance } from '../../types/distance';
 import { SepProps } from '../../types/distance/sep';
 import { color as d3Color, hsl } from 'd3-color';
 import { StrokeProps } from '../../types/svg/stroke';
-import { convertCssToPx } from '../../utils/css.utils';
+import { convertCssToPx } from '../../utils/css';
 import { TikZKey } from '../../types/tikz';
-import { convertStrokeType } from '../../utils/stroke.utils';
+import { convertStrokeType } from '../../utils/stroke';
+import { PointPosition } from '../../types/coordinate';
 
 export type NodeProps = {
   name?: TikZKey;
   ref?: Ref<SVGGElement>;
   /** 位置 */
-  position?: Position | DescartesPosition | PolarPosition;
+  position?: PointPosition;
   /** 内容宽度 */
   width?: CssDistanceType;
   /** 内容高度 */

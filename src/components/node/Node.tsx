@@ -7,7 +7,7 @@ import { DirectionDistance } from '../../types/distance';
 import useNodeShape from './_hooks/useNodeShape';
 import useNodeContent from './_hooks/useNodeContent';
 import useNodeConfig from './_hooks/useNodeConfig';
-import { convertCssToPx } from '../../utils/css.utils';
+import { convertCssToPx } from '../../utils/css';
 import useNodes from '../../hooks/useNodes';
 
 /** 节点外边框形状 */
@@ -46,10 +46,15 @@ const InnerNode: FC<InnerNodeProps> = props => {
   const shapeRef = useRef<SVGGraphicsElement>(null);
   const contentRef = useRef<SVGElement>(null);
 
-  const { updateModel, deleteModel } = useNodes();
+  const { getModel, updateModel, deleteModel } = useNodes();
 
   const nodeConfig = useNodeConfig();
   nodeConfig.current.position = position;
+  
+  // 在 render 阶段创建未初始化的节点
+  if (name && !getModel(name)) {
+    updateModel(name, nodeConfig.current, false);
+  }
 
   const groupElement = ref && 'current' in ref ? ref.current : nodeRef.current;
 

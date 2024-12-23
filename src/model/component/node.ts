@@ -1,27 +1,84 @@
-import { NodeConfig } from '../../components/node/_hooks/useNodeConfig';
 import { Position } from '../../types/coordinate/descartes';
 import { DirectionDistance } from '../../types/distance';
 import { Area, Size } from '../../types/shape';
 import { RectMidPoint, RectThirdPoint, RectVertexPoint } from '../../types/shape/rect';
-import { between } from '../../utils/math.utils';
+import { isSameArray, isSameObj } from '../../utils/compare';
+import { between } from '../../utils/math';
 import Line from '../equation/line';
+
+export type StateListener = (state?: NodeModel, prevState?: NodeModel) => void;
+
+export type NodeConfig = {
+  /** 内容中心位置 */
+  position: Position;
+  /** 内容（文本）尺寸 */
+  contentSize: Size;
+  /** 内边框距离 */
+  innerSep: DirectionDistance;
+  /** 外边框距离 */
+  outerSep: DirectionDistance;
+};
+
+export type NodeAttribute = keyof NodeConfig;
 
 // 目前只支持矩形节点
 export default class NodeModel {
+  /**
+   * 是否初始化节点数据
+   * 很多节点在 layout 阶段才能初始化全部数据
+   */
+  init: boolean = false;
   center: Position = [0, 0];
   size: Size = [0, 0];
   innerSep: DirectionDistance = { left: 0, right: 0, top: 0, bottom: 0 };
   outerSep: DirectionDistance = { left: 0, right: 0, top: 0, bottom: 0 };
+  listeners = new Set<StateListener>();
 
-  constructor(config: NodeConfig) {
-    this.update(config);
+  constructor(config: NodeConfig, init = true) {
+    this.update(config, init);
   }
 
-  update(config: Partial<NodeConfig>) {
-    if (config.position) this.center = config.position;
-    if (config.contentSize) this.size = config.contentSize;
-    if (config.innerSep) this.innerSep = config.innerSep;
-    if (config.outerSep) this.outerSep = config.outerSep;
+  update(config: Partial<NodeConfig>, init = true) {
+    const preSelf = { ...this };
+    const { position, contentSize, innerSep, outerSep } = config;
+    let needUpdate = false;
+
+    if (!this.init && init) {
+      this.init = init;
+      needUpdate = true;
+    }
+    if (position && !isSameArray(position, this.center)) {
+      this.center = position;
+      needUpdate = true;
+    }
+    if (contentSize && !isSameArray(contentSize, this.size)) {
+      this.size = contentSize;
+      needUpdate = true;
+    }
+    if (innerSep && !isSameObj(innerSep, this.innerSep)) {
+      this.innerSep = innerSep;
+      needUpdate = true;
+    }
+    if (outerSep && !isSameObj(outerSep, this.outerSep)) {
+      this.outerSep = outerSep;
+      needUpdate = true;
+    }
+    if (this.init && needUpdate) {
+      this.notify(preSelf);
+    }
+  }
+
+  notify(preSelf?: NodeModel) {
+    this.listeners.forEach(listener => listener(preSelf, undefined));
+  }
+
+  subscribe(listener: StateListener) {
+    this.listeners.add(listener);
+    return () => this.listeners.delete(listener);
+  }
+
+  dispose() {
+    this.listeners.clear();
   }
 
   /** 获取某个点相对于节点外边界的区域 */
