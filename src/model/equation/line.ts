@@ -54,7 +54,7 @@ export default class Line {
     if (Math.abs(D) <= epsilon) return;
     const x = (C1 * B2 - C2 * B1) / D;
     const y = (A1 * C2 - A2 * C1) / D;
-    return [x, y];
+    return [x, y] as Position;
   }
 
   /** 点到直线距离 */
