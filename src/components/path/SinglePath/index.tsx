@@ -13,10 +13,6 @@ import { Area } from '../../../types/shape';
 export type SinglePathProps = {
   /** 路径，首位可以是 Node，其他必须是坐标 */
   way: [TikZKey | PointPosition, ...PointPosition[], TikZKey | PointPosition];
-  /** 出点的角度 */
-  out?: number;
-  /** 入点的角度 */
-  in?: number;
   /** 线段颜色 */
   color?: TikZKey;
   /** 线段样式 */
