@@ -5,7 +5,7 @@ import { ShapeProps } from '../Node';
 /** 获取形状属性 */
 const getShapeProps = (nodeProps: ShapeProps) => {
   const { rx, ry, fill, fillOpacity, stroke, strokeWidth, strokeOpacity } = nodeProps;
-  const { strokeDasharray, strokeDashOffset, strokeLinecap, strokeLinejoin, strokeMiterlimit } = nodeProps;
+  const { strokeDasharray, strokeDashoffset, strokeLinecap, strokeLinejoin, strokeMiterlimit } = nodeProps;
   // TODO 暂时只支持 rectangle 属性传递，所以写的简单
   return {
     rx,
@@ -16,7 +16,7 @@ const getShapeProps = (nodeProps: ShapeProps) => {
     strokeWidth,
     strokeOpacity,
     strokeDasharray,
-    strokeDashOffset,
+    strokeDashoffset,
     strokeLinecap,
     strokeLinejoin,
     strokeMiterlimit,
