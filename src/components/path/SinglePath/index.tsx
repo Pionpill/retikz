@@ -8,6 +8,7 @@ import NodeModel from '../../../model/component/node';
 import { formatPointPosition } from './utils';
 import { Position } from '../../../types/coordinate/descartes';
 import InnerSinglePath from './SinglePath';
+import { Area } from '../../../types/shape';
 
 export type SinglePathProps = {
   /** 路径，首位可以是 Node，其他必须是坐标 */
@@ -34,7 +35,12 @@ const SinglePath: FC<SinglePathProps> = props => {
   const getNodeOrPointPosition = (node: NodeModel | PointPosition, linkNode: NodeModel | PointPosition) => {
     if (node instanceof NodeModel) {
       const linkPosition = linkNode instanceof NodeModel ? linkNode.center : formatPointPosition(linkNode);
-      return node.getCrossPoint(linkPosition);
+      const crossPoint = node.getCrossPoint(linkPosition);
+      if (!crossPoint) return;
+      if (linkNode instanceof NodeModel) {
+        return linkNode.getPointArea(crossPoint) === Area.OUTSIDE ? crossPoint : undefined;
+      }
+      return crossPoint;
     }
     return formatPointPosition(node);
   };
