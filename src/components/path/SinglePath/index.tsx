@@ -27,6 +27,11 @@ const SinglePath: FC<SinglePathProps> = props => {
   const lastNode = way[wayLength - 1];
   const toNode = (useNodeState(typeof lastNode === 'string' ? lastNode : '') ?? lastNode) as NodeModel | PointPosition;
 
+  // 节点还没有初始化好
+  if ((fromNode instanceof NodeModel && !fromNode.init) || (toNode instanceof NodeModel && !toNode.init)) {
+    return null;
+  }
+
   /** 获取点的连线位置 */
   const getNodeOrPointPosition = (node: NodeModel | PointPosition, linkNode: NodeModel | PointPosition) => {
     if (node instanceof NodeModel) {
@@ -41,32 +46,19 @@ const SinglePath: FC<SinglePathProps> = props => {
     return formatPointPosition(node);
   };
 
-  const fromPosition = useMemo(
-    () => getNodeOrPointPosition(fromNode, wayLength === 2 ? toNode : (way[1] as PointPosition)),
-    fromNode instanceof NodeModel ? [way[0], way[1]] : [way[0]],
-  );
-
-  const toPosition = useMemo(
-    () => getNodeOrPointPosition(toNode, wayLength === 2 ? fromNode : (way[0] as PointPosition)),
-    toNode instanceof NodeModel ? [way[wayLength - 1], way[wayLength - 2]] : [way[wayLength - 1]],
-  );
-
-  const pointWay = useMemo(
-    () =>
-      way.reduce((acc, cur, index) => {
-        if (index === 0) {
-          acc.push(fromPosition);
-        } else if (index === wayLength - 1) {
-          acc.push(toPosition);
-        } else {
-          acc.push(formatPointPosition(cur as PointPosition));
-        }
-        return acc;
-      }, [] as unknown as [Position | undefined, ...Position[], Position | undefined]),
-    [way],
-  );
-
-  const stokeAttributes = useMemo(() => convertStrokeType(strokeType, strokeWidth), [strokeType]);
+  const fromPosition = getNodeOrPointPosition(fromNode, wayLength === 2 ? toNode : (way[1] as PointPosition));
+  const toPosition = getNodeOrPointPosition(toNode, wayLength === 2 ? fromNode : (way[0] as PointPosition));
+  const pointWay = way.reduce((acc, cur, index) => {
+    if (index === 0) {
+      acc.push(fromPosition);
+    } else if (index === wayLength - 1) {
+      acc.push(toPosition);
+    } else {
+      acc.push(formatPointPosition(cur as PointPosition));
+    }
+    return acc;
+  }, [] as unknown as [Position | undefined, ...Position[], Position | undefined]);
+  const stokeAttributes = convertStrokeType(strokeType, strokeWidth);
 
   return <InnerSinglePath way={pointWay} strokeWidth={strokeWidth} {...stokeAttributes} {...pathProps} />;
 };
