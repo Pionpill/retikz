@@ -28,7 +28,8 @@ const useNodes = () => {
       if (!model) return;
       model.dispose();
       model.notify();
-      nodes.delete(name)},
+      nodes.delete(name);
+    },
   };
 };
 

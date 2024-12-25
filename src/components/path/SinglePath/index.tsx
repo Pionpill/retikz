@@ -1,14 +1,17 @@
-import { FC, useMemo } from 'react';
-import { StrokeProps } from '../../../types/svg/stroke';
-import { convertStrokeType } from '../../../utils/stroke';
-import { TikZKey } from '../../../types/tikz';
+import { FC } from 'react';
 import useNodeState from '../../../hooks/useNodeState';
-import { PointPosition } from '../../../types/coordinate';
 import NodeModel from '../../../model/component/node';
-import { formatPointPosition } from './utils';
+import { PointPosition } from '../../../types/coordinate';
 import { Position } from '../../../types/coordinate/descartes';
-import InnerSinglePath from './SinglePath';
 import { Area } from '../../../types/shape';
+import { StrokeProps } from '../../../types/svg/stroke';
+import { TikZKey } from '../../../types/tikz';
+import { convertStrokeType } from '../../../utils/stroke';
+import InnerSinglePath from './SinglePath';
+import { formatPointPosition } from './utils';
+
+/** 特殊的路径点， */
+export type SpecialPathPosition = '-|' | '|-'
 
 export type SinglePathProps = {
   /** 路径，首位可以是 Node，其他必须是坐标 */
@@ -19,6 +22,7 @@ export type SinglePathProps = {
   strokeType?: 'solid' | 'dashed' | 'dotted';
 } & StrokeProps;
 
+/** 单条连续的路径 */
 const SinglePath: FC<SinglePathProps> = props => {
   const { way, color, strokeType = 'solid', strokeWidth = 1, ...pathProps } = props;
 
@@ -27,8 +31,8 @@ const SinglePath: FC<SinglePathProps> = props => {
   const lastNode = way[wayLength - 1];
   const toNode = (useNodeState(typeof lastNode === 'string' ? lastNode : '') ?? lastNode) as NodeModel | PointPosition;
 
-  // 节点还没有初始化好
-  if ((fromNode instanceof NodeModel && !fromNode.init) || (toNode instanceof NodeModel && !toNode.init)) {
+  // render 阶段节点还没有初始化好，跳过
+  if (!NodeModel.isInitializedNode(fromNode) || !NodeModel.isInitializedNode(toNode)) {
     return null;
   }
 
