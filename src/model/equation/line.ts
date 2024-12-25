@@ -52,8 +52,8 @@ export default class Line {
     const C2 = line.c;
     const D = A1 * B2 - A2 * B1;
     if (Math.abs(D) <= epsilon) return;
-    const x = (C1 * B2 - C2 * B1) / D;
-    const y = (A1 * C2 - A2 * C1) / D;
+    const x = (C2 * B1 - C1 * B2) / D;
+    const y = (A2 * C1 - A1 * C2) / D;
     return [x, y] as Position;
   }
 
