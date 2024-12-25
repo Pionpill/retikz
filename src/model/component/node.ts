@@ -23,11 +23,11 @@ export type NodeAttribute = keyof NodeConfig;
 
 // 目前只支持矩形节点
 export default class NodeModel {
-  /**
-   * 是否初始化节点数据
-   * 很多节点在 layout 阶段才能初始化全部数据
-   */
+  type = ['node'];
+  /** 是否初始化节点数据, 很多节点在 layout 阶段才能初始化全部数据 */
   init: boolean = false;
+  /** 节点是否已经被销毁，如果已近销毁，其他地方应该删除对节点对象的引用 */
+  disposed: boolean = false;
   center: Position = [0, 0];
   size: Size = [0, 0];
   innerSep: DirectionDistance = { left: 0, right: 0, top: 0, bottom: 0 };
@@ -69,7 +69,7 @@ export default class NodeModel {
   }
 
   notify(preSelf?: NodeModel) {
-    this.listeners.forEach(listener => listener(preSelf, undefined));
+    this.listeners.forEach(listener => listener({ ...this }, preSelf));
   }
 
   subscribe(listener: StateListener) {
@@ -79,6 +79,8 @@ export default class NodeModel {
 
   dispose() {
     this.listeners.clear();
+    this.disposed = true;
+    this.notify(this);
   }
 
   /** 获取某个点相对于节点外边界的区域 */
@@ -180,4 +182,11 @@ export default class NodeModel {
     const rightCrossPoint = line.getIntersection(Line.fromPoints(PointTR, PointBR));
     return rightCrossPoint;
   }
+
+  /** 判断某个变量是否为初始化完成的节点 */
+  static isInitializedNode = (node: unknown) => {
+    if (typeof node !== 'object' || node === null) return false;
+    if (!('type' in node) || !Array.isArray(node.type)) return false;
+    return node.type.includes('node') && (node as NodeModel).init;
+  };
 }

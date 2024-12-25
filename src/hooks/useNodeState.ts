@@ -1,21 +1,20 @@
-import { useSyncExternalStore } from 'react';
+import { useLayoutEffect } from 'react';
 import { TikZKey } from '../types/tikz';
+import useForceUpdate from './useForceUpdate';
 import useNodes from './useNodes';
 
 /** 订阅节点状态 */
 const useNodeState = (name: TikZKey) => {
-  const { getModel } = useNodes();
-  const node = useSyncExternalStore(
-    onStorageChange => {
-      const model = getModel(name);
-      if (model) {
-        return model.subscribe(onStorageChange);
-      }
-      return () => {};
+  const { getModel, subscribeModel } = useNodes();
+  const forceUpdate = useForceUpdate();
+  const unSubscribe = subscribeModel(name, () => forceUpdate());
+  useLayoutEffect(
+    () => () => {
+      unSubscribe && unSubscribe();
     },
-    () => getModel(name),
+    [name],
   );
-  return node;
+  return getModel(name);
 };
 
 export default useNodeState;

@@ -50,7 +50,7 @@ const InnerNode: FC<InnerNodeProps> = props => {
 
   const nodeConfig = useNodeConfig();
   nodeConfig.current.position = position;
-  
+
   // 在 render 阶段创建未初始化的节点
   if (name && !getModel(name)) {
     updateModel(name, nodeConfig.current, false);
@@ -94,20 +94,26 @@ const InnerNode: FC<InnerNodeProps> = props => {
       contentSize: [width, height],
       innerSep,
     } = nodeConfig.current;
-    shapeRef.current?.setAttribute('x', (- width / 2 - innerSep.left).toString());
-    shapeRef.current?.setAttribute('y', (- height / 2 - innerSep.top).toString());
+    shapeRef.current?.setAttribute('x', (-width / 2 - innerSep.left).toString());
+    shapeRef.current?.setAttribute('y', (-height / 2 - innerSep.top).toString());
     shapeRef.current?.setAttribute('width', (width + innerSep.left + innerSep.right).toString());
     shapeRef.current?.setAttribute('height', (height + innerSep.top + innerSep.bottom).toString());
   }, [nodeConfig.current.position, nodeConfig.current.contentSize, nodeConfig.current.innerSep]);
 
-  // 初始化 node 上下文
+  // 每次视图更新时更新模型
   useLayoutEffect(() => {
-    if (!name) return;
-    updateModel(name, nodeConfig.current);
-    return () => {
-      deleteModel(name);
-    };
+    if (name) updateModel(name, nodeConfig.current);
   });
+
+  // 卸载组件时同步删除模型
+  useLayoutEffect(
+    () => () => {
+      if (name) {
+        deleteModel(name);
+      }
+    },
+    [name],
+  );
 
   return (
     <Group ref={ref || nodeRef} id={name} transform={`translate(${position[0]}, ${position[1]})`}>
