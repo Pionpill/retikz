@@ -12,7 +12,7 @@ export default class DescartesPoint {
 
   /** 获取极坐标 */
   getPolarPosition() {
-    return DescartesPoint.convertPolarToDescartesPosition(this.position)
+    return DescartesPoint.convertPolarToDescartesPosition(this.position);
   }
 
   /** 获取极点 */
@@ -24,5 +24,18 @@ export default class DescartesPoint {
   static convertPolarToDescartesPosition = (position: Position) => {
     const [x, y] = position;
     return { radius: Math.sqrt(x * x + y * y), angle: Math.atan2(y, x) } as PolarPosition;
-  }
+  };
+
+  /** 对象形式转换为数组形式 */
+  static covertToPosition = (position: DescartesPosition) => {
+    return [position.x, position.y];
+  };
+
+  static plus = (...positions: Array<Position | DescartesPosition>) => {
+    return positions.reduce(
+      (acc: Position, cur) =>
+        Array.isArray(cur) ? [acc[0] + cur[0], acc[1] + cur[1]] : [acc[0] + cur.x, acc[1] + cur.y],
+      [0, 0] as Position,
+    );
+  };
 }

@@ -185,8 +185,12 @@ export default class NodeModel {
 
   /** 判断某个变量是否为初始化完成的节点 */
   static isInitializedNode = (node: unknown) => {
+    return NodeModel.isNode(node) && (node as NodeModel).init;
+  };
+
+  static isNode = (node: unknown) => {
     if (typeof node !== 'object' || node === null) return false;
     if (!('type' in node) || !Array.isArray(node.type)) return false;
-    return node.type.includes('node') && (node as NodeModel).init;
-  };
+    return node.type.includes('node')
+  }
 }
