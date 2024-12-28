@@ -92,7 +92,7 @@ const useConvertWay = (way: SingleWay) => {
           case 'node':
             if (![0, way.length - 1].includes(index)) {
               throw new Error(
-                'Node can only be the first or last point on SinglePath component, this may be a retikz bug, please report it.',
+                'Node can only be the first or last point on PathSegment component, this may be a retikz bug, please report it.',
               );
             }
             const nodeModel = tryGetModel(item as TikZKey);
