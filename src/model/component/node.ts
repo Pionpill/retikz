@@ -146,38 +146,23 @@ export default class NodeModel {
   /** 获取外部点与 node 中心连线与外边缘的交点 */
   getCrossPoint(point: Position) {
     if (!this.init) return;
-    if (this.getPointArea(point) !== Area.OUTSIDE) return;
+    const pointArea = this.getPointArea(point);
+    if (pointArea === Area.EDGE) return point;
 
-    const pointsXRange: [number, number] =
-      this.center[0] < point[0] ? [this.center[0], point[0]] : [point[0], this.center[0]];
-    const pointsYRange: [number, number] =
-      this.center[1] < point[1] ? [this.center[1], point[1]] : [point[1], this.center[1]];
     const line = Line.fromPoints(point, this.center);
     const PointTL = this.getOuterPoint(RectVertexPoint.TL) as Position;
     const PointTR = this.getOuterPoint(RectVertexPoint.TR) as Position;
     const topCrossPoint = line.getIntersection(Line.fromPoints(PointTL, PointTR));
-    if (
-      topCrossPoint &&
-      between(topCrossPoint[0], [PointTL[0], PointTR[0]], true) &&
-      between(topCrossPoint[1], pointsYRange, true)
-    ) {
+    if (topCrossPoint && point[1] < this.center[1] && between(topCrossPoint[0], [PointTL[0], PointTR[0]], true)) {
       return topCrossPoint;
     }
     const PointBL = this.getOuterPoint(RectVertexPoint.BL) as Position;
     const PointBR = this.getOuterPoint(RectVertexPoint.BR) as Position;
     const belowCrossPoint = line.getIntersection(Line.fromPoints(PointBL, PointBR));
-    if (
-      belowCrossPoint &&
-      between(belowCrossPoint[0], [PointBL[0], PointBR[0]], true) &&
-      between(belowCrossPoint[1], pointsYRange, true)
-    )
+    if (belowCrossPoint && point[1] > this.center[1] && between(belowCrossPoint[0], [PointBL[0], PointBR[0]], true))
       return belowCrossPoint;
     const leftCrossPoint = line.getIntersection(Line.fromPoints(PointTL, PointBL));
-    if (
-      leftCrossPoint &&
-      between(leftCrossPoint[1], [PointTL[1], PointBL[1]], true) &&
-      between(leftCrossPoint[0], pointsXRange, true)
-    )
+    if (leftCrossPoint && point[0] < this.center[0] && between(leftCrossPoint[1], [PointTL[1], PointBL[1]], true))
       return leftCrossPoint;
     const rightCrossPoint = line.getIntersection(Line.fromPoints(PointTR, PointBR));
     return rightCrossPoint;
@@ -191,6 +176,6 @@ export default class NodeModel {
   static isNode = (node: unknown) => {
     if (typeof node !== 'object' || node === null) return false;
     if (!('type' in node) || !Array.isArray(node.type)) return false;
-    return node.type.includes('node')
-  }
+    return node.type.includes('node');
+  };
 }
