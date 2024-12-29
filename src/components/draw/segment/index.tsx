@@ -4,7 +4,7 @@ import { Position } from '../../../types/coordinate/descartes';
 import { StrokeProps } from '../../../types/svg/stroke';
 import { TikZKey } from '../../../types/tikz';
 import { convertStrokeType } from '../../../utils/stroke';
-import InnerDrawSegment from './Segement';
+import InnerDrawSegment from './Segment';
 import useConvertWay, { DrawWaySegmentType } from './useConvertWay';
 
 export type DrawSegmentProps = {
@@ -18,7 +18,7 @@ export type DrawSegmentProps = {
 
 /** 单条连续的路径 */
 const DrawSegment: FC<DrawSegmentProps> = props => {
-  const { way, color, strokeType = 'solid', strokeWidth = 1, ...drawProps } = props;
+  const { way, color, strokeType = 'solid', strokeWidth = 1, ...strokeProps } = props;
   
   const [convertedWay, nodesInit] = useConvertWay(way);
   // render 阶段节点还没有初始化好，跳过
@@ -37,7 +37,7 @@ const DrawSegment: FC<DrawSegmentProps> = props => {
       way={pointWay as [Position | undefined, ...Position[], Position | undefined]}
       strokeWidth={strokeWidth}
       {...convertStrokeType(strokeType, strokeWidth)}
-      {...drawProps}
+      {...strokeProps}
     />
   );
 };
