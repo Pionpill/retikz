@@ -8,7 +8,7 @@ import { color as d3Color, hsl } from 'd3-color';
 import { StrokeProps } from '../../types/svg/stroke';
 import { convertCssToPx } from '../../utils/css';
 import { TikZKey } from '../../types/tikz';
-import { convertStrokeType } from '../../utils/stroke';
+import { convertStrokeType, StrokeType } from '../../utils/stroke';
 import { PointPosition } from '../../types/coordinate';
 
 export type NodeProps = {
@@ -39,7 +39,7 @@ export type NodeProps = {
   /** 背景填充色透明度 */
   fillOpacity?: number;
   /** 边框样式 */
-  strokeType?: 'solid' | 'dashed' | 'dotted';
+  strokeType?: StrokeType;
   /** 内边距 */
   innerSep?: CssDistanceType | SepProps;
   /** 外边距 */
