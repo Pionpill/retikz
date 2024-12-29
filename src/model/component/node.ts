@@ -145,7 +145,7 @@ export default class NodeModel {
 
   /** 获取外部点与 node 中心连线与外边缘的交点 */
   getCrossPoint(point: Position) {
-    if (!this.init) return;
+    if (!this.init) return this.center;
     const pointArea = this.getPointArea(point);
     if (pointArea === Area.EDGE) return point;
 
@@ -165,7 +165,7 @@ export default class NodeModel {
     if (leftCrossPoint && point[0] < this.center[0] && between(leftCrossPoint[1], [PointTL[1], PointBL[1]], true))
       return leftCrossPoint;
     const rightCrossPoint = line.getIntersection(Line.fromPoints(PointTR, PointBR));
-    return rightCrossPoint;
+    return rightCrossPoint!;
   }
 
   /** 判断某个变量是否为初始化完成的节点 */

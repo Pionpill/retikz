@@ -5,11 +5,11 @@ import { StrokeProps } from '../../../types/svg/stroke';
 import { TikZKey } from '../../../types/tikz';
 import { convertStrokeType } from '../../../utils/stroke';
 import InnerPathSegment from './PathSegment';
-import useConvertWay, { SingleWay } from './useConvertWay';
+import useConvertWay, { PathWaySegmentType } from './useConvertWay';
 
 export type PathSegmentProps = {
   /** 路径，首位可以是 Node，其他必须是坐标 */
-  way: SingleWay;
+  way: PathWaySegmentType;
   /** 线段颜色 */
   color?: TikZKey;
   /** 线段样式 */
