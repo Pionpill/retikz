@@ -1,32 +1,32 @@
 import { FC, Ref, useMemo } from 'react';
 import { PointPosition } from '../../types/coordinate';
 import { TikZKey } from '../../types/tikz';
-import { PathWaySegmentType } from './PathSegment/useConvertWay';
-import { getPathPointType, OffSetOrMovePosition, PathPointType, VerticalPathPosition } from './common';
+import { DrawWaySegmentType } from './segment/useConvertWay';
+import { getDrawPointType, OffSetOrMovePosition, DrawPointType, VerticalDrawPosition } from './common';
 import Group from '../../container/Group';
-import PathSegment from './PathSegment';
+import DrawSegment from './segment';
 
 export type ArrowStyleShortcut = '';
 
-export type PathWayType = TikZKey | PointPosition | VerticalPathPosition | OffSetOrMovePosition;
+export type DrawWayType = TikZKey | PointPosition | VerticalDrawPosition | OffSetOrMovePosition;
 
-export type PathProps = {
+export type DrawProps = {
   ref?: Ref<SVGPathElement>;
   /** 路径点 */
-  way: PathWayType[];
+  way: DrawWayType[];
 };
 
-const Path: FC<PathProps> = props => {
+const Draw: FC<DrawProps> = props => {
   const { way, ref } = props;
 
   const waySegments = useMemo(() => {
-    let preNodeType: PathPointType = 'coordinate';
-    const waySegments: PathWayType[][] = [];
-    let waySegment: PathWayType[] = [];
+    let preNodeType: DrawPointType = 'coordinate';
+    const waySegments: DrawWayType[][] = [];
+    let waySegment: DrawWayType[] = [];
 
     for (let i = 0; i < way.length; i++) {
       const point = way[i];
-      const currentNodeType = getPathPointType(point);
+      const currentNodeType = getDrawPointType(point);
 
       // 两个连续的 node 节点断开
       if (currentNodeType === 'node' && preNodeType === 'node' && waySegment.length >= 2) {
@@ -41,16 +41,16 @@ const Path: FC<PathProps> = props => {
 
       preNodeType = currentNodeType;
     }
-    return waySegments as PathWaySegmentType[];
+    return waySegments as DrawWaySegmentType[];
   }, [way]);
 
   return (
     <Group ref={ref}>
       {waySegments.map(segment => (
-        <PathSegment key={JSON.stringify(segment)} way={segment} />
+        <DrawSegment key={JSON.stringify(segment)} way={segment} />
       ))}
     </Group>
   );
 };
 
-export default Path;
+export default Draw;
