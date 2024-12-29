@@ -4,12 +4,12 @@ import { StrokeProps } from '../../../types/svg/stroke';
 import Path from '../../../elements/Path';
 import { line } from 'd3-shape';
 
-export type InnerPathSegmentProps = {
+export type InnerDrawSegmentProps = {
   /** 路径，始末节点为 undefined 表示临近点在 node 外边界内 */
   way: [Position | undefined, ...Position[], Position | undefined];
 } & StrokeProps;
 
-const InnerPathSegment: FC<InnerPathSegmentProps> = props => {
+const InnerDrawSegment: FC<InnerDrawSegmentProps> = props => {
   const { way, ...strokeProps } = props;
 
   const d = useMemo(() => {
@@ -23,4 +23,4 @@ const InnerPathSegment: FC<InnerPathSegmentProps> = props => {
   return <Path d={d ?? ''} {...strokeProps} />;
 };
 
-export default InnerPathSegment;
+export default InnerDrawSegment;

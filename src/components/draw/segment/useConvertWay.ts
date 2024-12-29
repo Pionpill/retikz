@@ -8,11 +8,11 @@ import { PolarPosition } from '../../../types/coordinate/polar';
 import { TikZKey } from '../../../types/tikz';
 import NodeModel from '../../../model/component/node';
 import DescartesPoint from '../../../model/geometry/point/DescartesPoint';
-import { getPathPointType, OffSetOrMovePosition, VerticalPathPosition } from '../common';
+import { getDrawPointType, OffSetOrMovePosition, VerticalDrawPosition } from '../common';
 
-export type PathWaySegmentType = [
+export type DrawWaySegmentType = [
   TikZKey | PointPosition,
-  ...Array<PointPosition | VerticalPathPosition | OffSetOrMovePosition>,
+  ...Array<PointPosition | VerticalDrawPosition | OffSetOrMovePosition>,
   TikZKey | PointPosition,
 ];
 
@@ -43,7 +43,7 @@ const convertOffsetAndMovePoint = (point: string) => {
  * 将特殊路径点转换为坐标，Node 节点转换为对应的 Model
  * 目前支持的节点类型：node，各种坐标，垂点，位移点
  */
-const useConvertWay = (way: PathWaySegmentType) => {
+const useConvertWay = (way: DrawWaySegmentType) => {
   const { getModel, subscribeModel } = useNodes();
   const forceUpdate = useForceUpdate();
   const nodeUpdateCount = useRef(0);
@@ -66,7 +66,7 @@ const useConvertWay = (way: PathWaySegmentType) => {
   const result = useMemo(
     () =>
       way.map((item, index) => {
-        const type = getPathPointType(item);
+        const type = getDrawPointType(item);
         switch (type) {
           case 'coordinate':
             const corPosition = formatPointPosition(item as PointPosition);
@@ -75,7 +75,7 @@ const useConvertWay = (way: PathWaySegmentType) => {
           case 'node':
             if (![0, way.length - 1].includes(index)) {
               throw new Error(
-                'Node can only be the first or last point on PathSegment component, this may be a retikz bug, please report it.',
+                'Node can only be the first or last point on DrawSegment component, this may be a retikz bug, please report it.',
               );
             }
             const nodeModel = tryGetModel(item as TikZKey);
@@ -93,7 +93,7 @@ const useConvertWay = (way: PathWaySegmentType) => {
             }
             const beforePosition = cursor;
             const afterPoint = way[index + 1];
-            const afterPointType = getPathPointType(afterPoint);
+            const afterPointType = getDrawPointType(afterPoint);
             if (['vertical', 'offset', 'move'].includes(afterPointType)) {
               throw new Error('Vertical point can not be followed by these point type: vertical offset move.');
             }
@@ -101,7 +101,7 @@ const useConvertWay = (way: PathWaySegmentType) => {
               afterPointType === 'node'
                 ? tryGetModel(afterPoint as TikZKey).center
                 : formatPointPosition(afterPoint as PointPosition);
-            const verPosition = getVerticalPoint(beforePosition, afterPosition, item as VerticalPathPosition);
+            const verPosition = getVerticalPoint(beforePosition, afterPosition, item as VerticalDrawPosition);
             cursor = verPosition;
             return cursor;
           default:
