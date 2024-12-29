@@ -8,18 +8,13 @@ import { PolarPosition } from '../../../types/coordinate/polar';
 import { TikZKey } from '../../../types/tikz';
 import NodeModel from '../../../model/component/node';
 import DescartesPoint from '../../../model/geometry/point/DescartesPoint';
+import { getPathPointType, OffSetOrMovePosition, VerticalPathPosition } from '../common';
 
-/** 垂直路径点，临近的节点不能都是特殊路径点 */
-export type VerticalPathPosition = '-|' | '|-';
-
-export type SingleWay = [
+export type PathWaySegmentType = [
   TikZKey | PointPosition,
-  ...Array<PointPosition | VerticalPathPosition | string>,
+  ...Array<PointPosition | VerticalPathPosition | OffSetOrMovePosition>,
   TikZKey | PointPosition,
 ];
-
-/** 路径点类型：节点，坐标，垂点，偏移点，移动点 */
-type PathPointType = 'node' | 'coordinate' | 'vertical' | 'offset' | 'move';
 
 /** 将坐标格式转换为笛卡尔坐标数组形式 */
 export const formatPointPosition = (point: PointPosition): Position => {
@@ -38,18 +33,6 @@ export const getVerticalPoint = (point1: PointPosition, point2: PointPosition, t
   return type === '-|' ? [p2[0], p1[1]] : [p1[0], p2[1]];
 };
 
-const offsetReg = /\+[[(]?[+-]?\d+(?:\.\d+)?,\s*[+-]?\d+(?:\.\d+)?[)\]]?/;
-const moveReg = /\+\+[[(]?[+-]?\d+(?:\.\d+)?,\s*[+-]?\d+(?:\.\d+)?[)\]]?/;
-
-/** 获取点类型 */
-const getPathPointType = (point: string | PointPosition): PathPointType => {
-  if (typeof point !== 'string') return 'coordinate';
-  if (['-|', '|-'].includes(point)) return 'vertical';
-  if (point.match(moveReg)) return 'move';
-  if (point.match(offsetReg)) return 'offset';
-  return 'node';
-};
-
 /** 将偏移点与移动点转换为坐标点 */
 const convertOffsetAndMovePoint = (point: string) => {
   const filterPoint = point.replace(/[+()\[\]\s]/g, '');
@@ -60,7 +43,7 @@ const convertOffsetAndMovePoint = (point: string) => {
  * 将特殊路径点转换为坐标，Node 节点转换为对应的 Model
  * 目前支持的节点类型：node，各种坐标，垂点，位移点
  */
-const useConvertWay = (way: SingleWay) => {
+const useConvertWay = (way: PathWaySegmentType) => {
   const { getModel, subscribeModel } = useNodes();
   const forceUpdate = useForceUpdate();
   const nodeUpdateCount = useRef(0);
