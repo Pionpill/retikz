@@ -7,7 +7,13 @@ export type StrokeType =
   | 'looselyDashed'
   | 'dotted'
   | 'denselyDotted'
-  | 'looselyDotted';
+  | 'looselyDotted'
+  | 'dashDot'
+  | 'denselyDashDot'
+  | 'looselyDashDot'
+  | 'dashDashDot'
+  | 'denselyDashDashDot'
+  | 'looselyDashDashDot';
 
 /** 将 StrokeType 转换为 svg 原生的属性 */
 export const convertStrokeType = (strokeType: StrokeType, strokeWidth = 1): Partial<StrokeProps> => {
@@ -21,10 +27,22 @@ export const convertStrokeType = (strokeType: StrokeType, strokeWidth = 1): Part
     case 'looselyDashed':
       return { strokeDasharray: `${strokeWidth * 4} ${strokeWidth * 6}` };
     case 'dotted':
-      return { strokeDasharray: `0 ${strokeWidth * 4}`, strokeLinecap: 'round' as StrokeProps['strokeLinecap'] };
+      return { strokeDasharray: `1 ${strokeWidth * 4}` };
     case 'denselyDotted':
-      return { strokeDasharray: `0 ${strokeWidth * 2}`, strokeLinecap: 'round' as StrokeProps['strokeLinecap'] };
+      return { strokeDasharray: `1 ${strokeWidth * 2}` };
     case 'looselyDotted':
-      return { strokeDasharray: `0 ${strokeWidth * 6}`, strokeLinecap: 'round' as StrokeProps['strokeLinecap'] };
+      return { strokeDasharray: `1 ${strokeWidth * 6}` };
+    case 'dashDot':
+      return { strokeDasharray: `${strokeWidth * 4} ${strokeWidth * 4} 1 ${strokeWidth * 4}` };
+    case 'denselyDashDot':
+      return { strokeDasharray: `${strokeWidth * 4} ${strokeWidth * 2} 1 ${strokeWidth * 2}` };
+    case 'looselyDashDot':
+      return { strokeDasharray: `${strokeWidth * 4} ${strokeWidth * 6} 1 ${strokeWidth * 6}` };
+    case 'dashDashDot':
+      return { strokeDasharray: `${strokeWidth * 4} ${strokeWidth * 4} 1 ${strokeWidth * 4} 1 ${strokeWidth * 4}` };
+    case 'denselyDashDashDot':
+      return { strokeDasharray: `${strokeWidth * 4} ${strokeWidth * 2} 1 ${strokeWidth * 2} 1 ${strokeWidth * 2}` };
+    case 'looselyDashDashDot':
+      return { strokeDasharray: `${strokeWidth * 4} ${strokeWidth * 6} 1 ${strokeWidth * 6} 1 ${strokeWidth * 6}` };
   }
 };
