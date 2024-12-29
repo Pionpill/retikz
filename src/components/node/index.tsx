@@ -8,7 +8,7 @@ import { color as d3Color, hsl } from 'd3-color';
 import { StrokeProps } from '../../types/svg/stroke';
 import { convertCssToPx } from '../../utils/css';
 import { TikZKey } from '../../types/tikz';
-import { convertStrokeType, StrokeType } from '../../utils/stroke';
+import { convertStrokeShortcut, convertStrokeType, StrokeShortcutProps, StrokeType } from '../../utils/stroke';
 import { PointPosition } from '../../types/coordinate';
 
 export type NodeProps = {
@@ -44,7 +44,8 @@ export type NodeProps = {
   innerSep?: CssDistanceType | SepProps;
   /** 外边距 */
   outerSep?: CssDistanceType | SepProps;
-} & Partial<StrokeProps>;
+} & Partial<StrokeProps> &
+  StrokeShortcutProps;
 
 const Node: FC<NodeProps> = props => {
   const {
@@ -60,7 +61,7 @@ const Node: FC<NodeProps> = props => {
     ry,
     stroke = 'transparent',
     strokeWidth = 1,
-    strokeType = 'solid',
+    strokeType,
     innerSep,
     outerSep,
     ...otherProps
@@ -96,7 +97,8 @@ const Node: FC<NodeProps> = props => {
   const realRx = rx || r;
   const realRy = ry || r;
 
-  const stokeAttributes = useMemo(() => convertStrokeType(strokeType, strokeWidth), [strokeType]);
+  const getStrokeAttributes = () =>
+    strokeType ? convertStrokeType(strokeType, strokeWidth) : convertStrokeShortcut(otherProps, strokeWidth);
 
   const getSep = (sep?: CssDistanceType | SepProps, defaultVal?: number | string) => {
     if (typeof sep !== 'object') {
@@ -133,7 +135,7 @@ const Node: FC<NodeProps> = props => {
       strokeWidth={strokeWidth}
       innerSep={adjustedInnerSep}
       outerSep={adjustedOuterSep}
-      {...stokeAttributes}
+      {...getStrokeAttributes()}
       {...otherProps}
     />
   );
