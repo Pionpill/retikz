@@ -19,7 +19,7 @@ export type DrawSegmentProps = {
 /** 单条连续的路径 */
 const DrawSegment: FC<DrawSegmentProps> = props => {
   const { way, color, strokeType = 'solid', strokeWidth = 1, ...strokeProps } = props;
-  
+
   const [convertedWay, nodesInit] = useConvertWay(way);
   // render 阶段节点还没有初始化好，跳过
   if (!nodesInit) return null;
