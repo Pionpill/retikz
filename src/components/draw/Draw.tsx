@@ -47,7 +47,7 @@ const InnerDraw: FC<InnerDrawProps> = props => {
   return (
     <Group ref={ref}>
       {waySegments.map(segment => (
-        <DrawSegment key={JSON.stringify(segment)} way={segment} {...strokeProps}/>
+        <DrawSegment key={JSON.stringify(segment)} way={segment} {...strokeProps} />
       ))}
     </Group>
   );
