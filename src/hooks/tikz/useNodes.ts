@@ -1,10 +1,6 @@
-import { createContext, useContext } from 'react';
-import NodeModel, { NodeConfig, StateListener } from '../model/component/node';
-
-export const TikZContext = createContext({
-  // 存储元素对应的 Model 和 DOM
-  nodes: new Map<string, NodeModel>(),
-});
+import { useContext } from 'react';
+import { TikZContext } from './TikZContext';
+import NodeModel, { NodeConfig, StateListener } from '../../model/component/node';
 
 const useNodes = () => {
   const { nodes } = useContext(TikZContext);
