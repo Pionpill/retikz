@@ -8,7 +8,8 @@ import useNodeShape from './_hooks/useNodeShape';
 import useNodeContent from './_hooks/useNodeContent';
 import useNodeConfig from './_hooks/useNodeConfig';
 import { convertCssToPx } from '../../utils/css';
-import useNodes from '../../hooks/useNodes';
+import useNodes from '../../hooks/tikz/useNodes';
+import useIntegerMode from '../../hooks/tikz/useIntegerMode';
 
 /** 节点外边框形状 */
 export type NodeShape = 'rectangle';
@@ -47,6 +48,7 @@ const InnerNode: FC<InnerNodeProps> = props => {
   const contentRef = useRef<SVGElement>(null);
 
   const { getModel, updateModel, deleteModel } = useNodes();
+  const integerMode = useIntegerMode();
 
   const nodeConfig = useNodeConfig();
   nodeConfig.current.position = position;
@@ -94,10 +96,14 @@ const InnerNode: FC<InnerNodeProps> = props => {
       contentSize: [width, height],
       innerSep,
     } = nodeConfig.current;
-    shapeRef.current?.setAttribute('x', (-width / 2 - innerSep.left).toString());
-    shapeRef.current?.setAttribute('y', (-height / 2 - innerSep.top).toString());
-    shapeRef.current?.setAttribute('width', (width + innerSep.left + innerSep.right).toString());
-    shapeRef.current?.setAttribute('height', (height + innerSep.top + innerSep.bottom).toString());
+    const realX = -width / 2 - innerSep.left;
+    shapeRef.current?.setAttribute('x', (integerMode ? Math.round(realX) : realX).toString());
+    const realY = -height / 2 - innerSep.top;
+    shapeRef.current?.setAttribute('y', (integerMode ? Math.round(realY) : realY).toString());
+    const realWidth = width + innerSep.left + innerSep.right;
+    shapeRef.current?.setAttribute('width', (integerMode ? Math.round(realWidth) : realWidth).toString());
+    const realHeight = height + innerSep.top + innerSep.bottom;
+    shapeRef.current?.setAttribute('height', (integerMode ? Math.round(realHeight) : realHeight).toString());
   }, [nodeConfig.current.position, nodeConfig.current.contentSize, nodeConfig.current.innerSep]);
 
   // 每次视图更新时更新模型

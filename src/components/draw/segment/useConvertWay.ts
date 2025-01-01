@@ -1,13 +1,13 @@
 import { useLayoutEffect, useMemo, useRef } from 'react';
+import useNodes from '../../../hooks/tikz/useNodes';
 import useForceUpdate from '../../../hooks/useForceUpdate';
-import useNodes from '../../../hooks/useNodes';
+import NodeModel from '../../../model/component/node';
+import DescartesPoint from '../../../model/geometry/point/DescartesPoint';
 import PolarPoint from '../../../model/geometry/point/PolarPoint';
 import { PointPosition } from '../../../types/coordinate';
 import { DescartesPosition, Position } from '../../../types/coordinate/descartes';
 import { PolarPosition } from '../../../types/coordinate/polar';
 import { TikZKey } from '../../../types/tikz';
-import NodeModel from '../../../model/component/node';
-import DescartesPoint from '../../../model/geometry/point/DescartesPoint';
 import { getDrawPointType, OffSetOrMovePosition, VerticalDrawPosition } from '../common';
 
 export type DrawWaySegmentType = [
