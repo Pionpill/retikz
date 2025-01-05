@@ -9,7 +9,7 @@ import useNodeContent from './_hooks/useNodeContent';
 import useNodeConfig from './_hooks/useNodeConfig';
 import { convertCssToPx } from '../../utils/css';
 import useNodes from '../../hooks/tikz/useNodes';
-import useCalculate from '../../hooks/tikz/useIntegerMode';
+import useCalculate from '../../hooks/tikz/useCalculate';
 
 /** 节点外边框形状 */
 export type NodeShape = 'rectangle';

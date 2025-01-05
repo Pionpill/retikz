@@ -1,7 +1,7 @@
 import { FC, ReactNode } from 'react';
 import Surface, { SurfaceProps } from './Surface';
 import { NodesContext } from '../hooks/tikz/useNodes';
-import { CalculateContext } from '../hooks/tikz/useIntegerMode';
+import { CalculateContext } from '../hooks/tikz/useCalculate';
 
 export type TikZProps = {
   children: ReactNode;

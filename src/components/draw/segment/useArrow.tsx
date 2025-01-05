@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import useCalculate from '../../../hooks/tikz/useIntegerMode';
+import useCalculate from '../../../hooks/tikz/useCalculate';
 import { ArrowConfig } from '../types';
 import { Position } from '../../../types/coordinate/descartes';
 import getArrowPath from '../arrow';
