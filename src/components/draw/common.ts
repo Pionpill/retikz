@@ -1,10 +1,5 @@
 import { PointPosition } from '../../types/coordinate';
-
-/** 垂直路径点，临近的节点不能都是特殊路径点 */
-export type VerticalDrawPosition = '-|' | '|-';
-export type OffSetOrMovePosition = string;
-/** 路径点类型：节点，坐标，垂点，偏移点，移动点 */
-export type DrawPointType = 'node' | 'coordinate' | 'vertical' | 'offset' | 'move';
+import { DrawPointType } from './types';
 
 const offsetReg = /\+[[(]?[+-]?\d+(?:\.\d+)?,\s*[+-]?\d+(?:\.\d+)?[)\]]?/;
 const moveReg = /\+\+[[(]?[+-]?\d+(?:\.\d+)?,\s*[+-]?\d+(?:\.\d+)?[)\]]?/;
