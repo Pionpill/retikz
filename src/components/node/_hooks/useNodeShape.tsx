@@ -1,6 +1,6 @@
 import { Ref, useMemo } from 'react';
 import Rect from '../../../elements/Rect';
-import { ShapeProps } from '../Node';
+import { ShapeProps } from '../InnerNode';
 
 /** 获取形状属性 */
 const getShapeProps = (nodeProps: ShapeProps) => {
