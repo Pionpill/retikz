@@ -1,5 +1,5 @@
 import { cloneElement, isValidElement, ReactElement, Ref, useMemo } from 'react';
-import { ContentProps } from '../Node';
+import { ContentProps } from '../InnerNode';
 import Text from '../../../elements/Text';
 
 const useNodeContent = (props: ContentProps, ref: Ref<SVGElement>) => {

@@ -1,132 +1,144 @@
-import { FC, ReactNode, useLayoutEffect, useRef } from 'react';
-import { Position } from '../../types/coordinate/descartes';
+import { FC, ReactNode, Ref, useMemo } from 'react';
+import { DescartesPosition, Position } from '../../types/coordinate/descartes';
+import { PolarPosition } from '../../types/coordinate/polar';
+import InnerNode, { NodeShape } from './InnerNode';
+import { CssDistanceType, DirectionDistance } from '../../types/distance';
+import { SepProps } from '../../types/distance/sep';
+import { color as d3Color, hsl } from 'd3-color';
 import { StrokeProps } from '../../types/svg/stroke';
-import { TikZProps } from '../../types/tikz';
-import Group from '../../container/Group';
-import { DirectionDistance } from '../../types/distance';
-import useNodeShape from './_hooks/useNodeShape';
-import useNodeContent from './_hooks/useNodeContent';
-import useNodeConfig from './_hooks/useNodeConfig';
 import { convertCssToPx } from '../../utils/css';
-import useNodes from '../../hooks/tikz/useNodes';
-import useIntegerMode from '../../hooks/tikz/useIntegerMode';
+import { TikZKey } from '../../types/tikz';
+import { convertStrokeShortcut, convertStrokeType, StrokeShortcutProps, StrokeType } from '../../utils/stroke';
+import { PointPosition } from '../../types/coordinate';
 
-/** 节点外边框形状 */
-export type NodeShape = 'rectangle';
-
-/** 外层形状相关属性 */
-export type ShapeProps = {
-  shape: NodeShape;
-  rx?: number | string;
-  ry?: number | string;
-  fill?: string;
-  fillOpacity?: number;
-} & StrokeProps;
-
-/** 内容相关属性 */
-export type ContentProps = {
-  color: string;
-  children?: ReactNode;
+export type NodeProps = {
+  name?: TikZKey;
+  ref?: Ref<SVGGElement>;
+  /** 位置 */
+  position?: PointPosition;
+  /** 内容宽度 */
+  width?: CssDistanceType;
+  /** 内容高度 */
+  height?: CssDistanceType;
+  /** 内容(文本)颜色 */
+  color?: string;
+  /** 内容(文本)字体大小 */
   size?: string | number;
-};
+  /** 内容 */
+  children?: ReactNode;
+  /** 边框形状 */
+  shape?: NodeShape;
+  /** 边框圆角 */
+  r?: CssDistanceType;
+  /** 边框圆角-x */
+  rx?: CssDistanceType;
+  /** 边框圆角-y */
+  ry?: CssDistanceType;
+  /** 背景填充色，默认为 auto */
+  fill?: string | 'auto';
+  /** 背景填充色透明度 */
+  fillOpacity?: number;
+  /** 边框样式 */
+  strokeType?: StrokeType;
+  /** 内边距 */
+  innerSep?: CssDistanceType | SepProps;
+  /** 外边距 */
+  outerSep?: CssDistanceType | SepProps;
+} & Partial<StrokeProps> &
+  StrokeShortcutProps;
 
-export type InnerNodeProps = {
-  position: Position;
-  width?: number;
-  height?: number;
-  innerSep: DirectionDistance<number | string>;
-  outerSep: DirectionDistance<number | string>;
-} & TikZProps &
-  ContentProps &
-  ShapeProps;
+const Node: FC<NodeProps> = props => {
+  const {
+    shape = 'rectangle',
+    position,
+    width,
+    height,
+    color = 'auto',
+    fill,
+    fillOpacity,
+    r,
+    rx,
+    ry,
+    stroke = 'transparent',
+    strokeWidth = 1,
+    strokeType,
+    innerSep,
+    outerSep,
+    ...otherProps
+  } = props;
 
-const InnerNode: FC<InnerNodeProps> = props => {
-  const { name, ref, position, width, height, innerSep, outerSep } = props;
+  const realPosition = useMemo<Position>(() => {
+    if (!position) return [0, 0];
+    if (Array.isArray(position)) return position;
+    if (position.hasOwnProperty('x') && position.hasOwnProperty('y')) {
+      const { x, y } = position as DescartesPosition;
+      return [x, y];
+    }
+    if (position.hasOwnProperty('radius') && position.hasOwnProperty('angle')) {
+      const { radius, angle } = position as PolarPosition;
+      return [radius * Math.cos(angle), radius * Math.sin(angle)];
+    }
+    return [0, 0];
+  }, [position]);
 
-  const nodeRef = useRef<SVGGElement>(null);
-  const shapeRef = useRef<SVGGraphicsElement>(null);
-  const contentRef = useRef<SVGElement>(null);
+  const realColor = useMemo(() => {
+    // 自动根据 fill 计算内容颜色
+    if (color === 'auto' && fill && fill !== 'currentColor') {
+      const fillColor = d3Color(fill);
+      // 无法解析 color
+      if (!fillColor) return color || 'currentColor';
+      fillColor.opacity = fillOpacity || 1;
+      const lightness = hsl(fillColor).l;
+      return lightness < 0.5 ? 'white' : 'black';
+    }
+    return color || 'currentColor';
+  }, [color, fill, fillOpacity]);
 
-  const { getModel, updateModel, deleteModel } = useNodes();
-  const integerMode = useIntegerMode();
+  const realRx = rx || r;
+  const realRy = ry || r;
 
-  const nodeConfig = useNodeConfig();
-  nodeConfig.current.position = position;
+  const getStrokeAttributes = () =>
+    strokeType ? convertStrokeType(strokeType, strokeWidth) : convertStrokeShortcut(otherProps, strokeWidth);
 
-  // 在 render 阶段创建未初始化的节点
-  if (name && !getModel(name)) {
-    updateModel(name, nodeConfig.current, false);
-  }
-
-  const groupElement = ref && 'current' in ref ? ref.current : nodeRef.current;
-
-  // 计算内容尺寸并存储进 nodeConfig
-  useLayoutEffect(() => {
-    const contentElement = contentRef.current;
-    if (!contentElement) return;
-    const { width: elementWidth, height: elementHeight } = contentElement.getBoundingClientRect();
-    nodeConfig.current.contentSize = [Math.max(elementWidth, width || 0), Math.max(elementHeight, height || 0)];
-  });
-
-  const getSep = (sep: DirectionDistance<number | string>): DirectionDistance => {
-    const { width = 100, height = 100 } = groupElement?.getBoundingClientRect() || {};
-    const remPx = parseFloat(getComputedStyle(document.documentElement).fontSize);
-    const emPx = groupElement ? parseFloat(getComputedStyle(groupElement).fontSize) : remPx;
+  const getSep = (sep?: CssDistanceType | SepProps, defaultVal?: number | string) => {
+    if (typeof sep !== 'object') {
+      return {
+        left: sep ?? defaultVal,
+        right: sep ?? defaultVal,
+        top: sep ?? defaultVal,
+        bottom: sep ?? defaultVal,
+      } as DirectionDistance<number | string>;
+    }
     return {
-      left: convertCssToPx(sep.left, { remPx, emPx, parentPx: width }),
-      right: convertCssToPx(sep.right, { remPx, emPx, parentPx: width }),
-      top: convertCssToPx(sep.top, { remPx, emPx, parentPx: height }),
-      bottom: convertCssToPx(sep.bottom, { remPx, emPx, parentPx: height }),
-    };
+      left: sep.left ?? sep.x ?? defaultVal,
+      right: sep.right ?? sep.x ?? defaultVal,
+      top: sep.top ?? sep.y ?? defaultVal,
+      bottom: sep.bottom ?? sep.y ?? defaultVal,
+    } as DirectionDistance<number | string>;
   };
 
-  // 计算内边距并存储进 nodeConfig
-  useLayoutEffect(() => {
-    nodeConfig.current.innerSep = getSep(innerSep);
-  }, [innerSep]);
-
-  // 计算外边距并存储进 nodeConfig
-  useLayoutEffect(() => {
-    nodeConfig.current.outerSep = getSep(outerSep);
-  }, [outerSep]);
-
-  // 设置 shape
-  useLayoutEffect(() => {
-    const {
-      contentSize: [width, height],
-      innerSep,
-    } = nodeConfig.current;
-    const realX = -width / 2 - innerSep.left;
-    shapeRef.current?.setAttribute('x', (integerMode ? Math.round(realX) : realX).toString());
-    const realY = -height / 2 - innerSep.top;
-    shapeRef.current?.setAttribute('y', (integerMode ? Math.round(realY) : realY).toString());
-    const realWidth = width + innerSep.left + innerSep.right;
-    shapeRef.current?.setAttribute('width', (integerMode ? Math.round(realWidth) : realWidth).toString());
-    const realHeight = height + innerSep.top + innerSep.bottom;
-    shapeRef.current?.setAttribute('height', (integerMode ? Math.round(realHeight) : realHeight).toString());
-  }, [nodeConfig.current.position, nodeConfig.current.contentSize, nodeConfig.current.innerSep]);
-
-  // 每次视图更新时更新模型
-  useLayoutEffect(() => {
-    if (name) updateModel(name, nodeConfig.current);
-  });
-
-  // 卸载组件时同步删除模型
-  useLayoutEffect(
-    () => () => {
-      if (name) {
-        deleteModel(name);
-      }
-    },
-    [name],
-  );
+  const adjustedInnerSep = useMemo(() => getSep(innerSep, '0.3333em'), [innerSep]);
+  const adjustedOuterSep = useMemo(() => getSep(innerSep, 0), [outerSep]);
 
   return (
-    <Group ref={ref || nodeRef} id={name} transform={`translate(${position[0]}, ${position[1]})`}>
-      {useNodeShape({ ...props }, shapeRef)}
-      {useNodeContent(props, contentRef)}
-    </Group>
+    <InnerNode
+      width={convertCssToPx(width)}
+      height={convertCssToPx(height)}
+      shape={shape}
+      position={realPosition}
+      color={realColor}
+      fill={fill || 'transparent'}
+      fillOpacity={fillOpacity}
+      rx={realRx}
+      ry={realRy}
+      stroke={stroke}
+      strokeWidth={strokeWidth}
+      innerSep={adjustedInnerSep}
+      outerSep={adjustedOuterSep}
+      {...getStrokeAttributes()}
+      {...otherProps}
+    />
   );
 };
 
-export default InnerNode;
+export default Node;
