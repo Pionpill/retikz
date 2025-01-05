@@ -9,7 +9,7 @@ import useNodeContent from './_hooks/useNodeContent';
 import useNodeConfig from './_hooks/useNodeConfig';
 import { convertCssToPx } from '../../utils/css';
 import useNodes from '../../hooks/tikz/useNodes';
-import useIntegerMode from '../../hooks/tikz/useIntegerMode';
+import useCalculate from '../../hooks/tikz/useIntegerMode';
 
 /** 节点外边框形状 */
 export type NodeShape = 'rectangle';
@@ -48,7 +48,7 @@ const InnerNode: FC<InnerNodeProps> = props => {
   const contentRef = useRef<SVGElement>(null);
 
   const { getModel, updateModel, deleteModel } = useNodes();
-  const integerMode = useIntegerMode();
+  const integerMode = useCalculate();
 
   const nodeConfig = useNodeConfig();
   nodeConfig.current.position = position;

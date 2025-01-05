@@ -1,14 +1,15 @@
-import { useContext } from 'react';
-import { TikZContext } from './TikZContext';
+import { createContext, useContext } from 'react';
 
-const useIntegerMode = () => {
-  const { integerMode } = useContext(TikZContext);
+export const CalculateContext = createContext({integerMode: false});
+
+const useCalculate = () => {
+  const { integerMode } = useContext(CalculateContext);
   return integerMode;
 };
 
-export const useInteger = (value: number) => {
-  const integerMode = useIntegerMode();
+export const useCalculateValue = (value: number) => {
+  const integerMode = useCalculate();
   return integerMode ? Math.round(value) : value;
 };
 
-export default useIntegerMode;
+export default useCalculate;

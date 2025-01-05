@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import useIntegerMode from '../../../hooks/tikz/useIntegerMode';
+import useCalculate from '../../../hooks/tikz/useIntegerMode';
 import { ArrowConfig } from '../types';
 import { Position } from '../../../types/coordinate/descartes';
 import getArrowPath from '../arrow';
@@ -13,7 +13,7 @@ export type ArrowLinkConfig = {
 };
 
 const useArrow = (linkConfig: ArrowLinkConfig, arrowConfig?: ArrowConfig) => {
-  const integerMode = useIntegerMode();
+  const integerMode = useCalculate();
   return useMemo(() => {
     if (!arrowConfig) return null;
 

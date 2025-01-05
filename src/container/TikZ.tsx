@@ -1,6 +1,7 @@
 import { FC, ReactNode } from 'react';
 import Surface, { SurfaceProps } from './Surface';
-import { TikZContext } from '../hooks/tikz/TikZContext';
+import { NodesContext } from '../hooks/tikz/useNodes';
+import { CalculateContext } from '../hooks/tikz/useIntegerMode';
 
 export type TikZProps = {
   children: ReactNode;
@@ -11,9 +12,11 @@ const TikZ: FC<TikZProps> = props => {
   const { integerMode, ...resProps } = props;
 
   return (
-    <TikZContext value={{ nodes: new Map(), integerMode: !!integerMode }}>
-      <Surface {...resProps} />
-    </TikZContext>
+    <NodesContext value={new Map()}>
+      <CalculateContext value={{ integerMode: !!integerMode }}>
+        <Surface {...resProps} />
+      </CalculateContext>
+    </NodesContext>
   );
 };
 
