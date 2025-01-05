@@ -8,8 +8,8 @@ export default class Line {
 
   constructor(a: number, b: number, c: number) {
     if (a === 0 && b === 0) {
-        console.error('invalid line equation');
-        return;
+      console.error('invalid line equation');
+      return;
     }
     this.a = a;
     this.b = b;
@@ -33,14 +33,21 @@ export default class Line {
   }
 
   /** 两点获取直线方程 */
-  static fromPoints(point1: Position, point2: Position) {
+  static fromPoints = (point1: Position, point2: Position) => {
     const [x1, y1] = point1;
     const [x2, y2] = point2;
     const A = y2 - y1;
     const B = x1 - x2;
     const C = x2 * y1 - x1 * y2;
     return new Line(A, B, C);
-  }
+  };
+
+  /** 获取两点的斜率 */
+  static getSlope = (point1: Position, point2: Position) => {
+    const [x1, y1] = point1;
+    const [x2, y2] = point2;
+    return (y2 - y1) / (x2 - x1);
+  };
 
   /** 获取两条直线交点 */
   getIntersection(line: Line, epsilon = 1e-9) {

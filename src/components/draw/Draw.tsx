@@ -1,23 +1,18 @@
 import { FC, Ref, useMemo } from 'react';
-import { PointPosition } from '../../types/coordinate';
-import { TikZKey } from '../../types/tikz';
-import { DrawWaySegmentType } from './segment/useConvertWay';
-import { getDrawPointType, OffSetOrMovePosition, DrawPointType, VerticalDrawPosition } from './common';
 import Group from '../../container/Group';
-import DrawSegment from './segment';
 import { StrokeProps } from '../../types/svg/stroke';
-
-export type ArrowStyleShortcut = '';
-
-export type DrawWayType = TikZKey | PointPosition | VerticalDrawPosition | OffSetOrMovePosition;
+import { getDrawPointType } from './common';
+import DrawSegment from './segment';
+import { ArrowConfig, DrawPointType, DrawWaySegmentType, DrawWayType } from './types';
 
 export type InnerDrawProps = {
   ref?: Ref<SVGPathElement>;
   way: DrawWayType[];
+  endArrow?: ArrowConfig;
 } & StrokeProps;
 
 const InnerDraw: FC<InnerDrawProps> = props => {
-  const { way, ref, ...strokeProps } = props;
+  const { way, ref, endArrow, ...strokeProps } = props;
 
   const waySegments = useMemo(() => {
     let preNodeType: DrawPointType = 'coordinate';
@@ -46,8 +41,13 @@ const InnerDraw: FC<InnerDrawProps> = props => {
 
   return (
     <Group ref={ref}>
-      {waySegments.map(segment => (
-        <DrawSegment key={JSON.stringify(segment)} way={segment} {...strokeProps} />
+      {waySegments.map((segment, index) => (
+        <DrawSegment
+          key={JSON.stringify(segment)}
+          way={segment}
+          {...strokeProps}
+          endArrow={index === waySegments.length - 1 ? endArrow : undefined}
+        />
       ))}
     </Group>
   );

@@ -1,11 +1,11 @@
 import { FC } from 'react';
 import NodeModel from '../../../model/component/node';
-import { Position } from '../../../types/coordinate/descartes';
 import { StrokeProps } from '../../../types/svg/stroke';
 import { TikZKey } from '../../../types/tikz';
 import { convertStrokeType } from '../../../utils/stroke';
+import { ArrowConfig, DrawWaySegmentType } from '../types';
 import InnerDrawSegment from './Segment';
-import useConvertWay, { DrawWaySegmentType } from './useConvertWay';
+import useConvertWay from './useConvertWay';
 
 export type DrawSegmentProps = {
   /** 路径，首位可以是 Node，其他必须是坐标 */
@@ -14,11 +14,12 @@ export type DrawSegmentProps = {
   color?: TikZKey;
   /** 线段样式 */
   strokeType?: 'solid' | 'dashed' | 'dotted';
+  endArrow?: ArrowConfig;
 } & StrokeProps;
 
 /** 单条连续的路径 */
 const DrawSegment: FC<DrawSegmentProps> = props => {
-  const { way, color, strokeType = 'solid', strokeWidth = 1, ...strokeProps } = props;
+  const { way, color, endArrow, strokeType = 'solid', strokeWidth = 1, ...strokeProps } = props;
 
   const [convertedWay, nodesInit] = useConvertWay(way);
   // render 阶段节点还没有初始化好，跳过
@@ -34,7 +35,8 @@ const DrawSegment: FC<DrawSegmentProps> = props => {
 
   return (
     <InnerDrawSegment
-      way={pointWay as [Position | undefined, ...Position[], Position | undefined]}
+      way={pointWay}
+      endArrow={endArrow}
       strokeWidth={strokeWidth}
       {...convertStrokeType(strokeType, strokeWidth)}
       {...strokeProps}

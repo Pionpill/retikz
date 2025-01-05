@@ -8,13 +8,9 @@ import { PointPosition } from '../../../types/coordinate';
 import { DescartesPosition, Position } from '../../../types/coordinate/descartes';
 import { PolarPosition } from '../../../types/coordinate/polar';
 import { TikZKey } from '../../../types/tikz';
-import { getDrawPointType, OffSetOrMovePosition, VerticalDrawPosition } from '../common';
+import { getDrawPointType } from '../common';
+import { DrawWaySegmentType, VerticalDrawPosition } from '../types';
 
-export type DrawWaySegmentType = [
-  TikZKey | PointPosition,
-  ...Array<PointPosition | VerticalDrawPosition | OffSetOrMovePosition>,
-  TikZKey | PointPosition,
-];
 
 /** 将坐标格式转换为笛卡尔坐标数组形式 */
 export const formatPointPosition = (point: PointPosition): Position => {
