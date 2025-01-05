@@ -4,20 +4,26 @@ import { ArrowConfig } from '../types';
 import { Position } from '../../../types/coordinate/descartes';
 import getArrowPath from '../arrow';
 import Path from '../../../elements/Path';
+import Line from '../../../model/equation/line';
 
 export type ArrowLinkConfig = {
+  nearPosition: Position;
   position: Position;
-  degree: number;
+  arrowType: 'start' | 'end';
 };
 
 const useArrow = (linkConfig: ArrowLinkConfig, arrowConfig?: ArrowConfig) => {
   const integerMode = useIntegerMode();
   return useMemo(() => {
     if (!arrowConfig) return null;
+
+    const { position, nearPosition } = linkConfig;
     const { type, stroke, linkType = 'end', round, strokeLinejoin, strokeWidth, ...strokeProps } = arrowConfig;
-    const { position, degree } = linkConfig;
+
+    const degree = Line.getDegree(nearPosition, position);
+
     const isRound = round || strokeLinejoin === 'round';
-    const realStrokeWidth = strokeWidth || 1;
+    const realStrokeWidth = strokeWidth ?? 1;
 
     const { d, offsetDistance, insertDistance } = getArrowPath(type, arrowConfig);
 
@@ -41,7 +47,7 @@ const useArrow = (linkConfig: ArrowLinkConfig, arrowConfig?: ArrowConfig) => {
 
     const transform = `translate(${integerMode ? Math.round(translatePosition[0]) : translatePosition[0]}, ${
       integerMode ? Math.round(translatePosition[1]) : translatePosition[1]
-    }) rotate(${integerMode ? Math.round(degree) : degree})`;
+    }) rotate(${integerMode ? Math.round(degree * (180 / Math.PI)) : degree * (180 / Math.PI)})`;
 
     return {
       linkPoint,

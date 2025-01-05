@@ -3,7 +3,7 @@ import { StrokeProps } from '../../types/svg/stroke';
 import { TikZKey } from '../../types/tikz';
 import { ArrowPositionAttributes, ArrowType } from './arrow';
 
-export type ArrowConfig = { type: ArrowType, fill?: string } & ArrowPositionAttributes & StrokeProps;
+export type ArrowConfig = { type: ArrowType; fill?: string } & ArrowPositionAttributes & StrokeProps;
 
 /** 垂直路径点，临近的节点不能都是特殊路径点 */
 export type VerticalDrawPosition = '-|' | '|-';
@@ -23,3 +23,11 @@ export type DrawWaySegmentType = [
   ...Array<PointPosition | VerticalDrawPosition | OffSetOrMovePosition>,
   TikZKey | PointPosition,
 ];
+
+/** 箭头属性 */
+export type ArrowProps<T = ArrowType | ArrowConfig> = {
+  startArrow?: T;
+  startArrows?: T;
+  endArrow?: T;
+  endArrows?: T;
+};

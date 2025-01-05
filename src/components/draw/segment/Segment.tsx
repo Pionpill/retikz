@@ -4,28 +4,34 @@ import Path from '../../../elements/Path';
 import { Position } from '../../../types/coordinate/descartes';
 import { StrokeProps } from '../../../types/svg/stroke';
 import { ArrowConfig } from '../types';
-import Line from '../../../model/equation/line';
 import Group from '../../../container/Group';
 import useArrow from './useArrow';
 
 export type InnerDrawSegmentProps = {
   /** 路径，始末节点为 undefined 表示临近点在 node 外边界内 */
   way: Position[];
+  startArrow?: ArrowConfig;
   endArrow?: ArrowConfig;
 } & StrokeProps;
 
 const InnerDrawSegment: FC<InnerDrawSegmentProps> = props => {
-  const { way, endArrow, ...strokeProps } = props;
+  const { way, startArrow, endArrow, ...strokeProps } = props;
 
-  const endSlope = Line.getSlope(way[way.length - 2], way[way.length - 1]);
-  const endDegree = Math.atan(endSlope);
+  const startArrowPath = useArrow(
+    { position: way[0], nearPosition: way[1], arrowType: 'start' },
+    startArrow ? { ...strokeProps, ...startArrow } : undefined,
+  );
+
   const endArrowPath = useArrow(
-    { position: way[way.length - 1], degree: endDegree },
+    { position: way[way.length - 1], nearPosition: way[way.length - 2], arrowType: 'end' },
     endArrow ? { ...strokeProps, ...endArrow } : undefined,
   );
 
   const d = useMemo(() => {
     const realWay = [...way];
+    if (startArrowPath) {
+      realWay[0] = startArrowPath.linkPoint;
+    }
     if (endArrowPath) {
       realWay[realWay.length - 1] = endArrowPath.linkPoint;
     }
@@ -35,10 +41,11 @@ const InnerDrawSegment: FC<InnerDrawSegmentProps> = props => {
     return straightLine(realWay);
   }, [way]);
 
-  return endArrowPath ? (
+  return endArrowPath || startArrowPath ? (
     <Group>
       <Path d={d ?? ''} {...strokeProps} />
-      {endArrowPath.arrowPath}
+      {startArrowPath ? startArrowPath.arrowPath : null}
+      {endArrowPath ? endArrowPath.arrowPath : null}
     </Group>
   ) : (
     <Path d={d ?? ''} {...strokeProps} />
