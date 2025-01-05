@@ -1,9 +1,10 @@
-import { useContext } from 'react';
-import { TikZContext } from './TikZContext';
+import { createContext, useContext } from 'react';
 import NodeModel, { NodeConfig, StateListener } from '../../model/component/node';
 
+export const NodesContext = createContext(new Map<string, NodeModel>());
+
 const useNodes = () => {
-  const { nodes } = useContext(TikZContext);
+  const nodes = useContext(NodesContext);
   return {
     subscribeModel: (name: string, listener: StateListener) => {
       const model = nodes.get(name);
