@@ -42,11 +42,11 @@ export default class Line {
     return new Line(A, B, C);
   };
 
-  /** 获取两点的斜率 */
-  static getSlope = (point1: Position, point2: Position) => {
+  /** 获取两点的夹角(弧度制) */
+  static getDegree = (point1: Position, point2: Position) => {
     const [x1, y1] = point1;
     const [x2, y2] = point2;
-    return (y2 - y1) / (x2 - x1);
+    return Math.atan2(y2 - y1, x2 - x1);
   };
 
   /** 获取两条直线交点 */

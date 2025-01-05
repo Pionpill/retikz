@@ -3,16 +3,16 @@ import Group from '../../container/Group';
 import { StrokeProps } from '../../types/svg/stroke';
 import { getDrawPointType } from './common';
 import DrawSegment from './segment';
-import { ArrowConfig, DrawPointType, DrawWaySegmentType, DrawWayType } from './types';
+import { ArrowConfig, ArrowProps, DrawPointType, DrawWaySegmentType, DrawWayType } from './types';
 
 export type InnerDrawProps = {
   ref?: Ref<SVGPathElement>;
   way: DrawWayType[];
-  endArrow?: ArrowConfig;
-} & StrokeProps;
+} & StrokeProps &
+  ArrowProps<ArrowConfig>;
 
 const InnerDraw: FC<InnerDrawProps> = props => {
-  const { way, ref, endArrow, ...strokeProps } = props;
+  const { way, ref,startArrow,startArrows, endArrow, endArrows, ...strokeProps } = props;
 
   const waySegments = useMemo(() => {
     let preNodeType: DrawPointType = 'coordinate';
@@ -46,7 +46,8 @@ const InnerDraw: FC<InnerDrawProps> = props => {
           key={JSON.stringify(segment)}
           way={segment}
           {...strokeProps}
-          endArrow={index === waySegments.length - 1 ? endArrow : undefined}
+          endArrow={index === waySegments.length - 1 ? endArrow || endArrows : endArrows}
+          startArrow={index === waySegments.length - 1 ? startArrow || startArrows : startArrows}
         />
       ))}
     </Group>

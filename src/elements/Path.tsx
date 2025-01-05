@@ -7,7 +7,7 @@ const Path: FC<PathProps> = props => {
 
   const defaultProps = {
     fill: propFill || 'transparent',
-    strokeWidth: propStrokeWidth || 1,
+    strokeWidth: propStrokeWidth ?? 1,
     stroke: propStroke || 'currentColor',
   };
 

@@ -14,12 +14,13 @@ export type DrawSegmentProps = {
   color?: TikZKey;
   /** 线段样式 */
   strokeType?: 'solid' | 'dashed' | 'dotted';
+  startArrow?: ArrowConfig;
   endArrow?: ArrowConfig;
 } & StrokeProps;
 
 /** 单条连续的路径 */
 const DrawSegment: FC<DrawSegmentProps> = props => {
-  const { way, color, endArrow, strokeType = 'solid', strokeWidth = 1, ...strokeProps } = props;
+  const { way, color, startArrow, endArrow, strokeType = 'solid', strokeWidth = 1, ...strokeProps } = props;
 
   const [convertedWay, nodesInit] = useConvertWay(way);
   // render 阶段节点还没有初始化好，跳过
@@ -36,6 +37,7 @@ const DrawSegment: FC<DrawSegmentProps> = props => {
   return (
     <InnerDrawSegment
       way={pointWay}
+      startArrow={startArrow}
       endArrow={endArrow}
       strokeWidth={strokeWidth}
       {...convertStrokeType(strokeType, strokeWidth)}
