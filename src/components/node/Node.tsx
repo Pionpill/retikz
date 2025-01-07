@@ -50,7 +50,7 @@ export type NodeProps = {
 const Node: FC<NodeProps> = props => {
   const {
     shape = 'rectangle',
-    position,
+    position = [0,0],
     width,
     height,
     color = 'auto',
@@ -68,7 +68,6 @@ const Node: FC<NodeProps> = props => {
   } = props;
 
   const realPosition = useMemo<Position>(() => {
-    if (!position) return [0, 0];
     if (Array.isArray(position)) return position;
     if (position.hasOwnProperty('x') && position.hasOwnProperty('y')) {
       const { x, y } = position as DescartesPosition;
