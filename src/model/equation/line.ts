@@ -49,6 +49,15 @@ export default class Line {
     return Math.atan2(y2 - y1, x2 - x1);
   };
 
+  /** 根据百分比获取点位置 */
+  static getPositionByPercent = (startPoint: Position, endPoint: Position, percent: number): Position => {
+    const [x1, y1] = startPoint;
+    const [x2, y2] = endPoint;
+    const dirX = x2 - x1;
+    const dirY = y2 - y1;
+    return [x1 + dirX * percent, y1 + dirY * percent];
+  };
+
   /** 获取两条直线交点 */
   getIntersection(line: Line, epsilon = 1e-9) {
     const A1 = this.a;
