@@ -41,7 +41,7 @@ const useAnchorPosition = (pos: number, segmentIndex: number) => {
     const startPoint = way[index - 1];
     const endPoint = way[index];
     const percent = (pos % segmentPercent) / segmentPercent;
-    return Line.getPositionByPercent(startPoint, endPoint, percent);
+    return index === way.length ? startPoint : Line.getPositionByPercent(startPoint, endPoint, percent);
   }, [pos, segmentIndex, pathUpdateCount.current]);
 };
 
