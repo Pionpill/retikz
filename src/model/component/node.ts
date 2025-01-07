@@ -1,3 +1,4 @@
+import { Direction } from '../../types/coordinate';
 import { Position } from '../../types/coordinate/descartes';
 import { DirectionDistance } from '../../types/distance';
 import { Area, Size } from '../../types/shape';
@@ -25,7 +26,7 @@ export type NodeAttribute = keyof NodeConfig;
 export default class NodeModel {
   type = ['node'];
   /** 是否初始化节点数据, 很多节点在 layout 阶段才能初始化全部数据 */
-  init: boolean = false;
+  init = false;
   /** 节点是否已经被销毁，如果已近销毁，其他地方应该删除对节点对象的引用 */
   disposed: boolean = false;
   center: Position = [0, 0];
@@ -87,14 +88,8 @@ export default class NodeModel {
   getPointArea(point: Position) {
     const [pX, pY] = point;
     const [x, y] = this.center;
-    const edgeX: Size = [
-      x - this.size[0] / 2 - this.innerSep.left - this.outerSep.left,
-      x + this.size[0] / 2 + this.innerSep.right + this.outerSep.right,
-    ];
-    const edgeY: Size = [
-      y - this.size[1] / 2 - this.innerSep.left - this.outerSep.left,
-      y + this.size[1] / 2 + this.innerSep.right + this.outerSep.right,
-    ];
+    const edgeX: Size = [x - this.getOuterDistance('left'), x + this.getOuterDistance('right')];
+    const edgeY: Size = [y - this.getOuterDistance('top'), y + this.getOuterDistance('bottom')];
     if (between(pX, edgeX) && between(pY, edgeY)) return Area.INSIDE;
     if (between(pX, edgeX, true) && between(pY, edgeY, true)) return Area.EDGE;
     return Area.OUTSIDE;
@@ -166,6 +161,20 @@ export default class NodeModel {
       return leftCrossPoint;
     const rightCrossPoint = line.getIntersection(Line.fromPoints(PointTR, PointBR));
     return rightCrossPoint!;
+  }
+
+  /** 获取到边界的距离 */
+  getOuterDistance(direction: Direction) {
+    switch (direction) {
+      case 'top':
+        return this.size[1] / 2 + this.innerSep.top + this.outerSep.top;
+      case 'bottom':
+        return this.size[1] / 2 + this.innerSep.bottom + this.outerSep.bottom;
+      case 'left':
+        return this.size[0] / 2 + this.innerSep.left + this.outerSep.left;
+      case 'right':
+        return this.size[0] / 2 + this.innerSep.right + this.outerSep.right;
+    }
   }
 
   /** 判断某个变量是否为初始化完成的节点 */

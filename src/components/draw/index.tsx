@@ -1,4 +1,4 @@
-import { CSSProperties, FC, Ref } from 'react';
+import { CSSProperties, FC, ReactElement, Ref } from 'react';
 import { StrokeProps } from '../../types/svg/stroke';
 import { convertStrokeShortcut, convertStrokeType, StrokeShortcutProps, StrokeType } from '../../utils/stroke';
 import InnerDraw from './Draw';
@@ -11,6 +11,7 @@ export type DrawProps = {
   color?: CSSProperties['stroke'];
   /** 线段样式快捷属性 */
   strokeType?: StrokeType;
+  children?: ReactElement;
 } & StrokeProps &
   StrokeShortcutProps &
   ArrowProps;

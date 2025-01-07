@@ -11,7 +11,6 @@ import { TikZKey } from '../../../types/tikz';
 import { getDrawPointType } from '../common';
 import { DrawWaySegmentType, VerticalDrawPosition } from '../types';
 
-
 /** 将坐标格式转换为笛卡尔坐标数组形式 */
 export const formatPointPosition = (point: PointPosition): Position => {
   if (Array.isArray(point)) return point;
@@ -77,7 +76,7 @@ const useConvertWay = (way: DrawWaySegmentType) => {
             const nodeModel = tryGetModel(item as TikZKey);
             if (!nodeModel.init) allNodeInit = false;
             const cb = subscribeModel(item as string, () => {
-              nodeUpdateCount.current = nodeUpdateCount.current + 1;
+              nodeUpdateCount.current += 1;
               forceUpdate();
             });
             if (cb) subscribeCbs.push(cb);
