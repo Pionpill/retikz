@@ -26,12 +26,12 @@ const InnerDraw: FC<InnerDrawProps> = props => {
       const point = way[i];
       const currentNodeType = getDrawPointType(point);
 
+      waySegment.push(point);
       // 两个连续的 node 节点断开
       if (currentNodeType === 'node' && preNodeType === 'node' && waySegment.length >= 2) {
         waySegments.push(waySegment);
         waySegment = [waySegment[waySegment.length - 1]];
       }
-      waySegment.push(point);
       // 最后一个节点塞入路径组
       if (i === way.length - 1) {
         waySegments.push(waySegment);
