@@ -4,12 +4,14 @@ import usePath from '../../../hooks/tikz/usePath';
 import { between } from '../../../utils/math';
 import { Position } from '../../../types/coordinate/descartes';
 import Line from '../../../model/equation/line';
+import useCalculate from '../../../hooks/tikz/useCalculate';
 
-const useAnchorPosition = (pos: number, segmentIndex: number) => {
+const useAnchor = (pos: number, segmentIndex: number) => {
   const pathUpdateCount = useRef(0);
   const forceUpdate = useForceUpdate();
 
   const { model, subscribeModel } = usePath();
+  const integerMode = useCalculate();
 
   const subscribeCb = subscribeModel(model => {
     if (!model?.init) return;
@@ -26,8 +28,12 @@ const useAnchorPosition = (pos: number, segmentIndex: number) => {
   const adjustIndex = segmentIndex >= 0 ? segmentIndex : model.ways.length + segmentIndex;
   if (!between(adjustIndex, [0, model.ways.length - 1], true)) throw new Error('segmentIndex is out of range');
 
-  return useMemo(() => {
-    if (!model.init) return [Number.MAX_SAFE_INTEGER / 2, Number.MAX_SAFE_INTEGER / 2] as Position;
+  return useMemo<{ position: Position, angle: number }>(() => {
+    if (!model.init)
+      return {
+        position: [Number.MAX_SAFE_INTEGER / 2, Number.MAX_SAFE_INTEGER / 2],
+        angle: 0,
+      };
     const way = model.ways[adjustIndex];
     const waySegments = way.length - 1;
     const segmentPercent = 1 / waySegments;
@@ -41,8 +47,15 @@ const useAnchorPosition = (pos: number, segmentIndex: number) => {
     const startPoint = way[index - 1];
     const endPoint = way[index];
     const percent = (pos % segmentPercent) / segmentPercent;
-    return index === way.length ? startPoint : Line.getPositionByPercent(startPoint, endPoint, percent);
+    const position = index === way.length ? startPoint : Line.getPositionByPercent(startPoint, endPoint, percent);
+    return {
+      position: integerMode ? [Math.round(position[0]), Math.round(position[1])] : position,
+      angle:
+        index === way.length
+          ? Line.getDegree(way[way.length - 2], way[way.length - 1])
+          : Line.getDegree(startPoint, endPoint),
+    };
   }, [pos, segmentIndex, pathUpdateCount.current]);
 };
 
-export default useAnchorPosition;
+export default useAnchor;

@@ -36,12 +36,13 @@ export type InnerNodeProps = {
   height?: number;
   innerSep: DirectionDistance<number | string>;
   outerSep: DirectionDistance<number | string>;
+  rotate?: number;
 } & TikZProps &
   ContentProps &
   ShapeProps;
 
 const InnerNode: FC<InnerNodeProps> = props => {
-  const { name, ref, position, width, height, innerSep, outerSep } = props;
+  const { name, ref, position, width, height, innerSep, outerSep, rotate } = props;
 
   const nodeRef = useRef<SVGGElement>(null);
   const shapeRef = useRef<SVGGraphicsElement>(null);
@@ -122,7 +123,11 @@ const InnerNode: FC<InnerNodeProps> = props => {
   );
 
   return (
-    <Group ref={ref || nodeRef} id={name} transform={`translate(${position[0]}, ${position[1]})`}>
+    <Group
+      ref={ref || nodeRef}
+      id={name}
+      transform={`translate(${position[0]}, ${position[1]}) ${rotate ? `rotate(${rotate})` : ''}`}
+    >
       {useNodeShape({ ...props }, shapeRef)}
       {useNodeContent(props, contentRef)}
     </Group>

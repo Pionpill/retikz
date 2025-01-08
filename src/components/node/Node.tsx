@@ -44,6 +44,8 @@ export type NodeProps = {
   innerSep?: CssDistanceType | SepProps;
   /** 外边距 */
   outerSep?: CssDistanceType | SepProps;
+  /** 旋转 */
+  rotate?: number;
 } & Partial<StrokeProps> &
   StrokeShortcutProps;
 

@@ -1,7 +1,7 @@
 import { FC, useId, useLayoutEffect, useMemo, useState } from 'react';
 import Node, { NodeProps } from '../Node';
 import { Position } from '../../../types/coordinate/descartes';
-import useAnchorPosition from './useAnchorPosition';
+import useAnchor from './useAnchor';
 import useNodes from '../../../hooks/tikz/useNodes';
 import { Direction } from '../../../types/coordinate';
 import DescartesPoint from '../../../model/geometry/point/DescartesPoint';
@@ -34,19 +34,20 @@ type PosShortcutProps = {
 export type PathNodeProps = {
   segmentIndex?: number;
   /** path 片段的下标 */
-  /** 路径位置，0-1 */
   pos?: number;
   /** 相对于路径的位置 */
   anchor?: Direction | 'center';
   /** 偏移位置 */
   offset?: Position;
+  /** 跟随箭头位置 */
+  sloped?: boolean;
 } & PathNodePositionProps &
   PosShortcutProps &
   Omit<NodeProps, 'position'>;
 
 const PathNode: FC<PathNodeProps> = props => {
   const { segmentIndex = -1, offset = [0, 0], anchor, ref, left, right, above, below, name, ...resProps } = props;
-  const { pos, veryNearStart, veryNearEnd, start, nearStart, midway, nearEnd, end, ...nodeProps } = resProps;
+  const { pos, veryNearStart, veryNearEnd, start, nearStart, midway, nearEnd, end, sloped, ...nodeProps } = resProps;
 
   const id = useId();
   const realName = name ?? id;
@@ -70,9 +71,14 @@ const PathNode: FC<PathNodeProps> = props => {
     return { direction: anchor ?? 'center', distance: 0 };
   }, [anchor, left, right, above, below]);
 
-  const anchorPosition = useAnchorPosition(posRadio, segmentIndex);
+  const {position: anchorPosition, angle: anchorAngle} = useAnchor(posRadio, segmentIndex);
   const [adjustOffset, setAdjustOffset] = useState(DescartesPoint.plus(anchorPosition, offset));
   const { getModel } = useNodes();
+
+  const rotate = useMemo(() => {
+    if (!sloped) return 0;
+    return anchorAngle * (180 / Math.PI);
+  }, [sloped, anchorAngle])
 
   useLayoutEffect(() => {
     const model = getModel(realName);
@@ -97,7 +103,7 @@ const PathNode: FC<PathNodeProps> = props => {
     setAdjustOffset(DescartesPoint.plus(anchorPosition, directionPosition, offset));
   }, [anchorPosition, directionPos]);
 
-  return <Node name={realName} position={adjustOffset} ref={ref} {...nodeProps} />;
+  return <Node name={realName} position={adjustOffset} ref={ref} rotate={rotate} {...nodeProps} />;
 };
 
 export default PathNode;
