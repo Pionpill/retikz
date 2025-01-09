@@ -52,7 +52,7 @@ export type NodeProps = {
 const Node: FC<NodeProps> = props => {
   const {
     shape = 'rectangle',
-    position = [0,0],
+    position = [0, 0],
     width,
     height,
     color = 'auto',
@@ -66,6 +66,7 @@ const Node: FC<NodeProps> = props => {
     strokeType,
     innerSep,
     outerSep,
+    size,
     ...otherProps
   } = props;
 
@@ -118,7 +119,7 @@ const Node: FC<NodeProps> = props => {
     } as DirectionDistance<number | string>;
   };
 
-  const adjustedInnerSep = useMemo(() => getSep(innerSep, '0.3333em'), [innerSep]);
+  const adjustedInnerSep = useMemo(() => getSep(innerSep, convertCssToPx(size) / 3 || '0.3333em'), [innerSep]);
   const adjustedOuterSep = useMemo(() => getSep(innerSep, 0), [outerSep]);
 
   return (
@@ -136,6 +137,7 @@ const Node: FC<NodeProps> = props => {
       strokeWidth={strokeWidth}
       innerSep={adjustedInnerSep}
       outerSep={adjustedOuterSep}
+      size={size}
       {...getStrokeAttributes()}
       {...otherProps}
     />
