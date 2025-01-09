@@ -55,7 +55,7 @@ const Node: FC<NodeProps> = props => {
     position = [0, 0],
     width,
     height,
-    color = 'auto',
+    color = 'currentColor',
     fill,
     fillOpacity,
     r,
