@@ -6,6 +6,7 @@ import useNodes from '../../../hooks/tikz/useNodes';
 import { Direction } from '../../../types/coordinate';
 import DescartesPoint from '../../../model/geometry/point/DescartesPoint';
 import { convertCssToPx } from '../../../utils/css';
+import useCalculate from '../../../hooks/tikz/useCalculate';
 
 type PathNodePositionProps = {
   left?: boolean | number | string;
@@ -51,6 +52,7 @@ const PathNode: FC<PathNodeProps> = props => {
 
   const id = useId();
   const realName = name ?? id;
+  const integerMode = useCalculate();
 
   const posRadio = useMemo(() => {
     if (pos !== undefined) return pos;
@@ -71,14 +73,14 @@ const PathNode: FC<PathNodeProps> = props => {
     return { direction: anchor ?? 'center', distance: 0 };
   }, [anchor, left, right, above, below]);
 
-  const {position: anchorPosition, angle: anchorAngle} = useAnchor(posRadio, segmentIndex);
+  const { position: anchorPosition, angle: anchorAngle } = useAnchor(posRadio, segmentIndex);
   const [adjustOffset, setAdjustOffset] = useState(DescartesPoint.plus(anchorPosition, offset));
   const { getModel } = useNodes();
 
   const rotate = useMemo(() => {
     if (!sloped) return 0;
     return anchorAngle * (180 / Math.PI);
-  }, [sloped, anchorAngle])
+  }, [sloped, anchorAngle]);
 
   useLayoutEffect(() => {
     const model = getModel(realName);
@@ -103,7 +105,11 @@ const PathNode: FC<PathNodeProps> = props => {
     setAdjustOffset(DescartesPoint.plus(anchorPosition, directionPosition, offset));
   }, [anchorPosition, directionPos]);
 
-  return <Node name={realName} position={adjustOffset} ref={ref} rotate={rotate} {...nodeProps} />;
+  const adjustPosition: Position = integerMode
+    ? [Math.round(adjustOffset[0]), Math.round(adjustOffset[1])]
+    : adjustOffset;
+
+  return <Node name={realName} position={adjustPosition} ref={ref} rotate={rotate} {...nodeProps} />;
 };
 
 export default PathNode;
