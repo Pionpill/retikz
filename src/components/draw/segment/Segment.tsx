@@ -17,14 +17,21 @@ export type InnerDrawSegmentProps = {
 const InnerDrawSegment: FC<InnerDrawSegmentProps> = props => {
   const { way, startArrow, endArrow, ...strokeProps } = props;
 
+  /** 箭头仅使用部分 draw 的 stroke 属性 */
+  const pickedArrowStrokeProps = {
+    stroke: strokeProps.stroke,
+    strokeWidth: strokeProps.strokeWidth,
+    strokeOpacity: strokeProps.strokeOpacity,
+  };
+
   const startArrowPath = useArrow(
     { position: way[0], nearPosition: way[1], arrowType: 'start' },
-    startArrow ? { ...strokeProps, ...startArrow } : undefined,
+    startArrow ? { ...pickedArrowStrokeProps, ...startArrow } : undefined,
   );
 
   const endArrowPath = useArrow(
     { position: way[way.length - 1], nearPosition: way[way.length - 2], arrowType: 'end' },
-    endArrow ? { ...strokeProps, ...endArrow } : undefined,
+    endArrow ? { ...pickedArrowStrokeProps, ...endArrow } : undefined,
   );
 
   const d = useMemo(() => {
