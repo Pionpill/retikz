@@ -33,7 +33,7 @@ const InnerDraw: FC<InnerDrawProps> = props => {
         waySegment = [waySegment[waySegment.length - 1]];
       }
       // 最后一个节点塞入路径组
-      if (i === way.length - 1) {
+      if (i === way.length - 1 && waySegment.length > 1) {
         waySegments.push(waySegment);
       }
 
