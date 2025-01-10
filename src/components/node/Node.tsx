@@ -10,6 +10,7 @@ import { convertCssToPx } from '../../utils/css';
 import { TikZKey } from '../../types/tikz';
 import { convertStrokeShortcut, convertStrokeType, StrokeShortcutProps, StrokeType } from '../../utils/stroke';
 import { PointPosition } from '../../types/coordinate';
+import { TikZFontSize, TikZFontSizeMap } from './types';
 
 export type NodeProps = {
   name?: TikZKey;
@@ -23,7 +24,7 @@ export type NodeProps = {
   /** 内容(文本)颜色 */
   color?: string;
   /** 内容(文本)字体大小 */
-  size?: string | number;
+  size?: string | TikZFontSize | number;
   /** 内容 */
   children?: ReactNode;
   /** 边框形状 */
@@ -119,7 +120,17 @@ const Node: FC<NodeProps> = props => {
     } as DirectionDistance<number | string>;
   };
 
-  const adjustedInnerSep = useMemo(() => getSep(innerSep, convertCssToPx(size) / 3 || '0.3333em'), [innerSep]);
+  const adjustFontSize = useMemo(() => {
+    if (typeof size === 'string' && TikZFontSizeMap.hasOwnProperty(size)) {
+      return TikZFontSizeMap[size as TikZFontSize];
+    }
+    return size;
+  }, [size]);
+
+  const adjustedInnerSep = useMemo(
+    () => getSep(innerSep, convertCssToPx(adjustFontSize) / 3 || '0.3333em'),
+    [innerSep],
+  );
   const adjustedOuterSep = useMemo(() => getSep(innerSep, 0), [outerSep]);
 
   return (
@@ -137,7 +148,7 @@ const Node: FC<NodeProps> = props => {
       strokeWidth={strokeWidth}
       innerSep={adjustedInnerSep}
       outerSep={adjustedOuterSep}
-      size={size}
+      size={adjustFontSize}
       {...getStrokeAttributes()}
       {...otherProps}
     />
