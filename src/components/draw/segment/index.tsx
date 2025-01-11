@@ -2,7 +2,7 @@ import { FC, useMemo } from 'react';
 import NodeModel from '../../../model/component/node';
 import { StrokeProps } from '../../../types/svg/stroke';
 import { TikZKey } from '../../../types/tikz';
-import { convertStrokeType } from '../../../utils/stroke';
+import { convertStrokeType } from '../../../utils/style/stroke';
 import { ArrowConfig, DrawWaySegmentType } from '../types';
 import InnerDrawSegment from './Segment';
 import useConvertWay from './useConvertWay';

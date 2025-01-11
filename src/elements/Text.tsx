@@ -1,8 +1,19 @@
 import { FC, PropsWithChildren, ReactNode, Ref, SVGProps, useMemo } from 'react';
 import { textWrapParse } from '../utils/string';
-import { DominantBaseline } from '../types/svg/text';
+import { FontProps } from '../types/svg/font';
 
 type TextVerticalAlign = 'top' | 'center' | 'bottom';
+
+export type DominantBaseline =
+  | 'auto'
+  | 'text-bottom'
+  | 'alphabetic'
+  | 'ideographic'
+  | 'middle'
+  | 'central'
+  | 'mathematical'
+  | 'hanging'
+  | 'text-top';
 
 export type TextProps = {
   x?: SVGProps<SVGTextElement>['x'];
@@ -12,7 +23,8 @@ export type TextProps = {
   fontSize?: SVGProps<SVGTextElement>['fontSize'];
   fill?: SVGProps<SVGTextElement>['fill'];
   ref?: Ref<SVGTextElement>;
-} & SVGProps<SVGTextElement>;
+} & FontProps &
+  SVGProps<SVGTextElement>;
 
 /**
  * 文本节点

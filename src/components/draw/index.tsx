@@ -1,6 +1,6 @@
 import { CSSProperties, FC, ReactElement, Ref } from 'react';
 import { StrokeProps } from '../../types/svg/stroke';
-import { convertStrokeShortcut, convertStrokeType, StrokeShortcutProps, StrokeType } from '../../utils/stroke';
+import { convertStrokeShortcut, convertStrokeType, StrokeShortcutProps, StrokeType } from '../../utils/style/stroke';
 import InnerDraw from './Draw';
 import { ArrowProps, DrawWayType } from './types';
 

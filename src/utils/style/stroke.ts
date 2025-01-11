@@ -1,4 +1,4 @@
-import { StrokeProps } from '../types/svg/stroke';
+import { StrokeProps } from '../../types/svg/stroke';
 
 export type StrokeType =
   | 'solid'
