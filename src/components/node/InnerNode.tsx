@@ -10,6 +10,7 @@ import useNodeConfig from './_hooks/useNodeConfig';
 import { convertCssToPx } from '../../utils/css';
 import useNodes from '../../hooks/tikz/useNodes';
 import useCalculate from '../../hooks/tikz/useCalculate';
+import { FontProps } from '../../types/svg/font';
 
 /** 节点外边框形状 */
 export type NodeShape = 'rectangle';
@@ -26,9 +27,10 @@ export type ShapeProps = {
 /** 内容相关属性 */
 export type ContentProps = {
   color: string;
+  opacity?: number;
   children?: ReactNode;
   size?: string | number;
-};
+} & FontProps;
 
 export type InnerNodeProps = {
   position: Position;
@@ -128,7 +130,7 @@ const InnerNode: FC<InnerNodeProps> = props => {
       id={name}
       transform={`translate(${position[0]}, ${position[1]}) ${rotate ? `rotate(${rotate})` : ''}`}
     >
-      {useNodeShape({ ...props }, shapeRef)}
+      {useNodeShape(props, shapeRef)}
       {useNodeContent(props, contentRef)}
     </Group>
   );

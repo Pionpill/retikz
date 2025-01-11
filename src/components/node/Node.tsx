@@ -8,9 +8,10 @@ import { color as d3Color, hsl } from 'd3-color';
 import { StrokeProps } from '../../types/svg/stroke';
 import { convertCssToPx } from '../../utils/css';
 import { TikZKey } from '../../types/tikz';
-import { convertStrokeShortcut, convertStrokeType, StrokeShortcutProps, StrokeType } from '../../utils/stroke';
+import { convertStrokeShortcut, convertStrokeType, StrokeShortcutProps, StrokeType } from '../../utils/style/stroke';
 import { PointPosition } from '../../types/coordinate';
-import { TikZFontSize, TikZFontSizeMap } from './types';
+import { convertFontSize, convertFontStyle, TikZFontSize } from '../../utils/style/font';
+import { FontProps } from '../../types/svg/font';
 
 export type NodeProps = {
   name?: TikZKey;
@@ -22,7 +23,9 @@ export type NodeProps = {
   /** 内容高度 */
   height?: CssDistanceType;
   /** 内容(文本)颜色 */
-  color?: string;
+  color?: 'currentColor' | 'auto' | string;
+  /** 内容(文本)透明度 */
+  opacity?: number;
   /** 内容(文本)字体大小 */
   size?: string | TikZFontSize | number;
   /** 内容 */
@@ -47,29 +50,16 @@ export type NodeProps = {
   outerSep?: CssDistanceType | SepProps;
   /** 旋转 */
   rotate?: number;
-} & Partial<StrokeProps> &
+  /** 样式 */
+  style?: 'bold' | 'italic' | 'serif' | 'sans-serif';
+} & Partial<FontProps> &
+  Partial<StrokeProps> &
   StrokeShortcutProps;
 
 const Node: FC<NodeProps> = props => {
-  const {
-    shape = 'rectangle',
-    position = [0, 0],
-    width,
-    height,
-    color = 'currentColor',
-    fill,
-    fillOpacity,
-    r,
-    rx,
-    ry,
-    stroke = 'transparent',
-    strokeWidth = 1,
-    strokeType,
-    innerSep,
-    outerSep,
-    size,
-    ...otherProps
-  } = props;
+  const { shape = 'rectangle', width, height, position = [0, 0], innerSep, outerSep, ...res1Props } = props;
+  const { r, rx, ry, fill, fillOpacity, stroke = 'transparent', strokeWidth = 1, strokeType, ...res2Props } = res1Props;
+  const { color = 'currentColor', size, fontSize, fontStyle, fontFamily, style, ...otherProps } = res2Props;
 
   const realPosition = useMemo<Position>(() => {
     if (Array.isArray(position)) return position;
@@ -120,12 +110,9 @@ const Node: FC<NodeProps> = props => {
     } as DirectionDistance<number | string>;
   };
 
-  const adjustFontSize = useMemo(() => {
-    if (typeof size === 'string' && TikZFontSizeMap.hasOwnProperty(size)) {
-      return TikZFontSizeMap[size as TikZFontSize];
-    }
-    return size;
-  }, [size]);
+  const getFontStyle = () => convertFontStyle(style);
+
+  const adjustFontSize = useMemo(() => convertFontSize(size || fontSize), [size, fontSize]);
 
   const adjustedInnerSep = useMemo(
     () => getSep(innerSep, convertCssToPx(adjustFontSize) / 3 || '0.3333em'),
@@ -149,6 +136,7 @@ const Node: FC<NodeProps> = props => {
       innerSep={adjustedInnerSep}
       outerSep={adjustedOuterSep}
       size={adjustFontSize}
+      {...getFontStyle()}
       {...getStrokeAttributes()}
       {...otherProps}
     />
