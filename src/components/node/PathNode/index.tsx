@@ -2,11 +2,11 @@ import { FC, useId, useLayoutEffect, useMemo, useState } from 'react';
 import Node, { NodeProps } from '../Node';
 import { Position } from '../../../types/coordinate/descartes';
 import useAnchor from './useAnchor';
-import useNodes from '../../../hooks/tikz/useNodes';
+import useNodes from '../../../hooks/context/useNodes';
 import { Direction } from '../../../types/coordinate';
 import DescartesPoint from '../../../model/geometry/point/DescartesPoint';
 import { convertCssToPx } from '../../../utils/css';
-import useCalculate from '../../../hooks/tikz/useCalculate';
+import useCalculate from '../../../hooks/context/useCalculate';
 import { convertPrecision } from '../../../utils/math';
 
 type PathNodePositionProps = {

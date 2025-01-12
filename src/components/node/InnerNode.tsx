@@ -8,8 +8,8 @@ import useNodeShape from './_hooks/useNodeShape';
 import useNodeContent from './_hooks/useNodeContent';
 import useNodeConfig from './_hooks/useNodeConfig';
 import { convertCssToPx } from '../../utils/css';
-import useNodes from '../../hooks/tikz/useNodes';
-import useCalculate from '../../hooks/tikz/useCalculate';
+import useNodes from '../../hooks/context/useNodes';
+import useCalculate from '../../hooks/context/useCalculate';
 import { FontProps } from '../../types/svg/font';
 import { convertPrecision } from '../../utils/math';
 
