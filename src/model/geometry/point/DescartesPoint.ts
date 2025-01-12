@@ -1,3 +1,4 @@
+import { PointPosition } from '../../../types/coordinate';
 import { DescartesPosition, Position } from '../../../types/coordinate/descartes';
 import { PolarPosition } from '../../../types/coordinate/polar';
 import PolarPoint from './PolarPoint';
@@ -31,10 +32,23 @@ export default class DescartesPoint {
     return [position.x, position.y];
   };
 
-  static plus = (...positions: Array<Position | DescartesPosition>) => {
+  /** 将坐标格式转换为笛卡尔坐标数组形式 */
+  static formatPosition = (point: PointPosition): Position => {
+    if (Array.isArray(point)) return point;
+    if (point.hasOwnProperty('x') && point.hasOwnProperty('y')) {
+      const p = point as DescartesPosition;
+      return [p.x, p.y];
+    }
+    return PolarPoint.convertPolarToDescartesPosition(point as PolarPosition);
+  };
+
+  /** 多个点相加 */
+  static plus = (...positions: Array<PointPosition>) => {
     return positions.reduce(
-      (acc: Position, cur) =>
-        Array.isArray(cur) ? [acc[0] + cur[0], acc[1] + cur[1]] : [acc[0] + cur.x, acc[1] + cur.y],
+      (acc: Position, cur) => {
+        const formatCur = DescartesPoint.formatPosition(cur);
+        return [acc[0] + formatCur[0], acc[1] + formatCur[1]];
+      },
       [0, 0] as Position,
     );
   };

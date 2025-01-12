@@ -1,6 +1,5 @@
 import { FC, ReactNode, Ref, useMemo } from 'react';
-import { DescartesPosition, Position } from '../../types/coordinate/descartes';
-import { PolarPosition } from '../../types/coordinate/polar';
+import { Position } from '../../types/coordinate/descartes';
 import InnerNode, { NodeShape } from './InnerNode';
 import { CssDistanceType, DirectionDistance } from '../../types/distance';
 import { SepProps } from '../../types/distance/sep';
@@ -12,12 +11,16 @@ import { convertStrokeShortcut, convertStrokeType, StrokeShortcutProps, StrokeTy
 import { PointPosition } from '../../types/coordinate';
 import { convertFontSize, convertFontStyle, TikZFontSize } from '../../utils/style/font';
 import { FontProps } from '../../types/svg/font';
+import DescartesPoint from '../../model/geometry/point/DescartesPoint';
+import useScope from '../../hooks/context/useScope';
 
 export type NodeProps = {
   name?: TikZKey;
   ref?: Ref<SVGGElement>;
   /** 位置 */
   position?: PointPosition;
+  /** 位置偏移 */
+  offset?: PointPosition;
   /** 内容宽度 */
   width?: CssDistanceType;
   /** 内容高度 */
@@ -57,21 +60,22 @@ export type NodeProps = {
   StrokeShortcutProps;
 
 const Node: FC<NodeProps> = props => {
-  const { shape = 'rectangle', width, height, position = [0, 0], innerSep, outerSep, ...res1Props } = props;
+  const { offset: scopeOffset, node } = useScope();
+  const nodeScopeProps = { offset: scopeOffset, ...node };
+  const realProps = {
+    ...nodeScopeProps,
+    ...props,
+    offset: DescartesPoint.plus(scopeOffset || [0, 0], props.offset || [0, 0]),
+  };
+
+  const { shape = 'rectangle', width, height, position, offset, innerSep, outerSep, ...res1Props } = realProps;
   const { r, rx, ry, fill, fillOpacity, stroke = 'transparent', strokeWidth = 1, strokeType, ...res2Props } = res1Props;
   const { color = 'currentColor', size, fontSize, fontStyle, fontFamily, style, ...otherProps } = res2Props;
 
   const realPosition = useMemo<Position>(() => {
-    if (Array.isArray(position)) return position;
-    if (position.hasOwnProperty('x') && position.hasOwnProperty('y')) {
-      const { x, y } = position as DescartesPosition;
-      return [x, y];
-    }
-    if (position.hasOwnProperty('radius') && position.hasOwnProperty('angle')) {
-      const { radius, angle } = position as PolarPosition;
-      return [radius * Math.cos(angle), radius * Math.sin(angle)];
-    }
-    return [0, 0];
+    const formatPosition = position ? DescartesPoint.formatPosition(position) : [0, 0];
+    const formatOffset = offset ? DescartesPoint.formatPosition(offset) : [0, 0];
+    return [formatPosition[0] + formatOffset[0], formatPosition[1] + formatOffset[1]];
   }, [position]);
 
   const realColor = useMemo(() => {

@@ -6,16 +6,19 @@ import DrawSegment from './segment';
 import { ArrowConfig, ArrowProps, DrawPointType, DrawWaySegmentType, DrawWayType } from './types';
 import { PathContext } from '../../hooks/context/usePath';
 import PathModel from '../../model/component/path';
+import { Position } from '../../types/coordinate/descartes';
 
 export type InnerDrawProps = {
   ref?: Ref<SVGPathElement>;
+  /** 位置偏移 */
+  offset: Position;
   way: DrawWayType[];
   children?: ReactNode;
 } & StrokeProps &
   ArrowProps<ArrowConfig>;
 
 const InnerDraw: FC<InnerDrawProps> = props => {
-  const { way, ref, startArrow, startArrows, endArrow, endArrows, children, ...strokeProps } = props;
+  const { way, ref, offset, startArrow, startArrows, endArrow, endArrows, children, ...strokeProps } = props;
 
   const waySegments = useMemo(() => {
     let preNodeType: DrawPointType = 'coordinate';
@@ -44,7 +47,7 @@ const InnerDraw: FC<InnerDrawProps> = props => {
 
   return (
     <PathContext value={new PathModel(new Array(waySegments.length).fill([]), strokeProps.strokeWidth || 1, false)}>
-      <Group ref={ref}>
+      <Group ref={ref} transform={`translate(${offset[0]}, ${offset[1]})`}>
         {waySegments.map((segment, index) => (
           <DrawSegment
             key={JSON.stringify(segment)}
