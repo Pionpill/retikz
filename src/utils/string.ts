@@ -6,5 +6,6 @@
  */
 export const textWrapParse = (text: string, breakMark: string = "\\n"): string[] => {
     const textArray = text.split(breakMark);
+    console.log('textArray', textArray)
     return textArray;
 };

@@ -7,6 +7,7 @@ import { Direction } from '../../../types/coordinate';
 import DescartesPoint from '../../../model/geometry/point/DescartesPoint';
 import { convertCssToPx } from '../../../utils/css';
 import useCalculate from '../../../hooks/tikz/useCalculate';
+import { convertPrecision } from '../../../utils/math';
 
 type PathNodePositionProps = {
   left?: boolean | number | string;
@@ -52,7 +53,7 @@ const PathNode: FC<PathNodeProps> = props => {
 
   const id = useId();
   const realName = name ?? id;
-  const integerMode = useCalculate();
+  const { precision } = useCalculate();
 
   const posRadio = useMemo(() => {
     if (pos !== undefined) return pos;
@@ -105,11 +106,15 @@ const PathNode: FC<PathNodeProps> = props => {
     setAdjustOffset(DescartesPoint.plus(anchorPosition, directionPosition, offset));
   }, [anchorPosition, directionPos]);
 
-  const adjustPosition: Position = integerMode
-    ? [Math.round(adjustOffset[0]), Math.round(adjustOffset[1])]
-    : adjustOffset;
-
-  return <Node name={realName} position={adjustPosition} ref={ref} rotate={rotate} {...nodeProps} />;
+  return (
+    <Node
+      name={realName}
+      position={convertPrecision(adjustOffset, precision)}
+      ref={ref}
+      rotate={rotate}
+      {...nodeProps}
+    />
+  );
 };
 
 export default PathNode;

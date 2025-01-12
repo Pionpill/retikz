@@ -11,6 +11,7 @@ import { convertCssToPx } from '../../utils/css';
 import useNodes from '../../hooks/tikz/useNodes';
 import useCalculate from '../../hooks/tikz/useCalculate';
 import { FontProps } from '../../types/svg/font';
+import { convertPrecision } from '../../utils/math';
 
 /** 节点外边框形状 */
 export type NodeShape = 'rectangle';
@@ -51,7 +52,7 @@ const InnerNode: FC<InnerNodeProps> = props => {
   const contentRef = useRef<SVGElement>(null);
 
   const { getModel, updateModel, deleteModel } = useNodes();
-  const integerMode = useCalculate();
+  const { precision } = useCalculate();
 
   const nodeConfig = useNodeConfig();
   nodeConfig.current.position = position;
@@ -100,13 +101,13 @@ const InnerNode: FC<InnerNodeProps> = props => {
       innerSep,
     } = nodeConfig.current;
     const realX = -width / 2 - innerSep.left;
-    shapeRef.current?.setAttribute('x', (integerMode ? Math.round(realX) : realX).toString());
+    shapeRef.current?.setAttribute('x', convertPrecision(realX, precision).toString());
     const realY = -height / 2 - innerSep.top;
-    shapeRef.current?.setAttribute('y', (integerMode ? Math.round(realY) : realY).toString());
+    shapeRef.current?.setAttribute('y', convertPrecision(realY, precision).toString());
     const realWidth = width + innerSep.left + innerSep.right;
-    shapeRef.current?.setAttribute('width', (integerMode ? Math.round(realWidth) : realWidth).toString());
+    shapeRef.current?.setAttribute('width', convertPrecision(realWidth, precision).toString());
     const realHeight = height + innerSep.top + innerSep.bottom;
-    shapeRef.current?.setAttribute('height', (integerMode ? Math.round(realHeight) : realHeight).toString());
+    shapeRef.current?.setAttribute('height', convertPrecision(realHeight, precision).toString());
   }, [nodeConfig.current.position, nodeConfig.current.contentSize, nodeConfig.current.innerSep]);
 
   // 每次视图更新时更新模型
