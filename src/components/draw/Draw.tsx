@@ -4,7 +4,7 @@ import { StrokeProps } from '../../types/svg/stroke';
 import { getDrawPointType } from './common';
 import DrawSegment from './segment';
 import { ArrowConfig, ArrowProps, DrawPointType, DrawWaySegmentType, DrawWayType } from './types';
-import { PathContext } from '../../hooks/tikz/usePath';
+import { PathContext } from '../../hooks/context/usePath';
 import PathModel from '../../model/component/path';
 
 export type InnerDrawProps = {

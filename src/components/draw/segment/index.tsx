@@ -6,7 +6,7 @@ import { convertStrokeType } from '../../../utils/style/stroke';
 import { ArrowConfig, DrawWaySegmentType } from '../types';
 import InnerDrawSegment from './Segment';
 import useConvertWay from './useConvertWay';
-import usePath from '../../../hooks/tikz/usePath';
+import usePath from '../../../hooks/context/usePath';
 
 export type DrawSegmentProps = {
   /** 路径，首位可以是 Node，其他必须是坐标 */
