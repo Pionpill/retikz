@@ -1,7 +1,7 @@
 import { useLayoutEffect, useMemo, useRef } from 'react';
 import useForceUpdate from '../../../hooks/useForceUpdate';
 import usePath from '../../../hooks/tikz/usePath';
-import { between } from '../../../utils/math';
+import { between, convertPrecision } from '../../../utils/math';
 import { Position } from '../../../types/coordinate/descartes';
 import Line from '../../../model/equation/line';
 import useCalculate from '../../../hooks/tikz/useCalculate';
@@ -11,7 +11,7 @@ const useAnchor = (pos: number, segmentIndex: number) => {
   const forceUpdate = useForceUpdate();
 
   const { model, subscribeModel } = usePath();
-  const integerMode = useCalculate();
+  const { precision } = useCalculate();
 
   const subscribeCb = subscribeModel(model => {
     if (!model?.init) return;
@@ -28,7 +28,7 @@ const useAnchor = (pos: number, segmentIndex: number) => {
   const adjustIndex = segmentIndex >= 0 ? segmentIndex : model.ways.length + segmentIndex;
   if (!between(adjustIndex, [0, model.ways.length - 1], true)) throw new Error('segmentIndex is out of range');
 
-  return useMemo<{ position: Position, angle: number }>(() => {
+  return useMemo<{ position: Position; angle: number }>(() => {
     if (!model.init)
       return {
         position: [Number.MAX_SAFE_INTEGER / 2, Number.MAX_SAFE_INTEGER / 2],
@@ -49,7 +49,7 @@ const useAnchor = (pos: number, segmentIndex: number) => {
     const percent = (pos % segmentPercent) / segmentPercent;
     const position = index === way.length ? startPoint : Line.getPositionByPercent(startPoint, endPoint, percent);
     return {
-      position: integerMode ? [Math.round(position[0]), Math.round(position[1])] : position,
+      position: convertPrecision(position, precision),
       angle:
         index === way.length
           ? Line.getDegree(way[way.length - 2], way[way.length - 1])

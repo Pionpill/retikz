@@ -13,7 +13,7 @@ const TikZ: FC<TikZProps> = props => {
 
   return (
     <NodesContext value={new Map()}>
-      <CalculateContext value={{ integerMode: !!integerMode }}>
+      <CalculateContext value={{ precision: 2 }}>
         <Surface {...resProps} />
       </CalculateContext>
     </NodesContext>

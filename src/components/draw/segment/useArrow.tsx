@@ -5,6 +5,7 @@ import { Position } from '../../../types/coordinate/descartes';
 import getArrowPath from '../arrow';
 import Path from '../../../elements/Path';
 import Line from '../../../model/equation/line';
+import { convertPrecision } from '../../../utils/math';
 
 export type ArrowLinkConfig = {
   nearPosition: Position;
@@ -13,7 +14,7 @@ export type ArrowLinkConfig = {
 };
 
 const useArrow = (linkConfig: ArrowLinkConfig, arrowConfig?: ArrowConfig) => {
-  const integerMode = useCalculate();
+  const { precision } = useCalculate();
   return useMemo(() => {
     if (!arrowConfig) return null;
 
@@ -45,9 +46,11 @@ const useArrow = (linkConfig: ArrowLinkConfig, arrowConfig?: ArrowConfig) => {
           ]
         : position;
 
-    const transform = `translate(${integerMode ? Math.round(translatePosition[0]) : translatePosition[0]}, ${
-      integerMode ? Math.round(translatePosition[1]) : translatePosition[1]
-    }) rotate(${integerMode ? Math.round(degree * (180 / Math.PI)) : degree * (180 / Math.PI)})`;
+    const transform = `translate(
+      ${convertPrecision(translatePosition[0], precision)}, ${convertPrecision(
+      translatePosition[1],
+      precision,
+    )}) rotate(${convertPrecision(degree * (180 / Math.PI), precision)})`;
 
     return {
       linkPoint,
