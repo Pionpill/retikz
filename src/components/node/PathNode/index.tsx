@@ -8,6 +8,7 @@ import DescartesPoint from '../../../model/geometry/point/DescartesPoint';
 import { convertCssToPx } from '../../../utils/css';
 import useCalculate from '../../../hooks/context/useCalculate';
 import { convertPrecision } from '../../../utils/math';
+import useScope, { ScopeContext } from '../../../hooks/context/useScope';
 
 type PathNodePositionProps = {
   left?: boolean | number | string;
@@ -106,14 +107,18 @@ const PathNode: FC<PathNodeProps> = props => {
     setAdjustOffset(DescartesPoint.plus(anchorPosition, directionPosition, offset));
   }, [anchorPosition, directionPos]);
 
+  const scope = useScope();
+
   return (
-    <Node
-      name={realName}
-      position={convertPrecision(adjustOffset, precision)}
-      ref={ref}
-      rotate={rotate}
-      {...nodeProps}
-    />
+    <ScopeContext value={{ ...scope, offset: [0, 0] }}>
+      <Node
+        name={realName}
+        position={convertPrecision(adjustOffset, precision)}
+        ref={ref}
+        rotate={rotate}
+        {...nodeProps}
+      />
+    </ScopeContext>
   );
 };
 
