@@ -5,8 +5,8 @@ import { DrawProps } from '../../components/draw';
 
 export type ScopeProps = {
   offset?: Position;
-  node?: Omit<NodeProps, 'name' | 'ref'>
-  draw?: Omit<DrawProps, 'ref'>
+  node?: Omit<NodeProps, 'name' | 'ref' | 'position'>
+  draw?: Omit<DrawProps, 'ref' | 'way'>
 };
 
 export const ScopeContext = createContext<ScopeProps>({});
