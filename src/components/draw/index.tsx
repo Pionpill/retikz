@@ -17,7 +17,7 @@ export type DrawProps = {
   color?: CSSProperties['stroke'];
   /** 线段样式快捷属性 */
   strokeType?: StrokeType;
-  children?: ReactElement;
+  children?: ReactElement | ReactElement[] | null;
 } & StrokeProps &
   StrokeShortcutProps &
   ArrowProps;
