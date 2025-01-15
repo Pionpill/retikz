@@ -122,7 +122,7 @@ const Node: FC<NodeProps> = props => {
     () => getSep(innerSep, convertCssToPx(adjustFontSize) / 3 || '0.3333em'),
     [innerSep],
   );
-  const adjustedOuterSep = useMemo(() => getSep(innerSep, 0), [outerSep]);
+  const adjustedOuterSep = useMemo(() => getSep(outerSep, 0), [outerSep]);
 
   return (
     <InnerNode
