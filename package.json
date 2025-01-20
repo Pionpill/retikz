@@ -1,5 +1,5 @@
 {
-  "name": "retikz",
+  "name": "@retikz/core",
   "version": "0.0.1-rc.0",
   "description": "atomic drawing library implemented using react and d3, inspired by tikz",
   "type": "module",
