@@ -1,14 +1,14 @@
 import { FC, useId, useLayoutEffect, useMemo, useState } from 'react';
-import Node, { NodeProps } from '../Node';
-import { Position } from '../../../types/coordinate/descartes';
+import useCalculate from '../../hooks/context/useCalculate';
+import useNodes from '../../hooks/context/useNodes';
+import useScope, { ScopeContext } from '../../hooks/context/useScope';
+import DescartesPoint from '../../model/geometry/point/DescartesPoint';
+import { Direction } from '../../types/coordinate';
+import { Position } from '../../types/coordinate/descartes';
+import { convertCssToPx } from '../../utils/css';
+import { convertPrecision } from '../../utils/math';
+import Node, { NodeProps } from '../node/Node';
 import useAnchor from './useAnchor';
-import useNodes from '../../../hooks/context/useNodes';
-import { Direction } from '../../../types/coordinate';
-import DescartesPoint from '../../../model/geometry/point/DescartesPoint';
-import { convertCssToPx } from '../../../utils/css';
-import useCalculate from '../../../hooks/context/useCalculate';
-import { convertPrecision } from '../../../utils/math';
-import useScope, { ScopeContext } from '../../../hooks/context/useScope';
 
 type PathNodePositionProps = {
   left?: boolean | number | string;

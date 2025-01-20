@@ -1,7 +1,7 @@
 import { FC, ReactNode } from 'react';
 import Surface, { SurfaceProps } from '../container/Surface';
-import { NodesContext } from '../hooks/context/useNodes';
 import { CalculateContext, CalculateProps } from '../hooks/context/useCalculate';
+import { NodesContext } from '../hooks/context/useNodes';
 import { ScopeContext, ScopeProps } from '../hooks/context/useScope';
 
 export type TikZProps = {
@@ -15,7 +15,7 @@ const TikZ: FC<TikZProps> = props => {
 
   return (
     <NodesContext value={new Map()}>
-      <CalculateContext value={{ precision: 2 }}>
+      <CalculateContext value={{ precision }}>
         <ScopeContext value={{ offset, node, draw }}>
           <Surface {...resProps} />
         </ScopeContext>
