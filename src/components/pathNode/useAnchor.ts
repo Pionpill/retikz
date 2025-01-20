@@ -1,10 +1,10 @@
 import { useLayoutEffect, useMemo, useRef } from 'react';
-import useForceUpdate from '../../../hooks/useForceUpdate';
-import usePath from '../../../hooks/context/usePath';
-import { between, convertPrecision } from '../../../utils/math';
-import { Position } from '../../../types/coordinate/descartes';
-import Line from '../../../model/equation/line';
-import useCalculate from '../../../hooks/context/useCalculate';
+import useCalculate from '../../hooks/context/useCalculate';
+import usePath from '../../hooks/context/usePath';
+import useForceUpdate from '../../hooks/useForceUpdate';
+import Line from '../../model/equation/line';
+import { Position } from '../../types/coordinate/descartes';
+import { between, convertPrecision } from '../../utils/math';
 
 const useAnchor = (pos: number, segmentIndex: number) => {
   const pathUpdateCount = useRef(0);

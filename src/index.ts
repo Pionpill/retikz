@@ -1,11 +1,11 @@
-export { default as Draw } from './components/draw';
-export type { DrawProps } from './components/draw';
+export { default as Draw } from './components/draw/Draw';
+export type { DrawProps } from './components/draw/Draw';
 
 export { default as Node } from './components/node';
 export type { NodeProps } from './components/node';
 
-export { default as PathNode } from './components/node/PathNode';
-export type { PathNodeProps } from './components/node/PathNode';
+export { default as PathNode } from './components/pathNode';
+export type { PathNodeProps } from './components/pathNode';
 
 export { default as Scope } from './components/Scope';
 export type { ScopeProps } from './components/Scope';
