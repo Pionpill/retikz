@@ -10,7 +10,7 @@
   ],
   "license": "MIT",
   "repository": "https://github.com/Pionpill/retikz",
-  "main": "dist/lib/index.js",
+  "main": "dist/lib/index.cjs",
   "module": "dist/es/index.js",
   "types": "dist/lib/index.d.ts",
   "publishConfig": {
