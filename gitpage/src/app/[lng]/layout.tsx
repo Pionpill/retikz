@@ -1,7 +1,8 @@
 import type { Metadata } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
 import { FC, PropsWithChildren } from 'react';
-import { localeTypes } from '@/config';
+import { LocaleTypes } from '@/config';
+import './global.css';
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -19,7 +20,7 @@ export const metadata: Metadata = {
 };
 
 export type RootLayoutProps = {
-  params: Promise<{ lng: localeTypes }>;
+  params: Promise<{ lng: LocaleTypes }>;
 } & PropsWithChildren;
 
 const RootLayout: FC<RootLayoutProps> = async props => {
@@ -28,7 +29,8 @@ const RootLayout: FC<RootLayoutProps> = async props => {
 
   return (
     <html lang={lng}>
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>{children}</body>
+      {/* TODO 解决主题色问题 */}
+      <body className={`${geistSans.variable} ${geistMono.variable} antialiased theme-light`}>{children}</body>
     </html>
   );
 };

@@ -133,3 +133,4 @@ pnpm-lock.yaml
 .codegpt
 temp/
 TODO.md
+.vscode

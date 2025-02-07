@@ -4,5 +4,5 @@ export const localeMap = {
 };
 
 export const locales = Object.keys(localeMap);
-export type localeTypes = keyof typeof localeMap;
+export type LocaleTypes = keyof typeof localeMap;
 export const defaultLocale = 'zh';
