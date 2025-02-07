@@ -1,0 +1,23 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* 白色主题 */
+.theme-light {
+  --color-background-primary: #ffffff;
+  --color-background-secondary: #f3f3f3;
+  --color-background-thirdly: #ececec;
+  --color-text-primary: #212121;
+  --color-text-secondary: #666666;
+  --color-text-thirdly: #9e9e9e;
+}
+
+/* 黑色主题 */
+.theme-dark {
+  --color-background-primary: #151515;
+  --color-background-secondary: #252525;
+  --color-background-thirdly: #353535;
+  --color-text-primary: #ffffff;
+  --color-text-secondary: #b3b3b3;
+  --color-text-thirdly: #808080;
+}
