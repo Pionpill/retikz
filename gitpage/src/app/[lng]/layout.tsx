@@ -3,6 +3,9 @@ import { Geist, Geist_Mono } from 'next/font/google';
 import { FC, PropsWithChildren } from 'react';
 import { LocaleTypes } from '@/config';
 import './global.css';
+import ThemeProvider from './_components/ThemeProvider';
+import Header from './_components/Header';
+import { Toaster } from '@/components/ui/toaster';
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -29,8 +32,13 @@ const RootLayout: FC<RootLayoutProps> = async props => {
 
   return (
     <html lang={lng}>
-      {/* TODO 解决主题色问题 */}
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased theme-light`}>{children}</body>
+      <body className={`${geistSans.variable} ${geistMono.variable} antialiased w-full h-full`}>
+        <ThemeProvider>
+          <Header />
+          <Toaster />
+          <div className="flex flex-1">{children}</div>
+        </ThemeProvider>
+      </body>
     </html>
   );
 };

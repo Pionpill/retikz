@@ -1,3 +1,10 @@
 {
-  "docTitle": "retikz 文档"
+  "docTitle": "retikz 文档",
+  "switchTheme": "切换主题",
+  "switchLang": "切换语言(中/英)",
+  "starRetikZ": "在 Github 上 star 这个项目",
+  "contactMe": "联系我",
+  "copySuccess": "成功复制到剪切板",
+  "indicatePurpose": "请注明来意",
+  "doc": "文档"
 }

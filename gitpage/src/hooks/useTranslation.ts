@@ -3,7 +3,7 @@ import { createInstance } from 'i18next';
 import resourcesToBackend from 'i18next-resources-to-backend';
 import { initReactI18next } from 'react-i18next/initReactI18next';
 
-const initI18next = async (lng = defaultLocale, ns = 'common') => {
+const initI18next = async (lng = defaultLocale, ns = 'server') => {
   const i18nInstance = createInstance();
   await i18nInstance
     .use(initReactI18next)
@@ -13,14 +13,14 @@ const initI18next = async (lng = defaultLocale, ns = 'common') => {
       supportedLngs: locales,
       fallbackLng: defaultLocale,
       lng,
-      fallbackNS: 'common',
-      defaultNS: 'common',
+      fallbackNS: 'server',
+      defaultNS: 'server',
       ns,
     });
   return i18nInstance;
 };
 
-const useTranslation = async (lng: string, ns: string = 'common', options: { prefix?: string } = {}) => {
+const useTranslation = async (lng: string, ns: string = 'server', options: { prefix?: string } = {}) => {
   const i18nextInstance = await initI18next(lng, ns);
   return {
     t: i18nextInstance.getFixedT(lng, ns, options.prefix),
