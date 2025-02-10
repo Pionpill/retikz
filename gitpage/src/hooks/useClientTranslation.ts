@@ -1,11 +1,12 @@
 'use client';
 
-import { defaultLocale, locales } from '@/config';
+import { defaultLocale, locales, LocaleTypes } from '@/config';
 import i18next from 'i18next';
 import LanguageDetector from 'i18next-browser-languagedetector';
 import resourcesToBackend from 'i18next-resources-to-backend';
 import { useEffect } from 'react';
 import { initReactI18next, useTranslation as useTranslationOrg } from 'react-i18next';
+import { useParams } from 'next/navigation';
 export const cookieName = 'i18next';
 
 const runsOnServerSide = typeof window === 'undefined';
@@ -27,14 +28,13 @@ i18next
     preload: runsOnServerSide ? locales : [],
   });
 
-const useClientTranslation = (lng: string, ns: string = 'common', options: { prefix?: string } = {}) => {
+const useClientTranslation = (ns: string = 'common', options: { prefix?: string } = {}) => {
   const ret = useTranslationOrg(ns, options as any);
+  const lng = useParams<{ lng: LocaleTypes }>().lng;
   const { i18n } = ret;
-  useEffect(() => {
-    if (lng && i18n.resolvedLanguage !== lng) {
-      i18n.changeLanguage(lng);
-    }
-  }, [lng, i18n]);
+  if (lng && i18n.resolvedLanguage !== lng) {
+    i18n.changeLanguage(lng);
+  }
   return ret;
 };
 

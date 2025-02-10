@@ -1,18 +1,14 @@
-import { localeTypes } from '@/config';
-import useTranslation from '@/hooks/useTranslation';
+import { LocaleTypes } from '@/config';
 import { PropsWithChildren } from 'react';
 
 export type HomePageProps = {
-  params: Promise<{ lng: localeTypes }>;
+  params: Promise<{ lng: LocaleTypes }>;
 } & PropsWithChildren;
 
 const HomePage = async (props: HomePageProps) => {
   const { params } = props;
-  const { lng } = await params;
 
-  const { t } = await useTranslation(lng);
-
-  return <div>{t('docTitle')}</div>;
+  return <div></div>;
 };
 
 export default HomePage;
