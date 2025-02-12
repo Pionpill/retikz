@@ -1,11 +1,15 @@
+import { SidebarProvider } from '@/components/ui/sidebar';
+import { Toaster } from '@/components/ui/toaster';
+import { LocaleTypes } from '@/config';
 import type { Metadata } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
+import { cookies } from 'next/headers';
 import { FC, PropsWithChildren } from 'react';
-import { LocaleTypes } from '@/config';
+import SideContent from './_components/Sidebar/SideContent';
+import SideMenu from './_components/Sidebar/SideMenu';
 import './global.css';
-import ThemeProvider from './_components/ThemeProvider';
-import Header from './_components/Header';
-import { Toaster } from '@/components/ui/toaster';
+import Body from './_components/Body';
+import { THEME_COOKIE_NAME } from '@/config/cookie';
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -29,16 +33,21 @@ export type RootLayoutProps = {
 const RootLayout: FC<RootLayoutProps> = async props => {
   const { children, params } = props;
   const { lng } = await params;
+  const cookieTheme = (await cookies()).get(THEME_COOKIE_NAME)?.value as 'light' | 'dark';
+  console.log('cookieTheme', cookieTheme)
 
   return (
     <html lang={lng}>
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased w-full h-full`}>
-        <ThemeProvider>
-          <Header />
-          <Toaster />
-          <div className="flex flex-1">{children}</div>
-        </ThemeProvider>
-      </body>
+      <Body
+        cookieTheme={cookieTheme}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased w-full h-full`}
+      >
+        <Toaster />
+        <SidebarProvider>
+          <SideMenu lng={lng} />
+          <SideContent>{children}</SideContent>
+        </SidebarProvider>
+      </Body>
     </html>
   );
 };

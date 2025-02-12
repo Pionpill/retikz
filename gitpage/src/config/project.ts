@@ -1,0 +1,1 @@
+export const RETIKZ_VERSION = "0.0.0"

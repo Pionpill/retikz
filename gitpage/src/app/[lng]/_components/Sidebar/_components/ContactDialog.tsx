@@ -1,16 +1,19 @@
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+'use client';
 import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { DropdownMenuItem } from '@/components/ui/dropdown-menu';
 import { Typography } from '@/components/ui/typography';
+import useClientTrans from '@/hooks/useClientTrans';
+import { useThemeSelector } from '@/hooks/useTheme';
 import { useToast } from '@/hooks/useToast';
-import useClientTranslation from '@/hooks/useClientTranslation';
-import { CircleX, Files } from 'lucide-react';
-import { FC, useState } from 'react';
+import { Files } from 'lucide-react';
+import { FC } from 'react';
 import { BsWechat } from 'react-icons/bs';
+import { RiWechat2Line } from 'react-icons/ri';
 import QRCode from 'react-qr-code';
-import { useThemeSelector } from '@/hooks/store/useThemeStore';
 
 const ContactDialog: FC = () => {
-  const { t } = useClientTranslation();
+  const { t } = useClientTrans();
   const { toast } = useToast();
 
   const handleCopy = () => {
@@ -24,9 +27,10 @@ const ContactDialog: FC = () => {
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button size="sm" variant="ghost" icon title={t('contactMe')} className="text-purple-500">
-          <BsWechat />
-        </Button>
+        <DropdownMenuItem>
+          <RiWechat2Line />
+          <Typography className="text-sm">{t('contactAuthor')}</Typography>
+        </DropdownMenuItem>
       </DialogTrigger>
       <DialogContent className="w-96">
         <DialogHeader>
