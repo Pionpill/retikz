@@ -20,7 +20,7 @@ const initI18next = async (lng = defaultLocale, ns = 'server') => {
   return i18nInstance;
 };
 
-const useTranslation = async (lng: string, ns: string = 'server', options: { prefix?: string } = {}) => {
+const useTrans = async (lng: string, ns: string = 'server', options: { prefix?: string } = {}) => {
   const i18nextInstance = await initI18next(lng, ns);
   return {
     t: i18nextInstance.getFixedT(lng, ns, options.prefix),
@@ -28,4 +28,4 @@ const useTranslation = async (lng: string, ns: string = 'server', options: { pre
   };
 };
 
-export default useTranslation;
+export default useTrans;

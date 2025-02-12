@@ -1,10 +1,12 @@
 {
-  "docTitle": "retikz doc",
   "switchTheme": "switch Theme",
-  "switchLang": "switch Language(zh/en)",
-  "starRetikZ": "star retikz on github",
+  "switchLang": "switch Lang",
+  "starRetikZ": "give me a star",
   "contactMe": "contact me",
   "copySuccess": "copied to clipboard",
   "indicatePurpose": "please indicate the purpose",
-  "doc": "document"
+  "doc": "document",
+  "contactAuthor": "contact author via Wechat",
+  "followAuthor": "follow author",
+  "seeOnNpm": "view the project on npm"
 }
