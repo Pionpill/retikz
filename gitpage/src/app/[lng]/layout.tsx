@@ -1,15 +1,12 @@
-import { SidebarProvider } from '@/components/ui/sidebar';
 import { Toaster } from '@/components/ui/toaster';
 import { LocaleTypes } from '@/config';
+import { THEME_COOKIE_NAME } from '@/config/cookie';
 import type { Metadata } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
 import { cookies } from 'next/headers';
 import { FC, PropsWithChildren } from 'react';
-import SideContent from './_components/Sidebar/SideContent';
-import SideMenu from './_components/Sidebar/SideMenu';
-import './global.css';
 import Body from './_components/Body';
-import { THEME_COOKIE_NAME } from '@/config/cookie';
+import './global.css';
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -42,10 +39,7 @@ const RootLayout: FC<RootLayoutProps> = async props => {
         className={`${geistSans.variable} ${geistMono.variable} antialiased w-full h-full`}
       >
         <Toaster />
-        <SidebarProvider>
-          <SideMenu lng={lng} />
-          <SideContent>{children}</SideContent>
-        </SidebarProvider>
+        {children}
       </Body>
     </html>
   );
