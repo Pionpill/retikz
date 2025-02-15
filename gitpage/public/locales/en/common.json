@@ -1,13 +1,19 @@
 {
   "switchTheme": "switch Theme",
   "switchLang": "switch Lang",
-  "starRetikZ": "give me a star",
+  "starRetikZ": "give me a star on Github",
   "contactMe": "contact me",
   "copySuccess": "copied to clipboard",
   "indicatePurpose": "please indicate the purpose",
   "doc": "document",
   "contactAuthor": "contact author via Wechat",
-  "followAuthor": "follow author",
+  "followAuthor": "follow author on Github",
   "seeOnNpm": "view the project on npm",
-  "blog": "blog"
+  "blog": "blog",
+  "wechat": "wechat",
+  "wechatPay": "wechat pay",
+  "sponsor": "sponsor",
+  "sponsorAuthor": "sponsor author",
+  "sponsorMe": "sponsor me a coffee😘",
+  "sponsorThanks": "thank you for your support"
 }

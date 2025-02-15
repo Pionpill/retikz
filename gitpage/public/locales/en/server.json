@@ -1,4 +1,8 @@
 {
-  "docTitle": "retikz doc",
-  "docSubTitle": "under development"
+  "doc": {
+    "core": {
+      "title": "retikz doc",
+      "description": "under development"
+    }
+  }
 }
