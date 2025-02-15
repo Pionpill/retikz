@@ -1,20 +1,7 @@
-import { LocaleTypes } from '@/config';
-import { PropsWithChildren } from 'react';
-import SideMenu from './_components/Sidebar/SideMenu';
+import { FC } from 'react';
 
-export type HomePageProps = {
-  params: Promise<{ lng: LocaleTypes }>;
-} & PropsWithChildren;
-
-const HomePage = async (props: HomePageProps) => {
-  const { params } = props;
-  const { lng } = await params;
-
-  return (
-    <div>
-      <SideMenu lng={lng} />
-    </div>
-  );
+const RootPage: FC = () => {
+  return <div>HomePage</div>;
 };
 
-export default HomePage;
+export default RootPage;
