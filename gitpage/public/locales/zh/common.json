@@ -9,5 +9,6 @@
   "doc": "文档",
   "contactAuthor": "通过微信联系作者",
   "followAuthor": "follow作者",
-  "seeOnNpm": "在npm上查看项目"
+  "seeOnNpm": "在npm上查看项目",
+  "blog": "博客"
 }

@@ -7,7 +7,7 @@ import {
   BreadcrumbSeparator,
 } from '@/components/ui/breadcrumb';
 import { Separator } from '@/components/ui/separator';
-import { SidebarInset, SidebarTrigger, useSidebar } from '@/components/ui/sidebar';
+import { SidebarInset, SidebarTrigger } from '@/components/ui/sidebar';
 import { FC, PropsWithChildren } from 'react';
 
 const SideContent: FC<PropsWithChildren> = props => {

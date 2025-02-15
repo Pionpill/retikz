@@ -8,5 +8,6 @@
   "doc": "document",
   "contactAuthor": "contact author via Wechat",
   "followAuthor": "follow author",
-  "seeOnNpm": "view the project on npm"
+  "seeOnNpm": "view the project on npm",
+  "blog": "blog"
 }

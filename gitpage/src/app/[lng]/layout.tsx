@@ -34,7 +34,6 @@ const RootLayout: FC<RootLayoutProps> = async props => {
   const { children, params } = props;
   const { lng } = await params;
   const cookieTheme = (await cookies()).get(THEME_COOKIE_NAME)?.value as 'light' | 'dark';
-  console.log('cookieTheme', cookieTheme)
 
   return (
     <html lang={lng}>

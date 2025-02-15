@@ -24,42 +24,46 @@ const FooterAuthor: FC<{ lng: 'zh' | 'en' }> = props => {
   const { isMobile } = useSidebar();
   const { t } = useClientTrans();
 
-  const AuthorInfo: FC<{ icon?: ReactNode }> = ({ icon }) => (
-    <>
-      <Avatar className="h-8 w-8 rounded-lg">
-        <AvatarImage
-          src={
-            lng === 'en'
-              ? 'https://github.com/pionpill.png'
-              : 'https://q2.qlogo.cn/headimg_dl?dst_uin=673486387&spec=100'
-          }
-        />
-        <AvatarFallback>{lng === 'en' ? 'PP' : '小葱'}</AvatarFallback>
-      </Avatar>
-      <div className="grid flex-1 text-left text-sm leading-tight">
-        <Typography className="font-semibold">{lng === 'en' ? 'pionpill' : '小葱拌豆腐'}</Typography>
-        <Typography className="text-xs">673486387@qq.com</Typography>
-      </div>
-      {icon}
-    </>
-  );
-
   return (
     <SidebarMenu>
       <SidebarMenuItem>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <SidebarMenuButton size="lg">
-              <AuthorInfo icon={<ChevronsUpDown className="ml-auto size-4" />} />
+              <Avatar className="h-8 w-8 rounded-lg">
+                <AvatarImage
+                  src={
+                    lng === 'en'
+                      ? 'https://github.com/pionpill.png'
+                      : 'https://q2.qlogo.cn/headimg_dl?dst_uin=673486387&spec=100'
+                  }
+                />
+                <AvatarFallback>{lng === 'en' ? 'PP' : '小葱'}</AvatarFallback>
+              </Avatar>
+              <div className="grid flex-1 text-left text-sm leading-tight">
+                <Typography className="font-semibold">{lng === 'en' ? 'pionpill' : '小葱拌豆腐'}</Typography>
+                <Typography className="text-xs">673486387@qq.com</Typography>
+              </div>
+              <ChevronsUpDown className="ml-auto size-4" />
             </SidebarMenuButton>
           </DropdownMenuTrigger>
           <DropdownMenuContent
             className="w-[--radix-dropdown-menu-trigger-width] min-w-56"
             side={isMobile ? 'bottom' : 'right'}
           >
-            <DropdownMenuLabel className="flex items-center gap-2 font-normal">
-              <AuthorInfo />
-            </DropdownMenuLabel>
+            <SidebarMenuButton
+              className="flex items-center gap-2 font-normal h-12"
+              onClick={() => window.open('https://pionpill.github.io/', '_blank')}
+            >
+              <Avatar className="h-8 w-8 rounded-lg">
+                <AvatarImage src="https://github.com/pionpill.png" />
+                <AvatarFallback>PP</AvatarFallback>
+              </Avatar>
+              <div className="grid flex-1 text-left text-sm leading-tight">
+                <Typography className="font-semibold">{t('blog')}</Typography>
+                <Typography className="text-xs">pionpill.github.io</Typography>
+              </div>
+            </SidebarMenuButton>
             <DropdownMenuSeparator />
             <ContactDialog />
             <DropdownMenuItem>
