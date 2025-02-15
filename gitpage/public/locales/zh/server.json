@@ -1,4 +1,8 @@
 {
-  "docTitle": "retikz 文档",
-  "docSubTitle": "开发中"
+  "doc": {
+    "core": {
+      "title": "retikz 文档",
+      "description": "开发中"
+    }
+  }
 }
