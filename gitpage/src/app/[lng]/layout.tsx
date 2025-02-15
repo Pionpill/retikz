@@ -23,11 +23,11 @@ export const metadata: Metadata = {
   description: 'atomic drawing library implemented using react and d3, inspired by tikz',
 };
 
-export type RootLayoutProps = {
+export type RootProps = {
   params: Promise<{ lng: LocaleTypes }>;
 } & PropsWithChildren;
 
-const RootLayout: FC<RootLayoutProps> = async props => {
+const RootLayout: FC<RootProps> = async props => {
   const { children, params } = props;
   const { lng } = await params;
   const cookieTheme = (await cookies()).get(THEME_COOKIE_NAME)?.value as 'light' | 'dark';

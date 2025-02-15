@@ -4,20 +4,20 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuLabel,
   DropdownMenuSeparator,
-  DropdownMenuTrigger,
+  DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu';
 import { SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar } from '@/components/ui/sidebar';
 import { Typography } from '@/components/ui/typography';
 import useClientTrans from '@/hooks/useClientTrans';
 import { AvatarFallback, AvatarImage } from '@radix-ui/react-avatar';
 import { ChevronsUpDown } from 'lucide-react';
-import { FC, ReactNode } from 'react';
+import { FC } from 'react';
+import { BiStar } from 'react-icons/bi';
 import { CgNpm } from 'react-icons/cg';
 import { RiGithubLine } from 'react-icons/ri';
-import { BiStar } from 'react-icons/bi';
-import ContactDialog from './ContactDialog';
+import SponsorDialog from './SponsorDialog';
+import WeixinDialog from './WeixinDialog';
 
 const FooterAuthor: FC<{ lng: 'zh' | 'en' }> = props => {
   const { lng } = props;
@@ -65,7 +65,7 @@ const FooterAuthor: FC<{ lng: 'zh' | 'en' }> = props => {
               </div>
             </SidebarMenuButton>
             <DropdownMenuSeparator />
-            <ContactDialog />
+            <WeixinDialog />
             <DropdownMenuItem>
               <RiGithubLine />
               <Typography className="text-sm" onClick={() => window.open('https://github.com/Pionpill', '_blank')}>
@@ -91,6 +91,8 @@ const FooterAuthor: FC<{ lng: 'zh' | 'en' }> = props => {
                 {t('starRetikZ')}
               </Typography>
             </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <SponsorDialog />
           </DropdownMenuContent>
         </DropdownMenu>
       </SidebarMenuItem>
