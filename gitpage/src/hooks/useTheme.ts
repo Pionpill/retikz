@@ -8,7 +8,7 @@ export type ThemeType = {
 };
 
 const useTheme = create<ThemeType>(set => ({
-  theme: document.body.classList.contains('light') ? 'light' : 'dark',
+  theme: 'light',
   switchTheme: (theme?: 'dark' | 'light') => {
     set(state => {
       const newTheme = theme || (state.theme === 'dark' ? 'light' : 'dark');

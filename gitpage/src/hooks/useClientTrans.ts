@@ -28,8 +28,8 @@ i18next
   });
 
 const useClientTrans = (ns: string = 'common', options: { prefix?: string } = {}) => {
-  const ret = useTranslationOrg(ns, options as any);
   const lng = useParams<{ lng: LocaleTypes }>().lng;
+  const ret = useTranslationOrg(ns, { lng, ...options });
   const { i18n } = ret;
   if (lng && i18n.resolvedLanguage !== lng) {
     i18n.changeLanguage(lng);

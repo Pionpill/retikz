@@ -4,7 +4,7 @@ import { useSidebar } from '@/components/ui/sidebar';
 import useClientTrans from '@/hooks/useClientTrans';
 import useLang from '@/hooks/useLang';
 import useTheme from '@/hooks/useTheme';
-import { Moon, Star, Sun } from 'lucide-react';
+import { Moon, Sun } from 'lucide-react';
 import { FC } from 'react';
 import { LuLanguages } from 'react-icons/lu';
 import { RiEnglishInput } from 'react-icons/ri';
