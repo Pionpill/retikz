@@ -17,16 +17,17 @@ import HeaderInfo from './_components/HeaderInfo';
 
 export type SideMenuProps = {
   lng: LocaleTypes;
+  module: string;
 };
 
 const SideMenu: FC<SideMenuProps> = async props => {
-  const { lng } = props;
+  const { lng, module } = props;
   const { t } = await useTrans(lng);
 
   return (
     <Sidebar collapsible="icon">
       <SidebarHeader>
-        <HeaderInfo lng={lng} />
+        <HeaderInfo lng={lng} module={module} />
       </SidebarHeader>
       <SidebarContent className="overflow-hidden">
         <SidebarGroup>

@@ -7,10 +7,11 @@ import { FC } from 'react';
 
 export type HeaderInfoProps = {
   lng: LocaleTypes;
+  module: string;
 };
 
 const HeaderInfo: FC<HeaderInfoProps> = async props => {
-  const { lng } = props;
+  const { lng, module } = props;
   const { t } = await useTrans(lng);
 
   return (
@@ -20,8 +21,8 @@ const HeaderInfo: FC<HeaderInfoProps> = async props => {
           <BookMarked />
         </div>
         <div className="flex flex-col flex-1 text-left">
-          <Typography className="font-semibold">{t('docTitle')}</Typography>
-          <Typography className="text-xs">{t('docSubTitle')}</Typography>
+          <Typography className="font-semibold">{t(`doc.${module}.title`)}</Typography>
+          <Typography className="text-xs">0.0.1-rc.0 {t(`doc.${module}.description`)}</Typography>
         </div>
       </SidebarMenuButton>
     </SidebarMenu>
