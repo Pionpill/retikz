@@ -1,0 +1,18 @@
+# Scope
+
+`Scope` 用于为所有子元素提供统一的属性。例如我们想让所有子元素向 x 轴正方向偏移 20px 距离，可以这样写:
+
+```tsx
+const Example: FC = () => {
+  return (
+    <TikZ width="250" height="50">
+      <Node name="node1" position={[30, 30]} children="Node" />
+      <Scope node={{ offset: [20, 0] }}>
+        <Node name="node2" position={[200, 30]} children="Node" />
+      </Scope>
+    </TikZ>
+  );
+};
+```
+
+这样，nodes 的实际位置就会被调整为 [220, 30]。

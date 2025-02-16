@@ -1,0 +1,23 @@
+# TikZ
+
+所有的使用 @retikz/core 绘制的组件最外层必须被 TikZ 包裹来提供上下文（基于 React context API）:
+
+```tsx
+const Example: FC = () => {
+  return (
+    <TikZ width="250" height="50">
+      <Node name="node1" position={[30, 30]} children="Node" />
+      <Node name="node2" position={[200, 30]} children="Node" />
+      <Draw way={['node1', 'node2']} endArrow="Stealth">
+        <PathNode midway above children="PathNode" color="gray" size="small" />
+      </Draw>
+    </TikZ>
+  );
+};
+```
+
+TikZ 组件有如下作用：
+- 节点属性：TikZ 内部有一个 `NodesContext` 用于记录所有节点(Node)需要计算的属性。例如位置，内外边距，是否初始化... 这些属性会在后续绘图过程中起到辅助计算的作用。
+- 计算上下文：目前只提供 `precision` 一个属性，用于确定数据的精度，主要用于优化内存。
+- 提供 svg 环境：即创造一个最外层的 svg 标签，一般需要指定宽高。
+- 范围属性：同 Scope
