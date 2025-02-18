@@ -1,0 +1,134 @@
+# PathNode
+
+<Alert type="info" title="前置知识">
+  在使用 `PathNode` 组件之前，建议先熟悉 `Node` 和 `Draw` 组件的基本用法。
+</Alert>
+
+`PathNode` 是一个用于在连线上显示文本的组件。它必须作为 `Draw` 元素的子元素使用，以便获取路径上下文。`PathNode` 继承了 `Node` 的所有功能，并在此基础上进行了扩展。
+
+## 示例
+
+以下是一些 `PathNode` 组件的使用示例：
+
+<CodeSpace lang="tsx" showCode>
+  <TikZ width="250" height="50">
+    <Node name="node1" position={[30, 30]} children="Node" />
+    <Node name="node2" position={[200, 30]} children="Node" />
+    <Draw way={['node1', 'node2']} endArrow="Stealth">
+      <PathNode midway above children="PathNode" color="gray" size="small" />
+    </Draw>
+  </TikZ>
+</CodeSpace>
+
+## 属性
+
+### pos 位置
+
+pos 属性用于确定节点在路径上的位置。它是一个介于 `0` 到 `1` 之间的数值。其中 `0` 表示路径的起点，`1` 表示路径的终点。
+
+<CodeSpace lang="tsx" showCode>
+  <TikZ width="250" height="50">
+    <Draw way={[[30, 30], [200, 30]]}>
+      <PathNode pos={0} r="100%" fill="currentColor"/>
+      <PathNode pos={0} above="0.5em" children="pos:0" color="gray" size="small" />
+      <PathNode pos={1} r="100%" fill="currentColor"/>
+      <PathNode pos={1} above="0.5em" children="pos:1" color="gray" size="small" />
+    </Draw>
+  </TikZ>
+</CodeSpace>
+
+为了方便使用，`PathNode` 还提供了一些快捷属性来设置 `pos` 值：
+- start: 0
+- veryNearStart: 0.125
+- nearStart: 0.25
+- midway: 0.5
+- nearEnd: 0.75
+- veryNearEnd: 0.875
+- end: 1
+
+<CodeSpace lang="tsx">
+  <TikZ width="400" height="50">
+    <Draw way={[[30, 30], [370, 30]]}>
+      <PathNode start above color="gray" size="small" children="start" />
+      <PathNode start r="100%" fill="currentColor"/>
+      <PathNode veryNearStart below color="gray" size="small" children="veryNearStart" />
+      <PathNode veryNearStart r="100%" fill="currentColor"/>
+      <PathNode nearStart above color="gray" size="small" children="nearStart" />
+      <PathNode nearStart r="100%" fill="currentColor"/>
+      <PathNode midway below color="gray" size="small" children="midway" />
+      <PathNode midway r="100%" fill="currentColor"/>
+      <PathNode nearEnd above color="gray" size="small" children="nearEnd" />
+      <PathNode nearEnd r="100%" fill="currentColor"/>
+      <PathNode veryNearEnd below color="gray" size="small" children="veryNearEnd" />
+      <PathNode veryNearEnd r="100%" fill="currentColor"/>
+      <PathNode end above color="gray" size="small" children="end" />
+      <PathNode end r="100%" fill="currentColor"/>
+    </Draw>
+  </TikZ>
+</CodeSpace>
+
+### anchor 方位
+
+`anchor` 属性用于确定 `PathNode` 在路径点上的方位。它有以下五个可选值：`center`、`left`、`right`、`top`、`bottom`。
+
+这些值也可以直接作为属性传递给 `PathNode`，并设置对应的距离：
+
+<CodeSpace lang="tsx" showCode>
+  <TikZ width="200" height="60">
+    <Draw way={[[30, 30], [170, 30]]}>
+      <PathNode midway r="100%" fill="currentColor"/>
+      <PathNode midway above="1em" size="footnote" children="above"/>
+      <PathNode midway below="1em" size="footnote" children="below"/>
+      <PathNode midway left="1em" size="footnote" children="left"/>
+      <PathNode midway right="1em" size="footnote" children="right"/>
+    </Draw>
+  </TikZ>
+</CodeSpace>
+
+### sloped 倾斜
+
+当路径不是水平或垂直时，通常希望文本能够沿着路径方向排列。
+
+<CodeSpace lang="tsx" showCode>
+  <TikZ width="250" height="120">
+    <Node name="node1" position={[30, 30]} children="Node" />
+    <Node name="node2" position={[200, 100]} children="Node" />
+    <Draw way={['node1', 'node2']} endArrow="Stealth">
+      <PathNode midway above size="footnote" children="文本"/>
+      <PathNode midway below rotate="30" size="footnote" children="文本"/>
+    </Draw>
+  </TikZ>
+</CodeSpace>
+
+虽然可以通过 `Node` 的 `rotate` 属性手动设置旋转角度，但 `sloped` 属性可以自动计算并确保文本沿路径方向排列。
+
+<CodeSpace lang="tsx" showCode>
+  <TikZ width="250" height="120">
+    <Node name="node1" position={[30, 30]} children="Node" />
+    <Node name="node2" position={[200, 100]} children="Node" />
+    <Draw way={['node1', 'node2']} offset={[0,0]} endArrow="Stealth">
+      <PathNode sloped midway above size="footnote" children="文本"/>
+    </Draw>
+    <Draw way={['node2', 'node1']} offset={[-20,0]} endArrow="Stealth">
+      <PathNode sloped midway below size="footnote" children="文本"/>
+    </Draw>
+  </TikZ>
+</CodeSpace>
+
+### segmentIndex 路径线段
+
+当 `Draw` 连接多个 `Node` 时，路径会被分为多个分段。默认情况下，`pos` 属性会在最后一个分段上计算位置。通过 `segmentIndex` 属性，可以指定在哪个分段上计算位置。
+
+<CodeSpace lang="tsx" showCode>
+  <TikZ width="250" height="120">
+    <Node name="node1" position={[30, 30]} children="Node" />
+    <Node name="node2" position={[200, 30]} children="Node" />
+    <Node name="node3" position={[200, 100]} children="Node" />
+    <Draw way={['node1', 'node2', 'node3']}>
+      <PathNode midway r="100%" fill="currentColor"/>
+      <PathNode midway right="1em" size="footnote" children="默认"/>
+      <PathNode midway segmentIndex={0} r="100%" fill="currentColor"/>
+      <PathNode midway above="1em" segmentIndex={0} size="footnote" children="指定分段"/>
+    </Draw>
+  </TikZ>
+</CodeSpace>
