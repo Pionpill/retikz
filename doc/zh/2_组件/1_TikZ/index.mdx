@@ -1,0 +1,51 @@
+# TikZ
+
+TikZ 是 `@retikz/core` 的核心工具组件，所有使用该库绘制的图形必须被 `TikZ` 组件包裹，以提供必要的上下文支持（基于 [React Context API](https://reactjs.org/docs/context.html)）。它的主要功能包括：
+
+- SVG 容器：提供一个最外层的 `<svg>` 标签，并初始化 SVG 相关配置。
+- 节点上下文：为 `Node` 组件提供上下文，辅助后续的绘图计算（内部逻辑，调用者不需要关心）。
+- 计算配置：支持配置计算相关的参数，例如 `precision`（计算精度）。
+- 全局 `Scope` 配置：提供全局的 `Scope` 配置，统一管理内部元素的默认属性。
+
+## 示例
+
+以下是一个简单的示例，展示了如何使用 `TikZ` 组件绘制两个节点并连接它们：
+
+<CodeSpace lang="tsx" showCode>
+  <TikZ width="250" height="50">
+    <Node name="node1" position={[30, 30]} children="Node" />
+    <Node name="node2" position={[200, 30]} children="Node" />
+    <Draw way={['node1', 'node2']} endArrow="Stealth">
+      <PathNode midway above children="PathNode" color="gray" size="small" />
+    </Draw>
+  </TikZ>
+</CodeSpace>
+
+## 属性
+
+`TikZ` 有一个必需的属性：`children`，因为 `TikZ` 本身仅提供一个 SVG 容器，具体的图形元素需要通过其他组件（如 `Node`、`Draw` 等）来绘制。
+
+此外，`TikZ` 组件还具备 `Scope` 组件的所有功能，因为它本身就是一个全局的绘图环境。关于 `Scope` 的详细内容，请参考相关章节。
+
+### SVG 属性
+
+以下是 `TikZ` 组件最常用的 `SVG` 属性：
+
+- `width`: 设置 svg 容器的宽度
+- `height`: 设置 svg 容器的高度
+- `viewBox`: 设置 svg 容器的 `viewBox`。如果未传入，retikz 会根据 `width` 和 `height` 自动计算 `viewBox`。
+
+`width` 与 `height` 是几乎必传的属性，如果未指定，SVG 容器会默认使用 300x150 的尺寸。
+
+除此之外，以下属性会直接应用到原生的 `<svg>` 标签上：`title`、`desc`、`className`、`style`。
+
+### 计算属性
+
+目前，`TikZ` 组件仅支持一个计算属性：
+
+- `precision`: 用于控制最终渲染元素的数值精度（如位置、大小等）。默认值为 `2`。
+
+<Alert type="info" title="空间优化">
+  JavaScript 中的小数计算通常是不精确的。`retikz` 作为一个绘图库，其目标并非获取数据的精确值，而是生成可复制的 SVG
+  图形。过长的无意义小数只会浪费空间，因此我们提供了 `precision` 属性来控制数值的精度，以确保生成的 SVG 代码简洁且高效。
+</Alert>

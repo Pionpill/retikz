@@ -1,0 +1,111 @@
+# Draw
+
+`Draw` 是 @retikz/core 中最核心且功能强大的组件，用于创建和绘制路径。它支持多种路径类型和样式配置，能够满足复杂的绘图需求。
+
+## 示例
+
+以下是一些 `Draw` 组件的使用示例：
+
+<CodeSpace lang="tsx" showCode>
+  <TikZ width="400" height="50">
+    <Node name="node1" position={[30, 30]} children="Node" />
+    <Node name="node2" position={[200, 30]} children="Node" />
+    <Node name="node3" position={[370, 30]} children="Node" />
+    <Draw way={['node1', 'node2', 'node3']} endArrow="Stealth" />
+  </TikZ>
+</CodeSpace>
+
+## 属性
+
+### way 路径
+
+`way` 属性用于定义路径的连接方式，类型为 `DrawWayType[]`。`DrawWayType` 是一个联合类型，支持以下四种形式：
+- `TikZKey`: 与 `Node` 组件的 `name` 属性对应，表示路径经过的节点。
+- `PointPosition`: 点坐标，即 `[number, number]` 等各种数据结构的坐标。
+- `VerticalDrawPosition`: 使用特殊字符 `-|` 或 `|-` 表示垂直或水平连接，形成直角路径。
+- `OffSetOrMovePosition`: 通过偏移量调整路径位置，支持相对偏移和绝对偏移。
+
+#### TikZKey
+
+当 `Node` 组件设置了 `name` 属性时，`retikz` 会以 `name` 为键缓存对应的 `NodeModel`。在 `way` 中使用 `TikZKey` 时，`Draw` 会自动查找对应的 `NodeModel` 并计算路径。
+
+<CodeSpace lang="tsx" showCode>
+  <TikZ width="400" height="50">
+    <Node name="node1" position={[30, 30]} children="Node" />
+    <Node name="node2" position={[200, 30]} children="Node" />
+    <Draw way={['node1', 'node2']} endArrow="Stealth" />
+  </TikZ>
+</CodeSpace>
+
+#### PointPosition
+
+如果不需要连接节点，可以直接使用坐标点定义路径：
+
+<CodeSpace lang="tsx" showCode>
+  <TikZ width="400" height="50">
+    <Draw way={[[30, 30], [200, 30]]} endArrow="Stealth" />
+  </TikZ>
+</CodeSpace>
+
+<Alert type="info" title="Node与坐标的不同">使用坐标时，路径端点就是坐标位置，但使用 `Node` 时，会根据两个 `Node` 的连线与外边距的交点决定端点。</Alert>
+
+#### VerticalDrawPosition
+
+如果需要以折线方式连接两个点，可以使用 `VerticalDrawPosition`，支持 `-|` 和 `|-` 两种形式：
+
+<CodeSpace lang="tsx" showCode>
+  <TikZ width="400" height="100">
+    <Node name="node1" position={[30, 30]} children="Node" />
+    <Node name="node2" position={[200, 80]} children="Node" />
+    <Draw way={['node1', '-|', 'node2']} endArrow="Stealth" >
+        <PathNode nearStart above size="small" color="gray">-|</PathNode>
+    </Draw>
+    <Draw way={['node1', '|-', 'node2']} endArrow="Stealth" >
+        <PathNode nearEnd above size="small" color="gray">|-</PathNode>
+    </Draw>
+  </TikZ>
+</CodeSpace>
+
+#### OffSetOrMovePosition
+
+如果需要基于上一个节点的位置进行偏移，可以使用 `OffSetOrMovePosition`，支持以下两种格式：
+- `+(x, y)`: 偏移后下一个节点不基于当前位置计算
+- `++(x, y)`: 偏移后下一个节点基于当前位置计算
+
+<CodeSpace lang="tsx" showCode>
+  <TikZ width="400" height="100">
+    <Draw way={[[30, 30], '+(50, 0)', '+(0, 50)']}  />
+    <Draw way={[[100, 30], '++(50, 0)', '++(0, 50)']}  />
+  </TikZ>
+</CodeSpace>
+
+### arrow 箭头
+
+`Draw` 组件提供了四个属性来设置箭头样式：
+- `startArrow`, `endArrow`: 设置路径开始/结束位置的箭头样式
+- `startArrows`, `endArrows`: 设置路径所有分段上开始/结束位置的箭头样式
+
+箭头类型可以是 `ArrowType`（预定义的箭头名称）或 `ArrowConfig`（箭头配置对象）。目前仅支持 `Stealth` 箭头。
+
+<CodeSpace lang="tsx" showCode>
+  <TikZ width="400" height="150">
+    <Scope>
+        <Node name="node1" position={[30, 30]} children="Node" />
+        <Node name="node2" position={[200, 30]} children="Node" />
+        <Node name="node3" position={[370, 30]} children="Node" />
+        <Draw way={['node1', 'node2', 'node3']} startArrow="Stealth" endArrow="Stealth" />
+    </Scope>
+    <Scope offset={[0, 40]}>
+        <Node name="node1-1" position={[30, 30]} children="Node" />
+        <Node name="node1-2" position={[200, 30]} children="Node" />
+        <Node name="node1-3" position={[370, 30]} children="Node" />
+        <Draw way={['node1-1', 'node1-2', 'node1-3']} startArrows="Stealth" endArrows="Stealth" />
+    </Scope>
+    <Scope offset={[0, 80]}>
+        <Node name="node2-1" position={[30, 30]} children="Node" />
+        <Node name="node2-2" position={[200, 30]} children="Node" />
+        <Node name="node2-3" position={[370, 30]} children="Node" />
+        <Draw way={['node2-1', 'node2-2', 'node2-3']} endArrows={{ type: "Stealth", fill: "red", color: "red" }} />
+    </Scope>
+  </TikZ>
+</CodeSpace>

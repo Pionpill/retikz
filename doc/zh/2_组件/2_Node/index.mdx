@@ -1,0 +1,167 @@
+# Node
+
+`Node` 是 `@retikz/core` 的核心绘图组件，用于显示内容，目前仅支持文本显示。
+
+<Alert type="warning" title="导入注意">
+  NodeJS 有一个全局的 `Node` 类型，因此在使用 `@retikz/core` 的 `Node` 时，请务必使用以下导入方式： `import {Node} from "@retikz/core"`
+</Alert>
+
+## 示例
+
+以下是一些 `Node` 组件的使用示例：
+
+<CodeSpace showCode lang="tsx">
+  <TikZ width="400" height="50">
+    <Node position={[50, 25]} children="Node" />
+    <Node position={[150, 25]} color="gray" stroke="orange" children="Node" />
+    <Node position={[250, 25]} r="1em" fill="orange" color="#2e59a7" children="Node" />
+    <Node position={[350, 25]} dashed stroke="orange" fontSize="1.5em" children="Node" />
+  </TikZ>
+</CodeSpace>
+
+## 属性
+
+`Node` 组件的属性可以分为以下几类：
+
+- 计算属性：用于辅助 `retikz` 内部计算。
+- 样式属性：`Node` 特有的样式属性。
+- 原生样式属性：与原生 `svg` 元素（如 `text`、`g` 等）提供的属性一致。
+
+### 计算属性
+
+计算属性用于辅助 `retikz` 进行内部计算。例如传递 `name` 属性的 `Node` 会在节点上下文中缓存一个 `NodeModel` 对象，用于后续的连线等计算。
+
+#### name
+
+`name` 用于唯一标识 `Node` 节点。这是一个可选属性，如果提供了 `name` 节点上下文会生成一个对应的 `NodeModel` 用于计算节点的位置、边距等数据，并建立一个发布订阅系统以与其他组件联动。
+
+如果 `Node` 不需要和其他组件联动，则无需传递 `name` 属性：
+
+<CodeSpace lang="tsx" showCode>
+  <TikZ width="400" height="50">
+    <Node position={[50, 25]} children="独立Node" />
+    <Node name="1" position={[150, 25]} children="连线Node" />
+    <Node name="2" position={[300, 25]} children="连线Node" />
+    <Draw way={['1', '2']} endArrow="Stealth" />
+  </TikZ>
+</CodeSpace>
+
+<Alert type="info" title="name重复">理论上，不同节点的 `name` 属性应该是唯一的。如果多个 `Node` 的 `name` 属性相同，系统会使用后者的数据进行计算。</Alert>
+
+<CodeSpace lang="tsx" showCode>
+  <TikZ width="400" height="50">
+    <Node name="1" position={[50, 25]} children="同名节点" />
+    <Node name="1" position={[150, 25]} children="同名节点" />
+    <Node name="2" position={[300, 25]} children="唯一节点" />
+    <Draw way={['1', '2']} endArrow="Stealth" />
+  </TikZ>
+</CodeSpace>
+
+#### position
+
+`position` 属性用于确定节点的位置，支持以下类型：
+
+- `Position`: `[number, number]` 笛卡尔坐标数组形式。
+- `DescartesPosition`: `{ x: number, y: number }` 笛卡尔坐标对象形式。
+- `PolarPosition`: `{ radius: number; angle: number }` 极坐标对象形式。
+
+<CodeSpace lang="tsx" showCode>
+  <TikZ width="400" height="60" viewBox={{ x: -200, y: -40 }}>
+    <Node name="position" position={[-100, 10]} children="Node1" />
+    <Node name="descartes" position={{ x: 100, y: 10 }} children="Node2" />
+    <Node name="polar" position={{ radius: 30, angle: (-90 * Math.PI) / 180 }} children="Node3" />
+    <Draw way={['position', 'descartes', 'polar', 'position']} />
+  </TikZ>
+</CodeSpace>
+
+如果不传递 `position`，默认值为 `[0, 0]`。
+
+#### offset
+
+`offset` 的类型 `position` 相同，最终的位置是两者的叠加值。
+
+<CodeSpace lang="tsx" showCode>
+  <TikZ width="400" height="50">
+    <Node name="1" position={[50, 25]} children="Node" />
+    <Node name="2" position={[50, 25]} offset={{ x: 100, y: 0 }} children="Node" />
+    <Draw way={['1', '2']} />
+  </TikZ>
+</CodeSpace>
+
+### 样式属性
+
+样式属性是指 `Node` 独有的属性，`retikz` 会将这些属性进行计算后应用到原生 `svg` 元素上。
+
+#### 盒模型
+
+`Node` 的盒模型类似于 `CSS` 盒模型，分为以下三部分：
+- 内容区域：由 `width` 和 `height` 定义，用于显示文本。
+  - 通常情况下，`retikz` 会自动计算内容区域的大小。如果手动设置了 `width` 或 `height`，系统会取较大值作为实际值。
+- 内部区域：内容区域与 `innerSep` 共同构成，用于设置背景色、边框样式等。
+  - 默认 `innerSep` 值为 `0.333em`。可以传递一个 `string`/`number` 进行覆盖，或者传递一个对象指定各个方向的内部距离。
+- 外部区域：内部与 `outerSep` 构成的区域，用于连线的计算。
+  - 默认 `innerSep` 值为 `0`。可以传递一个 `string`/`number` 进行覆盖，或者传递一个对象指定各个方向的内部距离。
+
+<CodeSpace lang="tsx" showCode="hover">
+  <TikZ width="300" height="150">
+    <Node name="outer" position={[150, 75]} width="280" height="140" innerSep="0" stroke="gray" strokeWidth={2} />
+    <Node name="border" position={[150, 75]} width="180" height="90" innerSep="0" fill="gray" />
+    <Node name="inner" position={[150, 75]} width="100" height="50" innerSep="0" fill="silver" />
+    <Draw
+      way={[
+        [100, 70],
+        [200, 70],
+      ]}
+      startArrow="Stealth"
+      endArrow="Stealth"
+    >
+      <PathNode nearEnd below size="footnote" children="width" />
+    </Draw>
+    <Draw
+      way={[
+        [120, 50],
+        [120, 100],
+      ]}
+      startArrow="Stealth"
+      endArrow="Stealth"
+    >
+      <PathNode nearEnd right size="footnote" children="height" />
+    </Draw>
+    <Draw
+      way={[
+        [60, 70],
+        [100, 70],
+      ]}
+      startArrow="Stealth"
+      endArrow="Stealth"
+    >
+      <PathNode midway above size="footnote" children="innerSep" />
+    </Draw>
+    <Draw
+      way={[
+        [10, 70],
+        [60, 70],
+      ]}
+      startArrow="Stealth"
+      endArrow="Stealth"
+    >
+      <PathNode midway above size="footnote" children="outerSep" />
+    </Draw>
+  </TikZ>
+</CodeSpace>
+
+以下是一些示例：
+
+<CodeSpace lang="tsx" showCode>
+  <TikZ width="400" height="50">
+    <Node position={[50, 25]} children="Node" fill="orange" />
+    <Node position={[150, 25]} width="80" height="40" fill="orange" children="Node" />
+    <Node name="1" position={[250, 25]} fill="orange" innerSep="1em" children="Node" />
+    <Node name="2" position={[370, 25]} fill="orange" outerSep="1em" children="Node" />
+    <Draw way={['1', '2']} endArrow="Stealth" />
+  </TikZ>
+</CodeSpace>
+
+### 原生样式属性
+
+`Node` 支持原生 `svg` 元素的几乎所有样式属性，此处不再赘述。
