@@ -46,7 +46,9 @@ const InnerDraw: FC<InnerDrawProps> = props => {
   }, [way]);
 
   return (
-    <PathContext value={new PathModel(new Array(waySegments.length).fill([]), strokeProps.strokeWidth || 1, false)}>
+    <PathContext
+      value={new PathModel(new Array(waySegments.length).fill([]), Number(strokeProps.strokeWidth) || 1, false)}
+    >
       <Group ref={ref} transform={`translate(${offset[0]}, ${offset[1]})`}>
         {waySegments.map((segment, index) => (
           <DrawSegment
