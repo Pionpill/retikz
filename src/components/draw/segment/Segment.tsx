@@ -20,7 +20,7 @@ const InnerDrawSegment: FC<InnerDrawSegmentProps> = props => {
   /** 箭头仅使用部分 draw 的 stroke 属性 */
   const pickedArrowStrokeProps = {
     stroke: strokeProps.stroke,
-    strokeWidth: strokeProps.strokeWidth,
+    strokeWidth: Number(strokeProps.strokeWidth),
     strokeOpacity: strokeProps.strokeOpacity,
   };
 
