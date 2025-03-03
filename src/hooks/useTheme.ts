@@ -10,7 +10,7 @@ type ThemeStore = {
 
 const getSysColor = () => window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
 
-const useThemeStore = create<ThemeStore>()(
+const useTheme = create<ThemeStore>()(
   persist(
     (set) => ({
       theme: getSysColor(),
@@ -25,7 +25,7 @@ const useThemeStore = create<ThemeStore>()(
   )
 );
 
-export default useThemeStore;
+export default useTheme;
 
 /**
  * 主题选择器，根据主题色返回对应内容
@@ -34,5 +34,5 @@ export default useThemeStore;
  * @returns 当前主题下的内容
  */
 export const useThemeSelector = <T>(light: T, dark: T) => {
-  return useThemeStore((state) => state.theme) === 'light' ? light : dark;
+  return useTheme((state) => state.theme) === 'light' ? light : dark;
 };

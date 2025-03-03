@@ -5,7 +5,7 @@ export type LangType = 'zh' | 'en';
 
 type LangStore = {
     lang: LangType;
-    switchLang: (newLang: LangType | 'system') => void;
+    switchLang: (newLang?: LangType | 'system') => void;
 }
 
 const getSysLang = () => navigator.language.startsWith('zh') ? 'zh' : 'en';

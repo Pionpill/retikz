@@ -1,1 +1,27 @@
-{}
+{
+  "common": {
+    "title": "retikz 文档",
+    "doc": "文档"
+  },
+  "home": {
+    "tool": "工具",
+    "inspiration": "灵感",
+    "description": "基于 React 的图原级绘图工具",
+    "content": "retikz 的灵感源于 tikz，使用 React 框架与 d3 工具实现，旨在帮助开发者快速绘制 svg 图形。",
+    "getStarted": "开始使用",
+    "feature": {
+      "tikz": {
+        "title": "灵感: tikz",
+        "content": "retikz 的设计理念源于 tikz，基于 web 技术实现并拓展了部分功能。"
+      },
+      "react": {
+        "title": "框架: React",
+        "content": "基于 React16+ 框架，使用 JSX 语法表现图形元素间的关系。"
+      },
+      "d3": {
+        "title": "工具: d3",
+        "content": "使用 d3.js 辅助数学计算，图形路径生成等..."
+      }
+    }
+  }
+}

@@ -1,1 +1,27 @@
-{}
+{
+  "common": {
+    "title": "retikz.doc",
+    "doc": "document"
+  },
+  "home": {
+    "tool": "tool",
+    "inspiration": "inspiration",
+    "description": "A React-based graph-level drawing tool",
+    "content": "retikz is inspired by TikZ and is implemented using the React framework and D3 tools. It aims to help developers quickly draw SVG graphics.",
+    "getStarted": "Get Started",
+    "feature": {
+      "tikz": {
+        "title": "Inspiration: TikZ",
+        "content": "The design concept of Retikz is inspired by TikZ, implemented and extended using web technologies."
+      },
+      "react": {
+        "title": "Framework: React",
+        "content": "Based on the React16+ framework, using JSX syntax to express the relationships between graphic elements."
+      },
+      "d3": {
+        "title": "Tool: D3",
+        "content": "Utilizes d3.js for assisting with mathematical calculations, graphic path generation, etc."
+      }
+    }
+  }
+}
