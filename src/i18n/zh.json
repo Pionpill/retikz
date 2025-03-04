@@ -1,7 +1,14 @@
 {
   "common": {
-    "title": "retikz 文档",
-    "doc": "文档"
+    "copySuccess": "复制成功"
+  },
+  "header": {
+    "title": "retikz.doc",
+    "home": "主页",
+    "doc": "文档",
+    "wechat": "微信",
+    "contactMe": "联系我",
+    "indicatePurpose": "请注明来意"
   },
   "home": {
     "tool": "工具",

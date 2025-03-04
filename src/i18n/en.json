@@ -1,7 +1,14 @@
 {
   "common": {
+    "copySuccess": "copy success"
+  },
+  "header": {
     "title": "retikz.doc",
-    "doc": "document"
+    "home": "home",
+    "doc": "document",
+    "wechat": "wechat",
+    "contactMe": "contact me",
+    "indicatePurpose": "please indicate the purpose"
   },
   "home": {
     "tool": "tool",

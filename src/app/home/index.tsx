@@ -15,7 +15,7 @@ const Home: FC = () => {
   const i18nKeyArray = ['tikz', 'react', 'd3'];
 
   return (
-    <div className="flex-1 flex flex-wrap m-6 lg:m-12 justify-center gap-24 max-h-full overflow-auto">
+    <div className="w-full flex-1 flex flex-wrap p-6 lg:p-12 justify-center gap-24 max-h-full overflow-auto">
       <div className="w-full flex-col lg:flex-row-reverse items-center flex justify-center gap-8">
         <div className="flex items-center justify-center">
           <TikZFlow />
@@ -36,9 +36,9 @@ const Home: FC = () => {
           </div>
         </div>
       </div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 justify-between max-w-[1000px]">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 justify-between w-full max-w-[950px]">
         {i18nKeyArray.map(item => (
-          <div className="flex flex-col gap-2 max-w-full m-2 ">
+          <div className="flex flex-col gap-2 max-w-full m-2" key={item}>
             <Typography>{t(`home.feature.${item}.title`)}</Typography>
             <Typography variant="caption" wrap>
               {t(`home.feature.${item}.content`)}

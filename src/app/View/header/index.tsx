@@ -12,11 +12,11 @@ import useTheme from '@/hooks/useTheme';
 import { Moon, Sun } from 'lucide-react';
 import { FC } from 'react';
 import { useTranslation } from 'react-i18next';
-import { BsWechat } from 'react-icons/bs';
 import { FaGithub } from 'react-icons/fa';
 import { LuLanguages } from 'react-icons/lu';
 import { RiEnglishInput } from 'react-icons/ri';
 import { Link, useNavigate } from 'react-router';
+import WeixinDialog from './WeixinDialog';
 
 const Header: FC = () => {
   const { t } = useTranslation();
@@ -27,14 +27,21 @@ const Header: FC = () => {
   return (
     <div className="w-full p-2 flex items-center justify-between gap-4">
       <Link className="font-bold" to="/">
-        {t('common.title')}
+        {t('header.title')}
       </Link>
       <div className="flex-1">
         <NavigationMenu>
           <NavigationMenuList>
             <NavigationMenuItem>
+              <NavigationMenuLink onClick={() => navigate('/')} className={navigationMenuTriggerStyle()}>
+                {t('header.home')}
+              </NavigationMenuLink>
+            </NavigationMenuItem>
+          </NavigationMenuList>
+          <NavigationMenuList>
+            <NavigationMenuItem>
               <NavigationMenuLink onClick={() => navigate('/doc')} className={navigationMenuTriggerStyle()}>
-                {t('common.doc')}
+                {t('header.doc')}
               </NavigationMenuLink>
             </NavigationMenuItem>
           </NavigationMenuList>
@@ -51,12 +58,15 @@ const Header: FC = () => {
         </div>
         <Separator orientation="vertical" />
         <div>
-          <Button variant="ghost" size="icon" className="cursor-pointer" onClick={() => switchTheme()}>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="cursor-pointer"
+            onClick={() => window.open('https://github.com/Pionpill/retikz', '_blank')}
+          >
             <FaGithub />
           </Button>
-          <Button variant="ghost" size="icon" className="cursor-pointer" onClick={() => switchLang()}>
-            <BsWechat />
-          </Button>
+          <WeixinDialog/>
         </div>
       </div>
     </div>
