@@ -1,3 +1,4 @@
+import WeixinDialog from '@/components/shared/WeixinDialog';
 import { Button } from '@/components/ui/button';
 import {
   NavigationMenu,
@@ -16,7 +17,6 @@ import { FaGithub } from 'react-icons/fa';
 import { LuLanguages } from 'react-icons/lu';
 import { RiEnglishInput } from 'react-icons/ri';
 import { Link, useNavigate } from 'react-router';
-import WeixinDialog from './WeixinDialog';
 
 const Header: FC = () => {
   const { t } = useTranslation();
@@ -66,7 +66,7 @@ const Header: FC = () => {
           >
             <FaGithub />
           </Button>
-          <WeixinDialog/>
+          <WeixinDialog />
         </div>
       </div>
     </div>

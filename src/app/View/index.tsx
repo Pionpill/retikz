@@ -1,4 +1,4 @@
-import Header from '@/app/View/header';
+import Header from '@/app/View/Header';
 import { FC } from 'react';
 import { Outlet } from 'react-router';
 import { Toaster } from 'sonner';
