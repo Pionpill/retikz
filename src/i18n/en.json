@@ -1,6 +1,14 @@
 {
   "common": {
-    "copySuccess": "copy success"
+    "copySuccess": "copy success",
+    "switchTheme": "switch theme",
+    "switchLang": "switch language",
+    "sponsor": "sponsor",
+    "sponsorAuthor": "sponsor author",
+    "sponsorMe": "sponsor me a coffee😘",
+    "sponsorThanks": "thank you for your support",
+    "seeOnGithub": "see project on github",
+    "contactOnWechat": "contact me on wechat"
   },
   "header": {
     "title": "retikz.doc",
@@ -29,6 +37,17 @@
         "title": "Tool: D3",
         "content": "Utilizes d3.js for assisting with mathematical calculations, graphic path generation, etc."
       }
+    }
+  },
+  "doc": {
+    "blog": "blog",
+    "followAuthor": "follow author on Github",
+    "seeOnNpm": "view the project on npm",
+    "starRetikZ": "star retikz on Github",
+    "backToHome": "back to home",
+    "core": {
+      "title": "retikz doc",
+      "description": "under development"
     }
   }
 }

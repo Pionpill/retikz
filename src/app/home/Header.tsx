@@ -40,7 +40,7 @@ const Header: FC = () => {
           </NavigationMenuList>
           <NavigationMenuList>
             <NavigationMenuItem>
-              <NavigationMenuLink onClick={() => navigate('/doc')} className={navigationMenuTriggerStyle()}>
+              <NavigationMenuLink onClick={() => navigate('/doc/core')} className={navigationMenuTriggerStyle()}>
                 {t('header.doc')}
               </NavigationMenuLink>
             </NavigationMenuItem>
@@ -49,16 +49,29 @@ const Header: FC = () => {
       </div>
       <div className="flex items-center h-6 gap-1">
         <div>
-          <Button variant="ghost" size="icon" className="cursor-pointer" onClick={() => switchTheme()}>
+          <Button
+            title={t('common.switchTheme')}
+            variant="ghost"
+            size="icon"
+            className="cursor-pointer"
+            onClick={() => switchTheme()}
+          >
             {theme === 'dark' ? <Moon /> : <Sun />}
           </Button>
-          <Button variant="ghost" size="icon" className="cursor-pointer" onClick={() => switchLang()}>
+          <Button
+            title={t('common.switchLang')}
+            variant="ghost"
+            size="icon"
+            className="cursor-pointer"
+            onClick={() => switchLang()}
+          >
             {lang === 'en' ? <RiEnglishInput /> : <LuLanguages />}
           </Button>
         </div>
         <Separator orientation="vertical" />
         <div>
           <Button
+            title={t('common.switchLang')}
             variant="ghost"
             size="icon"
             className="cursor-pointer"

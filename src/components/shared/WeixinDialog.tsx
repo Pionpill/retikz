@@ -1,5 +1,5 @@
 'use client';
-import ContactDialog from '@/components/shared/contact-dialog';
+import ContactDialog, { ContactDialogProps } from '@/components/shared/ContactDialog';
 import { Button } from '@/components/ui/button';
 import { Typography } from '@/components/ui/typography';
 import { Files } from 'lucide-react';
@@ -8,7 +8,7 @@ import { useTranslation } from 'react-i18next';
 import { BsWechat } from 'react-icons/bs';
 import { toast } from 'sonner';
 
-const WeixinDialog: FC = () => {
+const WeixinDialog: FC<Partial<ContactDialogProps>> = props => {
   const { t } = useTranslation();
 
   const handleCopy = () => {
@@ -35,10 +35,11 @@ const WeixinDialog: FC = () => {
       qrCodeUrl="https://qm.qq.com/cgi-bin/qm/qr?k=8XRx97ISM1ZGoJBXA7rgYjQYjZz-Twv6&noverify=0&personal_qrcode_source=4"
       bottomContent={t('header.indicatePurpose')}
       trigger={
-        <Button variant="ghost" size="icon" className="cursor-pointer">
+        <Button title={t('common.contactOnWechat')} variant="ghost" size="icon" className="cursor-pointer">
           <BsWechat />
         </Button>
       }
+      {...props}
     />
   );
 };

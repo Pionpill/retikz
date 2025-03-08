@@ -22,13 +22,27 @@ export type ContactDialogProps = {
   qrCodeUrl: string;
   bottomContent?: string;
   trigger: ReactElement;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 };
 
 const ContactDialog: FC<ContactDialogProps> = props => {
-  const { icon, label, description, imgUrl, title, content, qrCodeUrl, bottomContent, trigger } = props;
+  const { 
+    icon, 
+    label, 
+    description, 
+    imgUrl, 
+    title, 
+    content, 
+    qrCodeUrl, 
+    bottomContent, 
+    trigger,
+    open,
+    onOpenChange
+  } = props;
 
   return (
-    <Dialog>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogTrigger asChild>{trigger}</DialogTrigger>
       <DialogContent className="w-96">
         <DialogHeader>

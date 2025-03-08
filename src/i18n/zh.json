@@ -1,6 +1,14 @@
 {
   "common": {
-    "copySuccess": "复制成功"
+    "copySuccess": "复制成功",
+    "switchTheme": "切换主题",
+    "switchLang": "切换语言",
+    "sponsor": "赞助",
+    "sponsorAuthor": "赞助作者",
+    "sponsorMe": "赞助我一杯奶茶😘",
+    "sponsorThanks": "感谢你的支持",
+    "seeOnGithub": "在 Github 上查看项目",
+    "contactOnWechat": "在微信上联系我"
   },
   "header": {
     "title": "retikz.doc",
@@ -29,6 +37,17 @@
         "title": "工具: d3",
         "content": "使用 d3.js 辅助数学计算，图形路径生成等..."
       }
+    }
+  },
+  "doc": {
+    "blog": "博客",
+    "followAuthor": "在 Github 上关注作者",
+    "seeOnNpm": "在 npm 上查看项目",
+    "starRetikZ": "在 Github 上 star 项目",
+    "backToHome": "返回主页",
+    "core": {
+      "title": "retikz 文档",
+      "description": "开发中"
     }
   }
 }
