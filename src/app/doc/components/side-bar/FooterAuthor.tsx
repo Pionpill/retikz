@@ -1,3 +1,4 @@
+import { SponsorDialog, WeixinDialog } from '@/components/shared/dialog';
 import { Avatar } from '@/components/ui/avatar';
 import {
   DropdownMenu,
@@ -8,16 +9,14 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar } from '@/components/ui/sidebar';
 import { Typography } from '@/components/ui/typography';
+import useLang from '@/hooks/useLang';
 import { AvatarFallback, AvatarImage } from '@radix-ui/react-avatar';
 import { ChevronsUpDown } from 'lucide-react';
 import { FC, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { BiStar } from 'react-icons/bi';
 import { CgNpm } from 'react-icons/cg';
 import { RiGithubLine, RiWechat2Line } from 'react-icons/ri';
-import SponsorDialog from '../../../../components/shared/SponsorDialog';
-import { useTranslation } from 'react-i18next';
-import useLang from '@/hooks/useLang';
-import WeixinDialog from '@/components/shared/WeixinDialog';
 
 const FooterAuthor: FC = () => {
   const { lang } = useLang();

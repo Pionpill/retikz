@@ -1,4 +1,4 @@
-import WeixinDialog from '@/components/shared/WeixinDialog';
+import { WeixinDialog } from '@/components/shared/dialog';
 import { Button } from '@/components/ui/button';
 import {
   NavigationMenu,

@@ -1,5 +1,3 @@
-'use client';
-import ContactDialog, { ContactDialogProps } from '@/components/shared/ContactDialog';
 import { Button } from '@/components/ui/button';
 import { Typography } from '@/components/ui/typography';
 import { Files } from 'lucide-react';
@@ -7,6 +5,7 @@ import { FC } from 'react';
 import { useTranslation } from 'react-i18next';
 import { BsWechat } from 'react-icons/bs';
 import { toast } from 'sonner';
+import ContactDialog, { ContactDialogProps } from './ContactDialog';
 
 const WeixinDialog: FC<Partial<ContactDialogProps>> = props => {
   const { t } = useTranslation();
