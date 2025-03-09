@@ -5,7 +5,7 @@ import Home from './app/home';
 import View from './app/view';
 
 const AppRoute: FC = () => (
-  <BrowserRouter>
+  <BrowserRouter basename="/retikz.doc">
     <Routes>
       <Route path="/" element={<View />}>
         <Route index element={<Home />} />
