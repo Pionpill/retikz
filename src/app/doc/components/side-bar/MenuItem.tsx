@@ -8,7 +8,6 @@ import {
   SidebarMenuSubButton,
   SidebarMenuSubItem,
 } from '@/components/ui/sidebar';
-import useLang from '@/hooks/useLang';
 import useModule from '@/hooks/useModule';
 import { Collapsible, CollapsibleContent } from '@radix-ui/react-collapsible';
 import { ChevronRight, FileCode2 } from 'lucide-react';
@@ -19,7 +18,6 @@ const MenuItem: FC<{ item: ContentType }> = props => {
   const { item } = props;
 
   const module = useModule();
-  const { lang } = useLang();
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
 
@@ -32,7 +30,7 @@ const MenuItem: FC<{ item: ContentType }> = props => {
 
   const folderLink = useMemo(() => {
     const getLinkByContentPath = (content: ContentType) =>
-      `/${lang}/${module}/${content.path.split('/').slice(2).join('/')}`;
+      `/doc/${module}/?path=${content.path.split('/').slice(2).join('/')}`;
 
     if (!item.children) {
       return getLinkByContentPath(item);
@@ -41,7 +39,7 @@ const MenuItem: FC<{ item: ContentType }> = props => {
       return getLinkByContentPath(item.children.find(item => item.name.startsWith('index'))!);
     }
     return;
-  }, [lang, module, item]);
+  }, [module, item]);
 
   const showExpand = useMemo(
     () => (folderLink ? item.children && item.children.length > 1 : item.children),
@@ -56,7 +54,7 @@ const MenuItem: FC<{ item: ContentType }> = props => {
   const getContentLink = (content: ContentType) => {
     return content.name.startsWith('index')
       ? undefined
-      : `/${lang}/${module}/${content.path.split('/').slice(2).join('/')}`;
+      : `/doc/${module}/?path=${content.path.split('/').slice(2).join('/')}`;
   };
 
   const getContentLabel = (name: string) => (name.split('_')[1] || name.split('_')[0]).split('.')[0];

@@ -8,7 +8,12 @@
     "sponsorMe": "sponsor me a coffee😘",
     "sponsorThanks": "thank you for your support",
     "seeOnGithub": "see project on github",
-    "contactOnWechat": "contact me on wechat"
+    "contactOnWechat": "contact me on wechat",
+    "loading": "loading..."
+  },
+  "mdx": {
+    "compiling": "compiling mdx file...",
+    "error": "failed to parse mdx file"
   },
   "header": {
     "title": "retikz.doc",
@@ -45,8 +50,9 @@
     "seeOnNpm": "view the project on npm",
     "starRetikZ": "star retikz on Github",
     "backToHome": "back to home",
+    "create": "create date",
+    "update": "update date",
     "core": {
-      "title": "retikz doc",
       "description": "under development"
     }
   }

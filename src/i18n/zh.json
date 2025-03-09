@@ -8,7 +8,12 @@
     "sponsorMe": "赞助我一杯奶茶😘",
     "sponsorThanks": "感谢你的支持",
     "seeOnGithub": "在 Github 上查看项目",
-    "contactOnWechat": "在微信上联系我"
+    "contactOnWechat": "在微信上联系我",
+    "loading": "加载中..."
+  },
+  "mdx": {
+    "compiling": "编译 MDX 文件中...",
+    "error": "MDX 文件解析失败"
   },
   "header": {
     "title": "retikz.doc",
@@ -45,9 +50,10 @@
     "seeOnNpm": "在 npm 上查看项目",
     "starRetikZ": "在 Github 上 star 项目",
     "backToHome": "返回主页",
+    "create": "创建日期",
+    "update": "更新日期",
     "core": {
-      "title": "retikz 文档",
-      "description": "开发中"
+      "description": "开发中" 
     }
   }
 }

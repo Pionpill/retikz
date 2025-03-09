@@ -3,11 +3,11 @@ import { Typography } from '@/components/ui/typography';
 import useModule from '@/hooks/useModule';
 import { BookMarked } from 'lucide-react';
 import { FC } from 'react';
-import { useTranslation } from 'react-i18next';
+import { moduleConfig } from '../../config/module';
 
 const HeaderInfo: FC = () => {
-  const { t } = useTranslation();
   const module = useModule();
+  const { npm, version } = moduleConfig[module];
 
   return (
     <SidebarMenu>
@@ -16,8 +16,8 @@ const HeaderInfo: FC = () => {
           <BookMarked />
         </div>
         <div className="flex flex-col flex-1 text-left">
-          <Typography className="font-semibold">{t(`doc.${module}.title`)}</Typography>
-          <Typography className="text-xs">0.0.1-rc.0 {t(`doc.${module}.description`)}</Typography>
+          <Typography className="font-semibold">{npm}</Typography>
+          <Typography className="text-xs">{version}</Typography>
         </div>
       </SidebarMenuButton>
     </SidebarMenu>

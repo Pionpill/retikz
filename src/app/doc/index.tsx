@@ -1,17 +1,34 @@
+import { getRawApi } from '@/api/github';
 import { SidebarProvider } from '@/components/ui/sidebar';
-import { FC } from 'react';
+import useLang from '@/hooks/useLang';
+import useModule from '@/hooks/useModule';
+import { FC, useEffect, useState } from 'react';
+import { useSearchParams } from 'react-router';
 import { SideContent, SideMenu } from './components/side-bar';
-import { useLocation } from 'react-router';
+import { moduleConfig } from './config/module';
+import { MdxContent } from '@/components/shared/mdx';
 
 const Doc: FC = () => {
-  const { pathname } = useLocation();
-  console.log('pathname', pathname);
+  const module = useModule();
+  const { lang } = useLang();
+  const [searchParams] = useSearchParams();
+  const path = searchParams.get('path');
+
+  const [source, setSource] = useState('');
+
+  useEffect(() => {
+    if (!path) return;
+
+    getRawApi(moduleConfig[module].repos, `doc/${lang}/${path}`).then(res => {
+      setSource(res);
+    });
+  }, [module, lang, path]);
 
   return (
     <SidebarProvider>
       <SideMenu />
       <SideContent>
-        TODO
+        <MdxContent content={source} />
       </SideContent>
     </SidebarProvider>
   );

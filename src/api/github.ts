@@ -24,6 +24,22 @@ export const getContentsApi = (repos: string, path: string) => fetch(
     }
   ).then(res => res.json() as Promise<ContentType[]>);
 
-  /** 获取文档：github 文件字符串 */
-export const getRawApi = (repo: string, path: string) => 
-  fetch(`https://raw.githubusercontent.com/Pionpill/${repo}/main/${path}`).then(res => res.text());
+/** 获取文档：github 文件字符串 */
+export const getRawApi = (repo: string, path: string) => fetch(`https://raw.githubusercontent.com/Pionpill/${repo}/main/${path}`).then(res => res.text());
+
+export type CommitInfo = {
+  commit: {
+    author: {
+      date: string;
+    }
+  }
+}
+
+/** 获取仓库的 commit 列表 */
+export const getReposCommitApi = (repos: string, path?: string): Promise<Array<CommitInfo>> => fetch(
+  `https://api.github.com/repos/Pionpill/${repos}/commits?${path ? `path=${path}` : ''}`,
+  {
+    method: "GET",
+    headers: authHeader,
+  }
+).then(res => res.json());
