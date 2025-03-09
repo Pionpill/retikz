@@ -8,7 +8,7 @@ const AppRoute: FC = () => (
   <BrowserRouter>
     <Routes>
       <Route path="/" element={<View />}>
-        <Route path="/" element={<Home />} />
+        <Route index element={<Home />} />
         <Route path="doc/*" element={<Doc />} />
       </Route>
     </Routes>

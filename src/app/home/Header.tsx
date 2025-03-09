@@ -40,7 +40,7 @@ const Header: FC = () => {
           </NavigationMenuList>
           <NavigationMenuList>
             <NavigationMenuItem>
-              <NavigationMenuLink onClick={() => navigate('/doc/core')} className={navigationMenuTriggerStyle()}>
+              <NavigationMenuLink onClick={() => navigate('/doc/core/?path=1_介绍/1_安装.mdx')} className={navigationMenuTriggerStyle()}>
                 {t('header.doc')}
               </NavigationMenuLink>
             </NavigationMenuItem>

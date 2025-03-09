@@ -28,7 +28,7 @@ const Home: FC = () => {
             <Typography variant="subTitle">{t('home.description')}</Typography>
             <Typography wrap className="text-center lg:text-left">{t('home.content')}</Typography>
             <div className="flex gap-4">
-              <Button onClick={() => navigate('/doc/core')}>
+              <Button onClick={() => navigate('/doc/core/?path=1_介绍/1_安装.mdx')}>
                 <BookText />
                 {t('home.getStarted')}
               </Button>
