@@ -11,8 +11,9 @@ const typographyVariants = cva('max-w-full', {
       header: 'text-4xl font-bold',
       subHeader: 'text-3xl font-bold',
       title: 'text-2xl font-bold',
-      subTitle: "text-xl",
-      caption: "text-sm opacity-60",
+      subTitle: 'text-xl',
+      caption: 'text-sm opacity-60',
+      hint: 'text-xs opacity-60',
     },
     wrap: {
       false: 'truncate',
