@@ -136,3 +136,5 @@ TODO.md
 .vscode
 test/
 local/
+test*
+index.html
