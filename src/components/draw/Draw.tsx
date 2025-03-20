@@ -1,4 +1,4 @@
-import { FC, ReactElement, Ref } from 'react';
+import { forwardRef, ReactElement, useMemo } from 'react';
 import useScope from '../../hooks/context/useScope';
 import DescartesPoint from '../../model/geometry/point/DescartesPoint';
 import { PointPosition } from '../../types/coordinate';
@@ -9,7 +9,6 @@ import InnerDraw from './InnerDraw';
 import { ArrowProps, DrawWayType } from './types';
 
 export type DrawProps = {
-  ref?: Ref<SVGPathElement>;
   way: DrawWayType[];
   /** 位置偏移 */
   offset?: PointPosition;
@@ -22,11 +21,11 @@ export type DrawProps = {
   StrokeShortcutProps &
   ArrowProps;
 
-const Draw: FC<DrawProps> = props => {
+const Draw = forwardRef<SVGPathElement, DrawProps>((props, ref) => {
   const { draw: scopeProps } = useScope();
   const realProps = { ...scopeProps, ...props };
 
-  const { offset, color, stroke, strokeWidth, startArrow, startArrows, endArrow, endArrows, ...drawProps } = realProps;
+  const { offset, color, stroke, strokeWidth, startArrow, startArrows, endArrow, endArrows, ...resProps } = realProps;
   const realStroke = stroke || color;
   const realStartArrow = typeof startArrow === 'string' ? { type: startArrow } : startArrow;
   const realStartArrows = typeof startArrows === 'string' ? { type: startArrows } : startArrows;
@@ -35,12 +34,37 @@ const Draw: FC<DrawProps> = props => {
   const convertOffset: Position = offset ? DescartesPoint.formatPosition(offset) : [0, 0];
 
   const getStrokeTypes = () =>
-    drawProps.strokeType
-      ? convertStrokeType(drawProps.strokeType, strokeWidth || 1)
-      : convertStrokeShortcut(drawProps, strokeWidth || 1);
+    resProps.strokeType
+      ? convertStrokeType(resProps.strokeType, strokeWidth ?? 1)
+      : convertStrokeShortcut(resProps, strokeWidth ?? 1);
+
+  const drawProps = useMemo<Partial<StrokeProps> & { way: DrawWayType[] }>(() => {
+    const props = { ...resProps };
+    [
+      'solid',
+      'dashed',
+      'denselyDashed',
+      'looselyDashed',
+      'dotted',
+      'denselyDotted',
+      'looselyDotted',
+      'dashDot',
+      'denselyDashDot',
+      'looselyDashDot',
+      'dashDashDot',
+      'denselyDashDashDot',
+      'looselyDashDashDot',
+    ].forEach(key => {
+      if (key in props) {
+        delete props[key as keyof typeof props];
+      }
+    })
+    return props;
+  }, [props])
 
   return (
     <InnerDraw
+      ref={ref}
       {...getStrokeTypes()}
       offset={convertOffset}
       stroke={realStroke}
@@ -52,6 +76,6 @@ const Draw: FC<DrawProps> = props => {
       {...drawProps}
     />
   );
-};
+});
 
 export default Draw;

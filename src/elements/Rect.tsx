@@ -1,12 +1,10 @@
-import { FC, PropsWithChildren, Ref, SVGProps } from 'react';
+import { forwardRef, PropsWithChildren, SVGProps } from 'react';
 
-export type RectProps = {
-  ref?: Ref<SVGRectElement>;
-} & SVGProps<SVGRectElement>;
+export type RectProps = SVGProps<SVGRectElement>;
 
-const Rect: FC<PropsWithChildren<RectProps>> = props => {
-  const { ref, ...otherProps } = props;
+const Rect = forwardRef<SVGRectElement, PropsWithChildren<RectProps>>((props, ref) => {
+  const { ...otherProps } = props;
   return <rect ref={ref} {...otherProps} />;
-};
+});
 
 export default Rect;

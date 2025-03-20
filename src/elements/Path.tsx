@@ -1,8 +1,8 @@
-import { FC, SVGProps } from 'react';
+import { forwardRef, SVGProps } from 'react';
 
 export type PathProps = {} & SVGProps<SVGPathElement>;
 
-const Path: FC<PathProps> = props => {
+const Path = forwardRef<SVGPathElement, PathProps>((props, ref) => {
   const { fill: propFill, strokeWidth: propStrokeWidth, stroke: propStroke, ...otherProps } = props;
 
   const defaultProps = {
@@ -11,7 +11,7 @@ const Path: FC<PathProps> = props => {
     stroke: propStroke || 'currentColor',
   };
 
-  return <path {...defaultProps} {...otherProps} />;
-};
+  return <path ref={ref} {...defaultProps} {...otherProps} />;
+});
 
 export default Path;

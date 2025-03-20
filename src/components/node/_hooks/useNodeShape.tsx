@@ -31,7 +31,7 @@ const useNodeShape = (props: ShapeProps, ref: Ref<SVGGraphicsElement>) => {
         return Rect;
     }
   }, [props.shape, ...Object.values(shapeProps)]);
-  // @ts-ignore 暂时没有添加其他 shape
+  // @ts-expect-error 暂时没有添加其他 shape
   return <Shape ref={ref} {...shapeProps} />;
 };
 

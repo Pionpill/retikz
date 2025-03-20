@@ -1,4 +1,4 @@
-import { FC, useId, useLayoutEffect, useMemo, useState } from 'react';
+import { forwardRef, useId, useLayoutEffect, useMemo, useState } from 'react';
 import useCalculate from '../../hooks/context/useCalculate';
 import useNodes from '../../hooks/context/useNodes';
 import useScope, { ScopeContext } from '../../hooks/context/useScope';
@@ -48,8 +48,8 @@ export type PathNodeProps = {
   PosShortcutProps &
   Omit<NodeProps, 'position'>;
 
-const PathNode: FC<PathNodeProps> = props => {
-  const { segmentIndex = -1, offset = [0, 0], anchor, ref, left, right, above, below, name, ...resProps } = props;
+const PathNode = forwardRef<SVGGElement, PathNodeProps>((props, ref) => {
+  const { segmentIndex = -1, offset = [0, 0], anchor, left, right, above, below, name, ...resProps } = props;
   const { pos, veryNearStart, veryNearEnd, start, nearStart, midway, nearEnd, end, sloped, ...nodeProps } = resProps;
 
   const id = useId();
@@ -110,7 +110,7 @@ const PathNode: FC<PathNodeProps> = props => {
   const scope = useScope();
 
   return (
-    <ScopeContext value={{ ...scope, offset: [0, 0] }}>
+    <ScopeContext.Provider value={{ ...scope, offset: [0, 0] }}>
       <Node
         name={realName}
         position={convertPrecision(adjustOffset, precision)}
@@ -118,8 +118,8 @@ const PathNode: FC<PathNodeProps> = props => {
         rotate={rotate}
         {...nodeProps}
       />
-    </ScopeContext>
+    </ScopeContext.Provider>
   );
-};
+});
 
 export default PathNode;

@@ -1,19 +1,22 @@
 import { StrokeProps } from '../../types/svg/stroke';
 
-export type StrokeType =
-  | 'solid'
-  | 'dashed'
-  | 'denselyDashed'
-  | 'looselyDashed'
-  | 'dotted'
-  | 'denselyDotted'
-  | 'looselyDotted'
-  | 'dashDot'
-  | 'denselyDashDot'
-  | 'looselyDashDot'
-  | 'dashDashDot'
-  | 'denselyDashDashDot'
-  | 'looselyDashDashDot';
+export const strokeTypes = [
+  'solid',
+  'dashed',
+  'denselyDashed',
+  'looselyDashed',
+  'dotted',
+  'denselyDotted',
+  'looselyDotted',
+  'dashDot',
+  'denselyDashDot',
+  'looselyDashDot',
+  'dashDashDot',
+  'denselyDashDashDot',
+  'looselyDashDashDot',
+] as const;
+
+export type StrokeType = typeof strokeTypes[number];
 
 export type StrokeShortcutProps = {
   dashed?: boolean;
@@ -31,7 +34,8 @@ export type StrokeShortcutProps = {
 };
 
 /** 将 StrokeType 转换为 svg 原生的属性 */
-export const convertStrokeType = (strokeType: StrokeType, strokeWidth = 1): Partial<StrokeProps> => {
+export const convertStrokeType = (strokeType: StrokeType, oriStrokeWidth: string | number = 1): Partial<StrokeProps> => {
+  const strokeWidth = Number(oriStrokeWidth);
   switch (strokeType) {
     case 'solid':
       return {};
@@ -62,7 +66,8 @@ export const convertStrokeType = (strokeType: StrokeType, strokeWidth = 1): Part
   }
 };
 
-export const convertStrokeShortcut = (shortcutProps: StrokeShortcutProps, strokeWidth = 1): Partial<StrokeProps> => {
+export const convertStrokeShortcut = (shortcutProps: StrokeShortcutProps, oriStrokeWidth: string | number = 1): Partial<StrokeProps> => {
+  const strokeWidth = Number(oriStrokeWidth);
   return convertStrokeType(
     shortcutProps.dashed
       ? 'dashed'
