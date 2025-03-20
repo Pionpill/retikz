@@ -1,6 +1,6 @@
 {
   "name": "@retikz/core",
-  "version": "0.0.1-rc.0",
+  "version": "0.0.1-rc.1",
   "description": "atomic drawing library implemented using react and d3, inspired by tikz",
   "type": "module",
   "homepage": "https://pionpill.github.io/retikz.doc/",
@@ -29,22 +29,22 @@
     "preview": "vite preview"
   },
   "peerDependencies": {
-    "react": ">=19.0.0",
-    "react-dom": ">=19.0.0"
+    "react": ">=18",
+    "react-dom": ">=18"
   },
   "dependencies": {
     "d3-color": "^3.1.0",
     "d3-shape": "^3.2.0",
-    "react": "^19",
-    "react-dom": "^19"
+    "react": "~18.3",
+    "react-dom": "~18.3"
   },
   "devDependencies": {
     "@eslint/js": "^9.15.0",
     "@types/d3-color": "^3.1.3",
     "@types/d3-shape": "^3.1.6",
     "@types/node": "^22.10.7",
-    "@types/react": "^19",
-    "@types/react-dom": "^19",
+    "@types/react": "~18.3",
+    "@types/react-dom": "~18.3",
     "@vitejs/plugin-react": "^4.3.4",
     "eslint": "^9.15.0",
     "eslint-plugin-react-hooks": "^5.0.0",

@@ -1,7 +1,6 @@
 import { FC, useMemo } from 'react';
 import NodeModel from '../../../model/component/node';
 import { StrokeProps } from '../../../types/svg/stroke';
-import { TikZKey } from '../../../types/tikz';
 import { convertStrokeType } from '../../../utils/style/stroke';
 import { ArrowConfig, DrawWaySegmentType } from '../types';
 import InnerDrawSegment from './Segment';
@@ -12,9 +11,6 @@ export type DrawSegmentProps = {
   /** 路径，首位可以是 Node，其他必须是坐标 */
   way: DrawWaySegmentType;
   index: number;
-  isLastSegment: boolean;
-  /** 线段颜色 */
-  color?: TikZKey;
   /** 线段样式 */
   strokeType?: 'solid' | 'dashed' | 'dotted';
   startArrow?: ArrowConfig;
@@ -23,7 +19,7 @@ export type DrawSegmentProps = {
 
 /** 单条连续的路径 */
 const DrawSegment: FC<DrawSegmentProps> = props => {
-  const { way, index, color, startArrow, endArrow, isLastSegment, ...resProps } = props;
+  const { way, index, startArrow, endArrow, ...resProps } = props;
   const { strokeType = 'solid', strokeWidth = 1, ...strokeProps } = resProps;
 
   const [convertedWay, nodesInit] = useConvertWay(way);
@@ -37,7 +33,7 @@ const DrawSegment: FC<DrawSegmentProps> = props => {
       }
       return wayPoint;
     });
-    const newWay = [...model?.ways];
+    const newWay = [...model.ways];
     newWay[index] = realWay;
     updateModel({ ways: newWay, init: nodesInit });
     return realWay;

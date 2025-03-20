@@ -21,6 +21,7 @@ const useNodeContent = (props: ContentProps, ref: Ref<SVGElement>) => {
           {children}
         </Text>
       ) : isValidElement(children) ? (
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         cloneElement(children as ReactElement<any>, { ref })
       ) : (
         children

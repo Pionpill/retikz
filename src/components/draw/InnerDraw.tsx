@@ -1,4 +1,4 @@
-import { FC, ReactNode, Ref, useMemo } from 'react';
+import { forwardRef, ReactNode, useMemo } from 'react';
 import Group from '../../container/Group';
 import { PathContext } from '../../hooks/context/usePath';
 import PathModel from '../../model/component/path';
@@ -9,7 +9,6 @@ import DrawSegment from './segment';
 import { ArrowConfig, ArrowProps, DrawPointType, DrawWaySegmentType, DrawWayType } from './types';
 
 export type InnerDrawProps = {
-  ref?: Ref<SVGPathElement>;
   /** 位置偏移 */
   offset: Position;
   way: DrawWayType[];
@@ -17,8 +16,8 @@ export type InnerDrawProps = {
 } & StrokeProps &
   ArrowProps<ArrowConfig>;
 
-const InnerDraw: FC<InnerDrawProps> = props => {
-  const { way, ref, offset, startArrow, startArrows, endArrow, endArrows, children, ...strokeProps } = props;
+const InnerDraw = forwardRef<SVGPathElement, InnerDrawProps>((props, ref) => {
+  const { way, offset, startArrow, startArrows, endArrow, endArrows, children, ...strokeProps } = props;
 
   const waySegments = useMemo(() => {
     let preNodeType: DrawPointType = 'coordinate';
@@ -46,7 +45,7 @@ const InnerDraw: FC<InnerDrawProps> = props => {
   }, [way]);
 
   return (
-    <PathContext
+    <PathContext.Provider
       value={new PathModel(new Array(waySegments.length).fill([]), Number(strokeProps.strokeWidth) || 1, false)}
     >
       <Group ref={ref} transform={`translate(${offset[0]}, ${offset[1]})`}>
@@ -54,7 +53,6 @@ const InnerDraw: FC<InnerDrawProps> = props => {
           <DrawSegment
             key={JSON.stringify(segment)}
             index={index}
-            isLastSegment={index === waySegments.length - 1}
             way={segment}
             {...strokeProps}
             endArrow={index === waySegments.length - 1 ? endArrow || endArrows : endArrows}
@@ -63,8 +61,8 @@ const InnerDraw: FC<InnerDrawProps> = props => {
         ))}
         {children}
       </Group>
-    </PathContext>
+    </PathContext.Provider>
   );
-};
+});
 
 export default InnerDraw;

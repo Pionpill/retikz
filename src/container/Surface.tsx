@@ -1,4 +1,4 @@
-import { CSSProperties, FC, PropsWithChildren, useMemo } from 'react';
+import { CSSProperties, forwardRef, PropsWithChildren, useMemo } from 'react';
 
 export type SurfaceProps = {
   title?: string;
@@ -15,7 +15,7 @@ export type SurfaceProps = {
   style?: CSSProperties;
 };
 
-const Surface: FC<PropsWithChildren<SurfaceProps>> = props => {
+const Surface = forwardRef<SVGSVGElement, PropsWithChildren<SurfaceProps>>((props, ref) => {
   const { title, desc, viewBox, children, width, height, ...otherProps } = props;
 
   const svgViewBox = useMemo(() => {
@@ -32,12 +32,12 @@ const Surface: FC<PropsWithChildren<SurfaceProps>> = props => {
   }, [width, height, viewBox]);
   
   return (
-    <svg viewBox={svgViewBox} width={width} height={height} {...otherProps}>
+    <svg ref={ref} viewBox={svgViewBox} width={width} height={height} {...otherProps}>
       {title ? <title>{title}</title> : null}
       {desc ? <desc>{desc}</desc> : null}
       {children}
     </svg>
   );
-};
+});
 
 export default Surface;

@@ -1,4 +1,4 @@
-import { FC, ReactNode, useLayoutEffect, useRef } from 'react';
+import { forwardRef, ReactNode, useLayoutEffect, useRef } from 'react';
 import { Position } from '../../types/coordinate/descartes';
 import { StrokeProps } from '../../types/svg/stroke';
 import { TikZProps } from '../../types/tikz';
@@ -44,8 +44,8 @@ export type InnerNodeProps = {
   ContentProps &
   ShapeProps;
 
-const InnerNode: FC<InnerNodeProps> = props => {
-  const { name, ref, position, width, height, innerSep, outerSep, rotate } = props;
+const InnerNode = forwardRef<SVGGElement, InnerNodeProps>((props, ref) => {
+  const { name, position, width, height, innerSep, outerSep, rotate } = props;
 
   const nodeRef = useRef<SVGGElement>(null);
   const shapeRef = useRef<SVGGraphicsElement>(null);
@@ -135,6 +135,6 @@ const InnerNode: FC<InnerNodeProps> = props => {
       {useNodeContent(props, contentRef)}
     </Group>
   );
-};
+});
 
 export default InnerNode;

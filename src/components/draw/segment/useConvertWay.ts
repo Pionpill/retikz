@@ -14,7 +14,7 @@ import { DrawWaySegmentType, VerticalDrawPosition } from '../types';
 /** 将坐标格式转换为笛卡尔坐标数组形式 */
 export const formatPointPosition = (point: PointPosition): Position => {
   if (Array.isArray(point)) return point;
-  if (point.hasOwnProperty('x') && point.hasOwnProperty('y')) {
+  if ('x' in point && 'y' in point) {
     const p = point as DescartesPosition;
     return [p.x, p.y];
   }
@@ -30,7 +30,7 @@ export const getVerticalPoint = (point1: PointPosition, point2: PointPosition, t
 
 /** 将偏移点与移动点转换为坐标点 */
 const convertOffsetAndMovePoint = (point: string) => {
-  const filterPoint = point.replace(/[+()\[\]\s]/g, '');
+  const filterPoint = point.replace(/[+()[\]\s]/g, '');
   return filterPoint.split(',').map(item => parseFloat(item)) as Position;
 };
 
@@ -63,11 +63,12 @@ const useConvertWay = (way: DrawWaySegmentType) => {
       way.map((item, index) => {
         const type = getDrawPointType(item);
         switch (type) {
-          case 'coordinate':
+          case 'coordinate': {
             const corPosition = formatPointPosition(item as PointPosition);
             cursor = corPosition;
             return corPosition;
-          case 'node':
+          }
+          case 'node': {
             if (![0, way.length - 1].includes(index)) {
               throw new Error(
                 'Node can only be the first or last point on DrawSegment component, this may be a retikz bug, please report it.',
@@ -82,7 +83,8 @@ const useConvertWay = (way: DrawWaySegmentType) => {
             if (cb) subscribeCbs.push(cb);
             cursor = nodeModel.center;
             return nodeModel;
-          case 'vertical':
+          }
+          case 'vertical': {
             if ([0, way.length - 1].includes(index)) {
               throw new Error('Vertical point can not be the first point on path.');
             }
@@ -99,12 +101,14 @@ const useConvertWay = (way: DrawWaySegmentType) => {
             const verPosition = getVerticalPoint(beforePosition, afterPosition, item as VerticalDrawPosition);
             cursor = verPosition;
             return cursor;
-          default:
+          }
+          default: {
             if (index === 0) throw new Error('offset/move point can not be the first point on path.');
             const convertedPos = convertOffsetAndMovePoint(item as string);
             const curPos = DescartesPoint.plus(convertedPos, cursor);
             if (type === 'move') cursor = curPos;
             return curPos;
+          }
         }
       }),
     [way, nodeUpdateCount.current],

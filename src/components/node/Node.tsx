@@ -1,4 +1,4 @@
-import { FC, ReactNode, Ref, useMemo } from 'react';
+import { forwardRef, ReactNode, useMemo } from 'react';
 import { Position } from '../../types/coordinate/descartes';
 import InnerNode, { NodeShape } from './InnerNode';
 import { CssDistanceType, DirectionDistance } from '../../types/distance';
@@ -16,7 +16,6 @@ import useScope from '../../hooks/context/useScope';
 
 export type NodeProps = {
   name?: TikZKey;
-  ref?: Ref<SVGGElement>;
   /** 位置 */
   position?: PointPosition;
   /** 位置偏移 */
@@ -59,7 +58,7 @@ export type NodeProps = {
   Partial<StrokeProps> &
   StrokeShortcutProps;
 
-const Node: FC<NodeProps> = props => {
+const Node = forwardRef<SVGGElement, NodeProps>((props, ref) => {
   const { offset: scopeOffset, node } = useScope();
   const nodeScopeProps = { offset: scopeOffset, ...node };
   const realProps = {
@@ -70,7 +69,7 @@ const Node: FC<NodeProps> = props => {
 
   const { shape = 'rectangle', width, height, position, offset, innerSep, outerSep, ...res1Props } = realProps;
   const { r, rx, ry, fill, fillOpacity, stroke = 'transparent', strokeWidth = 1, strokeType, ...res2Props } = res1Props;
-  const { color = 'currentColor', size, fontSize, fontStyle, fontFamily, style, ...otherProps } = res2Props;
+  const { color = 'currentColor', size, fontSize, style, ...otherProps } = res2Props;
 
   const realPosition = useMemo<Position>(() => {
     const formatPosition = position ? DescartesPoint.formatPosition(position) : [0, 0];
@@ -126,6 +125,7 @@ const Node: FC<NodeProps> = props => {
 
   return (
     <InnerNode
+      ref={ref}
       width={convertCssToPx(width)}
       height={convertCssToPx(height)}
       shape={shape}
@@ -145,6 +145,6 @@ const Node: FC<NodeProps> = props => {
       {...otherProps}
     />
   );
-};
+});
 
 export default Node;

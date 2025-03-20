@@ -14,13 +14,13 @@ const TikZ: FC<TikZProps> = props => {
   const { precision = 2, offset, node, draw, ...resProps } = props;
 
   return (
-    <NodesContext value={new Map()}>
-      <CalculateContext value={{ precision }}>
-        <ScopeContext value={{ offset, node, draw }}>
+    <NodesContext.Provider value={new Map()}>
+      <CalculateContext.Provider value={{ precision }}>
+        <ScopeContext.Provider value={{ offset, node, draw }}>
           <Surface {...resProps} />
-        </ScopeContext>
-      </CalculateContext>
-    </NodesContext>
+        </ScopeContext.Provider>
+      </CalculateContext.Provider>
+    </NodesContext.Provider>
   );
 };
 

@@ -1,4 +1,4 @@
-import { FC, PropsWithChildren, ReactNode, Ref, SVGProps, useMemo } from 'react';
+import { forwardRef, PropsWithChildren, ReactNode, SVGProps, useMemo } from 'react';
 import { textWrapParse } from '../utils/string';
 import { FontProps } from '../types/svg/font';
 
@@ -22,7 +22,6 @@ export type TextProps = {
   verticalAlign?: TextVerticalAlign | DominantBaseline;
   fontSize?: SVGProps<SVGTextElement>['fontSize'];
   fill?: SVGProps<SVGTextElement>['fill'];
-  ref?: Ref<SVGTextElement>;
 } & FontProps &
   SVGProps<SVGTextElement>;
 
@@ -30,8 +29,8 @@ export type TextProps = {
  * 文本节点
  * @tikz node
  */
-const Text: FC<PropsWithChildren<TextProps>> = props => {
-  const { children, ref, align, verticalAlign, fontSize, fill, ...otherProps } = props;
+const Text = forwardRef<SVGTextElement, PropsWithChildren<TextProps>>((props, ref) => {
+  const { children, align, verticalAlign, fontSize, fill, ...otherProps } = props;
 
   const dominantBaseline = useMemo(() => {
     switch (verticalAlign) {
@@ -66,6 +65,6 @@ const Text: FC<PropsWithChildren<TextProps>> = props => {
       {parseChildren(children)}
     </text>
   );
-};
+});
 
 export default Text;
