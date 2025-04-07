@@ -22,10 +22,16 @@ export const formatPointPosition = (point: PointPosition): Position => {
 };
 
 /** 获取两点间的垂直点 */
-export const getVerticalPoint = (point1: PointPosition, point2: PointPosition, type: '-|' | '|-'): Position => {
+export const getVerticalPoint = (point1: PointPosition, point2: PointPosition, type: '-|' | '|-' | '-|-' | '|-|'): Position | Position[] => {
   const p1 = formatPointPosition(point1);
   const p2 = formatPointPosition(point2);
-  return type === '-|' ? [p2[0], p1[1]] : [p1[0], p2[1]];
+  if (['-|', '|-'].includes(type)) return type === '-|' ? [p2[0], p1[1]] : [p1[0], p2[1]];
+  if (type === '-|-') {
+    const centerX = (p1[0] + p2[0]) / 2;
+    return [[centerX, p1[1]], [centerX, p2[1]]];
+  }
+  const centerY = (p1[1] + p2[1]) / 2;
+  return [[p1[0], centerY], [p2[0], centerY]];
 };
 
 /** 将偏移点与移动点转换为坐标点 */
@@ -54,19 +60,17 @@ const useConvertWay = (way: DrawWaySegmentType) => {
     return model;
   };
 
-  //
   const subscribeCbs: Array<() => boolean | false> = [];
   let allNodeInit = true;
-
   const result = useMemo(
     () =>
-      way.map((item, index) => {
+      way.reduce((acc, item, index) => {
         const type = getDrawPointType(item);
         switch (type) {
           case 'coordinate': {
             const corPosition = formatPointPosition(item as PointPosition);
             cursor = corPosition;
-            return corPosition;
+            return acc.concat(corPosition);
           }
           case 'node': {
             if (![0, way.length - 1].includes(index)) {
@@ -82,7 +86,7 @@ const useConvertWay = (way: DrawWaySegmentType) => {
             });
             if (cb) subscribeCbs.push(cb);
             cursor = nodeModel.center;
-            return nodeModel;
+            return acc.concat(nodeModel);
           }
           case 'vertical': {
             if ([0, way.length - 1].includes(index)) {
@@ -99,18 +103,23 @@ const useConvertWay = (way: DrawWaySegmentType) => {
                 ? tryGetModel(afterPoint as TikZKey).center
                 : formatPointPosition(afterPoint as PointPosition);
             const verPosition = getVerticalPoint(beforePosition, afterPosition, item as VerticalDrawPosition);
-            cursor = verPosition;
-            return cursor;
+            if (Array.isArray(verPosition[0])) {
+              const realVerPosition = verPosition as Position[];
+              cursor = realVerPosition[realVerPosition.length - 1];
+              return acc.concat(realVerPosition);
+            }
+            cursor =  verPosition as Position;
+            return acc.concat(verPosition as Position);
           }
           default: {
             if (index === 0) throw new Error('offset/move point can not be the first point on path.');
             const convertedPos = convertOffsetAndMovePoint(item as string);
             const curPos = DescartesPoint.plus(convertedPos, cursor);
             if (type === 'move') cursor = curPos;
-            return curPos;
+            return acc.concat(curPos);
           }
         }
-      }),
+      }, [] as Array<Position | NodeModel>),
     [way, nodeUpdateCount.current],
   );
 

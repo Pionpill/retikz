@@ -24,7 +24,7 @@ const DrawSegment: FC<DrawSegmentProps> = props => {
 
   const [convertedWay, nodesInit] = useConvertWay(way);
   const { model, updateModel } = usePath();
-
+  
   const pointWay = useMemo(() => {
     const realWay = convertedWay.map((wayPoint, index) => {
       if (wayPoint instanceof NodeModel) {

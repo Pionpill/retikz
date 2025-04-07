@@ -6,7 +6,7 @@ import { ArrowPositionAttributes, ArrowType } from './arrow';
 export type ArrowConfig = { type: ArrowType; fill?: string } & ArrowPositionAttributes & StrokeProps;
 
 /** 垂直路径点，临近的节点不能都是特殊路径点 */
-export type VerticalDrawPosition = '-|' | '|-';
+export type VerticalDrawPosition = '-|' | '|-' | '-|-' | '|-|';
 
 /** 偏移与移动点 */
 export type OffSetOrMovePosition = string;
