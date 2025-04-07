@@ -1,6 +1,6 @@
 {
   "name": "@retikz/core",
-  "version": "0.0.1-rc.1",
+  "version": "0.0.1-rc.2",
   "description": "atomic drawing library implemented using react and d3, inspired by tikz",
   "type": "module",
   "homepage": "https://pionpill.github.io/retikz.doc/",
