@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## 0.0.1-rc.3 (2025.04.08)
+### fix
+- Fixed converted way bug
+
 ## 0.0.1-rc.2 (2025.04.07)
 ### feat
 - Add one arrow type: Circle
