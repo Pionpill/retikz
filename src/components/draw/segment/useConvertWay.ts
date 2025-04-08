@@ -70,7 +70,8 @@ const useConvertWay = (way: DrawWaySegmentType) => {
           case 'coordinate': {
             const corPosition = formatPointPosition(item as PointPosition);
             cursor = corPosition;
-            return acc.concat(corPosition);
+            acc.push(corPosition);
+            return acc;
           }
           case 'node': {
             if (![0, way.length - 1].includes(index)) {
@@ -86,7 +87,8 @@ const useConvertWay = (way: DrawWaySegmentType) => {
             });
             if (cb) subscribeCbs.push(cb);
             cursor = nodeModel.center;
-            return acc.concat(nodeModel);
+            acc.push(nodeModel);
+            return acc;
           }
           case 'vertical': {
             if ([0, way.length - 1].includes(index)) {
@@ -106,17 +108,22 @@ const useConvertWay = (way: DrawWaySegmentType) => {
             if (Array.isArray(verPosition[0])) {
               const realVerPosition = verPosition as Position[];
               cursor = realVerPosition[realVerPosition.length - 1];
-              return acc.concat(realVerPosition);
+              for (const point of realVerPosition) {
+                acc.push(point);
+              }
+              return acc;
             }
             cursor =  verPosition as Position;
-            return acc.concat(verPosition as Position);
+            acc.push(verPosition as Position);
+            return acc;
           }
           default: {
             if (index === 0) throw new Error('offset/move point can not be the first point on path.');
             const convertedPos = convertOffsetAndMovePoint(item as string);
             const curPos = DescartesPoint.plus(convertedPos, cursor);
             if (type === 'move') cursor = curPos;
-            return acc.concat(curPos);
+            acc.push(curPos);
+            return acc;
           }
         }
       }, [] as Array<Position | NodeModel>),
