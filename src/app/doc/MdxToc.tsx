@@ -2,6 +2,7 @@ import { cn, throttle } from '@/lib/utils';
 import { FC, RefObject, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Text } from 'lucide-react';
+import { useLocation, useNavigate } from 'react-router';
 
 export type MdxTocProps = {
   mdxRef: RefObject<HTMLDivElement>;
@@ -11,6 +12,8 @@ export type MdxTocProps = {
 
 const MdxToc: FC<MdxTocProps> = props => {
   const { mdxRef, contentRef, path } = props;
+  const navigate = useNavigate();
+  const location = useLocation();
 
   const { t } = useTranslation();
   const [toc, setToc] = useState<Array<{ level: number; label: string }>>([]);
@@ -21,6 +24,11 @@ const MdxToc: FC<MdxTocProps> = props => {
     if (element) {
       element.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
+  };
+
+  const handleTocClick = (anchor: string) => {
+    scrollToTocAnchor(anchor);
+    navigate(`${location.pathname}${location.search}#${anchor.replace('mdx:', '')}`, { replace: true });
   };
 
   useEffect(() => {
@@ -38,7 +46,8 @@ const MdxToc: FC<MdxTocProps> = props => {
       label: heading.id,
       offsetY: heading.offsetTop,
     }));
-    contentRef.current.addEventListener(
+    scrollToTocAnchor(`mdx:${decodeURIComponent(location.hash.replace('#', ''))}`);
+    return contentRef.current.addEventListener(
       'scroll',
       throttle(() => {
         for (let i = 0; i < tocInfo.length; i++) {
@@ -77,7 +86,7 @@ const MdxToc: FC<MdxTocProps> = props => {
                 'opacity-100': item.label === activeToc,
               })}
               key={item.label}
-              onClick={() => scrollToTocAnchor(item.label)}
+              onClick={() => handleTocClick(item.label)}
             >
               {item.label.replace('mdx:', '')}
             </span>

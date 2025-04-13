@@ -36,7 +36,7 @@ const Doc: FC = () => {
     <SidebarProvider>
       <SideMenu />
       <SideContent>
-        <div className="flex gap-8 relative max-h-full overflow-auto" ref={contentRef}>
+        <div className="flex relative max-h-full overflow-auto" ref={contentRef}>
           <div className="flex-1 my-4 flex justify-center">
             <MdxContent ref={mdxRef} content={source} onStatusChange={handleStatusChange} />
           </div>
