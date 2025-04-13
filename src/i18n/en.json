@@ -54,6 +54,7 @@
     "update": "update date",
     "core": {
       "description": "under development"
-    }
+    },
+    "thisPage": "on this page"
   }
 }

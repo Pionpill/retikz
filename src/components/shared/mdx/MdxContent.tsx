@@ -1,7 +1,7 @@
 import { compile, CompileOptions, run, RunOptions } from '@mdx-js/mdx';
 import { MDXProvider } from '@mdx-js/react';
 import { Draw, Node, PathNode, Scope, TikZ } from '@retikz/core';
-import { FC, PropsWithChildren, ReactNode, useEffect, useState } from 'react';
+import { FC, memo, PropsWithChildren, ReactNode, RefObject, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import * as jsxDevRuntime from 'react/jsx-dev-runtime';
 import * as jsxRuntime from 'react/jsx-runtime';
@@ -10,6 +10,7 @@ import remarkMath from 'remark-math';
 import CodeSpace, { CodeSpaceProps } from './CodeSpace';
 import MarkdownAlert, { MarkdownAlertProps } from './MarkdownAlert';
 import MarkdownCode, { MarkdownCodeProps } from './MarkdownCode';
+import { cn } from '@/lib/utils';
 
 TikZ.displayName = 'TikZ';
 Draw.displayName = 'Draw';
@@ -17,16 +18,27 @@ Node.displayName = 'Node';
 PathNode.displayName = 'PathNode';
 Scope.displayName = 'Scope';
 
+export const MDX_ID_PREFIX = 'mdx:';
+const getTocAnchor = (name: unknown) => MDX_ID_PREFIX + String(name).replace(/[\s`]+/g, '');
+
 const components = {
   TikZ: TikZ,
   Draw: Draw,
   Node: Node,
   PathNode: PathNode,
   Scope: Scope,
-  h1: (props: PropsWithChildren) => <h1 className="text-3xl font-bold mb-6" {...props} />,
-  h2: (props: PropsWithChildren) => <h2 className="text-2xl font-bold mt-12 mb-5" {...props} />,
-  h3: (props: PropsWithChildren) => <h3 className="text-xl font-bold mt-7 mb-4" {...props} />,
-  h4: (props: PropsWithChildren) => <h3 className="text-lg font-bold mt-4 mb-4" {...props} />,
+  h1: (props: PropsWithChildren) => (
+    <h1 className="text-3xl font-bold mb-6" id={getTocAnchor(props.children)} {...props} />
+  ),
+  h2: (props: PropsWithChildren) => (
+    <h2 className="text-2xl font-bold mt-12 mb-5" id={getTocAnchor(props.children)} {...props} />
+  ),
+  h3: (props: PropsWithChildren) => (
+    <h3 className="text-xl font-bold mt-7 mb-4" id={getTocAnchor(props.children)} {...props} />
+  ),
+  h4: (props: PropsWithChildren) => (
+    <h3 id={getTocAnchor(props.children)} className="text-lg font-bold mt-4 mb-4" {...props} />
+  ),
   p: (props: PropsWithChildren) => <p className="mt-4" {...props} />,
   a: (props: PropsWithChildren<{ href: string }>) => (
     <a
@@ -52,22 +64,27 @@ const runtime: RunOptions = {
   jsxs: jsxRuntime.jsxs,
   jsxDEV: jsxDevRuntime.jsxDEV,
   Fragment: jsxRuntime.Fragment,
-  useMDXComponents: () => components,
 };
 
 export type MdxContentProps = {
   content: string;
+  onStatusChange?: (status: 'compiling' | 'error' | 'no-content' | 'success') => void;
+  ref?: RefObject<HTMLDivElement>;
 };
 
-const MdxContent: FC<MdxContentProps> = ({ content }) => {
+const InnerMdxContent: FC<MdxContentProps> = props => {
+  const { content, onStatusChange, ref } = props;
+
   const [source, setSource] = useState<ReactNode | null>(null);
   const [error, setError] = useState<string | null>(null);
   const { t } = useTranslation();
 
   useEffect(() => {
+    onStatusChange?.('compiling');
     const compileMdx = async () => {
       if (!content) {
         setSource(null);
+        onStatusChange?.('no-content');
         return;
       }
 
@@ -85,23 +102,27 @@ const MdxContent: FC<MdxContentProps> = ({ content }) => {
         const { default: Content } = await run(compiled, runtime);
 
         setSource(
-          <MDXProvider components={components}>
+          <MDXProvider>
             <Content components={components} />
           </MDXProvider>,
         );
         setError(null);
+        onStatusChange?.('success');
       } catch (err) {
         if (err instanceof Error) setError(err.message);
         setSource(null);
+        onStatusChange?.('error');
       }
     };
 
     compileMdx();
-  }, [content]);
+  }, [content, onStatusChange]);
+
+  const commonClassName = "max-w-[800px]";
 
   if (error) {
     return (
-      <div className="p-4 text-red-500 bg-red-50 dark:bg-red-950 rounded-lg">
+      <div ref={ref} className={cn("p-4 text-red-500 bg-red-50 dark:bg-red-950 rounded-lg", commonClassName)}>
         <h3 className="font-bold mb-2">{t('mdx.error')}</h3>
         <pre className="whitespace-pre-wrap text-sm">{error}</pre>
       </div>
@@ -109,10 +130,20 @@ const MdxContent: FC<MdxContentProps> = ({ content }) => {
   }
 
   if (!source) {
-    return <div className="p-4 text-muted-foreground">{t('mdx.compiling')}</div>;
+    return (
+      <div ref={ref} className={cn("p-4 text-muted-foreground", commonClassName)}>
+        {t('mdx.compiling')}
+      </div>
+    );
   }
 
-  return <div className="mdx-content">{source}</div>;
+  return (
+    <div ref={ref} className={cn("mdx-content", commonClassName)}>
+      {source}
+    </div>
+  );
 };
+
+const MdxContent = memo(InnerMdxContent, (pre: MdxContentProps, next: MdxContentProps) => pre.content === next.content);
 
 export default MdxContent;

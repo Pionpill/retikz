@@ -54,6 +54,7 @@
     "update": "更新日期",
     "core": {
       "description": "开发中" 
-    }
+    },
+    "thisPage": "这篇文章"
   }
 }

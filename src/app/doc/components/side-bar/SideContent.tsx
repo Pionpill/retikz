@@ -41,20 +41,18 @@ const SideContent: FC<PropsWithChildren> = props => {
     return filePath[filePath.length - 1] === 'index.mdx' ? filePath.slice(0, -1) : filePath;
   }, [filePath]);
 
-  const getInfo = () => getReposCommitApi(moduleConfig[module].repos, `doc/${lang}/${shownPath.join('/')}`);
-
   useEffect(() => {
-    getInfo().then(res =>
+    getReposCommitApi(moduleConfig[module].repos, `doc/${lang}/${shownPath.join('/')}`).then(res =>
       setInfo({
         createDate: new Date(res[0].commit.author.date),
         updateDate: new Date(res[res.length - 1].commit.author.date),
       }),
     );
-  }, []);
+  }, [JSON.stringify(shownPath), module, lang]);
 
   return (
-    <SidebarInset>
-      <header className="flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12">
+    <SidebarInset className="max-h-screen">
+      <header className="flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12 border-b">
         <div className="flex items-center gap-2 px-4 w-full">
           <div className="h-4 flex-1 flex items-center">
             <SidebarTrigger className="-ml-1" />
@@ -93,7 +91,7 @@ const SideContent: FC<PropsWithChildren> = props => {
           ) : null}
         </div>
       </header>
-      <div className="px-4 pb-4">{children}</div>
+      {children}
     </SidebarInset>
   );
 };

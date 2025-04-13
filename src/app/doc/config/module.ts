@@ -5,7 +5,7 @@ export const moduleConfig: Record<string, { repos: string; npm: string; version:
   core: {
     repos: 'retikz',
     npm: "@retikz/core",
-    version: "0.0.1-rc.0",
+    version: "0.0.1-rc.3",
     iconMap: {
       installation: MonitorDown,
       安装: MonitorDown,
