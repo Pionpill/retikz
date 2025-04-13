@@ -1,7 +1,7 @@
 import { compile, CompileOptions, run, RunOptions } from '@mdx-js/mdx';
 import { MDXProvider } from '@mdx-js/react';
 import { Draw, Node, PathNode, Scope, TikZ } from '@retikz/core';
-import { FC, memo, PropsWithChildren, ReactNode, RefObject, useEffect, useState } from 'react';
+import { FC, memo, PropsWithChildren, ReactNode, RefObject, useEffect, useLayoutEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import * as jsxDevRuntime from 'react/jsx-dev-runtime';
 import * as jsxRuntime from 'react/jsx-runtime';
@@ -68,7 +68,7 @@ const runtime: RunOptions = {
 
 export type MdxContentProps = {
   content: string;
-  onStatusChange?: (status: 'compiling' | 'error' | 'no-content' | 'success') => void;
+  onStatusChange?: (status: 'compiling' | 'error' | 'no-content' | 'compiled' | 'rendered') => void;
   ref?: RefObject<HTMLDivElement>;
 };
 
@@ -107,7 +107,7 @@ const InnerMdxContent: FC<MdxContentProps> = props => {
           </MDXProvider>,
         );
         setError(null);
-        onStatusChange?.('success');
+        onStatusChange?.('compiled');
       } catch (err) {
         if (err instanceof Error) setError(err.message);
         setSource(null);
@@ -117,6 +117,12 @@ const InnerMdxContent: FC<MdxContentProps> = props => {
 
     compileMdx();
   }, [content, onStatusChange]);
+
+  useLayoutEffect(() => {
+    if (source) {
+      onStatusChange?.('rendered');
+    }
+  }, [source])
 
   const commonClassName = "max-w-[800px]";
 

@@ -8,10 +8,11 @@ export type MdxTocProps = {
   mdxRef: RefObject<HTMLDivElement>;
   contentRef: RefObject<HTMLDivElement>;
   path: string;
+  mdxStatus: 'compiling' | 'error' | 'no-content' | 'compiled' | 'rendered';
 };
 
 const MdxToc: FC<MdxTocProps> = props => {
-  const { mdxRef, contentRef, path } = props;
+  const { mdxRef, contentRef, path, mdxStatus } = props;
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -38,7 +39,7 @@ const MdxToc: FC<MdxTocProps> = props => {
       label: heading.id,
     }));
     setToc(toc);
-  }, [path]);
+  }, [path, mdxStatus]);
 
   useEffect(() => {
     const headings = mdxRef.current.querySelectorAll<HTMLElement>('h2, h3, h4');
@@ -65,7 +66,7 @@ const MdxToc: FC<MdxTocProps> = props => {
     <div className="hidden sticky top-0 xl:flex flex-col w-48 border-l py-4">
       <div className="flex flex-col gap-2">
         <span
-          className="hover:text-blue-500 transition-all cursor-pointer ml-4 font-bold items-center flex gap-2 opacity-60"
+          className="hover:text-blue-500 transition-all cursor-pointer ml-4 items-center flex gap-2 opacity-60"
           onClick={() => {
             contentRef.current.scrollTo({ top: 0, behavior: 'smooth' });
           }}
@@ -74,7 +75,7 @@ const MdxToc: FC<MdxTocProps> = props => {
           {t('doc.thisPage')}
         </span>
         {toc.map(item => (
-          <div className="flex relative">
+          <div className="flex relative" key={item.label}>
             {activeToc === item.label && (
               <span className="absolute left-0 h-full w-[2px] bg-blue-500 translate-x-[-1px]" />
             )}

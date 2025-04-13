@@ -16,7 +16,9 @@ const Doc: FC = () => {
   const path = searchParams.get('path')!;
 
   const [source, setSource] = useState('');
-  const [mdxCompiled, setMdxCompiled] = useState(false);
+  const [mdxStatus, setMdxStatus] = useState<'compiling' | 'error' | 'no-content' | 'compiled' | 'rendered'>(
+    'no-content',
+  );
   const mdxRef = useRef<HTMLDivElement>(null!);
   const contentRef = useRef<HTMLDivElement>(null!);
 
@@ -28,19 +30,17 @@ const Doc: FC = () => {
     });
   }, [module, lang, path]);
 
-  const handleStatusChange = (status: 'compiling' | 'error' | 'no-content' | 'success') => {
-    setMdxCompiled(status === 'success');
-  };
-
   return (
     <SidebarProvider>
       <SideMenu />
       <SideContent>
         <div className="flex relative max-h-full overflow-auto" ref={contentRef}>
           <div className="flex-1 my-4 flex justify-center">
-            <MdxContent ref={mdxRef} content={source} onStatusChange={handleStatusChange} />
+            <MdxContent ref={mdxRef} content={source} onStatusChange={setMdxStatus} />
           </div>
-          { mdxCompiled && <MdxToc mdxRef={mdxRef} path={path} contentRef={contentRef}/>}
+          {mdxStatus === 'rendered' && (
+            <MdxToc mdxRef={mdxRef} path={path} contentRef={contentRef} mdxStatus={mdxStatus} />
+          )}
         </div>
       </SideContent>
     </SidebarProvider>
