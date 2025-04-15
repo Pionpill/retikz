@@ -46,6 +46,9 @@ const MarkdownCode: FC<MarkdownCodeProps> = props => {
       <SyntaxHighlighter
         {...props}
         style={theme === 'dark' ? oneDark : oneLight}
+        customStyle={{
+          background: "#2b2c2d",
+        }}
         language={match[1]}
         PreTag="div"
         className="rounded-lg text-sm w-full"
