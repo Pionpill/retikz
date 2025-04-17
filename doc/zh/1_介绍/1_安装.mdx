@@ -6,10 +6,18 @@
 npm install @retikz/core
 ```
 
-`@retikz/core` 有一个前置依赖：`react`，请确保你的项目中已经安装了对应的包:
+你还需要确保安装了前置依赖项。你可能已经在项目中安装了 `react` 和 `react-dom`，但如果没有，请确保安装它们：
 
 ```bash
 npm install react react-dom
 ```
 
-<Alert type="warning">目前，@retikz/core 基于 react19 开发，在正式版发布前会兼容 react18。更低的版本暂时不考虑支持。</Alert>
+<Alert type="warning">最低兼容的 React 版本是 React18，且没有更低的版本兼容计划。</Alert>
+
+## 包
+
+我们开发 `retikz` 的最终目标是打造一个开发者友好的逻辑绘图工具，目前只有 `@retikz/core` 这一个包，包含了最基本的原子绘图语法，未来可能会发布 `@retikz/uml`，`retikz/plot` 等包。
+
+| 封装程度 | 例子 | 说明 |
+| -------- | ---- | ---- |
+| 高度封装 |      |      |
