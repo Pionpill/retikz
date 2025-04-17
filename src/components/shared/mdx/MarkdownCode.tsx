@@ -32,14 +32,14 @@ const MarkdownCode: FC<MarkdownCodeProps> = props => {
     <code className={cn('w-full relative group', className)}>
       <Button
         variant="ghost"
-        size="sm"
-        className="absolute right-2 top-2 opacity-0 group-hover:opacity-100 transition-opacity z-50"
+        size="xs"
+        className="absolute right-2 top-1.5 opacity-0 group-hover:opacity-100 transition-opacity z-50"
         onClick={handleClick}
       >
         <Files className="h-4 w-4" />
       </Button>
       {match[1] ? (
-        <span className="absolute right-4 top-4 text-xs text-muted-foreground opacity-50 group-hover:opacity-0">
+        <span className="absolute right-2 top-2.5 text-xs text-muted-foreground opacity-50 group-hover:opacity-0">
           {match[1]}
         </span>
       ) : null}
@@ -51,7 +51,7 @@ const MarkdownCode: FC<MarkdownCodeProps> = props => {
         }}
         language={match[1]}
         PreTag="div"
-        className="rounded-lg text-sm w-full"
+        className="py-2! my-4! rounded-lg text-sm w-full"
       >
         {String(children).replace(/\n$/, '')}
       </SyntaxHighlighter>

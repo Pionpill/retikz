@@ -20,7 +20,7 @@ const TikZFlow: FC = () => {
         <PathNode midway right children={t('home.tool')} color="gray" size="small" />
       </Draw>
       <Draw way={['React', 'retikz']} color="silver" endArrow="Stealth">
-        <PathNode midway children="svg" fill={theme === 'dark' ? '#09090B' : 'white'} color="gray" size="small" />
+        <PathNode midway children="svg" fill={theme === 'dark' ? '#1d1d1d' : 'white'} color="gray" size="small" />
       </Draw>
     </TikZ>
   );
