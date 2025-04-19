@@ -35,7 +35,7 @@ const Doc: FC = () => {
       <SideMenu />
       <SideContent>
         <div className="flex relative max-h-full overflow-auto" ref={contentRef}>
-          <div className="flex-1 my-4 flex justify-center">
+          <div className="flex-1 my-4 flex justify-center px-4">
             <MdxContent ref={mdxRef} content={source} onStatusChange={setMdxStatus} />
           </div>
           {mdxStatus === 'rendered' && (

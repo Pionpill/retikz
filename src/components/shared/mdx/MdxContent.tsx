@@ -1,3 +1,4 @@
+import { cn } from '@/lib/utils';
 import { compile, CompileOptions, run, RunOptions } from '@mdx-js/mdx';
 import { MDXProvider } from '@mdx-js/react';
 import { Draw, Node, PathNode, Scope, TikZ } from '@retikz/core';
@@ -5,12 +6,9 @@ import { FC, memo, PropsWithChildren, ReactNode, RefObject, useEffect, useLayout
 import { useTranslation } from 'react-i18next';
 import * as jsxDevRuntime from 'react/jsx-dev-runtime';
 import * as jsxRuntime from 'react/jsx-runtime';
-import rehypeKatex from 'rehype-katex';
-import remarkMath from 'remark-math';
 import CodeSpace, { CodeSpaceProps } from './CodeSpace';
 import MarkdownAlert, { MarkdownAlertProps } from './MarkdownAlert';
 import MarkdownCode, { MarkdownCodeProps } from './MarkdownCode';
-import { cn } from '@/lib/utils';
 
 TikZ.displayName = 'TikZ';
 Draw.displayName = 'Draw';
@@ -42,7 +40,7 @@ const components = {
   p: (props: PropsWithChildren) => <p className="mt-4" {...props} />,
   a: (props: PropsWithChildren<{ href: string }>) => (
     <a
-      className="text-link hover:text-link-secondary transition-all"
+      className="text-blue-400 hover:text-blue-500 transition-all"
       target="_blank"
       rel="noopener noreferrer"
       {...props}
@@ -93,14 +91,11 @@ const InnerMdxContent: FC<MdxContentProps> = props => {
         const compiled = await compile(content, {
           outputFormat: 'function-body',
           development: process.env.NODE_ENV === 'development',
-          jsxImportSource: 'react',
-          remarkPlugins: [remarkMath],
-          rehypePlugins: [rehypeKatex],
         } as CompileOptions);
 
         // 运行编译后的代码
         const { default: Content } = await run(compiled, runtime);
-
+        
         setSource(
           <MDXProvider>
             <Content components={components} />
