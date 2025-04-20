@@ -1,0 +1,120 @@
+# 说明
+
+## 什么是 retikz
+
+retikz（即 @retikz/core 包，下文都用 retikz 指代） 是一个在 web 环境上，使用 javascript 和 react 框架搭建，基于 tikz 语法的可视化库。
+
+- web 环境：retikz 最基础的功能需要通过浏览器 DOM 绘制 svg 图像。
+- react 框架：retikz 基于 react18+ 框架，使用 jsx 语法编写。
+- tikz 语法：retikz 灵感源于 [tikz](https://github.com/pgf-tikz/pgf)，一定程度上借鉴了 tikz 语法。
+
+在代码实现上，使用了[d3](https://d3js.org/)的部分子包，和 d3 一样，retikz 只对 svg 元素做了最简单的封装，在 tikz 的语法中，仍然可以灵活，动态，基于数据地创建可视化图形。
+
+## 图元级封装
+
+目前主流的图形库按封装程度可以分为以下几类：
+
+- 高度封装：[highcharts](https://github.com/highcharts/highcharts-dist)，[echarts](https://echarts.apache.org/zh/index.html) 。通过固定的数据结构与参数配置来生成图形。
+- 中度封装：[recharts](https://recharts.org/)。并不直接生成图形，可以选择性地通过 JSX 语法生成坐标轴，曲线，标题等图表元素。
+- 简易封装：[d3](https://d3js.org/)。只给出处理与操作数据的方法，并提供一些工具函数，一般不直接生成图表元素。
+
+封装程度越高，开发者越容易上手，越容易绘制出图形。但同时，图形元素的灵活性越差，修改与调整参数的自由度越低。
+
+例如在 highcharts 中我们会容易绘制一个散点图，折线图，饼图等。也可以通过参数修改样式，动画效果，例如将线条变为虚线。但如果想要做一些自由度较高的修改，例如将柱状图与折线图结合在一起，就需要换一种图表。更过分一点，我想要将柱状图与折线图放在一个圆环上显示，那就完全不可行了。
+
+根据粒度不同，可以将图表分为这几种类别：
+
+- 图表类型（图表）：即散点图，折线图，饼图等。
+- 图表元素（元素）：坐标轴，曲线，标题等。
+- 图形元素（图元）：点，线等基本元素。
+
+retikz 的定位是图元级可视化库，我们封装了 Node，Draw 等 React 组件对应节点，路径等 svg 基本元素，并做了一些数学计算封装。在封装程度上，介于 d3 与 recharts 之间。
+
+### 对比 d3
+
+D3 是一个底层的绘图工具库，本身不具备直接绘图的能力，也不直接渲染图形元素。社区更多地将 D3 用作数据处理的基础工具。
+
+Retikz 和 D3 都提供了从数据到图元的转换能力，但它们在实现方式上有所不同。D3 更加庞大和复杂，直接与 SVG 元素对接；而 Retikz 则对 SVG 进行了封装，可以直接生成图形。虽然 Retikz 也包含一定的数学计算和数据处理逻辑，但这些都被封装在内部，开发者无需关心也无法调用。
+
+总而言之，D3 处理的图元是基本的 SVG 元素，而 Retikz 使用的是 TikZ 语法中的基本元素。
+
+### 对比 recharts
+
+我非常喜欢 recharts 的设计理念，通过 React 组件将图表元素分离，允许开发者通过 JSX 语法灵活地生成图表，在一定程度上解决了高度封装的图表库灵活性不足的问题。
+
+不过 retikz 并不是一个图表库，我们的粒度更小，例如 recharts 可以生成标题，但 retikz 可以生成更基础的文本；recharts 可以生成折线，retikz 则生成更基础的路径。
+
+三者的区别如下：
+
+<Table
+  header={[
+    { title: '框架', key: 'name' },
+    { title: '基础图形', key: 'unit' },
+    { title: '定位与作用', key: 'position' },
+  ]}
+  data={[
+    {
+      name: 'd3',
+      unit: 'svg 元素',
+      position: '底层可视化工具，提供数学计算与数据处理能力',
+    },
+    {
+      name: 'recharts',
+      unit: '图表元素',
+      position: '可视化组件库，提供细粒度的图表与图表元素组件',
+    },
+    {
+      name: 'retikz',
+      unit: 'tikz 元素（svg 封装）',
+      position: '基于 svg 简易封装的 tikz 组件库',
+    },
+  ]}
+/>
+
+<Alert type="info" title="未来计划">
+  未来，我们可能会基于 @retikz/core 封装出 @retikz/charts 并一定程度上参考 recharts 的设计理念。
+</Alert>
+
+## tikz 语法
+
+### 高自由的逻辑图形
+
+D3（全名 Data-Driven Documents）即数据驱动文档，有一个基本的特性：处理大数据。d3，recharts，highcharts 等库在业务场景中，都是基于数据来生成图表。d3 的许多 API 都提供了大数据转换与处理能力。整体可视化逻辑如下：
+
+<TikZ height="100" width="600">
+  <Node name="db" position={[50, 50]} children="数据库"/>
+  <Node name="api" position={[200, 50]} children="后端 API"/>
+  <Node name="comp" position={[350, 50]} children="图表组件"/>
+  <Node name="chart" position={[500, 50]} children="图表"/>
+  <Draw way={['db', 'api', 'comp', 'chart']} endArrows="Stealth">
+    <PathNode midway above color="gray" children="查询" size="small" segmentIndex={0}/>
+    <PathNode midway above color="gray" children="网络" size="small" segmentIndex={1}/>
+    <PathNode midway above color="gray" children="生成" size="small"/>
+  </Draw>
+</TikZ>
+
+retikz 最基础的用法是绘制逻辑图形，整个绘制逻辑如下：
+
+<TikZ height="100" width="600">
+  <Node name="logic" position={[50, 50]} children="逻辑"/>
+  <Node name="retikz" position={[200, 50]} children="retikz"/>
+  <Node name="chart" position={[350, 50]} children="图形"/>
+  <Draw way={['logic', 'retikz', 'chart']} endArrows="Stealth">
+    <PathNode midway above color="gray" children="查询" size="small" segmentIndex={0}/>
+    <PathNode midway above color="gray" children="生成" size="small"/>
+  </Draw>
+</TikZ>
+
+retikz 并不基于数据，简言之，它更适合用于绘制高自由度的逻辑图形。如果你想将数据存储在后端并进行可视化，需要自行实现 API -> 逻辑的转换过程（至少在基本的  @retikz/core 中是不支持的）。
+
+### retikz 封装了什么
+
+D3 主要提供将数据集转换为图形元素的逻辑，但具体的图形展示方式由开发者自行决定。而 Retikz 则对一些 TikZ 元素进行了封装。例如，Node 将矩形、文本、组等元素封装在一起，负责文本节点的绘制；Draw 则用于绘制路径，并提供一些数学计算功能。
+
+举个例子：如果需要绘制两个文本节点并用线连接起来，使用 D3 绘制时，开发者需要自行计算节点的位置、连接线的起点和终点，以及箭头的方向和位置。
+
+而在 Retikz 中，开发者只需确定节点的位置，并调用 Draw 组件绘制路径即可。Retikz 会自动计算从两个节点的哪个位置开始连接，以及如何生成箭头。这是因为在 Retikz 内部，Node 会创建一个对应的 Model 对象，并缓存节点位置、边距、是否在 DOM 上创建完成等数据，同时提供交点计算、顶点计算等数学方法。借助这些内部封装的数学方法，Retikz 可以自动计算连接路径和箭头的生成。
+
+D3 和 Retikz 在绘图上的区别在于，D3 绘制完图形后，基本不会对图形进行修改，也很难根据图形的 DOM 实时计算，因为 D3 的核心是数据。而 Retikz 会为每个图形创建对应的 Model 对象，可以实时获取数据并调用数学方法。
+
+总之，在使用 Retikz 时，开发者只需关注逻辑到图形的转换，基础元素的绘制过程则可以完全交由 Retikz 内部实现。
