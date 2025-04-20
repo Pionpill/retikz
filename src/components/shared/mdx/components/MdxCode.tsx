@@ -9,12 +9,12 @@ import { useTranslation } from 'react-i18next';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { oneDark, oneLight } from 'react-syntax-highlighter/dist/esm/styles/prism';
 
-export type MarkdownCodeProps = {
+export type MdxProps = {
   className?: string;
   children: string;
 };
 
-const MarkdownCode: FC<MarkdownCodeProps> = props => {
+const MdxCode: FC<MdxProps> = props => {
   const { children, className } = props;
 
   const inline = children?.includes('\\n');
@@ -61,4 +61,4 @@ const MarkdownCode: FC<MarkdownCodeProps> = props => {
   );
 };
 
-export default MarkdownCode;
+export default MdxCode;

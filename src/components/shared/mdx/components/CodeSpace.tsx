@@ -1,6 +1,6 @@
 'use client';
 import { FC, ReactElement, useMemo, useState } from 'react';
-import MarkdownCode from './MarkdownCode';
+import MdxCode from './MdxCode';
 import { Button } from '@/components/ui/button';
 import { PanelBottomClose, PanelTopClose } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -113,7 +113,7 @@ const CodeSpace: FC<CodeSpaceProps> = props => {
 
       {/* 渲染代码部分 */}
       {showCode === false ? null : (
-        <MarkdownCode className={`language-${lang} hidden group-data-[visible=true]:block`}>{codeString}</MarkdownCode>
+        <MdxCode className={`language-${lang} hidden group-data-[visible=true]:block`}>{codeString}</MdxCode>
       )}
     </div>
   );
