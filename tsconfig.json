@@ -1,25 +1,23 @@
 {
+  "$schema": "https://json.schemastore.org/tsconfig",
   "compilerOptions": {
-    "target": "ES2020",
-    "useDefineForClassFields": true,
-    "lib": ["ES2020", "DOM", "DOM.Iterable"],
-    "module": "ESNext",
-    "skipLibCheck": true,
-    "outDir": "./types",
-
-    /* Bundler mode */
-    "moduleResolution": "bundler",
+    "composite": false,
+    "declaration": true,
+    "declarationMap": true,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "inlineSources": false,
     "isolatedModules": true,
-    "moduleDetection": "force",
-    "jsx": "react-jsx",
-
-    /* Linting */
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "noUnusedLocals": false,
+    "noUnusedParameters": false,
+    "preserveWatchOutput": true,
+    "skipLibCheck": true,
     "strict": true,
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
-    "noFallthroughCasesInSwitch": true,
-    "declaration": true
+    "target": "ESNext",
+    "lib": ["ESNext"]
   },
-  "include": ["src"],
-  "exclude": ["node_modules", "dist"]
+  "include": ["packages/*/src", "apps/*/src"],
+  "exclude": ["node_modules"]
 }
