@@ -1,3 +1,34 @@
 packages:
   - 'packages/*'
   - 'apps/*'
+
+catalog:
+  # React
+  react: ~18.3
+  react-dom: ~18.3
+  '@types/react': ~18.3
+  '@types/react-dom': ~18.3
+
+  # D3
+  d3-color: ^3.1.0
+  d3-shape: ^3.2.0
+  '@types/d3-color': ^3.1.3
+  '@types/d3-shape': ^3.1.6
+
+  # Build
+  vite: ^6.0.1
+  vite-plugin-dts: ^4.5.0
+  '@vitejs/plugin-react': ^4.3.4
+  typescript: ^5.9.3
+
+  # Lint / format
+  eslint: ^9.39.1
+  '@eslint/js': ^9.39.1
+  eslint-plugin-react-hooks: ^7.0.1
+  eslint-plugin-react-refresh: ^0.4.24
+  typescript-eslint: ^8.49.0
+  globals: ^16.5.0
+  prettier: ^3.7.4
+
+  # Types
+  '@types/node': ^22.10.7
