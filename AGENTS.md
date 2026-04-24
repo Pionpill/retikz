@@ -19,10 +19,10 @@
 retikz/
 ├── packages/
 │   └── core/           # @retikz/core — 核心库，发布到 npm
-├── apps/               # 预留：未来的示例/演示应用
+├── apps/
+│   └── docs/           # @retikz/docs — 文档站点，mdx 内容在 apps/docs/doc/{en,zh}/
 ├── config/
 │   └── eslint/         # 共享的 ESLint 预设
-├── doc/                # 文档源码（en / zh）
 ├── pnpm-workspace.yaml # workspace + catalog（统一依赖版本）
 ├── eslint.config.js    # 根级 flat config
 └── tsconfig.json
@@ -90,7 +90,7 @@ pnpm --filter @retikz/core preview   # 预览构建结果
 
 ### 选择建议
 
-- 改了 `.md` / `doc/` → `:pencil:`
+- 改了 `.md` / `apps/docs/doc/` → `:pencil:`
 - 改了 `pnpm-workspace.yaml` / `eslint.config.js` / `tsconfig.json` 等 → `:wrench:`（配置）或 `:recycle:`（结构性整理）
 - 新增一个 API / 组件 → `:sparkles:`；其细节打磨后续改动 → `:construction:`
 - 纯删除无用代码 → `:fire:`

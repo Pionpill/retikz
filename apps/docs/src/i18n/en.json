@@ -50,8 +50,6 @@
     "seeOnNpm": "view the project on npm",
     "starRetikZ": "star retikz on Github",
     "backToHome": "back to home",
-    "create": "create date",
-    "update": "update date",
     "core": {
       "description": "under development"
     },

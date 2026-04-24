@@ -50,8 +50,6 @@
     "seeOnNpm": "在 npm 上查看项目",
     "starRetikZ": "在 Github 上 star 项目",
     "backToHome": "返回主页",
-    "create": "创建日期",
-    "update": "更新日期",
     "core": {
       "description": "开发中" 
     },

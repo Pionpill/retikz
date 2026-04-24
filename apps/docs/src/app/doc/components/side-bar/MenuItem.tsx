@@ -1,4 +1,4 @@
-import type { ContentType } from '@/api/github';
+import type { DocItem } from '@/app/doc/content';
 import { moduleConfig } from '@/app/doc/config/module';
 import { CollapsibleTrigger } from '@/components/ui/collapsible';
 import {
@@ -15,7 +15,7 @@ import type { FC} from 'react';
 import { useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router';
 
-const MenuItem: FC<{ item: ContentType }> = props => {
+const MenuItem: FC<{ item: DocItem }> = props => {
   const { item } = props;
 
   const module = useModule();
@@ -30,7 +30,7 @@ const MenuItem: FC<{ item: ContentType }> = props => {
   }, [module, folderLabel]);
 
   const folderLink = useMemo(() => {
-    const getLinkByContentPath = (content: ContentType) =>
+    const getLinkByContentPath = (content: DocItem) =>
       `/doc/${module}/?path=${content.path.split('/').slice(2).join('/')}`;
 
     if (!item.children) {
@@ -53,7 +53,7 @@ const MenuItem: FC<{ item: ContentType }> = props => {
     event.stopPropagation(); // 阻止事件冒泡
   };
 
-  const getContentLink = (content: ContentType) => {
+  const getContentLink = (content: DocItem) => {
     return content.name.startsWith('index')
       ? undefined
       : `/doc/${module}/?path=${content.path.split('/').slice(2).join('/')}`;
@@ -62,7 +62,7 @@ const MenuItem: FC<{ item: ContentType }> = props => {
   const getContentLabel = (name: string) => (name.split('_')[1] || name.split('_')[0]).split('.')[0];
 
   return (
-    <Collapsible key={item.sha} open={open} asChild className="group/collapsible">
+    <Collapsible key={item.path} open={open} asChild className="group/collapsible">
       <SidebarMenuItem>
         <CollapsibleTrigger asChild>
           <SidebarMenuButton className="capitalize" onClick={() => folderLink && navigate(folderLink)}>
@@ -82,7 +82,7 @@ const MenuItem: FC<{ item: ContentType }> = props => {
               {item.children!.map(subItem => {
                 const fileLink = getContentLink(subItem);
                 return fileLink ? (
-                  <SidebarMenuSubItem key={subItem.sha}>
+                  <SidebarMenuSubItem key={subItem.path}>
                     <SidebarMenuSubButton asChild>
                       <Link to={fileLink}>
                         <span>{getContentLabel(subItem.name)}</span>
