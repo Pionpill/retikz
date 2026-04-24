@@ -30,7 +30,7 @@ const getCodeString = (node: CodeStringNode, indentSize = 2): string => {
   // 如果是对象（React 元素），提取其类型和属性
   if (typeof node === 'object') {
     const { type, props } = node;
-    const typeName = type.displayName ?? type;
+    const typeName = type.displayName;
 
     // 处理子节点
     const childrenCode = props.children

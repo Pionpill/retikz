@@ -50,7 +50,7 @@ const InnerMdxContent: FC<MdxContentProps> = props => {
         // 编译 MDX
         const compiled = await compile(content, {
           outputFormat: 'function-body',
-          development: process.env.NODE_ENV === 'development',
+          development: import.meta.env.DEV,
         });
 
         // 运行编译后的代码
@@ -77,7 +77,7 @@ const InnerMdxContent: FC<MdxContentProps> = props => {
     if (source) {
       onStatusChange?.('rendered');
     }
-  }, [source])
+  }, [source, onStatusChange])
 
   const commonClassName = "max-w-[800px]";
 

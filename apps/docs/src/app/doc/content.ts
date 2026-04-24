@@ -2,25 +2,25 @@ export type DocItem = {
   name: string;
   path: string;
   type: 'file' | 'dir';
-  children?: DocItem[];
+  children?: Array<DocItem>;
 };
 
-const mdxModules = import.meta.glob('/doc/**/*.mdx', {
+const mdxModules = import.meta.glob<string>('/doc/**/*.mdx', {
   query: '?raw',
   import: 'default',
   eager: true,
-}) as Record<string, string>;
+});
 
 export const getMdxSource = (lang: string, relativePath: string): string => {
   const key = `/doc/${lang}/${relativePath}`;
   return mdxModules[key] ?? '';
 };
 
-export const getDocTree = (lang: string): DocItem[] => {
+export const getDocTree = (lang: string): Array<DocItem> => {
   const prefix = `/doc/${lang}/`;
   const keys = Object.keys(mdxModules).filter(k => k.startsWith(prefix));
 
-  const root: DocItem[] = [];
+  const root: Array<DocItem> = [];
 
   for (const key of keys) {
     const parts = key.slice(prefix.length).split('/');
@@ -47,7 +47,7 @@ export const getDocTree = (lang: string): DocItem[] => {
     }
   }
 
-  const sortTree = (items: DocItem[]) => {
+  const sortTree = (items: Array<DocItem>) => {
     items.sort((a, b) => a.name.localeCompare(b.name));
     items.forEach(item => item.children && sortTree(item.children));
   };

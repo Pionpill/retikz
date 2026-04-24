@@ -36,12 +36,12 @@ const MdxToc: FC<MdxTocProps> = props => {
   useEffect(() => {
     if (!mdxRef.current) return;
     const headings = mdxRef.current.querySelectorAll('h2, h3, h4');
-    const toc = Array.from(headings).map(heading => ({
+    const entries = Array.from(headings).map(heading => ({
       level: Number(heading.tagName.toLowerCase().replace('h', '')),
       label: heading.id,
     }));
-    setToc(toc);
-  }, [path, mdxStatus]);
+    setToc(entries);
+  }, [path, mdxStatus, mdxRef]);
 
   useEffect(() => {
     if (!mdxRef.current || !contentRef.current) return;
@@ -52,19 +52,18 @@ const MdxToc: FC<MdxTocProps> = props => {
     }));
     scrollToTocAnchor(`mdx:${decodeURIComponent(location.hash.replace('#', ''))}`);
     const container = contentRef.current;
-    return container.addEventListener(
-      'scroll',
-      throttle(() => {
-        for (let i = 0; i < tocInfo.length; i++) {
-          const toc = tocInfo[i];
-          if (toc.offsetY - container.scrollTop > 20) {
-            setActiveToc(i === 0 ? '' : tocInfo[i - 1].label);
-            break;
-          }
+    const handleScroll = throttle(() => {
+      for (let i = 0; i < tocInfo.length; i++) {
+        const entry = tocInfo[i];
+        if (entry.offsetY - container.scrollTop > 20) {
+          setActiveToc(i === 0 ? '' : tocInfo[i - 1].label);
+          break;
         }
-      }, 100),
-    );
-  }, []);
+      }
+    }, 100);
+    container.addEventListener('scroll', handleScroll);
+    return () => container.removeEventListener('scroll', handleScroll);
+  }, [mdxRef, contentRef, location.hash, mdxStatus]);
 
   return (
     <div className="hidden sticky top-0 xl:flex flex-col w-48 border-l py-4">
