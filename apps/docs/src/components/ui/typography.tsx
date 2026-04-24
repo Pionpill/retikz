@@ -1,8 +1,10 @@
 'use client';
 
 import { cn } from '@/lib/utils';
-import { cva, VariantProps } from 'class-variance-authority';
-import React, { FC, useEffect, useImperativeHandle, useRef } from 'react';
+import type { VariantProps } from 'class-variance-authority';
+import { cva } from 'class-variance-authority';
+import type { FC} from 'react';
+import React, { useEffect, useImperativeHandle, useRef } from 'react';
 
 const typographyVariants = cva('max-w-full', {
   variants: {

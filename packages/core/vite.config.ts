@@ -45,6 +45,7 @@ export default defineConfig({
     dts({
       tsconfigPath: './tsconfig.json',
       outDir: ['dist/lib', 'dist/es'],
+      entryRoot: 'src',
     }),
   ],
 });

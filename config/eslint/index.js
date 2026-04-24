@@ -22,6 +22,7 @@ const eslintConfig = [
             '**/build/**',
             '**/dist/**',
             '**/postcss.config.js',
+            '**/vite.config.ts',
         ],
     },
     {
@@ -46,6 +47,7 @@ const eslintConfig = [
                 project: [
                     './tsconfig.json',
                     './packages/core/tsconfig.json',
+                    './apps/docs/tsconfig.app.json',
                 ],
                 parser: tseslint.parser,
             },

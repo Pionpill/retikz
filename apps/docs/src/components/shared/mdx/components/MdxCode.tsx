@@ -4,7 +4,7 @@ import useTheme from '@/hooks/useTheme';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { Files } from 'lucide-react';
-import { FC, MouseEventHandler } from 'react';
+import type { FC, MouseEventHandler } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { oneDark, oneLight } from 'react-syntax-highlighter/dist/esm/styles/prism';

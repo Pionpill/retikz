@@ -1,6 +1,6 @@
 import useTheme from '@/hooks/useTheme';
-import { TikZ, Node, Draw, PathNode } from '@retikz/core';
-import { FC } from 'react';
+import { Draw, Node, PathNode, TikZ } from '@retikz/core';
+import type { FC } from 'react';
 import { useTranslation } from 'react-i18next';
 
 const TikZFlow: FC = () => {

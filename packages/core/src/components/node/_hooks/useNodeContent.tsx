@@ -15,12 +15,12 @@ const useNodeContent = (props: ContentProps, ref: Ref<SVGElement>) => {
       fontStyle={fontStyle}
       fontFamily={fontFamily}
       fontStretch={fontStretch}
-      ref={ref as Ref<SVGTextElement>}
+      ref={ref}
     >
       {children}
     </Text>
   ) : isValidElement(children) ? (
-    <g ref={ref as Ref<SVGGElement>}>{children as ReactElement<any>}</g>
+    <g ref={ref}>{children as ReactElement<any>}</g>
   ) : (
     children
   );

@@ -12,7 +12,7 @@ export type ContentType = {
     /** 下载地址 */
     download_url: string | null;
     type: 'file' | 'dir';
-    children?: ContentType[];
+    children?: Array<ContentType>;
 }
 
 /** 获取 github 参数某个文件夹下的文件列表 */
@@ -22,7 +22,7 @@ export const getContentsApi = (repos: string, path: string) => fetch(
       method: "GET",
       headers: authHeader
     }
-  ).then(res => res.json() as Promise<ContentType[]>);
+  ).then(res => res.json() as Promise<Array<ContentType>>);
 
 /** 获取文档：github 文件字符串 */
 export const getRawApi = (repo: string, path: string) => fetch(`https://raw.githubusercontent.com/Pionpill/${repo}/main/${path}`).then(res => res.text());

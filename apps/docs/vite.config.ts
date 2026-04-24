@@ -7,7 +7,7 @@ import tailwindcss from '@tailwindcss/vite';
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react(), tailwindcss(), mdx()],
-  base: '/retikz.doc/',
+  base: '/retikz/',
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),

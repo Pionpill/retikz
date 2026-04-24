@@ -11,7 +11,7 @@ import { Separator } from '@/components/ui/separator';
 import useLang from '@/hooks/useLang';
 import useTheme from '@/hooks/useTheme';
 import { Moon, Sun } from 'lucide-react';
-import { FC } from 'react';
+import type { FC } from 'react';
 import { useTranslation } from 'react-i18next';
 import { FaGithub } from 'react-icons/fa';
 import { LuLanguages } from 'react-icons/lu';

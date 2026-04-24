@@ -1,11 +1,12 @@
 import { Button } from '@/components/ui/button';
 import { Typography } from '@/components/ui/typography';
 import { Files } from 'lucide-react';
-import { FC } from 'react';
+import type { FC } from 'react';
 import { useTranslation } from 'react-i18next';
 import { BsWechat } from 'react-icons/bs';
 import { toast } from 'sonner';
-import ContactDialog, { ContactDialogProps } from './ContactDialog';
+import type { ContactDialogProps } from './ContactDialog';
+import ContactDialog from './ContactDialog';
 
 const WeixinDialog: FC<Partial<ContactDialogProps>> = props => {
   const { t } = useTranslation();

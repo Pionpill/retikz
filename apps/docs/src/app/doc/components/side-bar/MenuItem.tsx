@@ -1,4 +1,4 @@
-import { ContentType } from '@/api/github';
+import type { ContentType } from '@/api/github';
 import { moduleConfig } from '@/app/doc/config/module';
 import { CollapsibleTrigger } from '@/components/ui/collapsible';
 import {
@@ -11,7 +11,8 @@ import {
 import useModule from '@/hooks/useModule';
 import { Collapsible, CollapsibleContent } from '@radix-ui/react-collapsible';
 import { ChevronRight, FileCode2 } from 'lucide-react';
-import { FC, useMemo, useState } from 'react';
+import type { FC} from 'react';
+import { useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router';
 
 const MenuItem: FC<{ item: ContentType }> = props => {
@@ -36,7 +37,7 @@ const MenuItem: FC<{ item: ContentType }> = props => {
       return getLinkByContentPath(item);
     }
     if (item.children.some(item => item.name.startsWith('index'))) {
-      return getLinkByContentPath(item.children.find(item => item.name.startsWith('index'))!);
+      return getLinkByContentPath(item.children.find(item => item.name.startsWith('index')));
     }
     return;
   }, [module, item]);

@@ -1,9 +1,10 @@
 import { DropdownMenuItem } from '@/components/ui/dropdown-menu';
 import { Typography } from '@/components/ui/typography';
 import { Coffee } from 'lucide-react';
-import { FC } from 'react';
+import type { FC } from 'react';
 import { useTranslation } from 'react-i18next';
-import ContactDialog, { ContactDialogProps } from './ContactDialog';
+import type { ContactDialogProps } from './ContactDialog';
+import ContactDialog from './ContactDialog';
 
 const SponsorDialog: FC<Partial<ContactDialogProps>> = props => {
   const { t } = useTranslation();
