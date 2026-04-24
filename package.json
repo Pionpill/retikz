@@ -1,6 +1,7 @@
 {
   "private": true,
   "scripts": {
+    "docs": "pnpm --filter @retikz/docs dev",
     "lint": "eslint . --cache"
   },
   "devDependencies": {
