@@ -32,3 +32,11 @@ catalog:
 
   # Types
   '@types/node': ^22.10.7
+
+  # Styling
+  tailwindcss: ^4.0.9
+  '@tailwindcss/vite': ^4.0.9
+  tailwind-merge: ^3.0.2
+  tailwindcss-animate: ^1.0.7
+  class-variance-authority: ^0.7.1
+  clsx: ^2.1.1

@@ -1,7 +1,7 @@
 import { Button } from '@/components/ui/button';
 import { Typography } from '@/components/ui/typography';
 import { BookText } from 'lucide-react';
-import { FC } from 'react';
+import type { FC } from 'react';
 import { useTranslation } from 'react-i18next';
 import { FaGithub } from 'react-icons/fa';
 import { useNavigate } from 'react-router';

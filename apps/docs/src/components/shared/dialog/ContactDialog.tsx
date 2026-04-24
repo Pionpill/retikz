@@ -8,7 +8,7 @@ import {
 } from '@/components/ui/dialog';
 import { Typography } from '@/components/ui/typography';
 import { useThemeSelector } from '@/hooks/useTheme';
-import { FC, ReactElement } from 'react';
+import type { FC, ReactElement } from 'react';
 import QRCode from 'react-qr-code';
 
 export type ContactDialogProps = {

@@ -1,6 +1,7 @@
 import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
-import { FC, ReactNode, useMemo } from "react";
+import type { FC, ReactNode} from "react";
+import { useMemo } from "react";
 
 export type MdxTableProps = {
   header: Array<string | {title: string, key?: string}>;
@@ -15,7 +16,7 @@ const MdxTable: FC<MdxTableProps> = (props) => {
       if (typeof h === 'string') {
         return { title: h, key: h };
       }
-      return { key: h.key || h.title, ...h } as { title: string, key: string };
+      return { key: h.key || h.title, ...h };
     });
   }, [header]);
 

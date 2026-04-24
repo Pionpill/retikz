@@ -1,7 +1,7 @@
-import { clsx, type ClassValue } from 'clsx'
+import { type ClassValue, clsx } from 'clsx'
 import { twMerge } from 'tailwind-merge'
 
-export const cn = (...inputs: ClassValue[]) => {
+export const cn = (...inputs: Array<ClassValue>) => {
   return twMerge(clsx(inputs))
 }
 
@@ -9,7 +9,7 @@ export const cn = (...inputs: ClassValue[]) => {
 export const throttle = (func: Function, delay: number) => {
   let timeId: number | NodeJS.Timeout;
   let lastExeTime = 0;
-  return function (this: unknown, ...args: unknown[]) {
+  return function (this: unknown, ...args: Array<unknown>) {
     const now = Date.now();
     const interTime = now - lastExeTime;
     if (interTime >= delay) {

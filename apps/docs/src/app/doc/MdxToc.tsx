@@ -1,5 +1,6 @@
 import { cn, throttle } from '@/lib/utils';
-import { FC, RefObject, useEffect, useState } from 'react';
+import type { FC, RefObject} from 'react';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Text } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router';
@@ -33,6 +34,7 @@ const MdxToc: FC<MdxTocProps> = props => {
   };
 
   useEffect(() => {
+    if (!mdxRef.current) return;
     const headings = mdxRef.current.querySelectorAll('h2, h3, h4');
     const toc = Array.from(headings).map(heading => ({
       level: Number(heading.tagName.toLowerCase().replace('h', '')),
@@ -42,18 +44,20 @@ const MdxToc: FC<MdxTocProps> = props => {
   }, [path, mdxStatus]);
 
   useEffect(() => {
+    if (!mdxRef.current || !contentRef.current) return;
     const headings = mdxRef.current.querySelectorAll<HTMLElement>('h2, h3, h4');
     const tocInfo = Array.from(headings).map(heading => ({
       label: heading.id,
       offsetY: heading.offsetTop,
     }));
     scrollToTocAnchor(`mdx:${decodeURIComponent(location.hash.replace('#', ''))}`);
-    return contentRef.current.addEventListener(
+    const container = contentRef.current;
+    return container.addEventListener(
       'scroll',
       throttle(() => {
         for (let i = 0; i < tocInfo.length; i++) {
           const toc = tocInfo[i];
-          if (toc.offsetY - contentRef.current.scrollTop > 20) {
+          if (toc.offsetY - container.scrollTop > 20) {
             setActiveToc(i === 0 ? '' : tocInfo[i - 1].label);
             break;
           }
@@ -68,7 +72,7 @@ const MdxToc: FC<MdxTocProps> = props => {
         <span
           className="hover:text-blue-500 transition-all cursor-pointer ml-4 items-center flex gap-2 opacity-60"
           onClick={() => {
-            contentRef.current.scrollTo({ top: 0, behavior: 'smooth' });
+            contentRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
           }}
         >
           <Text size="18" />

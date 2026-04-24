@@ -1,5 +1,6 @@
 'use client';
-import { FC, ReactElement, useMemo, useState } from 'react';
+import type { FC, ReactElement} from 'react';
+import { useMemo, useState } from 'react';
 import MdxCode from './MdxCode';
 import { Button } from '@/components/ui/button';
 import { PanelBottomClose, PanelTopClose } from 'lucide-react';
@@ -8,17 +9,17 @@ import { useTranslation } from 'react-i18next';
 
 type ReactFiberElement = {
   props: {
-    children?: ReactFiberElement[];
+    children?: Array<ReactFiberElement>;
     [key: string]: unknown;
   };
   type: {
-    (props: unknown[]): unknown;
+    (props: Array<unknown>): unknown;
     displayName: string;
     name: string;
   };
 };
 
-export type CodeStringNode = ReactFiberElement | ReactFiberElement[] | string;
+export type CodeStringNode = ReactFiberElement | Array<ReactFiberElement> | string;
 
 const getCodeString = (node: CodeStringNode, indentSize = 2): string => {
   // 如果是数组，递归处理每个子节点

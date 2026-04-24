@@ -1,4 +1,4 @@
-import { Resource } from 'i18next';
+import type { Resource } from 'i18next';
 import translation_en from './en.json';
 import translation_zh from './zh.json';
 

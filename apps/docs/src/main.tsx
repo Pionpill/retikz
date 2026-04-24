@@ -1,4 +1,5 @@
-import { FC, StrictMode } from 'react';
+import type { FC} from 'react';
+import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import useLang from './hooks/useLang';
 import useTheme from './hooks/useTheme';
@@ -25,4 +26,4 @@ const Root: FC = () => {
   );
 };
 
-createRoot(document.querySelector('body')!).render(<Root />);
+createRoot(document.querySelector('body')).render(<Root />);

@@ -2,7 +2,7 @@ import { SidebarMenu, SidebarMenuButton } from '@/components/ui/sidebar';
 import { Typography } from '@/components/ui/typography';
 import useModule from '@/hooks/useModule';
 import { BookMarked } from 'lucide-react';
-import { FC } from 'react';
+import type { FC } from 'react';
 import { moduleConfig } from '../../config/module';
 
 const HeaderInfo: FC = () => {

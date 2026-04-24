@@ -7,13 +7,15 @@ import {
   SidebarHeader,
   SidebarMenu,
 } from '@/components/ui/sidebar';
-import { FC, Fragment, useEffect, useState } from 'react';
+import type { FC} from 'react';
+import { Fragment, useEffect, useState } from 'react';
 import FooterActions from './FooterActions';
 import FooterAuthor from './FooterAuthor';
 import HeaderInfo from './HeaderInfo';
 import MenuItem from './MenuItem';
 import { moduleConfig } from '../../config/module';
-import { ContentType, getContentsApi } from '@/api/github';
+import type { ContentType} from '@/api/github';
+import { getContentsApi } from '@/api/github';
 import useModule from '@/hooks/useModule';
 import useLang from '@/hooks/useLang';
 
@@ -21,7 +23,7 @@ const SideMenu: FC = () => {
   const module = useModule();
   const { lang } = useLang();
 
-  const [rootContents, setRootContents] = useState<ContentType[] | null>(null);
+  const [rootContents, setRootContents] = useState<Array<ContentType> | null>(null);
 
   useEffect(() => {
     const getContent = (reposName: string, path: string) =>

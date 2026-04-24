@@ -24,7 +24,7 @@ export default class DescartesPoint {
   /** 将笛卡尔坐标点转换为极坐标点 */
   static convertPolarToDescartesPosition = (position: Position) => {
     const [x, y] = position;
-    return { radius: Math.sqrt(x * x + y * y), angle: Math.atan2(y, x) } as PolarPosition;
+    return { radius: Math.sqrt(x * x + y * y), angle: Math.atan2(y, x) };
   };
 
   /** 对象形式转换为数组形式 */

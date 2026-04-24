@@ -1,8 +1,10 @@
 import { cn } from '@/lib/utils';
-import { compile, CompileOptions, run, RunOptions } from '@mdx-js/mdx';
+import type { CompileOptions, RunOptions } from '@mdx-js/mdx';
+import { compile, run } from '@mdx-js/mdx';
 import { MDXProvider } from '@mdx-js/react';
 import { Draw, Node, PathNode, Scope, TikZ } from '@retikz/core';
-import { FC, memo, ReactNode, RefObject, useEffect, useLayoutEffect, useState } from 'react';
+import type { FC, ReactNode, RefObject} from 'react';
+import { memo, useEffect, useLayoutEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import * as jsxDevRuntime from 'react/jsx-dev-runtime';
 import * as jsxRuntime from 'react/jsx-runtime';
@@ -49,7 +51,7 @@ const InnerMdxContent: FC<MdxContentProps> = props => {
         const compiled = await compile(content, {
           outputFormat: 'function-body',
           development: process.env.NODE_ENV === 'development',
-        } as CompileOptions);
+        });
 
         // 运行编译后的代码
         const { default: Content } = await run(compiled, runtime);

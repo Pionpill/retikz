@@ -2,7 +2,7 @@ import { Button } from '@/components/ui/button';
 import useLang from '@/hooks/useLang';
 import useTheme from '@/hooks/useTheme';
 import { House, Moon, Sun } from 'lucide-react';
-import { FC } from 'react';
+import type { FC } from 'react';
 import { useTranslation } from 'react-i18next';
 import { LuLanguages } from 'react-icons/lu';
 import { RiEnglishInput } from 'react-icons/ri';

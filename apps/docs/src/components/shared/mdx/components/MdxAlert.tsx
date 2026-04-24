@@ -1,7 +1,7 @@
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { cn } from '@/lib/utils';
 import { CircleAlert, CircleCheck, CircleX, Info } from 'lucide-react';
-import { FC } from 'react';
+import type { FC } from 'react';
 
 export type MdxAlertProps = {
   title?: string;
