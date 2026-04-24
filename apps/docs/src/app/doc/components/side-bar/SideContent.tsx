@@ -1,4 +1,3 @@
-import { getReposCommitApi } from '@/api/github';
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -9,15 +8,10 @@ import {
 } from '@/components/ui/breadcrumb';
 import { Separator } from '@/components/ui/separator';
 import { SidebarInset, SidebarTrigger } from '@/components/ui/sidebar';
-import useLang from '@/hooks/useLang';
 import useModule from '@/hooks/useModule';
-import { CalendarClock, CalendarPlus } from 'lucide-react';
-import type { FC, PropsWithChildren} from 'react';
-import { Fragment, useEffect, useMemo, useState } from 'react';
+import type { FC, PropsWithChildren } from 'react';
+import { Fragment, useMemo } from 'react';
 import { useSearchParams } from 'react-router';
-import { moduleConfig } from '../../config/module';
-import { useTranslation } from 'react-i18next';
-import { Typography } from '@/components/ui/typography';
 import { cn } from '@/lib/utils';
 
 const SideContent: FC<PropsWithChildren> = props => {
@@ -26,10 +20,6 @@ const SideContent: FC<PropsWithChildren> = props => {
   const [searchParams] = useSearchParams();
   const filePath = searchParams.get('path')!.split('/');
   const module = useModule();
-  const { lang } = useLang();
-  const { t } = useTranslation();
-
-  const [info, setInfo] = useState<{ createDate: Date; updateDate: Date } | null>(null);
 
   const getLabel = (value: string) => decodeURIComponent((value.split('_')[1] || value).split('.')[0]);
   // 目前仅支持一级目录
@@ -41,15 +31,6 @@ const SideContent: FC<PropsWithChildren> = props => {
   const shownPath = useMemo(() => {
     return filePath[filePath.length - 1] === 'index.mdx' ? filePath.slice(0, -1) : filePath;
   }, [filePath]);
-
-  useEffect(() => {
-    getReposCommitApi(moduleConfig[module].repos, `doc/${lang}/${shownPath.join('/')}`).then(res =>
-      setInfo({
-        createDate: new Date(res[0].commit.author.date),
-        updateDate: new Date(res[res.length - 1].commit.author.date),
-      }),
-    );
-  }, [JSON.stringify(shownPath), module, lang]);
 
   return (
     <SidebarInset className="max-h-screen">
@@ -78,18 +59,6 @@ const SideContent: FC<PropsWithChildren> = props => {
               </BreadcrumbList>
             </Breadcrumb>
           </div>
-          {info ? (
-            <div className="flex items-center gap-4">
-              <div className="flex items-center gap-2" title={t('doc.create')}>
-                <CalendarPlus size={12} />
-                <Typography variant="hint">{info.createDate.toLocaleDateString()}</Typography>
-              </div>
-              <div className="flex items-center gap-2" title={t('doc.update')}>
-                <CalendarClock size={12} />
-                <Typography variant="hint">{info.updateDate.toLocaleDateString()}</Typography>
-              </div>
-            </div>
-          ) : null}
         </div>
       </header>
       {children}

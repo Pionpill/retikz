@@ -1,17 +1,14 @@
-import { getRawApi } from '@/api/github';
 import { SidebarProvider } from '@/components/ui/sidebar';
-import useModule from '@/hooks/useModule';
 import useLang from '@/hooks/useLang';
 import type { FC} from 'react';
 import { useEffect, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router';
 import { SideContent, SideMenu } from './components/side-bar';
-import { moduleConfig } from './config/module';
+import { getMdxSource } from './content';
 import MdxContent from '@/components/shared/mdx';
 import MdxToc from './MdxToc';
 
 const Doc: FC = () => {
-  const module = useModule();
   const { lang } = useLang();
   const [searchParams] = useSearchParams();
   const path = searchParams.get('path')!;
@@ -25,11 +22,8 @@ const Doc: FC = () => {
 
   useEffect(() => {
     if (!path) return;
-
-    getRawApi(moduleConfig[module].repos, `doc/${lang}/${path}`).then(res => {
-      setSource(res);
-    });
-  }, [module, lang, path]);
+    setSource(getMdxSource(lang, path));
+  }, [lang, path]);
 
   return (
     <SidebarProvider>
