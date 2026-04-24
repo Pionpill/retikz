@@ -36,8 +36,9 @@ const MenuItem: FC<{ item: ContentType }> = props => {
     if (!item.children) {
       return getLinkByContentPath(item);
     }
-    if (item.children.some(item => item.name.startsWith('index'))) {
-      return getLinkByContentPath(item.children.find(item => item.name.startsWith('index')));
+    const indexChild = item.children.find(item => item.name.startsWith('index'));
+    if (indexChild) {
+      return getLinkByContentPath(indexChild);
     }
     return;
   }, [module, item]);

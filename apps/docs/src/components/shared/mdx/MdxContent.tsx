@@ -1,5 +1,5 @@
 import { cn } from '@/lib/utils';
-import type { CompileOptions, RunOptions } from '@mdx-js/mdx';
+import type { RunOptions } from '@mdx-js/mdx';
 import { compile, run } from '@mdx-js/mdx';
 import { MDXProvider } from '@mdx-js/react';
 import { Draw, Node, PathNode, Scope, TikZ } from '@retikz/core';
