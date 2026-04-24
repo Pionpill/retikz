@@ -14,7 +14,7 @@ export default defineConfig({
       formats: ['es', 'cjs'],
     },
     rollupOptions: {
-      external: ['react', 'react-dom', 'react/jsx-runtime'],
+      external: ['react', 'react-dom', 'react/jsx-runtime', /^d3-/],
       output: [
         {
           format: 'es',
@@ -33,12 +33,8 @@ export default defineConfig({
       ],
     },
   },
-  esbuild: {
-    define: {
-      'process.env.NODE_ENV': '"production"',
-    },
-    jsxFactory: 'h',
-    jsxFragment: 'Fragment',
+  define: {
+    'process.env.NODE_ENV': '"production"',
   },
   plugins: [
     react(),
