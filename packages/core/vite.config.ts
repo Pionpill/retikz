@@ -2,6 +2,16 @@ import react from '@vitejs/plugin-react';
 import { defineConfig } from 'vite';
 import dts from 'vite-plugin-dts';
 
+import pkg from './package.json' with { type: 'json' };
+
+const externalIds = [
+  ...Object.keys(pkg.dependencies ?? {}),
+  ...Object.keys(pkg.peerDependencies ?? {}),
+];
+
+const isExternal = (id: string) =>
+  externalIds.some(dep => id === dep || id.startsWith(`${dep}/`));
+
 // https://vite.dev/config/
 export default defineConfig({
   build: {
@@ -9,12 +19,11 @@ export default defineConfig({
     minify: false,
     lib: {
       entry: 'src/index.ts',
-      name: 'tikz',
       fileName: '[name]',
       formats: ['es', 'cjs'],
     },
     rollupOptions: {
-      external: ['react', 'react-dom', 'react/jsx-runtime'],
+      external: isExternal,
       output: [
         {
           format: 'es',
@@ -32,13 +41,6 @@ export default defineConfig({
         },
       ],
     },
-  },
-  esbuild: {
-    define: {
-      'process.env.NODE_ENV': '"production"',
-    },
-    jsxFactory: 'h',
-    jsxFragment: 'Fragment',
   },
   plugins: [
     react(),

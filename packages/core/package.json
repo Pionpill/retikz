@@ -11,9 +11,18 @@
   ],
   "license": "MIT",
   "repository": "https://github.com/Pionpill/retikz",
+  "sideEffects": false,
   "main": "dist/lib/index.cjs",
   "module": "dist/es/index.js",
-  "types": "dist/lib/index.d.ts",
+  "types": "dist/es/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/es/index.d.ts",
+      "import": "./dist/es/index.js",
+      "require": "./dist/lib/index.cjs"
+    },
+    "./package.json": "./package.json"
+  },
   "publishConfig": {
     "access": "public"
   },
@@ -37,22 +46,9 @@
     "d3-shape": "catalog:"
   },
   "devDependencies": {
-    "@eslint/js": "catalog:",
     "@types/d3-color": "catalog:",
     "@types/d3-shape": "catalog:",
-    "@types/node": "catalog:",
-    "@types/react": "catalog:",
-    "@types/react-dom": "catalog:",
-    "@vitejs/plugin-react": "catalog:",
-    "eslint": "catalog:",
-    "eslint-plugin-react-hooks": "catalog:",
-    "eslint-plugin-react-refresh": "catalog:",
-    "globals": "catalog:",
     "react": "catalog:",
-    "react-dom": "catalog:",
-    "typescript": "catalog:",
-    "typescript-eslint": "catalog:",
-    "vite": "catalog:",
-    "vite-plugin-dts": "catalog:"
+    "react-dom": "catalog:"
   }
 }
