@@ -26,4 +26,4 @@ const Root: FC = () => {
   );
 };
 
-createRoot(document.querySelector('body')).render(<Root />);
+createRoot(document.body).render(<Root />);
