@@ -1,0 +1,60 @@
+{
+  "common": {
+    "copySuccess": "复制成功",
+    "switchTheme": "切换主题",
+    "switchLang": "切换语言",
+    "sponsor": "赞助",
+    "sponsorAuthor": "赞助作者",
+    "sponsorMe": "赞助我一杯奶茶😘",
+    "sponsorThanks": "感谢你的支持",
+    "seeOnGithub": "在 Github 上查看项目",
+    "contactOnWechat": "在微信上联系我",
+    "loading": "加载中..."
+  },
+  "mdx": {
+    "compiling": "编译 MDX 文件中...",
+    "error": "MDX 文件解析失败"
+  },
+  "header": {
+    "title": "retikz.doc",
+    "home": "主页",
+    "doc": "文档",
+    "wechat": "微信",
+    "contactMe": "联系我",
+    "indicatePurpose": "请注明来意"
+  },
+  "home": {
+    "tool": "工具",
+    "inspiration": "灵感",
+    "description": "基于 React 的图原级绘图工具",
+    "content": "retikz 的灵感源于 tikz，使用 React 框架与 d3 工具实现，旨在帮助开发者快速绘制 svg 图形。",
+    "getStarted": "开始使用",
+    "feature": {
+      "tikz": {
+        "title": "灵感: tikz",
+        "content": "retikz 的设计理念源于 tikz，基于 web 技术实现并拓展了部分功能。"
+      },
+      "react": {
+        "title": "框架: React",
+        "content": "基于 React16+ 框架，使用 JSX 语法表现图形元素间的关系。"
+      },
+      "d3": {
+        "title": "工具: d3",
+        "content": "使用 d3.js 辅助数学计算，图形路径生成等..."
+      }
+    }
+  },
+  "doc": {
+    "blog": "博客",
+    "followAuthor": "在 Github 上关注作者",
+    "seeOnNpm": "在 npm 上查看项目",
+    "starRetikZ": "在 Github 上 star 项目",
+    "backToHome": "返回主页",
+    "create": "创建日期",
+    "update": "更新日期",
+    "core": {
+      "description": "开发中" 
+    },
+    "thisPage": "这篇文章"
+  }
+}
