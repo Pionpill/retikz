@@ -7,7 +7,7 @@ export const cn = (...inputs: Array<ClassValue>) => {
 
 // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
 export const throttle = (func: Function, delay: number) => {
-  let timeId: number | NodeJS.Timeout;
+  let timeId: ReturnType<typeof setTimeout> | undefined;
   let lastExeTime = 0;
   return function (this: unknown, ...args: Array<unknown>) {
     const now = Date.now();
