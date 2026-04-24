@@ -40,15 +40,9 @@
   "devDependencies": {
     "@tailwindcss/vite": "catalog:",
     "@types/mdx": "catalog:",
-    "@types/node": "catalog:",
-    "@types/react": "catalog:",
-    "@types/react-dom": "catalog:",
     "@types/react-syntax-highlighter": "catalog:",
-    "@vitejs/plugin-react": "catalog:",
     "tailwind-merge": "catalog:",
     "tailwindcss": "catalog:",
-    "tailwindcss-animate": "catalog:",
-    "typescript": "catalog:",
-    "vite": "catalog:"
+    "tailwindcss-animate": "catalog:"
   }
 }
