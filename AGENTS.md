@@ -18,17 +18,22 @@
 ```
 retikz/
 ├── packages/
-│   └── core/           # @retikz/core — 核心库，发布到 npm
+│   ├── legacy-core/    # @retikz/legacy-core — v0.0.x 旧实现，保留作参考，不发布
+│   └── core/           # @retikz/core — v0.1 重写中，见 docs/CORE-REFACTOR.md
 ├── apps/
 │   └── docs/           # @retikz/docs — 文档站点，mdx 内容在 apps/docs/doc/{en,zh}/
 ├── config/
 │   └── eslint/         # 共享的 ESLint 预设
+├── docs/               # 项目内部架构与重构方案文档
 ├── pnpm-workspace.yaml # workspace + catalog（统一依赖版本）
 ├── eslint.config.js    # 根级 flat config
 └── tsconfig.json
 ```
 
-后续会在 `packages/` 下新增更多子包（如渲染扩展、主题包等）。
+v0.1 重写正在 `next` 分支上进行。架构与实施方案见 `docs/`：
+- `docs/DESIGN.md`：架构与底层建设
+- `docs/CORE-REFACTOR.md`：@retikz/core 重写方案
+- `docs/REACT-ADAPTER.md`：@retikz/react 适配层方案
 
 ## 依赖管理
 
@@ -48,14 +53,16 @@ pnpm install                         # 安装所有 workspace 依赖
 pnpm lint                            # ESLint 全量（带 --cache）
 ```
 
-子包（示例：core）：
+子包（示例：legacy-core）：
 
 ```bash
-pnpm --filter @retikz/core dev       # 启动开发
-pnpm --filter @retikz/core build     # 构建产物到 dist/
-pnpm --filter @retikz/core lint      # 单包 lint
-pnpm --filter @retikz/core preview   # 预览构建结果
+pnpm --filter @retikz/legacy-core dev       # 启动开发
+pnpm --filter @retikz/legacy-core build     # 构建产物到 dist/
+pnpm --filter @retikz/legacy-core lint      # 单包 lint
+pnpm --filter @retikz/legacy-core preview   # 预览构建结果
 ```
+
+v0.1 新 core 正在 `next` 分支重写中，写完后命令切换为 `pnpm --filter @retikz/core ...`。
 
 ## Commit 规范
 

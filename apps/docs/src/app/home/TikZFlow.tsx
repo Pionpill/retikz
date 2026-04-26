@@ -1,5 +1,5 @@
 import useTheme from '@/hooks/useTheme';
-import { Draw, Node, PathNode, TikZ } from '@retikz/core';
+import { Draw, Node, PathNode, TikZ } from '@retikz/legacy-core';
 import type { FC } from 'react';
 import { useTranslation } from 'react-i18next';
 

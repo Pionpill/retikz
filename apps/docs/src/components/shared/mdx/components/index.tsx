@@ -1,4 +1,4 @@
-import { Draw, Node, PathNode, Scope, TikZ } from '@retikz/core';
+import { Draw, Node, PathNode, Scope, TikZ } from '@retikz/legacy-core';
 import type { MDXComponents } from 'mdx/types';
 import type { PropsWithChildren } from 'react';
 import type { MdxProps } from './MdxCode';
