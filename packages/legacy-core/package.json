@@ -1,7 +1,8 @@
 {
-  "name": "@retikz/core",
+  "name": "@retikz/legacy-core",
   "version": "0.0.1-rc.3",
-  "description": "atomic drawing library implemented using react and d3, inspired by tikz",
+  "description": "Legacy v0.0.x implementation of @retikz/core. Preserved as reference; v0.1 rewrite is in packages/core.",
+  "private": true,
   "type": "module",
   "homepage": "https://pionpill.github.io/retikz/",
   "keywords": [
@@ -14,9 +15,6 @@
   "main": "dist/lib/index.cjs",
   "module": "dist/es/index.js",
   "types": "dist/lib/index.d.ts",
-  "publishConfig": {
-    "access": "public"
-  },
   "files": [
     "LICENSE",
     "README.md",

@@ -2,7 +2,7 @@ import { cn } from '@/lib/utils';
 import type { RunOptions } from '@mdx-js/mdx';
 import { compile, run } from '@mdx-js/mdx';
 import { MDXProvider } from '@mdx-js/react';
-import { Draw, Node, PathNode, Scope, TikZ } from '@retikz/core';
+import { Draw, Node, PathNode, Scope, TikZ } from '@retikz/legacy-core';
 import type { FC, ReactNode, RefObject} from 'react';
 import { memo, useEffect, useLayoutEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';

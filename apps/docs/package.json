@@ -22,7 +22,7 @@
     "@radix-ui/react-slot": "catalog:",
     "@radix-ui/react-switch": "catalog:",
     "@radix-ui/react-tooltip": "catalog:",
-    "@retikz/core": "workspace:*",
+    "@retikz/legacy-core": "workspace:*",
     "class-variance-authority": "catalog:",
     "clsx": "catalog:",
     "i18next": "catalog:",

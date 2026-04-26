@@ -141,3 +141,5 @@ test/
 local/
 test*
 index.html
+
+legacy-core/
