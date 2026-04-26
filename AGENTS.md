@@ -66,6 +66,11 @@ v0.1 新 core 正在 `next` 分支重写中，写完后命令切换为 `pnpm --f
 
 ## Commit 规范
 
+> **🚨 重要规则：未经用户明确允许，AI 助手（Claude Code / Copilot / Cursor 等）不得自行执行 `git commit` / `git push` / `git rebase` 等会写入 git 历史的操作。**
+>
+> 写完代码、改完文件后**停下来等用户审阅**，由用户下达"提交"指令后再做提交。
+> 用户可以让 AI 起草 commit message，但实际提交动作必须由用户授权。
+
 **格式：`<emoji> <简短描述>`**
 
 使用 [gitmoji](https://gitmoji.dev/) 风格的 `:slug:` 形式或对应 Unicode 表情均可，描述使用中文，一般不超过 50 字。示例：
@@ -109,3 +114,38 @@ v0.1 新 core 正在 `next` 分支重写中，写完后命令切换为 `pnpm --f
 - 不要在子包里重复声明工具链（eslint、typescript 等）的版本，统一用 catalog
 - 变量/文件命名沿用现有风格：组件 PascalCase，hooks `useXxx`，工具类小驼峰
 - 尽量不写注释；确需解释"为什么"时再写，避免复述代码做了什么
+- 数组类型用 `Array<T>`，不用 `T[]`（项目内统一）
+- **函数定义优先用箭头形式**：`const fn = (...) => {...}` 而不是 `function fn(...) {...}`
+  - 顶层导出：`export const fn = (...) => {...}`
+  - 内部 helper：同上
+  - 例外：需要 hoisting（在定义点之前被引用）；类方法仍按 class 语法
+
+## IR / Schema 风格（zod）
+
+> 见 `docs/DESIGN.md` §7 "AI 友好性"——schema description 是给 LLM 看的契约，必须完整。
+
+- **每个 zod schema 字段都必须 `.describe(...)`**——包括 object 顶层和内部所有属性，包括看似自描述的字段（type / kind 等）
+  - description 写**含义与用途**，不是复述字段名
+  - description 是 LLM 输出 JSON 时的关键参考，影响生成质量
+  - JSON Schema 导出后这些 description 直接进 LLM tool definition / system prompt
+- **`.describe(...)` 的内容统一用英文**
+  - 对应外部 / 国际 OSS 用户、LLM tool definition、JSON Schema 生态工具——英文兼容性最好
+  - LLM 现在跨语言映射很稳，中文 prompt 配英文 schema description 没有质量损失
+  - 不允许中英混写（`'背景色 Background color'` 这种）
+- **TS 类型用 `z.infer` 派生，不手写**
+  - 派生类型形如 `export type IRNode = z.infer<typeof NodeSchema>`
+  - 单一来源是 zod，避免类型与 schema 漂移
+- **zod schema 定义内部不写 JSDoc**——schema 自身的字段说明全部走 `.describe(...)`，不在 zod 链里加 `/** */` 注释；这避免了"中文 JSDoc + 英文 describe"双份维护的冗余
+- **zod 派生类型 / 普通常量 / 函数 / 类必须写中文 JSDoc**
+  - 派生类型：`/** 节点 */ export type IRNode = z.infer<typeof NodeSchema>`
+  - 普通常量：`/** IR 当前主版本号 */ export const CURRENT_IR_VERSION = 1 as const`
+  - 导出函数：函数签名上方一段 JSDoc，说明意图、输入输出、可能的副作用
+  - 类：类声明上方一段 JSDoc，主要方法也要带 JSDoc
+  - **对象字面量当命名空间用时，每个成员都要 JSDoc**——例如 `export const point = { add, sub, ... }`，每个方法上方都要写 `/** ... */`，不能只在外层对象上写一行
+  - **`type` / `interface` 声明的每个属性都要 JSDoc**——例如 `type Rect = { x, y, width, height }`，每个字段都要写 `/** ... */`，不能只在外层 type 上写一行
+  - **type / interface / 对象字面量的成员间一律不加空行**（即使每个成员都带 JSDoc）——保持声明紧凑
+  - **`export const XxxSchema = z...` 不写 JSDoc**——它的语义已经在 `.describe(...)` 里说尽
+- JSDoc 内容用中文（项目母语），保持简洁；只解释"是什么 / 为什么"，不复述代码做了什么
+- IR 元素一文件一种：`packages/core/src/ir/<element>.ts` 同时写 schema 和 `z.infer` 派生类型
+- IR 字段命名沿用 TikZ 词汇（`stroke`、`fill`、`strokeWidth`、`via`、`anchor` 等），保留对 LLM 训练数据的亲和力
+- 不允许在 IR schema 里出现 `z.any()` / `z.unknown()` / 函数 / `ReactNode`——IR 必须 100% JSON 可序列化（见 DESIGN.md §4.3）
