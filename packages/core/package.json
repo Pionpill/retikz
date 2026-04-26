@@ -1,0 +1,39 @@
+{
+  "name": "@retikz/core",
+  "version": "0.1.0-alpha.0",
+  "description": "retikz v0.1 core: framework-agnostic IR, scene compiler, and pure parsers.",
+  "private": true,
+  "type": "module",
+  "main": "dist/lib/index.cjs",
+  "module": "dist/es/index.js",
+  "types": "dist/lib/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/lib/index.d.ts",
+      "import": "./dist/es/index.js",
+      "require": "./dist/lib/index.cjs",
+      "default": "./dist/es/index.js"
+    }
+  },
+  "files": [
+    "LICENSE",
+    "README.md",
+    "dist/**/*"
+  ],
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "lint": "eslint .",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@types/node": "catalog:",
+    "typescript": "catalog:",
+    "vite": "catalog:",
+    "vite-plugin-dts": "catalog:",
+    "vite-tsconfig-paths": "catalog:"
+  }
+}
