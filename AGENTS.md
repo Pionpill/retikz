@@ -99,6 +99,7 @@ v0.1 新 core 正在 `next` 分支重写中，写完后命令切换为 `pnpm --f
 | `:heavy_plus_sign:` | ➕ | 新增依赖 |
 | `:fire:` | 🔥 | 删除代码或文件 |
 | `:bookmark:` | 🔖 | 发布版本（打 tag） |
+| `:white_check_mark:` | ✅ | 测试相关：新增 / 补全 / 修复测试用例 |
 
 ### 选择建议
 
@@ -107,6 +108,7 @@ v0.1 新 core 正在 `next` 分支重写中，写完后命令切换为 `pnpm --f
 - 新增一个 API / 组件 → `:sparkles:`；其细节打磨后续改动 → `:construction:`
 - 纯删除无用代码 → `:fire:`
 - 版本号变更并准备发布 → `:bookmark:`
+- 加测试 / 修测试 / 补测试覆盖 → `:white_check_mark:`
 
 ## 代码风格
 
