@@ -2,7 +2,8 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "lint": "eslint . --cache"
+    "lint": "eslint . --cache",
+    "build": "pnpm -r --if-present run build"
   },
   "devDependencies": {
     "@eslint/js": "catalog:",
