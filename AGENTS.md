@@ -151,3 +151,74 @@ v0.1 新 core 正在 `next` 分支重写中，写完后命令切换为 `pnpm --f
 - IR 元素一文件一种：`packages/core/src/ir/<element>.ts` 同时写 schema 和 `z.infer` 派生类型
 - IR 字段命名沿用 TikZ 词汇（`stroke`、`fill`、`strokeWidth`、`via`、`anchor` 等），保留对 LLM 训练数据的亲和力
 - 不允许在 IR schema 里出现 `z.any()` / `z.unknown()` / 函数 / `ReactNode`——IR 必须 100% JSON 可序列化（见 DESIGN.md §4.3）
+
+## 抽象分层：Kernel / Sugar / Tier 2
+
+retikz 的 DSL 表面有三类构造，新增功能前必须先归类——错位会让 IR 膨胀或语义丢失，事后迁移成本极高。
+
+### 三类的定义
+
+| 层 | 例子 | 是否进 IR | 在哪展开 | 进 core 还是独立包 |
+|---|---|---|---|---|
+| **Kernel** | `<Tikz>` `<Node>` `<Path>` `<Step>` | ✅ 直接对应 IR 节点 | 不展开（IR 就是它本身） | core |
+| **Sugar** | `<Draw way={[...]}>`、`'cycle'`、`<Brace>` | ❌ | React adapter（builder 同步调用展开为 Kernel） | adapter（`packages/react/src/sugar/`）或 core 的 parser（`packages/core/src/parsers/`） |
+| **Tier 2 (Composite)** | `<Axis>` `<BarPlot>` `<Tree>` `<Network>` | ✅ 作为高层节点进 IR | core 的 `compileToScene` 内部 `lowerComposites` 钩子下沉到 Kernel | **独立包**（`@retikz/plot`、`@retikz/graph` 等），不进 core |
+
+### Sugar vs Tier 2 三条判定
+
+**任一答 Yes 即为 Tier 2，全 No 才是 Sugar：**
+
+1. **可逆性**：把展开后的 IR 反向推回高层形式，**做不到 1:1 还原**？（启发式猜不算）
+2. **算法存在性**：展开过程涉及决策算法（auto-tick / 布局 / scale 选择 / 力导向 / 数据采样）？
+3. **结构参数**：有参数会改变展开后的节点数量或拓扑（data 数组、节点列表、行列数 + 自适应等，不是仅改样式）？
+
+**口诀**：展开成 IR 后删掉构造名字，另一个开发者只看展开结果还能正确还原原意图吗？能 → Sugar；不能 → Tier 2。
+
+**有歧义就当 Tier 2 处理**——升级 Sugar 到 Tier 2 是迁移噩梦（持久化的 IR 全要重写），反过来则无害。
+
+### Sugar = Kernel 等价性硬规则
+
+- Sugar 不引入新能力——产出的 IR 必须**完全等价于**手写 Kernel JSX 的产物（REACT-ADAPTER.md §4.2）
+- 每加一种 Sugar item 类型必须配一条 `expect(buildIR(<Sugar/>)).toEqual(buildIR(<Kernel/>))` 等价性测试
+- Sugar 组件由 builder 同步调用获取 JSX，**不在 React render 调用栈上**，不能用 React hooks（useState / useMemo / useEffect 等会抛 "Invalid hook call"）
+
+### Tier 2 在哪落地
+
+- **不进 core**——core 运行时依赖白名单只有 `zod`，加图表会拉 d3-scale / 颜色映射等
+- **不进 LLM tool definition 的核心 schema**——core 的 IR schema 是 LLM 系统提示的输入，被高层 chart schema 撑爆会拖垮生成质量
+- **跨平台 adapter 不该被迫了解图表语义**——`@retikz/canvas` / `@retikz/ssr` 只懂 Tier 1 + Scene primitive 就能渲染
+
+类比 PGFPlots 之于 TikZ：独立演进、互不打扰。
+
+### core 为 Tier 2 预留的扩展点（v0.2 起）
+
+core 不知道 plot/graph 存在，但留两个钩子让独立包能接：
+
+- `IRChild` 允许"open" composite 节点（`type: string` 的 passthrough schema），core 不识别但允许进 IR
+- `CompileOptions.lowerComposites?: (ir) => ir`：`compileToScene` 在 Tier 1 处理前先调用这个钩子，由独立包提供具体下沉实现
+
+```ts
+// 用法示例（v0.2+）
+import { lowerPlots } from '@retikz/plot';
+<Tikz compileOptions={{ lowerComposites: lowerPlots }}>
+  <BarPlot data={[3, 7, 2, 9]} />
+</Tikz>
+```
+
+### 新加构造时的 checklist
+
+写代码前先回答：
+
+1. 它直接对应已有 IR 节点（Node / Path / Step）的简写吗？→ **Kernel**（不该新增，复用现有）
+2. 它有数据数组 / 函数 / 矩阵这种结构参数？→ **Tier 2**
+3. 它的展开涉及任何"算法选择"？→ **Tier 2**
+4. 都不是、能机械反推回原始形式？→ **Sugar**
+5. 不确定？→ 当 **Tier 2** 写进独立包
+
+### 目录归属速查
+
+| 归类 | 代码住在哪 |
+|---|---|
+| Kernel 组件 | `packages/react/src/kernel/` |
+| Sugar 组件 + 解析器 | `packages/react/src/sugar/`（React DSL） + `packages/core/src/parsers/`（共享 pure 解析） |
+| Tier 2 IR + 下沉 + 组件 | 独立包（`packages/plot/`、`packages/graph/` 等），**不进 core** |
