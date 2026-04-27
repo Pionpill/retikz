@@ -1,5 +1,6 @@
 {
   "private": true,
+  "type": "module",
   "scripts": {
     "docs": "pnpm --filter @retikz/docs dev",
     "lint": "eslint . --cache"

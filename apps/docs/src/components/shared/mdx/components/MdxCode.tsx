@@ -17,7 +17,7 @@ export type MdxProps = {
 const MdxCode: FC<MdxProps> = props => {
   const { children, className } = props;
 
-  const inline = children?.includes('\\n');
+  const inline = children.includes('\\n');
   const match = /language-(\w+)/.exec(className || '');
 
   const { theme } = useTheme();

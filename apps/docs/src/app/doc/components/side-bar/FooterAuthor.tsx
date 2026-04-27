@@ -27,13 +27,13 @@ const FooterAuthor: FC = () => {
 
   const dialogOpenRef = useRef<boolean>(false);
 
-  const handleDialogOpenChange = (open: boolean) => {
-    dialogOpenRef.current = open;
-    if (!open) setOpen(false);
+  const handleDialogOpenChange = (nextOpen: boolean) => {
+    dialogOpenRef.current = nextOpen;
+    if (!nextOpen) setOpen(false);
   };
 
-  const handleOpenChange = (open: boolean) => {
-    if (open || !dialogOpenRef.current) setOpen(open);
+  const handleOpenChange = (nextOpen: boolean) => {
+    if (nextOpen || !dialogOpenRef.current) setOpen(nextOpen);
   };
 
   return (

@@ -36,7 +36,7 @@ const MenuItem: FC<{ item: DocItem }> = props => {
     if (!item.children) {
       return getLinkByContentPath(item);
     }
-    const indexChild = item.children.find(item => item.name.startsWith('index'));
+    const indexChild = item.children.find(child => child.name.startsWith('index'));
     if (indexChild) {
       return getLinkByContentPath(indexChild);
     }
