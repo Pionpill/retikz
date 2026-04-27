@@ -26,6 +26,8 @@ const MenuItem: FC<{ item: DocItem }> = props => {
 
   const FolderIcon = useMemo(() => {
     const key = folderLabel.toLocaleLowerCase();
+    // 动态 key 索引可能 undefined（TS 不开 noUncheckedIndexedAccess 推断不出来）
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
     return moduleConfig[module].iconMap[key] || FileCode2;
   }, [module, folderLabel]);
 
@@ -66,7 +68,7 @@ const MenuItem: FC<{ item: DocItem }> = props => {
       <SidebarMenuItem>
         <CollapsibleTrigger asChild>
           <SidebarMenuButton className="capitalize" onClick={() => folderLink && navigate(folderLink)}>
-            {FolderIcon ? <FolderIcon /> : null}
+            <FolderIcon />
             <span>{folderLabel}</span>
             {item.type === 'dir' && showExpand ? (
               <ChevronRight
@@ -79,7 +81,7 @@ const MenuItem: FC<{ item: DocItem }> = props => {
         {item.children ? (
           <CollapsibleContent>
             <SidebarMenuSub>
-              {item.children!.map(subItem => {
+              {item.children.map(subItem => {
                 const fileLink = getContentLink(subItem);
                 return fileLink ? (
                   <SidebarMenuSubItem key={subItem.path}>

@@ -1,6 +1,6 @@
 import { Draw, Node, Tikz } from '@retikz/react';
 import type { MDXComponents } from 'mdx/types';
-import type { FC, PropsWithChildren } from 'react';
+import type { PropsWithChildren } from 'react';
 import type { MdxProps } from './MdxCode';
 import MdxCode from './MdxCode';
 import type { MdxAlertProps } from './MdxAlert';
@@ -9,14 +9,7 @@ import type { CodeSpaceProps } from './CodeSpace';
 import CodeSpace from './CodeSpace';
 import type { MdxTableProps } from './MdxTable';
 import MdxTable from './MdxTable';
-
-/**
- * v0.1 暂未实现的 legacy 组件 stub。
- * MDX 内容里出现 <PathNode/> / <Scope/> 时不至于落到原生 HTML 元素，
- * 等 @retikz/react 补完 Label / Scope 后用真实组件替换。
- */
-const PathNode: FC<PropsWithChildren> = () => null;
-const Scope: FC<PropsWithChildren> = ({ children }) => <>{children}</>;
+import { PathNode, Scope } from './_stubs';
 
 export const MDX_ID_PREFIX = 'mdx:';
 const getTocAnchor = (name: unknown) => MDX_ID_PREFIX + String(name).replace(/[\s`]+/g, '');
