@@ -2,19 +2,12 @@ import { cn } from '@/lib/utils';
 import type { RunOptions } from '@mdx-js/mdx';
 import { compile, run } from '@mdx-js/mdx';
 import { MDXProvider } from '@mdx-js/react';
-import { Draw, Node, PathNode, Scope, TikZ } from '@retikz/legacy-core';
 import type { FC, ReactNode, RefObject} from 'react';
 import { memo, useEffect, useLayoutEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import * as jsxDevRuntime from 'react/jsx-dev-runtime';
 import * as jsxRuntime from 'react/jsx-runtime';
 import mdxComponents from './components';
-
-TikZ.displayName = 'TikZ';
-Draw.displayName = 'Draw';
-Node.displayName = 'Node';
-PathNode.displayName = 'PathNode';
-Scope.displayName = 'Scope';
 
 // 确保提供正确的 JSX 运行时
 const runtime: RunOptions = {
