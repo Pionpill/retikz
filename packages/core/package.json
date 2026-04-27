@@ -4,15 +4,26 @@
   "description": "retikz v0.1 core: framework-agnostic IR, scene compiler, and pure parsers.",
   "private": true,
   "type": "module",
-  "main": "dist/lib/index.cjs",
-  "module": "dist/es/index.js",
-  "types": "dist/lib/index.d.ts",
+  "main": "./src/index.ts",
+  "module": "./src/index.ts",
+  "types": "./src/index.ts",
   "exports": {
     ".": {
-      "types": "./dist/lib/index.d.ts",
-      "import": "./dist/es/index.js",
-      "require": "./dist/lib/index.cjs",
-      "default": "./dist/es/index.js"
+      "types": "./src/index.ts",
+      "default": "./src/index.ts"
+    }
+  },
+  "publishConfig": {
+    "main": "dist/lib/index.cjs",
+    "module": "dist/es/index.js",
+    "types": "dist/lib/index.d.ts",
+    "exports": {
+      ".": {
+        "types": "./dist/lib/index.d.ts",
+        "import": "./dist/es/index.js",
+        "require": "./dist/lib/index.cjs",
+        "default": "./dist/es/index.js"
+      }
     }
   },
   "files": [

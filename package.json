@@ -3,7 +3,9 @@
   "type": "module",
   "scripts": {
     "lint": "eslint . --cache",
-    "build": "pnpm -r --if-present run build"
+    "build": "pnpm -r --if-present run build",
+    "dev:docs": "pnpm --filter @retikz/docs dev",
+    "dev:playground": "pnpm --filter @retikz/playground dev"
   },
   "devDependencies": {
     "@eslint/js": "catalog:",
