@@ -49,6 +49,7 @@
     "@types/d3-color": "catalog:",
     "@types/d3-shape": "catalog:",
     "react": "catalog:",
-    "react-dom": "catalog:"
+    "react-dom": "catalog:",
+    "vite-tsconfig-paths": "catalog:"
   }
 }
