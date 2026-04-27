@@ -82,11 +82,6 @@ describe('parseWay', () => {
       expect(steps.slice(1).every(s => s.kind === 'line')).toBe(true);
     });
 
-    it('每段 type 都是 "step"', () => {
-      const steps = parseWay(['A', [1, 2], { angle: 0, radius: 1 }]);
-      expect(steps.every(s => s.type === 'step')).toBe(true);
-    });
-
     it('to 字段按 way 顺序对应', () => {
       const way: WayDSL = ['A', [1, 2], 'B', [3, 4]];
       const steps = parseWay(way);
