@@ -24,7 +24,7 @@ export type WayDSL = Array<WayItem>;
  *
  * 类型校验由 TS 编译期完成；本函数不做运行时类型守卫。
  */
-export function parseWay(way: WayDSL): Array<IRStep> {
+export const parseWay = (way: WayDSL): Array<IRStep> => {
   if (way.length < 2) {
     throw new Error('parseWay: way must contain at least 2 items');
   }
