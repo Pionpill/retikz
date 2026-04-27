@@ -44,11 +44,7 @@ const eslintConfig = [
             ...languageOptions,
             parser: tseslint.parser,
             parserOptions: {
-                project: [
-                    './tsconfig.json',
-                    './packages/core/tsconfig.json',
-                    './apps/docs/tsconfig.app.json',
-                ],
+                projectService: true,
                 parser: tseslint.parser,
             },
         },
