@@ -137,9 +137,7 @@ pnpm-lock.yaml
 temp/
 TODO.md
 .vscode
-test/
 local/
-test*
 index.html
 
 legacy-core/

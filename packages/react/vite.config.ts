@@ -1,5 +1,5 @@
 import path from 'path';
-import { defineConfig } from 'vite';
+import { defineConfig } from 'vitest/config';
 import react from '@vitejs/plugin-react';
 import dts from 'vite-plugin-dts';
 import tsconfigPaths from 'vite-tsconfig-paths';
@@ -11,8 +11,8 @@ import pkg from './package.json' with { type: 'json' };
  * 等运行时打进库产物（同时支持 'foo' 和 'foo/sub' 子路径）。
  */
 const runtimeDeps = [
-  ...Object.keys(pkg.dependencies ?? {}),
-  ...Object.keys(pkg.peerDependencies ?? {}),
+  ...Object.keys(pkg.dependencies),
+  ...Object.keys(pkg.peerDependencies),
 ];
 const external = (id: string) =>
   runtimeDeps.some(p => id === p || id.startsWith(`${p}/`));
@@ -24,6 +24,7 @@ export default defineConfig({
       entryRoot: 'src',
       tsconfigPath: path.resolve(__dirname, 'tsconfig.json'),
       outDir: ['dist/lib', 'dist/es'],
+      exclude: ['tests/**'],
     }),
     tsconfigPaths(),
   ],
@@ -56,5 +57,9 @@ export default defineConfig({
         },
       ],
     },
+  },
+  test: {
+    environment: 'node',
+    include: ['tests/**/*.test.{ts,tsx}'],
   },
 });
