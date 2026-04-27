@@ -1,7 +1,7 @@
 import { SidebarProvider } from '@/components/ui/sidebar';
 import useLang from '@/hooks/useLang';
 import type { FC} from 'react';
-import { useEffect, useRef, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router';
 import { SideContent, SideMenu } from './components/side-bar';
 import { getMdxSource } from './content';
@@ -13,17 +13,12 @@ const Doc: FC = () => {
   const [searchParams] = useSearchParams();
   const path = searchParams.get('path')!;
 
-  const [source, setSource] = useState('');
+  const source = useMemo(() => (path ? getMdxSource(lang, path) : ''), [lang, path]);
   const [mdxStatus, setMdxStatus] = useState<'compiling' | 'error' | 'no-content' | 'compiled' | 'rendered'>(
     'no-content',
   );
   const mdxRef = useRef<HTMLDivElement>(null!);
   const contentRef = useRef<HTMLDivElement>(null!);
-
-  useEffect(() => {
-    if (!path) return;
-    setSource(getMdxSource(lang, path));
-  }, [lang, path]);
 
   return (
     <SidebarProvider>

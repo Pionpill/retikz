@@ -41,11 +41,9 @@ const Typography: FC<TypographyProps> = props => {
   useImperativeHandle(ref, () => innerRef.current);
 
   useEffect(() => {
-    if (innerRef.current) {
-      const { scrollWidth, clientWidth } = innerRef.current;
-      if (typeof children === 'string' && scrollWidth > clientWidth) {
-        innerRef.current.title = children;
-      }
+    const { scrollWidth, clientWidth } = innerRef.current;
+    if (typeof children === 'string' && scrollWidth > clientWidth) {
+      innerRef.current.title = children;
     }
   });
 

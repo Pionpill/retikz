@@ -31,10 +31,10 @@ const MdxTable: FC<MdxTableProps> = (props) => {
         </TableRow>
       </TableHeader>
       <TableBody>
-        {data.map((row, index) => (
-          <TableRow key={index}>
-            {formatHeader.map((h, index) => (
-              <TableCell className={cn({ "border-l": index !== 0})} key={h.key + row[h.key]}>{row[h.key]}</TableCell>
+        {data.map((row, rowIndex) => (
+          <TableRow key={rowIndex}>
+            {formatHeader.map((h, colIndex) => (
+              <TableCell className={cn({ "border-l": colIndex !== 0})} key={h.key + row[h.key]}>{row[h.key]}</TableCell>
             ))}
           </TableRow>
         ))}

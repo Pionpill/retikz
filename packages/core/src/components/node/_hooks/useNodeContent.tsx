@@ -15,12 +15,14 @@ const useNodeContent = (props: ContentProps, ref: Ref<SVGElement>) => {
       fontStyle={fontStyle}
       fontFamily={fontFamily}
       fontStretch={fontStretch}
-      ref={ref}
+      // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
+      ref={ref as Ref<SVGTextElement>}
     >
       {children}
     </Text>
   ) : isValidElement(children) ? (
-    <g ref={ref}>{children as ReactElement<any>}</g>
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
+    <g ref={ref as Ref<SVGGElement>}>{children as ReactElement<any>}</g>
   ) : (
     children
   );

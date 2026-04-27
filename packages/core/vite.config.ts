@@ -1,19 +1,31 @@
+import path from 'path';
 import react from '@vitejs/plugin-react';
 import { defineConfig } from 'vite';
 import dts from 'vite-plugin-dts';
+import tsconfigPaths from 'vite-tsconfig-paths';
 
 import pkg from './package.json' with { type: 'json' };
 
-const externalIds = [
-  ...Object.keys(pkg.dependencies ?? {}),
+const runtimeDeps = [
   ...Object.keys(pkg.peerDependencies ?? {}),
+  ...Object.keys(pkg.dependencies ?? {}),
 ];
+const external = (id: string) =>
+  runtimeDeps.some(p => id === p || id.startsWith(`${p}/`));
 
-const isExternal = (id: string) =>
-  externalIds.some(dep => id === dep || id.startsWith(`${dep}/`));
-
-// https://vite.dev/config/
 export default defineConfig({
+  plugins: [
+    react(),
+    dts({
+      entryRoot: 'src',
+      tsconfigPath: path.resolve(__dirname, 'tsconfig.json'),
+      outDir: ['dist/lib', 'dist/es'],
+    }),
+    tsconfigPaths(),
+  ],
+  define: {
+    'process.env.NODE_ENV': '"production"',
+  },
   build: {
     outDir: 'dist',
     minify: false,
@@ -23,31 +35,24 @@ export default defineConfig({
       formats: ['es', 'cjs'],
     },
     rollupOptions: {
-      external: isExternal,
+      external,
       output: [
         {
           format: 'es',
-          dir: './dist/es',
+          dir: 'dist/es',
           exports: 'named',
           preserveModules: true,
           preserveModulesRoot: 'src',
         },
         {
           format: 'cjs',
-          dir: './dist/lib',
+          dir: 'dist/lib',
           exports: 'named',
           preserveModules: true,
           preserveModulesRoot: 'src',
+          entryFileNames: '[name].cjs',
         },
       ],
     },
   },
-  plugins: [
-    react(),
-    dts({
-      tsconfigPath: './tsconfig.json',
-      outDir: ['dist/lib', 'dist/es'],
-      entryRoot: 'src',
-    }),
-  ],
 });
