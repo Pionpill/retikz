@@ -4,8 +4,7 @@
   "scripts": {
     "lint": "eslint . --cache",
     "build": "pnpm -r --if-present run build",
-    "test": "pnpm -r --if-present run test:run",
-    "dev:docs": "pnpm --filter @retikz/docs dev"
+    "test": "pnpm -r --if-present run test:run"
   },
   "devDependencies": {
     "@eslint/js": "catalog:",
