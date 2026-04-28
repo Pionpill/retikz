@@ -23,6 +23,10 @@ const eslintConfig = [
             '**/dist/**',
             '**/postcss.config.js',
             '**/vite.config.ts',
+            // shadcn/ui 的 components/ui/* 与 hooks/use-mobile.ts 是 vendored 代码，
+            // 由 shadcn CLI 直接拷入；按 node_modules 同等对待，不参与项目 lint
+            '**/components/ui/**',
+            '**/hooks/use-mobile.ts',
         ],
     },
     {
