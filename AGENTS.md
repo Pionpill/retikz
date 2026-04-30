@@ -122,6 +122,47 @@ v0.1 新 core 正在 `next` 分支重写中，写完后命令切换为 `pnpm --f
   - 内部 helper：同上
   - 例外：需要 hoisting（在定义点之前被引用）；类方法仍按 class 语法
 
+## React 组件规范
+
+- **用 `FC` 注解组件**——`const Foo: FC<FooProps> = props => ...`，不裸写 `(props: FooProps) =>`
+  - 让组件的"是 React 组件"这件事在类型上显式
+  - 自动带上 children？v18 之后的 `FC` 默认不含 `children`；要 children 就显式写在 Props 里（`children: ReactNode`）
+- **`ComponentProps` 类型独立声明，不内联在签名里**
+  ```tsx
+  // ✅
+  type FooProps = { id: string; onDone?: () => void };
+  const Foo: FC<FooProps> = ({ id, onDone }) => { ... };
+
+  // ❌
+  const Foo: FC<{ id: string; onDone?: () => void }> = ...
+  const Foo = ({ id, onDone }: { id: string }) => ...
+  ```
+  - Props 是组件的公开契约，必须可被外部 import / 派生（`Pick<FooProps, 'id'>` 等）
+  - `export type FooProps` 让消费者写 wrapper / HOC / forwardRef 时直接复用，不用 `ComponentProps<typeof Foo>` 推断
+- **一个组件一个文件，多组件通过 `index.ts` 聚合导出**
+  ```
+  components/
+    Foo/
+      Foo.tsx           # 单组件实现
+      Bar.tsx           # 单组件实现
+      index.ts          # export { Foo } from './Foo'; export { Bar } from './Bar'
+  ```
+  - 例外：紧密耦合的内部子组件（如 `Foo.Item` / `FooHeader` 仅给 `Foo` 用）可在同文件
+  - 例外：shadcn vendored（`components/ui/*`）按 shadcn CLI 约定，单文件多 export 不动
+- **在函数体里解构 props**，不在签名里
+  ```tsx
+  // ✅
+  const Foo: FC<FooProps> = props => {
+    const { id, onDone } = props;
+    // ...
+  };
+
+  // ❌
+  const Foo: FC<FooProps> = ({ id, onDone }) => { ... };
+  ```
+  - 理由：调试 / 日志时能直接 `console.log(props)`；用 hook 给 props 包一层（`useMemo(() => ..., [props])`）时不需要重新拼回去；改名 / 加字段时只动一处
+  - 例外：解构后立刻只用一两个字段、又确实更短的小组件（如 `<Icon size />`）——按可读性裁量
+
 ## IR / Schema 风格（zod）
 
 > 见 `docs/DESIGN.md` §7 "AI 友好性"——schema description 是给 LLM 看的契约，必须完整。
