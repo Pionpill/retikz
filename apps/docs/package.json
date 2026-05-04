@@ -10,6 +10,8 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@mdx-js/mdx": "catalog:",
+    "@mdx-js/react": "catalog:",
     "@retikz/core": "workspace:*",
     "@retikz/react": "workspace:*",
     "class-variance-authority": "catalog:",
@@ -27,6 +29,7 @@
   },
   "devDependencies": {
     "@tailwindcss/vite": "catalog:",
+    "@types/mdx": "catalog:",
     "@types/node": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
