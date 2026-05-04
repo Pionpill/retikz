@@ -1,15 +1,15 @@
 import { Navigate, Route, Routes, useParams } from 'react-router';
 import { DocLayout } from './layout/DocLayout';
 import { DocPage } from './pages/DocPage';
-import { sections } from './data/sections';
+import { coreSection } from './data/core';
 
 /** 默认入口：第一个栏目的第一页 */
-const defaultPath = `/${sections[0].id}/${sections[0].pages[0].id}`;
+const defaultPath = `/${coreSection[0].id}/${coreSection[0].pages[0].id}`;
 
 /** /:sectionId 命中时重定向到该栏目首页；找不到栏目就回首页 */
 const SectionRedirect = () => {
   const { sectionId } = useParams<'sectionId'>();
-  const section = sections.find(s => s.id === sectionId);
+  const section = coreSection.find(s => s.id === sectionId);
   if (!section) return <Navigate to="/" replace />;
   return <Navigate to={`/${section.id}/${section.pages[0].id}`} replace />;
 };

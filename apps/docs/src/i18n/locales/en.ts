@@ -1,7 +1,7 @@
-import type { Resources } from './zh';
+import type { I18nResources } from './zh';
 
 /** English copy. Structure mirrors zh.ts; keep keys in sync. */
-export const en: Resources = {
+export const en: I18nResources = {
   common: {
     search: 'Search this section...',
     pageCount: '{{count}} page(s)',
@@ -15,14 +15,8 @@ export const en: Resources = {
     themeDark: 'Dark theme',
     brandTagline: 'TikZ-style drawing library for React',
   },
-  sections: {
-    core: 'Core',
-    plot: 'Plot',
-    flow: 'Flow',
-  },
-  pages: {
-    'core-intro': 'Intro & Install',
-    'plot-intro': 'Intro (v0.2)',
-    'flow-intro': 'Intro (v0.3+)',
+  core: {
+    label: 'Core',
+    intro: 'Intro & Install',
   },
 };
