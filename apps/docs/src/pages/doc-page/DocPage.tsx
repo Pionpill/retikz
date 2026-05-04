@@ -1,8 +1,10 @@
-import type { FC } from 'react';
-import { useTranslation } from 'react-i18next';
-import { Navigate, useParams } from 'react-router';
+import type { MdxFrontmatter } from '@/components/shared/MdxContent';
 import { MdxContent } from '@/components/shared/MdxContent';
 import { coreSection } from '@/data/core';
+import type { FC } from 'react';
+import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { Navigate, useParams } from 'react-router';
 import { useMdxSource } from './useMdxSource';
 
 /**
@@ -13,9 +15,7 @@ import { useMdxSource } from './useMdxSource';
  */
 export const DocPage: FC = () => {
   const { t } = useTranslation();
-  const { moduleId, sectionId, pageId, subPageId } = useParams<
-    'moduleId' | 'sectionId' | 'pageId' | 'subPageId'
-  >();
+  const { moduleId, sectionId, pageId, subPageId } = useParams<'moduleId' | 'sectionId' | 'pageId' | 'subPageId'>();
 
   const section = coreSection.find(s => s.id === sectionId);
   const page = section?.pages.find(p => p.id === pageId);
@@ -25,6 +25,13 @@ export const DocPage: FC = () => {
   const target = subPageId ? subPage : page;
 
   const { source, notFound } = useMdxSource();
+
+  const [frontmatter, setFrontmatter] = useState<MdxFrontmatter>({});
+  const [prevSource, setPrevSource] = useState(source);
+  if (source !== prevSource) {
+    setPrevSource(source);
+    setFrontmatter({});
+  }
 
   if (!section || !target) {
     return (
@@ -46,16 +53,20 @@ export const DocPage: FC = () => {
   }
 
   const title = t(target.label);
+  const description = typeof frontmatter.description === 'string' ? frontmatter.description : null;
 
   return (
     <main className="flex flex-1 flex-col gap-6 p-6">
-      <header className="flex items-center justify-between gap-4">
-        <h1 className="text-2xl font-semibold tracking-tight">{title}</h1>
+      <header className="flex items-start justify-between gap-4">
+        <div className="flex flex-col gap-1">
+          <h1 className="scroll-m-24 text-3xl font-semibold tracking-tight sm:text-3xl">{title}</h1>
+          {description && <p className="text-muted-foreground">{description}</p>}
+        </div>
         {target.extra}
       </header>
-      <div className="prose prose-slate max-w-none dark:prose-invert">
+      <div>
         {source != null ? (
-          <MdxContent source={source} />
+          <MdxContent source={source} onFrontmatter={setFrontmatter} />
         ) : notFound ? (
           <p className="text-sm text-muted-foreground">{t('common.contentPlaceholder', { title })}</p>
         ) : null}
