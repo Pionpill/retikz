@@ -1,3 +1,6 @@
+import { Check, ChevronsUpDown } from 'lucide-react';
+import type { FC } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -5,19 +8,29 @@ import {
   DropdownMenuLabel,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar } from '@/components/ui/sidebar';
+import {
+  SidebarHeader,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  useSidebar,
+} from '@/components/ui/sidebar';
 import { modules } from '@/data/module';
 import { cn } from '@/lib/utils';
-import { Check, ChevronsUpDown } from 'lucide-react';
-import type { FC } from 'react';
-import { useState } from 'react';
-import { useTranslation } from 'react-i18next';
 
-/** 侧边栏头部 */
-export const AppSidebarHeader: FC = () => {
+/** AppSidebarHeader 组件 props */
+export type AppSidebarHeaderProps = {
+  /** 当前激活模块 id（受控） */
+  activeId: string;
+  /** 选择条目时回调 */
+  onActiveIdChange: (id: string) => void;
+};
+
+/** 侧边栏头部：retikz 子包切换器 */
+export const AppSidebarHeader: FC<AppSidebarHeaderProps> = props => {
+  const { activeId, onActiveIdChange } = props;
   const { t } = useTranslation();
   const { isMobile } = useSidebar();
-  const [activeId, setActiveId] = useState<string>(modules[0].id);
   const active = modules.find(m => m.id === activeId) ?? modules[0];
   const ActiveIcon = active.Icon;
 
@@ -37,7 +50,9 @@ export const AppSidebarHeader: FC = () => {
                 </div>
                 <div className="grid flex-1 text-left text-sm leading-tight">
                   <span className="truncate font-medium">{t(active.label)}</span>
-                  <span className="truncate text-xs opacity-60">retikz · {t('common.versionTag')}</span>
+                  <span className="truncate text-xs opacity-60">
+                    retikz · {t('common.versionTag')}
+                  </span>
                 </div>
                 <ChevronsUpDown className="ml-auto" />
               </DropdownMenuTrigger>
@@ -57,7 +72,7 @@ export const AppSidebarHeader: FC = () => {
                 return (
                   <DropdownMenuItem
                     key={m.id}
-                    onClick={() => setActiveId(m.id)}
+                    onClick={() => onActiveIdChange(m.id)}
                     className="flex items-center p-2 justify-between cursor-pointer"
                   >
                     <div className="flex items-center gap-2">
