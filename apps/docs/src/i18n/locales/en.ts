@@ -13,7 +13,7 @@ export const en: I18nResources = {
     switchLanguage: 'Switch language',
     themeLight: 'Light theme',
     themeDark: 'Dark theme',
-    brandTagline: 'TikZ-style drawing library for React',
+    brandTagline: 'ReTikZ module switcher',
   },
   core: {
     label: 'Core',
@@ -21,5 +21,11 @@ export const en: I18nResources = {
     introduction: 'Introduction',
     getStart: 'Get Started',
     overview: 'Overview',
+  },
+  flow: {
+    label: 'Flow',
+  },
+  plot: {
+    label: 'Plot',
   },
 };
