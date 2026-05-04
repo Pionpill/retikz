@@ -24,7 +24,9 @@
     "react-dom": "catalog:",
     "react-i18next": "catalog:",
     "react-router": "catalog:",
+    "remark-frontmatter": "catalog:",
     "remark-gfm": "catalog:",
+    "remark-mdx-frontmatter": "catalog:",
     "tailwind-merge": "catalog:",
     "zustand": "catalog:"
   },
