@@ -11,7 +11,7 @@ export const zh = {
     switchLanguage: '切换语言',
     themeLight: '浅色主题',
     themeDark: '深色主题',
-    brandTagline: 'TikZ 风格的 React 绘图库',
+    brandTagline: 'ReTikZ 模块切换',
   },
   core: {
     label: '核心',
@@ -19,6 +19,12 @@ export const zh = {
     introduction: '简介',
     getStart: '快速开始',
     overview: '概览',
+  },
+  flow: {
+    label: '流程',
+  },
+  plot: {
+    label: '图表',
   },
 };
 
