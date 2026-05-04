@@ -4,6 +4,7 @@ import type { FC } from 'react';
 import { useEffect, useState } from 'react';
 import * as jsxDevRuntime from 'react/jsx-dev-runtime';
 import * as jsxRuntime from 'react/jsx-runtime';
+import remarkGfm from 'remark-gfm';
 
 export type MdxContentProps = {
   /** MDX 源码字符串 */
@@ -20,6 +21,7 @@ const runtime = {
 const compileOptions: CompileOptions = {
   outputFormat: 'function-body',
   development: import.meta.env.DEV,
+  remarkPlugins: [remarkGfm],
 };
 
 export const MdxContent: FC<MdxContentProps> = props => {
