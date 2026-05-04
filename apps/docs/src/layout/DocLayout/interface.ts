@@ -15,8 +15,8 @@ export type SidebarModuleData = {
   value: string;
   /** 显示文字（已过 t()） */
   label: string;
-  /** 显示图标 */
-  Icon: ComponentType<{ className?: string }>;
+  /** 显示图标，可选 */
+  Icon?: ComponentType<{ className?: string }>;
 };
 
 /** 分组（一个 SidebarGroup） */

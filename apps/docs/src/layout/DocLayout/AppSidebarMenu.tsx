@@ -37,17 +37,14 @@ export const AppSidebarMenu: FC<AppSidebarMenuProps> = props => {
           })}
         >
           {category.label && (
-            <SidebarGroupLabel className="in-data-[state=collapsed]:hidden">
-              {category.label}
-            </SidebarGroupLabel>
+            <SidebarGroupLabel className="in-data-[state=collapsed]:hidden">{category.label}</SidebarGroupLabel>
           )}
           <SidebarMenu>
             {category.modules.map(module => {
               const path = `/${category.value}/${module.value}`;
               const isActive = pathname.toLowerCase() === path.toLowerCase();
-              const tooltipLabel = category.label
-                ? `${category.label} · ${module.label}`
-                : module.label;
+              const tooltipLabel = category.label ? `${category.label} · ${module.label}` : module.label;
+              const Icon = module.Icon;
               return (
                 <SidebarMenuItem key={module.value}>
                   <SidebarMenuButton
@@ -58,7 +55,7 @@ export const AppSidebarMenu: FC<AppSidebarMenuProps> = props => {
                       navigate(path);
                     }}
                   >
-                    <module.Icon />
+                    {Icon && <Icon />}
                     <span className="truncate">{module.label}</span>
                   </SidebarMenuButton>
                 </SidebarMenuItem>

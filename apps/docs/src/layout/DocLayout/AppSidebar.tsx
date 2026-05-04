@@ -2,7 +2,7 @@ import type { FC } from 'react';
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Sidebar, SidebarContent } from '@/components/ui/sidebar';
-import { sections } from '../../data/sections';
+import { coreSection } from '../../data/core';
 import { AppSidebarFooter } from './AppSidebarFooter';
 import { AppSidebarHeader } from './AppSidebarHeader';
 import { AppSidebarMenu } from './AppSidebarMenu';
@@ -18,9 +18,9 @@ export const AppSidebar: FC = () => {
 
   const categories = useMemo<Array<SidebarCategoryData>>(
     () =>
-      sections.map(section => ({
+      coreSection.map(section => ({
         value: section.id,
-        label: t(section.label),
+        label: section.label ? t(section.label) : undefined,
         modules: section.pages.map(page => ({
           value: page.id,
           label: t(page.label),

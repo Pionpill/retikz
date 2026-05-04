@@ -13,17 +13,11 @@ export const zh = {
     themeDark: '深色主题',
     brandTagline: 'TikZ 风格的 React 绘图库',
   },
-  sections: {
-    core: '核心',
-    plot: '图表',
-    flow: '流程',
-  },
-  pages: {
-    'core-intro': '介绍 & 安装',
-    'plot-intro': '介绍（v0.2）',
-    'flow-intro': '介绍（v0.3+）',
+  core: {
+    label: '核心',
+    intro: '介绍 & 安装',
   },
 };
 
 /** 资源结构由 zh 推导（不带 as const，值收敛成 string，让 en 等其它语言能赋值） */
-export type Resources = typeof zh;
+export type I18nResources = typeof zh;

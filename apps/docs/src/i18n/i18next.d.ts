@@ -1,5 +1,5 @@
 import 'i18next';
-import type { Resources } from './locales/zh';
+import type { I18nResources } from './locales/zh';
 
 /**
  * i18next 类型增强：把资源结构注入到 TypeScript，
@@ -12,6 +12,6 @@ declare module 'i18next' {
   // eslint-disable-next-line no-unused-vars
   interface CustomTypeOptions {
     defaultNS: 'translation';
-    resources: { translation: Resources };
+    resources: { translation: I18nResources };
   }
 }
