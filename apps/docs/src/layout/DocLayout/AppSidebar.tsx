@@ -59,7 +59,7 @@ export const AppSidebar: FC = () => {
     <Sidebar collapsible="icon" className="overflow-hidden">
       <AppSidebarHeader activeId={activeModuleId} onActiveIdChange={setActiveModuleId} />
       <SidebarContent className="gap-0">
-        <AppSidebarMenu categories={categories} />
+        <AppSidebarMenu categories={categories} moduleId={activeModuleId} />
       </SidebarContent>
       <AppSidebarFooter />
     </Sidebar>
