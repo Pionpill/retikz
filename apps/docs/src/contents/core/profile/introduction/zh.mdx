@@ -1,0 +1,40 @@
+# 简介
+
+**retikz** 是一个基于 React 与 D3 的绘图库，灵感来自 LaTeX 的 [TikZ](https://tikz.dev/)，让你以**组件化**的方式声明节点、路径和图形。
+
+## 设计理念
+
+- **声明式**：用 JSX 描述图形结构，框架负责布局与渲染
+- **AI 友好**：底层 IR 100% JSON 可序列化，方便 LLM 生成与往返
+- **分层抽象**：Kernel / Sugar / Tier 2 三层语义，按职责拆分
+
+## 一个最小例子
+
+```tsx
+import { TikZ, Node, Draw } from '@retikz/react';
+
+export const Demo = () => (
+  <TikZ>
+    <Node name="A" at={[0, 0]}>起点</Node>
+    <Node name="B" at={[3, 1]}>终点</Node>
+    <Draw way={['A', 'B']} arrow="->" />
+  </TikZ>
+);
+```
+
+## 适用场景
+
+1. 论文 / 博客里嵌入可交互示意图
+2. 流程图、概念图、网络拓扑
+3. 由 LLM 自动生成的图形配图
+
+> retikz 当前正在 `next` 分支重写 v0.1。详细方案见 `docs/CORE-REFACTOR.md`。
+
+## 与 TikZ 的关系
+
+| 维度 | LaTeX TikZ | retikz |
+| --- | --- | --- |
+| 运行环境 | LaTeX 编译 | 浏览器 / Node |
+| 语法 | `\node` `\draw` | `<Node>` `<Draw>` |
+| 输出 | PDF / SVG | SVG (DOM) |
+| 交互 | 无 | React 事件、状态 |

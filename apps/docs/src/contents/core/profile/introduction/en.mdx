@@ -1,0 +1,40 @@
+# Introduction
+
+**retikz** is a React + D3 drawing library inspired by LaTeX's [TikZ](https://tikz.dev/), letting you declare nodes, paths and shapes in a **component-driven** way.
+
+## Design Principles
+
+- **Declarative** — describe the graphic with JSX, leave layout and rendering to the runtime
+- **AI-friendly** — the underlying IR is 100% JSON-serializable, so LLMs can both produce and round-trip it
+- **Layered abstraction** — Kernel / Sugar / Tier 2 split responsibilities cleanly
+
+## A Minimal Example
+
+```tsx
+import { TikZ, Node, Draw } from '@retikz/react';
+
+export const Demo = () => (
+  <TikZ>
+    <Node name="A" at={[0, 0]}>Start</Node>
+    <Node name="B" at={[3, 1]}>End</Node>
+    <Draw way={['A', 'B']} arrow="->" />
+  </TikZ>
+);
+```
+
+## Use Cases
+
+1. Interactive diagrams embedded in papers and blog posts
+2. Flow charts, concept maps, network topologies
+3. LLM-generated illustrations
+
+> retikz v0.1 is being rewritten on the `next` branch. See `docs/CORE-REFACTOR.md` for the full plan.
+
+## Relation to TikZ
+
+| Aspect | LaTeX TikZ | retikz |
+| --- | --- | --- |
+| Runtime | LaTeX compiler | Browser / Node |
+| Syntax | `\node` `\draw` | `<Node>` `<Draw>` |
+| Output | PDF / SVG | SVG (DOM) |
+| Interactivity | None | React events & state |
