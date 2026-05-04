@@ -149,6 +149,9 @@ v0.1 新 core 正在 `next` 分支重写中，写完后命令切换为 `pnpm --f
   ```
   - 例外：紧密耦合的内部子组件（如 `Foo.Item` / `FooHeader` 仅给 `Foo` 用）可在同文件
   - 例外：shadcn vendored（`components/ui/*`）按 shadcn CLI 约定，单文件多 export 不动
+- **不要直接编辑 `components/ui/*` 下的 shadcn vendored 文件**
+  - 这些是由 shadcn CLI 生成的，需要修补时优先：(a) 用 shadcn CLI 重新生成；(b) 在外层包一个本地 wrapper / forwardRef 适配；(c) 在调用处避开有问题的用法（不要靠改 vendored 来绕坑）
+  - 直接改这些文件会让后续 `shadcn add` 升级时被覆盖，且和上游 issue / 文档脱节
 - **在函数体里解构 props**，不在签名里
   ```tsx
   // ✅
