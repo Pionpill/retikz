@@ -18,5 +18,8 @@ export const en: I18nResources = {
   core: {
     label: 'Core',
     intro: 'Intro & Install',
+    introduction: 'Introduction',
+    getStart: 'Get Started',
+    overview: 'Overview',
   },
 };

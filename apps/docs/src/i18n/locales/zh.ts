@@ -16,6 +16,9 @@ export const zh = {
   core: {
     label: '核心',
     intro: '介绍 & 安装',
+    introduction: '简介',
+    getStart: '快速开始',
+    overview: '概览',
   },
 };
 
