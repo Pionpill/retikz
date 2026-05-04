@@ -20,25 +20,28 @@ import type { SidebarCategoryData } from './interface';
 export type AppSidebarMenuProps = {
   /** 分组化的菜单数据 */
   categories: Array<SidebarCategoryData>;
+  /** 当前激活的一级 module id（路由首段，由 header switcher 控制） */
+  moduleId: string;
 };
 
 /**
  * 侧边栏主菜单：渲染若干 SidebarGroup。
- * - 一级 module 无 children：渲染为普通菜单项，点击跳转
+ * - 一级 module 无 children：渲染为普通菜单项，点击跳转 `/${moduleId}/${section}/${page}`
  * - 一级 module 有 children：渲染为 Collapsible，trigger 行带 Plus/Minus 指示，children 用 SidebarMenuSub 列出
  * - 折叠态相邻 group 之间画一条细分隔线（首组不画）
  * - 折叠态点击 trigger 自动展开 sidebar 并选中该 module
  */
 export const AppSidebarMenu: FC<AppSidebarMenuProps> = props => {
-  const { categories } = props;
+  const { categories, moduleId } = props;
   const { pathname } = useLocation();
   const navigate = useNavigate();
   const { open: sidebarOpen, setOpen: setSidebarOpen } = useSidebar();
 
-  /** 当前展开的一级 module key（`category.value/module.value`），同时只展开一个 */
+  /** 当前展开的一级 module key（`category.value/module.value` = `sectionId/pageId`），同时只展开一个 */
   const [openedModule, setOpenedModule] = useState<string | undefined>(() => {
+    // 路由形如 /:moduleId/:sectionId/:pageId，取后两段作为 key
     const segments = pathname.split('/').filter(Boolean);
-    return segments.length >= 2 ? `${segments[0]}/${segments[1]}` : undefined;
+    return segments.length >= 3 ? `${segments[1]}/${segments[2]}` : undefined;
   });
 
   return (
@@ -60,7 +63,7 @@ export const AppSidebarMenu: FC<AppSidebarMenuProps> = props => {
           <SidebarMenu>
             {category.modules.map(module => {
               const Icon = module.Icon;
-              const modulePath = `/${category.value}/${module.value}`;
+              const modulePath = `/${moduleId}/${category.value}/${module.value}`;
               const moduleKey = `${category.value}/${module.value}`;
               const tooltipLabel = category.label
                 ? `${category.label} · ${module.label}`
