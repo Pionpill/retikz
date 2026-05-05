@@ -63,34 +63,36 @@ export const DocPage: FC<DocPageProps> = props => {
   const description = typeof frontmatter.description === 'string' ? frontmatter.description : null;
 
   return (
-    <main className={cn('flex flex-1 min-w-0 gap-10 p-6', className)} {...resProps}>
-      <div className="flex min-w-0 max-w-160 flex-1 flex-col gap-6">
-        <header className="flex items-start justify-between gap-4">
-          <div className="flex flex-col gap-1">
-            <h1 className="scroll-m-24 text-3xl font-semibold tracking-tight sm:text-3xl">{title}</h1>
-            {description && <p className="text-muted-foreground">{description}</p>}
+    <main className={cn('flex flex-1 w-full p-6', className)} {...resProps}>
+      <div className="flex flex-1 justify-center">
+        <div className="flex min-w-0 max-w-160 flex-1 flex-col gap-6">
+          <header className="flex items-start justify-between gap-4">
+            <div className="flex flex-col gap-1">
+              <h1 className="scroll-m-24 text-3xl font-semibold tracking-tight sm:text-3xl">{title}</h1>
+              {description && <p className="text-muted-foreground">{description}</p>}
+            </div>
+            {target.extra}
+          </header>
+          <div>
+            {source != null ? (
+              <MdxContent source={source} onFrontmatter={setFrontmatter} />
+            ) : notFound ? (
+              <p className="text-sm text-muted-foreground">{t('common.contentPlaceholder', { title })}</p>
+            ) : null}
           </div>
-          {target.extra}
-        </header>
-        <div>
-          {source != null ? (
-            <MdxContent source={source} onFrontmatter={setFrontmatter} />
-          ) : notFound ? (
-            <p className="text-sm text-muted-foreground">{t('common.contentPlaceholder', { title })}</p>
-          ) : null}
         </div>
       </div>
       {source != null && (
         <aside
           aria-hidden={!tocOpen}
           className={cn(
-            'hidden shrink-0 overflow-hidden transition-all duration-300 ease-out xl:block',
-            tocOpen ? 'w-56 opacity-100' : 'w-0 opacity-0',
+            'hidden shrink-0 overflow-clip transition-all duration-300 ease-out xl:block px-4',
+            tocOpen ? 'w-75 opacity-100' : 'w-0 opacity-0',
           )}
         >
           <div
             className={cn(
-              'sticky top-16 transition-all duration-300 ease-out',
+              'sticky top-18 transition-all duration-300 ease-out',
               tocOpen ? 'translate-x-0' : 'pointer-events-none translate-x-2',
             )}
           >
