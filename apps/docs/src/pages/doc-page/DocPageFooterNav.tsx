@@ -19,14 +19,14 @@ export const DocPageFooterNav: FC = () => {
       {prev ? (
         <Link to={prev.path} className={cardClass}>
           <ArrowLeft className="size-3.5" />
-          <span className="font-medium">{t(prev.label)}</span>
+          <span className="font-medium text-sm">{t(prev.label)}</span>
         </Link>
       ) : (
         <div />
       )}
       {next ? (
         <Link to={next.path} className={cardClass}>
-          <span className="font-medium">{t(next.label)}</span>
+          <span className="font-medium text-sm">{t(next.label)}</span>
           <ArrowRight className="size-3.5" />
         </Link>
       ) : (
