@@ -26,6 +26,13 @@ export const zh = {
   plot: {
     label: '图表',
   },
+  toc: {
+    copyLink: '复制链接',
+    outline: '文章目录',
+    linkCopied: '成功复制网页链接',
+    showOutline: '显示文章目录',
+    hideOutline: '隐藏文章目录',
+  },
 };
 
 /** 资源结构由 zh 推导（不带 as const，值收敛成 string，让 en 等其它语言能赋值） */

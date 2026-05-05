@@ -1,4 +1,5 @@
 import { Navigate, Route, Routes, useParams } from 'react-router';
+import { Toaster } from 'sonner';
 import { coreSection } from './data/core';
 import { modules } from './data/module';
 import { DocLayout } from './layout/DocLayout';
@@ -24,14 +25,17 @@ const SectionRedirect = () => {
 };
 
 export const App = () => (
-  <Routes>
-    <Route element={<DocLayout />}>
-      <Route index element={<Navigate to={defaultPath} replace />} />
-      <Route path=":moduleId/:sectionId/:pageId/:subPageId" element={<DocPage />} />
-      <Route path=":moduleId/:sectionId/:pageId" element={<DocPage />} />
-      <Route path=":moduleId/:sectionId" element={<SectionRedirect />} />
-      <Route path=":moduleId" element={<ModuleRedirect />} />
-      <Route path="*" element={<Navigate to="/" replace />} />
-    </Route>
-  </Routes>
+  <>
+    <Routes>
+      <Route element={<DocLayout />}>
+        <Route index element={<Navigate to={defaultPath} replace />} />
+        <Route path=":moduleId/:sectionId/:pageId/:subPageId" element={<DocPage />} />
+        <Route path=":moduleId/:sectionId/:pageId" element={<DocPage />} />
+        <Route path=":moduleId/:sectionId" element={<SectionRedirect />} />
+        <Route path=":moduleId" element={<ModuleRedirect />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Route>
+    </Routes>
+    <Toaster position="top-center" />
+  </>
 );

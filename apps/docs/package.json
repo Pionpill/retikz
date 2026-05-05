@@ -30,6 +30,7 @@
     "remark-frontmatter": "catalog:",
     "remark-gfm": "catalog:",
     "remark-mdx-frontmatter": "catalog:",
+    "sonner": "catalog:",
     "tailwind-merge": "catalog:",
     "zustand": "catalog:"
   },
