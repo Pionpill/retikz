@@ -11,21 +11,7 @@ description: retikz 是一个基于 React 与 D3 的绘图库，灵感来自 LaT
 
 ## 一个最小例子
 
-```tsx
-import { TikZ, Node, Draw } from '@retikz/react';
-
-export const Demo = () => (
-  <TikZ>
-    <Node name="A" at={[0, 0]}>
-      起点
-    </Node>
-    <Node name="B" at={[3, 1]}>
-      终点
-    </Node>
-    <Draw way={['A', 'B']} arrow="->" />
-  </TikZ>
-);
-```
+<ComponentPreview name="minimal-example" />
 
 ## 适用场景
 

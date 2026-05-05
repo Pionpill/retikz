@@ -4,6 +4,7 @@ import type { MDXComponents } from 'mdx/types';
 import type { ComponentPropsWithoutRef, FC } from 'react';
 import { Link } from 'react-router';
 import { CodeBlock } from './CodeBlock';
+import { ComponentPreview } from './ComponentPreview';
 
 const linkClass = 'font-medium underline underline-offset-4';
 
@@ -41,13 +42,7 @@ const Code: FC<CodeProps> = ({ className, children, showLineNumbers, ...rest }) 
   const isBlock = !!langMatch || codeStr.includes('\n');
 
   if (isBlock) {
-    return (
-      <CodeBlock
-        lang={langMatch?.[1] ?? 'text'}
-        code={codeStr}
-        showLineNumbers={showLineNumbers}
-      />
-    );
+    return <CodeBlock lang={langMatch?.[1] ?? 'text'} code={codeStr} showLineNumbers={showLineNumbers} />;
   }
 
   return (
@@ -69,10 +64,7 @@ export const mdxComponents: MDXComponents = {
   ),
   h2: ({ className, ...props }) => (
     <h2
-      className={cn(
-        'mt-10 scroll-m-28 text-xl font-medium tracking-tight first:mt-0 lg:mt-12',
-        className,
-      )}
+      className={cn('mt-10 scroll-m-28 text-xl font-medium tracking-tight first:mt-0 lg:mt-12', className)}
       {...props}
     />
   ),
@@ -100,9 +92,7 @@ export const mdxComponents: MDXComponents = {
     <blockquote className={cn('mt-6 border-l-2 pl-6 italic', className)} {...props} />
   ),
   hr: ({ className, ...props }) => <hr className={cn('my-4 md:my-8', className)} {...props} />,
-  img: ({ className, alt, ...props }) => (
-    <img className={cn('rounded-md', className)} alt={alt ?? ''} {...props} />
-  ),
+  img: ({ className, alt, ...props }) => <img className={cn('rounded-md', className)} alt={alt ?? ''} {...props} />,
   // 围栏代码块的 pre 透传 children —— children 经 code mapper 已替换成 CodeBlock，
   // 后者自带 pre/code，再外包一层会变成双 pre 嵌套。
   pre: ({ children }) => <>{children}</>,
@@ -137,4 +127,5 @@ export const mdxComponents: MDXComponents = {
       {...props}
     />
   ),
+  ComponentPreview,
 };
