@@ -7,6 +7,8 @@ import type { FC, HTMLAttributes } from 'react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Navigate, useParams } from 'react-router';
+import { DocPageActions } from './DocPageActions';
+import { DocPageFooterNav } from './DocPageFooterNav';
 import { useMdxSource } from './useMdxSource';
 
 export type DocPageProps = HTMLAttributes<HTMLDivElement>;
@@ -67,11 +69,14 @@ export const DocPage: FC<DocPageProps> = props => {
       <div className="flex flex-1 justify-center">
         <div className="flex min-w-0 max-w-160 flex-1 flex-col gap-6">
           <header className="flex items-start justify-between gap-4">
-            <div className="flex flex-col gap-1">
+            <div className="flex flex-col gap-2">
               <h1 className="scroll-m-24 text-3xl font-semibold tracking-tight sm:text-3xl">{title}</h1>
               {description && <p className="text-muted-foreground">{description}</p>}
             </div>
-            {target.extra}
+            <div className="flex items-center gap-2">
+              {source != null && <DocPageActions source={source} />}
+              {target.extra}
+            </div>
           </header>
           <div>
             {source != null ? (
@@ -80,6 +85,7 @@ export const DocPage: FC<DocPageProps> = props => {
               <p className="text-sm text-muted-foreground">{t('common.contentPlaceholder', { title })}</p>
             ) : null}
           </div>
+          <DocPageFooterNav />
         </div>
       </div>
       {source != null && (
