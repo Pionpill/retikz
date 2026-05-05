@@ -71,12 +71,16 @@ v0.1 新 core 正在 `next` 分支重写中，写完后命令切换为 `pnpm --f
 ```bash
 # 单包验证（推荐，速度更快）
 pnpm --filter <pkg> exec eslint . --fix    # ESLint 自动修复（含格式化）
-pnpm --filter <pkg> exec tsc -b            # TypeScript 类型检查
+pnpm --filter <pkg> exec tsc --noEmit      # TypeScript 类型检查（必须 --noEmit）
 
 # 全量
 pnpm lint                                  # 全部包 ESLint（不带 --fix）
 ```
 
+- **类型检查只用 `tsc --noEmit`，不要用 `tsc -b` / `tsc`（不带参数）**
+  - 根 `tsconfig.json` 设了 `declaration: true` + `declarationMap: true`，又没设 `outDir`——任何会 emit 的 tsc 调用都会把 `.d.ts` / `.d.ts.map` / `.js` 洒到 `src/` 同目录污染源码树
+  - 真正构建产物走 `pnpm --filter <pkg> build`（vite + `vite-plugin-dts`，写到 `dist/`），跟类型检查走两条路
+  - 如果发现 `packages/*/src/` 下出现了 `.d.ts` / `.d.ts.map` / `.js` 文件，先跑一遍 `find packages -type f \( -name '*.d.ts' -o -name '*.d.ts.map' -o -name '*.js' \) -not -path '*/node_modules/*' -not -path '*/dist/*' -delete` 清掉再继续工作
 - ESLint 报错 / 警告必须全部修掉，不允许用 `eslint-disable-*` / `// @ts-expect-error` 绕过（除非确有不可避情况，并在同一行/上一行写清楚原因）
 - TS 类型错误同样必须修，不允许用 `as any` / `@ts-ignore` 绕过；让 zod / IR / 第三方库的真实类型穿透到调用点
 - 改了多个 workspace 时分别在每个受影响的子包跑一遍
