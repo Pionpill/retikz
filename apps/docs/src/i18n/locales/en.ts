@@ -28,4 +28,11 @@ export const en: I18nResources = {
   plot: {
     label: 'Plot',
   },
+  toc: {
+    copyLink: 'Copy link',
+    outline: 'Outline',
+    linkCopied: 'Link copied',
+    showOutline: 'Show outline',
+    hideOutline: 'Hide outline',
+  },
 };
