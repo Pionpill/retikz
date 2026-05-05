@@ -1,3 +1,4 @@
+import { GitHubIcon } from '@/components/icons';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { SidebarTrigger } from '@/components/ui/sidebar';
@@ -5,7 +6,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { LANGS, type Lang } from '@/i18n';
 import { useThemeStore } from '@/store/useThemeStore';
 import { useTocStore } from '@/store/useTocStore';
-import { ExternalLink, Languages, Link as LinkIcon, Moon, Sun, TableOfContents } from 'lucide-react';
+import { Languages, Link as LinkIcon, Moon, Sun, TableOfContents } from 'lucide-react';
 import { type FC, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
@@ -69,7 +70,7 @@ const AppHeader: FC = () => {
               <TooltipTrigger asChild>
                 <Button asChild size="icon" variant="ghost" className={buttonClass}>
                   <a href="https://github.com/Pionpill/retikz" target="_blank" rel="noopener noreferrer">
-                    <ExternalLink className="size-4" />
+                    <GitHubIcon className="size-4" />
                   </a>
                 </Button>
               </TooltipTrigger>
