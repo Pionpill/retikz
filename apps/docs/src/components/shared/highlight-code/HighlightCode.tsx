@@ -3,7 +3,7 @@ import type { FC } from 'react';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { oneDark, oneLight } from 'react-syntax-highlighter/dist/esm/styles/prism';
 
-export type HighlightedCodeProps = {
+export type HighlightCodeProps = {
   /** Prism 语言名（来自围栏 `language-*`），未知值 prism 会回落为不高亮 */
   lang: string;
   /** 代码原文，尾部换行会被裁掉避免多出空行 */
@@ -18,7 +18,7 @@ const lineNumberOverride = {
   fontWeight: 'normal',
 };
 
-export const HighlightedCode: FC<HighlightedCodeProps> = props => {
+export const HighlightCode: FC<HighlightCodeProps> = props => {
   const { lang, code, showLineNumbers } = props;
 
   const theme = useThemeStore(state => state.theme);

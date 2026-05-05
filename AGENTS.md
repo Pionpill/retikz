@@ -133,6 +133,7 @@ pnpm lint                                  # 全部包 ESLint（不带 --fix）
 - ESLint 统一在根目录通过 `pnpm lint` 运行，flat config 见 `eslint.config.js`
 - 不要在子包里重复声明工具链（eslint、typescript 等）的版本，统一用 catalog
 - 变量/文件命名沿用现有风格：组件 PascalCase，hooks `useXxx`，工具类小驼峰
+- **目录使用 kebab-case**（如 `mdx-content/`、`component-preview/`、`doc-page/`），不用 PascalCase / camelCase；目录里**单组件文件**仍按组件名 PascalCase（`ComponentPreview.tsx`），barrel / 配置 / 注册表等非组件文件用小写（`index.ts`、`components.tsx`）
 - 尽量不写注释；确需解释"为什么"时再写，避免复述代码做了什么
 - 数组类型用 `Array<T>`，不用 `T[]`（项目内统一）
 - **函数定义优先用箭头形式**：`const fn = (...) => {...}` 而不是 `function fn(...) {...}`

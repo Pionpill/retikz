@@ -3,8 +3,8 @@ import { cn } from '@/lib/utils';
 import type { MDXComponents } from 'mdx/types';
 import type { ComponentPropsWithoutRef, FC } from 'react';
 import { Link } from 'react-router';
-import { CodeBlock } from './CodeBlock';
-import { ComponentPreview } from './ComponentPreview';
+import { ComponentPreview } from '../component-preview';
+import { CodeBlock } from '../highlight-code';
 
 const linkClass = 'font-medium underline underline-offset-4';
 

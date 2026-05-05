@@ -1,7 +1,7 @@
 import { Button } from '@/components/ui/button';
 import { Check, Copy } from 'lucide-react';
 import { type FC, useCallback, useEffect, useRef, useState } from 'react';
-import { HighlightedCode } from './HighlightedCode';
+import { HighlightCode } from './HighlightCode';
 
 export type CodeBlockProps = {
   /** Prism 语言名（来自围栏 `language-*`），未知值 prism 会回落为不高亮 */
@@ -42,7 +42,7 @@ export const CodeBlock: FC<CodeBlockProps> = ({ lang, code, showLineNumbers }) =
       >
         {copied ? <Check className="size-4" /> : <Copy className="size-4" />}
       </Button>
-      <HighlightedCode lang={lang} code={trimmed} showLineNumbers={showLineNumbers} />
+      <HighlightCode lang={lang} code={trimmed} showLineNumbers={showLineNumbers} />
     </div>
   );
 };
