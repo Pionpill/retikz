@@ -1,12 +1,11 @@
-import { cn } from '@/lib/utils';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ArrowLeft, ArrowRight } from 'lucide-react';
 import type { FC } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router';
 import { usePageNavigation } from './usePageNavigation';
 
 const cardClass =
-  'flex flex-col gap-1 rounded-lg border p-4 transition-colors hover:bg-accent hover:text-accent-foreground';
+  'flex items-center gap-2 rounded-lg bg-muted hover:bg-muted/80 duration-200 transition-colors p-1 px-2 transition-colors hover:bg-accent hover:text-accent-foreground';
 
 /** 文章末尾的「上一页 / 下一页」大卡片导航，shadcn 风格 */
 export const DocPageFooterNav: FC = () => {
@@ -16,25 +15,19 @@ export const DocPageFooterNav: FC = () => {
   if (!prev && !next) return null;
 
   return (
-    <nav className="grid grid-cols-2 gap-4">
+    <nav className="flex items-center justify-between">
       {prev ? (
-        <Link to={prev.path} className={cn(cardClass, 'items-start text-left')}>
-          <span className="flex items-center gap-1 text-xs text-muted-foreground">
-            <ChevronLeft className="size-3.5" />
-            {t('page.prevPage')}
-          </span>
+        <Link to={prev.path} className={cardClass}>
+          <ArrowLeft className="size-3.5" />
           <span className="font-medium">{t(prev.label)}</span>
         </Link>
       ) : (
         <div />
       )}
       {next ? (
-        <Link to={next.path} className={cn(cardClass, 'items-end text-right')}>
-          <span className="flex items-center gap-1 text-xs text-muted-foreground">
-            {t('page.nextPage')}
-            <ChevronRight className="size-3.5" />
-          </span>
+        <Link to={next.path} className={cardClass}>
           <span className="font-medium">{t(next.label)}</span>
+          <ArrowRight className="size-3.5" />
         </Link>
       ) : (
         <div />
