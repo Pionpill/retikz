@@ -102,10 +102,8 @@ export const MdxToc: FC<MdxTocProps> = ({ source }) => {
               type="button"
               onClick={() => handleClick(item.id)}
               className={cn(
-                'block w-full cursor-pointer truncate py-0.5 pl-3 text-left text-sm transition-colors',
-                activeId === item.id
-                  ? 'font-semibold text-blue-500'
-                  : 'text-muted-foreground hover:text-foreground',
+                'block w-full cursor-pointer truncate py-0.5 pl-3 text-left text-sm transition-colors duration-200',
+                activeId === item.id ? 'font-semibold text-foreground' : 'text-muted-foreground hover:text-foreground',
               )}
             >
               {item.text}
