@@ -1,7 +1,6 @@
 import { JsonIcon, ReactIcon } from '@/components/icons';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
-import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { cn } from '@/lib/utils';
 import { convertReactNodeToIR } from '@retikz/react';
 import { Check, ChevronsDownUp, ChevronsUpDown, Copy, X } from 'lucide-react';
@@ -163,24 +162,32 @@ export const ComponentPreview: FC<ComponentPreviewProps> = props => {
         {showFull ? (
           <>
             <div className="flex items-center justify-between p-1 px-2">
-              <ToggleGroup
-                type="single"
-                variant="outline"
-                value={view}
-                onValueChange={v => {
-                  if (v) setView(v as SourceView);
-                }}
-                size="sm"
-              >
-                <ToggleGroupItem value="react" aria-label="React source">
+              <div className="flex items-center gap-1">
+                <Button
+                  type="button"
+                  size="sm"
+                  variant={view === 'react' ? 'outline' : 'ghost'}
+                  className={view === 'react' ? '' : 'border border-transparent'}
+                  aria-pressed={view === 'react'}
+                  aria-label="React source"
+                  onClick={() => setView('react')}
+                >
                   <ReactIcon className="size-3.5" />
                   React
-                </ToggleGroupItem>
-                <ToggleGroupItem value="ir" aria-label="IR JSON">
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant={view === 'ir' ? 'outline' : 'ghost'}
+                  className={view === 'ir' ? '' : 'border border-transparent'}
+                  aria-pressed={view === 'ir'}
+                  aria-label="IR JSON"
+                  onClick={() => setView('ir')}
+                >
                   <JsonIcon className="size-3.5" />
                   IR
-                </ToggleGroupItem>
-              </ToggleGroup>
+                </Button>
+              </div>
               <div className="flex items-center gap-1">
                 <Button
                   type="button"
