@@ -1,5 +1,5 @@
-import type { MdxFrontmatter } from '@/components/shared/MdxContent';
-import { MdxContent, MdxToc } from '@/components/shared/MdxContent';
+import type { MdxFrontmatter } from '@/components/shared/mdx-content';
+import { MdxContent, MdxToc } from '@/components/shared/mdx-content';
 import { coreSection } from '@/data/core';
 import { cn } from '@/lib/utils';
 import { useTocStore } from '@/store/useTocStore';

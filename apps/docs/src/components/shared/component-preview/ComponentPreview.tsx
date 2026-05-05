@@ -1,7 +1,7 @@
 import { cn } from '@/lib/utils';
 import type { ComponentType, FC } from 'react';
 import { useParams } from 'react-router';
-import { HighlightedCode } from './HighlightedCode';
+import { HighlightedCode } from '../highlight-code';
 
 /**
  * 收集 contents/<...>/<name>.demo.tsx 下的所有 demo（demo 文件与 mdx 同级，靠 .demo.tsx 后缀甄别）：
