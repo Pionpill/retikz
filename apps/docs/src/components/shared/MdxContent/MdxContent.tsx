@@ -5,6 +5,7 @@ import type { FC } from 'react';
 import { useEffect, useState } from 'react';
 import * as jsxDevRuntime from 'react/jsx-dev-runtime';
 import * as jsxRuntime from 'react/jsx-runtime';
+import rehypeMdxCodeProps from 'rehype-mdx-code-props';
 import rehypeSlug from 'rehype-slug';
 import remarkFrontmatter from 'remark-frontmatter';
 import remarkGfm from 'remark-gfm';
@@ -32,7 +33,9 @@ const compileOptions: CompileOptions = {
   development: import.meta.env.DEV,
   remarkPlugins: [remarkFrontmatter, remarkMdxFrontmatter, remarkGfm],
   // rehype-slug 给 h1-h6 注 id（基于 github-slugger），TOC 跳转 / 锚链接全靠它
-  rehypePlugins: [rehypeSlug],
+  // rehype-mdx-code-props 把围栏 meta（如 `ts showLineNumbers`）转成 <code> 的 JSX props，
+  // 必须最后跑 —— 它把 hast 转成 JSX 后下游插件就处理不了了。
+  rehypePlugins: [rehypeSlug, [rehypeMdxCodeProps, { tagName: 'code' }]],
 };
 
 export const MdxContent: FC<MdxContentProps> = props => {

@@ -29,14 +29,25 @@ const A: FC<ComponentPropsWithoutRef<'a'>> = ({ href, className, children, ...re
   );
 };
 
-/** 围栏代码块走 CodeBlock 组件（react-syntax-highlighter）；行内裸 `<code>` 用 shadcn neutral 样式 */
-const Code: FC<ComponentPropsWithoutRef<'code'>> = ({ className, children, ...rest }) => {
+/**
+ * 围栏代码块走 CodeBlock 组件（react-syntax-highlighter）；行内裸 `<code>` 用 shadcn neutral 样式。
+ * `showLineNumbers` 由 rehype-mdx-code-props 从围栏 meta（``` ts showLineNumbers）注入到 props。
+ */
+type CodeProps = ComponentPropsWithoutRef<'code'> & { showLineNumbers?: boolean };
+
+const Code: FC<CodeProps> = ({ className, children, showLineNumbers, ...rest }) => {
   const codeStr = typeof children === 'string' ? children : '';
   const langMatch = typeof className === 'string' ? /language-(\w+)/.exec(className) : null;
   const isBlock = !!langMatch || codeStr.includes('\n');
 
   if (isBlock) {
-    return <CodeBlock lang={langMatch?.[1] ?? 'text'} code={codeStr} />;
+    return (
+      <CodeBlock
+        lang={langMatch?.[1] ?? 'text'}
+        code={codeStr}
+        showLineNumbers={showLineNumbers}
+      />
+    );
   }
 
   return (
