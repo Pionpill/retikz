@@ -33,6 +33,19 @@ export const zh = {
     showOutline: '显示文章目录',
     hideOutline: '隐藏文章目录',
   },
+  page: {
+    copyPage: '复制页面',
+    sourceGroup: '源文件',
+    copyMarkdown: '复制 Markdown',
+    viewOnGithub: '在 GitHub 查看',
+    openInGroup: '在 AI 中打开',
+    openInChatGpt: '在 ChatGPT 中打开',
+    openInClaude: '在 Claude 中打开',
+    openInDeepSeek: '在 DeepSeek 中打开',
+    pageCopied: '已复制页面 Markdown',
+    prevPage: '上一页',
+    nextPage: '下一页',
+  },
 };
 
 /** 资源结构由 zh 推导（不带 as const，值收敛成 string，让 en 等其它语言能赋值） */

@@ -35,4 +35,17 @@ export const en: I18nResources = {
     showOutline: 'Show outline',
     hideOutline: 'Hide outline',
   },
+  page: {
+    copyPage: 'Copy Page',
+    sourceGroup: 'Source',
+    copyMarkdown: 'Copy as Markdown',
+    viewOnGithub: 'View on GitHub',
+    openInGroup: 'Open in',
+    openInChatGpt: 'Open in ChatGPT',
+    openInClaude: 'Open in Claude',
+    openInDeepSeek: 'Open in DeepSeek',
+    pageCopied: 'Page copied',
+    prevPage: 'Previous',
+    nextPage: 'Next',
+  },
 };
