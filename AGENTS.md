@@ -64,6 +64,24 @@ pnpm --filter @retikz/legacy-core preview   # 预览构建结果
 
 v0.1 新 core 正在 `next` 分支重写中，写完后命令切换为 `pnpm --filter @retikz/core ...`。
 
+## 改完代码后
+
+> **🚨 重要规则：每次写完 / 改完代码必须立即跑 ESLint 自动修复 + TypeScript 类型检查，把所有 ESLint 报错与 TS 报错修干净再交差，不要把格式问题或小报错留给用户。**
+
+```bash
+# 单包验证（推荐，速度更快）
+pnpm --filter <pkg> exec eslint . --fix    # ESLint 自动修复（含格式化）
+pnpm --filter <pkg> exec tsc -b            # TypeScript 类型检查
+
+# 全量
+pnpm lint                                  # 全部包 ESLint（不带 --fix）
+```
+
+- ESLint 报错 / 警告必须全部修掉，不允许用 `eslint-disable-*` / `// @ts-expect-error` 绕过（除非确有不可避情况，并在同一行/上一行写清楚原因）
+- TS 类型错误同样必须修，不允许用 `as any` / `@ts-ignore` 绕过；让 zod / IR / 第三方库的真实类型穿透到调用点
+- 改了多个 workspace 时分别在每个受影响的子包跑一遍
+- 跑出来还是修不掉的（如外部依赖声明问题）要在交付时明确说明，并配最小作用域的 disable + 原因注释，让后续可被搜出来
+
 ## Commit 规范
 
 > **🚨 重要规则：未经用户明确允许，AI 助手（Claude Code / Copilot / Cursor 等）不得自行执行 `git commit` / `git push` / `git rebase` 等会写入 git 历史的操作。**
