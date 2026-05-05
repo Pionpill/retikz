@@ -136,8 +136,8 @@ pnpm-lock.yaml
 .codegpt
 temp/
 TODO.md
-.vscode
 local/
 index.html
 
 legacy-core/
+temp.*
