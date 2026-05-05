@@ -5,6 +5,7 @@ import type { FC } from 'react';
 import { useEffect, useState } from 'react';
 import * as jsxDevRuntime from 'react/jsx-dev-runtime';
 import * as jsxRuntime from 'react/jsx-runtime';
+import rehypeSlug from 'rehype-slug';
 import remarkFrontmatter from 'remark-frontmatter';
 import remarkGfm from 'remark-gfm';
 import remarkMdxFrontmatter from 'remark-mdx-frontmatter';
@@ -30,6 +31,8 @@ const compileOptions: CompileOptions = {
   outputFormat: 'function-body',
   development: import.meta.env.DEV,
   remarkPlugins: [remarkFrontmatter, remarkMdxFrontmatter, remarkGfm],
+  // rehype-slug 给 h1-h6 注 id（基于 github-slugger），TOC 跳转 / 锚链接全靠它
+  rehypePlugins: [rehypeSlug],
 };
 
 export const MdxContent: FC<MdxContentProps> = props => {
