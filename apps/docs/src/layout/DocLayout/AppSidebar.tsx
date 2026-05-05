@@ -7,7 +7,6 @@ import { Sidebar, SidebarContent } from '@/components/ui/sidebar';
 import { coreSection } from '../../data/core';
 import type { SubPage } from '../../data/interface';
 import { modules } from '../../data/module';
-import { AppSidebarFooter } from './AppSidebarFooter';
 import { AppSidebarHeader } from './AppSidebarHeader';
 import { AppSidebarMenu } from './AppSidebarMenu';
 import type { SidebarCategoryData, SidebarSubModuleData } from './interface';
@@ -61,7 +60,6 @@ export const AppSidebar: FC = () => {
       <SidebarContent className="gap-0">
         <AppSidebarMenu categories={categories} moduleId={activeModuleId} />
       </SidebarContent>
-      <AppSidebarFooter />
     </Sidebar>
   );
 };
