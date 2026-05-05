@@ -3,6 +3,7 @@ import { cn } from '@/lib/utils';
 import type { MDXComponents } from 'mdx/types';
 import type { ComponentPropsWithoutRef, FC } from 'react';
 import { Link } from 'react-router';
+import { CodeBlock } from './CodeBlock';
 
 const linkClass = 'font-medium underline underline-offset-4';
 
@@ -28,19 +29,26 @@ const A: FC<ComponentPropsWithoutRef<'a'>> = ({ href, className, children, ...re
   );
 };
 
-/** 围栏代码块的 <code> 会带 `language-*` className（mdast 注入），以此区分行内 / 块级 */
-const Code: FC<ComponentPropsWithoutRef<'code'>> = ({ className, ...rest }) => {
-  const isBlock = typeof className === 'string' && className.includes('language-');
-  return isBlock ? (
-    <code className={cn('font-mono text-sm', className)} {...rest} />
-  ) : (
+/** 围栏代码块走 CodeBlock 组件（react-syntax-highlighter）；行内裸 `<code>` 用 shadcn neutral 样式 */
+const Code: FC<ComponentPropsWithoutRef<'code'>> = ({ className, children, ...rest }) => {
+  const codeStr = typeof children === 'string' ? children : '';
+  const langMatch = typeof className === 'string' ? /language-(\w+)/.exec(className) : null;
+  const isBlock = !!langMatch || codeStr.includes('\n');
+
+  if (isBlock) {
+    return <CodeBlock lang={langMatch?.[1] ?? 'text'} code={codeStr} />;
+  }
+
+  return (
     <code
       className={cn(
         'relative rounded-md bg-muted px-[0.3rem] py-[0.2rem] font-mono text-[0.8rem] break-words outline-none',
         className,
       )}
       {...rest}
-    />
+    >
+      {children}
+    </code>
   );
 };
 
@@ -84,17 +92,9 @@ export const mdxComponents: MDXComponents = {
   img: ({ className, alt, ...props }) => (
     <img className={cn('rounded-md', className)} alt={alt ?? ''} {...props} />
   ),
-  // shadcn 把 pre 的 bg/border/rounded 留给外层 figure（rehype-pretty-code 生成）。
-  // 我们没接 figure，所以这里把这些样式合并到 pre 上，保证容器仍可见。
-  pre: ({ className, ...props }) => (
-    <pre
-      className={cn(
-        'my-6 min-w-0 overflow-x-auto overscroll-x-contain rounded-lg border bg-muted px-4 py-3.5 text-sm outline-none',
-        className,
-      )}
-      {...props}
-    />
-  ),
+  // 围栏代码块的 pre 透传 children —— children 经 code mapper 已替换成 CodeBlock，
+  // 后者自带 pre/code，再外包一层会变成双 pre 嵌套。
+  pre: ({ children }) => <>{children}</>,
   code: Code,
   table: ({ className, ...props }) => (
     <div className="my-6 w-full overflow-x-auto rounded-xl border">
