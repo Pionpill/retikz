@@ -1,4 +1,6 @@
 @import 'tailwindcss';
+/* Geist Sans 拉丁全档 + Noto Sans SC 中文全档 —— 字重 100..900 都有真实字形，避免系统 Segoe UI / 微软雅黑 缺 500 字重导致 font-medium 与 font-normal 在中英文下都看不出差异 */
+@import url('https://fonts.googleapis.com/css2?family=Geist:wght@100..900&family=Noto+Sans+SC:wght@100..900&display=swap');
 
 @plugin "tailwindcss-animate";
 
@@ -67,6 +69,10 @@
 }
 
 @theme inline {
+  --font-sans:
+    'Geist', 'Noto Sans SC', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
+    'Segoe UI Symbol';
+
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
