@@ -21,7 +21,7 @@ retikz/
 │   ├── legacy-core/    # @retikz/legacy-core — v0.0.x 旧实现，保留作参考，不发布
 │   └── core/           # @retikz/core — v0.1 重写中，见 docs/CORE-REFACTOR.md
 ├── apps/
-│   └── docs/           # @retikz/docs — 文档站点，mdx 内容在 apps/docs/doc/{en,zh}/
+│   └── docs/           # @retikz/docs — 文档站点（修改前先看 apps/docs/AGENTS.md；写文档另见 .agents/skills/docs-doc-write/SKILL.md）
 ├── config/
 │   └── eslint/         # 共享的 ESLint 预设
 ├── docs/               # 项目内部架构与重构方案文档
