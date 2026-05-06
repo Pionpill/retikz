@@ -1,31 +1,118 @@
 ---
 title: Introduction
-description: A React + D3 drawing library inspired by LaTeX's TikZ.
+description: An AI-native, TikZ-style general-purpose drawing library — React components for figures, JSON IR for persistence, direct LLM generation and editing.
 ---
 
-## Design Principles
+retikz **is not yet another chart library**. It's a drawing foundation that re-designs "diagrams as a way to describe ideas" around an AI-native workflow.
 
-- **Declarative** — describe the graphic with JSX, leave layout and rendering to the runtime
-- **AI-friendly** — the underlying IR is 100% JSON-serializable, so LLMs can both produce and round-trip it
-- **Layered abstraction** — Kernel / Sugar / Tier 2 split responsibilities cleanly
+It brings TikZ's twenty-year vocabulary of nodes, paths, and anchors into the browser, expressed as React components — but the **single source of truth** is the underlying JSON IR: humans write JSX, LLMs emit IR JSON directly, and renderers translate it to SVG / Canvas / PDF / native targets.
 
 ## A Minimal Example
 
 <ComponentPreview name="minimal-example" />
 
-## Use Cases
+## AI-First
 
-1. Interactive diagrams embedded in papers and blog posts
-2. Flow charts, concept maps, network topologies
-3. LLM-generated illustrations
+**AI-friendliness is not one of retikz's features — it's the reason retikz exists.**
 
-> retikz v0.1 is being rewritten on the `next` branch. See `docs/CORE-REFACTOR.md` for the full plan.
+retikz picks IR JSON over JSX as the primary AI interface, leveraging OpenAI Structured Outputs and Anthropic Tool Use to enforce strict schema compliance — the LLM emits 100% valid IR, validated at runtime.
+
+| Capability | How |
+| --- | --- |
+| **Single-source types & schema** | [zod](https://zod.dev) single source → TS types + JSON Schema |
+| **Incremental editing** | [JSON Patch (RFC 6902)](https://datatracker.ietf.org/doc/html/rfc6902) — patch beats rewriting the IR |
+| **Text DSL (long-term)** | TikZ-native syntax; LLMs have ample TikZ training data |
+
+## IR at the Center
+
+```text
+   Sugar JSX  ─┐                          ┌─→ React + SVG
+   Kernel JSX ─┼─→  IR (JSON)  ─→  Scene ─┼─→ pure SVG string
+   Text DSL*  ─┤      ↑↓                  ├─→ Canvas → PNG/JPEG/WebP
+   AI / LLM  ──┘   persistence / edit     └─→ Native (Skia/RN) / PDF
+```
+
+Every input form (JSX / DSL / AI) compiles to the same IR; every output form (renderer) reads from it.
+**Persistence, cross-platform support, and AI integration aren't separate features — they're the same dividend paid by an IR-centric model.**
+
+## Layered Abstraction
+
+retikz's DSL surface has three kinds of constructs. Mixing them up is a migration nightmare:
+
+| Layer | Examples | In IR? | Where |
+| --- | --- | --- | --- |
+| **Kernel** | `<Tikz>` `<Node>` `<Path>` `<Step>` | ✅ Maps 1:1 to IR nodes | `@retikz/core` |
+| **Sugar** | `<Draw way={[...]} />` | ❌ Expands into Kernel at compile time | `@retikz/react` |
+| **Tier 2** | `<Axis>` `<BarPlot>` `<Tree>` | ✅ High-level node + lowering hook | Domain packages |
+
+Hard rule: **Sugar introduces no new capabilities** — anything Sugar can express, Kernel can. Break this and the layering is fake.
+
+## General Primitives, Arbitrary Composition
+
+The Kernel is small — about 5–8 components: `<Path>`, `<Step>`, `<Node>`, `<Anchor>`, `<Scope>` — yet general enough to compose almost any 2D figure.
+
+| Category | Composed from Kernel | Where |
+| --- | --- | --- |
+| **Flow charts / DAG** | Node + Step + Anchor + dagre/elkjs layout | `@retikz/flow` (v1.x) |
+| **Charts** | Step + Path + Node + data binding | `@retikz/plot` (v2.x) |
+| **UML / topology / mind maps** | Same Kernel, different layout & styling | Domain packages |
+| **Anything custom** | Write Kernel JSX directly | Your app |
+
+**You compose at the primitive layer.** Shape, connection, anchor, label — all expressed directly in TikZ's geometry / path vocabulary: drawing a curve from a bar to a side annotation, or a labeled curve between two nodes, is as natural as drawing two more primitives.
+
+A domain package is a thin layer of data binding, layout algorithms, and default styling on top of the Kernel; the underlying structure, persistence, and AI surface stay identical across domains.
+
+## Framework-Agnostic, React Today
+
+retikz follows a **core + thin per-framework adapter** architecture: every framework shares the same IR, the same `compileToScene` compiler, and the same Scene contract; an adapter only translates Scene primitives into that framework's element type — typically tens of lines of code.
+
+| Role | Purpose | Status |
+| --- | --- | --- |
+| `@retikz/core` | IR + Scene compiler; zero React / zero DOM | ✅ Official, v0.1 |
+| `@retikz/react` | React adapter (peerDep: react) | ✅ Official, v0.1 |
+| `@retikz/vue` / `svelte` / `solid` …<br />`@retikz/ssr` / `canvas` / `native` … | Other framework / target adapters | ⏳ Community / later |
+
+**Architecturally retikz isn't tied to any framework — the IR is universal; DSLs may legitimately differ between frameworks.** A diagram you draw today with `@retikz/react` produces an IR that any future adapter can render unchanged.
 
 ## Relation to TikZ
 
-| Aspect        | LaTeX TikZ      | retikz               |
-| ------------- | --------------- | -------------------- |
-| Runtime       | LaTeX compiler  | Browser / Node       |
-| Syntax        | `\node` `\draw` | `<Node>` `<Draw>`    |
-| Output        | PDF / SVG       | SVG (DOM)            |
-| Interactivity | None            | React events & state |
+retikz's naming, path actions, and anchor model are direct tributes to LaTeX's [TikZ package](https://tikz.dev):
+
+| Aspect | LaTeX TikZ | retikz |
+| --- | --- | --- |
+| Runtime | LaTeX compiler | Browser / Node |
+| Syntax | `\node` `\draw` | `<Node>` `<Draw>` |
+| Output | PDF / SVG | SVG / Canvas / PDF / Native |
+| Interactivity | None | React events & state |
+| Persistence | `.tex` source | JSON IR |
+
+In the long run, `@retikz/codec` will provide bidirectional IR ↔ TikZ source — sketch in the browser, paste straight into a LaTeX paper; or take TikZ from a `.tex` file and bring it live (v3.x+).
+
+## Who It's For
+
+**People who use diagrams to describe ideas** — technical writers, researchers, documentation authors, teachers.
+
+Concrete scenarios:
+
+1. Interactive diagrams embedded in papers and blog posts
+2. Flow charts, concept maps, network topologies, UML, mind maps
+3. LLM-generated or LLM-edited illustrations
+4. Anywhere in the browser that needs TikZ-level control
+
+## FAQ
+
+**Why not raw SVG / `<svg>`?**
+
+Plain SVG lacks named nodes, path actions, and anchor systems — even drawing "from node A's right side to node B's top" forces you to compute coordinates by hand. TikZ solved this twenty years ago; retikz brings that vocabulary into React.
+
+**Do I need to know TikZ?**
+
+No. retikz borrows TikZ's naming vocabulary (node / path / anchor / step), but the API is plain React components — if you can write JSX, you can use retikz. Knowing TikZ is a bonus, not a prerequisite.
+
+**Project status?**
+
+v0.1 is being rewritten on the `next` branch. Architecture: [DESIGN.md](https://github.com/Pionpill/retikz/blob/next/docs/DESIGN.md). Rewrite plan: [CORE-REFACTOR.md](https://github.com/Pionpill/retikz/blob/next/docs/CORE-REFACTOR.md). This documentation site itself is part of the v0.1 alpha rollout.
+
+**Feedback / contributing?**
+
+Source, issues, PRs: [github.com/Pionpill/retikz](https://github.com/Pionpill/retikz).
