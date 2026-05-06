@@ -5,7 +5,6 @@ export const coreSection: Array<Section> = [
   {
     id: 'profile',
     pages: [
-      { id: 'overview', label: 'core.overview' },
       { id: 'introduction', label: 'core.introduction' },
       { id: 'get-start', label: 'core.getStart' },
     ],
