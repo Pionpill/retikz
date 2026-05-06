@@ -1,9 +1,9 @@
+import { Sidebar, SidebarContent } from '@/components/ui/sidebar';
 import type { TFunction } from 'i18next';
 import type { FC } from 'react';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useParams } from 'react-router';
-import { Sidebar, SidebarContent } from '@/components/ui/sidebar';
 import { coreSection } from '../../data/core';
 import type { SubPage } from '../../data/interface';
 import { modules } from '../../data/module';
@@ -12,10 +12,7 @@ import { AppSidebarMenu } from './AppSidebarMenu';
 import type { SidebarCategoryData, SidebarSubModuleData } from './interface';
 
 /** 递归把 SubPage[] 翻译并适配成 SidebarSubModuleData[] */
-const mapChildren = (
-  t: TFunction,
-  children?: Array<SubPage>,
-): Array<SidebarSubModuleData> | undefined =>
+const mapChildren = (t: TFunction, children?: Array<SubPage>): Array<SidebarSubModuleData> | undefined =>
   children?.map(child => ({
     value: child.id,
     label: t(child.label),
