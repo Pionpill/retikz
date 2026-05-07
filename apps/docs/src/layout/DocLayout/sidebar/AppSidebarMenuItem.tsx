@@ -15,9 +15,9 @@ export type AppSidebarMenuItemProps = {
 };
 
 const baseLinkClass =
-  'group relative flex w-full cursor-pointer items-center justify-between rounded-md px-3 py-1.5 text-[13px] transition-colors text-muted-foreground hover:text-foreground';
+  'group relative flex w-full cursor-pointer items-center justify-between rounded-md px-3 py-1.5 text-[13px] transition-colors text-foreground/85 hover:text-foreground hover:bg-accent/40';
 
-const activeLinkClass = 'text-foreground';
+const activeLinkClass = 'text-foreground font-semibold bg-accent';
 
 /**
  * 二级及以下菜单项：左侧带一根竖线、激活时显示圆点。
