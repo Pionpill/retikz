@@ -36,13 +36,15 @@ jobs:
           cache: 'pnpm'
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Build legacy-core
-        run: pnpm --filter @retikz/legacy-core build
+        run: pnpm install
 
       - name: Build docs
         run: pnpm --filter @retikz/docs build
+
+      # SPA 兜底：GH Pages 对未知路径会返回 404.html。把 index.html 复制为 404.html，
+      # 任何深层路由刷新都能落到 index.html 引导 React Router 接管。
+      - name: SPA fallback (404.html = index.html)
+        run: cp apps/docs/dist/index.html apps/docs/dist/404.html
 
       - uses: actions/configure-pages@v5
 
