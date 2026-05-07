@@ -10,13 +10,16 @@ import rehypeSlug from 'rehype-slug';
 import remarkFrontmatter from 'remark-frontmatter';
 import remarkGfm from 'remark-gfm';
 import remarkMdxFrontmatter from 'remark-mdx-frontmatter';
+
+import { Skeleton } from '@/components/ui/skeleton';
+
 import { mdxComponents } from './components';
 
 export type MdxFrontmatter = Record<string, unknown>;
 
 export type MdxContentProps = {
-  /** MDX 源码字符串 */
-  source: string;
+  /** MDX 源码字符串；为 null 时表示路由切换中的过渡态，组件保持上一次成功编译的内容继续渲染 */
+  source: string | null;
   /** 编译完成后回调，向上层暴露 frontmatter；source 切换会触发新一轮 */
   onFrontmatter?: (frontmatter: MdxFrontmatter) => void;
 };
@@ -38,12 +41,35 @@ const compileOptions: CompileOptions = {
   rehypePlugins: [rehypeSlug, [rehypeMdxCodeProps, { tagName: 'code' }]],
 };
 
+/** 首次加载尚无任何内容可显示时的占位骨架 */
+const ContentSkeleton: FC = () => (
+  <div className="flex flex-col gap-3" aria-hidden>
+    <Skeleton className="h-4 w-[92%]" />
+    <Skeleton className="h-4 w-[96%]" />
+    <Skeleton className="h-4 w-[78%]" />
+    <Skeleton className="mt-3 h-4 w-[40%]" />
+    <Skeleton className="h-4 w-[88%]" />
+    <Skeleton className="h-4 w-[83%]" />
+    <Skeleton className="mt-3 h-4 w-[30%]" />
+    <Skeleton className="h-32 w-full" />
+  </div>
+);
+
+/**
+ * MDX 渲染容器：在浏览器里把 source 字符串编译成组件并挂载。
+ *
+ * 不闪关键：state.Content 只在新 source 编译成功后才被替换，编译期间继续渲染旧组件。
+ * 调用方传 source=null（路由过渡）时也按"什么都不动"处理，保持上一次的 DOM。
+ *
+ * 仅 state.Content === null（首次加载或第一次 compile 还没完成）时才回退到 Skeleton。
+ */
 export const MdxContent: FC<MdxContentProps> = props => {
   const { source, onFrontmatter } = props;
   const [Content, setContent] = useState<MDXContentType | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    if (source == null) return;
     const controller = new AbortController();
     const { signal } = controller;
 
@@ -59,7 +85,6 @@ export const MdxContent: FC<MdxContentProps> = props => {
         setError(null);
       } catch (err) {
         if (signal.aborted) return;
-        setContent(null);
         setError(err instanceof Error ? err.message : String(err));
       }
     })();
@@ -73,7 +98,7 @@ export const MdxContent: FC<MdxContentProps> = props => {
     return <pre className="text-sm whitespace-pre-wrap text-red-500">{error}</pre>;
   }
 
-  if (!Content) return null;
+  if (!Content) return <ContentSkeleton />;
 
   return <Content components={mdxComponents} />;
 };

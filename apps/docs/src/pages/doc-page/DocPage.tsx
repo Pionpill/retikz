@@ -18,6 +18,12 @@ export type DocPageProps = HTMLAttributes<HTMLDivElement>;
  * - 找不到对应数据节点 → 404 文案
  * - 命中分组节点（含 children）→ 重定向到首个子项，避免空页面
  * - 命中叶子节点 → 加载并渲染对应路径下的 mdx 文件
+ *
+ * 不闪策略：
+ *  - useMdxSource 的 source 在路由切换瞬间会回 null（新 mdx 还在 fetch）
+ *  - 我们用 stableSource 保持上一份非空 source 给下游（MdxContent / MdxToc / DocPageActions）
+ *  - MdxContent 内部 state.Content 也只在新编译成功才替换，于是「旧 → 新」无空白过渡
+ *  - frontmatter（描述文字等）同理不主动重置；新 mdx 编完后 onFrontmatter 直接覆盖
  */
 export const DocPage: FC<DocPageProps> = props => {
   const { className, ...resProps } = props;
@@ -36,10 +42,10 @@ export const DocPage: FC<DocPageProps> = props => {
   const tocOpen = useTocStore(state => state.tocOpen);
 
   const [frontmatter, setFrontmatter] = useState<MdxFrontmatter>({});
-  const [prevSource, setPrevSource] = useState(source);
-  if (source !== prevSource) {
-    setPrevSource(source);
-    setFrontmatter({});
+  /** 始终保留上一次非 null 的 source；过渡态时下游继续看见旧内容直至新 mdx 编译就绪 */
+  const [stableSource, setStableSource] = useState<string | null>(source);
+  if (source != null && source !== stableSource) {
+    setStableSource(source);
   }
 
   if (!section || !target) {
@@ -72,40 +78,38 @@ export const DocPage: FC<DocPageProps> = props => {
             <div className="flex w-full items-center justify-between">
               <h1 className="scroll-m-24 text-3xl font-semibold tracking-tight sm:text-3xl overflow-hidden">{title}</h1>
               <div className="flex items-center gap-2">
-                {source != null && <DocPageActions source={source} />}
+                {stableSource != null && <DocPageActions source={stableSource} />}
                 {target.extra}
               </div>
             </div>
             {description && <p className="text-muted-foreground">{description}</p>}
           </header>
           <div>
-            {source != null ? (
-              <MdxContent source={source} onFrontmatter={setFrontmatter} />
-            ) : notFound ? (
+            {notFound ? (
               <p className="text-sm text-muted-foreground">{t('common.contentPlaceholder', { title })}</p>
-            ) : null}
+            ) : (
+              <MdxContent source={stableSource} onFrontmatter={setFrontmatter} />
+            )}
           </div>
           <DocPageFooterNav />
         </div>
       </div>
-      {source != null && (
-        <aside
-          aria-hidden={!tocOpen}
+      <aside
+        aria-hidden={!tocOpen}
+        className={cn(
+          'hidden shrink-0 overflow-clip transition-all duration-300 ease-out xl:block px-4',
+          tocOpen ? 'w-75 opacity-100' : 'w-0 opacity-0',
+        )}
+      >
+        <div
           className={cn(
-            'hidden shrink-0 overflow-clip transition-all duration-300 ease-out xl:block px-4',
-            tocOpen ? 'w-75 opacity-100' : 'w-0 opacity-0',
+            'sticky top-18 transition-all duration-300 ease-out',
+            tocOpen ? 'translate-x-0' : 'pointer-events-none translate-x-2',
           )}
         >
-          <div
-            className={cn(
-              'sticky top-18 transition-all duration-300 ease-out',
-              tocOpen ? 'translate-x-0' : 'pointer-events-none translate-x-2',
-            )}
-          >
-            <MdxToc source={source} />
-          </div>
-        </aside>
-      )}
+          {stableSource != null && <MdxToc source={stableSource} />}
+        </div>
+      </aside>
     </main>
   );
 };
