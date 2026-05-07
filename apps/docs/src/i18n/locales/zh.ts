@@ -22,6 +22,7 @@ export const zh = {
     tikz: 'Tikz',
     node: 'Node',
     draw: 'Draw',
+    drawOverview: 'Draw 概览',
     path: 'Path',
     step: 'Step',
     positioning: '定位',

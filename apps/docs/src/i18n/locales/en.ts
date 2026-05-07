@@ -24,6 +24,7 @@ export const en: I18nResources = {
     tikz: 'Tikz',
     node: 'Node',
     draw: 'Draw',
+    drawOverview: 'Draw Overview',
     path: 'Path',
     step: 'Step',
     positioning: 'Positioning',
