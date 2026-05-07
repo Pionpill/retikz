@@ -42,7 +42,7 @@ export const MobileNav: FC = () => {
       </SheetTrigger>
       <SheetContent side="left" className="w-80 p-0">
         <SheetHeader className="border-b px-4 py-3">
-          <SheetTitle className="text-sm font-semibold">retikz</SheetTitle>
+          <SheetTitle className="text-sm font-semibold">ReTikz.doc</SheetTitle>
           <ToggleGroup
             type="single"
             value={moduleId ?? 'core'}
