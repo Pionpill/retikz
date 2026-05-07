@@ -1,0 +1,55 @@
+---
+title: 版本策略
+description: retikz 用语义化版本（SemVer），三段加预发布通道。0.x 期间宽松、1.x 起严格。
+---
+
+retikz 遵循 Semantic Versioning 2.0.0：版本号写作 `MAJOR.MINOR.PATCH`，必要时附预发布标签 `-alpha.x` / `-beta.x` / `-rc.x`。
+
+## 三段含义
+
+| 段 | 何时 +1 | 升级建议 |
+| --- | --- | --- |
+| MAJOR | 不兼容的 API 变更 | 阅读迁移指南 |
+| MINOR | 向下兼容的新能力 | 直接升 |
+| PATCH | 向下兼容的 bug fix | 直接升 |
+
+`@retikz/core` 与 `@retikz/react` 共享同一版号、**主版本同步发布**——不存在单独升 core 不升 react 的情况。
+
+## 0.x 与 1.x 的差别
+
+| 阶段 | API 稳定性 | 破坏性变更频率 |
+| --- | --- | --- |
+| `0.x` | 不稳，alpha / beta 期间持续打磨 | 可能在 MINOR 引入 |
+| `1.x` 起 | 严格 SemVer | 仅在 MAJOR 引入 |
+
+进入 `1.0.0` 之前的破坏性变更**不强行算 MAJOR + 1**，但会在 changelog 与发布说明里显式标注。
+
+## 预发布通道
+
+| 通道 | 形如 | 风险 | 适合 |
+| --- | --- | --- | --- |
+| alpha | `0.1.0-alpha.x` | API 仍在重塑、IR 不稳 | 探索 / 反馈 |
+| beta | `0.1.0-beta.x` | API 冻结，可能小调 | 集成验证 |
+| rc | `0.1.0-rc.x` | 即将正式 | 生产前演练 |
+| 稳定 | `0.1.0` | 进入 SemVer 守护 | 生产 |
+
+通道升级是单向的：alpha → beta → rc → stable，不会回退。
+
+## peerDependencies
+
+| 包 | peer | 版本 |
+| --- | --- | --- |
+| `@retikz/react` | `react` / `react-dom` | `>=18` |
+| `@retikz/core` | （无） | — |
+
+升 React 主版本通常发 MINOR；只有当新版本不兼容老 API 时才升 MAJOR。
+
+## 弃用流程
+
+| 步骤 | 何时 | 标志 |
+| --- | --- | --- |
+| 标记弃用 | 即时 | 类型上 `@deprecated`、运行时 `console.warn` |
+| 保留期 | 至少 2 个 MINOR | changelog 提示替代项 |
+| 移除 | 下一个 MAJOR | changelog 列入 Removed |
+
+`0.x` 期间弃用流程不强制；进入 `1.0` 起严格执行。

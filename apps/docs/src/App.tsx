@@ -5,6 +5,7 @@ import { Toaster, toast } from 'sonner';
 
 import { coreSection } from './data/core';
 import { modules } from './data/module';
+import { getSectionsByModule } from './data/sections';
 import AppHeader from './layout/header/AppHeader';
 import { DocLayout } from './layout/DocLayout';
 import { DocPage } from './pages/doc-page';
@@ -13,18 +14,22 @@ import { useTocStore } from './store/useTocStore';
 /** 默认入口：首个模块下的第一个栏目的第一页 */
 const defaultPath = `/${modules[0].id}/${coreSection[0].id}/${coreSection[0].pages[0].id}`;
 
-/** /:moduleId 命中时重定向到该模块首栏首页；找不到模块就回首页 */
+/** /:moduleId 命中时重定向到该模块首栏首页；找不到模块或模块为空就回首页 */
 const ModuleRedirect = () => {
   const { moduleId } = useParams<'moduleId'>();
   if (!modules.some(m => m.id === moduleId)) return <Navigate to="/" replace />;
-  return <Navigate to={`/${moduleId}/${coreSection[0].id}/${coreSection[0].pages[0].id}`} replace />;
+  const sections = getSectionsByModule(moduleId);
+  if (sections.length === 0 || sections[0].pages.length === 0) {
+    return <Navigate to="/" replace />;
+  }
+  return <Navigate to={`/${moduleId}/${sections[0].id}/${sections[0].pages[0].id}`} replace />;
 };
 
 /** /:moduleId/:sectionId 命中时重定向到该栏首页；找不到模块/栏目就回上一级 */
 const SectionRedirect = () => {
   const { moduleId, sectionId } = useParams<'moduleId' | 'sectionId'>();
   if (!modules.some(m => m.id === moduleId)) return <Navigate to="/" replace />;
-  const section = coreSection.find(s => s.id === sectionId);
+  const section = getSectionsByModule(moduleId).find(s => s.id === sectionId);
   if (!section) return <Navigate to={`/${moduleId}`} replace />;
   return <Navigate to={`/${moduleId}/${section.id}/${section.pages[0].id}`} replace />;
 };

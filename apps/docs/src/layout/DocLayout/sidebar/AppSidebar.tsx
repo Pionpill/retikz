@@ -4,8 +4,8 @@ import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useParams } from 'react-router';
 
-import { coreSection } from '@/data/core';
-import type { Section, SubPage } from '@/data/interface';
+import type { SubPage } from '@/data/interface';
+import { getSectionsByModule } from '@/data/sections';
 import { cn } from '@/lib/utils';
 
 import { AppSidebarMenu } from './AppSidebarMenu';
@@ -18,18 +18,6 @@ const mapChildren = (t: TFunction, children?: Array<SubPage>): Array<SidebarSubM
     children: mapChildren(t, child.children),
   }));
 
-/** 按 :moduleId 选数据源；flow / plot 暂留空数组 */
-const sectionsForModule = (moduleId: string | undefined): Array<Section> => {
-  switch (moduleId) {
-    case 'core':
-      return coreSection;
-    case 'flow':
-    case 'plot':
-    default:
-      return [];
-  }
-};
-
 export type AppSidebarProps = {
   /** 容器额外类（移动端 Sheet 复用本组件时关掉 sticky 等） */
   className?: string;
@@ -39,7 +27,7 @@ export const AppSidebar: FC<AppSidebarProps> = props => {
   const { className } = props;
   const { t, i18n } = useTranslation();
   const { moduleId } = useParams<'moduleId'>();
-  const sections = sectionsForModule(moduleId);
+  const sections = getSectionsByModule(moduleId);
 
   const categories = useMemo<Array<SidebarCategoryData>>(
     () =>

@@ -11,4 +11,5 @@ export const modules: Array<ModuleEntry> = [
   { id: 'core', label: 'core.label' },
   { id: 'flow', label: 'flow.label' },
   { id: 'plot', label: 'plot.label' },
+  { id: 'reference', label: 'reference.label' },
 ];

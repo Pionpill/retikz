@@ -1,0 +1,55 @@
+---
+title: Versioning
+description: retikz follows Semantic Versioning with pre-release channels. 0.x is loose, 1.x onwards is strict.
+---
+
+retikz follows Semantic Versioning 2.0.0: versions read as `MAJOR.MINOR.PATCH`, optionally tagged `-alpha.x` / `-beta.x` / `-rc.x`.
+
+## Segment meanings
+
+| Segment | Bumped when | Upgrade guidance |
+| --- | --- | --- |
+| MAJOR | Backward-incompatible API change | Read the migration guide |
+| MINOR | Backward-compatible new capability | Upgrade freely |
+| PATCH | Backward-compatible bug fix | Upgrade freely |
+
+`@retikz/core` and `@retikz/react` share the same version and **ship in lockstep at the major level** — you never upgrade core without react or vice versa.
+
+## 0.x vs 1.x
+
+| Phase | API stability | Breaking change frequency |
+| --- | --- | --- |
+| `0.x` | Unstable, alpha / beta polish | May land in a MINOR |
+| `1.x` onwards | Strict SemVer | Only in MAJOR |
+
+Breaking changes before `1.0.0` **do not force a MAJOR bump**, but the changelog and release notes will call them out explicitly.
+
+## Pre-release channels
+
+| Channel | Format | Risk | Suitable for |
+| --- | --- | --- | --- |
+| alpha | `0.1.0-alpha.x` | API in flux, IR unstable | Exploration / feedback |
+| beta | `0.1.0-beta.x` | API frozen, minor tweaks | Integration testing |
+| rc | `0.1.0-rc.x` | Imminent stable | Pre-production rehearsal |
+| stable | `0.1.0` | Under SemVer | Production |
+
+Channels move forward only: alpha → beta → rc → stable. There's no rollback.
+
+## peerDependencies
+
+| Package | peer | Version |
+| --- | --- | --- |
+| `@retikz/react` | `react` / `react-dom` | `>=18` |
+| `@retikz/core` | (none) | — |
+
+Bumping React's major version usually ships as a MINOR; we only bump MAJOR when the new React version is incompatible with our old API.
+
+## Deprecation flow
+
+| Step | When | Marker |
+| --- | --- | --- |
+| Mark deprecated | Immediately | `@deprecated` type, `console.warn` at runtime |
+| Grace period | At least 2 MINORs | Changelog points to the replacement |
+| Removal | Next MAJOR | Listed under Removed |
+
+The deprecation flow is not enforced during `0.x`; it kicks in once `1.0` ships.

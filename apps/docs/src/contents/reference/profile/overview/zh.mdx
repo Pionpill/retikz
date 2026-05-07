@@ -1,0 +1,27 @@
+---
+title: 总览
+description: 参考资料汇总——发布日志、版本策略、路线图。文档正文教"怎么用"，参考告诉"何时升、升到哪、能等到什么"。
+---
+
+retikz 的"参考"是除文档正文之外的元信息：版本怎么排、发布了什么、未来打算做什么。
+
+## 包含什么
+
+| 页 | 内容 |
+| --- | --- |
+| [更新日志](/reference/releases/changelog) | 历版发布记录 |
+| [版本策略](/reference/releases/versioning) | SemVer + 预发布通道 + 弃用流程 |
+| [路线图](/reference/releases/roadmap) | 当前 / 短期 / 中期 / 远期目标 |
+
+## 当前版本
+
+| 包 | 版本 | 说明 |
+| --- | --- | --- |
+| `@retikz/core` | `0.1.0-alpha.0` | IR + Scene 编译器，零 React |
+| `@retikz/react` | `0.1.0-alpha.0` | React adapter |
+
+alpha 期间 API 仍可能调整；进入 `0.1.0` stable 起按 SemVer 守护。详见[版本策略](/reference/releases/versioning)。
+
+## 反馈与提问
+
+retikz 仍处于 v0.1 alpha 阶段，**API 与 IR Schema 都欢迎反馈**——尤其是命名、props 形态、IR 字段语义这类需要早期收敛的事。文档站本身也是 alpha 的一部分，发现遗漏或不一致就一并提。

@@ -1,0 +1,37 @@
+---
+title: Changelog
+description: retikz release history grouped by MINOR version, newest first. Patches and pre-releases are folded into each MINOR by category.
+---
+
+## v0.1 — In development
+
+retikz redesign with IR at the center. Currently iterating on the `next` branch; merging into `main` ships it.
+
+**Added**
+- `@retikz/core`: IR + scene compiler (zero React, zero DOM)
+- `@retikz/react`: React adapter with Kernel + Sugar JSX layers
+- Docs site v0.1 — bilingual, co-located demos, live IR view
+
+**Changed**
+- Architecture moved from "single React package" to "core + thin per-framework adapters"
+- Persistence format moved from internal React state to serializable IR JSON
+
+## v0.0 — 2025.01 → 2025.04
+
+First public series, iterating from `rc.0` through `rc.3`. This series shipped a single React package, with no IR or cross-framework architecture.
+
+**Added**
+- Arrow type: `Circle`
+- Vertical way types: `|-|`, `-|-`
+
+**Changed**
+- React 18 compatibility
+
+**Fixed**
+- Fixed converted way bug
+- Fixed `ScopeContext` propagation
+- Various TypeScript errors and warnings
+- Non-functional prop forwarding regressions
+
+**Removed**
+- `react/jsx-runtime` dependency dropped from build output

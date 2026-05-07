@@ -1,5 +1,5 @@
-import { coreSection } from '@/data/core';
 import type { I18nKey, Page, Section, SubPage } from '@/data/interface';
+import { getSectionsByModule } from '@/data/sections';
 import { useMemo } from 'react';
 import { useParams } from 'react-router';
 
@@ -80,7 +80,7 @@ export type PageNavigation = {
 
 /**
  * 基于当前路由参数，按 sidebar 顺序计算上 / 下一篇。
- * 当前所有 module 共用同一份 coreSection；若以后按模块拆数据再扩。
+ * 数据源由 getSectionsByModule 按 moduleId 派发，跨模块独立成环。
  */
 export const usePageNavigation = (): PageNavigation => {
   const { moduleId, sectionId, pageId, subPageId } = useParams<
@@ -89,7 +89,7 @@ export const usePageNavigation = (): PageNavigation => {
 
   return useMemo(() => {
     if (!moduleId || !sectionId || !pageId) return { prev: null, next: null };
-    const leaves = flattenLeaves(moduleId, coreSection);
+    const leaves = flattenLeaves(moduleId, getSectionsByModule(moduleId));
     const idx = leaves.findIndex(
       l => l.sectionId === sectionId && l.pageId === pageId && l.subPageId === subPageId,
     );

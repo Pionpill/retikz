@@ -1,0 +1,50 @@
+---
+title: 路线图
+description: retikz 的版本目标。短期看 core / react 稳定，中期上 flow / plot，远期跨框架与 TikZ 互转。
+---
+
+路线图是**目标**而非承诺——会随社区反馈与维护者带宽调整。具体的发布按版本号在[更新日志](/reference/releases/changelog)里出现。
+
+## 当前
+
+**v0.1 alpha** — 在 `next` 分支迭代。
+
+| 子项 | 状态 |
+| --- | --- |
+| IR + Scene 编译器 | ✅ |
+| `@retikz/react` Kernel + Sugar | ✅ |
+| 文档站 v0.1 | ✅ |
+
+## 短期：v0.x → v0.1 stable
+
+把 Kernel 与 Sugar 的 API 冻结，IR Schema 稳定。
+
+| 目标 | 内容 |
+| --- | --- |
+| Kernel 收敛 | `<Tikz>` `<Node>` `<Path>` `<Step>` `<Anchor>` `<Scope>` 共 5–8 个组件 |
+| Sugar 收敛 | `<Draw way={[...]} />` 等糖语法编译期展开为 Kernel |
+| IR Schema 公开 | zod 单源 → TypeScript 类型 + JSON Schema |
+| AI 接入实验 | OpenAI Structured Outputs / Anthropic Tool Use 直吐 IR |
+
+## 中期：domain 子包
+
+| 版本 | 子包 | 内容 |
+| --- | --- | --- |
+| v1.x | `@retikz/flow` | DAG / 流程图 / 拓扑：node + step + anchor + dagre / elkjs 布局 |
+| v2.x | `@retikz/plot` | 图表：step + path + node + 数据绑定 |
+
+## 远期
+
+| 主题 | 落点 |
+| --- | --- |
+| `@retikz/codec` | v3.x，IR ↔ TikZ 源码双向转换 |
+| 跨框架 adapter | Vue / Svelte / Native（Skia 或 RN） |
+| 文本 DSL | 直接采用 TikZ 原生语法，复用 LLM 训练数据 |
+
+## 不在路线图
+
+为避免范围蔓延，明确**不做**的事：
+
+- 自带 LaTeX 数学渲染——交给 KaTeX / MathJax，retikz 只负责图
+- 关键帧动画 DSL——基础过渡保留，复杂动画建议外接
+- 服务端渲染专属 adapter——renderer 已是纯函数，SSR 通用

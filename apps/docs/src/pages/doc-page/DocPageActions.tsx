@@ -1,4 +1,4 @@
-import { ChatGptIcon, ClaudeIcon, DeepSeekIcon } from '@/components/icons';
+import { ChatGptIcon, ClaudeIcon, DeepSeekIcon, GitHubIcon } from '@/components/icons';
 import { Button } from '@/components/ui/button';
 import { ButtonGroup, ButtonGroupSeparator } from '@/components/ui/button-group';
 import {
@@ -9,8 +9,8 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { ArrowLeft, ArrowRight, ChevronDown, Copy, FileCode } from 'lucide-react';
-import { type FC, useCallback } from 'react';
+import { ArrowLeft, ArrowRight, ChevronDown, Copy, FileCode, Plug } from 'lucide-react';
+import { type FC, type ReactNode, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useParams } from 'react-router';
 import { toast } from 'sonner';
@@ -23,6 +23,20 @@ export type DocPageActionsProps = {
   /** 当前页面 mdx 源码（用于"复制 markdown"） */
   source: string;
 };
+
+/**
+ * 双行菜单项正文：bordered 图标盒（size-8 = 32px，内置 size-5 图标 → 单边 6px 边距）+ 标题 + 灰字描述。
+ * 右侧 gap-0：title/desc 各自 line-height 已留有视觉间距，无需额外 gap。
+ */
+const MenuItemBody: FC<{ icon: ReactNode; title: string; desc: string }> = ({ icon, title, desc }) => (
+  <>
+    <span className="flex size-8 shrink-0 items-center justify-center rounded-md border bg-background">{icon}</span>
+    <span className="flex min-w-0 flex-col">
+      <span className="text-sm leading-tight">{title}</span>
+      <span className="text-xs leading-snug text-muted-foreground">{desc}</span>
+    </span>
+  </>
+);
 
 /** 把 contents 路径拼好（含 lang），用于 GitHub blob / raw URL */
 const buildContentRelativePath = (
@@ -80,34 +94,65 @@ export const DocPageActions: FC<DocPageActionsProps> = ({ source }) => {
                 <ChevronDown className="size-3.5" />
               </DropdownMenuTrigger>
             </Button>
-            <DropdownMenuContent align="end" className="min-w-52">
-              <DropdownMenuItem asChild className="cursor-pointer">
+            <DropdownMenuContent align="end" className="min-w-72">
+              <DropdownMenuItem asChild className="cursor-pointer items-center gap-3 py-1.5">
+                <a href={rawUrl} target="_blank" rel="noopener noreferrer">
+                  <MenuItemBody
+                    icon={<FileCode className="size-5" />}
+                    title={t('page.viewAsMarkdown')}
+                    desc={t('page.viewAsMarkdownDesc')}
+                  />
+                </a>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild className="cursor-pointer items-center gap-3 py-1.5">
                 <a href={blobUrl} target="_blank" rel="noopener noreferrer">
-                  <FileCode />
-                  <span>{t('page.viewOnGithub')}</span>
+                  <MenuItemBody
+                    icon={<GitHubIcon className="size-5" />}
+                    title={t('page.viewOnGithub')}
+                    desc={t('page.viewOnGithubDesc')}
+                  />
                 </a>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem asChild className="cursor-pointer">
+              <DropdownMenuItem asChild className="cursor-pointer items-center gap-3 py-1.5">
                 <a href={buildAiUrl('https://chatgpt.com/', rawUrl, lang)} target="_blank" rel="noopener noreferrer">
-                  <ChatGptIcon />
-                  <span>{t('page.openInChatGpt')}</span>
+                  <MenuItemBody
+                    icon={<ChatGptIcon className="size-5" />}
+                    title={t('page.openInChatGpt')}
+                    desc={t('page.openInChatGptDesc')}
+                  />
                 </a>
               </DropdownMenuItem>
-              <DropdownMenuItem asChild className="cursor-pointer">
+              <DropdownMenuItem asChild className="cursor-pointer items-center gap-3 py-1.5">
                 <a href={buildAiUrl('https://claude.ai/new', rawUrl, lang)} target="_blank" rel="noopener noreferrer">
-                  <ClaudeIcon />
-                  <span>{t('page.openInClaude')}</span>
+                  <MenuItemBody
+                    icon={<ClaudeIcon className="size-5" />}
+                    title={t('page.openInClaude')}
+                    desc={t('page.openInClaudeDesc')}
+                  />
                 </a>
               </DropdownMenuItem>
-              <DropdownMenuItem asChild className="cursor-pointer">
+              <DropdownMenuItem asChild className="cursor-pointer items-center gap-3 py-1.5">
                 <a
                   href={buildAiUrl('https://chat.deepseek.com/', rawUrl, lang)}
                   target="_blank"
                   rel="noopener noreferrer"
                 >
-                  <DeepSeekIcon />
-                  <span>{t('page.openInDeepSeek')}</span>
+                  <MenuItemBody
+                    icon={<DeepSeekIcon className="size-5" />}
+                    title={t('page.openInDeepSeek')}
+                    desc={t('page.openInDeepSeekDesc')}
+                  />
+                </a>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem asChild className="cursor-pointer items-center gap-3 py-1.5">
+                <a href={`${import.meta.env.BASE_URL}llms.txt`} target="_blank" rel="noopener noreferrer">
+                  <MenuItemBody
+                    icon={<Plug className="size-5" />}
+                    title={t('page.connectMcp')}
+                    desc={t('page.connectMcpDesc')}
+                  />
                 </a>
               </DropdownMenuItem>
             </DropdownMenuContent>

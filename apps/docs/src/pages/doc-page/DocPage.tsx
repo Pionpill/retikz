@@ -1,6 +1,6 @@
 import type { MdxFrontmatter } from '@/components/shared/mdx-content';
 import { MdxContent, MdxToc } from '@/components/shared/mdx-content';
-import { coreSection } from '@/data/core';
+import { getSectionsByModule } from '@/data/sections';
 import { cn } from '@/lib/utils';
 import { useTocStore } from '@/store/useTocStore';
 import type { FC, HTMLAttributes } from 'react';
@@ -31,7 +31,7 @@ export const DocPage: FC<DocPageProps> = props => {
   const { t } = useTranslation();
   const { moduleId, sectionId, pageId, subPageId } = useParams<'moduleId' | 'sectionId' | 'pageId' | 'subPageId'>();
 
-  const section = coreSection.find(s => s.id === sectionId);
+  const section = getSectionsByModule(moduleId).find(s => s.id === sectionId);
   const page = section?.pages.find(p => p.id === pageId);
   const subPage = subPageId ? page?.children?.find(c => c.id === subPageId) : undefined;
 
