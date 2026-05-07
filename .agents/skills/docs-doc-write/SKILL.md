@@ -139,21 +139,55 @@ retikz 文档面向**用户**——用户写的是 DSL（`<Tikz>` / `<Node>` / `
 
 代码块、URL、超长英文术语在窄屏同样会破版——能简化就简化。
 
-## 文档结构（参考 shadcn/ui）
+## 文档结构（组件页）
 
-- 简单组件参考：<https://ui.shadcn.com/docs/components/spinner>
-- 复杂组件参考：<https://ui.shadcn.com/docs/components/sidebar>
+参考：<https://ui.shadcn.com/docs/components/spinner>（简单）/ <https://ui.shadcn.com/docs/components/radix/alert-dialog#usage>（复杂）
 
-骨架（按需裁剪）：
+组件页固定 4 段，**按下面顺序**出现：
 
-1. frontmatter `title` + `description`（H1 由 DocPage 从 `title` 渲染，**不要再写 `#`**）
-2. `## 概述 / Overview`（仅复杂组件）
-3. `## 一个最小例子 / A Minimal Example` → `<ComponentPreview name="minimal-example" />`
-4. `## 安装 / Installation`（仅入口/介绍页）
-5. `## 用法 / Usage`：分小节展示属性、组合、变体；每个变体一个 `<ComponentPreview>`
-6. `## API 参考 / API Reference`：用 markdown 表格列 props（name / type / default / description）
+| section | 必需 | 内容 |
+| --- | --- | --- |
+| `## 用法 / Usage` | ✅ | 两个**纯代码块**（不放 `<ComponentPreview>`）：`import` + 一个最小 JSX 骨架 |
+| `## 组合 / Composition` | 可选 | 仅 compound 组件需要——展示组件之间的父子关系 |
+| `## 例子 / Examples` | 可选 | 多子节，每子节一个 `<ComponentPreview>` 演示一种属性 / 变体 / 风格 |
+| `## API 参考 / API Reference` | 可选 | 4 列表（`属性 / 类型 / 默认值 / 描述` / `Prop / Type / Default / Description`），无默认填 `—`，属性名 + 类型用反引号包；多组件合一页时按组件分子节 |
 
-zh 用中文标题、en 用英文标题，但 Markdown 层级、列表条目数、表格列数保持对齐。
+frontmatter `title` + `description` 始终在；H1 由 DocPage 渲染，正文**不要**再写 `# 标题`。zh 用中文小节标题、en 用英文，但层级、子节数、表格列数保持对齐。
+
+### Usage 写法
+
+shadcn 同款，import 与最小骨架分两个代码块（**只显示代码，不放 ComponentPreview**）：
+
+````mdx
+## 用法
+
+```tsx
+import { Path, Step } from '@retikz/react';
+```
+
+```tsx
+<Path stroke="currentColor">
+  <Step kind="move" to="a" />
+  <Step kind="line" to="b" />
+</Path>
+```
+````
+
+骨架展示组件名 / props / children 形态，不要求可运行——`<ComponentPreview>` 留给 Examples 段。
+
+### Composition 适用
+
+| 组件 | 是否写 Composition |
+| --- | --- |
+| `<Tikz>` | ✅ 容器，children 是 Kernel/Sugar |
+| `<Path>` | ✅ 必须配 `<Step>` 子节点 |
+| `<Node>` `<Draw>` | ❌ 单组件 |
+| `<Step>` | ❌ 只作 `<Path>` 子节点；写在父组件页里 |
+
+### 入口页 / 概念页例外
+
+- **入口页**（`profile/introduction`、`profile/get-start`）有自己的章节布局（介绍 / 安装 / 步骤……），不强制走上面 4 段
+- **概念页**（`concepts/*`）按概念走子节，配 `<ComponentPreview hideCode>` 当叙述插图
 
 ## 与 shadcn 的差异
 
