@@ -122,24 +122,13 @@
   }
 }
 
-/* 默认 thumb 透明（视觉无 scrollbar）；hover 在该元素上时浮现，hover 在 thumb 自身上时加深 */
+/* 全局裸藏滚动条（与 shadcn no-scrollbar 同款）；元素仍可滚动，靠触控板 / 触屏 / Shift+滚轮 / 横向倾斜滚轮 */
+* {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE / 旧 Edge */
+}
 *::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
-*::-webkit-scrollbar-track {
-  background: transparent;
-}
-*::-webkit-scrollbar-thumb {
-  background-color: transparent;
-  border-radius: 4px;
-  transition: background-color 0.15s ease;
-}
-*:hover::-webkit-scrollbar-thumb {
-  background-color: oklch(0.7 0 0 / 25%);
-}
-*::-webkit-scrollbar-thumb:hover {
-  background-color: oklch(0.7 0 0 / 45%);
+  display: none; /* Chrome / Safari / Edge Chromium */
 }
 ::view-transition-old(root),
 ::view-transition-new(root) {
