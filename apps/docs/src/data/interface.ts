@@ -1,4 +1,4 @@
-import type { ComponentType, ReactNode } from 'react';
+import type { ReactNode } from 'react';
 import type { I18nResources } from '../i18n/locales/zh';
 
 /** 全部合法的 i18n 完整 key：<ns>.<key>，给 t(...) 用 */
@@ -25,11 +25,8 @@ export type SubPage =
   | (SubPageBase & { children?: never })
   | (SubPageBase & { children: Array<SubPage> });
 
-/** 一级页：在 sidebar 上以带图标的形态展示 */
-export type Page = SubPage & {
-  /** 菜单项左侧图标，可选 */
-  icon?: ComponentType<{ className?: string }>;
-};
+/** 一级页：与 SubPage 同结构（shadcn 风格 sidebar 不再需要图标） */
+export type Page = SubPage;
 
 /** 顶层栏目 = 一个包 */
 export type Section = {
