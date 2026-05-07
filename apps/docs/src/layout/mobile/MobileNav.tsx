@@ -58,7 +58,7 @@ export const MobileNav: FC = () => {
             ))}
           </ToggleGroup>
         </SheetHeader>
-        <AppSidebar className="flex h-[calc(100vh-7.5rem)] w-full shrink-0 flex-col overflow-y-auto px-4 py-4" />
+        <AppSidebar className="h-[calc(100vh-7.5rem)] w-full shrink-0" />
       </SheetContent>
     </Sheet>
   );

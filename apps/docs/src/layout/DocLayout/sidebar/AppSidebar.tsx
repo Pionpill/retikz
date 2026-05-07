@@ -6,6 +6,7 @@ import { useParams } from 'react-router';
 
 import { coreSection } from '@/data/core';
 import type { Section, SubPage } from '@/data/interface';
+import { cn } from '@/lib/utils';
 
 import { AppSidebarMenu } from './AppSidebarMenu';
 import type { SidebarCategoryData, SidebarSubModuleData } from './interface';
@@ -57,12 +58,21 @@ export const AppSidebar: FC<AppSidebarProps> = props => {
 
   return (
     <aside
-      className={
-        className ??
-        'sticky top-14 hidden h-[calc(100vh-3.5rem)] w-[250px] shrink-0 flex-col overflow-y-auto border-r border-border/60 px-4 py-6 lg:flex'
-      }
+      className={cn(
+        'relative flex flex-col',
+        !className &&
+          [
+            'sticky top-14 hidden h-[calc(100vh-3.5rem)] w-[250px] shrink-0 lg:flex',
+            'after:pointer-events-none after:absolute after:right-0 after:top-0 after:h-full after:w-px',
+            'after:bg-border',
+            'after:[mask-image:linear-gradient(to_bottom,transparent_0%,black_15%,black_85%,transparent_100%)]',
+          ].join(' '),
+        className,
+      )}
     >
-      <AppSidebarMenu categories={categories} moduleId={moduleId ?? 'core'} />
+      <div className="flex-1 overflow-y-auto px-4 py-6">
+        <AppSidebarMenu categories={categories} moduleId={moduleId ?? 'core'} />
+      </div>
     </aside>
   );
 };
