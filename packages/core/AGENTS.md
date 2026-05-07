@@ -2,7 +2,7 @@
 
 > 本文档是 `@retikz/core` 包内特有的规范。
 > - 项目通用规则（commit / JSDoc / IR schema 风格 / 数组写 `Array<T>` 等）见根 [`AGENTS.md`](../../AGENTS.md)
-> - 架构与重构方案见 [`docs/DESIGN.md`](../../docs/DESIGN.md) / [`docs/CORE-REFACTOR.md`](../../docs/CORE-REFACTOR.md)
+> - 架构设计见 [`docs/DESIGN.md`](../../docs/DESIGN.md)
 
 ---
 
@@ -55,7 +55,7 @@
 
 ### 纯函数 + plain data，不用 class
 
-- 几何工具一律用纯函数 + 普通对象，**不写 class**——理由见 docs/CORE-REFACTOR.md / 历史讨论
+- 几何工具一律用纯函数 + 普通对象，**不写 class**
 - 函数集合用 `const xxx = { method1, method2 }` 命名空间形态
 - 每个方法独立 JSDoc（见根 AGENTS.md "对象字面量当命名空间"规则）
 
