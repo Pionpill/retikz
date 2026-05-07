@@ -1,0 +1,114 @@
+---
+title: 简介
+description: AI 原生的 TikZ 风格通用绘图库——React 组件描述图元、JSON IR 持久化，LLM 直接生成与编辑。
+---
+
+retikz **不是又一个图表库**，而是把"用图描述思想"这件事重新设计为 AI 原生工作流的绘图基座。
+
+它把 TikZ 二十年沉淀的节点 / 路径 / anchor 词汇搬进浏览器，用 React 组件作为表达形式——但真正的"宇宙唯一真相"是底层的 JSON IR：人类用 JSX 写、LLM 直接吐 IR JSON、renderer 翻译成 SVG / Canvas / PDF / 原生平台。
+
+## 一个最小例子
+
+<ComponentPreview name="minimal-example" />
+
+## AI 友好优先
+
+**AI 友好不是 retikz 的功能之一，是 retikz 存在的理由。**
+
+retikz 选择 IR JSON 而非 JSX 作为 AI 接入的主接口，借力 OpenAI Structured Outputs / Anthropic Tool Use 的 schema 强约束输出能力——LLM 输出 100% 合法 IR、runtime 强校验。
+
+| 能力 | 落地 |
+| --- | --- |
+| **类型 / schema 同源** | zod 单源 → TS 类型 + JSON Schema |
+| **增量编辑** | JSON Patch（RFC 6902），patch 比重写整份 IR 便宜 |
+| **text DSL（远期）** | 采用 TikZ 原生语法，LLM 训练数据量大、零样本质量好 |
+
+## IR 居中
+
+```text
+   Sugar JSX  ─┐                          ┌─→ React + SVG
+   Kernel JSX ─┼─→  IR (JSON)  ─→  Scene ─┼─→ pure SVG 字符串
+   Text DSL*  ─┤      ↑↓                  ├─→ Canvas → PNG/JPEG/WebP
+   AI / LLM  ──┘   持久化 / 编辑          └─→ Native (Skia/RN) / PDF
+```
+
+所有输入方式（JSX / DSL / AI）都翻成同一份 IR；所有输出方式（renderer）都从 IR 出发。
+**持久化、跨平台、AI 接入这三件事不是各自独立的功能，而是 IR 居中带来的同一份红利。**
+
+## 分层抽象
+
+retikz DSL 表面有三类构造，混淆它们是事后迁移噩梦：
+
+| 层         | 例子                                | 是否进 IR                   | 落在哪          |
+| ---------- | ----------------------------------- | --------------------------- | --------------- |
+| **Kernel** | `<Tikz>` `<Node>` `<Path>` `<Step>` | ✅ 直接对应 IR 节点         | `@retikz/core`  |
+| **Sugar**  | `<Draw way={[...]} />`              | ❌ 编译期展开为 Kernel      | `@retikz/react` |
+| **Tier 2** | `<Axis>` `<BarPlot>` `<Tree>`       | ✅ 高层节点 + lowering 下沉 | 独立 domain 包  |
+
+关键约束：**Sugar 不引入新能力**——任何 Sugar 能表达的，Kernel 都能表达。这条线一旦破了，分层就假了。
+
+## 通用图元，任意组合
+
+core 的 Kernel 只有约 5–8 个组件——`<Path>`、`<Step>`、`<Node>`、`<Anchor>`、`<Scope>`——但它们足够通用，能拼出几乎任何二维图形。
+
+| 类别 | 由 Kernel 拼出 | 在哪 |
+| --- | --- | --- |
+| **流程图 / DAG** | Node + Step + Anchor + dagre/elkjs 布局 | `@retikz/flow`（v1.x） |
+| **图表 / chart** | Step + Path + Node + data binding | `@retikz/plot`（v2.x） |
+| **UML / 拓扑 / 思维导图** | 同 Kernel，换 layout 与样式约定 | 独立 domain 包 |
+| **任意自定义** | 直接写 Kernel JSX | 你的应用 |
+
+**你在图元层组合**——形状、连接方式、anchor、标签，都按 TikZ 的几何 / 路径词汇直接表达：柱子上加一条曲线连到旁边的注释、节点之间画一条带 label 的曲线，都跟多画两个原图元一样自然。
+
+domain 包是 Kernel 之上 + 数据绑定 / 布局算法 / 默认样式的薄薄一层；底层结构、持久化、AI 接口在所有 domain 间完全一致。
+
+## 跨框架，当前先发 React
+
+retikz 的架构是 **core + 各框架薄 adapter**：所有框架共享同一份 IR、同一份 `compileToScene` 编译器、同一份 Scene 渲染契约；每个 adapter 只负责把 Scene primitives 翻译成本框架的 element，几十行级别。
+
+| 角色 | 作用 | 当前状态 |
+| --- | --- | --- |
+| `@retikz/core` | IR + Scene 编译器；零 React / 零 DOM | ✅ v0.1 官方 |
+| `@retikz/react` | React adapter（peerDep: react） | ✅ v0.1 官方 |
+| `@retikz/vue` / `svelte` / `native` … | 其它框架 / 渲染目标 adapter | ⏳ 社区或后续 |
+
+**架构层面 retikz 不绑任何框架——IR 是 universal 的，DSL 因框架而异是合理的。** 你今天用 `@retikz/react` 画的图，其 IR 可以被未来任意 adapter 直接渲染，不需要重写。
+
+## 与 TikZ 的关系
+
+retikz 的命名 / 路径动作 / anchor 体系直接致敬 LaTeX 的 TikZ 包：
+
+| 维度     | LaTeX TikZ      | retikz                      |
+| -------- | --------------- | --------------------------- |
+| 运行环境 | LaTeX 编译器    | 浏览器 / Node               |
+| 语法     | `\node` `\draw` | `<Node>` `<Draw>`           |
+| 输出     | PDF / SVG       | SVG / Canvas / PDF / Native |
+| 交互     | 无              | React 事件、状态            |
+| 持久化   | `.tex` 源码     | JSON IR                     |
+
+远期会通过 `@retikz/codec` 做 IR ↔ TikZ 源码双向转换——浏览器画完直接贴进 LaTeX 论文，反向把 `.tex` 中的 TikZ 搬进浏览器（v3.x+）。
+
+## 适合谁
+
+**用图描述思想的人**——技术写作者、研究者、文档作者、教师。
+
+具体场景：
+
+1. 论文 / 博客里嵌入可交互示意图
+2. 流程图、概念图、网络拓扑、UML、思维导图
+3. 由 LLM 自动生成或编辑的图形配图
+4. 在浏览器里需要 TikZ 级控制力的任何场景
+
+## FAQ
+
+**为什么不直接用 SVG / `<svg>`？**
+
+裸 SVG 没有命名节点 / 路径动作 / anchor 体系——连"从 A 节点的右边画到 B 节点的上边"都要自己手算坐标。TikZ 二十年前就解决了这件事，retikz 把这套词汇搬到 React。
+
+**需要懂 TikZ 吗？**
+
+不需要。retikz 借用 TikZ 的命名词汇（node / path / anchor / step），但 API 是纯 React 组件——会写 JSX 就能上手。已经会 TikZ 是加分项，不会也不影响使用。
+
+**项目状态？**
+
+v0.1 alpha 正在 `next` 分支发布中。当前文档站本身就是 v0.1 alpha 同步发布的一部分。

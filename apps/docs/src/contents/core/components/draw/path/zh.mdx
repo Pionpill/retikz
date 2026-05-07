@@ -1,0 +1,60 @@
+---
+title: Path
+description: Kernel 路径容器——`<Step>` 子节点序列定义折线，最少 2 个 step；Sugar 的 `<Draw>` 编译后就是它。
+---
+
+`<Path>` 是底层路径容器：children 必须是若干 `<Step>`（至少 2 个），定义路径的 move / line 序列。日常连线用 `<Draw>` 更简洁，需要自定义 stroke / 多段折线 / 不同 step kind 时回到 `<Path>`。
+
+## 用法
+
+```tsx
+import { Path, Step } from '@retikz/react';
+```
+
+```tsx
+<Path stroke="currentColor">
+  <Step kind="move" to="a" />
+  <Step kind="line" to="b" />
+</Path>
+```
+
+## 组合
+
+`<Path>` 必须搭配 `<Step>` 子节点（至少 2 个）；首个非 `move` 时编译器会强制改成 `move`：
+
+```tsx
+<Path>
+  <Step kind="move" to={...} />     {/* 第 1 个：必为 move */}
+  <Step kind="line" to={...} />     {/* 之后任意多个 line / move */}
+  ...
+</Path>
+```
+
+## 例子
+
+### 折线
+
+<ComponentPreview name="path-basic" />
+
+### 虚线
+
+<ComponentPreview name="path-dashed" />
+
+## API 参考
+
+| 属性 | 类型 | 默认值 | 描述 |
+| --- | --- | --- | --- |
+| `stroke` | `string` | `currentColor` | 描边色 |
+| `strokeWidth` | `number` | `1` | 描边宽度 |
+| `strokeDasharray` | `string` | — | SVG `stroke-dasharray` 模式 |
+| `children` | `Array<<Step>>` | — | 至少 2 个；首个非 `move` 时编译器会强制改成 `move` |
+
+## 与 Draw 的取舍
+
+| | `<Draw>` | `<Path>` + `<Step>` |
+| --- | --- | --- |
+| 写法 | 一行 way 数组 | 容器 + 子节点 |
+| 表达力 | 与 Path 等价（编译展开） | 全部 Kernel 能力 |
+| 适用 | 90% 连线场景 | 自定义 step kind、未来扩展 |
+
+`<Draw>` 由 `<Path>` 编译而成；写文档 / 教程时一律先讲 `<Draw>`，`<Path>` 是给"想看底层"的用户。

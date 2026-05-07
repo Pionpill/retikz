@@ -1,0 +1,72 @@
+---
+title: Tikz
+description: Top-level container — scans children to build IR, compiles to Scene, renders SVG.
+---
+
+`<Tikz>` is retikz's only required top-level wrapper. Every Kernel / Sugar component must live inside a `<Tikz>`.
+
+## Usage
+
+```tsx
+import { Tikz } from '@retikz/react';
+```
+
+```tsx
+<Tikz width={300} height={80}>
+  {/* Kernel / Sugar children */}
+</Tikz>
+```
+
+## Composition
+
+`<Tikz>` is a container; children are any Kernel / Sugar component tree:
+
+```tsx
+<Tikz>
+  <Node id="..." position={...}>label</Node>
+  <Path>
+    <Step kind="move" to="..." />
+    <Step kind="line" to="..." />
+  </Path>
+  <Draw way={[...]} />
+</Tikz>
+```
+
+## Examples
+
+### Basic
+
+<ComponentPreview name="tikz-basic" />
+
+### Render from IR
+
+`<Tikz>` accepts an `ir` prop — feed a persisted IR JSON directly and get a rendered image, **no JSX children needed**. Source can be anything: LLM-generated, a JSON editor, URL deserialization, or database storage.
+
+<ComponentPreview name="tikz-from-ir" />
+
+## API Reference
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `width` | `number \| string` | — | SVG element width |
+| `height` | `number \| string` | — | SVG element height |
+| `children` | `ReactNode` | — | Kernel / Sugar component tree (mutually exclusive with `ir`) |
+| `ir` | `IR` | — | Pre-built IR JSON (mutually exclusive with `children`) |
+| `className` | `string` | — | Forwarded to `<svg>` |
+| `style` | `CSSProperties` | — | Forwarded to `<svg>` |
+
+## Feeding IR Directly
+
+The `ir` prop fits scenarios where IR JSON is already in hand — AI generation, JSON editors, URL deserialization. Pair with `convertReactNodeToIR` / `convertIRToReactNode` for a DSL ↔ IR bridge:
+
+```tsx
+import { Tikz, Node, convertReactNodeToIR } from '@retikz/react';
+
+const ir = convertReactNodeToIR(
+  <Node id="a" position={[0, 0]}>A</Node>,
+);
+// Serialize, send to LLM, store in DB...
+<Tikz ir={ir} width={200} height={80} />;
+```
+
+`ir` and `children` are mutually exclusive; if both are supplied, `ir` wins.

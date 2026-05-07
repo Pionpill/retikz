@@ -1,0 +1,64 @@
+---
+title: Draw
+description: Sugar component — way array threads through ids / Cartesian / polar targets, expands at compile time to Path + Step.
+---
+
+`<Draw>` is the go-to for 90% of connections. `way` is an array of targets joined as a polyline; at compile time it expands to an equivalent Kernel `<Path>` + `<Step>` tree, so `<Draw>` adds no capability the Kernel can't already express.
+
+## Usage
+
+```tsx
+import { Draw } from '@retikz/react';
+```
+
+```tsx
+<Draw way={['a', 'b']} />
+```
+
+## Examples
+
+### Basic connection
+
+<ComponentPreview name="draw-basic" />
+
+### Three forms of way item
+
+Each item in `way` accepts three forms (matching `<Step>.to`):
+
+| Form | Example | Meaning |
+| --- | --- | --- |
+| Node id | `'a'` | Reference a Node in the same Tikz; endpoint auto-attaches to border |
+| Cartesian | `[120, 0]` | Literal `[x, y]` |
+| Polar | `{ origin: 'a', angle: 60, radius: 80 }` | Polar (see [Positioning](/core/concepts/positioning)) |
+
+Three Draws below use id, Cartesian, and polar as endpoints respectively:
+
+<ComponentPreview name="draw-way-types" />
+
+### Styling
+
+`stroke` / `strokeWidth` / `strokeDasharray` match `<Path>`:
+
+<ComponentPreview name="draw-dashed" />
+
+## API Reference
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `way` | `Array<WayItem>` | — | At least 2 points; first = `move`, rest default `line` |
+| `stroke` | `string` | `currentColor` | Stroke color |
+| `strokeWidth` | `number` | `1` | Stroke width |
+| `strokeDasharray` | `string` | — | SVG `stroke-dasharray` pattern (e.g. `"4 2"`) |
+
+## Relation to Path
+
+`<Draw way={['a', 'b']}>` compiles to:
+
+```tsx
+<Path>
+  <Step kind="move" to="a" />
+  <Step kind="line" to="b" />
+</Path>
+```
+
+Use `<Path>` + `<Step>` directly when you need finer control.

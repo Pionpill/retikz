@@ -1,0 +1,59 @@
+import type { I18nResources } from './zh';
+
+/** English copy. Structure mirrors zh.ts; keep keys in sync. */
+export const en: I18nResources = {
+  common: {
+    search: 'Search this section...',
+    pageCount: '{{count}} page(s)',
+    notFound: 'Not found: /{{section}}/{{page}}',
+    versionTag: 'v0.1 alpha',
+    contentPlaceholder: '{{title}} — v0.1 alpha content coming soon.',
+    github: 'GitHub',
+    githubRepo: 'Pionpill/retikz',
+    switchLanguage: 'Switch language',
+    themeLight: 'Light theme',
+    themeDark: 'Dark theme',
+    brandTagline: 'ReTikZ module switcher',
+  },
+  core: {
+    label: 'Core',
+    introduction: 'Introduction',
+    getStart: 'Get Started',
+    components: 'Components',
+    concepts: 'Concepts',
+    tikz: 'Tikz',
+    node: 'Node',
+    draw: 'Draw',
+    drawOverview: 'Draw Overview',
+    path: 'Path',
+    step: 'Step',
+    positioning: 'Positioning',
+    anchors: 'Anchors',
+  },
+  flow: {
+    label: 'Flow',
+  },
+  plot: {
+    label: 'Plot',
+  },
+  toc: {
+    copyLink: 'Copy link',
+    outline: 'Outline',
+    linkCopied: 'Link copied',
+    showOutline: 'Show outline',
+    hideOutline: 'Hide outline',
+  },
+  page: {
+    copyPage: 'Copy Page',
+    sourceGroup: 'Source',
+    copyMarkdown: 'Copy as Markdown',
+    viewOnGithub: 'View on GitHub',
+    openInGroup: 'Open in',
+    openInChatGpt: 'Open in ChatGPT',
+    openInClaude: 'Open in Claude',
+    openInDeepSeek: 'Open in DeepSeek',
+    pageCopied: 'Page copied',
+    prevPage: 'Previous',
+    nextPage: 'Next',
+  },
+};

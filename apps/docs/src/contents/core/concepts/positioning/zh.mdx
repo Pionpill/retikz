@@ -1,0 +1,58 @@
+---
+title: 定位
+description: retikz 的三种位置表达——笛卡尔、极坐标、节点 id 引用——通用于 `<Node>.position` 与 path target。
+---
+
+retikz 里所有"放在哪 / 连到哪"都用同一套位置语法：3 种形态可互换，覆盖 `<Node>.position`、`<Step>.to`、`<Draw>.way` 元素。
+
+| 形态 | 类型 | 用在哪 |
+| --- | --- | --- |
+| 笛卡尔 | `[x, y]` | Node position、path target |
+| 极坐标 | `{ origin?, angle, radius }` | Node position、path target |
+| 节点 id | `'node-id'` | **仅** path target（Step.to / way item） |
+
+> 坐标系：x 向右，y 向下（与 SVG / Canvas 一致，与数学课本相反）。单位是 user units，不是像素，最终物理尺寸由 `<Tikz>` 的 `width` / `height` + viewBox 决定。
+
+## 笛卡尔
+
+最直白：`[x, y]` 元组。
+
+<ComponentPreview name="positioning-cartesian" />
+
+## 极坐标
+
+`{ origin?, angle, radius }`：
+
+| 字段 | 含义 |
+| --- | --- |
+| `origin` | 极点。可选，省略时为 `[0, 0]`；可传节点 id 字符串、笛卡尔坐标，**或嵌套的极坐标**（链式偏移） |
+| `angle` | 角度（度），逆时针为正（TikZ 约定） |
+| `radius` | 半径（user units） |
+
+下面 6 个节点以 `O` 为极点、半径 80、角度从 0 到 300 每 60° 一个，画出常见的圆形布局：
+
+<ComponentPreview name="positioning-polar" />
+
+`origin` 还可以**嵌套**——例如 `{ origin: { origin: 'a', angle: 0, radius: 30 }, angle: 90, radius: 20 }` 表示"从 a 向右 30 再向上 20"。这种链式表达在画径向 / 局部偏移时很顺手。
+
+## 节点 id 引用（path target）
+
+`<Step>` / `<Draw>` 的 target 还接受**字符串**，表示引用同一 `<Tikz>` 内的节点 id：
+
+<ComponentPreview name="positioning-id-ref" />
+
+线段的实际起止点由 retikz 自动算——见 [锚点](/core/concepts/anchors)。
+
+## 前向引用要求
+
+字符串引用、`origin: 'node-id'` 都要求**被引用节点先于引用方定义**（按 IR children 源码顺序）。引用未定义节点时编译失败、path 整体跳过。
+
+```tsx
+// ✅ b 引用 a，a 在前
+<Node id="a" position={[0, 0]}>A</Node>
+<Node id="b" position={{ origin: 'a', angle: 0, radius: 50 }}>B</Node>
+
+// ❌ a 引用 b，b 在 a 之后
+<Node id="a" position={{ origin: 'b', angle: 0, radius: 50 }}>A</Node>
+<Node id="b" position={[0, 0]}>B</Node>
+```

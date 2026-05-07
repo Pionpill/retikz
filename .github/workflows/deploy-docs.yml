@@ -6,6 +6,7 @@ on:
       - main
     paths:
       - 'apps/docs/**'
+      - 'packages/legacy-core/**'
       - 'packages/core/**'
       - 'pnpm-workspace.yaml'
       - 'pnpm-lock.yaml'
@@ -37,8 +38,8 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Build core
-        run: pnpm --filter @retikz/core build
+      - name: Build legacy-core
+        run: pnpm --filter @retikz/legacy-core build
 
       - name: Build docs
         run: pnpm --filter @retikz/docs build

@@ -1,0 +1,55 @@
+---
+title: Get Started
+description: Install retikz and build a minimal example in 3 steps to learn the Tikz, Node, and Draw components.
+---
+
+## Installation
+
+The React adapter is `@retikz/react`, with peer dependencies on `react` / `react-dom` (>= 18).
+
+<PackageManagerInstall packages="@retikz/react react react-dom" />
+
+The underlying `@retikz/core` (IR + compiler, zero React / zero DOM) is pulled in transitively — no need to install it directly.
+
+## A Minimal Example
+
+<ComponentPreview name="get-start-final" />
+
+We'll build this diagram in 3 steps. Click **View Code** under any preview to inspect the source and the corresponding IR JSON.
+
+## Step by Step
+
+### 1. The container `<Tikz />` + one `<Node />`
+
+A diagram needs at least two things: a container and a primitive. `<Tikz>` is the top-level container — it scans children to build the IR, compiles a Scene, and renders SVG; `width` / `height` set the SVG element's render size. `<Node>` is the most common primitive — it has an `id`, a `position`, and a visible label.
+
+<ComponentPreview name="get-start-step-1" />
+
+### 2. More `<Node />`s
+
+You can add as many nodes as you like, but each `id` must be unique — `<Draw>` references them by id later. `position` is in canvas (pixel) coordinates.
+
+| Prop | Meaning |
+| --- | --- |
+| `id` | Unique identifier, referenced by `<Path>` / `<Draw>` |
+| `position` | `[x, y]` canvas coordinates (pixels) |
+| children | The node's visible content (label) |
+
+<ComponentPreview name="get-start-step-2" />
+
+### 3. Connect them with `<Draw />`
+
+`<Draw>` is a Sugar component. The `way` array references nodes by id and is compiled to Kernel `<Path>` + `<Step>` — so `<Draw>` introduces no capability the Kernel can't already express. Click **View Code** and switch to the IR tab to see `<Draw>` show up as a plain `path` node in the IR.
+
+<ComponentPreview name="get-start-final" />
+
+Three nodes joined by two lines — matching the final example at the top.
+
+## Next Steps
+
+<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+  <LinkedCard href="/core/profile/introduction">
+    <span className="font-semibold">Introduction</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">Design philosophy: IR-centric, AI-first, Kernel/Sugar layering</span>
+  </LinkedCard>
+</div>

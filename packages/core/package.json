@@ -1,7 +1,8 @@
 {
   "name": "@retikz/core",
-  "version": "0.0.1-rc.3",
-  "description": "atomic drawing library implemented using react and d3, inspired by tikz",
+  "version": "0.1.0-alpha.0",
+  "description": "retikz v0.1 core: framework-agnostic IR, scene compiler, and pure parsers.",
+  "private": true,
   "type": "module",
   "homepage": "https://pionpill.github.io/retikz/",
   "keywords": [
@@ -12,19 +13,27 @@
   "license": "MIT",
   "repository": "https://github.com/Pionpill/retikz",
   "sideEffects": false,
-  "main": "dist/lib/index.cjs",
-  "module": "dist/es/index.js",
-  "types": "dist/es/index.d.ts",
+  "main": "./src/index.ts",
+  "module": "./src/index.ts",
+  "types": "./src/index.ts",
   "exports": {
     ".": {
-      "types": "./dist/es/index.d.ts",
-      "import": "./dist/es/index.js",
-      "require": "./dist/lib/index.cjs"
-    },
-    "./package.json": "./package.json"
+      "types": "./src/index.ts",
+      "default": "./src/index.ts"
+    }
   },
   "publishConfig": {
-    "access": "public"
+    "main": "dist/lib/index.cjs",
+    "module": "dist/es/index.js",
+    "types": "dist/lib/index.d.ts",
+    "exports": {
+      ".": {
+        "types": "./dist/lib/index.d.ts",
+        "import": "./dist/es/index.js",
+        "require": "./dist/lib/index.cjs",
+        "default": "./dist/es/index.js"
+      }
+    }
   },
   "files": [
     "LICENSE",
@@ -35,21 +44,19 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
-  },
-  "peerDependencies": {
-    "react": ">=18",
-    "react-dom": ">=18"
+    "preview": "vite preview",
+    "test": "vitest",
+    "test:run": "vitest run"
   },
   "dependencies": {
-    "d3-color": "catalog:",
-    "d3-shape": "catalog:"
+    "zod": "catalog:"
   },
   "devDependencies": {
-    "@types/d3-color": "catalog:",
-    "@types/d3-shape": "catalog:",
-    "react": "catalog:",
-    "react-dom": "catalog:",
-    "vite-tsconfig-paths": "catalog:"
+    "@types/node": "catalog:",
+    "typescript": "catalog:",
+    "vite": "catalog:",
+    "vite-plugin-dts": "catalog:",
+    "vite-tsconfig-paths": "catalog:",
+    "vitest": "catalog:"
   }
 }

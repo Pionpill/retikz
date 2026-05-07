@@ -1,0 +1,60 @@
+---
+title: Node
+description: Rectangle node + optional text label — the most common retikz primitive; paths reference it by id.
+---
+
+`<Node>` is the basic positioned, named primitive. Paths reference it by `id` and auto-attach to its border.
+
+## Usage
+
+```tsx
+import { Node } from '@retikz/react';
+```
+
+```tsx
+<Node id="a" position={[0, 0]}>
+  Label
+</Node>
+```
+
+## Examples
+
+### Basic
+
+<ComponentPreview name="node-basic" />
+
+### Styling
+
+`fill` / `stroke` / `strokeWidth` / `padding` / `fontSize` control per-node appearance:
+
+<ComponentPreview name="node-styled" />
+
+### Rotation
+
+`rotate` rotates around the node center; attached paths follow the new border:
+
+<ComponentPreview name="node-rotated" />
+
+## API Reference
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `id` | `string` | — | Unique identifier; referenced by `<Path>` / `<Draw>` |
+| `position` | `[x, y] \| PolarPosition` | — | Node center (Cartesian or polar) |
+| `children` / `text` | `string` | — | Visible label; pick one — `text` wins if both supplied |
+| `rotate` | `number` | `0` | Rotation around center, degrees, positive = clockwise |
+| `fill` | `string` | — | Background color (any CSS color) |
+| `stroke` | `string` | `currentColor` | Border color |
+| `strokeWidth` | `number` | `1` | Border width (user units) |
+| `padding` | `number` | — | Inner padding between text and border |
+| `margin` | `number` | `0` | Outer margin between border and path attachment point; **does not affect border position**, affects where lines stop |
+| `fontSize` | `number` | — | Text size (user units) |
+
+## margin vs padding
+
+| | Affects | Visual effect |
+| --- | --- | --- |
+| `padding` | Distance from text to border | Border grows |
+| `margin` | Distance from border to path endpoint | Border unchanged; lines stop `margin` short |
+
+Use `margin` to give connecting lines breathing room in multi-node diagrams — keeps lines from touching the border directly.

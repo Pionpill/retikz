@@ -1,0 +1,53 @@
+---
+title: Step
+description: Path 的子节点——一个 step = 一个动作（move / line）；只能作为 `<Path>` 的直接 children。
+---
+
+`<Step>` 描述路径上的一个动作：`move` 抬笔到目标点，`line` 落笔从游标画直线到目标点。它**只能**作为 `<Path>` 的直接 children；放在其它地方会被忽略。
+
+## 用法
+
+```tsx
+import { Path, Step } from '@retikz/react';
+```
+
+```tsx
+<Path>
+  <Step kind="move" to="a" />
+  <Step kind="line" to="b" />
+</Path>
+```
+
+## 例子
+
+### 基础
+
+下面这个 path 用一次 `move` + `line` 画 A→B，再 `move` 抬笔后 `line` 画一条独立的线：
+
+<ComponentPreview name="step-basic" />
+
+## API 参考
+
+| 属性 | 类型 | 默认值 | 描述 |
+| --- | --- | --- | --- |
+| `kind` | `'move' \| 'line'` | `'line'` | `'move'` 抬笔不绘制 |
+| `to` | `IRTarget` | — | 目标点：节点 id、笛卡尔 `[x, y]`、或极坐标对象 |
+
+## kind 的两种取值
+
+| kind | 行为 | 类比 SVG |
+| --- | --- | --- |
+| `'move'` | 移动游标，**不画线** | path "M" |
+| `'line'` | 从当前游标画直线到目标点 | path "L" |
+
+`<Path>` 第一个 step 必须是 `move`——如果你写 `'line'`，编译器会自动改成 `move`。
+
+## to 的三种形态
+
+`to` 与 [Draw 的 way item](/core/components/draw/overview#way-的-3-种-item) 完全一致：
+
+| 形态 | 例 | 行为 |
+| --- | --- | --- |
+| 节点 id | `'a'` | 自动贴 Node 边界（参看 [锚点](/core/concepts/anchors)） |
+| 笛卡尔 | `[60, 0]` | 直接坐标 |
+| 极坐标 | `{ origin: 'a', angle: 30, radius: 50 }` | 极坐标（参看 [定位](/core/concepts/positioning)） |
