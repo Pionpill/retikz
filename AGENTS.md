@@ -30,7 +30,7 @@ retikz/
 └── tsconfig.json
 ```
 
-v0.1 alpha 在 `next` 分支上发布中。架构设计见 `docs/DESIGN.md`。
+v0.1 alpha 在 `next` 分支上发布中。架构设计见 `docs/architecture/DESIGN.md`。
 
 ## 依赖管理
 
@@ -199,7 +199,7 @@ pnpm lint                                  # 全部包 ESLint（不带 --fix）
 
 ## IR / Schema 风格（zod）
 
-> 见 `docs/DESIGN.md` §7 "AI 友好性"——schema description 是给 LLM 看的契约，必须完整。
+> 见 `docs/architecture/DESIGN.md` §7 "AI 友好性"——schema description 是给 LLM 看的契约，必须完整。
 
 - **每个 zod schema 字段都必须 `.describe(...)`**——包括 object 顶层和内部所有属性，包括看似自描述的字段（type / kind 等）
   - description 写**含义与用途**，不是复述字段名

@@ -9,7 +9,7 @@ import type { ViewBox } from './view-box';
  * 所有 adapter（SVG / Canvas / PDF / Skia）都应能消费这些原语。
  *
  * 不允许出现 SVG-only 或 Canvas-only 特性（filter、marker、imageData 等）。
- * 见 docs/DESIGN.md §4.4。
+ * 见 docs/architecture/DESIGN.md §4.4。
  */
 export type ScenePrimitive = RectPrim | TextPrim | PathPrim | GroupPrim;
 
