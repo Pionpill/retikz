@@ -122,16 +122,24 @@
   }
 }
 
+/* 默认 thumb 透明（视觉无 scrollbar）；hover 在该元素上时浮现，hover 在 thumb 自身上时加深 */
 *::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 8px;
+  height: 8px;
 }
 *::-webkit-scrollbar-track {
   background: transparent;
 }
 *::-webkit-scrollbar-thumb {
-  background: oklch(0.7 0 0 / 30%);
-  border-radius: 3px;
+  background-color: transparent;
+  border-radius: 4px;
+  transition: background-color 0.15s ease;
+}
+*:hover::-webkit-scrollbar-thumb {
+  background-color: oklch(0.7 0 0 / 25%);
+}
+*::-webkit-scrollbar-thumb:hover {
+  background-color: oklch(0.7 0 0 / 45%);
 }
 ::view-transition-old(root),
 ::view-transition-new(root) {
