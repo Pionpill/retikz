@@ -65,11 +65,13 @@ export type ComponentPreviewProps = {
   align?: keyof typeof alignClass;
   /** 透传到 demo 渲染区父级 div 的 className，可覆盖默认的 h-72 / p-10 / 居中等 */
   componentClassName?: string;
+  /** 隐藏底部「View Code / 源码 / IR」面板，只保留 demo 渲染区——用于叙述性插图，让 retikz 画的图当配图使 */
+  hideCode?: boolean;
 };
 
 /** MDX 内的"渲染 + 源码"演示卡，下半段对齐 shadcn v4 的 View Code 一次性切换 */
 export const ComponentPreview: FC<ComponentPreviewProps> = props => {
-  const { name, align = 'center', componentClassName } = props;
+  const { name, align = 'center', componentClassName, hideCode = false } = props;
   // ALL hooks 必须无条件先于 early return 调用
   const [isCodeVisible, setIsCodeVisible] = useState(false);
   const [view, setView] = useState<SourceView>('react');
@@ -99,9 +101,10 @@ export const ComponentPreview: FC<ComponentPreviewProps> = props => {
   const Component = mod?.default;
 
   // IR 视图：调一次 Component()（demo 是一个直接返回 <Tikz>...</Tikz> 的纯 FC，无 hooks 不会出问题），
-  // 取 Tikz 的 children 喂给 convertReactNodeToIR；失败回落给一段错误文本而不是抛出
+  // 取 Tikz 的 children 喂给 convertReactNodeToIR；失败回落给一段错误文本而不是抛出。
+  // hideCode 时 IR 区根本不渲染——跳过整次 IR 计算
   const irJson = useMemo(() => {
-    if (!Component) return '';
+    if (!Component || hideCode) return '';
     try {
       const tikzElement = Component({}) as ReactElement<{ children?: ReactNode }> | null;
       const tikzChildren = tikzElement?.props.children;
@@ -110,7 +113,7 @@ export const ComponentPreview: FC<ComponentPreviewProps> = props => {
     } catch (err) {
       return `// Failed to compute IR: ${err instanceof Error ? err.message : String(err)}`;
     }
-  }, [Component]);
+  }, [Component, hideCode]);
 
   if (!moduleId || !sectionId || !pageId) return null;
 
@@ -158,7 +161,7 @@ export const ComponentPreview: FC<ComponentPreviewProps> = props => {
       <div className={cn('flex h-72 w-full justify-center p-10', alignClass[align], componentClassName)}>
         <Component />
       </div>
-      <div className="relative overflow-hidden border-t bg-muted/50 text-sm">
+      {hideCode ? null : <div className="relative overflow-hidden border-t bg-muted/50 text-sm">
         {showFull ? (
           <>
             <div className="flex items-center justify-between p-1 px-2">
@@ -249,7 +252,7 @@ export const ComponentPreview: FC<ComponentPreviewProps> = props => {
             </div>
           )}
         </div>
-      </div>
+      </div>}
     </div>
   );
 };
