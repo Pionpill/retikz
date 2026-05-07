@@ -1,10 +1,12 @@
 /* eslint-disable react-refresh/only-export-components -- 此文件导出 MDX 元素映射表（对象），不是 fast-refresh 边界 */
 import { cn } from '@/lib/utils';
 import type { MDXComponents } from 'mdx/types';
-import type { ComponentPropsWithoutRef, FC } from 'react';
+import type { ComponentPropsWithoutRef, FC, ReactNode } from 'react';
 import { Link } from 'react-router';
+import { CodeBlockCommand } from '../code-block-command';
 import { ComponentPreview } from '../component-preview';
 import { CodeBlock } from '../highlight-code';
+import { PackageManagerInstall } from '../package-manager-install';
 
 const linkClass = 'font-medium underline underline-offset-4';
 
@@ -27,6 +29,34 @@ const A: FC<ComponentPropsWithoutRef<'a'>> = ({ href, className, children, ...re
     <a href={href} className={cn(linkClass, className)} {...rest}>
       {children}
     </a>
+  );
+};
+
+/**
+ * 卡片化的 Link，照搬 shadcn 同名组件。href 自动判断内 / 外链：
+ * - `/` 开头走 react-router `<Link>`
+ * - `http(s)://` 开头走新窗口 `<a>`
+ * shadcn 用的 bg-surface / text-surface-foreground 我们没有对应主题 token，用 muted 替代。
+ */
+const linkedCardClass =
+  'flex w-full flex-col items-center rounded-xl bg-muted p-6 text-foreground no-underline transition-colors hover:bg-muted/80 sm:p-10';
+
+const LinkedCard: FC<{ className?: string; href: string; children?: ReactNode }> = ({
+  className,
+  href,
+  children,
+}) => {
+  if (/^https?:\/\//i.test(href)) {
+    return (
+      <a href={href} target="_blank" rel="noopener noreferrer" className={cn(linkedCardClass, className)}>
+        {children}
+      </a>
+    );
+  }
+  return (
+    <Link to={href} className={cn(linkedCardClass, className)}>
+      {children}
+    </Link>
   );
 };
 
@@ -127,5 +157,8 @@ export const mdxComponents: MDXComponents = {
       {...props}
     />
   ),
+  CodeBlockCommand,
   ComponentPreview,
+  LinkedCard,
+  PackageManagerInstall,
 };
