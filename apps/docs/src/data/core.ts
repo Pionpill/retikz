@@ -1,4 +1,3 @@
-import { Package } from 'lucide-react';
 import type { Section } from './interface';
 
 export const coreSection: Array<Section> = [
@@ -10,15 +9,22 @@ export const coreSection: Array<Section> = [
     ],
   },
   {
-    id: 'core',
-    label: 'core.label',
+    id: 'components',
+    label: 'core.components',
     pages: [
-      {
-        id: 'core-intro',
-        label: 'core.intro',
-        icon: Package,
-        children: [{ id: 'core-intro', label: 'core.intro' }],
-      },
+      { id: 'tikz', label: 'core.tikz' },
+      { id: 'node', label: 'core.node' },
+      { id: 'draw', label: 'core.draw' },
+      { id: 'path', label: 'core.path' },
+      { id: 'step', label: 'core.step' },
+    ],
+  },
+  {
+    id: 'concepts',
+    label: 'core.concepts',
+    pages: [
+      { id: 'positioning', label: 'core.positioning' },
+      { id: 'anchors', label: 'core.anchors' },
     ],
   },
 ];
