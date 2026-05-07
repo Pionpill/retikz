@@ -24,13 +24,13 @@ retikz/
 │   └── docs/           # @retikz/docs — 文档站点（修改前先看 apps/docs/AGENTS.md；写文档另见 .agents/skills/docs-doc-write/SKILL.md）
 ├── config/
 │   └── eslint/         # 共享的 ESLint 预设
-├── docs/               # 项目内部架构文档
+├── notes/              # 项目内部架构 / 设计 / 分析笔记（含 agent specs；与 apps/docs 用户文档站点区分）
 ├── pnpm-workspace.yaml # workspace + catalog（统一依赖版本）
 ├── eslint.config.js    # 根级 flat config
 └── tsconfig.json
 ```
 
-v0.1 alpha 在 `next` 分支上发布中。架构设计见 `docs/architecture/DESIGN.md`。
+v0.1 alpha 在 `next` 分支上发布中。架构设计见 `notes/architecture/DESIGN.md`。
 
 ## 依赖管理
 
@@ -199,7 +199,7 @@ pnpm lint                                  # 全部包 ESLint（不带 --fix）
 
 ## IR / Schema 风格（zod）
 
-> 见 `docs/architecture/DESIGN.md` §7 "AI 友好性"——schema description 是给 LLM 看的契约，必须完整。
+> 见 `notes/architecture/DESIGN.md` §7 "AI 友好性"——schema description 是给 LLM 看的契约，必须完整。
 
 - **每个 zod schema 字段都必须 `.describe(...)`**——包括 object 顶层和内部所有属性，包括看似自描述的字段（type / kind 等）
   - description 写**含义与用途**，不是复述字段名
