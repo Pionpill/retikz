@@ -1,20 +1,16 @@
-import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar';
-import { useTocStore } from '@/store/useTocStore';
-import type { CSSProperties, FC } from 'react';
+import type { FC } from 'react';
 import { useCallback, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Outlet } from 'react-router';
 import { toast } from 'sonner';
-import AppHeader from './AppHeader';
-import { AppSidebar } from './AppSidebar';
 
-const sidebarStyle = {
-  '--sidebar-width': '16rem',
-} as CSSProperties;
+import { useTocStore } from '@/store/useTocStore';
+
+import AppHeader from './header/AppHeader';
+import { AppSidebar } from './sidebar/AppSidebar';
 
 /**
- * 文档站主布局：左侧 Sidebar + 主内容 Outlet。
- * 顶部 sticky header 左侧 SidebarTrigger，右侧文档级动作（复制链接 / 切 TOC）。
+ * 文档站主布局：顶栏 sticky + 主区 flex（侧栏 + Outlet）。
  * 全局快捷键 Ctrl+L / Ctrl+Alt+B 同步挂在 layout 一级，覆盖所有页面。
  */
 export const DocLayout: FC = () => {
@@ -49,12 +45,14 @@ export const DocLayout: FC = () => {
   }, [handleCopyLink, handleToggleToc]);
 
   return (
-    <SidebarProvider style={sidebarStyle}>
-      <AppSidebar />
-      <SidebarInset>
-        <AppHeader />
-        <Outlet />
-      </SidebarInset>
-    </SidebarProvider>
+    <div className="flex min-h-screen flex-col">
+      <AppHeader />
+      <div className="flex flex-1">
+        <AppSidebar />
+        <main className="flex min-w-0 flex-1">
+          <Outlet />
+        </main>
+      </div>
+    </div>
   );
 };
