@@ -9,7 +9,7 @@
 | [`architecture/`](./architecture) | 长期架构文档；少改、不带日期 | 永久（重大架构调整时**更新原文**，不另起新文） | 主题名，如 `DESIGN.md` |
 | [`adr/`](./adr) | 单点架构决策记录（Architecture Decision Records） | 永久、不可变；被推翻就写新 ADR 标 `Supersedes #N` | `NNNN-kebab-case-标题.md`，编号递增 |
 | [`analysis/`](./analysis) | 一次性研究 / 对比 / gap 分析 | 长期保留作历史参考，但不再更新 | `YYYY-MM-DD-kebab-case-标题.md` |
-| [`plans/`](./plans) | 临时实施方案、迁移步骤 | **完工即删**（git 历史还在），不留死文件 | `YYYY-MM-DD-kebab-case-标题.md` |
+| [`plans/`](./plans) | 临时实施方案、迁移步骤 | **完工即删**（git 历史还在），不留死文件 | `kebab-case-标题.md` |
 
 ## 当前文档
 
@@ -27,7 +27,7 @@
 
 ### plans/
 
-（暂无；写完即删）
+- [`v0-roadmap.md`](./plans/v0-roadmap.md)：v0 总路线（v0.1 → v0.4 → v0 收尾）含 v0.1 各 alpha 详细拆分
 
 ## 写文档前先选生命周期
 
