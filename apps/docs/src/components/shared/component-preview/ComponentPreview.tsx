@@ -2,6 +2,7 @@ import { JsonIcon, ReactIcon } from '@/components/icons';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
+import type { IR } from '@retikz/core';
 import { convertReactNodeToIR } from '@retikz/react';
 import { Check, ChevronsDownUp, ChevronsUpDown, Copy, X } from 'lucide-react';
 import type { FC, ReactElement, ReactNode } from 'react';
@@ -101,14 +102,14 @@ export const ComponentPreview: FC<ComponentPreviewProps> = props => {
   const Component = mod?.default;
 
   // IR 视图：调一次 Component()（demo 是一个直接返回 <Tikz>...</Tikz> 的纯 FC，无 hooks 不会出问题），
-  // 取 Tikz 的 children 喂给 convertReactNodeToIR；失败回落给一段错误文本而不是抛出。
-  // hideCode 时 IR 区根本不渲染——跳过整次 IR 计算
+  // 优先看 Tikz 的 ir prop（demo 可能是 <Tikz ir={...}/> 直接喂 IR），否则把 children 喂给 convertReactNodeToIR；
+  // 失败回落给一段错误文本而不是抛出。hideCode 时 IR 区根本不渲染——跳过整次 IR 计算
   const irJson = useMemo(() => {
     if (!Component || hideCode) return '';
     try {
-      const tikzElement = Component({}) as ReactElement<{ children?: ReactNode }> | null;
-      const tikzChildren = tikzElement?.props.children;
-      const ir = convertReactNodeToIR(tikzChildren);
+      const tikzElement = Component({}) as ReactElement<{ children?: ReactNode; ir?: IR }> | null;
+      const irFromProp = tikzElement?.props.ir;
+      const ir = irFromProp ?? convertReactNodeToIR(tikzElement?.props.children);
       return formatIR(ir);
     } catch (err) {
       return `// Failed to compute IR: ${err instanceof Error ? err.message : String(err)}`;
