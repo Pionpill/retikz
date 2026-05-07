@@ -59,7 +59,7 @@ export const AppSidebar: FC<AppSidebarProps> = props => {
     <aside
       className={
         className ??
-        'sticky top-14 hidden h-[calc(100vh-3.5rem)] w-72 shrink-0 flex-col overflow-y-auto border-r border-border/60 px-4 py-6 lg:flex'
+        'sticky top-14 hidden h-[calc(100vh-3.5rem)] w-[250px] shrink-0 flex-col overflow-y-auto border-r border-border/60 px-4 py-6 lg:flex'
       }
     >
       <AppSidebarMenu categories={categories} moduleId={moduleId ?? 'core'} />
