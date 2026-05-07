@@ -19,8 +19,8 @@ retikz picks IR JSON over JSX as the primary AI interface, leveraging OpenAI Str
 
 | Capability | How |
 | --- | --- |
-| **Single-source types & schema** | [zod](https://zod.dev) single source → TS types + JSON Schema |
-| **Incremental editing** | [JSON Patch (RFC 6902)](https://datatracker.ietf.org/doc/html/rfc6902) — patch beats rewriting the IR |
+| **Single-source types & schema** | zod single source → TS types + JSON Schema |
+| **Incremental editing** | JSON Patch (RFC 6902) — patch beats rewriting the IR |
 | **Text DSL (long-term)** | TikZ-native syntax; LLMs have ample TikZ training data |
 
 ## IR at the Center
@@ -76,7 +76,7 @@ retikz follows a **core + thin per-framework adapter** architecture: every frame
 
 ## Relation to TikZ
 
-retikz's naming, path actions, and anchor model are direct tributes to LaTeX's [TikZ package](https://tikz.dev):
+retikz's naming, path actions, and anchor model are direct tributes to LaTeX's TikZ package:
 
 | Aspect | LaTeX TikZ | retikz |
 | --- | --- | --- |
@@ -111,8 +111,4 @@ No. retikz borrows TikZ's naming vocabulary (node / path / anchor / step), but t
 
 **Project status?**
 
-v0.1 alpha is shipping on the `next` branch. Architecture: [DESIGN.md](https://github.com/Pionpill/retikz/blob/next/docs/DESIGN.md). This documentation site itself is part of the v0.1 alpha rollout.
-
-**Feedback / contributing?**
-
-Source, issues, PRs: [github.com/Pionpill/retikz](https://github.com/Pionpill/retikz).
+v0.1 alpha is shipping on the `next` branch. This documentation site itself is part of the v0.1 alpha rollout.
