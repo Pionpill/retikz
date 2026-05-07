@@ -1,0 +1,60 @@
+---
+title: Path
+description: Kernel path container — children are a sequence of `<Step>` (≥ 2) defining a polyline; `<Draw>` compiles down to this.
+---
+
+`<Path>` is the low-level path container: children must be `<Step>` nodes (at least 2) defining the move / line sequence. For everyday connections `<Draw>` is shorter; reach for `<Path>` when you need custom stroke + multi-segment polylines or different step kinds.
+
+## Usage
+
+```tsx
+import { Path, Step } from '@retikz/react';
+```
+
+```tsx
+<Path stroke="currentColor">
+  <Step kind="move" to="a" />
+  <Step kind="line" to="b" />
+</Path>
+```
+
+## Composition
+
+`<Path>` requires `<Step>` children (at least 2); if the first isn't `move`, the compiler coerces it to `move`:
+
+```tsx
+<Path>
+  <Step kind="move" to={...} />     {/* First: must be move */}
+  <Step kind="line" to={...} />     {/* Then any number of line / move */}
+  ...
+</Path>
+```
+
+## Examples
+
+### Polyline
+
+<ComponentPreview name="path-basic" />
+
+### Dashed
+
+<ComponentPreview name="path-dashed" />
+
+## API Reference
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `stroke` | `string` | `currentColor` | Stroke color |
+| `strokeWidth` | `number` | `1` | Stroke width |
+| `strokeDasharray` | `string` | — | SVG `stroke-dasharray` pattern |
+| `children` | `Array<<Step>>` | — | At least 2; if the first isn't `move`, the compiler coerces it to `move` |
+
+## Path vs Draw
+
+| | `<Draw>` | `<Path>` + `<Step>` |
+| --- | --- | --- |
+| Form | Single-line `way` array | Container + child nodes |
+| Expressiveness | Equivalent to Path (compile-expanded) | All Kernel capability |
+| Use when | 90% of connection cases | Custom step kinds, future extensions |
+
+`<Draw>` compiles down to `<Path>`; tutorials should lead with `<Draw>` — `<Path>` is for users who want the underlying construct.

@@ -1,0 +1,58 @@
+---
+title: Positioning
+description: Three position forms in retikz — Cartesian, polar, and node id reference — shared across `<Node>.position` and path targets.
+---
+
+Every "where" in retikz uses one position syntax: three interchangeable forms covering `<Node>.position`, `<Step>.to`, and `<Draw>.way` items.
+
+| Form | Type | Where |
+| --- | --- | --- |
+| Cartesian | `[x, y]` | Node position, path target |
+| Polar | `{ origin?, angle, radius }` | Node position, path target |
+| Node id | `'node-id'` | **Path target only** (Step.to / way item) |
+
+> Coordinate system: x grows right, y grows down (matches SVG / Canvas; opposite of math textbooks). Units are user units, not pixels — final physical size depends on `<Tikz>`'s `width` / `height` and viewBox.
+
+## Cartesian
+
+Direct `[x, y]` tuple.
+
+<ComponentPreview name="positioning-cartesian" />
+
+## Polar
+
+`{ origin?, angle, radius }`:
+
+| Field | Meaning |
+| --- | --- |
+| `origin` | Pole. Optional, defaults to `[0, 0]`; accepts node id string, Cartesian, **or a nested polar** (chained offset) |
+| `angle` | Degrees, counter-clockwise positive (TikZ convention) |
+| `radius` | Distance in user units |
+
+Six nodes around `O` at radius 80, every 60° from 0 to 300 — the canonical radial layout:
+
+<ComponentPreview name="positioning-polar" />
+
+`origin` can be **nested** — e.g. `{ origin: { origin: 'a', angle: 0, radius: 30 }, angle: 90, radius: 20 }` means "30 right of a, then 20 up". Chained polar is handy for radial / local offsets.
+
+## Node id reference (path target)
+
+`<Step>` / `<Draw>` targets also accept a **string** — referencing a node id inside the same `<Tikz>`:
+
+<ComponentPreview name="positioning-id-ref" />
+
+The actual line endpoints are computed by retikz automatically — see [Anchors](/core/concepts/anchors).
+
+## Forward-reference requirement
+
+String references and `origin: 'node-id'` both require the **referenced node to appear before the referrer** (in IR children source order). Referencing an undefined node fails compilation and the path is dropped.
+
+```tsx
+// ✅ b references a, a defined first
+<Node id="a" position={[0, 0]}>A</Node>
+<Node id="b" position={{ origin: 'a', angle: 0, radius: 50 }}>B</Node>
+
+// ❌ a references b, but b is after a
+<Node id="a" position={{ origin: 'b', angle: 0, radius: 50 }}>A</Node>
+<Node id="b" position={[0, 0]}>B</Node>
+```

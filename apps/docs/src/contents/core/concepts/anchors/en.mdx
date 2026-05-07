@@ -1,0 +1,37 @@
+---
+title: Anchors
+description: A rectangle node's 9 named anchors + the auto-pick-border behavior when paths reference a node by id.
+---
+
+Every rectangle `<Node>` has 9 named anchors (matching TikZ). In v0.1 alpha they **don't appear directly in the DSL** — when you write `<Draw way={['a', 'b']}>`, retikz auto-picks the appropriate border point.
+
+## The 9 anchors
+
+| Name | Position |
+| --- | --- |
+| `center` | Geometric center |
+| `north` / `south` / `east` / `west` | Mid-points of top / bottom / right / left edges |
+| `north-east` / `north-west` / `south-east` / `south-west` | The four corners |
+
+When a node has `rotate`, all 9 anchors rotate with it.
+
+## Auto border attachment
+
+When a path references a node by id (`<Step to="a">` or `<Draw way={['a', ...]}>`), retikz calls `boundaryPoint` at compile time: it casts a ray from the node center toward the neighbor step's direction and takes the intersection with the border.
+
+The 8 Draws below are all `[outerNode, 'Node']` — endpoints land near N / S / E / W / NE / NW / SE / SW respectively:
+
+<ComponentPreview name="anchors-auto-attach" hideCode />
+
+## `margin` gives lines breathing room
+
+With `<Node margin={n}>`: the border stays put, but path endpoints back off `n` user units. In multi-node flow charts, `margin={4}` is enough to keep lines from touching the border.
+
+## Explicit anchor syntax
+
+v0.1 alpha does **not** support `'a.north'`-style explicit anchor references — `boundaryPoint`'s auto-selection covers most connection scenarios. If you must lock to a specific anchor, workarounds:
+
+1. Use polar `{ origin: 'a', angle: 0, radius: 0 }` (lands on `east`) and friends
+2. Compute the anchor position manually with Cartesian coordinates
+
+A dedicated syntax is on the roadmap.

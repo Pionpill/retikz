@@ -1,0 +1,64 @@
+---
+title: Draw
+description: Sugar 组件——way 数组按 id / 笛卡尔 / 极坐标三种形态串点，编译期展开为 Path + Step。
+---
+
+`<Draw>` 是 90% 用户连线的首选。`way` 是一个目标点数组，依次串成折线；编译期它会展开为一组等价的 Kernel `<Path>` + `<Step>`，所以 `<Draw>` 不引入任何 Kernel 表达不了的能力。
+
+## 用法
+
+```tsx
+import { Draw } from '@retikz/react';
+```
+
+```tsx
+<Draw way={['a', 'b']} />
+```
+
+## 例子
+
+### 基础连线
+
+<ComponentPreview name="draw-basic" />
+
+### way 的 3 种 item
+
+`way` 数组里的每一项都接受三种形态（与 `<Step>.to` 一致）：
+
+| 形态 | 例 | 含义 |
+| --- | --- | --- |
+| 节点 id | `'a'` | 引用同一 Tikz 内的 Node；端点自动贴 border |
+| 笛卡尔 | `[120, 0]` | 直接给坐标 |
+| 极坐标 | `{ origin: 'a', angle: 60, radius: 80 }` | 极坐标（详见 [定位](/core/concepts/positioning)） |
+
+下面三条 Draw 分别用 id、笛卡尔、极坐标作为终点：
+
+<ComponentPreview name="draw-way-types" />
+
+### 样式
+
+`stroke` / `strokeWidth` / `strokeDasharray` 与 `<Path>` 完全一致：
+
+<ComponentPreview name="draw-dashed" />
+
+## API 参考
+
+| 属性 | 类型 | 默认值 | 描述 |
+| --- | --- | --- | --- |
+| `way` | `Array<WayItem>` | — | 至少 2 个点；首个 = `move`，之后默认 `line` |
+| `stroke` | `string` | `currentColor` | 描边色 |
+| `strokeWidth` | `number` | `1` | 描边宽度 |
+| `strokeDasharray` | `string` | — | SVG `stroke-dasharray` 模式（如 `"4 2"`） |
+
+## 与 Path 的关系
+
+`<Draw way={['a', 'b']}>` 编译期等价于：
+
+```tsx
+<Path>
+  <Step kind="move" to="a" />
+  <Step kind="line" to="b" />
+</Path>
+```
+
+需要更精细的控制时，回到 `<Path>` + `<Step>`。

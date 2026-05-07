@@ -1,0 +1,37 @@
+---
+title: 锚点
+description: 节点矩形的 9 个具名 anchor + path 用 id 引用节点时自动选边界点的行为。
+---
+
+每个矩形 `<Node>` 在几何上有 9 个具名锚点（与 TikZ 同名）。当前 v0.1 alpha 里它们**不直接出现在 DSL** 里——你写 `<Draw way={['a', 'b']}>` 时 retikz 自动选最合适的边界点连过去。
+
+## 9 个 anchor
+
+| 名 | 位置 |
+| --- | --- |
+| `center` | 矩形几何中心 |
+| `north` / `south` / `east` / `west` | 上 / 下 / 右 / 左 边的中点 |
+| `north-east` / `north-west` / `south-east` / `south-west` | 4 个角 |
+
+考虑节点 `rotate` 时 9 个锚点跟着旋转。
+
+## 自动贴边界
+
+path 用字符串 id 引用节点时（`<Step to="a">` 或 `<Draw way={['a', ...]}>`），retikz 在 compile 阶段调 `boundaryPoint`：从节点中心向"邻居 step 方向"画射线，取与 border 的交点作为线段端点。
+
+下面 8 条 Draw 都是 `[外圈节点, 'Node']`——结果分别贴到中心节点的 N / S / E / W / NE / NW / SE / SW 边界附近：
+
+<ComponentPreview name="anchors-auto-attach" hideCode />
+
+## margin 让线"留呼吸"
+
+`<Node margin={n}>`：border 不变，path 端点向外推 `n` user units。在多节点流程图里，`margin={4}` 就能让所有连线不顶死 border。
+
+## 显式 anchor 语法
+
+v0.1 alpha **未支持** `'a.north'` 形式的显式 anchor 引用——常规连线场景下 `boundaryPoint` 自动选边界已经够用。如果你确实要锁死某个 anchor，临时方法：
+
+1. 用极坐标 `{ origin: 'a', angle: 0, radius: 0 }`（贴 `east`）等组合
+2. 用笛卡尔坐标手动算 anchor 位置
+
+这块未来会加专门的语法。
