@@ -103,7 +103,7 @@ export const DocPage: FC<DocPageProps> = props => {
       >
         <div
           className={cn(
-            'sticky top-18 transition-all duration-300 ease-out',
+            'sticky top-20 transition-all duration-300 ease-out',
             tocOpen ? 'translate-x-0' : 'pointer-events-none translate-x-2',
           )}
         >
