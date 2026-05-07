@@ -16,7 +16,7 @@ export const SceneSchema = z
     version: z
       .literal(1)
       .describe(
-        'IR major version number; bump only on breaking schema changes (see docs/architecture/DESIGN.md)',
+        'IR major version number; bump only on breaking schema changes',
       ),
     type: z
       .literal('scene')
@@ -34,5 +34,5 @@ export const SceneSchema = z
 /** retikz IR 顶层 Scene——可序列化 JSON 形式的绘制描述 */
 export type IR = z.infer<typeof SceneSchema>;
 
-/** IR 当前主版本号；详见 docs/architecture/DESIGN.md §4.3 与版本规则备忘 */
+/** IR 当前主版本号；只在 schema 出现破坏性变更时递增 */
 export const CURRENT_IR_VERSION = 1 as const;

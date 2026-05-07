@@ -1,8 +1,7 @@
 # @retikz/core 工作指南
 
 > 本文档是 `@retikz/core` 包内特有的规范。
-> - 项目通用规则（commit / JSDoc / IR schema 风格 / 数组写 `Array<T>` 等）见根 [`AGENTS.md`](../../AGENTS.md)
-> - 架构设计见 [`docs/DESIGN.md`](../../docs/architecture/DESIGN.md)
+> 项目通用规则（commit / JSDoc / IR schema 风格 / 数组写 `Array<T>` 等）见根 [`AGENTS.md`](../../AGENTS.md)。
 
 ---
 
@@ -64,7 +63,6 @@
 - `ScenePrimitive` 是矢量图形的最大公约子集
   - 禁止 SVG-only 特性（`<filter>` / `<marker>` / `<defs>` 共享）
   - 禁止 Canvas-only 特性（`getImageData` / 复杂合成模式）
-  - 详见 [`docs/DESIGN.md`](../../docs/architecture/DESIGN.md) §4.4
 - **文字必须在 Scene 编译完成时已度量好**——`TextPrim.measuredWidth` / `measuredHeight` 都填好；下游 renderer 直接信任
 - 度量函数通过 `CompileOptions.measureText` **依赖注入**；不传走 fallback
 - `compileToScene` **必须保持纯函数**：相同 IR + 相同 options → 完全相同的 Scene；禁止 `Math.random()` / `Date.now()` / module-level mutable state
