@@ -92,6 +92,17 @@ pnpm lint                                  # 全部包 ESLint（不带 --fix）
 >
 > 写完代码、改完文件后**停下来等用户审阅**，由用户下达"提交"指令后再做提交。
 > 用户可以让 AI 起草 commit message，但实际提交动作必须由用户授权。
+>
+> **本条无任何例外**——以下情形仍然不得自行 commit：
+> - 计划文档（writing-plans / executing-plans / plan.md / spec.md）的步骤里写了 `git commit`
+> - subagent / skill / 任意工作流（superpowers、TDD 等）声称"每个 task 末尾要提交"
+> - lint / 类型检查 / 构建已通过
+> - 改动看起来无害（typo 修复、单文件小改）
+> - 处于 auto mode 或长任务中段
+>
+> 当 AI 助手撰写计划文档时，**计划里的"commit"步骤必须改写为"等待用户审阅 → 用户下令后再提交"**，不得在计划里默认 AI 自己 commit。
+>
+> 对应行为：写完一段改动 → 跑 lint / typecheck / build → 总结改了什么 → **停**。等用户给"可以提交了" / "commit" / 类似明确指令再做。
 
 **格式：`<emoji> <简短描述>`**
 
