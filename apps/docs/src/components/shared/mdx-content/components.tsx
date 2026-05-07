@@ -86,19 +86,28 @@ const Code: FC<CodeProps> = ({ className, children, showLineNumbers, ...rest }) 
 
 export const mdxComponents: MDXComponents = {
   h1: ({ className, ...props }) => (
-    <h1 className={cn('mt-2 scroll-m-28 text-3xl font-bold tracking-tight', className)} {...props} />
+    <h1 className={cn('mt-2 scroll-m-28 font-heading text-3xl font-bold tracking-tight', className)} {...props} />
   ),
   h2: ({ className, ...props }) => (
     <h2
-      className={cn('mt-10 scroll-m-28 text-xl font-medium tracking-tight first:mt-0 lg:mt-12', className)}
+      className={cn(
+        'mt-10 scroll-m-28 font-heading text-xl font-medium tracking-tight first:mt-0 lg:mt-12 [&+h3]:mt-6! [&+p]:mt-4! *:[code]:text-xl',
+        className,
+      )}
       {...props}
     />
   ),
   h3: ({ className, ...props }) => (
-    <h3 className={cn('mt-12 scroll-m-28 text-lg font-medium tracking-tight', className)} {...props} />
+    <h3
+      className={cn(
+        'mt-12 scroll-m-28 font-heading text-lg font-medium tracking-tight [&+p]:mt-4! *:[code]:text-xl',
+        className,
+      )}
+      {...props}
+    />
   ),
   h4: ({ className, ...props }) => (
-    <h4 className={cn('mt-8 scroll-m-28 text-base font-medium tracking-tight', className)} {...props} />
+    <h4 className={cn('mt-8 scroll-m-28 font-heading text-base font-medium tracking-tight', className)} {...props} />
   ),
   h5: ({ className, ...props }) => (
     <h5 className={cn('mt-8 scroll-m-28 text-base font-medium tracking-tight', className)} {...props} />
