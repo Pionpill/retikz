@@ -41,11 +41,7 @@ const A: FC<ComponentPropsWithoutRef<'a'>> = ({ href, className, children, ...re
 const linkedCardClass =
   'flex w-full flex-col items-center rounded-xl bg-muted p-6 text-foreground no-underline transition-colors hover:bg-muted/80 sm:p-10';
 
-const LinkedCard: FC<{ className?: string; href: string; children?: ReactNode }> = ({
-  className,
-  href,
-  children,
-}) => {
+const LinkedCard: FC<{ className?: string; href: string; children?: ReactNode }> = ({ className, href, children }) => {
   if (/^https?:\/\//i.test(href)) {
     return (
       <a href={href} target="_blank" rel="noopener noreferrer" className={cn(linkedCardClass, className)}>
