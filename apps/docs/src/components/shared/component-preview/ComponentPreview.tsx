@@ -2,6 +2,7 @@ import { JsonIcon, ReactIcon } from '@/components/icons';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
+import { useComponentPreviewStore } from '@/store/useComponentPreviewStore';
 import type { IR } from '@retikz/core';
 import { convertReactNodeToIR } from '@retikz/react';
 import { Check, ChevronsDownUp, ChevronsUpDown, Copy, X } from 'lucide-react';
@@ -73,12 +74,23 @@ export type ComponentPreviewProps = {
 /** MDX 内的"渲染 + 源码"演示卡，下半段对齐 shadcn v4 的 View Code 一次性切换 */
 export const ComponentPreview: FC<ComponentPreviewProps> = props => {
   const { name, align = 'center', componentClassName, hideCode = false } = props;
-  // ALL hooks 必须无条件先于 early return 调用
-  const [isCodeVisible, setIsCodeVisible] = useState(false);
+  // ALL hooks 必须无条件先于 early return 调用。
+  // 局部状态用 `boolean | undefined`：undefined 表示「用户尚未对此卡单独操作过」，跟随全局默认；
+  // 一旦点过 View Code / X / 展开，本地选择就胜过全局，后续切换全局开关不会再改写它。
+  const [localIsCodeVisible, setLocalIsCodeVisible] = useState<boolean | undefined>(undefined);
   const [view, setView] = useState<SourceView>('react');
-  const [isExpanded, setIsExpanded] = useState(false);
+  const [localIsExpanded, setLocalIsExpanded] = useState<boolean | undefined>(undefined);
   const [copied, setCopied] = useState(false);
   const timerRef = useRef<number | null>(null);
+
+  // 全局默认（仅在该卡 local 仍为 undefined 时生效）：
+  // - isExpand 启用 → 默认揭示并展开
+  // - hideCode 启用 → 默认收回到 View Code 占位（与卡的初始默认一致）
+  // - 二者同启用时让 hideCode 胜出（更克制；isExpand 若想覆盖须用户单卡点开）
+  const globalHideCode = useComponentPreviewStore(s => s.hideCode);
+  const globalIsExpand = useComponentPreviewStore(s => s.isExpand);
+  const isCodeVisible = localIsCodeVisible ?? globalHideCode;
+  const isExpanded = localIsExpanded ?? globalIsExpand;
 
   useEffect(() => {
     return () => {
@@ -150,10 +162,10 @@ export const ComponentPreview: FC<ComponentPreviewProps> = props => {
     timerRef.current = window.setTimeout(() => setCopied(false), 3000);
   };
 
-  // 折叠源码区回到 View Code 占位状态：重置所有源码相关 state
+  // 折叠源码区回到 View Code 占位状态：把局部状态显式置 false（覆盖任何全局默认）
   const handleHideAll = () => {
-    setIsCodeVisible(false);
-    setIsExpanded(false);
+    setLocalIsCodeVisible(false);
+    setLocalIsExpanded(false);
     setView('react');
   };
 
@@ -162,98 +174,100 @@ export const ComponentPreview: FC<ComponentPreviewProps> = props => {
       <div className={cn('flex h-72 w-full justify-center p-10', alignClass[align], componentClassName)}>
         <Component />
       </div>
-      {hideCode ? null : <div className="relative overflow-hidden border-t bg-muted/50 text-sm">
-        {showFull ? (
-          <>
-            <div className="flex items-center justify-between p-1 px-2">
-              <div className="flex items-center gap-1">
-                <Button
-                  type="button"
-                  size="sm"
-                  variant={view === 'react' ? 'outline' : 'ghost'}
-                  className={view === 'react' ? '' : 'border border-transparent'}
-                  aria-pressed={view === 'react'}
-                  aria-label="React source"
-                  onClick={() => setView('react')}
-                >
-                  <ReactIcon className="size-3.5" />
-                  React
-                </Button>
-                <Button
-                  type="button"
-                  size="sm"
-                  variant={view === 'ir' ? 'outline' : 'ghost'}
-                  className={view === 'ir' ? '' : 'border border-transparent'}
-                  aria-pressed={view === 'ir'}
-                  aria-label="IR JSON"
-                  onClick={() => setView('ir')}
-                >
-                  <JsonIcon className="size-3.5" />
-                  IR
-                </Button>
-              </div>
-              <div className="flex items-center gap-1">
-                <Button
-                  type="button"
-                  size="icon"
-                  variant="ghost"
-                  aria-label={copied ? 'Copied' : 'Copy'}
-                  className="size-7 cursor-pointer rounded-sm text-muted-foreground"
-                  onClick={handleCopy}
-                >
-                  {copied ? <Check className="size-4" /> : <Copy className="size-4" />}
-                </Button>
-                {displayedLineCount > COLLAPSE_THRESHOLD_LINES && (
+      {hideCode ? null : (
+        <div className="relative overflow-hidden border-t bg-muted/50 text-sm">
+          {showFull ? (
+            <>
+              <div className="flex items-center justify-between p-1 px-2">
+                <div className="flex items-center gap-1">
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant={view === 'react' ? 'outline' : 'ghost'}
+                    className={view === 'react' ? '' : 'border border-transparent'}
+                    aria-pressed={view === 'react'}
+                    aria-label="React source"
+                    onClick={() => setView('react')}
+                  >
+                    <ReactIcon className="size-3.5" />
+                    React
+                  </Button>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant={view === 'ir' ? 'outline' : 'ghost'}
+                    className={view === 'ir' ? '' : 'border border-transparent'}
+                    aria-pressed={view === 'ir'}
+                    aria-label="IR JSON"
+                    onClick={() => setView('ir')}
+                  >
+                    <JsonIcon className="size-3.5" />
+                    IR
+                  </Button>
+                </div>
+                <div className="flex items-center gap-1">
                   <Button
                     type="button"
                     size="icon"
                     variant="ghost"
-                    aria-label={isExpanded ? 'Collapse' : 'Expand'}
+                    aria-label={copied ? 'Copied' : 'Copy'}
                     className="size-7 cursor-pointer rounded-sm text-muted-foreground"
-                    onClick={() => setIsExpanded(prev => !prev)}
+                    onClick={handleCopy}
                   >
-                    {isExpanded ? <ChevronsDownUp className="size-4" /> : <ChevronsUpDown className="size-4" />}
+                    {copied ? <Check className="size-4" /> : <Copy className="size-4" />}
                   </Button>
-                )}
+                  {displayedLineCount > COLLAPSE_THRESHOLD_LINES && (
+                    <Button
+                      type="button"
+                      size="icon"
+                      variant="ghost"
+                      aria-label={isExpanded ? 'Collapse' : 'Expand'}
+                      className="size-7 cursor-pointer rounded-sm text-muted-foreground"
+                      onClick={() => setLocalIsExpanded(!isExpanded)}
+                    >
+                      {isExpanded ? <ChevronsDownUp className="size-4" /> : <ChevronsUpDown className="size-4" />}
+                    </Button>
+                  )}
+                  <Button
+                    type="button"
+                    size="icon"
+                    variant="ghost"
+                    aria-label="Hide source"
+                    className="size-7 cursor-pointer rounded-sm text-muted-foreground"
+                    onClick={handleHideAll}
+                  >
+                    <X className="size-4" />
+                  </Button>
+                </div>
+              </div>
+              <Separator className="opacity-40" />
+            </>
+          ) : null}
+          <div className={cn('relative', showFull && !isExpanded && COLLAPSED_CODE_MAX_H)}>
+            <HighlightedCode lang={displayedLang} code={displayedCode} showLineNumbers={displayedLineCount >= 10} />
+            {!showFull && (
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div
+                  className="absolute inset-0"
+                  style={{
+                    background:
+                      'linear-gradient(to top, var(--muted), color-mix(in oklab, var(--muted) 60%, transparent), transparent)',
+                  }}
+                />
                 <Button
                   type="button"
-                  size="icon"
-                  variant="ghost"
-                  aria-label="Hide source"
-                  className="size-7 cursor-pointer rounded-sm text-muted-foreground"
-                  onClick={handleHideAll}
+                  size="sm"
+                  variant="outline"
+                  onClick={() => setLocalIsCodeVisible(true)}
+                  className="relative z-10 cursor-pointer rounded-lg bg-background text-foreground shadow-none hover:bg-muted dark:bg-background dark:text-foreground dark:hover:bg-muted font-medium"
                 >
-                  <X className="size-4" />
+                  View Code
                 </Button>
               </div>
-            </div>
-            <Separator className="opacity-40" />
-          </>
-        ) : null}
-        <div className={cn('relative', showFull && !isExpanded && COLLAPSED_CODE_MAX_H)}>
-          <HighlightedCode lang={displayedLang} code={displayedCode} showLineNumbers={displayedLineCount >= 10} />
-          {!showFull && (
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div
-                className="absolute inset-0"
-                style={{
-                  background:
-                    'linear-gradient(to top, var(--muted), color-mix(in oklab, var(--muted) 60%, transparent), transparent)',
-                }}
-              />
-              <Button
-                type="button"
-                size="sm"
-                variant="outline"
-                onClick={() => setIsCodeVisible(true)}
-                className="relative z-10 cursor-pointer rounded-lg bg-background text-foreground shadow-none hover:bg-muted dark:bg-background dark:text-foreground dark:hover:bg-muted font-medium"
-              >
-                View Code
-              </Button>
-            </div>
-          )}
+            )}
+          </div>
         </div>
-      </div>}
+      )}
     </div>
   );
 };

@@ -3,6 +3,7 @@ import { type FC, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router';
 
+import { Shortcut } from '@/components/shared/shortcut';
 import { Button } from '@/components/ui/button';
 import {
   CommandDialog,
@@ -119,9 +120,9 @@ export const DocsSearch: FC = () => {
       >
         <Search className="size-3.5 shrink-0" />
         <span className="hidden truncate sm:inline-flex">{t('common.search')}</span>
-        <kbd className="pointer-events-none absolute top-1/2 right-1.5 hidden h-5 -translate-y-1/2 items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground sm:flex">
-          <span className="text-xs">⌘</span>K
-        </kbd>
+        <span className="pointer-events-none absolute top-1/2 right-1.5 hidden -translate-y-1/2 sm:flex">
+          <Shortcut keys={['mod', 'K']} />
+        </span>
       </Button>
       <CommandDialog
         open={open}

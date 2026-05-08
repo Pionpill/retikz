@@ -17,6 +17,9 @@ export const zh = {
     brandTagline: 'ReTikZ 模块切换',
     layoutDefault: '默认布局',
     layoutCentered: '居中布局',
+    more: '更多',
+    groupResources: '资源',
+    tikzDocs: 'TikZ 官方文档',
   },
   core: {
     label: '核心',
@@ -53,6 +56,14 @@ export const zh = {
     linkCopied: '成功复制网页链接',
     showOutline: '显示文章目录',
     hideOutline: '隐藏文章目录',
+  },
+  preview: {
+    groupLabel: '组件演示',
+    hideAllCode: '隐藏所有代码',
+    expandAllCode: '展开所有代码',
+  },
+  view: {
+    groupLabel: '视图',
   },
   page: {
     copyPage: '复制页面',

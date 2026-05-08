@@ -9,16 +9,14 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { ArrowLeft, ArrowRight, ChevronDown, Copy, FileCode, Plug } from 'lucide-react';
+import { buildAiUrl, buildDocPageLinks } from '@/lib/docLinks';
+import { ArrowLeft, ArrowRight, ArrowUpRight, ChevronDown, Copy, FileCode, Plug } from 'lucide-react';
 import { type FC, type ReactNode, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router';
 import { toast } from 'sonner';
-import { docPathSegments, useDocLocation } from './docLocation';
+import { useDocLocation } from './docLocation';
 import { usePageNavigation } from './usePageNavigation';
-
-const REPO = 'Pionpill/retikz';
-const BRANCH = 'main';
 
 export type DocPageActionsProps = {
   /** 当前页面 mdx 源码（用于"复制 markdown"） */
@@ -27,33 +25,20 @@ export type DocPageActionsProps = {
 
 /**
  * 双行菜单项正文：bordered 图标盒（size-8 = 32px，内置 size-5 图标 → 单边 6px 边距）+ 标题 + 灰字描述。
- * 右侧 gap-0：title/desc 各自 line-height 已留有视觉间距，无需额外 gap。
+ * 标题尾随 `↗` 标识外链跳转（紧贴 label，不推到行尾）。
  */
 const MenuItemBody: FC<{ icon: ReactNode; title: string; desc: string }> = ({ icon, title, desc }) => (
   <>
     <span className="flex size-8 shrink-0 items-center justify-center rounded-md border bg-background">{icon}</span>
     <span className="flex min-w-0 flex-col">
-      <span className="text-sm leading-tight">{title}</span>
+      <span className="inline-flex items-center gap-1 text-sm leading-tight">
+        {title}
+        <ArrowUpRight className="size-3.5 shrink-0 text-muted-foreground" />
+      </span>
       <span className="text-xs leading-snug text-muted-foreground">{desc}</span>
     </span>
   </>
 );
-
-/** 把 contents 路径拼好（含 lang），用于 GitHub blob / raw URL */
-const buildContentRelativePath = (segments: Array<string>, lang: string): string =>
-  `apps/docs/src/contents/${segments.join('/')}/${lang}.mdx`;
-
-const buildBlobUrl = (relPath: string) => `https://github.com/${REPO}/blob/${BRANCH}/${relPath}`;
-const buildRawUrl = (relPath: string) => `https://raw.githubusercontent.com/${REPO}/${BRANCH}/${relPath}`;
-
-/** AI 站点的 prompt 直传 URL，按当前界面语言出双语 prompt */
-const buildAiUrl = (base: string, rawUrl: string, lang: string): string => {
-  const prompt =
-    lang === 'zh'
-      ? `请阅读这份 retikz 文档并帮我解答相关问题：${rawUrl}`
-      : `Please read this retikz documentation and help with related questions: ${rawUrl}`;
-  return `${base}?q=${encodeURIComponent(prompt)}`;
-};
 
 export const DocPageActions: FC<DocPageActionsProps> = ({ source }) => {
   const { t, i18n } = useTranslation();
@@ -62,9 +47,9 @@ export const DocPageActions: FC<DocPageActionsProps> = ({ source }) => {
   const navigate = useNavigate();
   const { prev, next } = usePageNavigation();
 
-  const relPath = loc ? buildContentRelativePath(docPathSegments(loc), lang) : '';
-  const blobUrl = relPath ? buildBlobUrl(relPath) : '#';
-  const rawUrl = relPath ? buildRawUrl(relPath) : '';
+  const links = loc ? buildDocPageLinks(loc, lang) : null;
+  const blobUrl = links?.blobUrl ?? '#';
+  const rawUrl = links?.rawUrl ?? '';
 
   const handleCopyMarkdown = useCallback(() => {
     void navigator.clipboard.writeText(source);

@@ -10,6 +10,8 @@ import { getSectionsByModule } from './data/sections';
 import AppHeader from './layout/header/AppHeader';
 import { DocLayout } from './layout/DocLayout';
 import { DocPage } from './pages/doc-page';
+import { useComponentPreviewStore } from './store/useComponentPreviewStore';
+import { useLayoutStore } from './store/useLayoutStore';
 import { useTocStore } from './store/useTocStore';
 
 /** section + 它的首页 → 完整 URL（无分组时跳过 sectionId 段） */
@@ -58,11 +60,21 @@ const TwoSegResolver = () => {
   return <Navigate to={`/${moduleId}`} replace />;
 };
 
-/** 全局快捷键：Ctrl+L 复制当前 URL；Ctrl+Alt+B 切换 TOC 显隐 */
+/**
+ * 全局快捷键：
+ * - Ctrl+L 复制当前 URL
+ * - Ctrl+Alt+B 切换 TOC 显隐
+ * - Ctrl+Alt+M 切换布局（默认 ↔ 居中）
+ * - Ctrl+Alt+H 切换隐藏所有 ComponentPreview 代码
+ * - Ctrl+Alt+E 切换强制展开所有 ComponentPreview 代码
+ */
 const useDocShortcuts = () => {
   const { t } = useTranslation();
   const tocOpen = useTocStore(state => state.tocOpen);
   const setTocOpen = useTocStore(state => state.setTocOpen);
+  const toggleLayout = useLayoutStore(s => s.toggleLayout);
+  const togglePreviewHideCode = useComponentPreviewStore(s => s.toggleHideCode);
+  const togglePreviewIsExpand = useComponentPreviewStore(s => s.toggleIsExpand);
 
   const handleCopyLink = useCallback(() => {
     void navigator.clipboard.writeText(window.location.href);
@@ -75,20 +87,38 @@ const useDocShortcuts = () => {
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
+      // Mac 走 ⌘（metaKey），其它平台走 Ctrl —— 与 UI 上 Shortcut 渲染的 mod 含义保持一致
+      const mod = event.metaKey || event.ctrlKey;
       const key = event.key.toLowerCase();
-      if (event.ctrlKey && !event.altKey && !event.shiftKey && key === 'l') {
+      if (mod && !event.altKey && !event.shiftKey && key === 'l') {
         event.preventDefault();
         handleCopyLink();
         return;
       }
-      if (event.ctrlKey && event.altKey && !event.shiftKey && key === 'b') {
-        event.preventDefault();
-        handleToggleToc();
+      if (mod && event.altKey && !event.shiftKey) {
+        switch (key) {
+          case 'b':
+            event.preventDefault();
+            handleToggleToc();
+            return;
+          case 'm':
+            event.preventDefault();
+            toggleLayout();
+            return;
+          case 'h':
+            event.preventDefault();
+            togglePreviewHideCode();
+            return;
+          case 'e':
+            event.preventDefault();
+            togglePreviewIsExpand();
+            return;
+        }
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [handleCopyLink, handleToggleToc]);
+  }, [handleCopyLink, handleToggleToc, toggleLayout, togglePreviewHideCode, togglePreviewIsExpand]);
 };
 
 export const App = () => {

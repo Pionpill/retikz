@@ -19,6 +19,9 @@ export const en: I18nResources = {
     brandTagline: 'ReTikZ module switcher',
     layoutDefault: 'Default layout',
     layoutCentered: 'Centered layout',
+    more: 'More',
+    groupResources: 'Resources',
+    tikzDocs: 'TikZ Docs',
   },
   core: {
     label: 'Core',
@@ -55,6 +58,14 @@ export const en: I18nResources = {
     linkCopied: 'Link copied',
     showOutline: 'Show outline',
     hideOutline: 'Hide outline',
+  },
+  preview: {
+    groupLabel: 'Component Preview',
+    hideAllCode: 'Hide all code',
+    expandAllCode: 'Expand all code',
+  },
+  view: {
+    groupLabel: 'View',
   },
   page: {
     copyPage: 'Copy Page',
