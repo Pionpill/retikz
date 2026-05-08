@@ -96,6 +96,8 @@ const buildPath = (props: Record<string, unknown>): IRChild => ({
     | 'diamond'
     | 'circle'
     | undefined,
+  fill: props.fill as string | undefined,
+  fillRule: props.fillRule as 'nonzero' | 'evenodd' | undefined,
   children: readPathChildren(props.children as ReactNode),
 });
 

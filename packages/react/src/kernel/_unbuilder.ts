@@ -49,6 +49,8 @@ const childToElement = (child: IRChild, key: number): ReactNode => {
         strokeDasharray: child.strokeDasharray,
         arrow: child.arrow,
         arrowShape: child.arrowShape,
+        fill: child.fill,
+        fillRule: child.fillRule,
         children: child.children.map((s, j) => stepToElement(s, j)),
       });
     default:

@@ -23,6 +23,10 @@ export type DrawProps = {
    * 箭头形状。默认 `'normal'`。其他：`'open'` / `'stealth'` / `'diamond'` / `'circle'`。
    */
   arrowShape?: IRPath['arrowShape'];
+  /** 闭合区域填充色，省略 = 不填充。配合 way 末尾的 `DrawWay.cycle` 画填充形状 */
+  fill?: IRPath['fill'];
+  /** SVG fill-rule：`'nonzero'`（默认）/ `'evenodd'` */
+  fillRule?: IRPath['fillRule'];
 };
 
 /**
@@ -34,7 +38,7 @@ export type DrawProps = {
  * （useState / useMemo / useEffect 等会抛 "Invalid hook call"）。
  */
 export const Draw: FC<DrawProps> = props => {
-  const { way, stroke, strokeWidth, strokeDasharray, arrow, arrowShape } = props;
+  const { way, stroke, strokeWidth, strokeDasharray, arrow, arrowShape, fill, fillRule } = props;
   const steps = parseWay(way);
 
   return (
@@ -44,6 +48,8 @@ export const Draw: FC<DrawProps> = props => {
       strokeDasharray={strokeDasharray}
       arrow={arrow}
       arrowShape={arrowShape}
+      fill={fill}
+      fillRule={fillRule}
     >
       {steps.map((s, i) => {
         if (s.kind === 'cycle') return <Step key={i} kind="cycle" />;

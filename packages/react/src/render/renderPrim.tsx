@@ -112,6 +112,7 @@ export const renderPrim = (
           key={key}
           d={p.d}
           fill={p.fill}
+          fillRule={p.fillRule}
           stroke={p.stroke}
           strokeWidth={p.strokeWidth}
           strokeDasharray={p.strokeDasharray}

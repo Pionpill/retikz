@@ -77,6 +77,12 @@ The `arrow` prop controls path-end arrows: `'->'` / `'<-'` / `'<->'` / `'none'` 
 
 <ComponentPreview name="draw-arrow" />
 
+### Filling
+
+`fill` colors the closed region (default `'none'` — stroke only); `fillRule` controls how nested sub-paths fill. Pairs with `DrawWay.cycle` at the end of `way` to draw filled shapes:
+
+<ComponentPreview name="draw-fill" />
+
 ### Styling
 
 `stroke` / `strokeWidth` / `strokeDasharray` match `<Path>`:

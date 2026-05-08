@@ -247,7 +247,9 @@ export const emitPathPrimitive = (
   const baseProps = {
     stroke: path.stroke ?? 'currentColor',
     strokeWidth,
-    fill: 'none' as const,
+    // path.fill 缺省 = 'none'（仅描边）；用户传具体颜色即填充。配合 cycle 闭合可画填充形状
+    fill: path.fill ?? 'none',
+    fillRule: path.fillRule,
     strokeDasharray: path.strokeDasharray,
   };
 

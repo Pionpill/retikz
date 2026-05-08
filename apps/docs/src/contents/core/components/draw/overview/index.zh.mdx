@@ -77,6 +77,12 @@ way 末尾放 `DrawWay.cycle` 把最后一段闭合回 way 第一项——与 Ti
 
 <ComponentPreview name="draw-arrow" />
 
+### 填充
+
+`fill` 给闭合区域填色（缺省 `'none'` = 仅描边），`fillRule` 控制嵌套子路径填充规则。配合 way 末尾的 `DrawWay.cycle` 画填充几何形状：
+
+<ComponentPreview name="draw-fill" />
+
 ### 样式
 
 `stroke` / `strokeWidth` / `strokeDasharray` 与 `<Path>` 完全一致：

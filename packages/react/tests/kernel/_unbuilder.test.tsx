@@ -141,6 +141,27 @@ describe('convertIRToReactNode', () => {
     expect(back).toEqual(ir);
   });
 
+  it("Path fill / fillRule round-trip", () => {
+    const ir: IR = {
+      version: CURRENT_IR_VERSION,
+      type: 'scene',
+      children: [
+        {
+          type: 'path',
+          fill: '#3b82f6',
+          fillRule: 'evenodd',
+          children: [
+            { type: 'step', kind: 'move', to: [0, 0] },
+            { type: 'step', kind: 'line', to: [10, 10] },
+            { type: 'step', kind: 'cycle' },
+          ],
+        },
+      ],
+    };
+    const back = buildIR(convertIRToReactNode(ir));
+    expect(back).toEqual(ir);
+  });
+
   it("Node shape round-trip：4 种 shape 字段透传保留", () => {
     for (const shape of ['rectangle', 'circle', 'ellipse', 'diamond'] as const) {
       const ir: IR = {

@@ -35,6 +35,18 @@ export const PathSchema = z
       .describe(
         'Arrow tip shape; default `normal` (filled triangle). Other values: `open` (hollow triangle), `stealth` (sharp barb), `diamond`, `circle`.',
       ),
+    fill: z
+      .string()
+      .optional()
+      .describe(
+        'Fill color of the closed region; any CSS color. Omitted = no fill (stroke only). Pairs with `cycle` step for filled shapes.',
+      ),
+    fillRule: z
+      .enum(['nonzero', 'evenodd'])
+      .optional()
+      .describe(
+        'How self-intersecting / nested sub-paths are filled. `nonzero` (default, SVG default) winds-by-direction; `evenodd` toggles fill on each crossing — useful for ring / donut shapes.',
+      ),
     children: z
       .array(StepSchema)
       .min(2)

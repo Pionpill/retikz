@@ -20,6 +20,10 @@ export type PathProps = {
    * `'stealth'` 倒钩、`'diamond'` 菱形、`'circle'` 圆点。
    */
   arrowShape?: IRPath['arrowShape'];
+  /** 闭合区域填充色，CSS 颜色字符串；省略 = 不填充（仅描边）。配合 cycle step 画填充形状 */
+  fill?: IRPath['fill'];
+  /** SVG fill-rule：`'nonzero'`（默认）/ `'evenodd'`（环形 / 孔洞） */
+  fillRule?: IRPath['fillRule'];
   /** 应当全部是 <Step /> */
   children: ReactNode;
 };
