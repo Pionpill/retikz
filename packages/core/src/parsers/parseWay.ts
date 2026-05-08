@@ -107,12 +107,12 @@ export const parseWay = (way: WayDSL): Array<IRStep> => {
       continue;
     }
     if (isWayVia(item)) {
-      const next = way[i + 1];
-      if (next === undefined) {
+      if (i + 1 >= way.length) {
         throw new Error(
           `parseWay: via operator '${item}' at end of way must be followed by a target`,
         );
       }
+      const next = way[i + 1];
       if (isWayCycle(next) || isWayVia(next)) {
         throw new Error(
           `parseWay: via operator '${item}' must be followed by a target, got '${String(next)}'`,

@@ -248,7 +248,7 @@ describe("compile path: 'cycle' 闭合", () => {
     );
   });
 
-  it('cycle 与节点 ref 配合：闭合不影响其他段端点贴边', () => {
+  it('cycle 与节点 ref 配合：每段独立 clip，cycle 段不能用 Z（闭合点与 lastEnd 不同）', () => {
     const ir: IR = {
       version: 1,
       type: 'scene',
@@ -268,8 +268,66 @@ describe("compile path: 'cycle' 闭合", () => {
       ],
     };
     const d = findPathPrim(compileToScene(ir).primitives).d;
-    expect(d.endsWith(' Z')).toBe(true);
-    expect(d.match(/[MLZ]/g)).toEqual(['M', 'L', 'L', 'Z']);
+    // 三段独立：A→B、B→C、C→A，每段都 M 开头；不出现 Z
+    expect(d).not.toContain('Z');
+    expect(d.match(/M/g) ?? []).toHaveLength(3);
+  });
+});
+
+describe('compile path: 多节点连线段独立 clip（bugfix tikz-from-ir.demo）', () => {
+  it("A → B → C → A：B 出口端点不同于 B 入口端点，路径在 B 处可见地断开", () => {
+    // A=(0,0)、B=(120,0)、C=(60,60)，无文本默认 16x16
+    // 段 A→B：A.east(8,0) → B.west(112,0)
+    // 段 B→C：B.center=(120,0) 朝 C.center=(60,60)，方向 (-60,60) 等比例 → 角点 → B.south-west=(112,8)；
+    //         C.center=(60,60) 朝 B.center，方向 (60,-60) → C.north-east=(68,52)
+    // 段 C→A：C 朝 A 方向 (-60,-60) → C.south-west=(52,52)；A 朝 C 方向 (60,60) → A.north-east=(8,8)
+    const ir: IR = {
+      version: 1,
+      type: 'scene',
+      children: [
+        { type: 'node', id: 'A', position: [0, 0] },
+        { type: 'node', id: 'B', position: [120, 0] },
+        { type: 'node', id: 'C', position: [60, 60] },
+        {
+          type: 'path',
+          children: [
+            { type: 'step', kind: 'move', to: 'A' },
+            { type: 'step', kind: 'line', to: 'B' },
+            { type: 'step', kind: 'line', to: 'C' },
+            { type: 'step', kind: 'line', to: 'A' },
+          ],
+        },
+      ],
+    };
+    const d = findPathPrim(compileToScene(ir).primitives).d;
+    // 关键：3 个 M（每段独立起点），共 3 个 L
+    expect(d.match(/M/g) ?? []).toHaveLength(3);
+    expect(d.match(/L/g) ?? []).toHaveLength(3);
+    // 关键：B 入口（112,0，从 A 那段）≠ B 出口（112,8，朝向 C 的那段）
+    expect(d).toContain('L 112 0');
+    expect(d).toContain('M 112 8');
+  });
+
+  it("直接坐标点 + 折角混合：cursor 复用（无 clip 差异时不起新 sub-path）", () => {
+    // 全直接点，每段 fromClip 等于 lastEnd → 复用 cursor，全程一个 sub-path
+    const ir: IR = {
+      version: 1,
+      type: 'scene',
+      children: [
+        {
+          type: 'path',
+          children: [
+            { type: 'step', kind: 'move', to: [0, 0] },
+            { type: 'step', kind: 'line', to: [10, 0] },
+            { type: 'step', kind: 'step', via: '-|', to: [20, 5] },
+          ],
+        },
+      ],
+    };
+    const d = findPathPrim(compileToScene(ir).primitives).d;
+    // 期望单 sub-path：M 一次 + L 三次
+    expect(d.match(/M/g) ?? []).toHaveLength(1);
+    expect(d).toBe('M 0 0 L 10 0 L 20 0 L 20 5');
   });
 });
 

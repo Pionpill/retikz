@@ -1,14 +1,13 @@
 import { rect as rectOps } from '../geometry/rect';
-import type { IRPath, IRPosition, IRTarget } from '../ir';
+import type { IRPath, IRPosition, IRStep, IRTarget } from '../ir';
 import type { ScenePrimitive } from '../primitive';
 import { type NodeLayout, attachRectOf } from './node';
 import { resolvePosition } from './position';
 
 /**
- * 求一个 step.to 的"参考点"——给邻居 step 算节点边界方向用：
- * - string（节点 ref） → 节点中心
- * - Position / PolarPosition → 解析后的笛卡尔
- * 解析失败返回 null（与 resolvePosition 一致）。
+ * 求一个 step.to 的"参考点"（节点中心 / 直接坐标 / 极坐标解算后）。
+ * 给段内 boundary clip 算方向用——只走中心，从不引入上次的 clip 点。
+ * 解析失败返回 null（如引用未定义节点）。
  */
 const refPointOfTarget = (
   target: IRTarget,
@@ -17,9 +16,7 @@ const refPointOfTarget = (
 
 /**
  * 折角中间点：基于"参考点"（节点中心或直接坐标）算直角拐点。
- * 用 ref 点而非 boundary 点——TikZ 语义是 corner 与节点中心轴对齐：
- * `-|` corner = (next.x, prev.y)；`|-` corner = (prev.x, next.y)。
- * 两侧端点再各自向 corner 方向贴 boundary（见 emitPathPrimitive）。
+ * `-|` corner = (curr.x, prev.y)；`|-` corner = (prev.x, curr.y)。
  */
 const cornerOf = (
   prev: IRPosition,
@@ -29,18 +26,48 @@ const cornerOf = (
   via === '-|' ? [curr[0], prev[1]] : [prev[0], curr[1]];
 
 /**
+ * 把 step.to 在给定方向 `toward` 上算出"实际绘制端点"：
+ * - 节点 ref：取 attachRect 边界与 (节点中心 → toward) 射线的交点
+ * - 直接坐标 / 极坐标：解析后直接返回（不做 clip）
+ * 解析失败返回 null。
+ */
+const clipForTarget = (
+  target: IRTarget,
+  toward: IRPosition,
+  nodeIndex: Map<string, NodeLayout>,
+): IRPosition | null => {
+  if (typeof target === 'string') {
+    const node = nodeIndex.get(target);
+    if (!node) return null;
+    return rectOps.boundaryPoint(attachRectOf(node), toward);
+  }
+  return resolvePosition(target, nodeIndex);
+};
+
+/** 浅相等：两个 IRPosition 的两个分量都精确相等（未 round） */
+const samePoint = (a: IRPosition | null, b: IRPosition | null): boolean =>
+  !!a && !!b && a[0] === b[0] && a[1] === b[1];
+
+/**
  * 把 IR Path 翻译为单个 PathPrim。
- * 算法：
- * 1. refPoints[i]：把每个 step.to 解析为参考点（节点中心 / 直接坐标 / 极坐标解算后）。
- * 2. corners[i]：fold step 的直角拐点，由 refPoints[i-1] / refPoints[i] 配合 via 算出；
- *    用中心而非 boundary 点，让水平/垂直腿与节点几何中心对齐（TikZ 语义）。
- * 3. endpoints[i]：节点 ref 走 boundaryPoint(attachRect, approach)；approach 方向：
- *    - 自身是 fold：朝向 corners[i]
- *    - 下一段是 fold：朝向 corners[i+1]（出腿沿 corner 走）
- *    - 否则：朝向前一个 refPoint（普通 line 行为）
- * 4. 把端点 + corner 序列写成 SVG path d。
  *
- * 引用未定义节点时返回 null（path 整体跳过）。
+ * 关键算法（v0.1.0-alpha.1）：每个绘制段（line / fold）**独立**地用节点中心
+ * 算两端 boundary clip——一个节点在路径中段时，"入边"和"出边" boundary 点
+ * 通常不同，路径会在该节点处可见地"断开"。这与 TikZ 原生语义一致：
+ *
+ *   `\draw (A) -- (B) -- (C);`
+ *   段 1：A.center → B.center 决定 A 出口、B 入口的 boundary 交点
+ *   段 2：B.center → C.center 决定 B 出口、C 入口的 boundary 交点
+ *   B 在两段里 clip 出来的点不同——视觉上看到两条独立线段。
+ *
+ * 实现上仍只产一个 PathPrim：d 字符串里以多组 `M ... L ...` 表达多个 sub-path。
+ * 当某段起点恰好等于上一段终点（例如直接坐标连续，或未触发 clip 差异）时，
+ * 复用 cursor，省掉冗余 M。
+ *
+ * cycle 段：闭回最近一次 move 起点。若 cycle 起点 == lastEnd 且终点 == subPathStart，
+ * 输出 `Z`（最优雅）；否则显式画一段 line（与"段独立 clip"一致）。
+ *
+ * 引用未定义节点 / 解析失败时返回 null（path 整体跳过）。
  */
 export const emitPathPrimitive = (
   path: IRPath,
@@ -50,86 +77,113 @@ export const emitPathPrimitive = (
   const steps = path.children;
   if (steps.length < 2) return null;
 
-  const refPoints: Array<IRPosition | null> = steps.map(s =>
+  // 每个 step 的几何参考点（节点中心 / 直接坐标）。cycle 没有 to。
+  const anchors: Array<IRPosition | null> = steps.map(s =>
     s.kind === 'cycle' ? null : refPointOfTarget(s.to, nodeIndex),
   );
 
-  // fold step 的拐点；非 fold 或 ref 缺失为 null
-  const corners: Array<IRPosition | null> = steps.map((s, i) => {
-    if (s.kind !== 'step') return null;
-    if (i === 0) return null;
-    const prev = refPoints[i - 1];
-    const curr = refPoints[i];
-    if (!prev || !curr) return null;
-    return cornerOf(prev, curr, s.via);
-  });
-
-  /** 取 endpoint i 的"贴边方向参考点"——决定 boundaryPoint 朝哪边切 */
-  const approachOf = (i: number): IRPosition | null => {
-    if (steps[i].kind === 'step' && corners[i]) return corners[i];
-    if (i + 1 < steps.length && steps[i + 1].kind === 'step' && corners[i + 1]) {
-      return corners[i + 1];
+  /** 找 i 之前最近的"有 to 字段的 step"（跳过 cycle） + 它的 anchor */
+  const findPrev = (
+    i: number,
+  ): { step: Exclude<IRStep, { kind: 'cycle' }>; anchor: IRPosition } | null => {
+    for (let j = i - 1; j >= 0; j--) {
+      const s = steps[j];
+      if (s.kind === 'cycle') continue;
+      const a = anchors[j];
+      if (!a) return null;
+      return { step: s, anchor: a };
     }
-    if (i > 0) return refPoints[i - 1];
-    if (i + 1 < steps.length) return refPoints[i + 1];
     return null;
   };
 
-  const endpoints: Array<IRPosition | null> = [];
-  for (let i = 0; i < steps.length; i++) {
-    const step = steps[i];
-    if (step.kind === 'cycle') {
-      endpoints.push(null);
-      continue;
-    }
-    const target = step.to;
-    if (typeof target === 'string') {
-      const node = nodeIndex.get(target);
-      if (!node) return null; // 引用未定义节点
-      const approach = approachOf(i);
-      if (!approach) {
-        endpoints.push([node.rect.x, node.rect.y]);
-      } else {
-        // 用 attachRect（视觉 rect 外扩 margin），让 path 在 border 外停 margin
-        endpoints.push(rectOps.boundaryPoint(attachRectOf(node), approach));
+  /** 找 i 之前最近的 move 的 to——cycle 闭合的目标 */
+  const findRecentMoveTo = (i: number): IRTarget | null => {
+    for (let j = i - 1; j >= 0; j--) {
+      if (steps[j].kind === 'move') {
+        return (steps[j] as Exclude<IRStep, { kind: 'cycle' }>).to;
       }
-    } else {
-      // Position 或 PolarPosition
-      const resolved = resolvePosition(target, nodeIndex);
-      if (!resolved) return null;
-      endpoints.push(resolved);
     }
-  }
+    return null;
+  };
 
-  // 顺着 step kind 把 endpoints 翻成"实际绘制点序列"——折角在中间多塞一个 corner，
-  // cycle 不增加点，只在 d 字符串末尾追加一个 'Z' 标记。
-  const points: Array<IRPosition> = [];
   const tokens: Array<string> = [];
+  const points: Array<IRPosition> = [];
+  let lastEnd: IRPosition | null = null;
+  let subPathStart: IRPosition | null = null;
+
+  const fmt = (p: IRPosition): string => `${round(p[0])} ${round(p[1])}`;
+  const emitM = (p: IRPosition) => {
+    tokens.push(`M ${fmt(p)}`);
+    points.push(p);
+    subPathStart = p;
+    lastEnd = p;
+  };
+  const emitL = (p: IRPosition) => {
+    tokens.push(`L ${fmt(p)}`);
+    points.push(p);
+    lastEnd = p;
+  };
+  const emitZ = () => {
+    tokens.push('Z');
+    lastEnd = subPathStart;
+  };
+  /** 段起点：与 lastEnd 相同就复用 cursor（省掉冗余 M），否则发 M */
+  const startSegment = (p: IRPosition) => {
+    if (samePoint(p, lastEnd)) return;
+    emitM(p);
+  };
+
   for (let i = 0; i < steps.length; i++) {
     const step = steps[i];
+
+    // move 自身不绘制；它的 to 仅在下个绘制段被 findPrev 引用
+    if (step.kind === 'move') continue;
+
     if (step.kind === 'cycle') {
-      tokens.push('Z');
-      continue;
-    }
-    const ep = endpoints[i];
-    if (!ep) return null; // 不应发生：非 cycle step 的 endpoint 必有
-    if (i === 0) {
-      points.push(ep);
-      tokens.push(`M ${round(ep[0])} ${round(ep[1])}`);
-      continue;
-    }
-    if (step.kind === 'step') {
-      const corner = corners[i];
-      if (corner) {
-        points.push(corner);
-        tokens.push(`L ${round(corner[0])} ${round(corner[1])}`);
+      const moveTo = findRecentMoveTo(i);
+      const prev = findPrev(i);
+      if (!moveTo || !prev) continue; // 没有 move / prev 则 cycle 无意义，跳过
+      const moveAnchor = refPointOfTarget(moveTo, nodeIndex);
+      if (!moveAnchor) return null;
+
+      const fromClip = clipForTarget(prev.step.to, moveAnchor, nodeIndex);
+      const toClip = clipForTarget(moveTo, prev.anchor, nodeIndex);
+      if (!fromClip || !toClip) return null;
+
+      // 起点恰好是 lastEnd，终点恰好是 subPathStart → 用 Z 收尾最干净
+      if (samePoint(fromClip, lastEnd) && samePoint(toClip, subPathStart)) {
+        emitZ();
+        continue;
       }
-      points.push(ep);
-      tokens.push(`L ${round(ep[0])} ${round(ep[1])}`);
+      // 否则段独立：可能要重新 M 起点，再 L 到终点（不再用 Z，避免回到错误的 subPathStart）
+      startSegment(fromClip);
+      emitL(toClip);
       continue;
     }
-    points.push(ep);
-    tokens.push(`${step.kind === 'move' ? 'M' : 'L'} ${round(ep[0])} ${round(ep[1])}`);
+
+    // line / step（fold）：先找 prev，再独立 clip 两端
+    const prev = findPrev(i);
+    if (!prev) return null;
+    const currAnchor = anchors[i];
+    if (!currAnchor) return null;
+
+    if (step.kind === 'line') {
+      const fromClip = clipForTarget(prev.step.to, currAnchor, nodeIndex);
+      const toClip = clipForTarget(step.to, prev.anchor, nodeIndex);
+      if (!fromClip || !toClip) return null;
+      startSegment(fromClip);
+      emitL(toClip);
+      continue;
+    }
+
+    // step.kind === 'step'（fold）
+    const corner = cornerOf(prev.anchor, currAnchor, step.via);
+    const fromClip = clipForTarget(prev.step.to, corner, nodeIndex);
+    const toClip = clipForTarget(step.to, corner, nodeIndex);
+    if (!fromClip || !toClip) return null;
+    startSegment(fromClip);
+    emitL(corner);
+    emitL(toClip);
   }
 
   const d = tokens.join(' ');
