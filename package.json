@@ -1,6 +1,7 @@
 {
   "private": true,
   "type": "module",
+  "packageManager": "pnpm@10.21.0",
   "scripts": {
     "lint": "eslint . --cache",
     "build": "pnpm -r --if-present run build",
