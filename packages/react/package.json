@@ -12,6 +12,24 @@
       "default": "./src/index.ts"
     }
   },
+  "publishConfig": {
+    "main": "dist/lib/index.cjs",
+    "module": "dist/es/index.js",
+    "types": "dist/lib/index.d.ts",
+    "exports": {
+      ".": {
+        "types": "./dist/lib/index.d.ts",
+        "import": "./dist/es/index.js",
+        "require": "./dist/lib/index.cjs",
+        "default": "./dist/es/index.js"
+      }
+    }
+  },
+  "files": [
+    "LICENSE",
+    "README.md",
+    "dist/**/*"
+  ],
   "scripts": {
     "dev": "vite",
     "build": "vite build",
