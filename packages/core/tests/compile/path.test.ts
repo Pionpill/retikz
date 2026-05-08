@@ -390,6 +390,109 @@ describe("compile path: arrow 箭头 (ADR-0002)", () => {
     expect(last.arrowEnd).toBe('normal');
   });
 
+  it("arrowShape 透传到 PathPrim 作为 arrowEnd / arrowStart 的值", () => {
+    for (const shape of ['normal', 'open', 'stealth', 'diamond', 'circle'] as const) {
+      const ir: IR = {
+        version: 1,
+        type: 'scene',
+        children: [
+          {
+            type: 'path',
+            arrow: '->',
+            arrowShape: shape,
+            children: [
+              { type: 'step', kind: 'move', to: [0, 0] },
+              { type: 'step', kind: 'line', to: [10, 0] },
+            ],
+          },
+        ],
+      };
+      const path = findPathPrim(compileToScene(ir).primitives);
+      expect(path.arrowEnd).toBe(shape);
+    }
+  });
+
+  it("open shape 让 path 末端向内缩 4.8×strokeWidth（apex 落在原始端点上）", () => {
+    // strokeWidth=1（默认）：shrink=4.8 path 单位
+    // 线段 (0,0) → (100,0)，shrink 后变 (0,0) → (95.2, 0)
+    const ir: IR = {
+      version: 1,
+      type: 'scene',
+      children: [
+        {
+          type: 'path',
+          arrow: '->',
+          arrowShape: 'open',
+          children: [
+            { type: 'step', kind: 'move', to: [0, 0] },
+            { type: 'step', kind: 'line', to: [100, 0] },
+          ],
+        },
+      ],
+    };
+    expect(findPathPrim(compileToScene(ir).primitives).d).toBe('M 0 0 L 95.2 0');
+  });
+
+  it("strokeWidth 翻倍时 shrink 也翻倍（4.8 × strokeWidth）", () => {
+    const ir: IR = {
+      version: 1,
+      type: 'scene',
+      children: [
+        {
+          type: 'path',
+          arrow: '->',
+          arrowShape: 'open',
+          strokeWidth: 2,
+          children: [
+            { type: 'step', kind: 'move', to: [0, 0] },
+            { type: 'step', kind: 'line', to: [100, 0] },
+          ],
+        },
+      ],
+    };
+    // shrink = 4.8 × 2 = 9.6 → (100 - 9.6, 0) = (90.4, 0)
+    expect(findPathPrim(compileToScene(ir).primitives).d).toBe('M 0 0 L 90.4 0');
+  });
+
+  it("实心 shape 不 shrink（line 端点保留原样）", () => {
+    for (const shape of ['normal', 'stealth', 'diamond', 'circle'] as const) {
+      const ir: IR = {
+        version: 1,
+        type: 'scene',
+        children: [
+          {
+            type: 'path',
+            arrow: '->',
+            arrowShape: shape,
+            children: [
+              { type: 'step', kind: 'move', to: [0, 0] },
+              { type: 'step', kind: 'line', to: [100, 0] },
+            ],
+          },
+        ],
+      };
+      expect(findPathPrim(compileToScene(ir).primitives).d).toBe('M 0 0 L 100 0');
+    }
+  });
+
+  it("arrowShape 缺省时回退 'normal'", () => {
+    const ir: IR = {
+      version: 1,
+      type: 'scene',
+      children: [
+        {
+          type: 'path',
+          arrow: '->',
+          children: [
+            { type: 'step', kind: 'move', to: [0, 0] },
+            { type: 'step', kind: 'line', to: [10, 0] },
+          ],
+        },
+      ],
+    };
+    expect(findPathPrim(compileToScene(ir).primitives).arrowEnd).toBe('normal');
+  });
+
   it("单 sub-path + arrow → 不拆 group，直接一个 PathPrim 挂 marker", () => {
     // 直接坐标，无 boundary clip 差异，单 sub-path
     const ir: IR = {

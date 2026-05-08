@@ -1,26 +1,62 @@
 import { rect as rectOps } from '../geometry/rect';
 import type { IRPath, IRPosition, IRStep, IRTarget } from '../ir';
-import type { PathPrim, ScenePrimitive } from '../primitive';
+import type { ArrowShape, PathPrim, ScenePrimitive } from '../primitive';
 import { type NodeLayout, attachRectOf } from './node';
 import { resolvePosition } from './position';
 
 /**
- * IR 的 path-level `arrow` 字段映射到 PathPrim 的 arrowStart / arrowEnd。
- * `'->'` → 终点箭头；`'<-'` → 起点；`'<->'` → 两端；省略或 `'none'` → 无。
+ * IR 的 path-level `arrow` + `arrowShape` 映射到 PathPrim 的
+ * arrowStart / arrowEnd（值就是 shape 名）。`arrowShape` 省略时默认 'normal'。
  */
 const arrowMarkers = (
-  arrow?: 'none' | '->' | '<-' | '<->',
-): { arrowStart?: 'normal'; arrowEnd?: 'normal' } => {
+  arrow: 'none' | '->' | '<-' | '<->' | undefined,
+  shape: ArrowShape = 'normal',
+): { arrowStart?: ArrowShape; arrowEnd?: ArrowShape } => {
   switch (arrow) {
     case '->':
-      return { arrowEnd: 'normal' };
+      return { arrowEnd: shape };
     case '<-':
-      return { arrowStart: 'normal' };
+      return { arrowStart: shape };
     case '<->':
-      return { arrowStart: 'normal', arrowEnd: 'normal' };
+      return { arrowStart: shape, arrowEnd: shape };
     default:
       return {};
   }
+};
+
+/**
+ * 按 arrow shape 决定线段需要从端点向内"缩短"多少（单位：strokeWidth 倍）。
+ *
+ * 用途：避免 hollow shape（如 `open` / `openDiamond` / `openCircle`）的
+ * 空心内部被 path 描边穿过——把线末端退到形状背面位置，marker 的 apex
+ * 才能正好落在原始端点上。
+ *
+ * 这个值与 marker 几何配套，必须与 react/render/arrowMarkers.tsx 里
+ * 各 shape 的 refX / 形状定义保持一致：
+ *   shrink = (apexX - refX) × markerWidth / viewBoxWidth
+ *   open:        apexX=9,    refX=1, scale=6/10 → 8  × 0.6 = 4.8
+ *   openDiamond: apexX=9,    refX=1, scale=6/10 → 8  × 0.6 = 4.8
+ *   openCircle:  apexX=10,   refX=0, scale=6/10 → 10 × 0.6 = 6
+ * 实心 shape（normal / stealth / diamond / circle）apex / 边缘已贴 refX=10，
+ * line 被 fill 覆盖看不见，shrink=0。
+ */
+const SHRINK_FOR_SHAPE: Record<ArrowShape, number> = {
+  normal: 0,
+  open: 4.8,
+  stealth: 0,
+  diamond: 0,
+  openDiamond: 4.8,
+  circle: 0,
+  openCircle: 6,
+};
+
+/** 把点 p 朝 target 方向移动 dist 个 path 单位 */
+const shiftToward = (p: IRPosition, target: IRPosition, dist: number): IRPosition => {
+  const dx = target[0] - p[0];
+  const dy = target[1] - p[1];
+  const len = Math.sqrt(dx * dx + dy * dy);
+  if (len === 0 || dist === 0) return p;
+  return [p[0] + (dx / len) * dist, p[1] + (dy / len) * dist];
 };
 
 /**
@@ -125,25 +161,27 @@ export const emitPathPrimitive = (
     return null;
   };
 
-  const tokens: Array<string> = [];
+  /** 单个 path 操作；shrink 阶段需要按 cmd 找到首/末有 point 的项 */
+  type PathOp = { cmd: 'M' | 'L'; point: IRPosition } | { cmd: 'Z' };
+
+  const ops: Array<PathOp> = [];
   const points: Array<IRPosition> = [];
   let lastEnd: IRPosition | null = null;
   let subPathStart: IRPosition | null = null;
 
-  const fmt = (p: IRPosition): string => `${round(p[0])} ${round(p[1])}`;
   const emitM = (p: IRPosition) => {
-    tokens.push(`M ${fmt(p)}`);
+    ops.push({ cmd: 'M', point: p });
     points.push(p);
     subPathStart = p;
     lastEnd = p;
   };
   const emitL = (p: IRPosition) => {
-    tokens.push(`L ${fmt(p)}`);
+    ops.push({ cmd: 'L', point: p });
     points.push(p);
     lastEnd = p;
   };
   const emitZ = () => {
-    tokens.push('Z');
+    ops.push({ cmd: 'Z' });
     lastEnd = subPathStart;
   };
   /** 段起点：与 lastEnd 相同就复用 cursor（省掉冗余 M），否则发 M */
@@ -205,15 +243,60 @@ export const emitPathPrimitive = (
     emitL(toClip);
   }
 
+  const strokeWidth = path.strokeWidth ?? 1;
   const baseProps = {
     stroke: path.stroke ?? 'currentColor',
-    strokeWidth: path.strokeWidth ?? 1,
+    strokeWidth,
     fill: 'none' as const,
     strokeDasharray: path.strokeDasharray,
   };
 
-  const markers = arrowMarkers(path.arrow);
+  const markers = arrowMarkers(path.arrow, path.arrowShape);
   const hasArrows = !!markers.arrowStart || !!markers.arrowEnd;
+
+  // 按 shape 把首段起点 / 末段终点向内"缩短"——避免 hollow 形状（如 open）
+  // 的空心被 path 描边穿过。shrink=0 的 shape（实心三角等）跳过。
+  const shrinkStart = markers.arrowStart ? SHRINK_FOR_SHAPE[markers.arrowStart] : 0;
+  const shrinkEnd = markers.arrowEnd ? SHRINK_FOR_SHAPE[markers.arrowEnd] : 0;
+
+  if (shrinkStart > 0) {
+    // 找首个 M（首段起点）和它后面第一个有坐标的 op（用来定方向）
+    const firstIdx = ops.findIndex(o => o.cmd === 'M');
+    if (firstIdx >= 0) {
+      const cur = ops[firstIdx];
+      const next = ops.slice(firstIdx + 1).find(o => o.cmd !== 'Z');
+      if (cur.cmd !== 'Z' && next && next.cmd !== 'Z') {
+        cur.point = shiftToward(cur.point, next.point, shrinkStart * strokeWidth);
+      }
+    }
+  }
+  if (shrinkEnd > 0) {
+    // 找末尾最后一个有坐标的 op（跳过 Z）和它前面最近一个有坐标的 op
+    let lastIdx = -1;
+    for (let i = ops.length - 1; i >= 0; i--) {
+      if (ops[i].cmd !== 'Z') {
+        lastIdx = i;
+        break;
+      }
+    }
+    if (lastIdx > 0) {
+      let prevIdx = lastIdx - 1;
+      while (prevIdx >= 0 && ops[prevIdx].cmd === 'Z') prevIdx--;
+      if (prevIdx >= 0) {
+        const cur = ops[lastIdx];
+        const prev = ops[prevIdx];
+        if (cur.cmd !== 'Z' && prev.cmd !== 'Z') {
+          cur.point = shiftToward(cur.point, prev.point, shrinkEnd * strokeWidth);
+        }
+      }
+    }
+  }
+
+  // ops → token strings（按精度 round）
+  const tokens = ops.map(op => {
+    if (op.cmd === 'Z') return 'Z';
+    return `${op.cmd} ${round(op.point[0])} ${round(op.point[1])}`;
+  });
 
   // 找出每个 sub-path 的起始 token 索引（每个 'M ...' 都是新 sub-path）
   const subPathStarts: Array<number> = [];

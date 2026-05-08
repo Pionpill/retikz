@@ -1,6 +1,7 @@
 import { type CSSProperties, type FC, type ReactNode, useId, useMemo } from 'react';
-import { type IR, type ScenePrimitive, compileToScene } from '@retikz/core';
+import { type ArrowShape, type IR, type ScenePrimitive, compileToScene } from '@retikz/core';
 import { buildIR } from './_builder';
+import { ArrowMarker } from '../render/arrowMarkers';
 import { browserMeasurer } from '../render/browser-measurer';
 import { renderPrim } from '../render/renderPrim';
 import { formatViewBox } from '../render/viewBox';
@@ -21,23 +22,29 @@ export type TikzProps = {
   style?: CSSProperties;
 };
 
-/** 递归判断 scene 里是否有 PathPrim 设了 arrowStart / arrowEnd——决定是否注入 marker defs */
-const sceneNeedsArrowMarker = (prims: Array<ScenePrimitive>): boolean =>
-  prims.some(p => {
-    if (p.type === 'path') return !!p.arrowStart || !!p.arrowEnd;
-    if (p.type === 'group') return sceneNeedsArrowMarker(p.children);
-    return false;
-  });
+/** 递归收集 scene 里所有 PathPrim 用到的 arrow 形状——按需注入 marker defs */
+const collectArrowShapes = (prims: Array<ScenePrimitive>): Set<ArrowShape> => {
+  const shapes = new Set<ArrowShape>();
+  for (const p of prims) {
+    if (p.type === 'path') {
+      if (p.arrowStart) shapes.add(p.arrowStart);
+      if (p.arrowEnd) shapes.add(p.arrowEnd);
+    } else if (p.type === 'group') {
+      for (const s of collectArrowShapes(p.children)) shapes.add(s);
+    }
+  }
+  return shapes;
+};
 
 /**
  * <Tikz> 顶层容器。
  * 1. 从 children 构造 IR（或直接接受外部 IR）
  * 2. 调 compileToScene 得 Scene
- * 3. 把 Scene primitives 渲染为 SVG 元素；按需注入 `<defs><marker>` 给箭头用
+ * 3. 把 Scene primitives 渲染为 SVG 元素；按需注入 `<defs>` 与每种 arrow 形状的 `<marker>`
  *
- * 箭头 marker 用 `useId()` 派生稳定 id，多个 Tikz 实例共存不会冲突；
- * 单一 marker 通过 `orient="auto-start-reverse"` 同时服务 marker-start
- * 与 marker-end，节省一个 defs 条目。
+ * 箭头 marker 用 `useId()` 派生稳定前缀（多个 Tikz 实例共存不冲突）；
+ * 每种用到的 shape 一个 marker 定义，id 形如 `${prefix}-${shape}`，
+ * marker 内 path 借 `context-stroke` / `context-fill` 让颜色随 path 同步。
  */
 export const Tikz: FC<TikzProps> = ({ ir: irFromProp, children, width, height, className, style }) => {
   const ir = useMemo(() => irFromProp ?? buildIR(children), [irFromProp, children]);
@@ -45,29 +52,21 @@ export const Tikz: FC<TikzProps> = ({ ir: irFromProp, children, width, height, c
 
   // useId 返回形如 ":r0:" 含冒号；SVG `url(#id)` 引用对冒号兼容性差，剥成纯字母数字
   const rawId = useId();
-  const arrowMarkerId = `retikz-arrow-${rawId.replace(/[^a-zA-Z0-9]/g, '')}`;
-  const needsArrowMarker = sceneNeedsArrowMarker(scene.primitives);
+  const arrowMarkerPrefix = `retikz-arrow-${rawId.replace(/[^a-zA-Z0-9]/g, '')}`;
+  const usedShapes = collectArrowShapes(scene.primitives);
+
+  const arrowMarkerIdFor = (shape: ArrowShape) => `${arrowMarkerPrefix}-${shape}`;
 
   return (
     <svg viewBox={formatViewBox(scene.viewBox)} width={width} height={height} className={className} style={style}>
-      {needsArrowMarker && (
+      {usedShapes.size > 0 && (
         <defs>
-          <marker
-            id={arrowMarkerId}
-            viewBox="0 0 10 10"
-            refX={10}
-            refY={5}
-            markerWidth={6}
-            markerHeight={6}
-            orient="auto-start-reverse"
-            markerUnits="strokeWidth"
-          >
-            {/* fill="context-stroke" 让箭头颜色随 path 的 stroke 自动同步 */}
-            <path d="M 0 0 L 10 5 L 0 10 Z" fill="context-stroke" />
-          </marker>
+          {Array.from(usedShapes).map(shape => (
+            <ArrowMarker key={shape} id={arrowMarkerIdFor(shape)} shape={shape} />
+          ))}
         </defs>
       )}
-      {scene.primitives.map((p, i) => renderPrim(p, i, { arrowMarkerId }))}
+      {scene.primitives.map((p, i) => renderPrim(p, i, { arrowMarkerIdFor }))}
     </svg>
   );
 };

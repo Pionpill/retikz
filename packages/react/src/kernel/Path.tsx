@@ -15,6 +15,11 @@ export type PathProps = {
    * 省略或 `'none'` = 无箭头。
    */
   arrow?: IRPath['arrow'];
+  /**
+   * 箭头形状。默认 `'normal'`（实心三角）。其他：`'open'` 空心三角、
+   * `'stealth'` 倒钩、`'diamond'` 菱形、`'circle'` 圆点。
+   */
+  arrowShape?: IRPath['arrowShape'];
   /** 应当全部是 <Step /> */
   children: ReactNode;
 };

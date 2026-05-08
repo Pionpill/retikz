@@ -19,6 +19,10 @@ export type DrawProps = {
    * 省略或 `'none'` = 无箭头。
    */
   arrow?: IRPath['arrow'];
+  /**
+   * 箭头形状。默认 `'normal'`。其他：`'open'` / `'stealth'` / `'diamond'` / `'circle'`。
+   */
+  arrowShape?: IRPath['arrowShape'];
 };
 
 /**
@@ -30,7 +34,7 @@ export type DrawProps = {
  * （useState / useMemo / useEffect 等会抛 "Invalid hook call"）。
  */
 export const Draw: FC<DrawProps> = props => {
-  const { way, stroke, strokeWidth, strokeDasharray, arrow } = props;
+  const { way, stroke, strokeWidth, strokeDasharray, arrow, arrowShape } = props;
   const steps = parseWay(way);
 
   return (
@@ -39,6 +43,7 @@ export const Draw: FC<DrawProps> = props => {
       strokeWidth={strokeWidth}
       strokeDasharray={strokeDasharray}
       arrow={arrow}
+      arrowShape={arrowShape}
     >
       {steps.map((s, i) => {
         if (s.kind === 'cycle') return <Step key={i} kind="cycle" />;

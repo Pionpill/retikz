@@ -1,47 +1,60 @@
 import { Node, Path, Step, Tikz } from '@retikz/react';
+import type { ArrowShape } from '@retikz/core';
 import type { FC } from 'react';
 
 /**
- * 三种箭头方向并列演示——`->`、`<-`、`<->`。箭头颜色由 `<defs>` 内 marker 的
- * `fill="context-stroke"` 自动随 Path 的 stroke 匹配；`markerUnits="strokeWidth"`
- * 让箭头大小随 strokeWidth 缩放。
+ * 4 行 × 2 列：左列实心、右列对应的空心变体；stealth 没有空心右侧留空。
+ *
+ * 颜色随 path stroke 自动同步（marker 用 `context-stroke`）；大小随 strokeWidth
+ * 缩放（`markerUnits="strokeWidth"`）。空心 shape 由 compile 把线段末端向内
+ * shrink 4.8~6 × strokeWidth，让 apex 精准落在原始端点上。
  */
-const Demo: FC = () => (
-  <Tikz width={360} height={220}>
-    <Node id="a1" position={[0, 0]}>
-      A
-    </Node>
-    <Node id="b1" position={[160, 0]}>
-      B
-    </Node>
-    <Node id="a2" position={[0, 60]}>
-      A
-    </Node>
-    <Node id="b2" position={[160, 60]}>
-      B
-    </Node>
-    <Node id="a3" position={[0, 120]}>
-      A
-    </Node>
-    <Node id="b3" position={[160, 120]}>
-      B
-    </Node>
+const pairs: ReadonlyArray<readonly [ArrowShape, ArrowShape | null]> = [
+  ['normal', 'open'],
+  ['stealth', null],
+  ['diamond', 'openDiamond'],
+  ['circle', 'openCircle'],
+];
 
-    {/* 终点箭头：A → B */}
-    <Path arrow="->">
-      <Step kind="move" to="a1" />
-      <Step kind="line" to="b1" />
-    </Path>
-    {/* 起点箭头：B → A 视觉上 */}
-    <Path arrow="<-">
-      <Step kind="move" to="a2" />
-      <Step kind="line" to="b2" />
-    </Path>
-    {/* 双向箭头 */}
-    <Path arrow="<->" stroke="#3b82f6" strokeWidth={2}>
-      <Step kind="move" to="a3" />
-      <Step kind="line" to="b3" />
-    </Path>
+/** 每行/每列的端点坐标偏移 */
+const ROW_GAP = 50;
+const COL_X_LEFT = 0;
+const COL_X_LEFT_END = 120;
+const COL_X_RIGHT = 220;
+const COL_X_RIGHT_END = 340;
+
+const Demo: FC = () => (
+  <Tikz width={400} height={220}>
+    {pairs.flatMap(([filled, hollow], row) => {
+      const y = row * ROW_GAP;
+      const elements = [
+        <Node key={`a-${filled}`} id={`a-${filled}`} position={[COL_X_LEFT, y]}>
+          A
+        </Node>,
+        <Node key={`b-${filled}`} id={`b-${filled}`} position={[COL_X_LEFT_END, y]}>
+          B
+        </Node>,
+        <Path key={`p-${filled}`} arrow="->" arrowShape={filled} strokeWidth={2}>
+          <Step kind="move" to={`a-${filled}`} />
+          <Step kind="line" to={`b-${filled}`} />
+        </Path>,
+      ];
+      if (hollow) {
+        elements.push(
+          <Node key={`a-${hollow}`} id={`a-${hollow}`} position={[COL_X_RIGHT, y]}>
+            A
+          </Node>,
+          <Node key={`b-${hollow}`} id={`b-${hollow}`} position={[COL_X_RIGHT_END, y]}>
+            B
+          </Node>,
+          <Path key={`p-${hollow}`} arrow="->" arrowShape={hollow} strokeWidth={2}>
+            <Step kind="move" to={`a-${hollow}`} />
+            <Step kind="line" to={`b-${hollow}`} />
+          </Path>,
+        );
+      }
+      return elements;
+    })}
   </Tikz>
 );
 

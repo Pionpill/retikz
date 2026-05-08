@@ -25,13 +25,13 @@ import { Draw } from '@retikz/react';
 
 `way` 数组里的每一项接受五种形态：前三种是直接 target（与 `<Step>.to` 一致），后两种是 infix 算子 / 关键字。
 
-| 形态 | 例 | 含义 |
-| --- | --- | --- |
-| 节点 id | `'a'` | 引用同一 Tikz 内的 Node；端点自动贴 border |
-| 笛卡尔 | `[120, 0]` | 直接给坐标 |
-| 极坐标 | `{ origin: 'a', angle: 60, radius: 80 }` | 极坐标（详见 [定位](/core/concepts/positioning)） |
+| 形态     | 例                                                  | 含义                                                        |
+| -------- | --------------------------------------------------- | ----------------------------------------------------------- |
+| 节点 id  | `'a'`                                               | 引用同一 Tikz 内的 Node；端点自动贴 border                  |
+| 笛卡尔   | `[120, 0]`                                          | 直接给坐标                                                  |
+| 极坐标   | `{ origin: 'a', angle: 60, radius: 80 }`            | 极坐标（详见 [定位](/core/concepts/positioning)）           |
 | 折角算子 | `'-\|'` / `'\|-'`（或 `DrawWay.hv` / `DrawWay.vh`） | 把"上一项 → 下一项"那段改成折角（TikZ `-\|` / `\|-` infix） |
-| 闭合 | `DrawWay.cycle` | 闭合回 way 起点（等价 TikZ `cycle` 关键字 / SVG `Z`） |
+| 闭合     | `DrawWay.cycle`                                     | 闭合回 way 起点（等价 TikZ `cycle` 关键字 / SVG `Z`）       |
 
 ### DrawWay 关键字常量
 
@@ -45,11 +45,11 @@ import { Draw, DrawWay } from '@retikz/react';
 <Draw way={['a', DrawWay.hv, 'b']} />                    {/* 折角：等价常量 */}
 ```
 
-| 常量 | 等价裸字面量 | 含义 |
-| --- | --- | --- |
+| 常量            | 等价裸字面量   | 含义                                                                               |
+| --------------- | -------------- | ---------------------------------------------------------------------------------- |
 | `DrawWay.cycle` | （**仅常量**） | 闭合关键字——底层字符串刻意写丑（`'retikz-keyword_cycle'`），保证不会与节点 id 冲突 |
-| `DrawWay.hv` | `'-\|'` | 折角：先水平后垂直（infix 算子） |
-| `DrawWay.vh` | `'\|-'` | 折角：先垂直后水平（infix 算子） |
+| `DrawWay.hv`    | `'-\|'`        | 折角：先水平后垂直（infix 算子）                                                   |
+| `DrawWay.vh`    | `'\|-'`        | 折角：先垂直后水平（infix 算子）                                                   |
 
 **为什么 cycle 不允许裸字面量**：`cycle` 太可能跟用户的节点 id 撞车（"cycle" 是个常见英文词）。所以闭合**只走 `DrawWay.cycle` 这个入口**，裸字符串 `'cycle'` 在 way 里直接当节点 id 处理。
 
@@ -85,10 +85,11 @@ way 末尾放 `DrawWay.cycle` 把最后一段闭合回 way 第一项——与 Ti
 
 ## API 参考
 
-| 属性 | 类型 | 默认值 | 描述 |
-| --- | --- | --- | --- |
-| `way` | `Array<WayItem>` | — | 至少 2 个点；首项总是 `move`，其余按 item 形态决定 `line` / `step`（折角）/ `cycle`（闭合） |
-| `stroke` | `string` | `currentColor` | 描边色 |
-| `strokeWidth` | `number` | `1` | 描边宽度 |
-| `strokeDasharray` | `string` | — | SVG `stroke-dasharray` 模式（如 `"4 2"`） |
-| `arrow` | `'none' \| '->' \| '<-' \| '<->'` | — | 路径级箭头方向 |
+| 属性              | 类型                                                       | 默认值         | 描述                                                                                        |
+| ----------------- | ---------------------------------------------------------- | -------------- | ------------------------------------------------------------------------------------------- |
+| `way`             | `Array<WayItem>`                                           | —              | 至少 2 个点；首项总是 `move`，其余按 item 形态决定 `line` / `step`（折角）/ `cycle`（闭合） |
+| `stroke`          | `string`                                                   | `currentColor` | 描边色                                                                                      |
+| `strokeWidth`     | `number`                                                   | `1`            | 描边宽度                                                                                    |
+| `strokeDasharray` | `string`                                                   | —              | SVG `stroke-dasharray` 模式（如 `"4 2"`）                                                   |
+| `arrow`           | `'none' \| '->' \| '<-' \| '<->'`                          | —              | 路径级箭头方向                                                                              |
+| `arrowShape`      | `'normal' \| 'open' \| 'stealth' \| 'diamond' \| 'openDiamond' \| 'circle' \| 'openCircle'` | `'normal'`     | 箭头形状                                                                                    |

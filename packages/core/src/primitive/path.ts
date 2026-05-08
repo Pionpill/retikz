@@ -1,3 +1,5 @@
+import type { ArrowShape } from '../ir/path/arrow';
+
 /** 路径原语：SVG path d 字符串；Canvas/PDF renderer 自行解析 */
 export type PathPrim = {
   /** 类型判别符 */
@@ -16,13 +18,10 @@ export type PathPrim = {
   strokeLinecap?: 'butt' | 'round' | 'square';
   /** 拐点形状 */
   strokeLinejoin?: 'miter' | 'round' | 'bevel';
-  /**
-   * 起点箭头形状名；undefined = 无。
-   * v0.1 alpha.1 仅支持 'normal'（实心三角形）。
-   */
-  arrowStart?: 'normal';
-  /** 终点箭头形状名；语义同 arrowStart */
-  arrowEnd?: 'normal';
+  /** 起点箭头形状；undefined = 无 */
+  arrowStart?: ArrowShape;
+  /** 终点箭头形状；undefined = 无 */
+  arrowEnd?: ArrowShape;
   /** 整体透明度 0~1 */
   opacity?: number;
 };

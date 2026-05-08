@@ -35,7 +35,9 @@ export type {
   IRPath,
   IRChild,
   IR,
+  ArrowShape,
 } from './ir';
+export { ARROW_SHAPES } from './ir';
 
 // Primitive (Scene 数据模型)
 export type {
@@ -65,3 +67,6 @@ export { parseWay, DrawWay } from './parsers';
 // RECT_ANCHORS（const 集合，值）与 RectAnchor（派生 type）配对，名字不撞
 export type { Position, Rect, RectAnchor, PolarPosition } from './geometry';
 export { point, rect, RECT_ANCHORS, polar } from './geometry';
+
+// Type utilities
+export type { ValueOf } from './types';

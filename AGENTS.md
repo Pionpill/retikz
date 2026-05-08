@@ -152,6 +152,11 @@ pnpm lint                                  # 全部包 ESLint（不带 --fix）
   - 顶层导出：`export const fn = (...) => {...}`
   - 内部 helper：同上
   - 例外：需要 hoisting（在定义点之前被引用）；类方法仍按 class 语法
+- **枚举型字面量联合用 const + 派生类型，不用 TS enum**
+  - TS 的 `enum` 在数值场景生成 reverse-mapping 表、在 string 场景与字面量类型不互通；`as const` 对象 + `ValueOf` 派生既能枚举又能与裸字面量字符串无缝混用，**还能直接喂给 `z.nativeEnum`**
+  - 通用 helper：`export type ValueOf<T extends object> = T[keyof T]`（住在 `packages/core/src/types.ts`，已从 `@retikz/core` 导出）
+  - 模式：先写 `const X = { a: 'a', b: 'b' } as const`，再 `type T = ValueOf<typeof X>`；zod schema 用 `z.nativeEnum(X)`
+  - 已有用例：`ARROW_SHAPES` / `ArrowShape`（`packages/core/src/ir/path/arrow.ts`）、`DrawWay` / `WayCycle` / `WayVia`（`packages/core/src/parsers/parseWay.ts`）
 
 ## React 组件规范
 

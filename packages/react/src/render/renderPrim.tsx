@@ -1,5 +1,5 @@
 import type { Key, ReactElement } from 'react';
-import type { ScenePrimitive } from '@retikz/core';
+import type { ArrowShape, ScenePrimitive } from '@retikz/core';
 
 type DominantBaseline =
   | 'text-before-edge'
@@ -33,8 +33,8 @@ const baselineToDominant = (
  * 资源若不存在就传 undefined，对应路径 prim 不会引用 marker。
  */
 export type RenderContext = {
-  /** path 元素引用 SVG `<defs><marker id="...">` 的 id，用于箭头渲染 */
-  arrowMarkerId?: string;
+  /** 按 arrow 形状查 SVG `<defs><marker id>` id 的回调 */
+  arrowMarkerIdFor?: (shape: ArrowShape) => string;
 };
 
 /**
@@ -84,7 +84,10 @@ export const renderPrim = (
         </text>
       );
     case 'path': {
-      const markerRef = ctx.arrowMarkerId ? `url(#${ctx.arrowMarkerId})` : undefined;
+      const startId =
+        p.arrowStart && ctx.arrowMarkerIdFor ? ctx.arrowMarkerIdFor(p.arrowStart) : undefined;
+      const endId =
+        p.arrowEnd && ctx.arrowMarkerIdFor ? ctx.arrowMarkerIdFor(p.arrowEnd) : undefined;
       return (
         <path
           key={key}
@@ -95,8 +98,8 @@ export const renderPrim = (
           strokeDasharray={p.strokeDasharray}
           strokeLinecap={p.strokeLinecap}
           strokeLinejoin={p.strokeLinejoin}
-          markerStart={p.arrowStart && markerRef ? markerRef : undefined}
-          markerEnd={p.arrowEnd && markerRef ? markerRef : undefined}
+          markerStart={startId ? `url(#${startId})` : undefined}
+          markerEnd={endId ? `url(#${endId})` : undefined}
           opacity={p.opacity}
         />
       );

@@ -88,6 +88,13 @@ const buildPath = (props: Record<string, unknown>): IRChild => ({
   strokeWidth: props.strokeWidth as number | undefined,
   strokeDasharray: props.strokeDasharray as string | undefined,
   arrow: props.arrow as 'none' | '->' | '<-' | '<->' | undefined,
+  arrowShape: props.arrowShape as
+    | 'normal'
+    | 'open'
+    | 'stealth'
+    | 'diamond'
+    | 'circle'
+    | undefined,
   children: readPathChildren(props.children as ReactNode),
 });
 

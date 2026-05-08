@@ -52,11 +52,21 @@ import { Path, Step } from '@retikz/react';
 
 ### 箭头
 
-`arrow` 是 Path 级属性（不在 Step 上），4 个枚举：`'->'`（终点）、`'<-'`（起点）、`'<->'`（两端）、`'none'` / 省略（无）：
+`arrow` 控制方向（4 个枚举：`'->'` 终点、`'<-'` 起点、`'<->'` 两端、`'none'` / 省略 = 无），`arrowShape` 控制形状（5 个枚举，默认 `'normal'`）：
+
+| 形状 | 描述 | 典型用途 |
+| --- | --- | --- |
+| `'normal'` | 实心三角 | 流程图默认 |
+| `'open'` | 空心三角 | UML 泛化 / 继承 |
+| `'stealth'` | 倒钩三角 | 现代流图、视觉锐利 |
+| `'diamond'` | 实心菱形 | UML 组合 |
+| `'openDiamond'` | 空心菱形 | UML 聚合 |
+| `'circle'` | 实心圆点 | 连接点 / dot end |
+| `'openCircle'` | 空心圆点 | 白圈端 / o-end |
 
 <ComponentPreview name="path-arrow" />
 
-> 多节点路径（如 A → B → C）按段独立 clip，但箭头**只**贴在整体起点 / 终点——中间节点不会出现额外箭头。颜色由 marker 的 `fill="context-stroke"` 自动同 stroke；大小按 `strokeWidth` 缩放。
+> 多节点路径（如 A → B → C）按段独立 clip，但箭头**只**贴在整体起点 / 终点——中间节点不会出现额外箭头。颜色由 marker 的 `context-stroke` 自动同 stroke；大小按 `strokeWidth` 缩放。
 
 ### 样式
 
@@ -72,6 +82,7 @@ import { Path, Step } from '@retikz/react';
 | `strokeWidth` | `number` | `1` | 描边宽度 |
 | `strokeDasharray` | `string` | — | SVG `stroke-dasharray` 模式 |
 | `arrow` | `'none' \| '->' \| '<-' \| '<->'` | — | 路径级箭头方向 |
+| `arrowShape` | `'normal' \| 'open' \| 'stealth' \| 'diamond' \| 'openDiamond' \| 'circle' \| 'openCircle'` | `'normal'` | 箭头形状 |
 | `children` | `Array<<Step>>` | — | 至少 2 个；首个非 `move` 时编译器会强制改成 `move`。`<Step>` 支持 `move` / `line` / `step`（折角）/ `cycle`（闭合） |
 
 ## 与 Draw 的取舍
