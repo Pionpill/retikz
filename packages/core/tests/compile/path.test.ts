@@ -145,4 +145,54 @@ describe("compile path: 'step' 折角 (ADR-0001)", () => {
     const matches = d.match(/[ML]/g);
     expect(matches).toEqual(['M', 'L', 'L']); // M start, L corner, L end
   });
+
+  it('折角中点对齐节点几何中心，不取 boundary 偏移（bugfix）', () => {
+    // A=(0,0)，B=(100,60)，无文本默认 width=height=2*padding=16
+    // 期望 corner = (B.center.x=100, A.center.y=0)
+    // A 端点向 (100, 0) 切 boundary → A.east = (8, 0)
+    // B 端点向 (100, 0) 切 boundary → B.north = (100, 52)
+    // 路径："M 8 0 L 100 0 L 100 52"
+    const ir: IR = {
+      version: 1,
+      type: 'scene',
+      children: [
+        { type: 'node', id: 'A', position: [0, 0] },
+        { type: 'node', id: 'B', position: [100, 60] },
+        {
+          type: 'path',
+          children: [
+            { type: 'step', kind: 'move', to: 'A' },
+            { type: 'step', kind: 'step', via: '-|', to: 'B' },
+          ],
+        },
+      ],
+    };
+    const d = findPathPrim(compileToScene(ir).primitives).d;
+    expect(d).toBe('M 8 0 L 100 0 L 100 52');
+  });
+
+  it("via '|-' 中点对齐：corner = (A.center.x, B.center.y)", () => {
+    // A=(0,0)，B=(100,60)，无文本 16x16
+    // |- corner = (A.x=0, B.y=60)
+    // A 端点向 (0, 60) → A.south = (0, 8)
+    // B 端点向 (0, 60) → B.west = (92, 60)
+    // 路径："M 0 8 L 0 60 L 92 60"
+    const ir: IR = {
+      version: 1,
+      type: 'scene',
+      children: [
+        { type: 'node', id: 'A', position: [0, 0] },
+        { type: 'node', id: 'B', position: [100, 60] },
+        {
+          type: 'path',
+          children: [
+            { type: 'step', kind: 'move', to: 'A' },
+            { type: 'step', kind: 'step', via: '|-', to: 'B' },
+          ],
+        },
+      ],
+    };
+    const d = findPathPrim(compileToScene(ir).primitives).d;
+    expect(d).toBe('M 0 8 L 0 60 L 92 60');
+  });
 });
