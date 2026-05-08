@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest';
+import type { IRStep, IRTarget } from '../../src/ir';
 import type { WayDSL } from '../../src/parsers/parseWay';
 import { DrawWay, parseWay } from '../../src/parsers/parseWay';
+
+/** 测试 helper：cycle step 没 to，统一返回 undefined；其他 kind 返回 .to */
+const toOf = (s: IRStep): IRTarget | undefined =>
+  s.kind === 'cycle' ? undefined : s.to;
 
 describe('parseWay', () => {
   describe('基本形态', () => {
@@ -23,7 +28,7 @@ describe('parseWay', () => {
   describe('Way 元素形态覆盖', () => {
     it('全是节点 id（string）', () => {
       const steps = parseWay(['A', 'B', 'C']);
-      expect(steps.map(s => s.to)).toEqual(['A', 'B', 'C']);
+      expect(steps.map(toOf)).toEqual(['A', 'B', 'C']);
     });
 
     it('全是笛卡尔坐标 [x, y]', () => {
@@ -32,7 +37,7 @@ describe('parseWay', () => {
         [10, 10],
         [20, 0],
       ]);
-      expect(steps.map(s => s.to)).toEqual([
+      expect(steps.map(toOf)).toEqual([
         [0, 0],
         [10, 10],
         [20, 0],
@@ -86,7 +91,7 @@ describe('parseWay', () => {
       const way: WayDSL = ['A', [1, 2], 'B', [3, 4]];
       const steps = parseWay(way);
       for (let i = 0; i < way.length; i++) {
-        expect(steps[i].to).toBe(way[i]);
+        expect(toOf(steps[i])).toBe(way[i]);
       }
     });
   });
@@ -103,7 +108,7 @@ describe('parseWay', () => {
       const polar = { angle: 0, radius: 1 };
       const steps = parseWay([polar, 'B']);
       // to 字段是同一引用，不深拷贝（对 IR 使用方足够：IR 序列化时再深拷贝）
-      expect(steps[0].to).toBe(polar);
+      expect(toOf(steps[0])).toBe(polar);
     });
 
     it('两次相同输入产出结构相等的结果', () => {

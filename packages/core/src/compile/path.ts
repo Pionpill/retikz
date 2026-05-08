@@ -1,6 +1,6 @@
 import { rect as rectOps } from '../geometry/rect';
-import type { IRPath, IRPosition, IRStep, IRTarget } from '../ir';
-import type { ArrowShape, PathPrim, ScenePrimitive } from '../primitive';
+import type { ArrowShape, IRPath, IRPosition, IRStep, IRTarget } from '../ir';
+import type { PathPrim, ScenePrimitive } from '../primitive';
 import { type NodeLayout, attachRectOf } from './node';
 import { resolvePosition } from './position';
 
@@ -265,7 +265,7 @@ export const emitPathPrimitive = (
     if (firstIdx >= 0) {
       const cur = ops[firstIdx];
       const next = ops.slice(firstIdx + 1).find(o => o.cmd !== 'Z');
-      if (cur.cmd !== 'Z' && next && next.cmd !== 'Z') {
+      if (cur.cmd !== 'Z' && next) {
         cur.point = shiftToward(cur.point, next.point, shrinkStart * strokeWidth);
       }
     }
