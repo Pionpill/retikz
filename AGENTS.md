@@ -18,8 +18,8 @@
 ```
 retikz/
 ├── packages/
-│   ├── legacy-core/    # @retikz/legacy-core — v0.0.x 旧实现，保留作参考，不发布
-│   └── core/           # @retikz/core — v0.1 alpha
+│   ├── core/           # @retikz/core — v0.1 alpha 框架无关 IR + Scene 编译器
+│   └── react/          # @retikz/react — React adapter（Kernel + Sugar JSX）
 ├── apps/
 │   └── docs/           # @retikz/docs — 文档站点（修改前先看 apps/docs/AGENTS.md；写文档另见 .agents/skills/docs-doc-write/SKILL.md）
 ├── config/
@@ -50,16 +50,16 @@ pnpm install                         # 安装所有 workspace 依赖
 pnpm lint                            # ESLint 全量（带 --cache）
 ```
 
-子包（示例：legacy-core）：
+子包（示例：core）：
 
 ```bash
-pnpm --filter @retikz/legacy-core dev       # 启动开发
-pnpm --filter @retikz/legacy-core build     # 构建产物到 dist/
-pnpm --filter @retikz/legacy-core lint      # 单包 lint
-pnpm --filter @retikz/legacy-core preview   # 预览构建结果
+pnpm --filter @retikz/core dev       # 启动开发
+pnpm --filter @retikz/core build     # 构建产物到 dist/
+pnpm --filter @retikz/core lint      # 单包 lint
+pnpm --filter @retikz/core preview   # 预览构建结果
 ```
 
-v0.1 新 core 在 `next` 分支：`pnpm --filter @retikz/core ...`。
+把 `core` 换成 `react` / `docs` 即可作用到对应子包。
 
 ## 改完代码后
 

@@ -6,8 +6,8 @@ on:
       - main
     paths:
       - 'apps/docs/**'
-      - 'packages/legacy-core/**'
       - 'packages/core/**'
+      - 'packages/react/**'
       - 'pnpm-workspace.yaml'
       - 'pnpm-lock.yaml'
       - '.github/workflows/deploy-docs.yml'
