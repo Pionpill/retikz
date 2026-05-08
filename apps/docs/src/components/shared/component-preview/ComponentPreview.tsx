@@ -5,7 +5,20 @@ import { cn } from '@/lib/utils';
 import { useComponentPreviewStore } from '@/store/useComponentPreviewStore';
 import type { IR } from '@retikz/core';
 import { convertReactNodeToIR } from '@retikz/react';
-import { Check, ChevronsDownUp, ChevronsUpDown, Copy, X } from 'lucide-react';
+import {
+  ArrowDown,
+  ArrowLeft,
+  ArrowRight,
+  ArrowUp,
+  Check,
+  ChevronsDownUp,
+  ChevronsUpDown,
+  Copy,
+  RotateCcw,
+  X,
+  ZoomIn,
+  ZoomOut,
+} from 'lucide-react';
 import type { FC, ReactElement, ReactNode } from 'react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useParams } from 'react-router';
@@ -82,6 +95,8 @@ export const ComponentPreview: FC<ComponentPreviewProps> = props => {
   const [localIsExpanded, setLocalIsExpanded] = useState<boolean | undefined>(undefined);
   const [copied, setCopied] = useState(false);
   const timerRef = useRef<number | null>(null);
+  // 渲染区平移 / 缩放：纯 CSS transform 实现，单次点击 24px 步进、缩放 ×1.2 因子
+  const [transform, setTransform] = useState({ x: 0, y: 0, scale: 1 });
 
   // 全局默认（仅在该卡 local 仍为 undefined 时生效）：
   // - isExpand 启用 → 默认揭示并展开
@@ -169,10 +184,121 @@ export const ComponentPreview: FC<ComponentPreviewProps> = props => {
     setView('react');
   };
 
+  const PAN_STEP = 24;
+  const ZOOM_FACTOR = 1.2;
+  const ZOOM_MIN = 0.25;
+  const ZOOM_MAX = 4;
+  const panBy = (dx: number, dy: number) => setTransform(t => ({ ...t, x: t.x + dx, y: t.y + dy }));
+  const zoomBy = (factor: number) =>
+    setTransform(t => ({ ...t, scale: Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, t.scale * factor)) }));
+  const resetTransform = () => setTransform({ x: 0, y: 0, scale: 1 });
+  const isTransformed = transform.x !== 0 || transform.y !== 0 || transform.scale !== 1;
+
   return (
     <div className="my-6 overflow-hidden rounded-xl border">
-      <div className={cn('flex h-72 w-full justify-center p-10', alignClass[align], componentClassName)}>
-        <Component />
+      <div
+        className={cn(
+          'group/preview relative flex h-72 w-full justify-center overflow-hidden p-10',
+          alignClass[align],
+          componentClassName,
+        )}
+      >
+        <div
+          className="flex items-center justify-center transition-transform duration-150"
+          style={{
+            transform: `translate(${transform.x}px, ${transform.y}px) scale(${transform.scale})`,
+          }}
+        >
+          <Component />
+        </div>
+        {/* hover-revealed pan/zoom 工具条：手柄式 3x4 布局——
+            ↑ / ← ⟲ → / ↓ / + ‧ −。空位用 <span/> 占网格槽避免按钮跨列。 */}
+        <div
+          className={cn(
+            'absolute right-2 bottom-2 grid grid-cols-3 gap-0.5 rounded-md border bg-background/95 p-1 shadow-sm backdrop-blur',
+            'pointer-events-none opacity-0 transition-opacity group-hover/preview:pointer-events-auto group-hover/preview:opacity-100 focus-within:pointer-events-auto focus-within:opacity-100',
+          )}
+        >
+          <span />
+          <Button
+            type="button"
+            size="icon"
+            variant="ghost"
+            aria-label="Pan up"
+            className="size-7 cursor-pointer rounded-sm text-muted-foreground"
+            onClick={() => panBy(0, -PAN_STEP)}
+          >
+            <ArrowUp className="size-3.5" />
+          </Button>
+          <span />
+          <Button
+            type="button"
+            size="icon"
+            variant="ghost"
+            aria-label="Pan left"
+            className="size-7 cursor-pointer rounded-sm text-muted-foreground"
+            onClick={() => panBy(-PAN_STEP, 0)}
+          >
+            <ArrowLeft className="size-3.5" />
+          </Button>
+          <Button
+            type="button"
+            size="icon"
+            variant="ghost"
+            aria-label="Reset"
+            disabled={!isTransformed}
+            className="size-7 cursor-pointer rounded-sm text-muted-foreground"
+            onClick={resetTransform}
+          >
+            <RotateCcw className="size-3.5" />
+          </Button>
+          <Button
+            type="button"
+            size="icon"
+            variant="ghost"
+            aria-label="Pan right"
+            className="size-7 cursor-pointer rounded-sm text-muted-foreground"
+            onClick={() => panBy(PAN_STEP, 0)}
+          >
+            <ArrowRight className="size-3.5" />
+          </Button>
+          <span />
+          <Button
+            type="button"
+            size="icon"
+            variant="ghost"
+            aria-label="Pan down"
+            className="size-7 cursor-pointer rounded-sm text-muted-foreground"
+            onClick={() => panBy(0, PAN_STEP)}
+          >
+            <ArrowDown className="size-3.5" />
+          </Button>
+          <span />
+          <Separator className="col-span-3 my-0.5" />
+          <Button
+            type="button"
+            size="icon"
+            variant="ghost"
+            aria-label="Zoom in"
+            disabled={transform.scale >= ZOOM_MAX}
+            className="size-7 cursor-pointer rounded-sm text-muted-foreground"
+            onClick={() => zoomBy(ZOOM_FACTOR)}
+          >
+            <ZoomIn className="size-3.5" />
+          </Button>
+          <span />
+          <Button
+            type="button"
+            size="icon"
+            variant="ghost"
+            aria-label="Zoom out"
+            disabled={transform.scale <= ZOOM_MIN}
+            className="size-7 cursor-pointer rounded-sm text-muted-foreground"
+            onClick={() => zoomBy(1 / ZOOM_FACTOR)}
+          >
+            <ZoomOut className="size-3.5" />
+          </Button>
+        </div>
       </div>
       {hideCode ? null : (
         <div className="relative overflow-hidden border-t bg-muted/50 text-sm">
