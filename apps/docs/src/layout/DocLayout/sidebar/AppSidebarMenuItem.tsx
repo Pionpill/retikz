@@ -20,11 +20,10 @@ const baseLinkClass =
 const activeLinkClass = 'text-foreground font-semibold bg-accent';
 
 /**
- * 二级及以下菜单项：左侧带一根竖线、激活时显示圆点。
- * - 叶子（无 children）：点击导航
- * - 分组（有 children）：点击展开/收起，递归渲染子项；命中子项时父节点自动展开
- *
- * 不依赖 shadcn Sidebar；纯 ul/li + Collapsible。
+ * 二级及以下菜单项。
+ * - 叶子（无 children）：点击导航；激活态靠按钮自身的 bg + bold 体现
+ * - 分组（有 children）：点击展开/收起；命中子项时父节点初始即展开；
+ *   chevron 表示当前折叠态。子项容器不带装饰竖线，平铺缩进即可
  */
 export const AppSidebarMenuItem: FC<AppSidebarMenuItemProps> = props => {
   const { item, path } = props;
@@ -61,24 +60,12 @@ export const AppSidebarMenuItem: FC<AppSidebarMenuItemProps> = props => {
   );
 
   return (
-    <li
-      className={cn(
-        'relative',
-        // 激活态在按钮左侧显示圆点
-        isLeafActive &&
-          'before:absolute before:top-1/2 before:-left-[3px] before:size-1.5 before:-translate-y-1/2 before:rounded-full before:bg-foreground/70 before:content-[""]',
-      )}
-    >
+    <li>
       {hasChildren ? (
         <Collapsible open={open} onOpenChange={setOpen}>
           <CollapsibleTrigger asChild>{button}</CollapsibleTrigger>
           <CollapsibleContent>
-            <ul
-              className={cn(
-                'relative ml-3 mt-0.5 flex flex-col gap-0.5 pl-3',
-                'before:absolute before:left-0 before:top-1 before:bottom-1 before:w-px before:rounded-full before:bg-border',
-              )}
-            >
+            <ul className="ml-3 mt-0.5 flex flex-col gap-0.5 pl-3">
               {item.children!.map(child => (
                 <AppSidebarMenuItem
                   key={child.value}
