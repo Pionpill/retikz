@@ -2,7 +2,6 @@
   "name": "@retikz/react",
   "version": "0.1.0-alpha.0",
   "description": "React adapter for retikz: Kernel/Sugar JSX components and SVG renderer.",
-  "private": true,
   "type": "module",
   "main": "./src/index.ts",
   "module": "./src/index.ts",

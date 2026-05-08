@@ -2,7 +2,6 @@
   "name": "@retikz/core",
   "version": "0.1.0-alpha.0",
   "description": "retikz v0.1 core: framework-agnostic IR, scene compiler, and pure parsers.",
-  "private": true,
   "type": "module",
   "homepage": "https://pionpill.github.io/retikz/",
   "keywords": [
