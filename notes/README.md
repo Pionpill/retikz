@@ -19,7 +19,10 @@
 
 ### adr/
 
-（暂无；后续单点决策从这里开始编号 0001）
+- [`0001-folding-step-syntax.md`](./adr/0001-folding-step-syntax.md)：折角 step 的 IR 语法（`Step.kind: 'step'` + `via: '-|' | '|-'`）
+- [`0002-path-arrow-representation.md`](./adr/0002-path-arrow-representation.md)：Path 箭头的 IR 表示（`Path.arrow: 'none' | '->' | '<-' | '<->'`）
+- [`0003-node-shape-polymorphism.md`](./adr/0003-node-shape-polymorphism.md)：Node shape 多态与扩展机制（rectangle / circle / ellipse / diamond）
+- [`0004-target-string-syntax.md`](./adr/0004-target-string-syntax.md)：Target 字符串扩展（`'A' | 'A.north' | 'A.30'`）
 
 ### analysis/
 
