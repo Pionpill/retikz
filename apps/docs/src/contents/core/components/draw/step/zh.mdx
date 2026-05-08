@@ -1,9 +1,9 @@
 ---
 title: Step
-description: Path 的子节点——一个 step = 一个动作（move / line / step 折角）；只能作为 `<Path>` 的直接 children。
+description: Path 的子节点——一个 step = 一个动作（move / line / step 折角 / cycle 闭合）；只能作为 `<Path>` 的直接 children。
 ---
 
-`<Step>` 描述路径上的一个动作：`move` 抬笔到目标点，`line` 落笔从游标画直线到目标点，`step` 经一个直角拐点折到目标点。它**只能**作为 `<Path>` 的直接 children；放在其它地方会被忽略。
+`<Step>` 描述路径上的一个动作：`move` 抬笔到目标点，`line` 落笔从游标画直线到目标点，`step` 经一个直角拐点折到目标点，`cycle` 闭合回 path 起点。它**只能**作为 `<Path>` 的直接 children；放在其它地方会被忽略。
 
 ## 用法
 
@@ -32,6 +32,12 @@ import { Path, Step } from '@retikz/react';
 
 <ComponentPreview name="step-fold" />
 
+### 闭合（cycle）
+
+`kind="cycle"` 把当前子路径闭合回最近一次 `move` 的起点——对应 TikZ 的 `cycle` / SVG path 的 `Z`。`cycle` 没有 `to` 字段（目标隐式 = 起点）。比手动 `line` 回起点少写一个端点：
+
+<ComponentPreview name="step-cycle" />
+
 ### 样式
 
 `<Step>` 自身没有 stroke 类视觉属性——样式都挂在父 `<Path>` 上，整条 Path 的所有 Step 共享同一套 `stroke` / `strokeWidth` / `strokeDasharray`：
@@ -42,19 +48,20 @@ import { Path, Step } from '@retikz/react';
 
 | 属性 | 类型 | 默认值 | 描述 |
 | --- | --- | --- | --- |
-| `kind` | `'move' \| 'line' \| 'step'` | `'line'` | `'move'` 抬笔不绘制；`'step'` 走折角 |
+| `kind` | `'move' \| 'line' \| 'step' \| 'cycle'` | `'line'` | `'move'` 抬笔不绘制；`'step'` 走折角；`'cycle'` 闭合回起点 |
 | `via` | `'-\|' \| '\|-'` | — | 仅 `kind="step"` 必填：`-\|` 先水平后垂直；`\|-` 先垂直后水平 |
-| `to` | `IRTarget` | — | 目标点：节点 id、笛卡尔 `[x, y]`、或极坐标对象 |
+| `to` | `IRTarget` | — | `kind="cycle"` 时不需要；其余 kind 必填——目标点：节点 id、笛卡尔 `[x, y]`、或极坐标对象 |
 
-## kind 的三种取值
+## kind 的四种取值
 
 | kind | 行为 | 类比 SVG / TikZ |
 | --- | --- | --- |
 | `'move'` | 移动游标，**不画线** | path "M" |
 | `'line'` | 从当前游标画直线到目标点 | path "L" / TikZ `--` |
 | `'step'` | 经一个直角拐点折到目标点 | TikZ `-\|` / `\|-` |
+| `'cycle'` | 闭合回最近一次 move 起点（无 `to`） | path "Z" / TikZ `cycle` |
 
-`<Path>` 第一个 step 必须是 `move`——如果你写 `'line'` 或 `'step'`，编译器会自动改成 `move`。
+`<Path>` 第一个 step 必须是 `move`——如果你写 `'line'` / `'step'` / `'cycle'`，编译器会自动改成 `move`（cycle 无 `to`，回退到原点 `[0, 0]`）。
 
 ## via 的两种取值
 

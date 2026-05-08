@@ -4,7 +4,8 @@ import { TIKZ_STEP } from './_displayNames';
 
 /**
  * <Step> 组件的 props。
- * v0.1.0-alpha.1 支持 'move' / 'line' / 'step'（折角）；kind 默认 'line'。
+ * v0.1.0-alpha.1 支持四种 kind：'move' / 'line' / 'step'（折角）/ 'cycle'（闭合）。
+ * kind 默认 'line'。
  */
 export type StepProps =
   | {
@@ -26,6 +27,10 @@ export type StepProps =
       via: '-|' | '|-';
       /** 折角终点 */
       to: IRTarget;
+    }
+  | {
+      /** 闭合：把当前子路径回到最近一个 move 起点（TikZ `cycle` / SVG `Z`） */
+      kind: 'cycle';
     };
 
 /**

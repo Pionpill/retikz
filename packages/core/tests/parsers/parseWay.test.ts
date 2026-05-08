@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { WayDSL } from '../../src/parsers/parseWay';
-import { parseWay } from '../../src/parsers/parseWay';
+import { DrawWay, parseWay } from '../../src/parsers/parseWay';
 
 describe('parseWay', () => {
   describe('基本形态', () => {
@@ -112,33 +112,84 @@ describe('parseWay', () => {
     });
   });
 
-  describe('折角项 WayFold', () => {
-    it("`{ via: '-|', to }` 解析为 step 折角", () => {
-      expect(parseWay(['A', { via: '-|', to: 'B' }])).toEqual([
+  describe('折角算子 (infix)', () => {
+    it("'-|' 在两个 target 之间产出 step 折角", () => {
+      expect(parseWay(['A', '-|', 'B'])).toEqual([
         { type: 'step', kind: 'move', to: 'A' },
         { type: 'step', kind: 'step', via: '-|', to: 'B' },
       ]);
     });
 
-    it("`{ via: '|-', to }` 解析为 step 折角", () => {
-      expect(parseWay(['A', { via: '|-', to: [10, 5] }])).toEqual([
+    it("'|-' 同理，目标可以是任意 IRTarget 形态", () => {
+      expect(parseWay(['A', '|-', [10, 5]])).toEqual([
         { type: 'step', kind: 'move', to: 'A' },
         { type: 'step', kind: 'step', via: '|-', to: [10, 5] },
       ]);
     });
 
-    it('混合 line + fold + line：fold 项产出 step，相邻 line 不受影响', () => {
-      expect(parseWay(['A', { via: '-|', to: 'B' }, [10, 0]])).toEqual([
+    it('混合 line + 折角算子 + line：折角与邻居 line 互不干扰', () => {
+      expect(parseWay(['A', '-|', 'B', [10, 0]])).toEqual([
         { type: 'step', kind: 'move', to: 'A' },
         { type: 'step', kind: 'step', via: '-|', to: 'B' },
         { type: 'step', kind: 'line', to: [10, 0] },
       ]);
     });
 
-    it('首项是 fold 对象时，提取 to 当 move target（不会变成 step）', () => {
-      const steps = parseWay([{ via: '-|', to: 'A' }, 'B']);
-      expect(steps[0]).toEqual({ type: 'step', kind: 'move', to: 'A' });
+    it("DrawWay.hv / DrawWay.vh 与裸 '-|' / '|-' 算子等价", () => {
+      expect(parseWay(['A', DrawWay.hv, 'B', DrawWay.vh, 'C'])).toEqual(
+        parseWay(['A', '-|', 'B', '|-', 'C']),
+      );
+    });
+
+    it("折角算子在 way 末尾（无下一项）抛错", () => {
+      expect(() => parseWay(['A', '-|'])).toThrow(/via operator '-\|' at end/);
+    });
+
+    it("折角算子后接另一个算子 / cycle 抛错", () => {
+      expect(() => parseWay(['A', '-|', '|-', 'B'])).toThrow(
+        /via operator '-\|' must be followed by a target/,
+      );
+      expect(() => parseWay(['A', '-|', DrawWay.cycle])).toThrow(
+        /via operator '-\|' must be followed by a target/,
+      );
+    });
+  });
+
+  describe('闭合关键字 DrawWay.cycle', () => {
+    it("DrawWay.cycle 解析为 cycle step（无 to）", () => {
+      expect(parseWay(['A', 'B', DrawWay.cycle])).toEqual([
+        { type: 'step', kind: 'move', to: 'A' },
+        { type: 'step', kind: 'line', to: 'B' },
+        { type: 'step', kind: 'cycle' },
+      ]);
+    });
+
+    it('cycle 可与 fold 算子混用', () => {
+      expect(parseWay(['A', '-|', 'B', 'C', DrawWay.cycle])).toEqual([
+        { type: 'step', kind: 'move', to: 'A' },
+        { type: 'step', kind: 'step', via: '-|', to: 'B' },
+        { type: 'step', kind: 'line', to: 'C' },
+        { type: 'step', kind: 'cycle' },
+      ]);
+    });
+
+    it('首项是 DrawWay.cycle 时降级为 move 到 [0, 0]（容错）', () => {
+      const steps = parseWay([DrawWay.cycle, 'B']);
+      expect(steps[0]).toEqual({ type: 'step', kind: 'move', to: [0, 0] });
       expect(steps[1]).toEqual({ type: 'step', kind: 'line', to: 'B' });
+    });
+
+    it("裸字符串 'cycle' 不触发闭合——视作普通节点 id（与 DrawWay.cycle 字面值刻意不同）", () => {
+      const steps = parseWay(['A', 'cycle']);
+      expect(steps[1]).toEqual({ type: 'step', kind: 'line', to: 'cycle' });
+    });
+  });
+
+  describe('DrawWay 常量值锁定', () => {
+    it('cycle 取不与节点 id 撞车的字符串；折角直接用 TikZ 字面', () => {
+      expect(DrawWay.cycle).toBe('retikz-keyword_cycle');
+      expect(DrawWay.hv).toBe('-|');
+      expect(DrawWay.vh).toBe('|-');
     });
   });
 

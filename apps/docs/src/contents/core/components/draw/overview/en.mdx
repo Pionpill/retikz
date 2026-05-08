@@ -1,6 +1,6 @@
 ---
 title: Draw
-description: Sugar component — way array threads through ids / Cartesian / polar / fold targets, expands at compile time to Path + Step.
+description: Sugar component — way array threads through ids / Cartesian / polar / fold / cycle items, expands at compile time to Path + Step.
 ---
 
 `<Draw>` is the go-to for 90% of connections. `way` is an array of targets joined as a path; at compile time it expands to an equivalent Kernel `<Path>` + `<Step>` tree, so `<Draw>` adds no capability the Kernel can't already express.
@@ -21,16 +21,39 @@ import { Draw } from '@retikz/react';
 
 <ComponentPreview name="draw-basic" />
 
-### Four forms of way item
+### Five forms of way item
 
-Each item in `way` accepts four forms — the first three are direct targets (matching `<Step>.to`), the fourth is a fold object.
+Each item in `way` accepts five forms — the first three are direct targets (matching `<Step>.to`), the last two are infix operators / keywords.
 
 | Form | Example | Meaning |
 | --- | --- | --- |
 | Node id | `'a'` | Reference a Node in the same Tikz; endpoint auto-attaches to border |
 | Cartesian | `[120, 0]` | Literal `[x, y]` |
 | Polar | `{ origin: 'a', angle: 60, radius: 80 }` | Polar (see [Positioning](/core/concepts/positioning)) |
-| Fold | `{ via: '-\|' \| '\|-', to: target }` | Right-angle fold segment (TikZ `-\|` / `\|-`) |
+| Fold operator | `'-\|'` / `'\|-'` (or `DrawWay.hv` / `DrawWay.vh`) | Turn the "previous → next" segment into a fold (TikZ `-\|` / `\|-` infix) |
+| Cycle | `DrawWay.cycle` | Close back to way's first item (equivalent to TikZ `cycle` / SVG `Z`) |
+
+### DrawWay keyword constants
+
+`DrawWay` exposes named constants for special way-array items:
+
+```tsx
+import { Draw, DrawWay } from '@retikz/react';
+
+<Draw way={['a', 'b', 'c', DrawWay.cycle]} />            {/* close */}
+<Draw way={['a', '-|', 'b']} />                          {/* fold via raw literal */}
+<Draw way={['a', DrawWay.hv, 'b']} />                    {/* fold via constant */}
+```
+
+| Constant | Raw literal | Meaning |
+| --- | --- | --- |
+| `DrawWay.cycle` | (**const-only**) | Close keyword. The underlying string is intentionally ugly (`'retikz-keyword_cycle'`) so it can never collide with a node id. |
+| `DrawWay.hv` | `'-\|'` | Fold: horizontal-then-vertical (infix operator) |
+| `DrawWay.vh` | `'\|-'` | Fold: vertical-then-horizontal (infix operator) |
+
+**Why cycle bans the raw literal**: `'cycle'` is a common English word, very likely to collide with a real node id. Cycle therefore goes **only** through `DrawWay.cycle`; a bare string `'cycle'` in `way` is just a node id reference.
+
+The fold values `'-\|'` / `'\|-'` contain reserved punctuation, so they cannot collide with node ids — **both raw literal and constant work**, pick whichever fits.
 
 Three Draws below use id, Cartesian, and polar as endpoints respectively:
 
@@ -38,9 +61,15 @@ Three Draws below use id, Cartesian, and polar as endpoints respectively:
 
 ### Folded segments
 
-Drop a `{ via, to }` object into `way` and that segment folds through a right-angle corner instead of a straight line — equivalent to `<Step kind="step" via to>`. Essential for flow charts and UML relationships:
+Drop `'-|'` or `'|-'` directly into `way` (infix operator) and the "previous → next" segment becomes a fold — matches TikZ's `(A) -| (B)` form, equivalent to `<Step kind="step" via to>`. Essential for flow charts and UML relationships:
 
 <ComponentPreview name="draw-fold" />
+
+### Closing the loop
+
+End `way` with `DrawWay.cycle` to close the last segment back to the first item — matches TikZ's native form `(A) -- (B) -- cycle`, equivalent to `<Step kind="cycle" />`:
+
+<ComponentPreview name="draw-cycle" />
 
 ### Styling
 
@@ -52,7 +81,7 @@ Drop a `{ via, to }` object into `way` and that segment folds through a right-an
 
 | Prop | Type | Default | Description |
 | --- | --- | --- | --- |
-| `way` | `Array<WayItem>` | — | At least 2 items; first is always `move`, rest are `line` or `step` (fold) depending on item form |
+| `way` | `Array<WayItem>` | — | At least 2 items; first is always `move`, rest are `line` / `step` (fold) / `cycle` (close) depending on item form |
 | `stroke` | `string` | `currentColor` | Stroke color |
 | `strokeWidth` | `number` | `1` | Stroke width |
 | `strokeDasharray` | `string` | — | SVG `stroke-dasharray` pattern (e.g. `"4 2"`) |

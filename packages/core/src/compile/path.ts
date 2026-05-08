@@ -51,7 +51,7 @@ export const emitPathPrimitive = (
   if (steps.length < 2) return null;
 
   const refPoints: Array<IRPosition | null> = steps.map(s =>
-    refPointOfTarget(s.to, nodeIndex),
+    s.kind === 'cycle' ? null : refPointOfTarget(s.to, nodeIndex),
   );
 
   // fold step 的拐点；非 fold 或 ref 缺失为 null
@@ -75,9 +75,14 @@ export const emitPathPrimitive = (
     return null;
   };
 
-  const endpoints: Array<IRPosition> = [];
+  const endpoints: Array<IRPosition | null> = [];
   for (let i = 0; i < steps.length; i++) {
-    const target = steps[i].to;
+    const step = steps[i];
+    if (step.kind === 'cycle') {
+      endpoints.push(null);
+      continue;
+    }
+    const target = step.to;
     if (typeof target === 'string') {
       const node = nodeIndex.get(target);
       if (!node) return null; // 引用未定义节点
@@ -96,33 +101,38 @@ export const emitPathPrimitive = (
     }
   }
 
-  // 顺着 step kind 把 endpoints 翻成"实际绘制点序列"——折角在中间多塞一个 corner
+  // 顺着 step kind 把 endpoints 翻成"实际绘制点序列"——折角在中间多塞一个 corner，
+  // cycle 不增加点，只在 d 字符串末尾追加一个 'Z' 标记。
   const points: Array<IRPosition> = [];
-  const commands: Array<'M' | 'L'> = [];
+  const tokens: Array<string> = [];
   for (let i = 0; i < steps.length; i++) {
-    if (i === 0) {
-      points.push(endpoints[0]);
-      commands.push('M');
+    const step = steps[i];
+    if (step.kind === 'cycle') {
+      tokens.push('Z');
       continue;
     }
-    if (steps[i].kind === 'step') {
+    const ep = endpoints[i];
+    if (!ep) return null; // 不应发生：非 cycle step 的 endpoint 必有
+    if (i === 0) {
+      points.push(ep);
+      tokens.push(`M ${round(ep[0])} ${round(ep[1])}`);
+      continue;
+    }
+    if (step.kind === 'step') {
       const corner = corners[i];
       if (corner) {
         points.push(corner);
-        commands.push('L');
+        tokens.push(`L ${round(corner[0])} ${round(corner[1])}`);
       }
-      points.push(endpoints[i]);
-      commands.push('L');
+      points.push(ep);
+      tokens.push(`L ${round(ep[0])} ${round(ep[1])}`);
       continue;
     }
-    points.push(endpoints[i]);
-    commands.push(steps[i].kind === 'move' ? 'M' : 'L');
+    points.push(ep);
+    tokens.push(`${step.kind === 'move' ? 'M' : 'L'} ${round(ep[0])} ${round(ep[1])}`);
   }
 
-  // 写 d 字符串时按 precision 四舍五入
-  const d = points
-    .map((p, i) => `${commands[i]} ${round(p[0])} ${round(p[1])}`)
-    .join(' ');
+  const d = tokens.join(' ');
 
   const primitive: ScenePrimitive = {
     type: 'path',

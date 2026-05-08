@@ -172,11 +172,6 @@ describe("compile path: 'step' 折角 (ADR-0001)", () => {
   });
 
   it("via '|-' 中点对齐：corner = (A.center.x, B.center.y)", () => {
-    // A=(0,0)，B=(100,60)，无文本 16x16
-    // |- corner = (A.x=0, B.y=60)
-    // A 端点向 (0, 60) → A.south = (0, 8)
-    // B 端点向 (0, 60) → B.west = (92, 60)
-    // 路径："M 0 8 L 0 60 L 92 60"
     const ir: IR = {
       version: 1,
       type: 'scene',
@@ -196,3 +191,85 @@ describe("compile path: 'step' 折角 (ADR-0001)", () => {
     expect(d).toBe('M 0 8 L 0 60 L 92 60');
   });
 });
+
+describe("compile path: 'cycle' 闭合", () => {
+  it("cycle 段在 d 字符串末尾追加 'Z'", () => {
+    const ir: IR = {
+      version: 1,
+      type: 'scene',
+      children: [
+        {
+          type: 'path',
+          children: [
+            { type: 'step', kind: 'move', to: [0, 0] },
+            { type: 'step', kind: 'line', to: [10, 0] },
+            { type: 'step', kind: 'line', to: [10, 10] },
+            { type: 'step', kind: 'cycle' },
+          ],
+        },
+      ],
+    };
+    const d = findPathPrim(compileToScene(ir).primitives).d;
+    expect(d).toBe('M 0 0 L 10 0 L 10 10 Z');
+  });
+
+  it('cycle 不引入新 endpoints，viewBox 与不带 cycle 的等价路径一致', () => {
+    const irWith: IR = {
+      version: 1,
+      type: 'scene',
+      children: [
+        {
+          type: 'path',
+          children: [
+            { type: 'step', kind: 'move', to: [0, 0] },
+            { type: 'step', kind: 'line', to: [10, 0] },
+            { type: 'step', kind: 'line', to: [10, 10] },
+            { type: 'step', kind: 'cycle' },
+          ],
+        },
+      ],
+    };
+    const irWithout: IR = {
+      version: 1,
+      type: 'scene',
+      children: [
+        {
+          type: 'path',
+          children: [
+            { type: 'step', kind: 'move', to: [0, 0] },
+            { type: 'step', kind: 'line', to: [10, 0] },
+            { type: 'step', kind: 'line', to: [10, 10] },
+          ],
+        },
+      ],
+    };
+    expect(compileToScene(irWith).viewBox).toEqual(
+      compileToScene(irWithout).viewBox,
+    );
+  });
+
+  it('cycle 与节点 ref 配合：闭合不影响其他段端点贴边', () => {
+    const ir: IR = {
+      version: 1,
+      type: 'scene',
+      children: [
+        { type: 'node', id: 'A', position: [0, 0] },
+        { type: 'node', id: 'B', position: [60, 0] },
+        { type: 'node', id: 'C', position: [60, 60] },
+        {
+          type: 'path',
+          children: [
+            { type: 'step', kind: 'move', to: 'A' },
+            { type: 'step', kind: 'line', to: 'B' },
+            { type: 'step', kind: 'line', to: 'C' },
+            { type: 'step', kind: 'cycle' },
+          ],
+        },
+      ],
+    };
+    const d = findPathPrim(compileToScene(ir).primitives).d;
+    expect(d.endsWith(' Z')).toBe(true);
+    expect(d.match(/[MLZ]/g)).toEqual(['M', 'L', 'L', 'Z']);
+  });
+});
+

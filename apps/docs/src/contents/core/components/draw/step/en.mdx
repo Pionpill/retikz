@@ -1,9 +1,9 @@
 ---
 title: Step
-description: Path's child node — one step = one action (move / line / step fold); only valid as a direct child of `<Path>`.
+description: Path's child node — one step = one action (move / line / step fold / cycle close); only valid as a direct child of `<Path>`.
 ---
 
-`<Step>` describes a single path action: `move` lifts the pen to the target, `line` draws a straight line from cursor to target, `step` folds through a single right-angle corner. It is **only** valid as a direct child of `<Path>`; placed elsewhere it is silently ignored.
+`<Step>` describes a single path action: `move` lifts the pen to the target, `line` draws a straight line from cursor to target, `step` folds through a single right-angle corner, `cycle` closes the path back to its starting point. It is **only** valid as a direct child of `<Path>`; placed elsewhere it is silently ignored.
 
 ## Usage
 
@@ -32,6 +32,12 @@ The path below draws A→B with one `move` + `line`, then lifts the pen with ano
 
 <ComponentPreview name="step-fold" />
 
+### Closing (cycle)
+
+`kind="cycle"` closes the current sub-path back to the most recent `move` target — the TikZ `cycle` keyword / SVG path `Z`. `cycle` carries **no** `to` field (the destination is implicit). Saves writing one explicit endpoint vs. drawing a `line` back to the start:
+
+<ComponentPreview name="step-cycle" />
+
 ### Styling
 
 `<Step>` itself has no stroke-related visual props — styling lives on the parent `<Path>`, and all child Steps share the same `stroke` / `strokeWidth` / `strokeDasharray`:
@@ -42,19 +48,20 @@ The path below draws A→B with one `move` + `line`, then lifts the pen with ano
 
 | Prop | Type | Default | Description |
 | --- | --- | --- | --- |
-| `kind` | `'move' \| 'line' \| 'step'` | `'line'` | `'move'` lifts the pen; `'step'` folds through a corner |
+| `kind` | `'move' \| 'line' \| 'step' \| 'cycle'` | `'line'` | `'move'` lifts the pen; `'step'` folds; `'cycle'` closes back to start |
 | `via` | `'-\|' \| '\|-'` | — | Required for `kind="step"`: `-\|` horizontal-then-vertical; `\|-` vertical-then-horizontal |
-| `to` | `IRTarget` | — | Target: node id, Cartesian `[x, y]`, or polar object |
+| `to` | `IRTarget` | — | Required except for `kind="cycle"`. Target: node id, Cartesian `[x, y]`, or polar object |
 
-## Three kinds
+## Four kinds
 
 | kind | Behavior | SVG / TikZ analogue |
 | --- | --- | --- |
 | `'move'` | Move cursor, **no draw** | path "M" |
 | `'line'` | Straight line from cursor to target | path "L" / TikZ `--` |
 | `'step'` | Right-angle fold through one corner | TikZ `-\|` / `\|-` |
+| `'cycle'` | Close back to most recent `move` (no `to`) | path "Z" / TikZ `cycle` |
 
-The first step of a `<Path>` must be `move` — if you write `'line'` or `'step'`, the compiler coerces it to `move`.
+The first step of a `<Path>` must be `move` — if you write `'line'` / `'step'` / `'cycle'`, the compiler coerces it to `move` (cycle has no `to`, so it falls back to origin `[0, 0]`).
 
 ## Two via values
 

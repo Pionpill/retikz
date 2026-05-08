@@ -35,7 +35,8 @@ const buildNode = (props: Record<string, unknown>): IRChild => {
 
 /**
  * 扫描 <Path> children 收集 <Step> 序列。
- * 至少 2 段；首段不是 move 时强制改为 move（与 SVG path 的 "M …" 语义对齐）。
+ * 至少 2 段；首段不是 move 时强制改为 move（与 SVG path 的 "M …" 语义对齐）；
+ * cycle 没有 to 字段，若用户把 cycle 放在首段，coerce 时降级到 move (0,0)。
  */
 const readPathChildren = (children: ReactNode): Array<IRStep> => {
   const out: Array<IRStep> = [];
@@ -44,27 +45,38 @@ const readPathChildren = (children: ReactNode): Array<IRStep> => {
     const name = getDisplayName(child);
     if (name !== TIKZ_STEP) return;
     const props = child.props as Record<string, unknown>;
-    const kind = (props.kind as 'move' | 'line' | 'step' | undefined) ?? 'line';
+    const kind =
+      (props.kind as 'move' | 'line' | 'step' | 'cycle' | undefined) ?? 'line';
+    if (kind === 'cycle') {
+      out.push({ type: 'step', kind: 'cycle' });
+      return;
+    }
     if (kind === 'step') {
       out.push({
         type: 'step',
         kind: 'step',
         via: props.via as '-|' | '|-',
-        to: props.to as IRStep['to'],
+        to: props.to as Exclude<IRStep, { kind: 'cycle' }>['to'],
       });
       return;
     }
     out.push({
       type: 'step',
       kind,
-      to: props.to as IRStep['to'],
+      to: props.to as Exclude<IRStep, { kind: 'cycle' }>['to'],
     });
   });
   if (out.length < 2) {
     throw new Error('<Path> requires at least 2 <Step> children');
   }
   if (out[0].kind !== 'move') {
-    out[0] = { type: 'step', kind: 'move', to: out[0].to };
+    // 首段如果是 cycle 或其它 kind：cycle 没 to，回退到原点 [0,0] 当 move target；
+    // 其它 kind（line / step）保留它们自己的 to
+    const first = out[0];
+    out[0] =
+      first.kind === 'cycle'
+        ? { type: 'step', kind: 'move', to: [0, 0] }
+        : { type: 'step', kind: 'move', to: first.to };
   }
   return out;
 };

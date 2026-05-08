@@ -14,6 +14,8 @@ export {
   TargetSchema,
   MoveStepSchema,
   LineStepSchema,
+  FoldStepSchema,
+  CycleStepSchema,
   StepSchema,
   NodeSchema,
   PathSchema,
@@ -27,6 +29,7 @@ export type {
   IRMoveStep,
   IRLineStep,
   IRFoldStep,
+  IRCycleStep,
   IRStep,
   IRNode,
   IRPath,
@@ -55,8 +58,8 @@ export type {
 export { fallbackMeasurer, compileToScene } from './compile';
 
 // Parsers
-export type { WayItem, WayDSL, WayFold } from './parsers';
-export { parseWay } from './parsers';
+export type { WayItem, WayDSL, WayCycle, WayVia } from './parsers';
+export { parseWay, DrawWay } from './parsers';
 
 // Geometry
 // RECT_ANCHORS（const 集合，值）与 RectAnchor（派生 type）配对，名字不撞

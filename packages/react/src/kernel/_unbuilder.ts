@@ -21,6 +21,9 @@ const nodePropsFromIR = (n: IRNode): NodeProps => {
 
 /** 单个 IRStep → <Step /> element */
 const stepToElement = (step: IRStep, key: number): ReactNode => {
+  if (step.kind === 'cycle') {
+    return createElement(Step, { key, kind: 'cycle' });
+  }
   if (step.kind === 'step') {
     return createElement(Step, { key, kind: 'step', via: step.via, to: step.to });
   }

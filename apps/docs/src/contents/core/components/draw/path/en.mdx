@@ -3,7 +3,7 @@ title: Path
 description: Kernel path container — children are a sequence of `<Step>` (≥ 2) defining a polyline; `<Draw>` compiles down to this.
 ---
 
-`<Path>` is the low-level path container: children must be `<Step>` nodes (at least 2) defining a sequence of move / line / step (folded) actions. For everyday connections `<Draw>` is shorter; reach for `<Path>` when you need folds, custom stroke, multi-segment polylines, or different step kinds.
+`<Path>` is the low-level path container: children must be `<Step>` nodes (at least 2) defining a sequence of move / line / step (folded) / cycle (close) actions. For everyday connections `<Draw>` is shorter; reach for `<Path>` when you need folds, closes, custom stroke, multi-segment polylines, or different step kinds.
 
 ## Usage
 
@@ -30,7 +30,7 @@ import { Path, Step } from '@retikz/react';
 </Path>
 ```
 
-`<Step>` supports three kinds — `move` / `line` / `step` — the first two draw straight segments, `step` folds through a right angle. See [Step](/core/components/draw/step) for details.
+`<Step>` supports four kinds — `move` / `line` / `step` / `cycle` — the first two draw straight segments, `step` folds through a right angle, `cycle` closes back to the start. See [Step](/core/components/draw/step) for details.
 
 ## Examples
 
@@ -43,6 +43,12 @@ import { Path, Step } from '@retikz/react';
 `<Step kind="step" via="-|" \| "\|-">` inserts a right-angle corner between cursor and target — essential for flow charts and UML relationships. Below is a path mixing `line` and both `via` directions:
 
 <ComponentPreview name="path-fold" />
+
+### Closing (cycle)
+
+`<Step kind="cycle" />` closes the current path back to the most recent `move` target — saves writing one explicit endpoint vs. a `line` back to the start. Compiles to SVG path `Z`:
+
+<ComponentPreview name="path-cycle" />
 
 ### Styling
 
@@ -57,7 +63,7 @@ import { Path, Step } from '@retikz/react';
 | `stroke` | `string` | `currentColor` | Stroke color |
 | `strokeWidth` | `number` | `1` | Stroke width |
 | `strokeDasharray` | `string` | — | SVG `stroke-dasharray` pattern |
-| `children` | `Array<<Step>>` | — | At least 2; if the first isn't `move`, the compiler coerces it to `move`. `<Step>` supports `move` / `line` / `step` (folded) |
+| `children` | `Array<<Step>>` | — | At least 2; if the first isn't `move`, the compiler coerces it to `move`. `<Step>` supports `move` / `line` / `step` (folded) / `cycle` (close) |
 
 ## Path vs Draw
 

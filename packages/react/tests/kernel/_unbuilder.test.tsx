@@ -141,6 +141,26 @@ describe('convertIRToReactNode', () => {
     expect(back).toEqual(ir);
   });
 
+  it("cycle step round-trip：无 to / via 字段保留", () => {
+    const ir: IR = {
+      version: CURRENT_IR_VERSION,
+      type: 'scene',
+      children: [
+        {
+          type: 'path',
+          children: [
+            { type: 'step', kind: 'move', to: [0, 0] },
+            { type: 'step', kind: 'line', to: [10, 0] },
+            { type: 'step', kind: 'line', to: [10, 10] },
+            { type: 'step', kind: 'cycle' },
+          ],
+        },
+      ],
+    };
+    const back = buildIR(convertIRToReactNode(ir));
+    expect(back).toEqual(ir);
+  });
+
   it('未知 child.type → 抛 "unknown IR child type" 错误', () => {
     const badIR = {
       version: CURRENT_IR_VERSION,

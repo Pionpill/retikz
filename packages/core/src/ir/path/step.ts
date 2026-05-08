@@ -40,8 +40,21 @@ export const FoldStepSchema = z
     'Fold action: TikZ-style right-angle fold with a single intermediate point chosen by `via`',
   );
 
+export const CycleStepSchema = z
+  .object({
+    type: z.literal('step').describe('Discriminator marking this as a path step node'),
+    kind: z
+      .literal('cycle')
+      .describe(
+        'Close the path back to the most recent move target (TikZ `cycle` / SVG path "Z")',
+      ),
+  })
+  .describe(
+    'Cycle action: close the current sub-path back to its starting point; carries no `to` field',
+  );
+
 export const StepSchema = z
-  .discriminatedUnion('kind', [MoveStepSchema, LineStepSchema, FoldStepSchema])
+  .discriminatedUnion('kind', [MoveStepSchema, LineStepSchema, FoldStepSchema, CycleStepSchema])
   .describe('A single path action; the discriminator field is `kind`');
 
 /** Move step：移动游标但不绘制 */
@@ -53,8 +66,11 @@ export type IRLineStep = z.infer<typeof LineStepSchema>;
 /** Fold step：折角段，从游标到目标经一个直角中间点（TikZ `-|` / `|-`） */
 export type IRFoldStep = z.infer<typeof FoldStepSchema>;
 
+/** Cycle step：把当前子路径闭合回起点（TikZ `cycle` / SVG `Z`） */
+export type IRCycleStep = z.infer<typeof CycleStepSchema>;
+
 /**
- * 路径上的一个动作。v0.1.0-alpha.1 支持 'move' / 'line' / 'step'（折角）。
- * 后续会加 'cycle'、'curve'、'cubic'、'rel' 等。
+ * 路径上的一个动作。v0.1.0-alpha.1 支持 'move' / 'line' / 'step'（折角）/ 'cycle'（闭合）。
+ * 后续会加 'curve'、'cubic'、'rel' 等。
  */
 export type IRStep = z.infer<typeof StepSchema>;
