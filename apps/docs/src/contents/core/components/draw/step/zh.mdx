@@ -1,9 +1,9 @@
 ---
 title: Step
-description: Path 的子节点——一个 step = 一个动作（move / line）；只能作为 `<Path>` 的直接 children。
+description: Path 的子节点——一个 step = 一个动作（move / line / step 折角）；只能作为 `<Path>` 的直接 children。
 ---
 
-`<Step>` 描述路径上的一个动作：`move` 抬笔到目标点，`line` 落笔从游标画直线到目标点。它**只能**作为 `<Path>` 的直接 children；放在其它地方会被忽略。
+`<Step>` 描述路径上的一个动作：`move` 抬笔到目标点，`line` 落笔从游标画直线到目标点，`step` 经一个直角拐点折到目标点。它**只能**作为 `<Path>` 的直接 children；放在其它地方会被忽略。
 
 ## 用法
 
@@ -26,21 +26,38 @@ import { Path, Step } from '@retikz/react';
 
 <ComponentPreview name="step-basic" />
 
+### 折角（step）
+
+`kind="step"` 在游标与目标点之间插一个直角拐点，对应 TikZ 的 `(A) -| (B)` / `(A) |- (B)` 写法。流程图常用：
+
+<ComponentPreview name="step-fold" />
+
 ## API 参考
 
 | 属性 | 类型 | 默认值 | 描述 |
 | --- | --- | --- | --- |
-| `kind` | `'move' \| 'line'` | `'line'` | `'move'` 抬笔不绘制 |
+| `kind` | `'move' \| 'line' \| 'step'` | `'line'` | `'move'` 抬笔不绘制；`'step'` 走折角 |
+| `via` | `'-\|' \| '\|-'` | — | 仅 `kind="step"` 必填：`-\|` 先水平后垂直；`\|-` 先垂直后水平 |
 | `to` | `IRTarget` | — | 目标点：节点 id、笛卡尔 `[x, y]`、或极坐标对象 |
 
-## kind 的两种取值
+## kind 的三种取值
 
-| kind | 行为 | 类比 SVG |
+| kind | 行为 | 类比 SVG / TikZ |
 | --- | --- | --- |
 | `'move'` | 移动游标，**不画线** | path "M" |
-| `'line'` | 从当前游标画直线到目标点 | path "L" |
+| `'line'` | 从当前游标画直线到目标点 | path "L" / TikZ `--` |
+| `'step'` | 经一个直角拐点折到目标点 | TikZ `-\|` / `\|-` |
 
-`<Path>` 第一个 step 必须是 `move`——如果你写 `'line'`，编译器会自动改成 `move`。
+`<Path>` 第一个 step 必须是 `move`——如果你写 `'line'` 或 `'step'`，编译器会自动改成 `move`。
+
+## via 的两种取值
+
+仅 `kind="step"` 时生效，决定折角中间点的位置。设当前游标 `(px, py)`，目标 `(tx, ty)`：
+
+| via | 中间点 | 走向 |
+| --- | --- | --- |
+| `'-\|'` | `(tx, py)` | 先水平到 `tx`，再垂直到 `ty` |
+| `'\|-'` | `(px, ty)` | 先垂直到 `ty`，再水平到 `tx` |
 
 ## to 的三种形态
 

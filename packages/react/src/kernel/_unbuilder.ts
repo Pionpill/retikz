@@ -20,8 +20,12 @@ const nodePropsFromIR = (n: IRNode): NodeProps => {
 };
 
 /** 单个 IRStep → <Step /> element */
-const stepToElement = (step: IRStep, key: number): ReactNode =>
-  createElement(Step, { key, kind: step.kind, to: step.to });
+const stepToElement = (step: IRStep, key: number): ReactNode => {
+  if (step.kind === 'step') {
+    return createElement(Step, { key, kind: 'step', via: step.via, to: step.to });
+  }
+  return createElement(Step, { key, kind: step.kind, to: step.to });
+};
 
 /** discriminated union 兜底：编译期保证不漏 case，运行时给出明确错误 */
 const assertNever = (x: never): never => {

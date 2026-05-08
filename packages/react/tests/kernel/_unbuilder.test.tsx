@@ -123,6 +123,24 @@ describe('convertIRToReactNode', () => {
     expect((pathEl.type as { displayName?: string }).displayName).not.toBe('Draw');
   });
 
+  it("折角 step 'step' round-trip：via 字段透传保留", () => {
+    const ir: IR = {
+      version: CURRENT_IR_VERSION,
+      type: 'scene',
+      children: [
+        {
+          type: 'path',
+          children: [
+            { type: 'step', kind: 'move', to: [0, 0] },
+            { type: 'step', kind: 'step', via: '-|', to: [10, 5] },
+          ],
+        },
+      ],
+    };
+    const back = buildIR(convertIRToReactNode(ir));
+    expect(back).toEqual(ir);
+  });
+
   it('未知 child.type → 抛 "unknown IR child type" 错误', () => {
     const badIR = {
       version: CURRENT_IR_VERSION,

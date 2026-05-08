@@ -1,9 +1,9 @@
 ---
 title: Step
-description: Path's child node — one step = one action (move / line); only valid as a direct child of `<Path>`.
+description: Path's child node — one step = one action (move / line / step fold); only valid as a direct child of `<Path>`.
 ---
 
-`<Step>` describes a single path action: `move` lifts the pen to the target, `line` draws a straight line from cursor to target. It is **only** valid as a direct child of `<Path>`; placed elsewhere it is silently ignored.
+`<Step>` describes a single path action: `move` lifts the pen to the target, `line` draws a straight line from cursor to target, `step` folds through a single right-angle corner. It is **only** valid as a direct child of `<Path>`; placed elsewhere it is silently ignored.
 
 ## Usage
 
@@ -26,21 +26,38 @@ The path below draws A→B with one `move` + `line`, then lifts the pen with ano
 
 <ComponentPreview name="step-basic" />
 
+### Folded (step)
+
+`kind="step"` inserts a single right-angle corner between cursor and target — the TikZ `(A) -| (B)` / `(A) |- (B)` form. A flow-chart staple:
+
+<ComponentPreview name="step-fold" />
+
 ## API Reference
 
 | Prop | Type | Default | Description |
 | --- | --- | --- | --- |
-| `kind` | `'move' \| 'line'` | `'line'` | `'move'` lifts the pen |
+| `kind` | `'move' \| 'line' \| 'step'` | `'line'` | `'move'` lifts the pen; `'step'` folds through a corner |
+| `via` | `'-\|' \| '\|-'` | — | Required for `kind="step"`: `-\|` horizontal-then-vertical; `\|-` vertical-then-horizontal |
 | `to` | `IRTarget` | — | Target: node id, Cartesian `[x, y]`, or polar object |
 
-## Two kinds
+## Three kinds
 
-| kind | Behavior | SVG analogue |
+| kind | Behavior | SVG / TikZ analogue |
 | --- | --- | --- |
 | `'move'` | Move cursor, **no draw** | path "M" |
-| `'line'` | Straight line from cursor to target | path "L" |
+| `'line'` | Straight line from cursor to target | path "L" / TikZ `--` |
+| `'step'` | Right-angle fold through one corner | TikZ `-\|` / `\|-` |
 
-The first step of a `<Path>` must be `move` — if you write `'line'`, the compiler coerces it to `move`.
+The first step of a `<Path>` must be `move` — if you write `'line'` or `'step'`, the compiler coerces it to `move`.
+
+## Two via values
+
+Only meaningful when `kind="step"`. Given cursor `(px, py)` and target `(tx, ty)`:
+
+| via | Corner | Path |
+| --- | --- | --- |
+| `'-\|'` | `(tx, py)` | Horizontal to `tx`, then vertical to `ty` |
+| `'\|-'` | `(px, ty)` | Vertical to `ty`, then horizontal to `tx` |
 
 ## Three forms of `to`
 

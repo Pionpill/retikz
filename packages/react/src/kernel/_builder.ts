@@ -44,7 +44,16 @@ const readPathChildren = (children: ReactNode): Array<IRStep> => {
     const name = getDisplayName(child);
     if (name !== TIKZ_STEP) return;
     const props = child.props as Record<string, unknown>;
-    const kind = (props.kind as 'move' | 'line' | undefined) ?? 'line';
+    const kind = (props.kind as 'move' | 'line' | 'step' | undefined) ?? 'line';
+    if (kind === 'step') {
+      out.push({
+        type: 'step',
+        kind: 'step',
+        via: props.via as '-|' | '|-',
+        to: props.to as IRStep['to'],
+      });
+      return;
+    }
     out.push({
       type: 'step',
       kind,

@@ -4,7 +4,7 @@ import { TIKZ_STEP } from './_displayNames';
 
 /**
  * <Step> 组件的 props。
- * v0.1.0-alpha 仅支持 'move' 与 'line'，kind 默认 'line'。
+ * v0.1.0-alpha.1 支持 'move' / 'line' / 'step'（折角）；kind 默认 'line'。
  */
 export type StepProps =
   | {
@@ -17,6 +17,14 @@ export type StepProps =
       /** 直线动作；省略时默认 'line' */
       kind?: 'line';
       /** 直线终点 */
+      to: IRTarget;
+    }
+  | {
+      /** 折角段：从游标经一个直角拐点到目标点（TikZ `-|` / `|-`） */
+      kind: 'step';
+      /** 折角走向：`-|` 先水平后垂直；`|-` 先垂直后水平 */
+      via: '-|' | '|-';
+      /** 折角终点 */
       to: IRTarget;
     };
 

@@ -21,8 +21,27 @@ export const LineStepSchema = z
   })
   .describe('Line action: straight-line segment from cursor to target');
 
+export const FoldStepSchema = z
+  .object({
+    type: z.literal('step').describe('Discriminator marking this as a path step node'),
+    kind: z
+      .literal('step')
+      .describe(
+        'Folded right-angle segment from cursor to target through one intermediate point (TikZ `-|` / `|-`)',
+      ),
+    via: z
+      .enum(['-|', '|-'])
+      .describe(
+        'Folding direction: `-|` first horizontal then vertical; `|-` first vertical then horizontal',
+      ),
+    to: TargetSchema.describe('Destination point of the folded segment'),
+  })
+  .describe(
+    'Fold action: TikZ-style right-angle fold with a single intermediate point chosen by `via`',
+  );
+
 export const StepSchema = z
-  .discriminatedUnion('kind', [MoveStepSchema, LineStepSchema])
+  .discriminatedUnion('kind', [MoveStepSchema, LineStepSchema, FoldStepSchema])
   .describe('A single path action; the discriminator field is `kind`');
 
 /** Move step：移动游标但不绘制 */
@@ -31,8 +50,11 @@ export type IRMoveStep = z.infer<typeof MoveStepSchema>;
 /** Line step：从游标到目标画直线 */
 export type IRLineStep = z.infer<typeof LineStepSchema>;
 
+/** Fold step：折角段，从游标到目标经一个直角中间点（TikZ `-|` / `|-`） */
+export type IRFoldStep = z.infer<typeof FoldStepSchema>;
+
 /**
- * 路径上的一个动作。v0.1.0-alpha 仅支持 'move' 与 'line'。
- * 后续会加 'step'（折角）、'curve'、'cubic'、'rel'、'close' 等。
+ * 路径上的一个动作。v0.1.0-alpha.1 支持 'move' / 'line' / 'step'（折角）。
+ * 后续会加 'cycle'、'curve'、'cubic'、'rel' 等。
  */
 export type IRStep = z.infer<typeof StepSchema>;

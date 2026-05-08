@@ -55,14 +55,16 @@ retikz 当前 `IRStep` 仅 `move` / `line`，没有折角表达。本 ADR 决定
 `packages/core/src/ir/path/step.ts`：
 
 ```ts
-export const StepStepSchema = z.object({
+export const FoldStepSchema = z.object({
   type: z.literal('step'),
-  kind: z.literal('step'),
+  kind: z.literal('step'),     // 与 TikZ 文档术语 step 一致；schema 名取 Fold 避免重复
   via: z.enum(['-|', '|-']),
   to: TargetSchema,
 });
 
-// 并入 discriminatedUnion('kind', [Move, Line, Step, ...])
+export type IRFoldStep = z.infer<typeof FoldStepSchema>;
+
+// 并入 StepSchema = discriminatedUnion('kind', [Move, Line, Fold])
 ```
 
 ### Compile 改动
