@@ -1,22 +1,34 @@
 ---
 title: 更新日志
-description: retikz 历版发布记录，按 MINOR 版本聚合，倒序排列。具体补丁 / 预发布在每个 MINOR 下分类汇总。
+description: retikz 历版发布记录，按 MINOR 版本聚合，倒序排列。每个条目左侧标日期，右侧列受影响的子包与变更。
 ---
 
-## v0.1 — 开发中
+<Update label="2026.05" tags={["@retikz/core", "@retikz/react", "docs"]}>
+
+## v0.1
 
 retikz 重构，IR 居中。当前在 `next` 分支迭代，进入 `main` 即正式发布。
 
-**Added**
-- `@retikz/core`：IR + Scene 编译器（零 React、零 DOM）
-- `@retikz/react`：React adapter，Kernel + Sugar 双层 JSX
-- 文档站 v0.1，双语 + 同源 demo + IR 视图
+### `@retikz/core`
 
-**Changed**
-- 架构由"单包 React 组件库"改为"core + 各框架薄 adapter"
-- 持久化形式由内部 React state 改为可序列化 IR JSON
+- **IR + Scene 编译器**：framework-agnostic 的中间表示与编译器，零 React、零 DOM
+- **持久化形式**：内部 React state → 可序列化 IR JSON，跨平台、可被 LLM 直接读写
 
-## v0.0 — 2025.01 → 2025.04
+### `@retikz/react`
+
+- **架构拆分**：从单包 React 组件库改为薄 React adapter，core 与 React 解耦
+- **Kernel + Sugar 双层 JSX**：Kernel 直对应 IR 节点，Sugar 编译期展开为 Kernel
+- peerDep React 18+
+
+### `docs`
+
+- v0.1 文档站：双语（zh / en）+ 同源 demo + IR 视图
+
+</Update>
+
+<Update label="2025.04" tags={["retikz"]}>
+
+## v0.0
 
 第一个公开版本系列，从 `rc.0` 迭代到 `rc.3`。该系列只发了 React 单包，没有 IR 与跨框架架构。
 
@@ -35,3 +47,5 @@ retikz 重构，IR 居中。当前在 `next` 分支迭代，进入 `main` 即正
 
 **Removed**
 - 构建产物移除对 `react/jsx-runtime` 的依赖
+
+</Update>

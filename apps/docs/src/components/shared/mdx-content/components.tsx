@@ -7,6 +7,7 @@ import { CodeBlockCommand } from '../code-block-command';
 import { ComponentPreview } from '../component-preview';
 import { CodeBlock } from '../highlight-code';
 import { PackageManagerInstall } from '../package-manager-install';
+import { Update } from '../update';
 
 const linkClass = 'font-medium underline underline-offset-4';
 
@@ -166,4 +167,5 @@ export const mdxComponents: MDXComponents = {
   ComponentPreview,
   LinkedCard,
   PackageManagerInstall,
+  Update,
 };

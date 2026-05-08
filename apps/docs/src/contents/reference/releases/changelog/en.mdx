@@ -1,24 +1,36 @@
 ---
 title: Changelog
-description: retikz release history grouped by MINOR version, newest first. Patches and pre-releases are folded into each MINOR by category.
+description: retikz release history grouped by MINOR version, newest first. Date on the left, affected packages and changes on the right.
 ---
 
-## v0.1 — In development
+<Update label="May 2026" tags={["@retikz/core", "@retikz/react", "docs"]}>
+
+## v0.1
 
 retikz redesign with IR at the center. Currently iterating on the `next` branch; merging into `main` ships it.
 
-**Added**
-- `@retikz/core`: IR + scene compiler (zero React, zero DOM)
-- `@retikz/react`: React adapter with Kernel + Sugar JSX layers
-- Docs site v0.1 — bilingual, co-located demos, live IR view
+### `@retikz/core`
 
-**Changed**
-- Architecture moved from "single React package" to "core + thin per-framework adapters"
-- Persistence format moved from internal React state to serializable IR JSON
+- **IR + scene compiler**: framework-agnostic intermediate representation and compiler, zero React and zero DOM
+- **Persistence**: internal React state → serializable IR JSON, cross-platform and directly readable / writable by LLMs
 
-## v0.0 — 2025.01 → 2025.04
+### `@retikz/react`
 
-First public series, iterating from `rc.0` through `rc.3`. This series shipped a single React package, with no IR or cross-framework architecture.
+- **Architecture split**: moved from a single React component library to a thin React adapter; core is decoupled from React
+- **Kernel + Sugar JSX layers**: Kernel maps 1:1 to IR nodes; Sugar compiles down to Kernel
+- peerDep React 18+
+
+### `docs`
+
+- v0.1 docs site: bilingual (zh / en) + co-located demos + live IR view
+
+</Update>
+
+<Update label="Apr 2025" tags={["retikz"]}>
+
+## v0.0
+
+First public series, iterating from `rc.0` through `rc.3`. This series shipped a single React package — no IR, no cross-framework architecture.
 
 **Added**
 - Arrow type: `Circle`
@@ -35,3 +47,5 @@ First public series, iterating from `rc.0` through `rc.3`. This series shipped a
 
 **Removed**
 - `react/jsx-runtime` dependency dropped from build output
+
+</Update>
