@@ -7,7 +7,7 @@ export const DOC_BRANCH = 'main';
 
 /** location → 仓库内 mdx 相对路径（含语言后缀） */
 export const buildContentRelativePath = (segments: Array<string>, lang: string): string =>
-  `apps/docs/src/contents/${segments.join('/')}/${lang}.mdx`;
+  `apps/docs/src/contents/${segments.join('/')}/index.${lang}.mdx`;
 
 export const buildBlobUrl = (relPath: string): string =>
   `https://github.com/${DOC_REPO}/blob/${DOC_BRANCH}/${relPath}`;

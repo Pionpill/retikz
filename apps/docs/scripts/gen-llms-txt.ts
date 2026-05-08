@@ -9,7 +9,7 @@ import { en } from '../src/i18n/locales/en';
 /**
  * 生成 llms.txt：站点文章索引，供 AI 工具发现页面。
  * - 标签走 en.ts 英文文案（llms.txt 习惯英文）
- * - description 从对应 en.mdx 的 frontmatter 提取，缺失则省略
+ * - description 从对应 index.en.mdx 的 frontmatter 提取，缺失则省略
  * - 嵌套页（page.children）展平为 "Parent / Child" 标题
  * - 空模块（flow / plot）跳过
  */
@@ -41,7 +41,7 @@ const collect = (rootDir: string, moduleId: string): Array<Item> => {
     out.push({
       url: `${SITE_URL}/${parts.join('/')}`,
       title,
-      desc: readDescription(path.resolve(rootDir, 'src/contents', ...parts, 'en.mdx')),
+      desc: readDescription(path.resolve(rootDir, 'src/contents', ...parts, 'index.en.mdx')),
     });
   };
 

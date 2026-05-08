@@ -37,7 +37,7 @@ apps/docs/
     │   ├── core.ts          # core module 的 sections + pages 树
     │   └── interface.ts     # Section / Page / SubPage / I18nKey 类型
     ├── contents/            # 文档正文（mdx）+ demo（.demo.tsx），双语并列
-    │   └── <moduleId>/<sectionId>/<pageId>[/<subPageId>]/{zh,en}.mdx
+    │   └── <moduleId>/<sectionId>/<pageId>[/<subPageId>]/index.{zh,en}.mdx
     ├── store/               # zustand 持久化 store
     │   ├── useThemeStore.ts # light/dark，同步 .dark class 到 <html>
     │   └── useTocStore.ts   # 右侧 TOC 开关

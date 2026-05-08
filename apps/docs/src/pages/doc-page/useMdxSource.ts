@@ -8,8 +8,8 @@ type MdxLoader = () => Promise<string>;
 
 /**
  * 收集 src/contents 下全部 mdx 源码字符串，按需异步加载。
- * key 形如 '../../contents/core/introduction/zh.mdx'（ungrouped）或
- * '../../contents/core/components/draw/path/zh.mdx'（grouped 嵌套）
+ * key 形如 '../../contents/core/introduction/index.zh.mdx'（ungrouped）或
+ * '../../contents/core/components/draw/path/index.zh.mdx'（grouped 嵌套）
  */
 const mdxLoaders: Record<string, MdxLoader | undefined> = import.meta.glob<string>(
   '../../contents/**/*.mdx',
@@ -17,7 +17,7 @@ const mdxLoaders: Record<string, MdxLoader | undefined> = import.meta.glob<strin
 );
 
 const buildKey = (segments: Array<string>, lang: string) =>
-  `../../contents/${segments.join('/')}/${lang}.mdx`;
+  `../../contents/${segments.join('/')}/index.${lang}.mdx`;
 
 /** 优先取当前语言；该语言缺文件时按 LANGS 顺序回退 */
 const resolveLoader = (segments: Array<string>, lang: Lang) => {

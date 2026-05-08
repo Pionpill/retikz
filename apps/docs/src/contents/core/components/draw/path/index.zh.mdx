@@ -50,6 +50,12 @@ import { Path, Step } from '@retikz/react';
 
 <ComponentPreview name="path-cycle" />
 
+### 填充
+
+`fill` 给闭合区域填色（缺省 `'none'` = 仅描边，向后兼容）；`fillRule` 控制自交 / 嵌套子路径的填充规则（`'nonzero'` 默认 / `'evenodd'` 环形孔洞场景）。配合 cycle 步使用：
+
+<ComponentPreview name="path-fill" />
+
 ### 箭头
 
 `arrow` 控制方向（4 个枚举：`'->'` 终点、`'<-'` 起点、`'<->'` 两端、`'none'` / 省略 = 无），`arrowShape` 控制形状（5 个枚举，默认 `'normal'`）：
@@ -83,6 +89,8 @@ import { Path, Step } from '@retikz/react';
 | `strokeDasharray` | `string` | — | SVG `stroke-dasharray` 模式 |
 | `arrow` | `'none' \| '->' \| '<-' \| '<->'` | — | 路径级箭头方向 |
 | `arrowShape` | `'normal' \| 'open' \| 'stealth' \| 'diamond' \| 'openDiamond' \| 'circle' \| 'openCircle'` | `'normal'` | 箭头形状 |
+| `fill` | `string` | `'none'` | 闭合区域填充色（任意 CSS 颜色） |
+| `fillRule` | `'nonzero' \| 'evenodd'` | `'nonzero'` | 填充规则；环形 / 孔洞场景用 `'evenodd'` |
 | `children` | `Array<<Step>>` | — | 至少 2 个；首个非 `move` 时编译器会强制改成 `move`。`<Step>` 支持 `move` / `line` / `step`（折角）/ `cycle`（闭合） |
 
 ## 与 Draw 的取舍
