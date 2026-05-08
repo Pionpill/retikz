@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 
 import { GitHubIcon } from '@/components/icons';
+import { DocsSearch } from '@/components/shared/docs-search';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
@@ -50,6 +51,7 @@ export const HeaderActions: FC = () => {
   return (
     <TooltipProvider delayDuration={150}>
       <div className="ml-auto flex items-center gap-2">
+        <DocsSearch />
         <div className="flex items-center gap-1">
           <Tooltip>
             <TooltipTrigger asChild>

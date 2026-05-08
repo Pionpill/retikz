@@ -16,6 +16,7 @@
     "@retikz/react": "workspace:*",
     "class-variance-authority": "catalog:",
     "clsx": "catalog:",
+    "cmdk": "catalog:",
     "github-slugger": "catalog:",
     "i18next": "catalog:",
     "i18next-browser-languagedetector": "catalog:",

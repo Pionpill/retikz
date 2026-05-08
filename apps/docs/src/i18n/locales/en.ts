@@ -3,7 +3,10 @@ import type { I18nResources } from './zh';
 /** English copy. Structure mirrors zh.ts; keep keys in sync. */
 export const en: I18nResources = {
   common: {
-    search: 'Search this section...',
+    search: 'Search docs...',
+    searchPlaceholder: 'Type to search...',
+    searchEmpty: 'No matching pages.',
+    searchHint: 'Search the docs',
     pageCount: '{{count}} page(s)',
     notFound: 'Not found: /{{section}}/{{page}}',
     versionTag: 'v0.1 alpha',

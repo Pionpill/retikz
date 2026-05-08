@@ -1,7 +1,10 @@
 /** 中文文案。结构同 en.ts；新增 key 时两边同步。 */
 export const zh = {
   common: {
-    search: '搜索本栏目...',
+    search: '搜索文档...',
+    searchPlaceholder: '输入关键字搜索...',
+    searchEmpty: '未找到匹配的页面',
+    searchHint: '搜索文档',
     pageCount: '{{count}} 页',
     notFound: '页面不存在：/{{section}}/{{page}}',
     versionTag: 'v0.1 alpha',
