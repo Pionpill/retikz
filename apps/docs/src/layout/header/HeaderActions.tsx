@@ -5,15 +5,18 @@ import { toast } from 'sonner';
 
 import { GitHubIcon } from '@/components/icons';
 import { DocsSearch } from '@/components/shared/docs-search';
-import { Button } from '@/components/ui/button';
+import { buttonVariants } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { LANGS, type Lang } from '@/i18n';
+import { cn } from '@/lib/utils';
 import { useLayoutStore } from '@/store/useLayoutStore';
 import { useThemeStore } from '@/store/useThemeStore';
 import { useTocStore } from '@/store/useTocStore';
 
-const buttonClass = 'size-7 cursor-pointer rounded-sm';
+// TooltipTrigger 默认即 <button>，直接套 buttonVariants；不再用 <Button asChild> 包，
+// 避免 React 18 下 asChild → 自定义函数组件 ref 转发不到，触发不到 Popper 锚点。
+const triggerClass = cn(buttonVariants({ variant: 'ghost', size: 'icon' }), 'size-7 cursor-pointer rounded-sm');
 
 /**
  * 顶栏右侧动作组：主题 / 语言 / GitHub | 复制链接 / 切 TOC。
@@ -57,59 +60,54 @@ export const HeaderActions: FC = () => {
     <TooltipProvider delayDuration={150}>
       <div className="ml-auto flex items-center gap-2">
         <DocsSearch />
+        <Separator orientation="vertical" className="h-4!" />
         <div className="flex items-center gap-1">
           <Tooltip>
-            <TooltipTrigger asChild>
-              <Button size="icon" variant="ghost" className={buttonClass} onClick={handleToggleTheme}>
-                <ThemeIcon className="size-4" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>{themeLabel}</TooltipContent>
-          </Tooltip>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button size="icon" variant="ghost" className={buttonClass} onClick={handleCycleLang}>
-                <Languages className="size-4" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>
-              {t('common.switchLanguage')} · {i18n.resolvedLanguage?.toUpperCase()}
-            </TooltipContent>
-          </Tooltip>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button asChild size="icon" variant="ghost" className={buttonClass}>
-                <a href="https://github.com/Pionpill/retikz" target="_blank" rel="noopener noreferrer">
-                  <GitHubIcon className="size-4" />
-                </a>
-              </Button>
+            <TooltipTrigger
+              asChild
+              className={cn(buttonVariants({ variant: 'ghost', size: 'icon' }), 'size-7 cursor-pointer rounded-sm')}
+            >
+              <a href="https://github.com/Pionpill/retikz" target="_blank" rel="noopener noreferrer">
+                <GitHubIcon className="size-4" />
+              </a>
             </TooltipTrigger>
             <TooltipContent>{t('common.github')}</TooltipContent>
+          </Tooltip>
+          <Tooltip>
+            <TooltipTrigger className={triggerClass} onClick={handleCopyLink}>
+              <LinkIcon className="size-4" />
+            </TooltipTrigger>
+            <TooltipContent>{t('toc.copyLink')} (Ctrl+L)</TooltipContent>
           </Tooltip>
         </div>
         <Separator orientation="vertical" className="h-4!" />
         <div className="flex items-center gap-1">
           <Tooltip>
-            <TooltipTrigger asChild>
-              <Button size="icon" variant="ghost" className={buttonClass} onClick={handleCopyLink}>
-                <LinkIcon className="size-4" />
-              </Button>
+            <TooltipTrigger className={triggerClass} onClick={handleToggleTheme}>
+              <ThemeIcon className="size-4" />
             </TooltipTrigger>
-            <TooltipContent>{t('toc.copyLink')} (Ctrl+L)</TooltipContent>
+            <TooltipContent>{themeLabel}</TooltipContent>
           </Tooltip>
           <Tooltip>
-            <TooltipTrigger asChild>
-              <Button size="icon" variant="ghost" className={buttonClass} onClick={handleToggleToc}>
-                <TableOfContents className="size-4" />
-              </Button>
+            <TooltipTrigger className={triggerClass} onClick={handleCycleLang}>
+              <Languages className="size-4" />
+            </TooltipTrigger>
+            <TooltipContent>
+              {t('common.switchLanguage')} · {i18n.resolvedLanguage?.toUpperCase()}
+            </TooltipContent>
+          </Tooltip>
+        </div>
+        <Separator orientation="vertical" className="h-4!" />
+        <div className="flex items-center gap-1">
+          <Tooltip>
+            <TooltipTrigger className={triggerClass} onClick={handleToggleToc}>
+              <TableOfContents className="size-4" />
             </TooltipTrigger>
             <TooltipContent>{tocOpen ? t('toc.hideOutline') : t('toc.showOutline')} (Ctrl+Alt+B)</TooltipContent>
           </Tooltip>
           <Tooltip>
-            <TooltipTrigger asChild>
-              <Button size="icon" variant="ghost" className={buttonClass} onClick={toggleLayout}>
-                <LayoutIcon className="size-4" />
-              </Button>
+            <TooltipTrigger className={triggerClass} onClick={toggleLayout}>
+              <LayoutIcon className="size-4" />
             </TooltipTrigger>
             <TooltipContent>{layoutLabel}</TooltipContent>
           </Tooltip>
