@@ -12,8 +12,9 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { ArrowLeft, ArrowRight, ChevronDown, Copy, FileCode, Plug } from 'lucide-react';
 import { type FC, type ReactNode, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useNavigate, useParams } from 'react-router';
+import { useNavigate } from 'react-router';
 import { toast } from 'sonner';
+import { docPathSegments, useDocLocation } from './docLocation';
 import { usePageNavigation } from './usePageNavigation';
 
 const REPO = 'Pionpill/retikz';
@@ -39,16 +40,8 @@ const MenuItemBody: FC<{ icon: ReactNode; title: string; desc: string }> = ({ ic
 );
 
 /** 把 contents 路径拼好（含 lang），用于 GitHub blob / raw URL */
-const buildContentRelativePath = (
-  moduleId: string,
-  sectionId: string,
-  pageId: string,
-  subPageId: string | undefined,
-  lang: string,
-): string => {
-  const parts = subPageId ? [moduleId, sectionId, pageId, subPageId] : [moduleId, sectionId, pageId];
-  return `apps/docs/src/contents/${parts.join('/')}/${lang}.mdx`;
-};
+const buildContentRelativePath = (segments: Array<string>, lang: string): string =>
+  `apps/docs/src/contents/${segments.join('/')}/${lang}.mdx`;
 
 const buildBlobUrl = (relPath: string) => `https://github.com/${REPO}/blob/${BRANCH}/${relPath}`;
 const buildRawUrl = (relPath: string) => `https://raw.githubusercontent.com/${REPO}/${BRANCH}/${relPath}`;
@@ -65,12 +58,11 @@ const buildAiUrl = (base: string, rawUrl: string, lang: string): string => {
 export const DocPageActions: FC<DocPageActionsProps> = ({ source }) => {
   const { t, i18n } = useTranslation();
   const lang = i18n.resolvedLanguage ?? 'zh';
-  const { moduleId, sectionId, pageId, subPageId } = useParams<'moduleId' | 'sectionId' | 'pageId' | 'subPageId'>();
+  const loc = useDocLocation();
   const navigate = useNavigate();
   const { prev, next } = usePageNavigation();
 
-  const relPath =
-    moduleId && sectionId && pageId ? buildContentRelativePath(moduleId, sectionId, pageId, subPageId, lang) : '';
+  const relPath = loc ? buildContentRelativePath(docPathSegments(loc), lang) : '';
   const blobUrl = relPath ? buildBlobUrl(relPath) : '#';
   const rawUrl = relPath ? buildRawUrl(relPath) : '';
 

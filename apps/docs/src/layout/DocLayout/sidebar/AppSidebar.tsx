@@ -31,9 +31,11 @@ export const AppSidebar: FC<AppSidebarProps> = props => {
 
   const categories = useMemo<Array<SidebarCategoryData>>(
     () =>
-      sections.map(section => ({
-        value: section.id,
+      sections.map((section, idx) => ({
+        // ungrouped section（无 id）用稳定的 sentinel 仅作 React key；ungrouped 标志告诉 menu 跳过 URL 段
+        value: section.id ?? `__ungrouped_${idx}`,
         label: section.label ? t(section.label) : undefined,
+        ungrouped: !section.label,
         modules: section.pages.map(page => ({
           value: page.id,
           label: t(page.label),

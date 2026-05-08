@@ -46,7 +46,9 @@ export const AppSidebarMenu: FC<AppSidebarMenuProps> = props => {
             )}
             <ul className="flex flex-col gap-0.5">
               {category.modules.map(module => {
-                const modulePath = `/${moduleId}/${category.value}/${module.value}`;
+                const modulePath = category.ungrouped
+                  ? `/${moduleId}/${module.value}`
+                  : `/${moduleId}/${category.value}/${module.value}`;
                 const hasChildren = Boolean(module.children?.length);
 
                 if (!hasChildren) {

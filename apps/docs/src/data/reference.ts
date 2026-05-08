@@ -2,7 +2,6 @@ import type { Section } from './interface';
 
 export const referenceSection: Array<Section> = [
   {
-    id: 'profile',
     pages: [{ id: 'overview', label: 'reference.overview' }],
   },
   {

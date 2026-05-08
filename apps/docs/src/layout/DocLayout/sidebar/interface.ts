@@ -28,10 +28,12 @@ export type SidebarModuleData = SidebarSubModuleData & {
 
 /** 分组（一个 SidebarGroup） */
 export type SidebarCategoryData = {
-  /** URL 第一段 */
+  /** React key 用；分组的稳定标识，但 ungrouped 分组的 value 不会出现在 URL 中 */
   value: string;
   /** 分组标题（已过 t()）；不填则该 Group 不渲染顶部 label，菜单项直接展示 */
   label?: string;
+  /** 无分组：菜单项直挂 module 根（URL 跳过 category 段）。默认 false */
+  ungrouped?: boolean;
   /** 该分组下的菜单项 */
   modules: Array<SidebarModuleData>;
 };

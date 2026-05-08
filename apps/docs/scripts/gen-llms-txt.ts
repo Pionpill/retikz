@@ -3,7 +3,7 @@ import path from 'node:path';
 
 import { modules } from '../src/data/module';
 import { getSectionsByModule } from '../src/data/sections';
-import type { I18nKey, Page } from '../src/data/interface';
+import type { I18nKey } from '../src/data/interface';
 import { en } from '../src/i18n/locales/en';
 
 /**
@@ -46,13 +46,15 @@ const collect = (rootDir: string, moduleId: string): Array<Item> => {
   };
 
   for (const section of getSectionsByModule(moduleId)) {
+    // ungrouped section（无 label）跳过 sectionId 段，URL/文件路径都不出现
+    const sectionPart = section.label && section.id ? [section.id] : [];
     for (const page of section.pages) {
       if (!page.children) {
-        pushItem([moduleId, section.id, page.id], t(page.label));
+        pushItem([moduleId, ...sectionPart, page.id], t(page.label));
       } else {
-        for (const child of page.children as Array<Page>) {
+        for (const child of page.children) {
           if (child.children) continue; // 路由只支持 2 级嵌套，更深的忽略
-          pushItem([moduleId, section.id, page.id, child.id], `${t(page.label)} / ${t(child.label)}`);
+          pushItem([moduleId, ...sectionPart, page.id, child.id], `${t(page.label)} / ${t(child.label)}`);
         }
       }
     }

@@ -1,15 +1,15 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useParams } from 'react-router';
 import type { Lang } from '@/i18n';
 import { LANGS } from '@/i18n';
+import { docPathSegments, useDocLocation } from './docLocation';
 
 type MdxLoader = () => Promise<string>;
 
 /**
  * 收集 src/contents 下全部 mdx 源码字符串，按需异步加载。
- * key 形如 '../../contents/core/profile/introduction/zh.mdx' 或更深层的
- * '../../contents/core/core/core-intro/core-intro/zh.mdx'
+ * key 形如 '../../contents/core/introduction/zh.mdx'（ungrouped）或
+ * '../../contents/core/components/draw/path/zh.mdx'（grouped 嵌套）
  */
 const mdxLoaders: Record<string, MdxLoader | undefined> = import.meta.glob<string>(
   '../../contents/**/*.mdx',
@@ -40,23 +40,18 @@ export type UseMdxSourceResult = {
 
 /**
  * 根据当前路由参数 + i18n 当前语言异步加载 mdx 源码。
- * 支持 3 段 (`:moduleId/:sectionId/:pageId`) 和 4 段 (`...:subPageId`) 两种叶子路径。
+ * 支持 grouped (2-/3-段路径段，sectionId 在内) 与 ungrouped (1-段，仅 pageId) 两种叶子路径。
  * 切换路由时会废弃过期的 fetch 结果，避免旧内容覆盖新页面。
  */
 export const useMdxSource = (): UseMdxSourceResult => {
   const { i18n } = useTranslation();
-  const { moduleId, sectionId, pageId, subPageId } = useParams<
-    'moduleId' | 'sectionId' | 'pageId' | 'subPageId'
-  >();
+  const loc = useDocLocation();
   const lang = (i18n.resolvedLanguage ?? 'zh') as Lang;
 
   const loader = useMemo(() => {
-    if (!moduleId || !sectionId || !pageId) return null;
-    const segments = subPageId
-      ? [moduleId, sectionId, pageId, subPageId]
-      : [moduleId, sectionId, pageId];
-    return resolveLoader(segments, lang);
-  }, [moduleId, sectionId, pageId, subPageId, lang]);
+    if (!loc) return null;
+    return resolveLoader(docPathSegments(loc), lang);
+  }, [loc, lang]);
 
   const [state, setState] = useState<{ loader: MdxLoader | null; source: string }>({
     loader: null,

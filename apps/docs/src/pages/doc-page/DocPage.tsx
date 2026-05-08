@@ -6,7 +6,8 @@ import { useTocStore } from '@/store/useTocStore';
 import type { FC, HTMLAttributes } from 'react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Navigate, useParams } from 'react-router';
+import { Navigate } from 'react-router';
+import { docPathSegments, useDocLocation } from './docLocation';
 import { DocPageActions } from './DocPageActions';
 import { DocPageFooterNav } from './DocPageFooterNav';
 import { useMdxSource } from './useMdxSource';
@@ -14,7 +15,7 @@ import { useMdxSource } from './useMdxSource';
 export type DocPageProps = HTMLAttributes<HTMLDivElement>;
 
 /**
- * /:moduleId/:sectionId/:pageId(/:subPageId)? 路由的渲染器。
+ * 文档页渲染器，支持两种路由形态：grouped (`/<m>/<s>/<p>(/<sp>)?`) 与 ungrouped (`/<m>/<p>`)。
  * - 找不到对应数据节点 → 404 文案
  * - 命中分组节点（含 children）→ 重定向到首个子项，避免空页面
  * - 命中叶子节点 → 加载并渲染对应路径下的 mdx 文件
@@ -29,14 +30,19 @@ export const DocPage: FC<DocPageProps> = props => {
   const { className, ...resProps } = props;
 
   const { t } = useTranslation();
-  const { moduleId, sectionId, pageId, subPageId } = useParams<'moduleId' | 'sectionId' | 'pageId' | 'subPageId'>();
+  const loc = useDocLocation();
 
-  const section = getSectionsByModule(moduleId).find(s => s.id === sectionId);
-  const page = section?.pages.find(p => p.id === pageId);
-  const subPage = subPageId ? page?.children?.find(c => c.id === subPageId) : undefined;
+  const sections = loc ? getSectionsByModule(loc.moduleId) : [];
+  const section = loc
+    ? loc.sectionId
+      ? sections.find(s => s.id === loc.sectionId)
+      : sections.find(s => !s.label)
+    : undefined;
+  const page = section?.pages.find(p => p.id === loc?.pageId);
+  const subPage = loc?.subPageId ? page?.children?.find(c => c.id === loc.subPageId) : undefined;
 
-  /** 当前 URL 实际指向的节点：4 段时是 subPage，3 段时是 page */
-  const target = subPageId ? subPage : page;
+  /** 当前 URL 实际指向的节点：4 段时是 subPage，否则是 page */
+  const target = loc?.subPageId ? subPage : page;
 
   const { source, notFound } = useMdxSource();
   const tocOpen = useTocStore(state => state.tocOpen);
@@ -48,11 +54,14 @@ export const DocPage: FC<DocPageProps> = props => {
     setStableSource(source);
   }
 
-  if (!section || !target) {
+  if (!loc || !section || !target) {
     return (
       <main className="flex flex-1 flex-col items-center justify-center p-12 text-muted-foreground">
         <p className="text-sm">
-          {t('common.notFound', { section: sectionId ?? '?', page: subPageId ?? pageId ?? '?' })}
+          {t('common.notFound', {
+            section: loc?.sectionId ?? '-',
+            page: loc?.subPageId ?? loc?.pageId ?? '?',
+          })}
         </p>
       </main>
     );
@@ -61,10 +70,7 @@ export const DocPage: FC<DocPageProps> = props => {
   // 命中分组节点：跳到首个子项（用户直接访问 group URL 时兜底）
   if (target.children) {
     const firstChild = target.children[0];
-    const basePath = subPageId
-      ? `/${moduleId}/${sectionId}/${pageId}/${subPageId}`
-      : `/${moduleId}/${sectionId}/${pageId}`;
-    return <Navigate to={`${basePath}/${firstChild.id}`} replace />;
+    return <Navigate to={`/${docPathSegments(loc).join('/')}/${firstChild.id}`} replace />;
   }
 
   const title = t(target.label);

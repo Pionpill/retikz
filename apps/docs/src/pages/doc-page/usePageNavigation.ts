@@ -1,25 +1,28 @@
 import type { I18nKey, Page, Section, SubPage } from '@/data/interface';
 import { getSectionsByModule } from '@/data/sections';
 import { useMemo } from 'react';
-import { useParams } from 'react-router';
+import { docPathSegments, useDocLocation } from './docLocation';
 
 export type LeafNode = {
-  /** 路由 :sectionId 段 */
-  sectionId: string;
+  /** 路由 :sectionId 段；ungrouped 时为 null */
+  sectionId: string | null;
   /** 路由 :pageId 段 */
   pageId: string;
   /** 路由 :subPageId 段（可选） */
   subPageId?: string;
   /** 节点 i18n label key */
   label: I18nKey;
-  /** 完整路径，含 moduleId 前缀 */
+  /** 完整路径，含 moduleId 前缀；无分组时不出现 sectionId 段 */
   path: string;
 };
+
+const buildPath = (moduleId: string, sectionId: string | null, pageId: string, subPageId?: string): string =>
+  '/' + docPathSegments({ moduleId, sectionId, pageId, subPageId }).join('/');
 
 /** 把一个 SubPage 节点（叶子或带 children 的分组）拍平成所有叶子 */
 const collectFromSubPage = (
   moduleId: string,
-  sectionId: string,
+  sectionId: string | null,
   pageId: string,
   sub: SubPage,
   acc: Array<LeafNode>,
@@ -35,14 +38,14 @@ const collectFromSubPage = (
     pageId,
     subPageId: sub.id,
     label: sub.label,
-    path: `/${moduleId}/${sectionId}/${pageId}/${sub.id}`,
+    path: buildPath(moduleId, sectionId, pageId, sub.id),
   });
 };
 
 /** 把一个 Page（一级页，可能有 children）拍平 */
 const collectFromPage = (
   moduleId: string,
-  sectionId: string,
+  sectionId: string | null,
   page: Page,
   acc: Array<LeafNode>,
 ): void => {
@@ -56,7 +59,7 @@ const collectFromPage = (
     sectionId,
     pageId: page.id,
     label: page.label,
-    path: `/${moduleId}/${sectionId}/${page.id}`,
+    path: buildPath(moduleId, sectionId, page.id),
   });
 };
 
@@ -64,8 +67,9 @@ const collectFromPage = (
 export const flattenLeaves = (moduleId: string, sections: Array<Section>): Array<LeafNode> => {
   const acc: Array<LeafNode> = [];
   for (const section of sections) {
+    const sectionId = section.label ? section.id ?? null : null;
     for (const page of section.pages) {
-      collectFromPage(moduleId, section.id, page, acc);
+      collectFromPage(moduleId, sectionId, page, acc);
     }
   }
   return acc;
@@ -83,20 +87,18 @@ export type PageNavigation = {
  * 数据源由 getSectionsByModule 按 moduleId 派发，跨模块独立成环。
  */
 export const usePageNavigation = (): PageNavigation => {
-  const { moduleId, sectionId, pageId, subPageId } = useParams<
-    'moduleId' | 'sectionId' | 'pageId' | 'subPageId'
-  >();
+  const loc = useDocLocation();
 
   return useMemo(() => {
-    if (!moduleId || !sectionId || !pageId) return { prev: null, next: null };
-    const leaves = flattenLeaves(moduleId, getSectionsByModule(moduleId));
+    if (!loc) return { prev: null, next: null };
+    const leaves = flattenLeaves(loc.moduleId, getSectionsByModule(loc.moduleId));
     const idx = leaves.findIndex(
-      l => l.sectionId === sectionId && l.pageId === pageId && l.subPageId === subPageId,
+      l => l.sectionId === loc.sectionId && l.pageId === loc.pageId && l.subPageId === loc.subPageId,
     );
     if (idx < 0) return { prev: null, next: null };
     return {
       prev: idx > 0 ? leaves[idx - 1] : null,
       next: idx < leaves.length - 1 ? leaves[idx + 1] : null,
     };
-  }, [moduleId, sectionId, pageId, subPageId]);
+  }, [loc]);
 };

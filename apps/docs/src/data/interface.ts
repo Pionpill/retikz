@@ -28,11 +28,16 @@ export type SubPage =
 /** 一级页：与 SubPage 同结构（shadcn 风格 sidebar 不再需要图标） */
 export type Page = SubPage;
 
-/** 顶层栏目 = 一个包 */
+/**
+ * 顶层栏目 = 一个分组。
+ * - **grouped**：填 id + label，URL 为 `/<module>/<sectionId>/<pageId>(/<subPageId>)?`，sidebar 会渲染顶部分组标题
+ * - **ungrouped**：id 与 label 都不填，URL 为 `/<module>/<pageId>`，sidebar 直接出 page 列表（无分组标题）
+ *
+ * 约定：id 与 label 共生 —— 要么都有要么都没。一个 module 至多一个 ungrouped section。
+ * ungrouped page 必须是叶子（不带 children），否则路由 2-段 URL 会有歧义。
+ */
 export type Section = {
-  id: string;
-  /** i18n 完整 key，调用方直接 t(label)；不填则该 Group 不渲染顶部 label */
+  id?: string;
   label?: I18nKey;
-  /** 内容 */
   pages: Array<Page>;
 };
