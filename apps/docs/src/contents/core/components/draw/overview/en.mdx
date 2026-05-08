@@ -71,6 +71,12 @@ End `way` with `DrawWay.cycle` to close the last segment back to the first item 
 
 <ComponentPreview name="draw-cycle" />
 
+### Arrows
+
+The `arrow` prop controls path-end arrows: `'->'` / `'<-'` / `'<->'` / `'none'` (default). For multi-node paths, the arrow attaches only to the overall start / end — never on intermediate nodes:
+
+<ComponentPreview name="draw-arrow" />
+
 ### Styling
 
 `stroke` / `strokeWidth` / `strokeDasharray` match `<Path>`:
@@ -85,3 +91,4 @@ End `way` with `DrawWay.cycle` to close the last segment back to the first item 
 | `stroke` | `string` | `currentColor` | Stroke color |
 | `strokeWidth` | `number` | `1` | Stroke width |
 | `strokeDasharray` | `string` | — | SVG `stroke-dasharray` pattern (e.g. `"4 2"`) |
+| `arrow` | `'none' \| '->' \| '<-' \| '<->'` | — | Path-level arrow direction |

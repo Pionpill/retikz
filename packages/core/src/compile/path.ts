@@ -1,8 +1,27 @@
 import { rect as rectOps } from '../geometry/rect';
 import type { IRPath, IRPosition, IRStep, IRTarget } from '../ir';
-import type { ScenePrimitive } from '../primitive';
+import type { PathPrim, ScenePrimitive } from '../primitive';
 import { type NodeLayout, attachRectOf } from './node';
 import { resolvePosition } from './position';
+
+/**
+ * IR 的 path-level `arrow` 字段映射到 PathPrim 的 arrowStart / arrowEnd。
+ * `'->'` → 终点箭头；`'<-'` → 起点；`'<->'` → 两端；省略或 `'none'` → 无。
+ */
+const arrowMarkers = (
+  arrow?: 'none' | '->' | '<-' | '<->',
+): { arrowStart?: 'normal'; arrowEnd?: 'normal' } => {
+  switch (arrow) {
+    case '->':
+      return { arrowEnd: 'normal' };
+    case '<-':
+      return { arrowStart: 'normal' };
+    case '<->':
+      return { arrowStart: 'normal', arrowEnd: 'normal' };
+    default:
+      return {};
+  }
+};
 
 /**
  * 求一个 step.to 的"参考点"（节点中心 / 直接坐标 / 极坐标解算后）。
@@ -186,16 +205,56 @@ export const emitPathPrimitive = (
     emitL(toClip);
   }
 
-  const d = tokens.join(' ');
-
-  const primitive: ScenePrimitive = {
-    type: 'path',
-    d,
+  const baseProps = {
     stroke: path.stroke ?? 'currentColor',
     strokeWidth: path.strokeWidth ?? 1,
-    fill: 'none',
+    fill: 'none' as const,
     strokeDasharray: path.strokeDasharray,
   };
 
+  const markers = arrowMarkers(path.arrow);
+  const hasArrows = !!markers.arrowStart || !!markers.arrowEnd;
+
+  // 找出每个 sub-path 的起始 token 索引（每个 'M ...' 都是新 sub-path）
+  const subPathStarts: Array<number> = [];
+  tokens.forEach((tok, idx) => {
+    if (tok.startsWith('M ')) subPathStarts.push(idx);
+  });
+
+  // 单 sub-path 或无箭头 → 一个 PathPrim 搞定
+  if (!hasArrows || subPathStarts.length <= 1) {
+    const primitive: PathPrim = {
+      type: 'path',
+      d: tokens.join(' '),
+      ...baseProps,
+      ...markers,
+    };
+    return { primitive, points };
+  }
+
+  // 多 sub-path + 有箭头：split 成多个 PathPrim 分别只挂"首段 marker-start / 末段 marker-end"，
+  // 用 GroupPrim 包起来。否则 SVG marker 会按每个 sub-path 单独贴在中间节点上，视觉错乱。
+  const subPathSlices: Array<Array<string>> = [];
+  for (let s = 0; s < subPathStarts.length; s++) {
+    const start = subPathStarts[s];
+    const end = s + 1 < subPathStarts.length ? subPathStarts[s + 1] : tokens.length;
+    subPathSlices.push(tokens.slice(start, end));
+  }
+  const subPathPrims: Array<PathPrim> = subPathSlices.map((sub, i) => {
+    const isFirst = i === 0;
+    const isLast = i === subPathSlices.length - 1;
+    return {
+      type: 'path',
+      d: sub.join(' '),
+      ...baseProps,
+      ...(isFirst && markers.arrowStart ? { arrowStart: markers.arrowStart } : {}),
+      ...(isLast && markers.arrowEnd ? { arrowEnd: markers.arrowEnd } : {}),
+    };
+  });
+
+  const primitive: ScenePrimitive = {
+    type: 'group',
+    children: subPathPrims,
+  };
   return { primitive, points };
 };

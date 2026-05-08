@@ -50,6 +50,14 @@ import { Path, Step } from '@retikz/react';
 
 <ComponentPreview name="path-cycle" />
 
+### Arrows
+
+`arrow` is a path-level prop (not on `<Step>`); four values: `'->'` (end), `'<-'` (start), `'<->'` (both), `'none'` / omitted (no arrow):
+
+<ComponentPreview name="path-arrow" />
+
+> Multi-node paths (e.g. A → B → C) clip per-segment, but the arrow only attaches to the overall **start** / **end** — never to intermediate nodes. The marker uses `fill="context-stroke"` so its color tracks the stroke; size scales with `strokeWidth`.
+
 ### Styling
 
 `stroke` / `strokeWidth` / `strokeDasharray` match `<Draw>`:
@@ -63,6 +71,7 @@ import { Path, Step } from '@retikz/react';
 | `stroke` | `string` | `currentColor` | Stroke color |
 | `strokeWidth` | `number` | `1` | Stroke width |
 | `strokeDasharray` | `string` | — | SVG `stroke-dasharray` pattern |
+| `arrow` | `'none' \| '->' \| '<-' \| '<->'` | — | Path-level arrow direction |
 | `children` | `Array<<Step>>` | — | At least 2; if the first isn't `move`, the compiler coerces it to `move`. `<Step>` supports `move` / `line` / `step` (folded) / `cycle` (close) |
 
 ## Path vs Draw

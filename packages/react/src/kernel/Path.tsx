@@ -10,6 +10,11 @@ export type PathProps = {
   strokeWidth?: IRPath['strokeWidth'];
   /** SVG stroke-dasharray 模式（如 "4 2"） */
   strokeDasharray?: IRPath['strokeDasharray'];
+  /**
+   * 路径级箭头方向。`'->'` = 终点；`'<-'` = 起点；`'<->'` = 两端；
+   * 省略或 `'none'` = 无箭头。
+   */
+  arrow?: IRPath['arrow'];
   /** 应当全部是 <Step /> */
   children: ReactNode;
 };

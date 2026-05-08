@@ -71,6 +71,12 @@ way 末尾放 `DrawWay.cycle` 把最后一段闭合回 way 第一项——与 Ti
 
 <ComponentPreview name="draw-cycle" />
 
+### 箭头
+
+`arrow` prop 控制路径两端的箭头：`'->'` / `'<-'` / `'<->'` / `'none'`（缺省）。多节点路径只在整体起点 / 终点贴箭头，中间节点不会出现额外箭头：
+
+<ComponentPreview name="draw-arrow" />
+
 ### 样式
 
 `stroke` / `strokeWidth` / `strokeDasharray` 与 `<Path>` 完全一致：
@@ -85,3 +91,4 @@ way 末尾放 `DrawWay.cycle` 把最后一段闭合回 way 第一项——与 Ti
 | `stroke` | `string` | `currentColor` | 描边色 |
 | `strokeWidth` | `number` | `1` | 描边宽度 |
 | `strokeDasharray` | `string` | — | SVG `stroke-dasharray` 模式（如 `"4 2"`） |
+| `arrow` | `'none' \| '->' \| '<-' \| '<->'` | — | 路径级箭头方向 |

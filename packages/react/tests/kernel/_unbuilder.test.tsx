@@ -141,6 +141,27 @@ describe('convertIRToReactNode', () => {
     expect(back).toEqual(ir);
   });
 
+  it("path-level arrow round-trip：'->'/'<-'/'<->' 字段透传保留", () => {
+    for (const arrow of ['->', '<-', '<->'] as const) {
+      const ir: IR = {
+        version: CURRENT_IR_VERSION,
+        type: 'scene',
+        children: [
+          {
+            type: 'path',
+            arrow,
+            children: [
+              { type: 'step', kind: 'move', to: [0, 0] },
+              { type: 'step', kind: 'line', to: [10, 0] },
+            ],
+          },
+        ],
+      };
+      const back = buildIR(convertIRToReactNode(ir));
+      expect(back).toEqual(ir);
+    }
+  });
+
   it("cycle step round-trip：无 to / via 字段保留", () => {
     const ir: IR = {
       version: CURRENT_IR_VERSION,

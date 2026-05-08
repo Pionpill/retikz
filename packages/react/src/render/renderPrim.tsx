@@ -29,10 +29,23 @@ const baselineToDominant = (
 };
 
 /**
- * Scene primitive → SVG React 元素。
- * 不读 IR，只读 Scene；约束在 100 行以内（超过说明 Scene 抽象不够下沉，回 core 补）。
+ * 渲染上下文——Tikz 容器侧把 marker id 等"全 SVG 共享"的资源向下传给 renderPrim。
+ * 资源若不存在就传 undefined，对应路径 prim 不会引用 marker。
  */
-export const renderPrim = (p: ScenePrimitive, key: Key): ReactElement => {
+export type RenderContext = {
+  /** path 元素引用 SVG `<defs><marker id="...">` 的 id，用于箭头渲染 */
+  arrowMarkerId?: string;
+};
+
+/**
+ * Scene primitive → SVG React 元素。
+ * 不读 IR，只读 Scene。
+ */
+export const renderPrim = (
+  p: ScenePrimitive,
+  key: Key,
+  ctx: RenderContext = {},
+): ReactElement => {
   switch (p.type) {
     case 'rect':
       return (
@@ -70,7 +83,8 @@ export const renderPrim = (p: ScenePrimitive, key: Key): ReactElement => {
           {p.content}
         </text>
       );
-    case 'path':
+    case 'path': {
+      const markerRef = ctx.arrowMarkerId ? `url(#${ctx.arrowMarkerId})` : undefined;
       return (
         <path
           key={key}
@@ -81,13 +95,16 @@ export const renderPrim = (p: ScenePrimitive, key: Key): ReactElement => {
           strokeDasharray={p.strokeDasharray}
           strokeLinecap={p.strokeLinecap}
           strokeLinejoin={p.strokeLinejoin}
+          markerStart={p.arrowStart && markerRef ? markerRef : undefined}
+          markerEnd={p.arrowEnd && markerRef ? markerRef : undefined}
           opacity={p.opacity}
         />
       );
+    }
     case 'group':
       return (
         <g key={key} transform={p.transform}>
-          {p.children.map((c, i) => renderPrim(c, i))}
+          {p.children.map((c, i) => renderPrim(c, i, ctx))}
         </g>
       );
   }

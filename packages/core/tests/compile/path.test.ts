@@ -274,6 +274,146 @@ describe("compile path: 'cycle' 闭合", () => {
   });
 });
 
+describe("compile path: arrow 箭头 (ADR-0002)", () => {
+  it("arrow: '->' → PathPrim arrowEnd: 'normal'，arrowStart 不写", () => {
+    const ir: IR = {
+      version: 1,
+      type: 'scene',
+      children: [
+        {
+          type: 'path',
+          arrow: '->',
+          children: [
+            { type: 'step', kind: 'move', to: [0, 0] },
+            { type: 'step', kind: 'line', to: [10, 0] },
+          ],
+        },
+      ],
+    };
+    const scene = compileToScene(ir);
+    const path = findPathPrim(scene.primitives);
+    expect(path.arrowEnd).toBe('normal');
+    expect(path.arrowStart).toBeUndefined();
+  });
+
+  it("arrow: '<-' → arrowStart: 'normal'", () => {
+    const ir: IR = {
+      version: 1,
+      type: 'scene',
+      children: [
+        {
+          type: 'path',
+          arrow: '<-',
+          children: [
+            { type: 'step', kind: 'move', to: [0, 0] },
+            { type: 'step', kind: 'line', to: [10, 0] },
+          ],
+        },
+      ],
+    };
+    const path = findPathPrim(compileToScene(ir).primitives);
+    expect(path.arrowStart).toBe('normal');
+    expect(path.arrowEnd).toBeUndefined();
+  });
+
+  it("arrow: '<->' → 两端都 'normal'", () => {
+    const ir: IR = {
+      version: 1,
+      type: 'scene',
+      children: [
+        {
+          type: 'path',
+          arrow: '<->',
+          children: [
+            { type: 'step', kind: 'move', to: [0, 0] },
+            { type: 'step', kind: 'line', to: [10, 0] },
+          ],
+        },
+      ],
+    };
+    const path = findPathPrim(compileToScene(ir).primitives);
+    expect(path.arrowStart).toBe('normal');
+    expect(path.arrowEnd).toBe('normal');
+  });
+
+  it("arrow: 'none' / 缺省 → 两端都不挂 marker", () => {
+    const ir: IR = {
+      version: 1,
+      type: 'scene',
+      children: [
+        {
+          type: 'path',
+          children: [
+            { type: 'step', kind: 'move', to: [0, 0] },
+            { type: 'step', kind: 'line', to: [10, 0] },
+          ],
+        },
+      ],
+    };
+    const path = findPathPrim(compileToScene(ir).primitives);
+    expect(path.arrowStart).toBeUndefined();
+    expect(path.arrowEnd).toBeUndefined();
+  });
+
+  it("多 sub-path + arrow → 拆成 GroupPrim：首段独占 marker-start，末段独占 marker-end", () => {
+    // A → B → C 多节点路径，'->'。期望产出 GroupPrim 内 2 个 PathPrim：
+    //   首段 d="M ... L ..."（无 arrow）
+    //   末段 d="M ... L ..."（arrowEnd: 'normal'）
+    const ir: IR = {
+      version: 1,
+      type: 'scene',
+      children: [
+        { type: 'node', id: 'A', position: [0, 0] },
+        { type: 'node', id: 'B', position: [60, 0] },
+        { type: 'node', id: 'C', position: [60, 60] },
+        {
+          type: 'path',
+          arrow: '->',
+          children: [
+            { type: 'step', kind: 'move', to: 'A' },
+            { type: 'step', kind: 'line', to: 'B' },
+            { type: 'step', kind: 'line', to: 'C' },
+          ],
+        },
+      ],
+    };
+    const scene = compileToScene(ir);
+    const group = scene.primitives.find(
+      (p): p is Extract<ScenePrimitive, { type: 'group' }> => p.type === 'group',
+    );
+    expect(group).toBeDefined();
+    expect(group?.children).toHaveLength(2);
+    const [first, last] = group!.children as Array<PathPrim>;
+    expect(first.arrowStart).toBeUndefined();
+    expect(first.arrowEnd).toBeUndefined();
+    expect(last.arrowStart).toBeUndefined();
+    expect(last.arrowEnd).toBe('normal');
+  });
+
+  it("单 sub-path + arrow → 不拆 group，直接一个 PathPrim 挂 marker", () => {
+    // 直接坐标，无 boundary clip 差异，单 sub-path
+    const ir: IR = {
+      version: 1,
+      type: 'scene',
+      children: [
+        {
+          type: 'path',
+          arrow: '->',
+          children: [
+            { type: 'step', kind: 'move', to: [0, 0] },
+            { type: 'step', kind: 'line', to: [10, 0] },
+            { type: 'step', kind: 'line', to: [10, 10] },
+          ],
+        },
+      ],
+    };
+    const scene = compileToScene(ir);
+    expect(scene.primitives.find(p => p.type === 'group')).toBeUndefined();
+    const path = findPathPrim(scene.primitives);
+    expect(path.arrowEnd).toBe('normal');
+  });
+});
+
 describe('compile path: 多节点连线段独立 clip（bugfix tikz-from-ir.demo）', () => {
   it("A → B → C → A：B 出口端点不同于 B 入口端点，路径在 B 处可见地断开", () => {
     // A=(0,0)、B=(120,0)、C=(60,60)，无文本默认 16x16

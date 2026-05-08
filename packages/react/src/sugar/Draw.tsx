@@ -6,7 +6,7 @@ import { Step } from '../kernel/Step';
 
 /** <Draw> 组件的 props */
 export type DrawProps = {
-  /** way 数组 DSL：节点 id / 坐标 / 极坐标 / 折角 `{ via, to }` / 闭合 `{ cycle: true }` */
+  /** way 数组 DSL：节点 id / 坐标 / 极坐标 / 折角算子 `'-|'` `'|-'` / 闭合 `DrawWay.cycle` */
   way: WayDSL;
   /** 描边色，省略时用 currentColor */
   stroke?: IRPath['stroke'];
@@ -14,6 +14,11 @@ export type DrawProps = {
   strokeWidth?: IRPath['strokeWidth'];
   /** SVG stroke-dasharray 模式（如 "4 2"） */
   strokeDasharray?: IRPath['strokeDasharray'];
+  /**
+   * 路径级箭头方向。`'->'` = 终点；`'<-'` = 起点；`'<->'` = 两端；
+   * 省略或 `'none'` = 无箭头。
+   */
+  arrow?: IRPath['arrow'];
 };
 
 /**
@@ -25,11 +30,16 @@ export type DrawProps = {
  * （useState / useMemo / useEffect 等会抛 "Invalid hook call"）。
  */
 export const Draw: FC<DrawProps> = props => {
-  const { way, stroke, strokeWidth, strokeDasharray } = props;
+  const { way, stroke, strokeWidth, strokeDasharray, arrow } = props;
   const steps = parseWay(way);
 
   return (
-    <Path stroke={stroke} strokeWidth={strokeWidth} strokeDasharray={strokeDasharray}>
+    <Path
+      stroke={stroke}
+      strokeWidth={strokeWidth}
+      strokeDasharray={strokeDasharray}
+      arrow={arrow}
+    >
       {steps.map((s, i) => {
         if (s.kind === 'cycle') return <Step key={i} kind="cycle" />;
         if (s.kind === 'move') return <Step key={i} kind="move" to={s.to} />;

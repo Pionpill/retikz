@@ -22,6 +22,12 @@ export const PathSchema = z
       .describe(
         'SVG stroke-dasharray pattern (e.g. "4 2"); leave empty for solid line',
       ),
+    arrow: z
+      .enum(['none', '->', '<-', '<->'])
+      .optional()
+      .describe(
+        'Path-level arrow direction. omitted/`none` = no arrows; `->` = arrow at end; `<-` = at start; `<->` = both. v0.1 alpha.1 fixes the arrow shape to a filled triangle; finer control via `arrowOptions` is planned.',
+      ),
     children: z
       .array(StepSchema)
       .min(2)
