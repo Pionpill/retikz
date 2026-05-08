@@ -26,6 +26,7 @@ export type {
   IRTarget,
   IRMoveStep,
   IRLineStep,
+  IRFoldStep,
   IRStep,
   IRNode,
   IRPath,
@@ -54,7 +55,7 @@ export type {
 export { fallbackMeasurer, compileToScene } from './compile';
 
 // Parsers
-export type { WayItem, WayDSL } from './parsers';
+export type { WayItem, WayDSL, WayFold } from './parsers';
 export { parseWay } from './parsers';
 
 // Geometry

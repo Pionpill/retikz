@@ -6,7 +6,7 @@ import { Step } from '../kernel/Step';
 
 /** <Draw> 组件的 props */
 export type DrawProps = {
-  /** way 数组 DSL：节点 id 字符串、坐标 [x, y]、极坐标对象 */
+  /** way 数组 DSL：节点 id 字符串、坐标 [x, y]、极坐标对象、折角对象 `{ via, to }` */
   way: WayDSL;
   /** 描边色，省略时用 currentColor */
   stroke?: IRPath['stroke'];
@@ -30,9 +30,11 @@ export const Draw: FC<DrawProps> = props => {
 
   return (
     <Path stroke={stroke} strokeWidth={strokeWidth} strokeDasharray={strokeDasharray}>
-      {steps.map((s, i) =>
-        s.kind === 'move' ? <Step key={i} kind="move" to={s.to} /> : <Step key={i} kind="line" to={s.to} />,
-      )}
+      {steps.map((s, i) => {
+        if (s.kind === 'move') return <Step key={i} kind="move" to={s.to} />;
+        if (s.kind === 'step') return <Step key={i} kind="step" via={s.via} to={s.to} />;
+        return <Step key={i} kind="line" to={s.to} />;
+      })}
     </Path>
   );
 };

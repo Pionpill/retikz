@@ -32,6 +32,12 @@ import { Path, Step } from '@retikz/react';
 
 <ComponentPreview name="step-fold" />
 
+### 样式
+
+`<Step>` 自身没有 stroke 类视觉属性——样式都挂在父 `<Path>` 上，整条 Path 的所有 Step 共享同一套 `stroke` / `strokeWidth` / `strokeDasharray`：
+
+<ComponentPreview name="step-styling" />
+
 ## API 参考
 
 | 属性 | 类型 | 默认值 | 描述 |

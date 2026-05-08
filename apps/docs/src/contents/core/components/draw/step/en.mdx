@@ -32,6 +32,12 @@ The path below draws A→B with one `move` + `line`, then lifts the pen with ano
 
 <ComponentPreview name="step-fold" />
 
+### Styling
+
+`<Step>` itself has no stroke-related visual props — styling lives on the parent `<Path>`, and all child Steps share the same `stroke` / `strokeWidth` / `strokeDasharray`:
+
+<ComponentPreview name="step-styling" />
+
 ## API Reference
 
 | Prop | Type | Default | Description |

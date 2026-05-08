@@ -3,7 +3,7 @@ title: Path
 description: Kernel 路径容器——`<Step>` 子节点序列定义折线，最少 2 个 step；Sugar 的 `<Draw>` 编译后就是它。
 ---
 
-`<Path>` 是底层路径容器：children 必须是若干 `<Step>`（至少 2 个），定义路径的 move / line 序列。日常连线用 `<Draw>` 更简洁，需要自定义 stroke / 多段折线 / 不同 step kind 时回到 `<Path>`。
+`<Path>` 是底层路径容器：children 必须是若干 `<Step>`（至少 2 个），定义路径的 move / line / step（折角）等动作序列。日常连线用 `<Draw>` 更简洁，需要折角、自定义 stroke、不同 step kind 时回到 `<Path>`。
 
 ## 用法
 
@@ -25,10 +25,12 @@ import { Path, Step } from '@retikz/react';
 ```tsx
 <Path>
   <Step kind="move" to={...} />     {/* 第 1 个：必为 move */}
-  <Step kind="line" to={...} />     {/* 之后任意多个 line / move */}
+  <Step kind="line" to={...} />     {/* 之后任意多个 line / move / step */}
   ...
 </Path>
 ```
+
+`<Step>` 支持 `move` / `line` / `step` 三种 kind——前两种画直线段，`step` 走直角折角，详见 [Step](/core/components/draw/step)。
 
 ## 例子
 
@@ -36,7 +38,15 @@ import { Path, Step } from '@retikz/react';
 
 <ComponentPreview name="path-basic" />
 
-### 虚线
+### 折角
+
+`<Step kind="step" via="-|" \| "\|-">` 在两端之间插一个直角拐点——流程图、UML 关系线刚需。下面这条 path 混合 `line` + 两种 `via` 折角：
+
+<ComponentPreview name="path-fold" />
+
+### 样式
+
+`stroke` / `strokeWidth` / `strokeDasharray` 与 `<Draw>` 完全一致：
 
 <ComponentPreview name="path-dashed" />
 
@@ -47,7 +57,7 @@ import { Path, Step } from '@retikz/react';
 | `stroke` | `string` | `currentColor` | 描边色 |
 | `strokeWidth` | `number` | `1` | 描边宽度 |
 | `strokeDasharray` | `string` | — | SVG `stroke-dasharray` 模式 |
-| `children` | `Array<<Step>>` | — | 至少 2 个；首个非 `move` 时编译器会强制改成 `move` |
+| `children` | `Array<<Step>>` | — | 至少 2 个；首个非 `move` 时编译器会强制改成 `move`。`<Step>` 支持 `move` / `line` / `step`（折角） |
 
 ## 与 Draw 的取舍
 
@@ -55,6 +65,6 @@ import { Path, Step } from '@retikz/react';
 | --- | --- | --- |
 | 写法 | 一行 way 数组 | 容器 + 子节点 |
 | 表达力 | 与 Path 等价（编译展开） | 全部 Kernel 能力 |
-| 适用 | 90% 连线场景 | 自定义 step kind、未来扩展 |
+| 适用 | 90% 连线场景 | 显式 Step 序列、未来扩展 |
 
 `<Draw>` 由 `<Path>` 编译而成；写文档 / 教程时一律先讲 `<Draw>`，`<Path>` 是给"想看底层"的用户。

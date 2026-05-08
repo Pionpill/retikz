@@ -1,9 +1,9 @@
 ---
 title: Draw
-description: Sugar component — way array threads through ids / Cartesian / polar targets, expands at compile time to Path + Step.
+description: Sugar component — way array threads through ids / Cartesian / polar / fold targets, expands at compile time to Path + Step.
 ---
 
-`<Draw>` is the go-to for 90% of connections. `way` is an array of targets joined as a polyline; at compile time it expands to an equivalent Kernel `<Path>` + `<Step>` tree, so `<Draw>` adds no capability the Kernel can't already express.
+`<Draw>` is the go-to for 90% of connections. `way` is an array of targets joined as a path; at compile time it expands to an equivalent Kernel `<Path>` + `<Step>` tree, so `<Draw>` adds no capability the Kernel can't already express.
 
 ## Usage
 
@@ -21,19 +21,26 @@ import { Draw } from '@retikz/react';
 
 <ComponentPreview name="draw-basic" />
 
-### Three forms of way item
+### Four forms of way item
 
-Each item in `way` accepts three forms (matching `<Step>.to`):
+Each item in `way` accepts four forms — the first three are direct targets (matching `<Step>.to`), the fourth is a fold object.
 
 | Form | Example | Meaning |
 | --- | --- | --- |
 | Node id | `'a'` | Reference a Node in the same Tikz; endpoint auto-attaches to border |
 | Cartesian | `[120, 0]` | Literal `[x, y]` |
 | Polar | `{ origin: 'a', angle: 60, radius: 80 }` | Polar (see [Positioning](/core/concepts/positioning)) |
+| Fold | `{ via: '-\|' \| '\|-', to: target }` | Right-angle fold segment (TikZ `-\|` / `\|-`) |
 
 Three Draws below use id, Cartesian, and polar as endpoints respectively:
 
 <ComponentPreview name="draw-way-types" />
+
+### Folded segments
+
+Drop a `{ via, to }` object into `way` and that segment folds through a right-angle corner instead of a straight line — equivalent to `<Step kind="step" via to>`. Essential for flow charts and UML relationships:
+
+<ComponentPreview name="draw-fold" />
 
 ### Styling
 
@@ -45,20 +52,7 @@ Three Draws below use id, Cartesian, and polar as endpoints respectively:
 
 | Prop | Type | Default | Description |
 | --- | --- | --- | --- |
-| `way` | `Array<WayItem>` | — | At least 2 points; first = `move`, rest default `line` |
+| `way` | `Array<WayItem>` | — | At least 2 items; first is always `move`, rest are `line` or `step` (fold) depending on item form |
 | `stroke` | `string` | `currentColor` | Stroke color |
 | `strokeWidth` | `number` | `1` | Stroke width |
 | `strokeDasharray` | `string` | — | SVG `stroke-dasharray` pattern (e.g. `"4 2"`) |
-
-## Relation to Path
-
-`<Draw way={['a', 'b']}>` compiles to:
-
-```tsx
-<Path>
-  <Step kind="move" to="a" />
-  <Step kind="line" to="b" />
-</Path>
-```
-
-Use `<Path>` + `<Step>` directly when you need finer control.

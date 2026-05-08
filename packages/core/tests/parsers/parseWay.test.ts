@@ -77,7 +77,7 @@ describe('parseWay', () => {
       expect(parseWay([{ angle: 0, radius: 1 }, 'B'])[0].kind).toBe('move');
     });
 
-    it('除首段外所有段 kind 是 "line"', () => {
+    it('除首段外、非 fold 项的段 kind 是 "line"', () => {
       const steps = parseWay(['A', 'B', 'C', 'D']);
       expect(steps.slice(1).every(s => s.kind === 'line')).toBe(true);
     });
@@ -109,6 +109,36 @@ describe('parseWay', () => {
     it('两次相同输入产出结构相等的结果', () => {
       const way: WayDSL = ['A', [1, 2], 'B'];
       expect(parseWay(way)).toEqual(parseWay(way));
+    });
+  });
+
+  describe('折角项 WayFold', () => {
+    it("`{ via: '-|', to }` 解析为 step 折角", () => {
+      expect(parseWay(['A', { via: '-|', to: 'B' }])).toEqual([
+        { type: 'step', kind: 'move', to: 'A' },
+        { type: 'step', kind: 'step', via: '-|', to: 'B' },
+      ]);
+    });
+
+    it("`{ via: '|-', to }` 解析为 step 折角", () => {
+      expect(parseWay(['A', { via: '|-', to: [10, 5] }])).toEqual([
+        { type: 'step', kind: 'move', to: 'A' },
+        { type: 'step', kind: 'step', via: '|-', to: [10, 5] },
+      ]);
+    });
+
+    it('混合 line + fold + line：fold 项产出 step，相邻 line 不受影响', () => {
+      expect(parseWay(['A', { via: '-|', to: 'B' }, [10, 0]])).toEqual([
+        { type: 'step', kind: 'move', to: 'A' },
+        { type: 'step', kind: 'step', via: '-|', to: 'B' },
+        { type: 'step', kind: 'line', to: [10, 0] },
+      ]);
+    });
+
+    it('首项是 fold 对象时，提取 to 当 move target（不会变成 step）', () => {
+      const steps = parseWay([{ via: '-|', to: 'A' }, 'B']);
+      expect(steps[0]).toEqual({ type: 'step', kind: 'move', to: 'A' });
+      expect(steps[1]).toEqual({ type: 'step', kind: 'line', to: 'B' });
     });
   });
 

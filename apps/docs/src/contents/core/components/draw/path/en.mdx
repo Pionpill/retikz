@@ -3,7 +3,7 @@ title: Path
 description: Kernel path container — children are a sequence of `<Step>` (≥ 2) defining a polyline; `<Draw>` compiles down to this.
 ---
 
-`<Path>` is the low-level path container: children must be `<Step>` nodes (at least 2) defining the move / line sequence. For everyday connections `<Draw>` is shorter; reach for `<Path>` when you need custom stroke + multi-segment polylines or different step kinds.
+`<Path>` is the low-level path container: children must be `<Step>` nodes (at least 2) defining a sequence of move / line / step (folded) actions. For everyday connections `<Draw>` is shorter; reach for `<Path>` when you need folds, custom stroke, multi-segment polylines, or different step kinds.
 
 ## Usage
 
@@ -25,10 +25,12 @@ import { Path, Step } from '@retikz/react';
 ```tsx
 <Path>
   <Step kind="move" to={...} />     {/* First: must be move */}
-  <Step kind="line" to={...} />     {/* Then any number of line / move */}
+  <Step kind="line" to={...} />     {/* Then any number of line / move / step */}
   ...
 </Path>
 ```
+
+`<Step>` supports three kinds — `move` / `line` / `step` — the first two draw straight segments, `step` folds through a right angle. See [Step](/core/components/draw/step) for details.
 
 ## Examples
 
@@ -36,7 +38,15 @@ import { Path, Step } from '@retikz/react';
 
 <ComponentPreview name="path-basic" />
 
-### Dashed
+### Folded (step)
+
+`<Step kind="step" via="-|" \| "\|-">` inserts a right-angle corner between cursor and target — essential for flow charts and UML relationships. Below is a path mixing `line` and both `via` directions:
+
+<ComponentPreview name="path-fold" />
+
+### Styling
+
+`stroke` / `strokeWidth` / `strokeDasharray` match `<Draw>`:
 
 <ComponentPreview name="path-dashed" />
 
@@ -47,7 +57,7 @@ import { Path, Step } from '@retikz/react';
 | `stroke` | `string` | `currentColor` | Stroke color |
 | `strokeWidth` | `number` | `1` | Stroke width |
 | `strokeDasharray` | `string` | — | SVG `stroke-dasharray` pattern |
-| `children` | `Array<<Step>>` | — | At least 2; if the first isn't `move`, the compiler coerces it to `move` |
+| `children` | `Array<<Step>>` | — | At least 2; if the first isn't `move`, the compiler coerces it to `move`. `<Step>` supports `move` / `line` / `step` (folded) |
 
 ## Path vs Draw
 
@@ -55,6 +65,6 @@ import { Path, Step } from '@retikz/react';
 | --- | --- | --- |
 | Form | Single-line `way` array | Container + child nodes |
 | Expressiveness | Equivalent to Path (compile-expanded) | All Kernel capability |
-| Use when | 90% of connection cases | Custom step kinds, future extensions |
+| Use when | 90% of connection cases | Explicit Step sequence, future extensions |
 
 `<Draw>` compiles down to `<Path>`; tutorials should lead with `<Draw>` — `<Path>` is for users who want the underlying construct.

@@ -1,9 +1,9 @@
 ---
 title: Draw
-description: Sugar 组件——way 数组按 id / 笛卡尔 / 极坐标三种形态串点，编译期展开为 Path + Step。
+description: Sugar 组件——way 数组按 id / 笛卡尔 / 极坐标 / 折角四种形态串点，编译期展开为 Path + Step。
 ---
 
-`<Draw>` 是 90% 用户连线的首选。`way` 是一个目标点数组，依次串成折线；编译期它会展开为一组等价的 Kernel `<Path>` + `<Step>`，所以 `<Draw>` 不引入任何 Kernel 表达不了的能力。
+`<Draw>` 是 90% 用户连线的首选。`way` 是一个目标点数组，依次串成路径；编译期它会展开为一组等价的 Kernel `<Path>` + `<Step>`，所以 `<Draw>` 不引入任何 Kernel 表达不了的能力。
 
 ## 用法
 
@@ -21,19 +21,26 @@ import { Draw } from '@retikz/react';
 
 <ComponentPreview name="draw-basic" />
 
-### way 的 3 种 item
+### way 的 4 种 item
 
-`way` 数组里的每一项都接受三种形态（与 `<Step>.to` 一致）：
+`way` 数组里的每一项接受四种形态：前三种是直接 target（与 `<Step>.to` 一致），第四种是折角对象。
 
 | 形态 | 例 | 含义 |
 | --- | --- | --- |
 | 节点 id | `'a'` | 引用同一 Tikz 内的 Node；端点自动贴 border |
 | 笛卡尔 | `[120, 0]` | 直接给坐标 |
 | 极坐标 | `{ origin: 'a', angle: 60, radius: 80 }` | 极坐标（详见 [定位](/core/concepts/positioning)） |
+| 折角 | `{ via: '-\|' \| '\|-', to: target }` | 直角拐点段（TikZ `-\|` / `\|-`） |
 
 下面三条 Draw 分别用 id、笛卡尔、极坐标作为终点：
 
 <ComponentPreview name="draw-way-types" />
+
+### 折角
+
+way 里夹一个 `{ via, to }` 对象，这一段就走折角而不是直线——等价于 `<Step kind="step" via to>`。流程图、UML 关系线刚需：
+
+<ComponentPreview name="draw-fold" />
 
 ### 样式
 
@@ -45,20 +52,7 @@ import { Draw } from '@retikz/react';
 
 | 属性 | 类型 | 默认值 | 描述 |
 | --- | --- | --- | --- |
-| `way` | `Array<WayItem>` | — | 至少 2 个点；首个 = `move`，之后默认 `line` |
+| `way` | `Array<WayItem>` | — | 至少 2 个点；首项总是 `move`，其余按 item 形态决定 `line` 或 `step`（折角） |
 | `stroke` | `string` | `currentColor` | 描边色 |
 | `strokeWidth` | `number` | `1` | 描边宽度 |
 | `strokeDasharray` | `string` | — | SVG `stroke-dasharray` 模式（如 `"4 2"`） |
-
-## 与 Path 的关系
-
-`<Draw way={['a', 'b']}>` 编译期等价于：
-
-```tsx
-<Path>
-  <Step kind="move" to="a" />
-  <Step kind="line" to="b" />
-</Path>
-```
-
-需要更精细的控制时，回到 `<Path>` + `<Step>`。
