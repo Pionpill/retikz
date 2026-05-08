@@ -15,6 +15,8 @@ export const zh = {
     themeLight: '浅色主题',
     themeDark: '深色主题',
     brandTagline: 'ReTikZ 模块切换',
+    layoutDefault: '默认布局',
+    layoutCentered: '居中布局',
   },
   core: {
     label: '核心',

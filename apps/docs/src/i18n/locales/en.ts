@@ -17,6 +17,8 @@ export const en: I18nResources = {
     themeLight: 'Light theme',
     themeDark: 'Dark theme',
     brandTagline: 'ReTikZ module switcher',
+    layoutDefault: 'Default layout',
+    layoutCentered: 'Centered layout',
   },
   core: {
     label: 'Core',

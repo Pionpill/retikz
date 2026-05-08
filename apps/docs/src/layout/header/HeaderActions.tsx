@@ -1,4 +1,4 @@
-import { Languages, Link as LinkIcon, Moon, Sun, TableOfContents } from 'lucide-react';
+import { AlignCenter, Columns3, Languages, Link as LinkIcon, Moon, Sun, TableOfContents } from 'lucide-react';
 import { type FC, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { LANGS, type Lang } from '@/i18n';
+import { useLayoutStore } from '@/store/useLayoutStore';
 import { useThemeStore } from '@/store/useThemeStore';
 import { useTocStore } from '@/store/useTocStore';
 
@@ -25,9 +26,13 @@ export const HeaderActions: FC = () => {
   const setTocOpen = useTocStore(state => state.setTocOpen);
   const theme = useThemeStore(s => s.theme);
   const setTheme = useThemeStore(s => s.setTheme);
+  const layout = useLayoutStore(s => s.layout);
+  const toggleLayout = useLayoutStore(s => s.toggleLayout);
 
   const ThemeIcon = theme === 'light' ? Sun : Moon;
   const themeLabel = theme === 'light' ? t('common.themeLight') : t('common.themeDark');
+  const LayoutIcon = layout === 'default' ? Columns3 : AlignCenter;
+  const layoutLabel = layout === 'default' ? t('common.layoutDefault') : t('common.layoutCentered');
 
   const handleCopyLink = useCallback(() => {
     void navigator.clipboard.writeText(window.location.href);
@@ -99,6 +104,14 @@ export const HeaderActions: FC = () => {
               </Button>
             </TooltipTrigger>
             <TooltipContent>{tocOpen ? t('toc.hideOutline') : t('toc.showOutline')} (Ctrl+Alt+B)</TooltipContent>
+          </Tooltip>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button size="icon" variant="ghost" className={buttonClass} onClick={toggleLayout}>
+                <LayoutIcon className="size-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>{layoutLabel}</TooltipContent>
           </Tooltip>
         </div>
       </div>
