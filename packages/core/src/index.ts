@@ -36,13 +36,15 @@ export type {
   IRChild,
   IR,
   ArrowShape,
+  NodeShape,
 } from './ir';
-export { ARROW_SHAPES } from './ir';
+export { ARROW_SHAPES, NODE_SHAPES } from './ir';
 
 // Primitive (Scene 数据模型)
 export type {
   ScenePrimitive,
   RectPrim,
+  EllipsePrim,
   TextPrim,
   PathPrim,
   GroupPrim,
@@ -65,8 +67,19 @@ export { parseWay, DrawWay } from './parsers';
 
 // Geometry
 // RECT_ANCHORS（const 集合，值）与 RectAnchor（派生 type）配对，名字不撞
-export type { Position, Rect, RectAnchor, PolarPosition } from './geometry';
-export { point, rect, RECT_ANCHORS, polar } from './geometry';
+export type {
+  Position,
+  Rect,
+  RectAnchor,
+  Circle,
+  CircleAnchor,
+  Ellipse,
+  EllipseAnchor,
+  Diamond,
+  DiamondAnchor,
+  PolarPosition,
+} from './geometry';
+export { point, rect, circle, ellipse, diamond, RECT_ANCHORS, polar } from './geometry';
 
 // Type utilities
 export type { ValueOf } from './types';

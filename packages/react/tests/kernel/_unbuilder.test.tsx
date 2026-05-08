@@ -141,6 +141,18 @@ describe('convertIRToReactNode', () => {
     expect(back).toEqual(ir);
   });
 
+  it("Node shape round-trip：4 种 shape 字段透传保留", () => {
+    for (const shape of ['rectangle', 'circle', 'ellipse', 'diamond'] as const) {
+      const ir: IR = {
+        version: CURRENT_IR_VERSION,
+        type: 'scene',
+        children: [{ type: 'node', id: 'A', shape, position: [0, 0], text: 'A' }],
+      };
+      const back = buildIR(convertIRToReactNode(ir));
+      expect(back).toEqual(ir);
+    }
+  });
+
   it("path-level arrow round-trip：'->'/'<-'/'<->' 字段透传保留", () => {
     for (const arrow of ['->', '<-', '<->'] as const) {
       const ir: IR = {

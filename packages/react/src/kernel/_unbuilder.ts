@@ -8,6 +8,7 @@ import { Step } from './Step';
 const nodePropsFromIR = (n: IRNode): NodeProps => {
   const props: NodeProps = { position: n.position };
   if (n.id !== undefined) props.id = n.id;
+  if (n.shape !== undefined) props.shape = n.shape;
   if (n.rotate !== undefined) props.rotate = n.rotate;
   if (n.text !== undefined) props.text = n.text;
   if (n.fontSize !== undefined) props.fontSize = n.fontSize;

@@ -1,5 +1,31 @@
 import { z } from 'zod';
+import type { ValueOf } from '../types';
 import { PolarPositionSchema, PositionSchema } from './position';
+
+/**
+ * 节点形状常量。值是 IR 中 `shape` 字段的字面字符串；
+ * 用 const + ValueOf 派生（不用 TS enum）。
+ *
+ * - `rectangle`：矩形（默认；UML 类、流程图常规节点）
+ * - `circle`：圆形（流程图起止、状态机）
+ * - `ellipse`：椭圆（状态机、集合图）
+ * - `diamond`：菱形（流程图判定）
+ *
+ * 每个 shape 的几何语义：node 的视觉边界包住"text 矩形 + padding"——
+ * - rectangle: 视觉 rect = text rect
+ * - circle:    外接圆，r = √(innerHalfW² + innerHalfH²)
+ * - ellipse:   外接椭圆，rx = innerHalfW×√2、ry = innerHalfH×√2
+ * - diamond:   外接菱形，halfA = 2×innerHalfW、halfB = 2×innerHalfH
+ */
+export const NODE_SHAPES = {
+  rectangle: 'rectangle',
+  circle: 'circle',
+  ellipse: 'ellipse',
+  diamond: 'diamond',
+} as const;
+
+/** 节点形状字面量类型，由 `NODE_SHAPES` 派生 */
+export type NodeShape = ValueOf<typeof NODE_SHAPES>;
 
 export const NodeSchema = z
   .object({
@@ -12,6 +38,12 @@ export const NodeSchema = z
       .optional()
       .describe(
         'Optional unique id; required if any path needs to reference this node by string',
+      ),
+    shape: z
+      .nativeEnum(NODE_SHAPES)
+      .optional()
+      .describe(
+        'Node visual shape; defaults to `rectangle`. The boundary fully contains text + padding (circumscribed for circle / ellipse / diamond).',
       ),
     position: z
       .union([PositionSchema, PolarPositionSchema])
@@ -32,13 +64,13 @@ export const NodeSchema = z
       .string()
       .optional()
       .describe(
-        'Background color of the node rectangle; any CSS color (e.g. "lightblue", "#fafafa", "rgba(...)")',
+        'Background color of the node shape; any CSS color (e.g. "lightblue", "#fafafa", "rgba(...)")',
       ),
     stroke: z
       .string()
       .optional()
       .describe(
-        'Border color of the node rectangle; any CSS color. Defaults to currentColor when omitted',
+        'Border color of the node shape; any CSS color. Defaults to currentColor when omitted',
       ),
     strokeWidth: z
       .number()
@@ -65,8 +97,8 @@ export const NodeSchema = z
       ),
   })
   .describe(
-    'Rectangle node with optional text label; the basic positional drawing primitive',
+    'Node primitive: a positioned, optionally textual shape (rectangle / circle / ellipse / diamond)',
   );
 
-/** 节点：矩形 + 可选文本标签，是最基础的有定位图元 */
+/** 节点：可定位的形状容器（矩形 / 圆 / 椭圆 / 菱形）+ 可选文本标签 */
 export type IRNode = z.infer<typeof NodeSchema>;

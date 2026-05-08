@@ -65,6 +65,25 @@ export const renderPrim = (
           opacity={p.opacity}
         />
       );
+    case 'ellipse': {
+      const transform = p.rotate ? `rotate(${p.rotate} ${p.cx} ${p.cy})` : undefined;
+      return (
+        <ellipse
+          key={key}
+          cx={p.cx}
+          cy={p.cy}
+          rx={p.rx}
+          ry={p.ry}
+          transform={transform}
+          fill={p.fill}
+          fillOpacity={p.fillOpacity}
+          stroke={p.stroke}
+          strokeWidth={p.strokeWidth}
+          strokeDasharray={p.strokeDasharray}
+          opacity={p.opacity}
+        />
+      );
+    }
     case 'text':
       return (
         <text

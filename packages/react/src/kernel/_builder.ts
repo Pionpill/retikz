@@ -21,6 +21,7 @@ const buildNode = (props: Record<string, unknown>): IRChild => {
   return {
     type: 'node',
     id: props.id as string | undefined,
+    shape: props.shape as IRNode['shape'],
     position: props.position as IRNode['position'],
     rotate: props.rotate as number | undefined,
     text,

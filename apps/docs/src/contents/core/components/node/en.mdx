@@ -1,9 +1,9 @@
 ---
 title: Node
-description: Rectangle node + optional text label — the most common retikz primitive; paths reference it by id.
+description: Shape container (rectangle / circle / ellipse / diamond) + optional text label — the most common retikz primitive; paths reference it by id.
 ---
 
-`<Node>` is the basic positioned, named primitive. Paths reference it by `id` and auto-attach to its border.
+`<Node>` is the basic positioned, named primitive. Paths reference it by `id` and auto-attach to the per-shape border.
 
 ## Usage
 
@@ -23,6 +23,18 @@ import { Node } from '@retikz/react';
 
 <ComponentPreview name="node-basic" />
 
+### Shape polymorphism
+
+`shape` picks the visual shape: `'rectangle'` (default) / `'circle'` / `'ellipse'` / `'diamond'`. Any shape works as an attachable target — connecting lines clip to that shape's boundary automatically:
+
+<ComponentPreview name="node-shapes" />
+
+> Each shape's outer boundary contains "text rectangle + padding":
+> - rectangle: boundary = inner rect
+> - circle: circumscribed, radius = √(innerHalfW² + innerHalfH²)
+> - ellipse: circumscribed, rx = innerHalfW × √2, ry = innerHalfH × √2
+> - diamond: circumscribed, halfA = 2 × innerHalfW, halfB = 2 × innerHalfH
+
 ### Styling
 
 `fill` / `stroke` / `strokeWidth` / `padding` / `fontSize` control per-node appearance:
@@ -40,6 +52,7 @@ import { Node } from '@retikz/react';
 | Prop | Type | Default | Description |
 | --- | --- | --- | --- |
 | `id` | `string` | — | Unique identifier; referenced by `<Path>` / `<Draw>` |
+| `shape` | `'rectangle' \| 'circle' \| 'ellipse' \| 'diamond'` | `'rectangle'` | Node shape |
 | `position` | `[x, y] \| PolarPosition` | — | Node center (Cartesian or polar) |
 | `children` / `text` | `string` | — | Visible label; pick one — `text` wins if both supplied |
 | `rotate` | `number` | `0` | Rotation around center, degrees, positive = clockwise |

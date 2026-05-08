@@ -1,3 +1,4 @@
+import type { EllipsePrim } from './ellipse';
 import type { GroupPrim } from './group';
 import type { PathPrim } from './path';
 import type { RectPrim } from './rect';
@@ -10,7 +11,7 @@ import type { ViewBox } from './view-box';
  *
  * 不允许出现 SVG-only 或 Canvas-only 特性（filter、marker、imageData 等）。
  */
-export type ScenePrimitive = RectPrim | TextPrim | PathPrim | GroupPrim;
+export type ScenePrimitive = RectPrim | EllipsePrim | TextPrim | PathPrim | GroupPrim;
 
 /** 场景：渲染目标无关的"已布局好的图元集合 + viewBox" */
 export type Scene = {

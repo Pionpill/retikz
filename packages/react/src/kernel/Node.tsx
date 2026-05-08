@@ -6,6 +6,8 @@ import { TIKZ_NODE } from './_displayNames';
 export type NodeProps = {
   /** 节点 id；其他 Path/Draw 通过这个 id 引用本节点 */
   id?: string;
+  /** 节点形状：rectangle（默认）/ circle / ellipse / diamond */
+  shape?: IRNode['shape'];
   /** 节点中心位置；笛卡尔 [x, y] 或极坐标（编译时解析） */
   position: IRPosition | PolarPosition;
   /** 旋转角度（度数，与 TikZ 一致），绕节点中心；正值顺时针 */

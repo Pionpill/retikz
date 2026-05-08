@@ -1,7 +1,6 @@
-import { rect as rectOps } from '../geometry/rect';
 import type { ArrowShape, IRPath, IRPosition, IRStep, IRTarget } from '../ir';
 import type { PathPrim, ScenePrimitive } from '../primitive';
-import { type NodeLayout, attachRectOf } from './node';
+import { type NodeLayout, boundaryPointOf } from './node';
 import { resolvePosition } from './position';
 
 /**
@@ -82,7 +81,8 @@ const cornerOf = (
 
 /**
  * 把 step.to 在给定方向 `toward` 上算出"实际绘制端点"：
- * - 节点 ref：取 attachRect 边界与 (节点中心 → toward) 射线的交点
+ * - 节点 ref：按 shape 多态走 boundaryPointOf（rect / circle / ellipse / diamond）
+ *   外扩 margin 后求边界与"中心→toward"射线的交点
  * - 直接坐标 / 极坐标：解析后直接返回（不做 clip）
  * 解析失败返回 null。
  */
@@ -94,7 +94,7 @@ const clipForTarget = (
   if (typeof target === 'string') {
     const node = nodeIndex.get(target);
     if (!node) return null;
-    return rectOps.boundaryPoint(attachRectOf(node), toward);
+    return boundaryPointOf(node, toward);
   }
   return resolvePosition(target, nodeIndex);
 };

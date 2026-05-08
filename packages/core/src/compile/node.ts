@@ -1,5 +1,10 @@
+import { type Circle, circle as circleOps } from '../geometry/circle';
+import { type Diamond, diamond as diamondOps } from '../geometry/diamond';
+import { type Ellipse, ellipse as ellipseOps } from '../geometry/ellipse';
+import type { Position } from '../geometry/point';
 import type { Rect } from '../geometry/rect';
-import type { IRNode } from '../ir';
+import { rect as rectOps } from '../geometry/rect';
+import type { IRNode, NodeShape } from '../ir';
 import type { ScenePrimitive } from '../primitive';
 import { resolvePosition } from './position';
 import type { TextMeasurer } from './text-metrics';
@@ -7,15 +12,26 @@ import type { TextMeasurer } from './text-metrics';
 const DEFAULT_FONT_SIZE = 14;
 const DEFAULT_PADDING = 8;
 const DEG_TO_RAD = Math.PI / 180;
+const SQRT2 = Math.SQRT2;
 
 export type NodeLayout = {
   /** 节点 id（如 IR Node 提供）；其他位置可通过 id 引用本节点 */
   id?: string;
-  /** 节点几何盒（x, y 是几何中心，rotate 是弧度，见 packages/core/AGENTS.md） */
+  /** 节点形状——所有几何 / boundaryPoint 计算按 shape 多态 */
+  shape: NodeShape;
+  /**
+   * 节点视觉边界框（所有 shape 共享语义）：
+   * - rectangle: rect 即矩形本身
+   * - circle:    rect.width = rect.height = 2 × radius（外接正方形）
+   * - ellipse:   rect.width = 2 × rx，rect.height = 2 × ry（外接矩形）
+   * - diamond:   rect.width = 2 × halfA，rect.height = 2 × halfB（外接矩形）
+   *
+   * x, y 是几何中心；rotate 是弧度（与 packages/core/AGENTS.md 对齐）。
+   */
   rect: Rect;
   /** IR 中原始的旋转角（度数），保留供 emit 阶段写 SVG transform */
   rotateDeg: number;
-  /** 外边距（user units，≥ 0）；path 附着到 rect 外扩 margin 的虚拟 attachRect 上 */
+  /** 外边距（user units，≥ 0）；path 附着到形状外扩 margin 的虚拟边界上 */
   margin: number;
   /** 节点文本内容；空字符串视为无文本（undefined） */
   text?: string;
@@ -25,33 +41,73 @@ export type NodeLayout = {
   textHeight: number;
   /** 文本字号（user units） */
   fontSize: number;
-  /** 节点矩形背景色，CSS 颜色字符串；emit 时用 'transparent' 兜底 */
+  /** 节点背景色，CSS 颜色字符串；emit 时用 'transparent' 兜底 */
   fill?: string;
-  /** 节点矩形边框色，CSS 颜色字符串；emit 时用 'currentColor' 兜底 */
+  /** 节点边框色，CSS 颜色字符串；emit 时用 'currentColor' 兜底 */
   stroke?: string;
-  /** 节点矩形边框宽度（user units）；emit 时用 1 兜底 */
+  /** 节点边框宽度（user units）；emit 时用 1 兜底 */
   strokeWidth?: number;
 };
 
+/** 由 layout 构造的 Rect（带 margin 扩张） */
+const rectOf = (layout: NodeLayout, marginAdd: number): Rect => ({
+  x: layout.rect.x,
+  y: layout.rect.y,
+  width: layout.rect.width + 2 * marginAdd,
+  height: layout.rect.height + 2 * marginAdd,
+  rotate: layout.rect.rotate,
+});
+
+/** 由 layout 构造的 Circle（圆心 + 半径，半径=外接框边长/2 + margin） */
+const circleOf = (layout: NodeLayout, marginAdd: number): Circle => ({
+  x: layout.rect.x,
+  y: layout.rect.y,
+  // circle 外接框宽=高，任取一个；再加 margin
+  radius: layout.rect.width / 2 + marginAdd,
+  rotate: layout.rect.rotate,
+});
+
+/** 由 layout 构造的 Ellipse（rx/ry 各加 margin） */
+const ellipseOf = (layout: NodeLayout, marginAdd: number): Ellipse => ({
+  x: layout.rect.x,
+  y: layout.rect.y,
+  rx: layout.rect.width / 2 + marginAdd,
+  ry: layout.rect.height / 2 + marginAdd,
+  rotate: layout.rect.rotate,
+});
+
+/** 由 layout 构造的 Diamond（halfA/halfB 各加 margin） */
+const diamondOf = (layout: NodeLayout, marginAdd: number): Diamond => ({
+  x: layout.rect.x,
+  y: layout.rect.y,
+  halfA: layout.rect.width / 2 + marginAdd,
+  halfB: layout.rect.height / 2 + marginAdd,
+  rotate: layout.rect.rotate,
+});
+
 /**
- * 取节点的"附着 rect"——用于 path 端点贴边的几何盒。
- * 在视觉 rect 基础上每边外扩 margin，保持中心与旋转不变。
- * margin = 0 时直接返回视觉 rect 自身（避免无意义复制）。
+ * 取节点 shape 在 toward 方向上的"附着点"——path 端点贴边用。
+ * 按 shape 多态：rect / circle / ellipse / diamond 各自的 boundaryPoint。
+ * margin > 0 时形状先外扩，让 path 在 border 外停 margin 个 user units。
  */
-export const attachRectOf = (layout: NodeLayout): Rect => {
-  if (layout.margin === 0) return layout.rect;
-  return {
-    x: layout.rect.x,
-    y: layout.rect.y,
-    width: layout.rect.width + 2 * layout.margin,
-    height: layout.rect.height + 2 * layout.margin,
-    rotate: layout.rect.rotate,
-  };
+export const boundaryPointOf = (layout: NodeLayout, toward: Position): Position => {
+  const m = layout.margin;
+  switch (layout.shape) {
+    case 'rectangle':
+      return rectOps.boundaryPoint(rectOf(layout, m), toward);
+    case 'circle':
+      return circleOps.boundaryPoint(circleOf(layout, m), toward);
+    case 'ellipse':
+      return ellipseOps.boundaryPoint(ellipseOf(layout, m), toward);
+    case 'diamond':
+      return diamondOps.boundaryPoint(diamondOf(layout, m), toward);
+  }
 };
 
 /**
  * 把 IR Node 解析为内部 NodeLayout：
- * - 算出文本度量与 padding 推导出的视觉 rect 尺寸
+ * - 算出文本度量与 padding 推导出"内框"半轴 (innerHalfW/H)
+ * - 按 shape 决定外接边界尺寸（circle 取半对角线、ellipse 各 ×√2、diamond 各 ×2）
  * - 解析 position（笛卡尔或极坐标）为几何中心
  * - IR 的 rotate（度数）转弧度存进 Rect.rotate
  * - 透传 margin / 样式属性
@@ -66,10 +122,39 @@ export const layoutNode = (
   const metrics = node.text
     ? measureText(node.text, { size: fontSize })
     : { width: 0, height: 0 };
-  const width = Math.max(metrics.width + padding * 2, padding * 2);
-  const height = Math.max(metrics.height + padding * 2, padding * 2);
+  // 内框半轴：text 半宽 + padding（保证有最小尺寸）
+  const innerHalfW = Math.max(metrics.width / 2 + padding, padding);
+  const innerHalfH = Math.max(metrics.height / 2 + padding, padding);
+  const shape = node.shape ?? 'rectangle';
+
+  // 外接边界（bounding rect）的半轴——按 shape 计算
+  let boundsHalfW: number;
+  let boundsHalfH: number;
+  switch (shape) {
+    case 'rectangle':
+      boundsHalfW = innerHalfW;
+      boundsHalfH = innerHalfH;
+      break;
+    case 'circle': {
+      // 外接圆半径 = 内框对角线/2，圆心居中
+      const r = Math.sqrt(innerHalfW * innerHalfW + innerHalfH * innerHalfH);
+      boundsHalfW = r;
+      boundsHalfH = r;
+      break;
+    }
+    case 'ellipse':
+      // 外接椭圆：半轴 = 内框半轴 × √2（让内框 4 顶点落在椭圆周上）
+      boundsHalfW = innerHalfW * SQRT2;
+      boundsHalfH = innerHalfH * SQRT2;
+      break;
+    case 'diamond':
+      // 外接菱形：半轴 = 内框半轴 × 2（让内框 4 顶点落在菱形 4 边上）
+      boundsHalfW = innerHalfW * 2;
+      boundsHalfH = innerHalfH * 2;
+      break;
+  }
+
   const rotateDeg = node.rotate ?? 0;
-  // node.position 可能是 Position 或 PolarPosition；解析为笛卡尔
   const center = resolvePosition(node.position, nodeIndex);
   if (!center) {
     throw new Error(
@@ -78,13 +163,14 @@ export const layoutNode = (
   }
   return {
     id: node.id,
+    shape,
     rect: {
       // x, y 是几何中心
       x: center[0],
       y: center[1],
-      width,
-      height,
-      // IR 用度数（TikZ 习惯），geometry 用弧度（数学习惯），此处转一次
+      width: 2 * boundsHalfW,
+      height: 2 * boundsHalfH,
+      // IR 用度数，geometry 用弧度
       rotate: rotateDeg * DEG_TO_RAD,
     },
     rotateDeg,
@@ -99,32 +185,91 @@ export const layoutNode = (
   };
 };
 
+/** rectangle shape 的 RectPrim */
+const emitRectShape = (
+  layout: NodeLayout,
+  round: (n: number) => number,
+): ScenePrimitive => {
+  const halfW = layout.rect.width / 2;
+  const halfH = layout.rect.height / 2;
+  return {
+    type: 'rect',
+    x: round(layout.rect.x - halfW),
+    y: round(layout.rect.y - halfH),
+    width: round(layout.rect.width),
+    height: round(layout.rect.height),
+    fill: layout.fill ?? 'transparent',
+    stroke: layout.stroke ?? 'currentColor',
+    strokeWidth: layout.strokeWidth ?? 1,
+  };
+};
+
+/** circle / ellipse shape 的 EllipsePrim（圆形 rx=ry） */
+const emitEllipseShape = (
+  layout: NodeLayout,
+  round: (n: number) => number,
+): ScenePrimitive => ({
+  type: 'ellipse',
+  cx: round(layout.rect.x),
+  cy: round(layout.rect.y),
+  rx: round(layout.rect.width / 2),
+  ry: round(layout.rect.height / 2),
+  fill: layout.fill ?? 'transparent',
+  stroke: layout.stroke ?? 'currentColor',
+  strokeWidth: layout.strokeWidth ?? 1,
+});
+
+/** diamond shape 的 PathPrim（4 顶点 + Z 闭合） */
+const emitDiamondShape = (
+  layout: NodeLayout,
+  round: (n: number) => number,
+): ScenePrimitive => {
+  // 4 顶点：用 diamond 几何工具直接拿 anchor，已带旋转处理
+  const diam = diamondOf(layout, 0);
+  const e = diamondOps.anchor(diam, 'east');
+  const n = diamondOps.anchor(diam, 'north');
+  const w = diamondOps.anchor(diam, 'west');
+  const s = diamondOps.anchor(diam, 'south');
+  const d = `M ${round(e[0])} ${round(e[1])} L ${round(n[0])} ${round(n[1])} L ${round(w[0])} ${round(w[1])} L ${round(s[0])} ${round(s[1])} Z`;
+  return {
+    type: 'path',
+    d,
+    fill: layout.fill ?? 'transparent',
+    stroke: layout.stroke ?? 'currentColor',
+    strokeWidth: layout.strokeWidth ?? 1,
+  };
+};
+
 /**
  * 把 NodeLayout 翻译为 Scene primitives：
- * - rect（背景边框；x/y 转为 SVG 风格的左上角）
- * - text（如有内容）
- * - 若有旋转，外面套一层 GroupPrim 用 SVG `rotate(deg cx cy)` 实现，
- *   内层 RectPrim/TextPrim 自身保持轴对齐
+ * - shape 主体：按 shape 分发（rect / ellipse / path）
+ * - text（如有内容）：始终走 TextPrim
+ * - 若有旋转：外面套一层 GroupPrim 用 SVG `rotate(deg cx cy)` 实现
+ *   （PathPrim 的 diamond 顶点已自带旋转坐标，但 text 需要 group 旋转，
+ *    所以仍统一用 group 包裹）
  */
 export const emitNodePrimitives = (
   layout: NodeLayout,
   round: (n: number) => number,
 ): Array<ScenePrimitive> => {
-  const halfW = layout.rect.width / 2;
-  const halfH = layout.rect.height / 2;
-  const inner: Array<ScenePrimitive> = [
-    {
-      type: 'rect',
-      // RectPrim 走 SVG 风格：x, y 是左上角，故由几何中心转换
-      x: round(layout.rect.x - halfW),
-      y: round(layout.rect.y - halfH),
-      width: round(layout.rect.width),
-      height: round(layout.rect.height),
-      fill: layout.fill ?? 'transparent',
-      stroke: layout.stroke ?? 'currentColor',
-      strokeWidth: layout.strokeWidth ?? 1,
-    },
-  ];
+  let shapePrim: ScenePrimitive;
+  switch (layout.shape) {
+    case 'rectangle':
+      shapePrim = emitRectShape(layout, round);
+      break;
+    case 'circle':
+    case 'ellipse':
+      shapePrim = emitEllipseShape(layout, round);
+      break;
+    case 'diamond':
+      // diamond 的 4 顶点已经按 layout.rect.rotate 旋转过，所以下面 group
+      // wrap 时只能给 text 旋转、不能再给 diamond 二次旋转。简化办法：
+      // 这里 emit 的 d 用"未旋转"的 diamond，让外层 group 统一旋转。
+      shapePrim = emitDiamondShape(unrotated(layout), round);
+      break;
+  }
+
+  const inner: Array<ScenePrimitive> = [shapePrim];
   if (layout.text) {
     inner.push({
       type: 'text',
@@ -140,7 +285,6 @@ export const emitNodePrimitives = (
     });
   }
   if (layout.rotateDeg === 0) return inner;
-  // SVG `rotate(angle cx cy)` 角度用度数；绕节点几何中心旋转
   return [
     {
       type: 'group',
@@ -149,3 +293,9 @@ export const emitNodePrimitives = (
     },
   ];
 };
+
+/** 返回 layout 的"未旋转"副本——用于先把 diamond 顶点按未旋转算，再由外层 group 统一旋转 */
+const unrotated = (layout: NodeLayout): NodeLayout => ({
+  ...layout,
+  rect: { ...layout.rect, rotate: 0 },
+});

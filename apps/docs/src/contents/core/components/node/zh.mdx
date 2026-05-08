@@ -1,9 +1,9 @@
 ---
 title: Node
-description: 矩形节点 + 可选文本标签——retikz 最常用的图元，path / draw 通过 id 引用它。
+description: 节点容器（rectangle / circle / ellipse / diamond）+ 可选文本标签——retikz 最常用的图元，path / draw 通过 id 引用它。
 ---
 
-`<Node>` 是有命名、有位置的最基本图元。其它路径用它的 `id` 引用，连线时自动贴边界。
+`<Node>` 是有命名、有位置的最基本图元。其它路径用它的 `id` 引用，连线时按 shape 自动贴边界。
 
 ## 用法
 
@@ -23,6 +23,18 @@ import { Node } from '@retikz/react';
 
 <ComponentPreview name="node-basic" />
 
+### shape 多态
+
+`shape` 控制节点形状：`'rectangle'`（默认）/ `'circle'` / `'ellipse'` / `'diamond'`。任意 shape 的节点都被 path / draw 当作有边界的图元，连线端点自动贴对应形状的边：
+
+<ComponentPreview name="node-shapes" />
+
+> 形状的"外接边界"包住"text 矩形 + padding"——
+> - rectangle: 边界 = 内框
+> - circle: 外接圆，半径 = √(innerHalfW² + innerHalfH²)
+> - ellipse: 外接椭圆，rx = innerHalfW × √2、ry = innerHalfH × √2
+> - diamond: 外接菱形，halfA = 2 × innerHalfW、halfB = 2 × innerHalfH
+
 ### 样式
 
 `fill` / `stroke` / `strokeWidth` / `padding` / `fontSize` 控制单个节点观感：
@@ -40,6 +52,7 @@ import { Node } from '@retikz/react';
 | 属性 | 类型 | 默认值 | 描述 |
 | --- | --- | --- | --- |
 | `id` | `string` | — | 唯一标识；被 `<Path>` / `<Draw>` 用来引用 |
+| `shape` | `'rectangle' \| 'circle' \| 'ellipse' \| 'diamond'` | `'rectangle'` | 节点形状 |
 | `position` | `[x, y] \| PolarPosition` | — | 节点中心位置（笛卡尔或极坐标） |
 | `children` / `text` | `string` | — | 节点内可见文字；二选一，`text` 优先 |
 | `rotate` | `number` | `0` | 绕中心旋转角度（度，正值顺时针） |
