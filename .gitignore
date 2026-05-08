@@ -142,3 +142,6 @@ index.html
 legacy-core/
 temp.*
 superpowers/
+
+# Vite gen-llms-txt 插件每次 dev/build 写入的站点索引
+apps/docs/public/llms.txt
