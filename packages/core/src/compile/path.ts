@@ -1,6 +1,7 @@
 import type { ArrowShape, IRPath, IRPosition, IRStep, IRTarget } from '../ir';
 import type { PathPrim, ScenePrimitive } from '../primitive';
-import { type NodeLayout, boundaryPointOf } from './node';
+import { type NodeLayout, anchorOf, angleBoundaryOf, boundaryPointOf } from './node';
+import { parseNodeRef } from './parseTarget';
 import { resolvePosition } from './position';
 
 /**
@@ -59,14 +60,35 @@ const shiftToward = (p: IRPosition, target: IRPosition, dist: number): IRPositio
 };
 
 /**
- * 求一个 step.to 的"参考点"（节点中心 / 直接坐标 / 极坐标解算后）。
- * 给段内 boundary clip 算方向用——只走中心，从不引入上次的 clip 点。
- * 解析失败返回 null（如引用未定义节点）。
+ * 求一个 step.to 的"参考点"——给段内 boundary clip 算方向 / 折角 corner 用。
+ *
+ * 三态字符串语法（ADR-0004）：
+ * - `'A'`（auto）：节点中心；邻居端点 clip 时按"A 中心 → toward"射线求边界
+ * - `'A.<anchor>'`：命名 anchor 位置（位置即 endpoint，refPoint 也是它）
+ * - `'A.<deg>'`：节点 deg 方向上的视觉边界点（位置即 endpoint）
+ *
+ * 后两种"显式锚点"模式下 refPoint = endpoint（位置不随邻居变），auto 模式
+ * 下 refPoint 仍是中心。直接坐标 / 极坐标：解析后的笛卡尔。
  */
 const refPointOfTarget = (
   target: IRTarget,
   nodeIndex: Map<string, NodeLayout>,
-): IRPosition | null => resolvePosition(target, nodeIndex);
+): IRPosition | null => {
+  if (typeof target === 'string') {
+    const ref = parseNodeRef(target);
+    const node = nodeIndex.get(ref.id);
+    if (!node) return null;
+    switch (ref.kind) {
+      case 'node':
+        return [node.rect.x, node.rect.y];
+      case 'anchor':
+        return anchorOf(node, ref.anchor);
+      case 'angle':
+        return angleBoundaryOf(node, ref.angle);
+    }
+  }
+  return resolvePosition(target, nodeIndex);
+};
 
 /**
  * 折角中间点：基于"参考点"（节点中心或直接坐标）算直角拐点。
@@ -81,8 +103,10 @@ const cornerOf = (
 
 /**
  * 把 step.to 在给定方向 `toward` 上算出"实际绘制端点"：
- * - 节点 ref：按 shape 多态走 boundaryPointOf（rect / circle / ellipse / diamond）
- *   外扩 margin 后求边界与"中心→toward"射线的交点
+ * - 节点 ref auto（`'A'`）：按 shape 多态走 boundaryPointOf——外扩 margin 后
+ *   求边界与"中心→toward"射线交点
+ * - 节点 ref 命名 anchor（`'A.north'`）/ 角度（`'A.30'`）：位置已被解析定死，
+ *   直接返回，**不再受 toward 影响**
  * - 直接坐标 / 极坐标：解析后直接返回（不做 clip）
  * 解析失败返回 null。
  */
@@ -92,9 +116,17 @@ const clipForTarget = (
   nodeIndex: Map<string, NodeLayout>,
 ): IRPosition | null => {
   if (typeof target === 'string') {
-    const node = nodeIndex.get(target);
+    const ref = parseNodeRef(target);
+    const node = nodeIndex.get(ref.id);
     if (!node) return null;
-    return boundaryPointOf(node, toward);
+    switch (ref.kind) {
+      case 'node':
+        return boundaryPointOf(node, toward);
+      case 'anchor':
+        return anchorOf(node, ref.anchor);
+      case 'angle':
+        return angleBoundaryOf(node, ref.angle);
+    }
   }
   return resolvePosition(target, nodeIndex);
 };

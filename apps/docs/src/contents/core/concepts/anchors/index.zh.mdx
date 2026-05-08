@@ -1,37 +1,55 @@
 ---
 title: 锚点
-description: 节点矩形的 9 个具名 anchor + path 用 id 引用节点时自动选边界点的行为。
+description: 节点的 9 个具名 anchor + 三态 Target 字符串语法（自动 / 命名 / 角度）。
 ---
 
-每个矩形 `<Node>` 在几何上有 9 个具名锚点（与 TikZ 同名）。当前 v0.1 alpha 里它们**不直接出现在 DSL** 里——你写 `<Draw way={['a', 'b']}>` 时 retikz 自动选最合适的边界点连过去。
+每个 `<Node>` 在几何上有 9 个具名锚点（与 TikZ 同名）。Path / Draw 引用节点时既能让 retikz 自动选边界点（最常见），也能用 `'A.north'` / `'A.30'` 等语法锁死。
 
 ## 9 个 anchor
 
 | 名 | 位置 |
 | --- | --- |
-| `center` | 矩形几何中心 |
-| `north` / `south` / `east` / `west` | 上 / 下 / 右 / 左 边的中点 |
-| `north-east` / `north-west` / `south-east` / `south-west` | 4 个角 |
+| `center` | 节点几何中心 |
+| `north` / `south` / `east` / `west` | 上 / 下 / 右 / 左 4 个方位的边界点 |
+| `north-east` / `north-west` / `south-east` / `south-west` | 4 个对角方位的边界点 |
 
-考虑节点 `rotate` 时 9 个锚点跟着旋转。
+四种 [`shape`](/core/components/node) 都遵守这套命名（按各自几何取对应位置）：
+
+| | rectangle | circle | ellipse | diamond |
+| --- | --- | --- | --- | --- |
+| `north` / 等 4 方位 | 边中点 | 圆周 4 方位 | 椭圆轴端 | 4 顶点 |
+| `north-east` / 等 4 对角 | 4 角 | 圆周 45° 处 | 椭圆参数 t=π/4 处 | 4 边中点 |
+
+节点 `rotate` 时 9 个锚点跟着旋转。
 
 ## 自动贴边界
 
-path 用字符串 id 引用节点时（`<Step to="a">` 或 `<Draw way={['a', ...]}>`），retikz 在 compile 阶段调 `boundaryPoint`：从节点中心向"邻居 step 方向"画射线，取与 border 的交点作为线段端点。
+最常用：path 用纯 id 字符串引用节点时（`<Step to="a">` / `<Draw way={['a', ...]}>`），retikz 在 compile 阶段调 `boundaryPoint`——从节点中心向"邻居 step 方向"画射线，取与 border 的交点作为线段端点。
 
 下面 8 条 Draw 都是 `[外圈节点, 'Node']`——结果分别贴到中心节点的 N / S / E / W / NE / NW / SE / SW 边界附近：
 
 <ComponentPreview name="anchors-auto-attach" hideCode />
 
+## 显式 anchor 字符串语法
+
+不想自动选边、要锁死某个具体位置？Target 字符串支持三种形态（ADR-0004）：
+
+| 写法 | 含义 |
+| --- | --- |
+| `'A'` | 节点 A，自动贴边（**最常用**） |
+| `'A.<anchor>'` | 节点 A 的命名 anchor，例：`'A.north'` / `'A.center'` / `'A.north-east'` |
+| `'A.<deg>'` | 节点 A 在 deg 角度方向上的视觉边界点，例：`'A.30'` / `'A.-45'` / `'A.180.5'` |
+
+`'A.<anchor>'` 与 `'A.<deg>'` **位置定死**——不再受邻居 step 方向影响（auto 模式才动态调整）。下面 8 条 Draw 用 8 个不同的命名 anchor 作端点：
+
+<ComponentPreview name="anchors-explicit" />
+
+> **id 命名约束**：节点 id 只能是字母 / 下划线开头，可含字母数字下划线连字符（`[A-Za-z_][\w-]*`），**不能包含 `.`**——因为 `.` 是 anchor / 角度分隔符。
+>
+> **anchor 名 alpha.1 范围**：上述 9 个 RECT_ANCHORS。`'text'` / `'base'` / `'mid'`（文字基线相关）等留 alpha.2 + 字体改造时再支持。
+
 ## margin 让线"留呼吸"
 
-`<Node margin={n}>`：border 不变，path 端点向外推 `n` user units。在多节点流程图里，`margin={4}` 就能让所有连线不顶死 border。
+`<Node margin={n}>`：border 不变，但 **auto 模式** 的 path 端点向外推 `n` user units——多节点流程图里 `margin={4}` 就够让连线不顶死 border。
 
-## 显式 anchor 语法
-
-v0.1 alpha **未支持** `'a.north'` 形式的显式 anchor 引用——常规连线场景下 `boundaryPoint` 自动选边界已经够用。如果你确实要锁死某个 anchor，临时方法：
-
-1. 用极坐标 `{ origin: 'a', angle: 0, radius: 0 }`（贴 `east`）等组合
-2. 用笛卡尔坐标手动算 anchor 位置
-
-这块未来会加专门的语法。
+注意：显式 anchor / 角度（`'A.east'` / `'A.30'`）取的是**视觉 border**，不应用 margin。如要把端点推得更远，加额外 padding 或显式坐标偏移。

@@ -1,37 +1,55 @@
 ---
 title: Anchors
-description: A rectangle node's 9 named anchors + the auto-pick-border behavior when paths reference a node by id.
+description: 9 named anchors per node + three-form Target string syntax (auto / named / angle).
 ---
 
-Every rectangle `<Node>` has 9 named anchors (matching TikZ). In v0.1 alpha they **don't appear directly in the DSL** — when you write `<Draw way={['a', 'b']}>`, retikz auto-picks the appropriate border point.
+Every `<Node>` has 9 named anchors (matching TikZ). Paths can either let retikz auto-pick the border point (the common case), or lock onto a specific position via `'A.north'` / `'A.30'`.
 
 ## The 9 anchors
 
 | Name | Position |
 | --- | --- |
 | `center` | Geometric center |
-| `north` / `south` / `east` / `west` | Mid-points of top / bottom / right / left edges |
-| `north-east` / `north-west` / `south-east` / `south-west` | The four corners |
+| `north` / `south` / `east` / `west` | The 4 cardinal border points |
+| `north-east` / `north-west` / `south-east` / `south-west` | The 4 diagonal border points |
+
+All four [`shape`](/core/components/node) types share this naming (each picks the geometric equivalent):
+
+| | rectangle | circle | ellipse | diamond |
+| --- | --- | --- | --- | --- |
+| `north` & 4 cardinals | Edge midpoints | Circle perimeter | Ellipse axis ends | The 4 vertices |
+| `north-east` & 4 diagonals | The 4 corners | Perimeter at 45° | Ellipse parametric t=π/4 | Side midpoints |
 
 When a node has `rotate`, all 9 anchors rotate with it.
 
 ## Auto border attachment
 
-When a path references a node by id (`<Step to="a">` or `<Draw way={['a', ...]}>`), retikz calls `boundaryPoint` at compile time: it casts a ray from the node center toward the neighbor step's direction and takes the intersection with the border.
+The most common case: when a path references a node by plain id (`<Step to="a">` or `<Draw way={['a', ...]}>`), retikz calls `boundaryPoint` at compile time — casts a ray from the node center toward the neighbor step's direction and takes the intersection with the border.
 
 The 8 Draws below are all `[outerNode, 'Node']` — endpoints land near N / S / E / W / NE / NW / SE / SW respectively:
 
 <ComponentPreview name="anchors-auto-attach" hideCode />
 
+## Explicit anchor string syntax
+
+Don't want auto-selection, need a specific position? Target strings support three forms (ADR-0004):
+
+| Form | Meaning |
+| --- | --- |
+| `'A'` | Node A, auto-attach to border (**most common**) |
+| `'A.<anchor>'` | Named anchor on A, e.g. `'A.north'` / `'A.center'` / `'A.north-east'` |
+| `'A.<deg>'` | Visual border point on A at the given degree, e.g. `'A.30'` / `'A.-45'` / `'A.180.5'` |
+
+`'A.<anchor>'` and `'A.<deg>'` are **fixed in place** — they don't move with neighbor step direction (only auto mode does). The 8 Draws below use 8 different named anchors as endpoints:
+
+<ComponentPreview name="anchors-explicit" />
+
+> **id naming constraints**: A node id starts with a letter or underscore, may include letters / digits / underscores / hyphens (`[A-Za-z_][\w-]*`), and **cannot contain `.`** — that's reserved as the anchor / angle separator.
+>
+> **anchor name scope (alpha.1)**: the 9 RECT_ANCHORS above. `'text'` / `'base'` / `'mid'` (text baseline anchors) are deferred to alpha.2 alongside the font system overhaul.
+
 ## `margin` gives lines breathing room
 
-With `<Node margin={n}>`: the border stays put, but path endpoints back off `n` user units. In multi-node flow charts, `margin={4}` is enough to keep lines from touching the border.
+With `<Node margin={n}>`: the border stays put, but path endpoints in **auto mode** back off `n` user units. In multi-node flow charts, `margin={4}` keeps lines from touching the border directly.
 
-## Explicit anchor syntax
-
-v0.1 alpha does **not** support `'a.north'`-style explicit anchor references — `boundaryPoint`'s auto-selection covers most connection scenarios. If you must lock to a specific anchor, workarounds:
-
-1. Use polar `{ origin: 'a', angle: 0, radius: 0 }` (lands on `east`) and friends
-2. Compute the anchor position manually with Cartesian coordinates
-
-A dedicated syntax is on the roadmap.
+Note: explicit anchors / angles (`'A.east'` / `'A.30'`) hit the **visual border** — `margin` does not apply. If you need the endpoint pushed further out, use extra padding or explicit coordinate offset.

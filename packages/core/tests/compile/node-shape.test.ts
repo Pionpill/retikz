@@ -83,6 +83,103 @@ describe("Node shape multimorphism (ADR-0003)", () => {
   });
 });
 
+describe("Target 字符串锚点扩展 (ADR-0004)", () => {
+  it("`'A.east'` → 端点固定在 east anchor，不受 toward 影响", () => {
+    // 矩形 A=(0,0)，无文本，padding=8 → 16x16；east = (8, 0)
+    const ir: IR = {
+      version: 1,
+      type: 'scene',
+      children: [
+        { type: 'node', id: 'A', position: [0, 0] },
+        {
+          type: 'path',
+          children: [
+            { type: 'step', kind: 'move', to: 'A.east' },
+            { type: 'step', kind: 'line', to: [100, 50] },
+          ],
+        },
+      ],
+    };
+    const linePath = compileToScene(ir).primitives.find(p => p.type === 'path');
+    if (linePath?.type === 'path') {
+      // M 8 0：固定 east
+      expect(linePath.d).toMatch(/^M 8 0 /);
+    }
+  });
+
+  it("`'A.30'` → 端点在 30° 方向上的视觉边界（圆形 r 半径处）", () => {
+    // 圆形 A=(0,0)，无文本，r = sqrt(8² + 8²) ≈ 11.31
+    // 30° → (cos 30°, sin 30°) = (0.866, 0.5) × r = (9.798, 5.657)
+    const ir: IR = {
+      version: 1,
+      type: 'scene',
+      children: [
+        { type: 'node', id: 'A', shape: 'circle', position: [0, 0] },
+        {
+          type: 'path',
+          children: [
+            { type: 'step', kind: 'move', to: 'A.30' },
+            { type: 'step', kind: 'line', to: [100, 50] },
+          ],
+        },
+      ],
+    };
+    const linePath = compileToScene(ir).primitives.find(p => p.type === 'path');
+    if (linePath?.type === 'path') {
+      // 检查 M 后第一个数字 ≈ r·cos(30°) ≈ 9.8
+      expect(linePath.d).toMatch(/^M 9\.8 5\.66 /);
+    }
+  });
+
+  it("不同 shape 的 'A.north' anchor 都在最高点", () => {
+    // rectangle / circle / ellipse / diamond 4 shape，A.north 都应在节点 north
+    for (const shape of ['rectangle', 'circle', 'ellipse', 'diamond'] as const) {
+      const ir: IR = {
+        version: 1,
+        type: 'scene',
+        children: [
+          { type: 'node', id: 'A', shape, position: [0, 0] },
+          {
+            type: 'path',
+            children: [
+              { type: 'step', kind: 'move', to: 'A.north' },
+              { type: 'step', kind: 'line', to: [0, -100] },
+            ],
+          },
+        ],
+      };
+      const linePath = compileToScene(ir).primitives.find(
+        p => p.type === 'path' && !p.d.includes('Z'),
+      );
+      if (linePath?.type === 'path') {
+        // north 的 x = 0（中心 x），y < 0（节点上方）
+        expect(linePath.d).toMatch(/^M 0 -\d/);
+      }
+    }
+  });
+
+  it("'A.center' 等价于节点几何中心（任意 shape）", () => {
+    const ir: IR = {
+      version: 1,
+      type: 'scene',
+      children: [
+        { type: 'node', id: 'A', shape: 'circle', position: [10, 20] },
+        {
+          type: 'path',
+          children: [
+            { type: 'step', kind: 'move', to: 'A.center' },
+            { type: 'step', kind: 'line', to: [100, 100] },
+          ],
+        },
+      ],
+    };
+    const linePath = compileToScene(ir).primitives.find(p => p.type === 'path');
+    if (linePath?.type === 'path') {
+      expect(linePath.d).toMatch(/^M 10 20 /);
+    }
+  });
+});
+
 describe("Node shape boundary clip 在 path 端点贴边时按 shape 多态 (ADR-0003)", () => {
   it("circle 节点 path 端点贴圆周（距中心 = radius）", () => {
     // A=(0,0) 圆形 + B=(100,0) 笛卡尔点；line 从 A 到 B

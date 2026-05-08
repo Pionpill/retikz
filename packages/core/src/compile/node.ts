@@ -2,7 +2,7 @@ import { type Circle, circle as circleOps } from '../geometry/circle';
 import { type Diamond, diamond as diamondOps } from '../geometry/diamond';
 import { type Ellipse, ellipse as ellipseOps } from '../geometry/ellipse';
 import type { Position } from '../geometry/point';
-import type { Rect } from '../geometry/rect';
+import type { Rect, RectAnchor } from '../geometry/rect';
 import { rect as rectOps } from '../geometry/rect';
 import type { IRNode, NodeShape } from '../ir';
 import type { ScenePrimitive } from '../primitive';
@@ -101,6 +101,45 @@ export const boundaryPointOf = (layout: NodeLayout, toward: Position): Position 
       return ellipseOps.boundaryPoint(ellipseOf(layout, m), toward);
     case 'diamond':
       return diamondOps.boundaryPoint(diamondOf(layout, m), toward);
+  }
+};
+
+/**
+ * 取节点 shape 的命名 anchor（center / north / east / north-east 等 9 个）。
+ * **不应用 margin**——TikZ 语义中 explicit anchor 取的是视觉边界点，不涉及 outer sep。
+ * 用于 `'A.north'` 这种语法落点。
+ */
+export const anchorOf = (layout: NodeLayout, name: RectAnchor): Position => {
+  switch (layout.shape) {
+    case 'rectangle':
+      return rectOps.anchor(rectOf(layout, 0), name);
+    case 'circle':
+      return circleOps.anchor(circleOf(layout, 0), name);
+    case 'ellipse':
+      return ellipseOps.anchor(ellipseOf(layout, 0), name);
+    case 'diamond':
+      return diamondOps.anchor(diamondOf(layout, 0), name);
+  }
+};
+
+/**
+ * 取节点 shape 在指定角度方向上的边界点。角度约定与 PolarPosition 一致（度数）：
+ *   0° = +x（east），90° = +y（screen 下方）。
+ * **不应用 margin**——同 anchorOf。用于 `'A.30'` 这种语法落点。
+ */
+export const angleBoundaryOf = (layout: NodeLayout, angleDeg: number): Position => {
+  const rad = (angleDeg * Math.PI) / 180;
+  // toward 方向上任意距离都行——boundary 算法只用方向不用距离
+  const toward: Position = [layout.rect.x + Math.cos(rad), layout.rect.y + Math.sin(rad)];
+  switch (layout.shape) {
+    case 'rectangle':
+      return rectOps.boundaryPoint(rectOf(layout, 0), toward);
+    case 'circle':
+      return circleOps.boundaryPoint(circleOf(layout, 0), toward);
+    case 'ellipse':
+      return ellipseOps.boundaryPoint(ellipseOf(layout, 0), toward);
+    case 'diamond':
+      return diamondOps.boundaryPoint(diamondOf(layout, 0), toward);
   }
 };
 
