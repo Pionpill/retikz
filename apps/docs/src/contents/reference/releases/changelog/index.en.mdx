@@ -5,6 +5,37 @@ description: retikz release history grouped by MINOR version, newest first. Date
 
 <Update label="May 2026" tags={["@retikz/core", "@retikz/react", "docs"]}>
 
+## v0.1.0-alpha.2
+
+Node visual P1 lands in full: multi-line text, font object, axis-specific seps, color / opacity / stroke style / size constraints / scaling. Backed by 3 ADRs and +47 new test cases.
+
+> **BREAKING**: `<Node fontSize={n}>` is now `<Node font={{ size: n }}>`; the IR `NodeSchema.fontSize` field is removed. No deprecation window during alpha (see ADR-0001).
+
+### `@retikz/core`
+
+- **Node font as nested object**: `font: { family?, size?, weight?, style? }` replaces the `fontSize` scalar — ADR-0001
+- **Node multi-line text**: `text: string | Array<string | LineSpec>` with per-line `fill` / `opacity` / `font` overrides; complementary `align` (left / center / right) + `lineHeight` (user units, defaults to `font.size × 1.2`) — ADR-0002
+- **Node axis-specific seps**: `innerXSep` / `innerYSep` / `outerSep`, mirroring TikZ `inner xsep` / `inner ysep` / `outer sep`; `padding` / `margin` are kept as symmetric aliases (axis-specific fields take precedence) — ADR-0003
+- **Node colors and opacity**: `textColor` / `opacity` (whole-node) / `fillOpacity` / `drawOpacity`
+- **Node stroke styles**: `dashed` (`4 2` preset) / `dotted` (`1 2` preset) / `dashArray` (explicit SVG `stroke-dasharray`); priority `dashArray` > `dashed` > `dotted`
+- **Node size constraints**: `roundedCorners` (rectangle corner radius) / `minimumWidth` / `minimumHeight` + symmetric alias `minimumSize`
+- **Node scaling**: `scale` / `xScale` / `yScale`; uniform scale takes the font with it, non-uniform falls back to `min(sx, sy)` to preserve glyph shape
+- **TextPrim upgrade**: `lines: Array<TextLine>` replaces `content: string`; per-line `fontSize` / `fontFamily` / `fontWeight` / `fontStyle` / `fill` / `opacity` overrides
+
+### `@retikz/react`
+
+- New sugar `<Text>` component for per-line overrides inside `<Node>`: `<Node><Text fill="red" font={{ weight: 'bold' }}>L1</Text>L2</Node>`
+- `<Node>` children accept multi-line text directly: `\n` strings, arrays, and mixed `<Text>` children all work
+- Builder / unbuilder forward every new field; derived types `IRFont` / `IRLineSpec` / `NodeTextAlign` are re-exported from core
+- Renderer emits `<text>` with one `<tspan>` per line, deriving the first-line `dy` from the block `baseline` for vertical alignment
+
+### `docs`
+
+- Node docs split into `overview` / `text` sub-pages: overview covers shape / font / multi-line / color / stroke / size / scale / sep in 8 sections; text sub-page dives into `<Text>` per-line overrides
+- New demos: `node-font` / `node-multiline` / `node-multiline-shapes` / `node-styled-lines` / `node-sep` / `node-color-opacity` / `node-stroke-style` / `node-size-constraints`
+- ComponentPreview on mobile: drag + touch (`<lg` enabled by default), reduced height / padding, Maximize entry hidden
+- `notes/adr/0001`–`0003` (font object / multi-line text / inner sep) decisions captured
+
 ## v0.1.0-alpha.1
 
 P0 + P1 essentials for flow charts / UML / state machines land in one shot: 4 node shapes, path folds / closing / multi-end arrows / region fills, explicit anchor references. Backed by 4 ADRs and ~180 test cases.
