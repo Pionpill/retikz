@@ -71,7 +71,7 @@ export const PanZoomToolbar: FC<PanZoomToolbarProps> = props => {
       >
         <Hand className="size-3.5" />
       </ToolbarIconButton>
-      <ToolbarIconButton label="Maximize" onClick={onMaximize}>
+      <ToolbarIconButton label="Maximize" onClick={onMaximize} className="hidden md:inline-flex">
         <Maximize2 className="size-3.5" />
       </ToolbarIconButton>
     </div>

@@ -168,7 +168,7 @@ export const ComponentPreview: FC<ComponentPreviewProps> = props => {
     <div className="my-6 overflow-hidden rounded-xl border">
       <div
         className={cn(
-          'group/preview relative flex h-72 w-full justify-center overflow-hidden p-10 select-none',
+          'group/preview relative flex h-56 sm:h-72 w-full justify-center overflow-hidden p-6 sm:p-10 select-none',
           alignClass[align],
           cardDragCursor,
           componentClassName,
