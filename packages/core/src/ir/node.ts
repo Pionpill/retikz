@@ -172,16 +172,85 @@ export const NodeSchema = z
       .describe(
         'Background color of the node shape; any CSS color (e.g. "lightblue", "#fafafa", "rgba(...)")',
       ),
+    fillOpacity: z
+      .number()
+      .min(0)
+      .max(1)
+      .optional()
+      .describe('Fill opacity 0..1; affects only the shape fill, leaves stroke / text alone.'),
     stroke: z
       .string()
       .optional()
       .describe(
         'Border color of the node shape; any CSS color. Defaults to currentColor when omitted',
       ),
+    drawOpacity: z
+      .number()
+      .min(0)
+      .max(1)
+      .optional()
+      .describe('Stroke opacity 0..1 (TikZ `draw opacity`); affects only the border.'),
     strokeWidth: z
       .number()
       .optional()
       .describe('Border width in user units; defaults to 1 when omitted'),
+    dashed: z
+      .boolean()
+      .optional()
+      .describe('Border style preset: dashed line (TikZ `dashed`); compiled to a default dash pattern. `dashArray` takes precedence.'),
+    dotted: z
+      .boolean()
+      .optional()
+      .describe('Border style preset: dotted line (TikZ `dotted`); compiled to a default dot pattern. `dashArray` and `dashed` take precedence.'),
+    dashArray: z
+      .string()
+      .optional()
+      .describe('Explicit SVG stroke-dasharray value (e.g. "4 2"); overrides `dashed` / `dotted`.'),
+    roundedCorners: z
+      .number()
+      .nonnegative()
+      .optional()
+      .describe('Corner radius in user units; only effective on `rectangle` shape (rx / ry on `<rect>`).'),
+    minimumWidth: z
+      .number()
+      .nonnegative()
+      .optional()
+      .describe('Minimum visual border width in user units; floors the bounding box width.'),
+    minimumHeight: z
+      .number()
+      .nonnegative()
+      .optional()
+      .describe('Minimum visual border height in user units; floors the bounding box height.'),
+    minimumSize: z
+      .number()
+      .nonnegative()
+      .optional()
+      .describe('Symmetric alias for `minimumWidth` + `minimumHeight`; axis-specific fields take precedence.'),
+    scale: z
+      .number()
+      .positive()
+      .optional()
+      .describe('Uniform scale factor; multiplies all node dimensions (border, padding, text, fontSize) at layout time. Affects path attachment positions.'),
+    xScale: z
+      .number()
+      .positive()
+      .optional()
+      .describe('Horizontal scale factor; overrides `scale` for the X axis.'),
+    yScale: z
+      .number()
+      .positive()
+      .optional()
+      .describe('Vertical scale factor; overrides `scale` for the Y axis.'),
+    textColor: z
+      .string()
+      .optional()
+      .describe('Text label color; any CSS color. Defaults to `currentColor`.'),
+    opacity: z
+      .number()
+      .min(0)
+      .max(1)
+      .optional()
+      .describe('Whole-node opacity 0..1; applies uniformly to shape and text.'),
     innerXSep: z
       .number()
       .nonnegative()

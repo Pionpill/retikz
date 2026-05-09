@@ -113,6 +113,28 @@ Line 2`}</Node>
 
 <ComponentPreview name="node-sep" />
 
+### 颜色 / 不透明度
+
+- `textColor`——文字颜色（块级默认；行级 LineSpec.fill 仍可覆盖）
+- `opacity`——整节点 0~1（同时作用于 shape + text）
+- `fillOpacity` / `drawOpacity`——分别只透明填充或描边
+
+<ComponentPreview name="node-color-opacity" />
+
+### 描边样式
+
+`dashed` / `dotted` 是预设；`dashArray` 是 SVG 原生语法的逃生口（优先级：`dashArray` > `dashed` > `dotted`）：
+
+<ComponentPreview name="node-stroke-style" />
+
+### 尺寸约束 + 缩放
+
+- `roundedCorners`——圆角（仅 `rectangle` shape 生效）
+- `minimumWidth` / `minimumHeight` / `minimumSize`——撑开 bbox（不缩水 text 自然宽度）
+- `scale` / `xScale` / `yScale`——均匀 / 分轴缩放，影响 bbox + 字号 + padding + 路径附着点
+
+<ComponentPreview name="node-size-constraints" />
+
 ### 旋转
 
 `rotate` 绕节点中心旋转；连线会跟着新边界点贴：
@@ -139,6 +161,18 @@ Line 2`}</Node>
 | `padding` | `number` | `8` | 内边距对称别名；轴特化字段优先 |
 | `margin` | `number` | `0` | 外边距对称别名；`outerSep` 优先；**不影响 border 位置**，只影响连线起止 |
 | `font` | `{ family?, size?, weight?, style? }` | — | 字体规格；嵌套对象，所有字段可选 |
+| `textColor` | `string` | `currentColor` | 文字颜色（块级默认；行级覆盖通过 LineSpec.fill） |
+| `opacity` | `number` | — | 整节点 0~1，同时作用于 shape + text |
+| `fillOpacity` | `number` | — | 仅填充透明 0~1 |
+| `drawOpacity` | `number` | — | 仅描边透明 0~1（TikZ `draw opacity`） |
+| `dashed` | `boolean` | — | 描边虚线预设（"4 2"） |
+| `dotted` | `boolean` | — | 描边点线预设（"1 2"） |
+| `dashArray` | `string` | — | 显式 SVG `stroke-dasharray`；优先级最高 |
+| `roundedCorners` | `number` | — | 圆角半径；仅 `rectangle` 生效 |
+| `minimumWidth` / `minimumHeight` | `number` | — | 撑开最小 bbox 宽高 |
+| `minimumSize` | `number` | — | 对称最小尺寸别名；轴特化字段优先 |
+| `scale` | `number` | `1` | 均匀缩放（含字号、padding、路径附着点） |
+| `xScale` / `yScale` | `number` | — | 分轴缩放，优先于 `scale` |
 
 ## margin 与 padding 的区别
 

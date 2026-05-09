@@ -113,6 +113,28 @@ Both **symmetric aliases** and **axis-specific** forms are supported (resolution
 
 <ComponentPreview name="node-sep" />
 
+### Colors / opacity
+
+- `textColor` — text color (block default; per-line `LineSpec.fill` still overrides)
+- `opacity` — whole-node 0..1 (applies to shape + text)
+- `fillOpacity` / `drawOpacity` — fill-only / stroke-only opacity
+
+<ComponentPreview name="node-color-opacity" />
+
+### Border style
+
+`dashed` / `dotted` are presets; `dashArray` is an SVG-native escape hatch (priority: `dashArray` > `dashed` > `dotted`):
+
+<ComponentPreview name="node-stroke-style" />
+
+### Size constraints + scale
+
+- `roundedCorners` — corner radius (only on `rectangle` shape)
+- `minimumWidth` / `minimumHeight` / `minimumSize` — floor the bbox without shrinking natural text width
+- `scale` / `xScale` / `yScale` — uniform / per-axis scale; affects bbox, font size, padding, and path attachment
+
+<ComponentPreview name="node-size-constraints" />
+
 ### Rotation
 
 `rotate` rotates around the node center; attached paths follow the new border:
@@ -139,6 +161,18 @@ Both **symmetric aliases** and **axis-specific** forms are supported (resolution
 | `padding` | `number` | `8` | Symmetric inner padding alias; axis-specific fields take precedence |
 | `margin` | `number` | `0` | Symmetric outer margin alias; `outerSep` takes precedence; **does not affect border position**, only path endpoints |
 | `font` | `{ family?, size?, weight?, style? }` | — | Font spec; nested object, all fields optional |
+| `textColor` | `string` | `currentColor` | Text color (block default; per-line override via `LineSpec.fill`) |
+| `opacity` | `number` | — | Whole-node 0..1, applies to both shape and text |
+| `fillOpacity` | `number` | — | Fill-only opacity 0..1 |
+| `drawOpacity` | `number` | — | Stroke-only opacity 0..1 (TikZ `draw opacity`) |
+| `dashed` | `boolean` | — | Dashed border preset ("4 2") |
+| `dotted` | `boolean` | — | Dotted border preset ("1 2") |
+| `dashArray` | `string` | — | Explicit SVG `stroke-dasharray`; highest priority |
+| `roundedCorners` | `number` | — | Corner radius (only on `rectangle` shape) |
+| `minimumWidth` / `minimumHeight` | `number` | — | Floors the bbox dimensions |
+| `minimumSize` | `number` | — | Symmetric minimum-size alias; axis-specific fields take precedence |
+| `scale` | `number` | `1` | Uniform scale (includes font, padding, path attachment) |
+| `xScale` / `yScale` | `number` | — | Per-axis scale; takes precedence over `scale` |
 
 ## margin vs padding
 

@@ -8,10 +8,14 @@ export type PathPrim = {
   d: string;
   /** 填充色；不填表示不填充 */
   fill?: string;
+  /** 填充透明度 0~1 */
+  fillOpacity?: number;
   /** SVG fill-rule：`nonzero`（默认）/ `evenodd`（环形 / 孔洞场景） */
   fillRule?: 'nonzero' | 'evenodd';
   /** 描边色 */
   stroke?: string;
+  /** 描边透明度 0~1（SVG stroke-opacity） */
+  strokeOpacity?: number;
   /** 描边宽度 */
   strokeWidth?: number;
   /** SVG stroke-dasharray 模式 */

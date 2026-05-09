@@ -22,6 +22,8 @@ export type EllipsePrim = {
   fillOpacity?: number;
   /** 描边色 */
   stroke?: string;
+  /** 描边透明度 0~1（SVG stroke-opacity） */
+  strokeOpacity?: number;
   /** 描边宽度 */
   strokeWidth?: number;
   /** SVG stroke-dasharray 模式 */

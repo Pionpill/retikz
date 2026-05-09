@@ -54,10 +54,38 @@ export type NodeProps = {
   margin?: number;
   /** 背景色 */
   fill?: IRNode['fill'];
+  /** 填充透明度 0~1 */
+  fillOpacity?: number;
   /** 描边色 */
   stroke?: IRNode['stroke'];
+  /** 描边透明度 0~1（TikZ `draw opacity`） */
+  drawOpacity?: number;
   /** 描边宽度 */
   strokeWidth?: number;
+  /** 描边虚线预设：等价于 dashArray="4 2"；与 `dotted` / `dashArray` 优先级：dashArray > dashed > dotted */
+  dashed?: boolean;
+  /** 描边点线预设：等价于 dashArray="1 2" */
+  dotted?: boolean;
+  /** 显式 SVG stroke-dasharray 值（如 "4 2"）；优先级最高 */
+  dashArray?: string;
+  /** 圆角半径（user units）；只对 `rectangle` shape 生效 */
+  roundedCorners?: number;
+  /** 最小 border 宽度（user units）；不足时撑开 bbox */
+  minimumWidth?: number;
+  /** 最小 border 高度（user units） */
+  minimumHeight?: number;
+  /** 对称最小尺寸别名——等价于同时设 `minimumWidth` 与 `minimumHeight`；轴特化字段优先 */
+  minimumSize?: number;
+  /** 均匀缩放因子；同时影响 bbox / 字号 / padding / margin / 路径附着点（与 TikZ scale 一致） */
+  scale?: number;
+  /** 横向缩放，优先于 `scale` */
+  xScale?: number;
+  /** 纵向缩放，优先于 `scale` */
+  yScale?: number;
+  /** 文字颜色（块级默认；行级 LineSpec.fill 可覆盖）；不填走 `currentColor` */
+  textColor?: string;
+  /** 整节点透明度 0~1（同时作用于 shape 与 text） */
+  opacity?: number;
 };
 
 /**

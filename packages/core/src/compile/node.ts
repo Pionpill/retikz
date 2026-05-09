@@ -14,6 +14,22 @@ const DEFAULT_PADDING = 8;
 const DEFAULT_LINE_HEIGHT_FACTOR = 1.2;
 const DEG_TO_RAD = Math.PI / 180;
 const SQRT2 = Math.SQRT2;
+/** dashed 预设：SVG stroke-dasharray "4 2"——4 px 实线 + 2 px 间隙循环 */
+const DASHED_PATTERN = '4 2';
+/** dotted 预设：SVG stroke-dasharray "1 2"——1 px 圆点 + 2 px 间隙 */
+const DOTTED_PATTERN = '1 2';
+
+/** 解析 dashed / dotted / dashArray 优先级：dashArray > dashed > dotted */
+const resolveDashArray = (
+  dashArray: string | undefined,
+  dashed: boolean | undefined,
+  dotted: boolean | undefined,
+): string | undefined => {
+  if (dashArray !== undefined) return dashArray;
+  if (dashed) return DASHED_PATTERN;
+  if (dotted) return DOTTED_PATTERN;
+  return undefined;
+};
 
 /** IR `align` ('left' | 'center' | 'right') → SVG textAnchor ('start' | 'middle' | 'end') */
 const alignToTextAnchor = (
@@ -64,10 +80,22 @@ export type NodeLayout = {
   fontStyle?: 'normal' | 'italic' | 'oblique';
   /** 节点背景色，CSS 颜色字符串；emit 时用 'transparent' 兜底 */
   fill?: string;
+  /** 节点填充透明度 0~1；透传 shape primitive */
+  fillOpacity?: number;
   /** 节点边框色，CSS 颜色字符串；emit 时用 'currentColor' 兜底 */
   stroke?: string;
+  /** 节点描边透明度 0~1；TikZ `draw opacity`，透传 shape primitive */
+  strokeOpacity?: number;
   /** 节点边框宽度（user units）；emit 时用 1 兜底 */
   strokeWidth?: number;
+  /** SVG stroke-dasharray 字符串；compile 已把 dashed / dotted 预设解析为具体 pattern */
+  strokeDasharray?: string;
+  /** rectangle shape 的圆角半径（user units）；非 rect shape 该字段无效 */
+  roundedCorners?: number;
+  /** 文字颜色；emit 时透传给 TextPrim.fill，兜底 'currentColor' */
+  textColor?: string;
+  /** 整节点透明度 0~1；emit 时同时挂 shape 与 text primitive */
+  opacity?: number;
 };
 
 /** 由 layout 构造的 Rect（带 margin 扩张） */
@@ -177,7 +205,15 @@ export const layoutNode = (
   measureText: TextMeasurer,
   nodeIndex: Map<string, NodeLayout>,
 ): NodeLayout => {
-  const fontSize = node.font?.size ?? DEFAULT_FONT_SIZE;
+  // 缩放：xScale / yScale 优先于 scale 别名；默认 1。layout-level 乘进所有尺寸，
+  // 让 path 端点贴在缩放后的边界上（与 TikZ scale 行为一致）。
+  // 字号取 min(sx, sy) 以保住 glyph 形状（避免非均匀缩放下文字被横纵拉变形）。
+  const sx = node.xScale ?? node.scale ?? 1;
+  const sy = node.yScale ?? node.scale ?? 1;
+  const fontScale = Math.min(sx, sy);
+
+  const baseFontSize = node.font?.size ?? DEFAULT_FONT_SIZE;
+  const fontSize = baseFontSize * fontScale;
   const fontFamily = node.font?.family;
   const fontWeight = node.font?.weight;
   const fontStyle = node.font?.style;
@@ -185,10 +221,12 @@ export const layoutNode = (
   //   axis-specific (innerXSep / innerYSep / outerSep)
   // → symmetric alias (padding / margin)
   // → 默认值
-  const xSep = node.innerXSep ?? node.padding ?? DEFAULT_PADDING;
-  const ySep = node.innerYSep ?? node.padding ?? DEFAULT_PADDING;
-  const outerSep = node.outerSep ?? node.margin ?? 0;
-  const lineHeight = node.lineHeight ?? fontSize * DEFAULT_LINE_HEIGHT_FACTOR;
+  // sep 也受 scale 影响——大 node 的视觉 padding 自然要更大
+  const xSep = (node.innerXSep ?? node.padding ?? DEFAULT_PADDING) * sx;
+  const ySep = (node.innerYSep ?? node.padding ?? DEFAULT_PADDING) * sy;
+  const outerSep = (node.outerSep ?? node.margin ?? 0) * Math.max(sx, sy);
+  const lineHeight =
+    (node.lineHeight ?? baseFontSize * DEFAULT_LINE_HEIGHT_FACTOR) * sy;
   const align = alignToTextAnchor(node.align ?? 'center');
 
   // 标准化为 Array<IRLineSpec>：单字符串 → 单元素；空数组在 schema 阶段已被拒
@@ -236,8 +274,11 @@ export const layoutNode = (
   }
 
   // 内框半轴：text 半宽 + xSep / ySep（保证至少 sep 大小，空文本节点也有最小尺寸）
-  const innerHalfW = Math.max(textWidth / 2 + xSep, xSep);
-  const innerHalfH = Math.max(textHeight / 2 + ySep, ySep);
+  // minimumWidth / minimumHeight（axis-specific）覆盖 minimumSize（对称别名）
+  const minW = node.minimumWidth ?? node.minimumSize ?? 0;
+  const minH = node.minimumHeight ?? node.minimumSize ?? 0;
+  const innerHalfW = Math.max(textWidth / 2 + xSep, xSep, minW / 2);
+  const innerHalfH = Math.max(textHeight / 2 + ySep, ySep, minH / 2);
   const shape = node.shape ?? 'rectangle';
 
   // 外接边界（bounding rect）的半轴——按 shape 计算
@@ -298,8 +339,14 @@ export const layoutNode = (
     fontWeight,
     fontStyle,
     fill: node.fill,
+    fillOpacity: node.fillOpacity,
     stroke: node.stroke,
+    strokeOpacity: node.drawOpacity,
     strokeWidth: node.strokeWidth,
+    strokeDasharray: resolveDashArray(node.dashArray, node.dashed, node.dotted),
+    roundedCorners: node.roundedCorners,
+    textColor: node.textColor,
+    opacity: node.opacity,
   };
 };
 
@@ -317,8 +364,13 @@ const emitRectShape = (
     width: round(layout.rect.width),
     height: round(layout.rect.height),
     fill: layout.fill ?? 'transparent',
+    fillOpacity: layout.fillOpacity,
     stroke: layout.stroke ?? 'currentColor',
+    strokeOpacity: layout.strokeOpacity,
     strokeWidth: layout.strokeWidth ?? 1,
+    strokeDasharray: layout.strokeDasharray,
+    cornerRadius: layout.roundedCorners,
+    opacity: layout.opacity,
   };
 };
 
@@ -333,8 +385,12 @@ const emitEllipseShape = (
   rx: round(layout.rect.width / 2),
   ry: round(layout.rect.height / 2),
   fill: layout.fill ?? 'transparent',
+  fillOpacity: layout.fillOpacity,
   stroke: layout.stroke ?? 'currentColor',
+  strokeOpacity: layout.strokeOpacity,
   strokeWidth: layout.strokeWidth ?? 1,
+  strokeDasharray: layout.strokeDasharray,
+  opacity: layout.opacity,
 });
 
 /** diamond shape 的 PathPrim（4 顶点 + Z 闭合） */
@@ -353,8 +409,12 @@ const emitDiamondShape = (
     type: 'path',
     d,
     fill: layout.fill ?? 'transparent',
+    fillOpacity: layout.fillOpacity,
     stroke: layout.stroke ?? 'currentColor',
+    strokeOpacity: layout.strokeOpacity,
     strokeWidth: layout.strokeWidth ?? 1,
+    strokeDasharray: layout.strokeDasharray,
+    opacity: layout.opacity,
   };
 };
 
@@ -407,7 +467,8 @@ export const emitNodePrimitives = (
       align: layout.align,
       baseline: 'middle',
       lineHeight: round(layout.lineHeight),
-      fill: 'currentColor',
+      fill: layout.textColor ?? 'currentColor',
+      opacity: layout.opacity,
       measuredWidth: round(layout.textWidth),
       measuredHeight: round(layout.textHeight),
     });

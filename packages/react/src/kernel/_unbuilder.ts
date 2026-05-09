@@ -20,8 +20,22 @@ const nodePropsFromIR = (n: IRNode): NodeProps => {
   if (n.padding !== undefined) props.padding = n.padding;
   if (n.margin !== undefined) props.margin = n.margin;
   if (n.fill !== undefined) props.fill = n.fill;
+  if (n.fillOpacity !== undefined) props.fillOpacity = n.fillOpacity;
   if (n.stroke !== undefined) props.stroke = n.stroke;
+  if (n.drawOpacity !== undefined) props.drawOpacity = n.drawOpacity;
   if (n.strokeWidth !== undefined) props.strokeWidth = n.strokeWidth;
+  if (n.dashed !== undefined) props.dashed = n.dashed;
+  if (n.dotted !== undefined) props.dotted = n.dotted;
+  if (n.dashArray !== undefined) props.dashArray = n.dashArray;
+  if (n.roundedCorners !== undefined) props.roundedCorners = n.roundedCorners;
+  if (n.minimumWidth !== undefined) props.minimumWidth = n.minimumWidth;
+  if (n.minimumHeight !== undefined) props.minimumHeight = n.minimumHeight;
+  if (n.minimumSize !== undefined) props.minimumSize = n.minimumSize;
+  if (n.scale !== undefined) props.scale = n.scale;
+  if (n.xScale !== undefined) props.xScale = n.xScale;
+  if (n.yScale !== undefined) props.yScale = n.yScale;
+  if (n.textColor !== undefined) props.textColor = n.textColor;
+  if (n.opacity !== undefined) props.opacity = n.opacity;
   return props;
 };
 
