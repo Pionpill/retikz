@@ -1,3 +1,4 @@
+import { arcBoundingPoints, arcEndPoint, arcSvgFlags } from '../geometry/arc';
 import { bendControlPoints } from '../geometry/bend';
 import type { ArrowShape, IRPath, IRPosition, IRStep, IRTarget } from '../ir';
 import type { PathPrim, ScenePrimitive } from '../primitive';
@@ -212,12 +213,24 @@ export const emitPathPrimitive = (
     | { cmd: 'M' | 'L'; point: IRPosition }
     | { cmd: 'Q'; control: IRPosition; point: IRPosition }
     | { cmd: 'C'; control1: IRPosition; control2: IRPosition; point: IRPosition }
+    | { cmd: 'A'; rx: number; ry: number; largeArc: 0 | 1; sweep: 0 | 1; point: IRPosition }
     | { cmd: 'Z' };
 
   const ops: Array<PathOp> = [];
   const points: Array<IRPosition> = [];
   let lastEnd: IRPosition | null = null;
   let subPathStart: IRPosition | null = null;
+  /**
+   * "笔位覆盖"——arc / circlePath / ellipsePath 这种没有 `to` 字段的 step
+   * 不能通过 `prev.step.to` 重算下一段的起点。它们设置 penOverride，下一个
+   * 绘制段（line/curve/cubic/bend/step）直接用这个点当 fromClip，之后清空。
+   *
+   *   - arc：endpoint（弧终点）—— 与 SVG 实际 cursor 一致
+   *   - circlePath/ellipsePath：center（圆心）—— ADR-0002 决策"画完留在圆心"，
+   *     注意 SVG 实际 cursor 在弧端点而不在 center，必须靠 startSegment 发 M
+   *     teleport 回中心
+   */
+  let penOverride: IRPosition | null = null;
 
   const emitM = (p: IRPosition) => {
     ops.push({ cmd: 'M', point: p });
@@ -246,6 +259,19 @@ export const emitPathPrimitive = (
     // 控制点纳入 viewBox bbox（保守，实际 bezier 曲线包络小于凸包）
     points.push(c1);
     points.push(c2);
+    points.push(p);
+    lastEnd = p;
+  };
+  const emitA = (
+    rx: number,
+    ry: number,
+    largeArc: 0 | 1,
+    sweep: 0 | 1,
+    p: IRPosition,
+  ) => {
+    ops.push({ cmd: 'A', rx, ry, largeArc, sweep, point: p });
+    // 弧端点纳入 bbox；弧形 bbox 极值候选（90°·k 轴向点）由各 compile 分支
+    // 单独 push 进 points（仅 arc 才需要——circle / ellipse 已显式 push 四点）
     points.push(p);
     lastEnd = p;
   };
@@ -283,14 +309,87 @@ export const emitPathPrimitive = (
       continue;
     }
 
-    // line / step（fold）：先找 prev，再独立 clip 两端
+    // line / step（fold）/ curve / cubic / bend / arc / circlePath / ellipsePath：
+    // 都需要 prev（找 cursor 起点 / 圆心）。currAnchor 仅 line / step / bend 等
+    // 有 `to` 字段的 step 才需要——arc / circlePath / ellipsePath 没有 to。
     const prev = findPrev(i);
     if (!prev) return null;
+
+    if (step.kind === 'arc') {
+      // 圆心 = 上一 step 的 anchor（refPoint）
+      const center = prev.anchor;
+      const startPt = arcEndPoint(center, step.radius, step.startAngle);
+      const endPt = arcEndPoint(center, step.radius, step.endAngle);
+      const flags = arcSvgFlags(step.startAngle, step.endAngle);
+
+      startSegment(startPt);
+      emitA(step.radius, step.radius, flags.largeArc, flags.sweep, endPt);
+
+      // viewBox bbox：把弧的极值点（90°·k 候选）也算进来
+      for (const p of arcBoundingPoints(center, step.radius, step.startAngle, step.endAngle)) {
+        points.push(p);
+      }
+      // 后续段从弧终点继续（lastEnd 已经在 emitA 设为 endPt，与 SVG cursor 一致）
+      penOverride = endPt;
+      continue;
+    }
+
+    if (step.kind === 'circlePath') {
+      // 圆心 = 上一 step 的 anchor；起点取圆周右侧（角度 0°）
+      const center = prev.anchor;
+      const r = step.radius;
+      const right: IRPosition = [center[0] + r, center[1]];
+      const left: IRPosition = [center[0] - r, center[1]];
+
+      startSegment(right);
+      // 第 1 段：右半圆，sweep=1（按当前 polar 约定 = 顺时针视觉，从右上到左）
+      emitA(r, r, 0, 1, left);
+      // 第 2 段：左半圆，sweep=1，闭回起点
+      emitA(r, r, 0, 1, right);
+
+      // viewBox bbox：整圆顶/底/左/右四点
+      points.push([center[0] + r, center[1]]);
+      points.push([center[0] - r, center[1]]);
+      points.push([center[0], center[1] + r]);
+      points.push([center[0], center[1] - r]);
+
+      // ADR-0002 决策：画完圆 / 椭圆笔位回到 center。lastEnd 保留 SVG 实际
+      // cursor（= right），下一段用 penOverride=center 触发 startSegment 发 M。
+      penOverride = center;
+      continue;
+    }
+
+    if (step.kind === 'ellipsePath') {
+      const center = prev.anchor;
+      const rx = step.radiusX;
+      const ry = step.radiusY;
+      const right: IRPosition = [center[0] + rx, center[1]];
+      const left: IRPosition = [center[0] - rx, center[1]];
+
+      startSegment(right);
+      emitA(rx, ry, 0, 1, left);
+      emitA(rx, ry, 0, 1, right);
+
+      points.push([center[0] + rx, center[1]]);
+      points.push([center[0] - rx, center[1]]);
+      points.push([center[0], center[1] + ry]);
+      points.push([center[0], center[1] - ry]);
+
+      penOverride = center;
+      continue;
+    }
+
     const currAnchor = anchors[i];
     if (!currAnchor) return null;
 
+    // arc / circlePath / ellipsePath 之后，penOverride 决定下一段起点（弧终点 / 圆心）。
+    // 普通段则继续用"对 prev.step.to 做 boundary clip"——节点 ref 时段独立 clip。
+    // 用完即清空，避免污染后续 step。
+    const usedOverride = penOverride;
+    penOverride = null;
+
     if (step.kind === 'line') {
-      const fromClip = clipForTarget(prev.step.to, currAnchor, nodeIndex);
+      const fromClip = usedOverride ?? clipForTarget(prev.step.to, currAnchor, nodeIndex);
       const toClip = clipForTarget(step.to, prev.anchor, nodeIndex);
       if (!fromClip || !toClip) return null;
       startSegment(fromClip);
@@ -299,7 +398,7 @@ export const emitPathPrimitive = (
     }
 
     if (step.kind === 'curve') {
-      const fromClip = clipForTarget(prev.step.to, step.control, nodeIndex);
+      const fromClip = usedOverride ?? clipForTarget(prev.step.to, step.control, nodeIndex);
       const toClip = clipForTarget(step.to, step.control, nodeIndex);
       if (!fromClip || !toClip) return null;
       startSegment(fromClip);
@@ -307,7 +406,7 @@ export const emitPathPrimitive = (
       continue;
     }
     if (step.kind === 'cubic') {
-      const fromClip = clipForTarget(prev.step.to, step.control1, nodeIndex);
+      const fromClip = usedOverride ?? clipForTarget(prev.step.to, step.control1, nodeIndex);
       const toClip = clipForTarget(step.to, step.control2, nodeIndex);
       if (!fromClip || !toClip) return null;
       startSegment(fromClip);
@@ -317,19 +416,17 @@ export const emitPathPrimitive = (
     if (step.kind === 'bend') {
       const angle = step.bendAngle ?? 30;
       const [c1, c2] = bendControlPoints(prev.anchor, currAnchor, step.bendDirection, angle);
-      const fromClip = clipForTarget(prev.step.to, c1, nodeIndex);
+      const fromClip = usedOverride ?? clipForTarget(prev.step.to, c1, nodeIndex);
       const toClip = clipForTarget(step.to, c2, nodeIndex);
       if (!fromClip || !toClip) return null;
       startSegment(fromClip);
       emitC(c1, c2, toClip);
       continue;
     }
-    // TODO: implemented in ADR-0002 step.3
-    if (step.kind === 'arc' || step.kind === 'circlePath' || step.kind === 'ellipsePath') continue;
 
     // step.kind === 'step'（fold）
     const corner = cornerOf(prev.anchor, currAnchor, step.via);
-    const fromClip = clipForTarget(prev.step.to, corner, nodeIndex);
+    const fromClip = usedOverride ?? clipForTarget(prev.step.to, corner, nodeIndex);
     const toClip = clipForTarget(step.to, corner, nodeIndex);
     if (!fromClip || !toClip) return null;
     startSegment(fromClip);
@@ -396,6 +493,10 @@ export const emitPathPrimitive = (
     }
     if (op.cmd === 'C') {
       return `C ${round(op.control1[0])} ${round(op.control1[1])} ${round(op.control2[0])} ${round(op.control2[1])} ${round(op.point[0])} ${round(op.point[1])}`;
+    }
+    if (op.cmd === 'A') {
+      // 中间的 '0' 是 x-axis-rotation；alpha.3 不暴露椭圆 tilt
+      return `A ${round(op.rx)} ${round(op.ry)} 0 ${op.largeArc} ${op.sweep} ${round(op.point[0])} ${round(op.point[1])}`;
     }
     return `${op.cmd} ${round(op.point[0])} ${round(op.point[1])}`;
   });

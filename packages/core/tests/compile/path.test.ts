@@ -862,3 +862,200 @@ describe("compile path: 'bend' (ADR-0001 alpha.3)", () => {
     expect(d.endsWith(' L 20 0')).toBe(true);
   });
 });
+
+describe("compile path: 'arc' (ADR-0002 alpha.3)", () => {
+  it('arc 0°→90° 在 [0,0] 圆心 r=10 → M 10,0 A 10 10 0 0 1 0 10', () => {
+    const ir: IR = {
+      version: 1,
+      type: 'scene',
+      children: [
+        {
+          type: 'path',
+          children: [
+            { type: 'step', kind: 'move', to: [0, 0] },
+            { type: 'step', kind: 'arc', startAngle: 0, endAngle: 90, radius: 10 },
+          ],
+        },
+      ],
+    };
+    expect(findPathPrim(compileToScene(ir).primitives).d).toBe(
+      'M 10 0 A 10 10 0 0 1 0 10',
+    );
+  });
+
+  it('arc 0°→270°（large arc）→ largeArc flag = 1', () => {
+    const ir: IR = {
+      version: 1,
+      type: 'scene',
+      children: [
+        {
+          type: 'path',
+          children: [
+            { type: 'step', kind: 'move', to: [0, 0] },
+            { type: 'step', kind: 'arc', startAngle: 0, endAngle: 270, radius: 10 },
+          ],
+        },
+      ],
+    };
+    const d = findPathPrim(compileToScene(ir).primitives).d;
+    // M 10 0 A 10 10 0 1 1 0 -10
+    expect(d).toMatch(/^M 10 0 A 10 10 0 1 1 0 -10$/);
+  });
+
+  it('arc 之后接 line：line 起点是弧的终点（不是圆心）', () => {
+    const ir: IR = {
+      version: 1,
+      type: 'scene',
+      children: [
+        {
+          type: 'path',
+          children: [
+            { type: 'step', kind: 'move', to: [0, 0] },
+            { type: 'step', kind: 'arc', startAngle: 0, endAngle: 90, radius: 10 },
+            { type: 'step', kind: 'line', to: [50, 50] },
+          ],
+        },
+      ],
+    };
+    // 弧终点 = (0, 10)；line 从 (0, 10) → (50, 50)
+    expect(findPathPrim(compileToScene(ir).primitives).d).toBe(
+      'M 10 0 A 10 10 0 0 1 0 10 L 50 50',
+    );
+  });
+
+  it('arc 圆心带偏移（move 到 [5,5]）', () => {
+    const ir: IR = {
+      version: 1,
+      type: 'scene',
+      children: [
+        {
+          type: 'path',
+          children: [
+            { type: 'step', kind: 'move', to: [5, 5] },
+            { type: 'step', kind: 'arc', startAngle: 0, endAngle: 90, radius: 10 },
+          ],
+        },
+      ],
+    };
+    // 起点 = (5+10, 5) = (15, 5)；终点 = (5, 5+10) = (5, 15)
+    expect(findPathPrim(compileToScene(ir).primitives).d).toBe(
+      'M 15 5 A 10 10 0 0 1 5 15',
+    );
+  });
+});
+
+describe("compile path: 'circlePath' (ADR-0002 alpha.3)", () => {
+  it('circlePath 在原点 r=10 → 两段半弧', () => {
+    const ir: IR = {
+      version: 1,
+      type: 'scene',
+      children: [
+        {
+          type: 'path',
+          children: [
+            { type: 'step', kind: 'move', to: [0, 0] },
+            { type: 'step', kind: 'circlePath', radius: 10 },
+          ],
+        },
+      ],
+    };
+    expect(findPathPrim(compileToScene(ir).primitives).d).toBe(
+      'M 10 0 A 10 10 0 0 1 -10 0 A 10 10 0 0 1 10 0',
+    );
+  });
+
+  it('circle 之后接 line：line 起点是圆心（不是圆周）', () => {
+    const ir: IR = {
+      version: 1,
+      type: 'scene',
+      children: [
+        {
+          type: 'path',
+          children: [
+            { type: 'step', kind: 'move', to: [0, 0] },
+            { type: 'step', kind: 'circlePath', radius: 10 },
+            { type: 'step', kind: 'line', to: [50, 50] },
+          ],
+        },
+      ],
+    };
+    // 圆画完 lastEnd 回到 center (0,0) → line 从 (0,0) → (50,50)
+    // 由于 (0,0) 不等于上次 emitA 的 (10, 0)，会先发 M 0 0 然后 L
+    const d = findPathPrim(compileToScene(ir).primitives).d;
+    expect(d).toBe(
+      'M 10 0 A 10 10 0 0 1 -10 0 A 10 10 0 0 1 10 0 M 0 0 L 50 50',
+    );
+  });
+
+  it('circle 圆心带偏移', () => {
+    const ir: IR = {
+      version: 1,
+      type: 'scene',
+      children: [
+        {
+          type: 'path',
+          children: [
+            { type: 'step', kind: 'move', to: [20, 30] },
+            { type: 'step', kind: 'circlePath', radius: 5 },
+          ],
+        },
+      ],
+    };
+    expect(findPathPrim(compileToScene(ir).primitives).d).toBe(
+      'M 25 30 A 5 5 0 0 1 15 30 A 5 5 0 0 1 25 30',
+    );
+  });
+});
+
+describe("compile path: 'ellipsePath' (ADR-0002 alpha.3)", () => {
+  it('ellipsePath rx=15 / ry=10 → 两段半弧', () => {
+    const ir: IR = {
+      version: 1,
+      type: 'scene',
+      children: [
+        {
+          type: 'path',
+          children: [
+            { type: 'step', kind: 'move', to: [0, 0] },
+            { type: 'step', kind: 'ellipsePath', radiusX: 15, radiusY: 10 },
+          ],
+        },
+      ],
+    };
+    expect(findPathPrim(compileToScene(ir).primitives).d).toBe(
+      'M 15 0 A 15 10 0 0 1 -15 0 A 15 10 0 0 1 15 0',
+    );
+  });
+
+  it('ellipse rx == ry 时与 circle 等价输出', () => {
+    const fromEllipse: IR = {
+      version: 1,
+      type: 'scene',
+      children: [
+        {
+          type: 'path',
+          children: [
+            { type: 'step', kind: 'move', to: [0, 0] },
+            { type: 'step', kind: 'ellipsePath', radiusX: 7, radiusY: 7 },
+          ],
+        },
+      ],
+    };
+    const fromCircle: IR = {
+      version: 1,
+      type: 'scene',
+      children: [
+        {
+          type: 'path',
+          children: [
+            { type: 'step', kind: 'move', to: [0, 0] },
+            { type: 'step', kind: 'circlePath', radius: 7 },
+          ],
+        },
+      ],
+    };
+    expect(findPathPrim(compileToScene(fromEllipse).primitives).d).toBe(
+      findPathPrim(compileToScene(fromCircle).primitives).d,
+    );
+  });
+});
