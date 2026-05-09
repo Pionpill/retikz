@@ -12,6 +12,8 @@ export {
   PositionSchema,
   PolarPositionSchema,
   TargetSchema,
+  RelTargetSchema,
+  RelAccumulateTargetSchema,
   MoveStepSchema,
   LineStepSchema,
   FoldStepSchema,
@@ -36,6 +38,8 @@ export {
 export type {
   IRPosition,
   IRTarget,
+  IRRelTarget,
+  IRRelAccumulateTarget,
   IRMoveStep,
   IRLineStep,
   IRFoldStep,

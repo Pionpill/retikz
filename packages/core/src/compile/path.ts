@@ -89,6 +89,10 @@ const refPointOfTarget = (
         return angleBoundaryOf(node, ref.angle);
     }
   }
+  // TODO: ADR-0003 Task 2 — resolve `{ rel }` / `{ relAccumulate }` against prevEnd / pathStart
+  if (!Array.isArray(target) && typeof target === 'object' && ('rel' in target || 'relAccumulate' in target)) {
+    return null;
+  }
   return resolvePosition(target, nodeIndex);
 };
 
@@ -129,6 +133,10 @@ const clipForTarget = (
       case 'angle':
         return angleBoundaryOf(node, ref.angle);
     }
+  }
+  // TODO: ADR-0003 Task 2 — resolve `{ rel }` / `{ relAccumulate }` against prevEnd / pathStart
+  if (!Array.isArray(target) && typeof target === 'object' && ('rel' in target || 'relAccumulate' in target)) {
+    return null;
   }
   return resolvePosition(target, nodeIndex);
 };
