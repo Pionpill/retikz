@@ -636,3 +636,229 @@ describe('compile path: 多节点连线段独立 clip（bugfix tikz-from-ir.demo
   });
 });
 
+describe("compile path: 'curve' (ADR-0001 alpha.3)", () => {
+  it('curve 直接坐标 → M ... Q cx,cy x,y', () => {
+    const ir: IR = {
+      version: 1,
+      type: 'scene',
+      children: [
+        {
+          type: 'path',
+          children: [
+            { type: 'step', kind: 'move', to: [0, 0] },
+            { type: 'step', kind: 'curve', to: [10, 0], control: [5, 8] },
+          ],
+        },
+      ],
+    };
+    expect(findPathPrim(compileToScene(ir).primitives).d).toBe('M 0 0 Q 5 8 10 0');
+  });
+
+  it('curve 与 line 混用：line → curve → line 串联', () => {
+    const ir: IR = {
+      version: 1,
+      type: 'scene',
+      children: [
+        {
+          type: 'path',
+          children: [
+            { type: 'step', kind: 'move', to: [0, 0] },
+            { type: 'step', kind: 'line', to: [5, 0] },
+            { type: 'step', kind: 'curve', to: [10, 5], control: [10, 0] },
+            { type: 'step', kind: 'line', to: [10, 10] },
+          ],
+        },
+      ],
+    };
+    expect(findPathPrim(compileToScene(ir).primitives).d).toBe(
+      'M 0 0 L 5 0 Q 10 0 10 5 L 10 10',
+    );
+  });
+
+  it('curve 接 cycle：闭合段是直线', () => {
+    const ir: IR = {
+      version: 1,
+      type: 'scene',
+      children: [
+        {
+          type: 'path',
+          children: [
+            { type: 'step', kind: 'move', to: [0, 0] },
+            { type: 'step', kind: 'curve', to: [10, 0], control: [5, 8] },
+            { type: 'step', kind: 'cycle' },
+          ],
+        },
+      ],
+    };
+    expect(findPathPrim(compileToScene(ir).primitives).d).toBe('M 0 0 Q 5 8 10 0 Z');
+  });
+});
+
+describe("compile path: 'cubic' (ADR-0001 alpha.3)", () => {
+  it('cubic 直接坐标 → M ... C c1x c1y c2x c2y x y', () => {
+    const ir: IR = {
+      version: 1,
+      type: 'scene',
+      children: [
+        {
+          type: 'path',
+          children: [
+            { type: 'step', kind: 'move', to: [0, 0] },
+            { type: 'step', kind: 'cubic', to: [10, 0], control1: [3, 5], control2: [7, 5] },
+          ],
+        },
+      ],
+    };
+    expect(findPathPrim(compileToScene(ir).primitives).d).toBe('M 0 0 C 3 5 7 5 10 0');
+  });
+
+  it('cubic 与 line 混用', () => {
+    const ir: IR = {
+      version: 1,
+      type: 'scene',
+      children: [
+        {
+          type: 'path',
+          children: [
+            { type: 'step', kind: 'move', to: [0, 0] },
+            { type: 'step', kind: 'cubic', to: [10, 0], control1: [2, 5], control2: [8, 5] },
+            { type: 'step', kind: 'line', to: [20, 0] },
+          ],
+        },
+      ],
+    };
+    expect(findPathPrim(compileToScene(ir).primitives).d).toBe('M 0 0 C 2 5 8 5 10 0 L 20 0');
+  });
+
+  it('cubic + cycle', () => {
+    const ir: IR = {
+      version: 1,
+      type: 'scene',
+      children: [
+        {
+          type: 'path',
+          children: [
+            { type: 'step', kind: 'move', to: [0, 0] },
+            { type: 'step', kind: 'cubic', to: [10, 10], control1: [5, 0], control2: [10, 5] },
+            { type: 'step', kind: 'cycle' },
+          ],
+        },
+      ],
+    };
+    expect(findPathPrim(compileToScene(ir).primitives).d).toBe(
+      'M 0 0 C 5 0 10 5 10 10 Z',
+    );
+  });
+});
+
+describe("compile path: 'bend' (ADR-0001 alpha.3)", () => {
+  it('bend left 30° on horizontal chord → C 命令，控制点 y < 0', () => {
+    const ir: IR = {
+      version: 1,
+      type: 'scene',
+      children: [
+        {
+          type: 'path',
+          children: [
+            { type: 'step', kind: 'move', to: [0, 0] },
+            { type: 'step', kind: 'bend', to: [12, 0], bendDirection: 'left', bendAngle: 30 },
+          ],
+        },
+      ],
+    };
+    const offset = (12 * Math.tan((15 * Math.PI) / 180) * 4) / 3;
+    const r = (n: number) => Math.round(n * 100) / 100;
+    expect(findPathPrim(compileToScene(ir).primitives).d).toBe(
+      `M 0 0 C 4 ${r(-offset)} 8 ${r(-offset)} 12 0`,
+    );
+  });
+
+  it('bend 默认角度 30°（省略 bendAngle）等价于显式 30°', () => {
+    const irImplicit: IR = {
+      version: 1,
+      type: 'scene',
+      children: [
+        {
+          type: 'path',
+          children: [
+            { type: 'step', kind: 'move', to: [0, 0] },
+            { type: 'step', kind: 'bend', to: [12, 0], bendDirection: 'left' },
+          ],
+        },
+      ],
+    };
+    const irExplicit: IR = {
+      version: 1,
+      type: 'scene',
+      children: [
+        {
+          type: 'path',
+          children: [
+            { type: 'step', kind: 'move', to: [0, 0] },
+            { type: 'step', kind: 'bend', to: [12, 0], bendDirection: 'left', bendAngle: 30 },
+          ],
+        },
+      ],
+    };
+    expect(findPathPrim(compileToScene(irImplicit).primitives).d).toBe(
+      findPathPrim(compileToScene(irExplicit).primitives).d,
+    );
+  });
+
+  it('bend right 与 left 关于 chord 对称（控制点 y 互为相反数）', () => {
+    const irL: IR = {
+      version: 1,
+      type: 'scene',
+      children: [
+        {
+          type: 'path',
+          children: [
+            { type: 'step', kind: 'move', to: [0, 0] },
+            { type: 'step', kind: 'bend', to: [10, 0], bendDirection: 'left', bendAngle: 45 },
+          ],
+        },
+      ],
+    };
+    const irR: IR = {
+      version: 1,
+      type: 'scene',
+      children: [
+        {
+          type: 'path',
+          children: [
+            { type: 'step', kind: 'move', to: [0, 0] },
+            { type: 'step', kind: 'bend', to: [10, 0], bendDirection: 'right', bendAngle: 45 },
+          ],
+        },
+      ],
+    };
+    const dL = findPathPrim(compileToScene(irL).primitives).d;
+    const dR = findPathPrim(compileToScene(irR).primitives).d;
+    const numsL = dL.match(/-?\d+(\.\d+)?/g)!.map(Number);
+    const numsR = dR.match(/-?\d+(\.\d+)?/g)!.map(Number);
+    // tokens: M 0 0 C c1x c1y c2x c2y 10 0 → indices for c1y=3, c2y=5
+    expect(numsL[3]).toBeCloseTo(-numsR[3], 4);
+    expect(numsL[5]).toBeCloseTo(-numsR[5], 4);
+  });
+
+  it('bend 与 line 混用', () => {
+    const ir: IR = {
+      version: 1,
+      type: 'scene',
+      children: [
+        {
+          type: 'path',
+          children: [
+            { type: 'step', kind: 'move', to: [0, 0] },
+            { type: 'step', kind: 'bend', to: [12, 0], bendDirection: 'left', bendAngle: 30 },
+            { type: 'step', kind: 'line', to: [20, 0] },
+          ],
+        },
+      ],
+    };
+    const d = findPathPrim(compileToScene(ir).primitives).d;
+    // 起头是 M 0 0 C ...，结尾是 L 20 0
+    expect(d.startsWith('M 0 0 C ')).toBe(true);
+    expect(d.endsWith(' L 20 0')).toBe(true);
+  });
+});

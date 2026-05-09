@@ -4,3 +4,4 @@ export * from './circle';
 export * from './ellipse';
 export * from './diamond';
 export * from './polar';
+export * from './bend';

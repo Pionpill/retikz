@@ -111,4 +111,50 @@ describe('buildIR', () => {
     );
     expect(fromSugar).toEqual(fromKernel);
   });
+
+  it('<Draw way={[..., { curve }, ...]}> 等价于 Kernel curve step', () => {
+    const fromSugar = buildIR(<Draw way={['A', { curve: [5, 8] }, 'B']} />);
+    const fromKernel = buildIR(
+      <Path>
+        <Step kind="move" to="A" />
+        <Step kind="curve" to="B" control={[5, 8]} />
+      </Path>,
+    );
+    expect(fromSugar).toEqual(fromKernel);
+  });
+
+  it('<Draw way={[..., { cubic }, ...]}> 等价于 Kernel cubic step', () => {
+    const fromSugar = buildIR(
+      <Draw way={['A', { cubic: [[3, 5], [7, 5]] }, 'B']} />,
+    );
+    const fromKernel = buildIR(
+      <Path>
+        <Step kind="move" to="A" />
+        <Step kind="cubic" to="B" control1={[3, 5]} control2={[7, 5]} />
+      </Path>,
+    );
+    expect(fromSugar).toEqual(fromKernel);
+  });
+
+  it('<Draw way={[..., { bend }, ...]}> 等价于 Kernel bend step（含 / 不含 angle 两种）', () => {
+    const sugarNoAngle = buildIR(<Draw way={['A', { bend: 'left' }, 'B']} />);
+    const kernelNoAngle = buildIR(
+      <Path>
+        <Step kind="move" to="A" />
+        <Step kind="bend" to="B" bendDirection="left" />
+      </Path>,
+    );
+    expect(sugarNoAngle).toEqual(kernelNoAngle);
+
+    const sugarWithAngle = buildIR(
+      <Draw way={['A', { bend: 'right', angle: 60 }, 'B']} />,
+    );
+    const kernelWithAngle = buildIR(
+      <Path>
+        <Step kind="move" to="A" />
+        <Step kind="bend" to="B" bendDirection="right" bendAngle={60} />
+      </Path>,
+    );
+    expect(sugarWithAngle).toEqual(kernelWithAngle);
+  });
 });

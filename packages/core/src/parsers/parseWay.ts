@@ -1,4 +1,8 @@
 import type {
+  IRBendStep,
+  IRControlPoint,
+  IRCubicStep,
+  IRCurveStep,
   IRCycleStep,
   IRFoldStep,
   IRLineStep,
@@ -47,22 +51,49 @@ export type WayVia = typeof DrawWay.hv | typeof DrawWay.vh;
 export type WayCycle = typeof DrawWay.cycle;
 
 /**
+ * 二次贝塞尔算子（infix）：与折角算子一样坐落两个 target 之间，把
+ * "上一项 → 下一项"那段改成 curve step。`curve` 字段携带控制点 `[x, y]`。
+ */
+export type WayCurveOp = { curve: IRControlPoint };
+
+/**
+ * 三次贝塞尔算子（infix）：把"上一项 → 下一项"那段改成 cubic step。
+ * `cubic` 字段携带两个控制点 `[c1, c2]`。
+ */
+export type WayCubicOp = { cubic: [IRControlPoint, IRControlPoint] };
+
+/**
+ * 弧形简记算子（infix）：把"上一项 → 下一项"那段改成 bend step。
+ * `bend` 字段是方向 `'left'` / `'right'`；`angle` 可选（缺省 30°）。
+ */
+export type WayBendOp = { bend: 'left' | 'right'; angle?: number };
+
+/**
  * Sugar 层的 way 数组 DSL 元素。
  *
- * v0.1.0-alpha.1 接受五种形态：
+ * 接受八种形态：
  * - 节点 id 字符串：`'A'` → line（首项时为 move）
  * - 笛卡尔坐标：`[x, y]` → line
  * - 极坐标：`{ origin?, angle, radius }` → line
  * - 折角算子：`'-|'` / `'|-'`（或 `DrawWay.hv` / `DrawWay.vh`）→ 当前项 +
  *   **下一项**合并成一个折角 step（与 TikZ 的 `(A) -| (B)` infix 写法对齐）
  * - 闭合关键字：`DrawWay.cycle` → cycle（闭合到起点）
+ * - 二次贝塞尔算子（infix）：`{ curve: [cx, cy] }`，与下一项合并为 curve step
+ * - 三次贝塞尔算子（infix）：`{ cubic: [[c1x, c1y], [c2x, c2y]] }`，与下一项合并为 cubic step
+ * - 弧形简记算子（infix）：`{ bend: 'left' | 'right', angle?: number }`，与下一项合并为 bend step
  *
- * 后续会加：相对位移（`{ rel: [x, y] }`）、curve / cubic 等。
+ * 后续会加：相对位移（`{ rel: [x, y] }`）等。
  *
  * 注意：闭合刻意只走 `DrawWay.cycle`（底层字符串是 `'retikz-keyword_cycle'`），
  * 这样裸字符串 `'cycle'` 仍可作为正常节点 id 使用。
  */
-export type WayItem = IRTarget | WayVia | WayCycle;
+export type WayItem =
+  | IRTarget
+  | WayVia
+  | WayCycle
+  | WayCurveOp
+  | WayCubicOp
+  | WayBendOp;
 
 /** way DSL 数组：sugar `<Draw way={...}>` 接受的输入形态 */
 export type WayDSL = Array<WayItem>;
@@ -72,10 +103,30 @@ const isWayCycle = (item: WayItem): item is WayCycle => item === DrawWay.cycle;
 const isWayVia = (item: WayItem): item is WayVia =>
   item === DrawWay.hv || item === DrawWay.vh;
 
+const isPlainObject = (item: unknown): item is Record<string, unknown> =>
+  typeof item === 'object' && item !== null && !Array.isArray(item);
+
+const isWayCurveOp = (item: WayItem): item is WayCurveOp =>
+  isPlainObject(item) && 'curve' in item;
+
+const isWayCubicOp = (item: WayItem): item is WayCubicOp =>
+  isPlainObject(item) && 'cubic' in item;
+
+const isWayBendOp = (item: WayItem): item is WayBendOp =>
+  isPlainObject(item) && 'bend' in item;
+
+const isWayCurveLike = (
+  item: WayItem,
+): item is WayCurveOp | WayCubicOp | WayBendOp =>
+  isWayCurveOp(item) || isWayCubicOp(item) || isWayBendOp(item);
+
+const isWayOperator = (item: WayItem): boolean =>
+  isWayCycle(item) || isWayVia(item) || isWayCurveLike(item);
+
 /** 把 WayItem 归约为它的"目标点"——target 直接返回；算子/关键字返回 null */
 const targetOf = (item: WayItem): IRTarget | null => {
-  if (isWayCycle(item) || isWayVia(item)) return null;
-  return item;
+  if (isWayOperator(item)) return null;
+  return item as IRTarget;
 };
 
 /**
@@ -113,13 +164,61 @@ export const parseWay = (way: WayDSL): Array<IRStep> => {
         );
       }
       const next = way[i + 1];
-      if (isWayCycle(next) || isWayVia(next)) {
+      if (isWayOperator(next)) {
         throw new Error(
           `parseWay: via operator '${item}' must be followed by a target, got '${String(next)}'`,
         );
       }
-      const fold: IRFoldStep = { type: 'step', kind: 'step', via: item, to: next };
+      const fold: IRFoldStep = {
+        type: 'step',
+        kind: 'step',
+        via: item,
+        to: next as IRTarget,
+      };
       out.push(fold);
+      i++; // 消费 next
+      continue;
+    }
+    if (isWayCurveLike(item)) {
+      if (i + 1 >= way.length) {
+        throw new Error(
+          `parseWay: curve operator at end of way must be followed by a target`,
+        );
+      }
+      const next = way[i + 1];
+      if (isWayOperator(next)) {
+        throw new Error(
+          `parseWay: curve operator must be followed by a target, got operator/keyword`,
+        );
+      }
+      const target = next as IRTarget;
+      if (isWayCurveOp(item)) {
+        const curve: IRCurveStep = {
+          type: 'step',
+          kind: 'curve',
+          to: target,
+          control: item.curve,
+        };
+        out.push(curve);
+      } else if (isWayCubicOp(item)) {
+        const cubic: IRCubicStep = {
+          type: 'step',
+          kind: 'cubic',
+          to: target,
+          control1: item.cubic[0],
+          control2: item.cubic[1],
+        };
+        out.push(cubic);
+      } else {
+        const bend: IRBendStep = {
+          type: 'step',
+          kind: 'bend',
+          to: target,
+          bendDirection: item.bend,
+        };
+        if (item.angle !== undefined) bend.bendAngle = item.angle;
+        out.push(bend);
+      }
       i++; // 消费 next
       continue;
     }

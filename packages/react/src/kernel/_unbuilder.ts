@@ -47,6 +47,35 @@ const stepToElement = (step: IRStep, key: number): ReactNode => {
   if (step.kind === 'step') {
     return createElement(Step, { key, kind: 'step', via: step.via, to: step.to });
   }
+  if (step.kind === 'curve') {
+    return createElement(Step, { key, kind: 'curve', to: step.to, control: step.control });
+  }
+  if (step.kind === 'cubic') {
+    return createElement(Step, {
+      key,
+      kind: 'cubic',
+      to: step.to,
+      control1: step.control1,
+      control2: step.control2,
+    });
+  }
+  if (step.kind === 'bend') {
+    if (step.bendAngle !== undefined) {
+      return createElement(Step, {
+        key,
+        kind: 'bend',
+        to: step.to,
+        bendDirection: step.bendDirection,
+        bendAngle: step.bendAngle,
+      });
+    }
+    return createElement(Step, {
+      key,
+      kind: 'bend',
+      to: step.to,
+      bendDirection: step.bendDirection,
+    });
+  }
   return createElement(Step, { key, kind: step.kind, to: step.to });
 };
 

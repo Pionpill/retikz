@@ -215,6 +215,72 @@ describe('convertIRToReactNode', () => {
     expect(back).toEqual(ir);
   });
 
+  it('curve step round-trip：control 字段透传保留', () => {
+    const ir: IR = {
+      version: CURRENT_IR_VERSION,
+      type: 'scene',
+      children: [
+        {
+          type: 'path',
+          children: [
+            { type: 'step', kind: 'move', to: [0, 0] },
+            { type: 'step', kind: 'curve', to: [10, 0], control: [5, 8] },
+          ],
+        },
+      ],
+    };
+    expect(buildIR(convertIRToReactNode(ir))).toEqual(ir);
+  });
+
+  it('cubic step round-trip：control1 / control2 字段透传保留', () => {
+    const ir: IR = {
+      version: CURRENT_IR_VERSION,
+      type: 'scene',
+      children: [
+        {
+          type: 'path',
+          children: [
+            { type: 'step', kind: 'move', to: [0, 0] },
+            { type: 'step', kind: 'cubic', to: [10, 0], control1: [3, 5], control2: [7, 5] },
+          ],
+        },
+      ],
+    };
+    expect(buildIR(convertIRToReactNode(ir))).toEqual(ir);
+  });
+
+  it('bend step round-trip：bendDirection 必填、bendAngle 可选', () => {
+    const irWithAngle: IR = {
+      version: CURRENT_IR_VERSION,
+      type: 'scene',
+      children: [
+        {
+          type: 'path',
+          children: [
+            { type: 'step', kind: 'move', to: [0, 0] },
+            { type: 'step', kind: 'bend', to: [10, 0], bendDirection: 'left', bendAngle: 45 },
+          ],
+        },
+      ],
+    };
+    expect(buildIR(convertIRToReactNode(irWithAngle))).toEqual(irWithAngle);
+
+    const irNoAngle: IR = {
+      version: CURRENT_IR_VERSION,
+      type: 'scene',
+      children: [
+        {
+          type: 'path',
+          children: [
+            { type: 'step', kind: 'move', to: [0, 0] },
+            { type: 'step', kind: 'bend', to: [10, 0], bendDirection: 'right' },
+          ],
+        },
+      ],
+    };
+    expect(buildIR(convertIRToReactNode(irNoAngle))).toEqual(irNoAngle);
+  });
+
   it('未知 child.type → 抛 "unknown IR child type" 错误', () => {
     const badIR = {
       version: CURRENT_IR_VERSION,

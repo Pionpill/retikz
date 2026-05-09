@@ -136,7 +136,15 @@ const readPathChildren = (children: ReactNode): Array<IRStep> => {
     if (name !== TIKZ_STEP) return;
     const props = child.props as Record<string, unknown>;
     const kind =
-      (props.kind as 'move' | 'line' | 'step' | 'cycle' | undefined) ?? 'line';
+      (props.kind as
+        | 'move'
+        | 'line'
+        | 'step'
+        | 'cycle'
+        | 'curve'
+        | 'cubic'
+        | 'bend'
+        | undefined) ?? 'line';
     if (kind === 'cycle') {
       out.push({ type: 'step', kind: 'cycle' });
       return;
@@ -148,6 +156,36 @@ const readPathChildren = (children: ReactNode): Array<IRStep> => {
         via: props.via as '-|' | '|-',
         to: props.to as Exclude<IRStep, { kind: 'cycle' }>['to'],
       });
+      return;
+    }
+    if (kind === 'curve') {
+      out.push({
+        type: 'step',
+        kind: 'curve',
+        to: props.to as Exclude<IRStep, { kind: 'cycle' }>['to'],
+        control: props.control as [number, number],
+      });
+      return;
+    }
+    if (kind === 'cubic') {
+      out.push({
+        type: 'step',
+        kind: 'cubic',
+        to: props.to as Exclude<IRStep, { kind: 'cycle' }>['to'],
+        control1: props.control1 as [number, number],
+        control2: props.control2 as [number, number],
+      });
+      return;
+    }
+    if (kind === 'bend') {
+      const step: Extract<IRStep, { kind: 'bend' }> = {
+        type: 'step',
+        kind: 'bend',
+        to: props.to as Exclude<IRStep, { kind: 'cycle' }>['to'],
+        bendDirection: props.bendDirection as 'left' | 'right',
+      };
+      if (props.bendAngle !== undefined) step.bendAngle = props.bendAngle as number;
+      out.push(step);
       return;
     }
     out.push({

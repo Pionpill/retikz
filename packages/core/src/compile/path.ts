@@ -1,3 +1,4 @@
+import { bendControlPoints } from '../geometry/bend';
 import type { ArrowShape, IRPath, IRPosition, IRStep, IRTarget } from '../ir';
 import type { PathPrim, ScenePrimitive } from '../primitive';
 import { type NodeLayout, anchorOf, angleBoundaryOf, boundaryPointOf } from './node';
@@ -194,7 +195,11 @@ export const emitPathPrimitive = (
   };
 
   /** 单个 path 操作；shrink 阶段需要按 cmd 找到首/末有 point 的项 */
-  type PathOp = { cmd: 'M' | 'L'; point: IRPosition } | { cmd: 'Z' };
+  type PathOp =
+    | { cmd: 'M' | 'L'; point: IRPosition }
+    | { cmd: 'Q'; control: IRPosition; point: IRPosition }
+    | { cmd: 'C'; control1: IRPosition; control2: IRPosition; point: IRPosition }
+    | { cmd: 'Z' };
 
   const ops: Array<PathOp> = [];
   const points: Array<IRPosition> = [];
@@ -215,6 +220,21 @@ export const emitPathPrimitive = (
   const emitZ = () => {
     ops.push({ cmd: 'Z' });
     lastEnd = subPathStart;
+  };
+  const emitQ = (control: IRPosition, p: IRPosition) => {
+    ops.push({ cmd: 'Q', control, point: p });
+    // 控制点纳入 viewBox bbox：曲线视觉范围一定不超过控制点 + 端点的凸包
+    points.push(control);
+    points.push(p);
+    lastEnd = p;
+  };
+  const emitC = (c1: IRPosition, c2: IRPosition, p: IRPosition) => {
+    ops.push({ cmd: 'C', control1: c1, control2: c2, point: p });
+    // 控制点纳入 viewBox bbox（保守，实际 bezier 曲线包络小于凸包）
+    points.push(c1);
+    points.push(c2);
+    points.push(p);
+    lastEnd = p;
   };
   /** 段起点：与 lastEnd 相同就复用 cursor（省掉冗余 M），否则发 M */
   const startSegment = (p: IRPosition) => {
@@ -262,6 +282,33 @@ export const emitPathPrimitive = (
       if (!fromClip || !toClip) return null;
       startSegment(fromClip);
       emitL(toClip);
+      continue;
+    }
+
+    if (step.kind === 'curve') {
+      const fromClip = clipForTarget(prev.step.to, step.control, nodeIndex);
+      const toClip = clipForTarget(step.to, step.control, nodeIndex);
+      if (!fromClip || !toClip) return null;
+      startSegment(fromClip);
+      emitQ(step.control, toClip);
+      continue;
+    }
+    if (step.kind === 'cubic') {
+      const fromClip = clipForTarget(prev.step.to, step.control1, nodeIndex);
+      const toClip = clipForTarget(step.to, step.control2, nodeIndex);
+      if (!fromClip || !toClip) return null;
+      startSegment(fromClip);
+      emitC(step.control1, step.control2, toClip);
+      continue;
+    }
+    if (step.kind === 'bend') {
+      const angle = step.bendAngle ?? 30;
+      const [c1, c2] = bendControlPoints(prev.anchor, currAnchor, step.bendDirection, angle);
+      const fromClip = clipForTarget(prev.step.to, c1, nodeIndex);
+      const toClip = clipForTarget(step.to, c2, nodeIndex);
+      if (!fromClip || !toClip) return null;
+      startSegment(fromClip);
+      emitC(c1, c2, toClip);
       continue;
     }
 
@@ -329,6 +376,12 @@ export const emitPathPrimitive = (
   // ops → token strings（按精度 round）
   const tokens = ops.map(op => {
     if (op.cmd === 'Z') return 'Z';
+    if (op.cmd === 'Q') {
+      return `Q ${round(op.control[0])} ${round(op.control[1])} ${round(op.point[0])} ${round(op.point[1])}`;
+    }
+    if (op.cmd === 'C') {
+      return `C ${round(op.control1[0])} ${round(op.control1[1])} ${round(op.control2[0])} ${round(op.control2[1])} ${round(op.point[0])} ${round(op.point[1])}`;
+    }
     return `${op.cmd} ${round(op.point[0])} ${round(op.point[1])}`;
   });
 

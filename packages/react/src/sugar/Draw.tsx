@@ -6,7 +6,10 @@ import { Step } from '../kernel/Step';
 
 /** <Draw> 组件的 props */
 export type DrawProps = {
-  /** way 数组 DSL：节点 id / 坐标 / 极坐标 / 折角算子 `'-|'` `'|-'` / 闭合 `DrawWay.cycle` */
+  /**
+   * way 数组 DSL：节点 id / 笛卡尔 / 极坐标 / 折角算子 `'-|'` `'|-'` /
+   * 闭合 `DrawWay.cycle` / 曲线算子 `{ curve | cubic | bend }`（infix）
+   */
   way: WayDSL;
   /** 描边色，省略时用 currentColor */
   stroke?: IRPath['stroke'];
@@ -55,6 +58,34 @@ export const Draw: FC<DrawProps> = props => {
         if (s.kind === 'cycle') return <Step key={i} kind="cycle" />;
         if (s.kind === 'move') return <Step key={i} kind="move" to={s.to} />;
         if (s.kind === 'step') return <Step key={i} kind="step" via={s.via} to={s.to} />;
+        if (s.kind === 'curve')
+          return <Step key={i} kind="curve" to={s.to} control={s.control} />;
+        if (s.kind === 'cubic')
+          return (
+            <Step
+              key={i}
+              kind="cubic"
+              to={s.to}
+              control1={s.control1}
+              control2={s.control2}
+            />
+          );
+        if (s.kind === 'bend') {
+          if (s.bendAngle !== undefined) {
+            return (
+              <Step
+                key={i}
+                kind="bend"
+                to={s.to}
+                bendDirection={s.bendDirection}
+                bendAngle={s.bendAngle}
+              />
+            );
+          }
+          return (
+            <Step key={i} kind="bend" to={s.to} bendDirection={s.bendDirection} />
+          );
+        }
         return <Step key={i} kind="line" to={s.to} />;
       })}
     </Path>

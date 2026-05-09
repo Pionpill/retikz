@@ -198,6 +198,95 @@ describe('parseWay', () => {
     });
   });
 
+  describe('曲线算子 (infix, ADR-0001 alpha.3)', () => {
+    it("{ curve } 在两个 target 之间产出 curve step", () => {
+      expect(parseWay(['A', { curve: [5, 8] }, 'B'])).toEqual([
+        { type: 'step', kind: 'move', to: 'A' },
+        { type: 'step', kind: 'curve', to: 'B', control: [5, 8] },
+      ]);
+    });
+
+    it("{ cubic } 在两个 target 之间产出 cubic step", () => {
+      expect(
+        parseWay([
+          'A',
+          { cubic: [[3, 5], [7, 5]] },
+          'B',
+        ]),
+      ).toEqual([
+        { type: 'step', kind: 'move', to: 'A' },
+        { type: 'step', kind: 'cubic', to: 'B', control1: [3, 5], control2: [7, 5] },
+      ]);
+    });
+
+    it("{ bend: 'left' } 默认角度（无 angle 字段，IR 也无 bendAngle）", () => {
+      expect(parseWay(['A', { bend: 'left' }, 'B'])).toEqual([
+        { type: 'step', kind: 'move', to: 'A' },
+        { type: 'step', kind: 'bend', to: 'B', bendDirection: 'left' },
+      ]);
+    });
+
+    it("{ bend: 'right', angle: 60 } 透传 bendAngle", () => {
+      expect(parseWay(['A', { bend: 'right', angle: 60 }, 'B'])).toEqual([
+        { type: 'step', kind: 'move', to: 'A' },
+        {
+          type: 'step',
+          kind: 'bend',
+          to: 'B',
+          bendDirection: 'right',
+          bendAngle: 60,
+        },
+      ]);
+    });
+
+    it("曲线算子可与 line / 折角 / cycle 混用", () => {
+      expect(
+        parseWay([
+          'A',
+          { curve: [50, -30] },
+          'B',
+          [10, 10],
+          { bend: 'right' },
+          'C',
+          DrawWay.cycle,
+        ]),
+      ).toEqual([
+        { type: 'step', kind: 'move', to: 'A' },
+        { type: 'step', kind: 'curve', to: 'B', control: [50, -30] },
+        { type: 'step', kind: 'line', to: [10, 10] },
+        { type: 'step', kind: 'bend', to: 'C', bendDirection: 'right' },
+        { type: 'step', kind: 'cycle' },
+      ]);
+    });
+
+    it("曲线算子在 way 末尾（无下一项）抛错", () => {
+      expect(() => parseWay(['A', { curve: [1, 2] }])).toThrow(
+        /curve operator at end/,
+      );
+      expect(() => parseWay(['A', { bend: 'left' }])).toThrow(
+        /curve operator at end/,
+      );
+    });
+
+    it("曲线算子后接另一个算子 / cycle 抛错", () => {
+      expect(() =>
+        parseWay(['A', { curve: [1, 2] }, '-|', 'B']),
+      ).toThrow(/curve operator must be followed by a target/);
+      expect(() =>
+        parseWay(['A', { bend: 'left' }, DrawWay.cycle]),
+      ).toThrow(/curve operator must be followed by a target/);
+      expect(() =>
+        parseWay(['A', { curve: [1, 2] }, { bend: 'right' }, 'B']),
+      ).toThrow(/curve operator must be followed by a target/);
+    });
+
+    it("折角算子后接曲线算子也抛错（互不允许相邻）", () => {
+      expect(() => parseWay(['A', '-|', { curve: [1, 2] }, 'B'])).toThrow(
+        /via operator '-\|' must be followed by a target/,
+      );
+    });
+  });
+
   describe('错误路径', () => {
     it('空数组抛错（错误信息含解析器名）', () => {
       expect(() => parseWay([])).toThrow(/parseWay: .* at least 2/);

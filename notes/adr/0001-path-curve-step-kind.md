@@ -1,6 +1,6 @@
 # ADR-0001：Path 曲线 step kind（curve / cubic / bend）
 
-- 状态：Proposed
+- 状态：Accepted（2026-05-09 完工）
 - 决策日期：2026-05-09
 - 关联：[v0-roadmap §v0.1.0-alpha.3](../plans/v0-roadmap.md) · [tikz-gap-analysis §2 P0](../analysis/2026-05-07-tikz-gap-analysis.md)
 
