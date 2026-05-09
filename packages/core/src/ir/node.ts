@@ -182,18 +182,40 @@ export const NodeSchema = z
       .number()
       .optional()
       .describe('Border width in user units; defaults to 1 when omitted'),
-    padding: z
+    innerXSep: z
       .number()
+      .nonnegative()
       .optional()
       .describe(
-        'Inner padding in user units between the text content and the node border',
+        'Inner horizontal padding from text to border in user units. Falls back to `padding` then default.',
+      ),
+    innerYSep: z
+      .number()
+      .nonnegative()
+      .optional()
+      .describe(
+        'Inner vertical padding from text to border in user units. Falls back to `padding` then default.',
+      ),
+    outerSep: z
+      .number()
+      .nonnegative()
+      .optional()
+      .describe(
+        'Outer margin from border to path attachment point in user units; does NOT change the visible border. Falls back to `margin`.',
+      ),
+    padding: z
+      .number()
+      .nonnegative()
+      .optional()
+      .describe(
+        'Symmetric inner padding (alias for `innerXSep` + `innerYSep`); axis-specific fields take precedence.',
       ),
     margin: z
       .number()
       .nonnegative()
       .optional()
       .describe(
-        'Outer margin in user units: distance between the visual border and where paths attach. Lines stop this far from the border. Defaults to 0.',
+        'Symmetric outer margin (alias for `outerSep`); axis-specific field takes precedence.',
       ),
     font: FontSchema.optional().describe(
       'Font spec for the inner text label (family / size / weight / style); all fields optional, all fall back to renderer defaults.',

@@ -181,7 +181,13 @@ export const layoutNode = (
   const fontFamily = node.font?.family;
   const fontWeight = node.font?.weight;
   const fontStyle = node.font?.style;
-  const padding = node.padding ?? DEFAULT_PADDING;
+  // 内 / 外边距解析顺序（ADR-0003）：
+  //   axis-specific (innerXSep / innerYSep / outerSep)
+  // → symmetric alias (padding / margin)
+  // → 默认值
+  const xSep = node.innerXSep ?? node.padding ?? DEFAULT_PADDING;
+  const ySep = node.innerYSep ?? node.padding ?? DEFAULT_PADDING;
+  const outerSep = node.outerSep ?? node.margin ?? 0;
   const lineHeight = node.lineHeight ?? fontSize * DEFAULT_LINE_HEIGHT_FACTOR;
   const align = alignToTextAnchor(node.align ?? 'center');
 
@@ -229,9 +235,9 @@ export const layoutNode = (
     textHeight = lines.length * lineHeight;
   }
 
-  // 内框半轴：text 半宽 + padding（保证有最小尺寸）
-  const innerHalfW = Math.max(textWidth / 2 + padding, padding);
-  const innerHalfH = Math.max(textHeight / 2 + padding, padding);
+  // 内框半轴：text 半宽 + xSep / ySep（保证至少 sep 大小，空文本节点也有最小尺寸）
+  const innerHalfW = Math.max(textWidth / 2 + xSep, xSep);
+  const innerHalfH = Math.max(textHeight / 2 + ySep, ySep);
   const shape = node.shape ?? 'rectangle';
 
   // 外接边界（bounding rect）的半轴——按 shape 计算
@@ -281,7 +287,7 @@ export const layoutNode = (
       rotate: rotateDeg * DEG_TO_RAD,
     },
     rotateDeg,
-    margin: node.margin ?? 0,
+    margin: outerSep,
     lines,
     textWidth,
     textHeight,

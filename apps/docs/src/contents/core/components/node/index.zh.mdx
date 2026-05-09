@@ -102,6 +102,17 @@ Line 2`}</Node>
 
 <ComponentPreview name="node-multiline-shapes" />
 
+### 内 / 外边距
+
+内 / 外边距支持**对称别名**与**轴特化**两套写法（解析顺序：轴特化 ?? 别名 ?? 默认）：
+
+- 内边距：`padding`（对称） · `innerXSep` / `innerYSep`（分轴）
+- 外边距：`margin`（对称） · `outerSep`（分轴目前只有 outer 一个；TikZ 也是单值）
+
+90% 场景写 `padding={N}` 就够；做 button-like 扁宽节点等少数场景再用轴特化。
+
+<ComponentPreview name="node-sep" />
+
 ### 旋转
 
 `rotate` 绕节点中心旋转；连线会跟着新边界点贴：
@@ -122,8 +133,11 @@ Line 2`}</Node>
 | `fill` | `string` | — | 背景色（任意 CSS 颜色） |
 | `stroke` | `string` | `currentColor` | 边框色 |
 | `strokeWidth` | `number` | `1` | 边框宽度（user units） |
-| `padding` | `number` | — | 文字到 border 的内边距 |
-| `margin` | `number` | `0` | border 到 path 附着点的外边距；**不影响 border 位置**，影响连线起止 |
+| `innerXSep` | `number` | — | 横向内边距（text → 左右 border）；不填走 `padding` 兜底 |
+| `innerYSep` | `number` | — | 纵向内边距（text → 上下 border）；不填走 `padding` 兜底 |
+| `outerSep` | `number` | — | 外边距（border → path 附着点）；不填走 `margin` 兜底 |
+| `padding` | `number` | `8` | 内边距对称别名；轴特化字段优先 |
+| `margin` | `number` | `0` | 外边距对称别名；`outerSep` 优先；**不影响 border 位置**，只影响连线起止 |
 | `font` | `{ family?, size?, weight?, style? }` | — | 字体规格；嵌套对象，所有字段可选 |
 
 ## margin 与 padding 的区别

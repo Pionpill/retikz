@@ -14,6 +14,9 @@ const nodePropsFromIR = (n: IRNode): NodeProps => {
   if (n.align !== undefined) props.align = n.align;
   if (n.lineHeight !== undefined) props.lineHeight = n.lineHeight;
   if (n.font !== undefined) props.font = n.font;
+  if (n.innerXSep !== undefined) props.innerXSep = n.innerXSep;
+  if (n.innerYSep !== undefined) props.innerYSep = n.innerYSep;
+  if (n.outerSep !== undefined) props.outerSep = n.outerSep;
   if (n.padding !== undefined) props.padding = n.padding;
   if (n.margin !== undefined) props.margin = n.margin;
   if (n.fill !== undefined) props.fill = n.fill;

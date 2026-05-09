@@ -42,9 +42,15 @@ export type NodeProps = {
   lineHeight?: number;
   /** 字体规格：family / size / weight / style 全部可选；不填走渲染端默认值 */
   font?: IRFont;
-  /** 内边距：内容到 border 的距离 */
+  /** 横向内边距（text → 左右 border）；不填走 `padding` 兜底，再走默认 */
+  innerXSep?: number;
+  /** 纵向内边距（text → 上下 border）；不填走 `padding` 兜底，再走默认 */
+  innerYSep?: number;
+  /** 外边距（border → path 附着点）；不影响 border 位置；不填走 `margin` 兜底 */
+  outerSep?: number;
+  /** 内边距对称别名——等价于同时设 `innerXSep` 和 `innerYSep`；轴特化字段优先 */
   padding?: number;
-  /** 外边距：border 到 path 附着点的距离；不影响 border 位置；必须 ≥ 0 */
+  /** 外边距对称别名——等价于 `outerSep`；轴特化字段优先 */
   margin?: number;
   /** 背景色 */
   fill?: IRNode['fill'];

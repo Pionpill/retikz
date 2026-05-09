@@ -102,6 +102,17 @@ Multi-line text combined with each shape — outer boundary follows the shape-sp
 
 <ComponentPreview name="node-multiline-shapes" />
 
+### Inner / outer sep
+
+Both **symmetric aliases** and **axis-specific** forms are supported (resolution order: axis-specific ?? alias ?? default):
+
+- Inner: `padding` (symmetric) · `innerXSep` / `innerYSep` (per-axis)
+- Outer: `margin` (symmetric) · `outerSep` (single — TikZ also keeps a single outer)
+
+90% of the time `padding={N}` is enough; reach for axis-specific only when you need button-like wide-but-flat nodes etc.
+
+<ComponentPreview name="node-sep" />
+
 ### Rotation
 
 `rotate` rotates around the node center; attached paths follow the new border:
@@ -122,8 +133,11 @@ Multi-line text combined with each shape — outer boundary follows the shape-sp
 | `fill` | `string` | — | Background color (any CSS color) |
 | `stroke` | `string` | `currentColor` | Border color |
 | `strokeWidth` | `number` | `1` | Border width (user units) |
-| `padding` | `number` | — | Inner padding between text and border |
-| `margin` | `number` | `0` | Outer margin between border and path attachment point; **does not affect border position**, affects where lines stop |
+| `innerXSep` | `number` | — | Horizontal inner padding (text → left/right border); falls back to `padding` |
+| `innerYSep` | `number` | — | Vertical inner padding (text → top/bottom border); falls back to `padding` |
+| `outerSep` | `number` | — | Outer margin (border → path attachment point); falls back to `margin` |
+| `padding` | `number` | `8` | Symmetric inner padding alias; axis-specific fields take precedence |
+| `margin` | `number` | `0` | Symmetric outer margin alias; `outerSep` takes precedence; **does not affect border position**, only path endpoints |
 | `font` | `{ family?, size?, weight?, style? }` | — | Font spec; nested object, all fields optional |
 
 ## margin vs padding
