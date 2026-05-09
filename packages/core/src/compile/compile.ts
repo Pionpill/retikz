@@ -58,12 +58,12 @@ export const compileToScene = (ir: IR, options: CompileOptions = {}): Scene => {
     }
   }
 
-  // Pass 2: 路径解析 → 发出 path primitive
+  // Pass 2: 路径解析 → 发出 path primitive（可能附带 ADR-0004 边标注 TextPrim）
   for (const child of ir.children) {
     if (child.type === 'path') {
-      const result = emitPathPrimitive(child, nodeIndex, round);
+      const result = emitPathPrimitive(child, nodeIndex, round, measureText);
       if (result) {
-        primitives.push(result.primitive);
+        for (const prim of result.primitives) primitives.push(prim);
         for (const p of result.points) allPoints.push(p);
       }
     }

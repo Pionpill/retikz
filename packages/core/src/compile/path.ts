@@ -1,10 +1,28 @@
 import { arcBoundingPoints, arcEndPoint, arcSvgFlags } from '../geometry/arc';
 import { bendControlPoints } from '../geometry/bend';
-import type { ArrowShape, IRPath, IRPosition, IRStep, IRTarget } from '../ir';
-import type { PathPrim, ScenePrimitive } from '../primitive';
+import {
+  type SegmentSample,
+  arcSegmentSample,
+  circleSegmentSample,
+  cubicSegmentSample,
+  ellipseSegmentSample,
+  foldSegmentSample,
+  lineSegmentSample,
+  quadSegmentSample,
+} from '../geometry/segment';
+import type {
+  ArrowShape,
+  IRPath,
+  IRPosition,
+  IRStep,
+  IRStepLabel,
+  IRTarget,
+} from '../ir';
+import type { PathPrim, ScenePrimitive, TextPrim } from '../primitive';
 import { type NodeLayout, anchorOf, angleBoundaryOf, boundaryPointOf } from './node';
 import { parseNodeRef } from './parseTarget';
 import { resolvePosition } from './position';
+import { type TextMeasurer, fallbackMeasurer } from './text-metrics';
 
 /**
  * IR 的 path-level `arrow` + `arrowShape` 映射到 PathPrim 的
@@ -148,6 +166,113 @@ const clipForTarget = (
 const samePoint = (a: IRPosition | null, b: IRPosition | null): boolean =>
   !!a && !!b && a[0] === b[0] && a[1] === b[1];
 
+/** ADR-0004：边标注的默认字号 / 偏移量（user units） */
+const LABEL_FONT_SIZE = 14;
+const LABEL_LINE_HEIGHT_FACTOR = 1.2;
+const LABEL_SIDE_OFFSET = 4;
+const RAD_TO_DEG = 180 / Math.PI;
+
+/** label.position → 段参数 t */
+const tForLabelPosition = (pos: IRStepLabel['position']): number =>
+  pos === 'near-start' ? 0.25 : pos === 'near-end' ? 0.75 : 0.5;
+
+/**
+ * 把 step.label + 段采样结果翻成 TextPrim（sloped 时再裹一层 group 旋转）。
+ *
+ * 几何（默认 side='above'，position='midway'）：
+ * - 'above': 锚点 (x, y - LABEL_SIDE_OFFSET)，align=middle, baseline=bottom
+ * - 'below': 锚点 (x, y + LABEL_SIDE_OFFSET)，align=middle, baseline=top
+ * - 'left' : 锚点 (x - LABEL_SIDE_OFFSET, y)，align=end,    baseline=middle
+ * - 'right': 锚点 (x + LABEL_SIDE_OFFSET, y)，align=start,  baseline=middle
+ * - 'sloped': 锚点 (x, y) 不偏移，align=middle baseline=bottom，外裹 group
+ *   `transform="rotate(angle x y)"`，angle 由切线 atan2 算出（SVG y-down，CW 正向）
+ *
+ * 文本宽高交给 measureText；fallbackMeasurer 时只是估算，但不影响渲染坐标。
+ * 返回 primitive + 用于 viewBox 的若干外接点（sloped 时按"近似最大半径"四角扩张）。
+ */
+const emitLabelPrimitive = (
+  label: IRStepLabel,
+  sample: SegmentSample,
+  measureText: TextMeasurer,
+  round: (n: number) => number,
+): { primitive: ScenePrimitive; points: Array<IRPosition> } => {
+  const fontSize = LABEL_FONT_SIZE;
+  const lineHeight = fontSize * LABEL_LINE_HEIGHT_FACTOR;
+  const m = measureText(label.text, { size: fontSize });
+  const measuredWidth = m.width;
+  const measuredHeight = m.height || lineHeight;
+  const side = label.side ?? 'above';
+
+  let x = sample.point[0];
+  let y = sample.point[1];
+  let align: 'start' | 'middle' | 'end' = 'middle';
+  let baseline: 'top' | 'middle' | 'bottom' | 'alphabetic' = 'middle';
+
+  if (side === 'above') {
+    y -= LABEL_SIDE_OFFSET;
+    baseline = 'bottom';
+  } else if (side === 'below') {
+    y += LABEL_SIDE_OFFSET;
+    baseline = 'top';
+  } else if (side === 'left') {
+    x -= LABEL_SIDE_OFFSET;
+    align = 'end';
+  } else if (side === 'right') {
+    x += LABEL_SIDE_OFFSET;
+    align = 'start';
+  } else {
+    // sloped：锚点不偏移；标签贴段，baseline 取 bottom（视觉上"在线上方"）
+    baseline = 'bottom';
+  }
+
+  const text: TextPrim = {
+    type: 'text',
+    x: round(x),
+    y: round(y),
+    lines: [{ text: label.text }],
+    fontSize,
+    align,
+    baseline,
+    lineHeight: round(lineHeight),
+    measuredWidth: round(measuredWidth),
+    measuredHeight: round(measuredHeight),
+    fill: 'currentColor',
+  };
+
+  if (side === 'sloped') {
+    const angleDeg = Math.atan2(sample.tangent[1], sample.tangent[0]) * RAD_TO_DEG;
+    const groupPrim: ScenePrimitive = {
+      type: 'group',
+      transform: `rotate(${round(angleDeg)} ${round(x)} ${round(y)})`,
+      children: [text],
+    };
+    // viewBox bbox：sloped 旋转后用半径外接近似——四角点
+    const r = Math.max(measuredWidth / 2, measuredHeight / 2);
+    return {
+      primitive: groupPrim,
+      points: [
+        [x - r, y - r],
+        [x + r, y - r],
+        [x - r, y + r],
+        [x + r, y + r],
+      ],
+    };
+  }
+
+  // 非 sloped：把锚点 + 文本块四角加进 bbox 候选（保守，避免 viewBox 把标签裁掉）
+  const halfW = measuredWidth / 2;
+  const halfH = measuredHeight / 2;
+  return {
+    primitive: text,
+    points: [
+      [x - halfW, y - halfH],
+      [x + halfW, y - halfH],
+      [x - halfW, y + halfH],
+      [x + halfW, y + halfH],
+    ],
+  };
+};
+
 /**
  * 把 rel / relAccumulate 目标解析为绝对 Position，产出 step kind 不变但
  * `to` 字段全为绝对坐标的步序列。
@@ -254,11 +379,36 @@ export const emitPathPrimitive = (
   path: IRPath,
   nodeIndex: Map<string, NodeLayout>,
   round: (n: number) => number,
-): { primitive: ScenePrimitive; points: Array<IRPosition> } | null => {
+  measureText: TextMeasurer = fallbackMeasurer,
+): { primitives: Array<ScenePrimitive>; points: Array<IRPosition> } | null => {
   // ADR-0003 Task 2：先把所有 rel / relAccumulate 目标解析为绝对坐标，
   // 后续算法对 step.to 的处理就和绝对坐标完全一致。
   const steps = normalizeRelativeTargets(path.children, nodeIndex);
   if (steps.length < 2) return null;
+
+  /** ADR-0004：每段 step.label 翻译出的 TextPrim（或裹 sloped 旋转的 group），
+   *  与 path 主体 primitive 同级返回；调用方 push 进 scene.primitives */
+  const labelPrims: Array<ScenePrimitive> = [];
+
+  /** 为当前 step 收 label：算 sample 后调用 emitLabelPrimitive，结果累积到 labelPrims / points */
+  const collectLabel = (
+    step: IRStep,
+    sampleAt: (t: number) => SegmentSample,
+  ): void => {
+    if (
+      step.kind === 'move' ||
+      step.kind === 'cycle' ||
+      !('label' in step) ||
+      !step.label
+    ) {
+      return;
+    }
+    const t = tForLabelPosition(step.label.position);
+    const sample = sampleAt(t);
+    const r = emitLabelPrimitive(step.label, sample, measureText, round);
+    labelPrims.push(r.primitive);
+    for (const p of r.points) points.push(p);
+  };
 
   // "无 to" 的 step kinds：cycle / arc / circlePath / ellipsePath
   // （后三者由 ADR-0002 引入，task 1 仅占位、task 3 才实现真正的几何）
@@ -423,6 +573,9 @@ export const emitPathPrimitive = (
       for (const p of arcBoundingPoints(center, step.radius, step.startAngle, step.endAngle)) {
         points.push(p);
       }
+      collectLabel(step, t =>
+        arcSegmentSample(center, step.radius, step.startAngle, step.endAngle, t),
+      );
       // 后续段从弧终点继续（lastEnd 已经在 emitA 设为 endPt，与 SVG cursor 一致）
       penOverride = endPt;
       continue;
@@ -447,6 +600,8 @@ export const emitPathPrimitive = (
       points.push([center[0], center[1] + r]);
       points.push([center[0], center[1] - r]);
 
+      collectLabel(step, t => circleSegmentSample(center, r, t));
+
       // ADR-0002 决策：画完圆 / 椭圆笔位回到 center。lastEnd 保留 SVG 实际
       // cursor（= right），下一段用 penOverride=center 触发 startSegment 发 M。
       penOverride = center;
@@ -469,6 +624,8 @@ export const emitPathPrimitive = (
       points.push([center[0], center[1] + ry]);
       points.push([center[0], center[1] - ry]);
 
+      collectLabel(step, t => ellipseSegmentSample(center, rx, ry, t));
+
       penOverride = center;
       continue;
     }
@@ -488,6 +645,7 @@ export const emitPathPrimitive = (
       if (!fromClip || !toClip) return null;
       startSegment(fromClip);
       emitL(toClip);
+      collectLabel(step, t => lineSegmentSample(fromClip, toClip, t));
       continue;
     }
 
@@ -497,6 +655,7 @@ export const emitPathPrimitive = (
       if (!fromClip || !toClip) return null;
       startSegment(fromClip);
       emitQ(step.control, toClip);
+      collectLabel(step, t => quadSegmentSample(fromClip, step.control, toClip, t));
       continue;
     }
     if (step.kind === 'cubic') {
@@ -505,6 +664,9 @@ export const emitPathPrimitive = (
       if (!fromClip || !toClip) return null;
       startSegment(fromClip);
       emitC(step.control1, step.control2, toClip);
+      collectLabel(step, t =>
+        cubicSegmentSample(fromClip, step.control1, step.control2, toClip, t),
+      );
       continue;
     }
     if (step.kind === 'bend') {
@@ -515,6 +677,7 @@ export const emitPathPrimitive = (
       if (!fromClip || !toClip) return null;
       startSegment(fromClip);
       emitC(c1, c2, toClip);
+      collectLabel(step, t => cubicSegmentSample(fromClip, c1, c2, toClip, t));
       continue;
     }
 
@@ -526,6 +689,7 @@ export const emitPathPrimitive = (
     startSegment(fromClip);
     emitL(corner);
     emitL(toClip);
+    collectLabel(step, t => foldSegmentSample(fromClip, corner, toClip, t));
   }
 
   const strokeWidth = path.strokeWidth ?? 1;
@@ -609,7 +773,7 @@ export const emitPathPrimitive = (
       ...baseProps,
       ...markers,
     };
-    return { primitive, points };
+    return { primitives: [primitive, ...labelPrims], points };
   }
 
   // 多 sub-path + 有箭头：split 成多个 PathPrim 分别只挂"首段 marker-start / 末段 marker-end"，
@@ -632,9 +796,9 @@ export const emitPathPrimitive = (
     };
   });
 
-  const primitive: ScenePrimitive = {
+  const groupPrim: ScenePrimitive = {
     type: 'group',
     children: subPathPrims,
   };
-  return { primitive, points };
+  return { primitives: [groupPrim, ...labelPrims], points };
 };
