@@ -19,6 +19,7 @@ export {
   StepSchema,
   NodeSchema,
   FontSchema,
+  NodeTextSchema,
   PathSchema,
   ChildSchema,
   SceneSchema,
@@ -39,8 +40,9 @@ export type {
   IR,
   ArrowShape,
   NodeShape,
+  NodeTextAlign,
 } from './ir';
-export { ARROW_SHAPES, NODE_SHAPES } from './ir';
+export { ARROW_SHAPES, NODE_SHAPES, NODE_TEXT_ALIGNS } from './ir';
 
 // Primitive (Scene 数据模型)
 export type {

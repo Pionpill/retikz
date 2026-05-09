@@ -10,29 +10,33 @@ const getDisplayName = (el: ReactElement): string | undefined => {
   return t.displayName;
 };
 
-/** 把 <Node> props 翻成 IRChild；text 优先取 props.text，其次取字符串 children */
-const buildNode = (props: Record<string, unknown>): IRChild => {
-  const text =
-    typeof props.text === 'string'
-      ? props.text
-      : typeof props.children === 'string'
-        ? props.children
-        : undefined;
-  return {
-    type: 'node',
-    id: props.id as string | undefined,
-    shape: props.shape as IRNode['shape'],
-    position: props.position as IRNode['position'],
-    rotate: props.rotate as number | undefined,
-    text,
-    fill: props.fill as string | undefined,
-    stroke: props.stroke as string | undefined,
-    strokeWidth: props.strokeWidth as number | undefined,
-    padding: props.padding as number | undefined,
-    margin: props.margin as number | undefined,
-    font: props.font as IRNode['font'],
-  };
+/** props.text 接受 string 或 string[]；children 兜底仅取字符串单行 */
+const readNodeText = (props: Record<string, unknown>): IRNode['text'] => {
+  if (typeof props.text === 'string') return props.text;
+  if (Array.isArray(props.text) && props.text.every(s => typeof s === 'string')) {
+    return props.text;
+  }
+  if (typeof props.children === 'string') return props.children;
+  return undefined;
 };
+
+/** 把 <Node> props 翻成 IRChild；text 优先取 props.text，其次取字符串 children */
+const buildNode = (props: Record<string, unknown>): IRChild => ({
+  type: 'node',
+  id: props.id as string | undefined,
+  shape: props.shape as IRNode['shape'],
+  position: props.position as IRNode['position'],
+  rotate: props.rotate as number | undefined,
+  text: readNodeText(props),
+  align: props.align as IRNode['align'],
+  lineHeight: props.lineHeight as number | undefined,
+  fill: props.fill as string | undefined,
+  stroke: props.stroke as string | undefined,
+  strokeWidth: props.strokeWidth as number | undefined,
+  padding: props.padding as number | undefined,
+  margin: props.margin as number | undefined,
+  font: props.font as IRNode['font'],
+});
 
 /**
  * 扫描 <Path> children 收集 <Step> 序列。

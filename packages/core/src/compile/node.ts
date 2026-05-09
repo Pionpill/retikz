@@ -11,8 +11,15 @@ import type { TextMeasurer } from './text-metrics';
 
 const DEFAULT_FONT_SIZE = 14;
 const DEFAULT_PADDING = 8;
+const DEFAULT_LINE_HEIGHT_FACTOR = 1.2;
 const DEG_TO_RAD = Math.PI / 180;
 const SQRT2 = Math.SQRT2;
+
+/** IR `align` ('left' | 'center' | 'right') → SVG textAnchor ('start' | 'middle' | 'end') */
+const alignToTextAnchor = (
+  a: 'left' | 'center' | 'right',
+): 'start' | 'middle' | 'end' =>
+  a === 'left' ? 'start' : a === 'right' ? 'end' : 'middle';
 
 export type NodeLayout = {
   /** 节点 id（如 IR Node 提供）；其他位置可通过 id 引用本节点 */
@@ -33,12 +40,16 @@ export type NodeLayout = {
   rotateDeg: number;
   /** 外边距（user units，≥ 0）；path 附着到形状外扩 margin 的虚拟边界上 */
   margin: number;
-  /** 节点文本内容；空字符串视为无文本（undefined） */
-  text?: string;
-  /** 文本宽度（user units），由 TextMeasurer 算出 */
+  /** 节点文本行；undefined 表示无文本，否则非空数组（每行一个字符串） */
+  lines?: Array<string>;
+  /** 文本块宽度（user units）= max(per-line measureText.width) */
   textWidth: number;
-  /** 文本高度（user units），由 TextMeasurer 算出 */
+  /** 文本块高度（user units）≈ lines × lineHeight */
   textHeight: number;
+  /** 文本对齐（已映射到 SVG textAnchor 三态）；emit 时透传给 TextPrim.align */
+  align: 'start' | 'middle' | 'end';
+  /** 行高（user units），已应用默认值；emit 时透传给 TextPrim.lineHeight */
+  lineHeight: number;
   /** 文本字号（user units），已应用默认值 */
   fontSize: number;
   /** 字体族；CSS font-family；emit 时透传给 TextPrim */
@@ -167,17 +178,36 @@ export const layoutNode = (
   const fontWeight = node.font?.weight;
   const fontStyle = node.font?.style;
   const padding = node.padding ?? DEFAULT_PADDING;
-  const metrics = node.text
-    ? measureText(node.text, {
+  const lineHeight = node.lineHeight ?? fontSize * DEFAULT_LINE_HEIGHT_FACTOR;
+  const align = alignToTextAnchor(node.align ?? 'center');
+
+  // 标准化为 Array<string>：单字符串 → 单元素数组；空数组在 schema 阶段已被拒
+  const lines: Array<string> | undefined =
+    node.text === undefined
+      ? undefined
+      : typeof node.text === 'string'
+        ? [node.text]
+        : node.text;
+
+  // 多行：max 宽度 / 行数 × lineHeight 高度
+  let textWidth = 0;
+  let textHeight = 0;
+  if (lines) {
+    for (const line of lines) {
+      const m = measureText(line, {
         size: fontSize,
         family: fontFamily,
         weight: fontWeight,
         style: fontStyle,
-      })
-    : { width: 0, height: 0 };
+      });
+      if (m.width > textWidth) textWidth = m.width;
+    }
+    textHeight = lines.length * lineHeight;
+  }
+
   // 内框半轴：text 半宽 + padding（保证有最小尺寸）
-  const innerHalfW = Math.max(metrics.width / 2 + padding, padding);
-  const innerHalfH = Math.max(metrics.height / 2 + padding, padding);
+  const innerHalfW = Math.max(textWidth / 2 + padding, padding);
+  const innerHalfH = Math.max(textHeight / 2 + padding, padding);
   const shape = node.shape ?? 'rectangle';
 
   // 外接边界（bounding rect）的半轴——按 shape 计算
@@ -228,9 +258,11 @@ export const layoutNode = (
     },
     rotateDeg,
     margin: node.margin ?? 0,
-    text: node.text,
-    textWidth: metrics.width,
-    textHeight: metrics.height,
+    lines,
+    textWidth,
+    textHeight,
+    align,
+    lineHeight,
     fontSize,
     fontFamily,
     fontWeight,
@@ -326,18 +358,25 @@ export const emitNodePrimitives = (
   }
 
   const inner: Array<ScenePrimitive> = [shapePrim];
-  if (layout.text) {
+  if (layout.lines) {
+    // align=left: 块左边对齐——TextPrim.x = 中心 - 块半宽，textAnchor=start
+    // align=right: 块右边对齐——TextPrim.x = 中心 + 块半宽，textAnchor=end
+    // align=middle: 居中——TextPrim.x = 中心
+    const halfBlockW = layout.textWidth / 2;
+    const xOffset =
+      layout.align === 'start' ? -halfBlockW : layout.align === 'end' ? halfBlockW : 0;
     inner.push({
       type: 'text',
-      x: round(layout.rect.x),
+      x: round(layout.rect.x + xOffset),
       y: round(layout.rect.y),
-      content: layout.text,
+      lines: layout.lines,
       fontSize: layout.fontSize,
       fontFamily: layout.fontFamily,
       fontWeight: layout.fontWeight,
       fontStyle: layout.fontStyle,
-      align: 'middle',
+      align: layout.align,
       baseline: 'middle',
+      lineHeight: round(layout.lineHeight),
       fill: 'currentColor',
       measuredWidth: round(layout.textWidth),
       measuredHeight: round(layout.textHeight),

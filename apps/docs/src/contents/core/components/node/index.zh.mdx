@@ -47,6 +47,14 @@ import { Node } from '@retikz/react';
 
 <ComponentPreview name="node-font" />
 
+### 多行文本
+
+`text` 既可以是字符串（单行），也可以是字符串数组（一元素一行）。`align` 控制多行块内各行水平对齐方式（`'left'` / `'center'`（默认）/ `'right'`），`lineHeight` 控制相邻行的间距，未设走 `font.size × 1.2`。
+
+<ComponentPreview name="node-multiline" />
+
+> 选数组而非 `'\n'` 字符串：JSON 友好（无 escape 困扰）；行级属性扩展空间预留。
+
 ### 旋转
 
 `rotate` 绕节点中心旋转；连线会跟着新边界点贴：
@@ -60,7 +68,9 @@ import { Node } from '@retikz/react';
 | `id` | `string` | — | 唯一标识；被 `<Path>` / `<Draw>` 用来引用 |
 | `shape` | `'rectangle' \| 'circle' \| 'ellipse' \| 'diamond'` | `'rectangle'` | 节点形状 |
 | `position` | `[x, y] \| PolarPosition` | — | 节点中心位置（笛卡尔或极坐标） |
-| `children` / `text` | `string` | — | 节点内可见文字；二选一，`text` 优先 |
+| `children` / `text` | `string \| Array<string>` | — | 节点内可见文字；字符串单行 / 数组多行；`text` 优先于 `children` |
+| `align` | `'left' \| 'center' \| 'right'` | `'center'` | 多行文本块内各行水平对齐方式 |
+| `lineHeight` | `number` | `font.size × 1.2` | 多行块的行高（user units） |
 | `rotate` | `number` | `0` | 绕中心旋转角度（度，正值顺时针） |
 | `fill` | `string` | — | 背景色（任意 CSS 颜色） |
 | `stroke` | `string` | `currentColor` | 边框色 |

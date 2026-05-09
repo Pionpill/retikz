@@ -11,6 +11,8 @@ const nodePropsFromIR = (n: IRNode): NodeProps => {
   if (n.shape !== undefined) props.shape = n.shape;
   if (n.rotate !== undefined) props.rotate = n.rotate;
   if (n.text !== undefined) props.text = n.text;
+  if (n.align !== undefined) props.align = n.align;
+  if (n.lineHeight !== undefined) props.lineHeight = n.lineHeight;
   if (n.font !== undefined) props.font = n.font;
   if (n.padding !== undefined) props.padding = n.padding;
   if (n.margin !== undefined) props.margin = n.margin;

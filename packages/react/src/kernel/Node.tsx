@@ -1,5 +1,11 @@
 import type { FC, ReactNode } from 'react';
-import type { IRFont, IRNode, IRPosition, PolarPosition } from '@retikz/core';
+import type {
+  IRFont,
+  IRNode,
+  IRPosition,
+  NodeTextAlign,
+  PolarPosition,
+} from '@retikz/core';
 import { TIKZ_NODE } from './_displayNames';
 
 /** <Node> 组件的 props */
@@ -14,8 +20,12 @@ export type NodeProps = {
   rotate?: number;
   /** 文本内容；也支持 children 形式（仅字符串） */
   children?: ReactNode;
-  /** 显式 text，优先级高于 children */
-  text?: string;
+  /** 显式 text；单字符串 = 一行，数组 = 每元素一行；优先级高于 children */
+  text?: string | Array<string>;
+  /** 多行文本对齐：left / center（默认）/ right；只影响多行块内各行的水平对齐 */
+  align?: NodeTextAlign;
+  /** 行高（user units）；不填走 `font.size × 1.2` 默认 */
+  lineHeight?: number;
   /** 字体规格：family / size / weight / style 全部可选；不填走渲染端默认值 */
   font?: IRFont;
   /** 内边距：内容到 border 的距离 */

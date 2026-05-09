@@ -62,6 +62,29 @@ export const FontSchema = z
 /** 节点字体规格（IR 层）——所有字段可选，编译期解析默认值 */
 export type IRFont = z.infer<typeof FontSchema>;
 
+/**
+ * 节点文本——单行字符串或非空多行数组：
+ * - `'Hello'` 等价于 `['Hello']`，按一行渲染
+ * - `['Line 1', 'Line 2']` 渲染为多个 `<tspan>`，垂直堆叠
+ *
+ * 选 `Array<string>` 而非 `'\n'` 字符串：JSON 友好（无 escape）；行级属性扩展空间预留。
+ */
+export const NodeTextSchema = z
+  .union([z.string(), z.array(z.string()).min(1)])
+  .describe(
+    'Text label rendered inside the node: a single string for one line, or a non-empty array of strings (one element per line).',
+  );
+
+/** 节点文本对齐（多行内文本对齐）——TikZ `align=` 同义词 */
+export const NODE_TEXT_ALIGNS = {
+  left: 'left',
+  center: 'center',
+  right: 'right',
+} as const;
+
+/** 多行文本对齐字面量类型 */
+export type NodeTextAlign = ValueOf<typeof NODE_TEXT_ALIGNS>;
+
 export const NodeSchema = z
   .object({
     type: z
@@ -91,10 +114,20 @@ export const NodeSchema = z
       .describe(
         'Rotation in degrees around the node center; positive = clockwise (matches TikZ rotate=...)',
       ),
-    text: z
-      .string()
+    text: NodeTextSchema.optional(),
+    align: z
+      .nativeEnum(NODE_TEXT_ALIGNS)
       .optional()
-      .describe('Text label rendered inside the node; omit for an empty node'),
+      .describe(
+        'Multi-line text alignment within the text block; `left` / `center` / `right`. Defaults to `center` (matches TikZ).',
+      ),
+    lineHeight: z
+      .number()
+      .positive()
+      .optional()
+      .describe(
+        'Line height in user units; falls back to `font.size × 1.2` when omitted.',
+      ),
     fill: z
       .string()
       .optional()

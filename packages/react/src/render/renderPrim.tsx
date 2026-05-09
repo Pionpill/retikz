@@ -84,7 +84,19 @@ export const renderPrim = (
         />
       );
     }
-    case 'text':
+    case 'text': {
+      // 多行块的整体垂直对齐：把首行 dy 推算成"整块在 (x, y) 上正确 baseline 对齐"
+      // - middle: 块中心对齐 → 首行向上推 (n-1)/2 × lineHeight
+      // - top:    块顶对齐    → 首行 dy=0
+      // - bottom: 块底对齐    → 首行向上推 (n-1) × lineHeight
+      // - alphabetic: 与 top 相同（baseline 落在首行字底）
+      const n = p.lines.length;
+      const firstDy =
+        p.baseline === 'middle'
+          ? (-(n - 1) / 2) * p.lineHeight
+          : p.baseline === 'bottom'
+            ? -(n - 1) * p.lineHeight
+            : 0;
       return (
         <text
           key={key}
@@ -99,9 +111,14 @@ export const renderPrim = (
           fill={p.fill}
           opacity={p.opacity}
         >
-          {p.content}
+          {p.lines.map((line, i) => (
+            <tspan key={i} x={p.x} dy={i === 0 ? firstDy : p.lineHeight}>
+              {line}
+            </tspan>
+          ))}
         </text>
       );
+    }
     case 'path': {
       const startId =
         p.arrowStart && ctx.arrowMarkerIdFor ? ctx.arrowMarkerIdFor(p.arrowStart) : undefined;
