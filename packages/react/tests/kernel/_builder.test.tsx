@@ -196,4 +196,52 @@ describe('buildIR', () => {
     );
     expect(fromSugar).toEqual(fromKernel);
   });
+
+  it('<Step to="+1,0" /> sugar 字符串解析为 { rel: [1, 0] }', () => {
+    const ir = buildIR(
+      <Path>
+        <Step kind="move" to="A" />
+        <Step to="+1,0" />
+      </Path>,
+    );
+    expect(ir.children[0]).toMatchObject({
+      type: 'path',
+      children: [
+        { type: 'step', kind: 'move', to: 'A' },
+        { type: 'step', kind: 'line', to: { rel: [1, 0] } },
+      ],
+    });
+  });
+
+  it('<Step to="++2,3" kind="curve" control={...} /> sugar 字符串走 relAccumulate', () => {
+    const ir = buildIR(
+      <Path>
+        <Step kind="move" to="A" />
+        <Step kind="curve" to="++2,3" control={[1, 1]} />
+      </Path>,
+    );
+    expect(ir.children[0]).toMatchObject({
+      type: 'path',
+      children: [
+        { type: 'step', kind: 'move', to: 'A' },
+        {
+          type: 'step',
+          kind: 'curve',
+          to: { relAccumulate: [2, 3] },
+          control: [1, 1],
+        },
+      ],
+    });
+  });
+
+  it('<Draw way={[..., "+5,0"]}> 与 <Path><Step to="+5,0" /></Path> 等价', () => {
+    const fromSugar = buildIR(<Draw way={['A', '+5,0']} />);
+    const fromKernel = buildIR(
+      <Path>
+        <Step kind="move" to="A" />
+        <Step to="+5,0" />
+      </Path>,
+    );
+    expect(fromSugar).toEqual(fromKernel);
+  });
 });

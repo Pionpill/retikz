@@ -13,6 +13,7 @@ import type {
   IRStep,
   IRTarget,
 } from '../ir';
+import { parseTargetSugar } from './parseTargetSugar';
 
 /**
  * Sugar 层 way 数组的"关键字常量"。
@@ -191,7 +192,8 @@ export const parseWay = (way: WayDSL): Array<IRStep> => {
     throw new Error('parseWay: way must contain at least 2 items');
   }
   const out: Array<IRStep> = [];
-  const moveTarget = targetOf(way[0]) ?? [0, 0];
+  const rawMove = targetOf(way[0]);
+  const moveTarget: IRTarget = rawMove === null ? [0, 0] : parseTargetSugar(rawMove);
   const moveStep: IRMoveStep = { type: 'step', kind: 'move', to: moveTarget };
   out.push(moveStep);
   for (let i = 1; i < way.length; i++) {
@@ -217,7 +219,7 @@ export const parseWay = (way: WayDSL): Array<IRStep> => {
         type: 'step',
         kind: 'step',
         via: item,
-        to: next as IRTarget,
+        to: parseTargetSugar(next),
       };
       out.push(fold);
       i++; // 消费 next
@@ -235,7 +237,7 @@ export const parseWay = (way: WayDSL): Array<IRStep> => {
           `parseWay: curve operator must be followed by a target, got operator/keyword`,
         );
       }
-      const target = next as IRTarget;
+      const target: IRTarget = parseTargetSugar(next);
       if (isWayCurveOp(item)) {
         const curve: IRCurveStep = {
           type: 'step',
@@ -296,7 +298,11 @@ export const parseWay = (way: WayDSL): Array<IRStep> => {
       }
       continue;
     }
-    const lineStep: IRLineStep = { type: 'step', kind: 'line', to: item };
+    const lineStep: IRLineStep = {
+      type: 'step',
+      kind: 'line',
+      to: parseTargetSugar(item),
+    };
     out.push(lineStep);
   }
   return out;

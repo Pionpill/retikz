@@ -359,4 +359,40 @@ describe('parseWay', () => {
       expect(() => parseWay(['A'])).toThrow(/at least 2/);
     });
   });
+
+  describe('Sugar 相对坐标字符串 (ADR-0003 alpha.3)', () => {
+    it("way 里 '+1,0' / '++1,0' 解析为 { rel } / { relAccumulate } step", () => {
+      expect(parseWay(['A', '+1,0', '++2,3'])).toEqual([
+        { type: 'step', kind: 'move', to: 'A' },
+        { type: 'step', kind: 'line', to: { rel: [1, 0] } },
+        { type: 'step', kind: 'line', to: { relAccumulate: [2, 3] } },
+      ]);
+    });
+
+    it("首项是 '+1,0' 时 move 的 to 也走 sugar 解析", () => {
+      expect(parseWay(['+5,0', 'B'])).toEqual([
+        { type: 'step', kind: 'move', to: { rel: [5, 0] } },
+        { type: 'step', kind: 'line', to: 'B' },
+      ]);
+    });
+
+    it("'+1,0' 与折角算子混用：折角算子的 next target 也走 sugar", () => {
+      expect(parseWay(['A', '-|', '+5,3'])).toEqual([
+        { type: 'step', kind: 'move', to: 'A' },
+        { type: 'step', kind: 'step', via: '-|', to: { rel: [5, 3] } },
+      ]);
+    });
+
+    it("曲线算子的 next 走 sugar：'+1,0' 当 curve 终点", () => {
+      expect(parseWay(['A', { curve: [5, 8] }, '+10,0'])).toEqual([
+        { type: 'step', kind: 'move', to: 'A' },
+        {
+          type: 'step',
+          kind: 'curve',
+          to: { rel: [10, 0] },
+          control: [5, 8],
+        },
+      ]);
+    });
+  });
 });

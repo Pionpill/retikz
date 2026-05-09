@@ -1,6 +1,6 @@
 import { Children, type ReactElement, type ReactNode, isValidElement } from 'react';
 import type { IR, IRChild, IRFont, IRLineSpec, IRNode, IRStep, IRTarget } from '@retikz/core';
-import { CURRENT_IR_VERSION } from '@retikz/core';
+import { CURRENT_IR_VERSION, parseTargetSugar } from '@retikz/core';
 import { TIKZ_NODE, TIKZ_PATH, TIKZ_STEP, TIKZ_TEXT } from './_displayNames';
 
 /** 取 React 元素 type 上的 displayName；type 为字符串时直接返回，用于识别 Kernel/Sugar 组件 */
@@ -157,7 +157,7 @@ const readPathChildren = (children: ReactNode): Array<IRStep> => {
         type: 'step',
         kind: 'step',
         via: props.via as '-|' | '|-',
-        to: props.to as IRTarget,
+        to: parseTargetSugar(props.to),
       });
       return;
     }
@@ -165,7 +165,7 @@ const readPathChildren = (children: ReactNode): Array<IRStep> => {
       out.push({
         type: 'step',
         kind: 'curve',
-        to: props.to as IRTarget,
+        to: parseTargetSugar(props.to),
         control: props.control as [number, number],
       });
       return;
@@ -174,7 +174,7 @@ const readPathChildren = (children: ReactNode): Array<IRStep> => {
       out.push({
         type: 'step',
         kind: 'cubic',
-        to: props.to as IRTarget,
+        to: parseTargetSugar(props.to),
         control1: props.control1 as [number, number],
         control2: props.control2 as [number, number],
       });
@@ -184,7 +184,7 @@ const readPathChildren = (children: ReactNode): Array<IRStep> => {
       const step: Extract<IRStep, { kind: 'bend' }> = {
         type: 'step',
         kind: 'bend',
-        to: props.to as IRTarget,
+        to: parseTargetSugar(props.to),
         bendDirection: props.bendDirection as 'left' | 'right',
       };
       if (props.bendAngle !== undefined) step.bendAngle = props.bendAngle as number;
@@ -221,7 +221,7 @@ const readPathChildren = (children: ReactNode): Array<IRStep> => {
     out.push({
       type: 'step',
       kind,
-      to: props.to as IRTarget,
+      to: parseTargetSugar(props.to),
     });
   });
   if (out.length < 2) {
