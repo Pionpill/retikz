@@ -15,7 +15,7 @@ export type TextPrim = {
   /** 字重 */
   fontWeight?: string | number;
   /** 字形 */
-  fontStyle?: 'normal' | 'italic';
+  fontStyle?: 'normal' | 'italic' | 'oblique';
   /** 水平对齐：start / middle / end 锚点位置 */
   align: 'start' | 'middle' | 'end';
   /** 垂直基线对齐方式 */

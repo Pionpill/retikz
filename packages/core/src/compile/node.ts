@@ -39,8 +39,14 @@ export type NodeLayout = {
   textWidth: number;
   /** 文本高度（user units），由 TextMeasurer 算出 */
   textHeight: number;
-  /** 文本字号（user units） */
+  /** 文本字号（user units），已应用默认值 */
   fontSize: number;
+  /** 字体族；CSS font-family；emit 时透传给 TextPrim */
+  fontFamily?: string;
+  /** 字重；emit 时透传给 TextPrim */
+  fontWeight?: string | number;
+  /** 字形：normal / italic / oblique；emit 时透传给 TextPrim */
+  fontStyle?: 'normal' | 'italic' | 'oblique';
   /** 节点背景色，CSS 颜色字符串；emit 时用 'transparent' 兜底 */
   fill?: string;
   /** 节点边框色，CSS 颜色字符串；emit 时用 'currentColor' 兜底 */
@@ -156,10 +162,18 @@ export const layoutNode = (
   measureText: TextMeasurer,
   nodeIndex: Map<string, NodeLayout>,
 ): NodeLayout => {
-  const fontSize = node.fontSize ?? DEFAULT_FONT_SIZE;
+  const fontSize = node.font?.size ?? DEFAULT_FONT_SIZE;
+  const fontFamily = node.font?.family;
+  const fontWeight = node.font?.weight;
+  const fontStyle = node.font?.style;
   const padding = node.padding ?? DEFAULT_PADDING;
   const metrics = node.text
-    ? measureText(node.text, { size: fontSize })
+    ? measureText(node.text, {
+        size: fontSize,
+        family: fontFamily,
+        weight: fontWeight,
+        style: fontStyle,
+      })
     : { width: 0, height: 0 };
   // 内框半轴：text 半宽 + padding（保证有最小尺寸）
   const innerHalfW = Math.max(metrics.width / 2 + padding, padding);
@@ -218,6 +232,9 @@ export const layoutNode = (
     textWidth: metrics.width,
     textHeight: metrics.height,
     fontSize,
+    fontFamily,
+    fontWeight,
+    fontStyle,
     fill: node.fill,
     stroke: node.stroke,
     strokeWidth: node.strokeWidth,
@@ -316,6 +333,9 @@ export const emitNodePrimitives = (
       y: round(layout.rect.y),
       content: layout.text,
       fontSize: layout.fontSize,
+      fontFamily: layout.fontFamily,
+      fontWeight: layout.fontWeight,
+      fontStyle: layout.fontStyle,
       align: 'middle',
       baseline: 'middle',
       fill: 'currentColor',

@@ -37,9 +37,15 @@ import { Node } from '@retikz/react';
 
 ### Styling
 
-`fill` / `stroke` / `strokeWidth` / `padding` / `fontSize` control per-node appearance:
+`fill` / `stroke` / `strokeWidth` / `padding` / `font` control per-node appearance:
 
 <ComponentPreview name="node-styled" />
+
+### Font
+
+`font` is a nested object `{ family?, size?, weight?, style? }` — bold / italic / family all live in one prop:
+
+<ComponentPreview name="node-font" />
 
 ### Rotation
 
@@ -61,7 +67,7 @@ import { Node } from '@retikz/react';
 | `strokeWidth` | `number` | `1` | Border width (user units) |
 | `padding` | `number` | — | Inner padding between text and border |
 | `margin` | `number` | `0` | Outer margin between border and path attachment point; **does not affect border position**, affects where lines stop |
-| `fontSize` | `number` | — | Text size (user units) |
+| `font` | `{ family?, size?, weight?, style? }` | — | Font spec; nested object, all fields optional |
 
 ## margin vs padding
 

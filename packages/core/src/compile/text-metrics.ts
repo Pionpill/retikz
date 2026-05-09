@@ -6,8 +6,8 @@ export type FontSpec = {
   size: number;
   /** 字重；可以是 'normal' / 'bold' / 100~900 数字等 */
   weight?: string | number;
-  /** 字形：normal 或 italic */
-  style?: 'normal' | 'italic';
+  /** 字形：normal / italic / oblique */
+  style?: 'normal' | 'italic' | 'oblique';
 };
 
 /** 文字度量结果：宽高 + 可选的基线 ascent/descent */

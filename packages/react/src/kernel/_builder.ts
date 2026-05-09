@@ -30,7 +30,7 @@ const buildNode = (props: Record<string, unknown>): IRChild => {
     strokeWidth: props.strokeWidth as number | undefined,
     padding: props.padding as number | undefined,
     margin: props.margin as number | undefined,
-    fontSize: props.fontSize as number | undefined,
+    font: props.font as IRNode['font'],
   };
 };
 

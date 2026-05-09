@@ -9,7 +9,7 @@ const Demo: FC = () => (
     <Node id="b" position={[0, 0]} stroke="#3b82f6" strokeWidth={2}>
       Stroked
     </Node>
-    <Node id="c" position={[90, 0]} padding={12} fontSize={18}>
+    <Node id="c" position={[90, 0]} padding={12} font={{ size: 18 }}>
       Big
     </Node>
   </Tikz>

@@ -1,5 +1,5 @@
 import type { FC, ReactNode } from 'react';
-import type { IRNode, IRPosition, PolarPosition } from '@retikz/core';
+import type { IRFont, IRNode, IRPosition, PolarPosition } from '@retikz/core';
 import { TIKZ_NODE } from './_displayNames';
 
 /** <Node> 组件的 props */
@@ -16,8 +16,8 @@ export type NodeProps = {
   children?: ReactNode;
   /** 显式 text，优先级高于 children */
   text?: string;
-  /** 字号；不填用默认值 */
-  fontSize?: number;
+  /** 字体规格：family / size / weight / style 全部可选；不填走渲染端默认值 */
+  font?: IRFont;
   /** 内边距：内容到 border 的距离 */
   padding?: number;
   /** 外边距：border 到 path 附着点的距离；不影响 border 位置；必须 ≥ 0 */
