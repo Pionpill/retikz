@@ -11,6 +11,7 @@ import type {
   IRLineStep,
   IRMoveStep,
   IRStep,
+  IRStepLabel,
   IRTarget,
 } from '../ir';
 import { parseTargetSugar } from './parseTargetSugar';
@@ -121,6 +122,25 @@ export type WayCircleOp = { circle: { radius: number } };
 export type WayEllipseOp = { ellipse: { radiusX: number; radiusY: number } };
 
 /**
+ * 边标注的 sugar 形态（ADR-0004）：
+ * - 字符串：等价 `{ text: <string> }`，其它字段走默认（midway / above）
+ * - 对象：与 IR `step.label` 字面一致
+ */
+export type WayLabel = IRStepLabel | string;
+
+/**
+ * 边标注 prefix 算子（infix）：修饰"下一段"——line / fold / curve / cubic / bend /
+ * arc / circle / ellipse 都可承载。挂在 way 中两个 way item 之间，下一个产生段的
+ * way item 把它消耗到自己的 IR step.label 上。
+ *
+ * `cycle` 不允许挂 label（schema 已禁），way 中"label op + cycle"的组合会抛错。
+ *
+ * 多个 label op 不能直接相邻，way 末尾未消费的 label op 同样抛错——保持"标注总有
+ * 段可挂"。
+ */
+export type WayLabelOp = { label: WayLabel };
+
+/**
  * Sugar 层的 way 数组 DSL 元素。
  *
  * 接受十二种形态：
@@ -153,7 +173,8 @@ export type WayItem =
   | WayBendOp
   | WayArcOp
   | WayCircleOp
-  | WayEllipseOp;
+  | WayEllipseOp
+  | WayLabelOp;
 
 /** way DSL 数组：sugar `<Draw way={...}>` 接受的输入形态 */
 export type WayDSL = Array<WayItem>;
@@ -197,11 +218,19 @@ const isWayShapeOp = (
 ): item is WayArcOp | WayCircleOp | WayEllipseOp =>
   isWayArcOp(item) || isWayCircleOp(item) || isWayEllipseOp(item);
 
+const isWayLabelOp = (item: WayItem): item is WayLabelOp =>
+  isPlainObject(item) && 'label' in item;
+
 const isWayOperator = (item: WayItem): boolean =>
   isWayCycle(item) ||
   isWayVia(item) ||
   isWayCurveLike(item) ||
-  isWayShapeOp(item);
+  isWayShapeOp(item) ||
+  isWayLabelOp(item);
+
+/** sugar 字符串 / 对象都映射到 IR `step.label`：字符串 = `{ text: s }`，对象原样取 */
+const normalizeLabel = (l: WayLabel): IRStepLabel =>
+  typeof l === 'string' ? { text: l } : { ...l };
 
 /**
  * 把 sugar 对象形态 `{ position, type }` 翻译为 IR `{ rel } | { relAccumulate }`；
@@ -230,6 +259,10 @@ const targetOf = (item: WayItem): IRTarget | null => {
  *   - `DrawWay.Cycle` → cycle 步
  *   - `'-|'` / `'|-'` → 与**下一项**合并成 fold 步；操作符在 way 末尾或后
  *     接非 target 项时抛错
+ *   - curve / cubic / bend infix 算子 → 与**下一项**合并成对应 step
+ *   - arc / circle / ellipse infix 算子 → 单独成 step（不消耗下一项）
+ *   - `{ label }` infix 算子（ADR-0004）→ 修饰**下一段**——挂在该段的
+ *     `step.label` 上；连续 label / 末尾 label / cycle 上的 label 均抛错
  *
  * 这是纯函数，住在 core，被各框架 adapter 的 Sugar 组件复用。
  */
@@ -238,13 +271,41 @@ export const parseWay = (way: WayDSL): Array<IRStep> => {
     throw new Error('parseWay: way must contain at least 2 items');
   }
   const out: Array<IRStep> = [];
+
+  /** ADR-0004：当前未消费的 label 算子结果——下一个产生段的 way item 消耗它。 */
+  let pendingLabel: IRStepLabel | undefined;
+  const consumeLabel = (): IRStepLabel | undefined => {
+    const l = pendingLabel;
+    pendingLabel = undefined;
+    return l;
+  };
+
+  if (isWayLabelOp(way[0])) {
+    throw new Error(
+      `parseWay: way[0] must be a target (move start), got label operator`,
+    );
+  }
   const rawMove = targetOf(way[0]);
   const moveTarget: IRTarget = rawMove === null ? [0, 0] : parseTargetSugar(rawMove);
   const moveStep: IRMoveStep = { type: 'step', kind: 'move', to: moveTarget };
   out.push(moveStep);
   for (let i = 1; i < way.length; i++) {
     const item = way[i];
+    if (isWayLabelOp(item)) {
+      if (pendingLabel) {
+        throw new Error(
+          `parseWay: label operator at index ${i} cannot directly follow another label operator`,
+        );
+      }
+      pendingLabel = normalizeLabel(item.label);
+      continue;
+    }
     if (isWayCycle(item)) {
+      if (pendingLabel) {
+        throw new Error(
+          `parseWay: cycle step cannot carry a label (label operator at index ${i - 1})`,
+        );
+      }
       const cycle: IRCycleStep = { type: 'step', kind: 'cycle' };
       out.push(cycle);
       continue;
@@ -267,6 +328,8 @@ export const parseWay = (way: WayDSL): Array<IRStep> => {
         via: item,
         to: parseTargetSugar(desugarRelItem(next)),
       };
+      const label = consumeLabel();
+      if (label) fold.label = label;
       out.push(fold);
       i++; // 消费 next
       continue;
@@ -284,6 +347,7 @@ export const parseWay = (way: WayDSL): Array<IRStep> => {
         );
       }
       const target: IRTarget = parseTargetSugar(desugarRelItem(next));
+      const label = consumeLabel();
       if (isWayCurveOp(item)) {
         const curve: IRCurveStep = {
           type: 'step',
@@ -291,6 +355,7 @@ export const parseWay = (way: WayDSL): Array<IRStep> => {
           to: target,
           control: item.curve,
         };
+        if (label) curve.label = label;
         out.push(curve);
       } else if (isWayCubicOp(item)) {
         const cubic: IRCubicStep = {
@@ -300,6 +365,7 @@ export const parseWay = (way: WayDSL): Array<IRStep> => {
           control1: item.cubic[0],
           control2: item.cubic[1],
         };
+        if (label) cubic.label = label;
         out.push(cubic);
       } else {
         const bend: IRBendStep = {
@@ -309,6 +375,7 @@ export const parseWay = (way: WayDSL): Array<IRStep> => {
           bendDirection: item.bend,
         };
         if (item.angle !== undefined) bend.bendAngle = item.angle;
+        if (label) bend.label = label;
         out.push(bend);
       }
       i++; // 消费 next
@@ -317,6 +384,7 @@ export const parseWay = (way: WayDSL): Array<IRStep> => {
     if (isWayShapeOp(item)) {
       // 形状算子（arc / circle / ellipse）以"上一项"为圆心，**不**消耗下一项；
       // 后续的 way item 仍按各自规则正常解析。
+      const label = consumeLabel();
       if (isWayArcOp(item)) {
         const arc: IRArcStep = {
           type: 'step',
@@ -325,6 +393,7 @@ export const parseWay = (way: WayDSL): Array<IRStep> => {
           endAngle: item.arc.endAngle,
           radius: item.arc.radius,
         };
+        if (label) arc.label = label;
         out.push(arc);
       } else if (isWayCircleOp(item)) {
         const circle: IRCirclePathStep = {
@@ -332,6 +401,7 @@ export const parseWay = (way: WayDSL): Array<IRStep> => {
           kind: 'circlePath',
           radius: item.circle.radius,
         };
+        if (label) circle.label = label;
         out.push(circle);
       } else {
         const ellipse: IREllipsePathStep = {
@@ -340,6 +410,7 @@ export const parseWay = (way: WayDSL): Array<IRStep> => {
           radiusX: item.ellipse.radiusX,
           radiusY: item.ellipse.radiusY,
         };
+        if (label) ellipse.label = label;
         out.push(ellipse);
       }
       continue;
@@ -349,7 +420,14 @@ export const parseWay = (way: WayDSL): Array<IRStep> => {
       kind: 'line',
       to: parseTargetSugar(desugarRelItem(item)),
     };
+    const label = consumeLabel();
+    if (label) lineStep.label = label;
     out.push(lineStep);
+  }
+  if (pendingLabel) {
+    throw new Error(
+      `parseWay: label operator at end of way must be followed by a step`,
+    );
   }
   return out;
 };

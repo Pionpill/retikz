@@ -59,9 +59,10 @@ export const Draw: FC<DrawProps> = props => {
       {steps.map((s, i) => {
         if (s.kind === 'cycle') return <Step key={i} kind="cycle" />;
         if (s.kind === 'move') return <Step key={i} kind="move" to={s.to} />;
-        if (s.kind === 'step') return <Step key={i} kind="step" via={s.via} to={s.to} />;
+        if (s.kind === 'step')
+          return <Step key={i} kind="step" via={s.via} to={s.to} label={s.label} />;
         if (s.kind === 'curve')
-          return <Step key={i} kind="curve" to={s.to} control={s.control} />;
+          return <Step key={i} kind="curve" to={s.to} control={s.control} label={s.label} />;
         if (s.kind === 'cubic')
           return (
             <Step
@@ -70,6 +71,7 @@ export const Draw: FC<DrawProps> = props => {
               to={s.to}
               control1={s.control1}
               control2={s.control2}
+              label={s.label}
             />
           );
         if (s.kind === 'bend') {
@@ -81,11 +83,18 @@ export const Draw: FC<DrawProps> = props => {
                 to={s.to}
                 bendDirection={s.bendDirection}
                 bendAngle={s.bendAngle}
+                label={s.label}
               />
             );
           }
           return (
-            <Step key={i} kind="bend" to={s.to} bendDirection={s.bendDirection} />
+            <Step
+              key={i}
+              kind="bend"
+              to={s.to}
+              bendDirection={s.bendDirection}
+              label={s.label}
+            />
           );
         }
         if (s.kind === 'arc') {
@@ -96,18 +105,25 @@ export const Draw: FC<DrawProps> = props => {
               startAngle={s.startAngle}
               endAngle={s.endAngle}
               radius={s.radius}
+              label={s.label}
             />
           );
         }
         if (s.kind === 'circlePath') {
-          return <Step key={i} kind="circlePath" radius={s.radius} />;
+          return <Step key={i} kind="circlePath" radius={s.radius} label={s.label} />;
         }
         if (s.kind === 'ellipsePath') {
           return (
-            <Step key={i} kind="ellipsePath" radiusX={s.radiusX} radiusY={s.radiusY} />
+            <Step
+              key={i}
+              kind="ellipsePath"
+              radiusX={s.radiusX}
+              radiusY={s.radiusY}
+              label={s.label}
+            />
           );
         }
-        return <Step key={i} kind="line" to={s.to} />;
+        return <Step key={i} kind="line" to={s.to} label={s.label} />;
       })}
     </Path>
   );

@@ -1,6 +1,6 @@
 ---
 title: Draw
-description: Sugar component — way array threads through ids / Cartesian / polar / relative offsets (Relative / Accumulate, object or sugar-string form) / fold / cycle / curves (curve / cubic / bend) / shapes (arc / circle / ellipse) items, expands at compile time to Path + Step.
+description: Sugar component — way array threads through ids / Cartesian / polar / relative offsets (Relative / Accumulate, object or sugar-string form) / fold / cycle / curves (curve / cubic / bend) / shapes (arc / circle / ellipse) / edge labels items, expands at compile time to Path + Step.
 ---
 
 `<Draw>` is the go-to for 90% of connections. `way` is an array of targets (with infix operators) joined as a path; at compile time it expands to an equivalent Kernel `<Path>` + `<Step>` tree, so `<Draw>` adds no capability the Kernel can't already express.
@@ -21,9 +21,9 @@ import { Draw } from '@retikz/react';
 
 <ComponentPreview name="draw-basic" />
 
-### Thirteen forms of way item
+### Fourteen forms of way item
 
-Each item in `way` accepts thirteen forms — the first five are direct targets (matching `<Step>.to`), the rest are infix operators / keywords. **Note**: curve operators (curve / cubic / bend) merge with the next item; shape operators (arc / circle / ellipse) center on the previous item and **do not** consume the next.
+Each item in `way` accepts fourteen forms — the first five are direct targets (matching `<Step>.to`), the rest are infix operators / keywords. **Note**: curve operators (curve / cubic / bend) merge with the next item; shape operators (arc / circle / ellipse) center on the previous item and **do not** consume the next; the edge-label operator (label) decorates the **next** segment without producing one itself.
 
 | Form | Example | Meaning |
 | --- | --- | --- |
@@ -40,6 +40,7 @@ Each item in `way` accepts thirteen forms — the first five are direct targets 
 | Arc operator | `{ arc: { startAngle, endAngle, radius } }` | Center on the previous item; draw an arc — **does not** consume the next item |
 | Circle operator | `{ circle: { radius } }` | Center on the previous item; draw a full circle — **does not** consume the next item |
 | Ellipse operator | `{ ellipse: { radiusX, radiusY } }` | Center on the previous item; draw a full ellipse — **does not** consume the next item |
+| Edge label operator | `{ label: 'accept' }` or `{ label: { text, position?, side? } }` | Decorate the **next** segment — sets IR `step.label` on the next step-producing item (ADR-0004) |
 
 ### DrawWay keyword constants
 
@@ -117,6 +118,14 @@ Drop `{ curve: [cx, cy] }` (infix operator) into `way` and the "previous → nex
 `{ ellipse: { radiusX, radiusY } }` centers on the **previous item** and draws a full ellipse — equivalent to `<Step kind="ellipsePath">`. Also **does not** consume the next item:
 
 <ComponentPreview name="draw-ellipse" />
+
+### Edge label
+
+Drop a `{ label: ... }` operator (infix) into `way` to set the IR `step.label` on the **next** segment — equivalent to the Kernel form `<Step><EdgeLabel>...</EdgeLabel></Step>` (see [Step's edge label](/core/components/draw/step#edge-label)). Shorthand: pass a string directly: `{ label: 'accept' }` ≡ `{ label: { text: 'accept' } }`.
+
+The label operator can sit before any segment-producing way item — line target, `-|` / `|-` fold, `{ curve }` / `{ cubic }` / `{ bend }` / `{ arc }` / `{ circle }` / `{ ellipse }`. It **cannot** decorate `DrawWay.Cycle` (IR forbids labels on cycle); a trailing label or two consecutive label operators also throw:
+
+<ComponentPreview name="draw-label" />
 
 ### Relative coordinates (Relative / Accumulate)
 

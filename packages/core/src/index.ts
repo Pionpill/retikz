@@ -89,7 +89,15 @@ export type {
 export { fallbackMeasurer, compileToScene } from './compile';
 
 // Parsers
-export type { WayItem, WayDSL, WayCycle, WayVia, WayRelItem } from './parsers';
+export type {
+  WayItem,
+  WayDSL,
+  WayCycle,
+  WayVia,
+  WayRelItem,
+  WayLabel,
+  WayLabelOp,
+} from './parsers';
 export { parseWay, DrawWay, parseTargetSugar } from './parsers';
 
 // Geometry

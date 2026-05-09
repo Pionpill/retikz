@@ -459,4 +459,202 @@ describe('parseWay', () => {
       ).toEqual(parseWay(['A', '+1,0', '++2,3']));
     });
   });
+
+  describe('ADR-0004：边标注 prefix label 算子', () => {
+    it('line 段：{ label } prefix 写到 step.label', () => {
+      expect(parseWay(['A', { label: { text: 'accept' } }, 'B'])).toEqual([
+        { type: 'step', kind: 'move', to: 'A' },
+        { type: 'step', kind: 'line', to: 'B', label: { text: 'accept' } },
+      ]);
+    });
+
+    it('字符串简记 { label: "x" } 等价 { label: { text: "x" } }', () => {
+      expect(parseWay(['A', { label: 'accept' }, 'B'])).toEqual(
+        parseWay(['A', { label: { text: 'accept' } }, 'B']),
+      );
+    });
+
+    it('label 完整字段透传：position + side', () => {
+      expect(
+        parseWay([
+          'A',
+          { label: { text: 'q', position: 'near-end', side: 'sloped' } },
+          'B',
+        ]),
+      ).toEqual([
+        { type: 'step', kind: 'move', to: 'A' },
+        {
+          type: 'step',
+          kind: 'line',
+          to: 'B',
+          label: { text: 'q', position: 'near-end', side: 'sloped' },
+        },
+      ]);
+    });
+
+    it('折角段（-|）也接受前置 label', () => {
+      expect(parseWay(['A', { label: 'f' }, '-|', 'B'])).toEqual([
+        { type: 'step', kind: 'move', to: 'A' },
+        {
+          type: 'step',
+          kind: 'step',
+          via: '-|',
+          to: 'B',
+          label: { text: 'f' },
+        },
+      ]);
+    });
+
+    it('curve / cubic / bend 都接受前置 label', () => {
+      expect(parseWay(['A', { label: 'q' }, { curve: [5, 8] }, 'B'])).toEqual([
+        { type: 'step', kind: 'move', to: 'A' },
+        {
+          type: 'step',
+          kind: 'curve',
+          to: 'B',
+          control: [5, 8],
+          label: { text: 'q' },
+        },
+      ]);
+      expect(
+        parseWay([
+          'A',
+          { label: 'c' },
+          { cubic: [[3, 5], [7, 5]] },
+          'B',
+        ]),
+      ).toEqual([
+        { type: 'step', kind: 'move', to: 'A' },
+        {
+          type: 'step',
+          kind: 'cubic',
+          to: 'B',
+          control1: [3, 5],
+          control2: [7, 5],
+          label: { text: 'c' },
+        },
+      ]);
+      expect(
+        parseWay(['A', { label: 'b' }, { bend: 'left', angle: 45 }, 'B']),
+      ).toEqual([
+        { type: 'step', kind: 'move', to: 'A' },
+        {
+          type: 'step',
+          kind: 'bend',
+          to: 'B',
+          bendDirection: 'left',
+          bendAngle: 45,
+          label: { text: 'b' },
+        },
+      ]);
+    });
+
+    it('arc / circle / ellipse 形状算子（不消耗 next）也接受前置 label', () => {
+      expect(
+        parseWay([
+          'A',
+          { label: 'a' },
+          { arc: { startAngle: 0, endAngle: 90, radius: 5 } },
+        ]),
+      ).toEqual([
+        { type: 'step', kind: 'move', to: 'A' },
+        {
+          type: 'step',
+          kind: 'arc',
+          startAngle: 0,
+          endAngle: 90,
+          radius: 5,
+          label: { text: 'a' },
+        },
+      ]);
+      expect(
+        parseWay(['A', { label: 'o' }, { circle: { radius: 5 } }]),
+      ).toEqual([
+        { type: 'step', kind: 'move', to: 'A' },
+        {
+          type: 'step',
+          kind: 'circlePath',
+          radius: 5,
+          label: { text: 'o' },
+        },
+      ]);
+      expect(
+        parseWay([
+          'A',
+          { label: 'e' },
+          { ellipse: { radiusX: 6, radiusY: 3 } },
+        ]),
+      ).toEqual([
+        { type: 'step', kind: 'move', to: 'A' },
+        {
+          type: 'step',
+          kind: 'ellipsePath',
+          radiusX: 6,
+          radiusY: 3,
+          label: { text: 'e' },
+        },
+      ]);
+    });
+
+    it('多段独立 label：每段一个 label，互不干扰', () => {
+      expect(
+        parseWay([
+          'A',
+          { label: 'one' },
+          'B',
+          { label: 'two' },
+          'C',
+        ]),
+      ).toEqual([
+        { type: 'step', kind: 'move', to: 'A' },
+        { type: 'step', kind: 'line', to: 'B', label: { text: 'one' } },
+        { type: 'step', kind: 'line', to: 'C', label: { text: 'two' } },
+      ]);
+    });
+
+    it('未给 label 的段不写出 label 字段（IR 保持紧凑）', () => {
+      const out = parseWay(['A', { label: 'x' }, 'B', 'C']);
+      expect(out[1]).toEqual({
+        type: 'step',
+        kind: 'line',
+        to: 'B',
+        label: { text: 'x' },
+      });
+      expect(out[2]).toEqual({ type: 'step', kind: 'line', to: 'C' });
+    });
+
+    it('way[0] 是 label 算子时抛错（没有段可挂）', () => {
+      expect(() => parseWay([{ label: 'x' }, 'A', 'B'])).toThrow(
+        /way\[0\] must be a target/,
+      );
+    });
+
+    it('连续两个 label 算子抛错', () => {
+      expect(() =>
+        parseWay(['A', { label: 'x' }, { label: 'y' }, 'B']),
+      ).toThrow(/cannot directly follow another label operator/);
+    });
+
+    it('cycle 上的 label 抛错（IR 不允许）', () => {
+      expect(() =>
+        parseWay(['A', 'B', { label: 'x' }, DrawWay.Cycle]),
+      ).toThrow(/cycle step cannot carry a label/);
+    });
+
+    it('way 末尾未消费的 label 算子抛错', () => {
+      expect(() => parseWay(['A', 'B', { label: 'x' }])).toThrow(
+        /label operator at end of way/,
+      );
+    });
+
+    it('via / curve 算子之后直接接 label 算子抛错（label 必须在段定义算子之前）', () => {
+      // '-|' 期待 next target，得到 label op 应被识别为 operator → 触发原"must be followed by a target"
+      expect(() => parseWay(['A', '-|', { label: 'x' }, 'B'])).toThrow(
+        /must be followed by a target/,
+      );
+      expect(() =>
+        parseWay(['A', { curve: [5, 8] }, { label: 'x' }, 'B']),
+      ).toThrow(/curve operator must be followed by a target/);
+    });
+  });
 });

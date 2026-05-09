@@ -346,5 +346,45 @@ describe('buildIR', () => {
       const steps = (ir.children[0] as { children: Array<Record<string, unknown>> }).children;
       expect(steps[2]).toEqual({ type: 'step', kind: 'cycle' });
     });
+
+    it('<Draw way={[..., { label }, ...]}> 与 Kernel <Step><EdgeLabel/></Step> 等价', () => {
+      const fromSugar = buildIR(<Draw way={['A', { label: 'accept' }, 'B']} />);
+      const fromKernel = buildIR(
+        <Path>
+          <Step kind="move" to="A" />
+          <Step to="B">
+            <EdgeLabel>accept</EdgeLabel>
+          </Step>
+        </Path>,
+      );
+      expect(fromSugar).toEqual(fromKernel);
+    });
+
+    it('<Draw> way 中 label 与 fold / curve / arc 算子组合，全等价 Kernel 写法', () => {
+      const fromSugar = buildIR(
+        <Draw
+          way={[
+            'A',
+            { label: 'fold' },
+            '-|',
+            'B',
+            { label: { text: 'q', side: 'below' } },
+            { curve: [5, 8] },
+            'C',
+            { label: 'a' },
+            { arc: { startAngle: 0, endAngle: 90, radius: 4 } },
+          ]}
+        />,
+      );
+      const fromKernel = buildIR(
+        <Path>
+          <Step kind="move" to="A" />
+          <Step kind="step" via="-|" to="B" label={{ text: 'fold' }} />
+          <Step kind="curve" to="C" control={[5, 8]} label={{ text: 'q', side: 'below' }} />
+          <Step kind="arc" startAngle={0} endAngle={90} radius={4} label={{ text: 'a' }} />
+        </Path>,
+      );
+      expect(fromSugar).toEqual(fromKernel);
+    });
   });
 });
