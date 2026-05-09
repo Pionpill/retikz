@@ -1,7 +1,8 @@
 # ADR-0004：边标注（Step.label）的归位
 
-- 状态：Proposed
+- 状态：Accepted
 - 决策日期：2026-05-09
+- 完工日期：2026-05-10
 - 关联：[v0-roadmap §v0.1.0-alpha.3](../plans/v0-roadmap.md) · [tikz-gap-analysis §2 P1](../analysis/2026-05-07-tikz-gap-analysis.md)
 
 ## 背景
