@@ -134,10 +134,10 @@ export const mdxComponents: MDXComponents = {
   pre: ({ children }) => <>{children}</>,
   code: Code,
   table: ({ className, ...props }) => (
-    <div className="my-6 w-full overflow-x-auto rounded-xl border">
+    <div className="my-6 w-full">
       <table
         className={cn(
-          'relative w-full overflow-hidden border-none text-sm [&_tbody_tr:last-child]:border-b-0',
+          'w-full table-auto border-collapse text-sm [&_tbody_tr:last-child]:border-b-0',
           className,
         )}
         {...props}
@@ -148,7 +148,7 @@ export const mdxComponents: MDXComponents = {
   th: ({ className, ...props }) => (
     <th
       className={cn(
-        'px-4 py-2 text-left font-bold [&[align=center]]:text-center [&[align=right]]:text-right',
+        'px-4 py-2 text-left font-normal text-muted-foreground [&[align=center]]:text-center [&[align=right]]:text-right',
         className,
       )}
       {...props}
@@ -157,7 +157,7 @@ export const mdxComponents: MDXComponents = {
   td: ({ className, ...props }) => (
     <td
       className={cn(
-        'px-4 py-2 text-left whitespace-nowrap [&[align=center]]:text-center [&[align=right]]:text-right',
+        'px-4 py-2 text-left align-middle first:font-semibold [&[align=center]]:text-center [&[align=right]]:text-right',
         className,
       )}
       {...props}
