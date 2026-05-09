@@ -157,4 +157,43 @@ describe('buildIR', () => {
     );
     expect(sugarWithAngle).toEqual(kernelWithAngle);
   });
+
+  it('<Draw way={[..., { arc }, ...]}> 等价于 Kernel arc step', () => {
+    const fromSugar = buildIR(
+      <Draw
+        way={['A', { arc: { startAngle: 0, endAngle: 90, radius: 10 } }]}
+      />,
+    );
+    const fromKernel = buildIR(
+      <Path>
+        <Step kind="move" to="A" />
+        <Step kind="arc" startAngle={0} endAngle={90} radius={10} />
+      </Path>,
+    );
+    expect(fromSugar).toEqual(fromKernel);
+  });
+
+  it('<Draw way={[..., { circle }, ...]}> 等价于 Kernel circlePath step', () => {
+    const fromSugar = buildIR(<Draw way={['A', { circle: { radius: 5 } }]} />);
+    const fromKernel = buildIR(
+      <Path>
+        <Step kind="move" to="A" />
+        <Step kind="circlePath" radius={5} />
+      </Path>,
+    );
+    expect(fromSugar).toEqual(fromKernel);
+  });
+
+  it('<Draw way={[..., { ellipse }, ...]}> 等价于 Kernel ellipsePath step', () => {
+    const fromSugar = buildIR(
+      <Draw way={['A', { ellipse: { radiusX: 8, radiusY: 4 } }]} />,
+    );
+    const fromKernel = buildIR(
+      <Path>
+        <Step kind="move" to="A" />
+        <Step kind="ellipsePath" radiusX={8} radiusY={4} />
+      </Path>,
+    );
+    expect(fromSugar).toEqual(fromKernel);
+  });
 });

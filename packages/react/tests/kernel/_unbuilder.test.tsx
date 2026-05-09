@@ -281,6 +281,57 @@ describe('convertIRToReactNode', () => {
     expect(buildIR(convertIRToReactNode(irNoAngle))).toEqual(irNoAngle);
   });
 
+  it("arc step round-trip：startAngle / endAngle / radius 透传保留", () => {
+    const ir: IR = {
+      version: CURRENT_IR_VERSION,
+      type: 'scene',
+      children: [
+        {
+          type: 'path',
+          children: [
+            { type: 'step', kind: 'move', to: [0, 0] },
+            { type: 'step', kind: 'arc', startAngle: 0, endAngle: 90, radius: 10 },
+          ],
+        },
+      ],
+    };
+    expect(buildIR(convertIRToReactNode(ir))).toEqual(ir);
+  });
+
+  it("circlePath step round-trip：radius 透传保留", () => {
+    const ir: IR = {
+      version: CURRENT_IR_VERSION,
+      type: 'scene',
+      children: [
+        {
+          type: 'path',
+          children: [
+            { type: 'step', kind: 'move', to: [0, 0] },
+            { type: 'step', kind: 'circlePath', radius: 5 },
+          ],
+        },
+      ],
+    };
+    expect(buildIR(convertIRToReactNode(ir))).toEqual(ir);
+  });
+
+  it("ellipsePath step round-trip：radiusX / radiusY 透传保留", () => {
+    const ir: IR = {
+      version: CURRENT_IR_VERSION,
+      type: 'scene',
+      children: [
+        {
+          type: 'path',
+          children: [
+            { type: 'step', kind: 'move', to: [0, 0] },
+            { type: 'step', kind: 'ellipsePath', radiusX: 8, radiusY: 4 },
+          ],
+        },
+      ],
+    };
+    expect(buildIR(convertIRToReactNode(ir))).toEqual(ir);
+  });
+
   it('未知 child.type → 抛 "unknown IR child type" 错误', () => {
     const badIR = {
       version: CURRENT_IR_VERSION,

@@ -287,6 +287,69 @@ describe('parseWay', () => {
     });
   });
 
+  describe('形状算子 (infix, ADR-0002 alpha.3)', () => {
+    it("{ arc: {...} } 产出 arc step（不消耗下一项）", () => {
+      expect(
+        parseWay([
+          'A',
+          { arc: { startAngle: 0, endAngle: 90, radius: 10 } },
+        ]),
+      ).toEqual([
+        { type: 'step', kind: 'move', to: 'A' },
+        { type: 'step', kind: 'arc', startAngle: 0, endAngle: 90, radius: 10 },
+      ]);
+    });
+
+    it("{ circle: { radius } } 产出 circlePath step", () => {
+      expect(parseWay(['A', { circle: { radius: 5 } }])).toEqual([
+        { type: 'step', kind: 'move', to: 'A' },
+        { type: 'step', kind: 'circlePath', radius: 5 },
+      ]);
+    });
+
+    it("{ ellipse: { radiusX, radiusY } } 产出 ellipsePath step", () => {
+      expect(
+        parseWay(['A', { ellipse: { radiusX: 8, radiusY: 4 } }]),
+      ).toEqual([
+        { type: 'step', kind: 'move', to: 'A' },
+        { type: 'step', kind: 'ellipsePath', radiusX: 8, radiusY: 4 },
+      ]);
+    });
+
+    it("形状算子不消耗下一项：后续 way item 正常解析", () => {
+      expect(
+        parseWay([
+          'A',
+          { arc: { startAngle: 0, endAngle: 90, radius: 5 } },
+          'B',
+        ]),
+      ).toEqual([
+        { type: 'step', kind: 'move', to: 'A' },
+        { type: 'step', kind: 'arc', startAngle: 0, endAngle: 90, radius: 5 },
+        { type: 'step', kind: 'line', to: 'B' },
+      ]);
+    });
+
+    it("形状算子可与 line / 曲线 / 折角 / cycle 混用", () => {
+      expect(
+        parseWay([
+          'A',
+          { circle: { radius: 3 } },
+          [10, 0],
+          { bend: 'left' },
+          'B',
+          DrawWay.cycle,
+        ]),
+      ).toEqual([
+        { type: 'step', kind: 'move', to: 'A' },
+        { type: 'step', kind: 'circlePath', radius: 3 },
+        { type: 'step', kind: 'line', to: [10, 0] },
+        { type: 'step', kind: 'bend', to: 'B', bendDirection: 'left' },
+        { type: 'step', kind: 'cycle' },
+      ]);
+    });
+  });
+
   describe('错误路径', () => {
     it('空数组抛错（错误信息含解析器名）', () => {
       expect(() => parseWay([])).toThrow(/parseWay: .* at least 2/);

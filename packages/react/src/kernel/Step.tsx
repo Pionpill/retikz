@@ -4,8 +4,9 @@ import { TIKZ_STEP } from './_displayNames';
 
 /**
  * <Step> 组件的 props。
- * alpha.3 起支持七种 kind：'move' / 'line' / 'step'（折角）/ 'cycle'（闭合）/
- * 'curve'（二次贝塞尔）/ 'cubic'（三次贝塞尔）/ 'bend'（弧形简记）。
+ * alpha.3 起支持十种 kind：'move' / 'line' / 'step'（折角）/ 'cycle'（闭合）/
+ * 'curve'（二次贝塞尔）/ 'cubic'（三次贝塞尔）/ 'bend'（弧形简记）/
+ * 'arc'（圆弧段）/ 'circlePath'（整圆）/ 'ellipsePath'（整椭圆）。
  * kind 默认 'line'。
  */
 export type StepProps =
@@ -60,6 +61,30 @@ export type StepProps =
       bendAngle?: number;
       /** 终点 */
       to: IRTarget;
+    }
+  | {
+      /** 弧段：以游标为圆心，按起末角度 + 半径绘制（TikZ `arc[start angle=…, end angle=…, radius=…]`） */
+      kind: 'arc';
+      /** 弧的起始角度（度），CCW from +x（注意 retikz polar y 轴向下，角度 90 视觉朝下） */
+      startAngle: number;
+      /** 弧的终止角度（度） */
+      endAngle: number;
+      /** 弧的半径 */
+      radius: number;
+    }
+  | {
+      /** 整圆：以游标为圆心，按半径绘制；画完画笔留在圆心 */
+      kind: 'circlePath';
+      /** 圆的半径 */
+      radius: number;
+    }
+  | {
+      /** 整椭圆：以游标为圆心，按 x/y 轴半径绘制；画完画笔留在圆心 */
+      kind: 'ellipsePath';
+      /** 椭圆 x 轴半径 */
+      radiusX: number;
+      /** 椭圆 y 轴半径 */
+      radiusY: number;
     };
 
 /**

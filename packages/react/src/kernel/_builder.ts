@@ -1,5 +1,5 @@
 import { Children, type ReactElement, type ReactNode, isValidElement } from 'react';
-import type { IR, IRChild, IRFont, IRLineSpec, IRNode, IRStep } from '@retikz/core';
+import type { IR, IRChild, IRFont, IRLineSpec, IRNode, IRStep, IRTarget } from '@retikz/core';
 import { CURRENT_IR_VERSION } from '@retikz/core';
 import { TIKZ_NODE, TIKZ_PATH, TIKZ_STEP, TIKZ_TEXT } from './_displayNames';
 
@@ -144,6 +144,9 @@ const readPathChildren = (children: ReactNode): Array<IRStep> => {
         | 'curve'
         | 'cubic'
         | 'bend'
+        | 'arc'
+        | 'circlePath'
+        | 'ellipsePath'
         | undefined) ?? 'line';
     if (kind === 'cycle') {
       out.push({ type: 'step', kind: 'cycle' });
@@ -154,7 +157,7 @@ const readPathChildren = (children: ReactNode): Array<IRStep> => {
         type: 'step',
         kind: 'step',
         via: props.via as '-|' | '|-',
-        to: props.to as Exclude<IRStep, { kind: 'cycle' }>['to'],
+        to: props.to as IRTarget,
       });
       return;
     }
@@ -162,7 +165,7 @@ const readPathChildren = (children: ReactNode): Array<IRStep> => {
       out.push({
         type: 'step',
         kind: 'curve',
-        to: props.to as Exclude<IRStep, { kind: 'cycle' }>['to'],
+        to: props.to as IRTarget,
         control: props.control as [number, number],
       });
       return;
@@ -171,7 +174,7 @@ const readPathChildren = (children: ReactNode): Array<IRStep> => {
       out.push({
         type: 'step',
         kind: 'cubic',
-        to: props.to as Exclude<IRStep, { kind: 'cycle' }>['to'],
+        to: props.to as IRTarget,
         control1: props.control1 as [number, number],
         control2: props.control2 as [number, number],
       });
@@ -181,30 +184,62 @@ const readPathChildren = (children: ReactNode): Array<IRStep> => {
       const step: Extract<IRStep, { kind: 'bend' }> = {
         type: 'step',
         kind: 'bend',
-        to: props.to as Exclude<IRStep, { kind: 'cycle' }>['to'],
+        to: props.to as IRTarget,
         bendDirection: props.bendDirection as 'left' | 'right',
       };
       if (props.bendAngle !== undefined) step.bendAngle = props.bendAngle as number;
       out.push(step);
       return;
     }
+    if (kind === 'arc') {
+      out.push({
+        type: 'step',
+        kind: 'arc',
+        startAngle: props.startAngle as number,
+        endAngle: props.endAngle as number,
+        radius: props.radius as number,
+      });
+      return;
+    }
+    if (kind === 'circlePath') {
+      out.push({
+        type: 'step',
+        kind: 'circlePath',
+        radius: props.radius as number,
+      });
+      return;
+    }
+    if (kind === 'ellipsePath') {
+      out.push({
+        type: 'step',
+        kind: 'ellipsePath',
+        radiusX: props.radiusX as number,
+        radiusY: props.radiusY as number,
+      });
+      return;
+    }
     out.push({
       type: 'step',
       kind,
-      to: props.to as Exclude<IRStep, { kind: 'cycle' }>['to'],
+      to: props.to as IRTarget,
     });
   });
   if (out.length < 2) {
     throw new Error('<Path> requires at least 2 <Step> children');
   }
   if (out[0].kind !== 'move') {
-    // 首段如果是 cycle 或其它 kind：cycle 没 to，回退到原点 [0,0] 当 move target；
-    // 其它 kind（line / step）保留它们自己的 to
+    // 首段如果是没有 to 字段的形状 step（cycle / arc / circlePath / ellipsePath），
+    // 回退到原点 [0,0] 当 move target；其它 kind（line / step / curve / cubic / bend）
+    // 保留它们自己的 to。
     const first = out[0];
-    out[0] =
-      first.kind === 'cycle'
-        ? { type: 'step', kind: 'move', to: [0, 0] }
-        : { type: 'step', kind: 'move', to: first.to };
+    const fallbackTo: IRTarget =
+      first.kind === 'cycle' ||
+      first.kind === 'arc' ||
+      first.kind === 'circlePath' ||
+      first.kind === 'ellipsePath'
+        ? [0, 0]
+        : first.to;
+    out[0] = { type: 'step', kind: 'move', to: fallbackTo };
   }
   return out;
 };

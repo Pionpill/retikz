@@ -1,9 +1,12 @@
 import type {
+  IRArcStep,
   IRBendStep,
+  IRCirclePathStep,
   IRControlPoint,
   IRCubicStep,
   IRCurveStep,
   IRCycleStep,
+  IREllipsePathStep,
   IRFoldStep,
   IRLineStep,
   IRMoveStep,
@@ -69,9 +72,27 @@ export type WayCubicOp = { cubic: [IRControlPoint, IRControlPoint] };
 export type WayBendOp = { bend: 'left' | 'right'; angle?: number };
 
 /**
+ * 弧段算子（infix）：以"上一项"为圆心，按起末角度 + 半径画弧；不消耗下一项
+ * （形状 step 没有 to 字段）。
+ *
+ * 注意与曲线 / 折角 infix 算子不同：way 数组里 `[..., target, { arc: {...} }, ...]`
+ * 时 arc 算子**只**消耗"前一个 target"作为圆心，**不**与"下一项"合并；
+ * 后续的 way item 仍按各自规则解析。
+ */
+export type WayArcOp = {
+  arc: { startAngle: number; endAngle: number; radius: number };
+};
+
+/** 整圆算子（infix）：以"上一项"为圆心、给定半径，画整圆。pen 留圆心 */
+export type WayCircleOp = { circle: { radius: number } };
+
+/** 整椭圆算子（infix）：以"上一项"为圆心，给定 x/y 半径，画整椭圆。pen 留圆心 */
+export type WayEllipseOp = { ellipse: { radiusX: number; radiusY: number } };
+
+/**
  * Sugar 层的 way 数组 DSL 元素。
  *
- * 接受八种形态：
+ * 接受十一种形态：
  * - 节点 id 字符串：`'A'` → line（首项时为 move）
  * - 笛卡尔坐标：`[x, y]` → line
  * - 极坐标：`{ origin?, angle, radius }` → line
@@ -81,6 +102,9 @@ export type WayBendOp = { bend: 'left' | 'right'; angle?: number };
  * - 二次贝塞尔算子（infix）：`{ curve: [cx, cy] }`，与下一项合并为 curve step
  * - 三次贝塞尔算子（infix）：`{ cubic: [[c1x, c1y], [c2x, c2y]] }`，与下一项合并为 cubic step
  * - 弧形简记算子（infix）：`{ bend: 'left' | 'right', angle?: number }`，与下一项合并为 bend step
+ * - 弧段算子（infix）：`{ arc: { startAngle, endAngle, radius } }`，以"上一项"为圆心，**不**消耗下一项
+ * - 整圆算子（infix）：`{ circle: { radius } }`，以"上一项"为圆心，**不**消耗下一项
+ * - 整椭圆算子（infix）：`{ ellipse: { radiusX, radiusY } }`，以"上一项"为圆心，**不**消耗下一项
  *
  * 后续会加：相对位移（`{ rel: [x, y] }`）等。
  *
@@ -93,7 +117,10 @@ export type WayItem =
   | WayCycle
   | WayCurveOp
   | WayCubicOp
-  | WayBendOp;
+  | WayBendOp
+  | WayArcOp
+  | WayCircleOp
+  | WayEllipseOp;
 
 /** way DSL 数组：sugar `<Draw way={...}>` 接受的输入形态 */
 export type WayDSL = Array<WayItem>;
@@ -120,8 +147,25 @@ const isWayCurveLike = (
 ): item is WayCurveOp | WayCubicOp | WayBendOp =>
   isWayCurveOp(item) || isWayCubicOp(item) || isWayBendOp(item);
 
+const isWayArcOp = (item: WayItem): item is WayArcOp =>
+  isPlainObject(item) && 'arc' in item;
+
+const isWayCircleOp = (item: WayItem): item is WayCircleOp =>
+  isPlainObject(item) && 'circle' in item;
+
+const isWayEllipseOp = (item: WayItem): item is WayEllipseOp =>
+  isPlainObject(item) && 'ellipse' in item;
+
+const isWayShapeOp = (
+  item: WayItem,
+): item is WayArcOp | WayCircleOp | WayEllipseOp =>
+  isWayArcOp(item) || isWayCircleOp(item) || isWayEllipseOp(item);
+
 const isWayOperator = (item: WayItem): boolean =>
-  isWayCycle(item) || isWayVia(item) || isWayCurveLike(item);
+  isWayCycle(item) ||
+  isWayVia(item) ||
+  isWayCurveLike(item) ||
+  isWayShapeOp(item);
 
 /** 把 WayItem 归约为它的"目标点"——target 直接返回；算子/关键字返回 null */
 const targetOf = (item: WayItem): IRTarget | null => {
@@ -220,6 +264,36 @@ export const parseWay = (way: WayDSL): Array<IRStep> => {
         out.push(bend);
       }
       i++; // 消费 next
+      continue;
+    }
+    if (isWayShapeOp(item)) {
+      // 形状算子（arc / circle / ellipse）以"上一项"为圆心，**不**消耗下一项；
+      // 后续的 way item 仍按各自规则正常解析。
+      if (isWayArcOp(item)) {
+        const arc: IRArcStep = {
+          type: 'step',
+          kind: 'arc',
+          startAngle: item.arc.startAngle,
+          endAngle: item.arc.endAngle,
+          radius: item.arc.radius,
+        };
+        out.push(arc);
+      } else if (isWayCircleOp(item)) {
+        const circle: IRCirclePathStep = {
+          type: 'step',
+          kind: 'circlePath',
+          radius: item.circle.radius,
+        };
+        out.push(circle);
+      } else {
+        const ellipse: IREllipsePathStep = {
+          type: 'step',
+          kind: 'ellipsePath',
+          radiusX: item.ellipse.radiusX,
+          radiusY: item.ellipse.radiusY,
+        };
+        out.push(ellipse);
+      }
       continue;
     }
     const lineStep: IRLineStep = { type: 'step', kind: 'line', to: item };

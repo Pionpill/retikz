@@ -8,7 +8,8 @@ import { Step } from '../kernel/Step';
 export type DrawProps = {
   /**
    * way 数组 DSL：节点 id / 笛卡尔 / 极坐标 / 折角算子 `'-|'` `'|-'` /
-   * 闭合 `DrawWay.cycle` / 曲线算子 `{ curve | cubic | bend }`（infix）
+   * 闭合 `DrawWay.cycle` / 曲线算子 `{ curve | cubic | bend }`（infix）/
+   * 形状算子 `{ arc | circle | ellipse }`（infix，以"上一项"为圆心，不消耗下一项）
    */
   way: WayDSL;
   /** 描边色，省略时用 currentColor */
@@ -86,10 +87,25 @@ export const Draw: FC<DrawProps> = props => {
             <Step key={i} kind="bend" to={s.to} bendDirection={s.bendDirection} />
           );
         }
-        // ADR-0002 task 4: 真正的 Step.arc / circlePath / ellipsePath 由后续 task 接入
-        if (s.kind === 'arc') return null;
-        if (s.kind === 'circlePath') return null;
-        if (s.kind === 'ellipsePath') return null;
+        if (s.kind === 'arc') {
+          return (
+            <Step
+              key={i}
+              kind="arc"
+              startAngle={s.startAngle}
+              endAngle={s.endAngle}
+              radius={s.radius}
+            />
+          );
+        }
+        if (s.kind === 'circlePath') {
+          return <Step key={i} kind="circlePath" radius={s.radius} />;
+        }
+        if (s.kind === 'ellipsePath') {
+          return (
+            <Step key={i} kind="ellipsePath" radiusX={s.radiusX} radiusY={s.radiusY} />
+          );
+        }
         return <Step key={i} kind="line" to={s.to} />;
       })}
     </Path>
