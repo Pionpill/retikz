@@ -19,7 +19,7 @@
 
 ### adr/
 
-- [`0001-node-font-shape.md`](./adr/0001-node-font-shape.md)：Node `font` 字段——对象 vs 扁平字段（决策：嵌套对象 `{ family, size, weight, style }`，alpha.2 起 `fontSize` 标量 deprecate）
+- [`0001-node-font-shape.md`](./adr/0001-node-font-shape.md)：Node `font` 字段——对象 vs 扁平字段（决策：嵌套对象 `{ family, size, weight, style }`，alpha.2 直接删除 `fontSize` 标量）
 - [`0002-multi-line-text.md`](./adr/0002-multi-line-text.md)：多行文本——数组 vs `\n` 字符串（决策：`text: string \| Array<string>`，单行兼容、多行用数组）
 - [`0003-padding-margin-migration.md`](./adr/0003-padding-margin-migration.md)：内 / 外边距分轴改造（决策：引入 `innerXSep` / `innerYSep` / `outerSep`，老 `padding` / `margin` 保留为 alias）
 
