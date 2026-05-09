@@ -90,7 +90,7 @@ export const DocPage: FC<DocPageProps> = props => {
             </div>
             {description && <p className="text-muted-foreground">{description}</p>}
           </header>
-          <div>
+          <div className="[&_p]:[overflow-wrap:anywhere] [&_li]:[overflow-wrap:anywhere] [&_h1]:[overflow-wrap:anywhere] [&_h2]:[overflow-wrap:anywhere] [&_h3]:[overflow-wrap:anywhere] [&_h4]:[overflow-wrap:anywhere]">
             {notFound ? (
               <p className="text-sm text-muted-foreground">{t('common.contentPlaceholder', { title })}</p>
             ) : (
