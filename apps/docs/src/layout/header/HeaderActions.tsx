@@ -30,8 +30,10 @@ import { GITHUB_URL, TIKZ_DOCS_URL, useDocActions } from './useDocActions';
 const triggerClass = cn(buttonVariants({ variant: 'ghost', size: 'icon' }), 'size-7 cursor-pointer rounded-sm');
 
 /**
- * 顶栏右侧动作组：搜索 | GitHub / 复制链接 | 主题 / 语言 / 更多。
- * 「更多」DropdownMenu 内分组：视图开关（TOC / 布局）+ ComponentPreview 全局开关（隐代码 / 强制展开）。
+ * 顶栏右侧动作组：
+ * - 桌面（lg+）：GitHub / 复制链接 / 主题 / 语言 / 更多 一字排开。
+ * - 移动端（< lg）：只保留 More 按钮，把主题 / 语言 / 复制链接 / GitHub 也塞进 Dropdown 顶部一组，
+ *   后接「视图」「演示」「资源」既有分组。模块切换 / sidebar 仍走左侧 MobileNav 抽屉。
  * TooltipProvider 在本组件内部自闭包，AppHeader 不必感知 Tooltip 实现。
  */
 export const HeaderActions: FC = () => {
@@ -51,8 +53,8 @@ export const HeaderActions: FC = () => {
 
   return (
     <TooltipProvider delayDuration={150}>
-      <div className="ml-auto hidden lg:flex items-center gap-2">
-        <div className="flex items-center gap-1">
+      <div className="flex items-center gap-2">
+        <div className="hidden lg:flex items-center gap-1">
           <Tooltip>
             <TooltipTrigger
               asChild
@@ -74,16 +76,16 @@ export const HeaderActions: FC = () => {
             </TooltipContent>
           </Tooltip>
         </div>
-        <Separator orientation="vertical" className="h-4!" />
+        <Separator orientation="vertical" className="hidden lg:block h-4!" />
         <div className="flex items-center gap-1">
           <Tooltip>
-            <TooltipTrigger className={triggerClass} onClick={handleToggleTheme}>
+            <TooltipTrigger className={cn(triggerClass, 'hidden lg:inline-flex')} onClick={handleToggleTheme}>
               <ThemeIcon className="size-4" />
             </TooltipTrigger>
             <TooltipContent>{themeLabel}</TooltipContent>
           </Tooltip>
           <Tooltip>
-            <TooltipTrigger className={triggerClass} onClick={handleCycleLang}>
+            <TooltipTrigger className={cn(triggerClass, 'hidden lg:inline-flex')} onClick={handleCycleLang}>
               <Languages className="size-4" />
             </TooltipTrigger>
             <TooltipContent>
@@ -99,20 +101,43 @@ export const HeaderActions: FC = () => {
               </TooltipTrigger>
               <TooltipContent>{t('common.more')}</TooltipContent>
             </Tooltip>
-            <DropdownMenuContent align="end" className="w-72">
+            <DropdownMenuContent align="end" className="w-56 lg:w-72">
+              {/* 移动端独占：把桌面顶栏的主题 / 语言 / 复制链接 / GitHub 收纳进来 */}
+              <DropdownMenuGroup className="lg:hidden">
+                <DropdownMenuItem onClick={handleToggleTheme} className="cursor-pointer">
+                  <ThemeIcon className="size-4" />
+                  {themeLabel}
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={handleCycleLang} className="cursor-pointer">
+                  <Languages className="size-4" />
+                  {t('common.switchLanguage')}
+                  <DropdownMenuShortcut>{i18n.resolvedLanguage?.toUpperCase()}</DropdownMenuShortcut>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={handleCopyLink} className="cursor-pointer">
+                  <LinkIcon className="size-4" />
+                  {t('toc.copyLink')}
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild className="cursor-pointer">
+                  <a href={GITHUB_URL} target="_blank" rel="noopener noreferrer">
+                    <GitHubIcon className="size-4" />
+                    {t('common.github')}
+                  </a>
+                </DropdownMenuItem>
+              </DropdownMenuGroup>
+              <DropdownMenuSeparator className="lg:hidden" />
               <DropdownMenuLabel inset className="text-xs font-normal text-muted-foreground">
                 {t('view.groupLabel')}
               </DropdownMenuLabel>
               <DropdownMenuGroup>
                 <DropdownMenuCheckboxItem checked={tocOpen} onCheckedChange={setTocOpen}>
                   {t('toc.outline')}
-                  <DropdownMenuShortcut>
+                  <DropdownMenuShortcut className="hidden lg:inline-flex">
                     <Shortcut keys={['mod', 'alt', 'B']} className="tracking-normal" />
                   </DropdownMenuShortcut>
                 </DropdownMenuCheckboxItem>
                 <DropdownMenuCheckboxItem checked={layout === 'centered'} onCheckedChange={toggleLayout}>
                   {t('common.layoutCentered')}
-                  <DropdownMenuShortcut>
+                  <DropdownMenuShortcut className="hidden lg:inline-flex">
                     <Shortcut keys={['mod', 'alt', 'M']} className="tracking-normal" />
                   </DropdownMenuShortcut>
                 </DropdownMenuCheckboxItem>
@@ -124,13 +149,13 @@ export const HeaderActions: FC = () => {
               <DropdownMenuGroup>
                 <DropdownMenuCheckboxItem checked={previewHideCode} onCheckedChange={togglePreviewHideCode}>
                   {t('preview.hideAllCode')}
-                  <DropdownMenuShortcut>
+                  <DropdownMenuShortcut className="hidden lg:inline-flex">
                     <Shortcut keys={['mod', 'alt', 'H']} className="tracking-normal" />
                   </DropdownMenuShortcut>
                 </DropdownMenuCheckboxItem>
                 <DropdownMenuCheckboxItem checked={previewIsExpand} onCheckedChange={togglePreviewIsExpand}>
                   {t('preview.expandAllCode')}
-                  <DropdownMenuShortcut>
+                  <DropdownMenuShortcut className="hidden lg:inline-flex">
                     <Shortcut keys={['mod', 'alt', 'E']} className="tracking-normal" />
                   </DropdownMenuShortcut>
                 </DropdownMenuCheckboxItem>

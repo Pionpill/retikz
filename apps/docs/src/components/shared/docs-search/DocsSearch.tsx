@@ -3,7 +3,6 @@ import { type FC, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router';
 
-import { Shortcut } from '@/components/shared/shortcut';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import {
@@ -114,20 +113,14 @@ export const DocsSearch: FC<DocsSearchProps> = ({ className }) => {
   return (
     <>
       <Button
-        variant="outline"
-        size="sm"
-        className={cn(
-          'relative h-8 w-9 justify-start gap-2 px-2 text-sm font-normal text-muted-foreground sm:w-44 sm:pr-12 lg:w-56',
-          className,
-        )}
+        variant="ghost"
+        size="icon"
+        className={cn('size-7 cursor-pointer rounded-sm', className)}
         onClick={() => setOpen(true)}
         aria-label={t('common.searchHint')}
+        title={t('common.searchHint')}
       >
-        <Search className="size-3.5 shrink-0" />
-        <span className="hidden truncate sm:inline-flex">{t('common.search')}</span>
-        <span className="pointer-events-none absolute top-1/2 right-1.5 hidden -translate-y-1/2 sm:flex">
-          <Shortcut keys={['mod', 'K']} />
-        </span>
+        <Search className="size-4" />
       </Button>
       <CommandDialog
         open={open}
