@@ -117,6 +117,55 @@ export const BendStepSchema = z
   })
   .describe('Bend action: shorthand for an arc-like cubic; control points computed at compile time');
 
+export const ArcStepSchema = z
+  .object({
+    type: z.literal('step').describe('Discriminator marking this as a path step node'),
+    kind: z
+      .literal('arc')
+      .describe('Arc segment from cursor as center, sweeping startAngle → endAngle on a circle of given radius (TikZ `arc[start angle=…, end angle=…, radius=…]`); pen ends at the arc endpoint, not the center'),
+    startAngle: z
+      .number()
+      .describe('Arc start angle in degrees, CCW from +x axis (math convention; SVG y-down means visual CW)'),
+    endAngle: z
+      .number()
+      .describe('Arc end angle in degrees; sweep direction inferred from startAngle vs endAngle'),
+    radius: z
+      .number()
+      .positive()
+      .describe('Arc radius in user units'),
+  })
+  .describe('Arc action: TikZ-style arc with implicit center at the cursor; startAngle / endAngle / radius give the geometry. Pen is left at the arc endpoint.');
+
+export const CirclePathStepSchema = z
+  .object({
+    type: z.literal('step').describe('Discriminator marking this as a path step node'),
+    kind: z
+      .literal('circlePath')
+      .describe('Full circle centered at the cursor with given radius (TikZ `circle[radius=…]`); SVG path emits two semi-arcs to avoid the 360° A-command degeneracy. Pen returns to the center.'),
+    radius: z
+      .number()
+      .positive()
+      .describe('Circle radius in user units'),
+  })
+  .describe('CirclePath action: full closed circle around the cursor as center; pen returns to center after.');
+
+export const EllipsePathStepSchema = z
+  .object({
+    type: z.literal('step').describe('Discriminator marking this as a path step node'),
+    kind: z
+      .literal('ellipsePath')
+      .describe('Full ellipse centered at the cursor with given x/y radii (TikZ `ellipse[x radius=…, y radius=…]`); SVG path emits two semi-arcs. Pen returns to the center.'),
+    radiusX: z
+      .number()
+      .positive()
+      .describe('Ellipse x-axis radius (semi-major or semi-minor on x)'),
+    radiusY: z
+      .number()
+      .positive()
+      .describe('Ellipse y-axis radius (semi-major or semi-minor on y)'),
+  })
+  .describe('EllipsePath action: full closed ellipse around the cursor; pen returns to center.');
+
 export const StepSchema = z
   .discriminatedUnion('kind', [
     MoveStepSchema,
@@ -126,6 +175,9 @@ export const StepSchema = z
     CurveStepSchema,
     CubicStepSchema,
     BendStepSchema,
+    ArcStepSchema,
+    CirclePathStepSchema,
+    EllipsePathStepSchema,
   ])
   .describe('A single path action; the discriminator field is `kind`');
 
@@ -150,8 +202,17 @@ export type IRCubicStep = z.infer<typeof CubicStepSchema>;
 /** Bend step：弧形简记，按方向 + 角度生成 */
 export type IRBendStep = z.infer<typeof BendStepSchema>;
 
+/** Arc step：以游标为圆心的圆弧段，按起末角度 + 半径定 */
+export type IRArcStep = z.infer<typeof ArcStepSchema>;
+/** CirclePath step：以游标为圆心的整圆 */
+export type IRCirclePathStep = z.infer<typeof CirclePathStepSchema>;
+/** EllipsePath step：以游标为圆心的整椭圆 */
+export type IREllipsePathStep = z.infer<typeof EllipsePathStepSchema>;
+
 /**
- * 路径上的一个动作。alpha.3 起支持 'move' / 'line' / 'step'（折角）/ 'cycle' /
- * 'curve' / 'cubic' / 'bend'（曲线三件套，ADR-0001）。后续 ADR-0003 会加相对坐标。
+ * 路径上的一个动作。alpha.3 起支持十种 kind：'move' / 'line' / 'step'（折角）/
+ * 'cycle' / 'curve' / 'cubic' / 'bend'（曲线三件套，ADR-0001）/
+ * 'arc' / 'circlePath' / 'ellipsePath'（path-level 形状，ADR-0002）。
+ * 后续 ADR-0003 会加相对坐标。
  */
 export type IRStep = z.infer<typeof StepSchema>;

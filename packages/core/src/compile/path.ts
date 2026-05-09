@@ -165,18 +165,30 @@ export const emitPathPrimitive = (
   const steps = path.children;
   if (steps.length < 2) return null;
 
-  // 每个 step 的几何参考点（节点中心 / 直接坐标）。cycle 没有 to。
+  // "无 to" 的 step kinds：cycle / arc / circlePath / ellipsePath
+  // （后三者由 ADR-0002 引入，task 1 仅占位、task 3 才实现真正的几何）
+  type StepWithTo = Exclude<
+    IRStep,
+    { kind: 'cycle' } | { kind: 'arc' } | { kind: 'circlePath' } | { kind: 'ellipsePath' }
+  >;
+  const hasTo = (s: IRStep): s is StepWithTo =>
+    s.kind !== 'cycle' &&
+    s.kind !== 'arc' &&
+    s.kind !== 'circlePath' &&
+    s.kind !== 'ellipsePath';
+
+  // 每个 step 的几何参考点（节点中心 / 直接坐标）。无 to 的 step kind 给 null。
   const anchors: Array<IRPosition | null> = steps.map(s =>
-    s.kind === 'cycle' ? null : refPointOfTarget(s.to, nodeIndex),
+    hasTo(s) ? refPointOfTarget(s.to, nodeIndex) : null,
   );
 
-  /** 找 i 之前最近的"有 to 字段的 step"（跳过 cycle） + 它的 anchor */
+  /** 找 i 之前最近的"有 to 字段的 step" + 它的 anchor */
   const findPrev = (
     i: number,
-  ): { step: Exclude<IRStep, { kind: 'cycle' }>; anchor: IRPosition } | null => {
+  ): { step: StepWithTo; anchor: IRPosition } | null => {
     for (let j = i - 1; j >= 0; j--) {
       const s = steps[j];
-      if (s.kind === 'cycle') continue;
+      if (!hasTo(s)) continue;
       const a = anchors[j];
       if (!a) return null;
       return { step: s, anchor: a };
@@ -187,8 +199,9 @@ export const emitPathPrimitive = (
   /** 找 i 之前最近的 move 的 to——cycle 闭合的目标 */
   const findRecentMoveTo = (i: number): IRTarget | null => {
     for (let j = i - 1; j >= 0; j--) {
-      if (steps[j].kind === 'move') {
-        return (steps[j] as Exclude<IRStep, { kind: 'cycle' }>).to;
+      const s = steps[j];
+      if (s.kind === 'move') {
+        return s.to;
       }
     }
     return null;
@@ -311,6 +324,8 @@ export const emitPathPrimitive = (
       emitC(c1, c2, toClip);
       continue;
     }
+    // TODO: implemented in ADR-0002 step.3
+    if (step.kind === 'arc' || step.kind === 'circlePath' || step.kind === 'ellipsePath') continue;
 
     // step.kind === 'step'（fold）
     const corner = cornerOf(prev.anchor, currAnchor, step.via);

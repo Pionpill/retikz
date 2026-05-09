@@ -76,6 +76,10 @@ const stepToElement = (step: IRStep, key: number): ReactNode => {
       bendDirection: step.bendDirection,
     });
   }
+  // ADR-0002 task 4: 真正的 Step.arc / circlePath / ellipsePath 由后续 task 接入
+  if (step.kind === 'arc') return null;
+  if (step.kind === 'circlePath') return null;
+  if (step.kind === 'ellipsePath') return null;
   return createElement(Step, { key, kind: step.kind, to: step.to });
 };
 

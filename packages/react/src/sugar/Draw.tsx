@@ -86,6 +86,10 @@ export const Draw: FC<DrawProps> = props => {
             <Step key={i} kind="bend" to={s.to} bendDirection={s.bendDirection} />
           );
         }
+        // ADR-0002 task 4: 真正的 Step.arc / circlePath / ellipsePath 由后续 task 接入
+        if (s.kind === 'arc') return null;
+        if (s.kind === 'circlePath') return null;
+        if (s.kind === 'ellipsePath') return null;
         return <Step key={i} kind="line" to={s.to} />;
       })}
     </Path>
