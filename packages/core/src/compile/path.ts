@@ -89,8 +89,10 @@ const refPointOfTarget = (
         return angleBoundaryOf(node, ref.angle);
     }
   }
-  // TODO: ADR-0003 Task 2 — resolve `{ rel }` / `{ relAccumulate }` against prevEnd / pathStart
-  if (!Array.isArray(target) && typeof target === 'object' && ('rel' in target || 'relAccumulate' in target)) {
+  // ADR-0003 Task 2: rel / relAccumulate 已在 emitPathPrimitive 入口被
+  // normalizeRelativeTargets 解析成绝对 [x, y]，到这里不应再出现。防御性
+  // 守卫给 TS narrowing 用——resolvePosition 签名只收 string | [x,y] | Polar。
+  if (typeof target === 'object' && !Array.isArray(target) && ('rel' in target || 'relAccumulate' in target)) {
     return null;
   }
   return resolvePosition(target, nodeIndex);
@@ -134,8 +136,9 @@ const clipForTarget = (
         return angleBoundaryOf(node, ref.angle);
     }
   }
-  // TODO: ADR-0003 Task 2 — resolve `{ rel }` / `{ relAccumulate }` against prevEnd / pathStart
-  if (!Array.isArray(target) && typeof target === 'object' && ('rel' in target || 'relAccumulate' in target)) {
+  // ADR-0003 Task 2: rel / relAccumulate 已被 normalizeRelativeTargets 预解析。
+  // 防御性守卫给 TS narrowing 用。
+  if (typeof target === 'object' && !Array.isArray(target) && ('rel' in target || 'relAccumulate' in target)) {
     return null;
   }
   return resolvePosition(target, nodeIndex);
@@ -144,6 +147,87 @@ const clipForTarget = (
 /** 浅相等：两个 IRPosition 的两个分量都精确相等（未 round） */
 const samePoint = (a: IRPosition | null, b: IRPosition | null): boolean =>
   !!a && !!b && a[0] === b[0] && a[1] === b[1];
+
+/**
+ * 把 rel / relAccumulate 目标解析为绝对 Position，产出 step kind 不变但
+ * `to` 字段全为绝对坐标的步序列。
+ *
+ * 决策（ADR-0003 §影响 与 §背景 文本有矛盾）：
+ *   两者都相对 prevEnd 解析，区别仅在是否更新 prevEnd——
+ *   rel 不更新（保持 TikZ `+` 语义），relAccumulate 更新（TikZ `++` 累积）。
+ *   选这个语义因为：(1) 与 TikZ `+`/`++` 一致；(2) 与字段名"Accumulate"
+ *   语义匹配；(3) 与 ADR 背景段一致；§影响 段写"pathStart + offset"是 typo。
+ *
+ * 跨 step kind 的 prevEnd 推进：
+ * - 有 to 的 kind（move/line/step/curve/cubic/bend）：prevEnd = refPointOfTarget(to)
+ * - arc：prevEnd = arcEndPoint(prevEnd, radius, endAngle)
+ * - circlePath / ellipsePath：prevEnd 不变（画完留圆心，即 prevEnd 本身）
+ * - cycle：prevEnd 不变（不重置到 pathStart，保持简单；后续如有需要再扩）
+ *
+ * prevEnd 为 null（首步是 rel）时回退到 [0, 0] 当锚点；解析失败保持原 step。
+ */
+const normalizeRelativeTargets = (
+  steps: ReadonlyArray<IRStep>,
+  nodeIndex: Map<string, NodeLayout>,
+): Array<IRStep> => {
+  let prevEnd: IRPosition | null = null;
+  const out: Array<IRStep> = [];
+
+  for (const step of steps) {
+    if (step.kind === 'cycle') {
+      out.push(step);
+      // prevEnd 不变（不重置到 pathStart）
+      continue;
+    }
+    if (step.kind === 'circlePath' || step.kind === 'ellipsePath') {
+      out.push(step);
+      // prevEnd 不变（画完笔位回到圆心，即 prevEnd 本身）
+      continue;
+    }
+    if (step.kind === 'arc') {
+      out.push(step);
+      if (prevEnd) {
+        prevEnd = arcEndPoint(prevEnd, step.radius, step.endAngle);
+      }
+      continue;
+    }
+
+    // step 有 to 字段（move / line / step(fold) / curve / cubic / bend）
+    const original = step.to;
+    let resolvedTo: IRTarget = original;
+    let updatePrevEnd = true;
+
+    if (
+      typeof original === 'object' &&
+      !Array.isArray(original) &&
+      'rel' in original
+    ) {
+      const ref = prevEnd ?? [0, 0];
+      resolvedTo = [ref[0] + original.rel[0], ref[1] + original.rel[1]];
+      updatePrevEnd = false;
+    } else if (
+      typeof original === 'object' &&
+      !Array.isArray(original) &&
+      'relAccumulate' in original
+    ) {
+      const ref = prevEnd ?? [0, 0];
+      resolvedTo = [
+        ref[0] + original.relAccumulate[0],
+        ref[1] + original.relAccumulate[1],
+      ];
+      // updatePrevEnd 保持 true
+    }
+
+    out.push({ ...step, to: resolvedTo });
+
+    if (updatePrevEnd) {
+      const pos = refPointOfTarget(resolvedTo, nodeIndex);
+      if (pos) prevEnd = pos;
+    }
+  }
+
+  return out;
+};
 
 /**
  * 把 IR Path 翻译为单个 PathPrim。
@@ -171,7 +255,9 @@ export const emitPathPrimitive = (
   nodeIndex: Map<string, NodeLayout>,
   round: (n: number) => number,
 ): { primitive: ScenePrimitive; points: Array<IRPosition> } | null => {
-  const steps = path.children;
+  // ADR-0003 Task 2：先把所有 rel / relAccumulate 目标解析为绝对坐标，
+  // 后续算法对 step.to 的处理就和绝对坐标完全一致。
+  const steps = normalizeRelativeTargets(path.children, nodeIndex);
   if (steps.length < 2) return null;
 
   // "无 to" 的 step kinds：cycle / arc / circlePath / ellipsePath

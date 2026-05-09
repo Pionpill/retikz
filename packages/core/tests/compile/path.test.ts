@@ -1059,3 +1059,200 @@ describe("compile path: 'ellipsePath' (ADR-0002 alpha.3)", () => {
     );
   });
 });
+
+describe("compile path: 'rel' / 'relAccumulate' (ADR-0003 alpha.3)", () => {
+  it('rel 解析为 prevEnd + offset；prevEnd 不更新（链式 rel 全相对同一锚点）', () => {
+    const ir: IR = {
+      version: 1,
+      type: 'scene',
+      children: [
+        {
+          type: 'path',
+          children: [
+            { type: 'step', kind: 'move', to: [0, 0] },
+            { type: 'step', kind: 'line', to: [10, 0] },
+            { type: 'step', kind: 'line', to: { rel: [5, 0] } },
+            { type: 'step', kind: 'line', to: { rel: [3, 0] } },
+          ],
+        },
+      ],
+    };
+    // (10,0) prevEnd 锚定；两条 rel 都从 (10,0) 出发
+    expect(findPathPrim(compileToScene(ir).primitives).d).toBe(
+      'M 0 0 L 10 0 L 15 0 L 13 0',
+    );
+  });
+
+  it('relAccumulate 解析为 prevEnd + offset；更新 prevEnd（链式累积）', () => {
+    const ir: IR = {
+      version: 1,
+      type: 'scene',
+      children: [
+        {
+          type: 'path',
+          children: [
+            { type: 'step', kind: 'move', to: [0, 0] },
+            { type: 'step', kind: 'line', to: [10, 0] },
+            { type: 'step', kind: 'line', to: { relAccumulate: [5, 0] } },
+            { type: 'step', kind: 'line', to: { relAccumulate: [3, 0] } },
+          ],
+        },
+      ],
+    };
+    expect(findPathPrim(compileToScene(ir).primitives).d).toBe(
+      'M 0 0 L 10 0 L 15 0 L 18 0',
+    );
+  });
+
+  it('rel + relAccumulate 混用', () => {
+    const ir: IR = {
+      version: 1,
+      type: 'scene',
+      children: [
+        {
+          type: 'path',
+          children: [
+            { type: 'step', kind: 'move', to: [0, 0] },
+            { type: 'step', kind: 'line', to: { rel: [10, 0] } },          // → (10,0)，prevEnd 留 (0,0)
+            { type: 'step', kind: 'line', to: { relAccumulate: [5, 5] } }, // → (5,5)，prevEnd → (5,5)
+            { type: 'step', kind: 'line', to: { rel: [-3, 0] } },          // → (2,5)，prevEnd 留 (5,5)
+          ],
+        },
+      ],
+    };
+    expect(findPathPrim(compileToScene(ir).primitives).d).toBe(
+      'M 0 0 L 10 0 L 5 5 L 2 5',
+    );
+  });
+
+  it('rel 与曲线 step 混用（curve 后 prevEnd 是曲线终点）', () => {
+    const ir: IR = {
+      version: 1,
+      type: 'scene',
+      children: [
+        {
+          type: 'path',
+          children: [
+            { type: 'step', kind: 'move', to: [0, 0] },
+            {
+              type: 'step',
+              kind: 'curve',
+              to: [10, 0],
+              control: [5, -5],
+            },
+            { type: 'step', kind: 'line', to: { rel: [5, 0] } },
+          ],
+        },
+      ],
+    };
+    // 曲线后 prevEnd = (10,0)；rel 解析到 (15,0)
+    expect(findPathPrim(compileToScene(ir).primitives).d).toBe(
+      'M 0 0 Q 5 -5 10 0 L 15 0',
+    );
+  });
+
+  it('rel 在 arc 之后：以 arc 终点为锚点', () => {
+    const ir: IR = {
+      version: 1,
+      type: 'scene',
+      children: [
+        {
+          type: 'path',
+          children: [
+            { type: 'step', kind: 'move', to: [0, 0] },
+            {
+              type: 'step',
+              kind: 'arc',
+              startAngle: 0,
+              endAngle: 90,
+              radius: 10,
+            },
+            { type: 'step', kind: 'line', to: { rel: [5, 0] } },
+          ],
+        },
+      ],
+    };
+    // arc endpoint (polar y-down) = (0, 10)；rel 解析到 (5, 10)
+    expect(findPathPrim(compileToScene(ir).primitives).d).toBe(
+      'M 10 0 A 10 10 0 0 1 0 10 L 5 10',
+    );
+  });
+
+  it('rel 在 circle 之后：以圆心为锚点（prevEnd 不变）', () => {
+    const ir: IR = {
+      version: 1,
+      type: 'scene',
+      children: [
+        {
+          type: 'path',
+          children: [
+            { type: 'step', kind: 'move', to: [0, 0] },
+            { type: 'step', kind: 'circlePath', radius: 10 },
+            { type: 'step', kind: 'line', to: { rel: [5, 5] } },
+          ],
+        },
+      ],
+    };
+    // circle 画完 prevEnd 仍是 (0,0)；rel 解析到 (5,5)
+    // circle SVG 后 lastEnd 是 (10,0)（最末半弧终点）；line 起点是
+    // penOverride = center = (0,0)，所以会发 M 0 0 然后 L 5 5
+    expect(findPathPrim(compileToScene(ir).primitives).d).toBe(
+      'M 10 0 A 10 10 0 0 1 -10 0 A 10 10 0 0 1 10 0 M 0 0 L 5 5',
+    );
+  });
+
+  it('首步是 rel（无 prevEnd）回退到 [0,0]', () => {
+    const ir: IR = {
+      version: 1,
+      type: 'scene',
+      children: [
+        {
+          type: 'path',
+          children: [
+            // 首步 move 用 rel：prevEnd 为 null，回退到 [0,0]，rel 解析到 (5, 3)
+            { type: 'step', kind: 'move', to: { rel: [5, 3] } },
+            { type: 'step', kind: 'line', to: [10, 3] },
+          ],
+        },
+      ],
+    };
+    expect(findPathPrim(compileToScene(ir).primitives).d).toBe(
+      'M 5 3 L 10 3',
+    );
+  });
+
+  it('rel 与等价绝对坐标产 IR 不同但 SVG d 相同', () => {
+    const irRel: IR = {
+      version: 1,
+      type: 'scene',
+      children: [
+        {
+          type: 'path',
+          children: [
+            { type: 'step', kind: 'move', to: [0, 0] },
+            { type: 'step', kind: 'line', to: { rel: [10, 5] } },
+            { type: 'step', kind: 'line', to: { relAccumulate: [5, 0] } },
+          ],
+        },
+      ],
+    };
+    const irAbs: IR = {
+      version: 1,
+      type: 'scene',
+      children: [
+        {
+          type: 'path',
+          children: [
+            { type: 'step', kind: 'move', to: [0, 0] },
+            { type: 'step', kind: 'line', to: [10, 5] }, // rel 不更新 prevEnd → 但 line 自己更新；这里用绝对值刚好等价
+            { type: 'step', kind: 'line', to: [5, 0] },  // relAccumulate [5,0] 从 prevEnd (0,0)
+          ],
+        },
+      ],
+    };
+    // 注意：rel [10,5] 后 prevEnd 留 (0,0)；relAccumulate [5,0] 解析到 (0+5, 0+0) = (5,0)
+    expect(findPathPrim(compileToScene(irRel).primitives).d).toBe(
+      findPathPrim(compileToScene(irAbs).primitives).d,
+    );
+  });
+});
