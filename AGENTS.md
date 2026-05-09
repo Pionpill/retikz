@@ -188,7 +188,7 @@ pnpm lint                                  # 全部包 ESLint（不带 --fix）
 - **不要直接编辑 `components/ui/*` 下的 shadcn vendored 文件**
   - 这些是由 shadcn CLI 生成的，需要修补时优先：(a) 用 shadcn CLI 重新生成；(b) 在外层包一个本地 wrapper / forwardRef 适配；(c) 在调用处避开有问题的用法（不要靠改 vendored 来绕坑）
   - 直接改这些文件会让后续 `shadcn add` 升级时被覆盖，且和上游 issue / 文档脱节
-- **在函数体里解构 props**，不在签名里
+- **在函数体里解构 props，不在签名里**——无例外
   ```tsx
   // ✅
   const Foo: FC<FooProps> = props => {
@@ -196,11 +196,10 @@ pnpm lint                                  # 全部包 ESLint（不带 --fix）
     // ...
   };
 
-  // ❌
+  // ❌ 不论组件大小都不要这么写
   const Foo: FC<FooProps> = ({ id, onDone }) => { ... };
   ```
-  - 理由：调试 / 日志时能直接 `console.log(props)`；用 hook 给 props 包一层（`useMemo(() => ..., [props])`）时不需要重新拼回去；改名 / 加字段时只动一处
-  - 例外：解构后立刻只用一两个字段、又确实更短的小组件（如 `<Icon size />`）——按可读性裁量
+  - 理由：调试 / 日志时能直接 `console.log(props)`；用 hook 给 props 包一层（`useMemo(() => ..., [props])`）时不需要重新拼回去；改名 / 加字段时只动一处；统一形式让 review 不必为「这个组件够小吗」纠结
 
 ## IR / Schema 风格（zod）
 

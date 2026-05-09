@@ -25,6 +25,7 @@
     "react": "catalog:",
     "react-dom": "catalog:",
     "react-i18next": "catalog:",
+    "react-resizable-panels": "catalog:",
     "react-router": "catalog:",
     "react-syntax-highlighter": "catalog:",
     "rehype-mdx-code-props": "catalog:",

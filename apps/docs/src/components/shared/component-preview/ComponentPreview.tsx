@@ -1,28 +1,21 @@
-import { JsonIcon, ReactIcon } from '@/components/icons';
+import { ChevronsDownUp, ChevronsUpDown, X } from 'lucide-react';
+import type { FC, ReactElement, ReactNode } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { useParams } from 'react-router';
+
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
 import { useComponentPreviewStore } from '@/store/useComponentPreviewStore';
 import type { IR } from '@retikz/core';
 import { convertReactNodeToIR } from '@retikz/react';
-import {
-  ArrowDown,
-  ArrowLeft,
-  ArrowRight,
-  ArrowUp,
-  Check,
-  ChevronsDownUp,
-  ChevronsUpDown,
-  Copy,
-  RotateCcw,
-  X,
-  ZoomIn,
-  ZoomOut,
-} from 'lucide-react';
-import type { FC, ReactElement, ReactNode } from 'react';
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { useParams } from 'react-router';
+
 import { HighlightedCode } from '../highlight-code';
+import { ComponentDetailDialog } from './ComponentDetailDialog';
+import { CopyButton, ToolbarIconButton, ViewToggle } from './_parts';
+import { type AlignKey, type SourceView, alignClass, formatIR } from './_shared';
+import { PanZoomToolbar } from './PanZoomToolbar';
+import { usePanZoom } from './usePanZoom';
 
 /**
  * 收集 contents/<...>/<name>.demo.tsx 下的所有 demo（demo 文件与 mdx 同级，靠 .demo.tsx 后缀甄别）：
@@ -43,12 +36,6 @@ const demoSources: Record<string, string | undefined> = import.meta.glob<string>
 
 const buildKey = (segments: Array<string>, name: string) => `../../../contents/${segments.join('/')}/${name}.demo.tsx`;
 
-const alignClass = {
-  center: 'items-center',
-  start: 'items-start',
-  end: 'items-end',
-} as const;
-
 /** 折叠态显示前几行 */
 const PREVIEW_MAX_LINES = 3;
 /** 已 View Code 之后默认折叠状态下的代码区高度上限（按 ~15 行 × 1.5em line-height + 一点点 padding 算）*/
@@ -56,35 +43,25 @@ const COLLAPSED_CODE_MAX_H = '[&_pre]:max-h-[15rem] [&_pre]:overflow-y-auto';
 /** 触发「展开/收起」按钮的最小行数门槛 */
 const COLLAPSE_THRESHOLD_LINES = 10;
 
-/** 源码视图切换：React 源码 / IR JSON */
-type SourceView = 'react' | 'ir';
-
-/**
- * `JSON.stringify(_, null, 2)` 会把数组无脑拆成 4 行（`position: [0, 0]` 也变 4 行），
- * IR 输出特别冗长。这里 post-process：把不含嵌套对象/数组的纯标量短数组压回单行（限 60 字符以内
- * 避免长数组内联反而难读）。
- */
-const formatIR = (ir: unknown): string =>
-  JSON.stringify(ir, null, 2).replace(/\[\s*([^[\]{}]+?)\s*\]/g, (match, contents: string) => {
-    const inlined = `[${contents
-      .replace(/\s+/g, ' ')
-      .replace(/\s*,\s*/g, ', ')
-      .trim()}]`;
-    return inlined.length <= 60 ? inlined : match;
-  });
-
 export type ComponentPreviewProps = {
   /** demo 文件名（不含 `.demo.tsx` 后缀），相对当前 mdx 同级目录解析 */
   name: string;
   /** 渲染区垂直对齐，默认 center */
-  align?: keyof typeof alignClass;
+  align?: AlignKey;
   /** 透传到 demo 渲染区父级 div 的 className，可覆盖默认的 h-72 / p-10 / 居中等 */
   componentClassName?: string;
   /** 隐藏底部「View Code / 源码 / IR」面板，只保留 demo 渲染区——用于叙述性插图，让 retikz 画的图当配图使 */
   hideCode?: boolean;
 };
 
-/** MDX 内的"渲染 + 源码"演示卡，下半段对齐 shadcn v4 的 View Code 一次性切换 */
+/**
+ * MDX 内的"渲染 + 源码"演示卡。下半段对齐 shadcn v4 的 View Code 一次性切换。
+ * 拆分：
+ * - 平移 / 缩放状态走 `usePanZoom`，与 Dialog 共享上下文
+ * - hover 工具条在 `PanZoomToolbar`
+ * - 放大查看 + 编辑在 `MaximizedDialog`
+ * 本文件保留 demo 数据载入 + 卡片骨架 + 下方代码面板（View Code / 折叠 / 复制）三段。
+ */
 export const ComponentPreview: FC<ComponentPreviewProps> = props => {
   const { name, align = 'center', componentClassName, hideCode = false } = props;
   // ALL hooks 必须无条件先于 early return 调用。
@@ -95,8 +72,11 @@ export const ComponentPreview: FC<ComponentPreviewProps> = props => {
   const [localIsExpanded, setLocalIsExpanded] = useState<boolean | undefined>(undefined);
   const [copied, setCopied] = useState(false);
   const timerRef = useRef<number | null>(null);
-  // 渲染区平移 / 缩放：纯 CSS transform 实现，单次点击 24px 步进、缩放 ×1.2 因子
-  const [transform, setTransform] = useState({ x: 0, y: 0, scale: 1 });
+  // 卡内 drag 默认关闭，靠工具条 Hand 按钮开启；Dialog 内强制开启
+  const [dragEnabled, setDragEnabled] = useState(false);
+  const [isMaximized, setIsMaximized] = useState(false);
+  const { transform, isDragging, panBy, zoomBy, resetTransform, isTransformed, transformStyle, beginDrag } =
+    usePanZoom();
 
   // 全局默认（仅在该卡 local 仍为 undefined 时生效）：
   // - isExpand 启用 → 默认揭示并展开
@@ -161,7 +141,6 @@ export const ComponentPreview: FC<ComponentPreviewProps> = props => {
   const sourcePreview = trimmedSource.split('\n').slice(0, PREVIEW_MAX_LINES).join('\n');
   const showFull = isCodeVisible || !hasMoreLines;
 
-  // 工具栏可见时按 view 选展示内容（react 源码 vs IR JSON）；折叠态（View Code 之前）始终给 React 截断片
   const fullCode = view === 'ir' ? irJson : trimmedSource;
   const fullLang = view === 'ir' ? 'json' : 'tsx';
   const displayedCode = showFull ? fullCode : sourcePreview;
@@ -177,128 +156,41 @@ export const ComponentPreview: FC<ComponentPreviewProps> = props => {
     timerRef.current = window.setTimeout(() => setCopied(false), 3000);
   };
 
-  // 折叠源码区回到 View Code 占位状态：把局部状态显式置 false（覆盖任何全局默认）
   const handleHideAll = () => {
     setLocalIsCodeVisible(false);
     setLocalIsExpanded(false);
     setView('react');
   };
 
-  const PAN_STEP = 24;
-  const ZOOM_FACTOR = 1.2;
-  const ZOOM_MIN = 0.25;
-  const ZOOM_MAX = 4;
-  const panBy = (dx: number, dy: number) => setTransform(t => ({ ...t, x: t.x + dx, y: t.y + dy }));
-  const zoomBy = (factor: number) =>
-    setTransform(t => ({ ...t, scale: Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, t.scale * factor)) }));
-  const resetTransform = () => setTransform({ x: 0, y: 0, scale: 1 });
-  const isTransformed = transform.x !== 0 || transform.y !== 0 || transform.scale !== 1;
+  const cardDragCursor = dragEnabled ? (isDragging ? 'cursor-grabbing' : 'cursor-grab') : '';
 
   return (
     <div className="my-6 overflow-hidden rounded-xl border">
       <div
         className={cn(
-          'group/preview relative flex h-72 w-full justify-center overflow-hidden p-10',
+          'group/preview relative flex h-72 w-full justify-center overflow-hidden p-10 select-none',
           alignClass[align],
+          cardDragCursor,
           componentClassName,
         )}
+        onMouseDown={beginDrag(dragEnabled)}
       >
         <div
-          className="flex items-center justify-center transition-transform duration-150"
-          style={{
-            transform: `translate(${transform.x}px, ${transform.y}px) scale(${transform.scale})`,
-          }}
+          className={cn('flex items-center justify-center', !isDragging && 'transition-transform duration-150')}
+          style={{ transform: transformStyle }}
         >
           <Component />
         </div>
-        {/* hover-revealed pan/zoom 工具条：手柄式 3x4 布局——
-            ↑ / ← ⟲ → / ↓ / + ‧ −。空位用 <span/> 占网格槽避免按钮跨列。 */}
-        <div
-          className={cn(
-            'absolute right-2 bottom-2 grid grid-cols-3 gap-0.5 rounded-md border bg-background/95 p-1 shadow-sm backdrop-blur',
-            'pointer-events-none opacity-0 transition-opacity group-hover/preview:pointer-events-auto group-hover/preview:opacity-100 focus-within:pointer-events-auto focus-within:opacity-100',
-          )}
-        >
-          <span />
-          <Button
-            type="button"
-            size="icon"
-            variant="ghost"
-            aria-label="Pan up"
-            className="size-7 cursor-pointer rounded-sm text-muted-foreground"
-            onClick={() => panBy(0, -PAN_STEP)}
-          >
-            <ArrowUp className="size-3.5" />
-          </Button>
-          <span />
-          <Button
-            type="button"
-            size="icon"
-            variant="ghost"
-            aria-label="Pan left"
-            className="size-7 cursor-pointer rounded-sm text-muted-foreground"
-            onClick={() => panBy(-PAN_STEP, 0)}
-          >
-            <ArrowLeft className="size-3.5" />
-          </Button>
-          <Button
-            type="button"
-            size="icon"
-            variant="ghost"
-            aria-label="Reset"
-            disabled={!isTransformed}
-            className="size-7 cursor-pointer rounded-sm text-muted-foreground"
-            onClick={resetTransform}
-          >
-            <RotateCcw className="size-3.5" />
-          </Button>
-          <Button
-            type="button"
-            size="icon"
-            variant="ghost"
-            aria-label="Pan right"
-            className="size-7 cursor-pointer rounded-sm text-muted-foreground"
-            onClick={() => panBy(PAN_STEP, 0)}
-          >
-            <ArrowRight className="size-3.5" />
-          </Button>
-          <span />
-          <Button
-            type="button"
-            size="icon"
-            variant="ghost"
-            aria-label="Pan down"
-            className="size-7 cursor-pointer rounded-sm text-muted-foreground"
-            onClick={() => panBy(0, PAN_STEP)}
-          >
-            <ArrowDown className="size-3.5" />
-          </Button>
-          <span />
-          <Separator className="col-span-3 my-0.5" />
-          <Button
-            type="button"
-            size="icon"
-            variant="ghost"
-            aria-label="Zoom in"
-            disabled={transform.scale >= ZOOM_MAX}
-            className="size-7 cursor-pointer rounded-sm text-muted-foreground"
-            onClick={() => zoomBy(ZOOM_FACTOR)}
-          >
-            <ZoomIn className="size-3.5" />
-          </Button>
-          <span />
-          <Button
-            type="button"
-            size="icon"
-            variant="ghost"
-            aria-label="Zoom out"
-            disabled={transform.scale <= ZOOM_MIN}
-            className="size-7 cursor-pointer rounded-sm text-muted-foreground"
-            onClick={() => zoomBy(1 / ZOOM_FACTOR)}
-          >
-            <ZoomOut className="size-3.5" />
-          </Button>
-        </div>
+        <PanZoomToolbar
+          transform={transform}
+          isTransformed={isTransformed}
+          panBy={panBy}
+          zoomBy={zoomBy}
+          resetTransform={resetTransform}
+          dragEnabled={dragEnabled}
+          toggleDrag={() => setDragEnabled(prev => !prev)}
+          onMaximize={() => setIsMaximized(true)}
+        />
       </div>
       {hideCode ? null : (
         <div className="relative overflow-hidden border-t bg-muted/50 text-sm">
@@ -306,64 +198,21 @@ export const ComponentPreview: FC<ComponentPreviewProps> = props => {
             <>
               <div className="flex items-center justify-between p-1 px-2">
                 <div className="flex items-center gap-1">
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant={view === 'react' ? 'outline' : 'ghost'}
-                    className={view === 'react' ? '' : 'border border-transparent'}
-                    aria-pressed={view === 'react'}
-                    aria-label="React source"
-                    onClick={() => setView('react')}
-                  >
-                    <ReactIcon className="size-3.5" />
-                    React
-                  </Button>
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant={view === 'ir' ? 'outline' : 'ghost'}
-                    className={view === 'ir' ? '' : 'border border-transparent'}
-                    aria-pressed={view === 'ir'}
-                    aria-label="IR JSON"
-                    onClick={() => setView('ir')}
-                  >
-                    <JsonIcon className="size-3.5" />
-                    IR
-                  </Button>
+                  <ViewToggle view={view} onChange={setView} />
                 </div>
                 <div className="flex items-center gap-1">
-                  <Button
-                    type="button"
-                    size="icon"
-                    variant="ghost"
-                    aria-label={copied ? 'Copied' : 'Copy'}
-                    className="size-7 cursor-pointer rounded-sm text-muted-foreground"
-                    onClick={handleCopy}
-                  >
-                    {copied ? <Check className="size-4" /> : <Copy className="size-4" />}
-                  </Button>
+                  <CopyButton copied={copied} onCopy={handleCopy} />
                   {displayedLineCount > COLLAPSE_THRESHOLD_LINES && (
-                    <Button
-                      type="button"
-                      size="icon"
-                      variant="ghost"
-                      aria-label={isExpanded ? 'Collapse' : 'Expand'}
-                      className="size-7 cursor-pointer rounded-sm text-muted-foreground"
+                    <ToolbarIconButton
+                      label={isExpanded ? 'Collapse' : 'Expand'}
                       onClick={() => setLocalIsExpanded(!isExpanded)}
                     >
                       {isExpanded ? <ChevronsDownUp className="size-4" /> : <ChevronsUpDown className="size-4" />}
-                    </Button>
+                    </ToolbarIconButton>
                   )}
-                  <Button
-                    type="button"
-                    size="icon"
-                    variant="ghost"
-                    aria-label="Hide source"
-                    className="size-7 cursor-pointer rounded-sm text-muted-foreground"
-                    onClick={handleHideAll}
-                  >
+                  <ToolbarIconButton label="Hide source" onClick={handleHideAll}>
                     <X className="size-4" />
-                  </Button>
+                  </ToolbarIconButton>
                 </div>
               </div>
               <Separator className="opacity-40" />
@@ -394,6 +243,15 @@ export const ComponentPreview: FC<ComponentPreviewProps> = props => {
           </div>
         </div>
       )}
+      <ComponentDetailDialog
+        open={isMaximized}
+        onOpenChange={setIsMaximized}
+        name={name}
+        Component={Component}
+        trimmedSource={trimmedSource}
+        irJson={irJson}
+        align={align}
+      />
     </div>
   );
 };
