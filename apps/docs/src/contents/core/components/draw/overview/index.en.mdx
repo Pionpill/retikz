@@ -1,6 +1,6 @@
 ---
 title: Draw
-description: Sugar component — way array threads through ids / Cartesian / polar / fold / cycle / curves (curve / cubic / bend) items, expands at compile time to Path + Step.
+description: Sugar component — way array threads through ids / Cartesian / polar / fold / cycle / curves (curve / cubic / bend) / shapes (arc / circle / ellipse) items, expands at compile time to Path + Step.
 ---
 
 `<Draw>` is the go-to for 90% of connections. `way` is an array of targets (with infix operators) joined as a path; at compile time it expands to an equivalent Kernel `<Path>` + `<Step>` tree, so `<Draw>` adds no capability the Kernel can't already express.
@@ -21,9 +21,9 @@ import { Draw } from '@retikz/react';
 
 <ComponentPreview name="draw-basic" />
 
-### Eight forms of way item
+### Eleven forms of way item
 
-Each item in `way` accepts eight forms — the first three are direct targets (matching `<Step>.to`), the rest are infix operators / keywords.
+Each item in `way` accepts eleven forms — the first three are direct targets (matching `<Step>.to`), the rest are infix operators / keywords. **Note**: curve operators (curve / cubic / bend) merge with the next item; shape operators (arc / circle / ellipse) center on the previous item and **do not** consume the next.
 
 | Form | Example | Meaning |
 | --- | --- | --- |
@@ -35,6 +35,9 @@ Each item in `way` accepts eight forms — the first three are direct targets (m
 | Quadratic curve | `{ curve: [cx, cy] }` | Merge with next item into a curve step; one control point (TikZ `..controls(B)..`) |
 | Cubic curve | `{ cubic: [[c1x, c1y], [c2x, c2y]] }` | Merge with next item into a cubic step; two control points (TikZ `..controls(B) and (C)..`) |
 | Bend | `{ bend: 'left' \| 'right', angle?: number }` | Merge with next item into a bend step; direction + optional angle (default 30°) |
+| Arc operator | `{ arc: { startAngle, endAngle, radius } }` | Center on the previous item; draw an arc — **does not** consume the next item |
+| Circle operator | `{ circle: { radius } }` | Center on the previous item; draw a full circle — **does not** consume the next item |
+| Ellipse operator | `{ ellipse: { radiusX, radiusY } }` | Center on the previous item; draw a full ellipse — **does not** consume the next item |
 
 ### DrawWay keyword constants
 
@@ -91,6 +94,24 @@ Drop `{ curve: [cx, cy] }` (infix operator) into `way` and the "previous → nex
 `{ bend: 'left' | 'right', angle?: number }` is the easier curve form — give a direction and angle (default 30°), control points are computed at compile time and lowered to a cubic. Equivalent to `<Step kind="bend">`:
 
 <ComponentPreview name="draw-bend" />
+
+### Arc
+
+`{ arc: { startAngle, endAngle, radius } }` centers on the **previous item** and draws a circular arc — equivalent to `<Step kind="arc">`. Unlike curve / cubic / bend, the arc operator **does not** consume the next item — the next way item is parsed normally:
+
+<ComponentPreview name="draw-arc" />
+
+### Circle
+
+`{ circle: { radius } }` centers on the **previous item** and draws a full circle — equivalent to `<Step kind="circlePath">`. Also **does not** consume the next item; the pen returns to the center after closing. Useful for drawing several independent circles in one go:
+
+<ComponentPreview name="draw-circle" />
+
+### Ellipse
+
+`{ ellipse: { radiusX, radiusY } }` centers on the **previous item** and draws a full ellipse — equivalent to `<Step kind="ellipsePath">`. Also **does not** consume the next item:
+
+<ComponentPreview name="draw-ellipse" />
 
 ### Arrows
 

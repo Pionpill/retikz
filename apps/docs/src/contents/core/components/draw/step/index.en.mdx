@@ -1,9 +1,9 @@
 ---
 title: Step
-description: Path's child node — one step = one action (move / line / step fold / cycle close / curve / cubic / bend); only valid as a direct child of `<Path>`.
+description: Path's child node — one step = one action (move / line / step fold / cycle close / curve / cubic / bend / arc / circlePath / ellipsePath); only valid as a direct child of `<Path>`.
 ---
 
-`<Step>` describes a single path action: `move` lifts the pen, `line` draws a straight line, `step` folds through a single right-angle corner, `cycle` closes the path, and `curve` / `cubic` / `bend` draw curves of various shapes. It is **only** valid as a direct child of `<Path>`; placed elsewhere it is silently ignored.
+`<Step>` describes a single path action: `move` lifts the pen, `line` draws a straight line, `step` folds through a single right-angle corner, `cycle` closes the path, `curve` / `cubic` / `bend` draw curves of various shapes, and `arc` / `circlePath` / `ellipsePath` use the cursor as the center to draw an arc / full circle / full ellipse. It is **only** valid as a direct child of `<Path>`; placed elsewhere it is silently ignored.
 
 ## Usage
 
@@ -56,6 +56,24 @@ The path below draws A→B with one `move` + `line`, then lifts the pen with ano
 
 <ComponentPreview name="step-bend" />
 
+### Arc
+
+`kind="arc"` uses the **cursor as center** and draws a circular arc by start / end angle and radius — matches TikZ's `arc[start angle=…, end angle=…, radius=…]`. Angles follow the retikz polar convention: 0° points to +x, 90° is visually downward. The pen ends at the arc's endpoint:
+
+<ComponentPreview name="step-arc" />
+
+### Circle
+
+`kind="circlePath"` uses the **cursor as center** and draws a fully closed circle by `radius` — the pen returns to the center after closing. Useful for endpoint dots, circular node borders, etc.:
+
+<ComponentPreview name="step-circle" />
+
+### Ellipse
+
+`kind="ellipsePath"` uses the **cursor as center** and draws a fully closed ellipse by `radiusX` / `radiusY` — the pen returns to the center. When `radiusX === radiusY` it degenerates into a circle:
+
+<ComponentPreview name="step-ellipse" />
+
 ### Styling
 
 `<Step>` itself has no stroke-related visual props — styling lives on the parent `<Path>`, and all child Steps share the same `stroke` / `strokeWidth` / `strokeDasharray`:
@@ -66,16 +84,21 @@ The path below draws A→B with one `move` + `line`, then lifts the pen with ano
 
 | Prop | Type | Default | Description |
 | --- | --- | --- | --- |
-| `kind` | `'move' \| 'line' \| 'step' \| 'cycle' \| 'curve' \| 'cubic' \| 'bend'` | `'line'` | See the "Seven kinds" table below |
+| `kind` | `'move' \| 'line' \| 'step' \| 'cycle' \| 'curve' \| 'cubic' \| 'bend' \| 'arc' \| 'circlePath' \| 'ellipsePath'` | `'line'` | See the "Ten kinds" table below |
 | `via` | `'-\|' \| '\|-'` | — | Required for `kind="step"`: `-\|` horizontal-then-vertical; `\|-` vertical-then-horizontal |
-| `to` | `IRTarget` | — | Required except for `kind="cycle"`. Target: node id, Cartesian `[x, y]`, or polar object |
+| `to` | `IRTarget` | — | Not used for `kind="cycle"` / `'arc'` / `'circlePath'` / `'ellipsePath'`; required for the rest. Target: node id, Cartesian `[x, y]`, or polar object |
 | `control` | `[number, number]` | — | Required for `kind="curve"`: single control point of the quadratic Bezier |
 | `control1` | `[number, number]` | — | Required for `kind="cubic"`: first control point (shapes start tangent) |
 | `control2` | `[number, number]` | — | Required for `kind="cubic"`: second control point (shapes end tangent) |
 | `bendDirection` | `'left' \| 'right'` | — | Required for `kind="bend"`: visual left / right relative to from→to direction |
 | `bendAngle` | `number` | `30` | Optional for `kind="bend"`: bend angle in degrees |
+| `startAngle` | `number` | — | Required for `kind="arc"`: start angle in degrees (0° → +x, 90° → visually down) |
+| `endAngle` | `number` | — | Required for `kind="arc"`: end angle in degrees |
+| `radius` | `number` | — | Required for `kind="arc"` / `'circlePath'`: radius of the circle / arc |
+| `radiusX` | `number` | — | Required for `kind="ellipsePath"`: x-axis radius |
+| `radiusY` | `number` | — | Required for `kind="ellipsePath"`: y-axis radius |
 
-## Seven kinds
+## Ten kinds
 
 | kind | Behavior | SVG / TikZ analogue |
 | --- | --- | --- |
@@ -86,6 +109,9 @@ The path below draws A→B with one `move` + `line`, then lifts the pen with ano
 | `'curve'` | Quadratic Bezier (one control point) | path "Q" / TikZ `.. controls (B) ..` |
 | `'cubic'` | Cubic Bezier (two control points) | path "C" / TikZ `.. controls (B) and (C) ..` |
 | `'bend'` | Arc shorthand (direction + angle), lowered to cubic | TikZ `to[bend left=N]` |
+| `'arc'` | Cursor as center; arc by start / end angle + radius | path "A" / TikZ `arc[start angle…]` |
+| `'circlePath'` | Cursor as center; full circle, pen returns to center | path "A"×2 / TikZ `circle[radius]` |
+| `'ellipsePath'` | Cursor as center; full ellipse, pen returns to center | path "A"×2 / TikZ `ellipse[…]` |
 
 The first step of a `<Path>` must be `move` — if you write `'line'` / `'step'` / `'cycle'`, the compiler coerces it to `move` (cycle has no `to`, so it falls back to origin `[0, 0]`).
 
@@ -100,7 +126,7 @@ Only meaningful when `kind="step"`. Given cursor `(px, py)` and target `(tx, ty)
 
 ## Three forms of `to`
 
-`to` matches [Draw's way item](/core/components/draw/overview#three-forms-of-way-item) exactly:
+`to` matches [Draw's way item](/core/components/draw/overview#eleven-forms-of-way-item) exactly:
 
 | Form | Example | Behavior |
 | --- | --- | --- |
