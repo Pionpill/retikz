@@ -55,6 +55,10 @@ import { Node } from '@retikz/react';
 
 > 选数组而非 `'\n'` 字符串：JSON 友好（无 escape 困扰）；行级属性扩展空间预留。
 
+多行文本套到不同 shape 上，外接边界沿用各自 shape 多态规则（外接圆 / 外接椭圆 / 外接菱形）：
+
+<ComponentPreview name="node-multiline-shapes" />
+
 ### 旋转
 
 `rotate` 绕节点中心旋转；连线会跟着新边界点贴：
