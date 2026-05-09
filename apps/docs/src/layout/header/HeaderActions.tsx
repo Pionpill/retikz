@@ -1,7 +1,6 @@
 import { ArrowUpRight, Languages, Link as LinkIcon, Moon, MoreHorizontal, Sun } from 'lucide-react';
-import { type FC, useCallback } from 'react';
+import { type FC } from 'react';
 import { useTranslation } from 'react-i18next';
-import { toast } from 'sonner';
 
 import { GitHubIcon } from '@/components/icons';
 import { DocsSearch } from '@/components/shared/docs-search';
@@ -20,14 +19,12 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Separator } from '@/components/ui/separator';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { LANGS, type Lang } from '@/i18n';
 import { cn } from '@/lib/utils';
 import { useComponentPreviewStore } from '@/store/useComponentPreviewStore';
 import { useLayoutStore } from '@/store/useLayoutStore';
-import { useThemeStore } from '@/store/useThemeStore';
 import { useTocStore } from '@/store/useTocStore';
 
-const TIKZ_DOCS_URL = 'https://tikz.dev/';
+import { GITHUB_URL, TIKZ_DOCS_URL, useDocActions } from './useDocActions';
 
 // TooltipTrigger 默认即 <button>，直接套 buttonVariants；不再用 <Button asChild> 包，
 // 避免 React 18 下 asChild → 自定义函数组件 ref 转发不到，触发不到 Popper 锚点。
@@ -40,10 +37,9 @@ const triggerClass = cn(buttonVariants({ variant: 'ghost', size: 'icon' }), 'siz
  */
 export const HeaderActions: FC = () => {
   const { t, i18n } = useTranslation();
+  const { theme, handleToggleTheme, handleCycleLang, handleCopyLink } = useDocActions();
   const tocOpen = useTocStore(state => state.tocOpen);
   const setTocOpen = useTocStore(state => state.setTocOpen);
-  const theme = useThemeStore(s => s.theme);
-  const setTheme = useThemeStore(s => s.setTheme);
   const layout = useLayoutStore(s => s.layout);
   const toggleLayout = useLayoutStore(s => s.toggleLayout);
   const previewHideCode = useComponentPreviewStore(s => s.hideCode);
@@ -53,21 +49,6 @@ export const HeaderActions: FC = () => {
 
   const ThemeIcon = theme === 'light' ? Sun : Moon;
   const themeLabel = theme === 'light' ? t('common.themeLight') : t('common.themeDark');
-
-  const handleCopyLink = useCallback(() => {
-    void navigator.clipboard.writeText(window.location.href);
-    toast.success(t('toc.linkCopied'));
-  }, [t]);
-
-  const handleToggleTheme = useCallback(() => {
-    setTheme(theme === 'light' ? 'dark' : 'light');
-  }, [theme, setTheme]);
-
-  const handleCycleLang = useCallback(() => {
-    const idx = LANGS.indexOf(i18n.resolvedLanguage as Lang);
-    const next = LANGS[(idx + 1) % LANGS.length];
-    void i18n.changeLanguage(next);
-  }, [i18n]);
 
   return (
     <TooltipProvider delayDuration={150}>
@@ -80,7 +61,7 @@ export const HeaderActions: FC = () => {
               asChild
               className={cn(buttonVariants({ variant: 'ghost', size: 'icon' }), 'size-7 cursor-pointer rounded-sm')}
             >
-              <a href="https://github.com/Pionpill/retikz" target="_blank" rel="noopener noreferrer">
+              <a href={GITHUB_URL} target="_blank" rel="noopener noreferrer">
                 <GitHubIcon className="size-4" />
               </a>
             </TooltipTrigger>
