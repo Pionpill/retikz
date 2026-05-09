@@ -72,8 +72,11 @@ export const ComponentPreview: FC<ComponentPreviewProps> = props => {
   const [localIsExpanded, setLocalIsExpanded] = useState<boolean | undefined>(undefined);
   const [copied, setCopied] = useState(false);
   const timerRef = useRef<number | null>(null);
-  // 卡内 drag 默认关闭，靠工具条 Hand 按钮开启；Dialog 内强制开启
-  const [dragEnabled, setDragEnabled] = useState(false);
+  // 卡内 drag：桌面默认关闭（避免劫持页面滚轮 / 误拖），靠工具条 Hand 按钮开启；
+  // 移动端（<lg）默认开启——窄屏没有滚轮且工具条不易触达，先让用户能直接拖拽。Dialog 内强制开启。
+  const [dragEnabled, setDragEnabled] = useState(
+    () => typeof window !== 'undefined' && window.matchMedia('(max-width: 1023.98px)').matches,
+  );
   const [isMaximized, setIsMaximized] = useState(false);
   const { transform, isDragging, panBy, zoomBy, resetTransform, isTransformed, transformStyle, beginDrag } =
     usePanZoom();
@@ -170,10 +173,14 @@ export const ComponentPreview: FC<ComponentPreviewProps> = props => {
         className={cn(
           'group/preview relative flex h-56 sm:h-72 w-full justify-center overflow-hidden p-6 sm:p-10 select-none',
           alignClass[align],
+          // 触摸设备上启用拖拽时关闭浏览器原生 pan/zoom，避免和我们的位移冲突；
+          // 关闭时保持默认 touch-action 让用户能正常滚动页面经过 demo。
+          dragEnabled && 'touch-none',
           cardDragCursor,
           componentClassName,
         )}
         onMouseDown={beginDrag(dragEnabled)}
+        onTouchStart={beginDrag(dragEnabled)}
       >
         <div
           className={cn('flex items-center justify-center', !isDragging && 'transition-transform duration-150')}

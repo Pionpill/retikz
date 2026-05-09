@@ -45,11 +45,12 @@ const DialogDemoPane: FC<DialogDemoPaneProps> = props => {
     <div
       style={DOT_PATTERN_STYLE}
       className={cn(
-        'relative flex h-full w-full items-center justify-center overflow-hidden p-10 select-none',
+        'relative flex h-full w-full items-center justify-center overflow-hidden p-10 select-none touch-none',
         alignClass[align],
         dragCursor,
       )}
       onMouseDown={beginDrag(true)}
+      onTouchStart={beginDrag(true)}
     >
       <div
         className={cn('flex items-center justify-center', !isDragging && 'transition-transform duration-150')}
