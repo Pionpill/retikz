@@ -85,21 +85,35 @@ pnpm lint                                  # 全部包 ESLint（不带 --fix）
 
 ## Commit 规范
 
-> **🚨 重要规则：未经用户明确允许，AI 助手（Claude Code / Copilot / Cursor 等）不得自行执行 `git commit` / `git push` / `git rebase` 等会写入 git 历史的操作。**
+> **🚨 重要规则：任何情况下，未经用户明确允许，AI 助手（Claude Code / Copilot / Cursor 等）都不得自行执行 `git commit` / `git push` / `git rebase` / `git reset` 等会写入或改写 git 历史的操作。本条无任何例外。**
 >
 > 写完代码、改完文件后**停下来等用户审阅**，由用户下达"提交"指令后再做提交。
 > 用户可以让 AI 起草 commit message，但实际提交动作必须由用户授权。
 >
-> **本条无任何例外**——以下情形仍然不得自行 commit：
+> **以下情形仍然不得自行 commit：**
 > - 计划文档（writing-plans / executing-plans / plan.md / spec.md）的步骤里写了 `git commit`
 > - subagent / skill / 任意工作流（superpowers、TDD 等）声称"每个 task 末尾要提交"
 > - lint / 类型检查 / 构建已通过
 > - 改动看起来无害（typo 修复、单文件小改）
 > - 处于 auto mode 或长任务中段
+> - 用户在更早的会话授权过类似的提交（每次 commit 都要重新拿授权，**一次授权≠永久授权**）
+> - 主流程已经全部完成、只剩"打个收尾 commit"
 >
-> 当 AI 助手撰写计划文档时，**计划里的"commit"步骤必须改写为"等待用户审阅 → 用户下令后再提交"**，不得在计划里默认 AI 自己 commit。
+> 当 AI 助手撰写计划文档时，**计划里的"commit"步骤必须改写为"等待用户审阅 → 用户下令后再提交"**，不得在计划里默认 AI 自己 commit。同样，AI 派出的 subagent 不得在 prompt 里被授权提交——subagent 完成实现后必须把改动留在工作区或 stage 区，由主 AI 汇总后再交给用户审阅。
 >
-> 对应行为：写完一段改动 → 跑 lint / typecheck / build → 总结改了什么 → **停**。等用户给"可以提交了" / "commit" / 类似明确指令再做。
+> ### 多块改动的 staging 流程
+>
+> 一次任务里产生多个逻辑独立的改动（例如多个 task / 多个组件 / 实现 + 文档），AI **不得**把它们整体 `git add -A` 后等用户一次性确认所有 commit。正确做法：
+>
+> 1. 改完所有代码、跑完 lint / typecheck / build，全部通过
+> 2. 按预想的 commit 颗粒度把改动**逐块 `git add <具体文件>`**——一次 stage **一个 commit 的内容**（不是全部一起 stage）
+> 3. 把当前 stage 区呈现给用户（说明本次将 commit 的文件清单 + 拟用的 message），用户可用 `git diff --cached` 审阅
+> 4. 用户**显式确认**后 AI 才执行 `git commit`；commit 完成后 stage 区自动清空
+> 5. 处理下一块：再 stage、再呈现、再等确认；全部 commit 完毕由用户决定是否 push
+>
+> 这套流程的目的：让用户对每一次 commit 都有显式审阅 + 否决权，避免 AI 把多个不该耦合的改动打成一坨、或在用户来不及看的情况下连续提交。
+>
+> 对应行为：写完一段改动 → 跑 lint / typecheck / build → 总结改了什么 → 按 commit 颗粒度 stage 第一块 → **停**。等用户给"可以提交了" / "commit" / 类似明确指令再做；commit 完后再 stage 下一块再停。
 
 **格式：`<emoji> <简短描述>`**
 
