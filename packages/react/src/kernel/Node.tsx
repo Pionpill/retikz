@@ -1,6 +1,7 @@
 import type { FC, ReactNode } from 'react';
 import type {
   IRFont,
+  IRLineSpec,
   IRNode,
   IRPosition,
   NodeTextAlign,
@@ -25,10 +26,16 @@ export type NodeProps = {
    * - `<Node>{'Line 1\nLine 2'}</Node>`（字符串内嵌 `\n`）
    * - ``<Node>{`Line 1\nLine 2`}</Node>``（模板字面量）
    * - `<Node>{['Line 1', 'Line 2']}</Node>`（数组）
+   * - `<Node><Text fill="red">L1</Text>L2</Node>`（混 `<Text>` 带样式行）
    */
   children?: ReactNode;
-  /** 显式 text；单字符串 = 一行，数组 = 每元素一行；优先级高于 children */
-  text?: string | Array<string>;
+  /**
+   * 显式 text，优先级高于 children：
+   * - `string` — 单行
+   * - `Array<string>` — 多行无样式覆盖
+   * - `Array<string | LineSpec>` — 多行，可对单行覆盖 fill / opacity / font
+   */
+  text?: string | Array<IRLineSpec>;
   /** 多行文本对齐：left / center（默认）/ right；只影响多行块内各行的水平对齐 */
   align?: NodeTextAlign;
   /** 行高（user units）；不填走 `font.size × 1.2` 默认 */

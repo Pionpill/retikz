@@ -63,16 +63,54 @@ export const FontSchema = z
 export type IRFont = z.infer<typeof FontSchema>;
 
 /**
- * 节点文本——单行字符串或非空多行数组：
- * - `'Hello'` 等价于 `['Hello']`，按一行渲染
- * - `['Line 1', 'Line 2']` 渲染为多个 `<tspan>`，垂直堆叠
+ * 单行文本规格——纯字符串走块级默认样式；对象形式可对该行覆盖 fill / opacity / font。
  *
- * 选 `Array<string>` 而非 `'\n'` 字符串：JSON 友好（无 escape）；行级属性扩展空间预留。
+ * 行级覆盖只生效于本行的 `<tspan>`：
+ * - `fill`：仅这一行颜色
+ * - `opacity`：仅这一行 0~1 透明度
+ * - `font`：family / size / weight / style 任意子集；未填字段继承块级 font
+ *
+ * 块级 `align` / `lineHeight` 不可被行覆盖（多行块整体属性）。
+ */
+export const LineSpecSchema = z
+  .union([
+    z.string(),
+    z.object({
+      text: z.string().describe('Line content'),
+      fill: z
+        .string()
+        .optional()
+        .describe('Per-line text color; overrides block default'),
+      opacity: z
+        .number()
+        .min(0)
+        .max(1)
+        .optional()
+        .describe('Per-line opacity 0..1'),
+      font: FontSchema.optional().describe(
+        'Per-line font overrides; missing fields inherit from block-level `font`',
+      ),
+    }),
+  ])
+  .describe(
+    'Single line of text: bare string for default styling, or an object with per-line `fill` / `opacity` / `font` overrides.',
+  );
+
+/** 行规格 IR 类型（string 或对象） */
+export type IRLineSpec = z.infer<typeof LineSpecSchema>;
+
+/**
+ * 节点文本——单行字符串或非空多行数组（每元素一个 LineSpec）：
+ * - `'Hello'` 等价于 `[{ text: 'Hello' }]`，按一行渲染
+ * - `['Line 1', 'Line 2']` 两行无样式覆盖
+ * - `[{ text: 'Heading', fill: 'red', font: { weight: 'bold' } }, 'body']` 混排
+ *
+ * 选 `Array<LineSpec>` 而非 `'\n'` 字符串：JSON 友好（无 escape）；行级覆盖天然落字段。
  */
 export const NodeTextSchema = z
-  .union([z.string(), z.array(z.string()).min(1)])
+  .union([z.string(), z.array(LineSpecSchema).min(1)])
   .describe(
-    'Text label rendered inside the node: a single string for one line, or a non-empty array of strings (one element per line).',
+    'Text label rendered inside the node: a single string for one line, or a non-empty array of line specs (string for default, object for per-line overrides).',
   );
 
 /** 节点文本对齐（多行内文本对齐）——TikZ `align=` 同义词 */

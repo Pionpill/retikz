@@ -11,3 +11,6 @@ export const TIKZ_PATH = '@retikz/Path';
 
 /** <Step> 组件的 displayName */
 export const TIKZ_STEP = '@retikz/Step';
+
+/** <Text> 组件的 displayName（Node 内多行文本带样式） */
+export const TIKZ_TEXT = '@retikz/Text';

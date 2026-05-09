@@ -3,6 +3,7 @@ import { Draw } from '../../src/sugar/Draw';
 import { Node } from '../../src/kernel/Node';
 import { Path } from '../../src/kernel/Path';
 import { Step } from '../../src/kernel/Step';
+import { Text } from '../../src/kernel/Text';
 import { buildIR } from '../../src/kernel/_builder';
 
 describe('buildIR', () => {
@@ -42,6 +43,45 @@ describe('buildIR', () => {
   it('children 单字符串无换行 → 单行 string（不是 string[]）', () => {
     const ir = buildIR(<Node id="A" position={[0, 0]}>Hello world</Node>);
     expect(ir.children[0]).toMatchObject({ type: 'node', text: 'Hello world' });
+  });
+
+  it('<Text> children 带样式 → 对象 LineSpec', () => {
+    const ir = buildIR(
+      <Node id="A" position={[0, 0]}>
+        <Text fill="red" font={{ weight: 'bold' }}>Heading</Text>
+        body line
+      </Node>,
+    );
+    expect(ir.children[0]).toMatchObject({
+      type: 'node',
+      text: [
+        { text: 'Heading', fill: 'red', font: { weight: 'bold' } },
+        'body line',
+      ],
+    });
+  });
+
+  it('<Text> 无样式属性时退回纯字符串 LineSpec（不浪费 IR 字段）', () => {
+    const ir = buildIR(
+      <Node id="A" position={[0, 0]}>
+        <Text>plain</Text>
+      </Node>,
+    );
+    expect(ir.children[0]).toMatchObject({ type: 'node', text: 'plain' });
+  });
+
+  it('<Text> 与字符串行混排时按 JSX 顺序排列', () => {
+    const ir = buildIR(
+      <Node id="A" position={[0, 0]}>
+        {'before\nmiddle1'}
+        <Text fill="red">red</Text>
+        {'middle2\nafter'}
+      </Node>,
+    );
+    expect(ir.children[0]).toMatchObject({
+      type: 'node',
+      text: ['before', 'middle1', { text: 'red', fill: 'red' }, 'middle2', 'after'],
+    });
   });
 
   it('<Path><Step/><Step/></Path> 收集 step 序列', () => {

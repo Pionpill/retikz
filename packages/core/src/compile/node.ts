@@ -4,8 +4,8 @@ import { type Ellipse, ellipse as ellipseOps } from '../geometry/ellipse';
 import type { Position } from '../geometry/point';
 import type { Rect, RectAnchor } from '../geometry/rect';
 import { rect as rectOps } from '../geometry/rect';
-import type { IRNode, NodeShape } from '../ir';
-import type { ScenePrimitive } from '../primitive';
+import type { IRLineSpec, IRNode, NodeShape } from '../ir';
+import type { ScenePrimitive, TextLine } from '../primitive';
 import { resolvePosition } from './position';
 import type { TextMeasurer } from './text-metrics';
 
@@ -40,8 +40,12 @@ export type NodeLayout = {
   rotateDeg: number;
   /** 外边距（user units，≥ 0）；path 附着到形状外扩 margin 的虚拟边界上 */
   margin: number;
-  /** 节点文本行；undefined 表示无文本，否则非空数组（每行一个字符串） */
-  lines?: Array<string>;
+  /**
+   * 节点文本行；undefined 表示无文本，否则非空数组。
+   * 每行可带覆盖样式（fill / opacity / fontSize / fontFamily / fontWeight / fontStyle）；
+   * 未覆盖的字段在 emit 阶段不写出，由下游走 TextPrim 块级默认。
+   */
+  lines?: Array<TextLine>;
   /** 文本块宽度（user units）= max(per-line measureText.width) */
   textWidth: number;
   /** 文本块高度（user units）≈ lines × lineHeight */
@@ -181,27 +185,47 @@ export const layoutNode = (
   const lineHeight = node.lineHeight ?? fontSize * DEFAULT_LINE_HEIGHT_FACTOR;
   const align = alignToTextAnchor(node.align ?? 'center');
 
-  // 标准化为 Array<string>：单字符串 → 单元素数组；空数组在 schema 阶段已被拒
-  const lines: Array<string> | undefined =
+  // 标准化为 Array<IRLineSpec>：单字符串 → 单元素；空数组在 schema 阶段已被拒
+  const rawLines: Array<IRLineSpec> | undefined =
     node.text === undefined
       ? undefined
       : typeof node.text === 'string'
         ? [node.text]
         : node.text;
 
-  // 多行：max 宽度 / 行数 × lineHeight 高度
+  // 每行解析覆盖样式 + 度量。仅写入真正被覆盖的字段，未填字段由下游走块级默认。
   let textWidth = 0;
   let textHeight = 0;
-  if (lines) {
-    for (const line of lines) {
-      const m = measureText(line, {
-        size: fontSize,
-        family: fontFamily,
-        weight: fontWeight,
-        style: fontStyle,
+  let lines: Array<TextLine> | undefined;
+  if (rawLines) {
+    lines = rawLines.map(spec => {
+      const isObj = typeof spec !== 'string';
+      const text = isObj ? spec.text : spec;
+      // 行级 font 与块级 font 合并：行级有就用行级，没有走块级（透传 undefined）
+      const lineFont = isObj ? spec.font : undefined;
+      const lineSize = lineFont?.size ?? fontSize;
+      const lineFamily = lineFont?.family ?? fontFamily;
+      const lineWeight = lineFont?.weight ?? fontWeight;
+      const lineStyle = lineFont?.style ?? fontStyle;
+      const m = measureText(text, {
+        size: lineSize,
+        family: lineFamily,
+        weight: lineWeight,
+        style: lineStyle,
       });
       if (m.width > textWidth) textWidth = m.width;
-    }
+      const out: TextLine = { text };
+      // 只在行级与块级不同时写出（让 emit 的 JSON 更精简，下游 fallback 更明确）
+      if (isObj) {
+        if (spec.fill !== undefined) out.fill = spec.fill;
+        if (spec.opacity !== undefined) out.opacity = spec.opacity;
+        if (lineFont?.size !== undefined) out.fontSize = lineFont.size;
+        if (lineFont?.family !== undefined) out.fontFamily = lineFont.family;
+        if (lineFont?.weight !== undefined) out.fontWeight = lineFont.weight;
+        if (lineFont?.style !== undefined) out.fontStyle = lineFont.style;
+      }
+      return out;
+    });
     textHeight = lines.length * lineHeight;
   }
 

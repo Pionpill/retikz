@@ -1,7 +1,7 @@
 import { Children, type ReactElement, type ReactNode, isValidElement } from 'react';
-import type { IR, IRChild, IRNode, IRStep } from '@retikz/core';
+import type { IR, IRChild, IRFont, IRLineSpec, IRNode, IRStep } from '@retikz/core';
 import { CURRENT_IR_VERSION } from '@retikz/core';
-import { TIKZ_NODE, TIKZ_PATH, TIKZ_STEP } from './_displayNames';
+import { TIKZ_NODE, TIKZ_PATH, TIKZ_STEP, TIKZ_TEXT } from './_displayNames';
 
 /** 取 React 元素 type 上的 displayName；type 为字符串时直接返回，用于识别 Kernel/Sugar 组件 */
 const getDisplayName = (el: ReactElement): string | undefined => {
@@ -11,44 +11,80 @@ const getDisplayName = (el: ReactElement): string | undefined => {
 };
 
 /**
- * 递归收集 children 中的字符串行：
- * - 字符串 child 按 `'\n'` 拆成多行
- * - 数组 child（包括 JSX 多 child 自动展平的数组）逐项递归
- * - 其它类型（React 元素 / null / 数字等）忽略——附带支持 `<br/>` 等元素当软分段
+ * 把 <Text> 元素的 props + children 串解析为 IRLineSpec 对象形式。
+ * children 必须是 string；非字符串 children 静默跳过此 <Text> 元素。
  */
-const collectChildLines = (children: unknown): Array<string> => {
-  const lines: Array<string> = [];
+const textElementToLineSpec = (el: ReactElement): IRLineSpec | undefined => {
+  const props = el.props as {
+    children?: ReactNode;
+    fill?: string;
+    opacity?: number;
+    font?: IRFont;
+  };
+  if (typeof props.children !== 'string') return undefined;
+  // 全部样式字段都没设 → 退回纯字符串形式（让 IR 更紧凑）
+  if (
+    props.fill === undefined &&
+    props.opacity === undefined &&
+    props.font === undefined
+  ) {
+    return props.children;
+  }
+  return {
+    text: props.children,
+    fill: props.fill,
+    opacity: props.opacity,
+    font: props.font,
+  };
+};
+
+/**
+ * 递归收集 Node children 中的行：
+ * - 字符串按 `'\n'` 拆行（每段 → 字符串 LineSpec）
+ * - 数组（JSX 多 child 自动展平）逐项递归
+ * - <Text> 元素 → 对象 LineSpec（带覆盖样式）
+ * - 其它类型（其它 React 元素 / null / 数字等）忽略——附带让 `<br/>` 当软分段
+ *
+ * 顺序保留——按 JSX 写的顺序行就是 IR 行顺序。
+ */
+const collectChildLines = (children: unknown): Array<IRLineSpec> => {
+  const out: Array<IRLineSpec> = [];
   const visit = (node: unknown): void => {
     if (typeof node === 'string') {
-      for (const part of node.split('\n')) lines.push(part);
+      for (const part of node.split('\n')) out.push(part);
       return;
     }
     if (Array.isArray(node)) {
       for (const c of node) visit(c);
+      return;
+    }
+    if (isValidElement(node) && getDisplayName(node) === TIKZ_TEXT) {
+      const spec = textElementToLineSpec(node);
+      if (spec !== undefined) out.push(spec);
     }
   };
   visit(children);
-  return lines;
+  return out;
 };
 
 /**
  * Node 文本读取顺序：
- * 1. `props.text`（string 或 string[]）— 显式优先，直接透传到 IR
- * 2. `props.children` — 字符串按 `'\n'` 拆行；数组逐项收集；多行返回 string[]
+ * 1. `props.text`（string / string[] / LineSpec[]）— 显式优先，直接透传到 IR
+ * 2. `props.children` — 字符串按 `'\n'` 拆行；`<Text>` 元素带样式贡献一行；保持 JSX 顺序
  *
- * 用 children 写多行的常见姿势：
+ * 用 children 写多行的几种姿势：
  * - 字符串带换行：`<Node>{'Line 1\nLine 2'}</Node>`
  * - 模板字面量：``<Node>{`Line 1\nLine 2`}</Node>``
  * - 数组：`<Node>{['Line 1', 'Line 2']}</Node>`
+ * - <Text>（带样式）：`<Node><Text fill="red">Heading</Text>body</Node>`
  */
 const readNodeText = (props: Record<string, unknown>): IRNode['text'] => {
+  // text prop：纯 string、string[]、或 LineSpec[]——直接透传
   if (typeof props.text === 'string') return props.text;
-  if (Array.isArray(props.text) && props.text.every(s => typeof s === 'string')) {
-    return props.text;
-  }
+  if (Array.isArray(props.text)) return props.text as IRNode['text'];
   const lines = collectChildLines(props.children);
   if (lines.length === 0) return undefined;
-  if (lines.length === 1) return lines[0];
+  if (lines.length === 1 && typeof lines[0] === 'string') return lines[0];
   return lines;
 };
 

@@ -71,6 +71,33 @@ Line 2`}</Node>
 
 `text` prop 优先级高于 children；二者都给时取 `text`。
 
+### 行级样式
+
+每行可独立覆盖 `fill` / `opacity` / `font`（family / size / weight / style 任意子集），未填字段继承块级。两条等价路径：
+
+1. **`text` 数组里混 LineSpec 对象**——AI / JSON 友好，schema 直接表达
+2. **`<Text>` 子元素**——JSX 写起来顺手；和字符串 children 平等参与，按 JSX 顺序排列
+
+```tsx
+{/* 路径 1：text 数组 + LineSpec 对象 */}
+<Node text={[
+  { text: 'Heading', font: { weight: 'bold', size: 16 }, fill: '#dc2626' },
+  'body line 1',
+  { text: 'note', font: { style: 'italic' }, opacity: 0.6 },
+]} />
+
+{/* 路径 2：<Text> 子元素 */}
+<Node>
+  <Text fill="#dc2626" font={{ weight: 'bold' }}>Heading</Text>
+  body line 1
+  <Text font={{ style: 'italic' }} opacity={0.6}>note</Text>
+</Node>
+```
+
+<ComponentPreview name="node-styled-lines" />
+
+> 块级 `align` / `lineHeight` 不能行级覆盖（多行块整体属性）。
+
 多行文本套到不同 shape 上，外接边界沿用各自 shape 多态规则（外接圆 / 外接椭圆 / 外接菱形）：
 
 <ComponentPreview name="node-multiline-shapes" />

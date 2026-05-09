@@ -112,8 +112,18 @@ export const renderPrim = (
           opacity={p.opacity}
         >
           {p.lines.map((line, i) => (
-            <tspan key={i} x={p.x} dy={i === 0 ? firstDy : p.lineHeight}>
-              {line}
+            <tspan
+              key={i}
+              x={p.x}
+              dy={i === 0 ? firstDy : p.lineHeight}
+              fill={line.fill}
+              opacity={line.opacity}
+              fontSize={line.fontSize}
+              fontFamily={line.fontFamily}
+              fontWeight={line.fontWeight}
+              fontStyle={line.fontStyle}
+            >
+              {line.text}
             </tspan>
           ))}
         </text>
