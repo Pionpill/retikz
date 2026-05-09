@@ -122,6 +122,14 @@ pnpm lint                                  # 全部包 ESLint（不带 --fix）
 >
 > 当 AI 助手撰写计划文档时，**计划里的"commit"步骤必须改写为"等待用户审阅 → 用户下令后再提交"**，不得在计划里默认 AI 自己 commit。同样，AI 派出的 subagent 不得在 prompt 里被授权提交——subagent 完成实现后必须把改动留在工作区或 stage 区，由主 AI 汇总后再交给用户审阅。
 >
+> ### 子 task 完成必须等用户确认（不限 commit 时机）
+>
+> AI 编排多 task 工作流（如 superpowers/subagent-driven-development、自定义任务列表、subagent dispatch 序列）时，**每个子 task 收尾都是停顿点**——subagent 返回报告 / 改动落地工作树后，主 AI 必须把本次 task 的变化总结呈给用户，等"继续" / "OK" / "下一步"等明确指令再派下一个 task。不允许"反正 plan 里写了 7 个 task、我全跑完再交"。
+>
+> Auto mode 下同样适用：auto mode 的"minimize interruptions"指的是**单个 task 内部不来回问**（不要为了小决策反复打断用户），**不豁免** task 之间的检查点。
+>
+> 例外：用户明确说了"一次性把 task A、B、C 都做完"或类似 explicitly-batched 指令，才能跳过中间检查点；那种情况下也要在最后一个 task 完成后停下来汇总。
+>
 > ### 多块改动的 staging 流程
 >
 > 一次任务里产生多个逻辑独立的改动（例如多个 task / 多个组件 / 实现 + 文档），AI **不得**把它们整体 `git add -A` 后等用户一次性确认所有 commit。正确做法：
