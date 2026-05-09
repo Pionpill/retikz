@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router';
 
 import { Button } from '@/components/ui/button';
+import { Shortcut } from '@/components/shared/shortcut';
 import { cn } from '@/lib/utils';
 import {
   CommandDialog,
@@ -112,16 +113,31 @@ export const DocsSearch: FC<DocsSearchProps> = ({ className }) => {
 
   return (
     <>
+      {/* 移动端：图标按钮 */}
       <Button
         variant="ghost"
         size="icon"
-        className={cn('size-7 cursor-pointer rounded-sm', className)}
+        className={cn('size-7 cursor-pointer rounded-sm lg:hidden', className)}
         onClick={() => setOpen(true)}
         aria-label={t('common.searchHint')}
         title={t('common.searchHint')}
       >
         <Search className="size-4" />
       </Button>
+      {/* 桌面端：输入框样式触发器 —— 点击或 Ctrl/Cmd+K 打开 CommandDialog */}
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        aria-label={t('common.searchHint')}
+        className={cn(
+          'hidden lg:inline-flex h-8 w-56 xl:w-64 items-center gap-2 rounded-md border border-input bg-transparent px-3 text-sm text-muted-foreground shadow-xs transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 cursor-pointer',
+          className,
+        )}
+      >
+        <Search className="size-4 shrink-0" />
+        <span className="flex-1 truncate text-left">{t('common.searchPlaceholder')}</span>
+        <Shortcut keys={['mod', 'K']} className="tracking-normal" />
+      </button>
       <CommandDialog
         open={open}
         onOpenChange={setOpen}
