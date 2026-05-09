@@ -2,6 +2,36 @@ import { z } from 'zod';
 import { PositionSchema } from '../position';
 import { TargetSchema } from './target';
 
+/**
+ * 边标注（ADR-0004）：挂在画线 step 上的 label，渲染时按段几何 + side 偏移
+ * 翻译为一个 TextPrim。`move` / `cycle` 不挂 label——前者不画线、后者是闭合
+ * 标记，标签语义不清。
+ */
+export const StepLabelSchema = z
+  .object({
+    text: z
+      .string()
+      .describe('Label text content. Single-line; for multi-line use \\n.'),
+    position: z
+      .enum(['midway', 'near-start', 'near-end'])
+      .optional()
+      .describe(
+        'Position along the step segment (TikZ `midway` / `near start` / `near end`). Default `midway`.',
+      ),
+    side: z
+      .enum(['above', 'below', 'left', 'right', 'sloped'])
+      .optional()
+      .describe(
+        'Side relative to segment direction. `above` / `below` / `left` / `right` offset along segment normal; `sloped` rotates label along the tangent (no normal offset). Default `above`.',
+      ),
+  })
+  .describe(
+    'Edge label spec attached to a drawn step (ADR-0004); compiled to a TextPrim positioned along the segment.',
+  );
+
+/** 边标注：单段 step 的位置 + side 修饰，编译期变成 TextPrim */
+export type IRStepLabel = z.infer<typeof StepLabelSchema>;
+
 export const MoveStepSchema = z
   .object({
     type: z.literal('step').describe('Discriminator marking this as a path step node'),
@@ -19,6 +49,7 @@ export const LineStepSchema = z
       .literal('line')
       .describe('Draw a straight line from the current cursor to the target (like SVG path "L")'),
     to: TargetSchema.describe('Destination point of the line segment'),
+    label: StepLabelSchema.optional().describe('Edge label attached to this line segment'),
   })
   .describe('Line action: straight-line segment from cursor to target');
 
@@ -36,6 +67,9 @@ export const FoldStepSchema = z
         'Folding direction: `-|` first horizontal then vertical; `|-` first vertical then horizontal',
       ),
     to: TargetSchema.describe('Destination point of the folded segment'),
+    label: StepLabelSchema.optional().describe(
+      'Edge label attached to this folded segment; positioned along the corresponding leg by `position`.',
+    ),
   })
   .describe(
     'Fold action: TikZ-style right-angle fold with a single intermediate point chosen by `via`',
@@ -79,6 +113,7 @@ export const CurveStepSchema = z
       ),
     to: TargetSchema.describe('Destination point of the curve'),
     control: ControlPointSchema.describe('Single control point for the quadratic Bezier'),
+    label: StepLabelSchema.optional().describe('Edge label attached to this quadratic Bezier'),
   })
   .describe('Curve action: quadratic Bezier; one control point shapes the bend');
 
@@ -93,6 +128,7 @@ export const CubicStepSchema = z
     to: TargetSchema.describe('Destination point of the cubic curve'),
     control1: ControlPointSchema.describe('First control point (influences the start tangent)'),
     control2: ControlPointSchema.describe('Second control point (influences the end tangent)'),
+    label: StepLabelSchema.optional().describe('Edge label attached to this cubic Bezier'),
   })
   .describe(
     'Cubic action: cubic Bezier; two control points give precise tangent control at both ends',
@@ -114,6 +150,7 @@ export const BendStepSchema = z
       .number()
       .optional()
       .describe('Bend angle in degrees; default 30 (matches TikZ `bend left` without explicit angle)'),
+    label: StepLabelSchema.optional().describe('Edge label attached to this bend segment'),
   })
   .describe('Bend action: shorthand for an arc-like cubic; control points computed at compile time');
 
@@ -133,6 +170,7 @@ export const ArcStepSchema = z
       .number()
       .positive()
       .describe('Arc radius in user units'),
+    label: StepLabelSchema.optional().describe('Edge label attached to this arc'),
   })
   .describe('Arc action: TikZ-style arc with implicit center at the cursor; startAngle / endAngle / radius give the geometry. Pen is left at the arc endpoint.');
 
@@ -146,6 +184,7 @@ export const CirclePathStepSchema = z
       .number()
       .positive()
       .describe('Circle radius in user units'),
+    label: StepLabelSchema.optional().describe('Edge label attached to this full circle'),
   })
   .describe('CirclePath action: full closed circle around the cursor as center; pen returns to center after.');
 
@@ -163,6 +202,7 @@ export const EllipsePathStepSchema = z
       .number()
       .positive()
       .describe('Ellipse y-axis radius (semi-major or semi-minor on y)'),
+    label: StepLabelSchema.optional().describe('Edge label attached to this full ellipse'),
   })
   .describe('EllipsePath action: full closed ellipse around the cursor; pen returns to center.');
 
@@ -213,6 +253,7 @@ export type IREllipsePathStep = z.infer<typeof EllipsePathStepSchema>;
  * 路径上的一个动作。alpha.3 起支持十种 kind：'move' / 'line' / 'step'（折角）/
  * 'cycle' / 'curve' / 'cubic' / 'bend'（曲线三件套，ADR-0001）/
  * 'arc' / 'circlePath' / 'ellipsePath'（path-level 形状，ADR-0002）。
- * 后续 ADR-0003 会加相对坐标。
+ * ADR-0003 引入 `to` 字段的 rel / relAccumulate 变体。
+ * ADR-0004 给除 move/cycle 外八种 kind 加 `label?` 字段（边标注）。
  */
 export type IRStep = z.infer<typeof StepSchema>;
