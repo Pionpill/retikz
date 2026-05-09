@@ -19,10 +19,9 @@
 
 ### adr/
 
-- [`0001-folding-step-syntax.md`](./adr/0001-folding-step-syntax.md)：折角 step 的 IR 语法（`Step.kind: 'step'` + `via: '-|' | '|-'`）
-- [`0002-path-arrow-representation.md`](./adr/0002-path-arrow-representation.md)：Path 箭头的 IR 表示（`Path.arrow: 'none' | '->' | '<-' | '<->'`）
-- [`0003-node-shape-polymorphism.md`](./adr/0003-node-shape-polymorphism.md)：Node shape 多态与扩展机制（rectangle / circle / ellipse / diamond）
-- [`0004-target-string-syntax.md`](./adr/0004-target-string-syntax.md)：Target 字符串扩展（`'A' | 'A.north' | 'A.30'`）
+- [`0001-node-font-shape.md`](./adr/0001-node-font-shape.md)：Node `font` 字段——对象 vs 扁平字段（决策：嵌套对象 `{ family, size, weight, style }`，alpha.2 起 `fontSize` 标量 deprecate）
+- [`0002-multi-line-text.md`](./adr/0002-multi-line-text.md)：多行文本——数组 vs `\n` 字符串（决策：`text: string \| Array<string>`，单行兼容、多行用数组）
+- [`0003-padding-margin-migration.md`](./adr/0003-padding-margin-migration.md)：内 / 外边距分轴改造（决策：引入 `innerXSep` / `innerYSep` / `outerSep`，老 `padding` / `margin` 保留为 alias）
 
 ### analysis/
 
