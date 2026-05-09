@@ -83,6 +83,27 @@ pnpm lint                                  # 全部包 ESLint（不带 --fix）
 - 改了多个 workspace 时分别在每个受影响的子包跑一遍
 - 跑出来还是修不掉的（如外部依赖声明问题）要在交付时明确说明，并配最小作用域的 disable + 原因注释，让后续可被搜出来
 
+## 用户可见改动必须同步文档站
+
+> **🚨 重要规则：任何会影响用户使用方式的改动——新增 / 删除 / 重命名 `@retikz/react` 组件或 props、改 `@retikz/core` IR schema 字段、改 React DSL 行为、改 sugar 解析、改 Tikz 容器选项等——都必须在同一改动集里同步更新 `apps/docs/` 下相应文档，文档与代码作为一个整体改动呈给用户审阅。**
+>
+> 包含但不限于：
+> - 新加 `kind` / 新加 prop / 新加 IR 字段 → 在对应组件页 mdx 里加 API 表格行 + 加 `<ComponentPreview>` 示例 + 加同级 `<name>.demo.tsx`
+> - 改默认值 / 改字段语义 → 改 mdx 里的 API 表 / 行为说明 / 受影响的 demo
+> - 删 / 重命名 prop → 改全部相关 mdx + demo + 提及该 prop 的概念页
+> - 加新组件 / 新页面 → 走 [`.agents/skills/docs-doc-write/SKILL.md`](.agents/skills/docs-doc-write/SKILL.md) 的三处协同流程（contents + data + i18n）
+> - **双语并行**：zh 与 en 始终保持同步，zh 是 source of truth；只改 zh 不改 en 视为未完成
+>
+> **不需要更新文档的情形**（仅限内部、用户无感）：
+> - 编译器 / 渲染器内部纯重构，IR schema 与 React DSL 不变
+> - 测试新增 / 重写、内部工具脚本
+> - notes / .agents / 仓库基础设施改动
+> - 性能优化但行为完全等价
+>
+> 判断口诀：如果用户读现有文档**可能据此写出与新代码不一致的代码**，就必须更新文档。
+>
+> 与 commit 规则的耦合：**文档没补齐之前不算"改完"**——多块 staging 流程里，某个用户可见改动的 commit 必须把它对应的 mdx / demo 一起 stage 进同一块；不允许"代码先 commit、文档随后再补"。
+
 ## Commit 规范
 
 > **🚨 重要规则：任何情况下，未经用户明确允许，AI 助手（Claude Code / Copilot / Cursor 等）都不得自行执行 `git commit` / `git push` / `git rebase` / `git reset` 等会写入或改写 git 历史的操作。本条无任何例外。**
