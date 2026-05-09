@@ -12,7 +12,14 @@ export const coreSection: Array<Section> = [
     label: 'core.components',
     pages: [
       { id: 'tikz', label: 'core.tikz' },
-      { id: 'node', label: 'core.node' },
+      {
+        id: 'node',
+        label: 'core.node',
+        children: [
+          { id: 'overview', label: 'core.nodeOverview' },
+          { id: 'text', label: 'core.text' },
+        ],
+      },
       {
         id: 'draw',
         label: 'core.draw',

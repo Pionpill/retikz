@@ -28,6 +28,8 @@
     "concepts": "Concepts",
     "tikz": "Tikz",
     "node": "Node",
+    "nodeOverview": "Node",
+    "text": "Text",
     "draw": "Drawing",
     "drawOverview": "Draw",
     "path": "Path",

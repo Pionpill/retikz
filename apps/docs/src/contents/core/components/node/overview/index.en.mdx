@@ -76,23 +76,7 @@ Line 2`}</Node>
 Each line can override `fill` / `opacity` / `font` (any subset of family / size / weight / style); unset fields inherit block defaults. Two equivalent paths:
 
 1. **Mix LineSpec objects into the `text` array** — JSON / AI-friendly, schema-expressible
-2. **`<Text>` child elements** — natural JSX; participates equally with string children, JSX order preserved
-
-```tsx
-{/* Path 1: text array with LineSpec objects */}
-<Node text={[
-  { text: 'Heading', font: { weight: 'bold', size: 16 }, fill: '#dc2626' },
-  'body line 1',
-  { text: 'note', font: { style: 'italic' }, opacity: 0.6 },
-]} />
-
-{/* Path 2: <Text> children */}
-<Node>
-  <Text fill="#dc2626" font={{ weight: 'bold' }}>Heading</Text>
-  body line 1
-  <Text font={{ style: 'italic' }} opacity={0.6}>note</Text>
-</Node>
-```
+2. **`<Text>` child elements** — natural JSX; see the [Text page](/core/components/node/text) for the dedicated docs
 
 <ComponentPreview name="node-styled-lines" />
 

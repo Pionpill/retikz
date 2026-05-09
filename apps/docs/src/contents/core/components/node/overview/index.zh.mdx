@@ -76,23 +76,7 @@ Line 2`}</Node>
 每行可独立覆盖 `fill` / `opacity` / `font`（family / size / weight / style 任意子集），未填字段继承块级。两条等价路径：
 
 1. **`text` 数组里混 LineSpec 对象**——AI / JSON 友好，schema 直接表达
-2. **`<Text>` 子元素**——JSX 写起来顺手；和字符串 children 平等参与，按 JSX 顺序排列
-
-```tsx
-{/* 路径 1：text 数组 + LineSpec 对象 */}
-<Node text={[
-  { text: 'Heading', font: { weight: 'bold', size: 16 }, fill: '#dc2626' },
-  'body line 1',
-  { text: 'note', font: { style: 'italic' }, opacity: 0.6 },
-]} />
-
-{/* 路径 2：<Text> 子元素 */}
-<Node>
-  <Text fill="#dc2626" font={{ weight: 'bold' }}>Heading</Text>
-  body line 1
-  <Text font={{ style: 'italic' }} opacity={0.6}>note</Text>
-</Node>
-```
+2. **`<Text>` 子元素**——JSX 写起来顺手；详见 [Text 章节](/core/components/node/text)
 
 <ComponentPreview name="node-styled-lines" />
 

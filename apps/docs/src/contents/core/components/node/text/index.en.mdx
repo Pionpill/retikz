@@ -1,0 +1,74 @@
+---
+title: Text
+description: Per-line marker component inside <Node> — overrides fill / opacity / font for a single line; participates equally with string children in Node's multi-line layout.
+---
+
+`<Text>` is Sugar — it renders nothing on its own. At buildIR time it is recognized and lowered to an `IRLineSpec` object inside `<Node>`'s `text` array.
+
+It's an **equivalent** alternative to writing LineSpec objects directly into the `text` prop:
+
+| Path | Form | Strength |
+|---|---|---|
+| `<Text>` Sugar | `<Node><Text fill="red">x</Text>...</Node>` | Natural JSX, mixes well with string children |
+| `text` array | `<Node text={[{ text: 'x', fill: 'red' }, ...]} />` | JSON-friendly; LLMs can emit IR JSON directly |
+
+> Block-level props (`align` / `lineHeight`) go on `<Node>`; per-line overrides (`fill` / `opacity` / `font`) go on `<Text>`.
+
+## Usage
+
+```tsx
+import { Node, Text } from '@retikz/react';
+```
+
+```tsx
+<Node>
+  <Text fill="red" font={{ weight: 'bold' }}>Heading</Text>
+  body line
+</Node>
+```
+
+## Examples
+
+### Basic
+
+`<Text>` contributes one styled line; plain string children contribute style-less lines — JSX order is render order:
+
+<ComponentPreview name="text-basic" />
+
+### Per-line override fields
+
+Three fields: `fill` / `opacity` / `font` — `font` is a nested object so you can override just one sub-field (family / size / weight / style):
+
+<ComponentPreview name="text-attrs" />
+
+### Mixing with string children
+
+String children can still be split on `'\n'` internally; each `<Text>` element contributes one styled line; JSX order = render order:
+
+<ComponentPreview name="text-mix-string" />
+
+### Equivalent to LineSpec objects
+
+These two nodes compile to identical output:
+
+<ComponentPreview name="text-vs-prop" />
+
+## API Reference
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `children` | `string` | — | Line content; must be a single string (other child types are ignored) |
+| `fill` | `string` | — | Per-line color override; falls back to Node `textColor` block default |
+| `opacity` | `number` | — | Per-line opacity 0..1 |
+| `font` | `{ family?, size?, weight?, style? }` | — | Per-line font override; missing fields inherit Node block-level `font` |
+
+## Constraints
+
+- **Must live inside `<Node>`**: a `<Text>` placed at the top level under `<Tikz>` is silently ignored.
+- **`children` must be a string**: nested elements or expressions are not supported. A line is a line.
+- **Block-level props can't be overridden**: `align` / `lineHeight` only go on `<Node>`.
+
+## See also
+
+- [Node multi-line text](/core/components/node/overview): block-level `text` / `align` / `lineHeight`
+- [Node per-line styling](/core/components/node/overview): equivalent in-array `LineSpec` form
