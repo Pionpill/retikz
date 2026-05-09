@@ -1,5 +1,5 @@
 ---
-name: package-public
+name: package-publish
 description: 用于把 retikz 的 publishable 包（`@retikz/core` / `@retikz/react`）发布到 npm。一次发包 = 三处同步：版本号（`packages/<pkg>/package.json`）、文档站（`apps/docs/src/contents/reference/releases` + `i18n` 的 `versionTag`）、内部计划（`notes/plans/v0-roadmap.md` 勾选）。retikz 专用，其它项目可忽略。
 ---
 
