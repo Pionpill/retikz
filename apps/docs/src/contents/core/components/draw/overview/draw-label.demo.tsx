@@ -2,7 +2,7 @@ import { Draw, Node, Tikz } from '@retikz/react';
 import type { FC } from 'react';
 
 const Demo: FC = () => (
-  <Tikz width={360} height={220}>
+  <Tikz width={360} height={280}>
     <Node id="a" position={[0, 0]} shape="diamond">
       ?
     </Node>
@@ -20,13 +20,25 @@ const Demo: FC = () => (
     <Draw way={['a', { label: { text: 'no', side: 'below' } }, 'c']} arrow="->" />
 
     {/* fold 段：label 算子放在 '-|' 之前 */}
-    <Node id="d" position={[40, 120]}>
+    <Node id="d" position={[40, 130]}>
       d
     </Node>
-    <Node id="e" position={[260, 120]}>
+    <Node id="e" position={[260, 130]}>
       e
     </Node>
     <Draw way={['d', { label: 'fold' }, '-|', 'e']} arrow="->" />
+
+    {/* sloped：side='sloped' 让标签沿段切线方向旋转贴线 */}
+    <Node id="f" position={[40, 220]}>
+      f
+    </Node>
+    <Node id="g" position={[300, 200]}>
+      g
+    </Node>
+    <Draw
+      way={['f', { label: { text: 'distance = 12', side: 'sloped' } }, 'g']}
+      arrow="->"
+    />
   </Tikz>
 );
 
