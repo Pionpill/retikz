@@ -1,9 +1,9 @@
 ---
 title: Draw
-description: Sugar component — way array threads through ids / Cartesian / polar / fold / cycle items, expands at compile time to Path + Step.
+description: Sugar component — way array threads through ids / Cartesian / polar / fold / cycle / curves (curve / cubic / bend) items, expands at compile time to Path + Step.
 ---
 
-`<Draw>` is the go-to for 90% of connections. `way` is an array of targets joined as a path; at compile time it expands to an equivalent Kernel `<Path>` + `<Step>` tree, so `<Draw>` adds no capability the Kernel can't already express.
+`<Draw>` is the go-to for 90% of connections. `way` is an array of targets (with infix operators) joined as a path; at compile time it expands to an equivalent Kernel `<Path>` + `<Step>` tree, so `<Draw>` adds no capability the Kernel can't already express.
 
 ## Usage
 
@@ -21,9 +21,9 @@ import { Draw } from '@retikz/react';
 
 <ComponentPreview name="draw-basic" />
 
-### Five forms of way item
+### Eight forms of way item
 
-Each item in `way` accepts five forms — the first three are direct targets (matching `<Step>.to`), the last two are infix operators / keywords.
+Each item in `way` accepts eight forms — the first three are direct targets (matching `<Step>.to`), the rest are infix operators / keywords.
 
 | Form | Example | Meaning |
 | --- | --- | --- |
@@ -32,6 +32,9 @@ Each item in `way` accepts five forms — the first three are direct targets (ma
 | Polar | `{ origin: 'a', angle: 60, radius: 80 }` | Polar (see [Positioning](/core/concepts/positioning)) |
 | Fold operator | `'-\|'` / `'\|-'` (or `DrawWay.hv` / `DrawWay.vh`) | Turn the "previous → next" segment into a fold (TikZ `-\|` / `\|-` infix) |
 | Cycle | `DrawWay.cycle` | Close back to way's first item (equivalent to TikZ `cycle` / SVG `Z`) |
+| Quadratic curve | `{ curve: [cx, cy] }` | Merge with next item into a curve step; one control point (TikZ `..controls(B)..`) |
+| Cubic curve | `{ cubic: [[c1x, c1y], [c2x, c2y]] }` | Merge with next item into a cubic step; two control points (TikZ `..controls(B) and (C)..`) |
+| Bend | `{ bend: 'left' \| 'right', angle?: number }` | Merge with next item into a bend step; direction + optional angle (default 30°) |
 
 ### DrawWay keyword constants
 
@@ -70,6 +73,24 @@ Drop `'-|'` or `'|-'` directly into `way` (infix operator) and the "previous →
 End `way` with `DrawWay.cycle` to close the last segment back to the first item — matches TikZ's native form `(A) -- (B) -- cycle`, equivalent to `<Step kind="cycle" />`:
 
 <ComponentPreview name="draw-cycle" />
+
+### Quadratic curve
+
+Drop `{ curve: [cx, cy] }` (infix operator) into `way` and the "previous → next" segment becomes a quadratic Bezier — matching TikZ's `..controls(B)..`, equivalent to `<Step kind="curve">`:
+
+<ComponentPreview name="draw-curve" />
+
+### Cubic curve
+
+`{ cubic: [[c1x, c1y], [c2x, c2y]] }` draws a cubic Bezier — two control points shape the start and end tangents independently, matching TikZ's `..controls(B) and (C)..`, equivalent to `<Step kind="cubic">`. Common for S-shaped or complex curves:
+
+<ComponentPreview name="draw-cubic" />
+
+### Bend (arc shorthand)
+
+`{ bend: 'left' | 'right', angle?: number }` is the easier curve form — give a direction and angle (default 30°), control points are computed at compile time and lowered to a cubic. Equivalent to `<Step kind="bend">`:
+
+<ComponentPreview name="draw-bend" />
 
 ### Arrows
 

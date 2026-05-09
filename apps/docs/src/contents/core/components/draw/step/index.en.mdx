@@ -1,9 +1,9 @@
 ---
 title: Step
-description: Path's child node — one step = one action (move / line / step fold / cycle close); only valid as a direct child of `<Path>`.
+description: Path's child node — one step = one action (move / line / step fold / cycle close / curve / cubic / bend); only valid as a direct child of `<Path>`.
 ---
 
-`<Step>` describes a single path action: `move` lifts the pen to the target, `line` draws a straight line from cursor to target, `step` folds through a single right-angle corner, `cycle` closes the path back to its starting point. It is **only** valid as a direct child of `<Path>`; placed elsewhere it is silently ignored.
+`<Step>` describes a single path action: `move` lifts the pen, `line` draws a straight line, `step` folds through a single right-angle corner, `cycle` closes the path, and `curve` / `cubic` / `bend` draw curves of various shapes. It is **only** valid as a direct child of `<Path>`; placed elsewhere it is silently ignored.
 
 ## Usage
 
@@ -38,6 +38,24 @@ The path below draws A→B with one `move` + `line`, then lifts the pen with ano
 
 <ComponentPreview name="step-cycle" />
 
+### Quadratic curve
+
+`kind="curve"` draws a quadratic Bezier with one control point — TikZ's `.. controls (B) ..` / SVG path `Q`. The control point governs the bend direction and amplitude (**alpha.3 supports Cartesian `[x, y]` control points only**):
+
+<ComponentPreview name="step-curve" />
+
+### Cubic curve
+
+`kind="cubic"` draws a cubic Bezier with two control points — TikZ's `.. controls (B) and (C) ..` / SVG path `C`. `control1` shapes the start tangent; `control2` shapes the end tangent. Common for S-shaped curves and complex connectors:
+
+<ComponentPreview name="step-cubic" />
+
+### Bend (arc shorthand)
+
+`kind="bend"` is shorthand for TikZ's `to[bend left=N]` / `to[bend right=N]` — give a direction and angle, control points are computed at compile time and lowered to a cubic. `bendDirection` is the visual left/right relative to the from→to path; `bendAngle` defaults to 30:
+
+<ComponentPreview name="step-bend" />
+
 ### Styling
 
 `<Step>` itself has no stroke-related visual props — styling lives on the parent `<Path>`, and all child Steps share the same `stroke` / `strokeWidth` / `strokeDasharray`:
@@ -48,11 +66,16 @@ The path below draws A→B with one `move` + `line`, then lifts the pen with ano
 
 | Prop | Type | Default | Description |
 | --- | --- | --- | --- |
-| `kind` | `'move' \| 'line' \| 'step' \| 'cycle'` | `'line'` | `'move'` lifts the pen; `'step'` folds; `'cycle'` closes back to start |
+| `kind` | `'move' \| 'line' \| 'step' \| 'cycle' \| 'curve' \| 'cubic' \| 'bend'` | `'line'` | See the "Seven kinds" table below |
 | `via` | `'-\|' \| '\|-'` | — | Required for `kind="step"`: `-\|` horizontal-then-vertical; `\|-` vertical-then-horizontal |
 | `to` | `IRTarget` | — | Required except for `kind="cycle"`. Target: node id, Cartesian `[x, y]`, or polar object |
+| `control` | `[number, number]` | — | Required for `kind="curve"`: single control point of the quadratic Bezier |
+| `control1` | `[number, number]` | — | Required for `kind="cubic"`: first control point (shapes start tangent) |
+| `control2` | `[number, number]` | — | Required for `kind="cubic"`: second control point (shapes end tangent) |
+| `bendDirection` | `'left' \| 'right'` | — | Required for `kind="bend"`: visual left / right relative to from→to direction |
+| `bendAngle` | `number` | `30` | Optional for `kind="bend"`: bend angle in degrees |
 
-## Four kinds
+## Seven kinds
 
 | kind | Behavior | SVG / TikZ analogue |
 | --- | --- | --- |
@@ -60,6 +83,9 @@ The path below draws A→B with one `move` + `line`, then lifts the pen with ano
 | `'line'` | Straight line from cursor to target | path "L" / TikZ `--` |
 | `'step'` | Right-angle fold through one corner | TikZ `-\|` / `\|-` |
 | `'cycle'` | Close back to most recent `move` (no `to`) | path "Z" / TikZ `cycle` |
+| `'curve'` | Quadratic Bezier (one control point) | path "Q" / TikZ `.. controls (B) ..` |
+| `'cubic'` | Cubic Bezier (two control points) | path "C" / TikZ `.. controls (B) and (C) ..` |
+| `'bend'` | Arc shorthand (direction + angle), lowered to cubic | TikZ `to[bend left=N]` |
 
 The first step of a `<Path>` must be `move` — if you write `'line'` / `'step'` / `'cycle'`, the compiler coerces it to `move` (cycle has no `to`, so it falls back to origin `[0, 0]`).
 

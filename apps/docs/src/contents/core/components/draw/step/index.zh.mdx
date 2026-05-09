@@ -1,9 +1,9 @@
 ---
 title: Step
-description: Path 的子节点——一个 step = 一个动作（move / line / step 折角 / cycle 闭合）；只能作为 `<Path>` 的直接 children。
+description: Path 的子节点——一个 step = 一个动作（move / line / step 折角 / cycle 闭合 / curve / cubic / bend 曲线三件套）；只能作为 `<Path>` 的直接 children。
 ---
 
-`<Step>` 描述路径上的一个动作：`move` 抬笔到目标点，`line` 落笔从游标画直线到目标点，`step` 经一个直角拐点折到目标点，`cycle` 闭合回 path 起点。它**只能**作为 `<Path>` 的直接 children；放在其它地方会被忽略。
+`<Step>` 描述路径上的一个动作：`move` 抬笔到目标点，`line` 落笔从游标画直线，`step` 经一个直角拐点折到目标点，`cycle` 闭合回 path 起点，`curve` / `cubic` / `bend` 画各类曲线。它**只能**作为 `<Path>` 的直接 children；放在其它地方会被忽略。
 
 ## 用法
 
@@ -38,6 +38,24 @@ import { Path, Step } from '@retikz/react';
 
 <ComponentPreview name="step-cycle" />
 
+### 二次贝塞尔（curve）
+
+`kind="curve"` 用一个控制点画二次贝塞尔曲线，对应 TikZ 的 `.. controls (B) ..` / SVG path 的 `Q`。控制点决定曲线的弯曲方向与幅度（**alpha.3 仅支持笛卡尔 `[x, y]` 控制点**）：
+
+<ComponentPreview name="step-curve" />
+
+### 三次贝塞尔（cubic）
+
+`kind="cubic"` 用两个控制点画三次贝塞尔曲线，对应 TikZ 的 `.. controls (B) and (C) ..` / SVG path 的 `C`。`control1` 影响起点切线方向，`control2` 影响终点切线方向；常用于 S 形曲线、复杂连接：
+
+<ComponentPreview name="step-cubic" />
+
+### 弧形简记（bend）
+
+`kind="bend"` 是 TikZ `to[bend left=N]` / `to[bend right=N]` 的简记——只给方向 + 角度，编译期自动算控制点退到 cubic。`bendDirection` 是相对 from→to 路径方向的视觉左 / 右；`bendAngle` 缺省 30：
+
+<ComponentPreview name="step-bend" />
+
 ### 样式
 
 `<Step>` 自身没有 stroke 类视觉属性——样式都挂在父 `<Path>` 上，整条 Path 的所有 Step 共享同一套 `stroke` / `strokeWidth` / `strokeDasharray`：
@@ -48,11 +66,16 @@ import { Path, Step } from '@retikz/react';
 
 | 属性 | 类型 | 默认值 | 描述 |
 | --- | --- | --- | --- |
-| `kind` | `'move' \| 'line' \| 'step' \| 'cycle'` | `'line'` | `'move'` 抬笔不绘制；`'step'` 走折角；`'cycle'` 闭合回起点 |
+| `kind` | `'move' \| 'line' \| 'step' \| 'cycle' \| 'curve' \| 'cubic' \| 'bend'` | `'line'` | 见下方"七种取值"表 |
 | `via` | `'-\|' \| '\|-'` | — | 仅 `kind="step"` 必填：`-\|` 先水平后垂直；`\|-` 先垂直后水平 |
 | `to` | `IRTarget` | — | `kind="cycle"` 时不需要；其余 kind 必填——目标点：节点 id、笛卡尔 `[x, y]`、或极坐标对象 |
+| `control` | `[number, number]` | — | 仅 `kind="curve"` 必填：二次贝塞尔的单个控制点 |
+| `control1` | `[number, number]` | — | 仅 `kind="cubic"` 必填：三次贝塞尔的第一控制点（影响起点切线） |
+| `control2` | `[number, number]` | — | 仅 `kind="cubic"` 必填：三次贝塞尔的第二控制点（影响终点切线） |
+| `bendDirection` | `'left' \| 'right'` | — | 仅 `kind="bend"` 必填：相对 from→to 路径方向的视觉左 / 右 |
+| `bendAngle` | `number` | `30` | 仅 `kind="bend"` 可选：弯角度（度） |
 
-## kind 的四种取值
+## kind 的七种取值
 
 | kind | 行为 | 类比 SVG / TikZ |
 | --- | --- | --- |
@@ -60,6 +83,9 @@ import { Path, Step } from '@retikz/react';
 | `'line'` | 从当前游标画直线到目标点 | path "L" / TikZ `--` |
 | `'step'` | 经一个直角拐点折到目标点 | TikZ `-\|` / `\|-` |
 | `'cycle'` | 闭合回最近一次 move 起点（无 `to`） | path "Z" / TikZ `cycle` |
+| `'curve'` | 二次贝塞尔（一个控制点） | path "Q" / TikZ `.. controls (B) ..` |
+| `'cubic'` | 三次贝塞尔（两个控制点） | path "C" / TikZ `.. controls (B) and (C) ..` |
+| `'bend'` | 弧形简记（方向 + 角度），编译期退到 cubic | TikZ `to[bend left=N]` |
 
 `<Path>` 第一个 step 必须是 `move`——如果你写 `'line'` / `'step'` / `'cycle'`，编译器会自动改成 `move`（cycle 无 `to`，回退到原点 `[0, 0]`）。
 

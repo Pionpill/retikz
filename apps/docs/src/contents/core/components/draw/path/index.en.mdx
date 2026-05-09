@@ -1,9 +1,9 @@
 ---
 title: Path
-description: Kernel path container — children are a sequence of `<Step>` (≥ 2) defining a polyline; `<Draw>` compiles down to this.
+description: Kernel path container — children are a sequence of `<Step>` (≥ 2) defining a polyline or curve; `<Draw>` compiles down to this.
 ---
 
-`<Path>` is the low-level path container: children must be `<Step>` nodes (at least 2) defining a sequence of move / line / step (folded) / cycle (close) actions. For everyday connections `<Draw>` is shorter; reach for `<Path>` when you need folds, closes, custom stroke, multi-segment polylines, or different step kinds.
+`<Path>` is the low-level path container: children must be `<Step>` nodes (at least 2) defining a sequence of move / line / step (folded) / cycle (close) / curve / cubic / bend (curves) actions. For everyday connections `<Draw>` is shorter; reach for `<Path>` when you need folds, closes, curves, custom stroke, or different step kinds.
 
 ## Usage
 
@@ -30,7 +30,7 @@ import { Path, Step } from '@retikz/react';
 </Path>
 ```
 
-`<Step>` supports four kinds — `move` / `line` / `step` / `cycle` — the first two draw straight segments, `step` folds through a right angle, `cycle` closes back to the start. See [Step](/core/components/draw/step) for details.
+`<Step>` supports seven kinds — `move` / `line` for straight segments, `step` for the right-angle fold, `cycle` to close back, `curve` / `cubic` for Bezier curves, `bend` as the arc shorthand. See [Step](/core/components/draw/step) for details.
 
 ## Examples
 
@@ -91,7 +91,7 @@ import { Path, Step } from '@retikz/react';
 | `arrowShape` | `'normal' \| 'open' \| 'stealth' \| 'diamond' \| 'openDiamond' \| 'circle' \| 'openCircle'` | `'normal'` | Arrow tip shape |
 | `fill` | `string` | `'none'` | Fill color of the closed region (any CSS color) |
 | `fillRule` | `'nonzero' \| 'evenodd'` | `'nonzero'` | Fill rule; use `'evenodd'` for rings / holes |
-| `children` | `Array<<Step>>` | — | At least 2; if the first isn't `move`, the compiler coerces it to `move`. `<Step>` supports `move` / `line` / `step` (folded) / `cycle` (close) |
+| `children` | `Array<<Step>>` | — | At least 2; if the first isn't `move`, the compiler coerces it to `move`. `<Step>` supports `move` / `line` / `step` (folded) / `cycle` (close) / `curve` / `cubic` (Bezier) / `bend` (arc shorthand) |
 
 ## Path vs Draw
 
