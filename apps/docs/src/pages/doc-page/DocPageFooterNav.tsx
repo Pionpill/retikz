@@ -5,7 +5,7 @@ import { Link } from 'react-router';
 import { usePageNavigation } from './usePageNavigation';
 
 const cardClass =
-  'flex items-center gap-2 rounded-lg bg-muted hover:bg-muted/80 duration-200 transition-colors p-1 px-2 transition-colors hover:bg-accent hover:text-accent-foreground';
+  'flex min-w-0 max-w-[48%] items-center gap-2 rounded-lg bg-muted hover:bg-muted/80 duration-200 transition-colors p-1 px-2 transition-colors hover:bg-accent hover:text-accent-foreground';
 
 /** 文章末尾的「上一页 / 下一页」大卡片导航，shadcn 风格 */
 export const DocPageFooterNav: FC = () => {
@@ -19,14 +19,14 @@ export const DocPageFooterNav: FC = () => {
       {prev ? (
         <Link to={prev.path} className={cardClass}>
           <ArrowLeft className="size-3.5" />
-          <span className="font-medium text-sm">{t(prev.label)}</span>
+          <span className="font-medium text-sm truncate min-w-0">{t(prev.label)}</span>
         </Link>
       ) : (
         <div />
       )}
       {next ? (
         <Link to={next.path} className={cardClass}>
-          <span className="font-medium text-sm">{t(next.label)}</span>
+          <span className="font-medium text-sm truncate min-w-0">{t(next.label)}</span>
           <ArrowRight className="size-3.5" />
         </Link>
       ) : (
