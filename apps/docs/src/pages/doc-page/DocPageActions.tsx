@@ -62,7 +62,7 @@ export const DocPageActions: FC<DocPageActionsProps> = ({ source }) => {
         <ButtonGroup className="flex items-center">
           <Button variant="secondary" size="sm" className="h-8 cursor-pointer gap-1.5" onClick={handleCopyMarkdown}>
             <Copy className="size-3.5" />
-            {t('page.copyPage')}
+            <span className="hidden sm:inline">{t('page.copyPage')}</span>
           </Button>
           <ButtonGroupSeparator />
           <DropdownMenu>
@@ -141,7 +141,7 @@ export const DocPageActions: FC<DocPageActionsProps> = ({ source }) => {
               <Button
                 variant="secondary"
                 size="icon"
-                className="size-8 cursor-pointer"
+                className="size-8 cursor-pointer hidden sm:inline-flex"
                 onClick={() => navigate(prev.path)}
               >
                 <ArrowLeft className="size-4" />
@@ -158,7 +158,7 @@ export const DocPageActions: FC<DocPageActionsProps> = ({ source }) => {
               <Button
                 variant="secondary"
                 size="icon"
-                className="size-8 cursor-pointer"
+                className="size-8 cursor-pointer hidden sm:inline-flex"
                 onClick={() => navigate(next.path)}
               >
                 <ArrowRight className="size-4" />
