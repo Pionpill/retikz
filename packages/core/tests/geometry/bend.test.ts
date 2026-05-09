@@ -42,4 +42,28 @@ describe('bendControlPoints', () => {
     expect(c2L[0] - mid2[0]).toBeCloseTo(-(c2R[0] - mid2[0]), 6);
     expect(c2L[1] - mid2[1]).toBeCloseTo(-(c2R[1] - mid2[1]), 6);
   });
+
+  it("负角度等价于 direction 翻转：tan(-θ/2) = -tan(θ/2) 抵消法向 sign", () => {
+    const [c1L, c2L] = bendControlPoints([0, 0], [10, 0], 'left', -30);
+    const [c1R, c2R] = bendControlPoints([0, 0], [10, 0], 'right', 30);
+    expect(c1L).toEqual(c1R);
+    expect(c2L).toEqual(c2R);
+  });
+
+  it("90° 产生大但有限的控制点偏移（offset = chord × tan(45°) × 4/3）", () => {
+    const [c1, c2] = bendControlPoints([0, 0], [10, 0], 'left', 90);
+    // tan(45°) = 1 → offset = 10 × 1 × 4/3 = 40/3 ≈ 13.33
+    expect(c1[1]).toBeCloseTo(-40 / 3, 6);
+    expect(c2[1]).toBeCloseTo(-40 / 3, 6);
+    expect(Number.isFinite(c1[1])).toBe(true);
+    expect(Number.isFinite(c2[1])).toBe(true);
+  });
+
+  it("180° 是几何退化点：tan(90°) → 极大值，控制点偏移 |y| > 1e10（用户应避免）", () => {
+    // JS Math.tan(Math.PI/2) 实际返回 1.633e+16（不是 Infinity——Math.PI
+    // 非真 π）。本测试记录此现状；schema 层未来可能加 angle ∈ (0, 180) 验证
+    const [c1, c2] = bendControlPoints([0, 0], [10, 0], 'left', 180);
+    expect(Math.abs(c1[1])).toBeGreaterThan(1e10);
+    expect(Math.abs(c2[1])).toBeGreaterThan(1e10);
+  });
 });
