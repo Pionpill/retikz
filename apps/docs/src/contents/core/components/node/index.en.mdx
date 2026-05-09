@@ -55,6 +55,22 @@ import { Node } from '@retikz/react';
 
 > Arrays beat `'\n'`-delimited strings: JSON-friendly (no escape headaches), and leaves room for per-line attributes later.
 
+You can also pass the text as `children` — pick whichever form reads best:
+
+```tsx
+{/* string with \n */}
+<Node>{'Line 1\nLine 2'}</Node>
+
+{/* template literal (real newlines) */}
+<Node>{`Line 1
+Line 2`}</Node>
+
+{/* array */}
+<Node>{['Line 1', 'Line 2']}</Node>
+```
+
+`text` wins over `children` whenever both are supplied.
+
 Multi-line text combined with each shape — outer boundary follows the shape-specific circumscription (circle / ellipse / diamond):
 
 <ComponentPreview name="node-multiline-shapes" />

@@ -16,6 +16,34 @@ describe('buildIR', () => {
     expect(ir.children).toEqual([expect.objectContaining({ type: 'node', id: 'A', text: 'Hi' })]);
   });
 
+  it("children 字符串带 '\\n' 自动拆成多行数组", () => {
+    const ir = buildIR(
+      <Node id="A" position={[0, 0]}>{'Line 1\nLine 2'}</Node>,
+    );
+    expect(ir.children[0]).toMatchObject({ type: 'node', text: ['Line 1', 'Line 2'] });
+  });
+
+  it('children 直接传字符串数组同样产出多行', () => {
+    const ir = buildIR(
+      <Node id="A" position={[0, 0]}>{['L1', 'L2', 'L3']}</Node>,
+    );
+    expect(ir.children[0]).toMatchObject({ type: 'node', text: ['L1', 'L2', 'L3'] });
+  });
+
+  it('text prop 优先于 children（同时给两边时取 text）', () => {
+    const ir = buildIR(
+      <Node id="A" position={[0, 0]} text={['from', 'prop']}>
+        from-children
+      </Node>,
+    );
+    expect(ir.children[0]).toMatchObject({ type: 'node', text: ['from', 'prop'] });
+  });
+
+  it('children 单字符串无换行 → 单行 string（不是 string[]）', () => {
+    const ir = buildIR(<Node id="A" position={[0, 0]}>Hello world</Node>);
+    expect(ir.children[0]).toMatchObject({ type: 'node', text: 'Hello world' });
+  });
+
   it('<Path><Step/><Step/></Path> 收集 step 序列', () => {
     const ir = buildIR(
       <Path>

@@ -7,12 +7,21 @@ import type { FC } from 'react';
  * - circle 外接圆，多行变得更圆胖
  * - ellipse 外接椭圆，行多 → ry 显著大于 rx
  * - diamond 外接菱形，多行垂直被拉得最长
+ *
+ * 顺便混着用 4 种文本写法（children 模板字面量 / children '\n' 字符串 /
+ * children 数组 / text prop 数组），都等价。
  */
 const Demo: FC = () => (
   <Tikz width={520} height={200}>
-    <Node id="rect" position={[-180, 0]} text={['rect', 'multi', 'lines']} />
-    <Node id="circ" shape="circle" position={[-60, 0]} text={['circle', 'multi', 'lines']} />
-    <Node id="elli" shape="ellipse" position={[80, 0]} text={['ellipse', 'multi', 'lines']} />
+    <Node id="rect" position={[-180, 0]}>{`rect
+multi
+lines`}</Node>
+    <Node id="circ" shape="circle" position={[-60, 0]}>
+      {'circle\nmulti\nlines'}
+    </Node>
+    <Node id="elli" shape="ellipse" position={[80, 0]}>
+      {['ellipse', 'multi', 'lines']}
+    </Node>
     <Node id="diam" shape="diamond" position={[220, 0]} text={['diamond', 'multi', 'lines']} />
   </Tikz>
 );

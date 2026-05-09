@@ -10,14 +10,46 @@ const getDisplayName = (el: ReactElement): string | undefined => {
   return t.displayName;
 };
 
-/** props.text 接受 string 或 string[]；children 兜底仅取字符串单行 */
+/**
+ * 递归收集 children 中的字符串行：
+ * - 字符串 child 按 `'\n'` 拆成多行
+ * - 数组 child（包括 JSX 多 child 自动展平的数组）逐项递归
+ * - 其它类型（React 元素 / null / 数字等）忽略——附带支持 `<br/>` 等元素当软分段
+ */
+const collectChildLines = (children: unknown): Array<string> => {
+  const lines: Array<string> = [];
+  const visit = (node: unknown): void => {
+    if (typeof node === 'string') {
+      for (const part of node.split('\n')) lines.push(part);
+      return;
+    }
+    if (Array.isArray(node)) {
+      for (const c of node) visit(c);
+    }
+  };
+  visit(children);
+  return lines;
+};
+
+/**
+ * Node 文本读取顺序：
+ * 1. `props.text`（string 或 string[]）— 显式优先，直接透传到 IR
+ * 2. `props.children` — 字符串按 `'\n'` 拆行；数组逐项收集；多行返回 string[]
+ *
+ * 用 children 写多行的常见姿势：
+ * - 字符串带换行：`<Node>{'Line 1\nLine 2'}</Node>`
+ * - 模板字面量：``<Node>{`Line 1\nLine 2`}</Node>``
+ * - 数组：`<Node>{['Line 1', 'Line 2']}</Node>`
+ */
 const readNodeText = (props: Record<string, unknown>): IRNode['text'] => {
   if (typeof props.text === 'string') return props.text;
   if (Array.isArray(props.text) && props.text.every(s => typeof s === 'string')) {
     return props.text;
   }
-  if (typeof props.children === 'string') return props.children;
-  return undefined;
+  const lines = collectChildLines(props.children);
+  if (lines.length === 0) return undefined;
+  if (lines.length === 1) return lines[0];
+  return lines;
 };
 
 /** 把 <Node> props 翻成 IRChild；text 优先取 props.text，其次取字符串 children */

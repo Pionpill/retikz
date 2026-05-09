@@ -18,7 +18,14 @@ export type NodeProps = {
   position: IRPosition | PolarPosition;
   /** 旋转角度（度数，与 TikZ 一致），绕节点中心；正值顺时针 */
   rotate?: number;
-  /** 文本内容；也支持 children 形式（仅字符串） */
+  /**
+   * 文本内容（也可以用 children 写）；与 `text` 二选一，`text` 优先。
+   *
+   * children 多行写法：
+   * - `<Node>{'Line 1\nLine 2'}</Node>`（字符串内嵌 `\n`）
+   * - ``<Node>{`Line 1\nLine 2`}</Node>``（模板字面量）
+   * - `<Node>{['Line 1', 'Line 2']}</Node>`（数组）
+   */
   children?: ReactNode;
   /** 显式 text；单字符串 = 一行，数组 = 每元素一行；优先级高于 children */
   text?: string | Array<string>;
