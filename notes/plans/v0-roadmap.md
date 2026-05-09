@@ -86,7 +86,7 @@ v0 完工后开 v1，重点转向 **Tier 2 domain 包**（`@retikz/flow`、`@ret
 |---|---|
 | `Step.kind: 'curve'`（quadratic）+ `'cubic'`（两控制点） | gap §2 P0 |
 | `Step.kind: 'bend'`（`bend left=N` / `bend right=N` 简记） | gap §2 P0 |
-| 相对坐标：`Target` 加 `{ rel: [dx, dy] }` / `{ relAccum: [dx, dy] }` | gap §2 P1 |
+| 相对坐标：`Target` 加 `{ rel: [dx, dy] }` / `{ relAccumulate: [dx, dy] }` | gap §2 P1 |
 | 路径上挂 node：`Step.label?: { text, position?: 'midway'\|'near-start'\|'near-end', side?: 'above'\|... }` | gap §2 P1 |
 | Path-level 形状：`Step.kind: 'arc' \| 'circlePath' \| 'ellipsePath'` | gap §2 P1 |
 | `lineCap` / `lineJoin` | gap §2 P2 |
@@ -125,7 +125,7 @@ v0 完工后开 v1，重点转向 **Tier 2 domain 包**（`@retikz/flow`、`@ret
 
 - [x] v0.1.0-alpha.1（2026-05-09 完工：6 项改动 + 4 篇 ADR + ~180 测试）
 - [x] v0.1.0-alpha.2（2026-05-09 完工：7 项改动 + 3 篇 ADR + 47 新测试 + sugar `<Text>`）
-- [ ] v0.1.0-alpha.3（进行中：ADR-0001 ✅ Path 曲线三件套 curve / cubic / bend；ADR-0002 ✅ path-level 形状 arc / circlePath / ellipsePath；ADR-0003/0004 待做）
+- [ ] v0.1.0-alpha.3（进行中：ADR-0001 ✅ Path 曲线三件套 curve / cubic / bend；ADR-0002 ✅ path-level 形状 arc / circlePath / ellipsePath；ADR-0003 ✅ 相对坐标 `{ rel }` / `{ relAccumulate }` + way sugar 对象形态；ADR-0004 待做）
 - [ ] v0.1.0-alpha.4
 - [ ] v0.1.0-beta
 - [ ] v0.1.0

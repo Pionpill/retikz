@@ -23,7 +23,7 @@
 
 - [`0001-path-curve-step-kind.md`](./adr/0001-path-curve-step-kind.md)：Path 曲线 step kind（决策：`curve` / `cubic` / `bend` 三个独立 kind，bend 不并入 curve）
 - [`0002-path-shape-step-kind.md`](./adr/0002-path-shape-step-kind.md)：Path-level 形状指令（决策：`arc` / `circlePath` / `ellipsePath` 作为 step kind，圆心隐式取上一 step 终点）
-- [`0003-relative-coordinate.md`](./adr/0003-relative-coordinate.md)：相对坐标的 IR 表达（决策：IR 用 `{ rel }` / `{ relAccum }` 嵌套对象；sugar 层支持 `'+1,0'` / `'++1,0'` 字符串简记）
+- [`0003-relative-coordinate.md`](./adr/0003-relative-coordinate.md)：相对坐标的 IR 表达（决策：IR 用 `{ rel }` / `{ relAccumulate }` 嵌套对象；sugar 层 way 推荐对象形态 `{ position, type: DrawWay.Relative \| DrawWay.Accumulate }`，并保留字符串简记 `'+1,0'` / `'++1,0'`）
 - [`0004-edge-label.md`](./adr/0004-edge-label.md)：边标注归位（决策：IR 嵌入 `Step.label`；sugar 层提供 `<EdgeLabel>` 翻译）
 
 ### analysis/
