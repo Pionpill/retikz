@@ -84,6 +84,7 @@
     "connectMcpDesc": "Site index (llms.txt) for AI tools",
     "pageCopied": "Page copied",
     "prevPage": "Previous",
-    "nextPage": "Next"
+    "nextPage": "Next",
+    "docStats": "{{chars}} chars · {{components}} components"
   }
 }

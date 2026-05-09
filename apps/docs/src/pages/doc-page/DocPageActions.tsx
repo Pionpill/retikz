@@ -11,7 +11,7 @@ import {
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { buildAiUrl, buildDocPageLinks } from '@/lib/docLinks';
 import { ArrowLeft, ArrowRight, ArrowUpRight, ChevronDown, Copy, FileCode, Plug } from 'lucide-react';
-import { type FC, type ReactNode, useCallback } from 'react';
+import { type FC, type ReactNode, useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router';
 import { toast } from 'sonner';
@@ -21,6 +21,24 @@ import { usePageNavigation } from './usePageNavigation';
 export type DocPageActionsProps = {
   /** 当前页面 mdx 源码（用于"复制 markdown"） */
   source: string;
+};
+
+/**
+ * 估算文档统计：
+ * - chars：剥掉 frontmatter / 代码块 / 行内代码 / JSX / md 链接 / 标题列表等标记后剩余的非空白字符数（中文按字符算）
+ * - components：大写开头 JSX 开标签的出现次数（HTML 小写标签不计入）；先剥代码块再扫，避免 ```...``` 里的伪组件
+ */
+const computeDocStats = (mdx: string): { chars: number; components: number } => {
+  let s = mdx.replace(/^---\r?\n[\s\S]*?\r?\n---\r?\n?/, '');
+  s = s.replace(/```[\s\S]*?```/g, '');
+  s = s.replace(/`[^`\n]*`/g, '');
+  const components = s.match(/<[A-Z][A-Za-z0-9_]*\b/g)?.length ?? 0;
+  s = s.replace(/<\/?[A-Za-z][^>]*>/g, '');
+  s = s.replace(/!\[[^\]]*\]\([^)]*\)/g, '');
+  s = s.replace(/\[([^\]]*)\]\([^)]*\)/g, '$1');
+  s = s.replace(/[#*_~>`-]/g, '');
+  const chars = s.replace(/\s/g, '').length;
+  return { chars, components };
 };
 
 /**
@@ -56,9 +74,17 @@ export const DocPageActions: FC<DocPageActionsProps> = ({ source }) => {
     toast.success(t('page.pageCopied'));
   }, [source, t]);
 
+  const stats = useMemo(() => computeDocStats(source), [source]);
+
   return (
     <TooltipProvider delayDuration={150}>
       <div className="flex items-center gap-1">
+        <span className="hidden whitespace-nowrap pr-1 text-xs text-muted-foreground sm:inline">
+          {t('page.docStats', {
+            chars: stats.chars.toLocaleString(),
+            components: stats.components,
+          })}
+        </span>
         <ButtonGroup className="flex items-center">
           <Button variant="secondary" size="sm" className="h-8 cursor-pointer gap-1.5" onClick={handleCopyMarkdown}>
             <Copy className="size-3.5" />

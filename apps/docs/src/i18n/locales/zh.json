@@ -84,6 +84,7 @@
     "connectMcpDesc": "站点索引 llms.txt，供 AI 工具使用",
     "pageCopied": "已复制页面 Markdown",
     "prevPage": "上一页",
-    "nextPage": "下一页"
+    "nextPage": "下一页",
+    "docStats": "共 {{chars}} 字 · {{components}} 个组件"
   }
 }
