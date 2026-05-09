@@ -1,0 +1,87 @@
+{
+  "common": {
+    "search": "搜索文档...",
+    "searchPlaceholder": "输入关键字搜索...",
+    "searchEmpty": "未找到匹配的页面",
+    "searchHint": "搜索文档",
+    "pageCount": "{{count}} 页",
+    "notFound": "页面不存在：/{{section}}/{{page}}",
+    "versionTag": "v0.1 alpha",
+    "contentPlaceholder": "{{title}} —— v0.1 alpha 内容补充中。",
+    "github": "GitHub",
+    "githubRepo": "Pionpill/retikz",
+    "switchLanguage": "切换语言",
+    "themeLight": "浅色主题",
+    "themeDark": "深色主题",
+    "brandTagline": "ReTikZ 模块切换",
+    "layoutDefault": "默认布局",
+    "layoutCentered": "居中布局",
+    "more": "更多",
+    "groupResources": "资源",
+    "tikzDocs": "TikZ 官方文档"
+  },
+  "core": {
+    "label": "核心",
+    "introduction": "简介",
+    "getStart": "快速开始",
+    "components": "组件",
+    "concepts": "概念",
+    "tikz": "Tikz",
+    "node": "Node",
+    "draw": "绘制",
+    "drawOverview": "Draw",
+    "path": "Path",
+    "step": "Step",
+    "positioning": "定位",
+    "anchors": "锚点"
+  },
+  "flow": {
+    "label": "流程"
+  },
+  "plot": {
+    "label": "图表"
+  },
+  "reference": {
+    "label": "参考",
+    "overview": "总览",
+    "releases": "发布",
+    "changelog": "更新日志",
+    "versioning": "版本策略",
+    "roadmap": "路线图"
+  },
+  "toc": {
+    "copyLink": "复制链接",
+    "outline": "文章目录",
+    "linkCopied": "成功复制网页链接",
+    "showOutline": "显示文章目录",
+    "hideOutline": "隐藏文章目录"
+  },
+  "preview": {
+    "groupLabel": "组件演示",
+    "hideAllCode": "隐藏所有代码",
+    "expandAllCode": "展开所有代码"
+  },
+  "view": {
+    "groupLabel": "视图"
+  },
+  "page": {
+    "copyPage": "复制页面",
+    "copyMarkdown": "复制 Markdown",
+    "viewAsMarkdown": "查看 Markdown 原文",
+    "viewAsMarkdownDesc": "在浏览器打开 .mdx 原始文件",
+    "viewOnGithub": "在 GitHub 查看",
+    "viewOnGithubDesc": "跳转到仓库源文件，可提 PR 修改",
+    "openInGroup": "在 AI 中打开",
+    "openInChatGpt": "在 ChatGPT 中打开",
+    "openInChatGptDesc": "带上本页内容向 ChatGPT 提问",
+    "openInClaude": "在 Claude 中打开",
+    "openInClaudeDesc": "带上本页内容向 Claude 提问",
+    "openInDeepSeek": "在 DeepSeek 中打开",
+    "openInDeepSeekDesc": "带上本页内容向 DeepSeek 提问",
+    "connectMcp": "通过 MCP 连接",
+    "connectMcpDesc": "站点索引 llms.txt，供 AI 工具使用",
+    "pageCopied": "已复制页面 Markdown",
+    "prevPage": "上一页",
+    "nextPage": "下一页"
+  }
+}
