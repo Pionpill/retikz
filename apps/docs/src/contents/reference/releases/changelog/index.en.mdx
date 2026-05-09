@@ -5,6 +5,36 @@ description: retikz release history grouped by MINOR version, newest first. Date
 
 <Update label="May 2026" tags={["@retikz/core", "@retikz/react", "docs"]}>
 
+## v0.1.0-alpha.1
+
+P0 + P1 essentials for flow charts / UML / state machines land in one shot: 4 node shapes, path folds / closing / multi-end arrows / region fills, explicit anchor references. Backed by 4 ADRs and ~180 test cases.
+
+### `@retikz/core`
+
+- **Step kind grows to 4**: `'move'` / `'line'` / `'step'` (fold, TikZ `(A) -| (B)` style) / `'cycle'` (close to start) — ADR-0001
+- **Path-level visuals**: `arrow` (4 directions) + `arrowShape` (7 shapes: normal / open / stealth / diamond / openDiamond / circle / openCircle, hollow shapes auto-shrink the path) + `fill` / `fillRule` — ADR-0002
+- **Node shape polymorphism**: `rectangle` / `circle` / `ellipse` / `diamond` with multimorphic `boundaryPoint`; the outer shape circumscribes "text + padding" — ADR-0003
+- **Target string syntax**: `'A'` (auto-clip) / `'A.<anchor>'` (named anchor) / `'A.<deg>'` (angle border) — ADR-0004
+- **Sugar way DSL upgrade**: `DrawWay` keyword constants (cycle / hv / vh) + infix fold operators `'-|'` / `'|-'` + cycle keyword
+- **Path clip algorithm refactor**: per-segment clip from node centers — avoids lines passing through intermediate nodes (matches TikZ semantics)
+- **New type utility**: `ValueOf<T extends object> = T[keyof T]`, standardizes `as const` object + derived-union enum pattern
+- **New geometry modules**: `circle` / `ellipse` / `diamond`, each with `boundaryPoint` / `anchor` / `contains`
+
+### `@retikz/react`
+
+- Path / Draw / Step / Node forward all new IR fields; `DrawWay` is fully interchangeable with IR string literals
+- Tikz container injects SVG `<defs><marker>` on demand (one per arrow shape used, `useId()` keeps ids unique across multiple instances)
+- Renderer adds `'ellipse'` primitive case (shared by circle / ellipse nodes)
+- Render pipeline now supports GroupPrim to wrap multi-sub-path paths — for multi-node arrowed paths, markers attach only to the very first / last segment
+
+### `docs`
+
+- Node page adds shape polymorphism section + a 4-shape-around-hub demo
+- Path / Draw overview pages: independent sections + demos for fold / cycle / arrow / arrowShape / fill
+- Step page: all 4 kinds overview + per-kind demos + styling / fold / cycle sections
+- Anchors concept page rewritten: three-form Target string syntax table + 4-shape anchor cross-reference
+- 4 new ADRs (`notes/adr/0001`–`0004`); AGENTS.md adds "const + ValueOf for enum-like unions" rule
+
 ## v0.1.0-alpha.0
 
 First npm release. retikz v0.1 redesign baseline with IR at the center — the foundation for upcoming alpha iterations.

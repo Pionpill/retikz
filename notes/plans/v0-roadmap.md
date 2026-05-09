@@ -123,7 +123,7 @@ v0 完工后开 v1，重点转向 **Tier 2 domain 包**（`@retikz/flow`、`@ret
 
 ### v0.1 跟踪
 
-- [ ] v0.1.0-alpha.1
+- [x] v0.1.0-alpha.1（2026-05-09 完工：6 项改动 + 4 篇 ADR + ~180 测试）
 - [ ] v0.1.0-alpha.2
 - [ ] v0.1.0-alpha.3
 - [ ] v0.1.0-alpha.4
