@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router';
 
 import { Shortcut } from '@/components/shared/shortcut';
 import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 import {
   CommandDialog,
   CommandEmpty,
@@ -77,7 +78,8 @@ const useSearchEntries = (): Array<SearchEntry> => {
  * 触发器是个 outline 输入框样的按钮，点击或 Ctrl/Cmd+K 打开 CommandDialog。
  * 数据源为 `data/` 下注册的模块 → 栏目 → 页树，按 label（i18n 翻译后）模糊匹配。
  */
-export const DocsSearch: FC = () => {
+export type DocsSearchProps = { className?: string };
+export const DocsSearch: FC<DocsSearchProps> = ({ className }) => {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const navigate = useNavigate();
@@ -114,7 +116,10 @@ export const DocsSearch: FC = () => {
       <Button
         variant="outline"
         size="sm"
-        className="relative h-8 w-9 justify-start gap-2 px-2 text-sm font-normal text-muted-foreground sm:w-44 sm:pr-12 lg:w-56"
+        className={cn(
+          'relative h-8 w-9 justify-start gap-2 px-2 text-sm font-normal text-muted-foreground sm:w-44 sm:pr-12 lg:w-56',
+          className,
+        )}
         onClick={() => setOpen(true)}
         aria-label={t('common.searchHint')}
       >

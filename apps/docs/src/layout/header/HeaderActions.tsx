@@ -3,7 +3,6 @@ import { type FC } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { GitHubIcon } from '@/components/icons';
-import { DocsSearch } from '@/components/shared/docs-search';
 import { Shortcut } from '@/components/shared/shortcut';
 import { buttonVariants } from '@/components/ui/button';
 import {
@@ -52,9 +51,7 @@ export const HeaderActions: FC = () => {
 
   return (
     <TooltipProvider delayDuration={150}>
-      <div className="ml-auto flex items-center gap-2">
-        <DocsSearch />
-        <Separator orientation="vertical" className="h-4!" />
+      <div className="ml-auto hidden lg:flex items-center gap-2">
         <div className="flex items-center gap-1">
           <Tooltip>
             <TooltipTrigger
