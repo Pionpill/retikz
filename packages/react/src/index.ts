@@ -15,7 +15,7 @@ export type { DrawProps } from './sugar';
 
 // 透传 core 的 way 关键字常量与字面量类型，方便 react 用户单包 import
 export { DrawWay } from '@retikz/core';
-export type { WayItem, WayDSL, WayCycle, WayVia } from '@retikz/core';
+export type { WayItem, WayDSL, WayCycle, WayVia, WayRelItem } from '@retikz/core';
 
 // React 节点 ↔ IR 桥接：buildIR 内部名保留，对外以 convertReactNodeToIR 暴露（命名 pattern 给后续多框架 adapter 留位）
 export { buildIR as convertReactNodeToIR } from './kernel/_builder';

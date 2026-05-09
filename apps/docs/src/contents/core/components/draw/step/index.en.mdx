@@ -1,6 +1,6 @@
 ---
 title: Step
-description: Path's child node — one step = one action (move / line / step fold / cycle close / curve / cubic / bend / arc / circlePath / ellipsePath); only valid as a direct child of `<Path>`.
+description: Path's child node — one step = one action (move / line / step fold / cycle close / curve / cubic / bend / arc / circlePath / ellipsePath); `to` accepts node id / Cartesian / polar / relative offsets (rel / relAccumulate); only valid as a direct child of `<Path>`.
 ---
 
 `<Step>` describes a single path action: `move` lifts the pen, `line` draws a straight line, `step` folds through a single right-angle corner, `cycle` closes the path, `curve` / `cubic` / `bend` draw curves of various shapes, and `arc` / `circlePath` / `ellipsePath` use the cursor as the center to draw an arc / full circle / full ellipse. It is **only** valid as a direct child of `<Path>`; placed elsewhere it is silently ignored.
@@ -56,6 +56,17 @@ The path below draws A→B with one `move` + `line`, then lifts the pen with ano
 
 <ComponentPreview name="step-bend" />
 
+### Relative coordinates (rel / relAccumulate)
+
+`to` also accepts relative-offset objects: `{ rel: [dx, dy] }` and `{ relAccumulate: [dx, dy] }` both resolve against the **previous step's endpoint** (`prevEnd`, falling back to `[0, 0]` when there is none). The only difference is **whether prevEnd advances**:
+
+- `{ rel }` — equivalent to TikZ `(+x, +y)`: chained offsets all anchor on the **same** point; prevEnd does **not** update
+- `{ relAccumulate }` — equivalent to TikZ `(++x, ++y)`: each segment accumulates and prevEnd moves with it
+
+You can also write the sugar strings `'+dx,dy'` / `'++dx,dy'` (e.g. `<Step to="+1,0" />`); the React adapter rewrites them in place to the matching IR objects. In the demo below, the two paths have identical step sequences and only the target form differs — the solid line (rel) traces an L, while the dashed line (relAccumulate) climbs a staircase:
+
+<ComponentPreview name="step-rel" />
+
 ### Arc
 
 `kind="arc"` uses the **cursor as center** and draws a circular arc by start / end angle and radius — matches TikZ's `arc[start angle=…, end angle=…, radius=…]`. Angles follow the retikz polar convention: 0° points to +x, 90° is visually downward. The pen ends at the arc's endpoint:
@@ -86,7 +97,7 @@ The path below draws A→B with one `move` + `line`, then lifts the pen with ano
 | --- | --- | --- | --- |
 | `kind` | `'move' \| 'line' \| 'step' \| 'cycle' \| 'curve' \| 'cubic' \| 'bend' \| 'arc' \| 'circlePath' \| 'ellipsePath'` | `'line'` | See the "Ten kinds" table below |
 | `via` | `'-\|' \| '\|-'` | — | Required for `kind="step"`: `-\|` horizontal-then-vertical; `\|-` vertical-then-horizontal |
-| `to` | `IRTarget` | — | Not used for `kind="cycle"` / `'arc'` / `'circlePath'` / `'ellipsePath'`; required for the rest. Target: node id, Cartesian `[x, y]`, or polar object |
+| `to` | `IRTarget` | — | Not used for `kind="cycle"` / `'arc'` / `'circlePath'` / `'ellipsePath'`; required for the rest. Target: node id, Cartesian `[x, y]`, polar object, relative-offset object `{ rel }` / `{ relAccumulate }`, or sugar string `'+dx,dy'` / `'++dx,dy'` |
 | `control` | `[number, number]` | — | Required for `kind="curve"`: single control point of the quadratic Bezier |
 | `control1` | `[number, number]` | — | Required for `kind="cubic"`: first control point (shapes start tangent) |
 | `control2` | `[number, number]` | — | Required for `kind="cubic"`: second control point (shapes end tangent) |
@@ -124,12 +135,14 @@ Only meaningful when `kind="step"`. Given cursor `(px, py)` and target `(tx, ty)
 | `'-\|'` | `(tx, py)` | Horizontal to `tx`, then vertical to `ty` |
 | `'\|-'` | `(px, ty)` | Vertical to `ty`, then horizontal to `tx` |
 
-## Three forms of `to`
+## Five forms of `to`
 
-`to` matches [Draw's way item](/core/components/draw/overview#eleven-forms-of-way-item) exactly:
+`to` matches the first five entries of [Draw's way item](/core/components/draw/overview#thirteen-forms-of-way-item):
 
 | Form | Example | Behavior |
 | --- | --- | --- |
 | Node id | `'a'` | Auto-attaches to Node border (see [Anchors](/core/concepts/anchors)) |
 | Cartesian | `[60, 0]` | Literal `[x, y]` |
 | Polar | `{ origin: 'a', angle: 30, radius: 50 }` | Polar (see [Positioning](/core/concepts/positioning)) |
+| Relative (rel) | `{ rel: [10, 0] }` or `'+10,0'` | Previous step's endpoint + `[dx, dy]`; does **not** update prevEnd (TikZ `(+x, +y)`) |
+| Relative (relAccumulate) | `{ relAccumulate: [10, 0] }` or `'++10,0'` | Previous step's endpoint + `[dx, dy]`; **updates** prevEnd (TikZ `(++x, ++y)`) |

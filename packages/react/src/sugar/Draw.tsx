@@ -7,8 +7,9 @@ import { Step } from '../kernel/Step';
 /** <Draw> 组件的 props */
 export type DrawProps = {
   /**
-   * way 数组 DSL：节点 id / 笛卡尔 / 极坐标 / 折角算子 `'-|'` `'|-'` /
-   * 闭合 `DrawWay.cycle` / 曲线算子 `{ curve | cubic | bend }`（infix）/
+   * way 数组 DSL：节点 id / 笛卡尔 / 极坐标 / 相对偏移 `{ position, type: DrawWay.Relative | DrawWay.Accumulate }` /
+   * 折角算子 `'-|'` `'|-'`（或 `DrawWay.Hv` / `DrawWay.Vh`）/ 闭合 `DrawWay.Cycle` /
+   * 曲线算子 `{ curve | cubic | bend }`（infix）/
    * 形状算子 `{ arc | circle | ellipse }`（infix，以"上一项"为圆心，不消耗下一项）
    */
   way: WayDSL;
@@ -27,7 +28,7 @@ export type DrawProps = {
    * 箭头形状。默认 `'normal'`。其他：`'open'` / `'stealth'` / `'diamond'` / `'circle'`。
    */
   arrowShape?: IRPath['arrowShape'];
-  /** 闭合区域填充色，省略 = 不填充。配合 way 末尾的 `DrawWay.cycle` 画填充形状 */
+  /** 闭合区域填充色，省略 = 不填充。配合 way 末尾的 `DrawWay.Cycle` 画填充形状 */
   fill?: IRPath['fill'];
   /** SVG fill-rule：`'nonzero'`（默认）/ `'evenodd'` */
   fillRule?: IRPath['fillRule'];

@@ -6,7 +6,7 @@ import type { FC } from 'react';
  * `(A) -| (B) -- (C) |- (-40, 60)` 字面对齐。
  *
  * 折角终点既能是节点 id（贴 boundary），也能是笛卡尔坐标（直落坐标）；
- * `DrawWay.hv` 与裸字面量 `'-|'` TS 类型完全等价，按习惯选即可。
+ * `DrawWay.Hv` 与裸字面量 `'-|'` TS 类型完全等价，按习惯选即可。
  */
 const Demo: FC = () => (
   <Tikz width={360} height={200}>
@@ -19,7 +19,7 @@ const Demo: FC = () => (
     <Node id="c" position={[80, -60]}>
       C
     </Node>
-    <Draw way={['a', DrawWay.hv, 'b', 'c', '|-', [-40, 60]]} />
+    <Draw way={['a', DrawWay.Hv, 'b', 'c', '|-', [-40, 60]]} />
   </Tikz>
 );
 

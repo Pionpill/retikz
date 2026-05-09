@@ -18,11 +18,15 @@ import { parseTargetSugar } from './parseTargetSugar';
 /**
  * Sugar 层 way 数组的"关键字常量"。
  *
- * - `DrawWay.cycle`：闭合到 way 起点（way 元素位置）。**底层字符串故意取得很丑**
+ * - `DrawWay.Cycle`：闭合到 way 起点（way 元素位置）。**底层字符串故意取得很丑**
  *   （`'retikz-keyword_cycle'`），保证不会与任何合理的节点 id 冲突；用户应当
- *   只通过 `DrawWay.cycle` 引用，不要直接写裸字面量。
- * - `DrawWay.hv`：折角算子，先水平后垂直（裸字面量 `'-|'`）。
- * - `DrawWay.vh`：折角算子，先垂直后水平（裸字面量 `'|-'`）。
+ *   只通过 `DrawWay.Cycle` 引用，不要直接写裸字面量。
+ * - `DrawWay.Hv`：折角算子，先水平后垂直（裸字面量 `'-|'`）。
+ * - `DrawWay.Vh`：折角算子，先垂直后水平（裸字面量 `'|-'`）。
+ * - `DrawWay.Relative` / `DrawWay.Accumulate`：相对偏移 way item 的 `type` 鉴别字段值。
+ *   配合 `{ position: [dx, dy], type: DrawWay.Relative | DrawWay.Accumulate }` 用——
+ *   `Relative` 等价 TikZ `(+x, +y)`（不更新 prevEnd），`Accumulate` 等价 TikZ `(++x, ++y)`
+ *   （累积更新）。底层字符串同样刻意写丑，保证不撞节点 id；用户只通过常量引用。
  *
  * 折角值（`-|` / `|-`）含特殊字符，与节点 id 不会冲突，因此**保留字面量与
  * 常量两种写法都合法**。way 数组里直接放 `'-|'` 或 `'|-'`（infix 算子）
@@ -37,22 +41,48 @@ export const DrawWay = {
    * 闭合 way 到起点，等价于 `<Step kind="cycle" />`（TikZ 同名保留字 / SVG `Z`）。
    * 底层字符串值刻意写丑以避开节点 id 冲突；不要硬编码这个字符串。
    */
-  cycle: 'retikz-keyword_cycle',
+  Cycle: 'retikz-keyword_cycle',
   /** 折角：先水平后垂直（TikZ `-|`） */
-  hv: '-|',
+  Hv: '-|',
   /** 折角：先垂直后水平（TikZ `|-`） */
-  vh: '|-',
+  Vh: '|-',
+  /**
+   * 相对偏移 way item 的 `type` 字段值——非累积分支，等价 TikZ `(+x, +y)`。
+   * 解析为 IR `{ rel: position }`，**不**推进 prevEnd；多段链式偏移共享同一锚点。
+   */
+  Relative: 'retikz-keyword_relative',
+  /**
+   * 相对偏移 way item 的 `type` 字段值——累积分支，等价 TikZ `(++x, ++y)`。
+   * 解析为 IR `{ relAccumulate: position }`，每段累积更新 prevEnd。
+   */
+  Accumulate: 'retikz-keyword_accumulate',
 } as const;
 
 /**
- * way 折角算子的字面量类型。`DrawWay.hv` / `DrawWay.vh` 与裸字面量等价。
+ * way 折角算子的字面量类型。`DrawWay.Hv` / `DrawWay.Vh` 与裸字面量等价。
  */
-export type WayVia = typeof DrawWay.hv | typeof DrawWay.vh;
+export type WayVia = typeof DrawWay.Hv | typeof DrawWay.Vh;
 
 /**
- * way 闭合关键字的字面量类型，由 `DrawWay.cycle` 派生。
+ * way 闭合关键字的字面量类型，由 `DrawWay.Cycle` 派生。
  */
-export type WayCycle = typeof DrawWay.cycle;
+export type WayCycle = typeof DrawWay.Cycle;
+
+/**
+ * 相对偏移 way item（sugar，TS-friendly）：以**前一 step 终点**（首项无前段时回退到 [0, 0]）
+ * 为基准的位移。`type: DrawWay.Relative` 不更新 prevEnd（TikZ `(+x, +y)`）；
+ * `type: DrawWay.Accumulate` 累积更新（TikZ `(++x, ++y)`）。
+ *
+ * 与 sugar 字符串 `'+dx,dy'` / `'++dx,dy'` 等价，但对象形态在编辑器里能直接补全
+ * `position` / `type` 字段，TS 也能校验元组与鉴别字段值——更适合 IDE 协作。
+ *
+ * parseWay 在 sugar 层就地翻译为 IR `{ rel }` / `{ relAccumulate }`；IR 持久化
+ * 形态保持纯净，仍是带 `rel` / `relAccumulate` discriminator 的对象。
+ */
+export type WayRelItem = {
+  position: [number, number];
+  type: typeof DrawWay.Relative | typeof DrawWay.Accumulate;
+};
 
 /**
  * 二次贝塞尔算子（infix）：与折角算子一样坐落两个 target 之间，把
@@ -93,13 +123,15 @@ export type WayEllipseOp = { ellipse: { radiusX: number; radiusY: number } };
 /**
  * Sugar 层的 way 数组 DSL 元素。
  *
- * 接受十一种形态：
+ * 接受十二种形态：
  * - 节点 id 字符串：`'A'` → line（首项时为 move）
  * - 笛卡尔坐标：`[x, y]` → line
  * - 极坐标：`{ origin?, angle, radius }` → line
- * - 折角算子：`'-|'` / `'|-'`（或 `DrawWay.hv` / `DrawWay.vh`）→ 当前项 +
+ * - 相对偏移对象（sugar，TS-friendly）：`{ position: [dx, dy], type: DrawWay.Relative | DrawWay.Accumulate }`
+ *   翻译为 IR `{ rel }` / `{ relAccumulate }`；与裸字符串 `'+dx,dy'` / `'++dx,dy'` 等价
+ * - 折角算子：`'-|'` / `'|-'`（或 `DrawWay.Hv` / `DrawWay.Vh`）→ 当前项 +
  *   **下一项**合并成一个折角 step（与 TikZ 的 `(A) -| (B)` infix 写法对齐）
- * - 闭合关键字：`DrawWay.cycle` → cycle（闭合到起点）
+ * - 闭合关键字：`DrawWay.Cycle` → cycle（闭合到起点）
  * - 二次贝塞尔算子（infix）：`{ curve: [cx, cy] }`，与下一项合并为 curve step
  * - 三次贝塞尔算子（infix）：`{ cubic: [[c1x, c1y], [c2x, c2y]] }`，与下一项合并为 cubic step
  * - 弧形简记算子（infix）：`{ bend: 'left' | 'right', angle?: number }`，与下一项合并为 bend step
@@ -107,13 +139,13 @@ export type WayEllipseOp = { ellipse: { radiusX: number; radiusY: number } };
  * - 整圆算子（infix）：`{ circle: { radius } }`，以"上一项"为圆心，**不**消耗下一项
  * - 整椭圆算子（infix）：`{ ellipse: { radiusX, radiusY } }`，以"上一项"为圆心，**不**消耗下一项
  *
- * 后续会加：相对位移（`{ rel: [x, y] }`）等。
- *
- * 注意：闭合刻意只走 `DrawWay.cycle`（底层字符串是 `'retikz-keyword_cycle'`），
- * 这样裸字符串 `'cycle'` 仍可作为正常节点 id 使用。
+ * 注意：闭合刻意只走 `DrawWay.Cycle`（底层字符串是 `'retikz-keyword_cycle'`），
+ * 这样裸字符串 `'cycle'` 仍可作为正常节点 id 使用。相对偏移的 `Relative` /
+ * `Accumulate` 同理刻意写丑——避免与节点 id / Position 形态撞结构。
  */
 export type WayItem =
   | IRTarget
+  | WayRelItem
   | WayVia
   | WayCycle
   | WayCurveOp
@@ -126,13 +158,16 @@ export type WayItem =
 /** way DSL 数组：sugar `<Draw way={...}>` 接受的输入形态 */
 export type WayDSL = Array<WayItem>;
 
-const isWayCycle = (item: WayItem): item is WayCycle => item === DrawWay.cycle;
+const isWayCycle = (item: WayItem): item is WayCycle => item === DrawWay.Cycle;
 
 const isWayVia = (item: WayItem): item is WayVia =>
-  item === DrawWay.hv || item === DrawWay.vh;
+  item === DrawWay.Hv || item === DrawWay.Vh;
 
 const isPlainObject = (item: unknown): item is Record<string, unknown> =>
   typeof item === 'object' && item !== null && !Array.isArray(item);
+
+const isWayRelItem = (item: WayItem): item is WayRelItem =>
+  isPlainObject(item) && 'position' in item && 'type' in item;
 
 const isWayCurveOp = (item: WayItem): item is WayCurveOp =>
   isPlainObject(item) && 'curve' in item;
@@ -168,10 +203,21 @@ const isWayOperator = (item: WayItem): boolean =>
   isWayCurveLike(item) ||
   isWayShapeOp(item);
 
+/**
+ * 把 sugar 对象形态 `{ position, type }` 翻译为 IR `{ rel } | { relAccumulate }`；
+ * 其它形态原样返回。在每个 parseTargetSugar 入口前调用，集中处理。
+ */
+const desugarRelItem = (item: WayItem): WayItem => {
+  if (!isWayRelItem(item)) return item;
+  return item.type === DrawWay.Accumulate
+    ? { relAccumulate: item.position }
+    : { rel: item.position };
+};
+
 /** 把 WayItem 归约为它的"目标点"——target 直接返回；算子/关键字返回 null */
 const targetOf = (item: WayItem): IRTarget | null => {
   if (isWayOperator(item)) return null;
-  return item as IRTarget;
+  return desugarRelItem(item) as IRTarget;
 };
 
 /**
@@ -180,8 +226,8 @@ const targetOf = (item: WayItem): IRTarget | null => {
  * - 第一个元素始终是 move：取 way[0] 的目标点；若 way[0] 是 cycle / via 算子等
  *   非 target 项，则降级到原点 `[0, 0]`（容错）。
  * - 后续元素：
- *   - 普通 target → line
- *   - `DrawWay.cycle` → cycle 步
+ *   - 普通 target / `WayRelItem` → line
+ *   - `DrawWay.Cycle` → cycle 步
  *   - `'-|'` / `'|-'` → 与**下一项**合并成 fold 步；操作符在 way 末尾或后
  *     接非 target 项时抛错
  *
@@ -219,7 +265,7 @@ export const parseWay = (way: WayDSL): Array<IRStep> => {
         type: 'step',
         kind: 'step',
         via: item,
-        to: parseTargetSugar(next),
+        to: parseTargetSugar(desugarRelItem(next)),
       };
       out.push(fold);
       i++; // 消费 next
@@ -237,7 +283,7 @@ export const parseWay = (way: WayDSL): Array<IRStep> => {
           `parseWay: curve operator must be followed by a target, got operator/keyword`,
         );
       }
-      const target: IRTarget = parseTargetSugar(next);
+      const target: IRTarget = parseTargetSugar(desugarRelItem(next));
       if (isWayCurveOp(item)) {
         const curve: IRCurveStep = {
           type: 'step',
@@ -301,7 +347,7 @@ export const parseWay = (way: WayDSL): Array<IRStep> => {
     const lineStep: IRLineStep = {
       type: 'step',
       kind: 'line',
-      to: parseTargetSugar(item),
+      to: parseTargetSugar(desugarRelItem(item)),
     };
     out.push(lineStep);
   }

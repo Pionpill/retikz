@@ -1,6 +1,6 @@
 ---
 title: Draw
-description: Sugar component — way array threads through ids / Cartesian / polar / fold / cycle / curves (curve / cubic / bend) / shapes (arc / circle / ellipse) items, expands at compile time to Path + Step.
+description: Sugar component — way array threads through ids / Cartesian / polar / relative offsets (Relative / Accumulate, object or sugar-string form) / fold / cycle / curves (curve / cubic / bend) / shapes (arc / circle / ellipse) items, expands at compile time to Path + Step.
 ---
 
 `<Draw>` is the go-to for 90% of connections. `way` is an array of targets (with infix operators) joined as a path; at compile time it expands to an equivalent Kernel `<Path>` + `<Step>` tree, so `<Draw>` adds no capability the Kernel can't already express.
@@ -21,17 +21,19 @@ import { Draw } from '@retikz/react';
 
 <ComponentPreview name="draw-basic" />
 
-### Eleven forms of way item
+### Thirteen forms of way item
 
-Each item in `way` accepts eleven forms — the first three are direct targets (matching `<Step>.to`), the rest are infix operators / keywords. **Note**: curve operators (curve / cubic / bend) merge with the next item; shape operators (arc / circle / ellipse) center on the previous item and **do not** consume the next.
+Each item in `way` accepts thirteen forms — the first five are direct targets (matching `<Step>.to`), the rest are infix operators / keywords. **Note**: curve operators (curve / cubic / bend) merge with the next item; shape operators (arc / circle / ellipse) center on the previous item and **do not** consume the next.
 
 | Form | Example | Meaning |
 | --- | --- | --- |
 | Node id | `'a'` | Reference a Node in the same Tikz; endpoint auto-attaches to border |
 | Cartesian | `[120, 0]` | Literal `[x, y]` |
 | Polar | `{ origin: 'a', angle: 60, radius: 80 }` | Polar (see [Positioning](/core/concepts/positioning)) |
-| Fold operator | `'-\|'` / `'\|-'` (or `DrawWay.hv` / `DrawWay.vh`) | Turn the "previous → next" segment into a fold (TikZ `-\|` / `\|-` infix) |
-| Cycle | `DrawWay.cycle` | Close back to way's first item (equivalent to TikZ `cycle` / SVG `Z`) |
+| Relative (Relative) | `{ position: [10, 0], type: DrawWay.Relative }` or `'+10,0'` | Previous step's endpoint + `[dx, dy]`; does **not** update prevEnd (TikZ `(+x, +y)`) |
+| Relative (Accumulate) | `{ position: [10, 0], type: DrawWay.Accumulate }` or `'++10,0'` | Previous step's endpoint + `[dx, dy]`; **updates** prevEnd (TikZ `(++x, ++y)`) |
+| Fold operator | `'-\|'` / `'\|-'` (or `DrawWay.Hv` / `DrawWay.Vh`) | Turn the "previous → next" segment into a fold (TikZ `-\|` / `\|-` infix) |
+| Cycle | `DrawWay.Cycle` | Close back to way's first item (equivalent to TikZ `cycle` / SVG `Z`) |
 | Quadratic curve | `{ curve: [cx, cy] }` | Merge with next item into a curve step; one control point (TikZ `..controls(B)..`) |
 | Cubic curve | `{ cubic: [[c1x, c1y], [c2x, c2y]] }` | Merge with next item into a cubic step; two control points (TikZ `..controls(B) and (C)..`) |
 | Bend | `{ bend: 'left' \| 'right', angle?: number }` | Merge with next item into a bend step; direction + optional angle (default 30°) |
@@ -46,18 +48,21 @@ Each item in `way` accepts eleven forms — the first three are direct targets (
 ```tsx
 import { Draw, DrawWay } from '@retikz/react';
 
-<Draw way={['a', 'b', 'c', DrawWay.cycle]} />            {/* close */}
+<Draw way={['a', 'b', 'c', DrawWay.Cycle]} />            {/* close */}
 <Draw way={['a', '-|', 'b']} />                          {/* fold via raw literal */}
-<Draw way={['a', DrawWay.hv, 'b']} />                    {/* fold via constant */}
+<Draw way={['a', DrawWay.Hv, 'b']} />                    {/* fold via constant */}
+<Draw way={['a', { position: [80, 0], type: DrawWay.Relative }]} />  {/* relative offset, TS-checked */}
 ```
 
 | Constant | Raw literal | Meaning |
 | --- | --- | --- |
-| `DrawWay.cycle` | (**const-only**) | Close keyword. The underlying string is intentionally ugly (`'retikz-keyword_cycle'`) so it can never collide with a node id. |
-| `DrawWay.hv` | `'-\|'` | Fold: horizontal-then-vertical (infix operator) |
-| `DrawWay.vh` | `'\|-'` | Fold: vertical-then-horizontal (infix operator) |
+| `DrawWay.Cycle` | (**const-only**) | Close keyword. The underlying string is intentionally ugly (`'retikz-keyword_cycle'`) so it can never collide with a node id. |
+| `DrawWay.Hv` | `'-\|'` | Fold: horizontal-then-vertical (infix operator) |
+| `DrawWay.Vh` | `'\|-'` | Fold: vertical-then-horizontal (infix operator) |
+| `DrawWay.Relative` | (**const-only**) | `type` discriminator for the `WayRelItem` object — equivalent to TikZ `(+x, +y)` (does **not** advance prevEnd) |
+| `DrawWay.Accumulate` | (**const-only**) | `type` discriminator for the `WayRelItem` object — equivalent to TikZ `(++x, ++y)` (advances prevEnd each segment) |
 
-**Why cycle bans the raw literal**: `'cycle'` is a common English word, very likely to collide with a real node id. Cycle therefore goes **only** through `DrawWay.cycle`; a bare string `'cycle'` in `way` is just a node id reference.
+**Why cycle / relative bans the raw literal**: `'cycle'` is a common English word, very likely to collide with a real node id. Cycle therefore goes **only** through `DrawWay.Cycle`; a bare string `'cycle'` in `way` is just a node id reference. Same reason for `Relative` / `Accumulate` — the `type` field never accepts a free string, so the object form is fully TS-checkable.
 
 The fold values `'-\|'` / `'\|-'` contain reserved punctuation, so they cannot collide with node ids — **both raw literal and constant work**, pick whichever fits.
 
@@ -73,7 +78,7 @@ Drop `'-|'` or `'|-'` directly into `way` (infix operator) and the "previous →
 
 ### Closing the loop
 
-End `way` with `DrawWay.cycle` to close the last segment back to the first item — matches TikZ's native form `(A) -- (B) -- cycle`, equivalent to `<Step kind="cycle" />`:
+End `way` with `DrawWay.Cycle` to close the last segment back to the first item — matches TikZ's native form `(A) -- (B) -- cycle`, equivalent to `<Step kind="cycle" />`:
 
 <ComponentPreview name="draw-cycle" />
 
@@ -113,6 +118,17 @@ Drop `{ curve: [cx, cy] }` (infix operator) into `way` and the "previous → nex
 
 <ComponentPreview name="draw-ellipse" />
 
+### Relative coordinates (Relative / Accumulate)
+
+Two equivalent ways to express relative offsets in `way`:
+
+- **Object (recommended)**: `{ position: [dx, dy], type: DrawWay.Relative | DrawWay.Accumulate }` — fully TS-checked; `position` is `[number, number]` and `type` is a union of two literal constants, so the IDE catches typos and gives autocompletion.
+- **Sugar string**: `'+dx,dy'` / `'++dx,dy'` — terser, TikZ-idiomatic, but parsed at runtime and unchecked by TS.
+
+Both resolve against the **previous step's endpoint** (`prevEnd`, falling back to `[0, 0]` when there is none). The only semantic difference is whether prevEnd advances: `Relative` (= `'+x,y'`) does **not** advance (chained offsets share the same anchor — TikZ `(+x, +y)`); `Accumulate` (= `'++x,y'`) **does** (each segment accumulates — TikZ `(++x, ++y)`). The two Draws below use the object form and differ only in `type` — the solid line traces an L, the dashed line climbs a staircase:
+
+<ComponentPreview name="draw-rel" />
+
 ### Arrows
 
 The `arrow` prop controls path-end arrows: `'->'` / `'<-'` / `'<->'` / `'none'` (default). For multi-node paths, the arrow attaches only to the overall start / end — never on intermediate nodes:
@@ -121,7 +137,7 @@ The `arrow` prop controls path-end arrows: `'->'` / `'<-'` / `'<->'` / `'none'` 
 
 ### Filling
 
-`fill` colors the closed region (default `'none'` — stroke only); `fillRule` controls how nested sub-paths fill. Pairs with `DrawWay.cycle` at the end of `way` to draw filled shapes:
+`fill` colors the closed region (default `'none'` — stroke only); `fillRule` controls how nested sub-paths fill. Pairs with `DrawWay.Cycle` at the end of `way` to draw filled shapes:
 
 <ComponentPreview name="draw-fill" />
 
