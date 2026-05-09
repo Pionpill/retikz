@@ -1,5 +1,5 @@
-import type { FC } from 'react';
-import type { IRControlPoint, IRTarget } from '@retikz/core';
+import type { FC, ReactNode } from 'react';
+import type { IRControlPoint, IRStepLabel, IRTarget } from '@retikz/core';
 import { TIKZ_STEP } from './_displayNames';
 
 /**
@@ -8,6 +8,9 @@ import { TIKZ_STEP } from './_displayNames';
  * 'curve'（二次贝塞尔）/ 'cubic'（三次贝塞尔）/ 'bend'（弧形简记）/
  * 'arc'（圆弧段）/ 'circlePath'（整圆）/ 'ellipsePath'（整椭圆）。
  * kind 默认 'line'。
+ *
+ * ADR-0004：除 'move' / 'cycle' 外的八种 kind 都可挂 `label?: IRStepLabel` 边标注；
+ * 等价的写法是用 sugar `<EdgeLabel>` 当 children。两者并存时 prop 优先。
  */
 export type StepProps =
   | {
@@ -21,6 +24,10 @@ export type StepProps =
       kind?: 'line';
       /** 直线终点 */
       to: IRTarget;
+      /** 边标注（ADR-0004），等价于 <EdgeLabel> child */
+      label?: IRStepLabel;
+      /** sugar 形态：`<Step><EdgeLabel>...</EdgeLabel></Step>`；其它 children 静默忽略 */
+      children?: ReactNode;
     }
   | {
       /** 折角段：从游标经一个直角拐点到目标点（TikZ `-|` / `|-`） */
@@ -29,6 +36,10 @@ export type StepProps =
       via: '-|' | '|-';
       /** 折角终点 */
       to: IRTarget;
+      /** 边标注（ADR-0004） */
+      label?: IRStepLabel;
+      /** sugar 形态 */
+      children?: ReactNode;
     }
   | {
       /** 闭合：把当前子路径回到最近一个 move 起点（TikZ `cycle` / SVG `Z`） */
@@ -41,6 +52,10 @@ export type StepProps =
       control: IRControlPoint;
       /** 曲线终点 */
       to: IRTarget;
+      /** 边标注（ADR-0004） */
+      label?: IRStepLabel;
+      /** sugar 形态 */
+      children?: ReactNode;
     }
   | {
       /** 三次贝塞尔：两个控制点（TikZ `.. controls (B) and (C) ..`） */
@@ -51,6 +66,10 @@ export type StepProps =
       control2: IRControlPoint;
       /** 曲线终点 */
       to: IRTarget;
+      /** 边标注（ADR-0004） */
+      label?: IRStepLabel;
+      /** sugar 形态 */
+      children?: ReactNode;
     }
   | {
       /** 弧形简记：按方向 + 角度生成 cubic（TikZ `to[bend left=N]` / `to[bend right=N]`） */
@@ -61,6 +80,10 @@ export type StepProps =
       bendAngle?: number;
       /** 终点 */
       to: IRTarget;
+      /** 边标注（ADR-0004） */
+      label?: IRStepLabel;
+      /** sugar 形态 */
+      children?: ReactNode;
     }
   | {
       /** 弧段：以游标为圆心，按起末角度 + 半径绘制（TikZ `arc[start angle=…, end angle=…, radius=…]`） */
@@ -71,12 +94,20 @@ export type StepProps =
       endAngle: number;
       /** 弧的半径 */
       radius: number;
+      /** 边标注（ADR-0004） */
+      label?: IRStepLabel;
+      /** sugar 形态 */
+      children?: ReactNode;
     }
   | {
       /** 整圆：以游标为圆心，按半径绘制；画完画笔留在圆心 */
       kind: 'circlePath';
       /** 圆的半径 */
       radius: number;
+      /** 边标注（ADR-0004） */
+      label?: IRStepLabel;
+      /** sugar 形态 */
+      children?: ReactNode;
     }
   | {
       /** 整椭圆：以游标为圆心，按 x/y 轴半径绘制；画完画笔留在圆心 */
@@ -85,6 +116,10 @@ export type StepProps =
       radiusX: number;
       /** 椭圆 y 轴半径 */
       radiusY: number;
+      /** 边标注（ADR-0004） */
+      label?: IRStepLabel;
+      /** sugar 形态 */
+      children?: ReactNode;
     };
 
 /**

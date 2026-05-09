@@ -332,6 +332,91 @@ describe('convertIRToReactNode', () => {
     expect(buildIR(convertIRToReactNode(ir))).toEqual(ir);
   });
 
+  describe('ADR-0004：step.label round-trip', () => {
+    it('line + label round-trip 完整保留 text/position/side', () => {
+      const ir: IR = {
+        version: CURRENT_IR_VERSION,
+        type: 'scene',
+        children: [
+          {
+            type: 'path',
+            children: [
+              { type: 'step', kind: 'move', to: [0, 0] },
+              {
+                type: 'step',
+                kind: 'line',
+                to: [10, 0],
+                label: { text: 'x', position: 'near-end', side: 'sloped' },
+              },
+            ],
+          },
+        ],
+      };
+      expect(buildIR(convertIRToReactNode(ir))).toEqual(ir);
+    });
+
+    it('八种带 label 的 kind 全部 round-trip', () => {
+      const ir: IR = {
+        version: CURRENT_IR_VERSION,
+        type: 'scene',
+        children: [
+          {
+            type: 'path',
+            children: [
+              { type: 'step', kind: 'move', to: [0, 0] },
+              { type: 'step', kind: 'line', to: [10, 0], label: { text: 'L' } },
+              { type: 'step', kind: 'step', via: '-|', to: [20, 5], label: { text: 'F' } },
+              { type: 'step', kind: 'curve', control: [25, -5], to: [30, 0], label: { text: 'Q' } },
+              {
+                type: 'step',
+                kind: 'cubic',
+                control1: [33, -3],
+                control2: [37, -3],
+                to: [40, 0],
+                label: { text: 'C' },
+              },
+              {
+                type: 'step',
+                kind: 'bend',
+                bendDirection: 'left',
+                to: [50, 0],
+                label: { text: 'B' },
+              },
+              {
+                type: 'step',
+                kind: 'arc',
+                startAngle: 0,
+                endAngle: 90,
+                radius: 5,
+                label: { text: 'A' },
+              },
+              { type: 'step', kind: 'circlePath', radius: 4, label: { text: 'O' } },
+              { type: 'step', kind: 'ellipsePath', radiusX: 6, radiusY: 3, label: { text: 'E' } },
+            ],
+          },
+        ],
+      };
+      expect(buildIR(convertIRToReactNode(ir))).toEqual(ir);
+    });
+
+    it('IR 中没有 label 字段时 round-trip 不会凭空多出 label', () => {
+      const ir: IR = {
+        version: CURRENT_IR_VERSION,
+        type: 'scene',
+        children: [
+          {
+            type: 'path',
+            children: [
+              { type: 'step', kind: 'move', to: [0, 0] },
+              { type: 'step', kind: 'line', to: [10, 0] },
+            ],
+          },
+        ],
+      };
+      expect(buildIR(convertIRToReactNode(ir))).toEqual(ir);
+    });
+  });
+
   it('未知 child.type → 抛 "unknown IR child type" 错误', () => {
     const badIR = {
       version: CURRENT_IR_VERSION,

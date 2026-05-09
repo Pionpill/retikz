@@ -45,10 +45,22 @@ const stepToElement = (step: IRStep, key: number): ReactNode => {
     return createElement(Step, { key, kind: 'cycle' });
   }
   if (step.kind === 'step') {
-    return createElement(Step, { key, kind: 'step', via: step.via, to: step.to });
+    return createElement(Step, {
+      key,
+      kind: 'step',
+      via: step.via,
+      to: step.to,
+      ...(step.label !== undefined && { label: step.label }),
+    });
   }
   if (step.kind === 'curve') {
-    return createElement(Step, { key, kind: 'curve', to: step.to, control: step.control });
+    return createElement(Step, {
+      key,
+      kind: 'curve',
+      to: step.to,
+      control: step.control,
+      ...(step.label !== undefined && { label: step.label }),
+    });
   }
   if (step.kind === 'cubic') {
     return createElement(Step, {
@@ -57,23 +69,17 @@ const stepToElement = (step: IRStep, key: number): ReactNode => {
       to: step.to,
       control1: step.control1,
       control2: step.control2,
+      ...(step.label !== undefined && { label: step.label }),
     });
   }
   if (step.kind === 'bend') {
-    if (step.bendAngle !== undefined) {
-      return createElement(Step, {
-        key,
-        kind: 'bend',
-        to: step.to,
-        bendDirection: step.bendDirection,
-        bendAngle: step.bendAngle,
-      });
-    }
     return createElement(Step, {
       key,
       kind: 'bend',
       to: step.to,
       bendDirection: step.bendDirection,
+      ...(step.bendAngle !== undefined && { bendAngle: step.bendAngle }),
+      ...(step.label !== undefined && { label: step.label }),
     });
   }
   if (step.kind === 'arc') {
@@ -83,10 +89,16 @@ const stepToElement = (step: IRStep, key: number): ReactNode => {
       startAngle: step.startAngle,
       endAngle: step.endAngle,
       radius: step.radius,
+      ...(step.label !== undefined && { label: step.label }),
     });
   }
   if (step.kind === 'circlePath') {
-    return createElement(Step, { key, kind: 'circlePath', radius: step.radius });
+    return createElement(Step, {
+      key,
+      kind: 'circlePath',
+      radius: step.radius,
+      ...(step.label !== undefined && { label: step.label }),
+    });
   }
   if (step.kind === 'ellipsePath') {
     return createElement(Step, {
@@ -94,9 +106,19 @@ const stepToElement = (step: IRStep, key: number): ReactNode => {
       kind: 'ellipsePath',
       radiusX: step.radiusX,
       radiusY: step.radiusY,
+      ...(step.label !== undefined && { label: step.label }),
     });
   }
-  return createElement(Step, { key, kind: step.kind, to: step.to });
+  if (step.kind === 'move') {
+    return createElement(Step, { key, kind: 'move', to: step.to });
+  }
+  // line（默认）
+  return createElement(Step, {
+    key,
+    kind: step.kind,
+    to: step.to,
+    ...(step.label !== undefined && { label: step.label }),
+  });
 };
 
 /** discriminated union 兜底：编译期保证不漏 case，运行时给出明确错误 */

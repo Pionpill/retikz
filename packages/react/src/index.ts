@@ -10,8 +10,8 @@
 export { Tikz, Node, Path, Step, Text } from './kernel';
 export type { TikzProps, NodeProps, PathProps, StepProps, TextProps } from './kernel';
 
-export { Draw } from './sugar';
-export type { DrawProps } from './sugar';
+export { Draw, EdgeLabel } from './sugar';
+export type { DrawProps, EdgeLabelProps } from './sugar';
 
 // 透传 core 的 way 关键字常量与字面量类型，方便 react 用户单包 import
 export { DrawWay } from '@retikz/core';

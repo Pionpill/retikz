@@ -14,3 +14,6 @@ export const TIKZ_STEP = '@retikz/Step';
 
 /** <Text> 组件的 displayName（Node 内多行文本带样式） */
 export const TIKZ_TEXT = '@retikz/Text';
+
+/** <EdgeLabel> 组件的 displayName（Step 内边标注，ADR-0004） */
+export const TIKZ_EDGE_LABEL = '@retikz/EdgeLabel';

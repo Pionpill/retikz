@@ -1,7 +1,22 @@
 import { Children, type ReactElement, type ReactNode, isValidElement } from 'react';
-import type { IR, IRChild, IRFont, IRLineSpec, IRNode, IRStep, IRTarget } from '@retikz/core';
+import type {
+  IR,
+  IRChild,
+  IRFont,
+  IRLineSpec,
+  IRNode,
+  IRStep,
+  IRStepLabel,
+  IRTarget,
+} from '@retikz/core';
 import { CURRENT_IR_VERSION, parseTargetSugar } from '@retikz/core';
-import { TIKZ_NODE, TIKZ_PATH, TIKZ_STEP, TIKZ_TEXT } from './_displayNames';
+import {
+  TIKZ_EDGE_LABEL,
+  TIKZ_NODE,
+  TIKZ_PATH,
+  TIKZ_STEP,
+  TIKZ_TEXT,
+} from './_displayNames';
 
 /** 取 React 元素 type 上的 displayName；type 为字符串时直接返回，用于识别 Kernel/Sugar 组件 */
 const getDisplayName = (el: ReactElement): string | undefined => {
@@ -124,6 +139,39 @@ const buildNode = (props: Record<string, unknown>): IRChild => ({
 });
 
 /**
+ * 扫描 Step children，把首个 <EdgeLabel> 翻译为 IRStepLabel；
+ * 非字符串 children 静默跳过；多个 <EdgeLabel> 取首个。
+ */
+const readEdgeLabel = (children: ReactNode): IRStepLabel | undefined => {
+  let result: IRStepLabel | undefined;
+  Children.forEach(children, child => {
+    if (result !== undefined) return;
+    if (!isValidElement(child)) return;
+    if (getDisplayName(child) !== TIKZ_EDGE_LABEL) return;
+    const props = child.props as {
+      children?: ReactNode;
+      position?: IRStepLabel['position'];
+      side?: IRStepLabel['side'];
+    };
+    if (typeof props.children !== 'string') return;
+    const out: IRStepLabel = { text: props.children };
+    if (props.position !== undefined) out.position = props.position;
+    if (props.side !== undefined) out.side = props.side;
+    result = out;
+  });
+  return result;
+};
+
+/**
+ * 解析 Step 的 label 来源：prop `label` 优先于 sugar `<EdgeLabel>` child；
+ * 都缺省时返回 undefined。
+ */
+const resolveStepLabel = (props: Record<string, unknown>): IRStepLabel | undefined => {
+  if (props.label !== undefined) return props.label as IRStepLabel;
+  return readEdgeLabel(props.children as ReactNode);
+};
+
+/**
  * 扫描 <Path> children 收集 <Step> 序列。
  * 至少 2 段；首段不是 move 时强制改为 move（与 SVG path 的 "M …" 语义对齐）；
  * cycle 没有 to 字段，若用户把 cycle 放在首段，coerce 时降级到 move (0,0)。
@@ -149,35 +197,44 @@ const readPathChildren = (children: ReactNode): Array<IRStep> => {
         | 'ellipsePath'
         | undefined) ?? 'line';
     if (kind === 'cycle') {
+      // cycle 不挂 label——schema 已禁；children 中的 <EdgeLabel> 静默忽略
       out.push({ type: 'step', kind: 'cycle' });
       return;
     }
+    // 'move' 同样不挂 label；其它 kind 都允许 label（ADR-0004）
+    const label = kind === 'move' ? undefined : resolveStepLabel(props);
     if (kind === 'step') {
-      out.push({
+      const step: Extract<IRStep, { kind: 'step' }> = {
         type: 'step',
         kind: 'step',
         via: props.via as '-|' | '|-',
         to: parseTargetSugar(props.to),
-      });
+      };
+      if (label) step.label = label;
+      out.push(step);
       return;
     }
     if (kind === 'curve') {
-      out.push({
+      const step: Extract<IRStep, { kind: 'curve' }> = {
         type: 'step',
         kind: 'curve',
         to: parseTargetSugar(props.to),
         control: props.control as [number, number],
-      });
+      };
+      if (label) step.label = label;
+      out.push(step);
       return;
     }
     if (kind === 'cubic') {
-      out.push({
+      const step: Extract<IRStep, { kind: 'cubic' }> = {
         type: 'step',
         kind: 'cubic',
         to: parseTargetSugar(props.to),
         control1: props.control1 as [number, number],
         control2: props.control2 as [number, number],
-      });
+      };
+      if (label) step.label = label;
+      out.push(step);
       return;
     }
     if (kind === 'bend') {
@@ -188,41 +245,55 @@ const readPathChildren = (children: ReactNode): Array<IRStep> => {
         bendDirection: props.bendDirection as 'left' | 'right',
       };
       if (props.bendAngle !== undefined) step.bendAngle = props.bendAngle as number;
+      if (label) step.label = label;
       out.push(step);
       return;
     }
     if (kind === 'arc') {
-      out.push({
+      const step: Extract<IRStep, { kind: 'arc' }> = {
         type: 'step',
         kind: 'arc',
         startAngle: props.startAngle as number,
         endAngle: props.endAngle as number,
         radius: props.radius as number,
-      });
+      };
+      if (label) step.label = label;
+      out.push(step);
       return;
     }
     if (kind === 'circlePath') {
-      out.push({
+      const step: Extract<IRStep, { kind: 'circlePath' }> = {
         type: 'step',
         kind: 'circlePath',
         radius: props.radius as number,
-      });
+      };
+      if (label) step.label = label;
+      out.push(step);
       return;
     }
     if (kind === 'ellipsePath') {
-      out.push({
+      const step: Extract<IRStep, { kind: 'ellipsePath' }> = {
         type: 'step',
         kind: 'ellipsePath',
         radiusX: props.radiusX as number,
         radiusY: props.radiusY as number,
-      });
+      };
+      if (label) step.label = label;
+      out.push(step);
       return;
     }
-    out.push({
+    if (kind === 'move') {
+      out.push({ type: 'step', kind: 'move', to: parseTargetSugar(props.to) });
+      return;
+    }
+    // line（默认）
+    const step: Extract<IRStep, { kind: 'line' }> = {
       type: 'step',
-      kind,
+      kind: 'line',
       to: parseTargetSugar(props.to),
-    });
+    };
+    if (label) step.label = label;
+    out.push(step);
   });
   if (out.length < 2) {
     throw new Error('<Path> requires at least 2 <Step> children');

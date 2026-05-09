@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { Draw } from '../../src/sugar/Draw';
+import { EdgeLabel } from '../../src/sugar/EdgeLabel';
 import { Node } from '../../src/kernel/Node';
 import { Path } from '../../src/kernel/Path';
 import { Step } from '../../src/kernel/Step';
@@ -243,5 +244,107 @@ describe('buildIR', () => {
       </Path>,
     );
     expect(fromSugar).toEqual(fromKernel);
+  });
+
+  describe('ADR-0004：Step label prop 与 <EdgeLabel> child', () => {
+    it('Step label prop 透传到 IR step.label', () => {
+      const ir = buildIR(
+        <Path>
+          <Step kind="move" to="A" />
+          <Step to="B" label={{ text: 'accept', side: 'above' }} />
+        </Path>,
+      );
+      expect(ir.children[0]).toMatchObject({
+        type: 'path',
+        children: [
+          { type: 'step', kind: 'move', to: 'A' },
+          {
+            type: 'step',
+            kind: 'line',
+            to: 'B',
+            label: { text: 'accept', side: 'above' },
+          },
+        ],
+      });
+    });
+
+    it('<EdgeLabel> child 与 prop 形态产出相同 IR', () => {
+      const fromProp = buildIR(
+        <Path>
+          <Step kind="move" to="A" />
+          <Step to="B" label={{ text: 'x', position: 'near-end', side: 'below' }} />
+        </Path>,
+      );
+      const fromChild = buildIR(
+        <Path>
+          <Step kind="move" to="A" />
+          <Step to="B">
+            <EdgeLabel position="near-end" side="below">x</EdgeLabel>
+          </Step>
+        </Path>,
+      );
+      expect(fromChild).toEqual(fromProp);
+    });
+
+    it('prop 与 child 同时存在时 prop 优先', () => {
+      const ir = buildIR(
+        <Path>
+          <Step kind="move" to="A" />
+          <Step to="B" label={{ text: 'from-prop' }}>
+            <EdgeLabel>from-child</EdgeLabel>
+          </Step>
+        </Path>,
+      );
+      expect(ir.children[0]).toMatchObject({
+        children: [
+          { kind: 'move' },
+          { kind: 'line', label: { text: 'from-prop' } },
+        ],
+      });
+    });
+
+    it('<EdgeLabel> 仅 children 字符串、其它属性走默认（IR 不写出 position/side）', () => {
+      const ir = buildIR(
+        <Path>
+          <Step kind="move" to="A" />
+          <Step to="B">
+            <EdgeLabel>plain</EdgeLabel>
+          </Step>
+        </Path>,
+      );
+      const step = (ir.children[0] as { children: Array<{ label?: unknown }> }).children[1];
+      expect(step.label).toEqual({ text: 'plain' });
+    });
+
+    it('label 在 fold / curve / cubic / bend / arc / circlePath / ellipsePath 上同样可挂', () => {
+      const ir = buildIR(
+        <Path>
+          <Step kind="move" to={[0, 0]} />
+          <Step kind="step" via="-|" to={[10, 5]} label={{ text: 'f' }} />
+          <Step kind="curve" control={[5, -10]} to={[20, 0]} label={{ text: 'q' }} />
+          <Step kind="cubic" control1={[24, -8]} control2={[26, -8]} to={[30, 0]} label={{ text: 'c' }} />
+          <Step kind="bend" bendDirection="left" to={[40, 0]} label={{ text: 'b' }} />
+          <Step kind="arc" startAngle={0} endAngle={90} radius={5} label={{ text: 'a' }} />
+          <Step kind="circlePath" radius={3} label={{ text: 'o' }} />
+          <Step kind="ellipsePath" radiusX={4} radiusY={2} label={{ text: 'e' }} />
+        </Path>,
+      );
+      const steps = (ir.children[0] as { children: Array<{ label?: { text: string } }> }).children;
+      expect(steps.slice(1).map(s => s.label?.text)).toEqual(['f', 'q', 'c', 'b', 'a', 'o', 'e']);
+    });
+
+    it('move / cycle 上的 <EdgeLabel> 静默忽略（schema 不允许）', () => {
+      const ir = buildIR(
+        <Path>
+          <Step kind="move" to={[0, 0]} />
+          <Step to={[10, 0]} />
+          <Step kind="cycle">
+            <EdgeLabel>ignored</EdgeLabel>
+          </Step>
+        </Path>,
+      );
+      const steps = (ir.children[0] as { children: Array<Record<string, unknown>> }).children;
+      expect(steps[2]).toEqual({ type: 'step', kind: 'cycle' });
+    });
   });
 });
