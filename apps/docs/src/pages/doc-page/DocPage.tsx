@@ -77,8 +77,8 @@ export const DocPage: FC<DocPageProps> = props => {
   const description = typeof frontmatter.description === 'string' ? frontmatter.description : null;
 
   return (
-    <main className={cn('flex flex-1 w-full p-4 sm:p-6', className)} {...resProps}>
-      <div className="flex flex-1 justify-center">
+    <main className={cn('flex min-w-0 flex-1 w-full p-4 sm:p-6', className)} {...resProps}>
+      <div className="flex min-w-0 flex-1 justify-center">
         <div className="flex min-w-0 max-w-180 flex-1 flex-col gap-6">
           <header className="flex flex-col items-start w-full justify-between gap-2">
             <div className="flex w-full flex-col items-start gap-3 lg:flex-row lg:items-center lg:justify-between">
