@@ -38,12 +38,6 @@
     "positioning": "定位",
     "anchors": "锚点"
   },
-  "flow": {
-    "label": "流程"
-  },
-  "plot": {
-    "label": "图表"
-  },
   "reference": {
     "label": "参考",
     "overview": "总览",

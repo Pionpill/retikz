@@ -38,12 +38,6 @@
     "positioning": "Positioning",
     "anchors": "Anchors"
   },
-  "flow": {
-    "label": "Flow"
-  },
-  "plot": {
-    "label": "Plot"
-  },
   "reference": {
     "label": "Reference",
     "overview": "Overview",

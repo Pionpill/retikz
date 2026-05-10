@@ -9,8 +9,6 @@ export const getSectionsByModule = (moduleId: string | undefined): Array<Section
       return coreSection;
     case 'reference':
       return referenceSection;
-    case 'flow':
-    case 'plot':
     default:
       return [];
   }
