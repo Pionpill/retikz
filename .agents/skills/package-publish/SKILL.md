@@ -138,8 +138,9 @@ monorepo 子包跑 `version` 不会触发 git commit，安全。
 约定：
 
 - `label` 用 `YYYY.MM` 月份形式；同月多个发布按需聚合到同一 `<Update>` 还是新开一块（手动判断）
-- `tags` 列**本次实际改动**的子包名，不影响的包不要列
+- `tags` 列**本次实际改动**的子包名（仅 `@retikz/core` / `@retikz/react` 两选一或全选），**不要写 `"docs"`**
 - 子标题层级固定：`## v<完整版本号>` → `### \`@retikz/<包>\``
+- **只写具体包的更新**——不开 `### docs` 段、不列文档站 / mdx / demo / ADR / AGENTS.md 改动；这些是项目内部演进，不影响下游 `pnpm add` 的体验
 - 中英两份**结构对齐**（章节数、bullet 数一致），文案不要求逐字翻译；按 `docs-doc-write` 技能"zh 是 source of truth、en 跟随"
 
 #### 2.3 i18n `versionTag`（仅 MINOR / MAJOR 切档时改）

@@ -3,7 +3,7 @@ title: Changelog
 description: retikz release history grouped by MINOR version, newest first. Date on the left, affected packages and changes on the right.
 ---
 
-<Update label="May 2026" tags={["@retikz/core", "@retikz/react", "docs"]}>
+<Update label="May 2026" tags={["@retikz/core", "@retikz/react"]}>
 
 ## v0.1.0-alpha.4
 
@@ -21,15 +21,6 @@ Node-relations layer in one wave: relative positioning between nodes, coordinate
 - `<Tikz>` gains a `nodeDistance` prop; `<Node position={{ direction, of, distance? }}>` accepts the relative-positioning form
 - New third kernel component `<Coordinate id="..." position={...} />` (peer of `<Node>` / `<Path>`, one-to-one with IR); builder / unbuilder round-trip end-to-end
 - `<Node label={...}>` prop takes a NodeLabel object or array, matching the IR field
-
-### `docs`
-
-- New `core/components/node/coordinate` page: bilingual mdx + bilingual demos (virtual anchor & junction-fold use cases)
-- `core/components/node/overview` gains two new sections (relative positioning, node labels) plus three demos (`node-at-relative` single file + `node-label-basic` bilingual)
-- API tables: `position` row adds the at-form; new `label` row
-- `ComponentPreview` resolves `<name>.<lang>.demo.tsx` against the current i18n language, falling back to the no-suffix file when missing; `apps/docs/AGENTS.md` documents the "demos with rendered text must come in bilingual pairs" rule
-- Root `AGENTS.md` adds the "no abbreviations" rule — IR schema fields / public APIs / functions / types must be spelled out; the rule originated from ADR-0001's `at.dir` → `at.direction` decision
-- Three ADRs land in `notes/adr/v0/v0.1-alpha.4/0001`–`0003` (node-to-node positioning / Coordinate placeholder / Node label)
 
 ## v0.1.0-alpha.3
 
@@ -52,13 +43,6 @@ Path enhancements land in one wave: curve trio, path-level shapes, relative coor
 - New sugar `<EdgeLabel>`: as a `<Step>` child it equals `<Step label={...}>`, with the prop winning on conflict; one-way (unbuilder only emits the prop form)
 - Step / Path / Draw forward every new field; builder / unbuilder round-trip end-to-end
 - Draw's way DSL also supports label / curves / shapes / relative coords sugar, byte-for-byte equivalent to Kernel
-
-### `docs`
-
-- Step page gains an edge-label section + sloped demo; Path page gains three sections (caps / joins, semantic preset, opacity) + 6 new API rows
-- Draw overview way-item list 13 → 14 (label op) + small caps / joins / opacity blurb pointing back to Path
-- New demos: `step-curve` / `step-cubic` / `step-bend` / `step-arc` / `step-circle` / `step-ellipse` / `step-rel` / `step-label` / `path-line-style` / `path-thickness` / `path-opacity` / `draw-curve` / `draw-cubic` / `draw-bend` / `draw-arc` / `draw-circle` / `draw-ellipse` / `draw-rel` / `draw-label`
-- Four ADRs land in `notes/adr/0001`–`0004` (curve trio / path shapes / relative coordinates / edge labels)
 
 ## v0.1.0-alpha.2
 
@@ -84,13 +68,6 @@ Node visual P1 lands in full: multi-line text, font object, axis-specific seps, 
 - Builder / unbuilder forward every new field; derived types `IRFont` / `IRLineSpec` / `NodeTextAlign` are re-exported from core
 - Renderer emits `<text>` with one `<tspan>` per line, deriving the first-line `dy` from the block `baseline` for vertical alignment
 
-### `docs`
-
-- Node docs split into `overview` / `text` sub-pages: overview covers shape / font / multi-line / color / stroke / size / scale / sep in 8 sections; text sub-page dives into `<Text>` per-line overrides
-- New demos: `node-font` / `node-multiline` / `node-multiline-shapes` / `node-styled-lines` / `node-sep` / `node-color-opacity` / `node-stroke-style` / `node-size-constraints`
-- ComponentPreview on mobile: drag + touch (`<lg` enabled by default), reduced height / padding, Maximize entry hidden
-- `notes/adr/0001`–`0003` (font object / multi-line text / inner sep) decisions captured
-
 ## v0.1.0-alpha.1
 
 P0 + P1 essentials for flow charts / UML / state machines land in one shot: 4 node shapes, path folds / closing / multi-end arrows / region fills, explicit anchor references. Backed by 4 ADRs and ~180 test cases.
@@ -113,14 +90,6 @@ P0 + P1 essentials for flow charts / UML / state machines land in one shot: 4 no
 - Renderer adds `'ellipse'` primitive case (shared by circle / ellipse nodes)
 - Render pipeline now supports GroupPrim to wrap multi-sub-path paths — for multi-node arrowed paths, markers attach only to the very first / last segment
 
-### `docs`
-
-- Node page adds shape polymorphism section + a 4-shape-around-hub demo
-- Path / Draw overview pages: independent sections + demos for fold / cycle / arrow / arrowShape / fill
-- Step page: all 4 kinds overview + per-kind demos + styling / fold / cycle sections
-- Anchors concept page rewritten: three-form Target string syntax table + 4-shape anchor cross-reference
-- 4 new ADRs (`notes/adr/0001`–`0004`); AGENTS.md adds "const + ValueOf for enum-like unions" rule
-
 ## v0.1.0-alpha.0
 
 First npm release. retikz v0.1 redesign baseline with IR at the center — the foundation for upcoming alpha iterations.
@@ -135,10 +104,6 @@ First npm release. retikz v0.1 redesign baseline with IR at the center — the f
 - **Architecture split**: moved from a single React component library to a thin React adapter; core is decoupled from React
 - **Kernel + Sugar JSX layers**: Kernel maps 1:1 to IR nodes; Sugar compiles down to Kernel
 - peerDep React 18+
-
-### `docs`
-
-- v0.1 docs site: bilingual (zh / en) + co-located demos + live IR view
 
 </Update>
 
