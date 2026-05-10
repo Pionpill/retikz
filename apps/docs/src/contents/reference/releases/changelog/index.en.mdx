@@ -5,6 +5,32 @@ description: retikz release history grouped by MINOR version, newest first. Date
 
 <Update label="May 2026" tags={["@retikz/core", "@retikz/react", "docs"]}>
 
+## v0.1.0-alpha.4
+
+Node-relations layer in one wave: relative positioning between nodes, coordinate placeholders, and node-attached labels. Backed by 3 ADRs and +33 new test cases.
+
+### `@retikz/core`
+
+- **Relative positioning between nodes**: `Node.position` accepts a `{ direction, of, distance? }` form mirroring TikZ `[<direction>=<distance> of <id>]`; `direction` ranges over the 8-direction enum (4 cardinals + 4 diagonals, with `1/√2` components keeping diagonal distance consistent with the cardinal radius); `of` requires the referenced node to be defined earlier in the IR (same forward-reference rule as polar `origin` / Step `to`) — ADR-0001
+- **`nodeDistance` on the Tikz container**: feeds `CompileOptions.nodeDistance`, used as the default distance for relative positioning; an explicit `distance` on the position wins, otherwise falls back to 1 (matches TikZ `node distance=1cm`)
+- **`<Coordinate>` placeholder**: new `IRChild` discriminator `'coordinate'` (only `id` + `position`), top-level peer of Node / Path; in compile Pass 1 it emits no primitive and does not extend the viewBox, but it does register in `nodeIndex` as a 0×0 rect layout (boundaryPoint always returns the center), letting path targets and `at.of` string references resolve to it — ADR-0002
+- **Node-attached labels**: `Node.label?` takes a single `NodeLabel` object or an array; each label takes `text` / `position?` (8-direction enum or numeric angle — `label=above:foo` / `label=30:foo`) / `distance?` (default 4) / `textColor?` / `opacity?` / `font?`; missing `font` / `textColor` inherit from the parent node; emit produces one TextPrim per label, placed inside the inner group so labels rotate with the node — ADR-0003
+
+### `@retikz/react`
+
+- `<Tikz>` gains a `nodeDistance` prop; `<Node position={{ direction, of, distance? }}>` accepts the relative-positioning form
+- New third kernel component `<Coordinate id="..." position={...} />` (peer of `<Node>` / `<Path>`, one-to-one with IR); builder / unbuilder round-trip end-to-end
+- `<Node label={...}>` prop takes a NodeLabel object or array, matching the IR field
+
+### `docs`
+
+- New `core/components/node/coordinate` page: bilingual mdx + bilingual demos (virtual anchor & junction-fold use cases)
+- `core/components/node/overview` gains two new sections (relative positioning, node labels) plus three demos (`node-at-relative` single file + `node-label-basic` bilingual)
+- API tables: `position` row adds the at-form; new `label` row
+- `ComponentPreview` resolves `<name>.<lang>.demo.tsx` against the current i18n language, falling back to the no-suffix file when missing; `apps/docs/AGENTS.md` documents the "demos with rendered text must come in bilingual pairs" rule
+- Root `AGENTS.md` adds the "no abbreviations" rule — IR schema fields / public APIs / functions / types must be spelled out; the rule originated from ADR-0001's `at.dir` → `at.direction` decision
+- Three ADRs land in `notes/adr/0001`–`0003` (node-to-node positioning / Coordinate placeholder / Node label)
+
 ## v0.1.0-alpha.3
 
 Path enhancements land in one wave: curve trio, path-level shapes, relative coordinates, edge labels, visual-prop fill-out. Backed by 4 ADRs and +120 new test cases.
