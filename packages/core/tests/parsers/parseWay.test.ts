@@ -3,9 +3,9 @@ import type { IRStep, IRTarget } from '../../src/ir';
 import type { WayDSL } from '../../src/parsers/parseWay';
 import { DrawWay, parseWay } from '../../src/parsers/parseWay';
 
-/** 测试 helper：cycle step 没 to，统一返回 undefined；其他 kind 返回 .to */
+/** 测试 helper：cycle / arc / circlePath / ellipsePath 没 to，统一返回 undefined；其他 kind 返回 .to */
 const toOf = (s: IRStep): IRTarget | undefined =>
-  s.kind === 'cycle' ? undefined : s.to;
+  'to' in s ? s.to : undefined;
 
 describe('parseWay', () => {
   describe('基本形态', () => {

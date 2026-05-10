@@ -338,6 +338,7 @@ describe('buildIR', () => {
         <Path>
           <Step kind="move" to={[0, 0]} />
           <Step to={[10, 0]} />
+          {/* @ts-expect-error cycle 类型不允许 children；这里故意构造来验证 builder 静默忽略 */}
           <Step kind="cycle">
             <EdgeLabel>ignored</EdgeLabel>
           </Step>

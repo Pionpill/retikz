@@ -259,7 +259,6 @@ describe('ADR-0004 step.label：覆盖各 step kind', () => {
           children: [
             { type: 'step', kind: 'move', to: [0, 0] },
             { type: 'step', kind: 'line', to: [5, 0] },
-            // @ts-expect-error cycle 不该有 label，构造一个错误 IR 验证 compile 容错
             { type: 'step', kind: 'cycle', label: { text: 'never' } },
           ],
         },
