@@ -26,139 +26,60 @@ alpha 功能开发的入口。产出**一份 ADR**——下游所有阶段（imp
 
 ## 输出
 
-`notes/adr/<NNNN>-<slug>.md`，状态 = Proposed。
+`notes/adr/v<MAJOR>/v<MAJOR>.<MINOR>-<channel>.<N>/<NNNN>-<slug>.md`，状态 = Proposed。
 
-ADR 编号规则：每个 alpha 段从 0001 开始（alpha.4 是 0001-0003，alpha.5 重新从 0001）。这与 [package-publish](../package-publish/SKILL.md) 中 "alpha.X 完工后 adr/ 给下版重新编号" 约定吻合。
+例：`notes/adr/v0/v0.1-alpha.5/0004-some-feature.md`
 
-## ADR 模板（必填段全展示）
+### 目录约定
 
-````markdown
-# ADR-NNNN：<标题>
+- **一级**：MAJOR 版本（`v0/` / `v1/`）
+- **二级**：版本通道节点（`v0.1-alpha.5/` / `v0.1-beta.1/` / `v0.1-rc.1/` / `v0.1/` 表稳定）
+- **PATCH 不开目录**：patch 仅修 bug、不写 ADR
+- **ADR 永久保留**：被新版决策覆盖时只标 `状态：Superseded by ADR-NNNN`，不删
 
-- 状态：Proposed
-- 决策日期：YYYY-MM-DD
-- 关联：[v0-roadmap §...](../plans/v0-roadmap.md) · [tikz-gap-analysis §...](../analysis/...) · [DESIGN.md §...](../architecture/DESIGN.md)
+### 编号规则
 
-## 背景
+- **项目级全局单调**：跨 milestone 不重置
+- alpha.4 是 ADR-0001 ~ ADR-0003 → alpha.5 从 ADR-0004 起
+- ADR 一旦分配编号，编号永远绑定该 ADR（即使后来 Rejected / Superseded）
+- 起新 ADR 前查 `notes/adr/README.md` 索引拿下一个未用编号
 
-<现状是什么、为什么不够、TikZ 怎么做、用户为什么会想要>
+### 模板
 
-## 选项
+复制 `notes/adr/_template.md` 到目标位置：
 
-### A. <方案 A>（**推荐**）
-
-<schema 草案 / DSL 表面 / 编译期处理示意>
-
-### B. <方案 B>
-
-<...>
-
-### C. <方案 C>
-
-<...>
-
-## 决策：<选哪个>
-
-理由：
-
-1. <...>
-2. <...>
-
-## 待决策点
-
-- <小决策 1>：<选项与倾向>
-- <小决策 2>：<选项与倾向>
-
-## DSL 表面
-
-```tsx
-<示例 JSX>
+```bash
+cp notes/adr/_template.md notes/adr/v<MAJOR>/v<MAJOR>.<MINOR>-<channel>.<N>/<NNNN>-<slug>.md
 ```
 
-## 测试设计
+模板里的相对链接已按"实例位于二级目录"写好，cp 后能直接用。
 
-`packages/core/tests/<对应路径>.test.ts` 覆盖：
+## ADR 必填段速查
 
-<列出 case 类别>
+完整模板在 [`notes/adr/_template.md`](../../../notes/adr/_template.md)（cp 到二级目录 `v<MAJOR>/v<MAJOR>.<MINOR>-channel.N/<NNNN>-<slug>.md` 后路径自动正确）。本 SKILL 只列必填段速查供 AI / 人工写 ADR 时核对：
 
-## 影响
+**叙述部分**：
 
-- <对现有代码 / 文档 / IR 的影响清单>
+- 标题（`# ADR-NNNN：<一句话>`）
+- 状态 / 决策日期 / 关联（v0-roadmap / tikz-gap-analysis / DESIGN.md）
+- 背景（现状 + 痛点 + TikZ 等价）
+- 选项（≥ 2 个，含 schema 草案 + DSL 表面）
+- 决策（选哪个 + 理由）
+- 待决策点（选项内部的小决策，越细越好）
+- DSL 表面（用户角度示例 JSX）
+- 测试设计（case 类别概述，具体 case 在实现契约段）
+- 影响（对现有代码 / 文档 / IR 的牵动）
+- 不在本 ADR 范围（推迟项）
 
-## 不在本 ADR 范围
+**实现契约（必填，下游 Spec / 实现 / 测试 / 文档 Agent 的硬约束）**：
 
-- <推迟到下版的相关项>
-
----
-
-## 实现契约（必填）
-
-> 本段是下游 implement / test / document / wrapup 阶段的硬契约。AI 子 Agent 严格按此执行，偏离需开新 ADR。
-
-### Level
-
-`red` | `yellow` | `green`
-
-| Level | 触发 |
+| 段 | 必填项 |
 |---|---|
-| red | 动 IR schema / compile 核心 / public exports |
-| yellow | 动 kernel / sugar / parser / render |
-| green | 仅文档 / 测试 / 配置 |
-
-判级与 [`alpha-feature-dev`](../alpha-feature-dev/SKILL.md) "自动判级" 表对齐——以本段下"文件 scope"为输入。
-
-### Schema 改动
-
-| 文件 | 操作 | 字段名 | 类型 | 默认值 | describe 中文摘要 |
-|---|---|---|---|---|---|
-| `packages/core/src/ir/xxx.ts` | 加字段 / 改字段 / 删字段 | `<exact name>` | `<zod 类型>` | `<default 或 —>` | <一句话> |
-
-每行一条字段改动。**字段名一旦写死，下游 Spec / 实现 Agent 不允许改**。
-
-### 文件 scope
-
-本 ADR 实现允许触碰的文件白名单：
-
-- `packages/core/src/ir/xxx.ts`（新建 / 修改）
-- `packages/core/src/compile/yyy.ts`（修改）
-- `packages/core/tests/.../xxx.test.ts`（新建）
-- `packages/react/src/kernel/Xxx.tsx`（新建 / 修改）
-- ...
-
-偏离白名单需开新 ADR 或本 ADR 加新条目重审。
-
-### 测试象限（每条 ADR 至少 9 个 case）
-
-按四象限填，每类不少于下限：
-
-**Happy path（≥ 3）**：
-
-- `<case 名>`：<触发输入> → <期望行为>
-- ...
-
-**边界（≥ 2）**：
-
-- `<case 名>`：<min/max / 0 / 空 / 单元素> → <期望>
-- ...
-
-**错误路径（≥ 2）**：
-
-- `<case 名>`：<schema 拒绝 / 引用未定义 / 类型错> → <期望抛错或 null>
-- ...
-
-**交互（≥ 2）**：
-
-- `<case 名>`：<与已有功能交叉，如 rotate × scale × 本字段> → <期望>
-- ...
-
-### 依赖的现有元素
-
-本 ADR 引用 / 扩展 / 修改的现有 IR 元素 / API / 工具：
-
-- `IRPosition`（geometry/point）—— 不修改、仅引用
-- `AT_DIRECTIONS`（ir/position/at-position.ts）—— 引用枚举值
-- ...
-````
+| Level | `red` \| `yellow` \| `green`（判级表见 [`alpha-feature-dev`](../alpha-feature-dev/SKILL.md) "自动判级"） |
+| Schema 改动 | 表格：文件 / 操作 / 字段名 / 类型 / 默认值 / describe；无改动写"无" |
+| 文件 scope | 白名单：本 ADR 实现允许触碰的所有文件；偏离需新开 ADR 或加条 |
+| 测试象限 | 4 类各达下限：happy ≥ 3 / 边界 ≥ 2 / 错误路径 ≥ 2 / 交互 ≥ 2，**至少 9 case** |
+| 依赖现有元素 | 本 ADR 引用 / 扩展的现有 IR / API / 工具，每条注明用途（仅引用 / 扩展 / 修改） |
 
 ## 流程
 
@@ -172,7 +93,7 @@ ADR 编号规则：每个 alpha 段从 0001 开始（alpha.4 是 0001-0003，alp
    - 校验失败 → 报告人工补充
 5. **人工 commit ADR**（emoji `:books:` 或 `:sparkles:`）—— 状态仍 Proposed，直到 alpha-feature-wrapup 阶段才翻 Accepted
 
-完成本阶段的标志：`notes/adr/<NNNN>-*.md` 已 commit、实现契约段 4 件齐、人工说"可以进实现"。
+完成本阶段的标志：`notes/adr/v<MAJOR>/v<MAJOR>.<MINOR>-<channel>.<N>/<NNNN>-*.md` 已 commit、实现契约段 4 件齐、人工说"可以进实现"。
 
 ## 失败 / 升级
 

@@ -158,8 +158,8 @@ Adversarial 第二关 Contract Auditor 结果：
 
 ```bash
 # 1. ADR 状态翻 Accepted
-sed -i 's/^- 状态：Proposed/- 状态：Accepted/' notes/adr/NNNN-*.md
-git add notes/adr/NNNN-*.md
+sed -i 's/^- 状态：Proposed/- 状态：Accepted/' notes/adr/v<MAJOR>/v<MAJOR>.<MINOR>-<channel>.<N>/NNNN-*.md
+git add notes/adr/v<MAJOR>/v<MAJOR>.<MINOR>-<channel>.<N>/NNNN-*.md
 git commit -m ":pencil: ADR-NNNN 完工：标记 Accepted"
 
 # 2. roadmap 勾选（如果是本 alpha 段最后一条 ADR）
