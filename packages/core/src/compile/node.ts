@@ -4,7 +4,7 @@ import { type Ellipse, ellipse as ellipseOps } from '../geometry/ellipse';
 import type { Position } from '../geometry/point';
 import type { Rect, RectAnchor } from '../geometry/rect';
 import { rect as rectOps } from '../geometry/rect';
-import type { IRLineSpec, IRNode, NodeShape } from '../ir';
+import type { AtDirection, IRLineSpec, IRNode, IRNodeLabel, NodeShape } from '../ir';
 import type { ScenePrimitive, TextLine } from '../primitive';
 import { resolvePosition } from './position';
 import type { TextMeasurer } from './text-metrics';
@@ -13,6 +13,8 @@ const DEFAULT_FONT_SIZE = 14;
 const DEFAULT_PADDING = 8;
 const DEFAULT_LINE_HEIGHT_FACTOR = 1.2;
 const DEG_TO_RAD = Math.PI / 180;
+/** Node label 与 node 边界的默认距离（user units）；TikZ 默认是 0pt 但视觉上太贴 */
+const DEFAULT_LABEL_DISTANCE = 4;
 const SQRT2 = Math.SQRT2;
 /** dashed 预设：SVG stroke-dasharray "4 2"——4 px 实线 + 2 px 间隙循环 */
 const DASHED_PATTERN = '4 2';
@@ -96,6 +98,28 @@ export type NodeLayout = {
   textColor?: string;
   /** 整节点透明度 0~1；emit 时同时挂 shape 与 text primitive */
   opacity?: number;
+  /**
+   * 已解析的 label 列表（IR 层 `Node.label` 标准化后）。每条 label 已合并：
+   * - position 默认 'above'
+   * - distance 默认 DEFAULT_LABEL_DISTANCE
+   * - font 字段从 Node 继承（family / size / weight / style 任一未填则取 Node 块级值）
+   */
+  labels?: Array<NodeLabelLayout>;
+};
+
+/** 节点附属标签的 layout——layoutNode 阶段已合并好默认值与样式继承 */
+export type NodeLabelLayout = {
+  text: string;
+  /** 8 方向枚举或数字角度（与 IR 同形态） */
+  position: AtDirection | number;
+  /** 已应用默认值的距离 */
+  distance: number;
+  textColor?: string;
+  opacity?: number;
+  fontSize: number;
+  fontFamily?: string;
+  fontWeight?: string | number;
+  fontStyle?: 'normal' | 'italic' | 'oblique';
 };
 
 /** 由 layout 构造的 Rect（带 margin 扩张） */
@@ -169,6 +193,40 @@ export const anchorOf = (layout: NodeLayout, name: RectAnchor): Position => {
     case 'diamond':
       return diamondOps.anchor(diamondOf(layout, 0), name);
   }
+};
+
+/**
+ * 8 方向 label position → (anchorName, 单位向量) 映射。
+ * 视觉语义与 `at.direction` 一致——above 是视觉上方（y 减小）。
+ */
+const LABEL_DIRECTION_MAP: Record<
+  AtDirection,
+  { anchor: RectAnchor; vec: [number, number] }
+> = {
+  above: { anchor: 'north', vec: [0, -1] },
+  below: { anchor: 'south', vec: [0, 1] },
+  left: { anchor: 'west', vec: [-1, 0] },
+  right: { anchor: 'east', vec: [1, 0] },
+  'above-left': { anchor: 'north-west', vec: [-Math.SQRT1_2, -Math.SQRT1_2] },
+  'above-right': { anchor: 'north-east', vec: [Math.SQRT1_2, -Math.SQRT1_2] },
+  'below-left': { anchor: 'south-west', vec: [-Math.SQRT1_2, Math.SQRT1_2] },
+  'below-right': { anchor: 'south-east', vec: [Math.SQRT1_2, Math.SQRT1_2] },
+};
+
+/**
+ * 算 label 中心点：
+ * - 8 方向：节点对应 anchor 出发，按单位向量 × distance 外推
+ * - 数字角度：先取 angleBoundary 边界点，再沿 (cos, sin) 单位向量 × distance 外推
+ */
+const labelCenter = (layout: NodeLayout, label: NodeLabelLayout): Position => {
+  if (typeof label.position === 'number') {
+    const rad = (label.position * Math.PI) / 180;
+    const [bx, by] = angleBoundaryOf(layout, label.position);
+    return [bx + Math.cos(rad) * label.distance, by + Math.sin(rad) * label.distance];
+  }
+  const { anchor, vec } = LABEL_DIRECTION_MAP[label.position];
+  const [bx, by] = anchorOf(layout, anchor);
+  return [bx + vec[0] * label.distance, by + vec[1] * label.distance];
 };
 
 /**
@@ -316,6 +374,28 @@ export const layoutNode = (
       `Cannot resolve position for node ${node.id ?? '(unnamed)'}; polar.origin or at.of may reference an undefined node`,
     );
   }
+  // 标准化 label：单对象 → 单元素数组；继承 Node 的 font / textColor 默认值
+  const rawLabels: Array<IRNodeLabel> | undefined =
+    node.label === undefined
+      ? undefined
+      : Array.isArray(node.label)
+        ? node.label
+        : [node.label];
+  const labels: Array<NodeLabelLayout> | undefined = rawLabels?.map(lab => {
+    const labFont = lab.font;
+    return {
+      text: lab.text,
+      position: lab.position ?? 'above',
+      distance: lab.distance ?? DEFAULT_LABEL_DISTANCE,
+      textColor: lab.textColor ?? node.textColor,
+      opacity: lab.opacity,
+      fontSize: (labFont?.size ?? baseFontSize) * fontScale,
+      fontFamily: labFont?.family ?? fontFamily,
+      fontWeight: labFont?.weight ?? fontWeight,
+      fontStyle: labFont?.style ?? fontStyle,
+    };
+  });
+
   return {
     id: node.id,
     shape,
@@ -348,6 +428,7 @@ export const layoutNode = (
     roundedCorners: node.roundedCorners,
     textColor: node.textColor,
     opacity: node.opacity,
+    labels,
   };
 };
 
@@ -473,6 +554,29 @@ export const emitNodePrimitives = (
       measuredWidth: round(layout.textWidth),
       measuredHeight: round(layout.textHeight),
     });
+  }
+  // Label TextPrim：每个 label 一个，放在 inner 同组 → 跟 node 旋转一致
+  if (layout.labels) {
+    for (const lab of layout.labels) {
+      const [lx, ly] = labelCenter(layout, lab);
+      inner.push({
+        type: 'text',
+        x: round(lx),
+        y: round(ly),
+        lines: [{ text: lab.text }],
+        fontSize: lab.fontSize,
+        fontFamily: lab.fontFamily,
+        fontWeight: lab.fontWeight,
+        fontStyle: lab.fontStyle,
+        align: 'middle',
+        baseline: 'middle',
+        lineHeight: round(lab.fontSize * DEFAULT_LINE_HEIGHT_FACTOR),
+        fill: lab.textColor ?? 'currentColor',
+        opacity: lab.opacity ?? layout.opacity,
+        measuredWidth: 0,
+        measuredHeight: round(lab.fontSize),
+      });
+    }
   }
   if (layout.rotateDeg === 0) return inner;
   return [

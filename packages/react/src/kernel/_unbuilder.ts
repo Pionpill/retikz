@@ -37,6 +37,7 @@ const nodePropsFromIR = (n: IRNode): NodeProps => {
   if (n.yScale !== undefined) props.yScale = n.yScale;
   if (n.textColor !== undefined) props.textColor = n.textColor;
   if (n.opacity !== undefined) props.opacity = n.opacity;
+  if (n.label !== undefined) props.label = n.label;
   return props;
 };
 

@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import type { ValueOf } from '../types';
-import { AtPositionSchema, PolarPositionSchema, PositionSchema } from './position';
+import { AT_DIRECTIONS, AtPositionSchema, PolarPositionSchema, PositionSchema } from './position';
 
 /**
  * 节点形状常量。值是 IR 中 `shape` 字段的字面字符串；
@@ -122,6 +122,56 @@ export const NODE_TEXT_ALIGNS = {
 
 /** 多行文本对齐字面量类型 */
 export type NodeTextAlign = ValueOf<typeof NODE_TEXT_ALIGNS>;
+
+/**
+ * 节点附属标签（label）——TikZ `[label=above:foo]` / `[label={[red]30:foo}]` 同义。
+ *
+ * 一个 Node 可挂多个 label（数组形态）；label 自身不参与 viewBox（视觉外延少时可接受）。
+ *
+ * `position` 接受两种形态：
+ * - 8 方向枚举（`above` / `right` / `above-left` ...）：标签贴在 node 该方向边界外
+ * - 数字角度：以 node 中心为原点，按该角度方向投射；约定与 polar 一致（0° = +x，90° = +y 屏幕下方）
+ *
+ * 默认 `position = 'above'`，`distance = 4`（user units，标签与 node 边界的距离）。
+ */
+export const NodeLabelSchema = z
+  .object({
+    text: z
+      .string()
+      .describe('Label text content; rendered as a single line.'),
+    position: z
+      .union([z.nativeEnum(AT_DIRECTIONS), z.number()])
+      .optional()
+      .describe(
+        'Placement around the node border: 8-direction enum (above / right / above-left / ...) or numeric angle in degrees (`label=30:foo` for radial placement). Default `above`. Numeric uses the polar convention (0° = +x, 90° = +y, screen-down).',
+      ),
+    distance: z
+      .number()
+      .nonnegative()
+      .optional()
+      .describe(
+        'Gap between the node border and the label center, in user units. Default 4.',
+      ),
+    textColor: z
+      .string()
+      .optional()
+      .describe('Label text color; falls back to currentColor.'),
+    opacity: z
+      .number()
+      .min(0)
+      .max(1)
+      .optional()
+      .describe('Label-only opacity 0..1; multiplied with the node opacity if both are set.'),
+    font: FontSchema.optional().describe(
+      'Label font overrides; missing fields inherit from the parent node font, then renderer defaults.',
+    ),
+  })
+  .describe(
+    'Extra text attached around a node border. Multiple labels supported via array form on `Node.label`.',
+  );
+
+/** Node label IR 类型——单条 label 的字段集 */
+export type IRNodeLabel = z.infer<typeof NodeLabelSchema>;
 
 export const NodeSchema = z
   .object({
@@ -289,6 +339,12 @@ export const NodeSchema = z
     font: FontSchema.optional().describe(
       'Font spec for the inner text label (family / size / weight / style); all fields optional, all fall back to renderer defaults.',
     ),
+    label: z
+      .union([NodeLabelSchema, z.array(NodeLabelSchema)])
+      .optional()
+      .describe(
+        'Extra label(s) attached around the node border (TikZ `[label=above:foo]`); single object or array form. Compiled into one TextPrim per label, positioned by `position` direction / angle and `distance`.',
+      ),
   })
   .describe(
     'Node primitive: a positioned, optionally textual shape (rectangle / circle / ellipse / diamond)',

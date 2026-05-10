@@ -138,6 +138,7 @@ const buildNode = (props: Record<string, unknown>): IRChild => ({
   padding: props.padding as number | undefined,
   margin: props.margin as number | undefined,
   font: props.font as IRNode['font'],
+  label: props.label as IRNode['label'],
 });
 
 /**

@@ -4,6 +4,7 @@ import type {
   IRFont,
   IRLineSpec,
   IRNode,
+  IRNodeLabel,
   IRPosition,
   NodeTextAlign,
   PolarPosition,
@@ -92,6 +93,14 @@ export type NodeProps = {
   textColor?: string;
   /** 整节点透明度 0~1（同时作用于 shape 与 text） */
   opacity?: number;
+  /**
+   * 节点附属标签——TikZ `[label=above:foo]` 同义。
+   *
+   * 单对象或数组形态；每条 label 接 `text` / `position?` / `distance?` / 样式继承。
+   * `position` 接 8 方向枚举（`above`/`right`/...）或数字角度（`label=30:foo` 等价 `position: 30`）；
+   * 缺省 'above'，distance 缺省 4。
+   */
+  label?: IRNodeLabel | Array<IRNodeLabel>;
 };
 
 /**
