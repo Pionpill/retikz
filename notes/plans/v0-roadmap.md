@@ -104,7 +104,7 @@ v0 完工后开 v1，重点转向 **Tier 2 domain 包**（`@retikz/flow`、`@ret
 
 | 改动 | 来源 |
 |---|---|
-| Node `at: { dir: 'above'\|'below'\|'left'\|'right'\|..., of: NodeId, distance?: number }` | gap §1 P1 |
+| Node `position: { direction: 'above'\|'below'\|'left'\|'right'\|..., of: NodeId, distance?: number }` | gap §1 P1 |
 | `<Coordinate>` IR 节点（占位、不绘制、可被 path 引用） | gap §3 |
 | Node `label?` 子结构（节点边挂额外文字） | gap §1 P2 |
 | 文档站补齐 Node / Path 全 prop 演示页 | — |
@@ -126,7 +126,7 @@ v0 完工后开 v1，重点转向 **Tier 2 domain 包**（`@retikz/flow`、`@ret
 - [x] v0.1.0-alpha.1（2026-05-09 完工：6 项改动 + 4 篇 ADR + ~180 测试）
 - [x] v0.1.0-alpha.2（2026-05-09 完工：7 项改动 + 3 篇 ADR + 47 新测试 + sugar `<Text>`）
 - [x] v0.1.0-alpha.3（2026-05-10 完工：ADR-0001 Path 曲线三件套 curve / cubic / bend；ADR-0002 path-level 形状 arc / circlePath / ellipsePath；ADR-0003 相对坐标 `{ rel }` / `{ relAccumulate }` + way sugar 对象形态；ADR-0004 边标注 step.label + sugar `<EdgeLabel>` + Draw way label 算子；P2 path 级 lineCap / lineJoin / thickness 语义档位 / opacity / fillOpacity / drawOpacity）
-- [ ] v0.1.0-alpha.4
+- [x] v0.1.0-alpha.4（2026-05-10 完工：ADR-0001 节点间相对定位 `Node.position = { direction, of, distance? }` 8 方向枚举 + Tikz `nodeDistance` prop；ADR-0002 `<Coordinate>` 一等占位节点（IRChild 第三种 discriminator，不发 primitive / 不扩 viewBox 但进 nodeIndex）；ADR-0003 Node `label?` 边挂标签（8 方向 / 数字角度，font / textColor 继承 Node）；docs 加 coordinate 章节 + node/overview 增段 + ComponentPreview 双语 demo 解析；AGENTS.md 加"不缩写命名"规则；+33 新测试）
 - [ ] v0.1.0-beta
 - [ ] v0.1.0
 
