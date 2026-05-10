@@ -12,13 +12,13 @@ This page explains how the model runs, who owns what, and what hard constraints 
 Hooking AI into the dev flow doesn't mean "let AI write the code for you" — it means **shifting human attention from implementation labor to decision labor**. Two iron rules:
 
 1. **Architecture / schema decisions are human-only.** Irreversible changes — IR field names, default values, trade-offs between options — are decided by humans writing ADRs. AI only provides option analysis and trade-off descriptions inside the ADR.
-2. **AI never commits / publishes on the human's behalf.** When the code is written, AI must stop and wait for human review and explicit authorization. This rule is in the repo-root `AGENTS.md` commit-policy section and admits no exceptions (auto mode, long tasks, seemingly harmless edits, prior approval of similar changes — none of these waive it; every commit requires fresh authorization).
+2. **AI never commits / publishes on the human's behalf.** When the code is written, AI must stop and wait for human review and explicit authorization. This rule is in the [repo-root AGENTS.md](https://github.com/Pionpill/retikz/blob/main/AGENTS.md) commit-policy section and admits no exceptions (auto mode, long tasks, seemingly harmless edits, prior approval of similar changes — none of these waive it; every commit requires fresh authorization).
 
 Everything else — the "middle work" of writing specs, implementations, tests, docs, and changelog drafts — AI can relay end-to-end. Humans only step in at the key checkpoints to review.
 
 ## Project design principle: AI as a first-class citizen
 
-This workflow isn't engineering theater — it serves a clear product thesis: **retikz is an AI-first drawing library, and the IR is designed for AI** (see `notes/architecture/DESIGN.md` §1.2 "First Design Principle" and §7 "AI Friendliness").
+This workflow isn't engineering theater — it serves a clear product thesis: **retikz is an AI-first drawing library, and the IR is designed for AI** (see [DESIGN.md §1.2 First Design Principle and §7 AI Friendliness](https://github.com/Pionpill/retikz/blob/main/notes/architecture/DESIGN.md)).
 
 Concretely:
 
@@ -45,7 +45,7 @@ Any artifact at any stage that **only humans can use, LLMs can't** (e.g. returni
 
 ## The 5-stage flow
 
-Every ADR / new feature in alpha goes through 5 stages, orchestrated by the `.agents/skills/alpha-feature-dev/` SKILL:
+Every ADR / new feature in alpha goes through 5 stages, orchestrated by the [`alpha-feature-dev`](https://github.com/Pionpill/retikz/blob/main/.agents/skills/alpha-feature-dev/SKILL.md) SKILL:
 
 | Stage | Driver | Output |
 | --- | --- | --- |
@@ -57,7 +57,7 @@ Every ADR / new feature in alpha goes through 5 stages, orchestrated by the `.ag
 
 **Humans only act on stages 1 and 5** — stages 2, 3, 4 are handed off to independent sub-agents in sequence, with hard gates at each stage (lint / tsc / tests / reconciliation report) that halt the flow on failure.
 
-Each stage has its own SKILL: `alpha-feature-design` / `alpha-feature-implement` / `alpha-feature-test` / `alpha-feature-document` / `alpha-feature-wrapup`. SKILL files live at `.agents/skills/<name>/SKILL.md` with their input, output, sub-agent prompt, and failure / escalation thresholds spelled out.
+Each stage has its own SKILL: [`alpha-feature-design`](https://github.com/Pionpill/retikz/blob/main/.agents/skills/alpha-feature-design/SKILL.md) / [`alpha-feature-implement`](https://github.com/Pionpill/retikz/blob/main/.agents/skills/alpha-feature-implement/SKILL.md) / [`alpha-feature-test`](https://github.com/Pionpill/retikz/blob/main/.agents/skills/alpha-feature-test/SKILL.md) / [`alpha-feature-document`](https://github.com/Pionpill/retikz/blob/main/.agents/skills/alpha-feature-document/SKILL.md) / [`alpha-feature-wrapup`](https://github.com/Pionpill/retikz/blob/main/.agents/skills/alpha-feature-wrapup/SKILL.md). Each spells out its inputs, outputs, sub-agent prompts, and failure / escalation thresholds.
 
 ## Three sub-agent roles
 
@@ -105,7 +105,7 @@ Users can also **manually paste the same input into another LLM** (e.g. ChatGPT)
 
 ## Hard rules (from AGENTS.md)
 
-The constraints written into the repo-root `AGENTS.md` that AI must follow throughout:
+The constraints written into the [repo-root AGENTS.md](https://github.com/Pionpill/retikz/blob/main/AGENTS.md) that AI must follow throughout:
 
 | Constraint | Meaning |
 | --- | --- |
@@ -120,17 +120,17 @@ The constraints written into the repo-root `AGENTS.md` that AI must follow throu
 
 | If you want to know about | Look here |
 | --- | --- |
-| Project hard rules (naming / commits / lint / bilingual / IR schema style) | repo-root `AGENTS.md` |
-| Docs-site-specific conventions (mdx style / bilingual demos / no external links) | `apps/docs/AGENTS.md` |
-| All SKILLs (dev flow, releases, docs writing) | `.agents/skills/` |
-| 5-stage orchestrator | `.agents/skills/alpha-feature-dev/SKILL.md` |
-| Per-stage child SKILLs | `.agents/skills/alpha-feature-{design,implement,test,document,wrapup}/SKILL.md` |
-| Release SKILL (npm publish 5-stage gating) | `.agents/skills/package-publish/SKILL.md` |
-| Docs-writing SKILL | `.agents/skills/docs-doc-write/SKILL.md` |
-| ADR archive | `notes/adr/` (with `_template.md` and `README.md` index) |
-| Internal architecture / design / analysis notes | `notes/architecture/` · `notes/plans/` · `notes/analysis/` |
+| Project hard rules (naming / commits / lint / bilingual / IR schema style) | [AGENTS.md](https://github.com/Pionpill/retikz/blob/main/AGENTS.md) |
+| Docs-site-specific conventions (mdx style / bilingual demos / link policy) | [apps/docs/AGENTS.md](https://github.com/Pionpill/retikz/blob/main/apps/docs/AGENTS.md) |
+| Project thesis and first design principle | [DESIGN.md](https://github.com/Pionpill/retikz/blob/main/notes/architecture/DESIGN.md) |
+| All SKILLs (dev flow, releases, docs writing) | [.agents/skills/](https://github.com/Pionpill/retikz/tree/main/.agents/skills) |
+| 5-stage orchestrator | [alpha-feature-dev SKILL](https://github.com/Pionpill/retikz/blob/main/.agents/skills/alpha-feature-dev/SKILL.md) |
+| Design / Implement / Test / Document / Wrap-up child SKILLs | [alpha-feature-design](https://github.com/Pionpill/retikz/blob/main/.agents/skills/alpha-feature-design/SKILL.md) · [alpha-feature-implement](https://github.com/Pionpill/retikz/blob/main/.agents/skills/alpha-feature-implement/SKILL.md) · [alpha-feature-test](https://github.com/Pionpill/retikz/blob/main/.agents/skills/alpha-feature-test/SKILL.md) · [alpha-feature-document](https://github.com/Pionpill/retikz/blob/main/.agents/skills/alpha-feature-document/SKILL.md) · [alpha-feature-wrapup](https://github.com/Pionpill/retikz/blob/main/.agents/skills/alpha-feature-wrapup/SKILL.md) |
+| Release SKILL (npm publish 5-stage gating) | [package-publish SKILL](https://github.com/Pionpill/retikz/blob/main/.agents/skills/package-publish/SKILL.md) |
+| Docs-writing SKILL | [docs-doc-write SKILL](https://github.com/Pionpill/retikz/blob/main/.agents/skills/docs-doc-write/SKILL.md) |
+| ADR archive | [notes/adr/](https://github.com/Pionpill/retikz/tree/main/notes/adr) (with [template](https://github.com/Pionpill/retikz/blob/main/notes/adr/_template.md) and [index](https://github.com/Pionpill/retikz/blob/main/notes/adr/README.md)) |
 
-In practice the main AI reads `AGENTS.md` + the relevant SKILL when it picks up a task, then dispatches sub-agents per the SKILL flow. Each sub-agent only sees its own role prompt + the inputs it's given — no context cross-contamination.
+In practice the main AI reads AGENTS.md + the relevant SKILL when it picks up a task, then dispatches sub-agents per the SKILL flow. Each sub-agent only sees its own role prompt + the inputs it's given — no context cross-contamination.
 
 ## Transparency
 
@@ -149,4 +149,4 @@ retikz does not pretend to be "all human" — most implementation commits carry 
 
 ---
 
-To bring this flow to your own open-source project, the retikz `AGENTS.md` and `.agents/skills/` are MIT-licensed and free to reference / fork / adapt. The key isn't the tooling — it's **how clearly the boundary between human and AI is drawn**: decisions to humans, implementation to AI, reconciliation to independent sub-agents, releases to humans.
+To bring this flow to your own open-source project, retikz's [AGENTS.md](https://github.com/Pionpill/retikz/blob/main/AGENTS.md) and [.agents/skills/](https://github.com/Pionpill/retikz/tree/main/.agents/skills) are MIT-licensed and free to reference / fork / adapt. The key isn't the tooling — it's **how clearly the boundary between human and AI is drawn**: decisions to humans, implementation to AI, reconciliation to independent sub-agents, releases to humans.

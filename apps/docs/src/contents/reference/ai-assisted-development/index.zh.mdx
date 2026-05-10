@@ -12,13 +12,13 @@ retikz 的实现劳动大部分由 AI 完成——节点 / 路径 / 边标注 / 
 把 AI 接进开发流程不等于"让 AI 替你写代码"，而是把人工的精力从实现劳动转移到**决策劳动**。两条铁律：
 
 1. **架构 / Schema 决策必须人工**——IR 字段名 / 默认值 / 选项之间的取舍这类不可逆改动，由人写 ADR 决策。AI 只在 ADR 提供选项分析与 trade-off 描述。
-2. **AI 永远不替人 commit / publish**——写完代码必须停下来等人工审阅 + 显式授权。这条写在仓库根 `AGENTS.md` commit 规范段，无任何例外（auto mode、长任务、看似无害的小改、预先批准过类似改动……一律不豁免，每次都要重新拿授权）。
+2. **AI 永远不替人 commit / publish**——写完代码必须停下来等人工审阅 + 显式授权。这条写在 [仓库根 AGENTS.md](https://github.com/Pionpill/retikz/blob/main/AGENTS.md) 的 commit 规范段，无任何例外（auto mode、长任务、看似无害的小改、预先批准过类似改动……一律不豁免，每次都要重新拿授权）。
 
 剩下的"中间劳动"（写 spec / 写实现 / 写测试 / 写文档 / 起草 changelog）AI 可以接力跑完，人工只在关键节点介入审稿。
 
 ## 项目设计原则：AI 一等公民
 
-这套工作流不是工程化炫技——它服务一个明确的产品立项主张：**retikz 是 AI 一等公民的绘图库，IR 是为 AI 设计的**（详见 `notes/architecture/DESIGN.md` §1.2「第一设计原则」与 §7「AI 友好性」）。
+这套工作流不是工程化炫技——它服务一个明确的产品立项主张：**retikz 是 AI 一等公民的绘图库，IR 是为 AI 设计的**（详见 [DESIGN.md §1.2 第一设计原则与 §7 AI 友好性](https://github.com/Pionpill/retikz/blob/main/notes/architecture/DESIGN.md)）。
 
 具体含义：
 
@@ -45,7 +45,7 @@ retikz 的实现劳动大部分由 AI 完成——节点 / 路径 / 边标注 / 
 
 ## 5 阶段流程
 
-alpha 阶段每条 ADR / 每条新功能都按 5 阶段走，编排在 `.agents/skills/alpha-feature-dev/` SKILL：
+alpha 阶段每条 ADR / 每条新功能都按 5 阶段走，编排在 [`alpha-feature-dev`](https://github.com/Pionpill/retikz/blob/main/.agents/skills/alpha-feature-dev/SKILL.md) SKILL：
 
 | 阶段 | 主体 | 输出 |
 | --- | --- | --- |
@@ -57,7 +57,7 @@ alpha 阶段每条 ADR / 每条新功能都按 5 阶段走，编排在 `.agents/
 
 **人工只动 1 和 5**——中间的 2、3、4 由独立 sub-Agent 接力完成，每阶段设硬关卡（lint / tsc / 测试 / 对账报告）不过即 halt。
 
-每个阶段对应一个独立的子 SKILL：`alpha-feature-design` / `alpha-feature-implement` / `alpha-feature-test` / `alpha-feature-document` / `alpha-feature-wrapup`。SKILL 文件在 `.agents/skills/<name>/SKILL.md`，里面写明输入、输出、子 Agent prompt、失败 / 升级阈值。
+每个阶段对应一个独立的子 SKILL：[`alpha-feature-design`](https://github.com/Pionpill/retikz/blob/main/.agents/skills/alpha-feature-design/SKILL.md) / [`alpha-feature-implement`](https://github.com/Pionpill/retikz/blob/main/.agents/skills/alpha-feature-implement/SKILL.md) / [`alpha-feature-test`](https://github.com/Pionpill/retikz/blob/main/.agents/skills/alpha-feature-test/SKILL.md) / [`alpha-feature-document`](https://github.com/Pionpill/retikz/blob/main/.agents/skills/alpha-feature-document/SKILL.md) / [`alpha-feature-wrapup`](https://github.com/Pionpill/retikz/blob/main/.agents/skills/alpha-feature-wrapup/SKILL.md)。SKILL 文件里写明输入、输出、子 Agent prompt、失败 / 升级阈值。
 
 ## 三个 sub-Agent 角色
 
@@ -105,7 +105,7 @@ retikz 当前三个 sub-Agent 默认全部用 Claude Opus 4.7。同 model 同上
 
 ## 红线（来自 AGENTS.md）
 
-写进仓库根 `AGENTS.md` 的硬约束，AI 全程必须遵守：
+写进 [仓库根 AGENTS.md](https://github.com/Pionpill/retikz/blob/main/AGENTS.md) 的硬约束，AI 全程必须遵守：
 
 | 约束 | 说明 |
 | --- | --- |
@@ -120,17 +120,17 @@ retikz 当前三个 sub-Agent 默认全部用 Claude Opus 4.7。同 model 同上
 
 | 想了解什么 | 看哪里 |
 | --- | --- |
-| 项目硬规则（命名 / commit / lint / 双语 / IR schema 风格） | 仓库根 `AGENTS.md` |
-| 文档站特有约定（mdx 风格 / 双语 demo / 不引外链） | `apps/docs/AGENTS.md` |
-| 全部 SKILL（开发流程、发版、文档写作） | `.agents/skills/` |
-| 5 阶段编排器 | `.agents/skills/alpha-feature-dev/SKILL.md` |
-| 单阶段子 SKILL | `.agents/skills/alpha-feature-{design,implement,test,document,wrapup}/SKILL.md` |
-| 发版 SKILL（npm publish 5 阶段守门） | `.agents/skills/package-publish/SKILL.md` |
-| 文档写作 SKILL | `.agents/skills/docs-doc-write/SKILL.md` |
-| ADR 决策档案 | `notes/adr/`（含 `_template.md` 与 `README.md` 索引） |
-| 内部架构 / 设计 / 分析 | `notes/architecture/` · `notes/plans/` · `notes/analysis/` |
+| 项目硬规则（命名 / commit / lint / 双语 / IR schema 风格） | [AGENTS.md](https://github.com/Pionpill/retikz/blob/main/AGENTS.md) |
+| 文档站特有约定（mdx 风格 / 双语 demo / 链接策略） | [apps/docs/AGENTS.md](https://github.com/Pionpill/retikz/blob/main/apps/docs/AGENTS.md) |
+| 项目立项主张与第一设计原则 | [DESIGN.md](https://github.com/Pionpill/retikz/blob/main/notes/architecture/DESIGN.md) |
+| 全部 SKILL（开发流程、发版、文档写作） | [.agents/skills/](https://github.com/Pionpill/retikz/tree/main/.agents/skills) |
+| 5 阶段编排器 | [alpha-feature-dev SKILL](https://github.com/Pionpill/retikz/blob/main/.agents/skills/alpha-feature-dev/SKILL.md) |
+| 设计 / 实现 / 测试 / 文档 / 收尾子 SKILL | [alpha-feature-design](https://github.com/Pionpill/retikz/blob/main/.agents/skills/alpha-feature-design/SKILL.md) · [alpha-feature-implement](https://github.com/Pionpill/retikz/blob/main/.agents/skills/alpha-feature-implement/SKILL.md) · [alpha-feature-test](https://github.com/Pionpill/retikz/blob/main/.agents/skills/alpha-feature-test/SKILL.md) · [alpha-feature-document](https://github.com/Pionpill/retikz/blob/main/.agents/skills/alpha-feature-document/SKILL.md) · [alpha-feature-wrapup](https://github.com/Pionpill/retikz/blob/main/.agents/skills/alpha-feature-wrapup/SKILL.md) |
+| 发版 SKILL（npm publish 5 阶段守门） | [package-publish SKILL](https://github.com/Pionpill/retikz/blob/main/.agents/skills/package-publish/SKILL.md) |
+| 文档写作 SKILL | [docs-doc-write SKILL](https://github.com/Pionpill/retikz/blob/main/.agents/skills/docs-doc-write/SKILL.md) |
+| ADR 决策档案 | [notes/adr/](https://github.com/Pionpill/retikz/tree/main/notes/adr)（含 [模板](https://github.com/Pionpill/retikz/blob/main/notes/adr/_template.md) 与 [索引](https://github.com/Pionpill/retikz/blob/main/notes/adr/README.md)） |
 
-实际工作时主 AI 接到任务先读 `AGENTS.md` + 对应 SKILL，按 SKILL 流程派 sub-Agent。每个 sub-Agent 只看自己角色 prompt + 给定输入，互不交叉污染。
+实际工作时主 AI 接到任务先读 AGENTS.md + 对应 SKILL，按 SKILL 流程派 sub-Agent。每个 sub-Agent 只看自己角色 prompt + 给定输入，互不交叉污染。
 
 ## 透明度
 
@@ -149,4 +149,4 @@ retikz 不假装"全人工"——commit 历史里大部分实现 commit 带 `Co-
 
 ---
 
-把这套流程落到你自己的开源项目里，retikz 仓库的 `AGENTS.md` 与 `.agents/skills/` 全部 MIT 许可下可参考、改写、迁移。流程的关键不在工具，而在**人工与 AI 的边界划得多清楚**：决策给人、实现给 AI、对账给独立 sub-Agent、发布给人。
+把这套流程落到你自己的开源项目里，retikz 的 [AGENTS.md](https://github.com/Pionpill/retikz/blob/main/AGENTS.md) 与 [.agents/skills/](https://github.com/Pionpill/retikz/tree/main/.agents/skills) 全部 MIT 许可下可参考、改写、迁移。流程的关键不在工具，而在**人工与 AI 的边界划得多清楚**：决策给人、实现给 AI、对账给独立 sub-Agent、发布给人。
