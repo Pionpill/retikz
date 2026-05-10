@@ -35,6 +35,19 @@ Breaking changes before `1.0.0` **do not force a MAJOR bump**, but the changelog
 
 Channels move forward only: alpha → beta → rc → stable. There's no rollback.
 
+## Development model per channel
+
+| Channel | Main content | Main driver |
+| --- | --- | --- |
+| alpha | New features, new IR fields, API reshaping | **Human-designed** + **AI-implemented** |
+| beta | Performance / readability / refactoring / test hardening / docs completion | **Human-led optimization and refactoring** (API frozen — the goal is code quality, not new capability) |
+| rc | Blocker bug fixes only | Human |
+| stable | Under SemVer; normal PATCH / MINOR / MAJOR cadence | — |
+
+The alpha "human-designed / AI-implemented" split — humans produce ADRs (schema field tables, file scopes, test quadrants, option decisions), AI relays through spec / implementation / tests / docs, and humans reconcile and review at the end. This keeps **architectural decisions under human control while scaling out implementation work**.
+
+beta inverts this — schema is frozen, the API stops growing, and AI's freedom narrows; this phase emphasizes human review of alpha-era implementation, performance tuning, refactoring, test hardening, and documentation completion, laying the foundation for rc / stable.
+
 ## peerDependencies
 
 | Package | peer | Version |
