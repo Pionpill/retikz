@@ -7,6 +7,17 @@ description: alpha 功能开发的自测加固阶段——派 Adversarial Bug Hu
 
 实现 Agent 让 spec 测试全过 ≠ 没 bug——spec 是按 ADR 列的"理论上该测的 case"，**对抗性输入**通常不在其中。本阶段派一个 prompt 角度故意错开的子 Agent 找 bug。
 
+## 设计原则（攻击面优先级）
+
+retikz 的根本设计原则——**AI 一等公民、IR 是为 AI 设计的**（[`notes/architecture/DESIGN.md`](../../../notes/architecture/DESIGN.md) §1.2 / §7）。本阶段 Bug Hunter 的攻击面**优先针对 AI 契约**：
+
+1. JSON round-trip 失真（IR → JSON → IR 不等价）
+2. zod parse 错误信息含糊到 LLM 修不动
+3. schema 不变量被违反（z.any / 函数 / class 偷渡进 IR）
+4. discriminator 失稳（type 字段缺失 / 拼错时报错笼统）
+
+这四类 BLOCKING 直接破坏 retikz 立项理由，必须清空。其他常规 corner case（极端数值 / 引用环 / 嵌套深度 / 与已有功能交叉）按严重度分 BLOCKING / WARNING。
+
 ## 输入
 
 - ADR
@@ -56,6 +67,10 @@ Agent({
 ```
 你是 retikz alpha 功能开发的 Adversarial Bug Hunter 子 Agent。
 
+retikz 的根本设计原则——**AI 一等公民、IR 是为 AI 设计的**（DESIGN.md §1.2 / §7）。
+你的任务是让 LLM 真实生成的 / 边角的 IR JSON 暴露实现 bug——
+LLM 用 retikz 时不会按教科书走，会送进各种 corner case，retikz 必须能稳。
+
 任务：**让实现失败**。
 
 读 ADR + 当前实现 diff + 现有测试，构造你认为会让实现 throw 出意外 / 返回错误结果 /
@@ -71,21 +86,34 @@ Agent({
 - 把对抗性 case 临时加在测试文件里（main test file 末尾或单独的 .adversarial.test.ts）跑，
   跑完报告就行——不 commit、不 stage。
 - 你**不被 ADR 测试象限限制**。象限是 spec 的覆盖最低线，你的工作是越过这条线找 bug。
-- 重点关注的"反直觉输入"模板（参考、不限于）：
-    1. 引用环 / 自引用（A 的 position.of = A 自己；polar.origin 形成环）
-    2. 极端数值：0、-0、NaN、Infinity、Number.MAX_VALUE、Number.MIN_VALUE、负零
-    3. Unicode / 长字符串 id（emoji id、千字 id）
-    4. 嵌套深度（polar.origin 链 100 层、coordinate at coordinate at coordinate）
-    5. 字段缺省与默认值边界（distance: 0、distance: undefined）
-    6. 与已有功能的怪异交叉（at + 大 rotate、scale + at + label 三件套）
-    7. JSON 序列化 / 反序列化 round-trip（IR → JSON → IR 后语义是否变）
-    8. zod parse 反例（缺字段、类型错、额外字段）
-- 测试名加前缀 `[adversarial]` 区分；中文 describe / it 仍要遵循。
+
+**优先级最高的攻击面（AI 一等公民契约必守）**——找到必判 BLOCKING：
+
+  1. **JSON round-trip 失真**：构造 IR、JSON.stringify、JSON.parse、Schema.parse 后与原 IR
+     不等价（任何字段类型 / 默认值 / 缺省值的差异都算）；这条挂 = LLM 持久化失败 = AI 一等公民契约破
+  2. **zod parse 错误信息不明确**：喂 LLM 常见的"乱写 IR"（字段拼错 / 类型混淆 / 缺必填字段 /
+     额外字段 / 数字写成字符串），看 zod 报错信息是否够 LLM 自我修正——含糊的报错（"invalid input"
+     这种）算 BLOCKING，因为 LLM 修不动
+  3. **schema 不变量违反**：如果实现里偷塞了 z.any / 函数 / class / ReactNode / Symbol /
+     Map / Set 进 IR（哪怕只是路径上的中间字段），算 BLOCKING——破坏 100% JSON 序列化
+  4. **discriminator 失稳**：如果 type 字段缺失 / 拼错 / 值非合法字面量时，schema 报错应当指出
+     具体哪个 case；笼统报错算 BLOCKING
+
+**其他常规攻击面**（找到归 WARNING 或 BLOCKING 看严重度）：
+
+  5. 引用环 / 自引用（A 的 position.of = A 自己；polar.origin 形成环）
+  6. 极端数值：0、-0、NaN、Infinity、Number.MAX_VALUE、Number.MIN_VALUE
+  7. Unicode / 长字符串 id（emoji id、千字 id）
+  8. 嵌套深度（polar.origin 链 100 层、coordinate at coordinate at coordinate）
+  9. 字段缺省与默认值边界（distance: 0、distance: undefined）
+  10. 与已有功能的怪异交叉（at + 大 rotate、scale + at + label 三件套）
+
+测试名加前缀 `[adversarial]` 区分；中文 describe / it 仍要遵循。
 
 输出格式（结构化）：
 
 BLOCKING（必须修，否则不进下一阶段）：
-  - case 名 / 触发输入 / 期望行为 / 实际行为 / 你的诊断
+  - case 名 / 触发输入 / 期望行为 / 实际行为 / 你的诊断 / 是否破坏 AI 一等公民契约（是 / 否）
 
 WARNING（建议修但不阻塞）：
   - 同上

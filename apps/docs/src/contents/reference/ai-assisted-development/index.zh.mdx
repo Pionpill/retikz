@@ -16,6 +16,33 @@ retikz 的实现劳动大部分由 AI 完成——节点 / 路径 / 边标注 / 
 
 剩下的"中间劳动"（写 spec / 写实现 / 写测试 / 写文档 / 起草 changelog）AI 可以接力跑完，人工只在关键节点介入审稿。
 
+## 项目设计原则：AI 一等公民
+
+这套工作流不是工程化炫技——它服务一个明确的产品立项主张：**retikz 是 AI 一等公民的绘图库，IR 是为 AI 设计的**（详见 `notes/architecture/DESIGN.md` §1.2「第一设计原则」与 §7「AI 友好性」）。
+
+具体含义：
+
+- **AI 接口走 IR JSON 而非 JSX**——LLM 用 OpenAI Structured Outputs / Anthropic Tool Use 强制 schema 校验时输出 100% 合法
+- **zod schema 是单一来源**——同时产出 TS 类型、JSON Schema、运行时校验、LLM tool definition；任何漂移都不被允许
+- **每个字段都有英文 `.describe(...)`**——是 LLM Tool Use 的契约，缺一即不合格
+- **IR 100% JSON 可序列化**——禁用 `z.any()` / `z.unknown()` / 函数 / class / ReactNode / Symbol / Map / Set；任何运行时才算得出的值都不进 IR
+- **字段命名沿用 TikZ 词汇 + 不缩写**——保留对 LLM 训练数据的亲和力（zero-shot 能力远超自创 DSL）
+- **支持 JSON Patch (RFC 6902) 增量编辑**——LLM 改局部成本远低于重写整个 IR
+
+### 这套原则如何穿透到实现 / 测试
+
+5 阶段流程不是孤立约束，每阶段都为这条原则服务——
+
+| 阶段 | 如何守 AI 一等公民 |
+| --- | --- |
+| 1 设计 | ADR 选项分析时第一过 AI 友好性这一关；字段命名 / 默认值决策必须服务 LLM 生成 |
+| 2 实现 | Spec Writer 必须含 ≥ 1 个 JSON round-trip 测试 + ≥ 1 个 zod parse 错误路径测试；实现 Agent 不允许在 schema 中引入非 JSON 类型 |
+| 3 自测 | Bug Hunter 优先攻击四类契约破坏：JSON round-trip 失真、zod 报错含糊到 LLM 修不动、schema 不变量违反、discriminator 失稳——这些直接破坏立项理由 |
+| 4 文档 | mdx 描述与 schema `.describe` 必须语义等同；demo 可被 LLM 学习作 few-shot 范例 |
+| 5 收尾 | Contract Auditor 对账 ADR / changelog / mdx / 实际行为四方一致——任何"实现里有但 ADR 没列"的字段都是契约破坏 |
+
+任何阶段产物**只能让人用、LLM 用不了**（如返回函数引用、依赖运行时上下文、字段名缩写到 LLM 猜不出语义），都是不合格的。
+
 ## 5 阶段流程
 
 alpha 阶段每条 ADR / 每条新功能都按 5 阶段走，编排在 `.agents/skills/alpha-feature-dev/` SKILL：

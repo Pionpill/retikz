@@ -7,6 +7,18 @@ description: alpha 功能开发的实现阶段——红色改动（动 IR / publ
 
 按 ADR 实现契约段把功能写进代码。**红色** 改动走 Spec-First TDD；黄色 / 绿色按规模选择。
 
+## 设计原则（不可破坏的硬约束）
+
+retikz 的根本设计原则——**AI 一等公民、IR 是为 AI 设计的**（见 [`notes/architecture/DESIGN.md`](../../../notes/architecture/DESIGN.md) §1.2 「第一设计原则」与 §7 「AI 友好性」）。本阶段所有 sub-Agent 必须把这条作为最高优先级、不得破坏：
+
+- **IR 100% JSON 可序列化**：schema 内禁用 `z.any()` / `z.unknown()` / 函数 / class / ReactNode / Symbol / Map / Set；任何"运行时才算得出"的值都不能进 IR
+- **每个 schema 字段必须英文 `.describe(...)`**：这是 LLM Tool Use / Structured Outputs 的契约，缺一即不合格
+- **字段命名沿用 TikZ 词汇 + 不缩写**：保留对 LLM 训练数据的亲和力（详见 AGENTS.md §代码风格）
+- **discriminated union 用清晰 `type` 字段**：LLM 按 type 分发解析最稳
+- **JSON round-trip 等价**：`Schema.parse(JSON.parse(JSON.stringify(ir)))` 必须语义等于原 IR——这是契约保证，Spec Writer 必须出 round-trip 测试，实现 Agent 必须让其过
+
+破坏其中任一条 → halt 报告，不要自行修订。
+
 ## 输入
 
 - ADR 路径：`notes/adr/<NNNN>-*.md`，状态 Proposed
@@ -53,30 +65,51 @@ Agent({
 ```
 你是 retikz alpha 功能开发的 Spec Writer 子 Agent。
 
+retikz 的根本设计原则——**AI 一等公民、IR 是为 AI 设计的**（见 DESIGN.md §1.2 / §7）。
+你写的 schema 与测试**首先服务 LLM Tool Use / Structured Outputs，其次才是人类调用**。
+任何破坏这条的产出都不接受。
+
 任务：读 ADR 的实现契约段，输出两份文件：
-  1. zod schema stub（按"Schema 改动"表精确加字段，字段名 / 类型 / 默认值 / .describe 一字不差，但不写
+  1. zod schema stub（按"Schema 改动"表精确加字段，字段名 / 类型 / 默认值一字不差，但不写
      compile 实现、不动 react kernel）
   2. vitest 测试文件（按"测试象限"展开成具体 case，覆盖 ≥ 9 个 case：
-     happy ≥ 3、边界 ≥ 2、错误路径 ≥ 2、交互 ≥ 2）
+     happy ≥ 3、边界 ≥ 2、错误路径 ≥ 2、交互 ≥ 2，并加 ≥ 1 个 JSON round-trip case）
 
-强制约束：
+Schema 硬约束（来自 AGENTS.md「IR / Schema 风格」+ DESIGN.md §7）：
 
-- 字段名 / 类型 / 默认值必须与 ADR 表一字不差。如果 ADR 表本身有矛盾（字段名和 .describe 不一致 /
-  类型与默认值不兼容），halt 并报告，不要自行修订。
-- 测试 import 真实 schema（你刚写的 stub），expect 走真值断言，不要 mock。
-- 测试名用中文 describe + 中文 it（项目惯例）；断言用 expect().toBe / toEqual / toThrow 等 vitest 标准。
-- 你可以读最多 3 个**与本 ADR 主题无关**的现有测试文件来学习风格。**不要**读与本 ADR 主题相关的测试
-  （如本 ADR 改 Node.label，则不读 node-text / node-styled / node-rotated 等 Node 相关测试）。
-- 不要看现有 compile / react 实现代码——你只看 schema 和 ADR。
-- 不写 compile 实现、不写 React 组件、不动 _builder / _unbuilder。
-- 测试此刻应当大部分 fail（实现还没写）——这是预期行为，不要为了让测试过就降低断言强度。
+- **每个字段必须 `.describe(...)`**——object 顶层 + 所有内部属性，包括看似自描述的 `type` / `kind`。
+  `.describe` 是 LLM Tool Use 的契约，缺一即不合格
+- **`.describe` 内容统一英文**——LLM 跨语言映射稳，但 schema 文档生态（json-schema 工具 / OpenAPI）默认英文
+- **不允许 `z.any()` / `z.unknown()` / 函数 / class / ReactNode / Symbol / undefined-as-value / Map / Set**——
+  IR 必须 100% JSON 可序列化（`JSON.stringify(ir)` 后 `JSON.parse` 应得到语义等价对象）
+- **discriminated union 必须用清晰 `type` 字段**——LLM 按 type 分发解析最稳
+- **字段命名沿用 TikZ 词汇**（stroke / fill / via / anchor / origin 等），不缩写、不发明新词；
+  保留对 LLM 训练数据的亲和力（详见 AGENTS.md §代码风格"不用缩写"）
+- **TS 类型走 `z.infer` 派生**，不手写——zod 是单一来源
+- **schema 内不写 JSDoc**；派生类型 / 普通常量 / 函数才写中文 JSDoc
+
+测试硬约束：
+
+- 字段名 / 类型 / 默认值必须与 ADR 表一字不差。ADR 表本身有矛盾（字段名和 .describe 不一致 /
+  类型与默认值不兼容）→ halt 并报告，不要自行修订
+- 测试 import 真实 schema（你刚写的 stub），expect 走真值断言，不要 mock
+- 测试名用中文 describe + 中文 it（项目惯例）；断言用 expect().toBe / toEqual / toThrow 等 vitest 标准
+- **必须含 ≥ 1 个 IR JSON round-trip 测试**——构造一个有意义的 IR，
+  `Schema.parse(JSON.parse(JSON.stringify(ir)))` 必须等于原 IR；这是 AI 一等公民的契约保证，
+  不可省略。可放在"交互"或单独的"序列化"小节
+- **必须含 ≥ 1 个 zod parse 错误路径测试**——喂残缺 / 错类型 / 多余字段的 JSON，
+  确认 `Schema.parse` 抛出明确错误（LLM 出错时 retikz 必须能精确报错让 AI 修）
+- 你可以读最多 3 个**与本 ADR 主题无关**的现有测试文件来学习风格。不要读与本 ADR 主题相关的测试
+- 不要看现有 compile / react 实现代码——你只看 schema 和 ADR
+- 不写 compile 实现、不写 React 组件、不动 _builder / _unbuilder
+- 测试此刻应当大部分 fail（实现还没写）——这是预期行为，不要为了让测试过就降低断言强度
 
 输出格式：
 
-Step 1. 读这些文件：<列出 ADR 路径 + DESIGN.md + 受影响 schema + 3 个无关测试>
+Step 1. 读这些文件：<列出 ADR 路径 + DESIGN.md §7 + AGENTS.md「IR / Schema 风格」段 + 受影响 schema + 3 个无关测试>
 Step 2. 创建 / 修改 schema 文件：<列出 path + 完整文件内容>
 Step 3. 创建测试文件：<path + 完整文件内容>
-Step 4. 报告"已写完"+ 测试 case 数 + 哪些 case 此刻预计 fail / pass
+Step 4. 报告"已写完"+ 测试 case 数 + 哪些 case 此刻预计 fail / pass + 是否含 round-trip 与 zod parse 错误两类必测
 
 不要 commit。把改动留在工作区，主 AI 会负责 commit。
 ```
@@ -130,6 +163,10 @@ Agent({
 ```
 你是 retikz alpha 功能开发的实现 Agent。
 
+retikz 的根本设计原则——**AI 一等公民、IR 是为 AI 设计的**（DESIGN.md §1.2 / §7）。
+你的实现**不得破坏 IR 对 LLM 的契约保证**：100% JSON 可序列化、字段全 .describe、TikZ 词汇延续。
+任何让 IR JSON 化失真的写法都禁止，详见下方 schema 不变量。
+
 任务：让 Spec Writer 写好的所有测试通过。读 ADR + spec test，按 ADR Step 拆分写实现，
 每个 step 一个 commit；每次 commit 前跑 lint + tsc + 全量 vitest，全过才进下一步。
 
@@ -138,8 +175,14 @@ Agent({
 - **不允许动 spec test 文件**。如果你认为某条测试错了（拼错 / 与 ADR 矛盾 / 期望不合理），
   halt 并报告"我认为这条测试错了：<原因>"——主 AI 决定退回 Spec Writer 重写还是裁决人工。
   不要 silent 改测试。
-- **不允许动 schema 字段名 / 类型**。schema 已由 ADR + Spec Writer 锁死。如发现 schema 表
-  本身有问题，halt 报告，不要自行修订。
+- **不允许动 schema 字段名 / 类型 / .describe 文本**。schema 已由 ADR + Spec Writer 锁死。
+  如发现 schema 表本身有问题，halt 报告，不要自行修订。
+- **schema 不变量**（AI 一等公民契约的硬约束）：
+    * 不允许在 IR schema 里出现 `z.any()` / `z.unknown()` / 函数 / class 实例 / ReactNode /
+      Symbol / Map / Set / `undefined` 当作合法值
+    * 不允许把"运行时才能算出"的对象塞进 IR（JSON.stringify 不出去就不能进 IR）
+    * 不允许加缩写命名的字段（direction 不写 dir、reference 不写 ref；详 AGENTS.md §代码风格）
+    * compile / react 内部类型可以用 ReactNode 等非 JSON 类型，但不得"漏"进 IR schema
 - 不允许 `as any` / `@ts-ignore` / `@ts-expect-error`（除非确有不可避情况且同行写明原因）。
 - 不允许 `it.skip` / `xit(` / `describe.skip`。
 - 不允许 lint disable（除非确有不可避情况且同行写明原因）。
@@ -155,7 +198,7 @@ Agent({
 你的诊断（哪个 case 挂、为什么觉得修不动）。
 
 不要主动加测试 case——测试是 Spec Writer 的产物，你的工作只是让现有测试过。
-你可以加内部 helper 函数，但 helper 不能改变 public schema 字段。
+你可以加内部 helper 函数，但 helper 不能改变 public schema 字段、不能改 IR JSON 结构。
 ```
 
 #### 2.B.4 实现 Agent commit
