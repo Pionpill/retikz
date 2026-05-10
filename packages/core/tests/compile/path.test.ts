@@ -1256,3 +1256,204 @@ describe("compile path: 'rel' / 'relAccumulate' (ADR-0003 alpha.3)", () => {
     );
   });
 });
+
+describe('alpha.3 P2：lineCap / lineJoin', () => {
+  it('lineCap 透传到 PathPrim.strokeLinecap', () => {
+    const ir: IR = {
+      version: 1,
+      type: 'scene',
+      children: [
+        {
+          type: 'path',
+          lineCap: 'round',
+          children: [
+            { type: 'step', kind: 'move', to: [0, 0] },
+            { type: 'step', kind: 'line', to: [10, 0] },
+          ],
+        },
+      ],
+    };
+    expect(findPathPrim(compileToScene(ir).primitives).strokeLinecap).toBe('round');
+  });
+
+  it('lineJoin 透传到 PathPrim.strokeLinejoin', () => {
+    const ir: IR = {
+      version: 1,
+      type: 'scene',
+      children: [
+        {
+          type: 'path',
+          lineJoin: 'bevel',
+          children: [
+            { type: 'step', kind: 'move', to: [0, 0] },
+            { type: 'step', kind: 'line', to: [10, 0] },
+            { type: 'step', kind: 'line', to: [10, 10] },
+          ],
+        },
+      ],
+    };
+    expect(findPathPrim(compileToScene(ir).primitives).strokeLinejoin).toBe('bevel');
+  });
+
+  it('未指定时 PathPrim 字段为 undefined（不写 SVG 默认值）', () => {
+    const ir: IR = {
+      version: 1,
+      type: 'scene',
+      children: [
+        {
+          type: 'path',
+          children: [
+            { type: 'step', kind: 'move', to: [0, 0] },
+            { type: 'step', kind: 'line', to: [10, 0] },
+          ],
+        },
+      ],
+    };
+    const p = findPathPrim(compileToScene(ir).primitives);
+    expect(p.strokeLinecap).toBeUndefined();
+    expect(p.strokeLinejoin).toBeUndefined();
+  });
+});
+
+describe('alpha.3 P2：thickness 语义档位', () => {
+  it.each([
+    ['ultraThin', 0.25],
+    ['veryThin', 0.5],
+    ['thin', 1],
+    ['semithick', 1.5],
+    ['thick', 2],
+    ['veryThick', 3],
+    ['ultraThick', 4],
+  ] as const)('thickness=%s → strokeWidth=%s', (thickness, width) => {
+    const ir: IR = {
+      version: 1,
+      type: 'scene',
+      children: [
+        {
+          type: 'path',
+          thickness,
+          children: [
+            { type: 'step', kind: 'move', to: [0, 0] },
+            { type: 'step', kind: 'line', to: [10, 0] },
+          ],
+        },
+      ],
+    };
+    expect(findPathPrim(compileToScene(ir).primitives).strokeWidth).toBe(width);
+  });
+
+  it('显式 strokeWidth 始终覆盖 thickness（thickness 仅在 strokeWidth 缺省时生效）', () => {
+    const ir: IR = {
+      version: 1,
+      type: 'scene',
+      children: [
+        {
+          type: 'path',
+          thickness: 'thick',
+          strokeWidth: 7,
+          children: [
+            { type: 'step', kind: 'move', to: [0, 0] },
+            { type: 'step', kind: 'line', to: [10, 0] },
+          ],
+        },
+      ],
+    };
+    expect(findPathPrim(compileToScene(ir).primitives).strokeWidth).toBe(7);
+  });
+
+  it('两者都缺省时退回默认 1', () => {
+    const ir: IR = {
+      version: 1,
+      type: 'scene',
+      children: [
+        {
+          type: 'path',
+          children: [
+            { type: 'step', kind: 'move', to: [0, 0] },
+            { type: 'step', kind: 'line', to: [10, 0] },
+          ],
+        },
+      ],
+    };
+    expect(findPathPrim(compileToScene(ir).primitives).strokeWidth).toBe(1);
+  });
+});
+
+describe('alpha.3 P2：path 级 opacity / fillOpacity / drawOpacity', () => {
+  it('opacity 透传到 PathPrim.opacity', () => {
+    const ir: IR = {
+      version: 1,
+      type: 'scene',
+      children: [
+        {
+          type: 'path',
+          opacity: 0.5,
+          children: [
+            { type: 'step', kind: 'move', to: [0, 0] },
+            { type: 'step', kind: 'line', to: [10, 0] },
+          ],
+        },
+      ],
+    };
+    expect(findPathPrim(compileToScene(ir).primitives).opacity).toBe(0.5);
+  });
+
+  it('fillOpacity 透传', () => {
+    const ir: IR = {
+      version: 1,
+      type: 'scene',
+      children: [
+        {
+          type: 'path',
+          fill: 'red',
+          fillOpacity: 0.3,
+          children: [
+            { type: 'step', kind: 'move', to: [0, 0] },
+            { type: 'step', kind: 'line', to: [10, 0] },
+            { type: 'step', kind: 'line', to: [10, 10] },
+            { type: 'step', kind: 'cycle' },
+          ],
+        },
+      ],
+    };
+    expect(findPathPrim(compileToScene(ir).primitives).fillOpacity).toBe(0.3);
+  });
+
+  it('IR drawOpacity → PathPrim.strokeOpacity（命名映射，与 Node 一致）', () => {
+    const ir: IR = {
+      version: 1,
+      type: 'scene',
+      children: [
+        {
+          type: 'path',
+          drawOpacity: 0.7,
+          children: [
+            { type: 'step', kind: 'move', to: [0, 0] },
+            { type: 'step', kind: 'line', to: [10, 0] },
+          ],
+        },
+      ],
+    };
+    expect(findPathPrim(compileToScene(ir).primitives).strokeOpacity).toBe(0.7);
+  });
+
+  it('未指定时三个 opacity 字段都是 undefined', () => {
+    const ir: IR = {
+      version: 1,
+      type: 'scene',
+      children: [
+        {
+          type: 'path',
+          children: [
+            { type: 'step', kind: 'move', to: [0, 0] },
+            { type: 'step', kind: 'line', to: [10, 0] },
+          ],
+        },
+      ],
+    };
+    const p = findPathPrim(compileToScene(ir).primitives);
+    expect(p.opacity).toBeUndefined();
+    expect(p.fillOpacity).toBeUndefined();
+    expect(p.strokeOpacity).toBeUndefined();
+  });
+});

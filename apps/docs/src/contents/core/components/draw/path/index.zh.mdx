@@ -80,6 +80,24 @@ import { Path, Step } from '@retikz/react';
 
 <ComponentPreview name="path-dashed" />
 
+### 描边端点 / 拐点
+
+`lineCap` 控制描边端点形状（SVG `stroke-linecap`）：`'butt'` 默认（直角端）/ `'round'` 半圆 / `'square'` 方头外扩半个 stroke。`lineJoin` 控制拐点形状（SVG `stroke-linejoin`）：`'miter'` 默认（尖角）/ `'round'` 圆角 / `'bevel'` 切角。
+
+<ComponentPreview name="path-line-style" />
+
+### 语义 stroke 档位
+
+`thickness` 是 TikZ 风格的语义档位——`'ultraThin'` / `'veryThin'` / `'thin'` / `'semithick'` / `'thick'` / `'veryThick'` / `'ultraThick'`，编译期映射到具体数值（`thin = 1` 与默认 strokeWidth 对齐，两端按 TikZ 比例外推）。**显式 `strokeWidth` 始终优先**——`thickness` 仅在 `strokeWidth` 缺省时生效：
+
+<ComponentPreview name="path-thickness" />
+
+### 透明度
+
+三个独立通道：`opacity` 整体（同时作用于 stroke 与 fill），`fillOpacity` 仅 fill，`drawOpacity` 仅 stroke（TikZ `draw opacity` 命名，与 `<Node>` 一致）。三者可叠加：
+
+<ComponentPreview name="path-opacity" />
+
 ## API 参考
 
 | 属性 | 类型 | 默认值 | 描述 |
@@ -87,10 +105,16 @@ import { Path, Step } from '@retikz/react';
 | `stroke` | `string` | `currentColor` | 描边色 |
 | `strokeWidth` | `number` | `1` | 描边宽度 |
 | `strokeDasharray` | `string` | — | SVG `stroke-dasharray` 模式 |
+| `lineCap` | `'butt' \| 'round' \| 'square'` | `'butt'` | 描边端点形状（SVG `stroke-linecap`） |
+| `lineJoin` | `'miter' \| 'round' \| 'bevel'` | `'miter'` | 描边拐点形状（SVG `stroke-linejoin`） |
+| `thickness` | `'ultraThin' \| 'veryThin' \| 'thin' \| 'semithick' \| 'thick' \| 'veryThick' \| 'ultraThick'` | — | 语义 stroke 档位（`thin = 1`）；显式 `strokeWidth` 始终优先 |
 | `arrow` | `'none' \| '->' \| '<-' \| '<->'` | — | 路径级箭头方向 |
 | `arrowShape` | `'normal' \| 'open' \| 'stealth' \| 'diamond' \| 'openDiamond' \| 'circle' \| 'openCircle'` | `'normal'` | 箭头形状 |
 | `fill` | `string` | `'none'` | 闭合区域填充色（任意 CSS 颜色） |
 | `fillRule` | `'nonzero' \| 'evenodd'` | `'nonzero'` | 填充规则；环形 / 孔洞场景用 `'evenodd'` |
+| `opacity` | `number` | — | 整 path 透明度 0~1（同时作用于 stroke 与 fill） |
+| `fillOpacity` | `number` | — | 仅 fill 透明度 0~1 |
+| `drawOpacity` | `number` | — | 仅 stroke 透明度 0~1（TikZ `draw opacity`） |
 | `children` | `Array<<Step>>` | — | 至少 2 个；首个非 `move` 时编译器会强制改成 `move`。`<Step>` 支持 `move` / `line` / `step`（折角）/ `cycle`（闭合）/ `curve` / `cubic`（贝塞尔曲线）/ `bend`（弧形简记）/ `arc` / `circlePath` / `ellipsePath`（圆 / 椭圆） |
 
 ## 与 Draw 的取舍

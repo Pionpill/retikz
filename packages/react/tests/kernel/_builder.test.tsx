@@ -360,6 +360,34 @@ describe('buildIR', () => {
       expect(fromSugar).toEqual(fromKernel);
     });
 
+    it('<Draw> 与 <Path> 等价透传 lineCap / lineJoin / thickness / opacity 全套', () => {
+      const fromSugar = buildIR(
+        <Draw
+          way={['A', 'B']}
+          lineCap="round"
+          lineJoin="bevel"
+          thickness="veryThick"
+          opacity={0.8}
+          fillOpacity={0.5}
+          drawOpacity={0.7}
+        />,
+      );
+      const fromKernel = buildIR(
+        <Path
+          lineCap="round"
+          lineJoin="bevel"
+          thickness="veryThick"
+          opacity={0.8}
+          fillOpacity={0.5}
+          drawOpacity={0.7}
+        >
+          <Step kind="move" to="A" />
+          <Step to="B" />
+        </Path>,
+      );
+      expect(fromSugar).toEqual(fromKernel);
+    });
+
     it('<Draw> way 中 label 与 fold / curve / arc 算子组合，全等价 Kernel 写法', () => {
       const fromSugar = buildIR(
         <Draw

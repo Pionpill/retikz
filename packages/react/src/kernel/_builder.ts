@@ -321,6 +321,17 @@ const buildPath = (props: Record<string, unknown>): IRChild => ({
   stroke: props.stroke as string | undefined,
   strokeWidth: props.strokeWidth as number | undefined,
   strokeDasharray: props.strokeDasharray as string | undefined,
+  lineCap: props.lineCap as 'butt' | 'round' | 'square' | undefined,
+  lineJoin: props.lineJoin as 'miter' | 'round' | 'bevel' | undefined,
+  thickness: props.thickness as
+    | 'ultraThin'
+    | 'veryThin'
+    | 'thin'
+    | 'semithick'
+    | 'thick'
+    | 'veryThick'
+    | 'ultraThick'
+    | undefined,
   arrow: props.arrow as 'none' | '->' | '<-' | '<->' | undefined,
   arrowShape: props.arrowShape as
     | 'normal'
@@ -331,6 +342,9 @@ const buildPath = (props: Record<string, unknown>): IRChild => ({
     | undefined,
   fill: props.fill as string | undefined,
   fillRule: props.fillRule as 'nonzero' | 'evenodd' | undefined,
+  opacity: props.opacity as number | undefined,
+  fillOpacity: props.fillOpacity as number | undefined,
+  drawOpacity: props.drawOpacity as number | undefined,
   children: readPathChildren(props.children as ReactNode),
 });
 

@@ -156,6 +156,10 @@ way 里两种等价写法：
 
 <ComponentPreview name="draw-dashed" />
 
+### 描边端点 / 拐点 + 语义档位 + 透明度
+
+Draw 透传 Path 的描边外观字段：`lineCap` / `lineJoin`（SVG `stroke-linecap` / `stroke-linejoin`）；`thickness` 是 TikZ 风格语义档位（`'ultraThin'` … `'ultraThick'`，`thin = 1` 与默认 strokeWidth 对齐，显式 `strokeWidth` 始终优先）；三个独立 opacity 通道——`opacity` 整体、`fillOpacity` 仅 fill、`drawOpacity` 仅 stroke（TikZ `draw opacity`）。详见 [Path](/core/components/draw/path) 的对应章节。
+
 ## API 参考
 
 | 属性              | 类型                                                       | 默认值         | 描述                                                                                        |
@@ -164,7 +168,13 @@ way 里两种等价写法：
 | `stroke`          | `string`                                                   | `currentColor` | 描边色                                                                                      |
 | `strokeWidth`     | `number`                                                   | `1`            | 描边宽度                                                                                    |
 | `strokeDasharray` | `string`                                                   | —              | SVG `stroke-dasharray` 模式（如 `"4 2"`）                                                   |
+| `lineCap`         | `'butt' \| 'round' \| 'square'`                            | `'butt'`       | 描边端点形状（SVG `stroke-linecap`）                                                        |
+| `lineJoin`        | `'miter' \| 'round' \| 'bevel'`                            | `'miter'`      | 描边拐点形状（SVG `stroke-linejoin`）                                                       |
+| `thickness`       | `'ultraThin' \| 'veryThin' \| 'thin' \| 'semithick' \| 'thick' \| 'veryThick' \| 'ultraThick'` | —              | 语义 stroke 档位（`thin = 1`）；显式 `strokeWidth` 始终优先                                |
 | `arrow`           | `'none' \| '->' \| '<-' \| '<->'`                          | —              | 路径级箭头方向                                                                              |
 | `arrowShape`      | `'normal' \| 'open' \| 'stealth' \| 'diamond' \| 'openDiamond' \| 'circle' \| 'openCircle'` | `'normal'`     | 箭头形状                                                                                    |
 | `fill`            | `string`                                                   | `'none'`       | 闭合区域填充色                                                                              |
 | `fillRule`        | `'nonzero' \| 'evenodd'`                                   | `'nonzero'`    | 填充规则                                                                                    |
+| `opacity`         | `number`                                                   | —              | 整 path 透明度 0~1                                                                          |
+| `fillOpacity`     | `number`                                                   | —              | 仅 fill 透明度 0~1                                                                          |
+| `drawOpacity`     | `number`                                                   | —              | 仅 stroke 透明度 0~1（TikZ `draw opacity`）                                                |

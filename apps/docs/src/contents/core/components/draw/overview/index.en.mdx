@@ -156,6 +156,10 @@ The `arrow` prop controls path-end arrows: `'->'` / `'<-'` / `'<->'` / `'none'` 
 
 <ComponentPreview name="draw-dashed" />
 
+### Endpoints / corners + thickness preset + opacity
+
+Draw forwards the rest of Path's stroke-appearance fields: `lineCap` / `lineJoin` (SVG `stroke-linecap` / `stroke-linejoin`); `thickness` is a TikZ-style semantic preset (`'ultraThin'` … `'ultraThick'`, with `thin = 1` matching the default `strokeWidth`; explicit `strokeWidth` always wins); three independent opacity channels — `opacity` overall, `fillOpacity` for fill only, `drawOpacity` for stroke only (TikZ `draw opacity`). See [Path](/core/components/draw/path) for examples.
+
 ## API Reference
 
 | Prop | Type | Default | Description |
@@ -164,7 +168,13 @@ The `arrow` prop controls path-end arrows: `'->'` / `'<-'` / `'<->'` / `'none'` 
 | `stroke` | `string` | `currentColor` | Stroke color |
 | `strokeWidth` | `number` | `1` | Stroke width |
 | `strokeDasharray` | `string` | — | SVG `stroke-dasharray` pattern (e.g. `"4 2"`) |
+| `lineCap` | `'butt' \| 'round' \| 'square'` | `'butt'` | Stroke endpoint shape (SVG `stroke-linecap`) |
+| `lineJoin` | `'miter' \| 'round' \| 'bevel'` | `'miter'` | Stroke corner shape (SVG `stroke-linejoin`) |
+| `thickness` | `'ultraThin' \| 'veryThin' \| 'thin' \| 'semithick' \| 'thick' \| 'veryThick' \| 'ultraThick'` | — | Semantic stroke preset (`thin = 1`); explicit `strokeWidth` always wins |
 | `arrow` | `'none' \| '->' \| '<-' \| '<->'` | — | Path-level arrow direction |
 | `arrowShape` | `'normal' \| 'open' \| 'stealth' \| 'diamond' \| 'openDiamond' \| 'circle' \| 'openCircle'` | `'normal'` | Arrow tip shape |
 | `fill` | `string` | `'none'` | Fill color of the closed region |
 | `fillRule` | `'nonzero' \| 'evenodd'` | `'nonzero'` | Fill rule |
+| `opacity` | `number` | — | Whole-path opacity 0..1 |
+| `fillOpacity` | `number` | — | Fill-only opacity 0..1 |
+| `drawOpacity` | `number` | — | Stroke-only opacity 0..1 (TikZ `draw opacity`) |

@@ -417,6 +417,69 @@ describe('convertIRToReactNode', () => {
     });
   });
 
+  describe('alpha.3 P2：path 级视觉属性 round-trip', () => {
+    it('lineCap / lineJoin 双向保留', () => {
+      const ir: IR = {
+        version: CURRENT_IR_VERSION,
+        type: 'scene',
+        children: [
+          {
+            type: 'path',
+            lineCap: 'round',
+            lineJoin: 'bevel',
+            children: [
+              { type: 'step', kind: 'move', to: [0, 0] },
+              { type: 'step', kind: 'line', to: [10, 0] },
+              { type: 'step', kind: 'line', to: [10, 10] },
+            ],
+          },
+        ],
+      };
+      expect(buildIR(convertIRToReactNode(ir))).toEqual(ir);
+    });
+
+    it('thickness 语义档位双向保留', () => {
+      const ir: IR = {
+        version: CURRENT_IR_VERSION,
+        type: 'scene',
+        children: [
+          {
+            type: 'path',
+            thickness: 'veryThick',
+            children: [
+              { type: 'step', kind: 'move', to: [0, 0] },
+              { type: 'step', kind: 'line', to: [10, 0] },
+            ],
+          },
+        ],
+      };
+      expect(buildIR(convertIRToReactNode(ir))).toEqual(ir);
+    });
+
+    it('opacity / fillOpacity / drawOpacity 三件双向保留', () => {
+      const ir: IR = {
+        version: CURRENT_IR_VERSION,
+        type: 'scene',
+        children: [
+          {
+            type: 'path',
+            fill: 'red',
+            opacity: 0.8,
+            fillOpacity: 0.4,
+            drawOpacity: 0.6,
+            children: [
+              { type: 'step', kind: 'move', to: [0, 0] },
+              { type: 'step', kind: 'line', to: [10, 0] },
+              { type: 'step', kind: 'line', to: [10, 10] },
+              { type: 'step', kind: 'cycle' },
+            ],
+          },
+        ],
+      };
+      expect(buildIR(convertIRToReactNode(ir))).toEqual(ir);
+    });
+  });
+
   it('未知 child.type → 抛 "unknown IR child type" 错误', () => {
     const badIR = {
       version: CURRENT_IR_VERSION,

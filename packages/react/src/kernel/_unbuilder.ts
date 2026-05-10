@@ -137,10 +137,16 @@ const childToElement = (child: IRChild, key: number): ReactNode => {
         stroke: child.stroke,
         strokeWidth: child.strokeWidth,
         strokeDasharray: child.strokeDasharray,
+        lineCap: child.lineCap,
+        lineJoin: child.lineJoin,
+        thickness: child.thickness,
         arrow: child.arrow,
         arrowShape: child.arrowShape,
         fill: child.fill,
         fillRule: child.fillRule,
+        opacity: child.opacity,
+        fillOpacity: child.fillOpacity,
+        drawOpacity: child.drawOpacity,
         children: child.children.map((s, j) => stepToElement(s, j)),
       });
     default:

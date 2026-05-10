@@ -10,6 +10,12 @@ export type PathProps = {
   strokeWidth?: IRPath['strokeWidth'];
   /** SVG stroke-dasharray 模式（如 "4 2"） */
   strokeDasharray?: IRPath['strokeDasharray'];
+  /** 端点形状（SVG `stroke-linecap`）：`'butt'`（默认 / 直角）/ `'round'`（半圆）/ `'square'`（方头外扩半 stroke） */
+  lineCap?: IRPath['lineCap'];
+  /** 拐点形状（SVG `stroke-linejoin`）：`'miter'`（默认 / 尖角）/ `'round'`（圆角）/ `'bevel'`（切角） */
+  lineJoin?: IRPath['lineJoin'];
+  /** 语义 stroke 档位（TikZ `ultra thin` … `ultra thick`）；显式 `strokeWidth` 始终优先 */
+  thickness?: IRPath['thickness'];
   /**
    * 路径级箭头方向。`'->'` = 终点；`'<-'` = 起点；`'<->'` = 两端；
    * 省略或 `'none'` = 无箭头。
@@ -24,6 +30,12 @@ export type PathProps = {
   fill?: IRPath['fill'];
   /** SVG fill-rule：`'nonzero'`（默认）/ `'evenodd'`（环形 / 孔洞） */
   fillRule?: IRPath['fillRule'];
+  /** 整 path 透明度 0~1；同时作用于 stroke 与 fill */
+  opacity?: IRPath['opacity'];
+  /** 仅 fill 透明度 0~1 */
+  fillOpacity?: IRPath['fillOpacity'];
+  /** 仅 stroke 透明度 0~1（TikZ `draw opacity`） */
+  drawOpacity?: IRPath['drawOpacity'];
   /** 应当全部是 <Step /> */
   children: ReactNode;
 };

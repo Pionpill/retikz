@@ -10,7 +10,8 @@ export type DrawProps = {
    * way 数组 DSL：节点 id / 笛卡尔 / 极坐标 / 相对偏移 `{ position, type: DrawWay.Relative | DrawWay.Accumulate }` /
    * 折角算子 `'-|'` `'|-'`（或 `DrawWay.Hv` / `DrawWay.Vh`）/ 闭合 `DrawWay.Cycle` /
    * 曲线算子 `{ curve | cubic | bend }`（infix）/
-   * 形状算子 `{ arc | circle | ellipse }`（infix，以"上一项"为圆心，不消耗下一项）
+   * 形状算子 `{ arc | circle | ellipse }`（infix，以"上一项"为圆心，不消耗下一项）/
+   * 边标注算子 `{ label }`（infix，修饰下一段）
    */
   way: WayDSL;
   /** 描边色，省略时用 currentColor */
@@ -19,6 +20,12 @@ export type DrawProps = {
   strokeWidth?: IRPath['strokeWidth'];
   /** SVG stroke-dasharray 模式（如 "4 2"） */
   strokeDasharray?: IRPath['strokeDasharray'];
+  /** 端点形状（SVG `stroke-linecap`） */
+  lineCap?: IRPath['lineCap'];
+  /** 拐点形状（SVG `stroke-linejoin`） */
+  lineJoin?: IRPath['lineJoin'];
+  /** 语义 stroke 档位（TikZ `ultra thin` … `ultra thick`）；显式 `strokeWidth` 始终优先 */
+  thickness?: IRPath['thickness'];
   /**
    * 路径级箭头方向。`'->'` = 终点；`'<-'` = 起点；`'<->'` = 两端；
    * 省略或 `'none'` = 无箭头。
@@ -32,6 +39,12 @@ export type DrawProps = {
   fill?: IRPath['fill'];
   /** SVG fill-rule：`'nonzero'`（默认）/ `'evenodd'` */
   fillRule?: IRPath['fillRule'];
+  /** 整 path 透明度 0~1 */
+  opacity?: IRPath['opacity'];
+  /** 仅 fill 透明度 0~1 */
+  fillOpacity?: IRPath['fillOpacity'];
+  /** 仅 stroke 透明度 0~1（TikZ `draw opacity`） */
+  drawOpacity?: IRPath['drawOpacity'];
 };
 
 /**
@@ -43,7 +56,22 @@ export type DrawProps = {
  * （useState / useMemo / useEffect 等会抛 "Invalid hook call"）。
  */
 export const Draw: FC<DrawProps> = props => {
-  const { way, stroke, strokeWidth, strokeDasharray, arrow, arrowShape, fill, fillRule } = props;
+  const {
+    way,
+    stroke,
+    strokeWidth,
+    strokeDasharray,
+    lineCap,
+    lineJoin,
+    thickness,
+    arrow,
+    arrowShape,
+    fill,
+    fillRule,
+    opacity,
+    fillOpacity,
+    drawOpacity,
+  } = props;
   const steps = parseWay(way);
 
   return (
@@ -51,10 +79,16 @@ export const Draw: FC<DrawProps> = props => {
       stroke={stroke}
       strokeWidth={strokeWidth}
       strokeDasharray={strokeDasharray}
+      lineCap={lineCap}
+      lineJoin={lineJoin}
+      thickness={thickness}
       arrow={arrow}
       arrowShape={arrowShape}
       fill={fill}
       fillRule={fillRule}
+      opacity={opacity}
+      fillOpacity={fillOpacity}
+      drawOpacity={drawOpacity}
     >
       {steps.map((s, i) => {
         if (s.kind === 'cycle') return <Step key={i} kind="cycle" />;

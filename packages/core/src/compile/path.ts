@@ -166,6 +166,30 @@ const clipForTarget = (
 const samePoint = (a: IRPosition | null, b: IRPosition | null): boolean =>
   !!a && !!b && a[0] === b[0] && a[1] === b[1];
 
+/**
+ * 语义 stroke 档位 → 数值映射（user units）。
+ *
+ * 对齐 TikZ 比例（thin = 默认 0.4pt，retikz 默认 strokeWidth = 1，所以 thin → 1）：
+ *   ultra thin  0.1pt → 0.25
+ *   very thin   0.2pt → 0.5
+ *   thin        0.4pt → 1     （= 默认 strokeWidth）
+ *   semithick   0.6pt → 1.5
+ *   thick       0.8pt → 2
+ *   very thick  1.2pt → 3
+ *   ultra thick 1.6pt → 4
+ *
+ * 显式 `strokeWidth` 始终覆盖 `thickness`——thickness 仅在 strokeWidth 缺省时生效。
+ */
+const THICKNESS_TO_WIDTH: Record<NonNullable<IRPath['thickness']>, number> = {
+  ultraThin: 0.25,
+  veryThin: 0.5,
+  thin: 1,
+  semithick: 1.5,
+  thick: 2,
+  veryThick: 3,
+  ultraThick: 4,
+};
+
 /** ADR-0004：边标注的默认字号 / 偏移量（user units） */
 const LABEL_FONT_SIZE = 14;
 const LABEL_LINE_HEIGHT_FACTOR = 1.2;
@@ -692,7 +716,10 @@ export const emitPathPrimitive = (
     collectLabel(step, t => foldSegmentSample(fromClip, corner, toClip, t));
   }
 
-  const strokeWidth = path.strokeWidth ?? 1;
+  // strokeWidth 解析顺序：显式 strokeWidth > 语义 thickness 档位 > 默认 1
+  // thickness 映射沿 TikZ 比例：thin=1（与默认一致）、ultra* 两端对称外推
+  const strokeWidth =
+    path.strokeWidth ?? (path.thickness ? THICKNESS_TO_WIDTH[path.thickness] : 1);
   const baseProps = {
     stroke: path.stroke ?? 'currentColor',
     strokeWidth,
@@ -700,6 +727,12 @@ export const emitPathPrimitive = (
     fill: path.fill ?? 'none',
     fillRule: path.fillRule,
     strokeDasharray: path.strokeDasharray,
+    strokeLinecap: path.lineCap,
+    strokeLinejoin: path.lineJoin,
+    // path 级 opacity（IR `drawOpacity` → primitive `strokeOpacity`，与 Node 命名约定一致）
+    opacity: path.opacity,
+    fillOpacity: path.fillOpacity,
+    strokeOpacity: path.drawOpacity,
   };
 
   const markers = arrowMarkers(path.arrow, path.arrowShape);
