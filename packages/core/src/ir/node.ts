@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import type { ValueOf } from '../types';
-import { PolarPositionSchema, PositionSchema } from './position';
+import { AtPositionSchema, PolarPositionSchema, PositionSchema } from './position';
 
 /**
  * 节点形状常量。值是 IR 中 `shape` 字段的字面字符串；
@@ -142,9 +142,9 @@ export const NodeSchema = z
         'Node visual shape; defaults to `rectangle`. The boundary fully contains text + padding (circumscribed for circle / ellipse / diamond).',
       ),
     position: z
-      .union([PositionSchema, PolarPositionSchema])
+      .union([PositionSchema, PolarPositionSchema, AtPositionSchema])
       .describe(
-        'Center point of the node content box; Cartesian [x, y] or polar (resolved at compile time)',
+        'Center point of the node content box; Cartesian [x, y], polar, or relative-to-another-node (`at`-style with `direction` / `of` / `distance?`). All non-Cartesian forms resolve at compile time.',
       ),
     rotate: z
       .number()

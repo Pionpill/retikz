@@ -20,6 +20,12 @@ export type TikzProps = {
   className?: string;
   /** 透传到 svg 元素的内联样式 */
   style?: CSSProperties;
+  /**
+   * 节点相对定位（`Node.position = { direction, of }`）的默认距离，单位 user units；
+   * 对应 TikZ 的 `node distance=...`。当节点 position 自带 `distance` 时优先用自带值；
+   * 都缺省时回退到 1。
+   */
+  nodeDistance?: number;
 };
 
 /** 递归收集 scene 里所有 PathPrim 用到的 arrow 形状——按需注入 marker defs */
@@ -46,9 +52,13 @@ const collectArrowShapes = (prims: Array<ScenePrimitive>): Set<ArrowShape> => {
  * 每种用到的 shape 一个 marker 定义，id 形如 `${prefix}-${shape}`，
  * marker 内 path 借 `context-stroke` / `context-fill` 让颜色随 path 同步。
  */
-export const Tikz: FC<TikzProps> = ({ ir: irFromProp, children, width, height, className, style }) => {
+export const Tikz: FC<TikzProps> = props => {
+  const { ir: irFromProp, children, width, height, className, style, nodeDistance } = props;
   const ir = useMemo(() => irFromProp ?? buildIR(children), [irFromProp, children]);
-  const scene = useMemo(() => compileToScene(ir, { measureText: browserMeasurer }), [ir]);
+  const scene = useMemo(
+    () => compileToScene(ir, { measureText: browserMeasurer, nodeDistance }),
+    [ir, nodeDistance],
+  );
 
   // useId 返回形如 ":r0:" 含冒号；SVG `url(#id)` 引用对冒号兼容性差，剥成纯字母数字
   const rawId = useId();

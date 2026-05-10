@@ -188,6 +188,11 @@ pnpm lint                                  # 全部包 ESLint（不带 --fix）
 - ESLint 统一在根目录通过 `pnpm lint` 运行，flat config 见 `eslint.config.js`
 - 不要在子包里重复声明工具链（eslint、typescript 等）的版本，统一用 catalog
 - 变量/文件命名沿用现有风格：组件 PascalCase，hooks `useXxx`，工具类小驼峰
+- **不用缩写命名，写全称**——IR schema 字段 / public API prop / 导出常量 / 函数名 / 类型名一律拼全：`direction` 不写 `dir`，`reference` 不写 `ref`（除非 React `useRef`），`background` 不写 `bg`，`description` 不写 `desc`
+  - 理由：IR schema 描述是给 LLM 看的契约（DESIGN.md §7 AI 友好性），缩写在跨语言 / 跨上下文歧义大；公开 API 缩写让消费者要二次猜
+  - 例外：项目内已有的 TikZ / SVG / CSS 标准词汇保持不动——`stroke` / `fill` / `padding` / `margin` / `cx` / `cy` / `rx` / `ry` / `dx` / `dy` / `innerXSep` / `outerSep`（TikZ `inner sep` / `outer sep` 直译）/ `IR`（项目核心术语）
+  - 例外：函数体内的短局部变量（`const [bx, by] = anchor(...)`）不强求拼全，作用域小、可读性优先
+  - 已有用例：alpha.4 ADR-0001 把 `at.dir` 升级为 `at.direction`，对应 `LABEL_DIR_MAP` → `LABEL_DIRECTION_MAP` 等
 - **目录使用 kebab-case**（如 `mdx-content/`、`component-preview/`、`doc-page/`），不用 PascalCase / camelCase；目录里**单组件文件**仍按组件名 PascalCase（`ComponentPreview.tsx`），barrel / 配置 / 注册表等非组件文件用小写（`index.ts`、`components.tsx`）
 - 尽量不写注释；确需解释"为什么"时再写，避免复述代码做了什么
 - 数组类型用 `Array<T>`，不用 `T[]`（项目内统一）

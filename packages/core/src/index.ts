@@ -11,6 +11,8 @@
 export {
   PositionSchema,
   PolarPositionSchema,
+  AtPositionSchema,
+  AT_DIRECTIONS,
   TargetSchema,
   RelTargetSchema,
   RelAccumulateTargetSchema,
@@ -38,6 +40,8 @@ export {
 } from './ir';
 export type {
   IRPosition,
+  IRAtPosition,
+  AtDirection,
   IRTarget,
   IRRelTarget,
   IRRelAccumulateTarget,

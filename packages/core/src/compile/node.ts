@@ -204,6 +204,7 @@ export const layoutNode = (
   node: IRNode,
   measureText: TextMeasurer,
   nodeIndex: Map<string, NodeLayout>,
+  nodeDistance?: number,
 ): NodeLayout => {
   // 缩放：xScale / yScale 优先于 scale 别名；默认 1。layout-level 乘进所有尺寸，
   // 让 path 端点贴在缩放后的边界上（与 TikZ scale 行为一致）。
@@ -217,7 +218,7 @@ export const layoutNode = (
   const fontFamily = node.font?.family;
   const fontWeight = node.font?.weight;
   const fontStyle = node.font?.style;
-  // 内 / 外边距解析顺序（ADR-0003）：
+  // 内 / 外边距解析顺序：
   //   axis-specific (innerXSep / innerYSep / outerSep)
   // → symmetric alias (padding / margin)
   // → 默认值
@@ -309,10 +310,10 @@ export const layoutNode = (
   }
 
   const rotateDeg = node.rotate ?? 0;
-  const center = resolvePosition(node.position, nodeIndex);
+  const center = resolvePosition(node.position, nodeIndex, nodeDistance);
   if (!center) {
     throw new Error(
-      `Cannot resolve position for node ${node.id ?? '(unnamed)'}; polar.origin may reference an undefined node`,
+      `Cannot resolve position for node ${node.id ?? '(unnamed)'}; polar.origin or at.of may reference an undefined node`,
     );
   }
   return {

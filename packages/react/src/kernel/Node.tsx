@@ -1,5 +1,6 @@
 import type { FC, ReactNode } from 'react';
 import type {
+  IRAtPosition,
   IRFont,
   IRLineSpec,
   IRNode,
@@ -15,8 +16,13 @@ export type NodeProps = {
   id?: string;
   /** 节点形状：rectangle（默认）/ circle / ellipse / diamond */
   shape?: IRNode['shape'];
-  /** 节点中心位置；笛卡尔 [x, y] 或极坐标（编译时解析） */
-  position: IRPosition | PolarPosition;
+  /**
+   * 节点中心位置。三种形态：
+   * - 笛卡尔 `[x, y]`
+   * - 极坐标 `{ angle, radius, origin? }`（编译时解析）
+   * - 相对定位 `{ direction, of, distance? }`（TikZ `[<direction>=<distance> of <id>]` 同义；编译时解析）
+   */
+  position: IRPosition | PolarPosition | IRAtPosition;
   /** 旋转角度（度数，与 TikZ 一致），绕节点中心；正值顺时针 */
   rotate?: number;
   /**

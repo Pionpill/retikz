@@ -19,6 +19,12 @@ export type CompileOptions = {
    * 内部几何计算保持完整 double 精度，避免误差累积。
    */
   precision?: number;
+  /**
+   * 相对定位（AtPosition）的默认距离，对应 TikZ `node distance`；user units。
+   * 当 `Node.position` 是 `{ direction, of }` 形态且未自带 `distance` 时取此值；
+   * 未配则回退到 1。
+   */
+  nodeDistance?: number;
 };
 
 /**
@@ -34,6 +40,7 @@ export const compileToScene = (ir: IR, options: CompileOptions = {}): Scene => {
   const measureText = options.measureText ?? fallbackMeasurer;
   const viewBoxPadding = options.padding ?? 10;
   const round = makeRound(options.precision ?? DEFAULT_PRECISION);
+  const nodeDistance = options.nodeDistance;
 
   const primitives: Array<ScenePrimitive> = [];
   const nodeIndex = new Map<string, NodeLayout>();
@@ -43,7 +50,7 @@ export const compileToScene = (ir: IR, options: CompileOptions = {}): Scene => {
   // 按 IR children 源码顺序处理；polar.origin 引用其他节点 id 时，要求被引用节点先定义。
   for (const child of ir.children) {
     if (child.type === 'node') {
-      const layout = layoutNode(child, measureText, nodeIndex);
+      const layout = layoutNode(child, measureText, nodeIndex, nodeDistance);
       if (child.id) nodeIndex.set(child.id, layout);
       for (const prim of emitNodePrimitives(layout, round)) {
         primitives.push(prim);
@@ -58,7 +65,7 @@ export const compileToScene = (ir: IR, options: CompileOptions = {}): Scene => {
     }
   }
 
-  // Pass 2: 路径解析 → 发出 path primitive（可能附带 ADR-0004 边标注 TextPrim）
+  // Pass 2: 路径解析 → 发出 path primitive（可能附带边标注 TextPrim）
   for (const child of ir.children) {
     if (child.type === 'path') {
       const result = emitPathPrimitive(child, nodeIndex, round, measureText);
