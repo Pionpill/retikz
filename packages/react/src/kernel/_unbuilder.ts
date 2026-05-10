@@ -1,5 +1,6 @@
 import { type ReactNode, createElement } from 'react';
 import type { IR, IRChild, IRNode, IRStep } from '@retikz/core';
+import { Coordinate } from './Coordinate';
 import { Node, type NodeProps } from './Node';
 import { Path } from './Path';
 import { Step } from './Step';
@@ -148,6 +149,12 @@ const childToElement = (child: IRChild, key: number): ReactNode => {
         fillOpacity: child.fillOpacity,
         drawOpacity: child.drawOpacity,
         children: child.children.map((s, j) => stepToElement(s, j)),
+      });
+    case 'coordinate':
+      return createElement(Coordinate, {
+        key,
+        id: child.id,
+        position: child.position,
       });
     default:
       return assertNever(child);

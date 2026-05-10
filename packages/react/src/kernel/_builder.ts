@@ -2,6 +2,7 @@ import { Children, type ReactElement, type ReactNode, isValidElement } from 'rea
 import type {
   IR,
   IRChild,
+  IRCoordinate,
   IRFont,
   IRLineSpec,
   IRNode,
@@ -11,6 +12,7 @@ import type {
 } from '@retikz/core';
 import { CURRENT_IR_VERSION, parseTargetSugar } from '@retikz/core';
 import {
+  TIKZ_COORDINATE,
   TIKZ_EDGE_LABEL,
   TIKZ_NODE,
   TIKZ_PATH,
@@ -315,6 +317,13 @@ const readPathChildren = (children: ReactNode): Array<IRStep> => {
   return out;
 };
 
+/** 把 <Coordinate> props 翻成 IRChild（占位节点，无视觉） */
+const buildCoordinate = (props: Record<string, unknown>): IRChild => ({
+  type: 'coordinate',
+  id: props.id as string,
+  position: props.position as IRCoordinate['position'],
+});
+
 /** 把 <Path> props 翻成 IRChild；step 序列由 readPathChildren 收集 */
 const buildPath = (props: Record<string, unknown>): IRChild => ({
   type: 'path',
@@ -366,6 +375,9 @@ const readSceneChildren = (children: ReactNode): Array<IRChild> => {
         return;
       case TIKZ_PATH:
         out.push(buildPath(child.props as Record<string, unknown>));
+        return;
+      case TIKZ_COORDINATE:
+        out.push(buildCoordinate(child.props as Record<string, unknown>));
         return;
     }
     if (typeof child.type === 'function') {

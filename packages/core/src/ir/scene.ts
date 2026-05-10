@@ -1,14 +1,15 @@
 import { z } from 'zod';
+import { CoordinateSchema } from './coordinate';
 import { NodeSchema } from './node';
 import { PathSchema } from './path';
 
 export const ChildSchema = z
-  .discriminatedUnion('type', [NodeSchema, PathSchema])
+  .discriminatedUnion('type', [NodeSchema, PathSchema, CoordinateSchema])
   .describe(
-    'Top-level scene child: either a node or a path; discriminator field is `type`',
+    'Top-level scene child: a node, a path, or a coordinate placeholder; discriminator field is `type`',
   );
 
-/** 顶层 Scene 的子节点：node 或 path */
+/** 顶层 Scene 的子节点：node / path / coordinate */
 export type IRChild = z.infer<typeof ChildSchema>;
 
 export const SceneSchema = z

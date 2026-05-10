@@ -3,9 +3,31 @@ import type { IR, IRPosition } from '../ir';
 import type { Scene, ScenePrimitive } from '../primitive';
 import { type NodeLayout, emitNodePrimitives, layoutNode } from './node';
 import { emitPathPrimitive } from './path';
+import { resolvePosition } from './position';
 import { DEFAULT_PRECISION, makeRound } from './precision';
 import { type TextMeasurer, fallbackMeasurer } from './text-metrics';
 import { computeViewBox } from './view-box';
+
+/**
+ * 把 coordinate 注册成最小 NodeLayout——0×0 rectangle，用于
+ * 后续 path target / `at.of` 引用时 boundaryPoint 命中（0×0 rect
+ * 的 boundaryPoint 始终返回中心，符合"占位无形状边界"语义）。
+ */
+const coordinateAsLayout = (
+  id: string,
+  center: IRPosition,
+): NodeLayout => ({
+  id,
+  shape: 'rectangle',
+  rect: { x: center[0], y: center[1], width: 0, height: 0, rotate: 0 },
+  rotateDeg: 0,
+  margin: 0,
+  textWidth: 0,
+  textHeight: 0,
+  align: 'middle',
+  lineHeight: 0,
+  fontSize: 0,
+});
 
 /** compileToScene 的可选参数 */
 export type CompileOptions = {
@@ -48,6 +70,8 @@ export const compileToScene = (ir: IR, options: CompileOptions = {}): Scene => {
 
   // Pass 1: 节点布局 → 注册到 nodeIndex 并发出节点 primitive
   // 按 IR children 源码顺序处理；polar.origin 引用其他节点 id 时，要求被引用节点先定义。
+  // coordinate 与 node 在同一 pass 处理：coordinate 不发 primitive、不扩 bbox，
+  // 但同样注册到 nodeIndex 让后续 path target 与 `at.of` 能引用。
   for (const child of ir.children) {
     if (child.type === 'node') {
       const layout = layoutNode(child, measureText, nodeIndex, nodeDistance);
@@ -62,6 +86,14 @@ export const compileToScene = (ir: IR, options: CompileOptions = {}): Scene => {
         rectOps.anchor(layout.rect, 'south-west'),
         rectOps.anchor(layout.rect, 'south-east'),
       );
+    } else if (child.type === 'coordinate') {
+      const center = resolvePosition(child.position, nodeIndex, nodeDistance);
+      if (!center) {
+        throw new Error(
+          `Cannot resolve position for coordinate ${child.id}; polar.origin or at.of may reference an undefined node`,
+        );
+      }
+      nodeIndex.set(child.id, coordinateAsLayout(child.id, center));
     }
   }
 

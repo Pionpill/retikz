@@ -7,8 +7,15 @@
  * 渲染管道：buildIR → compileToScene → renderPrim → SVG
  */
 
-export { Tikz, Node, Path, Step, Text } from './kernel';
-export type { TikzProps, NodeProps, PathProps, StepProps, TextProps } from './kernel';
+export { Tikz, Node, Path, Step, Text, Coordinate } from './kernel';
+export type {
+  TikzProps,
+  NodeProps,
+  PathProps,
+  StepProps,
+  TextProps,
+  CoordinateProps,
+} from './kernel';
 
 export { Draw, EdgeLabel } from './sugar';
 export type { DrawProps, EdgeLabelProps } from './sugar';
