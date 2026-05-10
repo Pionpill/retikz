@@ -125,13 +125,29 @@ Both **symmetric aliases** and **axis-specific** forms are supported (resolution
 
 <ComponentPreview name="node-rotated" />
 
+### Relative positioning
+
+In addition to Cartesian / polar, `position` accepts **`{ direction, of, distance? }`** — equivalent to TikZ `[<direction>=<distance> of <id>]`. No more hand-computing absolute coordinates; describe node relationships instead.
+
+- `direction`: 8 directions — `above` / `below` / `left` / `right` / `above-left` / `above-right` / `below-left` / `below-right`
+- `of`: id of the referenced node / coordinate (must be defined earlier in the IR; forward references rejected)
+- `distance`: falls back to `<Tikz nodeDistance>` then to 1 when omitted
+
+<ComponentPreview name="node-at-relative" />
+
+### Node labels
+
+`label` attaches extra text outside the node border (TikZ `[label=above:foo]` equivalent). Single object or array form; `position` accepts the 8-direction enum or a numeric angle (`label=30:foo` ↔ `position: 30`); `font` / `textColor` inherit from the node when omitted.
+
+<ComponentPreview name="node-label-basic" />
+
 ## API Reference
 
 | Prop | Type | Default | Description |
 | --- | --- | --- | --- |
 | `id` | `string` | — | Unique identifier; referenced by `<Path>` / `<Draw>` |
 | `shape` | `'rectangle' \| 'circle' \| 'ellipse' \| 'diamond'` | `'rectangle'` | Node shape |
-| `position` | `[x, y] \| PolarPosition` | — | Node center (Cartesian or polar) |
+| `position` | `[x, y] \| PolarPosition \| { direction, of, distance? }` | — | Node center: Cartesian / polar / relative-to-another-node (`[<direction>=<distance> of <id>]` equivalent) |
 | `children` / `text` | `string \| Array<string>` | — | Visible label; string = one line, array = one element per line; `text` wins over `children` |
 | `align` | `'left' \| 'center' \| 'right'` | `'center'` | Horizontal alignment of lines within the multi-line text block |
 | `lineHeight` | `number` | `font.size × 1.2` | Line height of the multi-line block (user units) |
@@ -157,6 +173,7 @@ Both **symmetric aliases** and **axis-specific** forms are supported (resolution
 | `minimumSize` | `number` | — | Symmetric minimum-size alias; axis-specific fields take precedence |
 | `scale` | `number` | `1` | Uniform scale (includes font, padding, path attachment) |
 | `xScale` / `yScale` | `number` | — | Per-axis scale; takes precedence over `scale` |
+| `label` | `NodeLabel \| Array<NodeLabel>` | — | Extra label(s) attached to the node border (TikZ `[label=above:foo]`); single object or array; `position` accepts the 8-direction enum or a numeric angle, `distance` defaults to 4, `font` / `textColor` inherit from the node |
 
 ## margin vs padding
 

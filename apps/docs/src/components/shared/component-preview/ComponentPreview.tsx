@@ -1,6 +1,7 @@
 import { ChevronsDownUp, ChevronsUpDown, X } from 'lucide-react';
 import type { FC, ReactElement, ReactNode } from 'react';
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useParams } from 'react-router';
 
 import { Button } from '@/components/ui/button';
@@ -35,6 +36,22 @@ const demoSources: Record<string, string | undefined> = import.meta.glob<string>
 });
 
 const buildKey = (segments: Array<string>, name: string) => `../../../contents/${segments.join('/')}/${name}.demo.tsx`;
+const buildLangKey = (segments: Array<string>, name: string, lang: string) =>
+  `../../../contents/${segments.join('/')}/${name}.${lang}.demo.tsx`;
+
+/**
+ * 解析 demo key——优先用当前语言版（`<name>.<lang>.demo.tsx`），找不到回退到无 lang 后缀（`<name>.demo.tsx`）。
+ * 含展示文本的 demo（节点标签 / 标注文字 / 中文文案）应配双语副本；无文本的纯几何 demo 直接用单文件即可。
+ */
+const resolveDemoKey = (
+  segments: Array<string>,
+  name: string,
+  lang: string,
+): string => {
+  const langKey = buildLangKey(segments, name, lang);
+  if (demoModules[langKey] !== undefined) return langKey;
+  return buildKey(segments, name);
+};
 
 /** 折叠态显示前几行 */
 const PREVIEW_MAX_LINES = 3;
@@ -97,6 +114,8 @@ export const ComponentPreview: FC<ComponentPreviewProps> = props => {
   }, []);
 
   const { moduleId, sectionId, pageId, subPageId } = useParams<'moduleId' | 'sectionId' | 'pageId' | 'subPageId'>();
+  const { i18n } = useTranslation();
+  const lang = i18n.language.startsWith('zh') ? 'zh' : 'en';
 
   // demo 解析需要在 useMemo 之前算出 Component 引用，所以这里允许「找不到」时为 undefined，
   // 不在这里 early return（hooks 顺序要稳）；最终的"找不到"分支由下面的 if (!mod || ...) 走
@@ -106,7 +125,7 @@ export const ComponentPreview: FC<ComponentPreviewProps> = props => {
         ? [moduleId, sectionId, pageId, subPageId]
         : [moduleId, sectionId, pageId]
       : null;
-  const key = segments ? buildKey(segments, name) : null;
+  const key = segments ? resolveDemoKey(segments, name, lang) : null;
   const mod = key ? demoModules[key] : undefined;
   const source = key ? demoSources[key] : undefined;
   const Component = mod?.default;

@@ -30,6 +30,7 @@
     "node": "Node",
     "nodeOverview": "Node",
     "text": "Text",
+    "coordinate": "Coordinate",
     "draw": "Drawing",
     "drawOverview": "Draw",
     "path": "Path",

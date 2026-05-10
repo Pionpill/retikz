@@ -125,13 +125,29 @@ Line 2`}</Node>
 
 <ComponentPreview name="node-rotated" />
 
+### 相对定位
+
+`position` 除了笛卡尔 / 极坐标还接受 **`{ direction, of, distance? }`** 形态——TikZ `[<direction>=<distance> of <id>]` 同义；不需要手算每个绝对坐标，描述节点关系即可。
+
+- `direction` 接 8 方向：`above` / `below` / `left` / `right` / `above-left` / `above-right` / `below-left` / `below-right`
+- `of` 是被参照节点 / coordinate 的 id（要求先出现在 IR 中，前向引用拒绝）
+- `distance` 缺省时取 `<Tikz nodeDistance>`，再缺省回退到 1
+
+<ComponentPreview name="node-at-relative" />
+
+### 节点附属标签
+
+`label` 在节点边界外挂额外文字，对应 TikZ `[label=above:foo]`。单对象或数组形态；`position` 接 8 方向枚举或数字角度（`label=30:foo` 等价 `position: 30`）；`font` / `textColor` 缺省时从 node 继承。
+
+<ComponentPreview name="node-label-basic" />
+
 ## API 参考
 
 | 属性 | 类型 | 默认值 | 描述 |
 | --- | --- | --- | --- |
 | `id` | `string` | — | 唯一标识；被 `<Path>` / `<Draw>` 用来引用 |
 | `shape` | `'rectangle' \| 'circle' \| 'ellipse' \| 'diamond'` | `'rectangle'` | 节点形状 |
-| `position` | `[x, y] \| PolarPosition` | — | 节点中心位置（笛卡尔或极坐标） |
+| `position` | `[x, y] \| PolarPosition \| { direction, of, distance? }` | — | 节点中心位置：笛卡尔 / 极坐标 / 相对定位（TikZ `[<direction>=<distance> of <id>]` 同义） |
 | `children` / `text` | `string \| Array<string>` | — | 节点内可见文字；字符串单行 / 数组多行；`text` 优先于 `children` |
 | `align` | `'left' \| 'center' \| 'right'` | `'center'` | 多行文本块内各行水平对齐方式 |
 | `lineHeight` | `number` | `font.size × 1.2` | 多行块的行高（user units） |
@@ -157,6 +173,7 @@ Line 2`}</Node>
 | `minimumSize` | `number` | — | 对称最小尺寸别名；轴特化字段优先 |
 | `scale` | `number` | `1` | 均匀缩放（含字号、padding、路径附着点） |
 | `xScale` / `yScale` | `number` | — | 分轴缩放，优先于 `scale` |
+| `label` | `NodeLabel \| Array<NodeLabel>` | — | 边挂标签（TikZ `[label=above:foo]`）；单对象或数组；`position` 接 8 方向枚举或数字角度，`distance` 缺省 4，`font` / `textColor` 缺省继承 node |
 
 ## margin 与 padding 的区别
 

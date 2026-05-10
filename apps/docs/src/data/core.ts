@@ -18,6 +18,7 @@ export const coreSection: Array<Section> = [
         children: [
           { id: 'overview', label: 'core.nodeOverview' },
           { id: 'text', label: 'core.text' },
+          { id: 'coordinate', label: 'core.coordinate' },
         ],
       },
       {

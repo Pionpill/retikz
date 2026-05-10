@@ -1,0 +1,75 @@
+---
+title: Coordinate
+description: Placeholder node — names a point without drawing anything, so paths and `at.of` can reference it by id. Equivalent to TikZ `\coordinate (id) at (x, y);`.
+---
+
+`<Coordinate>` is retikz's third kernel component (alongside `<Node>` / `<Path>`). It renders nothing visible, but registers into `nodeIndex` so downstream `<Path>` endpoints and `<Node>` `at.of` references can target it by `id`.
+
+## Usage
+
+```tsx
+import { Coordinate } from '@retikz/react';
+```
+
+```tsx
+<Coordinate id="hub" position={[0, 0]} />
+```
+
+`position` accepts the same three forms as `<Node>`: Cartesian `[x, y]` / polar `{ angle, radius, origin? }` / relative `{ direction, of, distance? }`.
+
+## Why it exists
+
+Without `<Coordinate>`, anchoring "a named point" forces you to fake an empty `<Node>` with `stroke="transparent" fill="transparent"` — but an empty Node still:
+
+- Goes through layoutNode and gets a non-visible rect layout sized by padding
+- Participates in viewBox expansion (enlarges the outer frame)
+- Confuses AI / TikZ codecs round-tripping IR ("real node vs invisible placeholder?")
+
+`<Coordinate>` makes "named point" a first-class concept:
+
+- Smallest IR shape (just `id` + `position`)
+- **Emits zero primitives** — no shape, no text
+- **Does not extend viewBox** — far-away coordinates don't bloat the frame
+- Registers as a 0×0 rectangle layout in nodeIndex — `boundaryPoint` always returns the center, matching "no shape boundary" semantics
+
+## Examples
+
+### Named virtual anchor
+
+The most common pattern: name a virtual center, then have multiple nodes position around it and multiple paths terminate at it.
+
+<ComponentPreview name="coordinate-as-anchor" />
+
+The four nodes above all use `at.of='hub'` to reference the same hub; moving hub moves the whole arrangement. Without a coordinate, each `at.of` would have to be replaced with absolute coordinates and each path would need `[0, 0]` literals — repetitive and unrenameable.
+
+### Named junction for path convergence
+
+In flow charts, multiple paths often converge at a virtual point — that point isn't a real node (no rectangle / no text), but it needs an id so several `way`s can route through it.
+
+<ComponentPreview name="coordinate-fold-junction" />
+
+## API Reference
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `id` | `string` | — | **Required** — a placeholder's entire purpose is to be referenced by id |
+| `position` | `[x, y] \| PolarPosition \| { direction, of, distance? }` | — | Placeholder position; same shapes as `<Node position>` |
+
+## Relationship with `<Node>` / `<Path>`
+
+| | `<Coordinate>` | `<Node>` |
+|---|---|---|
+| Renders shape | ❌ | ✅ (by `shape`) |
+| Participates in viewBox | ❌ | ✅ |
+| Registered in nodeIndex | ✅ | ✅ |
+| Referenced as path target | ✅ | ✅ |
+| Referenced via `at.of` | ✅ | ✅ |
+| Required `id` | ✅ | optional |
+
+Rule of thumb: need a shape + text → `<Node>`; need only a reference point → `<Coordinate>`.
+
+## When not to use
+
+- **Need a labelled point** → use `<Node>` with `label?`; coordinate has no text field
+- **Need a small visible dot** → use `<Node shape="circle">` with a small size; coordinate never draws
+- **Direction anchors** (`m.north`) → coordinate is a 0×0 placeholder, all anchors collapse to center; use `<Node>` if you need directional anchors
