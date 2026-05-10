@@ -5,6 +5,35 @@ description: retikz release history grouped by MINOR version, newest first. Date
 
 <Update label="May 2026" tags={["@retikz/core", "@retikz/react", "docs"]}>
 
+## v0.1.0-alpha.3
+
+Path enhancements land in one wave: curve trio, path-level shapes, relative coordinates, edge labels, visual-prop fill-out. Backed by 4 ADRs and +120 new test cases.
+
+### `@retikz/core`
+
+- **Path curve trio**: `Step.kind` adds `'curve'` (quadratic) / `'cubic'` (cubic) / `'bend'` (arc shorthand — direction + angle, lowered to cubic at compile time) — ADR-0001
+- **Path-level shapes**: `Step.kind` adds `'arc'` / `'circlePath'` / `'ellipsePath'`, centered on the cursor; `arc` leaves the pen at the arc end, `circle` / `ellipse` return it to the center — ADR-0002
+- **Relative coordinates**: `IRTarget` gains two variants — `{ rel: [dx, dy] }` (does not advance prevEnd, TikZ `(+x, +y)`) and `{ relAccumulate: [dx, dy] }` (accumulates, TikZ `(++x, ++y)`); compile entry `normalizeRelativeTargets` resolves them up-front — ADR-0003
+- **Edge labels**: every step kind except `'move'` / `'cycle'` accepts `label?: { text, position?, side? }`; `position` ∈ `'midway' | 'near-start' | 'near-end'`, `side` ∈ `'above' | 'below' | 'left' | 'right' | 'sloped'`; compiles to a TextPrim (sloped wrapped in a group rotate) — ADR-0004
+- **New `geometry/segment.ts`**: seven sampling helpers (line / quad / cubic / fold / arc / circle / ellipse) backing label position / tangent math
+- **Path stroke caps / joins**: `lineCap` / `lineJoin` (SVG `stroke-linecap` / `stroke-linejoin`)
+- **Semantic stroke preset**: `thickness` ∈ `'ultraThin'` … `'ultraThick'` (7 levels), `thin = 1` matches the default `strokeWidth`; explicit `strokeWidth` always wins
+- **Path opacity**: `opacity` overall + `fillOpacity` for fill only + `drawOpacity` for stroke only (matches Node naming)
+- **Sugar way DSL extensions**: `{ curve | cubic | bend }` infix operators (consume the next item); `{ arc | circle | ellipse }` infix operators (do not consume the next item); `WayRelItem` object form `{ position, type: DrawWay.Relative | DrawWay.Accumulate }` + sugar strings `'+1,0'` / `'++1,0'`; `{ label }` infix operator decorates the next segment
+
+### `@retikz/react`
+
+- New sugar `<EdgeLabel>`: as a `<Step>` child it equals `<Step label={...}>`, with the prop winning on conflict; one-way (unbuilder only emits the prop form)
+- Step / Path / Draw forward every new field; builder / unbuilder round-trip end-to-end
+- Draw's way DSL also supports label / curves / shapes / relative coords sugar, byte-for-byte equivalent to Kernel
+
+### `docs`
+
+- Step page gains an edge-label section + sloped demo; Path page gains three sections (caps / joins, semantic preset, opacity) + 6 new API rows
+- Draw overview way-item list 13 → 14 (label op) + small caps / joins / opacity blurb pointing back to Path
+- New demos: `step-curve` / `step-cubic` / `step-bend` / `step-arc` / `step-circle` / `step-ellipse` / `step-rel` / `step-label` / `path-line-style` / `path-thickness` / `path-opacity` / `draw-curve` / `draw-cubic` / `draw-bend` / `draw-arc` / `draw-circle` / `draw-ellipse` / `draw-rel` / `draw-label`
+- Four ADRs land in `notes/adr/0001`–`0004` (curve trio / path shapes / relative coordinates / edge labels)
+
 ## v0.1.0-alpha.2
 
 Node visual P1 lands in full: multi-line text, font object, axis-specific seps, color / opacity / stroke style / size constraints / scaling. Backed by 3 ADRs and +47 new test cases.
