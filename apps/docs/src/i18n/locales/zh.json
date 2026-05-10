@@ -41,6 +41,7 @@
   "reference": {
     "label": "参考",
     "overview": "总览",
+    "aiAssistedDevelopment": "AI 辅助开发",
     "releases": "发布",
     "changelog": "更新日志",
     "versioning": "版本策略",

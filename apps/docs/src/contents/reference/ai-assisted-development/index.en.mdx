@@ -1,0 +1,125 @@
+---
+title: AI-assisted development
+description: retikz operates on a "human-designed + AI-implemented" split during alpha — humans write ADRs and decide; AI relays through spec / implementation / tests / docs; humans reconcile and review at the end. This page explains how it runs, where the constraints are, and why.
+---
+
+Most of retikz's implementation work is done by AI — the IR-field code for nodes / paths / edge labels / coordinate placeholders, the test cases, the documentation paragraphs that come with them. The vast majority of commits carry `Co-Authored-By: Claude`. This is not a tech-blog gimmick — it's the actual working model the project has used since v0.1.
+
+This page explains how the model runs, who owns what, and what hard constraints keep AI from going off the rails.
+
+## Working premise
+
+Hooking AI into the dev flow doesn't mean "let AI write the code for you" — it means **shifting human attention from implementation labor to decision labor**. Two iron rules:
+
+1. **Architecture / schema decisions are human-only.** Irreversible changes — IR field names, default values, trade-offs between options — are decided by humans writing ADRs. AI only provides option analysis and trade-off descriptions inside the ADR.
+2. **AI never commits / publishes on the human's behalf.** When the code is written, AI must stop and wait for human review and explicit authorization. This rule is in the repo-root `AGENTS.md` commit-policy section and admits no exceptions (auto mode, long tasks, seemingly harmless edits, prior approval of similar changes — none of these waive it; every commit requires fresh authorization).
+
+Everything else — the "middle work" of writing specs, implementations, tests, docs, and changelog drafts — AI can relay end-to-end. Humans only step in at the key checkpoints to review.
+
+## The 5-stage flow
+
+Every ADR / new feature in alpha goes through 5 stages, orchestrated by the `.agents/skills/alpha-feature-dev/` SKILL:
+
+| Stage | Driver | Output |
+| --- | --- | --- |
+| 1. Design | **Human-led**, AI assists drafting | ADR (schema field table / file scope / test quadrants / option decisions) |
+| 2. Implement | AI (red-level changes go through Spec-First TDD) | spec test commit + implementation commit |
+| 3. Self-test | AI (Adversarial Bug Hunter sub-agent) | bug fixes + hardened tests |
+| 4. Document | AI (delegates to docs-doc-write SKILL) | bilingual mdx + demos + API table |
+| 5. Wrap-up | AI drafts / Adversarial Contract Auditor / **human** final ack | changelog + ADR marked Accepted + roadmap ticked |
+
+**Humans only act on stages 1 and 5** — stages 2, 3, 4 are handed off to independent sub-agents in sequence, with hard gates at each stage (lint / tsc / tests / reconciliation report) that halt the flow on failure.
+
+Each stage has its own SKILL: `alpha-feature-design` / `alpha-feature-implement` / `alpha-feature-test` / `alpha-feature-document` / `alpha-feature-wrapup`. SKILL files live at `.agents/skills/<name>/SKILL.md` with their input, output, sub-agent prompt, and failure / escalation thresholds spelled out.
+
+## Three sub-agent roles
+
+Stages 2, 3, 5 dispatch three independent sub-agents, **each in its own session** (no shared context):
+
+### Spec Writer
+
+- **Input**: ADR + affected existing schemas (read-only) + ≤ 3 unrelated test files for style reference
+- **Output**: zod schema stub + vitest test file
+- **Why independent**: an LLM that writes the implementation also sets the test coverage — within the same context, the tests it writes are bounded by the cases the implementation LLM thought about. Spec Writer runs in its own session, sees only the ADR (not the implementation), and expands by test quadrants (≥ 9 cases: happy ≥ 3 / boundary ≥ 2 / error path ≥ 2 / interaction ≥ 2).
+
+The Implementation Agent then **may not modify the spec test file or the schema field names**. If it thinks a test is wrong or a field definition is off, it must halt and report — the main AI decides whether to send it back to Spec Writer for a rewrite or escalate to a human.
+
+The spec commit uses the `:construction:` emoji to mark WIP (the tests fail at this point because the implementation isn't written yet), aligning with project convention.
+
+### Adversarial Bug Hunter
+
+- **Input**: ADR + current implementation diff + existing tests
+- **Output**: BLOCKING / WARNING / INFO three-tier report
+- **Task**: construct inputs that make the implementation fail. Focus areas: reference cycles / self-reference, extreme numerics (NaN / Infinity / 0 / negative zero), Unicode / long-string ids, nesting depth, JSON round-trip, zod parse counter-examples, weird interactions with existing features.
+
+It doesn't fix code, only reports "I expected this to fail but it passed" and "I broke it". A non-empty BLOCKING list becomes formal test cases that the Implementation Agent then fixes; halting after 3 unconverged rounds.
+
+### Adversarial Contract Auditor
+
+- **Input**: ADR + changelog draft + commit history + mdx / demo diff + schema diff
+- **Output**: four-way consistency report
+- **Task**: reconcile. What did the ADR promise? What does the changelog say? What does the mdx describe? What does the actual code do? Find places where the four don't match. Common patterns: silent additions (in code but not in ADR), silent omissions, default-value drift, naming drift, mdx out of sync with code.
+
+This pass runs at wrap-up (Stage 5), preventing "code committed, docs written, last-minute discovery that promises don't match reality".
+
+## Same model, different roles: avoiding shared blind spots
+
+retikz currently uses Claude Opus 4.7 for all three sub-agents by default. Same model + same context risks **identical blind spots** — cases A misses while writing code, B will also miss.
+
+Mitigation: **deliberately stagger the prompt angles** —
+
+- Spec Writer = **constructive view**: write the spec, aim for coverage
+- Bug Hunter = **destructive view**: construct inputs that break the implementation
+- Contract Auditor = **audit view**: reconcile promises against reality
+
+Combined with isolated sessions (no shared context), three angles produce notably different focus areas even within the same model.
+
+Users can also **manually paste the same input into another LLM** (e.g. ChatGPT) running the same prompt and union the opinions back to the Anthropic side — different vendor models have less correlated blind spots, and this is a low-cost hardening worth doing. The main AI does not auto-dispatch to other vendors; the user syncs manually, and the main AI merges the BLOCKING lists.
+
+## Hard rules (from AGENTS.md)
+
+The constraints written into the repo-root `AGENTS.md` that AI must follow throughout:
+
+| Constraint | Meaning |
+| --- | --- |
+| No abbreviations | IR schema fields / public API / functions / types must be spelled out (`direction` not `dir`, `reference` not `ref` except React `useRef`) |
+| Don't bypass lint / tsc / tests | No `as any` / `@ts-ignore` / `it.skip`; no `eslint-disable` workarounds; lint + tsc + vitest must all pass before commit |
+| No self-commit / push / publish | Stop after coding and wait for human authorization; every commit needs fresh authorization (one approval ≠ permanent approval) |
+| Docs travel with code | User-visible changes (new prop / changed default / removed field) must update docs in the same commit; updating only zh (not en) is incomplete |
+| IR schema needs `.describe` everywhere | Every zod schema field must have an English `.describe(...)` — it's the contract for LLM tool definitions |
+| ADRs are forever + globally monotonic | ADRs superseded by new versions are marked `Superseded by ADR-NNNN`, never deleted; numbering does not reset across milestones |
+
+## Where to look in the repo
+
+| If you want to know about | Look here |
+| --- | --- |
+| Project hard rules (naming / commits / lint / bilingual / IR schema style) | repo-root `AGENTS.md` |
+| Docs-site-specific conventions (mdx style / bilingual demos / no external links) | `apps/docs/AGENTS.md` |
+| All SKILLs (dev flow, releases, docs writing) | `.agents/skills/` |
+| 5-stage orchestrator | `.agents/skills/alpha-feature-dev/SKILL.md` |
+| Per-stage child SKILLs | `.agents/skills/alpha-feature-{design,implement,test,document,wrapup}/SKILL.md` |
+| Release SKILL (npm publish 5-stage gating) | `.agents/skills/package-publish/SKILL.md` |
+| Docs-writing SKILL | `.agents/skills/docs-doc-write/SKILL.md` |
+| ADR archive | `notes/adr/` (with `_template.md` and `README.md` index) |
+| Internal architecture / design / analysis notes | `notes/architecture/` · `notes/plans/` · `notes/analysis/` |
+
+In practice the main AI reads `AGENTS.md` + the relevant SKILL when it picks up a task, then dispatches sub-agents per the SKILL flow. Each sub-agent only sees its own role prompt + the inputs it's given — no context cross-contamination.
+
+## Transparency
+
+retikz does not pretend to be "all human" — most implementation commits carry `Co-Authored-By: Claude` in their history. Disclosing AI involvement openly is more credible than hiding it. At the same time —
+
+- **Decisions are human**: every ADR is human-reviewed before flipping to Accepted; every npm publish requires fresh human authorization (including the 2FA OTP, typed by a human)
+- **AI doesn't speak for the human in public**: commit messages, PR descriptions, issue replies are AI-drafted, human-reviewed; AI never publishes them directly
+- **Reversibility safety net**: every alpha release ships with `--tag alpha`, so downstream `pnpm add @retikz/...` doesn't pull it by default — bad releases don't pollute the latest channel and can be unpublished within 24 hours
+
+## Limitations
+
+- The current SKILL set serves the alpha phase. beta / rc phases are human-led with no dedicated SKILL orchestration
+- The ADR template requires ≥ 9 test-quadrant cases — small changes may feel like overhead, but the project assumes alpha-era changes touch IR or core, and the cost trades against future regression burden
+- Multi-vendor parallelism (running the same prompt through Anthropic + OpenAI simultaneously) currently relies on manual user sync — the main AI does not auto-call other vendors; opinions only merge after the user pastes them back
+- Adversarial sub-agents catch corner cases best; happy-path bugs are mostly covered by Spec Writer. This flow handles "complex logic + numerical edge" bugs well, but doesn't catch "UX / visual rendering wrong" issues — those still require human review of demos
+
+---
+
+To bring this flow to your own open-source project, the retikz `AGENTS.md` and `.agents/skills/` are MIT-licensed and free to reference / fork / adapt. The key isn't the tooling — it's **how clearly the boundary between human and AI is drawn**: decisions to humans, implementation to AI, reconciliation to independent sub-agents, releases to humans.

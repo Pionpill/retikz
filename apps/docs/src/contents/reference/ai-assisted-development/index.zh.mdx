@@ -1,0 +1,125 @@
+---
+title: AI 辅助开发
+description: retikz 在 alpha 阶段以"人工设计 + AI 实现"分工运转——人工写 ADR 决策、AI 接力写 spec / 实现 / 测试 / 文档、人工对账审稿。本文说明这套模式怎么跑、约束在哪里、为什么这么做。
+---
+
+retikz 的实现劳动大部分由 AI 完成——节点 / 路径 / 边标注 / 占位锚点这些 IR 字段的代码、对应的测试用例、配套的文档段落，绝大多数 commit 都有 `Co-Authored-By: Claude`。这不是技术博客噱头，是项目从 v0.1 起的实际工作模式。
+
+本文说明这套模式怎么运转、人工与 AI 各自管什么、有哪些硬约束防止 AI 胡来。
+
+## 工作前提
+
+把 AI 接进开发流程不等于"让 AI 替你写代码"，而是把人工的精力从实现劳动转移到**决策劳动**。两条铁律：
+
+1. **架构 / Schema 决策必须人工**——IR 字段名 / 默认值 / 选项之间的取舍这类不可逆改动，由人写 ADR 决策。AI 只在 ADR 提供选项分析与 trade-off 描述。
+2. **AI 永远不替人 commit / publish**——写完代码必须停下来等人工审阅 + 显式授权。这条写在仓库根 `AGENTS.md` commit 规范段，无任何例外（auto mode、长任务、看似无害的小改、预先批准过类似改动……一律不豁免，每次都要重新拿授权）。
+
+剩下的"中间劳动"（写 spec / 写实现 / 写测试 / 写文档 / 起草 changelog）AI 可以接力跑完，人工只在关键节点介入审稿。
+
+## 5 阶段流程
+
+alpha 阶段每条 ADR / 每条新功能都按 5 阶段走，编排在 `.agents/skills/alpha-feature-dev/` SKILL：
+
+| 阶段 | 主体 | 输出 |
+| --- | --- | --- |
+| 1. 设计 | **人工**主导 / AI 辅助起草 | ADR（schema 字段表 / 文件 scope / 测试象限 / 选项决策） |
+| 2. 实现 | AI（红色改动走 Spec-First TDD） | spec test commit + 实现 commit |
+| 3. 自测 | AI（Adversarial Bug Hunter sub-Agent） | bug 修复 + 加固测试 |
+| 4. 文档 | AI（衔接 docs-doc-write SKILL） | 双语 mdx + demo + API 表 |
+| 5. 收尾 | AI 起草 / Adversarial Contract Auditor / **人工**最终 ack | changelog + ADR 标 Accepted + roadmap 勾掉 |
+
+**人工只动 1 和 5**——中间的 2、3、4 由独立 sub-Agent 接力完成，每阶段设硬关卡（lint / tsc / 测试 / 对账报告）不过即 halt。
+
+每个阶段对应一个独立的子 SKILL：`alpha-feature-design` / `alpha-feature-implement` / `alpha-feature-test` / `alpha-feature-document` / `alpha-feature-wrapup`。SKILL 文件在 `.agents/skills/<name>/SKILL.md`，里面写明输入、输出、子 Agent prompt、失败 / 升级阈值。
+
+## 三个 sub-Agent 角色
+
+实现阶段（Stage 2、3、5）会派出 3 种独立 sub-Agent，**全部走独立 session**（互不可见上下文）：
+
+### Spec Writer
+
+- **输入**：ADR + 受影响的现有 schema（只读）+ ≤ 3 个无关测试文件作风格示例
+- **输出**：zod schema stub + vitest 测试文件
+- **为什么独立**：写实现的 LLM 既出题又答题——同上下文写出的测试，覆盖范围被实现 LLM 心里的 case 限制。Spec Writer 在独立 session 里只看 ADR 不看实现，按测试象限（≥ 9 case：happy ≥ 3 / 边界 ≥ 2 / 错误路径 ≥ 2 / 交互 ≥ 2）展开。
+
+实现 Agent 接到 Spec 后**不允许动测试文件 / 不允许改 schema 字段名**——发现测试错了或字段定义错了，必须 halt 报告，由主 AI 决定退回 Spec Writer 重写还是裁决人工。
+
+Spec commit 用 `:construction:` emoji 标 WIP（测试此刻必然 fail，因为实现还没写），与项目惯例对齐。
+
+### Adversarial Bug Hunter
+
+- **输入**：ADR + 当前实现 diff + 现有测试
+- **输出**：BLOCKING / WARNING / INFO 三档报告
+- **任务**：构造让实现挂的输入。重点关注引用环 / 自引用、极端数值（NaN / Infinity / 0 / 负零）、Unicode / 长字符串 id、嵌套深度、JSON round-trip、zod parse 反例、与已有功能的怪异交叉。
+
+它不修代码，只报告"我以为会挂、实际过了"和"我跑挂的"。BLOCKING 列表非空就转化为正式测试 case，让实现 Agent 修；3 轮没收敛 halt。
+
+### Adversarial Contract Auditor
+
+- **输入**：ADR + changelog 草稿 + commit 历史 + mdx / demo diff + schema diff
+- **输出**：四方一致性报告
+- **任务**：对账。ADR 承诺什么 / changelog 写什么 / mdx 描述什么 / 实际行为什么——找四者不一致的地方。常见类型：悄然加码（实现里有但 ADR 没列）、悄然减码、默认值偏移、命名漂移、mdx 与代码脱节。
+
+这关在收尾阶段（Stage 5）跑，避免"代码已 commit、文档已写、最后一刻发现承诺与实际不符"。
+
+## 同模型不同角色：怎么避免盲区一致
+
+retikz 当前三个 sub-Agent 默认全部用 Claude Opus 4.7。同 model 同上下文最大风险是**思维盲区一致**——A 写代码漏的 case，B 也漏。
+
+对策：**prompt 角度故意错开**——
+
+- Spec Writer = **建设视角**：写规格、想覆盖
+- Bug Hunter = **破坏视角**：构造让实现挂的输入
+- Contract Auditor = **审计视角**：对账承诺与实现
+
+加上独立 session（互不可见上下文），三种视角在同一 model 里也产出明显不同的关注点。
+
+此外用户可以**手动把同一份输入贴给其它 LLM**（如 ChatGPT）跑同 prompt，把意见与 Anthropic 这边取并集——多 vendor 模型的盲区差异更大，是值得的低成本加固。主 AI 不会自动调用其它 vendor，用户手动同步即可，主 AI 负责合并 BLOCKING 列表。
+
+## 红线（来自 AGENTS.md）
+
+写进仓库根 `AGENTS.md` 的硬约束，AI 全程必须遵守：
+
+| 约束 | 说明 |
+| --- | --- |
+| 不缩写命名 | IR schema 字段 / public API / 函数 / 类型一律拼全（`direction` 不写 `dir`、`reference` 不写 `ref` 除非 React `useRef`） |
+| 不绕过 lint / tsc / 测试 | 不允许 `as any` / `@ts-ignore` / `it.skip`；不允许 `eslint-disable` 绕过；commit 前 lint + tsc + vitest 全过 |
+| 不自行 commit / push / publish | 写完代码停下来等人工授权；每次 commit 都要重新拿授权（一次授权 ≠ 永久授权） |
+| 文档随代码同步 | 用户可见改动（新 prop / 改默认值 / 删字段）必须同 commit 改文档；只改 zh 不改 en 视为未完成 |
+| IR Schema 全 `.describe` | zod schema 每个字段必须有英文 `.describe(...)`，给 LLM 工具调用作契约 |
+| ADR 永久保留 + 全局单调编号 | 被新版决策覆盖的 ADR 标 `Superseded by ADR-NNNN`，不删；编号跨 milestone 不重置 |
+
+## 仓库里看哪里
+
+| 想了解什么 | 看哪里 |
+| --- | --- |
+| 项目硬规则（命名 / commit / lint / 双语 / IR schema 风格） | 仓库根 `AGENTS.md` |
+| 文档站特有约定（mdx 风格 / 双语 demo / 不引外链） | `apps/docs/AGENTS.md` |
+| 全部 SKILL（开发流程、发版、文档写作） | `.agents/skills/` |
+| 5 阶段编排器 | `.agents/skills/alpha-feature-dev/SKILL.md` |
+| 单阶段子 SKILL | `.agents/skills/alpha-feature-{design,implement,test,document,wrapup}/SKILL.md` |
+| 发版 SKILL（npm publish 5 阶段守门） | `.agents/skills/package-publish/SKILL.md` |
+| 文档写作 SKILL | `.agents/skills/docs-doc-write/SKILL.md` |
+| ADR 决策档案 | `notes/adr/`（含 `_template.md` 与 `README.md` 索引） |
+| 内部架构 / 设计 / 分析 | `notes/architecture/` · `notes/plans/` · `notes/analysis/` |
+
+实际工作时主 AI 接到任务先读 `AGENTS.md` + 对应 SKILL，按 SKILL 流程派 sub-Agent。每个 sub-Agent 只看自己角色 prompt + 给定输入，互不交叉污染。
+
+## 透明度
+
+retikz 不假装"全人工"——commit 历史里大部分实现 commit 带 `Co-Authored-By: Claude`。透明披露 AI 参与方式比掩饰更可信。同时——
+
+- **决策由人**：每条 ADR 状态 Accepted 之前由人审；每次 npm publish 由人当次授权（含 2FA OTP 由人输入）
+- **AI 不替人对外发声**：commit message、PR 描述、issue 回复都是 AI 起草、人工 review，不存在 AI 直发
+- **可逆性兜底**：alpha 通道每次发版都标 `--tag alpha`，下游 `pnpm add @retikz/...` 默认拉不到——出问题不污染 latest 通道，24h 内可 unpublish
+
+## 局限
+
+- 当前 SKILL 主要服务 alpha 阶段。beta / rc 阶段以人工主导，没有专门的 SKILL 编排
+- ADR 模板硬要求测试象限 ≥ 9 case——简单改动可能感觉繁琐，但项目预期 alpha 期改动都涉及 IR 或核心，门槛设这里换的是后期回归成本可控
+- 多模型并行（同时跑 Anthropic + OpenAI 同 prompt）目前靠用户手动同步——主 AI 不会自动调用其它 vendor，用户贴回来主 AI 才合并意见
+- Adversarial sub-Agent 找出的 BLOCKING 通常是 corner case；happy path 的 bug 多数被 Spec Writer 覆盖。这套流程对"复杂逻辑 + 数值边界"型 bug 抓得好，对"用户体验 / 视觉效果不对"型问题抓不到——后者仍需人工 review demo
+
+---
+
+把这套流程落到你自己的开源项目里，retikz 仓库的 `AGENTS.md` 与 `.agents/skills/` 全部 MIT 许可下可参考、改写、迁移。流程的关键不在工具，而在**人工与 AI 的边界划得多清楚**：决策给人、实现给 AI、对账给独立 sub-Agent、发布给人。

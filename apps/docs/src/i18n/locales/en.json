@@ -41,6 +41,7 @@
   "reference": {
     "label": "Reference",
     "overview": "Overview",
+    "aiAssistedDevelopment": "AI-assisted development",
     "releases": "Releases",
     "changelog": "Changelog",
     "versioning": "Versioning",

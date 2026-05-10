@@ -26,25 +26,16 @@ Breaking changes before `1.0.0` **do not force a MAJOR bump**, but the changelog
 
 ## Pre-release channels
 
-| Channel | Format | Risk | Suitable for |
-| --- | --- | --- | --- |
-| alpha | `0.1.0-alpha.x` | API in flux, IR unstable | Exploration / feedback |
-| beta | `0.1.0-beta.x` | API frozen, minor tweaks | Integration testing |
-| rc | `0.1.0-rc.x` | Imminent stable | Pre-production rehearsal |
-| stable | `0.1.0` | Under SemVer | Production |
+| Channel | Format | Main content | Main driver | Suitable for |
+| --- | --- | --- | --- | --- |
+| alpha | `0.1.0-alpha.x` | New features / new IR fields / API reshaping (schema in flux, IR unstable) | **Human-designed + AI-implemented** | Exploration / feedback |
+| beta | `0.1.0-beta.x` | Performance / readability / refactoring / test hardening / docs completion (API frozen, minor tweaks) | **Human-led optimization and refactoring** | Integration testing |
+| rc | `0.1.0-rc.x` | Blocker bug fixes only | Human | Pre-production rehearsal |
+| stable | `0.1.0` | Under SemVer; normal PATCH / MINOR / MAJOR cadence | — | Production |
 
 Channels move forward only: alpha → beta → rc → stable. There's no rollback.
 
-## Development model per channel
-
-| Channel | Main content | Main driver |
-| --- | --- | --- |
-| alpha | New features, new IR fields, API reshaping | **Human-designed** + **AI-implemented** |
-| beta | Performance / readability / refactoring / test hardening / docs completion | **Human-led optimization and refactoring** (API frozen — the goal is code quality, not new capability) |
-| rc | Blocker bug fixes only | Human |
-| stable | Under SemVer; normal PATCH / MINOR / MAJOR cadence | — |
-
-The alpha "human-designed / AI-implemented" split — humans produce ADRs (schema field tables, file scopes, test quadrants, option decisions), AI relays through spec / implementation / tests / docs, and humans reconcile and review at the end. This keeps **architectural decisions under human control while scaling out implementation work**.
+retikz uses a **"human-designed + AI-implemented"** split during alpha: humans produce ADRs (schema fields, file scopes, test quadrants, option decisions), AI relays through spec / implementation / tests / docs, and humans reconcile and review at the end — keeping architectural decisions under human control while scaling out implementation work. Full workflow details: [AI-assisted development](../ai-assisted-development).
 
 beta inverts this — schema is frozen, the API stops growing, and AI's freedom narrows; this phase emphasizes human review of alpha-era implementation, performance tuning, refactoring, test hardening, and documentation completion, laying the foundation for rc / stable.
 
