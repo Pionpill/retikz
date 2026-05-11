@@ -1,5 +1,5 @@
 import type { MdxFrontmatter } from '@/components/shared/mdx-content';
-import { MdxContent, MdxToc } from '@/components/shared/mdx-content';
+import { InlineMdx, MdxContent, MdxToc } from '@/components/shared/mdx-content';
 import { getSectionsByModule } from '@/data/sections';
 import { cn } from '@/lib/utils';
 import { useTocStore } from '@/store/useTocStore';
@@ -88,7 +88,7 @@ export const DocPage: FC<DocPageProps> = props => {
                 {target.extra}
               </div>
             </div>
-            {description && <p className="text-muted-foreground">{description}</p>}
+            {description && <InlineMdx source={description} className="text-muted-foreground" />}
           </header>
           <div className="[&_p]:[overflow-wrap:anywhere] [&_li]:[overflow-wrap:anywhere] [&_h1]:[overflow-wrap:anywhere] [&_h2]:[overflow-wrap:anywhere] [&_h3]:[overflow-wrap:anywhere] [&_h4]:[overflow-wrap:anywhere]">
             {notFound ? (
