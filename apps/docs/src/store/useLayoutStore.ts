@@ -5,9 +5,8 @@ import { persist } from 'zustand/middleware';
 export type DocLayout = 'default' | 'centered';
 
 /**
- * Layout store：托管文档站三列 ↔ 居中布局。
- * - `default`：左 sidebar + 中正文 + 右 TOC（默认）
- * - `centered`：隐藏 sidebar 与 TOC，正文居中、两侧留白；tocOpen 状态保留，切回 default 自动恢复
+ * Layout store：托管文档站三列 ↔ 居中布局
+ * @description `default` 三栏拉开，`centered` 正文居中、两侧留白；tocOpen 状态保留，切回 default 自动恢复
  */
 export type LayoutState = {
   layout: DocLayout;

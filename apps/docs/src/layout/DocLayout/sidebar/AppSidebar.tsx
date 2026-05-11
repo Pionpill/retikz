@@ -22,9 +22,8 @@ export type AppSidebarProps = {
   /** 容器额外类（移动端 Sheet 复用本组件时关掉 sticky 等） */
   className?: string;
   /**
-   * 显式指定模块 id。
-   * MobileNav 渲染在 `<Routes>` 外（AppHeader 里），useParams 拿不到 :moduleId，
-   * 这时调用方需要从 pathname 自己解出来传进来。桌面 DocLayout 走 Routes，缺省即可。
+   * 显式指定模块 id
+   * @description MobileNav 渲染在 `<Routes>` 外（AppHeader 里）useParams 拿不到 :moduleId，需调用方从 pathname 解出来传进；桌面 DocLayout 走 Routes，缺省即可
    */
   moduleId?: string;
 };

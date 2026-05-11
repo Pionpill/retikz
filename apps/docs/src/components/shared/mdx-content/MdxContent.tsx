@@ -35,9 +35,7 @@ const compileOptions: CompileOptions = {
   outputFormat: 'function-body',
   development: import.meta.env.DEV,
   remarkPlugins: [remarkFrontmatter, remarkMdxFrontmatter, remarkGfm],
-  // rehype-slug 给 h1-h6 注 id（基于 github-slugger），TOC 跳转 / 锚链接全靠它
-  // rehype-mdx-code-props 把围栏 meta（如 `ts showLineNumbers`）转成 <code> 的 JSX props，
-  // 必须最后跑 —— 它把 hast 转成 JSX 后下游插件就处理不了了。
+  // rehype-slug 给 h1-h6 注 id（TOC 跳转 / 锚链接靠它）；rehype-mdx-code-props 把围栏 meta 转成 JSX props，必须最后跑（把 hast 转 JSX 后下游插件就处理不了了）
   rehypePlugins: [rehypeSlug, [rehypeMdxCodeProps, { tagName: 'code' }]],
 };
 
@@ -56,12 +54,8 @@ const ContentSkeleton: FC = () => (
 );
 
 /**
- * MDX 渲染容器：在浏览器里把 source 字符串编译成组件并挂载。
- *
- * 不闪关键：state.Content 只在新 source 编译成功后才被替换，编译期间继续渲染旧组件。
- * 调用方传 source=null（路由过渡）时也按"什么都不动"处理，保持上一次的 DOM。
- *
- * 仅 state.Content === null（首次加载或第一次 compile 还没完成）时才回退到 Skeleton。
+ * MDX 渲染容器：把 source 字符串编译成组件并挂载
+ * @description state.Content 只在新 source 编译成功后才替换，编译期间继续渲染旧组件；source=null 视为路由过渡保持 DOM；仅 Content 为 null（首次加载未完成）才回退到 Skeleton
  */
 export const MdxContent: FC<MdxContentProps> = props => {
   const { source, onFrontmatter } = props;

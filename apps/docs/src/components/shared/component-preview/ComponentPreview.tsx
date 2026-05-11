@@ -19,13 +19,9 @@ import { PanZoomToolbar } from './PanZoomToolbar';
 import { usePanZoom } from './usePanZoom';
 
 /**
- * 收集 contents/<...>/<name>.demo.tsx 下的所有 demo（demo 文件与 mdx 同级，靠 .demo.tsx 后缀甄别）：
- * - demoModules：模块本体，用 default 导出当作渲染组件
- * - demoSources：?raw 取源码字符串，作为 ComponentPreview 底部代码段展示
- * 双 glob 同 key 一一对应，build 时由 vite 处理，零自定义脚本。
+ * 收集 contents 下全部 demo 模块 + 源码字符串
+ * @description 双 glob 同 key 一一对应：default 导出当渲染组件，?raw 取源码喂底部代码段。`undefined` 显式声明，让 TS 知道存在性检查不是冗余
  */
-// import.meta.glob 默认类型 Record<string, T>，但运行时未匹配的 key 是 undefined，
-// 显式声明为 `T | undefined` 让 TS 知道下面的存在性检查不是冗余。
 const demoModules: Record<string, { default: FC } | undefined> = import.meta.glob<{
   default: FC;
 }>('../../../contents/**/*.demo.tsx', { eager: true });
@@ -40,8 +36,8 @@ const buildLangKey = (segments: Array<string>, name: string, lang: string) =>
   `../../../contents/${segments.join('/')}/${name}.${lang}.demo.tsx`;
 
 /**
- * 解析 demo key——优先用当前语言版（`<name>.<lang>.demo.tsx`），找不到回退到无 lang 后缀（`<name>.demo.tsx`）。
- * 含展示文本的 demo（节点标签 / 标注文字 / 中文文案）应配双语副本；无文本的纯几何 demo 直接用单文件即可。
+ * 解析 demo key
+ * @description 优先 `<name>.<lang>.demo.tsx`，找不到回退到 `<name>.demo.tsx`；含展示文本的 demo 配双语副本，纯几何 demo 单文件即可
  */
 const resolveDemoKey = (
   segments: Array<string>,
@@ -74,25 +70,18 @@ export type ComponentPreviewProps = {
 };
 
 /**
- * MDX 内的"渲染 + 源码"演示卡。下半段对齐 shadcn v4 的 View Code 一次性切换。
- * 拆分：
- * - 平移 / 缩放状态走 `usePanZoom`，与 Dialog 共享上下文
- * - hover 工具条在 `PanZoomToolbar`
- * - 放大查看 + 编辑在 `MaximizedDialog`
- * 本文件保留 demo 数据载入 + 卡片骨架 + 下方代码面板（View Code / 折叠 / 复制）三段。
+ * MDX 内的"渲染 + 源码"演示卡
+ * @description 本文件保留 demo 数据载入 + 卡片骨架 + 下方代码面板三段；平移 / 缩放走 `usePanZoom`，工具条走 `PanZoomToolbar`，放大查看走 `ComponentDetailDialog`
  */
 export const ComponentPreview: FC<ComponentPreviewProps> = props => {
   const { name, align = 'center', size = 'md', componentClassName, hideCode = false } = props;
-  // ALL hooks 必须无条件先于 early return 调用。
-  // 局部状态用 `boolean | undefined`：undefined 表示「用户尚未对此卡单独操作过」，跟随全局默认；
-  // 一旦点过 View Code / X / 展开，本地选择就胜过全局，后续切换全局开关不会再改写它。
+  // 局部状态用 `boolean | undefined`：undefined 跟随全局默认；用户单卡操作过一次后本地选择胜出，不再被全局开关改写
   const [localIsCodeVisible, setLocalIsCodeVisible] = useState<boolean | undefined>(undefined);
   const [view, setView] = useState<SourceView>('react');
   const [localIsExpanded, setLocalIsExpanded] = useState<boolean | undefined>(undefined);
   const [copied, setCopied] = useState(false);
   const timerRef = useRef<number | null>(null);
-  // 卡内 drag：桌面默认关闭（避免劫持页面滚轮 / 误拖），靠工具条 Hand 按钮开启；
-  // 移动端（<lg）默认开启——窄屏没有滚轮且工具条不易触达，先让用户能直接拖拽。Dialog 内强制开启。
+  // 卡内 drag：桌面默认关闭（避免劫持滚轮 / 误拖）靠 Hand 按钮开启；移动端（<lg）默认开启——窄屏没有滚轮且工具条不易触达。Dialog 内强制开启
   const [dragEnabled, setDragEnabled] = useState(
     () => typeof window !== 'undefined' && window.matchMedia('(max-width: 1023.98px)').matches,
   );
@@ -100,10 +89,7 @@ export const ComponentPreview: FC<ComponentPreviewProps> = props => {
   const { transform, isDragging, panBy, zoomBy, resetTransform, isTransformed, transformStyle, beginDrag } =
     usePanZoom();
 
-  // 全局默认（仅在该卡 local 仍为 undefined 时生效）：
-  // - isExpand 启用 → 默认揭示并展开
-  // - hideCode 启用 → 默认收回到 View Code 占位（与卡的初始默认一致）
-  // - 二者同启用时让 hideCode 胜出（更克制；isExpand 若想覆盖须用户单卡点开）
+  // 全局默认（仅在该卡 local 仍为 undefined 时生效）：二者同启用时 hideCode 胜出（更克制，isExpand 若想覆盖须用户单卡点开）
   const globalHideCode = useComponentPreviewStore(s => s.hideCode);
   const globalIsExpand = useComponentPreviewStore(s => s.isExpand);
   const isCodeVisible = localIsCodeVisible ?? globalHideCode;
@@ -119,18 +105,14 @@ export const ComponentPreview: FC<ComponentPreviewProps> = props => {
   const { i18n } = useTranslation();
   const lang = i18n.language.startsWith('zh') ? 'zh' : 'en';
 
-  // demo 解析需要在 useMemo 之前算出 Component 引用，所以这里允许「找不到」时为 undefined，
-  // 不在这里 early return（hooks 顺序要稳）；最终的"找不到"分支由下面的 if (!mod || ...) 走。
-  // 走 useDocLocation 归一 grouped / ungrouped 两种 URL 形态——与 useMdxSource 共用一份路径来源。
+  // 允许「找不到」时为 undefined，不在这里 early return（hooks 顺序要稳）；"找不到"分支由下面的 `if (!mod || ...)` 走
   const segments = loc ? docPathSegments(loc) : null;
   const key = segments ? resolveDemoKey(segments, name, lang) : null;
   const mod = key ? demoModules[key] : undefined;
   const source = key ? demoSources[key] : undefined;
   const Component = mod?.default;
 
-  // IR 视图：调一次 Component()（demo 是一个直接返回 <Tikz>...</Tikz> 的纯 FC，无 hooks 不会出问题），
-  // 优先看 Tikz 的 ir prop（demo 可能是 <Tikz ir={...}/> 直接喂 IR），否则把 children 喂给 convertReactNodeToIR；
-  // 失败回落给一段错误文本而不是抛出。hideCode 时 IR 区根本不渲染——跳过整次 IR 计算
+  // IR 视图：调一次 Component()（demo 是无 hooks 的纯 FC）；优先看 Tikz 的 ir prop，否则把 children 喂给 convertReactNodeToIR；失败回落到错误文本；hideCode 时跳过整次计算
   const irJson = useMemo(() => {
     if (!Component || hideCode) return '';
     try {
@@ -191,8 +173,7 @@ export const ComponentPreview: FC<ComponentPreviewProps> = props => {
           'group/preview relative flex w-full justify-center overflow-hidden p-6 sm:p-10 select-none',
           sizeClass[size],
           alignClass[align],
-          // 触摸设备上启用拖拽时关闭浏览器原生 pan/zoom，避免和我们的位移冲突；
-          // 关闭时保持默认 touch-action 让用户能正常滚动页面经过 demo。
+          // 触摸设备启用拖拽时关闭浏览器原生 pan/zoom，避免和位移冲突；关闭时保持默认 touch-action 让用户能正常滚动页面经过 demo
           dragEnabled && 'touch-none',
           cardDragCursor,
           componentClassName,

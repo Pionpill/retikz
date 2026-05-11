@@ -25,8 +25,8 @@ const compileOptions: CompileOptions = {
 };
 
 /**
- * 给代码段（单 backtick）外的裸 `<` 加反斜杠转义，避免 MDX 把 `<Tag>` 当 JSX 解析。
- * CommonMark 中 `\<` 是 ASCII punctuation 转义，渲染回字面量 `<`。
+ * 给代码段外的裸 `<` 加反斜杠转义
+ * @description CommonMark 中 `\<` 是 ASCII punctuation 转义，渲染回字面量 `<`，避免 MDX 把 `<Tag>` 当 JSX 解析
  */
 const escapeBareAngles = (source: string): string =>
   source
@@ -41,13 +41,8 @@ export type InlineMdxProps = {
 };
 
 /**
- * 单段内联 Markdown 渲染：用于 frontmatter `description` 等短字符串场景。
- *
- * 与 MdxContent 的差异：
- *  - 同步编译 + useMemo 记忆化：输入短，省掉 skeleton 与异步状态机
- *  - 代码段外裸 `<` 自动转义：description 中写 `<Tag>` 字面量不会触发 JSX 解析失败
- *  - `<p>` className 由调用方注入：与外层段落样式一致，不强加 mdxComponents 的 margin
- *  - 编译失败回退到原文（含 backticks 等字面量），保证最坏情况下也能看见原始描述
+ * 单段内联 Markdown 渲染（用于 frontmatter `description` 等短字符串）
+ * @description 同步编译 + useMemo 记忆化（省掉 skeleton 与异步状态机）；代码段外裸 `<` 自动转义；`<p>` className 由调用方注入；编译失败回退到原文
  */
 export const InlineMdx: FC<InlineMdxProps> = ({ source, className }) => {
   const Content = useMemo<MDXContentType | null>(() => {

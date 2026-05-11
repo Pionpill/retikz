@@ -11,9 +11,8 @@ import {
 import { modules } from '@/data/module';
 
 /**
- * 顶栏水平模块切换：core / flow / plot。
- * 激活态由路由 :moduleId 决定；点击走 react-router <Link> 切到该模块默认页。
- * 默认页拼接由 App.tsx 的 ModuleRedirect 兜底（/:moduleId 自动跳到首栏首页）。
+ * 顶栏水平模块切换：core / flow / plot
+ * @description 激活态由路由 :moduleId 决定；点击走 react-router `<Link>` 切到该模块；默认页由 App.tsx 的 ModuleRedirect 兜底（/:moduleId 自动跳到首栏首页）
  */
 export const ModuleNav: FC = () => {
   const { t } = useTranslation();

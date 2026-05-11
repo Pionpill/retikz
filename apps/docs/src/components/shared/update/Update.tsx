@@ -12,12 +12,8 @@ export type UpdateProps = {
 };
 
 /**
- * Changelog 条目：左列上下叠"发布时刻 chip + 受影响包名（纯文字）"，右列纯 mdx 正文。
- * 不再画时间线竖条 / 圆点 —— 只是 2 列 grid 的对齐排版。
- *
- * - 左列固定 8rem，能容下 `@retikz/react` 这类双段 monospace 包名
- * - 日期是 chip（border + bg-muted），强调时刻；包名是纯 muted 文字，避免一堆 chip 视觉嘈杂
- * - 内部 children 直接走 mdxComponents 渲染：第一个 h2/h3 自带 first:mt-0，无需覆盖
+ * Changelog 条目（2 列 grid）
+ * @description 左列固定 8rem（容得下 `@retikz/react` 双段 monospace 包名），上下叠"日期 chip + 受影响包名（muted 纯文字，避免一堆 chip 视觉嘈杂）"；右列纯 mdx 正文走 mdxComponents 渲染
  */
 export const Update: FC<UpdateProps> = ({ label, tags, className, children }) => (
   <div className={cn('group/update grid grid-cols-[8rem_1fr] gap-6 pb-10 last:pb-0 first:pt-0', className)}>

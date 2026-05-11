@@ -29,8 +29,8 @@ const DOT_PATTERN_STYLE: React.CSSProperties = {
 };
 
 /**
- * 把 transform / drag 状态封装在自己内部——拖拽期间 setState 只让本组件重渲染，
- * 不会带动右侧 HighlightedCode 重跑 syntax highlight（之前 transform 在 Dialog 顶层 → 整树重渲染 → 卡）。
+ * 把 transform / drag 状态封装在自己内部
+ * @description 拖拽期间 setState 只让本组件重渲染，不带动右侧 HighlightedCode 重跑 syntax highlight（之前 transform 提到 Dialog 顶层 → 整树重渲染 → 卡）
  */
 type DialogDemoPaneProps = {
   align: AlignKey;
@@ -63,10 +63,8 @@ const DialogDemoPane: FC<DialogDemoPaneProps> = props => {
 };
 
 /**
- * 演示卡详情模态：
- * - 顶部 header：demo 名 + 关闭 X
- * - 左右 split-pane：左渲染（透明底纹 + 拖拽 + transform）、右代码
- * - 右上工具栏：React / IR 切换、Copy
+ * 演示卡详情模态
+ * @description 顶部 header（demo 名 + 关闭 X） + 左右 split-pane（左渲染 + 拖拽 transform，右代码 + React/IR 切换 + Copy）
  */
 export const ComponentDetailDialog: FC<ComponentDetailDialogProps> = props => {
   const { open, onOpenChange, name, Component, trimmedSource, irJson, align } = props;
@@ -94,8 +92,7 @@ export const ComponentDetailDialog: FC<ComponentDetailDialogProps> = props => {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
-        // 大屏放大 + 自定义 header + split-pane；override 默认 max-w-lg / p-6 / gap-4。
-        // showCloseButton=false：自带的右上 X 与代码栏 Copy 重合，关闭按钮挪到 header 里。
+        // 大屏放大 + 自定义 header + split-pane；showCloseButton=false：自带的右上 X 与 Copy 重合，关闭挪到 header
         showCloseButton={false}
         className="flex h-[90vh] max-h-[900px] w-[96vw] max-w-[1500px] flex-col gap-0 overflow-hidden p-0 sm:max-w-[1500px]"
       >

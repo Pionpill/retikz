@@ -15,16 +15,8 @@ import { useMdxSource } from './useMdxSource';
 export type DocPageProps = HTMLAttributes<HTMLDivElement>;
 
 /**
- * 文档页渲染器，支持两种路由形态：grouped (`/<m>/<s>/<p>(/<sp>)?`) 与 ungrouped (`/<m>/<p>`)。
- * - 找不到对应数据节点 → 404 文案
- * - 命中分组节点（含 children）→ 重定向到首个子项，避免空页面
- * - 命中叶子节点 → 加载并渲染对应路径下的 mdx 文件
- *
- * 不闪策略：
- *  - useMdxSource 的 source 在路由切换瞬间会回 null（新 mdx 还在 fetch）
- *  - 我们用 stableSource 保持上一份非空 source 给下游（MdxContent / MdxToc / DocPageActions）
- *  - MdxContent 内部 state.Content 也只在新编译成功才替换，于是「旧 → 新」无空白过渡
- *  - frontmatter（描述文字等）同理不主动重置；新 mdx 编完后 onFrontmatter 直接覆盖
+ * 文档页渲染器
+ * @description 用 stableSource 保留上一次非空 source，路由切换时下游继续看见旧内容直至新 mdx 编译就绪，避免空白闪烁
  */
 export const DocPage: FC<DocPageProps> = props => {
   const { className, ...resProps } = props;

@@ -7,9 +7,8 @@ import { docPathSegments, useDocLocation } from './docLocation';
 type MdxLoader = () => Promise<string>;
 
 /**
- * 收集 src/contents 下全部 mdx 源码字符串，按需异步加载。
- * key 形如 '../../contents/core/introduction/index.zh.mdx'（ungrouped）或
- * '../../contents/core/components/draw/path/index.zh.mdx'（grouped 嵌套）
+ * 收集 src/contents 下全部 mdx 源码字符串
+ * @description 按需异步加载；key 形如 `../../contents/<module>/<...segments>/index.<lang>.mdx`
  */
 const mdxLoaders: Record<string, MdxLoader | undefined> = import.meta.glob<string>(
   '../../contents/**/*.mdx',
@@ -39,9 +38,8 @@ export type UseMdxSourceResult = {
 };
 
 /**
- * 根据当前路由参数 + i18n 当前语言异步加载 mdx 源码。
- * 支持 grouped (2-/3-段路径段，sectionId 在内) 与 ungrouped (1-段，仅 pageId) 两种叶子路径。
- * 切换路由时会废弃过期的 fetch 结果，避免旧内容覆盖新页面。
+ * 根据当前路由参数 + i18n 当前语言异步加载 mdx 源码
+ * @description 兼容 grouped / ungrouped 两种叶子路径；切换路由废弃过期 fetch 结果，避免旧内容覆盖新页面
  */
 export const useMdxSource = (): UseMdxSourceResult => {
   const { i18n } = useTranslation();

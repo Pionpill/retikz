@@ -20,10 +20,8 @@ export type PanZoomToolbarProps = {
 };
 
 /**
- * Hover 出现的渲染区操作面板。
- * - 上半 3x3 d-pad（中央 ⟲ 复原）
- * - 下半单行 4 个动作按钮：放大、缩小、拖拽切换、放大查看
- * - mousedown 拦截不冒泡，避免触发外层 demo 区的 drag handler
+ * Hover 出现的渲染区操作面板
+ * @description 上半 3×3 d-pad（中央 ⟲ 复原），下半 4 按钮（放缩 / 拖拽切 / 放大查看）；mousedown 拦截不冒泡，避免触发外层 demo 的 drag handler
  */
 export const PanZoomToolbar: FC<PanZoomToolbarProps> = props => {
   const { transform, isTransformed, panBy, zoomBy, resetTransform, dragEnabled, toggleDrag, onMaximize } = props;

@@ -31,9 +31,8 @@ const stripInlineMarkdown = (text: string): string =>
     .replace(/_{1,3}([^_]+)_{1,3}/g, '$1');
 
 /**
- * 从 mdx 源码提取 h1-h3。
- * - 先剥 frontmatter / 围栏代码块，避免 ``` 内的 # 被当成标题
- * - 用 GithubSlugger 算 id，跟 rehype-slug 输出的 DOM id 对得上
+ * 从 mdx 源码提取 h1-h3
+ * @description 先剥 frontmatter / 围栏代码块避免 ``` 内的 # 被当成标题；用 GithubSlugger 算 id 与 rehype-slug 输出的 DOM id 对齐
  */
 const parseHeadings = (source: string): Array<TocItem> => {
   const cleaned = source.replace(FRONTMATTER_REGEX, '').replace(FENCED_CODE_REGEX, '');

@@ -34,10 +34,8 @@ const A: FC<ComponentPropsWithoutRef<'a'>> = ({ href, className, children, ...re
 };
 
 /**
- * 卡片化的 Link，照搬 shadcn 同名组件。href 自动判断内 / 外链：
- * - `/` 开头走 react-router `<Link>`
- * - `http(s)://` 开头走新窗口 `<a>`
- * shadcn 用的 bg-surface / text-surface-foreground 我们没有对应主题 token，用 muted 替代。
+ * 卡片化的 Link，照搬 shadcn 同名组件
+ * @description href 以 `/` 开头走 react-router，以 `http(s)://` 开头走新窗口；shadcn 用的 bg-surface token 不存在，用 muted 替代
  */
 const linkedCardClass =
   'flex w-full flex-col items-center rounded-xl bg-muted p-6 text-foreground no-underline transition-colors hover:bg-muted/80 sm:p-10';
@@ -58,8 +56,8 @@ const LinkedCard: FC<{ className?: string; href: string; children?: ReactNode }>
 };
 
 /**
- * 围栏代码块走 CodeBlock 组件（react-syntax-highlighter）；行内裸 `<code>` 用 shadcn neutral 样式。
- * `showLineNumbers` 由 rehype-mdx-code-props 从围栏 meta（``` ts showLineNumbers）注入到 props。
+ * 围栏代码块走 CodeBlock，行内 `<code>` 用 shadcn neutral 样式
+ * @description `showLineNumbers` 由 rehype-mdx-code-props 从围栏 meta（如 ``` ts showLineNumbers）注入到 props
  */
 type CodeProps = ComponentPropsWithoutRef<'code'> & { showLineNumbers?: boolean };
 

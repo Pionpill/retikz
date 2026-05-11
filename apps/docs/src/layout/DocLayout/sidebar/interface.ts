@@ -1,13 +1,8 @@
 import type { ComponentType } from 'react';
 
 /**
- * 侧边栏视图契约——参考 fx-data-nines 的 SidebarCategoryData / SidebarModuleData / SidebarItemData，
- * 但裁掉了 author / generateType / updateDate / href 等 retikz 用不到的字段。
- *
- * 数据形态（约定最多三级）：
- *   Category（分组：SidebarGroupLabel + 一组 modules）
- *     └── Module（一级菜单项：Icon + 文字；可有 children）
- *           └── SubModule（二级及以下：纯文字，递归 children）
+ * 侧边栏视图契约
+ * @description 三级层次：Category（分组）→ Module（一级，可带 Icon）→ SubModule（二级及以下，递归 children）
  */
 
 /** 二级及以下菜单项（递归节点） */

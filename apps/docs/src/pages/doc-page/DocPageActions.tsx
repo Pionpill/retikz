@@ -24,9 +24,8 @@ export type DocPageActionsProps = {
 };
 
 /**
- * 估算文档统计：
- * - chars：剥掉 frontmatter / 代码块 / 行内代码 / JSX / md 链接 / 标题列表等标记后剩余的非空白字符数（中文按字符算）
- * - components：大写开头 JSX 开标签的出现次数（HTML 小写标签不计入）；先剥代码块再扫，避免 ```...``` 里的伪组件
+ * 估算文档统计
+ * @description chars 剥掉 frontmatter / 代码块 / md 标记后的非空白字符数；components 计大写开头 JSX 开标签数量（先剥代码块避免 ``` 里的伪组件计入）
  */
 const computeDocStats = (mdx: string): { chars: number; components: number } => {
   let s = mdx.replace(/^---\r?\n[\s\S]*?\r?\n---\r?\n?/, '');
@@ -42,8 +41,8 @@ const computeDocStats = (mdx: string): { chars: number; components: number } => 
 };
 
 /**
- * 双行菜单项正文：bordered 图标盒（size-8 = 32px，内置 size-5 图标 → 单边 6px 边距）+ 标题 + 灰字描述。
- * 标题尾随 `↗` 标识外链跳转（紧贴 label，不推到行尾）。
+ * 双行菜单项正文：图标盒 + 标题 + 灰字描述
+ * @description 标题尾随 ↗ 标识外链跳转（紧贴 label，不推到行尾）
  */
 const MenuItemBody: FC<{ icon: ReactNode; title: string; desc: string }> = ({ icon, title, desc }) => (
   <>

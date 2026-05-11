@@ -8,8 +8,8 @@ import { cn } from '@/lib/utils';
 import type { SourceView } from './_shared';
 
 /**
- * 工具条里反复出现的小号 ghost icon button，统一外观（size-7、rounded-sm、muted 文字色）。
- * 透传所有原生 button 属性 + 一个 `pressed` 用作 toggle 视觉态（变 secondary + aria-pressed）。
+ * 工具条小号 ghost icon button
+ * @description 统一外观（size-7、rounded-sm、muted 色）；透传 button 属性 + `pressed` toggle 态（变 secondary + aria-pressed）
  */
 export type ToolbarIconButtonProps = Omit<ComponentProps<'button'>, 'aria-label'> & {
   label: string;
@@ -34,8 +34,8 @@ export const ToolbarIconButton: FC<ToolbarIconButtonProps> = props => {
 };
 
 /**
- * React / IR 视图切换的两连按钮——卡内底部代码栏与 Dialog 右栏共用。
- * 选中态走 outline，未选用 ghost 但加透明边框占位避免布局抖动。
+ * React / IR 视图切换的两连按钮
+ * @description 卡内底部代码栏与 Dialog 右栏共用；未选用 ghost + 透明边框占位避免布局抖动
  */
 export type ViewToggleProps = {
   view: SourceView;

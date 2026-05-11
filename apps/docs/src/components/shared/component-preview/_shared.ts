@@ -14,8 +14,8 @@ export const alignClass = {
 export type AlignKey = keyof typeof alignClass;
 
 /**
- * 预览区高度档位——mobile / sm: 双断点。`md` 与改造前 `h-56 sm:h-72` 完全一致，作为默认值。
- * 叙述性插图（hideCode + retikz 配图）一般用 xs / sm；带交互的大型 demo 用 lg / xl。
+ * 预览区高度档位
+ * @description mobile / sm 双断点；`md` 是默认值；叙述性插图用 xs / sm，带交互的大型 demo 用 lg / xl
  */
 export const sizeClass = {
   xs: 'h-32 sm:h-40',
@@ -28,9 +28,8 @@ export const sizeClass = {
 export type SizeKey = keyof typeof sizeClass;
 
 /**
- * `JSON.stringify(_, null, 2)` 会把数组无脑拆成 4 行（`position: [0, 0]` 也变 4 行），
- * IR 输出特别冗长。post-process：把不含嵌套对象/数组的纯标量短数组压回单行（限 60 字符以内
- * 避免长数组内联反而难读）。
+ * 格式化 IR JSON
+ * @description `JSON.stringify(_, null, 2)` 会把 `[0, 0]` 这种短数组拆 4 行；post-process 把不含嵌套的纯标量短数组压回单行（限 60 字符内，避免长数组内联反而难读）
  */
 export const formatIR = (ir: unknown): string =>
   JSON.stringify(ir, null, 2).replace(/\[\s*([^[\]{}]+?)\s*\]/g, (match, contents: string) => {

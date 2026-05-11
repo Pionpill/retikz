@@ -20,10 +20,8 @@ const baseLinkClass =
 const activeLinkClass = 'text-foreground font-semibold bg-accent';
 
 /**
- * 二级及以下菜单项。
- * - 叶子（无 children）：点击导航；激活态靠按钮自身的 bg + bold 体现
- * - 分组（有 children）：点击展开/收起；命中子项时父节点初始即展开；
- *   chevron 表示当前折叠态。子项容器不带装饰竖线，平铺缩进即可
+ * 二级及以下菜单项
+ * @description 叶子点击导航（激活态靠 bg + bold）；分组点击展开/收起（命中子项时父节点初始展开），chevron 显示折叠态；子项容器不带装饰竖线
  */
 export const AppSidebarMenuItem: FC<AppSidebarMenuItemProps> = props => {
   const { item, path } = props;

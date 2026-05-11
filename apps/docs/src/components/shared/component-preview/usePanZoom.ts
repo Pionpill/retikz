@@ -16,10 +16,8 @@ export const ZOOM_MIN = 0.25;
 export const ZOOM_MAX = 4;
 
 /**
- * 渲染区平移 + 缩放统一 hook。
- * - 状态：transform（{x,y,scale}）+ isDragging
- * - 拖拽期间监听 window 而非容器：指针离开 demo 边界时仍能继续 drag，松开（在哪都行）即结束
- * - `beginDrag(enabled)` 工厂返回一个 mousedown handler：卡内传 dragEnabled，Dialog 内传 true 强制启用
+ * 渲染区平移 + 缩放统一 hook
+ * @description 拖拽期间监听 window 而非容器，指针离开 demo 边界仍能继续 drag；`beginDrag(enabled)` 工厂：卡内传 dragEnabled，Dialog 内传 true 强制启用
  */
 export const usePanZoom = () => {
   const [transform, setTransform] = useState<Transform>({ x: 0, y: 0, scale: 1 });
@@ -35,8 +33,7 @@ export const usePanZoom = () => {
       setTransform(t => ({ ...t, x: dragRef.current!.baseX + dx, y: dragRef.current!.baseY + dy }));
     };
     const onMouseMove = (e: MouseEvent) => apply(e.clientX, e.clientY);
-    // touchmove 注册为 passive: false：拖拽期间需要 preventDefault 抑制页面滚动，
-    // 否则浏览器会优先把这次触摸交给页面 pan，demo 内的位移就跟不上手指。
+    // touchmove 注册为 passive: false：拖拽期间 preventDefault 抑制页面滚动，否则浏览器优先把触摸交给页面 pan，demo 位移跟不上手指
     const onTouchMove = (e: TouchEvent) => {
       if (e.touches.length !== 1) return;
       e.preventDefault();
@@ -66,10 +63,8 @@ export const usePanZoom = () => {
   const resetTransform = () => setTransform({ x: 0, y: 0, scale: 1 });
 
   /**
-   * mousedown / touchstart 共用入口：
-   * - 鼠标只接收左键
-   * - 触摸只接收单指（多指给浏览器自己处理 pinch-zoom 等手势）
-   * 真正抑制页面滚动靠 useEffect 里的 window touchmove preventDefault；touchstart 这里不需要。
+   * mousedown / touchstart 共用入口
+   * @description 鼠标只接左键，触摸只接单指（多指交给浏览器处理 pinch-zoom）；抑制页面滚动靠 useEffect 里的 window touchmove preventDefault
    */
   const beginDrag =
     (enabled: boolean) =>

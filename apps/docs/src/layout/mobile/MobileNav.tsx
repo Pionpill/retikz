@@ -11,14 +11,8 @@ import { modules } from '@/data/module';
 import { AppSidebar } from '../DocLayout/sidebar/AppSidebar';
 
 /**
- * 移动端 (< lg) 顶栏左侧汉堡按钮 + Sheet 抽屉。
- * 抽屉内：
- *   1. SheetHeader：复用桌面 BrandLink 的"标题 + 版本徽章" + 模块 ToggleGroup
- *   2. AppSidebar：当前模块下完整的栏目 / 页面树
- *
- * 注意：本组件挂在 AppHeader 里，渲染位置在 `<Routes>` 之外，所以 useParams() 取不到 :moduleId。
- * 因此 moduleId 这里直接从 pathname 解析（首段），并验证是否在 modules 注册表里；
- * 解析后的 id 同时用于 ToggleGroup 选中态和 AppSidebar 的列表渲染。
+ * 移动端汉堡按钮 + Sheet 抽屉
+ * @description 抽屉内 SheetHeader（brand + 模块 ToggleGroup） + AppSidebar；挂在 AppHeader 里位置在 `<Routes>` 外，moduleId 直接从 pathname 首段解析
  */
 export const MobileNav: FC = () => {
   const { t } = useTranslation();

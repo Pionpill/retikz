@@ -37,10 +37,8 @@ const ModuleRedirect = () => {
 };
 
 /**
- * 2-段 URL 解析器：`/:moduleId/:firstSeg`
- * - firstSeg 是 ungrouped section 下的某 page id → 直接渲染 DocPage
- * - firstSeg 是 grouped section 的 id → 重定向到该 section 首页
- * - 其它 → 回模块根
+ * 2-段 URL 解析器 `/:moduleId/:firstSeg`
+ * @description firstSeg 是 ungrouped page id 直接渲染 DocPage；是 grouped section id 重定向到该 section 首页；其它回模块根
  */
 const TwoSegResolver = () => {
   const { moduleId, firstSeg } = useParams<'moduleId' | 'firstSeg'>();
@@ -61,12 +59,8 @@ const TwoSegResolver = () => {
 };
 
 /**
- * 全局快捷键：
- * - Ctrl+L 复制当前 URL
- * - Ctrl+Alt+B 切换 TOC 显隐
- * - Ctrl+Alt+M 切换布局（默认 ↔ 居中）
- * - Ctrl+Alt+H 切换隐藏所有 ComponentPreview 代码
- * - Ctrl+Alt+E 切换强制展开所有 ComponentPreview 代码
+ * 全局快捷键
+ * @description Ctrl+L 复制 URL；Ctrl+Alt+B 切 TOC；Ctrl+Alt+M 切布局；Ctrl+Alt+H 切隐藏所有 demo 代码；Ctrl+Alt+E 切强制展开所有 demo 代码
  */
 const useDocShortcuts = () => {
   const { t } = useTranslation();
@@ -87,7 +81,7 @@ const useDocShortcuts = () => {
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      // Mac 走 ⌘（metaKey），其它平台走 Ctrl —— 与 UI 上 Shortcut 渲染的 mod 含义保持一致
+      // Mac 走 ⌘（metaKey），其它平台走 Ctrl —— 与 UI 上 Shortcut 渲染的 mod 含义一致
       const mod = event.metaKey || event.ctrlKey;
       const key = event.key.toLowerCase();
       if (mod && !event.altKey && !event.shiftKey && key === 'l') {

@@ -25,16 +25,12 @@ import { useTocStore } from '@/store/useTocStore';
 
 import { GITHUB_URL, TIKZ_DOCS_URL, useDocActions } from './useDocActions';
 
-// TooltipTrigger 默认即 <button>，直接套 buttonVariants；不再用 <Button asChild> 包，
-// 避免 React 18 下 asChild → 自定义函数组件 ref 转发不到，触发不到 Popper 锚点。
+// TooltipTrigger 默认即 `<button>`，直接套 buttonVariants；不用 `<Button asChild>` 包，避免 React 18 下 asChild → 自定义函数组件 ref 转发不到，触发不到 Popper 锚点
 const triggerClass = cn(buttonVariants({ variant: 'ghost', size: 'icon' }), 'size-7 cursor-pointer rounded-sm');
 
 /**
- * 顶栏右侧动作组：
- * - 桌面（lg+）：GitHub / 复制链接 / 主题 / 语言 / 更多 一字排开。
- * - 移动端（< lg）：只保留 More 按钮，把主题 / 语言 / 复制链接 / GitHub 也塞进 Dropdown 顶部一组，
- *   后接「视图」「演示」「资源」既有分组。模块切换 / sidebar 仍走左侧 MobileNav 抽屉。
- * TooltipProvider 在本组件内部自闭包，AppHeader 不必感知 Tooltip 实现。
+ * 顶栏右侧动作组
+ * @description 桌面（lg+）GitHub / 复制链接 / 主题 / 语言 / 更多 平铺；移动端（< lg）只保留 More 按钮，前四项折进 Dropdown 顶部分组；TooltipProvider 内部自闭包
  */
 export const HeaderActions: FC = () => {
   const { t, i18n } = useTranslation();

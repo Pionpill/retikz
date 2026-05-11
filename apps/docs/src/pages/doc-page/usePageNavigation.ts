@@ -83,8 +83,8 @@ export type PageNavigation = {
 };
 
 /**
- * 基于当前路由参数，按 sidebar 顺序计算上 / 下一篇。
- * 数据源由 getSectionsByModule 按 moduleId 派发，跨模块独立成环。
+ * 基于当前路由参数，按 sidebar 顺序计算上 / 下一篇
+ * @description 数据源由 getSectionsByModule 按 moduleId 派发，跨模块独立成环
  */
 export const usePageNavigation = (): PageNavigation => {
   const loc = useDocLocation();

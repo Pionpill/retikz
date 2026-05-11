@@ -14,8 +14,8 @@ export type CodeBlockCommandProps = {
 const MANAGERS: ReadonlyArray<PkgManager> = ['pnpm', 'npm', 'yarn', 'bun'];
 
 /**
- * 包管理器 tab 切换的 bash 命令块，视觉照搬 shadcn `code-block-command`。
- * 选择持久化到 usePkgManagerStore——一页内多块、跨页同步。
+ * 包管理器 tab 切换的 bash 命令块（视觉照搬 shadcn `code-block-command`）
+ * @description 选择持久化到 usePkgManagerStore，一页内多块、跨页同步
  */
 export const CodeBlockCommand: FC<CodeBlockCommandProps> = ({ pnpm, npm, yarn, bun }) => {
   const { pkgManager, setPkgManager } = usePkgManagerStore();

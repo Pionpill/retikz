@@ -20,11 +20,8 @@ const leafBase =
 const leafActive = 'text-foreground font-semibold bg-accent';
 
 /**
- * 侧栏主菜单：渲染若干分组（section）。
- * - 一级 module 无 children：叶子链接，点击跳路由
- * - 一级 module 有 children：交给 AppSidebarMenuItem（Collapsible 折叠，无装饰竖线）
- * - 一级始终铺开，不做 Plus/Minus 折叠
- * - 分组之间用 Separator 横线分隔
+ * 侧栏主菜单：渲染若干分组（section）
+ * @description 一级 module 无 children 即叶子链接，有 children 交给 AppSidebarMenuItem（Collapsible）；一级始终铺开不做 Plus/Minus 折叠；分组间 Separator 分隔
  */
 export const AppSidebarMenu: FC<AppSidebarMenuProps> = props => {
   const { categories, moduleId } = props;

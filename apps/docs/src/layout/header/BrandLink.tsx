@@ -3,8 +3,8 @@ import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router';
 
 /**
- * 顶栏左侧 brand：logo 占位（Sparkles）+ "retikz" + 版本 badge。
- * logo 资产到位后替换 Sparkles。
+ * 顶栏左侧 brand：logo + "retikz" + 版本 badge
+ * @description logo 资产到位后替换占位 Sparkles
  */
 export const BrandLink: FC = () => {
   const { t } = useTranslation();

@@ -35,7 +35,7 @@ const useSearchEntries = (): Array<SearchEntry> => {
   const { t, i18n } = useTranslation();
   return useMemo(() => {
     const out: Array<SearchEntry> = [];
-    // i18next t() 在 strict 模式下返回 string | undefined；统一包 String() 强转，避免向下传递时窄化报错
+    // i18next t() strict 模式返回 string | undefined；统一 String() 强转，避免向下传递时窄化报错
     for (const m of modules) {
       const moduleLabel = String(t(m.label));
       const sections = getSectionsByModule(m.id);
@@ -74,9 +74,8 @@ const useSearchEntries = (): Array<SearchEntry> => {
 };
 
 /**
- * 全站文档搜索：参考 shadcn / langchain docs 的 Cmd+K 风格。
- * 触发器是个 outline 输入框样的按钮，点击或 Ctrl/Cmd+K 打开 CommandDialog。
- * 数据源为 `data/` 下注册的模块 → 栏目 → 页树，按 label（i18n 翻译后）模糊匹配。
+ * 全站文档搜索（shadcn / langchain docs 的 Cmd+K 风格）
+ * @description 触发器是 outline 输入框样按钮，点击或 Ctrl/Cmd+K 打开 CommandDialog；数据源走 `data/` 模块 → 栏目 → 页树，按 i18n label 模糊匹配
  */
 export type DocsSearchProps = { className?: string };
 export const DocsSearch: FC<DocsSearchProps> = ({ className }) => {
