@@ -1,0 +1,41 @@
+---
+title: Node
+description: 可定位的形状容器，可选文本内容（矩形 / 圆 / 椭圆 / 菱形）
+---
+
+`NodeSchema` 描述一个被定位的视觉原件。它是 IR 里字段最多的实体 —— 30+ 字段覆盖形状、填充 / 描边、padding、文本、字体、缩放、附加标签。
+
+<ZodSchema name="NodeSchema" descriptions={{
+  type: '判别字段，标记此子节点为 node',
+  id: '可选唯一 id；当其它 path 需要按字符串引用本 node 时必填',
+  shape: '节点形状，默认 `rectangle`。circle / ellipse / diamond 外接 text+padding',
+  position: '节点内容盒中心点；笛卡尔 [x,y]、极坐标、或 `at`-风格相对定位',
+  rotate: '绕节点中心顺时针旋转角度（°）',
+  text: '节点内文本：纯字符串或多行 LineSpec 数组',
+  align: '多行文本块内对齐，默认 `center`',
+  lineHeight: '行高（用户单位）；未填时取 `font.size × 1.2`',
+  fill: '形状背景色，任意 CSS color',
+  fillOpacity: '填充不透明度 0..1，只影响形状背景',
+  stroke: '形状边框色，任意 CSS color，默认 currentColor',
+  drawOpacity: '描边不透明度 0..1（TikZ `draw opacity`），只影响边框',
+  strokeWidth: '边框宽度（用户单位），默认 1',
+  dashed: '边框样式：虚线预设（TikZ `dashed`）；被 dashArray 覆盖',
+  dotted: '边框样式：点线预设（TikZ `dotted`）；被 dashArray / dashed 覆盖',
+  dashArray: 'SVG stroke-dasharray 显式值，盖过 dashed / dotted',
+  roundedCorners: '圆角半径（用户单位），仅对 rectangle 生效',
+  minimumWidth: '形状最小可视宽度（用户单位）',
+  minimumHeight: '形状最小可视高度（用户单位）',
+  minimumSize: 'minimumWidth + minimumHeight 的对称别名；轴向字段优先',
+  scale: '整体缩放，乘到边框 / padding / text / fontSize',
+  xScale: '横向缩放，覆盖 scale 的 X 分量',
+  yScale: '纵向缩放，覆盖 scale 的 Y 分量',
+  textColor: '文本颜色，任意 CSS color，默认 currentColor',
+  opacity: '整节点不透明度 0..1，同时作用于形状与文本',
+  innerXSep: '内部横向 padding（text 到边框）',
+  innerYSep: '内部纵向 padding',
+  outerSep: '外部 margin（边框到 path 挂接点），不改可视边框',
+  padding: 'innerXSep + innerYSep 的对称别名',
+  margin: 'outerSep 的对称别名',
+  font: '节点内文本的字体规格（family / size / weight / style，均可选）',
+  label: '节点外围附加文本（TikZ `[label=above:foo]`），单对象或数组',
+}} />

@@ -1,0 +1,12 @@
+---
+title: Coordinate
+description: 占位节点 —— 命名一个点供 path / at 引用，不绘制任何图形
+---
+
+`CoordinateSchema` 是 TikZ `\coordinate (m) at (3,2);` 的 IR 形态。必须有 `id`（这是它存在的全部意义），不参与 viewBox 扩展，与 Node 共享 nodeIndex。
+
+<ZodSchema name="CoordinateSchema" descriptions={{
+  type: '判别字段，标记此子节点为 coordinate 占位',
+  id: '必填唯一 id；coordinate 的全部意义就是被引用',
+  position: '坐标位置；笛卡尔 [x,y]、极坐标、或相对定位（`at` 风格）',
+}} />

@@ -1,0 +1,11 @@
+---
+title: Entity 概述
+description: 在 scene 中被命名的成员 —— Node 与 Coordinate
+---
+
+`entity` 涵盖**有 id**、**放在某个位置**、**自身不画线**的 IR 元素。目前两类：
+
+- [`Node`](/core/reference/entity/node) —— 形状容器（矩形 / 圆 / 椭圆 / 菱形），可挂文本
+- [`Coordinate`](/core/reference/entity/coordinate) —— 不可见命名锚点，可作 path target 或 `at`-position 的 `of` 引用
+
+两者注册到同一个 nodeIndex，所以 Coordinate 的 id 与 Node 的 id 共享命名空间。

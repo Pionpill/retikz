@@ -1,0 +1,8 @@
+---
+title: Scene
+description: The top-level IR root — a JSON-serializable description of one retikz drawing
+---
+
+`SceneSchema` is the IR root. Every drawing serializes down to one Scene object whose `children` array holds nodes, paths, and coordinate placeholders.
+
+<ZodSchema name="SceneSchema" />

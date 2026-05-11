@@ -1,0 +1,12 @@
+---
+title: Scene
+description: IR 根 —— 一份 retikz 绘制的 JSON 化描述
+---
+
+`SceneSchema` 是 IR 根节点。一张图序列化下来就是一个 Scene 对象，`children` 数组里放 node / path / coordinate 三种子节点。
+
+<ZodSchema name="SceneSchema" descriptions={{
+  version: 'IR 主版本号；schema 出现破坏性变更时才递增',
+  type: '判别字段，标记该对象为 scene 根节点',
+  children: 'scene 的顶层子节点列表；node 注册的 id 可被 path 引用',
+}} />
