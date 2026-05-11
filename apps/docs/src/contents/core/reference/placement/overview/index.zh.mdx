@@ -1,0 +1,12 @@
+---
+title: Placement 概述
+description: 三种位置说明方式 —— 笛卡尔 / 极坐标 / 相对定位
+---
+
+`placement` 涵盖 `position` 字段能填入的三种形态：
+
+- [`Position`](/core/reference/placement/position) —— 笛卡尔 `[x, y]`（元组）
+- [`PolarPosition`](/core/reference/placement/polar-position) —— 围绕一个原点的角度 + 半径；递归（原点可以又是 PolarPosition）
+- [`AtPosition`](/core/reference/placement/at-position) —— 相对另一个节点，按方向 + 距离
+
+三者都会在 Scene 编译阶段解析为笛卡尔。

@@ -1,0 +1,12 @@
+---
+title: PolarPosition
+description: 极坐标位置（围绕原点的角度 + 半径）
+---
+
+`PolarPositionSchema` 是递归的 —— `origin` 字段本身可以又是一个 `PolarPosition`（链式极坐标）。
+
+<ZodSchema name="PolarPositionSchema" descriptions={{
+  origin: '原点引用：node id 字符串、笛卡尔 [x,y]、或嵌套 PolarPosition（递归）；省略则取 [0, 0]',
+  angle: '角度（°），逆时针为正（TikZ 约定）',
+  radius: '半径 / 距离，用户单位',
+}} />
