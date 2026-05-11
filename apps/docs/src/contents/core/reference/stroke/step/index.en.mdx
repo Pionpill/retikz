@@ -1,0 +1,48 @@
+---
+title: Step
+description: One action along a path — 10 variants discriminated by `kind`
+---
+
+`StepSchema` is a discriminated union — `Path.children` is an array of these. The `kind` field picks the variant:
+
+<ZodSchema name="StepSchema" />
+
+## Move
+
+<ZodSchema name="MoveStepSchema" />
+
+## Line
+
+<ZodSchema name="LineStepSchema" />
+
+## Fold
+
+<ZodSchema name="FoldStepSchema" />
+
+## Cycle
+
+<ZodSchema name="CycleStepSchema" />
+
+## Curve
+
+<ZodSchema name="CurveStepSchema" />
+
+## Cubic
+
+<ZodSchema name="CubicStepSchema" />
+
+## Bend
+
+<ZodSchema name="BendStepSchema" />
+
+## Arc
+
+<ZodSchema name="ArcStepSchema" />
+
+## CirclePath
+
+<ZodSchema name="CirclePathStepSchema" />
+
+## EllipsePath
+
+<ZodSchema name="EllipsePathStepSchema" />

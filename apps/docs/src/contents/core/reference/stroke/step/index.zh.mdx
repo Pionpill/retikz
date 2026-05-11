@@ -1,0 +1,104 @@
+---
+title: Step
+description: path 上一个动作 —— 由 `kind` 判别的 10 种变体
+---
+
+`StepSchema` 是判别联合 —— `Path.children` 是 Step 数组。`kind` 字段选变体：
+
+<ZodSchema name="StepSchema" />
+
+## Move
+
+<ZodSchema name="MoveStepSchema" descriptions={{
+  type: '判别字段，标记本节点为 path step',
+  kind: '动作种类：`move` —— 不画线，仅移动光标到目标点（SVG path "M"）',
+  to: 'move 动作的目标点',
+}} />
+
+## Line
+
+<ZodSchema name="LineStepSchema" descriptions={{
+  type: '判别字段，标记本节点为 path step',
+  kind: '动作种类：`line` —— 从光标到目标点画一条直线（SVG path "L"）',
+  to: '直线段的目标点',
+  label: '边标注：附在本段上的文字标签',
+}} />
+
+## Fold
+
+<ZodSchema name="FoldStepSchema" descriptions={{
+  type: '判别字段，标记本节点为 path step',
+  kind: '动作种类：`step`（折角段，从光标到目标点经一个直角中间点；TikZ `-|`/`|-`）',
+  via: '折角方向：`-|` 先横后竖；`|-` 先竖后横',
+  to: '折线段的目标点',
+  label: '边标注：附在本段上的文字标签（按 position 落在对应支段）',
+}} />
+
+## Cycle
+
+<ZodSchema name="CycleStepSchema" descriptions={{
+  type: '判别字段，标记本节点为 path step',
+  kind: '动作种类：`cycle` —— 闭合回最近一次 move 的目标点（TikZ `cycle` / SVG path "Z"）',
+}} />
+
+## Curve
+
+<ZodSchema name="CurveStepSchema" descriptions={{
+  type: '判别字段，标记本节点为 path step',
+  kind: '动作种类：`curve` —— 二次贝塞尔，从光标到目标点带 1 个控制点（SVG path "Q"）',
+  to: '曲线终点',
+  control: '二次贝塞尔单控制点',
+  label: '边标注：附在本段上的文字标签',
+}} />
+
+## Cubic
+
+<ZodSchema name="CubicStepSchema" descriptions={{
+  type: '判别字段，标记本节点为 path step',
+  kind: '动作种类：`cubic` —— 三次贝塞尔，从光标到目标点带 2 个控制点（SVG path "C"）',
+  to: '曲线终点',
+  control1: '第一个控制点（影响起点切线）',
+  control2: '第二个控制点（影响终点切线）',
+  label: '边标注：附在本段上的文字标签',
+}} />
+
+## Bend
+
+<ZodSchema name="BendStepSchema" descriptions={{
+  type: '判别字段，标记本节点为 path step',
+  kind: '动作种类：`bend` —— 简记弧形：按方向 + 角度生成贝塞尔近似（TikZ `to[bend left=N]` / `to[bend right=N]`）',
+  to: '弧形段的目标点',
+  bendDirection: '弧形偏转方向（相对 from→to 弦的视觉左 / 右）',
+  bendAngle: '弯曲角度（°），默认 30',
+  label: '边标注：附在本段上的文字标签',
+}} />
+
+## Arc
+
+<ZodSchema name="ArcStepSchema" descriptions={{
+  type: '判别字段，标记本节点为 path step',
+  kind: '动作种类：`arc` —— 以光标为圆心，按起末角度 + 半径绘制弧段（TikZ `arc[start angle=…, end angle=…, radius=…]`）；笔停在弧端点而非圆心',
+  startAngle: '弧起始角（°），逆时针从 +x 轴起（数学约定；SVG y-down 视觉为顺时针）',
+  endAngle: '弧终止角（°）；扫向由 startAngle 与 endAngle 大小关系隐式决定',
+  radius: '弧半径（用户单位）',
+  label: '边标注：附在本段上的文字标签',
+}} />
+
+## CirclePath
+
+<ZodSchema name="CirclePathStepSchema" descriptions={{
+  type: '判别字段，标记本节点为 path step',
+  kind: '动作种类：`circlePath` —— 以光标为圆心、给定半径的整圆（TikZ `circle[radius=…]`），笔画结束后回到圆心',
+  radius: '圆半径（用户单位）',
+  label: '边标注：附在本段上的文字标签',
+}} />
+
+## EllipsePath
+
+<ZodSchema name="EllipsePathStepSchema" descriptions={{
+  type: '判别字段，标记本节点为 path step',
+  kind: '动作种类：`ellipsePath` —— 以光标为圆心、给定 x/y 半径的整椭圆（TikZ `ellipse[x radius=…, y radius=…]`），笔画结束后回到中心',
+  radiusX: 'x 轴半径（半长轴或半短轴）',
+  radiusY: 'y 轴半径（半长轴或半短轴）',
+  label: '边标注：附在本段上的文字标签',
+}} />

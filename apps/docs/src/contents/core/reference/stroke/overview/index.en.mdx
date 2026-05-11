@@ -1,0 +1,10 @@
+---
+title: Stroke
+description: Path drawing system — Path, Step, and Target
+---
+
+`stroke` covers the IR primitives that make up a drawn line:
+
+- [`Path`](/core/reference/stroke/path) — the outer container; carries stroke style, arrow shape, fill, and a `children` array of steps
+- [`Step`](/core/reference/stroke/step) — one action along the path (10 kinds: move / line / fold / cycle / curve / cubic / bend / arc / circlePath / ellipsePath)
+- [`Target`](/core/reference/stroke/target) — the endpoint of a step (Cartesian / polar / node id / relative offset)
