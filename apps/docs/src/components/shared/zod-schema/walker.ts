@@ -13,5 +13,22 @@ export function walkType(schema: ZodTypeAny): TypeRepr {
   if (schema instanceof z.ZodBoolean) return { kind: 'primitive', name: 'boolean' };
   if (schema instanceof z.ZodLiteral) return { kind: 'literal', value: schema.value };
 
+  if (schema instanceof z.ZodEnum) {
+    return { kind: 'enum', values: schema.options as ReadonlyArray<string> };
+  }
+  if (schema instanceof z.ZodNativeEnum) {
+    return { kind: 'enum', values: Object.values(schema.enum) };
+  }
+  if (schema instanceof z.ZodArray) {
+    const constraints: Array<string> = [];
+    if (schema._def.minLength) constraints.push(`min ${schema._def.minLength.value}`);
+    if (schema._def.maxLength) constraints.push(`max ${schema._def.maxLength.value}`);
+    return {
+      kind: 'array',
+      element: walkType(schema._def.type),
+      constraints,
+    };
+  }
+
   return { kind: 'unknown', note: `unhandled: ${schema._def?.typeName ?? 'no typeName'}` };
 }
