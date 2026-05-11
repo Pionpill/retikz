@@ -38,7 +38,7 @@ Without `<Coordinate>`, anchoring "a named point" forces you to fake an empty `<
 
 The most common pattern: name a virtual center, then have multiple nodes position around it and multiple paths terminate at it.
 
-<ComponentPreview name="coordinate-as-anchor" />
+<ComponentPreview name="coordinate-as-anchor" size="lg" />
 
 The four nodes above all use `at.of='hub'` to reference the same hub; moving hub moves the whole arrangement. Without a coordinate, each `at.of` would have to be replaced with absolute coordinates and each path would need `[0, 0]` literals — repetitive and unrenameable.
 
@@ -46,7 +46,7 @@ The four nodes above all use `at.of='hub'` to reference the same hub; moving hub
 
 In flow charts, multiple paths often converge at a virtual point — that point isn't a real node (no rectangle / no text), but it needs an id so several `way`s can route through it.
 
-<ComponentPreview name="coordinate-fold-junction" />
+<ComponentPreview name="coordinate-fold-junction" size="lg" />
 
 ## API Reference
 

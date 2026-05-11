@@ -33,25 +33,25 @@ import { Node, Text } from '@retikz/react';
 
 `<Text>` contributes one styled line; plain string children contribute style-less lines — JSX order is render order:
 
-<ComponentPreview name="text-basic" />
+<ComponentPreview name="text-basic" size="xs" />
 
 ### Per-line override fields
 
 Three fields: `fill` / `opacity` / `font` — `font` is a nested object so you can override just one sub-field (family / size / weight / style):
 
-<ComponentPreview name="text-attrs" />
+<ComponentPreview name="text-attrs" size="sm" />
 
 ### Mixing with string children
 
 String children can still be split on `'\n'` internally; each `<Text>` element contributes one styled line; JSX order = render order:
 
-<ComponentPreview name="text-mix-string" />
+<ComponentPreview name="text-mix-string" size="sm" />
 
 ### Equivalent to LineSpec objects
 
 These two nodes compile to identical output:
 
-<ComponentPreview name="text-vs-prop" />
+<ComponentPreview name="text-vs-prop" size="sm" />
 
 ## API Reference
 

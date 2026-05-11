@@ -38,7 +38,7 @@ import { Coordinate } from '@retikz/react';
 
 最常用的姿势：用 coordinate 命名一个虚拟中心，让多个节点围绕它定位、多条 path 终止于它。
 
-<ComponentPreview name="coordinate-as-anchor" />
+<ComponentPreview name="coordinate-as-anchor" size="lg" />
 
 上面 4 个节点用 `at.of='hub'` 引用同一个 hub；移动 hub 整组节点都跟着移。如果不用 coordinate，4 个节点的 `at.of` 必须改成绝对坐标，4 条 path 也得用 `[0, 0]` 字面量——重复且不可重命名。
 
@@ -46,7 +46,7 @@ import { Coordinate } from '@retikz/react';
 
 流程图里多条 path 在一个虚拟点汇合的场景——汇合点本身不是真节点（不该有矩形 / 文字），但需要一个 id 让多条 way 经过它。
 
-<ComponentPreview name="coordinate-fold-junction" />
+<ComponentPreview name="coordinate-fold-junction" size="lg" />
 
 ## API 参考
 

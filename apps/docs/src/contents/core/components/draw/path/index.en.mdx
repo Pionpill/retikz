@@ -36,13 +36,13 @@ import { Path, Step } from '@retikz/react';
 
 ### Polyline
 
-<ComponentPreview name="path-basic" />
+<ComponentPreview name="path-basic" size="sm" />
 
 ### Folded (step)
 
 `<Step kind="step" via="-|" \| "\|-">` inserts a right-angle corner between cursor and target — essential for flow charts and UML relationships. Below is a path mixing `line` and both `via` directions:
 
-<ComponentPreview name="path-fold" />
+<ComponentPreview name="path-fold" size="lg" />
 
 ### Closing (cycle)
 
@@ -78,7 +78,7 @@ import { Path, Step } from '@retikz/react';
 
 `stroke` / `strokeWidth` / `strokeDasharray` match `<Draw>`:
 
-<ComponentPreview name="path-dashed" />
+<ComponentPreview name="path-dashed" size="xs" />
 
 ### Stroke endpoints / corners
 
@@ -90,7 +90,7 @@ import { Path, Step } from '@retikz/react';
 
 `thickness` is a TikZ-style semantic preset — `'ultraThin'` / `'veryThin'` / `'thin'` / `'semithick'` / `'thick'` / `'veryThick'` / `'ultraThick'` — compiled to a numeric stroke width (`thin = 1` matches the default `strokeWidth`; the rest scale by TikZ's ratios). **Explicit `strokeWidth` always wins** — `thickness` only applies when `strokeWidth` is omitted:
 
-<ComponentPreview name="path-thickness" />
+<ComponentPreview name="path-thickness" size="lg" />
 
 ### Opacity
 

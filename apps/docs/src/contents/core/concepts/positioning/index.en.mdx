@@ -17,7 +17,7 @@ Every "where" in retikz uses one position syntax: three interchangeable forms co
 
 Direct `[x, y]` tuple.
 
-<ComponentPreview name="positioning-cartesian" />
+<ComponentPreview name="positioning-cartesian" size="sm" />
 
 ## Polar
 
@@ -31,7 +31,7 @@ Direct `[x, y]` tuple.
 
 Six nodes around `O` at radius 80, every 60° from 0 to 300 — the canonical radial layout:
 
-<ComponentPreview name="positioning-polar" />
+<ComponentPreview name="positioning-polar" size="lg" />
 
 `origin` can be **nested** — e.g. `{ origin: { origin: 'a', angle: 0, radius: 30 }, angle: 90, radius: 20 }` means "30 right of a, then 20 up". Chained polar is handy for radial / local offsets.
 
@@ -39,7 +39,7 @@ Six nodes around `O` at radius 80, every 60° from 0 to 300 — the canonical ra
 
 `<Step>` / `<Draw>` targets also accept a **string** — referencing a node id inside the same `<Tikz>`:
 
-<ComponentPreview name="positioning-id-ref" />
+<ComponentPreview name="positioning-id-ref" size="sm" />
 
 The actual line endpoints are computed by retikz automatically — see [Anchors](/core/concepts/anchors).
 

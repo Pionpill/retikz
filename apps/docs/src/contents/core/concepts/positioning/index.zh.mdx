@@ -17,7 +17,7 @@ retikz 里所有"放在哪 / 连到哪"都用同一套位置语法：3 种形态
 
 最直白：`[x, y]` 元组。
 
-<ComponentPreview name="positioning-cartesian" />
+<ComponentPreview name="positioning-cartesian" size="sm" />
 
 ## 极坐标
 
@@ -31,7 +31,7 @@ retikz 里所有"放在哪 / 连到哪"都用同一套位置语法：3 种形态
 
 下面 6 个节点以 `O` 为极点、半径 80、角度从 0 到 300 每 60° 一个，画出常见的圆形布局：
 
-<ComponentPreview name="positioning-polar" />
+<ComponentPreview name="positioning-polar" size="lg" />
 
 `origin` 还可以**嵌套**——例如 `{ origin: { origin: 'a', angle: 0, radius: 30 }, angle: 90, radius: 20 }` 表示"从 a 向右 30 再向上 20"。这种链式表达在画径向 / 局部偏移时很顺手。
 
@@ -39,7 +39,7 @@ retikz 里所有"放在哪 / 连到哪"都用同一套位置语法：3 种形态
 
 `<Step>` / `<Draw>` 的 target 还接受**字符串**，表示引用同一 `<Tikz>` 内的节点 id：
 
-<ComponentPreview name="positioning-id-ref" />
+<ComponentPreview name="positioning-id-ref" size="sm" />
 
 线段的实际起止点由 retikz 自动算——见 [锚点](/core/concepts/anchors)。
 

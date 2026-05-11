@@ -21,13 +21,13 @@ import { Node } from '@retikz/react';
 
 ### Basic
 
-<ComponentPreview name="node-basic" />
+<ComponentPreview name="node-basic" size="xs" />
 
 ### Shape polymorphism
 
 `shape` picks the visual shape: `'rectangle'` (default) / `'circle'` / `'ellipse'` / `'diamond'`. Any shape works as an attachable target — connecting lines clip to that shape's boundary automatically:
 
-<ComponentPreview name="node-shapes" />
+<ComponentPreview name="node-shapes" size="lg" />
 
 > Each shape's outer boundary contains "text rectangle + padding":
 > - rectangle: boundary = inner rect
@@ -39,19 +39,19 @@ import { Node } from '@retikz/react';
 
 `fill` / `stroke` / `strokeWidth` / `padding` / `font` control per-node appearance:
 
-<ComponentPreview name="node-styled" />
+<ComponentPreview name="node-styled" size="xs" />
 
 ### Font
 
 `font` is a nested object `{ family?, size?, weight?, style? }` — bold / italic / family all live in one prop:
 
-<ComponentPreview name="node-font" />
+<ComponentPreview name="node-font" size="xs" />
 
 ### Multi-line text
 
 `text` accepts a string (one line) or an array of strings (one line each). `align` controls horizontal alignment within the text block (`'left'` / `'center'` (default) / `'right'`), and `lineHeight` controls vertical spacing between lines, defaulting to `font.size × 1.2`.
 
-<ComponentPreview name="node-multiline" />
+<ComponentPreview name="node-multiline" size="sm" />
 
 > Arrays beat `'\n'`-delimited strings: JSON-friendly (no escape headaches), and leaves room for per-line attributes later.
 
@@ -95,7 +95,7 @@ Both **symmetric aliases** and **axis-specific** forms are supported (resolution
 
 90% of the time `padding={N}` is enough; reach for axis-specific only when you need button-like wide-but-flat nodes etc.
 
-<ComponentPreview name="node-sep" />
+<ComponentPreview name="node-sep" size="sm" />
 
 ### Colors / opacity
 
@@ -103,13 +103,13 @@ Both **symmetric aliases** and **axis-specific** forms are supported (resolution
 - `opacity` — whole-node 0..1 (applies to shape + text)
 - `fillOpacity` / `drawOpacity` — fill-only / stroke-only opacity
 
-<ComponentPreview name="node-color-opacity" />
+<ComponentPreview name="node-color-opacity" size="sm" />
 
 ### Border style
 
 `dashed` / `dotted` are presets; `dashArray` is an SVG-native escape hatch (priority: `dashArray` > `dashed` > `dotted`):
 
-<ComponentPreview name="node-stroke-style" />
+<ComponentPreview name="node-stroke-style" size="sm" />
 
 ### Size constraints + scale
 
@@ -117,13 +117,13 @@ Both **symmetric aliases** and **axis-specific** forms are supported (resolution
 - `minimumWidth` / `minimumHeight` / `minimumSize` — floor the bbox without shrinking natural text width
 - `scale` / `xScale` / `yScale` — uniform / per-axis scale; affects bbox, font size, padding, and path attachment
 
-<ComponentPreview name="node-size-constraints" />
+<ComponentPreview name="node-size-constraints" size="sm" />
 
 ### Rotation
 
 `rotate` rotates around the node center; attached paths follow the new border:
 
-<ComponentPreview name="node-rotated" />
+<ComponentPreview name="node-rotated" size="sm" />
 
 ### Relative positioning
 
@@ -139,7 +139,7 @@ In addition to Cartesian / polar, `position` accepts **`{ direction, of, distanc
 
 `label` attaches extra text outside the node border (TikZ `[label=above:foo]` equivalent). Single object or array form; `position` accepts the 8-direction enum or a numeric angle (`label=30:foo` ↔ `position: 30`); `font` / `textColor` inherit from the node when omitted.
 
-<ComponentPreview name="node-label-basic" />
+<ComponentPreview name="node-label-basic" size="lg" />
 
 ## API Reference
 

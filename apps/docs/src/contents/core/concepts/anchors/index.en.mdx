@@ -28,7 +28,7 @@ The most common case: when a path references a node by plain id (`<Step to="a">`
 
 The 8 Draws below are all `[outerNode, 'Node']` — endpoints land near N / S / E / W / NE / NW / SE / SW respectively:
 
-<ComponentPreview name="anchors-auto-attach" hideCode />
+<ComponentPreview name="anchors-auto-attach" size="lg" hideCode />
 
 ## Explicit anchor string syntax
 
@@ -42,7 +42,7 @@ Don't want auto-selection, need a specific position? Target strings support thre
 
 `'A.<anchor>'` and `'A.<deg>'` are **fixed in place** — they don't move with neighbor step direction (only auto mode does). The 8 Draws below use 8 different named anchors as endpoints:
 
-<ComponentPreview name="anchors-explicit" />
+<ComponentPreview name="anchors-explicit" size="lg" />
 
 > **id naming constraints**: A node id starts with a letter or underscore, may include letters / digits / underscores / hyphens (`[A-Za-z_][\w-]*`), and **cannot contain `.`** — that's reserved as the anchor / angle separator.
 >

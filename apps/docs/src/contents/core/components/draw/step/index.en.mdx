@@ -24,7 +24,7 @@ import { Path, Step } from '@retikz/react';
 
 The path below draws A→B with one `move` + `line`, then lifts the pen with another `move` to draw an independent line:
 
-<ComponentPreview name="step-basic" />
+<ComponentPreview name="step-basic" size="sm" />
 
 ### Folded (step)
 
@@ -54,7 +54,7 @@ The path below draws A→B with one `move` + `line`, then lifts the pen with ano
 
 `kind="bend"` is shorthand for TikZ's `to[bend left=N]` / `to[bend right=N]` — give a direction and angle, control points are computed at compile time and lowered to a cubic. `bendDirection` is the visual left/right relative to the from→to path; `bendAngle` defaults to 30:
 
-<ComponentPreview name="step-bend" />
+<ComponentPreview name="step-bend" size="lg" />
 
 ### Relative coordinates (rel / relAccumulate)
 

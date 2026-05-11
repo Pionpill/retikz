@@ -13,7 +13,7 @@ retikz 的 React 适配器是 `@retikz/react`，peer 依赖 `react` / `react-dom
 
 ## 一个最小例子
 
-<ComponentPreview name="get-start-final" />
+<ComponentPreview name="get-start-final" size="xs" />
 
 下面 3 步把这张图搭起来——每一步都点开 **View Code** 可以看到源码与对应的 IR JSON。
 
@@ -23,7 +23,7 @@ retikz 的 React 适配器是 `@retikz/react`，peer 依赖 `react` / `react-dom
 
 画一张图至少要两件东西：容器和图元。`<Tikz>` 是顶层容器，扫描 children 构造 IR、编译 Scene、渲染 SVG；`width` / `height` 决定 SVG 元素的渲染尺寸。`<Node>` 是最常用的图元，有 `id`、`position`、可见 label。
 
-<ComponentPreview name="get-start-step-1" />
+<ComponentPreview name="get-start-step-1" size="xs" />
 
 ### 2. 多个 `<Node />`
 
@@ -35,13 +35,13 @@ retikz 的 React 适配器是 `@retikz/react`，peer 依赖 `react` / `react-dom
 | `position` | `[x, y]` 画布坐标（像素） |
 | children | 节点的可见内容（label） |
 
-<ComponentPreview name="get-start-step-2" />
+<ComponentPreview name="get-start-step-2" size="xs" />
 
 ### 3. 用 `<Draw />` 连起来
 
 `<Draw>` 是 Sugar 组件，`way` 数组按 id 引用上面的节点，编译期展开为 Kernel 的 `<Path>` + `<Step>`——所以 `<Draw>` 不会引入任何 Kernel 表达不了的能力。点开 **View Code** 切到 IR 标签，能直接看到 `<Draw>` 在 IR 里就是一个 `path`。
 
-<ComponentPreview name="get-start-final" />
+<ComponentPreview name="get-start-final" size="xs" />
 
 3 个节点用 2 条线串起，与最上方的最终效果完全一致。
 

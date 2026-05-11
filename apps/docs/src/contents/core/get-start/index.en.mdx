@@ -13,7 +13,7 @@ The underlying `@retikz/core` (IR + compiler, zero React / zero DOM) is pulled i
 
 ## A Minimal Example
 
-<ComponentPreview name="get-start-final" />
+<ComponentPreview name="get-start-final" size="xs" />
 
 We'll build this diagram in 3 steps. Click **View Code** under any preview to inspect the source and the corresponding IR JSON.
 
@@ -23,7 +23,7 @@ We'll build this diagram in 3 steps. Click **View Code** under any preview to in
 
 A diagram needs at least two things: a container and a primitive. `<Tikz>` is the top-level container — it scans children to build the IR, compiles a Scene, and renders SVG; `width` / `height` set the SVG element's render size. `<Node>` is the most common primitive — it has an `id`, a `position`, and a visible label.
 
-<ComponentPreview name="get-start-step-1" />
+<ComponentPreview name="get-start-step-1" size="xs" />
 
 ### 2. More `<Node />`s
 
@@ -35,13 +35,13 @@ You can add as many nodes as you like, but each `id` must be unique — `<Draw>`
 | `position` | `[x, y]` canvas coordinates (pixels) |
 | children | The node's visible content (label) |
 
-<ComponentPreview name="get-start-step-2" />
+<ComponentPreview name="get-start-step-2" size="xs" />
 
 ### 3. Connect them with `<Draw />`
 
 `<Draw>` is a Sugar component. The `way` array references nodes by id and is compiled to Kernel `<Path>` + `<Step>` — so `<Draw>` introduces no capability the Kernel can't already express. Click **View Code** and switch to the IR tab to see `<Draw>` show up as a plain `path` node in the IR.
 
-<ComponentPreview name="get-start-final" />
+<ComponentPreview name="get-start-final" size="xs" />
 
 Three nodes joined by two lines — matching the final example at the top.
 

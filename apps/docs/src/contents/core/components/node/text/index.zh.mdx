@@ -33,25 +33,25 @@ import { Node, Text } from '@retikz/react';
 
 `<Text>` 写一行带覆盖样式，普通字符串 children 写无样式行——按 JSX 顺序排：
 
-<ComponentPreview name="text-basic" />
+<ComponentPreview name="text-basic" size="xs" />
 
 ### 行级覆盖字段
 
 `fill` / `opacity` / `font` 三大类——`font` 是嵌套对象，可以只覆盖其中一个子字段（family / size / weight / style）：
 
-<ComponentPreview name="text-attrs" />
+<ComponentPreview name="text-attrs" size="sm" />
 
 ### 与字符串 children 混排
 
 字符串 children 内部还能用 `'\n'` 继续拆行；`<Text>` 元素整段贡献一行带样式行；JSX 写法的顺序就是渲染顺序：
 
-<ComponentPreview name="text-mix-string" />
+<ComponentPreview name="text-mix-string" size="sm" />
 
 ### 与 LineSpec 对象等价
 
 下面两个节点编译出来一模一样：
 
-<ComponentPreview name="text-vs-prop" />
+<ComponentPreview name="text-vs-prop" size="sm" />
 
 ## API 参考
 

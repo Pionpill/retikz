@@ -19,7 +19,7 @@ import { Draw } from '@retikz/react';
 
 ### Basic connection
 
-<ComponentPreview name="draw-basic" />
+<ComponentPreview name="draw-basic" size="xs" />
 
 ### Fourteen forms of way item
 
@@ -99,7 +99,7 @@ Drop `{ curve: [cx, cy] }` (infix operator) into `way` and the "previous → nex
 
 `{ bend: 'left' | 'right', angle?: number }` is the easier curve form — give a direction and angle (default 30°), control points are computed at compile time and lowered to a cubic. Equivalent to `<Step kind="bend">`:
 
-<ComponentPreview name="draw-bend" />
+<ComponentPreview name="draw-bend" size="lg" />
 
 ### Arc
 
@@ -125,7 +125,7 @@ Drop a `{ label: ... }` operator (infix) into `way` to set the IR `step.label` o
 
 The label operator can sit before any segment-producing way item — line target, `-|` / `|-` fold, `{ curve }` / `{ cubic }` / `{ bend }` / `{ arc }` / `{ circle }` / `{ ellipse }`. It **cannot** decorate `DrawWay.Cycle` (IR forbids labels on cycle); a trailing label or two consecutive label operators also throw:
 
-<ComponentPreview name="draw-label" />
+<ComponentPreview name="draw-label" size="lg" />
 
 ### Relative coordinates (Relative / Accumulate)
 

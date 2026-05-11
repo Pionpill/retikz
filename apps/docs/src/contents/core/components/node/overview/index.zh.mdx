@@ -21,13 +21,13 @@ import { Node } from '@retikz/react';
 
 ### 基础
 
-<ComponentPreview name="node-basic" />
+<ComponentPreview name="node-basic" size="xs" />
 
 ### shape 多态
 
 `shape` 控制节点形状：`'rectangle'`（默认）/ `'circle'` / `'ellipse'` / `'diamond'`。任意 shape 的节点都被 path / draw 当作有边界的图元，连线端点自动贴对应形状的边：
 
-<ComponentPreview name="node-shapes" />
+<ComponentPreview name="node-shapes" size="lg" />
 
 > 形状的"外接边界"包住"text 矩形 + padding"——
 > - rectangle: 边界 = 内框
@@ -39,19 +39,19 @@ import { Node } from '@retikz/react';
 
 `fill` / `stroke` / `strokeWidth` / `padding` / `font` 控制单个节点观感：
 
-<ComponentPreview name="node-styled" />
+<ComponentPreview name="node-styled" size="xs" />
 
 ### 字体
 
 `font` 是嵌套对象 `{ family?, size?, weight?, style? }`——粗体 / 斜体 / 字族都在一个字段里设：
 
-<ComponentPreview name="node-font" />
+<ComponentPreview name="node-font" size="xs" />
 
 ### 多行文本
 
 `text` 既可以是字符串（单行），也可以是字符串数组（一元素一行）。`align` 控制多行块内各行水平对齐方式（`'left'` / `'center'`（默认）/ `'right'`），`lineHeight` 控制相邻行的间距，未设走 `font.size × 1.2`。
 
-<ComponentPreview name="node-multiline" />
+<ComponentPreview name="node-multiline" size="sm" />
 
 > 选数组而非 `'\n'` 字符串：JSON 友好（无 escape 困扰）；行级属性扩展空间预留。
 
@@ -95,7 +95,7 @@ Line 2`}</Node>
 
 90% 场景写 `padding={N}` 就够；做 button-like 扁宽节点等少数场景再用轴特化。
 
-<ComponentPreview name="node-sep" />
+<ComponentPreview name="node-sep" size="sm" />
 
 ### 颜色 / 不透明度
 
@@ -103,13 +103,13 @@ Line 2`}</Node>
 - `opacity`——整节点 0~1（同时作用于 shape + text）
 - `fillOpacity` / `drawOpacity`——分别只透明填充或描边
 
-<ComponentPreview name="node-color-opacity" />
+<ComponentPreview name="node-color-opacity" size="sm" />
 
 ### 描边样式
 
 `dashed` / `dotted` 是预设；`dashArray` 是 SVG 原生语法的逃生口（优先级：`dashArray` > `dashed` > `dotted`）：
 
-<ComponentPreview name="node-stroke-style" />
+<ComponentPreview name="node-stroke-style" size="sm" />
 
 ### 尺寸约束 + 缩放
 
@@ -117,13 +117,13 @@ Line 2`}</Node>
 - `minimumWidth` / `minimumHeight` / `minimumSize`——撑开 bbox（不缩水 text 自然宽度）
 - `scale` / `xScale` / `yScale`——均匀 / 分轴缩放，影响 bbox + 字号 + padding + 路径附着点
 
-<ComponentPreview name="node-size-constraints" />
+<ComponentPreview name="node-size-constraints" size="sm" />
 
 ### 旋转
 
 `rotate` 绕节点中心旋转；连线会跟着新边界点贴：
 
-<ComponentPreview name="node-rotated" />
+<ComponentPreview name="node-rotated" size="sm" />
 
 ### 相对定位
 
@@ -139,7 +139,7 @@ Line 2`}</Node>
 
 `label` 在节点边界外挂额外文字，对应 TikZ `[label=above:foo]`。单对象或数组形态；`position` 接 8 方向枚举或数字角度（`label=30:foo` 等价 `position: 30`）；`font` / `textColor` 缺省时从 node 继承。
 
-<ComponentPreview name="node-label-basic" />
+<ComponentPreview name="node-label-basic" size="lg" />
 
 ## API 参考
 

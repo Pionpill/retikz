@@ -24,7 +24,7 @@ import { Path, Step } from '@retikz/react';
 
 下面这个 path 用一次 `move` + `line` 画 A→B，再 `move` 抬笔后 `line` 画一条独立的线：
 
-<ComponentPreview name="step-basic" />
+<ComponentPreview name="step-basic" size="sm" />
 
 ### 折角（step）
 
@@ -54,7 +54,7 @@ import { Path, Step } from '@retikz/react';
 
 `kind="bend"` 是 TikZ `to[bend left=N]` / `to[bend right=N]` 的简记——只给方向 + 角度，编译期自动算控制点退到 cubic。`bendDirection` 是相对 from→to 路径方向的视觉左 / 右；`bendAngle` 缺省 30：
 
-<ComponentPreview name="step-bend" />
+<ComponentPreview name="step-bend" size="lg" />
 
 ### 相对坐标（rel / relAccumulate）
 
