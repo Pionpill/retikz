@@ -39,8 +39,8 @@
     "anchors": "Anchors",
     "readingGuide": "Source Code Guide"
   },
-  "reference": {
-    "label": "Reference",
+  "about": {
+    "label": "About",
     "overview": "Overview",
     "aiAssistedDevelopment": "AI-assisted development",
     "releases": "Releases",

@@ -39,8 +39,8 @@
     "anchors": "锚点",
     "readingGuide": "源码指南"
   },
-  "reference": {
-    "label": "参考",
+  "about": {
+    "label": "关于",
     "overview": "总览",
     "aiAssistedDevelopment": "AI 辅助开发",
     "releases": "发布",
