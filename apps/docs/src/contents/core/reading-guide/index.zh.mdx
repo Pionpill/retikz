@@ -16,12 +16,9 @@ retikz 的官方仓库目前发两个包：
 
 数据流向：
 
-```text
-   JSX / DSL ──→ parsers ──→  IR  ──→ compile ──→  Scene  ──→ adapter renderer
-                              ↑                      ↑              ↑
-                          ir/* schema           primitive/*      @retikz/react
-                                          geometry/* （被 compile 调用）
-```
+<ComponentPreview name="data-flow" size="sm" hideCode />
+
+虚线箭头表示 `geometry/*` 被 `compile` 调用——是工具依赖，不是独立的数据通道。
 
 下文先讲 core 包（数据 + 编译器层），再讲 react 包（adapter 层）。
 

@@ -2,11 +2,11 @@ import { ChevronsDownUp, ChevronsUpDown, X } from 'lucide-react';
 import type { FC, ReactElement, ReactNode } from 'react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useParams } from 'react-router';
 
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
+import { docPathSegments, useDocLocation } from '@/pages/doc-page/docLocation';
 import { useComponentPreviewStore } from '@/store/useComponentPreviewStore';
 import type { IR } from '@retikz/core';
 import { convertReactNodeToIR } from '@retikz/react';
@@ -14,7 +14,7 @@ import { convertReactNodeToIR } from '@retikz/react';
 import { HighlightedCode } from '../highlight-code';
 import { ComponentDetailDialog } from './ComponentDetailDialog';
 import { CopyButton, ToolbarIconButton, ViewToggle } from './_parts';
-import { type AlignKey, type SourceView, alignClass, formatIR } from './_shared';
+import { type AlignKey, type SizeKey, type SourceView, alignClass, formatIR, sizeClass } from './_shared';
 import { PanZoomToolbar } from './PanZoomToolbar';
 import { usePanZoom } from './usePanZoom';
 
@@ -65,7 +65,9 @@ export type ComponentPreviewProps = {
   name: string;
   /** 渲染区垂直对齐，默认 center */
   align?: AlignKey;
-  /** 透传到 demo 渲染区父级 div 的 className，可覆盖默认的 h-72 / p-10 / 居中等 */
+  /** 渲染区高度档位（xs / sm / md / lg / xl），默认 `md` 与改造前一致 */
+  size?: SizeKey;
+  /** 透传到 demo 渲染区父级 div 的 className，可覆盖默认高度 / p-10 / 居中等 */
   componentClassName?: string;
   /** 隐藏底部「View Code / 源码 / IR」面板，只保留 demo 渲染区——用于叙述性插图，让 retikz 画的图当配图使 */
   hideCode?: boolean;
@@ -80,7 +82,7 @@ export type ComponentPreviewProps = {
  * 本文件保留 demo 数据载入 + 卡片骨架 + 下方代码面板（View Code / 折叠 / 复制）三段。
  */
 export const ComponentPreview: FC<ComponentPreviewProps> = props => {
-  const { name, align = 'center', componentClassName, hideCode = false } = props;
+  const { name, align = 'center', size = 'md', componentClassName, hideCode = false } = props;
   // ALL hooks 必须无条件先于 early return 调用。
   // 局部状态用 `boolean | undefined`：undefined 表示「用户尚未对此卡单独操作过」，跟随全局默认；
   // 一旦点过 View Code / X / 展开，本地选择就胜过全局，后续切换全局开关不会再改写它。
@@ -113,18 +115,14 @@ export const ComponentPreview: FC<ComponentPreviewProps> = props => {
     };
   }, []);
 
-  const { moduleId, sectionId, pageId, subPageId } = useParams<'moduleId' | 'sectionId' | 'pageId' | 'subPageId'>();
+  const loc = useDocLocation();
   const { i18n } = useTranslation();
   const lang = i18n.language.startsWith('zh') ? 'zh' : 'en';
 
   // demo 解析需要在 useMemo 之前算出 Component 引用，所以这里允许「找不到」时为 undefined，
-  // 不在这里 early return（hooks 顺序要稳）；最终的"找不到"分支由下面的 if (!mod || ...) 走
-  const segments =
-    moduleId && sectionId && pageId
-      ? subPageId
-        ? [moduleId, sectionId, pageId, subPageId]
-        : [moduleId, sectionId, pageId]
-      : null;
+  // 不在这里 early return（hooks 顺序要稳）；最终的"找不到"分支由下面的 if (!mod || ...) 走。
+  // 走 useDocLocation 归一 grouped / ungrouped 两种 URL 形态——与 useMdxSource 共用一份路径来源。
+  const segments = loc ? docPathSegments(loc) : null;
   const key = segments ? resolveDemoKey(segments, name, lang) : null;
   const mod = key ? demoModules[key] : undefined;
   const source = key ? demoSources[key] : undefined;
@@ -145,7 +143,7 @@ export const ComponentPreview: FC<ComponentPreviewProps> = props => {
     }
   }, [Component, hideCode]);
 
-  if (!moduleId || !sectionId || !pageId) return null;
+  if (!loc) return null;
 
   if (!mod || source == null || !key || !Component) {
     return (
@@ -190,7 +188,8 @@ export const ComponentPreview: FC<ComponentPreviewProps> = props => {
     <div className="my-6 overflow-hidden rounded-xl border">
       <div
         className={cn(
-          'group/preview relative flex h-56 sm:h-72 w-full justify-center overflow-hidden p-6 sm:p-10 select-none',
+          'group/preview relative flex w-full justify-center overflow-hidden p-6 sm:p-10 select-none',
+          sizeClass[size],
           alignClass[align],
           // 触摸设备上启用拖拽时关闭浏览器原生 pan/zoom，避免和我们的位移冲突；
           // 关闭时保持默认 touch-action 让用户能正常滚动页面经过 demo。

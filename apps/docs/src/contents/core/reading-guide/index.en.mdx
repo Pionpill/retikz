@@ -16,12 +16,9 @@ The official repo currently ships two packages:
 
 Data flow:
 
-```text
-   JSX / DSL ──→ parsers ──→  IR  ──→ compile ──→  Scene  ──→ adapter renderer
-                              ↑                      ↑              ↑
-                          ir/* schema           primitive/*      @retikz/react
-                                          geometry/* (called by compile)
-```
+<ComponentPreview name="data-flow" size="sm" hideCode />
+
+The dashed arrow indicates `geometry/*` is called by `compile` — a tool dependency, not a separate data channel.
 
 Below: `@retikz/core` first (data + compiler), then `@retikz/react` (adapter).
 
