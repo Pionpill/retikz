@@ -56,3 +56,51 @@ describe('walker — enum / nativeEnum / array', () => {
     });
   });
 });
+
+describe('walker — tuple / lazy / union / discriminatedUnion', () => {
+  it('walks z.tuple to tuple repr', () => {
+    expect(walkType(z.tuple([z.number(), z.number()]))).toEqual({
+      kind: 'tuple',
+      elements: [
+        { kind: 'primitive', name: 'number' },
+        { kind: 'primitive', name: 'number' },
+      ],
+    });
+  });
+
+  it('walks z.lazy by unwrapping the inner schema', () => {
+    const Lazy = z.lazy(() => z.string());
+    expect(walkType(Lazy)).toEqual({ kind: 'primitive', name: 'string' });
+  });
+
+  it('walks z.union members recursively', () => {
+    const r = walkType(z.union([z.string(), z.number()]));
+    expect(r).toEqual({
+      kind: 'union',
+      members: [
+        { kind: 'primitive', name: 'string' },
+        { kind: 'primitive', name: 'number' },
+      ],
+    });
+  });
+
+  it('walks z.discriminatedUnion same as union', () => {
+    const A = z.object({ type: z.literal('a'), x: z.number() });
+    const B = z.object({ type: z.literal('b'), y: z.string() });
+    const r = walkType(z.discriminatedUnion('type', [A, B]));
+    expect(r.kind).toBe('union');
+    if (r.kind === 'union') expect(r.members).toHaveLength(2);
+  });
+
+  it('resolves union members to ref when registered', async () => {
+    // 用 IR 真实 schema 验证：CoordinateSchema.position 是 union of Position / PolarPosition / AtPosition，三者均注册
+    const { CoordinateSchema } = await import('@retikz/core');
+    const positionField = CoordinateSchema.shape.position;
+    const r = walkType(positionField);
+    expect(r.kind).toBe('union');
+    if (r.kind === 'union') {
+      const labels = r.members.map(m => (m.kind === 'ref' ? m.name : `<${m.kind}>`));
+      expect(labels).toEqual(['Position', 'PolarPosition', 'AtPosition']);
+    }
+  });
+});

@@ -30,5 +30,22 @@ export function walkType(schema: ZodTypeAny): TypeRepr {
     };
   }
 
+  if (schema instanceof z.ZodTuple) {
+    return {
+      kind: 'tuple',
+      elements: (schema._def.items as Array<ZodTypeAny>).map(walkType),
+    };
+  }
+  if (schema instanceof z.ZodLazy) {
+    return walkType(schema._def.getter());
+  }
+  if (schema instanceof z.ZodUnion || schema instanceof z.ZodDiscriminatedUnion) {
+    const options =
+      schema instanceof z.ZodDiscriminatedUnion
+        ? Array.from((schema as z.ZodDiscriminatedUnion<string, Array<z.ZodObject<z.ZodRawShape>>>).options)
+        : (schema._def.options as Array<ZodTypeAny>);
+    return { kind: 'union', members: options.map(walkType) };
+  }
+
   return { kind: 'unknown', note: `unhandled: ${schema._def?.typeName ?? 'no typeName'}` };
 }
