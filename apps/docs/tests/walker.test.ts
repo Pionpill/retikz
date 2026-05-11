@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
-import { walkType } from '@/components/shared/zod-schema/walker';
+import { walk, walkType } from '@/components/shared/zod-schema/walker';
 
 describe('walker — primitives & literal', () => {
   it('walks z.string() to primitive', () => {
@@ -101,6 +101,92 @@ describe('walker — tuple / lazy / union / discriminatedUnion', () => {
     if (r.kind === 'union') {
       const labels = r.members.map(m => (m.kind === 'ref' ? m.name : `<${m.kind}>`));
       expect(labels).toEqual(['Position', 'PolarPosition', 'AtPosition']);
+    }
+  });
+});
+
+describe('walker — top-level entry + object + optional + constraints', () => {
+  it('walks top-level z.object to SchemaRepr kind=object', async () => {
+    const { CoordinateSchema } = await import('@retikz/core');
+    const r = walk(CoordinateSchema);
+    expect(r.kind).toBe('object');
+    if (r.kind === 'object') {
+      expect(r.description).toMatch(/Coordinate placeholder/);
+      const names = r.fields.map(f => f.name);
+      expect(names).toEqual(['type', 'id', 'position']);
+    }
+  });
+
+  it('top-level non-object emits SchemaRepr kind=alias', async () => {
+    const { PositionSchema } = await import('@retikz/core');
+    const r = walk(PositionSchema);
+    expect(r.kind).toBe('alias');
+    if (r.kind === 'alias') {
+      expect(r.description).toMatch(/Cartesian/);
+      expect(r.type.kind).toBe('tuple');
+    }
+  });
+
+  it('marks optional fields', () => {
+    const S = z.object({
+      a: z.string(),
+      b: z.string().optional(),
+    });
+    const r = walk(S);
+    if (r.kind !== 'object') throw new Error('expected object');
+    expect(r.fields[0].optional).toBe(false);
+    expect(r.fields[1].optional).toBe(true);
+  });
+
+  it('extracts numeric constraints', () => {
+    const S = z.object({
+      ratio: z.number().min(0).max(1),
+      size: z.number().positive(),
+      pad: z.number().nonnegative(),
+      tag: z.string().min(1),
+    });
+    const r = walk(S);
+    if (r.kind !== 'object') throw new Error('expected object');
+    const cmap = Object.fromEntries(r.fields.map(f => [f.name, f.constraints]));
+    expect(cmap.ratio).toContain('0..1');
+    expect(cmap.size).toContain('positive');
+    expect(cmap.pad).toContain('nonnegative');
+    expect(cmap.tag).toContain('min 1');
+  });
+
+  it('captures .describe() per field', async () => {
+    const { CoordinateSchema } = await import('@retikz/core');
+    const r = walk(CoordinateSchema);
+    if (r.kind !== 'object') throw new Error('expected object');
+    const idField = r.fields.find(f => f.name === 'id')!;
+    expect(idField.description).toMatch(/Required unique id/);
+  });
+
+  it('inline-expands anonymous nested object', () => {
+    const S = z.object({
+      meta: z.object({
+        x: z.number(),
+        y: z.string(),
+      }),
+    });
+    const r = walk(S);
+    if (r.kind !== 'object') throw new Error('expected object');
+    const meta = r.fields[0];
+    expect(meta.type.kind).toBe('object');
+    if (meta.type.kind === 'object') {
+      expect(meta.type.fields.map(f => f.name)).toEqual(['x', 'y']);
+    }
+  });
+
+  it('inline-expands anonymous object inside a union', () => {
+    // 对应 LineSpecSchema 那种"union 里夹一个匿名 object"
+    const S = z.union([z.string(), z.object({ text: z.string(), color: z.string().optional() })]);
+    const r = walkType(S);
+    if (r.kind !== 'union') throw new Error('expected union');
+    expect(r.members[0]).toEqual({ kind: 'primitive', name: 'string' });
+    expect(r.members[1].kind).toBe('object');
+    if (r.members[1].kind === 'object') {
+      expect(r.members[1].fields.map(f => f.name)).toEqual(['text', 'color']);
     }
   });
 });
