@@ -8,6 +8,7 @@ import { ComponentPreview } from '../component-preview';
 import { CodeBlock } from '../highlight-code';
 import { PackageManagerInstall } from '../package-manager-install';
 import { Update } from '../update';
+import { ZodSchema } from '../zod-schema';
 
 const linkClass = 'font-medium underline underline-offset-4';
 
@@ -166,4 +167,5 @@ export const mdxComponents: MDXComponents = {
   LinkedCard,
   PackageManagerInstall,
   Update,
+  ZodSchema,
 };
