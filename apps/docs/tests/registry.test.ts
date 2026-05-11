@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { z } from 'zod';
 import { SCHEMA_REGISTRY, lookupSchema } from '@/lib/schema-registry';
 import {
   CoordinateSchema,
@@ -28,6 +29,6 @@ describe('SCHEMA_REGISTRY', () => {
   });
 
   it('returns undefined for unregistered schemas', () => {
-    expect(lookupSchema({})).toBeUndefined();
+    expect(lookupSchema(z.string())).toBeUndefined();
   });
 });

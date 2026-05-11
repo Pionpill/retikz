@@ -37,6 +37,7 @@
     "remark-mdx-frontmatter": "catalog:",
     "sonner": "catalog:",
     "tailwind-merge": "catalog:",
+    "zod": "catalog:",
     "zustand": "catalog:"
   },
   "devDependencies": {

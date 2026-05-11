@@ -1,7 +1,8 @@
 import * as IR from '@retikz/core';
+import type { ZodTypeAny } from 'zod';
 
 export type SchemaRegistryEntry = {
-  schema: any;
+  schema: ZodTypeAny;
   /** 渲染类型签名时使用的名字（去掉 "Schema" 后缀） */
   label: string;
   /** Reference 页面 URL（含可选 #anchor） */
@@ -38,6 +39,6 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
 };
 
 /** 按 identity 反查注册表项（同一 Zod schema 实例必命中同一条目） */
-export function lookupSchema(schema: any): SchemaRegistryEntry | undefined {
+export function lookupSchema(schema: ZodTypeAny): SchemaRegistryEntry | undefined {
   return Object.values(SCHEMA_REGISTRY).find(e => e.schema === schema);
 }
