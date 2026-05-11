@@ -30,12 +30,12 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
   CubicStepSchema:       { schema: IR.CubicStepSchema,       label: 'CubicStep',       url: '/core/reference/stroke/step#cubic' },
   BendStepSchema:        { schema: IR.BendStepSchema,        label: 'BendStep',        url: '/core/reference/stroke/step#bend' },
   ArcStepSchema:         { schema: IR.ArcStepSchema,         label: 'ArcStep',         url: '/core/reference/stroke/step#arc' },
-  CirclePathStepSchema:  { schema: IR.CirclePathStepSchema,  label: 'CirclePathStep',  url: '/core/reference/stroke/step#circle-path' },
-  EllipsePathStepSchema: { schema: IR.EllipsePathStepSchema, label: 'EllipsePathStep', url: '/core/reference/stroke/step#ellipse-path' },
+  CirclePathStepSchema:  { schema: IR.CirclePathStepSchema,  label: 'CirclePathStep',  url: '/core/reference/stroke/step#circlepath' },
+  EllipsePathStepSchema: { schema: IR.EllipsePathStepSchema, label: 'EllipsePathStep', url: '/core/reference/stroke/step#ellipsepath' },
 
   // Target 2 变体（同页 #anchor）
   RelTargetSchema:           { schema: IR.RelTargetSchema,           label: 'RelTarget',           url: '/core/reference/stroke/target#rel' },
-  RelAccumulateTargetSchema: { schema: IR.RelAccumulateTargetSchema, label: 'RelAccumulateTarget', url: '/core/reference/stroke/target#rel-accumulate' },
+  RelAccumulateTargetSchema: { schema: IR.RelAccumulateTargetSchema, label: 'RelAccumulateTarget', url: '/core/reference/stroke/target#relaccumulate' },
 };
 
 /** 按 identity 反查注册表项（同一 Zod schema 实例必命中同一条目） */
