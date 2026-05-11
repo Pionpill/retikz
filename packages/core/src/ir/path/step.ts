@@ -3,9 +3,8 @@ import { PositionSchema } from '../position';
 import { TargetSchema } from './target';
 
 /**
- * 边标注（ADR-0004）：挂在画线 step 上的 label，渲染时按段几何 + side 偏移
- * 翻译为一个 TextPrim。`move` / `cycle` 不挂 label——前者不画线、后者是闭合
- * 标记，标签语义不清。
+ * 边标注（ADR-0004）：画线 step 上的 label
+ * @description 按段几何 + side 偏移翻译为 TextPrim；move/cycle 不挂 label
  */
 export const StepLabelSchema = z
   .object({
@@ -29,7 +28,7 @@ export const StepLabelSchema = z
     'Edge label spec attached to a drawn step (ADR-0004); compiled to a TextPrim positioned along the segment.',
   );
 
-/** 边标注：单段 step 的位置 + side 修饰，编译期变成 TextPrim */
+/** 边标注 IR 类型 */
 export type IRStepLabel = z.infer<typeof StepLabelSchema>;
 
 export const MoveStepSchema = z
@@ -89,18 +88,14 @@ export const CycleStepSchema = z
   );
 
 /**
- * 控制点的 schema 别名。
- *
- * alpha.3：仅支持笛卡尔 `[x, y]`（与 ADR-0001 字面一致）。
- * 未来扩展点：要支持节点 ref / 极坐标作为控制点（如 TikZ `controls (B)`）时，
- * 只把这里改成 `z.union([PositionSchema, PolarPositionSchema, z.string().min(1)])`，
- * curve / cubic schema 与下游消费侧不变。
+ * 控制点 schema 别名
+ * @description 当前仅支持笛卡尔 `[x,y]`（ADR-0001）；未来扩展节点 ref/极坐标时只改本处 union，curve/cubic schema 与下游不变
  */
 export const ControlPointSchema = PositionSchema.describe(
   'Bezier control point. Currently Cartesian [x, y]; reserved for node ref / polar in future versions.',
 );
 
-/** 控制点类型（曲线 step 用）；alpha.3 = `[number, number]`，未来可能扩展 */
+/** 控制点类型（曲线 step 用） */
 export type IRControlPoint = z.infer<typeof ControlPointSchema>;
 
 export const CurveStepSchema = z
@@ -227,10 +222,10 @@ export type IRMoveStep = z.infer<typeof MoveStepSchema>;
 /** Line step：从游标到目标画直线 */
 export type IRLineStep = z.infer<typeof LineStepSchema>;
 
-/** Fold step：折角段，从游标到目标经一个直角中间点（TikZ `-|` / `|-`） */
+/** Fold step：折角段，经一个直角中间点（TikZ `-|`/`|-`） */
 export type IRFoldStep = z.infer<typeof FoldStepSchema>;
 
-/** Cycle step：把当前子路径闭合回起点（TikZ `cycle` / SVG `Z`） */
+/** Cycle step：闭合回起点（TikZ `cycle` / SVG `Z`） */
 export type IRCycleStep = z.infer<typeof CycleStepSchema>;
 
 /** Curve step：二次贝塞尔，一个控制点 */
@@ -239,10 +234,10 @@ export type IRCurveStep = z.infer<typeof CurveStepSchema>;
 /** Cubic step：三次贝塞尔，两控制点 */
 export type IRCubicStep = z.infer<typeof CubicStepSchema>;
 
-/** Bend step：弧形简记，按方向 + 角度生成 */
+/** Bend step：弧形简记，按方向+角度生成 */
 export type IRBendStep = z.infer<typeof BendStepSchema>;
 
-/** Arc step：以游标为圆心的圆弧段，按起末角度 + 半径定 */
+/** Arc step：以游标为圆心的圆弧段，按起末角度+半径定 */
 export type IRArcStep = z.infer<typeof ArcStepSchema>;
 /** CirclePath step：以游标为圆心的整圆 */
 export type IRCirclePathStep = z.infer<typeof CirclePathStepSchema>;
@@ -250,10 +245,7 @@ export type IRCirclePathStep = z.infer<typeof CirclePathStepSchema>;
 export type IREllipsePathStep = z.infer<typeof EllipsePathStepSchema>;
 
 /**
- * 路径上的一个动作。alpha.3 起支持十种 kind：'move' / 'line' / 'step'（折角）/
- * 'cycle' / 'curve' / 'cubic' / 'bend'（曲线三件套，ADR-0001）/
- * 'arc' / 'circlePath' / 'ellipsePath'（path-level 形状，ADR-0002）。
- * ADR-0003 引入 `to` 字段的 rel / relAccumulate 变体。
- * ADR-0004 给除 move/cycle 外八种 kind 加 `label?` 字段（边标注）。
+ * 路径上的一个动作（十种 kind）
+ * @description move/line/step(折角)/cycle/curve/cubic/bend (ADR-0001)/arc/circlePath/ellipsePath (ADR-0002)；`to` 字段支持 rel/relAccumulate 变体 (ADR-0003)；除 move/cycle 外加 `label?` 边标注 (ADR-0004)
  */
 export type IRStep = z.infer<typeof StepSchema>;

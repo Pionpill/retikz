@@ -1,13 +1,12 @@
 import type { AtDirection, IRAtPosition, IRPosition, PolarPosition } from '../ir';
 import type { NodeLayout } from './node';
 
-/** 默认相对定位距离（user units）——CompileOptions.nodeDistance 未提供时使用 */
+/** 默认相对定位距离（CompileOptions.nodeDistance 未配时使用） */
 const DEFAULT_NODE_DISTANCE = 1;
 
 /**
- * 8 方向到屏幕坐标系（y 向下）单位向量的映射。
- * 视觉语义：above 在视觉上方（y 减小），below 在视觉下方（y 增大）。
- * 4 对角分量为 1/√2，保证斜向距离与水平 / 垂直距离等长（对角点位于半径 = distance 的圆周上）。
+ * 8 方向 → 屏幕坐标系（y 向下）单位向量
+ * @description above=视觉上方 (y 减小)；4 对角分量 1/√2 保证斜向与水平/垂直距离等长（对角点落在半径=distance 圆周上）
  */
 const DIRECTION_VECTOR: Record<AtDirection, [number, number]> = {
   above: [0, -1],
@@ -21,12 +20,8 @@ const DIRECTION_VECTOR: Record<AtDirection, [number, number]> = {
 };
 
 /**
- * 把 IR 里出现的位置形态（笛卡尔 / 极坐标 / 相对定位 / 节点 id）解析为笛卡尔位置。
- * - 极坐标的 origin 可递归 / 可引用节点 id
- * - 相对定位的 of 必须引用已定义的节点 / coordinate（前向引用要求被引节点先出现）
- * - 解析失败返回 null（如引用了未定义节点）
- *
- * `nodeDistance` 是 Tikz 容器 prop 注入的相对定位默认距离；AtPosition 自带 distance 时优先用自带值。
+ * IR 各种位置形态（笛卡尔/极坐标/相对定位/节点 id）→ 笛卡尔位置
+ * @description 极坐标 origin 可递归引用节点 id；相对定位 of 必须引用已定义节点/coordinate；解析失败返回 null。nodeDistance 为容器 prop 注入默认距离，AtPosition 自带 distance 优先
  */
 export const resolvePosition = (
   pos: IRPosition | PolarPosition | IRAtPosition | string,
@@ -39,14 +34,14 @@ export const resolvePosition = (
   }
   if (Array.isArray(pos)) return pos;
   if ('direction' in pos) {
-    // AtPosition：从 of 节点的中心出发，按 direction 单位向量 × distance 偏移
+    // AtPosition：from of 节点中心，按 direction 单位向量 × distance 偏移
     const ref = nodeMap.get(pos.of);
     if (!ref) return null;
     const distance = pos.distance ?? nodeDistance;
     const [dx, dy] = DIRECTION_VECTOR[pos.direction];
     return [ref.rect.x + dx * distance, ref.rect.y + dy * distance];
   }
-  // PolarPosition：先解析 origin，再叠加极偏移
+  // PolarPosition：先解析 origin 再叠加极偏移
   let origin: IRPosition;
   if (!pos.origin) {
     origin = [0, 0];

@@ -13,11 +13,8 @@ export type EdgeLabelProps = {
 };
 
 /**
- * Sugar 组件——挂在 <Step> 内作为子节点声明边标注。等价于在 Step 上写
- * `label={{ text, position, side }}` prop；二者并存时 prop 优先。
- *
- * <EdgeLabel> 自身不渲染，由 buildIR 在收集 Step 时识别 displayName 后
- * 提取到 IR `step.label`。
+ * Sugar 组件——挂在 <Step> 内作为子节点声明边标注
+ * @description 等价于在 Step 上写 `label={{ text, position, side }}` prop；二者并存时 prop 优先；自身不渲染，由 buildIR 在收集 Step 时识别 displayName 后提取到 IR `step.label`
  */
 export const EdgeLabel: FC<EdgeLabelProps> = () => null;
 EdgeLabel.displayName = TIKZ_EDGE_LABEL;

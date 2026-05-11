@@ -2,21 +2,8 @@ import type { FC, ReactElement } from 'react';
 import type { ArrowShape } from '@retikz/core';
 
 /**
- * 各 arrow 形状的 SVG `<marker>` 内容定义。
- *
- * 共用约定：
- * - viewBox `0 0 10 10`、refY=5
- * - markerUnits='strokeWidth'：marker 大小随 path strokeWidth 缩放
- * - orient='auto-start-reverse'：marker-start / marker-end 共用一份定义；
- *   marker-start 自动旋转 180° 让箭头指向起点反向
- * - 颜色用 `context-stroke` / `context-fill` 让箭头随 path 自动同步配色
- *
- * 不同 shape 的 refX 不一样：
- * - 实心 shape（normal / stealth / diamond / circle）：refX=10，apex / 右缘
- *   贴 path 端点，path 描边穿过 marker 内部但被 fill 覆盖看不见。**不需 shrink**。
- * - 空心 shape（open / openDiamond / openCircle）：refX 设在形状的"背面"位置，
- *   path 描边停在背面、apex 向前。**需 compile 层 shrink** 让 apex 精准落在
- *   原始端点上（shrink 量见 compile/path.ts 的 SHRINK_FOR_SHAPE）。
+ * 各 arrow 形状的 SVG `<marker>` 内容定义
+ * @description 共用约定：viewBox `0 0 10 10`、refY=5、markerUnits='strokeWidth'（marker 随 path strokeWidth 缩放）、orient='auto-start-reverse'（marker-start / marker-end 共用，start 自动反转 180°）、`context-stroke`/`context-fill` 让箭头随 path 同步配色；refX 差异：实心 shape（normal / stealth / diamond / circle）refX=10 apex 贴端点不需 shrink，空心 shape（open / openDiamond / openCircle）refX 设在背面 path 停在背面 apex 向前，需 compile 层 shrink 让 apex 落在原始端点（量见 compile/path.ts 的 SHRINK_FOR_SHAPE）
  */
 type MarkerSpec = {
   /** marker 在 path 端点的 alignment X（viewBox 坐标，0..10） */
@@ -51,8 +38,8 @@ const MARKERS: Record<ArrowShape, MarkerSpec> = {
     children: <path d="M 0 5 L 5 0 L 10 5 L 5 10 Z" fill="context-stroke" />,
   },
   openDiamond: {
-    // refX=1：菱形左尖在 path 端点（背面）；右尖在 viewBox x=9（与 shrink=4.8 配套时落在原始端点）。
-    // 顶点向内 1 单位避开 round-join 的 0.75 单位外延，避开 viewBox clip
+    // refX=1：左尖在背面、右尖在 viewBox x=9（与 shrink=4.8 配套落在原始端点）；
+    // 顶点向内 1 单位避开 round-join 0.75 单位外延导致的 viewBox clip
     refX: 1,
     children: (
       <path

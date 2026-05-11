@@ -29,8 +29,8 @@ const baselineToDominant = (
 };
 
 /**
- * 渲染上下文——Tikz 容器侧把 marker id 等"全 SVG 共享"的资源向下传给 renderPrim。
- * 资源若不存在就传 undefined，对应路径 prim 不会引用 marker。
+ * 渲染上下文——Tikz 容器侧把 marker id 等"全 SVG 共享"的资源向下传给 renderPrim
+ * @description 资源缺省时传 undefined，对应 path prim 不会引用 marker
  */
 export type RenderContext = {
   /** 按 arrow 形状查 SVG `<defs><marker id>` id 的回调 */
@@ -38,8 +38,8 @@ export type RenderContext = {
 };
 
 /**
- * Scene primitive → SVG React 元素。
- * 不读 IR，只读 Scene。
+ * Scene primitive → SVG React 元素
+ * @description 不读 IR，只读 Scene
  */
 export const renderPrim = (
   p: ScenePrimitive,
@@ -87,11 +87,10 @@ export const renderPrim = (
       );
     }
     case 'text': {
-      // 多行块的整体垂直对齐：把首行 dy 推算成"整块在 (x, y) 上正确 baseline 对齐"
-      // - middle: 块中心对齐 → 首行向上推 (n-1)/2 × lineHeight
-      // - top:    块顶对齐    → 首行 dy=0
-      // - bottom: 块底对齐    → 首行向上推 (n-1) × lineHeight
-      // - alphabetic: 与 top 相同（baseline 落在首行字底）
+      // 多行块整体垂直对齐：把首行 dy 推算成块在 (x, y) 上正确 baseline 对齐
+      // middle: 中心对齐 → 首行上推 (n-1)/2 × lineHeight
+      // top / alphabetic: 块顶对齐 → 首行 dy=0
+      // bottom: 块底对齐 → 首行上推 (n-1) × lineHeight
       const n = p.lines.length;
       const firstDy =
         p.baseline === 'middle'

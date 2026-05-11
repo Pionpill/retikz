@@ -3,14 +3,8 @@ import type { IRControlPoint, IRStepLabel, IRTarget } from '@retikz/core';
 import { TIKZ_STEP } from './_displayNames';
 
 /**
- * <Step> 组件的 props。
- * alpha.3 起支持十种 kind：'move' / 'line' / 'step'（折角）/ 'cycle'（闭合）/
- * 'curve'（二次贝塞尔）/ 'cubic'（三次贝塞尔）/ 'bend'（弧形简记）/
- * 'arc'（圆弧段）/ 'circlePath'（整圆）/ 'ellipsePath'（整椭圆）。
- * kind 默认 'line'。
- *
- * ADR-0004：除 'move' / 'cycle' 外的八种 kind 都可挂 `label?: IRStepLabel` 边标注；
- * 等价的写法是用 sugar `<EdgeLabel>` 当 children。两者并存时 prop 优先。
+ * <Step> 组件的 props
+ * @description 十种 kind：'move' / 'line'（默认） / 'step'（折角） / 'cycle'（闭合） / 'curve'（二次贝塞尔） / 'cubic'（三次贝塞尔） / 'bend'（弧形简记） / 'arc'（圆弧段） / 'circlePath'（整圆） / 'ellipsePath'（整椭圆）。ADR-0004：除 'move'/'cycle' 外均可挂 `label?: IRStepLabel`，等价于 sugar `<EdgeLabel>` child，prop 优先。
  */
 export type StepProps =
   | {
@@ -24,7 +18,7 @@ export type StepProps =
       kind?: 'line';
       /** 直线终点 */
       to: IRTarget;
-      /** 边标注（ADR-0004），等价于 <EdgeLabel> child */
+      /** 边标注，等价于 <EdgeLabel> child */
       label?: IRStepLabel;
       /** sugar 形态：`<Step><EdgeLabel>...</EdgeLabel></Step>`；其它 children 静默忽略 */
       children?: ReactNode;
@@ -36,7 +30,7 @@ export type StepProps =
       via: '-|' | '|-';
       /** 折角终点 */
       to: IRTarget;
-      /** 边标注（ADR-0004） */
+      /** 边标注 */
       label?: IRStepLabel;
       /** sugar 形态 */
       children?: ReactNode;
@@ -48,11 +42,11 @@ export type StepProps =
   | {
       /** 二次贝塞尔：一个控制点（TikZ `.. controls (B) ..`） */
       kind: 'curve';
-      /** 控制点（alpha.3 仅支持 [x, y]，未来可能扩展） */
+      /** 控制点（未来可能扩展更多形态） */
       control: IRControlPoint;
       /** 曲线终点 */
       to: IRTarget;
-      /** 边标注（ADR-0004） */
+      /** 边标注 */
       label?: IRStepLabel;
       /** sugar 形态 */
       children?: ReactNode;
@@ -66,7 +60,7 @@ export type StepProps =
       control2: IRControlPoint;
       /** 曲线终点 */
       to: IRTarget;
-      /** 边标注（ADR-0004） */
+      /** 边标注 */
       label?: IRStepLabel;
       /** sugar 形态 */
       children?: ReactNode;
@@ -80,7 +74,7 @@ export type StepProps =
       bendAngle?: number;
       /** 终点 */
       to: IRTarget;
-      /** 边标注（ADR-0004） */
+      /** 边标注 */
       label?: IRStepLabel;
       /** sugar 形态 */
       children?: ReactNode;
@@ -94,7 +88,7 @@ export type StepProps =
       endAngle: number;
       /** 弧的半径 */
       radius: number;
-      /** 边标注（ADR-0004） */
+      /** 边标注 */
       label?: IRStepLabel;
       /** sugar 形态 */
       children?: ReactNode;
@@ -104,7 +98,7 @@ export type StepProps =
       kind: 'circlePath';
       /** 圆的半径 */
       radius: number;
-      /** 边标注（ADR-0004） */
+      /** 边标注 */
       label?: IRStepLabel;
       /** sugar 形态 */
       children?: ReactNode;
@@ -116,15 +110,15 @@ export type StepProps =
       radiusX: number;
       /** 椭圆 y 轴半径 */
       radiusY: number;
-      /** 边标注（ADR-0004） */
+      /** 边标注 */
       label?: IRStepLabel;
       /** sugar 形态 */
       children?: ReactNode;
     };
 
 /**
- * Step 是 DSL 标记组件——本身不渲染。
- * 必须作为 <Path> 的直接子节点出现，由 <Path> 的 children 扫描读出。
+ * Step 是 DSL 标记组件——本身不渲染
+ * @description 必须作为 <Path> 的直接子节点出现，由 <Path> 的 children 扫描读出
  */
 export const Step: FC<StepProps> = () => null;
 Step.displayName = TIKZ_STEP;

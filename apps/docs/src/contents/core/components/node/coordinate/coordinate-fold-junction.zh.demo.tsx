@@ -2,10 +2,8 @@ import { Coordinate, Draw, Node, Tikz } from '@retikz/react';
 import type { FC } from 'react';
 
 /**
- * Coordinate 在流程图中的另一个常用场景——**命名拐点汇聚**（中文版）：
- * - 多个 step 节点向同一个"决策汇合点"收敛
- * - 汇合点本身不是矩形 / 不打字，只是几条线的交汇——用 coordinate 命名它
- * - 各 path 用 `<Draw way={['A', 'junction', 'B']}>` 经过汇合点；coordinate 是 0×0 锚点，端点贴中心
+ * Coordinate 作为命名拐点汇聚
+ * @description 多个 step 节点向同一决策汇合点收敛，汇合点本身不画矩形 / 不打字；各 path 用 `<Draw way={['A', 'junction', 'B']}>` 经过它，coordinate 是 0×0 锚点端点贴中心。
  */
 const Demo: FC = () => (
   <Tikz width={460} height={280}>

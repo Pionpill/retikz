@@ -1,10 +1,7 @@
 import type { IRPosition } from '../ir';
 import type { ViewBox } from '../primitive';
 
-/**
- * 由所有"贡献给 bbox"的点算出 viewBox（含四周 padding）。
- * points 为空时返回固定的 100×100 兜底框。
- */
+/** 由所有 bbox 候选点算出 viewBox（含 padding）；points 为空时返回 100×100 兜底 */
 export const computeViewBox = (
   points: Array<IRPosition>,
   padding: number,

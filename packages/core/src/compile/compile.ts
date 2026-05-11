@@ -9,9 +9,8 @@ import { type TextMeasurer, fallbackMeasurer } from './text-metrics';
 import { computeViewBox } from './view-box';
 
 /**
- * 把 coordinate 注册成最小 NodeLayout——0×0 rectangle，用于
- * 后续 path target / `at.of` 引用时 boundaryPoint 命中（0×0 rect
- * 的 boundaryPoint 始终返回中心，符合"占位无形状边界"语义）。
+ * 把 coordinate 注册成 0×0 NodeLayout
+ * @description 让后续 path target / `at.of` 引用时 boundaryPoint 命中中心，符合"占位无形状边界"语义
  */
 const coordinateAsLayout = (
   id: string,
@@ -36,27 +35,20 @@ export type CompileOptions = {
   /** viewBox 周围的留白（user units），默认 10 */
   padding?: number;
   /**
-   * 输出坐标的小数位精度；默认 2（保留 2 位小数四舍五入）。
-   * 仅在写入 Scene primitive / path d 字符串 / viewBox 时生效；
-   * 内部几何计算保持完整 double 精度，避免误差累积。
+   * 输出坐标的小数位精度；默认 2
+   * @description 仅作用于 Scene primitive / path d / viewBox；内部几何计算保持完整 double 精度
    */
   precision?: number;
   /**
-   * 相对定位（AtPosition）的默认距离，对应 TikZ `node distance`；user units。
-   * 当 `Node.position` 是 `{ direction, of }` 形态且未自带 `distance` 时取此值；
-   * 未配则回退到 1。
+   * 相对定位的默认距离（对应 TikZ `node distance`，user units）
+   * @description `Node.position` 为 `{ direction, of }` 且未自带 `distance` 时取此值；未配回退到 1
    */
   nodeDistance?: number;
 };
 
 /**
- * IR → Scene。纯函数。
- * 这是所有 adapter 共享的最深层共享代码。
- *
- * 流程：
- * 1. Pass 1：按 IR children 源码顺序处理 Node——计算 layout、注册 nodeIndex、发出 RectPrim/TextPrim、累积 bbox 角点
- * 2. Pass 2：处理 Path——解析每个 step 端点（节点 ref 走 boundaryPoint，其他走 resolvePosition），写 d 字符串
- * 3. 末端用 computeViewBox 折算最终 viewBox（按 precision 四舍五入）
+ * IR → Scene 纯函数转换，所有 adapter 共享
+ * @description Pass 1 处理 Node/coordinate 并注册 nodeIndex、发 primitive、累积 bbox；Pass 2 解析 Path 端点写 d 字符串；末端按 precision 折算 viewBox
  */
 export const compileToScene = (ir: IR, options: CompileOptions = {}): Scene => {
   const measureText = options.measureText ?? fallbackMeasurer;

@@ -2,8 +2,8 @@ import { Draw, Node, Tikz } from '@retikz/react';
 import type { FC } from 'react';
 
 /**
- * 4 种 shape 并排：rectangle（默认）/ circle / ellipse / diamond。
- * 节点中心 4 个连到中央 hub，path 端点按各自 shape 自动贴边。
+ * 4 种 shape 并排
+ * @description rectangle（默认）/ circle / ellipse / diamond；外围 4 个连到中央 hub，path 端点按各自 shape 自动贴边。
  */
 const Demo: FC = () => (
   <Tikz width={420} height={260}>

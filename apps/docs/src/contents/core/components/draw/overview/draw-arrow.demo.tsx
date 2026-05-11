@@ -2,8 +2,8 @@ import { Draw, Node, Tikz } from '@retikz/react';
 import type { FC } from 'react';
 
 /**
- * 路径级 `arrow` prop——透传到底层 PathPrim 的 marker。多节点时（如 a→b→c）
- * 路径会按段独立 clip，箭头**只**贴在整体起点 / 终点，不会出现在中间节点上。
+ * 路径级 `arrow` prop
+ * @description 透传到底层 PathPrim 的 marker；多节点路径按段独立 clip，箭头只贴整体起点 / 终点，不出现在中间节点。
  */
 const Demo: FC = () => (
   <Tikz width={360} height={200}>

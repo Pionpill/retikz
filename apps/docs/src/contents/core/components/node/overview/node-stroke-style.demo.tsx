@@ -2,10 +2,8 @@ import { Node, Tikz } from '@retikz/react';
 import type { FC } from 'react';
 
 /**
- * 描边样式预设：
- * - dashed：默认 "4 2" 短虚线
- * - dotted：默认 "1 2" 圆点线
- * - dashArray：自定义 pattern，优先级最高
+ * 描边样式预设
+ * @description dashed 默认 "4 2" 短虚线、dotted 默认 "1 2" 圆点线、dashArray 自定义 pattern 优先级最高。
  */
 const Demo: FC = () => (
   <Tikz width={460} height={100}>

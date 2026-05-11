@@ -2,10 +2,8 @@ import { Draw, Node, Tikz } from '@retikz/react';
 import type { FC } from 'react';
 
 /**
- * Node `at` 相对定位：
- * - position 接 `{ direction, of, distance? }` 形态
- * - 不需要手算坐标，只描述节点关系：B 在 A 右侧、C 在 B 右侧 ...
- * - <Tikz nodeDistance> 注入默认距离；node 自带 distance 时优先
+ * Node `at` 相对定位
+ * @description position 接 `{ direction, of, distance? }` 描述节点关系而非手算坐标；<Tikz nodeDistance> 注入默认距离，node 自带 distance 时优先。
  */
 const Demo: FC = () => (
   <Tikz width={460} height={220} nodeDistance={120}>

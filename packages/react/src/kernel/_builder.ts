@@ -28,8 +28,8 @@ const getDisplayName = (el: ReactElement): string | undefined => {
 };
 
 /**
- * 把 <Text> 元素的 props + children 串解析为 IRLineSpec 对象形式。
- * children 必须是 string；非字符串 children 静默跳过此 <Text> 元素。
+ * 把 <Text> 元素的 props + children 串解析为 IRLineSpec 对象形式
+ * @description children 必须是 string；非字符串 children 静默跳过此 <Text> 元素
  */
 const textElementToLineSpec = (el: ReactElement): IRLineSpec | undefined => {
   const props = el.props as {
@@ -56,13 +56,8 @@ const textElementToLineSpec = (el: ReactElement): IRLineSpec | undefined => {
 };
 
 /**
- * 递归收集 Node children 中的行：
- * - 字符串按 `'\n'` 拆行（每段 → 字符串 LineSpec）
- * - 数组（JSX 多 child 自动展平）逐项递归
- * - <Text> 元素 → 对象 LineSpec（带覆盖样式）
- * - 其它类型（其它 React 元素 / null / 数字等）忽略——附带让 `<br/>` 当软分段
- *
- * 顺序保留——按 JSX 写的顺序行就是 IR 行顺序。
+ * 递归收集 Node children 中的行
+ * @description 字符串按 `'\n'` 拆行 / 数组逐项递归 / <Text> 元素 → 对象 LineSpec / 其它类型忽略（让 `<br/>` 当软分段）；按 JSX 顺序保留行序
  */
 const collectChildLines = (children: unknown): Array<IRLineSpec> => {
   const out: Array<IRLineSpec> = [];
@@ -85,15 +80,8 @@ const collectChildLines = (children: unknown): Array<IRLineSpec> => {
 };
 
 /**
- * Node 文本读取顺序：
- * 1. `props.text`（string / string[] / LineSpec[]）— 显式优先，直接透传到 IR
- * 2. `props.children` — 字符串按 `'\n'` 拆行；`<Text>` 元素带样式贡献一行；保持 JSX 顺序
- *
- * 用 children 写多行的几种姿势：
- * - 字符串带换行：`<Node>{'Line 1\nLine 2'}</Node>`
- * - 模板字面量：``<Node>{`Line 1\nLine 2`}</Node>``
- * - 数组：`<Node>{['Line 1', 'Line 2']}</Node>`
- * - <Text>（带样式）：`<Node><Text fill="red">Heading</Text>body</Node>`
+ * Node 文本读取顺序
+ * @description `props.text`（string / string[] / LineSpec[]）显式优先直接透传 IR；否则取 `props.children`（字符串按 `'\n'` 拆行，`<Text>` 元素带样式贡献一行）
  */
 const readNodeText = (props: Record<string, unknown>): IRNode['text'] => {
   // text prop：纯 string、string[]、或 LineSpec[]——直接透传
@@ -142,8 +130,8 @@ const buildNode = (props: Record<string, unknown>): IRChild => ({
 });
 
 /**
- * 扫描 Step children，把首个 <EdgeLabel> 翻译为 IRStepLabel；
- * 非字符串 children 静默跳过；多个 <EdgeLabel> 取首个。
+ * 扫描 Step children，把首个 <EdgeLabel> 翻译为 IRStepLabel
+ * @description 非字符串 children 静默跳过；多个 <EdgeLabel> 取首个
  */
 const readEdgeLabel = (children: ReactNode): IRStepLabel | undefined => {
   let result: IRStepLabel | undefined;
@@ -166,8 +154,8 @@ const readEdgeLabel = (children: ReactNode): IRStepLabel | undefined => {
 };
 
 /**
- * 解析 Step 的 label 来源：prop `label` 优先于 sugar `<EdgeLabel>` child；
- * 都缺省时返回 undefined。
+ * 解析 Step 的 label 来源
+ * @description prop `label` 优先于 sugar `<EdgeLabel>` child；都缺省时返回 undefined
  */
 const resolveStepLabel = (props: Record<string, unknown>): IRStepLabel | undefined => {
   if (props.label !== undefined) return props.label as IRStepLabel;
@@ -175,9 +163,8 @@ const resolveStepLabel = (props: Record<string, unknown>): IRStepLabel | undefin
 };
 
 /**
- * 扫描 <Path> children 收集 <Step> 序列。
- * 至少 2 段；首段不是 move 时强制改为 move（与 SVG path 的 "M …" 语义对齐）；
- * cycle 没有 to 字段，若用户把 cycle 放在首段，coerce 时降级到 move (0,0)。
+ * 扫描 <Path> children 收集 <Step> 序列
+ * @description 至少 2 段；首段不是 move 时强制改为 move（与 SVG path "M …" 语义对齐）；cycle 无 to，首段为 cycle 时降级到 move (0,0)
  */
 const readPathChildren = (children: ReactNode): Array<IRStep> => {
   const out: Array<IRStep> = [];
@@ -200,7 +187,7 @@ const readPathChildren = (children: ReactNode): Array<IRStep> => {
         | 'ellipsePath'
         | undefined) ?? 'line';
     if (kind === 'cycle') {
-      // cycle 不挂 label——schema 已禁；children 中的 <EdgeLabel> 静默忽略
+      // cycle 不挂 label；children 中的 <EdgeLabel> 静默忽略
       out.push({ type: 'step', kind: 'cycle' });
       return;
     }
@@ -302,9 +289,8 @@ const readPathChildren = (children: ReactNode): Array<IRStep> => {
     throw new Error('<Path> requires at least 2 <Step> children');
   }
   if (out[0].kind !== 'move') {
-    // 首段如果是没有 to 字段的形状 step（cycle / arc / circlePath / ellipsePath），
-    // 回退到原点 [0,0] 当 move target；其它 kind（line / step / curve / cubic / bend）
-    // 保留它们自己的 to。
+    // 首段若是无 to 字段的形状 step（cycle / arc / circlePath / ellipsePath）回退到 [0,0]；
+    // 其它 kind（line / step / curve / cubic / bend）保留自己的 to
     const first = out[0];
     const fallbackTo: IRTarget =
       first.kind === 'cycle' ||
@@ -359,11 +345,8 @@ const buildPath = (props: Record<string, unknown>): IRChild => ({
 });
 
 /**
- * 扫描 <Tikz> 直接 children：
- * - Kernel marker（Node / Path）走对应 builder 直接产 IRChild
- * - 其余函数式组件视为 Sugar：同步调用拿 Kernel JSX，递归展开
- *   （Sugar 组件不能用 hooks——builder 不在 React 调用栈上）
- * - 非函数（fragment / 字符串 / null / 类组件）静默跳过
+ * 扫描 <Tikz> 直接 children
+ * @description Kernel marker（Node / Path / Coordinate）走对应 builder 直接产 IRChild；其余函数式组件视为 Sugar，同步调用拿 Kernel JSX 递归展开（Sugar 不能用 hooks——builder 不在 React 调用栈上）；非函数（fragment / 字符串 / null / 类组件）静默跳过
  */
 const readSceneChildren = (children: ReactNode): Array<IRChild> => {
   const out: Array<IRChild> = [];
@@ -392,8 +375,8 @@ const readSceneChildren = (children: ReactNode): Array<IRChild> => {
 };
 
 /**
- * 把 <Tikz> 的 children 同步翻译为 IR。
- * 纯函数，不依赖 effect/state；render 阶段即可直接使用。
+ * 把 <Tikz> 的 children 同步翻译为 IR
+ * @description 纯函数，不依赖 effect/state；render 阶段即可直接使用
  */
 export const buildIR = (children: ReactNode): IR => ({
   version: CURRENT_IR_VERSION,

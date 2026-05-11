@@ -2,9 +2,8 @@ import { Draw, Node, Tikz } from '@retikz/react';
 import type { FC } from 'react';
 
 /**
- * "IR at the Center" diagram for the introduction page: 4 inputs → IR ↔ Scene → 4 outputs (hourglass).
- * Nodes use stroke="none" as text anchors; Draw still snaps to bbox.
- * Bidirectional arrow between IR and "persistence / edit" — IR is a read/write durable layer.
+ * "IR at the Center" diagram for the introduction page
+ * @description 4 inputs → IR ↔ Scene → 4 outputs (hourglass); nodes use stroke="none" as text anchors with Draw still snapping to bbox; bidirectional arrow between IR and "persistence / edit" marks IR as a read/write durable layer.
  */
 const Demo: FC = () => (
   <Tikz width={640} height={210} style={{ maxWidth: '100%', height: 'auto' }}>

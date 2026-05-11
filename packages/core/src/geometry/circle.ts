@@ -1,23 +1,18 @@
 import type { Position } from './point';
 
-/** 圆形：几何中心 (x, y) + 半径；与 Rect 一样支持可选旋转（圆对自身旋转无影响，预留供 anchor 命名一致性） */
+/** 圆形：几何中心 + 半径，预留旋转字段保持与 Rect 同形 API */
 export type Circle = {
-  /** 圆心横坐标 */
   x: number;
-  /** 圆心纵坐标 */
   y: number;
-  /** 半径（user units） */
+  /** 半径 */
   radius: number;
-  /** 绕几何中心旋转弧度；保留与 Rect 同形 API，圆形本身旋转后视觉不变 */
+  /** 绕中心旋转弧度（圆视觉不变，与 Rect 同形保留） */
   rotate?: number;
 };
 
 const SQRT_HALF = Math.SQRT1_2;
 
-/**
- * 圆形 9 个标准 anchor 名集合，与 RECT_ANCHORS 同名同义。
- * 圆的"4 方位 + 4 对角"在圆周上等距分布（每 45°）。
- */
+/** 圆形 9 个标准 anchor（与 RECT_ANCHORS 同名同义，圆周每 45° 等距分布） */
 export type CircleAnchor =
   | 'center'
   | 'north'
@@ -95,10 +90,7 @@ export const circle = {
     }
     return localToWorld(c, [lx, ly]);
   },
-  /**
-   * 从圆心向 toward 方向画射线，求与圆周的交点。
-   * 用于把 Path 端点贴到 Node 边界。
-   */
+  /** 从圆心向 toward 方向射线与圆周交点（Path 端点贴 Node 边界用） */
   boundaryPoint: (c: Circle, toward: Position): Position => {
     const [lx, ly] = worldToLocal(c, toward);
     const len = Math.sqrt(lx * lx + ly * ly);

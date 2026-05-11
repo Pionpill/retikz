@@ -2,11 +2,8 @@ import { Node, Tikz } from '@retikz/react';
 import type { FC } from 'react';
 
 /**
- * 尺寸约束 + 圆角：
- * - roundedCorners：圆角（仅 rectangle 生效）
- * - minimumSize：对称最小宽高
- * - minimumWidth / minimumHeight：分轴最小尺寸（button 风格）
- * - scale：均匀放大整个 node（含字号）
+ * 尺寸约束 + 圆角
+ * @description roundedCorners 圆角（仅 rectangle）、minimumSize 对称最小宽高、minimumWidth/Height 分轴最小尺寸（button 风格）、scale 均匀放大整个 node 含字号。
  */
 const Demo: FC = () => (
   <Tikz width={560} height={140}>

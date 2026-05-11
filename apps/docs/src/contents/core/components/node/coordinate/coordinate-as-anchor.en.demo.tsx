@@ -2,11 +2,8 @@ import { Coordinate, Draw, Node, Tikz } from '@retikz/react';
 import type { FC } from 'react';
 
 /**
- * The real point of `<Coordinate>` — **named virtual anchor** (English variant):
- * - hub is an invisible center point
- * - Four nodes use `at.of='hub'` to lay out symmetrically — moving hub moves all of them
- * - All four paths terminate at hub — lines converge at the center but hub itself draws no shape
- * - Without a coordinate: each node would need to duplicate `[0, 0]`, and each path would need an absolute `[0, 0]` literal
+ * `<Coordinate>` as a named virtual anchor
+ * @description hub is an invisible center; four nodes `at.of='hub'` lay out symmetrically and all paths terminate at hub — without a coordinate every node/path would duplicate `[0, 0]`.
  */
 const Demo: FC = () => (
   <Tikz width={460} height={300}>

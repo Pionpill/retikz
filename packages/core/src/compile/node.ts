@@ -13,15 +13,15 @@ const DEFAULT_FONT_SIZE = 14;
 const DEFAULT_PADDING = 8;
 const DEFAULT_LINE_HEIGHT_FACTOR = 1.2;
 const DEG_TO_RAD = Math.PI / 180;
-/** Node label 与 node 边界的默认距离（user units）；TikZ 默认是 0pt 但视觉上太贴 */
+/** Node label 与 node 边界默认距离（TikZ 默认 0pt 视觉太贴） */
 const DEFAULT_LABEL_DISTANCE = 4;
 const SQRT2 = Math.SQRT2;
-/** dashed 预设：SVG stroke-dasharray "4 2"——4 px 实线 + 2 px 间隙循环 */
+/** dashed 预设：4 px 实线 + 2 px 间隙循环 */
 const DASHED_PATTERN = '4 2';
-/** dotted 预设：SVG stroke-dasharray "1 2"——1 px 圆点 + 2 px 间隙 */
+/** dotted 预设：1 px 圆点 + 2 px 间隙 */
 const DOTTED_PATTERN = '1 2';
 
-/** 解析 dashed / dotted / dashArray 优先级：dashArray > dashed > dotted */
+/** dashed / dotted / dashArray 优先级：dashArray > dashed > dotted */
 const resolveDashArray = (
   dashArray: string | undefined,
   dashed: boolean | undefined,
@@ -33,86 +33,78 @@ const resolveDashArray = (
   return undefined;
 };
 
-/** IR `align` ('left' | 'center' | 'right') → SVG textAnchor ('start' | 'middle' | 'end') */
+/** IR align → SVG textAnchor */
 const alignToTextAnchor = (
   a: 'left' | 'center' | 'right',
 ): 'start' | 'middle' | 'end' =>
   a === 'left' ? 'start' : a === 'right' ? 'end' : 'middle';
 
 export type NodeLayout = {
-  /** 节点 id（如 IR Node 提供）；其他位置可通过 id 引用本节点 */
+  /** 节点 id（其他位置可引用） */
   id?: string;
-  /** 节点形状——所有几何 / boundaryPoint 计算按 shape 多态 */
+  /** 节点形状，所有几何 / boundaryPoint 按 shape 多态 */
   shape: NodeShape;
   /**
-   * 节点视觉边界框（所有 shape 共享语义）：
-   * - rectangle: rect 即矩形本身
-   * - circle:    rect.width = rect.height = 2 × radius（外接正方形）
-   * - ellipse:   rect.width = 2 × rx，rect.height = 2 × ry（外接矩形）
-   * - diamond:   rect.width = 2 × halfA，rect.height = 2 × halfB（外接矩形）
-   *
-   * x, y 是几何中心；rotate 是弧度（与 packages/core/AGENTS.md 对齐）。
+   * 节点视觉边界框（所有 shape 共享语义）
+   * @description rectangle: rect 本身；circle: width=height=2×radius；ellipse: 2×rx,2×ry；diamond: 2×halfA,2×halfB。x,y 是几何中心，rotate 弧度
    */
   rect: Rect;
-  /** IR 中原始的旋转角（度数），保留供 emit 阶段写 SVG transform */
+  /** IR 原始旋转角（度数），供 emit 写 SVG transform */
   rotateDeg: number;
-  /** 外边距（user units，≥ 0）；path 附着到形状外扩 margin 的虚拟边界上 */
+  /** 外边距（≥ 0），path 附着到外扩 margin 的虚拟边界 */
   margin: number;
   /**
-   * 节点文本行；undefined 表示无文本，否则非空数组。
-   * 每行可带覆盖样式（fill / opacity / fontSize / fontFamily / fontWeight / fontStyle）；
-   * 未覆盖的字段在 emit 阶段不写出，由下游走 TextPrim 块级默认。
+   * 节点文本行（undefined 表示无文本，否则非空数组）
+   * @description 每行可带覆盖样式（fill/opacity/fontSize/fontFamily/fontWeight/fontStyle），未覆盖字段 emit 阶段不写出由下游走块级默认
    */
   lines?: Array<TextLine>;
-  /** 文本块宽度（user units）= max(per-line measureText.width) */
+  /** 文本块宽度 = max(per-line measureText.width) */
   textWidth: number;
-  /** 文本块高度（user units）≈ lines × lineHeight */
+  /** 文本块高度 ≈ lines × lineHeight */
   textHeight: number;
-  /** 文本对齐（已映射到 SVG textAnchor 三态）；emit 时透传给 TextPrim.align */
+  /** 文本对齐（已映射到 SVG textAnchor 三态） */
   align: 'start' | 'middle' | 'end';
-  /** 行高（user units），已应用默认值；emit 时透传给 TextPrim.lineHeight */
+  /** 行高（已应用默认值） */
   lineHeight: number;
-  /** 文本字号（user units），已应用默认值 */
+  /** 文本字号（已应用默认值） */
   fontSize: number;
-  /** 字体族；CSS font-family；emit 时透传给 TextPrim */
+  /** 字体族（CSS font-family） */
   fontFamily?: string;
-  /** 字重；emit 时透传给 TextPrim */
+  /** 字重 */
   fontWeight?: string | number;
-  /** 字形：normal / italic / oblique；emit 时透传给 TextPrim */
+  /** 字形 */
   fontStyle?: 'normal' | 'italic' | 'oblique';
-  /** 节点背景色，CSS 颜色字符串；emit 时用 'transparent' 兜底 */
+  /** 节点背景色，emit 时 'transparent' 兜底 */
   fill?: string;
-  /** 节点填充透明度 0~1；透传 shape primitive */
+  /** 填充透明度 0~1 */
   fillOpacity?: number;
-  /** 节点边框色，CSS 颜色字符串；emit 时用 'currentColor' 兜底 */
+  /** 节点边框色，emit 时 'currentColor' 兜底 */
   stroke?: string;
-  /** 节点描边透明度 0~1；TikZ `draw opacity`，透传 shape primitive */
+  /** 描边透明度 0~1（TikZ `draw opacity`） */
   strokeOpacity?: number;
-  /** 节点边框宽度（user units）；emit 时用 1 兜底 */
+  /** 边框宽度，emit 时 1 兜底 */
   strokeWidth?: number;
-  /** SVG stroke-dasharray 字符串；compile 已把 dashed / dotted 预设解析为具体 pattern */
+  /** SVG stroke-dasharray，已把 dashed/dotted 预设解析为具体 pattern */
   strokeDasharray?: string;
-  /** rectangle shape 的圆角半径（user units）；非 rect shape 该字段无效 */
+  /** rectangle 圆角半径（非 rect shape 无效） */
   roundedCorners?: number;
-  /** 文字颜色；emit 时透传给 TextPrim.fill，兜底 'currentColor' */
+  /** 文字颜色，emit 时 'currentColor' 兜底 */
   textColor?: string;
-  /** 整节点透明度 0~1；emit 时同时挂 shape 与 text primitive */
+  /** 整节点透明度 0~1（同时挂 shape 与 text primitive） */
   opacity?: number;
   /**
-   * 已解析的 label 列表（IR 层 `Node.label` 标准化后）。每条 label 已合并：
-   * - position 默认 'above'
-   * - distance 默认 DEFAULT_LABEL_DISTANCE
-   * - font 字段从 Node 继承（family / size / weight / style 任一未填则取 Node 块级值）
+   * 已解析的 label 列表
+   * @description IR 层 `Node.label` 标准化：position 默认 'above'、distance 默认 DEFAULT_LABEL_DISTANCE、font 从 Node 继承
    */
   labels?: Array<NodeLabelLayout>;
 };
 
-/** 节点附属标签的 layout——layoutNode 阶段已合并好默认值与样式继承 */
+/** 节点附属标签 layout（layoutNode 已合并默认值与样式继承） */
 export type NodeLabelLayout = {
   text: string;
-  /** 8 方向枚举或数字角度（与 IR 同形态） */
+  /** 8 方向枚举或数字角度 */
   position: AtDirection | number;
-  /** 已应用默认值的距离 */
+  /** 已应用默认值 */
   distance: number;
   textColor?: string;
   opacity?: number;
@@ -122,7 +114,7 @@ export type NodeLabelLayout = {
   fontStyle?: 'normal' | 'italic' | 'oblique';
 };
 
-/** 由 layout 构造的 Rect（带 margin 扩张） */
+/** 从 layout 构造 Rect（带 margin 扩张） */
 const rectOf = (layout: NodeLayout, marginAdd: number): Rect => ({
   x: layout.rect.x,
   y: layout.rect.y,
@@ -131,16 +123,16 @@ const rectOf = (layout: NodeLayout, marginAdd: number): Rect => ({
   rotate: layout.rect.rotate,
 });
 
-/** 由 layout 构造的 Circle（圆心 + 半径，半径=外接框边长/2 + margin） */
+/** 从 layout 构造 Circle（radius=外接框边长/2 + margin） */
 const circleOf = (layout: NodeLayout, marginAdd: number): Circle => ({
   x: layout.rect.x,
   y: layout.rect.y,
-  // circle 外接框宽=高，任取一个；再加 margin
+  // circle 外接框宽=高
   radius: layout.rect.width / 2 + marginAdd,
   rotate: layout.rect.rotate,
 });
 
-/** 由 layout 构造的 Ellipse（rx/ry 各加 margin） */
+/** 从 layout 构造 Ellipse（rx/ry 各加 margin） */
 const ellipseOf = (layout: NodeLayout, marginAdd: number): Ellipse => ({
   x: layout.rect.x,
   y: layout.rect.y,
@@ -149,7 +141,7 @@ const ellipseOf = (layout: NodeLayout, marginAdd: number): Ellipse => ({
   rotate: layout.rect.rotate,
 });
 
-/** 由 layout 构造的 Diamond（halfA/halfB 各加 margin） */
+/** 从 layout 构造 Diamond（halfA/halfB 各加 margin） */
 const diamondOf = (layout: NodeLayout, marginAdd: number): Diamond => ({
   x: layout.rect.x,
   y: layout.rect.y,
@@ -159,9 +151,8 @@ const diamondOf = (layout: NodeLayout, marginAdd: number): Diamond => ({
 });
 
 /**
- * 取节点 shape 在 toward 方向上的"附着点"——path 端点贴边用。
- * 按 shape 多态：rect / circle / ellipse / diamond 各自的 boundaryPoint。
- * margin > 0 时形状先外扩，让 path 在 border 外停 margin 个 user units。
+ * 取节点 shape 在 toward 方向的附着点（path 端点贴边用）
+ * @description 按 shape 多态调用各自 boundaryPoint；margin > 0 时形状先外扩，让 path 在 border 外停 margin
  */
 export const boundaryPointOf = (layout: NodeLayout, toward: Position): Position => {
   const m = layout.margin;
@@ -178,9 +169,8 @@ export const boundaryPointOf = (layout: NodeLayout, toward: Position): Position 
 };
 
 /**
- * 取节点 shape 的命名 anchor（center / north / east / north-east 等 9 个）。
- * **不应用 margin**——TikZ 语义中 explicit anchor 取的是视觉边界点，不涉及 outer sep。
- * 用于 `'A.north'` 这种语法落点。
+ * 取节点 shape 命名 anchor（center / north / east / north-east 等 9 个）
+ * @description 不应用 margin——TikZ 语义中 explicit anchor 取视觉边界点不涉及 outer sep；用于 `'A.north'` 落点
  */
 export const anchorOf = (layout: NodeLayout, name: RectAnchor): Position => {
   switch (layout.shape) {
@@ -195,10 +185,7 @@ export const anchorOf = (layout: NodeLayout, name: RectAnchor): Position => {
   }
 };
 
-/**
- * 8 方向 label position → (anchorName, 单位向量) 映射。
- * 视觉语义与 `at.direction` 一致——above 是视觉上方（y 减小）。
- */
+/** 8 方向 label position → (anchorName, 单位向量)；above 视觉上方即 y 减小 */
 const LABEL_DIRECTION_MAP: Record<
   AtDirection,
   { anchor: RectAnchor; vec: [number, number] }
@@ -214,9 +201,8 @@ const LABEL_DIRECTION_MAP: Record<
 };
 
 /**
- * 算 label 中心点：
- * - 8 方向：节点对应 anchor 出发，按单位向量 × distance 外推
- * - 数字角度：先取 angleBoundary 边界点，再沿 (cos, sin) 单位向量 × distance 外推
+ * 算 label 中心点
+ * @description 8 方向：节点对应 anchor 出发按单位向量 × distance 外推；数字角度：先取 angleBoundary 边界点再沿 (cos,sin) × distance 外推
  */
 const labelCenter = (layout: NodeLayout, label: NodeLabelLayout): Position => {
   if (typeof label.position === 'number') {
@@ -230,13 +216,12 @@ const labelCenter = (layout: NodeLayout, label: NodeLabelLayout): Position => {
 };
 
 /**
- * 取节点 shape 在指定角度方向上的边界点。角度约定与 PolarPosition 一致（度数）：
- *   0° = +x（east），90° = +y（screen 下方）。
- * **不应用 margin**——同 anchorOf。用于 `'A.30'` 这种语法落点。
+ * 取节点 shape 在指定角度方向的边界点
+ * @description 角度约定与 PolarPosition 一致（度数：0°=+x，90°=+y 即 screen 下方）；不应用 margin（同 anchorOf）；用于 `'A.30'` 落点
  */
 export const angleBoundaryOf = (layout: NodeLayout, angleDeg: number): Position => {
   const rad = (angleDeg * Math.PI) / 180;
-  // toward 方向上任意距离都行——boundary 算法只用方向不用距离
+  // toward 任意距离都行——boundary 只用方向
   const toward: Position = [layout.rect.x + Math.cos(rad), layout.rect.y + Math.sin(rad)];
   switch (layout.shape) {
     case 'rectangle':
@@ -251,12 +236,8 @@ export const angleBoundaryOf = (layout: NodeLayout, angleDeg: number): Position 
 };
 
 /**
- * 把 IR Node 解析为内部 NodeLayout：
- * - 算出文本度量与 padding 推导出"内框"半轴 (innerHalfW/H)
- * - 按 shape 决定外接边界尺寸（circle 取半对角线、ellipse 各 ×√2、diamond 各 ×2）
- * - 解析 position（笛卡尔或极坐标）为几何中心
- * - IR 的 rotate（度数）转弧度存进 Rect.rotate
- * - 透传 margin / 样式属性
+ * IR Node → 内部 NodeLayout
+ * @description 文本度量 + padding 推内框半轴；按 shape 算外接边界（circle 取半对角线、ellipse ×√2、diamond ×2）；解析 position 为几何中心；rotate 度数转弧度
  */
 export const layoutNode = (
   node: IRNode,
@@ -264,9 +245,8 @@ export const layoutNode = (
   nodeIndex: Map<string, NodeLayout>,
   nodeDistance?: number,
 ): NodeLayout => {
-  // 缩放：xScale / yScale 优先于 scale 别名；默认 1。layout-level 乘进所有尺寸，
-  // 让 path 端点贴在缩放后的边界上（与 TikZ scale 行为一致）。
-  // 字号取 min(sx, sy) 以保住 glyph 形状（避免非均匀缩放下文字被横纵拉变形）。
+  // 缩放：xScale/yScale 优先于 scale 别名，默认 1；乘进所有尺寸让 path 贴缩放后边界。
+  // 字号取 min(sx,sy) 保 glyph 形状，避免非均匀缩放下文字被拉变形。
   const sx = node.xScale ?? node.scale ?? 1;
   const sy = node.yScale ?? node.scale ?? 1;
   const fontScale = Math.min(sx, sy);
@@ -276,11 +256,7 @@ export const layoutNode = (
   const fontFamily = node.font?.family;
   const fontWeight = node.font?.weight;
   const fontStyle = node.font?.style;
-  // 内 / 外边距解析顺序：
-  //   axis-specific (innerXSep / innerYSep / outerSep)
-  // → symmetric alias (padding / margin)
-  // → 默认值
-  // sep 也受 scale 影响——大 node 的视觉 padding 自然要更大
+  // 内/外边距优先级：axis-specific (innerXSep/innerYSep/outerSep) → symmetric alias (padding/margin) → 默认；sep 受 scale 影响
   const xSep = (node.innerXSep ?? node.padding ?? DEFAULT_PADDING) * sx;
   const ySep = (node.innerYSep ?? node.padding ?? DEFAULT_PADDING) * sy;
   const outerSep = (node.outerSep ?? node.margin ?? 0) * Math.max(sx, sy);
@@ -288,7 +264,7 @@ export const layoutNode = (
     (node.lineHeight ?? baseFontSize * DEFAULT_LINE_HEIGHT_FACTOR) * sy;
   const align = alignToTextAnchor(node.align ?? 'center');
 
-  // 标准化为 Array<IRLineSpec>：单字符串 → 单元素；空数组在 schema 阶段已被拒
+  // 标准化为 Array<IRLineSpec>：单字符串 → 单元素（空数组 schema 已拒）
   const rawLines: Array<IRLineSpec> | undefined =
     node.text === undefined
       ? undefined
@@ -296,7 +272,7 @@ export const layoutNode = (
         ? [node.text]
         : node.text;
 
-  // 每行解析覆盖样式 + 度量。仅写入真正被覆盖的字段，未填字段由下游走块级默认。
+  // 每行解析覆盖样式 + 度量；仅写真正被覆盖的字段，未填字段由下游走块级默认
   let textWidth = 0;
   let textHeight = 0;
   let lines: Array<TextLine> | undefined;
@@ -304,7 +280,7 @@ export const layoutNode = (
     lines = rawLines.map(spec => {
       const isObj = typeof spec !== 'string';
       const text = isObj ? spec.text : spec;
-      // 行级 font 与块级 font 合并：行级有就用行级，没有走块级（透传 undefined）
+      // 行级 font 与块级合并：行级优先，没有走块级（透传 undefined）
       const lineFont = isObj ? spec.font : undefined;
       const lineSize = lineFont?.size ?? fontSize;
       const lineFamily = lineFont?.family ?? fontFamily;
@@ -318,7 +294,7 @@ export const layoutNode = (
       });
       if (m.width > textWidth) textWidth = m.width;
       const out: TextLine = { text };
-      // 只在行级与块级不同时写出（让 emit 的 JSON 更精简，下游 fallback 更明确）
+      // 行级与块级不同时才写出（精简 emit JSON，明确下游 fallback）
       if (isObj) {
         if (spec.fill !== undefined) out.fill = spec.fill;
         if (spec.opacity !== undefined) out.opacity = spec.opacity;
@@ -332,15 +308,15 @@ export const layoutNode = (
     textHeight = lines.length * lineHeight;
   }
 
-  // 内框半轴：text 半宽 + xSep / ySep（保证至少 sep 大小，空文本节点也有最小尺寸）
-  // minimumWidth / minimumHeight（axis-specific）覆盖 minimumSize（对称别名）
+  // 内框半轴：text 半宽 + sep（保证至少 sep 大小，空文本节点也有最小尺寸）
+  // minimumWidth/Height (axis-specific) 覆盖 minimumSize (对称别名)
   const minW = node.minimumWidth ?? node.minimumSize ?? 0;
   const minH = node.minimumHeight ?? node.minimumSize ?? 0;
   const innerHalfW = Math.max(textWidth / 2 + xSep, xSep, minW / 2);
   const innerHalfH = Math.max(textHeight / 2 + ySep, ySep, minH / 2);
   const shape = node.shape ?? 'rectangle';
 
-  // 外接边界（bounding rect）的半轴——按 shape 计算
+  // 外接边界（bounding rect）半轴，按 shape 计算
   let boundsHalfW: number;
   let boundsHalfH: number;
   switch (shape) {
@@ -349,19 +325,19 @@ export const layoutNode = (
       boundsHalfH = innerHalfH;
       break;
     case 'circle': {
-      // 外接圆半径 = 内框对角线/2，圆心居中
+      // 外接圆半径 = 内框对角线/2
       const r = Math.sqrt(innerHalfW * innerHalfW + innerHalfH * innerHalfH);
       boundsHalfW = r;
       boundsHalfH = r;
       break;
     }
     case 'ellipse':
-      // 外接椭圆：半轴 = 内框半轴 × √2（让内框 4 顶点落在椭圆周上）
+      // 外接椭圆半轴 = 内框半轴 × √2（内框 4 顶点落在椭圆周上）
       boundsHalfW = innerHalfW * SQRT2;
       boundsHalfH = innerHalfH * SQRT2;
       break;
     case 'diamond':
-      // 外接菱形：半轴 = 内框半轴 × 2（让内框 4 顶点落在菱形 4 边上）
+      // 外接菱形半轴 = 内框半轴 × 2（内框 4 顶点落在菱形 4 边上）
       boundsHalfW = innerHalfW * 2;
       boundsHalfH = innerHalfH * 2;
       break;
@@ -374,7 +350,7 @@ export const layoutNode = (
       `Cannot resolve position for node ${node.id ?? '(unnamed)'}; polar.origin or at.of may reference an undefined node`,
     );
   }
-  // 标准化 label：单对象 → 单元素数组；继承 Node 的 font / textColor 默认值
+  // 标准化 label：单对象 → 单元素数组；继承 Node 的 font/textColor
   const rawLabels: Array<IRNodeLabel> | undefined =
     node.label === undefined
       ? undefined
@@ -432,7 +408,7 @@ export const layoutNode = (
   };
 };
 
-/** rectangle shape 的 RectPrim */
+/** rectangle → RectPrim */
 const emitRectShape = (
   layout: NodeLayout,
   round: (n: number) => number,
@@ -456,7 +432,7 @@ const emitRectShape = (
   };
 };
 
-/** circle / ellipse shape 的 EllipsePrim（圆形 rx=ry） */
+/** circle/ellipse → EllipsePrim（圆形 rx=ry） */
 const emitEllipseShape = (
   layout: NodeLayout,
   round: (n: number) => number,
@@ -475,12 +451,12 @@ const emitEllipseShape = (
   opacity: layout.opacity,
 });
 
-/** diamond shape 的 PathPrim（4 顶点 + Z 闭合） */
+/** diamond → PathPrim（4 顶点 + Z 闭合） */
 const emitDiamondShape = (
   layout: NodeLayout,
   round: (n: number) => number,
 ): ScenePrimitive => {
-  // 4 顶点：用 diamond 几何工具直接拿 anchor，已带旋转处理
+  // 4 顶点：diamond 几何工具直接拿 anchor，已带旋转处理
   const diam = diamondOf(layout, 0);
   const e = diamondOps.anchor(diam, 'east');
   const n = diamondOps.anchor(diam, 'north');
@@ -501,12 +477,8 @@ const emitDiamondShape = (
 };
 
 /**
- * 把 NodeLayout 翻译为 Scene primitives：
- * - shape 主体：按 shape 分发（rect / ellipse / path）
- * - text（如有内容）：始终走 TextPrim
- * - 若有旋转：外面套一层 GroupPrim 用 SVG `rotate(deg cx cy)` 实现
- *   （PathPrim 的 diamond 顶点已自带旋转坐标，但 text 需要 group 旋转，
- *    所以仍统一用 group 包裹）
+ * NodeLayout → Scene primitives
+ * @description shape 主体按 shape 分发（rect/ellipse/path）；text 始终走 TextPrim；有旋转时外层 GroupPrim 用 `rotate(deg cx cy)` 统一包裹（text 必须靠 group 旋转）
  */
 export const emitNodePrimitives = (
   layout: NodeLayout,
@@ -522,18 +494,15 @@ export const emitNodePrimitives = (
       shapePrim = emitEllipseShape(layout, round);
       break;
     case 'diamond':
-      // diamond 的 4 顶点已经按 layout.rect.rotate 旋转过，所以下面 group
-      // wrap 时只能给 text 旋转、不能再给 diamond 二次旋转。简化办法：
-      // 这里 emit 的 d 用"未旋转"的 diamond，让外层 group 统一旋转。
+      // diamond 4 顶点已按 layout.rect.rotate 旋转过，外层 group 会再旋转 text
+      // 不能让 diamond 被二次旋转——这里 emit 的 d 用"未旋转"版让外层 group 统一旋转
       shapePrim = emitDiamondShape(unrotated(layout), round);
       break;
   }
 
   const inner: Array<ScenePrimitive> = [shapePrim];
   if (layout.lines) {
-    // align=left: 块左边对齐——TextPrim.x = 中心 - 块半宽，textAnchor=start
-    // align=right: 块右边对齐——TextPrim.x = 中心 + 块半宽，textAnchor=end
-    // align=middle: 居中——TextPrim.x = 中心
+    // align=start: x=中心-块半宽; align=end: x=中心+块半宽; align=middle: x=中心
     const halfBlockW = layout.textWidth / 2;
     const xOffset =
       layout.align === 'start' ? -halfBlockW : layout.align === 'end' ? halfBlockW : 0;
@@ -555,7 +524,7 @@ export const emitNodePrimitives = (
       measuredHeight: round(layout.textHeight),
     });
   }
-  // Label TextPrim：每个 label 一个，放在 inner 同组 → 跟 node 旋转一致
+  // 每个 label 一个 TextPrim，放在 inner 同组 → 跟 node 旋转一致
   if (layout.labels) {
     for (const lab of layout.labels) {
       const [lx, ly] = labelCenter(layout, lab);
@@ -588,7 +557,7 @@ export const emitNodePrimitives = (
   ];
 };
 
-/** 返回 layout 的"未旋转"副本——用于先把 diamond 顶点按未旋转算，再由外层 group 统一旋转 */
+/** layout 的"未旋转"副本，让 diamond 顶点先按未旋转算，外层 group 统一旋转 */
 const unrotated = (layout: NodeLayout): NodeLayout => ({
   ...layout,
   rect: { ...layout.rect, rotate: 0 },

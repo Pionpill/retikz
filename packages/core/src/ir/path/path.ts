@@ -104,5 +104,5 @@ export const PathSchema = z
     'A drawn path composed of a sequence of step actions (move / line / ...)',
   );
 
-/** 路径：由若干 step 动作（move / line / ...）组成的绘制路径 */
+/** 路径：由若干 step 动作（move/line/...）组成 */
 export type IRPath = z.infer<typeof PathSchema>;

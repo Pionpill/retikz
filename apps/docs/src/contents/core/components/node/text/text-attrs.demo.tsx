@@ -2,10 +2,8 @@ import { Node, Text, Tikz } from '@retikz/react';
 import type { FC } from 'react';
 
 /**
- * <Text> 三种行级覆盖字段并排展示：
- * - fill：颜色
- * - opacity：单行透明度
- * - font：family / size / weight / style 部分覆盖
+ * <Text> 行级覆盖字段并排
+ * @description fill 颜色、opacity 单行透明度、font 部分覆盖（family / size / weight / style）。
  */
 const Demo: FC = () => (
   <Tikz width={520} height={130}>

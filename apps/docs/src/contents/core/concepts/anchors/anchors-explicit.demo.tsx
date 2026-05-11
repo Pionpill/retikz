@@ -2,8 +2,8 @@ import { Draw, Node, Tikz } from '@retikz/react';
 import type { FC } from 'react';
 
 /**
- * 显式 anchor 字符串语法（ADR-0004）：'A.north' / 'A.east' / 'A.30' / 'A.center'。
- * 中央节点 8 条 Draw 用 8 个不同的 anchor / 角度作端点，强制锁死贴边位置。
+ * 显式 anchor 字符串语法（ADR-0004）
+ * @description 'A.north' / 'A.east' / 'A.30' / 'A.center'；中央节点 8 条 Draw 用 8 个不同 anchor / 角度作端点强制锁死贴边位置。
  */
 const Demo: FC = () => (
   <Tikz width={360} height={260}>

@@ -2,8 +2,8 @@ import { Draw, Node, Tikz } from '@retikz/react';
 import type { FC } from 'react';
 
 /**
- * 把所有样式变体并排画——每行一个 stroke / strokeWidth / strokeDasharray 组合。
- * 左端用 Node 占位当 row 标签，右端纯坐标终点；同一 Tikz 内 5 行不交叉。
+ * 描边样式变体并排
+ * @description 每行一个 stroke / strokeWidth / strokeDasharray 组合，左端 Node 当 row 标签，右端纯坐标终点。
  */
 const Demo: FC = () => (
   <Tikz width={420} height={200}>

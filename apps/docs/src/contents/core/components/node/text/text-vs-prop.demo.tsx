@@ -2,8 +2,8 @@ import { Node, Text, Tikz } from '@retikz/react';
 import type { FC } from 'react';
 
 /**
- * 两条等价路径——左边 <Text> Sugar、右边 text prop 数组里写 LineSpec 对象，
- * 编译产物完全相同。
+ * 两条等价路径
+ * @description 左 <Text> Sugar、右 text prop 数组里写 LineSpec 对象，编译产物完全相同。
  */
 const Demo: FC = () => (
   <Tikz width={420} height={140}>

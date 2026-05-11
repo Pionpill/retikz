@@ -15,8 +15,8 @@ const getCtx = (): CanvasRenderingContext2D | null => {
 };
 
 /**
- * 浏览器端 text measurer：基于 canvas measureText。
- * 在 SSR 路径下走不到这里，会自动降级 fallback。
+ * 浏览器端 text measurer：基于 canvas measureText
+ * @description SSR 路径下走不到这里，会自动降级 fallback
  */
 export const browserMeasurer: TextMeasurer = (text, font) => {
   const c = getCtx();
@@ -26,8 +26,7 @@ export const browserMeasurer: TextMeasurer = (text, font) => {
   const style = font.style ?? 'normal';
   c.font = `${style} ${weight} ${font.size}px ${family}`;
   const m = c.measureText(text);
-  // lib.dom 把 actualBoundingBox* 标成 number 必填，但旧 Safari / Chromium 仍可能返回 undefined。
-  // 故意保留兜底，禁用 lint 规则。
+  // lib.dom 把 actualBoundingBox* 标成必填，但旧 Safari / Chromium 仍可能返回 undefined，故意保留兜底
   // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
   const ascent = m.actualBoundingBoxAscent ?? font.size * 0.8;
   // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition

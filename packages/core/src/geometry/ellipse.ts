@@ -1,22 +1,20 @@
 import type { Position } from './point';
 
-/** 椭圆：几何中心 (x, y) + 半长轴 rx / 半短轴 ry + 可选旋转（弧度） */
+/** 椭圆：中心 + 半长轴 rx / 半短轴 ry + 可选旋转 */
 export type Ellipse = {
-  /** 中心横坐标 */
   x: number;
-  /** 中心纵坐标 */
   y: number;
-  /** 半长轴（沿本地 +x 方向） */
+  /** 沿本地 +x */
   rx: number;
-  /** 半短轴（沿本地 +y 方向） */
+  /** 沿本地 +y */
   ry: number;
-  /** 绕几何中心旋转弧度；省略或 0 表示不旋转 */
+  /** 绕中心旋转弧度 */
   rotate?: number;
 };
 
 const SQRT_HALF = Math.SQRT1_2;
 
-/** 椭圆 9 个标准 anchor 名（含义与 RECT_ANCHORS 一致） */
+/** 椭圆 9 个标准 anchor（与 RECT_ANCHORS 同名同义） */
 export type EllipseAnchor =
   | 'center'
   | 'north'
@@ -55,12 +53,10 @@ export const ellipse = {
     const [lx, ly] = worldToLocal(e, p);
     return (lx * lx) / (e.rx * e.rx) + (ly * ly) / (e.ry * e.ry) <= 1;
   },
-  /**
-   * 9 个标准 anchor 的世界坐标。
-   * 对角 anchor（NE/NW/SE/SW）取参数曲线 t=π/4 处的点：
-   * (rx·cos(π/4), ry·sin(π/4)) = (rx/√2, ry/√2)。
-   * 这与 TikZ 椭圆对角 anchor 的"参数等分"约定一致。
-   */
+/**
+ * 9 个 anchor 的世界坐标
+ * @description 对角（NE/NW/SE/SW）取参数曲线 t=π/4 处 (rx/√2, ry/√2)，与 TikZ 椭圆 anchor 参数等分约定一致
+ */
   anchor: (e: Ellipse, name: EllipseAnchor): Position => {
     let lx = 0;
     let ly = 0;
@@ -98,12 +94,10 @@ export const ellipse = {
     }
     return localToWorld(e, [lx, ly]);
   },
-  /**
-   * 从中心向 toward 方向画射线，求与椭圆的交点。
-   * 椭圆方程：(x/rx)² + (y/ry)² = 1。
-   * 沿方向 (lx, ly) 缩放 t 倍命中：t² × ((lx/rx)² + (ly/ry)²) = 1
-   * → t = 1 / √((lx/rx)² + (ly/ry)²)。
-   */
+/**
+ * 从中心向 toward 方向射线与椭圆交点
+ * @description 椭圆方程 (x/rx)² + (y/ry)² = 1；沿 (lx,ly) 缩放 t 倍命中 t = 1 / √((lx/rx)² + (ly/ry)²)
+ */
   boundaryPoint: (e: Ellipse, toward: Position): Position => {
     const [lx, ly] = worldToLocal(e, toward);
     if (lx === 0 && ly === 0) return [e.x, e.y];

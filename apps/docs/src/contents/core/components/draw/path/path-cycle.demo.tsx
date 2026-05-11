@@ -2,8 +2,8 @@ import { Node, Path, Step, Tikz } from '@retikz/react';
 import type { FC } from 'react';
 
 /**
- * cycle 与 line / step 折角混用画一个矩形回路：A -> B (line) -> C (-|) ->
- * D (line) -> cycle 回 A。比手动 line 回起点少一个端点声明。
+ * cycle + line / step 混用画矩形回路
+ * @description A -> B -> C -> D -> cycle 回 A，比手动 line 回起点少一个端点声明。
  */
 const Demo: FC = () => (
   <Tikz width={360} height={180}>

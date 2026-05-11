@@ -15,20 +15,8 @@ export type TextProps = {
 };
 
 /**
- * Text 是 Node 内的"行级"标记组件——本身不渲染，
- * 由 buildIR 在扫描 Node children 时识别为 LineSpec。
- *
- * 和字符串 children 平等参与——String 按 `'\n'` 拆纯样式行；
- * `<Text>` 一次贡献一行带样式行；保持 JSX 顺序。
- *
- * 用法：
- * ```tsx
- * <Node>
- *   <Text fill="red" font={{ weight: 'bold' }}>Heading</Text>
- *   body line 1
- *   body line 2
- * </Node>
- * ```
+ * Text 是 Node 内的"行级"标记组件——本身不渲染
+ * @description 由 buildIR 在扫描 Node children 时识别为 LineSpec；与字符串 children 平等参与（字符串按 `'\n'` 拆纯样式行，`<Text>` 一次贡献一行带样式行），保持 JSX 顺序
  */
 export const Text: FC<TextProps> = () => null;
 Text.displayName = TIKZ_TEXT;

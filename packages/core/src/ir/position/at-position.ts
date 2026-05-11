@@ -2,15 +2,8 @@ import { z } from 'zod';
 import type { ValueOf } from '../../types';
 
 /**
- * 节点相对方向常量。8 方向（4 主向 + 4 对角），按视觉语义：
- * - above:  y 减小（视觉上方）
- * - below:  y 增大（视觉下方）
- * - left:   x 减小（视觉左方）
- * - right:  x 增大（视觉右方）
- * - 4 对角：两轴各 1/√2 单位向量分量（对角距离与 distance 等长）
- *
- * 与 TikZ `positioning` library 的 `above of` / `right of` / `above right of` 对齐
- * （TikZ y 向上、retikz y 向下，但 `above` 视觉语义在两边一致——视觉上方）。
+ * 节点相对方向 8 方向常量（视觉语义）
+ * @description above/below=y 减/增（视觉上/下）；left/right=x 减/增；4 对角分量 1/√2 让对角距离与 distance 等长。与 TikZ positioning 的 `above of` 等对齐（TikZ y 向上 retikz y 向下，但视觉语义一致）
  */
 export const AT_DIRECTIONS = {
   above: 'above',
@@ -23,7 +16,7 @@ export const AT_DIRECTIONS = {
   'below-right': 'below-right',
 } as const;
 
-/** at 方向字面量类型；由 `AT_DIRECTIONS` 派生 */
+/** at 方向字面量类型 */
 export type AtDirection = ValueOf<typeof AT_DIRECTIONS>;
 
 export const AtPositionSchema = z
@@ -51,5 +44,5 @@ export const AtPositionSchema = z
     'Relative position: place this node at `direction` direction from `of`, `distance` away. Mirrors TikZ `[<direction>=<distance> of <id>]` from the positioning library.',
   );
 
-/** 相对定位的 IR 类型——`{ direction, of, distance? }`，与 `IRPosition` / `PolarPosition` 在 union 里平级 */
+/** 相对定位 IR 类型 `{ direction, of, distance? }`，与 IRPosition/PolarPosition union 平级 */
 export type IRAtPosition = z.infer<typeof AtPositionSchema>;

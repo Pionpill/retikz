@@ -18,29 +18,20 @@ export type NodeProps = {
   /** 节点形状：rectangle（默认）/ circle / ellipse / diamond */
   shape?: IRNode['shape'];
   /**
-   * 节点中心位置。三种形态：
-   * - 笛卡尔 `[x, y]`
-   * - 极坐标 `{ angle, radius, origin? }`（编译时解析）
-   * - 相对定位 `{ direction, of, distance? }`（TikZ `[<direction>=<distance> of <id>]` 同义；编译时解析）
+   * 节点中心位置
+   * @description 三种形态：笛卡尔 `[x, y]` / 极坐标 `{ angle, radius, origin? }` / 相对定位 `{ direction, of, distance? }`（TikZ `[<direction>=<distance> of <id>]` 同义）；极坐标与相对定位在编译时解析
    */
   position: IRPosition | PolarPosition | IRAtPosition;
   /** 旋转角度（度数，与 TikZ 一致），绕节点中心；正值顺时针 */
   rotate?: number;
   /**
-   * 文本内容（也可以用 children 写）；与 `text` 二选一，`text` 优先。
-   *
-   * children 多行写法：
-   * - `<Node>{'Line 1\nLine 2'}</Node>`（字符串内嵌 `\n`）
-   * - ``<Node>{`Line 1\nLine 2`}</Node>``（模板字面量）
-   * - `<Node>{['Line 1', 'Line 2']}</Node>`（数组）
-   * - `<Node><Text fill="red">L1</Text>L2</Node>`（混 `<Text>` 带样式行）
+   * 文本内容（也可以用 children 写）；与 `text` 二选一，`text` 优先
+   * @description 多行支持四种写法：字符串内嵌 `\n` / 模板字面量 / 字符串数组 / 混 `<Text>` 带样式行
    */
   children?: ReactNode;
   /**
-   * 显式 text，优先级高于 children：
-   * - `string` — 单行
-   * - `Array<string>` — 多行无样式覆盖
-   * - `Array<string | LineSpec>` — 多行，可对单行覆盖 fill / opacity / font
+   * 显式 text，优先级高于 children
+   * @description `string` 单行 / `Array<string>` 多行无样式 / `Array<string | LineSpec>` 多行可对单行覆盖 fill / opacity / font
    */
   text?: string | Array<IRLineSpec>;
   /** 多行文本对齐：left / center（默认）/ right；只影响多行块内各行的水平对齐 */
@@ -94,19 +85,15 @@ export type NodeProps = {
   /** 整节点透明度 0~1（同时作用于 shape 与 text） */
   opacity?: number;
   /**
-   * 节点附属标签——TikZ `[label=above:foo]` 同义。
-   *
-   * 单对象或数组形态；每条 label 接 `text` / `position?` / `distance?` / 样式继承。
-   * `position` 接 8 方向枚举（`above`/`right`/...）或数字角度（`label=30:foo` 等价 `position: 30`）；
-   * 缺省 'above'，distance 缺省 4。
+   * 节点附属标签——TikZ `[label=above:foo]` 同义
+   * @description 单对象或数组；每条 label 接 `text` / `position?` / `distance?` / 样式继承；`position` 接 8 方向枚举或数字角度（`label=30:foo` 等价 `position: 30`），缺省 'above'，distance 缺省 4
    */
   label?: IRNodeLabel | Array<IRNodeLabel>;
 };
 
 /**
- * Node 是 DSL 标记组件——本身不渲染任何 React 元素。
- * 由 <Tikz> 在 children 扫描阶段读出 props 构造 IR，
- * 再由 compileToScene + renderPrim 产出最终 SVG。
+ * Node 是 DSL 标记组件——本身不渲染任何 React 元素
+ * @description 由 <Tikz> 在 children 扫描阶段读出 props 构造 IR，再由 compileToScene + renderPrim 产出最终 SVG
  */
 export const Node: FC<NodeProps> = () => null;
 Node.displayName = TIKZ_NODE;

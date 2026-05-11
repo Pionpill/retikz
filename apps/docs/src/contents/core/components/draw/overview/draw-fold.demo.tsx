@@ -2,11 +2,8 @@ import { Draw, DrawWay, Node, Tikz } from '@retikz/react';
 import type { FC } from 'react';
 
 /**
- * 把 `'-|'` / `'|-'` 当 infix 算子直接塞进 way——与 TikZ 写法
- * `(A) -| (B) -- (C) |- (-40, 60)` 字面对齐。
- *
- * 折角终点既能是节点 id（贴 boundary），也能是笛卡尔坐标（直落坐标）；
- * `DrawWay.Hv` 与裸字面量 `'-|'` TS 类型完全等价，按习惯选即可。
+ * `'-|'` / `'|-'` 当 infix 折角算子
+ * @description 与 TikZ `(A) -| (B) -- (C) |- (-40, 60)` 字面对齐；折角终点既能是节点 id 也能是坐标，`DrawWay.Hv` 与字面量 `'-|'` TS 等价。
  */
 const Demo: FC = () => (
   <Tikz width={360} height={200}>

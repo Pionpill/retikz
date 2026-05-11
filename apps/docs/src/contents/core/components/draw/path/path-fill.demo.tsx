@@ -2,8 +2,8 @@ import { Path, Step, Tikz } from '@retikz/react';
 import type { FC } from 'react';
 
 /**
- * fill + cycle 配合画填充三角形和填充矩形，支持半透明色让 stroke 仍可见。
- * fillRule 在简单凸闭合路径下与 nonzero 结果一致；ring / 8 字形等才需要 evenodd。
+ * fill + cycle 画填充图形
+ * @description 半透明 fill 让 stroke 仍可见；简单凸闭合路径 fillRule 与 nonzero 结果一致，ring / 8 字形才需要 evenodd。
  */
 const Demo: FC = () => (
   <Tikz width={360} height={160}>

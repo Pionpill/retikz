@@ -2,10 +2,8 @@ import { Node, Text, Tikz } from '@retikz/react';
 import type { FC } from 'react';
 
 /**
- * 行级样式覆盖：
- * - 左：用 <Text> 写 heading（粗体 + 红）+ 普通 body 行
- * - 中：text prop 数组里混 LineSpec 对象 + 字符串
- * - 右：每行单独 fill / opacity，体现行级独立染色
+ * 行级样式覆盖
+ * @description 左：<Text> 写 heading + 普通 body；中：text prop 数组混 LineSpec 对象 + 字符串；右：每行单独 fill / opacity 行级独立染色。
  */
 const Demo: FC = () => (
   <Tikz width={520} height={160}>

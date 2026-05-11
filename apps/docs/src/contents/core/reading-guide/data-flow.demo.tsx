@@ -2,10 +2,8 @@ import { Draw, Node, Tikz } from '@retikz/react';
 import type { FC } from 'react';
 
 /**
- * Source-guide 章节的数据流向插图——用 retikz 画 retikz 自己的数据流（dogfood）。
- * 顶行：JSX/DSL → parsers → IR → compile → Scene → adapter renderer
- * 底行：每个阶段背后的模块来源；geometry/* 与 compile 之间用虚线表示"被调用"。
- * 节点纯当文字锚点用，stroke="none" 去掉外框；Draw 仍按 Node bbox 自动贴边。
+ * Source-guide 数据流向插图（dogfood）
+ * @description 顶行 JSX/DSL → parsers → IR → compile → Scene → adapter renderer；底行各阶段背后的模块来源，geometry/* 与 compile 之间用虚线表示"被调用"；节点纯当文字锚点 stroke="none"，Draw 仍按 Node bbox 自动贴边。
  */
 const Demo: FC = () => (
   <Tikz width={660} height={150} style={{ maxWidth: '100%', height: 'auto' }}>

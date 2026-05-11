@@ -1,30 +1,24 @@
 import type { Position } from './point';
 
 /*
- * 段几何采样工具——为 ADR-0004 边标注（step.label）服务。
- *
- * 每种段（line / quad / cubic / fold / arc / circle / ellipse）提供一个
- * `*SegmentSample` 函数：给定段参数 + 进度 t∈[0,1]，返回 t 处的点坐标
- * 与切线方向（已归一化为单位向量）。
- *
- * 用途：compile/path 在 emit 完路径段后，按 label.position 把 t 映射成
- * `0.25 / 0.5 / 0.75`（near-start / midway / near-end），再据 sample 算
- * 标签位置 / 旋转。
+ * 段几何采样工具，服务 ADR-0004 边标注（step.label）。
+ * 每种段（line/quad/cubic/fold/arc/circle/ellipse）提供 `*SegmentSample`：
+ * 段参数 + t∈[0,1] → t 处点坐标与归一化切线。
+ * label.position 把 t 映射 0.25/0.5/0.75（near-start/midway/near-end）。
  *
  * 参数化约定：
- * - 直线 / 贝塞尔：与几何参数一致（line `t·(to-from)+from`；Bezier 标准）。
- * - fold（折角）：t∈[0, 0.5] 走第一段（参数 2t），t∈(0.5, 1] 走第二段（参数 2t-1）。
- *   t=0.5 落在 corner，切线取第一段方向。
- * - arc：angle(t) = startAngle + t · (endAngle - startAngle)；切线沿弧扫描方向。
- * - circle / ellipse：参数 angle = t · 360°，从 0°（east）开始。
+ * - 直线/贝塞尔：标准参数（line t·(to-from)+from；Bezier 标准式）
+ * - fold：t∈[0,0.5] 走第一段（参数 2t），t∈(0.5,1] 走第二段（参数 2t-1）；t=0.5 落 corner 切线取第一段方向
+ * - arc：angle(t) = startAngle + t·(end-start)；切线沿扫描方向
+ * - circle/ellipse：angle = t·360°，从 0°(east) 开始
  */
 
 const DEG_TO_RAD = Math.PI / 180;
 
 export type SegmentSample = {
-  /** t 处的点坐标 */
+  /** t 处的点 */
   point: Position;
-  /** t 处的切线方向（单位向量；零向量时回退到 [1, 0]） */
+  /** t 处的切线（单位向量；零向量时回退 [1, 0]） */
   tangent: Position;
 };
 
@@ -45,9 +39,8 @@ export const lineSegmentSample = (
 });
 
 /**
- * 二次贝塞尔 from → control → to。
- * P(t)  = (1-t)²·P0 + 2(1-t)t·P1 + t²·P2
- * P'(t) = 2(1-t)(P1-P0) + 2t(P2-P1)
+ * 二次贝塞尔 from → control → to
+ * @description P(t) = (1-t)²P0 + 2(1-t)t·P1 + t²P2；P'(t) = 2(1-t)(P1-P0) + 2t(P2-P1)
  */
 export const quadSegmentSample = (
   from: Position,
@@ -66,8 +59,8 @@ export const quadSegmentSample = (
 };
 
 /**
- * 三次贝塞尔 from → c1 → c2 → to。
- * P'(t) = 3(1-t)²(P1-P0) + 6(1-t)t(P2-P1) + 3t²(P3-P2)
+ * 三次贝塞尔 from → c1 → c2 → to
+ * @description P'(t) = 3(1-t)²(P1-P0) + 6(1-t)t(P2-P1) + 3t²(P3-P2)
  */
 export const cubicSegmentSample = (
   from: Position,
@@ -99,9 +92,8 @@ export const cubicSegmentSample = (
 };
 
 /**
- * 折角段 from → corner → to。
- * t∈[0, 0.5] 走第一段（参数 2t）；t∈(0.5, 1] 走第二段（参数 2t-1）。
- * t=0.5 落在 corner，切线取第一段方向（与"靠近 prev 一侧"一致）。
+ * 折角段 from → corner → to
+ * @description t∈[0,0.5] 走第一段（参数 2t）；t∈(0.5,1] 走第二段（参数 2t-1）；t=0.5 落 corner 切线取第一段方向
  */
 export const foldSegmentSample = (
   from: Position,
@@ -113,10 +105,7 @@ export const foldSegmentSample = (
   return lineSegmentSample(corner, to, t * 2 - 1);
 };
 
-/**
- * 弧段（与 ir/path arc 同约定，角度单位为度）。
- * 切线沿"扫描方向"——endAngle ≥ startAngle 时为 (-sin, cos)，否则反向。
- */
+/** 弧段（角度度数，与 ir/path arc 同约定）；切线沿扫描方向：endAngle ≥ start 取 (-sin,cos)，否则反向 */
 export const arcSegmentSample = (
   center: Position,
   radius: number,
@@ -135,9 +124,7 @@ export const arcSegmentSample = (
   };
 };
 
-/**
- * 整圆——从 0°（east）开始，与 compile/path circlePath 输出方向（右→左→右，sweep=1）一致。
- */
+/** 整圆，从 0°(east) 开始，与 compile/path circlePath 输出方向（右→左→右，sweep=1）一致 */
 export const circleSegmentSample = (
   center: Position,
   radius: number,
@@ -153,7 +140,7 @@ export const circleSegmentSample = (
   };
 };
 
-/** 整椭圆——参数化 (rx·cos(2πt), ry·sin(2πt)) */
+/** 整椭圆，参数化 (rx·cos(2πt), ry·sin(2πt)) */
 export const ellipseSegmentSample = (
   center: Position,
   rx: number,

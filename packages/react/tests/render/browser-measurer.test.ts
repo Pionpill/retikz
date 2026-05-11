@@ -3,9 +3,8 @@ import { fallbackMeasurer } from '@retikz/core';
 import { browserMeasurer } from '../../src/render/browser-measurer';
 
 /**
- * vitest 用的是 node 环境（见 vite.config.ts: test.environment = 'node'），
- * 这里没有 document，browserMeasurer 内部 getCtx 应当返回 null，整体降级到 fallbackMeasurer。
- * 浏览器路径（canvas measureText）的测试需要 jsdom 环境，留给 e2e / 集成测。
+ * 验证 node 环境下 browserMeasurer 降级到 fallbackMeasurer
+ * @description vitest 配 `test.environment = 'node'` 无 document，getCtx 返回 null；canvas measureText 路径需 jsdom 环境，留给 e2e
  */
 describe('browserMeasurer (SSR / node 环境降级路径)', () => {
   it('无 document 时与 fallbackMeasurer 输出完全一致', () => {

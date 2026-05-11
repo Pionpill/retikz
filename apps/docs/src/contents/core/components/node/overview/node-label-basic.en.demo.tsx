@@ -2,10 +2,8 @@ import { Node, Tikz } from '@retikz/react';
 import type { FC } from 'react';
 
 /**
- * Node `label` outside a node border — English variant:
- * - Single object or array form
- * - `position` accepts the 8-direction enum or a numeric angle (TikZ `label=30:foo` equivalent)
- * - `font` / `textColor` inherit from the node when omitted
+ * Node `label` outside a node border
+ * @description Single object or array form; `position` accepts 8-direction enum or numeric angle (TikZ `label=30:foo`); `font` / `textColor` inherit from the node when omitted.
  */
 const Demo: FC = () => (
   <Tikz width={500} height={260}>

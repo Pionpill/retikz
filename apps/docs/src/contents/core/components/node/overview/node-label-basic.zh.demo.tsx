@@ -2,10 +2,8 @@ import { Node, Tikz } from '@retikz/react';
 import type { FC } from 'react';
 
 /**
- * Node `label` 边挂标签——中文版：
- * - 单对象或数组形态
- * - position 接 8 方向枚举或数字角度（TikZ `label=30:foo` 同义）
- * - font / textColor 缺省时从 node 继承
+ * Node `label` 边挂标签
+ * @description 单对象或数组形态；position 接 8 方向枚举或数字角度（TikZ `label=30:foo` 同义）；font / textColor 缺省时从 node 继承。
  */
 const Demo: FC = () => (
   <Tikz width={500} height={260}>

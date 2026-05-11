@@ -3,11 +3,8 @@ import type { ArrowShape } from '@retikz/core';
 import type { FC } from 'react';
 
 /**
- * 4 行 × 2 列：左列实心、右列对应的空心变体；stealth 没有空心右侧留空。
- *
- * 颜色随 path stroke 自动同步（marker 用 `context-stroke`）；大小随 strokeWidth
- * 缩放（`markerUnits="strokeWidth"`）。空心 shape 由 compile 把线段末端向内
- * shrink 4.8~6 × strokeWidth，让 apex 精准落在原始端点上。
+ * 4 行 × 2 列对照实心 vs 空心箭头
+ * @description stealth 无空心变体；颜色随 path stroke 同步（`context-stroke`），大小随 strokeWidth 缩放；空心 shape 由 compile 把末端 shrink 4.8~6 × strokeWidth 让 apex 落在原端点。
  */
 const pairs: ReadonlyArray<readonly [ArrowShape, ArrowShape | null]> = [
   ['normal', 'open'],

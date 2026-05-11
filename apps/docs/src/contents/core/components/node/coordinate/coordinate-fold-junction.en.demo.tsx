@@ -2,10 +2,8 @@ import { Coordinate, Draw, Node, Tikz } from '@retikz/react';
 import type { FC } from 'react';
 
 /**
- * Another common Coordinate pattern in flow charts — **named junction for path convergence** (English variant):
- * - Multiple step nodes converge to a shared "decision junction"
- * - The junction is not a rectangle and has no text, just a meeting point — name it with a coordinate
- * - Each path routes through the junction with `<Draw way={['A', 'junction', 'B']}>`; coordinate is a 0×0 anchor and endpoints clip to its center
+ * Coordinate as a named junction for path convergence
+ * @description Multiple step nodes converge to a shared decision junction with no rectangle or text; each path routes through via `<Draw way={['A', 'junction', 'B']}>` and endpoints clip to the 0×0 anchor center.
  */
 const Demo: FC = () => (
   <Tikz width={460} height={280}>

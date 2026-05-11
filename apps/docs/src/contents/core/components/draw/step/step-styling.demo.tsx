@@ -2,8 +2,8 @@ import { Node, Path, Step, Tikz } from '@retikz/react';
 import type { FC } from 'react';
 
 /**
- * Step 自身没有 stroke 类视觉属性——样式都挂在父 <Path> 上，整条 Path 的所有 Step 共享。
- * 下面 5 条 Path 同结构（move + line），仅 Path 上的 stroke / strokeWidth / strokeDasharray 不同。
+ * Step 没有 stroke 类视觉属性
+ * @description 样式都挂在父 <Path> 上整条共享；5 条 Path 同结构仅 stroke / strokeWidth / strokeDasharray 不同。
  */
 const Demo: FC = () => (
   <Tikz width={420} height={200}>

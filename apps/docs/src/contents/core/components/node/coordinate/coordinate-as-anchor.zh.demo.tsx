@@ -2,11 +2,8 @@ import { Coordinate, Draw, Node, Tikz } from '@retikz/react';
 import type { FC } from 'react';
 
 /**
- * `<Coordinate>` 真正的价值——**命名虚拟锚点**（中文版）：
- * - hub 是个不可见的中心点
- * - 4 个节点用 `at.of='hub'` 围绕它对称分布——离 hub 移动只需改一处
- * - 4 条 path 都终止在 hub——线段汇于一点，但 hub 自身不画矩形 / 圆
- * - 没有 coordinate 的话：要么 4 个节点都各自重复 [0,0]、要么 4 条 path 都用绝对坐标 [0,0]
+ * `<Coordinate>` 作为命名虚拟锚点
+ * @description hub 是不可见中心，4 个节点 `at.of='hub'` 对称分布、4 条 path 都终止在 hub 自身不画形状；没有 coordinate 的话节点 / path 都得各自重复 [0,0]。
  */
 const Demo: FC = () => (
   <Tikz width={460} height={300}>

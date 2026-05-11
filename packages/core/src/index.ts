@@ -1,10 +1,6 @@
 /**
  * @retikz/core 公开 API
- *
- * 任何 framework adapter（@retikz/react、@retikz/vue、@retikz/canvas、@retikz/ssr）
- * 只能 import 本文件导出的内容，不准走子路径。
- *
- * 本包零 React、零 DOM 依赖。
+ * @description 任何 framework adapter（@retikz/react、@retikz/vue、@retikz/canvas、@retikz/ssr）只能 import 本文件导出内容，不准走子路径。本包零 React/零 DOM 依赖
  */
 
 // IR

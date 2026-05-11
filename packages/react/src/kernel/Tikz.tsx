@@ -21,9 +21,8 @@ export type TikzProps = {
   /** 透传到 svg 元素的内联样式 */
   style?: CSSProperties;
   /**
-   * 节点相对定位（`Node.position = { direction, of }`）的默认距离，单位 user units；
-   * 对应 TikZ 的 `node distance=...`。当节点 position 自带 `distance` 时优先用自带值；
-   * 都缺省时回退到 1。
+   * 节点相对定位（`Node.position = { direction, of }`）的默认距离，单位 user units
+   * @description 对应 TikZ `node distance=...`；节点 position 自带 `distance` 时优先用自带值，都缺省时回退到 1
    */
   nodeDistance?: number;
 };
@@ -43,14 +42,8 @@ const collectArrowShapes = (prims: Array<ScenePrimitive>): Set<ArrowShape> => {
 };
 
 /**
- * <Tikz> 顶层容器。
- * 1. 从 children 构造 IR（或直接接受外部 IR）
- * 2. 调 compileToScene 得 Scene
- * 3. 把 Scene primitives 渲染为 SVG 元素；按需注入 `<defs>` 与每种 arrow 形状的 `<marker>`
- *
- * 箭头 marker 用 `useId()` 派生稳定前缀（多个 Tikz 实例共存不冲突）；
- * 每种用到的 shape 一个 marker 定义，id 形如 `${prefix}-${shape}`，
- * marker 内 path 借 `context-stroke` / `context-fill` 让颜色随 path 同步。
+ * <Tikz> 顶层容器
+ * @description 流水线：从 children 构造 IR（或直接接受外部 IR）→ compileToScene 得 Scene → 渲染 SVG 元素并按需注入 `<defs>` 与每种 arrow 形状的 `<marker>`；marker id 用 `useId()` 派生稳定前缀避免多实例冲突，每种 shape 一个定义（`${prefix}-${shape}`），marker 内借 `context-stroke` / `context-fill` 让颜色随 path 同步
  */
 export const Tikz: FC<TikzProps> = props => {
   const { ir: irFromProp, children, width, height, className, style, nodeDistance } = props;
@@ -60,7 +53,7 @@ export const Tikz: FC<TikzProps> = props => {
     [ir, nodeDistance],
   );
 
-  // useId 返回形如 ":r0:" 含冒号；SVG `url(#id)` 引用对冒号兼容性差，剥成纯字母数字
+  // useId 返回 ":r0:" 含冒号；SVG `url(#id)` 对冒号兼容性差，剥成纯字母数字
   const rawId = useId();
   const arrowMarkerPrefix = `retikz-arrow-${rawId.replace(/[^a-zA-Z0-9]/g, '')}`;
   const usedShapes = collectArrowShapes(scene.primitives);

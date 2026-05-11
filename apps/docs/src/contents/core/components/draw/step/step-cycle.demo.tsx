@@ -2,8 +2,8 @@ import { Node, Path, Step, Tikz } from '@retikz/react';
 import type { FC } from 'react';
 
 /**
- * `kind="cycle"` 闭合到 path 起点——SVG 'Z'。下面三角形写完 3 条边后
- * 不用再手动 line 回 A，直接 cycle 一次结束。
+ * `kind="cycle"` 闭合到 path 起点
+ * @description 等价 SVG 'Z'，三角形写完 3 条边后直接 cycle 一次结束，不用手动 line 回 A。
  */
 const Demo: FC = () => (
   <Tikz width={320} height={200}>

@@ -2,9 +2,8 @@ import { Draw, Node, Tikz } from '@retikz/react';
 import type { FC } from 'react';
 
 /**
- * 简介页"IR 居中"插图：4 路输入 → IR ↔ Scene → 4 路输出（hourglass / 漏斗双扇）。
- * 节点全部 stroke="none" 当文字锚点；Draw 仍按 bbox 自动贴边。
- * "持久化 / 编辑" 与 IR 之间双向箭头表示 IR 是可读写持久层（与 AI / 编辑器循环同源）。
+ * 简介页"IR 居中"插图
+ * @description 4 路输入 → IR ↔ Scene → 4 路输出（hourglass / 漏斗双扇）；节点全 stroke="none" 当文字锚点，Draw 仍按 bbox 自动贴边；"持久化 / 编辑" 与 IR 间双向箭头表示 IR 是可读写持久层。
  */
 const Demo: FC = () => (
   <Tikz width={640} height={210} style={{ maxWidth: '100%', height: 'auto' }}>

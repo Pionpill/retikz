@@ -123,7 +123,7 @@ const stepToElement = (step: IRStep, key: number): ReactNode => {
   });
 };
 
-/** discriminated union 兜底：编译期保证不漏 case，运行时给出明确错误 */
+/** discriminated union 兜底；编译期保证穷举，运行时给出明确错误 */
 const assertNever = (x: never): never => {
   throw new Error(`convertIRToReactNode: unknown IR child type: ${JSON.stringify(x)}`);
 };
@@ -163,11 +163,8 @@ const childToElement = (child: IRChild, key: number): ReactNode => {
 };
 
 /**
- * 把 IR JSON 反向还原为 Kernel element 数组（带 key、不裹外壳）。
- * 调用方可 `<Tikz>{convertIRToReactNode(ir)}</Tikz>`，或继续用 `<Tikz ir={ir}/>`。
- *
- * **Sugar 不可逆**：buildIR 在收集阶段就把 <Draw/> 求值展开为 Path+Step，IR 里没有
- * "原本是 Draw" 的痕迹；本函数永远只产 Kernel 三件套。
+ * 把 IR JSON 反向还原为 Kernel element 数组（带 key、不裹外壳）
+ * @description 调用方可 `<Tikz>{convertIRToReactNode(ir)}</Tikz>` 或用 `<Tikz ir={ir}/>`；Sugar 不可逆——buildIR 在收集阶段已把 <Draw/> 求值展开为 Path+Step，IR 里没有"原本是 Draw"的痕迹，本函数永远只产 Kernel 三件套
  */
 export const convertIRToReactNode = (ir: IR): ReactNode =>
   ir.children.map((child, i) => childToElement(child, i));

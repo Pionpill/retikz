@@ -6,10 +6,8 @@ import type { TextPrim } from './text';
 import type { ViewBox } from './view-box';
 
 /**
- * Scene primitive：渲染目标无关的最大公约子集。
- * 所有 adapter（SVG / Canvas / PDF / Skia）都应能消费这些原语。
- *
- * 不允许出现 SVG-only 或 Canvas-only 特性（filter、marker、imageData 等）。
+ * Scene primitive：渲染目标无关的最大公约子集
+ * @description 所有 adapter（SVG/Canvas/PDF/Skia）都应能消费；不允许出现 SVG-only 或 Canvas-only 特性（filter/marker/imageData）
  */
 export type ScenePrimitive = RectPrim | EllipsePrim | TextPrim | PathPrim | GroupPrim;
 

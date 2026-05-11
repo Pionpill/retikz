@@ -2,11 +2,8 @@ import { Node, Tikz } from '@retikz/react';
 import type { FC } from 'react';
 
 /**
- * 4 个节点演示颜色 / 不透明度族：
- * - textColor：文字颜色（块级默认）
- * - opacity：整节点 0~1（含 shape + text）
- * - fillOpacity：仅填充透明
- * - drawOpacity：仅描边透明
+ * 颜色 / 不透明度族对照
+ * @description textColor 块级文字色、opacity 整节点透明、fillOpacity 仅填充、drawOpacity 仅描边。
  */
 const Demo: FC = () => (
   <Tikz width={520} height={120}>

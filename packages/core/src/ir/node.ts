@@ -3,19 +3,8 @@ import type { ValueOf } from '../types';
 import { AT_DIRECTIONS, AtPositionSchema, PolarPositionSchema, PositionSchema } from './position';
 
 /**
- * 节点形状常量。值是 IR 中 `shape` 字段的字面字符串；
- * 用 const + ValueOf 派生（不用 TS enum）。
- *
- * - `rectangle`：矩形（默认；UML 类、流程图常规节点）
- * - `circle`：圆形（流程图起止、状态机）
- * - `ellipse`：椭圆（状态机、集合图）
- * - `diamond`：菱形（流程图判定）
- *
- * 每个 shape 的几何语义：node 的视觉边界包住"text 矩形 + padding"——
- * - rectangle: 视觉 rect = text rect
- * - circle:    外接圆，r = √(innerHalfW² + innerHalfH²)
- * - ellipse:   外接椭圆，rx = innerHalfW×√2、ry = innerHalfH×√2
- * - diamond:   外接菱形，halfA = 2×innerHalfW、halfB = 2×innerHalfH
+ * 节点形状常量（用 const + ValueOf 派生，不用 TS enum）
+ * @description rectangle 默认；circle/ellipse/diamond 几何语义：node 视觉边界包"text 矩形 + padding"；rectangle: 视觉=text；circle: r=√(innerHalfW²+innerHalfH²)；ellipse: rx=innerHalfW×√2,ry=innerHalfH×√2；diamond: halfA=2×innerHalfW,halfB=2×innerHalfH
  */
 export const NODE_SHAPES = {
   rectangle: 'rectangle',
@@ -24,15 +13,10 @@ export const NODE_SHAPES = {
   diamond: 'diamond',
 } as const;
 
-/** 节点形状字面量类型，由 `NODE_SHAPES` 派生 */
+/** 节点形状字面量类型 */
 export type NodeShape = ValueOf<typeof NODE_SHAPES>;
 
-/**
- * 节点字体规格——family / size / weight / style 全部可选；
- * 单字段透传到 SVG `<text>` 的 `font-*` 属性 / `font-size`。
- *
- * 取代 alpha.1 的标量 `fontSize` 字段（已删）。
- */
+/** 节点字体规格：family/size/weight/style 全部可选，透传 SVG `<text>` font-* 属性 */
 export const FontSchema = z
   .object({
     family: z
@@ -56,21 +40,15 @@ export const FontSchema = z
       .describe('CSS font-style'),
   })
   .describe(
-    'Font properties for the node text label; all fields optional, nested object form (replaces the alpha.1 `fontSize` scalar).',
+    'Font properties for the node text label; all fields optional, nested object form.',
   );
 
-/** 节点字体规格（IR 层）——所有字段可选，编译期解析默认值 */
+/** 节点字体规格 IR 类型（所有字段可选，编译期解析默认值） */
 export type IRFont = z.infer<typeof FontSchema>;
 
 /**
- * 单行文本规格——纯字符串走块级默认样式；对象形式可对该行覆盖 fill / opacity / font。
- *
- * 行级覆盖只生效于本行的 `<tspan>`：
- * - `fill`：仅这一行颜色
- * - `opacity`：仅这一行 0~1 透明度
- * - `font`：family / size / weight / style 任意子集；未填字段继承块级 font
- *
- * 块级 `align` / `lineHeight` 不可被行覆盖（多行块整体属性）。
+ * 单行文本规格：纯字符串走块级默认，对象形式可覆盖 fill/opacity/font
+ * @description 行级覆盖只生效于本行 `<tspan>`；font 子字段未填则继承块级；align/lineHeight 不可被行覆盖
  */
 export const LineSpecSchema = z
   .union([
@@ -96,16 +74,12 @@ export const LineSpecSchema = z
     'Single line of text: bare string for default styling, or an object with per-line `fill` / `opacity` / `font` overrides.',
   );
 
-/** 行规格 IR 类型（string 或对象） */
+/** 行规格 IR 类型 */
 export type IRLineSpec = z.infer<typeof LineSpecSchema>;
 
 /**
- * 节点文本——单行字符串或非空多行数组（每元素一个 LineSpec）：
- * - `'Hello'` 等价于 `[{ text: 'Hello' }]`，按一行渲染
- * - `['Line 1', 'Line 2']` 两行无样式覆盖
- * - `[{ text: 'Heading', fill: 'red', font: { weight: 'bold' } }, 'body']` 混排
- *
- * 选 `Array<LineSpec>` 而非 `'\n'` 字符串：JSON 友好（无 escape）；行级覆盖天然落字段。
+ * 节点文本：单字符串或非空多行 LineSpec 数组
+ * @description 选数组而非 `\n` 字符串：JSON 友好无 escape，行级覆盖天然落字段
  */
 export const NodeTextSchema = z
   .union([z.string(), z.array(LineSpecSchema).min(1)])
@@ -113,26 +87,18 @@ export const NodeTextSchema = z
     'Text label rendered inside the node: a single string for one line, or a non-empty array of line specs (string for default, object for per-line overrides).',
   );
 
-/** 节点文本对齐（多行内文本对齐）——TikZ `align=` 同义词 */
+/** 节点文本对齐（TikZ `align=` 同义） */
 export const NODE_TEXT_ALIGNS = {
   left: 'left',
   center: 'center',
   right: 'right',
 } as const;
 
-/** 多行文本对齐字面量类型 */
 export type NodeTextAlign = ValueOf<typeof NODE_TEXT_ALIGNS>;
 
 /**
- * 节点附属标签（label）——TikZ `[label=above:foo]` / `[label={[red]30:foo}]` 同义。
- *
- * 一个 Node 可挂多个 label（数组形态）；label 自身不参与 viewBox（视觉外延少时可接受）。
- *
- * `position` 接受两种形态：
- * - 8 方向枚举（`above` / `right` / `above-left` ...）：标签贴在 node 该方向边界外
- * - 数字角度：以 node 中心为原点，按该角度方向投射；约定与 polar 一致（0° = +x，90° = +y 屏幕下方）
- *
- * 默认 `position = 'above'`，`distance = 4`（user units，标签与 node 边界的距离）。
+ * 节点附属标签 label（TikZ `[label=above:foo]` 同义）
+ * @description 可挂多个；label 不参与 viewBox。position 支持 8 方向枚举或数字角度（polar 约定：0°=+x，90°=+y 屏幕下方）；默认 position='above'，distance=4
  */
 export const NodeLabelSchema = z
   .object({
@@ -170,7 +136,7 @@ export const NodeLabelSchema = z
     'Extra text attached around a node border. Multiple labels supported via array form on `Node.label`.',
   );
 
-/** Node label IR 类型——单条 label 的字段集 */
+/** Node label IR 类型 */
 export type IRNodeLabel = z.infer<typeof NodeLabelSchema>;
 
 export const NodeSchema = z
@@ -350,5 +316,5 @@ export const NodeSchema = z
     'Node primitive: a positioned, optionally textual shape (rectangle / circle / ellipse / diamond)',
   );
 
-/** 节点：可定位的形状容器（矩形 / 圆 / 椭圆 / 菱形）+ 可选文本标签 */
+/** 节点：可定位的形状容器（矩形/圆/椭圆/菱形）+ 可选文本标签 */
 export type IRNode = z.infer<typeof NodeSchema>;

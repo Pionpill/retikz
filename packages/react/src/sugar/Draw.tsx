@@ -7,11 +7,8 @@ import { Step } from '../kernel/Step';
 /** <Draw> 组件的 props */
 export type DrawProps = {
   /**
-   * way 数组 DSL：节点 id / 笛卡尔 / 极坐标 / 相对偏移 `{ position, type: DrawWay.Relative | DrawWay.Accumulate }` /
-   * 折角算子 `'-|'` `'|-'`（或 `DrawWay.Hv` / `DrawWay.Vh`）/ 闭合 `DrawWay.Cycle` /
-   * 曲线算子 `{ curve | cubic | bend }`（infix）/
-   * 形状算子 `{ arc | circle | ellipse }`（infix，以"上一项"为圆心，不消耗下一项）/
-   * 边标注算子 `{ label }`（infix，修饰下一段）
+   * way 数组 DSL
+   * @description 节点 id / 笛卡尔 / 极坐标 / 相对偏移 `{ position, type: DrawWay.Relative | DrawWay.Accumulate }` / 折角算子 `'-|'` `'|-'`（或 `DrawWay.Hv`/`DrawWay.Vh`）/ 闭合 `DrawWay.Cycle` / 曲线算子 `{ curve | cubic | bend }`（infix）/ 形状算子 `{ arc | circle | ellipse }`（infix，以"上一项"为圆心，不消耗下一项）/ 边标注算子 `{ label }`（infix，修饰下一段）
    */
   way: WayDSL;
   /** 描边色，省略时用 currentColor */
@@ -27,12 +24,13 @@ export type DrawProps = {
   /** 语义 stroke 档位（TikZ `ultra thin` … `ultra thick`）；显式 `strokeWidth` 始终优先 */
   thickness?: IRPath['thickness'];
   /**
-   * 路径级箭头方向。`'->'` = 终点；`'<-'` = 起点；`'<->'` = 两端；
-   * 省略或 `'none'` = 无箭头。
+   * 路径级箭头方向
+   * @description `'->'` 终点 / `'<-'` 起点 / `'<->'` 两端；省略或 `'none'` 无箭头
    */
   arrow?: IRPath['arrow'];
   /**
-   * 箭头形状。默认 `'normal'`。其他：`'open'` / `'stealth'` / `'diamond'` / `'circle'`。
+   * 箭头形状
+   * @description 默认 `'normal'`；其它：`'open'` / `'stealth'` / `'diamond'` / `'circle'`
    */
   arrowShape?: IRPath['arrowShape'];
   /** 闭合区域填充色，省略 = 不填充。配合 way 末尾的 `DrawWay.Cycle` 画填充形状 */
@@ -48,12 +46,8 @@ export type DrawProps = {
 };
 
 /**
- * Sugar 组件——展开为等价的 <Path><Step.../></Path> Kernel 子树。
- * way 数组的解析委托给 core 的 parseWay，保证"Sugar 不引入新能力"。
- *
- * 注意：本组件由 <Tikz> 的 builder 在 IR 构造阶段同步调用以获取 Kernel JSX，
- * 不在 React render 调用栈上，因此实现里不能使用 React hooks
- * （useState / useMemo / useEffect 等会抛 "Invalid hook call"）。
+ * Sugar 组件——展开为等价的 <Path><Step.../></Path> Kernel 子树
+ * @description way 数组解析委托给 core 的 parseWay，保证"Sugar 不引入新能力"；本组件由 <Tikz> builder 在 IR 构造阶段同步调用获取 Kernel JSX，不在 React render 调用栈上，因此不能使用 React hooks（useState / useMemo / useEffect 等会抛 "Invalid hook call"）
  */
 export const Draw: FC<DrawProps> = props => {
   const {

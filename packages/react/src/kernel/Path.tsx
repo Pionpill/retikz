@@ -17,13 +17,13 @@ export type PathProps = {
   /** 语义 stroke 档位（TikZ `ultra thin` … `ultra thick`）；显式 `strokeWidth` 始终优先 */
   thickness?: IRPath['thickness'];
   /**
-   * 路径级箭头方向。`'->'` = 终点；`'<-'` = 起点；`'<->'` = 两端；
-   * 省略或 `'none'` = 无箭头。
+   * 路径级箭头方向
+   * @description `'->'` 终点 / `'<-'` 起点 / `'<->'` 两端；省略或 `'none'` 无箭头
    */
   arrow?: IRPath['arrow'];
   /**
-   * 箭头形状。默认 `'normal'`（实心三角）。其他：`'open'` 空心三角、
-   * `'stealth'` 倒钩、`'diamond'` 菱形、`'circle'` 圆点。
+   * 箭头形状
+   * @description 默认 `'normal'`（实心三角），其它：`'open'` 空心三角 / `'stealth'` 倒钩 / `'diamond'` 菱形 / `'circle'` 圆点
    */
   arrowShape?: IRPath['arrowShape'];
   /** 闭合区域填充色，CSS 颜色字符串；省略 = 不填充（仅描边）。配合 cycle step 画填充形状 */
