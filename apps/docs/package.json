@@ -7,7 +7,9 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test": "vitest",
+    "test:run": "vitest run"
   },
   "dependencies": {
     "@mdx-js/mdx": "catalog:",
@@ -43,6 +45,7 @@
     "@types/react-syntax-highlighter": "catalog:",
     "@vitejs/plugin-react": "catalog:",
     "tailwindcss": "catalog:",
-    "tailwindcss-animate": "catalog:"
+    "tailwindcss-animate": "catalog:",
+    "vitest": "catalog:"
   }
 }

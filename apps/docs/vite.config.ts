@@ -1,7 +1,7 @@
 import path from 'node:path';
 import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
-import { defineConfig, type Plugin } from 'vite';
+import { defineConfig, type Plugin } from 'vitest/config';
 
 import { writeLlmsTxt } from './scripts/gen-llms-txt';
 
@@ -35,5 +35,9 @@ export default defineConfig(({ command }) => ({
   server: {
     port: 5173,
     open: true,
+  },
+  test: {
+    environment: 'node',
+    include: ['tests/**/*.test.{ts,tsx}'],
   },
 }));

@@ -11,6 +11,6 @@
       "@/*": ["./src/*"]
     }
   },
-  "include": ["src/**/*.ts", "src/**/*.tsx", "src/**/*.json", "vite.config.ts"],
+  "include": ["src/**/*.ts", "src/**/*.tsx", "src/**/*.json", "vite.config.ts", "tests/**/*.ts", "tests/**/*.tsx"],
   "exclude": ["node_modules", "dist"]
 }
