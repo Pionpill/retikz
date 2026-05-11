@@ -36,7 +36,8 @@
     "path": "Path",
     "step": "Step",
     "positioning": "Positioning",
-    "anchors": "Anchors"
+    "anchors": "Anchors",
+    "readingGuide": "Source Code Guide"
   },
   "reference": {
     "label": "Reference",

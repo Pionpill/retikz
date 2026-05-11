@@ -36,7 +36,8 @@
     "path": "Path",
     "step": "Step",
     "positioning": "定位",
-    "anchors": "锚点"
+    "anchors": "锚点",
+    "readingGuide": "源码指南"
   },
   "reference": {
     "label": "参考",

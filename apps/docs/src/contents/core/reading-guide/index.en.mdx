@@ -1,0 +1,153 @@
+---
+title: Source Code Guide
+description: A tour of the retikz source — module responsibilities, dependencies, and reading order across `@retikz/core` and `@retikz/react`, with GitHub links to jump straight to each file.
+---
+
+For readers who want to understand how retikz works, contribute code, or write an adapter for a new framework.
+
+The official repo currently ships two packages:
+
+| Package | Role | Status |
+| --- | --- | --- |
+| [`@retikz/core`](https://github.com/Pionpill/retikz/tree/main/packages/core) | IR + Scene compiler; zero React, zero DOM | Officially maintained |
+| [`@retikz/react`](https://github.com/Pionpill/retikz/tree/main/packages/react) | React adapter — JSX components + SVG renderer | Officially maintained |
+
+**Only the React adapter is officially provided today.** Vue / Svelte / Solid / Canvas / SSR / Native adapters are left to the community or future work — but the IR is universal: a new adapter only needs its own render layer and text measurer; the IR and the compiler are reused as-is.
+
+Data flow:
+
+```text
+   JSX / DSL ──→ parsers ──→  IR  ──→ compile ──→  Scene  ──→ adapter renderer
+                              ↑                      ↑              ↑
+                          ir/* schema           primitive/*      @retikz/react
+                                          geometry/* (called by compile)
+```
+
+Below: `@retikz/core` first (data + compiler), then `@retikz/react` (adapter).
+
+## @retikz/core
+
+Zero-React, zero-DOM. `zod` is the only runtime dependency.
+
+### Package Layout
+
+| Module | Responsibility |
+| --- | --- |
+| [`ir/`](https://github.com/Pionpill/retikz/tree/main/packages/core/src/ir) | IR schema (zod) — position / node / coordinate / path / step / scene, all defined with zod |
+| [`geometry/`](https://github.com/Pionpill/retikz/tree/main/packages/core/src/geometry) | Pure geometric utilities — rect / circle / ellipse / diamond / polar / arc / bend / segment |
+| [`primitive/`](https://github.com/Pionpill/retikz/tree/main/packages/core/src/primitive) | Scene data model — render-target-agnostic primitives (rect / ellipse / text / path / group) |
+| [`compile/`](https://github.com/Pionpill/retikz/tree/main/packages/core/src/compile) | IR → Scene compiler — node layout, path resolution, text measurement, viewBox |
+| [`parsers/`](https://github.com/Pionpill/retikz/tree/main/packages/core/src/parsers) | DSL → IR parsers — currently the Sugar `way` array and `target` strings |
+| [`index.ts`](https://github.com/Pionpill/retikz/blob/main/packages/core/src/index.ts) | Public API surface — every adapter must import from this file only |
+
+### Recommended Reading Order
+
+Walk inward from both ends: input contract (IR) first, then output contract (Scene), then the `compile` step that bridges them.
+
+1. **[`src/index.ts`](https://github.com/Pionpill/retikz/blob/main/packages/core/src/index.ts) — Public API**<br />
+   Skim the named re-exports. What `@retikz/core` exposes (and doesn't) lives here; every adapter must import from this single file.
+
+2. **[`ir/scene.ts`](https://github.com/Pionpill/retikz/blob/main/packages/core/src/ir/scene.ts) — IR root**<br />
+   `SceneSchema = { version, type: 'scene', children: ChildSchema[] }`; `ChildSchema` is a discriminated union of node / path / coordinate.
+
+3. **[`ir/node.ts`](https://github.com/Pionpill/retikz/blob/main/packages/core/src/ir/node.ts) + [`ir/path/`](https://github.com/Pionpill/retikz/tree/main/packages/core/src/ir/path) + [`ir/position/`](https://github.com/Pionpill/retikz/tree/main/packages/core/src/ir/position) — IR fields**<br />
+   Read the zod schemas with their `.describe(...)` text. Each `.describe` is the LLM tool-use contract — schema and field semantics in one place.
+
+4. **[`primitive/scene.ts`](https://github.com/Pionpill/retikz/blob/main/packages/core/src/primitive/scene.ts) + the sibling prim files — Scene output**<br />
+   `Scene = { primitives, viewBox }`. Primitives are the render-target-agnostic common subset every adapter consumes; SVG-only / Canvas-only features are forbidden.
+
+5. **[`geometry/`](https://github.com/Pionpill/retikz/tree/main/packages/core/src/geometry) — Geometric foundation**<br />
+   Pure functions + plain data, no classes. Start with [`point`](https://github.com/Pionpill/retikz/blob/main/packages/core/src/geometry/point.ts) / [`rect`](https://github.com/Pionpill/retikz/blob/main/packages/core/src/geometry/rect.ts) / [`polar`](https://github.com/Pionpill/retikz/blob/main/packages/core/src/geometry/polar.ts); [`arc`](https://github.com/Pionpill/retikz/blob/main/packages/core/src/geometry/arc.ts) / [`bend`](https://github.com/Pionpill/retikz/blob/main/packages/core/src/geometry/bend.ts) / [`segment`](https://github.com/Pionpill/retikz/blob/main/packages/core/src/geometry/segment.ts) come into play during path compilation.
+
+6. **[`compile/compile.ts`](https://github.com/Pionpill/retikz/blob/main/packages/core/src/compile/compile.ts) — Compiler entry**<br />
+   `compileToScene(ir, options): Scene`. Two passes: Pass 1 lays out nodes and populates the nodeIndex; Pass 2 resolves paths. Reading it shows how an IR becomes a Scene.
+
+7. **[`compile/node.ts`](https://github.com/Pionpill/retikz/blob/main/packages/core/src/compile/node.ts) / [`path.ts`](https://github.com/Pionpill/retikz/blob/main/packages/core/src/compile/path.ts) / [`position.ts`](https://github.com/Pionpill/retikz/blob/main/packages/core/src/compile/position.ts) — Sub-compilers**<br />
+   Drill in as needed: node layout / path stepping / position resolution. [`text-metrics.ts`](https://github.com/Pionpill/retikz/blob/main/packages/core/src/compile/text-metrics.ts) ships a fallback measurer; adapters can inject a more accurate one.
+
+8. **[`parsers/`](https://github.com/Pionpill/retikz/tree/main/packages/core/src/parsers) — Sugar entry (optional)**<br />
+   [`parseWay`](https://github.com/Pionpill/retikz/blob/main/packages/core/src/parsers/parseWay.ts) / [`parseTargetSugar`](https://github.com/Pionpill/retikz/blob/main/packages/core/src/parsers/parseTargetSugar.ts) translate `<Draw way={[...]}>` and similar Sugar forms into IR. `@retikz/react` calls them inside its Sugar components.
+
+### Constraints to Keep in Mind
+
+Encoded in [`packages/core/AGENTS.md`](https://github.com/Pionpill/retikz/blob/main/packages/core/AGENTS.md) and enforced by CI:
+
+- **Zero React, zero DOM** — core must not `import 'react'` / `import 'react-dom'`; browser-specific capabilities (text measurement, events) are injected by the adapter.
+- **IR data is 100% JSON-serializable** — no functions, class instances, refs, or Symbols in the IR schema.
+- **Geometry uses pure functions + plain data only** — no classes; function bundles are exposed as `const ns = { method1, method2 }` namespaces.
+- **`compileToScene` is a pure function** — same IR + same options ⇒ identical Scene; no `Math.random()`, `Date.now()`, or module-level mutable state.
+- **Runtime dependency allowlist** — `zod` only; new runtime deps must be justified in the PR description.
+
+## @retikz/react
+
+`peerDependencies: react / react-dom`. The whole package does three things: turn JSX into an IR, call `compileToScene` to obtain a Scene, and render the Scene into SVG elements.
+
+### Package Layout
+
+| Module | Responsibility |
+| --- | --- |
+| [`kernel/`](https://github.com/Pionpill/retikz/tree/main/packages/react/src/kernel) | Kernel JSX components — `<Tikz>` / `<Node>` / `<Path>` / `<Step>` / `<Text>` / `<Coordinate>`, plus `_builder` (JSX → IR) and `_unbuilder` (IR → JSX) bridges |
+| [`sugar/`](https://github.com/Pionpill/retikz/tree/main/packages/react/src/sugar) | Sugar JSX components — `<Draw way={[...]}>`, `<EdgeLabel>`; expand into Kernel at compile time, introduce no new capabilities |
+| [`render/`](https://github.com/Pionpill/retikz/tree/main/packages/react/src/render) | Scene → SVG elements — `renderPrim`, `browser-measurer` (injected into core's compiler), `arrowMarkers`, viewBox formatting |
+| [`index.ts`](https://github.com/Pionpill/retikz/blob/main/packages/react/src/index.ts) | Public API surface — Kernel + Sugar components and the `convertReactNodeToIR` / `convertIRToReactNode` bridges |
+
+### Recommended Reading Order
+
+1. **[`src/index.ts`](https://github.com/Pionpill/retikz/blob/main/packages/react/src/index.ts) — Public API**<br />
+   See which Kernel / Sugar components, types, and bridges are exposed. `WayDSL` and related constants from core are re-exported here so React users can import from a single package.
+
+2. **[`kernel/Tikz.tsx`](https://github.com/Pionpill/retikz/blob/main/packages/react/src/kernel/Tikz.tsx) — Top-level orchestrator**<br />
+   `<Tikz>` is the entry point of the whole pipeline: children → `buildIR` → `compileToScene` → `renderPrim` → `<svg>`. One file gives you the adapter's overall shape.
+
+3. **[`kernel/_builder.ts`](https://github.com/Pionpill/retikz/blob/main/packages/react/src/kernel/_builder.ts) — JSX → IR**<br />
+   Dispatches by child `displayName` to construct IRNode / IRPath / IRStep, etc. The companion [`_unbuilder.ts`](https://github.com/Pionpill/retikz/blob/main/packages/react/src/kernel/_unbuilder.ts) goes the other way (IR → React element tree), useful for editor / AI workflows that "feed IR, render components".
+
+4. **[`kernel/Node.tsx`](https://github.com/Pionpill/retikz/blob/main/packages/react/src/kernel/Node.tsx) / [`Path.tsx`](https://github.com/Pionpill/retikz/blob/main/packages/react/src/kernel/Path.tsx) / [`Step.tsx`](https://github.com/Pionpill/retikz/blob/main/packages/react/src/kernel/Step.tsx) etc. — Kernel components**<br />
+   These components don't render anything themselves — they only declare a `displayName` and hand props to `_builder`. Read one and you've read them all.
+
+5. **[`render/renderPrim.tsx`](https://github.com/Pionpill/retikz/blob/main/packages/react/src/render/renderPrim.tsx) — Scene → SVG element**<br />
+   Dispatches by primitive `type` to `<rect>` / `<ellipse>` / `<text>` / `<path>` / `<g>`. The ~50 lines that *are* the adapter — porting to another framework largely means rewriting this file.
+
+6. **[`render/browser-measurer.ts`](https://github.com/Pionpill/retikz/blob/main/packages/react/src/render/browser-measurer.ts) — Text measurer injection**<br />
+   A canvas-`measureText`-based `TextMeasurer`, injected into `compileToScene` via `CompileOptions.measureText`. When there's no document (SSR), it falls back to core's `fallbackMeasurer` automatically.
+
+7. **[`sugar/Draw.tsx`](https://github.com/Pionpill/retikz/blob/main/packages/react/src/sugar/Draw.tsx) — Sugar expansion**<br />
+   `<Draw way={[...]}>` internally calls [`parseWay`](https://github.com/Pionpill/retikz/blob/main/packages/core/src/parsers/parseWay.ts) (from core) to obtain a step array, then renders Kernel `<Path><Step/></Path>`. Sugar introduces no new capabilities; everything expands to Kernel.
+
+### Mapping when writing a new adapter
+
+If you're building `@retikz/vue` / `@retikz/svelte` / etc., the React adapter maps over like this:
+
+| In React | Your new adapter needs |
+| --- | --- |
+| `kernel/*.tsx` components (declare `displayName`) | Equivalent component types in your framework (with a recognizable marker) |
+| `kernel/_builder.ts` (JSX → IR) | A children / vnode → IR bridge for your framework |
+| `render/renderPrim.tsx` | Mapping Scene primitives to your framework's native elements |
+| `render/browser-measurer.ts` | A measurer for your environment (browser / SSR / Native) — implement `TextMeasurer` |
+
+`@retikz/core`'s IR, `compileToScene`, geometry, and Scene primitive types are reused unchanged — no need to rewrite them.
+
+## Quick File Index
+
+| Looking for | File |
+| --- | --- |
+| IR root | [`core/ir/scene.ts`](https://github.com/Pionpill/retikz/blob/main/packages/core/src/ir/scene.ts) |
+| Node fields | [`core/ir/node.ts`](https://github.com/Pionpill/retikz/blob/main/packages/core/src/ir/node.ts) |
+| Path / Step types | [`core/ir/path/`](https://github.com/Pionpill/retikz/tree/main/packages/core/src/ir/path) |
+| Polar / relative position | [`core/ir/position/`](https://github.com/Pionpill/retikz/tree/main/packages/core/src/ir/position) |
+| Scene primitive types | [`core/primitive/scene.ts`](https://github.com/Pionpill/retikz/blob/main/packages/core/src/primitive/scene.ts) |
+| Compile pipeline | [`core/compile/compile.ts`](https://github.com/Pionpill/retikz/blob/main/packages/core/src/compile/compile.ts) |
+| Text measurement contract | [`core/compile/text-metrics.ts`](https://github.com/Pionpill/retikz/blob/main/packages/core/src/compile/text-metrics.ts) |
+| boundaryPoint / anchor | [`core/geometry/rect.ts`](https://github.com/Pionpill/retikz/blob/main/packages/core/src/geometry/rect.ts) and siblings |
+| core public API | [`core/src/index.ts`](https://github.com/Pionpill/retikz/blob/main/packages/core/src/index.ts) |
+| React top-level pipeline | [`react/kernel/Tikz.tsx`](https://github.com/Pionpill/retikz/blob/main/packages/react/src/kernel/Tikz.tsx) |
+| JSX → IR bridge | [`react/kernel/_builder.ts`](https://github.com/Pionpill/retikz/blob/main/packages/react/src/kernel/_builder.ts) |
+| Scene → SVG element | [`react/render/renderPrim.tsx`](https://github.com/Pionpill/retikz/blob/main/packages/react/src/render/renderPrim.tsx) |
+| react public API | [`react/src/index.ts`](https://github.com/Pionpill/retikz/blob/main/packages/react/src/index.ts) |
+
+## Further Reading
+
+- Project pitch & IR-centric design: [DESIGN.md](https://github.com/Pionpill/retikz/blob/main/notes/architecture/DESIGN.md)
+- Repository-wide rules: [AGENTS.md](https://github.com/Pionpill/retikz/blob/main/AGENTS.md)
+- `@retikz/core` developer notes: [packages/core/AGENTS.md](https://github.com/Pionpill/retikz/blob/main/packages/core/AGENTS.md)
+- Decision records: [notes/adr/](https://github.com/Pionpill/retikz/tree/main/notes/adr)
