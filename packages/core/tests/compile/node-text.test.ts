@@ -6,7 +6,7 @@ import type { ScenePrimitive, TextPrim } from '../../src/primitive';
 const findText = (prims: Array<ScenePrimitive>): TextPrim | undefined =>
   prims.find((p): p is TextPrim => p.type === 'text');
 
-describe('Node multi-line text (ADR-0002)', () => {
+describe('Node multi-line text', () => {
   it("text: 'Hello' 与 text: ['Hello'] 编译产出相同 lines", () => {
     const single: IR = {
       version: 1,

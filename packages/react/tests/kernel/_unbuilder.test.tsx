@@ -332,7 +332,7 @@ describe('convertIRToReactNode', () => {
     expect(buildIR(convertIRToReactNode(ir))).toEqual(ir);
   });
 
-  describe('ADR-0004：step.label round-trip', () => {
+  describe('step.label round-trip', () => {
     it('line + label round-trip 完整保留 text/position/side', () => {
       const ir: IR = {
         version: CURRENT_IR_VERSION,

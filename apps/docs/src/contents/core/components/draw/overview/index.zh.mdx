@@ -40,7 +40,7 @@ import { Draw } from '@retikz/react';
 | 弧段算子 | `{ arc: { startAngle, endAngle, radius } }`         | 以"上一项"为圆心画弧段；**不**消耗下一项 |
 | 整圆算子 | `{ circle: { radius } }`                            | 以"上一项"为圆心画整圆；**不**消耗下一项 |
 | 整椭圆算子 | `{ ellipse: { radiusX, radiusY } }`               | 以"上一项"为圆心画整椭圆；**不**消耗下一项 |
-| 边标注算子 | `{ label: 'accept' }` 或 `{ label: { text, position?, side? } }` | 修饰"下一段"——为下一个产生段的 way item 写入 IR `step.label`（ADR-0004） |
+| 边标注算子 | `{ label: 'accept' }` 或 `{ label: { text, position?, side? } }` | 修饰"下一段"——为下一个产生段的 way item 写入 IR `step.label` |
 
 ### DrawWay 关键字常量
 

@@ -71,7 +71,7 @@ export type WayCircleOp = { circle: { radius: number } };
 /** 整椭圆算子（infix），以上一项为圆心、给定 x/y 半径画整椭圆，pen 留圆心 */
 export type WayEllipseOp = { ellipse: { radiusX: number; radiusY: number } };
 
-/** 边标注 sugar 形态（ADR-0004）：字符串=`{text:s}`，对象=IR `step.label` 字面一致 */
+/** 边标注 sugar 形态：字符串=`{text:s}`，对象=IR `step.label` 字面一致 */
 export type WayLabel = IRStepLabel | string;
 
 /**
@@ -177,7 +177,7 @@ export const parseWay = (way: WayDSL): Array<IRStep> => {
   }
   const out: Array<IRStep> = [];
 
-  /** 当前未消费的 label 算子结果，下一个产生段的 way item 消耗（ADR-0004） */
+  /** 当前未消费的 label 算子结果，下一个产生段的 way item 消耗 */
   let pendingLabel: IRStepLabel | undefined;
   const consumeLabel = (): IRStepLabel | undefined => {
     const l = pendingLabel;

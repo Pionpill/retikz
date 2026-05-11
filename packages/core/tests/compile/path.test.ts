@@ -29,7 +29,7 @@ describe('compile path: line baseline', () => {
   });
 });
 
-describe("compile path: 'step' 折角 (ADR-0001)", () => {
+describe("compile path: 'step' 折角", () => {
   it("via '-|' 等价于 line(curr.x, prev.y) → line(curr) 拆解", () => {
     const folded: IR = {
       version: 1,
@@ -336,7 +336,7 @@ describe('compile path: fill / fillRule', () => {
   });
 });
 
-describe("compile path: arrow 箭头 (ADR-0002)", () => {
+describe("compile path: arrow 箭头", () => {
   it("arrow: '->' → PathPrim arrowEnd: 'normal'，arrowStart 不写", () => {
     const ir: IR = {
       version: 1,
@@ -636,7 +636,7 @@ describe('compile path: 多节点连线段独立 clip（bugfix tikz-from-ir.demo
   });
 });
 
-describe("compile path: 'curve' (ADR-0001 alpha.3)", () => {
+describe("compile path: 'curve'", () => {
   it('curve 直接坐标 → M ... Q cx,cy x,y', () => {
     const ir: IR = {
       version: 1,
@@ -694,7 +694,7 @@ describe("compile path: 'curve' (ADR-0001 alpha.3)", () => {
   });
 });
 
-describe("compile path: 'cubic' (ADR-0001 alpha.3)", () => {
+describe("compile path: 'cubic'", () => {
   it('cubic 直接坐标 → M ... C c1x c1y c2x c2y x y', () => {
     const ir: IR = {
       version: 1,
@@ -751,7 +751,7 @@ describe("compile path: 'cubic' (ADR-0001 alpha.3)", () => {
   });
 });
 
-describe("compile path: 'bend' (ADR-0001 alpha.3)", () => {
+describe("compile path: 'bend'", () => {
   it('bend left 30° on horizontal chord → C 命令，控制点 y < 0', () => {
     const ir: IR = {
       version: 1,
@@ -863,7 +863,7 @@ describe("compile path: 'bend' (ADR-0001 alpha.3)", () => {
   });
 });
 
-describe("compile path: 'arc' (ADR-0002 alpha.3)", () => {
+describe("compile path: 'arc'", () => {
   it('arc 0°→90° 在 [0,0] 圆心 r=10 → M 10,0 A 10 10 0 0 1 0 10', () => {
     const ir: IR = {
       version: 1,
@@ -944,7 +944,7 @@ describe("compile path: 'arc' (ADR-0002 alpha.3)", () => {
   });
 });
 
-describe("compile path: 'circlePath' (ADR-0002 alpha.3)", () => {
+describe("compile path: 'circlePath'", () => {
   it('circlePath 在原点 r=10 → 两段半弧', () => {
     const ir: IR = {
       version: 1,
@@ -1007,7 +1007,7 @@ describe("compile path: 'circlePath' (ADR-0002 alpha.3)", () => {
   });
 });
 
-describe("compile path: 'ellipsePath' (ADR-0002 alpha.3)", () => {
+describe("compile path: 'ellipsePath'", () => {
   it('ellipsePath rx=15 / ry=10 → 两段半弧', () => {
     const ir: IR = {
       version: 1,
@@ -1060,7 +1060,7 @@ describe("compile path: 'ellipsePath' (ADR-0002 alpha.3)", () => {
   });
 });
 
-describe("compile path: 'rel' / 'relAccumulate' (ADR-0003 alpha.3)", () => {
+describe("compile path: 'rel' / 'relAccumulate'", () => {
   it('rel 解析为 prevEnd + offset；prevEnd 不更新（链式 rel 全相对同一锚点）', () => {
     const ir: IR = {
       version: 1,

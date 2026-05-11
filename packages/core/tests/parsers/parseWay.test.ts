@@ -200,7 +200,7 @@ describe('parseWay', () => {
     });
   });
 
-  describe('曲线算子 (infix, ADR-0001 alpha.3)', () => {
+  describe('曲线算子 (infix)', () => {
     it("{ curve } 在两个 target 之间产出 curve step", () => {
       expect(parseWay(['A', { curve: [5, 8] }, 'B'])).toEqual([
         { type: 'step', kind: 'move', to: 'A' },
@@ -289,7 +289,7 @@ describe('parseWay', () => {
     });
   });
 
-  describe('形状算子 (infix, ADR-0002 alpha.3)', () => {
+  describe('形状算子 (infix)', () => {
     it("{ arc: {...} } 产出 arc step（不消耗下一项）", () => {
       expect(
         parseWay([
@@ -362,7 +362,7 @@ describe('parseWay', () => {
     });
   });
 
-  describe('Sugar 相对坐标字符串 (ADR-0003 alpha.3)', () => {
+  describe('Sugar 相对坐标字符串', () => {
     it("way 里 '+1,0' / '++1,0' 解析为 { rel } / { relAccumulate } step", () => {
       expect(parseWay(['A', '+1,0', '++2,3'])).toEqual([
         { type: 'step', kind: 'move', to: 'A' },
@@ -398,7 +398,7 @@ describe('parseWay', () => {
     });
   });
 
-  describe('Sugar 相对坐标对象形态 WayRelItem (ADR-0003 alpha.3)', () => {
+  describe('Sugar 相对坐标对象形态 WayRelItem', () => {
     it("{ position, type: DrawWay.Relative } / DrawWay.Accumulate 解析为 { rel } / { relAccumulate }", () => {
       expect(
         parseWay([
@@ -460,7 +460,7 @@ describe('parseWay', () => {
     });
   });
 
-  describe('ADR-0004：边标注 prefix label 算子', () => {
+  describe('边标注 prefix label 算子', () => {
     it('line 段：{ label } prefix 写到 step.label', () => {
       expect(parseWay(['A', { label: { text: 'accept' } }, 'B'])).toEqual([
         { type: 'step', kind: 'move', to: 'A' },

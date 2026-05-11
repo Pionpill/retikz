@@ -246,7 +246,7 @@ describe('buildIR', () => {
     expect(fromSugar).toEqual(fromKernel);
   });
 
-  describe('ADR-0004：Step label prop 与 <EdgeLabel> child', () => {
+  describe('Step label prop 与 <EdgeLabel> child', () => {
     it('Step label prop 透传到 IR step.label', () => {
       const ir = buildIR(
         <Path>

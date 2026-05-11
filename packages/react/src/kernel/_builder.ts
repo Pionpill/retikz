@@ -191,7 +191,7 @@ const readPathChildren = (children: ReactNode): Array<IRStep> => {
       out.push({ type: 'step', kind: 'cycle' });
       return;
     }
-    // 'move' 同样不挂 label；其它 kind 都允许 label（ADR-0004）
+    // 'move' 同样不挂 label；其它 kind 都允许 label
     const label = kind === 'move' ? undefined : resolveStepLabel(props);
     if (kind === 'step') {
       const step: Extract<IRStep, { kind: 'step' }> = {

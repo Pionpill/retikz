@@ -9,7 +9,7 @@ const findByType = <T extends ScenePrimitive['type']>(
 ): Extract<ScenePrimitive, { type: T }> | undefined =>
   prims.find((p): p is Extract<ScenePrimitive, { type: T }> => p.type === type);
 
-describe("Node shape multimorphism (ADR-0003)", () => {
+describe("Node shape multimorphism", () => {
   it("默认 shape = rectangle，emit RectPrim", () => {
     const ir: IR = {
       version: 1,
@@ -83,7 +83,7 @@ describe("Node shape multimorphism (ADR-0003)", () => {
   });
 });
 
-describe("Target 字符串锚点扩展 (ADR-0004)", () => {
+describe("Target 字符串锚点扩展", () => {
   it("`'A.east'` → 端点固定在 east anchor，不受 toward 影响", () => {
     // 矩形 A=(0,0)，无文本，padding=8 → 16x16；east = (8, 0)
     const ir: IR = {
@@ -180,7 +180,7 @@ describe("Target 字符串锚点扩展 (ADR-0004)", () => {
   });
 });
 
-describe("Node shape boundary clip 在 path 端点贴边时按 shape 多态 (ADR-0003)", () => {
+describe("Node shape boundary clip 在 path 端点贴边时按 shape 多态", () => {
   it("circle 节点 path 端点贴圆周（距中心 = radius）", () => {
     // A=(0,0) 圆形 + B=(100,0) 笛卡尔点；line 从 A 到 B
     // A 的圆周半径 = sqrt((textHalfW+p)² + (textHalfH+p)²)

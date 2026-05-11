@@ -1,5 +1,5 @@
 /**
- * 节点 ref 字符串扩展语法（ADR-0004）
+ * 节点 ref 字符串扩展语法
  * @description `'A'`→节点（auto boundary clip）；`'A.<name>'`→命名 anchor（center/north/.../north-east）；`'A.<deg>'`→角度方向边界点（同 PolarPosition 约定）。id 约束 `[A-Za-z_][\w-]*` 禁数字开头与 `.`；角度纯数字含可选 `.`/`-`
  */
 

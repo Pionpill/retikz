@@ -4,7 +4,7 @@ import { TIKZ_STEP } from './_displayNames';
 
 /**
  * <Step> 组件的 props
- * @description 十种 kind：'move' / 'line'（默认） / 'step'（折角） / 'cycle'（闭合） / 'curve'（二次贝塞尔） / 'cubic'（三次贝塞尔） / 'bend'（弧形简记） / 'arc'（圆弧段） / 'circlePath'（整圆） / 'ellipsePath'（整椭圆）。ADR-0004：除 'move'/'cycle' 外均可挂 `label?: IRStepLabel`，等价于 sugar `<EdgeLabel>` child，prop 优先。
+ * @description 十种 kind：'move' / 'line'（默认） / 'step'（折角） / 'cycle'（闭合） / 'curve'（二次贝塞尔） / 'cubic'（三次贝塞尔） / 'bend'（弧形简记） / 'arc'（圆弧段） / 'circlePath'（整圆） / 'ellipsePath'（整椭圆）。除 'move'/'cycle' 外均可挂 `label?: IRStepLabel`，等价于 sugar `<EdgeLabel>` child，prop 优先。
  */
 export type StepProps =
   | {

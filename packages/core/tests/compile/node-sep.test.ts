@@ -11,7 +11,7 @@ const rectSize = (ir: IR) => {
   return r?.type === 'rect' ? { w: r.width, h: r.height } : undefined;
 };
 
-describe('Node inner / outer sep（ADR-0003 padding / margin 分轴改造）', () => {
+describe('Node inner / outer sep（padding / margin 分轴）', () => {
   it('padding={p} 等价于 innerXSep={p} innerYSep={p}（对称别名）', () => {
     const a: IR = {
       version: 1,

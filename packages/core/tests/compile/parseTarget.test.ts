@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { parseNodeRef } from '../../src/compile/parseTarget';
 
-describe('parseNodeRef (ADR-0004)', () => {
+describe('parseNodeRef', () => {
   describe('node 模式（无 .）', () => {
     it("简单 id → kind='node'", () => {
       expect(parseNodeRef('A')).toEqual({ kind: 'node', id: 'A' });

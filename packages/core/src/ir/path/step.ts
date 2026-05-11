@@ -3,7 +3,7 @@ import { PositionSchema } from '../position';
 import { TargetSchema } from './target';
 
 /**
- * 边标注（ADR-0004）：画线 step 上的 label
+ * 边标注：画线 step 上的 label
  * @description 按段几何 + side 偏移翻译为 TextPrim；move/cycle 不挂 label
  */
 export const StepLabelSchema = z
@@ -25,7 +25,7 @@ export const StepLabelSchema = z
       ),
   })
   .describe(
-    'Edge label spec attached to a drawn step (ADR-0004); compiled to a TextPrim positioned along the segment.',
+    'Edge label spec attached to a drawn step; compiled to a TextPrim positioned along the segment.',
   );
 
 /** 边标注 IR 类型 */
@@ -89,7 +89,7 @@ export const CycleStepSchema = z
 
 /**
  * 控制点 schema 别名
- * @description 当前仅支持笛卡尔 `[x,y]`（ADR-0001）；未来扩展节点 ref/极坐标时只改本处 union，curve/cubic schema 与下游不变
+ * @description 当前仅支持笛卡尔 `[x,y]`；未来扩展节点 ref/极坐标时只改本处 union，curve/cubic schema 与下游不变
  */
 export const ControlPointSchema = PositionSchema.describe(
   'Bezier control point. Currently Cartesian [x, y]; reserved for node ref / polar in future versions.',
@@ -246,6 +246,6 @@ export type IREllipsePathStep = z.infer<typeof EllipsePathStepSchema>;
 
 /**
  * 路径上的一个动作（十种 kind）
- * @description move/line/step(折角)/cycle/curve/cubic/bend (ADR-0001)/arc/circlePath/ellipsePath (ADR-0002)；`to` 字段支持 rel/relAccumulate 变体 (ADR-0003)；除 move/cycle 外加 `label?` 边标注 (ADR-0004)
+ * @description 十种 kind：move / line / step（折角）/ cycle / curve / cubic / bend / arc / circlePath / ellipsePath；`to` 字段支持 rel / relAccumulate 变体；除 move/cycle 外可挂 `label?` 边标注
  */
 export type IRStep = z.infer<typeof StepSchema>;

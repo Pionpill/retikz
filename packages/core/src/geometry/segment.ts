@@ -1,7 +1,7 @@
 import type { Position } from './point';
 
 /*
- * 段几何采样工具，服务 ADR-0004 边标注（step.label）。
+ * 段几何采样工具：给边标注（step.label）算位置 / 切线。
  * 每种段（line/quad/cubic/fold/arc/circle/ellipse）提供 `*SegmentSample`：
  * 段参数 + t∈[0,1] → t 处点坐标与归一化切线。
  * label.position 把 t 映射 0.25/0.5/0.75（near-start/midway/near-end）。

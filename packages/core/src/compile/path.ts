@@ -66,7 +66,7 @@ const shiftToward = (p: IRPosition, target: IRPosition, dist: number): IRPositio
 
 /**
  * 求 step.to 的参考点（给 boundary clip 算方向 / 折角 corner 用）
- * @description ADR-0004 三态：`'A'`(auto) 节点中心；`'A.<anchor>'`/`'A.<deg>'` 显式锚点 refPoint=endpoint 位置不随邻居变。直接坐标/极坐标解析为笛卡尔
+ * @description 三态：`'A'`(auto) 节点中心；`'A.<anchor>'`/`'A.<deg>'` 显式锚点 refPoint=endpoint 位置不随邻居变。直接坐标/极坐标解析为笛卡尔
  */
 const refPointOfTarget = (
   target: IRTarget,
@@ -147,7 +147,7 @@ const THICKNESS_TO_WIDTH: Record<NonNullable<IRPath['thickness']>, number> = {
   ultraThick: 4,
 };
 
-/** 边标注默认字号 / 偏移量（ADR-0004） */
+/** 边标注默认字号 / 偏移量 */
 const LABEL_FONT_SIZE = 14;
 const LABEL_LINE_HEIGHT_FACTOR = 1.2;
 const LABEL_SIDE_OFFSET = 4;
@@ -325,7 +325,7 @@ export const emitPathPrimitive = (
   const steps = normalizeRelativeTargets(path.children, nodeIndex);
   if (steps.length < 2) return null;
 
-  /** 每段 step.label 翻译出的 TextPrim（或 sloped 旋转的 group），与 path 主体同级返回（ADR-0004） */
+  /** 每段 step.label 翻译出的 TextPrim（或 sloped 旋转的 group），与 path 主体同级返回 */
   const labelPrims: Array<ScenePrimitive> = [];
 
   /** 算 sample 后 emitLabelPrimitive，结果累积到 labelPrims/points */
@@ -348,7 +348,7 @@ export const emitPathPrimitive = (
     for (const p of r.points) points.push(p);
   };
 
-  // "无 to" 的 step kinds：cycle / arc / circlePath / ellipsePath（ADR-0002）
+  // "无 to" 的 step kinds：cycle / arc / circlePath / ellipsePath
   type StepWithTo = Exclude<
     IRStep,
     { kind: 'cycle' } | { kind: 'arc' } | { kind: 'circlePath' } | { kind: 'ellipsePath' }
@@ -403,7 +403,7 @@ export const emitPathPrimitive = (
   let subPathStart: IRPosition | null = null;
   /**
    * 笔位覆盖：arc/circlePath/ellipsePath 无 `to` 字段不能用 prev.step.to 重算起点
-   * @description 设置 penOverride 让下个绘制段直接用此点当 fromClip 后清空。arc=弧终点（同 SVG cursor）；circlePath/ellipsePath=center（ADR-0002 "画完留在圆心"，需靠 startSegment 发 M teleport 回中心）
+   * @description 设置 penOverride 让下个绘制段直接用此点当 fromClip 后清空。arc=弧终点（同 SVG cursor）；circlePath/ellipsePath=center（"画完留在圆心"，需靠 startSegment 发 M teleport 回中心）
    */
   let penOverride: IRPosition | null = null;
 
@@ -530,7 +530,7 @@ export const emitPathPrimitive = (
 
       collectLabel(step, t => circleSegmentSample(center, r, t));
 
-      // 画完笔位回 center（ADR-0002）；lastEnd 保留 SVG 实际 cursor（= right），下段用 penOverride=center 触发 startSegment 发 M
+      // 画完笔位回 center；lastEnd 保留 SVG 实际 cursor（= right），下段用 penOverride=center 触发 startSegment 发 M
       penOverride = center;
       continue;
     }

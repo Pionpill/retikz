@@ -17,14 +17,14 @@ const linePathIR = (label: NonNullable<Parameters<typeof JSON.stringify>[0]>): I
       type: 'path',
       children: [
         { type: 'step', kind: 'move', to: [0, 0] },
-        // ADR-0004：line step 携带 label
+        // line step 携带 label
         { type: 'step', kind: 'line', to: [10, 0], label: label as never },
       ],
     },
   ],
 });
 
-describe('ADR-0004 step.label：line 段的 label 几何', () => {
+describe('step.label：line 段的 label 几何', () => {
   it('默认 (position=midway, side=above)：TextPrim 落在中点上方，align=middle baseline=bottom', () => {
     const scene = compileToScene(linePathIR({ text: 'accept' }));
     const labels = findTextPrims(scene.primitives);
@@ -108,7 +108,7 @@ describe('ADR-0004 step.label：line 段的 label 几何', () => {
   });
 });
 
-describe('ADR-0004 step.label：覆盖各 step kind', () => {
+describe('step.label：覆盖各 step kind', () => {
   it('curve 段 label 在 t=0.5 处的二次贝塞尔顶点上方', () => {
     const ir: IR = {
       version: 1,
@@ -289,7 +289,7 @@ describe('ADR-0004 step.label：覆盖各 step kind', () => {
   });
 });
 
-describe('ADR-0004 step.label：viewBox 把标签纳入 bbox', () => {
+describe('step.label：viewBox 把标签纳入 bbox', () => {
   it('side=above 时 label 锚点在路径外，viewBox 至少要包住其外接四角', () => {
     const ir: IR = {
       version: 1,

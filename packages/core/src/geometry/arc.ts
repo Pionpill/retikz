@@ -1,7 +1,7 @@
 import type { Position } from './point';
 
 /*
- * 弧几何工具，服务 ADR-0002 的 arc/circlePath/ellipsePath。
+ * 弧几何工具：arc / circlePath / ellipsePath 共用的端点 / bbox / SVG A 命令 flag 计算。
  * 角度约定（与 polar.ts 一致，SVG y-down）：endpoint = [cx + r·cos(θ), cy + r·sin(θ)]，
  * 0=+x(east), 90=+y(south,视觉下), 180=-x(west), 270=-y(north,视觉上)。
  * 角度递增=SVG 屏幕顺时针，对应 <path> A 命令 sweep-flag=1（endAngle > startAngle）。

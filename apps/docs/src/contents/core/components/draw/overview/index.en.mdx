@@ -40,7 +40,7 @@ Each item in `way` accepts fourteen forms — the first five are direct targets 
 | Arc operator | `{ arc: { startAngle, endAngle, radius } }` | Center on the previous item; draw an arc — **does not** consume the next item |
 | Circle operator | `{ circle: { radius } }` | Center on the previous item; draw a full circle — **does not** consume the next item |
 | Ellipse operator | `{ ellipse: { radiusX, radiusY } }` | Center on the previous item; draw a full ellipse — **does not** consume the next item |
-| Edge label operator | `{ label: 'accept' }` or `{ label: { text, position?, side? } }` | Decorate the **next** segment — sets IR `step.label` on the next step-producing item (ADR-0004) |
+| Edge label operator | `{ label: 'accept' }` or `{ label: { text, position?, side? } }` | Decorate the **next** segment — sets IR `step.label` on the next step-producing item |
 
 ### DrawWay keyword constants
 
