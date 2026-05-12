@@ -850,3 +850,258 @@ describe('label.position schema 边界：异常值由 zod 拒绝（不在 compil
     expect(StepLabelSchema.safeParse({ text: 'x', position: 1 }).success).toBe(true);
   });
 });
+
+// =============================================================================
+// Adversarial：bug hunter 视角，专找参数化 / schema / 端点漏网之鱼
+// =============================================================================
+
+describe('label.position adversarial：构造让实现挂的输入', () => {
+  it('adv_NaN_rejected：position=NaN → zod 拒绝（NaN 不在 [0,1] 区间）', async () => {
+    const { StepLabelSchema } = await import('../../src/ir/path/step');
+    const result = StepLabelSchema.safeParse({ text: 'x', position: Number.NaN });
+    expect(result.success).toBe(false);
+  });
+  it('adv_Infinity_rejected：position=+Infinity → 拒绝', async () => {
+    const { StepLabelSchema } = await import('../../src/ir/path/step');
+    const result = StepLabelSchema.safeParse({ text: 'x', position: Number.POSITIVE_INFINITY });
+    expect(result.success).toBe(false);
+  });
+  it('adv_neg_zero_accepted：position=-0 → 接受（IEEE -0 == 0 在数学上等价 t=0）', async () => {
+    const { StepLabelSchema } = await import('../../src/ir/path/step');
+    const result = StepLabelSchema.safeParse({ text: 'x', position: -0 });
+    expect(result.success).toBe(true);
+  });
+  it('adv_just_above_1_rejected：position=1.0000000001 → 拒绝', async () => {
+    const { StepLabelSchema } = await import('../../src/ir/path/step');
+    const result = StepLabelSchema.safeParse({ text: 'x', position: 1.0000000001 });
+    expect(result.success).toBe(false);
+  });
+  it('adv_boolean_rejected：position=true → 拒绝（不是 enum 也不是 number）', async () => {
+    const { StepLabelSchema } = await import('../../src/ir/path/step');
+    const result = StepLabelSchema.safeParse({ text: 'x', position: true });
+    expect(result.success).toBe(false);
+  });
+  it('adv_null_rejected：position=null → 拒绝（optional 接受 undefined 但不接受 null）', async () => {
+    const { StepLabelSchema } = await import('../../src/ir/path/step');
+    const result = StepLabelSchema.safeParse({ text: 'x', position: null });
+    expect(result.success).toBe(false);
+  });
+  it('adv_undefined_uses_default：position 缺省 → tForLabelPosition 回退 midway (t=0.5)', () => {
+    // 直接用直线段 + 不写 position，期望 x=50
+    const scene = compileToScene({
+      version: 1,
+      type: 'scene',
+      children: [
+        {
+          type: 'path',
+          children: [
+            { type: 'step', kind: 'move', to: [0, 0] },
+            { type: 'step', kind: 'line', to: [100, 0], label: { text: 'X' } },
+          ],
+        },
+      ],
+    });
+    const t = findTextPrims(scene.primitives)[0];
+    expect(t.x).toBe(50);
+  });
+  it('adv_keyword_camelCase_rejected：position="atStart" 驼峰拒绝（必须 kebab）', async () => {
+    const { StepLabelSchema } = await import('../../src/ir/path/step');
+    const result = StepLabelSchema.safeParse({ text: 'x', position: 'atStart' });
+    expect(result.success).toBe(false);
+  });
+  it('adv_keyword_space_rejected：position="at start" 含空格拒绝（TikZ 用空格 retikz 用连字符）', async () => {
+    const { StepLabelSchema } = await import('../../src/ir/path/step');
+    const result = StepLabelSchema.safeParse({ text: 'x', position: 'at start' });
+    expect(result.success).toBe(false);
+  });
+  it('adv_arc_cw_sweep：endAngle<startAngle 时 t 仍线性映射（不强制 CCW）', () => {
+    const ir: IR = {
+      version: 1,
+      type: 'scene',
+      children: [
+        {
+          type: 'path',
+          children: [
+            { type: 'step', kind: 'move', to: [0, 0] },
+            {
+              type: 'step',
+              kind: 'arc',
+              startAngle: 90,
+              endAngle: 0, // CW sweep
+              radius: 100,
+              label: { text: 'A', position: 0.5 },
+            },
+          ],
+        },
+      ],
+    };
+    const scene = compileToScene(ir);
+    const t = findTextPrims(scene.primitives)[0];
+    // t=0.5 → angle=90 + 0.5·(0-90) = 45° → (70.71, 70.71)
+    expect(t.x).toBeCloseTo(Math.cos(Math.PI / 4) * 100, 1);
+  });
+  it('adv_circle_t_1_wraps_to_start：t=1 → angle 360° = angle 0°（同 t=0 位置）', () => {
+    const scene = compileToScene({
+      version: 1,
+      type: 'scene',
+      children: [
+        {
+          type: 'path',
+          children: [
+            { type: 'step', kind: 'move', to: [0, 0] },
+            {
+              type: 'step',
+              kind: 'circlePath',
+              radius: 100,
+              label: { text: 'C', position: 1 },
+            },
+          ],
+        },
+      ],
+    });
+    const t = findTextPrims(scene.primitives)[0];
+    // 360° = 0° → (100, 0)
+    expect(t.x).toBeCloseTo(100, 1);
+  });
+  it('adv_fold_via_pipe_dash：via="|-" t=0.5 仍落 corner（对称性）', () => {
+    const ir: IR = {
+      version: 1,
+      type: 'scene',
+      children: [
+        {
+          type: 'path',
+          children: [
+            { type: 'step', kind: 'move', to: [0, 0] },
+            {
+              type: 'step',
+              kind: 'step',
+              via: '|-',
+              to: [40, 30],
+              label: { text: 'F', position: 0.5 },
+            },
+          ],
+        },
+      ],
+    };
+    const scene = compileToScene(ir);
+    const t = findTextPrims(scene.primitives)[0];
+    // via='|-' corner=(0, 30)
+    expect(t.x).toBe(0);
+    // above 偏移 corner y=30 → y ≈ 26
+    expect(t.y).toBeCloseTo(30 - 4, 2);
+  });
+  it('adv_fold_t_just_above_half：t=0.500001 落第二段起点（边界刚过）', () => {
+    const ir: IR = {
+      version: 1,
+      type: 'scene',
+      children: [
+        {
+          type: 'path',
+          children: [
+            { type: 'step', kind: 'move', to: [0, 0] },
+            {
+              type: 'step',
+              kind: 'step',
+              via: '-|',
+              to: [40, 30],
+              label: { text: 'F', position: 0.500001 },
+            },
+          ],
+        },
+      ],
+    };
+    const scene = compileToScene(ir);
+    const t = findTextPrims(scene.primitives)[0];
+    // corner=(40,0)；t=0.5+eps 段 2 内 (2t-1) ≈ 2e-6 → 几乎贴 corner
+    expect(t.x).toBe(40);
+    expect(t.y).toBeCloseTo(0 - 4, 2);
+  });
+  it('adv_line_keyword_vs_number_consistency：每个 keyword 与对应数值 t 落点完全相同', () => {
+    const pairs: Array<[string, number]> = [
+      ['at-start', 0],
+      ['very-near-start', 0.125],
+      ['near-start', 0.25],
+      ['midway', 0.5],
+      ['near-end', 0.75],
+      ['very-near-end', 0.875],
+      ['at-end', 1],
+    ];
+    for (const [kw, num] of pairs) {
+      const a = compileToScene(lineWithLabel(kw));
+      const b = compileToScene(lineWithLabel(num));
+      expect(findTextPrims(a.primitives)[0].x).toBe(findTextPrims(b.primitives)[0].x);
+      expect(findTextPrims(a.primitives)[0].y).toBe(findTextPrims(b.primitives)[0].y);
+    }
+  });
+  it('adv_curve_t_0_at_start_endpoint：position=0 落在起点（不要因 Bezier 公式 NaN 漂移）', () => {
+    const scene = compileToScene({
+      version: 1,
+      type: 'scene',
+      children: [
+        {
+          type: 'path',
+          children: [
+            { type: 'step', kind: 'move', to: [0, 0] },
+            {
+              type: 'step',
+              kind: 'curve',
+              control: [50, -100],
+              to: [100, 0],
+              label: { text: 'Q', position: 0 },
+            },
+          ],
+        },
+      ],
+    });
+    const t = findTextPrims(scene.primitives)[0];
+    expect(t.x).toBe(0);
+  });
+  it('adv_curve_t_1_at_end_endpoint：position=1 落在终点', () => {
+    const scene = compileToScene({
+      version: 1,
+      type: 'scene',
+      children: [
+        {
+          type: 'path',
+          children: [
+            { type: 'step', kind: 'move', to: [0, 0] },
+            {
+              type: 'step',
+              kind: 'curve',
+              control: [50, -100],
+              to: [100, 0],
+              label: { text: 'Q', position: 1 },
+            },
+          ],
+        },
+      ],
+    });
+    const t = findTextPrims(scene.primitives)[0];
+    expect(t.x).toBe(100);
+  });
+  it('adv_ellipse_aspect_ratio_extreme：rx >> ry，t=0.25 → 90° 在 (0, ry)', () => {
+    const scene = compileToScene({
+      version: 1,
+      type: 'scene',
+      children: [
+        {
+          type: 'path',
+          children: [
+            { type: 'step', kind: 'move', to: [0, 0] },
+            {
+              type: 'step',
+              kind: 'ellipsePath',
+              radiusX: 500,
+              radiusY: 5,
+              label: { text: 'E', position: 0.25 },
+            },
+          ],
+        },
+      ],
+    });
+    const t = findTextPrims(scene.primitives)[0];
+    // angle 90° → (500·cos90, 5·sin90) = (0, 5)；y above 上移
+    expect(t.x).toBeCloseTo(0, 1);
+    expect(t.y).toBeLessThan(5);
+  });
+});
