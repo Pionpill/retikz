@@ -198,7 +198,7 @@ describe('buildIR', () => {
     expect(fromSugar).toEqual(fromKernel);
   });
 
-  it('<Step to="+1,0" /> sugar 字符串解析为 { rel: [1, 0] }', () => {
+  it('<Step to="+1,0" /> sugar 字符串解析为 { relative: [1, 0] }', () => {
     const ir = buildIR(
       <Path>
         <Step kind="move" to="A" />
@@ -209,12 +209,12 @@ describe('buildIR', () => {
       type: 'path',
       children: [
         { type: 'step', kind: 'move', to: 'A' },
-        { type: 'step', kind: 'line', to: { rel: [1, 0] } },
+        { type: 'step', kind: 'line', to: { relative: [1, 0] } },
       ],
     });
   });
 
-  it('<Step to="++2,3" kind="curve" control={...} /> sugar 字符串走 relAccumulate', () => {
+  it('<Step to="++2,3" kind="curve" control={...} /> sugar 字符串走 relativeAccumulate', () => {
     const ir = buildIR(
       <Path>
         <Step kind="move" to="A" />
@@ -228,7 +228,7 @@ describe('buildIR', () => {
         {
           type: 'step',
           kind: 'curve',
-          to: { relAccumulate: [2, 3] },
+          to: { relativeAccumulate: [2, 3] },
           control: [1, 1],
         },
       ],

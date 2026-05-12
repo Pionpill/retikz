@@ -4,7 +4,7 @@ import { SCHEMA_REGISTRY, lookupSchema } from '@/lib/schema-registry';
 import {
   CoordinateSchema,
   MoveStepSchema,
-  RelTargetSchema,
+  RelativeTargetSchema,
   SceneSchema,
 } from '@retikz/core';
 
@@ -25,7 +25,7 @@ describe('SCHEMA_REGISTRY', () => {
     expect(lookupSchema(SceneSchema)?.label).toBe('Scene');
     expect(lookupSchema(CoordinateSchema)?.url).toBe('/core/reference/schema/entity#coordinate');
     expect(lookupSchema(MoveStepSchema)?.url).toBe('/core/reference/schema/path#move');
-    expect(lookupSchema(RelTargetSchema)?.url).toBe('/core/reference/schema/path#rel');
+    expect(lookupSchema(RelativeTargetSchema)?.url).toBe('/core/reference/schema/path#relative');
   });
 
   it('returns undefined for unregistered schemas', () => {

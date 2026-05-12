@@ -60,8 +60,8 @@ import { Draw, DrawWay } from '@retikz/react';
 | `DrawWay.Cycle` | (**const-only**) | Close keyword. The underlying string is intentionally ugly (`'retikz-keyword_cycle'`) so it can never collide with a node id. |
 | `DrawWay.Hv` | `'-\|'` | Fold: horizontal-then-vertical (infix operator) |
 | `DrawWay.Vh` | `'\|-'` | Fold: vertical-then-horizontal (infix operator) |
-| `DrawWay.Relative` | (**const-only**) | `type` discriminator for the `WayRelItem` object — equivalent to TikZ `(+x, +y)` (does **not** advance prevEnd) |
-| `DrawWay.Accumulate` | (**const-only**) | `type` discriminator for the `WayRelItem` object — equivalent to TikZ `(++x, ++y)` (advances prevEnd each segment) |
+| `DrawWay.Relative` | (**const-only**) | `type` discriminator for the `WayRelativeItem` object — equivalent to TikZ `(+x, +y)` (does **not** advance prevEnd) |
+| `DrawWay.Accumulate` | (**const-only**) | `type` discriminator for the `WayRelativeItem` object — equivalent to TikZ `(++x, ++y)` (advances prevEnd each segment) |
 
 **Why cycle / relative bans the raw literal**: `'cycle'` is a common English word, very likely to collide with a real node id. Cycle therefore goes **only** through `DrawWay.Cycle`; a bare string `'cycle'` in `way` is just a node id reference. Same reason for `Relative` / `Accumulate` — the `type` field never accepts a free string, so the object form is fully TS-checkable.
 

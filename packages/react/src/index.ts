@@ -27,7 +27,7 @@ export type {
   WayDSL,
   WayCycle,
   WayVia,
-  WayRelItem,
+  WayRelativeItem,
   WayLabel,
   WayLabelOp,
 } from '@retikz/core';

@@ -86,7 +86,7 @@ v0 完工后开 v1，重点转向 **Tier 2 domain 包**（`@retikz/flow`、`@ret
 |---|---|
 | `Step.kind: 'curve'`（quadratic）+ `'cubic'`（两控制点） | gap §2 P0 |
 | `Step.kind: 'bend'`（`bend left=N` / `bend right=N` 简记） | gap §2 P0 |
-| 相对坐标：`Target` 加 `{ rel: [dx, dy] }` / `{ relAccumulate: [dx, dy] }` | gap §2 P1 |
+| 相对坐标：`Target` 加 `{ relative: [dx, dy] }` / `{ relativeAccumulate: [dx, dy] }` | gap §2 P1 |
 | 路径上挂 node：`Step.label?: { text, position?: 'midway'\|'near-start'\|'near-end', side?: 'above'\|... }` | gap §2 P1 |
 | Path-level 形状：`Step.kind: 'arc' \| 'circlePath' \| 'ellipsePath'` | gap §2 P1 |
 | `lineCap` / `lineJoin` | gap §2 P2 |

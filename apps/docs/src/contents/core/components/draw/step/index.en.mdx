@@ -1,6 +1,6 @@
 ---
 title: Step
-description: Path's child node — one step = one action (move / line / step fold / cycle close / curve / cubic / bend / arc / circlePath / ellipsePath); `to` accepts node id / Cartesian / polar / offset (of+offset) / relative offsets (rel / relAccumulate); only valid as a direct child of `<Path>`.
+description: Path's child node — one step = one action (move / line / step fold / cycle close / curve / cubic / bend / arc / circlePath / ellipsePath); `to` accepts node id / Cartesian / polar / offset (of+offset) / relative offsets (relative / relativeAccumulate); only valid as a direct child of `<Path>`.
 ---
 
 `<Step>` describes a single path action: `move` lifts the pen, `line` draws a straight line, `step` folds through a single right-angle corner, `cycle` closes the path, `curve` / `cubic` / `bend` draw curves of various shapes, and `arc` / `circlePath` / `ellipsePath` use the cursor as the center to draw an arc / full circle / full ellipse. It is **only** valid as a direct child of `<Path>`; placed elsewhere it is silently ignored.
@@ -62,16 +62,16 @@ The path below draws A→B with one `move` + `line`, then lifts the pen with ano
 
 <ComponentPreview name="step-offset-target" size="lg" />
 
-### Relative coordinates (rel / relAccumulate)
+### Relative coordinates (relative / relativeAccumulate)
 
-`to` also accepts relative-offset objects: `{ rel: [dx, dy] }` and `{ relAccumulate: [dx, dy] }` both resolve against the **previous step's endpoint** (`prevEnd`, falling back to `[0, 0]` when there is none). The only difference is **whether prevEnd advances**:
+`to` also accepts relative-offset objects: `{ relative: [dx, dy] }` and `{ relativeAccumulate: [dx, dy] }` both resolve against the **previous step's endpoint** (`prevEnd`, falling back to `[0, 0]` when there is none). The only difference is **whether prevEnd advances**:
 
-- `{ rel }` — equivalent to TikZ `(+x, +y)`: chained offsets all anchor on the **same** point; prevEnd does **not** update
-- `{ relAccumulate }` — equivalent to TikZ `(++x, ++y)`: each segment accumulates and prevEnd moves with it
+- `{ relative }` — equivalent to TikZ `(+x, +y)`: chained offsets all anchor on the **same** point; prevEnd does **not** update
+- `{ relativeAccumulate }` — equivalent to TikZ `(++x, ++y)`: each segment accumulates and prevEnd moves with it
 
-You can also write the sugar strings `'+dx,dy'` / `'++dx,dy'` (e.g. `<Step to="+1,0" />`); the React adapter rewrites them in place to the matching IR objects. In the demo below, the two paths have identical step sequences and only the target form differs — the solid line (rel) traces an L, while the dashed line (relAccumulate) climbs a staircase:
+You can also write the sugar strings `'+dx,dy'` / `'++dx,dy'` (e.g. `<Step to="+1,0" />`); the React adapter rewrites them in place to the matching IR objects. In the demo below, the two paths have identical step sequences and only the target form differs — the solid line (relative) traces an L, while the dashed line (relativeAccumulate) climbs a staircase:
 
-<ComponentPreview name="step-rel" />
+<ComponentPreview name="step-relative" />
 
 ### Arc
 
@@ -179,7 +179,7 @@ The eight demos below show one set of t markers per kind — `t=0.25` vs `'midwa
 | --- | --- | --- | --- |
 | `kind` | `'move' \| 'line' \| 'step' \| 'cycle' \| 'curve' \| 'cubic' \| 'bend' \| 'arc' \| 'circlePath' \| 'ellipsePath'` | `'line'` | See the "Ten kinds" table below |
 | `via` | `'-\|' \| '\|-'` | — | Required for `kind="step"`: `-\|` horizontal-then-vertical; `\|-` vertical-then-horizontal |
-| `to` | `IRTarget` | — | Not used for `kind="cycle"` / `'arc'` / `'circlePath'` / `'ellipsePath'`; required for the rest. Target: node id, Cartesian `[x, y]`, polar object, offset object `{ of, offset }`, relative-offset object `{ rel }` / `{ relAccumulate }`, or sugar string `'+dx,dy'` / `'++dx,dy'` |
+| `to` | `IRTarget` | — | Not used for `kind="cycle"` / `'arc'` / `'circlePath'` / `'ellipsePath'`; required for the rest. Target: node id, Cartesian `[x, y]`, polar object, offset object `{ of, offset }`, relative-offset object `{ relative }` / `{ relativeAccumulate }`, or sugar string `'+dx,dy'` / `'++dx,dy'` |
 | `control` | `[number, number]` | — | Required for `kind="curve"`: single control point of the quadratic Bezier |
 | `control1` | `[number, number]` | — | Required for `kind="cubic"`: first control point (shapes start tangent) |
 | `control2` | `[number, number]` | — | Required for `kind="cubic"`: second control point (shapes end tangent) |
@@ -238,5 +238,5 @@ The geometric meaning of t per step kind is in the "[Geometric meaning of t per 
 | Cartesian | `[60, 0]` | Literal `[x, y]` |
 | Polar | `{ origin: 'a', angle: 30, radius: 50 }` | Polar (see [Positioning](/core/concepts/positioning)) |
 | Offset | `{ of: 'a', offset: [10, 5] }` | Base + `(dx, dy)`; `of` accepts node id, Cartesian literal, or PolarPosition |
-| Relative (rel) | `{ rel: [10, 0] }` or `'+10,0'` | Previous step's endpoint + `[dx, dy]`; does **not** update prevEnd (TikZ `(+x, +y)`) |
-| Relative (relAccumulate) | `{ relAccumulate: [10, 0] }` or `'++10,0'` | Previous step's endpoint + `[dx, dy]`; **updates** prevEnd (TikZ `(++x, ++y)`) |
+| Relative (relative) | `{ relative: [10, 0] }` or `'+10,0'` | Previous step's endpoint + `[dx, dy]`; does **not** update prevEnd (TikZ `(+x, +y)`) |
+| Relative (relativeAccumulate) | `{ relativeAccumulate: [10, 0] }` or `'++10,0'` | Previous step's endpoint + `[dx, dy]`; **updates** prevEnd (TikZ `(++x, ++y)`) |

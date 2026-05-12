@@ -35,8 +35,8 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
   EllipsePathStepSchema: { schema: IR.EllipsePathStepSchema, label: 'EllipsePathStep', url: '/core/reference/schema/path#ellipsepath' },
 
   // Target 2 变体（同页 #anchor）
-  RelTargetSchema:           { schema: IR.RelTargetSchema,           label: 'RelTarget',           url: '/core/reference/schema/path#rel' },
-  RelAccumulateTargetSchema: { schema: IR.RelAccumulateTargetSchema, label: 'RelAccumulateTarget', url: '/core/reference/schema/path#relaccumulate' },
+  RelativeTargetSchema:           { schema: IR.RelativeTargetSchema,           label: 'RelativeTarget',           url: '/core/reference/schema/path#relative' },
+  RelativeAccumulateTargetSchema: { schema: IR.RelativeAccumulateTargetSchema, label: 'RelativeAccumulateTarget', url: '/core/reference/schema/path#relativeaccumulate' },
 
   // Arrow detail（path-level 箭头视觉规格）
   ArrowDetailSchema:    { schema: IR.ArrowDetailSchema,    label: 'ArrowDetail',    url: '/core/reference/schema/path#arrowdetail' },

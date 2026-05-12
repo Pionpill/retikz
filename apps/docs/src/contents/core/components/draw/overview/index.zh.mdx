@@ -60,8 +60,8 @@ import { Draw, DrawWay } from '@retikz/react';
 | `DrawWay.Cycle`   | （**仅常量**） | 闭合关键字——底层字符串刻意写丑（`'retikz-keyword_cycle'`），保证不会与节点 id 冲突 |
 | `DrawWay.Hv`      | `'-\|'`        | 折角：先水平后垂直（infix 算子）                                                   |
 | `DrawWay.Vh`      | `'\|-'`        | 折角：先垂直后水平（infix 算子）                                                   |
-| `DrawWay.Relative`   | （**仅常量**） | `WayRelItem.type` 鉴别值——非累积分支，等价 TikZ `(+x, +y)`（**不**推进 prevEnd）    |
-| `DrawWay.Accumulate` | （**仅常量**） | `WayRelItem.type` 鉴别值——累积分支，等价 TikZ `(++x, ++y)`（每段推进 prevEnd）      |
+| `DrawWay.Relative`   | （**仅常量**） | `WayRelativeItem.type` 鉴别值——非累积分支，等价 TikZ `(+x, +y)`（**不**推进 prevEnd）    |
+| `DrawWay.Accumulate` | （**仅常量**） | `WayRelativeItem.type` 鉴别值——累积分支，等价 TikZ `(++x, ++y)`（每段推进 prevEnd）      |
 
 **为什么 cycle / Relative 不允许裸字面量**：`cycle` 太可能跟用户的节点 id 撞车（"cycle" 是个常见英文词）。所以闭合**只走 `DrawWay.Cycle`**；裸字符串 `'cycle'` 在 way 里直接当节点 id 处理。`Relative` / `Accumulate` 同理——`type` 字段不接受任意字符串，只认这两个常量，TS 能完整校验对象形态。
 

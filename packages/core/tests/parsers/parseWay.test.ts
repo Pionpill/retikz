@@ -363,17 +363,17 @@ describe('parseWay', () => {
   });
 
   describe('Sugar 相对坐标字符串', () => {
-    it("way 里 '+1,0' / '++1,0' 解析为 { rel } / { relAccumulate } step", () => {
+    it("way 里 '+1,0' / '++1,0' 解析为 { relative } / { relativeAccumulate } step", () => {
       expect(parseWay(['A', '+1,0', '++2,3'])).toEqual([
         { type: 'step', kind: 'move', to: 'A' },
-        { type: 'step', kind: 'line', to: { rel: [1, 0] } },
-        { type: 'step', kind: 'line', to: { relAccumulate: [2, 3] } },
+        { type: 'step', kind: 'line', to: { relative:[1, 0] } },
+        { type: 'step', kind: 'line', to: { relativeAccumulate:[2, 3] } },
       ]);
     });
 
     it("首项是 '+1,0' 时 move 的 to 也走 sugar 解析", () => {
       expect(parseWay(['+5,0', 'B'])).toEqual([
-        { type: 'step', kind: 'move', to: { rel: [5, 0] } },
+        { type: 'step', kind: 'move', to: { relative:[5, 0] } },
         { type: 'step', kind: 'line', to: 'B' },
       ]);
     });
@@ -381,7 +381,7 @@ describe('parseWay', () => {
     it("'+1,0' 与折角算子混用：折角算子的 next target 也走 sugar", () => {
       expect(parseWay(['A', '-|', '+5,3'])).toEqual([
         { type: 'step', kind: 'move', to: 'A' },
-        { type: 'step', kind: 'step', via: '-|', to: { rel: [5, 3] } },
+        { type: 'step', kind: 'step', via: '-|', to: { relative:[5, 3] } },
       ]);
     });
 
@@ -391,15 +391,15 @@ describe('parseWay', () => {
         {
           type: 'step',
           kind: 'curve',
-          to: { rel: [10, 0] },
+          to: { relative:[10, 0] },
           control: [5, 8],
         },
       ]);
     });
   });
 
-  describe('Sugar 相对坐标对象形态 WayRelItem', () => {
-    it("{ position, type: DrawWay.Relative } / DrawWay.Accumulate 解析为 { rel } / { relAccumulate }", () => {
+  describe('Sugar 相对坐标对象形态 WayRelativeItem', () => {
+    it("{ position, type: DrawWay.Relative } / DrawWay.Accumulate 解析为 { relative } / { relativeAccumulate }", () => {
       expect(
         parseWay([
           'A',
@@ -408,30 +408,30 @@ describe('parseWay', () => {
         ]),
       ).toEqual([
         { type: 'step', kind: 'move', to: 'A' },
-        { type: 'step', kind: 'line', to: { rel: [1, 0] } },
-        { type: 'step', kind: 'line', to: { relAccumulate: [2, 3] } },
+        { type: 'step', kind: 'line', to: { relative:[1, 0] } },
+        { type: 'step', kind: 'line', to: { relativeAccumulate:[2, 3] } },
       ]);
     });
 
-    it('首项是 WayRelItem 时 move 的 to 也走 desugar', () => {
+    it('首项是 WayRelativeItem 时 move 的 to 也走 desugar', () => {
       expect(
         parseWay([{ position: [5, 0], type: DrawWay.Relative }, 'B']),
       ).toEqual([
-        { type: 'step', kind: 'move', to: { rel: [5, 0] } },
+        { type: 'step', kind: 'move', to: { relative:[5, 0] } },
         { type: 'step', kind: 'line', to: 'B' },
       ]);
     });
 
-    it('与折角算子混用：折角算子的 next 也支持 WayRelItem', () => {
+    it('与折角算子混用：折角算子的 next 也支持 WayRelativeItem', () => {
       expect(
         parseWay(['A', '-|', { position: [5, 3], type: DrawWay.Accumulate }]),
       ).toEqual([
         { type: 'step', kind: 'move', to: 'A' },
-        { type: 'step', kind: 'step', via: '-|', to: { relAccumulate: [5, 3] } },
+        { type: 'step', kind: 'step', via: '-|', to: { relativeAccumulate:[5, 3] } },
       ]);
     });
 
-    it('曲线算子的 next 也支持 WayRelItem', () => {
+    it('曲线算子的 next 也支持 WayRelativeItem', () => {
       expect(
         parseWay([
           'A',
@@ -443,7 +443,7 @@ describe('parseWay', () => {
         {
           type: 'step',
           kind: 'curve',
-          to: { rel: [10, 0] },
+          to: { relative:[10, 0] },
           control: [5, 8],
         },
       ]);

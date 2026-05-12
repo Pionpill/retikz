@@ -41,9 +41,9 @@ export type WayCycle = typeof DrawWay.Cycle;
 
 /**
  * 相对偏移 way item（sugar，TS-friendly），与字符串 `'+dx,dy'`/`'++dx,dy'` 等价
- * @description 以前一 step 终点为基准（首项回退 [0,0]）；Relative 不更新 prevEnd，Accumulate 累积更新。对象形态便于 IDE 补全字段；parseWay 在 sugar 层就地翻译为 IR `{rel}`/`{relAccumulate}`
+ * @description 以前一 step 终点为基准（首项回退 [0,0]）；Relative 不更新 prevEnd，Accumulate 累积更新。对象形态便于 IDE 补全字段；parseWay 在 sugar 层就地翻译为 IR `{relative}`/`{relativeAccumulate}`
  */
-export type WayRelItem = {
+export type WayRelativeItem = {
   position: [number, number];
   type: typeof DrawWay.Relative | typeof DrawWay.Accumulate;
 };
@@ -82,11 +82,11 @@ export type WayLabelOp = { label: WayLabel };
 
 /**
  * Sugar 层 way 数组 DSL 元素（十二种形态）
- * @description 节点 id 字符串/笛卡尔/极坐标 → line（首项 move）；`{position,type}` 相对偏移对象 → IR rel/relAccumulate；`-|`/`|-` 与下一项合并 fold；DrawWay.Cycle → cycle；curve/cubic/bend infix 与下一项合并；arc/circle/ellipse infix 以上一项为圆心不消耗下一项。Cycle/Relative/Accumulate 底层字符串刻意写丑避节点 id 撞结构
+ * @description 节点 id 字符串/笛卡尔/极坐标 → line（首项 move）；`{position,type}` 相对偏移对象 → IR relative/relativeAccumulate；`-|`/`|-` 与下一项合并 fold；DrawWay.Cycle → cycle；curve/cubic/bend infix 与下一项合并；arc/circle/ellipse infix 以上一项为圆心不消耗下一项。Cycle/Relative/Accumulate 底层字符串刻意写丑避节点 id 撞结构
  */
 export type WayItem =
   | IRTarget
-  | WayRelItem
+  | WayRelativeItem
   | WayVia
   | WayCycle
   | WayCurveOp
@@ -108,7 +108,7 @@ const isWayVia = (item: WayItem): item is WayVia =>
 const isPlainObject = (item: unknown): item is Record<string, unknown> =>
   typeof item === 'object' && item !== null && !Array.isArray(item);
 
-const isWayRelItem = (item: WayItem): item is WayRelItem =>
+const isWayRelativeItem = (item: WayItem): item is WayRelativeItem =>
   isPlainObject(item) && 'position' in item && 'type' in item;
 
 const isWayCurveOp = (item: WayItem): item is WayCurveOp =>
@@ -153,18 +153,18 @@ const isWayOperator = (item: WayItem): boolean =>
 const normalizeLabel = (l: WayLabel): IRStepLabel =>
   typeof l === 'string' ? { text: l } : { ...l };
 
-/** sugar `{position,type}` → IR `{rel}|{relAccumulate}`；其它形态原样返回 */
-const desugarRelItem = (item: WayItem): WayItem => {
-  if (!isWayRelItem(item)) return item;
+/** sugar `{position,type}` → IR `{relative}|{relativeAccumulate}`；其它形态原样返回 */
+const desugarRelativeItem = (item: WayItem): WayItem => {
+  if (!isWayRelativeItem(item)) return item;
   return item.type === DrawWay.Accumulate
-    ? { relAccumulate: item.position }
-    : { rel: item.position };
+    ? { relativeAccumulate: item.position }
+    : { relative: item.position };
 };
 
 /** WayItem 归约为"目标点"，算子/关键字返回 null */
 const targetOf = (item: WayItem): IRTarget | null => {
   if (isWayOperator(item)) return null;
-  return desugarRelItem(item) as IRTarget;
+  return desugarRelativeItem(item) as IRTarget;
 };
 
 /**
@@ -231,7 +231,7 @@ export const parseWay = (way: WayDSL): Array<IRStep> => {
         type: 'step',
         kind: 'step',
         via: item,
-        to: parseTargetSugar(desugarRelItem(next)),
+        to: parseTargetSugar(desugarRelativeItem(next)),
       };
       const label = consumeLabel();
       if (label) fold.label = label;
@@ -251,7 +251,7 @@ export const parseWay = (way: WayDSL): Array<IRStep> => {
           `parseWay: curve operator must be followed by a target, got operator/keyword`,
         );
       }
-      const target: IRTarget = parseTargetSugar(desugarRelItem(next));
+      const target: IRTarget = parseTargetSugar(desugarRelativeItem(next));
       const label = consumeLabel();
       if (isWayCurveOp(item)) {
         const curve: IRCurveStep = {
@@ -322,7 +322,7 @@ export const parseWay = (way: WayDSL): Array<IRStep> => {
     const lineStep: IRLineStep = {
       type: 'step',
       kind: 'line',
-      to: parseTargetSugar(desugarRelItem(item)),
+      to: parseTargetSugar(desugarRelativeItem(item)),
     };
     const label = consumeLabel();
     if (label) lineStep.label = label;

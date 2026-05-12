@@ -24,9 +24,9 @@ const lastLineEnd = (prim: PathPrim): [number, number] => {
 };
 
 describe('OffsetPosition adversarial: schema union 边界', () => {
-  it('of 是 RelTarget（{ rel }）→ 应被 zod 拒绝（of union 仅 string|Position|Polar）', () => {
+  it('of 是 RelativeTarget（{ relative }）→ 应被 zod 拒绝（of union 仅 string|Position|Polar）', () => {
     expect(() =>
-      OffsetPositionSchema.parse({ of: { rel: [1, 2] }, offset: [0, 0] }),
+      OffsetPositionSchema.parse({ of: { relative: [1, 2] }, offset: [0, 0] }),
     ).toThrow();
   });
 

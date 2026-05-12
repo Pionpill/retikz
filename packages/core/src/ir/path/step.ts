@@ -257,6 +257,6 @@ export type IREllipsePathStep = z.infer<typeof EllipsePathStepSchema>;
 
 /**
  * 路径上的一个动作（十种 kind）
- * @description 十种 kind：move / line / step（折角）/ cycle / curve / cubic / bend / arc / circlePath / ellipsePath；`to` 字段支持 rel / relAccumulate 变体；除 move/cycle 外可挂 `label?` 边标注
+ * @description 十种 kind：move / line / step（折角）/ cycle / curve / cubic / bend / arc / circlePath / ellipsePath；`to` 字段支持 relative / relativeAccumulate 变体；除 move/cycle 外可挂 `label?` 边标注
  */
 export type IRStep = z.infer<typeof StepSchema>;

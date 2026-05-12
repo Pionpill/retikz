@@ -153,20 +153,20 @@ description: 笔画外壳、step 动作序列与 step 目标点
 
 ## Target
 
-`TargetSchema` 是六种形态的 union —— 笛卡尔 / 极坐标 / 节点 id / 偏移定位（`{ of, offset }`）/ 相对偏移（rel / relAccumulate）：
+`TargetSchema` 是六种形态的 union —— 笛卡尔 / 极坐标 / 节点 id / 偏移定位（`{ of, offset }`）/ 相对偏移（relative / relativeAccumulate）：
 
 <ZodSchema name="TargetSchema" />
 
-### Rel
+### Relative
 
-<ZodSchema name="RelTargetSchema" descriptions={{
-  rel: '相对偏移 (dx, dy)；不更新光标位置（对应 TikZ `(+x, +y)` 语法）',
+<ZodSchema name="RelativeTargetSchema" descriptions={{
+  relative: '相对偏移 (dx, dy)；不更新光标位置（对应 TikZ `(+x, +y)` 语法）',
 }} />
 
-### RelAccumulate
+### RelativeAccumulate
 
-<ZodSchema name="RelAccumulateTargetSchema" descriptions={{
-  relAccumulate: '累积相对偏移 (dx, dy)；**会**更新光标位置（对应 TikZ `(++x, ++y)` 语法）',
+<ZodSchema name="RelativeAccumulateTargetSchema" descriptions={{
+  relativeAccumulate: '累积相对偏移 (dx, dy)；**会**更新光标位置（对应 TikZ `(++x, ++y)` 语法）',
 }} />
 
 ## ArrowDetail

@@ -138,7 +138,7 @@ Kernel 是用户能用的最底层 React 原语，与 IR 一一对应。约 5–
 
 #### 架构层面已决策
 
-- **单 `<Step>` 组件**统一所有路径动作（move / line / step / curve / cubic / rel / close 等），通过 `kind` discriminated union 区分。理由：组件数量越少，学习成本越低、文档越短、bug 面积越小，与 TikZ "所有动作走一种 path operation grammar" 的哲学一致
+- **单 `<Step>` 组件**统一所有路径动作（move / line / step / curve / cubic / cycle / arc 等），通过 `kind` discriminated union 区分。理由：组件数量越少，学习成本越低、文档越短、bug 面积越小，与 TikZ "所有动作走一种 path operation grammar" 的哲学一致
 - **`kind` 默认 `'line'`**——line 是压倒性高频，省一个字符的代价对应每行代码视觉负担显著降低
 - **Kernel 组件不直接渲染 SVG/Canvas**，只负责把自己描述成 IR 节点；具体如何画由 Scene 编译器 + 各 adapter 决定
 

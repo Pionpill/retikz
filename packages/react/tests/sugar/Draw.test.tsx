@@ -147,25 +147,25 @@ describe('Draw: 边标注 label 透传', () => {
 });
 
 describe('Draw: 相对偏移', () => {
-  it('对象形态 { position, type: Relative } → IR target.rel', () => {
+  it('对象形态 { position, type: Relative } → IR target.relative', () => {
     const out = ir(
       <Draw way={['a', { position: [10, 0], type: DrawWay.Relative }]} />,
     );
-    const steps = (out.children[0] as { children: Array<{ to: { rel?: [number, number] } }> }).children;
-    expect(steps[1].to).toMatchObject({ rel: [10, 0] });
+    const steps = (out.children[0] as { children: Array<{ to: { relative?: [number, number] } }> }).children;
+    expect(steps[1].to).toMatchObject({ relative: [10, 0] });
   });
 
-  it('对象形态 { position, type: Accumulate } → IR target.relAccumulate', () => {
+  it('对象形态 { position, type: Accumulate } → IR target.relativeAccumulate', () => {
     const out = ir(
       <Draw way={['a', { position: [10, 0], type: DrawWay.Accumulate }]} />,
     );
-    const steps = (out.children[0] as { children: Array<{ to: { relAccumulate?: [number, number] } }> }).children;
-    expect(steps[1].to).toMatchObject({ relAccumulate: [10, 0] });
+    const steps = (out.children[0] as { children: Array<{ to: { relativeAccumulate?: [number, number] } }> }).children;
+    expect(steps[1].to).toMatchObject({ relativeAccumulate: [10, 0] });
   });
 
-  it('sugar 字符串 "+x,y" → IR target.rel', () => {
+  it('sugar 字符串 "+x,y" → IR target.relative', () => {
     const out = ir(<Draw way={['a', '+10,5']} />);
-    const steps = (out.children[0] as { children: Array<{ to: { rel?: [number, number] } }> }).children;
-    expect(steps[1].to).toMatchObject({ rel: [10, 5] });
+    const steps = (out.children[0] as { children: Array<{ to: { relative?: [number, number] } }> }).children;
+    expect(steps[1].to).toMatchObject({ relative: [10, 5] });
   });
 });

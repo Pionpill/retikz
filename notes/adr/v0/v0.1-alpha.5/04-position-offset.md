@@ -23,7 +23,7 @@
   - at：只能选 "right" 或 "below-right"，距离单标量
 ```
 
-`IRTarget` 上有 `RelTargetSchema` (`{ rel: [dx, dy] }`)，但它的基准点是 **path 前一步的终点**，不是命名节点；且只挂 `step.to`，不入 position union。
+`IRTarget` 上有 `RelativeTargetSchema` (`{ relative: [dx, dy] }`)，但它的基准点是 **path 前一步的终点**，不是命名节点；且只挂 `step.to`，不入 position union。
 
 对应 TikZ：`calc` library 的 `($(A) + (30, 10)$)` 语法。
 
@@ -88,7 +88,7 @@ distance?: number | [number, number]
 
 > 选项 A 主决策之外，3 项字段细节均已拍板。下游 implement 阶段按此执行。
 
-1. **字段名 = `offset`**：最朴素，dx/dy 直觉强。**不与 path `RelTarget.rel` 复用同名**——两者基准点不同（命名节点 / 笛卡尔 / polar vs 前步终点），同名易混淆
+1. **字段名 = `offset`**：最朴素，dx/dy 直觉强。**不与 path `RelativeTarget.relative` 复用同名**——两者基准点不同（命名节点 / 笛卡尔 / polar vs 前步终点），同名易混淆
 2. **同步进 `IRTarget`（本 ADR 一并处理）**：让 `step.to` 也能写 `{ of, offset }`——把 OffsetPosition 加进 `TargetSchema` union。step.to 拥有"任意基准 + 任意 offset"能力，与 `Node.position` / `Coordinate.position` 一致——避免"position 能写、target 不能写"的语义不对称
 3. **前向引用规则**：与 polar `origin` / at `of` 一致——**仅当 `of` 是 string（节点 id）或嵌套 PolarPosition 内部的 string origin 时**，要求被引用节点在 IR 中**先**定义（顺序敏感）。`of` 为 `Position`（直接笛卡尔）时**无前向引用概念**（字面坐标值）
 
@@ -246,7 +246,7 @@ distance?: number | [number, number]
 - `step_to_offset_of_string`：`<Step to={{ of: 'A', offset: [10, 5] }} />` → path 终点 = A + (10, 5)
 - `step_to_offset_of_cartesian`：`<Step to={{ of: [50, 50], offset: [10, 0] }} />` → path 终点 = (60, 50)
 - `step_to_offset_of_polar`：`<Step to={{ of: { origin: 'A', angle: 0, radius: 30 }, offset: [0, 5] }} />` → path 终点 = polar 解析后 + offset
-- `step_to_offset_chains_with_rel`：path 内连续 step——`<Step kind="move" to={{ of: 'A', offset: [0, 0] }} />` 然后 `<Step to={{ rel: [10, 0] }} />` → IRTarget 五种形态混用全部 resolve
+- `step_to_offset_chains_with_relative`：path 内连续 step——`<Step kind="move" to={{ of: 'A', offset: [0, 0] }} />` 然后 `<Step to={{ relative: [10, 0] }} />` → IRTarget 五种形态混用全部 resolve
 
 ### 依赖现有元素
 

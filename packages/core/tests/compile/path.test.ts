@@ -1064,8 +1064,8 @@ describe("compile path: 'ellipsePath'", () => {
   });
 });
 
-describe("compile path: 'rel' / 'relAccumulate'", () => {
-  it('rel 解析为 prevEnd + offset；prevEnd 不更新（链式 rel 全相对同一锚点）', () => {
+describe("compile path: 'relative' / 'relativeAccumulate'", () => {
+  it('relative 解析为 prevEnd + offset；prevEnd 不更新（链式 relative 全相对同一锚点）', () => {
     const ir: IR = {
       version: 1,
       type: 'scene',
@@ -1075,8 +1075,8 @@ describe("compile path: 'rel' / 'relAccumulate'", () => {
           children: [
             { type: 'step', kind: 'move', to: [0, 0] },
             { type: 'step', kind: 'line', to: [10, 0] },
-            { type: 'step', kind: 'line', to: { rel: [5, 0] } },
-            { type: 'step', kind: 'line', to: { rel: [3, 0] } },
+            { type: 'step', kind: 'line', to: { relative:[5, 0] } },
+            { type: 'step', kind: 'line', to: { relative:[3, 0] } },
           ],
         },
       ],
@@ -1087,7 +1087,7 @@ describe("compile path: 'rel' / 'relAccumulate'", () => {
     );
   });
 
-  it('relAccumulate 解析为 prevEnd + offset；更新 prevEnd（链式累积）', () => {
+  it('relativeAccumulate 解析为 prevEnd + offset；更新 prevEnd（链式累积）', () => {
     const ir: IR = {
       version: 1,
       type: 'scene',
@@ -1097,8 +1097,8 @@ describe("compile path: 'rel' / 'relAccumulate'", () => {
           children: [
             { type: 'step', kind: 'move', to: [0, 0] },
             { type: 'step', kind: 'line', to: [10, 0] },
-            { type: 'step', kind: 'line', to: { relAccumulate: [5, 0] } },
-            { type: 'step', kind: 'line', to: { relAccumulate: [3, 0] } },
+            { type: 'step', kind: 'line', to: { relativeAccumulate:[5, 0] } },
+            { type: 'step', kind: 'line', to: { relativeAccumulate:[3, 0] } },
           ],
         },
       ],
@@ -1108,7 +1108,7 @@ describe("compile path: 'rel' / 'relAccumulate'", () => {
     );
   });
 
-  it('rel + relAccumulate 混用', () => {
+  it('relative + relativeAccumulate 混用', () => {
     const ir: IR = {
       version: 1,
       type: 'scene',
@@ -1117,9 +1117,9 @@ describe("compile path: 'rel' / 'relAccumulate'", () => {
           type: 'path',
           children: [
             { type: 'step', kind: 'move', to: [0, 0] },
-            { type: 'step', kind: 'line', to: { rel: [10, 0] } },          // → (10,0)，prevEnd 留 (0,0)
-            { type: 'step', kind: 'line', to: { relAccumulate: [5, 5] } }, // → (5,5)，prevEnd → (5,5)
-            { type: 'step', kind: 'line', to: { rel: [-3, 0] } },          // → (2,5)，prevEnd 留 (5,5)
+            { type: 'step', kind: 'line', to: { relative:[10, 0] } },          // → (10,0)，prevEnd 留 (0,0)
+            { type: 'step', kind: 'line', to: { relativeAccumulate:[5, 5] } }, // → (5,5)，prevEnd → (5,5)
+            { type: 'step', kind: 'line', to: { relative:[-3, 0] } },          // → (2,5)，prevEnd 留 (5,5)
           ],
         },
       ],
@@ -1129,7 +1129,7 @@ describe("compile path: 'rel' / 'relAccumulate'", () => {
     );
   });
 
-  it('rel 与曲线 step 混用（curve 后 prevEnd 是曲线终点）', () => {
+  it('relative 与曲线 step 混用（curve 后 prevEnd 是曲线终点）', () => {
     const ir: IR = {
       version: 1,
       type: 'scene',
@@ -1144,7 +1144,7 @@ describe("compile path: 'rel' / 'relAccumulate'", () => {
               to: [10, 0],
               control: [5, -5],
             },
-            { type: 'step', kind: 'line', to: { rel: [5, 0] } },
+            { type: 'step', kind: 'line', to: { relative:[5, 0] } },
           ],
         },
       ],
@@ -1155,7 +1155,7 @@ describe("compile path: 'rel' / 'relAccumulate'", () => {
     );
   });
 
-  it('rel 在 arc 之后：以 arc 终点为锚点', () => {
+  it('relative 在 arc 之后：以 arc 终点为锚点', () => {
     const ir: IR = {
       version: 1,
       type: 'scene',
@@ -1171,18 +1171,18 @@ describe("compile path: 'rel' / 'relAccumulate'", () => {
               endAngle: 90,
               radius: 10,
             },
-            { type: 'step', kind: 'line', to: { rel: [5, 0] } },
+            { type: 'step', kind: 'line', to: { relative:[5, 0] } },
           ],
         },
       ],
     };
-    // arc endpoint (polar y-down) = (0, 10)；rel 解析到 (5, 10)
+    // arc endpoint (polar y-down) = (0, 10)；relative 解析到 (5, 10)
     expect(pathCommandsToD(findPathPrim(compileToScene(ir).primitives).commands)).toBe(
       'M 10 0 A 10 10 0 0 1 0 10 L 5 10',
     );
   });
 
-  it('rel 在 circle 之后：以圆心为锚点（prevEnd 不变）', () => {
+  it('relative 在 circle 之后：以圆心为锚点（prevEnd 不变）', () => {
     const ir: IR = {
       version: 1,
       type: 'scene',
@@ -1192,12 +1192,12 @@ describe("compile path: 'rel' / 'relAccumulate'", () => {
           children: [
             { type: 'step', kind: 'move', to: [0, 0] },
             { type: 'step', kind: 'circlePath', radius: 10 },
-            { type: 'step', kind: 'line', to: { rel: [5, 5] } },
+            { type: 'step', kind: 'line', to: { relative:[5, 5] } },
           ],
         },
       ],
     };
-    // circle 画完 prevEnd 仍是 (0,0)；rel 解析到 (5,5)
+    // circle 画完 prevEnd 仍是 (0,0)；relative 解析到 (5,5)
     // circle SVG 后 lastEnd 是 (10,0)（最末半弧终点）；line 起点是
     // penOverride = center = (0,0)，所以会发 M 0 0 然后 L 5 5
     expect(pathCommandsToD(findPathPrim(compileToScene(ir).primitives).commands)).toBe(
@@ -1205,7 +1205,7 @@ describe("compile path: 'rel' / 'relAccumulate'", () => {
     );
   });
 
-  it('首步是 rel（无 prevEnd）回退到 [0,0]', () => {
+  it('首步是 relative（无 prevEnd）回退到 [0,0]', () => {
     const ir: IR = {
       version: 1,
       type: 'scene',
@@ -1213,8 +1213,8 @@ describe("compile path: 'rel' / 'relAccumulate'", () => {
         {
           type: 'path',
           children: [
-            // 首步 move 用 rel：prevEnd 为 null，回退到 [0,0]，rel 解析到 (5, 3)
-            { type: 'step', kind: 'move', to: { rel: [5, 3] } },
+            // 首步 move 用 relative：prevEnd 为 null，回退到 [0,0]，relative 解析到 (5, 3)
+            { type: 'step', kind: 'move', to: { relative:[5, 3] } },
             { type: 'step', kind: 'line', to: [10, 3] },
           ],
         },
@@ -1225,7 +1225,7 @@ describe("compile path: 'rel' / 'relAccumulate'", () => {
     );
   });
 
-  it('rel 与等价绝对坐标产 IR 不同但 SVG d 相同', () => {
+  it('relative 与等价绝对坐标产 IR 不同但 SVG d 相同', () => {
     const irRel: IR = {
       version: 1,
       type: 'scene',
@@ -1234,8 +1234,8 @@ describe("compile path: 'rel' / 'relAccumulate'", () => {
           type: 'path',
           children: [
             { type: 'step', kind: 'move', to: [0, 0] },
-            { type: 'step', kind: 'line', to: { rel: [10, 5] } },
-            { type: 'step', kind: 'line', to: { relAccumulate: [5, 0] } },
+            { type: 'step', kind: 'line', to: { relative:[10, 5] } },
+            { type: 'step', kind: 'line', to: { relativeAccumulate:[5, 0] } },
           ],
         },
       ],
@@ -1248,13 +1248,13 @@ describe("compile path: 'rel' / 'relAccumulate'", () => {
           type: 'path',
           children: [
             { type: 'step', kind: 'move', to: [0, 0] },
-            { type: 'step', kind: 'line', to: [10, 5] }, // rel 不更新 prevEnd → 但 line 自己更新；这里用绝对值刚好等价
-            { type: 'step', kind: 'line', to: [5, 0] },  // relAccumulate [5,0] 从 prevEnd (0,0)
+            { type: 'step', kind: 'line', to: [10, 5] }, // relative 不更新 prevEnd → 但 line 自己更新；这里用绝对值刚好等价
+            { type: 'step', kind: 'line', to: [5, 0] },  // relativeAccumulate [5,0] 从 prevEnd (0,0)
           ],
         },
       ],
     };
-    // 注意：rel [10,5] 后 prevEnd 留 (0,0)；relAccumulate [5,0] 解析到 (0+5, 0+0) = (5,0)
+    // 注意：relative [10,5] 后 prevEnd 留 (0,0)；relativeAccumulate [5,0] 解析到 (0+5, 0+0) = (5,0)
     expect(pathCommandsToD(findPathPrim(compileToScene(irRel).primitives).commands)).toBe(
       pathCommandsToD(findPathPrim(compileToScene(irAbs).primitives).commands),
     );

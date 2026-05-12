@@ -139,8 +139,8 @@ const refPointOfTarget = (
         return angleBoundaryOf(node, ref.angle);
     }
   }
-  // rel/relAccumulate 已被 normalizeRelativeTargets 预解析；防御性守卫给 TS narrowing 用
-  if (typeof target === 'object' && !Array.isArray(target) && ('rel' in target || 'relAccumulate' in target)) {
+  // relative/relativeAccumulate 已被 normalizeRelativeTargets 预解析；防御性守卫给 TS narrowing 用
+  if (typeof target === 'object' && !Array.isArray(target) && ('relative' in target || 'relativeAccumulate' in target)) {
     return null;
   }
   return resolvePosition(target, nodeIndex);
@@ -176,8 +176,8 @@ const clipForTarget = (
         return angleBoundaryOf(node, ref.angle);
     }
   }
-  // rel/relAccumulate 已被预解析；防御性守卫给 TS narrowing 用
-  if (typeof target === 'object' && !Array.isArray(target) && ('rel' in target || 'relAccumulate' in target)) {
+  // relative/relativeAccumulate 已被预解析；防御性守卫给 TS narrowing 用
+  if (typeof target === 'object' && !Array.isArray(target) && ('relative' in target || 'relativeAccumulate' in target)) {
     return null;
   }
   return resolvePosition(target, nodeIndex);
@@ -318,8 +318,8 @@ const emitLabelPrimitive = (
 };
 
 /**
- * rel/relAccumulate 目标解析为绝对 Position（step kind 不变，to 全为绝对坐标）
- * @description rel 不更新 prevEnd（TikZ `+`），relAccumulate 更新（TikZ `++`）。prevEnd 推进：有 to 的 kind 用 refPointOfTarget(to)；arc 用 arcEndPoint；circlePath/ellipsePath/cycle 不变。首步 rel 时 prevEnd 回退 [0,0]；解析失败保持原 step
+ * relative/relativeAccumulate 目标解析为绝对 Position（step kind 不变，to 全为绝对坐标）
+ * @description relative 不更新 prevEnd（TikZ `+`），relativeAccumulate 更新（TikZ `++`）。prevEnd 推进：有 to 的 kind 用 refPointOfTarget(to)；arc 用 arcEndPoint；circlePath/ellipsePath/cycle 不变。首步 relative 时 prevEnd 回退 [0,0]；解析失败保持原 step
  */
 const normalizeRelativeTargets = (
   steps: ReadonlyArray<IRStep>,
@@ -355,20 +355,20 @@ const normalizeRelativeTargets = (
     if (
       typeof original === 'object' &&
       !Array.isArray(original) &&
-      'rel' in original
+      'relative' in original
     ) {
       const ref = prevEnd ?? [0, 0];
-      resolvedTo = [ref[0] + original.rel[0], ref[1] + original.rel[1]];
+      resolvedTo = [ref[0] + original.relative[0], ref[1] + original.relative[1]];
       updatePrevEnd = false;
     } else if (
       typeof original === 'object' &&
       !Array.isArray(original) &&
-      'relAccumulate' in original
+      'relativeAccumulate' in original
     ) {
       const ref = prevEnd ?? [0, 0];
       resolvedTo = [
-        ref[0] + original.relAccumulate[0],
-        ref[1] + original.relAccumulate[1],
+        ref[0] + original.relativeAccumulate[0],
+        ref[1] + original.relativeAccumulate[1],
       ];
       // updatePrevEnd 保持 true
     }
@@ -394,7 +394,7 @@ export const emitPathPrimitive = (
   round: (n: number) => number,
   measureText: TextMeasurer = fallbackMeasurer,
 ): { primitives: Array<ScenePrimitive>; points: Array<IRPosition> } | null => {
-  // 先把 rel/relAccumulate 解析为绝对坐标，后续算法可统一按绝对坐标处理
+  // 先把 relative/relativeAccumulate 解析为绝对坐标，后续算法可统一按绝对坐标处理
   const steps = normalizeRelativeTargets(path.children, nodeIndex);
   if (steps.length < 2) return null;
 

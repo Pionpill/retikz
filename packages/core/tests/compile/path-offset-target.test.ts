@@ -40,14 +40,14 @@ describe('OffsetPosition: step.to schema 校验', () => {
     ).not.toThrow();
   });
 
-  it('TargetSchema 仍接受既有 5 形态（笛卡尔 / polar / string id / rel / relAccumulate）', () => {
+  it('TargetSchema 仍接受既有 5 形态（笛卡尔 / polar / string id / relative / relativeAccumulate）', () => {
     expect(() => TargetSchema.parse([1, 2])).not.toThrow();
     expect(() =>
       TargetSchema.parse({ origin: 'A', angle: 0, radius: 30 }),
     ).not.toThrow();
     expect(() => TargetSchema.parse('A')).not.toThrow();
-    expect(() => TargetSchema.parse({ rel: [1, 0] })).not.toThrow();
-    expect(() => TargetSchema.parse({ relAccumulate: [1, 0] })).not.toThrow();
+    expect(() => TargetSchema.parse({ relative: [1, 0] })).not.toThrow();
+    expect(() => TargetSchema.parse({ relativeAccumulate: [1, 0] })).not.toThrow();
   });
 });
 
@@ -136,7 +136,7 @@ describe('OffsetPosition: step.to compile resolve', () => {
   });
 
   describe('交互', () => {
-    it('step_to_offset_chains_with_rel：IRTarget 五种形态混用全部 resolve', () => {
+    it('step_to_offset_chains_with_relative：IRTarget 五种形态混用全部 resolve', () => {
       const ir: IR = {
         version: 1,
         type: 'scene',
@@ -151,8 +151,8 @@ describe('OffsetPosition: step.to compile resolve', () => {
                 kind: 'move',
                 to: { of: 'A', offset: [0, 0] },
               },
-              // line 到 rel [10, 0] => (10, 0)
-              { type: 'step', kind: 'line', to: { rel: [10, 0] } },
+              // line 到 relative [10, 0] => (10, 0)
+              { type: 'step', kind: 'line', to: { relative: [10, 0] } },
               // line 到 offset of polar(A,90,20) = (0,20); + [-5, 0] = (-5, 20)
               {
                 type: 'step',
