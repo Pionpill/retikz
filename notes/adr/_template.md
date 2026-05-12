@@ -1,15 +1,15 @@
-# ADR-NNNN：<一句话标题>
+# ADR-NN：<一句话标题>
 
-> 起新 ADR：`cp _template.md v<MAJOR>/v<MAJOR>.<MINOR>-<channel>.<N>/NNNN-<slug>.md`
-> 例：`cp _template.md v0/v0.1-alpha.5/0004-foo.md`
+> 起新 ADR：`cp _template.md v<MAJOR>/v<MAJOR>.<MINOR>-<channel>.<N>/NN-<slug>.md`
+> 例：`cp _template.md v0/v0.1-alpha.5/01-foo.md`
 > 二级目录约定：
 > - 一级 = MAJOR 版本号（`v0/` / `v1/`）
 > - 二级 = 版本通道节点（`v0.1-alpha.5/` / `v0.1-beta.1/` / `v0.1-rc.1/` / `v0.1/` 表稳定）
 > - PATCH 不开目录（patch 仅修 bug，不写 ADR）
-> NNNN 是**项目级全局单调编号**，跨 milestone 不重置（alpha.4 是 0001-0003，alpha.5 从 0004 起）
+> NN 是**按 milestone 重置**的两位数编号（目录已分组，编号无需全局唯一）。alpha.4 是 01-03，alpha.5 从 01 重新起计；跨 milestone 引用带前缀：`alpha.4 ADR-01`
 > slug 用 kebab-case
 > 模板对应 [`alpha-feature-design`](../../../../.agents/skills/alpha-feature-design/SKILL.md) SKILL；改 ADR 结构时同步改两边
-> 路径假设实例位于 `notes/adr/<MAJOR>/<MAJOR>.<MINOR>-channel.N/<NNNN>-...md`，模板里的相对链接按此位置写（在模板自身处链接会断，cp 到实例位置后才正确）
+> 路径假设实例位于 `notes/adr/<MAJOR>/<MAJOR>.<MINOR>-channel.N/<NN>-...md`，模板里的相对链接按此位置写（在模板自身处链接会断，cp 到实例位置后才正确）
 
 - 状态：Proposed
 - 决策日期：YYYY-MM-DD

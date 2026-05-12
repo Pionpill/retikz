@@ -1,4 +1,4 @@
-# ADR-0001：Node `at` 节点间相对定位
+# ADR-01：Node `at` 节点间相对定位
 
 - 状态：Accepted
 - 决策日期：2026-05-10
@@ -116,6 +116,6 @@ node.distance > Tikz.nodeDistance prop > 1 (硬编码默认)
 
 ## 不在本 ADR 范围
 
-- `<Coordinate>` 占位节点（ADR-0002 处理）
-- Node `label` 边挂标签（ADR-0003 处理）
+- `<Coordinate>` 占位节点（ADR-02 处理）
+- Node `label` 边挂标签（ADR-03 处理）
 - TikZ `node distance=1cm and 1cm`（横/纵不同距离）：TikZ 高级用法，alpha.4 暂不支持，留到 v0.2

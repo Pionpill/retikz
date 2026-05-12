@@ -1,4 +1,4 @@
-# ADR-0002：`<Coordinate>` 占位节点的 IR 表达
+# ADR-02：`<Coordinate>` 占位节点的 IR 表达
 
 - 状态：Accepted
 - 决策日期：2026-05-10
@@ -62,7 +62,7 @@ type Node = {
 ### C. 仅 React DSL，不进 IR
 
 - builder 把 `<Coordinate>` 同步翻译成"在 builder 局部维护的 id → position map"，编译时不传给 core
-- 缺点：和 ADR-0001 选项 B 一样的问题——丢失意图，codec 反推失败；core 无法独立知道占位语义
+- 缺点：和 ADR-01 选项 B 一样的问题——丢失意图，codec 反推失败；core 无法独立知道占位语义
 
 ## 决策：A（独立 IR kind）
 

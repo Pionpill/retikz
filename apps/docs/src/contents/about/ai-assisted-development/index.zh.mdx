@@ -114,7 +114,7 @@ retikz 当前三个 sub-Agent 默认全部用 Claude Opus 4.7。同 model 同上
 | 不自行 commit / push / publish | 写完代码停下来等人工授权；每次 commit 都要重新拿授权（一次授权 ≠ 永久授权） |
 | 文档随代码同步 | 用户可见改动（新 prop / 改默认值 / 删字段）必须同 commit 改文档；只改 zh 不改 en 视为未完成 |
 | IR Schema 全 `.describe` | zod schema 每个字段必须有英文 `.describe(...)`，给 LLM 工具调用作契约 |
-| ADR 永久保留 + 全局单调编号 | 被新版决策覆盖的 ADR 标 `Superseded by ADR-NNNN`，不删；编号跨 milestone 不重置 |
+| ADR 永久保留 + 按 milestone 重置编号 | 被新版决策覆盖的 ADR 标 `Superseded by <milestone> ADR-NN`，不删；每个 milestone 目录下编号从 01 重新起，跨 milestone 引用带前缀消歧 |
 
 ## 仓库里看哪里
 

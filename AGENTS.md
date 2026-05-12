@@ -192,10 +192,10 @@ pnpm lint                                  # 全部包 ESLint（不带 --fix）
   - 理由：IR schema 描述是给 LLM 看的契约（DESIGN.md §7 AI 友好性），缩写在跨语言 / 跨上下文歧义大；公开 API 缩写让消费者要二次猜
   - 例外：项目内已有的 TikZ / SVG / CSS 标准词汇保持不动——`stroke` / `fill` / `padding` / `margin` / `cx` / `cy` / `rx` / `ry` / `dx` / `dy` / `innerXSep` / `outerSep`（TikZ `inner sep` / `outer sep` 直译）/ `IR`（项目核心术语）
   - 例外：函数体内的短局部变量（`const [bx, by] = anchor(...)`）不强求拼全，作用域小、可读性优先
-  - 已有用例：alpha.4 ADR-0001 把 `at.dir` 升级为 `at.direction`，对应 `LABEL_DIR_MAP` → `LABEL_DIRECTION_MAP` 等
+  - 已有用例：alpha.4 ADR-01 把 `at.dir` 升级为 `at.direction`，对应 `LABEL_DIR_MAP` → `LABEL_DIRECTION_MAP` 等
 - **目录使用 kebab-case**（如 `mdx-content/`、`component-preview/`、`doc-page/`），不用 PascalCase / camelCase；目录里**单组件文件**仍按组件名 PascalCase（`ComponentPreview.tsx`），barrel / 配置 / 注册表等非组件文件用小写（`index.ts`、`components.tsx`）
 - 尽量不写注释；确需解释"为什么"时再写，避免复述代码做了什么
-- **注释面向结果，不要引用 ADR / 历史阶段** —— 不在源码注释 / JSDoc / 测试 `describe`/`it` 标题 / zod `.describe(...)` 里出现 `ADR-0004`、`alpha.3 引入`、`见 ADR-XXXX` 这类**实现过程来源**；注释只解释代码*现在*的语义与意图，把"它从哪条决策来"的信息留给 commit message / changelog / `notes/adr/` 索引。源码注释一旦写上 ADR 编号，后续 ADR 重排或废弃就会让注释 rot；zod `.describe(...)` 还会被导出到 LLM tool definition，里面的 ADR 编号对模型纯噪声
+- **注释面向结果，不要引用 ADR / 历史阶段** —— 不在源码注释 / JSDoc / 测试 `describe`/`it` 标题 / zod `.describe(...)` 里出现 `ADR-04`、`alpha.3 引入`、`见 ADR-NN` 这类**实现过程来源**；注释只解释代码*现在*的语义与意图，把"它从哪条决策来"的信息留给 commit message / changelog / `notes/adr/` 索引。源码注释一旦写上 ADR 编号，后续 ADR 重排或废弃就会让注释 rot；zod `.describe(...)` 还会被导出到 LLM tool definition，里面的 ADR 编号对模型纯噪声
 - 数组类型用 `Array<T>`，不用 `T[]`（项目内统一）
 - **函数定义优先用箭头形式**：`const fn = (...) => {...}` 而不是 `function fn(...) {...}`
   - 顶层导出：`export const fn = (...) => {...}`

@@ -114,7 +114,7 @@ The constraints written into the [repo-root AGENTS.md](https://github.com/Pionpi
 | No self-commit / push / publish | Stop after coding and wait for human authorization; every commit needs fresh authorization (one approval ≠ permanent approval) |
 | Docs travel with code | User-visible changes (new prop / changed default / removed field) must update docs in the same commit; updating only zh (not en) is incomplete |
 | IR schema needs `.describe` everywhere | Every zod schema field must have an English `.describe(...)` — it's the contract for LLM tool definitions |
-| ADRs are forever + globally monotonic | ADRs superseded by new versions are marked `Superseded by ADR-NNNN`, never deleted; numbering does not reset across milestones |
+| ADRs are forever + per-milestone numbering | ADRs superseded by new versions are marked `Superseded by <milestone> ADR-NN`, never deleted; each milestone directory restarts numbering from 01 and cross-milestone references carry the milestone prefix |
 
 ## Where to look in the repo
 

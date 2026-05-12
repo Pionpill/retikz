@@ -1,4 +1,4 @@
-# ADR-0003：Node `label` 边挂标签
+# ADR-03：Node `label` 边挂标签
 
 - 状态：Accepted
 - 决策日期：2026-05-10
@@ -41,7 +41,7 @@ type Node = { /* ...原字段 */ label?: NodeLabel | Array<NodeLabel> };
 ```
 
 - label 跟 node 是从属关系，平级 child 反而失去约束
-- 与 alpha.3 ADR-0004 边标注（嵌入 `Step.label`）保持一致风格
+- 与 alpha.3 ADR-04 边标注（嵌入 `Step.label`）保持一致风格
 - 编译期：layoutNode 阶段标准化 + 继承样式，emitNodePrimitives 末尾追加 TextPrim
 - node rotate / scale 时 label 跟着动（同 group 旋转）
 
@@ -76,7 +76,7 @@ type IRNodeLabel = { type: 'node-label'; nodeId: string; text: string; ... };
 1. **从属关系正确**——label 是 node 的视觉附属，IR 上明确表达从属
 2. **transform 自动跟随**——label TextPrim 放进 emitNodePrimitives 的 inner 列表，rotate ≠ 0 时整组 wrap 进 group（label 与 node 一起旋转）
 3. **样式继承自然**——layoutNode 阶段已经知道 node.font / textColor，label 缺字段直接继承同一处变量
-4. **与 alpha.3 ADR-0004 边标注对齐**——边标注嵌在 `Step.label`，节点标签嵌在 `Node.label`，两者命名 / 形态对称
+4. **与 alpha.3 ADR-04 边标注对齐**——边标注嵌在 `Step.label`，节点标签嵌在 `Node.label`，两者命名 / 形态对称
 
 DSL 表面（数组形态多 label）：
 
@@ -94,7 +94,7 @@ DSL 表面（数组形态多 label）：
 
 ## position 表达：8 方向 ∪ 数字角度
 
-8 方向枚举：与 ADR-0001 `at.direction` 完全相同的 `AT_DIRECTIONS` 常量；视觉语义对齐。
+8 方向枚举：与 ADR-01 `at.direction` 完全相同的 `AT_DIRECTIONS` 常量；视觉语义对齐。
 
 数字角度：用 union `z.union([z.nativeEnum(AT_DIRECTIONS), z.number()])`；对应 TikZ `label=30:foo`。
 
@@ -162,7 +162,7 @@ alpha.4 暂不让 label 参与 viewBox 扩展——理由：
 
 不影响：
 
-- 现有 path label（alpha.3 ADR-0004 边标注）——独立模块，命名空间不冲突
+- 现有 path label（alpha.3 ADR-04 边标注）——独立模块，命名空间不冲突
 - 其它节点字段
 - viewBox 算法
 

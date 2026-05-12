@@ -11,10 +11,10 @@ Node-relations layer in one wave: relative positioning between nodes, coordinate
 
 ### `@retikz/core`
 
-- **Relative positioning between nodes**: `Node.position` accepts a `{ direction, of, distance? }` form mirroring TikZ `[<direction>=<distance> of <id>]`; `direction` ranges over the 8-direction enum (4 cardinals + 4 diagonals, with `1/√2` components keeping diagonal distance consistent with the cardinal radius); `of` requires the referenced node to be defined earlier in the IR (same forward-reference rule as polar `origin` / Step `to`) — ADR-0001
+- **Relative positioning between nodes**: `Node.position` accepts a `{ direction, of, distance? }` form mirroring TikZ `[<direction>=<distance> of <id>]`; `direction` ranges over the 8-direction enum (4 cardinals + 4 diagonals, with `1/√2` components keeping diagonal distance consistent with the cardinal radius); `of` requires the referenced node to be defined earlier in the IR (same forward-reference rule as polar `origin` / Step `to`) — ADR-01
 - **`nodeDistance` on the Tikz container**: feeds `CompileOptions.nodeDistance`, used as the default distance for relative positioning; an explicit `distance` on the position wins, otherwise falls back to 1 (matches TikZ `node distance=1cm`)
-- **`<Coordinate>` placeholder**: new `IRChild` discriminator `'coordinate'` (only `id` + `position`), top-level peer of Node / Path; in compile Pass 1 it emits no primitive and does not extend the viewBox, but it does register in `nodeIndex` as a 0×0 rect layout (boundaryPoint always returns the center), letting path targets and `at.of` string references resolve to it — ADR-0002
-- **Node-attached labels**: `Node.label?` takes a single `NodeLabel` object or an array; each label takes `text` / `position?` (8-direction enum or numeric angle — `label=above:foo` / `label=30:foo`) / `distance?` (default 4) / `textColor?` / `opacity?` / `font?`; missing `font` / `textColor` inherit from the parent node; emit produces one TextPrim per label, placed inside the inner group so labels rotate with the node — ADR-0003
+- **`<Coordinate>` placeholder**: new `IRChild` discriminator `'coordinate'` (only `id` + `position`), top-level peer of Node / Path; in compile Pass 1 it emits no primitive and does not extend the viewBox, but it does register in `nodeIndex` as a 0×0 rect layout (boundaryPoint always returns the center), letting path targets and `at.of` string references resolve to it — ADR-02
+- **Node-attached labels**: `Node.label?` takes a single `NodeLabel` object or an array; each label takes `text` / `position?` (8-direction enum or numeric angle — `label=above:foo` / `label=30:foo`) / `distance?` (default 4) / `textColor?` / `opacity?` / `font?`; missing `font` / `textColor` inherit from the parent node; emit produces one TextPrim per label, placed inside the inner group so labels rotate with the node — ADR-03
 
 ### `@retikz/react`
 
@@ -28,10 +28,10 @@ Path enhancements land in one wave: curve trio, path-level shapes, relative coor
 
 ### `@retikz/core`
 
-- **Path curve trio**: `Step.kind` adds `'curve'` (quadratic) / `'cubic'` (cubic) / `'bend'` (arc shorthand — direction + angle, lowered to cubic at compile time) — ADR-0001
-- **Path-level shapes**: `Step.kind` adds `'arc'` / `'circlePath'` / `'ellipsePath'`, centered on the cursor; `arc` leaves the pen at the arc end, `circle` / `ellipse` return it to the center — ADR-0002
-- **Relative coordinates**: `IRTarget` gains two variants — `{ rel: [dx, dy] }` (does not advance prevEnd, TikZ `(+x, +y)`) and `{ relAccumulate: [dx, dy] }` (accumulates, TikZ `(++x, ++y)`); compile entry `normalizeRelativeTargets` resolves them up-front — ADR-0003
-- **Edge labels**: every step kind except `'move'` / `'cycle'` accepts `label?: { text, position?, side? }`; `position` ∈ `'midway' | 'near-start' | 'near-end'`, `side` ∈ `'above' | 'below' | 'left' | 'right' | 'sloped'`; compiles to a TextPrim (sloped wrapped in a group rotate) — ADR-0004
+- **Path curve trio**: `Step.kind` adds `'curve'` (quadratic) / `'cubic'` (cubic) / `'bend'` (arc shorthand — direction + angle, lowered to cubic at compile time) — ADR-01
+- **Path-level shapes**: `Step.kind` adds `'arc'` / `'circlePath'` / `'ellipsePath'`, centered on the cursor; `arc` leaves the pen at the arc end, `circle` / `ellipse` return it to the center — ADR-02
+- **Relative coordinates**: `IRTarget` gains two variants — `{ rel: [dx, dy] }` (does not advance prevEnd, TikZ `(+x, +y)`) and `{ relAccumulate: [dx, dy] }` (accumulates, TikZ `(++x, ++y)`); compile entry `normalizeRelativeTargets` resolves them up-front — ADR-03
+- **Edge labels**: every step kind except `'move'` / `'cycle'` accepts `label?: { text, position?, side? }`; `position` ∈ `'midway' | 'near-start' | 'near-end'`, `side` ∈ `'above' | 'below' | 'left' | 'right' | 'sloped'`; compiles to a TextPrim (sloped wrapped in a group rotate) — ADR-04
 - **New `geometry/segment.ts`**: seven sampling helpers (line / quad / cubic / fold / arc / circle / ellipse) backing label position / tangent math
 - **Path stroke caps / joins**: `lineCap` / `lineJoin` (SVG `stroke-linecap` / `stroke-linejoin`)
 - **Semantic stroke preset**: `thickness` ∈ `'ultraThin'` … `'ultraThick'` (7 levels), `thin = 1` matches the default `strokeWidth`; explicit `strokeWidth` always wins
@@ -48,13 +48,13 @@ Path enhancements land in one wave: curve trio, path-level shapes, relative coor
 
 Node visual P1 lands in full: multi-line text, font object, axis-specific seps, color / opacity / stroke style / size constraints / scaling. Backed by 3 ADRs and +47 new test cases.
 
-> **BREAKING**: `<Node fontSize={n}>` is now `<Node font={{ size: n }}>`; the IR `NodeSchema.fontSize` field is removed. No deprecation window during alpha (see ADR-0001).
+> **BREAKING**: `<Node fontSize={n}>` is now `<Node font={{ size: n }}>`; the IR `NodeSchema.fontSize` field is removed. No deprecation window during alpha (see ADR-01).
 
 ### `@retikz/core`
 
-- **Node font as nested object**: `font: { family?, size?, weight?, style? }` replaces the `fontSize` scalar — ADR-0001
-- **Node multi-line text**: `text: string | Array<string | LineSpec>` with per-line `fill` / `opacity` / `font` overrides; complementary `align` (left / center / right) + `lineHeight` (user units, defaults to `font.size × 1.2`) — ADR-0002
-- **Node axis-specific seps**: `innerXSep` / `innerYSep` / `outerSep`, mirroring TikZ `inner xsep` / `inner ysep` / `outer sep`; `padding` / `margin` are kept as symmetric aliases (axis-specific fields take precedence) — ADR-0003
+- **Node font as nested object**: `font: { family?, size?, weight?, style? }` replaces the `fontSize` scalar — ADR-01
+- **Node multi-line text**: `text: string | Array<string | LineSpec>` with per-line `fill` / `opacity` / `font` overrides; complementary `align` (left / center / right) + `lineHeight` (user units, defaults to `font.size × 1.2`) — ADR-02
+- **Node axis-specific seps**: `innerXSep` / `innerYSep` / `outerSep`, mirroring TikZ `inner xsep` / `inner ysep` / `outer sep`; `padding` / `margin` are kept as symmetric aliases (axis-specific fields take precedence) — ADR-03
 - **Node colors and opacity**: `textColor` / `opacity` (whole-node) / `fillOpacity` / `drawOpacity`
 - **Node stroke styles**: `dashed` (`4 2` preset) / `dotted` (`1 2` preset) / `dashArray` (explicit SVG `stroke-dasharray`); priority `dashArray` > `dashed` > `dotted`
 - **Node size constraints**: `roundedCorners` (rectangle corner radius) / `minimumWidth` / `minimumHeight` + symmetric alias `minimumSize`
@@ -74,10 +74,10 @@ P0 + P1 essentials for flow charts / UML / state machines land in one shot: 4 no
 
 ### `@retikz/core`
 
-- **Step kind grows to 4**: `'move'` / `'line'` / `'step'` (fold, TikZ `(A) -| (B)` style) / `'cycle'` (close to start) — ADR-0001
-- **Path-level visuals**: `arrow` (4 directions) + `arrowShape` (7 shapes: normal / open / stealth / diamond / openDiamond / circle / openCircle, hollow shapes auto-shrink the path) + `fill` / `fillRule` — ADR-0002
-- **Node shape polymorphism**: `rectangle` / `circle` / `ellipse` / `diamond` with multimorphic `boundaryPoint`; the outer shape circumscribes "text + padding" — ADR-0003
-- **Target string syntax**: `'A'` (auto-clip) / `'A.<anchor>'` (named anchor) / `'A.<deg>'` (angle border) — ADR-0004
+- **Step kind grows to 4**: `'move'` / `'line'` / `'step'` (fold, TikZ `(A) -| (B)` style) / `'cycle'` (close to start) — ADR-01
+- **Path-level visuals**: `arrow` (4 directions) + `arrowShape` (7 shapes: normal / open / stealth / diamond / openDiamond / circle / openCircle, hollow shapes auto-shrink the path) + `fill` / `fillRule` — ADR-02
+- **Node shape polymorphism**: `rectangle` / `circle` / `ellipse` / `diamond` with multimorphic `boundaryPoint`; the outer shape circumscribes "text + padding" — ADR-03
+- **Target string syntax**: `'A'` (auto-clip) / `'A.<anchor>'` (named anchor) / `'A.<deg>'` (angle border) — ADR-04
 - **Sugar way DSL upgrade**: `DrawWay` keyword constants (cycle / hv / vh) + infix fold operators `'-|'` / `'|-'` + cycle keyword
 - **Path clip algorithm refactor**: per-segment clip from node centers — avoids lines passing through intermediate nodes (matches TikZ semantics)
 - **New type utility**: `ValueOf<T extends object> = T[keyof T]`, standardizes `as const` object + derived-union enum pattern
