@@ -96,12 +96,76 @@ You can also write the sugar strings `'+dx,dy'` / `'++dx,dy'` (e.g. `<Step to="+
 Attach a `label` to a `<Step>` to drop a single line of text near the segment's start / middle / end — the analogue of TikZ's `(a) -- node[midway, above] {accept} (b)`. `label` is an object:
 
 - `text`: required, single-line label content
-- `position`: `'midway'` / `'near-start'` / `'near-end'`, default `'midway'` (segment midpoint)
+- `position`: one of seven keywords `'at-start' | 'very-near-start' | 'near-start' | 'midway' | 'near-end' | 'very-near-end' | 'at-end'`, or a numeric t in `[0, 1]` for any fine position; default `'midway'` (t=0.5)
 - `side`: `'above'` / `'below'` / `'left'` / `'right'` / `'sloped'`, default `'above'`; `'sloped'` rotates the label along the tangent so it sits on the line
 
 Two equivalent forms — the prop form `<Step label={{...}} />`, or the sugar form `<Step><EdgeLabel>...</EdgeLabel></Step>` (needs `import { EdgeLabel } from '@retikz/react'`); **the prop wins when both are set**. `'move'` and `'cycle'` cannot carry a label — they don't draw a segment, so any label on them is silently dropped:
 
 <ComponentPreview name="step-label" />
+
+#### label.position: 7 keywords + arbitrary numeric t
+
+`position` accepts 7 keywords (the TikZ vocabulary) or a numeric t in `[0, 1]`. Keywords are sugar for the corresponding t:
+
+| Keyword | t | Meaning |
+| --- | --- | --- |
+| `'at-start'` | `0` | Segment start |
+| `'very-near-start'` | `0.125` | Very near start |
+| `'near-start'` | `0.25` | Near start (1/4 in) |
+| `'midway'` | `0.5` | Midpoint (default) |
+| `'near-end'` | `0.75` | Near end (3/4 in) |
+| `'very-near-end'` | `0.875` | Very near end |
+| `'at-end'` | `1` | Segment end |
+
+A numeric form like `position={0.3}` matches TikZ `pos=0.3` exactly — the most common pattern in LLM training data. **Values outside `[0, 1]` are rejected at schema validation, not clamped at compile time** (`position={-0.1}` / `position={1.2}` fail IR validation).
+
+#### Geometric meaning of t per step kind
+
+t is normalized along the whole segment; each kind interprets it **the same way TikZ does**:
+
+| Step kind | Parametrization | t=0.25 | t=0.5 | t=0.75 |
+| --- | --- | --- | --- | --- |
+| `'line'` | Normalized arc length | 1/4 in | Midpoint | 3/4 in |
+| `'step'` (fold N=2) | Each leg gets `1/N` of t — the corner is always at `t = j/N`, **independent of leg length** | Leg-1 midpoint | **Corner** | Leg-2 midpoint |
+| `'curve'` / `'cubic'` | Bezier parameter t (**not arc length**) | Bezier t=0.25 | Bezier t=0.5 (usually **not** the visual midpoint) | Bezier t=0.75 |
+| `'bend'` | Lowered to cubic, then Bezier t | Same as cubic | Same as cubic | Same as cubic |
+| `'arc'` | t maps linearly across `startAngle..endAngle` (degrees) | Quarter of the angle sweep | Mid angle | Three-quarters of the sweep |
+| `'circlePath'` | Full circle t∈[0, 1]: t=0 at angle 0 (+x), CCW growth | 90° (visually down) | 180° (−x) | 270° (visually up) |
+| `'ellipsePath'` | Same as circlePath: t=0 at angle 0, CCW growth | Ellipse at 90° | Ellipse at 180° (**not** arc-length midpoint) | Ellipse at 270° |
+
+The eight demos below show one set of t markers per kind — `t=0.25` vs `'midway'` side-by-side — so the keyword-as-sugar relationship and the per-kind geometry of t are clear at a glance.
+
+##### Line
+
+<ComponentPreview name="edge-label-on-line" size="sm" />
+
+##### Fold (step)
+
+<ComponentPreview name="edge-label-on-fold" />
+
+##### Quadratic Bezier (curve)
+
+<ComponentPreview name="edge-label-on-curve" />
+
+##### Cubic Bezier (cubic)
+
+<ComponentPreview name="edge-label-on-cubic" />
+
+##### Bend
+
+<ComponentPreview name="edge-label-on-bend" />
+
+##### Arc
+
+<ComponentPreview name="edge-label-on-arc" />
+
+##### Circle (circlePath)
+
+<ComponentPreview name="edge-label-on-circle" size="lg" />
+
+##### Ellipse (ellipsePath)
+
+<ComponentPreview name="edge-label-on-ellipse" />
 
 ### Styling
 
@@ -161,10 +225,10 @@ Only meaningful when `kind="step"`. Given cursor `(px, py)` and target `(tx, ty)
 | Field | Type | Default | Description |
 | --- | --- | --- | --- |
 | `text` | `string` | — | Required label text (single line) |
-| `position` | `'midway' \| 'near-start' \| 'near-end'` | `'midway'` | Position along the segment — `midway` = midpoint (t=0.5); `near-start` = t=0.25; `near-end` = t=0.75 |
+| `position` | one of 7 keywords or `number` (0..1) | `'midway'` | Normalized position t along the segment — keywords are sugar for t (at-start=0 / very-near-start=0.125 / near-start=0.25 / midway=0.5 / near-end=0.75 / very-near-end=0.875 / at-end=1); values outside `[0, 1]` are rejected by the schema |
 | `side` | `'above' \| 'below' \| 'left' \| 'right' \| 'sloped'` | `'above'` | Anchor + offset direction; `above` / `below` shift along y, `left` / `right` along x; `sloped` keeps the anchor and rotates the label along the tangent |
 
-For folded segments (`kind="step"`), t maps as t∈[0, 0.5] → first leg (`from→corner`), t∈(0.5, 1] → second leg; the default `midway` lands exactly on the corner, with the tangent taken from the first leg.
+The geometric meaning of t per step kind is in the "[Geometric meaning of t per step kind](#geometric-meaning-of-t-per-step-kind)" table above. In short: line / fold use normalized arc length (fold's corner is always at t=0.5), curve / cubic / bend use the Bezier parameter t (**not** arc length — t=0.5 is usually not the visual midpoint), arc uses angle parametrization, and circlePath / ellipsePath traverse the full curve starting at angle 0 (+x), CCW.
 
 ## Six forms of `to`
 

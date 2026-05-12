@@ -96,12 +96,76 @@ import { Path, Step } from '@retikz/react';
 给 `<Step>` 挂一个 `label` 就能在该段画线的中部 / 起点 / 终点附近放一段文字——对应 TikZ 的 `(a) -- node[midway, above] {accept} (b)`。`label` 是个对象：
 
 - `text`：必填，标签文字（单行）
-- `position`：`'midway'` / `'near-start'` / `'near-end'`，缺省 `'midway'`（段中点）
+- `position`：`'at-start' | 'very-near-start' | 'near-start' | 'midway' | 'near-end' | 'very-near-end' | 'at-end'` 七个 keyword，或 0..1 的数值 t（任意精细位置），缺省 `'midway'`（t=0.5）
 - `side`：`'above'` / `'below'` / `'left'` / `'right'` / `'sloped'`，缺省 `'above'`；`'sloped'` 让标签沿段切线方向旋转贴线
 
 两种等价写法——prop 形态 `<Step label={{...}} />`，或 sugar 形态 `<Step><EdgeLabel>...</EdgeLabel></Step>`（需 `import { EdgeLabel } from '@retikz/react'`）；**两者并存时 prop 优先**。`'move'` 与 `'cycle'` 不挂 label——前者不画线、后者是闭合标记，挂上去会被静默忽略：
 
 <ComponentPreview name="step-label" />
+
+#### label.position：7 个 keyword + 任意数值 t
+
+`position` 接受 7 个 keyword（TikZ 标准词汇）或 0..1 的数值 t，keyword 是 t 的语义糖：
+
+| keyword | 对应 t | 说明 |
+| --- | --- | --- |
+| `'at-start'` | `0` | 段起点 |
+| `'very-near-start'` | `0.125` | 起点附近 |
+| `'near-start'` | `0.25` | 起点 1/4 处 |
+| `'midway'` | `0.5` | 段中点（缺省） |
+| `'near-end'` | `0.75` | 终点 1/4 处 |
+| `'very-near-end'` | `0.875` | 终点附近 |
+| `'at-end'` | `1` | 段终点 |
+
+`position={0.3}` 这种任意数值与 TikZ `pos=0.3` 对齐——LLM 训练数据里最常见。**数值超出 `[0, 1]` 区间在 schema 阶段直接拒绝，不在编译阶段 clamp**（`position={-0.1}` / `position={1.2}` 均会让 IR 校验失败）。
+
+#### t 在每种 step kind 上的几何含义
+
+t 是沿整段的归一化参数，不同 kind 解释**与 TikZ 对齐**：
+
+| Step kind | 参数化方式 | t=0.25 | t=0.5 | t=0.75 |
+| --- | --- | --- | --- | --- |
+| `'line'` | 归一化弧长 | 1/4 处 | 中点 | 3/4 处 |
+| `'step'`（fold N=2） | 每段占 `1/N` t 区间——拐角恒在 `t = j/N`，**与段长无关** | 段 1 中点 | **拐角** | 段 2 中点 |
+| `'curve'` / `'cubic'` | Bezier 参数 t（**非弧长**） | Bezier t=0.25 位置 | Bezier t=0.5 位置（通常**非视觉中点**） | Bezier t=0.75 位置 |
+| `'bend'` | 内部 lower 成 cubic 后 Bezier t | 同 cubic | 同 cubic | 同 cubic |
+| `'arc'` | t 线性映射 `startAngle..endAngle`（度） | 起末角度 1/4 处 | 起末中点角度 | 起末角度 3/4 处 |
+| `'circlePath'` | 沿整圆 t∈[0, 1]：t=0 为 angle 0（+x），CCW 增长 | 圆周 90°（视觉下方） | 圆周 180°（-x） | 圆周 270°（视觉上方） |
+| `'ellipsePath'` | 同 circlePath：t=0 在 angle 0，CCW 增长 | 椭圆 90° 处 | 椭圆 180° 处（**非弧长中点**） | 椭圆 270° 处 |
+
+下面 8 个 demo 每种 kind 各演示一组 t——`t=0.25` / `'midway'` 两档对比，让 keyword=数值的语义糖关系与不同 kind 上 t 的几何含义一目了然。
+
+##### Line
+
+<ComponentPreview name="edge-label-on-line" size="sm" />
+
+##### Fold (step)
+
+<ComponentPreview name="edge-label-on-fold" />
+
+##### Quadratic Bezier (curve)
+
+<ComponentPreview name="edge-label-on-curve" />
+
+##### Cubic Bezier (cubic)
+
+<ComponentPreview name="edge-label-on-cubic" />
+
+##### Bend
+
+<ComponentPreview name="edge-label-on-bend" />
+
+##### Arc
+
+<ComponentPreview name="edge-label-on-arc" />
+
+##### Circle (circlePath)
+
+<ComponentPreview name="edge-label-on-circle" size="lg" />
+
+##### Ellipse (ellipsePath)
+
+<ComponentPreview name="edge-label-on-ellipse" />
 
 ### 样式
 
@@ -161,10 +225,10 @@ import { Path, Step } from '@retikz/react';
 | 字段 | 类型 | 默认 | 描述 |
 | --- | --- | --- | --- |
 | `text` | `string` | — | 必填，标签文字（单行） |
-| `position` | `'midway' \| 'near-start' \| 'near-end'` | `'midway'` | 段上位置——`midway` = 中点 (t=0.5)；`near-start` = t=0.25；`near-end` = t=0.75 |
+| `position` | 7 keyword 之一 或 `number`（0..1） | `'midway'` | 段上归一化位置 t——keyword 是 t 的语义糖（at-start=0 / very-near-start=0.125 / near-start=0.25 / midway=0.5 / near-end=0.75 / very-near-end=0.875 / at-end=1）；超出 [0, 1] 由 schema 拒绝 |
 | `side` | `'above' \| 'below' \| 'left' \| 'right' \| 'sloped'` | `'above'` | 锚点 + 偏移方向；`above` / `below` 偏 y 轴、`left` / `right` 偏 x 轴；`sloped` 不偏移、按段切线方向旋转 |
 
-折角段（`kind="step"`）的 t 映射：t∈[0, 0.5] 对应第一段（`from→corner`），t∈(0.5, 1] 对应第二段；`midway` 默认正落在 corner 上，按段切线方向取第一段。
+不同 step kind 上 t 的几何解释见上方 "[t 在每种 step kind 上的几何含义](#t-在每种-step-kind-上的几何含义)" 表。要点：line / fold 用归一化弧长（fold 拐角恒在 t=0.5），curve / cubic / bend 用 Bezier 参数 t（**非弧长**——t=0.5 通常不是视觉中点），arc 用角度参数化，circlePath / ellipsePath 沿整圆从 angle 0（+x）CCW 增长。
 
 ## to 的六种形态
 
