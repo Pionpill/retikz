@@ -135,6 +135,18 @@ In addition to Cartesian / polar, `position` accepts **`{ direction, of, distanc
 
 <ComponentPreview name="node-at-relative" />
 
+### Offset positioning
+
+`position` also accepts **`{ of, offset }`** — an arbitrary `(dx, dy)` offset from a base point, mirroring TikZ `calc` syntax `($(of) + (dx, dy)$)`. Use offset whenever the 8-direction + scalar-distance `at` form can't express what you want (e.g. "A right 30 down 10").
+
+- `of` is the base point in three shapes (matching `PolarPosition.origin`):
+  - string id — references a named node / coordinate (forward references rejected)
+  - `[x, y]` Cartesian literal — direct coordinate base, no node definition needed
+  - `PolarPosition` (`{ angle, radius, origin? }`) — polar expression as base, recursively resolved
+- `offset` is a `[dx, dy]` tuple in user units
+
+<ComponentPreview name="node-offset-position" />
+
 ### Node labels
 
 `label` attaches extra text outside the node border (TikZ `[label=above:foo]` equivalent). Single object or array form; `position` accepts the 8-direction enum or a numeric angle (`label=30:foo` ↔ `position: 30`); `font` / `textColor` inherit from the node when omitted.
@@ -147,7 +159,7 @@ In addition to Cartesian / polar, `position` accepts **`{ direction, of, distanc
 | --- | --- | --- | --- |
 | `id` | `string` | — | Unique identifier; referenced by `<Path>` / `<Draw>` |
 | `shape` | `'rectangle' \| 'circle' \| 'ellipse' \| 'diamond'` | `'rectangle'` | Node shape |
-| `position` | `[x, y] \| PolarPosition \| { direction, of, distance? }` | — | Node center: Cartesian / polar / relative-to-another-node (`[<direction>=<distance> of <id>]` equivalent) |
+| `position` | `[x, y] \| PolarPosition \| { direction, of, distance? } \| { of, offset }` | — | Node center: Cartesian / polar / relative / offset (TikZ `calc` equivalent; `of` accepts node id, Cartesian literal, or PolarPosition) |
 | `children` / `text` | `string \| Array<string>` | — | Visible label; string = one line, array = one element per line; `text` wins over `children` |
 | `align` | `'left' \| 'center' \| 'right'` | `'center'` | Horizontal alignment of lines within the multi-line text block |
 | `lineHeight` | `number` | `font.size × 1.2` | Line height of the multi-line block (user units) |
