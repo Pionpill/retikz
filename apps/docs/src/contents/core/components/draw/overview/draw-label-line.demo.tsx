@@ -2,9 +2,9 @@ import { Draw, Node, Tikz } from '@retikz/react';
 import type { FC } from 'react';
 
 const Demo: FC = () => (
-  <Tikz width={420} height={140}>
-    <Node id="A" position={[20, 60]}>a</Node>
-    <Node id="B" position={[400, 60]}>b</Node>
+  <Tikz width={420} height={220}>
+    <Node id="A" position={[20, 40]}>a</Node>
+    <Node id="B" position={[400, 40]}>b</Node>
     {/* 直线：t 即归一化弧长 */}
     <Draw
       way={['A', { label: { text: 't=0.25', position: 0.25 } }, 'B']}
@@ -12,17 +12,17 @@ const Demo: FC = () => (
     />
     <Draw
       way={[
-        [20, 80],
-        { label: { text: 'midway', position: 'midway', side: 'below' } },
-        [400, 80],
+        [20, 110],
+        { label: { text: 'midway', position: 'midway' } },
+        [400, 110],
       ]}
       arrow="->"
     />
     <Draw
       way={[
-        [20, 100],
+        [20, 180],
         { label: { text: 't=0.75', position: 0.75 } },
-        [400, 100],
+        [400, 180],
       ]}
       arrow="->"
     />
