@@ -3,18 +3,18 @@ import type { FC } from 'react';
 
 /**
  * Coordinate offset chain
- * @description a → b → c chained offsets: each coordinate derives the next via `{ of, offset }`; nodes anchor to the final coordinates, so moving `a` shifts the entire group
+ * @description ca → cb → cc three coordinates derived via `{ of, offset }`; nodes anchor to coordinates, so moving `ca` shifts the entire group.
  */
 const Demo: FC = () => (
-  <Tikz width={460} height={240}>
-    <Coordinate id="a" position={[-160, 0]} />
-    <Coordinate id="b" position={{ of: 'a', offset: [100, 0] }} />
-    <Coordinate id="c" position={{ of: 'b', offset: [100, 0] }} />
-    <Node id="N1" position={{ of: 'a', offset: [0, 0] }}>a</Node>
-    <Node id="N2" position={{ of: 'b', offset: [0, 50] }}>b down 50</Node>
-    <Node id="N3" position={{ of: 'c', offset: [0, -50] }} shape="circle">c up 50</Node>
-    <Draw way={['N1', 'N2']} arrow="->" />
-    <Draw way={['N2', 'N3']} arrow="->" />
+  <Tikz width={420} height={180}>
+    <Coordinate id="ca" position={[-140, 0]} />
+    <Coordinate id="cb" position={{ of: 'ca', offset: [120, 0] }} />
+    <Coordinate id="cc" position={{ of: 'cb', offset: [120, 0] }} />
+    <Node id="A" position={{ of: 'ca', offset: [0, 0] }} textColor="#888">a</Node>
+    <Node id="B" position={{ of: 'cb', offset: [0, 30] }} textColor="#888">b</Node>
+    <Node id="C" position={{ of: 'cc', offset: [0, -30] }} textColor="#888">c</Node>
+    <Draw way={['A', 'B']} arrow="->" />
+    <Draw way={['B', 'C']} arrow="->" />
   </Tikz>
 );
 
