@@ -48,7 +48,7 @@ describe('ArrowDetailSchema：字段合法 / optional', () => {
     const parsed = ArrowEndDetailSchema.parse({
       shape: 'normal',
       start: { shape: 'stealth' },
-    } as Record<string, unknown>);
+    });
     expect((parsed as Record<string, unknown>).start).toBeUndefined();
   });
 });
@@ -121,7 +121,7 @@ describe('PathSchema：arrowDetail 嵌入 + arrowShape 删除', () => {
         { type: 'step', kind: 'move', to: [0, 0] },
         { type: 'step', kind: 'line', to: [10, 0] },
       ],
-    } as Record<string, unknown>);
+    });
     expect((parsed as Record<string, unknown>).arrowShape).toBeUndefined();
   });
 });
