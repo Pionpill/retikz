@@ -1,0 +1,95 @@
+---
+title: Arrow
+description: Arrows on Path / Draw in depth. `arrow` picks direction; `arrowDetail` is a single object covering every visual spec (shape / scale / length / width / color / fill / opacity / lineWidth), with optional `start` / `end` sub-objects that merge field-by-field.
+---
+
+Arrows are driven by two independent props:
+
+- **`arrow`** — direction enum: `'->'` end / `'<-'` start / `'<->'` both / `'none'` (default) = none
+- **`arrowDetail`** — visual detail object, 8 top-level fields + optional `start` / `end` sub-objects. **Omit it for the minimal "normal filled triangle inheriting the path stroke / opacity" behavior**
+
+Both props sit on `<Draw>` and `<Path>` with identical syntax and effect — the examples below use `<Draw>`; the `<Path>` equivalent is the same.
+
+## Minimal usage
+
+<ComponentPreview name="arrow-default" size="xs" />
+
+```tsx
+<Draw way={['a', 'b']} arrow="->" />
+```
+
+With `arrowDetail` omitted, the arrow defaults to a normal-shape filled triangle inheriting the path stroke color and using 6 user units for both length and width.
+
+## Seven built-in shapes
+
+`arrowDetail.shape` picks the tip shape (default `'normal'`):
+
+| Shape | Description | Typical use |
+| --- | --- | --- |
+| `'normal'` | Filled triangle | Flow chart default |
+| `'open'` | Hollow triangle | UML generalization / inheritance |
+| `'stealth'` | Sharp barbed triangle | Modern flow charts |
+| `'diamond'` | Filled diamond | UML composition |
+| `'openDiamond'` | Hollow diamond | UML aggregation |
+| `'circle'` | Filled circle | Connection / dot end |
+| `'openCircle'` | Hollow circle | White circle / o-end |
+
+<ComponentPreview name="arrow-shapes" />
+
+> Multi-node paths (e.g. a → b → c) clip per-segment, but the arrow only attaches to the overall **start** / **end** — never to intermediate nodes.
+
+## Per-end overrides
+
+`arrowDetail.start` / `arrowDetail.end` sub-objects **merge field-by-field** into the top-level defaults — omitted fields inherit, present fields override. The classic UML "composition + inheritance" shows up as different `start.shape` + `end.shape`:
+
+<ComponentPreview name="arrow-uneven" size="xs" />
+
+> **Merge semantics**: sub-object fields win first; fields not in the sub-object fall back to the top-level defaults; fields not at the top level fall back to the built-in defaults. Example: `arrowDetail={{ shape: 'stealth', start: { color: 'red' } }}` → both ends use stealth, start in red, end inherits the path stroke.
+
+## Color override
+
+`color` overrides the marker stroke / solid fill (escaping the default `context-stroke` inheritance); `fill` is only effective on solid shapes. `start.color` / `end.color` give per-end overrides — handy for "light line, dark arrow" or two-color endpoints:
+
+<ComponentPreview name="arrow-color" size="sm" />
+
+> **Hollow shapes silently ignore `fill`**: when `shape ∈ { open / openDiamond / openCircle }`, the `fill` field is silently dropped. Hollow shapes are driven entirely by `color` (stroke) + `lineWidth` (stroke width); writing `fill='red'` will not render a red fill.
+
+## Sizing: scale / length / width
+
+- `scale` is the uniform marker scale factor (default 1), multiplied **after** `length` / `width` — `length=10, scale=1.5` → effective `markerWidth=15`
+- `length` controls the marker dimension along the path direction (default 6)
+- `width` controls the marker dimension perpendicular to the path (default 6)
+
+<ComponentPreview name="arrow-scale" size="md" />
+
+## Translucent
+
+`opacity` 0..1 applies to the marker as a whole (independent of the path's own `opacity` / `drawOpacity`):
+
+<ComponentPreview name="arrow-opacity" size="xs" />
+
+## API Reference
+
+### arrow
+
+| Property | Type | Default | Description |
+| --- | --- | --- | --- |
+| `arrow` | `'none' \| '->' \| '<-' \| '<->'` | — | Path-level arrow direction |
+| `arrowDetail` | `{ shape?, scale?, length?, width?, color?, fill?, opacity?, lineWidth?, start?, end? }` | — | Arrow visual config; 8 top-level fields all optional + optional `start` / `end` sub-objects that merge field-by-field |
+
+### arrowDetail fields
+
+`arrowDetail` carries 8 visual fields + optional `start` / `end` sub-objects. The `start` / `end` sub-objects use the same field set (non-recursive) and merge field-by-field into the top-level defaults:
+
+| Field | Type | Default | Description |
+| --- | --- | --- | --- |
+| `shape` | `'normal' \| 'open' \| 'stealth' \| 'diamond' \| 'openDiamond' \| 'circle' \| 'openCircle'` | `'normal'` | Arrow tip shape |
+| `scale` | `number > 0` | `1` | Uniform scale factor; multiplied **after** `length` / `width` (`length=10, scale=1.5` → effective 15) |
+| `length` | `number ≥ 0` | `6` | Marker length along the path direction (user units) |
+| `width` | `number ≥ 0` | `6` | Marker width perpendicular to the path (user units) |
+| `color` | `string` | — | Stroke color override; default falls back to `context-stroke` inheritance |
+| `fill` | `string` | `color` or `context-stroke` | Fill color override; **silent no-op on hollow shapes** (written value is dropped) |
+| `opacity` | `number ∈ [0, 1]` | — | Marker-only opacity; default inherits path opacity |
+| `lineWidth` | `number ≥ 0` | `1.5` | Stroke width for hollow shapes; ignored on solid shapes |
+| `start` | `ArrowEndDetail` (same field set, no `start` / `end`) | — | Start-end override (only effective when `arrow` includes the start: `'<-'` / `'<->'`) |
+| `end` | `ArrowEndDetail` (same field set, no `start` / `end`) | — | End-end override (only effective when `arrow` includes the end: `'->'` / `'<->'`) |

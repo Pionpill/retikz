@@ -58,55 +58,7 @@ import { Path, Step } from '@retikz/react';
 
 ### Arrows
 
-`arrow` picks direction (`'->'` end / `'<-'` start / `'<->'` both / `'none'` or omitted). All visual specs live under a single `arrowDetail` object; omitting it keeps the minimal "normal filled triangle inheriting the path stroke / opacity" behavior:
-
-<ComponentPreview name="path-arrow-default" size="xs" />
-
-#### 7 shapes
-
-`arrowDetail.shape` picks the tip shape (default `'normal'`):
-
-| Shape | Description | Typical use |
-| --- | --- | --- |
-| `'normal'` | Filled triangle | Flow chart default |
-| `'open'` | Hollow triangle | UML generalization / inheritance |
-| `'stealth'` | Sharp barbed triangle | Modern flow charts |
-| `'diamond'` | Filled diamond | UML composition |
-| `'openDiamond'` | Hollow diamond | UML aggregation |
-| `'circle'` | Filled circle | Connection / dot end |
-| `'openCircle'` | Hollow circle | White circle / o-end |
-
-<ComponentPreview name="path-arrow" />
-
-> Multi-node paths (e.g. A → B → C) clip per-segment, but the arrow only attaches to the overall **start** / **end** — never to intermediate nodes.
-
-#### Per-end overrides
-
-`arrowDetail.start` / `arrowDetail.end` sub-objects **merge field-by-field** into the top-level defaults — omitted fields inherit, present fields override. The classic UML "composition + inheritance" shows up as different `start.shape` + `end.shape`:
-
-<ComponentPreview name="path-arrow-uneven" size="xs" />
-
-#### Color override
-
-`color` overrides the marker stroke / solid fill (escaping the default `context-stroke` inheritance); `fill` is only effective on solid shapes. `start.color` / `end.color` give per-end overrides — handy for "light line, dark arrow" or two-color endpoints:
-
-<ComponentPreview name="path-arrow-color" size="sm" />
-
-> **Hollow shapes silently ignore `fill`**: when `shape ∈ { open / openDiamond / openCircle }`, the `fill` field is silently dropped. Hollow shapes are driven entirely by `color` (stroke) + `lineWidth` (stroke width); writing `fill='red'` will not render a red fill.
-
-#### Sizing: scale / length / width
-
-- `scale` is the uniform marker scale factor (default 1), multiplied **after** `length` / `width` — `length=10, scale=1.5` → effective `markerWidth=15`
-- `length` controls the marker dimension along the path direction (default 6)
-- `width` controls the marker dimension perpendicular to the path (default 6)
-
-<ComponentPreview name="path-arrow-scale" size="md" />
-
-#### Translucent
-
-`opacity` 0..1 applies to the marker as a whole (independent of the path's own `opacity` / `drawOpacity`):
-
-<ComponentPreview name="path-arrow-opacity" size="xs" />
+`arrow` picks direction (`'->'` / `'<-'` / `'<->'` / `'none'`); `arrowDetail` is a single object covering every visual spec (shape / scale / length / width / color / fill / opacity / lineWidth) plus optional `start` / `end` sub-objects for per-end overrides. The full reference — seven built-in shapes, per-end merge semantics, color / sizing / opacity, and the complete API table — lives on the **[Arrow](/core/components/draw/arrow)** page.
 
 ### Styling
 
@@ -142,33 +94,14 @@ Three independent channels: `opacity` overall (multiplies onto stroke and fill),
 | `lineCap` | `'butt' \| 'round' \| 'square'` | `'butt'` | Stroke endpoint shape (SVG `stroke-linecap`) |
 | `lineJoin` | `'miter' \| 'round' \| 'bevel'` | `'miter'` | Stroke corner shape (SVG `stroke-linejoin`) |
 | `thickness` | `'ultraThin' \| 'veryThin' \| 'thin' \| 'semithick' \| 'thick' \| 'veryThick' \| 'ultraThick'` | — | Semantic stroke preset (`thin = 1`); explicit `strokeWidth` always wins |
-| `arrow` | `'none' \| '->' \| '<-' \| '<->'` | — | Path-level arrow direction |
-| `arrowDetail` | `{ shape?, scale?, length?, width?, color?, fill?, opacity?, lineWidth?, start?, end? }` | — | Detailed arrow config: top-level visual fields act as shared defaults; optional `start` / `end` sub-objects merge field-by-field |
+| `arrow` | `'none' \| '->' \| '<-' \| '<->'` | — | Path-level arrow direction (see [Arrow](/core/components/draw/arrow)) |
+| `arrowDetail` | `ArrowDetail` object | — | Arrow visual config; fields documented on [Arrow](/core/components/draw/arrow) |
 | `fill` | `string` | `'none'` | Fill color of the closed region (any CSS color) |
 | `fillRule` | `'nonzero' \| 'evenodd'` | `'nonzero'` | Fill rule; use `'evenodd'` for rings / holes |
 | `opacity` | `number` | — | Whole-path opacity 0..1 (multiplies onto stroke and fill) |
 | `fillOpacity` | `number` | — | Fill-only opacity 0..1 |
 | `drawOpacity` | `number` | — | Stroke-only opacity 0..1 (TikZ `draw opacity`) |
 | `children` | `Array<<Step>>` | — | At least 2; if the first isn't `move`, the compiler coerces it to `move`. `<Step>` supports `move` / `line` / `step` (folded) / `cycle` (close) / `curve` / `cubic` (Bezier) / `bend` (arc shorthand) / `arc` / `circlePath` / `ellipsePath` (circle / ellipse) |
-
-### arrowDetail fields
-
-The `arrowDetail` object has 8 visual fields plus optional `start` / `end` sub-objects. The sub-objects share the same field set (no recursion) and merge field-by-field into the top-level defaults:
-
-| Field | Type | Default | Description |
-| --- | --- | --- | --- |
-| `shape` | `'normal' \| 'open' \| 'stealth' \| 'diamond' \| 'openDiamond' \| 'circle' \| 'openCircle'` | `'normal'` | Arrow tip shape |
-| `scale` | `number > 0` | `1` | Uniform scale factor; multiplied after `length` / `width` (`length=10, scale=1.5` → effective 15) |
-| `length` | `number ≥ 0` | `6` | Tip length (user units, along the path) |
-| `width` | `number ≥ 0` | `6` | Tip width (user units, perpendicular to the path) |
-| `color` | `string` | — | Stroke color override; omitted = `context-stroke` (inherits path stroke) |
-| `fill` | `string` | `color` or `context-stroke` | Fill color override; **silent no-op on hollow shapes** (silently dropped when written) |
-| `opacity` | `number ∈ [0, 1]` | — | Arrow-only opacity; omitted = inherits path opacity |
-| `lineWidth` | `number ≥ 0` | `1.5` | Stroke width on hollow shapes; ignored on solid shapes |
-| `start` | `ArrowEndDetail` (same field set minus `start` / `end`) | — | Start-end override (effective only when `arrow` includes start: `'<-'` / `'<->'`) |
-| `end` | `ArrowEndDetail` (same field set minus `start` / `end`) | — | End-end override (effective only when `arrow` includes end: `'->'` / `'<->'`) |
-
-> **Merge semantics**: `start` / `end` sub-object fields win first; missing sub-object fields fall back to the top-level defaults; missing top-level fields fall back to built-in defaults. e.g. `arrowDetail={{ shape: 'stealth', start: { color: 'red' } }}` → both ends use stealth, start end is red, end end inherits the path stroke.
 
 ## Path vs Draw
 

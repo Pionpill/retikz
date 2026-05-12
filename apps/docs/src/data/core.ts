@@ -28,6 +28,7 @@ export const coreSection: Array<Section> = [
         children: [
           { id: 'overview', label: 'core.drawOverview' },
           { id: 'path', label: 'core.path' },
+          { id: 'arrow', label: 'core.arrow' },
           { id: 'step', label: 'core.step' },
         ],
       },
