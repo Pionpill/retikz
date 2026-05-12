@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { PolarPositionSchema, PositionSchema } from '../position';
+import { OffsetPositionSchema, PolarPositionSchema, PositionSchema } from '../position';
 
 export const RelTargetSchema = z
   .object({
@@ -28,9 +28,10 @@ export const TargetSchema = z
     z.string().min(1),
     RelTargetSchema,
     RelAccumulateTargetSchema,
+    OffsetPositionSchema,
   ])
   .describe(
-    'Path endpoint: Cartesian [x, y], polar position, node id reference, or relative offset object ({ rel } / { relAccumulate }) resolved at compile time',
+    'Path endpoint: Cartesian [x, y], polar position, node id reference, relative offset object ({ rel } / { relAccumulate }), or offset position ({ of, offset } mirroring TikZ `calc`) resolved at compile time',
   );
 
 /** 路径端点：直接坐标 [x, y]、极坐标、节点 id 字符串、相对偏移对象 */

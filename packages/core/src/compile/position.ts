@@ -1,4 +1,4 @@
-import type { AtDirection, IRAtPosition, IRPosition, PolarPosition } from '../ir';
+import type { AtDirection, IRAtPosition, IROffsetPosition, IRPosition, PolarPosition } from '../ir';
 import type { NodeLayout } from './node';
 
 /** 默认相对定位距离（CompileOptions.nodeDistance 未配时使用） */
@@ -20,11 +20,11 @@ const DIRECTION_VECTOR: Record<AtDirection, [number, number]> = {
 };
 
 /**
- * IR 各种位置形态（笛卡尔/极坐标/相对定位/节点 id）→ 笛卡尔位置
- * @description 极坐标 origin 可递归引用节点 id；相对定位 of 必须引用已定义节点/coordinate；解析失败返回 null。nodeDistance 为容器 prop 注入默认距离，AtPosition 自带 distance 优先
+ * IR 各种位置形态（笛卡尔/极坐标/相对定位/偏移定位/节点 id）→ 笛卡尔位置
+ * @description 极坐标 origin / 偏移定位 of 均可递归引用节点 id 或字面坐标；relative `AtPosition` of 必须引用已定义节点/coordinate；解析失败返回 null。nodeDistance 为容器 prop 注入默认距离，AtPosition 自带 distance 优先
  */
 export const resolvePosition = (
-  pos: IRPosition | PolarPosition | IRAtPosition | string,
+  pos: IRPosition | PolarPosition | IRAtPosition | IROffsetPosition | string,
   nodeMap: Map<string, NodeLayout>,
   nodeDistance: number = DEFAULT_NODE_DISTANCE,
 ): IRPosition | null => {
@@ -40,6 +40,12 @@ export const resolvePosition = (
     const distance = pos.distance ?? nodeDistance;
     const [dx, dy] = DIRECTION_VECTOR[pos.direction];
     return [ref.rect.x + dx * distance, ref.rect.y + dy * distance];
+  }
+  if ('offset' in pos) {
+    // OffsetPosition：递归 resolve `of`（string id / Position / PolarPosition）再叠加 (dx, dy)
+    const base = resolvePosition(pos.of, nodeMap, nodeDistance);
+    if (!base) return null;
+    return [base[0] + pos.offset[0], base[1] + pos.offset[1]];
   }
   // PolarPosition：先解析 origin 再叠加极偏移
   let origin: IRPosition;

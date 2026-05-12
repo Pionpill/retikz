@@ -5,6 +5,7 @@ import type {
   IRLineSpec,
   IRNode,
   IRNodeLabel,
+  IROffsetPosition,
   IRPosition,
   NodeTextAlign,
   PolarPosition,
@@ -19,9 +20,9 @@ export type NodeProps = {
   shape?: IRNode['shape'];
   /**
    * 节点中心位置
-   * @description 三种形态：笛卡尔 `[x, y]` / 极坐标 `{ angle, radius, origin? }` / 相对定位 `{ direction, of, distance? }`（TikZ `[<direction>=<distance> of <id>]` 同义）；极坐标与相对定位在编译时解析
+   * @description 四种形态：笛卡尔 `[x, y]` / 极坐标 `{ angle, radius, origin? }` / 相对定位 `{ direction, of, distance? }`（TikZ `[<direction>=<distance> of <id>]` 同义）/ 偏移定位 `{ of, offset }`（TikZ `calc` 同义，`of` 可为节点 id / 笛卡尔 / 极坐标）；非笛卡尔形态在编译时解析
    */
-  position: IRPosition | PolarPosition | IRAtPosition;
+  position: IRPosition | PolarPosition | IRAtPosition | IROffsetPosition;
   /** 旋转角度（度数，与 TikZ 一致），绕节点中心；正值顺时针 */
   rotate?: number;
   /**

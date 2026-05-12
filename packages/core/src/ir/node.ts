@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import type { ValueOf } from '../types';
-import { AT_DIRECTIONS, AtPositionSchema, PolarPositionSchema, PositionSchema } from './position';
+import { AT_DIRECTIONS, AtPositionSchema, OffsetPositionSchema, PolarPositionSchema, PositionSchema } from './position';
 
 /**
  * 节点形状常量（用 const + ValueOf 派生，不用 TS enum）
@@ -158,9 +158,9 @@ export const NodeSchema = z
         'Node visual shape; defaults to `rectangle`. The boundary fully contains text + padding (circumscribed for circle / ellipse / diamond).',
       ),
     position: z
-      .union([PositionSchema, PolarPositionSchema, AtPositionSchema])
+      .union([PositionSchema, PolarPositionSchema, AtPositionSchema, OffsetPositionSchema])
       .describe(
-        'Center point of the node content box; Cartesian [x, y], polar, or relative-to-another-node (`at`-style with `direction` / `of` / `distance?`). All non-Cartesian forms resolve at compile time.',
+        'Center point of the node content box; Cartesian [x, y], polar, relative-to-another-node (`at`-style with `direction` / `of` / `distance?`), or offset from a base point (`{ of, offset }` form mirroring TikZ `calc`). All non-Cartesian forms resolve at compile time.',
       ),
     rotate: z
       .number()
