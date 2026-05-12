@@ -191,6 +191,68 @@ import { Path, Step } from '@retikz/react';
 - **入口页**（`profile/introduction`、`profile/get-start`）有自己的章节布局（介绍 / 安装 / 步骤……），不强制走上面 4 段
 - **概念页**（`concepts/*`）按概念走子节，配 `<ComponentPreview hideCode>` 当叙述插图
 
+## Reference 词典页（`<ZodSchema>`）
+
+`apps/docs/src/contents/core/reference/schema/<page>/index.{en,zh}.mdx` 下的页面用 **`<ZodSchema name="XxxSchema" descriptions={{...}} />`** 渲染字段表。Reference 词典是 IR schema 查询入口，跟"组件页"4 段结构无关。当前结构：5 个合并页（scene / entity / path / target / placement），每页一个或多个 H2/H3 + `<ZodSchema>` 块。
+
+### name prop
+
+变量名要在 `apps/docs/src/lib/schema-registry.ts` 注册（含 9 个顶层 + 10 个 Step 变体 + 2 个 Target 变体）。组件按 identity 反查 Zod schema 实例并自动出表 —— 字段名 / 类型 / 必填 / 英文描述都来自源码 `.describe()`。
+
+### descriptions prop（中文 mdx 必填）
+
+zh.mdx 用 `descriptions={{ 字段名: '中文释义' }}` 覆盖每个字段的英文描述。漏写则降级到英文 + 控制台 warn。**en.mdx 不传 descriptions**，全走 `.describe()` 英文源码。
+
+### 嵌套 object 字段必须用点路径覆盖
+
+字段类型是 **anonymous object**（即非注册表里的 schema，例：`NodeSchema.font` 嵌套 FontSchema、Step 各 variant 的 `label` 嵌套 StepLabelSchema）时，表格会**平铺**这些子字段为相邻匿名子行。子行描述也吃 zh.mdx 的 descriptions —— **必须用点路径**：
+
+```tsx
+<ZodSchema name="NodeSchema" descriptions={{
+  font: '节点内文本的字体规格（family / size / weight / style，均可选）',
+  'font.family': 'CSS font-family 字符串，如 "serif" / "monospace"',
+  'font.size': '字号（用户单位）；未填走渲染器默认',
+  'font.weight': 'CSS font-weight：keyword `normal`/`bold` 或数字 100..900',
+  'font.style': 'CSS font-style：`normal` / `italic` / `oblique`',
+}} />
+```
+
+漏写嵌套子字段 → 中文页该子行显示英文 `.describe()`（视觉残留）。控制台对每个漏写路径都会 warn。
+
+### 哪些字段会被平铺？
+
+判定条件：**父字段是顶层 object 字段 + 子 schema 不在 schema-registry**。检查方法：
+
+1. 看 `packages/core` 源码，字段类型为 `XxxSchema.optional()` / `XxxSchema` 且 `XxxSchema = z.object({...})`，再确认 XxxSchema 不在 `schema-registry.ts` 21 项里 → 会被平铺
+2. 开 dev server 看控制台 `[ZodSchema] ... no .describe() and no override` —— 列出所有漏写路径
+
+目前需要翻译嵌套子字段的位置（**新加 schema / 字段时要重新检查**）：
+
+| 父 schema.字段 | 嵌套 schema | 子字段 |
+| --- | --- | --- |
+| `NodeSchema.font` | FontSchema | family, size, weight, style |
+| 8 个 step variant 的 `label`（Line / Fold / Curve / Cubic / Bend / Arc / CirclePath / EllipsePath） | StepLabelSchema | text, position, side |
+
+union / array 内部的 object 不会被平铺（如 `NodeSchema.label` 是 union），保持折叠类型签名形态。
+
+### 合并页 URL 锚点（rehype-slug 自动 id）
+
+合并页（`path` / `target` / `placement` / `entity`）内多个 schema 用 H2/H3 标题分隔，rehype-slug 自动生成 id：
+
+- `## Position` → `#position`
+- `### Move` → `#move`
+- `### CirclePath` → `#circlepath` —— **camelCase 不会插连字符**
+
+注册表 URL 必须与自动 slug 对齐，否则 walker 输出的跨页 Link 会断。如要改 schema 名（如 `CirclePath` → `Circle Path`），rehype-slug 输出会变成 `circle-path`，registry 也得同步改。
+
+### 加新 schema 到 Reference
+
+1. 确认 schema 在 `@retikz/core` `index.ts` 已 export
+2. `apps/docs/src/lib/schema-registry.ts` 加一行（含 schema instance + label + URL；URL 是合并页 + `#anchor` 或独立页）
+3. 在合适的合并页 mdx 加 H2/H3 + `<ZodSchema name="..." descriptions={{...}} />`；zh 必须含所有字段（+ 嵌套点路径）；en 只写 `<ZodSchema name="..." />`
+4. **如果是新增独立页**（不属于现有 5 合并页）：在 `data/core.ts` reference section 加 children 条目 + i18n 加 `core.refXxxSchema` key
+5. 跑 `pnpm --filter @retikz/docs build` + dev 看控制台 warn
+
 ## 与 shadcn 的差异
 
 | | shadcn/ui | retikz |
@@ -213,7 +275,9 @@ import { Path, Step } from '@retikz/react';
 - GFM markdown（表格、列表、引用、链接、围栏代码块）全部支持
 - 围栏代码块带语言后会上语法高亮；写 `` ```tsx showLineNumbers `` 开行号
 - 行内 `<a href>`：`/` 开头自动走 react-router `<Link>`；`http(s)://` 开头自动 `target="_blank"`
-- 唯一的自定义 JSX：`<ComponentPreview ... />`
+- 自定义 JSX：
+  - `<ComponentPreview ... />` —— 所有 demo 页用
+  - `<ZodSchema ... />` —— 仅 Reference 词典页用，详见上文「Reference 词典页」
 
 ## Quick Reference
 
@@ -226,6 +290,7 @@ import { Path, Step } from '@retikz/react';
 | 加菜单图标 | `data/core.ts` 的 `Page.icon`（仅一级 Page 支持） |
 | 新建 module | `data/module.ts` 加条目 + 新建 `data/<module>.ts` + i18n 加新命名空间 |
 | 加分组节点 | 父节点加 `children`；分组本身不写 mdx |
+| 加新 IR schema 字典 | 注册到 `lib/schema-registry.ts` + 合适合并页加 `<ZodSchema>` 块（含 zh 嵌套点路径） |
 
 ## Common Mistakes
 
@@ -233,6 +298,8 @@ import { Path, Step } from '@retikz/react';
 - **demo 用 hooks** —— `ComponentPreview` 的 IR 视图会直接 `Component({})` 调用一次，hooks 在非渲染路径中会触发 React 错误
 - **demo 文件名写成 `<name>-demo.tsx`** —— 我们用 `.demo.tsx`，glob 匹配不到，会显示 "Demo not found"
 - **`<ComponentPreview src=...>`** —— 沿用 shadcn 写法。我们的 prop 是 `name`，不接受 `src`
+- **`<ZodSchema>` 漏写嵌套字段点路径** —— `Node.font` / Step 各 variant 的 `label` 等嵌套 object 必须用 `'font.family'` / `'label.text'` 等点路径补完所有子字段中文，否则中文页该子行残留英文 `.describe()`
+- **`<ZodSchema>` 的 name 不在 registry** —— 渲染会显示 "Unknown schema" 红框；新加 schema 必须先在 `apps/docs/src/lib/schema-registry.ts` 注册
 - **只加一边 i18n** —— `en.ts: I18nResources = typeof zh` 类型反向约束，少一个 key 就编译失败
 - **`label` 写成 `'core/getStart'` 或 `'getStart'`** —— 必须是 `'<ns>.<key>'` 完整路径，`I18nKey` 类型会卡你
 - **改 `id` 不改目录** —— `id` 决定 URL 段、决定 mdx 加载路径、决定 sidebar 的 key，三者强耦合
