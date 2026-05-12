@@ -24,3 +24,10 @@ export type ObjectField = {
 export type SchemaRepr =
   | { kind: 'object'; description?: string; fields: Array<ObjectField> }
   | { kind: 'alias'; description?: string; type: TypeRepr };
+
+/** RenderTable 的行：父行 name 非空；子行 name 为空且 isChild=true */
+export type TableRow = ObjectField & {
+  isChild?: boolean;
+  /** 子行原 field name（用于类型列前缀显示） */
+  originalName?: string;
+};

@@ -4,22 +4,20 @@ import { useTranslation } from 'react-i18next';
 
 import { cn } from '@/lib/utils';
 
-import type { ObjectField } from './types';
+import type { TableRow } from './types';
 import { RenderType } from './render-type';
 
 type Props = {
-  fields: Array<ObjectField>;
-  /** 给嵌套匿名子表用：是否带边框 / 缩进 */
-  nested?: boolean;
+  rows: Array<TableRow>;
 };
 
 const td = 'border-b border-border align-top py-2 pr-4';
 
-/** ObjectField 列表 → 表格；object kind 的字段同 td 内递归嵌套子表 */
-export const RenderTable: FC<Props> = ({ fields, nested = false }) => {
+/** TableRow 列表 → 表格；嵌套 object 字段已被 ZodSchema 平铺为相邻子行（name=''） */
+export const RenderTable: FC<Props> = ({ rows }) => {
   const { t } = useTranslation();
   return (
-    <div className={cn('my-4 overflow-x-auto', nested && 'ml-4 mt-2 border-l-2 border-muted pl-3')}>
+    <div className="my-4 overflow-x-auto">
       <table className="w-full border-collapse text-sm">
         <thead>
           <tr className="border-b-2 border-border text-left">
@@ -30,24 +28,26 @@ export const RenderTable: FC<Props> = ({ fields, nested = false }) => {
           </tr>
         </thead>
         <tbody>
-          {fields.map(f => (
-            <tr key={f.name}>
-              <td className={cn(td, 'font-mono whitespace-nowrap')}>{f.name}</td>
+          {rows.map((r, i) => (
+            <tr key={`${r.originalName ?? r.name}-${i}`}>
+              <td className={cn(td, 'font-mono whitespace-nowrap')}>
+                {r.isChild ? '' : r.name}
+              </td>
               <td className={td}>
-                <RenderType repr={f.type} />
-                {f.constraints.length > 0 && (
-                  <span className="ml-2 text-xs text-muted-foreground">
-                    ({f.constraints.join(', ')})
-                  </span>
+                {r.isChild && r.originalName != null && (
+                  <span className="font-mono text-muted-foreground">{`${r.originalName}: `}</span>
                 )}
-                {f.type.kind === 'object' && (
-                  <RenderTable fields={f.type.fields} nested />
+                <RenderType repr={r.type} />
+                {r.constraints.length > 0 && (
+                  <span className="ml-2 text-xs text-muted-foreground">
+                    ({r.constraints.join(', ')})
+                  </span>
                 )}
               </td>
               <td className={cn(td, 'whitespace-nowrap text-center')}>
-                {f.optional ? <span className="text-muted-foreground">—</span> : '✓'}
+                {r.optional ? <span className="text-muted-foreground">—</span> : '✓'}
               </td>
-              <td className={cn(td, 'text-muted-foreground')}>{f.description ?? ''}</td>
+              <td className={cn(td, 'text-muted-foreground')}>{r.description ?? ''}</td>
             </tr>
           ))}
         </tbody>

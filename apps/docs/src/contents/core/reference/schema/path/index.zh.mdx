@@ -46,6 +46,9 @@ description: 笔画外壳与 step 动作序列
   kind: '动作种类：`line` —— 从光标到目标点画一条直线（SVG path "L"）',
   to: '直线段的目标点',
   label: '边标注：附在本段上的文字标签',
+  'label.text': '标签文字内容（单行；多行需 \\n）',
+  'label.position': '沿段位置：`midway` / `near-start` / `near-end`，默认 midway',
+  'label.side': '相对段方向的偏移：above/below/left/right 沿法线偏移；sloped 沿切线旋转（无法线偏移），默认 above',
 }} />
 
 ### Fold
@@ -56,6 +59,9 @@ description: 笔画外壳与 step 动作序列
   via: '折角方向：`-|` 先横后竖；`|-` 先竖后横',
   to: '折线段的目标点',
   label: '边标注：附在本段上的文字标签（按 position 落在对应支段）',
+  'label.text': '标签文字内容（单行；多行需 \\n）',
+  'label.position': '沿段位置：`midway` / `near-start` / `near-end`，默认 midway',
+  'label.side': '相对段方向的偏移：above/below/left/right 沿法线偏移；sloped 沿切线旋转（无法线偏移），默认 above',
 }} />
 
 ### Cycle
@@ -73,6 +79,9 @@ description: 笔画外壳与 step 动作序列
   to: '曲线终点',
   control: '二次贝塞尔单控制点',
   label: '边标注：附在本段上的文字标签',
+  'label.text': '标签文字内容（单行；多行需 \\n）',
+  'label.position': '沿段位置：`midway` / `near-start` / `near-end`，默认 midway',
+  'label.side': '相对段方向的偏移：above/below/left/right 沿法线偏移；sloped 沿切线旋转（无法线偏移），默认 above',
 }} />
 
 ### Cubic
@@ -84,6 +93,9 @@ description: 笔画外壳与 step 动作序列
   control1: '第一个控制点（影响起点切线）',
   control2: '第二个控制点（影响终点切线）',
   label: '边标注：附在本段上的文字标签',
+  'label.text': '标签文字内容（单行；多行需 \\n）',
+  'label.position': '沿段位置：`midway` / `near-start` / `near-end`，默认 midway',
+  'label.side': '相对段方向的偏移：above/below/left/right 沿法线偏移；sloped 沿切线旋转（无法线偏移），默认 above',
 }} />
 
 ### Bend
@@ -95,6 +107,9 @@ description: 笔画外壳与 step 动作序列
   bendDirection: '弧形偏转方向（相对 from→to 弦的视觉左 / 右）',
   bendAngle: '弯曲角度（°），默认 30',
   label: '边标注：附在本段上的文字标签',
+  'label.text': '标签文字内容（单行；多行需 \\n）',
+  'label.position': '沿段位置：`midway` / `near-start` / `near-end`，默认 midway',
+  'label.side': '相对段方向的偏移：above/below/left/right 沿法线偏移；sloped 沿切线旋转（无法线偏移），默认 above',
 }} />
 
 ### Arc
@@ -106,6 +121,9 @@ description: 笔画外壳与 step 动作序列
   endAngle: '弧终止角（°）；扫向由 startAngle 与 endAngle 大小关系隐式决定',
   radius: '弧半径（用户单位）',
   label: '边标注：附在本段上的文字标签',
+  'label.text': '标签文字内容（单行；多行需 \\n）',
+  'label.position': '沿段位置：`midway` / `near-start` / `near-end`，默认 midway',
+  'label.side': '相对段方向的偏移：above/below/left/right 沿法线偏移；sloped 沿切线旋转（无法线偏移），默认 above',
 }} />
 
 ### CirclePath
@@ -115,6 +133,9 @@ description: 笔画外壳与 step 动作序列
   kind: '动作种类：`circlePath` —— 以光标为圆心、给定半径的整圆（TikZ `circle[radius=…]`），笔画结束后回到圆心',
   radius: '圆半径（用户单位）',
   label: '边标注：附在本段上的文字标签',
+  'label.text': '标签文字内容（单行；多行需 \\n）',
+  'label.position': '沿段位置：`midway` / `near-start` / `near-end`，默认 midway',
+  'label.side': '相对段方向的偏移：above/below/left/right 沿法线偏移；sloped 沿切线旋转（无法线偏移），默认 above',
 }} />
 
 ### EllipsePath
@@ -125,4 +146,7 @@ description: 笔画外壳与 step 动作序列
   radiusX: 'x 轴半径（半长轴或半短轴）',
   radiusY: 'y 轴半径（半长轴或半短轴）',
   label: '边标注：附在本段上的文字标签',
+  'label.text': '标签文字内容（单行；多行需 \\n）',
+  'label.position': '沿段位置：`midway` / `near-start` / `near-end`，默认 midway',
+  'label.side': '相对段方向的偏移：above/below/left/right 沿法线偏移；sloped 沿切线旋转（无法线偏移），默认 above',
 }} />
