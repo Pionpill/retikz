@@ -158,9 +158,26 @@ const LABEL_LINE_HEIGHT_FACTOR = 1.2;
 const LABEL_SIDE_OFFSET = 4;
 const RAD_TO_DEG = 180 / Math.PI;
 
-/** label.position → 段参数 t */
-const tForLabelPosition = (pos: IRStepLabel['position']): number =>
-  pos === 'near-start' ? 0.25 : pos === 'near-end' ? 0.75 : 0.5;
+/** keyword → t 数值映射；含旧 3 keyword（midway/near-start/near-end）+ 新 4 keyword */
+const KEYWORD_TO_T: Record<string, number> = {
+  'at-start': 0,
+  'very-near-start': 0.125,
+  'near-start': 0.25,
+  midway: 0.5,
+  'near-end': 0.75,
+  'very-near-end': 0.875,
+  'at-end': 1,
+};
+
+/**
+ * label.position → 段参数 t∈[0,1]
+ * @description 数值原样返回（schema 已 clamp 0..1）；keyword 走 KEYWORD_TO_T 映射；undefined 退默认 midway (0.5)
+ */
+const tForLabelPosition = (pos: IRStepLabel['position']): number => {
+  if (typeof pos === 'number') return pos;
+  if (typeof pos === 'string' && pos in KEYWORD_TO_T) return KEYWORD_TO_T[pos];
+  return 0.5;
+};
 
 /**
  * step.label + 段采样 → TextPrim（sloped 时裹一层 group 旋转）
