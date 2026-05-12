@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { compileToScene } from '../../src/compile/compile';
 import type { IR } from '../../src/ir';
+import { pathCommandsToD } from '../helpers/path-d';
 
 describe('Coordinate placeholder', () => {
   it('coordinate 自身不发任何 primitive', () => {
@@ -48,8 +49,8 @@ describe('Coordinate placeholder', () => {
     expect(path).toBeDefined();
     if (path?.type === 'path') {
       // coordinate 是 0×0 rect，boundary point 即中心；M 0 0 L 10 0
-      expect(path.d).toMatch(/^M 0 0/);
-      expect(path.d).toMatch(/L 10 0/);
+      expect(pathCommandsToD(path.commands)).toMatch(/^M 0 0/);
+      expect(pathCommandsToD(path.commands)).toMatch(/L 10 0/);
     }
   });
 
@@ -104,7 +105,7 @@ describe('Coordinate placeholder', () => {
     expect(path).toBeDefined();
     if (path?.type === 'path') {
       // c 在 (5+3, 0) = (8, 0)
-      expect(path.d).toMatch(/^M 8 0/);
+      expect(pathCommandsToD(path.commands)).toMatch(/^M 8 0/);
     }
   });
 

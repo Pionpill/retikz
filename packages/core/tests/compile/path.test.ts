@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { compileToScene } from '../../src/compile/compile';
 import type { IR } from '../../src/ir';
 import type { PathPrim, ScenePrimitive } from '../../src/primitive';
+import { pathCommandsToD } from '../helpers/path-d';
 
 const findPathPrim = (prims: Array<ScenePrimitive>): PathPrim => {
   const p = prims.find((x): x is PathPrim => x.type === 'path');
@@ -25,7 +26,7 @@ describe('compile path: line baseline', () => {
       ],
     };
     const scene = compileToScene(ir);
-    expect(findPathPrim(scene.primitives).d).toBe('M 0 0 L 10 5');
+    expect(pathCommandsToD(findPathPrim(scene.primitives).commands)).toBe('M 0 0 L 10 5');
   });
 });
 
@@ -58,8 +59,8 @@ describe("compile path: 'step' 折角", () => {
         },
       ],
     };
-    expect(findPathPrim(compileToScene(folded).primitives).d).toBe(
-      findPathPrim(compileToScene(manual).primitives).d,
+    expect(pathCommandsToD(findPathPrim(compileToScene(folded).primitives).commands)).toBe(
+      pathCommandsToD(findPathPrim(compileToScene(manual).primitives).commands),
     );
   });
 
@@ -91,8 +92,8 @@ describe("compile path: 'step' 折角", () => {
         },
       ],
     };
-    expect(findPathPrim(compileToScene(folded).primitives).d).toBe(
-      findPathPrim(compileToScene(manual).primitives).d,
+    expect(pathCommandsToD(findPathPrim(compileToScene(folded).primitives).commands)).toBe(
+      pathCommandsToD(findPathPrim(compileToScene(manual).primitives).commands),
     );
   });
 
@@ -141,7 +142,7 @@ describe("compile path: 'step' 折角", () => {
       ],
     };
     const scene = compileToScene(ir);
-    const d = findPathPrim(scene.primitives).d;
+    const d = pathCommandsToD(findPathPrim(scene.primitives).commands);
     const matches = d.match(/[ML]/g);
     expect(matches).toEqual(['M', 'L', 'L']); // M start, L corner, L end
   });
@@ -167,7 +168,7 @@ describe("compile path: 'step' 折角", () => {
         },
       ],
     };
-    const d = findPathPrim(compileToScene(ir).primitives).d;
+    const d = pathCommandsToD(findPathPrim(compileToScene(ir).primitives).commands);
     expect(d).toBe('M 8 0 L 100 0 L 100 52');
   });
 
@@ -187,7 +188,7 @@ describe("compile path: 'step' 折角", () => {
         },
       ],
     };
-    const d = findPathPrim(compileToScene(ir).primitives).d;
+    const d = pathCommandsToD(findPathPrim(compileToScene(ir).primitives).commands);
     expect(d).toBe('M 0 8 L 0 60 L 92 60');
   });
 });
@@ -209,7 +210,7 @@ describe("compile path: 'cycle' 闭合", () => {
         },
       ],
     };
-    const d = findPathPrim(compileToScene(ir).primitives).d;
+    const d = pathCommandsToD(findPathPrim(compileToScene(ir).primitives).commands);
     expect(d).toBe('M 0 0 L 10 0 L 10 10 Z');
   });
 
@@ -267,7 +268,7 @@ describe("compile path: 'cycle' 闭合", () => {
         },
       ],
     };
-    const d = findPathPrim(compileToScene(ir).primitives).d;
+    const d = pathCommandsToD(findPathPrim(compileToScene(ir).primitives).commands);
     // 三段独立：A→B、B→C、C→A，每段都 M 开头；不出现 Z
     expect(d).not.toContain('Z');
     expect(d.match(/M/g) ?? []).toHaveLength(3);
@@ -492,7 +493,7 @@ describe("compile path: arrow 箭头", () => {
         },
       ],
     };
-    expect(findPathPrim(compileToScene(ir).primitives).d).toBe('M 0 0 L 95.2 0');
+    expect(pathCommandsToD(findPathPrim(compileToScene(ir).primitives).commands)).toBe('M 0 0 L 95.2 0');
   });
 
   it("strokeWidth 翻倍时 shrink 也翻倍（4.8 × strokeWidth）", () => {
@@ -513,7 +514,7 @@ describe("compile path: arrow 箭头", () => {
       ],
     };
     // shrink = 4.8 × 2 = 9.6 → (100 - 9.6, 0) = (90.4, 0)
-    expect(findPathPrim(compileToScene(ir).primitives).d).toBe('M 0 0 L 90.4 0');
+    expect(pathCommandsToD(findPathPrim(compileToScene(ir).primitives).commands)).toBe('M 0 0 L 90.4 0');
   });
 
   it("实心 shape 不 shrink（line 端点保留原样）", () => {
@@ -533,7 +534,7 @@ describe("compile path: arrow 箭头", () => {
           },
         ],
       };
-      expect(findPathPrim(compileToScene(ir).primitives).d).toBe('M 0 0 L 100 0');
+      expect(pathCommandsToD(findPathPrim(compileToScene(ir).primitives).commands)).toBe('M 0 0 L 100 0');
     }
   });
 
@@ -604,7 +605,7 @@ describe('compile path: 多节点连线段独立 clip（bugfix tikz-from-ir.demo
         },
       ],
     };
-    const d = findPathPrim(compileToScene(ir).primitives).d;
+    const d = pathCommandsToD(findPathPrim(compileToScene(ir).primitives).commands);
     // 关键：3 个 M（每段独立起点），共 3 个 L
     expect(d.match(/M/g) ?? []).toHaveLength(3);
     expect(d.match(/L/g) ?? []).toHaveLength(3);
@@ -629,7 +630,7 @@ describe('compile path: 多节点连线段独立 clip（bugfix tikz-from-ir.demo
         },
       ],
     };
-    const d = findPathPrim(compileToScene(ir).primitives).d;
+    const d = pathCommandsToD(findPathPrim(compileToScene(ir).primitives).commands);
     // 期望单 sub-path：M 一次 + L 三次
     expect(d.match(/M/g) ?? []).toHaveLength(1);
     expect(d).toBe('M 0 0 L 10 0 L 20 0 L 20 5');
@@ -651,7 +652,7 @@ describe("compile path: 'curve'", () => {
         },
       ],
     };
-    expect(findPathPrim(compileToScene(ir).primitives).d).toBe('M 0 0 Q 5 8 10 0');
+    expect(pathCommandsToD(findPathPrim(compileToScene(ir).primitives).commands)).toBe('M 0 0 Q 5 8 10 0');
   });
 
   it('curve 与 line 混用：line → curve → line 串联', () => {
@@ -670,7 +671,7 @@ describe("compile path: 'curve'", () => {
         },
       ],
     };
-    expect(findPathPrim(compileToScene(ir).primitives).d).toBe(
+    expect(pathCommandsToD(findPathPrim(compileToScene(ir).primitives).commands)).toBe(
       'M 0 0 L 5 0 Q 10 0 10 5 L 10 10',
     );
   });
@@ -690,7 +691,7 @@ describe("compile path: 'curve'", () => {
         },
       ],
     };
-    expect(findPathPrim(compileToScene(ir).primitives).d).toBe('M 0 0 Q 5 8 10 0 Z');
+    expect(pathCommandsToD(findPathPrim(compileToScene(ir).primitives).commands)).toBe('M 0 0 Q 5 8 10 0 Z');
   });
 });
 
@@ -709,7 +710,7 @@ describe("compile path: 'cubic'", () => {
         },
       ],
     };
-    expect(findPathPrim(compileToScene(ir).primitives).d).toBe('M 0 0 C 3 5 7 5 10 0');
+    expect(pathCommandsToD(findPathPrim(compileToScene(ir).primitives).commands)).toBe('M 0 0 C 3 5 7 5 10 0');
   });
 
   it('cubic 与 line 混用', () => {
@@ -727,7 +728,7 @@ describe("compile path: 'cubic'", () => {
         },
       ],
     };
-    expect(findPathPrim(compileToScene(ir).primitives).d).toBe('M 0 0 C 2 5 8 5 10 0 L 20 0');
+    expect(pathCommandsToD(findPathPrim(compileToScene(ir).primitives).commands)).toBe('M 0 0 C 2 5 8 5 10 0 L 20 0');
   });
 
   it('cubic + cycle', () => {
@@ -745,7 +746,7 @@ describe("compile path: 'cubic'", () => {
         },
       ],
     };
-    expect(findPathPrim(compileToScene(ir).primitives).d).toBe(
+    expect(pathCommandsToD(findPathPrim(compileToScene(ir).primitives).commands)).toBe(
       'M 0 0 C 5 0 10 5 10 10 Z',
     );
   });
@@ -768,7 +769,7 @@ describe("compile path: 'bend'", () => {
     };
     const offset = (12 * Math.tan((15 * Math.PI) / 180) * 4) / 3;
     const r = (n: number) => Math.round(n * 100) / 100;
-    expect(findPathPrim(compileToScene(ir).primitives).d).toBe(
+    expect(pathCommandsToD(findPathPrim(compileToScene(ir).primitives).commands)).toBe(
       `M 0 0 C 4 ${r(-offset)} 8 ${r(-offset)} 12 0`,
     );
   });
@@ -800,8 +801,8 @@ describe("compile path: 'bend'", () => {
         },
       ],
     };
-    expect(findPathPrim(compileToScene(irImplicit).primitives).d).toBe(
-      findPathPrim(compileToScene(irExplicit).primitives).d,
+    expect(pathCommandsToD(findPathPrim(compileToScene(irImplicit).primitives).commands)).toBe(
+      pathCommandsToD(findPathPrim(compileToScene(irExplicit).primitives).commands),
     );
   });
 
@@ -832,8 +833,8 @@ describe("compile path: 'bend'", () => {
         },
       ],
     };
-    const dL = findPathPrim(compileToScene(irL).primitives).d;
-    const dR = findPathPrim(compileToScene(irR).primitives).d;
+    const dL = pathCommandsToD(findPathPrim(compileToScene(irL).primitives).commands);
+    const dR = pathCommandsToD(findPathPrim(compileToScene(irR).primitives).commands);
     const numsL = dL.match(/-?\d+(\.\d+)?/g)!.map(Number);
     const numsR = dR.match(/-?\d+(\.\d+)?/g)!.map(Number);
     // tokens: M 0 0 C c1x c1y c2x c2y 10 0 → indices for c1y=3, c2y=5
@@ -856,7 +857,7 @@ describe("compile path: 'bend'", () => {
         },
       ],
     };
-    const d = findPathPrim(compileToScene(ir).primitives).d;
+    const d = pathCommandsToD(findPathPrim(compileToScene(ir).primitives).commands);
     // 起头是 M 0 0 C ...，结尾是 L 20 0
     expect(d.startsWith('M 0 0 C ')).toBe(true);
     expect(d.endsWith(' L 20 0')).toBe(true);
@@ -878,7 +879,7 @@ describe("compile path: 'arc'", () => {
         },
       ],
     };
-    expect(findPathPrim(compileToScene(ir).primitives).d).toBe(
+    expect(pathCommandsToD(findPathPrim(compileToScene(ir).primitives).commands)).toBe(
       'M 10 0 A 10 10 0 0 1 0 10',
     );
   });
@@ -897,7 +898,7 @@ describe("compile path: 'arc'", () => {
         },
       ],
     };
-    const d = findPathPrim(compileToScene(ir).primitives).d;
+    const d = pathCommandsToD(findPathPrim(compileToScene(ir).primitives).commands);
     // M 10 0 A 10 10 0 1 1 0 -10
     expect(d).toMatch(/^M 10 0 A 10 10 0 1 1 0 -10$/);
   });
@@ -918,7 +919,7 @@ describe("compile path: 'arc'", () => {
       ],
     };
     // 弧终点 = (0, 10)；line 从 (0, 10) → (50, 50)
-    expect(findPathPrim(compileToScene(ir).primitives).d).toBe(
+    expect(pathCommandsToD(findPathPrim(compileToScene(ir).primitives).commands)).toBe(
       'M 10 0 A 10 10 0 0 1 0 10 L 50 50',
     );
   });
@@ -938,7 +939,7 @@ describe("compile path: 'arc'", () => {
       ],
     };
     // 起点 = (5+10, 5) = (15, 5)；终点 = (5, 5+10) = (5, 15)
-    expect(findPathPrim(compileToScene(ir).primitives).d).toBe(
+    expect(pathCommandsToD(findPathPrim(compileToScene(ir).primitives).commands)).toBe(
       'M 15 5 A 10 10 0 0 1 5 15',
     );
   });
@@ -959,7 +960,7 @@ describe("compile path: 'circlePath'", () => {
         },
       ],
     };
-    expect(findPathPrim(compileToScene(ir).primitives).d).toBe(
+    expect(pathCommandsToD(findPathPrim(compileToScene(ir).primitives).commands)).toBe(
       'M 10 0 A 10 10 0 0 1 -10 0 A 10 10 0 0 1 10 0',
     );
   });
@@ -981,7 +982,7 @@ describe("compile path: 'circlePath'", () => {
     };
     // 圆画完 lastEnd 回到 center (0,0) → line 从 (0,0) → (50,50)
     // 由于 (0,0) 不等于上次 emitA 的 (10, 0)，会先发 M 0 0 然后 L
-    const d = findPathPrim(compileToScene(ir).primitives).d;
+    const d = pathCommandsToD(findPathPrim(compileToScene(ir).primitives).commands);
     expect(d).toBe(
       'M 10 0 A 10 10 0 0 1 -10 0 A 10 10 0 0 1 10 0 M 0 0 L 50 50',
     );
@@ -1001,7 +1002,7 @@ describe("compile path: 'circlePath'", () => {
         },
       ],
     };
-    expect(findPathPrim(compileToScene(ir).primitives).d).toBe(
+    expect(pathCommandsToD(findPathPrim(compileToScene(ir).primitives).commands)).toBe(
       'M 25 30 A 5 5 0 0 1 15 30 A 5 5 0 0 1 25 30',
     );
   });
@@ -1022,7 +1023,7 @@ describe("compile path: 'ellipsePath'", () => {
         },
       ],
     };
-    expect(findPathPrim(compileToScene(ir).primitives).d).toBe(
+    expect(pathCommandsToD(findPathPrim(compileToScene(ir).primitives).commands)).toBe(
       'M 15 0 A 15 10 0 0 1 -15 0 A 15 10 0 0 1 15 0',
     );
   });
@@ -1054,8 +1055,8 @@ describe("compile path: 'ellipsePath'", () => {
         },
       ],
     };
-    expect(findPathPrim(compileToScene(fromEllipse).primitives).d).toBe(
-      findPathPrim(compileToScene(fromCircle).primitives).d,
+    expect(pathCommandsToD(findPathPrim(compileToScene(fromEllipse).primitives).commands)).toBe(
+      pathCommandsToD(findPathPrim(compileToScene(fromCircle).primitives).commands),
     );
   });
 });
@@ -1078,7 +1079,7 @@ describe("compile path: 'rel' / 'relAccumulate'", () => {
       ],
     };
     // (10,0) prevEnd 锚定；两条 rel 都从 (10,0) 出发
-    expect(findPathPrim(compileToScene(ir).primitives).d).toBe(
+    expect(pathCommandsToD(findPathPrim(compileToScene(ir).primitives).commands)).toBe(
       'M 0 0 L 10 0 L 15 0 L 13 0',
     );
   });
@@ -1099,7 +1100,7 @@ describe("compile path: 'rel' / 'relAccumulate'", () => {
         },
       ],
     };
-    expect(findPathPrim(compileToScene(ir).primitives).d).toBe(
+    expect(pathCommandsToD(findPathPrim(compileToScene(ir).primitives).commands)).toBe(
       'M 0 0 L 10 0 L 15 0 L 18 0',
     );
   });
@@ -1120,7 +1121,7 @@ describe("compile path: 'rel' / 'relAccumulate'", () => {
         },
       ],
     };
-    expect(findPathPrim(compileToScene(ir).primitives).d).toBe(
+    expect(pathCommandsToD(findPathPrim(compileToScene(ir).primitives).commands)).toBe(
       'M 0 0 L 10 0 L 5 5 L 2 5',
     );
   });
@@ -1146,7 +1147,7 @@ describe("compile path: 'rel' / 'relAccumulate'", () => {
       ],
     };
     // 曲线后 prevEnd = (10,0)；rel 解析到 (15,0)
-    expect(findPathPrim(compileToScene(ir).primitives).d).toBe(
+    expect(pathCommandsToD(findPathPrim(compileToScene(ir).primitives).commands)).toBe(
       'M 0 0 Q 5 -5 10 0 L 15 0',
     );
   });
@@ -1173,7 +1174,7 @@ describe("compile path: 'rel' / 'relAccumulate'", () => {
       ],
     };
     // arc endpoint (polar y-down) = (0, 10)；rel 解析到 (5, 10)
-    expect(findPathPrim(compileToScene(ir).primitives).d).toBe(
+    expect(pathCommandsToD(findPathPrim(compileToScene(ir).primitives).commands)).toBe(
       'M 10 0 A 10 10 0 0 1 0 10 L 5 10',
     );
   });
@@ -1196,7 +1197,7 @@ describe("compile path: 'rel' / 'relAccumulate'", () => {
     // circle 画完 prevEnd 仍是 (0,0)；rel 解析到 (5,5)
     // circle SVG 后 lastEnd 是 (10,0)（最末半弧终点）；line 起点是
     // penOverride = center = (0,0)，所以会发 M 0 0 然后 L 5 5
-    expect(findPathPrim(compileToScene(ir).primitives).d).toBe(
+    expect(pathCommandsToD(findPathPrim(compileToScene(ir).primitives).commands)).toBe(
       'M 10 0 A 10 10 0 0 1 -10 0 A 10 10 0 0 1 10 0 M 0 0 L 5 5',
     );
   });
@@ -1216,7 +1217,7 @@ describe("compile path: 'rel' / 'relAccumulate'", () => {
         },
       ],
     };
-    expect(findPathPrim(compileToScene(ir).primitives).d).toBe(
+    expect(pathCommandsToD(findPathPrim(compileToScene(ir).primitives).commands)).toBe(
       'M 5 3 L 10 3',
     );
   });
@@ -1251,8 +1252,8 @@ describe("compile path: 'rel' / 'relAccumulate'", () => {
       ],
     };
     // 注意：rel [10,5] 后 prevEnd 留 (0,0)；relAccumulate [5,0] 解析到 (0+5, 0+0) = (5,0)
-    expect(findPathPrim(compileToScene(irRel).primitives).d).toBe(
-      findPathPrim(compileToScene(irAbs).primitives).d,
+    expect(pathCommandsToD(findPathPrim(compileToScene(irRel).primitives).commands)).toBe(
+      pathCommandsToD(findPathPrim(compileToScene(irAbs).primitives).commands),
     );
   });
 });

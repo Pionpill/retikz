@@ -202,11 +202,11 @@ describe('buildPathD: 边界 / 错误路径', () => {
     expect(() => buildPathD(bad)).toThrow();
   });
 
-  it('精度参数可选；不传时按原值序列化', () => {
+  it('默认 round 保留 2 位小数（与 compile precision 一致），不传 round 时浮点噪声被裁掉', () => {
     const commands: Array<PathCommand> = [
       { kind: 'move', to: [1.23456, 2.34567] },
     ];
-    expect(buildPathD(commands)).toBe('M 1.23456 2.34567');
+    expect(buildPathD(commands)).toBe('M 1.23 2.35');
   });
 
   it('round 函数透传到所有坐标', () => {

@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { compileToScene } from '../../src/compile/compile';
 import type { IR } from '../../src/ir';
 import type { ScenePrimitive } from '../../src/primitive';
+import { pathCommandsToD } from '../helpers/path-d';
 
 const findRect = (prims: Array<ScenePrimitive>) =>
   prims.find(p => p.type === 'rect');
@@ -121,7 +122,7 @@ describe('Node inner / outer sep（padding / margin 分轴）', () => {
     const linePath = compileToScene(ir).primitives.find(p => p.type === 'path');
     if (linePath?.type === 'path') {
       // outerSep=10 取胜，端点 = 8 (innerXSep default) + 10 = 18
-      expect(linePath.d).toBe('M 18 0 L 100 0');
+      expect(pathCommandsToD(linePath.commands)).toBe('M 18 0 L 100 0');
     }
   });
 
@@ -143,7 +144,7 @@ describe('Node inner / outer sep（padding / margin 分轴）', () => {
     const linePath = compileToScene(ir).primitives.find(p => p.type === 'path');
     if (linePath?.type === 'path') {
       // margin=5 → 端点 8 + 5 = 13
-      expect(linePath.d).toBe('M 13 0 L 100 0');
+      expect(pathCommandsToD(linePath.commands)).toBe('M 13 0 L 100 0');
     }
   });
 
