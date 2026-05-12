@@ -33,6 +33,8 @@ export {
   NodeTextSchema,
   LineSpecSchema,
   PathSchema,
+  ArrowDetailSchema,
+  ArrowEndDetailSchema,
   ChildSchema,
   SceneSchema,
   CURRENT_IR_VERSION,
@@ -67,10 +69,12 @@ export type {
   IRChild,
   IR,
   ArrowShape,
+  IRArrowDetail,
+  IRArrowEndDetail,
   NodeShape,
   NodeTextAlign,
 } from './ir';
-export { ARROW_SHAPES, NODE_SHAPES, NODE_TEXT_ALIGNS } from './ir';
+export { ARROW_SHAPES, HOLLOW_ARROW_SHAPES, NODE_SHAPES, NODE_TEXT_ALIGNS } from './ir';
 
 // Primitive (Scene 数据模型)
 export type {
@@ -81,6 +85,7 @@ export type {
   TextLine,
   PathPrim,
   PathCommand,
+  ArrowEndSpec,
   GroupPrim,
   Transform,
   ViewBox,

@@ -1,5 +1,5 @@
 import type { Key, ReactElement } from 'react';
-import type { ArrowShape, ScenePrimitive } from '@retikz/core';
+import type { ArrowEndSpec, ScenePrimitive } from '@retikz/core';
 import { buildPathD } from './path-d-builder';
 import { buildTransform } from './transform-builder';
 
@@ -35,8 +35,8 @@ const baselineToDominant = (
  * @description 资源缺省时传 undefined，对应 path prim 不会引用 marker
  */
 export type RenderContext = {
-  /** 按 arrow 形状查 SVG `<defs><marker id>` id 的回调 */
-  arrowMarkerIdFor?: (shape: ArrowShape) => string;
+  /** 按 arrow 端点 spec 查 SVG `<defs><marker id>` id 的回调（按 detail hash 区分起末异形 / 异色） */
+  arrowMarkerIdFor?: (spec: ArrowEndSpec) => string;
 };
 
 /**

@@ -143,7 +143,7 @@ const childToElement = (child: IRChild, key: number): ReactNode => {
         lineJoin: child.lineJoin,
         thickness: child.thickness,
         arrow: child.arrow,
-        arrowShape: child.arrowShape,
+        arrowDetail: child.arrowDetail,
         fill: child.fill,
         fillRule: child.fillRule,
         opacity: child.opacity,

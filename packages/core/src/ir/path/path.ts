@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { ARROW_SHAPES } from './arrow';
+import { ArrowDetailSchema } from './arrow';
 import { StepSchema } from './step';
 
 export const PathSchema = z
@@ -29,12 +29,9 @@ export const PathSchema = z
       .describe(
         'Path-level arrow direction. omitted/`none` = no arrows; `->` = arrow at end; `<-` = at start; `<->` = both.',
       ),
-    arrowShape: z
-      .nativeEnum(ARROW_SHAPES)
-      .optional()
-      .describe(
-        'Arrow tip shape; default `normal` (filled triangle). Other values: `open` (hollow triangle), `stealth` (sharp barb), `diamond`, `circle`.',
-      ),
+    arrowDetail: ArrowDetailSchema.optional().describe(
+      'Detailed arrow visual config (shape / scale / length / width / color / fill / opacity / lineWidth) with optional `start` / `end` per-end overrides. Omitted = built-in defaults (shape `normal`, all visuals inherit from path stroke / opacity).',
+    ),
     fill: z
       .string()
       .optional()

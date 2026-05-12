@@ -71,16 +71,16 @@ describe('renderPrim: path', () => {
 
   it('arrowStart / arrowEnd 通过 ctx.arrowMarkerIdFor 映射为 url(#id)', () => {
     const el = renderPrim(
-      { ...base, arrowStart: 'normal', arrowEnd: 'stealth' },
+      { ...base, arrowStart: { shape: 'normal' }, arrowEnd: { shape: 'stealth' } },
       0,
-      { arrowMarkerIdFor: shape => `mk-${shape}` },
+      { arrowMarkerIdFor: spec => `mk-${spec.shape}` },
     ) as AnyEl;
     expect(el.props.markerStart).toBe('url(#mk-normal)');
     expect(el.props.markerEnd).toBe('url(#mk-stealth)');
   });
 
   it('有 arrowEnd 但 ctx 未提供 arrowMarkerIdFor → markerEnd 静默 undefined', () => {
-    const el = renderPrim({ ...base, arrowEnd: 'normal' }, 0) as AnyEl;
+    const el = renderPrim({ ...base, arrowEnd: { shape: 'normal' } }, 0) as AnyEl;
     expect(el.props.markerEnd).toBeUndefined();
   });
 });

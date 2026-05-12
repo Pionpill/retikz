@@ -48,7 +48,7 @@ describe('Draw: 基础展开', () => {
         lineJoin="bevel"
         thickness="thick"
         arrow="<->"
-        arrowShape="stealth"
+        arrowDetail={{ shape: 'stealth' }}
         fill="#fed"
         fillRule="evenodd"
         opacity={0.8}
@@ -65,7 +65,7 @@ describe('Draw: 基础展开', () => {
       lineJoin: 'bevel',
       thickness: 'thick',
       arrow: '<->',
-      arrowShape: 'stealth',
+      arrowDetail: { shape: 'stealth' },
       fill: '#fed',
       fillRule: 'evenodd',
       opacity: 0.8,

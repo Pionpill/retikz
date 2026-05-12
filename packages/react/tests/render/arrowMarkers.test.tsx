@@ -9,7 +9,8 @@ type AnyEl = ReactElement<Record<string, unknown> & { children?: unknown }>;
  * ArrowMarker 是 FC——直接调函数拿 ReactElement 检查。
  * 关注点：marker 的几何契约（viewBox / refX / markerUnits / orient），不验证内部 path d 的具体字符串。
  */
-const render = (shape: ArrowShape, id = 'mk') => ArrowMarker({ id, shape }) as unknown as AnyEl;
+const render = (shape: ArrowShape, id = 'mk') =>
+  ArrowMarker({ id, spec: { shape } }) as unknown as AnyEl;
 
 const ALL_SHAPES: Array<ArrowShape> = [
   'normal',

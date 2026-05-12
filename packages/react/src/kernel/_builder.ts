@@ -6,6 +6,7 @@ import type {
   IRFont,
   IRLineSpec,
   IRNode,
+  IRPath,
   IRStep,
   IRStepLabel,
   IRTarget,
@@ -329,13 +330,7 @@ const buildPath = (props: Record<string, unknown>): IRChild => ({
     | 'ultraThick'
     | undefined,
   arrow: props.arrow as 'none' | '->' | '<-' | '<->' | undefined,
-  arrowShape: props.arrowShape as
-    | 'normal'
-    | 'open'
-    | 'stealth'
-    | 'diamond'
-    | 'circle'
-    | undefined,
+  arrowDetail: props.arrowDetail as IRPath['arrowDetail'],
   fill: props.fill as string | undefined,
   fillRule: props.fillRule as 'nonzero' | 'evenodd' | undefined,
   opacity: props.opacity as number | undefined,

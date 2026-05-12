@@ -19,7 +19,7 @@ describe('arrow + arc 末端：编译不挂', () => {
         {
           type: 'path',
           arrow: '->',
-          arrowShape: 'normal',
+          arrowDetail: { shape: 'normal' },
           children: [
             { type: 'step', kind: 'move', to: [0, 0] },
             { type: 'step', kind: 'arc', radius: 10, startAngle: 0, endAngle: 90 },
@@ -30,7 +30,7 @@ describe('arrow + arc 末端：编译不挂', () => {
     expect(() => compileToScene(ir)).not.toThrow();
     const p = findPathPrim(compileToScene(ir).primitives);
     expect(p).toBeDefined();
-    expect(p?.arrowEnd).toBe('normal');
+    expect(p?.arrowEnd?.shape).toBe('normal');
     // 仍持有 arc PathCommand
     expect(p?.commands.some(c => c.kind === 'arc')).toBe(true);
   });
@@ -44,7 +44,7 @@ describe('arrow + arc 末端：编译不挂', () => {
         {
           type: 'path',
           arrow: '->',
-          arrowShape: 'open',
+          arrowDetail: { shape: 'open' },
           children: [
             { type: 'step', kind: 'move', to: [0, 0] },
             { type: 'step', kind: 'arc', radius: 10, startAngle: 0, endAngle: 90 },
@@ -55,7 +55,7 @@ describe('arrow + arc 末端：编译不挂', () => {
     expect(() => compileToScene(ir)).not.toThrow();
     const p = findPathPrim(compileToScene(ir).primitives);
     expect(p).toBeDefined();
-    expect(p?.arrowEnd).toBe('open');
+    expect(p?.arrowEnd?.shape).toBe('open');
   });
 });
 

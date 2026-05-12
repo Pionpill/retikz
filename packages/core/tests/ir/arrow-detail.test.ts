@@ -47,9 +47,8 @@ describe('ArrowDetailSchema：字段合法 / optional', () => {
     // 这里保证 schema 能 parse + 字段不被保留
     const parsed = ArrowEndDetailSchema.parse({
       shape: 'normal',
-      // @ts-expect-error 故意非法字段
       start: { shape: 'stealth' },
-    });
+    } as Record<string, unknown>);
     expect((parsed as Record<string, unknown>).start).toBeUndefined();
   });
 });
@@ -117,13 +116,12 @@ describe('PathSchema：arrowDetail 嵌入 + arrowShape 删除', () => {
     // strict 模式下 arrowShape 会被拒；当前默认 strip 模式下字段被忽略但不进入 parsed
     const parsed = PathSchema.parse({
       type: 'path',
-      // @ts-expect-error 故意写已删字段
       arrowShape: 'stealth',
       children: [
         { type: 'step', kind: 'move', to: [0, 0] },
         { type: 'step', kind: 'line', to: [10, 0] },
       ],
-    });
+    } as Record<string, unknown>);
     expect((parsed as Record<string, unknown>).arrowShape).toBeUndefined();
   });
 });

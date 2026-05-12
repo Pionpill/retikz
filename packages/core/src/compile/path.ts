@@ -10,8 +10,11 @@ import {
   lineSegmentSample,
   quadSegmentSample,
 } from '../geometry/segment';
+import { HOLLOW_ARROW_SHAPES } from '../ir';
 import type {
   ArrowShape,
+  IRArrowDetail,
+  IRArrowEndDetail,
   IRPath,
   IRPosition,
   IRStep,
@@ -19,6 +22,7 @@ import type {
   IRTarget,
 } from '../ir';
 import type {
+  ArrowEndSpec,
   PathCommand,
   PathPrim,
   ScenePrimitive,
@@ -29,20 +33,53 @@ import { parseNodeRef } from './parseTarget';
 import { resolvePosition } from './position';
 import { type TextMeasurer, fallbackMeasurer } from './text-metrics';
 
-/** IR path-level `arrow` + `arrowShape` → PathPrim 的 arrowStart/arrowEnd；arrowShape 默认 'normal' */
+/**
+ * 端点级 spec：顶层默认 ⊕ end-side override（逐字段 merge）
+ * @description 缺省字段继承顶层（不是"完全替换"）；空心 shape 上 fill 字段被丢（silent no-op）
+ */
+const resolveArrowEndSpec = (
+  topLevel: IRArrowDetail,
+  endSide: IRArrowEndDetail | undefined,
+): ArrowEndSpec => {
+  // ArrowDetail 的顶层字段含 start / end —— 提取 end-end 候选字段集（不含 start/end 自身）
+  const baseShape = endSide?.shape ?? topLevel.shape ?? 'normal';
+  const out: ArrowEndSpec = { shape: baseShape };
+  const scale = endSide?.scale ?? topLevel.scale;
+  if (scale !== undefined) out.scale = scale;
+  const length = endSide?.length ?? topLevel.length;
+  if (length !== undefined) out.length = length;
+  const width = endSide?.width ?? topLevel.width;
+  if (width !== undefined) out.width = width;
+  const color = endSide?.color ?? topLevel.color;
+  if (color !== undefined) out.color = color;
+  const opacity = endSide?.opacity ?? topLevel.opacity;
+  if (opacity !== undefined) out.opacity = opacity;
+  const lineWidth = endSide?.lineWidth ?? topLevel.lineWidth;
+  if (lineWidth !== undefined) out.lineWidth = lineWidth;
+  // fill 仅实心 shape 保留；空心 shape silent no-op
+  if (!HOLLOW_ARROW_SHAPES.has(baseShape)) {
+    const fill = endSide?.fill ?? topLevel.fill;
+    if (fill !== undefined) out.fill = fill;
+  }
+  return out;
+};
+
+/** IR path-level `arrow` + `arrowDetail` → PathPrim 起末视觉规格 */
 const arrowMarkers = (
   arrow: 'none' | '->' | '<-' | '<->' | undefined,
-  shape: ArrowShape = 'normal',
-): { arrowStart?: ArrowShape; arrowEnd?: ArrowShape } => {
+  detail: IRArrowDetail | undefined,
+): { arrowStart?: ArrowEndSpec; arrowEnd?: ArrowEndSpec } => {
+  if (!arrow || arrow === 'none') return {};
+  const top: IRArrowDetail = detail ?? {};
+  const startSpec = resolveArrowEndSpec(top, top.start);
+  const endSpec = resolveArrowEndSpec(top, top.end);
   switch (arrow) {
     case '->':
-      return { arrowEnd: shape };
+      return { arrowEnd: endSpec };
     case '<-':
-      return { arrowStart: shape };
+      return { arrowStart: startSpec };
     case '<->':
-      return { arrowStart: shape, arrowEnd: shape };
-    default:
-      return {};
+      return { arrowStart: startSpec, arrowEnd: endSpec };
   }
 };
 
@@ -693,12 +730,12 @@ export const emitPathPrimitive = (
     strokeOpacity: path.drawOpacity,
   };
 
-  const markers = arrowMarkers(path.arrow, path.arrowShape);
+  const markers = arrowMarkers(path.arrow, path.arrowDetail);
   const hasArrows = !!markers.arrowStart || !!markers.arrowEnd;
 
   // 按 shape 把首/末段端点向内缩短，避免 hollow 形状（如 open）空心被描边穿过；shrink=0 的实心 shape 跳过
-  const shrinkStart = markers.arrowStart ? SHRINK_FOR_SHAPE[markers.arrowStart] : 0;
-  const shrinkEnd = markers.arrowEnd ? SHRINK_FOR_SHAPE[markers.arrowEnd] : 0;
+  const shrinkStart = markers.arrowStart ? SHRINK_FOR_SHAPE[markers.arrowStart.shape] : 0;
+  const shrinkEnd = markers.arrowEnd ? SHRINK_FOR_SHAPE[markers.arrowEnd.shape] : 0;
 
   /** 取一个 PathCommand 末端 endpoint（move/line/quad/cubic → to；arc/ellipseArc → polar(end)；close 无端点） */
   const endpointOf = (cmd: PathCommand): IRPosition | null => {
