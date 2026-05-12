@@ -34,6 +34,29 @@ export type PathCommand =
     }
   | { kind: 'close' };
 
+/**
+ * 端点级解析后的箭头视觉规格（Scene primitive 层）
+ * @description compile/path.ts 把 IR `arrowDetail` 顶层 + start/end merge 后产出此结构。`shape` 必填、其余视觉字段全 optional：缺省字段交给 renderer 走 context-stroke / 硬编码 fallback，保持向后兼容
+ */
+export type ArrowEndSpec = {
+  /** 形状名 */
+  shape: ArrowShape;
+  /** 等比缩放因子（乘到 length/width 上）；缺省 1 */
+  scale?: number;
+  /** 尖长（user units）；缺省让 renderer 走默认 6 */
+  length?: number;
+  /** 尖宽（user units）；缺省让 renderer 走默认 6 */
+  width?: number;
+  /** 描边颜色 override；缺省走 context-stroke（继承 path stroke） */
+  color?: string;
+  /** 填充色 override（仅实心 shape 生效；空心 shape 已在 compile 阶段被丢） */
+  fill?: string;
+  /** 箭头不透明度 0..1；缺省继承 path opacity */
+  opacity?: number;
+  /** 空心 shape 描边粗细（user units）；缺省 1.5。实心 shape 忽略 */
+  lineWidth?: number;
+};
+
 /** 路径原语：结构化 commands 数组；adapter 在 render 时翻译为各自原生 API */
 export type PathPrim = {
   /** 类型判别符 */
@@ -58,10 +81,10 @@ export type PathPrim = {
   strokeLinecap?: 'butt' | 'round' | 'square';
   /** 拐点形状 */
   strokeLinejoin?: 'miter' | 'round' | 'bevel';
-  /** 起点箭头形状；undefined = 无 */
-  arrowStart?: ArrowShape;
-  /** 终点箭头形状；undefined = 无 */
-  arrowEnd?: ArrowShape;
+  /** 起点箭头视觉规格；undefined = 无箭头 */
+  arrowStart?: ArrowEndSpec;
+  /** 终点箭头视觉规格；undefined = 无箭头 */
+  arrowEnd?: ArrowEndSpec;
   /** 整体透明度 0~1 */
   opacity?: number;
 };

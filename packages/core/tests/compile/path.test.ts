@@ -338,7 +338,7 @@ describe('compile path: fill / fillRule', () => {
 });
 
 describe("compile path: arrow 箭头", () => {
-  it("arrow: '->' → PathPrim arrowEnd: 'normal'，arrowStart 不写", () => {
+  it("arrow: '->' → PathPrim arrowEnd shape='normal'，arrowStart 不写", () => {
     const ir: IR = {
       version: 1,
       type: 'scene',
@@ -355,11 +355,11 @@ describe("compile path: arrow 箭头", () => {
     };
     const scene = compileToScene(ir);
     const path = findPathPrim(scene.primitives);
-    expect(path.arrowEnd).toBe('normal');
+    expect(path.arrowEnd?.shape).toBe('normal');
     expect(path.arrowStart).toBeUndefined();
   });
 
-  it("arrow: '<-' → arrowStart: 'normal'", () => {
+  it("arrow: '<-' → arrowStart shape='normal'", () => {
     const ir: IR = {
       version: 1,
       type: 'scene',
@@ -375,11 +375,11 @@ describe("compile path: arrow 箭头", () => {
       ],
     };
     const path = findPathPrim(compileToScene(ir).primitives);
-    expect(path.arrowStart).toBe('normal');
+    expect(path.arrowStart?.shape).toBe('normal');
     expect(path.arrowEnd).toBeUndefined();
   });
 
-  it("arrow: '<->' → 两端都 'normal'", () => {
+  it("arrow: '<->' → 两端都 shape='normal'", () => {
     const ir: IR = {
       version: 1,
       type: 'scene',
@@ -395,8 +395,8 @@ describe("compile path: arrow 箭头", () => {
       ],
     };
     const path = findPathPrim(compileToScene(ir).primitives);
-    expect(path.arrowStart).toBe('normal');
-    expect(path.arrowEnd).toBe('normal');
+    expect(path.arrowStart?.shape).toBe('normal');
+    expect(path.arrowEnd?.shape).toBe('normal');
   });
 
   it("arrow: 'none' / 缺省 → 两端都不挂 marker", () => {
@@ -421,7 +421,7 @@ describe("compile path: arrow 箭头", () => {
   it("多 sub-path + arrow → 拆成 GroupPrim：首段独占 marker-start，末段独占 marker-end", () => {
     // A → B → C 多节点路径，'->'。期望产出 GroupPrim 内 2 个 PathPrim：
     //   首段 d="M ... L ..."（无 arrow）
-    //   末段 d="M ... L ..."（arrowEnd: 'normal'）
+    //   末段 d="M ... L ..."（arrowEnd shape='normal'）
     const ir: IR = {
       version: 1,
       type: 'scene',
@@ -450,10 +450,10 @@ describe("compile path: arrow 箭头", () => {
     expect(first.arrowStart).toBeUndefined();
     expect(first.arrowEnd).toBeUndefined();
     expect(last.arrowStart).toBeUndefined();
-    expect(last.arrowEnd).toBe('normal');
+    expect(last.arrowEnd?.shape).toBe('normal');
   });
 
-  it("arrowShape 透传到 PathPrim 作为 arrowEnd / arrowStart 的值", () => {
+  it("arrowDetail.shape 透传到 PathPrim 作为 arrowEnd / arrowStart 的 shape", () => {
     for (const shape of ['normal', 'open', 'stealth', 'diamond', 'circle'] as const) {
       const ir: IR = {
         version: 1,
@@ -462,7 +462,7 @@ describe("compile path: arrow 箭头", () => {
           {
             type: 'path',
             arrow: '->',
-            arrowShape: shape,
+            arrowDetail: { shape },
             children: [
               { type: 'step', kind: 'move', to: [0, 0] },
               { type: 'step', kind: 'line', to: [10, 0] },
@@ -471,7 +471,7 @@ describe("compile path: arrow 箭头", () => {
         ],
       };
       const path = findPathPrim(compileToScene(ir).primitives);
-      expect(path.arrowEnd).toBe(shape);
+      expect(path.arrowEnd?.shape).toBe(shape);
     }
   });
 
@@ -485,7 +485,7 @@ describe("compile path: arrow 箭头", () => {
         {
           type: 'path',
           arrow: '->',
-          arrowShape: 'open',
+          arrowDetail: { shape: 'open' },
           children: [
             { type: 'step', kind: 'move', to: [0, 0] },
             { type: 'step', kind: 'line', to: [100, 0] },
@@ -504,7 +504,7 @@ describe("compile path: arrow 箭头", () => {
         {
           type: 'path',
           arrow: '->',
-          arrowShape: 'open',
+          arrowDetail: { shape: 'open' },
           strokeWidth: 2,
           children: [
             { type: 'step', kind: 'move', to: [0, 0] },
@@ -526,7 +526,7 @@ describe("compile path: arrow 箭头", () => {
           {
             type: 'path',
             arrow: '->',
-            arrowShape: shape,
+            arrowDetail: { shape },
             children: [
               { type: 'step', kind: 'move', to: [0, 0] },
               { type: 'step', kind: 'line', to: [100, 0] },
@@ -538,7 +538,7 @@ describe("compile path: arrow 箭头", () => {
     }
   });
 
-  it("arrowShape 缺省时回退 'normal'", () => {
+  it("arrowDetail 缺省时 shape 回退 'normal'", () => {
     const ir: IR = {
       version: 1,
       type: 'scene',
@@ -553,7 +553,7 @@ describe("compile path: arrow 箭头", () => {
         },
       ],
     };
-    expect(findPathPrim(compileToScene(ir).primitives).arrowEnd).toBe('normal');
+    expect(findPathPrim(compileToScene(ir).primitives).arrowEnd?.shape).toBe('normal');
   });
 
   it("单 sub-path + arrow → 不拆 group，直接一个 PathPrim 挂 marker", () => {
@@ -576,7 +576,7 @@ describe("compile path: arrow 箭头", () => {
     const scene = compileToScene(ir);
     expect(scene.primitives.find(p => p.type === 'group')).toBeUndefined();
     const path = findPathPrim(scene.primitives);
-    expect(path.arrowEnd).toBe('normal');
+    expect(path.arrowEnd?.shape).toBe('normal');
   });
 });
 

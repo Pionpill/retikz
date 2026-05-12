@@ -13,7 +13,7 @@ description: 笔画外壳、step 动作序列与 step 目标点
   strokeWidth: '描边宽度（用户单位），默认 1',
   strokeDasharray: 'SVG stroke-dasharray 虚线模式（如 "4 2"），空 = 实线',
   arrow: '路径箭头方向：省略 / `none` 无箭头；`->` 末端；`<-` 起端；`<->` 双端',
-  arrowShape: '箭头形状，默认 `normal`（实心三角）；其它 `open` / `stealth` / `diamond` / `circle`',
+  arrowDetail: '箭头详细配置（shape / scale / length / width / color / fill / opacity / lineWidth + 可选 start/end 子对象逐字段 merge）',
   fill: '闭合区域填充色；省略 = 无填充；与 `cycle` step 配合产生封闭形状',
   fillRule: '自交 / 嵌套子路径填充规则；`nonzero`（默认）方向缠绕，`evenodd` 交错',
   lineCap: '描边端点形状（SVG `stroke-linecap`）：`butt` 默认 / `round` / `square`',
@@ -167,4 +167,36 @@ description: 笔画外壳、step 动作序列与 step 目标点
 
 <ZodSchema name="RelAccumulateTargetSchema" descriptions={{
   relAccumulate: '累积相对偏移 (dx, dy)；**会**更新光标位置（对应 TikZ `(++x, ++y)` 语法）',
+}} />
+
+## ArrowDetail
+
+`Path.arrowDetail` 字段的 schema —— 顶层 8 视觉字段（与 `ArrowEndDetail` 共享）+ 可选 `start` / `end` 子对象。`start` / `end` 与顶层默认逐字段 merge：缺省字段继承顶层、已填字段 override。
+
+<ZodSchema name="ArrowDetailSchema" descriptions={{
+  shape: '箭头形状：normal / open / stealth / diamond / openDiamond / circle / openCircle，默认 normal',
+  scale: '等比缩放因子（默认 1），乘到 length / width 之后',
+  length: '尖长（user units，沿 path 方向），默认 6',
+  width: '尖宽（user units，垂直 path 方向），默认 6',
+  color: '描边色 override；缺省走 context-stroke（继承 path stroke）',
+  fill: '填充色 override（仅实心 shape 生效）；空心 shape 上 silent no-op（写了静默丢）',
+  opacity: '箭头独立透明度 0..1；缺省继承 path opacity',
+  lineWidth: '空心 shape 描边粗细（user units）；默认 1.5；实心 shape 忽略',
+  start: '起端 override（仅 arrow 含起端时生效：`<-` / `<->`）',
+  end: '末端 override（仅 arrow 含末端时生效：`->` / `<->`）',
+}} />
+
+### ArrowEndDetail
+
+`start` / `end` 子对象的 schema —— 与 ArrowDetail 同字段集减去 `start` / `end` 字段自身（不递归）：
+
+<ZodSchema name="ArrowEndDetailSchema" descriptions={{
+  shape: '箭头形状（缺省时继承顶层；顶层也缺省时回退 normal）',
+  scale: '等比缩放因子',
+  length: '尖长（user units）',
+  width: '尖宽（user units）',
+  color: '描边色 override',
+  fill: '填充色 override（空心 shape 上 silent no-op）',
+  opacity: '箭头透明度 0..1',
+  lineWidth: '空心 shape 描边粗细',
 }} />

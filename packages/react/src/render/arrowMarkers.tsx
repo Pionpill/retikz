@@ -1,98 +1,123 @@
 import type { FC, ReactElement } from 'react';
-import type { ArrowShape } from '@retikz/core';
+import { type ArrowEndSpec, HOLLOW_ARROW_SHAPES } from '@retikz/core';
+
+/** marker `<marker>` 默认尺寸（与 ADR-03 前硬编码一致，作为 length / width 缺省回退） */
+const DEFAULT_MARKER_SIZE = 6;
+/** 空心 shape 默认描边粗细（与 ADR-03 前硬编码一致） */
+const DEFAULT_HOLLOW_STROKE_WIDTH = 1.5;
 
 /**
- * 各 arrow 形状的 SVG `<marker>` 内容定义
- * @description 共用约定：viewBox `0 0 10 10`、refY=5、markerUnits='strokeWidth'（marker 随 path strokeWidth 缩放）、orient='auto-start-reverse'（marker-start / marker-end 共用，start 自动反转 180°）、`context-stroke`/`context-fill` 让箭头随 path 同步配色；refX 差异：实心 shape（normal / stealth / diamond / circle）refX=10 apex 贴端点不需 shrink，空心 shape（open / openDiamond / openCircle）refX 设在背面 path 停在背面 apex 向前，需 compile 层 shrink 让 apex 落在原始端点（量见 compile/path.ts 的 SHRINK_FOR_SHAPE）
+ * 形状的 SVG 几何元素生成（接受解析后的 stroke / fill / strokeWidth）
+ * @description 实心 shape 用 fill 主导（hollow=false 分支）；空心 shape 用 stroke + strokeWidth、fill='none'（hollow=true 分支）；空心 shape 的 strokeLinejoin 在 openDiamond 上保留 round（避免 viewBox clip）
  */
-type MarkerSpec = {
-  /** marker 在 path 端点的 alignment X（viewBox 坐标，0..10） */
+type RenderedShape = {
+  /** marker viewBox 内 refX（apex 贴 path 端点；空心 shape refX 在背面） */
   refX: number;
-  /** 内部图形元素，挂在 `<marker>` 下 */
-  children: ReactElement;
+  /** 形状内部 SVG 子元素 */
+  inner: ReactElement;
 };
 
-const MARKERS: Record<ArrowShape, MarkerSpec> = {
-  normal: {
-    refX: 10,
-    children: <path d="M 0 0 L 10 5 L 0 10 Z" fill="context-stroke" />,
-  },
-  open: {
-    // refX=1：背面贴 path 端点；apex 向前延伸
-    refX: 1,
-    children: (
-      <path
-        d="M 1 1 L 9 5 L 1 9 Z"
-        fill="none"
-        stroke="context-stroke"
-        strokeWidth={1.5}
-      />
-    ),
-  },
-  stealth: {
-    refX: 10,
-    children: <path d="M 0 0 L 10 5 L 0 10 L 3 5 Z" fill="context-stroke" />,
-  },
-  diamond: {
-    refX: 10,
-    children: <path d="M 0 5 L 5 0 L 10 5 L 5 10 Z" fill="context-stroke" />,
-  },
-  openDiamond: {
-    // refX=1：左尖在背面、右尖在 viewBox x=9（与 shrink=4.8 配套落在原始端点）；
-    // 顶点向内 1 单位避开 round-join 0.75 单位外延导致的 viewBox clip
-    refX: 1,
-    children: (
-      <path
-        d="M 1 5 L 5 1 L 9 5 L 5 9 Z"
-        fill="none"
-        stroke="context-stroke"
-        strokeWidth={1.5}
-        strokeLinejoin="round"
-      />
-    ),
-  },
-  circle: {
-    refX: 10,
-    children: <circle cx={5} cy={5} r={5} fill="context-stroke" />,
-  },
-  openCircle: {
-    // refX=0：圆左缘在 path 端点（背面）；右缘在 apex 位置（与 shrink 配套时落在原始端点）
-    refX: 0,
-    children: (
-      <circle
-        cx={5}
-        cy={5}
-        r={4.25}
-        fill="none"
-        stroke="context-stroke"
-        strokeWidth={1.5}
-      />
-    ),
-  },
+const renderInner = (spec: ArrowEndSpec): RenderedShape => {
+  const isHollow = HOLLOW_ARROW_SHAPES.has(spec.shape);
+  const stroke = isHollow ? (spec.color ?? 'context-stroke') : undefined;
+  // 实心 shape：fill 优先 → color 备用 → context-stroke 兜底
+  const fill = isHollow ? 'none' : (spec.fill ?? spec.color ?? 'context-stroke');
+  const strokeWidth = isHollow ? (spec.lineWidth ?? DEFAULT_HOLLOW_STROKE_WIDTH) : undefined;
+
+  switch (spec.shape) {
+    case 'normal':
+      return {
+        refX: 10,
+        inner: <path d="M 0 0 L 10 5 L 0 10 Z" fill={fill} />,
+      };
+    case 'open':
+      return {
+        refX: 1,
+        inner: (
+          <path
+            d="M 1 1 L 9 5 L 1 9 Z"
+            fill={fill}
+            stroke={stroke}
+            strokeWidth={strokeWidth}
+          />
+        ),
+      };
+    case 'stealth':
+      return {
+        refX: 10,
+        inner: <path d="M 0 0 L 10 5 L 0 10 L 3 5 Z" fill={fill} />,
+      };
+    case 'diamond':
+      return {
+        refX: 10,
+        inner: <path d="M 0 5 L 5 0 L 10 5 L 5 10 Z" fill={fill} />,
+      };
+    case 'openDiamond':
+      return {
+        refX: 1,
+        inner: (
+          <path
+            d="M 1 5 L 5 1 L 9 5 L 5 9 Z"
+            fill={fill}
+            stroke={stroke}
+            strokeWidth={strokeWidth}
+            strokeLinejoin="round"
+          />
+        ),
+      };
+    case 'circle':
+      return {
+        refX: 10,
+        inner: <circle cx={5} cy={5} r={5} fill={fill} />,
+      };
+    case 'openCircle':
+      return {
+        refX: 0,
+        inner: (
+          <circle
+            cx={5}
+            cy={5}
+            r={4.25}
+            fill={fill}
+            stroke={stroke}
+            strokeWidth={strokeWidth}
+          />
+        ),
+      };
+  }
 };
 
+/** `<ArrowMarker>` 组件 props */
 export type ArrowMarkerProps = {
   /** marker 元素 id，用于 path markerStart / markerEnd 引用 */
   id: string;
-  /** 形状名 */
-  shape: ArrowShape;
+  /** 端点级箭头视觉规格（compile 已 resolve start/end merge + 空心 silent fill ignore） */
+  spec: ArrowEndSpec;
 };
 
-/** 单个 `<marker>` 元素，由 `<defs>` 包起来 */
-export const ArrowMarker: FC<ArrowMarkerProps> = ({ id, shape }) => {
-  const spec = MARKERS[shape];
+/**
+ * 单个 `<marker>` 元素，由 `<defs>` 包起来
+ * @description spec.scale 乘到 length/width 之后；spec.opacity 落到 marker 元素层；空心 shape 的 lineWidth 走 strokeWidth；缺省视觉字段全部走 context-stroke / 硬编码 fallback 维持向后兼容
+ */
+export const ArrowMarker: FC<ArrowMarkerProps> = props => {
+  const { id, spec } = props;
+  const scale = spec.scale ?? 1;
+  const length = (spec.length ?? DEFAULT_MARKER_SIZE) * scale;
+  const width = (spec.width ?? DEFAULT_MARKER_SIZE) * scale;
+  const { refX, inner } = renderInner(spec);
   return (
     <marker
       id={id}
       viewBox="0 0 10 10"
-      refX={spec.refX}
+      refX={refX}
       refY={5}
-      markerWidth={6}
-      markerHeight={6}
+      markerWidth={length}
+      markerHeight={width}
       orient="auto-start-reverse"
       markerUnits="strokeWidth"
+      opacity={spec.opacity}
     >
-      {spec.children}
+      {inner}
     </marker>
   );
 };

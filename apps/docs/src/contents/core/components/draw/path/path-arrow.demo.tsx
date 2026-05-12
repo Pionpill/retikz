@@ -31,7 +31,7 @@ const Demo: FC = () => (
         <Node key={`b-${filled}`} id={`b-${filled}`} position={[COL_X_LEFT_END, y]}>
           B
         </Node>,
-        <Path key={`p-${filled}`} arrow="->" arrowShape={filled} strokeWidth={2}>
+        <Path key={`p-${filled}`} arrow="->" arrowDetail={{ shape: filled }} strokeWidth={2}>
           <Step kind="move" to={`a-${filled}`} />
           <Step kind="line" to={`b-${filled}`} />
         </Path>,
@@ -44,7 +44,7 @@ const Demo: FC = () => (
           <Node key={`b-${hollow}`} id={`b-${hollow}`} position={[COL_X_RIGHT_END, y]}>
             B
           </Node>,
-          <Path key={`p-${hollow}`} arrow="->" arrowShape={hollow} strokeWidth={2}>
+          <Path key={`p-${hollow}`} arrow="->" arrowDetail={{ shape: hollow }} strokeWidth={2}>
             <Step kind="move" to={`a-${hollow}`} />
             <Step kind="line" to={`b-${hollow}`} />
           </Path>,

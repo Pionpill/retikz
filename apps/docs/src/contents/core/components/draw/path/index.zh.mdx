@@ -58,7 +58,13 @@ import { Path, Step } from '@retikz/react';
 
 ### 箭头
 
-`arrow` 控制方向（4 个枚举：`'->'` 终点、`'<-'` 起点、`'<->'` 两端、`'none'` / 省略 = 无），`arrowShape` 控制形状（5 个枚举，默认 `'normal'`）：
+`arrow` 控制方向（4 个枚举：`'->'` 终点、`'<-'` 起点、`'<->'` 两端、`'none'` / 省略 = 无）。视觉规格全部由 `arrowDetail` 一个对象统管，缺省时走最朴素的"normal 实心三角 + 继承 path stroke / opacity"行为：
+
+<ComponentPreview name="path-arrow-default" size="xs" />
+
+#### 7 种 shape
+
+`arrowDetail.shape` 选形状，缺省 `'normal'`：
 
 | 形状 | 描述 | 典型用途 |
 | --- | --- | --- |
@@ -72,7 +78,35 @@ import { Path, Step } from '@retikz/react';
 
 <ComponentPreview name="path-arrow" />
 
-> 多节点路径（如 A → B → C）按段独立 clip，但箭头**只**贴在整体起点 / 终点——中间节点不会出现额外箭头。颜色由 marker 的 `context-stroke` 自动同 stroke；大小按 `strokeWidth` 缩放。
+> 多节点路径（如 A → B → C）按段独立 clip，但箭头**只**贴在整体起点 / 终点——中间节点不会出现额外箭头。
+
+#### 起末分别配置
+
+`arrowDetail.start` / `arrowDetail.end` 子对象与顶层默认**逐字段 merge**——缺省字段继承顶层，已填字段 override。常见 UML "组合 + 继承"用 `start.shape` + `end.shape` 表达：
+
+<ComponentPreview name="path-arrow-uneven" size="xs" />
+
+#### 颜色 override
+
+`color` 把 marker 描边 / 实心填充改为指定颜色（脱离 `context-stroke` 继承）；`fill` 仅实心 shape 生效。`start.color` / `end.color` 单端 override 同样支持——常用于"线浅色、箭头深色"或起末异色：
+
+<ComponentPreview name="path-arrow-color" size="sm" />
+
+> **空心 shape silent ignore `fill`**：`shape ∈ { open / openDiamond / openCircle }` 时，`fill` 字段被静默丢弃——空心形状由 `color`（描边色） + `lineWidth`（描边粗细）共同决定视觉，写 `fill='red'` 不会渲染红色填充。
+
+#### 缩放：scale / length / width
+
+- `scale` 是 marker 等比缩放因子（默认 1），乘到 `length` / `width` 之后——`length=10, scale=1.5` → 实际 `markerWidth=15`
+- `length` 控 marker 沿 path 方向的长度（默认 6）
+- `width` 控 marker 垂直 path 方向的宽度（默认 6）
+
+<ComponentPreview name="path-arrow-scale" size="md" />
+
+#### 半透明
+
+`opacity` 0..1，作用于 marker 整体（独立于 path 的 `opacity` / `drawOpacity`）：
+
+<ComponentPreview name="path-arrow-opacity" size="xs" />
 
 ### 样式
 
@@ -109,13 +143,32 @@ import { Path, Step } from '@retikz/react';
 | `lineJoin` | `'miter' \| 'round' \| 'bevel'` | `'miter'` | 描边拐点形状（SVG `stroke-linejoin`） |
 | `thickness` | `'ultraThin' \| 'veryThin' \| 'thin' \| 'semithick' \| 'thick' \| 'veryThick' \| 'ultraThick'` | — | 语义 stroke 档位（`thin = 1`）；显式 `strokeWidth` 始终优先 |
 | `arrow` | `'none' \| '->' \| '<-' \| '<->'` | — | 路径级箭头方向 |
-| `arrowShape` | `'normal' \| 'open' \| 'stealth' \| 'diamond' \| 'openDiamond' \| 'circle' \| 'openCircle'` | `'normal'` | 箭头形状 |
+| `arrowDetail` | `{ shape?, scale?, length?, width?, color?, fill?, opacity?, lineWidth?, start?, end? }` | — | 箭头详细配置；顶层 8 视觉字段全 optional + 可选 `start` / `end` 子对象逐字段 merge override |
 | `fill` | `string` | `'none'` | 闭合区域填充色（任意 CSS 颜色） |
 | `fillRule` | `'nonzero' \| 'evenodd'` | `'nonzero'` | 填充规则；环形 / 孔洞场景用 `'evenodd'` |
 | `opacity` | `number` | — | 整 path 透明度 0~1（同时作用于 stroke 与 fill） |
 | `fillOpacity` | `number` | — | 仅 fill 透明度 0~1 |
 | `drawOpacity` | `number` | — | 仅 stroke 透明度 0~1（TikZ `draw opacity`） |
 | `children` | `Array<<Step>>` | — | 至少 2 个；首个非 `move` 时编译器会强制改成 `move`。`<Step>` 支持 `move` / `line` / `step`（折角）/ `cycle`（闭合）/ `curve` / `cubic`（贝塞尔曲线）/ `bend`（弧形简记）/ `arc` / `circlePath` / `ellipsePath`（圆 / 椭圆） |
+
+### arrowDetail 字段
+
+`arrowDetail` 对象 8 个视觉字段 + 可选 `start` / `end` 子对象。`start` / `end` 子对象用相同字段集（不递归），与顶层默认逐字段 merge：
+
+| 字段 | 类型 | 默认值 | 描述 |
+| --- | --- | --- | --- |
+| `shape` | `'normal' \| 'open' \| 'stealth' \| 'diamond' \| 'openDiamond' \| 'circle' \| 'openCircle'` | `'normal'` | 箭头形状 |
+| `scale` | `number > 0` | `1` | 等比缩放因子；乘到 `length` / `width` 之后（`length=10, scale=1.5` → 实际 15） |
+| `length` | `number ≥ 0` | `6` | 尖长（user units，沿 path 方向） |
+| `width` | `number ≥ 0` | `6` | 尖宽（user units，垂直 path 方向） |
+| `color` | `string` | — | 描边色 override；缺省走 `context-stroke` 继承 path stroke |
+| `fill` | `string` | `color` 或 `context-stroke` | 填充色 override；**空心 shape 上 silent no-op**（写了被静默丢弃） |
+| `opacity` | `number ∈ [0, 1]` | — | 箭头独立透明度；缺省继承 path opacity |
+| `lineWidth` | `number ≥ 0` | `1.5` | 空心 shape 描边粗细；实心 shape 忽略 |
+| `start` | `ArrowEndDetail`（同字段集，无 `start` / `end`） | — | 起端 override（仅 `arrow` 含起端时生效：`'<-'` / `'<->'`） |
+| `end` | `ArrowEndDetail`（同字段集，无 `start` / `end`） | — | 末端 override（仅 `arrow` 含末端时生效：`'->'` / `'<->'`） |
+
+> **merge 语义**：`start` / `end` 子对象的字段优先；子对象未填的字段 fallback 到顶层默认；顶层未填的字段 fallback 到内置默认。例：`arrowDetail={{ shape: 'stealth', start: { color: 'red' } }}` → 起末都用 stealth、起端用红色、末端继承 path stroke。
 
 ## 与 Draw 的取舍
 

@@ -29,10 +29,10 @@ export type DrawProps = {
    */
   arrow?: IRPath['arrow'];
   /**
-   * 箭头形状
-   * @description 默认 `'normal'`；其它：`'open'` / `'stealth'` / `'diamond'` / `'circle'`
+   * 箭头详细配置
+   * @description 顶层默认 + 可选 `start` / `end` 子对象逐字段 merge override；视觉字段含 `shape` / `scale` / `length` / `width` / `color` / `fill` / `opacity` / `lineWidth`。空心 shape 上 `fill` silent no-op
    */
-  arrowShape?: IRPath['arrowShape'];
+  arrowDetail?: IRPath['arrowDetail'];
   /** 闭合区域填充色，省略 = 不填充。配合 way 末尾的 `DrawWay.Cycle` 画填充形状 */
   fill?: IRPath['fill'];
   /** SVG fill-rule：`'nonzero'`（默认）/ `'evenodd'` */
@@ -59,7 +59,7 @@ export const Draw: FC<DrawProps> = props => {
     lineJoin,
     thickness,
     arrow,
-    arrowShape,
+    arrowDetail,
     fill,
     fillRule,
     opacity,
@@ -77,7 +77,7 @@ export const Draw: FC<DrawProps> = props => {
       lineJoin={lineJoin}
       thickness={thickness}
       arrow={arrow}
-      arrowShape={arrowShape}
+      arrowDetail={arrowDetail}
       fill={fill}
       fillRule={fillRule}
       opacity={opacity}
