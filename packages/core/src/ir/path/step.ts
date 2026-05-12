@@ -12,10 +12,21 @@ export const StepLabelSchema = z
       .string()
       .describe('Label text content. Single-line; for multi-line use \\n.'),
     position: z
-      .enum(['midway', 'near-start', 'near-end'])
+      .union([
+        z.enum([
+          'at-start',
+          'very-near-start',
+          'near-start',
+          'midway',
+          'near-end',
+          'very-near-end',
+          'at-end',
+        ]),
+        z.number().min(0).max(1),
+      ])
       .optional()
       .describe(
-        'Position along the step segment (TikZ `midway` / `near start` / `near end`). Default `midway`.',
+        'Normalized position t along the step (TikZ `pos`). Accepts a number 0..1 or one of 7 keyword sugars (at-start=0 / very-near-start=0.125 / near-start=0.25 / midway=0.5 / near-end=0.75 / very-near-end=0.875 / at-end=1). Geometric meaning of t varies by step kind: line/step use normalized arc length (fold partitions t equally across N legs — corner sits at t=j/N); curve/cubic/bend use the Bezier parameter (NOT arc length, so t=0.5 is not always the visual midpoint); arc maps t linearly across startAngle..endAngle; circlePath/ellipsePath use angle parametrization with t=0 at angle 0 (+x axis), CCW growth. Default `midway` (t=0.5).',
       ),
     side: z
       .enum(['above', 'below', 'left', 'right', 'sloped'])
