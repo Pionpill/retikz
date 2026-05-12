@@ -141,26 +141,42 @@ retikz 文档面向**用户**——用户写的是 DSL（`<Tikz>` / `<Node>` / `
 
 Draw way 简短、语义直白、与文档站现有 demo 风格一致。**唯一例外**：demo 本身就是演示 `<Path>` / `<Step>` Kernel 用法（参考 `components/path/*` 下的 demo）。
 
-### Node 当锚点用：短标签 + 小写 + 淡色
+### Node 当锚点用：短标签，**保持默认色**
 
-位置/关系 demo 里 Node 是"地理坐标"——是参照物，不是主角。文字别抢戏：
+位置/关系 demo 里 Node 是"地理坐标"——是参照物，不是主角。文字别抢戏，但**也不要染灰**（灰色留给边标注，见下节）：
 
 ```tsx
-// ✅ 锚点节点：单字母小写 + 淡色文字（让位置 / 关系成视觉焦点）
-<Node id="A" position={[0, 0]} textColor="#888">a</Node>
-<Node id="B" position={{ of: 'A', offset: [80, 30] }} textColor="#888">b</Node>
+// ✅ 锚点节点：单字母小写，文字色默认（currentColor）
+<Node id="A" position={[0, 0]}>a</Node>
+<Node id="B" position={{ of: 'A', offset: [80, 30] }}>b</Node>
 
-// ❌ 长描述文字 + 默认文字色（抢视觉焦点）
+// ❌ 长描述文字（抢视觉焦点）
 <Node id="A" position={[0, 0]}>A</Node>
 <Node id="B" position={{ of: 'A', offset: [80, 30] }}>右 80 下 30</Node>
+
+// ❌ Node 文字染灰（把灰色挪给边标注，Node 文字保持默认色）
+<Node id="A" position={[0, 0]} textColor="#888">a</Node>
 ```
 
 具体规则：
 
 - **id 用大写**（`A` / `B` / `C`）——id 是程序标识、给 `Draw way` 引用
 - **children 文字用小写**（`a` / `b` / `c`）——视觉上是 "anchor letter"，与 id 视觉区分
-- **`textColor` 用淡色**（`#888` / `#999` 一类柔和灰）——比默认 `currentColor` 弱，不抢主线条/箭头视觉
+- **不染色**——Node `textColor` 保持默认（继承 `currentColor`）；灰色不留给 Node 文字
 - **不要把位置描述写进文字**（如 `右 80 下 30`、`cartesian+offset`）——位置 / 关系靠视觉传达，文字只标"这是哪个节点"。位置说明在 mdx 段落里讲
+
+### Draw / Path 上的边标注：淡色（`textColor` 灰）
+
+需要在线条上标注"这条线是什么意思"时，**边标注用淡色**（比默认色弱，跟主体节点区分）：
+
+```tsx
+// ✅ 边标注用淡色——线条主体不抢节点视觉
+<Draw way={['A', 'B']} arrow="->">
+  <EdgeLabel position="midway" side="above" textColor="#888">label</EdgeLabel>
+</Draw>
+```
+
+> **当前已知限制**：alpha.5（截至本 commit）的 `StepLabelSchema` 还没有 `textColor` 字段——edge label 上色需要先扩 schema（建议另开 ADR）。在 schema 支持前，**省略边标注**而非用默认色，避免标注抢视觉。视觉信息靠 stroke 颜色 / 节点位置传达。
 
 ### 最小用例先行
 

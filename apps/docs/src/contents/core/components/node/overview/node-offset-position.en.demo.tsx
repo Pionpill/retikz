@@ -7,8 +7,8 @@ import type { FC } from 'react';
  */
 const Demo: FC = () => (
   <Tikz width={320} height={180}>
-    <Node id="B" position={[0, 0]} textColor="#888">b</Node>
-    <Node id="A" position={{ of: 'B', offset: [80, 50] }} textColor="#888">a</Node>
+    <Node id="B" position={[0, 0]}>b</Node>
+    <Node id="A" position={{ of: 'B', offset: [80, 50] }}>a</Node>
     <Draw way={['B', 'A']} arrow="->" />
   </Tikz>
 );

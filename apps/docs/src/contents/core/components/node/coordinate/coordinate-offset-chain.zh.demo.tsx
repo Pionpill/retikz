@@ -10,9 +10,9 @@ const Demo: FC = () => (
     <Coordinate id="ca" position={[-140, 0]} />
     <Coordinate id="cb" position={{ of: 'ca', offset: [120, 0] }} />
     <Coordinate id="cc" position={{ of: 'cb', offset: [120, 0] }} />
-    <Node id="A" position={{ of: 'ca', offset: [0, 0] }} textColor="#888">a</Node>
-    <Node id="B" position={{ of: 'cb', offset: [0, 30] }} textColor="#888">b</Node>
-    <Node id="C" position={{ of: 'cc', offset: [0, -30] }} textColor="#888">c</Node>
+    <Node id="A" position={{ of: 'ca', offset: [0, 0] }}>a</Node>
+    <Node id="B" position={{ of: 'cb', offset: [0, 30] }}>b</Node>
+    <Node id="C" position={{ of: 'cc', offset: [0, -30] }}>c</Node>
     <Draw way={['A', 'B']} arrow="->" />
     <Draw way={['B', 'C']} arrow="->" />
   </Tikz>

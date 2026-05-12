@@ -7,7 +7,7 @@ import type { FC } from 'react';
  */
 const Demo: FC = () => (
   <Tikz width={420} height={200}>
-    <Node id="A" position={[-140, 0]} textColor="#888">a</Node>
+    <Node id="A" position={[-140, 0]}>a</Node>
     <Draw way={['A', { of: 'A', offset: [120, -50] }]} arrow="->" />
     <Draw
       way={['A', { of: [120, 60], offset: [0, 0] }]}
