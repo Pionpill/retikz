@@ -475,9 +475,9 @@ describe("compile path: arrow 箭头", () => {
     }
   });
 
-  it("open shape 让 path 末端向内缩 4.8×strokeWidth（apex 落在原始端点上）", () => {
-    // strokeWidth=1（默认）：shrink=4.8 path 单位
-    // 线段 (0,0) → (100,0)，shrink 后变 (0,0) → (95.2, 0)
+  it("open shape 让 path 末端向内缩 5.25×strokeWidth（line 端点接在 back stroke 外缘）", () => {
+    // 默认 length=6, scale=1, lineWidth=1.5：shrink = (8 + 1.5/2) × 6 / 10 = 5.25 path 单位
+    // 线段 (0,0) → (100,0)，shrink 后变 (0,0) → (94.75, 0)；line 端点不再贯穿 back outline
     const ir: IR = {
       version: 1,
       type: 'scene',
@@ -493,10 +493,10 @@ describe("compile path: arrow 箭头", () => {
         },
       ],
     };
-    expect(pathCommandsToD(findPathPrim(compileToScene(ir).primitives).commands)).toBe('M 0 0 L 95.2 0');
+    expect(pathCommandsToD(findPathPrim(compileToScene(ir).primitives).commands)).toBe('M 0 0 L 94.75 0');
   });
 
-  it("strokeWidth 翻倍时 shrink 也翻倍（4.8 × strokeWidth）", () => {
+  it("strokeWidth 翻倍时 shrink 也翻倍（5.25 × strokeWidth）", () => {
     const ir: IR = {
       version: 1,
       type: 'scene',
@@ -513,29 +513,32 @@ describe("compile path: arrow 箭头", () => {
         },
       ],
     };
-    // shrink = 4.8 × 2 = 9.6 → (100 - 9.6, 0) = (90.4, 0)
-    expect(pathCommandsToD(findPathPrim(compileToScene(ir).primitives).commands)).toBe('M 0 0 L 90.4 0');
+    // shrink = 5.25 × 2 = 10.5 → (100 - 10.5, 0) = (89.5, 0)
+    expect(pathCommandsToD(findPathPrim(compileToScene(ir).primitives).commands)).toBe('M 0 0 L 89.5 0');
   });
 
-  it("实心 shape 不 shrink（line 端点保留原样）", () => {
-    for (const shape of ['normal', 'stealth', 'diamond', 'circle'] as const) {
-      const ir: IR = {
-        version: 1,
-        type: 'scene',
-        children: [
-          {
-            type: 'path',
-            arrow: '->',
-            arrowDetail: { shape },
-            children: [
-              { type: 'step', kind: 'move', to: [0, 0] },
-              { type: 'step', kind: 'line', to: [100, 0] },
-            ],
-          },
-        ],
-      };
-      expect(pathCommandsToD(findPathPrim(compileToScene(ir).primitives).commands)).toBe('M 0 0 L 100 0');
-    }
+  it.each([
+    ['normal', 'M 0 0 L 94 0'],   // shrink = length × scale = 6
+    ['diamond', 'M 0 0 L 94 0'],
+    ['circle', 'M 0 0 L 94 0'],
+    ['stealth', 'M 0 0 L 95.8 0'], // shrink = 0.7 × length × scale = 4.2（V tip x=3，line 嵌进凹口）
+  ] as const)("实心 shape %s 也 shrink（line 端点接在 arrow 尾部，低 opacity 下不透出 line）", (shape, expectedD) => {
+    const ir: IR = {
+      version: 1,
+      type: 'scene',
+      children: [
+        {
+          type: 'path',
+          arrow: '->',
+          arrowDetail: { shape },
+          children: [
+            { type: 'step', kind: 'move', to: [0, 0] },
+            { type: 'step', kind: 'line', to: [100, 0] },
+          ],
+        },
+      ],
+    };
+    expect(pathCommandsToD(findPathPrim(compileToScene(ir).primitives).commands)).toBe(expectedD);
   });
 
   it("arrowDetail 缺省时 shape 回退 'normal'", () => {

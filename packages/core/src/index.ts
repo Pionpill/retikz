@@ -74,7 +74,14 @@ export type {
   NodeShape,
   NodeTextAlign,
 } from './ir';
-export { ARROW_SHAPES, HOLLOW_ARROW_SHAPES, NODE_SHAPES, NODE_TEXT_ALIGNS } from './ir';
+export {
+  ARROW_SHAPES,
+  HOLLOW_ARROW_SHAPES,
+  ARROW_MARKER_DEFAULT_SIZE,
+  ARROW_MARKER_HOLLOW_DEFAULT_LINE_WIDTH,
+  NODE_SHAPES,
+  NODE_TEXT_ALIGNS,
+} from './ir';
 
 // Primitive (Scene 数据模型)
 export type {

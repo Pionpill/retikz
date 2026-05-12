@@ -1,19 +1,23 @@
 import type { FC, ReactElement } from 'react';
-import { type ArrowEndSpec, HOLLOW_ARROW_SHAPES } from '@retikz/core';
-
-/** marker `<marker>` 默认尺寸（与 ADR-03 前硬编码一致，作为 length / width 缺省回退） */
-const DEFAULT_MARKER_SIZE = 6;
-/** 空心 shape 默认描边粗细（与 ADR-03 前硬编码一致） */
-const DEFAULT_HOLLOW_STROKE_WIDTH = 1.5;
+import {
+  ARROW_MARKER_DEFAULT_SIZE,
+  ARROW_MARKER_HOLLOW_DEFAULT_LINE_WIDTH,
+  type ArrowEndSpec,
+  HOLLOW_ARROW_SHAPES,
+} from '@retikz/core';
 
 /**
- * 形状的 SVG 几何元素生成（接受解析后的 stroke / fill / strokeWidth）
- * @description 实心 shape 用 fill 主导（hollow=false 分支）；空心 shape 用 stroke + strokeWidth、fill='none'（hollow=true 分支）；空心 shape 的 strokeLinejoin 在 openDiamond 上保留 round（避免 viewBox clip）
+ * 形状的 SVG 几何元素 + refX（path 端点对齐位置）
+ * @description 不论实心 / 空心：refX 都落在 shape 的"back 接线点"——line tip 接在该点、apex 顶端经由 compile/path.ts 的 shrink 退回原 target。低 opacity 下 line 不再透过 marker。
+ *
+ * 各 shape 的 refX：
+ * - `normal` / `diamond` / `circle`：back 外缘 x=0 → refX=0；apex 在 viewBox x=10
+ * - `stealth`：V tip x=3（line 嵌进凹口）→ refX=3
+ * - `open` / `openDiamond`：back stroke 外缘 x = 1 - lineWidth/2
+ * - `openCircle`：back 外缘左 x = 0.75 - lineWidth/2（默认 lineWidth=1.5 时为 0）
  */
 type RenderedShape = {
-  /** marker viewBox 内 refX（apex 贴 path 端点；空心 shape refX 在背面） */
   refX: number;
-  /** 形状内部 SVG 子元素 */
   inner: ReactElement;
 };
 
@@ -22,17 +26,21 @@ const renderInner = (spec: ArrowEndSpec): RenderedShape => {
   const stroke = isHollow ? (spec.color ?? 'context-stroke') : undefined;
   // 实心 shape：fill 优先 → color 备用 → context-stroke 兜底
   const fill = isHollow ? 'none' : (spec.fill ?? spec.color ?? 'context-stroke');
-  const strokeWidth = isHollow ? (spec.lineWidth ?? DEFAULT_HOLLOW_STROKE_WIDTH) : undefined;
+  const lineWidth = isHollow
+    ? (spec.lineWidth ?? ARROW_MARKER_HOLLOW_DEFAULT_LINE_WIDTH)
+    : undefined;
+  const strokeWidth = lineWidth;
 
   switch (spec.shape) {
     case 'normal':
       return {
-        refX: 10,
+        refX: 0,
         inner: <path d="M 0 0 L 10 5 L 0 10 Z" fill={fill} />,
       };
     case 'open':
       return {
-        refX: 1,
+        // back stroke 外缘：1 - lineWidth/2
+        refX: 1 - (lineWidth ?? 0) / 2,
         inner: (
           <path
             d="M 1 1 L 9 5 L 1 9 Z"
@@ -44,17 +52,18 @@ const renderInner = (spec: ArrowEndSpec): RenderedShape => {
       };
     case 'stealth':
       return {
-        refX: 10,
+        // V tip 在 viewBox x=3，line 嵌进凹口
+        refX: 3,
         inner: <path d="M 0 0 L 10 5 L 0 10 L 3 5 Z" fill={fill} />,
       };
     case 'diamond':
       return {
-        refX: 10,
+        refX: 0,
         inner: <path d="M 0 5 L 5 0 L 10 5 L 5 10 Z" fill={fill} />,
       };
     case 'openDiamond':
       return {
-        refX: 1,
+        refX: 1 - (lineWidth ?? 0) / 2,
         inner: (
           <path
             d="M 1 5 L 5 1 L 9 5 L 5 9 Z"
@@ -67,12 +76,13 @@ const renderInner = (spec: ArrowEndSpec): RenderedShape => {
       };
     case 'circle':
       return {
-        refX: 10,
+        refX: 0,
         inner: <circle cx={5} cy={5} r={5} fill={fill} />,
       };
     case 'openCircle':
       return {
-        refX: 0,
+        // 圆外缘左：5 - 4.25 - lineWidth/2 = 0.75 - lineWidth/2（默认 lineWidth=1.5 时为 0）
+        refX: 0.75 - (lineWidth ?? 0) / 2,
         inner: (
           <circle
             cx={5}
@@ -97,13 +107,13 @@ export type ArrowMarkerProps = {
 
 /**
  * 单个 `<marker>` 元素，由 `<defs>` 包起来
- * @description spec.scale 乘到 length/width 之后；spec.opacity 落到 marker 元素层；空心 shape 的 lineWidth 走 strokeWidth；缺省视觉字段全部走 context-stroke / 硬编码 fallback 维持向后兼容
+ * @description spec.scale 乘到 length/width 之后；spec.opacity 落到 marker 元素层；空心 shape 的 lineWidth 走 strokeWidth；overflow=visible 让 back stroke 落在 viewBox 外（refX 可负，由 stroke 半宽决定）也能正常渲染；缺省视觉字段全部走 context-stroke / ARROW_MARKER_DEFAULT_SIZE 兜底
  */
 export const ArrowMarker: FC<ArrowMarkerProps> = props => {
   const { id, spec } = props;
   const scale = spec.scale ?? 1;
-  const length = (spec.length ?? DEFAULT_MARKER_SIZE) * scale;
-  const width = (spec.width ?? DEFAULT_MARKER_SIZE) * scale;
+  const length = (spec.length ?? ARROW_MARKER_DEFAULT_SIZE) * scale;
+  const width = (spec.width ?? ARROW_MARKER_DEFAULT_SIZE) * scale;
   const { refX, inner } = renderInner(spec);
   return (
     <marker
@@ -115,6 +125,7 @@ export const ArrowMarker: FC<ArrowMarkerProps> = props => {
       markerHeight={width}
       orient="auto-start-reverse"
       markerUnits="strokeWidth"
+      overflow="visible"
       opacity={spec.opacity}
     >
       {inner}

@@ -24,6 +24,12 @@ export type ArrowShape = ValueOf<typeof ARROW_SHAPES>;
  */
 export const HOLLOW_ARROW_SHAPES = new Set<ArrowShape>(['open', 'openDiamond', 'openCircle']);
 
+/** marker 默认尺寸（length / width 的 fallback；arrowMarkers viewBox 内的几何也按 10 单位定义） */
+export const ARROW_MARKER_DEFAULT_SIZE = 6;
+
+/** 空心 shape 描边默认粗细（lineWidth fallback；refX / shrink 计算都用它做"back stroke 半宽"） */
+export const ARROW_MARKER_HOLLOW_DEFAULT_LINE_WIDTH = 1.5;
+
 /**
  * 端点级箭头视觉规格 schema
  * @description 顶层 8 字段全 optional；fill 在空心 shape 上 silent no-op（schema 不拒绝、compile/render 丢字段）；start/end 子对象用相同字段集（无 start/end 递归）

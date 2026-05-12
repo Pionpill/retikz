@@ -366,8 +366,8 @@ describe('compile arrowDetail：scale × length / width 乘法', () => {
   });
 });
 
-describe('compile arrowDetail：shrink（hollow shape）仍按 shape 取', () => {
-  it("shape='open' shrink 4.8×strokeWidth 仍生效（与 ADR-01 / 既有行为一致）", () => {
+describe('compile arrowDetail：shrink（hollow shape）按 length / scale / lineWidth 动态算', () => {
+  it("shape='open' 默认 shrink=5.25×strokeWidth（line 端点接在 back stroke 外缘）", () => {
     const ir: IR = {
       version: 1,
       type: 'scene',
@@ -384,9 +384,9 @@ describe('compile arrowDetail：shrink（hollow shape）仍按 shape 取', () =>
       ],
     };
     const path = findPathPrim(compileToScene(ir).primitives);
-    // 最后一条 line 命令末端应被 shrink 4.8 单位
+    // 默认 length=6, scale=1, lineWidth=1.5：shrink = (8 + 0.75) × 6 / 10 = 5.25
     const last = path.commands[path.commands.length - 1];
     if (last.kind !== 'line') throw new Error('expected last to be line');
-    expect(last.to[0]).toBe(95.2);
+    expect(last.to[0]).toBe(94.75);
   });
 });

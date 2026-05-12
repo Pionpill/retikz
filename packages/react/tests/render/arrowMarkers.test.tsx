@@ -45,22 +45,29 @@ describe('ArrowMarker: 共用约定', () => {
   });
 });
 
-describe('ArrowMarker: refX 分类——实心 vs 空心', () => {
-  // 实心：apex 贴 path 端点 → refX=10
-  it.each(['normal', 'stealth', 'diamond', 'circle'] as const)('%s 实心 refX=10', shape => {
-    expect(render(shape).props.refX).toBe(10);
+describe('ArrowMarker: refX——line 接在 shape back 接线点', () => {
+  // 实心 normal/diamond/circle：back 外缘 viewBox x=0 → refX=0
+  it.each(['normal', 'diamond', 'circle'] as const)('%s 实心 refX=0（back 外缘 x=0）', shape => {
+    expect(render(shape).props.refX).toBe(0);
   });
 
-  // 空心：背面贴 path 端点 → refX 在形状背面
-  it('open 空心 refX=1', () => {
-    expect(render('open').props.refX).toBe(1);
+  // 实心 stealth：V tip viewBox x=3，line 嵌进凹口 → refX=3
+  it('stealth 实心 refX=3（V tip 凹口）', () => {
+    expect(render('stealth').props.refX).toBe(3);
   });
 
-  it('openDiamond 空心 refX=1', () => {
-    expect(render('openDiamond').props.refX).toBe(1);
+  // 空心：path 端点接在 back stroke 外缘 → refX = back-centerline - lineWidth/2
+  // 默认 lineWidth=1.5：open / openDiamond back centerline x=1 → refX=0.25
+  // openCircle 圆外缘左 x = 0.75 - 0.75 = 0
+  it('open 空心 refX=0.25（back centerline 1 - lineWidth/2）', () => {
+    expect(render('open').props.refX).toBe(0.25);
   });
 
-  it('openCircle 空心 refX=0', () => {
+  it('openDiamond 空心 refX=0.25（同 open）', () => {
+    expect(render('openDiamond').props.refX).toBe(0.25);
+  });
+
+  it('openCircle 空心 refX=0（圆外缘左 x=0.75 - lineWidth/2 = 0）', () => {
     expect(render('openCircle').props.refX).toBe(0);
   });
 });

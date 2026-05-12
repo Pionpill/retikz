@@ -10,9 +10,12 @@ import {
   lineSegmentSample,
   quadSegmentSample,
 } from '../geometry/segment';
-import { HOLLOW_ARROW_SHAPES } from '../ir';
+import {
+  ARROW_MARKER_DEFAULT_SIZE,
+  ARROW_MARKER_HOLLOW_DEFAULT_LINE_WIDTH,
+  HOLLOW_ARROW_SHAPES,
+} from '../ir';
 import type {
-  ArrowShape,
   IRArrowDetail,
   IRArrowEndDetail,
   IRPath,
@@ -84,17 +87,26 @@ const arrowMarkers = (
 };
 
 /**
- * 按 arrow shape 决定线段从端点向内缩短多少（strokeWidth 倍）
- * @description 避免 hollow shape（open/openDiamond/openCircle）空心被 path 描边穿过：把线末端退到形状背面让 marker apex 正好落在原始端点。必须与 react/render/arrowMarkers.tsx 中 refX/形状一致：shrink = (apexX - refX) × markerWidth / viewBoxWidth。实心 shape apex/refX=10，line 被 fill 覆盖，shrink=0
+ * 端点级 shrink（strokeWidth 倍）：line 末端朝起点缩这么多，让 marker apex 落回原 target
+ * @description 不分实心/空心：所有 shape 都让 line 端点接在箭头尾部、apex 顶端仍贴原 target。低 opacity 下不会再透出 line。viewBox=10，shrink = (apex.x - refX) × length × scale / 10（strokeWidth 倍）。
+ *
+ * 几何对齐（必须与 react/render/arrowMarkers.tsx 中 renderInner 的 refX 一致）：
+ * - `normal` / `diamond` / `circle`：apex 在 viewBox x=10、back 外缘 x=0 → refX=0，shrink = length × scale
+ * - `stealth`：apex x=10、V tip x=3（line 嵌进 V 凹口）→ refX=3，shrink = 0.7 × length × scale
+ * - `open` / `openDiamond`：apex x=9、back stroke 外缘 x = 1 - lineWidth/2 → refX = 1 - lineWidth/2，shrink = (8 + lineWidth/2) × length × scale / 10
+ * - `openCircle`：apex 外缘右 x ≈ 10、back 外缘左 x = 0.75 - lineWidth/2 → refX = 0.75 - lineWidth/2，shrink ≈ length × scale
  */
-const SHRINK_FOR_SHAPE: Record<ArrowShape, number> = {
-  normal: 0,
-  open: 4.8,
-  stealth: 0,
-  diamond: 0,
-  openDiamond: 4.8,
-  circle: 0,
-  openCircle: 6,
+const computeShrink = (spec: ArrowEndSpec): number => {
+  const length = (spec.length ?? ARROW_MARKER_DEFAULT_SIZE) * (spec.scale ?? 1);
+  if (HOLLOW_ARROW_SHAPES.has(spec.shape)) {
+    if (spec.shape === 'openCircle') return length;
+    // open / openDiamond：apex 在 viewBox x=9（path d 留半 stroke 余量）
+    const lineWidth = spec.lineWidth ?? ARROW_MARKER_HOLLOW_DEFAULT_LINE_WIDTH;
+    return ((8 + lineWidth / 2) * length) / 10;
+  }
+  // 实心：apex 在 viewBox x=10
+  if (spec.shape === 'stealth') return (7 * length) / 10;
+  return length;
 };
 
 /** 把 p 朝 target 方向移动 dist */
@@ -733,9 +745,9 @@ export const emitPathPrimitive = (
   const markers = arrowMarkers(path.arrow, path.arrowDetail);
   const hasArrows = !!markers.arrowStart || !!markers.arrowEnd;
 
-  // 按 shape 把首/末段端点向内缩短，避免 hollow 形状（如 open）空心被描边穿过；shrink=0 的实心 shape 跳过
-  const shrinkStart = markers.arrowStart ? SHRINK_FOR_SHAPE[markers.arrowStart.shape] : 0;
-  const shrinkEnd = markers.arrowEnd ? SHRINK_FOR_SHAPE[markers.arrowEnd.shape] : 0;
+  // 按 shape + spec（length / scale / lineWidth）把首/末段端点向内缩短，让 line 端点接在 hollow arrow 尾部外缘，不贯穿 back outline；shrink=0 的实心 shape 跳过
+  const shrinkStart = markers.arrowStart ? computeShrink(markers.arrowStart) : 0;
+  const shrinkEnd = markers.arrowEnd ? computeShrink(markers.arrowEnd) : 0;
 
   /** 取一个 PathCommand 末端 endpoint（move/line/quad/cubic → to；arc/ellipseArc → polar(end)；close 无端点） */
   const endpointOf = (cmd: PathCommand): IRPosition | null => {
