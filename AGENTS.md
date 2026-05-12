@@ -278,7 +278,7 @@ pnpm lint                                  # 全部包 ESLint（不带 --fix）
 - JSDoc 内容用中文（项目母语），保持简洁；只解释"是什么 / 为什么"，不复述代码做了什么
 - IR 元素一文件一种：`packages/core/src/ir/<element>.ts` 同时写 schema 和 `z.infer` 派生类型
 - IR 字段命名沿用 TikZ 词汇（`stroke`、`fill`、`strokeWidth`、`via`、`anchor` 等），保留对 LLM 训练数据的亲和力
-- 不允许在 IR schema 里出现 `z.any()` / `z.unknown()` / 函数 / `ReactNode`——IR 必须 100% JSON 可序列化（见 DESIGN.md §4.3）
+- 不允许在 IR schema 里出现 `z.any()` / `z.unknown()` / 函数 / `ReactNode`——IR 必须 100% JSON 可序列化（见 DESIGN.md §4.4）
 
 ## 抽象分层：Kernel / Sugar / Tier 2
 

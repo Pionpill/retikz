@@ -186,7 +186,121 @@ Kernel 是用户能用的最底层 React 原语，与 IR 一一对应。约 5–
 
 具体支持/不支持清单留到 v3.x 开工时再细化，**本文档只锁定"语法采用 TikZ 而不是自创"这一根本决策**。
 
-### 4.3 IR Schema
+### 4.3 Tier 2 / Composite 节点（domain 包扩展点）
+
+§4.1 Kernel + §4.2 Sugar 之外，retikz 有第三层抽象：**Tier 2 / Composite** —— 由独立 domain 包（`@retikz/plot` / `@retikz/graph` / `@retikz/circuit` 等）提供的**高层节点**，进 IR 持久化，但 compile 时由 core 的 `lowerComposites` 钩子下沉成 Kernel。
+
+#### Sugar vs Tier 2 三维度对比
+
+| 维度 | Sugar | Tier 2 (Composite) |
+|---|---|---|
+| **是否持久化进 IR** | ❌ IR 构建时就展平为 Kernel | ✅ 高层节点形态进 IR |
+| **展开时机** | adapter builder 同步调用（React render 之前） | core `compileToScene` 内，via `lowerComposites` 钩子 |
+| **展开实现位置** | adapter（`packages/react/src/sugar/`）或 core parser（共享纯函数） | 独立 domain 包（`@retikz/plot` 等）提供 `lowerXxx: (ir) => ir` |
+| **core 是否认识** | 认识（kernel/sugar 都是 retikz 自家概念） | **不认识** —— core 看到 passthrough 节点（`IRChild` 的 open discriminator），由 `lowerComposites` 解释 |
+| **跨 adapter 复用** | 弱（adapter-bound） | ✅ 强（所有 adapter 共享同一份 lowering） |
+| **典型例子** | `<Draw way={['A', '-\|', 'B']}>` / 字符串 `'+dx,dy'` / `cycle` 关键字 | `<Axis>` / `<Plot>` / `<Tree>` / `<Network>` |
+
+#### 三条判定测试（任一 Yes 即 Tier 2）
+
+判断一个新构造是 Sugar 还是 Tier 2，按以下三条：
+
+1. **可逆性**：展开后的 Kernel IR 反推回原始高层形式能 1:1 还原吗？（启发式猜不算）
+2. **算法存在性**：展开过程涉及决策算法（auto-tick / 布局 / scale 选择 / 力导向 / 数据采样）？
+3. **结构参数**：参数会改变展开后的节点数量或拓扑（data 数组 / 节点列表 / 行列数 + 自适应）？
+
+口诀：**展开成 IR 后删掉构造名字，另一个开发者只看展开结果还能正确还原原意图吗？能 → Sugar；不能 → Tier 2。**
+
+axis 为例：展开后是 N 条 tick line + N 个 label —— 反推不出"axis with 5 ticks"还是"用户手画 5 条线"（**可逆性失败**）；tick selection / log scale / label 格式化都是算法（**算法存在**）；`domain` / `tickCount` 改变生成的 line / label 数量（**结构参数**）。三条全 Yes → Tier 2。
+
+**有歧义就当 Tier 2 处理**——升级 Sugar 到 Tier 2 是迁移噩梦（持久化的 IR 全要重写），反过来则无害。
+
+#### 完整 compile 流程（含 Tier 2）
+
+```
+Tier 2 高层 IR（用户写 / LLM 生成 / 持久化形态）
+   { type: 'axis', domain: [0, 100], ticks: 5 }
+       │
+       ▼  compileToScene 第一步：lowerComposites 钩子
+       │  实现住在 @retikz/plot：lowerPlots: (ir) => ir
+       │  把 axis 节点替换成多个 Kernel node / path
+       │
+Kernel IR（Tier 1）
+   [ <Path stroke=…>…  + <Node text=…>… × N ticks ]
+       │
+       ▼  compileToScene 第二步：常规 Kernel → Scene compile
+       │
+Scene primitives
+       │
+       ▼  adapter（react / canvas / ...）
+       │
+SVG / Canvas / PDF 输出
+```
+
+Sugar 的展开发生在更早一层——还没进 IR 时就被 adapter builder 同步展平：
+
+```
+React JSX (含 sugar)
+   <Draw way={['A', '-\|', 'B']}>
+       │
+       ▼  React adapter builder（同步调用，不在 render 调用栈上）
+       │
+Kernel JSX
+   <Path><Step kind="move" to="A"/><Step kind="step" via="-\|" to="B"/></Path>
+       │
+       ▼  buildIR
+       │
+Kernel IR  → compileToScene → Scene
+```
+
+**Sugar 在 IR 之前展平，Tier 2 在 IR 之后展平**。这是两者最本质的区别。
+
+#### core 为 Tier 2 留的接口（v0.2+）
+
+core 不知道 plot / graph / circuit 存在，但留两个钩子让独立包接入：
+
+1. **`IRChild` 的 open discriminator** —— `type: string` 的 passthrough schema，core 不识别但允许进 IR；validation 阶段不会拒绝
+2. **`CompileOptions.lowerComposites?: (ir) => ir`** —— compileToScene 在 Tier 1 处理前先调这个钩子，由 domain 包提供具体下沉实现
+
+```ts
+// 用户用法（v0.2+）
+import { lowerPlots, Axis, Plot } from '@retikz/plot'
+
+<Tikz compileOptions={{ lowerComposites: lowerPlots }}>
+  <Axis domain={[0, 100]} ticks={5} />
+  <Plot data={[...]} />
+</Tikz>
+```
+
+跨 adapter 自动可用——`lowerComposites` 在 Tier 1 compile 之前跑，canvas / SSR / 任何 adapter 自动获得 Tier 2 能力，只要它们消费 core 的 `compileToScene` + 用户传同样的 `lowerComposites`。
+
+#### 为什么 Tier 2 不进 core
+
+- core 运行时依赖白名单只有 `zod`；图表会拉 d3-scale / 颜色映射等，污染零依赖原则
+- core 的 IR schema 是 LLM 系统提示的输入，被高层 chart schema 撑爆会拖垮生成质量
+- 跨 adapter 一致性靠 Scene primitive 公约子集——adapter 不该被迫了解图表语义
+
+类比 PGFPlots 之于 TikZ：独立演进、互不打扰。
+
+#### 持久化 + LLM 友好性的关键收益
+
+Tier 2 解决了"高层 chart schema 简洁 vs Kernel 表达精确"的矛盾：
+
+- **持久化**：存的是 `{ type: 'axis', domain: [0, 100], ticks: 5 }` 这 10 字段对象，而不是展开后的 30+ 个 Kernel node / path
+- **LLM 生成**：模型输出短而稳定的 axis schema，跟训练数据中的 axis 概念直接对齐
+- **灵活性**：实际渲染走 Kernel —— 用户依然可以在同图里手写 `<Node>` / `<Path>` 跟 axis 共存，因为 axis 最终也是 Kernel
+
+这套架构对标 Recharts 的"无头库"哲学（`<XAxis>` / `<YAxis>` / `<Line>` 等可组合 primitive，不提供 finished `<LineChart>`）—— retikz 的 plot 包按相同精神走 Tier 2 路线。
+
+#### 目录归属速查
+
+| 归类 | 代码住在哪 |
+|---|---|
+| Kernel 组件 | `packages/react/src/kernel/` |
+| Sugar 组件 + 解析器 | `packages/react/src/sugar/`（React DSL） + `packages/core/src/parsers/`（共享 pure 解析） |
+| Tier 2 IR + 下沉 + 组件 | 独立包（`packages/plot/`、`packages/graph/` 等），**不进 core** |
+
+### 4.4 IR Schema
 
 #### 已决策
 
@@ -237,7 +351,7 @@ Kernel 是用户能用的最底层 React 原语，与 IR 一一对应。约 5–
 - ❌ 不用 XML 当持久化格式（SVG 已经是 XML，会和"输出 SVG"混淆；JSON 更适合 LLM、TS、DB）
 - ❌ 不用纯扁平（normalized）schema 当默认形态；只在多人协作 v3.x 才考虑展平
 
-### 4.4 Scene 编译器（关键架构资产）
+### 4.5 Scene 编译器（关键架构资产）
 
 ```ts
 function compileToScene(ir: IR): Scene { /* 纯函数 */ }
