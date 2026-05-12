@@ -451,7 +451,7 @@ const emitEllipseShape = (
   opacity: layout.opacity,
 });
 
-/** diamond → PathPrim（4 顶点 + Z 闭合） */
+/** diamond → PathPrim（4 顶点 + close 闭合） */
 const emitDiamondShape = (
   layout: NodeLayout,
   round: (n: number) => number,
@@ -462,10 +462,15 @@ const emitDiamondShape = (
   const n = diamondOps.anchor(diam, 'north');
   const w = diamondOps.anchor(diam, 'west');
   const s = diamondOps.anchor(diam, 'south');
-  const d = `M ${round(e[0])} ${round(e[1])} L ${round(n[0])} ${round(n[1])} L ${round(w[0])} ${round(w[1])} L ${round(s[0])} ${round(s[1])} Z`;
   return {
     type: 'path',
-    d,
+    commands: [
+      { kind: 'move', to: [round(e[0]), round(e[1])] },
+      { kind: 'line', to: [round(n[0]), round(n[1])] },
+      { kind: 'line', to: [round(w[0]), round(w[1])] },
+      { kind: 'line', to: [round(s[0]), round(s[1])] },
+      { kind: 'close' },
+    ],
     fill: layout.fill ?? 'transparent',
     fillOpacity: layout.fillOpacity,
     stroke: layout.stroke ?? 'currentColor',
@@ -551,7 +556,14 @@ export const emitNodePrimitives = (
   return [
     {
       type: 'group',
-      transform: `rotate(${round(layout.rotateDeg)} ${round(layout.rect.x)} ${round(layout.rect.y)})`,
+      transforms: [
+        {
+          kind: 'rotate',
+          degrees: round(layout.rotateDeg),
+          cx: round(layout.rect.x),
+          cy: round(layout.rect.y),
+        },
+      ],
       children: inner,
     },
   ];

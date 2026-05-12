@@ -1,4 +1,4 @@
-import { arcBoundingPoints, arcEndPoint, arcSvgFlags } from '../geometry/arc';
+import { arcBoundingPoints, arcEndPoint } from '../geometry/arc';
 import { bendControlPoints } from '../geometry/bend';
 import {
   type SegmentSample,
@@ -18,7 +18,12 @@ import type {
   IRStepLabel,
   IRTarget,
 } from '../ir';
-import type { PathPrim, ScenePrimitive, TextPrim } from '../primitive';
+import type {
+  PathCommand,
+  PathPrim,
+  ScenePrimitive,
+  TextPrim,
+} from '../primitive';
 import { type NodeLayout, anchorOf, angleBoundaryOf, boundaryPointOf } from './node';
 import { parseNodeRef } from './parseTarget';
 import { resolvePosition } from './position';
@@ -159,7 +164,7 @@ const tForLabelPosition = (pos: IRStepLabel['position']): number =>
 
 /**
  * step.label + 段采样 → TextPrim（sloped 时裹一层 group 旋转）
- * @description 默认 side='above'/position='midway'：above/below 锚点 y±offset、align=middle、baseline=bottom/top；left/right x±offset、align=end/start、baseline=middle；sloped 不偏移裹 group `rotate(angle x y)` 由切线 atan2 算（SVG y-down CW 正）。返回 primitive + viewBox 外接点
+ * @description 默认 side='above'/position='midway'：above/below 锚点 y±offset、align=middle、baseline=bottom/top；left/right x±offset、align=end/start、baseline=middle；sloped 不偏移裹 group rotate(angle, cx, cy) 由切线 atan2 算（SVG y-down CW 正）。返回 primitive + viewBox 外接点
  */
 const emitLabelPrimitive = (
   label: IRStepLabel,
@@ -214,7 +219,9 @@ const emitLabelPrimitive = (
     const angleDeg = Math.atan2(sample.tangent[1], sample.tangent[0]) * RAD_TO_DEG;
     const groupPrim: ScenePrimitive = {
       type: 'group',
-      transform: `rotate(${round(angleDeg)} ${round(x)} ${round(y)})`,
+      transforms: [
+        { kind: 'rotate', degrees: round(angleDeg), cx: round(x), cy: round(y) },
+      ],
       children: [text],
     };
     // sloped 旋转后用半径外接近似四角点
@@ -313,7 +320,7 @@ const normalizeRelativeTargets = (
 
 /**
  * IR Path → PathPrim
- * @description 每个绘制段独立用节点中心算两端 boundary clip——中段节点的入/出 boundary 点通常不同，path 在该节点可见"断开"（与 TikZ `\draw (A)--(B)--(C);` 段独立 clip 一致）。仍产一个 PathPrim：d 用多组 `M..L..` 表达 sub-path；段起点等于上段终点时复用 cursor 省 M。cycle 段闭回最近 move 起点，起点==lastEnd && 终点==subPathStart 时输出 `Z`，否则显式画段 line。引用未定义节点/解析失败返回 null
+ * @description 每个绘制段独立用节点中心算两端 boundary clip——中段节点的入/出 boundary 点通常不同，path 在该节点可见"断开"（与 TikZ `\draw (A)--(B)--(C);` 段独立 clip 一致）。仍产一个 PathPrim：commands 用多组 move/line 表达 sub-path；段起点等于上段终点时复用 cursor 省 move。cycle 段闭回最近 move 起点，起点==lastEnd && 终点==subPathStart 时输出 close，否则显式画段 line。引用未定义节点/解析失败返回 null
  */
 export const emitPathPrimitive = (
   path: IRPath,
@@ -389,70 +396,110 @@ export const emitPathPrimitive = (
     return null;
   };
 
-  /** 单个 path 操作；shrink 阶段按 cmd 找首/末有 point 的项 */
-  type PathOp =
-    | { cmd: 'M' | 'L'; point: IRPosition }
-    | { cmd: 'Q'; control: IRPosition; point: IRPosition }
-    | { cmd: 'C'; control1: IRPosition; control2: IRPosition; point: IRPosition }
-    | { cmd: 'A'; rx: number; ry: number; largeArc: 0 | 1; sweep: 0 | 1; point: IRPosition }
-    | { cmd: 'Z' };
-
-  const ops: Array<PathOp> = [];
+  const commands: Array<PathCommand> = [];
   const points: Array<IRPosition> = [];
   let lastEnd: IRPosition | null = null;
   let subPathStart: IRPosition | null = null;
   /**
    * 笔位覆盖：arc/circlePath/ellipsePath 无 `to` 字段不能用 prev.step.to 重算起点
-   * @description 设置 penOverride 让下个绘制段直接用此点当 fromClip 后清空。arc=弧终点（同 SVG cursor）；circlePath/ellipsePath=center（"画完留在圆心"，需靠 startSegment 发 M teleport 回中心）
+   * @description 设置 penOverride 让下个绘制段直接用此点当 fromClip 后清空。arc=弧终点；circlePath/ellipsePath=center（"画完留在圆心"）
    */
   let penOverride: IRPosition | null = null;
 
-  const emitM = (p: IRPosition) => {
-    ops.push({ cmd: 'M', point: p });
+  const roundPoint = (p: IRPosition): IRPosition => [round(p[0]), round(p[1])];
+
+  const emitMove = (p: IRPosition) => {
+    const rp = roundPoint(p);
+    commands.push({ kind: 'move', to: [rp[0], rp[1]] });
     points.push(p);
     subPathStart = p;
     lastEnd = p;
   };
-  const emitL = (p: IRPosition) => {
-    ops.push({ cmd: 'L', point: p });
+  const emitLine = (p: IRPosition) => {
+    const rp = roundPoint(p);
+    commands.push({ kind: 'line', to: [rp[0], rp[1]] });
     points.push(p);
     lastEnd = p;
   };
-  const emitZ = () => {
-    ops.push({ cmd: 'Z' });
+  const emitClose = () => {
+    commands.push({ kind: 'close' });
     lastEnd = subPathStart;
   };
-  const emitQ = (control: IRPosition, p: IRPosition) => {
-    ops.push({ cmd: 'Q', control, point: p });
+  const emitQuad = (control: IRPosition, p: IRPosition) => {
+    const rc = roundPoint(control);
+    const rp = roundPoint(p);
+    commands.push({
+      kind: 'quad',
+      control: [rc[0], rc[1]],
+      to: [rp[0], rp[1]],
+    });
     // 曲线视觉范围不超过控制点+端点凸包
     points.push(control);
     points.push(p);
     lastEnd = p;
   };
-  const emitC = (c1: IRPosition, c2: IRPosition, p: IRPosition) => {
-    ops.push({ cmd: 'C', control1: c1, control2: c2, point: p });
+  const emitCubic = (c1: IRPosition, c2: IRPosition, p: IRPosition) => {
+    const rc1 = roundPoint(c1);
+    const rc2 = roundPoint(c2);
+    const rp = roundPoint(p);
+    commands.push({
+      kind: 'cubic',
+      control1: [rc1[0], rc1[1]],
+      control2: [rc2[0], rc2[1]],
+      to: [rp[0], rp[1]],
+    });
     // 控制点纳入 bbox（保守，实际 bezier 包络小于凸包）
     points.push(c1);
     points.push(c2);
     points.push(p);
     lastEnd = p;
   };
-  const emitA = (
-    rx: number,
-    ry: number,
-    largeArc: 0 | 1,
-    sweep: 0 | 1,
-    p: IRPosition,
+  const emitArc = (
+    center: IRPosition,
+    radius: number,
+    startAngle: number,
+    endAngle: number,
   ) => {
-    ops.push({ cmd: 'A', rx, ry, largeArc, sweep, point: p });
-    // 弧端点入 bbox；arc 极值候选（90°·k 轴向点）由各 compile 分支单独 push（circle/ellipse 已显式 push 四点）
-    points.push(p);
-    lastEnd = p;
+    const rc = roundPoint(center);
+    commands.push({
+      kind: 'arc',
+      center: [rc[0], rc[1]],
+      radius: round(radius),
+      startAngle,
+      endAngle,
+    });
+    // 弧端点入 bbox；arc 极值候选（90°·k 轴向点）由各 compile 分支单独 push
+    points.push(arcEndPoint(center, radius, endAngle));
+    lastEnd = arcEndPoint(center, radius, endAngle);
   };
-  /** 段起点：与 lastEnd 相同则复用 cursor（省 M），否则发 M */
+  const emitEllipseArc = (
+    center: IRPosition,
+    radiusX: number,
+    radiusY: number,
+    startAngle: number,
+    endAngle: number,
+  ) => {
+    const rc = roundPoint(center);
+    commands.push({
+      kind: 'ellipseArc',
+      center: [rc[0], rc[1]],
+      radiusX: round(radiusX),
+      radiusY: round(radiusY),
+      startAngle,
+      endAngle,
+    });
+    // 椭圆弧终点：未旋转椭圆 polar 投影
+    const endPt: IRPosition = [
+      center[0] + Math.cos((endAngle * Math.PI) / 180) * radiusX,
+      center[1] + Math.sin((endAngle * Math.PI) / 180) * radiusY,
+    ];
+    points.push(endPt);
+    lastEnd = endPt;
+  };
+  /** 段起点：与 lastEnd 相同则复用 cursor（省 move），否则发 move */
   const startSegment = (p: IRPosition) => {
     if (samePoint(p, lastEnd)) return;
-    emitM(p);
+    emitMove(p);
   };
 
   for (let i = 0; i < steps.length; i++) {
@@ -472,14 +519,14 @@ export const emitPathPrimitive = (
       const toClip = clipForTarget(moveTo, prev.anchor, nodeIndex);
       if (!fromClip || !toClip) return null;
 
-      // 起点 == lastEnd 且终点 == subPathStart → Z 收尾最干净
+      // 起点 == lastEnd 且终点 == subPathStart → close 收尾最干净
       if (samePoint(fromClip, lastEnd) && samePoint(toClip, subPathStart)) {
-        emitZ();
+        emitClose();
         continue;
       }
-      // 否则段独立：重新 M 起点再 L 到终点（不再用 Z，避免回到错误的 subPathStart）
+      // 否则段独立：重新 move 起点再 line 到终点（不再用 close，避免回到错误的 subPathStart）
       startSegment(fromClip);
-      emitL(toClip);
+      emitLine(toClip);
       continue;
     }
 
@@ -492,10 +539,9 @@ export const emitPathPrimitive = (
       const center = prev.anchor;
       const startPt = arcEndPoint(center, step.radius, step.startAngle);
       const endPt = arcEndPoint(center, step.radius, step.endAngle);
-      const flags = arcSvgFlags(step.startAngle, step.endAngle);
 
       startSegment(startPt);
-      emitA(step.radius, step.radius, flags.largeArc, flags.sweep, endPt);
+      emitArc(center, step.radius, step.startAngle, step.endAngle);
 
       // 弧的极值点（90°·k 候选）算进 bbox
       for (const p of arcBoundingPoints(center, step.radius, step.startAngle, step.endAngle)) {
@@ -504,23 +550,19 @@ export const emitPathPrimitive = (
       collectLabel(step, t =>
         arcSegmentSample(center, step.radius, step.startAngle, step.endAngle, t),
       );
-      // 后续段从弧终点继续（emitA 已把 lastEnd 设为 endPt）
+      // 后续段从弧终点继续（emitArc 已把 lastEnd 设为 endPt）
       penOverride = endPt;
       continue;
     }
 
     if (step.kind === 'circlePath') {
-      // 圆心 = 上一 step anchor；起点取圆周右侧（0°）
+      // 圆心 = 上一 step anchor；以 ellipseArc 全 sweep 表达整圆
       const center = prev.anchor;
       const r = step.radius;
       const right: IRPosition = [center[0] + r, center[1]];
-      const left: IRPosition = [center[0] - r, center[1]];
 
       startSegment(right);
-      // 第 1 段右半圆 sweep=1（polar 约定下顺时针视觉，从右上到左）
-      emitA(r, r, 0, 1, left);
-      // 第 2 段左半圆 sweep=1 闭回起点
-      emitA(r, r, 0, 1, right);
+      emitEllipseArc(center, r, r, 0, 360);
 
       // 整圆顶/底/左/右四点
       points.push([center[0] + r, center[1]]);
@@ -530,7 +572,7 @@ export const emitPathPrimitive = (
 
       collectLabel(step, t => circleSegmentSample(center, r, t));
 
-      // 画完笔位回 center；lastEnd 保留 SVG 实际 cursor（= right），下段用 penOverride=center 触发 startSegment 发 M
+      // 画完笔位回 center；下段用 penOverride=center 触发 startSegment 发 move
       penOverride = center;
       continue;
     }
@@ -540,11 +582,9 @@ export const emitPathPrimitive = (
       const rx = step.radiusX;
       const ry = step.radiusY;
       const right: IRPosition = [center[0] + rx, center[1]];
-      const left: IRPosition = [center[0] - rx, center[1]];
 
       startSegment(right);
-      emitA(rx, ry, 0, 1, left);
-      emitA(rx, ry, 0, 1, right);
+      emitEllipseArc(center, rx, ry, 0, 360);
 
       points.push([center[0] + rx, center[1]]);
       points.push([center[0] - rx, center[1]]);
@@ -570,7 +610,7 @@ export const emitPathPrimitive = (
       const toClip = clipForTarget(step.to, prev.anchor, nodeIndex);
       if (!fromClip || !toClip) return null;
       startSegment(fromClip);
-      emitL(toClip);
+      emitLine(toClip);
       collectLabel(step, t => lineSegmentSample(fromClip, toClip, t));
       continue;
     }
@@ -580,7 +620,7 @@ export const emitPathPrimitive = (
       const toClip = clipForTarget(step.to, step.control, nodeIndex);
       if (!fromClip || !toClip) return null;
       startSegment(fromClip);
-      emitQ(step.control, toClip);
+      emitQuad(step.control, toClip);
       collectLabel(step, t => quadSegmentSample(fromClip, step.control, toClip, t));
       continue;
     }
@@ -589,7 +629,7 @@ export const emitPathPrimitive = (
       const toClip = clipForTarget(step.to, step.control2, nodeIndex);
       if (!fromClip || !toClip) return null;
       startSegment(fromClip);
-      emitC(step.control1, step.control2, toClip);
+      emitCubic(step.control1, step.control2, toClip);
       collectLabel(step, t =>
         cubicSegmentSample(fromClip, step.control1, step.control2, toClip, t),
       );
@@ -602,7 +642,7 @@ export const emitPathPrimitive = (
       const toClip = clipForTarget(step.to, c2, nodeIndex);
       if (!fromClip || !toClip) return null;
       startSegment(fromClip);
-      emitC(c1, c2, toClip);
+      emitCubic(c1, c2, toClip);
       collectLabel(step, t => cubicSegmentSample(fromClip, c1, c2, toClip, t));
       continue;
     }
@@ -613,8 +653,8 @@ export const emitPathPrimitive = (
     const toClip = clipForTarget(step.to, corner, nodeIndex);
     if (!fromClip || !toClip) return null;
     startSegment(fromClip);
-    emitL(corner);
-    emitL(toClip);
+    emitLine(corner);
+    emitLine(toClip);
     collectLabel(step, t => foldSegmentSample(fromClip, corner, toClip, t));
   }
 
@@ -643,66 +683,103 @@ export const emitPathPrimitive = (
   const shrinkStart = markers.arrowStart ? SHRINK_FOR_SHAPE[markers.arrowStart] : 0;
   const shrinkEnd = markers.arrowEnd ? SHRINK_FOR_SHAPE[markers.arrowEnd] : 0;
 
+  /** 取一个 PathCommand 末端 endpoint（move/line/quad/cubic → to；arc/ellipseArc → polar(end)；close 无端点） */
+  const endpointOf = (cmd: PathCommand): IRPosition | null => {
+    switch (cmd.kind) {
+      case 'move':
+      case 'line':
+      case 'quad':
+      case 'cubic':
+        return [cmd.to[0], cmd.to[1]];
+      case 'arc': {
+        const rad = (cmd.endAngle * Math.PI) / 180;
+        return [
+          cmd.center[0] + Math.cos(rad) * cmd.radius,
+          cmd.center[1] + Math.sin(rad) * cmd.radius,
+        ];
+      }
+      case 'ellipseArc': {
+        const rad = (cmd.endAngle * Math.PI) / 180;
+        return [
+          cmd.center[0] + Math.cos(rad) * cmd.radiusX,
+          cmd.center[1] + Math.sin(rad) * cmd.radiusY,
+        ];
+      }
+      case 'close':
+        return null;
+    }
+  };
+
+  /** 改写一个 PathCommand 的 endpoint（用于 shrink） */
+  const setEndpoint = (idx: number, newPt: IRPosition) => {
+    const cmd = commands[idx];
+    if (cmd.kind === 'close') return;
+    const rp: [number, number] = [round(newPt[0]), round(newPt[1])];
+    if (cmd.kind === 'move' || cmd.kind === 'line') {
+      commands[idx] = { ...cmd, to: rp };
+    } else if (cmd.kind === 'quad') {
+      commands[idx] = { ...cmd, to: rp };
+    } else if (cmd.kind === 'cubic') {
+      commands[idx] = { ...cmd, to: rp };
+    }
+    // arc / ellipseArc 不参与 shrink——首末段都是 line/cubic（path-arrow 的 path 形态）
+  };
+
   if (shrinkStart > 0) {
-    // 找首个 M 与其后第一个有坐标的 op（定方向）
-    const firstIdx = ops.findIndex(o => o.cmd === 'M');
+    // 找首个 move 与其后第一个有 endpoint 的命令
+    const firstIdx = commands.findIndex(o => o.kind === 'move');
     if (firstIdx >= 0) {
-      const cur = ops[firstIdx];
-      const next = ops.slice(firstIdx + 1).find(o => o.cmd !== 'Z');
-      if (cur.cmd !== 'Z' && next) {
-        cur.point = shiftToward(cur.point, next.point, shrinkStart * strokeWidth);
+      const cur = commands[firstIdx];
+      const nextIdx = commands.findIndex(
+        (o, idx) => idx > firstIdx && o.kind !== 'close',
+      );
+      if (cur.kind === 'move' && nextIdx >= 0) {
+        const nextPt = endpointOf(commands[nextIdx]);
+        if (nextPt) {
+          const shifted = shiftToward(
+            [cur.to[0], cur.to[1]],
+            nextPt,
+            shrinkStart * strokeWidth,
+          );
+          setEndpoint(firstIdx, shifted);
+        }
       }
     }
   }
   if (shrinkEnd > 0) {
-    // 末尾最后一个有坐标的 op（跳过 Z）与其前最近一个有坐标的 op
+    // 末尾最后一个有 endpoint 的命令与其前最近的一个
     let lastIdx = -1;
-    for (let i = ops.length - 1; i >= 0; i--) {
-      if (ops[i].cmd !== 'Z') {
+    for (let i = commands.length - 1; i >= 0; i--) {
+      if (commands[i].kind !== 'close') {
         lastIdx = i;
         break;
       }
     }
     if (lastIdx > 0) {
       let prevIdx = lastIdx - 1;
-      while (prevIdx >= 0 && ops[prevIdx].cmd === 'Z') prevIdx--;
+      while (prevIdx >= 0 && commands[prevIdx].kind === 'close') prevIdx--;
       if (prevIdx >= 0) {
-        const cur = ops[lastIdx];
-        const prev = ops[prevIdx];
-        if (cur.cmd !== 'Z' && prev.cmd !== 'Z') {
-          cur.point = shiftToward(cur.point, prev.point, shrinkEnd * strokeWidth);
+        const curPt = endpointOf(commands[lastIdx]);
+        const prevPt = endpointOf(commands[prevIdx]);
+        if (curPt && prevPt) {
+          const shifted = shiftToward(curPt, prevPt, shrinkEnd * strokeWidth);
+          setEndpoint(lastIdx, shifted);
         }
       }
     }
   }
 
-  // ops → token strings（按精度 round）
-  const tokens = ops.map(op => {
-    if (op.cmd === 'Z') return 'Z';
-    if (op.cmd === 'Q') {
-      return `Q ${round(op.control[0])} ${round(op.control[1])} ${round(op.point[0])} ${round(op.point[1])}`;
-    }
-    if (op.cmd === 'C') {
-      return `C ${round(op.control1[0])} ${round(op.control1[1])} ${round(op.control2[0])} ${round(op.control2[1])} ${round(op.point[0])} ${round(op.point[1])}`;
-    }
-    if (op.cmd === 'A') {
-      // 中间 '0' 是 x-axis-rotation（不暴露椭圆 tilt）
-      return `A ${round(op.rx)} ${round(op.ry)} 0 ${op.largeArc} ${op.sweep} ${round(op.point[0])} ${round(op.point[1])}`;
-    }
-    return `${op.cmd} ${round(op.point[0])} ${round(op.point[1])}`;
-  });
-
-  // 每个 sub-path 起始 token 索引（每个 'M ...' 是新 sub-path）
+  // 每个 sub-path 起始命令索引（每个 move 都是新 sub-path）
   const subPathStarts: Array<number> = [];
-  tokens.forEach((tok, idx) => {
-    if (tok.startsWith('M ')) subPathStarts.push(idx);
+  commands.forEach((cmd, idx) => {
+    if (cmd.kind === 'move') subPathStarts.push(idx);
   });
 
   // 单 sub-path 或无箭头 → 一个 PathPrim
   if (!hasArrows || subPathStarts.length <= 1) {
     const primitive: PathPrim = {
       type: 'path',
-      d: tokens.join(' '),
+      commands,
       ...baseProps,
       ...markers,
     };
@@ -711,18 +788,18 @@ export const emitPathPrimitive = (
 
   // 多 sub-path + 有箭头：split 成多个 PathPrim 各挂"首段 marker-start/末段 marker-end"用 GroupPrim 包；
   // 否则 SVG marker 会按每个 sub-path 单独贴在中间节点视觉错乱
-  const subPathSlices: Array<Array<string>> = [];
+  const subPathSlices: Array<Array<PathCommand>> = [];
   for (let s = 0; s < subPathStarts.length; s++) {
     const start = subPathStarts[s];
-    const end = s + 1 < subPathStarts.length ? subPathStarts[s + 1] : tokens.length;
-    subPathSlices.push(tokens.slice(start, end));
+    const end = s + 1 < subPathStarts.length ? subPathStarts[s + 1] : commands.length;
+    subPathSlices.push(commands.slice(start, end));
   }
   const subPathPrims: Array<PathPrim> = subPathSlices.map((sub, i) => {
     const isFirst = i === 0;
     const isLast = i === subPathSlices.length - 1;
     return {
       type: 'path',
-      d: sub.join(' '),
+      commands: sub,
       ...baseProps,
       ...(isFirst && markers.arrowStart ? { arrowStart: markers.arrowStart } : {}),
       ...(isLast && markers.arrowEnd ? { arrowEnd: markers.arrowEnd } : {}),

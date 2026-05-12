@@ -2,7 +2,6 @@ import { describe, expect, it } from 'vitest';
 import {
   arcBoundingPoints,
   arcEndPoint,
-  arcSvgFlags,
 } from '../../src/geometry/arc';
 
 /*
@@ -56,32 +55,6 @@ describe('arcEndPoint 圆周点投影', () => {
     const [x, y] = arcEndPoint([0, 0], 10, -90);
     expect(x).toBeCloseTo(0);
     expect(y).toBeCloseTo(-10);
-  });
-});
-
-describe('arcSvgFlags large-arc / sweep 计算', () => {
-  it('小弧 0°→90°：largeArc=0, sweep=1（端角增加）', () => {
-    expect(arcSvgFlags(0, 90)).toEqual({ largeArc: 0, sweep: 1 });
-  });
-
-  it('恰好半弧 0°→180°：largeArc=0（边界，按 |Δ|>180 判定）, sweep=1', () => {
-    expect(arcSvgFlags(0, 180)).toEqual({ largeArc: 0, sweep: 1 });
-  });
-
-  it('大弧 0°→270°：largeArc=1, sweep=1', () => {
-    expect(arcSvgFlags(0, 270)).toEqual({ largeArc: 1, sweep: 1 });
-  });
-
-  it('反向小弧 90°→0°：endAngle < startAngle → sweep=0', () => {
-    expect(arcSvgFlags(90, 0)).toEqual({ largeArc: 0, sweep: 0 });
-  });
-
-  it('反向大弧 270°→0°：|Δ|=270>180 → largeArc=1, sweep=0', () => {
-    expect(arcSvgFlags(270, 0)).toEqual({ largeArc: 1, sweep: 0 });
-  });
-
-  it('完整一圈 0°→360°：|Δ|=360>180 → largeArc=1, sweep=1', () => {
-    expect(arcSvgFlags(0, 360)).toEqual({ largeArc: 1, sweep: 1 });
   });
 });
 

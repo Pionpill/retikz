@@ -53,12 +53,15 @@ describe('renderPrim: ellipse', () => {
 describe('renderPrim: path', () => {
   const base: PathPrim = {
     type: 'path',
-    d: 'M 0 0 L 10 10',
+    commands: [
+      { kind: 'move', to: [0, 0] },
+      { kind: 'line', to: [10, 10] },
+    ],
     stroke: '#000',
     strokeWidth: 1,
   };
 
-  it('path prim → <path> element，d / stroke 透传', () => {
+  it('path prim → <path> element，d 字符串由 commands 构造、stroke 透传', () => {
     const el = renderPrim(base, 0) as AnyEl;
     expect(el.type).toBe('path');
     expect(el.props).toMatchObject({ d: 'M 0 0 L 10 10', stroke: '#000' });
@@ -92,6 +95,8 @@ describe('renderPrim: text', () => {
     baseline: 'middle',
     lineHeight: 16,
     lines: [{ text: 'L1' }, { text: 'L2' }, { text: 'L3' }],
+    measuredWidth: 0,
+    measuredHeight: 0,
   };
 
   it('baseline=middle 的 3 行块：首行 dy = -(n-1)/2 × lineHeight 让整块在 y 居中', () => {
@@ -137,7 +142,7 @@ describe('renderPrim: group', () => {
   it('group prim → <g transform=...>，children 递归 renderPrim', () => {
     const group: GroupPrim = {
       type: 'group',
-      transform: 'translate(10 20)',
+      transforms: [{ kind: 'translate', x: 10, y: 20 }],
       children: [
         { type: 'rect', x: 0, y: 0, width: 5, height: 5 },
         { type: 'ellipse', cx: 0, cy: 0, rx: 2, ry: 2 },
@@ -155,11 +160,11 @@ describe('renderPrim: group', () => {
   it('group 内嵌套 group：renderPrim 递归正确', () => {
     const nested: ScenePrimitive = {
       type: 'group',
-      transform: 'translate(0 0)',
+      transforms: [{ kind: 'translate', x: 0, y: 0 }],
       children: [
         {
           type: 'group',
-          transform: 'translate(1 1)',
+          transforms: [{ kind: 'translate', x: 1, y: 1 }],
           children: [{ type: 'rect', x: 0, y: 0, width: 1, height: 1 }],
         },
       ],
@@ -169,5 +174,14 @@ describe('renderPrim: group', () => {
     expect(inner.type).toBe('g');
     expect(inner.props.transform).toBe('translate(1 1)');
     expect((inner.props.children as Array<AnyEl>)[0].type).toBe('rect');
+  });
+
+  it('group transforms 缺省 / 空数组 → transform 属性 undefined', () => {
+    const group: GroupPrim = {
+      type: 'group',
+      children: [{ type: 'rect', x: 0, y: 0, width: 5, height: 5 }],
+    };
+    const el = renderPrim(group, 0) as AnyEl;
+    expect(el.props.transform).toBeUndefined();
   });
 });

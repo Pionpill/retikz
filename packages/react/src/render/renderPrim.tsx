@@ -1,5 +1,7 @@
 import type { Key, ReactElement } from 'react';
 import type { ArrowShape, ScenePrimitive } from '@retikz/core';
+import { buildPathD } from './path-d-builder';
+import { buildTransform } from './transform-builder';
 
 type DominantBaseline =
   | 'text-before-edge'
@@ -138,7 +140,7 @@ export const renderPrim = (
       return (
         <path
           key={key}
-          d={p.d}
+          d={buildPathD(p.commands)}
           fill={p.fill}
           fillOpacity={p.fillOpacity}
           fillRule={p.fillRule}
@@ -156,7 +158,7 @@ export const renderPrim = (
     }
     case 'group':
       return (
-        <g key={key} transform={p.transform}>
+        <g key={key} transform={buildTransform(p.transforms)}>
           {p.children.map((c, i) => renderPrim(c, i, ctx))}
         </g>
       );

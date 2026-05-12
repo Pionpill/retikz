@@ -63,6 +63,8 @@
 - `ScenePrimitive` 是矢量图形的最大公约子集
   - 禁止 SVG-only 特性（`<filter>` / `<marker>` / `<defs>` 共享）
   - 禁止 Canvas-only 特性（`getImageData` / 复杂合成模式）
+- **`PathPrim` / `GroupPrim` 用结构化 `commands` / `transforms` 数组，不出 SVG 字符串**——`PathPrim.commands: Array<PathCommand>`（move/line/quad/cubic/arc/ellipseArc/close 七种 kind），`GroupPrim.transforms: Array<Transform>`（translate/rotate/scale 三种 kind）；adapter 在 render 时翻译为原生 API：SVG 拼 d / transform 字符串、Canvas 调 ctx.moveTo / lineTo / arc / translate 等。core 不持有 SVG mini-language 知识
+- `circlePath` / `ellipsePath` IR step 编译为单个 `ellipseArc` 全 sweep（0→360）PathCommand；SVG adapter 在 path-d-builder 内识别 360° 退化拆为两段半弧；canvas adapter 可直接 `ctx.ellipse` 整圈
 - **文字必须在 Scene 编译完成时已度量好**——`TextPrim.measuredWidth` / `measuredHeight` 都填好；下游 renderer 直接信任
 - 度量函数通过 `CompileOptions.measureText` **依赖注入**；不传走 fallback
 - `compileToScene` **必须保持纯函数**：相同 IR + 相同 options → 完全相同的 Scene；禁止 `Math.random()` / `Date.now()` / module-level mutable state

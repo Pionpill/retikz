@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { compileToScene } from '../../src/compile/compile';
 import type { IR } from '../../src/ir';
 import type { GroupPrim, ScenePrimitive, TextPrim } from '../../src/primitive';
+import { buildTransform } from '../helpers/transform';
 
 const findTextPrims = (prims: Array<ScenePrimitive>): Array<TextPrim> =>
   prims.filter((p): p is TextPrim => p.type === 'text');
@@ -80,7 +81,7 @@ describe('step.label：line 段的 label 几何', () => {
     const scene = compileToScene(linePathIR({ text: 'x', side: 'sloped' }));
     const grp = findGroupPrim(scene.primitives);
     expect(grp).toBeDefined();
-    expect(grp!.transform).toMatch(/^rotate\(0 5 0\)$/);
+    expect(buildTransform(grp!.transforms)).toMatch(/^rotate\(0 5 0\)$/);
     const inner = grp!.children.find((c): c is TextPrim => c.type === 'text');
     expect(inner).toBeDefined();
     // 锚点不偏移
@@ -104,7 +105,7 @@ describe('step.label：line 段的 label 几何', () => {
     };
     const scene = compileToScene(ir);
     const grp = findGroupPrim(scene.primitives);
-    expect(grp!.transform).toMatch(/^rotate\(90 0 5\)$/);
+    expect(buildTransform(grp!.transforms)).toMatch(/^rotate\(90 0 5\)$/);
   });
 });
 

@@ -1,10 +1,10 @@
 import type { Position } from './point';
 
 /*
- * 弧几何工具：arc / circlePath / ellipsePath 共用的端点 / bbox / SVG A 命令 flag 计算。
+ * 弧几何工具：arc / circlePath / ellipsePath 共用的端点 / bbox 计算。
  * 角度约定（与 polar.ts 一致，SVG y-down）：endpoint = [cx + r·cos(θ), cy + r·sin(θ)]，
  * 0=+x(east), 90=+y(south,视觉下), 180=-x(west), 270=-y(north,视觉上)。
- * 角度递增=SVG 屏幕顺时针，对应 <path> A 命令 sweep-flag=1（endAngle > startAngle）。
+ * 角度递增=SVG 屏幕顺时针。
  */
 
 const DEG_TO_RAD = Math.PI / 180;
@@ -20,21 +20,6 @@ export const arcEndPoint = (
     center[0] + Math.cos(rad) * radius,
     center[1] + Math.sin(rad) * radius,
   ];
-};
-
-/**
- * SVG `<path>` A 命令的 large-arc-flag 与 sweep-flag
- * @description largeArc：弧跨度 |Δ| > 180° 为 1；sweep：endAngle >= startAngle 为 1（角度增加 = SVG 屏幕 CW）。|Δ|=180°/0° 时 largeArc=0
- */
-export const arcSvgFlags = (
-  startAngleDeg: number,
-  endAngleDeg: number,
-): { largeArc: 0 | 1; sweep: 0 | 1 } => {
-  const delta = Math.abs(endAngleDeg - startAngleDeg);
-  return {
-    largeArc: delta > 180 ? 1 : 0,
-    sweep: endAngleDeg >= startAngleDeg ? 1 : 0,
-  };
 };
 
 /**
