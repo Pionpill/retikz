@@ -78,7 +78,9 @@ export type {
   TextPrim,
   TextLine,
   PathPrim,
+  PathCommand,
   GroupPrim,
+  Transform,
   ViewBox,
   Scene,
 } from './primitive';
