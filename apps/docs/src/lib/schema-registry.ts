@@ -10,16 +10,16 @@ export type SchemaRegistryEntry = {
 };
 
 export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
-  // 9 个一级页面
+  // 6 个一级页面
   SceneSchema:         { schema: IR.SceneSchema,         label: 'Scene',         url: '/core/reference/schema/scene' },
-  NodeSchema:          { schema: IR.NodeSchema,          label: 'Node',          url: '/core/reference/schema/node' },
-  CoordinateSchema:    { schema: IR.CoordinateSchema,    label: 'Coordinate',    url: '/core/reference/schema/coordinate' },
+  NodeSchema:          { schema: IR.NodeSchema,          label: 'Node',          url: '/core/reference/schema/entity#node' },
+  CoordinateSchema:    { schema: IR.CoordinateSchema,    label: 'Coordinate',    url: '/core/reference/schema/entity#coordinate' },
   PathSchema:          { schema: IR.PathSchema,          label: 'Path',          url: '/core/reference/schema/path' },
   StepSchema:          { schema: IR.StepSchema,          label: 'Step',          url: '/core/reference/schema/step' },
   TargetSchema:        { schema: IR.TargetSchema,        label: 'Target',        url: '/core/reference/schema/target' },
-  PositionSchema:      { schema: IR.PositionSchema,      label: 'Position',      url: '/core/reference/schema/position' },
-  PolarPositionSchema: { schema: IR.PolarPositionSchema, label: 'PolarPosition', url: '/core/reference/schema/polar-position' },
-  AtPositionSchema:    { schema: IR.AtPositionSchema,    label: 'AtPosition',    url: '/core/reference/schema/at-position' },
+  PositionSchema:      { schema: IR.PositionSchema,      label: 'Position',      url: '/core/reference/schema/placement#position' },
+  PolarPositionSchema: { schema: IR.PolarPositionSchema, label: 'PolarPosition', url: '/core/reference/schema/placement#polarposition' },
+  AtPositionSchema:    { schema: IR.AtPositionSchema,    label: 'AtPosition',    url: '/core/reference/schema/placement#atposition' },
 
   // Step 10 变体（同页 #anchor）
   MoveStepSchema:        { schema: IR.MoveStepSchema,        label: 'MoveStep',        url: '/core/reference/schema/step#move' },

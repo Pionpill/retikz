@@ -1,0 +1,32 @@
+---
+title: Placement
+description: position 字段的三种形态 —— 笛卡尔 / 极坐标 / 相对定位
+---
+
+`position` 字段可填的三种形态。三者都会在 Scene 编译阶段解析为笛卡尔。
+
+## Position
+
+`PositionSchema` 是元组 —— 最简单的位置形态。
+
+<ZodSchema name="PositionSchema" />
+
+## PolarPosition
+
+`PolarPositionSchema` 是递归的 —— `origin` 字段本身可以又是一个 `PolarPosition`（链式极坐标）。
+
+<ZodSchema name="PolarPositionSchema" descriptions={{
+  origin: '原点引用：node id 字符串、笛卡尔 [x,y]、或嵌套 PolarPosition（递归）；省略则取 [0, 0]',
+  angle: '角度（°），逆时针为正（TikZ 约定）',
+  radius: '半径 / 距离，用户单位',
+}} />
+
+## AtPosition
+
+`AtPositionSchema` 对应 TikZ positioning library 的 `[<direction>=<distance> of <id>]`。
+
+<ZodSchema name="AtPositionSchema" descriptions={{
+  direction: '从被引用节点指向本节点的方向，视觉约定（above = 视觉向上，screen y-）',
+  of: '被引用 node / coordinate 的 id；必须在 IR 中先于本节点出现（不接受前向引用）',
+  distance: '从被引用节点中心到本节点中心的距离（用户单位）；默认走 Tikz nodeDistance 上下文，再回 1',
+}} />

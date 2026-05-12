@@ -1,0 +1,24 @@
+---
+title: Placement
+description: Three forms a `position` field can take — Cartesian / Polar / At-relative
+---
+
+A `position` field can be filled with any of three forms. All resolve to Cartesian at compile time.
+
+## Position
+
+`PositionSchema` is a tuple — the simplest position form.
+
+<ZodSchema name="PositionSchema" />
+
+## PolarPosition
+
+`PolarPositionSchema` is recursive — the `origin` field may itself be another `PolarPosition` (chained polars).
+
+<ZodSchema name="PolarPositionSchema" />
+
+## AtPosition
+
+`AtPositionSchema` mirrors TikZ `[<direction>=<distance> of <id>]` from the positioning library.
+
+<ZodSchema name="AtPositionSchema" />

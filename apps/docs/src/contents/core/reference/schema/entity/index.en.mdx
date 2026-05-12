@@ -1,0 +1,18 @@
+---
+title: Entity
+description: Named members placed in a scene — Node and Coordinate
+---
+
+`entity` covers IR primitives that **have an id**, are **placed at a position**, and **don't draw paths themselves**. Both register into the same node index, so a Node id and a Coordinate id share the same namespace.
+
+## Node
+
+`NodeSchema` describes one positioned visual primitive. It's the heaviest IR entity — 30+ fields covering shape, fill / stroke style, padding, text content, font, scaling, and attached labels.
+
+<ZodSchema name="NodeSchema" />
+
+## Coordinate
+
+`CoordinateSchema` is the IR form of TikZ `\coordinate (m) at (3,2);`. Requires an `id` (its whole purpose), never contributes to viewBox, and shares the node index with `Node`.
+
+<ZodSchema name="CoordinateSchema" />

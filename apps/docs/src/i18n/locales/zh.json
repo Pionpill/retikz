@@ -41,14 +41,11 @@
     "reference": "参考",
     "refSchema": "Schema",
     "refSceneSchema": "Scene",
-    "refNodeSchema": "Node",
-    "refCoordinateSchema": "Coordinate",
+    "refEntity": "Entity",
     "refPathSchema": "Path",
     "refStepSchema": "Step",
     "refTargetSchema": "Target",
-    "refPositionSchema": "Position",
-    "refPolarPositionSchema": "PolarPosition",
-    "refAtPositionSchema": "AtPosition"
+    "refPlacement": "Placement"
   },
   "about": {
     "label": "关于",
