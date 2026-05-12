@@ -1,9 +1,9 @@
 ---
 title: Placement
-description: Three forms a `position` field can take — Cartesian / Polar / At-relative
+description: Four forms a `position` field can take — Cartesian / Polar / At-relative / Offset
 ---
 
-A `position` field can be filled with any of three forms. All resolve to Cartesian at compile time.
+A `position` field can be filled with any of four forms. All resolve to Cartesian at compile time.
 
 ## Position
 
@@ -22,3 +22,9 @@ A `position` field can be filled with any of three forms. All resolve to Cartesi
 `AtPositionSchema` mirrors TikZ `[<direction>=<distance> of <id>]` from the positioning library.
 
 <ZodSchema name="AtPositionSchema" />
+
+## OffsetPosition
+
+`OffsetPositionSchema` mirrors TikZ `calc` library syntax `($(of) + (dx, dy)$)` — an arbitrary `(dx, dy)` offset from a base point; the `of` union shape matches `PolarPosition.origin`.
+
+<ZodSchema name="OffsetPositionSchema" />
