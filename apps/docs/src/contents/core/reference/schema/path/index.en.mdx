@@ -1,9 +1,9 @@
 ---
 title: Path
-description: A drawn path container and its step actions
+description: A drawn path container, its step actions, and step targets
 ---
 
-A `path` is the outer container for a drawn line. Its `children` field is an ordered array of `Step` actions; the renderer walks them sequentially to produce SVG path commands.
+A `path` is the outer container for a drawn line. Its `children` field is an ordered array of `Step` actions; the renderer walks them sequentially to produce SVG path commands. Each step's destination is a `Target`.
 
 ## Path
 
@@ -54,3 +54,17 @@ A `path` is the outer container for a drawn line. Its `children` field is an ord
 ### EllipsePath
 
 <ZodSchema name="EllipsePathStepSchema" />
+
+## Target
+
+`TargetSchema` is a union over four forms — Cartesian / polar / node id / relative offset:
+
+<ZodSchema name="TargetSchema" />
+
+### Rel
+
+<ZodSchema name="RelTargetSchema" />
+
+### RelAccumulate
+
+<ZodSchema name="RelAccumulateTargetSchema" />

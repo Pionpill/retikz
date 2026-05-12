@@ -16,7 +16,7 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
   CoordinateSchema:    { schema: IR.CoordinateSchema,    label: 'Coordinate',    url: '/core/reference/schema/entity#coordinate' },
   PathSchema:          { schema: IR.PathSchema,          label: 'Path',          url: '/core/reference/schema/path#path' },
   StepSchema:          { schema: IR.StepSchema,          label: 'Step',          url: '/core/reference/schema/path#step' },
-  TargetSchema:        { schema: IR.TargetSchema,        label: 'Target',        url: '/core/reference/schema/target' },
+  TargetSchema:        { schema: IR.TargetSchema,        label: 'Target',        url: '/core/reference/schema/path#target' },
   PositionSchema:      { schema: IR.PositionSchema,      label: 'Position',      url: '/core/reference/schema/placement#position' },
   PolarPositionSchema: { schema: IR.PolarPositionSchema, label: 'PolarPosition', url: '/core/reference/schema/placement#polarposition' },
   AtPositionSchema:    { schema: IR.AtPositionSchema,    label: 'AtPosition',    url: '/core/reference/schema/placement#atposition' },
@@ -34,8 +34,8 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
   EllipsePathStepSchema: { schema: IR.EllipsePathStepSchema, label: 'EllipsePathStep', url: '/core/reference/schema/path#ellipsepath' },
 
   // Target 2 变体（同页 #anchor）
-  RelTargetSchema:           { schema: IR.RelTargetSchema,           label: 'RelTarget',           url: '/core/reference/schema/target#rel' },
-  RelAccumulateTargetSchema: { schema: IR.RelAccumulateTargetSchema, label: 'RelAccumulateTarget', url: '/core/reference/schema/target#relaccumulate' },
+  RelTargetSchema:           { schema: IR.RelTargetSchema,           label: 'RelTarget',           url: '/core/reference/schema/path#rel' },
+  RelAccumulateTargetSchema: { schema: IR.RelAccumulateTargetSchema, label: 'RelAccumulateTarget', url: '/core/reference/schema/path#relaccumulate' },
 };
 
 /** 按 identity 反查注册表项（同一 Zod schema 实例必命中同一条目） */

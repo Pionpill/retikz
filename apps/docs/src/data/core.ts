@@ -52,7 +52,6 @@ export const coreSection: Array<Section> = [
           { id: 'scene',     label: 'core.refSceneSchema' },
           { id: 'entity',    label: 'core.refEntity' },
           { id: 'path',      label: 'core.refPathSchema' },
-          { id: 'target',    label: 'core.refTargetSchema' },
           { id: 'placement', label: 'core.refPlacement' },
         ],
       },

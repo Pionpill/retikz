@@ -1,6 +1,6 @@
 ---
 title: Path
-description: 笔画外壳与 step 动作序列
+description: 笔画外壳、step 动作序列与 step 目标点
 ---
 
 `path` 是一条笔画的外壳容器；它的 `children` 字段是一个 `Step` 动作有序数组，渲染器顺序处理它们产出 SVG path 命令。
@@ -149,4 +149,22 @@ description: 笔画外壳与 step 动作序列
   'label.text': '标签文字内容（单行；多行需 \\n）',
   'label.position': '沿段位置：`midway` / `near-start` / `near-end`，默认 midway',
   'label.side': '相对段方向的偏移：above/below/left/right 沿法线偏移；sloped 沿切线旋转（无法线偏移），默认 above',
+}} />
+
+## Target
+
+`TargetSchema` 是四种形态的 union —— 笛卡尔 / 极坐标 / 节点 id / 相对偏移：
+
+<ZodSchema name="TargetSchema" />
+
+### Rel
+
+<ZodSchema name="RelTargetSchema" descriptions={{
+  rel: '相对偏移 (dx, dy)；不更新光标位置（对应 TikZ `(+x, +y)` 语法）',
+}} />
+
+### RelAccumulate
+
+<ZodSchema name="RelAccumulateTargetSchema" descriptions={{
+  relAccumulate: '累积相对偏移 (dx, dy)；**会**更新光标位置（对应 TikZ `(++x, ++y)` 语法）',
 }} />

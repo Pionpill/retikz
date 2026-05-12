@@ -193,7 +193,7 @@ import { Path, Step } from '@retikz/react';
 
 ## Reference 词典页（`<ZodSchema>`）
 
-`apps/docs/src/contents/core/reference/schema/<page>/index.{en,zh}.mdx` 下的页面用 **`<ZodSchema name="XxxSchema" descriptions={{...}} />`** 渲染字段表。Reference 词典是 IR schema 查询入口，跟"组件页"4 段结构无关。当前结构：5 个合并页（scene / entity / path / target / placement），每页一个或多个 H2/H3 + `<ZodSchema>` 块。
+`apps/docs/src/contents/core/reference/schema/<page>/index.{en,zh}.mdx` 下的页面用 **`<ZodSchema name="XxxSchema" descriptions={{...}} />`** 渲染字段表。Reference 词典是 IR schema 查询入口，跟"组件页"4 段结构无关。当前结构：4 个合并页（scene / entity / path / placement），每页一个或多个 H2/H3 + `<ZodSchema>` 块。
 
 ### name prop
 
@@ -237,7 +237,7 @@ union / array 内部的 object 不会被平铺（如 `NodeSchema.label` 是 unio
 
 ### 合并页 URL 锚点（rehype-slug 自动 id）
 
-合并页（`path` / `target` / `placement` / `entity`）内多个 schema 用 H2/H3 标题分隔，rehype-slug 自动生成 id：
+合并页（`path` / `placement` / `entity`）内多个 schema 用 H2/H3 标题分隔，rehype-slug 自动生成 id：
 
 - `## Position` → `#position`
 - `### Move` → `#move`
@@ -250,7 +250,7 @@ union / array 内部的 object 不会被平铺（如 `NodeSchema.label` 是 unio
 1. 确认 schema 在 `@retikz/core` `index.ts` 已 export
 2. `apps/docs/src/lib/schema-registry.ts` 加一行（含 schema instance + label + URL；URL 是合并页 + `#anchor` 或独立页）
 3. 在合适的合并页 mdx 加 H2/H3 + `<ZodSchema name="..." descriptions={{...}} />`；zh 必须含所有字段（+ 嵌套点路径）；en 只写 `<ZodSchema name="..." />`
-4. **如果是新增独立页**（不属于现有 5 合并页）：在 `data/core.ts` reference section 加 children 条目 + i18n 加 `core.refXxxSchema` key
+4. **如果是新增独立页**（不属于现有 4 合并页）：在 `data/core.ts` reference section 加 children 条目 + i18n 加 `core.refXxxSchema` key
 5. 跑 `pnpm --filter @retikz/docs build` + dev 看控制台 warn
 
 ## 与 shadcn 的差异

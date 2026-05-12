@@ -25,7 +25,7 @@ describe('SCHEMA_REGISTRY', () => {
     expect(lookupSchema(SceneSchema)?.label).toBe('Scene');
     expect(lookupSchema(CoordinateSchema)?.url).toBe('/core/reference/schema/entity#coordinate');
     expect(lookupSchema(MoveStepSchema)?.url).toBe('/core/reference/schema/path#move');
-    expect(lookupSchema(RelTargetSchema)?.url).toBe('/core/reference/schema/target#rel');
+    expect(lookupSchema(RelTargetSchema)?.url).toBe('/core/reference/schema/path#rel');
   });
 
   it('returns undefined for unregistered schemas', () => {
