@@ -37,6 +37,10 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
   // Target 2 变体（同页 #anchor）
   RelTargetSchema:           { schema: IR.RelTargetSchema,           label: 'RelTarget',           url: '/core/reference/schema/path#rel' },
   RelAccumulateTargetSchema: { schema: IR.RelAccumulateTargetSchema, label: 'RelAccumulateTarget', url: '/core/reference/schema/path#relaccumulate' },
+
+  // Arrow detail（path-level 箭头视觉规格）
+  ArrowDetailSchema:    { schema: IR.ArrowDetailSchema,    label: 'ArrowDetail',    url: '/core/reference/schema/path#arrowdetail' },
+  ArrowEndDetailSchema: { schema: IR.ArrowEndDetailSchema, label: 'ArrowEndDetail', url: '/core/reference/schema/path#arrowenddetail' },
 };
 
 /** 按 identity 反查注册表项（同一 Zod schema 实例必命中同一条目） */

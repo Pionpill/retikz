@@ -68,3 +68,15 @@ A `path` is the outer container for a drawn line. Its `children` field is an ord
 ### RelAccumulate
 
 <ZodSchema name="RelAccumulateTargetSchema" />
+
+## ArrowDetail
+
+The schema for `Path.arrowDetail` — eight top-level visual fields (shared with `ArrowEndDetail`) plus optional `start` / `end` sub-objects. Sub-objects merge field-by-field into the top-level defaults: missing fields inherit, present fields override.
+
+<ZodSchema name="ArrowDetailSchema" />
+
+### ArrowEndDetail
+
+The schema for `start` / `end` sub-objects — same field set as `ArrowDetail` minus the `start` / `end` fields themselves (no recursion):
+
+<ZodSchema name="ArrowEndDetailSchema" />
