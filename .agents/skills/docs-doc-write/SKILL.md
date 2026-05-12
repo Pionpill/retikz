@@ -122,6 +122,71 @@ retikz 文档面向**用户**——用户写的是 DSL（`<Tikz>` / `<Node>` / `
 
 **画叙述性插图时的具体惯例**（`stroke="none"` 当文字锚点、连线靠 id、宽度限制、双语 demo 拆分条件、模板代码等）走专门的 [`docs-figure-draw`](../docs-figure-draw/SKILL.md) skill；本文只管"什么时候用哪种"，不重复画法细节。
 
+## 演示位置 / 关系类 demo 的写法（重要）
+
+当 demo 的**主题是位置、引用、关系**（如 OffsetPosition / AtPosition / `<Coordinate>` / Sugar way / step.to 等），**不是**演示 Node 自己的视觉特性（shape / color / stroke / font）时，遵循以下惯例：
+
+### Draw 优先于 Path
+
+```tsx
+// ✅ 用 Sugar：Draw way
+<Draw way={['A', 'B']} arrow="->" />
+
+// ❌ 不用 Kernel：Path + Step
+<Path arrow="->">
+  <Step kind="move" to="A" />
+  <Step kind="line" to="B" />
+</Path>
+```
+
+Draw way 简短、语义直白、与文档站现有 demo 风格一致。**唯一例外**：demo 本身就是演示 `<Path>` / `<Step>` Kernel 用法（参考 `components/path/*` 下的 demo）。
+
+### Node 当锚点用：短标签 + 小写 + 淡色
+
+位置/关系 demo 里 Node 是"地理坐标"——是参照物，不是主角。文字别抢戏：
+
+```tsx
+// ✅ 锚点节点：单字母小写 + 淡色文字（让位置 / 关系成视觉焦点）
+<Node id="A" position={[0, 0]} textColor="#888">a</Node>
+<Node id="B" position={{ of: 'A', offset: [80, 30] }} textColor="#888">b</Node>
+
+// ❌ 长描述文字 + 默认文字色（抢视觉焦点）
+<Node id="A" position={[0, 0]}>A</Node>
+<Node id="B" position={{ of: 'A', offset: [80, 30] }}>右 80 下 30</Node>
+```
+
+具体规则：
+
+- **id 用大写**（`A` / `B` / `C`）——id 是程序标识、给 `Draw way` 引用
+- **children 文字用小写**（`a` / `b` / `c`）——视觉上是 "anchor letter"，与 id 视觉区分
+- **`textColor` 用淡色**（`#888` / `#999` 一类柔和灰）——比默认 `currentColor` 弱，不抢主线条/箭头视觉
+- **不要把位置描述写进文字**（如 `右 80 下 30`、`cartesian+offset`）——位置 / 关系靠视觉传达，文字只标"这是哪个节点"。位置说明在 mdx 段落里讲
+
+### 最小用例先行
+
+演示某种 schema / DSL 时，**两个节点能讲清就别用四个**——主 demo 取最朴素 case；高阶变体（of 的不同形态、嵌套、链式）拆 2-3 个独立 demo 顺序展示，每个 demo 单一主题：
+
+```tsx
+// ✅ 一个 demo 只演示一件事
+// node-offset-basic.demo.tsx：A → B 用 id 引用
+// node-offset-cartesian.demo.tsx：B 引用笛卡尔字面值
+// node-offset-polar.demo.tsx：B 引用 polar 基准
+```
+
+不是：
+
+```tsx
+// ❌ 一个 demo 塞 5 个节点演示 3 种 of 形态 + 路径连线 + 极坐标变体
+```
+
+### 与 docs-figure-draw 的边界
+
+| 用途 | 走的 skill | Node 默认 stroke |
+|---|---|---|
+| 叙述性插图（架构图 / 流程图 / 概念示意） | `docs-figure-draw`，`hideCode` | `"none"`（去外框）|
+| **演示位置 / 关系类用法**（本节） | `docs-doc-write` 本节 | **保留默认外框**——Node 自身是 demo 主体之一 |
+| 演示 Node 视觉特性（shape / color / font） | `docs-doc-write` 默认 ComponentPreview | 保留默认；文字 / 视觉自由发挥 |
+
 ## 文档宽度限制
 
 文档正文最大宽度 **640px**（`max-w-160`）；表格 `<td>` 默认 `whitespace-nowrap`——**单元格不会自动换行**，过长会触发横向滚动。
