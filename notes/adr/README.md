@@ -42,16 +42,19 @@ PATCH 不开目录——patch 仅修 bug、不写 ADR。
 | Milestone | 已用 | 下一个未用 |
 |---|---|---|
 | `v0.1-alpha.4` | 01-03（已完成） | — |
-| `v0.1-alpha.5` | 01 | 02 |
+| `v0.1-alpha.5` | 01-04 | 05 |
 
 ---
 
 ## v0.1.0-alpha.5（进行中）
 
-> 主题：alpha 收尾破坏性扩张（PathPrim 结构化 / arrow 重设计 / StepLabel position 扩充 / 任意 offset 相对定位）
+> 主题：alpha 收尾破坏性扩张（PathPrim 结构化 / StepLabel position 扩充 / arrow 重设计 / 任意 offset 相对定位）
 
 | ADR | 标题 | 状态 |
 |---|---|---|
+| [ADR-04](v0/v0.1-alpha.5/04-position-offset.md) | `Node.position` / `Coordinate.position` 加 `OffsetPosition` | Proposed |
+| [ADR-03](v0/v0.1-alpha.5/03-path-arrow-detail.md) | Path 箭头重设计（删 `arrowShape`，加 `arrowDetail` + 起末分别配置） | Proposed |
+| [ADR-02](v0/v0.1-alpha.5/02-step-label-position-t.md) | `StepLabel.position` 扩充（7 keyword + 任意 t 数值 + 多 kind 参数化） | Proposed |
 | [ADR-01](v0/v0.1-alpha.5/01-scene-primitive-structured.md) | Scene `PathPrim` + `GroupPrim` 结构化（去 SVG 字符串） | Proposed |
 
 ---
