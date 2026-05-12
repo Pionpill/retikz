@@ -163,9 +163,9 @@ git add notes/adr/v<MAJOR>/v<MAJOR>.<MINOR>-<channel>.<N>/NNNN-*.md
 git commit -m ":pencil: ADR-NNNN 完工：标记 Accepted"
 
 # 2. roadmap 勾选（如果是本 alpha 段最后一条 ADR）
-# 编辑 notes/plans/v0-roadmap.md 把 - [ ] vX → - [x] vX
-git add notes/plans/v0-roadmap.md
-git commit -m ":pencil: 勾掉 v0-roadmap §<段>"
+# 编辑 notes/plans/v0/roadmap.md 把 - [ ] vX → - [x] vX
+git add notes/plans/v0/roadmap.md
+git commit -m ":pencil: 勾掉 v0 roadmap §<段>"
 
 # 3. changelog 入库
 git add apps/docs/src/contents/reference/releases/changelog/index.{zh,en}.mdx

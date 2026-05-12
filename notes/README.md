@@ -9,7 +9,7 @@
 | [`architecture/`](./architecture) | 长期架构文档；少改、不带日期 | 永久（重大架构调整时**更新原文**，不另起新文） | 主题名，如 `DESIGN.md` |
 | [`adr/`](./adr) | 单点架构决策记录（Architecture Decision Records） | 永久、不可变；被推翻就写新 ADR 标 `Supersedes #N` | `NNNN-kebab-case-标题.md`，编号递增 |
 | [`analysis/`](./analysis) | 一次性研究 / 对比 / gap 分析 | 长期保留作历史参考，但不再更新 | `YYYY-MM-DD-kebab-case-标题.md` |
-| [`plans/`](./plans) | 临时实施方案、迁移步骤 | **完工即删**（git 历史还在），不留死文件 | `kebab-case-标题.md` |
+| [`plans/`](./plans) | 临时实施方案、迁移步骤 | **完工即删**（git 历史还在），不留死文件 | 版本专属：`v<MAJOR>/v<MAJOR>.<MINOR>-<channel>.<N>.md`（plan 比 adr 粒度粗，单文件就够）；跨版本草案：顶层 `kebab-case-标题.md` |
 
 ## 当前文档
 
@@ -19,9 +19,9 @@
 
 ### adr/
 
-> alpha.1 / alpha.2 / alpha.3 期间的 ADR 已随版本发布归档进 changelog，编号每个 alpha 重新起。
+> alpha.1 / alpha.2 / alpha.3 期间的 ADR 已随版本发布归档进 changelog（旧约定，每个 alpha 重新起号）。
 >
-> 当前 alpha.4 的 ADR 列表见 [`alpha-4-plan.md`](./plans/alpha-4-plan.md)，写入即附在此处。
+> alpha.4 起转为永久保留 + 全局单调编号——alpha.4 的 3 篇 ADR 在 [`adr/v0/v0.1-alpha.4/`](./adr/v0/v0.1-alpha.4)；后续版本的 ADR 写入 [`adr/v0/<version>/`](./adr/v0)，索引见 [`adr/README.md`](./adr/README.md)。
 
 ### analysis/
 
@@ -29,7 +29,11 @@
 
 ### plans/
 
-- [`v0-roadmap.md`](./plans/v0-roadmap.md)：v0 总路线（v0.1 → v0.4 → v0 收尾）含 v0.1 各 alpha 详细拆分
+详细索引见 [`plans/README.md`](./plans/README.md)。当前活跃 plan：
+
+- [`v0/roadmap.md`](./plans/v0/roadmap.md)：v0 总路线（v0.1 → v0.4 → v0 收尾）含 v0.1 各 alpha 详细拆分
+- [`v0/v0.1-alpha.5.md`](./plans/v0/v0.1-alpha.5.md)：v0.1.0-alpha.5 破坏性收尾 TODO 列表
+- [`v0/v0.1-beta.1.md`](./plans/v0/v0.1-beta.1.md)：v0.1.0-beta.1 非破坏性优化 TODO 列表
 - [`docs-ai-chat-panel.md`](./plans/docs-ai-chat-panel.md)：文档站侧边栏 AI 聊天面板设计讨论（草案 / 待续）；BYOK 浏览器直连方向
 
 ## 写文档前先选生命周期

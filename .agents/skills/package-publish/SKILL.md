@@ -1,6 +1,6 @@
 ---
 name: package-publish
-description: 用于把 retikz 的 publishable 包（`@retikz/core` / `@retikz/react`）发布到 npm。一次发包 = 三处同步：版本号（`packages/<pkg>/package.json`）、文档站（`apps/docs/src/contents/reference/releases` + `i18n` 的 `versionTag`）、内部计划（`notes/plans/v0-roadmap.md` 勾选）。retikz 专用，其它项目可忽略。
+description: 用于把 retikz 的 publishable 包（`@retikz/core` / `@retikz/react`）发布到 npm。一次发包 = 三处同步：版本号（`packages/<pkg>/package.json`）、文档站（`apps/docs/src/contents/reference/releases` + `i18n` 的 `versionTag`）、内部计划（`notes/plans/v0/roadmap.md` 勾选）。retikz 专用，其它项目可忽略。
 ---
 
 # 发 retikz 到 npm
@@ -13,7 +13,7 @@ retikz 一次发包 = **3 处同步改动 + 用户确认 + npm publish**。
 | --- | --- |
 | **包元数据** | `packages/<pkg>/package.json` 的 `version` 字段 |
 | **文档站** | `apps/docs/src/contents/reference/releases/changelog/{zh,en}.mdx` 加新条目 + `i18n/locales/{zh,en}.ts` 的 `versionTag`（仅 MINOR / MAJOR / 大里程碑变） |
-| **计划文档** | `notes/plans/v0-roadmap.md` 勾掉对应小版本 checkbox |
+| **计划文档** | `notes/plans/v0/roadmap.md` 勾掉对应小版本 checkbox |
 
 漏一处的后果：
 
@@ -47,7 +47,7 @@ retikz 一次发包 = **3 处同步改动 + 用户确认 + npm publish**。
 
 ## 版本节奏
 
-参考 `notes/plans/v0-roadmap.md`。pre-stable（v1.0 之前）走 `-alpha.N` / `-beta.N` / `-rc.N`：
+参考 `notes/plans/v0/roadmap.md`。pre-stable（v1.0 之前）走 `-alpha.N` / `-beta.N` / `-rc.N`：
 
 | 形态 | 示例 | npm dist-tag | 下游默认 install |
 | --- | --- | --- | --- |
@@ -90,7 +90,7 @@ retikz 一次发包 = **3 处同步改动 + 用户确认 + npm publish**。
 npm dist-tag: alpha
 git tag: v0.1.0-alpha.1
 本次变更：
-  - <从 v0-roadmap.md alpha.1 段或用户说明摘要>
+  - <从 v0/roadmap.md alpha.1 段或用户说明摘要>
 ```
 
 如果用户没说清楚版本号或变更点，**停下来问**，不要瞎猜。
@@ -156,14 +156,14 @@ monorepo 子包跑 `version` 不会触发 git commit，安全。
 
 #### 2.4 roadmap checklist
 
-`notes/plans/v0-roadmap.md` 末尾"v0.1 跟踪"区有 checkbox。本次发布对应版本前的 `[ ]` 改成 `[x]`：
+`notes/plans/v0/roadmap.md` 末尾"v0.1 跟踪"区有 checkbox。本次发布对应版本前的 `[ ]` 改成 `[x]`：
 
 ```diff
 - - [ ] v0.1.0-alpha.1
 + - [x] v0.1.0-alpha.1
 ```
 
-整 v0.1.0 完结后，按 `notes/README.md` 约定**整篇删除 `v0-roadmap.md`**——但那是 v0.1.0 当次的事，不是每次 alpha 做的。
+整 v0.1.0 完结后，按 `notes/README.md` 约定**整篇删除 `v0/roadmap.md`**——但那是 v0.1.0 当次的事，不是每次 alpha 做的。
 
 #### 2.5 lockfile 同步
 
@@ -250,7 +250,7 @@ working tree 改动汇总：
   M  packages/react/package.json
   M  apps/docs/src/contents/reference/releases/changelog/zh.mdx
   M  apps/docs/src/contents/reference/releases/changelog/en.mdx
-  M  notes/plans/v0-roadmap.md
+  M  notes/plans/v0/roadmap.md
   ...
 
 dry-run 关键行：
@@ -321,7 +321,7 @@ git tag: v0.1.0-alpha.1（已 push）
 
 - **根 AGENTS.md commit 规则**：阶段 5 的 commit / push / publish 都需要用户**当次明确授权**。授权一次只覆盖本次发布，下次发版要再问一遍
 - **`docs-doc-write` 技能**：本技能里 changelog mdx 的写法是简版规范；如果要做更复杂的版本说明页（迁移指南、breaking changes 详解），改完后参考 `docs-doc-write` 写正文
-- **roadmap 完结**：v0.1.0 正式发布后，`notes/plans/v0-roadmap.md` 按 `notes/README.md` 约定**整篇删除**——临时方案完工即删，不留死文档
+- **roadmap 完结**：v0.1.0 正式发布后，`notes/plans/v0/roadmap.md` 按 `notes/README.md` 约定**整篇删除**——临时方案完工即删，不留死文档
 
 ## 验证清单
 

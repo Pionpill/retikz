@@ -13,7 +13,7 @@
 
 - 状态：Proposed
 - 决策日期：YYYY-MM-DD
-- 关联：[v0-roadmap §<段>](../../../plans/v0-roadmap.md) · [tikz-gap-analysis §<段>](../../../analysis/<...>.md) · [DESIGN.md §<段>](../../../architecture/DESIGN.md)
+- 关联：[v0 roadmap §<段>](../../../plans/v0/roadmap.md) · [tikz-gap-analysis §<段>](../../../analysis/<...>.md) · [DESIGN.md §<段>](../../../architecture/DESIGN.md)
 
 ## 背景
 

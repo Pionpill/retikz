@@ -131,7 +131,7 @@ INFO（实现意外稳健的好消息）：
 | 列表 | 处理 |
 |---|---|
 | BLOCKING 非空 | 派**实现 Agent**修，每条 BLOCKING 加进 spec 测试文件（提升为正式测试），实现 Agent 让其过；3 轮没收敛 halt |
-| WARNING 非空 | 主 AI 决定本 ADR 内修还是 backlog（如果是后续 ADR 会触及的问题，可记进 v0-roadmap） |
+| WARNING 非空 | 主 AI 决定本 ADR 内修还是 backlog（如果是后续 ADR 会触及的问题，可记进 v0 roadmap） |
 | INFO | 不动作，但记进 wrapup 阶段 changelog 备注（实现稳健性的"宣传素材"） |
 
 BLOCKING 修完后**重跑一遍 Bug Hunter**（用同一份 prompt）确认没新增 BLOCKING——这是"修复回归"。最多再跑 2 轮，第 3 轮还有 BLOCKING 则 halt。
