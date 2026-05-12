@@ -5,6 +5,7 @@ import type { FC } from 'react';
 import { useEffect, useState } from 'react';
 import * as jsxDevRuntime from 'react/jsx-dev-runtime';
 import * as jsxRuntime from 'react/jsx-runtime';
+import { useLocation } from 'react-router';
 import rehypeMdxCodeProps from 'rehype-mdx-code-props';
 import rehypeSlug from 'rehype-slug';
 import remarkFrontmatter from 'remark-frontmatter';
@@ -61,6 +62,7 @@ export const MdxContent: FC<MdxContentProps> = props => {
   const { source, onFrontmatter } = props;
   const [Content, setContent] = useState<MDXContentType | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const { hash } = useLocation();
 
   useEffect(() => {
     if (source == null) return;
@@ -87,6 +89,20 @@ export const MdxContent: FC<MdxContentProps> = props => {
       controller.abort();
     };
   }, [source, onFrontmatter]);
+
+  /** MDX 运行时编译 + 异步挂载 —— 原生 hash 滚动 fail（DOM 还没注入 id）；自接 useLocation + rAF 兜底 */
+  useEffect(() => {
+    if (Content == null || !hash) return;
+    const id = decodeURIComponent(hash.slice(1));
+    if (!id) return;
+    const rafId = requestAnimationFrame(() => {
+      const el = document.getElementById(id);
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+    return () => {
+      cancelAnimationFrame(rafId);
+    };
+  }, [Content, hash]);
 
   if (error) {
     return <pre className="text-sm whitespace-pre-wrap text-red-500">{error}</pre>;
