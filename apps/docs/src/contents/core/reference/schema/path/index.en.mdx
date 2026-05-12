@@ -57,7 +57,7 @@ A `path` is the outer container for a drawn line. Its `children` field is an ord
 
 ## Target
 
-`TargetSchema` is a union over four forms — Cartesian / polar / node id / relative offset:
+`TargetSchema` is a union over six forms — Cartesian / polar / node id / offset (`{ of, offset }`) / relative offsets (rel / relAccumulate):
 
 <ZodSchema name="TargetSchema" />
 

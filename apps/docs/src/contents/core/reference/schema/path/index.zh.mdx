@@ -153,7 +153,7 @@ description: 笔画外壳、step 动作序列与 step 目标点
 
 ## Target
 
-`TargetSchema` 是四种形态的 union —— 笛卡尔 / 极坐标 / 节点 id / 相对偏移：
+`TargetSchema` 是六种形态的 union —— 笛卡尔 / 极坐标 / 节点 id / 偏移定位（`{ of, offset }`）/ 相对偏移（rel / relAccumulate）：
 
 <ZodSchema name="TargetSchema" />
 

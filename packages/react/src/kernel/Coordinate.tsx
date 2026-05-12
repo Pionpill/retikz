@@ -1,5 +1,5 @@
 import type { FC } from 'react';
-import type { IRAtPosition, IRPosition, PolarPosition } from '@retikz/core';
+import type { IRAtPosition, IROffsetPosition, IRPosition, PolarPosition } from '@retikz/core';
 import { TIKZ_COORDINATE } from './_displayNames';
 
 /** <Coordinate> 组件的 props */
@@ -8,9 +8,9 @@ export type CoordinateProps = {
   id: string;
   /**
    * 占位点位置；与 `<Node position>` 形态完全一致
-   * @description 笛卡尔 `[x, y]` / 极坐标 `{ angle, radius, origin? }` / 相对定位 `{ direction, of, distance? }`
+   * @description 笛卡尔 `[x, y]` / 极坐标 `{ angle, radius, origin? }` / 相对定位 `{ direction, of, distance? }` / 偏移定位 `{ of, offset }`（`of` 可为节点 id / 笛卡尔 / 极坐标）
    */
-  position: IRPosition | PolarPosition | IRAtPosition;
+  position: IRPosition | PolarPosition | IRAtPosition | IROffsetPosition;
 };
 
 /**

@@ -15,7 +15,7 @@ import { Coordinate } from '@retikz/react';
 <Coordinate id="hub" position={[0, 0]} />
 ```
 
-`position` 接受 `<Node>` 完全相同的三种形态：笛卡尔 `[x, y]` / 极坐标 `{ angle, radius, origin? }` / 相对定位 `{ direction, of, distance? }`。
+`position` 接受 `<Node>` 完全相同的四种形态：笛卡尔 `[x, y]` / 极坐标 `{ angle, radius, origin? }` / 相对定位 `{ direction, of, distance? }` / 偏移定位 `{ of, offset }`。
 
 ## 为什么需要它
 
@@ -48,12 +48,18 @@ import { Coordinate } from '@retikz/react';
 
 <ComponentPreview name="coordinate-fold-junction" size="lg" />
 
+### 偏移定位链
+
+Coordinate 用 `{ of, offset }` 派生下一个 coordinate——靠一个根 coordinate 驱动整组节点的相对位置，移动根点其它点全跟着走。比手写每个绝对坐标耦合更低：
+
+<ComponentPreview name="coordinate-offset-chain" size="lg" />
+
 ## API 参考
 
 | 属性 | 类型 | 默认值 | 描述 |
 | --- | --- | --- | --- |
 | `id` | `string` | — | **必填**——占位的全部意义就在于被 id 引用 |
-| `position` | `[x, y] \| PolarPosition \| { direction, of, distance? }` | — | 占位点位置；与 `<Node position>` 完全一致 |
+| `position` | `[x, y] \| PolarPosition \| { direction, of, distance? } \| { of, offset }` | — | 占位点位置；与 `<Node position>` 完全一致——包含偏移定位 `{ of, offset }` 形态 |
 
 ## 与 `<Node>` / `<Path>` 的关系
 

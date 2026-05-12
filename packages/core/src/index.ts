@@ -8,6 +8,7 @@ export {
   PositionSchema,
   PolarPositionSchema,
   AtPositionSchema,
+  OffsetPositionSchema,
   AT_DIRECTIONS,
   TargetSchema,
   RelTargetSchema,
@@ -39,6 +40,7 @@ export {
 export type {
   IRPosition,
   IRAtPosition,
+  IROffsetPosition,
   AtDirection,
   IRTarget,
   IRRelTarget,

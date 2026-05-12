@@ -135,6 +135,18 @@ Line 2`}</Node>
 
 <ComponentPreview name="node-at-relative" />
 
+### 偏移定位
+
+`position` 还接受 **`{ of, offset }`** 形态——任意 `(dx, dy)` 相对基准点偏移，对应 TikZ `calc` 的 `($(of) + (dx, dy)$)`。当 `at` 的 8 方向 + 单标量距离表达不下需求时（"A 右 30 下 10" 这种），用 offset 就够。
+
+- `of` 是基准点，三种形态（与 `PolarPosition.origin` 同形）：
+  - 字符串 id——引用命名节点 / coordinate（前向引用拒绝）
+  - `[x, y]` 笛卡尔字面值——直接坐标基准，无需任何节点定义
+  - `PolarPosition`（`{ angle, radius, origin? }`）——极坐标作基准，递归解析
+- `offset` 是 `[dx, dy]` 二元组，user units
+
+<ComponentPreview name="node-offset-position" />
+
 ### 节点附属标签
 
 `label` 在节点边界外挂额外文字，对应 TikZ `[label=above:foo]`。单对象或数组形态；`position` 接 8 方向枚举或数字角度（`label=30:foo` 等价 `position: 30`）；`font` / `textColor` 缺省时从 node 继承。
@@ -147,7 +159,7 @@ Line 2`}</Node>
 | --- | --- | --- | --- |
 | `id` | `string` | — | 唯一标识；被 `<Path>` / `<Draw>` 用来引用 |
 | `shape` | `'rectangle' \| 'circle' \| 'ellipse' \| 'diamond'` | `'rectangle'` | 节点形状 |
-| `position` | `[x, y] \| PolarPosition \| { direction, of, distance? }` | — | 节点中心位置：笛卡尔 / 极坐标 / 相对定位（TikZ `[<direction>=<distance> of <id>]` 同义） |
+| `position` | `[x, y] \| PolarPosition \| { direction, of, distance? } \| { of, offset }` | — | 节点中心位置：笛卡尔 / 极坐标 / 相对定位 / 偏移定位（TikZ `calc` 同义，`of` 三态：节点 id、笛卡尔、PolarPosition） |
 | `children` / `text` | `string \| Array<string>` | — | 节点内可见文字；字符串单行 / 数组多行；`text` 优先于 `children` |
 | `align` | `'left' \| 'center' \| 'right'` | `'center'` | 多行文本块内各行水平对齐方式 |
 | `lineHeight` | `number` | `font.size × 1.2` | 多行块的行高（user units） |

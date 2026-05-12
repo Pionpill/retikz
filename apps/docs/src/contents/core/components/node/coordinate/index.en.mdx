@@ -15,7 +15,7 @@ import { Coordinate } from '@retikz/react';
 <Coordinate id="hub" position={[0, 0]} />
 ```
 
-`position` accepts the same three forms as `<Node>`: Cartesian `[x, y]` / polar `{ angle, radius, origin? }` / relative `{ direction, of, distance? }`.
+`position` accepts the same four forms as `<Node>`: Cartesian `[x, y]` / polar `{ angle, radius, origin? }` / relative `{ direction, of, distance? }` / offset `{ of, offset }`.
 
 ## Why it exists
 
@@ -48,12 +48,18 @@ In flow charts, multiple paths often converge at a virtual point — that point 
 
 <ComponentPreview name="coordinate-fold-junction" size="lg" />
 
+### Offset positioning chain
+
+Use `{ of, offset }` to derive one coordinate from another — drive the whole group from a single root, and moving the root drags everything along. Lower coupling than hand-writing each absolute coordinate:
+
+<ComponentPreview name="coordinate-offset-chain" size="lg" />
+
 ## API Reference
 
 | Prop | Type | Default | Description |
 | --- | --- | --- | --- |
 | `id` | `string` | — | **Required** — a placeholder's entire purpose is to be referenced by id |
-| `position` | `[x, y] \| PolarPosition \| { direction, of, distance? }` | — | Placeholder position; same shapes as `<Node position>` |
+| `position` | `[x, y] \| PolarPosition \| { direction, of, distance? } \| { of, offset }` | — | Placeholder position; same shapes as `<Node position>` — includes the offset `{ of, offset }` form |
 
 ## Relationship with `<Node>` / `<Path>`
 

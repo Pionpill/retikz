@@ -1,6 +1,6 @@
 ---
 title: Step
-description: Path 的子节点——一个 step = 一个动作（move / line / step 折角 / cycle 闭合 / curve / cubic / bend 曲线 / arc 弧段 / circlePath 整圆 / ellipsePath 整椭圆）；`to` 支持节点 id / 笛卡尔 / 极坐标 / 相对偏移（rel / relAccumulate）；只能作为 `<Path>` 的直接 children。
+description: Path 的子节点——一个 step = 一个动作（move / line / step 折角 / cycle 闭合 / curve / cubic / bend 曲线 / arc 弧段 / circlePath 整圆 / ellipsePath 整椭圆）；`to` 支持节点 id / 笛卡尔 / 极坐标 / 偏移定位（of+offset）/ 相对偏移（rel / relAccumulate）；只能作为 `<Path>` 的直接 children。
 ---
 
 `<Step>` 描述路径上的一个动作：`move` 抬笔到目标点，`line` 落笔从游标画直线，`step` 经一个直角拐点折到目标点，`cycle` 闭合回 path 起点，`curve` / `cubic` / `bend` 画各类曲线，`arc` / `circlePath` / `ellipsePath` 以游标为圆心画弧段 / 整圆 / 整椭圆。它**只能**作为 `<Path>` 的直接 children；放在其它地方会被忽略。
@@ -56,6 +56,12 @@ import { Path, Step } from '@retikz/react';
 
 <ComponentPreview name="step-bend" size="lg" />
 
+### 偏移定位（offset）
+
+`to` 也接受 **`{ of, offset }`** 形态——基准 + `(dx, dy)` 任意偏移，对应 TikZ `calc` 的 `($(of) + (dx, dy)$)`。`of` 三态：节点 id、笛卡尔字面值、PolarPosition（递归极坐标）；和 `<Node position>` 的偏移定位完全对称：
+
+<ComponentPreview name="step-offset-target" size="lg" />
+
 ### 相对坐标（rel / relAccumulate）
 
 `to` 还可以是相对偏移对象：`{ rel: [dx, dy] }` 与 `{ relAccumulate: [dx, dy] }` 都基于**前一 step 的终点**（`prevEnd`，无前段时回退到 `[0, 0]`）解析；区别只是**是否推进 prevEnd**：
@@ -109,7 +115,7 @@ import { Path, Step } from '@retikz/react';
 | --- | --- | --- | --- |
 | `kind` | `'move' \| 'line' \| 'step' \| 'cycle' \| 'curve' \| 'cubic' \| 'bend' \| 'arc' \| 'circlePath' \| 'ellipsePath'` | `'line'` | 见下方"十种取值"表 |
 | `via` | `'-\|' \| '\|-'` | — | 仅 `kind="step"` 必填：`-\|` 先水平后垂直；`\|-` 先垂直后水平 |
-| `to` | `IRTarget` | — | `kind="cycle"` / `'arc'` / `'circlePath'` / `'ellipsePath'` 时不需要；其余 kind 必填——目标点：节点 id、笛卡尔 `[x, y]`、极坐标对象、相对偏移对象 `{ rel }` / `{ relAccumulate }`，或 sugar 字符串 `'+dx,dy'` / `'++dx,dy'` |
+| `to` | `IRTarget` | — | `kind="cycle"` / `'arc'` / `'circlePath'` / `'ellipsePath'` 时不需要；其余 kind 必填——目标点：节点 id、笛卡尔 `[x, y]`、极坐标对象、偏移定位对象 `{ of, offset }`、相对偏移对象 `{ rel }` / `{ relAccumulate }`，或 sugar 字符串 `'+dx,dy'` / `'++dx,dy'` |
 | `control` | `[number, number]` | — | 仅 `kind="curve"` 必填：二次贝塞尔的单个控制点 |
 | `control1` | `[number, number]` | — | 仅 `kind="cubic"` 必填：三次贝塞尔的第一控制点（影响起点切线） |
 | `control2` | `[number, number]` | — | 仅 `kind="cubic"` 必填：三次贝塞尔的第二控制点（影响终点切线） |
@@ -160,14 +166,13 @@ import { Path, Step } from '@retikz/react';
 
 折角段（`kind="step"`）的 t 映射：t∈[0, 0.5] 对应第一段（`from→corner`），t∈(0.5, 1] 对应第二段；`midway` 默认正落在 corner 上，按段切线方向取第一段。
 
-## to 的五种形态
-
-`to` 与 [Draw 的 way item](/core/components/draw/overview#way-的-14-种-item) 前五种完全一致：
+## to 的六种形态
 
 | 形态 | 例 | 行为 |
 | --- | --- | --- |
 | 节点 id | `'a'` | 自动贴 Node 边界（参看 [锚点](/core/concepts/anchors)） |
 | 笛卡尔 | `[60, 0]` | 直接坐标 |
 | 极坐标 | `{ origin: 'a', angle: 30, radius: 50 }` | 极坐标（参看 [定位](/core/concepts/positioning)） |
+| 偏移定位 | `{ of: 'a', offset: [10, 5] }` | 基准 + `(dx, dy)`；`of` 三态——节点 id / 笛卡尔字面值 / PolarPosition |
 | 相对偏移 (rel) | `{ rel: [10, 0] }` 或 `'+10,0'` | 基于前一 step 终点 + `[dx, dy]`；**不**更新 prevEnd（TikZ `(+x, +y)`） |
 | 相对偏移 (relAccumulate) | `{ relAccumulate: [10, 0] }` 或 `'++10,0'` | 基于前一 step 终点 + `[dx, dy]`；**更新** prevEnd（TikZ `(++x, ++y)`） |
