@@ -17,7 +17,7 @@
 | 版本 | 主题 | 主要新增 |
 |---|---|---|
 | **v0.1**（当前焦点） | **Node + Path 基础能力** | shape 多态、anchor 命名、箭头、折角、cycle、fill、曲线、相对坐标 |
-| v0.2 | Scope + 样式继承 | `<Scope>` / `<Group>`、`every node/.style` 默认值、局部 transform |
+| v0.2 | Scope + 样式 + Shape 扩展 | `<Scope>` / `<Group>`、`every node/.style` 默认值、局部 transform、`NodeShape` 闭合枚举打开 + ShapeRegistry 注入第三方 shape |
 | v0.3 | 高级定位 / Coordinate | `<Coordinate>` 命名点、相对定位语义糖、`intersections` / `calc` |
 | v0.4 | TikZ libraries 概念 + decorations 入门 | `shapes.geometric` / `arrows.meta` 等 lib 划分 |
 | v0 收尾 | codec 起步、文档完整 | `@retikz/codec` 早期 IR ↔ TikZ 文本子集双向转换 |
@@ -37,7 +37,7 @@ v0 完工后开 v1，重点转向 **Tier 2 domain 包**（`@retikz/flow`、`@ret
 ### 拆分原则
 
 - **每个小版本一个语义闭环**——发布后用户能画一类新东西，不留半成品
-- **alpha → beta → 0** 递进：alpha 可以改 schema，beta 起冻结
+- **alpha → beta → 0** 递进：alpha 允许破坏性改动（schema / API），beta.1 起严格只做非破坏性（bug / 性能 / 错误信息 / 内部重构 / 文档）
 - 每条 IR schema 改动配等价性测试；**有争议的设计选项另起 ADR**
 
 ### v0.1.0-alpha.1 — 流程图最小集（P0 闭环）
@@ -110,9 +110,20 @@ v0 完工后开 v1，重点转向 **Tier 2 domain 包**（`@retikz/flow`、`@ret
 | 文档站补齐 Node / Path 全 prop 演示页 | — |
 | 测试覆盖 P0 / P1 全部组合 | — |
 
-### v0.1.0-beta — schema 冻结 + 文档完整
+### v0.1.0-alpha.5 — schema 收尾扩张（破坏性窗口最后一站）
 
-- 不再改 IR schema 字段名 / 语义；只改 bug
+**目标**：alpha 期间发现但未补完的 IR schema 能力洞、字段语义 / 命名调整等"用户可见破坏性改动"全收在这一版；本版发布后 schema 字段名 / 语义冻结。
+
+详细 TODO 见 [`v0.1-alpha.5.md`](./v0.1-alpha.5.md)。
+
+| 改动 | 来源 |
+|---|---|
+| `Node.position` / `Coordinate.position` 加第 4 种相对定位（任意 `(dx, dy)` offset，对应 TikZ `calc` 语法） | v0.1-alpha.5 plan TODO-1 |
+
+### v0.1.0-beta.1 — 非破坏性优化窗口 + 文档完整
+
+- **不动** IR schema 字段名 / 语义；alpha.5 起冻结
+- bug 修复、性能优化、错误信息改善、内部重构
 - README、CHANGELOG、迁移指引就位
 - npm prerelease 上架
 
@@ -127,8 +138,71 @@ v0 完工后开 v1，重点转向 **Tier 2 domain 包**（`@retikz/flow`、`@ret
 - [x] v0.1.0-alpha.2（2026-05-09 完工：7 项改动 + 3 篇 ADR + 47 新测试 + sugar `<Text>`）
 - [x] v0.1.0-alpha.3（2026-05-10 完工：ADR-0001 Path 曲线三件套 curve / cubic / bend；ADR-0002 path-level 形状 arc / circlePath / ellipsePath；ADR-0003 相对坐标 `{ rel }` / `{ relAccumulate }` + way sugar 对象形态；ADR-0004 边标注 step.label + sugar `<EdgeLabel>` + Draw way label 算子；P2 path 级 lineCap / lineJoin / thickness 语义档位 / opacity / fillOpacity / drawOpacity）
 - [x] v0.1.0-alpha.4（2026-05-10 完工：ADR-0001 节点间相对定位 `Node.position = { direction, of, distance? }` 8 方向枚举 + Tikz `nodeDistance` prop；ADR-0002 `<Coordinate>` 一等占位节点（IRChild 第三种 discriminator，不发 primitive / 不扩 viewBox 但进 nodeIndex）；ADR-0003 Node `label?` 边挂标签（8 方向 / 数字角度，font / textColor 继承 Node）；docs 加 coordinate 章节 + node/overview 增段 + ComponentPreview 双语 demo 解析；AGENTS.md 加"不缩写命名"规则；+33 新测试）
-- [ ] v0.1.0-beta
+- [ ] v0.1.0-alpha.5
+- [ ] v0.1.0-beta.1
 - [ ] v0.1.0
+
+---
+
+## v0.2 预备 — Scope / 样式 / Shape 扩展
+
+v0.2 主线是 Scope + 样式继承（`<Scope>` / `<Group>` / `every node/.style` 默认值 / 局部 transform），同时**打开 NodeShape 的闭合枚举**——把"第三方自定义 shape 接入 IR"留作 v1 之前最后一步底层改造。详细 ADR 在 v0.2 开工前另起。
+
+### Shape Registry 提案
+
+**现状**：`NODE_SHAPES` 是 `as const` 闭合集合（rectangle / circle / ellipse / diamond），`NodeShape = z.nativeEnum(...)`；4 个 shape 的几何 / 边界 / anchor / emit 硬编码在 `compile/node.ts` + `geometry/{rect,circle,ellipse,diamond}.ts`——第三方包想加 `cloud` / `decision` / `cylinder` / `parallelogram` 没法进 IR，且没有可注入面。**`geometry/` 现存的 4 个 shape 文件 = 这套接口的"硬编码版本"**——v0.2 改造时各自包成一个 `ShapeDefinition` 实例、注册进 registry；其他纯数学文件（`point` / `polar` / `bend` / `segment` / `arc` 端点 + bbox）不变。
+
+**不能套 Tier 2 `lowerComposites` 钩子的理由**：shape 是 Tier 1 一等基元——要支持 `boundaryPoint` / `anchor` / `layout` / `emit` 四件事，下沉不到 Kernel——它本身就是 Kernel 的一部分。
+
+**目标接口（v0.2 ADR 阶段固化）**：
+
+```ts
+type ShapeDefinition = {
+  layout(text, padding): Rect
+  boundaryPoint(layout, from): Position
+  anchor(layout, name: string): Position | undefined   // 支持任意 anchor 名 + 数字角度
+  emit(layout, round): Iterable<ScenePrimitive>
+}
+
+CompileOptions.shapes?: Record<string, ShapeDefinition>     // 注入第三方
+NodeSchema.shape = z.union([z.nativeEnum(NODE_SHAPES), z.string().min(1)])
+```
+
+内置 4 shape 改造为"自己也是注册项"——避免内置特权 / 二等公民分裂。第三方可发 `@retikz/shapes-flow` / `@retikz/shapes-uml` 等独立包。Adapter 不感知 shape，emit 出来的全是 `ScenePrimitive`（`RectPrim` / `EllipsePrim` / `PathPrim` / `GroupPrim`）。
+
+**主要 trade-off**：
+
+| 项 | 影响 | 缓解 |
+|---|---|---|
+| LLM schema 友好性下降 | union 开放后 LLM 可能输出未注册 shape | 内置仍走 enum 路径；`.describe(...)` 注明扩展点；要求 system prompt 列举已注册 shape |
+| Anchor 体系重设计 | `RECT_ANCHORS` 常量 → `ShapeDefinition.anchor(layout, name: string)`；数字角度 `.30` 由 shape 自释 | 内部影响为主，公开 anchor 字符串面（`.north` / `.east` / `.30`）保持兼容 |
+| 旋转语义边界 | shape 接口是否感知 rotate？ | layout 阶段把 rotate 折平到 `NodeLayout`，shape 看到的全是已旋转坐标系几何，shape 实现无需感知 |
+| 覆盖语义 | 用户传同名 shape 是否覆盖内置？ | 建议支持（给"换默认 rectangle 的圆角行为"留口子）；文档警告"覆盖内置会影响所有依赖默认值的 demo / 测试" |
+
+**为什么放 v0.2 而非 v0.1**：
+
+- v0.1 内置 4 shape 已覆盖流程图 + UML 大头，扩展性不紧迫
+- v0.2 Scope / 样式继承本来就要再过一遍 NodeSchema，趁机改造成本低
+- 闭合枚举对 LLM 早期生成质量更友好，alpha / beta.1 阶段保留
+
+**v0.2 开工前另起 ADR**：固化 `ShapeDefinition` 接口签名、覆盖规则、内置 shape 是否随 core 发布还是拆独立包、Anchor 数字角度的解释规则、**支持 shape factory 模式（带参数 shape，如 N-pin IC）的约束**。
+
+### 远期：多端口 / 多引脚 shape（v1+）
+
+Shape Registry 落地后，**域特化 shape 包**自然延伸到电路 / EDA 场景：
+
+- `@retikz/shapes-circuit`：二极管（anchor `anode` / `cathode`）、电阻（`left` / `right`）、晶体管（`base` / `collector` / `emitter`）、电源 / 接地等基础元件
+- `@retikz/shapes-ic`：IC 芯片（DIP / QFP / BGA 等封装），多引脚（`pin1` ~ `pinN` + 可选语义 alias 如 `vcc` / `gnd` / `data0`）
+- `@retikz/shapes-pcb`：焊盘、过孔、连接器
+
+ShapeDefinition 接口**结构上已经支持**：`anchor(layout, name: string): Position | undefined` 中 `name` 是任意字符串，由 shape 自释义——电路 anchor 名（`'anode'` / `'cathode'` / `'pin42'`）与几何 anchor 名（`'north'` / `'east'`）共享同一名空间，shape 自己解释。
+
+但 **v0.2 ADR 阶段就要预留**的两点：
+
+1. **支持 shape factory 模式** —— IC 不可能为每种 pin 数注册一个新 shape；需要 `createDipShape({ pinCount: 16, pinSpacing: 0.1 }) → ShapeDefinition`。这条要求 `ShapeDefinition` 本身只是 plain object（不依赖任何特定工厂语法约定）——工厂只是返回 ShapeDefinition 的普通函数。注册端 `CompileOptions.shapes` 接受**已实例化**的 ShapeDefinition 即可。
+2. **Pin 视觉元素 emit** —— pin 不只是 anchor 点，通常是从 body 伸出的短线 / 焊盘 / 引脚编号文字。当前 `ShapeDefinition.emit` 返回 `Iterable<ScenePrimitive>` 已经覆盖——一个 shape 可以 emit 多个 prim（body + 每个 pin 的视觉表达）。
+
+**结论**：电路 / EDA 域是 Shape Registry 接口的天然延伸；core / v0.2 **不下场**实现具体电路 shape，只要 v0.2 ADR 设计时确保上述两点不冲突，其余等域特化包 v1+ 独立演进。
 
 ---
 
