@@ -74,6 +74,13 @@
   "view": {
     "groupLabel": "视图"
   },
+  "zodSchema": {
+    "field": "字段",
+    "type": "类型",
+    "required": "必填",
+    "description": "描述",
+    "typePrefix": "类型："
+  },
   "page": {
     "copyPage": "复制页面",
     "copyMarkdown": "复制 Markdown",

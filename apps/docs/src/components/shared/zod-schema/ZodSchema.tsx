@@ -1,4 +1,5 @@
 import { type FC, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { SCHEMA_REGISTRY } from '@/lib/schema-registry';
 import { RenderTable } from './render-table';
 import { RenderType } from './render-type';
@@ -15,6 +16,7 @@ type Props = {
 };
 
 export const ZodSchema: FC<Props> = ({ name, descriptions }) => {
+  const { t } = useTranslation();
   const entry = (SCHEMA_REGISTRY as Record<string, (typeof SCHEMA_REGISTRY)[string] | undefined>)[name];
 
   const repr = useMemo(() => {
@@ -65,7 +67,7 @@ export const ZodSchema: FC<Props> = ({ name, descriptions }) => {
         <RenderTable fields={appliedRepr.fields} />
       ) : (
         <div className="my-2">
-          <span className="text-sm text-muted-foreground">类型：</span>
+          <span className="text-sm text-muted-foreground">{t('zodSchema.typePrefix')}</span>
           <RenderType repr={appliedRepr.type} />
         </div>
       )}

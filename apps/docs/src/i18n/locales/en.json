@@ -74,6 +74,13 @@
   "view": {
     "groupLabel": "View"
   },
+  "zodSchema": {
+    "field": "Field",
+    "type": "Type",
+    "required": "Required",
+    "description": "Description",
+    "typePrefix": "Type:"
+  },
   "page": {
     "copyPage": "Copy Page",
     "copyMarkdown": "Copy as Markdown",

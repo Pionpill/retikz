@@ -1,5 +1,7 @@
 import type { FC } from 'react';
 
+import { useTranslation } from 'react-i18next';
+
 import { cn } from '@/lib/utils';
 
 import type { ObjectField } from './types';
@@ -15,15 +17,16 @@ const td = 'border-b border-border align-top py-2 pr-4';
 
 /** ObjectField 列表 → 表格；object kind 的字段同 td 内递归嵌套子表 */
 export const RenderTable: FC<Props> = ({ fields, nested = false }) => {
+  const { t } = useTranslation();
   return (
     <div className={cn('my-4 overflow-x-auto', nested && 'ml-4 mt-2 border-l-2 border-muted pl-3')}>
       <table className="w-full border-collapse text-sm">
         <thead>
           <tr className="border-b-2 border-border text-left">
-            <th className="py-2 pr-4 font-semibold">字段</th>
-            <th className="py-2 pr-4 font-semibold">类型</th>
-            <th className="py-2 pr-4 font-semibold">必填</th>
-            <th className="py-2 pr-4 font-semibold">描述</th>
+            <th className="py-2 pr-4 font-semibold">{t('zodSchema.field')}</th>
+            <th className="py-2 pr-4 font-semibold">{t('zodSchema.type')}</th>
+            <th className="py-2 pr-4 font-semibold">{t('zodSchema.required')}</th>
+            <th className="py-2 pr-4 font-semibold">{t('zodSchema.description')}</th>
           </tr>
         </thead>
         <tbody>
