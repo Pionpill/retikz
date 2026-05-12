@@ -11,31 +11,31 @@ export type SchemaRegistryEntry = {
 
 export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
   // 9 个一级页面
-  SceneSchema:         { schema: IR.SceneSchema,         label: 'Scene',         url: '/core/reference/scene' },
-  NodeSchema:          { schema: IR.NodeSchema,          label: 'Node',          url: '/core/reference/entity/node' },
-  CoordinateSchema:    { schema: IR.CoordinateSchema,    label: 'Coordinate',    url: '/core/reference/entity/coordinate' },
-  PathSchema:          { schema: IR.PathSchema,          label: 'Path',          url: '/core/reference/stroke/path' },
-  StepSchema:          { schema: IR.StepSchema,          label: 'Step',          url: '/core/reference/stroke/step' },
-  TargetSchema:        { schema: IR.TargetSchema,        label: 'Target',        url: '/core/reference/stroke/target' },
-  PositionSchema:      { schema: IR.PositionSchema,      label: 'Position',      url: '/core/reference/placement/position' },
-  PolarPositionSchema: { schema: IR.PolarPositionSchema, label: 'PolarPosition', url: '/core/reference/placement/polar-position' },
-  AtPositionSchema:    { schema: IR.AtPositionSchema,    label: 'AtPosition',    url: '/core/reference/placement/at-position' },
+  SceneSchema:         { schema: IR.SceneSchema,         label: 'Scene',         url: '/core/reference/schema/scene' },
+  NodeSchema:          { schema: IR.NodeSchema,          label: 'Node',          url: '/core/reference/schema/node' },
+  CoordinateSchema:    { schema: IR.CoordinateSchema,    label: 'Coordinate',    url: '/core/reference/schema/coordinate' },
+  PathSchema:          { schema: IR.PathSchema,          label: 'Path',          url: '/core/reference/schema/path' },
+  StepSchema:          { schema: IR.StepSchema,          label: 'Step',          url: '/core/reference/schema/step' },
+  TargetSchema:        { schema: IR.TargetSchema,        label: 'Target',        url: '/core/reference/schema/target' },
+  PositionSchema:      { schema: IR.PositionSchema,      label: 'Position',      url: '/core/reference/schema/position' },
+  PolarPositionSchema: { schema: IR.PolarPositionSchema, label: 'PolarPosition', url: '/core/reference/schema/polar-position' },
+  AtPositionSchema:    { schema: IR.AtPositionSchema,    label: 'AtPosition',    url: '/core/reference/schema/at-position' },
 
   // Step 10 变体（同页 #anchor）
-  MoveStepSchema:        { schema: IR.MoveStepSchema,        label: 'MoveStep',        url: '/core/reference/stroke/step#move' },
-  LineStepSchema:        { schema: IR.LineStepSchema,        label: 'LineStep',        url: '/core/reference/stroke/step#line' },
-  FoldStepSchema:        { schema: IR.FoldStepSchema,        label: 'FoldStep',        url: '/core/reference/stroke/step#fold' },
-  CycleStepSchema:       { schema: IR.CycleStepSchema,       label: 'CycleStep',       url: '/core/reference/stroke/step#cycle' },
-  CurveStepSchema:       { schema: IR.CurveStepSchema,       label: 'CurveStep',       url: '/core/reference/stroke/step#curve' },
-  CubicStepSchema:       { schema: IR.CubicStepSchema,       label: 'CubicStep',       url: '/core/reference/stroke/step#cubic' },
-  BendStepSchema:        { schema: IR.BendStepSchema,        label: 'BendStep',        url: '/core/reference/stroke/step#bend' },
-  ArcStepSchema:         { schema: IR.ArcStepSchema,         label: 'ArcStep',         url: '/core/reference/stroke/step#arc' },
-  CirclePathStepSchema:  { schema: IR.CirclePathStepSchema,  label: 'CirclePathStep',  url: '/core/reference/stroke/step#circlepath' },
-  EllipsePathStepSchema: { schema: IR.EllipsePathStepSchema, label: 'EllipsePathStep', url: '/core/reference/stroke/step#ellipsepath' },
+  MoveStepSchema:        { schema: IR.MoveStepSchema,        label: 'MoveStep',        url: '/core/reference/schema/step#move' },
+  LineStepSchema:        { schema: IR.LineStepSchema,        label: 'LineStep',        url: '/core/reference/schema/step#line' },
+  FoldStepSchema:        { schema: IR.FoldStepSchema,        label: 'FoldStep',        url: '/core/reference/schema/step#fold' },
+  CycleStepSchema:       { schema: IR.CycleStepSchema,       label: 'CycleStep',       url: '/core/reference/schema/step#cycle' },
+  CurveStepSchema:       { schema: IR.CurveStepSchema,       label: 'CurveStep',       url: '/core/reference/schema/step#curve' },
+  CubicStepSchema:       { schema: IR.CubicStepSchema,       label: 'CubicStep',       url: '/core/reference/schema/step#cubic' },
+  BendStepSchema:        { schema: IR.BendStepSchema,        label: 'BendStep',        url: '/core/reference/schema/step#bend' },
+  ArcStepSchema:         { schema: IR.ArcStepSchema,         label: 'ArcStep',         url: '/core/reference/schema/step#arc' },
+  CirclePathStepSchema:  { schema: IR.CirclePathStepSchema,  label: 'CirclePathStep',  url: '/core/reference/schema/step#circlepath' },
+  EllipsePathStepSchema: { schema: IR.EllipsePathStepSchema, label: 'EllipsePathStep', url: '/core/reference/schema/step#ellipsepath' },
 
   // Target 2 变体（同页 #anchor）
-  RelTargetSchema:           { schema: IR.RelTargetSchema,           label: 'RelTarget',           url: '/core/reference/stroke/target#rel' },
-  RelAccumulateTargetSchema: { schema: IR.RelAccumulateTargetSchema, label: 'RelAccumulateTarget', url: '/core/reference/stroke/target#relaccumulate' },
+  RelTargetSchema:           { schema: IR.RelTargetSchema,           label: 'RelTarget',           url: '/core/reference/schema/target#rel' },
+  RelAccumulateTargetSchema: { schema: IR.RelAccumulateTargetSchema, label: 'RelAccumulateTarget', url: '/core/reference/schema/target#relaccumulate' },
 };
 
 /** 按 identity 反查注册表项（同一 Zod schema 实例必命中同一条目） */

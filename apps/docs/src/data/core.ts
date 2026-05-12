@@ -45,31 +45,16 @@ export const coreSection: Array<Section> = [
     id: 'reference',
     label: 'core.reference',
     pages: [
-      { id: 'scene', label: 'core.refSceneSchema' },
       {
-        id: 'entity',
-        label: 'core.refEntity',
+        id: 'schema',
+        label: 'core.refSchema',
         children: [
-          { id: 'overview',   label: 'core.refEntityOverview' },
-          { id: 'node',       label: 'core.refNodeSchema' },
-          { id: 'coordinate', label: 'core.refCoordinateSchema' },
-        ],
-      },
-      {
-        id: 'stroke',
-        label: 'core.refStroke',
-        children: [
-          { id: 'overview', label: 'core.refStrokeOverview' },
-          { id: 'path',     label: 'core.refPathSchema' },
-          { id: 'step',     label: 'core.refStepSchema' },
-          { id: 'target',   label: 'core.refTargetSchema' },
-        ],
-      },
-      {
-        id: 'placement',
-        label: 'core.refPlacement',
-        children: [
-          { id: 'overview',        label: 'core.refPlacementOverview' },
+          { id: 'scene',           label: 'core.refSceneSchema' },
+          { id: 'node',            label: 'core.refNodeSchema' },
+          { id: 'coordinate',      label: 'core.refCoordinateSchema' },
+          { id: 'path',            label: 'core.refPathSchema' },
+          { id: 'step',            label: 'core.refStepSchema' },
+          { id: 'target',          label: 'core.refTargetSchema' },
           { id: 'position',        label: 'core.refPositionSchema' },
           { id: 'polar-position',  label: 'core.refPolarPositionSchema' },
           { id: 'at-position',     label: 'core.refAtPositionSchema' },
