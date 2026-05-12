@@ -24,7 +24,7 @@ describe('SCHEMA_REGISTRY', () => {
   it('lookupSchema resolves a registered schema by identity', () => {
     expect(lookupSchema(SceneSchema)?.label).toBe('Scene');
     expect(lookupSchema(CoordinateSchema)?.url).toBe('/core/reference/schema/entity#coordinate');
-    expect(lookupSchema(MoveStepSchema)?.url).toBe('/core/reference/schema/step#move');
+    expect(lookupSchema(MoveStepSchema)?.url).toBe('/core/reference/schema/path#move');
     expect(lookupSchema(RelTargetSchema)?.url).toBe('/core/reference/schema/target#rel');
   });
 

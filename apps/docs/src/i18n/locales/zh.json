@@ -43,7 +43,6 @@
     "refSceneSchema": "Scene",
     "refEntity": "Entity",
     "refPathSchema": "Path",
-    "refStepSchema": "Step",
     "refTargetSchema": "Target",
     "refPlacement": "Placement"
   },

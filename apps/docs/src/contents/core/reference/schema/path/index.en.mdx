@@ -1,6 +1,56 @@
 ---
 title: Path
-description: A drawn line composed of step actions; carries stroke style, fill, arrow shape
+description: A drawn path container and its step actions
 ---
 
+A `path` is the outer container for a drawn line. Its `children` field is an ordered array of `Step` actions; the renderer walks them sequentially to produce SVG path commands.
+
+## Path
+
 <ZodSchema name="PathSchema" />
+
+## Step
+
+`StepSchema` is a discriminated union — `Path.children` is an array of these. The `kind` field picks the variant:
+
+<ZodSchema name="StepSchema" />
+
+### Move
+
+<ZodSchema name="MoveStepSchema" />
+
+### Line
+
+<ZodSchema name="LineStepSchema" />
+
+### Fold
+
+<ZodSchema name="FoldStepSchema" />
+
+### Cycle
+
+<ZodSchema name="CycleStepSchema" />
+
+### Curve
+
+<ZodSchema name="CurveStepSchema" />
+
+### Cubic
+
+<ZodSchema name="CubicStepSchema" />
+
+### Bend
+
+<ZodSchema name="BendStepSchema" />
+
+### Arc
+
+<ZodSchema name="ArcStepSchema" />
+
+### CirclePath
+
+<ZodSchema name="CirclePathStepSchema" />
+
+### EllipsePath
+
+<ZodSchema name="EllipsePathStepSchema" />
