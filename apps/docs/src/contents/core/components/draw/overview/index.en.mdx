@@ -127,6 +127,26 @@ The label operator can sit before any segment-producing way item — line target
 
 <ComponentPreview name="draw-label" size="lg" />
 
+#### Label position across step kinds
+
+`label.position` accepts 7 keywords or a `0..1` numeric `t`; what `t` means geometrically depends on the step kind — normalized arc length on line, equal `1/N` slices on fold, Bezier parameter (not arc length) on curve / cubic / bend, angular parameterization on arc / circle / ellipse. Full rules in [Step → Edge label](/core/components/draw/step#edge-label-label); one Draw way example per kind:
+
+<ComponentPreview name="draw-label-line" />
+
+<ComponentPreview name="draw-label-fold" />
+
+<ComponentPreview name="draw-label-curve" />
+
+<ComponentPreview name="draw-label-cubic" />
+
+<ComponentPreview name="draw-label-bend" />
+
+<ComponentPreview name="draw-label-arc" />
+
+<ComponentPreview name="draw-label-circle" />
+
+<ComponentPreview name="draw-label-ellipse" />
+
 ### Relative coordinates (Relative / Accumulate)
 
 Two equivalent ways to express relative offsets in `way`:

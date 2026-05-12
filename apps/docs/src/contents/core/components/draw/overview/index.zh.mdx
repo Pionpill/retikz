@@ -127,6 +127,26 @@ label 算子可以放在任何产生段的 way item 之前——line target、`-
 
 <ComponentPreview name="draw-label" size="lg" />
 
+#### 各 step kind 上的 label 位置
+
+`label.position` 接 7 keyword 或 `0..1` 数值 t；t 在不同 step kind 上的几何含义不同——line 是归一化弧长、fold N 段每段占 `1/N` t、Bezier 是参数 t（非弧长）、arc / circle / ellipse 是角度参数化。完整规则见 [Step → 边标注](/core/components/draw/step#边标注label)；下面每种 kind 给一个 Draw way 示例：
+
+<ComponentPreview name="draw-label-line" />
+
+<ComponentPreview name="draw-label-fold" />
+
+<ComponentPreview name="draw-label-curve" />
+
+<ComponentPreview name="draw-label-cubic" />
+
+<ComponentPreview name="draw-label-bend" />
+
+<ComponentPreview name="draw-label-arc" />
+
+<ComponentPreview name="draw-label-circle" />
+
+<ComponentPreview name="draw-label-ellipse" />
+
 ### 相对坐标（Relative / Accumulate）
 
 way 里两种等价写法：
