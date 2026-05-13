@@ -1,6 +1,8 @@
 import { z } from 'zod';
 import type { ValueOf } from '../types';
+import { FontSchema } from './font';
 import { AT_DIRECTIONS, AtPositionSchema, OffsetPositionSchema, PolarPositionSchema, PositionSchema } from './position';
+import { NodeTextSchema } from './text';
 
 /**
  * 节点形状常量（用 const + ValueOf 派生，不用 TS enum）
@@ -15,77 +17,6 @@ export const NODE_SHAPES = {
 
 /** 节点形状字面量类型 */
 export type NodeShape = ValueOf<typeof NODE_SHAPES>;
-
-/** 节点字体规格：family/size/weight/style 全部可选，透传 SVG `<text>` font-* 属性 */
-export const FontSchema = z
-  .object({
-    family: z
-      .string()
-      .optional()
-      .describe(
-        'CSS font-family string, e.g. "serif", "monospace", "Inter, sans-serif"',
-      ),
-    size: z
-      .number()
-      .positive()
-      .optional()
-      .describe('Font size in user units; falls back to the renderer default when omitted'),
-    weight: z
-      .union([z.enum(['normal', 'bold']), z.number()])
-      .optional()
-      .describe('CSS font-weight: keyword `normal` / `bold` or numeric 100..900'),
-    style: z
-      .enum(['normal', 'italic', 'oblique'])
-      .optional()
-      .describe('CSS font-style'),
-  })
-  .describe(
-    'Font properties for the node text label; all fields optional, nested object form.',
-  );
-
-/** 节点字体规格 IR 类型（所有字段可选，编译期解析默认值） */
-export type IRFont = z.infer<typeof FontSchema>;
-
-/**
- * 单行文本规格：纯字符串走块级默认，对象形式可覆盖 fill/opacity/font
- * @description 行级覆盖只生效于本行 `<tspan>`；font 子字段未填则继承块级；align/lineHeight 不可被行覆盖
- */
-export const LineSpecSchema = z
-  .union([
-    z.string(),
-    z.object({
-      text: z.string().describe('Line content'),
-      fill: z
-        .string()
-        .optional()
-        .describe('Per-line text color; overrides block default'),
-      opacity: z
-        .number()
-        .min(0)
-        .max(1)
-        .optional()
-        .describe('Per-line opacity 0..1'),
-      font: FontSchema.optional().describe(
-        'Per-line font overrides; missing fields inherit from block-level `font`',
-      ),
-    }),
-  ])
-  .describe(
-    'Single line of text: bare string for default styling, or an object with per-line `fill` / `opacity` / `font` overrides.',
-  );
-
-/** 行规格 IR 类型 */
-export type IRLineSpec = z.infer<typeof LineSpecSchema>;
-
-/**
- * 节点文本：单字符串或非空多行 LineSpec 数组
- * @description 选数组而非 `\n` 字符串：JSON 友好无 escape，行级覆盖天然落字段
- */
-export const NodeTextSchema = z
-  .union([z.string(), z.array(LineSpecSchema).min(1)])
-  .describe(
-    'Text label rendered inside the node: a single string for one line, or a non-empty array of line specs (string for default, object for per-line overrides).',
-  );
 
 /** 节点文本对齐（TikZ `align=` 同义） */
 export const NODE_TEXT_ALIGNS = {
