@@ -1,4 +1,4 @@
-/** SVG viewBox 数值四元组 */
+/** viewBox 数值四元组 `[x, y, w, h]`（与 SVG `viewBox` 同语义） */
 export type ViewBox = {
   /** 视口左上角横坐标 */
   x: number;

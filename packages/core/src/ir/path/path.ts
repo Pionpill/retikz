@@ -21,7 +21,7 @@ export const PathSchema = z
       .string()
       .optional()
       .describe(
-        'SVG stroke-dasharray pattern (e.g. "4 2"); leave empty for solid line',
+        'Stroke dash pattern (e.g. "4 2"; same format as SVG/CSS `stroke-dasharray`); leave empty for solid line',
       ),
     arrow: z
       .enum(['none', '->', '<-', '<->'])
@@ -42,19 +42,19 @@ export const PathSchema = z
       .enum(['nonzero', 'evenodd'])
       .optional()
       .describe(
-        'How self-intersecting / nested sub-paths are filled. `nonzero` (default, SVG default) winds-by-direction; `evenodd` toggles fill on each crossing — useful for ring / donut shapes.',
+        'How self-intersecting / nested sub-paths are filled. `nonzero` (default) winds-by-direction; `evenodd` toggles fill on each crossing — useful for ring / donut shapes.',
       ),
     lineCap: z
       .enum(['butt', 'round', 'square'])
       .optional()
       .describe(
-        'Stroke endpoint shape (SVG `stroke-linecap`). Default `butt` (sharp end); `round` adds a half-disc cap; `square` extends a half-stroke past the endpoint.',
+        'Stroke endpoint shape (`butt` / `round` / `square`; same semantics as SVG/CSS `stroke-linecap`). Default `butt` (sharp end); `round` adds a half-disc cap; `square` extends a half-stroke past the endpoint.',
       ),
     lineJoin: z
       .enum(['miter', 'round', 'bevel'])
       .optional()
       .describe(
-        'Stroke corner shape (SVG `stroke-linejoin`). Default `miter` (sharp corner); `round` rounds the join; `bevel` cuts the corner flat.',
+        'Stroke corner shape (`miter` / `round` / `bevel`; same semantics as SVG/CSS `stroke-linejoin`). Default `miter` (sharp corner); `round` rounds the join; `bevel` cuts the corner flat.',
       ),
     thickness: z
       .enum([

@@ -2,7 +2,7 @@ import type { Position } from './point';
 
 /**
  * cubic Bezier 拟合 from→to 的弧形 bend
- * @description apex offset = chord × tan(bendAngle/2)；控制点取 chord 1/3 与 2/3 处沿法向偏移，让 cubic 在 t=0.5 穿过 apex 故 ctlOffset = 4/3 × apexOffset。法向 SVG y-down：visual-left=(dy,-dx)/|chord|，visual-right=(-dy,dx)/|chord|。chord=0 时两控制点都返回 from
+ * @description apex offset = chord × tan(bendAngle/2)；控制点取 chord 1/3 与 2/3 处沿法向偏移，让 cubic 在 t=0.5 穿过 apex 故 ctlOffset = 4/3 × apexOffset。法向（screen y-down）：visual-left=(dy,-dx)/|chord|，visual-right=(-dy,dx)/|chord|。chord=0 时两控制点都返回 from
  */
 export const bendControlPoints = (
   from: Position,

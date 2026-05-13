@@ -152,12 +152,12 @@ export const NodeSchema = z
     dashArray: z
       .string()
       .optional()
-      .describe('Explicit SVG stroke-dasharray value (e.g. "4 2"); overrides `dashed` / `dotted`.'),
+      .describe('Explicit stroke dash pattern (e.g. "4 2"; same format as SVG/CSS `stroke-dasharray`); overrides `dashed` / `dotted`.'),
     roundedCorners: z
       .number()
       .nonnegative()
       .optional()
-      .describe('Corner radius in user units; only effective on `rectangle` shape (rx / ry on `<rect>`).'),
+      .describe('Corner radius in user units; only effective on `rectangle` shape.'),
     minimumWidth: z
       .number()
       .nonnegative()

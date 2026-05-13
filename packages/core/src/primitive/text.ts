@@ -1,4 +1,4 @@
-/** 行级字段（`<tspan>` 可独立指定），未填走块级 TextPrim 默认 */
+/** 行级字段（每行可独立指定），未填走块级 TextPrim 默认 */
 export type TextLine = {
   text: string;
   fontSize?: number;
@@ -11,7 +11,7 @@ export type TextLine = {
 
 /**
  * 文本原语（measuredWidth/Height 由 Scene 编译阶段算好）
- * @description 多行 lines 至少 1 行；renderer 每行画 `<tspan>`，按 lineHeight 堆叠，按 baseline 在 (x,y) 锚点上下对齐。顶层属性是块级默认，单行 TextLine 可覆盖
+ * @description 多行 lines 至少 1 行；renderer 按 lineHeight 堆叠每行、按 baseline 在 (x,y) 锚点上下对齐。顶层属性是块级默认，单行 TextLine 可覆盖
  */
 export type TextPrim = {
   type: 'text';
@@ -27,7 +27,7 @@ export type TextPrim = {
   fontStyle?: 'normal' | 'italic' | 'oblique';
   align: 'start' | 'middle' | 'end';
   baseline: 'top' | 'middle' | 'bottom' | 'alphabetic';
-  /** 行高，多行下相邻 `<tspan>` 垂直距离 */
+  /** 行高，多行下相邻行的垂直距离 */
   lineHeight: number;
   /** 编译期算好的整块文字宽度 = max line width */
   measuredWidth: number;

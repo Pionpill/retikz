@@ -1,6 +1,6 @@
 /**
- * 椭圆原语，对应 SVG `<ellipse>`
- * @description 圆形（rx=ry）复用同一 prim 单 case 处理；rotate 度数绕中心，非零时 renderer 用 SVG transform 包裹
+ * 椭圆原语（cx/cy 圆心，rx/ry 半径）
+ * @description 圆形（rx=ry）复用同一 prim 单 case 处理；rotate 度数绕中心，非零时由 renderer 在 emit 阶段应用旋转变换
  */
 export type EllipsePrim = {
   type: 'ellipse';

@@ -16,11 +16,11 @@ export type RectPrim = {
   fillOpacity?: number;
   /** 描边色 */
   stroke?: string;
-  /** 描边透明度 0~1（SVG stroke-opacity） */
+  /** 描边透明度 0~1 */
   strokeOpacity?: number;
   /** 描边宽度 */
   strokeWidth?: number;
-  /** SVG stroke-dasharray 模式 */
+  /** 描边 dash 模式（如 '4 2'，与 SVG/CSS `stroke-dasharray` 同格式） */
   strokeDasharray?: string;
   /** 圆角半径（同时作用于 rx/ry） */
   cornerRadius?: number;

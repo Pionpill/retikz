@@ -33,7 +33,7 @@ const resolveDashArray = (
   return undefined;
 };
 
-/** IR align → SVG textAnchor */
+/** IR align → 文字对齐锚点（start / middle / end） */
 const alignToTextAnchor = (
   a: 'left' | 'center' | 'right',
 ): 'start' | 'middle' | 'end' =>
@@ -49,7 +49,7 @@ export type NodeLayout = {
    * @description rectangle: rect 本身；circle: width=height=2×radius；ellipse: 2×rx,2×ry；diamond: 2×halfA,2×halfB。x,y 是几何中心，rotate 弧度
    */
   rect: Rect;
-  /** IR 原始旋转角（度数），供 emit 写 SVG transform */
+  /** IR 原始旋转角（度数），供 emit 阶段写入 GroupPrim 的 rotate transform */
   rotateDeg: number;
   /** 外边距（≥ 0），path 附着到外扩 margin 的虚拟边界 */
   margin: number;
@@ -62,7 +62,7 @@ export type NodeLayout = {
   textWidth: number;
   /** 文本块高度 ≈ lines × lineHeight */
   textHeight: number;
-  /** 文本对齐（已映射到 SVG textAnchor 三态） */
+  /** 文本对齐（start / middle / end 三态） */
   align: 'start' | 'middle' | 'end';
   /** 行高（已应用默认值） */
   lineHeight: number;
@@ -84,7 +84,7 @@ export type NodeLayout = {
   strokeOpacity?: number;
   /** 边框宽度，emit 时 1 兜底 */
   strokeWidth?: number;
-  /** SVG stroke-dasharray，已把 dashed/dotted 预设解析为具体 pattern */
+  /** 描边 dash 模式（与 SVG/CSS `stroke-dasharray` 同格式），已把 dashed/dotted 预设解析为具体 pattern */
   strokeDasharray?: string;
   /** rectangle 圆角半径（非 rect shape 无效） */
   roundedCorners?: number;

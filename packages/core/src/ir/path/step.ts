@@ -47,7 +47,7 @@ export const MoveStepSchema = z
     type: z.literal('step').describe('Discriminator marking this as a path step node'),
     kind: z
       .literal('move')
-      .describe('Move the cursor to the target without drawing (like SVG path "M")'),
+      .describe('Move the cursor to the target without drawing (TikZ `(A)`, no drawing operation)'),
     to: TargetSchema.describe('Destination point of the move'),
   })
   .describe('Move action: relocate the path cursor without drawing');
@@ -57,7 +57,7 @@ export const LineStepSchema = z
     type: z.literal('step').describe('Discriminator marking this as a path step node'),
     kind: z
       .literal('line')
-      .describe('Draw a straight line from the current cursor to the target (like SVG path "L")'),
+      .describe('Draw a straight line from the current cursor to the target (TikZ `(A) -- (B)`)'),
     to: TargetSchema.describe('Destination point of the line segment'),
     label: StepLabelSchema.optional().describe('Edge label attached to this line segment'),
   })
@@ -91,7 +91,7 @@ export const CycleStepSchema = z
     kind: z
       .literal('cycle')
       .describe(
-        'Close the path back to the most recent move target (TikZ `cycle` / SVG path "Z")',
+        'Close the path back to the most recent move target (TikZ `cycle`)',
       ),
   })
   .describe(
@@ -115,7 +115,7 @@ export const CurveStepSchema = z
     kind: z
       .literal('curve')
       .describe(
-        'Quadratic Bezier curve from cursor to target with one control point (TikZ `.. controls (B) ..`, SVG path "Q")',
+        'Quadratic Bezier curve from cursor to target with one control point (TikZ `.. controls (B) ..`)',
       ),
     to: TargetSchema.describe('Destination point of the curve'),
     control: ControlPointSchema.describe('Single control point for the quadratic Bezier'),
@@ -129,7 +129,7 @@ export const CubicStepSchema = z
     kind: z
       .literal('cubic')
       .describe(
-        'Cubic Bezier curve from cursor to target with two control points (TikZ `.. controls (B) and (C) ..`, SVG path "C")',
+        'Cubic Bezier curve from cursor to target with two control points (TikZ `.. controls (B) and (C) ..`)',
       ),
     to: TargetSchema.describe('Destination point of the cubic curve'),
     control1: ControlPointSchema.describe('First control point (influences the start tangent)'),
@@ -168,7 +168,7 @@ export const ArcStepSchema = z
       .describe('Arc segment from cursor as center, sweeping startAngle → endAngle on a circle of given radius (TikZ `arc[start angle=…, end angle=…, radius=…]`); pen ends at the arc endpoint, not the center'),
     startAngle: z
       .number()
-      .describe('Arc start angle in degrees, CCW from +x axis (math convention; SVG y-down means visual CW)'),
+      .describe('Arc start angle in degrees, measured from +x axis. 0° = +x, 90° = +y = screen-down (visual clockwise under screen y-down); matches polar / Node label angle convention.'),
     endAngle: z
       .number()
       .describe('Arc end angle in degrees; sweep direction inferred from startAngle vs endAngle'),
@@ -185,7 +185,7 @@ export const CirclePathStepSchema = z
     type: z.literal('step').describe('Discriminator marking this as a path step node'),
     kind: z
       .literal('circlePath')
-      .describe('Full circle centered at the cursor with given radius (TikZ `circle[radius=…]`); SVG path emits two semi-arcs to avoid the 360° A-command degeneracy. Pen returns to the center.'),
+      .describe('Full circle centered at the cursor with given radius (TikZ `circle[radius=…]`); compiled to a single full-sweep ellipse arc command. Pen returns to the center.'),
     radius: z
       .number()
       .positive()
@@ -199,7 +199,7 @@ export const EllipsePathStepSchema = z
     type: z.literal('step').describe('Discriminator marking this as a path step node'),
     kind: z
       .literal('ellipsePath')
-      .describe('Full ellipse centered at the cursor with given x/y radii (TikZ `ellipse[x radius=…, y radius=…]`); SVG path emits two semi-arcs. Pen returns to the center.'),
+      .describe('Full ellipse centered at the cursor with given x/y radii (TikZ `ellipse[x radius=…, y radius=…]`); compiled to a single full-sweep ellipse arc command. Pen returns to the center.'),
     radiusX: z
       .number()
       .positive()
@@ -236,7 +236,7 @@ export type IRLineStep = z.infer<typeof LineStepSchema>;
 /** Fold step：折角段，经一个直角中间点（TikZ `-|`/`|-`） */
 export type IRFoldStep = z.infer<typeof FoldStepSchema>;
 
-/** Cycle step：闭合回起点（TikZ `cycle` / SVG `Z`） */
+/** Cycle step：闭合回起点（TikZ `cycle`） */
 export type IRCycleStep = z.infer<typeof CycleStepSchema>;
 
 /** Curve step：二次贝塞尔，一个控制点 */
