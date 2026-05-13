@@ -14,14 +14,13 @@ import { type Position, point } from './point';
 export type PolarPosition = {
   /** 极坐标原点：节点 id / 笛卡尔 / 嵌套极坐标；省略表示 [0,0] */
   origin?: string | Position | PolarPosition;
-  /** 角度（度数，逆时针为正） */
+  /** 角度（度数）：从 +x 轴量起，90° 朝 +y（屏幕下方），与 ArcStep / Node label 角度约定一致 */
   angle: number;
   /** 半径（非负） */
   radius: number;
 };
 
 const DEG_TO_RAD = Math.PI / 180;
-const RAD_TO_DEG = 180 / Math.PI;
 
 /** 极坐标 ↔ 笛卡尔转换工具集（polar 不参与几何计算，参与时先 toPosition） */
 export const polar = {
@@ -48,11 +47,8 @@ export const polar = {
       origin[1] + Math.sin(rad) * p.radius,
     ];
   },
-  /** 笛卡尔 → 极坐标（angle ∈ (-180,180]，origin 默认 [0,0]） */
-  fromPosition: (p: Position): PolarPosition => ({
-    angle: Math.atan2(p[1], p[0]) * RAD_TO_DEG,
-    radius: Math.hypot(p[0], p[1]),
-  }),
+  /** 笛卡尔 → 极坐标（point.toPolar 别名，angle ∈ (-180,180]，origin 默认 [0,0]） */
+  fromPosition: (p: Position): PolarPosition => point.toPolar(p),
   /** 在原点附近按极坐标偏移，返回结果点的世界笛卡尔坐标 */
   offsetFrom: (
     origin: Position,
