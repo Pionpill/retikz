@@ -3,6 +3,25 @@
   "version": "0.1.0-alpha.5",
   "description": "React adapter for retikz: Kernel/Sugar JSX components and SVG renderer.",
   "type": "module",
+  "author": "Pionpill",
+  "homepage": "https://pionpill.github.io/retikz/",
+  "keywords": [
+    "react",
+    "tikz",
+    "diagram",
+    "svg",
+    "visualization"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Pionpill/retikz.git",
+    "directory": "packages/react"
+  },
+  "bugs": {
+    "url": "https://github.com/Pionpill/retikz/issues"
+  },
+  "sideEffects": false,
   "main": "./src/index.ts",
   "module": "./src/index.ts",
   "types": "./src/index.ts",
