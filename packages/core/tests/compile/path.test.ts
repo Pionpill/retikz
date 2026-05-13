@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { compileToScene } from '../../src/compile/compile';
 import type { IR } from '../../src/ir';
 import type { PathPrim, ScenePrimitive } from '../../src/primitive';
-import { pathCommandsToD } from '../helpers/path-d';
+import { arc, close, cubic, ellipseArc, line, move, quad } from '../helpers/path-command-factory';
 
 const findPathPrim = (prims: Array<ScenePrimitive>): PathPrim => {
   const p = prims.find((x): x is PathPrim => x.type === 'path');
@@ -26,7 +26,10 @@ describe('compile path: line baseline', () => {
       ],
     };
     const scene = compileToScene(ir);
-    expect(pathCommandsToD(findPathPrim(scene.primitives).commands)).toBe('M 0 0 L 10 5');
+    expect(findPathPrim(scene.primitives).commands).toEqual([
+      move([0, 0]),
+      line([10, 5]),
+    ]);
   });
 });
 
