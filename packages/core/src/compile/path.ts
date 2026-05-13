@@ -384,19 +384,43 @@ const normalizeRelativeTargets = (
   return out;
 };
 
+/** emitPathPrimitive 可选 warn 钩子 */
+export type EmitPathWarnHook = {
+  /** 警告收集器（由 compileToScene 传入） */
+  onWarn?: (warning: {
+    code: string;
+    message: string;
+    path: string;
+  }) => void;
+  /** 当前 path 在 IR 中的 locator 前缀（如 `'children[3].path'`） */
+  irPath?: string;
+};
+
 /**
  * IR Path → PathPrim
- * @description 每个绘制段独立用节点中心算两端 boundary clip——中段节点的入/出 boundary 点通常不同，path 在该节点可见"断开"（与 TikZ `\draw (A)--(B)--(C);` 段独立 clip 一致）。仍产一个 PathPrim：commands 用多组 move/line 表达 sub-path；段起点等于上段终点时复用 cursor 省 move。cycle 段闭回最近 move 起点，起点==lastEnd && 终点==subPathStart 时输出 close，否则显式画段 line。引用未定义节点/解析失败返回 null
+ * @description 每个绘制段独立用节点中心算两端 boundary clip——中段节点的入/出 boundary 点通常不同，path 在该节点可见"断开"（与 TikZ `\draw (A)--(B)--(C);` 段独立 clip 一致）。仍产一个 PathPrim：commands 用多组 move/line 表达 sub-path；段起点等于上段终点时复用 cursor 省 move。cycle 段闭回最近 move 起点，起点==lastEnd && 终点==subPathStart 时输出 close，否则显式画段 line。引用未定义节点/解析失败返回 null，并通过 `warnHook.onWarn` 同步触发 warning
  */
 export const emitPathPrimitive = (
   path: IRPath,
   nodeIndex: Map<string, NodeLayout>,
   round: (n: number) => number,
   measureText: TextMeasurer = fallbackMeasurer,
+  warnHook: EmitPathWarnHook = {},
 ): { primitives: Array<ScenePrimitive>; points: Array<IRPosition> } | null => {
+  const irPath = warnHook.irPath ?? 'path';
+  const warn = (code: string, message: string, subPath = ''): void => {
+    warnHook.onWarn?.({ code, message, path: subPath ? `${irPath}.${subPath}` : irPath });
+  };
   // 先把 relative/relativeAccumulate 解析为绝对坐标，后续算法可统一按绝对坐标处理
   const steps = normalizeRelativeTargets(path.children, nodeIndex);
-  if (steps.length < 2) return null;
+  if (steps.length < 2) {
+    warn(
+      'PATH_TOO_SHORT',
+      `Path requires at least 2 steps (got ${steps.length}); the entire path is skipped`,
+      'children',
+    );
+    return null;
+  }
 
   /** 每段 step.label 翻译出的 TextPrim（或 sloped 旋转的 group），与 path 主体同级返回 */
   const labelPrims: Array<ScenePrimitive> = [];
@@ -433,9 +457,18 @@ export const emitPathPrimitive = (
     s.kind !== 'ellipsePath';
 
   // 每个 step 的几何参考点（节点中心/直接坐标）；无 to 的 step kind 给 null
-  const anchors: Array<IRPosition | null> = steps.map(s =>
-    hasTo(s) ? refPointOfTarget(s.to, nodeIndex) : null,
-  );
+  const anchors: Array<IRPosition | null> = steps.map((s, idx) => {
+    if (!hasTo(s)) return null;
+    const ref = refPointOfTarget(s.to, nodeIndex);
+    if (!ref && typeof s.to === 'string') {
+      warn(
+        'UNRESOLVED_NODE_REFERENCE',
+        `Step.to references undefined node id '${s.to}'; the entire path is skipped`,
+        `children[${idx}].to`,
+      );
+    }
+    return ref;
+  });
 
   /** 找 i 之前最近的"有 to 字段的 step" 及其 anchor */
   const findPrev = (

@@ -118,6 +118,7 @@ export type {
   TextMetrics,
   TextMeasurer,
   CompileOptions,
+  CompileWarning,
 } from './compile';
 export { fallbackMeasurer, compileToScene } from './compile';
 
