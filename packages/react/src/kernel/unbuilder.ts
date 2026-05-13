@@ -4,39 +4,15 @@ import { Coordinate } from './Coordinate';
 import { Node, type NodeProps } from './Node';
 import { Path } from './Path';
 import { Step } from './Step';
+import { NODE_FIELDS, pickDefined } from './_fields';
 
-/** IR 'node' child → NodeProps；过滤 undefined 字段，不污染 React DevTools 显示 */
+/**
+ * IR 'node' child → NodeProps；过滤 undefined 字段，不污染 React DevTools 显示
+ * @description NODE_FIELDS 字段表透传纯字段（与 builder.ts 共享）；text / position / label 特化字段独立处理
+ */
 const nodePropsFromIR = (n: IRNode): NodeProps => {
-  const props: NodeProps = { position: n.position };
-  if (n.id !== undefined) props.id = n.id;
-  if (n.shape !== undefined) props.shape = n.shape;
-  if (n.rotate !== undefined) props.rotate = n.rotate;
+  const props: NodeProps = { position: n.position, ...pickDefined(n, NODE_FIELDS) };
   if (n.text !== undefined) props.text = n.text;
-  if (n.align !== undefined) props.align = n.align;
-  if (n.lineHeight !== undefined) props.lineHeight = n.lineHeight;
-  if (n.font !== undefined) props.font = n.font;
-  if (n.innerXSep !== undefined) props.innerXSep = n.innerXSep;
-  if (n.innerYSep !== undefined) props.innerYSep = n.innerYSep;
-  if (n.outerSep !== undefined) props.outerSep = n.outerSep;
-  if (n.padding !== undefined) props.padding = n.padding;
-  if (n.margin !== undefined) props.margin = n.margin;
-  if (n.fill !== undefined) props.fill = n.fill;
-  if (n.fillOpacity !== undefined) props.fillOpacity = n.fillOpacity;
-  if (n.stroke !== undefined) props.stroke = n.stroke;
-  if (n.drawOpacity !== undefined) props.drawOpacity = n.drawOpacity;
-  if (n.strokeWidth !== undefined) props.strokeWidth = n.strokeWidth;
-  if (n.dashed !== undefined) props.dashed = n.dashed;
-  if (n.dotted !== undefined) props.dotted = n.dotted;
-  if (n.dashArray !== undefined) props.dashArray = n.dashArray;
-  if (n.roundedCorners !== undefined) props.roundedCorners = n.roundedCorners;
-  if (n.minimumWidth !== undefined) props.minimumWidth = n.minimumWidth;
-  if (n.minimumHeight !== undefined) props.minimumHeight = n.minimumHeight;
-  if (n.minimumSize !== undefined) props.minimumSize = n.minimumSize;
-  if (n.scale !== undefined) props.scale = n.scale;
-  if (n.xScale !== undefined) props.xScale = n.xScale;
-  if (n.yScale !== undefined) props.yScale = n.yScale;
-  if (n.textColor !== undefined) props.textColor = n.textColor;
-  if (n.opacity !== undefined) props.opacity = n.opacity;
   if (n.label !== undefined) props.label = n.label;
   return props;
 };
