@@ -2,7 +2,7 @@ import { rect as rectOps } from '../geometry/rect';
 import type { IR, IRPosition } from '../ir';
 import type { Scene, ScenePrimitive } from '../primitive';
 import { type NodeLayout, emitNodePrimitives, layoutNode } from './node';
-import { emitPathPrimitive } from './path';
+import { emitPathPrimitive } from './path/index';
 import { resolvePosition } from './position';
 import { DEFAULT_PRECISION, makeRound } from './precision';
 import { type TextMeasurer, fallbackMeasurer } from './text-metrics';

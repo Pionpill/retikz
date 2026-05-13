@@ -1,0 +1,445 @@
+import { arcBoundingPoints, arcEndPoint } from '../../geometry/arc';
+import { bendControlPoints } from '../../geometry/bend';
+import {
+  type SegmentSample,
+  arcSegmentSample,
+  circleSegmentSample,
+  cubicSegmentSample,
+  ellipseSegmentSample,
+  foldSegmentSample,
+  lineSegmentSample,
+  quadSegmentSample,
+} from '../../geometry/segment';
+import type {
+  IRPath,
+  IRPosition,
+  IRStep,
+  IRTarget,
+} from '../../ir';
+import type {
+  PathCommand,
+  ScenePrimitive,
+} from '../../primitive';
+import { type NodeLayout } from '../node';
+import { type TextMeasurer, fallbackMeasurer } from '../text-metrics';
+import { clipForTarget, cornerOf, refPointOfTarget, samePoint } from './anchor';
+import { emitLabelPrimitive, tForLabelPosition } from './label';
+import { normalizeRelativeTargets } from './relative';
+import { applyArrowShrinks, arrowMarkers, computeShrink } from './shrink';
+import { type PathBaseProps, splitSubPathsForMarkers } from './split';
+
+/**
+ * 语义 stroke 档位 → 数值（user units）
+ * @description 对齐 TikZ 比例（thin=0.4pt→1=默认 strokeWidth）：ultraThin 0.25、veryThin 0.5、thin 1、semithick 1.5、thick 2、veryThick 3、ultraThick 4。显式 strokeWidth 覆盖 thickness
+ */
+const THICKNESS_TO_WIDTH: Record<NonNullable<IRPath['thickness']>, number> = {
+  ultraThin: 0.25,
+  veryThin: 0.5,
+  thin: 1,
+  semithick: 1.5,
+  thick: 2,
+  veryThick: 3,
+  ultraThick: 4,
+};
+
+/** emitPathPrimitive 可选 warn 钩子 */
+export type EmitPathWarnHook = {
+  /** 警告收集器（由 compileToScene 传入） */
+  onWarn?: (warning: {
+    code: string;
+    message: string;
+    path: string;
+  }) => void;
+  /** 当前 path 在 IR 中的 locator 前缀（如 `'children[3].path'`） */
+  irPath?: string;
+};
+
+/**
+ * IR Path → PathPrim
+ * @description 每个绘制段独立用节点中心算两端 boundary clip——中段节点的入/出 boundary 点通常不同，path 在该节点可见"断开"（与 TikZ `\draw (A)--(B)--(C);` 段独立 clip 一致）。仍产一个 PathPrim：commands 用多组 move/line 表达 sub-path；段起点等于上段终点时复用 cursor 省 move。cycle 段闭回最近 move 起点，起点==lastEnd && 终点==subPathStart 时输出 close，否则显式画段 line。引用未定义节点/解析失败返回 null，并通过 `warnHook.onWarn` 同步触发 warning
+ */
+export const emitPathPrimitive = (
+  path: IRPath,
+  nodeIndex: Map<string, NodeLayout>,
+  round: (n: number) => number,
+  measureText: TextMeasurer = fallbackMeasurer,
+  warnHook: EmitPathWarnHook = {},
+): { primitives: Array<ScenePrimitive>; points: Array<IRPosition> } | null => {
+  const irPath = warnHook.irPath ?? 'path';
+  const warn = (code: string, message: string, subPath = ''): void => {
+    warnHook.onWarn?.({ code, message, path: subPath ? `${irPath}.${subPath}` : irPath });
+  };
+  // 先把 relative/relativeAccumulate 解析为绝对坐标，后续算法可统一按绝对坐标处理
+  const steps = normalizeRelativeTargets(path.children, nodeIndex);
+  if (steps.length < 2) {
+    warn(
+      'PATH_TOO_SHORT',
+      `Path requires at least 2 steps (got ${steps.length}); the entire path is skipped`,
+      'children',
+    );
+    return null;
+  }
+
+  /** 每段 step.label 翻译出的 TextPrim（或 sloped 旋转的 group），与 path 主体同级返回 */
+  const labelPrims: Array<ScenePrimitive> = [];
+
+  /** 算 sample 后 emitLabelPrimitive，结果累积到 labelPrims/points */
+  const collectLabel = (
+    step: IRStep,
+    sampleAt: (t: number) => SegmentSample,
+  ): void => {
+    if (
+      step.kind === 'move' ||
+      step.kind === 'cycle' ||
+      !('label' in step) ||
+      !step.label
+    ) {
+      return;
+    }
+    const t = tForLabelPosition(step.label.position);
+    const sample = sampleAt(t);
+    const r = emitLabelPrimitive(step.label, sample, measureText, round);
+    labelPrims.push(r.primitive);
+    for (const p of r.points) points.push(p);
+  };
+
+  // "无 to" 的 step kinds：cycle / arc / circlePath / ellipsePath
+  type StepWithTo = Exclude<
+    IRStep,
+    { kind: 'cycle' } | { kind: 'arc' } | { kind: 'circlePath' } | { kind: 'ellipsePath' }
+  >;
+  const hasTo = (s: IRStep): s is StepWithTo =>
+    s.kind !== 'cycle' &&
+    s.kind !== 'arc' &&
+    s.kind !== 'circlePath' &&
+    s.kind !== 'ellipsePath';
+
+  // 每个 step 的几何参考点（节点中心/直接坐标）；无 to 的 step kind 给 null
+  const anchors: Array<IRPosition | null> = steps.map((s, idx) => {
+    if (!hasTo(s)) return null;
+    const ref = refPointOfTarget(s.to, nodeIndex);
+    if (!ref && typeof s.to === 'string') {
+      warn(
+        'UNRESOLVED_NODE_REFERENCE',
+        `Step.to references undefined node id '${s.to}'; the entire path is skipped`,
+        `children[${idx}].to`,
+      );
+    }
+    return ref;
+  });
+
+  /** 找 i 之前最近的"有 to 字段的 step" 及其 anchor */
+  const findPrev = (
+    i: number,
+  ): { step: StepWithTo; anchor: IRPosition } | null => {
+    for (let j = i - 1; j >= 0; j--) {
+      const s = steps[j];
+      if (!hasTo(s)) continue;
+      const a = anchors[j];
+      if (!a) return null;
+      return { step: s, anchor: a };
+    }
+    return null;
+  };
+
+  /** 找 i 之前最近的 move 的 to，cycle 闭合的目标 */
+  const findRecentMoveTo = (i: number): IRTarget | null => {
+    for (let j = i - 1; j >= 0; j--) {
+      const s = steps[j];
+      if (s.kind === 'move') {
+        return s.to;
+      }
+    }
+    return null;
+  };
+
+  const commands: Array<PathCommand> = [];
+  const points: Array<IRPosition> = [];
+  let lastEnd: IRPosition | null = null;
+  let subPathStart: IRPosition | null = null;
+  /**
+   * 笔位覆盖：arc/circlePath/ellipsePath 无 `to` 字段不能用 prev.step.to 重算起点
+   * @description 设置 penOverride 让下个绘制段直接用此点当 fromClip 后清空。arc=弧终点；circlePath/ellipsePath=center（"画完留在圆心"）
+   */
+  let penOverride: IRPosition | null = null;
+
+  const roundPoint = (p: IRPosition): IRPosition => [round(p[0]), round(p[1])];
+
+  const emitMove = (p: IRPosition) => {
+    const rp = roundPoint(p);
+    commands.push({ kind: 'move', to: [rp[0], rp[1]] });
+    points.push(p);
+    subPathStart = p;
+    lastEnd = p;
+  };
+  const emitLine = (p: IRPosition) => {
+    const rp = roundPoint(p);
+    commands.push({ kind: 'line', to: [rp[0], rp[1]] });
+    points.push(p);
+    lastEnd = p;
+  };
+  const emitClose = () => {
+    commands.push({ kind: 'close' });
+    lastEnd = subPathStart;
+  };
+  const emitQuad = (control: IRPosition, p: IRPosition) => {
+    const rc = roundPoint(control);
+    const rp = roundPoint(p);
+    commands.push({
+      kind: 'quad',
+      control: [rc[0], rc[1]],
+      to: [rp[0], rp[1]],
+    });
+    // 曲线视觉范围不超过控制点+端点凸包
+    points.push(control);
+    points.push(p);
+    lastEnd = p;
+  };
+  const emitCubic = (c1: IRPosition, c2: IRPosition, p: IRPosition) => {
+    const rc1 = roundPoint(c1);
+    const rc2 = roundPoint(c2);
+    const rp = roundPoint(p);
+    commands.push({
+      kind: 'cubic',
+      control1: [rc1[0], rc1[1]],
+      control2: [rc2[0], rc2[1]],
+      to: [rp[0], rp[1]],
+    });
+    // 控制点纳入 bbox（保守，实际 bezier 包络小于凸包）
+    points.push(c1);
+    points.push(c2);
+    points.push(p);
+    lastEnd = p;
+  };
+  const emitArc = (
+    center: IRPosition,
+    radius: number,
+    startAngle: number,
+    endAngle: number,
+  ) => {
+    const rc = roundPoint(center);
+    commands.push({
+      kind: 'arc',
+      center: [rc[0], rc[1]],
+      radius: round(radius),
+      startAngle,
+      endAngle,
+    });
+    // 弧端点入 bbox；arc 极值候选（90°·k 轴向点）由各 compile 分支单独 push
+    points.push(arcEndPoint(center, radius, endAngle));
+    lastEnd = arcEndPoint(center, radius, endAngle);
+  };
+  const emitEllipseArc = (
+    center: IRPosition,
+    radiusX: number,
+    radiusY: number,
+    startAngle: number,
+    endAngle: number,
+  ) => {
+    const rc = roundPoint(center);
+    commands.push({
+      kind: 'ellipseArc',
+      center: [rc[0], rc[1]],
+      radiusX: round(radiusX),
+      radiusY: round(radiusY),
+      startAngle,
+      endAngle,
+    });
+    // 椭圆弧终点：未旋转椭圆 polar 投影
+    const endPt: IRPosition = [
+      center[0] + Math.cos((endAngle * Math.PI) / 180) * radiusX,
+      center[1] + Math.sin((endAngle * Math.PI) / 180) * radiusY,
+    ];
+    points.push(endPt);
+    lastEnd = endPt;
+  };
+  /** 段起点：与 lastEnd 相同则复用 cursor（省 move），否则发 move */
+  const startSegment = (p: IRPosition) => {
+    if (samePoint(p, lastEnd)) return;
+    emitMove(p);
+  };
+
+  for (let i = 0; i < steps.length; i++) {
+    const step = steps[i];
+
+    // move 自身不绘制；其 to 仅供下个绘制段的 findPrev 引用
+    if (step.kind === 'move') continue;
+
+    if (step.kind === 'cycle') {
+      const moveTo = findRecentMoveTo(i);
+      const prev = findPrev(i);
+      if (!moveTo || !prev) continue; // 没 move/prev cycle 无意义
+      const moveAnchor = refPointOfTarget(moveTo, nodeIndex);
+      if (!moveAnchor) return null;
+
+      const fromClip = clipForTarget(prev.step.to, moveAnchor, nodeIndex);
+      const toClip = clipForTarget(moveTo, prev.anchor, nodeIndex);
+      if (!fromClip || !toClip) return null;
+
+      // 起点 == lastEnd 且终点 == subPathStart → close 收尾最干净
+      if (samePoint(fromClip, lastEnd) && samePoint(toClip, subPathStart)) {
+        emitClose();
+        continue;
+      }
+      // 否则段独立：重新 move 起点再 line 到终点（不再用 close，避免回到错误的 subPathStart）
+      startSegment(fromClip);
+      emitLine(toClip);
+      continue;
+    }
+
+    // 其他 step 都需 prev（找 cursor 起点/圆心）；currAnchor 仅有 to 的 step 才需
+    const prev = findPrev(i);
+    if (!prev) return null;
+
+    if (step.kind === 'arc') {
+      // 圆心 = 上一 step anchor (refPoint)
+      const center = prev.anchor;
+      const startPt = arcEndPoint(center, step.radius, step.startAngle);
+      const endPt = arcEndPoint(center, step.radius, step.endAngle);
+
+      startSegment(startPt);
+      emitArc(center, step.radius, step.startAngle, step.endAngle);
+
+      // 弧的极值点（90°·k 候选）算进 bbox
+      for (const p of arcBoundingPoints(center, step.radius, step.startAngle, step.endAngle)) {
+        points.push(p);
+      }
+      collectLabel(step, t =>
+        arcSegmentSample(center, step.radius, step.startAngle, step.endAngle, t),
+      );
+      // 后续段从弧终点继续（emitArc 已把 lastEnd 设为 endPt）
+      penOverride = endPt;
+      continue;
+    }
+
+    if (step.kind === 'circlePath') {
+      // 圆心 = 上一 step anchor；以 ellipseArc 全 sweep 表达整圆
+      const center = prev.anchor;
+      const r = step.radius;
+      const right: IRPosition = [center[0] + r, center[1]];
+
+      startSegment(right);
+      emitEllipseArc(center, r, r, 0, 360);
+
+      // 整圆顶/底/左/右四点
+      points.push([center[0] + r, center[1]]);
+      points.push([center[0] - r, center[1]]);
+      points.push([center[0], center[1] + r]);
+      points.push([center[0], center[1] - r]);
+
+      collectLabel(step, t => circleSegmentSample(center, r, t));
+
+      // 画完笔位回 center；下段用 penOverride=center 触发 startSegment 发 move
+      penOverride = center;
+      continue;
+    }
+
+    if (step.kind === 'ellipsePath') {
+      const center = prev.anchor;
+      const rx = step.radiusX;
+      const ry = step.radiusY;
+      const right: IRPosition = [center[0] + rx, center[1]];
+
+      startSegment(right);
+      emitEllipseArc(center, rx, ry, 0, 360);
+
+      points.push([center[0] + rx, center[1]]);
+      points.push([center[0] - rx, center[1]]);
+      points.push([center[0], center[1] + ry]);
+      points.push([center[0], center[1] - ry]);
+
+      collectLabel(step, t => ellipseSegmentSample(center, rx, ry, t));
+
+      penOverride = center;
+      continue;
+    }
+
+    const currAnchor = anchors[i];
+    if (!currAnchor) return null;
+
+    // arc/circlePath/ellipsePath 后 penOverride 决定下段起点（弧终点/圆心）；
+    // 普通段继续对 prev.step.to 做 boundary clip（节点 ref 段独立 clip）。用完即清空
+    const usedOverride = penOverride;
+    penOverride = null;
+
+    if (step.kind === 'line') {
+      const fromClip = usedOverride ?? clipForTarget(prev.step.to, currAnchor, nodeIndex);
+      const toClip = clipForTarget(step.to, prev.anchor, nodeIndex);
+      if (!fromClip || !toClip) return null;
+      startSegment(fromClip);
+      emitLine(toClip);
+      collectLabel(step, t => lineSegmentSample(fromClip, toClip, t));
+      continue;
+    }
+
+    if (step.kind === 'curve') {
+      const fromClip = usedOverride ?? clipForTarget(prev.step.to, step.control, nodeIndex);
+      const toClip = clipForTarget(step.to, step.control, nodeIndex);
+      if (!fromClip || !toClip) return null;
+      startSegment(fromClip);
+      emitQuad(step.control, toClip);
+      collectLabel(step, t => quadSegmentSample(fromClip, step.control, toClip, t));
+      continue;
+    }
+    if (step.kind === 'cubic') {
+      const fromClip = usedOverride ?? clipForTarget(prev.step.to, step.control1, nodeIndex);
+      const toClip = clipForTarget(step.to, step.control2, nodeIndex);
+      if (!fromClip || !toClip) return null;
+      startSegment(fromClip);
+      emitCubic(step.control1, step.control2, toClip);
+      collectLabel(step, t =>
+        cubicSegmentSample(fromClip, step.control1, step.control2, toClip, t),
+      );
+      continue;
+    }
+    if (step.kind === 'bend') {
+      const angle = step.bendAngle ?? 30;
+      const [c1, c2] = bendControlPoints(prev.anchor, currAnchor, step.bendDirection, angle);
+      const fromClip = usedOverride ?? clipForTarget(prev.step.to, c1, nodeIndex);
+      const toClip = clipForTarget(step.to, c2, nodeIndex);
+      if (!fromClip || !toClip) return null;
+      startSegment(fromClip);
+      emitCubic(c1, c2, toClip);
+      collectLabel(step, t => cubicSegmentSample(fromClip, c1, c2, toClip, t));
+      continue;
+    }
+
+    // step.kind === 'step' (fold)
+    const corner = cornerOf(prev.anchor, currAnchor, step.via);
+    const fromClip = usedOverride ?? clipForTarget(prev.step.to, corner, nodeIndex);
+    const toClip = clipForTarget(step.to, corner, nodeIndex);
+    if (!fromClip || !toClip) return null;
+    startSegment(fromClip);
+    emitLine(corner);
+    emitLine(toClip);
+    collectLabel(step, t => foldSegmentSample(fromClip, corner, toClip, t));
+  }
+
+  // strokeWidth 解析：显式 strokeWidth > thickness 档位 > 默认 1
+  const strokeWidth =
+    path.strokeWidth ?? (path.thickness ? THICKNESS_TO_WIDTH[path.thickness] : 1);
+  const baseProps: PathBaseProps = {
+    stroke: path.stroke ?? 'currentColor',
+    strokeWidth,
+    // path.fill 缺省 'none'（仅描边）；传颜色即填充，可配 cycle 闭合画填充形状
+    fill: path.fill ?? 'none',
+    fillRule: path.fillRule,
+    strokeDasharray: path.strokeDasharray,
+    strokeLinecap: path.lineCap,
+    strokeLinejoin: path.lineJoin,
+    // IR `drawOpacity` → primitive `strokeOpacity`（与 Node 命名一致）
+    opacity: path.opacity,
+    fillOpacity: path.fillOpacity,
+    strokeOpacity: path.drawOpacity,
+  };
+
+  const markers = arrowMarkers(path.arrow, path.arrowDetail);
+
+  // 按 shape + spec（length / scale / lineWidth）把首/末段端点向内缩短，让 line 端点接在 hollow arrow 尾部外缘，不贯穿 back outline；shrink=0 的实心 shape 跳过
+  const shrinkStart = markers.arrowStart ? computeShrink(markers.arrowStart) : 0;
+  const shrinkEnd = markers.arrowEnd ? computeShrink(markers.arrowEnd) : 0;
+  applyArrowShrinks(commands, shrinkStart, shrinkEnd, strokeWidth, round);
+
+  const { primitive } = splitSubPathsForMarkers(commands, baseProps, markers);
+  return { primitives: [primitive, ...labelPrims], points };
+};
