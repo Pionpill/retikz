@@ -8,8 +8,8 @@ export type ValueOf<T extends object> = T[keyof T];
  *   const NODE_FIELDS = ['id', 'shape'] as const satisfies ReadonlyArray<keyof IRNode>;
  *   type _Check = AssertEqual<typeof NODE_FIELDS[number], keyof IRNode>;
  */
-export type AssertEqual<A, B> = [A] extends [B]
-  ? [B] extends [A]
+export type AssertEqual<TActual, TExpected> = [TActual] extends [TExpected]
+  ? [TExpected] extends [TActual]
     ? true
     : false
   : false;
