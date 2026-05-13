@@ -1,5 +1,5 @@
 ---
-name: alpha-feature-document
+name: develop-document
 description: alpha 功能开发的文档阶段——把已实现已通过 adversarial 第一关的功能落进 apps/docs/。衔接 docs-doc-write SKILL（双语 mdx + demo + API 表 + sidebar / i18n 同步）。绿色 level 改动若主体就是文档，本阶段即主流程；红色 / 黄色实现的文档化在本阶段补齐。
 ---
 
@@ -10,8 +10,8 @@ description: alpha 功能开发的文档阶段——把已实现已通过 advers
 ## 输入
 
 - ADR（已 Proposed，未 Accepted——Accepted 是 wrapup 阶段的事）
-- alpha-feature-test 阶段产出的稳定实现 + 完整测试
-- alpha-feature-test 留下的 INFO 列表（实现稳健性的素材，可写进文档"提示"段）
+- develop-test 阶段产出的稳定实现 + 完整测试
+- develop-test 留下的 INFO 列表（实现稳健性的素材，可写进文档"提示"段）
 
 ## 适用范围
 
@@ -99,8 +99,8 @@ description: alpha 功能开发的文档阶段——把已实现已通过 advers
 
 ## 与上下游衔接
 
-- **上游**：alpha-feature-test（实现已稳）
-- **下游**：alpha-feature-wrapup（写 changelog + 跑 Adversarial 第二关 + 人工 ack）
+- **上游**：develop-test（实现已稳）
+- **下游**：develop-wrapup（写 changelog + 跑 Adversarial 第二关 + 人工 ack）
 
 ## 完成标志
 

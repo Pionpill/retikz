@@ -161,7 +161,7 @@ Fold step 由 N 段直线 + (N-1) 个拐角组成。t 参数化**与段实际长
 
 ## 每 step kind 的独立 demo + 测试覆盖矩阵
 
-**实现要求**：8 种支持 label 的 step kind（`line` / `step` / `curve` / `cubic` / `bend` / `arc` / `circlePath` / `ellipsePath`）**每一种都要有独立的文档 demo + 独立的测试用例组**，确保 t 参数化规则在每种 kind 上都被验证。下表是实施清单——demo 文件名 / 关键测试 case 名按此规范，下游 alpha-feature-implement 阶段照此执行：
+**实现要求**：8 种支持 label 的 step kind（`line` / `step` / `curve` / `cubic` / `bend` / `arc` / `circlePath` / `ellipsePath`）**每一种都要有独立的文档 demo + 独立的测试用例组**，确保 t 参数化规则在每种 kind 上都被验证。下表是实施清单——demo 文件名 / 关键测试 case 名按此规范，下游 develop-implement 阶段照此执行：
 
 | Step kind | Docs demo 文件（apps/docs/...） | 关键测试 case（`label_<kind>_t_<value>_<desc>` 命名） |
 |---|---|---|

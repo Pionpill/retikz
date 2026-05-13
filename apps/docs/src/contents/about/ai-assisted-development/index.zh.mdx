@@ -45,7 +45,7 @@ retikz 的实现劳动大部分由 AI 完成——节点 / 路径 / 边标注 / 
 
 ## 5 阶段流程
 
-alpha 阶段每条 ADR / 每条新功能都按 5 阶段走，编排在 [`alpha-feature-dev`](https://github.com/Pionpill/retikz/blob/main/.agents/skills/alpha-feature-dev/SKILL.md) SKILL：
+alpha 阶段每条 ADR / 每条新功能都按 5 阶段走，编排在 [`flow-alpha`](https://github.com/Pionpill/retikz/blob/main/.agents/skills/flow-alpha/SKILL.md) SKILL：
 
 | 阶段 | 主体 | 输出 |
 | --- | --- | --- |
@@ -57,7 +57,7 @@ alpha 阶段每条 ADR / 每条新功能都按 5 阶段走，编排在 [`alpha-f
 
 **人工只动 1 和 5**——中间的 2、3、4 由独立 sub-Agent 接力完成，每阶段设硬关卡（lint / tsc / 测试 / 对账报告）不过即 halt。
 
-每个阶段对应一个独立的子 SKILL：[`alpha-feature-design`](https://github.com/Pionpill/retikz/blob/main/.agents/skills/alpha-feature-design/SKILL.md) / [`alpha-feature-implement`](https://github.com/Pionpill/retikz/blob/main/.agents/skills/alpha-feature-implement/SKILL.md) / [`alpha-feature-test`](https://github.com/Pionpill/retikz/blob/main/.agents/skills/alpha-feature-test/SKILL.md) / [`alpha-feature-document`](https://github.com/Pionpill/retikz/blob/main/.agents/skills/alpha-feature-document/SKILL.md) / [`alpha-feature-wrapup`](https://github.com/Pionpill/retikz/blob/main/.agents/skills/alpha-feature-wrapup/SKILL.md)。SKILL 文件里写明输入、输出、子 Agent prompt、失败 / 升级阈值。
+每个阶段对应一个独立的子 SKILL：[`develop-design`](https://github.com/Pionpill/retikz/blob/main/.agents/skills/develop-design/SKILL.md) / [`develop-implement`](https://github.com/Pionpill/retikz/blob/main/.agents/skills/develop-implement/SKILL.md) / [`develop-test`](https://github.com/Pionpill/retikz/blob/main/.agents/skills/develop-test/SKILL.md) / [`develop-document`](https://github.com/Pionpill/retikz/blob/main/.agents/skills/develop-document/SKILL.md) / [`develop-wrapup`](https://github.com/Pionpill/retikz/blob/main/.agents/skills/develop-wrapup/SKILL.md)。SKILL 文件里写明输入、输出、子 Agent prompt、失败 / 升级阈值。
 
 ## 三个 sub-Agent 角色
 
@@ -124,8 +124,8 @@ retikz 当前三个 sub-Agent 默认全部用 Claude Opus 4.7。同 model 同上
 | 文档站特有约定（mdx 风格 / 双语 demo / 链接策略） | [apps/docs/AGENTS.md](https://github.com/Pionpill/retikz/blob/main/apps/docs/AGENTS.md) |
 | 项目立项主张与第一设计原则 | [DESIGN.md](https://github.com/Pionpill/retikz/blob/main/notes/architecture/DESIGN.md) |
 | 全部 SKILL（开发流程、发版、文档写作） | [.agents/skills/](https://github.com/Pionpill/retikz/tree/main/.agents/skills) |
-| 5 阶段编排器 | [alpha-feature-dev SKILL](https://github.com/Pionpill/retikz/blob/main/.agents/skills/alpha-feature-dev/SKILL.md) |
-| 设计 / 实现 / 测试 / 文档 / 收尾子 SKILL | [alpha-feature-design](https://github.com/Pionpill/retikz/blob/main/.agents/skills/alpha-feature-design/SKILL.md) · [alpha-feature-implement](https://github.com/Pionpill/retikz/blob/main/.agents/skills/alpha-feature-implement/SKILL.md) · [alpha-feature-test](https://github.com/Pionpill/retikz/blob/main/.agents/skills/alpha-feature-test/SKILL.md) · [alpha-feature-document](https://github.com/Pionpill/retikz/blob/main/.agents/skills/alpha-feature-document/SKILL.md) · [alpha-feature-wrapup](https://github.com/Pionpill/retikz/blob/main/.agents/skills/alpha-feature-wrapup/SKILL.md) |
+| 5 阶段编排器 | [flow-alpha SKILL](https://github.com/Pionpill/retikz/blob/main/.agents/skills/flow-alpha/SKILL.md) |
+| 设计 / 实现 / 测试 / 文档 / 收尾子 SKILL | [develop-design](https://github.com/Pionpill/retikz/blob/main/.agents/skills/develop-design/SKILL.md) · [develop-implement](https://github.com/Pionpill/retikz/blob/main/.agents/skills/develop-implement/SKILL.md) · [develop-test](https://github.com/Pionpill/retikz/blob/main/.agents/skills/develop-test/SKILL.md) · [develop-document](https://github.com/Pionpill/retikz/blob/main/.agents/skills/develop-document/SKILL.md) · [develop-wrapup](https://github.com/Pionpill/retikz/blob/main/.agents/skills/develop-wrapup/SKILL.md) |
 | 发版 SKILL（npm publish 5 阶段守门） | [package-publish SKILL](https://github.com/Pionpill/retikz/blob/main/.agents/skills/package-publish/SKILL.md) |
 | 文档写作 SKILL | [docs-doc-write SKILL](https://github.com/Pionpill/retikz/blob/main/.agents/skills/docs-doc-write/SKILL.md) |
 | ADR 决策档案 | [notes/adr/](https://github.com/Pionpill/retikz/tree/main/notes/adr)（含 [模板](https://github.com/Pionpill/retikz/blob/main/notes/adr/_template.md) 与 [索引](https://github.com/Pionpill/retikz/blob/main/notes/adr/README.md)） |

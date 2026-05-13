@@ -45,7 +45,7 @@ Any artifact at any stage that **only humans can use, LLMs can't** (e.g. returni
 
 ## The 5-stage flow
 
-Every ADR / new feature in alpha goes through 5 stages, orchestrated by the [`alpha-feature-dev`](https://github.com/Pionpill/retikz/blob/main/.agents/skills/alpha-feature-dev/SKILL.md) SKILL:
+Every ADR / new feature in alpha goes through 5 stages, orchestrated by the [`flow-alpha`](https://github.com/Pionpill/retikz/blob/main/.agents/skills/flow-alpha/SKILL.md) SKILL:
 
 | Stage | Driver | Output |
 | --- | --- | --- |
@@ -57,7 +57,7 @@ Every ADR / new feature in alpha goes through 5 stages, orchestrated by the [`al
 
 **Humans only act on stages 1 and 5** — stages 2, 3, 4 are handed off to independent sub-agents in sequence, with hard gates at each stage (lint / tsc / tests / reconciliation report) that halt the flow on failure.
 
-Each stage has its own SKILL: [`alpha-feature-design`](https://github.com/Pionpill/retikz/blob/main/.agents/skills/alpha-feature-design/SKILL.md) / [`alpha-feature-implement`](https://github.com/Pionpill/retikz/blob/main/.agents/skills/alpha-feature-implement/SKILL.md) / [`alpha-feature-test`](https://github.com/Pionpill/retikz/blob/main/.agents/skills/alpha-feature-test/SKILL.md) / [`alpha-feature-document`](https://github.com/Pionpill/retikz/blob/main/.agents/skills/alpha-feature-document/SKILL.md) / [`alpha-feature-wrapup`](https://github.com/Pionpill/retikz/blob/main/.agents/skills/alpha-feature-wrapup/SKILL.md). Each spells out its inputs, outputs, sub-agent prompts, and failure / escalation thresholds.
+Each stage has its own SKILL: [`develop-design`](https://github.com/Pionpill/retikz/blob/main/.agents/skills/develop-design/SKILL.md) / [`develop-implement`](https://github.com/Pionpill/retikz/blob/main/.agents/skills/develop-implement/SKILL.md) / [`develop-test`](https://github.com/Pionpill/retikz/blob/main/.agents/skills/develop-test/SKILL.md) / [`develop-document`](https://github.com/Pionpill/retikz/blob/main/.agents/skills/develop-document/SKILL.md) / [`develop-wrapup`](https://github.com/Pionpill/retikz/blob/main/.agents/skills/develop-wrapup/SKILL.md). Each spells out its inputs, outputs, sub-agent prompts, and failure / escalation thresholds.
 
 ## Three sub-agent roles
 
@@ -124,8 +124,8 @@ The constraints written into the [repo-root AGENTS.md](https://github.com/Pionpi
 | Docs-site-specific conventions (mdx style / bilingual demos / link policy) | [apps/docs/AGENTS.md](https://github.com/Pionpill/retikz/blob/main/apps/docs/AGENTS.md) |
 | Project thesis and first design principle | [DESIGN.md](https://github.com/Pionpill/retikz/blob/main/notes/architecture/DESIGN.md) |
 | All SKILLs (dev flow, releases, docs writing) | [.agents/skills/](https://github.com/Pionpill/retikz/tree/main/.agents/skills) |
-| 5-stage orchestrator | [alpha-feature-dev SKILL](https://github.com/Pionpill/retikz/blob/main/.agents/skills/alpha-feature-dev/SKILL.md) |
-| Design / Implement / Test / Document / Wrap-up child SKILLs | [alpha-feature-design](https://github.com/Pionpill/retikz/blob/main/.agents/skills/alpha-feature-design/SKILL.md) · [alpha-feature-implement](https://github.com/Pionpill/retikz/blob/main/.agents/skills/alpha-feature-implement/SKILL.md) · [alpha-feature-test](https://github.com/Pionpill/retikz/blob/main/.agents/skills/alpha-feature-test/SKILL.md) · [alpha-feature-document](https://github.com/Pionpill/retikz/blob/main/.agents/skills/alpha-feature-document/SKILL.md) · [alpha-feature-wrapup](https://github.com/Pionpill/retikz/blob/main/.agents/skills/alpha-feature-wrapup/SKILL.md) |
+| 5-stage orchestrator | [flow-alpha SKILL](https://github.com/Pionpill/retikz/blob/main/.agents/skills/flow-alpha/SKILL.md) |
+| Design / Implement / Test / Document / Wrap-up child SKILLs | [develop-design](https://github.com/Pionpill/retikz/blob/main/.agents/skills/develop-design/SKILL.md) · [develop-implement](https://github.com/Pionpill/retikz/blob/main/.agents/skills/develop-implement/SKILL.md) · [develop-test](https://github.com/Pionpill/retikz/blob/main/.agents/skills/develop-test/SKILL.md) · [develop-document](https://github.com/Pionpill/retikz/blob/main/.agents/skills/develop-document/SKILL.md) · [develop-wrapup](https://github.com/Pionpill/retikz/blob/main/.agents/skills/develop-wrapup/SKILL.md) |
 | Release SKILL (npm publish 5-stage gating) | [package-publish SKILL](https://github.com/Pionpill/retikz/blob/main/.agents/skills/package-publish/SKILL.md) |
 | Docs-writing SKILL | [docs-doc-write SKILL](https://github.com/Pionpill/retikz/blob/main/.agents/skills/docs-doc-write/SKILL.md) |
 | ADR archive | [notes/adr/](https://github.com/Pionpill/retikz/tree/main/notes/adr) (with [template](https://github.com/Pionpill/retikz/blob/main/notes/adr/_template.md) and [index](https://github.com/Pionpill/retikz/blob/main/notes/adr/README.md)) |

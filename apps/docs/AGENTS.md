@@ -128,7 +128,7 @@ H1 走 frontmatter，**mdx 正文里不要再写 `# 标题`**。
 ## 文档内容规范
 
 - **不引用第三方外链**——mdx 正文里不主动加任何指向第三方网站的链接（zod 官网、RFC、第三方库主页、博客等）。需要时由维护者自己加。
-- **不要在 mdx 中暴露项目结构路径（文件名 / 目录路径）**——文档站用户看不到也点不到这些路径。例如不要写"详见 `notes/architecture/DESIGN.md` §1.2"或"参 `.agents/skills/alpha-feature-dev/SKILL.md`"——用户读到这种描述只能去仓库 / 本地手动找。
+- **不要在 mdx 中暴露项目结构路径（文件名 / 目录路径）**——文档站用户看不到也点不到这些路径。例如不要写"详见 `notes/architecture/DESIGN.md` §1.2"或"参 `.agents/skills/flow-alpha/SKILL.md`"——用户读到这种描述只能去仓库 / 本地手动找。
   - 如果确实要引用项目仓库内的文件（设计文档 / SKILL / AGENTS.md / ADR 等），**用 GitHub 完整 URL 作超链接**，让用户能点进去：
     ```mdx
     详见 [DESIGN.md §1.2](https://github.com/Pionpill/retikz/blob/main/notes/architecture/DESIGN.md)

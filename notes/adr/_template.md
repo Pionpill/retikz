@@ -8,7 +8,7 @@
 > - PATCH 不开目录（patch 仅修 bug，不写 ADR）
 > NN 是**按 milestone 重置**的两位数编号（目录已分组，编号无需全局唯一）。alpha.4 是 01-03，alpha.5 从 01 重新起计；跨 milestone 引用带前缀：`alpha.4 ADR-01`
 > slug 用 kebab-case
-> 模板对应 [`alpha-feature-design`](../../../../.agents/skills/alpha-feature-design/SKILL.md) SKILL；改 ADR 结构时同步改两边
+> 模板对应 [`develop-design`](../../../../.agents/skills/develop-design/SKILL.md) SKILL；改 ADR 结构时同步改两边
 > 路径假设实例位于 `notes/adr/<MAJOR>/<MAJOR>.<MINOR>-channel.N/<NN>-...md`，模板里的相对链接按此位置写（在模板自身处链接会断，cp 到实例位置后才正确）
 
 - 状态：Proposed
@@ -55,7 +55,7 @@
 ## DSL 表面
 
 ```tsx
-<最能表达本 ADR 价值的 1-2 段示例 JSX；用户读这段就知道"这玩意能用来干什么"——alpha-feature-document 阶段的 mdx demo 的种子>
+<最能表达本 ADR 价值的 1-2 段示例 JSX；用户读这段就知道"这玩意能用来干什么"——develop-document 阶段的 mdx demo 的种子>
 ```
 
 ## 测试设计
@@ -89,7 +89,7 @@
 
 `red` | `yellow` | `green`
 
-判级规则（参 [`alpha-feature-dev`](../../../../.agents/skills/alpha-feature-dev/SKILL.md) "自动判级" 表）：
+判级规则（参 [`flow-alpha`](../../../../.agents/skills/flow-alpha/SKILL.md) "自动判级" 表）：
 
 - **red**：动 `packages/core/src/ir/**` · `packages/core/src/compile/**` · `packages/*/src/index.ts`
 - **yellow**：动 `packages/react/src/{kernel,sugar,render}/**` · `packages/core/src/parsers/**`
@@ -149,7 +149,7 @@
 - `<case 名>`：<与已有功能交叉，如 rotate × scale × 本字段> → <期望>
 - `<case 名>`：...
 
-> 这是 [`alpha-feature-implement`](../../../../.agents/skills/alpha-feature-implement/SKILL.md) Stage 2 Spec Writer 的输入。象限填得越具体，Spec Writer 写出的测试越贴 ADR 意图，越不需要 [`alpha-feature-test`](../../../../.agents/skills/alpha-feature-test/SKILL.md) Stage 3 Bug Hunter 兜底。
+> 这是 [`develop-implement`](../../../../.agents/skills/develop-implement/SKILL.md) Stage 2 Spec Writer 的输入。象限填得越具体，Spec Writer 写出的测试越贴 ADR 意图，越不需要 [`develop-test`](../../../../.agents/skills/develop-test/SKILL.md) Stage 3 Bug Hunter 兜底。
 
 ### 依赖的现有元素
 

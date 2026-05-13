@@ -1,5 +1,5 @@
 ---
-name: alpha-feature-design
+name: develop-design
 description: alpha 功能开发的设计阶段——产出 ADR 草案，含必填实现契约段（Level / Schema 改动表 / 文件 scope / 测试象限 ≥ 9 case / 依赖现有元素）。本阶段**主要由人工参与**，AI 仅辅助起草 / 整理 / 校验完整性。AI 不得跳过本阶段直接进 implement。
 ---
 
@@ -87,7 +87,7 @@ cp notes/adr/_template.md notes/adr/v<MAJOR>/v<MAJOR>.<MINOR>-<channel>.<N>/<NNN
 
 | 段 | 必填项 |
 |---|---|
-| Level | `red` \| `yellow` \| `green`（判级表见 [`alpha-feature-dev`](../alpha-feature-dev/SKILL.md) "自动判级"） |
+| Level | `red` \| `yellow` \| `green`（判级表见 [`flow-alpha`](../flow-alpha/SKILL.md) "自动判级"） |
 | Schema 改动 | 表格：文件 / 操作 / 字段名 / 类型 / 默认值 / describe；无改动写"无" |
 | 文件 scope | 白名单：本 ADR 实现允许触碰的所有文件；偏离需新开 ADR 或加条 |
 | 测试象限 | 4 类各达下限：happy ≥ 3 / 边界 ≥ 2 / 错误路径 ≥ 2 / 交互 ≥ 2，**至少 9 case** |
@@ -97,15 +97,67 @@ cp notes/adr/_template.md notes/adr/v<MAJOR>/v<MAJOR>.<MINOR>-<channel>.<N>/<NNN
 
 1. **人工与 AI 对话整理需求** → AI 复述确认
 2. AI 起草 ADR：背景 / 选项 / 决策 / DSL 表面 / 测试设计部分
-3. **人工 review 并填实现契约段**——schema 字段表 / 文件 scope / 测试象限 必填
-4. AI 校验完整性：
+3. **多 LLM 评估同一份 ADR 草案**（见下"多 LLM 设计评估"段）
+4. **人工 review 并填实现契约段**——schema 字段表 / 文件 scope / 测试象限 必填
+5. AI 校验完整性：
    - schema 字段表每行四列填全
    - 文件 scope 至少包含 IR 文件 + 测试文件
    - 测试象限四类各达下限（≥ 3 / ≥ 2 / ≥ 2 / ≥ 2 = 9 起步）
    - 校验失败 → 报告人工补充
-5. **人工 commit ADR**（emoji `:books:` 或 `:sparkles:`）—— 状态仍 Proposed，直到 alpha-feature-wrapup 阶段才翻 Accepted
+6. **人工 commit ADR**（emoji `:books:` 或 `:sparkles:`）—— 状态仍 Proposed，直到 develop-wrapup 阶段才翻 Accepted
 
-完成本阶段的标志：`notes/adr/v<MAJOR>/v<MAJOR>.<MINOR>-<channel>.<N>/<NNNN>-*.md` 已 commit、实现契约段 4 件齐、人工说"可以进实现"。
+完成本阶段的标志：`notes/adr/v<MAJOR>/v<MAJOR>.<MINOR>-<channel>.<N>/<NNNN>-*.md` 已 commit、实现契约段 4 件齐、多 LLM 评估意见已合并、人工说"可以进实现"。
+
+## 多 LLM 设计评估
+
+**核心动作**：把第 2 步起草的 ADR 草案**贴给至少 2 个不同 LLM**（不同 vendor 或不同 model），各自跑一轮独立评估，把意见交叉合并。
+
+为什么必须做：
+
+- **同 model 同上下文盲区一致**——主 AI 起草时漏的选项 / 字段命名歧义 / schema 反例，自己 review 一遍照样漏
+- **设计阶段是改动最便宜的关卡**——schema 字段名定下来后实现 / 测试 / 文档全跟着走，越晚改成本越高
+- **跨 vendor 拉数据多样性**——不同公司训练数据 / 对齐风格不同，看待"什么是好 IR schema"的偏好系统性不同
+
+### 推荐组合
+
+| 起草者 | 评估者 1 | 评估者 2（可选） |
+|---|---|---|
+| Claude（默认）| ChatGPT（OpenAI o3 / GPT-5 系列） | Gemini（2.x / 后续）|
+
+至少跑评估者 1。评估者 2 视改动影响面（红色改动建议加，绿色可省）。
+
+### 评估 prompt 角度（强制错开）
+
+避免三个 LLM 都从"建设视角"看 ADR——三种角度故意错开：
+
+| LLM 角色 | prompt 角度 | 关注 |
+|---|---|---|
+| 起草者（Claude） | **建设视角**——把 ADR 写完整 | 选项完备性、决策理由、DSL 表面 |
+| 评估者 1 | **挑刺视角**——"这份 ADR 哪些地方会让用户 / LLM 误用？"| schema 命名歧义 / 默认值反直觉 / 测试象限漏 case / TikZ 习惯偏离 |
+| 评估者 2 | **替代方案视角**——"如果不这么做，还有哪些更简单 / 更通用的方式？" | 字段是否过度设计、能否合并到已有 schema、是否该推迟到下版 |
+
+### 人工合并意见
+
+人工读完三方意见后：
+
+1. 把评估者提的**反对意见 / 替代方案**逐条 vote：采纳 / 部分采纳 / 拒绝 + 理由
+2. 拒绝项写进 ADR 的"待决策点"或"不在本 ADR 范围"段（让审计 trail 完整）
+3. 采纳项直接改 ADR 草案
+4. 若两个评估者意见冲突 → 人工裁决，理由写进 ADR
+
+**人工是裁决者**，不是单纯把多 LLM 意见取并集；意见可能互相矛盾、可能都不对，最终由人决定。
+
+### 输出归档
+
+评估对话不进 git，但**评估结论**要在 ADR 中体现：
+
+- 采纳的替代方案 → 写进"决策"段对应选项
+- 拒绝的意见 → 写进"待决策点"或"不在本 ADR 范围"附理由
+- 不在 ADR 里出现 = 没评估过；审计时按 missing 处理
+
+### 何时可以跳过
+
+只有一种：**绿色 level 改动**（纯文档 / 纯注释 / 纯 demo），ADR 本身就是走过场，可跳。红色 / 黄色必走。
 
 ## 失败 / 升级
 
@@ -116,12 +168,12 @@ cp notes/adr/_template.md notes/adr/v<MAJOR>/v<MAJOR>.<MINOR>-<channel>.<N>/<NNN
 ## 与上下游衔接
 
 - **上游**：v0 roadmap 给出"该做什么"
-- **下游**：alpha-feature-implement 读本阶段产出的 ADR 进入实现
-- **不调** docs-doc-write——文档在 alpha-feature-document 阶段才写
+- **下游**：develop-implement 读本阶段产出的 ADR 进入实现
+- **不调** docs-doc-write——文档在 develop-document 阶段才写
 
 ## 完成标志
 
 - ADR 文件存在、状态 Proposed
 - 实现契约段四件齐（Level + Schema 改动 + 文件 scope + 测试象限）
 - 已 commit
-- 人工显式说"开始实现"或调用 alpha-feature-implement
+- 人工显式说"开始实现"或调用 develop-implement
