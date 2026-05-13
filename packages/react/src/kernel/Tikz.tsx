@@ -1,5 +1,11 @@
 import { type CSSProperties, type FC, type ReactNode, useId, useMemo } from 'react';
-import { type ArrowEndSpec, type IR, type ScenePrimitive, compileToScene } from '@retikz/core';
+import {
+  type ArrowEndSpec,
+  type AssertEqual,
+  type IR,
+  type ScenePrimitive,
+  compileToScene,
+} from '@retikz/core';
 import { buildIR } from './builder';
 import { ArrowMarker } from '../render/arrowMarkers';
 import { browserMeasurer } from '../render/browser-measurer';
@@ -43,19 +49,37 @@ const collectArrowSpecs = (prims: Array<ScenePrimitive>): Array<ArrowEndSpec> =>
 };
 
 /**
+ * `ArrowEndSpec` 全部可选字段（不含必填 `shape`）的字段表——`stableSpecKey` 遍历此表拼 key
+ * @description `as const satisfies` 拒不存在的 key；下方 `_OptionalCheck` 静态校验完备性——未来 `ArrowEndSpec` 加新可选字段时此表漏写 TS 编译期报错，防"字段表漂移"
+ */
+const ARROW_END_SPEC_OPTIONAL_FIELDS = [
+  'scale',
+  'length',
+  'width',
+  'color',
+  'fill',
+  'opacity',
+  'lineWidth',
+] as const satisfies ReadonlyArray<keyof ArrowEndSpec>;
+
+// 类型层完备性互锁：字段表必须覆盖 ArrowEndSpec 除 `shape` 外的所有 key（漏 / 多 字段 TS 报错）
+type _OptionalCheck = AssertEqual<
+  (typeof ARROW_END_SPEC_OPTIONAL_FIELDS)[number],
+  Exclude<keyof ArrowEndSpec, 'shape'>
+>;
+const _assertOptionalCheck: _OptionalCheck = true;
+void _assertOptionalCheck;
+
+/**
  * spec → 稳定字符串 key
- * @description 按字段名排序拼接（不依赖 JSON.stringify 字段顺序）；输出仅含 [A-Za-z0-9_-]，可安全嵌入 SVG id；不同 spec → 不同 key、相同 spec → 同 key（dedup）
+ * @description 必填 `shape` 头部输出，其余 optional 字段按 `ARROW_END_SPEC_OPTIONAL_FIELDS` 顺序遍历——不依赖对象字面量字段顺序、不漏字段；输出仅含 [A-Za-z0-9_-=|]，可安全嵌入 SVG id；不同 spec → 不同 key、相同 spec → 同 key（dedup）
  */
 const stableSpecKey = (spec: ArrowEndSpec): string => {
   const parts: Array<string> = [`shape=${spec.shape}`];
-  // 字段名按字典序固定排，保证 key 不依赖对象字面量字段顺序
-  if (spec.scale !== undefined) parts.push(`scale=${spec.scale}`);
-  if (spec.length !== undefined) parts.push(`length=${spec.length}`);
-  if (spec.width !== undefined) parts.push(`width=${spec.width}`);
-  if (spec.color !== undefined) parts.push(`color=${spec.color}`);
-  if (spec.fill !== undefined) parts.push(`fill=${spec.fill}`);
-  if (spec.opacity !== undefined) parts.push(`opacity=${spec.opacity}`);
-  if (spec.lineWidth !== undefined) parts.push(`lineWidth=${spec.lineWidth}`);
+  for (const field of ARROW_END_SPEC_OPTIONAL_FIELDS) {
+    const value = spec[field];
+    if (value !== undefined) parts.push(`${field}=${value}`);
+  }
   return parts.join('|');
 };
 

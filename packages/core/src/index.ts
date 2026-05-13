@@ -148,4 +148,4 @@ export type {
 export { point, rect, circle, ellipse, diamond, RECT_ANCHORS, polar } from './geometry';
 
 // Type utilities
-export type { ValueOf } from './types';
+export type { ValueOf, AssertEqual } from './types';
