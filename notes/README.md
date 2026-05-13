@@ -32,7 +32,6 @@
 详细索引见 [`plans/README.md`](./plans/README.md)。当前活跃 plan：
 
 - [`v0/roadmap.md`](./plans/v0/roadmap.md)：v0 总路线（v0.1 → v0.4 → v0 收尾）含 v0.1 各 alpha 详细拆分
-- [`v0/v0.1-alpha.5.md`](./plans/v0/v0.1-alpha.5.md)：v0.1.0-alpha.5 破坏性收尾 TODO 列表
 - [`v0/v0.1-beta.1.md`](./plans/v0/v0.1-beta.1.md)：v0.1.0-beta.1 非破坏性优化 TODO 列表
 - [`docs-ai-chat-panel.md`](./plans/docs-ai-chat-panel.md)：文档站侧边栏 AI 聊天面板设计讨论（草案 / 待续）；BYOK 浏览器直连方向
 

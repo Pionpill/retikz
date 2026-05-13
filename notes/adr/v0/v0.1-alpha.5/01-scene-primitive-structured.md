@@ -1,8 +1,8 @@
 # ADR-01：Scene `PathPrim` + `GroupPrim` 结构化（去 SVG 字符串）
 
-- 状态：Proposed
+- 状态：Accepted
 - 决策日期：2026-05-12
-- 关联：[v0 roadmap §v0.1.0-alpha.5](../../../plans/v0/roadmap.md) · [v0.1.0-alpha.5 plan TODO-5 / TODO-6](../../../plans/v0/v0.1-alpha.5.md) · [DESIGN.md §4.5](../../../architecture/DESIGN.md)
+- 关联：[v0 roadmap §v0.1.0-alpha.5](../../../plans/v0/roadmap.md) · [DESIGN.md §4.5](../../../architecture/DESIGN.md)
 
 ## 背景
 
@@ -81,7 +81,7 @@ type GroupPrim = {
 
 1. **跨 adapter 是 retikz 第一原则**——B / C 都让 core 继续依赖 SVG mini-language 知识，背离 DESIGN.md §4.5 "core 不假定任何具体渲染端"
 2. **双源是已知错误模式**——字符串 + 结构化双源同步问题在很多项目反复出现；保持单源（结构化）最稳
-3. **`arcSvgFlags` 顺手清理**——A 让 SVG-only flag 计算自然落进 react adapter，`core/geometry/` 回归"跨平台纯数学"定位（[TODO-5](../../../plans/v0/v0.1-alpha.5.md) 同步落实）
+3. **`arcSvgFlags` 顺手清理**——A 让 SVG-only flag 计算自然落进 react adapter，`core/geometry/` 回归"跨平台纯数学"定位（与本 ADR 同步落实）
 4. **AI 友好性不削弱**——`PathPrim` / `GroupPrim` 是 Scene primitive，不是 IR；LLM 直接生成的是 IR（`<Path>` / `<Step>` 这一层），不会写 PathCommand[]。所以这层结构化对 LLM 输入面无影响
 
 ## 决策细节
@@ -169,7 +169,7 @@ GroupPrim 同理：
 - **`packages/core/src/index.ts`**：公开 API 新增 `PathCommand` / `Transform` 导出
 - **`packages/core/src/compile/path.ts`**：全面重写，所有 step kind 改为推 PathCommand[] 而非拼字符串；删除字符串拼接相关辅助函数
 - **`packages/core/src/compile/node.ts`**：rotate 节点 emit 时从拼 transform 字符串改为推 transforms 数组
-- **`packages/core/src/geometry/arc.ts`**：删 `arcSvgFlags`（移到 react adapter，配套 [TODO-5](../../../plans/v0/v0.1-alpha.5.md)）
+- **`packages/core/src/geometry/arc.ts`**：删 `arcSvgFlags`（移到 react adapter）
 - **`packages/react/src/render/path-d-builder.ts`**（新）：`Array<PathCommand>` → SVG d 字符串；内含原 `arcSvgFlags` 等价逻辑
 - **`packages/react/src/render/transform-builder.ts`**（新）：`Array<Transform>` → SVG transform 字符串
 - **`packages/react/src/render/renderPrim.tsx`**：path / group 渲染分别调用对应 builder

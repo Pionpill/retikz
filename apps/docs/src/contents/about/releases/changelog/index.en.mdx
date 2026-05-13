@@ -5,6 +5,27 @@ description: retikz release history grouped by MINOR version, newest first. Date
 
 <Update label="May 2026" tags={["@retikz/core", "@retikz/react"]}>
 
+## v0.1.0-alpha.5
+
+Final breaking window of the alpha line: structured Scene primitives (no SVG string leakage), object-shaped arrow visual spec, expanded StepLabel position (7 keywords + any t∈[0, 1]), a 4th relative-positioning form (OffsetPosition), and abbreviation cleanup on IRTarget. After this release IR schema field names / semantics are frozen and the project enters the beta non-breaking window. Backed by 4 ADRs and +250+ new test cases (533 → 833).
+
+### `@retikz/core`
+
+- **Structured Scene PathPrim**: `PathPrim.d: string` becomes `commands: Array<PathCommand>` (seven kinds — move / line / quad / cubic / arc / ellipseArc / close); `GroupPrim.transform?: string` becomes `transforms?: Array<Transform>` (translate / rotate / scale). Core no longer holds any SVG mini-language; canvas / Skia / PDF adapters can consume the same structured payload; arc / ellipseArc use canvas-native center-parameterization — ADR-01
+- **Expanded StepLabel.position**: from 3 keywords to **7 keywords + any t∈[0, 1]** (`at-start` / `very-near-start` / `near-start` / `midway` / `near-end` / `very-near-end` / `at-end`, numbers aligned with TikZ `pos=<float>`). Fold N-segments split t evenly into `1/N` ranges (corners land exactly at `t = j/N`); Bezier uses parameter t rather than arc length; arc / ellipsePath use angle parametrization — all matching TikZ — ADR-02
+- **Path arrow redesign**: drop `arrowShape`, add `arrowDetail` — one object carries the full visual spec (shape / scale / length / width / color / fill / opacity / lineWidth); `start` / `end` sub-objects **per-field merge** into the top-level defaults, supporting heterogeneous shape / color / scale across the two ends. `fill` on hollow shapes is a silent no-op (schema accepts, render drops). Every shape (solid included) anchors its line tip at the back attachment point, so the path no longer shows through the marker when opacity < 1 — ADR-03
+- **OffsetPosition as the 4th relative-positioning form**: new `{ of, offset: [dx, dy] }`, where `of` accepts node id / Cartesian / PolarPosition; also added to **`IRTarget`** — `step.to` now accepts OffsetPosition, symmetric with `Node.position` / `Coordinate.position`. Mirrors TikZ `calc` `($(A) + (dx, dy)$)` — ADR-04
+- **IRTarget field abbreviation cleanup (BREAKING)**: `{ rel }` / `{ relAccumulate }` → `{ relative }` / `{ relativeAccumulate }`; exports `RelTargetSchema` / `IRRelTarget` etc. renamed accordingly. Sugar strings `'+x,y'` / `'++x,y'` on the public input surface stay the same
+- **Constant exports**: `ARROW_MARKER_DEFAULT_SIZE` / `ARROW_MARKER_HOLLOW_DEFAULT_LINE_WIDTH` / `HOLLOW_ARROW_SHAPES` — previously hardcoded inside the react adapter — are now part of the public API
+
+### `@retikz/react`
+
+- `<Path arrowDetail={...}>` prop takes the new `ArrowDetail` object (replacing the old single `arrowShape` field); marker id now hashes the detail object, so two paths sharing a shape but differing in detail no longer reuse the wrong marker
+- `<Step label={{ position: 0.3 }}>` / `<EdgeLabel position="very-near-start" />` accept any of the 7 keywords or a numeric t in `[0, 1]`
+- `<Node position={{ of, offset }}>` / `<Step to={{ of, offset }}>` accept the OffsetPosition form
+- New `path-d-builder` / `transform-builder` helpers translate structured `PathCommand[]` / `Transform[]` into SVG `d` / `transform` strings; the arc → A-command flag computation (large-arc-flag / sweep-flag) moves here from core
+- Docs site adds a dedicated **Arrow page** (`/core/components/draw/arrow`) covering shape / color / heterogeneous ends / scale / opacity; the Path / Draw pages keep a short summary linking to the Arrow page
+
 ## v0.1.0-alpha.4
 
 Node-relations layer in one wave: relative positioning between nodes, coordinate placeholders, and node-attached labels. Backed by 3 ADRs and +33 new test cases.

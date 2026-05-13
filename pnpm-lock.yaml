@@ -139,7 +139,7 @@ catalogs:
       specifier: ^4.1.5
       version: 4.1.5
     zod:
-      specifier: 3.25.76
+      specifier: ^3.23.8
       version: 3.25.76
     zustand:
       specifier: ^5.0.12

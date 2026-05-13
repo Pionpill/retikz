@@ -114,11 +114,13 @@ v0 完工后开 v1，重点转向 **Tier 2 domain 包**（`@retikz/flow`、`@ret
 
 **目标**：alpha 期间发现但未补完的 IR schema 能力洞、字段语义 / 命名调整等"用户可见破坏性改动"全收在这一版；本版发布后 schema 字段名 / 语义冻结。
 
-详细 TODO 见 [`v0.1-alpha.5.md`](./v0.1-alpha.5.md)。
-
 | 改动 | 来源 |
 |---|---|
-| `Node.position` / `Coordinate.position` 加第 4 种相对定位（任意 `(dx, dy)` offset，对应 TikZ `calc` 语法） | v0.1-alpha.5 plan TODO-1 |
+| Scene `PathPrim.d: string` → `commands: Array<PathCommand>`、`GroupPrim.transform: string` → `transforms: Array<Transform>`；adapter 各自从结构化数据翻译为原生 API | ADR-01 |
+| `StepLabel.position` 扩 7 keyword + 任意 t∈[0, 1]（与 TikZ `pos=<float>` 对齐），fold N 段等占 t 区间、Bezier 用参数 t、arc 角度参数化 | ADR-02 |
+| 删 `Path.arrowShape`，加 `Path.arrowDetail` 对象（shape / scale / length / width / color / fill / opacity / lineWidth + start / end 起末分别 merge） | ADR-03 |
+| `Node.position` / `Coordinate.position` 加第 4 种相对定位（任意 `(dx, dy)` offset，对应 TikZ `calc` 语法）；同步进 `IRTarget` step.to | ADR-04 |
+| IRTarget 字段去缩写：`{ rel }` / `{ relAccumulate }` → `{ relative }` / `{ relativeAccumulate }` | AGENTS.md 不用缩写规则收尾 |
 
 ### v0.1.0-beta.1 — 非破坏性优化窗口 + 文档完整
 
@@ -138,7 +140,7 @@ v0 完工后开 v1，重点转向 **Tier 2 domain 包**（`@retikz/flow`、`@ret
 - [x] v0.1.0-alpha.2（2026-05-09 完工：7 项改动 + 3 篇 ADR + 47 新测试 + sugar `<Text>`）
 - [x] v0.1.0-alpha.3（2026-05-10 完工：ADR-01 Path 曲线三件套 curve / cubic / bend；ADR-02 path-level 形状 arc / circlePath / ellipsePath；ADR-03 相对坐标 `{ rel }` / `{ relAccumulate }` + way sugar 对象形态；ADR-04 边标注 step.label + sugar `<EdgeLabel>` + Draw way label 算子；P2 path 级 lineCap / lineJoin / thickness 语义档位 / opacity / fillOpacity / drawOpacity）
 - [x] v0.1.0-alpha.4（2026-05-10 完工：ADR-01 节点间相对定位 `Node.position = { direction, of, distance? }` 8 方向枚举 + Tikz `nodeDistance` prop；ADR-02 `<Coordinate>` 一等占位节点（IRChild 第三种 discriminator，不发 primitive / 不扩 viewBox 但进 nodeIndex）；ADR-03 Node `label?` 边挂标签（8 方向 / 数字角度，font / textColor 继承 Node）；docs 加 coordinate 章节 + node/overview 增段 + ComponentPreview 双语 demo 解析；AGENTS.md 加"不缩写命名"规则；+33 新测试）
-- [ ] v0.1.0-alpha.5
+- [x] v0.1.0-alpha.5（2026-05-12 完工：ADR-01 Scene PathPrim / GroupPrim 结构化——`d: string` → `commands[]`、`transform: string` → `transforms[]`，center-parameterization 弧；ADR-02 StepLabel.position 扩 7 keyword + 任意 t∈[0,1]，fold N 段等占 t 区间 / Bezier 用参数 t / arc 角度参数化；ADR-03 删 arrowShape 加 arrowDetail 对象——shape/scale/length/width/color/fill/opacity/lineWidth 起末逐字段 merge，空心 fill silent no-op，所有 shape line tip 接 back 接线点；ADR-04 OffsetPosition 第 4 种相对定位 `{ of, offset }`，同步进 IRTarget；TODO-4 IRTarget 字段去缩写 `{ rel }` → `{ relative }`；tests 533 → 833（+300）；本版后 IR schema 字段名 / 语义冻结）
 - [ ] v0.1.0-beta.1
 - [ ] v0.1.0
 

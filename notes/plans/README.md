@@ -12,8 +12,7 @@ notes/plans/
 ├── docs-ai-chat-panel.md           ← 跨版本草案（顶层 kebab-case）
 └── v0/                             ← MAJOR 版本目录
     ├── roadmap.md                  ← MAJOR 系列总路线
-    ├── v0.1-alpha.5.md             ← 单版本 plan（一文件一版本，多个 ## TODO-N 段）
-    └── v0.1-beta.1.md
+    └── v0.1-beta.1.md              ← 单版本 plan（一文件一版本，多个 ## TODO-N 段）
 ```
 
 与 [`adr/`](../adr/) 对比：
@@ -28,7 +27,6 @@ PATCH 版本不开 plan——patch 仅修 bug，不写 plan。
 ### v0 系列
 
 - [`v0/roadmap.md`](v0/roadmap.md) — v0 总路线（v0.1 → v0.4 → v0 收尾）+ v0.1 各 alpha 详细拆分 + v0.2 预备段（Scope / 样式 / Shape 扩展）
-- [`v0/v0.1-alpha.5.md`](v0/v0.1-alpha.5.md) — v0.1.0-alpha.5 实施待办（破坏性收尾，6 条 TODO）
 - [`v0/v0.1-beta.1.md`](v0/v0.1-beta.1.md) — v0.1.0-beta.1 实施待办（非破坏性优化，4 条 TODO）
 
 ### 跨版本草案

@@ -1,8 +1,8 @@
 # ADR-02：`StepLabel.position` 扩充（7 keyword + 任意 t 数值 + 多 kind 参数化规则）
 
-- 状态：Proposed
+- 状态：Accepted
 - 决策日期：2026-05-12
-- 关联：[v0 roadmap §v0.1.0-alpha.5](../../../plans/v0/roadmap.md) · [v0.1.0-alpha.5 plan TODO-3](../../../plans/v0/v0.1-alpha.5.md) · [DESIGN.md §4.5](../../../architecture/DESIGN.md)
+- 关联：[v0 roadmap §v0.1.0-alpha.5](../../../plans/v0/roadmap.md) · [DESIGN.md §4.5](../../../architecture/DESIGN.md)
 
 ## 背景
 
