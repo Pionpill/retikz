@@ -20,6 +20,7 @@ import type {
   PathCommand,
   ScenePrimitive,
 } from '../../primitive';
+import type { AssertEqual } from '../../types';
 import { type NodeLayout } from '../node';
 import { type TextMeasurer, fallbackMeasurer } from '../text-metrics';
 import { clipForTarget, cornerOf, refPointOfTarget, samePoint } from './anchor';
@@ -30,9 +31,10 @@ import { type PathBaseProps, splitSubPathsForMarkers } from './split';
 
 /**
  * 语义 stroke 档位 → 数值（user units）
- * @description 对齐 TikZ 比例（thin=0.4pt→1=默认 strokeWidth）：ultraThin 0.25、veryThin 0.5、thin 1、semithick 1.5、thick 2、veryThick 3、ultraThick 4。显式 strokeWidth 覆盖 thickness
+ * @description 对齐 TikZ 比例（thin=0.4pt→1=默认 strokeWidth）：ultraThin 0.25、veryThin 0.5、thin 1、semithick 1.5、thick 2、veryThick 3、ultraThick 4。显式 strokeWidth 覆盖 thickness。
+ * `as const satisfies` + `AssertEqual` 双约束：加 IRPath['thickness'] 档位时漏写 TS 报错（字段表互锁，同 ADR-06 主题）
  */
-const THICKNESS_TO_WIDTH: Record<NonNullable<IRPath['thickness']>, number> = {
+const THICKNESS_TO_WIDTH = {
   ultraThin: 0.25,
   veryThin: 0.5,
   thin: 1,
@@ -40,7 +42,15 @@ const THICKNESS_TO_WIDTH: Record<NonNullable<IRPath['thickness']>, number> = {
   thick: 2,
   veryThick: 3,
   ultraThick: 4,
-};
+} as const satisfies Record<NonNullable<IRPath['thickness']>, number>;
+
+/** 类型互锁完备性：THICKNESS_TO_WIDTH 的 key 集合必须与 IRPath['thickness'] 完全等价；漏键 / 多键 / 类型错位 → AssertEqual = false → 下方常量赋值 TS 编译期报错 */
+type _ThicknessCheck = AssertEqual<
+  keyof typeof THICKNESS_TO_WIDTH,
+  NonNullable<IRPath['thickness']>
+>;
+const _assertThicknessCheck: _ThicknessCheck = true;
+void _assertThicknessCheck;
 
 /** emitPathPrimitive 可选 warn 钩子 */
 export type EmitPathWarnHook = {
