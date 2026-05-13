@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { compileToScene } from '../../src/compile/compile';
 import type { IR } from '../../src/ir';
-import { pathCommandsToD } from '../helpers/path-d';
+import { line, move } from '../helpers/path-command-factory';
 
 describe('Coordinate placeholder', () => {
   it('coordinate 自身不发任何 primitive', () => {
@@ -48,9 +48,8 @@ describe('Coordinate placeholder', () => {
     const path = scene.primitives.find(p => p.type === 'path');
     expect(path).toBeDefined();
     if (path?.type === 'path') {
-      // coordinate 是 0×0 rect，boundary point 即中心；M 0 0 L 10 0
-      expect(pathCommandsToD(path.commands)).toMatch(/^M 0 0/);
-      expect(pathCommandsToD(path.commands)).toMatch(/L 10 0/);
+      // coordinate 是 0×0 rect，boundary point 即中心；move(0,0) → line(10,0)
+      expect(path.commands).toEqual([move([0, 0]), line([10, 0])]);
     }
   });
 
@@ -105,7 +104,7 @@ describe('Coordinate placeholder', () => {
     expect(path).toBeDefined();
     if (path?.type === 'path') {
       // c 在 (5+3, 0) = (8, 0)
-      expect(pathCommandsToD(path.commands)).toMatch(/^M 8 0/);
+      expect(path.commands[0]).toEqual(move([8, 0]));
     }
   });
 

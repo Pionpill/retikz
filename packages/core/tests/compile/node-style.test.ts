@@ -7,7 +7,7 @@ import type {
   RectPrim,
   TextPrim,
 } from '../../src/primitive';
-import { pathCommandsToD } from '../helpers/path-d';
+import { line, move } from '../helpers/path-command-factory';
 
 const findRect = (ir: IR): RectPrim | undefined =>
   compileToScene(ir).primitives.find(
@@ -21,7 +21,7 @@ const findEllipse = (ir: IR): EllipsePrim | undefined =>
 
 const findShapePath = (ir: IR): PathPrim | undefined =>
   compileToScene(ir).primitives.find(
-    (p): p is PathPrim => p.type === 'path' && pathCommandsToD(p.commands).includes('Z'),
+    (p): p is PathPrim => p.type === 'path' && p.commands.some(c => c.kind === 'close'),
   );
 
 const findText = (ir: IR): TextPrim | undefined =>
@@ -306,7 +306,7 @@ describe('Node 缩放 (alpha.2)', () => {
     };
     const linePath = compileToScene(ir).primitives.find(p => p.type === 'path');
     if (linePath?.type === 'path') {
-      expect(pathCommandsToD(linePath.commands)).toBe('M 16 0 L 100 0');
+      expect(linePath.commands).toEqual([move([16, 0]), line([100, 0])]);
     }
   });
 });

@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { compileToScene } from '../../src/compile/compile';
 import type { IR } from '../../src/ir';
 import type { ScenePrimitive } from '../../src/primitive';
-import { pathCommandsToD } from '../helpers/path-d';
+import { line, move } from '../helpers/path-command-factory';
 
 const findByType = <T extends ScenePrimitive['type']>(
   prims: Array<ScenePrimitive>,
@@ -62,9 +62,10 @@ describe("Node shape multimorphism", () => {
     const scene = compileToScene(ir);
     const p = findByType(scene.primitives, 'path');
     expect(p).toBeDefined();
-    expect(pathCommandsToD(p!.commands)).toMatch(/^M /); // M 开头
-    expect(pathCommandsToD(p!.commands)).toMatch(/Z$/); // Z 结尾
-    expect(pathCommandsToD(p!.commands).match(/[MLZ]/g)).toEqual(['M', 'L', 'L', 'L', 'Z']);
+    const cmds = p!.commands;
+    expect(cmds[0].kind).toBe('move'); // move 开头
+    expect(cmds[cmds.length - 1].kind).toBe('close'); // close 结尾
+    expect(cmds.map(c => c.kind)).toEqual(['move', 'line', 'line', 'line', 'close']);
   });
 
   it("rectangle 默认 = 显式传 'rectangle'（向后兼容）", () => {
@@ -103,8 +104,8 @@ describe("Target 字符串锚点扩展", () => {
     };
     const linePath = compileToScene(ir).primitives.find(p => p.type === 'path');
     if (linePath?.type === 'path') {
-      // M 8 0：固定 east
-      expect(pathCommandsToD(linePath.commands)).toMatch(/^M 8 0 /);
+      // move(8, 0)：固定 east
+      expect(linePath.commands[0]).toEqual(move([8, 0]));
     }
   });
 
@@ -127,8 +128,8 @@ describe("Target 字符串锚点扩展", () => {
     };
     const linePath = compileToScene(ir).primitives.find(p => p.type === 'path');
     if (linePath?.type === 'path') {
-      // 检查 M 后第一个数字 ≈ r·cos(30°) ≈ 9.8
-      expect(pathCommandsToD(linePath.commands)).toMatch(/^M 9\.8 5\.66 /);
+      // move 后第一个点 ≈ (r·cos(30°), r·sin(30°)) = (9.8, 5.66)
+      expect(linePath.commands[0]).toEqual(move([9.8, 5.66]));
     }
   });
 
@@ -150,11 +151,17 @@ describe("Target 字符串锚点扩展", () => {
         ],
       };
       const linePath = compileToScene(ir).primitives.find(
-        p => p.type === 'path' && !pathCommandsToD(p.commands).includes('Z'),
+        (p): p is Extract<ScenePrimitive, { type: 'path' }> =>
+          p.type === 'path' && !p.commands.some(c => c.kind === 'close'),
       );
       if (linePath?.type === 'path') {
         // north 的 x = 0（中心 x），y < 0（节点上方）
-        expect(pathCommandsToD(linePath.commands)).toMatch(/^M 0 -\d/);
+        const first = linePath.commands[0];
+        expect(first.kind).toBe('move');
+        if (first.kind === 'move') {
+          expect(first.to[0]).toBe(0);
+          expect(first.to[1]).toBeLessThan(0);
+        }
       }
     }
   });
@@ -176,7 +183,7 @@ describe("Target 字符串锚点扩展", () => {
     };
     const linePath = compileToScene(ir).primitives.find(p => p.type === 'path');
     if (linePath?.type === 'path') {
-      expect(pathCommandsToD(linePath.commands)).toMatch(/^M 10 20 /);
+      expect(linePath.commands[0]).toEqual(move([10, 20]));
     }
   });
 });
@@ -207,7 +214,7 @@ describe("Node shape boundary clip 在 path 端点贴边时按 shape 多态", ()
     // d 形如 "M r 0 L 100 0"，r = 圆形半径（无 text 时 r = sqrt(p²+p²) = p√2）
     // 默认 padding=8 → r = 8√2 ≈ 11.31 → "M 11.31 0 L 100 0"
     if (linePath?.type === 'path') {
-      expect(pathCommandsToD(linePath.commands)).toBe('M 11.31 0 L 100 0');
+      expect(linePath.commands).toEqual([move([11.31, 0]), line([100, 0])]);
     }
   });
 
@@ -229,16 +236,17 @@ describe("Node shape boundary clip 在 path 端点贴边时按 shape 多态", ()
       ],
     };
     const scene = compileToScene(ir, { precision: 4 });
-    // 找连接 line（不带 Z 的 path，diamond 形状自带 Z）
+    // 找连接 line（不带 close 的 path，diamond 形状自带 close）
     const linePath = scene.primitives.find(
-      p => p.type === 'path' && !pathCommandsToD(p.commands).includes('Z'),
+      (p): p is Extract<ScenePrimitive, { type: 'path' }> =>
+        p.type === 'path' && !p.commands.some(c => c.kind === 'close'),
     );
     expect(linePath).toBeDefined();
     // 菱形 halfA = halfB = 16（无 text 时 innerHalf = padding = 8，diamond bound = 2 × 8 = 16）
     // 沿 (1, 1) 方向求边界：|t|/16 + |t|/16 = 1 → t = 8
     // 端点 = (8, 8)
     if (linePath?.type === 'path') {
-      expect(pathCommandsToD(linePath.commands)).toBe('M 8 8 L 100 100');
+      expect(linePath.commands).toEqual([move([8, 8]), line([100, 100])]);
     }
   });
 });

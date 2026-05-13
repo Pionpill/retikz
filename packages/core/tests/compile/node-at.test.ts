@@ -2,7 +2,6 @@ import { describe, expect, it } from 'vitest';
 import { compileToScene } from '../../src/compile/compile';
 import type { IR } from '../../src/ir';
 import type { RectPrim, ScenePrimitive } from '../../src/primitive';
-import { pathCommandsToD } from '../helpers/path-d';
 
 /** 取所有 RectPrim（节点 shape=rectangle 默认走 RectPrim） */
 const rects = (prims: Array<ScenePrimitive>): Array<RectPrim> =>
@@ -212,10 +211,10 @@ describe('Node at relative positioning', () => {
       const scene = compileToScene(ir);
       const path = scene.primitives.find(p => p.type === 'path');
       expect(path).toBeDefined();
-      // 至少有 M 和 L 两条命令
+      // 至少有 move 和 line 两条命令
       if (path?.type === 'path') {
-        expect(pathCommandsToD(path.commands)).toMatch(/^M /);
-        expect(pathCommandsToD(path.commands)).toMatch(/L /);
+        expect(path.commands[0].kind).toBe('move');
+        expect(path.commands.some(c => c.kind === 'line')).toBe(true);
       }
     });
   });

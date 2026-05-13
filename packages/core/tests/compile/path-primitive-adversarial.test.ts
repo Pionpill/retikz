@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { compileToScene } from '../../src/compile/compile';
 import type { IR } from '../../src/ir';
 import type { PathCommand, PathPrim, ScenePrimitive } from '../../src/primitive';
-import { pathCommandsToD } from '../helpers/path-d';
+import { close, line, move } from '../helpers/path-command-factory';
 
 const findPathPrim = (prims: Array<ScenePrimitive>): PathPrim | undefined =>
   prims.find((p): p is PathPrim => p.type === 'path');
@@ -186,17 +186,17 @@ describe('PathPrim.commands：结构化形态约束', () => {
       ],
     };
     const p = findPathPrim(compileToScene(ir).primitives)!;
-    const move = p.commands[0];
-    const line = p.commands[1];
-    expect(move.kind).toBe('move');
-    expect(line.kind).toBe('line');
-    if (move.kind === 'move') {
-      expect(move.to[0]).toBe(1.23);
-      expect(move.to[1]).toBe(2.35);
+    const moveCmd = p.commands[0];
+    const lineCmd = p.commands[1];
+    expect(moveCmd.kind).toBe('move');
+    expect(lineCmd.kind).toBe('line');
+    if (moveCmd.kind === 'move') {
+      expect(moveCmd.to[0]).toBe(1.23);
+      expect(moveCmd.to[1]).toBe(2.35);
     }
-    if (line.kind === 'line') {
-      expect(line.to[0]).toBe(3.46);
-      expect(line.to[1]).toBe(4.57);
+    if (lineCmd.kind === 'line') {
+      expect(lineCmd.to[0]).toBe(3.46);
+      expect(lineCmd.to[1]).toBe(4.57);
     }
   });
 
@@ -400,8 +400,8 @@ describe('边界 / 错误路径', () => {
     expect(findPathPrim(scene.primitives)).toBeUndefined();
   });
 
-  it('PathCommand 与 helper 转回 d 字符串后等价于旧 d 字段语义', () => {
-    // 等价回归：两段 line + cycle 的 d 字符串与 1.x 实现一致
+  it('两段 line + cycle 产出 4 个结构化 PathCommand（move/line/line/close）', () => {
+    // 等价回归：commands 序列与 1.x d 字符串语义对齐
     const ir: IR = {
       version: 1,
       type: 'scene',
@@ -418,6 +418,11 @@ describe('边界 / 错误路径', () => {
       ],
     };
     const p = findPathPrim(compileToScene(ir).primitives)!;
-    expect(pathCommandsToD(p.commands)).toBe('M 0 0 L 10 0 L 10 10 Z');
+    expect(p.commands).toEqual([
+      move([0, 0]),
+      line([10, 0]),
+      line([10, 10]),
+      close(),
+    ]);
   });
 });
