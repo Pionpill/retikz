@@ -480,6 +480,278 @@ describe('convertIRToReactNode', () => {
     });
   });
 
+  describe('alpha.4/5 新增形态 round-trip', () => {
+    it('round-trips AtPosition Node：{ direction, of, distance }', () => {
+      const ir: IR = {
+        version: CURRENT_IR_VERSION,
+        type: 'scene',
+        children: [
+          { type: 'node', id: 'A', position: [0, 0], text: 'A' },
+          {
+            type: 'node',
+            id: 'B',
+            position: { direction: 'right', of: 'A', distance: 50 },
+            text: 'B',
+          },
+        ],
+      };
+      expect(buildIR(convertIRToReactNode(ir))).toEqual(ir);
+    });
+
+    it('round-trips AtPosition 8 方向枚举全覆盖', () => {
+      const directions = [
+        'above',
+        'below',
+        'left',
+        'right',
+        'above-left',
+        'above-right',
+        'below-left',
+        'below-right',
+      ] as const;
+      for (const direction of directions) {
+        const ir: IR = {
+          version: CURRENT_IR_VERSION,
+          type: 'scene',
+          children: [
+            { type: 'node', id: 'A', position: [0, 0], text: 'A' },
+            {
+              type: 'node',
+              id: 'B',
+              position: { direction, of: 'A' },
+              text: 'B',
+            },
+          ],
+        };
+        expect(buildIR(convertIRToReactNode(ir))).toEqual(ir);
+      }
+    });
+
+    it('round-trips OffsetPosition Node：{ of, offset }（of 字符串 / 笛卡尔 / 嵌套 polar）', () => {
+      // of = 字符串
+      const irString: IR = {
+        version: CURRENT_IR_VERSION,
+        type: 'scene',
+        children: [
+          { type: 'node', id: 'A', position: [0, 0], text: 'A' },
+          {
+            type: 'node',
+            id: 'B',
+            position: { of: 'A', offset: [30, 10] },
+            text: 'B',
+          },
+        ],
+      };
+      expect(buildIR(convertIRToReactNode(irString))).toEqual(irString);
+
+      // of = 笛卡尔
+      const irCartesian: IR = {
+        version: CURRENT_IR_VERSION,
+        type: 'scene',
+        children: [
+          {
+            type: 'node',
+            id: 'C',
+            position: { of: [50, 50], offset: [10, 0] },
+            text: 'C',
+          },
+        ],
+      };
+      expect(buildIR(convertIRToReactNode(irCartesian))).toEqual(irCartesian);
+
+      // of = 嵌套 polar
+      const irPolar: IR = {
+        version: CURRENT_IR_VERSION,
+        type: 'scene',
+        children: [
+          { type: 'node', id: 'A', position: [0, 0], text: 'A' },
+          {
+            type: 'node',
+            id: 'D',
+            position: {
+              of: { origin: 'A', angle: 30, radius: 50 },
+              offset: [0, 5],
+            },
+            text: 'D',
+          },
+        ],
+      };
+      expect(buildIR(convertIRToReactNode(irPolar))).toEqual(irPolar);
+    });
+
+    it('round-trips OffsetPosition Step.to：path 内 step 用 { of, offset }', () => {
+      const ir: IR = {
+        version: CURRENT_IR_VERSION,
+        type: 'scene',
+        children: [
+          { type: 'node', id: 'A', position: [0, 0], text: 'A' },
+          {
+            type: 'path',
+            children: [
+              { type: 'step', kind: 'move', to: 'A' },
+              { type: 'step', kind: 'line', to: { of: 'A', offset: [50, 0] } },
+            ],
+          },
+        ],
+      };
+      expect(buildIR(convertIRToReactNode(ir))).toEqual(ir);
+    });
+
+    it('round-trips arrowDetail 顶层 + start / end 子对象 merge', () => {
+      const ir: IR = {
+        version: CURRENT_IR_VERSION,
+        type: 'scene',
+        children: [
+          {
+            type: 'path',
+            arrow: '<->',
+            arrowDetail: {
+              shape: 'stealth',
+              color: '#1f2937',
+              opacity: 0.7,
+              start: { shape: 'open', color: '#dc2626' },
+              end: { scale: 1.5, fill: '#fde68a' },
+            },
+            children: [
+              { type: 'step', kind: 'move', to: [0, 0] },
+              { type: 'step', kind: 'line', to: [100, 0] },
+            ],
+          },
+        ],
+      };
+      expect(buildIR(convertIRToReactNode(ir))).toEqual(ir);
+    });
+
+    it.each([
+      'at-start',
+      'very-near-start',
+      'near-start',
+      'midway',
+      'near-end',
+      'very-near-end',
+      'at-end',
+    ] as const)("round-trips StepLabel.position keyword '%s'", position => {
+      const ir: IR = {
+        version: CURRENT_IR_VERSION,
+        type: 'scene',
+        children: [
+          {
+            type: 'path',
+            children: [
+              { type: 'step', kind: 'move', to: [0, 0] },
+              {
+                type: 'step',
+                kind: 'line',
+                to: [100, 0],
+                label: { text: 'L', position },
+              },
+            ],
+          },
+        ],
+      };
+      expect(buildIR(convertIRToReactNode(ir))).toEqual(ir);
+    });
+
+    it.each([0, 0.25, 0.5, 0.75, 1])(
+      'round-trips StepLabel.position 数值 t = %s',
+      position => {
+        const ir: IR = {
+          version: CURRENT_IR_VERSION,
+          type: 'scene',
+          children: [
+            {
+              type: 'path',
+              children: [
+                { type: 'step', kind: 'move', to: [0, 0] },
+                {
+                  type: 'step',
+                  kind: 'line',
+                  to: [100, 0],
+                  label: { text: 'L', position },
+                },
+              ],
+            },
+          ],
+        };
+        expect(buildIR(convertIRToReactNode(ir))).toEqual(ir);
+      },
+    );
+
+    it('round-trips IRTarget `relative` / `relativeAccumulate`（alpha.5 字段去缩写）', () => {
+      const ir: IR = {
+        version: CURRENT_IR_VERSION,
+        type: 'scene',
+        children: [
+          {
+            type: 'path',
+            children: [
+              { type: 'step', kind: 'move', to: [0, 0] },
+              { type: 'step', kind: 'line', to: { relative: [10, 0] } },
+              { type: 'step', kind: 'line', to: { relativeAccumulate: [5, 5] } },
+            ],
+          },
+        ],
+      };
+      expect(buildIR(convertIRToReactNode(ir))).toEqual(ir);
+    });
+
+    it('round-trips Coordinate 占位节点（alpha.4 ADR-02）', () => {
+      const ir: IR = {
+        version: CURRENT_IR_VERSION,
+        type: 'scene',
+        children: [
+          { type: 'coordinate', id: 'pivot', position: [50, 50] },
+          {
+            type: 'path',
+            children: [
+              { type: 'step', kind: 'move', to: 'pivot' },
+              { type: 'step', kind: 'line', to: [100, 50] },
+            ],
+          },
+        ],
+      };
+      expect(buildIR(convertIRToReactNode(ir))).toEqual(ir);
+    });
+
+    it('round-trips Node.label 单对象 + 数组形态（alpha.4 ADR-03）', () => {
+      // 单对象
+      const irSingle: IR = {
+        version: CURRENT_IR_VERSION,
+        type: 'scene',
+        children: [
+          {
+            type: 'node',
+            id: 'A',
+            position: [0, 0],
+            text: 'A',
+            label: { text: 'tag', position: 'above', distance: 5 },
+          },
+        ],
+      };
+      expect(buildIR(convertIRToReactNode(irSingle))).toEqual(irSingle);
+
+      // 数组形态：多 label
+      const irArray: IR = {
+        version: CURRENT_IR_VERSION,
+        type: 'scene',
+        children: [
+          {
+            type: 'node',
+            id: 'B',
+            position: [0, 0],
+            text: 'B',
+            label: [
+              { text: 'top', position: 'above' },
+              { text: 'right', position: 'right', textColor: '#666' },
+              { text: '30°', position: 30 },
+            ],
+          },
+        ],
+      };
+      expect(buildIR(convertIRToReactNode(irArray))).toEqual(irArray);
+    });
+  });
+
   it('未知 child.type → 抛 "unknown IR child type" 错误', () => {
     const badIR = {
       version: CURRENT_IR_VERSION,
