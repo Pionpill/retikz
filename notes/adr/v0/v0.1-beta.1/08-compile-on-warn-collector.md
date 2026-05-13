@@ -82,14 +82,14 @@ export type CompileOptions = {
 3. `path` 字段用 IR locator 让用户能定位到具体 JSX child（结合 DSL 表面位置反推）
 4. 不引入 throw 路径，保留"path 解析失败 path 消失"的现状行为，仅在沉默处补一道可观察通道
 
-## 待决策点
+## 决策细节
 
-- **`CompileWarning.code` 是 enum 还是 string union**：`string union` + `string` fallback（保留扩展）。alpha.6+ 加新 code 不破坏调用方
-- **`path` 字段 IR locator 格式**：`'children[3].path.children[1].to'` 形式（jq-like）；不同字段类型不同前缀，例如 `step.to` / `node.position.of`
-- **dev 默认是否带 stack trace**：不带——`console.warn` 默认输出 `[retikz] <code> at <path>: <message>` 一行；用户要 stack 自己写 `onWarn: (w) => console.warn(w); console.trace()`
-- **是否给 production 加 `globalThis.__RETIKZ_WARN__` hook**：不加——保持 API 表面最小，用户需要 production 警告自己传 `onWarn`
-- **`compileToScene` 缺省 options 是否触发 warn**：默认 `undefined` 即按 dev / production 自动决定，与传 `{}` 等价
-- **`onWarn` 在 sync vs async path 中的次序**：`compileToScene` 是 sync，`onWarn` 同步调用，按发生顺序
+- ✓ **`CompileWarning.code` 用 `string union` + `string` fallback**——保留扩展性；alpha.6+ 加新 code 不破坏调用方
+- ✓ **`path` 字段 IR locator 格式：jq-like**——`'children[3].path.children[1].to'` / `step.to` / `node.position.of` 等明确路径前缀
+- ✓ **dev 默认不带 stack trace**——`console.warn` 默认输出 `[retikz] <code> at <path>: <message>` 一行；用户要 stack 自己在 `onWarn` 内调 `console.trace()`
+- ✓ **不加 `globalThis.__RETIKZ_WARN__` hook**——保持 API 表面最小；用户需 production 警告自传 `onWarn`
+- ✓ **缺省 options 行为**：`compileToScene(ir)` 与 `compileToScene(ir, {})` 等价，按 `process.env.NODE_ENV` 自动选 dev / production 默认行为
+- ✓ **`onWarn` 同步调用**——`compileToScene` 是 sync 入口，`onWarn` 按 silent fail 发生顺序同步触发
 
 ## DSL 表面
 

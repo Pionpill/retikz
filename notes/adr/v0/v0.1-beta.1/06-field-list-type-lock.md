@@ -76,12 +76,12 @@ const buildNodeIR = (props: NodeProps): IRNode => {
 2. 通用 `AssertEqual` helper 可作为公共 internal 工具（位于 `packages/core/src/types.ts` 或新 `packages/core/src/_internal/type-utils.ts`）
 3. builder/unbuilder 共用 `NODE_FIELDS` 是天然的——两边字段必须对称，共用常量是正解
 
-## 待决策点
+## 决策细节
 
-- **`AssertEqual` 放哪里**：`packages/core/src/types.ts` 已有 `ValueOf<T>`，加 `AssertEqual<A, B>` 同级。不公开 export（仅 internal idiom）
-- **`Step` 字段表是否一并做**：本 ADR 范围仅 `NODE_FIELDS` 与 `ARROW_END_SPEC_KEY_FIELDS`；`Step` 是 10-kind discriminated union，字段表需 per-kind 分开做，工作量大、留 ADR-07 或独立 ADR
-- **`Path` props 字段表**：与 `Node` 同样适用，但 `Path` 有 `children` 这种"读 Step 子节点"特化路径——本 ADR 也不做，留下次
-- **特化字段在字段表中如何标记**：用 `Exclude<keyof IRNode, 'type' | ...>` 显式排除，文档化在 `NODE_FIELDS` 常量上方 JSDoc 写清"特化字段：text / position / label，由独立路径处理"
+- ✓ **`AssertEqual<A, B>` 加到 `packages/core/src/types.ts`**（与 `ValueOf<T>` 同级），不公开 export——仅 internal idiom
+- ✓ **`Step` 字段表本 ADR 不做**：`Step` 是 10-kind discriminated union，字段表需 per-kind 分开做、工作量大；留待 plan 评估后单独 ADR
+- ✓ **`Path` props 字段表本 ADR 不做**：`Path` 有 `children` 特化（读 Step 子节点）；留下次
+- ✓ **特化字段用 `Exclude<keyof IRNode, 'type' | 'text' | 'position' | 'label'>` 显式排除**，并在 `NODE_FIELDS` 常量上方 JSDoc 写清"特化字段：text / position / label，由独立路径处理"
 
 ## DSL 表面
 

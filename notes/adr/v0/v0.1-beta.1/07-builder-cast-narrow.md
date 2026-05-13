@@ -85,12 +85,12 @@ const props = NodePropsSchema.parse(child.props);
 3. 不引入运行时开销（B 的 zod 方案有性能代价）
 4. 同 ADR-06 配合——子函数类型化签名是字段表互锁的前提
 
-## 待决策点
+## 决策细节
 
-- **顶层 cast 是否抽 helper**：可以写一个 `narrowChildProps<P>(child: ReactNode, expectedTag: string): P | undefined` helper，但只省 3-5 处样板，价值有限——暂不抽
-- **`parseTargetSugar` 是否进一步限制为 `string`**：函数本身用于字符串 sugar 解析，但调用方传 `IRTarget` 对象时直接返回；保留 `IRTarget | string` 联合
-- **`_unbuilder.ts` 是否同步审计**：是——unbuilder 方向同样可能有 cast（IR → React JSX，给 `n.x as ...` 之类）。本 ADR scope 含 `_unbuilder.ts` 一并扫一遍
-- **新增字段化 helper 命名约定**：`buildNodeFromProps` / `buildPathFromProps` / `buildStepFromProps` / `buildEdgeLabelFromProps` / `buildCoordinateFromProps` / `buildTextFromProps`（6 个 Kernel + Sugar 组件）
+- ✓ **顶层 cast 不抽 helper**——只省 3-5 处样板、价值有限；保留每个组件分支显式 cast 一次
+- ✓ **`parseTargetSugar` 参数类型 = `IRTarget | string`**——调用方传 `IRTarget` 对象直接返回、传字符串才走 sugar 解析
+- ✓ **`_unbuilder.ts` 同步审计**——unbuilder 方向同样审查 cast，含在本 ADR scope
+- ✓ **typed helper 命名约定**：`buildNodeFromProps` / `buildPathFromProps` / `buildStepFromProps` / `buildEdgeLabelFromProps` / `buildCoordinateFromProps` / `buildTextFromProps`（6 个 Kernel + Sugar 组件）
 
 ## DSL 表面
 

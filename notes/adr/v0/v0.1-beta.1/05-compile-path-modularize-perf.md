@@ -91,12 +91,16 @@ type _ThicknessCheck = AssertEqual<
 3. THICKNESS 类型互锁防字段表漂移（同 TODO-12 / TODO-17 一类做法，本 ADR 一并解决）
 4. 拆目录 + algorithmic 改 + 类型互锁是一组高内聚改动，分散到 3 个 ADR 反而难 review
 
-## 待决策点
+## 决策细节
 
-- **`path.ts` 是否保留 re-export**：保留 1 行 `export * from './path/index'`，确保 import path `compile/path` 仍可用；后续 alpha.6 / beta.2 时再删
-- **`findPrev` 实现细节**：用单调指针 `lastDrawnIdx` 维护；初始 `-1`，每次有 to 字段的 step 绘制后更新；cycle / arc / circle / ellipse 等无 to 的 step 不更新
-- **e2e snapshot 守门**：本 ADR 实施前**必须先加** core/tests 的 IR→Scene 全 snapshot test（至少 10 个典型流程图 / UML / 曲线场景），锁住 commands 数组输出 + arrow shrink 数值，再做拆分。这是防止重构期间静默回归的关键
-- **拆目录 vs 性能优化 vs 类型互锁 commit 顺序**：建议三连小 commit，每 commit 跑全测——单 commit 一次拆 5 文件 + 改 algorithm + 改类型，review 太重
+- ✓ **`path.ts` 不保留 re-export**——beta.1 不考虑兼容性，直接删除 `compile/path.ts`，所有内部 import 改成 `compile/path/index.ts` 或 `compile/path/<sub>.ts`；公开 API 不通过 `compile/path` 子路径 import（barrel `@retikz/core` 不变）
+- ✓ **`findPrev` 单调指针实现**：`lastDrawnIdx` 初始 `-1`，每次有 to 字段的 step 绘制后更新；cycle / arc / circle / ellipse 等无 to 的 step 不更新
+- ✓ **必须先加 e2e snapshot 守门再拆**：`packages/core/tests/compile/path-e2e-snapshot.test.ts` 含至少 10 个典型场景，锁住 commands 数组输出 + arrow shrink 数值；重构期每 commit 跑此守门
+- ✓ **三连小 commit 顺序**：
+    1. commit 1：加 e2e snapshot 守门
+    2. commit 2：拆 5 子文件 + 内部 import 调整（行为完全等价）
+    3. commit 3：findPrev O(n²) → O(n) 改造
+    4. commit 4：THICKNESS_TO_WIDTH 类型互锁
 
 ## DSL 表面
 
@@ -148,8 +152,8 @@ type _ThicknessCheck = AssertEqual<
 
 ### 文件 scope
 
-- `packages/core/src/compile/path.ts`（改为 re-export shim 1 行）
-- `packages/core/src/compile/path/index.ts`（新建）
+- `packages/core/src/compile/path.ts`（**删除**——beta.1 不考虑兼容性，无 re-export shim）
+- `packages/core/src/compile/path/index.ts`（新建——`emitPathPrimitive` 入口）
 - `packages/core/src/compile/path/relative.ts`（新建）
 - `packages/core/src/compile/path/shrink.ts`（新建）
 - `packages/core/src/compile/path/split.ts`（新建）

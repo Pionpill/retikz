@@ -62,14 +62,12 @@
 2. 不引入 core → react 反向依赖
 3. 长期工作量分摊——本 ADR 不要求一次 commit 改 74 处；建议按文件分批
 
-## 待决策点
+## 决策细节
 
-- **每次只迁一组测试**：建议每个测试文件单独一个 commit（最大 `path.test.ts` 拆 2-3 commit）——避免单 commit 改 74 处难 review
-- **保留 helper 还是删**：
-  - 如果迁移完 0 处再用 → 删 `helpers/path-d.ts` + `helpers/transform.ts`
-  - 如果留下 ≤ 5 处（极个别 readable snapshot 场景）→ 保留 helper，但 JSDoc 改成 "测试 readable formatter，**不**作为 SVG 输出契约——SVG 契约请测 `react/render/path-d-builder.ts`"
-- **`compile/path.test.ts` 47 处怎么拆**：按 describe 块拆——每个 describe 一个 commit
-- **结构化断言的可读性**：`PathCommand` 是带 `kind` 字段的对象，比 SVG `"M 0 0 L 100 0"` 字符串稍长但更明确；可以用 helper 工厂减少样板，如 `move([0,0])` / `line([100,0])`
+- ✓ **每个测试文件单独一个 commit**——最大 `path.test.ts` 拆 2-3 commit；避免单 commit 改 74 处难 review
+- ✓ **完工后删除 `helpers/path-d.ts` + `helpers/transform.ts`**——不留 readable formatter helper；如有极少数 readable snapshot 场景，迁到 `react/tests/render/*`（SVG 输出契约的正确归口）
+- ✓ **`compile/path.test.ts` 47 处按 describe 块拆 commit**——每个 describe 一个 commit、commit message 写明本批迁移哪个 describe
+- ✓ **加 `PathCommand` factory helper 减少结构化断言样板**：在 `packages/core/tests/helpers/path-command-factory.ts`（新建）加 `move([x, y])` / `line([x, y])` / `quad(c, [x, y])` / `cubic(c1, c2, [x, y])` / `arc(...)` / `close()` 等工厂；**只产结构化 PathCommand 对象、不产字符串**——避免重蹈 mirror renderer 覆辙
 
 ## DSL 表面
 

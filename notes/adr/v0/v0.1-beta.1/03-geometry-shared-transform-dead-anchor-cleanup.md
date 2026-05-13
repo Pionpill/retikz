@@ -41,11 +41,13 @@ export const worldToLocal = (s: CenteredShape, world: Position): Position => { .
 // circle.ts / ellipse.ts / diamond.ts —— 删除本地 localToWorld/worldToLocal、import 共享版
 import { localToWorld, worldToLocal } from './_transform';
 
-// 三个 *Anchor 类型 alias 到 RectAnchor，公开 export 保留
-export type CircleAnchor = RectAnchor;
+// 三个 *Anchor 类型直接删除（零消费方、字面量与 RectAnchor 重复）
+// 用户外部 import：从 CircleAnchor 改为 RectAnchor
 ```
 
-文件名前缀 `_` 表示"内部 helper，不进 barrel"——与 `_builder.ts` / `_unbuilder.ts` 用法一致（虽然 TODO-16 要清理 `_builder` 的 `_`，但 `_transform.ts` 这是纯内部 helper、不公开导出，前缀合理）。
+beta.1 不考虑兼容性——直接删除 `CircleAnchor` / `EllipseAnchor` / `DiamondAnchor`（包括 `geometry/index.ts` 的 re-export）。
+
+文件名前缀 `_` 表示"内部 helper，不进 barrel"——与 `_builder.ts` / `_unbuilder.ts` 用法一致（ADR-10 会把 `_builder` 的 `_` 清掉，但 `_transform.ts` 是纯内部 helper、不公开导出，前缀合理）。
 
 ### B. 把共享函数加在 `geometry/point.ts` 末尾
 
@@ -63,11 +65,12 @@ export type CircleAnchor = RectAnchor;
 3. 为 v0.2 Shape Registry（roadmap §v0.2 预备）铺路——`CenteredShape` 是 ShapeDefinition 的基础几何契约
 4. `_transform.ts` 是纯内部 helper、不进 barrel，文件名前缀 `_` 表意清楚
 
-## 待决策点
+## 决策细节
 
-- **`CenteredShape` 是否 export**：暂不导出（仅 geometry/ 内部使用）；v0.2 Shape Registry 阶段决定是否进公开 API
-- **是否同步清理 `RectAnchor` 类型**：保留——`RectAnchor` 在 `compile/parseTarget.ts` 有实际消费（anchor 名 lookup），不是死代码
-- **`*Anchor` alias 是否加 deprecation 注释**：不加——alias 保留作公开 API 表面兼容，未来 v0.2 Shape Registry 可能让 anchor 名扩展到任意字符串，到时再讨论 deprecation
+- ✓ **`CenteredShape` 暂不导出**（仅 `geometry/` 内部 helper），v0.2 Shape Registry 阶段决定是否进公开 API
+- ✓ **`RectAnchor` 保留**——在 `compile/parseTarget.ts` 有实际消费（anchor 名 lookup），不是死代码
+- ✓ **`CircleAnchor` / `EllipseAnchor` / `DiamondAnchor` 直接删除**（不留 alias）——零消费方、与 `RectAnchor` 字面量重复；beta.1 不考虑兼容性
+- ✓ **`geometry/index.ts` 同步移除三个 `*Anchor` 的 re-export**
 
 ## DSL 表面
 
@@ -81,8 +84,8 @@ export type CircleAnchor = RectAnchor;
 
 - **代码减少**：~60 行（4 文件 × 15 行 localToWorld+worldToLocal）
 - **新增文件**：`geometry/_transform.ts` ~30 行
-- **公开 API surface**：无变化（type alias）
-- **外部用户**：零影响
+- **公开 API surface**：删除 3 个 type export（`CircleAnchor` / `EllipseAnchor` / `DiamondAnchor`）；零消费方，无 BREAKING 实际影响
+- **外部用户**：理论上 BREAKING（若有人 import 这三个 type），实际预期零影响
 
 ## 不在本 ADR 范围
 

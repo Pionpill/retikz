@@ -44,13 +44,13 @@
 2. 单文件 30-80 行（每文件 1-5 case）保持可读
 3. 后续 alpha.6 / beta.2 加新边界测试可继续追加，命名 pattern 一致
 
-## 待决策点
+## 决策细节
 
-- **NaN / Infinity 输入行为**：明确规约——`computeViewBox` 对 NaN / Infinity 输入是**抛错**还是**过滤丢弃 + warn**？建议**过滤 + warn**（与 ADR-08 onWarn 配合，新加 code `'BBOX_EXTREME_INPUT'`）
-- **`fallbackMeasurer(size=0)`**：建议**返回 `width: 0, height: 0`**（与 `string=""` 一致）；负 size / NaN size 抛错
-- **`buildPathD` throw message 契约**：建议 message 必须含 kind 字面量字符串（如 `"Unknown PathCommand kind: '<kind>'"`）—— 让用户能从 message 反推哪个 kind 没处理
-- **多 `<Tikz>` marker id 隔离 e2e**：使用 React Testing Library 渲染两个 `<Tikz>` 实例，断言 `<marker id>` 在两实例下不同前缀
-- **`browser-measurer` 单例测试**：mock `document.createElement('canvas')` 看连续调用次数；要求第二次调用不再 createElement
+- ✓ **NaN / Infinity 输入：过滤 + warn**——`computeViewBox` 过滤掉非有限坐标、通过 ADR-08 `onWarn` 触发 `'BBOX_EXTREME_INPUT'` warning；不抛错（viewBox 退化优于 crash）
+- ✓ **`fallbackMeasurer(size=0) → { width: 0, height: 0 }`**（与 `text=""` 一致）；**负 size / NaN size 抛错**——非法输入早 fail
+- ✓ **`buildPathD` / `buildTransform` throw message 必须含 kind 字面量字符串**：格式 `"Unknown PathCommand kind: '<kind>'"`——让用户从 message 反推哪个 kind 漏处理
+- ✓ **多 `<Tikz>` marker id 隔离 e2e**：React Testing Library 渲染两个 `<Tikz>` 实例，断言两实例 `<marker id>` 前缀不同（`useId()` 派生）
+- ✓ **`browser-measurer` 单例测试**：mock `document.createElement('canvas')` 计调用次数，断言第二次调用不再 createElement
 
 ## DSL 表面
 

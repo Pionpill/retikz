@@ -58,14 +58,14 @@ export type PathCommand =
 3. JSDoc 跟着 named type 走，IDE hover 体验提升
 4. union 类型保留 export = 零破坏
 
-## 待决策点
+## 决策细节
 
-- **`StepProps` 命名对照 IR**：用 `MoveStepProps` / `LineStepProps` / `FoldStepProps`（kind=`'step'`）/ `CycleStepProps` / `CurveStepProps` / `CubicStepProps` / `BendStepProps` / `ArcStepProps` / `CirclePathStepProps` / `EllipsePathStepProps`——与 IR 的 `IRFoldStep`（kind 字面量 `'step'`）保持对照
-- **`PathCommand` 命名**：用 `<Kind>PathCommand`（`MovePathCommand` / `LinePathCommand` / `QuadPathCommand` / `CubicPathCommand` / `ArcPathCommand` / `EllipseArcPathCommand` / `ClosePathCommand`）
-- **`Transform` 命名**：`TranslateTransform` / `RotateTransform` / `ScaleTransform`
-- **`TextLine`**：保留单 type 不拆（已经是 record，不是 union），仅补字段 JSDoc
-- **`parseTargetSugar` JSDoc**：从文件顶常量挪到函数上方；同时补 `RELATIVE_OFFSET_RE` 的 JSDoc
-- **`SegmentSample`**：上方补 JSDoc 描述用途；字段已经有 JSDoc 不动
+- ✓ **`StepProps` 拆 10 个 named type**：`MoveStepProps` / `LineStepProps` / `FoldStepProps`（kind=`'step'`）/ `CycleStepProps` / `CurveStepProps` / `CubicStepProps` / `BendStepProps` / `ArcStepProps` / `CirclePathStepProps` / `EllipsePathStepProps`——与 IR 的 `IRFoldStep`（kind 字面量 `'step'`）保持对照
+- ✓ **`PathCommand` 拆 7 个 named type**：`MovePathCommand` / `LinePathCommand` / `QuadPathCommand` / `CubicPathCommand` / `ArcPathCommand` / `EllipseArcPathCommand` / `ClosePathCommand`
+- ✓ **`Transform` 拆 3 个 named type**：`TranslateTransform` / `RotateTransform` / `ScaleTransform`
+- ✓ **`TextLine` 保留单 type 不拆**（已是 record 非 union），仅补字段 JSDoc
+- ✓ **`parseTargetSugar` JSDoc 从文件顶常量挪到函数上方**，同时补 `RELATIVE_OFFSET_RE` 的 JSDoc
+- ✓ **`SegmentSample` 上方补 JSDoc 描述用途**，字段已有 JSDoc 保持不变
 
 ## DSL 表面
 

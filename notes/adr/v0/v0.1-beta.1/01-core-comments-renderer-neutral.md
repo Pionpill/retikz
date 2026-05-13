@@ -48,11 +48,11 @@
 2. `.describe()` 字符串是 LLM 工具调用契约，影响 IR 生成质量——这部分必须改
 3. 工作量集中（grep 出的位置有限，且 alpha.5 TODO-5/6 重写时已自然清掉一半 SVG 注释）
 
-## 待决策点
+## 决策细节
 
-- **保留 vs 删除"与 SVG `X` 同格式"标注**：dash / viewBox 这两处保留作格式参考；其它一律去 SVG 词汇
-- **`parseWay.ts:24` "TikZ `cycle` / SVG `Z`"**：保留——这是 TikZ-SVG 对照语境，引用合法
-- **`primitive/scene.ts:10` "不允许出现 SVG-only 或 Canvas-only 特性"**：保留——这本身是正确表述
+- ✓ **保留"与 SVG `X` 同格式"标注限定在 dash / viewBox 两处**——这两处 SVG 是格式标准的 reference（"与该标准格式兼容"），不是"为 SVG 准备"；其它一律去 SVG 词汇
+- ✓ **`parseWay.ts:24` "TikZ `cycle` / SVG `Z`" 保留**——TikZ-SVG 对照语境，引用合法
+- ✓ **`primitive/scene.ts:10` "不允许出现 SVG-only 或 Canvas-only 特性" 保留**——本身是正确的渲染器中性表述
 
 ## DSL 表面
 

@@ -51,11 +51,11 @@ expect(irRebuilt).toEqual(irOriginal);  // 深比较
 2. 一次性把 alpha.5 的 react-layer 守门补齐
 3. 集中在 `_unbuilder.test.tsx` 维持单文件归口，未来 alpha.6 加新字段照此格式追加即可
 
-## 待决策点
+## 决策细节
 
-- **如果 round-trip 不等价（unbuilder 实际有 bug）**：算 alpha.5 遗留 bug，必须修 `_unbuilder.ts`，可能要新加 helper 处理某种形态
-- **测试用例命名约定**：`it("round-trips AtPosition Node ...")` / `it("round-trips arrowDetail with start/end overrides")` 之类
-- **是否给每 round-trip 加 e2e SVG 输出比较**：不加——本 ADR 只测 IR 等价性，SVG 输出由 compile / render 单测各自守
+- ✓ **若 round-trip 不等价 → 算 alpha.5 遗留 bug**，本 ADR scope 扩展到修 `_unbuilder.ts`（含可能新加的 helper）
+- ✓ **测试命名约定**：`it("round-trips AtPosition Node ...")` / `it("round-trips arrowDetail with start/end overrides")` 等 round-trips 前缀
+- ✓ **不加 e2e SVG 输出比较**——本 ADR 只测 IR 等价性，SVG 输出由 compile / render 单测各自守
 
 ## DSL 表面
 
