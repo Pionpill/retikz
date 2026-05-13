@@ -13,6 +13,17 @@ export type {
   NodeProps,
   PathProps,
   StepProps,
+  /** 10 个 named Step kind props（按 IR `IR*Step` 命名对照） */
+  MoveStepProps,
+  LineStepProps,
+  FoldStepProps,
+  CycleStepProps,
+  CurveStepProps,
+  CubicStepProps,
+  BendStepProps,
+  ArcStepProps,
+  CirclePathStepProps,
+  EllipsePathStepProps,
   TextProps,
   CoordinateProps,
 } from './kernel';

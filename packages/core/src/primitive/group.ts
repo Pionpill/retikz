@@ -1,13 +1,45 @@
 import type { ScenePrimitive } from './scene';
 
+/** Translate transform：沿 x / y 平移（user units） */
+export type TranslateTransform = {
+  /** 鉴别字面量 */
+  kind: 'translate';
+  /** x 方向位移 */
+  x: number;
+  /** y 方向位移（屏幕 y-down） */
+  y: number;
+};
+
+/** Rotate transform：按角度旋转，可指定旋转中心；中心缺省 = 绕原点 (0, 0) */
+export type RotateTransform = {
+  /** 鉴别字面量 */
+  kind: 'rotate';
+  /** 旋转角度（度，正向 = 屏幕 y-down 下的视觉顺时针） */
+  degrees: number;
+  /** 旋转中心 x（缺省 0） */
+  cx?: number;
+  /** 旋转中心 y（缺省 0） */
+  cy?: number;
+};
+
+/** Scale transform：等比 / 非等比缩放；y 缺省 = x（等比） */
+export type ScaleTransform = {
+  /** 鉴别字面量 */
+  kind: 'scale';
+  /** x 轴缩放因子 */
+  x: number;
+  /** y 轴缩放因子；缺省 = x（等比缩放） */
+  y?: number;
+};
+
 /**
- * Group transform：结构化变换
- * @description 按数组顺序应用（与 SVG transform 多操作列表语义一致）；角度=度，缩放 y 缺省等比 x，rotate cx/cy 缺省绕原点
+ * Group transform：结构化变换（3 分支 discriminated union）
+ * @description 按数组顺序应用（与 SVG transform 多操作列表语义一致）；角度=度，缩放 y 缺省等比 x，rotate cx/cy 缺省绕原点。每个 kind 有对应 named type export。
  */
 export type Transform =
-  | { kind: 'translate'; x: number; y: number }
-  | { kind: 'rotate'; degrees: number; cx?: number; cy?: number }
-  | { kind: 'scale'; x: number; y?: number };
+  | TranslateTransform
+  | RotateTransform
+  | ScaleTransform;
 
 /** 编组：把若干 primitive 用结构化 transforms 包起来 */
 export type GroupPrim = {

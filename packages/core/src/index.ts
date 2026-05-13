@@ -93,9 +93,21 @@ export type {
   TextLine,
   PathPrim,
   PathCommand,
+  /** 7 个 named PathCommand 分支（便于 wrapper / Pick<>） */
+  MovePathCommand,
+  LinePathCommand,
+  QuadPathCommand,
+  CubicPathCommand,
+  ArcPathCommand,
+  EllipseArcPathCommand,
+  ClosePathCommand,
   ArrowEndSpec,
   GroupPrim,
   Transform,
+  /** 3 个 named Transform 分支 */
+  TranslateTransform,
+  RotateTransform,
+  ScaleTransform,
   ViewBox,
   Scene,
 } from './primitive';

@@ -1,38 +1,97 @@
 import type { ArrowShape } from '../ir/path/arrow';
 
+/** Move command：移动游标到目标点，不绘制 */
+export type MovePathCommand = {
+  /** 鉴别字面量 */
+  kind: 'move';
+  /** 目标点 [x, y] */
+  to: [number, number];
+};
+
+/** Line command：从游标到目标点画直线 */
+export type LinePathCommand = {
+  /** 鉴别字面量 */
+  kind: 'line';
+  /** 终点 [x, y] */
+  to: [number, number];
+};
+
+/** Quad command：二次贝塞尔，一个控制点 */
+export type QuadPathCommand = {
+  /** 鉴别字面量 */
+  kind: 'quad';
+  /** 控制点 [x, y] */
+  control: [number, number];
+  /** 终点 [x, y] */
+  to: [number, number];
+};
+
+/** Cubic command：三次贝塞尔，两个控制点 */
+export type CubicPathCommand = {
+  /** 鉴别字面量 */
+  kind: 'cubic';
+  /** 第一控制点 [x, y]（影响起点切线） */
+  control1: [number, number];
+  /** 第二控制点 [x, y]（影响终点切线） */
+  control2: [number, number];
+  /** 终点 [x, y] */
+  to: [number, number];
+};
+
+/** Arc command：以 center 为圆心、给定半径与起末角度的圆弧（center-parameterization） */
+export type ArcPathCommand = {
+  /** 鉴别字面量 */
+  kind: 'arc';
+  /** 圆心 [x, y] */
+  center: [number, number];
+  /** 半径（user units） */
+  radius: number;
+  /** 起始角度（度，0° = +x、90° = +y screen-down） */
+  startAngle: number;
+  /** 终止角度（度） */
+  endAngle: number;
+  /** 是否逆时针扫描；缺省 / `false` = CW（屏幕坐标系正向） */
+  counterClockwise?: boolean;
+};
+
+/** EllipseArc command：以 center 为圆心、给定 x/y 半径与起末角度的椭圆弧；可选 rotation */
+export type EllipseArcPathCommand = {
+  /** 鉴别字面量 */
+  kind: 'ellipseArc';
+  /** 圆心 [x, y] */
+  center: [number, number];
+  /** x 轴半径 */
+  radiusX: number;
+  /** y 轴半径 */
+  radiusY: number;
+  /** 椭圆整体旋转角度（度），缺省 0 */
+  rotation?: number;
+  /** 起始角度（度） */
+  startAngle: number;
+  /** 终止角度（度） */
+  endAngle: number;
+  /** 是否逆时针扫描；缺省 / `false` = CW */
+  counterClockwise?: boolean;
+};
+
+/** Close command：闭合当前子路径回最近一次 move 起点 */
+export type ClosePathCommand = {
+  /** 鉴别字面量；无其他字段 */
+  kind: 'close';
+};
+
 /**
- * Path 命令：结构化路径绘制操作
- * @description discriminated union 按 kind 分发；坐标 / 角度均使用 user units（角度=度，0=+x、90=+y/视觉下、CW=正）。各 adapter 自行翻译为原生 API：SVG 拼 `d` 字符串、Canvas 调 ctx.moveTo/lineTo/arc 等
+ * Path 命令：结构化路径绘制操作（7 分支 discriminated union）
+ * @description discriminated union 按 kind 分发；坐标 / 角度均使用 user units（角度=度，0=+x、90=+y/视觉下、CW=正）。各 adapter 自行翻译为原生 API：SVG 拼 `d` 字符串、Canvas 调 ctx.moveTo/lineTo/arc 等。每个 kind 有对应 named type export，便于 wrapper / `Pick<>` 派生。
  */
 export type PathCommand =
-  | { kind: 'move'; to: [number, number] }
-  | { kind: 'line'; to: [number, number] }
-  | { kind: 'quad'; control: [number, number]; to: [number, number] }
-  | {
-      kind: 'cubic';
-      control1: [number, number];
-      control2: [number, number];
-      to: [number, number];
-    }
-  | {
-      kind: 'arc';
-      center: [number, number];
-      radius: number;
-      startAngle: number;
-      endAngle: number;
-      counterClockwise?: boolean;
-    }
-  | {
-      kind: 'ellipseArc';
-      center: [number, number];
-      radiusX: number;
-      radiusY: number;
-      rotation?: number;
-      startAngle: number;
-      endAngle: number;
-      counterClockwise?: boolean;
-    }
-  | { kind: 'close' };
+  | MovePathCommand
+  | LinePathCommand
+  | QuadPathCommand
+  | CubicPathCommand
+  | ArcPathCommand
+  | EllipseArcPathCommand
+  | ClosePathCommand;
 
 /**
  * 端点级解析后的箭头视觉规格（Scene primitive 层）

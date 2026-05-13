@@ -1,11 +1,18 @@
 /** 行级字段（每行可独立指定），未填走块级 TextPrim 默认 */
 export type TextLine = {
+  /** 行文字内容 */
   text: string;
+  /** 行级字号 override（user units）；缺省走块级 TextPrim.fontSize */
   fontSize?: number;
+  /** 行级字体族 override（CSS font-family）；缺省走块级 */
   fontFamily?: string;
+  /** 行级字重 override（CSS font-weight）；缺省走块级 */
   fontWeight?: string | number;
+  /** 行级字形 override；缺省走块级 */
   fontStyle?: 'normal' | 'italic' | 'oblique';
+  /** 行级文字颜色 override；缺省走块级 TextPrim.fill */
   fill?: string;
+  /** 行级透明度 0..1 override；缺省走块级 */
   opacity?: number;
 };
 

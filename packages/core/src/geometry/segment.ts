@@ -15,8 +15,12 @@ import type { Position } from './point';
 
 const DEG_TO_RAD = Math.PI / 180;
 
+/**
+ * 段几何采样结果：t 处坐标点 + 归一化切线向量
+ * @description 各 `*SegmentSample` 函数（line / quad / cubic / fold / arc / circle / ellipse）的统一返回形态；供 step.label emit 算位置 / 切线 / sloped 旋转角
+ */
 export type SegmentSample = {
-  /** t 处的点 */
+  /** t 处的点（user units） */
   point: Position;
   /** t 处的切线（单位向量；零向量时回退 [1, 0]） */
   tangent: Position;
