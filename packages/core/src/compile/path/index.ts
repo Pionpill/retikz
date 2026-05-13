@@ -128,29 +128,22 @@ export const emitPathPrimitive = (
     return ref;
   });
 
-  /** 找 i 之前最近的"有 to 字段的 step" 及其 anchor */
-  const findPrev = (
-    i: number,
-  ): { step: StepWithTo; anchor: IRPosition } | null => {
-    for (let j = i - 1; j >= 0; j--) {
-      const s = steps[j];
-      if (!hasTo(s)) continue;
-      const a = anchors[j];
-      if (!a) return null;
-      return { step: s, anchor: a };
-    }
-    return null;
-  };
+  /**
+   * 单调指针：最近一个 hasTo step 的索引；主循环开头根据上一 step 推进；O(1) 读
+   * @description 旧实现 findPrev(i) 反向扫 anchors 数组每步 O(i)、整 path O(n²)；改为只在 step `i-1` 是 hasTo 时推进。anchor 失效"中毒"判断保留：lastHasToIdx 指向的 anchor 为 null 时 findPrev 返回 null，与旧"扫到第一个 hasTo 步若 anchor=null 返回 null"语义等价
+   */
+  let lastHasToIdx = -1;
+  /** 同步维护：最近一个 move 步的 `to`，给 cycle 闭合用；旧 findRecentMoveTo 反向扫 → O(1) */
+  let lastMoveTo: IRTarget | null = null;
 
-  /** 找 i 之前最近的 move 的 to，cycle 闭合的目标 */
-  const findRecentMoveTo = (i: number): IRTarget | null => {
-    for (let j = i - 1; j >= 0; j--) {
-      const s = steps[j];
-      if (s.kind === 'move') {
-        return s.to;
-      }
-    }
-    return null;
+  /** 找最近一个"有 to 字段的 step" 及其 anchor；O(1) 读 lastHasToIdx */
+  const findPrev = (): { step: StepWithTo; anchor: IRPosition } | null => {
+    if (lastHasToIdx === -1) return null;
+    const s = steps[lastHasToIdx];
+    if (!hasTo(s)) return null; // defensive：lastHasToIdx 只在 hasTo 时被推进
+    const a = anchors[lastHasToIdx];
+    if (!a) return null;
+    return { step: s, anchor: a };
   };
 
   const commands: Array<PathCommand> = [];
@@ -260,14 +253,21 @@ export const emitPathPrimitive = (
   };
 
   for (let i = 0; i < steps.length; i++) {
+    // 单调推进：上一 step 若 hasTo，则它成为新的 lastHasToIdx；move 也是 hasTo（其 to 仍可作为下个段的 prev）
+    if (i > 0) {
+      const prevStep = steps[i - 1];
+      if (hasTo(prevStep)) lastHasToIdx = i - 1;
+      if (prevStep.kind === 'move') lastMoveTo = prevStep.to;
+    }
+
     const step = steps[i];
 
     // move 自身不绘制；其 to 仅供下个绘制段的 findPrev 引用
     if (step.kind === 'move') continue;
 
     if (step.kind === 'cycle') {
-      const moveTo = findRecentMoveTo(i);
-      const prev = findPrev(i);
+      const moveTo = lastMoveTo;
+      const prev = findPrev();
       if (!moveTo || !prev) continue; // 没 move/prev cycle 无意义
       const moveAnchor = refPointOfTarget(moveTo, nodeIndex);
       if (!moveAnchor) return null;
@@ -288,7 +288,7 @@ export const emitPathPrimitive = (
     }
 
     // 其他 step 都需 prev（找 cursor 起点/圆心）；currAnchor 仅有 to 的 step 才需
-    const prev = findPrev(i);
+    const prev = findPrev();
     if (!prev) return null;
 
     if (step.kind === 'arc') {
