@@ -122,12 +122,37 @@ v0 完工后开 v1，重点转向 **Tier 2 domain 包**（`@retikz/flow`、`@ret
 | `Node.position` / `Coordinate.position` 加第 4 种相对定位（任意 `(dx, dy)` offset，对应 TikZ `calc` 语法）；同步进 `IRTarget` step.to | ADR-04 |
 | IRTarget 字段去缩写：`{ rel }` / `{ relAccumulate }` → `{ relative }` / `{ relativeAccumulate }` | AGENTS.md 不用缩写规则收尾 |
 
-### v0.1.0-beta.1 — 非破坏性优化窗口 + 文档完整
+### v0.1.0-beta.1 — 优化窗口（一）
 
-- **不动** IR schema 字段名 / 语义；alpha.5 起冻结
-- bug 修复、性能优化、错误信息改善、内部重构
+**beta 阶段定位**：持续优化 + **不考虑兼容性**——schema 字段名 / 公开 API 仍可改名 / 重构；**rc 起冻结公开 API**。与 alpha 区别：beta 不开新功能 ADR（不加新 schema 形态 / 新 IR 字段集），只做"重构 / 命名 / 注释 / 测试 / 错误信息 / 性能"。
+
+- 注释 / `.describe()` 去 SVG-imposing 语言（ADR-01）
+- 公开 union 拆 named type + JSDoc 补全（ADR-02）
+- geometry 共享 transform + 死 `*Anchor` 类型清理（ADR-03）
+- unbuilder round-trip 补 alpha.5 新增形态（ADR-04）
+- `compile/path.ts` 拆目录 + `findPrev` O(n²)→O(n) + `THICKNESS_TO_WIDTH` 互锁（ADR-05）
+- 字段表互锁通用做法 + 两处应用（ADR-06）
+- `_builder.ts` cast 收敛到边界（ADR-07）
+- `CompileOptions.onWarn` 收集器（ADR-08）
+- 边界 / error path 测试补完（ADR-09）
+- 改名清理：`NodeTextSchema` → `TextBlockSchema`、`_builder` / `_unbuilder` 去 `_`、`renderPrim` `ctx`→`context`（ADR-10）
+- core 测试 helper 去除 renderer mirror 漂移（ADR-11）
+
+### v0.1.0-beta.2 — 优化窗口（二）
+
+beta.1 实施过程中发现的命名抽象候选，跨 beta.1 ADR scope 单独成 plan。
+
+- Scene `ViewBox` → `Layout` 抽象（去 SVG 命名）
+- `<Tikz>` → `<TikZ>` 组件改名（与 TikZ 原品牌大小写一致）
+
+详 [`v0.1-beta.2.md`](./v0.1-beta.2.md)。
+
+### v0.1.0-rc.1 — 候选发布（冻结起点）
+
+- 公开 API surface **从本版冻结**——schema 字段名 / 组件名 / 函数签名 / 公开 type 名都不再改
+- 仅做 bug fix / 文档完善 / 性能优化（不改 API）
 - README、CHANGELOG、迁移指引就位
-- npm prerelease 上架
+- npm prerelease 上架，宽测试覆盖
 
 ### v0.1.0 — 正式发布
 
@@ -140,8 +165,10 @@ v0 完工后开 v1，重点转向 **Tier 2 domain 包**（`@retikz/flow`、`@ret
 - [x] v0.1.0-alpha.2（2026-05-09 完工：7 项改动 + 3 篇 ADR + 47 新测试 + sugar `<Text>`）
 - [x] v0.1.0-alpha.3（2026-05-10 完工：ADR-01 Path 曲线三件套 curve / cubic / bend；ADR-02 path-level 形状 arc / circlePath / ellipsePath；ADR-03 相对坐标 `{ rel }` / `{ relAccumulate }` + way sugar 对象形态；ADR-04 边标注 step.label + sugar `<EdgeLabel>` + Draw way label 算子；P2 path 级 lineCap / lineJoin / thickness 语义档位 / opacity / fillOpacity / drawOpacity）
 - [x] v0.1.0-alpha.4（2026-05-10 完工：ADR-01 节点间相对定位 `Node.position = { direction, of, distance? }` 8 方向枚举 + Tikz `nodeDistance` prop；ADR-02 `<Coordinate>` 一等占位节点（IRChild 第三种 discriminator，不发 primitive / 不扩 viewBox 但进 nodeIndex）；ADR-03 Node `label?` 边挂标签（8 方向 / 数字角度，font / textColor 继承 Node）；docs 加 coordinate 章节 + node/overview 增段 + ComponentPreview 双语 demo 解析；AGENTS.md 加"不缩写命名"规则；+33 新测试）
-- [x] v0.1.0-alpha.5（2026-05-12 完工：ADR-01 Scene PathPrim / GroupPrim 结构化——`d: string` → `commands[]`、`transform: string` → `transforms[]`，center-parameterization 弧；ADR-02 StepLabel.position 扩 7 keyword + 任意 t∈[0,1]，fold N 段等占 t 区间 / Bezier 用参数 t / arc 角度参数化；ADR-03 删 arrowShape 加 arrowDetail 对象——shape/scale/length/width/color/fill/opacity/lineWidth 起末逐字段 merge，空心 fill silent no-op，所有 shape line tip 接 back 接线点；ADR-04 OffsetPosition 第 4 种相对定位 `{ of, offset }`，同步进 IRTarget；TODO-4 IRTarget 字段去缩写 `{ rel }` → `{ relative }`；tests 533 → 833（+300）；本版后 IR schema 字段名 / 语义冻结）
+- [x] v0.1.0-alpha.5（2026-05-12 完工：ADR-01 Scene PathPrim / GroupPrim 结构化——`d: string` → `commands[]`、`transform: string` → `transforms[]`，center-parameterization 弧；ADR-02 StepLabel.position 扩 7 keyword + 任意 t∈[0,1]，fold N 段等占 t 区间 / Bezier 用参数 t / arc 角度参数化；ADR-03 删 arrowShape 加 arrowDetail 对象——shape/scale/length/width/color/fill/opacity/lineWidth 起末逐字段 merge，空心 fill silent no-op，所有 shape line tip 接 back 接线点；ADR-04 OffsetPosition 第 4 种相对定位 `{ of, offset }`，同步进 IRTarget；TODO-4 IRTarget 字段去缩写 `{ rel }` → `{ relative }`；tests 533 → 833（+300）；alpha 期结束，公开 API 仍可改名直到 rc）
 - [ ] v0.1.0-beta.1
+- [ ] v0.1.0-beta.2
+- [ ] v0.1.0-rc.1
 - [ ] v0.1.0
 
 ---
