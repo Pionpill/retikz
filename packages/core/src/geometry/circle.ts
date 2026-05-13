@@ -1,4 +1,6 @@
+import { localToWorld, worldToLocal } from './_transform';
 import type { Position } from './point';
+import type { RectAnchor } from './rect';
 
 /** 圆形：几何中心 + 半径，预留旋转字段保持与 Rect 同形 API */
 export type Circle = {
@@ -12,36 +14,6 @@ export type Circle = {
 
 const SQRT_HALF = Math.SQRT1_2;
 
-/** 圆形 9 个标准 anchor（与 RECT_ANCHORS 同名同义，圆周每 45° 等距分布） */
-export type CircleAnchor =
-  | 'center'
-  | 'north'
-  | 'south'
-  | 'east'
-  | 'west'
-  | 'north-east'
-  | 'north-west'
-  | 'south-east'
-  | 'south-west';
-
-const localToWorld = (c: Circle, local: Position): Position => {
-  const angle = c.rotate ?? 0;
-  if (angle === 0) return [c.x + local[0], c.y + local[1]];
-  const cos = Math.cos(angle);
-  const sin = Math.sin(angle);
-  return [c.x + local[0] * cos - local[1] * sin, c.y + local[0] * sin + local[1] * cos];
-};
-
-const worldToLocal = (c: Circle, world: Position): Position => {
-  const tx = world[0] - c.x;
-  const ty = world[1] - c.y;
-  const angle = c.rotate ?? 0;
-  if (angle === 0) return [tx, ty];
-  const cos = Math.cos(angle);
-  const sin = Math.sin(angle);
-  return [tx * cos + ty * sin, -tx * sin + ty * cos];
-};
-
 /** 圆形相关基础工具 */
 export const circle = {
   /** 圆心 */
@@ -52,7 +24,7 @@ export const circle = {
     return lx * lx + ly * ly <= c.radius * c.radius;
   },
   /** 9 个标准 anchor 之一的世界坐标 */
-  anchor: (c: Circle, name: CircleAnchor): Position => {
+  anchor: (c: Circle, name: RectAnchor): Position => {
     const r = c.radius;
     let lx = 0;
     let ly = 0;

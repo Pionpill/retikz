@@ -1,3 +1,4 @@
+import { localToWorld, worldToLocal } from './_transform';
 import type { Position } from './point';
 
 /** 轴对齐矩形：几何中心 + 宽高 + 可选绕中心旋转 */
@@ -25,30 +26,6 @@ export const RECT_ANCHORS = {
 
 /** 矩形 anchor 名（与 TikZ 命名一致） */
 export type RectAnchor = (typeof RECT_ANCHORS)[keyof typeof RECT_ANCHORS];
-
-/** 本地坐标（以中心为原点）→ 世界坐标，考虑 rect.rotate */
-const localToWorld = (r: Rect, local: Position): Position => {
-  const angle = r.rotate ?? 0;
-  if (angle === 0) return [r.x + local[0], r.y + local[1]];
-  const cos = Math.cos(angle);
-  const sin = Math.sin(angle);
-  return [
-    r.x + local[0] * cos - local[1] * sin,
-    r.y + local[0] * sin + local[1] * cos,
-  ];
-};
-
-/** 世界坐标 → 本地坐标（localToWorld 逆变换） */
-const worldToLocal = (r: Rect, world: Position): Position => {
-  const tx = world[0] - r.x;
-  const ty = world[1] - r.y;
-  const angle = r.rotate ?? 0;
-  if (angle === 0) return [tx, ty];
-  const cos = Math.cos(angle);
-  const sin = Math.sin(angle);
-  // 逆旋转：旋转矩阵转置即逆
-  return [tx * cos + ty * sin, -tx * sin + ty * cos];
-};
 
 export const rect = {
   /** 几何中心 */

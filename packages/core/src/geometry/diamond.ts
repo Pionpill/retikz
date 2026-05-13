@@ -1,4 +1,6 @@
+import { localToWorld, worldToLocal } from './_transform';
 import type { Position } from './point';
+import type { RectAnchor } from './rect';
 
 /** 菱形：中心 + halfA/halfB 半轴长 + 可选旋转；顶点在 (±halfA,0) 与 (0,±halfB) */
 export type Diamond = {
@@ -12,36 +14,6 @@ export type Diamond = {
   rotate?: number;
 };
 
-/** 菱形 9 个标准 anchor（4 顶点 + 4 边中点 + 中心） */
-export type DiamondAnchor =
-  | 'center'
-  | 'north'
-  | 'south'
-  | 'east'
-  | 'west'
-  | 'north-east'
-  | 'north-west'
-  | 'south-east'
-  | 'south-west';
-
-const localToWorld = (d: Diamond, local: Position): Position => {
-  const angle = d.rotate ?? 0;
-  if (angle === 0) return [d.x + local[0], d.y + local[1]];
-  const cos = Math.cos(angle);
-  const sin = Math.sin(angle);
-  return [d.x + local[0] * cos - local[1] * sin, d.y + local[0] * sin + local[1] * cos];
-};
-
-const worldToLocal = (d: Diamond, world: Position): Position => {
-  const tx = world[0] - d.x;
-  const ty = world[1] - d.y;
-  const angle = d.rotate ?? 0;
-  if (angle === 0) return [tx, ty];
-  const cos = Math.cos(angle);
-  const sin = Math.sin(angle);
-  return [tx * cos + ty * sin, -tx * sin + ty * cos];
-};
-
 /** 菱形相关基础工具 */
 export const diamond = {
   /** 中心 */
@@ -52,7 +24,7 @@ export const diamond = {
     return Math.abs(lx) / d.halfA + Math.abs(ly) / d.halfB <= 1 + 1e-9;
   },
   /** 9 个 anchor：N/S/E/W=顶点，NE/NW/SE/SW=边中点，center=中心 */
-  anchor: (d: Diamond, name: DiamondAnchor): Position => {
+  anchor: (d: Diamond, name: RectAnchor): Position => {
     let lx = 0;
     let ly = 0;
     switch (name) {

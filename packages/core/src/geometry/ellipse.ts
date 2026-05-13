@@ -1,4 +1,6 @@
+import { localToWorld, worldToLocal } from './_transform';
 import type { Position } from './point';
+import type { RectAnchor } from './rect';
 
 /** 椭圆：中心 + 半长轴 rx / 半短轴 ry + 可选旋转 */
 export type Ellipse = {
@@ -14,36 +16,6 @@ export type Ellipse = {
 
 const SQRT_HALF = Math.SQRT1_2;
 
-/** 椭圆 9 个标准 anchor（与 RECT_ANCHORS 同名同义） */
-export type EllipseAnchor =
-  | 'center'
-  | 'north'
-  | 'south'
-  | 'east'
-  | 'west'
-  | 'north-east'
-  | 'north-west'
-  | 'south-east'
-  | 'south-west';
-
-const localToWorld = (e: Ellipse, local: Position): Position => {
-  const angle = e.rotate ?? 0;
-  if (angle === 0) return [e.x + local[0], e.y + local[1]];
-  const cos = Math.cos(angle);
-  const sin = Math.sin(angle);
-  return [e.x + local[0] * cos - local[1] * sin, e.y + local[0] * sin + local[1] * cos];
-};
-
-const worldToLocal = (e: Ellipse, world: Position): Position => {
-  const tx = world[0] - e.x;
-  const ty = world[1] - e.y;
-  const angle = e.rotate ?? 0;
-  if (angle === 0) return [tx, ty];
-  const cos = Math.cos(angle);
-  const sin = Math.sin(angle);
-  return [tx * cos + ty * sin, -tx * sin + ty * cos];
-};
-
 /** 椭圆相关基础工具 */
 export const ellipse = {
   /** 中心 */
@@ -57,7 +29,7 @@ export const ellipse = {
  * 9 个 anchor 的世界坐标
  * @description 对角（NE/NW/SE/SW）取参数曲线 t=π/4 处 (rx/√2, ry/√2)，与 TikZ 椭圆 anchor 参数等分约定一致
  */
-  anchor: (e: Ellipse, name: EllipseAnchor): Position => {
+  anchor: (e: Ellipse, name: RectAnchor): Position => {
     let lx = 0;
     let ly = 0;
     switch (name) {

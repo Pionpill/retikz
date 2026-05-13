@@ -127,11 +127,8 @@ export type {
   Rect,
   RectAnchor,
   Circle,
-  CircleAnchor,
   Ellipse,
-  EllipseAnchor,
   Diamond,
-  DiamondAnchor,
   PolarPosition,
 } from './geometry';
 export { point, rect, circle, ellipse, diamond, RECT_ANCHORS, polar } from './geometry';
