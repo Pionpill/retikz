@@ -46,7 +46,7 @@ export type RenderContext = {
 export const renderPrim = (
   p: ScenePrimitive,
   key: Key,
-  ctx: RenderContext = {},
+  context: RenderContext = {},
 ): ReactElement => {
   switch (p.type) {
     case 'rect':
@@ -134,9 +134,9 @@ export const renderPrim = (
     }
     case 'path': {
       const startId =
-        p.arrowStart && ctx.arrowMarkerIdFor ? ctx.arrowMarkerIdFor(p.arrowStart) : undefined;
+        p.arrowStart && context.arrowMarkerIdFor ? context.arrowMarkerIdFor(p.arrowStart) : undefined;
       const endId =
-        p.arrowEnd && ctx.arrowMarkerIdFor ? ctx.arrowMarkerIdFor(p.arrowEnd) : undefined;
+        p.arrowEnd && context.arrowMarkerIdFor ? context.arrowMarkerIdFor(p.arrowEnd) : undefined;
       return (
         <path
           key={key}
@@ -159,7 +159,7 @@ export const renderPrim = (
     case 'group':
       return (
         <g key={key} transform={buildTransform(p.transforms)}>
-          {p.children.map((c, i) => renderPrim(c, i, ctx))}
+          {p.children.map((c, i) => renderPrim(c, i, context))}
         </g>
       );
   }

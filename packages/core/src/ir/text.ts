@@ -36,8 +36,11 @@ export type IRLineSpec = z.infer<typeof LineSpecSchema>;
  * 文本块：单字符串或非空多行 LineSpec 数组
  * @description 选数组而非 `\n` 字符串：JSON 友好无 escape，行级覆盖天然落字段；通用文本结构，Node text / 未来 Step.label 等共用
  */
-export const NodeTextSchema = z
+export const TextBlockSchema = z
   .union([z.string(), z.array(LineSpecSchema).min(1)])
   .describe(
     'Text block: a single string for one line, or a non-empty array of line specs (string for default, object for per-line overrides).',
   );
+
+/** 文本块 IR 类型（单字符串或多行 LineSpec 数组） */
+export type IRTextBlock = z.infer<typeof TextBlockSchema>;

@@ -3,7 +3,7 @@ import { DrawWay } from '@retikz/core';
 import { Draw } from '../../src/sugar/Draw';
 import { Path } from '../../src/kernel/Path';
 import { Step } from '../../src/kernel/Step';
-import { buildIR } from '../../src/kernel/_builder';
+import { buildIR } from '../../src/kernel/builder';
 
 /**
  * Draw 是 Sugar：调一次它得到 <Path><Step.../></Path> 子树。

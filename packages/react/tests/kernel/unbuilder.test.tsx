@@ -4,8 +4,8 @@ import type { IR, IRChild } from '@retikz/core';
 import { CURRENT_IR_VERSION } from '@retikz/core';
 import { Draw } from '../../src/sugar/Draw';
 import { TIKZ_NODE, TIKZ_PATH, TIKZ_STEP } from '../../src/kernel/_displayNames';
-import { buildIR } from '../../src/kernel/_builder';
-import { convertIRToReactNode } from '../../src/kernel/_unbuilder';
+import { buildIR } from '../../src/kernel/builder';
+import { convertIRToReactNode } from '../../src/kernel/unbuilder';
 
 const emptyScene: IR = {
   version: CURRENT_IR_VERSION,

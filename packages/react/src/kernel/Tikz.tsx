@@ -1,6 +1,6 @@
 import { type CSSProperties, type FC, type ReactNode, useId, useMemo } from 'react';
 import { type ArrowEndSpec, type IR, type ScenePrimitive, compileToScene } from '@retikz/core';
-import { buildIR } from './_builder';
+import { buildIR } from './builder';
 import { ArrowMarker } from '../render/arrowMarkers';
 import { browserMeasurer } from '../render/browser-measurer';
 import { renderPrim } from '../render/renderPrim';

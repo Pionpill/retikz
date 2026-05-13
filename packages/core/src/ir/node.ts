@@ -2,7 +2,7 @@ import { z } from 'zod';
 import type { ValueOf } from '../types';
 import { FontSchema } from './font';
 import { AT_DIRECTIONS, AtPositionSchema, OffsetPositionSchema, PolarPositionSchema, PositionSchema } from './position';
-import { NodeTextSchema } from './text';
+import { TextBlockSchema } from './text';
 
 /**
  * 节点形状常量（用 const + ValueOf 派生，不用 TS enum）
@@ -99,7 +99,7 @@ export const NodeSchema = z
       .describe(
         'Rotation in degrees around the node center; positive = clockwise (matches TikZ rotate=...)',
       ),
-    text: NodeTextSchema.optional(),
+    text: TextBlockSchema.optional(),
     align: z
       .nativeEnum(NODE_TEXT_ALIGNS)
       .optional()

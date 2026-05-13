@@ -5,7 +5,7 @@ import { Node } from '../../src/kernel/Node';
 import { Path } from '../../src/kernel/Path';
 import { Step } from '../../src/kernel/Step';
 import { Text } from '../../src/kernel/Text';
-import { buildIR } from '../../src/kernel/_builder';
+import { buildIR } from '../../src/kernel/builder';
 
 describe('buildIR', () => {
   it('单个 <Node> → IR scene', () => {
