@@ -5,6 +5,26 @@ description: retikz release history grouped by MINOR version, newest first. Date
 
 <Update label="May 2026" tags={["@retikz/core", "@retikz/react"]}>
 
+## v0.1.0-beta.1
+
+First beta optimization release after the alpha.5 schema wrap-up. It focuses on renderer-neutral core wording, named public union types and JSDoc, shared geometry transforms, unbuilder round-trip coverage, compile/path modularization and performance, field-list type locks, builder cast narrowing, explicit compile warnings, boundary tests, naming cleanup, and removing renderer-mirror helpers from core tests. It adds no new drawing capability; the goal is lower regression risk, better diagnostics, and maintainability.
+
+### `@retikz/core`
+
+- **Renderer-neutral core contract**: clean SVG-imposing wording from core comments and zod `.describe()` text so IR / Scene primitive descriptions stay render-target agnostic.
+- **Public types and JSDoc**: split public unions such as `PathCommand`, `Transform`, and `TextLine` into named variants with field-level JSDoc for better IDE hovers and wrapper reuse.
+- **Shared geometry transforms**: extract the common local/world transform helper used by the four shapes and remove duplicated dead `*Anchor` types.
+- **compile/path maintainability and performance**: split path compilation responsibilities, remove the `findPrev` O(n²) hotspot, and type-lock the thickness mapping against its enum.
+- **Diagnostics and test hardening**: add the `CompileOptions.onWarn` warning-collector path, cover boundary / error paths, and reduce core test helpers that mirror the SVG renderer.
+- **IR JSON serializability guard**: add finite-number tests exposing and locking the contract gap that `Infinity` / `-Infinity` must not enter IR schemas.
+
+### `@retikz/react`
+
+- **unbuilder coverage**: add round-trip coverage for alpha.5 forms including AtPosition / OffsetPosition / `arrowDetail` / expanded StepLabel positions.
+- **Field-list type locks**: tie builder / unbuilder mirrored field lists and arrow marker `stableSpecKey` fields to their TypeScript types.
+- **Builder cast narrowing**: reduce scattered `as` casts in `_builder.ts` by concentrating unsafe boundaries.
+- **Naming cleanup**: align builder/unbuilder file names and the `renderPrim` context parameter with public naming conventions.
+
 ## v0.1.0-alpha.5
 
 Final breaking window of the alpha line: structured Scene primitives (no SVG string leakage), object-shaped arrow visual spec, expanded StepLabel position (7 keywords + any t∈[0, 1]), a 4th relative-positioning form (OffsetPosition), and abbreviation cleanup on IRTarget. After this release IR schema field names / semantics are frozen and the project enters the beta non-breaking window. Backed by 4 ADRs and +250+ new test cases (533 → 833).
