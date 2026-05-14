@@ -24,6 +24,8 @@ retikz 一次发包 = **3 处同步改动 + 用户确认 + npm publish**。
 
 **AI 助手不得自行 `git commit` / `git push` / `npm publish`**——根 AGENTS.md 硬规则。本技能在做完 working tree 改动后**停下来等用户授权**，授权后才执行提交与发布。
 
+**版本写入硬规则：先把目标版本写进仓库并提交，再 tag / publish。** 不允许拿上一个版本的 `package.json` 去发布时临时改版本，也不允许 tag 指向一个还显示旧版本号的 commit。npm 包版本、git tag、仓库 `package.json` 必须三者一致；否则会造成“源码显示旧版本、npm 实际是新版本”的可追溯性断裂。
+
 ## 使用时机
 
 - 用户说"发个 alpha"、"发版"、"发 npm"、"publish 0.1.0-alpha.X"
@@ -102,6 +104,8 @@ git tag: v0.1.0-alpha.1
 #### 2.1 包版本号
 
 直接改 `packages/<pkg>/package.json` 的 `"version"` 字段。两个包同版本号。
+
+这是发版流程的第一性动作：目标版本（例如 `0.1.0-rc.1`）必须在 working tree 中显式出现，经过验证、commit，然后再创建 `v0.1.0-rc.1` tag 与 npm publish。不要在 publish 命令或临时脚本里动态覆盖版本号。
 
 如果想用 CLI：
 
@@ -236,6 +240,8 @@ pnpm --filter @retikz/react publish --dry-run --access public --tag alpha
 
 **不能省。** 根 AGENTS.md 明令 AI 不得自行 commit / push / publish。
 
+授权边界要说清楚：如果用户只说“提交”，只提交版本准备改动；如果用户说“发布 / publish / go”，才执行阶段 5。无论哪种授权，阶段 5 都必须保证 tag 之前目标版本已经在 HEAD 中。
+
 技能输出：
 
 ```
@@ -258,10 +264,11 @@ dry-run 关键行：
   - @retikz/react v0.1.0-alpha.1  X files, Y kB
 
 请审阅。确认后我会执行：
-  1. git commit -m ":bookmark: 发布 @retikz/core@0.1.0-alpha.1 + @retikz/react@0.1.0-alpha.1"
-  2. git tag v0.1.0-alpha.1
-  3. pnpm publish (alpha tag)
-  4. git push --follow-tags
+  1. git commit -m ":bookmark: 准备 0.1.0-alpha.1 发布"（若已提交则跳过）
+  2. 确认 HEAD 的 package.json 版本就是 0.1.0-alpha.1
+  3. git tag v0.1.0-alpha.1
+  4. pnpm publish (alpha tag)
+  5. git push + git push tag
 ```
 
 **停**。等用户给"可以发"、"publish"、"go"等明确指令再继续。
@@ -271,20 +278,27 @@ dry-run 关键行：
 用户授权后顺序执行：
 
 ```bash
-# 1. commit（按根 AGENTS.md 的 emoji 规范，发版用 :bookmark:）
+# 1. commit 版本准备改动（按根 AGENTS.md 的 emoji 规范，发版用 :bookmark:）
 git add -A
-git commit -m ":bookmark: 发布 @retikz/core@0.1.0-alpha.1 + @retikz/react@0.1.0-alpha.1"
+git commit -m ":bookmark: 准备 0.1.0-alpha.1 发布"
 
-# 2. tag（轻量 tag 即可；annotated tag 用 -a -m）
+# 2. 确认 HEAD 已包含目标版本；如果仍是旧版本，halt，不能 tag / publish
+node -e "const fs=require('node:fs'); for (const p of ['packages/core/package.json','packages/react/package.json']) { const j=JSON.parse(fs.readFileSync(p,'utf8')); if (j.version !== '0.1.0-alpha.1') throw new Error(`${j.name} version is ${j.version}`); }"
+git status --short
+
+# 3. tag（轻量 tag 即可；annotated tag 用 -a -m）
 git tag v0.1.0-alpha.1
 
-# 3. publish（按子包逐个发；--access public 首次必带）
+# 4. publish（按子包逐个发；--access public 首次必带）
 pnpm --filter @retikz/core publish --access public --tag alpha
 pnpm --filter @retikz/react publish --access public --tag alpha
 
-# 4. push commit + tag
-git push --follow-tags
+# 5. push commit + tag；轻量 tag 不一定会被 --follow-tags 带上，必要时单独 push tag
+git push
+git push origin v0.1.0-alpha.1
 ```
+
+如果阶段 4 之后用户已经单独授权并完成了“准备发布” commit，则阶段 5 跳过 commit，但仍必须执行版本确认；tag 必须打在包含目标版本号的 HEAD 上。
 
 发完报告：
 
@@ -314,6 +328,7 @@ git tag: v0.1.0-alpha.1（已 push）
 - **没 build 就 publish** —— 发出去的包指向 `src/index.ts` 而不是 `dist/lib/index.cjs`，下游装上但 import 解析不出。**所以必须按 §3 顺序：先 build，再 dry-run，再 publish**
 - **catalog 改动忘记 `pnpm install`** —— lockfile 与 workspace.yaml 不一致，CI 报 `ERR_PNPM_OUTDATED_LOCKFILE`
 - **AI 自己 commit / publish** —— 根 AGENTS.md 红线，必须等用户当次授权才动
+- **tag 指向旧版本 commit** —— 先 tag / publish，后补 `package.json` 版本号，会让 npm、git tag、源码三方不一致。正确顺序是：改版本 → 验证 → commit → 确认 HEAD 版本 → tag → publish。
 - **正式版 `0.1.0` 跑了 `--tag alpha`** —— 正式版反而进 alpha 通道，下游永远拉不到。正式版**不带** `--tag` 参数（默认 latest）
 - **同月多发了几个 alpha 都新建 `<Update>` 块** —— 同月内可聚合到一个块（label 仍写 `YYYY.MM`），让 changelog 不至于太碎；但跨月必须分块
 
@@ -328,6 +343,7 @@ git tag: v0.1.0-alpha.1（已 push）
 走完阶段 3 后、给用户审阅前最后过一遍：
 
 - [ ] `packages/<pkg>/package.json` 版本号正确
+- [ ] 目标版本号已进入 working tree；阶段 5 tag 前必须确认它已经进入 HEAD
 - [ ] 确认 publishable 包没有 `"private": true`（`grep '"private": true' packages/{core,react}/package.json` 应无输出）
 - [ ] `pnpm lint` pass（含 0 warning）
 - [ ] `tsc --noEmit` 在 core / react / docs 三个 workspace 全 pass
