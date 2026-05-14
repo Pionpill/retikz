@@ -20,7 +20,7 @@ beta 是公开 API 冻结前最后的命名窗口；如果保留 `strokeDasharra
 
 ### A. `strokeDasharray` 改名为 `dashPattern`（推荐）
 
-公开 IR 字段、React `<Path>` / `<Draw>` prop、Scene primitive 字段同步改为 `dashPattern`。React/SVG renderer 内部再映射成 SVG `strokeDasharray` attribute。
+公开 IR 字段、React `<Path>` / `<Draw>` prop、Scene primitive 字段同步改为 `dashPattern: Array<number>`。React/SVG renderer 内部再把数组 join 成 SVG `strokeDasharray` attribute。
 
 ### B. 仅文档改成 TikZ 解释，字段保留 `strokeDasharray`
 
@@ -28,7 +28,7 @@ beta 是公开 API 冻结前最后的命名窗口；如果保留 `strokeDasharra
 
 ### C. 使用 `dashArray`
 
-项目中 Node 已有 `dashArray`，但 TikZ manual 更接近 `dash pattern`；继续使用 `dashArray` 也容易和 SVG dash array 语义绑定。
+项目中 Node 已有 `dashArray`，但 TikZ manual 更接近 `dash pattern`；继续使用 `dashArray` 也容易和 SVG dash array 语义绑定。若保留 Node 字段名，至少应把字段值改为 `Array<number>`，避免保留 SVG/CSS 字符串文法。
 
 ## 决策：A
 
@@ -36,15 +36,15 @@ beta 是公开 API 冻结前最后的命名窗口；如果保留 `strokeDasharra
 
 1. `dashPattern` 更接近 TikZ 术语，且不暴露 SVG attribute 名。
 2. beta 允许 breaking rename，rc 后不应再改公开字段。
-3. React/SVG renderer 本来就是把 core Scene 映射到 SVG attribute 的边界，`dashPattern -> strokeDasharray` 应在 renderer 内完成。
+3. React/SVG renderer 本来就是把 core Scene 映射到 SVG attribute 的边界，`dashPattern -> strokeDasharray` 的 `join(' ')` 应在 renderer 内完成。
 
 ## 决策细节
 
-- `IRPath.strokeDasharray` 改名为 `IRPath.dashPattern`。
+- `IRPath.strokeDasharray` 改名为 `IRPath.dashPattern: Array<number>`。
 - React `<Path strokeDasharray>` / `<Draw strokeDasharray>` 改为 `dashPattern`。
-- `PathPrim.strokeDasharray`、`RectPrim.strokeDasharray`、`EllipsePrim.strokeDasharray` 改为 `dashPattern`。
-- React renderer 内部仍使用 SVG prop `strokeDasharray={p.dashPattern}`。
-- Node 当前已有 `dashArray` 字段。为避免一次性扩大变更，本 ADR 不强制改 Node 字段；但文档应避免称其为“SVG 原生逃生口”，改成“dash pattern string”。如果实施中发现 Node/Path 两套命名割裂影响明显，可在同一 ADR 下把 Node `dashArray` 也改为 `dashPattern`，但必须同步 changelog BREAKING。
+- `PathPrim.strokeDasharray`、`RectPrim.strokeDasharray`、`EllipsePrim.strokeDasharray` 改为 `dashPattern: Array<number>`。
+- React renderer 内部仍使用 SVG prop `strokeDasharray={p.dashPattern?.join(' ')}`。
+- Node 当前已有 `dashArray` 字段。本 ADR 保留字段名以减少改名面积，但同步把字段值从 string 改为 `Array<number>`；文档不得称其为“SVG 原生逃生口”。
 - `lineCap` / `lineJoin` 保持不变。
 - `fillRule` 保持不变。
 - 不保留 `strokeDasharray` alias。
@@ -52,7 +52,7 @@ beta 是公开 API 冻结前最后的命名窗口；如果保留 `strokeDasharra
 ## 影响
 
 - **公开 API**：BREAKING。影响 core IR、React `<Path>` / `<Draw>` prop、Scene primitive type。
-- **运行时行为**：不变；虚线数值字符串仍按现有格式传递。
+- **运行时行为**：渲染结果不变；公开值从字符串改为 number 数组，SVG adapter 内部负责 join。
 - **文档**：需要 changelog BREAKING + zh/en docs + demos 同步。
 
 ## 实现契约
@@ -65,12 +65,12 @@ beta 是公开 API 冻结前最后的命名窗口；如果保留 `strokeDasharra
 
 | 文件 | 操作 | 旧 | 新 |
 |---|---|---|---|
-| `packages/core/src/ir/path/path.ts` | 字段 rename | `strokeDasharray` | `dashPattern` |
-| `packages/core/src/primitive/path.ts` | 字段 rename | `strokeDasharray` | `dashPattern` |
-| `packages/core/src/primitive/rect.ts` | 字段 rename | `strokeDasharray` | `dashPattern` |
-| `packages/core/src/primitive/ellipse.ts` | 字段 rename | `strokeDasharray` | `dashPattern` |
-| `packages/react/src/kernel/Path.tsx` | prop rename | `strokeDasharray` | `dashPattern` |
-| `packages/react/src/sugar/Draw.tsx` | prop rename | `strokeDasharray` | `dashPattern` |
+| `packages/core/src/ir/path/path.ts` | 字段 rename + value shape | `strokeDasharray: string` | `dashPattern: Array<number>` |
+| `packages/core/src/primitive/path.ts` | 字段 rename + value shape | `strokeDasharray: string` | `dashPattern: Array<number>` |
+| `packages/core/src/primitive/rect.ts` | 字段 rename + value shape | `strokeDasharray: string` | `dashPattern: Array<number>` |
+| `packages/core/src/primitive/ellipse.ts` | 字段 rename + value shape | `strokeDasharray: string` | `dashPattern: Array<number>` |
+| `packages/react/src/kernel/Path.tsx` | prop rename + value shape | `strokeDasharray="4 2"` | `dashPattern={[4, 2]}` |
+| `packages/react/src/sugar/Draw.tsx` | prop rename + value shape | `strokeDasharray="4 2"` | `dashPattern={[4, 2]}` |
 
 ### 文件 scope
 
@@ -94,17 +94,17 @@ beta 是公开 API 冻结前最后的命名窗口；如果保留 `strokeDasharra
 
 1. `PathSchema` 接受 `dashPattern`。
 2. `PathSchema` 不再公开 `strokeDasharray`。
-3. `<Path dashPattern="4 2">` 产出的 IR 含 `dashPattern`。
-4. `<Draw dashPattern="4 2">` 与等价 `<Path dashPattern="4 2">` 构造一致。
+3. `<Path dashPattern={[4, 2]}>` 产出的 IR 含 `dashPattern: [4, 2]`。
+4. `<Draw dashPattern={[4, 2]}>` 与等价 `<Path dashPattern={[4, 2]}>` 构造一致。
 5. `compileToScene` 把 `IRPath.dashPattern` 透传到 `PathPrim.dashPattern`。
-6. React/SVG renderer 把 `PathPrim.dashPattern` 渲染为 SVG `stroke-dasharray`。
+6. React/SVG renderer 把 `PathPrim.dashPattern` join 后渲染为 SVG `stroke-dasharray`。
 7. Node dashed / dotted / explicit dash 行为保持现有优先级。
 8. unbuilder round-trip 使用新字段。
 9. docs demos 不再引用 `strokeDasharray`。
-10. changelog zh/en 明确迁移路径：`strokeDasharray` -> `dashPattern`。
+10. changelog zh/en 明确迁移路径：`strokeDasharray="4 2"` -> `dashPattern={[4, 2]}`，以及 `dashArray="6 2"` -> `dashArray={[6, 2]}`。
 
 ## 多 LLM 评估关注点
 
 - 是否遗漏 docs/demo/test 中的旧 prop。
 - 是否错误修改了 SVG renderer 的实际 attribute 名。
-- 是否让 Node `dashArray` 与 Path `dashPattern` 产生不可接受的不一致；如保留，文档是否说明清楚。
+- 是否让 Node `dashArray` 字段名与 Path `dashPattern` 字段名产生不可接受的不一致；如保留，文档是否说明清楚。
