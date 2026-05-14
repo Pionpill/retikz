@@ -1,0 +1,65 @@
+---
+title: Draw Way
+description: The way array item forms, DrawWay constants, folds, cycle, and relative-coordinate forms.
+---
+
+`way` is the core of `<Draw>`. The first item forms are targets; later forms are operators that modify the next segment or the previous point.
+
+## Way Item
+
+Each item in `way` accepts fourteen forms. The first five are direct targets matching `<Step>.to`; the rest are infix operators / keywords. Curve operators merge with the next item; shape operators center on the previous item and do not consume the next; the label operator decorates the next segment without producing one.
+
+| Form | Example | Meaning |
+| --- | --- | --- |
+| Node id | `'a'` | Reference a Node in the same TikZ; endpoint auto-attaches to border |
+| Cartesian | `[120, 0]` | Literal coordinate |
+| Polar | `{ origin: 'a', angle: 60, radius: 80 }` | Polar coordinate; see [Positioning](/core/concepts/positioning) |
+| Relative | `{ position: [10, 0], type: DrawWay.Relative }` or `'+10,0'` | Offset from the previous step endpoint without updating prevEnd |
+| Accumulate | `{ position: [10, 0], type: DrawWay.Accumulate }` or `'++10,0'` | Offset from the previous step endpoint and update prevEnd |
+| Fold operator | `'-\|'` / `'\|-'` | Turn previous-to-next into a folded segment |
+| Cycle | `DrawWay.Cycle` | Close back to the way start |
+| Curve / shape / label | `{ curve }` / `{ cubic }` / `{ bend }` / `{ arc }` / `{ circle }` / `{ ellipse }` / `{ label }` | Covered by the Draw subpages |
+
+## DrawWay Constants
+
+```tsx
+import { Draw, DrawWay } from '@retikz/react';
+
+<Draw way={['a', 'b', 'c', DrawWay.Cycle]} />
+<Draw way={['a', '-|', 'b']} />
+<Draw way={['a', DrawWay.Hv, 'b']} />
+<Draw way={['a', { position: [80, 0], type: DrawWay.Relative }]} />
+```
+
+| Constant | Raw literal | Meaning |
+| --- | --- | --- |
+| `DrawWay.Cycle` | const-only | Close keyword; avoids collisions with node ids |
+| `DrawWay.Hv` | `'-\|'` | Horizontal then vertical |
+| `DrawWay.Vh` | `'\|-'` | Vertical then horizontal |
+| `DrawWay.Relative` | const-only | Non-accumulating relative offset |
+| `DrawWay.Accumulate` | const-only | Accumulating relative offset |
+
+<ComponentPreview name="draw-way-types" />
+
+## Fold
+
+Put `'-|'` or `'|-'` in `way` to turn the previous-to-next segment into a fold, matching TikZ `(A) -| (B)` / `(A) |- (B)`.
+
+<ComponentPreview name="draw-fold" />
+
+## Cycle
+
+End `way` with `DrawWay.Cycle` to close the last segment back to the first item.
+
+<ComponentPreview name="draw-cycle" />
+
+## Relative Coordinates
+
+Relative coordinates have two equivalent forms:
+
+- Object form (recommended): `{ position: [dx, dy], type: DrawWay.Relative | DrawWay.Accumulate }`
+- Sugar string: `'+dx,dy'` / `'++dx,dy'`
+
+`Relative` leaves prevEnd unchanged; `Accumulate` advances prevEnd. The two Draws below differ only by `type`.
+
+<ComponentPreview name="draw-rel" />

@@ -29,15 +29,17 @@ retikz 遵循 Semantic Versioning 2.0.0：版本号写作 `MAJOR.MINOR.PATCH`，
 | 通道 | 形如 | 主要内容 | 主要执行 | 适合 |
 | --- | --- | --- | --- | --- |
 | alpha | `0.1.0-alpha.x` | 新功能 / 新 IR 字段 / API 形态重塑（schema 仍在重塑、IR 不稳） | **人工设计 + AI 实现** | 探索 / 反馈 |
-| beta | `0.1.0-beta.x` | 性能 / 可读性 / 重构 / 测试加固 / 文档完善（API 已冻、可能小调） | **人工主导优化与重构** | 集成验证 |
-| rc | `0.1.0-rc.x` | 仅 blocker bug 修复 | 人工 | 生产前演练 |
+| beta | `0.1.0-beta.x` | 性能 / 可读性 / 重构 / 测试加固 / 文档完善；允许最后一轮破坏性命名调整 | **人工主导优化与重构** | 集成验证 |
+| rc | `0.1.0-rc.x` | 公开 API 冻结；只做兼容 bug 修复、文档、安装验收与发布说明 | 人工主导 | 生产前演练 |
 | 稳定 | `0.1.0` | 进入 SemVer 守护，按 PATCH / MINOR / MAJOR 节奏迭代 | — | 生产 |
 
 通道升级是单向的：alpha → beta → rc → stable，不会回退。
 
-retikz 在 alpha 阶段采用 **"人工设计 + AI 实现"** 分工：人工写 ADR（schema 字段 / 文件 scope / 测试象限 / 选项决策），AI 接力写 spec / 实现 / 测试 / 文档，最后人工对账审稿——架构决策由人控、实现劳动可放大。具体流程见 [AI 辅助开发](/about/ai-assisted-development)。
+retikz 在 alpha 阶段采用 **"人工设计 + AI 实现"** 分工：人工写 ADR（schema 字段 / 文件 scope / 测试象限 / 选项决策），AI 接力写 spec / 实现 / 测试 / 文档，最后人工对账审稿——架构决策由人控、实现劳动可放大。具体流程见 [AI 辅助开发](/about/developer/ai-assisted-development)。
 
 beta 阶段反过来——schema 已冻、API 不再扩张，AI 自由发挥的空间收窄；这一阶段着重对 alpha 期的实现做人工 review、性能调优、重构、补加固测试、补完整文档，为 rc / 正式版打底。
+
+rc 阶段再收窄一层——公开 API 不再破坏，npm dist-tag 使用 `next`。安装验证以 `pnpm add @retikz/react@next react react-dom` 为准；如果发现必须破坏兼容才能修的问题，应停止 rc，重新回到人工版本决策。
 
 ## peerDependencies
 

@@ -29,15 +29,17 @@ Breaking changes before `1.0.0` **do not force a MAJOR bump**, but the changelog
 | Channel | Format | Main content | Main driver | Suitable for |
 | --- | --- | --- | --- | --- |
 | alpha | `0.1.0-alpha.x` | New features / new IR fields / API reshaping (schema in flux, IR unstable) | **Human-designed + AI-implemented** | Exploration / feedback |
-| beta | `0.1.0-beta.x` | Performance / readability / refactoring / test hardening / docs completion (API frozen, minor tweaks) | **Human-led optimization and refactoring** | Integration testing |
-| rc | `0.1.0-rc.x` | Blocker bug fixes only | Human | Pre-production rehearsal |
+| beta | `0.1.0-beta.x` | Performance / readability / refactoring / test hardening / docs completion; final breaking renames are still allowed | **Human-led optimization and refactoring** | Integration testing |
+| rc | `0.1.0-rc.x` | Public API frozen; compatible bug fixes, docs, installation acceptance, and release notes only | Human-led | Pre-production rehearsal |
 | stable | `0.1.0` | Under SemVer; normal PATCH / MINOR / MAJOR cadence | — | Production |
 
 Channels move forward only: alpha → beta → rc → stable. There's no rollback.
 
-retikz uses a **"human-designed + AI-implemented"** split during alpha: humans produce ADRs (schema fields, file scopes, test quadrants, option decisions), AI relays through spec / implementation / tests / docs, and humans reconcile and review at the end — keeping architectural decisions under human control while scaling out implementation work. Full workflow details: [AI-assisted development](/about/ai-assisted-development).
+retikz uses a **"human-designed + AI-implemented"** split during alpha: humans produce ADRs (schema fields, file scopes, test quadrants, option decisions), AI relays through spec / implementation / tests / docs, and humans reconcile and review at the end — keeping architectural decisions under human control while scaling out implementation work. Full workflow details: [AI-assisted development](/about/developer/ai-assisted-development).
 
 beta inverts this — schema is frozen, the API stops growing, and AI's freedom narrows; this phase emphasizes human review of alpha-era implementation, performance tuning, refactoring, test hardening, and documentation completion, laying the foundation for rc / stable.
+
+rc narrows the work again: public APIs no longer break, and npm uses the `next` dist-tag. Installation acceptance uses `pnpm add @retikz/react@next react react-dom`; any issue that requires a breaking compatibility fix should stop the rc and return to a human version decision.
 
 ## peerDependencies
 

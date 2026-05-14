@@ -1,0 +1,32 @@
+---
+title: Draw Styling
+description: Arrows, fill, dash, line cap / line join, and opacity on Draw.
+---
+
+Draw forwards Path stroke and fill fields. For lower-level field details, see [Path](/core/components/draw/path) and [Arrow](/core/components/draw/arrow).
+
+## Arrows
+
+`arrow` controls endpoint arrows: `'->'` / `'<-'` / `'<->'` / `'none'`. For multi-node paths, arrows appear only at the overall start / end.
+
+<ComponentPreview name="draw-arrow" />
+
+`arrowDetail` further configures shape, scale, color, and per-end overrides.
+
+## Fill
+
+`fill` colors closed regions, and `fillRule` controls nested sub-path filling. It is commonly used with `DrawWay.Cycle`.
+
+<ComponentPreview name="draw-fill" />
+
+## Dash
+
+`dashPattern` uses `Array<number>` for dash / gap lengths. `[4, 2]` means draw 4, skip 2, in user units.
+
+<ComponentPreview name="draw-dashed" />
+
+## Caps, Joins, and Opacity
+
+`lineCap` / `lineJoin` align with TikZ `line cap` / `line join`. `thickness` is a TikZ-style semantic stroke preset; explicit `strokeWidth` always wins.
+
+Opacity is split into three channels: `opacity` affects the whole path, `fillOpacity` affects fill only, and `drawOpacity` affects stroke only.

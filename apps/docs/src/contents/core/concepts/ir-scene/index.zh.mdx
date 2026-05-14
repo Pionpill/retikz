@@ -1,0 +1,35 @@
+---
+title: IR 与 Scene
+description: retikz 的两层数据模型：IR 用于声明与持久化，Scene 用于渲染。
+---
+
+retikz 把用户写下的 JSX 先转成 IR，再编译成 Scene。IR 保留"你想画什么"，Scene 只保留"渲染器应该画什么"。
+
+## 两层模型
+
+| 层 | 作用 | 面向谁 |
+| --- | --- | --- |
+| IR | JSON 可序列化的声明结构，保留 Node / Path / Step / Coordinate 语义 | 用户、LLM、持久化、转换器 |
+| Scene | 渲染目标无关的 primitive 列表，包含测量后的文本、路径、布局边界 | renderer |
+
+IR 是公开契约；Scene 是 renderer 输入。正常写图时不需要手写 Scene。
+
+## 编译链路
+
+```tsx
+<TikZ>
+  <Node id="a" position={[0, 0]}>A</Node>
+  <Draw way={['a', [80, 0]]} />
+</TikZ>
+```
+
+这段 JSX 会被 adapter 收集成 IR，`@retikz/core` 再负责解析 position、计算 anchor、展开路径与边界，最后输出 Scene。
+
+## 什么时候看 IR
+
+- 需要持久化图形
+- 需要让 AI 直接生成或局部修改图
+- 需要调试 `<ComponentPreview>` 中的输出是否符合预期
+- 需要写 adapter 或转换器
+
+普通组件用法页只展示 DSL；完整 schema 见 [Schema Reference](/core/reference/schema/scene)。

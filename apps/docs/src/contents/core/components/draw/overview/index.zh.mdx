@@ -1,9 +1,9 @@
 ---
 title: Draw
-description: Sugar 组件——way 数组按 id / 笛卡尔 / 极坐标 / 相对偏移（Relative / Accumulate，对象形态或 sugar 字符串）/ 折角 / cycle / 曲线（curve / cubic / bend）/ 形状（arc / circle / ellipse）/ 边标注（label）多种形态串点，编译期展开为 Path + Step。
+description: Sugar 组件——用 way 数组串起节点、坐标、折角、曲线、闭合、边标注和样式，编译期展开为等价的 Path + Step。
 ---
 
-`<Draw>` 是 90% 用户连线的首选。`way` 是一个目标点数组（外加 infix 算子），依次串成路径；编译期它会展开为一组等价的 Kernel `<Path>` + `<Step>`，所以 `<Draw>` 不引入任何 Kernel 表达不了的能力。
+`<Draw>` 是大多数连线的首选入口。它接受一个 `way` 数组，按顺序把目标点与 infix 算子展开成 Kernel `<Path>` + `<Step>`，所以它不引入新的底层能力，只减少常见路径的书写成本。
 
 ## 用法
 
@@ -15,188 +15,36 @@ import { Draw } from '@retikz/react';
 <Draw way={['a', 'b']} />
 ```
 
-## 例子
-
-### 基础连线
+## 基础连线
 
 <ComponentPreview name="draw-basic" size="xs" />
 
-### way 的 14 种 item
-
-`way` 数组里的每一项接受十四种形态：前五种是直接 target（与 `<Step>.to` 一致），后九种是 infix 算子 / 关键字。**注意**：曲线类算子（curve / cubic / bend）会与"下一项"合并；形状类算子（arc / circle / ellipse）以"上一项"为圆心，**不**消耗下一项；边标注算子（label）修饰**下一段**，不产生段。
-
-| 形态     | 例                                                  | 含义                                                        |
-| -------- | --------------------------------------------------- | ----------------------------------------------------------- |
-| 节点 id  | `'a'`                                               | 引用同一 TikZ 内的 Node；端点自动贴 border                  |
-| 笛卡尔   | `[120, 0]`                                          | 直接给坐标                                                  |
-| 极坐标   | `{ origin: 'a', angle: 60, radius: 80 }`            | 极坐标（详见 [定位](/core/concepts/positioning)）           |
-| 相对偏移 (Relative) | `{ position: [10, 0], type: DrawWay.Relative }` 或 `'+10,0'` | 基于前一 step 终点 + `[dx, dy]`；**不**更新 prevEnd（TikZ `(+x, +y)`） |
-| 相对偏移 (Accumulate) | `{ position: [10, 0], type: DrawWay.Accumulate }` 或 `'++10,0'` | 基于前一 step 终点 + `[dx, dy]`；**更新** prevEnd（TikZ `(++x, ++y)`） |
-| 折角算子 | `'-\|'` / `'\|-'`（或 `DrawWay.Hv` / `DrawWay.Vh`） | 把"上一项 → 下一项"那段改成折角（TikZ `-\|` / `\|-` infix） |
-| 闭合     | `DrawWay.Cycle`                                     | 闭合回 way 起点（等价 TikZ `cycle` 关键字 / SVG `Z`）       |
-| 二次贝塞尔 | `{ curve: [cx, cy] }`                             | 与下一项合并为 curve step；一个控制点（TikZ `..controls(B)..`） |
-| 三次贝塞尔 | `{ cubic: [[c1x, c1y], [c2x, c2y]] }`             | 与下一项合并为 cubic step；两个控制点（TikZ `..controls(B) and (C)..`） |
-| 弧形简记 | `{ bend: 'left' \| 'right', angle?: number }`       | 与下一项合并为 bend step；方向 + 可选角度（缺省 30°） |
-| 弧段算子 | `{ arc: { startAngle, endAngle, radius } }`         | 以"上一项"为圆心画弧段；**不**消耗下一项 |
-| 整圆算子 | `{ circle: { radius } }`                            | 以"上一项"为圆心画整圆；**不**消耗下一项 |
-| 整椭圆算子 | `{ ellipse: { radiusX, radiusY } }`               | 以"上一项"为圆心画整椭圆；**不**消耗下一项 |
-| 边标注算子 | `{ label: 'accept' }` 或 `{ label: { text, position?, side? } }` | 修饰"下一段"——为下一个产生段的 way item 写入 IR `step.label` |
-
-### DrawWay 关键字常量
-
-`DrawWay` 提供 way 数组里特殊语义项的命名常量：
-
-```tsx
-import { Draw, DrawWay } from '@retikz/react';
-
-<Draw way={['a', 'b', 'c', DrawWay.Cycle]} />            {/* 闭合 */}
-<Draw way={['a', '-|', 'b']} />                          {/* 折角：裸字面量 */}
-<Draw way={['a', DrawWay.Hv, 'b']} />                    {/* 折角：等价常量 */}
-<Draw way={['a', { position: [80, 0], type: DrawWay.Relative }]} />  {/* 相对偏移：TS 全程校验 */}
-```
-
-| 常量              | 等价裸字面量   | 含义                                                                               |
-| ----------------- | -------------- | ---------------------------------------------------------------------------------- |
-| `DrawWay.Cycle`   | （**仅常量**） | 闭合关键字——底层字符串刻意写丑（`'retikz-keyword_cycle'`），保证不会与节点 id 冲突 |
-| `DrawWay.Hv`      | `'-\|'`        | 折角：先水平后垂直（infix 算子）                                                   |
-| `DrawWay.Vh`      | `'\|-'`        | 折角：先垂直后水平（infix 算子）                                                   |
-| `DrawWay.Relative`   | （**仅常量**） | `WayRelativeItem.type` 鉴别值——非累积分支，等价 TikZ `(+x, +y)`（**不**推进 prevEnd）    |
-| `DrawWay.Accumulate` | （**仅常量**） | `WayRelativeItem.type` 鉴别值——累积分支，等价 TikZ `(++x, ++y)`（每段推进 prevEnd）      |
-
-**为什么 cycle / Relative 不允许裸字面量**：`cycle` 太可能跟用户的节点 id 撞车（"cycle" 是个常见英文词）。所以闭合**只走 `DrawWay.Cycle`**；裸字符串 `'cycle'` 在 way 里直接当节点 id 处理。`Relative` / `Accumulate` 同理——`type` 字段不接受任意字符串，只认这两个常量，TS 能完整校验对象形态。
-
-折角值 `'-\|'` / `'\|-'` 含特殊字符不会与节点 id 撞车，因此**字面量与常量两种写法都合法**——按习惯选即可。
-
-下面三条 Draw 分别用 id、笛卡尔、极坐标作为终点：
-
-<ComponentPreview name="draw-way-types" />
-
-### 折角
-
-way 里直接放一个 `'-|'` 或 `'|-'`（infix 算子），把它"上一项 → 下一项"那段改成折角——与 TikZ 写法 `(A) -| (B)` 字面对齐，等价于 `<Step kind="step" via to>`。流程图、UML 关系线刚需：
-
-<ComponentPreview name="draw-fold" />
-
-### 闭合
-
-way 末尾放 `DrawWay.Cycle` 把最后一段闭合回 way 第一项——与 TikZ 原生写法 `(A) -- (B) -- cycle` 对齐，等价于 `<Step kind="cycle" />`：
-
-<ComponentPreview name="draw-cycle" />
-
-### 二次贝塞尔（curve）
-
-way 里放 `{ curve: [cx, cy] }`（infix 算子）把"上一项 → 下一项"那段改成二次贝塞尔——对应 TikZ 的 `..controls(B)..`，等价 `<Step kind="curve">`：
-
-<ComponentPreview name="draw-curve" />
-
-### 三次贝塞尔（cubic）
-
-`{ cubic: [[c1x, c1y], [c2x, c2y]] }` 是三次贝塞尔——两个控制点分别影响起点与终点切线，对应 TikZ 的 `..controls(B) and (C)..`，等价 `<Step kind="cubic">`。常用于 S 形、复杂曲线连接：
-
-<ComponentPreview name="draw-cubic" />
-
-### 弧形（bend）
-
-`{ bend: 'left' | 'right', angle?: number }` 是更省事的弧形写法——只给方向 + 角度（缺省 30°），编译期自动算控制点退到 cubic。等价 `<Step kind="bend">`：
-
-<ComponentPreview name="draw-bend" size="lg" />
-
-### 弧段（arc）
-
-`{ arc: { startAngle, endAngle, radius } }` 以**上一项**为圆心画一段圆弧，等价 `<Step kind="arc">`。和 curve / cubic / bend 不同，arc 算子**不消耗下一项**——后面可以直接跟新的 way item 继续解析：
-
-<ComponentPreview name="draw-arc" />
-
-### 整圆（circle）
-
-`{ circle: { radius } }` 以**上一项**为圆心画整圆，等价 `<Step kind="circlePath">`。同样**不消耗下一项**——画完画笔回到圆心。常用于一次性画多个独立的圆：
-
-<ComponentPreview name="draw-circle" />
-
-### 整椭圆（ellipse）
-
-`{ ellipse: { radiusX, radiusY } }` 以**上一项**为圆心画整椭圆，等价 `<Step kind="ellipsePath">`。同样**不消耗下一项**：
-
-<ComponentPreview name="draw-ellipse" />
-
-### 边标注（label）
-
-way 里放一个 `{ label: ... }` 算子（infix）就把**下一段**的 IR `step.label` 设上，等价 Kernel 写法 `<Step><EdgeLabel>...</EdgeLabel></Step>`（详见 [Step 边标注](/core/components/draw/step#边标注label)）。短记法直接传字符串：`{ label: 'accept' }` ≡ `{ label: { text: 'accept' } }`。
-
-label 算子可以放在任何产生段的 way item 之前——line target、`-|` / `|-` 折角、`{ curve }` / `{ cubic }` / `{ bend }` / `{ arc }` / `{ circle }` / `{ ellipse }` 都行。**不能**修饰 `DrawWay.Cycle`（IR 不允许 cycle 带 label）；末尾 label 算子未消耗、连续两个 label 算子同样抛错：
-
-<ComponentPreview name="draw-label" size="lg" />
-
-#### 各 step kind 上的 label 位置
-
-`label.position` 接 7 keyword 或 `0..1` 数值 t；t 在不同 step kind 上的几何含义不同——line 是归一化弧长、fold N 段每段占 `1/N` t、Bezier 是参数 t（非弧长）、arc / circle / ellipse 是角度参数化。完整规则见 [Step → 边标注](/core/components/draw/step#边标注label)；下面每种 kind 给一个 Draw way 示例：
-
-<ComponentPreview name="draw-label-line" />
-
-<ComponentPreview name="draw-label-fold" />
-
-<ComponentPreview name="draw-label-curve" />
-
-<ComponentPreview name="draw-label-cubic" />
-
-<ComponentPreview name="draw-label-bend" />
-
-<ComponentPreview name="draw-label-arc" />
-
-<ComponentPreview name="draw-label-circle" />
-
-<ComponentPreview name="draw-label-ellipse" />
-
-### 相对坐标（Relative / Accumulate）
-
-way 里两种等价写法：
-
-- **对象形态（推荐）**：`{ position: [dx, dy], type: DrawWay.Relative | DrawWay.Accumulate }`——`position` 是 `[number, number]` 元组、`type` 限定为两个字面常量，TS 能完整校验，IDE 也能补全。
-- **Sugar 字符串**：`'+dx,dy'` / `'++dx,dy'`——更短、贴 TikZ 写法，但运行时正则解析、TS 不校验。
-
-两种写法都基于**前一 step 终点**（`prevEnd`，无前段时回退到 `[0, 0]`）。语义差异只在是否推进 prevEnd：`Relative`（= `'+x,y'`）**不**推进（多段链式偏移共享同一锚点，等价 TikZ `(+x, +y)`）；`Accumulate`（= `'++x,y'`）**推进**（每段累积，等价 TikZ `(++x, ++y)`）。下例两条 Draw 用对象形态，仅差 `type`——实线走出 L 形，虚线走出阶梯：
-
-<ComponentPreview name="draw-rel" />
-
-### 箭头
-
-`arrow` prop 控制路径两端的箭头：`'->'` / `'<-'` / `'<->'` / `'none'`（缺省）。多节点路径只在整体起点 / 终点贴箭头，中间节点不会出现额外箭头：
-
-<ComponentPreview name="draw-arrow" />
-
-`arrowDetail` 对象进一步配置箭头视觉（shape / scale / 颜色 / 起末分别配置等）——详见 [Arrow](/core/components/draw/arrow) 专页。
-
-### 填充
-
-`fill` 给闭合区域填色（缺省 `'none'` = 仅描边），`fillRule` 控制嵌套子路径填充规则。配合 way 末尾的 `DrawWay.Cycle` 画填充几何形状：
-
-<ComponentPreview name="draw-fill" />
-
-### 样式
-
-`stroke` / `strokeWidth` / `dashPattern` 与 `<Path>` 完全一致：
-
-<ComponentPreview name="draw-dashed" />
-
-### 描边端点 / 拐点 + 语义档位 + 透明度
-
-Draw 透传 Path 的描边外观字段：`lineCap` / `lineJoin`（TikZ `line cap` / `line join`）；`thickness` 是 TikZ 风格语义档位（`'ultraThin'` … `'ultraThick'`，`thin = 1` 与默认 strokeWidth 对齐，显式 `strokeWidth` 始终优先）；三个独立 opacity 通道——`opacity` 整体、`fillOpacity` 仅 fill、`drawOpacity` 仅 stroke（TikZ `draw opacity`）。详见 [Path](/core/components/draw/path) 的对应章节。
+## 阅读路径
+
+| 主题 | 内容 |
+| --- | --- |
+| [Way](/core/components/draw/way) | `way` item 形态、`DrawWay` 常量、折角、闭合、相对坐标 |
+| [曲线与形状](/core/components/draw/curves) | curve / cubic / bend / arc / circle / ellipse |
+| [边标注](/core/components/draw/labels) | `{ label }` 算子与不同 step kind 上的 label 位置 |
+| [样式](/core/components/draw/styling) | 箭头、填充、dash、line cap / line join、透明度 |
+| [Path](/core/components/draw/path) | Draw 展开后的 Kernel 容器与完整描边字段 |
+| [Step](/core/components/draw/step) | Draw 每一段最终对应的 Kernel step 语义 |
 
 ## API 参考
 
-| 属性              | 类型                                                       | 默认值         | 描述                                                                                        |
-| ----------------- | ---------------------------------------------------------- | -------------- | ------------------------------------------------------------------------------------------- |
-| `way`             | `Array<WayItem>`                                           | —              | 至少 2 个点；首项总是 `move`，其余按 item 形态决定 `line` / `step`（折角）/ `cycle`（闭合） |
-| `stroke`          | `string`                                                   | `currentColor` | 描边色                                                                                      |
-| `strokeWidth`     | `number`                                                   | `1`            | 描边宽度                                                                                    |
-| `dashPattern`     | `Array<number>`                                            | —              | dash/gap 长度序列（如 `[4, 2]`）                                                    |
-| `lineCap`         | `'butt' \| 'round' \| 'square'`                            | `'butt'`       | 描边端点形状（TikZ `line cap`）                                                             |
-| `lineJoin`        | `'miter' \| 'round' \| 'bevel'`                            | `'miter'`      | 描边拐点形状（TikZ `line join`）                                                            |
-| `thickness`       | `'ultraThin' \| 'veryThin' \| 'thin' \| 'semithick' \| 'thick' \| 'veryThick' \| 'ultraThick'` | —              | 语义 stroke 档位（`thin = 1`）；显式 `strokeWidth` 始终优先                                |
-| `arrow`           | `'none' \| '->' \| '<-' \| '<->'`                          | —              | 路径级箭头方向                                                                              |
-| `arrowDetail`     | `{ shape?, scale?, length?, width?, color?, fill?, opacity?, lineWidth?, start?, end? }` | —              | 箭头详细配置（顶层视觉字段 + 可选 start/end 子对象逐字段 merge）；详见 [Path](/core/components/draw/path#箭头) |
-| `fill`            | `string`                                                   | `'none'`       | 闭合区域填充色                                                                              |
-| `fillRule`        | `'nonzero' \| 'evenodd'`                                   | `'nonzero'`    | 填充规则                                                                                    |
-| `opacity`         | `number`                                                   | —              | 整 path 透明度 0~1                                                                          |
-| `fillOpacity`     | `number`                                                   | —              | 仅 fill 透明度 0~1                                                                          |
-| `drawOpacity`     | `number`                                                   | —              | 仅 stroke 透明度 0~1（TikZ `draw opacity`）                                                |
+| 属性 | 类型 | 默认值 | 描述 |
+| --- | --- | --- | --- |
+| `way` | `Array<WayItem>` | — | 至少 2 个点；首项总是 `move`，其余按 item 形态决定 `line` / `step` / `cycle` 等动作 |
+| `stroke` | `string` | `currentColor` | 描边色 |
+| `strokeWidth` | `number` | `1` | 描边宽度 |
+| `dashPattern` | `Array<number>` | — | dash / gap 长度序列，如 `[4, 2]` |
+| `lineCap` | `'butt' \| 'round' \| 'square'` | `'butt'` | 描边端点形状（TikZ `line cap`） |
+| `lineJoin` | `'miter' \| 'round' \| 'bevel'` | `'miter'` | 描边拐点形状（TikZ `line join`） |
+| `thickness` | `'ultraThin' \| 'veryThin' \| 'thin' \| 'semithick' \| 'thick' \| 'veryThick' \| 'ultraThick'` | — | TikZ 风格语义 stroke 档位；显式 `strokeWidth` 优先 |
+| `arrow` | `'none' \| '->' \| '<-' \| '<->'` | — | 路径级箭头方向 |
+| `arrowDetail` | `{ shape?, scale?, length?, width?, color?, fill?, opacity?, lineWidth?, start?, end? }` | — | 箭头详细配置；详见 [Arrow](/core/components/draw/arrow) |
+| `fill` | `string` | `'none'` | 闭合区域填充色 |
+| `fillRule` | `'nonzero' \| 'evenodd'` | `'nonzero'` | 填充规则 |
+| `opacity` | `number` | — | 整 path 透明度 0..1 |
+| `fillOpacity` | `number` | — | 仅 fill 透明度 0..1 |
+| `drawOpacity` | `number` | — | 仅 stroke 透明度 0..1（TikZ `draw opacity`） |

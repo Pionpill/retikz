@@ -40,7 +40,7 @@ import { Path, Step } from '@retikz/react';
 
 ### 二次贝塞尔（curve）
 
-`kind="curve"` 用一个控制点画二次贝塞尔曲线，对应 TikZ 的 `.. controls (B) ..` / SVG path 的 `Q`。控制点决定曲线的弯曲方向与幅度（**alpha.3 仅支持笛卡尔 `[x, y]` 控制点**）：
+`kind="curve"` 用一个控制点画二次贝塞尔曲线，对应 TikZ 的 `.. controls (B) ..` / SVG path 的 `Q`。控制点决定曲线的弯曲方向与幅度；当前控制点使用笛卡尔 `[x, y]`：
 
 <ComponentPreview name="step-curve" />
 

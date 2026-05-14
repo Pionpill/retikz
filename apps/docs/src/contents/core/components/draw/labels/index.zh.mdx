@@ -1,0 +1,38 @@
+---
+title: Draw 边标注
+description: 用 Draw way 的 label 算子给下一段路径加边标注。
+---
+
+`{ label }` 是 Draw way 里的 infix 标注算子。它修饰下一段产生的 IR `step.label`，不自己产生路径段。
+
+## 基础写法
+
+```tsx
+<Draw way={['a', { label: 'ok' }, 'b']} />
+```
+
+短写 `{ label: 'ok' }` 等价 `{ label: { text: 'ok' } }`。对象形态还可以写 `position` 与 `side`。
+
+<ComponentPreview name="draw-label" size="lg" />
+
+## 位置规则
+
+`label.position` 接 7 个 keyword 或 `0..1` 数值 t。t 的几何含义随 step kind 变化：line 是归一化弧长，fold 按段均分，Bezier 是参数 t，arc / circle / ellipse 是角度参数化。
+
+完整 Kernel 行为见 [Step 边标注](/core/components/draw/step#边标注label)。
+
+<ComponentPreview name="draw-label-line" />
+
+<ComponentPreview name="draw-label-fold" />
+
+<ComponentPreview name="draw-label-curve" />
+
+<ComponentPreview name="draw-label-cubic" />
+
+<ComponentPreview name="draw-label-bend" />
+
+<ComponentPreview name="draw-label-arc" />
+
+<ComponentPreview name="draw-label-circle" />
+
+<ComponentPreview name="draw-label-ellipse" />

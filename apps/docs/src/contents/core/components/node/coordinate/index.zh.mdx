@@ -22,14 +22,14 @@ import { Coordinate } from '@retikz/react';
 要在某处放一个引用点，不带 `<Coordinate>` 的话只能 fake 一个 `stroke="transparent" fill="transparent"` 的空 `<Node>`——但空 Node 仍然会：
 
 - 走 layoutNode 流程，按 padding 撑出一个不可见的矩形 layout
-- 参与 viewBox 扩展（让外框变大）
+- 参与 layout bounds 扩展（让外框变大）
 - 让 AI / TikZ codec 反推时分不清"真节点 vs fake 占位"
 
 `<Coordinate>` 把"命名点"升级为一等概念：
 
 - IR 字段最少（只有 `id` + `position`）
 - **不发任何 primitive**——没有形状、没有文字
-- **不参与 viewBox**——远端 coordinate 不会撑大画面
+- **不参与 layout bounds**——远端 coordinate 不会撑大画面
 - 在 nodeIndex 中以 0×0 矩形 layout 形式注册——boundaryPoint 始终返回中心，正好符合"无形状边界"语义
 
 ## 例子
@@ -66,7 +66,7 @@ Coordinate 用 `{ of, offset }` 派生下一个 coordinate——靠一个根 coo
 | | `<Coordinate>` | `<Node>` |
 |---|---|---|
 | 渲染图形 | ❌ | ✅（按 shape） |
-| 参与 viewBox | ❌ | ✅ |
+| 参与 layout bounds | ❌ | ✅ |
 | 进 nodeIndex | ✅ | ✅ |
 | path target 引用 | ✅ | ✅ |
 | `at.of` 引用 | ✅ | ✅ |

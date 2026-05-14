@@ -1,0 +1,65 @@
+---
+title: Draw Way
+description: way 数组的 item 形态、DrawWay 常量、折角、闭合与相对坐标写法。
+---
+
+`way` 是 `<Draw>` 的核心。前五种 item 是 target，后续形态是改变下一段或上一点的算子。
+
+## Way Item
+
+`way` 数组里的每一项接受十四种形态：前五种是直接 target（与 `<Step>.to` 一致），后九种是 infix 算子 / 关键字。曲线类算子（curve / cubic / bend）会与下一项合并；形状类算子（arc / circle / ellipse）以上一项为圆心，不消耗下一项；边标注算子（label）修饰下一段，不产生段。
+
+| 形态 | 例 | 含义 |
+| --- | --- | --- |
+| 节点 id | `'a'` | 引用同一 TikZ 内的 Node；端点自动贴 border |
+| 笛卡尔 | `[120, 0]` | 直接给坐标 |
+| 极坐标 | `{ origin: 'a', angle: 60, radius: 80 }` | 极坐标，详见 [定位](/core/concepts/positioning) |
+| Relative | `{ position: [10, 0], type: DrawWay.Relative }` 或 `'+10,0'` | 基于前一 step 终点偏移，不更新 prevEnd |
+| Accumulate | `{ position: [10, 0], type: DrawWay.Accumulate }` 或 `'++10,0'` | 基于前一 step 终点偏移，并更新 prevEnd |
+| 折角算子 | `'-\|'` / `'\|-'` | 把上一项到下一项改成折角 |
+| 闭合 | `DrawWay.Cycle` | 闭合回 way 起点 |
+| 曲线 / 形状 / 标注 | `{ curve }` / `{ cubic }` / `{ bend }` / `{ arc }` / `{ circle }` / `{ ellipse }` / `{ label }` | 详见 Draw 的子页面 |
+
+## DrawWay 常量
+
+```tsx
+import { Draw, DrawWay } from '@retikz/react';
+
+<Draw way={['a', 'b', 'c', DrawWay.Cycle]} />
+<Draw way={['a', '-|', 'b']} />
+<Draw way={['a', DrawWay.Hv, 'b']} />
+<Draw way={['a', { position: [80, 0], type: DrawWay.Relative }]} />
+```
+
+| 常量 | 等价裸字面量 | 含义 |
+| --- | --- | --- |
+| `DrawWay.Cycle` | 仅常量 | 闭合关键字；避免与节点 id 撞车 |
+| `DrawWay.Hv` | `'-\|'` | 先水平后垂直 |
+| `DrawWay.Vh` | `'\|-'` | 先垂直后水平 |
+| `DrawWay.Relative` | 仅常量 | 非累积相对偏移 |
+| `DrawWay.Accumulate` | 仅常量 | 累积相对偏移 |
+
+<ComponentPreview name="draw-way-types" />
+
+## 折角
+
+way 里直接放 `'-|'` 或 `'|-'`，把上一项到下一项那段改成折角；对应 TikZ `(A) -| (B)` / `(A) |- (B)`。
+
+<ComponentPreview name="draw-fold" />
+
+## 闭合
+
+way 末尾放 `DrawWay.Cycle` 把最后一段闭合回 way 第一项。
+
+<ComponentPreview name="draw-cycle" />
+
+## 相对坐标
+
+相对坐标有两种等价写法：
+
+- 对象形态（推荐）：`{ position: [dx, dy], type: DrawWay.Relative | DrawWay.Accumulate }`
+- Sugar 字符串：`'+dx,dy'` / `'++dx,dy'`
+
+`Relative` 不推进 prevEnd；`Accumulate` 推进 prevEnd。下例两条 Draw 只差 `type`。
+
+<ComponentPreview name="draw-rel" />

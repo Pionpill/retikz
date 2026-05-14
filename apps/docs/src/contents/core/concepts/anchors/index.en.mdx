@@ -46,7 +46,7 @@ Don't want auto-selection, need a specific position? Target strings support thre
 
 > **id naming constraints**: A node id starts with a letter or underscore, may include letters / digits / underscores / hyphens (`[A-Za-z_][\w-]*`), and **cannot contain `.`** — that's reserved as the anchor / angle separator.
 >
-> **anchor name scope (alpha.1)**: the 9 RECT_ANCHORS above. `'text'` / `'base'` / `'mid'` (text baseline anchors) are deferred to alpha.2 alongside the font system overhaul.
+> **Supported anchor names**: retikz currently supports the 9 geometric anchors above. Text-baseline anchors such as `'text'` / `'base'` / `'mid'` are not part of the public API yet.
 
 ## `margin` gives lines breathing room
 

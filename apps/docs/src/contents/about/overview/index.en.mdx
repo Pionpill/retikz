@@ -9,7 +9,8 @@ The About section is the meta-layer around the docs: how versions are scheduled,
 
 | Page | Content |
 | --- | --- |
-| [AI-assisted development](/about/ai-assisted-development) | The "human-designed + AI-implemented" workflow this project runs on |
+| [Source Code Guide](/about/developer/source-code-guide) | core / react source layout, module responsibilities, and reading order |
+| [AI-assisted development](/about/developer/ai-assisted-development) | The "human-designed + AI-implemented" workflow this project runs on |
 | [Changelog](/about/releases/changelog) | Per-version release notes |
 | [Versioning](/about/releases/versioning) | SemVer + pre-release channels + per-channel dev model + deprecation |
 | [Roadmap](/about/releases/roadmap) | Now / short / mid / long term goals |
@@ -18,11 +19,11 @@ The About section is the meta-layer around the docs: how versions are scheduled,
 
 | Package | Version | Notes |
 | --- | --- | --- |
-| `@retikz/core` | `0.1.0-beta.2` | IR + scene compiler, zero React |
-| `@retikz/react` | `0.1.0-beta.2` | React adapter |
+| `@retikz/core` | `0.1.0-rc.1` | IR + scene compiler, zero React |
+| `@retikz/react` | `0.1.0-rc.1` | React adapter |
 
-APIs may still shift during beta; SemVer guarantees take effect once `0.1.0` ships stable. See [Versioning](/about/releases/versioning).
+The public API is frozen during rc; work is limited to blocker bugs, docs, and release acceptance. SemVer guarantees take effect once `0.1.0` ships stable. See [Versioning](/about/releases/versioning).
 
 ## Feedback
 
-retikz is in v0.1 beta — **feedback on the API and IR schema is wanted**, especially naming, prop shape, and IR field semantics, all of which benefit from converging early. The docs site itself is part of the beta — flag gaps or inconsistencies as you go.
+retikz is in v0.1 rc. Public APIs no longer take breaking changes. Feedback should focus on bugs, missing docs, unreproducible examples, installation, and real-project integration issues.

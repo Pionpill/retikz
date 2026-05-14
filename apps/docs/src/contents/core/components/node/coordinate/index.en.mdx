@@ -22,14 +22,14 @@ import { Coordinate } from '@retikz/react';
 Without `<Coordinate>`, anchoring "a named point" forces you to fake an empty `<Node>` with `stroke="transparent" fill="transparent"` — but an empty Node still:
 
 - Goes through layoutNode and gets a non-visible rect layout sized by padding
-- Participates in viewBox expansion (enlarges the outer frame)
+- Participates in layout bounds expansion (enlarges the outer frame)
 - Confuses AI / TikZ codecs round-tripping IR ("real node vs invisible placeholder?")
 
 `<Coordinate>` makes "named point" a first-class concept:
 
 - Smallest IR shape (just `id` + `position`)
 - **Emits zero primitives** — no shape, no text
-- **Does not extend viewBox** — far-away coordinates don't bloat the frame
+- **Does not extend layout bounds** — far-away coordinates don't bloat the frame
 - Registers as a 0×0 rectangle layout in nodeIndex — `boundaryPoint` always returns the center, matching "no shape boundary" semantics
 
 ## Examples
@@ -66,7 +66,7 @@ Use `{ of, offset }` to derive one coordinate from another — drive the whole g
 | | `<Coordinate>` | `<Node>` |
 |---|---|---|
 | Renders shape | ❌ | ✅ (by `shape`) |
-| Participates in viewBox | ❌ | ✅ |
+| Participates in layout bounds | ❌ | ✅ |
 | Registered in nodeIndex | ✅ | ✅ |
 | Referenced as path target | ✅ | ✅ |
 | Referenced via `at.of` | ✅ | ✅ |

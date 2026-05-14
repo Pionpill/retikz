@@ -5,7 +5,16 @@ export const coreSection: Array<Section> = [
     pages: [
       { id: 'introduction', label: 'core.introduction' },
       { id: 'get-start', label: 'core.getStart' },
-      { id: 'reading-guide', label: 'core.readingGuide' },
+    ],
+  },
+  {
+    id: 'concepts',
+    label: 'core.concepts',
+    pages: [
+      { id: 'positioning', label: 'core.positioning' },
+      { id: 'anchors', label: 'core.anchors' },
+      { id: 'ir-scene', label: 'core.irScene' },
+      { id: 'kernel-sugar', label: 'core.kernelSugar' },
     ],
   },
   {
@@ -27,19 +36,15 @@ export const coreSection: Array<Section> = [
         label: 'core.draw',
         children: [
           { id: 'overview', label: 'core.drawOverview' },
+          { id: 'way', label: 'core.drawWay' },
+          { id: 'curves', label: 'core.drawCurves' },
+          { id: 'labels', label: 'core.drawLabels' },
+          { id: 'styling', label: 'core.drawStyling' },
           { id: 'path', label: 'core.path' },
           { id: 'arrow', label: 'core.arrow' },
           { id: 'step', label: 'core.step' },
         ],
       },
-    ],
-  },
-  {
-    id: 'concepts',
-    label: 'core.concepts',
-    pages: [
-      { id: 'positioning', label: 'core.positioning' },
-      { id: 'anchors', label: 'core.anchors' },
     ],
   },
   {

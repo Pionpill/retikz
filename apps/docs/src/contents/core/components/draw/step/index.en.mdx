@@ -40,7 +40,7 @@ The path below draws A→B with one `move` + `line`, then lifts the pen with ano
 
 ### Quadratic curve
 
-`kind="curve"` draws a quadratic Bezier with one control point — TikZ's `.. controls (B) ..` / SVG path `Q`. The control point governs the bend direction and amplitude (**alpha.3 supports Cartesian `[x, y]` control points only**):
+`kind="curve"` draws a quadratic Bezier with one control point — TikZ's `.. controls (B) ..` / SVG path `Q`. The control point governs the bend direction and amplitude; control points currently use Cartesian `[x, y]`:
 
 <ComponentPreview name="step-curve" />
 

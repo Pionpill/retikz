@@ -1,0 +1,32 @@
+---
+title: Draw 样式
+description: Draw 的箭头、填充、dash、line cap / line join 与透明度写法。
+---
+
+Draw 透传 Path 的描边和填充字段。需要更底层的字段说明时，见 [Path](/core/components/draw/path) 与 [Arrow](/core/components/draw/arrow)。
+
+## 箭头
+
+`arrow` 控制路径两端的箭头：`'->'` / `'<-'` / `'<->'` / `'none'`。多节点路径只在整体起点 / 终点贴箭头。
+
+<ComponentPreview name="draw-arrow" />
+
+`arrowDetail` 可进一步配置 shape、scale、颜色、起末端分别覆盖等。
+
+## 填充
+
+`fill` 给闭合区域填色，`fillRule` 控制嵌套子路径填充规则。常配合 `DrawWay.Cycle` 使用。
+
+<ComponentPreview name="draw-fill" />
+
+## Dash
+
+`dashPattern` 使用 `Array<number>` 表达 dash / gap 长度序列。`[4, 2]` 表示画 4、空 2，单位是 user units。
+
+<ComponentPreview name="draw-dashed" />
+
+## 端点、拐点与透明度
+
+`lineCap` / `lineJoin` 对齐 TikZ `line cap` / `line join`。`thickness` 是 TikZ 风格的语义 stroke 档位；显式 `strokeWidth` 始终优先。
+
+透明度拆为三个通道：`opacity` 作用于整条 path，`fillOpacity` 只作用于填充，`drawOpacity` 只作用于描边。
