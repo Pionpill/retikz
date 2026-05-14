@@ -12,7 +12,7 @@ const Demo: FC = () => (
       <Step kind="arc" startAngle={0} endAngle={90} radius={60} />
     </Path>
     {/* 270°→360° 弧（视觉左上半弧） */}
-    <Path stroke="currentColor" dashPattern="4 2">
+    <Path stroke="currentColor" dashPattern={[4, 2]}>
       <Step kind="move" to="center" />
       <Step kind="arc" startAngle={270} endAngle={360} radius={60} />
     </Path>

@@ -8,7 +8,7 @@ export type PathProps = {
   stroke?: IRPath['stroke'];
   /** 描边宽度，省略时为 1 */
   strokeWidth?: IRPath['strokeWidth'];
-  /** 描边 dash pattern（如 "4 2"） */
+  /** 描边 dash pattern（如 [4, 2]） */
   dashPattern?: IRPath['dashPattern'];
   /** 端点形状（TikZ `line cap`）：`'butt'`（默认 / 直角）/ `'round'`（半圆）/ `'square'`（方头外扩半 stroke） */
   lineCap?: IRPath['lineCap'];

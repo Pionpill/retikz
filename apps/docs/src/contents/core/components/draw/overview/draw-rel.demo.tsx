@@ -20,7 +20,7 @@ const Demo: FC = () => (
         { position: [80, 0], type: DrawWay.Accumulate },
         { position: [80, 40], type: DrawWay.Accumulate },
       ]}
-      dashPattern="4 2"
+      dashPattern={[4, 2]}
     />
   </TikZ>
 );

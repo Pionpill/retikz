@@ -14,7 +14,7 @@ const Demo: FC = () => (
       <Step to={{ relative: [80, 40] }} />
     </Path>
     {/* relativeAccumulate：累积偏移，每段从前一段终点继续 */}
-    <Path stroke="currentColor" dashPattern="4 2">
+    <Path stroke="currentColor" dashPattern={[4, 2]}>
       <Step kind="move" to={[20, 140]} />
       <Step to={{ relativeAccumulate: [80, 0] }} />
       <Step to={{ relativeAccumulate: [80, 40] }} />

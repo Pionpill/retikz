@@ -107,7 +107,7 @@ Line 2`}</Node>
 
 ### 描边样式
 
-`dashed` / `dotted` 是预设；`dashArray` 是显式 dash pattern（优先级：`dashArray` > `dashed` > `dotted`）：
+`dashed` / `dotted` 是预设；`dashArray` 是显式 dash/gap 长度序列（优先级：`dashArray` > `dashed` > `dotted`）：
 
 <ComponentPreview name="node-stroke-style" size="sm" />
 
@@ -177,9 +177,9 @@ Line 2`}</Node>
 | `opacity` | `number` | — | 整节点 0~1，同时作用于 shape + text |
 | `fillOpacity` | `number` | — | 仅填充透明 0~1 |
 | `drawOpacity` | `number` | — | 仅描边透明 0~1（TikZ `draw opacity`） |
-| `dashed` | `boolean` | — | 描边虚线预设（"4 2"） |
-| `dotted` | `boolean` | — | 描边点线预设（"1 2"） |
-| `dashArray` | `string` | — | 显式 dash pattern；优先级最高 |
+| `dashed` | `boolean` | — | 虚线预设（`[4, 2]`） |
+| `dotted` | `boolean` | — | 点线预设（`[1, 2]`） |
+| `dashArray` | `Array<number>` | — | 显式 dash/gap 长度序列；优先级最高 |
 | `roundedCorners` | `number` | — | 圆角半径；仅 `rectangle` 生效 |
 | `minimumWidth` / `minimumHeight` | `number` | — | 撑开最小 bbox 宽高 |
 | `minimumSize` | `number` | — | 对称最小尺寸别名；轴特化字段优先 |

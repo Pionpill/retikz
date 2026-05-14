@@ -30,9 +30,9 @@ const Demo: FC = () => (
     {/* 加粗 */}
     <Draw way={['r3', [320, 60]]} strokeWidth={4} />
     {/* 虚线 */}
-    <Draw way={['r4', [320, 90]]} stroke="#10b981" strokeWidth={2} dashPattern="6 3" />
+    <Draw way={['r4', [320, 90]]} stroke="#10b981" strokeWidth={2} dashPattern={[6, 3]} />
     {/* 点线 */}
-    <Draw way={['r5', [320, 120]]} stroke="#f97316" strokeWidth={2} dashPattern="1 4" />
+    <Draw way={['r5', [320, 120]]} stroke="#f97316" strokeWidth={2} dashPattern={[1, 4]} />
   </TikZ>
 );
 

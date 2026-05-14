@@ -150,9 +150,10 @@ export const NodeSchema = z
       .optional()
       .describe('Border style preset: dotted line (TikZ `dotted`); compiled to a default dot pattern. `dashArray` and `dashed` take precedence.'),
     dashArray: z
-      .string()
+      .array(z.number().finite().nonnegative())
+      .min(1)
       .optional()
-      .describe('Explicit stroke dash pattern (e.g. "4 2"); overrides `dashed` / `dotted`.'),
+      .describe('Explicit stroke dash pattern lengths in user units (e.g. [4, 2]); overrides `dashed` / `dotted`.'),
     roundedCorners: z
       .number()
       .nonnegative()

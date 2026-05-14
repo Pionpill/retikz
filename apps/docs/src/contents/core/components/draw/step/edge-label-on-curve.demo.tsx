@@ -19,7 +19,7 @@ const Demo: FC = () => (
         label={{ text: 't=0.25', position: 0.25 }}
       />
     </Path>
-    <Path stroke="currentColor" dashPattern="3 3">
+    <Path stroke="currentColor" dashPattern={[3, 3]}>
       <Step kind="move" to="a" />
       <Step
         kind="curve"

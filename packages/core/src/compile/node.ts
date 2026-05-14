@@ -17,16 +17,16 @@ const DEG_TO_RAD = Math.PI / 180;
 const DEFAULT_LABEL_DISTANCE = 4;
 const SQRT2 = Math.SQRT2;
 /** dashed 预设：4 px 实线 + 2 px 间隙循环 */
-const DASHED_PATTERN = '4 2';
+const DASHED_PATTERN: Array<number> = [4, 2];
 /** dotted 预设：1 px 圆点 + 2 px 间隙 */
-const DOTTED_PATTERN = '1 2';
+const DOTTED_PATTERN: Array<number> = [1, 2];
 
 /** dashed / dotted / dashArray 优先级：dashArray > dashed > dotted */
 const resolveDashArray = (
-  dashArray: string | undefined,
+  dashArray: Array<number> | undefined,
   dashed: boolean | undefined,
   dotted: boolean | undefined,
-): string | undefined => {
+): Array<number> | undefined => {
   if (dashArray !== undefined) return dashArray;
   if (dashed) return DASHED_PATTERN;
   if (dotted) return DOTTED_PATTERN;
@@ -85,7 +85,7 @@ export type NodeLayout = {
   /** 边框宽度，emit 时 1 兜底 */
   strokeWidth?: number;
   /** 描边 dash pattern，已把 dashed/dotted 预设解析为具体 pattern */
-  dashPattern?: string;
+  dashPattern?: Array<number>;
   /** rectangle 圆角半径（非 rect shape 无效） */
   roundedCorners?: number;
   /** 文字颜色，emit 时 'currentColor' 兜底 */

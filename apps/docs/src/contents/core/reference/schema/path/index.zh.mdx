@@ -11,7 +11,7 @@ description: 笔画外壳、step 动作序列与 step 目标点
   type: '判别字段，标记此子节点为 path',
   stroke: '描边颜色，任意 CSS color，默认 currentColor',
   strokeWidth: '描边宽度（用户单位），默认 1',
-  dashPattern: 'dash pattern 虚线模式（如 "4 2"），空 = 实线',
+  dashPattern: 'dash/gap 长度序列（如 [4, 2]），省略 = 实线',
   arrow: '路径箭头方向：省略 / `none` 无箭头；`->` 末端；`<-` 起端；`<->` 双端',
   arrowDetail: '箭头详细配置（shape / scale / length / width / color / fill / opacity / lineWidth + 可选 start/end 子对象逐字段 merge）',
   fill: '闭合区域填充色；省略 = 无填充；与 `cycle` step 配合产生封闭形状',

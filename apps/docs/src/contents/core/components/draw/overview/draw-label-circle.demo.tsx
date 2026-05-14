@@ -18,7 +18,7 @@ const Demo: FC = () => (
         { label: { text: 'midway (180°)', position: 'midway' } },
         { circle: { radius: 100 } },
       ]}
-      dashPattern="3 3"
+      dashPattern={[3, 3]}
     />
   </TikZ>
 );

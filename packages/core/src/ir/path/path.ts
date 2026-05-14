@@ -18,10 +18,11 @@ export const PathSchema = z
       .optional()
       .describe('Stroke width in user units; defaults to 1 when omitted'),
     dashPattern: z
-      .string()
+      .array(z.number().finite().nonnegative())
+      .min(1)
       .optional()
       .describe(
-        'Stroke dash pattern (e.g. "4 2"); leave empty for solid line',
+        'Stroke dash pattern lengths in user units (e.g. [4, 2]); omitted means solid line',
       ),
     arrow: z
       .enum(['none', '->', '<-', '<->'])

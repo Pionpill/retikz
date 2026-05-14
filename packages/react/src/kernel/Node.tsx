@@ -61,12 +61,12 @@ export type NodeProps = {
   drawOpacity?: number;
   /** 描边宽度 */
   strokeWidth?: number;
-  /** 描边虚线预设：等价于 dashArray="4 2"；与 `dotted` / `dashArray` 优先级：dashArray > dashed > dotted */
+  /** 描边虚线预设：等价于 dashArray={[4, 2]}；与 `dotted` / `dashArray` 优先级：dashArray > dashed > dotted */
   dashed?: boolean;
-  /** 描边点线预设：等价于 dashArray="1 2" */
+  /** 描边点线预设：等价于 dashArray={[1, 2]} */
   dotted?: boolean;
-  /** 显式 dash pattern（如 "4 2"）；优先级最高 */
-  dashArray?: string;
+  /** 显式 dash pattern（如 [4, 2]）；优先级最高 */
+  dashArray?: IRNode['dashArray'];
   /** 圆角半径（user units）；只对 `rectangle` shape 生效 */
   roundedCorners?: number;
   /** 最小 border 宽度（user units）；不足时撑开 bbox */

@@ -62,7 +62,7 @@ export const renderPrim = (
           stroke={p.stroke}
           strokeOpacity={p.strokeOpacity}
           strokeWidth={p.strokeWidth}
-          strokeDasharray={p.dashPattern}
+          strokeDasharray={p.dashPattern?.join(' ')}
           rx={p.cornerRadius}
           ry={p.cornerRadius}
           opacity={p.opacity}
@@ -83,7 +83,7 @@ export const renderPrim = (
           stroke={p.stroke}
           strokeOpacity={p.strokeOpacity}
           strokeWidth={p.strokeWidth}
-          strokeDasharray={p.dashPattern}
+          strokeDasharray={p.dashPattern?.join(' ')}
           opacity={p.opacity}
         />
       );
@@ -147,7 +147,7 @@ export const renderPrim = (
           stroke={p.stroke}
           strokeOpacity={p.strokeOpacity}
           strokeWidth={p.strokeWidth}
-          strokeDasharray={p.dashPattern}
+          strokeDasharray={p.dashPattern?.join(' ')}
           strokeLinecap={p.strokeLinecap}
           strokeLinejoin={p.strokeLinejoin}
           markerStart={startId ? `url(#${startId})` : undefined}

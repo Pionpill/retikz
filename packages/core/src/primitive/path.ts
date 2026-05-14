@@ -135,7 +135,7 @@ export type PathPrim = {
   /** 描边宽度 */
   strokeWidth?: number;
   /** 描边 dash pattern */
-  dashPattern?: string;
+  dashPattern?: Array<number>;
   /** 端点形状 */
   strokeLinecap?: 'butt' | 'round' | 'square';
   /** 拐点形状 */

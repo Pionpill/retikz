@@ -90,7 +90,7 @@ Three independent channels: `opacity` overall (multiplies onto stroke and fill),
 | --- | --- | --- | --- |
 | `stroke` | `string` | `currentColor` | Stroke color |
 | `strokeWidth` | `number` | `1` | Stroke width |
-| `dashPattern` | `string` | — | dash pattern string |
+| `dashPattern` | `Array<number>` | ? | Dash/gap lengths in user units (e.g. `[4, 2]`) |
 | `lineCap` | `'butt' \| 'round' \| 'square'` | `'butt'` | Stroke endpoint shape (TikZ `line cap`) |
 | `lineJoin` | `'miter' \| 'round' \| 'bevel'` | `'miter'` | Stroke corner shape (TikZ `line join`) |
 | `thickness` | `'ultraThin' \| 'veryThin' \| 'thin' \| 'semithick' \| 'thick' \| 'veryThick' \| 'ultraThick'` | — | Semantic stroke preset (`thin = 1`); explicit `strokeWidth` always wins |

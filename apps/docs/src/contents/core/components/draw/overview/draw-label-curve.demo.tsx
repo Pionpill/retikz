@@ -29,7 +29,7 @@ const Demo: FC = () => (
         'B',
       ]}
       arrow="->"
-      dashPattern="3 3"
+      dashPattern={[3, 3]}
     />
   </TikZ>
 );

@@ -90,7 +90,7 @@ import { Path, Step } from '@retikz/react';
 | --- | --- | --- | --- |
 | `stroke` | `string` | `currentColor` | 描边色 |
 | `strokeWidth` | `number` | `1` | 描边宽度 |
-| `dashPattern` | `string` | — | dash pattern 模式 |
+| `dashPattern` | `Array<number>` | — | dash/gap 长度序列（如 `[4, 2]`） |
 | `lineCap` | `'butt' \| 'round' \| 'square'` | `'butt'` | 描边端点形状（TikZ `line cap`） |
 | `lineJoin` | `'miter' \| 'round' \| 'bevel'` | `'miter'` | 描边拐点形状（TikZ `line join`） |
 | `thickness` | `'ultraThin' \| 'veryThin' \| 'thin' \| 'semithick' \| 'thick' \| 'veryThick' \| 'ultraThick'` | — | 语义 stroke 档位（`thin = 1`）；显式 `strokeWidth` 始终优先 |
