@@ -102,6 +102,6 @@
     "pageCopied": "Page copied",
     "prevPage": "Previous",
     "nextPage": "Next",
-    "docStats": "{{chars}} chars · {{components}} components"
+    "docStats": "About {{minutes}} min · {{chars}} chars · {{components}} components"
   }
 }
