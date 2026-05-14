@@ -28,6 +28,8 @@ PATCH 版本不开 plan——patch 仅修 bug，不写 plan。
 
 - [`v0/roadmap.md`](v0/roadmap.md) — v0 总路线（v0.1 → v0.4 → v0 收尾）+ v0.1 各 alpha 详细拆分 + v0.2 预备段（Scope / 样式 / Shape 扩展）
 - [`v0/v0.1-beta.1.md`](v0/v0.1-beta.1.md) — v0.1.0-beta.1 实施待办（非破坏性优化，4 条 TODO）
+- [`v0/v0.1-rc.1.md`](v0/v0.1-rc.1.md) — v0.1.0-rc.1 文档站与发布候选验收计划
+- [`v0/v0.1-rc.2.md`](v0/v0.1-rc.2.md) — v0.1.0-rc.2 示例库与搜索体验计划
 
 ### 跨版本草案
 
