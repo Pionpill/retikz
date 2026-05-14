@@ -1,0 +1,47 @@
+---
+title: 分层
+description: retikz 的三层表达模型：DSL 给人写，IR 用于声明与持久化，Scene 用于渲染。
+---
+
+retikz 把用户写下的 JSX DSL 先转成 IR，再编译成 Scene。DSL 负责书写体验，IR 保留“你想画什么”，Scene 只保留“渲染器应该画什么”。
+
+## 三层模型
+
+| 层 | 作用 | 面向谁 |
+| --- | --- | --- |
+| DSL | React 组件写法，分为 Kernel 与 Sugar | 日常作者 |
+| IR | JSON 可序列化的声明结构，保留 Node / Path / Step / Coordinate 语义 | 用户、LLM、持久化、转换器 |
+| Scene | 渲染目标无关的 primitive 列表，包含测量后的文本、路径、layout bounds | renderer |
+
+IR 是公开契约；Scene 是 renderer 输入。正常写图时不需要手写 Scene。
+
+## Kernel 与 Sugar
+
+| 层 | 例子 | 是否直接进 IR | 说明 |
+| --- | --- | --- | --- |
+| Kernel | `<TikZ>` / `<Node>` / `<Coordinate>` / `<Path>` / `<Step>` | 是 | 与 IR 节点一一对应 |
+| Sugar | `<Draw way={...}>`、`DrawWay.Cycle`、相对坐标字符串 | 否 | adapter 同步展开为 Kernel |
+
+Sugar 不引入新能力。能用 `<Draw>` 画出来的图，也能用 `<Path>` + `<Step>` 手写出来。
+
+## 编译链路
+
+```tsx
+<TikZ>
+  <Node id="a" position={[0, 0]}>A</Node>
+  <Draw way={['a', [80, 0]]} />
+</TikZ>
+```
+
+这段 JSX 会被 adapter 收集成 IR，`@retikz/core` 再负责解析 position、计算 anchor、展开路径与边界，最后输出 Scene。上例中的 `<Draw>` 会在 IR 中成为普通 `path` 节点。
+
+## 选择建议
+
+| 场景 | 推荐 |
+| --- | --- |
+| 普通连线、流程图边、带箭头路径 | `<Draw>` |
+| 需要逐段控制 move / line / cycle / curve | `<Path>` + `<Step>` |
+| 需要最接近 IR 的测试或转换器输出 | Kernel |
+| 需要持久化、AI 生成或局部修改图 | IR |
+
+Sugar 的展开逻辑由 builder 同步调用，不能依赖 React hooks 或异步状态。完整 IR schema 见 [Schema Reference](/core/reference/schema/scene)。

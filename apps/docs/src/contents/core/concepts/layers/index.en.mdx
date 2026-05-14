@@ -1,0 +1,47 @@
+---
+title: Layers
+description: The three retikz expression layers: DSL for authors, IR for declaration and persistence, Scene for rendering.
+---
+
+retikz turns the JSX DSL into IR first, then compiles IR into Scene. The DSL optimizes authoring, IR preserves what you intend to draw, and Scene preserves what a renderer needs to draw.
+
+## Three Layers
+
+| Layer | Role | Audience |
+| --- | --- | --- |
+| DSL | React component syntax, split into Kernel and Sugar | Everyday authors |
+| IR | JSON-serializable declaration model that preserves Node / Path / Step / Coordinate semantics | Users, LLMs, persistence, converters |
+| Scene | Render-target-neutral primitive list with measured text, paths, and layout bounds | Renderers |
+
+IR is the public contract; Scene is renderer input. You normally do not write Scene by hand.
+
+## Kernel and Sugar
+
+| Layer | Examples | Enters IR directly | Notes |
+| --- | --- | --- | --- |
+| Kernel | `<TikZ>` / `<Node>` / `<Coordinate>` / `<Path>` / `<Step>` | Yes | One-to-one with IR nodes |
+| Sugar | `<Draw way={...}>`, `DrawWay.Cycle`, relative-coordinate strings | No | Synchronously expands to Kernel in the adapter |
+
+Sugar adds no new capability. Anything drawn with `<Draw>` can also be written manually with `<Path>` + `<Step>`.
+
+## Compile Chain
+
+```tsx
+<TikZ>
+  <Node id="a" position={[0, 0]}>A</Node>
+  <Draw way={['a', [80, 0]]} />
+</TikZ>
+```
+
+The adapter collects this JSX into IR. `@retikz/core` resolves positions, computes anchors, expands paths and bounds, then outputs Scene. In this example, `<Draw>` becomes a plain `path` node in IR.
+
+## Choosing a Layer
+
+| Scenario | Prefer |
+| --- | --- |
+| Regular connections, flowchart edges, arrowed paths | `<Draw>` |
+| Per-segment control over move / line / cycle / curve | `<Path>` + `<Step>` |
+| Tests or converter output closest to IR | Kernel |
+| Persistence, AI generation, or local patching | IR |
+
+Sugar expansion is called synchronously by the builder, so it must not depend on React hooks or async state. The complete IR schema lives in [Schema Reference](/core/reference/schema/scene).

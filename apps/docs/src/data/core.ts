@@ -13,8 +13,7 @@ export const coreSection: Array<Section> = [
     pages: [
       { id: 'positioning', label: 'core.positioning' },
       { id: 'anchors', label: 'core.anchors' },
-      { id: 'ir-scene', label: 'core.irScene' },
-      { id: 'kernel-sugar', label: 'core.kernelSugar' },
+      { id: 'layers', label: 'core.layers' },
     ],
   },
   {
