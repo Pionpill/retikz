@@ -24,10 +24,10 @@ export type ArrowShape = ValueOf<typeof ARROW_SHAPES>;
  */
 export const HOLLOW_ARROW_SHAPES = new Set<ArrowShape>(['open', 'openDiamond', 'openCircle']);
 
-/** marker 默认尺寸（length / width 的 fallback；arrowMarkers viewBox 内的几何也按 10 单位定义） */
+/** 箭头默认尺寸（length / width 的 fallback） */
 export const ARROW_MARKER_DEFAULT_SIZE = 6;
 
-/** 空心 shape 描边默认粗细（lineWidth fallback；refX / shrink 计算都用它做"back stroke 半宽"） */
+/** 空心 shape 描边默认粗细（lineWidth fallback） */
 export const ARROW_MARKER_HOLLOW_DEFAULT_LINE_WIDTH = 1.5;
 
 /**
@@ -54,20 +54,20 @@ export const ArrowEndDetailSchema = z
       .nonnegative()
       .optional()
       .describe(
-        'Tip length in user units (the dimension along the path direction). Defaults to ~6 (matching the legacy hardcoded markerWidth).',
+        'Tip length in user units (the dimension along the path direction). Defaults to ~6.',
       ),
     width: z
       .number()
       .nonnegative()
       .optional()
       .describe(
-        'Tip width in user units (perpendicular to the path). Defaults to ~6 (matching the legacy hardcoded markerHeight).',
+        'Tip width in user units (perpendicular to the path). Defaults to ~6.',
       ),
     color: z
       .string()
       .optional()
       .describe(
-        'Stroke color override. When omitted, the marker inherits the path stroke via `context-stroke`.',
+        'Stroke color override. When omitted, the renderer should inherit the path stroke.',
       ),
     fill: z
       .string()

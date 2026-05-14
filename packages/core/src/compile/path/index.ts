@@ -26,8 +26,8 @@ import { type TextMeasurer, fallbackMeasurer } from '../text-metrics';
 import { clipForTarget, cornerOf, refPointOfTarget, samePoint } from './anchor';
 import { emitLabelPrimitive, tForLabelPosition } from './label';
 import { normalizeRelativeTargets } from './relative';
-import { applyArrowShrinks, arrowMarkers, computeShrink } from './shrink';
-import { type PathBaseProps, splitSubPathsForMarkers } from './split';
+import { applyArrowShrinks, computeShrink, endpointArrows } from './shrink';
+import { type PathBaseProps, splitSubPathsForEndpointArrows } from './split';
 
 /**
  * 语义 stroke 档位 → 数值（user units）
@@ -443,13 +443,13 @@ export const emitPathPrimitive = (
     strokeOpacity: path.drawOpacity,
   };
 
-  const markers = arrowMarkers(path.arrow, path.arrowDetail);
+  const arrows = endpointArrows(path.arrow, path.arrowDetail);
 
   // 按 shape + spec（length / scale / lineWidth）把首/末段端点向内缩短，让 line 端点接在 hollow arrow 尾部外缘，不贯穿 back outline；shrink=0 的实心 shape 跳过
-  const shrinkStart = markers.arrowStart ? computeShrink(markers.arrowStart) : 0;
-  const shrinkEnd = markers.arrowEnd ? computeShrink(markers.arrowEnd) : 0;
+  const shrinkStart = arrows.arrowStart ? computeShrink(arrows.arrowStart) : 0;
+  const shrinkEnd = arrows.arrowEnd ? computeShrink(arrows.arrowEnd) : 0;
   applyArrowShrinks(commands, shrinkStart, shrinkEnd, strokeWidth, round);
 
-  const { primitive } = splitSubPathsForMarkers(commands, baseProps, markers);
+  const { primitive } = splitSubPathsForEndpointArrows(commands, baseProps, arrows);
   return { primitives: [primitive, ...labelPrims], points };
 };

@@ -1,11 +1,7 @@
-import {
-  ARROW_MARKER_DEFAULT_SIZE,
-  ARROW_MARKER_HOLLOW_DEFAULT_LINE_WIDTH,
-  HOLLOW_ARROW_SHAPES,
-} from '../../ir';
 import type { IRArrowDetail, IRArrowEndDetail, IRPosition } from '../../ir';
 import type { ArrowEndSpec, PathCommand } from '../../primitive';
 import { shiftToward } from './anchor';
+import { isHollowArrowShape, resolveArrowShapeGeometry } from './arrow-geometry';
 
 /**
  * 端点级 spec：顶层默认 ⊕ end-side override（逐字段 merge）
@@ -31,15 +27,15 @@ const resolveArrowEndSpec = (
   const lineWidth = endSide?.lineWidth ?? topLevel.lineWidth;
   if (lineWidth !== undefined) out.lineWidth = lineWidth;
   // fill 仅实心 shape 保留；空心 shape silent no-op
-  if (!HOLLOW_ARROW_SHAPES.has(baseShape)) {
+  if (!isHollowArrowShape(baseShape)) {
     const fill = endSide?.fill ?? topLevel.fill;
     if (fill !== undefined) out.fill = fill;
   }
   return out;
 };
 
-/** IR path-level `arrow` + `arrowDetail` → PathPrim 起末视觉规格 */
-export const arrowMarkers = (
+/** IR path-level `arrow` + `arrowDetail` → PathPrim 起末端点箭头规格 */
+export const endpointArrows = (
   arrow: 'none' | '->' | '<-' | '<->' | undefined,
   detail: IRArrowDetail | undefined,
 ): { arrowStart?: ArrowEndSpec; arrowEnd?: ArrowEndSpec } => {
@@ -58,26 +54,13 @@ export const arrowMarkers = (
 };
 
 /**
- * 端点级 shrink（strokeWidth 倍）：line 末端朝起点缩这么多，让 marker apex 落回原 target
- * @description 不分实心/空心：所有 shape 都让 line 端点接在箭头尾部、apex 顶端仍贴原 target。低 opacity 下不会再透出 line。viewBox=10，shrink = (apex.x - refX) × length × scale / 10（strokeWidth 倍）。
- *
- * 几何对齐（必须与 react/render/arrowMarkers.tsx 中 renderInner 的 refX 一致）：
- * - `normal` / `diamond` / `circle`：apex 在 viewBox x=10、back 外缘 x=0 → refX=0，shrink = length × scale
- * - `stealth`：apex x=10、V tip x=3（line 嵌进 V 凹口）→ refX=3，shrink = 0.7 × length × scale
- * - `open` / `openDiamond`：apex x=9、back stroke 外缘 x = 1 - lineWidth/2 → refX = 1 - lineWidth/2，shrink = (8 + lineWidth/2) × length × scale / 10
- * - `openCircle`：apex 外缘右 x ≈ 10、back 外缘左 x = 0.75 - lineWidth/2 → refX = 0.75 - lineWidth/2，shrink ≈ length × scale
+ * 端点级 shrink（strokeWidth 倍）：line 末端朝起点缩这么多，让箭头尖端落回原 target
+ * @description 不分实心 / 空心：路径端点接在箭头尾部或凹口，箭头尖端仍贴原 target。低 opacity 下不会再透出 line。
  */
 export const computeShrink = (spec: ArrowEndSpec): number => {
-  const length = (spec.length ?? ARROW_MARKER_DEFAULT_SIZE) * (spec.scale ?? 1);
-  if (HOLLOW_ARROW_SHAPES.has(spec.shape)) {
-    if (spec.shape === 'openCircle') return length;
-    // open / openDiamond：apex 在 viewBox x=9（path d 留半 stroke 余量）
-    const lineWidth = spec.lineWidth ?? ARROW_MARKER_HOLLOW_DEFAULT_LINE_WIDTH;
-    return ((8 + lineWidth / 2) * length) / 10;
-  }
-  // 实心：apex 在 viewBox x=10
-  if (spec.shape === 'stealth') return (7 * length) / 10;
-  return length;
+  const geometry = resolveArrowShapeGeometry(spec);
+  const length = (spec.length ?? geometry.defaultLength) * (spec.scale ?? 1);
+  return ((geometry.tipX - geometry.lineContactX) * length) / geometry.baseSize;
 };
 
 /** 取一个 PathCommand 末端 endpoint（move/line/quad/cubic → to；arc/ellipseArc → polar(end)；close 无端点） */
