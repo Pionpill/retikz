@@ -1,4 +1,4 @@
-import { Node, Path, Step, Tikz } from '@retikz/react';
+import { Node, Path, Step, TikZ } from '@retikz/react';
 import type { FC } from 'react';
 
 /**
@@ -6,7 +6,7 @@ import type { FC } from 'react';
  * @description arrowDetail.color 把 marker 描边 / 实心填充改为指定颜色，覆盖默认的 context-stroke 继承；start / end 子对象的 color 字段同样支持单端 override
  */
 const Demo: FC = () => (
-  <Tikz width={320} height={120}>
+  <TikZ width={320} height={120}>
     <Node id="a1" position={[0, 0]}>
       A
     </Node>
@@ -36,7 +36,7 @@ const Demo: FC = () => (
       <Step kind="move" to="a2" />
       <Step kind="line" to="b2" />
     </Path>
-  </Tikz>
+  </TikZ>
 );
 
 export default Demo;

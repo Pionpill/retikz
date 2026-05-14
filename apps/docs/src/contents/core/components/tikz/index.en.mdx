@@ -1,35 +1,35 @@
 ---
-title: Tikz
+title: TikZ
 description: Top-level container — scans children to build IR, compiles to Scene, renders SVG.
 ---
 
-`<Tikz>` is retikz's only required top-level wrapper. Every Kernel / Sugar component must live inside a `<Tikz>`.
+`<TikZ>` is retikz's only required top-level wrapper. Every Kernel / Sugar component must live inside a `<TikZ>`.
 
 ## Usage
 
 ```tsx
-import { Tikz } from '@retikz/react';
+import { TikZ } from '@retikz/react';
 ```
 
 ```tsx
-<Tikz width={300} height={80}>
+<TikZ width={300} height={80}>
   {/* Kernel / Sugar children */}
-</Tikz>
+</TikZ>
 ```
 
 ## Composition
 
-`<Tikz>` is a container; children are any Kernel / Sugar component tree:
+`<TikZ>` is a container; children are any Kernel / Sugar component tree:
 
 ```tsx
-<Tikz>
+<TikZ>
   <Node id="..." position={...}>label</Node>
   <Path>
     <Step kind="move" to="..." />
     <Step kind="line" to="..." />
   </Path>
   <Draw way={[...]} />
-</Tikz>
+</TikZ>
 ```
 
 ## Examples
@@ -40,7 +40,7 @@ import { Tikz } from '@retikz/react';
 
 ### Render from IR
 
-`<Tikz>` accepts an `ir` prop — feed a persisted IR JSON directly and get a rendered image, **no JSX children needed**. Source can be anything: LLM-generated, a JSON editor, URL deserialization, or database storage.
+`<TikZ>` accepts an `ir` prop — feed a persisted IR JSON directly and get a rendered image, **no JSX children needed**. Source can be anything: LLM-generated, a JSON editor, URL deserialization, or database storage.
 
 <ComponentPreview name="tikz-from-ir" size="sm" />
 
@@ -60,13 +60,13 @@ import { Tikz } from '@retikz/react';
 The `ir` prop fits scenarios where IR JSON is already in hand — AI generation, JSON editors, URL deserialization. Pair with `convertReactNodeToIR` / `convertIRToReactNode` for a DSL ↔ IR bridge:
 
 ```tsx
-import { Tikz, Node, convertReactNodeToIR } from '@retikz/react';
+import { TikZ, Node, convertReactNodeToIR } from '@retikz/react';
 
 const ir = convertReactNodeToIR(
   <Node id="a" position={[0, 0]}>A</Node>,
 );
 // Serialize, send to LLM, store in DB...
-<Tikz ir={ir} width={200} height={80} />;
+<TikZ ir={ir} width={200} height={80} />;
 ```
 
 `ir` and `children` are mutually exclusive; if both are supplied, `ir` wins.

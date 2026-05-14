@@ -289,8 +289,8 @@ describe('step.label：覆盖各 step kind', () => {
   });
 });
 
-describe('step.label：viewBox 把标签纳入 bbox', () => {
-  it('side=above 时 label 锚点在路径外，viewBox 至少要包住其外接四角', () => {
+describe('step.label：layout 把标签纳入 bbox', () => {
+  it('side=above 时 label 锚点在路径外，layout 至少要包住其外接四角', () => {
     const ir: IR = {
       version: 1,
       type: 'scene',
@@ -305,9 +305,9 @@ describe('step.label：viewBox 把标签纳入 bbox', () => {
       ],
     };
     const scene = compileToScene(ir);
-    // 不假设 padding 具体值，只验 viewBox y 上界包住 label 上沿
-    // label y < 0；measuredHeight ≈ 16；viewBox.y ≤ label.y - measuredHeight/2 - padding
-    expect(scene.viewBox.y).toBeLessThan(-10);
+    // 不假设 padding 具体值，只验 layout y 上界包住 label 上沿
+    // label y < 0；measuredHeight ≈ 16；layout.y ≤ label.y - measuredHeight/2 - padding
+    expect(scene.layout.y).toBeLessThan(-10);
   });
 });
 

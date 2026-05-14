@@ -25,7 +25,7 @@ export const FontSchema = z
       .describe('CSS font-style'),
   })
   .describe(
-    'Font properties (family / size / weight / style). All fields optional; consumed by Node text / Node label / LineSpec / future Tikz / Scope font defaults.',
+    'Font properties (family / size / weight / style). All fields optional; consumed by Node text / Node label / LineSpec / future TikZ / Scope font defaults.',
   );
 
 /** 字体规格 IR 类型（所有字段可选，编译期解析默认值） */

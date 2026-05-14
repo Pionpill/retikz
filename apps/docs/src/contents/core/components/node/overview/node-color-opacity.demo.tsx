@@ -1,4 +1,4 @@
-import { Node, Tikz } from '@retikz/react';
+import { Node, TikZ } from '@retikz/react';
 import type { FC } from 'react';
 
 /**
@@ -6,7 +6,7 @@ import type { FC } from 'react';
  * @description textColor 块级文字色、opacity 整节点透明、fillOpacity 仅填充、drawOpacity 仅描边。
  */
 const Demo: FC = () => (
-  <Tikz width={520} height={120}>
+  <TikZ width={520} height={120}>
     <Node id="tc" position={[-180, 0]} fill="#fef3c7" textColor="#dc2626">
       textColor
     </Node>
@@ -19,7 +19,7 @@ const Demo: FC = () => (
     <Node id="do" position={[210, 0]} stroke="#dc2626" strokeWidth={3} drawOpacity={0.3}>
       drawOpacity
     </Node>
-  </Tikz>
+  </TikZ>
 );
 
 export default Demo;

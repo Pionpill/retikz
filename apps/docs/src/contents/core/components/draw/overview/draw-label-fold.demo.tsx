@@ -1,8 +1,8 @@
-import { Draw, Node, Tikz } from '@retikz/react';
+import { Draw, Node, TikZ } from '@retikz/react';
 import type { FC } from 'react';
 
 const Demo: FC = () => (
-  <Tikz width={420} height={200}>
+  <TikZ width={420} height={200}>
     <Node id="A" position={[20, 30]}>a</Node>
     <Node id="B" position={[380, 150]}>b</Node>
     {/* Fold N=2：每段占 1/N=0.5 t 区间，拐角恒在 t=0.5（与段长无关）；
@@ -26,7 +26,7 @@ const Demo: FC = () => (
       arrow="->"
       strokeDasharray="3 3"
     />
-  </Tikz>
+  </TikZ>
 );
 
 export default Demo;

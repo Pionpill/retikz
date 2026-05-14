@@ -1,8 +1,8 @@
-import { Draw, Node, Tikz } from '@retikz/react';
+import { Draw, Node, TikZ } from '@retikz/react';
 import type { FC } from 'react';
 
 const Demo: FC = () => (
-  <Tikz width={420} height={200}>
+  <TikZ width={420} height={200}>
     <Node id="A" position={[40, 100]}>a</Node>
     <Node id="B" position={[380, 100]}>b</Node>
     {/* Bend：内部 lower 为 cubic，t 解释与 cubic 一致 */}
@@ -25,7 +25,7 @@ const Demo: FC = () => (
       arrow="->"
       strokeDasharray="3 3"
     />
-  </Tikz>
+  </TikZ>
 );
 
 export default Demo;

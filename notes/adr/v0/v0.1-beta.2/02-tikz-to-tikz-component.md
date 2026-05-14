@@ -6,7 +6,7 @@
 
 ## 背景
 
-`packages/react/src/kernel/Tikz.tsx` 当前导出顶层 React 组件 `Tikz` 和 `TikzProps`。但原 LaTeX 项目的品牌写法是 `TikZ`，尾部 `Z` 大写。retikz 的核心心智模型来自 TikZ，顶层容器也正是用户最常 import 和最常在文档中看到的组件；保持 `<TikZ>` 命名更贴近原品牌，也更容易被熟悉 TikZ 的用户和 LLM 语料命中。
+`packages/react/src/kernel/Tikz.tsx` 在 beta.1 及之前导出顶层 React 组件 `Tikz` 和 `TikzProps`。但原 LaTeX 项目的品牌写法是 `TikZ`，尾部 `Z` 大写。retikz 的核心心智模型来自 TikZ，顶层容器也是用户最常 import 和最常在文档中看到的组件；保持 `<TikZ>` 命名更贴近原品牌，也更容易被熟悉 TikZ 的用户和 LLM 语料命中。
 
 当前 `<Tikz>` 是所有 JSX DSL 的入口，改名会影响用户 import、JSX 标签、docs demo、ComponentPreview 示例、测试和阅读指南。这是明确的 breaking 改动，但 beta 阶段仍允许公开 API 改名，rc 起才冻结。
 
@@ -60,7 +60,7 @@ import { TikZ, Node, Draw } from '@retikz/react';
 - public barrel 只导出 `TikZ` / `TikZProps`，不导出 `Tikz` / `TikzProps` alias。
 - 组件 `displayName` 同步为 `TikZ`；builder display-name 判断必须跟进。
 - 所有 docs demo 和 MDX 示例统一替换为 `TikZ`。
-- 文档路由是否从 `/core/components/tikz` 改为 `/core/components/tikz` 保持不变：URL slug 仍可小写 `tikz`，不属于 React API surface。
+- 文档路由 `/core/components/tikz` 保持不变：URL slug 仍可小写 `tikz`，不属于 React API surface。
 
 ## DSL 表面
 
@@ -153,5 +153,5 @@ import { TikZ } from '@retikz/react';
 
 - 是否遗漏 docs demo import，导致 docs build 或 ComponentPreview 失败。
 - 是否遗漏 displayName / builder 判断，导致 children 收集失败。
-- 是否错误修改 `TikZ` 品牌外的普通英文 `Tikz` 历史引用。
+- 是否错误修改 TikZ 品牌外的普通英文 `Tikz` 历史引用。
 - 是否保留了不该保留的 public alias。

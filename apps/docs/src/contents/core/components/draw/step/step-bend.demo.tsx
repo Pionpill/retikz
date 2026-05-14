@@ -1,8 +1,8 @@
-import { Node, Path, Step, Tikz } from '@retikz/react';
+import { Node, Path, Step, TikZ } from '@retikz/react';
 import type { FC } from 'react';
 
 const Demo: FC = () => (
-  <Tikz width={320} height={260}>
+  <TikZ width={320} height={260}>
     <Node id="a" position={[0, 0]}>
       A
     </Node>
@@ -19,7 +19,7 @@ const Demo: FC = () => (
       <Step kind="move" to="a" />
       <Step kind="bend" to="b" bendDirection="right" bendAngle={45} />
     </Path>
-  </Tikz>
+  </TikZ>
 );
 
 export default Demo;

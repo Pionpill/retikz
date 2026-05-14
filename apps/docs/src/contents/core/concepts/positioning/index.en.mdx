@@ -11,7 +11,7 @@ Every "where" in retikz uses one position syntax: three interchangeable forms co
 | Polar | `{ origin?, angle, radius }` | Node position, path target |
 | Node id | `'node-id'` | **Path target only** (Step.to / way item) |
 
-> Coordinate system: x grows right, y grows down (matches SVG / Canvas; opposite of math textbooks). Units are user units, not pixels — final physical size depends on `<Tikz>`'s `width` / `height` and viewBox.
+> Coordinate system: x grows right, y grows down (matches SVG / Canvas; opposite of math textbooks). Units are user units, not pixels — final physical size depends on `<TikZ>`'s `width` / `height` and viewBox.
 
 ## Cartesian
 
@@ -37,7 +37,7 @@ Six nodes around `O` at radius 80, every 60° from 0 to 300 — the canonical ra
 
 ## Node id reference (path target)
 
-`<Step>` / `<Draw>` targets also accept a **string** — referencing a node id inside the same `<Tikz>`:
+`<Step>` / `<Draw>` targets also accept a **string** — referencing a node id inside the same `<TikZ>`:
 
 <ComponentPreview name="positioning-id-ref" size="sm" />
 

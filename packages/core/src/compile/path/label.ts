@@ -32,7 +32,7 @@ export const tForLabelPosition = (pos: IRStepLabel['position']): number => {
 
 /**
  * step.label + 段采样 → TextPrim（sloped 时裹一层 group 旋转）
- * @description 默认 side='above'/position='midway'：above/below 锚点 y±offset、align=middle、baseline=bottom/top；left/right x±offset、align=end/start、baseline=middle；sloped 不偏移裹 group rotate(angle, cx, cy) 由切线 atan2 算（SVG y-down CW 正）。返回 primitive + viewBox 外接点
+ * @description 默认 side='above'/position='midway'：above/below 锚点 y±offset、align=middle、baseline=bottom/top；left/right x±offset、align=end/start、baseline=middle；sloped 不偏移裹 group rotate(angle, cx, cy) 由切线 atan2 算（SVG y-down CW 正）。返回 primitive + layout 外接点
  */
 export const emitLabelPrimitive = (
   label: IRStepLabel,

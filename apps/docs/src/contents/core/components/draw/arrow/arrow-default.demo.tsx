@@ -1,4 +1,4 @@
-import { Node, Path, Step, Tikz } from '@retikz/react';
+import { Node, Path, Step, TikZ } from '@retikz/react';
 import type { FC } from 'react';
 
 /**
@@ -6,7 +6,7 @@ import type { FC } from 'react';
  * @description 颜色由 marker 的 context-stroke 同步 path stroke；大小走 strokeWidth × 6 默认尺寸；不传 arrowDetail = 完全向后兼容 alpha.4 行为
  */
 const Demo: FC = () => (
-  <Tikz width={320} height={80}>
+  <TikZ width={320} height={80}>
     <Node id="a" position={[0, 0]}>
       A
     </Node>
@@ -17,7 +17,7 @@ const Demo: FC = () => (
       <Step kind="move" to="a" />
       <Step kind="line" to="b" />
     </Path>
-  </Tikz>
+  </TikZ>
 );
 
 export default Demo;

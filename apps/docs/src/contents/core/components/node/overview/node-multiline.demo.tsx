@@ -1,8 +1,8 @@
-import { Node, Tikz } from '@retikz/react';
+import { Node, TikZ } from '@retikz/react';
 import type { FC } from 'react';
 
 const Demo: FC = () => (
-  <Tikz width={460} height={140}>
+  <TikZ width={460} height={140}>
     {/* 模板字面量真换行 */}
     <Node id="center" position={[-150, 0]}>{`User
 Service
@@ -13,7 +13,7 @@ v2.1`}</Node>
     </Node>
     {/* text prop 数组 */}
     <Node id="right" position={[160, 0]} align="right" text={['short', 'longer line', 'mid']} />
-  </Tikz>
+  </TikZ>
 );
 
 export default Demo;

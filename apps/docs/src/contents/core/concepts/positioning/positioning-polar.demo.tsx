@@ -1,8 +1,8 @@
-import { Node, Tikz } from '@retikz/react';
+import { Node, TikZ } from '@retikz/react';
 import type { FC } from 'react';
 
 const Demo: FC = () => (
-  <Tikz width={300} height={300}>
+  <TikZ width={300} height={300}>
     <Node id="o" position={[0, 0]}>
       O
     </Node>
@@ -24,7 +24,7 @@ const Demo: FC = () => (
     <Node id="n300" position={{ origin: 'o', angle: 300, radius: 80 }}>
       300°
     </Node>
-  </Tikz>
+  </TikZ>
 );
 
 export default Demo;

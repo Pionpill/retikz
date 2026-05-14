@@ -8,7 +8,7 @@ import {
 
 /**
  * Coordinate 占位节点（TikZ `\coordinate (m) at (3,2);` 同义）
- * @description 命名一个点供 path/at 引用，不绘制任何图形；支持笛卡尔/极坐标/相对定位三种 position 形态。必须有 id，不参与 viewBox 扩展，与 Node 在同一 nodeIndex 注册
+ * @description 命名一个点供 path/at 引用，不绘制任何图形；支持笛卡尔/极坐标/相对定位三种 position 形态。必须有 id，不参与 layout 扩展，与 Node 在同一 nodeIndex 注册
  */
 export const CoordinateSchema = z
   .object({

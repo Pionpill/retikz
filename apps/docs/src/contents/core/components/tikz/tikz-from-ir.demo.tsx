@@ -1,5 +1,5 @@
 import type { IR } from '@retikz/core';
-import { Tikz } from '@retikz/react';
+import { TikZ } from '@retikz/react';
 import type { FC } from 'react';
 
 // 已存好的 IR JSON——来自 LLM 生成 / JSON 编辑器 / URL 反序列化 / 数据库存档，不写 JSX children 照样能渲染。
@@ -22,6 +22,6 @@ const ir: IR = {
   ],
 };
 
-const Demo: FC = () => <Tikz ir={ir} width={300} height={120} />;
+const Demo: FC = () => <TikZ ir={ir} width={300} height={120} />;
 
 export default Demo;

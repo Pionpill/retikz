@@ -1,8 +1,8 @@
-import { Draw, Node, Tikz } from '@retikz/react';
+import { Draw, Node, TikZ } from '@retikz/react';
 import type { FC } from 'react';
 
 const Demo: FC = () => (
-  <Tikz width={280} height={220}>
+  <TikZ width={280} height={220}>
     <Node id="center" position={[140, 30]} stroke="none">·</Node>
     {/* Arc：t 线性映射 startAngle..endAngle；0..120° 弧上演示三档 */}
     <Draw
@@ -21,7 +21,7 @@ const Demo: FC = () => (
       ]}
       strokeDasharray="3 3"
     />
-  </Tikz>
+  </TikZ>
 );
 
 export default Demo;

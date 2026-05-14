@@ -1,4 +1,4 @@
-import { Node, Path, Step, Tikz } from '@retikz/react';
+import { Node, Path, Step, TikZ } from '@retikz/react';
 import type { FC } from 'react';
 
 /**
@@ -6,7 +6,7 @@ import type { FC } from 'react';
  * @description 等价 SVG 'Z'，三角形写完 3 条边后直接 cycle 一次结束，不用手动 line 回 A。
  */
 const Demo: FC = () => (
-  <Tikz width={320} height={200}>
+  <TikZ width={320} height={200}>
     <Node id="a" position={[0, 0]}>
       A
     </Node>
@@ -22,7 +22,7 @@ const Demo: FC = () => (
       <Step kind="line" to="c" />
       <Step kind="cycle" />
     </Path>
-  </Tikz>
+  </TikZ>
 );
 
 export default Demo;

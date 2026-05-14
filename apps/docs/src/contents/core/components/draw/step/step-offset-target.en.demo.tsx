@@ -1,4 +1,4 @@
-import { Draw, Node, Tikz } from '@retikz/react';
+import { Draw, Node, TikZ } from '@retikz/react';
 import type { FC } from 'react';
 
 /**
@@ -6,7 +6,7 @@ import type { FC } from 'react';
  * @description path endpoint = `{ of, offset }`, with three base shapes: node id (dark), Cartesian literal (mid-gray), polar expression (light gray). Draw way items accept OffsetPosition directly.
  */
 const Demo: FC = () => (
-  <Tikz width={420} height={200}>
+  <TikZ width={420} height={200}>
     <Node id="A" position={[-140, 0]}>a</Node>
     <Draw way={['A', { of: 'A', offset: [120, -50] }]} arrow="->" />
     <Draw
@@ -25,7 +25,7 @@ const Demo: FC = () => (
       arrow="->"
       stroke="#bbb"
     />
-  </Tikz>
+  </TikZ>
 );
 
 export default Demo;

@@ -6,7 +6,7 @@ import { emitPathPrimitive } from './path/index';
 import { resolvePosition } from './position';
 import { DEFAULT_PRECISION, makeRound } from './precision';
 import { type TextMeasurer, fallbackMeasurer } from './text-metrics';
-import { computeViewBox } from './view-box';
+import { computeLayout } from './layout';
 
 /**
  * 把 coordinate 注册成 0×0 NodeLayout
@@ -54,11 +54,11 @@ export type CompileWarning = {
 export type CompileOptions = {
   /** 注入文字度量函数；不传则用 fallback（不准但可跑） */
   measureText?: TextMeasurer;
-  /** viewBox 周围的留白（user units），默认 10 */
+  /** layout 周围的留白（user units），默认 10 */
   padding?: number;
   /**
    * 输出坐标的小数位精度；默认 2
-   * @description 仅作用于 Scene primitive / path d / viewBox；内部几何计算保持完整 double 精度
+   * @description 仅作用于 Scene primitive / path d / layout；内部几何计算保持完整 double 精度
    */
   precision?: number;
   /**
@@ -84,11 +84,11 @@ const defaultWarnDispatcher = (warning: CompileWarning): void => {
 
 /**
  * IR → Scene 纯函数转换，所有 adapter 共享
- * @description Pass 1 处理 Node/coordinate 并注册 nodeIndex、发 primitive、累积 bbox；Pass 2 解析 Path 端点写 d 字符串；末端按 precision 折算 viewBox
+ * @description Pass 1 处理 Node/coordinate 并注册 nodeIndex、发 primitive、累积 bbox；Pass 2 解析 Path 端点写 d 字符串；末端按 precision 折算 layout
  */
 export const compileToScene = (ir: IR, options: CompileOptions = {}): Scene => {
   const measureText = options.measureText ?? fallbackMeasurer;
-  const viewBoxPadding = options.padding ?? 10;
+  const layoutPadding = options.padding ?? 10;
   const round = makeRound(options.precision ?? DEFAULT_PRECISION);
   const nodeDistance = options.nodeDistance;
   const onWarn = options.onWarn ?? defaultWarnDispatcher;
@@ -109,7 +109,7 @@ export const compileToScene = (ir: IR, options: CompileOptions = {}): Scene => {
       for (const prim of emitNodePrimitives(layout, round)) {
         primitives.push(prim);
       }
-      // 用旋转感知的 4 角扩 bbox（保持完整精度，computeViewBox 末端再 round）
+      // 用旋转感知的 4 角扩 bbox（保持完整精度，computeLayout 末端再 round）
       allPoints.push(
         rectOps.anchor(layout.rect, 'north-west'),
         rectOps.anchor(layout.rect, 'north-east'),
@@ -150,6 +150,6 @@ export const compileToScene = (ir: IR, options: CompileOptions = {}): Scene => {
 
   return {
     primitives,
-    viewBox: computeViewBox(allPoints, viewBoxPadding, round),
+    layout: computeLayout(allPoints, layoutPadding, round),
   };
 };

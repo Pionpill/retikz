@@ -94,7 +94,7 @@ export type NodeProps = {
 
 /**
  * Node 是 DSL 标记组件——本身不渲染任何 React 元素
- * @description 由 <Tikz> 在 children 扫描阶段读出 props 构造 IR，再由 compileToScene + renderPrim 产出最终 SVG
+ * @description 由 <TikZ> 在 children 扫描阶段读出 props 构造 IR，再由 compileToScene + renderPrim 产出最终 SVG
  */
 export const Node: FC<NodeProps> = () => null;
 Node.displayName = TIKZ_NODE;

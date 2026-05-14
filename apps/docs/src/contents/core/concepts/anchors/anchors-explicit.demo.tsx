@@ -1,4 +1,4 @@
-import { Draw, Node, Tikz } from '@retikz/react';
+import { Draw, Node, TikZ } from '@retikz/react';
 import type { FC } from 'react';
 
 /**
@@ -6,7 +6,7 @@ import type { FC } from 'react';
  * @description 'A.north' / 'A.east' / 'A.30' / 'A.center'；中央节点 8 条 Draw 用 8 个不同 anchor / 角度作端点强制锁死贴边位置。
  */
 const Demo: FC = () => (
-  <Tikz width={360} height={260}>
+  <TikZ width={360} height={260}>
     <Node id="hub" position={[0, 0]}>
       hub
     </Node>
@@ -19,7 +19,7 @@ const Demo: FC = () => (
     <Draw way={[[-140, 0], 'hub.west']} arrow="->" />
     <Draw way={[[-120, -90], 'hub.north-west']} arrow="->" />
     <Draw way={[[0, -110], 'hub.north']} arrow="->" />
-  </Tikz>
+  </TikZ>
 );
 
 export default Demo;

@@ -29,7 +29,7 @@ export type NodeTextAlign = ValueOf<typeof NODE_TEXT_ALIGNS>;
 
 /**
  * 节点附属标签 label（TikZ `[label=above:foo]` 同义）
- * @description 可挂多个；label 不参与 viewBox。position 支持 8 方向枚举或数字角度（polar 约定：0°=+x，90°=+y 屏幕下方）；默认 position='above'，distance=4
+ * @description 可挂多个；label 不参与 layout。position 支持 8 方向枚举或数字角度（polar 约定：0°=+x，90°=+y 屏幕下方）；默认 position='above'，distance=4
  */
 export const NodeLabelSchema = z
   .object({

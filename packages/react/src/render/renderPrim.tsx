@@ -31,7 +31,7 @@ const baselineToDominant = (
 };
 
 /**
- * 渲染上下文——Tikz 容器侧把 marker id 等"全 SVG 共享"的资源向下传给 renderPrim
+ * 渲染上下文——TikZ 容器侧把 marker id 等"全 SVG 共享"的资源向下传给 renderPrim
  * @description 资源缺省时传 undefined，对应 path prim 不会引用 marker
  */
 export type RenderContext = {

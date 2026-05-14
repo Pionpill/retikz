@@ -1,4 +1,4 @@
-import { Draw, Node, Tikz } from '@retikz/react';
+import { Draw, Node, TikZ } from '@retikz/react';
 import type { FC } from 'react';
 
 /**
@@ -6,7 +6,7 @@ import type { FC } from 'react';
  * @description rectangle（默认）/ circle / ellipse / diamond；外围 4 个连到中央 hub，path 端点按各自 shape 自动贴边。
  */
 const Demo: FC = () => (
-  <Tikz width={420} height={260}>
+  <TikZ width={420} height={260}>
     <Node id="hub" position={[0, 0]}>
       hub
     </Node>
@@ -26,7 +26,7 @@ const Demo: FC = () => (
     <Draw way={['circ', 'hub']} arrow="->" />
     <Draw way={['elli', 'hub']} arrow="->" />
     <Draw way={['diam', 'hub']} arrow="->" />
-  </Tikz>
+  </TikZ>
 );
 
 export default Demo;

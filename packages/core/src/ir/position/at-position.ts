@@ -37,7 +37,7 @@ export const AtPositionSchema = z
       .positive()
       .optional()
       .describe(
-        'Distance from the referenced node center to this node center in user units. Falls back to the Tikz `nodeDistance` compile-time context, then to 1.',
+        'Distance from the referenced node center to this node center in user units. Falls back to the TikZ `nodeDistance` compile-time context, then to 1.',
       ),
   })
   .describe(

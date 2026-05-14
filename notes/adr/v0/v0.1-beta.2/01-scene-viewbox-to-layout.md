@@ -76,7 +76,7 @@ computeLayout(points, padding, round);
 
 - **公开 API**：BREAKING。`ViewBox` / `Scene.viewBox` / `computeViewBox` 改名。
 - **运行时行为**：不变。布局边界计算公式、rounding、padding、空点集兜底行为保持等价。
-- **React adapter**：`<Tikz>` 内部读取 `scene.layout`，继续渲染 SVG `viewBox` 属性。
+- **React adapter**：`<TikZ>` 内部读取 `scene.layout`，继续渲染 SVG `viewBox` 属性。
 - **文档**：需要 changelog BREAKING + 迁移路径；涉及当前 docs 示例、API 说明和阅读指南。
 
 ## 不在本 ADR 范围
@@ -115,11 +115,11 @@ computeLayout(points, padding, round);
 - `packages/core/src/compile/index.ts`
 - `packages/core/src/index.ts`
 - `packages/core/tests/**` 中 `scene.viewBox` / `computeViewBox` / `view-box` 引用
-- `packages/react/src/kernel/Tikz.tsx`
+- `packages/react/src/kernel/TikZ.tsx`
 - `packages/react/src/render/viewBox.ts`
 - `packages/react/tests/**` 中 scene snapshot 或 render 相关引用
 - `apps/docs/src/**` 中当前 API / demo / 阅读指南相关引用
-- `AGENTS.md` 中当前流程示例的 `<Tikz>` 改名不属于本 ADR，若与 ADR-02 同批实现则统一处理
+- `AGENTS.md` 中当前流程示例的 `<TikZ>` 改名不属于本 ADR，若与 ADR-02 同批实现则统一处理
 
 ### 测试象限
 
@@ -139,7 +139,7 @@ computeLayout(points, padding, round);
 
 **React adapter**
 
-9. `<Tikz>` 渲染出的 `<svg>` 仍包含正确 `viewBox` attribute。
+9. `<TikZ>` 渲染出的 `<svg>` 仍包含正确 `viewBox` attribute。
 10. `formatViewBox(layout)` 输出字符串格式不变。
 
 **回归**

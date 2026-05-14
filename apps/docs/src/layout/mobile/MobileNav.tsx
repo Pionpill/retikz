@@ -50,7 +50,7 @@ export const MobileNav: FC = () => {
               className="flex items-center gap-2 text-foreground hover:opacity-80 transition-opacity"
               aria-label="retikz home"
             >
-              <span className="text-base font-semibold tracking-tight">ReTikz.doc</span>
+              <span className="text-base font-semibold tracking-tight">ReTikZ.doc</span>
               <span className="rounded border border-border px-1.5 py-0.5 text-[10px] leading-none text-muted-foreground font-normal">
                 {t('common.versionTag')}
               </span>

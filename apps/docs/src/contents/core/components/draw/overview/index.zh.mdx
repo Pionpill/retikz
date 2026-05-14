@@ -27,7 +27,7 @@ import { Draw } from '@retikz/react';
 
 | 形态     | 例                                                  | 含义                                                        |
 | -------- | --------------------------------------------------- | ----------------------------------------------------------- |
-| 节点 id  | `'a'`                                               | 引用同一 Tikz 内的 Node；端点自动贴 border                  |
+| 节点 id  | `'a'`                                               | 引用同一 TikZ 内的 Node；端点自动贴 border                  |
 | 笛卡尔   | `[120, 0]`                                          | 直接给坐标                                                  |
 | 极坐标   | `{ origin: 'a', angle: 60, radius: 80 }`            | 极坐标（详见 [定位](/core/concepts/positioning)）           |
 | 相对偏移 (Relative) | `{ position: [10, 0], type: DrawWay.Relative }` 或 `'+10,0'` | 基于前一 step 终点 + `[dx, dy]`；**不**更新 prevEnd（TikZ `(+x, +y)`） |

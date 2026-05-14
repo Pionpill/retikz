@@ -143,7 +143,7 @@ describe('OffsetPosition adversarial: 数值极端', () => {
     expect(b[1]).toBeCloseTo(0.45);
   });
 
-  it('极大 offset 不溢出且参与 viewBox 计算', () => {
+  it('极大 offset 不溢出且参与 layout 计算', () => {
     const ir: IR = {
       version: 1,
       type: 'scene',
@@ -156,8 +156,8 @@ describe('OffsetPosition adversarial: 数值极端', () => {
     const [, b] = rects(scene.primitives).map(rectCenter);
     expect(b[0]).toBeCloseTo(1e6, 0);
     expect(b[1]).toBeCloseTo(1e6, 0);
-    // viewBox 跟随
-    expect(scene.viewBox.width).toBeGreaterThan(1e5);
+    // layout 跟随
+    expect(scene.layout.width).toBeGreaterThan(1e5);
   });
 
   it('深链 4 层 OffsetPosition 累加（id 形式）', () => {

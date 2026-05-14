@@ -50,7 +50,7 @@ description: 在 scene 中被命名的成员 —— Node 与 Coordinate
 
 ## Coordinate
 
-`CoordinateSchema` 是 TikZ `\coordinate (m) at (3,2);` 的 IR 形态。必须有 `id`（这是它存在的全部意义），不参与 viewBox 扩展，与 Node 共享 nodeIndex。
+`CoordinateSchema` 是 TikZ `\coordinate (m) at (3,2);` 的 IR 形态。必须有 `id`（这是它存在的全部意义），不参与 layout 扩展，与 Node 共享 nodeIndex。
 
 <ZodSchema name="CoordinateSchema" descriptions={{
   type: '判别字段，标记此子节点为 coordinate 占位',

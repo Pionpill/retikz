@@ -1,4 +1,4 @@
-import { Node, Text, Tikz } from '@retikz/react';
+import { Node, Text, TikZ } from '@retikz/react';
 import type { FC } from 'react';
 
 /**
@@ -6,7 +6,7 @@ import type { FC } from 'react';
  * @description fill 颜色、opacity 单行透明度、font 部分覆盖（family / size / weight / style）。
  */
 const Demo: FC = () => (
-  <Tikz width={520} height={130}>
+  <TikZ width={520} height={130}>
     <Node id="fill" position={[-180, 0]} align="left">
       <Text fill="#dc2626">red line</Text>
       <Text fill="#16a34a">green line</Text>
@@ -24,7 +24,7 @@ const Demo: FC = () => (
       <Text font={{ style: 'italic' }}>Italic</Text>
       <Text font={{ family: 'monospace' }}>mono()</Text>
     </Node>
-  </Tikz>
+  </TikZ>
 );
 
 export default Demo;

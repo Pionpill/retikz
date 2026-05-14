@@ -1,6 +1,6 @@
 ---
 title: 快速开始
-description: 安装 retikz，并通过 3 步搭建一个最小例子，认识 Tikz、Node 与 Draw 三个核心组件。
+description: 安装 retikz，并通过 3 步搭建一个最小例子，认识 TikZ、Node 与 Draw 三个核心组件。
 ---
 
 ## 安装
@@ -19,9 +19,9 @@ retikz 的 React 适配器是 `@retikz/react`，peer 依赖 `react` / `react-dom
 
 ## 一步步搭建
 
-### 1. 容器 `<Tikz />` + 一个 `<Node />`
+### 1. 容器 `<TikZ />` + 一个 `<Node />`
 
-画一张图至少要两件东西：容器和图元。`<Tikz>` 是顶层容器，扫描 children 构造 IR、编译 Scene、渲染 SVG；`width` / `height` 决定 SVG 元素的渲染尺寸。`<Node>` 是最常用的图元，有 `id`、`position`、可见 label。
+画一张图至少要两件东西：容器和图元。`<TikZ>` 是顶层容器，扫描 children 构造 IR、编译 Scene、渲染 SVG；`width` / `height` 决定 SVG 元素的渲染尺寸。`<Node>` 是最常用的图元，有 `id`、`position`、可见 label。
 
 <ComponentPreview name="get-start-step-1" size="xs" />
 

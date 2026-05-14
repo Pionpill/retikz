@@ -1,8 +1,8 @@
-import { EdgeLabel, Node, Path, Step, Tikz } from '@retikz/react';
+import { EdgeLabel, Node, Path, Step, TikZ } from '@retikz/react';
 import type { FC } from 'react';
 
 const Demo: FC = () => (
-  <Tikz width={360} height={220}>
+  <TikZ width={360} height={220}>
     <Node id="a" position={[0, 0]} shape="diamond">
       ?
     </Node>
@@ -40,7 +40,7 @@ const Demo: FC = () => (
         <EdgeLabel side="sloped">distance = 12</EdgeLabel>
       </Step>
     </Path>
-  </Tikz>
+  </TikZ>
 );
 
 export default Demo;

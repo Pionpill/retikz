@@ -1,4 +1,4 @@
-import { Node, Path, Step, Tikz } from '@retikz/react';
+import { Node, Path, Step, TikZ } from '@retikz/react';
 import type { FC } from 'react';
 
 /**
@@ -6,7 +6,7 @@ import type { FC } from 'react';
  * @description scale 乘到 length × width 之后（length=10, scale=1.5 → markerWidth 15）。三行对照：默认（scale 缺省）/ scale=1.5 / length=14, width=10
  */
 const Demo: FC = () => (
-  <Tikz width={320} height={140}>
+  <TikZ width={320} height={140}>
     <Node id="a1" position={[0, 0]}>
       A
     </Node>
@@ -37,7 +37,7 @@ const Demo: FC = () => (
       <Step kind="move" to="a3" />
       <Step kind="line" to="b3" />
     </Path>
-  </Tikz>
+  </TikZ>
 );
 
 export default Demo;

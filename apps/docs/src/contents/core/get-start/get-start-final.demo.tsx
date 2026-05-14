@@ -1,8 +1,8 @@
-import { Draw, Node, Tikz } from '@retikz/react';
+import { Draw, Node, TikZ } from '@retikz/react';
 import type { FC } from 'react';
 
 const GetStartFinal: FC = () => (
-  <Tikz width={420} height={80}>
+  <TikZ width={420} height={80}>
     <Node id="a" position={[0, 0]}>
       A
     </Node>
@@ -14,7 +14,7 @@ const GetStartFinal: FC = () => (
     </Node>
     <Draw way={['a', 'b']} />
     <Draw way={['b', 'c']} />
-  </Tikz>
+  </TikZ>
 );
 
 export default GetStartFinal;

@@ -12,8 +12,8 @@ import { browserMeasurer } from '../render/browser-measurer';
 import { renderPrim } from '../render/renderPrim';
 import { formatViewBox } from '../render/viewBox';
 
-/** <Tikz> 组件的 props */
-export type TikzProps = {
+/** <TikZ> 组件的 props */
+export type TikZProps = {
   /** 直接喂 IR JSON（持久化 / AI / 编辑器场景），与 children 二选一 */
   ir?: IR;
   /** Kernel/Sugar JSX children */
@@ -96,10 +96,10 @@ const hashKey = (key: string): string => {
 };
 
 /**
- * <Tikz> 顶层容器
+ * <TikZ> 顶层容器
  * @description 流水线：从 children 构造 IR（或直接接受外部 IR）→ compileToScene 得 Scene → 渲染 SVG 元素并按需注入 `<defs>` 与每种 arrow 端点 spec 的 `<marker>`；marker id 用 `useId()` 派生稳定前缀避免多实例冲突，每种 detail 一个定义（`${prefix}-${specHash}`），marker 内借 spec 字段（`color` / `fill` / `opacity` 等）替换硬编码，缺省字段回退到 `context-stroke` 让颜色继续跟随 path 同步
  */
-export const Tikz: FC<TikzProps> = props => {
+export const TikZ: FC<TikZProps> = props => {
   const { ir: irFromProp, children, width, height, className, style, nodeDistance } = props;
   const ir = useMemo(() => irFromProp ?? buildIR(children), [irFromProp, children]);
   const scene = useMemo(
@@ -123,7 +123,7 @@ export const Tikz: FC<TikzProps> = props => {
     `${arrowMarkerPrefix}-${hashKey(stableSpecKey(spec))}`;
 
   return (
-    <svg viewBox={formatViewBox(scene.viewBox)} width={width} height={height} className={className} style={style}>
+    <svg viewBox={formatViewBox(scene.layout)} width={width} height={height} className={className} style={style}>
       {uniqueByKey.size > 0 && (
         <defs>
           {Array.from(uniqueByKey.entries()).map(([k, spec]) => (

@@ -1,8 +1,8 @@
-import { Draw, Node, Tikz } from '@retikz/react';
+import { Draw, Node, TikZ } from '@retikz/react';
 import type { FC } from 'react';
 
 const Demo: FC = () => (
-  <Tikz width={280} height={200}>
+  <TikZ width={280} height={200}>
     <Node id="center" position={[100, 100]} stroke="none">
       ·
     </Node>
@@ -12,7 +12,7 @@ const Demo: FC = () => (
       way={['center', { arc: { startAngle: 270, endAngle: 360, radius: 60 } }]}
       strokeDasharray="4 2"
     />
-  </Tikz>
+  </TikZ>
 );
 
 export default Demo;

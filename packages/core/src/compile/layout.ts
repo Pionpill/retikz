@@ -1,12 +1,12 @@
 import type { IRPosition } from '../ir';
-import type { ViewBox } from '../primitive';
+import type { Layout } from '../primitive';
 
-/** 由所有 bbox 候选点算出 viewBox（含 padding）；points 为空时返回 100×100 兜底 */
-export const computeViewBox = (
+/** 由所有 bbox 候选点算出布局边界（含 padding）；points 为空时返回 100×100 兜底 */
+export const computeLayout = (
   points: Array<IRPosition>,
   padding: number,
   round: (n: number) => number,
-): ViewBox => {
+): Layout => {
   if (points.length === 0) return { x: 0, y: 0, width: 100, height: 100 };
   let minX = Infinity;
   let minY = Infinity;

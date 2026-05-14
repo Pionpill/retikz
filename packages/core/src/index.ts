@@ -108,7 +108,7 @@ export type {
   TranslateTransform,
   RotateTransform,
   ScaleTransform,
-  ViewBox,
+  Layout,
   Scene,
 } from './primitive';
 
@@ -120,7 +120,7 @@ export type {
   CompileOptions,
   CompileWarning,
 } from './compile';
-export { fallbackMeasurer, compileToScene } from './compile';
+export { computeLayout, fallbackMeasurer, compileToScene } from './compile';
 
 // Parsers
 export type {

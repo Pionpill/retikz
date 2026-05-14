@@ -1,4 +1,4 @@
-import { Node, Tikz } from '@retikz/react';
+import { Node, TikZ } from '@retikz/react';
 import type { FC } from 'react';
 
 /**
@@ -6,7 +6,7 @@ import type { FC } from 'react';
  * @description 单对象或数组形态；position 接 8 方向枚举或数字角度（TikZ `label=30:foo` 同义）；font / textColor 缺省时从 node 继承。
  */
 const Demo: FC = () => (
-  <Tikz width={500} height={260}>
+  <TikZ width={500} height={260}>
     {/* 单 label，缺省 position='above' */}
     <Node id="A" position={[-160, 0]} label={{ text: '简单标签' }}>A</Node>
     {/* 多 label，不同方向 */}
@@ -31,7 +31,7 @@ const Demo: FC = () => (
         { text: '-110°', position: -110, textColor: 'crimson' },
       ]}
     >C</Node>
-  </Tikz>
+  </TikZ>
 );
 
 export default Demo;

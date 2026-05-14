@@ -1,8 +1,8 @@
-import { Node, Tikz } from '@retikz/react';
+import { Node, TikZ } from '@retikz/react';
 import type { FC } from 'react';
 
 const Demo: FC = () => (
-  <Tikz width={460} height={80}>
+  <TikZ width={460} height={80}>
     <Node id="bold" position={[-160, 0]} font={{ weight: 'bold' }}>
       Bold
     </Node>
@@ -15,7 +15,7 @@ const Demo: FC = () => (
     <Node id="big" position={[170, 0]} font={{ size: 18, weight: 600 }}>
       Big
     </Node>
-  </Tikz>
+  </TikZ>
 );
 
 export default Demo;

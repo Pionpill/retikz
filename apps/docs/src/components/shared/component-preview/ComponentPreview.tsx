@@ -112,7 +112,7 @@ export const ComponentPreview: FC<ComponentPreviewProps> = props => {
   const source = key ? demoSources[key] : undefined;
   const Component = mod?.default;
 
-  // IR 视图：调一次 Component()（demo 是无 hooks 的纯 FC）；优先看 Tikz 的 ir prop，否则把 children 喂给 convertReactNodeToIR；失败回落到错误文本；hideCode 时跳过整次计算
+  // IR 视图：调一次 Component()（demo 是无 hooks 的纯 FC）；优先看 TikZ 的 ir prop，否则把 children 喂给 convertReactNodeToIR；失败回落到错误文本；hideCode 时跳过整次计算
   const irJson = useMemo(() => {
     if (!Component || hideCode) return '';
     try {

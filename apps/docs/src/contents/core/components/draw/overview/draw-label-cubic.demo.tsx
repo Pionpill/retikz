@@ -1,8 +1,8 @@
-import { Draw, Node, Tikz } from '@retikz/react';
+import { Draw, Node, TikZ } from '@retikz/react';
 import type { FC } from 'react';
 
 const Demo: FC = () => (
-  <Tikz width={420} height={200}>
+  <TikZ width={420} height={200}>
     <Node id="A" position={[40, 160]}>a</Node>
     <Node id="B" position={[380, 160]}>b</Node>
     {/* Cubic Bezier：t 是 Bezier 参数；对称 S-curve 上演示三档 */}
@@ -25,7 +25,7 @@ const Demo: FC = () => (
       arrow="->"
       strokeDasharray="3 3"
     />
-  </Tikz>
+  </TikZ>
 );
 
 export default Demo;

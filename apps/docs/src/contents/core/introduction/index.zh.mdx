@@ -36,7 +36,7 @@ retikz DSL 表面有三类构造，混淆它们是事后迁移噩梦：
 
 | 层         | 例子                                | 是否进 IR                   | 落在哪          |
 | ---------- | ----------------------------------- | --------------------------- | --------------- |
-| **Kernel** | `<Tikz>` `<Node>` `<Path>` `<Step>` | ✅ 直接对应 IR 节点         | `@retikz/core`  |
+| **Kernel** | `<TikZ>` `<Node>` `<Path>` `<Step>` | ✅ 直接对应 IR 节点         | `@retikz/core`  |
 | **Sugar**  | `<Draw way={[...]} />`              | ❌ 编译期展开为 Kernel      | `@retikz/react` |
 | **Tier 2** | `<Axis>` `<BarPlot>` `<Tree>`       | ✅ 高层节点 + lowering 下沉 | 独立 domain 包  |
 

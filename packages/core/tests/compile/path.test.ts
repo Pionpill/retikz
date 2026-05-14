@@ -100,9 +100,9 @@ describe("compile path: 'step' 折角", () => {
     );
   });
 
-  it('折角中间点参与 viewBox 计算（不会被裁掉）', () => {
+  it('折角中间点参与 layout 计算（不会被裁掉）', () => {
     // 起点 (0,0)，终点 (40, 30)，via='-|' → 中点 (40, 0)
-    // 三个点的 bbox: x in [0,40], y in [0,30]；padding=10 → viewBox [-10,-10,60,50]
+    // 三个点的 bbox: x in [0,40], y in [0,30]；padding=10 → layout [-10,-10,60,50]
     const ir: IR = {
       version: 1,
       type: 'scene',
@@ -117,7 +117,7 @@ describe("compile path: 'step' 折角", () => {
       ],
     };
     const scene = compileToScene(ir, { padding: 10 });
-    expect(scene.viewBox).toEqual({ x: -10, y: -10, width: 60, height: 50 });
+    expect(scene.layout).toEqual({ x: -10, y: -10, width: 60, height: 50 });
   });
 
   it('折角与节点引用配合：节点 ref 端点贴 boundary 后再插中点', () => {
@@ -226,7 +226,7 @@ describe("compile path: 'cycle' 闭合", () => {
     ]);
   });
 
-  it('cycle 不引入新 endpoints，viewBox 与不带 cycle 的等价路径一致', () => {
+  it('cycle 不引入新 endpoints，layout 与不带 cycle 的等价路径一致', () => {
     const irWith: IR = {
       version: 1,
       type: 'scene',
@@ -256,8 +256,8 @@ describe("compile path: 'cycle' 闭合", () => {
         },
       ],
     };
-    expect(compileToScene(irWith).viewBox).toEqual(
-      compileToScene(irWithout).viewBox,
+    expect(compileToScene(irWith).layout).toEqual(
+      compileToScene(irWithout).layout,
     );
   });
 

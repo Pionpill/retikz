@@ -1,4 +1,4 @@
-import { Draw, Node, Tikz } from '@retikz/react';
+import { Draw, Node, TikZ } from '@retikz/react';
 import type { FC } from 'react';
 
 /**
@@ -6,7 +6,7 @@ import type { FC } from 'react';
  * @description 4 inputs → IR ↔ Scene → 4 outputs (hourglass); nodes use stroke="none" as text anchors with Draw still snapping to bbox; bidirectional arrow between IR and "persistence / edit" marks IR as a read/write durable layer.
  */
 const Demo: FC = () => (
-  <Tikz width={640} height={210} style={{ maxWidth: '100%', height: 'auto' }}>
+  <TikZ width={640} height={210} style={{ maxWidth: '100%', height: 'auto' }}>
     <Node id="sugar" position={[-160, -54]} stroke="none">
       Sugar JSX
     </Node>
@@ -61,7 +61,7 @@ const Demo: FC = () => (
     <Draw way={['scene', 'native']} arrow="->" />
 
     <Draw way={['ir', 'persist']} arrow="<->" />
-  </Tikz>
+  </TikZ>
 );
 
 export default Demo;

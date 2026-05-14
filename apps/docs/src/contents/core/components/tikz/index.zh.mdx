@@ -1,35 +1,35 @@
 ---
-title: Tikz
+title: TikZ
 description: 顶层容器：扫描 children 构造 IR、编译 Scene、渲染 SVG。
 ---
 
-`<Tikz>` 是 retikz 唯一必需的顶层包装，所有 Kernel / Sugar 组件都必须放在它里面。
+`<TikZ>` 是 retikz 唯一必需的顶层包装，所有 Kernel / Sugar 组件都必须放在它里面。
 
 ## 用法
 
 ```tsx
-import { Tikz } from '@retikz/react';
+import { TikZ } from '@retikz/react';
 ```
 
 ```tsx
-<Tikz width={300} height={80}>
+<TikZ width={300} height={80}>
   {/* Kernel / Sugar children */}
-</Tikz>
+</TikZ>
 ```
 
 ## 组合
 
-`<Tikz>` 是容器；children 是任意 Kernel / Sugar 组件树：
+`<TikZ>` 是容器；children 是任意 Kernel / Sugar 组件树：
 
 ```tsx
-<Tikz>
+<TikZ>
   <Node id="..." position={...}>label</Node>
   <Path>
     <Step kind="move" to="..." />
     <Step kind="line" to="..." />
   </Path>
   <Draw way={[...]} />
-</Tikz>
+</TikZ>
 ```
 
 ## 例子
@@ -40,7 +40,7 @@ import { Tikz } from '@retikz/react';
 
 ### 从 IR 渲染
 
-`<Tikz>` 接受 `ir` prop——直接把一段已经持久化的 IR JSON 渲染成图，**不写一行 JSX children**。来源不限：LLM 生成、JSON 编辑器、URL 反序列化、数据库存档都可以。
+`<TikZ>` 接受 `ir` prop——直接把一段已经持久化的 IR JSON 渲染成图，**不写一行 JSX children**。来源不限：LLM 生成、JSON 编辑器、URL 反序列化、数据库存档都可以。
 
 <ComponentPreview name="tikz-from-ir" size="sm" />
 
@@ -60,13 +60,13 @@ import { Tikz } from '@retikz/react';
 `ir` prop 适合"已经有 IR JSON"的场景——AI 生成、JSON 编辑器、URL 反序列化。配合 `convertReactNodeToIR` / `convertIRToReactNode` 做 DSL ↔ IR 双向桥：
 
 ```tsx
-import { Tikz, Node, convertReactNodeToIR } from '@retikz/react';
+import { TikZ, Node, convertReactNodeToIR } from '@retikz/react';
 
 const ir = convertReactNodeToIR(
   <Node id="a" position={[0, 0]}>A</Node>,
 );
 // 序列化、传 LLM、存数据库……
-<Tikz ir={ir} width={200} height={80} />;
+<TikZ ir={ir} width={200} height={80} />;
 ```
 
 `ir` 与 `children` 互斥；同时传时优先 `ir`。

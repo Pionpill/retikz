@@ -1,4 +1,4 @@
-import { Node, Path, Step, Tikz } from '@retikz/react';
+import { Node, Path, Step, TikZ } from '@retikz/react';
 import type { FC } from 'react';
 
 /**
@@ -6,7 +6,7 @@ import type { FC } from 'react';
  * @description A -> B -> C -> D -> cycle 回 A，比手动 line 回起点少一个端点声明。
  */
 const Demo: FC = () => (
-  <Tikz width={360} height={180}>
+  <TikZ width={360} height={180}>
     <Node id="a" position={[0, 0]}>
       A
     </Node>
@@ -26,7 +26,7 @@ const Demo: FC = () => (
       <Step kind="line" to="d" />
       <Step kind="cycle" />
     </Path>
-  </Tikz>
+  </TikZ>
 );
 
 export default Demo;

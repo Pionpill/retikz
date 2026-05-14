@@ -1,8 +1,8 @@
-import { Path, Step, Tikz } from '@retikz/react';
+import { Path, Step, TikZ } from '@retikz/react';
 import type { FC } from 'react';
 
 const Demo: FC = () => (
-  <Tikz width={420} height={220}>
+  <TikZ width={420} height={220}>
     {/* lineCap：粗 stroke 让端点形状差异肉眼可见 */}
     {(['butt', 'round', 'square'] as const).map((cap, i) => (
       <Path key={`cap-${cap}`} stroke="currentColor" strokeWidth={12} lineCap={cap}>
@@ -19,7 +19,7 @@ const Demo: FC = () => (
         <Step kind="line" to={[260, i * 40 + 25]} />
       </Path>
     ))}
-  </Tikz>
+  </TikZ>
 );
 
 export default Demo;

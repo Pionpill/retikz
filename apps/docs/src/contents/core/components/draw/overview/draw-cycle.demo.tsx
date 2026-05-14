@@ -1,4 +1,4 @@
-import { Draw, DrawWay, Node, Tikz } from '@retikz/react';
+import { Draw, DrawWay, Node, TikZ } from '@retikz/react';
 import type { FC } from 'react';
 
 /**
@@ -6,7 +6,7 @@ import type { FC } from 'react';
  * @description 等价于 <Step kind="cycle" />，对齐 TikZ 写法 `(A) -- (B) -- (C) -- cycle`。
  */
 const Demo: FC = () => (
-  <Tikz width={320} height={200}>
+  <TikZ width={320} height={200}>
     <Node id="a" position={[0, 0]}>
       A
     </Node>
@@ -17,7 +17,7 @@ const Demo: FC = () => (
       C
     </Node>
     <Draw way={['a', 'b', 'c', DrawWay.Cycle]} />
-  </Tikz>
+  </TikZ>
 );
 
 export default Demo;

@@ -1,4 +1,4 @@
-import { Draw, DrawWay, Tikz } from '@retikz/react';
+import { Draw, DrawWay, TikZ } from '@retikz/react';
 import type { FC } from 'react';
 
 /**
@@ -6,7 +6,7 @@ import type { FC } from 'react';
  * @description 半透明 fill + 同色 stroke 是 UML / 流程图常用配色。
  */
 const Demo: FC = () => (
-  <Tikz width={360} height={160}>
+  <TikZ width={360} height={160}>
     {/* 蓝色填充三角形 */}
     <Draw
       way={[[20, 20], [100, 20], [60, 110], DrawWay.Cycle]}
@@ -21,7 +21,7 @@ const Demo: FC = () => (
       stroke="#10b981"
       strokeWidth={2}
     />
-  </Tikz>
+  </TikZ>
 );
 
 export default Demo;

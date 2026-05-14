@@ -1,4 +1,4 @@
-import { Draw, Node, Tikz } from '@retikz/react';
+import { Draw, Node, TikZ } from '@retikz/react';
 import type { FC } from 'react';
 
 /**
@@ -6,7 +6,7 @@ import type { FC } from 'react';
  * @description 顶行 JSX/DSL → parsers → IR → compile → Scene → adapter renderer；底行各阶段背后的模块来源，geometry/* 与 compile 之间用虚线表示"被调用"；节点纯当文字锚点 stroke="none"，Draw 仍按 Node bbox 自动贴边。
  */
 const Demo: FC = () => (
-  <Tikz width={660} height={150} style={{ maxWidth: '100%', height: 'auto' }}>
+  <TikZ width={660} height={150} style={{ maxWidth: '100%', height: 'auto' }}>
     <Node id="jsx" position={[-300, 0]} stroke="none">
       JSX / DSL
     </Node>
@@ -49,7 +49,7 @@ const Demo: FC = () => (
     <Draw way={['geometry', 'compile']} arrow="->" strokeDasharray="4 3" />
     <Draw way={['primitive', 'scene']} arrow="->" />
     <Draw way={['react', 'adapter']} arrow="->" />
-  </Tikz>
+  </TikZ>
 );
 
 export default Demo;

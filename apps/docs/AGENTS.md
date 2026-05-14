@@ -138,7 +138,7 @@ H1 走 frontmatter，**mdx 正文里不要再写 `# 标题`**。
 - **demo 含展示文本（节点标签 / 标注文字 / 任何会渲染到 SVG 的字符串）必须双语并行**：写两份文件 `<name>.zh.demo.tsx` + `<name>.en.demo.tsx`，分别用中文 / 英文文案。`ComponentPreview` 按当前 i18n 语言自动挑对应文件，找不到再回退到无 lang 后缀的 `<name>.demo.tsx`。
 - **demo 含展示文本（节点标签 / 标注文字 / 任何会渲染到 SVG 的字符串）必须双语并行**：写两份文件 `<name>.zh.demo.tsx` + `<name>.en.demo.tsx`，分别用中文 / 英文文案。`ComponentPreview` 按当前 i18n 语言自动挑对应文件，找不到再回退到无 lang 后缀的 `<name>.demo.tsx`。
   - 纯几何 / 形状演示（无任何文字）继续用单文件 `<name>.demo.tsx`，不需要双份
-  - 双份 demo 内 JSX 结构必须保持一致（同样的 props、同样的 `<Tikz>` size、同样的 layout）；只换文本字面量
+  - 双份 demo 内 JSX 结构必须保持一致（同样的 props、同样的 `<TikZ>` size、同样的 layout）；只换文本字面量
   - mdx 一侧 `<ComponentPreview name="..."/>` 不需要改——name 不带 lang 后缀，由 ComponentPreview 自己解析
   - 反例：英文 mdx 里的 demo 出现"北 / 南 / 东 / 西"等中文，会让英语用户困惑、demo 截图也不一致
 

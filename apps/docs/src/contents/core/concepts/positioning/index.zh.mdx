@@ -11,7 +11,7 @@ retikz 里所有"放在哪 / 连到哪"都用同一套位置语法：3 种形态
 | 极坐标 | `{ origin?, angle, radius }` | Node position、path target |
 | 节点 id | `'node-id'` | **仅** path target（Step.to / way item） |
 
-> 坐标系：x 向右，y 向下（与 SVG / Canvas 一致，与数学课本相反）。单位是 user units，不是像素，最终物理尺寸由 `<Tikz>` 的 `width` / `height` + viewBox 决定。
+> 坐标系：x 向右，y 向下（与 SVG / Canvas 一致，与数学课本相反）。单位是 user units，不是像素，最终物理尺寸由 `<TikZ>` 的 `width` / `height` + viewBox 决定。
 
 ## 笛卡尔
 
@@ -37,7 +37,7 @@ retikz 里所有"放在哪 / 连到哪"都用同一套位置语法：3 种形态
 
 ## 节点 id 引用（path target）
 
-`<Step>` / `<Draw>` 的 target 还接受**字符串**，表示引用同一 `<Tikz>` 内的节点 id：
+`<Step>` / `<Draw>` 的 target 还接受**字符串**，表示引用同一 `<TikZ>` 内的节点 id：
 
 <ComponentPreview name="positioning-id-ref" size="sm" />
 

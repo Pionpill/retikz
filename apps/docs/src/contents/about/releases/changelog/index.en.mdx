@@ -5,6 +5,18 @@ description: retikz release history grouped by MINOR version, newest first. Date
 
 <Update label="May 2026" tags={["@retikz/core", "@retikz/react"]}>
 
+## v0.1.0-beta.2
+
+Second beta naming pass: continue moving public APIs away from SVG-specific wording and historical casing mismatches before the rc API freeze.
+
+### `@retikz/core`
+
+- **BREAKING: Scene bounds are now `Layout` instead of `ViewBox`**: `ViewBox` / `Scene.viewBox` / `computeViewBox` become `Layout` / `Scene.layout` / `computeLayout`. The SVG adapter still writes the SVG `viewBox` attribute; core's public type layer now uses render-target-neutral layout naming.
+
+### `@retikz/react`
+
+- **BREAKING: the top-level component is now `<TikZ>` instead of `<Tikz>`**: `Tikz` / `TikzProps` become `TikZ` / `TikZProps`, matching the original LaTeX TikZ casing. Migration is a direct import and JSX tag rename.
+
 ## v0.1.0-beta.1
 
 First beta optimization release after the alpha.5 schema wrap-up. It focuses on renderer-neutral core wording, named public union types and JSDoc, shared geometry transforms, unbuilder round-trip coverage, compile/path modularization and performance, field-list type locks, builder cast narrowing, explicit compile warnings, boundary tests, naming cleanup, and removing renderer-mirror helpers from core tests. It adds no new drawing capability; the goal is lower regression risk, better diagnostics, and maintainability.
@@ -53,13 +65,13 @@ Node-relations layer in one wave: relative positioning between nodes, coordinate
 ### `@retikz/core`
 
 - **Relative positioning between nodes**: `Node.position` accepts a `{ direction, of, distance? }` form mirroring TikZ `[<direction>=<distance> of <id>]`; `direction` ranges over the 8-direction enum (4 cardinals + 4 diagonals, with `1/√2` components keeping diagonal distance consistent with the cardinal radius); `of` requires the referenced node to be defined earlier in the IR (same forward-reference rule as polar `origin` / Step `to`) — ADR-01
-- **`nodeDistance` on the Tikz container**: feeds `CompileOptions.nodeDistance`, used as the default distance for relative positioning; an explicit `distance` on the position wins, otherwise falls back to 1 (matches TikZ `node distance=1cm`)
+- **`nodeDistance` on the TikZ container**: feeds `CompileOptions.nodeDistance`, used as the default distance for relative positioning; an explicit `distance` on the position wins, otherwise falls back to 1 (matches TikZ `node distance=1cm`)
 - **`<Coordinate>` placeholder**: new `IRChild` discriminator `'coordinate'` (only `id` + `position`), top-level peer of Node / Path; in compile Pass 1 it emits no primitive and does not extend the viewBox, but it does register in `nodeIndex` as a 0×0 rect layout (boundaryPoint always returns the center), letting path targets and `at.of` string references resolve to it — ADR-02
 - **Node-attached labels**: `Node.label?` takes a single `NodeLabel` object or an array; each label takes `text` / `position?` (8-direction enum or numeric angle — `label=above:foo` / `label=30:foo`) / `distance?` (default 4) / `textColor?` / `opacity?` / `font?`; missing `font` / `textColor` inherit from the parent node; emit produces one TextPrim per label, placed inside the inner group so labels rotate with the node — ADR-03
 
 ### `@retikz/react`
 
-- `<Tikz>` gains a `nodeDistance` prop; `<Node position={{ direction, of, distance? }}>` accepts the relative-positioning form
+- `<TikZ>` gains a `nodeDistance` prop; `<Node position={{ direction, of, distance? }}>` accepts the relative-positioning form
 - New third kernel component `<Coordinate id="..." position={...} />` (peer of `<Node>` / `<Path>`, one-to-one with IR); builder / unbuilder round-trip end-to-end
 - `<Node label={...}>` prop takes a NodeLabel object or array, matching the IR field
 
@@ -127,7 +139,7 @@ P0 + P1 essentials for flow charts / UML / state machines land in one shot: 4 no
 ### `@retikz/react`
 
 - Path / Draw / Step / Node forward all new IR fields; `DrawWay` is fully interchangeable with IR string literals
-- Tikz container injects SVG `<defs><marker>` on demand (one per arrow shape used, `useId()` keeps ids unique across multiple instances)
+- TikZ container injects SVG `<defs><marker>` on demand (one per arrow shape used, `useId()` keeps ids unique across multiple instances)
 - Renderer adds `'ellipse'` primitive case (shared by circle / ellipse nodes)
 - Render pipeline now supports GroupPrim to wrap multi-sub-path paths — for multi-node arrowed paths, markers attach only to the very first / last segment
 

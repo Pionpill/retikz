@@ -16,16 +16,16 @@ describe('Coordinate placeholder', () => {
     expect(scene.primitives).toHaveLength(0);
   });
 
-  it('coordinate 不参与 viewBox 扩展（与"无 child"等价兜底）', () => {
-    // 远离原点的 coordinate 不该撑大 viewBox：
-    // 仅含 coordinate 时 allPoints 为空，viewBox 走 view-box.ts 的兜底 100x100@(0,0)
+  it('coordinate 不参与 layout 扩展（与"无 child"等价兜底）', () => {
+    // 远离原点的 coordinate 不该撑大 layout：
+    // 仅含 coordinate 时 allPoints 为空，layout 走 layout.ts 的兜底 100x100@(0,0)
     const farIR: IR = {
       version: 1,
       type: 'scene',
       children: [{ type: 'coordinate', id: 'far', position: [9999, 9999] }],
     };
     const emptyIR: IR = { version: 1, type: 'scene', children: [] };
-    expect(compileToScene(farIR).viewBox).toEqual(compileToScene(emptyIR).viewBox);
+    expect(compileToScene(farIR).layout).toEqual(compileToScene(emptyIR).layout);
   });
 
   it('path target 字符串可命中 coordinate id', () => {

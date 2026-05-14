@@ -3,7 +3,7 @@ import type { GroupPrim } from './group';
 import type { PathPrim } from './path';
 import type { RectPrim } from './rect';
 import type { TextPrim } from './text';
-import type { ViewBox } from './view-box';
+import type { Layout } from './layout';
 
 /**
  * Scene primitive：渲染目标无关的最大公约子集
@@ -11,10 +11,10 @@ import type { ViewBox } from './view-box';
  */
 export type ScenePrimitive = RectPrim | EllipsePrim | TextPrim | PathPrim | GroupPrim;
 
-/** 场景：渲染目标无关的"已布局好的图元集合 + viewBox" */
+/** 场景：渲染目标无关的"已布局好的图元集合 + layout" */
 export type Scene = {
   /** 已布局好的图元数组，按渲染顺序排列 */
   primitives: Array<ScenePrimitive>;
-  /** 整个场景的视口范围 */
-  viewBox: ViewBox;
+  /** 整个场景的布局边界 */
+  layout: Layout;
 };

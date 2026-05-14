@@ -27,7 +27,7 @@ Each item in `way` accepts fourteen forms — the first five are direct targets 
 
 | Form | Example | Meaning |
 | --- | --- | --- |
-| Node id | `'a'` | Reference a Node in the same Tikz; endpoint auto-attaches to border |
+| Node id | `'a'` | Reference a Node in the same TikZ; endpoint auto-attaches to border |
 | Cartesian | `[120, 0]` | Literal `[x, y]` |
 | Polar | `{ origin: 'a', angle: 60, radius: 80 }` | Polar (see [Positioning](/core/concepts/positioning)) |
 | Relative (Relative) | `{ position: [10, 0], type: DrawWay.Relative }` or `'+10,0'` | Previous step's endpoint + `[dx, dy]`; does **not** update prevEnd (TikZ `(+x, +y)`) |

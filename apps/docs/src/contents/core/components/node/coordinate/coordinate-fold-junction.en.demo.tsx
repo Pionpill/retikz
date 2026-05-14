@@ -1,4 +1,4 @@
-import { Coordinate, Draw, Node, Tikz } from '@retikz/react';
+import { Coordinate, Draw, Node, TikZ } from '@retikz/react';
 import type { FC } from 'react';
 
 /**
@@ -6,7 +6,7 @@ import type { FC } from 'react';
  * @description Multiple step nodes converge to a shared decision junction with no rectangle or text; each path routes through via `<Draw way={['A', 'junction', 'B']}>` and endpoints clip to the 0×0 anchor center.
  */
 const Demo: FC = () => (
-  <Tikz width={460} height={280}>
+  <TikZ width={460} height={280}>
     <Node id="A" position={[-180, -80]}>A</Node>
     <Node id="B" position={[-180, 80]}>B</Node>
     <Coordinate id="junction" position={[0, 0]} />
@@ -15,7 +15,7 @@ const Demo: FC = () => (
     <Draw way={['A', 'junction']} />
     <Draw way={['B', 'junction']} />
     <Draw way={['junction', 'out']} arrow="->" />
-  </Tikz>
+  </TikZ>
 );
 
 export default Demo;

@@ -1,4 +1,4 @@
-import { Coordinate, Draw, Node, Tikz } from '@retikz/react';
+import { Coordinate, Draw, Node, TikZ } from '@retikz/react';
 import type { FC } from 'react';
 
 /**
@@ -6,7 +6,7 @@ import type { FC } from 'react';
  * @description ca → cb → cc 三个 coordinate 用 `{ of, offset }` 派生；节点 anchor 到 coordinate，移动 ca 整组跟着走。
  */
 const Demo: FC = () => (
-  <Tikz width={420} height={180}>
+  <TikZ width={420} height={180}>
     <Coordinate id="ca" position={[-140, 0]} />
     <Coordinate id="cb" position={{ of: 'ca', offset: [120, 0] }} />
     <Coordinate id="cc" position={{ of: 'cb', offset: [120, 0] }} />
@@ -15,7 +15,7 @@ const Demo: FC = () => (
     <Node id="C" position={{ of: 'cc', offset: [0, -30] }}>c</Node>
     <Draw way={['A', 'B']} arrow="->" />
     <Draw way={['B', 'C']} arrow="->" />
-  </Tikz>
+  </TikZ>
 );
 
 export default Demo;
