@@ -174,13 +174,13 @@ The `arrowDetail` object goes further — shape / scale / color / per-end overri
 
 ### Styling
 
-`stroke` / `strokeWidth` / `strokeDasharray` match `<Path>`:
+`stroke` / `strokeWidth` / `dashPattern` match `<Path>`:
 
 <ComponentPreview name="draw-dashed" />
 
 ### Endpoints / corners + thickness preset + opacity
 
-Draw forwards the rest of Path's stroke-appearance fields: `lineCap` / `lineJoin` (SVG `stroke-linecap` / `stroke-linejoin`); `thickness` is a TikZ-style semantic preset (`'ultraThin'` … `'ultraThick'`, with `thin = 1` matching the default `strokeWidth`; explicit `strokeWidth` always wins); three independent opacity channels — `opacity` overall, `fillOpacity` for fill only, `drawOpacity` for stroke only (TikZ `draw opacity`). See [Path](/core/components/draw/path) for examples.
+Draw forwards the rest of Path's stroke-appearance fields: `lineCap` / `lineJoin` (TikZ `line cap` / `line join`); `thickness` is a TikZ-style semantic preset (`'ultraThin'` … `'ultraThick'`, with `thin = 1` matching the default `strokeWidth`; explicit `strokeWidth` always wins); three independent opacity channels — `opacity` overall, `fillOpacity` for fill only, `drawOpacity` for stroke only (TikZ `draw opacity`). See [Path](/core/components/draw/path) for examples.
 
 ## API Reference
 
@@ -189,9 +189,9 @@ Draw forwards the rest of Path's stroke-appearance fields: `lineCap` / `lineJoin
 | `way` | `Array<WayItem>` | — | At least 2 items; first is always `move`, rest are `line` / `step` (fold) / `cycle` (close) depending on item form |
 | `stroke` | `string` | `currentColor` | Stroke color |
 | `strokeWidth` | `number` | `1` | Stroke width |
-| `strokeDasharray` | `string` | — | SVG `stroke-dasharray` pattern (e.g. `"4 2"`) |
-| `lineCap` | `'butt' \| 'round' \| 'square'` | `'butt'` | Stroke endpoint shape (SVG `stroke-linecap`) |
-| `lineJoin` | `'miter' \| 'round' \| 'bevel'` | `'miter'` | Stroke corner shape (SVG `stroke-linejoin`) |
+| `dashPattern` | `string` | — | dash pattern string (e.g. `"4 2"`) |
+| `lineCap` | `'butt' \| 'round' \| 'square'` | `'butt'` | Stroke endpoint shape (TikZ `line cap`) |
+| `lineJoin` | `'miter' \| 'round' \| 'bevel'` | `'miter'` | Stroke corner shape (TikZ `line join`) |
 | `thickness` | `'ultraThin' \| 'veryThin' \| 'thin' \| 'semithick' \| 'thick' \| 'veryThick' \| 'ultraThick'` | — | Semantic stroke preset (`thin = 1`); explicit `strokeWidth` always wins |
 | `arrow` | `'none' \| '->' \| '<-' \| '<->'` | — | Path-level arrow direction |
 | `arrowDetail` | `{ shape?, scale?, length?, width?, color?, fill?, opacity?, lineWidth?, start?, end? }` | — | Detailed arrow config (top-level visual fields + optional `start` / `end` field-by-field merge); see [Path](/core/components/draw/path#arrows) for details |

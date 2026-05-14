@@ -126,16 +126,16 @@ export type PathPrim = {
   fill?: string;
   /** 填充透明度 0~1 */
   fillOpacity?: number;
-  /** SVG fill-rule：`nonzero`（默认）/ `evenodd`（环形 / 孔洞场景） */
+  /** 填充规则：`nonzero`（默认）/ `evenodd`（环形 / 孔洞场景） */
   fillRule?: 'nonzero' | 'evenodd';
   /** 描边色 */
   stroke?: string;
-  /** 描边透明度 0~1（SVG stroke-opacity） */
+  /** 描边透明度 0~1 */
   strokeOpacity?: number;
   /** 描边宽度 */
   strokeWidth?: number;
-  /** SVG stroke-dasharray 模式 */
-  strokeDasharray?: string;
+  /** 描边 dash pattern */
+  dashPattern?: string;
   /** 端点形状 */
   strokeLinecap?: 'butt' | 'round' | 'square';
   /** 拐点形状 */

@@ -46,7 +46,7 @@ const Demo: FC = () => (
     </Node>
 
     <Draw way={['ir_schema', 'ir']} arrow="->" />
-    <Draw way={['geometry', 'compile']} arrow="->" strokeDasharray="4 3" />
+    <Draw way={['geometry', 'compile']} arrow="->" dashPattern="4 3" />
     <Draw way={['primitive', 'scene']} arrow="->" />
     <Draw way={['react', 'adapter']} arrow="->" />
   </TikZ>

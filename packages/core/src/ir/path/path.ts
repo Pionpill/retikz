@@ -17,11 +17,11 @@ export const PathSchema = z
       .number()
       .optional()
       .describe('Stroke width in user units; defaults to 1 when omitted'),
-    strokeDasharray: z
+    dashPattern: z
       .string()
       .optional()
       .describe(
-        'Stroke dash pattern (e.g. "4 2"; same format as SVG/CSS `stroke-dasharray`); leave empty for solid line',
+        'Stroke dash pattern (e.g. "4 2"); leave empty for solid line',
       ),
     arrow: z
       .enum(['none', '->', '<-', '<->'])
@@ -48,13 +48,13 @@ export const PathSchema = z
       .enum(['butt', 'round', 'square'])
       .optional()
       .describe(
-        'Stroke endpoint shape (`butt` / `round` / `square`; same semantics as SVG/CSS `stroke-linecap`). Default `butt` (sharp end); `round` adds a half-disc cap; `square` extends a half-stroke past the endpoint.',
+        'Stroke endpoint shape (`butt` / `round` / `square`; matches TikZ `line cap`). Default `butt` (sharp end); `round` adds a half-disc cap; `square` extends a half-stroke past the endpoint.',
       ),
     lineJoin: z
       .enum(['miter', 'round', 'bevel'])
       .optional()
       .describe(
-        'Stroke corner shape (`miter` / `round` / `bevel`; same semantics as SVG/CSS `stroke-linejoin`). Default `miter` (sharp corner); `round` rounds the join; `bevel` cuts the corner flat.',
+        'Stroke corner shape (`miter` / `round` / `bevel`; matches TikZ `line join`). Default `miter` (sharp corner); `round` rounds the join; `bevel` cuts the corner flat.',
       ),
     thickness: z
       .enum([

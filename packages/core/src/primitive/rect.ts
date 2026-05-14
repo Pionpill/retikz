@@ -20,8 +20,8 @@ export type RectPrim = {
   strokeOpacity?: number;
   /** 描边宽度 */
   strokeWidth?: number;
-  /** 描边 dash 模式（如 '4 2'，与 SVG/CSS `stroke-dasharray` 同格式） */
-  strokeDasharray?: string;
+  /** 描边 dash pattern（如 '4 2'） */
+  dashPattern?: string;
   /** 圆角半径（同时作用于 rx/ry） */
   cornerRadius?: number;
   /** 整体透明度 0~1 */

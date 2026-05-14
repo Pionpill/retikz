@@ -12,10 +12,13 @@ Second beta naming pass: continue moving public APIs away from SVG-specific word
 ### `@retikz/core`
 
 - **BREAKING: Scene bounds are now `Layout` instead of `ViewBox`**: `ViewBox` / `Scene.viewBox` / `computeViewBox` become `Layout` / `Scene.layout` / `computeLayout`. The SVG adapter still writes the SVG `viewBox` attribute; core's public type layer now uses render-target-neutral layout naming.
+- **BREAKING: path dash fields are now `dashPattern`**: `IRPath.strokeDasharray`, `PathPrim.strokeDasharray`, `RectPrim.strokeDasharray`, and `EllipsePrim.strokeDasharray` become `dashPattern`. The React/SVG renderer still maps the field to the SVG `stroke-dasharray` attribute internally.
+- **Renderer-neutral endpoint arrow geometry**: multi-sub-path endpoint arrow splitting no longer uses SVG marker terminology in core, and arrow shrink now uses neutral arrow geometry instead of depending on React/SVG `viewBox` / `refX` wording.
 
 ### `@retikz/react`
 
 - **BREAKING: the top-level component is now `<TikZ>` instead of `<Tikz>`**: `Tikz` / `TikzProps` become `TikZ` / `TikZProps`, matching the original LaTeX TikZ casing. Migration is a direct import and JSX tag rename.
+- **BREAKING: `<Path>` / `<Draw>` dash props are now `dashPattern`**: replace `strokeDasharray="4 2"` with `dashPattern="4 2"`. `lineCap` / `lineJoin` stay unchanged and continue to align with TikZ `line cap` / `line join` terminology.
 
 ## v0.1.0-beta.1
 
@@ -86,7 +89,7 @@ Path enhancements land in one wave: curve trio, path-level shapes, relative coor
 - **Relative coordinates**: `IRTarget` gains two variants — `{ rel: [dx, dy] }` (does not advance prevEnd, TikZ `(+x, +y)`) and `{ relAccumulate: [dx, dy] }` (accumulates, TikZ `(++x, ++y)`); compile entry `normalizeRelativeTargets` resolves them up-front — ADR-03
 - **Edge labels**: every step kind except `'move'` / `'cycle'` accepts `label?: { text, position?, side? }`; `position` ∈ `'midway' | 'near-start' | 'near-end'`, `side` ∈ `'above' | 'below' | 'left' | 'right' | 'sloped'`; compiles to a TextPrim (sloped wrapped in a group rotate) — ADR-04
 - **New `geometry/segment.ts`**: seven sampling helpers (line / quad / cubic / fold / arc / circle / ellipse) backing label position / tangent math
-- **Path stroke caps / joins**: `lineCap` / `lineJoin` (SVG `stroke-linecap` / `stroke-linejoin`)
+- **Path stroke caps / joins**: `lineCap` / `lineJoin` (TikZ `line cap` / `line join`)
 - **Semantic stroke preset**: `thickness` ∈ `'ultraThin'` … `'ultraThick'` (7 levels), `thin = 1` matches the default `strokeWidth`; explicit `strokeWidth` always wins
 - **Path opacity**: `opacity` overall + `fillOpacity` for fill only + `drawOpacity` for stroke only (matches Node naming)
 - **Sugar way DSL extensions**: `{ curve | cubic | bend }` infix operators (consume the next item); `{ arc | circle | ellipse }` infix operators (do not consume the next item); `WayRelItem` object form `{ position, type: DrawWay.Relative | DrawWay.Accumulate }` + sugar strings `'+1,0'` / `'++1,0'`; `{ label }` infix operator decorates the next segment
@@ -109,7 +112,7 @@ Node visual P1 lands in full: multi-line text, font object, axis-specific seps, 
 - **Node multi-line text**: `text: string | Array<string | LineSpec>` with per-line `fill` / `opacity` / `font` overrides; complementary `align` (left / center / right) + `lineHeight` (user units, defaults to `font.size × 1.2`) — ADR-02
 - **Node axis-specific seps**: `innerXSep` / `innerYSep` / `outerSep`, mirroring TikZ `inner xsep` / `inner ysep` / `outer sep`; `padding` / `margin` are kept as symmetric aliases (axis-specific fields take precedence) — ADR-03
 - **Node colors and opacity**: `textColor` / `opacity` (whole-node) / `fillOpacity` / `drawOpacity`
-- **Node stroke styles**: `dashed` (`4 2` preset) / `dotted` (`1 2` preset) / `dashArray` (explicit SVG `stroke-dasharray`); priority `dashArray` > `dashed` > `dotted`
+- **Node stroke styles**: `dashed` (`4 2` preset) / `dotted` (`1 2` preset) / `dashArray` (explicit dash pattern); priority `dashArray` > `dashed` > `dotted`
 - **Node size constraints**: `roundedCorners` (rectangle corner radius) / `minimumWidth` / `minimumHeight` + symmetric alias `minimumSize`
 - **Node scaling**: `scale` / `xScale` / `yScale`; uniform scale takes the font with it, non-uniform falls back to `min(sx, sy)` to preserve glyph shape
 - **TextPrim upgrade**: `lines: Array<TextLine>` replaces `content: string`; per-line `fontSize` / `fontFamily` / `fontWeight` / `fontStyle` / `fill` / `opacity` overrides

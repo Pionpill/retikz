@@ -10,7 +10,7 @@ const Demo: FC = () => (
       B
     </Node>
     <Draw way={['a', { circle: { radius: 30 } }]} />
-    <Draw way={['b', { circle: { radius: 20 } }]} strokeDasharray="4 2" />
+    <Draw way={['b', { circle: { radius: 20 } }]} dashPattern="4 2" />
   </TikZ>
 );
 

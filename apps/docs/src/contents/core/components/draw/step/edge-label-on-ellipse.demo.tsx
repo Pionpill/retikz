@@ -16,7 +16,7 @@ const Demo: FC = () => (
         label={{ text: 't=0.25', position: 0.25, side: 'below' }}
       />
     </Path>
-    <Path stroke="currentColor" strokeDasharray="3 3">
+    <Path stroke="currentColor" dashPattern="3 3">
       <Step kind="move" to="center" />
       <Step
         kind="ellipsePath"

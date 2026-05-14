@@ -8,11 +8,11 @@ export type PathProps = {
   stroke?: IRPath['stroke'];
   /** 描边宽度，省略时为 1 */
   strokeWidth?: IRPath['strokeWidth'];
-  /** SVG stroke-dasharray 模式（如 "4 2"） */
-  strokeDasharray?: IRPath['strokeDasharray'];
-  /** 端点形状（SVG `stroke-linecap`）：`'butt'`（默认 / 直角）/ `'round'`（半圆）/ `'square'`（方头外扩半 stroke） */
+  /** 描边 dash pattern（如 "4 2"） */
+  dashPattern?: IRPath['dashPattern'];
+  /** 端点形状（TikZ `line cap`）：`'butt'`（默认 / 直角）/ `'round'`（半圆）/ `'square'`（方头外扩半 stroke） */
   lineCap?: IRPath['lineCap'];
-  /** 拐点形状（SVG `stroke-linejoin`）：`'miter'`（默认 / 尖角）/ `'round'`（圆角）/ `'bevel'`（切角） */
+  /** 拐点形状（TikZ `line join`）：`'miter'`（默认 / 尖角）/ `'round'`（圆角）/ `'bevel'`（切角） */
   lineJoin?: IRPath['lineJoin'];
   /** 语义 stroke 档位（TikZ `ultra thin` … `ultra thick`）；显式 `strokeWidth` 始终优先 */
   thickness?: IRPath['thickness'];
@@ -28,7 +28,7 @@ export type PathProps = {
   arrowDetail?: IRPath['arrowDetail'];
   /** 闭合区域填充色，CSS 颜色字符串；省略 = 不填充（仅描边）。配合 cycle step 画填充形状 */
   fill?: IRPath['fill'];
-  /** SVG fill-rule：`'nonzero'`（默认）/ `'evenodd'`（环形 / 孔洞） */
+  /** 填充规则：`'nonzero'`（默认）/ `'evenodd'`（环形 / 孔洞） */
   fillRule?: IRPath['fillRule'];
   /** 整 path 透明度 0~1；同时作用于 stroke 与 fill */
   opacity?: IRPath['opacity'];

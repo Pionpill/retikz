@@ -220,7 +220,7 @@ describe('ADR-05 e2e snapshot：拆分前 commands 锁定', () => {
         },
       ]),
     );
-    // 默认 length=6 scale=1，normal refX=0 → shrink = 6 user units（线缩到 94）
+    // 默认 length=6 scale=1，normal lineContactX=0 → shrink = 6 user units（线缩到 94）
     expect(commands).toEqual([
       { kind: 'move', to: [0, 0] },
       { kind: 'line', to: [94, 0] },

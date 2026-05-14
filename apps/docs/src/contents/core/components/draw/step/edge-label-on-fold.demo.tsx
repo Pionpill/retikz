@@ -20,7 +20,7 @@ const Demo: FC = () => (
         label={{ text: "'-|' t=0.5 (corner)", position: 0.5 }}
       />
     </Path>
-    <Path stroke="currentColor" arrow="->" strokeDasharray="3 3">
+    <Path stroke="currentColor" arrow="->" dashPattern="3 3">
       <Step kind="move" to="a" />
       <Step
         kind="step"

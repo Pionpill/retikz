@@ -19,7 +19,7 @@ const Demo: FC = () => (
         { label: { text: 'midway (60°)', position: 'midway', side: 'sloped' } },
         { arc: { startAngle: 0, endAngle: 120, radius: 120 } },
       ]}
-      strokeDasharray="3 3"
+      dashPattern="3 3"
     />
   </TikZ>
 );

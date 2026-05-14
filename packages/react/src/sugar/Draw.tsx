@@ -15,11 +15,11 @@ export type DrawProps = {
   stroke?: IRPath['stroke'];
   /** 描边宽度，省略时为 1 */
   strokeWidth?: IRPath['strokeWidth'];
-  /** SVG stroke-dasharray 模式（如 "4 2"） */
-  strokeDasharray?: IRPath['strokeDasharray'];
-  /** 端点形状（SVG `stroke-linecap`） */
+  /** 描边 dash pattern（如 "4 2"） */
+  dashPattern?: IRPath['dashPattern'];
+  /** 端点形状（TikZ `line cap`） */
   lineCap?: IRPath['lineCap'];
-  /** 拐点形状（SVG `stroke-linejoin`） */
+  /** 拐点形状（TikZ `line join`） */
   lineJoin?: IRPath['lineJoin'];
   /** 语义 stroke 档位（TikZ `ultra thin` … `ultra thick`）；显式 `strokeWidth` 始终优先 */
   thickness?: IRPath['thickness'];
@@ -35,7 +35,7 @@ export type DrawProps = {
   arrowDetail?: IRPath['arrowDetail'];
   /** 闭合区域填充色，省略 = 不填充。配合 way 末尾的 `DrawWay.Cycle` 画填充形状 */
   fill?: IRPath['fill'];
-  /** SVG fill-rule：`'nonzero'`（默认）/ `'evenodd'` */
+  /** 填充规则：`'nonzero'`（默认）/ `'evenodd'` */
   fillRule?: IRPath['fillRule'];
   /** 整 path 透明度 0~1 */
   opacity?: IRPath['opacity'];
@@ -54,7 +54,7 @@ export const Draw: FC<DrawProps> = props => {
     way,
     stroke,
     strokeWidth,
-    strokeDasharray,
+    dashPattern,
     lineCap,
     lineJoin,
     thickness,
@@ -72,7 +72,7 @@ export const Draw: FC<DrawProps> = props => {
     <Path
       stroke={stroke}
       strokeWidth={strokeWidth}
-      strokeDasharray={strokeDasharray}
+      dashPattern={dashPattern}
       lineCap={lineCap}
       lineJoin={lineJoin}
       thickness={thickness}

@@ -65,7 +65,7 @@ export type NodeProps = {
   dashed?: boolean;
   /** 描边点线预设：等价于 dashArray="1 2" */
   dotted?: boolean;
-  /** 显式 SVG stroke-dasharray 值（如 "4 2"）；优先级最高 */
+  /** 显式 dash pattern（如 "4 2"）；优先级最高 */
   dashArray?: string;
   /** 圆角半径（user units）；只对 `rectangle` shape 生效 */
   roundedCorners?: number;

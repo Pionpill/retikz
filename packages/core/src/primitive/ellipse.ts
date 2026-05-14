@@ -17,7 +17,7 @@ export type EllipsePrim = {
   /** 描边透明度 0~1 */
   strokeOpacity?: number;
   strokeWidth?: number;
-  strokeDasharray?: string;
+  dashPattern?: string;
   /** 整体透明度 0~1 */
   opacity?: number;
 };

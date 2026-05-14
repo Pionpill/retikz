@@ -62,13 +62,13 @@ import { Path, Step } from '@retikz/react';
 
 ### Styling
 
-`stroke` / `strokeWidth` / `strokeDasharray` match `<Draw>`:
+`stroke` / `strokeWidth` / `dashPattern` match `<Draw>`:
 
 <ComponentPreview name="path-dashed" size="xs" />
 
 ### Stroke endpoints / corners
 
-`lineCap` controls the stroke endpoint shape (SVG `stroke-linecap`): `'butt'` default (square end at endpoint) / `'round'` half-circle cap / `'square'` square cap extended past the endpoint by half a stroke. `lineJoin` controls the corner shape (SVG `stroke-linejoin`): `'miter'` default (sharp) / `'round'` rounded / `'bevel'` flat-cut.
+`lineCap` controls the stroke endpoint shape (TikZ `line cap`): `'butt'` default (square end at endpoint) / `'round'` half-circle cap / `'square'` square cap extended past the endpoint by half a stroke. `lineJoin` controls the corner shape (TikZ `line join`): `'miter'` default (sharp) / `'round'` rounded / `'bevel'` flat-cut.
 
 <ComponentPreview name="path-line-style" />
 
@@ -90,9 +90,9 @@ Three independent channels: `opacity` overall (multiplies onto stroke and fill),
 | --- | --- | --- | --- |
 | `stroke` | `string` | `currentColor` | Stroke color |
 | `strokeWidth` | `number` | `1` | Stroke width |
-| `strokeDasharray` | `string` | — | SVG `stroke-dasharray` pattern |
-| `lineCap` | `'butt' \| 'round' \| 'square'` | `'butt'` | Stroke endpoint shape (SVG `stroke-linecap`) |
-| `lineJoin` | `'miter' \| 'round' \| 'bevel'` | `'miter'` | Stroke corner shape (SVG `stroke-linejoin`) |
+| `dashPattern` | `string` | — | dash pattern string |
+| `lineCap` | `'butt' \| 'round' \| 'square'` | `'butt'` | Stroke endpoint shape (TikZ `line cap`) |
+| `lineJoin` | `'miter' \| 'round' \| 'bevel'` | `'miter'` | Stroke corner shape (TikZ `line join`) |
 | `thickness` | `'ultraThin' \| 'veryThin' \| 'thin' \| 'semithick' \| 'thick' \| 'veryThick' \| 'ultraThick'` | — | Semantic stroke preset (`thin = 1`); explicit `strokeWidth` always wins |
 | `arrow` | `'none' \| '->' \| '<-' \| '<->'` | — | Path-level arrow direction (see [Arrow](/core/components/draw/arrow)) |
 | `arrowDetail` | `ArrowDetail` object | — | Arrow visual config; fields documented on [Arrow](/core/components/draw/arrow) |

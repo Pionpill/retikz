@@ -114,7 +114,7 @@ const childToElement = (child: IRChild, key: number): ReactNode => {
         key,
         stroke: child.stroke,
         strokeWidth: child.strokeWidth,
-        strokeDasharray: child.strokeDasharray,
+        dashPattern: child.dashPattern,
         lineCap: child.lineCap,
         lineJoin: child.lineJoin,
         thickness: child.thickness,

@@ -107,7 +107,7 @@ Both **symmetric aliases** and **axis-specific** forms are supported (resolution
 
 ### Border style
 
-`dashed` / `dotted` are presets; `dashArray` is an SVG-native escape hatch (priority: `dashArray` > `dashed` > `dotted`):
+`dashed` / `dotted` are presets; `dashArray` is an explicit dash pattern (priority: `dashArray` > `dashed` > `dotted`):
 
 <ComponentPreview name="node-stroke-style" size="sm" />
 
@@ -179,7 +179,7 @@ In addition to Cartesian / polar, `position` accepts **`{ direction, of, distanc
 | `drawOpacity` | `number` | — | Stroke-only opacity 0..1 (TikZ `draw opacity`) |
 | `dashed` | `boolean` | — | Dashed border preset ("4 2") |
 | `dotted` | `boolean` | — | Dotted border preset ("1 2") |
-| `dashArray` | `string` | — | Explicit SVG `stroke-dasharray`; highest priority |
+| `dashArray` | `string` | — | Explicit dash pattern; highest priority |
 | `roundedCorners` | `number` | — | Corner radius (only on `rectangle` shape) |
 | `minimumWidth` / `minimumHeight` | `number` | — | Floors the bbox dimensions |
 | `minimumSize` | `number` | — | Symmetric minimum-size alias; axis-specific fields take precedence |

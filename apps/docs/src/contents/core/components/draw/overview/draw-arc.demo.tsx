@@ -10,7 +10,7 @@ const Demo: FC = () => (
     <Draw way={['center', { arc: { startAngle: 0, endAngle: 90, radius: 60 } }]} />
     <Draw
       way={['center', { arc: { startAngle: 270, endAngle: 360, radius: 60 } }]}
-      strokeDasharray="4 2"
+      dashPattern="4 2"
     />
   </TikZ>
 );

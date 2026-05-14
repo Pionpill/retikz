@@ -43,7 +43,7 @@ describe('Draw: 基础展开', () => {
         way={['a', 'b']}
         stroke="#abc"
         strokeWidth={3}
-        strokeDasharray="4 2"
+        dashPattern="4 2"
         lineCap="round"
         lineJoin="bevel"
         thickness="thick"
@@ -60,7 +60,7 @@ describe('Draw: 基础展开', () => {
       type: 'path',
       stroke: '#abc',
       strokeWidth: 3,
-      strokeDasharray: '4 2',
+      dashPattern: '4 2',
       lineCap: 'round',
       lineJoin: 'bevel',
       thickness: 'thick',

@@ -434,7 +434,7 @@ export const emitPathPrimitive = (
     // path.fill 缺省 'none'（仅描边）；传颜色即填充，可配 cycle 闭合画填充形状
     fill: path.fill ?? 'none',
     fillRule: path.fillRule,
-    strokeDasharray: path.strokeDasharray,
+    dashPattern: path.dashPattern,
     strokeLinecap: path.lineCap,
     strokeLinejoin: path.lineJoin,
     // IR `drawOpacity` → primitive `strokeOpacity`（与 Node 命名一致）

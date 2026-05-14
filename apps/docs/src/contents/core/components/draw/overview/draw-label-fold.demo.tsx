@@ -24,7 +24,7 @@ const Demo: FC = () => (
         'B',
       ]}
       arrow="->"
-      strokeDasharray="3 3"
+      dashPattern="3 3"
     />
   </TikZ>
 );

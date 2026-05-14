@@ -50,7 +50,7 @@ void _assertNodeFieldsCheck;
 export const PATH_FIELDS = [
   'stroke',
   'strokeWidth',
-  'strokeDasharray',
+  'dashPattern',
   'arrow',
   'arrowDetail',
   'fill',

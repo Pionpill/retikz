@@ -174,13 +174,13 @@ way 里两种等价写法：
 
 ### 样式
 
-`stroke` / `strokeWidth` / `strokeDasharray` 与 `<Path>` 完全一致：
+`stroke` / `strokeWidth` / `dashPattern` 与 `<Path>` 完全一致：
 
 <ComponentPreview name="draw-dashed" />
 
 ### 描边端点 / 拐点 + 语义档位 + 透明度
 
-Draw 透传 Path 的描边外观字段：`lineCap` / `lineJoin`（SVG `stroke-linecap` / `stroke-linejoin`）；`thickness` 是 TikZ 风格语义档位（`'ultraThin'` … `'ultraThick'`，`thin = 1` 与默认 strokeWidth 对齐，显式 `strokeWidth` 始终优先）；三个独立 opacity 通道——`opacity` 整体、`fillOpacity` 仅 fill、`drawOpacity` 仅 stroke（TikZ `draw opacity`）。详见 [Path](/core/components/draw/path) 的对应章节。
+Draw 透传 Path 的描边外观字段：`lineCap` / `lineJoin`（TikZ `line cap` / `line join`）；`thickness` 是 TikZ 风格语义档位（`'ultraThin'` … `'ultraThick'`，`thin = 1` 与默认 strokeWidth 对齐，显式 `strokeWidth` 始终优先）；三个独立 opacity 通道——`opacity` 整体、`fillOpacity` 仅 fill、`drawOpacity` 仅 stroke（TikZ `draw opacity`）。详见 [Path](/core/components/draw/path) 的对应章节。
 
 ## API 参考
 
@@ -189,9 +189,9 @@ Draw 透传 Path 的描边外观字段：`lineCap` / `lineJoin`（SVG `stroke-li
 | `way`             | `Array<WayItem>`                                           | —              | 至少 2 个点；首项总是 `move`，其余按 item 形态决定 `line` / `step`（折角）/ `cycle`（闭合） |
 | `stroke`          | `string`                                                   | `currentColor` | 描边色                                                                                      |
 | `strokeWidth`     | `number`                                                   | `1`            | 描边宽度                                                                                    |
-| `strokeDasharray` | `string`                                                   | —              | SVG `stroke-dasharray` 模式（如 `"4 2"`）                                                   |
-| `lineCap`         | `'butt' \| 'round' \| 'square'`                            | `'butt'`       | 描边端点形状（SVG `stroke-linecap`）                                                        |
-| `lineJoin`        | `'miter' \| 'round' \| 'bevel'`                            | `'miter'`      | 描边拐点形状（SVG `stroke-linejoin`）                                                       |
+| `dashPattern`     | `string`                                                   | —              | dash pattern 模式（如 `"4 2"`）                                                           |
+| `lineCap`         | `'butt' \| 'round' \| 'square'`                            | `'butt'`       | 描边端点形状（TikZ `line cap`）                                                             |
+| `lineJoin`        | `'miter' \| 'round' \| 'bevel'`                            | `'miter'`      | 描边拐点形状（TikZ `line join`）                                                            |
 | `thickness`       | `'ultraThin' \| 'veryThin' \| 'thin' \| 'semithick' \| 'thick' \| 'veryThick' \| 'ultraThick'` | —              | 语义 stroke 档位（`thin = 1`）；显式 `strokeWidth` 始终优先                                |
 | `arrow`           | `'none' \| '->' \| '<-' \| '<->'`                          | —              | 路径级箭头方向                                                                              |
 | `arrowDetail`     | `{ shape?, scale?, length?, width?, color?, fill?, opacity?, lineWidth?, start?, end? }` | —              | 箭头详细配置（顶层视觉字段 + 可选 start/end 子对象逐字段 merge）；详见 [Path](/core/components/draw/path#箭头) |

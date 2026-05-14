@@ -15,7 +15,7 @@ const Demo: FC = () => (
       <Step kind="circlePath" radius={30} />
     </Path>
     {/* 以 b 为圆心画整圆 */}
-    <Path stroke="currentColor" strokeDasharray="4 2">
+    <Path stroke="currentColor" dashPattern="4 2">
       <Step kind="move" to="b" />
       <Step kind="circlePath" radius={20} />
     </Path>

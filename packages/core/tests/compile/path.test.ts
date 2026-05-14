@@ -430,7 +430,7 @@ describe("compile path: arrow 箭头", () => {
     expect(path.arrowEnd).toBeUndefined();
   });
 
-  it("多 sub-path + arrow → 拆成 GroupPrim：首段独占 marker-start，末段独占 marker-end", () => {
+  it("多 sub-path + arrow → 拆成 GroupPrim：首段独占 arrowStart，末段独占 arrowEnd", () => {
     // A → B → C 多节点路径，'->'。期望产出 GroupPrim 内 2 个 PathPrim：
     //   首段 d="M ... L ..."（无 arrow）
     //   末段 d="M ... L ..."（arrowEnd shape='normal'）

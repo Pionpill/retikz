@@ -152,7 +152,7 @@ export const NodeSchema = z
     dashArray: z
       .string()
       .optional()
-      .describe('Explicit stroke dash pattern (e.g. "4 2"; same format as SVG/CSS `stroke-dasharray`); overrides `dashed` / `dotted`.'),
+      .describe('Explicit stroke dash pattern (e.g. "4 2"); overrides `dashed` / `dotted`.'),
     roundedCorners: z
       .number()
       .nonnegative()

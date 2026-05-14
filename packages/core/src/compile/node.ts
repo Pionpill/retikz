@@ -84,8 +84,8 @@ export type NodeLayout = {
   strokeOpacity?: number;
   /** 边框宽度，emit 时 1 兜底 */
   strokeWidth?: number;
-  /** 描边 dash 模式（与 SVG/CSS `stroke-dasharray` 同格式），已把 dashed/dotted 预设解析为具体 pattern */
-  strokeDasharray?: string;
+  /** 描边 dash pattern，已把 dashed/dotted 预设解析为具体 pattern */
+  dashPattern?: string;
   /** rectangle 圆角半径（非 rect shape 无效） */
   roundedCorners?: number;
   /** 文字颜色，emit 时 'currentColor' 兜底 */
@@ -400,7 +400,7 @@ export const layoutNode = (
     stroke: node.stroke,
     strokeOpacity: node.drawOpacity,
     strokeWidth: node.strokeWidth,
-    strokeDasharray: resolveDashArray(node.dashArray, node.dashed, node.dotted),
+    dashPattern: resolveDashArray(node.dashArray, node.dashed, node.dotted),
     roundedCorners: node.roundedCorners,
     textColor: node.textColor,
     opacity: node.opacity,
@@ -426,7 +426,7 @@ const emitRectShape = (
     stroke: layout.stroke ?? 'currentColor',
     strokeOpacity: layout.strokeOpacity,
     strokeWidth: layout.strokeWidth ?? 1,
-    strokeDasharray: layout.strokeDasharray,
+    dashPattern: layout.dashPattern,
     cornerRadius: layout.roundedCorners,
     opacity: layout.opacity,
   };
@@ -447,7 +447,7 @@ const emitEllipseShape = (
   stroke: layout.stroke ?? 'currentColor',
   strokeOpacity: layout.strokeOpacity,
   strokeWidth: layout.strokeWidth ?? 1,
-  strokeDasharray: layout.strokeDasharray,
+  dashPattern: layout.dashPattern,
   opacity: layout.opacity,
 });
 
@@ -476,7 +476,7 @@ const emitDiamondShape = (
     stroke: layout.stroke ?? 'currentColor',
     strokeOpacity: layout.strokeOpacity,
     strokeWidth: layout.strokeWidth ?? 1,
-    strokeDasharray: layout.strokeDasharray,
+    dashPattern: layout.dashPattern,
     opacity: layout.opacity,
   };
 };

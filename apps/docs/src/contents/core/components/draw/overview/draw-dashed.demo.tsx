@@ -3,7 +3,7 @@ import type { FC } from 'react';
 
 /**
  * 描边样式变体并排
- * @description 每行一个 stroke / strokeWidth / strokeDasharray 组合，左端 Node 当 row 标签，右端纯坐标终点。
+ * @description 每行一个 stroke / strokeWidth / dashPattern 组合，左端 Node 当 row 标签，右端纯坐标终点。
  */
 const Demo: FC = () => (
   <TikZ width={420} height={200}>
@@ -30,9 +30,9 @@ const Demo: FC = () => (
     {/* 加粗 */}
     <Draw way={['r3', [320, 60]]} strokeWidth={4} />
     {/* 虚线 */}
-    <Draw way={['r4', [320, 90]]} stroke="#10b981" strokeWidth={2} strokeDasharray="6 3" />
+    <Draw way={['r4', [320, 90]]} stroke="#10b981" strokeWidth={2} dashPattern="6 3" />
     {/* 点线 */}
-    <Draw way={['r5', [320, 120]]} stroke="#f97316" strokeWidth={2} strokeDasharray="1 4" />
+    <Draw way={['r5', [320, 120]]} stroke="#f97316" strokeWidth={2} dashPattern="1 4" />
   </TikZ>
 );
 

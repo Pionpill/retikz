@@ -62,13 +62,13 @@ import { Path, Step } from '@retikz/react';
 
 ### 样式
 
-`stroke` / `strokeWidth` / `strokeDasharray` 与 `<Draw>` 完全一致：
+`stroke` / `strokeWidth` / `dashPattern` 与 `<Draw>` 完全一致：
 
 <ComponentPreview name="path-dashed" size="xs" />
 
 ### 描边端点 / 拐点
 
-`lineCap` 控制描边端点形状（SVG `stroke-linecap`）：`'butt'` 默认（直角端）/ `'round'` 半圆 / `'square'` 方头外扩半个 stroke。`lineJoin` 控制拐点形状（SVG `stroke-linejoin`）：`'miter'` 默认（尖角）/ `'round'` 圆角 / `'bevel'` 切角。
+`lineCap` 控制描边端点形状（TikZ `line cap`）：`'butt'` 默认（直角端）/ `'round'` 半圆 / `'square'` 方头外扩半个 stroke。`lineJoin` 控制拐点形状（TikZ `line join`）：`'miter'` 默认（尖角）/ `'round'` 圆角 / `'bevel'` 切角。
 
 <ComponentPreview name="path-line-style" />
 
@@ -90,9 +90,9 @@ import { Path, Step } from '@retikz/react';
 | --- | --- | --- | --- |
 | `stroke` | `string` | `currentColor` | 描边色 |
 | `strokeWidth` | `number` | `1` | 描边宽度 |
-| `strokeDasharray` | `string` | — | SVG `stroke-dasharray` 模式 |
-| `lineCap` | `'butt' \| 'round' \| 'square'` | `'butt'` | 描边端点形状（SVG `stroke-linecap`） |
-| `lineJoin` | `'miter' \| 'round' \| 'bevel'` | `'miter'` | 描边拐点形状（SVG `stroke-linejoin`） |
+| `dashPattern` | `string` | — | dash pattern 模式 |
+| `lineCap` | `'butt' \| 'round' \| 'square'` | `'butt'` | 描边端点形状（TikZ `line cap`） |
+| `lineJoin` | `'miter' \| 'round' \| 'bevel'` | `'miter'` | 描边拐点形状（TikZ `line join`） |
 | `thickness` | `'ultraThin' \| 'veryThin' \| 'thin' \| 'semithick' \| 'thick' \| 'veryThick' \| 'ultraThick'` | — | 语义 stroke 档位（`thin = 1`）；显式 `strokeWidth` 始终优先 |
 | `arrow` | `'none' \| '->' \| '<-' \| '<->'` | — | 路径级箭头方向（详见 [Arrow](/core/components/draw/arrow)） |
 | `arrowDetail` | `ArrowDetail` 对象 | — | 箭头视觉详细配置；字段详见 [Arrow](/core/components/draw/arrow) |

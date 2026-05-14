@@ -106,22 +106,22 @@ describe('Node 颜色 / 不透明度 (alpha.2)', () => {
 });
 
 describe('Node 描边样式 (alpha.2)', () => {
-  it('dashed → strokeDasharray 默认 "4 2"', () => {
+  it('dashed → dashPattern 默认 "4 2"', () => {
     const ir: IR = {
       version: 1,
       type: 'scene',
       children: [{ type: 'node', position: [0, 0], dashed: true }],
     };
-    expect(findRect(ir)?.strokeDasharray).toBe('4 2');
+    expect(findRect(ir)?.dashPattern).toBe('4 2');
   });
 
-  it('dotted → strokeDasharray 默认 "1 2"', () => {
+  it('dotted → dashPattern 默认 "1 2"', () => {
     const ir: IR = {
       version: 1,
       type: 'scene',
       children: [{ type: 'node', position: [0, 0], dotted: true }],
     };
-    expect(findRect(ir)?.strokeDasharray).toBe('1 2');
+    expect(findRect(ir)?.dashPattern).toBe('1 2');
   });
 
   it('dashArray 显式值优先于 dashed / dotted', () => {
@@ -138,7 +138,7 @@ describe('Node 描边样式 (alpha.2)', () => {
         },
       ],
     };
-    expect(findRect(ir)?.strokeDasharray).toBe('8 3 2 3');
+    expect(findRect(ir)?.dashPattern).toBe('8 3 2 3');
   });
 
   it('dashed 优先于 dotted（两者同设时）', () => {
@@ -149,7 +149,7 @@ describe('Node 描边样式 (alpha.2)', () => {
         { type: 'node', position: [0, 0], dashed: true, dotted: true },
       ],
     };
-    expect(findRect(ir)?.strokeDasharray).toBe('4 2');
+    expect(findRect(ir)?.dashPattern).toBe('4 2');
   });
 });
 

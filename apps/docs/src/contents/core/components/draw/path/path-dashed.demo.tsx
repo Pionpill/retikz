@@ -9,7 +9,7 @@ const Demo: FC = () => (
     <Node id="b" position={[120, 0]}>
       B
     </Node>
-    <Path strokeDasharray="6 3" stroke="#10b981" strokeWidth={2}>
+    <Path dashPattern="6 3" stroke="#10b981" strokeWidth={2}>
       <Step kind="move" to="a" />
       <Step kind="line" to="b" />
     </Path>
