@@ -28,7 +28,6 @@ import { useComponentPreviewStore } from '@/store/useComponentPreviewStore';
 import { useLayoutStore } from '@/store/useLayoutStore';
 import { useTocStore } from '@/store/useTocStore';
 
-import { AiChatTrigger } from '../ai-chat';
 import { GITHUB_URL, TIKZ_DOCS_URL, useDocActions } from './useDocActions';
 
 // TooltipTrigger 默认即 `<button>`，直接套 buttonVariants；不用 `<Button asChild>` 包，避免 React 18 下 asChild → 自定义函数组件 ref 转发不到，触发不到 Popper 锚点
@@ -36,7 +35,7 @@ const triggerClass = cn(buttonVariants({ variant: 'ghost', size: 'icon' }), 'siz
 
 /**
  * 顶栏右侧动作组
- * @description 桌面（lg+）GitHub / 复制链接 / 主题 / 语言 / 更多 平铺；移动端（< lg）只保留 More 按钮，前四项折进 Dropdown 顶部分组；TooltipProvider 内部自闭包
+ * @description 桌面（lg+）GitHub / 复制链接 / 主题 / 语言 / 更多 平铺；移动端（< lg）只保留 More 按钮，前四项折进 Dropdown 顶部分组；TooltipProvider 内部自闭包。AI 触发器由 AppHeader 直接放在中间，不再属于这里
  */
 export const HeaderActions: FC = () => {
   const { t, i18n } = useTranslation();
@@ -59,7 +58,6 @@ export const HeaderActions: FC = () => {
     <TooltipProvider delayDuration={150}>
       <div className="flex items-center gap-2">
         <div className="hidden lg:flex items-center gap-1">
-          <AiChatTrigger />
           <Tooltip>
             <TooltipTrigger
               asChild

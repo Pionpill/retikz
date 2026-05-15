@@ -36,7 +36,10 @@ export const AiChatTrigger: FC = () => {
         <TooltipTrigger
           onClick={toggleOpen}
           aria-label={t('ai.triggerLabel')}
-          className={cn(buttonVariants({ variant: 'ghost', size: 'icon' }), 'size-7 cursor-pointer rounded-sm')}
+          className={cn(
+            buttonVariants({ variant: 'outline', size: 'icon-sm' }),
+            'cursor-pointer text-muted-foreground hover:text-accent-foreground',
+          )}
         >
           <BotMessageSquare className="size-4" />
         </TooltipTrigger>
