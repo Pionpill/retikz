@@ -3,18 +3,16 @@ import { type FC, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
 import { useAiChatStore } from '@/store/useAiChatStore';
 import { AiChatConversation } from './parts/AiChatConversation';
 import { AiChatEmpty } from './parts/AiChatEmpty';
 import { AiChatSettings } from './parts/AiChatSettings';
 
 /**
- * AI 聊天侧栏 panel
- * @description 与 DocLayout 主区并列的持久 right rail（**非** Sheet 覆盖型），打开时挤压
- *   主内容、不遮挡阅读。挂在 App.tsx 顶层、与 Routes 同行。
+ * AI 聊天侧栏 panel 内容
+ * @description 由 ViewLayout 的 `ResizablePanelGroup` 包裹，宽度交给上层 `ResizablePanel`
+ *   托管；这里只负责内部布局：sticky h-screen 让面板在主内容滚动时常驻视口。
  *
- *   关闭时 width 收为 0、aria-hidden=true、children 保留挂载以保持会话 state。
  *   Esc：生成中 abort；非生成中 close。视图路由：view==='settings' → Settings；
  *   否则按当前 provider 是否填 key 选 Empty / Conversation。
  */
@@ -51,44 +49,36 @@ export const AiChatPanel: FC = () => {
   const showConversation = !showSettings && hasKey;
 
   return (
-    <aside
-      aria-hidden={!open}
-      className={cn(
-        'sticky top-0 hidden h-screen shrink-0 overflow-hidden border-l border-border bg-background transition-[width,opacity] duration-300 ease-out lg:flex',
-        open ? 'w-96 opacity-100' : 'pointer-events-none w-0 opacity-0',
-      )}
-    >
-      <div className="flex h-full w-96 flex-col">
-        {!showSettings && (
-          <div className="flex h-14 shrink-0 items-center gap-2 border-b border-border px-3">
-            <span className="text-sm font-medium">✦ {t('ai.triggerLabel')}</span>
-            <div className="ml-auto flex items-center gap-1">
-              <Button
-                variant="ghost"
-                size="icon"
-                className="size-7 cursor-pointer rounded-sm"
-                onClick={() => setView('settings')}
-                aria-label={t('ai.settingsLabel')}
-              >
-                <Settings className="size-4" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="size-7 cursor-pointer rounded-sm"
-                onClick={() => setOpen(false)}
-                aria-label={t('ai.closeLabel')}
-              >
-                <X className="size-4" />
-              </Button>
-            </div>
+    <aside className="sticky top-0 flex h-screen flex-col bg-background">
+      {!showSettings && (
+        <div className="flex h-14 shrink-0 items-center gap-2 border-b border-border px-3">
+          <span className="text-sm font-medium">✦ {t('ai.triggerLabel')}</span>
+          <div className="ml-auto flex items-center gap-1">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="size-7 cursor-pointer rounded-sm"
+              onClick={() => setView('settings')}
+              aria-label={t('ai.settingsLabel')}
+            >
+              <Settings className="size-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="size-7 cursor-pointer rounded-sm"
+              onClick={() => setOpen(false)}
+              aria-label={t('ai.closeLabel')}
+            >
+              <X className="size-4" />
+            </Button>
           </div>
-        )}
-        <div className="flex flex-1 flex-col overflow-hidden">
-          {showSettings && <AiChatSettings />}
-          {showEmpty && <AiChatEmpty />}
-          {showConversation && <AiChatConversation />}
         </div>
+      )}
+      <div className="flex flex-1 flex-col overflow-hidden">
+        {showSettings && <AiChatSettings />}
+        {showEmpty && <AiChatEmpty />}
+        {showConversation && <AiChatConversation />}
       </div>
     </aside>
   );

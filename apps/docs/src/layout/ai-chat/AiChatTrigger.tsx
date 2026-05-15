@@ -38,7 +38,7 @@ export const AiChatTrigger: FC = () => {
           aria-label={t('ai.triggerLabel')}
           className={cn(
             buttonVariants({ variant: 'outline', size: 'icon-sm' }),
-            'cursor-pointer text-muted-foreground hover:text-accent-foreground',
+            'hidden cursor-pointer text-muted-foreground hover:text-accent-foreground lg:inline-flex',
           )}
         >
           <BotMessageSquare className="size-4" />
