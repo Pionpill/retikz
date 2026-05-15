@@ -1,4 +1,4 @@
-import { Sparkles } from 'lucide-react';
+import { BotMessageSquare } from 'lucide-react';
 import { type FC, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -38,7 +38,7 @@ export const AiChatTrigger: FC = () => {
           aria-label={t('ai.triggerLabel')}
           className={cn(buttonVariants({ variant: 'ghost', size: 'icon' }), 'size-7 cursor-pointer rounded-sm')}
         >
-          <Sparkles className="size-4" />
+          <BotMessageSquare className="size-4" />
         </TooltipTrigger>
         <TooltipContent className="flex items-center gap-2">
           {t('ai.triggerHint')}

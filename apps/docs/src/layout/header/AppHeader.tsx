@@ -1,7 +1,6 @@
 import type { FC } from 'react';
 
 import { DocsSearch } from '@/components/shared/docs-search';
-import { AiChatTrigger } from '@/layout/ai-chat';
 
 import { MobileNav } from '../mobile/MobileNav';
 
@@ -20,7 +19,7 @@ const AppHeader: FC = () => (
     <ModuleNav />
     <div className="ml-auto flex items-center gap-2 lg:gap-3">
       <DocsSearch />
-      <AiChatTrigger />
+
       <HeaderActions />
     </div>
   </header>

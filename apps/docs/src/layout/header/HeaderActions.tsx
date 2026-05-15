@@ -3,6 +3,7 @@ import { type FC } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { GitHubIcon } from '@/components/icons';
+import { COMPARISON_TARGETS, ComparisonTargetLabelKeys } from '@/components/shared/comparison';
 import { Shortcut } from '@/components/shared/shortcut';
 import { buttonVariants } from '@/components/ui/button';
 import {
@@ -22,12 +23,12 @@ import {
 import { Separator } from '@/components/ui/separator';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
-import { COMPARISON_TARGETS, ComparisonTargetLabelKeys } from '@/components/shared/comparison';
-import { useComponentPreviewStore } from '@/store/useComponentPreviewStore';
 import { useComparisonStore } from '@/store/useComparisonStore';
+import { useComponentPreviewStore } from '@/store/useComponentPreviewStore';
 import { useLayoutStore } from '@/store/useLayoutStore';
 import { useTocStore } from '@/store/useTocStore';
 
+import { AiChatTrigger } from '../ai-chat';
 import { GITHUB_URL, TIKZ_DOCS_URL, useDocActions } from './useDocActions';
 
 // TooltipTrigger 默认即 `<button>`，直接套 buttonVariants；不用 `<Button asChild>` 包，避免 React 18 下 asChild → 自定义函数组件 ref 转发不到，触发不到 Popper 锚点
@@ -58,6 +59,7 @@ export const HeaderActions: FC = () => {
     <TooltipProvider delayDuration={150}>
       <div className="flex items-center gap-2">
         <div className="hidden lg:flex items-center gap-1">
+          <AiChatTrigger />
           <Tooltip>
             <TooltipTrigger
               asChild
