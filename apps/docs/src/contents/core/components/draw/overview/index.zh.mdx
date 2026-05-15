@@ -25,7 +25,13 @@ import { Draw } from '@retikz/react';
 
 #### 二次贝塞尔
 
-`{ curve: [cx, cy] }` 对应 TikZ `..controls(B)..`，等价 `<Step kind="curve">`。
+`{ curve: [cx, cy] }` 等价 `<Step kind="curve">`。
+
+<Comparison target="tikz" title="二次贝塞尔">
+
+`{ curve: [cx, cy] }` 对应 TikZ 的 `.. controls (B) ..` 路径控制点写法。
+
+</Comparison>
 
 <ComponentPreview name="draw-curve" />
 
@@ -119,16 +125,22 @@ import { Draw } from '@retikz/react';
 | `stroke` | `string` | `currentColor` | 描边色 |
 | `strokeWidth` | `number` | `1` | 描边宽度 |
 | `dashPattern` | `Array<number>` | — | dash / gap 长度序列，如 `[4, 2]` |
-| `lineCap` | `'butt' \| 'round' \| 'square'` | `'butt'` | 描边端点形状（TikZ `line cap`） |
-| `lineJoin` | `'miter' \| 'round' \| 'bevel'` | `'miter'` | 描边拐点形状（TikZ `line join`） |
-| `thickness` | `'ultraThin' \| 'veryThin' \| 'thin' \| 'semithick' \| 'thick' \| 'veryThick' \| 'ultraThick'` | — | TikZ 风格语义 stroke 档位；显式 `strokeWidth` 优先 |
+| `lineCap` | `'butt' \| 'round' \| 'square'` | `'butt'` | 描边端点形状 |
+| `lineJoin` | `'miter' \| 'round' \| 'bevel'` | `'miter'` | 描边拐点形状 |
+| `thickness` | `'ultraThin' \| 'veryThin' \| 'thin' \| 'semithick' \| 'thick' \| 'veryThick' \| 'ultraThick'` | — | 语义化 stroke 档位；显式 `strokeWidth` 优先 |
 | `arrow` | `'none' \| '->' \| '<-' \| '<->'` | — | 路径级箭头方向 |
 | `arrowDetail` | `{ shape?, scale?, length?, width?, color?, fill?, opacity?, lineWidth?, start?, end? }` | — | 箭头详细配置；详见 [Arrow](/core/components/draw/arrow) |
 | `fill` | `string` | `'none'` | 闭合区域填充色 |
 | `fillRule` | `'nonzero' \| 'evenodd'` | `'nonzero'` | 填充规则 |
 | `opacity` | `number` | — | 整 path 透明度 0..1 |
 | `fillOpacity` | `number` | — | 仅 fill 透明度 0..1 |
-| `drawOpacity` | `number` | — | 仅 stroke 透明度 0..1（TikZ `draw opacity`） |
+| `drawOpacity` | `number` | — | 仅 stroke 透明度 0..1 |
+
+<Comparison target="tikz" title="样式命名">
+
+`lineCap` / `lineJoin` 对应 TikZ 的 `line cap` / `line join`；`drawOpacity` 对应 `draw opacity`；`thickness` 的档位沿用 `ultra thin` 到 `ultra thick` 的语义化描边厚度。
+
+</Comparison>
 
 ### 曲线 / 形状 / 标注 way item
 

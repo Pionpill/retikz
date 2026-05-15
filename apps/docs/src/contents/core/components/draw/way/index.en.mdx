@@ -25,7 +25,13 @@ One `way` can mix node ids, Cartesian coordinates, and polar coordinates.
 
 ### Fold
 
-`'-|'` / `'|-'` turns the previous-to-next segment into a fold, matching TikZ `(A) -| (B)` / `(A) |- (B)`.
+`'-|'` / `'|-'` turns the previous-to-next segment into a fold.
+
+<Comparison target="tikz" title="Fold Syntax">
+
+These raw literals follow TikZ path syntax: `(A) -| (B)` / `(A) |- (B)`. `'-|'` goes horizontal then vertical; `'|-'` goes vertical then horizontal.
+
+</Comparison>
 
 <ComponentPreview name="draw-fold" />
 
@@ -47,7 +53,7 @@ One `way` can mix node ids, Cartesian coordinates, and polar coordinates.
 
 | Form | Example | Meaning |
 | --- | --- | --- |
-| Node id | `'a'` | Reference a Node in the same TikZ; endpoint auto-attaches to border |
+| Node id | `'a'` | Reference a Node in the same diagram; endpoint auto-attaches to border |
 | Cartesian | `[120, 0]` | Literal coordinate |
 | Polar | `{ origin: 'a', angle: 60, radius: 80 }` | Polar coordinate; see [Positioning](/core/concepts/positioning) |
 | Relative | `{ position: [10, 0], type: DrawWay.Relative }` or `'+10,0'` | Offset from the previous step endpoint without updating prevEnd |

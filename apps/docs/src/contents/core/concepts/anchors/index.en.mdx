@@ -3,7 +3,7 @@ title: Anchors
 description: 9 named anchors per node + three-form Target string syntax (auto / named / angle).
 ---
 
-Every `<Node>` has 9 named anchors (matching TikZ). Paths can either let retikz auto-pick the border point (the common case), or lock onto a specific position via `'A.north'` / `'A.30'`.
+Every `<Node>` has 9 named anchors. Paths can either let retikz auto-pick the border point (the common case), or lock onto a specific position via `'A.north'` / `'A.30'`.
 
 ## The 9 anchors
 
@@ -21,6 +21,12 @@ All four [`shape`](/core/components/node) types share this naming (each picks th
 | `north-east` & 4 diagonals | The 4 corners | Perimeter at 45° | Ellipse parametric t=π/4 | Side midpoints |
 
 When a node has `rotate`, all 9 anchors rotate with it.
+
+<Comparison target="tikz" title="Anchor Names">
+
+`center` / `north` / `south` / `east` / `west` / `north-east` / `north-west` / `south-east` / `south-west` reuse TikZ's common anchor vocabulary, which makes LaTeX-style node relationships easy to translate into JSX.
+
+</Comparison>
 
 ## Auto border attachment
 

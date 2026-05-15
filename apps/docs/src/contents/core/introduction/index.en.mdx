@@ -1,11 +1,11 @@
 ---
 title: Introduction
-description: An AI-native, TikZ-style general-purpose drawing library — React components for figures, JSON IR for persistence, direct LLM generation and editing.
+description: An AI-native general-purpose drawing library — React components for figures, JSON IR for persistence, direct LLM generation and editing.
 ---
 
 retikz **is not yet another chart library**. It's a drawing foundation that re-designs "diagrams as a way to describe ideas" around an AI-native workflow.
 
-It brings TikZ's twenty-year vocabulary of nodes, paths, and anchors into the browser, expressed as React components — but the **single source of truth** is the underlying JSON IR: humans write JSX, LLMs emit IR JSON directly, and renderers translate it to SVG / Canvas / PDF / native targets.
+It brings a mature vocabulary of nodes, paths, and anchors into the browser, expressed as React components — but the **single source of truth** is the underlying JSON IR: humans write JSX, LLMs emit IR JSON directly, and renderers translate it to SVG / Canvas / PDF / native targets.
 
 ## A Minimal Example
 
@@ -21,7 +21,7 @@ retikz picks IR JSON over JSX as the primary AI interface, leveraging OpenAI Str
 | --- | --- |
 | **Single-source types & schema** | zod single source → TS types + JSON Schema |
 | **Incremental editing** | JSON Patch (RFC 6902) — patch beats rewriting the IR |
-| **Text DSL (long-term)** | TikZ-native syntax; LLMs have ample TikZ training data |
+| **Text DSL (long-term)** | Mature drawing syntax that gives LLMs stronger zero-shot priors |
 
 ## IR at the Center
 
@@ -53,7 +53,7 @@ The Kernel is small — about 5–8 components: `<Path>`, `<Step>`, `<Node>`, `<
 | **UML / topology / mind maps** | Same Kernel, different layout & styling | Domain packages |
 | **Anything custom** | Write Kernel JSX directly | Your app |
 
-**You compose at the primitive layer.** Shape, connection, anchor, label — all expressed directly in TikZ's geometry / path vocabulary: drawing a curve from a bar to a side annotation, or a labeled curve between two nodes, is as natural as drawing two more primitives.
+**You compose at the primitive layer.** Shape, connection, anchor, label — all expressed directly in geometry / path vocabulary: drawing a curve from a bar to a side annotation, or a labeled curve between two nodes, is as natural as drawing two more primitives.
 
 A domain package is a thin layer of data binding, layout algorithms, and default styling on top of the Kernel; the underlying structure, persistence, and AI surface stay identical across domains.
 
@@ -69,9 +69,9 @@ retikz follows a **core + thin per-framework adapter** architecture: every frame
 
 **Architecturally retikz isn't tied to any framework — the IR is universal; DSLs may legitimately differ between frameworks.** A diagram you draw today with `@retikz/react` produces an IR that any future adapter can render unchanged.
 
-## Relation to TikZ
+<Comparison target="tikz" title="Relation to TikZ">
 
-retikz's naming, path actions, and anchor model are direct tributes to LaTeX's TikZ package:
+retikz's naming, path actions, and anchor model are direct tributes to LaTeX's TikZ package.
 
 | Aspect | LaTeX TikZ | retikz |
 | --- | --- | --- |
@@ -83,6 +83,10 @@ retikz's naming, path actions, and anchor model are direct tributes to LaTeX's T
 
 In the long run, `@retikz/codec` will provide bidirectional IR ↔ TikZ source — sketch in the browser, paste straight into a LaTeX paper; or take TikZ from a `.tex` file and bring it live (v3.x+).
 
+You do not need to know TikZ to use retikz. retikz borrows naming vocabulary (node / path / anchor / step), while the API remains plain React components.
+
+</Comparison>
+
 ## Who It's For
 
 **People who use diagrams to describe ideas** — technical writers, researchers, documentation authors, teachers.
@@ -92,17 +96,13 @@ Concrete scenarios:
 1. Interactive diagrams embedded in papers and blog posts
 2. Flow charts, concept maps, network topologies, UML, mind maps
 3. LLM-generated or LLM-edited illustrations
-4. Anywhere in the browser that needs TikZ-level control
+4. Anywhere in the browser that needs precise geometric control
 
 ## FAQ
 
 **Why not raw SVG / `<svg>`?**
 
-Plain SVG lacks named nodes, path actions, and anchor systems — even drawing "from node A's right side to node B's top" forces you to compute coordinates by hand. TikZ solved this twenty years ago; retikz brings that vocabulary into React.
-
-**Do I need to know TikZ?**
-
-No. retikz borrows TikZ's naming vocabulary (node / path / anchor / step), but the API is plain React components — if you can write JSX, you can use retikz. Knowing TikZ is a bonus, not a prerequisite.
+Plain SVG lacks named nodes, path actions, and anchor systems — even drawing "from node A's right side to node B's top" forces you to compute coordinates by hand. retikz brings relational drawing vocabulary into React components.
 
 **Project status?**
 

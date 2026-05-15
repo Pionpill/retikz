@@ -68,19 +68,37 @@ import { Path, Step } from '@retikz/react';
 
 #### 描边端点 / 拐点
 
-`lineCap` 控制描边端点形状（TikZ `line cap`）：`'butt'` 默认（直角端）/ `'round'` 半圆 / `'square'` 方头外扩半个 stroke。`lineJoin` 控制拐点形状（TikZ `line join`）：`'miter'` 默认（尖角）/ `'round'` 圆角 / `'bevel'` 切角。
+`lineCap` 控制描边端点形状：`'butt'` 默认（直角端）/ `'round'` 半圆 / `'square'` 方头外扩半个 stroke。`lineJoin` 控制拐点形状：`'miter'` 默认（尖角）/ `'round'` 圆角 / `'bevel'` 切角。
+
+<Comparison target="tikz" title="描边端点 / 拐点">
+
+`lineCap` / `lineJoin` 对应 TikZ 的 `line cap` / `line join` 选项。
+
+</Comparison>
 
 <ComponentPreview name="path-line-style" />
 
 #### 语义 stroke 档位
 
-`thickness` 是 TikZ 风格的语义档位——`'ultraThin'` / `'veryThin'` / `'thin'` / `'semithick'` / `'thick'` / `'veryThick'` / `'ultraThick'`，编译期映射到具体数值（`thin = 1` 与默认 strokeWidth 对齐，两端按 TikZ 比例外推）。**显式 `strokeWidth` 始终优先**——`thickness` 仅在 `strokeWidth` 缺省时生效：
+`thickness` 是语义化描边档位——`'ultraThin'` / `'veryThin'` / `'thin'` / `'semithick'` / `'thick'` / `'veryThick'` / `'ultraThick'`，编译期映射到具体数值（`thin = 1` 与默认 strokeWidth 对齐）。**显式 `strokeWidth` 始终优先**——`thickness` 仅在 `strokeWidth` 缺省时生效：
+
+<Comparison target="tikz" title="语义 stroke 档位">
+
+这些档位沿用 TikZ 从 `ultra thin` 到 `ultra thick` 的命名；retikz 使用 camelCase prop 值，例如 `ultraThin` / `veryThick`。
+
+</Comparison>
 
 <ComponentPreview name="path-thickness" size="lg" />
 
 #### 透明度
 
-三个独立通道：`opacity` 整体（同时作用于 stroke 与 fill），`fillOpacity` 仅 fill，`drawOpacity` 仅 stroke（TikZ `draw opacity` 命名，与 `<Node>` 一致）。三者可叠加：
+三个独立通道：`opacity` 整体（同时作用于 stroke 与 fill），`fillOpacity` 仅 fill，`drawOpacity` 仅 stroke。三者可叠加：
+
+<Comparison target="tikz" title="drawOpacity 命名">
+
+`drawOpacity` 对应 TikZ 的 `draw opacity`，并与 `<Node>` 的描边透明字段保持一致。
+
+</Comparison>
 
 <ComponentPreview name="path-opacity" />
 
@@ -91,8 +109,8 @@ import { Path, Step } from '@retikz/react';
 | `stroke` | `string` | `currentColor` | 描边色 |
 | `strokeWidth` | `number` | `1` | 描边宽度 |
 | `dashPattern` | `Array<number>` | — | dash/gap 长度序列（如 `[4, 2]`） |
-| `lineCap` | `'butt' \| 'round' \| 'square'` | `'butt'` | 描边端点形状（TikZ `line cap`） |
-| `lineJoin` | `'miter' \| 'round' \| 'bevel'` | `'miter'` | 描边拐点形状（TikZ `line join`） |
+| `lineCap` | `'butt' \| 'round' \| 'square'` | `'butt'` | 描边端点形状 |
+| `lineJoin` | `'miter' \| 'round' \| 'bevel'` | `'miter'` | 描边拐点形状 |
 | `thickness` | `'ultraThin' \| 'veryThin' \| 'thin' \| 'semithick' \| 'thick' \| 'veryThick' \| 'ultraThick'` | — | 语义 stroke 档位（`thin = 1`）；显式 `strokeWidth` 始终优先 |
 | `arrow` | `'none' \| '->' \| '<-' \| '<->'` | — | 路径级箭头方向（详见 [Arrow](/core/components/draw/arrow)） |
 | `arrowDetail` | `ArrowDetail` 对象 | — | 箭头视觉详细配置；字段详见 [Arrow](/core/components/draw/arrow) |
@@ -100,7 +118,7 @@ import { Path, Step } from '@retikz/react';
 | `fillRule` | `'nonzero' \| 'evenodd'` | `'nonzero'` | 填充规则；环形 / 孔洞场景用 `'evenodd'` |
 | `opacity` | `number` | — | 整 path 透明度 0~1（同时作用于 stroke 与 fill） |
 | `fillOpacity` | `number` | — | 仅 fill 透明度 0~1 |
-| `drawOpacity` | `number` | — | 仅 stroke 透明度 0~1（TikZ `draw opacity`） |
+| `drawOpacity` | `number` | — | 仅 stroke 透明度 0~1 |
 | `children` | `Array<<Step>>` | — | 至少 2 个；首个非 `move` 时编译器会强制改成 `move`。`<Step>` 支持 `move` / `line` / `step`（折角）/ `cycle`（闭合）/ `curve` / `cubic`（贝塞尔曲线）/ `bend`（弧形简记）/ `arc` / `circlePath` / `ellipsePath`（圆 / 椭圆） |
 
 ## 相关

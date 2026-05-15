@@ -19,12 +19,24 @@ A `position` field can be filled with any of four forms. All resolve to Cartesia
 
 ## AtPosition
 
-`AtPositionSchema` mirrors TikZ `[<direction>=<distance> of <id>]` from the positioning library.
+`AtPositionSchema` describes relative positioning between named entities.
 
 <ZodSchema name="AtPositionSchema" />
 
+<Comparison target="tikz" title="Relative Positioning">
+
+`AtPositionSchema` maps to TikZ positioning-library forms like `[<direction>=<distance> of <id>]`. The `nodeDistance` context maps to TikZ's global `node distance` default.
+
+</Comparison>
+
 ## OffsetPosition
 
-`OffsetPositionSchema` mirrors TikZ `calc` library syntax `($(of) + (dx, dy)$)` — an arbitrary `(dx, dy)` offset from a base point; the `of` union shape matches `PolarPosition.origin`.
+`OffsetPositionSchema` describes an arbitrary `(dx, dy)` offset from a base point; the `of` union shape matches `PolarPosition.origin`.
 
 <ZodSchema name="OffsetPositionSchema" />
+
+<Comparison target="tikz" title="Offset Positioning">
+
+`OffsetPositionSchema` maps to TikZ `calc` library syntax `($(of) + (dx, dy)$)`.
+
+</Comparison>

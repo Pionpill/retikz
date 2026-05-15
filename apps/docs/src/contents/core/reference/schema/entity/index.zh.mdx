@@ -21,10 +21,10 @@ description: 在 scene 中被命名的成员 —— Node 与 Coordinate
   fill: '形状背景色，任意 CSS color',
   fillOpacity: '填充不透明度 0..1，只影响形状背景',
   stroke: '形状边框色，任意 CSS color，默认 currentColor',
-  drawOpacity: '描边不透明度 0..1（TikZ `draw opacity`），只影响边框',
+  drawOpacity: '描边不透明度 0..1，只影响边框',
   strokeWidth: '边框宽度（用户单位），默认 1',
-  dashed: '边框样式：虚线预设（TikZ `dashed`）；被 dashArray 覆盖',
-  dotted: '边框样式：点线预设（TikZ `dotted`）；被 dashArray / dashed 覆盖',
+  dashed: '边框样式：虚线预设；被 dashArray 覆盖',
+  dotted: '边框样式：点线预设；被 dashArray / dashed 覆盖',
   dashArray: 'dash/gap 长度序列，盖过 dashed / dotted',
   roundedCorners: '圆角半径（用户单位），仅对 rectangle 生效',
   minimumWidth: '形状最小可视宽度（用户单位）',
@@ -45,12 +45,24 @@ description: 在 scene 中被命名的成员 —— Node 与 Coordinate
   'font.size': '字号（用户单位）；未填走渲染器默认',
   'font.weight': 'CSS font-weight：keyword `normal`/`bold` 或数字 100..900',
   'font.style': 'CSS font-style：`normal` / `italic` / `oblique`',
-  label: '节点外围附加文本（TikZ `[label=above:foo]`），单对象或数组',
+  label: '节点外围附加文本，单对象或数组',
 }} />
+
+<Comparison target="tikz" title="Node 字段对照">
+
+`drawOpacity` 对应 TikZ `draw opacity`；`dashed` / `dotted` 对应 TikZ 的虚线 / 点线预设；`label` 的 `{ text, position }` 形态对应 `[label=above:foo]` / `[label=30:foo]`。
+
+</Comparison>
 
 ## Coordinate
 
-`CoordinateSchema` 是 TikZ `\coordinate (m) at (3,2);` 的 IR 形态。必须有 `id`（这是它存在的全部意义），不参与 layout 扩展，与 Node 共享 nodeIndex。
+`CoordinateSchema` 必须有 `id`（这是它存在的全部意义），不参与 layout 扩展，与 Node 共享 nodeIndex。
+
+<Comparison target="tikz" title="Coordinate 对照">
+
+`{ type: 'coordinate', id: 'm', position: [3, 2] }` 对应 TikZ 的 `\coordinate (m) at (3,2);`。
+
+</Comparison>
 
 <ZodSchema name="CoordinateSchema" descriptions={{
   type: '判别字段，标记此子节点为 coordinate 占位',

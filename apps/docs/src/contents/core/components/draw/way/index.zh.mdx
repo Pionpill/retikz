@@ -25,7 +25,13 @@ import { Draw, DrawWay } from '@retikz/react';
 
 ### 折角
 
-`'-|'` / `'|-'` 把上一项到下一项那段改成折角；对应 TikZ `(A) -| (B)` / `(A) |- (B)`。
+`'-|'` / `'|-'` 把上一项到下一项那段改成折角。
+
+<Comparison target="tikz" title="折角写法">
+
+这两个裸字面量沿用 TikZ path 的 `(A) -| (B)` / `(A) |- (B)` 写法：`'-|'` 先水平后垂直，`'|-'` 先垂直后水平。
+
+</Comparison>
 
 <ComponentPreview name="draw-fold" />
 
@@ -47,7 +53,7 @@ import { Draw, DrawWay } from '@retikz/react';
 
 | 形态 | 例 | 含义 |
 | --- | --- | --- |
-| 节点 id | `'a'` | 引用同一 TikZ 内的 Node；端点自动贴 border |
+| 节点 id | `'a'` | 引用同一张图内的 Node；端点自动贴 border |
 | 笛卡尔 | `[120, 0]` | 直接给坐标 |
 | 极坐标 | `{ origin: 'a', angle: 60, radius: 80 }` | 极坐标，详见 [定位](/core/concepts/positioning) |
 | Relative | `{ position: [10, 0], type: DrawWay.Relative }` 或 `'+10,0'` | 基于前一 step 终点偏移，不更新 prevEnd |

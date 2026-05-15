@@ -28,37 +28,37 @@ import { Path, Step } from '@retikz/react';
 
 ### 折角（step）
 
-`kind="step"` 在游标与目标点之间插一个直角拐点，对应 TikZ 的 `(A) -| (B)` / `(A) |- (B)` 写法。流程图常用：
+`kind="step"` 在游标与目标点之间插一个直角拐点。流程图常用：
 
 <ComponentPreview name="step-fold" />
 
 ### 闭合（cycle）
 
-`kind="cycle"` 把当前子路径闭合回最近一次 `move` 的起点——对应 TikZ 的 `cycle` / SVG path 的 `Z`。`cycle` 没有 `to` 字段（目标隐式 = 起点）。比手动 `line` 回起点少写一个端点：
+`kind="cycle"` 把当前子路径闭合回最近一次 `move` 的起点，对应 SVG path 的 `Z`。`cycle` 没有 `to` 字段（目标隐式 = 起点）。比手动 `line` 回起点少写一个端点：
 
 <ComponentPreview name="step-cycle" />
 
 ### 二次贝塞尔（curve）
 
-`kind="curve"` 用一个控制点画二次贝塞尔曲线，对应 TikZ 的 `.. controls (B) ..` / SVG path 的 `Q`。控制点决定曲线的弯曲方向与幅度；当前控制点使用笛卡尔 `[x, y]`：
+`kind="curve"` 用一个控制点画二次贝塞尔曲线，对应 SVG path 的 `Q`。控制点决定曲线的弯曲方向与幅度；当前控制点使用笛卡尔 `[x, y]`：
 
 <ComponentPreview name="step-curve" />
 
 ### 三次贝塞尔（cubic）
 
-`kind="cubic"` 用两个控制点画三次贝塞尔曲线，对应 TikZ 的 `.. controls (B) and (C) ..` / SVG path 的 `C`。`control1` 影响起点切线方向，`control2` 影响终点切线方向；常用于 S 形曲线、复杂连接：
+`kind="cubic"` 用两个控制点画三次贝塞尔曲线，对应 SVG path 的 `C`。`control1` 影响起点切线方向，`control2` 影响终点切线方向；常用于 S 形曲线、复杂连接：
 
 <ComponentPreview name="step-cubic" />
 
 ### 弧形简记（bend）
 
-`kind="bend"` 是 TikZ `to[bend left=N]` / `to[bend right=N]` 的简记——只给方向 + 角度，编译期自动算控制点退到 cubic。`bendDirection` 是相对 from→to 路径方向的视觉左 / 右；`bendAngle` 缺省 30：
+`kind="bend"` 是弧形连线的简记——只给方向 + 角度，编译期自动算控制点退到 cubic。`bendDirection` 是相对 from→to 路径方向的视觉左 / 右；`bendAngle` 缺省 30：
 
 <ComponentPreview name="step-bend" size="lg" />
 
 ### 偏移定位（offset）
 
-`to` 也接受 **`{ of, offset }`** 形态——基准 + `(dx, dy)` 任意偏移，对应 TikZ `calc` 的 `($(of) + (dx, dy)$)`。`of` 三态：节点 id、笛卡尔字面值、PolarPosition（递归极坐标）；和 `<Node position>` 的偏移定位完全对称：
+`to` 也接受 **`{ of, offset }`** 形态——基准 + `(dx, dy)` 任意偏移。`of` 三态：节点 id、笛卡尔字面值、PolarPosition（递归极坐标）；和 `<Node position>` 的偏移定位完全对称：
 
 <ComponentPreview name="step-offset-target" size="lg" />
 
@@ -66,8 +66,8 @@ import { Path, Step } from '@retikz/react';
 
 `to` 还可以是相对偏移对象：`{ relative: [dx, dy] }` 与 `{ relativeAccumulate: [dx, dy] }` 都基于**前一 step 的终点**（`prevEnd`，无前段时回退到 `[0, 0]`）解析；区别只是**是否推进 prevEnd**：
 
-- `{ relative }`：等价 TikZ `(+x, +y)`——多段链式偏移都基于**同一**锚点，**不**更新 prevEnd
-- `{ relativeAccumulate }`：等价 TikZ `(++x, ++y)`——每段累积，prevEnd 跟着推进
+- `{ relative }`：多段链式偏移都基于**同一**锚点，**不**更新 prevEnd
+- `{ relativeAccumulate }`：每段累积，prevEnd 跟着推进
 
 也可写作 sugar 字符串 `'+dx,dy'` / `'++dx,dy'`（`<Step to="+1,0" />`），React adapter 会就地转成对应 IR 对象。下例两条路径 step 序列字面相同，仅差 target 形态——实线（relative）走出 L 形，虚线（relativeAccumulate）走出阶梯：
 
@@ -75,7 +75,7 @@ import { Path, Step } from '@retikz/react';
 
 ### 弧段（arc）
 
-`kind="arc"` 以**游标为圆心**，按起末角度 + 半径画一段圆弧——对应 TikZ 的 `arc[start angle=…, end angle=…, radius=…]`。角度沿 retikz polar 约定：0° 朝 +x，90° 视觉朝下；画完画笔停在弧的终点：
+`kind="arc"` 以**游标为圆心**，按起末角度 + 半径画一段圆弧。角度沿 retikz polar 约定：0° 朝 +x，90° 视觉朝下；画完画笔停在弧的终点：
 
 <ComponentPreview name="step-arc" />
 
@@ -93,7 +93,7 @@ import { Path, Step } from '@retikz/react';
 
 ### 边标注（label）
 
-给 `<Step>` 挂一个 `label` 就能在该段画线的中部 / 起点 / 终点附近放一段文字——对应 TikZ 的 `(a) -- node[midway, above] {accept} (b)`。`label` 是个对象：
+给 `<Step>` 挂一个 `label` 就能在该段画线的中部 / 起点 / 终点附近放一段文字。`label` 是个对象：
 
 - `text`：必填，标签文字（单行）
 - `position`：`'at-start' | 'very-near-start' | 'near-start' | 'midway' | 'near-end' | 'very-near-end' | 'at-end'` 七个 keyword，或 0..1 的数值 t（任意精细位置），缺省 `'midway'`（t=0.5）
@@ -105,7 +105,7 @@ import { Path, Step } from '@retikz/react';
 
 #### label.position：7 个 keyword + 任意数值 t
 
-`position` 接受 7 个 keyword（TikZ 标准词汇）或 0..1 的数值 t，keyword 是 t 的语义糖：
+`position` 接受 7 个 keyword 或 0..1 的数值 t，keyword 是 t 的语义糖：
 
 | keyword | 对应 t | 说明 |
 | --- | --- | --- |
@@ -117,11 +117,11 @@ import { Path, Step } from '@retikz/react';
 | `'very-near-end'` | `0.875` | 终点附近 |
 | `'at-end'` | `1` | 段终点 |
 
-`position={0.3}` 这种任意数值与 TikZ `pos=0.3` 对齐——LLM 训练数据里最常见。**数值超出 `[0, 1]` 区间在 schema 阶段直接拒绝，不在编译阶段 clamp**（`position={-0.1}` / `position={1.2}` 均会让 IR 校验失败）。
+`position={0.3}` 这种任意数值可以精确指定段上位置。**数值超出 `[0, 1]` 区间在 schema 阶段直接拒绝，不在编译阶段 clamp**（`position={-0.1}` / `position={1.2}` 均会让 IR 校验失败）。
 
 #### t 在每种 step kind 上的几何含义
 
-t 是沿整段的归一化参数，不同 kind 解释**与 TikZ 对齐**：
+t 是沿整段的归一化参数，不同 kind 有不同参数化方式：
 
 | Step kind | 参数化方式 | t=0.25 | t=0.5 | t=0.75 |
 | --- | --- | --- | --- | --- |
@@ -173,6 +173,23 @@ t 是沿整段的归一化参数，不同 kind 解释**与 TikZ 对齐**：
 
 <ComponentPreview name="step-styling" />
 
+<Comparison target="tikz" title="Step 与 TikZ 路径语法">
+
+| retikz | TikZ 对照 |
+| --- | --- |
+| `kind="step"` + `via="-\|"` / `"\|-"` | `(A) -\| (B)` / `(A) \|- (B)` |
+| `kind="cycle"` | `cycle` |
+| `kind="curve"` | `.. controls (B) ..` |
+| `kind="cubic"` | `.. controls (B) and (C) ..` |
+| `kind="bend"` | `to[bend left=N]` / `to[bend right=N]` |
+| `{ of, offset }` target | `calc` library 的 `($(of) + (dx, dy)$)` |
+| `{ relative }` / `{ relativeAccumulate }` | `(+x, +y)` / `(++x, ++y)` |
+| `kind="arc"` | `arc[start angle=…, end angle=…, radius=…]` |
+| `kind="circlePath"` / `kind="ellipsePath"` | `circle[radius=…]` / `ellipse[x radius=…, y radius=…]` |
+| `label={{ text, position, side }}` | `(a) -- node[midway, above] {text} (b)`；数值 t 对应 `pos=<float>` |
+
+</Comparison>
+
 ## API 参考
 
 | 属性 | 类型 | 默认值 | 描述 |
@@ -194,18 +211,18 @@ t 是沿整段的归一化参数，不同 kind 解释**与 TikZ 对齐**：
 
 ### kind 的十种取值
 
-| kind | 行为 | 类比 SVG / TikZ |
+| kind | 行为 | 底层路径类比 |
 | --- | --- | --- |
 | `'move'` | 移动游标，**不画线** | path "M" |
-| `'line'` | 从当前游标画直线到目标点 | path "L" / TikZ `--` |
-| `'step'` | 经一个直角拐点折到目标点 | TikZ `-\|` / `\|-` |
-| `'cycle'` | 闭合回最近一次 move 起点（无 `to`） | path "Z" / TikZ `cycle` |
-| `'curve'` | 二次贝塞尔（一个控制点） | path "Q" / TikZ `.. controls (B) ..` |
-| `'cubic'` | 三次贝塞尔（两个控制点） | path "C" / TikZ `.. controls (B) and (C) ..` |
-| `'bend'` | 弧形简记（方向 + 角度），编译期退到 cubic | TikZ `to[bend left=N]` |
-| `'arc'` | 以游标为圆心，按起末角度 + 半径画弧 | path "A" / TikZ `arc[start angle…]` |
-| `'circlePath'` | 以游标为圆心画整圆，画完回到圆心 | path "A"×2 / TikZ `circle[radius]` |
-| `'ellipsePath'` | 以游标为圆心画整椭圆，画完回到圆心 | path "A"×2 / TikZ `ellipse[…]` |
+| `'line'` | 从当前游标画直线到目标点 | path "L" |
+| `'step'` | 经一个直角拐点折到目标点 | 两段 path "L" |
+| `'cycle'` | 闭合回最近一次 move 起点（无 `to`） | path "Z" |
+| `'curve'` | 二次贝塞尔（一个控制点） | path "Q" |
+| `'cubic'` | 三次贝塞尔（两个控制点） | path "C" |
+| `'bend'` | 弧形简记（方向 + 角度），编译期退到 cubic | path "C" |
+| `'arc'` | 以游标为圆心，按起末角度 + 半径画弧 | path "A" |
+| `'circlePath'` | 以游标为圆心画整圆，画完回到圆心 | path "A"×2 |
+| `'ellipsePath'` | 以游标为圆心画整椭圆，画完回到圆心 | path "A"×2 |
 
 `<Path>` 第一个 step 必须是 `move`——如果你写 `'line'` / `'step'` / `'cycle'`，编译器会自动改成 `move`（cycle 无 `to`，回退到原点 `[0, 0]`）。
 
@@ -238,8 +255,8 @@ t 是沿整段的归一化参数，不同 kind 解释**与 TikZ 对齐**：
 | 笛卡尔 | `[60, 0]` | 直接坐标 |
 | 极坐标 | `{ origin: 'a', angle: 30, radius: 50 }` | 极坐标（参看 [定位](/core/concepts/positioning)） |
 | 偏移定位 | `{ of: 'a', offset: [10, 5] }` | 基准 + `(dx, dy)`；`of` 三态——节点 id / 笛卡尔字面值 / PolarPosition |
-| 相对偏移 (relative) | `{ relative: [10, 0] }` 或 `'+10,0'` | 基于前一 step 终点 + `[dx, dy]`；**不**更新 prevEnd（TikZ `(+x, +y)`） |
-| 相对偏移 (relativeAccumulate) | `{ relativeAccumulate: [10, 0] }` 或 `'++10,0'` | 基于前一 step 终点 + `[dx, dy]`；**更新** prevEnd（TikZ `(++x, ++y)`） |
+| 相对偏移 (relative) | `{ relative: [10, 0] }` 或 `'+10,0'` | 基于前一 step 终点 + `[dx, dy]`；**不**更新 prevEnd |
+| 相对偏移 (relativeAccumulate) | `{ relativeAccumulate: [10, 0] }` 或 `'++10,0'` | 基于前一 step 终点 + `[dx, dy]`；**更新** prevEnd |
 
 ## 相关
 

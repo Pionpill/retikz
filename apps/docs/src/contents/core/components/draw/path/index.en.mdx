@@ -68,19 +68,37 @@ import { Path, Step } from '@retikz/react';
 
 #### Stroke endpoints / corners
 
-`lineCap` controls the stroke endpoint shape (TikZ `line cap`): `'butt'` default (square end at endpoint) / `'round'` half-circle cap / `'square'` square cap extended past the endpoint by half a stroke. `lineJoin` controls the corner shape (TikZ `line join`): `'miter'` default (sharp) / `'round'` rounded / `'bevel'` flat-cut.
+`lineCap` controls the stroke endpoint shape: `'butt'` default (square end at endpoint) / `'round'` half-circle cap / `'square'` square cap extended past the endpoint by half a stroke. `lineJoin` controls the corner shape: `'miter'` default (sharp) / `'round'` rounded / `'bevel'` flat-cut.
+
+<Comparison target="tikz" title="Stroke Endpoints / Corners">
+
+`lineCap` / `lineJoin` map to TikZ `line cap` / `line join`.
+
+</Comparison>
 
 <ComponentPreview name="path-line-style" />
 
 #### Semantic thickness preset
 
-`thickness` is a TikZ-style semantic preset — `'ultraThin'` / `'veryThin'` / `'thin'` / `'semithick'` / `'thick'` / `'veryThick'` / `'ultraThick'` — compiled to a numeric stroke width (`thin = 1` matches the default `strokeWidth`; the rest scale by TikZ's ratios). **Explicit `strokeWidth` always wins** — `thickness` only applies when `strokeWidth` is omitted:
+`thickness` is a semantic stroke preset — `'ultraThin'` / `'veryThin'` / `'thin'` / `'semithick'` / `'thick'` / `'veryThick'` / `'ultraThick'` — compiled to a numeric stroke width (`thin = 1` matches the default `strokeWidth`). **Explicit `strokeWidth` always wins** — `thickness` only applies when `strokeWidth` is omitted:
+
+<Comparison target="tikz" title="Semantic Stroke Presets">
+
+These presets reuse TikZ names from `ultra thin` through `ultra thick`; retikz exposes them as camelCase prop values such as `ultraThin` / `veryThick`.
+
+</Comparison>
 
 <ComponentPreview name="path-thickness" size="lg" />
 
 #### Opacity
 
-Three independent channels: `opacity` overall (multiplies onto stroke and fill), `fillOpacity` for fill only, `drawOpacity` for stroke only (TikZ `draw opacity` naming, matching `<Node>`). The three compose:
+Three independent channels: `opacity` overall (multiplies onto stroke and fill), `fillOpacity` for fill only, `drawOpacity` for stroke only. The three compose:
+
+<Comparison target="tikz" title="drawOpacity Naming">
+
+`drawOpacity` maps to TikZ `draw opacity`, and matches the stroke-only opacity field on `<Node>`.
+
+</Comparison>
 
 <ComponentPreview name="path-opacity" />
 
@@ -91,8 +109,8 @@ Three independent channels: `opacity` overall (multiplies onto stroke and fill),
 | `stroke` | `string` | `currentColor` | Stroke color |
 | `strokeWidth` | `number` | `1` | Stroke width |
 | `dashPattern` | `Array<number>` | ? | Dash/gap lengths in user units (e.g. `[4, 2]`) |
-| `lineCap` | `'butt' \| 'round' \| 'square'` | `'butt'` | Stroke endpoint shape (TikZ `line cap`) |
-| `lineJoin` | `'miter' \| 'round' \| 'bevel'` | `'miter'` | Stroke corner shape (TikZ `line join`) |
+| `lineCap` | `'butt' \| 'round' \| 'square'` | `'butt'` | Stroke endpoint shape |
+| `lineJoin` | `'miter' \| 'round' \| 'bevel'` | `'miter'` | Stroke corner shape |
 | `thickness` | `'ultraThin' \| 'veryThin' \| 'thin' \| 'semithick' \| 'thick' \| 'veryThick' \| 'ultraThick'` | — | Semantic stroke preset (`thin = 1`); explicit `strokeWidth` always wins |
 | `arrow` | `'none' \| '->' \| '<-' \| '<->'` | — | Path-level arrow direction (see [Arrow](/core/components/draw/arrow)) |
 | `arrowDetail` | `ArrowDetail` object | — | Arrow visual config; fields documented on [Arrow](/core/components/draw/arrow) |
@@ -100,7 +118,7 @@ Three independent channels: `opacity` overall (multiplies onto stroke and fill),
 | `fillRule` | `'nonzero' \| 'evenodd'` | `'nonzero'` | Fill rule; use `'evenodd'` for rings / holes |
 | `opacity` | `number` | — | Whole-path opacity 0..1 (multiplies onto stroke and fill) |
 | `fillOpacity` | `number` | — | Fill-only opacity 0..1 |
-| `drawOpacity` | `number` | — | Stroke-only opacity 0..1 (TikZ `draw opacity`) |
+| `drawOpacity` | `number` | — | Stroke-only opacity 0..1 |
 | `children` | `Array<<Step>>` | — | At least 2; if the first isn't `move`, the compiler coerces it to `move`. `<Step>` supports `move` / `line` / `step` (folded) / `cycle` (close) / `curve` / `cubic` (Bezier) / `bend` (arc shorthand) / `arc` / `circlePath` / `ellipsePath` (circle / ellipse) |
 
 ## Related

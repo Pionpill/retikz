@@ -1,6 +1,6 @@
 ---
 title: Coordinate
-description: 占位节点——命名一个点不画任何图形，给后续 path 和 node `at.of` 引用。等价于 TikZ `\coordinate (id) at (x, y);`。
+description: 占位节点——命名一个点不画任何图形，给后续 path 和 node `at.of` 引用。
 ---
 
 `<Coordinate>` 是 retikz kernel 的第三件（与 `<Node>` / `<Path>` 平级）。它在画面上不渲染任何东西，但参与 `nodeIndex` 注册——让后续 `<Path>` 端点和 `<Node>` 的 `at.of` 都能用 `id` 引用它。
@@ -23,7 +23,7 @@ import { Coordinate } from '@retikz/react';
 
 - 走 layoutNode 流程，按 padding 撑出一个不可见的矩形 layout
 - 参与 layout bounds 扩展（让外框变大）
-- 让 AI / TikZ codec 反推时分不清"真节点 vs fake 占位"
+- 让 AI / codec 反推时分不清"真节点 vs fake 占位"
 
 `<Coordinate>` 把"命名点"升级为一等概念：
 
@@ -31,6 +31,12 @@ import { Coordinate } from '@retikz/react';
 - **不发任何 primitive**——没有形状、没有文字
 - **不参与 layout bounds**——远端 coordinate 不会撑大画面
 - 在 nodeIndex 中以 0×0 矩形 layout 形式注册——boundaryPoint 始终返回中心，正好符合"无形状边界"语义
+
+<Comparison target="tikz" title="Coordinate 对照">
+
+`<Coordinate id="hub" position={[0, 0]} />` 对应 TikZ 的 `\coordinate (hub) at (0,0);`：只命名一个点，不渲染形状。
+
+</Comparison>
 
 ## 例子
 

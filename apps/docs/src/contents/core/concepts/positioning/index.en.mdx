@@ -26,8 +26,14 @@ Direct `[x, y]` tuple.
 | Field | Meaning |
 | --- | --- |
 | `origin` | Pole. Optional, defaults to `[0, 0]`; accepts node id string, Cartesian, **or a nested polar** (chained offset) |
-| `angle` | Degrees, counter-clockwise positive (TikZ convention) |
+| `angle` | Degrees, counter-clockwise positive |
 | `radius` | Distance in user units |
+
+<Comparison target="tikz" title="Polar Angles">
+
+`angle` follows the TikZ convention: degrees, with counter-clockwise as the positive direction. retikz still uses screen coordinates (x right, y down), so examples render according to browser coordinates.
+
+</Comparison>
 
 Six nodes around `O` at radius 80, every 60° from 0 to 300 — the canonical radial layout:
 

@@ -91,11 +91,17 @@ Multi-line text combined with each shape — outer boundary follows the shape-sp
 Both **symmetric aliases** and **axis-specific** forms are supported (resolution order: axis-specific ?? alias ?? default):
 
 - Inner: `padding` (symmetric) · `innerXSep` / `innerYSep` (per-axis)
-- Outer: `margin` (symmetric) · `outerSep` (single — TikZ also keeps a single outer)
+- Outer: `margin` (symmetric) · `outerSep` (single)
 
 90% of the time `padding={N}` is enough; reach for axis-specific only when you need button-like wide-but-flat nodes etc.
 
 <ComponentPreview name="node-sep" size="sm" />
+
+<Comparison target="tikz" title="Sep Naming">
+
+`innerXSep` / `innerYSep` / `outerSep` reuse TikZ's sep vocabulary; retikz also keeps `padding` / `margin` as CSS-like symmetric aliases.
+
+</Comparison>
 
 #### Colors / opacity
 
@@ -129,17 +135,23 @@ Both **symmetric aliases** and **axis-specific** forms are supported (resolution
 
 #### Relative positioning
 
-In addition to Cartesian / polar, `position` accepts **`{ direction, of, distance? }`** — equivalent to TikZ `[<direction>=<distance> of <id>]`. No more hand-computing absolute coordinates; describe node relationships instead.
+In addition to Cartesian / polar, `position` accepts **`{ direction, of, distance? }`**. No more hand-computing absolute coordinates; describe node relationships instead.
 
 - `direction`: 8 directions — `above` / `below` / `left` / `right` / `above-left` / `above-right` / `below-left` / `below-right`
 - `of`: id of the referenced node / coordinate (must be defined earlier in the IR; forward references rejected)
 - `distance`: falls back to `<TikZ nodeDistance>` then to 1 when omitted
 
+<Comparison target="tikz" title="Relative Positioning">
+
+`{ direction: 'above', of: 'a', distance: 20 }` maps to TikZ positioning-library forms like `[above=20 of a]`. `<TikZ nodeDistance={...}>` maps to TikZ's global `node distance` default.
+
+</Comparison>
+
 <ComponentPreview name="node-at-relative" />
 
 #### Offset positioning
 
-`position` also accepts **`{ of, offset }`** — an arbitrary `(dx, dy)` offset from a base point, mirroring TikZ `calc` syntax `($(of) + (dx, dy)$)`. Use offset whenever the 8-direction + scalar-distance `at` form can't express what you want (e.g. "A right 30 down 10").
+`position` also accepts **`{ of, offset }`** — an arbitrary `(dx, dy)` offset from a base point. Use offset whenever the 8-direction + scalar-distance `at` form can't express what you want (e.g. "A right 30 down 10").
 
 - `of` is the base point in three shapes (matching `PolarPosition.origin`):
   - string id — references a named node / coordinate (forward references rejected)
@@ -147,11 +159,23 @@ In addition to Cartesian / polar, `position` accepts **`{ direction, of, distanc
   - `PolarPosition` (`{ angle, radius, origin? }`) — polar expression as base, recursively resolved
 - `offset` is a `[dx, dy]` tuple in user units
 
+<Comparison target="tikz" title="Offset Positioning">
+
+`{ of: 'a', offset: [10, 5] }` maps to TikZ `calc` syntax `($(a) + (10,5)$)`.
+
+</Comparison>
+
 <ComponentPreview name="node-offset-position" />
 
 ### Node labels
 
-`label` attaches extra text outside the node border (TikZ `[label=above:foo]` equivalent). Single object or array form; `position` accepts the 8-direction enum or a numeric angle (`label=30:foo` ↔ `position: 30`); `font` / `textColor` inherit from the node when omitted.
+`label` attaches extra text outside the node border. Single object or array form; `position` accepts the 8-direction enum or a numeric angle; `font` / `textColor` inherit from the node when omitted.
+
+<Comparison target="tikz" title="Node Labels">
+
+`label={{ text: 'foo', position: 'above' }}` maps to TikZ `[label=above:foo]`; `position: 30` maps to `label=30:foo`.
+
+</Comparison>
 
 <ComponentPreview name="node-label-basic" size="lg" />
 
@@ -161,7 +185,7 @@ In addition to Cartesian / polar, `position` accepts **`{ direction, of, distanc
 | --- | --- | --- | --- |
 | `id` | `string` | — | Unique identifier; referenced by `<Path>` / `<Draw>` |
 | `shape` | `'rectangle' \| 'circle' \| 'ellipse' \| 'diamond'` | `'rectangle'` | Node shape |
-| `position` | `[x, y] \| PolarPosition \| { direction, of, distance? } \| { of, offset }` | — | Node center: Cartesian / polar / relative / offset (TikZ `calc` equivalent; `of` accepts node id, Cartesian literal, or PolarPosition) |
+| `position` | `[x, y] \| PolarPosition \| { direction, of, distance? } \| { of, offset }` | — | Node center: Cartesian / polar / relative / offset; `of` accepts node id, Cartesian literal, or PolarPosition |
 | `children` / `text` | `string \| Array<string>` | — | Visible label; string = one line, array = one element per line; `text` wins over `children` |
 | `align` | `'left' \| 'center' \| 'right'` | `'center'` | Horizontal alignment of lines within the multi-line text block |
 | `lineHeight` | `number` | `font.size × 1.2` | Line height of the multi-line block (user units) |
@@ -178,7 +202,7 @@ In addition to Cartesian / polar, `position` accepts **`{ direction, of, distanc
 | `textColor` | `string` | `currentColor` | Text color (block default; per-line override via `LineSpec.fill`) |
 | `opacity` | `number` | — | Whole-node 0..1, applies to both shape and text |
 | `fillOpacity` | `number` | — | Fill-only opacity 0..1 |
-| `drawOpacity` | `number` | — | Stroke-only opacity 0..1 (TikZ `draw opacity`) |
+| `drawOpacity` | `number` | — | Stroke-only opacity 0..1 |
 | `dashed` | `boolean` | ? | Dashed border preset (`[4, 2]`) |
 | `dotted` | `boolean` | ? | Dotted border preset (`[1, 2]`) |
 | `dashArray` | `Array<number>` | ? | Explicit dash/gap lengths; highest priority |
@@ -187,7 +211,7 @@ In addition to Cartesian / polar, `position` accepts **`{ direction, of, distanc
 | `minimumSize` | `number` | — | Symmetric minimum-size alias; axis-specific fields take precedence |
 | `scale` | `number` | `1` | Uniform scale (includes font, padding, path attachment) |
 | `xScale` / `yScale` | `number` | — | Per-axis scale; takes precedence over `scale` |
-| `label` | `NodeLabel \| Array<NodeLabel>` | — | Extra label(s) attached to the node border (TikZ `[label=above:foo]`); single object or array; `position` accepts the 8-direction enum or a numeric angle, `distance` defaults to 4, `font` / `textColor` inherit from the node |
+| `label` | `NodeLabel \| Array<NodeLabel>` | — | Extra label(s) attached to the node border; single object or array; `position` accepts the 8-direction enum or a numeric angle, `distance` defaults to 4, `font` / `textColor` inherit from the node |
 
 ### margin vs padding
 

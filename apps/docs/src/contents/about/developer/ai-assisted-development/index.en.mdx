@@ -26,8 +26,14 @@ Concretely:
 - **The zod schema is the single source of truth** — it produces TS types, JSON Schema, runtime validation, and LLM tool definitions in one place; drift is not allowed
 - **Every field carries an English `.describe(...)`** — this is the contract for LLM Tool Use; a field without one is not acceptable
 - **IR is 100% JSON-serializable** — `z.any()` / `z.unknown()` / functions / classes / ReactNode / Symbol / Map / Set are forbidden; anything computed only at runtime never enters the IR
-- **Field names follow TikZ vocabulary, no abbreviations** — preserves alignment with LLM training data (zero-shot performance far exceeds any in-house DSL)
+- **Field names follow mature drawing vocabulary, no abbreviations** — preserves alignment with LLM training data (zero-shot performance far exceeds any in-house DSL)
 - **JSON Patch (RFC 6902) for incremental edits** — local edits by LLM are far cheaper than rewriting the whole IR
+
+<Comparison target="tikz" title="Field Naming Source">
+
+retikz intentionally keeps node / path / anchor / step vocabulary close to TikZ training data instead of inventing a project-local DSL.
+
+</Comparison>
 
 ### How this principle propagates into implementation / testing
 

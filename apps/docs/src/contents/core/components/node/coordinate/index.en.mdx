@@ -1,6 +1,6 @@
 ---
 title: Coordinate
-description: Placeholder node — names a point without drawing anything, so paths and `at.of` can reference it by id. Equivalent to TikZ `\coordinate (id) at (x, y);`.
+description: Placeholder node — names a point without drawing anything, so paths and `at.of` can reference it by id.
 ---
 
 `<Coordinate>` is retikz's third kernel component (alongside `<Node>` / `<Path>`). It renders nothing visible, but registers into `nodeIndex` so downstream `<Path>` endpoints and `<Node>` `at.of` references can target it by `id`.
@@ -23,7 +23,7 @@ Without `<Coordinate>`, anchoring "a named point" forces you to fake an empty `<
 
 - Goes through layoutNode and gets a non-visible rect layout sized by padding
 - Participates in layout bounds expansion (enlarges the outer frame)
-- Confuses AI / TikZ codecs round-tripping IR ("real node vs invisible placeholder?")
+- Confuses AI / codecs round-tripping IR ("real node vs invisible placeholder?")
 
 `<Coordinate>` makes "named point" a first-class concept:
 
@@ -31,6 +31,12 @@ Without `<Coordinate>`, anchoring "a named point" forces you to fake an empty `<
 - **Emits zero primitives** — no shape, no text
 - **Does not extend layout bounds** — far-away coordinates don't bloat the frame
 - Registers as a 0×0 rectangle layout in nodeIndex — `boundaryPoint` always returns the center, matching "no shape boundary" semantics
+
+<Comparison target="tikz" title="Coordinate Mapping">
+
+`<Coordinate id="hub" position={[0, 0]} />` maps to TikZ `\coordinate (hub) at (0,0);`: it names a point without rendering a shape.
+
+</Comparison>
 
 ## Examples
 

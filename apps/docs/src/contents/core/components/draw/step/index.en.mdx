@@ -28,37 +28,37 @@ The path below draws A→B with one `move` + `line`, then lifts the pen with ano
 
 ### Folded (step)
 
-`kind="step"` inserts a single right-angle corner between cursor and target — the TikZ `(A) -| (B)` / `(A) |- (B)` form. A flow-chart staple:
+`kind="step"` inserts a single right-angle corner between cursor and target. A flow-chart staple:
 
 <ComponentPreview name="step-fold" />
 
 ### Closing (cycle)
 
-`kind="cycle"` closes the current sub-path back to the most recent `move` target — the TikZ `cycle` keyword / SVG path `Z`. `cycle` carries **no** `to` field (the destination is implicit). Saves writing one explicit endpoint vs. drawing a `line` back to the start:
+`kind="cycle"` closes the current sub-path back to the most recent `move` target, matching SVG path `Z`. `cycle` carries **no** `to` field (the destination is implicit). Saves writing one explicit endpoint vs. drawing a `line` back to the start:
 
 <ComponentPreview name="step-cycle" />
 
 ### Quadratic curve
 
-`kind="curve"` draws a quadratic Bezier with one control point — TikZ's `.. controls (B) ..` / SVG path `Q`. The control point governs the bend direction and amplitude; control points currently use Cartesian `[x, y]`:
+`kind="curve"` draws a quadratic Bezier with one control point, matching SVG path `Q`. The control point governs the bend direction and amplitude; control points currently use Cartesian `[x, y]`:
 
 <ComponentPreview name="step-curve" />
 
 ### Cubic curve
 
-`kind="cubic"` draws a cubic Bezier with two control points — TikZ's `.. controls (B) and (C) ..` / SVG path `C`. `control1` shapes the start tangent; `control2` shapes the end tangent. Common for S-shaped curves and complex connectors:
+`kind="cubic"` draws a cubic Bezier with two control points, matching SVG path `C`. `control1` shapes the start tangent; `control2` shapes the end tangent. Common for S-shaped curves and complex connectors:
 
 <ComponentPreview name="step-cubic" />
 
 ### Bend (arc shorthand)
 
-`kind="bend"` is shorthand for TikZ's `to[bend left=N]` / `to[bend right=N]` — give a direction and angle, control points are computed at compile time and lowered to a cubic. `bendDirection` is the visual left/right relative to the from→to path; `bendAngle` defaults to 30:
+`kind="bend"` is shorthand for an arced connection — give a direction and angle, control points are computed at compile time and lowered to a cubic. `bendDirection` is the visual left/right relative to the from→to path; `bendAngle` defaults to 30:
 
 <ComponentPreview name="step-bend" size="lg" />
 
 ### Offset positioning
 
-`to` also accepts the **`{ of, offset }`** form — a base point plus an arbitrary `(dx, dy)`, mirroring TikZ `calc` syntax `($(of) + (dx, dy)$)`. `of` has three shapes — node id, Cartesian literal, or PolarPosition (recursive polar) — symmetric with `<Node position>`'s offset form:
+`to` also accepts the **`{ of, offset }`** form — a base point plus an arbitrary `(dx, dy)`. `of` has three shapes — node id, Cartesian literal, or PolarPosition (recursive polar) — symmetric with `<Node position>`'s offset form:
 
 <ComponentPreview name="step-offset-target" size="lg" />
 
@@ -66,8 +66,8 @@ The path below draws A→B with one `move` + `line`, then lifts the pen with ano
 
 `to` also accepts relative-offset objects: `{ relative: [dx, dy] }` and `{ relativeAccumulate: [dx, dy] }` both resolve against the **previous step's endpoint** (`prevEnd`, falling back to `[0, 0]` when there is none). The only difference is **whether prevEnd advances**:
 
-- `{ relative }` — equivalent to TikZ `(+x, +y)`: chained offsets all anchor on the **same** point; prevEnd does **not** update
-- `{ relativeAccumulate }` — equivalent to TikZ `(++x, ++y)`: each segment accumulates and prevEnd moves with it
+- `{ relative }` — chained offsets all anchor on the **same** point; prevEnd does **not** update
+- `{ relativeAccumulate }` — each segment accumulates and prevEnd moves with it
 
 You can also write the sugar strings `'+dx,dy'` / `'++dx,dy'` (e.g. `<Step to="+1,0" />`); the React adapter rewrites them in place to the matching IR objects. In the demo below, the two paths have identical step sequences and only the target form differs — the solid line (relative) traces an L, while the dashed line (relativeAccumulate) climbs a staircase:
 
@@ -75,7 +75,7 @@ You can also write the sugar strings `'+dx,dy'` / `'++dx,dy'` (e.g. `<Step to="+
 
 ### Arc
 
-`kind="arc"` uses the **cursor as center** and draws a circular arc by start / end angle and radius — matches TikZ's `arc[start angle=…, end angle=…, radius=…]`. Angles follow the retikz polar convention: 0° points to +x, 90° is visually downward. The pen ends at the arc's endpoint:
+`kind="arc"` uses the **cursor as center** and draws a circular arc by start / end angle and radius. Angles follow the retikz polar convention: 0° points to +x, 90° is visually downward. The pen ends at the arc's endpoint:
 
 <ComponentPreview name="step-arc" />
 
@@ -93,7 +93,7 @@ You can also write the sugar strings `'+dx,dy'` / `'++dx,dy'` (e.g. `<Step to="+
 
 ### Edge label
 
-Attach a `label` to a `<Step>` to drop a single line of text near the segment's start / middle / end — the analogue of TikZ's `(a) -- node[midway, above] {accept} (b)`. `label` is an object:
+Attach a `label` to a `<Step>` to drop a single line of text near the segment's start / middle / end. `label` is an object:
 
 - `text`: required, single-line label content
 - `position`: one of seven keywords `'at-start' | 'very-near-start' | 'near-start' | 'midway' | 'near-end' | 'very-near-end' | 'at-end'`, or a numeric t in `[0, 1]` for any fine position; default `'midway'` (t=0.5)
@@ -105,7 +105,7 @@ Two equivalent forms — the prop form `<Step label={{...}} />`, or the sugar fo
 
 #### label.position: 7 keywords + arbitrary numeric t
 
-`position` accepts 7 keywords (the TikZ vocabulary) or a numeric t in `[0, 1]`. Keywords are sugar for the corresponding t:
+`position` accepts 7 keywords or a numeric t in `[0, 1]`. Keywords are sugar for the corresponding t:
 
 | Keyword | t | Meaning |
 | --- | --- | --- |
@@ -117,11 +117,11 @@ Two equivalent forms — the prop form `<Step label={{...}} />`, or the sugar fo
 | `'very-near-end'` | `0.875` | Very near end |
 | `'at-end'` | `1` | Segment end |
 
-A numeric form like `position={0.3}` matches TikZ `pos=0.3` exactly — the most common pattern in LLM training data. **Values outside `[0, 1]` are rejected at schema validation, not clamped at compile time** (`position={-0.1}` / `position={1.2}` fail IR validation).
+A numeric form like `position={0.3}` precisely places the label along the segment. **Values outside `[0, 1]` are rejected at schema validation, not clamped at compile time** (`position={-0.1}` / `position={1.2}` fail IR validation).
 
 #### Geometric meaning of t per step kind
 
-t is normalized along the whole segment; each kind interprets it **the same way TikZ does**:
+t is normalized along the whole segment; each kind has its own parametrization:
 
 | Step kind | Parametrization | t=0.25 | t=0.5 | t=0.75 |
 | --- | --- | --- | --- | --- |
@@ -173,6 +173,23 @@ The eight demos below show one set of t markers per kind — `t=0.25` vs `'midwa
 
 <ComponentPreview name="step-styling" />
 
+<Comparison target="tikz" title="Step and TikZ Path Syntax">
+
+| retikz | TikZ mapping |
+| --- | --- |
+| `kind="step"` + `via="-\|"` / `"\|-"` | `(A) -\| (B)` / `(A) \|- (B)` |
+| `kind="cycle"` | `cycle` |
+| `kind="curve"` | `.. controls (B) ..` |
+| `kind="cubic"` | `.. controls (B) and (C) ..` |
+| `kind="bend"` | `to[bend left=N]` / `to[bend right=N]` |
+| `{ of, offset }` target | `calc` library syntax `($(of) + (dx, dy)$)` |
+| `{ relative }` / `{ relativeAccumulate }` | `(+x, +y)` / `(++x, ++y)` |
+| `kind="arc"` | `arc[start angle=…, end angle=…, radius=…]` |
+| `kind="circlePath"` / `kind="ellipsePath"` | `circle[radius=…]` / `ellipse[x radius=…, y radius=…]` |
+| `label={{ text, position, side }}` | `(a) -- node[midway, above] {text} (b)`; numeric t maps to `pos=<float>` |
+
+</Comparison>
+
 ## API Reference
 
 | Prop | Type | Default | Description |
@@ -194,18 +211,18 @@ The eight demos below show one set of t markers per kind — `t=0.25` vs `'midwa
 
 ### Ten kinds
 
-| kind | Behavior | SVG / TikZ analogue |
+| kind | Behavior | Path analogue |
 | --- | --- | --- |
 | `'move'` | Move cursor, **no draw** | path "M" |
-| `'line'` | Straight line from cursor to target | path "L" / TikZ `--` |
-| `'step'` | Right-angle fold through one corner | TikZ `-\|` / `\|-` |
-| `'cycle'` | Close back to most recent `move` (no `to`) | path "Z" / TikZ `cycle` |
-| `'curve'` | Quadratic Bezier (one control point) | path "Q" / TikZ `.. controls (B) ..` |
-| `'cubic'` | Cubic Bezier (two control points) | path "C" / TikZ `.. controls (B) and (C) ..` |
-| `'bend'` | Arc shorthand (direction + angle), lowered to cubic | TikZ `to[bend left=N]` |
-| `'arc'` | Cursor as center; arc by start / end angle + radius | path "A" / TikZ `arc[start angle…]` |
-| `'circlePath'` | Cursor as center; full circle, pen returns to center | path "A"×2 / TikZ `circle[radius]` |
-| `'ellipsePath'` | Cursor as center; full ellipse, pen returns to center | path "A"×2 / TikZ `ellipse[…]` |
+| `'line'` | Straight line from cursor to target | path "L" |
+| `'step'` | Right-angle fold through one corner | two path "L" segments |
+| `'cycle'` | Close back to most recent `move` (no `to`) | path "Z" |
+| `'curve'` | Quadratic Bezier (one control point) | path "Q" |
+| `'cubic'` | Cubic Bezier (two control points) | path "C" |
+| `'bend'` | Arc shorthand (direction + angle), lowered to cubic | path "C" |
+| `'arc'` | Cursor as center; arc by start / end angle + radius | path "A" |
+| `'circlePath'` | Cursor as center; full circle, pen returns to center | path "A"×2 |
+| `'ellipsePath'` | Cursor as center; full ellipse, pen returns to center | path "A"×2 |
 
 The first step of a `<Path>` must be `move` — if you write `'line'` / `'step'` / `'cycle'`, the compiler coerces it to `move` (cycle has no `to`, so it falls back to origin `[0, 0]`).
 
@@ -238,8 +255,8 @@ The geometric meaning of t per step kind is in the "[Geometric meaning of t per 
 | Cartesian | `[60, 0]` | Literal `[x, y]` |
 | Polar | `{ origin: 'a', angle: 30, radius: 50 }` | Polar (see [Positioning](/core/concepts/positioning)) |
 | Offset | `{ of: 'a', offset: [10, 5] }` | Base + `(dx, dy)`; `of` accepts node id, Cartesian literal, or PolarPosition |
-| Relative (relative) | `{ relative: [10, 0] }` or `'+10,0'` | Previous step's endpoint + `[dx, dy]`; does **not** update prevEnd (TikZ `(+x, +y)`) |
-| Relative (relativeAccumulate) | `{ relativeAccumulate: [10, 0] }` or `'++10,0'` | Previous step's endpoint + `[dx, dy]`; **updates** prevEnd (TikZ `(++x, ++y)`) |
+| Relative (relative) | `{ relative: [10, 0] }` or `'+10,0'` | Previous step's endpoint + `[dx, dy]`; does **not** update prevEnd |
+| Relative (relativeAccumulate) | `{ relativeAccumulate: [10, 0] }` or `'++10,0'` | Previous step's endpoint + `[dx, dy]`; **updates** prevEnd |
 
 ## Related
 

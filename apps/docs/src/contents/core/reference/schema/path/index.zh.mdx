@@ -16,12 +16,12 @@ description: 笔画外壳、step 动作序列与 step 目标点
   arrowDetail: '箭头详细配置（shape / scale / length / width / color / fill / opacity / lineWidth + 可选 start/end 子对象逐字段 merge）',
   fill: '闭合区域填充色；省略 = 无填充；与 `cycle` step 配合产生封闭形状',
   fillRule: '自交 / 嵌套子路径填充规则；`nonzero`（默认）方向缠绕，`evenodd` 交错',
-  lineCap: '描边端点形状（TikZ `line cap`）：`butt` 默认 / `round` / `square`',
-  lineJoin: '描边拐角形状（TikZ `line join`）：`miter` 默认 / `round` / `bevel`',
-  thickness: '语义化描边厚度预设（TikZ `ultra thin` … `ultra thick`）；显式 strokeWidth 优先',
+  lineCap: '描边端点形状：`butt` 默认 / `round` / `square`',
+  lineJoin: '描边拐角形状：`miter` 默认 / `round` / `bevel`',
+  thickness: '语义化描边厚度预设；显式 strokeWidth 优先',
   opacity: '整路径不透明度 0..1，同时作用于描边与填充',
   fillOpacity: '填充不透明度 0..1，只影响闭合区域',
-  drawOpacity: '描边不透明度 0..1（TikZ `draw opacity`），只影响描边',
+  drawOpacity: '描边不透明度 0..1，只影响描边',
   children: 'step 动作序列；首项通常应是 `move`',
 }} />
 
@@ -55,7 +55,7 @@ description: 笔画外壳、step 动作序列与 step 目标点
 
 <ZodSchema name="FoldStepSchema" descriptions={{
   type: '判别字段，标记本节点为 path step',
-  kind: '动作种类：`step`（折角段，从光标到目标点经一个直角中间点；TikZ `-|`/`|-`）',
+  kind: '动作种类：`step`（折角段，从光标到目标点经一个直角中间点）',
   via: '折角方向：`-|` 先横后竖；`|-` 先竖后横',
   to: '折线段的目标点',
   label: '边标注：附在本段上的文字标签（按 position 落在对应支段）',
@@ -68,7 +68,7 @@ description: 笔画外壳、step 动作序列与 step 目标点
 
 <ZodSchema name="CycleStepSchema" descriptions={{
   type: '判别字段，标记本节点为 path step',
-  kind: '动作种类：`cycle` —— 闭合回最近一次 move 的目标点（TikZ `cycle` / SVG path "Z"）',
+  kind: '动作种类：`cycle` —— 闭合回最近一次 move 的目标点（SVG path "Z"）',
 }} />
 
 ### Curve
@@ -102,7 +102,7 @@ description: 笔画外壳、step 动作序列与 step 目标点
 
 <ZodSchema name="BendStepSchema" descriptions={{
   type: '判别字段，标记本节点为 path step',
-  kind: '动作种类：`bend` —— 简记弧形：按方向 + 角度生成贝塞尔近似（TikZ `to[bend left=N]` / `to[bend right=N]`）',
+  kind: '动作种类：`bend` —— 简记弧形：按方向 + 角度生成贝塞尔近似',
   to: '弧形段的目标点',
   bendDirection: '弧形偏转方向（相对 from→to 弦的视觉左 / 右）',
   bendAngle: '弯曲角度（°），默认 30',
@@ -116,7 +116,7 @@ description: 笔画外壳、step 动作序列与 step 目标点
 
 <ZodSchema name="ArcStepSchema" descriptions={{
   type: '判别字段，标记本节点为 path step',
-  kind: '动作种类：`arc` —— 以光标为圆心，按起末角度 + 半径绘制弧段（TikZ `arc[start angle=…, end angle=…, radius=…]`）；笔停在弧端点而非圆心',
+  kind: '动作种类：`arc` —— 以光标为圆心，按起末角度 + 半径绘制弧段；笔停在弧端点而非圆心',
   startAngle: '弧起始角（°），逆时针从 +x 轴起（数学约定；SVG y-down 视觉为顺时针）',
   endAngle: '弧终止角（°）；扫向由 startAngle 与 endAngle 大小关系隐式决定',
   radius: '弧半径（用户单位）',
@@ -130,7 +130,7 @@ description: 笔画外壳、step 动作序列与 step 目标点
 
 <ZodSchema name="CirclePathStepSchema" descriptions={{
   type: '判别字段，标记本节点为 path step',
-  kind: '动作种类：`circlePath` —— 以光标为圆心、给定半径的整圆（TikZ `circle[radius=…]`），笔画结束后回到圆心',
+  kind: '动作种类：`circlePath` —— 以光标为圆心、给定半径的整圆，笔画结束后回到圆心',
   radius: '圆半径（用户单位）',
   label: '边标注：附在本段上的文字标签',
   'label.text': '标签文字内容（单行；多行需 \\n）',
@@ -142,7 +142,7 @@ description: 笔画外壳、step 动作序列与 step 目标点
 
 <ZodSchema name="EllipsePathStepSchema" descriptions={{
   type: '判别字段，标记本节点为 path step',
-  kind: '动作种类：`ellipsePath` —— 以光标为圆心、给定 x/y 半径的整椭圆（TikZ `ellipse[x radius=…, y radius=…]`），笔画结束后回到中心',
+  kind: '动作种类：`ellipsePath` —— 以光标为圆心、给定 x/y 半径的整椭圆，笔画结束后回到中心',
   radiusX: 'x 轴半径（半长轴或半短轴）',
   radiusY: 'y 轴半径（半长轴或半短轴）',
   label: '边标注：附在本段上的文字标签',
@@ -160,14 +160,30 @@ description: 笔画外壳、step 动作序列与 step 目标点
 ### Relative
 
 <ZodSchema name="RelativeTargetSchema" descriptions={{
-  relative: '相对偏移 (dx, dy)；不更新光标位置（对应 TikZ `(+x, +y)` 语法）',
+  relative: '相对偏移 (dx, dy)；不更新光标位置',
 }} />
 
 ### RelativeAccumulate
 
 <ZodSchema name="RelativeAccumulateTargetSchema" descriptions={{
-  relativeAccumulate: '累积相对偏移 (dx, dy)；**会**更新光标位置（对应 TikZ `(++x, ++y)` 语法）',
+  relativeAccumulate: '累积相对偏移 (dx, dy)；**会**更新光标位置',
 }} />
+
+<Comparison target="tikz" title="Path / Step 字段对照">
+
+| IR 字段 | TikZ 对照 |
+| --- | --- |
+| `lineCap` / `lineJoin` | `line cap` / `line join` |
+| `thickness` | `ultra thin` … `ultra thick` |
+| `drawOpacity` | `draw opacity` |
+| `kind: 'step'` | `-\|` / `\|-` |
+| `kind: 'cycle'` | `cycle` |
+| `kind: 'bend'` | `to[bend left=N]` / `to[bend right=N]` |
+| `kind: 'arc'` | `arc[start angle=…, end angle=…, radius=…]` |
+| `kind: 'circlePath'` / `kind: 'ellipsePath'` | `circle[radius=…]` / `ellipse[x radius=…, y radius=…]` |
+| `relative` / `relativeAccumulate` | `(+x, +y)` / `(++x, ++y)` |
+
+</Comparison>
 
 ## ArrowDetail
 

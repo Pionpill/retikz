@@ -26,8 +26,14 @@ retikz 的实现劳动大部分由 AI 完成——节点 / 路径 / 边标注 / 
 - **zod schema 是单一来源**——同时产出 TS 类型、JSON Schema、运行时校验、LLM tool definition；任何漂移都不被允许
 - **每个字段都有英文 `.describe(...)`**——是 LLM Tool Use 的契约，缺一即不合格
 - **IR 100% JSON 可序列化**——禁用 `z.any()` / `z.unknown()` / 函数 / class / ReactNode / Symbol / Map / Set；任何运行时才算得出的值都不进 IR
-- **字段命名沿用 TikZ 词汇 + 不缩写**——保留对 LLM 训练数据的亲和力（zero-shot 能力远超自创 DSL）
+- **字段命名沿用成熟绘图词汇 + 不缩写**——保留对 LLM 训练数据的亲和力（zero-shot 能力远超自创 DSL）
 - **支持 JSON Patch (RFC 6902) 增量编辑**——LLM 改局部成本远低于重写整个 IR
+
+<Comparison target="tikz" title="字段命名来源">
+
+retikz 的 node / path / anchor / step 等字段词汇有意贴近 TikZ 训练语料，而不是创造一套只在本项目内部成立的新 DSL。
+
+</Comparison>
 
 ### 这套原则如何穿透到实现 / 测试
 

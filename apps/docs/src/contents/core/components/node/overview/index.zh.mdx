@@ -91,11 +91,17 @@ Line 2`}</Node>
 内 / 外边距支持**对称别名**与**轴特化**两套写法（解析顺序：轴特化 ?? 别名 ?? 默认）：
 
 - 内边距：`padding`（对称） · `innerXSep` / `innerYSep`（分轴）
-- 外边距：`margin`（对称） · `outerSep`（分轴目前只有 outer 一个；TikZ 也是单值）
+- 外边距：`margin`（对称） · `outerSep`（分轴目前只有 outer 一个）
 
 90% 场景写 `padding={N}` 就够；做 button-like 扁宽节点等少数场景再用轴特化。
 
 <ComponentPreview name="node-sep" size="sm" />
+
+<Comparison target="tikz" title="Sep 命名">
+
+`innerXSep` / `innerYSep` / `outerSep` 沿用 TikZ 的 sep 词汇；retikz 另外保留 `padding` / `margin` 作为更接近 CSS 的对称别名。
+
+</Comparison>
 
 #### 颜色 / 不透明度
 
@@ -129,17 +135,23 @@ Line 2`}</Node>
 
 #### 相对定位
 
-`position` 除了笛卡尔 / 极坐标还接受 **`{ direction, of, distance? }`** 形态——TikZ `[<direction>=<distance> of <id>]` 同义；不需要手算每个绝对坐标，描述节点关系即可。
+`position` 除了笛卡尔 / 极坐标还接受 **`{ direction, of, distance? }`** 形态；不需要手算每个绝对坐标，描述节点关系即可。
 
 - `direction` 接 8 方向：`above` / `below` / `left` / `right` / `above-left` / `above-right` / `below-left` / `below-right`
 - `of` 是被参照节点 / coordinate 的 id（要求先出现在 IR 中，前向引用拒绝）
 - `distance` 缺省时取 `<TikZ nodeDistance>`，再缺省回退到 1
 
+<Comparison target="tikz" title="相对定位">
+
+`{ direction: 'above', of: 'a', distance: 20 }` 对应 TikZ positioning library 的 `[above=20 of a]` 一类写法。`<TikZ nodeDistance={...}>` 对应 TikZ 的全局 `node distance` 缺省值。
+
+</Comparison>
+
 <ComponentPreview name="node-at-relative" />
 
 #### 偏移定位
 
-`position` 还接受 **`{ of, offset }`** 形态——任意 `(dx, dy)` 相对基准点偏移，对应 TikZ `calc` 的 `($(of) + (dx, dy)$)`。当 `at` 的 8 方向 + 单标量距离表达不下需求时（"A 右 30 下 10" 这种），用 offset 就够。
+`position` 还接受 **`{ of, offset }`** 形态——任意 `(dx, dy)` 相对基准点偏移。当 `at` 的 8 方向 + 单标量距离表达不下需求时（"A 右 30 下 10" 这种），用 offset 就够。
 
 - `of` 是基准点，三种形态（与 `PolarPosition.origin` 同形）：
   - 字符串 id——引用命名节点 / coordinate（前向引用拒绝）
@@ -147,11 +159,23 @@ Line 2`}</Node>
   - `PolarPosition`（`{ angle, radius, origin? }`）——极坐标作基准，递归解析
 - `offset` 是 `[dx, dy]` 二元组，user units
 
+<Comparison target="tikz" title="偏移定位">
+
+`{ of: 'a', offset: [10, 5] }` 对应 TikZ `calc` library 的 `($(a) + (10,5)$)`。
+
+</Comparison>
+
 <ComponentPreview name="node-offset-position" />
 
 ### 节点附属标签
 
-`label` 在节点边界外挂额外文字，对应 TikZ `[label=above:foo]`。单对象或数组形态；`position` 接 8 方向枚举或数字角度（`label=30:foo` 等价 `position: 30`）；`font` / `textColor` 缺省时从 node 继承。
+`label` 在节点边界外挂额外文字。单对象或数组形态；`position` 接 8 方向枚举或数字角度；`font` / `textColor` 缺省时从 node 继承。
+
+<Comparison target="tikz" title="节点标签">
+
+`label={{ text: 'foo', position: 'above' }}` 对应 TikZ `[label=above:foo]`；`position: 30` 对应 `label=30:foo`。
+
+</Comparison>
 
 <ComponentPreview name="node-label-basic" size="lg" />
 
@@ -161,7 +185,7 @@ Line 2`}</Node>
 | --- | --- | --- | --- |
 | `id` | `string` | — | 唯一标识；被 `<Path>` / `<Draw>` 用来引用 |
 | `shape` | `'rectangle' \| 'circle' \| 'ellipse' \| 'diamond'` | `'rectangle'` | 节点形状 |
-| `position` | `[x, y] \| PolarPosition \| { direction, of, distance? } \| { of, offset }` | — | 节点中心位置：笛卡尔 / 极坐标 / 相对定位 / 偏移定位（TikZ `calc` 同义，`of` 三态：节点 id、笛卡尔、PolarPosition） |
+| `position` | `[x, y] \| PolarPosition \| { direction, of, distance? } \| { of, offset }` | — | 节点中心位置：笛卡尔 / 极坐标 / 相对定位 / 偏移定位；`of` 三态：节点 id、笛卡尔、PolarPosition |
 | `children` / `text` | `string \| Array<string>` | — | 节点内可见文字；字符串单行 / 数组多行；`text` 优先于 `children` |
 | `align` | `'left' \| 'center' \| 'right'` | `'center'` | 多行文本块内各行水平对齐方式 |
 | `lineHeight` | `number` | `font.size × 1.2` | 多行块的行高（user units） |
@@ -178,7 +202,7 @@ Line 2`}</Node>
 | `textColor` | `string` | `currentColor` | 文字颜色（块级默认；行级覆盖通过 LineSpec.fill） |
 | `opacity` | `number` | — | 整节点 0~1，同时作用于 shape + text |
 | `fillOpacity` | `number` | — | 仅填充透明 0~1 |
-| `drawOpacity` | `number` | — | 仅描边透明 0~1（TikZ `draw opacity`） |
+| `drawOpacity` | `number` | — | 仅描边透明 0~1 |
 | `dashed` | `boolean` | — | 虚线预设（`[4, 2]`） |
 | `dotted` | `boolean` | — | 点线预设（`[1, 2]`） |
 | `dashArray` | `Array<number>` | — | 显式 dash/gap 长度序列；优先级最高 |
@@ -187,7 +211,7 @@ Line 2`}</Node>
 | `minimumSize` | `number` | — | 对称最小尺寸别名；轴特化字段优先 |
 | `scale` | `number` | `1` | 均匀缩放（含字号、padding、路径附着点） |
 | `xScale` / `yScale` | `number` | — | 分轴缩放，优先于 `scale` |
-| `label` | `NodeLabel \| Array<NodeLabel>` | — | 边挂标签（TikZ `[label=above:foo]`）；单对象或数组；`position` 接 8 方向枚举或数字角度，`distance` 缺省 4，`font` / `textColor` 缺省继承 node |
+| `label` | `NodeLabel \| Array<NodeLabel>` | — | 边挂标签；单对象或数组；`position` 接 8 方向枚举或数字角度，`distance` 缺省 4，`font` / `textColor` 缺省继承 node |
 
 ### margin 与 padding 的区别
 

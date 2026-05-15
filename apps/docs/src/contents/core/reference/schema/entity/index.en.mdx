@@ -13,6 +13,12 @@ description: Named members placed in a scene — Node and Coordinate
 
 ## Coordinate
 
-`CoordinateSchema` is the IR form of TikZ `\coordinate (m) at (3,2);`. Requires an `id` (its whole purpose), never contributes to layout, and shares the node index with `Node`.
+`CoordinateSchema` requires an `id` (its whole purpose), never contributes to layout, and shares the node index with `Node`.
+
+<Comparison target="tikz" title="Coordinate Mapping">
+
+`{ type: 'coordinate', id: 'm', position: [3, 2] }` maps to TikZ `\coordinate (m) at (3,2);`.
+
+</Comparison>
 
 <ZodSchema name="CoordinateSchema" />
