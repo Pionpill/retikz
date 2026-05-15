@@ -1,10 +1,12 @@
 import type { MdxFrontmatter } from '@/components/shared/mdx-content';
 import { InlineMdx, MdxContent, MdxToc } from '@/components/shared/mdx-content';
 import { getSectionsByModule } from '@/data/sections';
+import { buildDocPageLinks } from '@/lib/docLinks';
 import { cn } from '@/lib/utils';
+import { useAiChatStore } from '@/store/useAiChatStore';
 import { useTocStore } from '@/store/useTocStore';
 import type { FC, HTMLAttributes } from 'react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Navigate } from 'react-router';
 import { docPathSegments, useDocLocation } from './docLocation';
@@ -21,7 +23,7 @@ export type DocPageProps = HTMLAttributes<HTMLDivElement>;
 export const DocPage: FC<DocPageProps> = props => {
   const { className, ...resProps } = props;
 
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const loc = useDocLocation();
 
   const sections = loc ? getSectionsByModule(loc.moduleId) : [];
@@ -45,6 +47,23 @@ export const DocPage: FC<DocPageProps> = props => {
   if (source != null && source !== stableSource) {
     setStableSource(source);
   }
+
+  // 把当前页 mdx + 元信息推给 AI 聊天面板（Sheet 打开时按当前页作为 context）
+  const setAiChatCurrentPage = useAiChatStore(s => s.setCurrentPage);
+  const aiChatLang: 'zh' | 'en' = (i18n.resolvedLanguage ?? 'zh').startsWith('en') ? 'en' : 'zh';
+  const aiChatTitleKey = target?.label ?? null;
+  useEffect(() => {
+    if (!loc || !aiChatTitleKey || stableSource == null) return;
+    const title = String(t(aiChatTitleKey));
+    const { rawUrl } = buildDocPageLinks(loc, aiChatLang);
+    setAiChatCurrentPage({ title, mdx: stableSource, lang: aiChatLang, rawUrl });
+  }, [loc, aiChatTitleKey, stableSource, aiChatLang, t, setAiChatCurrentPage]);
+  useEffect(
+    () => () => {
+      useAiChatStore.getState().setCurrentPage(null);
+    },
+    [],
+  );
 
   if (!loc || !section || !target) {
     return (

@@ -7,6 +7,7 @@ import type { Section } from './data/interface';
 import { coreSection } from './data/core';
 import { modules } from './data/module';
 import { getSectionsByModule } from './data/sections';
+import { AiChatSheet } from './layout/ai-chat';
 import AppHeader from './layout/header/AppHeader';
 import { DocLayout } from './layout/DocLayout';
 import { DocPage } from './pages/doc-page';
@@ -130,6 +131,7 @@ export const App = () => {
           <Route path="*" element={<Navigate to="/" replace />} />
         </Route>
       </Routes>
+      <AiChatSheet />
       <Toaster position="top-center" />
     </div>
   );
