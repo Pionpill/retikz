@@ -3,7 +3,7 @@ title: Draw
 description: Sugar component — a way array threads through nodes, coordinates, folds, curves, close operations, edge labels, and styling, then expands to equivalent Path + Step.
 ---
 
-`<Draw>` is the default entry point for most connections. It accepts a `way` array and expands targets plus infix operators into Kernel `<Path>` + `<Step>`, so it adds no lower-level capability; it only makes common paths shorter to write.
+`<Draw>` is the default entry point for most connections. It accepts a `way` array and expands targets, folds, cycles, curves, shapes, and edge labels into Kernel `<Path>` + `<Step>`. Stroke, fill, arrow, and opacity props match `<Path>`.
 
 ## Usage
 
@@ -15,22 +15,103 @@ import { Draw } from '@retikz/react';
 <Draw way={['a', 'b']} />
 ```
 
-## Basic Connection
+## Examples
+
+### Basic
 
 <ComponentPreview name="draw-basic" size="xs" />
 
-## Reading Path
+### Curves
 
-| Topic | Covers |
-| --- | --- |
-| [Way](/core/components/draw/way) | `way` item forms, `DrawWay` constants, folds, cycle, relative coordinates |
-| [Curves and Shapes](/core/components/draw/curves) | curve / cubic / bend / arc / circle / ellipse |
-| [Edge Labels](/core/components/draw/labels) | the `{ label }` operator and label positions across step kinds |
-| [Styling](/core/components/draw/styling) | arrows, fill, dash, line cap / line join, opacity |
-| [Path](/core/components/draw/path) | the Kernel container Draw expands to and the full stroke field set |
-| [Step](/core/components/draw/step) | the Kernel step semantics behind each Draw segment |
+#### Quadratic Bezier
+
+`{ curve: [cx, cy] }` matches TikZ `..controls(B)..` and is equivalent to `<Step kind="curve">`.
+
+<ComponentPreview name="draw-curve" />
+
+#### Cubic Bezier
+
+`{ cubic: [[c1x, c1y], [c2x, c2y]] }` uses two control points to shape the start and end tangents.
+
+<ComponentPreview name="draw-cubic" />
+
+#### Bend
+
+`{ bend: 'left' | 'right', angle?: number }` gives only direction and angle; the compiler computes control points and lowers it to cubic.
+
+<ComponentPreview name="draw-bend" size="lg" />
+
+#### Arc
+
+`{ arc: { startAngle, endAngle, radius } }` draws an arc around the previous item and does not consume the next item.
+
+<ComponentPreview name="draw-arc" />
+
+### Shapes
+
+#### Circle
+
+`{ circle: { radius } }` draws a full circle around the previous item; the pen returns to the center.
+
+<ComponentPreview name="draw-circle" />
+
+#### Ellipse
+
+`{ ellipse: { radiusX, radiusY } }` draws a full ellipse centered on the previous item.
+
+<ComponentPreview name="draw-ellipse" />
+
+### Edge Labels
+
+#### Basic Form
+
+`{ label }` is an infix label operator in Draw way. It decorates the next produced segment by setting `step.label`; it does not produce a segment itself. The shorthand `{ label: 'ok' }` is equivalent to `{ label: { text: 'ok' } }`.
+
+<ComponentPreview name="draw-label" size="lg" />
+
+#### Position Rules
+
+`label.position` accepts seven keywords or a numeric `0..1` t. The geometry of t depends on step kind: line / fold use normalized path position, curve / cubic / bend use Bezier t, and arc / circle / ellipse use angular parametrization.
+
+<ComponentPreview name="draw-label-line" />
+
+<ComponentPreview name="draw-label-fold" />
+
+<ComponentPreview name="draw-label-curve" />
+
+<ComponentPreview name="draw-label-cubic" />
+
+<ComponentPreview name="draw-label-bend" />
+
+<ComponentPreview name="draw-label-arc" />
+
+<ComponentPreview name="draw-label-circle" />
+
+<ComponentPreview name="draw-label-ellipse" />
+
+### Style
+
+#### Arrows
+
+`arrow` controls endpoint arrows: `'->'` / `'<-'` / `'<->'` / `'none'`. For shape, size, color, and per-end overrides, see [Arrow](/core/components/draw/arrow).
+
+<ComponentPreview name="draw-arrow" />
+
+#### Fill
+
+`fill` colors closed regions, and `fillRule` controls nested sub-path filling. It is commonly used with `DrawWay.Cycle`.
+
+<ComponentPreview name="draw-fill" />
+
+#### Dash
+
+`dashPattern` uses `Array<number>` for dash / gap lengths. `[4, 2]` means draw 4, skip 2, in user units.
+
+<ComponentPreview name="draw-dashed" />
 
 ## API Reference
+
+### Props
 
 | Prop | Type | Default | Description |
 | --- | --- | --- | --- |
@@ -48,3 +129,31 @@ import { Draw } from '@retikz/react';
 | `opacity` | `number` | — | Whole-path opacity, 0..1 |
 | `fillOpacity` | `number` | — | Fill-only opacity, 0..1 |
 | `drawOpacity` | `number` | — | Stroke-only opacity, 0..1 (TikZ `draw opacity`) |
+
+### Curve / Shape / Label Way Items
+
+| Way item | Parameters | Consumes next item | Equivalent Step | Description |
+| --- | --- | --- | --- | --- |
+| `{ curve }` | `[cx, cy]` | Yes | `kind="curve"` | Quadratic Bezier control point |
+| `{ cubic }` | `[[c1x, c1y], [c2x, c2y]]` | Yes | `kind="cubic"` | Two cubic Bezier control points |
+| `{ bend }` | `'left' \| 'right'` | Yes | `kind="bend"` | Bend direction, default angle 30 |
+| `{ bend, angle }` | `number` | Yes | `kind="bend"` | Override the bend angle |
+| `{ arc }` | `{ startAngle, endAngle, radius }` | No | `kind="arc"` | Draw an arc around the current point |
+| `{ circle }` | `{ radius }` | No | `kind="circlePath"` | Draw a full circle around the current point |
+| `{ ellipse }` | `{ radiusX, radiusY }` | No | `kind="ellipsePath"` | Draw a full ellipse centered on the current point |
+| `{ label }` | `string \| StepLabel` | Yes | `step.label` | Decorates the next segment; string shorthand equals `{ text }` |
+
+### StepLabel
+
+| Field | Type | Default | Description |
+| --- | --- | --- | --- |
+| `text` | `string` | — | Label text |
+| `position` | `StepLabelPosition \| number` | `'midway'` | Keyword or numeric `0..1` t value |
+| `side` | `'above' \| 'below'` | `'above'` | Which side of the line to place the text on |
+
+## Related
+
+- [Way](/core/components/draw/way): `way` item forms, `DrawWay` constants, folds, cycle, relative coordinates
+- [Path](/core/components/draw/path): the Kernel container Draw expands to and the full stroke field set
+- [Step](/core/components/draw/step): the Kernel step semantics behind each Draw segment
+- [Arrow](/core/components/draw/arrow): Arrow shape, size, color, and per-end overrides

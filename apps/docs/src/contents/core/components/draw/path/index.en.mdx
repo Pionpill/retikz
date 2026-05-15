@@ -66,19 +66,19 @@ import { Path, Step } from '@retikz/react';
 
 <ComponentPreview name="path-dashed" size="xs" />
 
-### Stroke endpoints / corners
+#### Stroke endpoints / corners
 
 `lineCap` controls the stroke endpoint shape (TikZ `line cap`): `'butt'` default (square end at endpoint) / `'round'` half-circle cap / `'square'` square cap extended past the endpoint by half a stroke. `lineJoin` controls the corner shape (TikZ `line join`): `'miter'` default (sharp) / `'round'` rounded / `'bevel'` flat-cut.
 
 <ComponentPreview name="path-line-style" />
 
-### Semantic thickness preset
+#### Semantic thickness preset
 
 `thickness` is a TikZ-style semantic preset — `'ultraThin'` / `'veryThin'` / `'thin'` / `'semithick'` / `'thick'` / `'veryThick'` / `'ultraThick'` — compiled to a numeric stroke width (`thin = 1` matches the default `strokeWidth`; the rest scale by TikZ's ratios). **Explicit `strokeWidth` always wins** — `thickness` only applies when `strokeWidth` is omitted:
 
 <ComponentPreview name="path-thickness" size="lg" />
 
-### Opacity
+#### Opacity
 
 Three independent channels: `opacity` overall (multiplies onto stroke and fill), `fillOpacity` for fill only, `drawOpacity` for stroke only (TikZ `draw opacity` naming, matching `<Node>`). The three compose:
 
@@ -103,7 +103,9 @@ Three independent channels: `opacity` overall (multiplies onto stroke and fill),
 | `drawOpacity` | `number` | — | Stroke-only opacity 0..1 (TikZ `draw opacity`) |
 | `children` | `Array<<Step>>` | — | At least 2; if the first isn't `move`, the compiler coerces it to `move`. `<Step>` supports `move` / `line` / `step` (folded) / `cycle` (close) / `curve` / `cubic` (Bezier) / `bend` (arc shorthand) / `arc` / `circlePath` / `ellipsePath` (circle / ellipse) |
 
-## Path vs Draw
+## Related
+
+### Path vs Draw
 
 | | `<Draw>` | `<Path>` + `<Step>` |
 | --- | --- | --- |
@@ -112,3 +114,7 @@ Three independent channels: `opacity` overall (multiplies onto stroke and fill),
 | Use when | 90% of connection cases | Explicit Step sequence, future extensions |
 
 `<Draw>` compiles down to `<Path>`; tutorials should lead with `<Draw>` — `<Path>` is for users who want the underlying construct.
+
+- [Draw](/core/components/draw/overview): Sugar preferred for everyday connections
+- [Step](/core/components/draw/step): Complete field and kind reference for `<Path>` children
+- [Arrow](/core/components/draw/arrow): Detailed path arrow configuration

@@ -41,13 +41,13 @@ import { Node } from '@retikz/react';
 
 <ComponentPreview name="node-styled" size="xs" />
 
-### Font
+#### Font
 
 `font` is a nested object `{ family?, size?, weight?, style? }` — bold / italic / family all live in one prop:
 
 <ComponentPreview name="node-font" size="xs" />
 
-### Multi-line text
+#### Multi-line text
 
 `text` accepts a string (one line) or an array of strings (one line each). `align` controls horizontal alignment within the text block (`'left'` / `'center'` (default) / `'right'`), and `lineHeight` controls vertical spacing between lines, defaulting to `font.size × 1.2`.
 
@@ -71,7 +71,7 @@ Line 2`}</Node>
 
 `text` wins over `children` whenever both are supplied.
 
-### Per-line styling
+#### Per-line styling
 
 Each line can override `fill` / `opacity` / `font` (any subset of family / size / weight / style); unset fields inherit block defaults. Two equivalent paths:
 
@@ -86,7 +86,7 @@ Multi-line text combined with each shape — outer boundary follows the shape-sp
 
 <ComponentPreview name="node-multiline-shapes" />
 
-### Inner / outer sep
+#### Inner / outer sep
 
 Both **symmetric aliases** and **axis-specific** forms are supported (resolution order: axis-specific ?? alias ?? default):
 
@@ -97,7 +97,7 @@ Both **symmetric aliases** and **axis-specific** forms are supported (resolution
 
 <ComponentPreview name="node-sep" size="sm" />
 
-### Colors / opacity
+#### Colors / opacity
 
 - `textColor` — text color (block default; per-line `LineSpec.fill` still overrides)
 - `opacity` — whole-node 0..1 (applies to shape + text)
@@ -105,13 +105,13 @@ Both **symmetric aliases** and **axis-specific** forms are supported (resolution
 
 <ComponentPreview name="node-color-opacity" size="sm" />
 
-### Border style
+#### Border style
 
 `dashed` / `dotted` are presets; `dashArray` is an explicit dash/gap length sequence (priority: `dashArray` > `dashed` > `dotted`):
 
 <ComponentPreview name="node-stroke-style" size="sm" />
 
-### Size constraints + scale
+#### Size constraints + scale
 
 - `roundedCorners` — corner radius (only on `rectangle` shape)
 - `minimumWidth` / `minimumHeight` / `minimumSize` — floor the bbox without shrinking natural text width
@@ -119,13 +119,15 @@ Both **symmetric aliases** and **axis-specific** forms are supported (resolution
 
 <ComponentPreview name="node-size-constraints" size="sm" />
 
-### Rotation
+#### Rotation
 
 `rotate` rotates around the node center; attached paths follow the new border:
 
 <ComponentPreview name="node-rotated" size="sm" />
 
-### Relative positioning
+### Positioning
+
+#### Relative positioning
 
 In addition to Cartesian / polar, `position` accepts **`{ direction, of, distance? }`** — equivalent to TikZ `[<direction>=<distance> of <id>]`. No more hand-computing absolute coordinates; describe node relationships instead.
 
@@ -135,7 +137,7 @@ In addition to Cartesian / polar, `position` accepts **`{ direction, of, distanc
 
 <ComponentPreview name="node-at-relative" />
 
-### Offset positioning
+#### Offset positioning
 
 `position` also accepts **`{ of, offset }`** — an arbitrary `(dx, dy)` offset from a base point, mirroring TikZ `calc` syntax `($(of) + (dx, dy)$)`. Use offset whenever the 8-direction + scalar-distance `at` form can't express what you want (e.g. "A right 30 down 10").
 
@@ -187,7 +189,7 @@ In addition to Cartesian / polar, `position` accepts **`{ direction, of, distanc
 | `xScale` / `yScale` | `number` | — | Per-axis scale; takes precedence over `scale` |
 | `label` | `NodeLabel \| Array<NodeLabel>` | — | Extra label(s) attached to the node border (TikZ `[label=above:foo]`); single object or array; `position` accepts the 8-direction enum or a numeric angle, `distance` defaults to 4, `font` / `textColor` inherit from the node |
 
-## margin vs padding
+### margin vs padding
 
 | | Affects | Visual effect |
 | --- | --- | --- |
@@ -195,3 +197,9 @@ In addition to Cartesian / polar, `position` accepts **`{ direction, of, distanc
 | `margin` | Distance from border to path endpoint | Border unchanged; lines stop `margin` short |
 
 Use `margin` to give connecting lines breathing room in multi-node diagrams — keeps lines from touching the border directly.
+
+## Related
+
+- [Text](/core/components/node/text): Per-line styling inside Node
+- [Coordinate](/core/components/node/coordinate): Name a reference point without rendering a shape
+- [Draw](/core/components/draw/overview): Connect nodes by id

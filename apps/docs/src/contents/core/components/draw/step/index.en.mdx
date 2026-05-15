@@ -192,7 +192,7 @@ The eight demos below show one set of t markers per kind — `t=0.25` vs `'midwa
 | `radiusY` | `number` | — | Required for `kind="ellipsePath"`: y-axis radius |
 | `label` | `IRStepLabel` | — | Edge label (works on every kind except `'move'` / `'cycle'`): `{ text, position?, side? }`; equivalent sugar form `<Step><EdgeLabel>…</EdgeLabel></Step>`, prop wins on conflict |
 
-## Ten kinds
+### Ten kinds
 
 | kind | Behavior | SVG / TikZ analogue |
 | --- | --- | --- |
@@ -209,7 +209,7 @@ The eight demos below show one set of t markers per kind — `t=0.25` vs `'midwa
 
 The first step of a `<Path>` must be `move` — if you write `'line'` / `'step'` / `'cycle'`, the compiler coerces it to `move` (cycle has no `to`, so it falls back to origin `[0, 0]`).
 
-## Two via values
+### Two via values
 
 Only meaningful when `kind="step"`. Given cursor `(px, py)` and target `(tx, ty)`:
 
@@ -218,7 +218,7 @@ Only meaningful when `kind="step"`. Given cursor `(px, py)` and target `(tx, ty)
 | `'-\|'` | `(tx, py)` | Horizontal to `tx`, then vertical to `ty` |
 | `'\|-'` | `(px, ty)` | Vertical to `ty`, then horizontal to `tx` |
 
-## Fields of `label`
+### Fields of `label`
 
 `label` is a single object, applied uniformly across all kinds that accept it:
 
@@ -230,7 +230,7 @@ Only meaningful when `kind="step"`. Given cursor `(px, py)` and target `(tx, ty)
 
 The geometric meaning of t per step kind is in the "[Geometric meaning of t per step kind](#geometric-meaning-of-t-per-step-kind)" table above. In short: line / fold use normalized arc length (fold's corner is always at t=0.5), curve / cubic / bend use the Bezier parameter t (**not** arc length — t=0.5 is usually not the visual midpoint), arc uses angle parametrization, and circlePath / ellipsePath traverse the full curve starting at angle 0 (+x), CCW.
 
-## Six forms of `to`
+### Six forms of `to`
 
 | Form | Example | Behavior |
 | --- | --- | --- |
@@ -240,3 +240,9 @@ The geometric meaning of t per step kind is in the "[Geometric meaning of t per 
 | Offset | `{ of: 'a', offset: [10, 5] }` | Base + `(dx, dy)`; `of` accepts node id, Cartesian literal, or PolarPosition |
 | Relative (relative) | `{ relative: [10, 0] }` or `'+10,0'` | Previous step's endpoint + `[dx, dy]`; does **not** update prevEnd (TikZ `(+x, +y)`) |
 | Relative (relativeAccumulate) | `{ relativeAccumulate: [10, 0] }` or `'++10,0'` | Previous step's endpoint + `[dx, dy]`; **updates** prevEnd (TikZ `(++x, ++y)`) |
+
+## Related
+
+- [Path](/core/components/draw/path): Kernel path container that owns `<Step>` children
+- [Draw Way](/core/components/draw/way): Sugar way syntax for everyday use
+- [Draw](/core/components/draw/overview): Sugar syntax for curves, circles / ellipses, and edge labels

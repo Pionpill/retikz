@@ -192,7 +192,7 @@ t 是沿整段的归一化参数，不同 kind 解释**与 TikZ 对齐**：
 | `radiusY` | `number` | — | 仅 `kind="ellipsePath"` 必填：椭圆 y 轴半径 |
 | `label` | `IRStepLabel` | — | 边标注（`'move'` / `'cycle'` 外八种 kind 通用）：`{ text, position?, side? }`；等价 sugar 写法 `<Step><EdgeLabel>…</EdgeLabel></Step>`，prop 优先 |
 
-## kind 的十种取值
+### kind 的十种取值
 
 | kind | 行为 | 类比 SVG / TikZ |
 | --- | --- | --- |
@@ -209,7 +209,7 @@ t 是沿整段的归一化参数，不同 kind 解释**与 TikZ 对齐**：
 
 `<Path>` 第一个 step 必须是 `move`——如果你写 `'line'` / `'step'` / `'cycle'`，编译器会自动改成 `move`（cycle 无 `to`，回退到原点 `[0, 0]`）。
 
-## via 的两种取值
+### via 的两种取值
 
 仅 `kind="step"` 时生效，决定折角中间点的位置。设当前游标 `(px, py)`，目标 `(tx, ty)`：
 
@@ -218,7 +218,7 @@ t 是沿整段的归一化参数，不同 kind 解释**与 TikZ 对齐**：
 | `'-\|'` | `(tx, py)` | 先水平到 `tx`，再垂直到 `ty` |
 | `'\|-'` | `(px, ty)` | 先垂直到 `ty`，再水平到 `tx` |
 
-## label 的字段
+### label 的字段
 
 `label` 是单个对象，对所有可挂 label 的 kind 透明：
 
@@ -230,7 +230,7 @@ t 是沿整段的归一化参数，不同 kind 解释**与 TikZ 对齐**：
 
 不同 step kind 上 t 的几何解释见上方 "[t 在每种 step kind 上的几何含义](#t-在每种-step-kind-上的几何含义)" 表。要点：line / fold 用归一化弧长（fold 拐角恒在 t=0.5），curve / cubic / bend 用 Bezier 参数 t（**非弧长**——t=0.5 通常不是视觉中点），arc 用角度参数化，circlePath / ellipsePath 沿整圆从 angle 0（+x）CCW 增长。
 
-## to 的六种形态
+### to 的六种形态
 
 | 形态 | 例 | 行为 |
 | --- | --- | --- |
@@ -240,3 +240,9 @@ t 是沿整段的归一化参数，不同 kind 解释**与 TikZ 对齐**：
 | 偏移定位 | `{ of: 'a', offset: [10, 5] }` | 基准 + `(dx, dy)`；`of` 三态——节点 id / 笛卡尔字面值 / PolarPosition |
 | 相对偏移 (relative) | `{ relative: [10, 0] }` 或 `'+10,0'` | 基于前一 step 终点 + `[dx, dy]`；**不**更新 prevEnd（TikZ `(+x, +y)`） |
 | 相对偏移 (relativeAccumulate) | `{ relativeAccumulate: [10, 0] }` 或 `'++10,0'` | 基于前一 step 终点 + `[dx, dy]`；**更新** prevEnd（TikZ `(++x, ++y)`） |
+
+## 相关
+
+- [Path](/core/components/draw/path)：`<Step>` 所在的 Kernel 路径容器
+- [Draw Way](/core/components/draw/way)：日常使用的 Sugar way 写法
+- [Draw](/core/components/draw/overview)：曲线、圆 / 椭圆和边标注的 Sugar 写法

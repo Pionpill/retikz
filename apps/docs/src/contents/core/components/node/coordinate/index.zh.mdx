@@ -17,7 +17,7 @@ import { Coordinate } from '@retikz/react';
 
 `position` 接受 `<Node>` 完全相同的四种形态：笛卡尔 `[x, y]` / 极坐标 `{ angle, radius, origin? }` / 相对定位 `{ direction, of, distance? }` / 偏移定位 `{ of, offset }`。
 
-## 为什么需要它
+### 为什么需要它
 
 要在某处放一个引用点，不带 `<Coordinate>` 的话只能 fake 一个 `stroke="transparent" fill="transparent"` 的空 `<Node>`——但空 Node 仍然会：
 
@@ -61,7 +61,9 @@ Coordinate 用 `{ of, offset }` 派生下一个 coordinate——靠一个根 coo
 | `id` | `string` | — | **必填**——占位的全部意义就在于被 id 引用 |
 | `position` | `[x, y] \| PolarPosition \| { direction, of, distance? } \| { of, offset }` | — | 占位点位置；与 `<Node position>` 完全一致——包含偏移定位 `{ of, offset }` 形态 |
 
-## 与 `<Node>` / `<Path>` 的关系
+## 相关
+
+### 与 `<Node>` / `<Path>` 的关系
 
 | | `<Coordinate>` | `<Node>` |
 |---|---|---|
@@ -74,8 +76,11 @@ Coordinate 用 `{ of, offset }` 派生下一个 coordinate——靠一个根 coo
 
 简单原则：需要画形状 + 文字 → `<Node>`；只要一个引用点 → `<Coordinate>`。
 
-## 不适用场景
+### 不适用场景
 
 - **要给点配文字标签** → 用 `<Node>` 加 `label?`，coordinate 不带文字字段
 - **要画一个圆点 / 标记位置** → 用 `<Node shape="circle">` + 小尺寸；coordinate 永远不画
 - **anchor 指向**（`m.north`）→ coordinate 是 0×0 占位，所有 anchor 都退化为中心；要用方向 anchor 还是用 `<Node>`
+
+- [Node](/core/components/node/overview)：有形状和文字的节点
+- [Draw](/core/components/draw/overview)：引用 coordinate id 的日常连线写法

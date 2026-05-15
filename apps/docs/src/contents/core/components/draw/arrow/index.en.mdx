@@ -10,7 +10,7 @@ Arrows are driven by two independent props:
 
 Both props sit on `<Draw>` and `<Path>` with identical syntax and effect — the examples below use `<Draw>`; the `<Path>` equivalent is the same.
 
-## Minimal usage
+## Usage
 
 <ComponentPreview name="arrow-default" size="xs" />
 
@@ -20,7 +20,9 @@ Both props sit on `<Draw>` and `<Path>` with identical syntax and effect — the
 
 With `arrowDetail` omitted, the arrow defaults to a normal-shape filled triangle inheriting the path stroke color and using 6 user units for both length and width.
 
-## Seven built-in shapes
+## Examples
+
+### Shapes
 
 `arrowDetail.shape` picks the tip shape (default `'normal'`):
 
@@ -38,7 +40,7 @@ With `arrowDetail` omitted, the arrow defaults to a normal-shape filled triangle
 
 > Multi-node paths (e.g. a → b → c) clip per-segment, but the arrow only attaches to the overall **start** / **end** — never to intermediate nodes.
 
-## Per-end overrides
+### Per-end overrides
 
 `arrowDetail.start` / `arrowDetail.end` sub-objects **merge field-by-field** into the top-level defaults — omitted fields inherit, present fields override. The classic UML "composition + inheritance" shows up as different `start.shape` + `end.shape`:
 
@@ -46,7 +48,9 @@ With `arrowDetail` omitted, the arrow defaults to a normal-shape filled triangle
 
 > **Merge semantics**: sub-object fields win first; fields not in the sub-object fall back to the top-level defaults; fields not at the top level fall back to the built-in defaults. Example: `arrowDetail={{ shape: 'stealth', start: { color: 'red' } }}` → both ends use stealth, start in red, end inherits the path stroke.
 
-## Color override
+### Style
+
+#### Color override
 
 `color` overrides the marker stroke / solid fill (escaping the default `context-stroke` inheritance); `fill` is only effective on solid shapes. `start.color` / `end.color` give per-end overrides — handy for "light line, dark arrow" or two-color endpoints:
 
@@ -54,7 +58,7 @@ With `arrowDetail` omitted, the arrow defaults to a normal-shape filled triangle
 
 > **Hollow shapes silently ignore `fill`**: when `shape ∈ { open / openDiamond / openCircle }`, the `fill` field is silently dropped. Hollow shapes are driven entirely by `color` (stroke) + `lineWidth` (stroke width); writing `fill='red'` will not render a red fill.
 
-## Sizing: scale / length / width
+#### Sizing: scale / length / width
 
 - `scale` is the uniform marker scale factor (default 1), multiplied **after** `length` / `width` — `length=10, scale=1.5` → effective `markerWidth=15`
 - `length` controls the marker dimension along the path direction (default 6)
@@ -62,7 +66,7 @@ With `arrowDetail` omitted, the arrow defaults to a normal-shape filled triangle
 
 <ComponentPreview name="arrow-scale" size="md" />
 
-## Translucent
+#### Translucent
 
 `opacity` 0..1 applies to the marker as a whole (independent of the path's own `opacity` / `drawOpacity`):
 
@@ -93,3 +97,8 @@ With `arrowDetail` omitted, the arrow defaults to a normal-shape filled triangle
 | `lineWidth` | `number ≥ 0` | `1.5` | Stroke width for hollow shapes; ignored on solid shapes |
 | `start` | `ArrowEndDetail` (same field set, no `start` / `end`) | — | Start-end override (only effective when `arrow` includes the start: `'<-'` / `'<->'`) |
 | `end` | `ArrowEndDetail` (same field set, no `start` / `end`) | — | End-end override (only effective when `arrow` includes the end: `'->'` / `'<->'`) |
+
+## Related
+
+- [Draw](/core/components/draw/overview): Sugar for everyday connections
+- [Path](/core/components/draw/path): Low-level path container with the same `arrow` / `arrowDetail` behavior

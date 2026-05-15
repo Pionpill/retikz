@@ -17,7 +17,7 @@ import { Coordinate } from '@retikz/react';
 
 `position` accepts the same four forms as `<Node>`: Cartesian `[x, y]` / polar `{ angle, radius, origin? }` / relative `{ direction, of, distance? }` / offset `{ of, offset }`.
 
-## Why it exists
+### Why it exists
 
 Without `<Coordinate>`, anchoring "a named point" forces you to fake an empty `<Node>` with `stroke="transparent" fill="transparent"` — but an empty Node still:
 
@@ -61,7 +61,9 @@ Use `{ of, offset }` to derive one coordinate from another — drive the whole g
 | `id` | `string` | — | **Required** — a placeholder's entire purpose is to be referenced by id |
 | `position` | `[x, y] \| PolarPosition \| { direction, of, distance? } \| { of, offset }` | — | Placeholder position; same shapes as `<Node position>` — includes the offset `{ of, offset }` form |
 
-## Relationship with `<Node>` / `<Path>`
+## Related
+
+### Relationship with `<Node>` / `<Path>`
 
 | | `<Coordinate>` | `<Node>` |
 |---|---|---|
@@ -74,8 +76,11 @@ Use `{ of, offset }` to derive one coordinate from another — drive the whole g
 
 Rule of thumb: need a shape + text → `<Node>`; need only a reference point → `<Coordinate>`.
 
-## When not to use
+### When not to use
 
 - **Need a labelled point** → use `<Node>` with `label?`; coordinate has no text field
 - **Need a small visible dot** → use `<Node shape="circle">` with a small size; coordinate never draws
 - **Direction anchors** (`m.north`) → coordinate is a 0×0 placeholder, all anchors collapse to center; use `<Node>` if you need directional anchors
+
+- [Node](/core/components/node/overview): Nodes with shape and text
+- [Draw](/core/components/draw/overview): Everyday connections that can target coordinate ids

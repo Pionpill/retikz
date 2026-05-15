@@ -55,7 +55,7 @@ import { TikZ } from '@retikz/react';
 | `className` | `string` | — | Forwarded to `<svg>` |
 | `style` | `CSSProperties` | — | Forwarded to `<svg>` |
 
-## Feeding IR Directly
+### Feeding IR Directly
 
 The `ir` prop fits scenarios where IR JSON is already in hand — AI generation, JSON editors, URL deserialization. Pair with `convertReactNodeToIR` / `convertIRToReactNode` for a DSL ↔ IR bridge:
 
@@ -70,3 +70,9 @@ const ir = convertReactNodeToIR(
 ```
 
 `ir` and `children` are mutually exclusive; if both are supplied, `ir` wins.
+
+## Related
+
+- [Node](/core/components/node/overview): Most common Kernel node
+- [Draw](/core/components/draw/overview): Sugar for everyday connections
+- [Path](/core/components/draw/path): Low-level path container

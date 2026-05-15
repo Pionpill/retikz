@@ -3,7 +3,7 @@ title: Draw
 description: Sugar 组件——用 way 数组串起节点、坐标、折角、曲线、闭合、边标注和样式，编译期展开为等价的 Path + Step。
 ---
 
-`<Draw>` 是大多数连线的首选入口。它接受一个 `way` 数组，按顺序把目标点与 infix 算子展开成 Kernel `<Path>` + `<Step>`，所以它不引入新的底层能力，只减少常见路径的书写成本。
+`<Draw>` 是大多数连线的首选入口。它接受一个 `way` 数组，按顺序把目标点、折角、闭合、曲线、形状和边标注展开成 Kernel `<Path>` + `<Step>`。描边、填充、箭头等样式字段与 `<Path>` 保持一致。
 
 ## 用法
 
@@ -15,22 +15,103 @@ import { Draw } from '@retikz/react';
 <Draw way={['a', 'b']} />
 ```
 
-## 基础连线
+## 例子
+
+### 基础
 
 <ComponentPreview name="draw-basic" size="xs" />
 
-## 阅读路径
+### 曲线
 
-| 主题 | 内容 |
-| --- | --- |
-| [Way](/core/components/draw/way) | `way` item 形态、`DrawWay` 常量、折角、闭合、相对坐标 |
-| [曲线与形状](/core/components/draw/curves) | curve / cubic / bend / arc / circle / ellipse |
-| [边标注](/core/components/draw/labels) | `{ label }` 算子与不同 step kind 上的 label 位置 |
-| [样式](/core/components/draw/styling) | 箭头、填充、dash、line cap / line join、透明度 |
-| [Path](/core/components/draw/path) | Draw 展开后的 Kernel 容器与完整描边字段 |
-| [Step](/core/components/draw/step) | Draw 每一段最终对应的 Kernel step 语义 |
+#### 二次贝塞尔
+
+`{ curve: [cx, cy] }` 对应 TikZ `..controls(B)..`，等价 `<Step kind="curve">`。
+
+<ComponentPreview name="draw-curve" />
+
+#### 三次贝塞尔
+
+`{ cubic: [[c1x, c1y], [c2x, c2y]] }` 用两个控制点分别影响起点与终点切线。
+
+<ComponentPreview name="draw-cubic" />
+
+#### Bend
+
+`{ bend: 'left' | 'right', angle?: number }` 只给方向与角度，编译期自动算控制点并降为 cubic。
+
+<ComponentPreview name="draw-bend" size="lg" />
+
+#### 弧段
+
+`{ arc: { startAngle, endAngle, radius } }` 以上一项为圆心画弧段，不消耗下一项。
+
+<ComponentPreview name="draw-arc" />
+
+### 形状
+
+#### 整圆
+
+`{ circle: { radius } }` 以上一项为圆心画整圆，画完画笔回到圆心。
+
+<ComponentPreview name="draw-circle" />
+
+#### 整椭圆
+
+`{ ellipse: { radiusX, radiusY } }` 以上一项为中心画整椭圆。
+
+<ComponentPreview name="draw-ellipse" />
+
+### 边标注
+
+#### 基础写法
+
+`{ label }` 是 Draw way 里的 infix 标注算子。它修饰下一段产生的 `step.label`，不自己产生路径段。短写 `{ label: 'ok' }` 等价 `{ label: { text: 'ok' } }`。
+
+<ComponentPreview name="draw-label" size="lg" />
+
+#### 位置规则
+
+`label.position` 接 7 个 keyword 或 `0..1` 数值 t。t 的几何含义随 step kind 变化；line / fold 按归一化路径位置，curve / cubic / bend 按 Bezier 参数，arc / circle / ellipse 按角度参数化。
+
+<ComponentPreview name="draw-label-line" />
+
+<ComponentPreview name="draw-label-fold" />
+
+<ComponentPreview name="draw-label-curve" />
+
+<ComponentPreview name="draw-label-cubic" />
+
+<ComponentPreview name="draw-label-bend" />
+
+<ComponentPreview name="draw-label-arc" />
+
+<ComponentPreview name="draw-label-circle" />
+
+<ComponentPreview name="draw-label-ellipse" />
+
+### 样式
+
+#### 箭头
+
+`arrow` 控制路径两端的箭头：`'->'` / `'<-'` / `'<->'` / `'none'`。更细的 shape、尺寸、颜色和起末分别配置见 [Arrow](/core/components/draw/arrow)。
+
+<ComponentPreview name="draw-arrow" />
+
+#### 填充
+
+`fill` 给闭合区域填色，`fillRule` 控制嵌套子路径填充规则。常配合 `DrawWay.Cycle` 使用。
+
+<ComponentPreview name="draw-fill" />
+
+#### Dash
+
+`dashPattern` 使用 `Array<number>` 表达 dash / gap 长度序列。`[4, 2]` 表示画 4、空 2，单位是 user units。
+
+<ComponentPreview name="draw-dashed" />
 
 ## API 参考
+
+### Props
 
 | 属性 | 类型 | 默认值 | 描述 |
 | --- | --- | --- | --- |
@@ -48,3 +129,31 @@ import { Draw } from '@retikz/react';
 | `opacity` | `number` | — | 整 path 透明度 0..1 |
 | `fillOpacity` | `number` | — | 仅 fill 透明度 0..1 |
 | `drawOpacity` | `number` | — | 仅 stroke 透明度 0..1（TikZ `draw opacity`） |
+
+### 曲线 / 形状 / 标注 way item
+
+| Way item | 参数 | 消耗下一项 | 等价 Step | 描述 |
+| --- | --- | --- | --- | --- |
+| `{ curve }` | `[cx, cy]` | 是 | `kind="curve"` | 二次贝塞尔控制点 |
+| `{ cubic }` | `[[c1x, c1y], [c2x, c2y]]` | 是 | `kind="cubic"` | 三次贝塞尔两个控制点 |
+| `{ bend }` | `'left' \| 'right'` | 是 | `kind="bend"` | 弯曲方向，角度默认 30 |
+| `{ bend, angle }` | `number` | 是 | `kind="bend"` | 覆盖 bend 角度 |
+| `{ arc }` | `{ startAngle, endAngle, radius }` | 否 | `kind="arc"` | 以当前点为圆心画弧段 |
+| `{ circle }` | `{ radius }` | 否 | `kind="circlePath"` | 以当前点为圆心画整圆 |
+| `{ ellipse }` | `{ radiusX, radiusY }` | 否 | `kind="ellipsePath"` | 以当前点为中心画整椭圆 |
+| `{ label }` | `string \| StepLabel` | 是 | `step.label` | 标注下一段；字符串短写等价 `{ text }` |
+
+### StepLabel
+
+| 字段 | 类型 | 默认值 | 描述 |
+| --- | --- | --- | --- |
+| `text` | `string` | — | 标注文本 |
+| `position` | `StepLabelPosition \| number` | `'midway'` | keyword 或 `0..1` 的 t 值 |
+| `side` | `'above' \| 'below'` | `'above'` | 文本放在线的哪一侧 |
+
+## 相关
+
+- [Way](/core/components/draw/way)：`way` item 形态、`DrawWay` 常量、折角、闭合、相对坐标
+- [Path](/core/components/draw/path)：Draw 展开后的 Kernel 容器与完整描边字段
+- [Step](/core/components/draw/step)：Draw 每一段最终对应的 Kernel step 语义
+- [Arrow](/core/components/draw/arrow)：箭头 shape、尺寸、颜色与起末分别配置

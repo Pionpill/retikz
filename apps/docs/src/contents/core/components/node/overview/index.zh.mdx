@@ -41,13 +41,13 @@ import { Node } from '@retikz/react';
 
 <ComponentPreview name="node-styled" size="xs" />
 
-### 字体
+#### 字体
 
 `font` 是嵌套对象 `{ family?, size?, weight?, style? }`——粗体 / 斜体 / 字族都在一个字段里设：
 
 <ComponentPreview name="node-font" size="xs" />
 
-### 多行文本
+#### 多行文本
 
 `text` 既可以是字符串（单行），也可以是字符串数组（一元素一行）。`align` 控制多行块内各行水平对齐方式（`'left'` / `'center'`（默认）/ `'right'`），`lineHeight` 控制相邻行的间距，未设走 `font.size × 1.2`。
 
@@ -71,7 +71,7 @@ Line 2`}</Node>
 
 `text` prop 优先级高于 children；二者都给时取 `text`。
 
-### 行级样式
+#### 行级样式
 
 每行可独立覆盖 `fill` / `opacity` / `font`（family / size / weight / style 任意子集），未填字段继承块级。两条等价路径：
 
@@ -86,7 +86,7 @@ Line 2`}</Node>
 
 <ComponentPreview name="node-multiline-shapes" />
 
-### 内 / 外边距
+#### 内 / 外边距
 
 内 / 外边距支持**对称别名**与**轴特化**两套写法（解析顺序：轴特化 ?? 别名 ?? 默认）：
 
@@ -97,7 +97,7 @@ Line 2`}</Node>
 
 <ComponentPreview name="node-sep" size="sm" />
 
-### 颜色 / 不透明度
+#### 颜色 / 不透明度
 
 - `textColor`——文字颜色（块级默认；行级 LineSpec.fill 仍可覆盖）
 - `opacity`——整节点 0~1（同时作用于 shape + text）
@@ -105,13 +105,13 @@ Line 2`}</Node>
 
 <ComponentPreview name="node-color-opacity" size="sm" />
 
-### 描边样式
+#### 描边样式
 
 `dashed` / `dotted` 是预设；`dashArray` 是显式 dash/gap 长度序列（优先级：`dashArray` > `dashed` > `dotted`）：
 
 <ComponentPreview name="node-stroke-style" size="sm" />
 
-### 尺寸约束 + 缩放
+#### 尺寸约束 + 缩放
 
 - `roundedCorners`——圆角（仅 `rectangle` shape 生效）
 - `minimumWidth` / `minimumHeight` / `minimumSize`——撑开 bbox（不缩水 text 自然宽度）
@@ -119,13 +119,15 @@ Line 2`}</Node>
 
 <ComponentPreview name="node-size-constraints" size="sm" />
 
-### 旋转
+#### 旋转
 
 `rotate` 绕节点中心旋转；连线会跟着新边界点贴：
 
 <ComponentPreview name="node-rotated" size="sm" />
 
-### 相对定位
+### 定位
+
+#### 相对定位
 
 `position` 除了笛卡尔 / 极坐标还接受 **`{ direction, of, distance? }`** 形态——TikZ `[<direction>=<distance> of <id>]` 同义；不需要手算每个绝对坐标，描述节点关系即可。
 
@@ -135,7 +137,7 @@ Line 2`}</Node>
 
 <ComponentPreview name="node-at-relative" />
 
-### 偏移定位
+#### 偏移定位
 
 `position` 还接受 **`{ of, offset }`** 形态——任意 `(dx, dy)` 相对基准点偏移，对应 TikZ `calc` 的 `($(of) + (dx, dy)$)`。当 `at` 的 8 方向 + 单标量距离表达不下需求时（"A 右 30 下 10" 这种），用 offset 就够。
 
@@ -187,7 +189,7 @@ Line 2`}</Node>
 | `xScale` / `yScale` | `number` | — | 分轴缩放，优先于 `scale` |
 | `label` | `NodeLabel \| Array<NodeLabel>` | — | 边挂标签（TikZ `[label=above:foo]`）；单对象或数组；`position` 接 8 方向枚举或数字角度，`distance` 缺省 4，`font` / `textColor` 缺省继承 node |
 
-## margin 与 padding 的区别
+### margin 与 padding 的区别
 
 | | 影响什么 | 视觉表现 |
 | --- | --- | --- |
@@ -195,3 +197,9 @@ Line 2`}</Node>
 | `margin` | border 到 path 端点的距离 | border 不变；连线提前 margin 停 |
 
 `margin` 用来在多节点流程图里给连线"留呼吸空间"——不让线贴死 border。
+
+## 相关
+
+- [Text](/core/components/node/text)：在 Node 内写行级样式
+- [Coordinate](/core/components/node/coordinate)：只命名引用点、不渲染形状
+- [Draw](/core/components/draw/overview)：通过 Node id 连接节点

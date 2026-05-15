@@ -62,13 +62,13 @@ These two nodes compile to identical output:
 | `opacity` | `number` | — | Per-line opacity 0..1 |
 | `font` | `{ family?, size?, weight?, style? }` | — | Per-line font override; missing fields inherit Node block-level `font` |
 
-## Constraints
+### Constraints
 
 - **Must live inside `<Node>`**: a `<Text>` placed at the top level under `<TikZ>` is silently ignored.
 - **`children` must be a string**: nested elements or expressions are not supported. A line is a line.
 - **Block-level props can't be overridden**: `align` / `lineHeight` only go on `<Node>`.
 
-## See also
+## Related
 
 - [Node multi-line text](/core/components/node/overview): block-level `text` / `align` / `lineHeight`
 - [Node per-line styling](/core/components/node/overview): equivalent in-array `LineSpec` form

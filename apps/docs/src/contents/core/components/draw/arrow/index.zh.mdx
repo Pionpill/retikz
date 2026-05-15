@@ -10,7 +10,7 @@ description: Path / Draw 的箭头详解。`arrow` 控制方向、`arrowDetail` 
 
 `arrow` + `arrowDetail` 同时挂在 `<Draw>` 和 `<Path>` 上，写法和效果完全一致——下文示例用 `<Draw>` 演示，`<Path>` 写法等价。
 
-## 最简用例
+## 用法
 
 <ComponentPreview name="arrow-default" size="xs" />
 
@@ -20,7 +20,9 @@ description: Path / Draw 的箭头详解。`arrow` 控制方向、`arrowDetail` 
 
 `arrowDetail` 全省，箭头走默认 normal shape + path stroke 继承色 + 6 user units 默认大小。
 
-## 7 种内置 shape
+## 例子
+
+### 形状
 
 `arrowDetail.shape` 选形状，缺省 `'normal'`：
 
@@ -38,7 +40,7 @@ description: Path / Draw 的箭头详解。`arrow` 控制方向、`arrowDetail` 
 
 > 多节点路径（如 a → b → c）按段独立 clip，但箭头**只**贴在整体起点 / 终点——中间节点不会出现额外箭头。
 
-## 起末分别配置
+### 起末分别配置
 
 `arrowDetail.start` / `arrowDetail.end` 子对象与顶层默认**逐字段 merge**——缺省字段继承顶层，已填字段 override。UML "组合 + 继承"用 `start.shape` + `end.shape` 表达：
 
@@ -46,7 +48,9 @@ description: Path / Draw 的箭头详解。`arrow` 控制方向、`arrowDetail` 
 
 > **merge 语义**：`start` / `end` 子对象的字段优先；子对象未填的字段 fallback 到顶层默认；顶层未填的字段 fallback 到内置默认。例：`arrowDetail={{ shape: 'stealth', start: { color: 'red' } }}` → 起末都用 stealth、起端用红色、末端继承 path stroke。
 
-## 颜色 override
+### 样式
+
+#### 颜色 override
 
 `color` 把 marker 描边 / 实心填充改为指定颜色（脱离 `context-stroke` 继承）；`fill` 仅实心 shape 生效。`start.color` / `end.color` 单端 override 同样支持——常用于"线浅色、箭头深色"或起末异色：
 
@@ -54,7 +58,7 @@ description: Path / Draw 的箭头详解。`arrow` 控制方向、`arrowDetail` 
 
 > **空心 shape silent ignore `fill`**：`shape ∈ { open / openDiamond / openCircle }` 时，`fill` 字段被静默丢弃——空心形状由 `color`（描边色） + `lineWidth`（描边粗细）共同决定视觉，写 `fill='red'` 不会渲染红色填充。
 
-## 缩放：scale / length / width
+#### 缩放：scale / length / width
 
 - `scale` 是 marker 等比缩放因子（默认 1），乘到 `length` / `width` 之后——`length=10, scale=1.5` → 实际 `markerWidth=15`
 - `length` 控 marker 沿 path 方向的长度（默认 6）
@@ -62,7 +66,7 @@ description: Path / Draw 的箭头详解。`arrow` 控制方向、`arrowDetail` 
 
 <ComponentPreview name="arrow-scale" size="md" />
 
-## 半透明
+#### 半透明
 
 `opacity` 0..1，作用于 marker 整体（独立于 path 的 `opacity` / `drawOpacity`）：
 
@@ -93,3 +97,8 @@ description: Path / Draw 的箭头详解。`arrow` 控制方向、`arrowDetail` 
 | `lineWidth` | `number ≥ 0` | `1.5` | 空心 shape 描边粗细；实心 shape 忽略 |
 | `start` | `ArrowEndDetail`（同字段集，无 `start` / `end`） | — | 起端 override（仅 `arrow` 含起端时生效：`'<-'` / `'<->'`） |
 | `end` | `ArrowEndDetail`（同字段集，无 `start` / `end`） | — | 末端 override（仅 `arrow` 含末端时生效：`'->'` / `'<->'`） |
+
+## 相关
+
+- [Draw](/core/components/draw/overview)：日常连线的 Sugar 写法
+- [Path](/core/components/draw/path)：底层路径容器，`arrow` / `arrowDetail` 行为一致

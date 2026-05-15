@@ -55,7 +55,7 @@ import { TikZ } from '@retikz/react';
 | `className` | `string` | — | 透传到 `<svg>` |
 | `style` | `CSSProperties` | — | 透传到 `<svg>` |
 
-## 直接喂 IR
+### 直接喂 IR
 
 `ir` prop 适合"已经有 IR JSON"的场景——AI 生成、JSON 编辑器、URL 反序列化。配合 `convertReactNodeToIR` / `convertIRToReactNode` 做 DSL ↔ IR 双向桥：
 
@@ -70,3 +70,9 @@ const ir = convertReactNodeToIR(
 ```
 
 `ir` 与 `children` 互斥；同时传时优先 `ir`。
+
+## 相关
+
+- [Node](/core/components/node/overview)：最常用的 Kernel 节点
+- [Draw](/core/components/draw/overview)：日常连线 Sugar
+- [Path](/core/components/draw/path)：底层路径容器
