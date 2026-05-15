@@ -23,57 +23,59 @@ export const AiChatEmpty: FC = () => {
   const hasDeeplinks = rawUrl.length > 0;
 
   return (
-    <div className="flex h-full flex-col items-stretch gap-5 overflow-y-auto px-5 py-6">
-      <div className="text-center">
-        <div className="mx-auto mb-2 text-3xl">✦</div>
-        <div className="text-base font-medium">{t('ai.emptyTitle')}</div>
-        <p className="mt-1 text-xs text-muted-foreground">{t('ai.emptySubtitle')}</p>
+    <div className="flex h-full flex-col overflow-y-auto px-5 py-6">
+      <div className="flex flex-1 flex-col justify-center gap-5">
+        <div className="text-center">
+          <div className="mx-auto mb-2 text-3xl">✦</div>
+          <div className="text-base font-medium">{t('ai.emptyTitle')}</div>
+          <p className="mt-1 text-xs text-muted-foreground">{t('ai.emptySubtitle')}</p>
+        </div>
+
+        <section className="flex flex-col gap-2">
+          <div className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+            {t('ai.emptyByokLabel')}
+          </div>
+          <Button size="lg" className="cursor-pointer" onClick={() => setView('settings')}>
+            {t('ai.emptyFillKey')}
+          </Button>
+          <div className="text-[11px] text-muted-foreground">{t('ai.emptyByokDesc')}</div>
+        </section>
+
+        {hasDeeplinks && (
+          <>
+            <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
+              <div className="h-px flex-1 bg-border" />
+              <span>{t('ai.emptyOr')}</span>
+              <div className="h-px flex-1 bg-border" />
+            </div>
+
+            <section className="flex flex-col gap-2">
+              <div className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+                {t('ai.emptyDeeplinkLabel')}
+              </div>
+              <div className="flex gap-2">
+                <DeeplinkButton
+                  href={buildAiUrl(DEEPLINK_BASES.chatgpt, rawUrl, lang)}
+                  icon={<ChatGptIcon className="size-4" />}
+                  label={t('page.openInChatGpt')}
+                />
+                <DeeplinkButton
+                  href={buildAiUrl(DEEPLINK_BASES.claude, rawUrl, lang)}
+                  icon={<ClaudeIcon className="size-4" />}
+                  label={t('page.openInClaude')}
+                />
+                <DeeplinkButton
+                  href={buildAiUrl(DEEPLINK_BASES.deepseek, rawUrl, lang)}
+                  icon={<DeepSeekIcon className="size-4" />}
+                  label={t('page.openInDeepSeek')}
+                />
+              </div>
+            </section>
+          </>
+        )}
       </div>
 
-      <section className="flex flex-col gap-2">
-        <div className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
-          {t('ai.emptyByokLabel')}
-        </div>
-        <Button size="lg" className="cursor-pointer" onClick={() => setView('settings')}>
-          {t('ai.emptyFillKey')}
-        </Button>
-        <div className="text-[11px] text-muted-foreground">{t('ai.emptyByokDesc')}</div>
-      </section>
-
-      {hasDeeplinks && (
-        <>
-          <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
-            <div className="h-px flex-1 bg-border" />
-            <span>{t('ai.emptyOr')}</span>
-            <div className="h-px flex-1 bg-border" />
-          </div>
-
-          <section className="flex flex-col gap-2">
-            <div className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
-              {t('ai.emptyDeeplinkLabel')}
-            </div>
-            <div className="flex gap-2">
-              <DeeplinkButton
-                href={buildAiUrl(DEEPLINK_BASES.chatgpt, rawUrl, lang)}
-                icon={<ChatGptIcon className="size-4" />}
-                label={t('page.openInChatGpt')}
-              />
-              <DeeplinkButton
-                href={buildAiUrl(DEEPLINK_BASES.claude, rawUrl, lang)}
-                icon={<ClaudeIcon className="size-4" />}
-                label={t('page.openInClaude')}
-              />
-              <DeeplinkButton
-                href={buildAiUrl(DEEPLINK_BASES.deepseek, rawUrl, lang)}
-                icon={<DeepSeekIcon className="size-4" />}
-                label={t('page.openInDeepSeek')}
-              />
-            </div>
-          </section>
-        </>
-      )}
-
-      <div className="mt-auto text-center text-[10px] text-muted-foreground">{t('ai.emptyNetworkHint')}</div>
+      <div className="mt-5 text-center text-[10px] text-muted-foreground">{t('ai.emptyNetworkHint')}</div>
     </div>
   );
 };
