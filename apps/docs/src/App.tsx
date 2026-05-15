@@ -7,7 +7,7 @@ import type { Section } from './data/interface';
 import { coreSection } from './data/core';
 import { modules } from './data/module';
 import { getSectionsByModule } from './data/sections';
-import { AiChatSheet } from './layout/ai-chat';
+import { AiChatPanel } from './layout/ai-chat';
 import AppHeader from './layout/header/AppHeader';
 import { DocLayout } from './layout/DocLayout';
 import { DocPage } from './pages/doc-page';
@@ -121,17 +121,21 @@ export const App = () => {
   return (
     <div className="flex min-h-screen flex-col">
       <AppHeader />
-      <Routes>
-        <Route element={<DocLayout />}>
-          <Route index element={<Navigate to={defaultPath} replace />} />
-          <Route path=":moduleId/:sectionId/:pageId/:subPageId" element={<DocPage />} />
-          <Route path=":moduleId/:sectionId/:pageId" element={<DocPage />} />
-          <Route path=":moduleId/:firstSeg" element={<TwoSegResolver />} />
-          <Route path=":moduleId" element={<ModuleRedirect />} />
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Route>
-      </Routes>
-      <AiChatSheet />
+      <div className="flex min-h-0 flex-1">
+        <div className="flex min-w-0 flex-1 flex-col">
+          <Routes>
+            <Route element={<DocLayout />}>
+              <Route index element={<Navigate to={defaultPath} replace />} />
+              <Route path=":moduleId/:sectionId/:pageId/:subPageId" element={<DocPage />} />
+              <Route path=":moduleId/:sectionId/:pageId" element={<DocPage />} />
+              <Route path=":moduleId/:firstSeg" element={<TwoSegResolver />} />
+              <Route path=":moduleId" element={<ModuleRedirect />} />
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Route>
+          </Routes>
+        </div>
+        <AiChatPanel />
+      </div>
       <Toaster position="top-center" />
     </div>
   );

@@ -88,12 +88,12 @@ export const DocPage: FC<DocPageProps> = props => {
   const description = typeof frontmatter.description === 'string' ? frontmatter.description : null;
 
   return (
-    <main className={cn('flex min-w-0 flex-1 w-full p-4 sm:p-6', className)} {...resProps}>
+    <main className={cn('@container flex min-w-0 flex-1 w-full p-4 sm:p-6', className)} {...resProps}>
       <div className="flex min-w-0 flex-1 justify-center">
         <div className="flex min-w-0 max-w-180 flex-1 flex-col gap-6">
           <header className="flex flex-col items-start w-full justify-between gap-2">
-            <div className="flex w-full flex-col items-start gap-3 lg:flex-row lg:items-center lg:justify-between">
-              <h1 className="scroll-m-24 text-3xl font-semibold tracking-tight sm:text-3xl overflow-hidden">{title}</h1>
+            <div className="@[48rem]:flex-row @[48rem]:items-center @[48rem]:justify-between flex w-full flex-col items-start gap-3">
+              <h1 className="scroll-m-24 text-3xl font-semibold tracking-tight overflow-hidden">{title}</h1>
               <div className="flex items-center gap-2">
                 {stableSource != null && <DocPageActions source={stableSource} />}
                 {target.extra}
@@ -114,7 +114,7 @@ export const DocPage: FC<DocPageProps> = props => {
       <aside
         aria-hidden={!tocOpen}
         className={cn(
-          'hidden shrink-0 overflow-clip transition-all duration-300 ease-out xl:block px-4',
+          '@[64rem]:block hidden shrink-0 overflow-clip transition-all duration-300 ease-out px-4',
           tocOpen ? 'w-75 opacity-100' : 'w-0 opacity-0',
         )}
       >
