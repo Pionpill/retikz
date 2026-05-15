@@ -70,6 +70,10 @@
     "hideAllCode": "隐藏所有代码",
     "expandAllCode": "展开所有代码"
   },
+  "comparison": {
+    "groupLabel": "对照",
+    "tikz": "TikZ"
+  },
   "view": {
     "groupLabel": "视图"
   },

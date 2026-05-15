@@ -14,12 +14,17 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuShortcut,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Separator } from '@/components/ui/separator';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
+import { COMPARISON_TARGETS, ComparisonTargetLabelKeys } from '@/components/shared/comparison';
 import { useComponentPreviewStore } from '@/store/useComponentPreviewStore';
+import { useComparisonStore } from '@/store/useComparisonStore';
 import { useLayoutStore } from '@/store/useLayoutStore';
 import { useTocStore } from '@/store/useTocStore';
 
@@ -43,6 +48,8 @@ export const HeaderActions: FC = () => {
   const previewIsExpand = useComponentPreviewStore(s => s.isExpand);
   const togglePreviewHideCode = useComponentPreviewStore(s => s.toggleHideCode);
   const togglePreviewIsExpand = useComponentPreviewStore(s => s.toggleIsExpand);
+  const comparisonTargets = useComparisonStore(s => s.visibleTargets);
+  const setComparisonTargetVisible = useComparisonStore(s => s.setTargetVisible);
 
   const ThemeIcon = theme === 'light' ? Sun : Moon;
   const themeLabel = theme === 'light' ? t('common.themeLight') : t('common.themeDark');
@@ -156,6 +163,21 @@ export const HeaderActions: FC = () => {
                   </DropdownMenuShortcut>
                 </DropdownMenuCheckboxItem>
               </DropdownMenuGroup>
+              <DropdownMenuSeparator />
+              <DropdownMenuSub>
+                <DropdownMenuSubTrigger inset>{t('comparison.groupLabel')}</DropdownMenuSubTrigger>
+                <DropdownMenuSubContent className="w-44">
+                  {COMPARISON_TARGETS.map(target => (
+                    <DropdownMenuCheckboxItem
+                      key={target}
+                      checked={comparisonTargets[target]}
+                      onCheckedChange={checked => setComparisonTargetVisible(target, checked === true)}
+                    >
+                      {t(ComparisonTargetLabelKeys[target])}
+                    </DropdownMenuCheckboxItem>
+                  ))}
+                </DropdownMenuSubContent>
+              </DropdownMenuSub>
               <DropdownMenuSeparator />
               <DropdownMenuLabel inset className="text-xs font-normal text-muted-foreground">
                 {t('common.groupResources')}

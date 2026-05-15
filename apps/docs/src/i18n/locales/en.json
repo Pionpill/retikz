@@ -70,6 +70,10 @@
     "hideAllCode": "Hide all code",
     "expandAllCode": "Expand all code"
   },
+  "comparison": {
+    "groupLabel": "Comparisons",
+    "tikz": "TikZ"
+  },
   "view": {
     "groupLabel": "View"
   },

@@ -4,6 +4,7 @@ import type { MDXComponents } from 'mdx/types';
 import type { ComponentPropsWithoutRef, FC, ReactNode } from 'react';
 import { Link } from 'react-router';
 import { CodeBlockCommand } from '../code-block-command';
+import { Comparison } from '../comparison';
 import { ComponentPreview } from '../component-preview';
 import { CodeBlock } from '../highlight-code';
 import { PackageManagerInstall } from '../package-manager-install';
@@ -163,6 +164,7 @@ export const mdxComponents: MDXComponents = {
     />
   ),
   CodeBlockCommand,
+  Comparison,
   ComponentPreview,
   LinkedCard,
   PackageManagerInstall,

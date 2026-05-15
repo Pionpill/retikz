@@ -102,6 +102,25 @@ retikz 文档面向**用户**——用户写的是 DSL（`<Tikz>` / `<Node>` / `
 
 普通用法页**不要**为了"完整"硬塞 IR JSON 节录或字段表——`<ComponentPreview>` 的 IR Tab 已经把"想看的人能看"留好了，不必正文复述。编译器内部（`compileToScene` / Scene primitive）一律不进用户文档。
 
+## 对照内容（Comparison）
+
+涉及 TikZ / Recharts / shadcn / D3 / 其它外部生态的对照、迁移提示、写法映射时，必须使用 `<Comparison>` 组件，不要把对照内容直接写在正文段落里。正文在隐藏所有对照块后仍应自洽完整；对照块只是给有相关背景的读者补充参照。
+
+当前只注册了 `target="tikz"`；新增其它 target 前，先扩展 `ComparisonTargets`、Header 菜单与 i18n 文案。
+
+```mdx
+<Comparison target="tikz" title="TikZ 对照">
+  TikZ 中类似写法是 `\draw (a) -- (b);`。
+</Comparison>
+```
+
+写法约束：
+
+- 一个 `<Comparison>` 块只服务一个 target，不要在同一块里混写多个生态
+- 内容保持短：优先一段映射、一小段代码或一张紧凑表格
+- 迁移/对照不改变正文主线，不在正文里写"对应 TikZ ..."这类散落句子
+- 只有页面主题本身就是 TikZ 迁移指南时，正文才可以直接讨论 TikZ
+
 ## 图示一律 retikz 自绘
 
 文档里的**所有可视化示例都用 retikz 自身绘制**——同级 `<name>.demo.tsx` + `<ComponentPreview name="..." />`。
@@ -389,6 +408,7 @@ union / array 内部的 object 不会被平铺（如 `NodeSchema.label` 是 unio
 - 自定义 JSX：
   - `<ComponentPreview ... />` —— 所有 demo 页用
   - `<ZodSchema ... />` —— 仅 Reference 词典页用，详见上文「Reference 词典页」
+  - `<Comparison ... />` —— 外部生态对照内容用，当前只支持 `target="tikz"`
 
 ## Quick Reference
 
@@ -402,6 +422,7 @@ union / array 内部的 object 不会被平铺（如 `NodeSchema.label` 是 unio
 | 新建 module | `data/module.ts` 加条目 + 新建 `data/<module>.ts` + i18n 加新命名空间 |
 | 加分组节点 | 父节点加 `children`；分组本身不写 mdx |
 | 加新 IR schema 字典 | 注册到 `lib/schema-registry.ts` + 合适合并页加 `<ZodSchema>` 块（含 zh 嵌套点路径） |
+| 写 TikZ 对照 | 用 `<Comparison target="tikz">` 包起来，不写进普通正文 |
 
 ## Common Mistakes
 
@@ -417,6 +438,7 @@ union / array 内部的 object 不会被平铺（如 `NodeSchema.label` 是 unio
 - **写成连续的大段文字** —— 优先表格 / 示例 / 代码块；段落超过 3 行就拆
 - **写防御性 / 攻击性内容** —— "竞品做不到 / 我们更好"等段落直接删，正向表述自身能力即可
 - **普通用法页大段讲 IR 结构 / 字段** —— IR 是后端 / AI 用的隐藏层，正文说 DSL 即可；要看 IR 的用户点 `<ComponentPreview>` 的 IR tab
+- **把 TikZ / 外部生态对照散落在正文** —— 用 `<Comparison>` 可选显示；隐藏对照后正文仍要完整
 - **塞 jpg / png / Mermaid / 截图当演示** —— 演示用 `<ComponentPreview>` + retikz 自绘；ASCII 框图作辅助叙述可以
 
 ## 验证
