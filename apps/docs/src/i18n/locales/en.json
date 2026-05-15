@@ -129,6 +129,8 @@
     "settingsKeyPlaceholder": "Paste your API key",
     "settingsKeyHint": "Stored locally in this browser only. Never uploaded.",
     "settingsHowToGet": "How to get one?",
+    "settingsBaseUrlLabel": "Base URL (optional)",
+    "settingsBaseUrlHint": "Leave empty for the official endpoint; set for a proxy or self-hosted compatible endpoint",
     "settingsModelLabel": "Model",
     "settingsModelCustom": "Or enter a custom model id",
     "settingsContextLabel": "Context Mode",

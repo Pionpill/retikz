@@ -129,6 +129,8 @@
     "settingsKeyPlaceholder": "粘贴你的 API key",
     "settingsKeyHint": "仅保存在本地浏览器，永不上传。",
     "settingsHowToGet": "如何获取？",
+    "settingsBaseUrlLabel": "Base URL（可选）",
+    "settingsBaseUrlHint": "留空走官方端点；填入用于代理 / 自建兼容端点",
     "settingsModelLabel": "Model",
     "settingsModelCustom": "或填入自定义模型 id",
     "settingsContextLabel": "Context Mode",

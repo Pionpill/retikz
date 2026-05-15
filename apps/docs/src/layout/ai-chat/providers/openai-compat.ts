@@ -22,9 +22,10 @@ async function* runStream(
   cfg: { baseUrl: string; includeUsage?: boolean },
   req: ChatRequestOptions,
 ): AsyncGenerator<ChatChunk, void, void> {
+  const baseUrl = (req.baseUrl?.trim() || cfg.baseUrl).replace(/\/+$/, '');
   let res: Response;
   try {
-    res = await fetch(`${cfg.baseUrl}/chat/completions`, {
+    res = await fetch(`${baseUrl}/chat/completions`, {
       method: 'POST',
       headers: {
         'content-type': 'application/json',

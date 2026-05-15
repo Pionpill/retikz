@@ -16,6 +16,8 @@ type PersistedState = {
   providerId: ProviderId;
   models: Record<ProviderId, string>;
   apiKeys: Record<ProviderId, string>;
+  /** 各 provider 的 base URL 覆盖；空字符串 → 用各家默认端点（见 DEFAULT_BASE_URLS） */
+  baseUrls: Record<ProviderId, string>;
   contextMode: ContextMode;
 };
 
@@ -38,6 +40,7 @@ type Actions = {
   setProvider: (id: ProviderId) => void;
   setApiKey: (id: ProviderId, key: string) => void;
   setModel: (id: ProviderId, model: string) => void;
+  setBaseUrl: (id: ProviderId, baseUrl: string) => void;
   setContextMode: (mode: ContextMode) => void;
   setCurrentPage: (page: CurrentPage | null) => void;
   send: (input: string) => Promise<void>;
@@ -71,6 +74,7 @@ export const useAiChatStore = create<PersistedState & EphemeralState & Actions>(
       providerId: 'deepseek',
       models: { ...DEFAULT_MODELS },
       apiKeys: { deepseek: '', openai: '', anthropic: '' },
+      baseUrls: { deepseek: '', openai: '', anthropic: '' },
       contextMode: 'balanced',
 
       // ephemeral defaults
@@ -83,6 +87,7 @@ export const useAiChatStore = create<PersistedState & EphemeralState & Actions>(
       setProvider: id => set({ providerId: id }),
       setApiKey: (id, key) => set(s => ({ apiKeys: { ...s.apiKeys, [id]: key } })),
       setModel: (id, model) => set(s => ({ models: { ...s.models, [id]: model } })),
+      setBaseUrl: (id, baseUrl) => set(s => ({ baseUrls: { ...s.baseUrls, [id]: baseUrl } })),
       setContextMode: mode => set({ contextMode: mode }),
 
       setCurrentPage: page => set({ currentPage: page }),
@@ -118,6 +123,7 @@ export const useAiChatStore = create<PersistedState & EphemeralState & Actions>(
             system,
             messages: messagesForSend,
             signal: controller.signal,
+            baseUrl: state.baseUrls[state.providerId],
           })) {
             if (controller.signal.aborted) break;
             if (chunk.type === 'delta') {
@@ -174,6 +180,7 @@ export const useAiChatStore = create<PersistedState & EphemeralState & Actions>(
         providerId: state.providerId,
         models: state.models,
         apiKeys: state.apiKeys,
+        baseUrls: state.baseUrls,
         contextMode: state.contextMode,
       }),
     },

@@ -32,6 +32,8 @@ export type ChatRequestOptions = {
   system: string;
   messages: Array<ChatMessage>;
   signal: AbortSignal;
+  /** 用户在设置里覆盖的 base URL；缺省 → 各 provider 用自家默认端点 */
+  baseUrl?: string;
 };
 
 /**

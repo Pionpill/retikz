@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
 import { useAiChatStore } from '@/store/useAiChatStore';
 import type { ContextMode } from '../context';
-import { MODEL_CHOICES, PROVIDER_LABEL } from '../models';
+import { DEFAULT_BASE_URLS, MODEL_CHOICES, PROVIDER_LABEL } from '../models';
 import type { ProviderId } from '../providers/types';
 import { PROVIDER_IDS } from '../providers/types';
 
@@ -38,6 +38,8 @@ export const AiChatSettings: FC = () => {
   const setProvider = useAiChatStore(s => s.setProvider);
   const apiKey = useAiChatStore(s => s.apiKeys[providerId]);
   const setApiKey = useAiChatStore(s => s.setApiKey);
+  const baseUrl = useAiChatStore(s => s.baseUrls[providerId]);
+  const setBaseUrl = useAiChatStore(s => s.setBaseUrl);
   const model = useAiChatStore(s => s.models[providerId]);
   const setModel = useAiChatStore(s => s.setModel);
   const contextMode = useAiChatStore(s => s.contextMode);
@@ -61,7 +63,7 @@ export const AiChatSettings: FC = () => {
         </Button>
       </div>
 
-      <div className="flex flex-col gap-5 px-4 py-4">
+      <div className="m-auto flex w-full max-w-md flex-col gap-5 px-4 py-4">
         {/* Provider segmented */}
         <section className="flex flex-col gap-1.5">
           <Label className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
@@ -121,6 +123,22 @@ export const AiChatSettings: FC = () => {
               {t('ai.settingsHowToGet')}
             </a>
           </div>
+        </section>
+
+        {/* Base URL (optional) */}
+        <section className="flex flex-col gap-1.5">
+          <Label className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+            {t('ai.settingsBaseUrlLabel')}
+          </Label>
+          <Input
+            value={baseUrl}
+            onChange={e => setBaseUrl(providerId, e.target.value)}
+            placeholder={DEFAULT_BASE_URLS[providerId]}
+            className="font-mono text-xs"
+            autoComplete="off"
+            spellCheck={false}
+          />
+          <div className="text-[11px] text-muted-foreground">{t('ai.settingsBaseUrlHint')}</div>
         </section>
 
         {/* Model */}

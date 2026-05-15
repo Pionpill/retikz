@@ -9,9 +9,10 @@ import type { ChatChunk, ChatErrorKind, ChatProvider, ChatRequestOptions } from 
 export const anthropicProvider: ChatProvider = {
   id: 'anthropic',
   async *chat(req: ChatRequestOptions): AsyncGenerator<ChatChunk, void, void> {
+    const baseUrl = (req.baseUrl?.trim() || 'https://api.anthropic.com').replace(/\/+$/, '');
     let res: Response;
     try {
-      res = await fetch('https://api.anthropic.com/v1/messages', {
+      res = await fetch(`${baseUrl}/v1/messages`, {
         method: 'POST',
         headers: {
           'content-type': 'application/json',

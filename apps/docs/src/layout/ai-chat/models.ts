@@ -18,3 +18,10 @@ export const PROVIDER_LABEL: Record<ProviderId, string> = {
   openai: 'OpenAI',
   anthropic: 'Anthropic',
 };
+
+/** 各 provider 的默认 base URL；设置里 baseUrl 留空即用这些值，填了则覆盖 */
+export const DEFAULT_BASE_URLS: Record<ProviderId, string> = {
+  deepseek: 'https://api.deepseek.com',
+  openai: 'https://api.openai.com/v1',
+  anthropic: 'https://api.anthropic.com',
+};
