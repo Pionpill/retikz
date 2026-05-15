@@ -7,9 +7,8 @@ import type { Section } from './data/interface';
 import { coreSection } from './data/core';
 import { modules } from './data/module';
 import { getSectionsByModule } from './data/sections';
-import { AiChatPanel } from './layout/ai-chat';
-import AppHeader from './layout/header/AppHeader';
 import { DocLayout } from './layout/DocLayout';
+import { ViewLayout } from './layout/ViewLayout';
 import { DocPage } from './pages/doc-page';
 import { useComponentPreviewStore } from './store/useComponentPreviewStore';
 import { useLayoutStore } from './store/useLayoutStore';
@@ -119,24 +118,20 @@ const useDocShortcuts = () => {
 export const App = () => {
   useDocShortcuts();
   return (
-    <div className="flex min-h-screen flex-col">
-      <AppHeader />
-      <div className="flex min-h-0 flex-1">
-        <div className="flex min-w-0 flex-1 flex-col">
-          <Routes>
-            <Route element={<DocLayout />}>
-              <Route index element={<Navigate to={defaultPath} replace />} />
-              <Route path=":moduleId/:sectionId/:pageId/:subPageId" element={<DocPage />} />
-              <Route path=":moduleId/:sectionId/:pageId" element={<DocPage />} />
-              <Route path=":moduleId/:firstSeg" element={<TwoSegResolver />} />
-              <Route path=":moduleId" element={<ModuleRedirect />} />
-              <Route path="*" element={<Navigate to="/" replace />} />
-            </Route>
-          </Routes>
-        </div>
-        <AiChatPanel />
-      </div>
+    <>
+      <Routes>
+        <Route element={<ViewLayout />}>
+          <Route element={<DocLayout />}>
+            <Route index element={<Navigate to={defaultPath} replace />} />
+            <Route path=":moduleId/:sectionId/:pageId/:subPageId" element={<DocPage />} />
+            <Route path=":moduleId/:sectionId/:pageId" element={<DocPage />} />
+            <Route path=":moduleId/:firstSeg" element={<TwoSegResolver />} />
+            <Route path=":moduleId" element={<ModuleRedirect />} />
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Route>
+        </Route>
+      </Routes>
       <Toaster position="top-center" />
-    </div>
+    </>
   );
 };

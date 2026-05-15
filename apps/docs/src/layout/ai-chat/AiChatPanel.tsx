@@ -54,13 +54,13 @@ export const AiChatPanel: FC = () => {
     <aside
       aria-hidden={!open}
       className={cn(
-        'sticky top-14 hidden h-[calc(100vh-3.5rem)] shrink-0 overflow-hidden border-l border-border bg-background transition-[width,opacity] duration-300 ease-out lg:flex',
+        'sticky top-0 hidden h-screen shrink-0 overflow-hidden border-l border-border bg-background transition-[width,opacity] duration-300 ease-out lg:flex',
         open ? 'w-96 opacity-100' : 'pointer-events-none w-0 opacity-0',
       )}
     >
       <div className="flex h-full w-96 flex-col">
         {!showSettings && (
-          <div className="flex items-center gap-2 border-b border-border px-3 py-2">
+          <div className="flex h-14 shrink-0 items-center gap-2 border-b border-border px-3">
             <span className="text-sm font-medium">✦ {t('ai.triggerLabel')}</span>
             <div className="ml-auto flex items-center gap-1">
               <Button
