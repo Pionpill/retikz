@@ -72,7 +72,12 @@
   },
   "comparison": {
     "groupLabel": "对照",
-    "tikz": "TikZ"
+    "tikz": "TikZ",
+    "close": "隐藏 {{target}} 对照",
+    "closeTitle": "隐藏 {{target}} 对照？",
+    "closeDescription": "隐藏后，文档中的 {{target}} 相关对照内容将不再展示。需要时，可在页面右上角 ... 按钮中的「对照」二级菜单里重新开启。",
+    "cancel": "继续展示",
+    "confirmClose": "隐藏对照"
   },
   "view": {
     "groupLabel": "视图"

@@ -72,7 +72,12 @@
   },
   "comparison": {
     "groupLabel": "Comparisons",
-    "tikz": "TikZ"
+    "tikz": "TikZ",
+    "close": "Hide {{target}} comparisons",
+    "closeTitle": "Hide {{target}} comparisons?",
+    "closeDescription": "{{target}} comparison content will be hidden across the docs. You can re-enable it from the upper-right ... menu under Comparisons.",
+    "cancel": "Keep showing",
+    "confirmClose": "Hide comparisons"
   },
   "view": {
     "groupLabel": "View"
