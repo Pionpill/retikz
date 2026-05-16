@@ -42,7 +42,7 @@ export const ViewLayout: FC = () => {
 
   return (
     <ResizablePanelGroup direction="horizontal" autoSaveId="docs-view" className="min-h-screen">
-      <ResizablePanel order={1} className="!overflow-visible">
+      <ResizablePanel order={1} className="overflow-visible!">
         <div className="flex min-h-screen min-w-0 flex-col">
           <AppHeader />
           <Outlet />
@@ -50,13 +50,13 @@ export const ViewLayout: FC = () => {
       </ResizablePanel>
       {aiOpen && (
         <>
-          <ResizableHandle className="data-[resize-handle-state=hover]:bg-primary/40 data-[resize-handle-state=drag]:bg-primary" />
+          <ResizableHandle withHandle />
           <ResizablePanel
             order={2}
             defaultSize={toPercent(DEFAULT_AI_PX)}
             minSize={toPercent(MIN_AI_PX)}
             maxSize={toPercent(MAX_AI_PX)}
-            className="!overflow-visible"
+            className="overflow-visible!"
           >
             <AiChatPanel />
           </ResizablePanel>
