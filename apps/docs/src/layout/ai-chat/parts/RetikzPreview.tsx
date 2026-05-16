@@ -11,14 +11,13 @@ import { CodeBlock } from '@/components/shared/highlight-code';
 import {
   ComponentRender,
   type ComponentRenderSource,
+  formatIR,
 } from '@/components/shared/component-preview';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { parseRetikzJsx } from '@/lib/jsx-to-ir';
 import type { IR } from '@retikz/core';
 import { TikZ, convertReactNodeToIR } from '@retikz/react';
-
-import { formatIR } from '@/components/shared/component-preview/_shared';
 
 export type RetikzPreviewFormat = 'ir' | 'tsx';
 

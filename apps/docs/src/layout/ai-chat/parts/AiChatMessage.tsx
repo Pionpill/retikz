@@ -5,6 +5,7 @@ import { Link } from 'react-router';
 import { CodeBlock } from '@/components/shared/highlight-code';
 import { cn } from '@/lib/utils';
 import type { ChatMessage } from '../providers/types';
+import { RetikzPreview, type RetikzPreviewFormat, RetikzPreviewPending } from './RetikzPreview';
 
 export type AiChatMessageProps = {
   message: ChatMessage;
@@ -40,7 +41,15 @@ type Block =
   | { type: 'p'; text: string }
   | { type: 'code'; lang: string; code: string }
   | { type: 'list'; items: Array<string> }
-  | { type: 'h'; level: 1 | 2 | 3; text: string };
+  | { type: 'h'; level: 1 | 2 | 3; text: string }
+  | { type: 'retikz'; format: RetikzPreviewFormat; source: string }
+  | { type: 'retikz-pending'; format: RetikzPreviewFormat };
+
+/** 显式 `| undefined`：让 lang 字符串查表后的"未命中"分支不被 TS 视作死代码 */
+const RETIKZ_LANG_FORMAT: Readonly<Record<string, RetikzPreviewFormat | undefined>> = {
+  'retikz-ir': 'ir',
+  'retikz-tsx': 'tsx',
+};
 
 const parseBlocks = (src: string): Array<Block> => {
   const lines = src.split('\n');
@@ -57,7 +66,18 @@ const parseBlocks = (src: string): Array<Block> => {
       const start = i + 1;
       let j = start;
       while (j < lines.length && !lines[j].startsWith('```')) j++;
-      blocks.push({ type: 'code', lang: lang || 'text', code: lines.slice(start, j).join('\n') });
+      const closed = j < lines.length;
+      const retikzFormat = RETIKZ_LANG_FORMAT[lang];
+      if (retikzFormat !== undefined) {
+        // retikz fenced 块特化：闭合走 RetikzPreview 真渲染；未闭合（流式中）走骨架占位
+        if (closed) {
+          blocks.push({ type: 'retikz', format: retikzFormat, source: lines.slice(start, j).join('\n') });
+        } else {
+          blocks.push({ type: 'retikz-pending', format: retikzFormat });
+        }
+      } else {
+        blocks.push({ type: 'code', lang: lang || 'text', code: lines.slice(start, j).join('\n') });
+      }
       i = j + 1;
       continue;
     }
@@ -158,6 +178,12 @@ const renderMarkdown = (src: string): ReactNode => {
           <CodeBlock lang={b.lang} code={b.code} />
         </div>
       );
+    }
+    if (b.type === 'retikz') {
+      return <RetikzPreview key={i} format={b.format} source={b.source} />;
+    }
+    if (b.type === 'retikz-pending') {
+      return <RetikzPreviewPending key={i} format={b.format} />;
     }
     if (b.type === 'h') {
       const baseCls = 'mt-3 mb-1 font-medium';
