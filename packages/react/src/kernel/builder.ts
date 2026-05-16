@@ -1,4 +1,4 @@
-import { Children, type ReactElement, type ReactNode, isValidElement } from 'react';
+import { Children, Fragment, type ReactElement, type ReactNode, isValidElement } from 'react';
 import type {
   IR,
   IRChild,
@@ -295,12 +295,20 @@ const buildPathFromProps = (props: PathProps): IRChild => ({
 
 /**
  * 扫描 <TikZ> 直接 children
- * @description Kernel marker（Node / Path / Coordinate）走对应 typed builder；其余函数式组件视为 Sugar，同步调用拿 Kernel JSX 递归展开；非函数静默跳过。`as` cast 仅在此顶层一次——子函数全走 typed signature
+ * @description Kernel marker（Node / Path / Coordinate）走对应 typed builder；React.Fragment 递归展开 children；其余函数式组件视为 Sugar，同步调用拿 Kernel JSX 递归展开；非函数静默跳过。`as` cast 仅在此顶层一次——子函数全走 typed signature
  */
 const readSceneChildren = (children: ReactNode): Array<IRChild> => {
   const out: Array<IRChild> = [];
   Children.forEach(children, child => {
     if (!isValidElement(child)) return;
+    // React.Fragment：透明容器，递归解开 children 让 .map() 内 <>...</> 平铺到 TikZ 子级
+    if (child.type === Fragment) {
+      const fragChildren = (child.props as { children?: ReactNode }).children;
+      for (const ir of readSceneChildren(fragChildren)) {
+        out.push(ir);
+      }
+      return;
+    }
     const name = getDisplayName(child);
     switch (name) {
       case TIKZ_NODE:

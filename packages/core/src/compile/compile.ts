@@ -97,25 +97,16 @@ export const compileToScene = (ir: IR, options: CompileOptions = {}): Scene => {
   const nodeIndex = new Map<string, NodeLayout>();
   const allPoints: Array<IRPosition> = [];
 
-  // Pass 1: 节点布局 → 注册到 nodeIndex 并发出节点 primitive
-  // 按 IR children 源码顺序处理；polar.origin 引用其他节点 id 时，要求被引用节点先定义。
-  // coordinate 与 node 在同一 pass 处理：coordinate 不发 primitive、不扩 bbox，
-  // 但同样注册到 nodeIndex 让后续 path target 与 `at.of` 能引用。
+  // Pass 1: 节点布局——按 IR children 源码顺序遍历 Node / Coordinate，把 layout 注册到 nodeIndex
+  // 但不发 primitive；polar.origin 引用其它节点 id 时，要求被引用节点在 IR 中先定义。
+  // Path 的引用解析也走 nodeIndex，所以必须先完成所有 node / coordinate 的注册。
+  const nodeLayouts = new Map<number, NodeLayout>();
   for (let i = 0; i < ir.children.length; i++) {
     const child = ir.children[i];
     if (child.type === 'node') {
       const layout = layoutNode(child, measureText, nodeIndex, nodeDistance);
       if (child.id) nodeIndex.set(child.id, layout);
-      for (const prim of emitNodePrimitives(layout, round)) {
-        primitives.push(prim);
-      }
-      // 用旋转感知的 4 角扩 bbox（保持完整精度，computeLayout 末端再 round）
-      allPoints.push(
-        rectOps.anchor(layout.rect, 'north-west'),
-        rectOps.anchor(layout.rect, 'north-east'),
-        rectOps.anchor(layout.rect, 'south-west'),
-        rectOps.anchor(layout.rect, 'south-east'),
-      );
+      nodeLayouts.set(i, layout);
     } else if (child.type === 'coordinate') {
       const center = resolvePosition(child.position, nodeIndex, nodeDistance);
       if (!center) {
@@ -133,10 +124,25 @@ export const compileToScene = (ir: IR, options: CompileOptions = {}): Scene => {
     }
   }
 
-  // Pass 2: 路径解析 → 发出 path primitive（可能附带边标注 TextPrim）
+  // Pass 2: 按 IR children 源码顺序发 primitive——Node 复用 Pass 1 算好的 layout，Path 解析 nodeIndex
+  // 这样 SVG z-order = JSX 顺序：用户写在前面的元素在下层，后面的在上层（与 SVG / DOM 直觉一致）。
+  // coordinate 不发 primitive、不扩 bbox。
   for (let i = 0; i < ir.children.length; i++) {
     const child = ir.children[i];
-    if (child.type === 'path') {
+    if (child.type === 'node') {
+      const layout = nodeLayouts.get(i);
+      if (!layout) continue; // 防御：Pass 1 一定写入了
+      for (const prim of emitNodePrimitives(layout, round)) {
+        primitives.push(prim);
+      }
+      // 用旋转感知的 4 角扩 bbox（保持完整精度，computeLayout 末端再 round）
+      allPoints.push(
+        rectOps.anchor(layout.rect, 'north-west'),
+        rectOps.anchor(layout.rect, 'north-east'),
+        rectOps.anchor(layout.rect, 'south-west'),
+        rectOps.anchor(layout.rect, 'south-east'),
+      );
+    } else if (child.type === 'path') {
       const result = emitPathPrimitive(child, nodeIndex, round, measureText, {
         onWarn,
         irPath: `children[${i}].path`,

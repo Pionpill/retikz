@@ -40,6 +40,22 @@ export type RenderContext = {
 };
 
 /**
+ * SVG attribute 与 inline style 的双路 paint：含 `var(...)` 的颜色值改走 style 字段（SVG attribute 不解析 CSS var）
+ * @description SVG2 / CSS Color Module 规定 var() 只在 CSS 属性上下文里解析，作为 SVG 元素的 `fill` / `stroke` 等 attribute 值时不展开；想用 `var(--background)` 这种主题感知颜色必须落到 inline style。本 helper 把"含 var(" 的值挑出来塞 style.fill / style.stroke，剩下的走 attribute——既保留 attribute 的简洁，又让 var() 自动主题切换生效
+ */
+const paintAttr = (value: string | undefined): string | undefined =>
+  value === undefined || value.includes('var(') ? undefined : value;
+const paintStyle = (
+  fill: string | undefined,
+  stroke: string | undefined,
+): { fill?: string; stroke?: string } | undefined => {
+  const out: { fill?: string; stroke?: string } = {};
+  if (fill !== undefined && fill.includes('var(')) out.fill = fill;
+  if (stroke !== undefined && stroke.includes('var(')) out.stroke = stroke;
+  return out.fill !== undefined || out.stroke !== undefined ? out : undefined;
+};
+
+/**
  * Scene primitive → SVG React 元素
  * @description 不读 IR，只读 Scene
  */
@@ -57,15 +73,16 @@ export const renderPrim = (
           y={p.y}
           width={p.width}
           height={p.height}
-          fill={p.fill}
+          fill={paintAttr(p.fill)}
           fillOpacity={p.fillOpacity}
-          stroke={p.stroke}
+          stroke={paintAttr(p.stroke)}
           strokeOpacity={p.strokeOpacity}
           strokeWidth={p.strokeWidth}
           strokeDasharray={p.dashPattern?.join(' ')}
           rx={p.cornerRadius}
           ry={p.cornerRadius}
           opacity={p.opacity}
+          style={paintStyle(p.fill, p.stroke)}
         />
       );
     case 'ellipse': {
@@ -78,13 +95,14 @@ export const renderPrim = (
           rx={p.rx}
           ry={p.ry}
           transform={transform}
-          fill={p.fill}
+          fill={paintAttr(p.fill)}
           fillOpacity={p.fillOpacity}
-          stroke={p.stroke}
+          stroke={paintAttr(p.stroke)}
           strokeOpacity={p.strokeOpacity}
           strokeWidth={p.strokeWidth}
           strokeDasharray={p.dashPattern?.join(' ')}
           opacity={p.opacity}
+          style={paintStyle(p.fill, p.stroke)}
         />
       );
     }
@@ -111,20 +129,22 @@ export const renderPrim = (
           fontStyle={p.fontStyle}
           textAnchor={alignToAnchor(p.align)}
           dominantBaseline={baselineToDominant(p.baseline)}
-          fill={p.fill}
+          fill={paintAttr(p.fill)}
           opacity={p.opacity}
+          style={paintStyle(p.fill, undefined)}
         >
           {p.lines.map((line, i) => (
             <tspan
               key={i}
               x={p.x}
               dy={i === 0 ? firstDy : p.lineHeight}
-              fill={line.fill}
+              fill={paintAttr(line.fill)}
               opacity={line.opacity}
               fontSize={line.fontSize}
               fontFamily={line.fontFamily}
               fontWeight={line.fontWeight}
               fontStyle={line.fontStyle}
+              style={paintStyle(line.fill, undefined)}
             >
               {line.text}
             </tspan>
@@ -141,10 +161,10 @@ export const renderPrim = (
         <path
           key={key}
           d={buildPathD(p.commands)}
-          fill={p.fill}
+          fill={paintAttr(p.fill)}
           fillOpacity={p.fillOpacity}
           fillRule={p.fillRule}
-          stroke={p.stroke}
+          stroke={paintAttr(p.stroke)}
           strokeOpacity={p.strokeOpacity}
           strokeWidth={p.strokeWidth}
           strokeDasharray={p.dashPattern?.join(' ')}
@@ -153,6 +173,7 @@ export const renderPrim = (
           markerStart={startId ? `url(#${startId})` : undefined}
           markerEnd={endId ? `url(#${endId})` : undefined}
           opacity={p.opacity}
+          style={paintStyle(p.fill, p.stroke)}
         />
       );
     }
