@@ -9,9 +9,9 @@ description: 30° 角下 sin / cos / tan 的几何关系示意——从一个圆
 
 本页把它拆成 7 个累加 step：从一个孤零零的圆开始，每步加一点东西、对应学一点 retikz 能力——结束时既得到完整图，也走完了 [Path](/core/components/draw/path) / [Draw](/core/components/draw/overview) / [Coordinate](/core/components/node/coordinate) / [Node](/core/components/node/overview) 的组合套路，以及极坐标、累加 path、多 Draw 协同、Node 多行多色文本等高频技巧。
 
-<ComponentPreview name="karl-circle-07-info" size="xl" />
+<ComponentPreview name="karl-circle-07-info" size="lg" />
 
-## Prompt
+## 提示词
 
 下面这段 prompt 一键发到 AI 对话面板，由 LLM 直接产出 retikz IR / JSX 复现本图。需要变体（改角度、改颜色、改半径等）发送后在聊天面板里改 prompt 重发即可。
 
@@ -47,57 +47,57 @@ description: 30° 角下 sin / cos / tan 的几何关系示意——从一个圆
 
 ## 过程
 
-### Step 1：画单位圆
+### 步骤 1：画单位圆
 
 最小起步——一个原点为中心的圆。[Path](/core/components/draw/path) 容器配 [`<Step kind="circlePath">`](/core/components/draw/step#circlepath)：circlePath 把上一个 step 的 anchor 当作圆心，所以先 `move (0, 0)` 把游标移到原点。`lineCap="round"` 让圆轮廓端点圆润一点。
 
-<ComponentPreview name="karl-circle-01-circle" />
+<ComponentPreview name="karl-circle-01-circle" size="lg" />
 
-### Step 2：加坐标轴 + 端点标签 + 命名锚
+### 步骤 2：加坐标轴 + 端点标签 + 命名锚
 
 x 轴和 y 轴用 [Draw](/core/components/draw/overview) 配 `arrow="->"` 一键画带箭头的线段。轴端的 `x` / `y` 文字用 [Node](/core/components/node/overview)（`stroke="none"` 去掉默认外框），独立放在轴外侧。[Coordinate](/core/components/node/coordinate) 给两个端点命名（`x-axis` / `y-axis`），后续 step 可以用 id 字符串引用——本例其实没引用到，但保留以贴合 TikZ 的 `coordinate(x axis)` 风格习惯。
 
-<ComponentPreview name="karl-circle-02-axes" />
+<ComponentPreview name="karl-circle-02-axes" size="lg" />
 
-### Step 3：加网格 + 刻度
+### 步骤 3：加网格 + 刻度
 
 背景网格用 `.map()` 平铺 5 横 5 竖（IR 暂无 grid 算子）；这种 React 端 `.map()` 替代 TikZ `\foreach` 的写法在 retikz 里很常见。刻度同样靠数组遍历，每条短线 + 一个 `fill="white"` 的 [Node](/core/components/node/overview)——白底把网格遮在 label 下，让数字读起来清爽。
 
 `cm(x, y)` helper 把数学坐标（y-up）翻成 retikz 屏幕坐标（y-down）：retikz 顶层 `<TikZ>` 不接 picture-level scale + 不翻 y，所以教程类例子常自带这种 helper。
 
-<ComponentPreview name="karl-circle-03-ticks" />
+<ComponentPreview name="karl-circle-03-ticks" size="lg" />
 
-### Step 4：画 30° 扇形 + α 标签
+### 步骤 4：画 30° 扇形 + α 标签
 
 扇形是这一例最巧的一步。[`<Step kind="arc">`](/core/components/draw/step#arc) 把上一个 step 的 anchor 当作**圆心**（注意与 TikZ 把 prev 当作圆周起点不同）：`move (0, 0)` → `arc start=0 end=−30 radius=30` 自动从 (radius, 0) 起笔画弧 → `line` 回原点让 [Path](/core/components/draw/path) 的 fill 隐式闭合成扇形。
 
 α 文字标签用 [Node](/core/components/node/overview) 配极坐标位置（`{ angle, radius }`）——`polar(15, 0.22)` 把它放在扇形的视觉中央。
 
-<ComponentPreview name="karl-circle-04-wedge" />
+<ComponentPreview name="karl-circle-04-wedge" size="lg" />
 
-### Step 5：sin α 红线 + cos α 蓝线
+### 步骤 5：sin α 红线 + cos α 蓝线
 
 sin 是 (30°, 1cm) 垂直落到 x 轴；cos 是落点回原点。两段都靠 [Draw](/core/components/draw/overview)，way 数组里中间插一个 `{ label: { text, side } }` 算子给段挂边标注。`thickness="veryThick"` 是语义 stroke 档位，省得写具体像素值。
 
 注：原 TikZ 用 `(30:1cm |- x axis)` 直接表达"30°,1cm 点与 x 轴的投影交点"。retikz 暂无投影 target，几何上等于 (cos30°, 0)，手算坐标喂进去。
 
-<ComponentPreview name="karl-circle-05-sin-cos" />
+<ComponentPreview name="karl-circle-05-sin-cos" size="lg" />
 
-### Step 6：tan α 橙线 + 辅助射线
+### 步骤 6：tan α 橙线 + 辅助射线
 
 tan 线从 (1, 0) 垂直到 (1, tan30°)。原图用 TikZ 的 named path + intersections 求"x=1 竖线与原点 30° 射线"的交点；retikz 暂无这类构造，手算 (1, tan30°) 并用 [Coordinate](/core/components/node/coordinate) 命名为 `t`，下方延伸到 `t` 的辅助射线就能直接引用这个 id。
 
 注意"多个 [Draw](/core/components/draw/overview) 协同 + 共享命名锚"——这是 retikz 把"一张图的多条 path 串起来"的标准套路。
 
-<ComponentPreview name="karl-circle-06-tan" />
+<ComponentPreview name="karl-circle-06-tan" size="lg" />
 
-### Step 7：右侧多色信息说明框
+### 步骤 7：右侧多色信息说明框
 
 最后加一个图右侧的彩色说明框。[Node](/core/components/node/overview) 的 `text` prop 接字符串数组，**每行可以是 string 或 `{ text, fill }`**——后者让该行单独换色。空字符串行做分隔。
 
-`shape="rectangle"` + `roundedCorners` + `align="left"` 把它装成一个左对齐的圆角卡片，`stroke="none"` 去外框。注意行内片段着色（同一行里某几个词换色）目前不支持，只能整行换色——见 Limitations。
+`shape="rectangle"` + `roundedCorners` + `align="left"` 把它装成一个左对齐的圆角卡片，`stroke="none"` 去外框。注意行内片段着色（同一行里某几个词换色）目前不支持，只能整行换色——见「已知限制」。
 
-<ComponentPreview name="karl-circle-07-info" size="xl" />
+<ComponentPreview name="karl-circle-07-info" size="lg" />
 
 ## 能力
 
@@ -109,7 +109,7 @@ tan 线从 (1, 0) 垂直到 (1, tan30°)。原图用 TikZ 的 named path + inter
 | [Node](/core/components/node/overview) | 轴端 label + 刻度文字 + α 标签 + 右侧信息框 | 2, 3, 4, 7 |
 | [Coordinate](/core/components/node/coordinate) | 命名 x/y 轴端点 + tan 交点 t | 2, 6 |
 
-## Limitations
+## 已知限制
 
 - 🚧 **grid 算子**：未来计划支持。本例用 `.map()` 手画 5 横 5 竖兜底
 - 🚧 **整图 scale + y 翻转**：未来计划在 `<TikZ>` 容器加 `scale` / `yAxis="up"`，让用户直接喂数学坐标。本例用本地 `cm()` / `polar()` helper 兜底
@@ -118,7 +118,7 @@ tan 线从 (1, 0) 垂直到 (1, tan30°)。原图用 TikZ 的 named path + inter
 - 🚧 **LineSpec 行内 spans**：未来计划在 LineSpec 加 `spans` 字段。本例只能整行换色
 - ❌ **inline LaTeX 数学排版**（`$\frac{1}{2}$` / `$\sin \alpha$`）：暂无计划。本例用纯文本字符兜底（`1/2` / `sin α`）
 
-## Related
+## 相关阅读
 
 - [Path](/core/components/draw/path) · [Step](/core/components/draw/step) · [Draw](/core/components/draw/overview) · [Node](/core/components/node/overview) · [Coordinate](/core/components/node/coordinate)
 - [定位](/core/concepts/positioning) · [锚点](/core/concepts/anchors)

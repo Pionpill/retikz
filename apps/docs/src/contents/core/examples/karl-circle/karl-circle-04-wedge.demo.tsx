@@ -7,10 +7,14 @@ const cm = (x: number, y: number): [number, number] => [x * UNIT, -y * UNIT];
 /** 数学极坐标 → retikz PolarPosition：retikz angle 是 screen-down 正向，传 -degMath */
 const polar = (degMath: number, r = 1) => ({ angle: -degMath, radius: r * UNIT });
 
-const HELP_LINE = 'oklch(0.85 0.04 250)';
-const TICK_TEXT_BG = 'white';
+const HELP_LINE = '#d4d4d4';
+const PAGE_BG = 'white';
 const ANGLE_STROKE = 'oklch(0.55 0.16 145)';
 const ANGLE_FILL = 'oklch(0.92 0.10 145)';
+const MATH_FONT = {
+  family: '"Latin Modern Math", "STIX Two Math", "Cambria Math", "Times New Roman", serif',
+  style: 'italic' as const,
+};
 
 const Demo: FC = () => (
   <TikZ width={600} height={360}>
@@ -30,10 +34,10 @@ const Demo: FC = () => (
 
     {/* 坐标轴 */}
     <Draw way={[cm(-1.5, 0), cm(1.5, 0)]} arrow="->" />
-    <Node position={cm(1.62, 0)} stroke="none" padding={0}>x</Node>
+    <Node position={cm(1.62, 0)} stroke="none" padding={0} font={MATH_FONT}>x</Node>
     <Coordinate id="x-axis" position={cm(1.5, 0)} />
     <Draw way={[cm(0, -1.5), cm(0, 1.5)]} arrow="->" />
-    <Node position={cm(0, 1.62)} stroke="none" padding={0}>y</Node>
+    <Node position={cm(0, 1.62)} stroke="none" padding={0} font={MATH_FONT}>y</Node>
     <Coordinate id="y-axis" position={cm(0, 1.5)} />
 
     {/* 刻度 */}
@@ -44,7 +48,7 @@ const Demo: FC = () => (
     ].map(({ x, text }) => (
       <Fragment key={`tx-${x}`}>
         <Draw way={[[x * UNIT, -3], [x * UNIT, 3]]} />
-        <Node position={[x * UNIT, 14]} fill={TICK_TEXT_BG} stroke="none" padding={1}>
+        <Node position={[x * UNIT, 14]} fill={PAGE_BG} stroke="none" padding={1}>
           {text}
         </Node>
       </Fragment>
@@ -57,7 +61,7 @@ const Demo: FC = () => (
     ].map(({ y, text }) => (
       <Fragment key={`ty-${y}`}>
         <Draw way={[[-3, -y * UNIT], [3, -y * UNIT]]} />
-        <Node position={[-18, -y * UNIT]} fill={TICK_TEXT_BG} stroke="none" padding={1}>
+        <Node position={[-18, -y * UNIT]} fill={PAGE_BG} stroke="none" padding={1}>
           {text}
         </Node>
       </Fragment>
@@ -71,8 +75,8 @@ const Demo: FC = () => (
       <Step kind="line" to={cm(0, 0)} />
     </Path>
 
-    {/* α 文字标签（极坐标 15°、距原点 0.22cm） */}
-    <Node position={polar(15, 0.22)} stroke="none" textColor={ANGLE_STROKE} padding={1}>
+    {/* α 文字标签（极坐标 15°、距原点 0.22cm）——math 斜体衬线 */}
+    <Node position={polar(15, 0.22)} stroke="none" textColor={ANGLE_STROKE} padding={1} font={MATH_FONT}>
       α
     </Node>
   </TikZ>

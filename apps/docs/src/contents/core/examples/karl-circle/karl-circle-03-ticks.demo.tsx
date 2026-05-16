@@ -5,8 +5,13 @@ import { Coordinate, Draw, Node, Path, Step, TikZ } from '@retikz/react';
 const UNIT = 100;
 const cm = (x: number, y: number): [number, number] => [x * UNIT, -y * UNIT];
 
-const HELP_LINE = 'oklch(0.85 0.04 250)';
-const TICK_TEXT_BG = 'white';
+const HELP_LINE = '#d4d4d4';
+/** 跟随主题色——浅色 white、深色 near-black（Tailwind 4 的 --background token） */
+const PAGE_BG = 'white';
+const MATH_FONT = {
+  family: '"Latin Modern Math", "STIX Two Math", "Cambria Math", "Times New Roman", serif',
+  style: 'italic' as const,
+};
 
 const Demo: FC = () => (
   <TikZ width={600} height={360}>
@@ -26,14 +31,14 @@ const Demo: FC = () => (
 
     {/* 坐标轴 + 端点 label + 命名锚 */}
     <Draw way={[cm(-1.5, 0), cm(1.5, 0)]} arrow="->" />
-    <Node position={cm(1.62, 0)} stroke="none" padding={0}>x</Node>
+    <Node position={cm(1.62, 0)} stroke="none" padding={0} font={MATH_FONT}>x</Node>
     <Coordinate id="x-axis" position={cm(1.5, 0)} />
 
     <Draw way={[cm(0, -1.5), cm(0, 1.5)]} arrow="->" />
-    <Node position={cm(0, 1.62)} stroke="none" padding={0}>y</Node>
+    <Node position={cm(0, 1.62)} stroke="none" padding={0} font={MATH_FONT}>y</Node>
     <Coordinate id="y-axis" position={cm(0, 1.5)} />
 
-    {/* x 轴刻度（-1, -1/2, 1）—— Node fill=white 把网格遮在 label 下 */}
+    {/* x 轴刻度（-1, -1/2, 1）—— Node fill=PAGE_BG 把网格遮在 label 下 */}
     {[
       { x: -1, text: '−1' },
       { x: -0.5, text: '−1/2' },
@@ -41,7 +46,7 @@ const Demo: FC = () => (
     ].map(({ x, text }) => (
       <Fragment key={`tx-${x}`}>
         <Draw way={[[x * UNIT, -3], [x * UNIT, 3]]} />
-        <Node position={[x * UNIT, 14]} fill={TICK_TEXT_BG} stroke="none" padding={1}>
+        <Node position={[x * UNIT, 14]} fill={PAGE_BG} stroke="none" padding={1}>
           {text}
         </Node>
       </Fragment>
@@ -56,7 +61,7 @@ const Demo: FC = () => (
     ].map(({ y, text }) => (
       <Fragment key={`ty-${y}`}>
         <Draw way={[[-3, -y * UNIT], [3, -y * UNIT]]} />
-        <Node position={[-18, -y * UNIT]} fill={TICK_TEXT_BG} stroke="none" padding={1}>
+        <Node position={[-18, -y * UNIT]} fill={PAGE_BG} stroke="none" padding={1}>
           {text}
         </Node>
       </Fragment>

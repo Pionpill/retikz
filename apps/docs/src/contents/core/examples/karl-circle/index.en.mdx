@@ -9,7 +9,7 @@ This is the final figure from the TikZ tutorial — "Karl teaching his daughter 
 
 The page breaks it into 7 accumulative steps. From a single naked circle each step adds one piece and one retikz capability — by the end you have the full figure and have walked through how [Path](/core/components/draw/path) / [Draw](/core/components/draw/overview) / [Coordinate](/core/components/node/coordinate) / [Node](/core/components/node/overview) combine, plus polar positions, accumulative paths, multi-Draw coordination, and multi-line / multi-color Node text.
 
-<ComponentPreview name="karl-circle-07-info" size="xl" />
+<ComponentPreview name="karl-circle-07-info" size="lg" />
 
 ## Prompt
 
@@ -51,13 +51,13 @@ Send the prompt below to the AI chat panel — the LLM will produce retikz IR / 
 
 Minimal start — one circle centered at the origin. The [Path](/core/components/draw/path) container with [`<Step kind="circlePath">`](/core/components/draw/step#circlepath): `circlePath` takes the previous step's anchor as the center, so we `move (0, 0)` first to position the cursor at the origin. `lineCap="round"` softens the line endpoints.
 
-<ComponentPreview name="karl-circle-01-circle" />
+<ComponentPreview name="karl-circle-01-circle" size="lg" />
 
 ### Step 2 — Axes + endpoint labels + named anchors
 
 x and y axes use [Draw](/core/components/draw/overview) with `arrow="->"` to get arrow-tipped segments. The `x` / `y` labels at the axis ends are [Node](/core/components/node/overview)s (with `stroke="none"` to hide the default border) placed just past each axis. [Coordinate](/core/components/node/coordinate) names the two endpoints (`x-axis` / `y-axis`) so later steps could reference them by id string — this example doesn't end up using them, but we keep them for fidelity to TikZ's `coordinate(x axis)` idiom.
 
-<ComponentPreview name="karl-circle-02-axes" />
+<ComponentPreview name="karl-circle-02-axes" size="lg" />
 
 ### Step 3 — Grid + ticks
 
@@ -65,7 +65,7 @@ The background grid is a `.map()` over 5 horizontal + 5 vertical lines (IR has n
 
 The `cm(x, y)` helper translates math (y-up) to retikz screen coordinates (y-down): the top-level `<TikZ>` has no picture-level scale or y-flip, so tutorial-style examples often carry this kind of helper inline.
 
-<ComponentPreview name="karl-circle-03-ticks" />
+<ComponentPreview name="karl-circle-03-ticks" size="lg" />
 
 ### Step 4 — 30° wedge + α label
 
@@ -73,7 +73,7 @@ The wedge is the trickiest step. [`<Step kind="arc">`](/core/components/draw/ste
 
 The α label is a [Node](/core/components/node/overview) at a polar position (`{ angle, radius }`) — `polar(15, 0.22)` places it visually centered in the wedge.
 
-<ComponentPreview name="karl-circle-04-wedge" />
+<ComponentPreview name="karl-circle-04-wedge" size="lg" />
 
 ### Step 5 — sin α red line + cos α blue line
 
@@ -81,7 +81,7 @@ The α label is a [Node](/core/components/node/overview) at a polar position (`{
 
 Note: the original TikZ uses `(30:1cm |- x axis)` to express "horizontal projection of (30°, 1cm) onto the x-axis" directly. retikz has no projection target yet — geometrically that equals (cos30°, 0), so we hand-compute the coordinate.
 
-<ComponentPreview name="karl-circle-05-sin-cos" />
+<ComponentPreview name="karl-circle-05-sin-cos" size="lg" />
 
 ### Step 6 — tan α orange line + auxiliary ray
 
@@ -89,7 +89,7 @@ The tan line goes from (1, 0) up to (1, tan30°). The original uses TikZ's `name
 
 The pattern here — multiple [Draw](/core/components/draw/overview)s coordinating through shared named anchors — is retikz's standard way to wire up a multi-segment figure.
 
-<ComponentPreview name="karl-circle-06-tan" />
+<ComponentPreview name="karl-circle-06-tan" size="lg" />
 
 ### Step 7 — Right-hand multi-color info box
 
@@ -97,7 +97,7 @@ Finally, a colored info card on the right. The [Node](/core/components/node/over
 
 `shape="rectangle"` + `roundedCorners` + `align="left"` packs the lines into a left-aligned rounded card; `stroke="none"` removes the default border. Note: in-line span coloring (multiple colors within a single line) is not supported yet — only whole-line color switches. See Limitations.
 
-<ComponentPreview name="karl-circle-07-info" size="xl" />
+<ComponentPreview name="karl-circle-07-info" size="lg" />
 
 ## Capabilities
 
