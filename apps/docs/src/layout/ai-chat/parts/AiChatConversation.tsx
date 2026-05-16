@@ -1,4 +1,4 @@
-import { AlertCircle, FileText, Trash2 } from 'lucide-react';
+import { AlertCircle, Trash2 } from 'lucide-react';
 import { type FC, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -16,27 +16,24 @@ const ERROR_KEY = {
   unknown: 'ai.errorUnknown',
 } as const satisfies Record<ChatErrorKind, string>;
 
+/**
+ * 对话视图：消息列表 + 输入区。当前页 / 取消生成 hint 已迁入 AiChatInput，
+ * 这里只保留 Clear 按钮和滚动容器
+ */
 export const AiChatConversation: FC = () => {
   const { t } = useTranslation();
   const messages = useAiChatStore(s => s.messages);
   const isGenerating = useAiChatStore(s => s.isGenerating);
   const error = useAiChatStore(s => s.error);
-  const currentPage = useAiChatStore(s => s.currentPage);
   const clear = useAiChatStore(s => s.clearConversation);
 
   const scrollRef = useRef<HTMLDivElement | null>(null);
 
-  // 流式追加 / 新消息时自动滚到底；不影响用户手动上拉浏览历史的体验
   useEffect(() => {
     const el = scrollRef.current;
     if (!el) return;
     el.scrollTop = el.scrollHeight;
   }, [messages, isGenerating]);
-
-  const footHint =
-    typeof navigator !== 'undefined' && navigator.platform.toLowerCase().includes('mac')
-      ? t('ai.convFootHint')
-      : t('ai.convFootHintWin');
 
   const errorText = error
     ? error.kind === 'unknown'
@@ -46,16 +43,11 @@ export const AiChatConversation: FC = () => {
 
   return (
     <div className="flex h-full flex-col">
-      {/* Top context chip */}
-      <div className="flex items-center gap-2 border-b border-border px-3 py-2">
-        <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">
-          <FileText className="size-3" />
-          <span className="max-w-[200px] truncate">{currentPage?.title ?? t('ai.convNoPageContext')}</span>
-        </span>
+      <div className="flex items-center justify-end border-b border-border px-3 py-2">
         <Button
           variant="ghost"
           size="sm"
-          className="ml-auto h-6 cursor-pointer gap-1 px-2 text-xs text-muted-foreground"
+          className="h-6 cursor-pointer gap-1 px-2 text-xs text-muted-foreground"
           onClick={clear}
           disabled={messages.length === 0 || isGenerating}
         >
@@ -64,7 +56,6 @@ export const AiChatConversation: FC = () => {
         </Button>
       </div>
 
-      {/* Messages scroll area */}
       <div ref={scrollRef} className="flex-1 overflow-y-auto px-3 py-3">
         {messages.length === 0 && !error ? (
           <div className="flex h-full items-center justify-center px-4 text-center text-sm text-muted-foreground">
@@ -90,8 +81,6 @@ export const AiChatConversation: FC = () => {
       </div>
 
       <AiChatInput />
-
-      <div className="px-3 pb-2 text-center text-[10px] text-muted-foreground">{footHint}</div>
     </div>
   );
 };

@@ -22,8 +22,12 @@ export const AiChatPanel: FC = () => {
   const setOpen = useAiChatStore(s => s.setOpen);
   const view = useAiChatStore(s => s.view);
   const setView = useAiChatStore(s => s.setView);
-  const providerId = useAiChatStore(s => s.providerId);
-  const hasKey = useAiChatStore(s => s.apiKeys[providerId].length > 0);
+  const hasKey = useAiChatStore(s => {
+    const id = s.providerId;
+    if (id === 'deepseek' || id === 'openai' || id === 'anthropic') return s.apiKeys[id].length > 0;
+    const customProviders = s.customProviders as Record<string, { apiKey: string } | undefined>;
+    return (customProviders[id]?.apiKey ?? '').length > 0;
+  });
   const isGenerating = useAiChatStore(s => s.isGenerating);
   const abort = useAiChatStore(s => s.abort);
 

@@ -56,7 +56,8 @@ export const DocPage: FC<DocPageProps> = props => {
     if (!loc || !aiChatTitleKey || stableSource == null) return;
     const title = String(t(aiChatTitleKey));
     const { rawUrl } = buildDocPageLinks(loc, aiChatLang);
-    setAiChatCurrentPage({ title, mdx: stableSource, lang: aiChatLang, rawUrl });
+    const path = `/${docPathSegments(loc).join('/')}`;
+    setAiChatCurrentPage({ title, mdx: stableSource, lang: aiChatLang, rawUrl, path });
   }, [loc, aiChatTitleKey, stableSource, aiChatLang, t, setAiChatCurrentPage]);
   useEffect(
     () => () => {

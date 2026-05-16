@@ -1,28 +1,32 @@
-import { ArrowUp, Square } from 'lucide-react';
+import { Send } from 'lucide-react';
 import { type FC, type KeyboardEvent, useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
 import { useAiChatStore } from '@/store/useAiChatStore';
-import { PROVIDER_LABEL } from '../models';
-import { estimateUsd, formatUsd } from '../pricing';
 
-const MAX_TEXTAREA_HEIGHT = 200;
+import { AiChatInputContextChips } from './AiChatInputContextChips';
+import { AiChatInputContextModePicker } from './AiChatInputContextModePicker';
+import { AiChatInputMetaRow } from './AiChatInputMetaRow';
+import { AiChatInputModelPicker } from './AiChatInputModelPicker';
 
+/** textarea 最大高度（约 3 行 leading-relaxed 文本） */
+const MAX_TEXTAREA_HEIGHT = 72;
+
+/**
+ * AI Chat 输入框（Copilot 风格三段式）
+ * @description prompt 框 bg-muted 区分：① chips 行 ② textarea（1 行起、3 行封顶滚动）
+ *   ③ pickers + ghost Send。下方 meta 行：Esc 提示 + 上下文圆环
+ */
 export const AiChatInput: FC = () => {
   const { t } = useTranslation();
   const send = useAiChatStore(s => s.send);
-  const abort = useAiChatStore(s => s.abort);
   const isGenerating = useAiChatStore(s => s.isGenerating);
-  const providerId = useAiChatStore(s => s.providerId);
-  const model = useAiChatStore(s => s.models[providerId]);
-  const usage = useAiChatStore(s => s.usage);
 
   const [text, setText] = useState('');
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
 
-  // 自适应行高
+  // 自适应行高 —— 1 行起、最高 3 行，超出后内部滚动；滚动条按项目约定隐藏
   useEffect(() => {
     const el = textareaRef.current;
     if (!el) return;
@@ -31,15 +35,12 @@ export const AiChatInput: FC = () => {
   }, [text]);
 
   const handleSubmit = useCallback(() => {
-    if (isGenerating) {
-      abort();
-      return;
-    }
+    if (isGenerating) return;
     const value = text.trim();
     if (!value) return;
     setText('');
     void send(value);
-  }, [abort, isGenerating, send, text]);
+  }, [isGenerating, send, text]);
 
   const handleKeyDown = useCallback(
     (e: KeyboardEvent<HTMLTextAreaElement>) => {
@@ -51,45 +52,46 @@ export const AiChatInput: FC = () => {
     [handleSubmit],
   );
 
-  const usd = estimateUsd(providerId, model, usage.input, usage.output);
+  const sendDisabled = isGenerating || text.trim().length === 0;
 
   return (
-    <div className="flex flex-col gap-1.5 border-t border-border bg-background px-3 pt-2 pb-3">
-      <div className="flex items-end gap-2 rounded-md border border-input bg-background px-2 py-1.5 focus-within:ring-[3px] focus-within:ring-ring/50">
-        <textarea
-          ref={textareaRef}
-          value={text}
-          onChange={e => setText(e.target.value)}
-          onKeyDown={handleKeyDown}
-          placeholder={t('ai.convPlaceholder')}
-          rows={1}
-          className="flex-1 resize-none bg-transparent text-sm leading-relaxed outline-none placeholder:text-muted-foreground"
-        />
-        <Button
-          type="button"
-          size="icon"
-          variant={isGenerating ? 'destructive' : 'default'}
-          className="size-7 shrink-0 cursor-pointer rounded-sm"
-          onClick={handleSubmit}
-          aria-label={isGenerating ? t('ai.convStop') : t('ai.convSend')}
-          disabled={!isGenerating && !text.trim()}
-        >
-          {isGenerating ? <Square className="size-3.5" /> : <ArrowUp className="size-4" />}
-        </Button>
+    <div className="border-t border-border bg-background px-3 pt-2 pb-3">
+      <div className="flex flex-col rounded-lg border border-border bg-muted">
+        <AiChatInputContextChips />
+
+        <div className="px-3 pb-1">
+          <textarea
+            ref={textareaRef}
+            value={text}
+            onChange={e => setText(e.target.value)}
+            onKeyDown={handleKeyDown}
+            placeholder={t('ai.convPlaceholder')}
+            rows={1}
+            className="block w-full resize-none bg-transparent text-sm leading-relaxed outline-none placeholder:text-muted-foreground"
+            style={{ maxHeight: `${MAX_TEXTAREA_HEIGHT}px` }}
+          />
+        </div>
+
+        <div className="flex items-center justify-between gap-2 px-2 pb-2">
+          <div className="flex items-center gap-1">
+            <AiChatInputModelPicker />
+            <AiChatInputContextModePicker />
+          </div>
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            className="size-7 shrink-0 cursor-pointer rounded text-muted-foreground hover:bg-accent hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40"
+            onClick={handleSubmit}
+            aria-label={t('ai.convSend')}
+            disabled={sendDisabled}
+          >
+            <Send className="size-4" />
+          </Button>
+        </div>
       </div>
-      <div className={cn('flex items-center justify-between text-[10px] text-muted-foreground')}>
-        <span>
-          {PROVIDER_LABEL[providerId]} · {model}
-        </span>
-        <span>
-          ↑{formatNumber(usage.input)} · ↓{formatNumber(usage.output)} · ≈{formatUsd(usd)}
-        </span>
-      </div>
+
+      <AiChatInputMetaRow />
     </div>
   );
-};
-
-const formatNumber = (n: number): string => {
-  if (n < 1000) return String(n);
-  return `${(n / 1000).toFixed(1)}K`;
 };
