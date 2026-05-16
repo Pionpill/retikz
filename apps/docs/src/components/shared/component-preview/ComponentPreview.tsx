@@ -85,7 +85,7 @@ export const ComponentPreview: FC<ComponentPreviewProps> = props => {
   // local 为 undefined 时跟随全局 useComponentPreviewStore.dragEnabled（更多菜单可一次批量开启），
   // 用户单卡点过 Hand 后本地选择胜出（与 hideCode / isExpand 的覆盖规则一致）；Dialog 内单独强制开启
   const [localDragEnabled, setLocalDragEnabled] = useState<boolean | undefined>(undefined);
-  // 工具条 pinned：移动端没 hover，靠 tap preview 区域 toggle；拖拽开启时强制 pin（不然 Hand 按钮自己藏起来没法再关）
+  // 工具条 pinned：移动端没 hover，靠 tap preview 区域 toggle；拖拽开启时也不强制 pin（用户照样可以 tap 呼出再点 Hand 关掉）
   const [toolbarPinned, setToolbarPinned] = useState(false);
   const [isMaximized, setIsMaximized] = useState(false);
   const { transform, isDragging, panBy, zoomBy, resetTransform, isTransformed, transformStyle, beginDrag } =
@@ -98,7 +98,6 @@ export const ComponentPreview: FC<ComponentPreviewProps> = props => {
   const isCodeVisible = localIsCodeVisible ?? globalHideCode;
   const isExpanded = localIsExpanded ?? globalIsExpand;
   const dragEnabled = localDragEnabled ?? globalDragEnabled;
-  const effectiveToolbarPinned = toolbarPinned || dragEnabled;
 
   useEffect(() => {
     return () => {
@@ -202,7 +201,7 @@ export const ComponentPreview: FC<ComponentPreviewProps> = props => {
           dragEnabled={dragEnabled}
           toggleDrag={() => setLocalDragEnabled(!dragEnabled)}
           onMaximize={() => setIsMaximized(true)}
-          pinned={effectiveToolbarPinned}
+          pinned={toolbarPinned}
         />
       </div>
       {hideCode ? null : (
