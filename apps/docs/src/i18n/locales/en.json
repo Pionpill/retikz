@@ -40,6 +40,8 @@
     "positioning": "Positioning",
     "anchors": "Anchors",
     "layers": "Layers",
+    "examples": "Examples",
+    "examplesKarlCircle": "Karl's Unit Circle",
     "reference": "Reference",
     "refSchema": "Schema",
     "refSceneSchema": "Scene",

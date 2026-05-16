@@ -40,6 +40,8 @@
     "positioning": "定位",
     "anchors": "锚点",
     "layers": "分层",
+    "examples": "示例",
+    "examplesKarlCircle": "Karl 单位圆",
     "reference": "参考",
     "refSchema": "Schema",
     "refSceneSchema": "Scene",

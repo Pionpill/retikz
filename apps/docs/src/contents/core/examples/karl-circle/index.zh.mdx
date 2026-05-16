@@ -1,0 +1,38 @@
+---
+title: Karl 单位圆
+description: 复刻 tikz.dev 入门教程最终示例（30° 角下 sin / cos / tan 的几何关系），呈现 retikz v0.1 当前能力与仍待补完的 API
+---
+
+这是 TikZ 入门教程最后那张「Karl 给女儿讲三角函数」的图：单位圆 + 坐标轴 + 30° 扇形 + 三条彩色函数线（sin 红 / cos 蓝 / tan 橙）+ 信息说明框。下面用 retikz v0.1 现有 DSL 整体复刻一遍。
+
+<ComponentPreview name="karl-circle" size="xl" />
+
+## 写法映射
+
+下表把图中每一块映射到 retikz 当前 DSL；对照看 demo 源码可一眼定位 TikZ 写法在 retikz 该用什么写。
+
+| 区块 | 当前 retikz 写法 | 备注 |
+| --- | --- | --- |
+| 整图缩放 + y 翻转 | 本地 `cm(x,y)` / `polar(deg)` helper | 容器没接 picture scale，y 翻转得自己做（适配 SVG y-down） |
+| 背景网格 | `.map()` 手画 5 横 5 竖 | 没 grid step |
+| 单位圆 | `move → circlePath` | circlePath 把上一 step 的 anchor 当圆心 |
+| 坐标轴 + 端点 label + 命名锚 | `Draw + Node + Coordinate` 三件 | 没"画线 + 末尾挂 label + 命名锚"合一的 sugar |
+| 刻度 + xshift | `.map()` 数组遍历 + bake 坐标 | `\foreach` 用 React 替代；xshift 直接合进字面坐标 |
+| 30° 扇形 | `move (0,0) → arc → line (0,0)` 三步 | ArcStep 把 prev anchor 当圆心（与 TikZ 把 prev 当圆周起点不同）；line 回原点让 fill 自动闭合 |
+| sin / cos 投影点 | 手算 `cm(cos30, 0)` | 没投影 target |
+| tan 与射线交点 | 手算 `cm(1, tan30)` | 没 named path 也没 intersection target |
+| 信息框分色文本 | LineSpec 行级 `fill` | 行内片段着色暂不支持，只能整行换色 |
+| 数学排版 (½ / sin α) | 纯文本兜底 | 没接 KaTeX / MathJax，分数 / 上标只能凑字符 |
+
+## 仍缺的能力
+
+下面任何一项到位都能让这张图明显短：
+
+- **整图 scale + y 翻转**：`<TikZ scale={3} yAxis="up">` 让用户直接喂数学坐标，省两个 helper
+- **grid 算子**：`<Draw grid step={0.5} from={...} to={...} />` 替掉 `.map` 网格
+- **末尾合一 sugar**：`<Draw arrow="->" endLabel={...} endCoordId="x-axis" />` 一行替三件套
+- **扇形 sugar**：`<Wedge center radius from to fill stroke />`，对标 TikZ `pic{angle=A--B--C}`
+- **投影 target**：`{ project: 'horizontal', from, onto }`，统一 TikZ `(A |- B)` / `(A -| B)`
+- **交点 target**：`{ intersection: [seg, ray] }`，让 `name path + name intersections` 一等公民化
+- **行内 span 文本**：LineSpec 加 `spans` 数组，让一行内可切片着色 / 字号 / 字体
+- **inline math**：text 节点接 KaTeX / MathJax，分数、上下标、希腊字母按 LaTeX 语法渲染

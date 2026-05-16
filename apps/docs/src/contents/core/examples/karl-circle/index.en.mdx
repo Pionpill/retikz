@@ -1,0 +1,38 @@
+---
+title: Karl's Unit Circle
+description: A retikz replication of the final figure from tikz.dev's tutorial (sin / cos / tan geometry around a 30° angle), showing what v0.1 covers and what's still missing
+---
+
+This is the final figure from the TikZ tutorial — "Karl teaching his daughter trigonometry": a unit circle, axes, a 30° wedge, three colored function lines (sin red / cos blue / tan orange), and an info box. Below is the full replication using retikz v0.1's existing DSL.
+
+<ComponentPreview name="karl-circle" size="xl" />
+
+## Writing Map
+
+The table maps each region of the figure to current retikz DSL — pair it with the demo source to see exactly how a given TikZ construct should be written in retikz today.
+
+| Region | Current retikz writing | Notes |
+| --- | --- | --- |
+| Whole-picture scale + y-flip | Local `cm(x,y)` / `polar(deg)` helpers | The container has no picture scale; y must be flipped manually (SVG is y-down) |
+| Background grid | `.map()` of 5 horizontal + 5 vertical lines | No `grid` step yet |
+| Unit circle | `move → circlePath` | `circlePath` takes the previous step's anchor as the center |
+| Axes + endpoint label + named anchor | `Draw + Node + Coordinate` as three pieces | No "draw line + attach end label + name an anchor" combined sugar |
+| Ticks + xshift | Array `.map()` + bake offsets into coords | `\foreach` is replaced by React; `xshift` is folded into the literal coordinate |
+| 30° wedge | `move (0,0) → arc → line (0,0)` triple | `ArcStep` treats the prev anchor as the center (TikZ uses it as a point on the arc instead); the trailing line back to the origin lets the fill close implicitly |
+| sin / cos projection points | Hand-computed `cm(cos30, 0)` | No projection target |
+| tan / ray intersection | Hand-computed `cm(1, tan30)` | Neither named path nor intersection target |
+| Per-line color in info box | LineSpec line-level `fill` | Inline-span coloring is not supported; only whole-line color switches |
+| Math typography (½, sin α) | Plain text fallback | No KaTeX / MathJax integration; fractions and subscripts are character soup |
+
+## What's Still Missing
+
+Any one of the following would noticeably shorten this figure:
+
+- **Picture scale + y-up axis**: `<TikZ scale={3} yAxis="up">` lets users feed math coordinates directly and drops both helpers
+- **Grid operator**: `<Draw grid step={0.5} from={...} to={...} />` to replace the `.map` grid
+- **End-of-path sugar**: `<Draw arrow="->" endLabel={...} endCoordId="x-axis" />` to collapse the three-piece axis pattern into a single Draw
+- **Wedge sugar**: `<Wedge center radius from to fill stroke />`, modelled on TikZ's `pic{angle=A--B--C}`
+- **Projection target**: `{ project: 'horizontal', from, onto }`, unifying TikZ `(A |- B)` / `(A -| B)`
+- **Intersection target**: `{ intersection: [seg, ray] }`, promoting `name path + name intersections` to a first-class value
+- **Inline-span text**: extend LineSpec with a `spans` array so a single line can switch color / size / font mid-string
+- **Inline math**: hook KaTeX / MathJax into text nodes so fractions, super/subscripts, and Greek letters render from LaTeX syntax
