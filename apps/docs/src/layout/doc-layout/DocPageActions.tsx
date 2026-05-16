@@ -32,6 +32,13 @@ type DocStats = {
   readingMinutes: number;
 };
 
+/** 移动端紧凑统计：>=1000 转 K，其它原值；用于 page.docStatsCompact 的字数槽位 */
+const formatCompactCount = (count: number): string => {
+  if (count >= 10000) return `${Math.round(count / 1000)}K`;
+  if (count >= 1000) return `${(count / 1000).toFixed(1)}K`;
+  return count.toString();
+};
+
 /** 中文技术文档估算阅读速度：每分钟字符数 */
 const ZH_CHARS_PER_MINUTE = 500;
 /** 英文技术文档估算阅读速度：每分钟字符数 */
@@ -112,6 +119,12 @@ export const DocPageActions: FC<DocPageActionsProps> = props => {
             minutes: stats.readingMinutes,
             chars: stats.chars.toLocaleString(),
             components: stats.components,
+          })}
+        </span>
+        <span className="whitespace-nowrap pr-1 text-[11px] text-muted-foreground sm:hidden">
+          {t('page.docStatsCompact', {
+            minutes: stats.readingMinutes,
+            chars: formatCompactCount(stats.chars),
           })}
         </span>
         <ButtonGroup className="flex items-center">

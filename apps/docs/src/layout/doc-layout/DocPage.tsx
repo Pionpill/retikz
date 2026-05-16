@@ -93,9 +93,11 @@ export const DocPage: FC<DocPageProps> = props => {
       <div className="flex min-w-0 flex-1 justify-center">
         <div className="flex min-w-0 max-w-180 flex-1 flex-col gap-6">
           <header className="flex flex-col items-start w-full justify-between gap-2">
-            <div className="@[48rem]:flex-row @[48rem]:items-center @[48rem]:justify-between flex w-full flex-col items-start gap-3">
-              <h1 className="scroll-m-24 text-3xl font-semibold tracking-tight overflow-hidden">{title}</h1>
-              <div className="flex items-center gap-2">
+            <div className="flex w-full items-start justify-between gap-3">
+              <h1 className="scroll-m-24 min-w-0 flex-1 text-2xl @[40rem]:text-3xl font-semibold tracking-tight">
+                {title}
+              </h1>
+              <div className="flex shrink-0 items-center gap-2">
                 {stableSource != null && <DocPageActions source={stableSource} />}
                 {target.extra}
               </div>

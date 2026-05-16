@@ -108,7 +108,8 @@
     "pageCopied": "Page copied",
     "prevPage": "Previous",
     "nextPage": "Next",
-    "docStats": "About {{minutes}} min · {{chars}} chars · {{components}} components"
+    "docStats": "About {{minutes}} min · {{chars}} chars · {{components}} components",
+    "docStatsCompact": "{{minutes}} min · {{chars}} chars"
   },
   "ai": {
     "triggerLabel": "Chat RetikZ",
