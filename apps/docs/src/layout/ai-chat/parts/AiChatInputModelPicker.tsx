@@ -1,12 +1,24 @@
-import { ChevronDown, Plus } from 'lucide-react';
-import { type FC, useMemo, useState } from 'react';
+import { Bot, Plus } from 'lucide-react';
+import { type ComponentType, type FC, type SVGProps, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { ChatGptIcon, ClaudeIcon, DeepSeekIcon } from '@/components/icons';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
 import { useAiChatStore } from '@/store/useAiChatStore';
 import { MODEL_CHOICES, PROVIDER_LABEL } from '../models';
-import { PROVIDER_IDS } from '../providers/types';
+import { PROVIDER_IDS, type ProviderId } from '../providers/types';
+import { isBuiltInProviderId } from '../providers/resolve';
+
+type BrandIcon = ComponentType<SVGProps<SVGSVGElement> & { className?: string }>;
+
+/** 内置 provider 的 LLM 厂家 icon；自定义 provider 走通用 Bot 占位 */
+const PROVIDER_ICON: Record<ProviderId, BrandIcon> = {
+  deepseek: DeepSeekIcon,
+  openai: ChatGptIcon,
+  anthropic: ClaudeIcon,
+};
 
 type ProviderGroup = {
   providerId: string;
@@ -55,7 +67,10 @@ export const AiChatInputModelPicker: FC = () => {
   }, [apiKeys, customProviders, customModels]);
 
   const currentModel = models[providerId] ?? '';
-  const currentLabel = currentModel || t('ai.convModelLabel');
+  const ActiveIcon: BrandIcon = isBuiltInProviderId(providerId) ? PROVIDER_ICON[providerId] : Bot;
+  const tooltipText = currentModel
+    ? `${t('ai.convModelLabel')} · ${currentModel}`
+    : t('ai.convModelLabel');
 
   const handlePick = (nextProviderId: string, nextModel: string) => {
     if (nextProviderId !== providerId) setProvider(nextProviderId);
@@ -75,13 +90,21 @@ export const AiChatInputModelPicker: FC = () => {
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger
-        className="flex cursor-pointer items-center gap-1 rounded px-2 py-1 text-xs text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-        aria-label={t('ai.convModelLabel')}
-      >
-        <span className="font-mono">{currentLabel}</span>
-        <ChevronDown className="size-3" />
-      </PopoverTrigger>
+      <TooltipProvider delayDuration={150}>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <PopoverTrigger
+              className="flex size-7 cursor-pointer items-center justify-center rounded text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+              aria-label={t('ai.convModelLabel')}
+            >
+              <ActiveIcon className="size-3.5" />
+            </PopoverTrigger>
+          </TooltipTrigger>
+          <TooltipContent side="top">
+            <span className="font-mono text-[11px]">{tooltipText}</span>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
       <PopoverContent
         align="start"
         className="w-[280px] max-h-[400px] overflow-y-auto p-0"

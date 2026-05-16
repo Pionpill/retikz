@@ -82,7 +82,7 @@ export const ViewLayout: FC = () => {
           <SheetContent
             side="bottom"
             showCloseButton={false}
-            className="h-[80vh] gap-0 p-0"
+            className="h-[90vh] gap-0 p-0"
             onEscapeKeyDown={e => {
               // 生成中 Esc 让 AiChatPanel 的全局 keydown 自己 abort，不让 Sheet 抢去关闭
               if (isGenerating) e.preventDefault();
