@@ -5,7 +5,7 @@ description: sin / cos / tan geometry for a 30° angle — start from a circle a
 
 ## Introduction
 
-This is the final figure from the TikZ tutorial — "Karl teaching his daughter trigonometry": a unit circle plus the sin / cos / tan geometry around a 30° angle.
+This is the final figure from the [TikZ tutorial](https://tikz.dev/tutorial) — "Karl teaching his daughter trigonometry": a unit circle plus the sin / cos / tan geometry around a 30° angle.
 
 The page breaks it into 7 accumulative steps. From a single naked circle each step adds one piece and one retikz capability — by the end you have the full figure and have walked through how [Path](/core/components/draw/path) / [Draw](/core/components/draw/overview) / [Coordinate](/core/components/node/coordinate) / [Node](/core/components/node/overview) combine, plus polar positions, accumulative paths, multi-Draw coordination, and multi-line / multi-color Node text.
 
@@ -110,6 +110,8 @@ Finally, a colored info card on the right. The [Node](/core/components/node/over
 | [Coordinate](/core/components/node/coordinate) | Named x/y axis endpoints + tan intersection `t` | 2, 6 |
 
 ## Limitations
+
+The items below will be filled in over upcoming releases; everything marked 🚧 is already on the roadmap.
 
 - 🚧 **`grid` operator**: planned. The example uses `.map()` to draw 5 horizontal + 5 vertical lines instead
 - 🚧 **Picture scale + y-up axis**: planned for `<TikZ>` (`scale` + `yAxis="up"`) to let users feed math coordinates directly. The example uses local `cm()` / `polar()` helpers

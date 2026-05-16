@@ -5,7 +5,7 @@ description: 30° 角下 sin / cos / tan 的几何关系示意——从一个圆
 
 ## 引言
 
-这是 TikZ 入门教程最后那张「Karl 给女儿讲三角函数」的图：单位圆 + 30° 角下 sin / cos / tan 的几何关系示意。
+这是 [TikZ 入门教程](https://tikz.dev/tutorial) 最后那张「Karl 给女儿讲三角函数」的图：单位圆 + 30° 角下 sin / cos / tan 的几何关系示意。
 
 本页把它拆成 7 个累加 step：从一个孤零零的圆开始，每步加一点东西、对应学一点 retikz 能力——结束时既得到完整图，也走完了 [Path](/core/components/draw/path) / [Draw](/core/components/draw/overview) / [Coordinate](/core/components/node/coordinate) / [Node](/core/components/node/overview) 的组合套路，以及极坐标、累加 path、多 Draw 协同、Node 多行多色文本等高频技巧。
 
@@ -57,7 +57,7 @@ description: 30° 角下 sin / cos / tan 的几何关系示意——从一个圆
 
 x 轴和 y 轴用 [Draw](/core/components/draw/overview) 配 `arrow="->"` 一键画带箭头的线段。轴端的 `x` / `y` 文字用 [Node](/core/components/node/overview)（`stroke="none"` 去掉默认外框），独立放在轴外侧。[Coordinate](/core/components/node/coordinate) 给两个端点命名（`x-axis` / `y-axis`），后续 step 可以用 id 字符串引用——本例其实没引用到，但保留以贴合 TikZ 的 `coordinate(x axis)` 风格习惯。
 
-<ComponentPreview name="karl-circle-02-axes" size="lg" />
+<ComponentPreview name="karl-circle-02-axes" diffFrom="karl-circle-01-circle" size="lg" />
 
 ### 步骤 3：加网格 + 刻度
 
@@ -110,6 +110,8 @@ tan 线从 (1, 0) 垂直到 (1, tan30°)。原图用 TikZ 的 named path + inter
 | [Coordinate](/core/components/node/coordinate) | 命名 x/y 轴端点 + tan 交点 t | 2, 6 |
 
 ## 已知限制
+
+下面这些限制在后续版本会逐渐补齐，🚧 标记的均已在 roadmap 中。
 
 - 🚧 **grid 算子**：未来计划支持。本例用 `.map()` 手画 5 横 5 竖兜底
 - 🚧 **整图 scale + y 翻转**：未来计划在 `<TikZ>` 容器加 `scale` / `yAxis="up"`，让用户直接喂数学坐标。本例用本地 `cm()` / `polar()` helper 兜底
