@@ -65,7 +65,7 @@ x 轴和 y 轴用 [Draw](/core/components/draw/overview) 配 `arrow="->"` 一键
 
 `cm(x, y)` helper 把数学坐标（y-up）翻成 retikz 屏幕坐标（y-down）：retikz 顶层 `<TikZ>` 不接 picture-level scale + 不翻 y，所以教程类例子常自带这种 helper。
 
-<ComponentPreview name="karl-circle-03-ticks" size="lg" />
+<ComponentPreview name="karl-circle-03-ticks" diffFrom="karl-circle-02-axes" size="lg" />
 
 ### 步骤 4：画 30° 扇形 + α 标签
 
@@ -73,7 +73,7 @@ x 轴和 y 轴用 [Draw](/core/components/draw/overview) 配 `arrow="->"` 一键
 
 α 文字标签用 [Node](/core/components/node/overview) 配极坐标位置（`{ angle, radius }`）——`polar(15, 0.22)` 把它放在扇形的视觉中央。
 
-<ComponentPreview name="karl-circle-04-wedge" size="lg" />
+<ComponentPreview name="karl-circle-04-wedge" diffFrom="karl-circle-03-ticks" size="lg" />
 
 ### 步骤 5：sin α 红线 + cos α 蓝线
 
@@ -81,7 +81,7 @@ sin 是 (30°, 1cm) 垂直落到 x 轴；cos 是落点回原点。两段都靠 [
 
 注：原 TikZ 用 `(30:1cm |- x axis)` 直接表达"30°,1cm 点与 x 轴的投影交点"。retikz 暂无投影 target，几何上等于 (cos30°, 0)，手算坐标喂进去。
 
-<ComponentPreview name="karl-circle-05-sin-cos" size="lg" />
+<ComponentPreview name="karl-circle-05-sin-cos" diffFrom="karl-circle-04-wedge" size="lg" />
 
 ### 步骤 6：tan α 橙线 + 辅助射线
 
@@ -89,7 +89,7 @@ tan 线从 (1, 0) 垂直到 (1, tan30°)。原图用 TikZ 的 named path + inter
 
 注意"多个 [Draw](/core/components/draw/overview) 协同 + 共享命名锚"——这是 retikz 把"一张图的多条 path 串起来"的标准套路。
 
-<ComponentPreview name="karl-circle-06-tan" size="lg" />
+<ComponentPreview name="karl-circle-06-tan" diffFrom="karl-circle-05-sin-cos" size="lg" />
 
 ### 步骤 7：右侧多色信息说明框
 
@@ -97,17 +97,17 @@ tan 线从 (1, 0) 垂直到 (1, tan30°)。原图用 TikZ 的 named path + inter
 
 `shape="rectangle"` + `roundedCorners` + `align="left"` 把它装成一个左对齐的圆角卡片，`stroke="none"` 去外框。注意行内片段着色（同一行里某几个词换色）目前不支持，只能整行换色——见「已知限制」。
 
-<ComponentPreview name="karl-circle-07-info" size="lg" />
+<ComponentPreview name="karl-circle-07-info" diffFrom="karl-circle-06-tan" size="lg" />
 
 ## 能力
 
 | 组件 | 在本例中扮演的角色 | 主要 step |
 | --- | --- | --- |
-| [Path](/core/components/draw/path) | 单位圆主体 + 30° 扇形 | 1, 4 |
-| [Step](/core/components/draw/step) | circlePath / arc / move / line 等 step kind | 1, 4 |
-| [Draw](/core/components/draw/overview) | 坐标轴 + 网格 + 刻度短线 + sin/cos/tan 三色线 + 辅助射线 | 2, 3, 5, 6 |
-| [Node](/core/components/node/overview) | 轴端 label + 刻度文字 + α 标签 + 右侧信息框 | 2, 3, 4, 7 |
-| [Coordinate](/core/components/node/coordinate) | 命名 x/y 轴端点 + tan 交点 t | 2, 6 |
+| [Path](/core/components/draw/path) | 单位圆主体 + 30° 扇形 | [1](#步骤-1画单位圆), [4](#步骤-4画-30-扇形--α-标签) |
+| [Step](/core/components/draw/step) | circlePath / arc / move / line 等 step kind | [1](#步骤-1画单位圆), [4](#步骤-4画-30-扇形--α-标签) |
+| [Draw](/core/components/draw/overview) | 坐标轴 + 网格 + 刻度短线 + sin/cos/tan 三色线 + 辅助射线 | [2](#步骤-2加坐标轴--端点标签--命名锚), [3](#步骤-3加网格--刻度), [5](#步骤-5sin-α-红线--cos-α-蓝线), [6](#步骤-6tan-α-橙线--辅助射线) |
+| [Node](/core/components/node/overview) | 轴端 label + 刻度文字 + α 标签 + 右侧信息框 | [2](#步骤-2加坐标轴--端点标签--命名锚), [3](#步骤-3加网格--刻度), [4](#步骤-4画-30-扇形--α-标签), [7](#步骤-7右侧多色信息说明框) |
+| [Coordinate](/core/components/node/coordinate) | 命名 x/y 轴端点 + tan 交点 t | [2](#步骤-2加坐标轴--端点标签--命名锚), [6](#步骤-6tan-α-橙线--辅助射线) |
 
 ## 已知限制
 

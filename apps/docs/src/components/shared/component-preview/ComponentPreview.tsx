@@ -7,7 +7,7 @@ import type { IR } from '@retikz/core';
 import { convertReactNodeToIR } from '@retikz/react';
 
 import { ComponentRender, type ComponentRenderSource } from './ComponentRender';
-import { type AlignKey, type SizeKey, formatIR } from './_shared';
+import { type AlignKey, type SizeKey, computeUnifiedDiff, formatIR } from './_shared';
 
 /**
  * 收集 contents 下全部 demo 模块 + 源码字符串
@@ -47,6 +47,12 @@ export type ComponentPreviewProps = {
   componentClassName?: string;
   /** 隐藏底部「View Code / 源码 / IR」面板与 Dialog 右栏，只保留 demo 渲染区——用于叙述性插图 */
   hideCode?: boolean;
+  /**
+   * 另一个 demo 的 id（与 `name` 同名规则），作为 React 源码"新增行高亮"的 baseline
+   * @description 用于 Example 类多 Step 教学页：让当前 step 的代码视图自动标出相比上一 step 新增的行（浅绿底 + 左侧色条）。
+   *   baseline 同样走 `<id>.<lang>.demo.tsx` 优先、回退到 `<id>.demo.tsx` 的解析；找不到时静默关闭高亮、不报错
+   */
+  diffFrom?: string;
 };
 
 /**
@@ -54,7 +60,7 @@ export type ComponentPreviewProps = {
  * @description 只负责 demo 文件 glob 加载 + IR 派生 + "Demo not found" 兜底；卡片 / pan&zoom / 代码面板 / 放大 dialog 全部走 `ComponentRender` 核心
  */
 export const ComponentPreview: FC<ComponentPreviewProps> = props => {
-  const { name, align = 'center', size = 'md', componentClassName, hideCode = false } = props;
+  const { name, align = 'center', size = 'md', componentClassName, hideCode = false, diffFrom } = props;
   const loc = useDocLocation();
   const { i18n } = useTranslation();
   const lang = i18n.language.startsWith('zh') ? 'zh' : 'en';
@@ -65,6 +71,9 @@ export const ComponentPreview: FC<ComponentPreviewProps> = props => {
   const mod = key ? demoModules[key] : undefined;
   const rawSource = key ? demoSources[key] : undefined;
   const Component = mod?.default;
+  // baseline 走同样的 i18n 解析；找不到时 baselineRawSource = undefined，下游静默跳过染色
+  const baselineKey = segments && diffFrom ? resolveDemoKey(segments, diffFrom, lang) : null;
+  const baselineRawSource = baselineKey ? demoSources[baselineKey] : undefined;
 
   // IR 视图：调一次 Component()（demo 是无 hooks 的纯 FC）；优先看 TikZ 的 ir prop，否则把 children 喂给 convertReactNodeToIR；失败回落到错误文本；hideCode 时跳过整次计算
   const irJson = useMemo(() => {
@@ -91,7 +100,14 @@ export const ComponentPreview: FC<ComponentPreviewProps> = props => {
   }
 
   const trimmedSource = rawSource.replace(/\n$/, '');
-  const source: ComponentRenderSource | undefined = hideCode ? undefined : { react: trimmedSource, ir: irJson };
+  // baseline 也裁尾换行后再 diff——和 trimmedSource 同口径，避免末行因 `\n` 差异被误判新增 / 删除
+  const reactDiff =
+    !hideCode && baselineRawSource !== undefined
+      ? computeUnifiedDiff(baselineRawSource.replace(/\n$/, ''), trimmedSource)
+      : undefined;
+  const source: ComponentRenderSource | undefined = hideCode
+    ? undefined
+    : { react: trimmedSource, ir: irJson, reactDiff };
 
   return (
     <ComponentRender

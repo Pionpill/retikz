@@ -1,15 +1,26 @@
-import { ChevronsDownUp, ChevronsUpDown, X } from 'lucide-react';
+import { Ban, ChevronsDownUp, ChevronsUpDown, Diff, Minus, Plus, X } from 'lucide-react';
 import { type FC, useEffect, useRef, useState } from 'react';
 
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
 import { useComponentPreviewStore } from '@/store/useComponentPreviewStore';
 
 import { HighlightedCode } from '../highlight-code';
 import { ComponentDetailDialog } from './ComponentDetailDialog';
 import { CopyButton, ToolbarIconButton, ViewToggle } from './_parts';
-import { type AlignKey, type SizeKey, type SourceView, alignClass, sizeClass } from './_shared';
+import {
+  type AlignKey,
+  type DiffMode,
+  type SizeKey,
+  type SourceView,
+  type UnifiedDiff,
+  alignClass,
+  filterDiffByMode,
+  sizeClass,
+} from './_shared';
 import { PanZoomToolbar } from './PanZoomToolbar';
 import { usePanZoom } from './usePanZoom';
 
@@ -28,6 +39,11 @@ const COLLAPSE_THRESHOLD_LINES = 10;
 export type ComponentRenderSource = {
   react?: string;
   ir?: string;
+  /**
+   * 相比 baseline 的 unified diff（current 与 baseline 删除行交织后的展示代码 + 每行 kind）
+   * @description 仅在 React 视图 + 展开态下喂给 HighlightedCode：替换展示代码为 unified 版本、按 kind 给行加 `+`/`-` 字符与背景；teaser 折叠态 / IR 视图 / hideCode 跳过。Copy 始终复制真实 React 源码，不带 diff 装饰
+   */
+  reactDiff?: UnifiedDiff;
 };
 
 export type ComponentRenderProps = {
@@ -59,6 +75,9 @@ export const ComponentRender: FC<ComponentRenderProps> = props => {
   // view 仅在双视图时由用户控制；单视图情境下 effectiveView 派生兜底，避免在 effect 里同步 setState
   const [view, setView] = useState<SourceView>('react');
   const [localIsExpanded, setLocalIsExpanded] = useState<boolean | undefined>(undefined);
+  // diff 模式默认 'added'（有 reactDiff 数据时）；用户选过一次后 localDiffMode 胜出。
+  // 偏好 added/removed 优先于 full：full unified（current + 删除行交织）阅读噪声大，教学场景只看新增 / 只看删除更直观
+  const [localDiffMode, setLocalDiffMode] = useState<DiffMode | undefined>(undefined);
   const [copied, setCopied] = useState(false);
   const timerRef = useRef<number | null>(null);
   // 卡内 drag 默认关闭：local 为 undefined 时跟随全局；单卡点过 Hand 后本地胜出
@@ -95,15 +114,27 @@ export const ComponentRender: FC<ComponentRenderProps> = props => {
   const usesTeaser = hasReact && reactHasMoreLines;
   const showFull = !usesTeaser || isCodeVisible;
 
-  const fullCode = effectiveView === 'ir' ? irSource : reactSource;
+  // Copy 用的源码：始终是真实 React / IR 源码，与 diff 视觉装饰解耦
+  const copyCode = effectiveView === 'ir' ? irSource : reactSource;
+  // 默认 'added'：有 diff 数据 → 默认只看新增；用户在下拉里改过 mode 后 local 胜出
+  const hasReactDiff = source?.reactDiff !== undefined;
+  const diffMode: DiffMode = localDiffMode ?? (hasReactDiff ? 'added' : 'off');
+  // 展示代码：React 视图 + 展开态 + 有数据 + mode != off → 按 mode 过滤 unified diff；其余情况维持原行为
+  const reactDiffActive = effectiveView === 'react' && showFull && hasReactDiff && diffMode !== 'off';
+  const displayedDiff: UnifiedDiff | null =
+    reactDiffActive ? filterDiffByMode(source!.reactDiff!, diffMode) : null;
+  const fullCode = effectiveView === 'ir' ? irSource : (displayedDiff?.code ?? reactSource);
   const fullLang = effectiveView === 'ir' ? 'json' : 'tsx';
   const displayedCode = showFull ? fullCode : reactPreview;
   const displayedLang = showFull ? fullLang : 'tsx';
   const displayedLineCount = displayedCode.split('\n').length;
+  const displayedLineKinds = displayedDiff?.lineKinds;
+  // 右侧工具条 diff 下拉仅在 React 视图 + 展开态 + 有数据时出
+  const showDiffPicker = hasReactDiff && effectiveView === 'react' && showFull;
 
-  // 复制内容跟随当前视图（IR 模式复制 IR JSON，React 模式复制源码）
+  // 复制内容跟随当前视图（IR 模式复制 IR JSON，React 模式复制真实源码——即便当下显示的是 unified diff）
   const handleCopy = () => {
-    void navigator.clipboard.writeText(fullCode);
+    void navigator.clipboard.writeText(copyCode);
     setCopied(true);
     if (timerRef.current !== null) window.clearTimeout(timerRef.current);
     timerRef.current = window.setTimeout(() => setCopied(false), 3000);
@@ -160,26 +191,111 @@ export const ComponentRender: FC<ComponentRenderProps> = props => {
                 <div className="flex items-center gap-1">
                   {showViewToggle ? <ViewToggle view={view} onChange={setView} /> : null}
                 </div>
-                <div className="flex items-center gap-1">
-                  <CopyButton copied={copied} onCopy={handleCopy} />
-                  {displayedLineCount > COLLAPSE_THRESHOLD_LINES && (
-                    <ToolbarIconButton
-                      label={isExpanded ? 'Collapse' : 'Expand'}
-                      onClick={() => setLocalIsExpanded(!isExpanded)}
-                    >
-                      {isExpanded ? <ChevronsDownUp className="size-4" /> : <ChevronsUpDown className="size-4" />}
-                    </ToolbarIconButton>
-                  )}
-                  <ToolbarIconButton label="Hide source" onClick={handleHideAll}>
-                    <X className="size-4" />
-                  </ToolbarIconButton>
-                </div>
+                <TooltipProvider delayDuration={150}>
+                  <div className="flex items-center gap-1">
+                    {showDiffPicker && (
+                      <ToggleGroup
+                        type="single"
+                        variant="outline"
+                        value={diffMode}
+                        onValueChange={value => {
+                          // radix 单选 ToggleGroup 在点击已激活项时会回 ''（取消选择）；这里禁掉取消，保证 diffMode 始终有 mode
+                          if (value === 'off' || value === 'added' || value === 'removed' || value === 'full') {
+                            setLocalDiffMode(value);
+                          }
+                        }}
+                        className="mr-1"
+                      >
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <ToggleGroupItem
+                              value="off"
+                              aria-label="Diff off"
+                              className="h-7 min-w-7 cursor-pointer px-1.5"
+                            >
+                              <Ban className="size-3.5" />
+                            </ToggleGroupItem>
+                          </TooltipTrigger>
+                          <TooltipContent>Off</TooltipContent>
+                        </Tooltip>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <ToggleGroupItem
+                              value="added"
+                              aria-label="Added only"
+                              className="h-7 min-w-7 cursor-pointer px-1.5"
+                            >
+                              <Plus className="size-3.5" />
+                            </ToggleGroupItem>
+                          </TooltipTrigger>
+                          <TooltipContent>Added only</TooltipContent>
+                        </Tooltip>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <ToggleGroupItem
+                              value="removed"
+                              aria-label="Removed only"
+                              className="h-7 min-w-7 cursor-pointer px-1.5"
+                            >
+                              <Minus className="size-3.5" />
+                            </ToggleGroupItem>
+                          </TooltipTrigger>
+                          <TooltipContent>Removed only</TooltipContent>
+                        </Tooltip>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <ToggleGroupItem
+                              value="full"
+                              aria-label="Full diff"
+                              className="h-7 min-w-7 cursor-pointer px-1.5"
+                            >
+                              <Diff className="size-3.5" />
+                            </ToggleGroupItem>
+                          </TooltipTrigger>
+                          <TooltipContent>Full diff</TooltipContent>
+                        </Tooltip>
+                      </ToggleGroup>
+                    )}
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <CopyButton copied={copied} onCopy={handleCopy} />
+                      </TooltipTrigger>
+                      <TooltipContent>{copied ? 'Copied' : 'Copy'}</TooltipContent>
+                    </Tooltip>
+                    {displayedLineCount > COLLAPSE_THRESHOLD_LINES && (
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <ToolbarIconButton
+                            label={isExpanded ? 'Collapse' : 'Expand'}
+                            onClick={() => setLocalIsExpanded(!isExpanded)}
+                          >
+                            {isExpanded ? <ChevronsDownUp className="size-4" /> : <ChevronsUpDown className="size-4" />}
+                          </ToolbarIconButton>
+                        </TooltipTrigger>
+                        <TooltipContent>{isExpanded ? 'Collapse' : 'Expand'}</TooltipContent>
+                      </Tooltip>
+                    )}
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <ToolbarIconButton label="Hide source" onClick={handleHideAll}>
+                          <X className="size-4" />
+                        </ToolbarIconButton>
+                      </TooltipTrigger>
+                      <TooltipContent>Hide source</TooltipContent>
+                    </Tooltip>
+                  </div>
+                </TooltipProvider>
               </div>
               <Separator className="opacity-40" />
             </>
           ) : null}
           <div className={cn('relative', showFull && !isExpanded && COLLAPSED_CODE_MAX_H)}>
-            <HighlightedCode lang={displayedLang} code={displayedCode} showLineNumbers={displayedLineCount >= 10} />
+            <HighlightedCode
+              lang={displayedLang}
+              code={displayedCode}
+              showLineNumbers={displayedLineCount >= 10}
+              lineKinds={displayedLineKinds}
+            />
             {!showFull && (
               <div className="absolute inset-0 flex items-center justify-center">
                 <div

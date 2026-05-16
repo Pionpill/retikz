@@ -1,37 +1,42 @@
 import { Check, Copy } from 'lucide-react';
-import { type ComponentProps, type FC, type ReactNode } from 'react';
+import { forwardRef, type ComponentProps, type FC, type ReactNode } from 'react';
 
 import { JsonIcon, ReactIcon } from '@/components/icons';
-import { Button } from '@/components/ui/button';
+import { Button, buttonVariants } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
 import type { SourceView } from './_shared';
 
 /**
  * 工具条小号 ghost icon button
- * @description 统一外观（size-7、rounded-sm、muted 色）；透传 button 属性 + `pressed` toggle 态（变 secondary + aria-pressed）
+ * @description 统一外观（size-7、rounded-sm、muted 色）；透传 button 属性 + `pressed` toggle 态（变 secondary + aria-pressed）。
+ *   走 `forwardRef` + 内部渲染原生 `<button>`（绕开 shadcn `Button` FC）：项目 React 18.2 下 FC 不接 ref，让 radix `asChild`（Tooltip / DropdownMenu）能拿到 trigger DOM 做定位
  */
 export type ToolbarIconButtonProps = Omit<ComponentProps<'button'>, 'aria-label'> & {
   label: string;
   pressed?: boolean;
 };
 
-export const ToolbarIconButton: FC<ToolbarIconButtonProps> = props => {
+export const ToolbarIconButton = forwardRef<HTMLButtonElement, ToolbarIconButtonProps>((props, ref) => {
   const { label, pressed, className, children, ...rest } = props;
   return (
-    <Button
+    <button
+      ref={ref}
       type="button"
-      size="icon"
-      variant={pressed ? 'secondary' : 'ghost'}
       aria-label={label}
       aria-pressed={pressed}
-      className={cn('size-7 cursor-pointer rounded-sm text-muted-foreground', className)}
+      className={cn(
+        buttonVariants({ variant: pressed ? 'secondary' : 'ghost', size: 'icon' }),
+        'size-7 cursor-pointer rounded-sm text-muted-foreground',
+        className,
+      )}
       {...rest}
     >
       {children}
-    </Button>
+    </button>
   );
-};
+});
+ToolbarIconButton.displayName = 'ToolbarIconButton';
 
 /**
  * React / IR 视图切换的两连按钮
@@ -101,11 +106,12 @@ export type CopyButtonProps = {
   className?: string;
 };
 
-export const CopyButton: FC<CopyButtonProps> = props => {
+export const CopyButton = forwardRef<HTMLButtonElement, CopyButtonProps>((props, ref) => {
   const { copied, onCopy, className } = props;
   return (
-    <ToolbarIconButton label={copied ? 'Copied' : 'Copy'} onClick={onCopy} className={className}>
+    <ToolbarIconButton ref={ref} label={copied ? 'Copied' : 'Copy'} onClick={onCopy} className={className}>
       {copied ? <Check className="size-4" /> : <Copy className="size-4" />}
     </ToolbarIconButton>
   );
-};
+});
+CopyButton.displayName = 'CopyButton';

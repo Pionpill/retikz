@@ -8,7 +8,7 @@ import { cn } from '@/lib/utils';
 import { HighlightedCode } from '../highlight-code';
 import type { ComponentRenderSource } from './ComponentRender';
 import { CopyButton, ToolbarIconButton, ViewToggle } from './_parts';
-import { type AlignKey, type SourceView, alignClass } from './_shared';
+import { type AlignKey, type SourceView, alignClass, filterDiffByMode } from './_shared';
 import { usePanZoom } from './usePanZoom';
 
 export type ComponentDetailDialogProps = {
@@ -86,10 +86,16 @@ export const ComponentDetailDialog: FC<ComponentDetailDialogProps> = props => {
     };
   }, []);
 
-  const fullCode = view === 'ir' ? (source?.ir ?? '') : (source?.react ?? '');
+  // Copy 用的是真实 React / IR 源码；displayedCode 在 React 视图下有 reactDiff 时切换为 'added' 模式过滤后的内容
+  // Dialog 暂不出 diff mode 切换，固定 'added'（与卡片默认一致——教学场景优先看新增）
+  const copyCode = view === 'ir' ? (source?.ir ?? '') : (source?.react ?? '');
+  const reactDiffActive = view === 'react' && source?.reactDiff !== undefined;
+  const displayedDiff = reactDiffActive ? filterDiffByMode(source!.reactDiff!, 'added') : null;
+  const displayedCode = displayedDiff?.code ?? copyCode;
+  const displayedLineKinds = displayedDiff?.lineKinds;
 
   const handleCopy = () => {
-    void navigator.clipboard.writeText(fullCode);
+    void navigator.clipboard.writeText(copyCode);
     setCopied(true);
     if (copyTimerRef.current !== null) window.clearTimeout(copyTimerRef.current);
     copyTimerRef.current = window.setTimeout(() => setCopied(false), 3000);
@@ -126,7 +132,12 @@ export const ComponentDetailDialog: FC<ComponentDetailDialogProps> = props => {
                 </div>
                 {/* `[&_pre]:!text-xs` 用 ! 覆盖 react-syntax-highlighter 主题注入的 inline font-size */}
                 <div className="min-h-0 flex-1 overflow-auto [&_code]:!text-sm [&_pre]:!text-xs">
-                  <HighlightedCode lang={view === 'ir' ? 'json' : 'tsx'} code={fullCode} showLineNumbers />
+                  <HighlightedCode
+                    lang={view === 'ir' ? 'json' : 'tsx'}
+                    code={displayedCode}
+                    showLineNumbers
+                    lineKinds={displayedLineKinds}
+                  />
                 </div>
               </div>
             </ResizablePanel>
