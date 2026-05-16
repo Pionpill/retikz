@@ -15,3 +15,4 @@ export * from './AiChatInputPolishButton';
 export * from './AiChatInputSettingsPopover';
 export * from './AiChatMessage';
 export * from './AiChatSettings';
+export * from './RetikzPreview';
