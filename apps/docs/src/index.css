@@ -112,8 +112,14 @@
   * {
     @apply border-border outline-ring/50;
   }
+  /* html / body 都用 overflow-x: clip 兜底：clip 不创建滚动容器，sticky 子元素继续工作；
+     比 overflow-x: hidden 在 iOS Safari 等不一定把 body 的 overflow 传到 viewport 的浏览器上更稳 */
+  html,
   body {
-    @apply bg-background text-foreground overflow-x-hidden;
+    @apply overflow-x-clip;
+  }
+  body {
+    @apply bg-background text-foreground;
   }
   /* Tailwind v4 取消了 button cursor-pointer 的 reset；这里恢复 v3 行为以匹配主流用户预期 */
   button:not(:disabled),
