@@ -1,6 +1,6 @@
-export { ChatGptIcon } from './chatgpt';
-export { ClaudeIcon } from './claude';
-export { DeepSeekIcon } from './deepseek';
-export { GitHubIcon } from './github';
-export { JsonIcon } from './json';
-export { ReactIcon } from './react';
+export { ChatGptIcon } from './ChatGpt';
+export { ClaudeIcon } from './Claude';
+export { DeepSeekIcon } from './DeepSeek';
+export { GitHubIcon } from './GitHub';
+export { JsonIcon } from './Json';
+export { ReactIcon } from './ReactLogo';

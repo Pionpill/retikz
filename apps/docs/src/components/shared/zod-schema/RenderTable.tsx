@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { cn } from '@/lib/utils';
 
 import type { TableRow } from './types';
-import { RenderType } from './render-type';
+import { RenderType } from './RenderType';
 
 type Props = {
   rows: Array<TableRow>;

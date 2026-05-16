@@ -1,10 +1,10 @@
 import { type FC, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import { SCHEMA_REGISTRY } from '@/lib/schema-registry';
+import { SCHEMA_REGISTRY } from '@/lib/schemaRegistry';
 
-import { RenderTable } from './render-table';
-import { RenderType } from './render-type';
+import { RenderTable } from './RenderTable';
+import { RenderType } from './RenderType';
 import type { ObjectField, TableRow } from './types';
 import { walk } from './walker';
 
