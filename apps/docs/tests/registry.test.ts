@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
-import { SCHEMA_REGISTRY, lookupSchema } from '@/lib/schema-registry';
+import { SCHEMA_REGISTRY, lookupSchema } from '@/lib/schemaRegistry';
 import {
   CoordinateSchema,
   MoveStepSchema,

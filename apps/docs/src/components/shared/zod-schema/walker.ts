@@ -1,6 +1,6 @@
 import { type ZodTypeAny, z } from 'zod';
 import type { ObjectField, SchemaRepr, TypeRepr } from './types';
-import { lookupSchema } from '@/lib/schema-registry';
+import { lookupSchema } from '@/lib/schemaRegistry';
 
 /** 类型层 walker 内部实现；skipRegistry=true 时绕过注册表（顶层 alias 展开用） */
 function walkTypeImpl(schema: ZodTypeAny, skipRegistry: boolean): TypeRepr {
