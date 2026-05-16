@@ -92,6 +92,9 @@
     "description": "描述",
     "typePrefix": "类型："
   },
+  "examplePrompt": {
+    "sendToChat": "发送到 AI 对话"
+  },
   "page": {
     "copyPage": "复制页面",
     "copyMarkdown": "复制 Markdown",

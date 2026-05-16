@@ -92,6 +92,9 @@
     "description": "Description",
     "typePrefix": "Type:"
   },
+  "examplePrompt": {
+    "sendToChat": "Send to AI chat"
+  },
   "page": {
     "copyPage": "Copy Page",
     "copyMarkdown": "Copy as Markdown",
