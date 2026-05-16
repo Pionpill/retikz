@@ -52,7 +52,7 @@ export const AiChatPanel: FC = () => {
     <aside className="sticky top-0 flex h-screen flex-col bg-background">
       {!showSettings && (
         <div className="flex h-14 shrink-0 items-center gap-2 border-b border-border px-3">
-          <span className="text-sm font-medium">✦ {t('ai.triggerLabel')}</span>
+          <span className="text-sm font-medium flex items-center gap-2">{t('ai.triggerLabel')}</span>
           <div className="ml-auto flex items-center gap-1">
             <Button
               variant="ghost"
