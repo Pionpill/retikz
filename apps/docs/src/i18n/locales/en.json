@@ -93,8 +93,8 @@
     "typePrefix": "Type:"
   },
   "examplePrompt": {
-    "expandDetail": "Expand",
-    "collapseDetail": "Collapse",
+    "expandDetail": "Details",
+    "collapseDetail": "Hide details",
     "copy": "Copy",
     "sendToChat": "Send to AI chat",
     "copiedToast": "Prompt copied (with retikz context)",
@@ -157,6 +157,11 @@
     "diagramFormatDescAuto": "AI picks: JSX for simple geometry, IR for complex topology",
     "diagramFormatDescIR": "Force IR JSON: compact, good for large diagrams",
     "diagramFormatDescTsx": "Force retikz-tsx: readable, copy-paste-able as demo",
+    "diagramErrorIr": "IR JSON parse failed",
+    "diagramErrorJsx": "JSX → IR failed",
+    "diagramViewSource": "View source",
+    "diagramHideSource": "Hide source",
+    "diagramGenerating": "{{lang}} generating…",
     "settingsAnthropicWarning": "Enabling Anthropic acknowledges that you accept running with dangerouslyAllowBrowser on a trusted personal device.",
     "settingsNetworkHint": "OpenAI / Anthropic direct connections can be unstable in some regions; consider DeepSeek as default in CN",
     "settingsCustomProvidersLabel": "Custom Providers",

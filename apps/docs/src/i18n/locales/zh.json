@@ -93,8 +93,8 @@
     "typePrefix": "类型："
   },
   "examplePrompt": {
-    "expandDetail": "展开",
-    "collapseDetail": "收起",
+    "expandDetail": "详细内容",
+    "collapseDetail": "收起详细内容",
     "copy": "复制",
     "sendToChat": "发送到 AI 对话",
     "copiedToast": "已复制 prompt（含 retikz 上下文）",
@@ -157,6 +157,11 @@
     "diagramFormatDescAuto": "AI 自选：简单几何用 JSX，复杂拓扑用 IR",
     "diagramFormatDescIR": "强制 IR JSON：紧凑，适合大图",
     "diagramFormatDescTsx": "强制 retikz-tsx：直观，可直接复制成 demo",
+    "diagramErrorIr": "IR JSON 解析失败",
+    "diagramErrorJsx": "JSX → IR 失败",
+    "diagramViewSource": "查看原文",
+    "diagramHideSource": "收起原文",
+    "diagramGenerating": "{{lang}} 生成中…",
     "settingsAnthropicWarning": "启用 Anthropic 即表示你确认在受信任的个人设备上使用自己的 key（dangerouslyAllowBrowser）",
     "settingsNetworkHint": "国区直连 OpenAI / Anthropic 不稳，建议优先 DeepSeek",
     "settingsCustomProvidersLabel": "Custom Providers",

@@ -6,6 +6,7 @@ import {
   useMemo,
   useState,
 } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import { CodeBlock } from '@/components/shared/highlight-code';
 import {
@@ -30,7 +31,7 @@ export type RetikzPreviewProps = {
 
 type Resolved =
   | { ok: true; Component: FC; renderSource: ComponentRenderSource }
-  | { ok: false; error: string };
+  | { ok: false; errorKind: 'ir' | 'tsx'; errorDetail: string };
 
 const resolveIr = (source: string): Resolved => {
   let ir: IR;
@@ -39,7 +40,8 @@ const resolveIr = (source: string): Resolved => {
   } catch (err) {
     return {
       ok: false,
-      error: `IR JSON 解析失败：${err instanceof Error ? err.message : String(err)}`,
+      errorKind: 'ir',
+      errorDetail: err instanceof Error ? err.message : String(err),
     };
   }
   const Component: FC = () => <TikZ ir={ir} />;
@@ -49,7 +51,7 @@ const resolveIr = (source: string): Resolved => {
 
 const resolveTsx = (source: string): Resolved => {
   const parsed = parseRetikzJsx(source);
-  if (!parsed.ok) return { ok: false, error: `JSX → IR 失败：${parsed.error}` };
+  if (!parsed.ok) return { ok: false, errorKind: 'tsx', errorDetail: parsed.error };
   const element = parsed.element as ReactElement<{ children?: ReactNode }>;
   const Component: FC = () => element;
   let irJson: string;
@@ -74,7 +76,14 @@ export const RetikzPreview: FC<RetikzPreviewProps> = props => {
   );
 
   if (!resolved.ok) {
-    return <RetikzPreviewError format={format} source={source} error={resolved.error} />;
+    return (
+      <RetikzPreviewError
+        format={format}
+        source={source}
+        errorKind={resolved.errorKind}
+        errorDetail={resolved.errorDetail}
+      />
+    );
   }
   return (
     <ComponentRender
@@ -90,18 +99,22 @@ export const RetikzPreview: FC<RetikzPreviewProps> = props => {
 type RetikzPreviewErrorProps = {
   format: RetikzPreviewFormat;
   source: string;
-  error: string;
+  errorKind: 'ir' | 'tsx';
+  /** 解析器原始错误细节；目前为中文（acorn 报的解析错为英文），i18n 包外层前缀 */
+  errorDetail: string;
 };
 
 const RetikzPreviewError: FC<RetikzPreviewErrorProps> = props => {
-  const { format, source, error } = props;
+  const { format, source, errorKind, errorDetail } = props;
+  const { t } = useTranslation();
   const [expanded, setExpanded] = useState(false);
   const lang = format === 'ir' ? 'json' : 'tsx';
+  const prefix = errorKind === 'ir' ? t('ai.diagramErrorIr') : t('ai.diagramErrorJsx');
   return (
     <div className="my-3 overflow-hidden rounded-lg border border-destructive/30 bg-destructive/5">
       <div className="flex items-start gap-2 px-3 py-2 text-xs text-destructive">
         <AlertCircle className="mt-0.5 size-3.5 shrink-0" />
-        <span className="break-all">{error}</span>
+        <span className="break-all">{`${prefix}：${errorDetail}`}</span>
       </div>
       <div className="border-t border-destructive/20 px-2 py-1">
         <Button
@@ -114,7 +127,7 @@ const RetikzPreviewError: FC<RetikzPreviewErrorProps> = props => {
           onClick={() => setExpanded(prev => !prev)}
         >
           {expanded ? <ChevronDown className="size-3" /> : <ChevronRight className="size-3" />}
-          {expanded ? 'Hide source' : 'View source'}
+          {expanded ? t('ai.diagramHideSource') : t('ai.diagramViewSource')}
         </Button>
         {expanded ? (
           <div className="mt-1">
@@ -132,13 +145,14 @@ const RetikzPreviewError: FC<RetikzPreviewErrorProps> = props => {
  */
 export const RetikzPreviewPending: FC<{ format: RetikzPreviewFormat }> = props => {
   const { format } = props;
+  const { t } = useTranslation();
   return (
     <div className="my-3 overflow-hidden rounded-xl border">
       <div className="relative flex h-44 w-full items-center justify-center overflow-hidden bg-muted/20 p-6 sm:h-56 sm:p-10">
         {/* Tailwind animate-pulse 直接做最简 shimmer，无需自定义 keyframes */}
         <div className="absolute inset-0 animate-pulse bg-muted/40" />
         <span className="relative font-mono text-xs text-muted-foreground">
-          {`retikz-${format} generating…`}
+          {t('ai.diagramGenerating', { lang: `retikz-${format}` })}
         </span>
       </div>
     </div>
