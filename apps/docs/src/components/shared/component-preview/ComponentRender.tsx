@@ -1,4 +1,4 @@
-import { Ban, ChevronsDownUp, ChevronsUpDown, Diff, Minus, Plus, X } from 'lucide-react';
+import { Ban, ChevronsDownUp, ChevronsUpDown, Diff, Minus, Plus, Sparkles, X } from 'lucide-react';
 import { type FC, useEffect, useRef, useState } from 'react';
 
 import { Button } from '@/components/ui/button';
@@ -6,6 +6,7 @@ import { Separator } from '@/components/ui/separator';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
+import { useAiChatStore } from '@/store/useAiChatStore';
 import { useComponentPreviewStore } from '@/store/useComponentPreviewStore';
 
 import { HighlightedCode } from '../highlight-code';
@@ -23,6 +24,35 @@ import {
 } from './_shared';
 import { PanZoomToolbar } from './PanZoomToolbar';
 import { usePanZoom } from './usePanZoom';
+
+/**
+ * 反查最近的前置 heading：从当前节点出发往左找兄弟，找不到就上一层继续
+ * @description MDX 渲染产物里 ComponentPreview 卡和 h2/h3 标题是同级兄弟节点（被 article 容器包裹），常规一两轮回溯就能命中；找不到（页面首部无标题）返回 null
+ */
+const findPrecedingHeading = (el: HTMLElement | null): HTMLElement | null => {
+  if (!el) return null;
+  let sib: Element | null = el.previousElementSibling;
+  while (sib) {
+    if (/^H[1-6]$/.test(sib.tagName)) return sib as HTMLElement;
+    sib = sib.previousElementSibling;
+  }
+  return el.parentElement ? findPrecedingHeading(el.parentElement) : null;
+};
+
+const buildAskAiPrompt = (lang: 'zh' | 'en', pageTitle: string, heading: string, demoName: string): string => {
+  if (lang === 'en') {
+    const ref = heading ? `the "${heading}" section of ${pageTitle}` : pageTitle;
+    return `Based on ${ref}, walk me through the \`${demoName}\` example:
+
+- Implementation rationale + key retikz APIs used
+- How could I modify or extend it`;
+  }
+  const ref = heading ? `${pageTitle}「${heading}」小节` : pageTitle;
+  return `请基于${ref}里的 \`${demoName}\` 示例：
+
+- 解释它的实现思路 + 关键 retikz API 用法
+- 可以怎么改 / 怎么扩展`;
+};
 
 /** 折叠态显示前几行 */
 const PREVIEW_MAX_LINES = 3;
@@ -87,6 +117,11 @@ export const ComponentRender: FC<ComponentRenderProps> = props => {
   const [isMaximized, setIsMaximized] = useState(false);
   const { transform, isDragging, panBy, zoomBy, resetTransform, isTransformed, transformStyle, beginDrag } =
     usePanZoom();
+  // outer card ref：Ask AI 时反查最近前置 heading 拼 prompt 用
+  const containerRef = useRef<HTMLDivElement>(null);
+  const setAiOpen = useAiChatStore(s => s.setOpen);
+  const fillAiDraft = useAiChatStore(s => s.fillDraftAndFocus);
+  const aiCurrentPage = useAiChatStore(s => s.currentPage);
 
   const globalHideCode = useComponentPreviewStore(s => s.hideCode);
   const globalIsExpand = useComponentPreviewStore(s => s.isExpand);
@@ -146,11 +181,21 @@ export const ComponentRender: FC<ComponentRenderProps> = props => {
     setView('react');
   };
 
+  const handleAskAi = () => {
+    const heading = findPrecedingHeading(containerRef.current);
+    const lang = aiCurrentPage?.lang ?? 'zh';
+    const pageTitle = aiCurrentPage?.title ?? '';
+    const headingText = heading?.textContent?.trim() ?? '';
+    const prompt = buildAskAiPrompt(lang, pageTitle, headingText, name);
+    setAiOpen(true);
+    fillAiDraft(prompt);
+  };
+
   const cardDragCursor = dragEnabled ? (isDragging ? 'cursor-grabbing' : 'cursor-grab') : '';
   const showViewToggle = hasReact && hasIr;
 
   return (
-    <div className="my-6 overflow-hidden rounded-xl border">
+    <div ref={containerRef} className="my-6 overflow-hidden rounded-xl border">
       <div
         className={cn(
           'group/preview relative flex w-full justify-center overflow-hidden p-6 sm:p-10 select-none',
@@ -261,6 +306,14 @@ export const ComponentRender: FC<ComponentRenderProps> = props => {
                         <CopyButton copied={copied} onCopy={handleCopy} />
                       </TooltipTrigger>
                       <TooltipContent>{copied ? 'Copied' : 'Copy'}</TooltipContent>
+                    </Tooltip>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <ToolbarIconButton label="Ask AI" onClick={handleAskAi}>
+                          <Sparkles className="size-4" />
+                        </ToolbarIconButton>
+                      </TooltipTrigger>
+                      <TooltipContent>Ask AI</TooltipContent>
                     </Tooltip>
                     {displayedLineCount > COLLAPSE_THRESHOLD_LINES && (
                       <Tooltip>
