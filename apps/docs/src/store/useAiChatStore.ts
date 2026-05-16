@@ -47,6 +47,10 @@ type EphemeralState = {
   contextSelection: Array<ContextItem>;
   /** 当前进行中的请求 AbortController；abort() 会触发 stream 提前结束 */
   abortController: AbortController | null;
+  /** 输入框 draft 文本，提升到 store 让外部（空态 suggestions / 命令）可写入 */
+  draft: string;
+  /** 外部写入 draft 后请求 input focus 的一次性 flag；input 监听后立即清掉 */
+  focusInputNonce: number;
 };
 
 type Actions = {
@@ -71,6 +75,11 @@ type Actions = {
   send: (input: string) => Promise<void>;
   abort: () => void;
   clearConversation: () => void;
+  /** 主动压缩对话历史：让当前模型把 messages 总结成一段，替换 messages 并重置 usage */
+  compressConversation: () => Promise<void>;
+  setDraft: (text: string) => void;
+  /** 写入 draft 并触发 input focus —— 给空态 suggestion 点击用 */
+  fillDraftAndFocus: (text: string) => void;
 };
 
 const INITIAL_USAGE = { input: 0, output: 0, cacheRead: 0 };
@@ -85,6 +94,8 @@ const INITIAL_EPHEMERAL: EphemeralState = {
   currentPage: null,
   contextSelection: [],
   abortController: null,
+  draft: '',
+  focusInputNonce: 0,
 };
 
 /**
@@ -232,6 +243,67 @@ export const useAiChatStore = create<PersistedState & EphemeralState & Actions>(
       },
 
       clearConversation: () => set({ messages: [], error: null, usage: INITIAL_USAGE }),
+
+      setDraft: text => set({ draft: text }),
+      fillDraftAndFocus: text => set(s => ({ draft: text, focusInputNonce: s.focusInputNonce + 1 })),
+
+      compressConversation: async () => {
+        const state = get();
+        if (state.isGenerating) return;
+        if (state.messages.length === 0) return;
+        const resolved = resolveProvider(state.providerId, state);
+        if (!resolved || !resolved.apiKey) return;
+        const model = state.models[state.providerId];
+        if (!model) return;
+
+        const lang = state.currentPage?.lang ?? 'zh';
+        const instruction =
+          lang === 'en'
+            ? 'Summarize the conversation above in 200-400 words. Preserve key facts, decisions, code snippets references, and unresolved questions. Your summary will replace the entire conversation history, so write it as if you (assistant) were recalling what was discussed.'
+            : '把以上对话总结成 200-400 字的摘要。保留关键事实、结论、代码 / 文件引用以及未解决的问题。摘要将替换整段对话历史，请以你（assistant）回忆"刚才谈了什么"的口吻写。';
+
+        const askMessage: ChatMessage = { role: 'user', content: instruction };
+        const controller = new AbortController();
+        set({ isGenerating: true, error: null, abortController: controller });
+
+        let summary = '';
+        try {
+          for await (const chunk of resolved.chat({
+            apiKey: resolved.apiKey,
+            model,
+            system:
+              lang === 'en'
+                ? 'You are summarizing a chat conversation. Respond with the summary text only, no preamble.'
+                : '你正在总结一段对话。直接给出摘要文本，不要加前言或后记。',
+            messages: [...state.messages, askMessage],
+            signal: controller.signal,
+            baseUrl: resolved.baseUrl,
+          })) {
+            if (controller.signal.aborted) break;
+            if (chunk.type === 'delta') summary += chunk.text;
+            else if (chunk.type === 'error') {
+              set({ error: { kind: chunk.kind, message: chunk.message } });
+              return;
+            }
+          }
+        } catch (e) {
+          if ((e as { name?: string }).name !== 'AbortError') {
+            set({ error: { kind: 'unknown', message: (e as Error).message } });
+          }
+        } finally {
+          const trimmed = summary.trim();
+          if (trimmed.length > 0) {
+            set({
+              messages: [{ role: 'assistant', content: trimmed }],
+              usage: INITIAL_USAGE,
+              isGenerating: false,
+              abortController: null,
+            });
+          } else {
+            set({ isGenerating: false, abortController: null });
+          }
+        }
+      },
     }),
     {
       name: 'retikz-ai-chat',

@@ -1,5 +1,5 @@
 import { Send } from 'lucide-react';
-import { type FC, type KeyboardEvent, useCallback, useEffect, useRef, useState } from 'react';
+import { type FC, type KeyboardEvent, useCallback, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/components/ui/button';
@@ -16,14 +16,17 @@ const MAX_TEXTAREA_HEIGHT = 72;
 /**
  * AI Chat 输入框（Copilot 风格三段式）
  * @description prompt 框 bg-muted 区分：① chips 行 ② textarea（1 行起、3 行封顶滚动）
- *   ③ pickers + ghost Send。下方 meta 行：Esc 提示 + 上下文圆环
+ *   ③ pickers + ghost Send。下方 meta 行：Esc 提示 + 上下文圆环。
+ *   draft / focusInputNonce 来自 store，让空态 suggestion 可写入并聚焦
  */
 export const AiChatInput: FC = () => {
   const { t } = useTranslation();
   const send = useAiChatStore(s => s.send);
   const isGenerating = useAiChatStore(s => s.isGenerating);
+  const draft = useAiChatStore(s => s.draft);
+  const setDraft = useAiChatStore(s => s.setDraft);
+  const focusInputNonce = useAiChatStore(s => s.focusInputNonce);
 
-  const [text, setText] = useState('');
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
 
   // 自适应行高 —— 1 行起、最高 3 行，超出后内部滚动；滚动条按项目约定隐藏
@@ -32,15 +35,25 @@ export const AiChatInput: FC = () => {
     if (!el) return;
     el.style.height = 'auto';
     el.style.height = `${Math.min(el.scrollHeight, MAX_TEXTAREA_HEIGHT)}px`;
-  }, [text]);
+  }, [draft]);
+
+  // 外部触发 focus（suggestion 点击等场景）：focusInputNonce 变化即聚焦并把光标置末尾
+  useEffect(() => {
+    if (focusInputNonce === 0) return;
+    const el = textareaRef.current;
+    if (!el) return;
+    el.focus();
+    const end = el.value.length;
+    el.setSelectionRange(end, end);
+  }, [focusInputNonce]);
 
   const handleSubmit = useCallback(() => {
     if (isGenerating) return;
-    const value = text.trim();
+    const value = draft.trim();
     if (!value) return;
-    setText('');
+    setDraft('');
     void send(value);
-  }, [isGenerating, send, text]);
+  }, [isGenerating, send, draft, setDraft]);
 
   const handleKeyDown = useCallback(
     (e: KeyboardEvent<HTMLTextAreaElement>) => {
@@ -52,7 +65,7 @@ export const AiChatInput: FC = () => {
     [handleSubmit],
   );
 
-  const sendDisabled = isGenerating || text.trim().length === 0;
+  const sendDisabled = isGenerating || draft.trim().length === 0;
 
   return (
     <div className="border-t border-border bg-background px-3 pt-2 pb-3">
@@ -62,8 +75,8 @@ export const AiChatInput: FC = () => {
         <div className="px-3 pb-1">
           <textarea
             ref={textareaRef}
-            value={text}
-            onChange={e => setText(e.target.value)}
+            value={draft}
+            onChange={e => setDraft(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder={t('ai.convPlaceholder')}
             rows={1}

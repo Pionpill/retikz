@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { useAiChatStore } from '@/store/useAiChatStore';
 import type { ChatErrorKind } from '../providers/types';
+import { AiChatConversationEmpty } from './AiChatConversationEmpty';
 import { AiChatInput } from './AiChatInput';
 import { AiChatMessage } from './AiChatMessage';
 
@@ -58,9 +59,7 @@ export const AiChatConversation: FC = () => {
 
       <div ref={scrollRef} className="flex-1 overflow-y-auto px-3 py-3">
         {messages.length === 0 && !error ? (
-          <div className="flex h-full items-center justify-center px-4 text-center text-sm text-muted-foreground">
-            {t('ai.convEmptyHint')}
-          </div>
+          <AiChatConversationEmpty />
         ) : (
           <div className="flex flex-col gap-3">
             {messages.map((m, idx) => (
