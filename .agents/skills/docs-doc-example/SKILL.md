@@ -191,13 +191,29 @@ karl-circle-07-info.en.demo.tsx         # 同上 en
 
 | 组件 | 在本例中扮演的角色 | 主要 step |
 | --- | --- | --- |
-| [Path](/core/components/draw/path) | 单位圆主体 + 30° 扇形 | 1, 4 |
-| [Draw](/core/components/draw/overview) | 坐标轴 + sin/cos/tan 三色线 | 2, 5, 6 |
-| [Node](/core/components/node/overview) | 轴端点 label + 刻度文字 + α 标签 + 信息框 | 2, 3, 4, 7 |
-| [Coordinate](/core/components/node/coordinate) | 命名 x/y 轴端点 + tan 交点 t | 2, 6 |
+| [Path](/core/components/draw/path) | 单位圆主体 + 30° 扇形 | [1](#步骤-1画单位圆), [4](#步骤-4画-30-扇形--α-标签) |
+| [Draw](/core/components/draw/overview) | 坐标轴 + sin/cos/tan 三色线 | [2](#步骤-2加坐标轴--端点标签--命名锚), [5](#步骤-5sin-α-红线--cos-α-蓝线), [6](#步骤-6tan-α-橙线--辅助射线) |
+| [Node](/core/components/node/overview) | 轴端点 label + 刻度文字 + α 标签 + 信息框 | [2](#步骤-2加坐标轴--端点标签--命名锚), [3](#步骤-3加网格--刻度), [4](#步骤-4画-30-扇形--α-标签), [7](#步骤-7右侧多色信息说明框) |
+| [Coordinate](/core/components/node/coordinate) | 命名 x/y 轴端点 + tan 交点 t | [2](#步骤-2加坐标轴--端点标签--命名锚), [6](#步骤-6tan-α-橙线--辅助射线) |
 ```
 
-每行第一列必须是 markdown link 跳到对应 components/ 页——示例页面定位是 showcase + 教学，跳走查 API 是天然动作。
+两条强约束：
+
+- **第一列**必须是 markdown link 跳到对应 `components/` 页——示例页面定位是 showcase + 教学，跳走查 API 是天然动作
+- **第三列**每个 step 数字必须是页内锚链接，跳到「过程」节里对应 H3——读者从「能力」反查"这个组件在第几步出现"时一键跳过去，比让他自己滚屏找快得多
+
+锚 slug = rehype-slug 对 H3 标题文本运行 [github-slugger](https://github.com/Flet/github-slugger) 的输出。中文 / 含 + - / 全角符号的 H3，slug 不直观；写之前用一行 node 跑一遍：
+
+```bash
+cd apps/docs && node -e "import('github-slugger').then(({default: S}) => { const s = new S(); console.log(s.slug('步骤 4：画 30° 扇形 + α 标签')); })"
+# => 步骤-4画-30-扇形--α-标签
+```
+
+要点：
+
+- 全角冒号 `：`、`+`、`°`、em-dash `—`、半角冒号 `:` 一律被剥掉
+- 空格 ` ` → `-`；被剥掉的标点周围的空格仍各自变 `-`，所以 ` + ` 会变成 `--`（两个连字符）
+- 中文字符、希腊字母（`α`）、半角连字符 `-` 都保留
 
 ## Limitations 节
 
@@ -246,5 +262,6 @@ karl-circle-07-info.en.demo.tsx         # 同上 en
 - **正文里散落 TikZ 对照** —— TikZ 关系一律走 `<Comparison>`（principle 已规定）；正文专心讲 retikz
 - **Limitations 当成「未来 roadmap」写** —— 只列**本例触到的** gap；与本例无关的 roadmap 别塞进来
 - **能力节列表里组件名不带 link** —— 第一列必须 markdown link 跳到对应 components/ 页
+- **能力节第三列 step 数字裸写** —— 必须改写成 `[N](#<H3-slug>)` 锚链接，读者能从能力反向跳到对应 step；中文 H3 的 slug 别手写、用 github-slugger 跑一下确认
 - **Prompt 给精确坐标 / 列 retikz 组件清单** —— prompt 只描述意图与视觉约束，不写"用 Path / Node / ..."这种 API 提示；让 LLM 自由发挥
 - **`<ExamplePrompt>` 写了 textarea / 编辑** —— 它现在是**只读** + 复制 / 发送双按钮，没有就地编辑路径；要改 prompt 在 AI 面板里改

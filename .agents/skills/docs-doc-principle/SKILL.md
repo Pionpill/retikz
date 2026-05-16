@@ -415,3 +415,17 @@ union / array 内部的 object 不会被平铺（如 `NodeSchema.label` 是 unio
 pnpm --filter @retikz/docs build   # 类型 + 产物，能挡 i18n 缺 key、label 类型错
 pnpm --filter @retikz/docs dev     # 浏览器打开新页，确认中英、demo、TOC、菜单都对
 ```
+
+### 超链接自检
+
+写完文档（含改动 / 新页）后**逐条复核所有超链接是否可达**，TS / build / 自动测试都挡不住，断链一旦出现是用户体验灾难。重点检查：
+
+| 类别 | 检查方法 |
+| --- | --- |
+| **页内锚链接**（`#xxx`） | 每一条都跳得到对应 H1-H3；CJK / 含 `+ - ° :` 的标题别手写 slug，用 github-slugger 跑一下：`cd apps/docs && node -e "import('github-slugger').then(({default:S})=>console.log(new S().slug('<标题>')))"` |
+| **站内路径**（`/core/...`） | 路径段必须命中 `data/<module>.ts` 里实际注册的 `{ id }` —— 改名 / 重组目录后所有外部文档 link 一起改；最简单做法是搜全仓 `grep -r "/core/old-path"` |
+| **GitHub URL** | 仓库根 / branch / 路径都对（默认 `main`）；本地复制 GitHub URL 时容易把 `blob/<commit>/...` 黏进去——必须改回 `blob/main/...` |
+| **能力节 step 锚** | 示例页能力节第三列每个 `[N](#<H3-slug>)` 都要跳到对应 step H3，slug 与 github-slugger 输出一致 |
+| **components/ 跳转** | 每条 `[X](/core/components/...)` 都落到现有页 —— 组件改名 / 移位时一起改 |
+
+zh 和 en 两份 mdx **分别**检查（很多链接在两边目标 slug 不同）。改完批量改动后用浏览器开页直接挨个点是最稳的兜底。
