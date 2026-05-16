@@ -4,6 +4,9 @@ export type ContextMode = 'lean' | 'balanced' | 'heavy';
 
 export type Lang = 'zh' | 'en';
 
+/** AI 出图首选格式：auto 让模型自选；ir 强制 IR JSON；tsx 强制 retikz-tsx */
+export type DiagramFormatPreference = 'auto' | 'ir' | 'tsx';
+
 export type CurrentPage = {
   title: string;
   mdx: string;
@@ -19,22 +22,84 @@ export type ExtraContextItem = {
   title: string;
 };
 
+const diagramProtocolZh = (preference: DiagramFormatPreference): string => {
+  const intro = `## 画图协议（retikz）
+
+需要画图时用下面两种围栏代码块之一；除此之外的回答正常用 markdown。
+
+\`\`\`retikz-ir
+{ "children": [ { "type": "node", "position": { "x": 0, "y": 0 }, "text": "A" } ] }
+\`\`\`
+IR JSON：直接给 @retikz/core 的 IR schema（字段名一律全称，如 \`position\` / \`direction\` / \`startAngle\`，不写 \`pos\` / \`dir\` / \`start\`）。
+
+\`\`\`retikz-tsx
+<TikZ>
+  <Node position={{ x: 0, y: 0 }}>A</Node>
+  <Draw from="a" to="b" />
+</TikZ>
+\`\`\`
+JSX：仅允许 8 个 retikz 组件 — \`TikZ\` / \`Node\` / \`Path\` / \`Step\` / \`Text\` / \`Coordinate\` / \`Draw\` / \`EdgeLabel\`。
+props 只能是字面量（字符串 / 数字 / 布尔 / null / 数组字面量 / 对象字面量）；**禁止** 变量引用、表达式、\`.map()\`、hooks、模板插值、spread。`;
+
+  const directive =
+    preference === 'ir'
+      ? '\n\n**用户已选"仅 IR"**：只输出 ```retikz-ir```，不要给 retikz-tsx。'
+      : preference === 'tsx'
+        ? '\n\n**用户已选"仅 JSX"**：只输出 ```retikz-tsx```，不要给 retikz-ir。'
+        : '\n\n**用户选择 Auto**：简单几何用 ```retikz-tsx``` 更易读；复杂 / 嵌套深 / 节点多的拓扑用 ```retikz-ir``` 更紧凑。';
+
+  return intro + directive;
+};
+
+const diagramProtocolEn = (preference: DiagramFormatPreference): string => {
+  const intro = `## Diagram protocol (retikz)
+
+When you need to draw a diagram, use one of the two fenced blocks below; otherwise answer normally with markdown.
+
+\`\`\`retikz-ir
+{ "children": [ { "type": "node", "position": { "x": 0, "y": 0 }, "text": "A" } ] }
+\`\`\`
+IR JSON: feed @retikz/core IR schema directly. Field names are spelled out in full (\`position\`, \`direction\`, \`startAngle\` — never abbreviations like \`pos\` / \`dir\` / \`start\`).
+
+\`\`\`retikz-tsx
+<TikZ>
+  <Node position={{ x: 0, y: 0 }}>A</Node>
+  <Draw from="a" to="b" />
+</TikZ>
+\`\`\`
+JSX: only the 8 retikz components are allowed — \`TikZ\` / \`Node\` / \`Path\` / \`Step\` / \`Text\` / \`Coordinate\` / \`Draw\` / \`EdgeLabel\`.
+Props must be literals (string / number / boolean / null / array literal / object literal). **No** variable references, expressions, \`.map()\`, hooks, template interpolation, or spread.`;
+
+  const directive =
+    preference === 'ir'
+      ? '\n\n**User chose "IR only"**: only output ```retikz-ir```, never retikz-tsx.'
+      : preference === 'tsx'
+        ? '\n\n**User chose "JSX only"**: only output ```retikz-tsx```, never retikz-ir.'
+        : '\n\n**User chose Auto**: prefer ```retikz-tsx``` for simple geometry (more readable); prefer ```retikz-ir``` for complex / deeply nested / many-node topologies (more compact).';
+
+  return intro + directive;
+};
+
 /**
  * 按 contextMode 拼 system message
  * @description lean=只送当前页；balanced=当前页 + 全站 llms.txt 索引；heavy=v1 暂同 balanced。
  *   extras（用户通过 Add Context 选中的额外页面）以"参考清单"形式附在末尾——v1 不抓 mdx，
  *   仅提示模型用户关心哪些页面；TODO-2 阶段再做实际 mdx 注入。
+ *   diagramFormatPreference 决定是否拼接 retikz 画图协议段（auto/ir/tsx 都拼，无是关闭开关）
  */
 export const composeSystem = async (
   mode: ContextMode,
   page: CurrentPage | null,
   extras: ReadonlyArray<ExtraContextItem> = [],
+  diagramFormatPreference: DiagramFormatPreference = 'auto',
 ): Promise<string> => {
   const lang = page?.lang ?? 'zh';
   const intro =
     lang === 'zh'
       ? '你是 retikz（TikZ React 适配库）的文档助手。基于下面提供的当前页内容回答用户的问题，回答用中文。需要引用其他文档页时给出对应的 markdown 链接，链接 path 用站内绝对路径（以 / 开头）。'
       : 'You are a documentation assistant for retikz (a TikZ React adapter). Answer user questions based on the current page content provided below. Respond in English. When referencing other documentation pages, include a markdown link using a site-relative path (starting with /).';
+
+  const diagramBlock = '\n\n' + (lang === 'zh' ? diagramProtocolZh(diagramFormatPreference) : diagramProtocolEn(diagramFormatPreference));
 
   const pageBlock = page ? `\n\n## Current page: ${page.title}\n\n${page.mdx}` : '';
 
@@ -44,9 +109,9 @@ export const composeSystem = async (
         .join('\n')}`
     : '';
 
-  if (mode === 'lean') return intro + pageBlock + extrasBlock;
+  if (mode === 'lean') return intro + diagramBlock + pageBlock + extrasBlock;
 
   const llms = await fetchLlmsTxt();
-  if (!llms) return intro + pageBlock + extrasBlock;
-  return `${intro}${pageBlock}\n\n## Site index (other pages)\n\n${llms}${extrasBlock}`;
+  if (!llms) return intro + diagramBlock + pageBlock + extrasBlock;
+  return `${intro}${diagramBlock}${pageBlock}\n\n## Site index (other pages)\n\n${llms}${extrasBlock}`;
 };

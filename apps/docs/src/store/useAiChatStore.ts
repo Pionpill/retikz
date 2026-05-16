@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
-import type { ContextMode, CurrentPage } from '@/layout/ai-chat/context';
+import type { ContextMode, CurrentPage, DiagramFormatPreference } from '@/layout/ai-chat/context';
 import { composeSystem } from '@/layout/ai-chat/context';
 import { DEFAULT_MODELS } from '@/layout/ai-chat/models';
 import type { CustomProvider } from '@/layout/ai-chat/providers/resolve';
@@ -33,6 +33,8 @@ type PersistedState = {
   /** 用户添加的自定义 provider；按 id 持久化 */
   customProviders: Record<string, CustomProvider>;
   contextMode: ContextMode;
+  /** AI 出图首选格式：auto 让模型自选；ir / tsx 强制单选 */
+  diagramFormatPreference: DiagramFormatPreference;
 };
 
 type EphemeralState = {
@@ -64,6 +66,7 @@ type Actions = {
   setModel: (providerId: string, model: string) => void;
   setBaseUrl: (id: ProviderId, baseUrl: string) => void;
   setContextMode: (mode: ContextMode) => void;
+  setDiagramFormatPreference: (pref: DiagramFormatPreference) => void;
   /** 把一个用户输入的 model 名追加到 customModels[providerId]（去重） */
   addCustomModel: (providerId: string, model: string) => void;
   /** 新增 / 更新一个自定义 provider；若该 provider 的 model 未设置过，默认选 models[0] */
@@ -120,6 +123,7 @@ export const useAiChatStore = create<PersistedState & EphemeralState & Actions>(
       customModels: {},
       customProviders: {},
       contextMode: 'balanced',
+      diagramFormatPreference: 'auto',
 
       ...INITIAL_EPHEMERAL,
 
@@ -132,6 +136,7 @@ export const useAiChatStore = create<PersistedState & EphemeralState & Actions>(
       setModel: (providerId, model) => set(s => ({ models: { ...s.models, [providerId]: model } })),
       setBaseUrl: (id, baseUrl) => set(s => ({ baseUrls: { ...s.baseUrls, [id]: baseUrl } })),
       setContextMode: mode => set({ contextMode: mode }),
+      setDiagramFormatPreference: pref => set({ diagramFormatPreference: pref }),
 
       addCustomModel: (providerId, model) =>
         set(s => {
@@ -191,7 +196,12 @@ export const useAiChatStore = create<PersistedState & EphemeralState & Actions>(
         });
 
         try {
-          const system = await composeSystem(state.contextMode, state.currentPage, state.contextSelection);
+          const system = await composeSystem(
+            state.contextMode,
+            state.currentPage,
+            state.contextSelection,
+            state.diagramFormatPreference,
+          );
           const messagesForSend = baseMessages.slice(0, -1);
 
           for await (const chunk of resolved.chat({
@@ -381,6 +391,7 @@ export const useAiChatStore = create<PersistedState & EphemeralState & Actions>(
         customModels: state.customModels,
         customProviders: state.customProviders,
         contextMode: state.contextMode,
+        diagramFormatPreference: state.diagramFormatPreference,
       }),
     },
   ),

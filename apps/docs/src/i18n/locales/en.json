@@ -93,7 +93,13 @@
     "typePrefix": "Type:"
   },
   "examplePrompt": {
-    "sendToChat": "Send to AI chat"
+    "expandDetail": "Expand",
+    "collapseDetail": "Collapse",
+    "copy": "Copy",
+    "sendToChat": "Send to AI chat",
+    "copiedToast": "Prompt copied (with retikz context)",
+    "copyFailedToast": "Copy failed — please select the text manually",
+    "copyTemplate": "Help me draw a figure with retikz.\n\n[retikz context]\n- Docs index (use as MCP / llms.txt): {{url}}\n- Use any API from `@retikz/react` / `@retikz/core`; for unfamiliar components / IR fields / sugar / parsers, look them up via the index above — don't guess from training data\n\n[task]\n{{content}}"
   },
   "page": {
     "copyPage": "Copy Page",
@@ -144,6 +150,13 @@
     "settingsContextDescLean": "Current page mdx only",
     "settingsContextDescBalanced": "Current page mdx + site llms.txt index",
     "settingsContextDescHeavy": "(v1: same as Balanced; demo source pull comes later)",
+    "diagramFormatLabel": "Diagram format",
+    "diagramFormatAuto": "Auto",
+    "diagramFormatIR": "IR",
+    "diagramFormatTsx": "JSX",
+    "diagramFormatDescAuto": "AI picks: JSX for simple geometry, IR for complex topology",
+    "diagramFormatDescIR": "Force IR JSON: compact, good for large diagrams",
+    "diagramFormatDescTsx": "Force retikz-tsx: readable, copy-paste-able as demo",
     "settingsAnthropicWarning": "Enabling Anthropic acknowledges that you accept running with dangerouslyAllowBrowser on a trusted personal device.",
     "settingsNetworkHint": "OpenAI / Anthropic direct connections can be unstable in some regions; consider DeepSeek as default in CN",
     "settingsCustomProvidersLabel": "Custom Providers",

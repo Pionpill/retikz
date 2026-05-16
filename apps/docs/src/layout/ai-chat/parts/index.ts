@@ -6,6 +6,7 @@ export * from './AiChatInputAddContextButton';
 export * from './AiChatInputContextChips';
 export * from './AiChatInputContextModePicker';
 export * from './AiChatInputContextUsage';
+export * from './AiChatInputDiagramFormatPicker';
 export * from './AiChatInputDetailPopover';
 export * from './AiChatInputFooter';
 export * from './AiChatInputHeader';

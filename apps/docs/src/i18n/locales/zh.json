@@ -93,7 +93,13 @@
     "typePrefix": "类型："
   },
   "examplePrompt": {
-    "sendToChat": "发送到 AI 对话"
+    "expandDetail": "展开",
+    "collapseDetail": "收起",
+    "copy": "复制",
+    "sendToChat": "发送到 AI 对话",
+    "copiedToast": "已复制 prompt（含 retikz 上下文）",
+    "copyFailedToast": "复制失败，请手动选中文本复制",
+    "copyTemplate": "你要帮我用 retikz 画一张图。\n\n【retikz 上下文】\n- 文档索引（可当 MCP / llms.txt 用）：{{url}}\n- 用 `@retikz/react` / `@retikz/core` 提供的任意 API 完成；遇到不熟悉的组件 / IR 字段 / Sugar / 解析器先查上面的索引，不要凭训练数据猜\n\n【任务】\n{{content}}"
   },
   "page": {
     "copyPage": "复制页面",
@@ -144,6 +150,13 @@
     "settingsContextDescLean": "只送当前页 mdx",
     "settingsContextDescBalanced": "当前页 mdx + 全站 llms.txt 索引",
     "settingsContextDescHeavy": "(v1 暂同 Balanced，后续展开 demo 源码)",
+    "diagramFormatLabel": "出图格式",
+    "diagramFormatAuto": "Auto",
+    "diagramFormatIR": "IR",
+    "diagramFormatTsx": "JSX",
+    "diagramFormatDescAuto": "AI 自选：简单几何用 JSX，复杂拓扑用 IR",
+    "diagramFormatDescIR": "强制 IR JSON：紧凑，适合大图",
+    "diagramFormatDescTsx": "强制 retikz-tsx：直观，可直接复制成 demo",
     "settingsAnthropicWarning": "启用 Anthropic 即表示你确认在受信任的个人设备上使用自己的 key（dangerouslyAllowBrowser）",
     "settingsNetworkHint": "国区直连 OpenAI / Anthropic 不稳，建议优先 DeepSeek",
     "settingsCustomProvidersLabel": "Custom Providers",

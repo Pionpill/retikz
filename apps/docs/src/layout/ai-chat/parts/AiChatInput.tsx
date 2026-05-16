@@ -8,6 +8,7 @@ import { useAiChatStore } from '@/store/useAiChatStore';
 import { AiChatInputAddContextButton } from './AiChatInputAddContextButton';
 import { AiChatInputContextModePicker } from './AiChatInputContextModePicker';
 import { AiChatInputContextUsage } from './AiChatInputContextUsage';
+import { AiChatInputDiagramFormatPicker } from './AiChatInputDiagramFormatPicker';
 import { AiChatInputFooter } from './AiChatInputFooter';
 import { AiChatInputHeader } from './AiChatInputHeader';
 import { AiChatInputMicButton } from './AiChatInputMicButton';
@@ -98,6 +99,7 @@ export const AiChatInput: FC = () => {
             <span className="mx-1 inline-block h-4 w-px bg-border" />
             <AiChatInputModelPicker />
             <AiChatInputContextModePicker />
+            <AiChatInputDiagramFormatPicker />
           </div>
           <div className="flex items-center gap-1">
             <AiChatInputContextUsage />
