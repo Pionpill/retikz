@@ -6,14 +6,14 @@ const UNIT = 100;
 const cm = (x: number, y: number): [number, number] => [x * UNIT, -y * UNIT];
 const polar = (degMath: number, r = 1) => ({ angle: -degMath, radius: r * UNIT });
 
-const HELP_LINE = '#d4d4d4';
-const PAGE_BG = 'white';
+const HELP_LINE = 'var(--border)';
+const PAGE_BG = 'var(--background)';
 const ANGLE_STROKE = 'oklch(0.55 0.16 145)';
 const ANGLE_FILL = 'oklch(0.92 0.10 145)';
 const SIN_COLOR = '#ef4444';
 const COS_COLOR = '#2563eb';
 const TAN_COLOR = 'oklch(0.72 0.16 60)';
-const INFO_BG = 'oklch(0.96 0.04 25)';
+const INFO_BG = 'var(--muted)';
 const MATH_FONT = {
   family: '"Latin Modern Math", "STIX Two Math", "Cambria Math", "Times New Roman", serif',
   style: 'italic' as const,
@@ -88,24 +88,24 @@ const Demo: FC = () => (
     <Draw
       way={[polar(30, 1), { label: { text: 'sin α', side: 'left' } }, cm(COS30, 0)]}
       stroke={SIN_COLOR}
-      thickness="veryThick"
+      thickness="thick"
     />
     <Draw
       way={[cm(COS30, 0), { label: { text: 'cos α', side: 'below' } }, cm(0, 0)]}
       stroke={COS_COLOR}
-      thickness="veryThick"
+      thickness="thick"
     />
     <Draw
       way={[cm(1, 0), { label: { text: 'tan α = sin α / cos α', side: 'right' } }, cm(1, TAN30)]}
       stroke={TAN_COLOR}
-      thickness="veryThick"
+      thickness="thick"
     />
     <Coordinate id="t" position={cm(1, TAN30)} />
     <Draw way={[cm(0, 0), 't']} />
 
     {/* 右侧信息说明框 —— LineSpec.fill 行级换色（行内片段着色暂不支持） */}
     <Node
-      position={cm(2.6, -0.1)}
+      position={cm(3.2, -0.1)}
       shape="rectangle"
       fill={INFO_BG}
       stroke="none"

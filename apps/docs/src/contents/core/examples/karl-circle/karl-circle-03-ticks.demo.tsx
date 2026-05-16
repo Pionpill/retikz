@@ -5,9 +5,9 @@ import { Coordinate, Draw, Node, Path, Step, TikZ } from '@retikz/react';
 const UNIT = 100;
 const cm = (x: number, y: number): [number, number] => [x * UNIT, -y * UNIT];
 
-const HELP_LINE = '#d4d4d4';
+const HELP_LINE = 'var(--border)';
 /** 跟随主题色——浅色 white、深色 near-black（Tailwind 4 的 --background token） */
-const PAGE_BG = 'white';
+const PAGE_BG = 'var(--background)';
 const MATH_FONT = {
   family: '"Latin Modern Math", "STIX Two Math", "Cambria Math", "Times New Roman", serif',
   style: 'italic' as const,

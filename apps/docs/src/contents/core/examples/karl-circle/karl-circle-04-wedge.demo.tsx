@@ -7,8 +7,8 @@ const cm = (x: number, y: number): [number, number] => [x * UNIT, -y * UNIT];
 /** 数学极坐标 → retikz PolarPosition：retikz angle 是 screen-down 正向，传 -degMath */
 const polar = (degMath: number, r = 1) => ({ angle: -degMath, radius: r * UNIT });
 
-const HELP_LINE = '#d4d4d4';
-const PAGE_BG = 'white';
+const HELP_LINE = 'var(--border)';
+const PAGE_BG = 'var(--background)';
 const ANGLE_STROKE = 'oklch(0.55 0.16 145)';
 const ANGLE_FILL = 'oklch(0.92 0.10 145)';
 const MATH_FONT = {

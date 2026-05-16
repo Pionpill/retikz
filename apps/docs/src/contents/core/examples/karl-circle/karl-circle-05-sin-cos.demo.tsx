@@ -6,8 +6,8 @@ const UNIT = 100;
 const cm = (x: number, y: number): [number, number] => [x * UNIT, -y * UNIT];
 const polar = (degMath: number, r = 1) => ({ angle: -degMath, radius: r * UNIT });
 
-const HELP_LINE = '#d4d4d4';
-const PAGE_BG = 'white';
+const HELP_LINE = 'var(--border)';
+const PAGE_BG = 'var(--background)';
 const ANGLE_STROKE = 'oklch(0.55 0.16 145)';
 const ANGLE_FILL = 'oklch(0.92 0.10 145)';
 const SIN_COLOR = '#ef4444';
@@ -85,14 +85,14 @@ const Demo: FC = () => (
     <Draw
       way={[polar(30, 1), { label: { text: 'sin α', side: 'left' } }, cm(COS30, 0)]}
       stroke={SIN_COLOR}
-      thickness="veryThick"
+      thickness="thick"
     />
 
     {/* cos α 蓝色横线：投影点 → 原点 */}
     <Draw
       way={[cm(COS30, 0), { label: { text: 'cos α', side: 'below' } }, cm(0, 0)]}
       stroke={COS_COLOR}
-      thickness="veryThick"
+      thickness="thick"
     />
   </TikZ>
 );
