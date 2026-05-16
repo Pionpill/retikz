@@ -6,6 +6,7 @@ import { Link } from 'react-router';
 import { CodeBlockCommand } from '../code-block-command';
 import { Comparison } from '../comparison';
 import { ComponentPreview } from '../component-preview';
+import { ExamplePrompt } from '../example-prompt';
 import { CodeBlock } from '../highlight-code';
 import { PackageManagerInstall } from '../package-manager-install';
 import { Update } from '../update';
@@ -166,6 +167,7 @@ export const mdxComponents: MDXComponents = {
   CodeBlockCommand,
   Comparison,
   ComponentPreview,
+  ExamplePrompt,
   LinkedCard,
   PackageManagerInstall,
   Update,

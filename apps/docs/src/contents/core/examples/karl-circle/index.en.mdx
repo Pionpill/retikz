@@ -16,25 +16,30 @@ The page breaks it into 7 accumulative steps. From a single naked circle each st
 Send the prompt below to the AI chat panel — the LLM will produce retikz IR / JSX for this figure directly. For variants (different angle, colors, radius), edit the prompt inside the chat panel after sending and resend.
 
 <ExamplePrompt
-  prompt={`Draw the unit-circle trigonometry diagram.
+  short="**Draw a 30° angle sin / cos / tan geometry diagram**: unit circle + axes with arrows + ticks (−1, −1/2, 1/2, 1) + green-filled wedge + red / blue / orange function lines + a right-hand multi-color info box."
+  detailed={`**Draw the unit-circle trigonometry diagram**
 
-[Geometry]
+**Geometry**
+
 - Unit circle, r = 1cm
 - Axes x / y from −1.5 to 1.5, with arrows
 - Ticks: x at −1 / −1/2 / 1; y at −1 / −1/2 / 1/2 / 1
 - Light background grid, 0.5cm spacing
 - 30° wedge centered at the origin, radius 0.3cm
 
-[Function lines]
+**Function lines**
+
 - sin α (red): from (cos30°, sin30°) down to the x-axis
 - cos α (blue): from the projection point back to the origin
 - tan α (orange): from (1, 0) up to (1, tan30°); a ray from the origin through that point
 
-[Colors]
+**Colors**
+
 - Wedge: light-green fill, dark-green stroke
 - sin: red, cos: blue, tan: orange
 
-[Labels]
+**Labels**
+
 - α inside the wedge (polar 15°, 0.22cm from origin)
 - each function line carries its own name label
 - right-hand multi-line info box, per-line color, describing α / sin / cos / tan values`}
