@@ -41,7 +41,11 @@ export const ViewLayout: FC = () => {
   const toPercent = (px: number): number => Math.min(95, (px / vw) * 100);
 
   return (
-    <ResizablePanelGroup direction="horizontal" autoSaveId="docs-view" className="min-h-screen">
+    <ResizablePanelGroup
+      direction="horizontal"
+      autoSaveId="docs-view"
+      className="min-h-screen overflow-visible!"
+    >
       <ResizablePanel order={1} className="overflow-visible!">
         <div className="flex min-h-screen min-w-0 flex-col">
           <AppHeader />
