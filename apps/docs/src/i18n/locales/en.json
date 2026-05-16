@@ -111,7 +111,7 @@
     "docStats": "About {{minutes}} min · {{chars}} chars · {{components}} components"
   },
   "ai": {
-    "triggerLabel": "Ask AI",
+    "triggerLabel": "Chat RetikZ",
     "triggerHint": "Ask AI about the current page",
     "settingsLabel": "Settings",
     "closeLabel": "Close",

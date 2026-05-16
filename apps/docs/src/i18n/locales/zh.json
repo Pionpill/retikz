@@ -111,7 +111,7 @@
     "docStats": "约 {{minutes}} 分钟 · 共 {{chars}} 字 · {{components}} 个组件"
   },
   "ai": {
-    "triggerLabel": "Ask AI",
+    "triggerLabel": "Chat RetikZ",
     "triggerHint": "基于当前文档页问 AI",
     "settingsLabel": "设置",
     "closeLabel": "关闭",
