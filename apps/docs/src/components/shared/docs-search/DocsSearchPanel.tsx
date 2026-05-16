@@ -30,7 +30,10 @@ const DEFAULT_COMMAND_CLASS =
 export type DocsSearchPanelProps = {
   /** 用户选中（点击 / Enter）一项时回调 */
   onSelect: (entry: SearchEntry) => void;
-  /** 某项是否处于"已选"态；提供则在右侧渲染 ✓，常用于多选场景 */
+  /**
+   * 某项是否处于"已选"态；提供后视为多选模式：
+   * 行首固定宽度槽位渲染 ✓（未选时为占位，避免标签位移）
+   */
   isSelected?: (entry: SearchEntry) => boolean;
   placeholder: string;
   emptyText: string;
@@ -38,6 +41,13 @@ export type DocsSearchPanelProps = {
   active?: boolean;
   /** 覆盖 Command 外层 className（一般用于尺寸 token，比如 popover 想要更紧凑） */
   commandClassName?: string;
+  /**
+   * 固定置顶的 entry 路径列表（按顺序）。命中的 entry 在顶部以独立 group 渲染，
+   * 不参与搜索过滤，也从下方主分组中剔除以避免重复
+   */
+  pinnedPaths?: ReadonlyArray<string>;
+  /** 置顶 group 的 heading 文案；不传则不渲染 group heading */
+  pinnedHeading?: string;
 };
 
 /**
@@ -52,6 +62,8 @@ export const DocsSearchPanel: FC<DocsSearchPanelProps> = ({
   emptyText,
   active = true,
   commandClassName,
+  pinnedPaths,
+  pinnedHeading,
 }) => {
   const { i18n } = useTranslation();
   const lang = (i18n.resolvedLanguage ?? 'zh') as Lang;
@@ -77,9 +89,22 @@ export const DocsSearchPanel: FC<DocsSearchPanelProps> = ({
 
   const entries = useSearchEntries(searchIndex, lang);
 
+  const pinnedSet = useMemo(() => new Set(pinnedPaths ?? []), [pinnedPaths]);
+
+  // 顶部固定项：按 pinnedPaths 顺序从已加载的 entries 里挑出对应 entry；
+  // searchIndex 尚未加载时为空，无 entry 不渲染
+  const pinnedItems = useMemo(() => {
+    if (pinnedSet.size === 0) return [];
+    const byPath = new Map(entries.map(entry => [entry.path, entry]));
+    return (pinnedPaths ?? [])
+      .map(path => byPath.get(path))
+      .filter((entry): entry is SearchEntry => Boolean(entry));
+  }, [entries, pinnedPaths, pinnedSet]);
+
   const grouped = useMemo(() => {
     const matched: Array<{ entry: SearchEntry; match: Match }> = [];
     for (const entry of entries) {
+      if (pinnedSet.has(entry.path)) continue; // 已在顶部置顶组渲染，避免重复
       const match = findMatch(debouncedInput, entry);
       if (match) matched.push({ entry, match });
     }
@@ -91,50 +116,63 @@ export const DocsSearchPanel: FC<DocsSearchPanelProps> = ({
       map.set(item.entry.moduleLabel, list);
     }
     return Array.from(map.entries());
-  }, [entries, debouncedInput]);
+  }, [entries, debouncedInput, pinnedSet]);
+
+  const multiSelect = isSelected !== undefined;
+
+  const renderEntry = (entry: SearchEntry, match: Match | null) => {
+    const selected = isSelected?.(entry) ?? false;
+    return (
+      <CommandItem
+        key={entry.path}
+        value={entry.path}
+        onSelect={() => onSelect(entry)}
+        className="flex-col items-start gap-0.5"
+      >
+        <div className="flex w-full items-center gap-2">
+          {multiSelect && (
+            <span className="flex size-3.5 shrink-0 items-center justify-center">
+              {selected && <Check className="size-3.5 text-foreground" />}
+            </span>
+          )}
+          <span className="truncate">
+            {match && match.kind === 'label'
+              ? renderHighlighted(entry.label, match.index, match.queryLength)
+              : entry.label}
+          </span>
+          {(entry.sectionLabel || entry.parentLabel) && (
+            <span className="ml-auto truncate text-xs text-muted-foreground">
+              {[entry.sectionLabel, entry.parentLabel].filter(Boolean).join(' / ')}
+            </span>
+          )}
+        </div>
+        {match && match.kind !== 'label' && match.text && (
+          <span className="line-clamp-1 w-full truncate text-xs text-muted-foreground">
+            {renderSnippet(match.text, match.index, match.queryLength)}
+          </span>
+        )}
+      </CommandItem>
+    );
+  };
+
+  const hasPinned = pinnedItems.length > 0;
+  const hasGrouped = grouped.length > 0;
 
   return (
     <Command shouldFilter={false} className={cn(commandClassName ?? DEFAULT_COMMAND_CLASS)}>
       <CommandInput placeholder={placeholder} value={input} onValueChange={setInput} />
       <CommandList>
-        {grouped.length === 0 ? (
-          <CommandEmpty>{emptyText}</CommandEmpty>
-        ) : (
-          grouped.map(([moduleLabel, items]) => (
-            <CommandGroup key={moduleLabel} heading={moduleLabel}>
-              {items.map(({ entry, match }) => {
-                const selected = isSelected?.(entry) ?? false;
-                return (
-                  <CommandItem
-                    key={entry.path}
-                    value={entry.path}
-                    onSelect={() => onSelect(entry)}
-                    className="flex-col items-start gap-0.5"
-                  >
-                    <div className="flex w-full items-center gap-2">
-                      <span className="truncate">
-                        {match.kind === 'label'
-                          ? renderHighlighted(entry.label, match.index, match.queryLength)
-                          : entry.label}
-                      </span>
-                      {(entry.sectionLabel || entry.parentLabel) && (
-                        <span className="ml-auto truncate text-xs text-muted-foreground">
-                          {[entry.sectionLabel, entry.parentLabel].filter(Boolean).join(' / ')}
-                        </span>
-                      )}
-                      {selected && <Check className="size-3.5 shrink-0 text-foreground" />}
-                    </div>
-                    {match.kind !== 'label' && match.text && (
-                      <span className="line-clamp-1 w-full truncate text-xs text-muted-foreground">
-                        {renderSnippet(match.text, match.index, match.queryLength)}
-                      </span>
-                    )}
-                  </CommandItem>
-                );
-              })}
-            </CommandGroup>
-          ))
+        {hasPinned && (
+          <CommandGroup heading={pinnedHeading}>
+            {pinnedItems.map(entry => renderEntry(entry, null))}
+          </CommandGroup>
         )}
+        {!hasPinned && !hasGrouped && <CommandEmpty>{emptyText}</CommandEmpty>}
+        {grouped.map(([moduleLabel, items]) => (
+          <CommandGroup key={moduleLabel} heading={moduleLabel}>
+            {items.map(({ entry, match }) => renderEntry(entry, match))}
+          </CommandGroup>
+        ))}
       </CommandList>
     </Command>
   );

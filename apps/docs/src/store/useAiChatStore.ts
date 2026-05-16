@@ -51,6 +51,8 @@ type EphemeralState = {
   draft: string;
   /** 外部写入 draft 后请求 input focus 的一次性 flag；input 监听后立即清掉 */
   focusInputNonce: number;
+  /** Wand2 润色按钮进行中标记；UI 据此 disable 按钮 + 切 spinner */
+  polishingDraft: boolean;
 };
 
 type Actions = {
@@ -80,6 +82,8 @@ type Actions = {
   setDraft: (text: string) => void;
   /** 写入 draft 并触发 input focus —— 给空态 suggestion 点击用 */
   fillDraftAndFocus: (text: string) => void;
+  /** 用当前 provider + model 把 draft 重写得更清晰；成功后 setDraft 替换；失败保留原 draft */
+  polishDraft: () => Promise<void>;
 };
 
 const INITIAL_USAGE = { input: 0, output: 0, cacheRead: 0 };
@@ -96,6 +100,7 @@ const INITIAL_EPHEMERAL: EphemeralState = {
   abortController: null,
   draft: '',
   focusInputNonce: 0,
+  polishingDraft: false,
 };
 
 /**
@@ -301,6 +306,67 @@ export const useAiChatStore = create<PersistedState & EphemeralState & Actions>(
             });
           } else {
             set({ isGenerating: false, abortController: null });
+          }
+        }
+      },
+
+      polishDraft: async () => {
+        const state = get();
+        if (state.polishingDraft) return;
+        const original = state.draft.trim();
+        if (!original) return;
+        const resolved = resolveProvider(state.providerId, state);
+        if (!resolved || !resolved.apiKey) return;
+        const model = state.models[state.providerId];
+        if (!model) return;
+
+        const lang = state.currentPage?.lang ?? 'zh';
+        const system =
+          lang === 'en'
+            ? 'You rewrite user prompts to be clearer and more complete. Preserve original intent. Do not answer the question. Respond with only the rewritten prompt text, no preamble.'
+            : '你的任务是把用户的提问改写得更清晰、信息更完整，但严格保留原意。不要回答问题，只输出改写后的提示词正文，不要加前言或解释。';
+        const instruction =
+          lang === 'en'
+            ? `Rewrite the following user message:\n${original}`
+            : `请改写下面这条用户提问：\n${original}`;
+
+        const controller = new AbortController();
+        set({ polishingDraft: true, error: null });
+
+        let rewritten = '';
+        let hadError = false;
+        try {
+          for await (const chunk of resolved.chat({
+            apiKey: resolved.apiKey,
+            model,
+            system,
+            messages: [{ role: 'user', content: instruction }],
+            signal: controller.signal,
+            baseUrl: resolved.baseUrl,
+          })) {
+            if (controller.signal.aborted) break;
+            if (chunk.type === 'delta') rewritten += chunk.text;
+            else if (chunk.type === 'error') {
+              hadError = true;
+              set({ error: { kind: chunk.kind, message: chunk.message } });
+              break;
+            }
+          }
+        } catch (e) {
+          if ((e as { name?: string }).name !== 'AbortError') {
+            hadError = true;
+            set({ error: { kind: 'unknown', message: (e as Error).message } });
+          }
+        } finally {
+          const trimmed = rewritten.trim();
+          if (!hadError && trimmed.length > 0) {
+            set(s => ({
+              draft: trimmed,
+              polishingDraft: false,
+              focusInputNonce: s.focusInputNonce + 1,
+            }));
+          } else {
+            set({ polishingDraft: false });
           }
         }
       },
