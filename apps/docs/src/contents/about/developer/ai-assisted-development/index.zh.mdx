@@ -58,7 +58,7 @@ alpha 阶段每条 ADR / 每条新功能都按 5 阶段走，编排在 [`flow-al
 | 1. 设计 | **人工**主导 / AI 辅助起草 | ADR（schema 字段表 / 文件 scope / 测试象限 / 选项决策） |
 | 2. 实现 | AI（红色改动走 Spec-First TDD） | spec test commit + 实现 commit |
 | 3. 自测 | AI（Adversarial Bug Hunter sub-Agent） | bug 修复 + 加固测试 |
-| 4. 文档 | AI（衔接 docs-doc-write SKILL） | 双语 mdx + demo + API 表 |
+| 4. 文档 | AI（衔接 docs-doc-principle SKILL） | 双语 mdx + demo + API 表 |
 | 5. 收尾 | AI 起草 / Adversarial Contract Auditor / **人工**最终 ack | changelog + ADR 标 Accepted + roadmap 勾掉 |
 
 **人工只动 1 和 5**——中间的 2、3、4 由独立 sub-Agent 接力完成，每阶段设硬关卡（lint / tsc / 测试 / 对账报告）不过即 halt。
@@ -133,7 +133,7 @@ retikz 当前三个 sub-Agent 默认全部用 Claude Opus 4.7。同 model 同上
 | 5 阶段编排器 | [flow-alpha SKILL](https://github.com/Pionpill/retikz/blob/main/.agents/skills/flow-alpha/SKILL.md) |
 | 设计 / 实现 / 测试 / 文档 / 收尾子 SKILL | [develop-design](https://github.com/Pionpill/retikz/blob/main/.agents/skills/develop-design/SKILL.md) · [develop-implement](https://github.com/Pionpill/retikz/blob/main/.agents/skills/develop-implement/SKILL.md) · [develop-test](https://github.com/Pionpill/retikz/blob/main/.agents/skills/develop-test/SKILL.md) · [develop-document](https://github.com/Pionpill/retikz/blob/main/.agents/skills/develop-document/SKILL.md) · [develop-wrapup](https://github.com/Pionpill/retikz/blob/main/.agents/skills/develop-wrapup/SKILL.md) |
 | 发版 SKILL（npm publish 5 阶段守门） | [package-publish SKILL](https://github.com/Pionpill/retikz/blob/main/.agents/skills/package-publish/SKILL.md) |
-| 文档写作 SKILL | [docs-doc-write SKILL](https://github.com/Pionpill/retikz/blob/main/.agents/skills/docs-doc-write/SKILL.md) |
+| 文档写作 SKILL | [docs-doc-principle](https://github.com/Pionpill/retikz/blob/main/.agents/skills/docs-doc-principle/SKILL.md) · [docs-doc-component](https://github.com/Pionpill/retikz/blob/main/.agents/skills/docs-doc-component/SKILL.md) · [docs-doc-example](https://github.com/Pionpill/retikz/blob/main/.agents/skills/docs-doc-example/SKILL.md) |
 | ADR 决策档案 | [notes/adr/](https://github.com/Pionpill/retikz/tree/main/notes/adr)（含 [模板](https://github.com/Pionpill/retikz/blob/main/notes/adr/_template.md) 与 [索引](https://github.com/Pionpill/retikz/blob/main/notes/adr/README.md)） |
 
 实际工作时主 AI 接到任务先读 AGENTS.md + 对应 SKILL，按 SKILL 流程派 sub-Agent。每个 sub-Agent 只看自己角色 prompt + 给定输入，互不交叉污染。

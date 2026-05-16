@@ -1,9 +1,9 @@
 ---
-name: docs-doc-write
-description: 用于在 retikz 文档站新增、编辑或翻译 mdx 文档（`apps/docs/src/contents/**/*.mdx`）、在 `apps/docs/src/data` 中注册页面或栏目、以及同步 `apps/docs/src/i18n` 下中英文案。retikz 专用，其它项目可忽略。
+name: docs-doc-principle
+description: retikz 文档站的总原则，所有页型（组件 / 示例 / 概念 / 入口 / Reference 词典）都必须遵守。涵盖三处协同（contents + data + i18n）、双语规则、写作风格、DSL 优先、Comparison 写法、自绘图示规则、演示位置/关系类 demo 规范、文档宽度限制、阅读时间、Reference (ZodSchema) 页型、入口页/概念页例外、与 shadcn 的差异、可用 MDX 元素。具体页型规范分流到 docs-doc-component（组件页）/ docs-doc-example（示例页）。retikz 专用。
 ---
 
-# 写 retikz 文档
+# retikz 文档总原则
 
 ## 总览
 
@@ -11,11 +11,18 @@ retikz 文档站，1 个页面 = **3 处同步改动**：内容（`contents/`）
 
 中文是源语言，英文跟随；mdx 走 shadcn/ui 风格，但 demo 用我们自己的 `<ComponentPreview>`。
 
-## 使用时机
+## 使用时机 + 分流
 
-- 加 / 改 / 翻译 `apps/docs/src/contents/**` 下的 mdx
-- 在 `apps/docs/src/data/*.ts` 里注册或调整页面节点
-- 同步 `apps/docs/src/i18n/locales/{zh,en}.ts` 的标题、菜单等文案
+所有 docs 改动都**先读本 skill** 拿通用规则，再按页型分流到专门 skill：
+
+| 页型 | 路径 | 分流到 |
+| --- | --- | --- |
+| 组件页 | `contents/<module>/components/**` | [`docs-doc-component`](../docs-doc-component/SKILL.md) |
+| 示例页 | `contents/<module>/examples/**` | [`docs-doc-example`](../docs-doc-example/SKILL.md) |
+| 概念页 / 入口页 | `contents/<module>/concepts/**` / `introduction` / `get-start` | 本 skill 的「入口页 / 概念页例外」节 |
+| Reference 词典页 | `contents/<module>/reference/**` | 本 skill 的「Reference 词典页」节 |
+
+本 skill 也直接覆盖：i18n 改 key、改菜单、改正文、加 demo 这类"对页结构无大改"的杂活。
 
 ## 三处协同的目录
 
@@ -30,8 +37,8 @@ apps/docs/src/
     core.ts               # core module 的 sections + pages 树
     interface.ts          # Section / Page / SubPage / I18nKey 类型
   i18n/locales/
-    zh.ts                 # 文案源（I18nResources = typeof zh）
-    en.ts                 # 英文，由 I18nResources 类型反向约束
+    zh.json               # 文案源（I18nResources = typeof zh）
+    en.json               # 英文，由 I18nResources 类型反向约束
 ```
 
 路由：`/:moduleId/:sectionId/:pageId(/:subPageId)?`。URL 段 == 目录段 == 数据节点 `id`，三处必须严格一致。
@@ -41,8 +48,8 @@ apps/docs/src/
 以加 `core/profile/get-start` 为例（已有 `core` module 与 `profile` section）：
 
 1. **i18n key 先行**（类型才能通）
-   - `i18n/locales/zh.ts`：在 `core` 命名空间下加 `getStart: '快速开始'`
-   - `i18n/locales/en.ts`：相同位置加 `getStart: 'Get Started'`
+   - `i18n/locales/zh.json`：在 `core` 命名空间下加 `"getStart": "快速开始"`
+   - `i18n/locales/en.json`：相同位置加 `"getStart": "Get Started"`
 2. **加内容**
    - `contents/core/profile/get-start/zh.mdx` + `en.mdx`
    - 顶部 frontmatter：`title`（与 i18n label 一致）+ `description`（一句话，渲染在 H1 下方）
@@ -71,7 +78,7 @@ apps/docs/src/
 - 编辑文档时若 zh / en 已不同步：以 zh 重写 en
 - 翻译可在不损失语义前提下本地化（标题、列表数量、表格列保持一致）
 - **代码与 zh.mdx 不一致**：停下来询问用户，不要自行选边——两边都过期的情况都见过
-- 新增 i18n key：先加 `zh.ts`，再加 `en.ts`，顺序固定
+- 新增 i18n key：先加 `zh.json`，再加 `en.json`，顺序固定
 
 ## 写作风格
 
@@ -102,7 +109,21 @@ retikz 文档面向**用户**——用户写的是 DSL（`<Tikz>` / `<Node>` / `
 
 普通用法页**不要**为了"完整"硬塞 IR JSON 节录或字段表——`<ComponentPreview>` 的 IR Tab 已经把"想看的人能看"留好了，不必正文复述。编译器内部（`compileToScene` / Scene primitive）一律不进用户文档。
 
-## 对照内容（Comparison）
+## 不引用第三方外链
+
+mdx 正文里不主动加任何指向第三方网站的链接（zod 官网、RFC、第三方库主页、博客等）。需要时由维护者自己加。
+
+**例外（GitHub 仓库内文件可链）**：如果确实要引用项目仓库内的设计文档 / SKILL / AGENTS / ADR，用 GitHub 完整 URL 作超链接，让用户能点进去：
+
+```mdx
+详见 [DESIGN.md §1.2](https://github.com/Pionpill/retikz/blob/main/notes/architecture/DESIGN.md)
+```
+
+GitHub URL 是这条规则的**例外**——它指向项目自家 repo，对用户来说是可达的"项目延伸阅读"，与第三方外链性质不同。
+
+**不要在 mdx 中暴露项目结构路径**（文件名 / 目录路径）——文档站用户看不到也点不到。例如不要写"详见 `notes/architecture/DESIGN.md` §1.2"或"参 `.agents/skills/...`"——用户读到这种描述只能去仓库 / 本地手动找。仅与"项目目录约定"相关的纯文字描述（如"ADR 起新文件用 `cp _template.md ...`"）可以保留路径作为 inline code，因为这是给已经在用 retikz 的人看的操作说明。
+
+## 对照内容 (Comparison)
 
 涉及 TikZ / Recharts / shadcn / D3 / 其它外部生态的对照、迁移提示、写法映射时，必须使用 `<Comparison>` 组件，不要把对照内容直接写在正文段落里。正文在隐藏所有对照块后仍应自洽完整；对照块只是给有相关背景的读者补充参照。
 
@@ -217,10 +238,10 @@ Draw way 简短、语义直白、与文档站现有 demo 风格一致。**唯一
 ### 与 docs-figure-draw 的边界
 
 | 用途 | 走的 skill | Node 默认 stroke |
-|---|---|---|
-| 叙述性插图（架构图 / 流程图 / 概念示意） | `docs-figure-draw`，`hideCode` | `"none"`（去外框）|
-| **演示位置 / 关系类用法**（本节） | `docs-doc-write` 本节 | **保留默认外框**——Node 自身是 demo 主体之一 |
-| 演示 Node 视觉特性（shape / color / font） | `docs-doc-write` 默认 ComponentPreview | 保留默认；文字 / 视觉自由发挥 |
+| --- | --- | --- |
+| 叙述性插图（架构图 / 流程图 / 概念示意） | `docs-figure-draw`，`hideCode` | `"none"`（去外框） |
+| **演示位置 / 关系类用法**（本节） | 本 skill 本节 | **保留默认外框**——Node 自身是 demo 主体之一 |
+| 演示 Node 视觉特性（shape / color / font） | 默认 ComponentPreview | 保留默认；文字 / 视觉自由发挥 |
 
 ## 文档宽度限制
 
@@ -247,81 +268,22 @@ Draw way 简短、语义直白、与文档站现有 demo 风格一致。**唯一
 
 | 页面类型 | 例子 | 阅读时间约束 | 处理方式 |
 | --- | --- | --- | --- |
-| 教程类文章 | `core/get-start`、线性 tutorial、迁移步骤 | **尽量 ≤ 10 分钟，且不可超过 15 分钟** | 超过 10 分钟先压缩叙述 / 拆步骤；接近 15 分钟必须拆页或改成多篇 guide |
+| 教程类文章 | `core/get-start`、线性 tutorial、迁移步骤、`examples/*` | **尽量 ≤ 10 分钟，且不可超过 15 分钟** | 超过 10 分钟先压缩叙述 / 拆步骤；接近 15 分钟必须拆页或改成多篇 guide |
 | 字典类文章 | `components/*`、组件 API 页、能力查阅页 | **尽量 ≤ 15 分钟；特殊情况下可超过** | 超过 15 分钟时必须有清晰 TOC、主题分组、API 表和可跳读小节；若多个主题互不依赖，优先拆子页 |
 | Reference / Schema | `core/reference/schema/*` | 不按完整阅读时间限制 | 以查询效率为准：字段表完整、锚点稳定、中英文结构一致 |
 
 判断原则：
 
-- **教程类**默认假设用户线性读完；阅读时间超限说明学习路径过长。
-- **字典类**默认假设用户跳读查询；可以更长，但不能变成无序 demo 堆。
-- 一个页面同时承担教程 + 字典时，先保证教程主线在 10 分钟内；额外查阅内容放到明确的 Reference / API / 子页中。
+- **教程类**默认假设用户线性读完；阅读时间超限说明学习路径过长
+- **字典类**默认假设用户跳读查询；可以更长，但不能变成无序 demo 堆
+- 一个页面同时承担教程 + 字典时，先保证教程主线在 10 分钟内；额外查阅内容放到明确的 Reference / API / 子页中
 
-## 文档结构（组件页）
+## 入口页 / 概念页例外
 
-参考：<https://ui.shadcn.com/docs/components/spinner>（简单）/ <https://ui.shadcn.com/docs/components/radix/alert-dialog#usage>（复杂）
-
-字典类组件页固定为 5 类 section，**按下面顺序**出现；`Composition` / `Related` 可选，其余不要新增散乱顶级章节。需要额外内容时优先并入 `Examples` 子节、`API Reference` 说明或拆子页。
-
-| section | 必需 | 内容 |
-| --- | --- | --- |
-| `## 用法 / Usage` | ✅ | 两个**纯代码块**（不放 `<ComponentPreview>`）：`import` + 一个最小 JSX 骨架 |
-| `## 组合 / Composition` | 可选 | 仅 compound 组件需要——展示组件之间的父子关系 |
-| `## 例子 / Examples` | ✅ | 页面主体；多子节，每子节围绕一个能力点，通常一句说明 + 一个 `<ComponentPreview>` |
-| `## API 参考 / API Reference` | ✅ | 4 列表（`属性 / 类型 / 默认值 / 描述` / `Prop / Type / Default / Description`），无默认填 `—`，属性名 + 类型用反引号包；多组件合一页时按组件分子节 |
-| `## 相关 / Related` | 可选 | 只放相关组件、概念、Reference、Guide 链接；不承载长解释 |
-
-frontmatter `title` + `description` 始终在；H1 由 DocPage 渲染，正文**不要**再写 `# 标题`。zh 用中文小节标题、en 用英文，但层级、子节数、表格列数保持对齐。
-
-### Examples 分组
-
-Examples 里的示例较多时，必须先抽象主题，再在主题下细分具体能力，避免一长串并列 `###` 把页面变成 demo 清单。
-
-规则：
-
-- 同类示例 ≥ 3 个时，先合并成主题组。例如 `<Draw>` 的弧线、二次贝塞尔、三次贝塞尔可统一放进"曲线"主题，再在主题下细分。
-- 样式类示例统一归入"样式 / Style"主题，不要把 stroke、fill、dash、opacity、font 等每个样式字段都单独提成同级小节。
-- 主题组用 `###`，组内具体示例用 `####`；如果该页示例较少，可直接用 `###`。
-- 主题顺序按用户心智排序：基础 → 常用变体 → 高级 / 边界 → 样式；样式主题一般放在 Examples 最后面，除非该组件本身就是样式组件。
-- 分组后每个具体示例仍保持"一句说明 + 一个 `<ComponentPreview>`"的节奏。
-- 如果一个主题组本身超过阅读时间或示例过多，优先拆成子页，而不是继续加深标题层级。
-
-### Usage 写法
-
-shadcn 同款，import 与最小骨架分两个代码块（**只显示代码，不放 ComponentPreview**）：
-
-````mdx
-## 用法
-
-```tsx
-import { Path, Step } from '@retikz/react';
-```
-
-```tsx
-<Path stroke="currentColor">
-  <Step kind="move" to="a" />
-  <Step kind="line" to="b" />
-</Path>
-```
-````
-
-骨架展示组件名 / props / children 形态，不要求可运行——`<ComponentPreview>` 留给 Examples 段。
-
-### Composition 适用
-
-| 组件 | 是否写 Composition |
-| --- | --- |
-| `<Tikz>` | ✅ 容器，children 是 Kernel/Sugar |
-| `<Path>` | ✅ 必须配 `<Step>` 子节点 |
-| `<Node>` `<Draw>` | ❌ 单组件 |
-| `<Step>` | ❌ 只作 `<Path>` 子节点；写在父组件页里 |
-
-### 入口页 / 概念页例外
-
-- **入口页**（`profile/introduction`、`profile/get-start`）有自己的章节布局（介绍 / 安装 / 步骤……），不强制走上面 4 段
+- **入口页**（`introduction`、`get-start`）有自己的章节布局（介绍 / 安装 / 步骤……），不强制走组件页的 5 段结构
 - **概念页**（`concepts/*`）按概念走子节，配 `<ComponentPreview hideCode>` 当叙述插图
 
-## Reference 词典页（`<ZodSchema>`）
+## Reference 词典页 (`<ZodSchema>`)
 
 `apps/docs/src/contents/core/reference/schema/<page>/index.{en,zh}.mdx` 下的页面用 **`<ZodSchema name="XxxSchema" descriptions={{...}} />`** 渲染字段表。Reference 词典是 IR schema 查询入口，跟"组件页"4 段结构无关。当前结构：4 个合并页（scene / entity / path / placement），每页一个或多个 H2/H3 + `<ZodSchema>` 块。
 
@@ -397,8 +359,9 @@ union / array 内部的 object 不会被平铺（如 `NodeSchema.label` 是 unio
 `ComponentPreview` props：
 - `name: string` —— 同级 `<name>.demo.tsx` 的 stem，必填
 - `align?: 'center' | 'start' | 'end'` —— 渲染区垂直对齐，默认 `center`
+- `size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl'` —— 渲染区高度档位，默认 `md`
 - `componentClassName?: string` —— 覆盖渲染区容器样式（如想去掉默认 `h-72 p-10`）
-- `hideCode?: boolean` —— 隐藏底部 View Code / 源码 / IR 面板，默认 `false`；**叙述性插图**（说明性的图表、流程图、概念示意）必须开 `hideCode`，**演示组件用法**保持默认
+- `hideCode?: boolean` —— 隐藏底部 View Code / 源码 / IR 面板，默认 `false`；**叙述性插图**必须开 `hideCode`，**演示组件用法**保持默认
 
 ## MDX 可用元素
 
@@ -406,23 +369,26 @@ union / array 内部的 object 不会被平铺（如 `NodeSchema.label` 是 unio
 - 围栏代码块带语言后会上语法高亮；写 `` ```tsx showLineNumbers `` 开行号
 - 行内 `<a href>`：`/` 开头自动走 react-router `<Link>`；`http(s)://` 开头自动 `target="_blank"`
 - 自定义 JSX：
-  - `<ComponentPreview ... />` —— 所有 demo 页用
-  - `<ZodSchema ... />` —— 仅 Reference 词典页用，详见上文「Reference 词典页」
+  - `<ComponentPreview ... />` —— 组件 / 示例 / 概念页 demo 都用
+  - `<ZodSchema ... />` —— Reference 词典页用，详见上文「Reference 词典页」
   - `<Comparison ... />` —— 外部生态对照内容用，当前只支持 `target="tikz"`
+  - `<ExamplePrompt ... />` —— 示例页 AI Prompt 节用，见 [`docs-doc-example`](../docs-doc-example/SKILL.md)
 
 ## Quick Reference
 
-| 任务 | 改动 |
-| --- | --- |
-| 加叶子页 | i18n × 2 + `contents/.../{zh,en}.mdx` + 在 `data/<module>.ts` 注册 `{ id, label }` |
-| 改正文 | `contents/.../{zh,en}.mdx`（双语都要） |
-| 改菜单 / 标题文案 | `i18n/locales/{zh,en}.ts`（双语都要） |
-| 加一个 demo | 同级写 `<name>.demo.tsx` + 在 mdx 里 `<ComponentPreview name="<name>" />` |
-| 加菜单图标 | `data/core.ts` 的 `Page.icon`（仅一级 Page 支持） |
-| 新建 module | `data/module.ts` 加条目 + 新建 `data/<module>.ts` + i18n 加新命名空间 |
-| 加分组节点 | 父节点加 `children`；分组本身不写 mdx |
-| 加新 IR schema 字典 | 注册到 `lib/schema-registry.ts` + 合适合并页加 `<ZodSchema>` 块（含 zh 嵌套点路径） |
-| 写 TikZ 对照 | 用 `<Comparison target="tikz">` 包起来，不写进普通正文 |
+| 任务 | 改动 | 也要读 |
+| --- | --- | --- |
+| 加叶子页 | i18n × 2 + `contents/.../{zh,en}.mdx` + 在 `data/<module>.ts` 注册 `{ id, label }` | 按页型分流 |
+| 改正文 | `contents/.../{zh,en}.mdx`（双语都要） | — |
+| 改菜单 / 标题文案 | `i18n/locales/{zh,en}.json`（双语都要） | — |
+| 加一个 demo | 同级写 `<name>.demo.tsx` + 在 mdx 里 `<ComponentPreview name="<name>" />` | — |
+| 加菜单图标 | `data/core.ts` 的 `Page.icon`（仅一级 Page 支持） | — |
+| 新建 module | `data/module.ts` 加条目 + 新建 `data/<module>.ts` + i18n 加新命名空间 | — |
+| 加分组节点 | 父节点加 `children`；分组本身不写 mdx | — |
+| 加新 IR schema 字典 | 注册到 `lib/schema-registry.ts` + 合适合并页加 `<ZodSchema>` 块（含 zh 嵌套点路径） | — |
+| 写 TikZ 对照 | 用 `<Comparison target="tikz">` 包起来，不写进普通正文 | — |
+| 加组件页 | — | [`docs-doc-component`](../docs-doc-component/SKILL.md) |
+| 加示例页 | — | [`docs-doc-example`](../docs-doc-example/SKILL.md) |
 
 ## Common Mistakes
 
@@ -432,7 +398,7 @@ union / array 内部的 object 不会被平铺（如 `NodeSchema.label` 是 unio
 - **`<ComponentPreview src=...>`** —— 沿用 shadcn 写法。我们的 prop 是 `name`，不接受 `src`
 - **`<ZodSchema>` 漏写嵌套字段点路径** —— `Node.font` / Step 各 variant 的 `label` 等嵌套 object 必须用 `'font.family'` / `'label.text'` 等点路径补完所有子字段中文，否则中文页该子行残留英文 `.describe()`
 - **`<ZodSchema>` 的 name 不在 registry** —— 渲染会显示 "Unknown schema" 红框；新加 schema 必须先在 `apps/docs/src/lib/schema-registry.ts` 注册
-- **只加一边 i18n** —— `en.ts: I18nResources = typeof zh` 类型反向约束，少一个 key 就编译失败
+- **只加一边 i18n** —— `en` 由 `I18nResources = typeof zh` 类型反向约束，少一个 key 就编译失败
 - **`label` 写成 `'core/getStart'` 或 `'getStart'`** —— 必须是 `'<ns>.<key>'` 完整路径，`I18nKey` 类型会卡你
 - **改 `id` 不改目录** —— `id` 决定 URL 段、决定 mdx 加载路径、决定 sidebar 的 key，三者强耦合
 - **写成连续的大段文字** —— 优先表格 / 示例 / 代码块；段落超过 3 行就拆

@@ -169,7 +169,7 @@ cp notes/adr/_template.md notes/adr/v<MAJOR>/v<MAJOR>.<MINOR>-<channel>.<N>/<NNN
 
 - **上游**：v0 roadmap 给出"该做什么"
 - **下游**：develop-implement 读本阶段产出的 ADR 进入实现
-- **不调** docs-doc-write——文档在 develop-document 阶段才写
+- **不调** docs-doc-principle / docs-doc-component / docs-doc-example——文档在 develop-document 阶段才写
 
 ## 完成标志
 

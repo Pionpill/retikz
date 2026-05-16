@@ -9,7 +9,7 @@ description: 在 retikz 文档站用 retikz 自身画叙述性插图（架构图
 
 - 文档（`apps/docs/src/contents/**/*.mdx`）里需要插一张架构 / 流程 / 概念示意图
 - 原稿是 ASCII 框图、Mermaid、截图、外站绘图——一律改成 retikz 自绘
-- 演示组件用法的 demo（用户复制源码学法）**不走本 skill**，走 `docs-doc-write` 的 `<ComponentPreview>` 默认模式
+- 演示组件用法的 demo（用户复制源码学法）**不走本 skill**，走 `docs-doc-principle` 的 `<ComponentPreview>` 默认模式
 
 判断：用户想"复制源码学怎么写"→ 例子 demo（`hideCode=false`）；想"看懂这张图说啥"→ 叙述性插图（本 skill）。
 
@@ -202,12 +202,12 @@ pnpm --filter @retikz/docs dev
 - [ ] 中英两版（如有拆）label 都对得上
 - [ ] 没有遗留的 ASCII / Mermaid / 截图
 
-## 与 docs-doc-write 的分工
+## 与 doc-skill 的分工
 
 | 任务 | skill |
 | --- | --- |
-| 加 / 改文档页（结构、双语、注册） | `docs-doc-write` |
+| 加 / 改文档页（结构、双语、注册） | `docs-doc-principle`（按页型再读 `docs-doc-component` / `docs-doc-example`） |
 | 给已有页面加一张**叙述性插图** | 本 skill |
-| 给组件页加**演示用法的 demo** | `docs-doc-write`（默认 `<ComponentPreview>`） |
+| 给组件页加**演示用法的 demo** | `docs-doc-principle`（默认 `<ComponentPreview>`） |
 
-两个 skill 协作：先按 `docs-doc-write` 把页面骨架立起来，再按本 skill 把"图"这部分填上。
+两个 skill 协作：先按 `docs-doc-principle` 把页面骨架立起来，再按本 skill 把"图"这部分填上。

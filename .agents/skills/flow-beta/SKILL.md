@@ -42,7 +42,7 @@ retikz beta 期 plan TODO 端到端执行的**编排器**。beta 与 alpha / rc 
 
 - 跳过 stage 1 设计——TODO 在 plan 已写清楚改动 scope、不开 ADR
 - 跳过 stage 3 自测 adversarial——beta 改动多为重构，主要风险是回归不是 bug；既有测试守门 + 新加测试覆盖即可
-- 跳过 stage 4 文档——beta 多数改动用户不可见（FontSchema 文件搬迁 / 注释清理 / 内部命名重构 等不影响 mdx）；用户可见时单独走 docs-doc-write
+- 跳过 stage 4 文档——beta 多数改动用户不可见（FontSchema 文件搬迁 / 注释清理 / 内部命名重构 等不影响 mdx）；用户可见时单独走 docs-doc-principle（按页型再读 docs-doc-component / docs-doc-example）
 - **新增 stage 2 多 LLM 评估**——beta 的核心安全网
 
 ## 自动判级（beta 简化为 3 档）

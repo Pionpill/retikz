@@ -72,7 +72,8 @@ URL 段 == 数据节点 `id` == `contents/` 目录段，三者强耦合，改一
 - `i18n/` —— 菜单标题 / UI 文案
 
 加 / 改 / 翻译文档时三处常**同时改动**。具体步骤、骨架模板、易错点全部抽到
-[`.agents/skills/docs-doc-write/SKILL.md`](../../.agents/skills/docs-doc-write/SKILL.md)，写文档前先读它。
+[`.agents/skills/docs-doc-principle/SKILL.md`](../../.agents/skills/docs-doc-principle/SKILL.md)，写文档前先读它；具体页型规范按需再读
+[`docs-doc-component`](../../.agents/skills/docs-doc-component/SKILL.md) / [`docs-doc-example`](../../.agents/skills/docs-doc-example/SKILL.md)。
 
 ## 状态管理（zustand）
 
@@ -172,4 +173,4 @@ pnpm --filter @retikz/docs lint     # ESLint
 
 ## 写文档？
 
-直接跳到 [`.agents/skills/docs-doc-write/SKILL.md`](../../.agents/skills/docs-doc-write/SKILL.md)。
+总原则先看 [`.agents/skills/docs-doc-principle/SKILL.md`](../../.agents/skills/docs-doc-principle/SKILL.md)；写组件页另读 [`docs-doc-component`](../../.agents/skills/docs-doc-component/SKILL.md)，写示例页另读 [`docs-doc-example`](../../.agents/skills/docs-doc-example/SKILL.md)。
