@@ -149,7 +149,6 @@ export const AiChatSettings: FC = () => {
           <Input
             value={model}
             onChange={e => setModel(providerId, e.target.value)}
-            list={`ai-model-options-${providerId}`}
             className="font-mono text-xs"
             spellCheck={false}
           />

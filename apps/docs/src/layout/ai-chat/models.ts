@@ -1,15 +1,20 @@
 import type { ProviderId } from './providers/types';
 
-/** 各家 provider 的默认 model + dropdown 推荐选项 */
+/**
+ * 各家 provider 的默认 model + dropdown 推荐选项
+ * @description deepseek 主推 V4 Flash（quick / cheap），同时留 chat 别名 + reasoner；
+ *   openai 切 GPT-5 系列；anthropic 走 Claude 4.X（Opus 4.7 / Sonnet 4.6 / Haiku 4.5）。
+ *   Default 选各家中端档（cost-effective），高端档进选项给用户切换。
+ */
 export const MODEL_CHOICES: Record<ProviderId, ReadonlyArray<string>> = {
-  deepseek: ['deepseek-chat', 'deepseek-reasoner'],
-  openai: ['gpt-4o-mini', 'gpt-4.1-mini', 'gpt-4o'],
-  anthropic: ['claude-haiku-4-5', 'claude-sonnet-4-6'],
+  deepseek: ['deepseek-v4-flash', 'deepseek-chat', 'deepseek-reasoner'],
+  openai: ['gpt-5-mini', 'gpt-5', 'gpt-5-nano'],
+  anthropic: ['claude-haiku-4-5', 'claude-sonnet-4-6', 'claude-opus-4-7'],
 };
 
 export const DEFAULT_MODELS: Record<ProviderId, string> = {
-  deepseek: 'deepseek-chat',
-  openai: 'gpt-4o-mini',
+  deepseek: 'deepseek-v4-flash',
+  openai: 'gpt-5-mini',
   anthropic: 'claude-haiku-4-5',
 };
 
