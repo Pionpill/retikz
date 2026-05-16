@@ -194,8 +194,9 @@ pnpm lint                                  # 全部包 ESLint（不带 --fix）
   - 例外：函数体内的短局部变量（`const [bx, by] = anchor(...)`）不强求拼全，作用域小、可读性优先
   - 已有用例：alpha.4 ADR-01 把 `at.dir` 升级为 `at.direction`，对应 `LABEL_DIR_MAP` → `LABEL_DIRECTION_MAP` 等
 - **目录一律 kebab-case**（小写 + 短横线，如 `mdx-content/`、`component-preview/`、`doc-page/`、`my-component/`），不用 PascalCase / camelCase / snake_case
-- **文件命名**：React 组件文件用 PascalCase（`ComponentPreview.tsx`、`Foo.tsx`），其余**所有**文件一律小写（barrel `index.ts`、配置 `components.tsx`、工具 `utils.ts`、hook `use-foo.ts` 等）
-  - 判定：文件 default / 顶层 export 是 React 组件 → PascalCase；否则一律小写
+- **文件命名**：React 组件文件用 PascalCase（`ComponentPreview.tsx`、`Foo.tsx`），其余文件一律 camelCase（barrel `index.ts`、配置 `components.tsx`、工具 `utils.ts`、hook `useFoo.ts`、store `useThemeStore.ts`、类型 `types.ts` / `interface.ts` 等）
+  - 判定：文件 default / 顶层 export 是 React 组件 → PascalCase；否则 camelCase
+  - **不用 kebab-case 或 snake_case 给文件命名**——kebab-case 只用在目录上
 - **绝大多数目录都要有 `index.ts` 作为 barrel 导出**——上层调用方一律从目录路径 import（`from './foo'`），不直接深入到具体文件（`from './foo/Foo'`）
   - `index.ts` 只做 re-export，不写实现：`export { Foo } from './Foo'; export type { FooProps } from './Foo';`
   - 例外：`packages/*/src/` 根入口本身已是 barrel，单组件文件目录里若**真**只有一个文件且不会再增（罕见），可暂缓加 `index.ts`，但加了不亏
