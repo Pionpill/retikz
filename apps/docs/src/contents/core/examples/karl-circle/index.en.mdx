@@ -1,38 +1,120 @@
 ---
 title: Karl's Unit Circle
-description: A retikz replication of the final figure from tikz.dev's tutorial (sin / cos / tan geometry around a 30° angle), showing what v0.1 covers and what's still missing
+description: sin / cos / tan geometry for a 30° angle — start from a circle and grow the figure in seven steps, exercising Path / Draw / Coordinate / Node side by side
 ---
 
-This is the final figure from the TikZ tutorial — "Karl teaching his daughter trigonometry": a unit circle, axes, a 30° wedge, three colored function lines (sin red / cos blue / tan orange), and an info box. Below is the full replication using retikz v0.1's existing DSL.
+## Introduction
 
-<ComponentPreview name="karl-circle" size="xl" />
+This is the final figure from the TikZ tutorial — "Karl teaching his daughter trigonometry": a unit circle plus the sin / cos / tan geometry around a 30° angle.
 
-## Writing Map
+The page breaks it into 7 accumulative steps. From a single naked circle each step adds one piece and one retikz capability — by the end you have the full figure and have walked through how [Path](/core/components/draw/path) / [Draw](/core/components/draw/overview) / [Coordinate](/core/components/node/coordinate) / [Node](/core/components/node/overview) combine, plus polar positions, accumulative paths, multi-Draw coordination, and multi-line / multi-color Node text.
 
-The table maps each region of the figure to current retikz DSL — pair it with the demo source to see exactly how a given TikZ construct should be written in retikz today.
+<ComponentPreview name="karl-circle-07-info" size="xl" />
 
-| Region | Current retikz writing | Notes |
+## Prompt
+
+Send the prompt below to the AI chat panel — the LLM will produce retikz IR / JSX for this figure directly. For variants (different angle, colors, radius), edit the textarea inline before sending.
+
+<ExamplePrompt
+  short="Draw a 30° angle sin / cos / tan geometry diagram: unit circle + axes with arrows + ticks (−1, −1/2, 1/2, 1) + green-filled wedge + red / blue / orange function lines + a right-hand multi-color info box."
+  detailed={`Draw the unit-circle trigonometry diagram.
+
+[Geometry]
+- Unit circle, r = 1cm
+- Axes x / y from −1.5 to 1.5, with arrows
+- Ticks: x at −1 / −1/2 / 1; y at −1 / −1/2 / 1/2 / 1
+- Light background grid, 0.5cm spacing
+- 30° wedge centered at the origin, radius 0.3cm
+
+[Function lines]
+- sin α (red): from (cos30°, sin30°) down to the x-axis
+- cos α (blue): from the projection point back to the origin
+- tan α (orange): from (1, 0) up to (1, tan30°); a ray from the origin through that point
+
+[Colors]
+- Wedge: light-green fill, dark-green stroke
+- sin: red, cos: blue, tan: orange
+
+[Labels]
+- α inside the wedge (polar 15°, 0.22cm from origin)
+- each function line carries its own name label
+- right-hand multi-line info box, per-line color, describing α / sin / cos / tan values`}
+/>
+
+## Steps
+
+### Step 1 — Unit circle
+
+Minimal start — one circle centered at the origin. The [Path](/core/components/draw/path) container with [`<Step kind="circlePath">`](/core/components/draw/step#circlepath): `circlePath` takes the previous step's anchor as the center, so we `move (0, 0)` first to position the cursor at the origin. `lineCap="round"` softens the line endpoints.
+
+<ComponentPreview name="karl-circle-01-circle" />
+
+### Step 2 — Axes + endpoint labels + named anchors
+
+x and y axes use [Draw](/core/components/draw/overview) with `arrow="->"` to get arrow-tipped segments. The `x` / `y` labels at the axis ends are [Node](/core/components/node/overview)s (with `stroke="none"` to hide the default border) placed just past each axis. [Coordinate](/core/components/node/coordinate) names the two endpoints (`x-axis` / `y-axis`) so later steps could reference them by id string — this example doesn't end up using them, but we keep them for fidelity to TikZ's `coordinate(x axis)` idiom.
+
+<ComponentPreview name="karl-circle-02-axes" />
+
+### Step 3 — Grid + ticks
+
+The background grid is a `.map()` over 5 horizontal + 5 vertical lines (IR has no `grid` operator yet); this `.map()` substitute for TikZ `\foreach` is common throughout retikz. Ticks are also array-driven: a short segment plus a `fill="white"` [Node](/core/components/node/overview) per tick — white bg covers the grid behind each label.
+
+The `cm(x, y)` helper translates math (y-up) to retikz screen coordinates (y-down): the top-level `<TikZ>` has no picture-level scale or y-flip, so tutorial-style examples often carry this kind of helper inline.
+
+<ComponentPreview name="karl-circle-03-ticks" />
+
+### Step 4 — 30° wedge + α label
+
+The wedge is the trickiest step. [`<Step kind="arc">`](/core/components/draw/step#arc) treats the previous step's anchor as the **center** (note: TikZ instead treats it as a point on the arc). So `move (0, 0)` → `arc start=0 end=−30 radius=30` automatically starts drawing from (radius, 0) → `line` back to the origin lets [Path](/core/components/draw/path)'s fill implicitly close into a pie slice.
+
+The α label is a [Node](/core/components/node/overview) at a polar position (`{ angle, radius }`) — `polar(15, 0.22)` places it visually centered in the wedge.
+
+<ComponentPreview name="karl-circle-04-wedge" />
+
+### Step 5 — sin α red line + cos α blue line
+
+`sin` drops from (30°, 1cm) vertically to the x-axis; `cos` goes from that foot back to the origin. Both use [Draw](/core/components/draw/overview), with a `{ label: { text, side } }` operator threaded into the `way` array to attach an edge label. `thickness="veryThick"` is a semantic stroke preset — saves having to pick a numeric width.
+
+Note: the original TikZ uses `(30:1cm |- x axis)` to express "horizontal projection of (30°, 1cm) onto the x-axis" directly. retikz has no projection target yet — geometrically that equals (cos30°, 0), so we hand-compute the coordinate.
+
+<ComponentPreview name="karl-circle-05-sin-cos" />
+
+### Step 6 — tan α orange line + auxiliary ray
+
+The tan line goes from (1, 0) up to (1, tan30°). The original uses TikZ's `name path` + `name intersections` to compute "intersection of x=1 vertical and 30° ray from origin"; retikz has no such constructs, so we hand-compute (1, tan30°) and name it `t` via [Coordinate](/core/components/node/coordinate). The auxiliary ray from the origin through `t` then just references the id.
+
+The pattern here — multiple [Draw](/core/components/draw/overview)s coordinating through shared named anchors — is retikz's standard way to wire up a multi-segment figure.
+
+<ComponentPreview name="karl-circle-06-tan" />
+
+### Step 7 — Right-hand multi-color info box
+
+Finally, a colored info card on the right. The [Node](/core/components/node/overview) `text` prop takes an array of lines — **each entry can be a string or `{ text, fill }`**, the latter switching color for that line. Empty strings act as visual separators.
+
+`shape="rectangle"` + `roundedCorners` + `align="left"` packs the lines into a left-aligned rounded card; `stroke="none"` removes the default border. Note: in-line span coloring (multiple colors within a single line) is not supported yet — only whole-line color switches. See Limitations.
+
+<ComponentPreview name="karl-circle-07-info" size="xl" />
+
+## Capabilities
+
+| Component | Role in this example | Main steps |
 | --- | --- | --- |
-| Whole-picture scale + y-flip | Local `cm(x,y)` / `polar(deg)` helpers | The container has no picture scale; y must be flipped manually (SVG is y-down) |
-| Background grid | `.map()` of 5 horizontal + 5 vertical lines | No `grid` step yet |
-| Unit circle | `move → circlePath` | `circlePath` takes the previous step's anchor as the center |
-| Axes + endpoint label + named anchor | `Draw + Node + Coordinate` as three pieces | No "draw line + attach end label + name an anchor" combined sugar |
-| Ticks + xshift | Array `.map()` + bake offsets into coords | `\foreach` is replaced by React; `xshift` is folded into the literal coordinate |
-| 30° wedge | `move (0,0) → arc → line (0,0)` triple | `ArcStep` treats the prev anchor as the center (TikZ uses it as a point on the arc instead); the trailing line back to the origin lets the fill close implicitly |
-| sin / cos projection points | Hand-computed `cm(cos30, 0)` | No projection target |
-| tan / ray intersection | Hand-computed `cm(1, tan30)` | Neither named path nor intersection target |
-| Per-line color in info box | LineSpec line-level `fill` | Inline-span coloring is not supported; only whole-line color switches |
-| Math typography (½, sin α) | Plain text fallback | No KaTeX / MathJax integration; fractions and subscripts are character soup |
+| [Path](/core/components/draw/path) | Unit circle body + 30° wedge | 1, 4 |
+| [Step](/core/components/draw/step) | circlePath / arc / move / line kinds | 1, 4 |
+| [Draw](/core/components/draw/overview) | Axes + grid + tick marks + sin/cos/tan colored lines + auxiliary ray | 2, 3, 5, 6 |
+| [Node](/core/components/node/overview) | Axis-end labels + tick text + α label + right info box | 2, 3, 4, 7 |
+| [Coordinate](/core/components/node/coordinate) | Named x/y axis endpoints + tan intersection `t` | 2, 6 |
 
-## What's Still Missing
+## Limitations
 
-Any one of the following would noticeably shorten this figure:
+- 🚧 **`grid` operator**: planned. The example uses `.map()` to draw 5 horizontal + 5 vertical lines instead
+- 🚧 **Picture scale + y-up axis**: planned for `<TikZ>` (`scale` + `yAxis="up"`) to let users feed math coordinates directly. The example uses local `cm()` / `polar()` helpers
+- 🚧 **Projection target (`(A |- B)`)**: planned. The example hand-computes `cm(cos30, 0)`
+- 🚧 **Named path + intersection target**: planned. The example hand-computes `cm(1, tan30)`
+- 🚧 **In-line spans inside LineSpec**: planned (add a `spans` field). The example switches color only at line granularity
+- ❌ **Inline LaTeX math typography** (`$\frac{1}{2}$` / `$\sin \alpha$`): not planned. The example uses plain characters (`1/2` / `sin α`)
 
-- **Picture scale + y-up axis**: `<TikZ scale={3} yAxis="up">` lets users feed math coordinates directly and drops both helpers
-- **Grid operator**: `<Draw grid step={0.5} from={...} to={...} />` to replace the `.map` grid
-- **End-of-path sugar**: `<Draw arrow="->" endLabel={...} endCoordId="x-axis" />` to collapse the three-piece axis pattern into a single Draw
-- **Wedge sugar**: `<Wedge center radius from to fill stroke />`, modelled on TikZ's `pic{angle=A--B--C}`
-- **Projection target**: `{ project: 'horizontal', from, onto }`, unifying TikZ `(A |- B)` / `(A -| B)`
-- **Intersection target**: `{ intersection: [seg, ray] }`, promoting `name path + name intersections` to a first-class value
-- **Inline-span text**: extend LineSpec with a `spans` array so a single line can switch color / size / font mid-string
-- **Inline math**: hook KaTeX / MathJax into text nodes so fractions, super/subscripts, and Greek letters render from LaTeX syntax
+## Related
+
+- [Path](/core/components/draw/path) · [Step](/core/components/draw/step) · [Draw](/core/components/draw/overview) · [Node](/core/components/node/overview) · [Coordinate](/core/components/node/coordinate)
+- [Positioning](/core/concepts/positioning) · [Anchors](/core/concepts/anchors)
