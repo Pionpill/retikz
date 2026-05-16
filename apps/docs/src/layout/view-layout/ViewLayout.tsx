@@ -1,7 +1,9 @@
 import { type FC, useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Outlet } from 'react-router';
 
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable';
+import { Sheet, SheetContent, SheetDescription, SheetTitle } from '@/components/ui/sheet';
 import { AiChatPanel } from '@/layout/ai-chat';
 import { useAiChatStore } from '@/store/useAiChatStore';
 
@@ -25,47 +27,73 @@ const useViewportWidth = (): number => {
 };
 
 /**
- * 根布局：主内容 + 可拖拽 AI 面板
- * @description 用 shadcn `ResizablePanelGroup` 托管拖拽 UX。库只认百分比，所以把
- *   MIN/MAX/DEFAULT_AI_PX 按当前 viewport 宽度换算成 % 喂进去；viewport 变化时
- *   useViewportWidth 触发重算，库内部 clamp 会把超界宽度收回。
+ * 根布局：主内容 + AI 面板（桌面侧栏 / 移动底部 Drawer）
+ * @description 桌面（≥ lg）用 shadcn `ResizablePanelGroup` 托管拖拽侧栏；库只认百分比，
+ *   按 viewport 把 MIN/MAX/DEFAULT_AI_PX 换算成 % 喂进去，viewport 变化由 useViewportWidth
+ *   触发重算，库内 clamp 收回超界宽度。autoSaveId 把用户拖到的宽度存 localStorage。
  *
- *   AI 面板按 store.open + viewport ≥ lg 条件挂载；关闭即卸载，handle 一并消失。
- *   autoSaveId 让库把用户拖到的宽度记进 localStorage，刷新后还原。
+ *   移动（< lg）用 bottom Sheet 80vh 弹出，与桌面共用 store.open 与 AiChatPanel 内容；
+ *   生成中 Esc 由 AiChatPanel 自身的窗口监听负责 abort，这里阻止 Sheet 关闭以免抢键。
  */
 export const ViewLayout: FC = () => {
+  const { t } = useTranslation();
   const open = useAiChatStore(s => s.open);
+  const setOpen = useAiChatStore(s => s.setOpen);
+  const isGenerating = useAiChatStore(s => s.isGenerating);
   const vw = useViewportWidth();
-  const aiOpen = open && vw >= DESKTOP_BREAKPOINT;
+  const isDesktop = vw >= DESKTOP_BREAKPOINT;
+  const aiOpenDesktop = open && isDesktop;
+  const aiOpenMobile = open && !isDesktop;
 
   const toPercent = (px: number): number => Math.min(95, (px / vw) * 100);
 
   return (
-    <ResizablePanelGroup
-      direction="horizontal"
-      autoSaveId="docs-view"
-      className="min-h-screen overflow-x-clip! overflow-y-visible!"
-    >
-      <ResizablePanel order={1} className="overflow-x-clip! overflow-y-visible!">
-        <div className="flex min-h-screen min-w-0 flex-col">
-          <AppHeader />
-          <Outlet />
-        </div>
-      </ResizablePanel>
-      {aiOpen && (
-        <>
-          <ResizableHandle />
-          <ResizablePanel
-            order={2}
-            defaultSize={toPercent(DEFAULT_AI_PX)}
-            minSize={toPercent(MIN_AI_PX)}
-            maxSize={toPercent(MAX_AI_PX)}
-            className="overflow-visible!"
+    <>
+      <ResizablePanelGroup
+        direction="horizontal"
+        autoSaveId="docs-view"
+        className="min-h-screen overflow-x-clip! overflow-y-visible!"
+      >
+        <ResizablePanel order={1} className="overflow-x-clip! overflow-y-visible!">
+          <div className="flex min-h-screen min-w-0 flex-col">
+            <AppHeader />
+            <Outlet />
+          </div>
+        </ResizablePanel>
+        {aiOpenDesktop && (
+          <>
+            <ResizableHandle />
+            <ResizablePanel
+              order={2}
+              defaultSize={toPercent(DEFAULT_AI_PX)}
+              minSize={toPercent(MIN_AI_PX)}
+              maxSize={toPercent(MAX_AI_PX)}
+              className="overflow-visible!"
+            >
+              <div className="sticky top-0 h-screen">
+                <AiChatPanel />
+              </div>
+            </ResizablePanel>
+          </>
+        )}
+      </ResizablePanelGroup>
+      {!isDesktop && (
+        <Sheet open={aiOpenMobile} onOpenChange={setOpen}>
+          <SheetContent
+            side="bottom"
+            showCloseButton={false}
+            className="h-[80vh] gap-0 p-0"
+            onEscapeKeyDown={e => {
+              // 生成中 Esc 让 AiChatPanel 的全局 keydown 自己 abort，不让 Sheet 抢去关闭
+              if (isGenerating) e.preventDefault();
+            }}
           >
+            <SheetTitle className="sr-only">{t('ai.triggerLabel')}</SheetTitle>
+            <SheetDescription className="sr-only">{t('ai.triggerHint')}</SheetDescription>
             <AiChatPanel />
-          </ResizablePanel>
-        </>
+          </SheetContent>
+        </Sheet>
       )}
-    </ResizablePanelGroup>
+    </>
   );
 };

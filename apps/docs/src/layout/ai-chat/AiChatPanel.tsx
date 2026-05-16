@@ -9,9 +9,10 @@ import { AiChatEmpty } from './parts/AiChatEmpty';
 import { AiChatSettings } from './parts/AiChatSettings';
 
 /**
- * AI 聊天侧栏 panel 内容
- * @description 由 ViewLayout 的 `ResizablePanelGroup` 包裹，宽度交给上层 `ResizablePanel`
- *   托管；这里只负责内部布局：sticky h-screen 让面板在主内容滚动时常驻视口。
+ * AI 聊天面板内容（与容器无关，由调用方决定 sizing context）
+ * @description 桌面 ViewLayout 把它放进 ResizablePanel 内的 sticky h-screen aside；
+ *   移动 ViewLayout 把它放进 bottom Sheet 的 h-[80vh] 容器。组件本身只负责
+ *   内部布局：`flex h-full flex-col`。
  *
  *   Esc：生成中 abort；非生成中 close。视图路由：view==='settings' → Settings；
  *   否则按当前 provider 是否填 key 选 Empty / Conversation。
@@ -53,7 +54,7 @@ export const AiChatPanel: FC = () => {
   const showConversation = !showSettings && hasKey;
 
   return (
-    <aside className="sticky top-0 flex h-screen flex-col bg-background">
+    <aside className="flex h-full flex-col bg-background">
       {!showSettings && (
         <div className="flex h-14 shrink-0 items-center gap-2 border-b border-border px-3">
           <span className="text-sm font-medium flex items-center gap-2">{t('ai.triggerLabel')}</span>
