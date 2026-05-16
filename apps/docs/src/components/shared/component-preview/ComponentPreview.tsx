@@ -6,7 +6,7 @@ import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
-import { docPathSegments, useDocLocation } from '@/pages/doc-page/docLocation';
+import { docPathSegments, useDocLocation } from '@/layout/doc-layout/docLocation';
 import { useComponentPreviewStore } from '@/store/useComponentPreviewStore';
 import type { IR } from '@retikz/core';
 import { convertReactNodeToIR } from '@retikz/react';

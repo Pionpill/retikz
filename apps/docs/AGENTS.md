@@ -41,8 +41,7 @@ apps/docs/
     ├── store/               # zustand 持久化 store
     │   ├── useThemeStore.ts # light/dark，同步 .dark class 到 <html>
     │   └── useTocStore.ts   # 右侧 TOC 开关
-    ├── layout/doc-layout/   # 主布局：Sidebar + Header + Outlet + 全局快捷键
-    ├── pages/doc-page/      # 文档页渲染器（DocPage / Actions / FooterNav / hooks）
+    ├── layout/doc-layout/   # 主布局 + 文档页渲染（Sidebar / Outlet / DocPage / Actions / FooterNav / hooks）
     ├── components/
     │   ├── ui/              # shadcn vendored —— 不要手改
     │   ├── shared/          # 自研：component-preview / highlight-code / mdx-content
