@@ -8,7 +8,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/co
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { modules } from '@/data/module';
 
-import { AppSidebar } from '../DocLayout/sidebar/AppSidebar';
+import { AppSidebar } from '../doc-layout/sidebar/AppSidebar';
 
 /**
  * 移动端汉堡按钮 + Sheet 抽屉
