@@ -193,7 +193,13 @@ pnpm lint                                  # 全部包 ESLint（不带 --fix）
   - 例外：项目内已有的 TikZ / SVG / CSS 标准词汇保持不动——`stroke` / `fill` / `padding` / `margin` / `cx` / `cy` / `rx` / `ry` / `dx` / `dy` / `innerXSep` / `outerSep`（TikZ `inner sep` / `outer sep` 直译）/ `IR`（项目核心术语）
   - 例外：函数体内的短局部变量（`const [bx, by] = anchor(...)`）不强求拼全，作用域小、可读性优先
   - 已有用例：alpha.4 ADR-01 把 `at.dir` 升级为 `at.direction`，对应 `LABEL_DIR_MAP` → `LABEL_DIRECTION_MAP` 等
-- **目录使用 kebab-case**（如 `mdx-content/`、`component-preview/`、`doc-page/`），不用 PascalCase / camelCase；目录里**单组件文件**仍按组件名 PascalCase（`ComponentPreview.tsx`），barrel / 配置 / 注册表等非组件文件用小写（`index.ts`、`components.tsx`）
+- **目录一律 kebab-case**（小写 + 短横线，如 `mdx-content/`、`component-preview/`、`doc-page/`、`my-component/`），不用 PascalCase / camelCase / snake_case
+- **文件命名**：React 组件文件用 PascalCase（`ComponentPreview.tsx`、`Foo.tsx`），其余**所有**文件一律小写（barrel `index.ts`、配置 `components.tsx`、工具 `utils.ts`、hook `use-foo.ts` 等）
+  - 判定：文件 default / 顶层 export 是 React 组件 → PascalCase；否则一律小写
+- **绝大多数目录都要有 `index.ts` 作为 barrel 导出**——上层调用方一律从目录路径 import（`from './foo'`），不直接深入到具体文件（`from './foo/Foo'`）
+  - `index.ts` 只做 re-export，不写实现：`export { Foo } from './Foo'; export type { FooProps } from './Foo';`
+  - 例外：`packages/*/src/` 根入口本身已是 barrel，单组件文件目录里若**真**只有一个文件且不会再增（罕见），可暂缓加 `index.ts`，但加了不亏
+  - 例外：shadcn vendored `components/ui/*` 沿用 shadcn 自己的组织方式
 - 尽量不写注释；确需解释"为什么"时再写，避免复述代码做了什么
 - **注释面向结果，不要引用 ADR / 历史阶段** —— 不在源码注释 / JSDoc / 测试 `describe`/`it` 标题 / zod `.describe(...)` 里出现 `ADR-04`、`alpha.3 引入`、`见 ADR-NN` 这类**实现过程来源**；注释只解释代码*现在*的语义与意图，把"它从哪条决策来"的信息留给 commit message / changelog / `notes/adr/` 索引。源码注释一旦写上 ADR 编号，后续 ADR 重排或废弃就会让注释 rot；zod `.describe(...)` 还会被导出到 LLM tool definition，里面的 ADR 编号对模型纯噪声
 - 数组类型用 `Array<T>`，不用 `T[]`（项目内统一）
@@ -249,6 +255,21 @@ pnpm lint                                  # 全部包 ESLint（不带 --fix）
   const Foo: FC<FooProps> = ({ id, onDone }) => { ... };
   ```
   - 理由：调试 / 日志时能直接 `console.log(props)`；用 hook 给 props 包一层（`useMemo(() => ..., [props])`）时不需要重新拼回去；改名 / 加字段时只动一处；统一形式让 review 不必为「这个组件够小吗」纠结
+
+## Tailwind CSS
+
+**项目用 Tailwind v4（`^4.2.4`），不要写 v3 语法。** v3 的写法在 v4 下会报错或被静默忽略，AI 写代码时常因训练数据偏向 v3 而踩坑，特别注意：
+
+- **入口 CSS 用 `@import 'tailwindcss';`**——不要写 v3 的 `@tailwind base;` / `@tailwind components;` / `@tailwind utilities;`
+- **主题配置走 CSS-first**（`@theme { ... }` / CSS 变量 / `@plugin`），不要新建 / 修改 `tailwind.config.js` `tailwind.config.ts`——v4 默认无 JS 配置文件，整个 design tokens 全部在 `apps/docs/src/index.css` 里以 CSS 变量 + `@theme` 维护
+- **插件用 `@plugin "..."`**（在 CSS 里声明），不要在 JS config 的 `plugins: []` 里加
+- **自定义变体用 `@custom-variant name (...)`**，不要走 v3 的 `addVariant()` JS API
+- **不透明度用斜杠语法**：`bg-black/50`、`text-foreground/70`——不要用 v3 的 `bg-opacity-50` / `text-opacity-70`（v4 已移除）
+- **颜色用现代色彩空间**：项目里 design tokens 用 `oklch(...)`，新加颜色优先 `oklch` 或 `hsl`，不要再写 `rgb(...)` / hex
+- **任意值仍用 `[]`**：`w-[42px]`、`bg-[oklch(0.5_0.2_30)]`——这点 v4 沿用 v3
+- **shadcn 组件依赖的 token 名**（`--background` / `--foreground` / `--primary` / `--ring` / `--radius` 等）保持现状，不要乱改；新加 token 时在 `:root` 与 `.dark` 都补一份
+
+不确定某个 class 是不是 v4 合法语法时，先查 <https://tailwindcss.com/docs>（确认是 v4 文档而非 v3），不要凭训练数据猜。
 
 ## IR / Schema 风格（zod）
 

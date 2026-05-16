@@ -1,7 +1,7 @@
 # apps/docs
 
 retikz 的文档站。本文件是 AI / 贡献者修改本子包时的基本指南。
-**根 `AGENTS.md` 的全仓约定（commit、TS、React 组件、抽象分层等）继承生效，本文件只补 docs 站特有的内容。**
+**根 `AGENTS.md` 的全仓约定（commit、TS、React 组件、Tailwind v4、目录与文件命名、抽象分层等）继承生效，本文件只补 docs 站特有的内容。**
 
 ## 概览
 
@@ -87,6 +87,18 @@ URL 段 == 数据节点 `id` == `contents/` 目录段，三者强耦合，改一
 ## 主题
 
 shadcn 暗色靠 `<html class="dark">` 触发。明暗切换走 `useThemeStore.setTheme`，**不要手动操作 DOM**。颜色变量在 `src/index.css` 中以 CSS 变量形式定义；新增主题色 / 调色应在 css 这一层做。
+
+## Tailwind
+
+docs 站是全仓**唯一**用 Tailwind 的子包，版本为 v4（`tailwindcss@^4.2.4` + `@tailwindcss/vite`）。根 AGENTS.md 的 Tailwind v4 语法规则全部适用，这里补 docs 站具体落点：
+
+- **入口**：`src/index.css`，开头是 `@import 'tailwindcss';` + `@plugin "tailwindcss-animate";` + `@custom-variant dark (&:is(.dark *));`——这套是 v4 写法，不要改成 v3 的 `@tailwind base/components/utilities`
+- **没有 `tailwind.config.js`**：所有 design tokens（`--background` / `--foreground` / `--primary` / `--radius` 等）和 dark mode 变体都在 `src/index.css` 用 CSS 变量 + `@theme` / `@custom-variant` 维护——别新建 JS 配置文件
+- **dark 触发器**：`@custom-variant dark (&:is(.dark *))` —— `<html class="dark">` 一加，`dark:bg-foo` / `dark:text-bar` 即生效。切 dark 走 `useThemeStore.setTheme`，不要手动 toggle class
+- **shadcn vendored token 名**（`--background` / `--foreground` / `--primary` / `--primary-foreground` / `--ring` / `--radius` / `--sidebar-*` 等）必须保留，shadcn 组件硬绑这些名字；新加 token 时在 `:root` 和 `.dark` 都补一份
+- **颜色用 `oklch(...)`**：现有 design tokens 用 oklch（如 `--background: oklch(1 0 0)`），新加颜色优先 oklch，不要混进 hex / rgb
+- **`cn()` 来自 `lib/utils.ts`**（`clsx` + `tailwind-merge`）；条件组合 class 用 `cn(...)`，不要手拼字符串 / 三元嵌套
+- **shadcn vendored 组件（`components/ui/*`）禁动**——其中的 Tailwind class 是 shadcn 生成的成品，要调样式在外层 wrapper 上覆盖或用 `cn()` 合并
 
 ## 国际化
 
