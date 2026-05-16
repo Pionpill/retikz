@@ -81,10 +81,12 @@ export const ComponentPreview: FC<ComponentPreviewProps> = props => {
   const [localIsExpanded, setLocalIsExpanded] = useState<boolean | undefined>(undefined);
   const [copied, setCopied] = useState(false);
   const timerRef = useRef<number | null>(null);
-  // 卡内 drag：桌面默认关闭（避免劫持滚轮 / 误拖）靠 Hand 按钮开启；移动端（<lg）默认开启——窄屏没有滚轮且工具条不易触达。Dialog 内强制开启
-  const [dragEnabled, setDragEnabled] = useState(
-    () => typeof window !== 'undefined' && window.matchMedia('(max-width: 1023.98px)').matches,
-  );
+  // 卡内 drag 默认关闭（桌面避免劫持滚轮 / 误拖，移动端避免 touch-none 吃掉用户从 demo 区上下滑页面的手势）；
+  // local 为 undefined 时跟随全局 useComponentPreviewStore.dragEnabled（更多菜单可一次批量开启），
+  // 用户单卡点过 Hand 后本地选择胜出（与 hideCode / isExpand 的覆盖规则一致）；Dialog 内单独强制开启
+  const [localDragEnabled, setLocalDragEnabled] = useState<boolean | undefined>(undefined);
+  // 工具条 pinned：移动端没 hover，靠 tap preview 区域 toggle；拖拽开启时强制 pin（不然 Hand 按钮自己藏起来没法再关）
+  const [toolbarPinned, setToolbarPinned] = useState(false);
   const [isMaximized, setIsMaximized] = useState(false);
   const { transform, isDragging, panBy, zoomBy, resetTransform, isTransformed, transformStyle, beginDrag } =
     usePanZoom();
@@ -92,8 +94,11 @@ export const ComponentPreview: FC<ComponentPreviewProps> = props => {
   // 全局默认（仅在该卡 local 仍为 undefined 时生效）：二者同启用时 hideCode 胜出（更克制，isExpand 若想覆盖须用户单卡点开）
   const globalHideCode = useComponentPreviewStore(s => s.hideCode);
   const globalIsExpand = useComponentPreviewStore(s => s.isExpand);
+  const globalDragEnabled = useComponentPreviewStore(s => s.dragEnabled);
   const isCodeVisible = localIsCodeVisible ?? globalHideCode;
   const isExpanded = localIsExpanded ?? globalIsExpand;
+  const dragEnabled = localDragEnabled ?? globalDragEnabled;
+  const effectiveToolbarPinned = toolbarPinned || dragEnabled;
 
   useEffect(() => {
     return () => {
@@ -180,6 +185,7 @@ export const ComponentPreview: FC<ComponentPreviewProps> = props => {
         )}
         onMouseDown={beginDrag(dragEnabled)}
         onTouchStart={beginDrag(dragEnabled)}
+        onClick={() => setToolbarPinned(prev => !prev)}
       >
         <div
           className={cn('flex items-center justify-center', !isDragging && 'transition-transform duration-150')}
@@ -194,8 +200,9 @@ export const ComponentPreview: FC<ComponentPreviewProps> = props => {
           zoomBy={zoomBy}
           resetTransform={resetTransform}
           dragEnabled={dragEnabled}
-          toggleDrag={() => setDragEnabled(prev => !prev)}
+          toggleDrag={() => setLocalDragEnabled(!dragEnabled)}
           onMaximize={() => setIsMaximized(true)}
+          pinned={effectiveToolbarPinned}
         />
       </div>
       {hideCode ? null : (

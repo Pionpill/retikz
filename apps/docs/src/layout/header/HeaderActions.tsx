@@ -46,8 +46,10 @@ export const HeaderActions: FC = () => {
   const toggleLayout = useLayoutStore(s => s.toggleLayout);
   const previewHideCode = useComponentPreviewStore(s => s.hideCode);
   const previewIsExpand = useComponentPreviewStore(s => s.isExpand);
+  const previewDragEnabled = useComponentPreviewStore(s => s.dragEnabled);
   const togglePreviewHideCode = useComponentPreviewStore(s => s.toggleHideCode);
   const togglePreviewIsExpand = useComponentPreviewStore(s => s.toggleIsExpand);
+  const togglePreviewDragEnabled = useComponentPreviewStore(s => s.toggleDragEnabled);
   const comparisonTargets = useComparisonStore(s => s.visibleTargets);
   const setComparisonTargetVisible = useComparisonStore(s => s.setTargetVisible);
 
@@ -161,6 +163,9 @@ export const HeaderActions: FC = () => {
                   <DropdownMenuShortcut className="hidden lg:inline-flex">
                     <Shortcut keys={['mod', 'alt', 'E']} className="tracking-normal" />
                   </DropdownMenuShortcut>
+                </DropdownMenuCheckboxItem>
+                <DropdownMenuCheckboxItem checked={previewDragEnabled} onCheckedChange={togglePreviewDragEnabled}>
+                  {t('preview.dragComponent')}
                 </DropdownMenuCheckboxItem>
               </DropdownMenuGroup>
               <DropdownMenuSeparator />

@@ -70,7 +70,8 @@
   "preview": {
     "groupLabel": "组件演示",
     "hideAllCode": "隐藏所有代码",
-    "expandAllCode": "展开所有代码"
+    "expandAllCode": "展开所有代码",
+    "dragComponent": "拖动组件"
   },
   "comparison": {
     "groupLabel": "对照",

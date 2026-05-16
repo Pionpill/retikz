@@ -70,7 +70,8 @@
   "preview": {
     "groupLabel": "Component Preview",
     "hideAllCode": "Hide all code",
-    "expandAllCode": "Expand all code"
+    "expandAllCode": "Expand all code",
+    "dragComponent": "Drag component"
   },
   "comparison": {
     "groupLabel": "Comparisons",
