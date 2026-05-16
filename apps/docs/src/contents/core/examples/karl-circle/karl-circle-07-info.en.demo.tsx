@@ -110,7 +110,8 @@ const Demo: FC = () => (
       fill={INFO_BG}
       stroke="none"
       roundedCorners={6}
-      padding={10}
+      innerXSep={10}
+      innerYSep={4}
       align="left"
       text={[
         { text: 'angle α = 30°', fill: ANGLE_STROKE },
