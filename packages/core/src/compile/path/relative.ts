@@ -1,6 +1,6 @@
 import { arcEndPoint } from '../../geometry/arc';
 import type { IRPosition, IRStep, IRTarget } from '../../ir';
-import type { NodeLayout } from '../node';
+import type { NameStack } from '../name-stack';
 import { refPointOfTarget } from './anchor';
 
 /**
@@ -9,7 +9,7 @@ import { refPointOfTarget } from './anchor';
  */
 export const normalizeRelativeTargets = (
   steps: ReadonlyArray<IRStep>,
-  nodeIndex: Map<string, NodeLayout>,
+  nameStack: NameStack,
 ): Array<IRStep> => {
   let prevEnd: IRPosition | null = null;
   const out: Array<IRStep> = [];
@@ -62,7 +62,7 @@ export const normalizeRelativeTargets = (
     out.push({ ...step, to: resolvedTo });
 
     if (updatePrevEnd) {
-      const pos = refPointOfTarget(resolvedTo, nodeIndex);
+      const pos = refPointOfTarget(resolvedTo, nameStack);
       if (pos) prevEnd = pos;
     }
   }

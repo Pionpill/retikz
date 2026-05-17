@@ -1,5 +1,7 @@
 import type { IRPosition, IRTarget } from '../../ir';
-import { type NodeLayout, anchorOf, angleBoundaryOf, boundaryPointOf } from '../node';
+import { resolveAnchor } from '../anchor-cache';
+import type { NameStack } from '../name-stack';
+import { boundaryPointOf } from '../node';
 import { parseNodeRef } from '../parseTarget';
 import { resolvePosition } from '../position';
 
@@ -9,26 +11,26 @@ import { resolvePosition } from '../position';
  */
 export const refPointOfTarget = (
   target: IRTarget,
-  nodeIndex: Map<string, NodeLayout>,
+  nameStack: NameStack,
 ): IRPosition | null => {
   if (typeof target === 'string') {
     const ref = parseNodeRef(target);
-    const node = nodeIndex.get(ref.id);
+    const node = nameStack.lookup(ref.id);
     if (!node) return null;
     switch (ref.kind) {
       case 'node':
         return [node.rect.x, node.rect.y];
       case 'anchor':
-        return anchorOf(node, ref.anchor);
+        return resolveAnchor(node, ref.anchor);
       case 'angle':
-        return angleBoundaryOf(node, ref.angle);
+        return resolveAnchor(node, String(ref.angle));
     }
   }
   // relative/relativeAccumulate 已被 normalizeRelativeTargets 预解析；防御性守卫给 TS narrowing 用
   if (typeof target === 'object' && !Array.isArray(target) && ('relative' in target || 'relativeAccumulate' in target)) {
     return null;
   }
-  return resolvePosition(target, nodeIndex);
+  return resolvePosition(target, nameStack);
 };
 
 /** 折角中间点：`-|` → (curr.x, prev.y)；`|-` → (prev.x, curr.y) */
@@ -46,26 +48,26 @@ export const cornerOf = (
 export const clipForTarget = (
   target: IRTarget,
   toward: IRPosition,
-  nodeIndex: Map<string, NodeLayout>,
+  nameStack: NameStack,
 ): IRPosition | null => {
   if (typeof target === 'string') {
     const ref = parseNodeRef(target);
-    const node = nodeIndex.get(ref.id);
+    const node = nameStack.lookup(ref.id);
     if (!node) return null;
     switch (ref.kind) {
       case 'node':
         return boundaryPointOf(node, toward);
       case 'anchor':
-        return anchorOf(node, ref.anchor);
+        return resolveAnchor(node, ref.anchor);
       case 'angle':
-        return angleBoundaryOf(node, ref.angle);
+        return resolveAnchor(node, String(ref.angle));
     }
   }
   // relative/relativeAccumulate 已被预解析；防御性守卫给 TS narrowing 用
   if (typeof target === 'object' && !Array.isArray(target) && ('relative' in target || 'relativeAccumulate' in target)) {
     return null;
   }
-  return resolvePosition(target, nodeIndex);
+  return resolvePosition(target, nameStack);
 };
 
 /** 两个 IRPosition 两分量精确相等（未 round） */

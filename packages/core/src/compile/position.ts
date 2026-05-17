@@ -1,5 +1,5 @@
 import type { AtDirection, IRAtPosition, IROffsetPosition, IRPosition, PolarPosition } from '../ir';
-import type { NodeLayout } from './node';
+import type { NameStack } from './name-stack';
 
 /** 默认相对定位距离（CompileOptions.nodeDistance 未配时使用） */
 const DEFAULT_NODE_DISTANCE = 1;
@@ -21,21 +21,23 @@ const DIRECTION_VECTOR: Record<AtDirection, [number, number]> = {
 
 /**
  * IR 各种位置形态（笛卡尔/极坐标/相对定位/偏移定位/节点 id）→ 笛卡尔位置
- * @description 极坐标 origin / 偏移定位 of 均可递归引用节点 id 或字面坐标；relative `AtPosition` of 必须引用已定义节点/coordinate；解析失败返回 null。nodeDistance 为容器 prop 注入默认距离，AtPosition 自带 distance 优先
+ * @description 极坐标 origin / 偏移定位 of 均可递归引用节点 id 或字面坐标；relative `AtPosition` of 必须引用已定义节点/coordinate；解析失败返回 null。
+ *   节点 id lookup 走 NameStack.lookup 进行 inside-out 搜索（内层 frame 可见外层 frame）；
+ *   nodeDistance 为容器 prop 注入默认距离，AtPosition 自带 distance 优先
  */
 export const resolvePosition = (
   pos: IRPosition | PolarPosition | IRAtPosition | IROffsetPosition | string,
-  nodeMap: Map<string, NodeLayout>,
+  nameStack: NameStack,
   nodeDistance: number = DEFAULT_NODE_DISTANCE,
 ): IRPosition | null => {
   if (typeof pos === 'string') {
-    const node = nodeMap.get(pos);
+    const node = nameStack.lookup(pos);
     return node ? [node.rect.x, node.rect.y] : null;
   }
   if (Array.isArray(pos)) return pos;
   if ('direction' in pos) {
     // AtPosition：from of 节点中心，按 direction 单位向量 × distance 偏移
-    const ref = nodeMap.get(pos.of);
+    const ref = nameStack.lookup(pos.of);
     if (!ref) return null;
     const distance = pos.distance ?? nodeDistance;
     const [dx, dy] = DIRECTION_VECTOR[pos.direction];
@@ -43,7 +45,7 @@ export const resolvePosition = (
   }
   if ('offset' in pos) {
     // OffsetPosition：递归 resolve `of`（string id / Position / PolarPosition）再叠加 (dx, dy)
-    const base = resolvePosition(pos.of, nodeMap, nodeDistance);
+    const base = resolvePosition(pos.of, nameStack, nodeDistance);
     if (!base) return null;
     return [base[0] + pos.offset[0], base[1] + pos.offset[1]];
   }
@@ -52,7 +54,7 @@ export const resolvePosition = (
   if (!pos.origin) {
     origin = [0, 0];
   } else {
-    const resolved = resolvePosition(pos.origin, nodeMap, nodeDistance);
+    const resolved = resolvePosition(pos.origin, nameStack, nodeDistance);
     if (!resolved) return null;
     origin = resolved;
   }

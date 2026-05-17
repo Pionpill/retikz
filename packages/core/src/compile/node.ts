@@ -6,6 +6,7 @@ import type { Rect, RectAnchor } from '../geometry/rect';
 import { rect as rectOps } from '../geometry/rect';
 import type { AtDirection, IRLineSpec, IRNode, IRNodeLabel, NodeShape } from '../ir';
 import type { ScenePrimitive, TextLine } from '../primitive';
+import type { NameStack } from './name-stack';
 import { resolvePosition } from './position';
 import type { TextMeasurer } from './text-metrics';
 
@@ -217,12 +218,20 @@ const labelCenter = (layout: NodeLayout, label: NodeLabelLayout): Position => {
 
 /**
  * 取节点 shape 在指定角度方向的边界点
- * @description 角度约定与 PolarPosition 一致（度数：0°=+x，90°=+y 即 screen 下方）；不应用 margin（同 anchorOf）；用于 `'A.30'` 落点
+ * @description 角度是节点**局部坐标系**下的极角（度数：0°=局部 +x，90°=局部 +y）。layout.rect.rotate 把局部基绕中心旋转，得到世界系下的视觉方向；shape boundaryPoint 内部用 rotate-aware 投影，所以这里把局部 (cos, sin) 经 rect.rotate 旋转后加到中心当作世界系 toward 传入。不应用 margin（同 anchorOf）；用于 `'A.30'` 落点
  */
 export const angleBoundaryOf = (layout: NodeLayout, angleDeg: number): Position => {
   const rad = (angleDeg * Math.PI) / 180;
-  // toward 任意距离都行——boundary 只用方向
-  const toward: Position = [layout.rect.x + Math.cos(rad), layout.rect.y + Math.sin(rad)];
+  const lx = Math.cos(rad);
+  const ly = Math.sin(rad);
+  const rot = layout.rect.rotate ?? 0;
+  const cosR = Math.cos(rot);
+  const sinR = Math.sin(rot);
+  // 局部 (lx, ly) → 世界方向 (lx*cos - ly*sin, lx*sin + ly*cos)；toward 距离任意，boundaryPoint 只用方向
+  const toward: Position = [
+    layout.rect.x + lx * cosR - ly * sinR,
+    layout.rect.y + lx * sinR + ly * cosR,
+  ];
   switch (layout.shape) {
     case 'rectangle':
       return rectOps.boundaryPoint(rectOf(layout, 0), toward);
@@ -242,7 +251,7 @@ export const angleBoundaryOf = (layout: NodeLayout, angleDeg: number): Position 
 export const layoutNode = (
   node: IRNode,
   measureText: TextMeasurer,
-  nodeIndex: Map<string, NodeLayout>,
+  nameStack: NameStack,
   nodeDistance?: number,
 ): NodeLayout => {
   // 缩放：xScale/yScale 优先于 scale 别名，默认 1；乘进所有尺寸让 path 贴缩放后边界。
@@ -344,7 +353,7 @@ export const layoutNode = (
   }
 
   const rotateDeg = node.rotate ?? 0;
-  const center = resolvePosition(node.position, nodeIndex, nodeDistance);
+  const center = resolvePosition(node.position, nameStack, nodeDistance);
   if (!center) {
     throw new Error(
       `Cannot resolve position for node ${node.id ?? '(unnamed)'}; polar.origin or at.of may reference an undefined node`,

@@ -1,6 +1,7 @@
 import { rect as rectOps } from '../geometry/rect';
 import type { IR, IRChild, IRPath, IRPosition, IRScope } from '../ir';
 import type { GroupPrim, Scene, ScenePrimitive, Transform } from '../primitive';
+import { type DuplicateRegisterInfo, NameStack } from './name-stack';
 import { type NodeLayout, emitNodePrimitives, layoutNode } from './node';
 import { emitPathPrimitive } from './path/index';
 import { resolvePosition } from './position';
@@ -33,6 +34,29 @@ const coordinateAsLayout = (
   fontSize: 0,
 });
 
+/**
+ * 把 scope.id 注册成最简占位 NodeLayout（0×0 rect 落在 scope 在当前累积 chain 下的局部原点）
+ * @description scope.id 作为外部句柄进入父 frame；bbox 真正按子树范围计算的版本由后续 ADR 接手——此处先放占位，让 lookup 不返回 undefined、保证跨 scope 引用 scope.id 在编译期可解析
+ */
+const scopePlaceholderLayout = (
+  id: string,
+  chain: ReadonlyArray<Transform>,
+): NodeLayout => {
+  const [gx, gy] = chain.length === 0 ? [0, 0] : applyTransformChain([0, 0], chain);
+  return {
+    id,
+    shape: 'rectangle',
+    rect: { x: gx, y: gy, width: 0, height: 0, rotate: 0 },
+    rotateDeg: 0,
+    margin: 0,
+    textWidth: 0,
+    textHeight: 0,
+    align: 'middle',
+    lineHeight: 0,
+    fontSize: 0,
+  };
+};
+
 /** 编译期警告：path / position 解析失败时通过 `CompileOptions.onWarn` 发出，不影响编译产物 */
 export type CompileWarning = {
   /**
@@ -48,6 +72,7 @@ export type CompileWarning = {
     | 'AT_TARGET_UNRESOLVED'
     | 'RELATIVE_INITIAL_NO_PREV_END'
     | 'BBOX_EXTREME_INPUT'
+    | 'DUPLICATE_NODE_ID'
     | (string & {});
   /** 人类可读消息（英文） */
   message: string;
@@ -87,7 +112,10 @@ const defaultWarnDispatcher = (warning: CompileWarning): void => {
   console.warn(`[retikz] ${warning.code} at ${warning.path}: ${warning.message}`);
 };
 
-/** Pass 1 递归扫描时记录的 pending path，Pass 2 解析后一律发到顶层 primitives */
+/**
+ * Pass 1 递归扫描时记录的 pending path
+ * @description path 必须等所有 node / coordinate Pass 1 注册完才能解析端点（避免前向引用），但 lookup 必须在它所在的 frame 栈上下文中进行——scope localNamespace 内 path 引用同 frame id 需在 frame pop 前完成。compile 处理顺序：每个层级先把子 node / coordinate / 子 scope 处理完（pending path 全部收集），然后**在该层 popFrame 前**统一 resolve 本层 pending path；这样 path 端点 inside-out lookup 能正确看到本层 frame
+ */
 type PendingPath = {
   /** path IR 节点本体 */
   path: IRPath;
@@ -108,9 +136,24 @@ const scopeTransformWarnCode = (
   return 'UNRESOLVED_NODE_REFERENCE';
 };
 
+/** 把 DuplicateRegisterInfo 翻成 CompileWarning（含可读 message + 双 IR locator） */
+const formatDuplicateWarning = (info: DuplicateRegisterInfo): CompileWarning => {
+  const frameNote =
+    info.frameDepth === 0
+      ? 'frame depth: 0 (root namespace)'
+      : `frame depth: ${info.frameDepth} (under <Scope localNamespace>)`;
+  const firstLoc = info.firstIrPath ?? '(unknown earlier location)';
+  const secondLoc = info.secondIrPath ?? '(unknown current location)';
+  return {
+    code: 'DUPLICATE_NODE_ID',
+    message: `Duplicate id '${info.id}' registered in the same namespace frame (${frameNote}); first defined at ${firstLoc}, redefined at ${secondLoc}. The later definition overrides the earlier one (last-wins).`,
+    path: secondLoc,
+  };
+};
+
 /**
  * IR → Scene 纯函数转换，所有 adapter 共享
- * @description Pass 1 递归处理 node / coordinate / scope，把 scope 树下沉为嵌套 GroupPrim；scope.transforms 中的 4 种 translate 变体按 lowerScopeTransforms 展平为 Cartesian transform；node 在 Scene primitive 树里是局部坐标 + GroupPrim transform 链、在 nodeIndex 中存全局坐标供其他节点 / path 引用。Pass 2 解析 path 端点写 d 字符串，path primitive 发到 Pass 1 记录的对应容器；末端按 precision 折算 layout
+ * @description Pass 1 递归处理 node / coordinate / scope，把 scope 树下沉为嵌套 GroupPrim；scope.transforms 中的 4 种 translate 变体按 lowerScopeTransforms 展平为 Cartesian transform；node 在 Scene primitive 树里是局部坐标 + GroupPrim transform 链、在 NameStack 中存全局坐标供其他节点 / path 引用。NameStack 用栈式 frame 管理命名空间：默认全局扁平、`<Scope localNamespace>` 推入子 frame；scope.id 始终在父 frame 注册（外部句柄）；id lookup 从栈顶向栈底 inside-out 搜索；同 frame 重复 id 触发 DUPLICATE_NODE_ID warn + 后定义覆盖前定义。Pass 2 解析 path 端点写 d 字符串，path primitive 发到 Pass 1 记录的对应容器；末端按 precision 折算 layout
  */
 export const compileToScene = (ir: IR, options: CompileOptions = {}): Scene => {
   const measureText = options.measureText ?? fallbackMeasurer;
@@ -120,12 +163,37 @@ export const compileToScene = (ir: IR, options: CompileOptions = {}): Scene => {
   const onWarn = options.onWarn ?? defaultWarnDispatcher;
 
   const primitives: Array<ScenePrimitive> = [];
-  const nodeIndex = new Map<string, NodeLayout>();
+  const nameStack = new NameStack({
+    onDuplicate: info => onWarn(formatDuplicateWarning(info)),
+  });
   const allPoints: Array<IRPosition> = [];
-  const pendingPaths: Array<PendingPath> = [];
 
   /**
-   * 递归处理一组 IR child，把 node / coordinate 发到 sink、把 path 收集到 pendingPaths、scope 下沉为 GroupPrim
+   * 解析一批本层收集的 pending paths（lookup-only 阶段）
+   * @description path primitive 一律 push 到顶层 `primitives` —— 端点已是全局坐标，不能进 GroupPrim 否则被 scope.transform 二次 apply。NameStack 切到 pass2 守门：path 解析中误调 register 抛 internal error；解析完切回 pass1 让上层 scope 子树继续 register 子节点
+   */
+  const resolvePendingPaths = (pending: ReadonlyArray<PendingPath>): void => {
+    if (pending.length === 0) return;
+    nameStack.enterLookupPhase();
+    try {
+      for (const item of pending) {
+        const result = emitPathPrimitive(item.path, nameStack, round, measureText, {
+          onWarn,
+          irPath: item.irPath,
+        });
+        if (result) {
+          for (const prim of result.primitives) primitives.push(prim);
+          for (const p of result.points) allPoints.push(p);
+        }
+      }
+    } finally {
+      nameStack.exitLookupPhase();
+    }
+  };
+
+  /**
+   * 递归处理一组 IR child，把 node / coordinate 发到 sink、把本层 path 收集到 ownPaths、scope 下沉为 GroupPrim
+   * @description 子节点处理完后**在本层 popFrame 前**统一 resolve ownPaths，确保 scope localNamespace 内 path 端点 lookup 能看到内层 frame；path 端点全局坐标 emit 到顶层 primitives 不进当前层 sink（GroupPrim 会对子 primitive 再 apply 一次 chain）
    * @param children 当前层级的 IR child 数组
    * @param chain 从根到当前层级累积的 Cartesian-only transform 链
    * @param sink 当前层级 Scene primitive 落点（顶层 = primitives，scope 内 = GroupPrim.children）
@@ -137,12 +205,16 @@ export const compileToScene = (ir: IR, options: CompileOptions = {}): Scene => {
     sink: Array<ScenePrimitive>,
     locatorPrefix: string,
   ): void => {
+    /** 当前层级收集的 pending paths（在本层 popFrame 前 resolve） */
+    const ownPaths: Array<PendingPath> = [];
     for (let i = 0; i < children.length; i++) {
       const child = children[i];
       if (child.type === 'node') {
-        const layout = layoutNode(child, measureText, nodeIndex, nodeDistance);
+        const layout = layoutNode(child, measureText, nameStack, nodeDistance);
         const globalLayout = chain.length === 0 ? layout : projectLayoutToGlobal(layout, chain);
-        if (child.id) nodeIndex.set(child.id, globalLayout);
+        if (child.id) {
+          nameStack.register(child.id, globalLayout, `${locatorPrefix}children[${i}].node.id`);
+        }
         for (const prim of emitNodePrimitives(layout, round)) {
           sink.push(prim);
         }
@@ -154,7 +226,7 @@ export const compileToScene = (ir: IR, options: CompileOptions = {}): Scene => {
           rectOps.anchor(globalLayout.rect, 'south-east'),
         );
       } else if (child.type === 'coordinate') {
-        const localCenter = resolvePosition(child.position, nodeIndex, nodeDistance);
+        const localCenter = resolvePosition(child.position, nameStack, nodeDistance);
         if (!localCenter) {
           onWarn({
             code: 'POLAR_ORIGIN_UNRESOLVED',
@@ -166,10 +238,14 @@ export const compileToScene = (ir: IR, options: CompileOptions = {}): Scene => {
           );
         }
         const globalCenter = chain.length === 0 ? localCenter : applyTransformChain(localCenter, chain);
-        nodeIndex.set(child.id, coordinateAsLayout(child.id, globalCenter));
+        nameStack.register(
+          child.id,
+          coordinateAsLayout(child.id, globalCenter),
+          `${locatorPrefix}children[${i}].coordinate.id`,
+        );
       } else if (child.type === 'scope') {
         const rawTransforms = child.transforms ?? [];
-        const loweredOwn = lowerScopeTransforms(rawTransforms, nodeIndex, nodeDistance);
+        const loweredOwn = lowerScopeTransforms(rawTransforms, nameStack, nodeDistance);
         if (loweredOwn === null) {
           onWarn({
             code: scopeTransformWarnCode(child),
@@ -180,14 +256,28 @@ export const compileToScene = (ir: IR, options: CompileOptions = {}): Scene => {
         }
         const ownTransforms: ReadonlyArray<Transform> = loweredOwn ?? [];
         const innerChain: ReadonlyArray<Transform> = [...chain, ...ownTransforms];
+        // scope.id 必须先于子树处理在父 frame 注册（外部句柄，不受 localNamespace 影响）
+        if (child.id) {
+          nameStack.register(
+            child.id,
+            scopePlaceholderLayout(child.id, innerChain),
+            `${locatorPrefix}children[${i}].scope.id`,
+          );
+        }
+        // 进入 scope 子 frame：localNamespace=true 时隔离子树命名空间
+        const pushedFrame = child.localNamespace === true;
+        if (pushedFrame) nameStack.pushFrame();
         const innerSink: Array<ScenePrimitive> = [];
-        processChildren(
-          child.children,
-          innerChain,
-          innerSink,
-          `${locatorPrefix}children[${i}].scope.`,
-        );
-        // TODO: 当 scope.id 设值时注册 axis-aligned synthetic bbox layout，让外部 path 能 target 'scope-id.<anchor>'
+        try {
+          processChildren(
+            child.children,
+            innerChain,
+            innerSink,
+            `${locatorPrefix}children[${i}].scope.`,
+          );
+        } finally {
+          if (pushedFrame) nameStack.popFrame();
+        }
         const hasOwnTransforms = ownTransforms.length > 0;
         const isPrunable =
           innerSink.length === 0 &&
@@ -201,30 +291,20 @@ export const compileToScene = (ir: IR, options: CompileOptions = {}): Scene => {
         if (hasOwnTransforms) group.transforms = [...ownTransforms];
         sink.push(group);
       } else {
-        // child.type === 'path'：Pass 2 才解析。
-        // path 端点从 nodeIndex（全局坐标）查得，几何已是全局——不进 GroupPrim 避免被 scope.transform 重复 apply
-        pendingPaths.push({
+        // child.type === 'path'：本层 node / coordinate / 子 scope 处理完后统一 resolve（仍在本层 frame 上下文）
+        // path 端点从 NameStack（全局坐标）查得，几何已是全局——primitive 在 resolvePendingPaths 中一律 push 顶层 primitives 避免被 scope.transform 重复 apply
+        ownPaths.push({
           path: child,
           irPath: `${locatorPrefix}children[${i}].path`,
         });
       }
     }
+    // 本层 children 处理完毕：在当前 frame 还活着时 resolve 本层 path（让 scope 内 path 引用 inside-out lookup 看到内层 id）
+    resolvePendingPaths(ownPaths);
   };
 
-  // Pass 1：递归处理整棵 IR child 树
+  // 递归处理整棵 IR child 树；每层 children 末尾自行 resolve 本层 path
   processChildren(ir.children, [], primitives, '');
-
-  // Pass 2：解析所有 path（来自顶层 / 任意 scope 内）；端点取 nodeIndex 全局坐标，primitive 一律落顶层
-  for (const pending of pendingPaths) {
-    const result = emitPathPrimitive(pending.path, nodeIndex, round, measureText, {
-      onWarn,
-      irPath: pending.irPath,
-    });
-    if (result) {
-      for (const prim of result.primitives) primitives.push(prim);
-      for (const p of result.points) allPoints.push(p);
-    }
-  }
 
   return {
     primitives,

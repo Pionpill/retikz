@@ -92,6 +92,50 @@ Scope does not introduce namespace isolation — child node ids register into th
 
 A referenced node resolves to its **global** coordinate (with the cumulative transform chain of its containing scopes applied). The forward-reference rule matches v0.1 — the referent must appear before the reference in IR order.
 
+The reference string also accepts `.<anchor>` or `.<deg>` suffixes for the visual border point instead of the center — anchors / numeric angles are computed on the node's **global** rect (including the accumulated scope rotate / scale), so endpoints across scope boundaries still land precisely on the visual edge:
+
+<ComponentPreview name="scope-anchor-cross" size="md" />
+
+## Namespace and isolation
+
+By default a scope does **not** introduce a namespace boundary — child node / coordinate / nested scope.id ids all register into the current top frame; ids from multiple stacked scopes flow up to the `<TikZ>` root frame and outer paths can reference them directly.
+
+<Comparison target="tikz" title="Default namespace behavior">
+
+TikZ pgf's `\begin{scope}` does not introduce a local namespace — a `\node (foo) {...}` registered inside is globally visible, and outer code can `\draw (foo) -- ...` directly. retikz keeps this convention so v0.1 IR continues to work without changing id references after being wrapped in a scope; opt in to `localNamespace` only when subdiagram reuse or template-style isolation is needed.
+
+</Comparison>
+
+When subdiagram reuse or template-style isolation is needed, opt in with `localNamespace: true` so the scope pushes its own frame and child ids are isolated from the outside:
+
+<ComponentPreview name="scope-local-namespace-basic" size="md" />
+
+- **inside-out lookup**: when an inner path references an id string, the lookup walks the frame stack from top to bottom — inner code **can** see outer ids (shadowing), but outer code **cannot** see inner ids
+- **Shadowing**: registering the same id in an inner frame is not a conflict and emits no warning; lookups hit the inner copy first, and the outer id becomes visible again once the frame is popped
+- **scope.id always registers in the parent frame**: scope.id is the external handle and is **not** affected by its own `localNamespace`; outer paths can always reference `<Scope id="X">` as `X`, regardless of whether the scope uses local namespacing internally
+
+Nested localNamespace forms a stack of namespace frames:
+
+<ComponentPreview name="scope-local-namespace-nested" size="md" />
+
+The innermost path references `L2-node` / `L1-node` / `root-anchor` — each resolves at the innermost / middle / root frame respectively; the stack search returns at the first match.
+
+When every `localNamespace` layer registers the same id, inside-out lookup automatically shadows outer copies; same id across frames is not a duplicate and no warning is emitted:
+
+<ComponentPreview name="scope-local-namespace-shadowing" size="md" />
+
+## Duplicate id handling
+
+When the same id is registered more than once within the same frame (any combination of node × node, node × coordinate, node × scope.id) compile emits a `DUPLICATE_NODE_ID` warning (collected via `CompileOptions.onWarn`) and **the later definition overrides the earlier one** (last-wins):
+
+<ComponentPreview name="scope-duplicate-id-warn" size="md" />
+
+- Compile does **not** throw — useful for LLM-generated / templated code where duplicates can be benign and you still want a usable output
+- Every duplicate emits its own warning (not merged); each carries two IR locators (earlier and current) plus the current frame depth
+- Same id across different frames (e.g. an outer id and a same-named id inside `<Scope localNamespace>`) is shadowing rather than a duplicate — **no warning** is emitted
+
+> v0.1 behavior: duplicate ids threw. Starting from alpha.1, the policy is warn + last-wins, so v0.1 code keeps running unchanged; if you want strict behavior, detect `code === 'DUPLICATE_NODE_ID'` inside `onWarn` and re-throw yourself.
+
 ## Empty scope optimisation
 
 `<Scope></Scope>` with no children, no transforms, and no id → compile emits no Scene primitive; any non-empty field → a `GroupPrim` is emitted. Writing a bare `<Scope>` leaves no empty-container overhead.
@@ -102,8 +146,8 @@ A referenced node resolves to its **global** coordinate (with the cumulative tra
 | --- | --- | --- | --- |
 | `transforms` | `Array<Transform>` | — | Local transform list, 6 variants; applied in array order (0-th first) |
 | `children` | `ReactNode` | — | Scope children: `<Node>` / `<Path>` / `<Coordinate>` / nested `<Scope>` |
-| `id` | `string` | — | Optional scope reference id (field exposed; not consumed by the current alpha) |
-| `localNamespace` | `boolean` | `false` | Whether to create a local namespace (field exposed; not consumed by the current alpha) |
+| `id` | `string` | — | Optional scope reference id; when set, registers into the **parent frame** (external handle), so outer paths can reference it as `'cluster'` / `'cluster.<anchor>'` |
+| `localNamespace` | `boolean` | `false` | Whether to create a local namespace: `true` pushes a child frame and isolates child ids from the outside (external code cannot see them; inner code can still inside-out reach outer ids); default false = global flat |
 
 ## Related
 

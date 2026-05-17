@@ -7,6 +7,7 @@ import type {
   PolarPosition,
 } from '../ir';
 import type { Transform } from '../primitive';
+import type { NameStack } from './name-stack';
 import type { NodeLayout } from './node';
 import { resolvePosition } from './position';
 
@@ -18,7 +19,7 @@ import { resolvePosition } from './position';
  */
 export const lowerScopeTransforms = (
   transforms: ReadonlyArray<IRTransform>,
-  nodeIndex: Map<string, NodeLayout>,
+  nameStack: NameStack,
   nodeDistance?: number,
 ): Array<Transform> | null => {
   const out: Array<Transform> = [];
@@ -30,7 +31,7 @@ export const lowerScopeTransforms = (
       case 'polar-translate': {
         const polar: PolarPosition = { angle: t.angle, radius: t.radius };
         if (t.origin !== undefined) polar.origin = t.origin;
-        const resolved = resolvePosition(polar, nodeIndex, nodeDistance);
+        const resolved = resolvePosition(polar, nameStack, nodeDistance);
         if (!resolved) return null;
         out.push({ kind: 'translate', x: resolved[0], y: resolved[1] });
         break;
@@ -38,7 +39,7 @@ export const lowerScopeTransforms = (
       case 'at-translate': {
         const at: IRAtPosition = { direction: t.direction, of: t.of };
         if (t.distance !== undefined) at.distance = t.distance;
-        const resolved = resolvePosition(at, nodeIndex, nodeDistance);
+        const resolved = resolvePosition(at, nameStack, nodeDistance);
         if (!resolved) return null;
         out.push({ kind: 'translate', x: resolved[0], y: resolved[1] });
         break;
@@ -48,7 +49,7 @@ export const lowerScopeTransforms = (
           of: t.of,
           offset: t.offset ?? [0, 0],
         };
-        const resolved = resolvePosition(off, nodeIndex, nodeDistance);
+        const resolved = resolvePosition(off, nameStack, nodeDistance);
         if (!resolved) return null;
         out.push({ kind: 'translate', x: resolved[0], y: resolved[1] });
         break;

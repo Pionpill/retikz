@@ -641,3 +641,93 @@ describe('scope.id 占位（暂不注册 synthetic bbox）', () => {
     expect(() => compileToScene(ir)).not.toThrow();
   });
 });
+
+describe('同 frame 重复 id 触发 DUPLICATE_NODE_ID warn + last-wins', () => {
+  it('duplicate_same_frame_two_nodes_warn_last_wins：两个同 id node → 1 条 warn，nodeIndex 取 second', () => {
+    const ir = scene([
+      { type: 'node', id: 'A', position: [0, 0], text: 'first' },
+      { type: 'node', id: 'A', position: [50, 0], text: 'second' },
+      {
+        type: 'path',
+        children: [
+          { type: 'step', kind: 'move', to: [0, -60] },
+          { type: 'step', kind: 'line', to: 'A' },
+        ],
+      },
+    ]);
+    const warnings: Array<CompileWarning> = [];
+    const compiled = compileToScene(ir, { onWarn: w => warnings.push(w) });
+    const dups = warnings.filter(w => w.code === 'DUPLICATE_NODE_ID');
+    expect(dups).toHaveLength(1);
+    expect(dups[0].message).toContain("'A'");
+    expect(dups[0].path).toContain('children[1].node.id');
+    // last-wins：path 端点应接近 second 全局中心 (50, 0)
+    const path = compiled.primitives.find(p => p.type === 'path');
+    if (path?.type === 'path') {
+      const ln = path.commands.find(c => c.kind === 'line');
+      if (ln?.kind === 'line') {
+        expect(Math.abs(ln.to[0] - 50)).toBeLessThan(20);
+      }
+    }
+  });
+
+  it('duplicate_same_frame_node_vs_coordinate_warn：node + coordinate 同 id → 1 条 warn', () => {
+    const ir = scene([
+      { type: 'node', id: 'A', position: [0, 0], text: 'first' },
+      { type: 'coordinate', id: 'A', position: [100, 0] },
+    ]);
+    const warnings: Array<CompileWarning> = [];
+    compileToScene(ir, { onWarn: w => warnings.push(w) });
+    const dups = warnings.filter(w => w.code === 'DUPLICATE_NODE_ID');
+    expect(dups).toHaveLength(1);
+    expect(dups[0].path).toContain('coordinate.id');
+  });
+
+  it('duplicate_same_frame_node_vs_scope_id_warn：node + scope.id 同名 → 1 条 warn', () => {
+    const ir = scene([
+      { type: 'scope', id: 'X', children: [{ type: 'node', id: 'inner', position: [0, 0], text: 'i' }] },
+      { type: 'node', id: 'X', position: [50, 0], text: 'X' },
+    ]);
+    const warnings: Array<CompileWarning> = [];
+    compileToScene(ir, { onWarn: w => warnings.push(w) });
+    const dups = warnings.filter(w => w.code === 'DUPLICATE_NODE_ID');
+    expect(dups).toHaveLength(1);
+  });
+
+  it('duplicate_same_frame_three_times_warn_each：三个同 id → 2 条 warn（N - 1）', () => {
+    const ir = scene([
+      { type: 'node', id: 'A', position: [0, 0], text: '1' },
+      { type: 'node', id: 'A', position: [10, 0], text: '2' },
+      { type: 'node', id: 'A', position: [20, 0], text: '3' },
+    ]);
+    const warnings: Array<CompileWarning> = [];
+    compileToScene(ir, { onWarn: w => warnings.push(w) });
+    const dups = warnings.filter(w => w.code === 'DUPLICATE_NODE_ID');
+    expect(dups).toHaveLength(2);
+    expect(dups[0].path).toContain('children[1].node.id');
+    expect(dups[1].path).toContain('children[2].node.id');
+  });
+
+  it('duplicate 不抛错；compile 仍正常完成', () => {
+    const ir = scene([
+      { type: 'node', id: 'A', position: [0, 0], text: 'first' },
+      { type: 'node', id: 'A', position: [50, 0], text: 'second' },
+    ]);
+    expect(() => compileToScene(ir, { onWarn: () => {} })).not.toThrow();
+  });
+});
+
+describe('scope 内前向引用规则', () => {
+  it('scope_forward_ref_within_scope_rejected：scope 内 polar.origin → 后定义 id → 解析失败抛错（与 v0.1 一致）', () => {
+    const ir = scene([
+      {
+        type: 'scope',
+        children: [
+          { type: 'node', id: 'A', position: { origin: 'B', angle: 0, radius: 10 }, text: 'A' },
+          { type: 'node', id: 'B', position: [0, 0], text: 'B' },
+        ],
+      },
+    ]);
+    expect(() => compileToScene(ir, { onWarn: () => {} })).toThrow();
+  });
+});

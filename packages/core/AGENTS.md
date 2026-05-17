@@ -86,10 +86,20 @@
 - `IRScope` 是 IRChild 第 4 类，对应 TikZ `\begin{scope}[...]...\end{scope}`：分组 + 局部 transform（暂占位 / 后续承担样式作用域）
 - `TransformSchema` 6 变体（IR 层）：`translate` / `polar-translate` / `at-translate` / `offset-translate` / `rotate` / `scale`——4 个 translate 完全镜像 Node.position union
 - compile Pass 1 递归处理 scope 树：`lowerScopeTransforms` 把 4 个 translate 变体调用 `resolvePosition` 展平为 Cartesian translate，再下沉到 Scene `GroupPrim.transforms`（Scene 维持 3 变体不变）
-- nodeIndex 存全局坐标（chain apply 后），Scene primitive 树里 node 用局部坐标 + GroupPrim transform 链——adapter 只看 Scene 的几何
+- NameStack 存全局坐标（chain apply 后），Scene primitive 树里 node 用局部坐标 + GroupPrim transform 链——adapter 只看 Scene 的几何
 - 空 scope（children 空 + transforms 空 / 缺省 + id 缺省）→ 不 emit GroupPrim
 - 后续 ADR 接：
-  - localNamespace 隔离 + 同 frame duplicate id warn（ADR-02）
-  - scope.id 触发的 synthetic bbox 注册（ADR-03）
-  - scope 下相对 Position 引用外层节点的投影规则（ADR-04）
+  - scope.id 触发的 synthetic bbox 注册
+  - scope 下相对 Position 引用外层节点的投影规则
   - 占位待 v0.2 alpha.2 单独 ADR：scope 上挂样式默认值（`nodeDefault` / `pathDefault`）
+
+## 命名空间栈（`compile/name-stack.ts`）
+
+- compile 用 `NameStack` 替代单一 `Map<string, NodeLayout>` 作为 id → layout 的查找结构；内部维护 `Array<Map<string, NodeLayout>>`，栈底是 `<TikZ>` 根 frame
+- **默认全局扁平**：`<Scope>` 不 push frame，子 node / coordinate / 嵌套 scope.id 全部注册到栈顶现有 frame；与 TikZ pgf 默认 + v0.1 行为一致
+- **opt-in 隔离**：`<Scope localNamespace>` push 子 frame；子节点 id 注册到此 local frame、退出时 pop 不向父合并 → 外部不可见
+- **scope.id 始终在父 frame 注册**：scope.id 是外部句柄；与 `localNamespace` 字段无关，永远进入父 frame 让外部 path 可引用
+- **lookup = inside-out**：path / position referent 字符串 id 从当前 frame 向栈底逐层查找；命中第一个匹配 frame 返回——内部 shadowing 外部、外部看不到内部
+- **同 frame 重复 id 走 warn + last-wins**：register 检测到栈顶 frame 已有同 id → 通过 onDuplicate 回调发 `DUPLICATE_NODE_ID`（compile 翻译成 CompileWarning），用新 layout 覆盖；**不抛错**。跨 frame 同 id 是 shadowing，**不算 duplicate、不 warn**
+- 与 v0.1 行为对比：v0.1 duplicate throw，alpha 起改为 warn + last-wins；用户 v0.1 代码 0 改动；如需 strict 行为，`onWarn` 内可检测 code 主动 throw
+- NameStack 内部 `phase: 'pass1' | 'pass2'` 状态：register 仅 pass1 允许，pass2 期 register 抛 internal error（防御性 invariant，path 解析阶段只 lookup）；compile 在每层 children 处理完后切到 pass2 resolve 本层 path、再切回 pass1 继续上层 children
