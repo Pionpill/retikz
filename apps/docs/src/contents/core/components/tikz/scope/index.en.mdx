@@ -17,7 +17,7 @@ import { Scope } from '@retikz/react';
 </Scope>
 ```
 
-`transforms` is an array of 6 variants: 4 translate variants (Cartesian / polar / direction-relative / offset) + `rotate` + `scale`. Array order is application order — the 0-th entry takes effect first (innermost), matching SVG transform list / Scene `GroupPrim`.
+A bare `<Scope></Scope>` (no children, no transforms, no id) → compile emits no Scene primitive; any non-empty field → a `GroupPrim` is emitted, no empty-container overhead.
 
 ### When to use Scope
 
@@ -25,13 +25,7 @@ import { Scope } from '@retikz/react';
 - **Rotate a subdiagram**: rotate a subgraph around the scope's local origin; connections and labels follow automatically
 - **Nested coordinate frames**: outer scope positions the cluster, inner scope positions children within the cluster — clearer than computing absolute coordinates by hand
 
-<Comparison target="tikz" title="Scope mapping">
-
-`<Scope transforms={[{ kind: 'translate', x: 50, y: 0 }]}>...</Scope>` maps to TikZ `\begin{scope}[shift={(50,0)}] ... \end{scope}`: a local transform is pushed at the start of the subdiagram and popped at the end. TikZ stacks CM in the order options appear; retikz applies `transforms` in array index order, reusing the SVG / Scene convention.
-
-</Comparison>
-
-## The 6 transform variants
+### The 6 transform variants
 
 The 4 translate variants mirror the 4 `<Node position>` shapes (Cartesian / polar / direction-relative / offset) one-to-one. At compile time they are all flattened to Cartesian translate before being lowered to Scene `GroupPrim`; `rotate` / `scale` pass through directly.
 
@@ -44,31 +38,27 @@ The 4 translate variants mirror the 4 `<Node position>` shapes (Cartesian / pola
 | `rotate` | `{ degrees, cx?, cy? }` | Rotate by degrees; `cx/cy` default to scope local origin |
 | `scale` | `{ x, y? }` | Scale; `y` defaults to `x` (uniform) |
 
-Array order = the 0-th transform is applied first to child coordinates. `transforms: [translate, rotate]` means translate then rotate — same semantics as SVG `transform="translate(...) rotate(...)"`.
+Array order is application order — the 0-th entry takes effect first (innermost), matching SVG transform list / Scene `GroupPrim`. `transforms: [translate, rotate]` means translate then rotate — same semantics as SVG `transform="translate(...) rotate(...)"`.
+
+<Comparison target="tikz" title="Scope mapping">
+
+`<Scope transforms={[{ kind: 'translate', x: 50, y: 0 }]}>...</Scope>` maps to TikZ `\begin{scope}[shift={(50,0)}] ... \end{scope}`: a local transform is pushed at the start of the subdiagram and popped at the end. TikZ stacks CM in the order options appear; retikz applies `transforms` in array index order, reusing the SVG / Scene convention.
+
+</Comparison>
 
 ## Examples
 
-### Basic translation
+### Translation
 
-Cartesian translate is the most common form: move a subdiagram as a whole:
+Cartesian translate is the most common form — the cluster of nodes + paths share one shift:
 
 <ComponentPreview name="scope-translate-basic" size="md" />
 
-### Polar translation
-
-`polar-translate` describes the cluster center relative to an origin in polar coordinates — two clusters below use `angle: 0` / `angle: 180` with identical `radius`, landing symmetrically on either side of the hub:
+The polar / at / offset variants describe "polar offset / direction-relative / Cartesian offset" — equivalents of TikZ `[shift={(angle:radius)}]` / `[<dir> of=A]` / `[shift={($(A) + (dx,dy)$)}]`:
 
 <ComponentPreview name="scope-polar-translate" size="md" />
 
-### Direction-relative translation
-
-`at-translate` places the whole group at a direction-distance from a referent node — visually scope = "right / above / below the referent by distance", same expressiveness as `<Node position={{ direction, of, distance }}>` but applied to a cluster instead of a single point:
-
 <ComponentPreview name="scope-at-translate" size="md" />
-
-### Offset translation
-
-`offset-translate` expresses "anchor to a referent node, then offset by (dx, dy)" — when the 8-direction + single-distance form of `at-translate` is not enough:
 
 <ComponentPreview name="scope-offset-translate" size="md" />
 
@@ -96,7 +86,7 @@ The reference string also accepts `.<anchor>` or `.<deg>` suffixes for the visua
 
 <ComponentPreview name="scope-anchor-cross" size="md" />
 
-## scope.id: reference the scope as a whole
+### Reference the scope as a whole
 
 When `<Scope id="cluster">` is set, compile collects the axis-aligned **global bounding box** of all child layouts (nodes / coordinates / nested scope.id bboxes) at the end of Pass 1 and registers a synthetic `rectangle` `NodeLayout` named `cluster` into the **parent** namespace frame. From the outside, `cluster` behaves exactly like a normal rectangle node — paths can target `cluster.north` / `cluster.east` / `cluster.30`, and other nodes can use `cluster` as the referent for polar / direction / offset positioning.
 
@@ -106,39 +96,29 @@ When `<Scope id="cluster">` is set, compile collects the axis-aligned **global b
 
 </Comparison>
 
-### Basic reference
-
 External paths use `'cluster.<anchor>'` to hit the **whole** cluster's visual border instead of any single inner node:
 
 <ComponentPreview name="scope-id-reference" size="md" />
 
 - bbox endpoints (`.north` / `.east` / `.south-west` / `.30` / etc.) work exactly like a rectangle node — all 9 named anchors plus numeric angles are supported via the shared rect anchor path
 - `'cluster'` with no suffix uses `boundaryPoint` clip toward the source (same behavior as a normal node id with no anchor)
-- Path endpoints (move/line `to`) are not included in the bbox — only nodes / coordinates / nested scope.id bboxes contribute, matching TikZ `local bounding box`'s default
+- Path endpoints (move/line `to`) are **not** included in the bbox — only nodes / coordinates / nested scope.id bboxes contribute, matching TikZ `local bounding box`'s default
 
-### Nested scope.id
-
-Each scope.id keeps its own bbox; an outer scope.id includes everything inside (transitively), while an inner scope.id is independent:
+When nested, each scope.id keeps its own bbox; an outer scope.id includes everything inside, while an inner scope.id is independent — the outer bbox covers `A` plus everything in the `inner` subtree; `inner.bbox` only covers `B` and `C`:
 
 <ComponentPreview name="scope-id-nested" size="md" />
-
-The outer bbox covers `A` plus everything in the `inner` subtree; `inner.bbox` only covers `B` and `C`.
-
-### As a referent for other nodes
 
 scope.id resolves to its bbox **center** when used as a `polar.origin` / `at.of` / `offset.of` referent — same as any rectangle node:
 
 <ComponentPreview name="scope-id-referent" size="md" />
 
-### scope.id conflicts
+> scope.id shares the flat global namespace with `node.id` and `coordinate.id` — a same-name `<Node id="cluster">` or sibling `<Scope id="cluster">` triggers a `DUPLICATE_NODE_ID` warning under last-wins (see [Duplicate id handling](#duplicate-id-handling)). Forward references fail to resolve, since the bbox is computed only after the scope subtree finishes.
 
-scope.id shares the flat global namespace with `node.id` and `coordinate.id` (see [Duplicate id handling](#duplicate-id-handling)) — a same-name `<Node id="cluster">` or sibling `<Scope id="cluster">` triggers a `DUPLICATE_NODE_ID` warning under last-wins. Forward references (referring to a scope.id before it appears in IR) fail to resolve, since the bbox is computed only after the scope subtree finishes.
-
-## Relative positioning inside a scope
+### Relative positioning inside a scope
 
 When a `<Node>` / `<Coordinate>` / `<Path>` `Step.to` inside a scope uses `PolarPosition` / `AtPosition` / `OffsetPosition`, retikz resolves it under the following rules:
 
-1. **Referent is global**: the `polar.origin` / `at.of` / `offset.of` referent (node id / scope.id / coordinate literal) is resolved to its **global** coordinate (already includes any cumulative transforms of the scope it lives in)
+1. **Referent is global**: the `polar.origin` / `at.of` / `offset.of` referent (node id / scope.id / coordinate literal) is resolved to its **global** coordinate
 2. **Relative part is measured in the current scope's local frame**: polar's `(angle, radius)`, at's `(direction, distance)`, offset's `[dx, dy]` are all expressed in the **current node's enclosing scope's local coordinate system**
 3. **The end result is projected back to global via the current scope's chain**: the referent's global point is first inversely projected to the current scope's local frame, the relative part is added, then the sum is forward-projected back to global
 
@@ -150,30 +130,24 @@ Maps to TikZ `\begin{scope}[rotate=90] \node at ($(hub) + (50:0)$) {orbit}; \end
 
 </Comparison>
 
-### PolarPosition under scope rotate
-
-`hub` lives outside the scope (global origin); inside `rotate(45°)` scope, `orbit` uses polar `{ origin: 'hub', angle: 0, radius: 80 }` — the relative part is local right-80, then projected by the scope rotate to a 45° down-right visual direction. The same polar written outside the scope (see `ref`) directly lands at hub's global right by 80:
+`hub` lives outside the scope (global origin); inside a `rotate(45°)` scope, `orbit` uses polar `{ origin: 'hub', angle: 0, radius: 80 }` — the relative part is local right-80, then projected by the scope rotate to a 45° down-right visual direction. The same polar written outside the scope (see `ref`) directly lands at hub's global right by 80:
 
 <ComponentPreview name="scope-position-polar-in-rotate" size="md" />
-
-### AtPosition under scope rotate
 
 `direction: 'right'` is the **current scope's local** right — after the scope rotates 90°, "right" visually becomes "down", and B lands below A by 60. The `B-ref` outside the scope sits at A's global right by 60:
 
 <ComponentPreview name="scope-position-at-cross-scope" size="md" />
 
-### OffsetPosition under scope scale
-
 `offset: [40, 0]` is measured in scope local; after `scale(2)`, the visual offset becomes (80, 0) — B is to anchor's right by 80. `B-ref` outside the scope keeps the unscaled offset:
 
 <ComponentPreview name="scope-position-offset-with-scale" size="md" />
 
-### Detailed rules
+Detailed rules:
 
-- **Nested polar / nested offset**: the whole nested chain is measured in the **current node's enclosing scope's local frame** — the basis scope does not switch as you recurse; an inner `polar.origin = { origin: 'A', angle: 0, radius: 30 }` is also evaluated under the current scope's local frame
+- **Nested polar / nested offset**: the whole nested chain is measured in the **current node's enclosing scope's local frame** — the basis scope does not switch as you recurse
 - **Cartesian `Position` literal**: inside a scope, `position={[10, 0]}` keeps v0.1 behavior — `[10, 0]` is measured in the current scope's local frame and projected to global via the scope chain
 - **Scope translate does not change relative vectors**: translate is neither rotation nor scaling — `relative=(10, 0)` inside a `translate(50, 0)` scope keeps the same visual direction and length
-- **Scope `scale=0`**: the inverse projection is undefined; retikz falls back to local origin (0, 0) to avoid NaN. Avoid zero scale in practice — use a tiny positive value if a "near-invisible" effect is desired
+- **Scope `scale=0`**: the inverse projection is undefined; retikz falls back to local origin (0, 0) to avoid NaN. Avoid zero scale in practice
 - **Relative `Step.to` in a path**: same rules as `Node.position` — when path step.to is a polar / offset / Cartesian / `{ relative: [dx, dy] }` literal, the relative part is measured in the path's enclosing scope's local frame
 
 ## Namespace and isolation
@@ -215,10 +189,6 @@ When the same id is registered more than once within the same frame (any combina
 - Same id across different frames (e.g. an outer id and a same-named id inside `<Scope localNamespace>`) is shadowing rather than a duplicate — **no warning** is emitted
 
 > v0.1 behavior: duplicate ids threw. Starting from alpha.1, the policy is warn + last-wins, so v0.1 code keeps running unchanged; if you want strict behavior, detect `code === 'DUPLICATE_NODE_ID'` inside `onWarn` and re-throw yourself.
-
-## Empty scope optimisation
-
-`<Scope></Scope>` with no children, no transforms, and no id → compile emits no Scene primitive; any non-empty field → a `GroupPrim` is emitted. Writing a bare `<Scope>` leaves no empty-container overhead.
 
 ## API Reference
 
