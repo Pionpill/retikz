@@ -2,14 +2,16 @@ import { Fragment } from 'react';
 import type { FC } from 'react';
 import { Coordinate, Draw, Node, Path, Step, TikZ } from '@retikz/react';
 
-const HELP_LINE = 'var(--border)';
-const PAGE_BG = 'var(--background)';
+// Literal colors instead of CSS vars: downloaded SVGs resolve `var(--x)` in a different
+// context (or none), falling back to black; literal colors stay correct everywhere.
+const HELP_LINE = '#e5e7eb';
+const PAGE_BG = '#ffffff';
 const ANGLE_STROKE = 'oklch(0.55 0.16 145)';
 const ANGLE_FILL = 'oklch(0.92 0.10 145)';
 const SIN_COLOR = '#ef4444';
 const COS_COLOR = '#2563eb';
 const TAN_COLOR = 'oklch(0.72 0.16 60)';
-const INFO_BG = 'var(--muted)';
+const INFO_BG = '#f5f5f5';
 const MATH_FONT = {
   family: '"Latin Modern Math", "STIX Two Math", "Cambria Math", "Times New Roman", serif',
   style: 'italic' as const,

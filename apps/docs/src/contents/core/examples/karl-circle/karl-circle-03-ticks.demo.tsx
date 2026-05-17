@@ -2,9 +2,9 @@ import { Fragment } from 'react';
 import type { FC } from 'react';
 import { Coordinate, Draw, Node, Path, Step, TikZ } from '@retikz/react';
 
-const HELP_LINE = 'var(--border)';
-/** 跟随主题色——浅色 white、深色 near-black（Tailwind 4 的 --background token） */
-const PAGE_BG = 'var(--background)';
+/** 用字面色而非 `var(--border)`：SVG 下载后 CSS var 不在新上下文里解析，会 fallback 成黑 */
+const HELP_LINE = '#e5e7eb';
+const PAGE_BG = '#ffffff';
 const MATH_FONT = {
   family: '"Latin Modern Math", "STIX Two Math", "Cambria Math", "Times New Roman", serif',
   style: 'italic' as const,

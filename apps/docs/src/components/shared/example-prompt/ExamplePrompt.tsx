@@ -1,5 +1,5 @@
 import { ChevronDown, ChevronUp, Copy, Link2, Quote, Send, Sparkles } from 'lucide-react';
-import { Fragment, type FC, type ReactNode, useState } from 'react';
+import { type FC, Fragment, type ReactNode, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 
@@ -24,7 +24,7 @@ export type ExamplePromptProps = {
   /** 完整 prompt（markdown）；左下角「展开」按钮点开后替换 short 展示。省略 = 不显示展开按钮 */
   detailed?: string;
   /** 可选「还可以试试这些发散思路」扩展提示词列表（markdown）；每条只有 short 模式，仅可发送到聊天面板（不复制） */
-  extensions?: string[];
+  extensions?: Array<string>;
 };
 
 /** 在浏览器里推出 llms.txt 的绝对 URL，用户复制到外部 AI 工具时可直接 fetch */
@@ -155,7 +155,7 @@ const ExtensionRow: FC<{ content: string }> = ({ content }) => {
   };
 
   return (
-    <li className="flex items-end justify-between gap-3 px-2 py-2">
+    <li className="flex items-end justify-between gap-3 px-2 py-1">
       <InlineMarkdown source={content} className="flex-1 text-foreground/85 text-sm leading-relaxed" />
       <Tooltip>
         <TooltipTrigger asChild>
@@ -193,11 +193,7 @@ export const ExamplePrompt: FC<ExamplePromptProps> = props => {
         <div className="mt-3 flex items-center justify-between gap-2">
           {hasDetailed ? (
             <Button type="button" variant="ghost" size="sm" onClick={() => setExpanded(prev => !prev)}>
-              {expanded ? (
-                <ChevronUp className="mr-1 size-3.5" />
-              ) : (
-                <ChevronDown className="mr-1 size-3.5" />
-              )}
+              {expanded ? <ChevronUp className="mr-1 size-3.5" /> : <ChevronDown className="mr-1 size-3.5" />}
               {expanded ? t('examplePrompt.collapseDetail') : t('examplePrompt.expandDetail')}
             </Button>
           ) : (

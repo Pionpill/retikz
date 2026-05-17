@@ -95,6 +95,7 @@ description: <一句话：建什么图 + 主要教什么能力>
 | 双语 | **按文本是否实际不同**判断：通用数学 / 公式 / 符号 label（`sin α` / `f(x)` / `α`）单 `.demo.tsx`；含本地化散文 / 解释性文本的 step 才分 `.zh.demo.tsx` / `.en.demo.tsx` |
 | Helpers | **内联**在每个 demo——ComponentPreview 源码视图只显示 `.demo.tsx` 本体，要求每个 demo 独立可读 |
 | Hero 复用 | 引言里 hero `<ComponentPreview>` 复用最后一个 step 的 demo（不另起 `-final` 文件） |
+| 颜色字面值 | demo 里的 `stroke` / `fill` / `bg` 等 **必须用 hex / oklch / 命名色字面量**——不能用 `var(--border)` / `var(--background)` 等 CSS 自定义属性。预览工具条可下载 SVG，CSS var 在新上下文里无定义 → fallback 成黑，下载后图变样 |
 
 ### 累加式的代价与好处
 
@@ -259,6 +260,7 @@ cd apps/docs && node -e "import('github-slugger').then(({default: S}) => { const
 - **demo 之间共用 helpers 模块** —— ComponentPreview 源码视图只显示 `.demo.tsx` 本体，shared helpers 用户看不到；每个 demo 内联 helpers
 - **过程节用 `####` 而非 `###`** —— H4 不入 TOC，读者无法跳到具体 step；统一用 `###`
 - **过度拆 zh/en demo** —— 只在文本**实际不同**时才拆；`sin α` / `α` / `f(x)` 这种通用符号留单文件
+- **demo 颜色用 CSS var**（`var(--border)` / `var(--muted)` 等） —— 工具条 SVG 下载在新上下文里 var 解析失败 fallback 成黑；颜色统一用字面量（hex / oklch / 命名色）。需要 light/dark 适配的"装饰性"色（grid help line / 背景遮罩）取浅色字面值（如 `#e5e7eb` / `#ffffff`），下载后在白底文档里仍然好看
 - **正文里散落 TikZ 对照** —— TikZ 关系一律走 `<Comparison>`（principle 已规定）；正文专心讲 retikz
 - **Limitations 当成「未来 roadmap」写** —— 只列**本例触到的** gap；与本例无关的 roadmap 别塞进来
 - **能力节列表里组件名不带 link** —— 第一列必须 markdown link 跳到对应 components/ 页

@@ -2,14 +2,15 @@ import { Fragment } from 'react';
 import type { FC } from 'react';
 import { Coordinate, Draw, Node, Path, Step, TikZ } from '@retikz/react';
 
-const HELP_LINE = 'var(--border)';
-const PAGE_BG = 'var(--background)';
+// 字面色而非 CSS var：SVG 下载后 CSS var 不在新上下文里解析，会 fallback 成黑
+const HELP_LINE = '#e5e7eb';
+const PAGE_BG = '#ffffff';
 const ANGLE_STROKE = 'oklch(0.55 0.16 145)';
 const ANGLE_FILL = 'oklch(0.92 0.10 145)';
 const SIN_COLOR = '#ef4444';
 const COS_COLOR = '#2563eb';
 const TAN_COLOR = 'oklch(0.72 0.16 60)';
-const INFO_BG = 'var(--muted)';
+const INFO_BG = '#f5f5f5';
 const MATH_FONT = {
   family: '"Latin Modern Math", "STIX Two Math", "Cambria Math", "Times New Roman", serif',
   style: 'italic' as const,
