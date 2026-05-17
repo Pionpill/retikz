@@ -251,7 +251,6 @@
     "convEmptySuggestion2": "Give me a complete runnable example",
     "convEmptySuggestion3": "List all available props with their types",
     "convEmptySuggestion4": "How does this compare to similar components",
-    "convClearLabel": "Clear chat",
     "messageCopyLabel": "Copy message",
     "messageCopiedLabel": "Copied",
     "messageCopyFailedLabel": "Copy failed",

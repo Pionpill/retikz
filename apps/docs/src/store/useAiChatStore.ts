@@ -162,7 +162,7 @@ const RETIKZ_REPAIR_MAX_BY_MODE: Record<AutoRepairMode, number> = {
 };
 
 /** history 保留的最大会话数；超出按 updatedAt 升序自动淘汰；active 会话强制保留 */
-const MAX_CONVERSATIONS = 10;
+const MAX_CONVERSATIONS = 20;
 
 /**
  * AI 聊天面板 store

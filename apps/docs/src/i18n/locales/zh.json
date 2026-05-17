@@ -251,7 +251,6 @@
     "convEmptySuggestion2": "给我一个完整可复制的示例",
     "convEmptySuggestion3": "列出所有 props 与对应类型",
     "convEmptySuggestion4": "和类似组件相比有什么区别",
-    "convClearLabel": "清空会话",
     "messageCopyLabel": "复制消息",
     "messageCopiedLabel": "已复制",
     "messageCopyFailedLabel": "复制失败",
