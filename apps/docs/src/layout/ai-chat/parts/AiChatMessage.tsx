@@ -1,4 +1,5 @@
-import { Bot, Copy } from 'lucide-react';
+import type { TFunction } from 'i18next';
+import { Bot, Code, Copy, Pencil, RefreshCw, Trash2 } from 'lucide-react';
 import { Fragment, useCallback } from 'react';
 import type { FC, ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -6,34 +7,63 @@ import { Link } from 'react-router';
 import { toast } from 'sonner';
 
 import { CodeBlock } from '@/components/shared/highlight-code';
-import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger } from '@/components/ui/context-menu';
+import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuSeparator,
+  ContextMenuTrigger,
+} from '@/components/ui/context-menu';
 import { cn } from '@/lib/utils';
+import { useAiChatStore } from '@/store/useAiChatStore';
 import type { ChatMessage } from '../providers/types';
 import { RetikzPreview, type RetikzPreviewFormat, RetikzPreviewPending } from './RetikzPreview';
 
 export type AiChatMessageProps = {
   message: ChatMessage;
+  /** 消息在 messages 数组中的下标；菜单动作（Edit / Delete / Regenerate）按此定位 */
+  index: number;
   /** 是否在流式生成中——若是，末尾追加闪烁光标 */
   isStreaming?: boolean;
 };
 
-type MessageCopyMenuProps = {
-  /** 用于 Copy 的源 markdown 文本（流式中可能为空，此时不挂菜单） */
-  content: string;
+/** 写剪贴板 + 成功/失败 toast（用 i18n 文案） */
+const writeClipboardWithToast = (content: string, t: TFunction) =>
+  void navigator.clipboard.writeText(content).then(
+    () => toast.success(t('ai.messageCopiedLabel')),
+    () => toast.error(t('ai.messageCopyFailedLabel')),
+  );
+
+/** 从 markdown 抽出第一段 ```retikz-tsx``` / ```retikz-ir``` 围栏的内部代码（不含围栏） */
+const extractFirstRetikzBlock = (content: string): { format: 'tsx' | 'ir'; code: string } | null => {
+  const m = /```retikz-(tsx|ir)\r?\n([\s\S]*?)\r?\n```/.exec(content);
+  if (!m) return null;
+  return { format: m[1] as 'tsx' | 'ir', code: m[2] };
+};
+
+type MessageMenuProps = {
+  index: number;
+  message: ChatMessage;
   children: ReactNode;
 };
 
-/** 右键 / 长按消息体弹出 Copy 单项菜单；流式空内容跳过包裹直接透传 children */
-const MessageCopyMenu: FC<MessageCopyMenuProps> = ({ content, children }) => {
+/** 用户消息右键菜单：Copy + Edit & Resend（仅非 autoSent）+ Delete from here */
+const HumanMessageMenu: FC<MessageMenuProps> = ({ index, message, children }) => {
   const { t } = useTranslation();
-  const handleCopy = useCallback(() => {
-    void navigator.clipboard.writeText(content).then(
-      () => toast.success(t('ai.messageCopiedLabel')),
-      () => toast.error(t('ai.messageCopyFailedLabel')),
-    );
-  }, [content, t]);
+  const isGenerating = useAiChatStore(s => s.isGenerating);
+  const editAndResendAt = useAiChatStore(s => s.editAndResendAt);
+  const truncateMessagesFrom = useAiChatStore(s => s.truncateMessagesFrom);
+  const messageCount = useAiChatStore(s => s.messages.length);
 
-  if (!content.trim()) return <>{children}</>;
+  const handleCopy = useCallback(() => writeClipboardWithToast(message.content, t), [message.content, t]);
+  const handleEdit = useCallback(() => editAndResendAt(index), [editAndResendAt, index]);
+  const handleDelete = useCallback(() => {
+    const removed = messageCount - index;
+    truncateMessagesFrom(index);
+    if (removed > 0) toast.success(t('ai.messageDeletedToast', { count: removed }));
+  }, [truncateMessagesFrom, index, messageCount, t]);
+
+  if (!message.content.trim()) return <>{children}</>;
 
   return (
     <ContextMenu>
@@ -42,6 +72,57 @@ const MessageCopyMenu: FC<MessageCopyMenuProps> = ({ content, children }) => {
         <ContextMenuItem onSelect={handleCopy}>
           <Copy />
           {t('ai.messageCopyLabel')}
+        </ContextMenuItem>
+        {!message.autoSent && (
+          <ContextMenuItem onSelect={handleEdit} disabled={isGenerating}>
+            <Pencil />
+            {t('ai.messageEditLabel')}
+          </ContextMenuItem>
+        )}
+        <ContextMenuSeparator />
+        <ContextMenuItem variant="destructive" onSelect={handleDelete} disabled={isGenerating}>
+          <Trash2 />
+          {t('ai.messageDeleteFromHereLabel')}
+        </ContextMenuItem>
+      </ContextMenuContent>
+    </ContextMenu>
+  );
+};
+
+/** 助手消息右键菜单：Copy + Regenerate + Copy retikz code（条件项） */
+const AssistantMessageMenu: FC<MessageMenuProps> = ({ index, message, children }) => {
+  const { t } = useTranslation();
+  const isGenerating = useAiChatStore(s => s.isGenerating);
+  const regenerateAssistantAt = useAiChatStore(s => s.regenerateAssistantAt);
+
+  const handleCopy = useCallback(() => writeClipboardWithToast(message.content, t), [message.content, t]);
+  const handleRegenerate = useCallback(() => void regenerateAssistantAt(index), [regenerateAssistantAt, index]);
+  const retikzBlock = extractFirstRetikzBlock(message.content);
+  const handleCopyRetikz = useCallback(() => {
+    if (!retikzBlock) return;
+    writeClipboardWithToast(retikzBlock.code, t);
+  }, [retikzBlock, t]);
+
+  if (!message.content.trim()) return <>{children}</>;
+
+  return (
+    <ContextMenu>
+      <ContextMenuTrigger asChild>{children}</ContextMenuTrigger>
+      <ContextMenuContent>
+        <ContextMenuItem onSelect={handleCopy}>
+          <Copy />
+          {t('ai.messageCopyLabel')}
+        </ContextMenuItem>
+        {retikzBlock && (
+          <ContextMenuItem onSelect={handleCopyRetikz}>
+            <Code />
+            {t('ai.messageCopyRetikzLabel', { format: retikzBlock.format })}
+          </ContextMenuItem>
+        )}
+        <ContextMenuSeparator />
+        <ContextMenuItem onSelect={handleRegenerate} disabled={isGenerating}>
+          <RefreshCw />
+          {t('ai.messageRegenerateLabel')}
         </ContextMenuItem>
       </ContextMenuContent>
     </ContextMenu>
@@ -56,7 +137,7 @@ const MessageCopyMenu: FC<MessageCopyMenuProps> = ({ content, children }) => {
  *   无序列表（含嵌套、任务列表 `- [ ] / - [x]`）、h1-h3。
  *   不支持有序列表 / 嵌套表格 / 行内 HTML 等不常见语法。
  */
-export const AiChatMessage: FC<AiChatMessageProps> = ({ message, isStreaming }) => {
+export const AiChatMessage: FC<AiChatMessageProps> = ({ message, index, isStreaming }) => {
   const { t } = useTranslation();
   if (message.role === 'user') {
     // autoSent（系统自动追的修复 prompt）样式区别于真用户气泡：左对齐、虚线边框、小号 Bot 头标记 + 灰底；
@@ -64,7 +145,7 @@ export const AiChatMessage: FC<AiChatMessageProps> = ({ message, isStreaming }) 
     if (message.autoSent) {
       return (
         <div className="flex justify-start">
-          <MessageCopyMenu content={message.content}>
+          <HumanMessageMenu index={index} message={message}>
             <div className="flex max-w-[90%] items-start gap-1.5 rounded-md border border-dashed border-muted-foreground/30 bg-muted/30 px-2.5 py-1.5 text-xs text-muted-foreground">
               <Bot className="mt-0.5 size-3.5 shrink-0 text-muted-foreground/70" />
               <div className="min-w-0 flex-1 space-y-1">
@@ -76,7 +157,7 @@ export const AiChatMessage: FC<AiChatMessageProps> = ({ message, isStreaming }) 
                 </div>
               </div>
             </div>
-          </MessageCopyMenu>
+          </HumanMessageMenu>
         </div>
       );
     }
@@ -84,23 +165,23 @@ export const AiChatMessage: FC<AiChatMessageProps> = ({ message, isStreaming }) 
     // （用户偶尔粘贴的 retikz 示例也能直接显示渲染图）；first/last 块 margin 重置以贴合气泡内边距
     return (
       <div className="flex justify-end">
-        <MessageCopyMenu content={message.content}>
+        <HumanMessageMenu index={index} message={message}>
           <div className="max-w-[85%] min-w-0 rounded-2xl bg-muted px-3 py-2 text-sm break-words [&>:first-child]:mt-0 [&>:last-child]:mb-0">
             {renderMarkdown(message.content)}
           </div>
-        </MessageCopyMenu>
+        </HumanMessageMenu>
       </div>
     );
   }
   return (
-    <MessageCopyMenu content={message.content}>
+    <AssistantMessageMenu index={index} message={message}>
       <div className="text-sm leading-relaxed">
         {renderMarkdown(message.content)}
         {isStreaming && (
           <span className="ml-0.5 inline-block h-3 w-1.5 translate-y-0.5 animate-pulse bg-foreground/60 align-middle" />
         )}
       </div>
-    </MessageCopyMenu>
+    </AssistantMessageMenu>
   );
 };
 

@@ -65,6 +65,7 @@ export const AiChatConversation: FC = () => {
             {messages.map((m, idx) => (
               <AiChatMessage
                 key={idx}
+                index={idx}
                 message={m}
                 isStreaming={isGenerating && idx === messages.length - 1 && m.role === 'assistant'}
               />

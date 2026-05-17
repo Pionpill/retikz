@@ -91,6 +91,12 @@ type Actions = {
   send: (input: string) => Promise<void>;
   abort: () => void;
   clearConversation: () => void;
+  /** 把某条 user 消息内容拉回 draft 并 focus 输入框；非破坏性——已有 messages 保留，用户按 Enter 后作为新 turn 追加 */
+  editAndResendAt: (index: number) => void;
+  /** 截断 messages：丢弃 [index, end) 范围；用户主动剪枝对话 */
+  truncateMessagesFrom: (index: number) => void;
+  /** 重新生成 index 处的 assistant 消息：截断到其前面的 user 消息（不含），再 send 那条 user 内容 */
+  regenerateAssistantAt: (index: number) => Promise<void>;
   /** 主动压缩对话历史：让当前模型把 messages 总结成一段，替换 messages 并重置 usage */
   compressConversation: () => Promise<void>;
   setDraft: (text: string) => void;
@@ -314,6 +320,38 @@ export const useAiChatStore = create<PersistedState & EphemeralState & Actions>(
       },
 
       clearConversation: () => set({ messages: [], error: null, usage: INITIAL_USAGE }),
+
+      editAndResendAt: index => {
+        const state = get();
+        if (state.isGenerating) return;
+        const target = state.messages.at(index);
+        if (!target || target.role !== 'user') return;
+        // 非破坏性：不动 messages，只把内容拉回 draft，让用户改完按 Enter 当新 turn 发
+        set(s => ({
+          draft: target.content,
+          focusInputNonce: s.focusInputNonce + 1,
+        }));
+      },
+
+      truncateMessagesFrom: index => {
+        const state = get();
+        if (state.isGenerating) return;
+        if (index < 0 || index >= state.messages.length) return;
+        set({ messages: state.messages.slice(0, index), error: null });
+      },
+
+      regenerateAssistantAt: async index => {
+        const state = get();
+        if (state.isGenerating) return;
+        const assistantMsg = state.messages.at(index);
+        if (!assistantMsg || assistantMsg.role !== 'assistant') return;
+        // 找上一条 user 消息（通常 index-1，但 autoSent 也走 user role，直接取前一条即可）
+        const userMsg = state.messages.at(index - 1);
+        if (!userMsg || userMsg.role !== 'user') return;
+        // 截断到 user 之前，由 send() 把 user + 新 assistant 重新追加；autoSent flag 不带回 send()
+        set({ messages: state.messages.slice(0, index - 1), error: null });
+        await get().send(userMsg.content);
+      },
 
       setDraft: text => set({ draft: text }),
       fillDraftAndFocus: text => set(s => ({ draft: text, focusInputNonce: s.focusInputNonce + 1 })),
