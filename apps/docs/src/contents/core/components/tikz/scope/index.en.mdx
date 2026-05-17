@@ -96,6 +96,50 @@ The reference string also accepts `.<anchor>` or `.<deg>` suffixes for the visua
 
 <ComponentPreview name="scope-anchor-cross" size="md" />
 
+## scope.id: reference the scope as a whole
+
+When `<Scope id="cluster">` is set, compile collects the axis-aligned **global bounding box** of all child layouts (nodes / coordinates / nested scope.id bboxes) at the end of Pass 1 and registers a synthetic `rectangle` `NodeLayout` named `cluster` into the **parent** namespace frame. From the outside, `cluster` behaves exactly like a normal rectangle node — paths can target `cluster.north` / `cluster.east` / `cluster.30`, and other nodes can use `cluster` as the referent for polar / direction / offset positioning.
+
+<Comparison target="tikz" title="scope.id mapping">
+
+`<Scope id="cluster">` maps to TikZ `\begin{scope}[local bounding box=cluster] ... \end{scope}`: pgf collects the axis-aligned bounding box of everything drawn inside and registers a rectangle node named `cluster`. retikz reuses the existing scope `id` field as the single entry point — no extra `boundingBox` flag — so the field stays a one-job thing (set id ⇒ get a referenceable bbox handle).
+
+</Comparison>
+
+### Basic reference
+
+External paths use `'cluster.<anchor>'` to hit the **whole** cluster's visual border instead of any single inner node:
+
+<ComponentPreview name="scope-id-reference" size="md" />
+
+- bbox endpoints (`.north` / `.east` / `.south-west` / `.30` / etc.) work exactly like a rectangle node — all 9 named anchors plus numeric angles are supported via the shared rect anchor path
+- `'cluster'` with no suffix uses `boundaryPoint` clip toward the source (same behavior as a normal node id with no anchor)
+- Path endpoints (move/line `to`) are not included in the bbox — only nodes / coordinates / nested scope.id bboxes contribute, matching TikZ `local bounding box`'s default
+
+### Nested scope.id
+
+Each scope.id keeps its own bbox; an outer scope.id includes everything inside (transitively), while an inner scope.id is independent:
+
+<ComponentPreview name="scope-id-nested" size="md" />
+
+The outer bbox covers `A` plus everything in the `inner` subtree; `inner.bbox` only covers `B` and `C`.
+
+### As a referent for other nodes
+
+scope.id resolves to its bbox **center** when used as a `polar.origin` / `at.of` / `offset.of` referent — same as any rectangle node:
+
+<ComponentPreview name="scope-id-referent" size="md" />
+
+### Empty scope with id
+
+When a scope has `id` set but no children, the bbox degenerates to a 0×0 placeholder at the scope's local origin (after applying the transform chain). Setting `id` always yields a referenceable handle — useful as a named anchor point you can position elsewhere later:
+
+<ComponentPreview name="scope-id-empty" size="md" />
+
+### scope.id conflicts
+
+scope.id shares the flat global namespace with `node.id` and `coordinate.id` (see [Duplicate id handling](#duplicate-id-handling)) — a same-name `<Node id="cluster">` or sibling `<Scope id="cluster">` triggers a `DUPLICATE_NODE_ID` warning under last-wins. Forward references (referring to a scope.id before it appears in IR) fail to resolve, since the bbox is computed only after the scope subtree finishes.
+
 ## Namespace and isolation
 
 By default a scope does **not** introduce a namespace boundary — child node / coordinate / nested scope.id ids all register into the current top frame; ids from multiple stacked scopes flow up to the `<TikZ>` root frame and outer paths can reference them directly.
@@ -146,7 +190,7 @@ When the same id is registered more than once within the same frame (any combina
 | --- | --- | --- | --- |
 | `transforms` | `Array<Transform>` | — | Local transform list, 6 variants; applied in array order (0-th first) |
 | `children` | `ReactNode` | — | Scope children: `<Node>` / `<Path>` / `<Coordinate>` / nested `<Scope>` |
-| `id` | `string` | — | Optional scope reference id; when set, registers into the **parent frame** (external handle), so outer paths can reference it as `'cluster'` / `'cluster.<anchor>'` |
+| `id` | `string` | — | Optional scope reference id; when set, the **axis-aligned global bounding box** of all child layouts is registered as a synthetic rectangle layout into the **parent frame**, so outer paths can reference it as `'cluster'` (bbox center after clip), `'cluster.<anchor>'` (9 named anchors), or `'cluster.<deg>'` (numeric angle). Other nodes can use scope.id as a `polar.origin` / `at.of` / `offset.of` referent (takes the bbox center) |
 | `localNamespace` | `boolean` | `false` | Whether to create a local namespace: `true` pushes a child frame and isolates child ids from the outside (external code cannot see them; inner code can still inside-out reach outer ids); default false = global flat |
 
 ## Related

@@ -628,8 +628,8 @@ describe('scope.transforms 解析失败 warn', () => {
   });
 });
 
-describe('scope.id 占位（暂不注册 synthetic bbox）', () => {
-  it('scope 接受 id 字段而不破坏 compile', () => {
+describe('scope.id synthetic bbox 注册', () => {
+  it('scope 接受 id 字段而不破坏 compile（synthetic bbox layout 注册到父 frame）', () => {
     const ir = scene([
       {
         type: 'scope',
@@ -637,8 +637,20 @@ describe('scope.id 占位（暂不注册 synthetic bbox）', () => {
         transforms: [{ kind: 'translate', x: 10, y: 0 }],
         children: [{ type: 'node', id: 'A', position: [0, 0], text: 'A' }],
       },
+      {
+        type: 'path',
+        children: [
+          { type: 'step', kind: 'move', to: [0, 80] },
+          { type: 'step', kind: 'line', to: 'cluster' },
+        ],
+      },
     ]);
-    expect(() => compileToScene(ir)).not.toThrow();
+    const warnings: Array<CompileWarning> = [];
+    const compiled = compileToScene(ir, { onWarn: w => warnings.push(w) });
+    expect(warnings.filter(w => w.code === 'UNRESOLVED_NODE_REFERENCE')).toHaveLength(0);
+    // path 端点应被解析为 cluster bbox 中心（≈ 子 node A 的全局中心，即 translate(10,0)）
+    const path = compiled.primitives.find(p => p.type === 'path');
+    expect(path).toBeDefined();
   });
 });
 

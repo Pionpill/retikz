@@ -8,23 +8,23 @@ import { resolvePosition } from './position';
 import { DEFAULT_PRECISION, makeRound } from './precision';
 import {
   applyTransformChain,
+  computeScopeBoundingBox,
   lowerScopeTransforms,
   projectLayoutToGlobal,
+  registerScopeAsLayout,
 } from './scope';
 import { type TextMeasurer, fallbackMeasurer } from './text-metrics';
 import { computeLayout } from './layout';
 
 /**
- * 把 coordinate 注册成 0×0 NodeLayout
- * @description 让后续 path target / `at.of` 引用时 boundaryPoint 命中中心，符合"占位无形状边界"语义
+ * 构造一个落在指定全局点的 0×0 rectangle NodeLayout
+ * @description coordinate / scope.id 入场临时占位等"无形状只有位置"句柄共享此结构，
+ *   让后续 path target / `at.of` / `offset.of` / `polar.origin` 引用时 boundaryPoint 命中中心。
  */
-const coordinateAsLayout = (
-  id: string,
-  center: IRPosition,
-): NodeLayout => ({
+const zeroSizeRectAt = (id: string, [cx, cy]: IRPosition): NodeLayout => ({
   id,
   shape: 'rectangle',
-  rect: { x: center[0], y: center[1], width: 0, height: 0, rotate: 0 },
+  rect: { x: cx, y: cy, width: 0, height: 0, rotate: 0 },
   rotateDeg: 0,
   margin: 0,
   textWidth: 0,
@@ -35,26 +35,25 @@ const coordinateAsLayout = (
 });
 
 /**
- * 把 scope.id 注册成最简占位 NodeLayout（0×0 rect 落在 scope 在当前累积 chain 下的局部原点）
- * @description scope.id 作为外部句柄进入父 frame；bbox 真正按子树范围计算的版本由后续 ADR 接手——此处先放占位，让 lookup 不返回 undefined、保证跨 scope 引用 scope.id 在编译期可解析
+ * 把 coordinate 注册成 0×0 NodeLayout
+ * @description 让后续 path target / `at.of` 引用时 boundaryPoint 命中中心，符合"占位无形状边界"语义
+ */
+const coordinateAsLayout = (id: string, center: IRPosition): NodeLayout =>
+  zeroSizeRectAt(id, center);
+
+/**
+ * scope.id 入场时的临时占位 NodeLayout
+ * @description scope 子树尚未处理时先放 0×0 占位（落在 scope 局部原点经累积 chain 投到全局的位置），
+ *   让 scope 子树内任何 lookup 不返回 undefined（占位语义自洽）。
+ *   子树 Pass 1 处理完毕后由 `registerScopeAsLayout` 算出真 bbox layout 覆盖此占位（NameStack.replaceLayout 不发 duplicate warn）
  */
 const scopePlaceholderLayout = (
   id: string,
   chain: ReadonlyArray<Transform>,
 ): NodeLayout => {
-  const [gx, gy] = chain.length === 0 ? [0, 0] : applyTransformChain([0, 0], chain);
-  return {
-    id,
-    shape: 'rectangle',
-    rect: { x: gx, y: gy, width: 0, height: 0, rotate: 0 },
-    rotateDeg: 0,
-    margin: 0,
-    textWidth: 0,
-    textHeight: 0,
-    align: 'middle',
-    lineHeight: 0,
-    fontSize: 0,
-  };
+  const globalOrigin: IRPosition =
+    chain.length === 0 ? [0, 0] : applyTransformChain([0, 0], chain);
+  return zeroSizeRectAt(id, globalOrigin);
 };
 
 /** 编译期警告：path / position 解析失败时通过 `CompileOptions.onWarn` 发出，不影响编译产物 */
@@ -192,21 +191,23 @@ export const compileToScene = (ir: IR, options: CompileOptions = {}): Scene => {
   };
 
   /**
-   * 递归处理一组 IR child，把 node / coordinate 发到 sink、把本层 path 收集到 ownPaths、scope 下沉为 GroupPrim
-   * @description 子节点处理完后**在本层 popFrame 前**统一 resolve ownPaths，确保 scope localNamespace 内 path 端点 lookup 能看到内层 frame；path 端点全局坐标 emit 到顶层 primitives 不进当前层 sink（GroupPrim 会对子 primitive 再 apply 一次 chain）
+   * 递归处理一组 IR child，把 node / coordinate 发到 sink、把本层 path 收集到 pathsAccumulator、scope 下沉为 GroupPrim
+   * @description **不**在内部 resolve pathsAccumulator——调用方负责在合适时机（scope 入口：bbox replaceLayout 之后 / popFrame 之前；顶层：所有处理结束后）调用 resolvePendingPaths。这样 scope.id 的 placeholder→real bbox 替换在本层 path 端点 lookup 之前完成，避免 "scope 内 path 自引用本 scope.id 拿到 placeholder" 的 latent bug，同时保留 ADR-02 的 "本层 path 在本层 frame 还在栈顶时 resolve" inside-out lookup 语义。
    * @param children 当前层级的 IR child 数组
    * @param chain 从根到当前层级累积的 Cartesian-only transform 链
    * @param sink 当前层级 Scene primitive 落点（顶层 = primitives，scope 内 = GroupPrim.children）
    * @param locatorPrefix IR locator 前缀（如 `''` 表示顶层、`children[2].scope.` 表示某 scope 内）
+   * @param layoutsAccumulator 当前 scope 子树所有"实体"layout（node / coordinate / 嵌套 scope.id synthetic）累积——专给上层 scope.id bbox 计算用；顶层调用传一个共享数组（用得着就用，丢弃也不影响）
+   * @param pathsAccumulator 当前层级收集的 pending paths——由调用方分配并在合适时机 resolve
    */
   const processChildren = (
     children: ReadonlyArray<IRChild>,
     chain: ReadonlyArray<Transform>,
     sink: Array<ScenePrimitive>,
     locatorPrefix: string,
+    layoutsAccumulator: Array<NodeLayout>,
+    pathsAccumulator: Array<PendingPath>,
   ): void => {
-    /** 当前层级收集的 pending paths（在本层 popFrame 前 resolve） */
-    const ownPaths: Array<PendingPath> = [];
     for (let i = 0; i < children.length; i++) {
       const child = children[i];
       if (child.type === 'node') {
@@ -225,6 +226,8 @@ export const compileToScene = (ir: IR, options: CompileOptions = {}): Scene => {
           rectOps.anchor(globalLayout.rect, 'south-west'),
           rectOps.anchor(globalLayout.rect, 'south-east'),
         );
+        // 把 node layout 加进 layoutsAccumulator，供上层 scope.id bbox 计算
+        layoutsAccumulator.push(globalLayout);
       } else if (child.type === 'coordinate') {
         const localCenter = resolvePosition(child.position, nameStack, nodeDistance);
         if (!localCenter) {
@@ -238,11 +241,14 @@ export const compileToScene = (ir: IR, options: CompileOptions = {}): Scene => {
           );
         }
         const globalCenter = chain.length === 0 ? localCenter : applyTransformChain(localCenter, chain);
+        const coordLayout = coordinateAsLayout(child.id, globalCenter);
         nameStack.register(
           child.id,
-          coordinateAsLayout(child.id, globalCenter),
+          coordLayout,
           `${locatorPrefix}children[${i}].coordinate.id`,
         );
+        // coordinate 0×0 layout 也算上层 scope.id bbox 输入（参与父 scope 子树 AABB 累积）
+        layoutsAccumulator.push(coordLayout);
       } else if (child.type === 'scope') {
         const rawTransforms = child.transforms ?? [];
         const loweredOwn = lowerScopeTransforms(rawTransforms, nameStack, nodeDistance);
@@ -256,7 +262,10 @@ export const compileToScene = (ir: IR, options: CompileOptions = {}): Scene => {
         }
         const ownTransforms: ReadonlyArray<Transform> = loweredOwn ?? [];
         const innerChain: ReadonlyArray<Transform> = [...chain, ...ownTransforms];
-        // scope.id 必须先于子树处理在父 frame 注册（外部句柄，不受 localNamespace 影响）
+        // scope.id 必须先于子树处理在父 frame 注册（外部句柄，不受 localNamespace 影响）；
+        // 此 register 是 register（走 duplicate 检测——与 node.id / coordinate.id / 兄弟 scope.id 冲突触发 warn）；
+        // 后面子树完成后用 replaceLayout 覆盖 bbox 不再触发 warn（同一 scope.id 的 placeholder→real 接力不算冲突）
+        const parentFrameDepth = nameStack.depth - 1;
         if (child.id) {
           nameStack.register(
             child.id,
@@ -268,13 +277,37 @@ export const compileToScene = (ir: IR, options: CompileOptions = {}): Scene => {
         const pushedFrame = child.localNamespace === true;
         if (pushedFrame) nameStack.pushFrame();
         const innerSink: Array<ScenePrimitive> = [];
+        /** 本 scope 子树的 layouts 累积器；子树结束后用于算 bbox */
+        const innerLayouts: Array<NodeLayout> = [];
+        /** 本 scope 子树收集的 pending paths——在 bbox replaceLayout 后 / popFrame 前 resolve，
+         *  让 scope 内 path 自引用本 scope.id 端点取真 bbox 而非 placeholder */
+        const innerPaths: Array<PendingPath> = [];
         try {
           processChildren(
             child.children,
             innerChain,
             innerSink,
             `${locatorPrefix}children[${i}].scope.`,
+            innerLayouts,
+            innerPaths,
           );
+          // 子树 register 完毕，先用真 bbox 覆盖 placeholder（仍在本 scope frame 上下文），再 resolve 本 scope 内 paths
+          if (child.id) {
+            const bbox = computeScopeBoundingBox(innerLayouts);
+            const fallbackOrigin: IRPosition =
+              innerChain.length === 0 ? [0, 0] : applyTransformChain([0, 0], innerChain);
+            const bboxLayout = registerScopeAsLayout(child.id, bbox, fallbackOrigin);
+            // 用 replaceLayout 覆盖不触发 duplicate warn（placeholder → real bbox 是预期升级）
+            nameStack.replaceLayout(child.id, bboxLayout, parentFrameDepth);
+            // 嵌套 scope.id：把本层 synthetic bbox layout 合并进外层 layoutsAccumulator，
+            // 让外层 scope.id 的 bbox 包含本层 bbox（外层 bbox 透传包内层 bbox 区域）
+            layoutsAccumulator.push(bboxLayout);
+          } else {
+            // 无 scope.id：把内层 layouts 直接透传给上层 accumulator（外层 scope.id 仍能包含跨这层的 node）
+            for (const innerLayout of innerLayouts) layoutsAccumulator.push(innerLayout);
+          }
+          // bbox 已就位，现在 resolve 本 scope 内 paths（lookup 能命中真 bbox 的 scope.id）
+          resolvePendingPaths(innerPaths);
         } finally {
           if (pushedFrame) nameStack.popFrame();
         }
@@ -291,20 +324,21 @@ export const compileToScene = (ir: IR, options: CompileOptions = {}): Scene => {
         if (hasOwnTransforms) group.transforms = [...ownTransforms];
         sink.push(group);
       } else {
-        // child.type === 'path'：本层 node / coordinate / 子 scope 处理完后统一 resolve（仍在本层 frame 上下文）
+        // child.type === 'path'：累积到调用方提供的 pathsAccumulator，让调用方决定 resolve 时机
         // path 端点从 NameStack（全局坐标）查得，几何已是全局——primitive 在 resolvePendingPaths 中一律 push 顶层 primitives 避免被 scope.transform 重复 apply
-        ownPaths.push({
+        pathsAccumulator.push({
           path: child,
           irPath: `${locatorPrefix}children[${i}].path`,
         });
       }
     }
-    // 本层 children 处理完毕：在当前 frame 还活着时 resolve 本层 path（让 scope 内 path 引用 inside-out lookup 看到内层 id）
-    resolvePendingPaths(ownPaths);
   };
 
-  // 递归处理整棵 IR child 树；每层 children 末尾自行 resolve 本层 path
-  processChildren(ir.children, [], primitives, '');
+  // 递归处理整棵 IR child 树；顶层 paths 在所有 register 完成后统一 resolve
+  // 顶层 layouts 累积无人消费——传一个临时数组即可（顶层无 scope.id 包裹）
+  const rootPaths: Array<PendingPath> = [];
+  processChildren(ir.children, [], primitives, '', [], rootPaths);
+  resolvePendingPaths(rootPaths);
 
   return {
     primitives,

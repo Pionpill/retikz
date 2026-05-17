@@ -131,8 +131,8 @@ describe('跨 scope 数字角度', () => {
   });
 });
 
-describe('scope.id 占位（注册到父 frame，外部可 lookup 不报 UNRESOLVED）', () => {
-  it('scope.id 注册后 outer path 引用 scope.id 不触发 UNRESOLVED warn', () => {
+describe('scope.id synthetic bbox 注册到父 frame，外部可 lookup', () => {
+  it('scope.id 注册后 outer path 引用 scope.id 不触发 UNRESOLVED warn，端点落在 bbox 中心', () => {
     const ir = scene([
       {
         type: 'scope',
@@ -149,8 +149,12 @@ describe('scope.id 占位（注册到父 frame，外部可 lookup 不报 UNRESOL
       },
     ]);
     const warnings: Array<{ code: string }> = [];
-    compileToScene(ir, { onWarn: w => warnings.push(w) });
+    const compiled = compileToScene(ir, { onWarn: w => warnings.push(w) });
     expect(warnings.filter(w => w.code === 'UNRESOLVED_NODE_REFERENCE')).toHaveLength(0);
+    // bbox 中心 ≈ A 的全局中心 (60, 0)（A 是唯一子 node，bbox = A 的 4 角 AABB，中心即 A 中心）
+    const end = lineTo(topPath(compiled.primitives));
+    expect(end).toBeDefined();
+    expect(Math.abs(end![0] - 60)).toBeLessThan(20);
   });
 });
 
