@@ -242,6 +242,7 @@
     "convClearLabel": "Clear chat",
     "messageCopyLabel": "Copy message",
     "messageCopiedLabel": "Copied",
+    "messageCopyFailedLabel": "Copy failed",
     "errorAuth": "API key invalid. Check the key in settings →",
     "errorRate": "Rate limited. Try again shortly.",
     "errorWindow": "Conversation context too long. Start a new chat or pick a larger-window model.",

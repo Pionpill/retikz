@@ -1,11 +1,12 @@
-import { Bot, Check, Copy } from 'lucide-react';
-import { Fragment, useCallback, useEffect, useRef, useState } from 'react';
+import { Bot, Copy } from 'lucide-react';
+import { Fragment, useCallback } from 'react';
 import type { FC, ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router';
+import { toast } from 'sonner';
 
 import { CodeBlock } from '@/components/shared/highlight-code';
-import { Button } from '@/components/ui/button';
+import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger } from '@/components/ui/context-menu';
 import { cn } from '@/lib/utils';
 import type { ChatMessage } from '../providers/types';
 import { RetikzPreview, type RetikzPreviewFormat, RetikzPreviewPending } from './RetikzPreview';
@@ -14,55 +15,36 @@ export type AiChatMessageProps = {
   message: ChatMessage;
   /** 是否在流式生成中——若是，末尾追加闪烁光标 */
   isStreaming?: boolean;
-  /** true 时动作条常驻不悬浮（用于最新条助手消息） */
-  alwaysShowActions?: boolean;
 };
 
-type MessageActionsProps = {
+type MessageCopyMenuProps = {
+  /** 用于 Copy 的源 markdown 文本（流式中可能为空，此时不挂菜单） */
   content: string;
-  align: 'start' | 'end';
-  alwaysShow?: boolean;
+  children: ReactNode;
 };
 
-const MessageActions: FC<MessageActionsProps> = ({ content, align, alwaysShow }) => {
+/** 右键 / 长按消息体弹出 Copy 单项菜单；流式空内容跳过包裹直接透传 children */
+const MessageCopyMenu: FC<MessageCopyMenuProps> = ({ content, children }) => {
   const { t } = useTranslation();
-  const [copied, setCopied] = useState(false);
-  const timerRef = useRef<number | null>(null);
-
-  useEffect(() => {
-    return () => {
-      if (timerRef.current !== null) window.clearTimeout(timerRef.current);
-    };
-  }, []);
-
   const handleCopy = useCallback(() => {
-    void navigator.clipboard.writeText(content);
-    setCopied(true);
-    if (timerRef.current !== null) window.clearTimeout(timerRef.current);
-    timerRef.current = window.setTimeout(() => setCopied(false), 2000);
-  }, [content]);
+    void navigator.clipboard.writeText(content).then(
+      () => toast.success(t('ai.messageCopiedLabel')),
+      () => toast.error(t('ai.messageCopyFailedLabel')),
+    );
+  }, [content, t]);
 
-  if (!content.trim()) return null;
+  if (!content.trim()) return <>{children}</>;
 
   return (
-    <div
-      className={cn(
-        align === 'end' ? 'justify-end' : 'justify-start',
-        // display 切换：非 alwaysShow 时彻底不占位（hidden），hover/focus/touch 才 flex 出来
-        alwaysShow ? 'flex' : 'hidden group-hover:flex focus-within:flex [@media(hover:none)]:flex',
-      )}
-    >
-      <Button
-        type="button"
-        size="icon"
-        variant="ghost"
-        aria-label={copied ? t('ai.messageCopiedLabel') : t('ai.messageCopyLabel')}
-        className="size-6 cursor-pointer rounded text-muted-foreground hover:text-foreground"
-        onClick={handleCopy}
-      >
-        {copied ? <Check className="size-3.5" /> : <Copy className="size-3.5" />}
-      </Button>
-    </div>
+    <ContextMenu>
+      <ContextMenuTrigger asChild>{children}</ContextMenuTrigger>
+      <ContextMenuContent>
+        <ContextMenuItem onSelect={handleCopy}>
+          <Copy />
+          {t('ai.messageCopyLabel')}
+        </ContextMenuItem>
+      </ContextMenuContent>
+    </ContextMenu>
   );
 };
 
@@ -74,50 +56,51 @@ const MessageActions: FC<MessageActionsProps> = ({ content, align, alwaysShow })
  *   无序列表（含嵌套、任务列表 `- [ ] / - [x]`）、h1-h3。
  *   不支持有序列表 / 嵌套表格 / 行内 HTML 等不常见语法。
  */
-export const AiChatMessage: FC<AiChatMessageProps> = ({ message, isStreaming, alwaysShowActions }) => {
+export const AiChatMessage: FC<AiChatMessageProps> = ({ message, isStreaming }) => {
   const { t } = useTranslation();
   if (message.role === 'user') {
     // autoSent（系统自动追的修复 prompt）样式区别于真用户气泡：左对齐、虚线边框、小号 Bot 头标记 + 灰底；
     // 走 renderMarkdown 但关掉 retikz live 渲染（消息体里嵌的是上一轮的非法源码，再 live 一次只是再失败一次）
     if (message.autoSent) {
       return (
-        <div className="group flex flex-col items-start gap-0.5">
-          <div className="flex max-w-[90%] items-start gap-1.5 rounded-md border border-dashed border-muted-foreground/30 bg-muted/30 px-2.5 py-1.5 text-xs text-muted-foreground">
-            <Bot className="mt-0.5 size-3.5 shrink-0 text-muted-foreground/70" />
-            <div className="min-w-0 flex-1 space-y-1">
-              <div className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground/70">
-                {t('ai.autoSentBadge')}
-              </div>
-              <div className="min-w-0 break-words [&>:first-child]:mt-0 [&>:last-child]:mb-0">
-                {renderMarkdown(message.content, { liveRetikz: false })}
+        <div className="flex justify-start">
+          <MessageCopyMenu content={message.content}>
+            <div className="flex max-w-[90%] items-start gap-1.5 rounded-md border border-dashed border-muted-foreground/30 bg-muted/30 px-2.5 py-1.5 text-xs text-muted-foreground">
+              <Bot className="mt-0.5 size-3.5 shrink-0 text-muted-foreground/70" />
+              <div className="min-w-0 flex-1 space-y-1">
+                <div className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground/70">
+                  {t('ai.autoSentBadge')}
+                </div>
+                <div className="min-w-0 break-words [&>:first-child]:mt-0 [&>:last-child]:mb-0">
+                  {renderMarkdown(message.content, { liveRetikz: false })}
+                </div>
               </div>
             </div>
-          </div>
-          <MessageActions content={message.content} align="start" />
+          </MessageCopyMenu>
         </div>
       );
     }
     // 真用户气泡：同样跑 markdown 渲染，支持 ``` 围栏代码、列表、bold、链接；retikz 围栏 live render
     // （用户偶尔粘贴的 retikz 示例也能直接显示渲染图）；first/last 块 margin 重置以贴合气泡内边距
     return (
-      <div className="group flex flex-col items-end gap-0.5">
-        <div className="max-w-[85%] min-w-0 rounded-2xl bg-muted px-3 py-2 text-sm break-words [&>:first-child]:mt-0 [&>:last-child]:mb-0">
-          {renderMarkdown(message.content)}
-        </div>
-        <MessageActions content={message.content} align="end" />
+      <div className="flex justify-end">
+        <MessageCopyMenu content={message.content}>
+          <div className="max-w-[85%] min-w-0 rounded-2xl bg-muted px-3 py-2 text-sm break-words [&>:first-child]:mt-0 [&>:last-child]:mb-0">
+            {renderMarkdown(message.content)}
+          </div>
+        </MessageCopyMenu>
       </div>
     );
   }
   return (
-    <div className="group flex flex-col gap-1">
+    <MessageCopyMenu content={message.content}>
       <div className="text-sm leading-relaxed">
         {renderMarkdown(message.content)}
         {isStreaming && (
           <span className="ml-0.5 inline-block h-3 w-1.5 translate-y-0.5 animate-pulse bg-foreground/60 align-middle" />
         )}
       </div>
-      {!isStreaming && <MessageActions content={message.content} align="start" alwaysShow={alwaysShowActions} />}
-    </div>
+    </MessageCopyMenu>
   );
 };
 
