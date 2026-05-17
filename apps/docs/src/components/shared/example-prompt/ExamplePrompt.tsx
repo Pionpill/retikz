@@ -155,16 +155,18 @@ const ExtensionRow: FC<{ content: string }> = ({ content }) => {
   };
 
   return (
-    <li className="flex items-end justify-between gap-3 px-2 py-1">
+    <li className="flex items-start justify-between gap-1 px-2">
+      <div className="pt-1">
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button type="button" variant="secondary" size="icon" className="h-8 w-8 shrink-0" onClick={handleSend}>
+              <Send className="size-3.5" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>{t('examplePrompt.sendTooltip')}</TooltipContent>
+        </Tooltip>
+      </div>
       <InlineMarkdown source={content} className="flex-1 text-foreground/85 text-sm leading-relaxed" />
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <Button type="button" variant="secondary" size="icon" className="h-8 w-8 shrink-0" onClick={handleSend}>
-            <Send className="size-3.5" />
-          </Button>
-        </TooltipTrigger>
-        <TooltipContent>{t('examplePrompt.sendTooltip')}</TooltipContent>
-      </Tooltip>
     </li>
   );
 };
