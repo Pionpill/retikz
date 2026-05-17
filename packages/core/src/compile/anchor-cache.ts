@@ -1,0 +1,65 @@
+/**
+ * Anchor 解析统一入口 + per-layout WeakMap 缓存
+ * @description
+ *   `'A.<keyword>'`（north / east / north-east 等 9 个 RectAnchor）与 `'A.<deg>'`（'30' / '-45' / '180.5' 等数字角度）
+ *   两类 anchor 解析在 path / position 多处会反复触发同一 (layout, name) 组合。本模块把对各 shape 的
+ *   `anchor()` / 数字角度 `boundaryPoint(toward=旋转后单位向量)` 调用统一收编到 `resolveAnchor(layout, name)`，
+ *   并按 `WeakMap<NodeLayout, Map<string, IRPosition>>` 缓存结果——
+ *   单次 compile 内 layout 不可变 → cache 命中保证返回**严格相等**（`===`）的 IRPosition 引用。
+ *   compile 结束 layout 引用释放，WeakMap entry 随 GC 一并回收。
+ */
+
+import type { Position } from '../geometry/point';
+import type { IRPosition } from '../ir';
+import { anchorOf, angleBoundaryOf } from './node';
+import type { NodeLayout } from './node';
+
+/**
+ * (layout, anchorName) → IRPosition 缓存
+ * @description WeakMap 让 NodeLayout 引用一旦失效（compile 结束、NameStack 回收），对应 Map 自动 GC，无需手动 invalidate
+ */
+const cache = new WeakMap<NodeLayout, Map<string, IRPosition>>();
+
+/** 角度字符串识别：可选负号 + 数字 + 可选小数；与 parseTarget.ts 的 ANGLE_RE 同语义 */
+const ANGLE_RE = /^-?\d+(\.\d+)?$/;
+
+/**
+ * 把 anchorName 解析到对应 shape 的 anchor / boundaryPoint 上
+ * @description 数字字符串走 angleBoundaryOf；其余按 RectAnchor 走 anchorOf
+ */
+const computeAnchor = (layout: NodeLayout, anchorName: string): IRPosition => {
+  if (ANGLE_RE.test(anchorName)) {
+    const angle = Number(anchorName);
+    return positionToIR(angleBoundaryOf(layout, angle));
+  }
+  // anchorOf 内部按 layout.shape 分发到 rect / circle / ellipse / diamond 的 anchor()，已带 RectAnchor 校验
+  // anchorName 不在 RECT_ANCHORS 范围时 anchorOf 会抛错；调用方（parseNodeRef）通常已先校验 anchor 名合法性
+  return positionToIR(anchorOf(layout, anchorName as Parameters<typeof anchorOf>[1]));
+};
+
+/** geometry Position（含 readonly 形态）转 IRPosition 元组（IRPosition === [number, number]） */
+const positionToIR = (p: Position): IRPosition => [p[0], p[1]];
+
+/**
+ * 取节点 anchor 的全局坐标，带 per-layout 缓存
+ * @description name 接受 RectAnchor 关键字（如 `'north'` / `'south-west'`）或数字角度字符串（如 `'30'` / `'-45'`）；
+ *   同一 (layout, name) 第二次起返回首调用结果的**同一引用**——上游可用 `===` 判定 cache 命中
+ * @param layout 已 Pass 1 完成的 NodeLayout（rect 已是全局坐标）
+ * @param anchorName 关键字或数字角度字符串
+ * @returns 全局坐标系下的 IRPosition `[x, y]`
+ */
+export const resolveAnchor = (
+  layout: NodeLayout,
+  anchorName: string,
+): IRPosition => {
+  let layoutCache = cache.get(layout);
+  if (!layoutCache) {
+    layoutCache = new Map<string, IRPosition>();
+    cache.set(layout, layoutCache);
+  }
+  const cached = layoutCache.get(anchorName);
+  if (cached !== undefined) return cached;
+  const result = computeAnchor(layout, anchorName);
+  layoutCache.set(anchorName, result);
+  return result;
+};
