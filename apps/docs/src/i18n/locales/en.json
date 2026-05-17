@@ -240,6 +240,8 @@
     "convEmptySuggestion3": "List all available props with their types",
     "convEmptySuggestion4": "How does this compare to similar components",
     "convClearLabel": "Clear chat",
+    "messageCopyLabel": "Copy message",
+    "messageCopiedLabel": "Copied",
     "errorAuth": "API key invalid. Check the key in settings →",
     "errorRate": "Rate limited. Try again shortly.",
     "errorWindow": "Conversation context too long. Start a new chat or pick a larger-window model.",

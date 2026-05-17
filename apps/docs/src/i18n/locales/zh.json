@@ -240,6 +240,8 @@
     "convEmptySuggestion3": "列出所有 props 与对应类型",
     "convEmptySuggestion4": "和类似组件相比有什么区别",
     "convClearLabel": "清空会话",
+    "messageCopyLabel": "复制消息",
+    "messageCopiedLabel": "已复制",
     "errorAuth": "API key 无效。检查 settings 里的 key →",
     "errorRate": "请求过频，稍后重试。",
     "errorWindow": "本会话上下文过长，开新会话或换更大窗口的模型。",

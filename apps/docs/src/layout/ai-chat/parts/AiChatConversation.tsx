@@ -62,13 +62,20 @@ export const AiChatConversation: FC = () => {
           <AiChatConversationEmpty />
         ) : (
           <div className="flex flex-col gap-3">
-            {messages.map((m, idx) => (
-              <AiChatMessage
-                key={idx}
-                message={m}
-                isStreaming={isGenerating && idx === messages.length - 1 && m.role === 'assistant'}
-              />
-            ))}
+            {messages.map((m, idx) => {
+              const isLast = idx === messages.length - 1;
+              const isStreamingThis = isGenerating && isLast && m.role === 'assistant';
+              // 最新条助手消息且不在流式中：动作条常驻
+              const isSettledLastAssistant = !isGenerating && isLast && m.role === 'assistant';
+              return (
+                <AiChatMessage
+                  key={idx}
+                  message={m}
+                  isStreaming={isStreamingThis}
+                  alwaysShowActions={isSettledLastAssistant}
+                />
+              );
+            })}
             {errorText && (
               <div className="flex items-start gap-2 rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-xs text-destructive">
                 <AlertCircle className="mt-0.5 size-3.5 shrink-0" />
