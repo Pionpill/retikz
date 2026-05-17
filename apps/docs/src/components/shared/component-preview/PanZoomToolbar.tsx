@@ -126,13 +126,14 @@ export const PanZoomToolbar: FC<PanZoomToolbarProps> = props => {
           if (SIZE_VALUE_SET.has(value)) onSizeChange(value as SizeKey);
         }}
         aria-label="Preview size"
+        className="w-full"
       >
         {SIZE_KEYS.map(key => (
           <ToggleGroupItem
             key={key}
             value={key}
             aria-label={`Size ${key}`}
-            className="h-6 min-w-6 cursor-pointer px-1 text-[10px] font-medium uppercase"
+            className="h-6 flex-1 cursor-pointer px-0 text-[10px] font-medium uppercase"
           >
             {key}
           </ToggleGroupItem>
