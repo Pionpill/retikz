@@ -159,7 +159,7 @@ describe('scope.id synthetic bbox 注册到父 frame，外部可 lookup', () => 
 });
 
 describe('跨 scope 位置引用（polar.origin / AtPosition.of / OffsetPosition.of）', () => {
-  it('scope_polar_origin_cross_scope：scope 内 node 用 polar.origin 引用外层 node，全局坐标正确', () => {
+  it('scope_polar_origin_cross_scope：scope 内 node 用 polar.origin 引用外层 node，referent 取全局 / relative 在 scope 局部度量', () => {
     const ir = scene([
       { type: 'node', id: 'hub', position: [0, 0], text: 'H' },
       {
@@ -184,14 +184,15 @@ describe('跨 scope 位置引用（polar.origin / AtPosition.of / OffsetPosition
     ]);
     const warnings: Array<{ code: string }> = [];
     const compiled = compileToScene(ir, { onWarn: w => warnings.push(w) });
-    // polar.origin 'hub' = (0,0) + angle 0 / radius 30 → 局部 (30, 0)，再 apply scope translate(100,0) → 全局 (130, 0)
+    // referent hub_global=(0,0); inverseTranslate(100,0) → 局部 (-100,0); +(30,0) → 局部 (-70,0); applyTranslate(100,0) → 全局 (30,0)
+    // 几何上：scope translate 不改 relative 矢量方向 / 长度——orbit 视觉在 hub 全局右 30
     expect(warnings.filter(w => w.code === 'POLAR_ORIGIN_UNRESOLVED')).toHaveLength(0);
     const end = lineTo(topPath(compiled.primitives));
     expect(end).toBeDefined();
-    expect(Math.abs(end![0] - 130)).toBeLessThan(20);
+    expect(Math.abs(end![0] - 30)).toBeLessThan(20);
   });
 
-  it('scope_at_of_cross_scope：scope 内 node 用 AtPosition.of 引用外层 node，全局坐标正确', () => {
+  it('scope_at_of_cross_scope：scope 内 node 用 AtPosition.of 引用外层 node，referent 取全局 / relative 在 scope 局部度量', () => {
     const ir = scene([
       { type: 'node', id: 'hub', position: [0, 0], text: 'H' },
       {
@@ -217,13 +218,13 @@ describe('跨 scope 位置引用（polar.origin / AtPosition.of / OffsetPosition
     const warnings: Array<{ code: string }> = [];
     const compiled = compileToScene(ir, { onWarn: w => warnings.push(w) });
     expect(warnings.filter(w => w.code === 'AT_TARGET_UNRESOLVED')).toHaveLength(0);
-    // hub.right 40 = 局部 (40, 0)，再 scope translate(100,0) → 全局 (140, 0)
+    // hub_global=(0,0)；scope translate 不改 right 方向 / 距离 → 视觉 = hub 全局右 40 = 全局 (40, 0)
     const end = lineTo(topPath(compiled.primitives));
     expect(end).toBeDefined();
-    expect(Math.abs(end![0] - 140)).toBeLessThan(20);
+    expect(Math.abs(end![0] - 40)).toBeLessThan(20);
   });
 
-  it('scope_offset_of_cross_scope：scope 内 node 用 OffsetPosition.of 引用外层 node，全局坐标正确', () => {
+  it('scope_offset_of_cross_scope：scope 内 node 用 OffsetPosition.of 引用外层 node，referent 取全局 / relative 在 scope 局部度量', () => {
     const ir = scene([
       { type: 'node', id: 'hub', position: [0, 0], text: 'H' },
       {
@@ -249,10 +250,10 @@ describe('跨 scope 位置引用（polar.origin / AtPosition.of / OffsetPosition
     const warnings: Array<{ code: string }> = [];
     const compiled = compileToScene(ir, { onWarn: w => warnings.push(w) });
     expect(warnings.filter(w => w.code === 'OFFSET_BASE_UNRESOLVED')).toHaveLength(0);
-    // hub + (20, 10) = 局部 (20, 10)，再 scope translate(100,0) → 全局 (120, 10)
+    // hub_global=(0,0) + offset(20,10) 经 scope translate 后视觉 = hub 全局 +(20,10) = (20, 10)
     const end = lineTo(topPath(compiled.primitives));
     expect(end).toBeDefined();
-    expect(Math.abs(end![0] - 120)).toBeLessThan(20);
+    expect(Math.abs(end![0] - 20)).toBeLessThan(20);
   });
 });
 
@@ -430,7 +431,7 @@ describe('跨 scope anchor 交互场景', () => {
   });
 
   it('scope_with_at_position_and_anchor_chain：node B AtPosition `{ of: A, direction: right }` 在 scope 内 + path 引用 `B.south` → 全链路解析', () => {
-    // A 在 scope 外，B 在 scope 内引用 A——避免"同 scope 内引用 A 后被 chain 二次 apply"的 latent 行为
+    // A 在 scope 外，B 在 scope 内引用 A——relative 部分在 scope 局部度量后投回全局
     const ir = scene([
       { type: 'node', id: 'A', position: [0, 0], text: 'A' },
       {
@@ -458,9 +459,9 @@ describe('跨 scope anchor 交互场景', () => {
     expect(warnings.filter(w => w.code === 'UNRESOLVED_NODE_REFERENCE')).toHaveLength(0);
     const end = lineTo(topPath(compiled.primitives));
     expect(end).toBeDefined();
-    // A 全局 (0, 0)；B 局部 (60, 0) + scope translate(0, 80) = 全局 (60, 80)；south 在 y > 80 方向
+    // A 全局 (0, 0)；scope translate 不改 right 方向 / 距离；B 视觉 = A 全局右 60 = (60, 0)；south 在 y > 0 方向
     expect(Math.abs(end![0] - 60)).toBeLessThan(20);
-    expect(end![1]).toBeGreaterThan(80);
+    expect(end![1]).toBeGreaterThan(0);
   });
 
   it('scope_with_polar_chain_cross_scope：A 在 scope1、B polar.origin=A 在 scope2 不同 transform → 全链解析', () => {
@@ -493,11 +494,12 @@ describe('跨 scope anchor 交互场景', () => {
     const warnings: Array<{ code: string }> = [];
     const compiled = compileToScene(ir, { onWarn: w => warnings.push(w) });
     expect(warnings.filter(w => w.code === 'POLAR_ORIGIN_UNRESOLVED')).toHaveLength(0);
-    // A 全局 (40, 0) → B 极坐标局部 (40+30=70, 0)，再 scope2 translate(0, 40) → 全局 (70, 40)
+    // A 全局 (40, 0)；scope2 translate 不改 relative 矢量方向 / 长度；
+    // B 视觉 = A 全局 + (30, 0) = (70, 0)（不再 + scope2 的 y=40 偏移——translate 不重复 apply 到 relative）
     const end = lineTo(topPath(compiled.primitives));
     expect(end).toBeDefined();
     expect(Math.abs(end![0] - 70)).toBeLessThan(20);
-    expect(Math.abs(end![1] - 40)).toBeLessThan(20);
+    expect(Math.abs(end![1])).toBeLessThan(20);
   });
 
   it('scope_emit_group_prim_anchor_global：Scene GroupPrim 子 node 在局部坐标；NameStack layout 全局——path 端点取后者，二者一致无 drift', () => {

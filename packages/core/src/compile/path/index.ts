@@ -19,9 +19,11 @@ import type {
 import type {
   PathCommand,
   ScenePrimitive,
+  Transform,
 } from '../../primitive';
 import type { AssertEqual } from '../../types';
 import type { NameStack } from '../name-stack';
+import { applyTransformChain } from '../scope';
 import { type TextMeasurer, fallbackMeasurer } from '../text-metrics';
 import { clipForTarget, cornerOf, refPointOfTarget, samePoint } from './anchor';
 import { emitLabelPrimitive, tForLabelPosition } from './label';
@@ -62,6 +64,12 @@ export type EmitPathWarnHook = {
   }) => void;
   /** 当前 path 在 IR 中的 locator 前缀（如 `'children[3].path'`） */
   irPath?: string;
+  /**
+   * 该 path 所属 scope 的累积 Cartesian-only transform 链
+   * @description step.to 内的 polar/at/offset 字面量按"当前 scope 局部度量 + 末端 apply chain"
+   *   投影回全局；顶层 path / 无 scope chain 时为 `[]`（恒等，等价 v0.1 行为）
+   */
+  scopeChain?: ReadonlyArray<Transform>;
 };
 
 /**
@@ -79,8 +87,9 @@ export const emitPathPrimitive = (
   const warn = (code: string, message: string, subPath = ''): void => {
     warnHook.onWarn?.({ code, message, path: subPath ? `${irPath}.${subPath}` : irPath });
   };
+  const scopeChain = warnHook.scopeChain ?? [];
   // 先把 relative/relativeAccumulate 解析为绝对坐标，后续算法可统一按绝对坐标处理
-  const steps = normalizeRelativeTargets(path.children, nameStack);
+  const steps = normalizeRelativeTargets(path.children, nameStack, scopeChain);
   if (steps.length < 2) {
     warn(
       'PATH_TOO_SHORT',
@@ -127,7 +136,7 @@ export const emitPathPrimitive = (
   // 每个 step 的几何参考点（节点中心/直接坐标）；无 to 的 step kind 给 null
   const anchors: Array<IRPosition | null> = steps.map((s, idx) => {
     if (!hasTo(s)) return null;
-    const ref = refPointOfTarget(s.to, nameStack);
+    const ref = refPointOfTarget(s.to, nameStack, scopeChain);
     if (!ref && typeof s.to === 'string') {
       warn(
         'UNRESOLVED_NODE_REFERENCE',
@@ -279,11 +288,11 @@ export const emitPathPrimitive = (
       const moveTo = lastMoveTo;
       const prev = findPrev();
       if (!moveTo || !prev) continue; // 没 move/prev cycle 无意义
-      const moveAnchor = refPointOfTarget(moveTo, nameStack);
+      const moveAnchor = refPointOfTarget(moveTo, nameStack, scopeChain);
       if (!moveAnchor) return null;
 
-      const fromClip = clipForTarget(prev.step.to, moveAnchor, nameStack);
-      const toClip = clipForTarget(moveTo, prev.anchor, nameStack);
+      const fromClip = clipForTarget(prev.step.to, moveAnchor, nameStack, scopeChain);
+      const toClip = clipForTarget(moveTo, prev.anchor, nameStack, scopeChain);
       if (!fromClip || !toClip) return null;
 
       // 起点 == lastEnd 且终点 == subPathStart → close 收尾最干净
@@ -373,8 +382,8 @@ export const emitPathPrimitive = (
     penOverride = null;
 
     if (step.kind === 'line') {
-      const fromClip = usedOverride ?? clipForTarget(prev.step.to, currAnchor, nameStack);
-      const toClip = clipForTarget(step.to, prev.anchor, nameStack);
+      const fromClip = usedOverride ?? clipForTarget(prev.step.to, currAnchor, nameStack, scopeChain);
+      const toClip = clipForTarget(step.to, prev.anchor, nameStack, scopeChain);
       if (!fromClip || !toClip) return null;
       startSegment(fromClip);
       emitLine(toClip);
@@ -383,8 +392,8 @@ export const emitPathPrimitive = (
     }
 
     if (step.kind === 'curve') {
-      const fromClip = usedOverride ?? clipForTarget(prev.step.to, step.control, nameStack);
-      const toClip = clipForTarget(step.to, step.control, nameStack);
+      const fromClip = usedOverride ?? clipForTarget(prev.step.to, step.control, nameStack, scopeChain);
+      const toClip = clipForTarget(step.to, step.control, nameStack, scopeChain);
       if (!fromClip || !toClip) return null;
       startSegment(fromClip);
       emitQuad(step.control, toClip);
@@ -392,8 +401,8 @@ export const emitPathPrimitive = (
       continue;
     }
     if (step.kind === 'cubic') {
-      const fromClip = usedOverride ?? clipForTarget(prev.step.to, step.control1, nameStack);
-      const toClip = clipForTarget(step.to, step.control2, nameStack);
+      const fromClip = usedOverride ?? clipForTarget(prev.step.to, step.control1, nameStack, scopeChain);
+      const toClip = clipForTarget(step.to, step.control2, nameStack, scopeChain);
       if (!fromClip || !toClip) return null;
       startSegment(fromClip);
       emitCubic(step.control1, step.control2, toClip);
@@ -405,8 +414,8 @@ export const emitPathPrimitive = (
     if (step.kind === 'bend') {
       const angle = step.bendAngle ?? 30;
       const [c1, c2] = bendControlPoints(prev.anchor, currAnchor, step.bendDirection, angle);
-      const fromClip = usedOverride ?? clipForTarget(prev.step.to, c1, nameStack);
-      const toClip = clipForTarget(step.to, c2, nameStack);
+      const fromClip = usedOverride ?? clipForTarget(prev.step.to, c1, nameStack, scopeChain);
+      const toClip = clipForTarget(step.to, c2, nameStack, scopeChain);
       if (!fromClip || !toClip) return null;
       startSegment(fromClip);
       emitCubic(c1, c2, toClip);
@@ -416,8 +425,8 @@ export const emitPathPrimitive = (
 
     // step.kind === 'step' (fold)
     const corner = cornerOf(prev.anchor, currAnchor, step.via);
-    const fromClip = usedOverride ?? clipForTarget(prev.step.to, corner, nameStack);
-    const toClip = clipForTarget(step.to, corner, nameStack);
+    const fromClip = usedOverride ?? clipForTarget(prev.step.to, corner, nameStack, scopeChain);
+    const toClip = clipForTarget(step.to, corner, nameStack, scopeChain);
     if (!fromClip || !toClip) return null;
     startSegment(fromClip);
     emitLine(corner);

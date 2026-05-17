@@ -113,13 +113,17 @@ const defaultWarnDispatcher = (warning: CompileWarning): void => {
 
 /**
  * Pass 1 递归扫描时记录的 pending path
- * @description path 必须等所有 node / coordinate Pass 1 注册完才能解析端点（避免前向引用），但 lookup 必须在它所在的 frame 栈上下文中进行——scope localNamespace 内 path 引用同 frame id 需在 frame pop 前完成。compile 处理顺序：每个层级先把子 node / coordinate / 子 scope 处理完（pending path 全部收集），然后**在该层 popFrame 前**统一 resolve 本层 pending path；这样 path 端点 inside-out lookup 能正确看到本层 frame
+ * @description path 必须等所有 node / coordinate Pass 1 注册完才能解析端点（避免前向引用），但 lookup 必须在它所在的 frame 栈上下文中进行——scope localNamespace 内 path 引用同 frame id 需在 frame pop 前完成。compile 处理顺序：每个层级先把子 node / coordinate / 子 scope 处理完（pending path 全部收集），然后**在该层 popFrame 前**统一 resolve 本层 pending path；这样 path 端点 inside-out lookup 能正确看到本层 frame。
+ *   `scopeChain` 字段记录该 path 所在 scope 的累积 transform 链，让 path step 内 polar/at/offset
+ *   `to` 在 scope 局部度量后由 path 端点 lookup 端走 `applyTransformChain` 投回全局。
  */
 type PendingPath = {
   /** path IR 节点本体 */
   path: IRPath;
   /** path 在 IR 中的 jq-like locator（如 `children[2].scope.children[1].path`） */
   irPath: string;
+  /** 该 path 所属 scope 的累积 transform 链；顶层 path = [] */
+  scopeChain: ReadonlyArray<Transform>;
 };
 
 /** scope.transforms 解析失败时根据失败成因映射的 warn code */
@@ -169,7 +173,9 @@ export const compileToScene = (ir: IR, options: CompileOptions = {}): Scene => {
 
   /**
    * 解析一批本层收集的 pending paths（lookup-only 阶段）
-   * @description path primitive 一律 push 到顶层 `primitives` —— 端点已是全局坐标，不能进 GroupPrim 否则被 scope.transform 二次 apply。NameStack 切到 pass2 守门：path 解析中误调 register 抛 internal error；解析完切回 pass1 让上层 scope 子树继续 register 子节点
+   * @description path primitive 一律 push 到顶层 `primitives` —— 端点已是全局坐标，不能进 GroupPrim 否则被 scope.transform 二次 apply。NameStack 切到 pass2 守门：path 解析中误调 register 抛 internal error；解析完切回 pass1 让上层 scope 子树继续 register 子节点。
+   *   `item.scopeChain` 记录该 path 所属 scope 累积 transform 链——传给 emitPathPrimitive，
+   *   让 step.to 内的 polar/at/offset 字面量按"当前 scope 局部度量 + 末端 apply chain"投影回全局。
    */
   const resolvePendingPaths = (pending: ReadonlyArray<PendingPath>): void => {
     if (pending.length === 0) return;
@@ -179,6 +185,7 @@ export const compileToScene = (ir: IR, options: CompileOptions = {}): Scene => {
         const result = emitPathPrimitive(item.path, nameStack, round, measureText, {
           onWarn,
           irPath: item.irPath,
+          scopeChain: item.scopeChain,
         });
         if (result) {
           for (const prim of result.primitives) primitives.push(prim);
@@ -211,7 +218,7 @@ export const compileToScene = (ir: IR, options: CompileOptions = {}): Scene => {
     for (let i = 0; i < children.length; i++) {
       const child = children[i];
       if (child.type === 'node') {
-        const layout = layoutNode(child, measureText, nameStack, nodeDistance);
+        const layout = layoutNode(child, measureText, nameStack, nodeDistance, chain);
         const globalLayout = chain.length === 0 ? layout : projectLayoutToGlobal(layout, chain);
         if (child.id) {
           nameStack.register(child.id, globalLayout, `${locatorPrefix}children[${i}].node.id`);
@@ -229,7 +236,7 @@ export const compileToScene = (ir: IR, options: CompileOptions = {}): Scene => {
         // 把 node layout 加进 layoutsAccumulator，供上层 scope.id bbox 计算
         layoutsAccumulator.push(globalLayout);
       } else if (child.type === 'coordinate') {
-        const localCenter = resolvePosition(child.position, nameStack, nodeDistance);
+        const localCenter = resolvePosition(child.position, nameStack, nodeDistance, chain);
         if (!localCenter) {
           onWarn({
             code: 'POLAR_ORIGIN_UNRESOLVED',
@@ -326,9 +333,12 @@ export const compileToScene = (ir: IR, options: CompileOptions = {}): Scene => {
       } else {
         // child.type === 'path'：累积到调用方提供的 pathsAccumulator，让调用方决定 resolve 时机
         // path 端点从 NameStack（全局坐标）查得，几何已是全局——primitive 在 resolvePendingPaths 中一律 push 顶层 primitives 避免被 scope.transform 重复 apply
+        // `chain` 记录 path 所属 scope 累积 transform，让 step.to 内的 polar/at/offset 字面量
+        // 按"当前 scope 局部度量 + 末端 apply chain"投影回全局
         pathsAccumulator.push({
           path: child,
           irPath: `${locatorPrefix}children[${i}].path`,
+          scopeChain: chain,
         });
       }
     }

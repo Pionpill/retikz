@@ -88,8 +88,9 @@
 - compile Pass 1 递归处理 scope 树：`lowerScopeTransforms` 把 4 个 translate 变体调用 `resolvePosition` 展平为 Cartesian translate，再下沉到 Scene `GroupPrim.transforms`（Scene 维持 3 变体不变）
 - NameStack 存全局坐标（chain apply 后），Scene primitive 树里 node 用局部坐标 + GroupPrim transform 链——adapter 只看 Scene 的几何
 - 空 scope（children 空 + transforms 空 / 缺省 + id 缺省）→ 不 emit GroupPrim
+- **scope 下相对定位**：referent（`polar.origin` / `at.of` / `offset.of`）取全局；relative 部分（polar `(angle, radius)` / at `(direction, distance)` / offset `[dx, dy]`）在**当前 node 所属 scope 局部度量**；末端正向 apply 当前 scope chain 投回全局。`resolvePosition(pos, nameStack, nodeDistance?, scopeChain?)` 第 4 参数空 = v0.1 行为（全局）；非空 = 当前 scope 局部坐标返回值，调用方走 `projectLayoutToGlobal` / `applyTransformChain` 投全局。`inverseTransformChain` 是 `applyTransformChain` 的逆——translate(-x,-y) / rotate(-deg, cx, cy) / scale(1/x, 1/y)；scale 分量 0 退化为 (0,0) 防 NaN
+- **`scope.transforms` 自身定位的边界语义**（与 scope 内 node 相对定位区分）：`lowerScopeTransforms` 处理的是 scope 本身放在父 scope 里的"自身位移 / 旋转 / 缩放"——它的 `polar-translate` / `at-translate` / `offset-translate` 在解析 referent 时**不接 scope chain**（按"父 scope 全局坐标"度量），因为这些 transform 描述的是 scope 自身在父坐标系里的放置，**不属于"scope 内 node 的相对定位"那条算法**。调用方对此**不要传 chain**——传了反而违背"scope 是被父 scope 包含的"模型。注意：在嵌套 scope 时如果父 scope 内有更外层 scope，本 scope 的 transforms 仍按"父 scope 全局" = 上一层 scope 内的局部坐标（已被外层 scope chain 投到全局前的本层视角），现阶段不展开"嵌套父 scope chain → scope.transforms"语义——这是当前已知边界，alpha 阶段不修
 - 后续 ADR 接：
-  - scope 下相对 Position 引用外层节点的投影规则
   - 占位待 v0.2 alpha.2 单独 ADR：scope 上挂样式默认值（`nodeDefault` / `pathDefault`）
 
 ## 命名空间栈（`compile/name-stack.ts`）

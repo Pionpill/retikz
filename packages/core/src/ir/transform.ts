@@ -124,12 +124,16 @@ const ScaleSchema = z
     x: z
       .number()
       .finite()
-      .describe('Scale factor on the x axis.'),
+      .describe(
+        'Scale factor on the x axis. Zero scale collapses the coordinate system and is not invertible — relative positions inside the scope degrade to the local origin (0, 0). Avoid zero in practice; use a tiny positive value if a "near-invisible" effect is desired.',
+      ),
     y: z
       .number()
       .finite()
       .optional()
-      .describe('Scale factor on the y axis; omit = x (uniform scaling).'),
+      .describe(
+        'Scale factor on the y axis; omit = x (uniform scaling). Zero scale falls back to (0, 0) for relative position inverse projection (see `x`).',
+      ),
   })
   .describe(
     'Scale transform; identical shape to Scene `ScaleTransform`. Passed through to GroupPrim without further lowering.',

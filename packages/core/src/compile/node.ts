@@ -5,7 +5,7 @@ import type { Position } from '../geometry/point';
 import type { Rect, RectAnchor } from '../geometry/rect';
 import { rect as rectOps } from '../geometry/rect';
 import type { AtDirection, IRLineSpec, IRNode, IRNodeLabel, NodeShape } from '../ir';
-import type { ScenePrimitive, TextLine } from '../primitive';
+import type { ScenePrimitive, TextLine, Transform } from '../primitive';
 import type { NameStack } from './name-stack';
 import { resolvePosition } from './position';
 import type { TextMeasurer } from './text-metrics';
@@ -246,13 +246,17 @@ export const angleBoundaryOf = (layout: NodeLayout, angleDeg: number): Position 
 
 /**
  * IR Node → 内部 NodeLayout
- * @description 文本度量 + padding 推内框半轴；按 shape 算外接边界（circle 取半对角线、ellipse ×√2、diamond ×2）；解析 position 为几何中心；rotate 度数转弧度
+ * @description 文本度量 + padding 推内框半轴；按 shape 算外接边界（circle 取半对角线、ellipse ×√2、diamond ×2）；解析 position 为几何中心；rotate 度数转弧度。
+ *   `scopeChain` 非空时 `resolvePosition` 返回**当前 scope 局部坐标**（relative position 在当前
+ *   scope 局部度量），调用方负责后续 `projectLayoutToGlobal` / `applyTransformChain` 投回全局；
+ *   笛卡尔字面量 `Position` 已在 scope 局部度量，行为延续 v0.1。
  */
 export const layoutNode = (
   node: IRNode,
   measureText: TextMeasurer,
   nameStack: NameStack,
   nodeDistance?: number,
+  scopeChain: ReadonlyArray<Transform> = [],
 ): NodeLayout => {
   // 缩放：xScale/yScale 优先于 scale 别名，默认 1；乘进所有尺寸让 path 贴缩放后边界。
   // 字号取 min(sx,sy) 保 glyph 形状，避免非均匀缩放下文字被拉变形。
@@ -353,7 +357,7 @@ export const layoutNode = (
   }
 
   const rotateDeg = node.rotate ?? 0;
-  const center = resolvePosition(node.position, nameStack, nodeDistance);
+  const center = resolvePosition(node.position, nameStack, nodeDistance, scopeChain);
   if (!center) {
     throw new Error(
       `Cannot resolve position for node ${node.id ?? '(unnamed)'}; polar.origin or at.of may reference an undefined node`,

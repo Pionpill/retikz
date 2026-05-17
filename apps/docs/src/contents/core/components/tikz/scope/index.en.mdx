@@ -130,15 +130,51 @@ scope.id resolves to its bbox **center** when used as a `polar.origin` / `at.of`
 
 <ComponentPreview name="scope-id-referent" size="md" />
 
-### Empty scope with id
-
-When a scope has `id` set but no children, the bbox degenerates to a 0×0 placeholder at the scope's local origin (after applying the transform chain). Setting `id` always yields a referenceable handle — useful as a named anchor point you can position elsewhere later:
-
-<ComponentPreview name="scope-id-empty" size="md" />
-
 ### scope.id conflicts
 
 scope.id shares the flat global namespace with `node.id` and `coordinate.id` (see [Duplicate id handling](#duplicate-id-handling)) — a same-name `<Node id="cluster">` or sibling `<Scope id="cluster">` triggers a `DUPLICATE_NODE_ID` warning under last-wins. Forward references (referring to a scope.id before it appears in IR) fail to resolve, since the bbox is computed only after the scope subtree finishes.
+
+## Relative positioning inside a scope
+
+When a `<Node>` / `<Coordinate>` / `<Path>` `Step.to` inside a scope uses `PolarPosition` / `AtPosition` / `OffsetPosition`, retikz resolves it under the following rules:
+
+1. **Referent is global**: the `polar.origin` / `at.of` / `offset.of` referent (node id / scope.id / coordinate literal) is resolved to its **global** coordinate (already includes any cumulative transforms of the scope it lives in)
+2. **Relative part is measured in the current scope's local frame**: polar's `(angle, radius)`, at's `(direction, distance)`, offset's `[dx, dy]` are all expressed in the **current node's enclosing scope's local coordinate system**
+3. **The end result is projected back to global via the current scope's chain**: the referent's global point is first inversely projected to the current scope's local frame, the relative part is added, then the sum is forward-projected back to global
+
+Math: `final = scopeTransform(inverseScopeTransform(referent_global) + relative_part)`
+
+<Comparison target="tikz" title="Relative positioning inside a scope">
+
+Maps to TikZ `\begin{scope}[rotate=90] \node at ($(hub) + (50:0)$) {orbit}; \end{scope}` — `(hub)` resolves to a global coordinate (unaffected by scope rotate), and `+ (50:0)` is measured in the current scope's local frame. retikz reuses this convention: referents are globally visible, while relative parts rotate / scale together with the scope.
+
+</Comparison>
+
+### PolarPosition under scope rotate
+
+`hub` lives outside the scope (global origin); inside `rotate(45°)` scope, `orbit` uses polar `{ origin: 'hub', angle: 0, radius: 80 }` — the relative part is local right-80, then projected by the scope rotate to a 45° down-right visual direction. The same polar written outside the scope (see `ref`) directly lands at hub's global right by 80:
+
+<ComponentPreview name="scope-position-polar-in-rotate" size="md" />
+
+### AtPosition under scope rotate
+
+`direction: 'right'` is the **current scope's local** right — after the scope rotates 90°, "right" visually becomes "down", and B lands below A by 60. The `B-ref` outside the scope sits at A's global right by 60:
+
+<ComponentPreview name="scope-position-at-cross-scope" size="md" />
+
+### OffsetPosition under scope scale
+
+`offset: [40, 0]` is measured in scope local; after `scale(2)`, the visual offset becomes (80, 0) — B is to anchor's right by 80. `B-ref` outside the scope keeps the unscaled offset:
+
+<ComponentPreview name="scope-position-offset-with-scale" size="md" />
+
+### Detailed rules
+
+- **Nested polar / nested offset**: the whole nested chain is measured in the **current node's enclosing scope's local frame** — the basis scope does not switch as you recurse; an inner `polar.origin = { origin: 'A', angle: 0, radius: 30 }` is also evaluated under the current scope's local frame
+- **Cartesian `Position` literal**: inside a scope, `position={[10, 0]}` keeps v0.1 behavior — `[10, 0]` is measured in the current scope's local frame and projected to global via the scope chain
+- **Scope translate does not change relative vectors**: translate is neither rotation nor scaling — `relative=(10, 0)` inside a `translate(50, 0)` scope keeps the same visual direction and length
+- **Scope `scale=0`**: the inverse projection is undefined; retikz falls back to local origin (0, 0) to avoid NaN. Avoid zero scale in practice — use a tiny positive value if a "near-invisible" effect is desired
+- **Relative `Step.to` in a path**: same rules as `Node.position` — when path step.to is a polar / offset / Cartesian / `{ relative: [dx, dy] }` literal, the relative part is measured in the path's enclosing scope's local frame
 
 ## Namespace and isolation
 

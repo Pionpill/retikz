@@ -1,5 +1,7 @@
 import type { AtDirection, IRAtPosition, IROffsetPosition, IRPosition, PolarPosition } from '../ir';
+import type { Transform } from '../primitive';
 import type { NameStack } from './name-stack';
+import { inverseTransformChain } from './scope';
 
 /** 默认相对定位距离（CompileOptions.nodeDistance 未配时使用） */
 const DEFAULT_NODE_DISTANCE = 1;
@@ -21,40 +23,61 @@ const DIRECTION_VECTOR: Record<AtDirection, [number, number]> = {
 
 /**
  * IR 各种位置形态（笛卡尔/极坐标/相对定位/偏移定位/节点 id）→ 笛卡尔位置
- * @description 极坐标 origin / 偏移定位 of 均可递归引用节点 id 或字面坐标；relative `AtPosition` of 必须引用已定义节点/coordinate；解析失败返回 null。
- *   节点 id lookup 走 NameStack.lookup 进行 inside-out 搜索（内层 frame 可见外层 frame）；
- *   nodeDistance 为容器 prop 注入默认距离，AtPosition 自带 distance 优先
+ * @description
+ *   - **返回值语义**：当 `scopeChain` 非空时，返回**当前 scope 局部坐标系**下的笛卡尔位置；
+ *     调用方负责走 `applyTransformChain(local, scopeChain)` 投回全局。当 `scopeChain` 为空时
+ *     等价于 v0.1 行为（全局坐标）。
+ *   - **referent 处理**：node id lookup 拿到的 layout.rect 已是全局坐标；本函数内部用
+ *     `inverseTransformChain` 把全局 referent 反向投影到当前 scope 局部坐标系作为"在当前
+ *     scope 局部的固定点"基准。relative 部分（polar 的 angle/radius、at 的 direction/distance、
+ *     offset 的 dx/dy）在当前 scope 局部度量后加到 referent 局部坐标上。
+ *   - **嵌套**：PolarPosition.origin / OffsetPosition.of 是嵌套 polar 时，递归调用传同样
+ *     scopeChain——整条嵌套链都在当前 scope 局部度量。
+ *   - **笛卡尔字面量**：`Position` 形态直接返回（v0.1 行为延续：scope 内笛卡尔字面量在
+ *     当前 scope 局部度量；调用方走 applyTransformChain 投全局）。
+ *   - 极坐标 origin / 偏移定位 of 均可递归引用节点 id 或字面坐标；relative `AtPosition` of
+ *     必须引用已定义节点/coordinate；解析失败返回 null。
+ *   - 节点 id lookup 走 NameStack.lookup 进行 inside-out 搜索（内层 frame 可见外层 frame）；
+ *     nodeDistance 为容器 prop 注入默认距离，AtPosition 自带 distance 优先
  */
 export const resolvePosition = (
   pos: IRPosition | PolarPosition | IRAtPosition | IROffsetPosition | string,
   nameStack: NameStack,
   nodeDistance: number = DEFAULT_NODE_DISTANCE,
+  scopeChain: ReadonlyArray<Transform> = [],
 ): IRPosition | null => {
   if (typeof pos === 'string') {
     const node = nameStack.lookup(pos);
-    return node ? [node.rect.x, node.rect.y] : null;
+    if (!node) return null;
+    // 全局坐标 referent → 当前 scope 局部坐标（无 chain 时恒等）
+    const global: IRPosition = [node.rect.x, node.rect.y];
+    return scopeChain.length === 0 ? global : inverseTransformChain(global, scopeChain);
   }
   if (Array.isArray(pos)) return pos;
   if ('direction' in pos) {
-    // AtPosition：from of 节点中心，按 direction 单位向量 × distance 偏移
+    // AtPosition：referent 全局 → 反向投影到当前 scope 局部，再加 direction × distance（局部度量）
     const ref = nameStack.lookup(pos.of);
     if (!ref) return null;
+    const refGlobal: IRPosition = [ref.rect.x, ref.rect.y];
+    const refLocal =
+      scopeChain.length === 0 ? refGlobal : inverseTransformChain(refGlobal, scopeChain);
     const distance = pos.distance ?? nodeDistance;
     const [dx, dy] = DIRECTION_VECTOR[pos.direction];
-    return [ref.rect.x + dx * distance, ref.rect.y + dy * distance];
+    return [refLocal[0] + dx * distance, refLocal[1] + dy * distance];
   }
   if ('offset' in pos) {
-    // OffsetPosition：递归 resolve `of`（string id / Position / PolarPosition）再叠加 (dx, dy)
-    const base = resolvePosition(pos.of, nameStack, nodeDistance);
+    // OffsetPosition：递归 resolve `of`（string id / Position / PolarPosition）后已是局部坐标，
+    // 再叠加 (dx, dy)（局部度量）
+    const base = resolvePosition(pos.of, nameStack, nodeDistance, scopeChain);
     if (!base) return null;
     return [base[0] + pos.offset[0], base[1] + pos.offset[1]];
   }
-  // PolarPosition：先解析 origin 再叠加极偏移
+  // PolarPosition：先解析 origin（递归走 scopeChain → 局部坐标），再叠加极偏移（局部度量）
   let origin: IRPosition;
   if (!pos.origin) {
     origin = [0, 0];
   } else {
-    const resolved = resolvePosition(pos.origin, nameStack, nodeDistance);
+    const resolved = resolvePosition(pos.origin, nameStack, nodeDistance, scopeChain);
     if (!resolved) return null;
     origin = resolved;
   }

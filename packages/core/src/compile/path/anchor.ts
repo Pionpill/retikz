@@ -1,17 +1,23 @@
 import type { IRPosition, IRTarget } from '../../ir';
+import type { Transform } from '../../primitive';
 import { resolveAnchor } from '../anchor-cache';
 import type { NameStack } from '../name-stack';
 import { boundaryPointOf } from '../node';
 import { parseNodeRef } from '../parseTarget';
 import { resolvePosition } from '../position';
+import { applyTransformChain } from '../scope';
 
 /**
  * 求 step.to 的参考点（给 boundary clip 算方向 / 折角 corner 用）
- * @description 三态：`'A'`(auto) 节点中心；`'A.<anchor>'`/`'A.<deg>'` 显式锚点 refPoint=endpoint 位置不随邻居变。直接坐标/极坐标解析为笛卡尔
+ * @description 三态：`'A'`(auto) 节点中心；`'A.<anchor>'`/`'A.<deg>'` 显式锚点 refPoint=endpoint 位置不随邻居变。直接坐标/极坐标解析为笛卡尔。
+ *   string id lookup 拿到的 layout 已是全局坐标——不走 scopeChain 投影；Position / Polar /
+ *   At / Offset 字面量经 `resolvePosition(..., scopeChain)` 拿到当前 scope 局部坐标后
+ *   `applyTransformChain` 投回全局。`scopeChain=[]` 等价 v0.1（恒等）。
  */
 export const refPointOfTarget = (
   target: IRTarget,
   nameStack: NameStack,
+  scopeChain: ReadonlyArray<Transform> = [],
 ): IRPosition | null => {
   if (typeof target === 'string') {
     const ref = parseNodeRef(target);
@@ -30,7 +36,9 @@ export const refPointOfTarget = (
   if (typeof target === 'object' && !Array.isArray(target) && ('relative' in target || 'relativeAccumulate' in target)) {
     return null;
   }
-  return resolvePosition(target, nameStack);
+  const local = resolvePosition(target, nameStack, undefined, scopeChain);
+  if (!local) return null;
+  return scopeChain.length === 0 ? local : applyTransformChain(local, scopeChain);
 };
 
 /** 折角中间点：`-|` → (curr.x, prev.y)；`|-` → (prev.x, curr.y) */
@@ -43,12 +51,15 @@ export const cornerOf = (
 
 /**
  * 在 toward 方向算 step.to 的实际绘制端点
- * @description 节点 auto `'A'`：按 shape 走 boundaryPointOf 求中心→toward 射线交点；命名 anchor/角度：位置已定不受 toward 影响；直接坐标/极坐标：解析后返回；失败返回 null
+ * @description 节点 auto `'A'`：按 shape 走 boundaryPointOf 求中心→toward 射线交点；命名 anchor/角度：位置已定不受 toward 影响；直接坐标/极坐标：解析后返回；失败返回 null。
+ *   string id lookup 拿到的 layout 已是全局坐标；Position / Polar / At / Offset 字面量经
+ *   `resolvePosition(..., scopeChain)` 拿到当前 scope 局部坐标后 `applyTransformChain` 投回全局。
  */
 export const clipForTarget = (
   target: IRTarget,
   toward: IRPosition,
   nameStack: NameStack,
+  scopeChain: ReadonlyArray<Transform> = [],
 ): IRPosition | null => {
   if (typeof target === 'string') {
     const ref = parseNodeRef(target);
@@ -67,7 +78,9 @@ export const clipForTarget = (
   if (typeof target === 'object' && !Array.isArray(target) && ('relative' in target || 'relativeAccumulate' in target)) {
     return null;
   }
-  return resolvePosition(target, nameStack);
+  const local = resolvePosition(target, nameStack, undefined, scopeChain);
+  if (!local) return null;
+  return scopeChain.length === 0 ? local : applyTransformChain(local, scopeChain);
 };
 
 /** 两个 IRPosition 两分量精确相等（未 round） */

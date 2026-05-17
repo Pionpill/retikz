@@ -110,6 +110,53 @@ export const applyTransformChain = (
 };
 
 /**
+ * 把全局坐标点反向投影回 scope 局部坐标系（`applyTransformChain` 的逆）
+ * @description chain = [t0, t1, t2]（array[0] 最外层、最后 apply）的逆 =
+ *   按数组正序应用每个 transform 的逆：t0^-1 / t1^-1 / t2^-1。
+ *   translate(-x, -y) / rotate(-deg, cx, cy) / scale(1/x, 1/y)。
+ *   scale 分量为 0 时反向投影未定义——退化为返回原点 (0, 0) 当前层，避免 NaN 污染下游。
+ *   作用：referent 全局点 → 当前 scope 局部坐标系，配合 `applyTransformChain` 实现
+ *   "referent 全局 + relative 部分在当前 scope 局部度量 + 末端正向投影回全局" 的语义。
+ */
+export const inverseTransformChain = (
+  global: IRPosition,
+  chain: ReadonlyArray<Transform>,
+): IRPosition => {
+  let x = global[0];
+  let y = global[1];
+  for (let i = 0; i < chain.length; i++) {
+    const t = chain[i];
+    if (t.kind === 'translate') {
+      x -= t.x;
+      y -= t.y;
+    } else if (t.kind === 'rotate') {
+      const cx = t.cx ?? 0;
+      const cy = t.cy ?? 0;
+      const rad = (-t.degrees * Math.PI) / 180;
+      const cos = Math.cos(rad);
+      const sin = Math.sin(rad);
+      const dx = x - cx;
+      const dy = y - cy;
+      x = cx + dx * cos - dy * sin;
+      y = cy + dx * sin + dy * cos;
+    } else {
+      const sy = t.y ?? t.x;
+      if (t.x === 0 || sy === 0) {
+        // scale 0 不可逆——退化为 (0, 0) 防 NaN
+        // schema 层不强制拒 scale=0（zod 3 discriminatedUnion 不支持 .refine），
+        // 仅 ScaleSchema describe 提醒用户避坑；运行时退化为 (0, 0) 防 NaN
+        x = 0;
+        y = 0;
+        continue;
+      }
+      x /= t.x;
+      y /= sy;
+    }
+  }
+  return [x, y];
+};
+
+/**
  * 复制 NodeLayout 并把 rect 中心点 + rotate + 尺寸全部按 scope transform chain 投到全局
  * @description rect 中心走 `applyTransformChain`；chain 里的 rotate 累加到 `rect.rotate`（弧度）、
  *   scale 乘进 rect.width / height / margin——这样 path 端点的 boundary clip 取的是与 SVG `<g>`
