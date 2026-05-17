@@ -21,6 +21,7 @@ retikz 文档站，1 个页面 = **3 处同步改动**：内容（`contents/`）
 | 示例页 | `contents/<module>/examples/**` | [`docs-doc-example`](../docs-doc-example/SKILL.md) |
 | 概念页 / 入口页 | `contents/<module>/concepts/**` / `introduction` / `get-start` | 本 skill 的「入口页 / 概念页例外」节 |
 | Reference 词典页 | `contents/<module>/reference/**` | 本 skill 的「Reference 词典页」节 |
+| 博客文章 | `contents/blog/**` | [`docs-doc-blog`](../docs-doc-blog/SKILL.md)（差异较大，blog skill 独立成体；通用规则仍继承本 skill） |
 
 本 skill 也直接覆盖：i18n 改 key、改菜单、改正文、加 demo 这类"对页结构无大改"的杂活。
 

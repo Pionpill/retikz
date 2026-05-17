@@ -161,10 +161,12 @@ H1 走 frontmatter，**mdx 正文里不要再写 `# 标题`**。
 retikz 站点除了 docs 之外还挂了一个 **blog** 顶层 module，URL 形如 `/blog/<sectionId>/<pageId>`，复用 DocLayout / sidebar / mdx 管线，零新组件。
 
 - 文章路径：`contents/blog/<sectionId>/<slug>/index.{zh,en}.mdx`；**zh 必填**，en 可选——缺 en 时 `useMdxSource` 自动 fallback 到 zh，并由 DocPage 在文章顶部渲染一条"暂无英文版"提示
-- frontmatter 比 docs 多两个字段：`date`（必填，ISO `YYYY-MM-DD`）和 `tags`（可选，字符串数组）；DocPage 仅在 `:moduleId === 'blog'` 时把它们渲染为标题下的元数据条
+- frontmatter 比 docs 多两个字段：`date`（必填，ISO `YYYY-MM-DD`）和 `tags`（必填，1-3 个字符串）；DocPage 仅在 `:moduleId === 'blog'` 时把它们渲染为标题下的元数据条
 - 当前两个 section：`design`（设计理念）/ `journey`（开发历程）；以后扩节直接在 [`src/data/blog.ts`](src/data/blog.ts) 加新 Section + i18n key
-- **blog 文章不应使用 docs 专属的复杂 mdx 组件**（`<ComponentPreview>` / `<Comparison>` 等）——blog 走标准 markdown + 偶尔嵌内联 retikz JSX 即可；想跨平台搬运（掘金 / 公众号）时手抄 mdx 正文即可
+- 想跨平台搬运（掘金 / 公众号）时手抄 mdx 正文——站内**不做导出工具**
 - AI 翻译辅助流程：作者写完 `index.zh.mdx`，由 AI 译出 `index.en.mdx` 初稿，作者 review 后入版本
+
+**写 blog 文章前先读** [`.agents/skills/docs-doc-blog/SKILL.md`](../../.agents/skills/docs-doc-blog/SKILL.md)（受众 / 篇幅 / 段落风格 / `<ComponentPreview>` 优先 / 双语术语 review / 系列拆分 / 跨平台手抄约束 / 与 docs 的差异）。通用规则（三处协同 / Comparison / 表格宽度等）继承自 [`docs-doc-principle`](../../.agents/skills/docs-doc-principle/SKILL.md)。
 
 设计 spec：[`notes/plans/2026-05-17-blog-section-spec.md`](https://github.com/Pionpill/retikz/blob/main/notes/plans/2026-05-17-blog-section-spec.md)（含 markdown 导出方案——已废弃，改为手抄 mdx）。
 
