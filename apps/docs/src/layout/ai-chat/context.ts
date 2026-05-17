@@ -30,6 +30,8 @@ const diagramProtocolZh = (preference: DiagramFormatPreference): string => {
 - \`\`\`retikz-ir\`\`\`：直接给 @retikz/core 的 IR JSON。
 - \`\`\`retikz-tsx\`\`\`：JSX，仅允许 8 个 retikz 组件 — \`TikZ\` / \`Node\` / \`Path\` / \`Step\` / \`Text\` / \`Coordinate\` / \`Draw\` / \`EdgeLabel\`；props 只能是字面量（字符串 / 数字 / 布尔 / null / 数组字面量 / 对象字面量）；**禁止** 变量引用、表达式、\`.map()\`、hooks、模板插值、spread。
 
+**两种围栏块都只用于"完整可运行单元"**——retikz-tsx 必须有最外层 \`<TikZ>\` 包裹；retikz-ir 必须是完整 Scene 对象（含 \`version\` / \`type\` / \`children\`）。**只展示改动 / 片段 / 单独几个标签时用普通 \`\`\`tsx 或 \`\`\`json 围栏**，不要用 retikz-* 否则会被当成完整图去渲染、报 parse 错。
+
 ### ⚠️ 写图前**必须先看下面这段 Schema 速查**
 
 retikz 是新库，字段名与 TikZ / d3 / mermaid / "你训练时见过的某个 graph 库"**都不一致**。下面是 IR 顶层骨架；细节字段缺失时再查 \`/core/reference/schema/*\` 页面。**不要凭训练记忆编字段名（如 \`entities\`、\`paths\`、\`nodes\`、\`edges\` 这些都不存在）**。
@@ -128,6 +130,8 @@ When you need to draw a diagram, use one of the two fenced blocks below; otherwi
 
 - \`\`\`retikz-ir\`\`\`: feed @retikz/core IR JSON directly.
 - \`\`\`retikz-tsx\`\`\`: JSX, only the 8 retikz components allowed — \`TikZ\` / \`Node\` / \`Path\` / \`Step\` / \`Text\` / \`Coordinate\` / \`Draw\` / \`EdgeLabel\`. Props must be literals (string / number / boolean / null / array literal / object literal). **No** variable references, expressions, \`.map()\`, hooks, template interpolation, or spread.
+
+**Both fenced blocks are for "complete, runnable units" only** — retikz-tsx must include the outer \`<TikZ>\` wrapper; retikz-ir must be a complete Scene object (with \`version\` / \`type\` / \`children\`). **When showing only changes / snippets / a handful of standalone tags, use plain \`\`\`tsx or \`\`\`json fences instead** — using retikz-* will be treated as a full diagram and will throw a parse error.
 
 ### ⚠️ **Read the Schema cheatsheet below BEFORE drawing**
 

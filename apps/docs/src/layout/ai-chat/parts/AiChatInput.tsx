@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { useAiChatStore } from '@/store/useAiChatStore';
 
 import { AiChatInputAddContextButton } from './AiChatInputAddContextButton';
+import { AiChatInputAutoRepairPicker } from './AiChatInputAutoRepairPicker';
 import { AiChatInputContextModePicker } from './AiChatInputContextModePicker';
 import { AiChatInputContextUsage } from './AiChatInputContextUsage';
 import { AiChatInputDiagramFormatPicker } from './AiChatInputDiagramFormatPicker';
@@ -100,6 +101,7 @@ export const AiChatInput: FC = () => {
             <AiChatInputModelPicker />
             <AiChatInputContextModePicker />
             <AiChatInputDiagramFormatPicker />
+            <AiChatInputAutoRepairPicker />
           </div>
           <div className="flex items-center gap-1">
             <AiChatInputContextUsage />

@@ -114,8 +114,9 @@ export const RetikzPreview: FC<RetikzPreviewProps> = props => {
       resolved.errorKind === 'tsx' &&
       /Adjacent JSX elements must be wrapped/i.test(resolved.errorDetail)
     ) {
+      // w-full + min-w-0 + overflow-hidden 三件套防止长代码行撑宽 AI 侧栏，内部 pre 自带横向滚动
       return (
-        <div className="my-3">
+        <div className="my-3 w-full min-w-0 max-w-full overflow-hidden">
           <CodeBlock lang="tsx" code={source} />
         </div>
       );
@@ -201,10 +202,11 @@ const RetikzPreviewError: FC<RetikzPreviewErrorProps> = props => {
   const lang = format === 'ir' ? 'json' : 'tsx';
   const prefix = errorKind === 'ir' ? t('ai.diagramErrorIr') : t('ai.diagramErrorJsx');
   return (
-    <div className="my-3 overflow-hidden rounded-lg border border-destructive/30 bg-destructive/5">
+    // w-full + min-w-0 + max-w-full：error 卡严格占父宽，不让里面长错误信息 / 源码撑大 AI 侧栏
+    <div className="my-3 w-full min-w-0 max-w-full overflow-hidden rounded-lg border border-destructive/30 bg-destructive/5">
       <div className="flex items-start gap-2 px-3 py-2 text-xs text-destructive">
         <AlertCircle className="mt-0.5 size-3.5 shrink-0" />
-        <span className="break-all">{`${prefix}：${errorDetail}`}</span>
+        <span className="min-w-0 break-all">{`${prefix}：${errorDetail}`}</span>
       </div>
       <div className="border-t border-destructive/20 px-2 py-1">
         <Button
@@ -220,7 +222,7 @@ const RetikzPreviewError: FC<RetikzPreviewErrorProps> = props => {
           {expanded ? t('ai.diagramHideSource') : t('ai.diagramViewSource')}
         </Button>
         {expanded ? (
-          <div className="mt-1">
+          <div className="mt-1 w-full min-w-0 max-w-full overflow-hidden">
             <CodeBlock lang={lang} code={source} />
           </div>
         ) : null}

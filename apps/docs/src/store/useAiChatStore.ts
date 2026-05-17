@@ -36,7 +36,12 @@ type PersistedState = {
   contextMode: ContextMode;
   /** AI 出图首选格式：auto 让模型自选；ir / tsx 强制单选 */
   diagramFormatPreference: DiagramFormatPreference;
+  /** retikz schema 错误自动修复策略：off=关 / limited=有限（max 3）/ always=始终（max 999 兜底防爆） */
+  autoRepairMode: AutoRepairMode;
 };
+
+/** Auto-repair 三档：关 / 有限（默认）/ 始终 */
+export type AutoRepairMode = 'off' | 'limited' | 'always';
 
 type EphemeralState = {
   open: boolean;
@@ -72,6 +77,7 @@ type Actions = {
   setBaseUrl: (id: ProviderId, baseUrl: string) => void;
   setContextMode: (mode: ContextMode) => void;
   setDiagramFormatPreference: (pref: DiagramFormatPreference) => void;
+  setAutoRepairMode: (mode: AutoRepairMode) => void;
   /** 把一个用户输入的 model 名追加到 customModels[providerId]（去重） */
   addCustomModel: (providerId: string, model: string) => void;
   /** 新增 / 更新一个自定义 provider；若该 provider 的 model 未设置过，默认选 models[0] */
@@ -113,8 +119,12 @@ const INITIAL_EPHEMERAL: EphemeralState = {
   retikzRepairInProgress: false,
 };
 
-/** retikz 修复闭环允许的最大自动重试次数（每个用户 turn 内） */
-const MAX_RETIKZ_REPAIR_ATTEMPTS = 1;
+/** retikz 修复闭环允许的最大自动重试次数（每个用户 turn 内）：limited 模式封顶 3 防 LLM 死循环；always 模式开个 99 兜底 */
+const RETIKZ_REPAIR_MAX_BY_MODE: Record<AutoRepairMode, number> = {
+  off: 0,
+  limited: 3,
+  always: 99,
+};
 
 /**
  * AI 聊天面板 store
@@ -134,6 +144,7 @@ export const useAiChatStore = create<PersistedState & EphemeralState & Actions>(
       customProviders: {},
       contextMode: 'balanced',
       diagramFormatPreference: 'auto',
+      autoRepairMode: 'limited',
 
       ...INITIAL_EPHEMERAL,
 
@@ -147,6 +158,7 @@ export const useAiChatStore = create<PersistedState & EphemeralState & Actions>(
       setBaseUrl: (id, baseUrl) => set(s => ({ baseUrls: { ...s.baseUrls, [id]: baseUrl } })),
       setContextMode: mode => set({ contextMode: mode }),
       setDiagramFormatPreference: pref => set({ diagramFormatPreference: pref }),
+      setAutoRepairMode: mode => set({ autoRepairMode: mode }),
 
       addCustomModel: (providerId, model) =>
         set(s => {
@@ -199,7 +211,10 @@ export const useAiChatStore = create<PersistedState & EphemeralState & Actions>(
           set({ retikzRepairAttempts: 0 });
         }
 
-        const userMsg: ChatMessage = { role: 'user', content: text };
+        // auto-repair 自递归触发时把 user msg 打 autoSent 标，UI 据此区分样式
+        const userMsg: ChatMessage = state.retikzRepairInProgress
+          ? { role: 'user', content: text, autoSent: true }
+          : { role: 'user', content: text };
         const assistantMsg: ChatMessage = { role: 'assistant', content: '' };
         const baseMessages = [...state.messages, userMsg, assistantMsg];
         const controller = new AbortController();
@@ -217,7 +232,8 @@ export const useAiChatStore = create<PersistedState & EphemeralState & Actions>(
             state.contextSelection,
             state.diagramFormatPreference,
           );
-          const messagesForSend = baseMessages.slice(0, -1);
+          // 喂给 provider 的消息 strip 掉 autoSent flag（provider 不需要也不该感知）
+          const messagesForSend = baseMessages.slice(0, -1).map(({ role, content }) => ({ role, content }));
 
           for await (const chunk of resolved.chat({
             apiKey: resolved.apiKey,
@@ -267,15 +283,20 @@ export const useAiChatStore = create<PersistedState & EphemeralState & Actions>(
           });
         }
 
-        // stream 收尾后扫一遍 retikz 块；非法且未触顶 → 自动追一轮 "请按 schema 重写" 的修复 prompt
+        // stream 收尾后扫一遍 retikz 块；按 autoRepairMode 决定上限
         const post = get();
+        const maxAttempts = RETIKZ_REPAIR_MAX_BY_MODE[post.autoRepairMode];
+        if (maxAttempts === 0) {
+          set({ retikzRepairInProgress: false });
+          return;
+        }
         const lastAssistant = post.messages.at(-1);
         if (lastAssistant?.role !== 'assistant') {
           set({ retikzRepairInProgress: false });
           return;
         }
         const invalid = findInvalidRetikzBlocks(lastAssistant.content);
-        if (invalid.length === 0 || post.retikzRepairAttempts >= MAX_RETIKZ_REPAIR_ATTEMPTS) {
+        if (invalid.length === 0 || post.retikzRepairAttempts >= maxAttempts) {
           set({ retikzRepairInProgress: false });
           return;
         }
@@ -427,6 +448,7 @@ export const useAiChatStore = create<PersistedState & EphemeralState & Actions>(
         customProviders: state.customProviders,
         contextMode: state.contextMode,
         diagramFormatPreference: state.diagramFormatPreference,
+        autoRepairMode: state.autoRepairMode,
       }),
     },
   ),

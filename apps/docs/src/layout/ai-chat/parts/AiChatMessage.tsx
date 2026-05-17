@@ -1,5 +1,7 @@
+import { Bot } from 'lucide-react';
 import { Fragment } from 'react';
 import type { FC, ReactNode } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router';
 
 import { CodeBlock } from '@/components/shared/highlight-code';
@@ -20,7 +22,24 @@ export type AiChatMessageProps = {
  *   粗体 **bold** 与无序列表 -/*。不支持 italic / 表格 / 任意嵌套 markdown，AI 响应大多在此范围内。
  */
 export const AiChatMessage: FC<AiChatMessageProps> = ({ message, isStreaming }) => {
+  const { t } = useTranslation();
   if (message.role === 'user') {
+    // autoSent（系统自动追的修复 prompt）样式区别于真用户气泡：左对齐、虚线边框、小号 Bot 头标记 + 灰底
+    if (message.autoSent) {
+      return (
+        <div className="flex justify-start">
+          <div className="flex max-w-[90%] items-start gap-1.5 rounded-md border border-dashed border-muted-foreground/30 bg-muted/30 px-2.5 py-1.5 text-xs text-muted-foreground">
+            <Bot className="mt-0.5 size-3.5 shrink-0 text-muted-foreground/70" />
+            <div className="min-w-0 space-y-1">
+              <div className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground/70">
+                {t('ai.autoSentBadge')}
+              </div>
+              <div className="whitespace-pre-wrap break-words">{message.content}</div>
+            </div>
+          </div>
+        </div>
+      );
+    }
     return (
       <div className="flex justify-end">
         <div className="max-w-[85%] whitespace-pre-wrap rounded-2xl bg-muted px-3 py-2 text-sm">{message.content}</div>

@@ -3,6 +3,7 @@ export * from './AiChatConversationEmpty';
 export * from './AiChatEmpty';
 export * from './AiChatInput';
 export * from './AiChatInputAddContextButton';
+export * from './AiChatInputAutoRepairPicker';
 export * from './AiChatInputContextChips';
 export * from './AiChatInputContextModePicker';
 export * from './AiChatInputContextUsage';
