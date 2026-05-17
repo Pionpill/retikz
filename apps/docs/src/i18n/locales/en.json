@@ -51,6 +51,18 @@
     "refPathSchema": "Path",
     "refPlacement": "Placement"
   },
+  "blog": {
+    "label": "Blog",
+    "design": "Design Philosophy",
+    "journey": "Development Journey",
+    "designWhyReactTikz": "Why React TikZ",
+    "journeyAlphaFromZero": "From-zero Alpha Journey",
+    "notTranslatedYet": "This article is not yet translated; the Chinese version is shown below",
+    "exportMarkdownCopy": "Copy Markdown",
+    "exportMarkdownDownload": "Download .md",
+    "exportCopied": "Markdown copied to clipboard",
+    "exportFailed": "Export failed: {{reason}}"
+  },
   "about": {
     "label": "About",
     "overview": "Overview",

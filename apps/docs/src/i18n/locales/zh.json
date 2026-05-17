@@ -51,6 +51,18 @@
     "refPathSchema": "Path",
     "refPlacement": "Placement"
   },
+  "blog": {
+    "label": "博客",
+    "design": "设计理念",
+    "journey": "开发历程",
+    "designWhyReactTikz": "为什么做 React TikZ",
+    "journeyAlphaFromZero": "从零起步的 alpha",
+    "notTranslatedYet": "本文尚未提供英文版，以下为中文原文",
+    "exportMarkdownCopy": "复制 Markdown",
+    "exportMarkdownDownload": "下载 .md",
+    "exportCopied": "已复制 Markdown 到剪贴板",
+    "exportFailed": "导出失败：{{reason}}"
+  },
   "about": {
     "label": "关于",
     "overview": "总览",
