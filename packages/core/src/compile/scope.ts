@@ -1,4 +1,4 @@
-import type { Rect } from '../geometry/rect';
+import { type Rect, rect as rectOps } from '../geometry/rect';
 import type {
   IRAtPosition,
   IROffsetPosition,
@@ -143,4 +143,82 @@ export const projectLayoutToGlobal = (
   };
   const marginScale = Math.max(Math.abs(scaleX), Math.abs(scaleY));
   return { ...layout, rect: globalRect, margin: layout.margin * marginScale };
+};
+
+/** scope bbox 计算结果：bbox 几何中心 + 尺寸（width/height ≥ 0；空 scope 退化为 0×0 占位时仍合法） */
+export type ScopeBoundingBox = {
+  /** bbox 几何中心 x（全局坐标） */
+  x: number;
+  /** bbox 几何中心 y（全局坐标） */
+  y: number;
+  /** bbox 宽度（≥ 0；空 scope / 单点退化为 0） */
+  width: number;
+  /** bbox 高度（≥ 0；空 scope / 单点退化为 0） */
+  height: number;
+};
+
+/**
+ * 收集一组 NodeLayout 的全局 axis-aligned bounding box
+ * @description 每个 layout 的 4 角点已是全局坐标系（Pass 1 累积 chain apply 后），
+ *   取每个 layout 的 rotate-aware `north-west` / `north-east` / `south-west` / `south-east`
+ *   4 角点（rect.anchor 已含 layout.rect.rotate 处理）并求 AABB；
+ *   layout 是 0×0（coordinate / 空 scope 占位）时退化为单点也合法；
+ *   空 layouts 数组返回 null（调用方按"empty scope + fallback origin"退化为 0×0 占位）
+ */
+export const computeScopeBoundingBox = (
+  layouts: ReadonlyArray<NodeLayout>,
+): ScopeBoundingBox | null => {
+  if (layouts.length === 0) return null;
+  let minX = Infinity;
+  let minY = Infinity;
+  let maxX = -Infinity;
+  let maxY = -Infinity;
+  for (const layout of layouts) {
+    // 4 角点取 rotate-aware 投影后的全局坐标——rect.anchor 已包含 rect.rotate
+    const corners: ReadonlyArray<IRPosition> = [
+      rectOps.anchor(layout.rect, 'north-west'),
+      rectOps.anchor(layout.rect, 'north-east'),
+      rectOps.anchor(layout.rect, 'south-west'),
+      rectOps.anchor(layout.rect, 'south-east'),
+    ];
+    for (const [cx, cy] of corners) {
+      if (cx < minX) minX = cx;
+      if (cy < minY) minY = cy;
+      if (cx > maxX) maxX = cx;
+      if (cy > maxY) maxY = cy;
+    }
+  }
+  return {
+    x: (minX + maxX) / 2,
+    y: (minY + maxY) / 2,
+    width: maxX - minX,
+    height: maxY - minY,
+  };
+};
+
+/**
+ * 用 scope id + bbox 构造 synthetic rectangle NodeLayout
+ * @description bbox 为 null 时退化为 fallbackOrigin 的 0×0 占位（空 scope 仍要有可引用句柄）。
+ *   synthetic layout 完全复用 rectangle 路径：`scope.id.<keyword>` / `scope.id.<deg>` / `scope.id` 作为 referent
+ *   走与普通 rectangle Node 完全一致的 anchorOf / boundaryPointOf / 中心点取值
+ */
+export const registerScopeAsLayout = (
+  id: string,
+  bbox: ScopeBoundingBox | null,
+  fallbackOrigin: IRPosition,
+): NodeLayout => {
+  const box: ScopeBoundingBox =
+    bbox ?? { x: fallbackOrigin[0], y: fallbackOrigin[1], width: 0, height: 0 };
+  return {
+    id,
+    shape: 'rectangle',
+    rect: { x: box.x, y: box.y, width: box.width, height: box.height, rotate: 0 },
+    rotateDeg: 0,
+    margin: 0,
+    textWidth: box.width,
+    textHeight: box.height,
+    align: 'middle',
+    lineHeight: 0,
+    fontSize: 0,
+  };
 };

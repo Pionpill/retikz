@@ -116,6 +116,36 @@ export class NameStack {
   }
 
   /**
+   * 在指定深度的 frame 上替换已注册 id 对应的 layout，**不触发** onDuplicate 回调
+   * @description 专为"scope.id 入场注册临时占位 layout、子树结束后用真 bbox layout 覆盖"流程设计——
+   *   同一 scope.id 的两次 register 是预期的 placeholder → real-bbox 接力，不是命名冲突；
+   *   此 API 跳过 duplicate 检测但保留 firstIrPath（不刷新 first-register 位置）。
+   *   若指定 frame 不存在该 id（说明 id 没被 register 过），抛 internal error 暴露调用方 bug
+   * @param id 要替换的 id（必须已在该 frame 注册过）
+   * @param layout 新的 NodeLayout（覆盖旧值）
+   * @param frameDepth 0 = 根 frame；通常传 scope 入场前的栈深 - 1
+   */
+  replaceLayout(id: string, layout: NodeLayout, frameDepth: number): void {
+    if (this.currentPhase !== 'pass1') {
+      throw new Error(
+        `NameStack.replaceLayout('${id}'): only allowed during pass1; current phase is '${this.currentPhase}'`,
+      );
+    }
+    if (frameDepth < 0 || frameDepth >= this.frames.length) {
+      throw new Error(
+        `NameStack.replaceLayout('${id}'): frameDepth ${frameDepth} out of range (stack depth ${this.frames.length})`,
+      );
+    }
+    const targetFrame = this.frames[frameDepth];
+    if (!targetFrame.has(id)) {
+      throw new Error(
+        `NameStack.replaceLayout('${id}'): id not previously registered in frame at depth ${frameDepth}`,
+      );
+    }
+    targetFrame.set(id, layout);
+  }
+
+  /**
    * inside-out 查找 id 对应的 NodeLayout
    * @description 从栈顶向栈底依次查找；首个命中的 frame 返回；都没命中返回 undefined。内层可见外层（shadowing），外层不可见内层
    */
