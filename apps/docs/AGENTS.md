@@ -33,8 +33,10 @@ apps/docs/
     │   ├── i18next.d.ts     # CustomTypeOptions 类型增强（t() 自动补全）
     │   └── locales/{zh,en}.ts
     ├── data/                # 路由 + 侧边栏数据
-    │   ├── module.ts        # 顶层 module 列表（core / flow / plot）
+    │   ├── module.ts        # 顶层 module 列表（core / blog / about）
     │   ├── core.ts          # core module 的 sections + pages 树
+    │   ├── blog.ts          # blog module 的 sections（设计理念 / 开发历程）
+    │   ├── about.ts         # about module 的 sections（总览 / 发布 / 开发者）
     │   └── interface.ts     # Section / Page / SubPage / I18nKey 类型
     ├── contents/            # 文档正文（mdx）+ demo（.demo.tsx），双语并列
     │   └── <moduleId>/<sectionId>/<pageId>[/<subPageId>]/index.{zh,en}.mdx
@@ -153,6 +155,18 @@ H1 走 frontmatter，**mdx 正文里不要再写 `# 标题`**。
   - 双份 demo 内 JSX 结构必须保持一致（同样的 props、同样的 `<TikZ>` size、同样的 layout）；只换文本字面量
   - mdx 一侧 `<ComponentPreview name="..."/>` 不需要改——name 不带 lang 后缀，由 ComponentPreview 自己解析
   - 反例：英文 mdx 里的 demo 出现"北 / 南 / 东 / 西"等中文，会让英语用户困惑、demo 截图也不一致
+
+## 博客分区（blog module）
+
+retikz 站点除了 docs 之外还挂了一个 **blog** 顶层 module，URL 形如 `/blog/<sectionId>/<pageId>`，复用 DocLayout / sidebar / mdx 管线，零新组件。
+
+- 文章路径：`contents/blog/<sectionId>/<slug>/index.{zh,en}.mdx`；**zh 必填**，en 可选——缺 en 时 `useMdxSource` 自动 fallback 到 zh，并由 DocPage 在文章顶部渲染一条"暂无英文版"提示
+- frontmatter 比 docs 多两个字段：`date`（必填，ISO `YYYY-MM-DD`）和 `tags`（可选，字符串数组）；DocPage 仅在 `:moduleId === 'blog'` 时把它们渲染为标题下的元数据条
+- 当前两个 section：`design`（设计理念）/ `journey`（开发历程）；以后扩节直接在 [`src/data/blog.ts`](src/data/blog.ts) 加新 Section + i18n key
+- **blog 文章不应使用 docs 专属的复杂 mdx 组件**（`<ComponentPreview>` / `<Comparison>` 等）——blog 走标准 markdown + 偶尔嵌内联 retikz JSX 即可；想跨平台搬运（掘金 / 公众号）时手抄 mdx 正文即可
+- AI 翻译辅助流程：作者写完 `index.zh.mdx`，由 AI 译出 `index.en.mdx` 初稿，作者 review 后入版本
+
+设计 spec：[`notes/plans/2026-05-17-blog-section-spec.md`](https://github.com/Pionpill/retikz/blob/main/notes/plans/2026-05-17-blog-section-spec.md)（含 markdown 导出方案——已废弃，改为手抄 mdx）。
 
 ## 全局快捷键
 
