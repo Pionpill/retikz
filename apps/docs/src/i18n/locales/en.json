@@ -18,7 +18,9 @@
     "layoutCentered": "Centered layout",
     "more": "More",
     "groupResources": "Resources",
-    "tikzDocs": "TikZ Docs"
+    "tikzDocs": "TikZ Docs",
+    "groupContact": "Contact",
+    "contactGithub": "GitHub profile"
   },
   "core": {
     "label": "Core",

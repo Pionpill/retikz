@@ -18,7 +18,9 @@
     "layoutCentered": "居中布局",
     "more": "更多",
     "groupResources": "资源",
-    "tikzDocs": "TikZ 官方文档"
+    "tikzDocs": "TikZ 官方文档",
+    "groupContact": "联系作者",
+    "contactGithub": "GitHub 主页"
   },
   "core": {
     "label": "核心",

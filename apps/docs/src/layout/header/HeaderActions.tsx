@@ -28,7 +28,7 @@ import { useComponentPreviewStore } from '@/store/useComponentPreviewStore';
 import { useLayoutStore } from '@/store/useLayoutStore';
 import { useTocStore } from '@/store/useTocStore';
 
-import { GITHUB_URL, TIKZ_DOCS_URL, useDocActions } from './useDocActions';
+import { AUTHOR_GITHUB_URL, GITHUB_URL, TIKZ_DOCS_URL, useDocActions } from './useDocActions';
 
 // TooltipTrigger 默认即 `<button>`，直接套 buttonVariants；不用 `<Button asChild>` 包，避免 React 18 下 asChild → 自定义函数组件 ref 转发不到，触发不到 Popper 锚点
 const triggerClass = cn(buttonVariants({ variant: 'ghost', size: 'icon' }), 'size-7 cursor-pointer rounded-sm');
@@ -192,6 +192,20 @@ export const HeaderActions: FC = () => {
                   <a href={TIKZ_DOCS_URL} target="_blank" rel="noopener noreferrer">
                     <span className="inline-flex items-center gap-1">
                       {t('common.tikzDocs')}
+                      <ArrowUpRight className="size-3.5 text-muted-foreground" />
+                    </span>
+                  </a>
+                </DropdownMenuItem>
+              </DropdownMenuGroup>
+              <DropdownMenuSeparator />
+              <DropdownMenuLabel inset className="text-xs font-normal text-muted-foreground">
+                {t('common.groupContact')}
+              </DropdownMenuLabel>
+              <DropdownMenuGroup>
+                <DropdownMenuItem inset asChild className="cursor-pointer">
+                  <a href={AUTHOR_GITHUB_URL} target="_blank" rel="noopener noreferrer">
+                    <span className="inline-flex items-center gap-1">
+                      {t('common.contactGithub')}
                       <ArrowUpRight className="size-3.5 text-muted-foreground" />
                     </span>
                   </a>
