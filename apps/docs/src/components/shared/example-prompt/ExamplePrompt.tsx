@@ -1,10 +1,18 @@
-import { ChevronDown, ChevronUp, Copy, Send } from 'lucide-react';
-import { type FC, useState } from 'react';
+import { ChevronDown, ChevronUp, Copy, Link2, Quote, Send, Sparkles } from 'lucide-react';
+import { type FC, type ReactNode, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 
-import { Button } from '@/components/ui/button';
 import { InlineMarkdown } from '@/components/shared/inline-markdown';
+import { Button } from '@/components/ui/button';
+import { ButtonGroup, ButtonGroupSeparator } from '@/components/ui/button-group';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { useAiChatStore } from '@/store/useAiChatStore';
 
 /** Example 页 Prompt 节 props——短摘要 + 可展开的完整 prompt */
@@ -21,19 +29,36 @@ const getLlmsTxtUrl = (): string => {
   return new URL(`${import.meta.env.BASE_URL}llms.txt`, window.location.origin).toString();
 };
 
-/**
- * 把当前 prompt 包装成"可粘贴到任意 AI 工具"的自包含文本
- * @description 前置 retikz 上下文（llms.txt URL + 包用法）让外部 AI 即使没有 retikz 训练知识也能按提示行动；不包含敏感信息，公开站点 URL 即可
- */
-const buildPortableCopy = (content: string, template: string): string =>
-  template.replace('{{url}}', getLlmsTxtUrl()).replace('{{content}}', content);
+/** 当前文档页 URL；SSR 兜底为站点根 */
+const getPageUrl = (): string => {
+  if (typeof window === 'undefined') return '/';
+  return window.location.href;
+};
+
+/** 每行前置 `> `，得到 markdown 引用块 */
+const toMarkdownQuote = (content: string): string =>
+  content
+    .split('\n')
+    .map(line => `> ${line}`)
+    .join('\n');
+
+/** 双行菜单项：图标盒 + 标题 + 灰字描述（对齐 DocPageActions 的 MenuItemBody 风格） */
+const MenuItemBody: FC<{ icon: ReactNode; title: string; desc: string }> = ({ icon, title, desc }) => (
+  <>
+    <span className="flex size-8 shrink-0 items-center justify-center rounded-md border bg-background">{icon}</span>
+    <span className="flex min-w-0 flex-col">
+      <span className="text-sm leading-tight">{title}</span>
+      <span className="text-xs leading-snug text-muted-foreground">{desc}</span>
+    </span>
+  </>
+);
 
 /**
  * Example 页的 Prompt 节
- * @description 只读，markdown 渲染。默认显示 `short`；有 `detailed` 时左下角出「展开」按钮，点开后切换为 `detailed`。右下角两个按钮：
- *   - 「复制」：在 prompt 前包一段 retikz 上下文（站点 llms.txt URL + `@retikz/*` 包用法）后写入剪贴板，方便粘贴到任意外部 AI 工具（Claude Code / Cursor / ChatGPT 等）
- *   - 「发送到 AI 对话」：调 useAiChatStore.setOpen + fillDraftAndFocus，把当前显示的内容（不含外部上下文头）推到站内聊天面板由用户自行 send——站内已有 system 注入 retikz 上下文，无需重复
- *   二次编辑请在聊天面板里改，本节本身不编辑
+ * @description 只读，markdown 渲染。默认显示 `short`；有 `detailed` 时左下角出「展开」按钮，点开后切换为 `detailed`。右下角：
+ *   - 主「复制」按钮：默认只复制当前展示内容（纯文本）
+ *   - 下拉：纯文本 / 带 retikz 上下文 / Markdown 引用块 / 附页面来源链接
+ *   - 「发送到 AI 对话」：调 useAiChatStore.setOpen + fillDraftAndFocus，把当前展示内容（不含外部上下文头）推到站内聊天面板——站内已有 system 注入 retikz 上下文
  */
 export const ExamplePrompt: FC<ExamplePromptProps> = props => {
   const { short, detailed } = props;
@@ -51,15 +76,28 @@ export const ExamplePrompt: FC<ExamplePromptProps> = props => {
     fillDraftAndFocus(content);
   };
 
-  const handleCopy = async () => {
-    const portable = buildPortableCopy(content, t('examplePrompt.copyTemplate'));
+  const writeClipboard = async (text: string) => {
     try {
-      await navigator.clipboard.writeText(portable);
+      await navigator.clipboard.writeText(text);
       toast.success(t('examplePrompt.copiedToast'));
     } catch {
       toast.error(t('examplePrompt.copyFailedToast'));
     }
   };
+
+  const handleCopyPlain = () => void writeClipboard(content);
+
+  const handleCopyWithContext = () =>
+    void writeClipboard(
+      t('examplePrompt.copyTemplate').replace('{{url}}', getLlmsTxtUrl()).replace('{{content}}', content),
+    );
+
+  const handleCopyAsQuote = () => void writeClipboard(toMarkdownQuote(content));
+
+  const handleCopyWithPageLink = () =>
+    void writeClipboard(
+      t('examplePrompt.pageLinkTemplate').replace('{{url}}', getPageUrl()).replace('{{content}}', content),
+    );
 
   return (
     <div className="my-6 rounded-lg border bg-muted/40 px-4 py-3">
@@ -78,10 +116,57 @@ export const ExamplePrompt: FC<ExamplePromptProps> = props => {
           <span />
         )}
         <div className="flex items-center gap-2">
-          <Button type="button" variant="outline" size="sm" onClick={handleCopy}>
-            <Copy className="mr-1 size-3.5" />
-            {t('examplePrompt.copy')}
-          </Button>
+          <ButtonGroup className="flex items-center">
+            <Button type="button" variant="outline" size="sm" className="h-8 gap-1.5" onClick={handleCopyPlain}>
+              <Copy className="size-3.5" />
+              {t('examplePrompt.copy')}
+            </Button>
+            <ButtonGroupSeparator />
+            <DropdownMenu>
+              <Button asChild type="button" variant="outline" size="icon" className="h-8 w-7">
+                <DropdownMenuTrigger aria-label={t('examplePrompt.copyMoreAriaLabel')}>
+                  <ChevronDown className="size-3.5" />
+                </DropdownMenuTrigger>
+              </Button>
+              <DropdownMenuContent align="end" className="min-w-72">
+                <DropdownMenuItem className="cursor-pointer items-center gap-3 py-1.5" onSelect={handleCopyPlain}>
+                  <MenuItemBody
+                    icon={<Copy className="size-4" />}
+                    title={t('examplePrompt.copyPlain')}
+                    desc={t('examplePrompt.copyPlainDesc')}
+                  />
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  className="cursor-pointer items-center gap-3 py-1.5"
+                  onSelect={handleCopyWithContext}
+                >
+                  <MenuItemBody
+                    icon={<Sparkles className="size-4" />}
+                    title={t('examplePrompt.copyWithContext')}
+                    desc={t('examplePrompt.copyWithContextDesc')}
+                  />
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem className="cursor-pointer items-center gap-3 py-1.5" onSelect={handleCopyAsQuote}>
+                  <MenuItemBody
+                    icon={<Quote className="size-4" />}
+                    title={t('examplePrompt.copyAsQuote')}
+                    desc={t('examplePrompt.copyAsQuoteDesc')}
+                  />
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  className="cursor-pointer items-center gap-3 py-1.5"
+                  onSelect={handleCopyWithPageLink}
+                >
+                  <MenuItemBody
+                    icon={<Link2 className="size-4" />}
+                    title={t('examplePrompt.copyWithPageLink')}
+                    desc={t('examplePrompt.copyWithPageLinkDesc')}
+                  />
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </ButtonGroup>
           <Button type="button" size="sm" onClick={handleSend}>
             <Send className="mr-1 size-3.5" />
             {t('examplePrompt.sendToChat')}

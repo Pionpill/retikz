@@ -96,10 +96,20 @@
     "expandDetail": "Details",
     "collapseDetail": "Hide details",
     "copy": "Copy",
+    "copyMoreAriaLabel": "More copy options",
+    "copyPlain": "Plain text",
+    "copyPlainDesc": "Copy only the currently shown prompt content",
+    "copyWithContext": "With retikz context",
+    "copyWithContextDesc": "Prepend llms.txt link and package usage so external AI tools can run it directly",
+    "copyAsQuote": "Markdown quote block",
+    "copyAsQuoteDesc": "Prefix each line with > for quoting in GitHub or chat threads",
+    "copyWithPageLink": "Append source link",
+    "copyWithPageLinkDesc": "Append current doc URL so readers can find the source",
     "sendToChat": "Send to AI chat",
-    "copiedToast": "Prompt copied (with retikz context)",
+    "copiedToast": "Prompt copied",
     "copyFailedToast": "Copy failed — please select the text manually",
-    "copyTemplate": "Help me draw a figure with retikz.\n\n[retikz context]\n- Docs index (use as MCP / llms.txt): {{url}}\n- Use any API from `@retikz/react` / `@retikz/core`; for unfamiliar components / IR fields / sugar / parsers, look them up via the index above — don't guess from training data\n\n[task]\n{{content}}"
+    "copyTemplate": "Help me draw a figure with retikz.\n\n[retikz context]\n- Docs index (use as MCP / llms.txt): {{url}}\n- Use any API from `@retikz/react` / `@retikz/core`; for unfamiliar components / IR fields / sugar / parsers, look them up via the index above — don't guess from training data\n\n[task]\n{{content}}",
+    "pageLinkTemplate": "{{content}}\n\n— From retikz docs: {{url}}"
   },
   "page": {
     "copyPage": "Copy Page",

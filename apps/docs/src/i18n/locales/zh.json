@@ -96,10 +96,20 @@
     "expandDetail": "详细内容",
     "collapseDetail": "收起详细内容",
     "copy": "复制",
+    "copyMoreAriaLabel": "更多复制选项",
+    "copyPlain": "纯文本",
+    "copyPlainDesc": "只复制当前显示的 prompt 内容",
+    "copyWithContext": "带 retikz 上下文",
+    "copyWithContextDesc": "前置 llms.txt 链接与包用法，粘到外部 AI 也能直接跑",
+    "copyAsQuote": "Markdown 引用块",
+    "copyAsQuoteDesc": "每行加 > 前缀，方便在 GitHub / 聊天里引用",
+    "copyWithPageLink": "附页面来源",
+    "copyWithPageLinkDesc": "末尾附当前文档 URL，分享时读者可回到出处",
     "sendToChat": "发送到 AI 对话",
-    "copiedToast": "已复制 prompt（含 retikz 上下文）",
+    "copiedToast": "已复制 prompt",
     "copyFailedToast": "复制失败，请手动选中文本复制",
-    "copyTemplate": "你要帮我用 retikz 画一张图。\n\n【retikz 上下文】\n- 文档索引（可当 MCP / llms.txt 用）：{{url}}\n- 用 `@retikz/react` / `@retikz/core` 提供的任意 API 完成；遇到不熟悉的组件 / IR 字段 / Sugar / 解析器先查上面的索引，不要凭训练数据猜\n\n【任务】\n{{content}}"
+    "copyTemplate": "你要帮我用 retikz 画一张图。\n\n【retikz 上下文】\n- 文档索引（可当 MCP / llms.txt 用）：{{url}}\n- 用 `@retikz/react` / `@retikz/core` 提供的任意 API 完成；遇到不熟悉的组件 / IR 字段 / Sugar / 解析器先查上面的索引，不要凭训练数据猜\n\n【任务】\n{{content}}",
+    "pageLinkTemplate": "{{content}}\n\n— 来自 retikz 文档：{{url}}"
   },
   "page": {
     "copyPage": "复制页面",
