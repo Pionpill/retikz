@@ -9,8 +9,17 @@ import { isBuiltInProviderId, resolveProvider } from '@/layout/ai-chat/providers
 import type { ChatErrorKind, ChatMessage, ProviderId } from '@/layout/ai-chat/providers/types';
 import { buildRepairPrompt, findInvalidRetikzBlocks } from '@/layout/ai-chat/retikz-validation';
 
-/** 主视图 vs 设置视图。empty 状态由容器组件按是否填了 key 推导，不进 store */
-type View = 'main' | 'settings';
+import {
+  CONVERSATION_SCHEMA_VERSION,
+  type Conversation,
+  deleteConversationFromStorage,
+  deriveTitleFromMessages,
+  loadAllConversations,
+  saveConversation,
+} from './aiChatConversationsStorage';
+
+/** 主视图 / 设置视图 / 历史会话列表视图 */
+type View = 'main' | 'settings' | 'history';
 
 type ErrorState = { kind: ChatErrorKind; message: string } | null;
 
@@ -38,6 +47,11 @@ type PersistedState = {
   diagramFormatPreference: DiagramFormatPreference;
   /** retikz schema 错误自动修复策略：off=关 / limited=有限（max 3）/ always=始终（max 999 兜底防爆） */
   autoRepairMode: AutoRepairMode;
+  /**
+   * 当前 active 会话 id；null 表示"还没开始任何会话"（panel 打开后第一次 send 时自动创建）
+   * @description 仅持久化 id 本身（小且热），完整 Conversation 列表存 IDB；启动时按 id 把对应消息装载回 messages
+   */
+  activeConversationId: string | null;
 };
 
 /** Auto-repair 三档：关 / 有限（默认）/ 始终 */
@@ -65,6 +79,10 @@ type EphemeralState = {
   retikzRepairAttempts: number;
   /** auto-repair 自递归 send 时设为 true：让被调的 send 不重置 attempts 计数 */
   retikzRepairInProgress: boolean;
+  /** 全部历史会话的内存缓存，从 IDB 装载；以 conversation.id 为 key */
+  conversations: Record<string, Conversation>;
+  /** IDB 装载完成标记；hydrate 前 history 视图显示骨架 */
+  conversationsHydrated: boolean;
 };
 
 type Actions = {
@@ -90,7 +108,16 @@ type Actions = {
   removeContext: (path: string) => void;
   send: (input: string) => Promise<void>;
   abort: () => void;
+  /** "新建会话"语义：当前 active 已保存到 IDB（每次 send 完成时已 save），这里只把内存里 active 置空 + 清运行态消息，旧会话仍在 history 里能找到 */
   clearConversation: () => void;
+  /** 启动时从 IDB 装载历史；幂等，重复调用第二次起立即返回 */
+  hydrateConversations: () => Promise<void>;
+  /** 切到 history 列表里的某条会话；空字符串 id 视为"新建空会话"（等同 clearConversation） */
+  switchConversation: (id: string) => void;
+  /** 从 history 删除一条会话（IDB + 内存）；若被删的是 active，自动回退到 null（即新建空会话） */
+  deleteConversation: (id: string) => Promise<void>;
+  /** 重命名会话标题；空标题被忽略 */
+  renameConversation: (id: string, title: string) => void;
   /** 把某条 user 消息内容拉回 draft 并 focus 输入框；非破坏性——已有 messages 保留，用户按 Enter 后作为新 turn 追加 */
   editAndResendAt: (index: number) => void;
   /** 截断 messages：丢弃 [index, end) 范围；用户主动剪枝对话 */
@@ -123,6 +150,8 @@ const INITIAL_EPHEMERAL: EphemeralState = {
   polishingDraft: false,
   retikzRepairAttempts: 0,
   retikzRepairInProgress: false,
+  conversations: {},
+  conversationsHydrated: false,
 };
 
 /** retikz 修复闭环允许的最大自动重试次数（每个用户 turn 内）：limited 模式封顶 3 防 LLM 死循环；always 模式开个 99 兜底 */
@@ -141,7 +170,31 @@ const RETIKZ_REPAIR_MAX_BY_MODE: Record<AutoRepairMode, number> = {
  */
 export const useAiChatStore = create<PersistedState & EphemeralState & Actions>()(
   persist(
-    (set, get) => ({
+    (set, get) => {
+      /**
+       * 把当前 active 会话的 messages / usage 镜像写回 cache + IDB
+       * @description send / truncate / compress 等会改 messages 的动作收尾时调用一次。
+       *   标题为空时按首条 user 消息派生；createdAt 不动；updatedAt 永远更新
+       */
+      const persistActiveConversation = () => {
+        const state = get();
+        const id = state.activeConversationId;
+        if (!id) return;
+        const existing = state.conversations[id];
+        if (!existing) return;
+        const now = Date.now();
+        const updated: Conversation = {
+          ...existing,
+          messages: state.messages,
+          usage: state.usage,
+          title: existing.title || deriveTitleFromMessages(state.messages, ''),
+          updatedAt: now,
+        };
+        set(s => ({ conversations: { ...s.conversations, [id]: updated } }));
+        void saveConversation(updated);
+      };
+
+      return {
       providerId: 'deepseek',
       models: { ...DEFAULT_MODELS },
       apiKeys: { deepseek: '', openai: '', anthropic: '' },
@@ -151,6 +204,7 @@ export const useAiChatStore = create<PersistedState & EphemeralState & Actions>(
       contextMode: 'balanced',
       diagramFormatPreference: 'auto',
       autoRepairMode: 'limited',
+      activeConversationId: null,
 
       ...INITIAL_EPHEMERAL,
 
@@ -215,6 +269,27 @@ export const useAiChatStore = create<PersistedState & EphemeralState & Actions>(
         // 用户初发 → 把上一 turn 留下的修复计数清零；auto-repair 自递归 send 时跳过（保持递增的 attempts）
         if (!state.retikzRepairInProgress) {
           set({ retikzRepairAttempts: 0 });
+        }
+
+        // 若当前没有 active conversation（首次发或刚 clearConversation 完），新建一个空壳挂到 cache；
+        // 真正的消息体由下面的 set({ messages: baseMessages }) 写入，标题在 finally 阶段从首条 user msg 派生
+        if (state.activeConversationId == null) {
+          const id = crypto.randomUUID();
+          const now = Date.now();
+          const conv: Conversation = {
+            schemaVersion: CONVERSATION_SCHEMA_VERSION,
+            id,
+            title: '',
+            messages: [],
+            usage: INITIAL_USAGE,
+            pageContext: state.currentPage,
+            createdAt: now,
+            updatedAt: now,
+          };
+          set(s => ({
+            activeConversationId: id,
+            conversations: { ...s.conversations, [id]: conv },
+          }));
         }
 
         // auto-repair 自递归触发时把 user msg 打 autoSent 标，UI 据此区分样式
@@ -287,6 +362,8 @@ export const useAiChatStore = create<PersistedState & EphemeralState & Actions>(
             if (last?.role === 'assistant' && last.content === '') m.pop();
             return { messages: m, isGenerating: false, abortController: null };
           });
+          // 把当前 active 会话的 messages / usage / 标题落到 cache + IDB；递归 auto-repair 内的 send 也会再次进这里把更新的 messages 再写一次
+          persistActiveConversation();
         }
 
         // stream 收尾后扫一遍 retikz 块；按 autoRepairMode 决定上限
@@ -319,7 +396,74 @@ export const useAiChatStore = create<PersistedState & EphemeralState & Actions>(
         get().abortController?.abort();
       },
 
-      clearConversation: () => set({ messages: [], error: null, usage: INITIAL_USAGE }),
+      clearConversation: () => {
+        // "新建会话"语义：每次 send 完成时已 persist 过当前 active 到 IDB；
+        // 这里只是把 active 解绑、清运行态，下次 send 会自动新建一条 conversation
+        set({ activeConversationId: null, messages: [], error: null, usage: INITIAL_USAGE });
+      },
+
+      hydrateConversations: async () => {
+        if (get().conversationsHydrated) return;
+        const conversations = await loadAllConversations();
+        set(s => {
+          const id = s.activeConversationId;
+          const active = id ? conversations[id] : null;
+          return {
+            conversations,
+            conversationsHydrated: true,
+            // 有 active 命中 → 把它的 messages / usage 装载到运行态；否则保留默认空态
+            ...(active ? { messages: active.messages, usage: active.usage } : {}),
+            // 持久化的 id 在 IDB 找不到（被异端清过 / schema 不兼容跳过）→ 解绑，避免悬空
+            ...(id && !active ? { activeConversationId: null } : {}),
+          };
+        });
+      },
+
+      switchConversation: id => {
+        const state = get();
+        if (state.isGenerating) return;
+        if (id === '') {
+          // 空 id 表示主动新建空会话；等同 clearConversation
+          set({ activeConversationId: null, messages: [], error: null, usage: INITIAL_USAGE });
+          return;
+        }
+        const target = state.conversations[id];
+        if (!target) return;
+        set({
+          activeConversationId: id,
+          messages: target.messages,
+          usage: target.usage,
+          error: null,
+        });
+      },
+
+      deleteConversation: async id => {
+        const state = get();
+        const isActive = state.activeConversationId === id;
+        // 内存先剔除（UI 立刻刷新），IDB 后写；删除失败也只是下次启动还会重新装载
+        set(s => {
+          const rest = { ...s.conversations };
+          delete rest[id];
+          return {
+            conversations: rest,
+            ...(isActive
+              ? { activeConversationId: null, messages: [], error: null, usage: INITIAL_USAGE }
+              : {}),
+          };
+        });
+        await deleteConversationFromStorage(id);
+      },
+
+      renameConversation: (id, title) => {
+        const trimmed = title.trim();
+        if (!trimmed) return;
+        const state = get();
+        const existing = state.conversations[id];
+        if (!existing) return;
+        const updated: Conversation = { ...existing, title: trimmed, updatedAt: Date.now() };
+        set(s => ({ conversations: { ...s.conversations, [id]: updated } }));
+        void saveConversation(updated);
+      },
 
       editAndResendAt: index => {
         const state = get();
@@ -338,6 +482,7 @@ export const useAiChatStore = create<PersistedState & EphemeralState & Actions>(
         if (state.isGenerating) return;
         if (index < 0 || index >= state.messages.length) return;
         set({ messages: state.messages.slice(0, index), error: null });
+        persistActiveConversation();
       },
 
       regenerateAssistantAt: async index => {
@@ -349,6 +494,7 @@ export const useAiChatStore = create<PersistedState & EphemeralState & Actions>(
         const userMsg = state.messages.at(index - 1);
         if (!userMsg || userMsg.role !== 'user') return;
         // 截断到 user 之前，由 send() 把 user + 新 assistant 重新追加；autoSent flag 不带回 send()
+        // send 的 finally 会再次 persist，这里不重复
         set({ messages: state.messages.slice(0, index - 1), error: null });
         await get().send(userMsg.content);
       },
@@ -408,6 +554,8 @@ export const useAiChatStore = create<PersistedState & EphemeralState & Actions>(
               isGenerating: false,
               abortController: null,
             });
+            // 压缩后整个会话被 1 条 assistant 摘要替换；落盘
+            persistActiveConversation();
           } else {
             set({ isGenerating: false, abortController: null });
           }
@@ -474,7 +622,8 @@ export const useAiChatStore = create<PersistedState & EphemeralState & Actions>(
           }
         }
       },
-    }),
+      };
+    },
     {
       name: 'retikz-ai-chat',
       partialize: state => ({
@@ -487,6 +636,7 @@ export const useAiChatStore = create<PersistedState & EphemeralState & Actions>(
         contextMode: state.contextMode,
         diagramFormatPreference: state.diagramFormatPreference,
         autoRepairMode: state.autoRepairMode,
+        activeConversationId: state.activeConversationId,
       }),
     },
   ),

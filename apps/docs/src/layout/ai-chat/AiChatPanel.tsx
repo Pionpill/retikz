@@ -1,4 +1,4 @@
-import { Settings, X } from 'lucide-react';
+import { History, Settings, X } from 'lucide-react';
 import { type FC, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { useAiChatStore } from '@/store/useAiChatStore';
 import { AiChatConversation } from './parts/AiChatConversation';
 import { AiChatEmpty } from './parts/AiChatEmpty';
+import { AiChatHistory } from './parts/AiChatHistory';
 import { AiChatSettings } from './parts/AiChatSettings';
 
 /**
@@ -31,6 +32,12 @@ export const AiChatPanel: FC = () => {
   });
   const isGenerating = useAiChatStore(s => s.isGenerating);
   const abort = useAiChatStore(s => s.abort);
+  const hydrateConversations = useAiChatStore(s => s.hydrateConversations);
+
+  // panel 渲染挂载即触发一次 IDB 装载（幂等）；history 视图就有数据可显示
+  useEffect(() => {
+    void hydrateConversations();
+  }, [hydrateConversations]);
 
   // 生成中 Esc 优先 abort、非生成中关闭 panel；panel 打开时全局监听
   useEffect(() => {
@@ -50,15 +57,27 @@ export const AiChatPanel: FC = () => {
   }, [open, isGenerating, abort, setOpen]);
 
   const showSettings = view === 'settings';
-  const showEmpty = !showSettings && !hasKey;
-  const showConversation = !showSettings && hasKey;
+  const showHistory = view === 'history';
+  // Settings / History 自带顶栏（带返回按钮），主视图顶栏才出现
+  const showMainHeader = !showSettings && !showHistory;
+  const showEmpty = showMainHeader && !hasKey;
+  const showConversation = showMainHeader && hasKey;
 
   return (
     <aside className="flex h-full flex-col bg-background">
-      {!showSettings && (
+      {showMainHeader && (
         <div className="flex h-14 shrink-0 items-center gap-2 border-b border-border px-3">
           <span className="text-sm font-medium flex items-center gap-2">{t('ai.triggerLabel')}</span>
           <div className="ml-auto flex items-center gap-1">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="size-7 cursor-pointer rounded-sm"
+              onClick={() => setView('history')}
+              aria-label={t('ai.historyLabel')}
+            >
+              <History className="size-4" />
+            </Button>
             <Button
               variant="ghost"
               size="icon"
@@ -82,6 +101,7 @@ export const AiChatPanel: FC = () => {
       )}
       <div className="flex flex-1 flex-col overflow-hidden">
         {showSettings && <AiChatSettings />}
+        {showHistory && <AiChatHistory />}
         {showEmpty && <AiChatEmpty />}
         {showConversation && <AiChatConversation />}
       </div>
