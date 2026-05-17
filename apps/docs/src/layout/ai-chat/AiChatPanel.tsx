@@ -1,4 +1,4 @@
-import { History, Plus, Settings, X } from 'lucide-react';
+import { Bot, History, Plus, Settings, X } from 'lucide-react';
 import { type FC, type KeyboardEvent as ReactKeyboardEvent, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -124,6 +124,7 @@ export const AiChatPanel: FC = () => {
     <aside className="flex h-full flex-col bg-background">
       {showMainHeader && (
         <div className="flex h-14 shrink-0 items-center gap-2 border-b border-border px-3">
+          <Bot className="size-4 shrink-0 text-muted-foreground" aria-hidden />
           {editing ? (
             <input
               autoFocus
