@@ -1,10 +1,15 @@
 import { rect as rectOps } from '../geometry/rect';
-import type { IR, IRPosition } from '../ir';
-import type { Scene, ScenePrimitive } from '../primitive';
+import type { IR, IRChild, IRPath, IRPosition, IRScope } from '../ir';
+import type { GroupPrim, Scene, ScenePrimitive, Transform } from '../primitive';
 import { type NodeLayout, emitNodePrimitives, layoutNode } from './node';
 import { emitPathPrimitive } from './path/index';
 import { resolvePosition } from './position';
 import { DEFAULT_PRECISION, makeRound } from './precision';
+import {
+  applyTransformChain,
+  lowerScopeTransforms,
+  projectLayoutToGlobal,
+} from './scope';
 import { type TextMeasurer, fallbackMeasurer } from './text-metrics';
 import { computeLayout } from './layout';
 
@@ -82,9 +87,30 @@ const defaultWarnDispatcher = (warning: CompileWarning): void => {
   console.warn(`[retikz] ${warning.code} at ${warning.path}: ${warning.message}`);
 };
 
+/** Pass 1 递归扫描时记录的 pending path，Pass 2 解析后一律发到顶层 primitives */
+type PendingPath = {
+  /** path IR 节点本体 */
+  path: IRPath;
+  /** path 在 IR 中的 jq-like locator（如 `children[2].scope.children[1].path`） */
+  irPath: string;
+};
+
+/** scope.transforms 解析失败时根据失败成因映射的 warn code */
+const scopeTransformWarnCode = (
+  scope: IRScope,
+): CompileWarning['code'] => {
+  // 取首个 translate 变体的 kind 决定 warn code（多个都失败时只报第一种成因）
+  for (const t of scope.transforms ?? []) {
+    if (t.kind === 'offset-translate') return 'OFFSET_BASE_UNRESOLVED';
+    if (t.kind === 'at-translate') return 'AT_TARGET_UNRESOLVED';
+    if (t.kind === 'polar-translate') return 'POLAR_ORIGIN_UNRESOLVED';
+  }
+  return 'UNRESOLVED_NODE_REFERENCE';
+};
+
 /**
  * IR → Scene 纯函数转换，所有 adapter 共享
- * @description Pass 1 处理 Node/coordinate 并注册 nodeIndex、发 primitive、累积 bbox；Pass 2 解析 Path 端点写 d 字符串；末端按 precision 折算 layout
+ * @description Pass 1 递归处理 node / coordinate / scope，把 scope 树下沉为嵌套 GroupPrim；scope.transforms 中的 4 种 translate 变体按 lowerScopeTransforms 展平为 Cartesian transform；node 在 Scene primitive 树里是局部坐标 + GroupPrim transform 链、在 nodeIndex 中存全局坐标供其他节点 / path 引用。Pass 2 解析 path 端点写 d 字符串，path primitive 发到 Pass 1 记录的对应容器；末端按 precision 折算 layout
  */
 export const compileToScene = (ir: IR, options: CompileOptions = {}): Scene => {
   const measureText = options.measureText ?? fallbackMeasurer;
@@ -96,55 +122,107 @@ export const compileToScene = (ir: IR, options: CompileOptions = {}): Scene => {
   const primitives: Array<ScenePrimitive> = [];
   const nodeIndex = new Map<string, NodeLayout>();
   const allPoints: Array<IRPosition> = [];
+  const pendingPaths: Array<PendingPath> = [];
 
-  // Pass 1: 节点布局 → 注册到 nodeIndex 并发出节点 primitive
-  // 按 IR children 源码顺序处理；polar.origin 引用其他节点 id 时，要求被引用节点先定义。
-  // coordinate 与 node 在同一 pass 处理：coordinate 不发 primitive、不扩 bbox，
-  // 但同样注册到 nodeIndex 让后续 path target 与 `at.of` 能引用。
-  for (let i = 0; i < ir.children.length; i++) {
-    const child = ir.children[i];
-    if (child.type === 'node') {
-      const layout = layoutNode(child, measureText, nodeIndex, nodeDistance);
-      if (child.id) nodeIndex.set(child.id, layout);
-      for (const prim of emitNodePrimitives(layout, round)) {
-        primitives.push(prim);
-      }
-      // 用旋转感知的 4 角扩 bbox（保持完整精度，computeLayout 末端再 round）
-      allPoints.push(
-        rectOps.anchor(layout.rect, 'north-west'),
-        rectOps.anchor(layout.rect, 'north-east'),
-        rectOps.anchor(layout.rect, 'south-west'),
-        rectOps.anchor(layout.rect, 'south-east'),
-      );
-    } else if (child.type === 'coordinate') {
-      const center = resolvePosition(child.position, nodeIndex, nodeDistance);
-      if (!center) {
-        onWarn({
-          code: 'POLAR_ORIGIN_UNRESOLVED',
-          message: `Cannot resolve position for coordinate '${child.id}'; polar.origin or at.of may reference an undefined node`,
-          path: `children[${i}].coordinate.position`,
-        });
-        // 兼容旧行为：依然 throw（coordinate 解析失败是 IR 完整性错误，不仅是路径丢失）
-        throw new Error(
-          `Cannot resolve position for coordinate ${child.id}; polar.origin or at.of may reference an undefined node`,
+  /**
+   * 递归处理一组 IR child，把 node / coordinate 发到 sink、把 path 收集到 pendingPaths、scope 下沉为 GroupPrim
+   * @param children 当前层级的 IR child 数组
+   * @param chain 从根到当前层级累积的 Cartesian-only transform 链
+   * @param sink 当前层级 Scene primitive 落点（顶层 = primitives，scope 内 = GroupPrim.children）
+   * @param locatorPrefix IR locator 前缀（如 `''` 表示顶层、`children[2].scope.` 表示某 scope 内）
+   */
+  const processChildren = (
+    children: ReadonlyArray<IRChild>,
+    chain: ReadonlyArray<Transform>,
+    sink: Array<ScenePrimitive>,
+    locatorPrefix: string,
+  ): void => {
+    for (let i = 0; i < children.length; i++) {
+      const child = children[i];
+      if (child.type === 'node') {
+        const layout = layoutNode(child, measureText, nodeIndex, nodeDistance);
+        const globalLayout = chain.length === 0 ? layout : projectLayoutToGlobal(layout, chain);
+        if (child.id) nodeIndex.set(child.id, globalLayout);
+        for (const prim of emitNodePrimitives(layout, round)) {
+          sink.push(prim);
+        }
+        // bbox 用全局坐标系下的 4 角点累积——scope 内 node 也参与顶层 layout 计算
+        allPoints.push(
+          rectOps.anchor(globalLayout.rect, 'north-west'),
+          rectOps.anchor(globalLayout.rect, 'north-east'),
+          rectOps.anchor(globalLayout.rect, 'south-west'),
+          rectOps.anchor(globalLayout.rect, 'south-east'),
         );
+      } else if (child.type === 'coordinate') {
+        const localCenter = resolvePosition(child.position, nodeIndex, nodeDistance);
+        if (!localCenter) {
+          onWarn({
+            code: 'POLAR_ORIGIN_UNRESOLVED',
+            message: `Cannot resolve position for coordinate '${child.id}'; polar.origin or at.of may reference an undefined node`,
+            path: `${locatorPrefix}children[${i}].coordinate.position`,
+          });
+          throw new Error(
+            `Cannot resolve position for coordinate ${child.id}; polar.origin or at.of may reference an undefined node`,
+          );
+        }
+        const globalCenter = chain.length === 0 ? localCenter : applyTransformChain(localCenter, chain);
+        nodeIndex.set(child.id, coordinateAsLayout(child.id, globalCenter));
+      } else if (child.type === 'scope') {
+        const rawTransforms = child.transforms ?? [];
+        const loweredOwn = lowerScopeTransforms(rawTransforms, nodeIndex, nodeDistance);
+        if (loweredOwn === null) {
+          onWarn({
+            code: scopeTransformWarnCode(child),
+            message: `Cannot resolve one of scope.transforms; referent (at.of / offset.of / polar.origin) is undefined or defined later in the IR`,
+            path: `${locatorPrefix}children[${i}].scope.transforms`,
+          });
+          // 失败时退化为不应用 transform，继续处理子树以收集尽可能多的产物
+        }
+        const ownTransforms: ReadonlyArray<Transform> = loweredOwn ?? [];
+        const innerChain: ReadonlyArray<Transform> = [...chain, ...ownTransforms];
+        const innerSink: Array<ScenePrimitive> = [];
+        processChildren(
+          child.children,
+          innerChain,
+          innerSink,
+          `${locatorPrefix}children[${i}].scope.`,
+        );
+        // TODO: 当 scope.id 设值时注册 axis-aligned synthetic bbox layout，让外部 path 能 target 'scope-id.<anchor>'
+        const hasOwnTransforms = ownTransforms.length > 0;
+        const isPrunable =
+          innerSink.length === 0 &&
+          !hasOwnTransforms &&
+          child.id === undefined;
+        if (isPrunable) continue;
+        const group: GroupPrim = {
+          type: 'group',
+          children: innerSink,
+        };
+        if (hasOwnTransforms) group.transforms = [...ownTransforms];
+        sink.push(group);
+      } else {
+        // child.type === 'path'：Pass 2 才解析。
+        // path 端点从 nodeIndex（全局坐标）查得，几何已是全局——不进 GroupPrim 避免被 scope.transform 重复 apply
+        pendingPaths.push({
+          path: child,
+          irPath: `${locatorPrefix}children[${i}].path`,
+        });
       }
-      nodeIndex.set(child.id, coordinateAsLayout(child.id, center));
     }
-  }
+  };
 
-  // Pass 2: 路径解析 → 发出 path primitive（可能附带边标注 TextPrim）
-  for (let i = 0; i < ir.children.length; i++) {
-    const child = ir.children[i];
-    if (child.type === 'path') {
-      const result = emitPathPrimitive(child, nodeIndex, round, measureText, {
-        onWarn,
-        irPath: `children[${i}].path`,
-      });
-      if (result) {
-        for (const prim of result.primitives) primitives.push(prim);
-        for (const p of result.points) allPoints.push(p);
-      }
+  // Pass 1：递归处理整棵 IR child 树
+  processChildren(ir.children, [], primitives, '');
+
+  // Pass 2：解析所有 path（来自顶层 / 任意 scope 内）；端点取 nodeIndex 全局坐标，primitive 一律落顶层
+  for (const pending of pendingPaths) {
+    const result = emitPathPrimitive(pending.path, nodeIndex, round, measureText, {
+      onWarn,
+      irPath: pending.irPath,
+    });
+    if (result) {
+      for (const prim of result.primitives) primitives.push(prim);
+      for (const p of result.points) allPoints.push(p);
     }
   }
 

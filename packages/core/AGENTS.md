@@ -80,3 +80,16 @@
 - 只通过 `src/index.ts` 暴露公开 API；adapter 不准 import 子路径（如 `@retikz/core/scene/compile`）
 - 顶层 `src/index.ts` 用**显式 named re-export**——这是公开契约面，让 API 一目了然
 - 内部子 barrel（`ir/index.ts`、`scene/index.ts` 等）用 `export *`——维护轻
+
+## Scope IR 容器（`ir/scope.ts` + `compile/scope.ts`）
+
+- `IRScope` 是 IRChild 第 4 类，对应 TikZ `\begin{scope}[...]...\end{scope}`：分组 + 局部 transform（暂占位 / 后续承担样式作用域）
+- `TransformSchema` 6 变体（IR 层）：`translate` / `polar-translate` / `at-translate` / `offset-translate` / `rotate` / `scale`——4 个 translate 完全镜像 Node.position union
+- compile Pass 1 递归处理 scope 树：`lowerScopeTransforms` 把 4 个 translate 变体调用 `resolvePosition` 展平为 Cartesian translate，再下沉到 Scene `GroupPrim.transforms`（Scene 维持 3 变体不变）
+- nodeIndex 存全局坐标（chain apply 后），Scene primitive 树里 node 用局部坐标 + GroupPrim transform 链——adapter 只看 Scene 的几何
+- 空 scope（children 空 + transforms 空 / 缺省 + id 缺省）→ 不 emit GroupPrim
+- 后续 ADR 接：
+  - localNamespace 隔离 + 同 frame duplicate id warn（ADR-02）
+  - scope.id 触发的 synthetic bbox 注册（ADR-03）
+  - scope 下相对 Position 引用外层节点的投影规则（ADR-04）
+  - 占位待 v0.2 alpha.2 单独 ADR：scope 上挂样式默认值（`nodeDefault` / `pathDefault`）

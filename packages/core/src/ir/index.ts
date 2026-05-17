@@ -4,4 +4,6 @@ export * from './text';
 export * from './path';
 export * from './node';
 export * from './coordinate';
+export * from './transform';
+export * from './scope';
 export * from './scene';
