@@ -161,6 +161,9 @@ const RETIKZ_REPAIR_MAX_BY_MODE: Record<AutoRepairMode, number> = {
   always: 99,
 };
 
+/** history 保留的最大会话数；超出按 updatedAt 升序自动淘汰；active 会话强制保留 */
+const MAX_CONVERSATIONS = 10;
+
 /**
  * AI 聊天面板 store
  * @description persisted: provider 选择 / 每家 key + 模型 / 自定义 provider / contextMode
@@ -192,6 +195,31 @@ export const useAiChatStore = create<PersistedState & EphemeralState & Actions>(
         };
         set(s => ({ conversations: { ...s.conversations, [id]: updated } }));
         void saveConversation(updated);
+      };
+
+      /**
+       * 把会话总数控制在 MAX_CONVERSATIONS 以内：超出时按 updatedAt 升序剔除最旧的
+       * @description active 会话强制保留（即便它本身就是最旧的）；调用时机：新建会话后、hydration 完成后
+       */
+      const enforceConversationsCap = () => {
+        const state = get();
+        const all = Object.values(state.conversations);
+        if (all.length <= MAX_CONVERSATIONS) return;
+        const sorted = [...all].sort((a, b) => b.updatedAt - a.updatedAt);
+        const keep = new Set<string>();
+        if (state.activeConversationId) keep.add(state.activeConversationId);
+        for (const c of sorted) {
+          if (keep.size >= MAX_CONVERSATIONS) break;
+          keep.add(c.id);
+        }
+        const evictIds = all.filter(c => !keep.has(c.id)).map(c => c.id);
+        if (evictIds.length === 0) return;
+        set(s => {
+          const rest = { ...s.conversations };
+          for (const id of evictIds) delete rest[id];
+          return { conversations: rest };
+        });
+        for (const id of evictIds) void deleteConversationFromStorage(id);
       };
 
       return {
@@ -290,6 +318,8 @@ export const useAiChatStore = create<PersistedState & EphemeralState & Actions>(
             activeConversationId: id,
             conversations: { ...s.conversations, [id]: conv },
           }));
+          // 新建可能让总数超 cap，立刻淘汰最旧（active 强制保留）
+          enforceConversationsCap();
         }
 
         // auto-repair 自递归触发时把 user msg 打 autoSent 标，UI 据此区分样式
@@ -417,6 +447,8 @@ export const useAiChatStore = create<PersistedState & EphemeralState & Actions>(
             ...(id && !active ? { activeConversationId: null } : {}),
           };
         });
+        // 装载完后立刻 enforce cap：之前如有保存超过 10 条的老数据，这里收敛
+        enforceConversationsCap();
       },
 
       switchConversation: id => {
