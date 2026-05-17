@@ -1,0 +1,71 @@
+---
+title: retikz 的起点
+description: retikz 项目的起点与定位
+date: 2026-05-17
+tags: [设计, 起点]
+---
+
+## retikz 的成果
+
+先看 retikz v0.1 版本的标志性例子——单位圆 + 坐标轴 + 刻度 + 阴影楔形 + `sin / cos / tan` 函数线 + 一个带标注的信息框，全在一张图：
+
+<ComponentPreview name="unit-circle" size="lg" />
+
+这是 [karl-circle 示例](/core/examples/karl-circle)的最终图。示例页把它拆成 7 步演进，从一个圆开始一步步搭出来。
+
+demo 卡片右上角的 **Ask AI** 按钮可以把当前图喂给站内 AI 助手——换主题色、加切线、改公式、删某段标注，都不用动手敲 React 代码。
+
+## 定位与路线图
+
+retikz 的长远规划是「底层图元 + 上层 domain 包」分层矩阵——core 守通用图元 + IR 标准，零依赖、零框架；上层 domain 包按方向切（流程图 / UML / 图表等），各自带数据与布局算法，最终都由 core 统一渲染。
+
+| 包 | 职责 | 状态 |
+|---|---|---|
+| `@retikz/core` | 通用图元（Node / Path / Step / Anchor）<br />+ IR + Scene 编译器 | v0.1 rc 进行中<br />（API 已冻结） |
+| `@retikz/flow` | 流程图 / UML 等 DAG 类高层组件<br />+ 布局算法（dagre / elkjs） | 规划中 |
+| `@retikz/plot` | 数据驱动的图表能力（chart） | 规划中 |
+
+底层之外还隔着一层 framework adapter，把 IR 翻成具体框架的元素——`@retikz/react` 是当前唯一发出来的，`@retikz/vue` / `@retikz/canvas` / `@retikz/ssr` 都在路线图里。flow / plot 等 core 1.0 稳定后再启动，可能作为子包发布，也可能脱离仓库独立项目化。
+
+切多层的好处：底层只一套图元词汇与 IR，所有 adapter 和 AI 接入零成本继承；domain 包能各自演进，不拖慢核心。
+
+## 灵感来源
+
+retikz 的灵感不来自前端生态——大学时代我就觉得 LaTeX + TikZ 非常好用，retikz 就是想把那套体验搬到 React 里。
+
+那几年我做过这些事：
+
+- 系统整理过一份 [LaTeX 学习笔记](https://github.com/Pionpill/Notebook/tree/Pionpill/Language/Academic/Latex)，从排版基础到 TikZ 全覆盖
+- 翻译过 [TikZ 基础语法 PDF](https://github.com/Pionpill/Notebook/blob/Pionpill/Language/Academic/Latex/TikZ/Latex/TikZNotebook.pdf)，给当时找不到中文资料的自己一份手册
+- 数模美赛硬要用 LaTeX + TikZ 排版（队友交 Word，我交 PDF），最后拿了 Meritorious Winner——排版功劳占十成
+- 个人笔记博客 [pionpill.github.io/article](https://pionpill.github.io/article) 全程 LaTeX + TikZ，连配图都是手画的
+
+到现在还能想起为一条 `\draw` 拐角编译十次、节点对齐差 0.5pt 都得回头微调的执念——TikZ 那套图元、anchor、path 词汇就是那几年磨进**肌肉记忆**的。
+
+## 工作后的困境
+
+毕业进前端，想接着画图，发现 LaTeX + TikZ 那套**词汇**在前端生态里没有对应的库——一个个试下来都不对劲。
+
+我了解到的组件库有：
+
+| 组件 | 我以为 | 实际上 |
+|---|---|---|
+| **echarts / highcharts / antv** | chart 库，画图就行 | 按图表类型出图<br />（line / bar / pie...） |
+| **react-flow** | 节点 + 边 = 万能 | 锁定在流程图 / DAG<br />节点形状不通用 |
+| **d3** | 万能底层 | 偏数据驱动 + 偏底层<br />API 不是图元词汇 |
+| **mermaid** | DSL 简洁 | 图类型固定<br />自定义钩子少 |
+| **drawio** | 万能编辑器 | 是 GUI 工具不是 library |
+
+每个都解决了「画图」的某个子问题，但没有一个像 TikZ 那样以「通用图元 + 命名节点 + 路径词汇」为中心展开，跨 chart / 流程图 / UML / 思维导图一套词汇通吃。
+
+那时候才意识到：前端缺的不是又一个图表库，是一个 TikZ 性质的图元库。
+
+## 初步尝试
+
+2024 年 11 月底动了第一个 commit；接下来五个月把 Node / Path / Draw / Step / Anchor / Scope 这些核心组件断断续续写出来，到 2025 年 4 月发到 0.0.1-rc.3。
+
+5 月停在文档微调，然后是十个月静默——工作太忙断了，更主要是太懒，鸽了。
+
+那个版本设计想法比较简单：React 组件直接持 Model 实例，组件间靠发布订阅同步状态。能把图画出来就完事，没多想。
+
+直到 2026 年初 AI 辅助开发的体感升级，才决定重做——v0.0 代码被打包成 `@retikz/legacy-core` 留了几天作参考，最后整包删掉。

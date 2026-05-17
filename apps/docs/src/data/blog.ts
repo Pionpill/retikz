@@ -5,15 +5,14 @@ export const blogSection: Array<Section> = [
   {
     id: 'design',
     label: 'blog.design',
-    pages: [
-      { id: 'why-react-tikz', label: 'blog.designWhyReactTikz' },
-    ],
+    pages: [{ id: 'core-philosophy', label: 'blog.designCorePhilosophy' },],
   },
   {
     id: 'journey',
     label: 'blog.journey',
     pages: [
-      { id: 'alpha-from-zero', label: 'blog.journeyAlphaFromZero' },
+      { id: 'origin', label: 'blog.journeyOrigin' },
+      
     ],
   },
 ];
