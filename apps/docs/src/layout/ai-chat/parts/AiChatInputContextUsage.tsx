@@ -1,4 +1,4 @@
-import { Bot } from 'lucide-react';
+import { Minimize2 } from 'lucide-react';
 import { type FC, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -114,7 +114,7 @@ export const AiChatInputContextUsage: FC = () => {
           disabled={compressDisabled}
           className="flex w-full cursor-pointer items-center justify-center gap-1.5 border-t border-border px-3 py-2 text-xs text-muted-foreground hover:bg-accent hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent"
         >
-          <Bot className="size-3" />
+          <Minimize2 className="size-3" />
           <span>{isGenerating ? t('ai.convCompressing') : t('ai.convCompress')}</span>
         </button>
       </PopoverContent>
