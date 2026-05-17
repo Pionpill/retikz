@@ -66,6 +66,17 @@ export const DocPage: FC<DocPageProps> = props => {
     [],
   );
 
+  // 把当前页 label 写到 document.title，离开 DocPage 恢复 index.html 的 slogan
+  useEffect(() => {
+    if (!aiChatTitleKey) return;
+    const pageTitle = String(t(aiChatTitleKey));
+    const fallback = 'retikz — Draw TikZ figures the React way';
+    document.title = `${pageTitle} · retikz`;
+    return () => {
+      document.title = fallback;
+    };
+  }, [aiChatTitleKey, t]);
+
   if (!loc || !section || !target) {
     return (
       <main className="flex flex-1 flex-col items-center justify-center p-12 text-muted-foreground">
