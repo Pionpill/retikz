@@ -2,10 +2,6 @@ import { Fragment } from 'react';
 import type { FC } from 'react';
 import { Coordinate, Draw, Node, Path, Step, TikZ } from '@retikz/react';
 
-const UNIT = 100;
-const cm = (x: number, y: number): [number, number] => [x * UNIT, -y * UNIT];
-const polar = (degMath: number, r = 1) => ({ angle: -degMath, radius: r * UNIT });
-
 const HELP_LINE = 'var(--border)';
 const PAGE_BG = 'var(--background)';
 const ANGLE_STROKE = 'oklch(0.55 0.16 145)';
@@ -25,49 +21,49 @@ const TAN30 = SIN30 / COS30;
 const Demo: FC = () => (
   <TikZ width={600} height={360}>
     {/* 背景网格 */}
-    {[-1, -0.5, 0, 0.5, 1].map(v => (
+    {[-100, -50, 0, 50, 100].map(v => (
       <Fragment key={`grid-${v}`}>
-        <Draw way={[cm(v, -1.4), cm(v, 1.4)]} stroke={HELP_LINE} strokeWidth={0.5} />
-        <Draw way={[cm(-1.4, v), cm(1.4, v)]} stroke={HELP_LINE} strokeWidth={0.5} />
+        <Draw way={[[v, -140], [v, 140]]} stroke={HELP_LINE} strokeWidth={0.5} />
+        <Draw way={[[-140, v], [140, v]]} stroke={HELP_LINE} strokeWidth={0.5} />
       </Fragment>
     ))}
 
     {/* 单位圆 */}
     <Path lineCap="round">
-      <Step kind="move" to={cm(0, 0)} />
-      <Step kind="circlePath" radius={UNIT} />
+      <Step kind="move" to={[0, 0]} />
+      <Step kind="circlePath" radius={100} />
     </Path>
 
     {/* 坐标轴 */}
-    <Draw way={[cm(-1.5, 0), cm(1.5, 0)]} arrow="->" />
-    <Node position={cm(1.62, 0)} stroke="none" padding={0} font={MATH_FONT}>x</Node>
-    <Coordinate id="x-axis" position={cm(1.5, 0)} />
-    <Draw way={[cm(0, -1.5), cm(0, 1.5)]} arrow="->" />
-    <Node position={cm(0, 1.62)} stroke="none" padding={0} font={MATH_FONT}>y</Node>
-    <Coordinate id="y-axis" position={cm(0, 1.5)} />
+    <Draw way={[[-150, 0], [150, 0]]} arrow="->" />
+    <Node position={[162, 0]} stroke="none" padding={0} font={MATH_FONT}>x</Node>
+    <Coordinate id="x-axis" position={[150, 0]} />
+    <Draw way={[[0, 150], [0, -150]]} arrow="->" />
+    <Node position={[0, -162]} stroke="none" padding={0} font={MATH_FONT}>y</Node>
+    <Coordinate id="y-axis" position={[0, -150]} />
 
     {/* 刻度 */}
     {[
-      { x: -1, text: '−1' },
-      { x: -0.5, text: '−1/2' },
-      { x: 1, text: '1' },
+      { x: -100, text: '−1' },
+      { x: -50, text: '−1/2' },
+      { x: 100, text: '1' },
     ].map(({ x, text }) => (
       <Fragment key={`tx-${x}`}>
-        <Draw way={[[x * UNIT, -3], [x * UNIT, 3]]} />
-        <Node position={[x * UNIT, 14]} fill={PAGE_BG} stroke="none" padding={1}>
+        <Draw way={[[x, -3], [x, 3]]} />
+        <Node position={[x, 14]} fill={PAGE_BG} stroke="none" padding={1}>
           {text}
         </Node>
       </Fragment>
     ))}
     {[
-      { y: -1, text: '−1' },
-      { y: -0.5, text: '−1/2' },
-      { y: 0.5, text: '1/2' },
-      { y: 1, text: '1' },
+      { y: 100, text: '−1' },
+      { y: 50, text: '−1/2' },
+      { y: -50, text: '1/2' },
+      { y: -100, text: '1' },
     ].map(({ y, text }) => (
       <Fragment key={`ty-${y}`}>
-        <Draw way={[[-3, -y * UNIT], [3, -y * UNIT]]} />
-        <Node position={[-18, -y * UNIT]} fill={PAGE_BG} stroke="none" padding={1}>
+        <Draw way={[[-3, y], [3, y]]} />
+        <Node position={[-18, y]} fill={PAGE_BG} stroke="none" padding={1}>
           {text}
         </Node>
       </Fragment>
@@ -75,37 +71,38 @@ const Demo: FC = () => (
 
     {/* 30° 扇形 + α */}
     <Path fill={ANGLE_FILL} stroke={ANGLE_STROKE}>
-      <Step kind="move" to={cm(0, 0)} />
+      <Step kind="move" to={[0, 0]} />
       <Step kind="arc" startAngle={0} endAngle={-30} radius={30} />
-      <Step kind="line" to={cm(0, 0)} />
+      <Step kind="line" to={[0, 0]} />
     </Path>
-    <Node position={polar(15, 0.22)} stroke="none" textColor={ANGLE_STROKE} padding={1} font={MATH_FONT}>
+    <Node position={{ angle: -15, radius: 22 }} stroke="none" textColor={ANGLE_STROKE} padding={1} font={MATH_FONT}>
       α
     </Node>
 
     {/* sin α / cos α */}
     <Draw
-      way={[polar(30, 1), { label: { text: 'sin α', side: 'left' } }, cm(COS30, 0)]}
+      way={[{ angle: -30, radius: 100 }, { label: { text: 'sin α', side: 'left' } }, [COS30 * 100, 0]]}
       stroke={SIN_COLOR}
       thickness="thick"
     />
     <Draw
-      way={[cm(COS30, 0), { label: { text: 'cos α', side: 'below' } }, cm(0, 0)]}
+      way={[[COS30 * 100, 0], { label: { text: 'cos α', side: 'below' } }, [0, 0]]}
       stroke={COS_COLOR}
       thickness="thick"
     />
 
     {/* tan α 橙色竖线 + 辅助射线
         原 TikZ 用 name path + name intersections 求交点；IR 没建模，几何上
-        x=1 竖线与原点 30° 射线交于 (1, tan30°)，直接喂坐标。Coordinate t 命名供下方 ray 引用 */}
+        x=100 竖线与原点 30° 射线交于 (100, -TAN30·100)（screen y），直接喂坐标。
+        Coordinate t 命名供下方 ray 引用 */}
     <Draw
-      way={[cm(1, 0), { label: { text: 'tan α = sin α / cos α', side: 'right' } }, cm(1, TAN30)]}
+      way={[[100, 0], { label: { text: 'tan α = sin α / cos α', side: 'right' } }, [100, -TAN30 * 100]]}
       stroke={TAN_COLOR}
       thickness="thick"
     />
-    <Coordinate id="t" position={cm(1, TAN30)} />
+    <Coordinate id="t" position={[100, -TAN30 * 100]} />
     {/* 原点 → t 的辅助射线 */}
-    <Draw way={[cm(0, 0), 't']} />
+    <Draw way={[[0, 0], 't']} />
   </TikZ>
 );
 

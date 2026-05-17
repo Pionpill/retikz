@@ -68,9 +68,14 @@ export const ViewLayout: FC = () => {
               defaultSize={toPercent(DEFAULT_AI_PX)}
               minSize={toPercent(MIN_AI_PX)}
               maxSize={toPercent(MAX_AI_PX)}
-              className="overflow-visible!"
+              // 三件套：
+              // 1) overflow-x-clip 截横向溢出（clip 不像 hidden 那样创 scroll container，保留 sticky 的 viewport 锚定）
+              // 2) overflow-y-visible 让内部 sticky 看得到顶层文档滚动
+              // 3) min-w-0! 直接强制 flex item 最小宽 = 0，杜绝长代码行 / 大 SVG 的 min-content propagate 撑大 panel
+              //    （`overflow-x-clip` 单独不一定能触发 flex 的隐式 min-width:auto→0 规则，必须显式加）
+              className="overflow-x-clip! overflow-y-visible! min-w-0!"
             >
-              <div className="sticky top-0 h-screen">
+              <div className="sticky top-0 h-screen min-w-0 max-w-full">
                 <AiChatPanel />
               </div>
             </ResizablePanel>

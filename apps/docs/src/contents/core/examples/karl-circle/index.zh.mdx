@@ -21,11 +21,11 @@ description: 30° 角下 sin / cos / tan 的几何关系示意——从一个圆
 
 **几何**
 
-- 单位圆 r = 1cm
+- 单位圆 r = 100px
 - 坐标轴 x / y，从 −1.5 到 1.5，带箭头
 - 刻度：x 轴标注 −1 / −1/2 / 1；y 轴标注 −1 / −1/2 / 1/2 / 1
-- 0.5cm 间距的浅色背景网格
-- 30° 扇形：原点为圆心，半径 0.3cm
+- 50px 间距的浅色背景网格
+- 30° 扇形：原点为圆心，半径 30px
 
 **函数线**
 
@@ -40,7 +40,7 @@ description: 30° 角下 sin / cos / tan 的几何关系示意——从一个圆
 
 **标注**
 
-- α 文字在扇形内（极坐标 15°, 0.22cm）
+- α 文字在扇形内（极坐标 15°, 22px）
 - 每条函数线带各自名字 label
 - 右侧多行信息框，每行可单独着色，分别说明 α / sin / cos / tan 的值与对应颜色`}
 />
@@ -63,7 +63,7 @@ x 轴和 y 轴用 [Draw](/core/components/draw/overview) 配 `arrow="->"` 一键
 
 背景网格用 `.map()` 平铺 5 横 5 竖（IR 暂无 grid 算子）；这种 React 端 `.map()` 替代 TikZ `\foreach` 的写法在 retikz 里很常见。刻度同样靠数组遍历，每条短线 + 一个 `fill="white"` 的 [Node](/core/components/node/overview)——白底把网格遮在 label 下，让数字读起来清爽。
 
-`cm(x, y)` helper 把数学坐标（y-up）翻成 retikz 屏幕坐标（y-down）：retikz 顶层 `<TikZ>` 不接 picture-level scale + 不翻 y，所以教程类例子常自带这种 helper。
+retikz 坐标统一是 SVG 像素，y 向下为正——所以「向上 1 单位」写成 `[0, -100]`（本例取 100px = 单位圆半径作为长度基准）。顶层 `<TikZ>` 不接 picture-level scale + 不翻 y，TikZ 教程里的数学坐标得手动给 y 加负号。
 
 <ComponentPreview name="karl-circle-03-ticks" diffFrom="karl-circle-02-axes" size="lg" />
 
@@ -77,7 +77,7 @@ x 轴和 y 轴用 [Draw](/core/components/draw/overview) 配 `arrow="->"` 一键
 
 ### 步骤 5：sin α 红线 + cos α 蓝线
 
-sin 是 (30°, 1cm) 垂直落到 x 轴；cos 是落点回原点。两段都靠 [Draw](/core/components/draw/overview)，way 数组里中间插一个 `{ label: { text, side } }` 算子给段挂边标注。`thickness="veryThick"` 是语义 stroke 档位，省得写具体像素值。
+sin 是 (30°, 100px) 垂直落到 x 轴；cos 是落点回原点。两段都靠 [Draw](/core/components/draw/overview)，way 数组里中间插一个 `{ label: { text, side } }` 算子给段挂边标注。`thickness="veryThick"` 是语义 stroke 档位，省得写具体像素值。
 
 注：原 TikZ 用 `(30:1cm |- x axis)` 直接表达"30°,1cm 点与 x 轴的投影交点"。retikz 暂无投影 target，几何上等于 (cos30°, 0)，手算坐标喂进去。
 
@@ -114,9 +114,9 @@ tan 线从 (1, 0) 垂直到 (1, tan30°)。原图用 TikZ 的 named path + inter
 下面这些限制在后续版本会逐渐补齐，🚧 标记的均已在 roadmap 中。
 
 - 🚧 **grid 算子**：未来计划支持。本例用 `.map()` 手画 5 横 5 竖兜底
-- 🚧 **整图 scale + y 翻转**：未来计划在 `<TikZ>` 容器加 `scale` / `yAxis="up"`，让用户直接喂数学坐标。本例用本地 `cm()` / `polar()` helper 兜底
-- 🚧 **投影 target（`(A |- B)`）**：未来计划支持。本例手算 `cm(cos30, 0)` 兜底
-- 🚧 **named path + intersection target**：未来计划支持。本例手算 `cm(1, tan30)` 兜底
+- 🚧 **整图 scale + y 翻转**：未来计划在 `<TikZ>` 容器加 `scale` / `yAxis="up"`，让用户直接喂数学坐标。本例直接写像素 literal + 手动给 y 加负号兜底
+- 🚧 **投影 target（`(A |- B)`）**：未来计划支持。本例手算 `[cos30 * 100, 0]` 兜底
+- 🚧 **named path + intersection target**：未来计划支持。本例手算 `[100, -tan30 * 100]` 兜底
 - 🚧 **LineSpec 行内 spans**：未来计划在 LineSpec 加 `spans` 字段。本例只能整行换色
 - ❌ **inline LaTeX 数学排版**（`$\frac{1}{2}$` / `$\sin \alpha$`）：暂无计划。本例用纯文本字符兜底（`1/2` / `sin α`）
 

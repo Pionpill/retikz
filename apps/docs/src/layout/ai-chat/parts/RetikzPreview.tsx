@@ -141,6 +141,8 @@ export const RetikzPreview: FC<RetikzPreviewProps> = props => {
         size="sm"
         // AI 面板宽度有限，AI 生成的 TikZ 常自带 `width/height` 像素值，让 svg max-width 跟容器、height 按 viewBox 比例自适应，避免撑大侧栏
         componentClassName="min-w-0 [&_svg]:max-w-full [&_svg]:h-auto"
+        // AI 面板内自指无意义：用户已经在跟 AI 对话，不需要再点 Ask AI 弹回 prompt
+        showAskAi={false}
       />
     </RetikzRenderErrorBoundary>
   );

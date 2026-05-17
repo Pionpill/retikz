@@ -87,6 +87,8 @@ export type ComponentRenderProps = {
   size?: SizeKey;
   /** 透传到 demo 渲染区父级 div 的 className，可覆盖默认高度 / p-10 / 居中等 */
   componentClassName?: string;
+  /** 是否显示右侧工具条的 Ask AI 按钮，默认 true；在 AI 面板内（如 RetikzPreview）渲染时关掉避免自指 */
+  showAskAi?: boolean;
 };
 
 /**
@@ -94,7 +96,7 @@ export type ComponentRenderProps = {
  * @description 不接触 demo 文件加载、AST 解析或 IR 派生——那些由调用方（`ComponentPreview` 走 glob、`RetikzPreview` 走 source string）准备好后喂进来
  */
 export const ComponentRender: FC<ComponentRenderProps> = props => {
-  const { name, Component, source, align = 'center', size = 'md', componentClassName } = props;
+  const { name, Component, source, align = 'center', size = 'md', componentClassName, showAskAi = true } = props;
   const hasReact = (source?.react ?? '').length > 0;
   const hasIr = (source?.ir ?? '').length > 0;
   const hasCode = hasReact || hasIr;
@@ -111,6 +113,9 @@ export const ComponentRender: FC<ComponentRenderProps> = props => {
   const timerRef = useRef<number | null>(null);
   // 卡内 drag 默认关闭：local 为 undefined 时跟随全局；单卡点过 Hand 后本地胜出
   const [localDragEnabled, setLocalDragEnabled] = useState<boolean | undefined>(undefined);
+  // 用户在 PanZoomToolbar 切了 size 之后本地胜出；未切时跟随 prop 的 size
+  const [localSize, setLocalSize] = useState<SizeKey | undefined>(undefined);
+  const effectiveSize = localSize ?? size;
   // 工具条 pinned：移动端没 hover，靠 tap preview 区域 toggle
   const [toolbarPinned, setToolbarPinned] = useState(false);
   const [isMaximized, setIsMaximized] = useState(false);
@@ -197,7 +202,7 @@ export const ComponentRender: FC<ComponentRenderProps> = props => {
       <div
         className={cn(
           'group/preview relative flex w-full justify-center overflow-hidden p-6 sm:p-10 select-none',
-          sizeClass[size],
+          sizeClass[effectiveSize],
           alignClass[align],
           // 触摸设备启用拖拽时关闭浏览器原生 pan/zoom；关闭时保持默认 touch-action 让用户能正常滚动页面经过 demo
           dragEnabled && 'touch-none',
@@ -223,6 +228,8 @@ export const ComponentRender: FC<ComponentRenderProps> = props => {
           dragEnabled={dragEnabled}
           toggleDrag={() => setLocalDragEnabled(!dragEnabled)}
           onMaximize={() => setIsMaximized(true)}
+          size={effectiveSize}
+          onSizeChange={setLocalSize}
           pinned={toolbarPinned}
         />
       </div>
@@ -287,9 +294,11 @@ export const ComponentRender: FC<ComponentRenderProps> = props => {
                     </ToggleGroup>
                   )}
                   <CopyButton copied={copied} onCopy={handleCopy} title={copied ? 'Copied' : 'Copy'} />
-                  <ToolbarIconButton label="Ask AI" title="Ask AI" onClick={handleAskAi}>
-                    <BotMessageSquare className="size-4" />
-                  </ToolbarIconButton>
+                  {showAskAi && (
+                    <ToolbarIconButton label="Ask AI" title="Ask AI" onClick={handleAskAi}>
+                      <BotMessageSquare className="size-4" />
+                    </ToolbarIconButton>
+                  )}
                   {displayedLineCount > COLLAPSE_THRESHOLD_LINES && (
                     <ToolbarIconButton
                       label={isExpanded ? 'Collapse' : 'Expand'}

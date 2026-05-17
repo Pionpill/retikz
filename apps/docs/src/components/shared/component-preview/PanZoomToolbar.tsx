@@ -2,10 +2,11 @@ import { type FC } from 'react';
 import { ArrowDown, ArrowLeft, ArrowRight, ArrowUp, Hand, Maximize2, RotateCcw, ZoomIn, ZoomOut } from 'lucide-react';
 
 import { Separator } from '@/components/ui/separator';
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { cn } from '@/lib/utils';
 
 import { ToolbarIconButton } from './_parts';
-import type { Transform } from './_shared';
+import { SIZE_KEYS, type SizeKey, type Transform } from './_shared';
 import { PAN_STEP, ZOOM_FACTOR, ZOOM_MAX, ZOOM_MIN } from './usePanZoom';
 
 export type PanZoomToolbarProps = {
@@ -17,6 +18,9 @@ export type PanZoomToolbarProps = {
   dragEnabled: boolean;
   toggleDrag: () => void;
   onMaximize: () => void;
+  /** 当前 size 档位（受控）+ 切换回调；用户在工具条里改完后由父级 ComponentRender 落到 sizeClass */
+  size: SizeKey;
+  onSizeChange: (next: SizeKey) => void;
   /**
    * 强制可见（覆盖 hover-only 默认）；移动端没有 hover，由父级通过 tap 切换 pinned 真值。
    * 未指定时沿用原 group-hover/focus-within 显示规则
@@ -31,9 +35,23 @@ export type PanZoomToolbarProps = {
  *   下半基础组：放缩 / 拖拽切 / Reset（mobile-only）/ 放大查看（md+）
  *   mousedown + click 都 stopPropagation，避免父级 preview 区域的 drag handler 与 tap toggle 误触
  */
+/** 允许的 size 值集合（避免 radix ToggleGroup 取消选中时回 '' 误传） */
+const SIZE_VALUE_SET: ReadonlySet<string> = new Set<SizeKey>(SIZE_KEYS);
+
 export const PanZoomToolbar: FC<PanZoomToolbarProps> = props => {
-  const { transform, isTransformed, panBy, zoomBy, resetTransform, dragEnabled, toggleDrag, onMaximize, pinned } =
-    props;
+  const {
+    transform,
+    isTransformed,
+    panBy,
+    zoomBy,
+    resetTransform,
+    dragEnabled,
+    toggleDrag,
+    onMaximize,
+    size,
+    onSizeChange,
+    pinned,
+  } = props;
   return (
     <div
       className={cn(
@@ -93,6 +111,27 @@ export const PanZoomToolbar: FC<PanZoomToolbarProps> = props => {
           <Maximize2 className="size-3.5" />
         </ToolbarIconButton>
       </div>
+      <Separator className="w-full" />
+      <ToggleGroup
+        type="single"
+        variant="outline"
+        value={size}
+        onValueChange={value => {
+          if (SIZE_VALUE_SET.has(value)) onSizeChange(value as SizeKey);
+        }}
+        aria-label="Preview size"
+      >
+        {SIZE_KEYS.map(key => (
+          <ToggleGroupItem
+            key={key}
+            value={key}
+            aria-label={`Size ${key}`}
+            className="h-6 min-w-6 cursor-pointer px-1 text-[10px] font-medium uppercase"
+          >
+            {key}
+          </ToggleGroupItem>
+        ))}
+      </ToggleGroup>
     </div>
   );
 };

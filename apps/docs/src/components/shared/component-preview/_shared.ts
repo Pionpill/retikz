@@ -27,6 +27,9 @@ export const sizeClass = {
 
 export type SizeKey = keyof typeof sizeClass;
 
+/** size 档位的展示顺序（从小到大）；切换 UI 按这个数组渲染 */
+export const SIZE_KEYS: ReadonlyArray<SizeKey> = ['xs', 'sm', 'md', 'lg', 'xl'];
+
 /**
  * 格式化 IR JSON
  * @description `JSON.stringify(_, null, 2)` 会把 `[0, 0]` 这种短数组拆 4 行；post-process 把不含嵌套的纯标量短数组压回单行（限 60 字符内，避免长数组内联反而难读）

@@ -21,11 +21,11 @@ Send the prompt below to the AI chat panel — the LLM will produce retikz IR / 
 
 **Geometry**
 
-- Unit circle, r = 1cm
+- Unit circle, r = 100px
 - Axes x / y from −1.5 to 1.5, with arrows
 - Ticks: x at −1 / −1/2 / 1; y at −1 / −1/2 / 1/2 / 1
-- Light background grid, 0.5cm spacing
-- 30° wedge centered at the origin, radius 0.3cm
+- Light background grid, 50px spacing
+- 30° wedge centered at the origin, radius 30px
 
 **Function lines**
 
@@ -40,7 +40,7 @@ Send the prompt below to the AI chat panel — the LLM will produce retikz IR / 
 
 **Labels**
 
-- α inside the wedge (polar 15°, 0.22cm from origin)
+- α inside the wedge (polar 15°, 22px from origin)
 - each function line carries its own name label
 - right-hand multi-line info box, per-line color, describing α / sin / cos / tan values`}
 />
@@ -63,7 +63,7 @@ x and y axes use [Draw](/core/components/draw/overview) with `arrow="->"` to get
 
 The background grid is a `.map()` over 5 horizontal + 5 vertical lines (IR has no `grid` operator yet); this `.map()` substitute for TikZ `\foreach` is common throughout retikz. Ticks are also array-driven: a short segment plus a `fill="white"` [Node](/core/components/node/overview) per tick — white bg covers the grid behind each label.
 
-The `cm(x, y)` helper translates math (y-up) to retikz screen coordinates (y-down): the top-level `<TikZ>` has no picture-level scale or y-flip, so tutorial-style examples often carry this kind of helper inline.
+retikz coordinates are SVG pixels with y pointing downward — so "1 unit up" is written as `[0, -100]` (this example uses 100px = unit-circle radius as the length basis). The top-level `<TikZ>` has no picture-level scale or y-flip, so math coordinates from the TikZ tutorial need their y manually negated.
 
 <ComponentPreview name="karl-circle-03-ticks" diffFrom="karl-circle-02-axes" size="lg" />
 
@@ -77,7 +77,7 @@ The α label is a [Node](/core/components/node/overview) at a polar position (`{
 
 ### Step 5 — sin α red line + cos α blue line
 
-`sin` drops from (30°, 1cm) vertically to the x-axis; `cos` goes from that foot back to the origin. Both use [Draw](/core/components/draw/overview), with a `{ label: { text, side } }` operator threaded into the `way` array to attach an edge label. `thickness="veryThick"` is a semantic stroke preset — saves having to pick a numeric width.
+`sin` drops from (30°, 100px) vertically to the x-axis; `cos` goes from that foot back to the origin. Both use [Draw](/core/components/draw/overview), with a `{ label: { text, side } }` operator threaded into the `way` array to attach an edge label. `thickness="veryThick"` is a semantic stroke preset — saves having to pick a numeric width.
 
 Note: the original TikZ uses `(30:1cm |- x axis)` to express "horizontal projection of (30°, 1cm) onto the x-axis" directly. retikz has no projection target yet — geometrically that equals (cos30°, 0), so we hand-compute the coordinate.
 
@@ -114,9 +114,9 @@ Finally, a colored info card on the right. The [Node](/core/components/node/over
 The items below will be filled in over upcoming releases; everything marked 🚧 is already on the roadmap.
 
 - 🚧 **`grid` operator**: planned. The example uses `.map()` to draw 5 horizontal + 5 vertical lines instead
-- 🚧 **Picture scale + y-up axis**: planned for `<TikZ>` (`scale` + `yAxis="up"`) to let users feed math coordinates directly. The example uses local `cm()` / `polar()` helpers
-- 🚧 **Projection target (`(A |- B)`)**: planned. The example hand-computes `cm(cos30, 0)`
-- 🚧 **Named path + intersection target**: planned. The example hand-computes `cm(1, tan30)`
+- 🚧 **Picture scale + y-up axis**: planned for `<TikZ>` (`scale` + `yAxis="up"`) to let users feed math coordinates directly. The example writes pixel literals with manual y negation instead
+- 🚧 **Projection target (`(A |- B)`)**: planned. The example hand-computes `[cos30 * 100, 0]`
+- 🚧 **Named path + intersection target**: planned. The example hand-computes `[100, -tan30 * 100]`
 - 🚧 **In-line spans inside LineSpec**: planned (add a `spans` field). The example switches color only at line granularity
 - ❌ **Inline LaTeX math typography** (`$\frac{1}{2}$` / `$\sin \alpha$`): not planned. The example uses plain characters (`1/2` / `sin α`)
 
