@@ -695,6 +695,93 @@ describe('convertIRToReactNode', () => {
       expect(buildIR(convertIRToReactNode(ir))).toEqual(ir);
     });
 
+    it('round-trips IRScope：仅 children（无 id / transforms / localNamespace）', () => {
+      const ir: IR = {
+        version: CURRENT_IR_VERSION,
+        type: 'scene',
+        children: [
+          {
+            type: 'scope',
+            children: [{ type: 'node', id: 'A', position: [0, 0], text: 'A' }],
+          },
+        ],
+      };
+      expect(buildIR(convertIRToReactNode(ir))).toEqual(ir);
+    });
+
+    it('round-trips IRScope：含 id / localNamespace / 6 种 transform 变体复合', () => {
+      const ir: IR = {
+        version: CURRENT_IR_VERSION,
+        type: 'scene',
+        children: [
+          { type: 'node', id: 'hub', position: [10, 0], text: 'H' },
+          {
+            type: 'scope',
+            id: 'cluster',
+            localNamespace: true,
+            transforms: [
+              { kind: 'translate', x: 5, y: 5 },
+              { kind: 'polar-translate', origin: 'hub', angle: 30, radius: 20 },
+              { kind: 'at-translate', direction: 'right', of: 'hub', distance: 10 },
+              { kind: 'offset-translate', of: 'hub', offset: [3, 0] },
+              { kind: 'rotate', degrees: 45, cx: 1, cy: 2 },
+              { kind: 'scale', x: 2, y: 1.5 },
+            ],
+            children: [{ type: 'node', id: 'A', position: [0, 0], text: 'A' }],
+          },
+        ],
+      };
+      expect(buildIR(convertIRToReactNode(ir))).toEqual(ir);
+    });
+
+    it('round-trips 嵌套 IRScope', () => {
+      const ir: IR = {
+        version: CURRENT_IR_VERSION,
+        type: 'scene',
+        children: [
+          {
+            type: 'scope',
+            transforms: [{ kind: 'translate', x: 50, y: 0 }],
+            children: [
+              {
+                type: 'scope',
+                transforms: [{ kind: 'rotate', degrees: 90 }],
+                children: [
+                  { type: 'node', id: 'inner', position: [0, 0], text: 'I' },
+                ],
+              },
+            ],
+          },
+        ],
+      };
+      expect(buildIR(convertIRToReactNode(ir))).toEqual(ir);
+    });
+
+    it('round-trips IRScope 含 path 子节点', () => {
+      const ir: IR = {
+        version: CURRENT_IR_VERSION,
+        type: 'scene',
+        children: [
+          {
+            type: 'scope',
+            transforms: [{ kind: 'translate', x: 10, y: 0 }],
+            children: [
+              { type: 'node', id: 'A', position: [0, 0], text: 'A' },
+              { type: 'node', id: 'B', position: [30, 0], text: 'B' },
+              {
+                type: 'path',
+                children: [
+                  { type: 'step', kind: 'move', to: 'A' },
+                  { type: 'step', kind: 'line', to: 'B' },
+                ],
+              },
+            ],
+          },
+        ],
+      };
+      expect(buildIR(convertIRToReactNode(ir))).toEqual(ir);
+    });
+
     it('round-trips Coordinate 占位节点（alpha.4 ADR-02）', () => {
       const ir: IR = {
         version: CURRENT_IR_VERSION,

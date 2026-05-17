@@ -10,7 +10,7 @@
 
 `@retikz/core` 之上的 **React adapter**：把 Kernel/Sugar JSX 编译成 `IR` → 调 `compileToScene` 拿 `Scene` → 渲染成 SVG。
 
-- **Kernel 组件**：`<TikZ>` `<Node>` `<Path>` `<Step>` `<Text>` `<Coordinate>`——一对一映射 IR
+- **Kernel 组件**：`<TikZ>` `<Node>` `<Path>` `<Step>` `<Text>` `<Coordinate>` `<Scope>`——一对一映射 IR
 - **Sugar 组件**：`<Draw>` `<EdgeLabel>` 等——builder 同步展开为 Kernel，IR 完全等价
 - **桥接函数**：`convertReactNodeToIR`（buildIR 别名）/ `convertIRToReactNode`（unbuilder）
 - **renderer**：浏览器 SVG，`render/renderPrim.tsx` 把 ScenePrimitive 翻译为 React 元素
@@ -31,7 +31,7 @@
 src/
 ├── index.ts          # 公开 API barrel（显式 named export）
 ├── kernel/           # Kernel 组件 + builder/unbuilder（JSX ↔ IR）
-│   ├── TikZ.tsx Node.tsx Path.tsx Step.tsx Text.tsx Coordinate.tsx
+│   ├── TikZ.tsx Node.tsx Path.tsx Step.tsx Text.tsx Coordinate.tsx Scope.tsx
 │   ├── builder.ts    # React 元素树 → IR（同步遍历 children）
 │   ├── unbuilder.ts  # IR → React 元素树（带 key、不裹 TikZ 外壳）
 │   ├── _displayNames.ts / _fields.ts  # 内部常量（_前缀 = 不导出）

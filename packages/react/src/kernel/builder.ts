@@ -4,6 +4,7 @@ import type {
   IRChild,
   IRLineSpec,
   IRNode,
+  IRScope,
   IRStep,
   IRStepLabel,
   IRTarget,
@@ -12,6 +13,7 @@ import { CURRENT_IR_VERSION, parseTargetSugar } from '@retikz/core';
 import type { CoordinateProps } from './Coordinate';
 import type { NodeProps } from './Node';
 import type { PathProps } from './Path';
+import type { ScopeProps } from './Scope';
 import type { StepProps } from './Step';
 import type { TextProps } from './Text';
 import type { EdgeLabelProps } from '../sugar/EdgeLabel';
@@ -20,6 +22,7 @@ import {
   TIKZ_EDGE_LABEL,
   TIKZ_NODE,
   TIKZ_PATH,
+  TIKZ_SCOPE,
   TIKZ_STEP,
   TIKZ_TEXT,
 } from './_displayNames';
@@ -286,6 +289,18 @@ const buildCoordinateFromProps = (props: CoordinateProps): IRChild => ({
   position: props.position,
 });
 
+/** `<Scope>` props → IRScope；children 递归扫描走 readSceneChildren */
+const buildScopeFromProps = (props: ScopeProps): IRScope => {
+  const ir: IRScope = {
+    type: 'scope',
+    children: readSceneChildren(props.children),
+  };
+  if (props.id !== undefined) ir.id = props.id;
+  if (props.localNamespace !== undefined) ir.localNamespace = props.localNamespace;
+  if (props.transforms !== undefined) ir.transforms = props.transforms;
+  return ir;
+};
+
 /** `<Path>` props → IRChild；step 序列由 readPathChildren 收集 */
 const buildPathFromProps = (props: PathProps): IRChild => ({
   type: 'path',
@@ -311,6 +326,9 @@ const readSceneChildren = (children: ReactNode): Array<IRChild> => {
         return;
       case TIKZ_COORDINATE:
         out.push(buildCoordinateFromProps(child.props as CoordinateProps));
+        return;
+      case TIKZ_SCOPE:
+        out.push(buildScopeFromProps(child.props as ScopeProps));
         return;
     }
     if (typeof child.type === 'function') {

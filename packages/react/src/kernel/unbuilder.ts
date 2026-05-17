@@ -1,8 +1,9 @@
 import { type ReactNode, createElement } from 'react';
-import type { IR, IRChild, IRNode, IRStep } from '@retikz/core';
+import type { IR, IRChild, IRNode, IRScope, IRStep } from '@retikz/core';
 import { Coordinate } from './Coordinate';
 import { Node, type NodeProps } from './Node';
 import { Path } from './Path';
+import { Scope, type ScopeProps } from './Scope';
 import { Step } from './Step';
 import { NODE_FIELDS, pickDefined } from './_fields';
 
@@ -133,9 +134,26 @@ const childToElement = (child: IRChild, key: number): ReactNode => {
         id: child.id,
         position: child.position,
       });
+    case 'scope':
+      return createElement(Scope, scopePropsFromIR(child, key));
     default:
       return assertNever(child);
   }
+};
+
+/** IR 'scope' child → ScopeProps；递归把 scope.children 还原为 Kernel element 数组 */
+const scopePropsFromIR = (
+  s: IRScope,
+  key: number,
+): ScopeProps & { key: number } => {
+  const props: ScopeProps & { key: number } = {
+    key,
+    children: s.children.map((c, i) => childToElement(c, i)),
+  };
+  if (s.id !== undefined) props.id = s.id;
+  if (s.localNamespace !== undefined) props.localNamespace = s.localNamespace;
+  if (s.transforms !== undefined) props.transforms = s.transforms;
+  return props;
 };
 
 /**

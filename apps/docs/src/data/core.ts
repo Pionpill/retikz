@@ -20,7 +20,14 @@ export const coreSection: Array<Section> = [
     id: 'components',
     label: 'core.components',
     pages: [
-      { id: 'tikz', label: 'core.tikz' },
+      {
+        id: 'tikz',
+        label: 'core.tikz',
+        children: [
+          { id: 'overview', label: 'core.tikzOverview' },
+          { id: 'scope', label: 'core.tikzScope' },
+        ],
+      },
       {
         id: 'node',
         label: 'core.node',

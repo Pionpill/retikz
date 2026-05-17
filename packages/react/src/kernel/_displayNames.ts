@@ -20,3 +20,6 @@ export const TIKZ_EDGE_LABEL = '@retikz/EdgeLabel';
 
 /** <Coordinate> 组件的 displayName（占位节点） */
 export const TIKZ_COORDINATE = '@retikz/Coordinate';
+
+/** <Scope> 组件的 displayName（IR 容器：分组 + 局部 transform） */
+export const TIKZ_SCOPE = '@retikz/Scope';

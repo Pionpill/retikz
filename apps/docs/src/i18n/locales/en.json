@@ -27,6 +27,8 @@
     "components": "Components",
     "concepts": "Concepts",
     "tikz": "TikZ",
+    "tikzOverview": "TikZ",
+    "tikzScope": "Scope",
     "node": "Node",
     "nodeOverview": "Node",
     "text": "Text",

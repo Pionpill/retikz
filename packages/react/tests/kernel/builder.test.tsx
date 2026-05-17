@@ -1,8 +1,10 @@
 import { describe, expect, it } from 'vitest';
+import { Coordinate } from '../../src/kernel/Coordinate';
 import { Draw } from '../../src/sugar/Draw';
 import { EdgeLabel } from '../../src/sugar/EdgeLabel';
 import { Node } from '../../src/kernel/Node';
 import { Path } from '../../src/kernel/Path';
+import { Scope } from '../../src/kernel/Scope';
 import { Step } from '../../src/kernel/Step';
 import { Text } from '../../src/kernel/Text';
 import { buildIR } from '../../src/kernel/builder';
@@ -387,6 +389,59 @@ describe('buildIR', () => {
         </Path>,
       );
       expect(fromSugar).toEqual(fromKernel);
+    });
+
+    it('<Scope> emit IRScope：transforms / id / localNamespace 透传', () => {
+      const ir = buildIR(
+        <Scope id="cluster" localNamespace transforms={[{ kind: 'translate', x: 50, y: 0 }]}>
+          <Node id="A" position={[0, 0]}>A</Node>
+        </Scope>,
+      );
+      expect(ir.children).toHaveLength(1);
+      expect(ir.children[0]).toMatchObject({
+        type: 'scope',
+        id: 'cluster',
+        localNamespace: true,
+        transforms: [{ kind: 'translate', x: 50, y: 0 }],
+      });
+    });
+
+    it('<Scope> 嵌套：scope 内 scope / node / coordinate / path 全部 emit 到 scope.children', () => {
+      const ir = buildIR(
+        <Scope transforms={[{ kind: 'translate', x: 10, y: 0 }]}>
+          <Node id="A" position={[0, 0]}>A</Node>
+          <Coordinate id="anchor" position={[5, 5]} />
+          <Scope transforms={[{ kind: 'rotate', degrees: 45 }]}>
+            <Node id="inner" position={[0, 0]}>I</Node>
+          </Scope>
+          <Path>
+            <Step kind="move" to="A" />
+            <Step to="inner" />
+          </Path>
+        </Scope>,
+      );
+      const scope = ir.children[0];
+      expect(scope.type).toBe('scope');
+      if (scope.type === 'scope') {
+        expect(scope.children).toHaveLength(4);
+        expect(scope.children[0]).toMatchObject({ type: 'node', id: 'A' });
+        expect(scope.children[1]).toMatchObject({ type: 'coordinate', id: 'anchor' });
+        expect(scope.children[2]).toMatchObject({ type: 'scope' });
+        expect(scope.children[3]).toMatchObject({ type: 'path' });
+      }
+    });
+
+    it('<Scope> 缺省 transforms / id / localNamespace → IR 字段缺省（不写出空值）', () => {
+      const ir = buildIR(
+        <Scope>
+          <Node id="A" position={[0, 0]}>A</Node>
+        </Scope>,
+      );
+      const scope = ir.children[0];
+      expect(scope.type).toBe('scope');
+      expect(scope).not.toHaveProperty('id');
+      expect(scope).not.toHaveProperty('localNamespace');
+      expect(scope).not.toHaveProperty('transforms');
     });
 
     it('<Draw> way 中 label 与 fold / curve / arc 算子组合，全等价 Kernel 写法', () => {

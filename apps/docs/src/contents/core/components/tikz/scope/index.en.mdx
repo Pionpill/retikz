@@ -1,0 +1,112 @@
+---
+title: Scope
+description: Local transform container — wraps a group of children and translates / rotates / scales them as a unit; mirrors TikZ `\begin{scope}[...]`.
+---
+
+`<Scope>` is retikz Kernel's fourth element (alongside `<Node>` / `<Path>` / `<Coordinate>`). It groups a set of IR children at the IR layer and applies a local transform chain to them; maps to TikZ `\begin{scope}[shift=..., rotate=..., scale=...] ... \end{scope}`.
+
+## Usage
+
+```tsx
+import { Scope } from '@retikz/react';
+```
+
+```tsx
+<Scope transforms={[{ kind: 'translate', x: 50, y: 0 }]}>
+  {/* Node / Path / Coordinate / nested Scope */}
+</Scope>
+```
+
+`transforms` is an array of 6 variants: 4 translate variants (Cartesian / polar / direction-relative / offset) + `rotate` + `scale`. Array order is application order — the 0-th entry takes effect first (innermost), matching SVG transform list / Scene `GroupPrim`.
+
+### When to use Scope
+
+- **Move a cluster as a unit**: a group of nodes + paths form a cluster — moving the cluster only changes the scope's transform, not each child's `position`
+- **Rotate a subdiagram**: rotate a subgraph around the scope's local origin; connections and labels follow automatically
+- **Nested coordinate frames**: outer scope positions the cluster, inner scope positions children within the cluster — clearer than computing absolute coordinates by hand
+
+<Comparison target="tikz" title="Scope mapping">
+
+`<Scope transforms={[{ kind: 'translate', x: 50, y: 0 }]}>...</Scope>` maps to TikZ `\begin{scope}[shift={(50,0)}] ... \end{scope}`: a local transform is pushed at the start of the subdiagram and popped at the end. TikZ stacks CM in the order options appear; retikz applies `transforms` in array index order, reusing the SVG / Scene convention.
+
+</Comparison>
+
+## The 6 transform variants
+
+The 4 translate variants mirror the 4 `<Node position>` shapes (Cartesian / polar / direction-relative / offset) one-to-one. At compile time they are all flattened to Cartesian translate before being lowered to Scene `GroupPrim`; `rotate` / `scale` pass through directly.
+
+| kind | Fields | Semantics |
+|---|---|---|
+| `translate` | `{ x, y }` | Cartesian translation in user units |
+| `polar-translate` | `{ origin?, angle, radius }` | Polar translation; `origin` accepts `id` / `[x, y]` / `PolarPosition`; defaults to origin point |
+| `at-translate` | `{ direction, of, distance? }` | Place scope at `distance` from referent node along `direction`; `distance` defaults to `<TikZ nodeDistance>` |
+| `offset-translate` | `{ of, offset? }` | Scope origin = referent global position + `[dx, dy]`; `offset` defaults to `[0, 0]` |
+| `rotate` | `{ degrees, cx?, cy? }` | Rotate by degrees; `cx/cy` default to scope local origin |
+| `scale` | `{ x, y? }` | Scale; `y` defaults to `x` (uniform) |
+
+Array order = the 0-th transform is applied first to child coordinates. `transforms: [translate, rotate]` means translate then rotate — same semantics as SVG `transform="translate(...) rotate(...)"`.
+
+## Examples
+
+### Basic translation
+
+Cartesian translate is the most common form: move a subdiagram as a whole:
+
+<ComponentPreview name="scope-translate-basic" size="md" />
+
+### Polar translation
+
+`polar-translate` describes the cluster center relative to an origin in polar coordinates — two clusters below use `angle: 0` / `angle: 180` with identical `radius`, landing symmetrically on either side of the hub:
+
+<ComponentPreview name="scope-polar-translate" size="md" />
+
+### Direction-relative translation
+
+`at-translate` places the whole group at a direction-distance from a referent node — visually scope = "right / above / below the referent by distance", same expressiveness as `<Node position={{ direction, of, distance }}>` but applied to a cluster instead of a single point:
+
+<ComponentPreview name="scope-at-translate" size="md" />
+
+### Offset translation
+
+`offset-translate` expresses "anchor to a referent node, then offset by (dx, dy)" — when the 8-direction + single-distance form of `at-translate` is not enough:
+
+<ComponentPreview name="scope-offset-translate" size="md" />
+
+### Rotate and scale
+
+`rotate` rotates around the scope's local origin by `degrees`; `scale` is uniform or per-axis — node sizes, font sizes, spacing, and path endpoint boundary clip all align with the scope's visual dimensions:
+
+<ComponentPreview name="scope-rotate-scale" size="md" />
+
+### Nested composition
+
+A scope can contain another scope — outer scope positions the cluster, inner scope positions children within; no depth limit:
+
+<ComponentPreview name="scope-nested-compose" size="md" />
+
+### Cross-scope references
+
+Scope does not introduce namespace isolation — child node ids register into the global nodeIndex, and outer path endpoints / `at.of` can reference them:
+
+<ComponentPreview name="scope-cross-reference" size="md" />
+
+A referenced node resolves to its **global** coordinate (with the cumulative transform chain of its containing scopes applied). The forward-reference rule matches v0.1 — the referent must appear before the reference in IR order.
+
+## Empty scope optimisation
+
+`<Scope></Scope>` with no children, no transforms, and no id → compile emits no Scene primitive; any non-empty field → a `GroupPrim` is emitted. Writing a bare `<Scope>` leaves no empty-container overhead.
+
+## API Reference
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `transforms` | `Array<Transform>` | — | Local transform list, 6 variants; applied in array order (0-th first) |
+| `children` | `ReactNode` | — | Scope children: `<Node>` / `<Path>` / `<Coordinate>` / nested `<Scope>` |
+| `id` | `string` | — | Optional scope reference id (field exposed; not consumed by the current alpha) |
+| `localNamespace` | `boolean` | `false` | Whether to create a local namespace (field exposed; not consumed by the current alpha) |
+
+## Related
+
+- [TikZ](/core/components/tikz/overview): the outermost container that owns a scope
+- [Node](/core/components/node/overview): scope's most common children; node `position` 4 shapes mirror scope translate 4 variants one-to-one
+- [Coordinate](/core/components/node/coordinate): named placeholder points inside a scope can be referenced from outside just like nodes

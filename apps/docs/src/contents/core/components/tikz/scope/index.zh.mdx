@@ -1,0 +1,112 @@
+---
+title: Scope
+description: 局部 transform 容器——把一组 children 包起来批量平移 / 旋转 / 缩放，对应 TikZ `\begin{scope}[...]`。
+---
+
+`<Scope>` 是 retikz Kernel 的第四件（与 `<Node>` / `<Path>` / `<Coordinate>` 平级）。它在 IR 层把一组子元素聚成容器，对它们应用局部 transform 链；对应 TikZ `\begin{scope}[shift=..., rotate=..., scale=...] ... \end{scope}`。
+
+## 用法
+
+```tsx
+import { Scope } from '@retikz/react';
+```
+
+```tsx
+<Scope transforms={[{ kind: 'translate', x: 50, y: 0 }]}>
+  {/* Node / Path / Coordinate / 嵌套 Scope */}
+</Scope>
+```
+
+`transforms` 是 6 变体的数组：4 个 translate 变体（笛卡尔 / 极坐标 / 方向相对 / 偏移）+ `rotate` + `scale`。数组顺序应用——第 0 个先生效（最内层），与 SVG transform list / Scene `GroupPrim` 一致。
+
+### 何时用 Scope
+
+- **批量平移子图**：一组节点 + path 形成 cluster，整体移动只改 scope 的 transform，组内节点 position 不动
+- **整体旋转**：把一段子图绕 scope 局部原点旋转，组内连线 / 标签自动跟随
+- **嵌套坐标系**：外层定位 cluster，内层再定位 cluster 内子节点，层级表达比手算绝对坐标清晰
+
+<Comparison target="tikz" title="Scope 对照">
+
+`<Scope transforms={[{ kind: 'translate', x: 50, y: 0 }]}>...</Scope>` 对应 TikZ 的 `\begin{scope}[shift={(50,0)}] ... \end{scope}`：在子图开始处压一层局部 transform，结束时弹出。TikZ 多个 option 写一起按出现顺序叠加 CM；retikz `transforms` 数组按 index 顺序应用，复用 SVG / Scene 约定。
+
+</Comparison>
+
+## transforms 6 变体
+
+4 个 translate 变体一一镜像 `<Node position>` 的 4 种形态（笛卡尔 / 极坐标 / 方向相对 / 偏移），在 compile 时统一展平为笛卡尔 translate 再下沉到 Scene `GroupPrim`；`rotate` / `scale` 直接透传。
+
+| kind | 字段 | 语义 |
+|---|---|---|
+| `translate` | `{ x, y }` | 笛卡尔平移，user units |
+| `polar-translate` | `{ origin?, angle, radius }` | 极坐标平移，`origin` 为 `id` / `[x,y]` / `PolarPosition`，缺省 = 原点 |
+| `at-translate` | `{ direction, of, distance? }` | 落到 referent 节点的某方向 distance 处，`distance` 缺省走 `<TikZ nodeDistance>` |
+| `offset-translate` | `{ of, offset? }` | scope 原点 = referent 全局坐标 + `[dx, dy]`，`offset` 缺省 = `[0, 0]` |
+| `rotate` | `{ degrees, cx?, cy? }` | 旋转 degrees 度，`cx/cy` 缺省 = scope 局部原点 |
+| `scale` | `{ x, y? }` | 缩放，`y` 缺省 = `x`（等比） |
+
+数组顺序应用 = 第 0 个最先作用到子坐标。`transforms: [translate, rotate]` 表示先 translate 再 rotate；与 SVG `transform="translate(...) rotate(...)"` 同语义。
+
+## 例子
+
+### 基础平移
+
+笛卡尔 translate 是最常用形态：把一段子图整体右移 / 上移：
+
+<ComponentPreview name="scope-translate-basic" size="md" />
+
+### 极坐标平移
+
+`polar-translate` 用 angle + radius 描述 cluster 中心相对 origin 的极坐标——下面两组 cluster 用 `angle: 0` / `angle: 180`、相同 radius，对称落在 hub 左右两侧：
+
+<ComponentPreview name="scope-polar-translate" size="md" />
+
+### 方向相对平移
+
+`at-translate` 把整组节点落到 referent 节点的某方向上——视觉上 scope = "referent 右 / 上 / 下 distance 处"，与 `<Node position={{ direction, of, distance }}>` 表达力一致，但作用到一组而非单点：
+
+<ComponentPreview name="scope-at-translate" size="md" />
+
+### 偏移平移
+
+`offset-translate` 表达"以 referent 节点为锚，偏移任意 (dx, dy)"——当 `at-translate` 的 8 方向 + 单距离不够时用 offset：
+
+<ComponentPreview name="scope-offset-translate" size="md" />
+
+### 旋转与缩放
+
+`rotate` 绕 scope 局部原点旋转 degrees 度；`scale` 等比 / 分轴缩放，组内节点尺寸 + 字号 + 间距 + path 端点 boundary clip 都按 scope 视觉尺寸对齐：
+
+<ComponentPreview name="scope-rotate-scale" size="md" />
+
+### 嵌套组合
+
+scope 内可以再放 scope——外层定位 cluster，内层再定位 cluster 内的子组；嵌套深度无限制：
+
+<ComponentPreview name="scope-nested-compose" size="md" />
+
+### 跨 scope 引用
+
+scope 不引入命名空间隔离——内部 node id 注册到全局 nodeIndex，外部 path 端点 / `at.of` 都能引用：
+
+<ComponentPreview name="scope-cross-reference" size="md" />
+
+被引用的 node 取的是**全局**坐标（已 apply 它所在 scope 链的累积 transform）；前向引用规则与 v0.1 一致——被引用者必须先于引用者出现在 IR 顺序中。
+
+## 空 scope 的优化
+
+`<Scope></Scope>` 无 children、无 transforms、无 id → compile 不发任何 Scene primitive；任一非空 → 发 `GroupPrim`。这样写裸 `<Scope>` 不会留下空容器开销。
+
+## API 参考
+
+| 属性 | 类型 | 默认值 | 描述 |
+| --- | --- | --- | --- |
+| `transforms` | `Array<Transform>` | — | 局部 transform 列表，6 变体；数组顺序应用（第 0 个最先生效） |
+| `children` | `ReactNode` | — | scope 内子元素：`<Node>` / `<Path>` / `<Coordinate>` / 嵌套 `<Scope>` |
+| `id` | `string` | — | 可选 scope 引用 id（字段已暴露，当前 alpha 不消费此字段） |
+| `localNamespace` | `boolean` | `false` | 是否创建本地命名空间（字段已暴露，当前 alpha 不消费此字段） |
+
+## 相关
+
+- [TikZ](/core/components/tikz/overview)：scope 的最外层容器
+- [Node](/core/components/node/overview)：scope 内常见 children；node `position` 4 形态与 scope translate 4 变体一一镜像
+- [Coordinate](/core/components/node/coordinate)：scope 内可直接放命名占位点，跨 scope 同样可被外部引用

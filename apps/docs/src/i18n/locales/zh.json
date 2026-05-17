@@ -27,6 +27,8 @@
     "components": "组件",
     "concepts": "概念",
     "tikz": "TikZ",
+    "tikzOverview": "TikZ",
+    "tikzScope": "Scope",
     "node": "节点",
     "nodeOverview": "Node",
     "text": "Text",
