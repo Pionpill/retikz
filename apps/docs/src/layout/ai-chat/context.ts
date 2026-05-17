@@ -30,22 +30,93 @@ const diagramProtocolZh = (preference: DiagramFormatPreference): string => {
 - \`\`\`retikz-ir\`\`\`：直接给 @retikz/core 的 IR JSON。
 - \`\`\`retikz-tsx\`\`\`：JSX，仅允许 8 个 retikz 组件 — \`TikZ\` / \`Node\` / \`Path\` / \`Step\` / \`Text\` / \`Coordinate\` / \`Draw\` / \`EdgeLabel\`；props 只能是字面量（字符串 / 数字 / 布尔 / null / 数组字面量 / 对象字面量）；**禁止** 变量引用、表达式、\`.map()\`、hooks、模板插值、spread。
 
-**具体 schema（坐标 / Step kind 枚举 / Node props / Path props / Draw way DSL / 单位与画布等）以站内文档为准，不要凭训练记忆猜**。retikz API 仍在迭代，过去 TikZ 经验或类似库的字段名常与之不一致——先查再写：
+### ⚠️ 写图前**必须先看下面这段 Schema 速查**
 
-- 坐标 / 定位形式：\`/core/concepts/positioning\` · \`/core/reference/schema/placement\`
-- IR Scene / Entity / Path：\`/core/reference/schema/scene\` · \`.../entity\` · \`.../path\`
-- 各组件 props：\`/core/components/tikz\` · \`.../node/overview\` · \`.../draw/{overview,way,path,step,arrow}\`
+retikz 是新库，字段名与 TikZ / d3 / mermaid / "你训练时见过的某个 graph 库"**都不一致**。下面是 IR 顶层骨架；细节字段缺失时再查 \`/core/reference/schema/*\` 页面。**不要凭训练记忆编字段名（如 \`entities\`、\`paths\`、\`nodes\`、\`edges\` 这些都不存在）**。
+
+\`\`\`
+Scene = {
+  version: 1,              // 字面量数字 1，不是字符串 "1" / "0.1"
+  type: 'scene',           // 字面量
+  children: Array<Node | Path | Coordinate>,
+}
+
+Node = {
+  type: 'node',
+  id?: string,             // 后续 path/coordinate 引用用
+  position: [x, y] | { direction: 'right'|'above'|..., of: string, distance?: number } | { angle, radius },
+  text?: string | { lines: Array<string | { text, fill? }> },
+  shape?: 'rectangle' | 'circle' | 'ellipse' | 'diamond',  // 默认 rectangle
+  fill?, stroke?, strokeWidth?, padding?, font?, ...  // 视觉属性
+}
+
+Path = {
+  type: 'path',
+  children: Array<Step>,   // 至少 2 个 step（含 move + 至少一个绘制 step）
+  arrow?: 'none' | '->' | '<-' | '<->',
+  stroke?, strokeWidth?, dashPattern?, fill?, lineCap?, lineJoin?, ...
+}
+
+Step = {
+  type: 'step',
+  kind: 'move' | 'line' | 'arc' | 'circlePath' | 'quad' | 'cubic' | 'ellipseArc' | 'cycle',
+  to?: [x, y] | string,    // string 引用 Node/Coordinate id
+  // 各 kind 还有专属字段（如 arc: startAngle/endAngle/radius；circlePath: radius）
+}
+
+Coordinate = {
+  type: 'coordinate',
+  id: string,
+  position: [x, y] | { ... },
+}
+\`\`\`
+
+### 最小可运行范例
+
+\`\`\`retikz-ir
+{
+  "version": 1,
+  "type": "scene",
+  "children": [
+    { "type": "node", "id": "a", "position": [0, 0], "text": "Hello" },
+    { "type": "node", "id": "b", "position": [150, 0], "text": "World" },
+    {
+      "type": "path",
+      "arrow": "->",
+      "children": [
+        { "type": "step", "kind": "move", "to": "a" },
+        { "type": "step", "kind": "line", "to": "b" }
+      ]
+    }
+  ]
+}
+\`\`\`
+
+\`\`\`retikz-tsx
+<TikZ width={300} height={120}>
+  <Node id="a" position={[0, 0]}>Hello</Node>
+  <Node id="b" position={[150, 0]}>World</Node>
+  <Draw way={['a', 'b']} arrow="->" />
+</TikZ>
+\`\`\`
+
+### 复杂场景的扩展参考
+
+需要 polar 坐标 / 多段 path / Node 锚点 / Draw way DSL / EdgeLabel / 弧 / 扇形等更深字段时，下面页面给出权威字段表（用 markdown 链接引用即可，path 以 / 开头）：
+
+- 定位：\`/core/concepts/positioning\` · \`/core/reference/schema/placement\`
+- IR：\`/core/reference/schema/scene\` · \`.../entity\` · \`.../path\`
+- 组件：\`/core/components/{tikz,node/overview,draw/overview,draw/way,draw/path,draw/step,draw/arrow}\`
 - 完整范例：\`/core/examples/karl-circle\`
 
-上面这些页面已经收录在系统 prompt 末尾的 llms.txt 索引里，你能直接看到 URL；按需引用页面 path（以 / 开头）。
-不要回避——schema 不熟时务必先索引、再生成，比猜错后再修一次更省 token。`;
+这些页面已经收录在 prompt 末尾的 llms.txt 索引里。Schema 不熟时**务必参照上面速查 + 引用页面**，不要凭记忆瞎写——产出非法 IR 会被自动校验拦下，比一次写对成本高得多。`;
 
   const directive =
     preference === 'ir'
-      ? '\n\n**用户已选"仅 IR"**：只输出 ```retikz-ir```，不要给 retikz-tsx。'
+      ? '\n\n**用户已选"仅 IR"格式**：这只决定**画图时**用哪种围栏块——一律走 ```retikz-ir```，不要给 ```retikz-tsx```。常规问答、解释、列表照常用 markdown 正文回复。'
       : preference === 'tsx'
-        ? '\n\n**用户已选"仅 JSX"**：只输出 ```retikz-tsx```，不要给 retikz-ir。'
-        : '\n\n**用户选择 Auto**：简单几何用 ```retikz-tsx``` 更易读；复杂 / 嵌套深 / 节点多的拓扑用 ```retikz-ir``` 更紧凑。';
+        ? '\n\n**用户已选"仅 JSX"格式**：这只决定**画图时**用哪种围栏块——一律走 ```retikz-tsx```，不要给 ```retikz-ir```。常规问答、解释、列表照常用 markdown 正文回复。'
+        : '\n\n**用户选择 Auto**：画图时按场景挑——简单几何用 ```retikz-tsx``` 更易读；复杂 / 嵌套深 / 节点多的拓扑用 ```retikz-ir``` 更紧凑。常规问答、解释、列表照常用 markdown 正文回复。';
 
   return intro + directive;
 };
@@ -58,22 +129,93 @@ When you need to draw a diagram, use one of the two fenced blocks below; otherwi
 - \`\`\`retikz-ir\`\`\`: feed @retikz/core IR JSON directly.
 - \`\`\`retikz-tsx\`\`\`: JSX, only the 8 retikz components allowed — \`TikZ\` / \`Node\` / \`Path\` / \`Step\` / \`Text\` / \`Coordinate\` / \`Draw\` / \`EdgeLabel\`. Props must be literals (string / number / boolean / null / array literal / object literal). **No** variable references, expressions, \`.map()\`, hooks, template interpolation, or spread.
 
-**Concrete schema (coordinates / Step kind enum / Node props / Path props / Draw way DSL / units & canvas, etc.) comes from the docs — do NOT guess from training memory.** The retikz API is still evolving; prior TikZ knowledge or similar libraries' prop names often disagree. Look it up before writing:
+### ⚠️ **Read the Schema cheatsheet below BEFORE drawing**
 
-- Positioning forms: \`/core/concepts/positioning\` · \`/core/reference/schema/placement\`
-- IR Scene / Entity / Path: \`/core/reference/schema/scene\` · \`.../entity\` · \`.../path\`
-- Per-component props: \`/core/components/tikz\` · \`.../node/overview\` · \`.../draw/{overview,way,path,step,arrow}\`
+retikz is a new library; field names disagree with TikZ / d3 / mermaid / "whatever graph lib you've seen in training". Below is the IR top-level skeleton; consult \`/core/reference/schema/*\` pages for deeper details. **Do NOT guess field names from training memory (no \`entities\`, no \`paths\` top-level field, no \`nodes\`, no \`edges\`)**.
+
+\`\`\`
+Scene = {
+  version: 1,              // literal number 1, NOT string "1" / "0.1"
+  type: 'scene',           // literal
+  children: Array<Node | Path | Coordinate>,
+}
+
+Node = {
+  type: 'node',
+  id?: string,             // referenced later by path/coordinate
+  position: [x, y] | { direction: 'right'|'above'|..., of: string, distance?: number } | { angle, radius },
+  text?: string | { lines: Array<string | { text, fill? }> },
+  shape?: 'rectangle' | 'circle' | 'ellipse' | 'diamond',  // default rectangle
+  fill?, stroke?, strokeWidth?, padding?, font?, ...  // visual props
+}
+
+Path = {
+  type: 'path',
+  children: Array<Step>,   // at least 2 steps (move + at least one draw step)
+  arrow?: 'none' | '->' | '<-' | '<->',
+  stroke?, strokeWidth?, dashPattern?, fill?, lineCap?, lineJoin?, ...
+}
+
+Step = {
+  type: 'step',
+  kind: 'move' | 'line' | 'arc' | 'circlePath' | 'quad' | 'cubic' | 'ellipseArc' | 'cycle',
+  to?: [x, y] | string,    // string references a Node/Coordinate id
+  // each kind has kind-specific extras (e.g. arc: startAngle/endAngle/radius; circlePath: radius)
+}
+
+Coordinate = {
+  type: 'coordinate',
+  id: string,
+  position: [x, y] | { ... },
+}
+\`\`\`
+
+### Minimal runnable example
+
+\`\`\`retikz-ir
+{
+  "version": 1,
+  "type": "scene",
+  "children": [
+    { "type": "node", "id": "a", "position": [0, 0], "text": "Hello" },
+    { "type": "node", "id": "b", "position": [150, 0], "text": "World" },
+    {
+      "type": "path",
+      "arrow": "->",
+      "children": [
+        { "type": "step", "kind": "move", "to": "a" },
+        { "type": "step", "kind": "line", "to": "b" }
+      ]
+    }
+  ]
+}
+\`\`\`
+
+\`\`\`retikz-tsx
+<TikZ width={300} height={120}>
+  <Node id="a" position={[0, 0]}>Hello</Node>
+  <Node id="b" position={[150, 0]}>World</Node>
+  <Draw way={['a', 'b']} arrow="->" />
+</TikZ>
+\`\`\`
+
+### When you need more depth
+
+For polar coordinates / multi-segment paths / Node anchors / Draw way DSL / EdgeLabel / arcs / wedges — these pages have authoritative field tables (reference by site-relative path starting with /):
+
+- Positioning: \`/core/concepts/positioning\` · \`/core/reference/schema/placement\`
+- IR: \`/core/reference/schema/scene\` · \`.../entity\` · \`.../path\`
+- Components: \`/core/components/{tikz,node/overview,draw/overview,draw/way,draw/path,draw/step,draw/arrow}\`
 - Worked example: \`/core/examples/karl-circle\`
 
-These pages are already in the llms.txt index appended to this system prompt — you can see the URLs there. Reference them by site-relative path (starting with /).
-Don't dodge it — when you're unsure about the schema, index → generate is cheaper than guess → fix later.`;
+These pages are already indexed in the llms.txt at the end of this prompt. When unsure about the schema, **follow the cheatsheet + cite the relevant page** — don't improvise. Invalid IR will be rejected by automated validation, costing more than getting it right once.`;
 
   const directive =
     preference === 'ir'
-      ? '\n\n**User chose "IR only"**: only output ```retikz-ir```, never retikz-tsx.'
+      ? '\n\n**User chose "IR only" format**: this only controls **which fenced block to use when drawing** — always use ```retikz-ir```, never ```retikz-tsx```. Normal answers, explanations, and lists should still flow as regular markdown prose.'
       : preference === 'tsx'
-        ? '\n\n**User chose "JSX only"**: only output ```retikz-tsx```, never retikz-ir.'
-        : '\n\n**User chose Auto**: prefer ```retikz-tsx``` for simple geometry (more readable); prefer ```retikz-ir``` for complex / deeply nested / many-node topologies (more compact).';
+        ? '\n\n**User chose "JSX only" format**: this only controls **which fenced block to use when drawing** — always use ```retikz-tsx```, never ```retikz-ir```. Normal answers, explanations, and lists should still flow as regular markdown prose.'
+        : '\n\n**User chose Auto**: when drawing, pick by scenario — prefer ```retikz-tsx``` for simple geometry (more readable); prefer ```retikz-ir``` for complex / deeply nested / many-node topologies (more compact). Normal answers, explanations, and lists should still flow as regular markdown prose.';
 
   return intro + directive;
 };

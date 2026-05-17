@@ -7,6 +7,7 @@ import { DEFAULT_MODELS } from '@/layout/ai-chat/models';
 import type { CustomProvider } from '@/layout/ai-chat/providers/resolve';
 import { isBuiltInProviderId, resolveProvider } from '@/layout/ai-chat/providers/resolve';
 import type { ChatErrorKind, ChatMessage, ProviderId } from '@/layout/ai-chat/providers/types';
+import { buildRepairPrompt, findInvalidRetikzBlocks } from '@/layout/ai-chat/retikz-validation';
 
 /** 主视图 vs 设置视图。empty 状态由容器组件按是否填了 key 推导，不进 store */
 type View = 'main' | 'settings';
@@ -55,6 +56,10 @@ type EphemeralState = {
   focusInputNonce: number;
   /** Wand2 润色按钮进行中标记；UI 据此 disable 按钮 + 切 spinner */
   polishingDraft: boolean;
+  /** 当前 turn 内已自动重试过几次 retikz schema 修复——防止无限循环（max 1） */
+  retikzRepairAttempts: number;
+  /** auto-repair 自递归 send 时设为 true：让被调的 send 不重置 attempts 计数 */
+  retikzRepairInProgress: boolean;
 };
 
 type Actions = {
@@ -104,7 +109,12 @@ const INITIAL_EPHEMERAL: EphemeralState = {
   draft: '',
   focusInputNonce: 0,
   polishingDraft: false,
+  retikzRepairAttempts: 0,
+  retikzRepairInProgress: false,
 };
+
+/** retikz 修复闭环允许的最大自动重试次数（每个用户 turn 内） */
+const MAX_RETIKZ_REPAIR_ATTEMPTS = 1;
 
 /**
  * AI 聊天面板 store
@@ -184,6 +194,11 @@ export const useAiChatStore = create<PersistedState & EphemeralState & Actions>(
         const model = state.models[state.providerId];
         if (!model) return;
 
+        // 用户初发 → 把上一 turn 留下的修复计数清零；auto-repair 自递归 send 时跳过（保持递增的 attempts）
+        if (!state.retikzRepairInProgress) {
+          set({ retikzRepairAttempts: 0 });
+        }
+
         const userMsg: ChatMessage = { role: 'user', content: text };
         const assistantMsg: ChatMessage = { role: 'assistant', content: '' };
         const baseMessages = [...state.messages, userMsg, assistantMsg];
@@ -251,6 +266,26 @@ export const useAiChatStore = create<PersistedState & EphemeralState & Actions>(
             return { messages: m, isGenerating: false, abortController: null };
           });
         }
+
+        // stream 收尾后扫一遍 retikz 块；非法且未触顶 → 自动追一轮 "请按 schema 重写" 的修复 prompt
+        const post = get();
+        const lastAssistant = post.messages.at(-1);
+        if (lastAssistant?.role !== 'assistant') {
+          set({ retikzRepairInProgress: false });
+          return;
+        }
+        const invalid = findInvalidRetikzBlocks(lastAssistant.content);
+        if (invalid.length === 0 || post.retikzRepairAttempts >= MAX_RETIKZ_REPAIR_ATTEMPTS) {
+          set({ retikzRepairInProgress: false });
+          return;
+        }
+        const lang = post.currentPage?.lang ?? 'zh';
+        const repairPrompt = buildRepairPrompt(invalid, lang);
+        set({
+          retikzRepairAttempts: post.retikzRepairAttempts + 1,
+          retikzRepairInProgress: true,
+        });
+        await get().send(repairPrompt);
       },
 
       abort: () => {

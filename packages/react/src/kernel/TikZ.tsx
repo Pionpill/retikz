@@ -36,7 +36,9 @@ export type TikZProps = {
 /** 递归收集 scene 里所有 PathPrim 用到的 arrow 端点 spec —— 按需注入 marker defs */
 const collectArrowSpecs = (prims: Array<ScenePrimitive>): Array<ArrowEndSpec> => {
   const out: Array<ArrowEndSpec> = [];
-  const visit = (p: ScenePrimitive): void => {
+  const visit = (p: ScenePrimitive | undefined | null): void => {
+    // 防御：上游（如 AI 生成的非法 IR、有空槽位的 group.children）可能塞 undefined，命中后直接 noop，别让属性访问抛
+    if (!p) return;
     if (p.type === 'path') {
       if (p.arrowStart) out.push(p.arrowStart);
       if (p.arrowEnd) out.push(p.arrowEnd);

@@ -90,7 +90,7 @@ export const ComponentDetailDialog: FC<ComponentDetailDialogProps> = props => {
   // Dialog 暂不出 diff mode 切换，固定 'added'（与卡片默认一致——教学场景优先看新增）
   const copyCode = view === 'ir' ? (source?.ir ?? '') : (source?.react ?? '');
   const reactDiffActive = view === 'react' && source?.reactDiff !== undefined;
-  const displayedDiff = reactDiffActive ? filterDiffByMode(source!.reactDiff!, 'added') : null;
+  const displayedDiff = reactDiffActive ? filterDiffByMode(source.reactDiff!, 'added') : null;
   const displayedCode = displayedDiff?.code ?? copyCode;
   const displayedLineKinds = displayedDiff?.lineKinds;
 

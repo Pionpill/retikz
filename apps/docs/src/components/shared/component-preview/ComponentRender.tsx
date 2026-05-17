@@ -183,7 +183,7 @@ export const ComponentRender: FC<ComponentRenderProps> = props => {
     const heading = findPrecedingHeading(containerRef.current);
     const lang = aiCurrentPage?.lang ?? 'zh';
     const pageTitle = aiCurrentPage?.title ?? '';
-    const headingText = heading?.textContent?.trim() ?? '';
+    const headingText = (heading?.textContent ?? '').trim();
     const prompt = buildAskAiPrompt(lang, pageTitle, headingText, name);
     setAiOpen(true);
     fillAiDraft(prompt);

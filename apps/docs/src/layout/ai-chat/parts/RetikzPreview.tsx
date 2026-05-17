@@ -1,8 +1,12 @@
 import { AlertCircle, ChevronDown, ChevronRight } from 'lucide-react';
 import {
+  type ErrorInfo,
   type FC,
+  Component as ReactComponent,
   type ReactElement,
   type ReactNode,
+  cloneElement,
+  isValidElement,
   useMemo,
   useState,
 } from 'react';
@@ -17,8 +21,10 @@ import {
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { parseRetikzJsx } from '@/lib/jsx-to-ir';
-import type { IR } from '@retikz/core';
+import { type IR, SceneSchema } from '@retikz/core';
 import { TikZ, convertReactNodeToIR } from '@retikz/react';
+
+import { formatZodError } from '../retikz-validation';
 
 export type RetikzPreviewFormat = 'ir' | 'tsx';
 
@@ -33,10 +39,17 @@ type Resolved =
   | { ok: true; Component: FC; renderSource: ComponentRenderSource }
   | { ok: false; errorKind: 'ir' | 'tsx'; errorDetail: string };
 
+/**
+ * AI 生成的 retikz 渲染默认 SVG 尺寸
+ * @description IR 路径 AI 不会主动写 width/height；TSX 路径 AI 偶尔也漏。给个兜底让 SVG 有 intrinsic size，配合 `[&_svg]:max-w-full [&_svg]:h-auto` 缩放
+ */
+const DEFAULT_TIKZ_WIDTH = 400;
+const DEFAULT_TIKZ_HEIGHT = 300;
+
 const resolveIr = (source: string): Resolved => {
-  let ir: IR;
+  let raw: unknown;
   try {
-    ir = JSON.parse(source) as IR;
+    raw = JSON.parse(source);
   } catch (err) {
     return {
       ok: false,
@@ -44,7 +57,18 @@ const resolveIr = (source: string): Resolved => {
       errorDetail: err instanceof Error ? err.message : String(err),
     };
   }
-  const Component: FC = () => <TikZ ir={ir} />;
+  // zod schema 校验：AI 常凭训练记忆编一套不同形状的 IR（如 `entities` / `paths` 顶层、version `"0.1"`），不挡的话进 TikZ 直接 runtime 炸
+  const parsed = SceneSchema.safeParse(raw);
+  if (!parsed.success) {
+    return {
+      ok: false,
+      errorKind: 'ir',
+      errorDetail: `schema mismatch — ${formatZodError(parsed.error)}`,
+    };
+  }
+  const ir: IR = parsed.data;
+  // 强制传 width/height：SVG 不带 width/height attr 时 flex 容器里浏览器算 intrinsic size 不一致（Chrome 偶尔 0×0），导致看似"没渲染"
+  const Component: FC = () => <TikZ ir={ir} width={DEFAULT_TIKZ_WIDTH} height={DEFAULT_TIKZ_HEIGHT} />;
   // ComponentRender 只展示 IR 视图：source.react 留空即可触发"单视图、不出 toggle"分支
   return { ok: true, Component, renderSource: { ir: formatIR(ir) } };
 };
@@ -52,8 +76,15 @@ const resolveIr = (source: string): Resolved => {
 const resolveTsx = (source: string): Resolved => {
   const parsed = parseRetikzJsx(source);
   if (!parsed.ok) return { ok: false, errorKind: 'tsx', errorDetail: parsed.error };
-  const element = parsed.element as ReactElement<{ children?: ReactNode }>;
-  const Component: FC = () => element;
+  const element = parsed.element as ReactElement<{ children?: ReactNode; width?: number; height?: number }>;
+  // 同 IR 路径：AI 偶尔写 `<TikZ>...` 不带 width/height，cloneElement 补默认。已有的 width/height 不动
+  const enriched = isValidElement(element)
+    ? cloneElement(element, {
+        width: element.props.width ?? DEFAULT_TIKZ_WIDTH,
+        height: element.props.height ?? DEFAULT_TIKZ_HEIGHT,
+      })
+    : element;
+  const Component: FC = () => enriched;
   let irJson: string;
   try {
     irJson = formatIR(convertReactNodeToIR(element.props.children));
@@ -76,6 +107,19 @@ export const RetikzPreview: FC<RetikzPreviewProps> = props => {
   );
 
   if (!resolved.ok) {
+    // AI 经常用 retikz-tsx 围栏块写"改动片段"（裸的几行 <Node>，不带 <TikZ> 外壳）来说明 diff——
+    // 这种情况 parser 报 "Adjacent JSX elements must be wrapped in an enclosing tag"。
+    // 降级成 plain code block：用户看的是改动片段，不是要再跑一次预览
+    if (
+      resolved.errorKind === 'tsx' &&
+      /Adjacent JSX elements must be wrapped/i.test(resolved.errorDetail)
+    ) {
+      return (
+        <div className="my-3">
+          <CodeBlock lang="tsx" code={source} />
+        </div>
+      );
+    }
     return (
       <RetikzPreviewError
         format={format}
@@ -86,15 +130,61 @@ export const RetikzPreview: FC<RetikzPreviewProps> = props => {
     );
   }
   return (
-    <ComponentRender
-      name={`retikz-${format}`}
-      Component={resolved.Component}
-      source={resolved.renderSource}
-      align="center"
-      size="sm"
-    />
+    // key=source：source 变（AI 流式追加 / 重发）时 boundary 重新挂载，否则错过一次后 error 状态会一直锁住
+    <RetikzRenderErrorBoundary key={source} format={format} source={source}>
+      <ComponentRender
+        name={`retikz-${format}`}
+        Component={resolved.Component}
+        source={resolved.renderSource}
+        align="center"
+        size="sm"
+        // AI 面板宽度有限，AI 生成的 TikZ 常自带 `width/height` 像素值，让 svg max-width 跟容器、height 按 viewBox 比例自适应，避免撑大侧栏
+        componentClassName="min-w-0 [&_svg]:max-w-full [&_svg]:h-auto"
+      />
+    </RetikzRenderErrorBoundary>
   );
 };
+
+/**
+ * 局部 ErrorBoundary：抓 ComponentRender 子树里 TikZ 编译 / 渲染抛的 runtime 异常
+ * @description AI 生成的 IR 可能解析成功（JSON 合法）但 compileToScene 后字段不全 / 不一致，render 阶段抛错。
+ *   不拦的话整个 AI 面板崩；这里降级为同款 RetikzPreviewError 错误卡，让用户能看到原文 + 报错并让 AI 重试
+ */
+type RetikzRenderErrorBoundaryProps = {
+  format: RetikzPreviewFormat;
+  source: string;
+  children: ReactNode;
+};
+
+type RetikzRenderErrorBoundaryState = { error: Error | null };
+
+class RetikzRenderErrorBoundary extends ReactComponent<
+  RetikzRenderErrorBoundaryProps,
+  RetikzRenderErrorBoundaryState
+> {
+  override state: RetikzRenderErrorBoundaryState = { error: null };
+
+  static getDerivedStateFromError(error: Error): RetikzRenderErrorBoundaryState {
+    return { error };
+  }
+
+  override componentDidCatch(error: Error, info: ErrorInfo): void {
+    console.error('[RetikzPreview] render error:', error, info.componentStack);
+  }
+
+  override render(): ReactNode {
+    const { error } = this.state;
+    if (!error) return this.props.children;
+    return (
+      <RetikzPreviewError
+        format={this.props.format}
+        source={this.props.source}
+        errorKind={this.props.format}
+        errorDetail={error.message}
+      />
+    );
+  }
+}
 
 type RetikzPreviewErrorProps = {
   format: RetikzPreviewFormat;
