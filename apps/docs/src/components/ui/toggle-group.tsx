@@ -48,16 +48,18 @@ function ToggleGroup({
   )
 }
 
-// 走 forwardRef 而非 FC 函数声明：项目 React 18.2 下 FC 不接 ref，radix Tooltip / DropdownMenu 等 asChild 包装会丢 ref 导致 popper 定位失败
-const ToggleGroupItem = React.forwardRef<
-  React.ElementRef<typeof ToggleGroupPrimitive.Item>,
-  React.ComponentProps<typeof ToggleGroupPrimitive.Item> & VariantProps<typeof toggleVariants>
->(({ className, children, variant, size, ...props }, ref) => {
+function ToggleGroupItem({
+  className,
+  children,
+  variant,
+  size,
+  ...props
+}: React.ComponentProps<typeof ToggleGroupPrimitive.Item> &
+  VariantProps<typeof toggleVariants>) {
   const context = React.useContext(ToggleGroupContext)
 
   return (
     <ToggleGroupPrimitive.Item
-      ref={ref}
       data-slot="toggle-group-item"
       data-variant={context.variant || variant}
       data-size={context.size || size}
@@ -76,7 +78,6 @@ const ToggleGroupItem = React.forwardRef<
       {children}
     </ToggleGroupPrimitive.Item>
   )
-})
-ToggleGroupItem.displayName = "ToggleGroupItem"
+}
 
 export { ToggleGroup, ToggleGroupItem }

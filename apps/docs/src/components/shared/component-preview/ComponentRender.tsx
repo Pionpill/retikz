@@ -4,7 +4,6 @@ import { type FC, useEffect, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
 import { useAiChatStore } from '@/store/useAiChatStore';
 import { useComponentPreviewStore } from '@/store/useComponentPreviewStore';
@@ -235,108 +234,75 @@ export const ComponentRender: FC<ComponentRenderProps> = props => {
                 <div className="flex items-center gap-1">
                   {showViewToggle ? <ViewToggle view={view} onChange={setView} /> : null}
                 </div>
-                <TooltipProvider delayDuration={150}>
-                  <div className="flex items-center gap-1">
-                    {showDiffPicker && (
-                      <ToggleGroup
-                        type="single"
-                        variant="outline"
-                        value={diffMode}
-                        onValueChange={value => {
-                          // radix 单选 ToggleGroup 在点击已激活项时会回 ''（取消选择）；这里禁掉取消，保证 diffMode 始终有 mode
-                          if (value === 'off' || value === 'added' || value === 'removed' || value === 'full') {
-                            setLocalDiffMode(value);
-                          }
-                        }}
-                        className="mr-1"
+                {/* 工具条上每个按钮用 native title 而非 radix Tooltip + asChild：
+                   项目 React 18.2 下 shadcn Button / DropdownMenuTrigger / TooltipTrigger 都是 FC 不 forwardRef，
+                   `<TooltipTrigger asChild>` 透传 ref 给 FC 会触发 React warning + 偶发未捕获错误把整树 unmount。
+                   原生 title 没 portal / ref 链路，最稳。视觉上 toolbar 已经 icon-only + aria-label，可达性不丢 */}
+                <div className="flex items-center gap-1">
+                  {showDiffPicker && (
+                    <ToggleGroup
+                      type="single"
+                      variant="outline"
+                      value={diffMode}
+                      onValueChange={value => {
+                        // radix 单选 ToggleGroup 在点击已激活项时会回 ''（取消选择）；这里禁掉取消，保证 diffMode 始终有 mode
+                        if (value === 'off' || value === 'added' || value === 'removed' || value === 'full') {
+                          setLocalDiffMode(value);
+                        }
+                      }}
+                      className="mr-1"
+                    >
+                      <ToggleGroupItem
+                        value="off"
+                        aria-label="Diff off"
+                        title="Off"
+                        className="h-7 min-w-7 cursor-pointer px-1.5"
                       >
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <ToggleGroupItem
-                              value="off"
-                              aria-label="Diff off"
-                              className="h-7 min-w-7 cursor-pointer px-1.5"
-                            >
-                              <Ban className="size-3.5" />
-                            </ToggleGroupItem>
-                          </TooltipTrigger>
-                          <TooltipContent>Off</TooltipContent>
-                        </Tooltip>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <ToggleGroupItem
-                              value="added"
-                              aria-label="Added only"
-                              className="h-7 min-w-7 cursor-pointer px-1.5"
-                            >
-                              <Plus className="size-3.5" />
-                            </ToggleGroupItem>
-                          </TooltipTrigger>
-                          <TooltipContent>Added only</TooltipContent>
-                        </Tooltip>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <ToggleGroupItem
-                              value="removed"
-                              aria-label="Removed only"
-                              className="h-7 min-w-7 cursor-pointer px-1.5"
-                            >
-                              <Minus className="size-3.5" />
-                            </ToggleGroupItem>
-                          </TooltipTrigger>
-                          <TooltipContent>Removed only</TooltipContent>
-                        </Tooltip>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <ToggleGroupItem
-                              value="full"
-                              aria-label="Full diff"
-                              className="h-7 min-w-7 cursor-pointer px-1.5"
-                            >
-                              <Diff className="size-3.5" />
-                            </ToggleGroupItem>
-                          </TooltipTrigger>
-                          <TooltipContent>Full diff</TooltipContent>
-                        </Tooltip>
-                      </ToggleGroup>
-                    )}
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <CopyButton copied={copied} onCopy={handleCopy} />
-                      </TooltipTrigger>
-                      <TooltipContent>{copied ? 'Copied' : 'Copy'}</TooltipContent>
-                    </Tooltip>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <ToolbarIconButton label="Ask AI" onClick={handleAskAi}>
-                          <BotMessageSquare className="size-4" />
-                        </ToolbarIconButton>
-                      </TooltipTrigger>
-                      <TooltipContent>Ask AI</TooltipContent>
-                    </Tooltip>
-                    {displayedLineCount > COLLAPSE_THRESHOLD_LINES && (
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <ToolbarIconButton
-                            label={isExpanded ? 'Collapse' : 'Expand'}
-                            onClick={() => setLocalIsExpanded(!isExpanded)}
-                          >
-                            {isExpanded ? <ChevronsDownUp className="size-4" /> : <ChevronsUpDown className="size-4" />}
-                          </ToolbarIconButton>
-                        </TooltipTrigger>
-                        <TooltipContent>{isExpanded ? 'Collapse' : 'Expand'}</TooltipContent>
-                      </Tooltip>
-                    )}
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <ToolbarIconButton label="Hide source" onClick={handleHideAll}>
-                          <X className="size-4" />
-                        </ToolbarIconButton>
-                      </TooltipTrigger>
-                      <TooltipContent>Hide source</TooltipContent>
-                    </Tooltip>
-                  </div>
-                </TooltipProvider>
+                        <Ban className="size-3.5" />
+                      </ToggleGroupItem>
+                      <ToggleGroupItem
+                        value="added"
+                        aria-label="Added only"
+                        title="Added only"
+                        className="h-7 min-w-7 cursor-pointer px-1.5"
+                      >
+                        <Plus className="size-3.5" />
+                      </ToggleGroupItem>
+                      <ToggleGroupItem
+                        value="removed"
+                        aria-label="Removed only"
+                        title="Removed only"
+                        className="h-7 min-w-7 cursor-pointer px-1.5"
+                      >
+                        <Minus className="size-3.5" />
+                      </ToggleGroupItem>
+                      <ToggleGroupItem
+                        value="full"
+                        aria-label="Full diff"
+                        title="Full diff"
+                        className="h-7 min-w-7 cursor-pointer px-1.5"
+                      >
+                        <Diff className="size-3.5" />
+                      </ToggleGroupItem>
+                    </ToggleGroup>
+                  )}
+                  <CopyButton copied={copied} onCopy={handleCopy} title={copied ? 'Copied' : 'Copy'} />
+                  <ToolbarIconButton label="Ask AI" title="Ask AI" onClick={handleAskAi}>
+                    <BotMessageSquare className="size-4" />
+                  </ToolbarIconButton>
+                  {displayedLineCount > COLLAPSE_THRESHOLD_LINES && (
+                    <ToolbarIconButton
+                      label={isExpanded ? 'Collapse' : 'Expand'}
+                      title={isExpanded ? 'Collapse' : 'Expand'}
+                      onClick={() => setLocalIsExpanded(!isExpanded)}
+                    >
+                      {isExpanded ? <ChevronsDownUp className="size-4" /> : <ChevronsUpDown className="size-4" />}
+                    </ToolbarIconButton>
+                  )}
+                  <ToolbarIconButton label="Hide source" title="Hide source" onClick={handleHideAll}>
+                    <X className="size-4" />
+                  </ToolbarIconButton>
+                </div>
               </div>
               <Separator className="opacity-40" />
             </>

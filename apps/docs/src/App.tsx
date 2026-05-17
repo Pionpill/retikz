@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Navigate, Route, Routes, useParams } from 'react-router';
 import { Toaster, toast } from 'sonner';
 
+import { AppErrorBoundary } from './components/shared/error-boundary';
 import type { Section } from './data/interface';
 import { coreSection } from './data/core';
 import { modules } from './data/module';
@@ -117,7 +118,7 @@ const useDocShortcuts = () => {
 export const App = () => {
   useDocShortcuts();
   return (
-    <>
+    <AppErrorBoundary>
       <Routes>
         <Route element={<ViewLayout />}>
           <Route element={<DocLayout />}>
@@ -131,6 +132,6 @@ export const App = () => {
         </Route>
       </Routes>
       <Toaster position="top-center" />
-    </>
+    </AppErrorBoundary>
   );
 };

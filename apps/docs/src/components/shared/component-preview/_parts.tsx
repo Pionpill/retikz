@@ -1,5 +1,5 @@
 import { Check, Copy } from 'lucide-react';
-import { forwardRef, type ComponentProps, type FC, type ReactNode } from 'react';
+import { type ComponentProps, type FC, type ReactNode } from 'react';
 
 import { JsonIcon, ReactIcon } from '@/components/icons';
 import { Button, buttonVariants } from '@/components/ui/button';
@@ -9,19 +9,17 @@ import type { SourceView } from './_shared';
 
 /**
  * 工具条小号 ghost icon button
- * @description 统一外观（size-7、rounded-sm、muted 色）；透传 button 属性 + `pressed` toggle 态（变 secondary + aria-pressed）。
- *   走 `forwardRef` + 内部渲染原生 `<button>`（绕开 shadcn `Button` FC）：项目 React 18.2 下 FC 不接 ref，让 radix `asChild`（Tooltip / DropdownMenu）能拿到 trigger DOM 做定位
+ * @description 统一外观（size-7、rounded-sm、muted 色）；透传 button 属性 + `pressed` toggle 态（变 secondary + aria-pressed）
  */
 export type ToolbarIconButtonProps = Omit<ComponentProps<'button'>, 'aria-label'> & {
   label: string;
   pressed?: boolean;
 };
 
-export const ToolbarIconButton = forwardRef<HTMLButtonElement, ToolbarIconButtonProps>((props, ref) => {
+export const ToolbarIconButton: FC<ToolbarIconButtonProps> = props => {
   const { label, pressed, className, children, ...rest } = props;
   return (
     <button
-      ref={ref}
       type="button"
       aria-label={label}
       aria-pressed={pressed}
@@ -35,8 +33,7 @@ export const ToolbarIconButton = forwardRef<HTMLButtonElement, ToolbarIconButton
       {children}
     </button>
   );
-});
-ToolbarIconButton.displayName = 'ToolbarIconButton';
+};
 
 /**
  * React / IR 视图切换的两连按钮
@@ -104,14 +101,14 @@ export type CopyButtonProps = {
   copied: boolean;
   onCopy: () => void;
   className?: string;
+  title?: string;
 };
 
-export const CopyButton = forwardRef<HTMLButtonElement, CopyButtonProps>((props, ref) => {
-  const { copied, onCopy, className } = props;
+export const CopyButton: FC<CopyButtonProps> = props => {
+  const { copied, onCopy, className, title } = props;
   return (
-    <ToolbarIconButton ref={ref} label={copied ? 'Copied' : 'Copy'} onClick={onCopy} className={className}>
+    <ToolbarIconButton label={copied ? 'Copied' : 'Copy'} title={title} onClick={onCopy} className={className}>
       {copied ? <Check className="size-4" /> : <Copy className="size-4" />}
     </ToolbarIconButton>
   );
-});
-CopyButton.displayName = 'CopyButton';
+};
