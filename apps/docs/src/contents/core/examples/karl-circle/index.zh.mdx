@@ -1,6 +1,6 @@
 ---
 title: Karl 单位圆
-description: 30° 角下 sin / cos / tan 的几何关系示意——从一个圆开始，七步搭出完整图，端到端走一遍 Path / Draw / Coordinate / Node 的组合用法
+description: 学术 / 教材类绘图示例——30° 角下 sin / cos / tan 的几何关系示意：从一个圆开始，七步搭出完整图，端到端走一遍 Path / Draw / Coordinate / Node 的组合用法
 ---
 
 ## 引言
@@ -43,6 +43,11 @@ description: 30° 角下 sin / cos / tan 的几何关系示意——从一个圆
 - α 文字在扇形内（极坐标 15°, 22px）
 - 每条函数线带各自名字 label
 - 右侧多行信息框，每行可单独着色，分别说明 α / sin / cos / tan 的值与对应颜色`}
+  extensions={[
+    '**改成钝角（120°）版本**：把角度从 30° 换成 120°，看 cos 取负值时几何上是什么样——sin 投影点会落到 y 轴左侧，tan 切线方向也跟着翻转。',
+    '**画齐六个三角函数**：在同一张图里把 sec / csc / cot 也按几何定义画出来——sec 是 x 轴上的截距，csc 是 y 轴上的截距，cot 是 (0, 1) 处水平切线与原点射线的交点距离。',
+    '**多角度小图并排对比**：用 3 张 ComponentPreview 并排，分别画 30° / 60° / 120° 的同款图，便于一眼对比 sin / cos / tan 随角度的几何变化。',
+  ]}
 />
 
 ## 过程

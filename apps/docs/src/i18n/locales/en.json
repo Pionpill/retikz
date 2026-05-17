@@ -109,7 +109,9 @@
     "copiedToast": "Prompt copied",
     "copyFailedToast": "Copy failed — please select the text manually",
     "copyTemplate": "Help me draw a figure with retikz.\n\n[retikz context]\n- Docs index (use as MCP / llms.txt): {{url}}\n- Use any API from `@retikz/react` / `@retikz/core`; for unfamiliar components / IR fields / sugar / parsers, look them up via the index above — don't guess from training data\n\n[task]\n{{content}}",
-    "pageLinkTemplate": "{{content}}\n\n— From retikz docs: {{url}}"
+    "pageLinkTemplate": "{{content}}\n\n— From retikz docs: {{url}}",
+    "extensionsLabel": "Also try these to broaden your thinking",
+    "sendTooltip": "Send to AI chat"
   },
   "page": {
     "copyPage": "Copy Page",

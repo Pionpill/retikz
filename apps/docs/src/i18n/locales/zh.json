@@ -109,7 +109,9 @@
     "copiedToast": "已复制 prompt",
     "copyFailedToast": "复制失败，请手动选中文本复制",
     "copyTemplate": "你要帮我用 retikz 画一张图。\n\n【retikz 上下文】\n- 文档索引（可当 MCP / llms.txt 用）：{{url}}\n- 用 `@retikz/react` / `@retikz/core` 提供的任意 API 完成；遇到不熟悉的组件 / IR 字段 / Sugar / 解析器先查上面的索引，不要凭训练数据猜\n\n【任务】\n{{content}}",
-    "pageLinkTemplate": "{{content}}\n\n— 来自 retikz 文档：{{url}}"
+    "pageLinkTemplate": "{{content}}\n\n— 来自 retikz 文档：{{url}}",
+    "extensionsLabel": "还可以试试这些发散思路",
+    "sendTooltip": "发送到 AI 对话"
   },
   "page": {
     "copyPage": "复制页面",

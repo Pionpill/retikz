@@ -123,6 +123,8 @@ export const ComponentRender: FC<ComponentRenderProps> = props => {
     usePanZoom();
   // outer card ref：Ask AI 时反查最近前置 heading 拼 prompt 用
   const containerRef = useRef<HTMLDivElement>(null);
+  // 渲染区内 transform 容器的 ref：下载时从里头 querySelector('svg') 拿到当前展示的 SVG 节点
+  const renderPaneRef = useRef<HTMLDivElement>(null);
   const setAiOpen = useAiChatStore(s => s.setOpen);
   const fillAiDraft = useAiChatStore(s => s.fillDraftAndFocus);
   const aiCurrentPage = useAiChatStore(s => s.currentPage);
@@ -184,6 +186,32 @@ export const ComponentRender: FC<ComponentRenderProps> = props => {
     setView('react');
   };
 
+  /**
+   * 下载当前渲染图。目前 retikz 只输出 SVG，所以直接序列化 SVG → blob → 触发 anchor 点击。
+   * @todo 等渲染管线支持 canvas / WebGPU 后台后，把这里改成多格式 picker（SVG / PNG / JPEG / WebP），
+   *   PNG/JPEG 走 `new Image() + canvas.drawImage` 路径（注意外部字体 / CSS var 在 canvas 里的 fallback）
+   */
+  const handleDownload = () => {
+    const svg = renderPaneRef.current?.querySelector('svg');
+    if (!svg) return;
+    let source = new XMLSerializer().serializeToString(svg);
+    // 序列化 React 渲染出的 svg 不一定带 xmlns；离线打开 / 嵌别处时缺它会被当 HTML 解析
+    if (!/\sxmlns=/.test(source)) {
+      source = source.replace(/<svg\b/, '<svg xmlns="http://www.w3.org/2000/svg"');
+    }
+    const blob = new Blob([`<?xml version="1.0" encoding="UTF-8"?>\n${source}`], {
+      type: 'image/svg+xml;charset=utf-8',
+    });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${name || 'retikz'}.svg`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
   const handleAskAi = () => {
     const heading = findPrecedingHeading(containerRef.current);
     const lang = aiCurrentPage?.lang ?? 'zh';
@@ -214,6 +242,7 @@ export const ComponentRender: FC<ComponentRenderProps> = props => {
         onClick={() => setToolbarPinned(prev => !prev)}
       >
         <div
+          ref={renderPaneRef}
           className={cn('flex items-center justify-center', !isDragging && 'transition-transform duration-150')}
           style={{ transform: transformStyle }}
         >
@@ -230,6 +259,7 @@ export const ComponentRender: FC<ComponentRenderProps> = props => {
           onMaximize={() => setIsMaximized(true)}
           size={effectiveSize}
           onSizeChange={setLocalSize}
+          onDownload={handleDownload}
           pinned={toolbarPinned}
         />
       </div>

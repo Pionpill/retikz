@@ -1,5 +1,5 @@
 import { type FC } from 'react';
-import { ArrowDown, ArrowLeft, ArrowRight, ArrowUp, Hand, Maximize2, RotateCcw, ZoomIn, ZoomOut } from 'lucide-react';
+import { ArrowDown, ArrowLeft, ArrowRight, ArrowUp, Download, Hand, Maximize2, RotateCcw, ZoomIn, ZoomOut } from 'lucide-react';
 
 import { Separator } from '@/components/ui/separator';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
@@ -21,6 +21,8 @@ export type PanZoomToolbarProps = {
   /** 当前 size 档位（受控）+ 切换回调；用户在工具条里改完后由父级 ComponentRender 落到 sizeClass */
   size: SizeKey;
   onSizeChange: (next: SizeKey) => void;
+  /** 下载当前渲染图（目前仅支持 SVG；未来通过 canvas 转 PNG / JPEG 再开多格式） */
+  onDownload: () => void;
   /**
    * 强制可见（覆盖 hover-only 默认）；移动端没有 hover，由父级通过 tap 切换 pinned 真值。
    * 未指定时沿用原 group-hover/focus-within 显示规则
@@ -50,6 +52,7 @@ export const PanZoomToolbar: FC<PanZoomToolbarProps> = props => {
     onMaximize,
     size,
     onSizeChange,
+    onDownload,
     pinned,
   } = props;
   return (
@@ -106,6 +109,9 @@ export const PanZoomToolbar: FC<PanZoomToolbarProps> = props => {
           className="md:hidden"
         >
           <RotateCcw className="size-3.5" />
+        </ToolbarIconButton>
+        <ToolbarIconButton label="Download SVG" onClick={onDownload}>
+          <Download className="size-3.5" />
         </ToolbarIconButton>
         <ToolbarIconButton label="Maximize" onClick={onMaximize} className="hidden md:inline-flex">
           <Maximize2 className="size-3.5" />

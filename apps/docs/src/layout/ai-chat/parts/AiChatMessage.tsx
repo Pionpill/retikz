@@ -24,25 +24,32 @@ export type AiChatMessageProps = {
 export const AiChatMessage: FC<AiChatMessageProps> = ({ message, isStreaming }) => {
   const { t } = useTranslation();
   if (message.role === 'user') {
-    // autoSent（系统自动追的修复 prompt）样式区别于真用户气泡：左对齐、虚线边框、小号 Bot 头标记 + 灰底
+    // autoSent（系统自动追的修复 prompt）样式区别于真用户气泡：左对齐、虚线边框、小号 Bot 头标记 + 灰底；
+    // 走 renderMarkdown 但关掉 retikz live 渲染（消息体里嵌的是上一轮的非法源码，再 live 一次只是再失败一次）
     if (message.autoSent) {
       return (
         <div className="flex justify-start">
           <div className="flex max-w-[90%] items-start gap-1.5 rounded-md border border-dashed border-muted-foreground/30 bg-muted/30 px-2.5 py-1.5 text-xs text-muted-foreground">
             <Bot className="mt-0.5 size-3.5 shrink-0 text-muted-foreground/70" />
-            <div className="min-w-0 space-y-1">
+            <div className="min-w-0 flex-1 space-y-1">
               <div className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground/70">
                 {t('ai.autoSentBadge')}
               </div>
-              <div className="whitespace-pre-wrap break-words">{message.content}</div>
+              <div className="min-w-0 break-words [&>:first-child]:mt-0 [&>:last-child]:mb-0">
+                {renderMarkdown(message.content, { liveRetikz: false })}
+              </div>
             </div>
           </div>
         </div>
       );
     }
+    // 真用户气泡：同样跑 markdown 渲染，支持 ``` 围栏代码、列表、bold、链接；retikz 围栏 live render
+    // （用户偶尔粘贴的 retikz 示例也能直接显示渲染图）；first/last 块 margin 重置以贴合气泡内边距
     return (
       <div className="flex justify-end">
-        <div className="max-w-[85%] whitespace-pre-wrap rounded-2xl bg-muted px-3 py-2 text-sm">{message.content}</div>
+        <div className="max-w-[85%] min-w-0 rounded-2xl bg-muted px-3 py-2 text-sm break-words [&>:first-child]:mt-0 [&>:last-child]:mb-0">
+          {renderMarkdown(message.content)}
+        </div>
       </div>
     );
   }
@@ -187,8 +194,18 @@ const renderInline = (src: string): ReactNode => {
   return nodes.map((n, idx) => <Fragment key={idx}>{n}</Fragment>);
 };
 
-const renderMarkdown = (src: string): ReactNode => {
+type RenderMarkdownOptions = {
+  /**
+   * retikz 围栏块是否走 live 渲染（默认 true）
+   * @description false 时把 retikz 块当作普通 CodeBlock 显示，不再实例化 RetikzPreview。
+   *   用于 autoSent 修复反馈：消息里嵌着 AI 上一轮的非法源码，再 live render 一次会再失败一次徒增噪声
+   */
+  liveRetikz?: boolean;
+};
+
+const renderMarkdown = (src: string, options: RenderMarkdownOptions = {}): ReactNode => {
   if (!src) return null;
+  const { liveRetikz = true } = options;
   const blocks = parseBlocks(src);
   return blocks.map((b, i) => {
     if (b.type === 'code') {
@@ -199,6 +216,13 @@ const renderMarkdown = (src: string): ReactNode => {
       );
     }
     if (b.type === 'retikz') {
+      if (!liveRetikz) {
+        return (
+          <div key={i} className="my-2">
+            <CodeBlock lang={`retikz-${b.format}`} code={b.source} />
+          </div>
+        );
+      }
       return <RetikzPreview key={i} format={b.format} source={b.source} />;
     }
     if (b.type === 'retikz-pending') {

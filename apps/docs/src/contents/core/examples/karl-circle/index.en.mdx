@@ -1,6 +1,6 @@
 ---
 title: Karl's Unit Circle
-description: sin / cos / tan geometry for a 30° angle — start from a circle and grow the figure in seven steps, exercising Path / Draw / Coordinate / Node side by side
+description: Academic illustration example — sin / cos / tan geometry for a 30° angle: start from a circle and grow the figure in seven steps, exercising Path / Draw / Coordinate / Node side by side
 ---
 
 ## Introduction
@@ -43,6 +43,11 @@ Send the prompt below to the AI chat panel — the LLM will produce retikz IR / 
 - α inside the wedge (polar 15°, 22px from origin)
 - each function line carries its own name label
 - right-hand multi-line info box, per-line color, describing α / sin / cos / tan values`}
+  extensions={[
+    "**Switch to an obtuse angle (120°)**: change the angle from 30° to 120° and see what it looks like geometrically when cos goes negative — the sin projection lands on the left side of the y-axis, and the tan tangent flips with it.",
+    "**Draw all six trig functions**: add sec / csc / cot to the same figure following their geometric definitions — sec as the x-axis intercept, csc as the y-axis intercept, cot as the distance from (0, 1) along the horizontal tangent to where the origin ray hits.",
+    "**Side-by-side angle comparison**: render three ComponentPreviews in a row for 30° / 60° / 120° using the same diagram, so the geometric change in sin / cos / tan across angles is visible at a glance.",
+  ]}
 />
 
 ## Steps
