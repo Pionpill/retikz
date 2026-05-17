@@ -18,12 +18,14 @@ const mdxLoaders: Record<string, MdxLoader | undefined> = import.meta.glob<strin
 const buildKey = (segments: Array<string>, lang: string) =>
   `../../contents/${segments.join('/')}/index.${lang}.mdx`;
 
-/** 优先取当前语言；该语言缺文件时按 LANGS 顺序回退 */
-const resolveLoader = (segments: Array<string>, lang: Lang) => {
+type ResolvedLoader = { loader: MdxLoader; lang: Lang };
+
+/** 优先取当前语言；该语言缺文件时按 LANGS 顺序回退；返回命中的语言以便上层判 fallback */
+const resolveLoader = (segments: Array<string>, lang: Lang): ResolvedLoader | null => {
   const candidates = [lang, ...LANGS.filter(l => l !== lang)];
   for (const candidate of candidates) {
     const loader = mdxLoaders[buildKey(segments, candidate)];
-    if (loader) return loader;
+    if (loader) return { loader, lang: candidate };
   }
   return null;
 };
@@ -35,6 +37,8 @@ export type UseMdxSourceResult = {
   isLoading: boolean;
   /** 路径对应的 mdx 文件不存在（含语言回退后仍然找不到） */
   notFound: boolean;
+  /** 实际命中的语言；缺当前语言回退到其它语言时即为 fallback 后的 lang */
+  resolvedLang: Lang | null;
 };
 
 /**
@@ -46,10 +50,15 @@ export const useMdxSource = (): UseMdxSourceResult => {
   const loc = useDocLocation();
   const lang = (i18n.resolvedLanguage ?? 'zh') as Lang;
 
-  const loader = useMemo(() => {
+  const resolved = useMemo(() => {
     if (!loc) return null;
     return resolveLoader(docPathSegments(loc), lang);
   }, [loc, lang]);
+
+  // 单独把 loader 函数引用拎出来——`mdxLoaders[key]` 同 key 永远同一个函数引用，identity 稳定；
+  // 反观 `resolved` 是每次 useMemo 跑出来的新对象字面量，identity 不稳，直接喂给 useEffect 会让 fetch 死循环
+  const loader = resolved?.loader ?? null;
+  const resolvedLang = resolved?.lang ?? null;
 
   const [state, setState] = useState<{ loader: MdxLoader | null; source: string }>({
     loader: null,
@@ -74,5 +83,6 @@ export const useMdxSource = (): UseMdxSourceResult => {
     source: loader && isCurrent ? state.source : null,
     isLoading: !!loader && !isCurrent,
     notFound: !loader,
+    resolvedLang,
   };
 };

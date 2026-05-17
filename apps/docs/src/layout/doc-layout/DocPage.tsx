@@ -1,3 +1,4 @@
+import { BlogFrontmatter } from '@/components/shared/blog-frontmatter';
 import type { MdxFrontmatter } from '@/components/shared/mdx-content';
 import { InlineMdx, MdxContent, MdxToc } from '@/components/shared/mdx-content';
 import { getSectionsByModule } from '@/data/sections';
@@ -38,7 +39,7 @@ export const DocPage: FC<DocPageProps> = props => {
   /** 当前 URL 实际指向的节点：4 段时是 subPage，否则是 page */
   const target = loc?.subPageId ? subPage : page;
 
-  const { source, notFound } = useMdxSource();
+  const { source, notFound, resolvedLang } = useMdxSource();
   const tocOpen = useTocStore(state => state.tocOpen);
 
   const [frontmatter, setFrontmatter] = useState<MdxFrontmatter>({});
@@ -113,7 +114,21 @@ export const DocPage: FC<DocPageProps> = props => {
                 {target.extra}
               </div>
             </div>
+            {loc.moduleId === 'blog' && (
+              <BlogFrontmatter
+                date={typeof frontmatter.date === 'string' ? frontmatter.date : undefined}
+                tags={Array.isArray(frontmatter.tags) ? (frontmatter.tags as Array<string>) : undefined}
+              />
+            )}
             {description && <InlineMdx source={description} className="text-muted-foreground" />}
+            {loc.moduleId === 'blog' && resolvedLang && resolvedLang !== i18n.resolvedLanguage && (
+              <div
+                role="alert"
+                className="w-full rounded-md border border-amber-500/50 bg-amber-500/10 px-4 py-2 text-sm text-amber-900 dark:text-amber-200"
+              >
+                {t('blog.notTranslatedYet')}
+              </div>
+            )}
           </header>
           <div className="[&_p]:[overflow-wrap:anywhere] [&_li]:[overflow-wrap:anywhere] [&_h1]:[overflow-wrap:anywhere] [&_h2]:[overflow-wrap:anywhere] [&_h3]:[overflow-wrap:anywhere] [&_h4]:[overflow-wrap:anywhere]">
             {notFound ? (
