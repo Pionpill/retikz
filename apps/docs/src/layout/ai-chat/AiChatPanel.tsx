@@ -1,4 +1,4 @@
-import { Bot, History, Plus, Settings, X } from 'lucide-react';
+import { Bot, HelpCircle, History, Plus, Settings, X } from 'lucide-react';
 import { type FC, type KeyboardEvent as ReactKeyboardEvent, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -7,6 +7,7 @@ import { cn } from '@/lib/utils';
 import { useAiChatStore } from '@/store/useAiChatStore';
 import { AiChatConversation } from './parts/AiChatConversation';
 import { AiChatEmpty } from './parts/AiChatEmpty';
+import { AiChatHelpDialog } from './parts/AiChatHelpDialog';
 import { AiChatHistory } from './parts/AiChatHistory';
 import { AiChatSettings } from './parts/AiChatSettings';
 
@@ -120,6 +121,8 @@ export const AiChatPanel: FC = () => {
   const showNewChatButton = showMainHeader && hasKey;
   const newChatDisabled = isGenerating || messagesLength === 0;
 
+  const [helpOpen, setHelpOpen] = useState(false);
+
   return (
     <aside className="flex h-full flex-col bg-background">
       {showMainHeader && (
@@ -184,6 +187,16 @@ export const AiChatPanel: FC = () => {
               variant="ghost"
               size="icon"
               className="size-7 cursor-pointer rounded-sm"
+              onClick={() => setHelpOpen(true)}
+              aria-label={t('ai.helpLabel')}
+              title={t('ai.helpLabel')}
+            >
+              <HelpCircle className="size-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="size-7 cursor-pointer rounded-sm"
               onClick={() => setOpen(false)}
               aria-label={t('ai.closeLabel')}
             >
@@ -198,6 +211,7 @@ export const AiChatPanel: FC = () => {
         {showEmpty && <AiChatEmpty />}
         {showConversation && <AiChatConversation />}
       </div>
+      <AiChatHelpDialog open={helpOpen} onOpenChange={setHelpOpen} />
     </aside>
   );
 };

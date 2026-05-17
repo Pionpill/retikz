@@ -1,6 +1,7 @@
 export * from './AiChatConversation';
 export * from './AiChatConversationEmpty';
 export * from './AiChatEmpty';
+export * from './AiChatHelpDialog';
 export * from './AiChatHistory';
 export * from './AiChatInput';
 export * from './AiChatInputAddContextButton';
