@@ -70,7 +70,9 @@ const MessageActions: FC<MessageActionsProps> = ({ content, align, alwaysShow })
  * AI 对话单条消息
  * @description User: 右对齐 bubble；Assistant: 左对齐 markdown（自带极简解析器）。
  *   解析器支持：段落、围栏代码块、行内 code、链接 ([text](url)) — 链接 `/` 开头走 router Link、外链走新窗口；
- *   粗体 **bold** 与无序列表 -/*。不支持 italic / 表格 / 任意嵌套 markdown，AI 响应大多在此范围内。
+ *   粗体 **bold**、斜体 *italic*、删除线 ~~strike~~、引用块 `> ...`、水平线 `---`、表格 GFM、
+ *   无序列表（含嵌套、任务列表 `- [ ] / - [x]`）、h1-h3。
+ *   不支持有序列表 / 嵌套表格 / 行内 HTML 等不常见语法。
  */
 export const AiChatMessage: FC<AiChatMessageProps> = ({ message, isStreaming, alwaysShowActions }) => {
   const { t } = useTranslation();
@@ -119,18 +121,120 @@ export const AiChatMessage: FC<AiChatMessageProps> = ({ message, isStreaming, al
   );
 };
 
+type TableAlign = 'left' | 'center' | 'right' | null;
+
+type ListItem = {
+  text: string;
+  /** null：普通列表项；boolean：任务列表项（GFM `- [ ]` / `- [x]`） */
+  checked: boolean | null;
+  children: Array<ListItem>;
+};
+
 type Block =
   | { type: 'p'; text: string }
   | { type: 'code'; lang: string; code: string }
-  | { type: 'list'; items: Array<string> }
+  | { type: 'list'; items: Array<ListItem> }
   | { type: 'h'; level: 1 | 2 | 3; text: string }
   | { type: 'retikz'; format: RetikzPreviewFormat; source: string }
-  | { type: 'retikz-pending'; format: RetikzPreviewFormat };
+  | { type: 'retikz-pending'; format: RetikzPreviewFormat }
+  | { type: 'blockquote'; text: string }
+  | { type: 'hr' }
+  | { type: 'table'; header: Array<string>; aligns: Array<TableAlign>; rows: Array<Array<string>> };
 
 /** 显式 `| undefined`：让 lang 字符串查表后的"未命中"分支不被 TS 视作死代码 */
 const RETIKZ_LANG_FORMAT: Readonly<Record<string, RetikzPreviewFormat | undefined>> = {
   'retikz-ir': 'ir',
   'retikz-tsx': 'tsx',
+};
+
+const RE_HEADING = /^(#{1,3})\s+(.*)$/;
+const RE_LIST = /^[-*]\s/;
+/** 含缩进的列表项；tab 视作 2 空格 */
+const RE_LIST_INDENTED = /^(\s*)[-*]\s+/;
+/** 任务列表前缀（去掉列表标记后剩下的内容前缀）：`[ ]`、`[x]`、`[X]` */
+const RE_TASK_ITEM = /^\[([ xX])\]\s+(.*)$/;
+const RE_BLOCKQUOTE = /^>\s?/;
+const RE_HR = /^(-{3,}|\*{3,}|_{3,})\s*$/;
+/** GitHub table separator：`|---|---|`、`|:---|---:|:---:|` 等，至少 2 列 */
+const RE_TABLE_SEPARATOR = /^\|?\s*:?-{3,}:?\s*(\|\s*:?-{3,}:?\s*)+\|?\s*$/;
+
+/** 拆 `| a | b | c |` 这种行；可省略首尾管道 */
+const parseTableRow = (line: string): Array<string> => {
+  let s = line.trim();
+  if (s.startsWith('|')) s = s.slice(1);
+  if (s.endsWith('|')) s = s.slice(0, -1);
+  return s.split('|').map(c => c.trim());
+};
+
+const parseTableAligns = (separator: string): Array<TableAlign> =>
+  parseTableRow(separator).map(cell => {
+    const left = cell.startsWith(':');
+    const right = cell.endsWith(':');
+    if (left && right) return 'center';
+    if (right) return 'right';
+    if (left) return 'left';
+    return null;
+  });
+
+const isTableStart = (lines: Array<string>, idx: number): boolean =>
+  lines[idx].includes('|') && idx + 1 < lines.length && RE_TABLE_SEPARATOR.test(lines[idx + 1]);
+
+/** 当前行若是列表项（任意缩进），返回其缩进字符数（tab → 2 空格）；否则 null */
+const getListIndent = (line: string): number | null => {
+  const m = RE_LIST_INDENTED.exec(line);
+  if (!m) return null;
+  return m[1].replace(/\t/g, '  ').length;
+};
+
+/** 把单行列表项的"裸文本"（去掉 `- ` / `* ` 标记后的部分）切成 task 或普通项 */
+const buildListItem = (raw: string): ListItem => {
+  const taskMatch = RE_TASK_ITEM.exec(raw);
+  if (taskMatch) return { text: taskMatch[2], checked: taskMatch[1].toLowerCase() === 'x', children: [] };
+  return { text: raw, checked: null, children: [] };
+};
+
+/**
+ * 从 `start` 开始递归吃下一段同级（缩进 == baseIndent）的列表项；
+ * 遇到更深缩进的列表行就递归塞进当前 item.children；遇到更浅缩进或非列表行就停止
+ */
+const parseListAt = (
+  lines: Array<string>,
+  start: number,
+  baseIndent: number,
+): { items: Array<ListItem>; end: number } => {
+  const items: Array<ListItem> = [];
+  let i = start;
+  while (i < lines.length) {
+    const indent = getListIndent(lines[i]);
+    if (indent === null || indent < baseIndent) break;
+    if (indent > baseIndent) break;
+    const raw = lines[i].replace(/^\s*[-*]\s+/, '');
+    const item = buildListItem(raw);
+    i++;
+    if (i < lines.length) {
+      const nextIndent = getListIndent(lines[i]);
+      if (nextIndent !== null && nextIndent > baseIndent) {
+        const child = parseListAt(lines, i, nextIndent);
+        item.children = child.items;
+        i = child.end;
+      }
+    }
+    items.push(item);
+  }
+  return { items, end: i };
+};
+
+/** 段落收集器停止条件：遇到任意块起始或空行就收尾 */
+const isBlockStarter = (lines: Array<string>, idx: number): boolean => {
+  const line = lines[idx];
+  if (line.trim() === '') return true;
+  if (line.startsWith('```')) return true;
+  if (RE_HEADING.test(line)) return true;
+  if (RE_LIST.test(line)) return true;
+  if (RE_BLOCKQUOTE.test(line)) return true;
+  if (RE_HR.test(line)) return true;
+  if (isTableStart(lines, idx)) return true;
+  return false;
 };
 
 const parseBlocks = (src: string): Array<Block> => {
@@ -163,29 +267,48 @@ const parseBlocks = (src: string): Array<Block> => {
       i = j + 1;
       continue;
     }
-    const headingMatch = /^(#{1,3})\s+(.*)$/.exec(line);
+    const headingMatch = RE_HEADING.exec(line);
     if (headingMatch) {
       blocks.push({ type: 'h', level: headingMatch[1].length as 1 | 2 | 3, text: headingMatch[2] });
       i++;
       continue;
     }
-    if (/^[-*]\s/.test(line)) {
-      const items: Array<string> = [];
-      while (i < lines.length && /^[-*]\s/.test(lines[i])) {
-        items.push(lines[i].replace(/^[-*]\s+/, ''));
+    if (RE_LIST.test(line)) {
+      const { items, end } = parseListAt(lines, i, 0);
+      blocks.push({ type: 'list', items });
+      i = end;
+      continue;
+    }
+    if (RE_BLOCKQUOTE.test(line)) {
+      const start = i;
+      while (i < lines.length && RE_BLOCKQUOTE.test(lines[i])) i++;
+      const text = lines
+        .slice(start, i)
+        .map(l => l.replace(RE_BLOCKQUOTE, ''))
+        .join('\n');
+      blocks.push({ type: 'blockquote', text });
+      continue;
+    }
+    // table：当前行带 `|` 且下一行是分隔行；优先于 hr 判断（`|---|` 含管道，被 RE_HR 拒绝，但更明确的顺序更安全）
+    if (isTableStart(lines, i)) {
+      const header = parseTableRow(lines[i]);
+      const aligns = parseTableAligns(lines[i + 1]);
+      i += 2;
+      const rows: Array<Array<string>> = [];
+      while (i < lines.length && lines[i].includes('|') && lines[i].trim() !== '') {
+        rows.push(parseTableRow(lines[i]));
         i++;
       }
-      blocks.push({ type: 'list', items });
+      blocks.push({ type: 'table', header, aligns, rows });
+      continue;
+    }
+    if (RE_HR.test(line)) {
+      blocks.push({ type: 'hr' });
+      i++;
       continue;
     }
     const pStart = i;
-    while (
-      i < lines.length &&
-      lines[i].trim() !== '' &&
-      !lines[i].startsWith('```') &&
-      !/^[-*]\s/.test(lines[i]) &&
-      !/^#{1,3}\s/.test(lines[i])
-    ) {
+    while (i < lines.length && !isBlockStarter(lines, i)) {
       i++;
     }
     blocks.push({ type: 'p', text: lines.slice(pStart, i).join('\n') });
@@ -193,10 +316,12 @@ const parseBlocks = (src: string): Array<Block> => {
   return blocks;
 };
 
-/** 行内：code (`...`) → <code>；**bold** → <strong>；[text](url) → <Link>/<a>；其它原文输出 */
+/** 行内：code (`...`) → <code>；**bold** → <strong>；*italic* → <em>；~~strike~~ → <del>；[text](url) → <Link>/<a>；其它原文输出 */
 const renderInline = (src: string): ReactNode => {
   const nodes: Array<ReactNode> = [];
-  const re = /(`[^`\n]+`)|(\*\*[^*\n]+\*\*)|(\[[^\]]+\]\([^)\s]+\))/g;
+  // 顺序敏感：bold (`\*\*..\*\*`) 必须排在 italic (`\*..\*`) 之前；italic 用 lookaround 避开 `**` 边界和"两侧空格"误命中（避免 `5 * 6 * 2` 被吞）
+  const re =
+    /(`[^`\n]+`)|(\*\*[^*\n]+\*\*)|((?<!\*)\*(?!\s)[^*\n]+?(?<!\s)\*(?!\*))|(~~[^~\n]+~~)|(\[[^\]]+\]\([^)\s]+\))/g;
   let lastIndex = 0;
   let m: RegExpExecArray | null;
   let key = 0;
@@ -214,6 +339,18 @@ const renderInline = (src: string): ReactNode => {
         <strong key={`b${key++}`} className="font-medium">
           {token.slice(2, -2)}
         </strong>,
+      );
+    } else if (token.startsWith('~~')) {
+      nodes.push(
+        <del key={`s${key++}`} className="text-muted-foreground">
+          {token.slice(2, -2)}
+        </del>,
+      );
+    } else if (token.startsWith('*')) {
+      nodes.push(
+        <em key={`i${key++}`} className="italic">
+          {token.slice(1, -1)}
+        </em>,
       );
     } else {
       const linkMatch = /^\[([^\]]+)\]\(([^)\s]+)\)$/.exec(token);
@@ -248,6 +385,35 @@ const renderInline = (src: string): ReactNode => {
   }
   if (lastIndex < src.length) nodes.push(src.slice(lastIndex));
   return nodes.map((n, idx) => <Fragment key={idx}>{n}</Fragment>);
+};
+
+/** 渲染单个列表项（含 task checkbox + 嵌套子列表）；递归 */
+const renderListItem = (item: ListItem, idx: number): ReactNode => {
+  const isTask = item.checked !== null;
+  const body = isTask ? (
+    <span className="inline-flex items-start gap-1.5">
+      <input
+        type="checkbox"
+        checked={item.checked === true}
+        readOnly
+        className="mt-1 size-3.5 shrink-0 cursor-default accent-primary"
+      />
+      <span className={cn(item.checked === true && 'text-muted-foreground line-through')}>{renderInline(item.text)}</span>
+    </span>
+  ) : (
+    renderInline(item.text)
+  );
+  return (
+    // task 项关 disc + 负 ml 抵消父 ul 的 ml-5，让 checkbox 起点对齐普通 bullet
+    <li key={idx} className={isTask ? '-ml-5 list-none' : undefined}>
+      {body}
+      {item.children.length > 0 && (
+        <ul className="mt-1 ml-5 list-disc space-y-1">
+          {item.children.map((child, childIdx) => renderListItem(child, childIdx))}
+        </ul>
+      )}
+    </li>
+  );
 };
 
 type RenderMarkdownOptions = {
@@ -297,10 +463,51 @@ const renderMarkdown = (src: string, options: RenderMarkdownOptions = {}): React
     if (b.type === 'list') {
       return (
         <ul key={i} className="my-2 ml-5 list-disc space-y-1">
-          {b.items.map((it, idx) => (
-            <li key={idx}>{renderInline(it)}</li>
-          ))}
+          {b.items.map((it, idx) => renderListItem(it, idx))}
         </ul>
+      );
+    }
+    if (b.type === 'blockquote') {
+      return (
+        <blockquote
+          key={i}
+          className="my-2 border-l-2 border-border pl-3 whitespace-pre-wrap text-muted-foreground"
+        >
+          {renderInline(b.text)}
+        </blockquote>
+      );
+    }
+    if (b.type === 'hr') {
+      return <hr key={i} className="my-3 border-border" />;
+    }
+    if (b.type === 'table') {
+      const alignCls = (a: TableAlign) =>
+        a === 'center' ? 'text-center' : a === 'right' ? 'text-right' : 'text-left';
+      return (
+        <div key={i} className="my-2 overflow-x-auto">
+          <table className="w-full border-collapse text-sm">
+            <thead>
+              <tr className="border-b border-border">
+                {b.header.map((h, hi) => (
+                  <th key={hi} className={cn('px-2 py-1 font-medium', alignCls(b.aligns[hi] ?? null))}>
+                    {renderInline(h)}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {b.rows.map((row, ri) => (
+                <tr key={ri} className="border-b border-border last:border-b-0">
+                  {row.map((cell, ci) => (
+                    <td key={ci} className={cn('px-2 py-1', alignCls(b.aligns[ci] ?? null))}>
+                      {renderInline(cell)}
+                    </td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       );
     }
     return (
