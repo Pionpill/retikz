@@ -1,5 +1,5 @@
 import { ChevronLeft, Plus, Trash2 } from 'lucide-react';
-import { type FC, type KeyboardEvent, useEffect, useMemo, useRef, useState } from 'react';
+import { type FC, type KeyboardEvent, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/components/ui/button';
@@ -12,7 +12,7 @@ import {
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
 import { useAiChatStore } from '@/store/useAiChatStore';
-import type { Conversation } from '@/store/aiChatConversationsStorage';
+import type { Conversation } from '../conversationsStorage';
 
 /**
  * AI 历史会话列表视图
