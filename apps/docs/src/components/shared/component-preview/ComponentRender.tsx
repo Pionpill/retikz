@@ -1,4 +1,4 @@
-import { Ban, ChevronsDownUp, ChevronsUpDown, Diff, Minus, Plus, Sparkles, X } from 'lucide-react';
+import { Ban, BotMessageSquare, ChevronsDownUp, ChevronsUpDown, Diff, Minus, Plus, X } from 'lucide-react';
 import { type FC, useEffect, useRef, useState } from 'react';
 
 import { Button } from '@/components/ui/button';
@@ -10,7 +10,6 @@ import { useAiChatStore } from '@/store/useAiChatStore';
 import { useComponentPreviewStore } from '@/store/useComponentPreviewStore';
 
 import { HighlightedCode } from '../highlight-code';
-import { ComponentDetailDialog } from './ComponentDetailDialog';
 import { CopyButton, ToolbarIconButton, ViewToggle } from './_parts';
 import {
   type AlignKey,
@@ -22,6 +21,7 @@ import {
   filterDiffByMode,
   sizeClass,
 } from './_shared';
+import { ComponentDetailDialog } from './ComponentDetailDialog';
 import { PanZoomToolbar } from './PanZoomToolbar';
 import { usePanZoom } from './usePanZoom';
 
@@ -156,8 +156,7 @@ export const ComponentRender: FC<ComponentRenderProps> = props => {
   const diffMode: DiffMode = localDiffMode ?? (hasReactDiff ? 'added' : 'off');
   // 展示代码：React 视图 + 展开态 + 有数据 + mode != off → 按 mode 过滤 unified diff；其余情况维持原行为
   const reactDiffActive = effectiveView === 'react' && showFull && hasReactDiff && diffMode !== 'off';
-  const displayedDiff: UnifiedDiff | null =
-    reactDiffActive ? filterDiffByMode(source!.reactDiff!, diffMode) : null;
+  const displayedDiff: UnifiedDiff | null = reactDiffActive ? filterDiffByMode(source.reactDiff!, diffMode) : null;
   const fullCode = effectiveView === 'ir' ? irSource : (displayedDiff?.code ?? reactSource);
   const fullLang = effectiveView === 'ir' ? 'json' : 'tsx';
   const displayedCode = showFull ? fullCode : reactPreview;
@@ -310,7 +309,7 @@ export const ComponentRender: FC<ComponentRenderProps> = props => {
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <ToolbarIconButton label="Ask AI" onClick={handleAskAi}>
-                          <Sparkles className="size-4" />
+                          <BotMessageSquare className="size-4" />
                         </ToolbarIconButton>
                       </TooltipTrigger>
                       <TooltipContent>Ask AI</TooltipContent>

@@ -1,4 +1,4 @@
-import { ArrowUpRight, Sparkles } from 'lucide-react';
+import { ArrowUpRight, Bot } from 'lucide-react';
 import { type FC } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -25,7 +25,7 @@ export const AiChatConversationEmpty: FC = () => {
     <div className="flex h-full flex-col items-center justify-center gap-5 px-5 py-8 text-center">
       <div className="flex flex-col items-center gap-3">
         <div className="flex size-11 items-center justify-center rounded-full border border-border bg-muted text-foreground">
-          <Sparkles className="size-5" />
+          <Bot className="size-5" />
         </div>
         <div className="flex flex-col gap-1.5">
           <h3 className="text-base font-medium">{t('ai.convEmptyTitle')}</h3>
