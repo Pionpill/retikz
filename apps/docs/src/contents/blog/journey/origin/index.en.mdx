@@ -130,6 +130,16 @@ Beyond the releases, things not originally on the plan got built along the way t
 
 In-site Ask AI lets readers pipe any demo to an AI for remixing; llms.txt lets external AIs (ChatGPT / Claude) also "see" the entire retikz docs—the docs site itself became an AI tool.
 
+Two concrete examples show what "prompt-driven remixing" looks like.
+
+The **Ask AI** button on any demo card sends the current figure to the in-site AI. Tweak the [karl-circle example](/core/examples/karl-circle)'s prompt with one extra line — "draw all six trig functions: add sec / csc / cot by their geometric definitions" — and the model adds a tangent line (carrying both sec and csc) plus a horizontal top tangent (cot), and expands the info card to six formulas:
+
+<ComponentPreview name="unit-circle-six" hideCode size="xxl" />
+
+The [AI Expert Roadmap example](/core/examples/learning-path) is another comprehensive piece — a pixel-perfect retikz replica of [AMAI-GmbH/AI-Expert-Roadmap](https://github.com/AMAI-GmbH/AI-Expert-Roadmap)'s intro.svg cover, exercising the RoadmapNode abstraction + AtPosition tight stacking + Draw way's line / curve / dashPattern / arrow / label combo:
+
+<ComponentPreview name="ai-roadmap" hideCode size="lg" />
+
 ## Looking Ahead
 
 v0.1 delivered core + IR + Scene compiler. Going forward, v1.x / v2.x will push in two directions:

@@ -17,7 +17,7 @@
 | 版本 | 主题 | 主要新增 |
 |---|---|---|
 | **v0.1**（当前焦点） | **Node + Path 基础能力** | shape 多态、anchor 命名、箭头、折角、cycle、fill、曲线、相对坐标 |
-| v0.2 | Scope + 样式 + Shape 扩展 | `<Scope>` / `<Group>`、`every node/.style` 默认值、局部 transform、`NodeShape` 闭合枚举打开 + ShapeRegistry 注入第三方 shape、显式 `zIndex` 覆盖、带文本 Node 输出始终包 `<g>`、Path-level shape sugar（Circle / Ellipse / Arc / Rectangle / Grid / Sector + IR 椭圆弧 / 圆角矩形 / 部分裁剪） |
+| v0.2 | Scope + 样式 + Shape 扩展 | `<Scope>` / `<Group>`、`every node/.style` 默认值、局部 transform、`NodeShape` 闭合枚举打开 + ShapeRegistry 注入第三方 shape、显式 `zIndex` 覆盖、带文本 Node 输出始终包 `<g>`、Path-level shape sugar（Circle / Ellipse / Arc / Rectangle / Grid / Sector + IR 椭圆弧 / 圆角矩形 / 部分裁剪）、StepLabel 自定义样式（`textColor` / `opacity` / `font`） |
 | v0.3 | 高级定位 / Coordinate | `<Coordinate>` 命名点、相对定位语义糖、`intersections` / `calc` |
 | v0.4 | TikZ libraries 概念 + decorations 入门 | `shapes.geometric` / `arrows.meta` 等 lib 划分 |
 | v0 收尾 | codec 起步、文档完整 | `@retikz/codec` 早期 IR ↔ TikZ 文本子集双向转换 |
@@ -328,6 +328,37 @@ return [{
 每个 sugar 支持**多种 prop 形态**：例如 `<Rectangle>` 接受 `{ corner1, corner2 }` / `{ center, width, height }` / `{ corner1, width, height }` / `{ center, side }` 等 5 种写法；`<Circle>` 接受 `radius` / `diameter` / `{ from, to }`（直径两端）/ `{ corner1, corner2 }`（bbox 内切）4 种。
 
 详细 prop 表 / IR 字段变更 / 实现拆分 / ADR 待定项见 [`v0.2-path-shape-sugar.md`](./v0.2-path-shape-sugar.md)。
+
+### Step label 自定义样式提案
+
+**现状**：`StepLabelSchema` 只有 `text` / `position` / `side` 三个字段；`compile/path/label.ts` 渲染时 `fill: 'currentColor'` 硬编码——所有边标注都跟随主题色（黑 / 白），无法**与所标注的线段同色**。给彩色函数线（sin / cos / tan / sec / csc / cot 等）配标注时尤其违和，标签都是 currentColor 一片黑，读者得对照线色和位置反推。
+
+**目标接口（v0.2 ADR 阶段固化）**：
+
+```ts
+export const StepLabelSchema = z.object({
+  text: z.string(),
+  position: ...,
+  side: ...,
+  // ✚ 新增
+  textColor: z.string().optional()
+    .describe('Label text color; defaults to currentColor. Set to match segment stroke when labeling colored lines.'),
+  opacity: z.number().min(0).max(1).optional()
+    .describe('Label-only opacity 0..1; multiplied with surrounding text opacity if present.'),
+  font: FontSchema.optional()
+    .describe('Label font overrides (family / size / weight / style); missing fields inherit from segment-level default then renderer default.'),
+});
+```
+
+`compile/path/label.ts` 改 `fill: label.textColor ?? 'currentColor'`，并把 `fontSize` / `fontFamily` 等改成 `label.font?.size ?? LABEL_FONT_SIZE` 的回退链。
+
+**为什么放 v0.2 而非 v0.1**：
+
+- 不阻塞 v0.1 闭环——v0.1 标注全 currentColor 也能用（karl-circle / unit-circle 都跑通）
+- v0.2 主线是 Scope + 样式继承，本来就要在 NodeSchema / 文字渲染路径走一遍统一改造，趁机一起把 StepLabel 的样式扩展加上
+- 新字段加在已有 schema 末尾，零破坏性，alpha 期后再开窗也行——但提早进 v0.2 与 Scope `every node label/.style` 配合更顺
+
+**待写 ADR**（v0.2 开工前）：固化 textColor / opacity / font 字段，确认与 Scope 的样式继承顺序（label > Scope label 默认 > 段级 stroke 衍生 > 全局 currentColor 兜底）；ZodSchema reference 同步更新 8 个 step variant 的 `'label.*'` 嵌套点路径描述。
 
 ### 远期：多端口 / 多引脚 shape（v1+）
 
