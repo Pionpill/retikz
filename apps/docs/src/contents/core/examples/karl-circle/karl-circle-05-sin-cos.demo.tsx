@@ -4,7 +4,6 @@ import { Coordinate, Draw, Node, Path, Step, TikZ } from '@retikz/react';
 
 // 字面色而非 CSS var：SVG 下载后 CSS var 不在新上下文里解析，会 fallback 成黑
 const HELP_LINE = '#e5e7eb';
-const PAGE_BG = '#ffffff';
 const ANGLE_STROKE = 'oklch(0.55 0.16 145)';
 const ANGLE_FILL = 'oklch(0.92 0.10 145)';
 const SIN_COLOR = '#ef4444';
@@ -48,7 +47,7 @@ const Demo: FC = () => (
     ].map(({ x, text }) => (
       <Fragment key={`tx-${x}`}>
         <Draw way={[[x, -3], [x, 3]]} />
-        <Node position={[x, 14]} fill={PAGE_BG} stroke="none" padding={1}>
+        <Node position={[x - 10, 14]} stroke="none" padding={1}>
           {text}
         </Node>
       </Fragment>
@@ -61,7 +60,7 @@ const Demo: FC = () => (
     ].map(({ y, text }) => (
       <Fragment key={`ty-${y}`}>
         <Draw way={[[-3, y], [3, y]]} />
-        <Node position={[-18, y]} fill={PAGE_BG} stroke="none" padding={1}>
+        <Node position={[-18, y + 10]} stroke="none" padding={1}>
           {text}
         </Node>
       </Fragment>

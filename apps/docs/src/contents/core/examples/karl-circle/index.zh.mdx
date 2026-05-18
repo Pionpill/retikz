@@ -66,7 +66,7 @@ x 轴和 y 轴用 [Draw](/core/components/draw/overview) 配 `arrow="->"` 一键
 
 ### 步骤 3：加网格 + 刻度
 
-背景网格用 `.map()` 平铺 5 横 5 竖（IR 暂无 grid 算子）；这种 React 端 `.map()` 替代 TikZ `\foreach` 的写法在 retikz 里很常见。刻度同样靠数组遍历，每条短线 + 一个 `fill="white"` 的 [Node](/core/components/node/overview)——白底把网格遮在 label 下，让数字读起来清爽。
+背景网格用 `.map()` 平铺 5 横 5 竖（IR 暂无 grid 算子）；这种 React 端 `.map()` 替代 TikZ `\foreach` 的写法在 retikz 里很常见。刻度同样靠数组遍历，每条短线配一个无背景的 [Node](/core/components/node/overview)；label 位置在 tick 基础上**轻微偏移**（x 轴左偏 10px / y 轴下偏 10px），避开圆周线与轴线交叠。
 
 retikz 坐标统一是 SVG 像素，y 向下为正——所以「向上 1 单位」写成 `[0, -100]`（本例取 100px = 单位圆半径作为长度基准）。顶层 `<TikZ>` 不接 picture-level scale + 不翻 y，TikZ 教程里的数学坐标得手动给 y 加负号。
 
@@ -98,9 +98,9 @@ tan 线从 (1, 0) 垂直到 (1, tan30°)。原图用 TikZ 的 named path + inter
 
 ### 步骤 7：右侧多色信息说明框
 
-最后加一个图右侧的彩色说明框。[Node](/core/components/node/overview) 的 `text` prop 接字符串数组，**每行可以是 string 或 `{ text, fill }`**——后者让该行单独换色。空字符串行做分隔。
+最后加一个图右侧的彩色说明框。[Node](/core/components/node/overview) 的 `text` prop 接字符串数组，**每行可以是 string 或 `{ text, fill }`**——后者让该行单独换色。视觉分组靠「彩色公式行 + 默认色注释行」的交替表达，不再额外加空行间隔（空 `''` 行会让 textHeight 把 lineHeight 算进盒高、但 SVG 渲染上空 tspan 的 dy 在浏览器间不稳，外框会撑出明显的下边空白）。
 
-`shape="rectangle"` + `roundedCorners` + `align="left"` 把它装成一个左对齐的圆角卡片，`stroke="none"` 去外框。注意行内片段着色（同一行里某几个词换色）目前不支持，只能整行换色——见「已知限制」。
+`shape="rectangle"` + `roundedCorners` + `align="left"` 把它装成一个左对齐的圆角卡片，`stroke="#d4d4d4"` + `dashed` 加一圈浅灰虚线外框（无填充，主题切换都看得见）。注意行内片段着色（同一行里某几个词换色）目前不支持，只能整行换色——见「已知限制」。
 
 <ComponentPreview name="karl-circle-07-info" diffFrom="karl-circle-06-tan" size="lg" />
 
