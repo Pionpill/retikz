@@ -146,6 +146,8 @@ Trigger conditions / cross-frame behavior / v0.1 comparison are in § How it wor
 
 ## How it works
 
+> Optional for everyday use; revisit when you hit edge cases or want to see how scope flattens transforms, registers namespaces, and isolates / cascades ids at compile time.
+
 ### Namespace stack and lookup
 
 A scope does **not** introduce a namespace boundary by default — child node / coordinate / nested scope.id ids all register into the current top frame; ids from multiple stacked scopes flow up to the `<TikZ>` root frame, and outer paths can reference them directly. Only `localNamespace: true` makes the scope push its own frame and isolate the subtree.
