@@ -27,7 +27,7 @@ import { Scope } from '@retikz/react';
 
 ### transforms 6 变体
 
-4 个 translate 变体一一镜像 `<Node position>` 的 4 种形态（笛卡尔 / 极坐标 / 方向相对 / 偏移），在 compile 时统一展平为笛卡尔 translate 再下沉到 Scene `GroupPrim`；`rotate` / `scale` 直接透传。
+4 个 translate 变体一一镜像 `<Node position>` 的 4 种形态（笛卡尔 / 极坐标 / 方向相对 / 偏移）。
 
 | kind | 字段 | 语义 |
 |---|---|---|
@@ -38,7 +38,7 @@ import { Scope } from '@retikz/react';
 | `rotate` | `{ degrees, cx?, cy? }` | 旋转 degrees 度，`cx/cy` 缺省 = scope 局部原点 |
 | `scale` | `{ x, y? }` | 缩放，`y` 缺省 = `x`（等比） |
 
-数组顺序应用——第 0 个先生效（最内层），与 SVG transform list / Scene `GroupPrim` 一致。`transforms: [translate, rotate]` 表示先 translate 再 rotate；与 SVG `transform="translate(...) rotate(...)"` 同语义。
+数组顺序应用——第 0 个最先生效（最内层）。`transforms: [translate, rotate]` 表示先 translate 再 rotate；compile 展平 / 下沉细节详见 § 技术原理 §「transforms 展平到 Scene」。
 
 <Comparison target="tikz" title="Scope 对照">
 
@@ -54,11 +54,15 @@ import { Scope } from '@retikz/react';
 
 <ComponentPreview name="scope-translate-basic" size="md" />
 
-polar / at / offset 三种变体对应"极坐标 / 方向相对 / 偏移"——分别等价 TikZ `[shift={(angle:radius)}]` / `[<dir> of=A]` / `[shift={($(A) + (dx,dy)$)}]`：
+polar 用极坐标偏移：
 
 <ComponentPreview name="scope-polar-translate" size="md" />
 
+at 用方向相对（`direction` + referent + 可选 `distance`）：
+
 <ComponentPreview name="scope-at-translate" size="md" />
+
+offset 用任意 `[dx, dy]` 落点：
 
 <ComponentPreview name="scope-offset-translate" size="md" />
 
@@ -76,45 +80,106 @@ scope 内可以再放 scope——外层定位 cluster，内层再定位 cluster 
 
 ### 跨 scope 引用
 
-scope 不引入命名空间隔离——内部 node id 注册到全局 nodeIndex，外部 path 端点 / `at.of` 都能引用：
+scope 内 node id 默认注册到全局 nodeIndex，外部 path 端点 / `at.of` 都能引用：
 
 <ComponentPreview name="scope-cross-reference" size="md" />
 
-被引用的 node 取的是**全局**坐标（已 apply 它所在 scope 链的累积 transform）；前向引用规则与 v0.1 一致——被引用者必须先于引用者出现在 IR 顺序中。
-
-引用语法可在 id 后追加 `.<anchor>` 或 `.<deg>` 取节点视觉边界点而非中心——anchor / 数字角度都在节点**全局** rect 上算（已含 scope 累积 rotate / scale），跨 scope 边界仍能精确落到视觉端点：
+引用 id 后追加 `.<anchor>` / `.<deg>` 取节点视觉边界点（含累积 rotate / scale 后的全局边界）：
 
 <ComponentPreview name="scope-anchor-cross" size="md" />
 
-### 作为引用整体
+### scope.id：作为引用整体
 
-`<Scope id="cluster">` 设值后，compile 在 Pass 1 子树结束时收集子树**全部** layout（node / coordinate / 嵌套 scope.id bbox）的轴对齐**全局 bounding box**，注册为一条 `rectangle` synthetic `NodeLayout`（id = `cluster`）到**父 namespace frame**。从外部看，`cluster` 与普通 rectangle 节点完全一致——path 可指 `cluster.north` / `cluster.east` / `cluster.30`，其他 node 可把 `cluster` 用作 polar / direction / offset 定位 referent。
-
-<Comparison target="tikz" title="scope.id 对照">
-
-`<Scope id="cluster">` 对应 TikZ 的 `\begin{scope}[local bounding box=cluster] ... \end{scope}`：pgf 收集 scope 内所有元素的轴对齐 bbox 并注册一个名为 `cluster` 的矩形节点。retikz 复用已有的 scope `id` 字段作为唯一入口——不另加 `boundingBox` flag——保持字段单一职责（设 id ⇒ 拿到可引用的 bbox 句柄）。
-
-</Comparison>
-
-外部 path 用 `'cluster.<anchor>'` 指到**整体** cluster 视觉边界，而非任何单个内部节点：
+`<Scope id="cluster">` 设值后，外部可用 `'cluster'` / `'cluster.<anchor>'` / `'cluster.<deg>'` 引用整个 scope 的视觉边界——与普通 rectangle 节点一致：
 
 <ComponentPreview name="scope-id-reference" size="md" />
 
-- bbox 锚点（`.north` / `.east` / `.south-west` / `.30` 等）与普通 rectangle 节点完全一致——9 个命名 anchor + 数字角度均走共享的 rect anchor 路径
-- `'cluster'` 不带 anchor 后缀时用 `boundaryPoint` 朝源方向 clip
-- path 走线端点（move/line `to`）**不计入** bbox——只有 node / coordinate / 嵌套 scope.id bbox 参与，与 TikZ `local bounding box` 默认行为一致
-
-嵌套时每条 scope.id 各算各的 bbox；外层 scope.id 包含全部内层 layout，内层 scope.id 独立——outer bbox 含 `A` 加 `inner` 子树全部内容；`inner.bbox` 仅含 `B` 与 `C`：
+嵌套时每层 scope.id 各算各的 bbox：
 
 <ComponentPreview name="scope-id-nested" size="md" />
 
-scope.id 用作 `polar.origin` / `at.of` / `offset.of` referent 时取 bbox **中心**——与普通 rectangle 节点一致：
+scope.id 也可作为 `polar.origin` / `at.of` / `offset.of` referent（取 bbox 中心）：
 
 <ComponentPreview name="scope-id-referent" size="md" />
 
-> scope.id 与 `node.id` / `coordinate.id` 共享扁平全局命名空间——同名 `<Node id="cluster">` 或兄弟 `<Scope id="cluster">` 触发 `DUPLICATE_NODE_ID` warn 走 last-wins（见 [重复 id 处理](#重复-id-处理)）。前向引用解析失败抛错，因为 bbox 在 scope 子树完成后才能算出。
+bbox 计算时机 / 嵌套规则 / 哪些 layout 参与详见 § 技术原理 §「scope.id synthetic bbox」。
 
-### 内部相对定位
+### scope 内相对定位
+
+scope 内 node / coordinate / path step.to 用 polar / at / offset 时，referent 取全局、relative 跟着当前 scope rotate / scale 走：
+
+<ComponentPreview name="scope-position-polar-in-rotate" size="md" />
+
+`direction: 'right'` 是**当前 scope 局部**的 right——scope rotate 90° 后视觉变 down：
+
+<ComponentPreview name="scope-position-at-cross-scope" size="md" />
+
+`offset: [40, 0]` 在 scope 局部度量；scope `scale(2)` 后视觉偏移 (80, 0)：
+
+<ComponentPreview name="scope-position-offset-with-scale" size="md" />
+
+具体投影公式 / 边界 case（嵌套 polar / scope translate / scale=0 / path step.to）详见 § 技术原理 §「scope 下相对定位投影」。
+
+### 局部命名空间
+
+`localNamespace: true` 让 scope 创建本地 frame——内部 id 与外部隔离，常用于子图复用 / 模板化：
+
+<ComponentPreview name="scope-local-namespace-basic" size="md" />
+
+嵌套 localNamespace 形成栈式命名空间，最内层 path 引用 id 时从内向外 lookup：
+
+<ComponentPreview name="scope-local-namespace-nested" size="md" />
+
+同名 id 在不同 frame 内不算冲突；inside-out lookup 自动让内层 shadowing 外层：
+
+<ComponentPreview name="scope-local-namespace-shadowing" size="md" />
+
+inside-out / shadowing / scope.id 落父 frame 的语义详见 § 技术原理 §「命名空间栈与 lookup」。
+
+### 重复 id 警告
+
+同 frame 重复 id 触发 `DUPLICATE_NODE_ID` warn + 后定义覆盖前定义（last-wins，**不抛错**）：
+
+<ComponentPreview name="scope-duplicate-id-warn" size="md" />
+
+触发条件 / 跨 frame 行为 / v0.1 对比详见 § 技术原理 §「重复 id 与冲突处理」。
+
+## 技术原理
+
+### 命名空间栈与 lookup
+
+scope 默认**不引入命名空间边界**——子 node / coordinate / 嵌套 scope.id 全部注册到当前栈顶 frame；多层 scope 串起来 id 仍汇到 `<TikZ>` 根 frame，外部 path 可直接引用。`localNamespace: true` 才让 scope 推一个子 frame、隔离子树 id。
+
+<ComponentPreview name="scope-namespace-stack" hideCode />
+
+<Comparison target="tikz" title="命名空间默认行为">
+
+TikZ pgf 的 `\begin{scope}` 不引入局部命名空间——scope 内 `\node (foo) {...}` 注册的 `foo` 全局可见、scope 外可直接 `\draw (foo) -- ...`。retikz 沿用此约定，让 v0.1 已写好的 IR 嵌入 scope 后无需改 id 引用即可继续工作；需要"子图复用 / 模板化"再 opt-in `localNamespace`。
+
+</Comparison>
+
+| 机制 | 行为 |
+|---|---|
+| **inside-out lookup** | 内层 path 引用 id 时从当前 frame 向栈底逐层查找——内部**可见**外部 id；外部**不可见**内部 id |
+| **shadowing** | 内层 frame 注册同名 id 不算冲突、不发 warn；lookup 命中内层；frame 退出后外层 id 重新可见 |
+| **scope.id 始终落父 frame** | scope.id 是外部句柄，不受自身 `localNamespace` 影响——外部 path 永远可以引用 `<Scope id="X">` 的 `X`，无论其内部是否启用本地命名空间 |
+| **栈式 frame** | 每层 `<Scope localNamespace>` 都 push 一个子 frame；frame 在 scope 子树 compile 结束时 pop——超出层级的 id 引用自动断 |
+
+### 重复 id 与冲突处理
+
+同一 frame 内重复出现的 id（node × node、node × coordinate、node × scope.id 任意组合）触发 `DUPLICATE_NODE_ID` warning，**后定义覆盖前定义**（last-wins）。
+
+| 规则 | 行为 |
+|---|---|
+| 触发 | 同 frame 内同 id 第 2 次及之后的 register |
+| 处理 | warn 通过 `CompileOptions.onWarn` 收集；compile **不抛错**；nodeIndex 最终保留最后一次定义 |
+| Warn 单元 | 每次重复都单独发一条 warn（不合并），含两条 IR locator（前 / 现）+ 当前 frame 深度 |
+| 跨 frame 同 id | 算 shadowing 不是 duplicate，**不发 warn** |
+| scope.id 自引用 | bbox 在 scope 子树完成后才能算出——`at.of='self'` / `offset.of='self'` 等自引用前向解析失败，抛错（不走 last-wins） |
+
+> v0.1 行为：同名 id 直接 throw。alpha.1 起改为 warn + last-wins，迁移时 v0.1 代码 0 改动；如需 strict 行为，可在 `onWarn` 里检测 `code === 'DUPLICATE_NODE_ID'` 主动 throw。
+
+### scope 下相对定位投影
 
 scope 内 `<Node>` / `<Coordinate>` / `<Path>` `Step.to` 使用 `PolarPosition` / `AtPosition` / `OffsetPosition` 时按以下规则解析：
 
@@ -130,74 +195,63 @@ scope 内 `<Node>` / `<Coordinate>` / `<Path>` `Step.to` 使用 `PolarPosition` 
 
 </Comparison>
 
-referent `hub` 在 scope 外（全局原点）；scope `rotate(45°)` 内的 `orbit` 用 polar `{ origin: 'hub', angle: 0, radius: 80 }`——relative 局部右 80，scope rotate 后视觉落到右下 45 度方向。同样 polar 写在 scope 外（参考 `ref` 节点）则直接在 hub 全局右 80：
+边界规则：
 
-<ComponentPreview name="scope-position-polar-in-rotate" size="md" />
+| case | 行为 |
+|---|---|
+| **嵌套 polar / 嵌套 offset** | 整条嵌套链都在**当前 node 所属 scope 局部**度量——不切换基准 scope |
+| **`Position` 笛卡尔字面量** | scope 内 `position={[10, 0]}` 与 v0.1 一致——`[10, 0]` 在当前 scope 局部度量，经 scope chain 投影到全局 |
+| **scope translate 不改 relative 矢量** | translate 不旋转 / 不缩放——`relative=(10, 0)` 在 translate(50, 0) 内视觉仍是 (10, 0) 方向 / 长度 |
+| **scope `scale=0`** | 反向投影未定义——retikz 退化为局部 (0, 0) 防 NaN；实践中避免 0 scale |
+| **path `step.to` 内的相对定位** | 与 node position 同规则——polar / offset / `{ relative: [dx, dy] }` 字面量时，relative 部分在当前 path 所属 scope 局部度量 |
 
-`direction: 'right'` 是**当前 scope 局部**的 right——scope rotate 90 度后视觉变 down，B 落在 A 下方 60；scope 外的 `B-ref` 在 A 全局右侧 60：
+### scope.id synthetic bbox
 
-<ComponentPreview name="scope-position-at-cross-scope" size="md" />
+`<Scope id="X">` 设值后，compile 在 Pass 1 子树结束时收集子树**全部** layout（node / coordinate / 嵌套 scope.id bbox）的轴对齐**全局 bounding box**，注册为一条 `rectangle` synthetic `NodeLayout`（id = `X`）到**父 namespace frame**。
 
-`offset: [40, 0]` 在 scope 局部度量；scope `scale(2)` 后视觉偏移 (80, 0)——B 落在 anchor 右 80。scope 外的 `B-ref` offset 量按未缩放计算：
+| 项 | 行为 |
+|---|---|
+| **计算时机** | Pass 1 递归 scope 子树结束时（所有内层 node / coordinate / 嵌套 scope.id 都已 register） |
+| **bbox 输入** | 子树全部 `NodeLayout` 的 4 角点（含累积 rotate / scale 后的全局坐标）求轴对齐 AABB |
+| **不计入 bbox** | path 走线端点（move / line `to`）—— 与 TikZ `local bounding box` 默认一致 |
+| **注册位置** | **父 frame**（不受自身 `localNamespace` 影响）——scope.id 是外部句柄 |
+| **形态** | synthetic rectangle `NodeLayout`，`rect.rotate=0`（轴对齐） |
+| **作为 anchor referent** | 9 个命名 anchor + 数字角度都走共享的 rect anchor 路径——`'X.north'` / `'X.30'` / 无后缀走 `boundaryPoint` clip |
+| **作为 polar / at / offset referent** | 取 bbox 中心，与普通 rectangle 节点一致 |
+| **嵌套** | 每层 scope.id 各算各的 bbox——外层 bbox 含全部内层 layout；内层 bbox 仅含自己子树 |
+| **空 scope.id** | 子树无任何 layout 时 bbox 退化为 0×0 占位点（落在 scope 局部原点经 chain 投影到的全局点） |
 
-<ComponentPreview name="scope-position-offset-with-scale" size="md" />
+<Comparison target="tikz" title="scope.id 对照">
 
-细节规则：
-
-- **嵌套 polar / 嵌套 offset**：整条嵌套链都在**当前 node 所属 scope 局部**度量——不切换基准 scope
-- **`Position` 笛卡尔字面量**：scope 内 `position={[10, 0]}` 与 v0.1 一致——`[10, 0]` 在当前 scope 局部度量，经 scope chain 投影到全局
-- **scope translate 不改 relative 矢量**：translate 不旋转 / 不缩放——`relative=(10, 0)` 在 translate(50, 0) 内视觉仍是 (10, 0) 方向 / 长度
-- **scope `scale=0`**：反向投影未定义——retikz 退化为局部 (0, 0) 防 NaN；实践中避免 0 scale
-- **path `step.to` 内的相对定位**：与 node position 同规则——path step.to 用 polar / offset / 笛卡尔 / `{ relative: [dx, dy] }` 字面量时，relative 部分在当前 path 所属 scope 局部度量
-
-## 命名空间与隔离
-
-scope 默认**不引入命名空间边界**——子 node / coordinate / 嵌套 scope.id 全部注册到当前栈顶 frame；多层 scope 串起来 id 仍汇到 `<TikZ>` 根 frame，外部 path 可直接引用。
-
-<Comparison target="tikz" title="命名空间默认行为">
-
-TikZ pgf 的 `\begin{scope}` 不引入局部命名空间——scope 内 `\node (foo) {...}` 注册的 `foo` 全局可见、scope 外可直接 `\draw (foo) -- ...`。retikz 沿用此约定，让 v0.1 已写好的 IR 嵌入 scope 后无需改 id 引用即可继续工作；需要"子图复用 / 模板化"再 opt-in `localNamespace`。
+`<Scope id="cluster">` 对应 TikZ 的 `\begin{scope}[local bounding box=cluster] ... \end{scope}`：pgf 收集 scope 内所有元素的轴对齐 bbox 并注册一个名为 `cluster` 的矩形节点。retikz 复用已有的 scope `id` 字段作为唯一入口——不另加 `boundingBox` flag——保持字段单一职责（设 id ⇒ 拿到可引用的 bbox 句柄）。
 
 </Comparison>
 
-需要"子图复用 / 模板化"时显式 `localNamespace: true` 让 scope 创建本地 frame，内部 id 与外部隔离：
+### transforms 展平到 Scene
 
-<ComponentPreview name="scope-local-namespace-basic" size="md" />
+IR 6 变体在 compile 阶段统一压成 Scene 3 变体（Cartesian translate / rotate / scale），再下沉到 `GroupPrim.transforms`：
 
-- **inside-out lookup**：内层 path 引用字符串 id 时从当前 frame 向栈底逐层查找——内部**可见**外部 id（shadowing），外部**不可见**内部 id
-- **shadowing**：内层 frame 注册同名 id 不算冲突、不发 warn；lookup 命中内层；frame 退出后外层 id 重新可见
-- **scope.id 始终在父 frame 注册**：scope 是外部句柄，不受自身 `localNamespace` 影响——外部 path 永远可以引用 `<Scope id="X">` 的 `X`，无论其内部是否启用本地命名空间
+| IR 形态 | compile 处理 | Scene 形态 |
+|---|---|---|
+| `translate` | 直接透传 | `translate(x, y)` |
+| `polar-translate` | `resolvePosition` 解出 origin 全局点 + (angle, radius) → Cartesian (x, y) | `translate(x, y)` |
+| `at-translate` | `resolvePosition` 解出 referent 全局点 + direction + distance → Cartesian (x, y) | `translate(x, y)` |
+| `offset-translate` | `resolvePosition` 解出 referent 全局点 + (dx, dy) → Cartesian (x, y) | `translate(x, y)` |
+| `rotate` | 直接透传 | `rotate(degrees, cx, cy)` |
+| `scale` | 直接透传 | `scale(x, y)` |
 
-嵌套 localNamespace 形成栈式 namespace frame：
+`transforms` 数组顺序应用——第 0 个最先生效（最内层），与 SVG `transform="t1 t2 t3"` / Scene `GroupPrim.transforms` 一致。`transforms: [translate, rotate]` 等价 SVG `transform="translate(...) rotate(...)"`：先 translate 再 rotate。
 
-<ComponentPreview name="scope-local-namespace-nested" size="md" />
-
-最内层 path 引用 `L2-node` / `L1-node` / `root-anchor` 分别由最内层 / 中层 / 根 frame 命中——栈搜索遇到第一个匹配即返回。
-
-当每层 `localNamespace` 都注册同名 id 时，inside-out lookup 自动让内层 shadowing 外层；跨 frame 同 id 不算 duplicate、不发 warn：
-
-<ComponentPreview name="scope-local-namespace-shadowing" size="md" />
-
-## 重复 id 处理
-
-同一 frame 内重复出现的 id（node × node、node × coordinate、node × scope.id 任意组合）触发 `DUPLICATE_NODE_ID` warning（通过 `CompileOptions.onWarn` 收集），**后定义覆盖前定义**（last-wins）：
-
-<ComponentPreview name="scope-duplicate-id-warn" size="md" />
-
-- compile 不抛错——LLM 生成 / 模板复制场景下能跑出可用结果
-- 每次重复都单独发一条 warn（不合并），含两条 IR locator 区分前后位置 + 当前 frame 深度
-- 跨 frame 同 id（如外层 + `<Scope localNamespace>` 内同名）是 shadowing 不是 duplicate，**不发 warn**
-
-> v0.1 行为：同名 id 直接 throw。alpha.1 起改为 warn + last-wins，迁移时 v0.1 代码 0 改动；如需 strict 行为，可在 `onWarn` 里检测 `code === 'DUPLICATE_NODE_ID'` 主动 throw。
+外部 nodeIndex 看到的节点 layout 已是**全局坐标**（compile 累积 chain 投影完成）；scope 内 path primitive 直接走顶层 `primitives`（不进 GroupPrim 避免 transform 二次 apply）。
 
 ## API 参考
 
 | 属性 | 类型 | 默认值 | 描述 |
 | --- | --- | --- | --- |
-| `transforms` | `Array<Transform>` | — | 局部 transform 列表，6 变体；数组顺序应用（第 0 个最先生效） |
+| `transforms` | `Array<Transform>` | — | 局部 transform 列表，6 变体；数组顺序应用（第 0 个最先生效）；展平 / 下沉细节详见 § 技术原理 §「transforms 展平到 Scene」 |
 | `children` | `ReactNode` | — | scope 内子元素：`<Node>` / `<Path>` / `<Coordinate>` / 嵌套 `<Scope>` |
-| `id` | `string` | — | 可选 scope 引用 id；设值后 scope 子树全部 layout 的**轴对齐全局 bbox** 注册为 synthetic rectangle layout 到**父 frame**，外部 path 可用 `'cluster'`（boundary clip 后的 bbox 边界点）/ `'cluster.<anchor>'`（9 个命名 anchor）/ `'cluster.<deg>'`（数字角度）引用。其他 node 可把 scope.id 用作 `polar.origin` / `at.of` / `offset.of` referent（取 bbox 中心） |
-| `localNamespace` | `boolean` | `false` | 是否创建本地命名空间：`true` 时 scope 推一个子 frame，内部 id 与外部隔离（外部不可见、内部可 inside-out 看外部）；缺省 false = 全局扁平 |
+| `id` | `string` | — | 可选 scope 引用 id；设值后 scope 子树全部 layout 的**轴对齐全局 bbox** 注册为 synthetic rectangle layout 到**父 frame**；外部可用 `'X'` / `'X.<anchor>'` / `'X.<deg>'` 引用，详见 § 技术原理 §「scope.id synthetic bbox」 |
+| `localNamespace` | `boolean` | `false` | 是否创建本地命名空间：`true` 时 scope 推一个子 frame，内部 id 与外部隔离；详见 § 技术原理 §「命名空间栈与 lookup」 |
 
 ## 相关
 

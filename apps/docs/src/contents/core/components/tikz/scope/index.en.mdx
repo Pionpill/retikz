@@ -27,7 +27,7 @@ A bare `<Scope></Scope>` (no children, no transforms, no id) → compile emits n
 
 ### The 6 transform variants
 
-The 4 translate variants mirror the 4 `<Node position>` shapes (Cartesian / polar / direction-relative / offset) one-to-one. At compile time they are all flattened to Cartesian translate before being lowered to Scene `GroupPrim`; `rotate` / `scale` pass through directly.
+The 4 translate variants mirror the 4 `<Node position>` shapes (Cartesian / polar / direction-relative / offset) one-to-one.
 
 | kind | Fields | Semantics |
 |---|---|---|
@@ -38,7 +38,7 @@ The 4 translate variants mirror the 4 `<Node position>` shapes (Cartesian / pola
 | `rotate` | `{ degrees, cx?, cy? }` | Rotate by degrees; `cx/cy` default to scope local origin |
 | `scale` | `{ x, y? }` | Scale; `y` defaults to `x` (uniform) |
 
-Array order is application order — the 0-th entry takes effect first (innermost), matching SVG transform list / Scene `GroupPrim`. `transforms: [translate, rotate]` means translate then rotate — same semantics as SVG `transform="translate(...) rotate(...)"`.
+Array order is application order — the 0-th entry takes effect first (innermost). `transforms: [translate, rotate]` means translate then rotate; compile flattening / lowering details are in § How it works §「transforms lowering to Scene」.
 
 <Comparison target="tikz" title="Scope mapping">
 
@@ -54,11 +54,15 @@ Cartesian translate is the most common form — the cluster of nodes + paths sha
 
 <ComponentPreview name="scope-translate-basic" size="md" />
 
-The polar / at / offset variants describe "polar offset / direction-relative / Cartesian offset" — equivalents of TikZ `[shift={(angle:radius)}]` / `[<dir> of=A]` / `[shift={($(A) + (dx,dy)$)}]`:
+Polar applies a polar offset:
 
 <ComponentPreview name="scope-polar-translate" size="md" />
 
+At uses direction-relative (`direction` + referent + optional `distance`):
+
 <ComponentPreview name="scope-at-translate" size="md" />
+
+Offset applies an arbitrary `[dx, dy]`:
 
 <ComponentPreview name="scope-offset-translate" size="md" />
 
@@ -76,45 +80,106 @@ A scope can contain another scope — outer scope positions the cluster, inner s
 
 ### Cross-scope references
 
-Scope does not introduce namespace isolation — child node ids register into the global nodeIndex, and outer path endpoints / `at.of` can reference them:
+Child node ids register into the global nodeIndex by default, and outer path endpoints / `at.of` can reference them:
 
 <ComponentPreview name="scope-cross-reference" size="md" />
 
-A referenced node resolves to its **global** coordinate (with the cumulative transform chain of its containing scopes applied). The forward-reference rule matches v0.1 — the referent must appear before the reference in IR order.
-
-The reference string also accepts `.<anchor>` or `.<deg>` suffixes for the visual border point instead of the center — anchors / numeric angles are computed on the node's **global** rect (including the accumulated scope rotate / scale), so endpoints across scope boundaries still land precisely on the visual edge:
+Append `.<anchor>` / `.<deg>` to the id for the node's visual border point (computed on the global rect with accumulated rotate / scale):
 
 <ComponentPreview name="scope-anchor-cross" size="md" />
 
-### Reference the scope as a whole
+### scope.id: reference the scope as a whole
 
-When `<Scope id="cluster">` is set, compile collects the axis-aligned **global bounding box** of all child layouts (nodes / coordinates / nested scope.id bboxes) at the end of Pass 1 and registers a synthetic `rectangle` `NodeLayout` named `cluster` into the **parent** namespace frame. From the outside, `cluster` behaves exactly like a normal rectangle node — paths can target `cluster.north` / `cluster.east` / `cluster.30`, and other nodes can use `cluster` as the referent for polar / direction / offset positioning.
-
-<Comparison target="tikz" title="scope.id mapping">
-
-`<Scope id="cluster">` maps to TikZ `\begin{scope}[local bounding box=cluster] ... \end{scope}`: pgf collects the axis-aligned bounding box of everything drawn inside and registers a rectangle node named `cluster`. retikz reuses the existing scope `id` field as the single entry point — no extra `boundingBox` flag — so the field stays a one-job thing (set id ⇒ get a referenceable bbox handle).
-
-</Comparison>
-
-External paths use `'cluster.<anchor>'` to hit the **whole** cluster's visual border instead of any single inner node:
+When `<Scope id="cluster">` is set, external paths can use `'cluster'` / `'cluster.<anchor>'` / `'cluster.<deg>'` to reference the scope's visual boundary — same as a normal rectangle node:
 
 <ComponentPreview name="scope-id-reference" size="md" />
 
-- bbox endpoints (`.north` / `.east` / `.south-west` / `.30` / etc.) work exactly like a rectangle node — all 9 named anchors plus numeric angles are supported via the shared rect anchor path
-- `'cluster'` with no suffix uses `boundaryPoint` clip toward the source (same behavior as a normal node id with no anchor)
-- Path endpoints (move/line `to`) are **not** included in the bbox — only nodes / coordinates / nested scope.id bboxes contribute, matching TikZ `local bounding box`'s default
-
-When nested, each scope.id keeps its own bbox; an outer scope.id includes everything inside, while an inner scope.id is independent — the outer bbox covers `A` plus everything in the `inner` subtree; `inner.bbox` only covers `B` and `C`:
+When nested, each scope.id keeps its own bbox:
 
 <ComponentPreview name="scope-id-nested" size="md" />
 
-scope.id resolves to its bbox **center** when used as a `polar.origin` / `at.of` / `offset.of` referent — same as any rectangle node:
+scope.id can also be a `polar.origin` / `at.of` / `offset.of` referent (resolves to bbox center):
 
 <ComponentPreview name="scope-id-referent" size="md" />
 
-> scope.id shares the flat global namespace with `node.id` and `coordinate.id` — a same-name `<Node id="cluster">` or sibling `<Scope id="cluster">` triggers a `DUPLICATE_NODE_ID` warning under last-wins (see [Duplicate id handling](#duplicate-id-handling)). Forward references fail to resolve, since the bbox is computed only after the scope subtree finishes.
+bbox compute timing / nesting rules / which layouts contribute are in § How it works §「scope.id synthetic bbox」.
 
 ### Relative positioning inside a scope
+
+Inside a scope, `<Node>` / `<Coordinate>` / `<Path>` `Step.to` using polar / at / offset resolve the referent globally, while the relative part rotates / scales with the current scope:
+
+<ComponentPreview name="scope-position-polar-in-rotate" size="md" />
+
+`direction: 'right'` is the **current scope's local** right — after the scope rotates 90°, "right" visually becomes "down":
+
+<ComponentPreview name="scope-position-at-cross-scope" size="md" />
+
+`offset: [40, 0]` is measured in scope local; after `scale(2)`, the visual offset becomes (80, 0):
+
+<ComponentPreview name="scope-position-offset-with-scale" size="md" />
+
+Detailed projection formula / edge cases (nested polar / scope translate / scale=0 / path step.to) are in § How it works §「Relative positioning projection」.
+
+### Local namespace
+
+`localNamespace: true` makes the scope push its own frame — child ids are isolated from the outside, useful for subdiagram reuse / templating:
+
+<ComponentPreview name="scope-local-namespace-basic" size="md" />
+
+Nested localNamespace forms a stack of namespace frames; an inner path's id lookup walks from inner to outer:
+
+<ComponentPreview name="scope-local-namespace-nested" size="md" />
+
+The same id across different frames is not a conflict; inside-out lookup automatically shadows outer ids:
+
+<ComponentPreview name="scope-local-namespace-shadowing" size="md" />
+
+inside-out / shadowing / scope.id-registers-in-parent-frame semantics are in § How it works §「Namespace stack and lookup」.
+
+### Duplicate id warning
+
+A duplicate id in the same frame triggers a `DUPLICATE_NODE_ID` warning and the later definition overrides the earlier one (last-wins, **does not throw**):
+
+<ComponentPreview name="scope-duplicate-id-warn" size="md" />
+
+Trigger conditions / cross-frame behavior / v0.1 comparison are in § How it works §「Duplicate id and conflict handling」.
+
+## How it works
+
+### Namespace stack and lookup
+
+A scope does **not** introduce a namespace boundary by default — child node / coordinate / nested scope.id ids all register into the current top frame; ids from multiple stacked scopes flow up to the `<TikZ>` root frame, and outer paths can reference them directly. Only `localNamespace: true` makes the scope push its own frame and isolate the subtree.
+
+<ComponentPreview name="scope-namespace-stack" hideCode />
+
+<Comparison target="tikz" title="Default namespace behavior">
+
+TikZ pgf's `\begin{scope}` does not introduce a local namespace — a `\node (foo) {...}` registered inside is globally visible, and outer code can `\draw (foo) -- ...` directly. retikz keeps this convention so v0.1 IR continues to work without changing id references after being wrapped in a scope; opt in to `localNamespace` only when subdiagram reuse or template-style isolation is needed.
+
+</Comparison>
+
+| Mechanism | Behavior |
+|---|---|
+| **Inside-out lookup** | An inner path's id lookup walks the frame stack from top to bottom — inner code **can** see outer ids; outer code **cannot** see inner ids |
+| **Shadowing** | Registering the same id in an inner frame is not a conflict and emits no warning; lookups hit the inner copy first; the outer id becomes visible again once the frame is popped |
+| **scope.id always registers in the parent frame** | scope.id is the external handle and is **not** affected by its own `localNamespace`; outer paths can always reference `<Scope id="X">` as `X`, regardless of whether the scope uses local namespacing internally |
+| **Stack frames** | Every `<Scope localNamespace>` pushes a child frame; the frame is popped when the scope subtree finishes compiling — id references beyond the level naturally break |
+
+### Duplicate id and conflict handling
+
+When the same id is registered more than once in the same frame (any combination of node × node, node × coordinate, node × scope.id), compile emits a `DUPLICATE_NODE_ID` warning, and **the later definition overrides the earlier one** (last-wins).
+
+| Rule | Behavior |
+|---|---|
+| Trigger | The 2nd and subsequent registers of the same id within the same frame |
+| Handling | Warning is collected via `CompileOptions.onWarn`; compile **does not throw**; nodeIndex keeps the last definition |
+| Warn unit | Every duplicate emits its own warning (not merged); each carries two IR locators (earlier and current) plus the current frame depth |
+| Same id across frames | Counts as shadowing rather than duplicate, **no warning** is emitted |
+| scope.id self-reference | bbox is computed only after the scope subtree finishes — `at.of='self'` / `offset.of='self'` etc. fail forward-resolution and throw (not subject to last-wins) |
+
+> v0.1 behavior: duplicate ids threw. Starting from alpha.1, the policy is warn + last-wins, so v0.1 code keeps running unchanged; if you want strict behavior, detect `code === 'DUPLICATE_NODE_ID'` inside `onWarn` and re-throw yourself.
+
+### Relative positioning projection
 
 When a `<Node>` / `<Coordinate>` / `<Path>` `Step.to` inside a scope uses `PolarPosition` / `AtPosition` / `OffsetPosition`, retikz resolves it under the following rules:
 
@@ -130,74 +195,63 @@ Maps to TikZ `\begin{scope}[rotate=90] \node at ($(hub) + (50:0)$) {orbit}; \end
 
 </Comparison>
 
-`hub` lives outside the scope (global origin); inside a `rotate(45°)` scope, `orbit` uses polar `{ origin: 'hub', angle: 0, radius: 80 }` — the relative part is local right-80, then projected by the scope rotate to a 45° down-right visual direction. The same polar written outside the scope (see `ref`) directly lands at hub's global right by 80:
+Edge cases:
 
-<ComponentPreview name="scope-position-polar-in-rotate" size="md" />
+| Case | Behavior |
+|---|---|
+| **Nested polar / nested offset** | The whole nested chain is measured in the **current node's enclosing scope's local frame** — the basis scope does not switch as you recurse |
+| **Cartesian `Position` literal** | Inside a scope, `position={[10, 0]}` keeps v0.1 behavior — `[10, 0]` is measured in the current scope's local frame and projected to global via the scope chain |
+| **Scope translate does not change relative vectors** | translate is neither rotation nor scaling — `relative=(10, 0)` inside a `translate(50, 0)` scope keeps the same visual direction and length |
+| **Scope `scale=0`** | The inverse projection is undefined; retikz falls back to local origin (0, 0) to avoid NaN — avoid zero scale in practice |
+| **Relative `Step.to` in a path** | Same rules as `Node.position` — when a step.to is polar / offset / `{ relative: [dx, dy] }`, the relative part is measured in the path's enclosing scope's local frame |
 
-`direction: 'right'` is the **current scope's local** right — after the scope rotates 90°, "right" visually becomes "down", and B lands below A by 60. The `B-ref` outside the scope sits at A's global right by 60:
+### scope.id synthetic bbox
 
-<ComponentPreview name="scope-position-at-cross-scope" size="md" />
+When `<Scope id="X">` is set, compile collects the axis-aligned **global bounding box** of all child layouts (nodes / coordinates / nested scope.id bboxes) at the end of Pass 1 and registers a synthetic `rectangle` `NodeLayout` named `X` into the **parent** namespace frame.
 
-`offset: [40, 0]` is measured in scope local; after `scale(2)`, the visual offset becomes (80, 0) — B is to anchor's right by 80. `B-ref` outside the scope keeps the unscaled offset:
+| Item | Behavior |
+|---|---|
+| **Compute timing** | End of Pass 1 recursion of the scope subtree (after every inner node / coordinate / nested scope.id is registered) |
+| **bbox input** | The 4 corners (with accumulated rotate / scale in global coordinates) of every `NodeLayout` in the subtree, fed into an AABB |
+| **Not counted in bbox** | Path endpoints (move / line `to`) — matches TikZ `local bounding box`'s default |
+| **Register location** | **Parent frame** (not affected by its own `localNamespace`) — scope.id is the external handle |
+| **Shape** | Synthetic rectangle `NodeLayout` with `rect.rotate=0` (axis-aligned) |
+| **As anchor referent** | All 9 named anchors plus numeric angles share the rect anchor path — `'X.north'` / `'X.30'` / no-suffix uses `boundaryPoint` clip |
+| **As polar / at / offset referent** | Resolves to bbox center, same as a normal rectangle node |
+| **Nesting** | Each scope.id keeps its own bbox — outer bbox covers all inner layouts; inner bbox covers only its own subtree |
+| **Empty scope.id** | If the subtree has no layouts, the bbox degenerates to a 0×0 placeholder (the scope's local origin projected to global via the chain) |
 
-<ComponentPreview name="scope-position-offset-with-scale" size="md" />
+<Comparison target="tikz" title="scope.id mapping">
 
-Detailed rules:
-
-- **Nested polar / nested offset**: the whole nested chain is measured in the **current node's enclosing scope's local frame** — the basis scope does not switch as you recurse
-- **Cartesian `Position` literal**: inside a scope, `position={[10, 0]}` keeps v0.1 behavior — `[10, 0]` is measured in the current scope's local frame and projected to global via the scope chain
-- **Scope translate does not change relative vectors**: translate is neither rotation nor scaling — `relative=(10, 0)` inside a `translate(50, 0)` scope keeps the same visual direction and length
-- **Scope `scale=0`**: the inverse projection is undefined; retikz falls back to local origin (0, 0) to avoid NaN. Avoid zero scale in practice
-- **Relative `Step.to` in a path**: same rules as `Node.position` — when path step.to is a polar / offset / Cartesian / `{ relative: [dx, dy] }` literal, the relative part is measured in the path's enclosing scope's local frame
-
-## Namespace and isolation
-
-By default a scope does **not** introduce a namespace boundary — child node / coordinate / nested scope.id ids all register into the current top frame; ids from multiple stacked scopes flow up to the `<TikZ>` root frame and outer paths can reference them directly.
-
-<Comparison target="tikz" title="Default namespace behavior">
-
-TikZ pgf's `\begin{scope}` does not introduce a local namespace — a `\node (foo) {...}` registered inside is globally visible, and outer code can `\draw (foo) -- ...` directly. retikz keeps this convention so v0.1 IR continues to work without changing id references after being wrapped in a scope; opt in to `localNamespace` only when subdiagram reuse or template-style isolation is needed.
+`<Scope id="cluster">` maps to TikZ `\begin{scope}[local bounding box=cluster] ... \end{scope}`: pgf collects the axis-aligned bounding box of everything drawn inside and registers a rectangle node named `cluster`. retikz reuses the existing scope `id` field as the single entry point — no extra `boundingBox` flag — so the field stays a one-job thing (set id ⇒ get a referenceable bbox handle).
 
 </Comparison>
 
-When subdiagram reuse or template-style isolation is needed, opt in with `localNamespace: true` so the scope pushes its own frame and child ids are isolated from the outside:
+### transforms lowering to Scene
 
-<ComponentPreview name="scope-local-namespace-basic" size="md" />
+The 6 IR variants are uniformly flattened to 3 Scene variants (Cartesian translate / rotate / scale) at compile time, then lowered into `GroupPrim.transforms`:
 
-- **inside-out lookup**: when an inner path references an id string, the lookup walks the frame stack from top to bottom — inner code **can** see outer ids (shadowing), but outer code **cannot** see inner ids
-- **Shadowing**: registering the same id in an inner frame is not a conflict and emits no warning; lookups hit the inner copy first, and the outer id becomes visible again once the frame is popped
-- **scope.id always registers in the parent frame**: scope.id is the external handle and is **not** affected by its own `localNamespace`; outer paths can always reference `<Scope id="X">` as `X`, regardless of whether the scope uses local namespacing internally
+| IR shape | Compile handling | Scene shape |
+|---|---|---|
+| `translate` | Pass through | `translate(x, y)` |
+| `polar-translate` | `resolvePosition` resolves origin global + (angle, radius) → Cartesian (x, y) | `translate(x, y)` |
+| `at-translate` | `resolvePosition` resolves referent global + direction + distance → Cartesian (x, y) | `translate(x, y)` |
+| `offset-translate` | `resolvePosition` resolves referent global + (dx, dy) → Cartesian (x, y) | `translate(x, y)` |
+| `rotate` | Pass through | `rotate(degrees, cx, cy)` |
+| `scale` | Pass through | `scale(x, y)` |
 
-Nested localNamespace forms a stack of namespace frames:
+The `transforms` array is applied in order — 0-th first (innermost), matching SVG `transform="t1 t2 t3"` / Scene `GroupPrim.transforms`. `transforms: [translate, rotate]` is equivalent to SVG `transform="translate(...) rotate(...)"`: translate first, then rotate.
 
-<ComponentPreview name="scope-local-namespace-nested" size="md" />
-
-The innermost path references `L2-node` / `L1-node` / `root-anchor` — each resolves at the innermost / middle / root frame respectively; the stack search returns at the first match.
-
-When every `localNamespace` layer registers the same id, inside-out lookup automatically shadows outer copies; same id across frames is not a duplicate and no warning is emitted:
-
-<ComponentPreview name="scope-local-namespace-shadowing" size="md" />
-
-## Duplicate id handling
-
-When the same id is registered more than once within the same frame (any combination of node × node, node × coordinate, node × scope.id) compile emits a `DUPLICATE_NODE_ID` warning (collected via `CompileOptions.onWarn`) and **the later definition overrides the earlier one** (last-wins):
-
-<ComponentPreview name="scope-duplicate-id-warn" size="md" />
-
-- Compile does **not** throw — useful for LLM-generated / templated code where duplicates can be benign and you still want a usable output
-- Every duplicate emits its own warning (not merged); each carries two IR locators (earlier and current) plus the current frame depth
-- Same id across different frames (e.g. an outer id and a same-named id inside `<Scope localNamespace>`) is shadowing rather than a duplicate — **no warning** is emitted
-
-> v0.1 behavior: duplicate ids threw. Starting from alpha.1, the policy is warn + last-wins, so v0.1 code keeps running unchanged; if you want strict behavior, detect `code === 'DUPLICATE_NODE_ID'` inside `onWarn` and re-throw yourself.
+External nodeIndex sees node layouts already in **global coordinates** (compile has projected through the chain); path primitives inside a scope go to the top-level `primitives` directly (not into the GroupPrim, to avoid double application of the transform).
 
 ## API Reference
 
 | Prop | Type | Default | Description |
 | --- | --- | --- | --- |
-| `transforms` | `Array<Transform>` | — | Local transform list, 6 variants; applied in array order (0-th first) |
+| `transforms` | `Array<Transform>` | — | Local transform list, 6 variants; applied in array order (0-th first); flattening / lowering details in § How it works §「transforms lowering to Scene」 |
 | `children` | `ReactNode` | — | Scope children: `<Node>` / `<Path>` / `<Coordinate>` / nested `<Scope>` |
-| `id` | `string` | — | Optional scope reference id; when set, the **axis-aligned global bounding box** of all child layouts is registered as a synthetic rectangle layout into the **parent frame**, so outer paths can reference it as `'cluster'` (bbox center after clip), `'cluster.<anchor>'` (9 named anchors), or `'cluster.<deg>'` (numeric angle). Other nodes can use scope.id as a `polar.origin` / `at.of` / `offset.of` referent (takes the bbox center) |
-| `localNamespace` | `boolean` | `false` | Whether to create a local namespace: `true` pushes a child frame and isolates child ids from the outside (external code cannot see them; inner code can still inside-out reach outer ids); default false = global flat |
+| `id` | `string` | — | Optional scope reference id; when set, the **axis-aligned global bounding box** of all child layouts is registered as a synthetic rectangle layout into the **parent frame**; external code can reference it as `'X'` / `'X.<anchor>'` / `'X.<deg>'`; details in § How it works §「scope.id synthetic bbox」 |
+| `localNamespace` | `boolean` | `false` | Whether to create a local namespace: `true` pushes a child frame and isolates child ids from the outside; details in § How it works §「Namespace stack and lookup」 |
 
 ## Related
 
