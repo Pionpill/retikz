@@ -58,7 +58,7 @@ Every ADR / new feature in alpha goes through 5 stages, orchestrated by the [`fl
 | 1. Design | **Human-led**, AI assists drafting | ADR (schema field table / file scope / test quadrants / option decisions) |
 | 2. Implement | AI (red-level changes go through Spec-First TDD) | spec test commit + implementation commit |
 | 3. Self-test | AI (Adversarial Bug Hunter sub-agent) | bug fixes + hardened tests |
-| 4. Document | AI (delegates to docs-doc-write SKILL) | bilingual mdx + demos + API table |
+| 4. Document | AI (delegates to docs-doc-principle SKILL) | bilingual mdx + demos + API table |
 | 5. Wrap-up | AI drafts / Adversarial Contract Auditor / **human** final ack | changelog + ADR marked Accepted + roadmap ticked |
 
 **Humans only act on stages 1 and 5** — stages 2, 3, 4 are handed off to independent sub-agents in sequence, with hard gates at each stage (lint / tsc / tests / reconciliation report) that halt the flow on failure.
@@ -133,7 +133,7 @@ The constraints written into the [repo-root AGENTS.md](https://github.com/Pionpi
 | 5-stage orchestrator | [flow-alpha SKILL](https://github.com/Pionpill/retikz/blob/main/.agents/skills/flow-alpha/SKILL.md) |
 | Design / Implement / Test / Document / Wrap-up child SKILLs | [develop-design](https://github.com/Pionpill/retikz/blob/main/.agents/skills/develop-design/SKILL.md) · [develop-implement](https://github.com/Pionpill/retikz/blob/main/.agents/skills/develop-implement/SKILL.md) · [develop-test](https://github.com/Pionpill/retikz/blob/main/.agents/skills/develop-test/SKILL.md) · [develop-document](https://github.com/Pionpill/retikz/blob/main/.agents/skills/develop-document/SKILL.md) · [develop-wrapup](https://github.com/Pionpill/retikz/blob/main/.agents/skills/develop-wrapup/SKILL.md) |
 | Release SKILL (npm publish 5-stage gating) | [package-publish SKILL](https://github.com/Pionpill/retikz/blob/main/.agents/skills/package-publish/SKILL.md) |
-| Docs-writing SKILL | [docs-doc-write SKILL](https://github.com/Pionpill/retikz/blob/main/.agents/skills/docs-doc-write/SKILL.md) |
+| Docs-writing SKILL | [docs-doc-principle](https://github.com/Pionpill/retikz/blob/main/.agents/skills/docs-doc-principle/SKILL.md) · [docs-doc-component](https://github.com/Pionpill/retikz/blob/main/.agents/skills/docs-doc-component/SKILL.md) · [docs-doc-example](https://github.com/Pionpill/retikz/blob/main/.agents/skills/docs-doc-example/SKILL.md) |
 | ADR archive | [notes/adr/](https://github.com/Pionpill/retikz/tree/main/notes/adr) (with [template](https://github.com/Pionpill/retikz/blob/main/notes/adr/_template.md) and [index](https://github.com/Pionpill/retikz/blob/main/notes/adr/README.md)) |
 
 In practice the main AI reads AGENTS.md + the relevant SKILL when it picks up a task, then dispatches sub-agents per the SKILL flow. Each sub-agent only sees its own role prompt + the inputs it's given — no context cross-contamination.

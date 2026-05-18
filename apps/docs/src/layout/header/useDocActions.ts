@@ -38,3 +38,4 @@ export const useDocActions = () => {
 /** 资源链接常量（外链） */
 export const TIKZ_DOCS_URL = 'https://tikz.dev/';
 export const GITHUB_URL = 'https://github.com/Pionpill/retikz';
+export const AUTHOR_GITHUB_URL = 'https://github.com/Pionpill';

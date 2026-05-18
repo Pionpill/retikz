@@ -6,8 +6,9 @@ import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/componen
 import { cn } from '@/lib/utils';
 
 import { HighlightedCode } from '../highlight-code';
+import type { ComponentRenderSource } from './ComponentRender';
 import { CopyButton, ToolbarIconButton, ViewToggle } from './_parts';
-import { type AlignKey, type SourceView, alignClass } from './_shared';
+import { type AlignKey, type SourceView, alignClass, filterDiffByMode } from './_shared';
 import { usePanZoom } from './usePanZoom';
 
 export type ComponentDetailDialogProps = {
@@ -16,8 +17,8 @@ export type ComponentDetailDialogProps = {
   /** demo 文件名（用于 header 标识） */
   name: string;
   Component: FC;
-  trimmedSource: string;
-  irJson: string;
+  /** 代码区视图集合；缺省 / 双字段都空时退化为单 panel 仅显示渲染区 */
+  source?: ComponentRenderSource;
   align: AlignKey;
 };
 
@@ -64,13 +65,18 @@ const DialogDemoPane: FC<DialogDemoPaneProps> = props => {
 
 /**
  * 演示卡详情模态
- * @description 顶部 header（demo 名 + 关闭 X） + 左右 split-pane（左渲染 + 拖拽 transform，右代码 + React/IR 切换 + Copy）
+ * @description 顶部 header（demo 名 + 关闭 X） + 左右 split-pane（左渲染 + 拖拽 transform，右代码 + React/IR 切换 + Copy）。
+ *   仅一个视图存在时不出 React/IR toggle；两视图都缺（如 hideCode demo）时退化为单 panel 仅渲染区
  */
 export const ComponentDetailDialog: FC<ComponentDetailDialogProps> = props => {
-  const { open, onOpenChange, name, Component, trimmedSource, irJson, align } = props;
+  const { open, onOpenChange, name, Component, source, align } = props;
+  const hasReact = (source?.react ?? '').length > 0;
+  const hasIr = (source?.ir ?? '').length > 0;
+  const hasCode = hasReact || hasIr;
+  const showViewToggle = hasReact && hasIr;
 
-  // Dialog 自己的视图 / copied 状态——和外部卡完全独立，切 React/IR、点 Copy 都不会影响卡
-  const [view, setView] = useState<SourceView>('react');
+  // Dialog 自己的视图 / copied 状态——和外部卡完全独立
+  const [view, setView] = useState<SourceView>(hasReact ? 'react' : 'ir');
   const [copied, setCopied] = useState(false);
   const copyTimerRef = useRef<number | null>(null);
 
@@ -80,10 +86,16 @@ export const ComponentDetailDialog: FC<ComponentDetailDialogProps> = props => {
     };
   }, []);
 
-  const fullCode = view === 'ir' ? irJson : trimmedSource;
+  // Copy 用的是真实 React / IR 源码；displayedCode 在 React 视图下有 reactDiff 时切换为 'added' 模式过滤后的内容
+  // Dialog 暂不出 diff mode 切换，固定 'added'（与卡片默认一致——教学场景优先看新增）
+  const copyCode = view === 'ir' ? (source?.ir ?? '') : (source?.react ?? '');
+  const reactDiffActive = view === 'react' && source?.reactDiff !== undefined;
+  const displayedDiff = reactDiffActive ? filterDiffByMode(source.reactDiff!, 'added') : null;
+  const displayedCode = displayedDiff?.code ?? copyCode;
+  const displayedLineKinds = displayedDiff?.lineKinds;
 
   const handleCopy = () => {
-    void navigator.clipboard.writeText(fullCode);
+    void navigator.clipboard.writeText(copyCode);
     setCopied(true);
     if (copyTimerRef.current !== null) window.clearTimeout(copyTimerRef.current);
     copyTimerRef.current = window.setTimeout(() => setCopied(false), 3000);
@@ -104,26 +116,39 @@ export const ComponentDetailDialog: FC<ComponentDetailDialogProps> = props => {
             </ToolbarIconButton>
           </DialogClose>
         </header>
-        <ResizablePanelGroup direction="horizontal" className="min-h-0 flex-1">
-          <ResizablePanel defaultSize={60} minSize={30} maxSize={85}>
+        {hasCode ? (
+          <ResizablePanelGroup direction="horizontal" className="min-h-0 flex-1">
+            <ResizablePanel defaultSize={60} minSize={30} maxSize={85}>
+              <DialogDemoPane align={align}>
+                <Component />
+              </DialogDemoPane>
+            </ResizablePanel>
+            <ResizableHandle withHandle />
+            <ResizablePanel defaultSize={40} minSize={15}>
+              <div className="flex h-full min-w-0 flex-col bg-muted/30">
+                <div className="flex shrink-0 items-center gap-1 border-b p-1 px-2">
+                  {showViewToggle ? <ViewToggle view={view} onChange={setView} /> : null}
+                  <CopyButton copied={copied} onCopy={handleCopy} className="ml-auto" />
+                </div>
+                {/* `[&_pre]:!text-xs` 用 ! 覆盖 react-syntax-highlighter 主题注入的 inline font-size */}
+                <div className="min-h-0 flex-1 overflow-auto [&_code]:!text-sm [&_pre]:!text-xs">
+                  <HighlightedCode
+                    lang={view === 'ir' ? 'json' : 'tsx'}
+                    code={displayedCode}
+                    showLineNumbers
+                    lineKinds={displayedLineKinds}
+                  />
+                </div>
+              </div>
+            </ResizablePanel>
+          </ResizablePanelGroup>
+        ) : (
+          <div className="min-h-0 flex-1">
             <DialogDemoPane align={align}>
               <Component />
             </DialogDemoPane>
-          </ResizablePanel>
-          <ResizableHandle withHandle />
-          <ResizablePanel defaultSize={40} minSize={15}>
-            <div className="flex h-full min-w-0 flex-col bg-muted/30">
-              <div className="flex shrink-0 items-center gap-1 border-b p-1 px-2">
-                <ViewToggle view={view} onChange={setView} />
-                <CopyButton copied={copied} onCopy={handleCopy} className="ml-auto" />
-              </div>
-              {/* `[&_pre]:!text-xs` 用 ! 覆盖 react-syntax-highlighter 主题注入的 inline font-size */}
-              <div className="min-h-0 flex-1 overflow-auto [&_code]:!text-sm [&_pre]:!text-xs">
-                <HighlightedCode lang={view === 'ir' ? 'json' : 'tsx'} code={fullCode} showLineNumbers />
-              </div>
-            </div>
-          </ResizablePanel>
-        </ResizablePanelGroup>
+          </div>
+        )}
       </DialogContent>
     </Dialog>
   );

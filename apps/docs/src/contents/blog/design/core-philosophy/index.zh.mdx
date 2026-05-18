@@ -1,0 +1,154 @@
+---
+title: retikz 核心理念
+description: IR 居中的图形描述与跨平台渲染架构
+date: 2026-05-17
+tags: [架构, 设计]
+---
+
+## 三层架构
+
+<ComponentPreview name="pipeline" hideCode />
+
+四路输入——Sugar JSX、Kernel JSX、远期的 Text DSL、AI / LLM——最终都翻成同一份 IR；IR 编译成 Scene 后，由各 adapter 分流到 React + SVG、纯 SVG 字符串、Canvas（再栅格化为 PNG / JPEG / WebP）、Native（Skia / RN）或 PDF。IR 与"持久化 / 编辑"之间是双向箭头：它是可读写的持久层，所有用户编辑、AI patch、序列化保存都在这一层完成。
+
+| 层 | 是什么 | 关键约束 |
+|---|---|---|
+| IR | 声明式 JSON schema（zod 单源定义） | 只装数据，禁函数 / ReactNode / closure |
+| Scene | 编译后产物，几何坐标已折算 | 矢量图形最大公约子集（rect / ellipse / text / path / group）|
+| Adapter | Scene → 具体 runtime（React/SVG、Canvas、SSR…） | 薄翻译层，零布局逻辑 |
+
+中间这两层 schema 稳定下来，外圈就能任意演进——这是 retikz 的核心赌注。
+
+## 为什么把 IR 摆在中心
+
+最直觉的做法是 JSX 直接渲染 SVG——React + 一堆 `<g>` `<path>`，跳过中间表示。retikz 没走这条路，原因有三个：
+
+1. **持久化**：JSX 一旦渲染就回不来。用户在浏览器里调好的图想保存、回放、增量 patch，没有中间表示就只能存源码字符串，等于把代码当数据存。
+2. **跨平台**：Canvas / SSR / PDF 想复用同一份布局逻辑，要么每个 runtime 重写一遍 anchor 计算，要么先翻成中间形态。重写成本随 adapter 数量线性涨。
+3. **AI 一等输入**：LLM 用 Structured Outputs 吐 JSON 比吐 JSX 文本可靠得多。带 zod schema 的 JSON 可以 100% 通过校验，JSX 字符串经常缺括号、写错 prop 名、生成不存在的组件。
+
+IR 是这三件事的公约数。一旦它存在，JSX 就是 IR 的一种"输入语法"，AI 是另一种，未来文本 DSL 是第三种——彼此不再耦合。
+
+## IR 的三层结构
+
+顶层是 `Scene`，固定形如：
+
+```ts
+{
+  version: 1,
+  type: 'scene',
+  children: Array<IRNode | IRPath | IRCoordinate>
+}
+```
+
+`version` 字段强制存在，破坏性改动时递增；schema 用 zod 单源定义（`packages/core/src/ir/scene.ts`），TS 类型靠 `z.infer` 派生，JSON Schema 靠 `zod-to-json-schema` 导出喂给 LLM。每个字段必须带 `.describe(...)` 英文说明——这影响 LLM 生成质量，不是文档。
+
+中间层是 **Node** 和 **Path**：
+
+- **Node** 是可定位、可旋转的形状容器（rectangle / circle / ellipse / diamond），带 text / label / padding / scale 等字段；position 支持 4 种形式（笛卡尔 / 极坐标 / `at` 引用 / 偏移）。
+- **Path** 是绘制命令序列，`children` 至少 2 个 `Step`，外加 stroke / fill / arrow / dashPattern 等视觉属性。
+
+底层是 **Step**，10 种 kind 覆盖全部路径动作：
+
+| kind | 参数 | 语义 |
+|---|---|---|
+| `move` | `to` | 移动游标，不绘制 |
+| `line` | `to`, `label?` | 直线 |
+| `step` | `via`, `to`, `label?` | 折角（一个直角中间点）|
+| `cycle` | — | 闭合回起点 |
+| `curve` | `to`, `control`, `label?` | 二次 Bézier |
+| `cubic` | `to`, `control1`, `control2`, `label?` | 三次 Bézier |
+| `bend` | `to`, `bendDirection`, `bendAngle?` | 弧线简记（编译为 cubic）|
+| `arc` | `startAngle`, `endAngle`, `radius` | 圆弧（游标为圆心）|
+| `circlePath` | `radius` | 整圆 |
+| `ellipsePath` | `radiusX`, `radiusY` | 整椭圆 |
+
+挑这 10 个是反复砍出来的——TikZ 原生几十条 path 动作，绝大多数能由这 10 种组合表达。kind 多了 LLM 学习成本涨、新增 adapter 实现成本涨；少了 sugar 层兜不住。
+
+## Scene 编译器：两 pass 在做什么
+
+`compileToScene(ir, options)` 是 core 包最重的资产（`packages/core/src/compile/compile.ts`），两 pass 设计：
+
+- **Pass 1**：遍历所有 Node，解析相对定位（如 `{ direction: 'right', of: 'A', distance: 2 }`），登记到 `nodeIndex` 表里——节点 id 到已知坐标 + 锚点表的映射。
+- **Pass 2**：按 JSX 源码顺序发 primitive。Path 里的 Step 这时才解析 `to`——节点引用 `"A.east"` / `"A.45"` 都查 nodeIndex；相对 / 累积相对则跟踪游标位置。
+
+为什么要两 pass？因为节点和路径互相引用——节点位置可能依赖另一个节点的锚点，路径终点可能引用某个节点的方位。先把节点全部布完，路径再消费就不会撞上未定义引用。
+
+编译产物 `Scene` 由 5 种 primitive 组成：`RectPrim` / `EllipsePrim` / `TextPrim` / `PathPrim` / `GroupPrim`。这是矢量图形的最大公约子集——SVG、Canvas、PDF、原生绘图都能直接消费，不依赖任何 runtime 特性。文字度量必须在此阶段完成（`measuredWidth` / `measuredHeight` 已填好），所以 adapter 不再需要碰 `canvas.measureText` 这类副作用 API。
+
+```text
+IR (JSON)
+  ↓ Pass 1: 节点布局 + nodeIndex 登记
+  ↓ Pass 2: 路径解析 + primitive 发射
+Scene (primitive 列表 + viewBox)
+  ↓ adapter（纯翻译）
+SVG / Canvas / PDF / ...
+```
+
+## 组件分层：Tier 1 / Tier 2
+
+`@retikz/react` 的组件分成两个梯度——Tier 1 是 in-core 的底层原语（Kernel 与它的语法糖 Sugar），Tier 2 是高层 domain 包（流程图、图表等）。三条标准判定一个新组件该归哪层（详见 AGENTS.md 的组件分层章节）：
+
+1. **可逆性**：展开后删掉构造名字，能 1:1 还原原意吗？
+2. **算法存在性**：展开涉及决策（auto-tick / 布局 / scale）吗？
+3. **结构参数**：参数会改变节点数量或拓扑吗？
+
+三条都 No → Sugar（仍属 Tier 1）；任一 Yes → Tier 2；底层原语 → Kernel。
+
+### Tier 1：Kernel / Sugar（已落地）
+
+| 层 | 例子 | 进 IR 形态 | 展开时机 |
+|---|---|---|---|
+| Kernel | `<Node>` `<Path>` `<Step>` | 直接对应 IR 节点 | 不展开 |
+| Sugar | `<Draw way={['A', '-\|', 'B']}>` | 展平为 Kernel | builder 同步（不进 IR）|
+
+Kernel 是 IR 的 React 直接映射，1:1 对应；Sugar 是 Kernel 的语法糖，在 builder 阶段就被展平，不会出现在 IR 里。两层都在 `@retikz/react` 包内，零额外依赖。
+
+铁律：**Sugar 不引入新能力**。任何 Sugar 能表达的，Kernel 都能表达——这条线一旦破，Sugar-only 的能力就无法持久化、不能跨平台、无法被 AI 消费，整个分层就假掉。
+
+### Tier 2：domain 包（规划中，未来支持）
+
+Tier 2 目前还没在 core 里实装，规划中由 `@retikz/flow` / `@retikz/plot` 等 domain 包承担：
+
+| 层 | 例子 | 进 IR 形态 | 展开时机 |
+|---|---|---|---|
+| Tier 2 | `<Axis>` `<BarPlot>` `<Tree>`（domain 包） | 高层形态保留 | `compileToScene` 内 |
+
+它们的共同特征是有算法决策（dagre 布局、自动刻度、scale 计算），需要在编译流水线里以高层形态保留到 `compileToScene` 阶段，再由 lowerComposites 钩子下沉成 Kernel primitive。这样 core schema 不膨胀，LLM 学习成本不涨，新增 chart 类型也不用改 core——等 core 1.0 稳定后再启动这层。
+
+## Framework adapter：刻意保持薄
+
+`@retikz/react` 是当前唯一发出来的 adapter，整套架构反复强调它要"薄"：
+
+- 顶层 `<TikZ>` 容器（`packages/react/src/kernel/TikZ.tsx`）只做三件事：拿到 `ir` prop 或 `useMemo(buildIR(children))`、调 `compileToScene`、把 Scene primitive 翻成 `<svg>` 子元素。
+- Builder（`packages/react/src/kernel/builder.ts`）做 JSX → IR 的同步转换，靠共享字段表（`NODE_FIELDS` / `PATH_FIELDS`）和组件 `displayName` 识别；它不调 hook、不进 React render 调用栈。
+- 文字度量用 `browserMeasurer`（canvas.measureText），作为 `TextMeasurer` 注入 compile——后续 SSR adapter 可换成 satori / sharp 之类的实现，compile 本身零改动。
+
+这层的目标是**未来加新 adapter 时只写 50 行翻译代码**。SSR 翻 SVG 字符串、Canvas 翻 ctx 调用、PDF 翻 PDFKit 命令——共享同一份 Scene primitive。零依赖原则在这里落地：CI 强制 `@retikz/core` 在零 React 环境可加载，packages/core 的 dependencies 白名单里只剩 `zod`。
+
+## AI 友好性怎么落到代码里
+
+"AI 友好"在 retikz 不是口号，是几条具体约束：
+
+- **JSON only**：IR 不装函数、ReactNode、closure。LLM 吐的就是 `JSON.parse` 能直接用的对象。
+- **zod 单源**：JSON Schema 自动从 zod 导出，随版本演进自动跟。OpenAI Structured Outputs / Anthropic tool use 拿到就能用。
+- **每字段强制 description**：英文说明既是给 LLM 看的含义提示，也是给开发者看的字段文档；少一个 PR 就过不去。
+- **JSON Patch 友好**：IR 是纯 JSON 树，能直接套 RFC 6902 做增量编辑——文档站 demo 卡片右上角那个 Ask AI 按钮，"换主题色 / 加切线 / 改公式 / 删某段标注"背后就是一组 patch。
+- **Schema 版本字段**：`version: 1` 在 schema 第一层，破坏性改动递增，前向兼容靠 migrator。
+
+这些约束是 retikz 相对已有图表库的核心差异。Recharts、ECharts 加新 chart、加 React 适配都做得到；但把核心改成"IR 居中 + JSON Schema 强约束 + LLM 一等输入"等于推倒重来，这就是 retikz 押注的窗口期。
+
+## 与 TikZ：不只是名字
+
+retikz 的语法**采用** TikZ 子集，而不是另起一套 DSL。这条决策在设计文档里反复掂量过：
+
+- **生态借力**：TikZ 二十年沉淀的教材、StackOverflow 答案、arXiv 论文示例全部可参考；自创 DSL 等于把这些清零。
+- **AI 红利**：LLM 训练数据里 TikZ 体量极大，零样本生成质量远超任何自创语法。AI 时代的图形 DSL，能复用预训练就是巨大领先。
+- **真实迁移**：retikz 支持的 TikZ 代码计划做到可直接复制进 LaTeX 编译；反向 `@retikz/codec`（v2.x 计划）把 IR 导出回 `.tex`，让浏览器里画好的图能贴进论文。
+
+所以 IR 里的 `padding` / `margin` 直接对应 TikZ 的 `inner sep` / `outer sep`、节点 anchor 用 `north-west` / `45` 这种字符串、polar convention 0°=+x 而不是屏幕坐标的 0°=向右——都是有意保留原词，让懂 TikZ 的人零学习成本，让 LLM 命中训练分布。
+
+## 引用
+
+- 站内：[karl-circle 示例](/core/examples/karl-circle)——retikz v0.1 标志性图，演示 Kernel 原语组合
+- 站内：[retikz 的起点](/blog/journey/origin)——项目灵感来源、路线图与版本节奏

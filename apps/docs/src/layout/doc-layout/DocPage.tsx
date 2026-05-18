@@ -1,3 +1,4 @@
+import { BlogFrontmatter } from '@/components/shared/blog-frontmatter';
 import type { MdxFrontmatter } from '@/components/shared/mdx-content';
 import { InlineMdx, MdxContent, MdxToc } from '@/components/shared/mdx-content';
 import { getSectionsByModule } from '@/data/sections';
@@ -38,7 +39,7 @@ export const DocPage: FC<DocPageProps> = props => {
   /** 当前 URL 实际指向的节点：4 段时是 subPage，否则是 page */
   const target = loc?.subPageId ? subPage : page;
 
-  const { source, notFound } = useMdxSource();
+  const { source, notFound, resolvedLang } = useMdxSource();
   const tocOpen = useTocStore(state => state.tocOpen);
 
   const [frontmatter, setFrontmatter] = useState<MdxFrontmatter>({});
@@ -56,7 +57,8 @@ export const DocPage: FC<DocPageProps> = props => {
     if (!loc || !aiChatTitleKey || stableSource == null) return;
     const title = String(t(aiChatTitleKey));
     const { rawUrl } = buildDocPageLinks(loc, aiChatLang);
-    setAiChatCurrentPage({ title, mdx: stableSource, lang: aiChatLang, rawUrl });
+    const path = `/${docPathSegments(loc).join('/')}`;
+    setAiChatCurrentPage({ title, mdx: stableSource, lang: aiChatLang, rawUrl, path });
   }, [loc, aiChatTitleKey, stableSource, aiChatLang, t, setAiChatCurrentPage]);
   useEffect(
     () => () => {
@@ -64,6 +66,17 @@ export const DocPage: FC<DocPageProps> = props => {
     },
     [],
   );
+
+  // 把当前页 label 写到 document.title，离开 DocPage 恢复 index.html 的 slogan
+  useEffect(() => {
+    if (!aiChatTitleKey) return;
+    const pageTitle = String(t(aiChatTitleKey));
+    const fallback = 'retikz — Draw TikZ figures the React way';
+    document.title = `${pageTitle} · retikz`;
+    return () => {
+      document.title = fallback;
+    };
+  }, [aiChatTitleKey, t]);
 
   if (!loc || !section || !target) {
     return (
@@ -92,14 +105,30 @@ export const DocPage: FC<DocPageProps> = props => {
       <div className="flex min-w-0 flex-1 justify-center">
         <div className="flex min-w-0 max-w-180 flex-1 flex-col gap-6">
           <header className="flex flex-col items-start w-full justify-between gap-2">
-            <div className="@[48rem]:flex-row @[48rem]:items-center @[48rem]:justify-between flex w-full flex-col items-start gap-3">
-              <h1 className="scroll-m-24 text-3xl font-semibold tracking-tight overflow-hidden">{title}</h1>
-              <div className="flex items-center gap-2">
+            <div className="flex w-full items-start justify-between gap-3">
+              <h1 className="scroll-m-24 min-w-0 flex-1 text-2xl @[40rem]:text-3xl font-semibold tracking-tight">
+                {title}
+              </h1>
+              <div className="flex shrink-0 items-center gap-2">
                 {stableSource != null && <DocPageActions source={stableSource} />}
                 {target.extra}
               </div>
             </div>
+            {loc.moduleId === 'blog' && (
+              <BlogFrontmatter
+                date={typeof frontmatter.date === 'string' ? frontmatter.date : undefined}
+                tags={Array.isArray(frontmatter.tags) ? (frontmatter.tags as Array<string>) : undefined}
+              />
+            )}
             {description && <InlineMdx source={description} className="text-muted-foreground" />}
+            {loc.moduleId === 'blog' && resolvedLang && resolvedLang !== i18n.resolvedLanguage && (
+              <div
+                role="alert"
+                className="w-full rounded-md border border-amber-500/50 bg-amber-500/10 px-4 py-2 text-sm text-amber-900 dark:text-amber-200"
+              >
+                {t('blog.notTranslatedYet')}
+              </div>
+            )}
           </header>
           <div className="[&_p]:[overflow-wrap:anywhere] [&_li]:[overflow-wrap:anywhere] [&_h1]:[overflow-wrap:anywhere] [&_h2]:[overflow-wrap:anywhere] [&_h3]:[overflow-wrap:anywhere] [&_h4]:[overflow-wrap:anywhere]">
             {notFound ? (

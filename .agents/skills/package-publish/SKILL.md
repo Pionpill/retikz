@@ -145,7 +145,7 @@ monorepo 子包跑 `version` 不会触发 git commit，安全。
 - `tags` 列**本次实际改动**的子包名（仅 `@retikz/core` / `@retikz/react` 两选一或全选），**不要写 `"docs"`**
 - 子标题层级固定：`## v<完整版本号>` → `### \`@retikz/<包>\``
 - **只写具体包的更新**——不开 `### docs` 段、不列文档站 / mdx / demo / ADR / AGENTS.md 改动；这些是项目内部演进，不影响下游 `pnpm add` 的体验
-- 中英两份**结构对齐**（章节数、bullet 数一致），文案不要求逐字翻译；按 `docs-doc-write` 技能"zh 是 source of truth、en 跟随"
+- 中英两份**结构对齐**（章节数、bullet 数一致），文案不要求逐字翻译；按 `docs-doc-principle` 技能"zh 是 source of truth、en 跟随"
 
 #### 2.3 i18n `versionTag`（仅 MINOR / MAJOR 切档时改）
 
@@ -335,7 +335,7 @@ git tag: v0.1.0-alpha.1（已 push）
 ## 与其它流程的衔接
 
 - **根 AGENTS.md commit 规则**：阶段 5 的 commit / push / publish 都需要用户**当次明确授权**。授权一次只覆盖本次发布，下次发版要再问一遍
-- **`docs-doc-write` 技能**：本技能里 changelog mdx 的写法是简版规范；如果要做更复杂的版本说明页（迁移指南、breaking changes 详解），改完后参考 `docs-doc-write` 写正文
+- **`docs-doc-principle` 技能**：本技能里 changelog mdx 的写法是简版规范；如果要做更复杂的版本说明页（迁移指南、breaking changes 详解），改完后参考 `docs-doc-principle` 写正文
 - **roadmap 完结**：v0.1.0 正式发布后，`notes/plans/v0/roadmap.md` 按 `notes/README.md` 约定**整篇删除**——临时方案完工即删，不留死文档
 
 ## 验证清单

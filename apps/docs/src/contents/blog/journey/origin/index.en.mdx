@@ -1,0 +1,156 @@
+---
+title: Origins of retikz
+description: The origin and positioning of the retikz project
+date: 2026-05-17
+tags: [design, origin]
+---
+
+## Showcase
+
+Here's the signature example from retikz v0.1—a unit circle, axes, ticks, a shaded wedge, sin / cos / tan curves, and an annotated info box, all in one figure:
+
+<ComponentPreview name="unit-circle" size="lg" />
+
+This is the final figure from the [karl-circle example](/core/examples/karl-circle). The example page breaks it into 7 progressive steps, starting from a single circle and building up.
+
+Every line and every label in this figure is composed from retikz primitives (Node / Path / Step)—not hand-written SVG—so you can edit it directly with React code.
+
+The **Ask AI** button at the top-right of the demo card pipes the current figure to the site's AI assistant. Change the color theme, add a tangent line, modify a formula, or remove an annotation, all without writing React code by hand.
+
+## Positioning and Roadmap
+
+retikz's long-term plan is a layered matrix of "low-level primitives + high-level domain packages". Core holds the universal primitives and IR standard, zero deps, framework-agnostic; the domain packages on top split by direction (flowchart / UML / charts, etc.), each carrying its own data and layout algorithms, all eventually rendered through core.
+
+| Package | Responsibility | Status |
+|---|---|---|
+| `@retikz/core` | Universal primitives (Node / Path / Step / Anchor)<br />+ IR + Scene compiler | v0.1 rc in progress<br />(API frozen) |
+| `@retikz/flow` | DAG-style high-level components (flowchart / UML)<br />+ layout algorithms (dagre / elkjs) | Planned |
+| `@retikz/plot` | Data-driven chart capabilities | Planned |
+
+Between core and the host framework sits a framework-adapter layer that translates IR into framework-specific elements. `@retikz/react` is the only one published so far; `@retikz/vue` / `@retikz/canvas` / `@retikz/ssr` are on the roadmap. flow / plot won't kick off until core 1.0 stabilizes, and may ship as sub-packages or spin off as independent projects.
+
+The benefit of layering: one set of primitive vocabulary and IR at the base, every adapter and AI integration inheriting it for free; domain packages can evolve independently without slowing the core.
+
+## Inspiration
+
+### Encountering TikZ
+
+retikz's inspiration didn't come from the frontend ecosystem. Back in college I already found LaTeX + TikZ incredibly useful, and retikz is essentially an attempt to port that experience into React.
+
+Here's what I did with LaTeX + TikZ back then:
+
+- Compiled a systematic [LaTeX study notebook](https://github.com/Pionpill/Notebook/tree/Pionpill/Language/Academic/Latex) covering typesetting basics through TikZ
+- Translated a [TikZ syntax PDF](https://github.com/Pionpill/Notebook/blob/Pionpill/Language/Academic/Latex/TikZ/Latex/TikZNotebook.pdf) as a Chinese-language reference when none existed at the time
+- Used LaTeX + TikZ for typesetting and figures in the MCM/ICM contest—the typesetting and figures came out clean, and the team won a Meritorious Winner
+- Personal notes site [pionpill.github.io/article](https://pionpill.github.io/article) is written entirely in LaTeX
+
+TikZ expresses "a curved line from A's upper-right corner to B's bottom" as `(A.north east) to[bend left] (B.south)`—the expressive power of anchor + path together is something no other tool offered.
+
+### The Frontend Gap
+
+After joining frontend work, I wanted to keep drawing figures—and found that LaTeX + TikZ's **vocabulary** had no counterpart in the frontend ecosystem. Option after option, none fit.
+
+The libraries I looked at:
+
+| Library | I expected | Reality |
+|---|---|---|
+| **echarts / highcharts / antv** | Chart libs, just plot something | Type-driven charts<br />(line / bar / pie...) |
+| **react-flow** | Nodes + edges = universal | Locked to flowchart / DAG<br />Node shapes aren't generic |
+| **d3** | The universal low-level lib | Data-driven + low-level<br />API isn't primitive vocabulary |
+| **mermaid** | DSL is concise | Fixed diagram types<br />Few customization hooks |
+| **drawio** | Universal editor | A GUI tool, not a library |
+
+What I wanted was `(node.south east) -- (other.north)`—anchor + relational coordinates. Chart libs don't offer it, d3 is too low-level, flow locks you to DAG topology. None matched.
+
+Each library solves one sub-problem of "drawing", but none anchors itself on "universal primitives + named nodes + path vocabulary" the way TikZ does—one shared vocabulary across charts / flowcharts / UML / mind maps.
+
+That's when it hit me: what frontend was missing wasn't yet another chart lib—it was a TikZ-flavored primitive library.
+
+## First Attempt
+
+The first commit landed in late November 2024. Over the next five months I sketched out core components: Node / Path / Draw / Step / Anchor / Scope, shipping 0.0.1-rc.3 by April 2025.
+
+May ended with some doc tweaks, then ten months of silence—work got busy, but mostly I got lazy and let it slip.
+
+The design was naive: React components held Model instances directly, with components syncing state via pub-sub. As long as it could draw, that was good enough—I didn't think much further.
+
+The hardest part wasn't writing components; it was being trapped by the old logic when adding new ones. Introducing a new path type meant simultaneous edits in Node Model, the subscription chain, and Path parsing, piling up technical debt I no longer wanted to touch.
+
+Only in early 2026, with AI-assisted development noticeably leveling up, did I decide to rewrite. The v0.0 code was packaged as `@retikz/legacy-core` and kept for a few days as reference, then deleted entirely.
+
+## The AI Opportunity
+
+Rewriting v0.1 in early 2026, several shifts made it a fundamentally different project from v0.0.
+
+### Influences
+
+- **Component granularity from headless libraries (shadcn / tailwindcss)**—shadcn ships functionality rather than styling (`<Button variant="outline">` and cva variants being the canonical example), with components fine-grained enough to be freely recomposed. "Ship primitives, not finished products" was exactly what v0.0 missed
+- **recharts' fine-grained primitives**—`<XAxis dataKey="month">` / `<Line>` / `<Tooltip>` are independent, with data binding even sliced to prop granularity; you compose a chart rather than receive a black-box `<LineChart>`—the same philosophy as TikZ's primitive composition
+- **The rise of AI-assisted development**—tools like Claude Code / Codex broadened what's reachable, letting one person handle design + implementation + docs + structural refactoring in reasonable time. With sub-agents like Spec Writer / Adversarial Bug Hunter / Contract Auditor divvying up the work, one developer plus AI runs like a small team
+
+shadcn / tailwindcss / recharts were all things I systematically learned during the v0.1 rewrite—before that I only knew them by name.
+
+### Architecture
+
+v0.1 flipped the architecture inside out. At the center is an IR (a JSON-serialized graph description). All inputs (Sugar JSX / Kernel JSX / future text DSL / AI) translate to IR; all outputs (React + SVG / pure SVG / Canvas / Native / PDF) start from Scene:
+
+<ComponentPreview name="ir-centric" hideCode />
+
+This architecture came out of extensive AI discussions—for instance, the iron rule "Sugar introduces no new capabilities" was settled only after long back-and-forth on "what happens to cross-platform support if Sugar can express things Kernel can't?"
+
+The complete architectural principles (IR-centric / Sugar adds no new capability / Scene is render-target neutral / domain package extension points, etc.) are covered in [Core Philosophy of retikz](/blog/design/core-philosophy).
+
+### Process
+
+The development pipeline went fully AI-driven. Each feature passes through 5 stages from inception to merge, each governed by a SKILL constraining AI behavior:
+
+| Stage | Led by | Key actions |
+|---|---|---|
+| design | Human | ADR draft + implementation contract |
+| implement | AI | Spec-First TDD: sub-agent writes tests<br />implementer agent makes them pass |
+| test | AI | Dispatch an Adversarial Bug Hunter sub-agent to attack the implementation |
+| document | AI | Bilingual mdx + demo + i18n |
+| wrapup | AI + human | Contract Auditor cross-checks four-way consistency<br />Human ack required before commit |
+
+Humans anchor both ends (design + final ack); the middle stages are largely delegated to sub-agents running in independent sessions.
+
+## Outcome
+
+| Metric | Number |
+|---|---|
+| v0.1 rewrite start → alpha.0 | 2026-04-26 → 2026-05-08, ~2 weeks |
+| alpha.0 → rc.1 | 2026-05-08 → 2026-05-16, 1 week |
+| v0.1 era commits | 430+ |
+| Published packages | `@retikz/core` + `@retikz/react` |
+| Docs site mdx pages | 28 (56 bilingual files) |
+
+About a month total—what didn't get finished in v0.0's two years got done in this one month.
+
+Beyond the releases, things not originally on the plan got built along the way too: in-site AI assistant, full-text search, IR JSON view, Markdown export, llms.txt index. A side effect of AI-assisted development is "what you think of, you can build"—the pace never got blocked.
+
+In-site Ask AI lets readers pipe any demo to an AI for remixing; llms.txt lets external AIs (ChatGPT / Claude) also "see" the entire retikz docs—the docs site itself became an AI tool.
+
+## Looking Ahead
+
+v0.1 delivered core + IR + Scene compiler. Going forward, v1.x / v2.x will push in two directions:
+
+- **Free composition of primitives**: high-level wrappers in domain packages (flow / plot / uml / mind, etc.) can freely combine core primitives—users aren't fenced in by a fixed chart type; you can hand-draw an annotation curve or add a custom node alongside an axis in the same figure
+- **AI-native as a first-class citizen**: every subsequent iteration prioritizes AI compatibility—schema descriptions, JSON Patch, tool definitions, generation quality, error feedback all go into design review
+
+Per the current roadmap, here's roughly how v0.1 onward is paced:
+
+<ComponentPreview name="roadmap" hideCode />
+
+Each version has its own theme—v0.2 adds Scope and Shape Registry, v0.3 brings advanced positioning, v0.4 introduces TikZ libraries and decorations, and canvas rendering arrives before v1.0; the plot domain package kicks off after v1.x. AI compatibility is solidified at every step.
+
+The nearest step is the Shape Registry in v0.2—opening node shapes from a closed enum to third-party injection. It's the prerequisite for domain packages like flow / UML / circuit diagrams.
+
+The v0.1 stage proved that one developer plus AI tools can deliver this architecture. The rest gets done one step at a time—the goal is to push retikz toward what "the next-generation graphics library" should look like.
+
+## References
+
+- [karl-circle example](/core/examples/karl-circle): 7-step buildup of v0.1's signature example
+- [LaTeX study notebook](https://github.com/Pionpill/Notebook/tree/Pionpill/Language/Academic/Latex): systematic LaTeX notes compiled in college
+- [TikZ syntax PDF](https://github.com/Pionpill/Notebook/blob/Pionpill/Language/Academic/Latex/TikZ/Latex/TikZNotebook.pdf): TikZ manual I translated for myself
+- [pionpill.github.io/article](https://pionpill.github.io/article): personal notes site, written entirely in LaTeX
+- [Core Philosophy of retikz](/blog/design/core-philosophy): the complete architectural principles (forthcoming)

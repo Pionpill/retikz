@@ -77,7 +77,7 @@ node -e "const fs=require('node:fs'); for (const p of ['packages/core/package.js
 
 **docs**
 
-- 优先走 [`docs-doc-write`](../docs-doc-write/SKILL.md)。
+- 优先走 [`docs-doc-principle`](../docs-doc-principle/SKILL.md)（按页型再读 [`docs-doc-component`](../docs-doc-component/SKILL.md) / [`docs-doc-example`](../docs-doc-example/SKILL.md)）。
 - zh 是 source of truth，en 同步；不要只改单语。
 - 示例必须使用 rc API，不出现 beta 旧字段。
 - 迁移指南应提供“旧写法 / 新写法 / 原因 / 影响范围”。

@@ -1,0 +1,156 @@
+---
+title: retikz 的起点
+description: retikz 项目的起点与定位
+date: 2026-05-17
+tags: [设计, 起点]
+---
+
+## retikz 的成果
+
+先看 retikz v0.1 版本的标志性例子——单位圆 + 坐标轴 + 刻度 + 阴影楔形 + `sin / cos / tan` 函数线 + 一个带标注的信息框，全在一张图：
+
+<ComponentPreview name="unit-circle" size="lg" />
+
+这是 [karl-circle 示例](/core/examples/karl-circle)的最终图。示例页把它拆成 7 步演进，从一个圆开始一步步搭出来。
+
+图里每一根线、每一个标签都是 retikz 原语（Node / Path / Step）拼出来的，不是手写的 SVG——所以你能直接拿 React 代码改它。
+
+demo 卡片右上角的 **Ask AI** 按钮可以把当前图喂给站内 AI 助手——换主题色、加切线、改公式、删某段标注，都不用动手敲 React 代码。
+
+## 定位与路线图
+
+retikz 的长远规划是「底层图元 + 上层 domain 包」分层矩阵——core 守通用图元 + IR 标准，零依赖、零框架；上层 domain 包按方向切（流程图 / UML / 图表等），各自带数据与布局算法，最终都由 core 统一渲染。
+
+| 包 | 职责 | 状态 |
+|---|---|---|
+| `@retikz/core` | 通用图元（Node / Path / Step / Anchor）<br />+ IR + Scene 编译器 | v0.1 rc 进行中<br />（API 已冻结） |
+| `@retikz/flow` | 流程图 / UML 等 DAG 类高层组件<br />+ 布局算法（dagre / elkjs） | 规划中 |
+| `@retikz/plot` | 数据驱动的图表能力（chart） | 规划中 |
+
+底层之外还隔着一层 framework adapter，把 IR 翻成具体框架的元素——`@retikz/react` 是当前唯一发出来的，`@retikz/vue` / `@retikz/canvas` / `@retikz/ssr` 都在路线图里。flow / plot 等 core 1.0 稳定后再启动，可能作为子包发布，也可能脱离仓库独立项目化。
+
+切多层的好处：底层只一套图元词汇与 IR，所有 adapter 和 AI 接入零成本继承；domain 包能各自演进，不拖慢核心。
+
+## 灵感来源
+
+### 初识 TikZ
+
+retikz 的灵感不来自前端生态——大学时代我就觉得 LaTeX + TikZ 非常好用，retikz 就是想把那套体验搬到 React 里。
+
+那几年我做过这些事：
+
+- 系统整理过一份 [LaTeX 学习笔记](https://github.com/Pionpill/Notebook/tree/Pionpill/Language/Academic/Latex)，从排版基础到 TikZ 全覆盖
+- 翻译过 [TikZ 基础语法 PDF](https://github.com/Pionpill/Notebook/blob/Pionpill/Language/Academic/Latex/TikZ/Latex/TikZNotebook.pdf)，给当时找不到中文资料的自己一份手册
+- 数模美赛用 LaTeX + TikZ 排版绘图，排版与绘图质量高，最后拿了 Meritorious Winner
+- 个人笔记 [pionpill.github.io/article](https://pionpill.github.io/article) 全程 LaTeX 写
+
+TikZ 把"从 A 节点的右上角画一条带弯到 B 节点的下边"这种关系，写成 `(A.north east) to[bend left] (B.south)`——anchor + 路径的表达力是其它工具没有的。
+
+### 工作后的困境
+
+毕业进前端，想接着画图，发现 LaTeX + TikZ 那套**词汇**在前端生态里没有对应的库——一个个试下来都不对劲。
+
+我了解到的组件库有：
+
+| 组件 | 我以为 | 实际上 |
+|---|---|---|
+| **echarts / highcharts / antv** | chart 库，画图就行 | 按图表类型出图<br />（line / bar / pie...） |
+| **react-flow** | 节点 + 边 = 万能 | 锁定在流程图 / DAG<br />节点形状不通用 |
+| **d3** | 万能底层 | 偏数据驱动 + 偏底层<br />API 不是图元词汇 |
+| **mermaid** | DSL 简洁 | 图类型固定<br />自定义钩子少 |
+| **drawio** | 万能编辑器 | 是 GUI 工具不是 library |
+
+我想要的是 `(node.south east) -- (other.north)` 这种 anchor + 关系式坐标的表达——chart 库不给、d3 太底层、flow 锁定 DAG 拓扑，都不是。
+
+每个都解决了「画图」的某个子问题，但没有一个像 TikZ 那样以「通用图元 + 命名节点 + 路径词汇」为中心展开，跨 chart / 流程图 / UML / 思维导图一套词汇通吃。
+
+那时候才意识到：前端缺的不是又一个图表库，是一个 TikZ 性质的图元库。
+
+## 初步尝试
+
+2024 年 11 月底动了第一个 commit；接下来五个月把 Node / Path / Draw / Step / Anchor / Scope 这些核心组件断断续续写出来，到 2025 年 4 月发到 0.0.1-rc.3。
+
+5 月停在文档微调，然后是十个月静默——工作太忙断了，更主要是太懒，鸽了。
+
+那个版本设计想法比较简单：React 组件直接持 Model 实例，组件间靠发布订阅同步状态。能把图画出来就完事，没多想。
+
+最难的不是写组件，是写新功能时被旧逻辑捆住——加一种新 path 类型，得在 Node Model、订阅链、Path 解析三处同时改，最后形成「不想动」的技术债。
+
+直到 2026 年初 AI 辅助开发的体感升级，才决定重做——v0.0 代码被打包成 `@retikz/legacy-core` 留了几天作参考，最后整包删掉。
+
+## AI 机遇
+
+2026 年初重做 v0.1，几方面的变化让它跟 v0.0 不是同一个项目。
+
+### 启发来源
+
+- **shadcn / tailwindcss 无头库的组件粒度**——shadcn 封装的是功能而不是样式（`<Button variant="outline">` 这种 cva variants 切片就是典型），组件粒度细到可被任意重组。"提供原语不提供成品"的思路正好是 v0.0 时代缺的
+- **recharts 的细粒度图元**——`<XAxis dataKey="month">` / `<Line>` / `<Tooltip>` 各自独立，连数据绑定都切到 prop 粒度，组合出 chart 而不是给你一个黑盒 `<LineChart>`——跟 TikZ 拼图元的哲学一脉相承
+- **AI 辅助开发的兴起**——Claude Code / Codex 这类工具拓宽视野，让一个人能在合理时间内同时设计 + 实现 + 写文档 + 调结构。Spec Writer / Adversarial Bug Hunter / Contract Auditor 等子 Agent 分工后，一个人配 AI 也能开个小团队
+
+shadcn / tailwindcss / recharts 这几个其实都是重做 v0.1 期间才系统学的，之前只是听过名字。
+
+### 架构
+
+v0.1 把架构整个翻过来——核心是一份 IR（JSON 序列化的图描述），所有输入（Sugar JSX / Kernel JSX / 未来的 text DSL / AI）都翻译成 IR，所有输出（React + SVG / 纯 SVG / Canvas / Native / PDF）都从 Scene 出发：
+
+<ComponentPreview name="ir-centric" hideCode />
+
+这套架构是和 AI 深入讨论得出的结论——比如「Sugar 不引入新能力」这条铁律，最初是反复推敲「Sugar 能表达 Kernel 表达不了的东西的话，跨平台会怎样」才定下来的。
+
+完整的架构原则（IR 居中 / Sugar 不引入新能力 / Scene 渲染目标无关 / domain 包扩展点等）见 [retikz 核心理念](/blog/design/core-philosophy)。
+
+### 流程
+
+开发流程也整套 AI 化。每个功能从立项到合并走 5 个阶段，每个阶段配一个 SKILL 约束 AI 行为：
+
+| 阶段 | 谁主导 | 关键动作 |
+|---|---|---|
+| design | 人工 | ADR 草稿 + 实现契约段 |
+| implement | AI | Spec-First TDD：子 Agent 写测试<br />实现 Agent 让其通过 |
+| test | AI | 派 Adversarial Bug Hunter 子 Agent 攻击实现 |
+| document | AI | 双语 mdx + demo + i18n |
+| wrapup | AI + 人工 | Contract Auditor 四方对账<br />人工 ack 后 commit |
+
+人工管住两端（设计 + 最终 ack），中间环节大量交给独立 session 的子 Agent。
+
+## 最终成效
+
+| 维度 | 数字 |
+|---|---|
+| v0.1 重写动手 → alpha.0 | 2026-04-26 → 2026-05-08，约 2 周 |
+| alpha.0 → rc.1 | 2026-05-08 → 2026-05-16，1 周 |
+| v0.1 时段 commits | 430+ |
+| 发布的包 | `@retikz/core` + `@retikz/react` |
+| 文档站 mdx 页 | 28（双语 56 份） |
+
+整体一个月——v0.0 时代两年没做完的事，这一个月做了。
+
+发布之外，站点的 AI 助手 / 全站搜索 / IR JSON 视图 / Markdown 导出 / llms.txt 索引这些不在原计划里的东西也都顺手做了。AI 辅助开发的一个副作用是「想到就能做」，节奏没被卡住过。
+
+站内 Ask AI 让读者把任意 demo 喂给 AI 改图，llms.txt 让外站 AI（ChatGPT / Claude）也能"看到"retikz 的全部文档——文档站本身成了 AI 工具。
+
+## 未来畅想
+
+v0.1 落了 core + IR + Scene 编译器；接下来 v1.x / v2.x 想往两个方向走：
+
+- **自由图元**：domain 包（flow / plot / uml / mind 等）的高层封装能自由组合 core 底层图元——用户拼图不被图表类型框住，画 axis 的同图里能手画注释曲线、加自定义节点
+- **AI 原生作为一等公民**：所有后续迭代都优先考虑 AI 适配度——schema 描述、JSON Patch、tool definition、生成质量、错误反馈都进设计 review
+
+按目前路线图，v0.1 到未来大概是这样推进：
+
+<ComponentPreview name="roadmap" hideCode />
+
+每个版本各有命题——v0.2 加 Scope 与 Shape Registry，v0.3 上高级定位，v0.4 引入 TikZ libraries 与 decorations，v1.0 发布前加上 canvas 渲染；1.x 之后从 plot domain 包起步。每一步把 AI 适配做扎实。
+
+最近的一步是 v0.2 的 Shape Registry——把节点形状从闭合枚举开放成第三方可注入，是 flow / UML / 电路图等 domain 包的前置条件。
+
+v0.1 这一阶段证明了独立开发者配 AI 工具能跑通这套架构；剩下的一段段往下做——目标是把 retikz 推到「下一代图形库」该有的样子。
+
+## 引用
+
+- [karl-circle 示例](/core/examples/karl-circle)：v0.1 标志性例子的 7 步演进
+- [LaTeX 学习笔记](https://github.com/Pionpill/Notebook/tree/Pionpill/Language/Academic/Latex)：大学整理的系统性 LaTeX 笔记
+- [TikZ 基础语法 PDF](https://github.com/Pionpill/Notebook/blob/Pionpill/Language/Academic/Latex/TikZ/Latex/TikZNotebook.pdf)：自译的 TikZ 中文手册
+- [pionpill.github.io/article](https://pionpill.github.io/article)：个人笔记，全程 LaTeX 写
+- [retikz 核心理念](/blog/design/core-philosophy)：完整的架构原则（待发布）

@@ -1,5 +1,5 @@
 import { Search } from 'lucide-react';
-import { type FC, useEffect, useMemo, useState } from 'react';
+import { type FC, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router';
 
@@ -7,92 +7,26 @@ import { Button } from '@/components/ui/button';
 import { Shortcut } from '@/components/shared/shortcut';
 import { cn } from '@/lib/utils';
 import {
-  CommandDialog,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from '@/components/ui/command';
-import type { Page } from '@/data/interface';
-import { modules } from '@/data/module';
-import { getSectionsByModule } from '@/data/sections';
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 
-type SearchEntry = {
-  /** 路由路径，点击 onSelect 时跳转 */
-  path: string;
-  /** 翻译后的页面标题 */
-  label: string;
-  /** 翻译后的模块名（用于分组 heading） */
-  moduleLabel: string;
-  /** 翻译后的栏目名（顶部 section 名，可空——profile 这类无 label） */
-  sectionLabel?: string;
-  /** 翻译后的父级页面名（仅 4 段子页有） */
-  parentLabel?: string;
-};
-
-const useSearchEntries = (): Array<SearchEntry> => {
-  const { t, i18n } = useTranslation();
-  return useMemo(() => {
-    const out: Array<SearchEntry> = [];
-    // i18next t() strict 模式返回 string | undefined；统一 String() 强转，避免向下传递时窄化报错
-    for (const m of modules) {
-      const moduleLabel = String(t(m.label));
-      const sections = getSectionsByModule(m.id);
-      for (const section of sections) {
-        // ungrouped section（无 id + 无 label）下页面是 2 段 URL：`/<module>/<page>`
-        const ungrouped = !section.id || !section.label;
-        const sectionLabel = section.label ? String(t(section.label)) : undefined;
-        const walk = (pages: Array<Page>, parent: { id: string; label: string } | null) => {
-          for (const page of pages) {
-            const pageLabel = String(t(page.label));
-            if (page.children) {
-              walk(page.children, { id: page.id, label: pageLabel });
-              continue;
-            }
-            const path = ungrouped
-              ? `/${m.id}/${page.id}`
-              : parent
-                ? `/${m.id}/${section.id}/${parent.id}/${page.id}`
-                : `/${m.id}/${section.id}/${page.id}`;
-            out.push({
-              path,
-              label: pageLabel,
-              moduleLabel,
-              sectionLabel,
-              parentLabel: parent?.label,
-            });
-          }
-        };
-        walk(section.pages, null);
-      }
-    }
-    return out;
-    // 语言切换时强制重算 label
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [t, i18n.resolvedLanguage]);
-};
+import { DocsSearchPanel } from './DocsSearchPanel';
 
 /**
- * 全站文档搜索（shadcn / langchain docs 的 Cmd+K 风格）
- * @description 触发器是 outline 输入框样按钮，点击或 Ctrl/Cmd+K 打开 CommandDialog；数据源走 `data/` 模块 → 栏目 → 页树，按 i18n label 模糊匹配
+ * 全站文档搜索（Cmd+K）
+ * @description 触发器是 outline 输入框样按钮，点击或 Ctrl/Cmd+K 打开 Dialog；内部 Command UI 由
+ *   DocsSearchPanel 提供，与 AI Chat 的 Add Context 共用一份匹配 / 渲染逻辑
  */
 export type DocsSearchProps = { className?: string };
-export const DocsSearch: FC<DocsSearchProps> = ({ className }) => {
+export const DocsSearch: FC<DocsSearchProps> = props => {
+  const { className } = props;
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const navigate = useNavigate();
-  const entries = useSearchEntries();
-
-  const grouped = useMemo(() => {
-    const map = new Map<string, Array<SearchEntry>>();
-    entries.forEach(entry => {
-      const list = map.get(entry.moduleLabel) ?? [];
-      list.push(entry);
-      map.set(entry.moduleLabel, list);
-    });
-    return Array.from(map.entries());
-  }, [entries]);
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
@@ -105,31 +39,26 @@ export const DocsSearch: FC<DocsSearchProps> = ({ className }) => {
     return () => window.removeEventListener('keydown', onKey);
   }, []);
 
-  const handleSelect = (path: string) => {
-    setOpen(false);
-    navigate(path);
-  };
-
   return (
     <>
-      {/* 移动端：图标按钮 */}
+      {/* < md：ghost 图标按钮，与右侧 More / AI 触发器对齐 size-7 */}
       <Button
         variant="ghost"
         size="icon"
-        className={cn('size-7 cursor-pointer rounded-sm lg:hidden', className)}
+        className={cn('size-7 cursor-pointer rounded-sm text-muted-foreground hover:text-foreground md:hidden', className)}
         onClick={() => setOpen(true)}
         aria-label={t('common.searchHint')}
         title={t('common.searchHint')}
       >
         <Search className="size-4" />
       </Button>
-      {/* 桌面端：输入框样式触发器 —— 点击或 Ctrl/Cmd+K 打开 CommandDialog */}
+      {/* md+：输入框样式触发器（md 紧凑、lg / xl 渐次放大）—— 点击或 Ctrl/Cmd+K 打开 Dialog */}
       <button
         type="button"
         onClick={() => setOpen(true)}
         aria-label={t('common.searchHint')}
         className={cn(
-          'hidden lg:inline-flex h-8 w-56 xl:w-64 items-center gap-2 rounded-md border border-input bg-transparent px-3 text-sm text-muted-foreground shadow-xs transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 cursor-pointer',
+          'hidden md:inline-flex h-8 w-44 lg:w-52 xl:w-64 items-center gap-2 rounded-md border border-input bg-transparent px-3 text-sm text-muted-foreground shadow-xs transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 cursor-pointer',
           className,
         )}
       >
@@ -137,35 +66,23 @@ export const DocsSearch: FC<DocsSearchProps> = ({ className }) => {
         <span className="flex-1 truncate text-left">{t('common.searchPlaceholder')}</span>
         <Shortcut keys={['mod', 'K']} className="tracking-normal" />
       </button>
-      <CommandDialog
-        open={open}
-        onOpenChange={setOpen}
-        title={t('common.searchHint')}
-        description={t('common.searchPlaceholder')}
-      >
-        <CommandInput placeholder={t('common.searchPlaceholder')} />
-        <CommandList>
-          <CommandEmpty>{t('common.searchEmpty')}</CommandEmpty>
-          {grouped.map(([moduleLabel, items]) => (
-            <CommandGroup key={moduleLabel} heading={moduleLabel}>
-              {items.map(item => (
-                <CommandItem
-                  key={item.path}
-                  value={`${item.label} ${item.sectionLabel ?? ''} ${item.parentLabel ?? ''} ${item.moduleLabel}`}
-                  onSelect={() => handleSelect(item.path)}
-                >
-                  <span className="truncate">{item.label}</span>
-                  {(item.sectionLabel || item.parentLabel) && (
-                    <span className="ml-auto truncate text-xs text-muted-foreground">
-                      {[item.sectionLabel, item.parentLabel].filter(Boolean).join(' / ')}
-                    </span>
-                  )}
-                </CommandItem>
-              ))}
-            </CommandGroup>
-          ))}
-        </CommandList>
-      </CommandDialog>
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent className="overflow-hidden p-0 sm:max-w-lg">
+          <DialogHeader className="sr-only">
+            <DialogTitle>{t('common.searchHint')}</DialogTitle>
+            <DialogDescription>{t('common.searchPlaceholder')}</DialogDescription>
+          </DialogHeader>
+          <DocsSearchPanel
+            active={open}
+            placeholder={t('common.searchPlaceholder')}
+            emptyText={t('common.searchEmpty')}
+            onSelect={entry => {
+              setOpen(false);
+              navigate(entry.path);
+            }}
+          />
+        </DialogContent>
+      </Dialog>
     </>
   );
 };

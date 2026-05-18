@@ -1,6 +1,6 @@
 ---
 name: develop-document
-description: alpha 功能开发的文档阶段——把已实现已通过 adversarial 第一关的功能落进 apps/docs/。衔接 docs-doc-write SKILL（双语 mdx + demo + API 表 + sidebar / i18n 同步）。绿色 level 改动若主体就是文档，本阶段即主流程；红色 / 黄色实现的文档化在本阶段补齐。
+description: alpha 功能开发的文档阶段——把已实现已通过 adversarial 第一关的功能落进 apps/docs/。衔接 docs-doc-principle SKILL（按页型再分流到 docs-doc-component / docs-doc-example；双语 mdx + demo + API 表 + sidebar / i18n 同步）。绿色 level 改动若主体就是文档，本阶段即主流程；红色 / 黄色实现的文档化在本阶段补齐。
 ---
 
 # Stage 4：文档
@@ -23,10 +23,10 @@ description: alpha 功能开发的文档阶段——把已实现已通过 advers
 
 ## 流程主体
 
-委托给 [`docs-doc-write`](../docs-doc-write/SKILL.md) SKILL。本 SKILL 主要负责：
+委托给 [`docs-doc-principle`](../docs-doc-principle/SKILL.md) SKILL（按页型再分流到 [`docs-doc-component`](../docs-doc-component/SKILL.md) / [`docs-doc-example`](../docs-doc-example/SKILL.md)）。本 SKILL 主要负责：
 
 - 列出本 ADR 必须落到文档站的清单
-- 检查 docs-doc-write 产出是否覆盖了清单
+- 检查 doc-skill 产出是否覆盖了清单
 - 校验双语并行 / API 表 / sidebar 注册的完整性
 
 ## 必落清单
@@ -61,20 +61,20 @@ description: alpha 功能开发的文档阶段——把已实现已通过 advers
 - [ ] 受影响 demo 删 / 改
 - [ ] 章节里如有相关说明全删
 
-## docs-doc-write 衔接
+## doc-skill 衔接
 
-调用 docs-doc-write SKILL 时把上面"必落清单"作为输入，让其按清单逐条产出 mdx / demo 文件。
+调用 docs-doc-principle SKILL（按页型再读 docs-doc-component / docs-doc-example）时把上面"必落清单"作为输入，让其按清单逐条产出 mdx / demo 文件。
 
-主 AI 接到 docs-doc-write 产出后回校：
+主 AI 接到 doc-skill 产出后回校：
 
 ```
-- 必落清单每条是否打勾？没打勾的项 halt → 派 docs-doc-write 补
+- 必落清单每条是否打勾？没打勾的项 halt → 派 doc-skill 补
 - 双语 demo 文件结构是否一致（同 props / 同 layout / 仅文案差异）？
 - API 表行是否完整（4 列填全）？
 - sidebar / i18n 是否两端都注册？
 ```
 
-## demo 文件命名（与 docs-doc-write 一致）
+## demo 文件命名（与 doc-skill 一致）
 
 - 无文字：`<name>.demo.tsx`
 - 含展示文本：`<name>.zh.demo.tsx` + `<name>.en.demo.tsx`（[`ComponentPreview`](../../../apps/docs/src/components/shared/component-preview/ComponentPreview.tsx) 按当前 i18n 语言挑）
@@ -93,9 +93,9 @@ description: alpha 功能开发的文档阶段——把已实现已通过 advers
 
 | 情景 | 处理 |
 |---|---|
-| docs-doc-write 写出的 mdx 描述与实际行为不符 | halt → 主 AI 呈报，让 docs-doc-write 重写（不要让本 SKILL 自己改 mdx，违反职责分工） |
-| 必落清单某项 docs-doc-write 不知道怎么写（如新 demo 找不到合适场景） | halt → 主 AI 提供 demo 场景或改 ADR 加示例 |
-| 双语 demo 文案不对应（zh 用了中文示例文本但 en 拷贝过来没翻译） | halt → 让 docs-doc-write 修 |
+| doc-skill 写出的 mdx 描述与实际行为不符 | halt → 主 AI 呈报，让 doc-skill 重写（不要让本 SKILL 自己改 mdx，违反职责分工） |
+| 必落清单某项 doc-skill 不知道怎么写（如新 demo 找不到合适场景） | halt → 主 AI 提供 demo 场景或改 ADR 加示例 |
+| 双语 demo 文案不对应（zh 用了中文示例文本但 en 拷贝过来没翻译） | halt → 让 doc-skill 修 |
 
 ## 与上下游衔接
 

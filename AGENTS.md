@@ -21,7 +21,7 @@ retikz/
 │   ├── core/           # @retikz/core — v0.1 alpha 框架无关 IR + Scene 编译器
 │   └── react/          # @retikz/react — React adapter（Kernel + Sugar JSX）
 ├── apps/
-│   └── docs/           # @retikz/docs — 文档站点（修改前先看 apps/docs/AGENTS.md；写文档另见 .agents/skills/docs-doc-write/SKILL.md）
+│   └── docs/           # @retikz/docs — 文档站点（修改前先看 apps/docs/AGENTS.md；写文档另见 .agents/skills/docs-doc-principle/SKILL.md，按页型再分流到 docs-doc-component / docs-doc-example）
 ├── config/
 │   └── eslint/         # 共享的 ESLint 预设
 ├── notes/              # 项目内部架构 / 设计 / 分析笔记（含 agent specs；与 apps/docs 用户文档站点区分）
@@ -91,7 +91,7 @@ pnpm lint                                  # 全部包 ESLint（不带 --fix）
 > - 新加 `kind` / 新加 prop / 新加 IR 字段 → 在对应组件页 mdx 里加 API 表格行 + 加 `<ComponentPreview>` 示例 + 加同级 `<name>.demo.tsx`
 > - 改默认值 / 改字段语义 → 改 mdx 里的 API 表 / 行为说明 / 受影响的 demo
 > - 删 / 重命名 prop → 改全部相关 mdx + demo + 提及该 prop 的概念页
-> - 加新组件 / 新页面 → 走 [`.agents/skills/docs-doc-write/SKILL.md`](.agents/skills/docs-doc-write/SKILL.md) 的三处协同流程（contents + data + i18n）
+> - 加新组件 / 新页面 → 走 [`.agents/skills/docs-doc-principle/SKILL.md`](.agents/skills/docs-doc-principle/SKILL.md) 的三处协同流程（contents + data + i18n），按页型再读 [`docs-doc-component`](.agents/skills/docs-doc-component/SKILL.md) / [`docs-doc-example`](.agents/skills/docs-doc-example/SKILL.md)
 > - **双语并行**：zh 与 en 始终保持同步，zh 是 source of truth；只改 zh 不改 en 视为未完成
 >
 > **不需要更新文档的情形**（仅限内部、用户无感）：

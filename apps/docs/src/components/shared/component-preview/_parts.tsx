@@ -2,7 +2,7 @@ import { Check, Copy } from 'lucide-react';
 import { type ComponentProps, type FC, type ReactNode } from 'react';
 
 import { JsonIcon, ReactIcon } from '@/components/icons';
-import { Button } from '@/components/ui/button';
+import { Button, buttonVariants } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
 import type { SourceView } from './_shared';
@@ -19,17 +19,19 @@ export type ToolbarIconButtonProps = Omit<ComponentProps<'button'>, 'aria-label'
 export const ToolbarIconButton: FC<ToolbarIconButtonProps> = props => {
   const { label, pressed, className, children, ...rest } = props;
   return (
-    <Button
+    <button
       type="button"
-      size="icon"
-      variant={pressed ? 'secondary' : 'ghost'}
       aria-label={label}
       aria-pressed={pressed}
-      className={cn('size-7 cursor-pointer rounded-sm text-muted-foreground', className)}
+      className={cn(
+        buttonVariants({ variant: pressed ? 'secondary' : 'ghost', size: 'icon' }),
+        'size-7 cursor-pointer rounded-sm text-muted-foreground',
+        className,
+      )}
       {...rest}
     >
       {children}
-    </Button>
+    </button>
   );
 };
 
@@ -99,12 +101,13 @@ export type CopyButtonProps = {
   copied: boolean;
   onCopy: () => void;
   className?: string;
+  title?: string;
 };
 
 export const CopyButton: FC<CopyButtonProps> = props => {
-  const { copied, onCopy, className } = props;
+  const { copied, onCopy, className, title } = props;
   return (
-    <ToolbarIconButton label={copied ? 'Copied' : 'Copy'} onClick={onCopy} className={className}>
+    <ToolbarIconButton label={copied ? 'Copied' : 'Copy'} title={title} onClick={onCopy} className={className}>
       {copied ? <Check className="size-4" /> : <Copy className="size-4" />}
     </ToolbarIconButton>
   );

@@ -1,3 +1,4 @@
+import { Fragment } from 'react';
 import { describe, expect, it } from 'vitest';
 import { Coordinate } from '../../src/kernel/Coordinate';
 import { Draw } from '../../src/sugar/Draw';
@@ -469,6 +470,70 @@ describe('buildIR', () => {
         </Path>,
       );
       expect(fromSugar).toEqual(fromKernel);
+    });
+  });
+
+  describe('React.Fragment 透明展开', () => {
+    it('Fragment 直接子元素被展开为 TikZ 子级', () => {
+      const ir = buildIR(
+        <Fragment>
+          <Node id="A" position={[0, 0]}>a</Node>
+          <Node id="B" position={[10, 0]}>b</Node>
+        </Fragment>,
+      );
+      expect(ir.children).toEqual([
+        expect.objectContaining({ type: 'node', id: 'A' }),
+        expect.objectContaining({ type: 'node', id: 'B' }),
+      ]);
+    });
+
+    it('.map() 返回 <Fragment> 包裹多个 Kernel 元素 → 全部展开（典型 demo 用法）', () => {
+      const ir = buildIR(
+        [-1, 0, 1].map(v => (
+          <Fragment key={v}>
+            <Node id={`x${v}`} position={[v * 10, 0]}>{`x=${v}`}</Node>
+            <Coordinate id={`c${v}`} position={[v * 10, 10]} />
+          </Fragment>
+        )),
+      );
+      expect(ir.children.map(c => c.type)).toEqual([
+        'node', 'coordinate',
+        'node', 'coordinate',
+        'node', 'coordinate',
+      ]);
+    });
+
+    it('嵌套 Fragment 也递归展开', () => {
+      const ir = buildIR(
+        <Fragment>
+          <Fragment>
+            <Node id="A" position={[0, 0]}>a</Node>
+          </Fragment>
+          <Node id="B" position={[10, 0]}>b</Node>
+        </Fragment>,
+      );
+      expect(ir.children.map(c => (c as { id?: string }).id)).toEqual(['A', 'B']);
+    });
+
+    it('混合 .map(Fragment) + 直接子节点 + 再 .map(Fragment) 保持 JSX 顺序（回归 karl-circle 网格→圆→刻度 模式）', () => {
+      const ir = buildIR(
+        <>
+          {[1, 2].map(i => (
+            <Fragment key={`g${i}`}>
+              <Node id={`grid${i}`} position={[i, 0]}>g</Node>
+            </Fragment>
+          ))}
+          <Node id="circle" position={[0, 0]}>c</Node>
+          {[3].map(i => (
+            <Fragment key={`t${i}`}>
+              <Node id={`tick${i}`} position={[i, 0]}>t</Node>
+            </Fragment>
+          ))}
+        </>,
+      );
+      expect(ir.children.map(c => (c as { id?: string }).id)).toEqual([
+        'grid1', 'grid2', 'circle', 'tick3',
+      ]);
     });
   });
 });

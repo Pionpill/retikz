@@ -8,6 +8,8 @@ export type ChatRole = 'user' | 'assistant';
 export type ChatMessage = {
   role: ChatRole;
   content: string;
+  /** 系统自动发出的消息（如 retikz schema 自动修复）；UI 据此打不同样式，provider 侧忽略（发送前 strip） */
+  autoSent?: boolean;
 };
 
 /** 错误类别——UI 据此显示分级提示 */

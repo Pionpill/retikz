@@ -1,0 +1,154 @@
+---
+title: Core Philosophy of retikz
+description: IR-centric description, cross-platform rendering
+date: 2026-05-17
+tags: [architecture, design]
+---
+
+## Three layers
+
+<ComponentPreview name="pipeline" hideCode />
+
+Four input paths — Sugar JSX, Kernel JSX, the future Text DSL, and AI / LLM — all translate into one and the same IR; IR is compiled into Scene, which adapters then route to React + SVG, pure SVG strings, Canvas (further rasterized to PNG / JPEG / WebP), Native (Skia / RN), or PDF. The arrow between IR and "persistence / edit" is bidirectional: IR is a read/write durable layer where user edits, AI patches, and serialization all live.
+
+| Layer | What it is | Key constraint |
+|---|---|---|
+| IR | Declarative JSON schema (single source: zod) | Data only — no functions, ReactNode, or closures |
+| Scene | Compiled product with geometry resolved | Greatest-common subset of vector graphics (rect / ellipse / text / path / group) |
+| Adapter | Scene → concrete runtime (React/SVG, Canvas, SSR…) | Thin translation layer, zero layout logic |
+
+Lock down the schema of those two middle layers, and the outer rings can evolve freely — that's retikz's core bet.
+
+## Why IR sits at the center
+
+The intuitive move is to render SVG straight from JSX — React plus a pile of `<g>` `<path>`, skipping any middle representation. retikz didn't take that path, for three reasons:
+
+1. **Persistence**: Once JSX is rendered, there's no path back. A user tweaks a diagram in the browser and wants to save it, replay it, patch it incrementally — without a middle representation you end up storing source-code strings, i.e. treating code as data.
+2. **Cross-platform**: Canvas / SSR / PDF want to share the same layout logic. Either each runtime reimplements anchor resolution, or you translate to a middle form first. Reimplementation cost grows linearly with adapter count.
+3. **AI as a first-class input**: LLMs producing JSON via Structured Outputs is far more reliable than producing JSX text. JSON backed by a zod schema can be validated 100% of the time; JSX strings routinely miss brackets, mistype prop names, or invent nonexistent components.
+
+IR is the common denominator of those three concerns. Once it exists, JSX becomes one "input syntax" for IR, AI is another, a future text DSL is the third — and none of them couple to each other.
+
+## The three layers of IR
+
+The top layer is `Scene`, fixed in shape:
+
+```ts
+{
+  version: 1,
+  type: 'scene',
+  children: Array<IRNode | IRPath | IRCoordinate>
+}
+```
+
+`version` is mandatory and bumps on breaking changes; the schema is defined once in zod (`packages/core/src/ir/scene.ts`), TS types derive via `z.infer`, and the JSON Schema gets exported through `zod-to-json-schema` to feed LLMs. Every field must carry an English `.describe(...)` — that affects LLM output quality; it's not documentation.
+
+The middle layer is **Node** and **Path**:
+
+- **Node** is a positionable, rotatable shape container (rectangle / circle / ellipse / diamond) with fields like text / label / padding / scale; position supports four forms (Cartesian / polar / `at`-reference / offset).
+- **Path** is a sequence of drawing commands — at least 2 `Step` entries in `children`, plus stroke / fill / arrow / dashPattern and other visual attributes.
+
+The bottom layer is **Step**: 10 `kind`s cover the full set of path actions:
+
+| kind | Params | Semantics |
+|---|---|---|
+| `move` | `to` | Move the cursor, no drawing |
+| `line` | `to`, `label?` | Straight line |
+| `step` | `via`, `to`, `label?` | Elbow (one right-angle mid-point) |
+| `cycle` | — | Close back to the start point |
+| `curve` | `to`, `control`, `label?` | Quadratic Bézier |
+| `cubic` | `to`, `control1`, `control2`, `label?` | Cubic Bézier |
+| `bend` | `to`, `bendDirection`, `bendAngle?` | Arc shorthand (compiled to cubic) |
+| `arc` | `startAngle`, `endAngle`, `radius` | Circular arc (cursor as center) |
+| `circlePath` | `radius` | Full circle |
+| `ellipsePath` | `radiusX`, `radiusY` | Full ellipse |
+
+These 10 are the result of repeated trimming — TikZ has dozens of native path actions, and most can be expressed by composing these 10. More `kind`s push up LLM learning cost and adapter implementation cost; fewer and the sugar layer can't paper over the gap.
+
+## The Scene compiler: what the two passes do
+
+`compileToScene(ir, options)` is core's heaviest asset (`packages/core/src/compile/compile.ts`), and it's a two-pass design:
+
+- **Pass 1**: Walk every Node, resolve relative placement (e.g. `{ direction: 'right', of: 'A', distance: 2 }`), register into `nodeIndex` — a map from node id to known coordinates plus anchor table.
+- **Pass 2**: Emit primitives in JSX source order. Steps in a Path resolve their `to` here — node references like `"A.east"` / `"A.45"` look up `nodeIndex`; relative / accumulated-relative targets track cursor position.
+
+Why two passes? Because nodes and paths reference each other — a node's position may depend on another node's anchor, and a path endpoint may reference some node's compass direction. Lay out all nodes first, and paths can consume the result without hitting undefined references.
+
+The compile output `Scene` consists of 5 primitive types: `RectPrim` / `EllipsePrim` / `TextPrim` / `PathPrim` / `GroupPrim`. That's the greatest-common subset of vector graphics — SVG, Canvas, PDF, native drawing can all consume it directly, without depending on any runtime feature. Text measurement must complete at this stage (`measuredWidth` / `measuredHeight` already filled), so adapters never need to touch side-effecting APIs like `canvas.measureText`.
+
+```text
+IR (JSON)
+  ↓ Pass 1: node layout + nodeIndex registration
+  ↓ Pass 2: path resolution + primitive emission
+Scene (primitive list + viewBox)
+  ↓ adapter (pure translation)
+SVG / Canvas / PDF / ...
+```
+
+## Component layering: Tier 1 / Tier 2
+
+`@retikz/react` splits components into two gradients — Tier 1 is the in-core low-level primitives (Kernel and its syntactic sugar Sugar), Tier 2 is the high-level domain packages (flow charts, plots, etc.). Three criteria decide which tier a new component belongs in (see the component-layering section in AGENTS.md):
+
+1. **Reversibility**: After expansion, can you 1:1 recover the original intent by removing the construct's name?
+2. **Algorithm presence**: Does expansion involve decisions (auto-tick / layout / scale)?
+3. **Structural parameters**: Do parameters change the number of nodes or topology?
+
+All three No → Sugar (still Tier 1); any Yes → Tier 2; low-level primitive → Kernel.
+
+### Tier 1: Kernel / Sugar (shipped)
+
+| Layer | Examples | IR form | Expansion time |
+|---|---|---|---|
+| Kernel | `<Node>` `<Path>` `<Step>` | Directly maps to an IR node | Not expanded |
+| Sugar | `<Draw way={['A', '-\|', 'B']}>` | Flattened to Kernel | Synchronous in builder (never enters IR) |
+
+Kernel is the React-direct mapping of IR, 1:1; Sugar is syntactic sugar over Kernel, flattened during the builder phase, and never appears in IR. Both layers live inside `@retikz/react`, with zero extra dependencies.
+
+The iron rule: **Sugar introduces no new capability**. Anything Sugar can express, Kernel can express too — once that line breaks, Sugar-only capabilities can't be persisted, can't cross platforms, can't be consumed by AI, and the whole layering becomes a lie.
+
+### Tier 2: domain packages (planned)
+
+Tier 2 isn't implemented in core yet; the plan is for `@retikz/flow` / `@retikz/plot` and other domain packages to carry it:
+
+| Layer | Examples | IR form | Expansion time |
+|---|---|---|---|
+| Tier 2 | `<Axis>` `<BarPlot>` `<Tree>` (domain packages) | High-level form preserved | Inside `compileToScene` |
+
+The shared trait is that they involve algorithmic decisions (dagre layout, auto-ticks, scale calculation) and must be preserved as high-level forms through the compile pipeline until `compileToScene`, where a `lowerComposites` hook lowers them into Kernel primitives. That keeps core's schema slim, the LLM learning surface flat, and adding a new chart type doesn't require core changes — this tier kicks off once core 1.0 stabilizes.
+
+## Framework adapter: deliberately thin
+
+`@retikz/react` is currently the only shipped adapter, and the whole architecture insists it stay "thin":
+
+- The top-level `<TikZ>` container (`packages/react/src/kernel/TikZ.tsx`) does three things only: receive an `ir` prop or `useMemo(buildIR(children))`, call `compileToScene`, and translate Scene primitives into `<svg>` children.
+- The builder (`packages/react/src/kernel/builder.ts`) does synchronous JSX → IR conversion, using a shared field table (`NODE_FIELDS` / `PATH_FIELDS`) and component `displayName` to recognize types; it doesn't call hooks and isn't part of the React render call stack.
+- Text measurement uses `browserMeasurer` (canvas.measureText), injected into compile as a `TextMeasurer` — later SSR adapters can swap in satori / sharp etc., with zero changes to compile itself.
+
+The goal of this layer is **adding a new adapter in the future should take roughly 50 lines of translation code**. SSR translates to SVG strings, Canvas to ctx calls, PDF to PDFKit commands — all sharing the same Scene primitives. The zero-dependency principle lands here: CI enforces that `@retikz/core` loads in a React-free environment, and packages/core's dependency allowlist contains only `zod`.
+
+## How AI-friendliness lands in code
+
+"AI-friendliness" isn't a slogan in retikz — it's a handful of concrete constraints:
+
+- **JSON only**: IR holds no functions, no ReactNode, no closures. Whatever the LLM emits is a plain `JSON.parse`-able object.
+- **Single source: zod**: JSON Schema is auto-exported from zod and tracks the schema's evolution. OpenAI Structured Outputs / Anthropic tool use can consume it as-is.
+- **Mandatory description on every field**: The English text is both the LLM's semantic hint and the developer's field documentation; miss one and the PR doesn't pass.
+- **JSON-Patch-friendly**: IR is a pure JSON tree and works directly with RFC 6902 patches — the Ask AI button in the upper-right of doc-site demo cards (recolor / add tangent / change formula / drop an annotation) is exactly a patch set under the hood.
+- **Schema version field**: `version: 1` sits at the top level, bumps on breaking changes, with forward compatibility carried by migrators.
+
+These constraints are retikz's core differentiator versus existing charting libraries. Recharts, ECharts can add new chart types and add React support; but changing the core to "IR-centric + JSON Schema strict / LLM-first input" amounts to a full rewrite — and that's the window retikz is betting on.
+
+## TikZ: more than just the name
+
+retikz **adopts** a subset of TikZ syntax rather than inventing a fresh DSL. That decision was weighed repeatedly in the design notes:
+
+- **Ecosystem leverage**: TikZ's two decades of tutorials, StackOverflow answers, arXiv paper examples are all available for reference; inventing a DSL zeros that out.
+- **AI dividend**: TikZ's volume in LLM training data is enormous, and zero-shot generation quality blows past any invented syntax. In the AI era, a graphics DSL that can reuse pretraining has a huge head start.
+- **Real migration**: retikz-supported TikZ code is planned to be copy-pasteable straight into LaTeX compilation; in reverse, `@retikz/codec` (v2.x plan) will export IR back to `.tex`, letting browser-drawn diagrams be pasted into papers.
+
+So `padding` / `margin` in IR map directly to TikZ's `inner sep` / `outer sep`, node anchors use strings like `north-west` / `45`, polar convention is 0° = +x rather than screen-coordinate 0° = right — all deliberately kept in the original vocabulary so TikZ users have zero learning cost and LLMs hit the training distribution.
+
+## References
+
+- In-site: [karl-circle example](/core/examples/karl-circle) — retikz v0.1's signature diagram, demonstrating Kernel primitive composition
+- In-site: [Origins of retikz](/blog/journey/origin) — project inspiration, roadmap, and release cadence
