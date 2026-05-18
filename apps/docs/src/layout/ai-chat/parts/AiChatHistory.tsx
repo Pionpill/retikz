@@ -10,6 +10,7 @@ import {
   ContextMenuTrigger,
 } from '@/components/ui/context-menu';
 import { Skeleton } from '@/components/ui/skeleton';
+import { MarkdownInline } from '@/components/shared/inline-markdown';
 import { cn } from '@/lib/utils';
 import { useAiChatStore } from '@/store/useAiChatStore';
 import type { Conversation } from '../conversationsStorage';
@@ -172,9 +173,10 @@ export const AiChatHistory: FC = () => {
                               className="min-w-0 flex-1 rounded-sm border border-border bg-background px-1.5 py-0.5 text-sm outline-none focus:border-primary"
                             />
                           ) : (
-                            <span className="min-w-0 flex-1 truncate text-sm font-medium">
-                              {displayTitle(conv)}
-                            </span>
+                            <MarkdownInline
+                              source={displayTitle(conv)}
+                              className="min-w-0 flex-1 truncate text-sm font-medium"
+                            />
                           )}
                           {isActive && !isEditing && (
                             <span className="shrink-0 rounded-sm bg-primary/15 px-1.5 py-0.5 text-[10px] font-medium text-primary">
