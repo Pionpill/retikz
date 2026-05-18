@@ -5,13 +5,11 @@ import { Coordinate, Draw, Node, Path, Step, TikZ } from '@retikz/react';
 // Literal colors instead of CSS vars: downloaded SVGs resolve `var(--x)` in a different
 // context (or none), falling back to black; literal colors stay correct everywhere.
 const HELP_LINE = '#e5e7eb';
-const PAGE_BG = '#ffffff';
 const ANGLE_STROKE = 'oklch(0.55 0.16 145)';
 const ANGLE_FILL = 'oklch(0.92 0.10 145)';
 const SIN_COLOR = '#ef4444';
 const COS_COLOR = '#2563eb';
 const TAN_COLOR = 'oklch(0.72 0.16 60)';
-const INFO_BG = '#f5f5f5';
 const MATH_FONT = {
   family: '"Latin Modern Math", "STIX Two Math", "Cambria Math", "Times New Roman", serif',
   style: 'italic' as const,
@@ -53,7 +51,7 @@ const Demo: FC = () => (
     ].map(({ x, text }) => (
       <Fragment key={`tx-${x}`}>
         <Draw way={[[x, -3], [x, 3]]} />
-        <Node position={[x, 14]} fill={PAGE_BG} stroke="none" padding={1}>
+        <Node position={[x - 10, 14]} stroke="none" padding={1}>
           {text}
         </Node>
       </Fragment>
@@ -66,7 +64,7 @@ const Demo: FC = () => (
     ].map(({ y, text }) => (
       <Fragment key={`ty-${y}`}>
         <Draw way={[[-3, y], [3, y]]} />
-        <Node position={[-18, y]} fill={PAGE_BG} stroke="none" padding={1}>
+        <Node position={[-18, y + 10]} stroke="none" padding={1}>
           {text}
         </Node>
       </Fragment>
@@ -101,12 +99,15 @@ const Demo: FC = () => (
     <Coordinate id="t" position={[100, -TAN30 * 100]} />
     <Draw way={[[0, 0], 't']} />
 
-    {/* Right-hand info box — LineSpec.fill switches color per line (inline-span coloring not yet supported) */}
+    {/* Right-hand info box — LineSpec.fill switches color per line (inline-span coloring not yet supported).
+        Light-gray dashed border, no fill: visible in both light / dark themes without stealing focus;
+        no empty '' separators (empty tspan dy advance is inconsistent across browsers, leaves a visible
+        bottom strip); visual grouping comes from the alternating colored / default-color lines. */}
     <Node
       position={[320, 10]}
       shape="rectangle"
-      fill={INFO_BG}
-      stroke="none"
+      stroke="#d4d4d4"
+      dashed
       roundedCorners={6}
       innerXSep={10}
       innerYSep={4}
@@ -114,13 +115,10 @@ const Demo: FC = () => (
       text={[
         { text: 'angle α = 30°', fill: ANGLE_STROKE },
         '(π/6 in radians)',
-        '',
         { text: 'sin α = 1/2', fill: SIN_COLOR },
         '(length of red line)',
-        '',
         { text: 'cos α = √3/2', fill: COS_COLOR },
         '(length of blue line)',
-        '',
         { text: 'tan α = 1/√3', fill: TAN_COLOR },
         '(length of orange line)',
       ]}
