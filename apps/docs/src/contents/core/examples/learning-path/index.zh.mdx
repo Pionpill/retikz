@@ -1,0 +1,187 @@
+---
+title: 路线图
+description: 路线图类绘图示例——以 AMAI-GmbH/AI-Expert-Roadmap 封面为题材，5 步搭出完整图，端到端走一遍 Draw 的 line / curve + dashPattern / arrow / 边标注组合用法
+---
+
+## 引言
+
+本页以 [AMAI-GmbH/AI-Expert-Roadmap](https://github.com/AMAI-GmbH/AI-Expert-Roadmap) 的封面为题材，5 步演示 [Draw](/core/components/draw/overview) 的核心能力：直线 line、二次贝塞尔 curve、虚线 dashPattern、箭头 arrow、边标注 label。
+
+<ComponentPreview name="learning-path-05-dashed" size="xl" />
+
+## Prompt
+
+下面这段 prompt 一键发到 AI 对话面板，由 LLM 直接产出 retikz IR / JSX 复现本图。需要变体（改文案、加路径按钮、换连线 step 等）在聊天面板里改 prompt 重发即可。
+
+<ExamplePrompt
+  short="**复刻 [AMAI-GmbH/AI-Expert-Roadmap](https://github.com/AMAI-GmbH/AI-Expert-Roadmap) 的 intro.svg 封面图**：顶部居中标题 `AI Expert in 2022` + 中段灰色 `Fundamentals` 按钮 + 加粗黑字小标题 `Choose your path`；左侧 4 个蓝色 `Required for any path` 按钮、右侧 2 个图例按钮；中央 5 个灰色路径按钮（3 + 2 分子列）；2 条贝塞尔合并曲线 + 1 条青色虚线「推荐路径」+ 2 条「more below」短虚线 + 1 个红 X 装饰。"
+  detailed={`**1:1 复刻 [AMAI-GmbH/AI-Expert-Roadmap](https://github.com/AMAI-GmbH/AI-Expert-Roadmap) 的 intro.svg 封面图**
+
+**画布**：宽 811 × 高 441，背景白；y 轴向下为正，全部用 intro.svg 的原始像素坐标
+
+**节点（圆角矩形 rx=4.5、Helvetica）**
+
+- 标题 \`AI Expert in 2022\`：24px 加粗、currentColor、无背景；位置 (404, 20)，宽 200 × 高 40
+- 中段灰色按钮 \`Fundamentals\`：12px 白字、灰底 \`#878787\`、黑边；(404, 95)，宽 90 × 高 30
+- 中段加粗 currentColor 小标题 \`Choose your path\`：14px 加粗、无背景；(404, 162)，宽 130 × 高 25
+- 左侧 4 蓝色 \`Required for any path\`：12px 白字、蓝底 \`#1f6286\`、黑边、宽 210 × 高 30；x=105，y=68/109/149.5/189.5（紧贴堆叠）
+- 右侧 2 图例按钮：宽 210 × 高 30；上蓝 \`Personal Recommendation!\`、下灰 \`Available Options\`；x=705，y=68/109
+- 中央 5 路径按钮（灰底）：宽 111 × 高 30
+  - 左子列 x=316：\`Data Scientist\` y=245、\`Machine Learning\` y=306、\`Deep Learning\` y=366
+  - 右子列 x=495：\`Data Engineer\` y=245、\`Big Data Engineer\` y=306
+
+**连线（全部蓝色 \`#1f6286\`、strokeWidth=2、终点带箭头）**
+
+- title → Fundamentals：竖直 line
+- Fundamentals → Choose：竖直 line
+- Choose → 左子列段顶 Data Scientist：2 段拼接的 quadratic Bezier（中点 360, 195 + 控制点 404, 200 / 316, 190）
+- Choose → 右子列段顶 Data Engineer：镜像版本
+- 子列内相邻节点之间：3 条短竖直 line
+
+**装饰**
+
+- 青色 \`#287fad\` 虚线 \`dashPattern=[6,6]\` 的"推荐路径"：从 Deep Learning 上方 (251.88, 359.77) 蜿蜒 3 段 quadratic Bezier 到 Choose 底 (404, 174.5)；箭头在起点指向 Deep Learning；中点挂 \`label="recommended"\`
+- 2 条蓝色 \`#1f6286\` 短虚线 \`dashPattern=[4,4]\` 4px 粗，垂直，"more below" 提示
+- 1 个红色 \`#ff0000\` X：两条 4px 交叉线`}
+  extensions={[
+  '**替换路径节点**：把 5 个 path 按钮换成自己组里的成长路径（如「前端 / 后端 / 全栈 / DevOps / SRE」），其它布局不变。',
+  '**加更多分组**：在 Required 列下方再加一列「Advanced」蓝色按钮，连线用 step (fold) 折角接到 Choose header。',
+  '**配深色模式版**：把背景换深色，蓝色加亮、灰色压暗，文字反色，再渲染一份。',
+  ]}
+  />
+
+## 过程
+
+### 步骤 1：title — RoadmapNode 4 variant
+
+先抽出 `RoadmapNode` 组件——4 个 variant 共用 [Node](/core/components/node/overview) 的 shape / 圆角 / 字体，按 variant 选不同的色和字号：
+
+| variant    | 用途       | 视觉                                          |
+| ---------- | ---------- | --------------------------------------------- |
+| `title`    | 顶部大标题 | 24px 加粗、`currentColor`（跟随主题）、无背景 |
+| `header`   | 小节标题   | 14px 加粗、`currentColor`、无背景             |
+| `required` | 必修按钮   | 12px 白字、蓝底 `#1f6286`、黑边               |
+| `optional` | 备选按钮   | 12px 白字、灰底 `#878787`、黑边               |
+
+第一步先把顶部标题摆出来，演示 `title` variant：加粗 + currentColor 跟主题 + 无背景。
+
+<ComponentPreview name="learning-path-01-title" size="md" />
+
+### 步骤 2：中段 spine — 2 条 Draw line
+
+下方加 `Fundamentals` 灰底 mini 按钮 + `Choose your path` 小标题，配 2 条竖直 [Draw](/core/components/draw/overview) line 连起来：
+
+```tsx
+<Draw way={['title', 'fundamentals']} stroke="#1f6286" strokeWidth={2} arrow="->" />
+<Draw way={['fundamentals', 'choose']}   stroke="#1f6286" strokeWidth={2} arrow="->" />
+```
+
+- way 数组 `[源 id, 目标 id]` —— 最简形态：两个 target 就是一条直线
+- 节点 id 字符串在编译期自动解析为节点边框最近锚点（不是节点中心）
+- `arrow="->"` 终点加箭头（`<-` 起点 / `<->` 两端）
+- `strokeWidth={2}` 控制连线粗细
+
+<ComponentPreview name="learning-path-02-spine" diffFrom="learning-path-01-title" size="lg" />
+
+### 步骤 3：两侧色块条 — AtPosition 紧贴堆叠
+
+加左右两个独立的色块条——左侧 4 个蓝色「必修」按钮、右侧 2 个图例按钮（1 蓝 1 灰）。每列**段头**用绝对坐标，剩余节点用 [AtPosition](/core/concepts/positioning) `{ direction: 'below', of: 'prev-id' }` 紧贴堆叠：
+
+- `<TikZ ... nodeDistance={41}>` 在容器一次性设全局节点间距
+- 段内每个 AtPosition 节点都引用上一个节点 id；视觉上紧贴成"色块条"
+
+```tsx
+<RoadmapNode id="papers" position={[105, 68]} ...>Papers With Code</RoadmapNode>
+<RoadmapNode id="git" position={{ direction: 'below', of: 'papers' }} ...>GIT - Version Control</RoadmapNode>
+<RoadmapNode id="semver" position={{ direction: 'below', of: 'git' }} ...>Semantic Versioning</RoadmapNode>
+```
+
+此步只加节点，不加新连线。
+
+<ComponentPreview name="learning-path-03-stacks" diffFrom="learning-path-02-spine" />
+
+### 步骤 4：5 路径按钮 + curve 合并曲线
+
+加中央 5 个路径按钮（2 子列 3 + 2 紧贴堆叠），再用 [Draw](/core/components/draw/overview) 的 `{ curve }` infix 算子把 `Choose` header 连到 2 子列的段顶。
+
+合并曲线用 2 段拼接的 quadratic Bezier——对应 Draw way 里 **2 个连续的 `{ curve: [cx, cy] }` infix 算子**，每个修饰下一段：
+
+```tsx
+<Draw
+  way={[
+    'choose', // move 起点
+    { curve: [404, 200] },
+    [360, 195], // 第 1 段 quadratic：control + target
+    { curve: [316, 190] },
+    'data-scientist', // 第 2 段：control + target id
+  ]}
+  stroke="#1f6286"
+  strokeWidth={2}
+  arrow="->"
+/>
+```
+
+最后一个 target 用节点 id `'data-scientist'`，retikz 自动锚到节点边框（不是裸坐标）。子列内的 3 条短竖直 line 也用节点 id 引用：
+
+```tsx
+<Draw way={['data-scientist', 'machine-learning']} stroke="#1f6286" strokeWidth={2} arrow="->" />
+<Draw way={['machine-learning', 'deep-learning']}   stroke="#1f6286" strokeWidth={2} arrow="->" />
+<Draw way={['data-engineer', 'big-data-engineer']}  stroke="#1f6286" strokeWidth={2} arrow="->" />
+```
+
+<ComponentPreview name="learning-path-04-paths" diffFrom="learning-path-03-stacks" size="lg" />
+
+### 步骤 5：装饰 — 虚线推荐路径 + 短虚线 + 红 X
+
+最后一层装饰——一次性演示 `dashPattern` / `arrow` 在起点 / 边标注：
+
+| 装饰                             | Draw 配置                                                      | way 算子                                                                    |
+| -------------------------------- | -------------------------------------------------------------- | --------------------------------------------------------------------------- |
+| 青色虚线推荐路径                 | `stroke="#287fad"` + `dashPattern={[6,6]}` + `arrow="<-"`      | 3 段连续 `{ curve }` infix，前置 `{ label: 'recommended' }` 给第 1 段挂标注 |
+| 短虚线「more below」提示（2 条） | `stroke="#1f6286"` + `strokeWidth={4}` + `dashPattern={[4,4]}` | way `[起点, 终点]` 两坐标即可                                               |
+| 红 X 装饰（2 条交叉线）          | `stroke="#ff0000"` + `strokeWidth={4}`                         | 同上                                                                        |
+
+```tsx
+<Draw
+  way={[
+    [251.88, 359.77],
+    { label: 'recommended' },
+    { curve: [200, 320] },
+    [225, 241],
+    { curve: [250, 162] },
+    [327, 186],
+    { curve: [404, 210] },
+    'choose',
+  ]}
+  stroke="#287fad"
+  strokeWidth={2}
+  dashPattern={[6, 6]}
+  arrow="<-"
+/>
+```
+
+`arrow="<-"` 把箭头放在**起点**而非终点——本例中起点 (251.88, 359.77) 正好在 Deep Learning 顶部，箭头指向"推荐去 Deep Learning"。`{ label: 'recommended' }` 是 prefix 算子，修饰**下一段**——这里挂在第 1 段 curve 上，落在该段中点上方（默认 `position: 'midway'` + `side: 'above'`）。
+
+<ComponentPreview name="learning-path-05-dashed" diffFrom="learning-path-04-paths" size="xl" />
+
+## 能力
+
+| 组件                                     | 在本例中扮演的角色                                                                                                                               | 主要 step                                                                                                                    |
+| ---------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------- |
+| [Draw](/core/components/draw/overview)   | 全部 12 条连线（2 spine line / 3 子列短 line / 2 quadratic 合并 / 1 推荐虚线 / 2 short dashed / 2 红 X）+ stroke / strokeWidth / dashPattern / arrow | [2](#步骤-2中段-spine--2-条-draw-line), [4](#步骤-45-路径按钮--curve-合并曲线), [5](#步骤-5装饰--虚线推荐路径--短虚线--红-x) |
+| [Way 算子](/core/components/draw/way)    | `{ curve }` infix 走 quadratic / `{ label }` infix 挂边标注 / 节点 id 自动锚 border                                                              | [4](#步骤-45-路径按钮--curve-合并曲线), [5](#步骤-5装饰--虚线推荐路径--短虚线--红-x)                                         |
+| [Node](/core/components/node/overview)   | 全部 16 个 roadmap 节点（title / header / required / optional）—— 4 variant 抽成 `RoadmapNode`                                                   | [1](#步骤-1title--roadmapnode-4-variant), [3](#步骤-3两侧色块条--atposition-紧贴堆叠)                                        |
+| [AtPosition](/core/concepts/positioning) | 三个色块段内的紧贴堆叠（`{ direction: 'below', of: prevId }` + 全局 `nodeDistance`）                                                             | [3](#步骤-3两侧色块条--atposition-紧贴堆叠), [4](#步骤-45-路径按钮--curve-合并曲线)                                          |
+
+## Limitations
+
+- 🚧 **整图 scale + y 翻转**：当前 [`<TikZ>`](/core/components/tikz) 不支持 picture-level scale 或 y-flip，所以本例直接用 intro.svg 的原始像素坐标（y 向下为正、(0,0) 在左上）。未来计划加 `scale` / `yAxis="up"` 之后可以选数学坐标系
+- 🚧 **节点超链接**：当前 [`<Node>`](/core/components/node/overview) 不支持 `href`，所以 intro.svg 原图的 `<a xlink:href="...">` 包装层丢失——按钮可见但不可点。需要可点击的话只能外层包 `<a>`、或在 mdx 文本里另放 link 列表
+- 🚧 **节点阴影 / drop shadow**：intro.svg 的按钮有 `transform="translate(2,3)" opacity="0.25"` 的双 rect 阴影效果；当前 [`<Node>`](/core/components/node/overview) 不支持 shadow，本例省略阴影
+- 🚧 **曲线箭头沿 chord 缩短**：当前 arrow shrink 把曲线端点沿**弦方向**朝起点缩短（不是 tangent 方向），所以 curve / cubic 上的箭头会**偏出节点边框**几像素。直线 / 折角 step 不受影响（chord 即 tangent）。后续计划改成沿 tangent 缩短
+
+## 相关阅读
+
+- [Draw](/core/components/draw/overview) · [Way 算子](/core/components/draw/way) · [Node](/core/components/node/overview) · [定位](/core/concepts/positioning)
+- [Karl 单位圆](/core/examples/karl-circle) —— 另一个综合示例，几何 / 三角函数题材
+- 原始出处：[AMAI-GmbH/AI-Expert-Roadmap](https://github.com/AMAI-GmbH/AI-Expert-Roadmap)（MIT License）

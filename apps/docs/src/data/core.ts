@@ -48,6 +48,7 @@ export const coreSection: Array<Section> = [
     label: 'core.examples',
     pages: [
       { id: 'karl-circle', label: 'core.examplesKarlCircle' },
+      { id: 'learning-path', label: 'core.examplesLearningPath' },
     ],
   },
   {

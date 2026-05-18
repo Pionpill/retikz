@@ -243,7 +243,12 @@ export const ComponentRender: FC<ComponentRenderProps> = props => {
       >
         <div
           ref={renderPaneRef}
-          className={cn('flex items-center justify-center', !isDragging && 'transition-transform duration-150')}
+          className={cn(
+            // [&>svg]:max-w-full + max-h-full：让 demo 的 SVG 自动按 viewBox aspect 缩进
+            // 父框，不超出宽 / 高；TikZ 自身 width/height 属性只是 intrinsic 上限，CSS max 收紧
+            'flex items-center justify-center max-w-full max-h-full [&>svg]:max-w-full [&>svg]:max-h-full',
+            !isDragging && 'transition-transform duration-150',
+          )}
           style={{ transform: transformStyle }}
         >
           <Component />
