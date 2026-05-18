@@ -155,16 +155,16 @@ tags: [设计, 起点]
 
 ### 3) 站内路径全部绝对化
 
-文档站走 react-router `BrowserRouter` + GitHub Pages 部署，部署 base 是 `https://pionpill.github.io/retikz.doc/`。站内任何 `/...` 开头的链接都要前缀部署 URL：
+文档站走 react-router `BrowserRouter` + GitHub Pages 部署，部署 base 是 `https://pionpill.github.io/retikz/`。站内任何 `/...` 开头的链接都要前缀部署 URL：
 
 | 源 mdx 链接 | 输出 markdown 链接 |
 |---|---|
-| `[karl-circle 示例](/core/examples/karl-circle)` | `[karl-circle 示例](https://pionpill.github.io/retikz.doc/core/examples/karl-circle)` |
-| `[retikz 核心理念](/blog/design/core-philosophy)` | `[retikz 核心理念](https://pionpill.github.io/retikz.doc/blog/design/core-philosophy)` |
+| `[karl-circle 示例](/core/examples/karl-circle)` | `[karl-circle 示例](https://pionpill.github.io/retikz/core/examples/karl-circle)` |
+| `[retikz 核心理念](/blog/design/core-philosophy)` | `[retikz 核心理念](https://pionpill.github.io/retikz/blog/design/core-philosophy)` |
 
 **覆盖范围**：正文 inline link + `## 引用` 节里的所有站内链接都要改。外部链接（GitHub、TikZ 官网、pionpill.github.io/article 等）保持原样。
 
-**别瞎猜 base URL**——只用 `apps/docs/AGENTS.md` 与根 `AGENTS.md` 里登记的 `https://pionpill.github.io/retikz.doc/`；不要凭训练数据想象（旧域名 / 旧仓库名等）。
+**别瞎猜 base URL**——只用 `apps/docs/AGENTS.md` 与根 `AGENTS.md` 里登记的 `https://pionpill.github.io/retikz/`；不要凭训练数据想象（旧域名 / 旧仓库名等）。
 
 ### 4) 站内表述重述
 
@@ -172,7 +172,7 @@ tags: [设计, 起点]
 
 | 源句（站内视角） | 输出句（外站视角） |
 |---|---|
-| "demo 卡片右上角的 **Ask AI** 按钮" | "retikz 官方文档站（https://pionpill.github.io/retikz.doc/）的 demo 卡片右上角有 **Ask AI** 按钮" |
+| "demo 卡片右上角的 **Ask AI** 按钮" | "retikz 官方文档站（https://pionpill.github.io/retikz/）的 demo 卡片右上角有 **Ask AI** 按钮" |
 | "站内 Ask AI 让读者把任意 demo 喂给 AI 改图" | "retikz 站点的 Ask AI 功能让读者把任意 demo 喂给 AI 改图" |
 | "站内搜索 / 全站搜索 / 侧边栏 / 右上角语言切换" | 全部加 "retikz 官方文档站" 限定语 |
 
@@ -204,7 +204,7 @@ origin 文章未用 `<Comparison>`，其他文章可能用。统一处理：
 - **摘要**：retikz 项目的起点与定位
 - **发布日期**：2026-05-17
 - **标签**：设计 / 起点
-- **原文链接**：https://pionpill.github.io/retikz.doc/blog/journey/origin
+- **原文链接**：https://pionpill.github.io/retikz/blog/journey/origin
 ```
 
 注意：
@@ -316,7 +316,7 @@ grep -nE '\]\(/(blog|core|about)/' .markdown/<slug>/content.md
 - **`<ComponentPreview>` 没改成 markdown 图片** —— 外站不识别 JSX；不能保留原 tag
 - **alt 文本写 `图片` / `示例` / `demo 名`** —— 失去 a11y + 失去手抄场景下"看不到图也能读"的可读性下限；alt 取 docs-doc-blog 要求的点题句
 - **站内 `/blog/...` / `/core/...` 链接没绝对化** —— 外站点击 404
-- **`https://pionpill.github.io/retikz.doc/` base URL 凭印象写错**（如漏了 `.doc`、域名换 `Pionpill` 而非 `pionpill`）—— 永远从 `AGENTS.md` 抄
+- **`https://pionpill.github.io/retikz/` base URL 凭印象写错**（如写成 `retikz.doc` 旧路径、域名换 `Pionpill` 而非 `pionpill`）—— 永远从 `apps/docs/vite.config.ts` 的 `base` 字段或 `AGENTS.md` 抄，不要凭训练数据
 - **站内 UI 表述没重述** —— "demo 卡片右上角的 Ask AI 按钮"直接贴外站读者懵
 - **`var(--foreground)` 类 CSS token 直接抓 SVG** —— 离线变黑；先改 demo 用字面色
 - **没扫同名 demo 复用** —— 把同一份 SVG 复制成多个文件，污染目录
