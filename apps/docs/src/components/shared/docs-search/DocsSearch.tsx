@@ -41,24 +41,24 @@ export const DocsSearch: FC<DocsSearchProps> = props => {
 
   return (
     <>
-      {/* < md：ghost 图标按钮，与右侧 More / AI 触发器对齐 size-7 */}
+      {/* 紧凑模式（< @2xl/header:）：ghost 图标按钮，与右侧 More / AI 触发器对齐 size-7 */}
       <Button
         variant="ghost"
         size="icon"
-        className={cn('size-7 cursor-pointer rounded-sm text-muted-foreground hover:text-foreground md:hidden', className)}
+        className={cn('size-7 cursor-pointer rounded-sm text-muted-foreground hover:text-foreground @2xl/header:hidden', className)}
         onClick={() => setOpen(true)}
         aria-label={t('common.searchHint')}
         title={t('common.searchHint')}
       >
         <Search className="size-4" />
       </Button>
-      {/* md+：输入框样式触发器（md 紧凑、lg / xl 渐次放大）—— 点击或 Ctrl/Cmd+K 打开 Dialog */}
+      {/* ≥ @2xl/header:：输入框样式触发器，宽度按 header 实宽渐次放大（@2xl→@4xl→@5xl）—— 点击或 Ctrl/Cmd+K 打开 Dialog */}
       <button
         type="button"
         onClick={() => setOpen(true)}
         aria-label={t('common.searchHint')}
         className={cn(
-          'hidden md:inline-flex h-8 w-44 lg:w-52 xl:w-64 items-center gap-2 rounded-md border border-input bg-transparent px-3 text-sm text-muted-foreground shadow-xs transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 cursor-pointer',
+          'hidden @2xl/header:inline-flex h-8 w-44 @4xl/header:w-52 @5xl/header:w-64 items-center gap-2 rounded-md border border-input bg-transparent px-3 text-sm text-muted-foreground shadow-xs transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 cursor-pointer',
           className,
         )}
       >
