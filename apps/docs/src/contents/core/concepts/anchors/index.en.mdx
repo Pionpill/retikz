@@ -36,6 +36,8 @@ The 8 Draws below are all `[outerNode, 'Node']` — endpoints land near N / S / 
 
 <ComponentPreview name="anchors-auto-attach" size="lg" hideCode />
 
+Rule of thumb: for flowcharts, DAG edges, and ordinary relationship lines, write plain node ids and let retikz choose the border point. Use explicit anchors / angles only when a line must leave a specific side, align with a layout, or replicate an existing diagram. To create breathing room around a border, use `margin` instead of replacing the target with hand-computed coordinates.
+
 ## Explicit anchor string syntax
 
 Don't want auto-selection, need a specific position? Target strings support three forms:
