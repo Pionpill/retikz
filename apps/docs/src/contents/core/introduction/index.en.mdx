@@ -11,6 +11,8 @@ It brings a mature vocabulary of nodes, paths, and anchors into the browser, exp
 
 <ComponentPreview name="minimal-example" size="xs" />
 
+The stable v0.1 surface is intentionally focused on **Node / Coordinate / Path / Step / Draw / Text**: named nodes, reference points, path actions, arrows, edge labels, multi-line text, and IR rendering. Chart / flow / codec packages and additional framework adapters mentioned below are architectural directions or future domain packages, not APIs already shipped in `@retikz/react@next`.
+
 ## AI-First
 
 **AI-friendliness is not one of retikz's features — it's the reason retikz exists.**
@@ -44,7 +46,7 @@ Hard rule: **Sugar introduces no new capabilities** — anything Sugar can expre
 
 ## General Primitives, Arbitrary Composition
 
-The Kernel is small — about 5–8 components: `<Path>`, `<Step>`, `<Node>`, `<Anchor>`, `<Scope>` — yet general enough to compose almost any 2D figure.
+The Kernel is deliberately small: `<TikZ>`, `<Node>`, `<Coordinate>`, `<Path>`, and `<Step>`. It is still general enough to compose most 2D relationship diagrams. Sugar such as `<Draw>` / `<Text>` improves authoring ergonomics, but still lowers back to the same Kernel IR.
 
 | Category | Composed from Kernel | Where |
 | --- | --- | --- |
@@ -55,7 +57,7 @@ The Kernel is small — about 5–8 components: `<Path>`, `<Step>`, `<Node>`, `<
 
 **You compose at the primitive layer.** Shape, connection, anchor, label — all expressed directly in geometry / path vocabulary: drawing a curve from a bar to a side annotation, or a labeled curve between two nodes, is as natural as drawing two more primitives.
 
-A domain package is a thin layer of data binding, layout algorithms, and default styling on top of the Kernel; the underlying structure, persistence, and AI surface stay identical across domains.
+A domain package is a thin layer of data binding, layout algorithms, and default styling on top of the Kernel; the underlying structure, persistence, and AI surface stay identical across domains. The current release keeps core focused on primitives first, instead of baking charting or layout algorithms into the base package too early.
 
 ## Framework-Agnostic, React Today
 
