@@ -18,13 +18,15 @@ retikz uses a unified set of position expressions for entity placement and path 
 
 ## Cartesian
 
-Direct `[x, y]` tuple.
+Cartesian coordinates are the most direct form: `[x, y]` names a point on the canvas. x grows to the right and y grows downward, so `[120, 40]` means 120 units right and 40 units down from the origin. Use this for small hand-placed diagrams, reproducing existing SVG coordinates, or providing a base point for other position forms.
 
 <ComponentPreview name="positioning-cartesian" size="sm" />
 
 ## Polar
 
-`{ origin?, angle, radius }`:
+Polar coordinates describe a position as "start from a pole, follow an angle, then move by a radius." They are useful for circular layouts, radial labels, placing a group around a node, or expressing a rotated offset from some local point.
+
+`{ origin?, angle, radius }` resolves from these fields:
 
 | Field | Meaning |
 | --- | --- |
