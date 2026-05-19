@@ -372,3 +372,17 @@ import { lowerPlots } from '@retikz/plot';
 | Kernel 组件 | `packages/react/src/kernel/` |
 | Sugar 组件 + 解析器 | `packages/react/src/sugar/`（React DSL） + `packages/core/src/parsers/`（共享 pure 解析） |
 | Tier 2 IR + 下沉 + 组件 | 独立包（`packages/plot/`、`packages/graph/` 等），**不进 core** |
+
+## `<Scope>` 使用规则（v0.2-alpha.1 起）
+
+> 决策来源：[`v0.2-alpha.1 ADRs`](./notes/adr/v0/v0.2-alpha.1/)（01 IR + compile / 02 nodeIndex 命名空间 / 03 scope.id bbox / 04 scope 下 relative position）
+
+Scope 是 v0.2 起的 IR Kernel 容器，对应 TikZ `\begin{scope}`：分组 + 局部 transform。LLM 出图时易踩的语义陷阱集中在以下 5 条：
+
+1. **transform 4 变体**：`translate` / `polar-translate`（新；对应 TikZ `[shift={(angle:radius)}]`）/ `rotate` / `scale`；数组按 outside-in 顺序应用（`transforms: [t1, t2]` 内部 children 先经 t1 再经 t2）；compile 阶段 polar-translate 展平为 Cartesian translate 后下沉
+2. **id 共享全局命名空间**：scope 内 node / coordinate 仍可被外层 path 通过 `id` 引用——retikz 不引入 scope 局部命名空间。**id 跨 scope 冲突 warn `DUPLICATE_NODE_ID`**（含 node / coordinate / scope.id 三类共占），后定义者会 shadow 但同时报警；anchor 解析走 NameStack inside-out lookup（内层 frame 可见外层）
+3. **`scope.id` = synthetic bbox**：给 `<Scope id="...">` 后，Pass 1 末把子树 axis-aligned 全局 bbox 注册成 synthetic rectangle layout——外层可像普通 Node 一样引用 `scope-id` / `scope-id.north` / `scope-id.30`，但**不发渲染 primitive**（仅作引用目标）。空 scope 设 id 退化为 0×0 占位点
+4. **scope 下 relative position 在当前 scope 局部度量**（最易踩）：referent 坐标取全局，但 polar / at / offset / `{relative:[dx,dy]}` 的 relative 部分**在当前 scope 局部坐标系**度量，末端 apply 当前 scope transform chain 投回全局。即 `<Scope transforms={[{kind:'rotate', degrees:90}]}>` 内的 `position={{of:'A', direction:'right', distance:50}}` 视觉上是 A 下方 50（局部 right 经 rotate 90 投影），不是 A 右 50
+5. **何时该用**：①需要给一组节点统一加局部 transform 时；②需要用 `scope.id` 把一组节点当作整体在外层引用时。**否则不要无谓嵌套** Scope——单纯为了"逻辑分组"用 `<Scope>` 会引入命名空间陷阱但没换来视觉差异
+
+`scope` props 当前只接受 `id` / `transforms`；样式继承（`nodeDefault` / `pathDefault` / Scope 直接挂 Node 样式子集）在 v0.2-alpha.2 才落地，本 alpha 不要往 Scope 上写 `stroke` / `fill` 等样式属性（schema 会拒）。
