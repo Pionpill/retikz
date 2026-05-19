@@ -288,6 +288,8 @@ Draw way 简短、语义直白、与文档站现有 demo 风格一致。**唯一
 
 `apps/docs/src/contents/core/reference/schema/<page>/index.{en,zh}.mdx` 下的页面用 **`<ZodSchema name="XxxSchema" descriptions={{...}} />`** 渲染字段表。Reference 词典是 IR schema 查询入口，跟"组件页"4 段结构无关。当前结构：4 个合并页（scene / entity / path / placement），每页一个或多个 H2/H3 + `<ZodSchema>` 块。
 
+Reference 词典页只负责**可扫描、可链接、字段完整**，不承担教程 / 示例职责。不要为了让页面"更像文档"而添加最小 JSON 示例、逐步讲解、使用场景 walkthrough 或 ComponentPreview；这些内容应放到组件页、概念页或示例页。Reference 页正文只写 schema 分组说明、必要语义边界、跨 schema 关系和 `<Comparison>` 对照。
+
 ### name prop
 
 变量名要在 `apps/docs/src/lib/schema-registry.ts` 注册（含 9 个顶层 + 10 个 Step 变体 + 2 个 Target 变体）。组件按 identity 反查 Zod schema 实例并自动出表 —— 字段名 / 类型 / 必填 / 英文描述都来自源码 `.describe()`。
