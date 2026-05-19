@@ -5,6 +5,8 @@ description: Sugar component — a way array threads through nodes, coordinates,
 
 `<Draw>` is the default entry point for most connections. It accepts a `way` array and expands targets, folds, cycles, curves, shapes, and edge labels into Kernel `<Path>` + `<Step>`. Stroke, fill, arrow, and opacity props match `<Path>`.
 
+Choosing rule: use `<Draw>` for ordinary relationship lines, flowchart edges, and arrowed connections; switch to `<Path>` + `<Step>` when you need multiple `move`s, precise per-segment `kind` control, or IR-close debugging; work with IR directly only at AI / persistence boundaries.
+
 ## Usage
 
 ```tsx
