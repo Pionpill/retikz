@@ -70,6 +70,14 @@ Offset applies an arbitrary `[dx, dy]`:
 
 <ComponentPreview name="scope-rotate-scale" size="md" />
 
+#### Recipe: orbit + self-rotation facing the center
+
+A bare `polar-translate` only moves the scope's origin — it does **not** rotate the local frame, so animating its angle keeps the scope content's orientation fixed ("like a satellite drifting along the orbit"). To make the scope also self-rotate so its front always faces the center ("tidal lock"), chain a `rotate(angle + 180)`:
+
+<ComponentPreview name="scope-orbit-facing-hub" size="xl" />
+
+Chain application order: in `[t0, t1]` the **last** element is applied first (innermost), so `rotate` runs first to align local +x toward hub, then `polar-translate` pushes the origin to the orbital position. The `+ 180` flips scope's +x from "pointing outward" to "pointing at hub"; drop it to face outward (front away from center).
+
 ### Nested composition
 
 A scope can contain another scope — outer scope positions the cluster, inner scope positions children within; no depth limit:
