@@ -33,7 +33,12 @@ const AppHeader: FC = () => {
     const el = ref.current;
     if (!el) return;
     const ro = new ResizeObserver(([entry]) => {
-      setCompact(entry.contentRect.width < COMPACT_THRESHOLD_PX);
+      // Tailwind 容器查询走 border-box；与 CSS 保持一致避免边界值附近 portal 与 in-tree 状态错位
+      const width =
+        entry.borderBoxSize.length > 0
+          ? entry.borderBoxSize[0].inlineSize
+          : entry.contentRect.width;
+      setCompact(width < COMPACT_THRESHOLD_PX);
     });
     ro.observe(el);
     return () => ro.disconnect();
