@@ -59,7 +59,7 @@ export const HeaderActions: FC = () => {
   return (
     <TooltipProvider delayDuration={150}>
       <div className="flex items-center gap-2">
-        <div className="hidden lg:flex items-center gap-1">
+        <div className="hidden @4xl/header:flex items-center gap-1">
           <Tooltip>
             <TooltipTrigger
               asChild
@@ -81,16 +81,16 @@ export const HeaderActions: FC = () => {
             </TooltipContent>
           </Tooltip>
         </div>
-        <Separator orientation="vertical" className="hidden lg:block h-4!" />
+        <Separator orientation="vertical" className="hidden @4xl/header:block h-4!" />
         <div className="flex items-center gap-1">
           <Tooltip>
-            <TooltipTrigger className={cn(triggerClass, 'hidden lg:inline-flex')} onClick={handleToggleTheme}>
+            <TooltipTrigger className={cn(triggerClass, 'hidden @4xl/header:inline-flex')} onClick={handleToggleTheme}>
               <ThemeIcon className="size-4" />
             </TooltipTrigger>
             <TooltipContent>{themeLabel}</TooltipContent>
           </Tooltip>
           <Tooltip>
-            <TooltipTrigger className={cn(triggerClass, 'hidden lg:inline-flex')} onClick={handleCycleLang}>
+            <TooltipTrigger className={cn(triggerClass, 'hidden @4xl/header:inline-flex')} onClick={handleCycleLang}>
               <Languages className="size-4" />
             </TooltipTrigger>
             <TooltipContent>
