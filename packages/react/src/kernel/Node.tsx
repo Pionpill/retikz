@@ -87,7 +87,7 @@ export type NodeProps = {
   opacity?: number;
   /**
    * 节点附属标签——TikZ `[label=above:foo]` 同义
-   * @description 单对象或数组；每条 label 接 `text` / `position?` / `distance?` / 样式继承；`position` 接 8 方向枚举或数字角度（`label=30:foo` 等价 `position: 30`），缺省 'above'，distance 缺省 4
+   * @description 单对象或数组；每条 label 接 `text` / `position?` / `distance?` / 样式继承；`position` 接 8 方向枚举或数字角度（`label=30:foo` 等价 `position: 30`），缺省 'above'，distance 缺省 12
    */
   label?: IRNodeLabel | Array<IRNodeLabel>;
 };

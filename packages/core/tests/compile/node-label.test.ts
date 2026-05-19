@@ -192,6 +192,38 @@ describe('Node label', () => {
       const yDef = findLabel(compileToScene(irDefault).primitives, 'L')!.y;
       expect(yExp).toEqual(yDef);
     });
+
+    it('distance 缺省 = 12', () => {
+      const irExplicit: IR = {
+        version: 1,
+        type: 'scene',
+        children: [
+          {
+            type: 'node',
+            id: 'A',
+            position: [0, 0],
+            text: 'A',
+            label: { text: 'L', position: 'above', distance: 12 },
+          },
+        ],
+      };
+      const irDefault: IR = {
+        version: 1,
+        type: 'scene',
+        children: [
+          {
+            type: 'node',
+            id: 'A',
+            position: [0, 0],
+            text: 'A',
+            label: { text: 'L', position: 'above' },
+          },
+        ],
+      };
+      const yExp = findLabel(compileToScene(irExplicit).primitives, 'L')!.y;
+      const yDef = findLabel(compileToScene(irDefault).primitives, 'L')!.y;
+      expect(yExp).toEqual(yDef);
+    });
   });
 
   describe('样式继承', () => {
