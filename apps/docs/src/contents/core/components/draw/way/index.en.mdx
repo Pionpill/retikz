@@ -5,6 +5,8 @@ description: The way array item forms, DrawWay constants, folds, cycle, and rela
 
 `way` is the core of `<Draw>`. The first item forms are targets; later forms are operators that modify the next segment or the previous point.
 
+Think of `way` as a tiny path language: targets produce points, `'-|'` / `'|-'` rewrite the segment between neighboring points, `{ label }` decorates the next segment, `{ curve }` / `{ cubic }` / `{ bend }` consume the next item to make a curve, and `{ arc }` / `{ circle }` / `{ ellipse }` draw around the previous point without consuming the next item.
+
 ## Usage
 
 ```tsx
