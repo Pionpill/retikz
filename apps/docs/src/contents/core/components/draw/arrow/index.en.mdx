@@ -10,6 +10,8 @@ Arrows are driven by two independent props:
 
 Both props sit on `<Draw>` and `<Path>` with identical syntax and effect — the examples below use `<Draw>`; the `<Path>` equivalent is the same.
 
+An arrow is a marker at the path end: it does not change the original path geometry, and it is not repeated at intermediate nodes. Very short segments, two-ended arrows, or large `length` / `width` values can overlap visually; reduce marker size or create room with node `margin` / explicit coordinates.
+
 ## Usage
 
 <ComponentPreview name="arrow-default" size="xs" />

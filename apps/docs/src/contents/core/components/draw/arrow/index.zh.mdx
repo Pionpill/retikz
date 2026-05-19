@@ -10,6 +10,8 @@ description: Path / Draw 的箭头详解。`arrow` 控制方向、`arrowDetail` 
 
 `arrow` + `arrowDetail` 同时挂在 `<Draw>` 和 `<Path>` 上，写法和效果完全一致——下文示例用 `<Draw>` 演示，`<Path>` 写法等价。
 
+箭头是 path 末端的 marker：不会改变原始 path 几何长度，也不会在中间节点重复出现。短线段、双向箭头或很大的 `length` / `width` 可能产生视觉重叠；这时优先减小 marker 尺寸，或用节点 `margin` / 显式坐标给线段留出空间。
+
 ## 用法
 
 <ComponentPreview name="arrow-default" size="xs" />
