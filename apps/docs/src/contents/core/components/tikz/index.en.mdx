@@ -1,11 +1,11 @@
 ---
 title: TikZ
-description: Top-level container — scans children to build IR, compiles to Scene, renders SVG.
+description: Top-level container — scans children to build IR, compiles to Scene, and produces rendered output.
 ---
 
 `<TikZ>` is retikz's only required top-level wrapper. Every Kernel / Sugar component must live inside a `<TikZ>`.
 
-It does two jobs at once: collect children / `ir` into IR, then render the compiled Scene as an `<svg>`. `width` / `height` control the SVG's displayed size in the page; internal coordinates remain retikz user units and are mapped through the compiled layout bounds into the viewBox.
+It does two jobs at once: collect children / `ir` into IR, then hand the compiled Scene to the current renderer. `width` / `height` control the rendered output's displayed size in the page; internal coordinates stay in retikz user units, and the compiler uses layout bounds to compute the visible range.
 
 ## Usage
 
@@ -50,12 +50,12 @@ import { TikZ } from '@retikz/react';
 
 | Prop | Type | Default | Description |
 | --- | --- | --- | --- |
-| `width` | `number \| string` | — | SVG element width |
-| `height` | `number \| string` | — | SVG element height |
+| `width` | `number \| string` | — | Rendered output width |
+| `height` | `number \| string` | — | Rendered output height |
 | `children` | `ReactNode` | — | Kernel / Sugar component tree (mutually exclusive with `ir`) |
 | `ir` | `IR` | — | Pre-built IR JSON (mutually exclusive with `children`) |
-| `className` | `string` | — | Forwarded to `<svg>` |
-| `style` | `CSSProperties` | — | Forwarded to `<svg>` |
+| `className` | `string` | — | Forwarded to the render root |
+| `style` | `CSSProperties` | — | Forwarded to the render root |
 
 ### Feeding IR Directly
 
