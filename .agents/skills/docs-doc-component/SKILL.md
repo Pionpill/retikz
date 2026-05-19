@@ -49,7 +49,7 @@ import { Path, Step } from '@retikz/react';
 
 骨架展示组件名 / props / children 形态，不要求可运行——`<ComponentPreview>` 留给 Examples 段。
 
-`Usage` 下必须补一句 **何时使用这个组件**。如果说明很短，直接接在最小骨架后的段落尾；如果说明较长，或 `Usage` 下已有子分小节，则单独开一个 `### 何时使用 / When to use` 子小节说明。
+`Usage` 下应包含**使用时机相关说明**，帮助读者判断这个组件适合解决什么问题。说明很短时，直接接在最小骨架后的段落尾；说明较长，或 `Usage` 下已有子分小节时，单独开一个 `### 何时使用 / When to use` 子小节说明。
 
 ## Composition 适用
 
