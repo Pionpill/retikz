@@ -5,6 +5,8 @@ description: Kernel 路径容器——`<Step>` 子节点序列定义折线 / 曲
 
 `<Path>` 是底层路径容器：children 必须是若干 `<Step>`（至少 2 个），定义路径的 move / line / step（折角）/ cycle（闭合）/ curve / cubic / bend（曲线）/ arc / circlePath / ellipsePath（圆 / 椭圆）等动作序列。日常连线用 `<Draw>` 更简洁，需要折角、闭合、曲线、自定义 stroke、不同 step kind 时回到 `<Path>`。
 
+它最适合三类场景：一条 path 里有多个子路径（多次 `move`）、不同段要混用不同 `kind` / label / 控制点、或者你希望 JSX 结构和 IR `path.children` 几乎一一对应，方便调试和生成。
+
 ## 用法
 
 ```tsx
