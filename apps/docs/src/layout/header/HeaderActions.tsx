@@ -36,7 +36,7 @@ const triggerClass = cn(buttonVariants({ variant: 'ghost', size: 'icon' }), 'siz
 
 /**
  * 顶栏右侧动作组
- * @description 桌面（lg+）GitHub / 复制链接 / 主题 / 语言 / 更多 平铺；移动端（< lg）只保留 More 按钮，前四项折进 Dropdown 顶部分组；TooltipProvider 内部自闭包。AI 触发器由 AppHeader 直接放在中间，不再属于这里
+ * @description 完整模式（header 实宽 ≥ `@4xl/header:` = 896px）GitHub / 复制链接 / 主题 / 语言 / 更多 平铺；紧凑模式（< 896px）只保留 More 按钮，前四项折进 Dropdown 顶部分组。紧凑模式判断走 `useHeaderCompact()` 读 Context（DropdownMenuContent 是 Radix Portal 出去的，容器查询过不去）。AI 触发器由 AppHeader 直接放在中间，不再属于这里
  */
 export const HeaderActions: FC = () => {
   const { t, i18n } = useTranslation();
@@ -109,7 +109,7 @@ export const HeaderActions: FC = () => {
               <TooltipContent>{t('common.more')}</TooltipContent>
             </Tooltip>
             <DropdownMenuContent align="end" className={cn('w-56', !compact && 'w-72')}>
-              {/* 紧凑模式独占：把桌面顶栏的主题 / 语言 / 复制链接 / GitHub 收纳进来 */}
+              {/* 紧凑模式独占：完整模式平铺的主题 / 语言 / 复制链接 / GitHub 在紧凑模式收纳到这 */}
               {compact && (
                 <>
                   <DropdownMenuGroup>
