@@ -45,6 +45,13 @@ You can add as many nodes as you like, but each `id` must be unique — `<Draw>`
 
 Three nodes joined by two lines — matching the final example at the top.
 
+Keep four rules in mind before moving on:
+
+- Canvas coordinates grow right on x and down on y; `[0, 0]` is the origin in retikz user units
+- `<TikZ width height>` controls the rendered SVG size; it does not rewrite internal coordinates into CSS pixels
+- A node `id` is the name used by connectors, and `<Draw way={['a', 'b']}>` targets node borders rather than text centers
+- Use **View Code → IR** to inspect the real IR after Sugar expansion; it is the quickest way to debug connections
+
 ## Next Steps
 
 <div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
