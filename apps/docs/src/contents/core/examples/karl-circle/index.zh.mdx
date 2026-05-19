@@ -11,6 +11,8 @@ description: 学术 / 教材类绘图示例——30° 角下 sin / cos / tan 的
 
 <ComponentPreview name="karl-circle-07-info" size="lg" />
 
+如果你是从 TikZ 迁移过来，这页重点看 4 个差异：retikz 坐标 y 向下；`arc` 把游标当圆心而不是圆周起点；投影 / 交点目前需要手算或命名 Coordinate；`foreach` 风格重复图元通常在 React 里用 `.map()` 生成。
+
 ## 提示词
 
 下面这段 prompt 一键发到 AI 对话面板，由 LLM 直接产出 retikz IR / JSX 复现本图。需要变体（改角度、改颜色、改半径等）发送后在聊天面板里改 prompt 重发即可。
