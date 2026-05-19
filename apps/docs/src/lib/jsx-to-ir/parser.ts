@@ -21,7 +21,7 @@ const COMPONENT_REGISTRY: Record<string, FC<Record<string, unknown>> | undefined
   Coordinate: Coordinate as unknown as FC<Record<string, unknown>>,
   Draw: Draw as unknown as FC<Record<string, unknown>>,
   EdgeLabel: EdgeLabel as unknown as FC<Record<string, unknown>>,
-  Scope: Scope as unknown as FC<Record<string, unknown>>,
+  Scope,
 };
 
 const componentNames = Object.keys(COMPONENT_REGISTRY).join(', ');
