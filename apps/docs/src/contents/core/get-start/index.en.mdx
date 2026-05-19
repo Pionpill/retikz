@@ -21,13 +21,13 @@ We'll build this diagram in 3 steps. Click **View Code** under any preview to in
 
 ### 1. The container `<TikZ />` + one `<Node />`
 
-A diagram needs at least two things: a container and a primitive. `<TikZ>` is the top-level container — it scans children to build the IR, compiles a Scene, and renders SVG; `width` / `height` set the SVG element's render size. `<Node>` is the most common primitive — it has an `id`, a `position`, and a visible label.
+A diagram needs at least two things: a container and a primitive. `<TikZ>` holds the whole diagram, sets the SVG's rendered size, and renders the primitives inside it. `<Node>` draws a positioned, named element with visible text. This first step places one node to confirm both the canvas and the basic primitive are working.
 
 <ComponentPreview name="get-start-step-1" size="xs" />
 
 ### 2. More `<Node />`s
 
-You can add as many nodes as you like, but each `id` must be unique — `<Draw>` references them by id later. `position` is in canvas (pixel) coordinates.
+Add more `<Node>`s to place the entities in the diagram before drawing relationships between them. You can add as many nodes as you like, but each `id` must be unique — `<Draw>` will find them by id later. `position` is the node center in canvas coordinates.
 
 | Prop | Meaning |
 | --- | --- |
@@ -39,7 +39,7 @@ You can add as many nodes as you like, but each `id` must be unique — `<Draw>`
 
 ### 3. Connect them with `<Draw />`
 
-`<Draw>` is a Sugar component. The `way` array references nodes by id and is compiled to Kernel `<Path>` + `<Step>` — so `<Draw>` introduces no capability the Kernel can't already express. Click **View Code** and switch to the IR tab to see `<Draw>` show up as a plain `path` node in the IR.
+`<Draw>` draws connector lines. The `way` array lists the node ids to pass through in order, and retikz attaches the line to node borders instead of text centers. `arrow="->"` adds an arrowhead at the end.
 
 <ComponentPreview name="get-start-final" size="xs" />
 
@@ -50,13 +50,25 @@ Keep four rules in mind before moving on:
 - Canvas coordinates grow right on x and down on y; `[0, 0]` is the origin in retikz user units
 - `<TikZ width height>` controls the rendered SVG size; it does not rewrite internal coordinates into CSS pixels
 - A node `id` is the name used by connectors, and `<Draw way={['a', 'b']}>` targets node borders rather than text centers
-- Use **View Code → IR** to inspect the real IR after Sugar expansion; it is the quickest way to debug connections
+- Use **View Code → IR** to inspect the compiled diagram data; it is the quickest way to debug connections
 
 ## Next Steps
 
 <div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
-  <LinkedCard href="/core/introduction">
-    <span className="font-semibold">Introduction</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">Design philosophy: IR-centric, AI-first, Kernel/Sugar layering</span>
+  <LinkedCard href="/core/components/tikz">
+    <span className="font-semibold">TikZ</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">Learn the top-level container, canvas sizing, and direct IR rendering</span>
+  </LinkedCard>
+  <LinkedCard href="/core/components/node/overview">
+    <span className="font-semibold">Node</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">Learn shapes, text, styling, positioning, and node labels</span>
+  </LinkedCard>
+  <LinkedCard href="/core/components/draw/overview">
+    <span className="font-semibold">Draw</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">Continue with folds, curves, arrows, fills, and edge labels</span>
+  </LinkedCard>
+  <LinkedCard href="/core/examples/karl-circle">
+    <span className="font-semibold">Karl's Unit Circle</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">See a richer geometry diagram built step by step</span>
   </LinkedCard>
 </div>
