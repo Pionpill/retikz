@@ -15,6 +15,8 @@ retikz turns the JSX DSL into IR first, then compiles IR into Scene. The DSL opt
 
 IR is the public contract; Scene is renderer input. You normally do not write Scene by hand.
 
+Why this matters in practice: use the DSL when authoring diagrams, use IR when saving diagrams, asking an LLM to edit them, applying JSON Patch, or rendering across targets, and only inspect Scene when building renderers or debugging measured output.
+
 ## Kernel and Sugar
 
 | Layer | Examples | Enters IR directly | Notes |

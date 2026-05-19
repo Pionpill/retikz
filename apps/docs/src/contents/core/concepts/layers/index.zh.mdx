@@ -15,6 +15,8 @@ retikz 把用户写下的 JSX DSL 先转成 IR，再编译成 Scene。DSL 负责
 
 IR 是公开契约；Scene 是 renderer 输入。正常写图时不需要手写 Scene。
 
+为什么用户需要知道这三层：日常写图看 DSL；要把图存进数据库、发给 LLM 修改、做 JSON Patch 或跨端渲染时看 IR；只有写 renderer / 调试测量结果时才看 Scene。
+
 ## Kernel 与 Sugar
 
 | 层 | 例子 | 是否直接进 IR | 说明 |
