@@ -19,8 +19,9 @@ const COMPACT_THRESHOLD_PX = 896;
  *   响应式按 **header 自身宽度** 切换（容器查询 `@container/header`），不再吃 viewport：
  *   AI 面板打开后 header 实宽变小可正确折叠成紧凑布局。
  *
- *   阈值映射：`@xs/header:` (320px) BrandLink 版本徽章；`@2xl/header:` (672px) 右段三段平衡；
- *   `@4xl/header:` (896px) 完整桌面 chrome（ModuleNav / 平铺 action / Shortcut 徽章）
+ *   阈值映射：`@xs/header:` (320px) BrandLink 版本徽章；`@4xl/header:` (896px) 完整桌面 chrome
+ *   （ModuleNav / 平铺 action / Shortcut 徽章 / DocsSearch 切输入框 / AiChatTrigger 升 outlined /
+ *   右段从 shrink-0 变 flex-1 basis-0 三段平衡）；`@5xl/header:` (1024px) DocsSearch 输入框扩到 w-64
  *
  *   `DropdownMenuContent` 走 Radix Portal，容器查询过不去——`<HeaderCompactContext.Provider>`
  *   注入 `compact: boolean`，portal 子树用 `useHeaderCompact()` 读取后条件渲染
@@ -59,7 +60,7 @@ const AppHeader: FC = () => {
           <DocsSearch />
           <AiChatTrigger />
         </div>
-        <div className="flex min-w-0 shrink-0 items-center justify-end gap-2 @2xl/header:flex-1 @2xl/header:basis-0 @4xl/header:gap-3">
+        <div className="flex min-w-0 shrink-0 items-center justify-end gap-2 @4xl/header:flex-1 @4xl/header:basis-0 @4xl/header:gap-3">
           <HeaderActions />
         </div>
       </header>
