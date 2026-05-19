@@ -1,9 +1,9 @@
 ---
 title: Scope
-description: Local transform container — wraps a group of children and translates / rotates / scales them as a unit; mirrors TikZ `\begin{scope}[...]`.
+description: Local transform container — wraps a group of children and translates / rotates / scales them as a unit.
 ---
 
-`<Scope>` is retikz Kernel's fourth element (alongside `<Node>` / `<Path>` / `<Coordinate>`). It groups a set of IR children at the IR layer and applies a local transform chain to them; maps to TikZ `\begin{scope}[shift=..., rotate=..., scale=...] ... \end{scope}`.
+`<Scope>` groups a set of IR children at the IR layer and applies a local transform chain to them.
 
 ## Usage
 
@@ -17,13 +17,11 @@ import { Scope } from '@retikz/react';
 </Scope>
 ```
 
-A bare `<Scope></Scope>` (no children, no transforms, no id) → compile emits no Scene primitive; any non-empty field → a `GroupPrim` is emitted, no empty-container overhead.
+A `<Scope></Scope>` with no props and no children → compile emits no Scene primitive; any non-empty field → a `GroupPrim` is emitted, no empty-container overhead.
 
 ### When to use Scope
 
-- **Move a cluster as a unit**: a group of nodes + paths form a cluster — moving the cluster only changes the scope's transform, not each child's `position`
-- **Rotate a subdiagram**: rotate a subgraph around the scope's local origin; connections and labels follow automatically
-- **Nested coordinate frames**: outer scope positions the cluster, inner scope positions children within the cluster — clearer than computing absolute coordinates by hand
+When your design has a "grouping" concept — a set of nodes / paths that conceptually belong to the same sub-diagram, need to be transformed as a unit, or need to be referenced / positioned as a whole from outside via `scope.id`. Don't wrap a Scope purely for code-level organization; that only adds namespace pitfalls with no geometric or reference benefit.
 
 ### The 6 transform variants
 

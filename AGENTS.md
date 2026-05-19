@@ -85,6 +85,8 @@ pnpm lint                                  # 全部包 ESLint（不带 --fix）
 
 ## 用户可见改动必须同步文档站
 
+> **写文档前先读相关 SKILL**：[`docs-doc-principle`](.agents/skills/docs-doc-principle/SKILL.md)（通用规则——双语、写作风格、`<Comparison>` / `<ComponentPreview>` / `<ZodSchema>` 等组件用法、三处协同流程）+ 按页型读 [`docs-doc-component`](.agents/skills/docs-doc-component/SKILL.md) / [`docs-doc-example`](.agents/skills/docs-doc-example/SKILL.md) / [`docs-doc-blog`](.agents/skills/docs-doc-blog/SKILL.md)。改 mdx / 加 demo / 写 blog 前都先扫一遍——Comparison 用法、不在正文写"对应 TikZ ..."、6 段结构、双语并行等规则都在 SKILL 里，凭直觉容易漏。
+
 > **🚨 重要规则：任何会影响用户使用方式的改动——新增 / 删除 / 重命名 `@retikz/react` 组件或 props、改 `@retikz/core` IR schema 字段、改 React DSL 行为、改 sugar 解析、改 TikZ 容器选项等——都必须在同一改动集里同步更新 `apps/docs/` 下相应文档，文档与代码作为一个整体改动呈给用户审阅。**
 >
 > 包含但不限于：

@@ -1,9 +1,9 @@
 ---
 title: Scope
-description: 局部 transform 容器——把一组 children 包起来批量平移 / 旋转 / 缩放，对应 TikZ `\begin{scope}[...]`。
+description: 局部 transform 容器——把一组 children 包起来批量平移 / 旋转 / 缩放。
 ---
 
-`<Scope>` 是 retikz Kernel 的第四件（与 `<Node>` / `<Path>` / `<Coordinate>` 平级）。它在 IR 层把一组子元素聚成容器，对它们应用局部 transform 链；对应 TikZ `\begin{scope}[shift=..., rotate=..., scale=...] ... \end{scope}`。
+`<Scope>` 在 IR 层把一组子元素聚成容器，对它们应用局部 transform 链。
 
 ## 用法
 
@@ -17,13 +17,11 @@ import { Scope } from '@retikz/react';
 </Scope>
 ```
 
-裸 `<Scope></Scope>`（无 children、无 transforms、无 id）→ compile 不发任何 Scene primitive；任一非空 → 发 `GroupPrim`，不会留下空容器开销。
+没有属性与子元素的 `<Scope></Scope>` → compile 不发任何 Scene primitive；任一非空 → 发 `GroupPrim`，不会留下空容器开销。
 
 ### 何时用 Scope
 
-- **批量平移子图**：一组节点 + path 形成 cluster，整体移动只改 scope 的 transform，组内节点 position 不动
-- **整体旋转**：把一段子图绕 scope 局部原点旋转，组内连线 / 标签自动跟随
-- **嵌套坐标系**：外层定位 cluster，内层再定位 cluster 内子节点，层级表达比手算绝对坐标清晰
+设计上有"分组"概念时——一组节点 / path 在意图上属于同一个子图，需要作为整体应用 transform，或需要让外层通过 `scope.id` 把它们当作一个单元引用 / 定位。仅做代码层级组织、不共享 transform / 引用句柄的情况，不要包 Scope（凭添命名空间陷阱、零几何收益）。
 
 ### transforms 6 变体
 
