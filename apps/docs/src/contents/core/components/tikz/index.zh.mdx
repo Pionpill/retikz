@@ -5,6 +5,8 @@ description: 顶层容器：扫描 children 构造 IR、编译 Scene、渲染 SV
 
 `<TikZ>` 是 retikz 唯一必需的顶层包装，所有 Kernel / Sugar 组件都必须放在它里面。
 
+它同时承担两件事：收集 children / `ir` 生成 IR，以及把编译后的 Scene 渲染成一个 `<svg>`。`width` / `height` 控制的是 SVG 在页面上的显示尺寸；内部坐标仍然使用 retikz user units，并由编译得到的 layout bounds 映射到 viewBox。
+
 ## 用法
 
 ```tsx
@@ -70,6 +72,8 @@ const ir = convertReactNodeToIR(
 ```
 
 `ir` 与 `children` 互斥；同时传时优先 `ir`。
+
+如果图形看起来被裁掉或留白过多，先看 **View Code → IR** 里的节点坐标和 path bounds：通常是内部坐标离可见图元太远、只定义了不可见 coordinate，或用了显式坐标但没有对应的可见边界。
 
 ## 相关
 

@@ -5,6 +5,8 @@ description: Top-level container — scans children to build IR, compiles to Sce
 
 `<TikZ>` is retikz's only required top-level wrapper. Every Kernel / Sugar component must live inside a `<TikZ>`.
 
+It does two jobs at once: collect children / `ir` into IR, then render the compiled Scene as an `<svg>`. `width` / `height` control the SVG's displayed size in the page; internal coordinates remain retikz user units and are mapped through the compiled layout bounds into the viewBox.
+
 ## Usage
 
 ```tsx
@@ -70,6 +72,8 @@ const ir = convertReactNodeToIR(
 ```
 
 `ir` and `children` are mutually exclusive; if both are supplied, `ir` wins.
+
+If a diagram looks clipped or has too much empty space, inspect **View Code → IR** first: the usual causes are internal coordinates far away from visible primitives, invisible coordinates that do not extend bounds, or explicit coordinates without a visible boundary around them.
 
 ## Related
 
