@@ -17,7 +17,7 @@
 | 版本 | 主题 | 主要新增 |
 |---|---|---|
 | **v0.1**（当前焦点） | **Node + Path 基础能力** | shape 多态、anchor 命名、箭头、折角、cycle、fill、曲线、相对坐标 |
-| v0.2 | Scope + 样式 + Shape 扩展 | `<TikZ>` 重命名为 `<Layout>`、`<Scope>` / `<Group>`、`every node/.style` 默认值、局部 transform、`NodeShape` 闭合枚举打开 + ShapeRegistry 注入第三方 shape、结构化 Target / Anchor（对象 IR + 字符串 sugar 兼容）、显式 `zIndex` 覆盖、带文本 Node 输出始终包 `<g>`、Path-level shape sugar（Circle / Ellipse / Arc / Rectangle / Grid / Sector + IR 椭圆弧 / 圆角矩形 / 部分裁剪）、StepLabel 自定义样式（`textColor` / `opacity` / `font`） |
+| v0.2 | Scope + 样式 + Shape 扩展 | `<TikZ>` 重命名为 `<Layout>`、`<Scope>` / `<Group>`、`every node/.style` 默认值、局部 transform、`NodeShape` 闭合枚举打开 + ShapeRegistry 注入第三方 shape、结构化 Target / Anchor（对象 IR + 字符串 sugar 兼容）、显式 `zIndex` 覆盖、带文本 Node 输出始终包 `<g>`、NodeLabel 旋转（`rotate: 'none' \| 'radial' \| 'tangent' \| number`）、Path-level shape sugar（Circle / Ellipse / Arc / Rectangle / Grid / Sector + IR 椭圆弧 / 圆角矩形 / 部分裁剪）、StepLabel 自定义样式（`textColor` / `opacity` / `font`） |
 | v0.3 | 高级定位 / Coordinate | `<Coordinate>` 命名点、相对定位语义糖、`intersections` / `calc` |
 | v0.4 | TikZ libraries 概念 + decorations 入门 | `shapes.geometric` / `arrows.meta` 等 lib 划分 |
 | v0 收尾 | codec 起步、文档完整 | `@retikz/codec` 早期 IR ↔ TikZ 文本子集双向转换 |
@@ -377,6 +377,60 @@ return [{
 - `<g>` 上要不要带 `data-node-id` / `data-node-shape` 钩子（影响 GroupPrim schema）
 - 与 zIndex 提案的 sort 范围对齐——sort 单位是「Node 整体」还是「单个 primitive」；包 group 后天然按 group 排，简化实现
 - label 当前已与 shape / text 同层；本提案不改 label 位置，只追加外层包装
+
+### Node label 旋转能力计划
+
+**现状**：`Node.label` 只根据 `position` / `distance` 计算标签中心点，文本本身保持水平；当 Node 自身 `rotate` 时，label 会随整个 Node group 一起旋转，但不支持“标签沿所在方向自旋”。例如 `position: 'left'` 只会把标签放到左侧，不会把文字旋转到左侧方向。
+
+**目标接口（v0.2 ADR 阶段固化）**：
+
+```ts
+type NodeLabelRotate = 'none' | 'radial' | 'tangent' | number;
+
+export const NodeLabelSchema = z.object({
+  text: z.string(),
+  position: ...,
+  distance: ...,
+  // 新增
+  rotate: NodeLabelRotateSchema.optional(),
+  keepUpright: z.boolean().optional(),
+});
+```
+
+语义草案：
+
+| 值 | 含义 |
+| --- | --- |
+| `undefined` / `'none'` | 保持水平，兼容 v0.1 行为 |
+| `'radial'` | 沿「Node 中心 → label 中心」方向旋转；适合左 / 右 / 上 / 下等径向说明 |
+| `'tangent'` | 使用径向方向的切线角；适合环绕式标注 |
+| `number` | 手动指定角度（度数，沿用 retikz 屏幕坐标角度约定） |
+| `keepUpright` | 可选；旋转后若文字会倒置，则自动翻转 180°，保证阅读方向 |
+
+**实现要点**：旋转中心应当是 label 自身中心 `[lx, ly]`，不是 Node 中心。编译流程先复用现有 `labelCenter(layout, lab)` 算出位置，再把 TextPrim 包进一个只含该 label 的 GroupPrim：
+
+```ts
+{
+  type: 'group',
+  transforms: [{ kind: 'rotate', degrees, cx: lx, cy: ly }],
+  children: [labelTextPrim],
+}
+```
+
+这样 label 的位置仍由 `position` / `distance` 决定，`rotate` 只改变文字朝向，不会让标签绕 Node 再位移一次。
+
+**为什么放 v0.2 而非 v0.1**：
+
+- 需要扩展 `NodeLabelSchema`，v0.1 rc 起已冻结公开 API，不再加新字段
+- v0.2 已计划整理 Node group / Transform / Scope 样式继承，label 自旋可以顺手复用同一套 GroupPrim transform 能力
+- 与结构化 Target / Anchor 的对象化计划相邻：未来 label 的 `position` 若支持更复杂的百分比 / anchor 表达，旋转角也应基于统一的几何解析结果计算
+
+**待写 ADR**（v0.2 开工前）：
+
+- `rotate` 默认值是否显式写入 schema reference 为 `'none'`，还是保持字段缺省
+- `'radial'` / `'tangent'` 在屏幕 y-down 坐标中的角度定义，以及与 numeric `position` 的一致性
+- `keepUpright` 默认是否开启；倾向默认关闭，避免悄悄改变严格几何语义，由用户显式要求可读性优化
+- Node 自身 `rotate` 与 label 自身 `rotate` 的组合顺序：倾向外层 Node group 先整体变换，label 内层围绕自身中心自旋，最终视觉等价于两者角度叠加
 
 ### Path-level shape sugar 提案
 
