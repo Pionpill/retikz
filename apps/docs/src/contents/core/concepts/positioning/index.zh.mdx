@@ -1,18 +1,18 @@
 ---
 title: 定位
-description: retikz 的三种位置表达——笛卡尔、极坐标、节点 id 引用——通用于 `<Node>.position` 与 path target。
+description: retikz 的位置表达覆盖笛卡尔、极坐标、节点引用、相对定位、偏移定位与相对 target，用于节点放置和路径目标解析。
 ---
 
-retikz 里所有"放在哪 / 连到哪"都用同一套位置语法家族。不同字段接受的子集不完全相同：`<Node>.position` 偏向"放置一个实体"，`<Step>.to` / `<Draw>.way` 偏向"找一个路径目标"。
+retikz 使用一组统一的位置表达来描述实体放置与路径目标解析。`<Node>.position` / `<Coordinate>.position` 用于确定图元中心或引用点位置；`<Step>.to` / `<Draw>.way` 用于解析路径要连接或经过的目标。
 
-| 形态 | 类型 | 用在哪 |
-| --- | --- | --- |
-| 笛卡尔 | `[x, y]` | Node position、path target |
-| 极坐标 | `{ origin?, angle, radius }` | Node position、path target |
-| 节点 id | `'node-id'` | **仅** path target（Step.to / way item） |
-| 相对定位 | `{ direction, of, distance? }` | Node / Coordinate position |
-| 偏移定位 | `{ of, offset }` | Node / Coordinate position、path target |
-| 相对 target | `{ relative }` / `{ relativeAccumulate }` 或 `'+x,y'` / `'++x,y'` | **仅** path target |
+| 形态 | 类型 | 含义 | 用在哪 |
+| --- | --- | --- | --- |
+| 笛卡尔 | `[x, y]` | 直接给出画布坐标 | 节点位置、路径目标 |
+| 极坐标 | `{ origin?, angle, radius }` | 从极点按角度和半径推导位置 | 节点位置、路径目标 |
+| 节点 id | `'node-id'` | 引用已命名节点或 Coordinate，并由路径自动贴边界 | **仅**路径目标（`Step.to` / way item） |
+| 相对定位 | `{ direction, of, distance? }` | 按方向和距离放在另一个节点 / Coordinate 周围 | 节点位置、Coordinate 位置 |
+| 偏移定位 | `{ of, offset }` | 基于节点、坐标或极坐标做二维偏移 | 节点位置、Coordinate 位置、路径目标 |
+| 相对 target | `{ relative }` / `{ relativeAccumulate }` 或 `'+x,y'` / `'++x,y'` | 基于上一段终点做相对偏移 | **仅**路径目标 |
 
 > 坐标系：x 向右，y 向下（与 SVG / Canvas 一致，与数学课本相反）。单位是 user units，不是像素，最终物理尺寸由 `<TikZ>` 的 `width` / `height` 与编译得到的 layout bounds 决定。
 

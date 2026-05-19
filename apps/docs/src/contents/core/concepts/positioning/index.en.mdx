@@ -1,18 +1,18 @@
 ---
 title: Positioning
-description: Three position forms in retikz — Cartesian, polar, and node id reference — shared across `<Node>.position` and path targets.
+description: Position expressions in retikz cover Cartesian, polar, node references, relative placement, offset placement, and relative targets for entity placement and path target resolution.
 ---
 
-Every "where" in retikz belongs to one position-syntax family. Each field accepts a slightly different subset: `<Node>.position` is about placing an entity, while `<Step>.to` / `<Draw>.way` are about resolving a path target.
+retikz uses a unified set of position expressions for entity placement and path target resolution. `<Node>.position` / `<Coordinate>.position` determine the center of a visible entity or reference point; `<Step>.to` / `<Draw>.way` resolve the targets that a path connects to or passes through.
 
-| Form | Type | Where |
-| --- | --- | --- |
-| Cartesian | `[x, y]` | Node position, path target |
-| Polar | `{ origin?, angle, radius }` | Node position, path target |
-| Node id | `'node-id'` | **Path target only** (Step.to / way item) |
-| Relative placement | `{ direction, of, distance? }` | Node / Coordinate position |
-| Offset placement | `{ of, offset }` | Node / Coordinate position, path target |
-| Relative target | `{ relative }` / `{ relativeAccumulate }` or `'+x,y'` / `'++x,y'` | **Path target only** |
+| Form | Type | Meaning | Where |
+| --- | --- | --- | --- |
+| Cartesian | `[x, y]` | Direct canvas coordinate | Node position, path target |
+| Polar | `{ origin?, angle, radius }` | Derive a position from a pole, angle, and radius | Node position, path target |
+| Node id | `'node-id'` | Reference a named Node or Coordinate; paths auto-attach to the boundary | **Path target only** (`Step.to` / way item) |
+| Relative placement | `{ direction, of, distance? }` | Place around another Node / Coordinate by direction and distance | Node position, Coordinate position |
+| Offset placement | `{ of, offset }` | Apply a 2D offset from a node, coordinate, or polar base | Node position, Coordinate position, path target |
+| Relative target | `{ relative }` / `{ relativeAccumulate }` or `'+x,y'` / `'++x,y'` | Offset from the previous segment endpoint | **Path target only** |
 
 > Coordinate system: x grows right, y grows down (matches SVG / Canvas; opposite of math textbooks). Units are user units, not pixels — final physical size depends on `<TikZ>`'s `width` / `height` and the compiled layout bounds.
 
