@@ -5,6 +5,7 @@ import type { ComponentPropsWithoutRef, FC, ReactNode } from 'react';
 import { Link } from 'react-router';
 import { CodeBlockCommand } from '../code-block-command';
 import { Comparison } from '../comparison';
+import { ComponentAlert } from '../component-alert';
 import { ComponentPreview } from '../component-preview';
 import { ExamplePrompt } from '../example-prompt';
 import { CodeBlock } from '../highlight-code';
@@ -166,6 +167,7 @@ export const mdxComponents: MDXComponents = {
   ),
   CodeBlockCommand,
   Comparison,
+  ComponentAlert,
   ComponentPreview,
   ExamplePrompt,
   LinkedCard,

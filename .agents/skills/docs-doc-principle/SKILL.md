@@ -376,6 +376,17 @@ union / array 内部的 object 不会被平铺（如 `NodeSchema.label` 是 unio
   - `<ZodSchema ... />` —— Reference 词典页用，详见上文「Reference 词典页」
   - `<Comparison ... />` —— 外部生态对照内容用，当前只支持 `target="tikz"`
   - `<ExamplePrompt ... />` —— 示例页 AI Prompt 节用，见 [`docs-doc-example`](../docs-doc-example/SKILL.md)
+  - `<ComponentAlert type="tip|warn|error" title="..." description="..." />` —— 文档提示块，只传 `title` 和 `description`；`type` 省略时默认为 `tip`
+
+### `<ComponentAlert>` 使用边界
+
+`ComponentAlert` 用于把正文里的提示 / 警告 / 错误用法从普通段落中分离出来。它不承载长篇教程，不替代 `<Comparison>`，也不替代真实 demo；如果提示内容超过 2-3 句，优先拆成正文小节或表格。
+
+| type | 用途 |
+| --- | --- |
+| `tip` | 提示、用法建议、文档阅读顺序、文档建议 |
+| `warn` | 警告、非规范用法、组件错误用法、性能 / 内存问题 |
+| `error` | 错误、明确错误用法 |
 
 ## Quick Reference
 
