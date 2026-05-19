@@ -104,6 +104,8 @@ Concrete scenarios:
 
 | Option | Best fit | Strengths | Limits |
 | --- | --- | --- | --- |
-| retikz | Relational diagrams, flow charts, concept maps, AI-generated / AI-edited figures | Named nodes, path actions, anchors, and JSON IR; good at describing relationships between elements and at persistence / local edits | Not a built-in chart-template library; complex layout, data binding, and chart semantics belong in future domain packages |
+| `@retikz/core` | Relational diagrams, flow charts, concept maps, AI-generated / AI-edited figures | Named nodes, path actions, anchors, and JSON IR; good at describing relationships between elements and at persistence / local edits | Not a built-in chart-template library; complex layout, data binding, and chart semantics belong in future domain packages |
 | Traditional chart libraries | Dataset-driven statistical charts, dashboards, business reports | Mature chart types, axes, legends, tooltips, and data mapping out of the box | Better at mapping data to charts than at freely composing nodes, paths, annotations, and arbitrary geometric relationships |
 | Raw SVG / `<svg>` | Hand-tuned individual graphics or static exported assets | Native platform primitive, direct, no extra abstraction | No node naming, path semantics, or anchor system; relationship lines, boundary attachment, and later edits require manual coordinate management |
+
+Long term, `@retikz/core` is the foundation for higher-level domain components and packages. Core itself stays focused on general primitives, the IR contract, and compilation.
