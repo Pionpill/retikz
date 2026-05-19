@@ -3,13 +3,16 @@ title: 定位
 description: retikz 的三种位置表达——笛卡尔、极坐标、节点 id 引用——通用于 `<Node>.position` 与 path target。
 ---
 
-retikz 里所有"放在哪 / 连到哪"都用同一套位置语法：3 种形态可互换，覆盖 `<Node>.position`、`<Step>.to`、`<Draw>.way` 元素。
+retikz 里所有"放在哪 / 连到哪"都用同一套位置语法家族。不同字段接受的子集不完全相同：`<Node>.position` 偏向"放置一个实体"，`<Step>.to` / `<Draw>.way` 偏向"找一个路径目标"。
 
 | 形态 | 类型 | 用在哪 |
 | --- | --- | --- |
 | 笛卡尔 | `[x, y]` | Node position、path target |
 | 极坐标 | `{ origin?, angle, radius }` | Node position、path target |
 | 节点 id | `'node-id'` | **仅** path target（Step.to / way item） |
+| 相对定位 | `{ direction, of, distance? }` | Node / Coordinate position |
+| 偏移定位 | `{ of, offset }` | Node / Coordinate position、path target |
+| 相对 target | `{ relative }` / `{ relativeAccumulate }` 或 `'+x,y'` / `'++x,y'` | **仅** path target |
 
 > 坐标系：x 向右，y 向下（与 SVG / Canvas 一致，与数学课本相反）。单位是 user units，不是像素，最终物理尺寸由 `<TikZ>` 的 `width` / `height` 与编译得到的 layout bounds 决定。
 
@@ -48,6 +51,8 @@ retikz 里所有"放在哪 / 连到哪"都用同一套位置语法：3 种形态
 <ComponentPreview name="positioning-id-ref" size="sm" />
 
 线段的实际起止点由 retikz 自动算——见 [锚点](/core/concepts/anchors)。
+
+`<Node>` / `<Coordinate>` 不能直接把 `position` 写成节点 id，因为"把一个实体放在另一个实体中心"通常不是最有用的默认。要表达节点之间的关系，用 `{ direction, of, distance? }`；要表达任意二维偏移，用 `{ of, offset }`。这两种写法把布局意图留在文档里，比提前算好每个绝对坐标更容易维护。
 
 ## 前向引用要求
 
