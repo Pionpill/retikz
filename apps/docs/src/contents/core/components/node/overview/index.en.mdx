@@ -23,6 +23,8 @@ import { Node } from '@retikz/react';
 
 <ComponentPreview name="node-basic" size="xs" />
 
+Start from the job you need: flowchart nodes usually use the default rectangle + `padding`; plain text labels use `stroke="none"` / `fill="none"`; button-like nodes add `roundedCorners` + `minimumWidth`; annotation cards use multi-line `text` + `align="left"`; and if you only need a reference point with no visible shape, use [Coordinate](/core/components/node/coordinate) instead.
+
 ### Shape polymorphism
 
 `shape` picks the visual shape: `'rectangle'` (default) / `'circle'` / `'ellipse'` / `'diamond'`. Any shape works as an attachable target — connecting lines clip to that shape's boundary automatically:

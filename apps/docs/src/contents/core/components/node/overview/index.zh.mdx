@@ -23,6 +23,8 @@ import { Node } from '@retikz/react';
 
 <ComponentPreview name="node-basic" size="xs" />
 
+常见写法可以先按目标反查：流程图节点用默认 rectangle + `padding`；纯文字标签写 `stroke="none"` / `fill="none"`；按钮感节点加 `roundedCorners` + `minimumWidth`；说明框用多行 `text` + `align="left"`；只要引用点不用可见形状时，换成 [Coordinate](/core/components/node/coordinate)。
+
 ### shape 多态
 
 `shape` 控制节点形状：`'rectangle'`（默认）/ `'circle'` / `'ellipse'` / `'diamond'`。任意 shape 的节点都被 path / draw 当作有边界的图元，连线端点自动贴对应形状的边：
