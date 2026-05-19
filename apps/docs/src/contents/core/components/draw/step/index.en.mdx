@@ -5,6 +5,16 @@ description: Path's child node — one step = one action (move / line / step fol
 
 `<Step>` describes a single path action: `move` lifts the pen, `line` draws a straight line, `step` folds through a single right-angle corner, `cycle` closes the path, `curve` / `cubic` / `bend` draw curves of various shapes, and `arc` / `circlePath` / `ellipsePath` use the cursor as the center to draw an arc / full circle / full ellipse. It is **only** valid as a direct child of `<Path>`; placed elsewhere it is silently ignored.
 
+Use this table to pick a `kind` first:
+
+| kind | Needs `to` | Draws | Advances cursor | Supports label |
+| --- | --- | --- | --- | --- |
+| `move` | Yes | No | Yes | No |
+| `line` / `step` / `curve` / `cubic` / `bend` | Yes | Yes | Yes | Yes |
+| `cycle` | No | Yes | Back to subpath start | No |
+| `arc` | No | Yes | To arc endpoint | Yes |
+| `circlePath` / `ellipsePath` | No | Yes | Back to circle / ellipse center | Yes |
+
 ## Usage
 
 ```tsx

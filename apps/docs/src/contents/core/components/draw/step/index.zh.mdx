@@ -5,6 +5,16 @@ description: Path 的子节点——一个 step = 一个动作（move / line / s
 
 `<Step>` 描述路径上的一个动作：`move` 抬笔到目标点，`line` 落笔从游标画直线，`step` 经一个直角拐点折到目标点，`cycle` 闭合回 path 起点，`curve` / `cubic` / `bend` 画各类曲线，`arc` / `circlePath` / `ellipsePath` 以游标为圆心画弧段 / 整圆 / 整椭圆。它**只能**作为 `<Path>` 的直接 children；放在其它地方会被忽略。
 
+先用这张表定位 `kind`：
+
+| kind | 需要 `to` | 画线 | 推进游标 | 支持 label |
+| --- | --- | --- | --- | --- |
+| `move` | 是 | 否 | 是 | 否 |
+| `line` / `step` / `curve` / `cubic` / `bend` | 是 | 是 | 是 | 是 |
+| `cycle` | 否 | 是 | 回到子路径起点 | 否 |
+| `arc` | 否 | 是 | 到弧段终点 | 是 |
+| `circlePath` / `ellipsePath` | 否 | 是 | 回到圆心 / 椭圆中心 | 是 |
+
 ## 用法
 
 ```tsx
