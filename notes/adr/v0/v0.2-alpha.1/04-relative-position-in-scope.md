@@ -1,6 +1,6 @@
 # ADR-04：scope 下相对定位（Polar / At / Offset）语义
 
-- 状态：Proposed
+- 状态：Accepted
 - 决策日期：2026-05-16
 - 关联：[v0.2-alpha.1 plan](../../../plans/v0/v0.2-alpha.1.md) · [本 milestone ADR-01](./01-scope-ir-and-compile.md) · [本 milestone ADR-02](./02-node-index-anchor-resolution.md) · [本 milestone ADR-03](./03-scope-id-bounding-box.md) · [alpha.4 ADR-01 (Node.position direction/of)](../v0.1-alpha.4/01-node-at-positioning.md) · [alpha.5 ADR-04 (OffsetPosition)](../v0.1-alpha.5/04-position-offset.md)
 

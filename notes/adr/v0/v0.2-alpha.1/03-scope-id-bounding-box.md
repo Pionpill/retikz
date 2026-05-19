@@ -1,6 +1,6 @@
 # ADR-03：`scope.id` 注册 synthetic bounding-box 进父 namespace frame
 
-- 状态：Proposed
+- 状态：Accepted
 - 决策日期：2026-05-16
 - 关联：[v0.2-alpha.1 plan](../../../plans/v0/v0.2-alpha.1.md) · [本 milestone ADR-01](./01-scope-ir-and-compile.md) · [本 milestone ADR-02](./02-node-index-anchor-resolution.md) · [本 milestone ADR-04](./04-relative-position-in-scope.md)
 
