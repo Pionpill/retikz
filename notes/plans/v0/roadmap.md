@@ -331,6 +331,8 @@ return [{
 
 ### Step label 自定义样式提案
 
+> **归宿**（2026-05-19）：折入 v0.2 **alpha.2**（样式继承 + Scope 挂 Node 样式子集 + label 样式字段扩展），不开新 alpha；ADR 在 alpha.2 开工时与 Scope 样式继承 ADR 同期起草。详 [`v0.2.md §alpha.2 设计预想`](./v0.2.md#alpha2-设计预想scope-样式子集) 末段。
+
 **现状**：`StepLabelSchema` 只有 `text` / `position` / `side` 三个字段；`compile/path/label.ts` 渲染时 `fill: 'currentColor'` 硬编码——所有边标注都跟随主题色（黑 / 白），无法**与所标注的线段同色**。给彩色函数线（sin / cos / tan / sec / csc / cot 等）配标注时尤其违和，标签都是 currentColor 一片黑，读者得对照线色和位置反推。
 
 **目标接口（v0.2 ADR 阶段固化）**：
