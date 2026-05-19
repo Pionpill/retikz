@@ -60,6 +60,8 @@ Coordinate 用 `{ of, offset }` 派生下一个 coordinate——靠一个根 coo
 
 <ComponentPreview name="coordinate-offset-chain" size="lg" />
 
+调试时记住：Coordinate **不会**撑开 layout bounds。只把一个远处坐标点注册出来，画布不会因此自动变大；必须有实际 Node / Path primitive 落在那片区域，最终 viewBox 才会覆盖过去。
+
 ## API 参考
 
 | 属性 | 类型 | 默认值 | 描述 |

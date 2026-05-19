@@ -60,6 +60,8 @@ Use `{ of, offset }` to derive one coordinate from another — drive the whole g
 
 <ComponentPreview name="coordinate-offset-chain" size="lg" />
 
+Debugging note: a Coordinate **does not** expand layout bounds. Registering a far-away coordinate alone will not make the canvas grow; an actual Node / Path primitive must land in that region for the final viewBox to cover it.
+
 ## API Reference
 
 | Prop | Type | Default | Description |
