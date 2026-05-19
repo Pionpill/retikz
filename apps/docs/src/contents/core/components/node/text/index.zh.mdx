@@ -14,6 +14,8 @@ description: 写在 <Node> 内部的"行级"标记组件——给一行单独覆
 
 > 块级属性（`align` / `lineHeight`）写在 `<Node>` 上；行级覆盖（`fill` / `opacity` / `font`）写在 `<Text>` 上。
 
+把 `<Text>` 理解成"给 Node 增加一整行带样式的文本"，不要把它当 HTML inline `<span>`。它不能在同一行里混多段颜色；需要多色说明时，把内容拆成多行，或改用多个独立 `<Node>`。
+
 ## 用法
 
 ```tsx
