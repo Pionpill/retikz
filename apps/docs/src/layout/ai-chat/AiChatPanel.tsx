@@ -87,10 +87,12 @@ export const AiChatPanel: FC = () => {
   // inline rename：点击标题切到 input；Enter 提交 / Esc 取消 / blur 提交；切换 active 时强制退出编辑
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState('');
-  useEffect(() => {
+  const [prevActiveId, setPrevActiveId] = useState(activeConversationId);
+  if (prevActiveId !== activeConversationId) {
+    setPrevActiveId(activeConversationId);
     setEditing(false);
     setDraft('');
-  }, [activeConversationId]);
+  }
 
   const handleStartEdit = () => {
     if (!titleEditable) return;

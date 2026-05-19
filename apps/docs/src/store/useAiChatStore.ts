@@ -184,6 +184,7 @@ export const useAiChatStore = create<PersistedState & EphemeralState & Actions>(
         const id = state.activeConversationId;
         if (!id) return;
         const existing = state.conversations[id];
+        // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- Record<string,V> index 在 TS 默认 typings 下永远返回 V，但运行时 id 不存在时确实是 undefined；保留防御
         if (!existing) return;
         const now = Date.now();
         const updated: Conversation = {
@@ -460,6 +461,7 @@ export const useAiChatStore = create<PersistedState & EphemeralState & Actions>(
           return;
         }
         const target = state.conversations[id];
+        // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- 同上，运行时 id 不存在时索引返回 undefined
         if (!target) return;
         set({
           activeConversationId: id,
@@ -491,6 +493,7 @@ export const useAiChatStore = create<PersistedState & EphemeralState & Actions>(
         if (!trimmed) return;
         const state = get();
         const existing = state.conversations[id];
+        // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- 同上，运行时 id 不存在时索引返回 undefined
         if (!existing) return;
         const updated: Conversation = { ...existing, title: trimmed, updatedAt: Date.now() };
         set(s => ({ conversations: { ...s.conversations, [id]: updated } }));
