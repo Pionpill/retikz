@@ -60,4 +60,6 @@ Don't want auto-selection, need a specific position? Target strings support thre
 
 With `<Node margin={n}>`: the border stays put, but path endpoints in **auto mode** back off `n` user units. In multi-node flow charts, `margin={4}` keeps lines from touching the border directly.
 
+<ComponentPreview name="anchors-margin" size="sm" />
+
 Note: explicit anchors / angles (`'A.east'` / `'A.30'`) hit the **visual border** — `margin` does not apply. If you need the endpoint pushed further out, use extra padding or explicit coordinate offset.
