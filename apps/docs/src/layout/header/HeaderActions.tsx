@@ -108,7 +108,7 @@ export const HeaderActions: FC = () => {
               </TooltipTrigger>
               <TooltipContent>{t('common.more')}</TooltipContent>
             </Tooltip>
-            <DropdownMenuContent align="end" className={cn('w-56', !compact && 'w-72')}>
+            <DropdownMenuContent align="end" className={compact ? 'w-56' : 'w-72'}>
               {/* 紧凑模式独占：完整模式平铺的主题 / 语言 / 复制链接 / GitHub 在紧凑模式收纳到这 */}
               {compact && (
                 <>
