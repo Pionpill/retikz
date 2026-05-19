@@ -22,6 +22,15 @@ export const InlineMarkdown: FC<InlineMarkdownProps> = props => {
   return <div className={className}>{renderMarkdown(source)}</div>;
 };
 
+/**
+ * 单行 / inline-only markdown 渲染（不分块、不出 `<p>` / `<h>` / `<ul>`，包成 `<span>`）
+ * @description 解析片段限于 `**bold**` / `` `code` `` / `[text](url)`，用在按钮 / 标题 / chip 等**单行**容器里。若嵌入 `<button>` 等交互父元素，避免源串里出现链接（链接渲染成 `<a>` 会与父交互嵌套，但仅 HTML lint 警告，不影响 onClick 行为）
+ */
+export const MarkdownInline: FC<InlineMarkdownProps> = props => {
+  const { source, className } = props;
+  return <span className={className}>{renderInline(source)}</span>;
+};
+
 type Block =
   | { type: 'p'; text: string }
   | { type: 'code'; lang: string; code: string }

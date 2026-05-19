@@ -1,0 +1,187 @@
+---
+title: AI Expert RoadMap
+description: Roadmap illustration example — using AMAI-GmbH/AI-Expert-Roadmap's cover as the subject, grow the figure in 5 steps, exercising Draw's line / curve + dashPattern / arrow / edge label side by side
+---
+
+## Introduction
+
+This page uses [AMAI-GmbH/AI-Expert-Roadmap](https://github.com/AMAI-GmbH/AI-Expert-Roadmap)'s cover as the subject, walking through five core [Draw](/core/components/draw/overview) capabilities in 5 steps: straight `line`, quadratic Bezier `curve`, `dashPattern`, `arrow`, and edge `label`.
+
+<ComponentPreview name="learning-path-05-dashed" size="xl" />
+
+## Prompt
+
+Send the prompt below to the AI chat panel — the LLM will produce retikz IR / JSX for this figure directly. For variants (change labels, add path buttons, swap step kinds), edit the prompt inside the chat panel and resend.
+
+<ExamplePrompt
+  short="**Replicate the intro.svg cover of [AMAI-GmbH/AI-Expert-Roadmap](https://github.com/AMAI-GmbH/AI-Expert-Roadmap)**: centered title `AI Expert in 2022` on top + gray `Fundamentals` button + bold black header `Choose your path`; 4 blue `Required for any path` buttons on the left, 2 legend buttons on the right; 5 gray path buttons in the center (split 3 + 2 in two sub-columns); 2 Bezier merge curves + 1 cyan dashed 'recommended path' + 2 short 'more below' dashed lines + 1 red X decoration."
+  detailed={`**Pixel-perfect replica of [AMAI-GmbH/AI-Expert-Roadmap](https://github.com/AMAI-GmbH/AI-Expert-Roadmap)'s intro.svg cover**
+
+**Canvas**: width 811 × height 441, white background; y-axis grows downward; reuse intro.svg's raw pixel coordinates
+
+**Nodes** (rounded rectangles rx=4.5, Helvetica)
+
+- Title \`AI Expert in 2022\`: 24px bold, currentColor, no background; (404, 20), width 200 × height 40
+- Center gray button \`Fundamentals\`: 12px white text, gray fill \`#878787\`, black border; (404, 95), width 90 × height 30
+- Center bold currentColor sub-header \`Choose your path\`: 14px bold, no background; (404, 162), width 130 × height 25
+- 4 blue \`Required for any path\` buttons on the left: 12px white text, blue fill \`#1f6286\`, black border, width 210 × height 30; x=105, y=68/109/149.5/189.5 (tightly stacked)
+- 2 legend buttons on the right: width 210 × height 30; top blue \`Personal Recommendation!\`, bottom gray \`Available Options\`; x=705, y=68/109
+- 5 center path buttons (gray fill): width 111 × height 30
+  - Left sub-column x=316: \`Data Scientist\` y=245, \`Machine Learning\` y=306, \`Deep Learning\` y=366
+  - Right sub-column x=495: \`Data Engineer\` y=245, \`Big Data Engineer\` y=306
+
+**Connectors** (all blue \`#1f6286\`, strokeWidth=2, arrow at end)
+
+- title → Fundamentals: vertical line
+- Fundamentals → Choose: vertical line
+- Choose → left sub-column head Data Scientist: 2-segment quadratic Bezier (midpoint 360, 195; controls 404, 200 / 316, 190)
+- Choose → right sub-column head Data Engineer: mirror version
+- Inside each sub-column: 3 short vertical lines
+
+**Decoration**
+
+- Cyan \`#287fad\` dashed \`dashPattern=[6,6]\` "recommended path": meanders from above Deep Learning (251.88, 359.77) through 3 quadratic Bezier segments to Choose bottom (404, 174.5); arrow at the start pointing into Deep Learning; mid-curve label "recommended"
+- 2 blue \`#1f6286\` short dashed lines \`dashPattern=[4,4]\` 4px wide, vertical "more below" hints
+- 1 red \`#ff0000\` X: two 4px-wide diagonals`}
+  extensions={[
+  'Swap the path buttons: replace the 5 path buttons with your team’s career tracks (e.g. "Frontend / Backend / Fullstack / DevOps / SRE"), keeping the rest of the layout.',
+  'Add more sections: add an "Advanced" blue stack below the Required column, connected to Choose with an orthogonal step (fold) connector.',
+  'Render a dark-mode variant: switch the background to dark, brighten the blues and dim the grays, invert the text colors, and render a second copy.',
+  ]}
+  />
+
+## Process
+
+### Step 1: title — RoadmapNode 4 variants
+
+Factor a `RoadmapNode` helper first — 4 variants sharing [Node](/core/components/node/overview)'s shape / corner radius / font, varying only in fill and font size:
+
+| variant    | use             | look                                                   |
+| ---------- | --------------- | ------------------------------------------------------ |
+| `title`    | top title       | 24px bold, `currentColor` (theme-aware), no background |
+| `header`   | sub-header      | 14px bold, `currentColor`, no background               |
+| `required` | required button | 12px white text, blue fill `#1f6286`, black border     |
+| `optional` | optional button | 12px white text, gray fill `#878787`, black border     |
+
+Step 1 places one `title` — "AI Expert in 2022" — showing the `title` variant: bold + `currentColor` (theme-aware) + no background.
+
+<ComponentPreview name="learning-path-01-title" size="md" />
+
+### Step 2: center spine — 2 Draw lines
+
+Add the `Fundamentals` gray mini button and the `Choose your path` sub-header below the title, then wire them up with 2 vertical [Draw](/core/components/draw/overview) lines:
+
+```tsx
+<Draw way={['title', 'fundamentals']} stroke="#1f6286" strokeWidth={2} arrow="->" />
+<Draw way={['fundamentals', 'choose']}   stroke="#1f6286" strokeWidth={2} arrow="->" />
+```
+
+- way array `[source id, target id]` — simplest form: two targets = one straight line
+- Node id strings are resolved at compile time to the nearest border anchor (not the node center)
+- `arrow="->"` adds an arrowhead at the end (`<-` at start / `<->` both ends)
+- `strokeWidth={2}` sets the connector thickness
+
+<ComponentPreview name="learning-path-02-spine" diffFrom="learning-path-01-title" size="lg" />
+
+### Step 3: side stacks — AtPosition tight stacking
+
+Add two independent stacks — 4 blue "required" buttons on the left, 2 legend buttons on the right (1 blue + 1 gray). Each column's **head** uses an absolute Cartesian; the rest use [AtPosition](/core/concepts/positioning) `{ direction: 'below', of: 'prev-id' }` for tight stacking:
+
+- `<TikZ ... nodeDistance={41}>` sets the global node distance on the container
+- Each AtPosition node references the previous node's id, gluing them visually into a "color bar"
+
+```tsx
+<RoadmapNode id="papers" position={[105, 68]} ...>Papers With Code</RoadmapNode>
+<RoadmapNode id="git" position={{ direction: 'below', of: 'papers' }} ...>GIT - Version Control</RoadmapNode>
+<RoadmapNode id="semver" position={{ direction: 'below', of: 'git' }} ...>Semantic Versioning</RoadmapNode>
+```
+
+This step only adds nodes — no new connectors.
+
+<ComponentPreview name="learning-path-03-stacks" diffFrom="learning-path-02-spine" />
+
+### Step 4: 5 path buttons + curve merge
+
+Add 5 center path buttons (two sub-columns of 3 + 2 tightly stacked), then use [Draw](/core/components/draw/overview)'s `{ curve }` infix operator to connect the `Choose` header down to each sub-column head.
+
+The merge curve is a 2-segment quadratic Bezier — that maps directly to **2 consecutive `{ curve: [cx, cy] }` infix operators** in the way array, each modifying the next segment:
+
+```tsx
+<Draw
+  way={[
+    'choose', // move start
+    { curve: [404, 200] },
+    [360, 195], // 1st quadratic: control + target
+    { curve: [316, 190] },
+    'data-scientist', // 2nd: control + target id
+  ]}
+  stroke="#1f6286"
+  strokeWidth={2}
+  arrow="->"
+/>
+```
+
+The last target is the node id `'data-scientist'`, which retikz auto-anchors to the node border (not raw coords). The 3 short sub-column connectors also use node id refs:
+
+```tsx
+<Draw way={['data-scientist', 'machine-learning']} stroke="#1f6286" strokeWidth={2} arrow="->" />
+<Draw way={['machine-learning', 'deep-learning']}   stroke="#1f6286" strokeWidth={2} arrow="->" />
+<Draw way={['data-engineer', 'big-data-engineer']}  stroke="#1f6286" strokeWidth={2} arrow="->" />
+```
+
+<ComponentPreview name="learning-path-04-paths" diffFrom="learning-path-03-stacks" size="lg" />
+
+### Step 5: decoration — dashed recommended + short dashed + red X
+
+The final decoration layer demonstrates `dashPattern` / `arrow` at start / edge label in one pass:
+
+| Decoration                     | Draw config                                                    | way operators                                                                                        |
+| ------------------------------ | -------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| Cyan dashed recommended path   | `stroke="#287fad"` + `dashPattern={[6,6]}` + `arrow="<-"`      | 3 consecutive `{ curve }` infix; a `{ label: 'recommended' }` prefix attaches the label to segment 1 |
+| "more below" short dashed (×2) | `stroke="#1f6286"` + `strokeWidth={4}` + `dashPattern={[4,4]}` | way `[start, end]` — just two coordinates                                                            |
+| Red X decoration (×2 crossing) | `stroke="#ff0000"` + `strokeWidth={4}`                         | Same as above                                                                                        |
+
+```tsx
+<Draw
+  way={[
+    [251.88, 359.77],
+    { label: 'recommended' },
+    { curve: [200, 320] },
+    [225, 241],
+    { curve: [250, 162] },
+    [327, 186],
+    { curve: [404, 210] },
+    'choose',
+  ]}
+  stroke="#287fad"
+  strokeWidth={2}
+  dashPattern={[6, 6]}
+  arrow="<-"
+/>
+```
+
+`arrow="<-"` puts the arrow at the **start** instead of the end — here the start (251.88, 359.77) sits above Deep Learning, so the arrow points "go to Deep Learning." `{ label: 'recommended' }` is a prefix operator that modifies the **next** segment — it lands on the first curve's midpoint (default `position: 'midway'` + `side: 'above'`).
+
+<ComponentPreview name="learning-path-05-dashed" diffFrom="learning-path-04-paths" size="xl" />
+
+## Capabilities
+
+| Component                                  | Role in this example                                                                                                                                                         | Main steps                                                                                                                                          |
+| ------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [Draw](/core/components/draw/overview)     | All 12 connectors (2 spine lines / 3 short sub-column lines / 2 quadratic merges / 1 recommended dashed / 2 short dashed / 2 red X) + stroke / strokeWidth / dashPattern / arrow | [2](#step-2-center-spine--2-draw-lines), [4](#step-4-5-path-buttons--curve-merge), [5](#step-5-decoration--dashed-recommended--short-dashed--red-x) |
+| [Way operators](/core/components/draw/way) | `{ curve }` infix → quadratic / `{ label }` infix → edge label / node id → auto border anchor                                                                                | [4](#step-4-5-path-buttons--curve-merge), [5](#step-5-decoration--dashed-recommended--short-dashed--red-x)                                          |
+| [Node](/core/components/node/overview)     | All 16 roadmap nodes (title / header / required / optional) — 4 variants factored into `RoadmapNode`                                                                         | [1](#step-1-title--roadmapnode-4-variants), [3](#step-3-side-stacks--atposition-tight-stacking)                                                     |
+| [AtPosition](/core/concepts/positioning)   | Tight intra-stack stacking (`{ direction: 'below', of: prevId }` + global `nodeDistance`)                                                                                    | [3](#step-3-side-stacks--atposition-tight-stacking), [4](#step-4-5-path-buttons--curve-merge)                                                       |
+
+## Limitations
+
+- 🚧 **Picture-level scale + y-flip**: [`<TikZ>`](/core/components/tikz) doesn't support picture-level scale or y-flip yet, so this example uses intro.svg's raw pixel coordinates (y grows downward, origin top-left). `scale` / `yAxis="up"` are planned
+- 🚧 **Node hyperlinks**: [`<Node>`](/core/components/node/overview) doesn't accept `href` today, so intro.svg's `<a xlink:href="...">` wrappers are lost — buttons are visible but not clickable. Wrap the SVG in an `<a>` externally or render a separate text-link list alongside the figure
+- 🚧 **Node drop shadow**: intro.svg's buttons use a duplicated rect with `transform="translate(2,3)" opacity="0.25"` as a drop shadow; [`<Node>`](/core/components/node/overview) has no shadow support today, so this example omits it
+- 🚧 **Curve arrow shrink along chord**: arrow-end shrink currently shortens the endpoint **along the chord** toward the start (not along the tangent), so arrows on `curve` / `cubic` segments drift a few pixels off the node border. Straight `line` / `step` (fold) segments aren't affected (chord == tangent). Tangent-direction shrink is on the roadmap
+
+## Related
+
+- [Draw](/core/components/draw/overview) · [Way operators](/core/components/draw/way) · [Node](/core/components/node/overview) · [Positioning](/core/concepts/positioning)
+- [Karl's Unit Circle](/core/examples/karl-circle) — another comprehensive example, this one on trigonometry geometry
+- Source: [AMAI-GmbH/AI-Expert-Roadmap](https://github.com/AMAI-GmbH/AI-Expert-Roadmap) (MIT License)

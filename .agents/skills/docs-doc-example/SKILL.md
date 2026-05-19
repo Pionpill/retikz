@@ -96,6 +96,7 @@ description: <一句话：建什么图 + 主要教什么能力>
 | Helpers | **内联**在每个 demo——ComponentPreview 源码视图只显示 `.demo.tsx` 本体，要求每个 demo 独立可读 |
 | Hero 复用 | 引言里 hero `<ComponentPreview>` 复用最后一个 step 的 demo（不另起 `-final` 文件） |
 | 颜色字面值 | demo 里的 `stroke` / `fill` / `bg` 等 **必须用 hex / oklch / 命名色字面量**——不能用 `var(--border)` / `var(--background)` 等 CSS 自定义属性。预览工具条可下载 SVG，CSS var 在新上下文里无定义 → fallback 成黑，下载后图变样 |
+| DSL 选择 | **默认用 Sugar `<Draw way={[...]}>`，不用 Kernel `<Path><Step /></Path>`**。`way` 数组 1 行就能表达 line / curve / cubic / bend / step (fold) / cycle / label，比 Kernel 的多行 children 更短、与 components/draw/* 例子风格一致。例外：示例**本身**就是教 `<Path>` / `<Step>` Kernel 用法、或需要 fill + 闭合（`DrawWay.Cycle`）的填充形状 |
 
 ### 累加式的代价与好处
 
@@ -251,6 +252,44 @@ cd apps/docs && node -e "import('github-slugger').then(({default: S}) => { const
 
 简单判断：单组件能讲完 → 组件页 Examples 子节；多个组件协同 → 示例页。
 
+## Draw way 速查
+
+示例 demo 写 edge 时不要嵌 `<Path><Step kind="...">` —— 用 `<Draw way={[...]}>`。way 数组各 step kind 的 sugar 写法：
+
+```tsx
+import { Draw, DrawWay } from '@retikz/react';
+
+// 直线: 直接放两个 target
+<Draw way={['A', 'B']} arrow="->" />
+
+// 折角（fold）: '-|' = 先横后竖 / '|-' = 先竖后横
+<Draw way={['A', '|-', 'B']} arrow="->" />
+
+// 二次贝塞尔（curve）: { curve: [cx, cy] } infix
+<Draw way={['A', { curve: [50, -30] }, 'B']} arrow="->" />
+
+// 三次贝塞尔（cubic）: { cubic: [[c1x, c1y], [c2x, c2y]] }
+<Draw way={['A', { cubic: [[40, -20], [60, 30]] }, 'B']} arrow="->" />
+
+// 弧形简记（bend）: { bend: 'left' | 'right', angle?: number }
+<Draw way={['A', { bend: 'right', angle: 45 }, 'B']} arrow="->" />
+
+// 边标注 label: { label: 'text' } 或 { label: { text, position, side } } infix（修饰下一段）
+<Draw way={['A', { label: 'midway' }, 'B']} arrow="->" />
+
+// 多段串联: 串多个 infix 算子，每个修饰下一段
+<Draw way={[
+  'A',
+  { curve: [40, -30] }, [80, -10],   // 第 1 段 quadratic
+  { curve: [60, 40] }, 'B',          // 第 2 段 quadratic，端点 auto-clip 到 B 边框
+]} arrow="->" />
+
+// 闭合（filled）: DrawWay.Cycle 闭回起点
+<Draw way={['A', 'B', 'C', DrawWay.Cycle]} fill="#ff0" />
+```
+
+**端点写 node id 字符串** —— retikz 编译期自动按"toward 方向射线"算 border 锚点；写裸坐标会让箭头偏离节点边框。
+
 ## 常见错误（示例页特有）
 
 - **6 段顺序错乱** —— 严格按"引言 / Prompt / 过程 / 能力 / Limitations / Related"；缺哪段除非整节为空否则不许
@@ -261,6 +300,7 @@ cd apps/docs && node -e "import('github-slugger').then(({default: S}) => { const
 - **过程节用 `####` 而非 `###`** —— H4 不入 TOC，读者无法跳到具体 step；统一用 `###`
 - **过度拆 zh/en demo** —— 只在文本**实际不同**时才拆；`sin α` / `α` / `f(x)` 这种通用符号留单文件
 - **demo 颜色用 CSS var**（`var(--border)` / `var(--muted)` 等） —— 工具条 SVG 下载在新上下文里 var 解析失败 fallback 成黑；颜色统一用字面量（hex / oklch / 命名色）。需要 light/dark 适配的"装饰性"色（grid help line / 背景遮罩）取浅色字面值（如 `#e5e7eb` / `#ffffff`），下载后在白底文档里仍然好看
+- **demo 用 `<Path><Step />` 而非 `<Draw way={[...]}>`** —— 示例 edge 一律走 Draw sugar（way 数组 1 行就能表达），Kernel Path 仅在示例**本身**教 Path/Step 内部或需要 fill+cycle 时用；理由见 demo 文件约定的「DSL 选择」行
 - **正文里散落 TikZ 对照** —— TikZ 关系一律走 `<Comparison>`（principle 已规定）；正文专心讲 retikz
 - **Limitations 当成「未来 roadmap」写** —— 只列**本例触到的** gap；与本例无关的 roadmap 别塞进来
 - **能力节列表里组件名不带 link** —— 第一列必须 markdown link 跳到对应 components/ 页

@@ -9,6 +9,9 @@ const ANGLE_FILL = 'oklch(0.92 0.10 145)';
 const SIN_COLOR = '#ef4444';
 const COS_COLOR = '#2563eb';
 const TAN_COLOR = 'oklch(0.72 0.16 60)';
+const SEC_COLOR = '#a855f7';
+const CSC_COLOR = '#ec4899';
+const COT_COLOR = '#14b8a6';
 const MATH_FONT = {
   family: '"Latin Modern Math", "STIX Two Math", "Cambria Math", "Times New Roman", serif',
   style: 'italic' as const,
@@ -17,13 +20,16 @@ const MATH_FONT = {
 const COS30 = Math.cos((30 * Math.PI) / 180);
 const SIN30 = Math.sin((30 * Math.PI) / 180);
 const TAN30 = SIN30 / COS30;
+const SEC30 = 1 / COS30;     // x 轴上的截距 = 1/cos(α)
+const CSC30 = 1 / SIN30;     // y 轴上的截距 = 1/sin(α)
+const COT30 = 1 / TAN30;     // 顶部水平切线与原点射线的距离 = 1/tan(α)
 
 const Demo: FC = () => (
-  <TikZ width={720} height={360}>
+  <TikZ width={760} height={480}>
     {/* 背景网格 */}
     {[-100, -50, 0, 50, 100].map(v => (
       <Fragment key={`grid-${v}`}>
-        <Draw way={[[v, -140], [v, 140]]} stroke={HELP_LINE} strokeWidth={0.5} />
+        <Draw way={[[v, -210], [v, 140]]} stroke={HELP_LINE} strokeWidth={0.5} />
         <Draw way={[[-140, v], [140, v]]} stroke={HELP_LINE} strokeWidth={0.5} />
       </Fragment>
     ))}
@@ -34,15 +40,15 @@ const Demo: FC = () => (
       <Step kind="circlePath" radius={100} />
     </Path>
 
-    {/* 坐标轴 */}
+    {/* 坐标轴：y 轴上端拉到 -230 以容纳 csc α = 2 端点 (0, -200) */}
     <Draw way={[[-150, 0], [150, 0]]} arrow="->" />
     <Node position={[162, 0]} stroke="none" padding={0} font={MATH_FONT}>x</Node>
     <Coordinate id="x-axis" position={[150, 0]} />
-    <Draw way={[[0, 150], [0, -150]]} arrow="->" />
-    <Node position={[0, -162]} stroke="none" padding={0} font={MATH_FONT}>y</Node>
-    <Coordinate id="y-axis" position={[0, -150]} />
+    <Draw way={[[0, 150], [0, -230]]} arrow="->" />
+    <Node position={[0, -242]} stroke="none" padding={0} font={MATH_FONT}>y</Node>
+    <Coordinate id="y-axis" position={[0, -230]} />
 
-    {/* 刻度 */}
+    {/* 刻度：y 轴多加一个 2（位置 -200）方便看 csc 端点 */}
     {[
       { x: -100, text: '−1' },
       { x: -50, text: '−1/2' },
@@ -60,6 +66,7 @@ const Demo: FC = () => (
       { y: 50, text: '−1/2' },
       { y: -50, text: '1/2' },
       { y: -100, text: '1' },
+      { y: -200, text: '2' },
     ].map(({ y, text }) => (
       <Fragment key={`ty-${y}`}>
         <Draw way={[[-3, y], [3, y]]} />
@@ -79,7 +86,11 @@ const Demo: FC = () => (
       α
     </Node>
 
-    {/* sin α / cos α / tan α */}
+    {/* 从原点穿过 P 的射线（延伸到 (cot α · 100, -100)）——cot 几何定义的基准；
+        虚线 currentColor：跟着主题深浅自适应，又一眼能看出是辅助线 */}
+    <Draw way={[[0, 0], [COT30 * 100, -100]]} dashPattern={[3, 3]} />
+
+    {/* sin α 红 / cos α 蓝 / tan α 橙；label.textColor 与线色一致 */}
     <Draw
       way={[{ angle: -30, radius: 100 }, { label: { text: 'sin α', side: 'left' } }, [COS30 * 100, 0]]}
       stroke={SIN_COLOR}
@@ -91,19 +102,48 @@ const Demo: FC = () => (
       thickness="thick"
     />
     <Draw
-      way={[[100, 0], { label: { text: 'tan α = sin α / cos α', side: 'right' } }, [100, -TAN30 * 100]]}
+      way={[[100, 0], { label: { text: 'tan α', side: 'right' } }, [100, -TAN30 * 100]]}
       stroke={TAN_COLOR}
       thickness="thick"
     />
-    <Coordinate id="t" position={[100, -TAN30 * 100]} />
-    <Draw way={[[0, 0], 't']} />
 
-    {/* 右侧信息说明框 —— LineSpec.fill 行级换色（行内片段着色暂不支持）。
-        浅灰虚线边框 + 无填充：light/dark 主题都能看见，不抢主视觉；
-        text 不放空 '' 分组行（空 tspan 的 dy advance 在浏览器间不稳，外框会撑出底部空白），
-        视觉分组靠彩色公式行 + 默认色注释行的交替表达 */}
+    {/* sec α 紫：切线下半段，P → x 轴截距 (sec α · 100, 0)；
+        标签锚到段末 + side='below'，落到 x 轴下方，避开 tan α 的 right 侧标签 */}
+    <Draw
+      way={[
+        { angle: -30, radius: 100 },
+        { label: { text: 'sec α', position: 'at-end', side: 'below' } },
+        [SEC30 * 100, 0],
+      ]}
+      stroke={SEC_COLOR}
+      thickness="thick"
+    />
+
+    {/* csc α 粉：切线上半段，P → y 轴截距 (0, -csc α · 100) */}
+    <Draw
+      way={[
+        { angle: -30, radius: 100 },
+        { label: { text: 'csc α', side: 'left' } },
+        [0, -CSC30 * 100],
+      ]}
+      stroke={CSC_COLOR}
+      thickness="thick"
+    />
+
+    {/* cot α 青：顶部水平切线段，(0, -100) → (cot α · 100, -100) */}
+    <Draw
+      way={[
+        [0, -100],
+        { label: { text: 'cot α', side: 'above' } },
+        [COT30 * 100, -100],
+      ]}
+      stroke={COT_COLOR}
+      thickness="thick"
+    />
+
+    {/* 右侧信息说明框：6 个三角函数的值 + α */}
     <Node
-      position={[320, 10]}
+      position={[320, -70]}
       shape="rectangle"
       stroke="#d4d4d4"
       dashed
@@ -112,14 +152,13 @@ const Demo: FC = () => (
       innerYSep={4}
       align="left"
       text={[
-        { text: '角 α = 30°', fill: ANGLE_STROKE },
-        '即 π/6 弧度',
+        { text: 'α = 30°', fill: ANGLE_STROKE },
         { text: 'sin α = 1/2', fill: SIN_COLOR },
-        '（红线长度）',
         { text: 'cos α = √3/2', fill: COS_COLOR },
-        '（蓝线长度）',
         { text: 'tan α = 1/√3', fill: TAN_COLOR },
-        '（橙线长度）',
+        { text: 'sec α = 2/√3', fill: SEC_COLOR },
+        { text: 'csc α = 2', fill: CSC_COLOR },
+        { text: 'cot α = √3', fill: COT_COLOR },
       ]}
     />
   </TikZ>

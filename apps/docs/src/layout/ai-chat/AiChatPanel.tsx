@@ -3,6 +3,7 @@ import { type FC, type KeyboardEvent as ReactKeyboardEvent, useEffect, useState 
 import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/components/ui/button';
+import { MarkdownInline } from '@/components/shared/inline-markdown';
 import { cn } from '@/lib/utils';
 import { useAiChatStore } from '@/store/useAiChatStore';
 import { AiChatConversation } from './parts/AiChatConversation';
@@ -148,7 +149,7 @@ export const AiChatPanel: FC = () => {
               )}
               title={titleEditable ? t('ai.historyRenameLabel') : undefined}
             >
-              {titleDisplay}
+              <MarkdownInline source={titleDisplay} />
             </button>
           )}
           <div className="ml-auto flex items-center gap-1">

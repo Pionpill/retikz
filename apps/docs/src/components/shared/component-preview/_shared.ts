@@ -15,7 +15,8 @@ export type AlignKey = keyof typeof alignClass;
 
 /**
  * 预览区高度档位
- * @description mobile / sm 双断点；`md` 是默认值；叙述性插图用 xs / sm，带交互的大型 demo 用 lg / xl
+ * @description mobile / sm 双断点；`md` 是默认值；叙述性插图用 xs / sm，带交互的大型 demo 用 lg / xl / xxl / xxxl。
+ * 高度 class 一律写字面量（不动态拼字符串），保证 Tailwind JIT 能静态扫到
  */
 export const sizeClass = {
   xs: 'h-32 sm:h-40',
@@ -23,12 +24,14 @@ export const sizeClass = {
   md: 'h-56 sm:h-72',
   lg: 'h-72 sm:h-96',
   xl: 'h-96 sm:h-[28rem]',
+  xxl: 'h-[28rem] sm:h-[32rem]',
+  xxxl: 'h-[32rem] sm:h-[40rem]',
 } as const;
 
 export type SizeKey = keyof typeof sizeClass;
 
 /** size 档位的展示顺序（从小到大）；切换 UI 按这个数组渲染 */
-export const SIZE_KEYS: ReadonlyArray<SizeKey> = ['xs', 'sm', 'md', 'lg', 'xl'];
+export const SIZE_KEYS: ReadonlyArray<SizeKey> = ['xs', 'sm', 'md', 'lg', 'xl', 'xxl', 'xxxl'];
 
 /**
  * 格式化 IR JSON

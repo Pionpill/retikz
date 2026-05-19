@@ -9,7 +9,7 @@
 - 语言：TypeScript（ESM）
 - 运行时：React ≥ 18
 - 构建：Vite + `vite-plugin-dts`
-- 文档站：<https://pionpill.github.io/retikz.doc/>
+- 文档站：<https://pionpill.github.io/retikz/>
 
 ## 仓库结构
 
