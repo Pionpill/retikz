@@ -12,12 +12,12 @@ const findPathPrim = (prims: Array<ScenePrimitive>): PathPrim => {
 /**
  * compile path.arrowDetail → PathPrim.arrowStart / arrowEnd（结构化 ArrowEndSpec）
  * @description ADR-03 合同：
- *  - 无 arrowDetail / `arrow="->"` → arrowEnd 仍解析为 { shape: 'normal' }（其余视觉字段不写，让 renderer 走 context-stroke 缺省）
+ *  - 无 arrowDetail / `arrow="->"` → arrowEnd 仍解析为 { shape: 'stealth' }（其余视觉字段不写，让 renderer 走 context-stroke 缺省）
  *  - `arrowDetail.shape` / `scale` / `color` / `fill` / `opacity` / `length` / `width` / `lineWidth` 顶层默认作为起末共享视觉
  *  - `arrowDetail.start` / `end` 子对象**逐字段 merge** 顶层默认：缺省字段继承，已填字段 override
  */
 describe('compile arrowDetail：默认行为（不传 arrowDetail）', () => {
-  it("arrow='->' 无 arrowDetail → arrowEnd = { shape: 'normal' }，无视觉字段", () => {
+  it("arrow='->' 无 arrowDetail → arrowEnd = { shape: 'stealth' }，无视觉字段", () => {
     const ir: IR = {
       version: 1,
       type: 'scene',
@@ -33,11 +33,11 @@ describe('compile arrowDetail：默认行为（不传 arrowDetail）', () => {
       ],
     };
     const path = findPathPrim(compileToScene(ir).primitives);
-    expect(path.arrowEnd).toEqual({ shape: 'normal' });
+    expect(path.arrowEnd).toEqual({ shape: 'stealth' });
     expect(path.arrowStart).toBeUndefined();
   });
 
-  it("arrow='<->' 无 arrowDetail → 两端都 { shape: 'normal' }", () => {
+  it("arrow='<->' 无 arrowDetail → 两端都 { shape: 'stealth' }", () => {
     const ir: IR = {
       version: 1,
       type: 'scene',
@@ -53,8 +53,8 @@ describe('compile arrowDetail：默认行为（不传 arrowDetail）', () => {
       ],
     };
     const path = findPathPrim(compileToScene(ir).primitives);
-    expect(path.arrowStart).toEqual({ shape: 'normal' });
-    expect(path.arrowEnd).toEqual({ shape: 'normal' });
+    expect(path.arrowStart).toEqual({ shape: 'stealth' });
+    expect(path.arrowEnd).toEqual({ shape: 'stealth' });
   });
 
   it("arrowDetail={} 等同未传 arrowDetail（空对象 merge 不引入字段）", () => {
@@ -246,7 +246,7 @@ describe("compile arrowDetail：顶层默认 + start/end merge", () => {
       ],
     };
     const path = findPathPrim(compileToScene(ir).primitives);
-    expect(path.arrowStart?.shape).toBe('normal');
+    expect(path.arrowStart?.shape).toBe('stealth');
     expect(path.arrowEnd).toBeUndefined(); // arrow direction 不含 end → end 配置静默丢
   });
 });

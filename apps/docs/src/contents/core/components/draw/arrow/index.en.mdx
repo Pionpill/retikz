@@ -6,7 +6,7 @@ description: Arrows on Path / Draw in depth. `arrow` picks direction; `arrowDeta
 Arrows are driven by two independent props:
 
 - **`arrow`** — direction enum: `'->'` end / `'<-'` start / `'<->'` both / `'none'` (default) = none
-- **`arrowDetail`** — visual detail object, 8 top-level fields + optional `start` / `end` sub-objects. **Omit it for the minimal "normal filled triangle inheriting the path stroke / opacity" behavior**
+- **`arrowDetail`** — visual detail object, 8 top-level fields + optional `start` / `end` sub-objects. **Omit it for the default "stealth sharp barb inheriting the path stroke / opacity" behavior**
 
 Both props sit on `<Draw>` and `<Path>` with identical syntax and effect — the examples below use `<Draw>`; the `<Path>` equivalent is the same.
 
@@ -20,19 +20,19 @@ An arrow is a marker at the path end: it does not change the original path geome
 <Draw way={['a', 'b']} arrow="->" />
 ```
 
-With `arrowDetail` omitted, the arrow defaults to a normal-shape filled triangle inheriting the path stroke color and using 6 user units for both length and width.
+With `arrowDetail` omitted, the arrow defaults to a stealth tip inheriting the path stroke color and using 6 user units for both length and width.
 
 ## Examples
 
 ### Shapes
 
-`arrowDetail.shape` picks the tip shape (default `'normal'`):
+`arrowDetail.shape` picks the tip shape (default `'stealth'`):
 
 | Shape | Description | Typical use |
 | --- | --- | --- |
-| `'normal'` | Filled triangle | Flow chart default |
+| `'normal'` | Filled triangle | Basic triangular arrow |
 | `'open'` | Hollow triangle | UML generalization / inheritance |
-| `'stealth'` | Sharp barbed triangle | Modern flow charts |
+| `'stealth'` | Sharp barbed triangle | Default arrow, modern flow charts |
 | `'diamond'` | Filled diamond | UML composition |
 | `'openDiamond'` | Hollow diamond | UML aggregation |
 | `'circle'` | Filled circle | Connection / dot end |
@@ -89,7 +89,7 @@ With `arrowDetail` omitted, the arrow defaults to a normal-shape filled triangle
 
 | Field | Type | Default | Description |
 | --- | --- | --- | --- |
-| `shape` | `'normal' \| 'open' \| 'stealth' \| 'diamond' \| 'openDiamond' \| 'circle' \| 'openCircle'` | `'normal'` | Arrow tip shape |
+| `shape` | `'normal' \| 'open' \| 'stealth' \| 'diamond' \| 'openDiamond' \| 'circle' \| 'openCircle'` | `'stealth'` | Arrow tip shape |
 | `scale` | `number > 0` | `1` | Uniform scale factor; multiplied **after** `length` / `width` (`length=10, scale=1.5` → effective 15) |
 | `length` | `number ≥ 0` | `6` | Marker length along the path direction (user units) |
 | `width` | `number ≥ 0` | `6` | Marker width perpendicular to the path (user units) |

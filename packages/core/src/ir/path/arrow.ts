@@ -3,7 +3,7 @@ import type { ValueOf } from '../../types';
 
 /**
  * 箭头形状常量（用 const 而非 TS enum 避免 reverse-mapping 和字面量不互通）
- * @description normal 实心三角（默认）；open 空心三角（UML 泛化/继承）；stealth 尖锐倒钩；diamond 实心菱形（UML 组合）；openDiamond 空心菱形（聚合）；circle 实心圆点；openCircle 空心圆点
+ * @description normal 实心三角；open 空心三角（UML 泛化/继承）；stealth 尖锐倒钩（默认）；diamond 实心菱形（UML 组合）；openDiamond 空心菱形（聚合）；circle 实心圆点；openCircle 空心圆点
  */
 export const ARROW_SHAPES = {
   normal: 'normal',
@@ -17,6 +17,9 @@ export const ARROW_SHAPES = {
 
 /** 箭头形状字面量类型 */
 export type ArrowShape = ValueOf<typeof ARROW_SHAPES>;
+
+/** 箭头默认形状 */
+export const DEFAULT_ARROW_SHAPE = ARROW_SHAPES.stealth;
 
 /**
  * 空心 shape 集合（fill 字段在这些 shape 上 silent no-op）
@@ -40,7 +43,7 @@ export const ArrowEndDetailSchema = z
       .nativeEnum(ARROW_SHAPES)
       .optional()
       .describe(
-        'Arrow tip shape. Defaults to `normal` (filled triangle). Other values: `open` (hollow triangle), `stealth` (sharp barb), `diamond`, `openDiamond`, `circle`, `openCircle`.',
+        'Arrow tip shape. Defaults to `stealth` (sharp barb). Other values: `normal` (filled triangle), `open` (hollow triangle), `diamond`, `openDiamond`, `circle`, `openCircle`.',
       ),
     scale: z
       .number()

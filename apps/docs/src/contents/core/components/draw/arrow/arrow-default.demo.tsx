@@ -2,7 +2,7 @@ import { Node, Path, Step, TikZ } from '@retikz/react';
 import type { FC } from 'react';
 
 /**
- * arrow='->' 无 arrowDetail：默认 normal 实心三角，视觉随 path stroke 继承
+ * arrow='->' 无 arrowDetail：默认 stealth 倒钩三角，视觉随 path stroke 继承
  * @description 颜色由 marker 的 context-stroke 同步 path stroke；大小走 strokeWidth × 6 默认尺寸；不传 arrowDetail 时使用默认箭头外观
  */
 const Demo: FC = () => (

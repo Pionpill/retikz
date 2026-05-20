@@ -1,4 +1,4 @@
-import type { IRArrowDetail, IRArrowEndDetail, IRPosition } from '../../ir';
+import { DEFAULT_ARROW_SHAPE, type IRArrowDetail, type IRArrowEndDetail, type IRPosition } from '../../ir';
 import type { ArrowEndSpec, PathCommand } from '../../primitive';
 import { shiftToward } from './anchor';
 import { isHollowArrowShape, resolveArrowShapeGeometry } from './arrow-geometry';
@@ -12,7 +12,7 @@ const resolveArrowEndSpec = (
   endSide: IRArrowEndDetail | undefined,
 ): ArrowEndSpec => {
   // ArrowDetail 的顶层字段含 start / end —— 提取 end-end 候选字段集（不含 start/end 自身）
-  const baseShape = endSide?.shape ?? topLevel.shape ?? 'normal';
+  const baseShape = endSide?.shape ?? topLevel.shape ?? DEFAULT_ARROW_SHAPE;
   const out: ArrowEndSpec = { shape: baseShape };
   const scale = endSide?.scale ?? topLevel.scale;
   if (scale !== undefined) out.scale = scale;

@@ -190,7 +190,7 @@ description: 笔画外壳、step 动作序列与 step 目标点
 `Path.arrowDetail` 字段的 schema —— 顶层 8 视觉字段（与 `ArrowEndDetail` 共享）+ 可选 `start` / `end` 子对象。`start` / `end` 与顶层默认逐字段 merge：缺省字段继承顶层、已填字段 override。
 
 <ZodSchema name="ArrowDetailSchema" descriptions={{
-  shape: '箭头形状：normal / open / stealth / diamond / openDiamond / circle / openCircle，默认 normal',
+  shape: '箭头形状：normal / open / stealth / diamond / openDiamond / circle / openCircle，默认 stealth',
   scale: '等比缩放因子（默认 1），乘到 length / width 之后',
   length: '尖长（user units，沿 path 方向），默认 6',
   width: '尖宽（user units，垂直 path 方向），默认 6',
@@ -207,7 +207,7 @@ description: 笔画外壳、step 动作序列与 step 目标点
 `start` / `end` 子对象的 schema —— 与 ArrowDetail 同字段集减去 `start` / `end` 字段自身（不递归）：
 
 <ZodSchema name="ArrowEndDetailSchema" descriptions={{
-  shape: '箭头形状（缺省时继承顶层；顶层也缺省时回退 normal）',
+  shape: '箭头形状（缺省时继承顶层；顶层也缺省时回退 stealth）',
   scale: '等比缩放因子',
   length: '尖长（user units）',
   width: '尖宽（user units）',

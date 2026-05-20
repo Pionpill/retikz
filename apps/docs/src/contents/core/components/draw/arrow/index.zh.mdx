@@ -6,7 +6,7 @@ description: Path / Draw 的箭头详解。`arrow` 控制方向、`arrowDetail` 
 箭头由两个独立的 prop 控制：
 
 - **`arrow`**——方向枚举：`'->'` 终点 / `'<-'` 起点 / `'<->'` 两端 / `'none'`（缺省）= 无
-- **`arrowDetail`**——视觉详细配置对象，8 个顶层字段 + 可选 `start` / `end` 子对象。**省略 = 最朴素的"normal 实心三角 + 继承 path stroke / opacity"行为**
+- **`arrowDetail`**——视觉详细配置对象，8 个顶层字段 + 可选 `start` / `end` 子对象。**省略 = 默认的 "stealth 倒钩三角 + 继承 path stroke / opacity" 行为**
 
 `arrow` + `arrowDetail` 同时挂在 `<Draw>` 和 `<Path>` 上，写法和效果完全一致——下文示例用 `<Draw>` 演示，`<Path>` 写法等价。
 
@@ -20,19 +20,19 @@ description: Path / Draw 的箭头详解。`arrow` 控制方向、`arrowDetail` 
 <Draw way={['a', 'b']} arrow="->" />
 ```
 
-`arrowDetail` 全省，箭头走默认 normal shape + path stroke 继承色 + 6 user units 默认大小。
+`arrowDetail` 全省，箭头走默认 stealth shape + path stroke 继承色 + 6 user units 默认大小。
 
 ## 例子
 
 ### 形状
 
-`arrowDetail.shape` 选形状，缺省 `'normal'`：
+`arrowDetail.shape` 选形状，缺省 `'stealth'`：
 
 | 形状 | 描述 | 典型用途 |
 | --- | --- | --- |
-| `'normal'` | 实心三角 | 流程图默认 |
+| `'normal'` | 实心三角 | 基础三角箭头 |
 | `'open'` | 空心三角 | UML 泛化 / 继承 |
-| `'stealth'` | 倒钩三角 | 现代流图、视觉锐利 |
+| `'stealth'` | 倒钩三角 | 默认箭头、现代流图 |
 | `'diamond'` | 实心菱形 | UML 组合 |
 | `'openDiamond'` | 空心菱形 | UML 聚合 |
 | `'circle'` | 实心圆点 | 连接点 / dot end |
@@ -89,7 +89,7 @@ description: Path / Draw 的箭头详解。`arrow` 控制方向、`arrowDetail` 
 
 | 字段 | 类型 | 默认值 | 描述 |
 | --- | --- | --- | --- |
-| `shape` | `'normal' \| 'open' \| 'stealth' \| 'diamond' \| 'openDiamond' \| 'circle' \| 'openCircle'` | `'normal'` | 箭头形状 |
+| `shape` | `'normal' \| 'open' \| 'stealth' \| 'diamond' \| 'openDiamond' \| 'circle' \| 'openCircle'` | `'stealth'` | 箭头形状 |
 | `scale` | `number > 0` | `1` | 等比缩放因子；乘到 `length` / `width` 之后（`length=10, scale=1.5` → 实际 15） |
 | `length` | `number ≥ 0` | `6` | 尖长（user units，沿 path 方向） |
 | `width` | `number ≥ 0` | `6` | 尖宽（user units，垂直 path 方向） |
