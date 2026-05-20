@@ -158,6 +158,17 @@ describe("ArrowMarker：共用约定不被 spec 改变", () => {
       refY: 5,
       orient: 'auto-start-reverse',
       markerUnits: 'strokeWidth',
+      preserveAspectRatio: 'none',
     });
+  });
+
+  it('length / width can scale independently without keeping the square viewBox ratio', () => {
+    const el = ArrowMarker({
+      id: 'mk',
+      spec: { shape: 'stealth', length: 14, width: 10 },
+    }) as AnyEl;
+    expect(el.props.markerWidth).toBe(14);
+    expect(el.props.markerHeight).toBe(10);
+    expect(el.props.preserveAspectRatio).toBe('none');
   });
 });

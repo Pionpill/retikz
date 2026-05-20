@@ -113,6 +113,7 @@ export const ArrowMarker: FC<ArrowMarkerProps> = props => {
       markerHeight={width}
       orient="auto-start-reverse"
       markerUnits="strokeWidth"
+      preserveAspectRatio="none"
       overflow="visible"
       opacity={spec.opacity}
     >

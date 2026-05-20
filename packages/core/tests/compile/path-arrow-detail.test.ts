@@ -389,4 +389,26 @@ describe('compile arrowDetail：shrink（hollow shape）按 length / scale / lin
     if (last.kind !== 'line') throw new Error('expected last to be line');
     expect(last.to[0]).toBe(94.75);
   });
+
+  it("shape='openCircle' lineWidth=1 shrink matches the rendered circle edge", () => {
+    const ir: IR = {
+      version: 1,
+      type: 'scene',
+      children: [
+        {
+          type: 'path',
+          arrow: '->',
+          arrowDetail: { shape: 'openCircle', lineWidth: 1 },
+          children: [
+            { type: 'step', kind: 'move', to: [0, 0] },
+            { type: 'step', kind: 'line', to: [100, 0] },
+          ],
+        },
+      ],
+    };
+    const path = findPathPrim(compileToScene(ir).primitives);
+    const last = path.commands[path.commands.length - 1];
+    if (last.kind !== 'line') throw new Error('expected last to be line');
+    expect(last.to[0]).toBe(94.15);
+  });
 });
