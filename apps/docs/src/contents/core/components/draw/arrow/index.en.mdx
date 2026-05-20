@@ -10,7 +10,7 @@ Arrows are driven by two independent props:
 
 Both props sit on `<Draw>` and `<Path>` with identical syntax and effect — the examples below use `<Draw>`; the `<Path>` equivalent is the same.
 
-An arrow is a marker at the path end: it does not change the original path geometry, and it is not repeated at intermediate nodes. Very short segments, two-ended arrows, or large `length` / `width` values can overlap visually; reduce marker size or create room with node `margin` / explicit coordinates.
+An arrow attaches to a path endpoint: it does not change the original path geometry, and it is not repeated at intermediate nodes. Very short segments, two-ended arrows, or large `length` / `width` values can overlap visually; reduce the arrow size or create room with node `margin` / explicit coordinates.
 
 ## Usage
 
@@ -28,15 +28,12 @@ With `arrowDetail` omitted, the arrow defaults to a stealth tip inheriting the p
 
 `arrowDetail.shape` picks the tip shape (default `'stealth'`):
 
-| Shape | Description | Typical use |
+| Solid | Hollow | Typical use |
 | --- | --- | --- |
-| `'normal'` | Filled triangle | Basic triangular arrow |
-| `'open'` | Hollow triangle | UML generalization / inheritance |
-| `'stealth'` | Sharp barbed triangle | Default arrow, modern flow charts |
-| `'diamond'` | Filled diamond | UML composition |
-| `'openDiamond'` | Hollow diamond | UML aggregation |
-| `'circle'` | Filled circle | Connection / dot end |
-| `'openCircle'` | Hollow circle | White circle / o-end |
+| `'normal'` filled triangle | `'open'` hollow triangle | Basic triangle / UML generalization |
+| `'stealth'` sharp barb | - | Default arrow, modern flow charts |
+| `'diamond'` filled diamond | `'openDiamond'` hollow diamond | UML composition / aggregation |
+| `'circle'` filled dot | `'openCircle'` hollow dot | Connection dot / open endpoint |
 
 <ComponentPreview name="arrow-shapes" />
 
@@ -54,7 +51,7 @@ With `arrowDetail` omitted, the arrow defaults to a stealth tip inheriting the p
 
 #### Color override
 
-`color` overrides the marker stroke / solid fill (escaping the default `context-stroke` inheritance); `fill` is only effective on solid shapes. `start.color` / `end.color` give per-end overrides — handy for "light line, dark arrow" or two-color endpoints:
+`color` overrides the arrow stroke / solid fill instead of inheriting the path stroke color; `fill` is only effective on solid shapes. `start.color` / `end.color` give per-end overrides — handy for "light line, dark arrow" or two-color endpoints:
 
 <ComponentPreview name="arrow-color" size="sm" />
 
@@ -62,15 +59,15 @@ With `arrowDetail` omitted, the arrow defaults to a stealth tip inheriting the p
 
 #### Sizing: scale / length / width
 
-- `scale` is the uniform marker scale factor (default 1), multiplied **after** `length` / `width` — `length=10, scale=1.5` → effective `markerWidth=15`
-- `length` controls the marker dimension along the path direction (default 6)
-- `width` controls the marker dimension perpendicular to the path (default 6)
+- `scale` is the uniform arrow scale factor (default 1), multiplied **after** `length` / `width` — `length=10, scale=1.5` → effective arrow length 15
+- `length` controls the arrow dimension along the path direction (default 6)
+- `width` controls the arrow dimension perpendicular to the path (default 6)
 
 <ComponentPreview name="arrow-scale" size="md" />
 
 #### Translucent
 
-`opacity` 0..1 applies to the marker as a whole (independent of the path's own `opacity` / `drawOpacity`):
+`opacity` 0..1 applies to the whole arrow (independent of the path's own `opacity` / `drawOpacity`):
 
 <ComponentPreview name="arrow-opacity" size="xs" />
 
@@ -91,11 +88,11 @@ With `arrowDetail` omitted, the arrow defaults to a stealth tip inheriting the p
 | --- | --- | --- | --- |
 | `shape` | `'normal' \| 'open' \| 'stealth' \| 'diamond' \| 'openDiamond' \| 'circle' \| 'openCircle'` | `'stealth'` | Arrow tip shape |
 | `scale` | `number > 0` | `1` | Uniform scale factor; multiplied **after** `length` / `width` (`length=10, scale=1.5` → effective 15) |
-| `length` | `number ≥ 0` | `6` | Marker length along the path direction (user units) |
-| `width` | `number ≥ 0` | `6` | Marker width perpendicular to the path (user units) |
-| `color` | `string` | — | Stroke color override; default falls back to `context-stroke` inheritance |
-| `fill` | `string` | `color` or `context-stroke` | Fill color override; **silent no-op on hollow shapes** (written value is dropped) |
-| `opacity` | `number ∈ [0, 1]` | — | Marker-only opacity; default inherits path opacity |
+| `length` | `number ≥ 0` | `6` | Arrow length along the path direction (user units) |
+| `width` | `number ≥ 0` | `6` | Arrow width perpendicular to the path (user units) |
+| `color` | `string` | — | Stroke color override; default inherits the path stroke color |
+| `fill` | `string` | `color` or path stroke color | Fill color override; **silent no-op on hollow shapes** (written value is dropped) |
+| `opacity` | `number ∈ [0, 1]` | — | Arrow-only opacity; default inherits path opacity |
 | `lineWidth` | `number ≥ 0` | `1.5` | Stroke width for hollow shapes; ignored on solid shapes |
 | `start` | `ArrowEndDetail` (same field set, no `start` / `end`) | — | Start-end override (only effective when `arrow` includes the start: `'<-'` / `'<->'`) |
 | `end` | `ArrowEndDetail` (same field set, no `start` / `end`) | — | End-end override (only effective when `arrow` includes the end: `'->'` / `'<->'`) |
