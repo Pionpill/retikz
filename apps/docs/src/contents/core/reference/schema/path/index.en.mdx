@@ -55,6 +55,18 @@ A `path` is the outer container for a drawn line. Its `children` field is an ord
 
 <ZodSchema name="EllipsePathStepSchema" />
 
+## StepLabel
+
+`StepLabelSchema` is shared by every drawn step except move and cycle. It describes edge-label text, position along the segment, and offset side.
+
+<ZodSchema name="StepLabelSchema" />
+
+## ControlPoint
+
+`ControlPointSchema` is the alias for Bezier control points. It currently resolves to Cartesian `[x, y]`.
+
+<ZodSchema name="ControlPointSchema" />
+
 ## Target
 
 `TargetSchema` is a union over six forms — Cartesian / polar / node id / offset (`{ of, offset }`) / relative offsets (relative / relativeAccumulate):

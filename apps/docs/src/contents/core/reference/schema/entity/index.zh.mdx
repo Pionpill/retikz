@@ -9,7 +9,7 @@ description: 在 scene 中被命名的成员 —— Node 与 Coordinate
 
 `NodeSchema` 描述一个被定位的视觉原件。它是 IR 里字段最多的实体 —— 30+ 字段覆盖形状、填充 / 描边、padding、文本、字体、缩放、附加标签。
 
-<ZodSchema name="NodeSchema" descriptions={{
+<ZodSchema name="NodeSchema" description="节点图元：带位置、形状和可选文本的可引用实体。" descriptions={{
   type: '判别字段，标记此子节点为 node',
   id: '可选唯一 id；当其它 path 需要按字符串引用本 node 时必填',
   shape: '节点形状，默认 `rectangle`。circle / ellipse / diamond 外接 text+padding',
@@ -41,10 +41,6 @@ description: 在 scene 中被命名的成员 —— Node 与 Coordinate
   padding: 'innerXSep + innerYSep 的对称别名',
   margin: 'outerSep 的对称别名',
   font: '节点内文本的字体规格（family / size / weight / style，均可选）',
-  'font.family': 'CSS font-family 字符串，如 "serif" / "monospace" / "Inter, sans-serif"',
-  'font.size': '字号（用户单位）；未填走渲染器默认',
-  'font.weight': 'CSS font-weight：keyword `normal`/`bold` 或数字 100..900',
-  'font.style': 'CSS font-style：`normal` / `italic` / `oblique`',
   label: '节点外围附加文本，单对象或数组',
 }} />
 
@@ -64,8 +60,42 @@ description: 在 scene 中被命名的成员 —— Node 与 Coordinate
 
 </Comparison>
 
-<ZodSchema name="CoordinateSchema" descriptions={{
+<ZodSchema name="CoordinateSchema" description="坐标占位：只注册 id 与位置，不渲染可见形状。" descriptions={{
   type: '判别字段，标记此子节点为 coordinate 占位',
   id: '必填唯一 id；coordinate 的全部意义就是被引用',
   position: '坐标位置；笛卡尔 [x,y]、极坐标、或相对定位（`at` 风格）',
+}} />
+
+## NodeLabel
+
+`NodeLabelSchema` 描述节点外围的附加文本；`Node.label` 可填单个对象或数组。
+
+<ZodSchema name="NodeLabelSchema" description="附着在节点边界外侧的额外文本标签。" descriptions={{
+  text: '标签文字内容，按单行文本渲染',
+  position: '标签相对节点边界的位置：8 向枚举或数字角度；默认 above',
+  distance: '节点边界到标签中心的间距（用户单位），默认 12',
+  textColor: '标签文字颜色，省略时使用 currentColor',
+  opacity: '标签自身不透明度 0..1；会与节点 opacity 相乘',
+  font: '标签字体覆盖；缺省字段继承父节点 font，再回退到渲染器默认',
+}} />
+
+## TextBlock
+
+`TextBlockSchema` 是节点文本块的结构：单字符串表示单行；数组表示多行，数组项可用 `LineSpec` 做行级样式覆盖。
+
+<ZodSchema name="TextBlockSchema" description="文本块：单字符串表示单行，非空 LineSpec 数组表示多行。" />
+
+### LineSpec
+
+<ZodSchema name="LineSpecSchema" description="单行文本规格：字符串走默认样式，对象形式可覆盖本行颜色、透明度和字体。" />
+
+## Font
+
+`FontSchema` 复用于节点文本、节点标签和行级文本覆盖；所有字段均可选。
+
+<ZodSchema name="FontSchema" description="字体规格：family / size / weight / style 全部可选。" descriptions={{
+  family: 'CSS font-family 字符串，如 "serif" / "monospace" / "Inter, sans-serif"',
+  size: '字号（用户单位）；未填走渲染器默认',
+  weight: 'CSS font-weight：keyword `normal`/`bold` 或数字 100..900',
+  style: 'CSS font-style：`normal` / `italic` / `oblique`',
 }} />

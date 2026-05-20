@@ -22,3 +22,25 @@ description: Named members placed in a scene — Node and Coordinate
 </Comparison>
 
 <ZodSchema name="CoordinateSchema" />
+
+## NodeLabel
+
+`NodeLabelSchema` describes extra text attached around a node border. `Node.label` accepts either one object or an array.
+
+<ZodSchema name="NodeLabelSchema" />
+
+## TextBlock
+
+`TextBlockSchema` is the node text block shape: a single string for one line, or an array for multiple lines where each item may use `LineSpec` for per-line styling.
+
+<ZodSchema name="TextBlockSchema" />
+
+### LineSpec
+
+<ZodSchema name="LineSpecSchema" />
+
+## Font
+
+`FontSchema` is shared by node text, node labels, and per-line text overrides. All fields are optional.
+
+<ZodSchema name="FontSchema" />

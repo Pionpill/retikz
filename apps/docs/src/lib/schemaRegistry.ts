@@ -10,12 +10,23 @@ export type SchemaRegistryEntry = {
 };
 
 export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
-  // 6 个一级页面
+  // 顶层 scene
   SceneSchema:         { schema: IR.SceneSchema,         label: 'Scene',         url: '/core/reference/schema/scene' },
+  ChildSchema:         { schema: IR.ChildSchema,         label: 'Child',         url: '/core/reference/schema/scene#child' },
+
+  // Entity 及文本相关结构
   NodeSchema:          { schema: IR.NodeSchema,          label: 'Node',          url: '/core/reference/schema/entity#node' },
+  NodeLabelSchema:     { schema: IR.NodeLabelSchema,     label: 'NodeLabel',     url: '/core/reference/schema/entity#nodelabel' },
   CoordinateSchema:    { schema: IR.CoordinateSchema,    label: 'Coordinate',    url: '/core/reference/schema/entity#coordinate' },
+  FontSchema:          { schema: IR.FontSchema,          label: 'Font',          url: '/core/reference/schema/entity#font' },
+  TextBlockSchema:     { schema: IR.TextBlockSchema,     label: 'TextBlock',     url: '/core/reference/schema/entity#textblock' },
+  LineSpecSchema:      { schema: IR.LineSpecSchema,      label: 'LineSpec',      url: '/core/reference/schema/entity#linespec' },
+
+  // Path / Step / Target
   PathSchema:          { schema: IR.PathSchema,          label: 'Path',          url: '/core/reference/schema/path#path' },
   StepSchema:          { schema: IR.StepSchema,          label: 'Step',          url: '/core/reference/schema/path#step' },
+  StepLabelSchema:     { schema: IR.StepLabelSchema,     label: 'StepLabel',     url: '/core/reference/schema/path#steplabel' },
+  ControlPointSchema:  { schema: IR.ControlPointSchema,  label: 'ControlPoint',  url: '/core/reference/schema/path#controlpoint' },
   TargetSchema:        { schema: IR.TargetSchema,        label: 'Target',        url: '/core/reference/schema/path#target' },
   PositionSchema:      { schema: IR.PositionSchema,      label: 'Position',      url: '/core/reference/schema/placement#position' },
   PolarPositionSchema: { schema: IR.PolarPositionSchema, label: 'PolarPosition', url: '/core/reference/schema/placement#polarposition' },
