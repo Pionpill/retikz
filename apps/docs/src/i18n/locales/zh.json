@@ -46,11 +46,11 @@
     "examplesKarlCircle": "Karl 单位圆",
     "examplesLearningPath": "AI 专家路线图",
     "reference": "参考",
-    "refSchema": "Schema",
-    "refSceneSchema": "Scene",
-    "refEntity": "Entity",
-    "refPathSchema": "Path",
-    "refPlacement": "Placement"
+    "refSchema": "结构（Schema）",
+    "refSceneSchema": "场景",
+    "refEntity": "实体",
+    "refPathSchema": "路径",
+    "refPlacement": "定位"
   },
   "blog": {
     "label": "博客",
