@@ -5,7 +5,7 @@ description: Top-level container — scans children to build IR, compiles to Sce
 
 `<TikZ>` is retikz's only required top-level wrapper. Every Kernel / Sugar component must live inside a `<TikZ>`.
 
-It does two jobs at once: collect children / `ir` into IR, then hand the compiled Scene to the current renderer. `width` / `height` control the rendered output's displayed size in the page; internal coordinates stay in retikz user units, and the compiler uses layout bounds to compute the visible range.
+Its core responsibility is to collect children / `ir` into IR, then hand the compiled Scene to the current renderer. `width` / `height` control the rendered output's displayed size in the page; internal coordinates stay in retikz user units, and the compiler uses layout bounds to compute the visible range.
 
 ## Usage
 

@@ -3,7 +3,7 @@ title: Coordinate
 description: 占位节点——命名一个点不画任何图形，给后续 path 和 node `at.of` 引用。
 ---
 
-`<Coordinate>` 是 retikz kernel 的第三件（与 `<Node>` / `<Path>` 平级）。它在画面上不渲染任何东西，但参与 `nodeIndex` 注册——让后续 `<Path>` 端点和 `<Node>` 的 `at.of` 都能用 `id` 引用它。
+`<Coordinate>` 用来在 IR 中登记一个可命名的引用点。它和 `<Node>` 一样可以被路径与相对定位引用，但不会在画面上渲染形状或文字；编译时只把 `id` 与位置注册进 `nodeIndex`，供后续 `<Path>` 端点和 `<Node>` 的 `at.of` 使用。
 
 ## 用法
 
