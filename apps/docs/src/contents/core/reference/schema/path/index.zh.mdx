@@ -5,7 +5,9 @@ description: 笔画外壳、step 动作序列与 step 目标点
 
 `path` 是一条笔画的外壳容器；它的 `children` 字段是一个 `Step` 动作有序数组，渲染器顺序处理它们产出 SVG path 命令。
 
-## Path
+<span id="path"></span>
+
+## 路径（Path）
 
 <ZodSchema name="PathSchema" description="路径图元：一组按顺序执行的 step 组成一条可描边、可填充、可带箭头的笔画。" descriptions={{
   type: '判别字段，标记此子节点为 path',
@@ -25,13 +27,17 @@ description: 笔画外壳、step 动作序列与 step 目标点
   children: 'step 动作序列；首项通常应是 `move`',
 }} />
 
-## Step
+<span id="step"></span>
+
+## 动作（Step）
 
 `StepSchema` 是判别联合 —— `Path.children` 是 Step 数组。`kind` 字段选变体：
 
 <ZodSchema name="StepSchema" description="单个路径动作；通过 kind 字段选择具体 step 变体。" />
 
-### Move
+<span id="move"></span>
+
+### 移动（Move）
 
 <ZodSchema name="MoveStepSchema" description="移动动作：只移动路径光标，不绘制线段。" descriptions={{
   type: '判别字段，标记本节点为 path step',
@@ -39,7 +45,9 @@ description: 笔画外壳、step 动作序列与 step 目标点
   to: 'move 动作的目标点',
 }} />
 
-### Line
+<span id="line"></span>
+
+### 直线（Line）
 
 <ZodSchema name="LineStepSchema" description="直线动作：从当前光标到目标点绘制一条直线。" descriptions={{
   type: '判别字段，标记本节点为 path step',
@@ -48,7 +56,9 @@ description: 笔画外壳、step 动作序列与 step 目标点
   label: '边标注：附在本段上的文字标签',
 }} />
 
-### Fold
+<span id="fold"></span>
+
+### 折角（Fold）
 
 <ZodSchema name="FoldStepSchema" description="折角动作：按 `-|` 或 `|-` 经一个直角中间点连接目标。" descriptions={{
   type: '判别字段，标记本节点为 path step',
@@ -58,14 +68,18 @@ description: 笔画外壳、step 动作序列与 step 目标点
   label: '边标注：附在本段上的文字标签（按 position 落在对应支段）',
 }} />
 
-### Cycle
+<span id="cycle"></span>
+
+### 闭合（Cycle）
 
 <ZodSchema name="CycleStepSchema" description="闭合动作：回到最近一次 move 的起点，不携带 to 字段。" descriptions={{
   type: '判别字段，标记本节点为 path step',
   kind: '动作种类：`cycle` —— 闭合回最近一次 move 的目标点（SVG path "Z"）',
 }} />
 
-### Curve
+<span id="curve"></span>
+
+### 二次曲线（Curve）
 
 <ZodSchema name="CurveStepSchema" description="二次贝塞尔动作：一个控制点决定曲线弯曲。" descriptions={{
   type: '判别字段，标记本节点为 path step',
@@ -75,7 +89,9 @@ description: 笔画外壳、step 动作序列与 step 目标点
   label: '边标注：附在本段上的文字标签',
 }} />
 
-### Cubic
+<span id="cubic"></span>
+
+### 三次曲线（Cubic）
 
 <ZodSchema name="CubicStepSchema" description="三次贝塞尔动作：两个控制点分别控制起点和终点切线。" descriptions={{
   type: '判别字段，标记本节点为 path step',
@@ -86,7 +102,9 @@ description: 笔画外壳、step 动作序列与 step 目标点
   label: '边标注：附在本段上的文字标签',
 }} />
 
-### Bend
+<span id="bend"></span>
+
+### 弯曲（Bend）
 
 <ZodSchema name="BendStepSchema" description="弯曲动作：用方向和角度生成近似弧形的贝塞尔曲线。" descriptions={{
   type: '判别字段，标记本节点为 path step',
@@ -97,7 +115,9 @@ description: 笔画外壳、step 动作序列与 step 目标点
   label: '边标注：附在本段上的文字标签',
 }} />
 
-### Arc
+<span id="arc"></span>
+
+### 圆弧（Arc）
 
 <ZodSchema name="ArcStepSchema" description="圆弧动作：以当前光标为圆心，按起止角和半径绘制弧段。" descriptions={{
   type: '判别字段，标记本节点为 path step',
@@ -108,7 +128,9 @@ description: 笔画外壳、step 动作序列与 step 目标点
   label: '边标注：附在本段上的文字标签',
 }} />
 
-### CirclePath
+<span id="circlepath"></span>
+
+### 整圆路径（CirclePath）
 
 <ZodSchema name="CirclePathStepSchema" description="整圆动作：以当前光标为圆心绘制一个完整圆。" descriptions={{
   type: '判别字段，标记本节点为 path step',
@@ -117,7 +139,9 @@ description: 笔画外壳、step 动作序列与 step 目标点
   label: '边标注：附在本段上的文字标签',
 }} />
 
-### EllipsePath
+<span id="ellipsepath"></span>
+
+### 整椭圆路径（EllipsePath）
 
 <ZodSchema name="EllipsePathStepSchema" description="整椭圆动作：以当前光标为中心绘制一个完整椭圆。" descriptions={{
   type: '判别字段，标记本节点为 path step',
@@ -127,7 +151,9 @@ description: 笔画外壳、step 动作序列与 step 目标点
   label: '边标注：附在本段上的文字标签',
 }} />
 
-## StepLabel
+<span id="steplabel"></span>
+
+## 边标注（StepLabel）
 
 `StepLabelSchema` 复用于除 move / cycle 之外的绘制 step；它描述边标注文字、段上位置与相对段方向的偏移方式。
 
@@ -137,25 +163,33 @@ description: 笔画外壳、step 动作序列与 step 目标点
   side: '相对段方向的偏移：above / below / left / right 沿法线偏移；sloped 沿切线旋转',
 }} />
 
-## ControlPoint
+<span id="controlpoint"></span>
+
+## 控制点（ControlPoint）
 
 `ControlPointSchema` 是曲线控制点的别名；当前等同笛卡尔 `[x, y]`。
 
 <ZodSchema name="ControlPointSchema" description="贝塞尔控制点；当前是笛卡尔 `[x, y]` 的别名。" />
 
-## Target
+<span id="target"></span>
+
+## 目标点（Target）
 
 `TargetSchema` 是六种形态的 union —— 笛卡尔 / 极坐标 / 节点 id / 偏移定位（`{ of, offset }`）/ 相对偏移（relative / relativeAccumulate）：
 
 <ZodSchema name="TargetSchema" description="路径目标点：支持笛卡尔、极坐标、节点 id、偏移定位和相对偏移。" />
 
-### Relative
+<span id="relative"></span>
+
+### 相对偏移（Relative）
 
 <ZodSchema name="RelativeTargetSchema" description="相对前一个 step 终点的偏移；不更新光标位置。" descriptions={{
   relative: '相对偏移 (dx, dy)；不更新光标位置',
 }} />
 
-### RelativeAccumulate
+<span id="relativeaccumulate"></span>
+
+### 累积相对偏移（RelativeAccumulate）
 
 <ZodSchema name="RelativeAccumulateTargetSchema" description="相对前一个 step 终点的累积偏移；会更新光标位置。" descriptions={{
   relativeAccumulate: '累积相对偏移 (dx, dy)；**会**更新光标位置',
@@ -177,7 +211,9 @@ description: 笔画外壳、step 动作序列与 step 目标点
 
 </Comparison>
 
-## ArrowDetail
+<span id="arrowdetail"></span>
+
+## 箭头配置（ArrowDetail）
 
 `Path.arrowDetail` 字段的 schema —— 顶层 8 视觉字段（与 `ArrowEndDetail` 共享）+ 可选 `start` / `end` 子对象。`start` / `end` 与顶层默认逐字段 merge：缺省字段继承顶层、已填字段 override。
 
@@ -194,7 +230,9 @@ description: 笔画外壳、step 动作序列与 step 目标点
   end: '末端 override（仅 arrow 含末端时生效：`->` / `<->`）',
 }} />
 
-### ArrowEndDetail
+<span id="arrowenddetail"></span>
+
+### 箭头端点配置（ArrowEndDetail）
 
 `start` / `end` 子对象的 schema —— 与 ArrowDetail 同字段集减去 `start` / `end` 字段自身（不递归）：
 

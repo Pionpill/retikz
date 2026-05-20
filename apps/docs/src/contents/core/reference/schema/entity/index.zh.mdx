@@ -5,7 +5,9 @@ description: 在 scene 中被命名的成员 —— Node 与 Coordinate
 
 `entity` 涵盖**有 id**、**放在某个位置**、**自身不画线**的 IR 元素。两者注册到同一个 nodeIndex，所以 Node 的 id 与 Coordinate 的 id 共享命名空间。
 
-## Node
+<span id="node"></span>
+
+## 节点（Node）
 
 `NodeSchema` 描述一个被定位的视觉原件。它是 IR 里字段最多的实体 —— 30+ 字段覆盖形状、填充 / 描边、padding、文本、字体、缩放、附加标签。
 
@@ -50,7 +52,9 @@ description: 在 scene 中被命名的成员 —— Node 与 Coordinate
 
 </Comparison>
 
-## Coordinate
+<span id="coordinate"></span>
+
+## 坐标（Coordinate）
 
 `CoordinateSchema` 必须有 `id`（这是它存在的全部意义），不参与 layout 扩展，与 Node 共享 nodeIndex。
 
@@ -66,7 +70,9 @@ description: 在 scene 中被命名的成员 —— Node 与 Coordinate
   position: '坐标位置；笛卡尔 [x,y]、极坐标、或相对定位（`at` 风格）',
 }} />
 
-## NodeLabel
+<span id="nodelabel"></span>
+
+## 节点标签（NodeLabel）
 
 `NodeLabelSchema` 描述节点外围的附加文本；`Node.label` 可填单个对象或数组。
 
@@ -79,17 +85,23 @@ description: 在 scene 中被命名的成员 —— Node 与 Coordinate
   font: '标签字体覆盖；缺省字段继承父节点 font，再回退到渲染器默认',
 }} />
 
-## TextBlock
+<span id="textblock"></span>
+
+## 文本块（TextBlock）
 
 `TextBlockSchema` 是节点文本块的结构：单字符串表示单行；数组表示多行，数组项可用 `LineSpec` 做行级样式覆盖。
 
 <ZodSchema name="TextBlockSchema" description="文本块：单字符串表示单行，非空 LineSpec 数组表示多行。" />
 
-### LineSpec
+<span id="linespec"></span>
+
+### 行规格（LineSpec）
 
 <ZodSchema name="LineSpecSchema" description="单行文本规格：字符串走默认样式，对象形式可覆盖本行颜色、透明度和字体。" />
 
-## Font
+<span id="font"></span>
+
+## 字体（Font）
 
 `FontSchema` 复用于节点文本、节点标签和行级文本覆盖；所有字段均可选。
 

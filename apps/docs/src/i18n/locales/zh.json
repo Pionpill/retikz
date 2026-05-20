@@ -47,10 +47,14 @@
     "examplesLearningPath": "AI 专家路线图",
     "reference": "参考",
     "refSchema": "结构（Schema）",
-    "refSceneSchema": "场景",
-    "refEntity": "实体",
-    "refPathSchema": "路径",
-    "refPlacement": "定位"
+    "refSceneSchema": "场景（Scene）",
+    "refEntity": "实体（Entity）",
+    "refPathSchema": "路径（Path）",
+    "refPlacement": "定位（Placement）",
+    "refRuntime": "运行时（Runtime）",
+    "refCompile": "编译（Compile）",
+    "refScenePrimitive": "原语（Primitive）",
+    "refParser": "解析器（Parser）"
   },
   "blog": {
     "label": "博客",

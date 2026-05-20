@@ -50,7 +50,11 @@
     "refSceneSchema": "Scene",
     "refEntity": "Entity",
     "refPathSchema": "Path",
-    "refPlacement": "Placement"
+    "refPlacement": "Placement",
+    "refRuntime": "Runtime",
+    "refCompile": "Compile",
+    "refScenePrimitive": "Primitive",
+    "refParser": "Parser"
   },
   "blog": {
     "label": "Blog",
