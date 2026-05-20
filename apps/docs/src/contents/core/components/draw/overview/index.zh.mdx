@@ -25,9 +25,18 @@ import { Draw } from '@retikz/react';
 
 ### 曲线
 
+Draw 里的曲线分两类：`curve` / `cubic` / `bend` 连接前后两个目标点，`arc` 则以上一个点为圆心画一段圆弧。贝塞尔曲线里的控制点不是曲线必须经过的点，而是用来"拉动"曲线方向和弯曲程度的手柄。
+
+| 写法 | 直觉 | 适合场景 |
+| --- | --- | --- |
+| `{ curve }` | 一个控制点拉出一段简单弯曲 | 普通单弧连线 |
+| `{ cubic }` | 两个控制点分别控制起点和终点附近的方向 | S 形、复杂连接、需要更精确切线 |
+| `{ bend }` | 只指定向左 / 向右弯和角度，由编译器算控制点 | 两节点之间的快捷弧形连线 |
+| `{ arc }` | 以上一点为圆心，按角度和半径画圆弧 | 角度标注、圆周片段、几何示意 |
+
 #### 二次贝塞尔
 
-`{ curve: [cx, cy] }` 等价 `<Step kind="curve">`。
+`{ curve: [cx, cy] }` 等价 `<Step kind="curve">`。它从前一个目标点画到后一个目标点，中间用一个控制点决定弯曲方向和幅度。控制点越远，曲线被拉得越明显。
 
 <Comparison target="tikz" title="二次贝塞尔">
 
@@ -39,19 +48,19 @@ import { Draw } from '@retikz/react';
 
 #### 三次贝塞尔
 
-`{ cubic: [[c1x, c1y], [c2x, c2y]] }` 用两个控制点分别影响起点与终点切线。
+`{ cubic: [[c1x, c1y], [c2x, c2y]] }` 等价 `<Step kind="cubic">`。它用两个控制点画更可控的贝塞尔曲线：第一个控制点影响曲线离开起点时的方向，第二个控制点影响曲线靠近终点时的方向，因此比二次贝塞尔更适合 S 形或需要精细调整的连线。
 
 <ComponentPreview name="draw-cubic" />
 
-#### Bend
+#### 弯曲简写
 
-`{ bend: 'left' | 'right', angle?: number }` 只给方向与角度，编译期自动算控制点并降为 cubic。
+`{ bend: 'left' | 'right', angle?: number }` 等价 `<Step kind="bend">`。它是弧形连线的简写：你只需要说明从起点看向终点时向左还是向右弯，以及弯曲角度；编译期会自动计算控制点，并展开为三次贝塞尔。
 
 <ComponentPreview name="draw-bend" size="lg" />
 
 #### 弧段
 
-`{ arc: { startAngle, endAngle, radius } }` 以上一项为圆心画弧段，不消耗下一项。
+`{ arc: { startAngle, endAngle, radius } }` 等价 `<Step kind="arc">`。它以上一项为圆心画弧段，不连接到下一个目标点，也不消耗下一项。它描述的是"从哪个角度扫到哪个角度的圆弧"，常用于画角度、圆周的一部分或辅助几何线。
 
 <ComponentPreview name="draw-arc" />
 
@@ -81,19 +90,35 @@ import { Draw } from '@retikz/react';
 
 `label.position` 接 7 个 keyword 或 `0..1` 数值 t。t 的几何含义随 step kind 变化；line / fold 按归一化路径位置，curve / cubic / bend 按 Bezier 参数，arc / circle / ellipse 按角度参数化。
 
+直线段最直观：`start` / `midway` / `end` 分别落在起点、中点和终点附近。
+
 <ComponentPreview name="draw-label-line" />
+
+折角段会把 t 平均分配给每一段折线；`midway` 固定落在拐角处，而不是按两段实际长度取视觉中点。
 
 <ComponentPreview name="draw-label-fold" />
 
+二次贝塞尔使用曲线参数 t。`midway` 是 Bezier t=0.5 的位置，不一定是视觉弧长的一半。
+
 <ComponentPreview name="draw-label-curve" />
+
+三次贝塞尔同样按 Bezier 参数放置标注；控制点变化会影响 t 对应的位置和切线方向。
 
 <ComponentPreview name="draw-label-cubic" />
 
+`bend` 会先展开成三次贝塞尔，因此标注位置规则与 cubic 一致。
+
 <ComponentPreview name="draw-label-bend" />
+
+弧段按角度插值放置标注；`midway` 表示起始角度与终止角度的中间角。
 
 <ComponentPreview name="draw-label-arc" />
 
+整圆从 0° 位置开始绕一圈，数值 t 映射到圆周角度。
+
 <ComponentPreview name="draw-label-circle" />
+
+整椭圆也按角度参数放置标注；这不是按椭圆弧长等分。
 
 <ComponentPreview name="draw-label-ellipse" />
 

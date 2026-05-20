@@ -142,12 +142,12 @@ Line 2`}</Node>
 
 #### 内 / 外边距
 
-内 / 外边距支持**对称别名**与**轴特化**两套写法（解析顺序：轴特化 ?? 别名 ?? 默认）：
+内 / 外边距支持**对称别名**与**轴特化**两套写法。若同时提供，分轴字段优先；没有分轴字段时使用对称别名；两者都没有时使用默认值：
 
 - 内边距：`padding`（对称） · `innerXSep` / `innerYSep`（分轴）
 - 外边距：`margin`（对称） · `outerSep`（分轴目前只有 outer 一个）
 
-90% 场景写 `padding={N}` 就够；做 button-like 扁宽节点等少数场景再用轴特化。
+多数节点只需要写 `padding={N}`。当水平留白和垂直留白需要不同数值时，再改用 `innerXSep` / `innerYSep`。
 
 <ComponentPreview name="node-sep" size="sm" />
 

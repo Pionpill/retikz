@@ -25,9 +25,18 @@ import { Draw } from '@retikz/react';
 
 ### Curves
 
+Draw has two curve families: `curve` / `cubic` / `bend` connect the previous target to the next target, while `arc` draws a circular arc around the previous point. In Bezier curves, control points are not necessarily points the curve passes through; they are handles that pull the curve's direction and amount of bend.
+
+| Form | Mental model | Good for |
+| --- | --- | --- |
+| `{ curve }` | One control point pulls a simple bend | Ordinary single-arc connectors |
+| `{ cubic }` | Two control points shape the start and end directions separately | S-curves, complex connectors, precise tangents |
+| `{ bend }` | Direction + angle shorthand; control points are computed for you | Quick curved links between two nodes |
+| `{ arc }` | Circular arc around the previous point by angles and radius | Angle marks, circle fragments, geometry diagrams |
+
 #### Quadratic Bezier
 
-`{ curve: [cx, cy] }` is equivalent to `<Step kind="curve">`.
+`{ curve: [cx, cy] }` is equivalent to `<Step kind="curve">`. It draws from the previous target to the next target, using one control point to set the bend direction and strength. The farther the control point is, the more strongly the curve is pulled.
 
 <Comparison target="tikz" title="Quadratic Bezier">
 
@@ -39,19 +48,19 @@ import { Draw } from '@retikz/react';
 
 #### Cubic Bezier
 
-`{ cubic: [[c1x, c1y], [c2x, c2y]] }` uses two control points to shape the start and end tangents.
+`{ cubic: [[c1x, c1y], [c2x, c2y]] }` is equivalent to `<Step kind="cubic">`. It draws a more controllable Bezier curve with two control points: the first shapes how the curve leaves the start point; the second shapes how it approaches the end point. This makes it better than a quadratic curve for S-curves or connectors that need precise tuning.
 
 <ComponentPreview name="draw-cubic" />
 
 #### Bend
 
-`{ bend: 'left' | 'right', angle?: number }` gives only direction and angle; the compiler computes control points and lowers it to cubic.
+`{ bend: 'left' | 'right', angle?: number }` is equivalent to `<Step kind="bend">`. It is shorthand for a curved connection: you only choose whether the curve bends left or right as seen from start to end, plus an optional angle; the compiler computes the control points and expands it to a cubic Bezier.
 
 <ComponentPreview name="draw-bend" size="lg" />
 
 #### Arc
 
-`{ arc: { startAngle, endAngle, radius } }` draws an arc around the previous item and does not consume the next item.
+`{ arc: { startAngle, endAngle, radius } }` is equivalent to `<Step kind="arc">`. It draws a circular arc around the previous item. It does not connect to the next target and does not consume the next item. Think of it as "sweep from one angle to another at this radius"; it is useful for angle marks, circle fragments, and geometry helpers.
 
 <ComponentPreview name="draw-arc" />
 
@@ -81,19 +90,35 @@ import { Draw } from '@retikz/react';
 
 `label.position` accepts seven keywords or a numeric `0..1` t. The geometry of t depends on step kind: line / fold use normalized path position, curve / cubic / bend use Bezier t, and arc / circle / ellipse use angular parametrization.
 
+Line segments are the most direct: `start` / `midway` / `end` land near the start, middle, and end of the segment.
+
 <ComponentPreview name="draw-label-line" />
+
+Folded segments divide t evenly across the folded legs. `midway` lands on the corner, not at the visual midpoint by actual segment length.
 
 <ComponentPreview name="draw-label-fold" />
 
+Quadratic Beziers use the curve parameter t. `midway` means Bezier t=0.5, which is not always halfway along the visible curve.
+
 <ComponentPreview name="draw-label-curve" />
+
+Cubic Beziers also place labels by Bezier t; changing the control points changes both the position and tangent at that t.
 
 <ComponentPreview name="draw-label-cubic" />
 
+`bend` expands to a cubic Bezier, so its label positioning follows the same rule as cubic.
+
 <ComponentPreview name="draw-label-bend" />
+
+Arcs place labels by angle interpolation; `midway` means the middle angle between `startAngle` and `endAngle`.
 
 <ComponentPreview name="draw-label-arc" />
 
+Full circles start at the 0° position and traverse the circle; numeric t maps to the circular angle.
+
 <ComponentPreview name="draw-label-circle" />
+
+Full ellipses also use angular parametrization, not equal divisions by ellipse arc length.
 
 <ComponentPreview name="draw-label-ellipse" />
 

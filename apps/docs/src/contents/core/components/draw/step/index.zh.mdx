@@ -28,6 +28,8 @@ import { Path, Step } from '@retikz/react';
 </Path>
 ```
 
+当你需要逐段控制 Kernel 路径动作时使用 `<Step>`：例如多次 `move`、混合直线 / 折角 / 曲线 / 圆弧，或排查 `<Draw>` 展开后的结构。日常连线优先用 [Draw](/core/components/draw/overview)。
+
 ## 例子
 
 ### 基础
@@ -50,19 +52,19 @@ import { Path, Step } from '@retikz/react';
 
 ### 二次贝塞尔（curve）
 
-`kind="curve"` 用一个控制点画二次贝塞尔曲线，对应 SVG path 的 `Q`。控制点决定曲线的弯曲方向与幅度；当前控制点使用笛卡尔 `[x, y]`：
+`kind="curve"` 用一个控制点画二次贝塞尔曲线，对应 SVG path 的 `Q`。贝塞尔曲线不要求经过控制点；控制点更像一只手柄，用来把起点到终点之间的线段拉弯。控制点离直线越远，弯曲越明显。当前控制点使用笛卡尔 `[x, y]`：
 
 <ComponentPreview name="step-curve" />
 
 ### 三次贝塞尔（cubic）
 
-`kind="cubic"` 用两个控制点画三次贝塞尔曲线，对应 SVG path 的 `C`。`control1` 影响起点切线方向，`control2` 影响终点切线方向；常用于 S 形曲线、复杂连接：
+`kind="cubic"` 用两个控制点画三次贝塞尔曲线，对应 SVG path 的 `C`。`control1` 影响曲线离开起点时的方向，`control2` 影响曲线靠近终点时的方向；两端方向可分别控制，因此常用于 S 形曲线、复杂连接：
 
 <ComponentPreview name="step-cubic" />
 
 ### 弧形简记（bend）
 
-`kind="bend"` 是弧形连线的简记——只给方向 + 角度，编译期自动算控制点退到 cubic。`bendDirection` 是相对 from→to 路径方向的视觉左 / 右；`bendAngle` 缺省 30：
+`kind="bend"` 是弧形连线的简记——只说明从起点看向终点时向左还是向右弯，以及弯曲角度；编译期会自动计算控制点，并展开为三次贝塞尔。`bendDirection` 是相对 from→to 路径方向的视觉左 / 右；`bendAngle` 缺省 30：
 
 <ComponentPreview name="step-bend" size="lg" />
 
@@ -85,7 +87,7 @@ import { Path, Step } from '@retikz/react';
 
 ### 弧段（arc）
 
-`kind="arc"` 以**游标为圆心**，按起末角度 + 半径画一段圆弧。角度沿 retikz polar 约定：0° 朝 +x，90° 视觉朝下；画完画笔停在弧的终点：
+`kind="arc"` 以**游标为圆心**，按起末角度 + 半径画一段圆弧。它描述的是“从哪个角度扫到哪个角度的圆弧”，不需要 `to`，常用于角度标注、圆周片段或几何辅助线。角度沿 retikz polar 约定：0° 朝 +x，90° 视觉朝下；画完画笔停在弧的终点：
 
 <ComponentPreview name="step-arc" />
 
@@ -147,33 +149,49 @@ t 是沿整段的归一化参数，不同 kind 有不同参数化方式：
 
 ##### Line
 
+直线段最直观：`t=0.25`、`midway`、`t=0.75` 分别落在段长的 1/4、中点和 3/4 处。
+
 <ComponentPreview name="edge-label-on-line" size="sm" />
 
 ##### Fold (step)
+
+折角段把 t 区间平均分给每一段折线；`midway` 固定落在拐角处，而不是按两段实际长度取视觉中点。
 
 <ComponentPreview name="edge-label-on-fold" />
 
 ##### Quadratic Bezier (curve)
 
+二次贝塞尔使用曲线参数 t；`midway` 是 Bezier t=0.5 的位置，不一定是视觉弧长的一半。
+
 <ComponentPreview name="edge-label-on-curve" />
 
 ##### Cubic Bezier (cubic)
+
+三次贝塞尔同样按 Bezier 参数放置标注；两个控制点会同时影响 t 对应的位置和切线方向。
 
 <ComponentPreview name="edge-label-on-cubic" />
 
 ##### Bend
 
+`bend` 会先展开成三次贝塞尔，因此标注位置规则与 cubic 一致。
+
 <ComponentPreview name="edge-label-on-bend" />
 
 ##### Arc
+
+弧段按角度插值放置标注；`midway` 表示起始角度与终止角度的中间角。
 
 <ComponentPreview name="edge-label-on-arc" />
 
 ##### Circle (circlePath)
 
+整圆从 0° 位置开始绕一圈，数值 t 映射到圆周角度。
+
 <ComponentPreview name="edge-label-on-circle" size="lg" />
 
 ##### Ellipse (ellipsePath)
+
+整椭圆也按角度参数放置标注；这不是按椭圆弧长等分。
 
 <ComponentPreview name="edge-label-on-ellipse" />
 
@@ -255,7 +273,7 @@ t 是沿整段的归一化参数，不同 kind 有不同参数化方式：
 | `position` | 7 keyword 之一 或 `number`（0..1） | `'midway'` | 段上归一化位置 t——keyword 是 t 的语义糖（at-start=0 / very-near-start=0.125 / near-start=0.25 / midway=0.5 / near-end=0.75 / very-near-end=0.875 / at-end=1）；超出 [0, 1] 由 schema 拒绝 |
 | `side` | `'above' \| 'below' \| 'left' \| 'right' \| 'sloped'` | `'above'` | 锚点 + 偏移方向；`above` / `below` 偏 y 轴、`left` / `right` 偏 x 轴；`sloped` 不偏移、按段切线方向旋转 |
 
-不同 step kind 上 t 的几何解释见上方 "[t 在每种 step kind 上的几何含义](#t-在每种-step-kind-上的几何含义)" 表。要点：line / fold 用归一化弧长（fold 拐角恒在 t=0.5），curve / cubic / bend 用 Bezier 参数 t（**非弧长**——t=0.5 通常不是视觉中点），arc 用角度参数化，circlePath / ellipsePath 沿整圆从 angle 0（+x）CCW 增长。
+不同 step kind 上 t 的几何解释见上方 "[t 在每种 step kind 上的几何含义](#t-在每种-step-kind-上的几何含义)" 表。要点：line 按弧长归一化；fold 按折线段数均分 t 区间（拐角恒在 t=0.5）；curve / cubic / bend 用 Bezier 参数 t（**非弧长**——t=0.5 通常不是视觉中点）；arc 用角度参数化；circlePath / ellipsePath 沿整圆从 angle 0（+x）CCW 增长。
 
 ### to 的六种形态
 

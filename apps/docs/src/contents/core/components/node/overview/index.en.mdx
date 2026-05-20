@@ -142,12 +142,12 @@ Multi-line text combined with each shape — outer boundary follows the shape-sp
 
 #### Inner / outer sep
 
-Both **symmetric aliases** and **axis-specific** forms are supported (resolution order: axis-specific ?? alias ?? default):
+Both **symmetric aliases** and **axis-specific** forms are supported. If both are provided, axis-specific fields win; otherwise retikz falls back to the symmetric alias, then to the default:
 
 - Inner: `padding` (symmetric) · `innerXSep` / `innerYSep` (per-axis)
 - Outer: `margin` (symmetric) · `outerSep` (single)
 
-90% of the time `padding={N}` is enough; reach for axis-specific only when you need button-like wide-but-flat nodes etc.
+Most nodes only need `padding={N}`. Use `innerXSep` / `innerYSep` when horizontal and vertical spacing need different values.
 
 <ComponentPreview name="node-sep" size="sm" />
 
