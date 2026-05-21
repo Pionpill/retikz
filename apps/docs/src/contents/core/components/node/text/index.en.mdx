@@ -14,6 +14,8 @@ It's an **equivalent** alternative to writing LineSpec objects directly into the
 
 > Block-level props (`align` / `lineHeight`) go on `<Node>`; per-line overrides (`fill` / `opacity` / `font`) go on `<Text>`.
 
+Think of `<Text>` as "add one styled line to a Node", not as an HTML inline `<span>`. It cannot mix several colors inside the same line; for multi-color explanations, split the content into separate lines or use multiple independent `<Node>`s.
+
 ## Usage
 
 ```tsx

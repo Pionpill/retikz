@@ -3,7 +3,7 @@ title: Coordinate
 description: 占位节点——命名一个点不画任何图形，给后续 path 和 node `at.of` 引用。
 ---
 
-`<Coordinate>` 是 retikz kernel 的第三件（与 `<Node>` / `<Path>` 平级）。它在画面上不渲染任何东西，但参与 `nodeIndex` 注册——让后续 `<Path>` 端点和 `<Node>` 的 `at.of` 都能用 `id` 引用它。
+`<Coordinate>` 用来在 IR 中登记一个可命名的引用点。它和 `<Node>` 一样可以被路径与相对定位引用，但不会在画面上渲染形状或文字；编译时只把 `id` 与位置注册进 `nodeIndex`，供后续 `<Path>` 端点和 `<Node>` 的 `at.of` 使用。
 
 ## 用法
 
@@ -59,6 +59,8 @@ import { Coordinate } from '@retikz/react';
 Coordinate 用 `{ of, offset }` 派生下一个 coordinate——靠一个根 coordinate 驱动整组节点的相对位置，移动根点其它点全跟着走。比手写每个绝对坐标耦合更低：
 
 <ComponentPreview name="coordinate-offset-chain" size="lg" />
+
+调试时记住：Coordinate **不会**撑开 layout bounds。只把一个远处坐标点注册出来，画布不会因此自动变大；必须有实际 Node / Path primitive 落在那片区域，最终 viewBox 才会覆盖过去。
 
 ## API 参考
 

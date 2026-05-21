@@ -31,7 +31,7 @@ export const PathSchema = z
         'Path-level arrow direction. omitted/`none` = no arrows; `->` = arrow at end; `<-` = at start; `<->` = both.',
       ),
     arrowDetail: ArrowDetailSchema.optional().describe(
-      'Detailed arrow visual config (shape / scale / length / width / color / fill / opacity / lineWidth) with optional `start` / `end` per-end overrides. Omitted = built-in defaults (shape `normal`, all visuals inherit from path stroke / opacity).',
+      'Detailed arrow visual config (shape / scale / length / width / color / fill / opacity / lineWidth) with optional `start` / `end` per-end overrides. Omitted = built-in defaults (shape `stealth`, all visuals inherit from path stroke / opacity).',
     ),
     fill: z
       .string()

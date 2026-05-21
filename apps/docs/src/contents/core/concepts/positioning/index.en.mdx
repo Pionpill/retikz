@@ -1,27 +1,32 @@
 ---
 title: Positioning
-description: Three position forms in retikz — Cartesian, polar, and node id reference — shared across `<Node>.position` and path targets.
+description: Position expressions in retikz cover Cartesian, polar, node references, relative placement, offset placement, and relative targets for entity placement and path target resolution.
 ---
 
-Every "where" in retikz uses one position syntax: three interchangeable forms covering `<Node>.position`, `<Step>.to`, and `<Draw>.way` items.
+retikz uses a unified set of position expressions for entity placement and path target resolution. `<Node>.position` / `<Coordinate>.position` determine the center of a visible entity or reference point; `<Step>.to` / `<Draw>.way` resolve the targets that a path connects to or passes through.
 
-| Form | Type | Where |
-| --- | --- | --- |
-| Cartesian | `[x, y]` | Node position, path target |
-| Polar | `{ origin?, angle, radius }` | Node position, path target |
-| Node id | `'node-id'` | **Path target only** (Step.to / way item) |
+| Form | Type | Meaning | Where |
+| --- | --- | --- | --- |
+| Cartesian | `[x, y]` | Direct canvas coordinate | Node position, path target |
+| Polar | `{ origin?, angle, radius }` | Derive a position from a pole, angle, and radius | Node position, path target |
+| Node id | `'node-id'` | Reference a named Node or Coordinate; paths auto-attach to the boundary | **Path target only** (`Step.to` / way item) |
+| Relative placement | `{ direction, of, distance? }` | Place around another Node / Coordinate by direction and distance | Node position, Coordinate position |
+| Offset placement | `{ of, offset }` | Apply a 2D offset from a node, coordinate, or polar base | Node position, Coordinate position, path target |
+| Relative target | `{ relative }` / `{ relativeAccumulate }` or `'+x,y'` / `'++x,y'` | Offset from the previous segment endpoint | **Path target only** |
 
 > Coordinate system: x grows right, y grows down (matches SVG / Canvas; opposite of math textbooks). Units are user units, not pixels — final physical size depends on `<TikZ>`'s `width` / `height` and the compiled layout bounds.
 
 ## Cartesian
 
-Direct `[x, y]` tuple.
+Cartesian coordinates are the most direct form: `[x, y]` names a point on the canvas. x grows to the right and y grows downward, so `[120, 40]` means 120 units right and 40 units down from the origin. Use this for small hand-placed diagrams, reproducing existing SVG coordinates, or providing a base point for other position forms.
 
 <ComponentPreview name="positioning-cartesian" size="sm" />
 
 ## Polar
 
-`{ origin?, angle, radius }`:
+Polar coordinates describe a position as "start from a pole, follow an angle, then move by a radius." They are useful for circular layouts, radial labels, placing a group around a node, or expressing a rotated offset from some local point.
+
+`{ origin?, angle, radius }` resolves from these fields:
 
 | Field | Meaning |
 | --- | --- |
@@ -48,6 +53,8 @@ Six nodes around `O` at radius 80, every 60° from 0 to 300 — the canonical ra
 <ComponentPreview name="positioning-id-ref" size="sm" />
 
 The actual line endpoints are computed by retikz automatically — see [Anchors](/core/concepts/anchors).
+
+`<Node>` / `<Coordinate>` do not accept a bare node id as `position`, because "place this entity at another entity's center" is rarely the useful default. Use `{ direction, of, distance? }` for relational placement, or `{ of, offset }` for arbitrary 2D offsets. Both keep layout intent in the document instead of baking every coordinate up front.
 
 ## Forward-reference requirement
 

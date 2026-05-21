@@ -12,6 +12,7 @@ type Props = {
 };
 
 const td = 'border-b border-border align-top py-2 pr-4';
+const th = 'px-4 py-2 text-left font-normal whitespace-nowrap text-muted-foreground';
 
 /** TableRow 列表 → 表格；嵌套 object 字段已被 ZodSchema 平铺为相邻子行（name=''） */
 export const RenderTable: FC<Props> = ({ rows }) => {
@@ -21,10 +22,10 @@ export const RenderTable: FC<Props> = ({ rows }) => {
       <table className="w-full border-collapse text-sm">
         <thead>
           <tr className="border-b-2 border-border text-left">
-            <th className="py-2 pr-4 font-semibold">{t('zodSchema.field')}</th>
-            <th className="py-2 pr-4 font-semibold">{t('zodSchema.type')}</th>
-            <th className="py-2 pr-4 font-semibold">{t('zodSchema.required')}</th>
-            <th className="py-2 pr-4 font-semibold">{t('zodSchema.description')}</th>
+            <th className={th}>{t('zodSchema.field')}</th>
+            <th className={th}>{t('zodSchema.type')}</th>
+            <th className={cn(th, 'w-12 text-center')}>{t('zodSchema.required')}</th>
+            <th className={th}>{t('zodSchema.description')}</th>
           </tr>
         </thead>
         <tbody>

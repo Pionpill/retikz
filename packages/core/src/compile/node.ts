@@ -15,7 +15,7 @@ const DEFAULT_PADDING = 8;
 const DEFAULT_LINE_HEIGHT_FACTOR = 1.2;
 const DEG_TO_RAD = Math.PI / 180;
 /** Node label 与 node 边界默认距离（TikZ 默认 0pt 视觉太贴） */
-const DEFAULT_LABEL_DISTANCE = 4;
+const DEFAULT_LABEL_DISTANCE = 12;
 const SQRT2 = Math.SQRT2;
 /** dashed 预设：4 px 实线 + 2 px 间隙循环 */
 const DASHED_PATTERN: Array<number> = [4, 2];

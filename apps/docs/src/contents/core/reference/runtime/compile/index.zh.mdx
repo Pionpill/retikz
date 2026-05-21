@@ -1,0 +1,77 @@
+---
+title: 编译
+description: IR 到 Scene 的编译入口、布局选项、文字度量与 warning 合同
+---
+
+`@retikz/core` 的 compile 层把 JSON 化的 IR 转成已布局的 `Scene`。React 渲染器、未来的 SSR / Canvas adapter、以及任何自定义导出流程都应该从这里接入。
+
+## 函数（Functions）
+
+| API | Signature | 用途 |
+| --- | --- | --- |
+| `compileToScene` | `(ir: IR, options?: CompileOptions) => Scene` | 主编译入口；处理 node / coordinate / path，输出 primitive 列表和 layout |
+| `computeLayout` | `(points, padding, round) => Layout` | 从 bbox 候选点计算场景边界；通常由 `compileToScene` 内部调用 |
+| `fallbackMeasurer` | `(text, font) => TextMetrics` | 默认文字度量；不准但可运行，适合无 DOM 环境的兜底 |
+
+`compileToScene` 分两步：先按 IR 顺序布局 node / coordinate 并注册 id，再按原始 children 顺序发出 primitive。这样路径可以引用任意已经注册的 node / coordinate，最终渲染顺序仍保持用户写入顺序。
+
+## 编译选项（CompileOptions）
+
+| Option | Type | Default | 说明 |
+| --- | --- | --- | --- |
+| `measureText` | `TextMeasurer` | `fallbackMeasurer` | 注入文字度量函数；React adapter 使用浏览器能力，SSR 可以接 fontkit / opentype |
+| `padding` | `number` | `10` | layout 外围留白，单位为 user units |
+| `precision` | `number` | `2` | 输出 Scene primitive / path d / layout 的小数位；内部几何计算保持双精度 |
+| `nodeDistance` | `number` | `1` | `AtPosition` 未写 `distance` 时使用的默认距离 |
+| `onWarn` | `(warning) => void` | dev: `console.warn`<br />production: silent | 收集可恢复的编译期 warning |
+
+## 文字度量（Text Measuring）
+
+`TextMeasurer` 是 compile 层唯一需要外部环境帮助的地方：
+
+```ts
+type TextMeasurer = (text: string, font: FontSpec) => TextMetrics;
+```
+
+| Type | 字段 | 说明 |
+| --- | --- | --- |
+| `FontSpec` | `family?` / `size` / `weight?` / `style?` | 传给 measurer 的字体信息；`size` 必填 |
+| `TextMetrics` | `width` / `height` / `ascent?` / `descent?` | 文本盒尺寸；ascent / descent 可选 |
+
+如果不传 `measureText`，`fallbackMeasurer` 用 `text.length * size * 0.55` 估算宽度、`size * 1.2` 估算高度。它能保证编译可跑，但不适合做精确排版。
+
+## 警告（Warnings）
+
+`CompileWarning` 是机器可读的同步 warning：
+
+| Field | Type | 说明 |
+| --- | --- | --- |
+| `code` | string | warning 类型代码 |
+| `message` | string | 英文人类可读消息 |
+| `path` | string | IR locator，例如 `children[3].path.children[1].to` |
+
+当前内置 code：
+
+| Code | 含义 |
+| --- | --- |
+| `UNRESOLVED_NODE_REFERENCE` | 路径或位置引用了不存在的节点 / coordinate |
+| `PATH_TOO_SHORT` | path 无法形成有效绘制段 |
+| `ANCHOR_RESOLUTION_FAILED` | 节点边界挂接点无法解析 |
+| `OFFSET_BASE_UNRESOLVED` | OffsetPosition 的 `of` 无法解析 |
+| `POLAR_ORIGIN_UNRESOLVED` | PolarPosition 的 `origin` 无法解析 |
+| `AT_TARGET_UNRESOLVED` | AtPosition 的 `of` 无法解析 |
+| `RELATIVE_INITIAL_NO_PREV_END` | relative target 出现在没有前一终点的位置 |
+| `BBOX_EXTREME_INPUT` | bbox 输入极端，layout 计算降级 |
+
+大多数 warning 不会中断编译；coordinate 自身位置无法解析时会先触发 warning，然后抛错，因为它会破坏后续引用合同。
+
+## 输出（Output）
+
+`compileToScene` 返回：
+
+| Field | Type | 说明 |
+| --- | --- | --- |
+| `primitives` | `Array<ScenePrimitive>` | 已布局图元，顺序就是渲染顺序 |
+| `layout` | `Layout` | 场景边界 `{ x, y, width, height }` |
+
+如果没有任何 bbox 候选点，`computeLayout` 返回 `100×100` 的兜底 layout。

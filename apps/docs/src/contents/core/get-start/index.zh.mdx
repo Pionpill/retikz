@@ -7,7 +7,7 @@ description: 安装 retikz，并通过 3 步搭建一个最小例子，认识顶
 
 retikz 的 React 适配器是 `@retikz/react`，peer 依赖 `react` / `react-dom`（>= 18）。
 
-<PackageManagerInstall packages="@retikz/react@next react react-dom" />
+<PackageManagerInstall packages="@retikz/react react react-dom" />
 
 底层 `@retikz/core`（IR + 编译器，零 React / 零 DOM）会作为 `@retikz/react` 的依赖自动装上，无需单独安装。
 
@@ -21,13 +21,13 @@ retikz 的 React 适配器是 `@retikz/react`，peer 依赖 `react` / `react-dom
 
 ### 1. 容器 `<TikZ />` + 一个 `<Node />`
 
-画一张图至少要两件东西：容器和图元。`<TikZ>` 是顶层容器，扫描 children 构造 IR、编译 Scene、渲染 SVG；`width` / `height` 决定 SVG 元素的渲染尺寸。`<Node>` 是最常用的图元，有 `id`、`position`、可见 label。
+最小图形从容器和基础图元开始。`<TikZ>` 负责承载整张图，决定 SVG 的显示尺寸，并把内部图元渲染出来；`<Node>` 负责画一个有位置、有名字、可显示文字的节点。这里先放一个节点，确认画布和基础图元都能工作。
 
 <ComponentPreview name="get-start-step-1" size="xs" />
 
 ### 2. 多个 `<Node />`
 
-节点数量随便加，但 `id` 必须全局唯一——后面 `<Draw>` 会按 id 引用它们。`position` 是画布坐标（像素）。
+继续添加多个 `<Node>`，相当于先把图里的实体摆好。节点数量随便加，但 `id` 必须全局唯一——后面 `<Draw>` 会按 id 找到它们；`position` 是节点中心在画布里的坐标。
 
 | Prop | 含义 |
 | --- | --- |
@@ -39,17 +39,36 @@ retikz 的 React 适配器是 `@retikz/react`，peer 依赖 `react` / `react-dom
 
 ### 3. 用 `<Draw />` 连起来
 
-`<Draw>` 是 Sugar 组件，`way` 数组按 id 引用上面的节点，编译期展开为 Kernel 的 `<Path>` + `<Step>`——所以 `<Draw>` 不会引入任何 Kernel 表达不了的能力。点开 **View Code** 切到 IR 标签，能直接看到 `<Draw>` 在 IR 里就是一个 `path`。
+`<Draw>` 负责画连接线。`way` 数组按顺序写要经过的节点 id，retikz 会自动把线贴到节点边界，而不是连到文字中心；`arrow="->"` 给末端加箭头。
 
 <ComponentPreview name="get-start-final" size="xs" />
 
 3 个节点用 2 条线串起，与最上方的最终效果完全一致。
 
+到这里先记住 4 个规则：
+
+- 画布坐标 x 向右、y 向下；`[0, 0]` 是 retikz 内部 user units 的原点
+- `<TikZ width height>` 控制最终 SVG 显示尺寸，不等于强行把内部坐标改成 CSS 像素
+- 节点 `id` 是连线的名字，`<Draw way={['a', 'b']}>` 引用的是节点边界，不是文本中心
+- 点开 **View Code → IR** 可以看到编译后的图形数据，调试连线时优先看这里
+
 ## 接下来
 
 <div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
-  <LinkedCard href="/core/introduction">
-    <span className="font-semibold">简介</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">retikz 的设计哲学：IR 居中、AI 优先、Kernel/Sugar 分层</span>
+  <LinkedCard href="/core/components/tikz">
+    <span className="font-semibold">TikZ</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">了解顶层容器、画布尺寸与直接渲染 IR</span>
+  </LinkedCard>
+  <LinkedCard href="/core/components/node/overview">
+    <span className="font-semibold">Node</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">学习节点形状、文字、样式、定位和标签</span>
+  </LinkedCard>
+  <LinkedCard href="/core/components/draw/overview">
+    <span className="font-semibold">Draw</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">继续学习折线、曲线、箭头、填充和边标注</span>
+  </LinkedCard>
+  <LinkedCard href="/core/examples/karl-circle">
+    <span className="font-semibold">Karl 单位圆</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">看一个更完整的几何示意图如何逐步搭出来</span>
   </LinkedCard>
 </div>

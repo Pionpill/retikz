@@ -1,0 +1,87 @@
+---
+title: 解析器（Parser）
+description: Sugar 输入到 IR 片段的纯函数转换
+---
+
+Parser reference 覆盖 `@retikz/core` 公开的 sugar 解析函数。它们不依赖 React、DOM 或 nodeIndex，适合 adapter、测试和自定义 DSL 复用。
+
+## 函数（Functions）
+
+| API | Signature | 用途 |
+| --- | --- | --- |
+| `parseWay` | `(way: WayDSL) => Array<IRStep>` | 把 `<Draw way={...}>` 的 way 数组转成 path step 序列 |
+| `parseTargetSugar` | `(input: unknown) => IRTarget` | 把 TikZ 风格相对坐标字符串转成 IR target；其他输入原样返回 |
+
+## 画线方式常量（DrawWay）
+
+`DrawWay` 是 way DSL 的关键字集合。不要硬编码内部字符串，使用常量引用。
+
+| Constant | 值 / 语义 | 说明 |
+| --- | --- | --- |
+| `DrawWay.Cycle` | cycle | 闭合回 path 起点 |
+| `DrawWay.Hv` | `'-|'` | 折角：先水平后垂直 |
+| `DrawWay.Vh` | `'\|-'` | 折角：先垂直后水平 |
+| `DrawWay.Relative` | relative 类型标记 | 对象式相对偏移，不更新 prevEnd |
+| `DrawWay.Accumulate` | accumulate 类型标记 | 对象式累积相对偏移，更新 prevEnd |
+
+## 路径项（Way Items）
+
+`WayDSL` 是 `Array<WayItem>`。常见 item 形态：
+
+| Shape | 产物 | 说明 |
+| --- | --- | --- |
+| `IRTarget` | `move` / `line` | 第一项成为 move，后续 target 成为 line |
+| `{ position, type }` | `relative` / `relativeAccumulate` target | TS-friendly 的相对偏移对象 |
+| `DrawWay.Hv` / `DrawWay.Vh` | `kind: 'step'` | 与下一项 target 合并成折角 step |
+| `DrawWay.Cycle` | `kind: 'cycle'` | 闭合当前子路径 |
+| `{ curve }` | `kind: 'curve'` | 与下一项 target 合并成二次贝塞尔 |
+| `{ cubic }` | `kind: 'cubic'` | 与下一项 target 合并成三次贝塞尔 |
+| `{ bend }` | `kind: 'bend'` | 与下一项 target 合并成弯曲段；`angle` 可选 |
+| `{ arc }` | `kind: 'arc'` | 以上一项为圆心，不消耗下一项 |
+| `{ circle }` | `kind: 'circlePath'` | 以上一项为圆心画整圆 |
+| `{ ellipse }` | `kind: 'ellipsePath'` | 以上一项为中心画整椭圆 |
+| `{ label }` | step label | 修饰下一个产生绘制段的 item |
+
+## 路径解析规则（parseWay Rules）
+
+| Rule | 行为 |
+| --- | --- |
+| 最少长度 | `way.length < 2` 抛错 |
+| 第一项 | 必须不是 label；若不是 target，则 move 回退到 `[0, 0]` |
+| target | 首项转 `move`，后续 target 转 `line` |
+| fold / curve / cubic / bend | 必须跟随 target；解析后会消费下一项 |
+| arc / circle / ellipse | 以上一项为中心，不消费下一项 |
+| label | 修饰下一个产生绘制段的 item |
+| label + cycle | 抛错；cycle 不承载 label |
+| 连续 label / 末尾 label | 抛错 |
+
+`parseWay` 的输出是 IR step 数组，可以直接放入 `PathSchema.children`。
+
+## 相对目标点语法糖（Relative Target Sugar）
+
+`parseTargetSugar` 只特殊处理字符串相对坐标：
+
+| Input | Output | 含义 |
+| --- | --- | --- |
+| `'+10,0'` | `{ relative: [10, 0] }` | 相对前一终点，不更新 prevEnd |
+| `'++10,0'` | `{ relativeAccumulate: [10, 0] }` | 相对前一终点，并更新 prevEnd |
+| `'node-id'` | `'node-id'` | 普通节点 id，原样返回 |
+| `[10, 20]` | `[10, 20]` | 非字符串输入原样返回 |
+
+正则允许空格和负数，例如 `'+ -4, 8'` / `'++-4,8'`。
+
+## 错误边界（Error Surface）
+
+| Case | Message 前缀 |
+| --- | --- |
+| way 太短 | `parseWay: way must contain at least 2 items` |
+| 第一项是 label | `parseWay: way[0] must be a target` |
+| via 在末尾 | `parseWay: via operator ... at end of way` |
+| via 后不是 target | `parseWay: via operator ... must be followed by a target` |
+| curve-like 在末尾 | `parseWay: curve operator at end of way` |
+| curve-like 后不是 target | `parseWay: curve operator must be followed by a target` |
+| cycle 承载 label | `parseWay: cycle step cannot carry a label` |
+| 连续 label | `parseWay: label operator ... cannot directly follow another label operator` |
+| 末尾 label | `parseWay: label operator at end of way` |
+
+这些错误属于 sugar 输入错误，应该在 adapter / 开发期尽早暴露，而不是降级成 warning。

@@ -1,9 +1,11 @@
 ---
 title: TikZ
-description: Top-level container — scans children to build IR, compiles to Scene, renders SVG.
+description: Top-level container — accepts a component tree or IR, compiles to Scene, and produces rendered output.
 ---
 
 `<TikZ>` is retikz's only required top-level wrapper. Every Kernel / Sugar component must live inside a `<TikZ>`.
+
+`<TikZ>` is the entry point between the DSL and the renderer: with children, it converts the inner component tree into IR; with `ir`, it uses that pre-built IR directly. It then compiles the IR into a Scene and hands it to the current renderer. `width` / `height` control the rendered output's displayed size in the page; internal coordinates stay in retikz user units, and the compiler uses layout bounds to compute the visible range.
 
 ## Usage
 
@@ -48,12 +50,12 @@ import { TikZ } from '@retikz/react';
 
 | Prop | Type | Default | Description |
 | --- | --- | --- | --- |
-| `width` | `number \| string` | — | SVG element width |
-| `height` | `number \| string` | — | SVG element height |
+| `width` | `number \| string` | — | Rendered output width |
+| `height` | `number \| string` | — | Rendered output height |
 | `children` | `ReactNode` | — | Kernel / Sugar component tree (mutually exclusive with `ir`) |
 | `ir` | `IR` | — | Pre-built IR JSON (mutually exclusive with `children`) |
-| `className` | `string` | — | Forwarded to `<svg>` |
-| `style` | `CSSProperties` | — | Forwarded to `<svg>` |
+| `className` | `string` | — | Forwarded to the render root |
+| `style` | `CSSProperties` | — | Forwarded to the render root |
 
 ### Feeding IR Directly
 
@@ -70,6 +72,8 @@ const ir = convertReactNodeToIR(
 ```
 
 `ir` and `children` are mutually exclusive; if both are supplied, `ir` wins.
+
+If a diagram looks clipped or has too much empty space, inspect **View Code → IR** first: the usual causes are internal coordinates far away from visible primitives, invisible coordinates that do not extend bounds, or explicit coordinates without a visible boundary around them.
 
 ## Related
 

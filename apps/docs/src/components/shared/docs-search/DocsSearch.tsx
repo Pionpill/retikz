@@ -3,16 +3,10 @@ import { type FC, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router';
 
-import { Button } from '@/components/ui/button';
 import { Shortcut } from '@/components/shared/shortcut';
+import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
 
 import { DocsSearchPanel } from './DocsSearchPanel';
 
@@ -41,24 +35,27 @@ export const DocsSearch: FC<DocsSearchProps> = props => {
 
   return (
     <>
-      {/* < md：ghost 图标按钮，与右侧 More / AI 触发器对齐 size-7 */}
+      {/* 紧凑模式（< @4xl/header:）：ghost 图标按钮，与右侧 More / AI 触发器对齐 size-7 */}
       <Button
         variant="ghost"
         size="icon"
-        className={cn('size-7 cursor-pointer rounded-sm text-muted-foreground hover:text-foreground md:hidden', className)}
+        className={cn(
+          'size-7 cursor-pointer rounded-sm text-muted-foreground hover:text-foreground @4xl/header:hidden',
+          className,
+        )}
         onClick={() => setOpen(true)}
         aria-label={t('common.searchHint')}
         title={t('common.searchHint')}
       >
         <Search className="size-4" />
       </Button>
-      {/* md+：输入框样式触发器（md 紧凑、lg / xl 渐次放大）—— 点击或 Ctrl/Cmd+K 打开 Dialog */}
+      {/* ≥ @4xl/header:：输入框样式触发器（仅完整桌面 chrome 显示），@5xl/header: 起进一步放宽到 w-64 */}
       <button
         type="button"
         onClick={() => setOpen(true)}
         aria-label={t('common.searchHint')}
         className={cn(
-          'hidden md:inline-flex h-8 w-44 lg:w-52 xl:w-64 items-center gap-2 rounded-md border border-input bg-transparent px-3 text-sm text-muted-foreground shadow-xs transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 cursor-pointer',
+          'hidden @4xl/header:inline-flex h-8 w-48 @5xl/header:w-64 items-center gap-2 rounded-md border border-input bg-transparent px-3 text-sm text-muted-foreground shadow-xs transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 cursor-pointer',
           className,
         )}
       >

@@ -6,7 +6,7 @@
     "searchHint": "Search the docs",
     "pageCount": "{{count}} page(s)",
     "notFound": "Not found: /{{section}}/{{page}}",
-    "versionTag": "v0.1 rc",
+    "versionTag": "v0.1",
     "contentPlaceholder": "{{title}} — this page does not have body content yet.",
     "github": "GitHub",
     "githubRepo": "Pionpill/retikz",
@@ -52,7 +52,11 @@
     "refSceneSchema": "Scene",
     "refEntity": "Entity",
     "refPathSchema": "Path",
-    "refPlacement": "Placement"
+    "refPlacement": "Placement",
+    "refRuntime": "Runtime",
+    "refCompile": "Compile",
+    "refScenePrimitive": "Primitive",
+    "refParser": "Parser"
   },
   "blog": {
     "label": "Blog",

@@ -34,6 +34,7 @@ describe('ArrowMarker: 共用约定', () => {
       markerHeight: 6,
       orient: 'auto-start-reverse',
       markerUnits: 'strokeWidth',
+      preserveAspectRatio: 'none',
     });
   });
 

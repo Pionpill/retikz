@@ -5,6 +5,12 @@ description: The three retikz expression layers: DSL for authors, IR for declara
 
 retikz turns the JSX DSL into IR first, then compiles IR into Scene. The DSL optimizes authoring, IR preserves what you intend to draw, and Scene preserves what a renderer needs to draw.
 
+<ComponentAlert
+  type="tip"
+  title="You can skip this on a first read"
+  description="This chapter explains retikz's lower-level build chain. If you only want to draw your first figure, start with Get Started and the component docs, then come back when you need the IR / Scene boundary."
+/>
+
 ## Three Layers
 
 | Layer | Role | Audience |
@@ -14,6 +20,8 @@ retikz turns the JSX DSL into IR first, then compiles IR into Scene. The DSL opt
 | Scene | Render-target-neutral primitive list with measured text, paths, and layout bounds | Renderers |
 
 IR is the public contract; Scene is renderer input. You normally do not write Scene by hand.
+
+Why this matters in practice: use the DSL when authoring diagrams, use IR when saving diagrams, asking an LLM to edit them, applying JSON Patch, or rendering across targets, and only inspect Scene when building renderers or debugging measured output.
 
 ## Kernel and Sugar
 

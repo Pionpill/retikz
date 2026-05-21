@@ -11,6 +11,8 @@ import { walk } from './walker';
 type Props = {
   /** 注册表里的 schema 名（变量名，带 Schema 后缀） */
   name: string;
+  /** 覆盖 schema 顶层描述；中文 mdx 用于翻译源码里的英文 .describe() */
+  description?: string;
   /**
    * 按字段名（或点路径，如 `label.text`）覆盖描述。
    * @description 中文 mdx 必填，英文 mdx 留空走 .describe()。漏写降级到英文并 warn
@@ -66,7 +68,8 @@ function collectFieldPaths(fields: Array<ObjectField>, prefix = ''): Array<strin
   return out;
 }
 
-export const ZodSchema: FC<Props> = ({ name, descriptions }) => {
+export const ZodSchema: FC<Props> = props => {
+  const { name, description, descriptions } = props;
   const { t } = useTranslation();
   const entry = (SCHEMA_REGISTRY as Record<string, (typeof SCHEMA_REGISTRY)[string] | undefined>)[name];
 
@@ -109,8 +112,8 @@ export const ZodSchema: FC<Props> = ({ name, descriptions }) => {
 
   return (
     <div className="my-6">
-      {repr.description != null && (
-        <p className="mb-3 text-sm text-muted-foreground">{repr.description}</p>
+      {(description != null || repr.description != null) && (
+        <p className="mb-3 text-sm text-muted-foreground">{description ?? repr.description}</p>
       )}
       {repr.kind === 'object' && rows != null ? (
         <RenderTable rows={rows} />

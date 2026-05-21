@@ -6,3 +6,9 @@ description: The top-level IR root — a JSON-serializable description of one re
 `SceneSchema` is the IR root. Every drawing serializes down to one Scene object whose `children` array holds nodes, paths, and coordinate placeholders.
 
 <ZodSchema name="SceneSchema" />
+
+## Child
+
+`ChildSchema` is the union for top-level scene children. It currently includes node, path, and coordinate children.
+
+<ZodSchema name="ChildSchema" />

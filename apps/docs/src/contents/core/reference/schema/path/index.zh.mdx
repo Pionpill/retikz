@@ -1,13 +1,15 @@
 ---
-title: Path
+title: 路径
 description: 笔画外壳、step 动作序列与 step 目标点
 ---
 
 `path` 是一条笔画的外壳容器；它的 `children` 字段是一个 `Step` 动作有序数组，渲染器顺序处理它们产出 SVG path 命令。
 
-## Path
+<span id="path"></span>
 
-<ZodSchema name="PathSchema" descriptions={{
+## 路径（Path）
+
+<ZodSchema name="PathSchema" description="路径图元：一组按顺序执行的 step 组成一条可描边、可填充、可带箭头的笔画。" descriptions={{
   type: '判别字段，标记此子节点为 path',
   stroke: '描边颜色，任意 CSS color，默认 currentColor',
   strokeWidth: '描边宽度（用户单位），默认 1',
@@ -25,147 +27,171 @@ description: 笔画外壳、step 动作序列与 step 目标点
   children: 'step 动作序列；首项通常应是 `move`',
 }} />
 
-## Step
+<span id="step"></span>
+
+## 动作（Step）
 
 `StepSchema` 是判别联合 —— `Path.children` 是 Step 数组。`kind` 字段选变体：
 
-<ZodSchema name="StepSchema" />
+<ZodSchema name="StepSchema" description="单个路径动作；通过 kind 字段选择具体 step 变体。" />
 
-### Move
+<span id="move"></span>
 
-<ZodSchema name="MoveStepSchema" descriptions={{
+### 移动（Move）
+
+<ZodSchema name="MoveStepSchema" description="移动动作：只移动路径光标，不绘制线段。" descriptions={{
   type: '判别字段，标记本节点为 path step',
   kind: '动作种类：`move` —— 不画线，仅移动光标到目标点（SVG path "M"）',
   to: 'move 动作的目标点',
 }} />
 
-### Line
+<span id="line"></span>
 
-<ZodSchema name="LineStepSchema" descriptions={{
+### 直线（Line）
+
+<ZodSchema name="LineStepSchema" description="直线动作：从当前光标到目标点绘制一条直线。" descriptions={{
   type: '判别字段，标记本节点为 path step',
   kind: '动作种类：`line` —— 从光标到目标点画一条直线（SVG path "L"）',
   to: '直线段的目标点',
   label: '边标注：附在本段上的文字标签',
-  'label.text': '标签文字内容（单行；多行需 \\n）',
-  'label.position': '沿段位置：`midway` / `near-start` / `near-end`，默认 midway',
-  'label.side': '相对段方向的偏移：above/below/left/right 沿法线偏移；sloped 沿切线旋转（无法线偏移），默认 above',
 }} />
 
-### Fold
+<span id="fold"></span>
 
-<ZodSchema name="FoldStepSchema" descriptions={{
+### 折角（Fold）
+
+<ZodSchema name="FoldStepSchema" description="折角动作：按 `-|` 或 `|-` 经一个直角中间点连接目标。" descriptions={{
   type: '判别字段，标记本节点为 path step',
   kind: '动作种类：`step`（折角段，从光标到目标点经一个直角中间点）',
   via: '折角方向：`-|` 先横后竖；`|-` 先竖后横',
   to: '折线段的目标点',
   label: '边标注：附在本段上的文字标签（按 position 落在对应支段）',
-  'label.text': '标签文字内容（单行；多行需 \\n）',
-  'label.position': '沿段位置：`midway` / `near-start` / `near-end`，默认 midway',
-  'label.side': '相对段方向的偏移：above/below/left/right 沿法线偏移；sloped 沿切线旋转（无法线偏移），默认 above',
 }} />
 
-### Cycle
+<span id="cycle"></span>
 
-<ZodSchema name="CycleStepSchema" descriptions={{
+### 闭合（Cycle）
+
+<ZodSchema name="CycleStepSchema" description="闭合动作：回到最近一次 move 的起点，不携带 to 字段。" descriptions={{
   type: '判别字段，标记本节点为 path step',
   kind: '动作种类：`cycle` —— 闭合回最近一次 move 的目标点（SVG path "Z"）',
 }} />
 
-### Curve
+<span id="curve"></span>
 
-<ZodSchema name="CurveStepSchema" descriptions={{
+### 二次曲线（Curve）
+
+<ZodSchema name="CurveStepSchema" description="二次贝塞尔动作：一个控制点决定曲线弯曲。" descriptions={{
   type: '判别字段，标记本节点为 path step',
   kind: '动作种类：`curve` —— 二次贝塞尔，从光标到目标点带 1 个控制点（SVG path "Q"）',
   to: '曲线终点',
   control: '二次贝塞尔单控制点',
   label: '边标注：附在本段上的文字标签',
-  'label.text': '标签文字内容（单行；多行需 \\n）',
-  'label.position': '沿段位置：`midway` / `near-start` / `near-end`，默认 midway',
-  'label.side': '相对段方向的偏移：above/below/left/right 沿法线偏移；sloped 沿切线旋转（无法线偏移），默认 above',
 }} />
 
-### Cubic
+<span id="cubic"></span>
 
-<ZodSchema name="CubicStepSchema" descriptions={{
+### 三次曲线（Cubic）
+
+<ZodSchema name="CubicStepSchema" description="三次贝塞尔动作：两个控制点分别控制起点和终点切线。" descriptions={{
   type: '判别字段，标记本节点为 path step',
   kind: '动作种类：`cubic` —— 三次贝塞尔，从光标到目标点带 2 个控制点（SVG path "C"）',
   to: '曲线终点',
   control1: '第一个控制点（影响起点切线）',
   control2: '第二个控制点（影响终点切线）',
   label: '边标注：附在本段上的文字标签',
-  'label.text': '标签文字内容（单行；多行需 \\n）',
-  'label.position': '沿段位置：`midway` / `near-start` / `near-end`，默认 midway',
-  'label.side': '相对段方向的偏移：above/below/left/right 沿法线偏移；sloped 沿切线旋转（无法线偏移），默认 above',
 }} />
 
-### Bend
+<span id="bend"></span>
 
-<ZodSchema name="BendStepSchema" descriptions={{
+### 弯曲（Bend）
+
+<ZodSchema name="BendStepSchema" description="弯曲动作：用方向和角度生成近似弧形的贝塞尔曲线。" descriptions={{
   type: '判别字段，标记本节点为 path step',
   kind: '动作种类：`bend` —— 简记弧形：按方向 + 角度生成贝塞尔近似',
   to: '弧形段的目标点',
   bendDirection: '弧形偏转方向（相对 from→to 弦的视觉左 / 右）',
   bendAngle: '弯曲角度（°），默认 30',
   label: '边标注：附在本段上的文字标签',
-  'label.text': '标签文字内容（单行；多行需 \\n）',
-  'label.position': '沿段位置：`midway` / `near-start` / `near-end`，默认 midway',
-  'label.side': '相对段方向的偏移：above/below/left/right 沿法线偏移；sloped 沿切线旋转（无法线偏移），默认 above',
 }} />
 
-### Arc
+<span id="arc"></span>
 
-<ZodSchema name="ArcStepSchema" descriptions={{
+### 圆弧（Arc）
+
+<ZodSchema name="ArcStepSchema" description="圆弧动作：以当前光标为圆心，按起止角和半径绘制弧段。" descriptions={{
   type: '判别字段，标记本节点为 path step',
   kind: '动作种类：`arc` —— 以光标为圆心，按起末角度 + 半径绘制弧段；笔停在弧端点而非圆心',
   startAngle: '弧起始角（°），逆时针从 +x 轴起（数学约定；SVG y-down 视觉为顺时针）',
   endAngle: '弧终止角（°）；扫向由 startAngle 与 endAngle 大小关系隐式决定',
   radius: '弧半径（用户单位）',
   label: '边标注：附在本段上的文字标签',
-  'label.text': '标签文字内容（单行；多行需 \\n）',
-  'label.position': '沿段位置：`midway` / `near-start` / `near-end`，默认 midway',
-  'label.side': '相对段方向的偏移：above/below/left/right 沿法线偏移；sloped 沿切线旋转（无法线偏移），默认 above',
 }} />
 
-### CirclePath
+<span id="circlepath"></span>
 
-<ZodSchema name="CirclePathStepSchema" descriptions={{
+### 整圆路径（CirclePath）
+
+<ZodSchema name="CirclePathStepSchema" description="整圆动作：以当前光标为圆心绘制一个完整圆。" descriptions={{
   type: '判别字段，标记本节点为 path step',
   kind: '动作种类：`circlePath` —— 以光标为圆心、给定半径的整圆，笔画结束后回到圆心',
   radius: '圆半径（用户单位）',
   label: '边标注：附在本段上的文字标签',
-  'label.text': '标签文字内容（单行；多行需 \\n）',
-  'label.position': '沿段位置：`midway` / `near-start` / `near-end`，默认 midway',
-  'label.side': '相对段方向的偏移：above/below/left/right 沿法线偏移；sloped 沿切线旋转（无法线偏移），默认 above',
 }} />
 
-### EllipsePath
+<span id="ellipsepath"></span>
 
-<ZodSchema name="EllipsePathStepSchema" descriptions={{
+### 整椭圆路径（EllipsePath）
+
+<ZodSchema name="EllipsePathStepSchema" description="整椭圆动作：以当前光标为中心绘制一个完整椭圆。" descriptions={{
   type: '判别字段，标记本节点为 path step',
   kind: '动作种类：`ellipsePath` —— 以光标为圆心、给定 x/y 半径的整椭圆，笔画结束后回到中心',
   radiusX: 'x 轴半径（半长轴或半短轴）',
   radiusY: 'y 轴半径（半长轴或半短轴）',
   label: '边标注：附在本段上的文字标签',
-  'label.text': '标签文字内容（单行；多行需 \\n）',
-  'label.position': '沿段位置：`midway` / `near-start` / `near-end`，默认 midway',
-  'label.side': '相对段方向的偏移：above/below/left/right 沿法线偏移；sloped 沿切线旋转（无法线偏移），默认 above',
 }} />
 
-## Target
+<span id="steplabel"></span>
+
+## 边标注（StepLabel）
+
+`StepLabelSchema` 复用于除 move / cycle 之外的绘制 step；它描述边标注文字、段上位置与相对段方向的偏移方式。
+
+<ZodSchema name="StepLabelSchema" description="边标注：附着在绘制 step 上的文本与定位规格。" descriptions={{
+  text: '标签文字内容（单行；多行需 \\n）',
+  position: '沿段归一化位置：7 个 keyword 或 0..1 数字；默认 midway',
+  side: '相对段方向的偏移：above / below / left / right 沿法线偏移；sloped 沿切线旋转',
+}} />
+
+<span id="controlpoint"></span>
+
+## 控制点（ControlPoint）
+
+`ControlPointSchema` 是曲线控制点的别名；当前等同笛卡尔 `[x, y]`。
+
+<ZodSchema name="ControlPointSchema" description="贝塞尔控制点；当前是笛卡尔 `[x, y]` 的别名。" />
+
+<span id="target"></span>
+
+## 目标点（Target）
 
 `TargetSchema` 是六种形态的 union —— 笛卡尔 / 极坐标 / 节点 id / 偏移定位（`{ of, offset }`）/ 相对偏移（relative / relativeAccumulate）：
 
-<ZodSchema name="TargetSchema" />
+<ZodSchema name="TargetSchema" description="路径目标点：支持笛卡尔、极坐标、节点 id、偏移定位和相对偏移。" />
 
-### Relative
+<span id="relative"></span>
 
-<ZodSchema name="RelativeTargetSchema" descriptions={{
+### 相对偏移（Relative）
+
+<ZodSchema name="RelativeTargetSchema" description="相对前一个 step 终点的偏移；不更新光标位置。" descriptions={{
   relative: '相对偏移 (dx, dy)；不更新光标位置',
 }} />
 
-### RelativeAccumulate
+<span id="relativeaccumulate"></span>
 
-<ZodSchema name="RelativeAccumulateTargetSchema" descriptions={{
+### 累积相对偏移（RelativeAccumulate）
+
+<ZodSchema name="RelativeAccumulateTargetSchema" description="相对前一个 step 终点的累积偏移；会更新光标位置。" descriptions={{
   relativeAccumulate: '累积相对偏移 (dx, dy)；**会**更新光标位置',
 }} />
 
@@ -185,12 +211,14 @@ description: 笔画外壳、step 动作序列与 step 目标点
 
 </Comparison>
 
-## ArrowDetail
+<span id="arrowdetail"></span>
+
+## 箭头配置（ArrowDetail）
 
 `Path.arrowDetail` 字段的 schema —— 顶层 8 视觉字段（与 `ArrowEndDetail` 共享）+ 可选 `start` / `end` 子对象。`start` / `end` 与顶层默认逐字段 merge：缺省字段继承顶层、已填字段 override。
 
-<ZodSchema name="ArrowDetailSchema" descriptions={{
-  shape: '箭头形状：normal / open / stealth / diamond / openDiamond / circle / openCircle，默认 normal',
+<ZodSchema name="ArrowDetailSchema" description="路径级箭头视觉配置：顶层默认加可选起末端覆盖。" descriptions={{
+  shape: '箭头形状：normal / open / stealth / diamond / openDiamond / circle / openCircle，默认 stealth',
   scale: '等比缩放因子（默认 1），乘到 length / width 之后',
   length: '尖长（user units，沿 path 方向），默认 6',
   width: '尖宽（user units，垂直 path 方向），默认 6',
@@ -202,12 +230,14 @@ description: 笔画外壳、step 动作序列与 step 目标点
   end: '末端 override（仅 arrow 含末端时生效：`->` / `<->`）',
 }} />
 
-### ArrowEndDetail
+<span id="arrowenddetail"></span>
+
+### 箭头端点配置（ArrowEndDetail）
 
 `start` / `end` 子对象的 schema —— 与 ArrowDetail 同字段集减去 `start` / `end` 字段自身（不递归）：
 
-<ZodSchema name="ArrowEndDetailSchema" descriptions={{
-  shape: '箭头形状（缺省时继承顶层；顶层也缺省时回退 normal）',
+<ZodSchema name="ArrowEndDetailSchema" description="单个箭头端点的视觉覆盖配置，不递归包含 start / end。" descriptions={{
+  shape: '箭头形状（缺省时继承顶层；顶层也缺省时回退 stealth）',
   scale: '等比缩放因子',
   length: '尖长（user units）',
   width: '尖宽（user units）',

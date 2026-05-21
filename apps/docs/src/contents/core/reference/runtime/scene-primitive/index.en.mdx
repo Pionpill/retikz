@@ -1,0 +1,82 @@
+---
+title: Primitive
+description: The renderer-agnostic drawing model produced by compile
+---
+
+Scene primitives are the output contract of `compileToScene`: after IR is laid out, the result no longer contains React, JSX, or Zod schemas. It is a structured drawing model that renderers can consume directly.
+
+## Scene
+
+| Type | Fields | Notes |
+| --- | --- | --- |
+| `Scene` | `primitives` | Laid-out primitive array, in render order |
+| `Scene` | `layout` | Scene bounds `{ x, y, width, height }` |
+| `Layout` | `x` / `y` | Top-left layout coordinate |
+| `Layout` | `width` / `height` | Layout size |
+
+`ScenePrimitive` is a union of five primitives: `RectPrim | EllipsePrim | TextPrim | PathPrim | GroupPrim`.
+
+## Shape Primitives
+
+| Primitive | Key fields | Notes |
+| --- | --- | --- |
+| `RectPrim` | `x` / `y` / `width` / `height` | Top-left positioned rectangle; `cornerRadius` maps to both rx and ry |
+| `EllipsePrim` | `cx` / `cy` / `rx` / `ry` | Center plus radii; circles use `rx === ry` |
+| `TextPrim` | `x` / `y` / `lines` | Text block; `align` / `baseline` define anchor semantics |
+| `PathPrim` | `commands` | Structured path command array |
+| `GroupPrim` | `transforms` / `children` | Child primitives wrapped in structured transforms |
+
+Shape primitives share common visual fields such as `fill`, `fillOpacity`, `stroke`, `strokeOpacity`, `strokeWidth`, `dashPattern`, and `opacity`. Not every primitive supports every field; for example, `TextPrim.fill` is text color.
+
+## Text
+
+| Type | Fields | Notes |
+| --- | --- | --- |
+| `TextPrim` | `lines` | At least one `TextLine` |
+| `TextPrim` | `fontSize` / `fontFamily?` / `fontWeight?` / `fontStyle?` | Block-level font defaults |
+| `TextPrim` | `lineHeight` | Vertical distance between adjacent lines |
+| `TextPrim` | `measuredWidth` / `measuredHeight` | Text block metrics computed during compile |
+| `TextLine` | `text` | Line content |
+| `TextLine` | `fontSize?` / `fill?` / `opacity?` | Per-line override; missing fields inherit from `TextPrim` |
+
+Renderers do not need to decide text layout again. They consume the anchor, line height, metrics, and line-level overrides in `TextPrim`.
+
+## Path Commands
+
+`PathPrim.commands` is structured path data, not an SVG `d` string. Adapters translate it to their target platform at render time.
+
+| Command | Fields | Notes |
+| --- | --- | --- |
+| `move` | `to` | Move cursor without drawing |
+| `line` | `to` | Straight line |
+| `quad` | `control` / `to` | Quadratic Bezier |
+| `cubic` | `control1` / `control2` / `to` | Cubic Bezier |
+| `arc` | `center` / `radius` / `startAngle` / `endAngle` / `counterClockwise?` | Circular arc, angles in degrees |
+| `ellipseArc` | `center` / `radiusX` / `radiusY` / `rotation?` / `startAngle` / `endAngle` | Elliptical arc |
+| `close` | — | Close back to the latest move |
+
+Coordinates use user units. Angles follow the screen-coordinate convention: `0 = +x`, `90 = +y`.
+
+## Arrows
+
+`PathPrim.arrowStart` / `arrowEnd` use `ArrowEndSpec`:
+
+| Field | Notes |
+| --- | --- |
+| `shape` | Arrow shape, required |
+| `scale` / `length` / `width` | Size controls; renderers use defaults when omitted |
+| `color` / `fill` / `opacity` / `lineWidth` | Endpoint-level visual overrides |
+
+The compile layer has already merged IR-level `arrowDetail` defaults with `start` / `end` overrides into endpoint specs. Renderers do not need to know the IR merge rule.
+
+## Transforms
+
+`GroupPrim.transforms` is an ordered list of structured transforms:
+
+| Transform | Fields | Notes |
+| --- | --- | --- |
+| `translate` | `x` / `y` | Translation |
+| `rotate` | `degrees` / `cx?` / `cy?` | Rotation; defaults to origin when center is omitted |
+| `scale` | `x` / `y?` | Scaling; `y` defaults to `x` |
+
+This layer intentionally excludes SVG-only or Canvas-only features such as filters, markers, or image data. Adapters translate the common structure into whatever their platform supports.

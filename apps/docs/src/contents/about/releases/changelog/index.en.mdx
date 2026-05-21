@@ -5,6 +5,22 @@ description: retikz release history grouped by MINOR version, newest first. Date
 
 <Update label="May 2026" tags={["@retikz/core", "@retikz/react"]}>
 
+## v0.1.0
+
+retikz v0.1 stable: the release line moves from the rc channel to the stable version number, and default installation no longer needs `@next`. This release keeps the rc.2 API surface and docs experience without breaking changes.
+
+### `@retikz/core`
+
+- **Stable version number**: `@retikz/core` moves from `0.1.0-rc.2` to `0.1.0`, entering the SemVer-compatible v0.1 maintenance line.
+
+### `@retikz/react`
+
+- **Stable version number**: `@retikz/react` moves from `0.1.0-rc.2` to `0.1.0`. Users can install latest directly with `pnpm add @retikz/react react react-dom`.
+
+### Docs site
+
+- **Remove rc from current version wording**: the site version badge, About overview, Get Started install command, and origin article now use stable `v0.1` wording.
+
 ## v0.1.0-rc.2
 
 Second release candidate window: library changes are limited to three render pipeline bug fixes; the bulk of the work is on the docs site — a new Examples / Recipes section, mdx-body search indexing, a Copilot-style AI assistant rewrite with multi-conversation IDB persistence, AI replies that render retikz diagrams directly, and a new Blog section. No schema or public API changes.

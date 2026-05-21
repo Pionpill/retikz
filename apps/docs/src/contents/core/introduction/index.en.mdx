@@ -5,11 +5,13 @@ description: An AI-native general-purpose drawing library — React components f
 
 retikz **is not yet another chart library**. It's a drawing foundation that re-designs "diagrams as a way to describe ideas" around an AI-native workflow.
 
-It brings a mature vocabulary of nodes, paths, and anchors into the browser, expressed as React components — but the **single source of truth** is the underlying JSON IR: humans write JSX, LLMs emit IR JSON directly, and renderers translate it to SVG / Canvas / PDF / native targets.
+It brings a mature vocabulary of nodes, paths, and anchors into the browser, expressed as React components; the underlying JSON IR acts as the shared data contract between human-authored JSX, LLM-generated JSON, and renderers for SVG / Canvas / PDF / native targets.
 
 ## A Minimal Example
 
 <ComponentPreview name="minimal-example" size="xs" />
+
+The stable v0.1 surface is intentionally focused on **Node / Coordinate / Path / Step / Draw / Text**: named nodes, reference points, path actions, arrows, edge labels, multi-line text, and IR rendering. Chart / flow / codec packages and additional framework adapters mentioned below are architectural directions or future domain packages, not APIs already shipped in `@retikz/react`.
 
 ## AI-First
 
@@ -40,11 +42,11 @@ retikz's DSL surface has three kinds of constructs. Mixing them up is a migratio
 | **Sugar** | `<Draw way={[...]} />` | ❌ Expands into Kernel at compile time | `@retikz/react` |
 | **Tier 2** | `<Axis>` `<BarPlot>` `<Tree>` | ✅ High-level node + lowering hook | Domain packages |
 
-Hard rule: **Sugar introduces no new capabilities** — anything Sugar can express, Kernel can. Break this and the layering is fake.
+Hard rule: **Sugar introduces no new capabilities** — anything Sugar can express, Kernel can. That lets Sugar optimize authoring ergonomics without hiding core semantics inside an adapter.
 
 ## General Primitives, Arbitrary Composition
 
-The Kernel is small — about 5–8 components: `<Path>`, `<Step>`, `<Node>`, `<Anchor>`, `<Scope>` — yet general enough to compose almost any 2D figure.
+The Kernel is deliberately small: `<TikZ>`, `<Node>`, `<Coordinate>`, `<Path>`, and `<Step>`. It is still general enough to compose most 2D relationship diagrams. Sugar such as `<Draw>` / `<Text>` improves authoring ergonomics, but still lowers back to the same Kernel IR.
 
 | Category | Composed from Kernel | Where |
 | --- | --- | --- |
@@ -55,7 +57,7 @@ The Kernel is small — about 5–8 components: `<Path>`, `<Step>`, `<Node>`, `<
 
 **You compose at the primitive layer.** Shape, connection, anchor, label — all expressed directly in geometry / path vocabulary: drawing a curve from a bar to a side annotation, or a labeled curve between two nodes, is as natural as drawing two more primitives.
 
-A domain package is a thin layer of data binding, layout algorithms, and default styling on top of the Kernel; the underlying structure, persistence, and AI surface stay identical across domains.
+A domain package is a thin layer of data binding, layout algorithms, and default styling on top of the Kernel; the underlying structure, persistence, and AI surface stay identical across domains. The current release keeps core focused on primitives first, instead of baking charting or layout algorithms into the base package too early.
 
 ## Framework-Agnostic, React Today
 
@@ -98,12 +100,12 @@ Concrete scenarios:
 3. LLM-generated or LLM-edited illustrations
 4. Anywhere in the browser that needs precise geometric control
 
-## FAQ
+## Technical Comparison
 
-**Why not raw SVG / `<svg>`?**
+| Option | Best fit | Strengths | Limits |
+| --- | --- | --- | --- |
+| `@retikz/core` | Relational diagrams, flow charts, concept maps, AI-generated / AI-edited figures | Named nodes, path actions, anchors, and JSON IR; good at describing relationships between elements and at persistence / local edits | Not a built-in chart-template library; complex layout, data binding, and chart semantics belong in future domain packages |
+| Traditional chart libraries | Dataset-driven statistical charts, dashboards, business reports | Mature chart types, axes, legends, tooltips, and data mapping out of the box | Better at mapping data to charts than at freely composing nodes, paths, annotations, and arbitrary geometric relationships |
+| Raw SVG / `<svg>` | Hand-tuned individual graphics or static exported assets | Native platform primitive, direct, no extra abstraction | No node naming, path semantics, or anchor system; relationship lines, boundary attachment, and later edits require manual coordinate management |
 
-Plain SVG lacks named nodes, path actions, and anchor systems — even drawing "from node A's right side to node B's top" forces you to compute coordinates by hand. retikz brings relational drawing vocabulary into React components.
-
-**Project status?**
-
-v0.1 rc — the public API is frozen, no more breaking changes. Remaining work is docs, install validation, and bug fixes. npm releases use the `@next` dist-tag.
+Long term, `@retikz/core` is the foundation for higher-level domain components and packages. Core itself stays focused on general primitives, the IR contract, and compilation.

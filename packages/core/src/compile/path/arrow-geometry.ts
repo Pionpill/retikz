@@ -58,7 +58,7 @@ export const resolveArrowShapeGeometry = (spec: ArrowEndSpec): ArrowShapeGeometr
     case 'openCircle':
       return {
         ...base,
-        lineContactX: 0,
+        lineContactX: 0.75 - lineWidth / 2,
         hollowLineWidth: lineWidth,
       };
   }

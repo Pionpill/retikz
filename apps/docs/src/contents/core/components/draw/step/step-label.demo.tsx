@@ -2,15 +2,15 @@ import { EdgeLabel, Node, Path, Step, TikZ } from '@retikz/react';
 import type { FC } from 'react';
 
 const Demo: FC = () => (
-  <TikZ width={360} height={220}>
+  <TikZ width={520} height={220}>
     <Node id="a" position={[0, 0]} shape="diamond">
       ?
     </Node>
-    <Node id="b" position={[160, -60]}>
-      yes path
+    <Node id="b" position={[150, -45]}>
+      yes
     </Node>
-    <Node id="c" position={[160, 60]}>
-      no path
+    <Node id="c" position={[150, 45]}>
+      no
     </Node>
 
     {/* prop 形态：直接给 label 对象，position 默认 midway，side='above' */}
@@ -27,17 +27,29 @@ const Demo: FC = () => (
       </Step>
     </Path>
 
-    {/* sloped：标签贴线旋转 */}
-    <Node id="d" position={[0, 100]}>
+    <Node id="d" position={[280, -50]}>
       d
     </Node>
-    <Node id="e" position={[260, 160]}>
+    <Node id="e" position={[470, -50]}>
       e
     </Node>
     <Path arrow="->">
       <Step kind="move" to="d" />
       <Step to="e">
-        <EdgeLabel side="sloped">distance = 12</EdgeLabel>
+        <EdgeLabel side="below">below</EdgeLabel>
+      </Step>
+    </Path>
+
+    <Node id="f" position={[280, 55]}>
+      f
+    </Node>
+    <Node id="g" position={[470, 105]}>
+      g
+    </Node>
+    <Path arrow="->">
+      <Step kind="move" to="f" />
+      <Step to="g">
+        <EdgeLabel side="sloped">sloped</EdgeLabel>
       </Step>
     </Path>
   </TikZ>

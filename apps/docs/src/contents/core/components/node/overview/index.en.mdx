@@ -1,9 +1,9 @@
 ---
 title: Node
-description: Shape container (rectangle / circle / ellipse / diamond) + optional text label — the most common retikz primitive; paths reference it by id.
+description: Named primitive with an id, position, shape boundary, and optional text; Path / Draw reference it by id and auto-attach to its border.
 ---
 
-`<Node>` is the basic positioned, named primitive. Paths reference it by `id` and auto-attach to the per-shape border.
+`<Node>` is the basic positioned, named primitive with its own geometric boundary. Paths reference it by `id` and auto-attach to the per-shape border.
 
 ## Usage
 
@@ -23,6 +23,8 @@ import { Node } from '@retikz/react';
 
 <ComponentPreview name="node-basic" size="xs" />
 
+Choose the form by the role in the diagram: flowchart nodes usually use the default rectangle + `padding`; plain text labels use `stroke="none"` / `fill="none"`; button-like nodes add `roundedCorners` + `minimumWidth`; annotation cards fit multi-line `text` + `align="left"`; and if you only need a reference point with no visible shape, use [Coordinate](/core/components/node/coordinate) instead.
+
 ### Shape polymorphism
 
 `shape` picks the visual shape: `'rectangle'` (default) / `'circle'` / `'ellipse'` / `'diamond'`. Any shape works as an attachable target — connecting lines clip to that shape's boundary automatically:
@@ -34,6 +36,58 @@ import { Node } from '@retikz/react';
 > - circle: circumscribed, radius = √(innerHalfW² + innerHalfH²)
 > - ellipse: circumscribed, rx = innerHalfW × √2, ry = innerHalfH × √2
 > - diamond: circumscribed, halfA = 2 × innerHalfW, halfB = 2 × innerHalfH
+
+### Positioning
+
+#### Relative positioning
+
+In addition to Cartesian / polar, `position` accepts **`{ direction, of, distance? }`**. No more hand-computing absolute coordinates; describe node relationships instead.
+
+- `direction`: 8 directions — `above` / `below` / `left` / `right` / `above-left` / `above-right` / `below-left` / `below-right`
+- `of`: id of the referenced node / coordinate (must be defined earlier in the IR; forward references rejected)
+- `distance`: falls back to `<TikZ nodeDistance>` then to 1 when omitted
+
+<Comparison target="tikz" title="Relative Positioning">
+
+`{ direction: 'above', of: 'a', distance: 20 }` maps to TikZ positioning-library forms like `[above=20 of a]`. `<TikZ nodeDistance={...}>` maps to TikZ's global `node distance` default.
+
+</Comparison>
+
+<ComponentPreview name="node-at-relative" />
+
+#### Offset positioning
+
+`position` also accepts **`{ of, offset }`** — an arbitrary `(dx, dy)` offset from a base point. Use offset whenever the 8-direction + scalar-distance `at` form can't express what you want (e.g. "A right 30 down 10").
+
+- `of` is the base point in three shapes (matching `PolarPosition.origin`):
+  - string id — references a named node / coordinate (forward references rejected)
+  - `[x, y]` Cartesian literal — direct coordinate base, no node definition needed
+  - `PolarPosition` (`{ angle, radius, origin? }`) — polar expression as base, recursively resolved
+- `offset` is a `[dx, dy]` tuple in user units
+
+<Comparison target="tikz" title="Offset Positioning">
+
+`{ of: 'a', offset: [10, 5] }` maps to TikZ `calc` syntax `($(a) + (10,5)$)`.
+
+</Comparison>
+
+<ComponentPreview name="node-offset-position" />
+
+### Node labels
+
+`label` attaches extra text outside the node border. Single object or array form; `position` accepts the 8-direction enum or a numeric angle; `font` / `textColor` inherit from the node when omitted.
+
+<Comparison target="tikz" title="Node Labels">
+
+`label={{ text: 'foo', position: 'above' }}` maps to TikZ `[label=above:foo]`; `position: 30` maps to `label=30:foo`.
+
+</Comparison>
+
+<ComponentPreview name="node-label-basic" size="lg" />
+
+`distance` controls how far the label is pushed outward from the node border, still in retikz user units. It defaults to `12`; for example, `position: 'above', distance: 20` places the label further above the node's top border.
+
+<ComponentPreview name="node-label-distance" size="sm" />
 
 ### Styling
 
@@ -88,12 +142,12 @@ Multi-line text combined with each shape — outer boundary follows the shape-sp
 
 #### Inner / outer sep
 
-Both **symmetric aliases** and **axis-specific** forms are supported (resolution order: axis-specific ?? alias ?? default):
+Both **symmetric aliases** and **axis-specific** forms are supported. If both are provided, axis-specific fields win; otherwise retikz falls back to the symmetric alias, then to the default:
 
 - Inner: `padding` (symmetric) · `innerXSep` / `innerYSep` (per-axis)
 - Outer: `margin` (symmetric) · `outerSep` (single)
 
-90% of the time `padding={N}` is enough; reach for axis-specific only when you need button-like wide-but-flat nodes etc.
+Most nodes only need `padding={N}`. Use `innerXSep` / `innerYSep` when horizontal and vertical spacing need different values.
 
 <ComponentPreview name="node-sep" size="sm" />
 
@@ -131,54 +185,6 @@ Both **symmetric aliases** and **axis-specific** forms are supported (resolution
 
 <ComponentPreview name="node-rotated" size="sm" />
 
-### Positioning
-
-#### Relative positioning
-
-In addition to Cartesian / polar, `position` accepts **`{ direction, of, distance? }`**. No more hand-computing absolute coordinates; describe node relationships instead.
-
-- `direction`: 8 directions — `above` / `below` / `left` / `right` / `above-left` / `above-right` / `below-left` / `below-right`
-- `of`: id of the referenced node / coordinate (must be defined earlier in the IR; forward references rejected)
-- `distance`: falls back to `<TikZ nodeDistance>` then to 1 when omitted
-
-<Comparison target="tikz" title="Relative Positioning">
-
-`{ direction: 'above', of: 'a', distance: 20 }` maps to TikZ positioning-library forms like `[above=20 of a]`. `<TikZ nodeDistance={...}>` maps to TikZ's global `node distance` default.
-
-</Comparison>
-
-<ComponentPreview name="node-at-relative" />
-
-#### Offset positioning
-
-`position` also accepts **`{ of, offset }`** — an arbitrary `(dx, dy)` offset from a base point. Use offset whenever the 8-direction + scalar-distance `at` form can't express what you want (e.g. "A right 30 down 10").
-
-- `of` is the base point in three shapes (matching `PolarPosition.origin`):
-  - string id — references a named node / coordinate (forward references rejected)
-  - `[x, y]` Cartesian literal — direct coordinate base, no node definition needed
-  - `PolarPosition` (`{ angle, radius, origin? }`) — polar expression as base, recursively resolved
-- `offset` is a `[dx, dy]` tuple in user units
-
-<Comparison target="tikz" title="Offset Positioning">
-
-`{ of: 'a', offset: [10, 5] }` maps to TikZ `calc` syntax `($(a) + (10,5)$)`.
-
-</Comparison>
-
-<ComponentPreview name="node-offset-position" />
-
-### Node labels
-
-`label` attaches extra text outside the node border. Single object or array form; `position` accepts the 8-direction enum or a numeric angle; `font` / `textColor` inherit from the node when omitted.
-
-<Comparison target="tikz" title="Node Labels">
-
-`label={{ text: 'foo', position: 'above' }}` maps to TikZ `[label=above:foo]`; `position: 30` maps to `label=30:foo`.
-
-</Comparison>
-
-<ComponentPreview name="node-label-basic" size="lg" />
-
 ## API Reference
 
 | Prop | Type | Default | Description |
@@ -211,7 +217,7 @@ In addition to Cartesian / polar, `position` accepts **`{ direction, of, distanc
 | `minimumSize` | `number` | — | Symmetric minimum-size alias; axis-specific fields take precedence |
 | `scale` | `number` | `1` | Uniform scale (includes font, padding, path attachment) |
 | `xScale` / `yScale` | `number` | — | Per-axis scale; takes precedence over `scale` |
-| `label` | `NodeLabel \| Array<NodeLabel>` | — | Extra label(s) attached to the node border; single object or array; `position` accepts the 8-direction enum or a numeric angle, `distance` defaults to 4, `font` / `textColor` inherit from the node |
+| `label` | `NodeLabel \| Array<NodeLabel>` | — | Extra label(s) attached to the node border; single object or array; `position` accepts the 8-direction enum or a numeric angle, `distance` defaults to 12, `font` / `textColor` inherit from the node |
 
 ### margin vs padding
 

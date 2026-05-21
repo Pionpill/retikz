@@ -1,27 +1,32 @@
 ---
 title: 定位
-description: retikz 的三种位置表达——笛卡尔、极坐标、节点 id 引用——通用于 `<Node>.position` 与 path target。
+description: retikz 的位置表达覆盖笛卡尔、极坐标、节点引用、相对定位、偏移定位与相对 target，用于节点放置和路径目标解析。
 ---
 
-retikz 里所有"放在哪 / 连到哪"都用同一套位置语法：3 种形态可互换，覆盖 `<Node>.position`、`<Step>.to`、`<Draw>.way` 元素。
+retikz 使用一组统一的位置表达来描述实体放置与路径目标解析。`<Node>.position` / `<Coordinate>.position` 用于确定图元中心或引用点位置；`<Step>.to` / `<Draw>.way` 用于解析路径要连接或经过的目标。
 
-| 形态 | 类型 | 用在哪 |
-| --- | --- | --- |
-| 笛卡尔 | `[x, y]` | Node position、path target |
-| 极坐标 | `{ origin?, angle, radius }` | Node position、path target |
-| 节点 id | `'node-id'` | **仅** path target（Step.to / way item） |
+| 形态 | 类型 | 含义 | 用在哪 |
+| --- | --- | --- | --- |
+| 笛卡尔 | `[x, y]` | 直接给出画布坐标 | 节点位置、路径目标 |
+| 极坐标 | `{ origin?, angle, radius }` | 从极点按角度和半径推导位置 | 节点位置、路径目标 |
+| 节点 id | `'node-id'` | 引用已命名节点或 Coordinate，并由路径自动贴边界 | **仅**路径目标（`Step.to` / way item） |
+| 相对定位 | `{ direction, of, distance? }` | 按方向和距离放在另一个节点 / Coordinate 周围 | 节点位置、Coordinate 位置 |
+| 偏移定位 | `{ of, offset }` | 基于节点、坐标或极坐标做二维偏移 | 节点位置、Coordinate 位置、路径目标 |
+| 相对 target | `{ relative }` / `{ relativeAccumulate }` 或 `'+x,y'` / `'++x,y'` | 基于上一段终点做相对偏移 | **仅**路径目标 |
 
 > 坐标系：x 向右，y 向下（与 SVG / Canvas 一致，与数学课本相反）。单位是 user units，不是像素，最终物理尺寸由 `<TikZ>` 的 `width` / `height` 与编译得到的 layout bounds 决定。
 
 ## 笛卡尔
 
-最直白：`[x, y]` 元组。
+笛卡尔坐标是最直接的位置写法：`[x, y]` 表示画布上的一个点。x 向右增大，y 向下增大；因此 `[120, 40]` 表示从原点向右 120、向下 40。适合少量手工摆放、复刻已有 SVG 坐标，或作为其它定位表达的基准点。
 
 <ComponentPreview name="positioning-cartesian" size="sm" />
 
 ## 极坐标
 
-`{ origin?, angle, radius }`：
+极坐标用“从某个极点出发，沿某个角度走一段距离”来描述位置。它适合圆形布局、径向标注、围绕某个节点摆放一组元素，或表达“相对某点旋转偏移”的关系。
+
+`{ origin?, angle, radius }` 三个字段共同决定最终位置：
 
 | 字段 | 含义 |
 | --- | --- |
@@ -48,6 +53,8 @@ retikz 里所有"放在哪 / 连到哪"都用同一套位置语法：3 种形态
 <ComponentPreview name="positioning-id-ref" size="sm" />
 
 线段的实际起止点由 retikz 自动算——见 [锚点](/core/concepts/anchors)。
+
+`<Node>` / `<Coordinate>` 不能直接把 `position` 写成节点 id，因为"把一个实体放在另一个实体中心"通常不是最有用的默认。要表达节点之间的关系，用 `{ direction, of, distance? }`；要表达任意二维偏移，用 `{ of, offset }`。这两种写法把布局意图留在文档里，比提前算好每个绝对坐标更容易维护。
 
 ## 前向引用要求
 

@@ -14,12 +14,12 @@ const Demo: FC = () => (
     <Node
       id="E"
       shape="diamond"
-      position={{ direction: 'below-right', of: 'D', distance: 80 }}
+      position={{ direction: 'below-right', of: 'C', distance: 80 }}
     >E</Node>
     <Draw way={['A', 'B']} arrow="->" />
     <Draw way={['B', 'C']} arrow="->" />
     <Draw way={['B', 'D']} arrow="->" />
-    <Draw way={['D', 'E']} arrow="->" />
+    <Draw way={['C', 'E']} arrow="->" />
   </TikZ>
 );
 

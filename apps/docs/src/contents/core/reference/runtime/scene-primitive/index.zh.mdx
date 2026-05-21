@@ -1,0 +1,82 @@
+---
+title: 原语（Primitive）
+description: compile 输出的渲染目标无关绘制模型
+---
+
+Scene primitive 是 `compileToScene` 的输出合同：IR 经过布局后不再包含 React / JSX / Zod schema，而是一组 renderer 可以直接消费的结构化图元。
+
+## 场景（Scene）
+
+| Type | 字段 | 说明 |
+| --- | --- | --- |
+| `Scene` | `primitives` | 已布局图元数组，顺序就是渲染顺序 |
+| `Scene` | `layout` | 场景边界 `{ x, y, width, height }` |
+| `Layout` | `x` / `y` | layout 左上角坐标 |
+| `Layout` | `width` / `height` | layout 宽高 |
+
+`ScenePrimitive` 是五种 primitive 的 union：`RectPrim | EllipsePrim | TextPrim | PathPrim | GroupPrim`。
+
+## 形状原语（Shape Primitives）
+
+| Primitive | 关键字段 | 说明 |
+| --- | --- | --- |
+| `RectPrim` | `x` / `y` / `width` / `height` | 左上角定位的矩形；`cornerRadius` 同时作用于 rx / ry |
+| `EllipsePrim` | `cx` / `cy` / `rx` / `ry` | 圆心 + 半径；圆形用 `rx === ry` 表示 |
+| `TextPrim` | `x` / `y` / `lines` | 文本块；`align` / `baseline` 决定锚点含义 |
+| `PathPrim` | `commands` | 结构化路径命令数组 |
+| `GroupPrim` | `transforms` / `children` | 带结构化 transform 的子图元组 |
+
+形状 primitive 共享常见视觉字段：`fill`、`fillOpacity`、`stroke`、`strokeOpacity`、`strokeWidth`、`dashPattern`、`opacity`。并不是每个 primitive 都支持全部字段，例如 `TextPrim` 使用 `fill` 表示文字颜色。
+
+## 文本（Text）
+
+| Type | 字段 | 说明 |
+| --- | --- | --- |
+| `TextPrim` | `lines` | 至少一行，每行是 `TextLine` |
+| `TextPrim` | `fontSize` / `fontFamily?` / `fontWeight?` / `fontStyle?` | 块级字体默认值 |
+| `TextPrim` | `lineHeight` | 多行堆叠时相邻行的垂直距离 |
+| `TextPrim` | `measuredWidth` / `measuredHeight` | compile 阶段算好的文本块尺寸 |
+| `TextLine` | `text` | 行文本 |
+| `TextLine` | `fontSize?` / `fill?` / `opacity?` | 行级覆盖；未填继承 `TextPrim` |
+
+renderer 不需要重新决定文字布局，只需要按 `TextPrim` 的锚点、行高和行级覆盖发出目标平台的文本绘制指令。
+
+## 路径命令（Path Commands）
+
+`PathPrim.commands` 是结构化路径命令，不是 SVG `d` 字符串。adapter 应在渲染阶段翻译为目标平台 API。
+
+| Command | 字段 | 说明 |
+| --- | --- | --- |
+| `move` | `to` | 移动游标，不绘制 |
+| `line` | `to` | 直线 |
+| `quad` | `control` / `to` | 二次贝塞尔 |
+| `cubic` | `control1` / `control2` / `to` | 三次贝塞尔 |
+| `arc` | `center` / `radius` / `startAngle` / `endAngle` / `counterClockwise?` | 圆弧，角度单位为度 |
+| `ellipseArc` | `center` / `radiusX` / `radiusY` / `rotation?` / `startAngle` / `endAngle` | 椭圆弧 |
+| `close` | — | 闭合到最近一次 move |
+
+坐标使用 user units；角度采用 `0 = +x`、`90 = +y` 的屏幕坐标约定。
+
+## 箭头（Arrows）
+
+`PathPrim.arrowStart` / `arrowEnd` 使用 `ArrowEndSpec`：
+
+| Field | 说明 |
+| --- | --- |
+| `shape` | 箭头形状，必填 |
+| `scale` / `length` / `width` | 尺寸控制；省略时 renderer 使用默认值 |
+| `color` / `fill` / `opacity` / `lineWidth` | 端点级视觉覆盖 |
+
+compile 层已经把 IR 的 `arrowDetail` 顶层配置与 `start` / `end` 覆盖合并成端点规格。renderer 不需要再理解 IR 层的 merge 规则。
+
+## 变换（Transforms）
+
+`GroupPrim.transforms` 是按顺序应用的结构化 transform：
+
+| Transform | 字段 | 说明 |
+| --- | --- | --- |
+| `translate` | `x` / `y` | 平移 |
+| `rotate` | `degrees` / `cx?` / `cy?` | 旋转；中心省略时绕原点 |
+| `scale` | `x` / `y?` | 缩放；`y` 省略时等比 |
+
+这层刻意不包含 SVG-only / Canvas-only 特性，例如 filter、marker、imageData。adapter 需要把这些结构翻译为各自平台支持的绘制能力。

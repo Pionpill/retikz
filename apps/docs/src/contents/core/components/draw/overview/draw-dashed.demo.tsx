@@ -7,19 +7,19 @@ import type { FC } from 'react';
  */
 const Demo: FC = () => (
   <TikZ width={420} height={200}>
-    <Node id="r1" position={[0, 0]}>
+    <Node id="r1" position={[0, 0]} stroke="none">
       默认
     </Node>
-    <Node id="r2" position={[0, 30]}>
+    <Node id="r2" position={[0, 30]} stroke="none">
       着色
     </Node>
-    <Node id="r3" position={[0, 60]}>
+    <Node id="r3" position={[0, 60]} stroke="none">
       加粗
     </Node>
-    <Node id="r4" position={[0, 90]}>
+    <Node id="r4" position={[0, 90]} stroke="none">
       虚线
     </Node>
-    <Node id="r5" position={[0, 120]}>
+    <Node id="r5" position={[0, 120]} stroke="none">
       点线
     </Node>
 

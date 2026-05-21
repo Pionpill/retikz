@@ -5,6 +5,7 @@ import type { ComponentPropsWithoutRef, FC, ReactNode } from 'react';
 import { Link } from 'react-router';
 import { CodeBlockCommand } from '../code-block-command';
 import { Comparison } from '../comparison';
+import { ComponentAlert } from '../component-alert';
 import { ComponentPreview } from '../component-preview';
 import { ExamplePrompt } from '../example-prompt';
 import { CodeBlock } from '../highlight-code';
@@ -135,7 +136,7 @@ export const mdxComponents: MDXComponents = {
   pre: ({ children }) => <>{children}</>,
   code: Code,
   table: ({ className, ...props }) => (
-    <div className="my-6 w-full">
+    <div className="my-6 w-full overflow-x-auto">
       <table
         className={cn(
           'w-full table-auto border-collapse text-sm [&_tbody_tr:last-child]:border-b-0',
@@ -149,7 +150,7 @@ export const mdxComponents: MDXComponents = {
   th: ({ className, ...props }) => (
     <th
       className={cn(
-        'px-4 py-2 text-left font-normal text-muted-foreground [&[align=center]]:text-center [&[align=right]]:text-right',
+        'px-4 py-2 text-left font-normal whitespace-nowrap text-muted-foreground [&[align=center]]:text-center [&[align=right]]:text-right',
         className,
       )}
       {...props}
@@ -166,6 +167,7 @@ export const mdxComponents: MDXComponents = {
   ),
   CodeBlockCommand,
   Comparison,
+  ComponentAlert,
   ComponentPreview,
   ExamplePrompt,
   LinkedCard,

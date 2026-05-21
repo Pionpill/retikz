@@ -288,6 +288,8 @@ Draw way 简短、语义直白、与文档站现有 demo 风格一致。**唯一
 
 `apps/docs/src/contents/core/reference/schema/<page>/index.{en,zh}.mdx` 下的页面用 **`<ZodSchema name="XxxSchema" descriptions={{...}} />`** 渲染字段表。Reference 词典是 IR schema 查询入口，跟"组件页"4 段结构无关。当前结构：4 个合并页（scene / entity / path / placement），每页一个或多个 H2/H3 + `<ZodSchema>` 块。
 
+Reference 词典页只负责**可扫描、可链接、字段完整**，不承担教程 / 示例职责。不要为了让页面"更像文档"而添加最小 JSON 示例、逐步讲解、使用场景 walkthrough 或 ComponentPreview；这些内容应放到组件页、概念页或示例页。Reference 页正文只写 schema 分组说明、必要语义边界、跨 schema 关系和 `<Comparison>` 对照。
+
 ### name prop
 
 变量名要在 `apps/docs/src/lib/schema-registry.ts` 注册（含 9 个顶层 + 10 个 Step 变体 + 2 个 Target 变体）。组件按 identity 反查 Zod schema 实例并自动出表 —— 字段名 / 类型 / 必填 / 英文描述都来自源码 `.describe()`。
@@ -374,6 +376,17 @@ union / array 内部的 object 不会被平铺（如 `NodeSchema.label` 是 unio
   - `<ZodSchema ... />` —— Reference 词典页用，详见上文「Reference 词典页」
   - `<Comparison ... />` —— 外部生态对照内容用，当前只支持 `target="tikz"`
   - `<ExamplePrompt ... />` —— 示例页 AI Prompt 节用，见 [`docs-doc-example`](../docs-doc-example/SKILL.md)
+  - `<ComponentAlert type="tip|warn|error" title="..." description="..." />` —— 文档提示块，只传 `title` 和 `description`；`type` 省略时默认为 `tip`
+
+### `<ComponentAlert>` 使用边界
+
+`ComponentAlert` 用于把正文里的提示 / 警告 / 错误用法从普通段落中分离出来。它不承载长篇教程，不替代 `<Comparison>`，也不替代真实 demo；如果提示内容超过 2-3 句，优先拆成正文小节或表格。
+
+| type | 用途 |
+| --- | --- |
+| `tip` | 提示、用法建议、文档阅读顺序、文档建议 |
+| `warn` | 警告、非规范用法、组件错误用法、性能 / 内存问题 |
+| `error` | 错误、明确错误用法 |
 
 ## Quick Reference
 

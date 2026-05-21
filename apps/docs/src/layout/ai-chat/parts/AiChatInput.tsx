@@ -1,4 +1,4 @@
-import { Send } from 'lucide-react';
+import { Send, Square } from 'lucide-react';
 import { type FC, type KeyboardEvent, useCallback, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -29,6 +29,7 @@ const MAX_TEXTAREA_HEIGHT = 120;
 export const AiChatInput: FC = () => {
   const { t } = useTranslation();
   const send = useAiChatStore(s => s.send);
+  const abort = useAiChatStore(s => s.abort);
   const isGenerating = useAiChatStore(s => s.isGenerating);
   const draft = useAiChatStore(s => s.draft);
   const setDraft = useAiChatStore(s => s.setDraft);
@@ -71,7 +72,7 @@ export const AiChatInput: FC = () => {
     [handleSubmit],
   );
 
-  const sendDisabled = isGenerating || draft.trim().length === 0;
+  const sendDisabled = draft.trim().length === 0;
 
   return (
     <div className="flex flex-col gap-1 bg-background px-3 pt-2 pb-3">
@@ -106,17 +107,31 @@ export const AiChatInput: FC = () => {
           <div className="flex items-center gap-1">
             <AiChatInputContextUsage />
             <AiChatInputMicButton />
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon"
-              className="size-7 shrink-0 cursor-pointer rounded text-muted-foreground hover:bg-accent hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40"
-              onClick={handleSubmit}
-              aria-label={t('ai.convSend')}
-              disabled={sendDisabled}
-            >
-              <Send className="size-4" />
-            </Button>
+            {isGenerating ? (
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="size-7 shrink-0 cursor-pointer rounded text-muted-foreground hover:bg-accent hover:text-foreground"
+                onClick={abort}
+                aria-label={t('ai.convStop')}
+                title={t('ai.convStop')}
+              >
+                <Square className="size-3.5 fill-current" />
+              </Button>
+            ) : (
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="size-7 shrink-0 cursor-pointer rounded text-muted-foreground hover:bg-accent hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40"
+                onClick={handleSubmit}
+                aria-label={t('ai.convSend')}
+                disabled={sendDisabled}
+              >
+                <Send className="size-4" />
+              </Button>
+            )}
           </div>
         </div>
       </div>

@@ -72,6 +72,15 @@ export const coreSection: Array<Section> = [
           { id: 'placement', label: 'core.refPlacement' },
         ],
       },
+      {
+        id: 'runtime',
+        label: 'core.refRuntime',
+        children: [
+          { id: 'compile', label: 'core.refCompile' },
+          { id: 'scene-primitive', label: 'core.refScenePrimitive' },
+          { id: 'parser', label: 'core.refParser' },
+        ],
+      },
     ],
   },
 ];

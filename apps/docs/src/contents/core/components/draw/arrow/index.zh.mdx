@@ -1,14 +1,16 @@
 ---
 title: Arrow
-description: Path / Draw 的箭头详解。`arrow` 控制方向、`arrowDetail` 对象统管全部视觉规格（shape / scale / length / width / color / fill / opacity / lineWidth），并支持 `start` / `end` 起末分别配置 + 逐字段 merge。
+description: Path / Draw 的箭头详解。`arrow` 控制方向、`arrowDetail` 对象统管全部视觉规格（shape / scale / length / width / color / fill / opacity / lineWidth），并支持 `start` / `end` 起末分别配置 + 逐字段合并。
 ---
 
 箭头由两个独立的 prop 控制：
 
 - **`arrow`**——方向枚举：`'->'` 终点 / `'<-'` 起点 / `'<->'` 两端 / `'none'`（缺省）= 无
-- **`arrowDetail`**——视觉详细配置对象，8 个顶层字段 + 可选 `start` / `end` 子对象。**省略 = 最朴素的"normal 实心三角 + 继承 path stroke / opacity"行为**
+- **`arrowDetail`**——视觉详细配置对象，8 个顶层字段 + 可选 `start` / `end` 子对象。**省略时使用默认的 `stealth` 倒钩形状，颜色与透明度继承路径本身**
 
 `arrow` + `arrowDetail` 同时挂在 `<Draw>` 和 `<Path>` 上，写法和效果完全一致——下文示例用 `<Draw>` 演示，`<Path>` 写法等价。
+
+箭头附着在路径端点上：不会改变原始路径的几何长度，也不会在中间节点重复出现。短线段、双向箭头或很大的 `length` / `width` 可能产生视觉重叠；这时优先减小箭头尺寸，或用节点 `margin` / 显式坐标给线段留出空间。
 
 ## 用法
 
@@ -18,23 +20,20 @@ description: Path / Draw 的箭头详解。`arrow` 控制方向、`arrowDetail` 
 <Draw way={['a', 'b']} arrow="->" />
 ```
 
-`arrowDetail` 全省，箭头走默认 normal shape + path stroke 继承色 + 6 user units 默认大小。
+省略 `arrowDetail` 时，箭头使用默认的 `stealth` 倒钩形状，颜色继承路径描边色，长度和宽度默认都是 6 个用户单位。
 
 ## 例子
 
 ### 形状
 
-`arrowDetail.shape` 选形状，缺省 `'normal'`：
+`arrowDetail.shape` 选形状，缺省 `'stealth'`：
 
-| 形状 | 描述 | 典型用途 |
+| 实心 | 空心 | 典型用途 |
 | --- | --- | --- |
-| `'normal'` | 实心三角 | 流程图默认 |
-| `'open'` | 空心三角 | UML 泛化 / 继承 |
-| `'stealth'` | 倒钩三角 | 现代流图、视觉锐利 |
-| `'diamond'` | 实心菱形 | UML 组合 |
-| `'openDiamond'` | 空心菱形 | UML 聚合 |
-| `'circle'` | 实心圆点 | 连接点 / dot end |
-| `'openCircle'` | 空心圆点 | 白圈端 / o-end |
+| `'normal'` 实心三角 | `'open'` 空心三角 | 基础三角 / UML 泛化 |
+| `'stealth'` 倒钩三角 | - | 默认箭头、现代流程图 |
+| `'diamond'` 实心菱形 | `'openDiamond'` 空心菱形 | UML 组合 / 聚合 |
+| `'circle'` 实心圆点 | `'openCircle'` 空心圆点 | 连接点 / 空心端点 |
 
 <ComponentPreview name="arrow-shapes" />
 
@@ -42,33 +41,33 @@ description: Path / Draw 的箭头详解。`arrow` 控制方向、`arrowDetail` 
 
 ### 起末分别配置
 
-`arrowDetail.start` / `arrowDetail.end` 子对象与顶层默认**逐字段 merge**——缺省字段继承顶层，已填字段 override。UML "组合 + 继承"用 `start.shape` + `end.shape` 表达：
+`arrowDetail.start` / `arrowDetail.end` 子对象与顶层默认**逐字段合并**——缺省字段继承顶层，已填字段覆盖顶层。UML "组合 + 继承"用 `start.shape` + `end.shape` 表达：
 
 <ComponentPreview name="arrow-uneven" size="xs" />
 
-> **merge 语义**：`start` / `end` 子对象的字段优先；子对象未填的字段 fallback 到顶层默认；顶层未填的字段 fallback 到内置默认。例：`arrowDetail={{ shape: 'stealth', start: { color: 'red' } }}` → 起末都用 stealth、起端用红色、末端继承 path stroke。
+> **合并语义**：`start` / `end` 子对象的字段优先；子对象未填的字段回退到顶层默认；顶层未填的字段回退到内置默认。例：`arrowDetail={{ shape: 'stealth', start: { color: 'red' } }}` → 起末都用 `stealth`，起端用红色，末端继承路径描边色。
 
 ### 样式
 
-#### 颜色 override
+#### 颜色覆盖
 
-`color` 把 marker 描边 / 实心填充改为指定颜色（脱离 `context-stroke` 继承）；`fill` 仅实心 shape 生效。`start.color` / `end.color` 单端 override 同样支持——常用于"线浅色、箭头深色"或起末异色：
+`color` 把箭头描边 / 实心填充改为指定颜色，不再继承路径描边色；`fill` 仅实心形状生效。`start.color` / `end.color` 同样支持单端覆盖——常用于"线浅色、箭头深色"或起末异色：
 
 <ComponentPreview name="arrow-color" size="sm" />
 
-> **空心 shape silent ignore `fill`**：`shape ∈ { open / openDiamond / openCircle }` 时，`fill` 字段被静默丢弃——空心形状由 `color`（描边色） + `lineWidth`（描边粗细）共同决定视觉，写 `fill='red'` 不会渲染红色填充。
+> **空心形状会静默忽略 `fill`**：`shape ∈ { open / openDiamond / openCircle }` 时，`fill` 字段被静默丢弃——空心形状由 `color`（描边色） + `lineWidth`（描边粗细）共同决定视觉，写 `fill='red'` 不会渲染红色填充。
 
 #### 缩放：scale / length / width
 
-- `scale` 是 marker 等比缩放因子（默认 1），乘到 `length` / `width` 之后——`length=10, scale=1.5` → 实际 `markerWidth=15`
-- `length` 控 marker 沿 path 方向的长度（默认 6）
-- `width` 控 marker 垂直 path 方向的宽度（默认 6）
+- `scale` 是箭头等比缩放因子（默认 1），乘到 `length` / `width` 之后——`length=10, scale=1.5` → 实际箭头长度为 15
+- `length` 控制箭头沿路径方向的长度（默认 6）
+- `width` 控制箭头垂直路径方向的宽度（默认 6）
 
 <ComponentPreview name="arrow-scale" size="md" />
 
 #### 半透明
 
-`opacity` 0..1，作用于 marker 整体（独立于 path 的 `opacity` / `drawOpacity`）：
+`opacity` 0..1，作用于箭头整体（独立于路径的 `opacity` / `drawOpacity`）：
 
 <ComponentPreview name="arrow-opacity" size="xs" />
 
@@ -79,24 +78,24 @@ description: Path / Draw 的箭头详解。`arrow` 控制方向、`arrowDetail` 
 | 属性 | 类型 | 默认值 | 描述 |
 | --- | --- | --- | --- |
 | `arrow` | `'none' \| '->' \| '<-' \| '<->'` | — | 路径级箭头方向 |
-| `arrowDetail` | `{ shape?, scale?, length?, width?, color?, fill?, opacity?, lineWidth?, start?, end? }` | — | 箭头详细配置；顶层 8 视觉字段全 optional + 可选 `start` / `end` 子对象逐字段 merge override |
+| `arrowDetail` | `{ shape?, scale?, length?, width?, color?, fill?, opacity?, lineWidth?, start?, end? }` | — | 箭头详细配置；顶层 8 个视觉字段均可选，并支持 `start` / `end` 单端覆盖 |
 
 ### arrowDetail 字段
 
-`arrowDetail` 对象 8 个视觉字段 + 可选 `start` / `end` 子对象。`start` / `end` 子对象用相同字段集（不递归），与顶层默认逐字段 merge：
+`arrowDetail` 对象包含 8 个视觉字段 + 可选 `start` / `end` 子对象。`start` / `end` 子对象使用相同字段集（不递归），并与顶层默认逐字段合并：
 
 | 字段 | 类型 | 默认值 | 描述 |
 | --- | --- | --- | --- |
-| `shape` | `'normal' \| 'open' \| 'stealth' \| 'diamond' \| 'openDiamond' \| 'circle' \| 'openCircle'` | `'normal'` | 箭头形状 |
+| `shape` | `'normal' \| 'open' \| 'stealth' \| 'diamond' \| 'openDiamond' \| 'circle' \| 'openCircle'` | `'stealth'` | 箭头形状 |
 | `scale` | `number > 0` | `1` | 等比缩放因子；乘到 `length` / `width` 之后（`length=10, scale=1.5` → 实际 15） |
-| `length` | `number ≥ 0` | `6` | 尖长（user units，沿 path 方向） |
-| `width` | `number ≥ 0` | `6` | 尖宽（user units，垂直 path 方向） |
-| `color` | `string` | — | 描边色 override；缺省走 `context-stroke` 继承 path stroke |
-| `fill` | `string` | `color` 或 `context-stroke` | 填充色 override；**空心 shape 上 silent no-op**（写了被静默丢弃） |
-| `opacity` | `number ∈ [0, 1]` | — | 箭头独立透明度；缺省继承 path opacity |
-| `lineWidth` | `number ≥ 0` | `1.5` | 空心 shape 描边粗细；实心 shape 忽略 |
-| `start` | `ArrowEndDetail`（同字段集，无 `start` / `end`） | — | 起端 override（仅 `arrow` 含起端时生效：`'<-'` / `'<->'`） |
-| `end` | `ArrowEndDetail`（同字段集，无 `start` / `end`） | — | 末端 override（仅 `arrow` 含末端时生效：`'->'` / `'<->'`） |
+| `length` | `number ≥ 0` | `6` | 尖长（用户单位，沿路径方向） |
+| `width` | `number ≥ 0` | `6` | 尖宽（用户单位，垂直路径方向） |
+| `color` | `string` | — | 描边色覆盖；缺省继承路径描边色 |
+| `fill` | `string` | `color` 或路径描边色 | 填充色覆盖；**空心形状上静默无效**（写了被静默丢弃） |
+| `opacity` | `number ∈ [0, 1]` | — | 箭头独立透明度；缺省继承路径透明度 |
+| `lineWidth` | `number ≥ 0` | `1.5` | 空心形状描边粗细；实心形状忽略 |
+| `start` | `ArrowEndDetail`（同字段集，无 `start` / `end`） | — | 起端覆盖配置（仅 `arrow` 含起端时生效：`'<-'` / `'<->'`） |
+| `end` | `ArrowEndDetail`（同字段集，无 `start` / `end`） | — | 末端覆盖配置（仅 `arrow` 含末端时生效：`'->'` / `'<->'`） |
 
 ## 相关
 

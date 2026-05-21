@@ -3,7 +3,7 @@ title: Coordinate
 description: Placeholder node — names a point without drawing anything, so paths and `at.of` can reference it by id.
 ---
 
-`<Coordinate>` is retikz's third kernel component (alongside `<Node>` / `<Path>`). It renders nothing visible, but registers into `nodeIndex` so downstream `<Path>` endpoints and `<Node>` `at.of` references can target it by `id`.
+`<Coordinate>` registers a named reference point in IR. Like `<Node>`, it can be targeted by paths and relative positioning, but it renders no visible shape or text; during compilation, only its `id` and position are registered in `nodeIndex` for downstream `<Path>` endpoints and `<Node>` `at.of` references.
 
 ## Usage
 
@@ -59,6 +59,8 @@ In flow charts, multiple paths often converge at a virtual point — that point 
 Use `{ of, offset }` to derive one coordinate from another — drive the whole group from a single root, and moving the root drags everything along. Lower coupling than hand-writing each absolute coordinate:
 
 <ComponentPreview name="coordinate-offset-chain" size="lg" />
+
+Debugging note: a Coordinate **does not** expand layout bounds. Registering a far-away coordinate alone will not make the canvas grow; an actual Node / Path primitive must land in that region for the final viewBox to cover it.
 
 ## API Reference
 

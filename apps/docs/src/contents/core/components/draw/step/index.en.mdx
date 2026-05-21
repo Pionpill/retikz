@@ -5,6 +5,16 @@ description: Path's child node — one step = one action (move / line / step fol
 
 `<Step>` describes a single path action: `move` lifts the pen, `line` draws a straight line, `step` folds through a single right-angle corner, `cycle` closes the path, `curve` / `cubic` / `bend` draw curves of various shapes, and `arc` / `circlePath` / `ellipsePath` use the cursor as the center to draw an arc / full circle / full ellipse. It is **only** valid as a direct child of `<Path>`; placed elsewhere it is silently ignored.
 
+Use this table to pick a `kind` first:
+
+| kind | Needs `to` | Draws | Advances cursor | Supports label |
+| --- | --- | --- | --- | --- |
+| `move` | Yes | No | Yes | No |
+| `line` / `step` / `curve` / `cubic` / `bend` | Yes | Yes | Yes | Yes |
+| `cycle` | No | Yes | Back to subpath start | No |
+| `arc` | No | Yes | To arc endpoint | Yes |
+| `circlePath` / `ellipsePath` | No | Yes | Back to circle / ellipse center | Yes |
+
 ## Usage
 
 ```tsx
@@ -17,6 +27,8 @@ import { Path, Step } from '@retikz/react';
   <Step kind="line" to="b" />
 </Path>
 ```
+
+Use `<Step>` when you need exact control over Kernel path actions: multiple `move`s, mixed straight / folded / curved / arc segments, or debugging the structure produced by `<Draw>`. For everyday connections, prefer [Draw](/core/components/draw/overview).
 
 ## Examples
 
@@ -40,19 +52,19 @@ The path below draws A→B with one `move` + `line`, then lifts the pen with ano
 
 ### Quadratic curve
 
-`kind="curve"` draws a quadratic Bezier with one control point, matching SVG path `Q`. The control point governs the bend direction and amplitude; control points currently use Cartesian `[x, y]`:
+`kind="curve"` draws a quadratic Bezier with one control point, matching SVG path `Q`. A Bezier curve does not have to pass through the control point; the control point acts more like a handle that pulls the segment from start to end. The farther it is from the straight line, the stronger the bend. Control points currently use Cartesian `[x, y]`:
 
 <ComponentPreview name="step-curve" />
 
 ### Cubic curve
 
-`kind="cubic"` draws a cubic Bezier with two control points, matching SVG path `C`. `control1` shapes the start tangent; `control2` shapes the end tangent. Common for S-shaped curves and complex connectors:
+`kind="cubic"` draws a cubic Bezier with two control points, matching SVG path `C`. `control1` shapes the direction as the curve leaves the start; `control2` shapes the direction as it approaches the end. Because both ends can be controlled separately, this is useful for S-shaped curves and complex connectors:
 
 <ComponentPreview name="step-cubic" />
 
 ### Bend (arc shorthand)
 
-`kind="bend"` is shorthand for an arced connection — give a direction and angle, control points are computed at compile time and lowered to a cubic. `bendDirection` is the visual left/right relative to the from→to path; `bendAngle` defaults to 30:
+`kind="bend"` is shorthand for an arced connection: say whether the segment bends left or right while looking from start to end, plus an angle. The compiler computes control points and lowers it to a cubic Bezier. `bendDirection` is the visual left/right relative to the from→to path; `bendAngle` defaults to 30:
 
 <ComponentPreview name="step-bend" size="lg" />
 
@@ -75,7 +87,7 @@ You can also write the sugar strings `'+dx,dy'` / `'++dx,dy'` (e.g. `<Step to="+
 
 ### Arc
 
-`kind="arc"` uses the **cursor as center** and draws a circular arc by start / end angle and radius. Angles follow the retikz polar convention: 0° points to +x, 90° is visually downward. The pen ends at the arc's endpoint:
+`kind="arc"` uses the **cursor as center** and draws a circular arc by start / end angle and radius. It describes "sweep from this angle to that angle", needs no `to`, and is useful for angle marks, circle fragments, or geometric guides. Angles follow the retikz polar convention: 0° points to +x, 90° is visually downward. The pen ends at the arc's endpoint:
 
 <ComponentPreview name="step-arc" />
 
@@ -137,33 +149,49 @@ The eight demos below show one set of t markers per kind — `t=0.25` vs `'midwa
 
 ##### Line
 
+Straight segments are the most direct case: `t=0.25`, `midway`, and `t=0.75` land at one quarter, the midpoint, and three quarters of the segment length.
+
 <ComponentPreview name="edge-label-on-line" size="sm" />
 
 ##### Fold (step)
+
+Folded segments split the t interval evenly across the polyline legs; `midway` always lands on the corner, not on the visual midpoint by total leg length.
 
 <ComponentPreview name="edge-label-on-fold" />
 
 ##### Quadratic Bezier (curve)
 
+Quadratic Beziers use the curve parameter t. `midway` is Bezier t=0.5, which is not necessarily half of the visual arc length.
+
 <ComponentPreview name="edge-label-on-curve" />
 
 ##### Cubic Bezier (cubic)
+
+Cubic Beziers also place labels by Bezier parameter; both control points affect the position and tangent for a given t.
 
 <ComponentPreview name="edge-label-on-cubic" />
 
 ##### Bend
 
+`bend` is lowered to a cubic Bezier first, so its label-position rule is the same as cubic.
+
 <ComponentPreview name="edge-label-on-bend" />
 
 ##### Arc
+
+Arcs place labels by angle interpolation; `midway` means the middle angle between start and end.
 
 <ComponentPreview name="edge-label-on-arc" />
 
 ##### Circle (circlePath)
 
+Full circles start at the 0° position and traverse the circle once; numeric t maps to a circular angle.
+
 <ComponentPreview name="edge-label-on-circle" size="lg" />
 
 ##### Ellipse (ellipsePath)
+
+Full ellipses also place labels by angle parameter; this is not equal spacing by ellipse arc length.
 
 <ComponentPreview name="edge-label-on-ellipse" />
 
@@ -245,7 +273,7 @@ Only meaningful when `kind="step"`. Given cursor `(px, py)` and target `(tx, ty)
 | `position` | one of 7 keywords or `number` (0..1) | `'midway'` | Normalized position t along the segment — keywords are sugar for t (at-start=0 / very-near-start=0.125 / near-start=0.25 / midway=0.5 / near-end=0.75 / very-near-end=0.875 / at-end=1); values outside `[0, 1]` are rejected by the schema |
 | `side` | `'above' \| 'below' \| 'left' \| 'right' \| 'sloped'` | `'above'` | Anchor + offset direction; `above` / `below` shift along y, `left` / `right` along x; `sloped` keeps the anchor and rotates the label along the tangent |
 
-The geometric meaning of t per step kind is in the "[Geometric meaning of t per step kind](#geometric-meaning-of-t-per-step-kind)" table above. In short: line / fold use normalized arc length (fold's corner is always at t=0.5), curve / cubic / bend use the Bezier parameter t (**not** arc length — t=0.5 is usually not the visual midpoint), arc uses angle parametrization, and circlePath / ellipsePath traverse the full curve starting at angle 0 (+x), CCW.
+The geometric meaning of t per step kind is in the "[Geometric meaning of t per step kind](#geometric-meaning-of-t-per-step-kind)" table above. In short: line uses normalized arc length; fold splits the t interval evenly by polyline leg count (the corner is always at t=0.5); curve / cubic / bend use the Bezier parameter t (**not** arc length — t=0.5 is usually not the visual midpoint); arc uses angle parametrization; circlePath / ellipsePath traverse the full curve starting at angle 0 (+x), CCW.
 
 ### Six forms of `to`
 

@@ -1,0 +1,87 @@
+---
+title: Parser
+description: Pure conversion helpers from sugar input to IR fragments
+---
+
+Parser reference covers the sugar parsing helpers exported by `@retikz/core`. They do not depend on React, the DOM, or node indexes, so adapters, tests, and custom DSLs can reuse them.
+
+## Functions
+
+| API | Signature | Purpose |
+| --- | --- | --- |
+| `parseWay` | `(way: WayDSL) => Array<IRStep>` | Converts the `<Draw way={...}>` way array into path steps |
+| `parseTargetSugar` | `(input: unknown) => IRTarget` | Converts TikZ-style relative coordinate strings into IR targets; returns other inputs unchanged |
+
+## DrawWay
+
+`DrawWay` is the keyword set for the way DSL. Do not hard-code the internal strings; reference the constants.
+
+| Constant | Value / meaning | Notes |
+| --- | --- | --- |
+| `DrawWay.Cycle` | cycle | Close back to the path start |
+| `DrawWay.Hv` | `'-|'` | Fold: horizontal then vertical |
+| `DrawWay.Vh` | `'\|-'` | Fold: vertical then horizontal |
+| `DrawWay.Relative` | relative type marker | Object-style relative offset; does not update prevEnd |
+| `DrawWay.Accumulate` | accumulate type marker | Object-style accumulated relative offset; updates prevEnd |
+
+## Way Items
+
+`WayDSL` is `Array<WayItem>`. Common item shapes:
+
+| Shape | Output | Notes |
+| --- | --- | --- |
+| `IRTarget` | `move` / `line` | First item becomes move; later targets become line |
+| `{ position, type }` | `relative` / `relativeAccumulate` target | TS-friendly relative offset object |
+| `DrawWay.Hv` / `DrawWay.Vh` | `kind: 'step'` | Merged with the next target into a folded step |
+| `DrawWay.Cycle` | `kind: 'cycle'` | Closes the current subpath |
+| `{ curve }` | `kind: 'curve'` | Merged with the next target into a quadratic Bezier |
+| `{ cubic }` | `kind: 'cubic'` | Merged with the next target into a cubic Bezier |
+| `{ bend }` | `kind: 'bend'` | Merged with the next target into a bend segment; `angle` is optional |
+| `{ arc }` | `kind: 'arc'` | Uses the previous item as center; does not consume the next item |
+| `{ circle }` | `kind: 'circlePath'` | Draws a full circle around the previous item |
+| `{ ellipse }` | `kind: 'ellipsePath'` | Draws a full ellipse around the previous item |
+| `{ label }` | step label | Modifies the next item that emits a drawn step |
+
+## parseWay Rules
+
+| Rule | Behavior |
+| --- | --- |
+| Minimum length | Throws when `way.length < 2` |
+| First item | Must not be a label; if it is not a target, move falls back to `[0, 0]` |
+| Target | First target becomes `move`; later targets become `line` |
+| fold / curve / cubic / bend | Must be followed by a target; consumes that next item |
+| arc / circle / ellipse | Uses the previous item as center; does not consume the next item |
+| label | Modifies the next item that emits a drawn step |
+| label + cycle | Throws; cycle cannot carry a label |
+| consecutive label / trailing label | Throws |
+
+`parseWay` returns an IR step array that can be used as `PathSchema.children`.
+
+## Relative Target Sugar
+
+`parseTargetSugar` only special-cases string relative coordinates:
+
+| Input | Output | Meaning |
+| --- | --- | --- |
+| `'+10,0'` | `{ relative: [10, 0] }` | Relative to previous endpoint; does not update prevEnd |
+| `'++10,0'` | `{ relativeAccumulate: [10, 0] }` | Relative to previous endpoint; updates prevEnd |
+| `'node-id'` | `'node-id'` | Ordinary node id, returned unchanged |
+| `[10, 20]` | `[10, 20]` | Non-string input, returned unchanged |
+
+The regex accepts whitespace and negative numbers, such as `'+ -4, 8'` / `'++-4,8'`.
+
+## Error Surface
+
+| Case | Message prefix |
+| --- | --- |
+| way too short | `parseWay: way must contain at least 2 items` |
+| first item is label | `parseWay: way[0] must be a target` |
+| trailing via | `parseWay: via operator ... at end of way` |
+| via not followed by target | `parseWay: via operator ... must be followed by a target` |
+| trailing curve-like operator | `parseWay: curve operator at end of way` |
+| curve-like not followed by target | `parseWay: curve operator must be followed by a target` |
+| cycle carries label | `parseWay: cycle step cannot carry a label` |
+| consecutive labels | `parseWay: label operator ... cannot directly follow another label operator` |
+| trailing label | `parseWay: label operator at end of way` |
+
+These are sugar input errors. Adapters should surface them early during development instead of downgrading them to warnings.

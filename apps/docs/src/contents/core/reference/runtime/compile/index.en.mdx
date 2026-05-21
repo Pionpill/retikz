@@ -1,0 +1,77 @@
+---
+title: Compile
+description: The IR-to-Scene compile entry point, layout options, text measuring, and warning contract
+---
+
+The `@retikz/core` compile layer turns JSON-serializable IR into a laid-out `Scene`. The React renderer, future SSR / Canvas adapters, and custom export pipelines should integrate at this boundary.
+
+## Functions
+
+| API | Signature | Purpose |
+| --- | --- | --- |
+| `compileToScene` | `(ir: IR, options?: CompileOptions) => Scene` | Main compile entry point; handles nodes, coordinates, paths, and returns primitives plus layout |
+| `computeLayout` | `(points, padding, round) => Layout` | Computes the scene bounds from bbox candidate points; usually called inside `compileToScene` |
+| `fallbackMeasurer` | `(text, font) => TextMetrics` | Default text measurer; approximate but runnable, useful as a no-DOM fallback |
+
+`compileToScene` runs in two passes: first it lays out nodes / coordinates and registers ids, then it emits primitives in the original child order. Paths can resolve registered nodes / coordinates, while final rendering order still follows the order written by the user.
+
+## CompileOptions
+
+| Option | Type | Default | Notes |
+| --- | --- | --- | --- |
+| `measureText` | `TextMeasurer` | `fallbackMeasurer` | Injects text measurement; React can use browser APIs, SSR can use fontkit / opentype |
+| `padding` | `number` | `10` | Extra layout padding in user units |
+| `precision` | `number` | `2` | Decimal precision for output Scene primitives / path d / layout; internal geometry keeps double precision |
+| `nodeDistance` | `number` | `1` | Default distance for `AtPosition` when `distance` is omitted |
+| `onWarn` | `(warning) => void` | dev: `console.warn`<br />production: silent | Collects recoverable compile-time warnings |
+
+## Text Measuring
+
+`TextMeasurer` is the only compile-layer hook that needs help from the host environment:
+
+```ts
+type TextMeasurer = (text: string, font: FontSpec) => TextMetrics;
+```
+
+| Type | Fields | Notes |
+| --- | --- | --- |
+| `FontSpec` | `family?` / `size` / `weight?` / `style?` | Font input passed to the measurer; `size` is required |
+| `TextMetrics` | `width` / `height` / `ascent?` / `descent?` | Text box metrics; ascent / descent are optional |
+
+When `measureText` is omitted, `fallbackMeasurer` estimates width as `text.length * size * 0.55` and height as `size * 1.2`. It keeps compilation runnable, but it is not meant for precise typography.
+
+## Warnings
+
+`CompileWarning` is a synchronous, machine-readable warning:
+
+| Field | Type | Notes |
+| --- | --- | --- |
+| `code` | string | Warning code |
+| `message` | string | Human-readable English message |
+| `path` | string | IR locator, such as `children[3].path.children[1].to` |
+
+Current built-in codes:
+
+| Code | Meaning |
+| --- | --- |
+| `UNRESOLVED_NODE_REFERENCE` | A path or position references a missing node / coordinate |
+| `PATH_TOO_SHORT` | A path cannot form a valid drawn segment |
+| `ANCHOR_RESOLUTION_FAILED` | A node boundary attachment point cannot be resolved |
+| `OFFSET_BASE_UNRESOLVED` | `OffsetPosition.of` cannot be resolved |
+| `POLAR_ORIGIN_UNRESOLVED` | `PolarPosition.origin` cannot be resolved |
+| `AT_TARGET_UNRESOLVED` | `AtPosition.of` cannot be resolved |
+| `RELATIVE_INITIAL_NO_PREV_END` | A relative target appears before there is a previous endpoint |
+| `BBOX_EXTREME_INPUT` | Bbox input is extreme and layout computation falls back |
+
+Most warnings do not stop compilation. If a coordinate's own position cannot be resolved, compile emits a warning and then throws, because that breaks the contract for later references.
+
+## Output
+
+`compileToScene` returns:
+
+| Field | Type | Notes |
+| --- | --- | --- |
+| `primitives` | `Array<ScenePrimitive>` | Laid-out primitives, in render order |
+| `layout` | `Layout` | Scene bounds `{ x, y, width, height }` |
+
+If there are no bbox candidate points, `computeLayout` returns a `100×100` fallback layout.

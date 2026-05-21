@@ -22,7 +22,7 @@ export const AiChatConversationEmpty: FC = () => {
   const fillDraftAndFocus = useAiChatStore(s => s.fillDraftAndFocus);
 
   return (
-    <div className="flex h-full flex-col items-center justify-center gap-5 px-5 py-8 text-center">
+    <div className="flex flex-1 flex-col items-center justify-center gap-5 px-5 py-8 text-center">
       <div className="flex flex-col items-center gap-3">
         <div className="flex size-11 items-center justify-center rounded-full border border-border bg-muted text-foreground">
           <Bot className="size-5" />

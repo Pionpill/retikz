@@ -9,6 +9,8 @@ This page uses [AMAI-GmbH/AI-Expert-Roadmap](https://github.com/AMAI-GmbH/AI-Exp
 
 <ComponentPreview name="learning-path-05-dashed" size="xl" />
 
+This is not a recommendation to hard-code every diagram. Absolute coordinates are the direct choice when replicating an existing SVG / poster; once a figure needs reuse, text swaps, or changing node counts, extract repeated visuals into small components, encode stable relationships with `AtPosition` / `Draw`, and leave only a few anchors as absolute coordinates.
+
 ## Prompt
 
 Send the prompt below to the AI chat panel — the LLM will produce retikz IR / JSX for this figure directly. For variants (change labels, add path buttons, swap step kinds), edit the prompt inside the chat panel and resend.
