@@ -1,133 +1,141 @@
-# retikz Node / Path 与 TikZ 能力差距分析
+# retikz 图元与 TikZ 能力对照
 
-> 基于 `@retikz/core` v0.1.0-alpha 现状（仅 `move` / `line` step、矩形 node），对照 TikZ 完整能力盘点缺失项，按优先级分类。
->
 > 关联文档：[`architecture/DESIGN.md`](../architecture/DESIGN.md) · [`packages/core/AGENTS.md`](../../packages/core/AGENTS.md)
 
----
+## 总览
 
-## 0. 现状速查
+**修改记录**
 
-### IRNode（`packages/core/src/ir/node.ts`）
+- **2026-05-07 初版**：基于 `@retikz/core` v0.1.0-alpha（仅 `move` / `line` step、矩形 node）盘点缺失项。
+- **2026-05-21 修订**：对照 `@retikz/core` v0.1.0 正式版按图元重排。初版列出的 P0 全部闭环，P1 / P2 绝大多数已补齐；当前缺口集中在结构化能力（Scope / 主题）、文本排版（LaTeX / 数学）与 P3 高级特性。
 
-```ts
-{
-  type: 'node',
-  id?: string,
-  position: Position | PolarPosition,
-  rotate?: number,
-  text?: string,
-  fill?: string,
-  stroke?: string,
-  strokeWidth?: number,
-  padding?: number,
-  margin?: number,
-  fontSize?: number,
-}
-```
+**状态图例**
 
-**形状只支持矩形**。
-
-### IRPath（`packages/core/src/ir/path/path.ts`）
-
-```ts
-{
-  type: 'path',
-  stroke?: string,
-  strokeWidth?: number,
-  strokeDasharray?: string,
-  children: Array<IRStep>,  // min 2
-}
-```
-
-### IRStep（`packages/core/src/ir/path/step.ts`）
-
-```ts
-{ type: 'step', kind: 'move', to: IRTarget }
-{ type: 'step', kind: 'line', to: IRTarget }
-
-// IRTarget = Position | PolarPosition | string  (string = node id 引用)
-```
-
-**仅 `move` / `line`**；无折角、无曲线、无闭合、无箭头、无路径中段标注。
-
----
-
-## 1. Node 缺的能力
-
-| 能力 | TikZ 写法 | 缺失影响 | 优先级 |
-|---|---|---|---|
-| **shape 多态**（circle / ellipse / diamond / rounded rectangle / regular polygon / cloud / cylinder / star / chamfered…） | `[circle]` / `[diamond]` / `[regular polygon, regular polygon sides=6]` | 当前所有 node 只能是矩形——流程图、UML、电路、思维导图全画不了。**最大短板** | **P0** |
-| **anchor 命名锚点**（除 8 方位外还有 `text` / `base` / `mid` / `angle anchor=30` / 各 shape 特有 anchor） | `(A.north east)` / `(A.30)` | path 端点目前只能"node id"→ 走 `boundaryPoint` 算朝向；用户没法精确指定"从 A 的 east 出"。`<Anchor>` 在 DESIGN.md §4.1 已列入 kernel | **P0** |
-| **相对定位**（`above of=A` / `right=2cm of A` / `at (A.south)`） | `(B) [right of=A]` | 现在只有 polar `origin` 是替代，但缺 "above/below/left/right + node distance" 语义糖 | **P1** |
-| **minimum width / height / size**（强制最小尺寸） | `[minimum size=1cm]` | 让多个 node 视觉对齐时必须 | **P1** |
-| **rounded corners**（圆角矩形 / 任意 shape 圆角） | `[rounded corners=2pt]` | 现代图表必备 | **P1** |
-| **draw / line style**（dashed / dotted / dash dot / very thick / ultra thin） | `[dashed, very thick]` | path 已经有 `strokeDasharray`，node 没有；语义档位（thin/thick）也都没有 | **P1** |
-| **font 完整描述**（family / weight / italic / `\Large`） | `[font=\bfseries\Large]` | 只有 `fontSize: number`；粗体 / 斜体 / 字族都没法表达 | **P1** |
-| **text color** / **text opacity** / **fill opacity** / **draw opacity** | `[text=red, opacity=.5]` | 完全缺，不透明度跨平台都要支持 | **P1** |
-| **align / text width**（多行文字对齐 + 自动换行宽度） | `[align=center, text width=3cm]` | `text` 现在是 `string`，多行 / 换行 / 对齐全部缺；`measureText` 只算单行 | **P1** |
-| **inner sep / outer sep**（语义比 `padding/margin` 更精确） | `[inner sep=2pt, outer sep=0pt]` | 现有 `padding/margin` 接近，但还缺 "inner xsep / inner ysep" 分轴 | **P2** |
-| **scale / xscale / yscale** | `[scale=1.5]` | 仅有 `rotate`，缺缩放 | **P2** |
-| **label / pin**（在 node 边挂额外文字 / 引脚） | `[label=above:foo, pin=right:bar]` | 想给节点边加备注就得拆成两个 node + path | **P2** |
-| **double border**（双线） | `[double, double distance=2pt]` | UML / 电路图常见 | **P3** |
-| **clip**（裁剪子内容） | `[clip]` | 高级特性 | **P3** |
-
----
-
-## 2. Path 缺的能力
-
-| 能力 | TikZ 写法 | 缺失影响 | 优先级 |
-|---|---|---|---|
-| **箭头**（`->` `<-` `<->` `>=Latex` / `>=Stealth` / `>={Triangle[scale=1.5]}`） | `\draw[->, >=Stealth]` | **绘图最常见的需求**。当前 path 只能画无箭头线段，流程图 / 网络图 / UML 全废 | **P0** |
-| **折角 step**（`-\|` / `\|-`） | `(A) -\| (B)` | DESIGN.md §1.7 / AGENTS.md 都列为优先项；流程图刚需 | **P0** |
-| **`cycle` 闭合** | `(A) -- (B) -- (C) -- cycle` | 当前 `move/line` 闭合需要手动重复起点 | **P0** |
-| **贝塞尔 / curve / cubic**（`to[bend left]` / `.. controls (a) and (b) ..`） | `(A) to[bend left=30] (B)` | AGENTS.md 已列；UML / 关系图 / 流图常用 | **P0** |
-| **arc / circle / ellipse / rectangle 形状指令**（path-level 而非 node） | `(0,0) arc[start=0,end=90,radius=1]` / `(0,0) circle[radius=1]` | 画"几何示意图"无法直接用 path 画弧 / 圆 | **P1** |
-| **fill / filldraw / 路径 action**（仅描边 vs 仅填充 vs 同时） | `\fill[red] (...) ;` | 现在 path 只有 stroke 没有 fill / fillRule，闭合后也填不了色 | **P1** |
-| **相对坐标**（`+(1,0)` / `++(1,0)`） | `(A) -- +(1,0)` | AGENTS.md 已列（`'rel'`）；写"链式平移"很冗长 | **P1** |
-| **路径上挂 node**（`-- node[midway, above] {label}`） | `(A) -- node[above] {x=1} (B)` | 边标注（流程图 / UML 关系名）刚需，目前只能再开一个 path child 模拟 | **P1** |
-| **line cap / line join** | `[line cap=round, line join=miter]` | 没法控制线端 / 拐角形态，跨 SVG/Canvas 一致性也需要明确化 | **P2** |
-| **stroke 语义档位** | `[thick]` / `[ultra thick]` / `[loosely dashed]` | 只有数字 `strokeWidth` + 字符串 `strokeDasharray` | **P2** |
-| **opacity 全套** | `[opacity / draw opacity / fill opacity=...]` | 跨平台都好支持 | **P2** |
-| **路径变换** | `[rotate=30, shift={(1,2)}]` | 整条 path 旋转 / 平移 | **P3** |
-| **decorations**（snake / coil / brace） | `decorate[decoration={snake}]` | 高级，靠 path effect 重写 d 字符串实现 | **P3** |
-| **intersections**（取两线交点） | `(intersection of A--B and C--D)` | 高级目标点 | **P3** |
-| **markings**（路径中段标记） | `decoration={markings, mark=at position .5 with {...}}` | 高级 | **P3** |
-
----
-
-## 3. 顶层 / 共有缺失
-
-| 能力 | 影响 |
+| 状态 | 含义 |
 |---|---|
-| **`<Coordinate>`**（只命名一个点，不画任何东西，给 path 引用） | 想"在某处定义锚点供后续路径引用"现在必须 fake 成空 node。DESIGN.md 提到了，但 IR 里没 |
-| **`<Scope>` / `<Group>`**（嵌套样式继承 + 局部 transform） | 没法写"这一块都用红色 + 旋转 30°"。`GroupPrim` 在 primitive 层有，但 IR 层没 group / scope |
-| **样式继承 / 默认值**（`every node/.style={...}` / `every path/.style={...}`） | TikZ 的"主题"机制 |
-| **`label` / `pin` 子结构**（节点附属标签） | 同 Node 表 |
-| **`\useasboundingbox`** | 自定义 viewBox（当前 `computeViewBox` 自动算，没逃生口） |
-| **TikZ libraries 概念**（`shapes.geometric` / `arrows.meta` / `positioning` / `calc` / `decorations.*`） | 当前所有能力是平铺的；以后多了得有 lib 划分机制 |
+| ✨ | **超过**——retikz 比原生 TikZ 更结构化 / 更易用 |
+| ✅ | **相等**——能力对齐，写法不同但效果一致 |
+| ⚠️ | **不足**——部分支持，覆盖主流但有边界缺口 |
+| ❌ | **缺失**——尚未实现 |
 
 ---
 
-## 4. 优先级建议：P0 闭环
+## 1. Node 节点
 
-按"画一张可看的流程图所需的最小集"倒推，**P0 应该一起做**：
+可定位的形状容器（矩形 / 圆 / 椭圆 / 菱形）+ 可选文本标签。retikz 的形状边界统一外接"文本框 + padding"，circle / ellipse / diamond 为外接几何。
 
-1. **Path 箭头**（`arrow: 'none' | '->' | '<-' | '<->'`，先做最常见三种就能解锁 80% 流图）
-2. **Path 折角**（`Step.kind: 'step'`，`via: '-|' | '|-'`）
-3. **Node shape 多态**（至少先加 `circle` / `ellipse` / `diamond` 三种）
-4. **Anchor 命名**（`Target` 字符串扩展为 `'A' | 'A.north' | 'A.30'`）
-5. **Path `cycle` + `fill`**（让闭合区域能填色）
-
-这五点做完，retikz 就能画出"教科书级流程图 + UML 类图 + 简单几何图"，AI 友好的样本范围会从"线框图"扩展到 TikZ 主流用例的大头。
+| 能力 | ReTikZ | TikZ | 状态 | 备注 |
+|---|---|---|---|---|
+| 形状 | `shape: rectangle/circle/ellipse/diamond` | `[circle]` / `[diamond]` / `[regular polygon]` / `[cloud]` | ⚠️ | 4 种已支持；regular polygon / star / cylinder / cloud / chamfered 缺 |
+| 文本内容 | `text`（单行 string 或多行 `LineSpec[]`） | `{文字}` + `\\` 手动换行 | ✅ | 多行用数组，JSON 友好无 escape |
+| 逐行样式覆盖 | `LineSpec` 的 `fill` / `opacity` / `font` | 需 inline `\textcolor` 等 | ✨ | 逐行结构化覆盖，AI 生成更直接 |
+| 数学 / LaTeX 排版 | —（纯文本） | `$x^2$` 等任意 LaTeX | ❌ | 文本为纯字符串，无数学 / 宏 |
+| 多行对齐 | `align: left/center/right` | `[align=center]` | ✅ | |
+| 行高 | `lineHeight` | 字体间接控制 | ✅ | |
+| text width 自动换行 | —（仅手动分行） | `[text width=3cm]` | ❌ | 按宽度自动折行缺 |
+| 填充 / 描边 | `fill` / `stroke` / `strokeWidth` | `[fill=, draw=, line width=]` | ✅ | |
+| 边框线型 | `dashed` / `dotted` / `dashArray` | `[dashed]` / `[dotted]` / `[dash pattern=]` | ✅ | |
+| 边框语义粗细 | —（仅数值 `strokeWidth`） | `[very thick]` / `[ultra thin]` | ❌ | 语义档位目前仅 Path 有 |
+| 圆角 | `roundedCorners`（仅 rectangle） | `[rounded corners=2pt]` | ⚠️ | 非矩形圆角缺 |
+| 最小尺寸 | `minimumWidth` / `minimumHeight` / `minimumSize` | `[minimum size=1cm]` | ✅ | |
+| 缩放 | `scale` / `xScale` / `yScale` | `[scale=]` / `[xscale=]` | ✅ | |
+| 旋转 | `rotate` | `[rotate=]` | ✅ | |
+| 内 / 外边距 | `innerXSep` / `innerYSep` / `outerSep`（+ `padding` / `margin` 别名） | `[inner sep=, outer sep=]` | ✅ | retikz 支持分轴 inner sep |
+| 字体 | `font: family/size/weight/style` | `[font=\bfseries\Large]` | ✅ | `\Large` 等语义宏用数值 `size` 表达 |
+| 颜色 / 透明度 | `textColor` / `opacity` / `fillOpacity` / `drawOpacity` | `[text=, opacity=, fill opacity=, draw opacity=]` | ✅ | |
+| 标签 label | `label`（单 / 数组，方向或角度 + distance + 字体覆盖） | `[label=above:foo]` | ✅ | |
+| 引脚 pin | — | `[pin=right:bar]` | ❌ | label 无引线 |
+| 双线边框 | — | `[double, double distance=2pt]` | ❌ | P3 |
+| 裁剪 clip | — | `[clip]` | ❌ | P3 |
 
 ---
 
-## 5. 优先级图例
+## 2. Path 路径
 
-| 标记 | 含义 |
-|---|---|
-| **P0** | 阻塞主流用例（流程图 / UML / 几何图）；缺失即库无法落地 |
-| **P1** | 高频需求；缺了用户体验差但还能凑合 |
-| **P2** | 中频需求；典型主题 / 风格化诉求 |
-| **P3** | 低频 / 高级特性；可以拖到后期 |
+由一串 step 动作组成的绘制路径。本节列 path 级样式（描边 / 箭头 / 填充 / 变换）；具体动作见 [§3 Step](#3-step-路径步骤)。
+
+| 能力 | ReTikZ | TikZ | 状态 | 备注 |
+|---|---|---|---|---|
+| 描边 | `stroke` / `strokeWidth` / `dashPattern` | `[draw=, line width=, dash pattern=]` | ✅ | |
+| 语义粗细 | `thickness: ultraThin…ultraThick` | `[ultra thin]…[ultra thick]` | ✅ | |
+| 箭头方向 | `arrow: ->` / `<-` / `<->` | `[->]` / `[<-]` / `[<->]` | ✅ | |
+| 箭头细节 | `arrowDetail`：7 shape + scale/length/width/color/fill/opacity/lineWidth + `start`/`end` 逐端覆盖 | `[>=Stealth]` + `arrows.meta` | ✅ | UML open / diamond / openDiamond 内置 |
+| 填充 | `fill` / `fillRule`（nonzero / evenodd） | `\fill` / `[fill=, even odd rule]` | ✅ | evenodd 可画环形 |
+| 线端 / 拐角 | `lineCap` / `lineJoin` | `[line cap=, line join=]` | ✅ | |
+| 透明度 | `opacity` / `fillOpacity` / `drawOpacity` | `[opacity=, fill opacity=, draw opacity=]` | ✅ | |
+| 路径整体变换 | — | `[rotate=30, shift={(1,2)}]` | ❌ | primitive 层有 GroupPrim，IR 未暴露 |
+| decorations | — | `decorate[decoration={snake}]` | ❌ | P3 |
+| intersections | — | `(intersection of A--B and C--D)` | ❌ | P3 |
+
+---
+
+## 3. Step 路径步骤
+
+Path 的子动作，十种 `kind`。除 `move` / `cycle` 外每段可挂 `label?` 边标注。端点 `to` 的坐标形态见 [§5 定位](#5-定位与坐标nodestep-共用)。
+
+| 能力 | ReTikZ | TikZ | 状态 | 备注 |
+|---|---|---|---|---|
+| 移动（不绘制） | `kind: move` | `(A)` | ✅ | |
+| 直线 | `kind: line` | `(A) -- (B)` | ✅ | |
+| 折角 | `kind: step, via: -\| / \|-` | `(A) -\| (B)` | ✅ | |
+| 闭合 | `kind: cycle` | `-- cycle` | ✅ | |
+| 二次贝塞尔 | `kind: curve` + `control` | `.. controls (c) ..` | ✅ | |
+| 三次贝塞尔 | `kind: cubic` + `control1/2` | `.. controls (a) and (b) ..` | ✅ | |
+| 弧形简记 | `kind: bend` + `bendDirection/bendAngle` | `to[bend left=30]` | ✅ | 编译为 cubic 近似 |
+| 圆弧 | `kind: arc` + `startAngle/endAngle/radius` | `arc[start angle=, end angle=, radius=]` | ✅ | |
+| 整圆 | `kind: circlePath` + `radius` | `circle[radius=]` | ✅ | |
+| 整椭圆 | `kind: ellipsePath` + `radiusX/Y` | `ellipse[x radius=, y radius=]` | ✅ | |
+| 边标注 | step `label`：`pos`（0..1 或 7 档关键字）+ `above/below/left/right/sloped` | `-- node[midway, above] {x}` | ✅ | |
+| 路径中段任意 marking | —（仅文字 label） | `decoration={markings, mark=...}` | ⚠️ | 任意图形标记缺 |
+
+---
+
+## 4. Coordinate 坐标占位
+
+命名一个点，不绘制任何图形，供 path 端点 / 相对定位引用。与 Node 在同一 nodeIndex 注册。
+
+| 能力 | ReTikZ | TikZ | 状态 | 备注 |
+|---|---|---|---|---|
+| 命名点 | `IRCoordinate { id, position }` | `\coordinate (m) at (3,2);` | ✅ | position 支持笛卡尔 / 极 / 相对 / 偏移 |
+
+---
+
+## 5. 定位与坐标（Node/Step 共用）
+
+`Node.position` 与 `Step.to` 共用的坐标表达。非笛卡尔形态全部在编译期解析为笛卡尔。
+
+| 能力 | ReTikZ | TikZ | 状态 | 备注 |
+|---|---|---|---|---|
+| 笛卡尔 | `[x, y]` | `(x, y)` | ✅ | |
+| 极坐标 | `PolarPosition { angle, radius, origin? }`（origin 可嵌套） | `(30:2)` | ✅ | |
+| 相对定位 | `AtPosition { direction, of, distance? }` | `[above=2cm of A]`（positioning） | ✅ | 8 方向 |
+| calc 偏移 | `OffsetPosition { of, offset }` | `($(A) + (1,2)$)`（calc） | ⚠️ | 仅加法偏移；投影 / 比例等完整 calc 表达式缺 |
+| 命名 anchor | `'A.north'`（9 anchor） | `(A.north)` | ✅ | center + 8 方位 |
+| 角度边界点 | `'A.30'` | `(A.30)` | ✅ | 同极坐标角度约定 |
+| 节点 auto-clip | `'A'`（中心→目标射线交边界） | `(A)` 自动裁剪 | ✅ | |
+| 相对端点（不推进） | `{ relative: [dx, dy] }` | `(+x, +y)` | ✅ | |
+| 累积相对（推进游标） | `{ relativeAccumulate: [dx, dy] }` | `(++x, ++y)` | ✅ | |
+
+---
+
+## 6. Scene 与全局能力
+
+顶层结构与跨图元机制。Scene children 当前为 `node` / `path` / `coordinate` 三种。
+
+| 能力 | ReTikZ | TikZ | 状态 | 备注 |
+|---|---|---|---|---|
+| 作用域 / 分组 | —（GroupPrim 仅 primitive 层，编译内部用） | `\begin{scope}` / `{[...]}` | ❌ | IR 层无用户可写的 scope / group |
+| 样式继承 / 主题 | — | `every node/.style={...}` | ❌ | 当前每个图元自带全量样式字段 |
+| 自定义 viewBox | —（`computeViewBox` 自动） | `\useasboundingbox` | ❌ | 无逃生口 |
+| libraries 划分 | —（能力平铺） | `\usetikzlibrary{...}` | ❌ | 功能多已落地，缺的是组织方式 |
+
+---
+
+## 7. 剩余优先级
+
+初版 **P0 闭环（箭头 / 折角 / shape 多态 / anchor / cycle + fill）已全部完成**，v0.1.0 已能画教科书级流程图、UML 类图、简单几何图。下一阶段杠杆点：
+
+1. **结构化能力（最高）**：`<Scope>` / `<Group>` IR + 样式继承 / 主题。primitive 层已有 `GroupPrim`，主要工作在 IR schema 与编译展开；落地后 AI 生成的 IR 会显著变短。
+2. **文本排版**：数学 / LaTeX 排版、`text width` 自动换行。
+3. **补全图元**：更多 shape（regular polygon / star / cylinder / cloud）、`pin`、node 语义粗细档位、非矩形圆角。
+4. **P3 高级特性**：路径整体变换、decorations、intersections、任意 markings、double border、clip、`useasboundingbox`、完整 calc 表达式。
