@@ -9,7 +9,6 @@ import { useTocStore } from '@/store/useTocStore';
 import type { FC, HTMLAttributes } from 'react';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Navigate } from 'react-router';
 import { docPathSegments, useDocLocation } from './docLocation';
 import { DocPageActions } from './DocPageActions';
 import { DocPageFooterNav } from './DocPageFooterNav';
@@ -89,12 +88,6 @@ export const DocPage: FC<DocPageProps> = props => {
         </p>
       </main>
     );
-  }
-
-  // 命中分组节点：跳到首个子项（用户直接访问 group URL 时兜底）
-  if (target.children) {
-    const firstChild = target.children[0];
-    return <Navigate to={`/${docPathSegments(loc).join('/')}/${firstChild.id}`} replace />;
   }
 
   const title = t(target.label);

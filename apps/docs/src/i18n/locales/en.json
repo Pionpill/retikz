@@ -20,7 +20,9 @@
     "groupResources": "Resources",
     "tikzDocs": "TikZ Docs",
     "groupContact": "Contact",
-    "contactGithub": "GitHub profile"
+    "contactGithub": "GitHub profile",
+    "expandSection": "Expand",
+    "collapseSection": "Collapse"
   },
   "core": {
     "label": "Core",

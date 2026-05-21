@@ -20,7 +20,9 @@
     "groupResources": "资源",
     "tikzDocs": "TikZ 官方文档",
     "groupContact": "联系作者",
-    "contactGithub": "GitHub 主页"
+    "contactGithub": "GitHub 主页",
+    "expandSection": "展开",
+    "collapseSection": "收起"
   },
   "core": {
     "label": "核心",
