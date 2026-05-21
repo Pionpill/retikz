@@ -21,7 +21,13 @@ A `<Scope></Scope>` with no props and no children → compile emits no Scene pri
 
 ### When to use Scope
 
-When your design has a "grouping" concept — a set of nodes / paths that conceptually belong to the same sub-diagram, need to be transformed as a unit, or need to be referenced / positioned as a whole from outside via `scope.id`. Don't wrap a Scope purely for code-level organization; that only adds namespace pitfalls with no geometric or reference benefit.
+When your design has a "grouping" concept — a set of nodes / paths that conceptually belong to the same sub-diagram, need to be transformed as a unit, or need to be referenced / positioned as a whole from outside via `scope.id`.
+
+<ComponentAlert
+  type="warn"
+  title="Don't wrap a Scope just for code-level organization"
+  description="Wrapping a Scope without a shared transform or external reference handle only adds namespace pitfalls and gives no geometric or referencing benefit."
+/>
 
 ### The 6 transform variants
 
@@ -130,6 +136,12 @@ Detailed projection formula / edge cases (nested polar / scope translate / scale
 
 `localNamespace: true` makes the scope push its own frame — child ids are isolated from the outside, useful for subdiagram reuse / templating:
 
+<ComponentAlert
+  type="warn"
+  title="Prefer distinct ids over localNamespace"
+  description="localNamespace introduces a namespace stack: inside-out lookup makes id resolution depend on nesting depth, shadowing silently masks same-named outer ids, and outside code can no longer reference the isolated inner ids. Unless you are genuinely doing subdiagram reuse / templating, prefer giving ids distinct names (e.g. a prefix) rather than leaning on localNamespace to dodge name clashes."
+/>
+
 <ComponentPreview name="scope-local-namespace-basic" size="md" />
 
 Nested localNamespace forms a stack of namespace frames; an inner path's id lookup walks from inner to outer:
@@ -152,7 +164,11 @@ Trigger conditions / cross-frame behavior / v0.1 comparison are in § How it wor
 
 ## How it works
 
-> Optional for everyday use; revisit when you hit edge cases or want to see how scope flattens transforms, registers namespaces, and isolates / cascades ids at compile time.
+<ComponentAlert
+  type="tip"
+  title="Optional on first read"
+  description="Revisit when you hit edge cases or want to see how scope flattens transforms, registers namespaces, and isolates / cascades ids at compile time."
+/>
 
 ### Namespace stack and lookup
 
@@ -184,8 +200,6 @@ When the same id is registered more than once in the same frame (any combination
 | Warn unit | Every duplicate emits its own warning (not merged); each carries two IR locators (earlier and current) plus the current frame depth |
 | Same id across frames | Counts as shadowing rather than duplicate, **no warning** is emitted |
 | scope.id self-reference | bbox is computed only after the scope subtree finishes — `at.of='self'` / `offset.of='self'` etc. fail forward-resolution and throw (not subject to last-wins) |
-
-> v0.1 behavior: duplicate ids threw. Starting from alpha.1, the policy is warn + last-wins, so v0.1 code keeps running unchanged; if you want strict behavior, detect `code === 'DUPLICATE_NODE_ID'` inside `onWarn` and re-throw yourself.
 
 ### Relative positioning projection
 
