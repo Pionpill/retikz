@@ -1,6 +1,6 @@
 ---
 name: docs-doc-principle
-description: retikz 文档站的总原则，所有页型（组件 / 示例 / 概念 / 入口 / Reference 词典）都必须遵守。涵盖三处协同（contents + data + i18n）、双语规则、写作风格、DSL 优先、Comparison 写法、自绘图示规则、演示位置/关系类 demo 规范、文档宽度限制、阅读时间、Reference (ZodSchema) 页型、入口页/概念页例外、与 shadcn 的差异、可用 MDX 元素。具体页型规范分流到 docs-doc-component（组件页）/ docs-doc-example（示例页）。retikz 专用。
+description: retikz 文档站的总原则，所有页型（组件 / 示例 / 概念 / 入口 / Reference 词典）都必须遵守。涵盖三处协同（contents + data + i18n）、双语规则、写作风格、DSL 优先、Comparison 写法、自绘图示规则、演示位置/关系类 demo 规范、文档宽度限制、阅读时间、Reference (ZodSchema) 页型、入口页/概念页例外、与 shadcn 的差异、可用 MDX 元素。具体页型规范分流到 docs-doc-component（组件页）/ docs-doc-example（示例页）/ docs-doc-group（分组落地页）。retikz 专用。
 ---
 
 # retikz 文档总原则
@@ -19,6 +19,7 @@ retikz 文档站，1 个页面 = **3 处同步改动**：内容（`contents/`）
 | --- | --- | --- |
 | 组件页 | `contents/<module>/components/**` | [`docs-doc-component`](../docs-doc-component/SKILL.md) |
 | 示例页 | `contents/<module>/examples/**` | [`docs-doc-example`](../docs-doc-example/SKILL.md) |
+| 分组落地页 | 带 children 的分组节点（`components/node`、`reference/schema` 等） | [`docs-doc-group`](../docs-doc-group/SKILL.md) |
 | 概念页 / 入口页 | `contents/<module>/concepts/**` / `introduction` / `get-start` | 本 skill 的「入口页 / 概念页例外」节 |
 | Reference 词典页 | `contents/<module>/reference/**` | 本 skill 的「Reference 词典页」节 |
 | 博客文章 | `contents/blog/**` | [`docs-doc-blog`](../docs-doc-blog/SKILL.md)（差异较大，blog skill 独立成体；通用规则仍继承本 skill） |
@@ -61,7 +62,7 @@ apps/docs/src/
      ```
    - `id` 必须等于目录段；`label` 是完整 i18n 路径，由 `I18nKey` 类型约束（拼错编译就报）
 
-加分组（带 children 的非叶子）：在父节点加 `children: Array<SubPage>`，分组本身不导航，URL 命中分组时会重定向到第一个子项；分组**没有** mdx 文件。
+加分组（带 children 的非叶子）：在父节点加 `children: Array<SubPage>`。分组**有自己的落地页** `index.{zh,en}.mdx`（侧栏点分组主体进落地页、点右侧 chevron 展开子项）——写法见 [`docs-doc-group`](../docs-doc-group/SKILL.md)。
 
 ## 漏改对照
 
@@ -398,7 +399,7 @@ union / array 内部的 object 不会被平铺（如 `NodeSchema.label` 是 unio
 | 加一个 demo | 同级写 `<name>.demo.tsx` + 在 mdx 里 `<ComponentPreview name="<name>" />` | — |
 | 加菜单图标 | `data/core.ts` 的 `Page.icon`（仅一级 Page 支持） | — |
 | 新建 module | `data/module.ts` 加条目 + 新建 `data/<module>.ts` + i18n 加新命名空间 | — |
-| 加分组节点 | 父节点加 `children`；分组本身不写 mdx | — |
+| 加分组节点 | 父节点加 `children` + 写分组落地页 `index.{zh,en}.mdx` | [`docs-doc-group`](../docs-doc-group/SKILL.md) |
 | 加新 IR schema 字典 | 注册到 `lib/schema-registry.ts` + 合适合并页加 `<ZodSchema>` 块（含 zh 嵌套点路径） | — |
 | 写 TikZ 对照 | 用 `<Comparison target="tikz">` 包起来，不写进普通正文 | — |
 | 加组件页 | — | [`docs-doc-component`](../docs-doc-component/SKILL.md) |
