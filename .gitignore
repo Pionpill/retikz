@@ -149,3 +149,4 @@ apps/docs/public/llms.txt
 
 # blog 文章转外站发布的手抄中间产物（见 .agents/skills/docs-blog-conventor）
 .markdown/
+.git-rewrite
