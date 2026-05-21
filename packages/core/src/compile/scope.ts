@@ -124,8 +124,7 @@ export const inverseTransformChain = (
 ): IRPosition => {
   let x = global[0];
   let y = global[1];
-  for (let i = 0; i < chain.length; i++) {
-    const t = chain[i];
+  for (const t of chain) {
     if (t.kind === 'translate') {
       x -= t.x;
       y -= t.y;

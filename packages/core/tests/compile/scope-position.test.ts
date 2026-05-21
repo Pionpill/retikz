@@ -815,9 +815,9 @@ describe('path relative inside scope', () => {
       if (cmd.kind === 'line') lines.push(cmd.to);
     }
     expect(lines).toHaveLength(2);
-    expect(lines[0]![0]).toBeCloseTo(0, 1);
-    expect(lines[0]![1]).toBeCloseTo(10, 1);
-    expect(lines[1]![0]).toBeCloseTo(0, 1);
-    expect(lines[1]![1]).toBeCloseTo(20, 1);
+    expect(lines[0][0]).toBeCloseTo(0, 1);
+    expect(lines[0][1]).toBeCloseTo(10, 1);
+    expect(lines[1][0]).toBeCloseTo(0, 1);
+    expect(lines[1][1]).toBeCloseTo(20, 1);
   });
 });

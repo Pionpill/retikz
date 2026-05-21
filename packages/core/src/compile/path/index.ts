@@ -23,7 +23,6 @@ import type {
 } from '../../primitive';
 import type { AssertEqual } from '../../types';
 import type { NameStack } from '../name-stack';
-import { applyTransformChain } from '../scope';
 import { type TextMeasurer, fallbackMeasurer } from '../text-metrics';
 import { clipForTarget, cornerOf, refPointOfTarget, samePoint } from './anchor';
 import { emitLabelPrimitive, tForLabelPosition } from './label';
