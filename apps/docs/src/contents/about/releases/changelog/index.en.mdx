@@ -5,6 +5,32 @@ description: retikz release history grouped by MINOR version, newest first. Date
 
 <Update label="May 2026" tags={["@retikz/core", "@retikz/react"]}>
 
+## v0.1.0-rc.2
+
+Second release candidate window: library changes are limited to three render pipeline bug fixes; the bulk of the work is on the docs site — a new Examples / Recipes section, mdx-body search indexing, a Copilot-style AI assistant rewrite with multi-conversation IDB persistence, AI replies that render retikz diagrams directly, and a new Blog section. No schema or public API changes.
+
+### `@retikz/core`
+
+- **Compile z-order now follows IR / JSX order**: the previous 2-pass compile emitted all Node primitives first and all Path primitives second, so Paths were always layered above Nodes regardless of JSX order. Refactored to a single layout pass that registers `nodeIndex`, followed by an emit pass that walks IR order. SVG z-order is now strictly equal to JSX order, matching DOM intuition.
+
+### `@retikz/react`
+
+- **`buildIR` transparently unwraps `<Fragment>`**: previously, Fragment children produced by patterns like `.map(<></>)` were silently dropped. `React.Fragment` is now recursively unwrapped during IR construction; children flow through in source order. Covers direct Fragment, `.map` + Fragment, nested Fragment, and mixed direct + `.map` children.
+- **CSS `var()` colors routed through inline `style`**: the SVG2 spec only resolves `var()` in CSS-property contexts, not on SVG attributes. `renderPrim` now detects `var(` in `fill` / `stroke` and routes the value through inline `style` for `rect` / `ellipse` / `text` + `tspan` / `path` primitives. Theme-aware colors like `fill="var(--background)"` now work directly.
+- **`<TikZ>` arrow spec collection adds null defense**: the `collectArrowSpecs` visitor now tolerates fragment / empty children during AI streaming intermediate states, preventing crashes mid-generation.
+
+### Docs site
+
+- **Examples / Recipes section**: new `/core/examples/` grouping with the first entry — Karl's unit circle. Backed by a `docs-doc-example` skill so maintainers can add scenario examples on demand.
+- **`<ComponentPreview>` enhancements**: diff mode (unified + 4-way toggle), SVG download, Ask AI button, size picker (incl. xxl / xxxl tiers), and on mobile — tap-to-summon toolbar, two-finger pinch zoom, and a global pan toggle.
+- **mdx-body search indexing**: indexing now covers mdx body, `##` / `###` headings, and inline code in addition to frontmatter; results include highlight and snippet. Searching for code identifiers like `dashPattern` / `layout` / `anchor` now lands on the relevant pages directly.
+- **Copilot-style AI assistant**: input box is split into three segments (detached header / card / footer), with Model / Context Mode / Diagram Format pickers, a Wand2 polish button, a Web Speech API mic, and a context usage ring. Mobile uses a bottom Sheet.
+- **AI multi-conversation persistence**: IndexedDB storage, a history view (list / switch / rename / delete), and a 20-conversation cap with automatic eviction by `updatedAt`.
+- **AI direct diagram rendering**: AI replies can return ` ```retikz-ir` or ` ```retikz-tsx` fenced blocks. IR blocks go through `JSON.parse`; TSX blocks go through an AST parser (whitelisted 8 components + literal props, no eval) → IR → `<TikZ ir={...} />`. Wired up with schema validation, a single auto-repair round trip, and a render `ErrorBoundary`.
+- **AI message UX**: GFM rendering (tables / blockquotes / task lists), right-click ContextMenu (Copy / Edit / Delete / Regenerate / Copy as retikz), manual conversation compression, empty-state suggestion prompts, and a header Help dialog covering BYOK and privacy.
+- **Blog section**: new `/blog/` with design / journey sub-sections; ships `core-philosophy` (zh + en) and `origin` (zh + en) as the first two posts.
+- **Site polish**: title switched to a slogan + emoji favicon + per-page dynamic title; mobile viewport horizontal overflow prevention; header trio collapses to the right.
+
 ## v0.1.0-rc.1
 
 The public API surface enters the release candidate freeze window with this version. No schema or public API changes in this release.

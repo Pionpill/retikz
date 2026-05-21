@@ -194,12 +194,12 @@ export const ComponentRender: FC<ComponentRenderProps> = props => {
   const handleDownload = () => {
     const svg = renderPaneRef.current?.querySelector('svg');
     if (!svg) return;
-    let source = new XMLSerializer().serializeToString(svg);
+    let svgSource = new XMLSerializer().serializeToString(svg);
     // 序列化 React 渲染出的 svg 不一定带 xmlns；离线打开 / 嵌别处时缺它会被当 HTML 解析
-    if (!/\sxmlns=/.test(source)) {
-      source = source.replace(/<svg\b/, '<svg xmlns="http://www.w3.org/2000/svg"');
+    if (!/\sxmlns=/.test(svgSource)) {
+      svgSource = svgSource.replace(/<svg\b/, '<svg xmlns="http://www.w3.org/2000/svg"');
     }
-    const blob = new Blob([`<?xml version="1.0" encoding="UTF-8"?>\n${source}`], {
+    const blob = new Blob([`<?xml version="1.0" encoding="UTF-8"?>\n${svgSource}`], {
       type: 'image/svg+xml;charset=utf-8',
     });
     const url = URL.createObjectURL(blob);
