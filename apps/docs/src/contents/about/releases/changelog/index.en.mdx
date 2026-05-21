@@ -5,6 +5,24 @@ description: retikz release history grouped by MINOR version, newest first. Date
 
 <Update label="May 2026" tags={["@retikz/core", "@retikz/react"]}>
 
+## v0.2.0-alpha.1
+
+The first v0.2 alpha: introduces the IR-level `<Scope>` grouping container, carrying TikZ `\begin{scope}` "grouping + local transform" semantics. Style inheritance is deferred to alpha.2.
+
+### `@retikz/core`
+
+- **New `<Scope>` IR container**: `IRScope` is the 4th IRChild kind and supports arbitrary nesting; lowered to a Scene `GroupPrim` at compile time, and an empty scope (no transform / children / id) emits no primitive.
+- **6 transform variants**: `translate` / `polar-translate` / `at-translate` / `offset-translate` / `rotate` / `scale`, applied in array order (0-th innermost); polar / at / offset are flattened to Cartesian at compile time before lowering.
+- **scope.id whole-scope reference**: when `id` is set, the scope subtree's axis-aligned global bbox is registered as a synthetic rectangle layout, referenceable from outside as `id` / `id.<anchor>` / `id.<deg>`, matching TikZ `local bounding box`.
+- **Cross-scope resolution**: child node ids register into the global nodeIndex by default and can be referenced by outer paths / positions; anchor coordinates are projected to global through the transform chain.
+- **Relative positioning inside a scope**: polar / at / offset resolve the referent globally while the relative part is measured in the current scope's local frame, then projected back to global via the scope chain.
+- **`localNamespace` local namespace**: opt-in pushes a child frame to isolate inner ids, with inside-out lookup and shadowing.
+- **Duplicate id is now warn + last-wins**: a duplicate id in the same frame no longer throws; it emits a `DUPLICATE_NODE_ID` warning and the later definition overrides the earlier one.
+
+### `@retikz/react`
+
+- **New `<Scope>` Kernel component**: accepts `transforms` / `id` / `localNamespace` / children; the builder recursively constructs IRScope.
+
 ## v0.1.0
 
 retikz v0.1 stable: the release line moves from the rc channel to the stable version number, and default installation no longer needs `@next`. This release keeps the rc.2 API surface and docs experience without breaking changes.
