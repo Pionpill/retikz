@@ -1,3 +1,38 @@
 ---
 title: Schema
+description: Schema reference — the JSON shape contract of retikz's IR, i.e. what a figure serializes to.
 ---
+
+This group is the data contract of the IR (intermediate representation): the JSON structure a retikz figure ultimately serializes to. AI generation, database storage, and custom converters all build on this schema. From the scene root downward come the named entities, the drawn paths, and the positioning fields that run through them.
+
+> This is the reference layer, not component docs; to author figures, start from [Components](/core/components/tikz).
+
+## What each part covers
+
+| Topic | Responsibility | Reach for it when |
+| --- | --- | --- |
+| Scene | The IR root: a JSON-serializable description of one figure | Understanding the top-level structure, serializing a whole figure |
+| Entity | Named members in a scene: Node and Coordinate | Working with the IR shape of nodes / coordinates |
+| Path | The stroke shell, step action sequence, and step targets | Working with the IR shape of paths / connectors |
+| Placement | The four forms of a position field: Cartesian / polar / relative / offset | Parsing or generating any positioning field |
+
+## In this section
+
+<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+  <LinkedCard href="/core/reference/schema/scene">
+    <span className="font-semibold">Scene</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">The IR root, a JSON description of one figure</span>
+  </LinkedCard>
+  <LinkedCard href="/core/reference/schema/entity">
+    <span className="font-semibold">Entity</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">Named members: Node and Coordinate</span>
+  </LinkedCard>
+  <LinkedCard href="/core/reference/schema/path">
+    <span className="font-semibold">Path</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">Stroke shell, step sequence, and targets</span>
+  </LinkedCard>
+  <LinkedCard href="/core/reference/schema/placement">
+    <span className="font-semibold">Placement</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">The four forms of a position field</span>
+  </LinkedCard>
+</div>

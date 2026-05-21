@@ -1,3 +1,43 @@
 ---
 title: Draw
+description: The drawing family — from everyday-connection Sugar to step-by-step Kernel paths, plus the shared arrow configuration.
 ---
+
+This group is about *drawing lines*: node to node, folds, curves, arcs, and closed fills. Reach for the Sugar `<Draw>` for everyday connections; drop to the Kernel `<Path>` + `<Step>` when you need step-by-step control or the closest match to the IR. Arrow specs get their own page and are shared by both Draw and Path.
+
+<ComponentPreview name="draw-anatomy" size="md" hideCode />
+
+## What each part does
+
+| Component | Type | Responsibility | Use it when |
+| --- | --- | --- | --- |
+| Draw | Sugar | A way array threads targets / folds / curves / cycle / edge labels / styling, expanding to Path + Step | Everyday connections, flowchart edges, arrowed links (the default) |
+| Way | Sugar | Draw's way item forms, DrawWay constants, folds, cycle, relative coordinates | Looking up what a way array can contain |
+| Path | Kernel | Path container, a sequence of Step children defining a polyline / curve / arc | Multiple moves, step-by-step control, closest to the IR |
+| Step | Kernel | One step = one action (move / line / curve / arc / cycle…) | Controlling each segment's path action semantics |
+| Arrow | Shared | Arrows shared by Path / Draw: `arrow` sets direction, `arrowDetail` covers visual specs | Fine-grained arrow shape / size / color / per-end config |
+
+## In this section
+
+<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+  <LinkedCard href="/core/components/draw/overview">
+    <span className="font-semibold">Draw</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">Way forms, curves, shapes, edge labels, styling, and the full API</span>
+  </LinkedCard>
+  <LinkedCard href="/core/components/draw/way">
+    <span className="font-semibold">Way</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">Way item forms and DrawWay constants</span>
+  </LinkedCard>
+  <LinkedCard href="/core/components/draw/path">
+    <span className="font-semibold">Path</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">Kernel path container and full stroke fields</span>
+  </LinkedCard>
+  <LinkedCard href="/core/components/draw/step">
+    <span className="font-semibold">Step</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">The Kernel action semantics each segment maps to</span>
+  </LinkedCard>
+  <LinkedCard href="/core/components/draw/arrow">
+    <span className="font-semibold">Arrow</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">Arrow direction and detailed visual specs</span>
+  </LinkedCard>
+</div>

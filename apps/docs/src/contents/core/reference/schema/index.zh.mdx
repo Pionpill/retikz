@@ -1,3 +1,38 @@
 ---
-title: Schema
+title: 结构
+description: 结构参考——retikz IR 的 JSON 形状契约，一份图被序列化成什么样。
 ---
+
+这一分组是 IR（中间表示）的数据契约：一份 retikz 图最终被序列化成的 JSON 结构。AI 生成、数据库存储、自定义转换器都基于这套 schema。从 scene 根往下，依次是被命名的实体、绘制路径，以及贯穿其中的定位字段。
+
+> 这里是参考层，不是组件文档；写图请从 [组件](/core/components/tikz) 开始。
+
+## 职责一览
+
+| 主题 | 职责 | 何时查阅 |
+| --- | --- | --- |
+| Scene | IR 根：一份图的 JSON 化描述 | 想了解顶层结构、序列化整张图 |
+| Entity | scene 中被命名的成员：Node 与 Coordinate | 处理节点 / 坐标的 IR 形状 |
+| Path | 笔画外壳、step 动作序列与 step 目标点 | 处理路径 / 连线的 IR 形状 |
+| Placement | position 字段的四种形态：笛卡尔 / 极坐标 / 相对 / 偏移 | 解析或生成任意定位字段 |
+
+## 章节内容
+
+<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+  <LinkedCard href="/core/reference/schema/scene">
+    <span className="font-semibold">场景（Scene）</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">IR 根，一份图的 JSON 化描述</span>
+  </LinkedCard>
+  <LinkedCard href="/core/reference/schema/entity">
+    <span className="font-semibold">实体（Entity）</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">被命名的成员：Node 与 Coordinate</span>
+  </LinkedCard>
+  <LinkedCard href="/core/reference/schema/path">
+    <span className="font-semibold">路径（Path）</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">笔画外壳、step 序列与目标点</span>
+  </LinkedCard>
+  <LinkedCard href="/core/reference/schema/placement">
+    <span className="font-semibold">定位（Placement）</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">position 字段的四种形态</span>
+  </LinkedCard>
+</div>

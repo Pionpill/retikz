@@ -1,3 +1,35 @@
 ---
-title: Runtime
+title: 运行时
+description: 运行时参考——把 IR 编译成渲染目标无关绘制模型的管线：compile 入口、Primitive 输出、Parser 工具。
 ---
+
+这一分组是从 IR 到画面的运行时管线。`compile` 是入口，吃 IR、吐出渲染目标无关的 Scene Primitive；Primitive 是那份与具体渲染器无关的绘制模型；Parser 是把 Sugar 输入转成 IR 片段的纯函数。自己驱动编译、写自定义渲染器、或复用 Sugar 解析逻辑时看这里。
+
+<ComponentPreview name="runtime-flow" size="sm" hideCode />
+
+> 这里是参考层，不是组件文档；写图请从 [组件](/core/components/tikz) 开始。
+
+## 职责一览
+
+| 主题 | 职责 | 何时查阅 |
+| --- | --- | --- |
+| Compile | IR → Scene 的编译入口、布局选项、文字度量、warning 合同 | 自己驱动编译、配置布局、接收 warning |
+| Primitive | compile 输出的渲染目标无关绘制模型 | 写自定义渲染器 / 导出器 |
+| Parser | Sugar 输入到 IR 片段的纯函数转换 | 复用相对坐标等 Sugar 解析逻辑 |
+
+## 章节内容
+
+<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+  <LinkedCard href="/core/reference/runtime/compile">
+    <span className="font-semibold">编译（Compile）</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">IR → Scene 入口、布局、文字度量与 warning</span>
+  </LinkedCard>
+  <LinkedCard href="/core/reference/runtime/scene-primitive">
+    <span className="font-semibold">原语（Primitive）</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">渲染目标无关的绘制模型</span>
+  </LinkedCard>
+  <LinkedCard href="/core/reference/runtime/parser">
+    <span className="font-semibold">解析器（Parser）</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">Sugar 输入到 IR 片段的纯函数</span>
+  </LinkedCard>
+</div>
