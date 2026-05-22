@@ -108,12 +108,13 @@ pnpm lint                                  # 全部包 ESLint（不带 --fix）
 
 ## Commit 规范
 
-> **🚨 重要规则：任何情况下，未经用户明确允许，AI 助手（Claude Code / Copilot / Cursor 等）都不得自行执行 `git commit` / `git push` / `git rebase` / `git reset` 等会写入或改写 git 历史的操作。本条无任何例外。**
+> **🚨 重要规则：AI 助手（Claude Code / Copilot / Cursor 等）执行 `git commit` / `git push` / `git tag` / `npm publish` 等会写入 / 改写 git 历史或对外发布的操作前，必须先获得用户在当前对话中的明确确认。未经确认不得自行执行；一旦获得确认，AI 可直接执行被确认的那一条操作（不需要用户改用 `!` 自己跑）。**
 >
-> 写完代码、改完文件后**停下来等用户审阅**，由用户下达"提交"指令后再做提交。
-> 用户可以让 AI 起草 commit message，但实际提交动作必须由用户授权。
+> 写完代码、改完文件后**停下来等用户审阅**；用户下达"提交" / "发布"等明确指令后，AI 再执行对应操作。
+> 用户可以让 AI 起草 commit message。
+> 确认是**逐条**的：一次确认只覆盖当次被确认的操作，不构成对后续 commit / push / publish 的永久授权（见下"一次授权≠永久授权"）。
 >
-> **以下情形仍然不得自行 commit：**
+> **以下情形都不构成"用户确认"，AI 不得据此自行 commit：**
 > - 计划文档（writing-plans / executing-plans / plan.md / spec.md）的步骤里写了 `git commit`
 > - subagent / skill / 任意工作流（superpowers、TDD 等）声称"每个 task 末尾要提交"
 > - lint / 类型检查 / 构建已通过
