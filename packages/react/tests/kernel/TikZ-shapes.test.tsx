@@ -1,6 +1,6 @@
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
-import { type ShapeDefinition, localToWorld, worldToLocal } from '@retikz/core';
+import { type ScenePrimitive, type ShapeDefinition, localToWorld, worldToLocal } from '@retikz/core';
 import { Node } from '../../src/kernel/Node';
 import { TikZ } from '../../src/kernel/TikZ';
 
@@ -21,7 +21,7 @@ const radialShape = (): ShapeDefinition => ({
     return localToWorld(rect, [(lx / len) * r, (ly / len) * r]);
   },
   anchor: (rect, name) => (name === 'center' ? [rect.x, rect.y] : undefined),
-  *emit(rect, style): Iterable<import('@retikz/core').ScenePrimitive> {
+  *emit(rect, style): Iterable<ScenePrimitive> {
     yield {
       type: 'ellipse',
       cx: rect.x,

@@ -1,0 +1,75 @@
+---
+title: Custom Shapes
+description: The Shape Registry — extend node shapes beyond the built-in four to registerable, third-party-injectable shapes; the IR still stores a string name, the definition is injected at compile time via CompileOptions.shapes.
+---
+
+The built-in `rectangle` / `circle` / `ellipse` / `diamond` are registry entries with no privilege. A third-party package (`@retikz/shapes-flow` / `-uml`, etc.) or host code can register new shapes without modifying core.
+
+> This is the reference layer. For everyday figures the built-in shapes are covered on [Node](/core/components/node/overview); reach here when you need a hexagon / cylinder / cloud.
+
+## Core constraint: `shape` in the IR is always a string
+
+`node.shape` is a JSON-serializable string name (LLM / persistence / JSON Patch friendly). A `ShapeDefinition` holds functions, **never enters the IR**, and is injected at compile time via `CompileOptions.shapes`. Schema validation only checks for a non-empty string; unregistered names throw at **compile time** (listing available names), not at the schema layer.
+
+## ShapeDefinition
+
+A shape owns only the four genuinely polymorphic concerns, all operating on the circumscribing `Rect`:
+
+| Method | Signature | Responsibility |
+| --- | --- | --- |
+| `circumscribe` | `(innerHalfW, innerHalfH) => { halfWidth, halfHeight }` | Content half-axes (text + padding) → bounding-box half-axes |
+| `boundaryPoint` | `(rect, toward) => Position` | Center → toward ray ∩ boundary; used for path attachment and the `.30` numeric angle |
+| `anchor` | `(rect, name) => Position \| undefined` | Named anchor world coords; an unknown name returns `undefined` (caller throws Unknown anchor) |
+| `emit` | `(rect, style, round) => Iterable<ScenePrimitive>` | Visual primitives; returning an Iterable lets one shape emit several primitives (body + pins, etc.) |
+
+<ComponentAlert
+  type="warn"
+  title="Two coordinate conventions — the most common author mistake"
+  description="emit receives an axis-aligned rect (rotate = 0) — rotation is applied uniformly by the compiler's outer GroupPrim, so a shape only ever draws itself upright. But boundaryPoint / anchor receive a rotate-bearing rect — use the re-exported worldToLocal / localToWorld to map toward into local space first. The two coordinate systems differ; don't mix them."
+/>
+
+Numeric angles (`A.30`) work **for free** on any shape that implements `boundaryPoint` — the compiler computes the toward direction and calls `boundaryPoint`; it is not part of the shape interface.
+
+## Injection: CompileOptions.shapes
+
+```ts
+import { compileToScene, type ShapeDefinition } from '@retikz/core';
+import { worldToLocal, localToWorld } from '@retikz/core';
+
+// a factory is just a plain function returning a ShapeDefinition
+const createPolygonShape = (sides: number): ShapeDefinition => ({
+  circumscribe: (hw, hh) => {
+    const r = Math.hypot(hw, hh);
+    return { halfWidth: r, halfHeight: r };
+  },
+  boundaryPoint: (rect, toward) => {
+    /* polygon ray ∩ edge, using worldToLocal / localToWorld for rotate */
+  },
+  anchor: (rect, name) => (name === 'center' ? [rect.x, rect.y] : undefined),
+  *emit(rect, style, round) {
+    yield { type: 'path', commands: [/* n vertices + close */], stroke: style.stroke ?? 'currentColor' };
+  },
+});
+
+// the IR only writes shape: 'hexagon'; the definition is injected via options
+const scene = compileToScene(ir, { shapes: { hexagon: createPolygonShape(6) } });
+```
+
+On the React side, pass `shapes` to `<TikZ>`:
+
+```tsx
+<TikZ shapes={{ hexagon: createPolygonShape(6) }}>
+  <Node shape="hexagon" position={[0, 0]} text="Ready" />
+</TikZ>
+```
+
+<ComponentPreview name="custom-shape" size="md" />
+
+## Overriding built-ins and unknown names
+
+- **Same-name override**: `shapes: { rectangle: myRect }` overrides the built-in rectangle and emits `SHAPE_OVERRIDES_BUILTIN` via `onWarn` (same channel as every warning; a user-supplied `onWarn` receives it even in production).
+- **Unknown shape**: a `node.shape` not in the effective table → compile throws `Unknown shape '<name>'; registered shapes: <sorted list>`. There is no correct geometry to fall back to, so it fails hard.
+
+## Public helpers
+
+`@retikz/core` exports for third-party shape authors: `ShapeDefinition` / `ShapeStyle` / `BUILTIN_SHAPES` / `BuiltinShapeName` / `Rect` / `Position` / `worldToLocal` / `localToWorld`.

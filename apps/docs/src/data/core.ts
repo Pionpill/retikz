@@ -79,6 +79,7 @@ export const coreSection: Array<Section> = [
           { id: 'compile', label: 'core.refCompile' },
           { id: 'scene-primitive', label: 'core.refScenePrimitive' },
           { id: 'parser', label: 'core.refParser' },
+          { id: 'shape-registry', label: 'core.refShapeRegistry' },
         ],
       },
     ],

@@ -58,7 +58,8 @@
     "refRuntime": "运行时（Runtime）",
     "refCompile": "编译（Compile）",
     "refScenePrimitive": "原语（Primitive）",
-    "refParser": "解析器（Parser）"
+    "refParser": "解析器（Parser）",
+    "refShapeRegistry": "自定义 Shape"
   },
   "blog": {
     "label": "博客",

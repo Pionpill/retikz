@@ -24,6 +24,7 @@ description: IR 到 Scene 的编译入口、布局选项、文字度量与 warni
 | `precision` | `number` | `2` | 输出 Scene primitive / path d / layout 的小数位；内部几何计算保持双精度 |
 | `nodeDistance` | `number` | `1` | `AtPosition` 未写 `distance` 时使用的默认距离 |
 | `onWarn` | `(warning) => void` | dev: `console.warn`<br />production: silent | 收集可恢复的编译期 warning |
+| `shapes` | `Record<string, ShapeDefinition>` | `—` | 运行时注入自定义 node shape；同名覆盖内置发 `SHAPE_OVERRIDES_BUILTIN`。见 [自定义 Shape](/core/reference/runtime/shape-registry) |
 
 ## 文字度量（Text Measuring）
 

@@ -14,7 +14,7 @@ description: 在 scene 中被命名的成员 —— Node 与 Coordinate
 <ZodSchema name="NodeSchema" description="节点图元：带位置、形状和可选文本的可引用实体。" descriptions={{
   type: '判别字段，标记此子节点为 node',
   id: '可选唯一 id；当其它 path 需要按字符串引用本 node 时必填',
-  shape: '节点形状，默认 `rectangle`。circle / ellipse / diamond 外接 text+padding',
+  shape: '节点形状名（开放字符串），默认 `rectangle`；内置 circle / ellipse / diamond 外接 text+padding，或经 `CompileOptions.shapes` 注册的扩展名（未注册名 compile 期报错）',
   position: '节点内容盒中心点；笛卡尔 [x,y]、极坐标、或 `at`-风格相对定位',
   rotate: '绕节点中心顺时针旋转角度（°）',
   text: '节点内文本：纯字符串或多行 LineSpec 数组',

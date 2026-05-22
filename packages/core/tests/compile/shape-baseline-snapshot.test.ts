@@ -3,7 +3,7 @@ import { compileToScene } from '../../src/compile/compile';
 import type { IR } from '../../src/ir';
 
 /**
- * Shape Registry 重构的「逐字节」回归网（alpha.3）
+ * Shape Registry 重构的「逐字节」回归网
  * @description 在重构前捕获一张覆盖 4 内置 shape 全路径（circumscribe / emit / boundaryPoint /
  *   命名 anchor / 数字角度 / rotate / margin）的 Scene 快照。把 shape 从硬编码 switch 抽成
  *   ShapeDefinition 注册项后，本快照必须逐字节不变——证明纯重构无行为漂移。

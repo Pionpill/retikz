@@ -58,7 +58,8 @@
     "refRuntime": "Runtime",
     "refCompile": "Compile",
     "refScenePrimitive": "Primitive",
-    "refParser": "Parser"
+    "refParser": "Parser",
+    "refShapeRegistry": "Custom Shapes"
   },
   "blog": {
     "label": "Blog",

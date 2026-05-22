@@ -1,5 +1,5 @@
 /**
- * Shape Registry 扩展面（alpha.3）
+ * Shape Registry 扩展面
  * @description 内置 4 shape 的注册项 + 第三方 shape 作者所需的类型 / helper。
  *   `BUILTIN_SHAPES` 的 Record key 用 `BuiltinShapeName`（4 名穷尽），不用开放的 `NodeShape`。
  */

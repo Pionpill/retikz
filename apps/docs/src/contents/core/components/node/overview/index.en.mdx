@@ -37,6 +37,8 @@ Choose the form by the role in the diagram: flowchart nodes usually use the defa
 > - ellipse: circumscribed, rx = innerHalfW × √2, ry = innerHalfH × √2
 > - diamond: circumscribed, halfA = 2 × innerHalfW, halfB = 2 × innerHalfH
 
+`shape` also accepts registered names beyond the built-ins (hexagon / cylinder / cloud…) — any string passes schema validation, the definition is injected via `CompileOptions.shapes` / `<TikZ shapes>`, and unregistered names throw at compile time. See [Custom Shapes](/core/reference/runtime/shape-registry).
+
 ### Positioning
 
 #### Relative positioning

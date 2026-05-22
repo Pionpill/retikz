@@ -24,6 +24,7 @@ The `@retikz/core` compile layer turns JSON-serializable IR into a laid-out `Sce
 | `precision` | `number` | `2` | Decimal precision for output Scene primitives / path d / layout; internal geometry keeps double precision |
 | `nodeDistance` | `number` | `1` | Default distance for `AtPosition` when `distance` is omitted |
 | `onWarn` | `(warning) => void` | dev: `console.warn`<br />production: silent | Collects recoverable compile-time warnings |
+| `shapes` | `Record<string, ShapeDefinition>` | `—` | Inject custom node shapes at runtime; overriding a built-in emits `SHAPE_OVERRIDES_BUILTIN`. See [Custom Shapes](/core/reference/runtime/shape-registry) |
 
 ## Text Measuring
 

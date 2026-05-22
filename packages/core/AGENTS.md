@@ -69,6 +69,16 @@
 - 度量函数通过 `CompileOptions.measureText` **依赖注入**；不传走 fallback
 - `compileToScene` **必须保持纯函数**：相同 IR + 相同 options → 完全相同的 Scene；禁止 `Math.random()` / `Date.now()` / module-level mutable state
 
+## Shape Registry（`shapes/`，alpha.3）
+
+- **IR 的 `node.shape` 永远是字符串名**（JSON 可序列化 / LLM 友好）；`ShapeDefinition`（含函数）**不进 IR**，走 `CompileOptions.shapes` 运行时注入。schema 只校验非空字符串；未注册名在 **compile 期** throw（不在 schema 层门控内置名）。
+- 内置 4 shape 是注册项（`BUILTIN_SHAPES`），无特权。有效表 = `{ ...BUILTIN_SHAPES, ...options.shapes }`；同名覆盖经 `onWarn` 发 `SHAPE_OVERRIDES_BUILTIN`。
+- `ShapeDefinition` 四方法统一操作外接 `Rect`：`circumscribe`（内框半轴→外接框半轴）/ `boundaryPoint` / `anchor`（未知名返回 `undefined`，`anchorOf` 据此 throw）/ `emit`（`Iterable<ScenePrimitive>`，可多 prim）。
+- **两套坐标语义**：`emit` 收**轴对齐 rect（rotate=0）**——rotate 由 `emitNodePrimitives` 末端外层 `GroupPrim` 统一施加；`boundaryPoint` / `anchor` 收**带 rotate 的 rect**（用 `worldToLocal` / `localToWorld`）。改 emit 时勿读 `rect.rotate`。
+- 数字角度（`A.30`）是 generic：编译层算 toward 后调 `shape.boundaryPoint`，**不进** shape 接口——任何实现 boundaryPoint 的 shape 免费可用。
+- synthetic layout（coordinate 占位 / `scope.id` bbox）必须显式挂 `shapeDef: BUILTIN_SHAPES.rectangle`（`NodeLayout.shapeDef` 必填，无兜底分支）。
+- 改内置 shape 几何 / emit → 跑 `tests/compile/shape-baseline-snapshot.test.ts`（逐字节回归网）确认无行为漂移。
+
 ## 解析器（`parsers/`）
 
 - 解析器一律是纯函数：input → output，无副作用

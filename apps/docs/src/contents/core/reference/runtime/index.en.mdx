@@ -16,6 +16,7 @@ This group is the runtime pipeline from IR to picture. `compile` is the entry po
 | Compile | The IR → Scene entry point, layout options, text measuring, warning contract | Driving compilation yourself, configuring layout, receiving warnings |
 | Primitive | The renderer-agnostic drawing model produced by compile | Writing a custom renderer / exporter |
 | Parser | Pure conversion from sugar input to IR fragments | Reusing sugar parsing such as relative coordinates |
+| Shape Registry | Registering / injecting custom node shapes (`ShapeDefinition` + `CompileOptions.shapes`) | Adding hexagon / cylinder / cloud beyond the built-ins |
 
 ## In this section
 
@@ -31,5 +32,9 @@ This group is the runtime pipeline from IR to picture. `compile` is the entry po
   <LinkedCard href="/core/reference/runtime/parser">
     <span className="font-semibold">Parser</span>
     <span className="mt-1 text-center text-sm text-muted-foreground">Pure functions from sugar input to IR fragments</span>
+  </LinkedCard>
+  <LinkedCard href="/core/reference/runtime/shape-registry">
+    <span className="font-semibold">Custom Shapes</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">Register / inject a ShapeDefinition for custom node shapes</span>
   </LinkedCard>
 </div>

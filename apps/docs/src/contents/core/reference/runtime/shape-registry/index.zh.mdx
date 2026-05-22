@@ -1,0 +1,75 @@
+---
+title: 自定义 Shape
+description: Shape Registry——把 node 形状从内置 4 种扩展为可注册、可第三方注入；IR 仍只写字符串名，定义经 CompileOptions.shapes 运行时注入。
+---
+
+内置 `rectangle` / `circle` / `ellipse` / `diamond` 都是注册项，没有特权。第三方包（`@retikz/shapes-flow` / `-uml` 之类）或宿主代码可以注册新 shape，不依赖修改 core。
+
+> 这里是参考层。日常写图只用内置 shape 看 [Node](/core/components/node/overview) 即可；需要 hexagon / cylinder / cloud 这类形状再来这里。
+
+## 核心约束：IR 里 shape 永远是字符串
+
+`node.shape` 是 JSON 可序列化的字符串名（LLM / 持久化 / JSON Patch 友好）。`ShapeDefinition` 含函数、**不进 IR**，走编译期 `CompileOptions.shapes` 注入。schema 只校验非空字符串；未注册名在 **compile 期** throw（列出可用名），不在 schema 层门控。
+
+## ShapeDefinition
+
+一个 shape 只承担真正多态的四件事，统一操作外接 `Rect`：
+
+| 方法 | 签名 | 职责 |
+| --- | --- | --- |
+| `circumscribe` | `(innerHalfW, innerHalfH) => { halfWidth, halfHeight }` | 内容半轴（text + padding）→ 外接框半轴 |
+| `boundaryPoint` | `(rect, toward) => Position` | 中心 → toward 射线 ∩ 边界；path 端点贴边、`.30` 数字角度都走它 |
+| `anchor` | `(rect, name) => Position \| undefined` | 命名 anchor 世界坐标；不认识的名字返回 `undefined`（调用方抛 Unknown anchor）|
+| `emit` | `(rect, style, round) => Iterable<ScenePrimitive>` | 视觉 primitive；返回 Iterable 即一个 shape 可出多 primitive（body + 引脚等）|
+
+<ComponentAlert
+  type="warn"
+  title="两套坐标语义，第三方最易写错"
+  description="emit 收的是轴对齐 rect（rotate = 0）——旋转由编译器在外层 GroupPrim 统一施加，shape 只画正放的自己。而 boundaryPoint / anchor 收的是带 rotate 的 rect——用 re-export 的 worldToLocal / localToWorld 把 toward 转到局部系再算。两者坐标系不同，别混。"
+/>
+
+数字角度（`A.30`）对所有实现了 `boundaryPoint` 的 shape **免费可用**——编译层算出 toward 后调 `boundaryPoint`，不进 shape 接口。
+
+## 注入：CompileOptions.shapes
+
+```ts
+import { compileToScene, type ShapeDefinition } from '@retikz/core';
+import { worldToLocal, localToWorld } from '@retikz/core';
+
+// factory 只是返回 ShapeDefinition 的普通函数
+const createPolygonShape = (sides: number): ShapeDefinition => ({
+  circumscribe: (hw, hh) => {
+    const r = Math.hypot(hw, hh);
+    return { halfWidth: r, halfHeight: r };
+  },
+  boundaryPoint: (rect, toward) => {
+    /* 多边形射线交边，用 worldToLocal / localToWorld 处理 rotate */
+  },
+  anchor: (rect, name) => (name === 'center' ? [rect.x, rect.y] : undefined),
+  *emit(rect, style, round) {
+    yield { type: 'path', commands: [/* n 顶点 + close */], stroke: style.stroke ?? 'currentColor' };
+  },
+});
+
+// IR 里只写 shape: 'hexagon' 字符串，定义在 options 注入
+const scene = compileToScene(ir, { shapes: { hexagon: createPolygonShape(6) } });
+```
+
+React 侧把 shapes 透传给 `<TikZ>`：
+
+```tsx
+<TikZ shapes={{ hexagon: createPolygonShape(6) }}>
+  <Node shape="hexagon" position={[0, 0]} text="准备" />
+</TikZ>
+```
+
+<ComponentPreview name="custom-shape" size="md" />
+
+## 覆盖内置与未知名
+
+- **同名覆盖**：`shapes: { rectangle: myRect }` 覆盖内置 rectangle，编译期经 `onWarn` 发 `SHAPE_OVERRIDES_BUILTIN`（与所有 warning 同通道；用户传 `onWarn` 时即使 production 也收到）。
+- **未知 shape**：`node.shape` 不在有效表 → compile throw `Unknown shape '<name>'; registered shapes: <sorted list>`。无可降级的正确几何，硬失败。
+
+## 公开 helper
+
+`@retikz/core` 为第三方 shape 作者导出：`ShapeDefinition` / `ShapeStyle` / `BUILTIN_SHAPES` / `BuiltinShapeName` / `Rect` / `Position` / `worldToLocal` / `localToWorld`。
