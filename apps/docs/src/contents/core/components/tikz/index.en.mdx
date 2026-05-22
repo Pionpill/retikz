@@ -1,0 +1,28 @@
+---
+title: Layout
+description: The layout family — containers that establish coordinate context: the required top-level TikZ canvas, and the nestable Scope that applies a local transform to a group of children as a unit.
+---
+
+This group is the figure's *container* layer. `<TikZ>` is the mandatory outermost wrapper of every figure: it takes a component tree or IR, compiles a Scene, and hands it to the current renderer. `<Scope>` gathers a group of children into one unit inside it, applies a shared translate / rotate / scale, and can be referenced or positioned as a whole through its `id`. Both divide up the job of *establishing coordinate context*: `<TikZ>` provides the root coordinate system, and `<Scope>` opens a local one within it.
+
+<ComponentPreview name="tikz-family" size="md" hideCode />
+
+## What each part does
+
+| Component | Type | Responsibility | Use it when |
+| --- | --- | --- | --- |
+| TikZ | Kernel | The one required top-level container: children / IR entry, compiles and emits the Scene; `width` / `height` set display size | The outermost wrapper of every figure |
+| Scope | Kernel | Local transform container: translates / rotates / scales a group of children as a unit, referenceable as a whole by `id` | Transforming a sub-figure as one, local coordinate frames, id namespace isolation |
+
+## In this section
+
+<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+  <LinkedCard href="/core/components/tikz/overview">
+    <span className="font-semibold">TikZ</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">Top-level container: children / IR entry, compile pipeline, and full props</span>
+  </LinkedCard>
+  <LinkedCard href="/core/components/tikz/scope">
+    <span className="font-semibold">Scope</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">The six transform variants, namespacing, and group-level references</span>
+  </LinkedCard>
+</div>

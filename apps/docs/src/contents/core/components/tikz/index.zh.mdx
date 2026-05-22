@@ -1,0 +1,28 @@
+---
+title: 布局
+description: 布局家族——确立坐标语境的容器：每张图必需的顶层 TikZ 画布，与可嵌套、对一组 children 整体施加局部 transform 的 Scope。
+---
+
+这一分组是图的「容器」层。`<TikZ>` 是每张图必需的最外层包装：接收组件树或 IR，编译出 Scene，再交给当前渲染器输出。`<Scope>` 则在内部把一组 children 聚成一个单元，对它们整体施加平移 / 旋转 / 缩放，并可凭 `id` 被外部当作一个整体引用 / 定位。两者都在「确立坐标语境」上分工：`<TikZ>` 给出根坐标系，`<Scope>` 在其中开一层局部坐标系。
+
+<ComponentPreview name="tikz-family" size="md" hideCode />
+
+## 职责一览
+
+| 组件 | 类型 | 职责 | 适合场景 |
+| --- | --- | --- | --- |
+| TikZ | Kernel | 唯一必需的顶层容器：children / IR 入口，编译 Scene 并输出；`width` / `height` 控制显示尺寸 | 每张图的最外层包装 |
+| Scope | Kernel | 局部 transform 容器：把一组 children 当作整体平移 / 旋转 / 缩放，可凭 `id` 被整体引用 | 子图整体变换、局部坐标系、id 命名空间隔离 |
+
+## 章节内容
+
+<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+  <LinkedCard href="/core/components/tikz/overview">
+    <span className="font-semibold">TikZ</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">顶层容器：children / IR 入口、编译管线与完整 props</span>
+  </LinkedCard>
+  <LinkedCard href="/core/components/tikz/scope">
+    <span className="font-semibold">Scope</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">transforms 六变体、命名空间与整组引用</span>
+  </LinkedCard>
+</div>
