@@ -43,6 +43,54 @@ PATCH 不开目录——patch 仅修 bug、不写 ADR。
 |---|---|---|
 | `v0.1-alpha.4` | 01-03（已完成） | — |
 | `v0.1-alpha.5` | 01-04 | 05 |
+| `v0.2-alpha.1` | 01-04（已完成） | — |
+| `v0.2-alpha.2` | 01-02（已完成） | — |
+| `v0.2-alpha.3` | 01（已完成） | — |
+| `v0.2-alpha.4` | 01 | 02 |
+
+---
+
+## v0.2.0-alpha.4（进行中）
+
+> 主题：compile 输出按 IR 顺序回归——修复 alpha.1 重写 compile 管线后 path 顺序退化；alpha.5 / alpha.6 的硬前置
+
+| ADR | 标题 | 状态 |
+|---|---|---|
+| [ADR-01](v0/v0.2-alpha.4/01-ir-order-regression.md) | compile 输出 IR 顺序回归（占位槽回填恢复 transform-free frame 的声明序） | Proposed |
+
+---
+
+## v0.2.0-alpha.3（已完成）
+
+> 主题：ShapeRegistry——NodeShape 枚举开放为字符串 + ShapeDefinition 运行时注入面
+
+| ADR | 标题 | 状态 |
+|---|---|---|
+| [ADR-01](v0/v0.2-alpha.3/01-shape-registry.md) | Shape Registry（NodeShape 开放为字符串 + ShapeDefinition 注入面 + 内置 4 shape 改造为注册项） | Accepted |
+
+---
+
+## v0.2.0-alpha.2（已完成）
+
+> 主题：样式继承——扁平 every-X 默认 + 主色 color 级联 + StepLabel 样式扩展
+
+| ADR | 标题 | 状态 |
+|---|---|---|
+| [ADR-02](v0/v0.2-alpha.2/02-step-label-style.md) | StepLabel 样式扩展（textColor / opacity / font + label 继承顺序） | Accepted |
+| [ADR-01](v0/v0.2-alpha.2/01-scope-style-inheritance.md) | Scope 样式继承（扁平 every-X 默认 + 主色 color + resetStyle 屏障） | Accepted |
+
+---
+
+## v0.2.0-alpha.1（已完成）
+
+> 主题：`<Scope>` IR 容器 + 局部 transform + 跨 scope namespace / anchor / 相对定位解析
+
+| ADR | 标题 | 状态 |
+|---|---|---|
+| [ADR-04](v0/v0.2-alpha.1/04-relative-position-in-scope.md) | scope 下相对定位（Polar / At / Offset）语义 | Accepted |
+| [ADR-03](v0/v0.2-alpha.1/03-scope-id-bounding-box.md) | `scope.id` 注册 synthetic bounding-box 进父 namespace frame | Accepted |
+| [ADR-02](v0/v0.2-alpha.1/02-node-index-anchor-resolution.md) | nodeIndex / anchor 跨 scope 解析语义 | Accepted |
+| [ADR-01](v0/v0.2-alpha.1/01-scope-ir-and-compile.md) | `<Scope>` IR 容器 + compile 下沉到 GroupPrim | Accepted |
 
 ---
 
