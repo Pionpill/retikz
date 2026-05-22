@@ -2,10 +2,11 @@ import { describe, expect, it } from 'vitest';
 import { compileToScene } from '../../src/compile/compile';
 import type { IR } from '../../src/ir';
 import type { RectPrim, ScenePrimitive } from '../../src/primitive';
+import { flattenPrims } from '../helpers/flatten';
 
-/** 取所有 RectPrim（节点 shape=rectangle 默认走 RectPrim） */
+/** 取所有 RectPrim（节点 shape=rectangle 默认走 RectPrim；带文本节点包 group，flatten 穿透） */
 const rects = (prims: Array<ScenePrimitive>): Array<RectPrim> =>
-  prims.filter((p): p is RectPrim => p.type === 'rect');
+  flattenPrims(prims).filter((p): p is RectPrim => p.type === 'rect');
 
 /** 给定一组 IR Node + at，编译后取每个 rect 的几何中心 [cx, cy] */
 const centers = (ir: IR): Array<[number, number]> =>

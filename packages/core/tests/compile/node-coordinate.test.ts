@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { compileToScene } from '../../src/compile/compile';
 import type { IR } from '../../src/ir';
 import { line, move } from '../helpers/path-command-factory';
+import { flattenPrims } from '../helpers/flatten';
 
 describe('Coordinate placeholder', () => {
   it('coordinate 自身不发任何 primitive', () => {
@@ -68,7 +69,7 @@ describe('Coordinate placeholder', () => {
       ],
     };
     const scene = compileToScene(ir);
-    const rect = scene.primitives.find(p => p.type === 'rect');
+    const rect = flattenPrims(scene.primitives).find(p => p.type === 'rect');
     expect(rect).toBeDefined();
     if (rect?.type === 'rect') {
       // A 中心 = origin + (4, 0) = (9, 5)

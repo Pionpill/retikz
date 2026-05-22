@@ -1,7 +1,7 @@
 import type { Position } from '../geometry/point';
 import type { Rect, RectAnchor } from '../geometry/rect';
 import type { AtDirection, IRLabelDefault, IRLineSpec, IRNode, IRNodeLabel } from '../ir';
-import type { ScenePrimitive, TextLine, Transform } from '../primitive';
+import type { GroupPrim, ScenePrimitive, TextLine, Transform } from '../primitive';
 import { BUILTIN_SHAPES } from '../shapes';
 import type { ShapeDefinition, ShapeStyle } from '../shapes';
 import type { NameStack } from './name-stack';
@@ -434,19 +434,20 @@ export const emitNodePrimitives = (
       });
     }
   }
-  if (layout.rotateDeg === 0) return inner;
-  return [
-    {
-      type: 'group',
-      transforms: [
-        {
-          kind: 'rotate',
-          degrees: round(layout.rotateDeg),
-          cx: round(layout.rect.x),
-          cy: round(layout.rect.y),
-        },
-      ],
-      children: inner,
-    },
-  ];
+  // 带文本（layout.lines 非空）或有旋转的 Node 包进单层 GroupPrim：给"语义化节点"一个稳定 DOM /
+  // stacking 单位边界；纯几何装饰 Node 维持平铺、零额外 DOM 层。无旋转时 group 不带 transforms。
+  const needsGroup = layout.rotateDeg !== 0 || layout.lines !== undefined;
+  if (!needsGroup) return inner;
+  const group: GroupPrim = { type: 'group', children: inner };
+  if (layout.rotateDeg !== 0) {
+    group.transforms = [
+      {
+        kind: 'rotate',
+        degrees: round(layout.rotateDeg),
+        cx: round(layout.rect.x),
+        cy: round(layout.rect.y),
+      },
+    ];
+  }
+  return [group];
 };

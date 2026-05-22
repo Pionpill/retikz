@@ -6,9 +6,10 @@ import { describe, expect, it } from 'vitest';
 import { compileToScene } from '../../src/compile/compile';
 import { type IR, OffsetPositionSchema, PolarPositionSchema, TargetSchema } from '../../src/ir';
 import type { PathPrim, RectPrim, ScenePrimitive } from '../../src/primitive';
+import { flattenPrims } from '../helpers/flatten';
 
 const rects = (prims: Array<ScenePrimitive>): Array<RectPrim> =>
-  prims.filter((p): p is RectPrim => p.type === 'rect');
+  flattenPrims(prims).filter((p): p is RectPrim => p.type === 'rect');
 const rectCenter = (r: RectPrim): [number, number] => [
   r.x + r.width / 2,
   r.y + r.height / 2,

@@ -273,11 +273,12 @@ describe('GroupPrim.transforms：结构化形态约束', () => {
     }
   });
 
-  it('未 rotate 节点不外裹 group（transforms 缺省语义不浪费一层）', () => {
+  it('无文本无 rotate 节点不外裹 group（transforms 缺省语义不浪费一层）', () => {
+    // 纯几何节点（无 text、无 rotate）维持平铺；带文本节点会包 group，故此处用无文本节点隔离 rotate 判定
     const ir: IR = {
       version: 1,
       type: 'scene',
-      children: [{ type: 'node', id: 'A', position: [0, 0], text: 'A' }],
+      children: [{ type: 'node', id: 'A', position: [0, 0] }],
     };
     const scene = compileToScene(ir);
     expect(scene.primitives.find(p => p.type === 'group')).toBeUndefined();

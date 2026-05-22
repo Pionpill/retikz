@@ -6,13 +6,14 @@ import {
   OffsetPositionSchema,
 } from '../../src/ir';
 import type { EllipsePrim, RectPrim, ScenePrimitive } from '../../src/primitive';
+import { flattenPrims } from '../helpers/flatten';
 
-/** 取所有 RectPrim（默认 rectangle 节点） */
+/** 取所有 RectPrim（默认 rectangle 节点；带文本节点包 group，flatten 穿透） */
 const rects = (prims: Array<ScenePrimitive>): Array<RectPrim> =>
-  prims.filter((p): p is RectPrim => p.type === 'rect');
+  flattenPrims(prims).filter((p): p is RectPrim => p.type === 'rect');
 
 const ellipses = (prims: Array<ScenePrimitive>): Array<EllipsePrim> =>
-  prims.filter((p): p is EllipsePrim => p.type === 'ellipse');
+  flattenPrims(prims).filter((p): p is EllipsePrim => p.type === 'ellipse');
 
 /** rect 中心点 */
 const rectCenter = (r: RectPrim): [number, number] => [

@@ -5,6 +5,7 @@
 import { describe, expect, it } from 'vitest';
 import { compileToScene } from '../../src/compile/compile';
 import type { CompileWarning, GroupPrim, IR, ScenePrimitive, Transform } from '../../src';
+import { flattenPrims } from '../helpers/flatten';
 
 const scene = (children: IR['children']): IR => ({
   version: 1,
@@ -302,7 +303,7 @@ describe('scope GroupPrim emit 形态', () => {
     const compiled = compileToScene(ir);
     const groups = compiled.primitives.filter(p => p.type === 'group');
     expect(groups).toHaveLength(1);
-    const rects = groups[0].children.filter(c => c.type === 'rect');
+    const rects = flattenPrims(groups[0].children).filter(c => c.type === 'rect');
     expect(rects.length).toBeGreaterThanOrEqual(2);
   });
 
@@ -358,7 +359,7 @@ describe('scope GroupPrim emit 形态', () => {
     const compiled = compileToScene(ir);
     const group = findTopScopeGroup(compiled.primitives);
     if (group?.type === 'group') {
-      const rect = group.children.find(c => c.type === 'rect');
+      const rect = flattenPrims(group.children).find(c => c.type === 'rect');
       expect(rect).toBeDefined();
       if (rect?.type === 'rect') {
         // node 中心 = 局部 0,0；rect.x = 左上角 = -halfW < 0
@@ -526,11 +527,12 @@ describe('scope empty / prune 行为', () => {
   it('空 scope（无 children / 无 transforms / 无 id）不 emit GroupPrim', () => {
     const ir = scene([
       { type: 'scope', children: [] },
-      { type: 'node', id: 'A', position: [0, 0], text: 'A' },
+      // 纯几何节点（无文本、无 rotate）不外裹 group——隔离出"空 scope 是否产 group"的判定
+      { type: 'node', id: 'A', position: [0, 0] },
     ]);
     const compiled = compileToScene(ir);
     const groups = compiled.primitives.filter(p => p.type === 'group');
-    // 空 scope 不产 group；node 自身只有 rotate 才会产 group（此处 rotate=0），所以总数 = 0
+    // 空 scope 不产 group；纯几何 node 平铺不产 group，所以总数 = 0
     expect(groups).toHaveLength(0);
   });
 

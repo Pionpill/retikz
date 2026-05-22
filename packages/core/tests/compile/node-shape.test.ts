@@ -3,12 +3,13 @@ import { compileToScene } from '../../src/compile/compile';
 import type { IR } from '../../src/ir';
 import type { ScenePrimitive } from '../../src/primitive';
 import { line, move } from '../helpers/path-command-factory';
+import { flattenPrims } from '../helpers/flatten';
 
 const findByType = <T extends ScenePrimitive['type']>(
   prims: Array<ScenePrimitive>,
   type: T,
 ): Extract<ScenePrimitive, { type: T }> | undefined =>
-  prims.find((p): p is Extract<ScenePrimitive, { type: T }> => p.type === type);
+  flattenPrims(prims).find((p): p is Extract<ScenePrimitive, { type: T }> => p.type === type);
 
 describe("Node shape multimorphism", () => {
   it("默认 shape = rectangle，emit RectPrim", () => {

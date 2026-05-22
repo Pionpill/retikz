@@ -6,12 +6,13 @@ import type { ShapeDefinition } from '../../src/shapes';
 import { NodeSchema } from '../../src/ir';
 import type { IR } from '../../src/ir';
 import type { ScenePrimitive } from '../../src/primitive';
+import { flattenPrims } from '../helpers/flatten';
 
 const findByType = <T extends ScenePrimitive['type']>(
   prims: Array<ScenePrimitive>,
   type: T,
 ): Extract<ScenePrimitive, { type: T }> | undefined =>
-  prims.find((p): p is Extract<ScenePrimitive, { type: T }> => p.type === type);
+  flattenPrims(prims).find((p): p is Extract<ScenePrimitive, { type: T }> => p.type === type);
 
 /** 径向自定义 shape（外接圆 + 投影 boundaryPoint + 仅 center anchor + ellipse emit） */
 const radialShape = (): ShapeDefinition => ({

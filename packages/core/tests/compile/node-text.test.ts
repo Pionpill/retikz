@@ -2,9 +2,10 @@ import { describe, expect, it } from 'vitest';
 import { compileToScene } from '../../src/compile/compile';
 import type { IR } from '../../src/ir';
 import type { ScenePrimitive, TextPrim } from '../../src/primitive';
+import { flattenPrims } from '../helpers/flatten';
 
 const findText = (prims: Array<ScenePrimitive>): TextPrim | undefined =>
-  prims.find((p): p is TextPrim => p.type === 'text');
+  flattenPrims(prims).find((p): p is TextPrim => p.type === 'text');
 
 describe('Node multi-line text', () => {
   it("text: 'Hello' 与 text: ['Hello'] 编译产出相同 lines", () => {

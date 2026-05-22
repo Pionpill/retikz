@@ -6,6 +6,7 @@
 import { describe, expect, it } from 'vitest';
 import { compileToScene } from '../../src/compile/compile';
 import type { IR, ScenePrimitive } from '../../src';
+import { flattenPrims } from '../helpers/flatten';
 
 const scene = (children: IR['children']): IR => ({
   version: 1,
@@ -522,7 +523,7 @@ describe('跨 scope anchor 交互场景', () => {
     const group = compiled.primitives.find(p => p.type === 'group');
     expect(group).toBeDefined();
     expect(group!.transforms).toEqual([{ kind: 'translate', x: 120, y: 0 }]);
-    const innerRect = group!.children.find(p => p.type === 'rect');
+    const innerRect = flattenPrims(group!.children).find(p => p.type === 'rect');
     expect(innerRect).toBeDefined();
     // 局部坐标 rect 左上角 = 10 - halfW < 10；x 应接近 10 - halfW，而不是 130 - halfW
     expect(innerRect!.x).toBeLessThan(40);
