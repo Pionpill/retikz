@@ -387,4 +387,4 @@ Scope 是 v0.2 起的 IR Kernel 容器，对应 TikZ `\begin{scope}`：分组 + 
 4. **scope 下 relative position 在当前 scope 局部度量**（最易踩）：referent 坐标取全局，但 polar / at / offset / `{relative:[dx,dy]}` 的 relative 部分**在当前 scope 局部坐标系**度量，末端 apply 当前 scope transform chain 投回全局。即 `<Scope transforms={[{kind:'rotate', degrees:90}]}>` 内的 `position={{of:'A', direction:'right', distance:50}}` 视觉上是 A 下方 50（局部 right 经 rotate 90 投影），不是 A 右 50
 5. **何时该用**：①需要给一组节点统一加局部 transform 时；②需要用 `scope.id` 把一组节点当作整体在外层引用时。**否则不要无谓嵌套** Scope——单纯为了"逻辑分组"用 `<Scope>` 会引入命名空间陷阱但没换来视觉差异
 
-`scope` props 当前只接受 `id` / `transforms`；样式继承（`nodeDefault` / `pathDefault` / Scope 直接挂 Node 样式子集）在 v0.2-alpha.2 才落地，本 alpha 不要往 Scope 上写 `stroke` / `fill` 等样式属性（schema 会拒）。
+`scope` 自 v0.2-alpha.2 起兼作样式默认挂点：级联 graphic state（主色 `color` + `stroke` / `fill` / `strokeWidth` / `opacity` / `fillOpacity` / `drawOpacity`）+ 四类默认（`nodeDefault` / `pathDefault` / `labelDefault` / `arrowDefault`，按元素类型分发、扁平独立）+ `resetStyle` 继承屏障；主色 `color` 同时上 Node / Path（stroke / fill / 文字 / 箭头 / 标注未单设则随它，**跟主色不跟 stroke**）。解析就近优先（内层压外层、同层分类默认压级联），opacity 嵌套替换不复合。详见 v0.2-alpha.2 ADRs（`notes/adr/v0/v0.2-alpha.2/`）。
