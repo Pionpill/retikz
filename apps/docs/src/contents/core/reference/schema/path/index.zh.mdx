@@ -11,6 +11,7 @@ description: 笔画外壳、step 动作序列与 step 目标点
 
 <ZodSchema name="PathSchema" description="路径图元：一组按顺序执行的 step 组成一条可描边、可填充、可带箭头的笔画。" descriptions={{
   type: '判别字段，标记此子节点为 path',
+  color: '主色（TikZ color=）；stroke / 箭头 / step label 未单设则随它（跟主色不跟 stroke）',
   stroke: '描边颜色，任意 CSS color，默认 currentColor',
   strokeWidth: '描边宽度（用户单位），默认 1',
   dashPattern: 'dash/gap 长度序列（如 [4, 2]），省略 = 实线',
@@ -161,6 +162,13 @@ description: 笔画外壳、step 动作序列与 step 目标点
   text: '标签文字内容（单行；多行需 \\n）',
   position: '沿段归一化位置：7 个 keyword 或 0..1 数字；默认 midway',
   side: '相对段方向的偏移：above / below / left / right 沿法线偏移；sloped 沿切线旋转',
+  textColor: '标签文字色；缺省回退 scope labelDefault → 宿主 path 主色 color → currentColor（跟主色不跟 stroke）',
+  opacity: '标签独立透明度 0..1；与所属 path opacity 相乘（跨 scope 不复合）',
+  font: '标签字体覆盖（family / size / weight / style 均可选）；逐字段回退 labelDefault → 渲染端默认',
+  'font.family': 'CSS font-family 字符串，如 "serif" / "monospace"',
+  'font.size': '字号（用户单位）；未填走 labelDefault → 渲染端默认',
+  'font.weight': 'CSS font-weight：keyword normal/bold 或数字 100..900',
+  'font.style': 'CSS font-style：normal / italic / oblique',
 }} />
 
 <span id="controlpoint"></span>

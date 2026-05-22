@@ -196,6 +196,7 @@ Most nodes only need `padding={N}`. Use `innerXSep` / `innerYSep` when horizonta
 | `align` | `'left' \| 'center' \| 'right'` | `'center'` | Horizontal alignment of lines within the multi-line text block |
 | `lineHeight` | `number` | `font.size × 1.2` | Line height of the multi-line block (user units) |
 | `rotate` | `number` | `0` | Rotation around center, degrees, positive = clockwise |
+| `color` | `string` | — | Master color (TikZ `color=`); `stroke` / `fill` / `textColor` default to it unless individually set, and it cascades to inner text and edge labels |
 | `fill` | `string` | — | Background color (any CSS color) |
 | `stroke` | `string` | `currentColor` | Border color |
 | `strokeWidth` | `number` | `1` | Border width (user units) |

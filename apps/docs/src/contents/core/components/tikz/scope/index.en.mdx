@@ -162,6 +162,38 @@ A duplicate id in the same frame triggers a `DUPLICATE_NODE_ID` warning and the 
 
 Trigger conditions / cross-frame behavior / v0.1 comparison are in § How it works §「Duplicate id and conflict handling」.
 
+### Style inheritance
+
+A scope doubles as a style-default anchor, exposing three style surfaces to its children: a **master color `color`** plus shared sub-fields that cascade to every element; **four typed defaults** `nodeDefault` / `pathDefault` / `labelDefault` / `arrowDefault` dispatched by element type, flat and independent; and **`resetStyle`** to cut outer inheritance.
+
+#### Master color cascade
+
+`<Scope color>` cascades the current color to every inner element — node border / text, path stroke / arrow / edge label all default to it; individual fields (`stroke` / `fill` / `textColor`) override the master when set explicitly:
+
+<ComponentPreview name="scope-style-cascade" size="md" />
+
+The master color also tints node `fill`; the anchor nodes above set `fill="white"` to cut that fill so their text stays readable. What follows the color is the **master `color`**, not `stroke` — `<Path color>` colors the label / arrow too, while `<Path stroke>` only paints the line and leaves the label unchanged.
+
+#### Typed defaults
+
+`nodeDefault` / `pathDefault` / `labelDefault` / `arrowDefault` each attach defaults to one element type, flat and independent. `nodeDefault` carries node-only fields like shape / spacing (a bare `color` can't reach `shape` — use `nodeDefault`); arrows go through the separate `arrowDefault`, so `pathDefault` excludes them:
+
+<ComponentPreview name="scope-style-typed-defaults" size="md" />
+
+#### resetStyle inheritance barrier
+
+`resetStyle` cuts the outer scope's inheritance (master-color cascade + typed defaults) back to the built-in baseline; the scope's own values and inner scopes still apply. `true` cuts all; pass a channel array (`['node' | 'path' | 'label' | 'arrow']`) to cut per type:
+
+<ComponentPreview name="scope-style-reset" size="md" />
+
+`resetStyle` only cuts the scope inheritance, **not the structural relation between an element and its host** — labels / arrows still follow their owning path / node's resolved color: `resetStyle={['label']}` only ignores the outer `labelDefault`, the label still follows its line. Priority chain / master-color expansion / opacity-does-not-compound details are in § How it works §「Style inheritance resolution」.
+
+<Comparison target="tikz" title="Style inheritance mapping">
+
+The master `color` maps to TikZ `color=` (sets the current color; draw / fill / text follow); `nodeDefault` / `pathDefault` / `labelDefault` / `arrowDefault` map to `every node` / `every path` etc. `.style`. Difference: retikz nesting is **per-field merge** (≈ TikZ `.append style`), not a literal `.style=` whole replacement.
+
+</Comparison>
+
 ## How it works
 
 <ComponentAlert
@@ -266,6 +298,24 @@ The `transforms` array is applied in order — 0-th first (innermost), matching 
 
 External nodeIndex sees node layouts already in **global coordinates** (compile has projected through the chain); path primitives inside a scope go to the top-level `primitives` directly (not into the GroupPrim, to avoid double application of the transform).
 
+### Style inheritance resolution
+
+Compile keeps a style frame stack, pushing one frame per scope, and resolves each element's final style **inside-out, per field**. Priority chain (per field, nearest wins):
+
+```
+element field > element color > typed-default field > typed-default color > scope cascade field > scope color > built-in
+```
+
+Inner overrides outer; within one frame the typed default overrides the cascade.
+
+| Mechanism | Behavior |
+|---|---|
+| **Master-color expansion** | Within each style source, a sub-color (stroke / fill / textColor, arrow color) not set explicitly takes that source's `color` — same-source fields override the master |
+| **Color cascade** | A container's resolved color flows down as the child's color default: node.color → text / edge label; path.color → stroke / arrow / step label |
+| **Missing vs explicit** | Decided by presence (not truthiness): missing defers outward; explicit `none` / `0` / `false` cuts at this layer |
+| **opacity replaces, not compounds** | Nested scope opacity replaces (0.5 ⊃ 0.5 → 0.5 each, not 0.25), matching TikZ default; only label × element opacity multiplies within an element |
+| **resetStyle keeps the host axis** | Only the scope inheritance axis is cut; labels / arrows still follow the host path / node resolved color, never orphaned |
+
 ## API Reference
 
 | Prop | Type | Default | Description |
@@ -274,6 +324,18 @@ External nodeIndex sees node layouts already in **global coordinates** (compile 
 | `children` | `ReactNode` | — | Scope children: `<Node>` / `<Path>` / `<Coordinate>` / nested `<Scope>` |
 | `id` | `string` | — | Optional scope reference id; when set, the **axis-aligned global bounding box** of all child layouts is registered as a synthetic rectangle layout into the **parent frame**; external code can reference it as `'X'` / `'X.<anchor>'` / `'X.<deg>'`; details in § How it works §「scope.id synthetic bbox」 |
 | `localNamespace` | `boolean` | `false` | Whether to create a local namespace: `true` pushes a child frame and isolates child ids from the outside; details in § How it works §「Namespace stack and lookup」 |
+| `color` | `string` | — | Cascading master color; inner stroke / fill / text / arrow / label default to it |
+| `stroke` | `string` | — | Cascading default stroke color (shared sub-field) |
+| `fill` | `string` | — | Cascading default fill color |
+| `strokeWidth` | `number` | — | Cascading default stroke width |
+| `opacity` | `number` | — | Cascading default whole-element opacity 0–1 (replaces, not compounds) |
+| `fillOpacity` | `number` | — | Cascading default fill opacity 0–1 |
+| `drawOpacity` | `number` | — | Cascading default stroke opacity 0–1 |
+| `nodeDefault` | `object` | — | Node default style (shape / spacing / color), applied to every node in the scope |
+| `pathDefault` | `object` | — | Path default style (excludes arrows — see `arrowDefault`) |
+| `labelDefault` | `object` | — | Label default style (node label + step label) |
+| `arrowDefault` | `object` | — | Arrow default style (shape / scale / color) |
+| `resetStyle` | `boolean \| Array` | `false` | Inheritance barrier: cut outer channels; details in § How it works §「Style inheritance resolution」 |
 
 ## Related
 

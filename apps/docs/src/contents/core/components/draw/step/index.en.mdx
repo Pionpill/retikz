@@ -110,10 +110,21 @@ Attach a `label` to a `<Step>` to drop a single line of text near the segment's 
 - `text`: required, single-line label content
 - `position`: one of seven keywords `'at-start' | 'very-near-start' | 'near-start' | 'midway' | 'near-end' | 'very-near-end' | 'at-end'`, or a numeric t in `[0, 1]` for any fine position; default `'midway'` (t=0.5)
 - `side`: `'above'` / `'below'` / `'left'` / `'right'` / `'sloped'`, default `'above'`; `'sloped'` rotates the label along the tangent so it sits on the line
+- `textColor`: label text color; falls back to scope `labelDefault` → the owning path's master `color` → currentColor (follows the master color, not stroke)
+- `opacity`: label-only opacity 0..1; multiplied with the owning path opacity (element-internal axis; does not compound across scopes)
+- `font`: label font overrides (family / size / weight / style); per-field fallback to `labelDefault` → renderer default
 
 Two equivalent forms — the prop form `<Step label={{...}} />`, or the sugar form `<Step><EdgeLabel>...</EdgeLabel></Step>` (needs `import { EdgeLabel } from '@retikz/react'`); **the prop wins when both are set**. `'move'` and `'cycle'` cannot carry a label — they don't draw a segment, so any label on them is silently dropped:
 
 <ComponentPreview name="step-label" />
+
+#### Label color and font
+
+An edge label's color follows the owning path's **master `color`** — with `<Path color>` the label is auto-colored to match; setting only `stroke` (no `color`) does not, so the label keeps its default color. Use `textColor` to override explicitly, and `font` / `opacity` for smaller / faded secondary labels:
+
+<ComponentPreview name="step-label-color" size="md" />
+
+A scope `labelDefault` gives a whole group of labels a shared default (see [Scope style inheritance](/core/components/tikz/scope)); inheritance order: label explicit > `labelDefault` > host path master color > currentColor.
 
 #### label.position: 7 keywords + arbitrary numeric t
 
@@ -235,7 +246,7 @@ Full ellipses also place labels by angle parameter; this is not equal spacing by
 | `radius` | `number` | — | Required for `kind="arc"` / `'circlePath'`: radius of the circle / arc |
 | `radiusX` | `number` | — | Required for `kind="ellipsePath"`: x-axis radius |
 | `radiusY` | `number` | — | Required for `kind="ellipsePath"`: y-axis radius |
-| `label` | `IRStepLabel` | — | Edge label (works on every kind except `'move'` / `'cycle'`): `{ text, position?, side? }`; equivalent sugar form `<Step><EdgeLabel>…</EdgeLabel></Step>`, prop wins on conflict |
+| `label` | `IRStepLabel` | — | Edge label (works on every kind except `'move'` / `'cycle'`): `{ text, position?, side?, textColor?, opacity?, font? }`; equivalent sugar form `<Step><EdgeLabel>…</EdgeLabel></Step>`, prop wins on conflict |
 
 ### Ten kinds
 
@@ -272,6 +283,9 @@ Only meaningful when `kind="step"`. Given cursor `(px, py)` and target `(tx, ty)
 | `text` | `string` | — | Required label text (single line) |
 | `position` | one of 7 keywords or `number` (0..1) | `'midway'` | Normalized position t along the segment — keywords are sugar for t (at-start=0 / very-near-start=0.125 / near-start=0.25 / midway=0.5 / near-end=0.75 / very-near-end=0.875 / at-end=1); values outside `[0, 1]` are rejected by the schema |
 | `side` | `'above' \| 'below' \| 'left' \| 'right' \| 'sloped'` | `'above'` | Anchor + offset direction; `above` / `below` shift along y, `left` / `right` along x; `sloped` keeps the anchor and rotates the label along the tangent |
+| `textColor` | `string` | — | Label text color; falls back to scope `labelDefault` → host path master `color` → currentColor (follows the master color, not stroke) |
+| `opacity` | `number` | — | Label-only opacity 0..1; multiplied with the owning path opacity (does not compound across scopes) |
+| `font` | `object` | — | Label font overrides (family / size / weight / style); per-field fallback to `labelDefault` → renderer default |
 
 The geometric meaning of t per step kind is in the "[Geometric meaning of t per step kind](#geometric-meaning-of-t-per-step-kind)" table above. In short: line uses normalized arc length; fold splits the t interval evenly by polyline leg count (the corner is always at t=0.5); curve / cubic / bend use the Bezier parameter t (**not** arc length — t=0.5 is usually not the visual midpoint); arc uses angle parametrization; circlePath / ellipsePath traverse the full curve starting at angle 0 (+x), CCW.
 

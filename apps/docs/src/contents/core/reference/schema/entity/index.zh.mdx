@@ -20,6 +20,7 @@ description: 在 scene 中被命名的成员 —— Node 与 Coordinate
   text: '节点内文本：纯字符串或多行 LineSpec 数组',
   align: '多行文本块内对齐，默认 `center`',
   lineHeight: '行高（用户单位）；未填时取 `font.size × 1.2`',
+  color: '主色（TikZ color=）；stroke / fill / textColor 未单设则随它，并级联到内部文字与边 label',
   fill: '形状背景色，任意 CSS color',
   fillOpacity: '填充不透明度 0..1，只影响形状背景',
   stroke: '形状边框色，任意 CSS color，默认 currentColor',

@@ -110,10 +110,21 @@ import { Path, Step } from '@retikz/react';
 - `text`：必填，标签文字（单行）
 - `position`：`'at-start' | 'very-near-start' | 'near-start' | 'midway' | 'near-end' | 'very-near-end' | 'at-end'` 七个 keyword，或 0..1 的数值 t（任意精细位置），缺省 `'midway'`（t=0.5）
 - `side`：`'above'` / `'below'` / `'left'` / `'right'` / `'sloped'`，缺省 `'above'`；`'sloped'` 让标签沿段切线方向旋转贴线
+- `textColor`：标签文字色；缺省按 **scope `labelDefault` → 宿主 path 主色 `color` → currentColor** 回退（跟主色不跟 stroke）
+- `opacity`：标签独立透明度 0..1；与所属 path 的 opacity 相乘（元素内轴；跨 scope 不复合）
+- `font`：标签字体覆盖（family / size / weight / style），逐字段回退 `labelDefault` → 渲染端默认
 
 两种等价写法——prop 形态 `<Step label={{...}} />`，或 sugar 形态 `<Step><EdgeLabel>...</EdgeLabel></Step>`（需 `import { EdgeLabel } from '@retikz/react'`）；**两者并存时 prop 优先**。`'move'` 与 `'cycle'` 不挂 label——前者不画线、后者是闭合标记，挂上去会被静默忽略：
 
 <ComponentPreview name="step-label" />
+
+#### 标签颜色与字体
+
+边标注颜色跟随宿主 path 的**主色 `color`**——`<Path color>` 时标注自动同色；只设 `stroke`（不设 `color`）标注不跟，保持默认色。也可用 `textColor` 显式覆盖，`font` / `opacity` 做小一号 / 淡化的辅助标注：
+
+<ComponentPreview name="step-label-color" size="md" />
+
+scope `labelDefault` 给整组标注统一默认（见 [Scope 样式继承](/core/components/tikz/scope)）；继承顺序：label 显式 > `labelDefault` > 宿主 path 主色 > currentColor。
 
 #### label.position：7 个 keyword + 任意数值 t
 
@@ -235,7 +246,7 @@ t 是沿整段的归一化参数，不同 kind 有不同参数化方式：
 | `radius` | `number` | — | `kind="arc"` / `'circlePath'` 必填：圆 / 弧的半径 |
 | `radiusX` | `number` | — | 仅 `kind="ellipsePath"` 必填：椭圆 x 轴半径 |
 | `radiusY` | `number` | — | 仅 `kind="ellipsePath"` 必填：椭圆 y 轴半径 |
-| `label` | `IRStepLabel` | — | 边标注（`'move'` / `'cycle'` 外八种 kind 通用）：`{ text, position?, side? }`；等价 sugar 写法 `<Step><EdgeLabel>…</EdgeLabel></Step>`，prop 优先 |
+| `label` | `IRStepLabel` | — | 边标注（`'move'` / `'cycle'` 外八种 kind 通用）：`{ text, position?, side?, textColor?, opacity?, font? }`；等价 sugar 写法 `<Step><EdgeLabel>…</EdgeLabel></Step>`，prop 优先 |
 
 ### kind 的十种取值
 
@@ -272,6 +283,9 @@ t 是沿整段的归一化参数，不同 kind 有不同参数化方式：
 | `text` | `string` | — | 必填，标签文字（单行） |
 | `position` | 7 keyword 之一 或 `number`（0..1） | `'midway'` | 段上归一化位置 t——keyword 是 t 的语义糖（at-start=0 / very-near-start=0.125 / near-start=0.25 / midway=0.5 / near-end=0.75 / very-near-end=0.875 / at-end=1）；超出 [0, 1] 由 schema 拒绝 |
 | `side` | `'above' \| 'below' \| 'left' \| 'right' \| 'sloped'` | `'above'` | 锚点 + 偏移方向；`above` / `below` 偏 y 轴、`left` / `right` 偏 x 轴；`sloped` 不偏移、按段切线方向旋转 |
+| `textColor` | `string` | — | 标签文字色；缺省回退 scope `labelDefault` → 宿主 path 主色 `color` → currentColor（跟主色不跟 stroke） |
+| `opacity` | `number` | — | 标签独立透明度 0..1；与所属 path opacity 相乘（跨 scope 不复合） |
+| `font` | `object` | — | 标签字体覆盖（family / size / weight / style）；逐字段回退 `labelDefault` → 渲染端默认 |
 
 不同 step kind 上 t 的几何解释见上方 "[t 在每种 step kind 上的几何含义](#t-在每种-step-kind-上的几何含义)" 表。要点：line 按弧长归一化；fold 按折线段数均分 t 区间（拐角恒在 t=0.5）；curve / cubic / bend 用 Bezier 参数 t（**非弧长**——t=0.5 通常不是视觉中点）；arc 用角度参数化；circlePath / ellipsePath 沿整圆从 angle 0（+x）CCW 增长。
 
