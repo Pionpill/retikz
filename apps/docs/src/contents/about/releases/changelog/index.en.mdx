@@ -5,6 +5,30 @@ description: retikz release history grouped by MINOR version, newest first. Date
 
 <Update label="May 2026" tags={["@retikz/core", "@retikz/react"]}>
 
+## v0.2.0-alpha.2
+
+The second v0.2 alpha: upgrades `<Scope>` into a style-default anchor — master color `color` cascade + four typed defaults (`nodeDefault` / `pathDefault` / `labelDefault` / `arrowDefault`); StepLabel gains `textColor` / `opacity` / `font`, so a colored line can finally carry a matching-colored label.
+
+### `@retikz/core`
+
+- **Master color `color` (TikZ `color=`) on Scope / Node / Path**: sets the current color, so stroke / fill / text / arrows / labels default to it unless individually set; individual fields (`stroke` / `fill` / `textColor`) override the master. What follows is the master color, not `stroke` — `<Path color>` colors the label / arrow too, while `<Path stroke>` (line only) does not (matching TikZ `draw=`).
+- **Scope cascading graphic state**: `color` plus shared sub-fields (`stroke` / `fill` / `strokeWidth` / `opacity` / `fillOpacity` / `drawOpacity`) cascade to every element in the scope.
+- **Four typed default channels**: `nodeDefault` / `pathDefault` / `labelDefault` / `arrowDefault`, dispatched by element type, flat and independent; each is derived via `.omit()` from the corresponding element schema (single source of truth) with a top-level `.strict()` rejecting unknown / excluded keys.
+- **`resetStyle` inheritance barrier**: `boolean | ('node'|'path'|'label'|'arrow')[]`, cuts the outer scope inheritance axis back to the built-in baseline; it only cuts the scope axis, not the instance-host axis — labels / arrows still follow their owning path / node resolved color, never orphaned.
+- **StepLabel gains `textColor` / `opacity` / `font`**: edge-label color / opacity / font; inheritance order is label explicit > scope `labelDefault` > host path master color > currentColor; `opacity` multiplies with the owning path opacity (element-internal axis).
+- **Style resolution mechanism**: compile keeps a style frame stack and resolves each element inside-out, per field (nearest wins); same-source master-color expansion + color cascade to children; opacity replaces (does not compound) across nested scopes (TikZ default).
+
+### `@retikz/react`
+
+- **`<Scope>` gains 12 style props**: cascading graphic state (`color` / `stroke` / `fill` / `strokeWidth` / `opacity` / `fillOpacity` / `drawOpacity`) + four channels (`nodeDefault` / `pathDefault` / `labelDefault` / `arrowDefault`) + `resetStyle`, all optional.
+- **`<Node>` / `<Path>` gain master `color`**, `<Step label>` gains `textColor` / `opacity` / `font`, all optional, with IR ↔ JSX two-way passthrough.
+
+### Docs
+
+- **Scope style-inheritance section**: master-color cascade / four every-X channels / resetStyle barrier, plus the priority chain / master-color expansion / opacity-no-compound how-it-works, with 3 demos.
+- **StepLabel color and font**: matching-colored label example plus `textColor` / `opacity` / `font` field docs.
+- **Node / Path master color + Reference**: component API tables and the schema reference gain `color` / the new StepLabel fields.
+
 ## v0.2.0-alpha.1
 
 The first v0.2 alpha: introduces the IR-level `<Scope>` grouping container, carrying TikZ `\begin{scope}` "grouping + local transform" semantics. Style inheritance is deferred to alpha.2.
