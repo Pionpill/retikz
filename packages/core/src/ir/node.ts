@@ -113,6 +113,12 @@ export const NodeSchema = z
       .describe(
         'Line height in user units; falls back to `font.size × 1.2` when omitted.',
       ),
+    color: z
+      .string()
+      .optional()
+      .describe(
+        'Master color (TikZ `color=`). When set, stroke / fill / text default to it unless individually overridden, and it cascades to the inner text and edge labels. Individual fields (stroke / fill / textColor) always win over this within the same node.',
+      ),
     fill: z
       .string()
       .optional()

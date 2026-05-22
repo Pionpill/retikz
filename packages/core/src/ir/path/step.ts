@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { FontSchema } from '../font';
 import { PositionSchema } from '../position';
 import { TargetSchema } from './target';
 
@@ -34,6 +35,23 @@ export const StepLabelSchema = z
       .describe(
         'Side relative to segment direction. `above` / `below` / `left` / `right` offset along segment normal; `sloped` rotates label along the tangent (no normal offset). Default `above`.',
       ),
+    textColor: z
+      .string()
+      .optional()
+      .describe(
+        "Label text color; falls back to the scope labelDefault, then the owning path's resolved master color, then currentColor. To match a colored line set the path color (not stroke).",
+      ),
+    opacity: z
+      .number()
+      .min(0)
+      .max(1)
+      .optional()
+      .describe(
+        'Label-only opacity 0..1; multiplied with the owning path opacity (element-internal axis). Scope-level opacity does NOT compound.',
+      ),
+    font: FontSchema.optional().describe(
+      'Label font overrides (family / size / weight / style); missing fields inherit from the scope labelDefault, then the renderer default.',
+    ),
   })
   .describe(
     'Edge label spec attached to a drawn step; compiled to a TextPrim positioned along the segment.',

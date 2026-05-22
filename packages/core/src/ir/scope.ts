@@ -1,18 +1,109 @@
 import { z } from 'zod';
 import type { IRCoordinate } from './coordinate';
-import type { IRNode } from './node';
-import type { IRPath } from './path';
+import { FontSchema } from './font';
+import { type IRNode, NodeSchema } from './node';
+import { type IRPath, PathSchema } from './path';
+import { ArrowDetailSchema } from './path/arrow';
 import { type IRTransform, TransformSchema } from './transform';
+
+// ===========================================================================
+// every-X 四通道默认 schema —— 各从对应元素 schema `.omit()` 派生（单一真源，禁手抄）
+// 全字段 optional（继承自源 schema）、顶层 `.strict()` 严拒未知 / 被排除字段
+// ===========================================================================
+
+/**
+ * every node 默认样式 schema
+ * @description 从 NodeSchema 派生，排除实例专属字段（type / id / position / text / label）；
+ *   含形状 / 间距 / scale / rotate / color 等所有可作默认的 node 样式字段
+ */
+export const NodeDefaultSchema = NodeSchema.omit({
+  type: true,
+  id: true,
+  position: true,
+  text: true,
+  label: true,
+}).strict();
+
+/**
+ * every path 默认样式 schema
+ * @description 从 PathSchema 派生，排除 type / children / arrow / arrowDetail（arrow 走独立 arrowDefault 通道，免双入口）
+ */
+export const PathDefaultSchema = PathSchema.omit({
+  type: true,
+  children: true,
+  arrow: true,
+  arrowDetail: true,
+}).strict();
+
+/**
+ * every label 默认样式 schema（node label 与 step label 共享）
+ * @description 单通道双宿主：node-label 跟 node.color、step-label 跟 path.color；本 schema 只定义可继承的 label 样式字段
+ */
+export const LabelDefaultSchema = z
+  .object({
+    color: z
+      .string()
+      .optional()
+      .describe('Master color for labels in this scope; textColor falls back to it.'),
+    textColor: z
+      .string()
+      .optional()
+      .describe('Default text color for node labels and step labels in this scope.'),
+    opacity: z
+      .number()
+      .min(0)
+      .max(1)
+      .optional()
+      .describe('Default label opacity 0..1.'),
+    font: FontSchema.optional().describe(
+      'Default label font (family / size / weight / style); per-field fallback.',
+    ),
+  })
+  .strict()
+  .describe(
+    'Default style applied to every label (node label + step label) in this scope (TikZ `every label`). All fields optional; unknown keys are rejected.',
+  );
+
+/**
+ * every arrow 默认样式 schema
+ * @description 直接复用 ArrowDetailSchema（shape / scale / length / width / color / fill / opacity / lineWidth + start / end）
+ */
+export const ArrowDefaultSchema = ArrowDetailSchema;
+
+/** every node 默认样式（排除 type / id / position / text / label 的全部 node 样式字段） */
+export type IRNodeDefault = z.infer<typeof NodeDefaultSchema>;
+/** every path 默认样式（排除 type / children / arrow / arrowDetail） */
+export type IRPathDefault = z.infer<typeof PathDefaultSchema>;
+/** every label 默认样式（color / textColor / opacity / font） */
+export type IRLabelDefault = z.infer<typeof LabelDefaultSchema>;
+/** every arrow 默认样式（= ArrowDetail） */
+export type IRArrowDefault = z.infer<typeof ArrowDefaultSchema>;
+
+/** 样式继承通道标识——resetStyle 按通道切外层继承 */
+export type StyleChannel = 'node' | 'path' | 'label' | 'arrow';
 
 /**
  * Scope IR 类型——手写而非 z.infer 派生
- * @description ChildSchema 通过 z.lazy 延迟回灌，z.infer 推断 children 元素时拿不到精确的 IRNode | IRPath | IRCoordinate | IRScope union；手写让 children 类型显式表达递归 union
+ * @description ChildSchema 通过 z.lazy 延迟回灌，z.infer 推断 children 元素时拿不到精确的 IRNode | IRPath | IRCoordinate | IRScope union；手写让 children 类型显式表达递归 union。
+ *   alpha.2 起 Scope 兼作样式默认值挂点：级联 graphic state（color + 跨类共享分项）+ 四通道 every-X 默认 + resetStyle 继承屏障。
  */
 export type IRScope = {
   type: 'scope';
   id?: string;
   localNamespace?: boolean;
   transforms?: Array<IRTransform>;
+  color?: string;
+  stroke?: string;
+  fill?: string;
+  strokeWidth?: number;
+  opacity?: number;
+  fillOpacity?: number;
+  drawOpacity?: number;
+  nodeDefault?: IRNodeDefault;
+  pathDefault?: IRPathDefault;
+  labelDefault?: IRLabelDefault;
+  arrowDefault?: IRArrowDefault;
+  resetStyle?: boolean | Array<StyleChannel>;
   children: Array<IRNode | IRPath | IRCoordinate | IRScope>;
 };
 
@@ -30,9 +121,11 @@ export const __registerChildSchema = (schema: z.ZodTypeAny): void => {
 };
 
 /**
- * Scope schema：4 IRScope 字段
+ * Scope schema：容器 + 局部 transform + 样式默认挂点
  * @description 直接 `z.object` 让 ChildSchema discriminatedUnion 能识别 `type` 鉴别字段；
- * children 字段内部用 z.lazy 引用 ChildSchema 实现递归，避免直接 `z.lazy(() => z.object(...))` 让外层 union 拒识 type
+ * children 字段内部用 z.lazy 引用 ChildSchema 实现递归，避免直接 `z.lazy(() => z.object(...))` 让外层 union 拒识 type。
+ * alpha.2 加：① 级联 graphic state（color + stroke / fill / strokeWidth / opacity / fillOpacity / drawOpacity）；
+ * ② 四通道 every-X 默认（nodeDefault / pathDefault / labelDefault / arrowDefault）；③ resetStyle 继承屏障。
  */
 export const ScopeSchema = z
   .object({
@@ -58,6 +151,64 @@ export const ScopeSchema = z
       .describe(
         'Local transforms applied to all scope children; array order = application order (first element applied innermost, matching Scene `GroupPrim.transforms` / SVG transform list). Supports 6 variants; the 4 translate variants are lowered to Cartesian translate at compile time.',
       ),
+    color: z
+      .string()
+      .optional()
+      .describe(
+        'Cascading master color for all elements in this scope (TikZ scope `color=`). Stroke / fill / text of inner elements default to it unless individually overridden; cascades into edge labels and arrows.',
+      ),
+    stroke: z
+      .string()
+      .optional()
+      .describe(
+        'Cascading default stroke color for inner nodes and paths; overrides the cascading master color for the stroke channel.',
+      ),
+    fill: z
+      .string()
+      .optional()
+      .describe('Cascading default fill color for inner nodes and paths.'),
+    strokeWidth: z
+      .number()
+      .optional()
+      .describe('Cascading default stroke width (user units) for inner nodes and paths.'),
+    opacity: z
+      .number()
+      .min(0)
+      .max(1)
+      .optional()
+      .describe(
+        'Cascading default whole-element opacity 0..1. Replaces (does NOT compound across nested scopes — TikZ default).',
+      ),
+    fillOpacity: z
+      .number()
+      .min(0)
+      .max(1)
+      .optional()
+      .describe('Cascading default fill opacity 0..1 for inner nodes and paths.'),
+    drawOpacity: z
+      .number()
+      .min(0)
+      .max(1)
+      .optional()
+      .describe('Cascading default stroke opacity 0..1 (TikZ `draw opacity`) for inner nodes and paths.'),
+    nodeDefault: NodeDefaultSchema.optional().describe(
+      'Default style applied to every node in this scope (TikZ `every node`). Flat channel, independent from the other defaults.',
+    ),
+    pathDefault: PathDefaultSchema.optional().describe(
+      'Default style applied to every path in this scope (TikZ `every path`); arrows use the separate arrowDefault channel.',
+    ),
+    labelDefault: LabelDefaultSchema.optional().describe(
+      'Default style applied to every label (node label + step label) in this scope (TikZ `every label`).',
+    ),
+    arrowDefault: ArrowDefaultSchema.optional().describe(
+      'Default style applied to every arrow in this scope (TikZ `every arrow`).',
+    ),
+    resetStyle: z
+      .union([z.boolean(), z.array(z.enum(['node', 'path', 'label', 'arrow']))])
+      .optional()
+      .describe(
+        'Inheritance barrier: drop the outer scope cascade + every-X defaults for the listed channels (or all when true), falling back to the built-in baseline. Only cuts the scope-inheritance axis; labels / arrows still follow their host path / node resolved color (structural relation, not scope inheritance).',
+      ),
     children: z
       .array(
         z.lazy(() => {
@@ -74,5 +225,5 @@ export const ScopeSchema = z
       ),
   })
   .describe(
-    'Scope container: groups child IR elements and applies local transforms. Corresponds to TikZ `\\begin{scope}` (with optional `local bounding box=id` when id is set, and `name prefix`-like isolation when localNamespace is true).',
+    'Scope container: groups child IR elements, applies local transforms, and acts as a style-default anchor (cascading graphic state + every-X defaults + resetStyle barrier). Corresponds to TikZ `\\begin{scope}`.',
   );

@@ -7,6 +7,12 @@ export const PathSchema = z
     type: z
       .literal('path')
       .describe('Discriminator marking this child as a path'),
+    color: z
+      .string()
+      .optional()
+      .describe(
+        'Master color (TikZ `color=`). When set, the stroke, arrow tips, and step labels default to it unless individually overridden. Following the master color (not the stroke) is how a colored line shares its color with its labels and arrows — `stroke=` alone only paints the line.',
+      ),
     stroke: z
       .string()
       .optional()
