@@ -1,34 +1,44 @@
 ---
 title: Custom Shapes
-description: The Shape Registry — extend node shapes beyond the built-in four to registerable, third-party-injectable shapes; the IR still stores a string name, the definition is injected at compile time via CompileOptions.shapes.
+description: Register new node shapes through the Shape Registry; the IR still stores only the shape name, while drawing, boundary, and anchor logic is supplied at compile time through CompileOptions.shapes.
 ---
 
-The built-in `rectangle` / `circle` / `ellipse` / `diamond` are registry entries with no privilege. A third-party package (`@retikz/shapes-flow` / `-uml`, etc.) or host code can register new shapes without modifying core.
+The built-in `rectangle` / `circle` / `ellipse` / `diamond` shapes are registered through the same Shape Registry. In other words, built-in shapes and custom shapes use the same mechanism: give the shape a name, then provide how it wraps text, how its boundary is found, and how it is drawn.
+
+A third-party package (`@retikz/shapes-flow` / `-uml`, etc.) or host code can register new shapes the same way, without modifying core.
 
 > This is the reference layer. For everyday figures the built-in shapes are covered on [Node](/core/components/node/overview); reach here when you need a hexagon / cylinder / cloud.
 
 ## Core constraint: `shape` in the IR is always a string
 
-`node.shape` is a JSON-serializable string name (LLM / persistence / JSON Patch friendly). A `ShapeDefinition` holds functions, **never enters the IR**, and is injected at compile time via `CompileOptions.shapes`. Schema validation only checks for a non-empty string; unregistered names throw at **compile time** (listing available names), not at the schema layer.
+`node.shape` stores only a name, such as `'hexagon'`. That name is safe to keep in JSON, which makes it friendly to persistence, JSON Patch, and LLM-generated IR.
+
+The actual shape definition is called `ShapeDefinition`. It contains functions, so it **never enters the IR**. Instead, those functions are passed to retikz at compile time through `CompileOptions.shapes`. Schema validation only checks that `shape` is a non-empty string; if the name is not registered, the error is thrown during **compile**, with the available shape names listed.
 
 ## ShapeDefinition
 
-A shape owns only the four genuinely polymorphic concerns, all operating on the circumscribing `Rect`:
+A custom shape answers four questions. retikz already handles text measurement, style merging, rotation grouping, and final rendering; the shape author only describes the geometry and drawing behavior that is specific to that shape.
 
-| Method | Signature | Responsibility |
+Read the core types in the table like this:
+
+- `Rect` is “the outer rectangle occupied by this node”: it has center coordinates `x/y`, `width/height`, and optional `rotate`.
+- `Position` is a point coordinate, shaped as `[x, y]`.
+- `ScenePrimitive` is a low-level drawing primitive passed to the renderer, such as `path`, `rect`, or `ellipse`.
+
+| Method | Parameters and return value | Role |
 | --- | --- | --- |
-| `circumscribe` | `(innerHalfW, innerHalfH) => { halfWidth, halfHeight }` | Content half-axes (text + padding) → bounding-box half-axes |
-| `boundaryPoint` | `(rect, toward) => Position` | Center → toward ray ∩ boundary; used for path attachment and the `.30` numeric angle |
-| `anchor` | `(rect, name) => Position \| undefined` | Named anchor world coords; an unknown name returns `undefined` (caller throws Unknown anchor) |
-| `emit` | `(rect, style, round) => Iterable<ScenePrimitive>` | Visual primitives; returning an Iterable lets one shape emit several primitives (body + pins, etc.) |
+| `circumscribe`<br />`(innerHalfW, innerHalfH) => { halfWidth, halfHeight }` | `innerHalfW` / `innerHalfH`: half-width and half-height already occupied by text and padding.<br />`halfWidth` / `halfHeight`: half-width and half-height required by the outer shape. | Called during node layout. It answers “how large must the outer rectangle be to contain the content and padding”. A diamond usually expands it; a rectangle usually returns it unchanged. |
+| `boundaryPoint`<br />`(rect, toward) => Position` | `rect`: the node's outer rectangle.<br />`toward`: the target point seen from the node center.<br />Return value: the point where the ray from the center toward `toward` hits the shape boundary. | Called when a path attaches to a node boundary, and when numeric anchors such as `A.30` are resolved. It decides where the line should stop on the shape edge. |
+| `anchor`<br />`(rect, name) => Position \| undefined` | `rect`: the node's outer rectangle.<br />`name`: an anchor name such as `north`, `south east`, or `center`.<br />Return value: a coordinate for known anchors, or `undefined` for names this shape does not own. | Called when users write `A.north`, `A.center`, or a custom anchor name. Unknown anchors are reported by the compiler with the standard Unknown anchor error. |
+| `emit`<br />`(rect, style, round) => Iterable<ScenePrimitive>` | `rect`: the node's outer rectangle.<br />`style`: merged fill, stroke, opacity, and related style values.<br />`round`: a helper that keeps coordinate precision consistent.<br />Return value: one or more primitives to draw. | Called when compiling the visible node body. Simple shapes often return one path or rect; complex shapes can return several primitives, such as an outer frame plus two vertical bars. |
 
 <ComponentAlert
   type="warn"
-  title="Two coordinate conventions — the most common author mistake"
-  description="emit receives an axis-aligned rect (rotate = 0) — rotation is applied uniformly by the compiler's outer GroupPrim, so a shape only ever draws itself upright. But boundaryPoint / anchor receive a rotate-bearing rect — use the re-exported worldToLocal / localToWorld to map toward into local space first. The two coordinate systems differ; don't mix them."
+  title="Draw the upright shape; let the compiler rotate it"
+  description="emit always receives an unrotated rect: draw the shape around the center as if it were on ordinary graph paper. The node's real rotation is applied later by the compiler through an outer group. boundaryPoint / anchor are different because they answer connection points and anchors in world coordinates, so they receive a rect that includes rotation information; use worldToLocal for local geometry, then localToWorld to return world coordinates."
 />
 
-Numeric angles (`A.30`) work **for free** on any shape that implements `boundaryPoint` — the compiler computes the toward direction and calls `boundaryPoint`; it is not part of the shape interface.
+Numeric angles (`A.30`) do not need a separate hook. Once a shape implements `boundaryPoint`, the compiler converts the angle into a direction point and calls your `boundaryPoint`.
 
 ## Injection: CompileOptions.shapes
 
@@ -36,26 +46,36 @@ Numeric angles (`A.30`) work **for free** on any shape that implements `boundary
 import { compileToScene, type ShapeDefinition } from '@retikz/core';
 import { worldToLocal, localToWorld } from '@retikz/core';
 
-// a factory is just a plain function returning a ShapeDefinition
+// a factory is just a plain function: pass parameters in, return a ShapeDefinition
 const createPolygonShape = (sides: number): ShapeDefinition => ({
   circumscribe: (hw, hh) => {
     const r = Math.hypot(hw, hh);
     return { halfWidth: r, halfHeight: r };
   },
   boundaryPoint: (rect, toward) => {
-    /* polygon ray ∩ edge, using worldToLocal / localToWorld for rotate */
+    /* map toward to local coordinates first, then intersect the ray with polygon edges */
   },
   anchor: (rect, name) => (name === 'center' ? [rect.x, rect.y] : undefined),
   *emit(rect, style, round) {
-    yield { type: 'path', commands: [/* n vertices + close */], stroke: style.stroke ?? 'currentColor' };
+    yield {
+      type: 'path',
+      commands: [/* n vertices + close */],
+      fill: style.fill ?? 'transparent',
+      fillOpacity: style.fillOpacity,
+      stroke: style.stroke ?? 'currentColor',
+      strokeOpacity: style.strokeOpacity,
+      strokeWidth: style.strokeWidth ?? 1,
+      dashPattern: style.dashPattern,
+      opacity: style.opacity,
+    };
   },
 });
 
-// the IR only writes shape: 'hexagon'; the definition is injected via options
+// the IR only writes shape: 'hexagon'; options supply the concrete definition
 const scene = compileToScene(ir, { shapes: { hexagon: createPolygonShape(6) } });
 ```
 
-On the React side, pass `shapes` to `<TikZ>`:
+In React, pass the same `shapes` table to `<TikZ>`:
 
 ```tsx
 <TikZ shapes={{ hexagon: createPolygonShape(6) }}>
@@ -67,20 +87,38 @@ On the React side, pass `shapes` to `<TikZ>`:
 
 ### Polygon factory (single path)
 
-A factory like `createPolygonShape(n)` is just a plain function returning a `ShapeDefinition`. The example below injects a regular hexagon; the connector between the two nodes clips to its circumscribed boundary:
+A factory like `createPolygonShape(n)` is just a plain function returning a `ShapeDefinition`. The example below injects a regular hexagon; when the two nodes are connected, the path endpoints stop on the actual hexagon boundary instead of the node center:
 
 <ComponentPreview name="custom-shape" size="md" />
 
 ### Multiple primitives: a subroutine box
 
-`emit` returns an `Iterable<ScenePrimitive>`, so one shape can emit several primitives. The subroutine box below (outer frame + two vertical bars) emits 3 primitives; its geometry (circumscribe / boundaryPoint / anchor) reuses the built-in rectangle:
+`emit` can return several drawing primitives at once. The subroutine box below consists of an outer frame and two vertical bars, so it returns 3 primitives. Its outer outline is still a rectangle, so `circumscribe` / `boundaryPoint` / `anchor` can reuse the built-in rectangle:
 
 <ComponentPreview name="subroutine" size="sm" />
 
+### Semantic terminals: a diode
+
+Some shapes should not attach lines by intersecting a ray from the center with the visible outline. A circuit diode has only two meaningful terminals: a line coming from the left should attach to the left terminal, and a line coming from the right should attach to the right terminal, instead of landing on the triangle edge or the vertical bar.
+
+In this example, `boundaryPoint` checks whether `toward` is on the left or right in local coordinates, then returns the matching terminal. `anchor` also exposes `input` / `output` as semantic anchors:
+
+<ComponentPreview name="diode" size="sm" />
+
+## Implementation checklist
+
+When writing a third-party shape, check these points first:
+
+- `circumscribe` answers “how large must the outer rectangle be to contain text and padding”, not the raw visual path size.
+- `boundaryPoint` handles the case where `toward` is exactly the center; choosing a fixed default direction is common.
+- `boundaryPoint` and `anchor` use `worldToLocal` before local geometry when rotation is involved, then `localToWorld` when returning world coordinates.
+- `anchor` only handles names it owns; unknown names return `undefined` so the compiler can throw the standard error.
+- `emit` uses the provided `round` for coordinates and dimensions, and forwards relevant style fields where possible: `fillOpacity` / `strokeOpacity` / `dashPattern` / `opacity` / `roundedCorners`.
+
 ## Overriding built-ins and unknown names
 
-- **Same-name override**: `shapes: { rectangle: myRect }` overrides the built-in rectangle and emits `SHAPE_OVERRIDES_BUILTIN` via `onWarn` (same channel as every warning; a user-supplied `onWarn` receives it even in production).
-- **Unknown shape**: a `node.shape` not in the effective table → compile throws `Unknown shape '<name>'; registered shapes: <sorted list>`. There is no correct geometry to fall back to, so it fails hard.
+- **Same-name override**: if you write `shapes: { rectangle: myRect }`, the new definition replaces the built-in rectangle. Compile emits `SHAPE_OVERRIDES_BUILTIN` through `onWarn` to make the replacement visible.
+- **Unknown shape**: if `node.shape` names something that has not been registered, compile throws `Unknown shape '<name>'; registered shapes: <sorted list>`. retikz cannot safely fall back to another shape because it does not know the missing shape's boundary or anchors.
 
 ## Public helpers
 

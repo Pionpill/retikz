@@ -79,6 +79,7 @@ apps/docs/src/
 
 - 编辑文档时若 zh / en 已不同步：以 zh 重写 en
 - 翻译可在不损失语义前提下本地化（标题、列表数量、表格列保持一致）
+- 中文页标题默认**不要**写括号英文（如 `自定义形状（Custom Shapes）`、`例子（Examples）`、`形状定义（ShapeDefinition）`）。只有英文名本身是用户必须识别的契约时才保留，例如 schema / 类型 / API 名称：`NodeSchema`、`ShapeDefinition`、`CompileOptions.shapes`、`ScenePrimitive`。这类英文更适合放在正文首段或 API 表里解释，而不是塞进每个中文标题。
 - **代码与 zh.mdx 不一致**：停下来询问用户，不要自行选边——两边都过期的情况都见过
 - 新增 i18n key：先加 `zh.json`，再加 `en.json`，顺序固定
 

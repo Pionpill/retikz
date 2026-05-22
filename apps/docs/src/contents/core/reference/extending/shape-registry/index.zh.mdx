@@ -1,61 +1,81 @@
 ---
 title: 自定义形状
-description: 自定义形状（Shape Registry）——把节点形状从内置 4 种扩展为可注册、可第三方注入；IR 仍只写字符串名，定义经 CompileOptions.shapes 运行时注入。
+description: 通过 Shape Registry 注册新的节点形状；IR 里仍只保存形状名称，真正的绘制、边界和锚点逻辑在编译时通过 CompileOptions.shapes 提供。
 ---
 
-内置 `rectangle` / `circle` / `ellipse` / `diamond` 都是注册项，没有特权。第三方包（`@retikz/shapes-flow` / `-uml` 之类）或宿主代码可以注册新形状，不依赖修改 core。
+retikz 自带的 `rectangle` / `circle` / `ellipse` / `diamond` 也是通过 Shape Registry 注册出来的形状。也就是说，内置形状和你自己写的形状走同一套机制：给一个形状名，再提供它如何包住文字、如何计算边界、如何画出来。
+
+第三方包（例如 `@retikz/shapes-flow` / `-uml` 之类）或宿主代码可以用同样的方式注册新形状，不需要修改 core。
 
 > 这里是参考层。日常写图只用内置形状看 [节点](/core/components/node/overview) 即可；需要 hexagon / cylinder / cloud 这类形状再来这里。
 
 ## 核心约束：IR 里的形状名永远是字符串
 
-`node.shape` 是 JSON 可序列化的字符串名（LLM / 持久化 / JSON Patch 友好）。`ShapeDefinition` 含函数、**不进 IR**，走编译期 `CompileOptions.shapes` 注入。schema 只校验非空字符串；未注册名在 **compile 期** throw（列出可用名），不在 schema 层门控。
+`node.shape` 只保存一个名字，比如 `'hexagon'`。这个名字可以安全写进 JSON，适合持久化、JSON Patch，也适合 LLM 生成。
 
-## 形状定义（ShapeDefinition）
+真正的形状定义叫 `ShapeDefinition`，里面会包含函数，因此**不会进入 IR**。编译时再通过 `CompileOptions.shapes` 把这些函数交给 retikz。schema 只检查 `shape` 是非空字符串；如果名字没有注册，错误会在 **compile 阶段**抛出，并列出当前可用的形状名。
 
-一个形状只承担真正多态的四件事，统一操作外接 `Rect`：
+## 形状定义
 
-| 方法 | 签名 | 职责 |
+一个自定义形状需要回答四个问题。retikz 已经负责文字测量、样式合并、旋转分组和最终渲染；形状作者只需要描述这个形状自己的几何和绘制方式。
+
+表里的几个类型先按直觉理解即可：
+
+- `Rect` 是“这个节点最终占用的外接矩形”：包含中心点 `x/y`、宽高 `width/height`，以及可选旋转角度 `rotate`。
+- `Position` 是一个点坐标，形如 `[x, y]`。
+- `ScenePrimitive` 是最终交给渲染器的基础图元，例如 `path`、`rect`、`ellipse`。
+
+| 方法 | 参数与返回值 | 作用 |
 | --- | --- | --- |
-| `circumscribe` | `(innerHalfW, innerHalfH) => { halfWidth, halfHeight }` | 内容半轴（text + padding）→ 外接框半轴 |
-| `boundaryPoint` | `(rect, toward) => Position` | 中心 → toward 射线 ∩ 边界；path 端点贴边、`.30` 数字角度都走它 |
-| `anchor` | `(rect, name) => Position \| undefined` | 命名 anchor 世界坐标；不认识的名字返回 `undefined`（调用方抛 Unknown anchor）|
-| `emit` | `(rect, style, round) => Iterable<ScenePrimitive>` | 视觉 primitive；返回 Iterable 即一个 shape 可出多 primitive（body + 引脚等）|
+| `circumscribe`<br />`(innerHalfW, innerHalfH) => { halfWidth, halfHeight }` | `innerHalfW` / `innerHalfH`：文字和 padding 已经占用的半宽、半高。<br />`halfWidth` / `halfHeight`：外层形状最终需要的半宽、半高。 | 节点布局时调用，回答“为了包住文字和 padding，形状外接矩形需要多大”。例如菱形通常要放大，矩形通常原样返回。 |
+| `boundaryPoint`<br />`(rect, toward) => Position` | `rect`：节点外接矩形。<br />`toward`：从节点中心看出去的目标点。<br />返回值：从中心朝 `toward` 连线时，与形状边界相交的点。 | 路径连接节点边界、解析 `A.30` 这种数字角度时调用，决定线条应该停在形状边上的哪里。 |
+| `anchor`<br />`(rect, name) => Position \| undefined` | `rect`：节点外接矩形。<br />`name`：锚点名，例如 `north`、`south east`、`center`。<br />返回值：认识这个锚点就返回坐标；不认识就返回 `undefined`。 | 用户写 `A.north`、`A.center` 或自定义锚点名时调用，决定命名锚点在哪里。未知锚点由编译层统一报 Unknown anchor。 |
+| `emit`<br />`(rect, style, round) => Iterable<ScenePrimitive>` | `rect`：节点外接矩形。<br />`style`：已经合并好的填充、描边、透明度等样式。<br />`round`：用于统一坐标精度的函数。<br />返回值：一个或多个要画出来的基础图元。 | 编译节点视觉内容时调用，决定这个形状最终画成哪些基础图元。简单形状通常返回一个 path 或 rect；复杂形状可以返回多个 primitive，比如“外框 + 两条竖线”。 |
 
 <ComponentAlert
   type="warn"
-  title="两套坐标语义，第三方最易写错"
-  description="emit 收的是轴对齐 rect（rotate = 0）——旋转由编译器在外层 GroupPrim 统一施加，shape 只画正放的自己。而 boundaryPoint / anchor 收的是带 rotate 的 rect——用 re-export 的 worldToLocal / localToWorld 把 toward 转到局部系再算。两者坐标系不同，别混。"
+  title="先画正放的形状，旋转交给编译器"
+  description="emit 拿到的 rect 永远是不旋转的：你只需要像在普通坐标纸上一样，把形状画在中心点周围。节点真正的旋转会由编译器统一包在外层 group 上。boundaryPoint / anchor 不同，它们要回答世界坐标里的连接点和锚点，所以会收到带旋转信息的 rect；这时先用 worldToLocal 算局部几何，再用 localToWorld 转回世界坐标。"
 />
 
-数字角度（`A.30`）对所有实现了 `boundaryPoint` 的形状**免费可用**——编译层算出 toward 后调 `boundaryPoint`，不进形状接口。
+数字角度（`A.30`）不需要单独实现。只要形状实现了 `boundaryPoint`，编译层会把 `30` 度换成一个方向点，再调用你的 `boundaryPoint`。
 
-## 注入（CompileOptions.shapes）
+## 注入形状定义
 
 ```ts
 import { compileToScene, type ShapeDefinition } from '@retikz/core';
 import { worldToLocal, localToWorld } from '@retikz/core';
 
-// factory 只是返回 ShapeDefinition 的普通函数
+// factory 只是一个普通函数：传入参数，返回一份 ShapeDefinition
 const createPolygonShape = (sides: number): ShapeDefinition => ({
   circumscribe: (hw, hh) => {
     const r = Math.hypot(hw, hh);
     return { halfWidth: r, halfHeight: r };
   },
   boundaryPoint: (rect, toward) => {
-    /* 多边形射线交边，用 worldToLocal / localToWorld 处理 rotate */
+    /* 先把 toward 转到局部坐标，再计算射线和多边形边界的交点 */
   },
   anchor: (rect, name) => (name === 'center' ? [rect.x, rect.y] : undefined),
   *emit(rect, style, round) {
-    yield { type: 'path', commands: [/* n 顶点 + close */], stroke: style.stroke ?? 'currentColor' };
+    yield {
+      type: 'path',
+      commands: [/* n 顶点 + close */],
+      fill: style.fill ?? 'transparent',
+      fillOpacity: style.fillOpacity,
+      stroke: style.stroke ?? 'currentColor',
+      strokeOpacity: style.strokeOpacity,
+      strokeWidth: style.strokeWidth ?? 1,
+      dashPattern: style.dashPattern,
+      opacity: style.opacity,
+    };
   },
 });
 
-// IR 里只写 shape: 'hexagon' 字符串，定义在 options 注入
+// IR 里只写 shape: 'hexagon'，具体定义由 options 提供
 const scene = compileToScene(ir, { shapes: { hexagon: createPolygonShape(6) } });
 ```
 
-React 侧把 shapes 透传给 `<TikZ>`：
+在 React 里，把同一份 `shapes` 传给 `<TikZ>`：
 
 ```tsx
 <TikZ shapes={{ hexagon: createPolygonShape(6) }}>
@@ -63,25 +83,43 @@ React 侧把 shapes 透传给 `<TikZ>`：
 </TikZ>
 ```
 
-## 例子（Examples）
+## 例子
 
 ### 多边形 factory（单 path）
 
-`createPolygonShape(n)` 这类工厂只是返回 `ShapeDefinition` 的普通函数。下面注入一个正六边形，两节点间连线自动贴外接圆边界：
+`createPolygonShape(n)` 这类工厂只是返回 `ShapeDefinition` 的普通函数。下面注入一个正六边形；两节点之间连线时，路径端点会停在真实的六边形边界上，而不是停在节点中心：
 
 <ComponentPreview name="custom-shape" size="md" />
 
 ### 多 primitive：子程序框
 
-`emit` 返回 `Iterable<ScenePrimitive>`，一个形状能出多个 primitive。下面的子程序框（外框 + 左右两道竖条）emit 出 3 个 primitive；几何（circumscribe / boundaryPoint / anchor）直接复用内置 rectangle：
+`emit` 可以一次返回多个图元。下面的子程序框由一个外框和左右两条竖线组成，所以它返回 3 个 primitive。它的外轮廓仍然是矩形，因此 `circumscribe` / `boundaryPoint` / `anchor` 可以直接复用内置 rectangle：
 
 <ComponentPreview name="subroutine" size="sm" />
 
+### 语义端点：二极管
+
+有些形状不是“从中心朝外找轮廓交点”就能得到正确连接点。二极管这类电路符号只有左右两个端点能接线：从左侧来的线应该接到左端，从右侧来的线应该接到右端，而不是接到三角形斜边或竖线外轮廓上。
+
+这个例子的 `boundaryPoint` 会先判断 `toward` 在局部坐标里位于左侧还是右侧，再返回对应端点。`anchor` 也额外提供了 `input` / `output` 这两个语义锚点：
+
+<ComponentPreview name="diode" size="sm" />
+
+## 实现清单
+
+写第三方 shape 时，优先逐项核对这几个点：
+
+- `circumscribe` 回答“为了包住文字和 padding，外接矩形需要多大”，不要直接返回视觉 path 的原始尺寸。
+- `boundaryPoint` 要处理 `toward` 刚好等于中心点的情况；常见做法是选一个固定默认方向。
+- `boundaryPoint` 和 `anchor` 如果涉及旋转，先用 `worldToLocal` 进入形状自己的局部坐标，算完后再用 `localToWorld` 返回世界坐标。
+- `anchor` 只处理自己认识的名字；未知名返回 `undefined`，让编译层抛统一错误。
+- `emit` 里用传入的 `round` 处理坐标与尺寸，并尽量透传相关样式字段：`fillOpacity` / `strokeOpacity` / `dashPattern` / `opacity` / `roundedCorners`。
+
 ## 覆盖内置与未知名
 
-- **同名覆盖**：`shapes: { rectangle: myRect }` 覆盖内置 rectangle，编译期经 `onWarn` 发 `SHAPE_OVERRIDES_BUILTIN`（与所有 warning 同通道；用户传 `onWarn` 时即使 production 也收到）。
-- **未知 shape**：`node.shape` 不在有效表 → compile throw `Unknown shape '<name>'; registered shapes: <sorted list>`。无可降级的正确几何，硬失败。
+- **同名覆盖**：如果写 `shapes: { rectangle: myRect }`，新的定义会覆盖内置 rectangle。编译期会通过 `onWarn` 发出 `SHAPE_OVERRIDES_BUILTIN`，提醒你正在替换内置行为。
+- **未知 shape**：如果 `node.shape` 写了一个没有注册过的名字，compile 会抛出 `Unknown shape '<name>'; registered shapes: <sorted list>`。因为 retikz 不知道这个形状的边界和锚点，不能安全降级成别的形状。
 
-## 公开导出（Helper）
+## 公开导出
 
 `@retikz/core` 为第三方形状作者导出：`ShapeDefinition` / `ShapeStyle` / `BUILTIN_SHAPES` / `BuiltinShapeName` / `Rect` / `Position` / `worldToLocal` / `localToWorld`。

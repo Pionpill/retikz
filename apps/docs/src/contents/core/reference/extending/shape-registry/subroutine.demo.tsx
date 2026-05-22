@@ -17,6 +17,13 @@ const subroutine: ShapeDefinition = {
     const inset = 8;
     const stroke = style.stroke ?? 'currentColor';
     const strokeWidth = style.strokeWidth ?? 1;
+    const sharedStrokeStyle = {
+      stroke,
+      strokeOpacity: style.strokeOpacity,
+      strokeWidth,
+      dashPattern: style.dashPattern,
+      opacity: style.opacity,
+    };
     yield {
       type: 'rect',
       x: round(rect.x - hw),
@@ -24,8 +31,9 @@ const subroutine: ShapeDefinition = {
       width: round(rect.width),
       height: round(rect.height),
       fill: style.fill ?? 'transparent',
-      stroke,
-      strokeWidth,
+      fillOpacity: style.fillOpacity,
+      cornerRadius: style.roundedCorners,
+      ...sharedStrokeStyle,
     };
     yield {
       type: 'path',
@@ -33,8 +41,7 @@ const subroutine: ShapeDefinition = {
         { kind: 'move', to: [round(rect.x - hw + inset), round(rect.y - hh)] },
         { kind: 'line', to: [round(rect.x - hw + inset), round(rect.y + hh)] },
       ],
-      stroke,
-      strokeWidth,
+      ...sharedStrokeStyle,
     };
     yield {
       type: 'path',
@@ -42,8 +49,7 @@ const subroutine: ShapeDefinition = {
         { kind: 'move', to: [round(rect.x + hw - inset), round(rect.y - hh)] },
         { kind: 'line', to: [round(rect.x + hw - inset), round(rect.y + hh)] },
       ],
-      stroke,
-      strokeWidth,
+      ...sharedStrokeStyle,
     };
   },
 };
