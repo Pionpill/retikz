@@ -16,7 +16,6 @@ description: 运行时参考——把 IR 编译成渲染目标无关绘制模型
 | Compile | IR → Scene 的编译入口、布局选项、文字度量、warning 合同 | 自己驱动编译、配置布局、接收 warning |
 | Primitive | compile 输出的渲染目标无关绘制模型 | 写自定义渲染器 / 导出器 |
 | Parser | Sugar 输入到 IR 片段的纯函数转换 | 复用相对坐标等 Sugar 解析逻辑 |
-| Shape Registry | 注册 / 注入自定义 node shape（`ShapeDefinition` + `CompileOptions.shapes`）| 加 hexagon / cylinder / cloud 等内置之外的形状 |
 
 ## 章节内容
 
@@ -32,9 +31,5 @@ description: 运行时参考——把 IR 编译成渲染目标无关绘制模型
   <LinkedCard href="/core/reference/runtime/parser">
     <span className="font-semibold">解析器（Parser）</span>
     <span className="mt-1 text-center text-sm text-muted-foreground">Sugar 输入到 IR 片段的纯函数</span>
-  </LinkedCard>
-  <LinkedCard href="/core/reference/runtime/shape-registry">
-    <span className="font-semibold">自定义 Shape</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">注册 / 注入自定义 node shape 的 ShapeDefinition</span>
   </LinkedCard>
 </div>

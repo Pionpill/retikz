@@ -1,0 +1,23 @@
+---
+title: 扩展
+description: 扩展 retikz——为内置能力之外的需求注册新形状等扩展点；面向在 retikz 之上构建的人（第三方包 / 宿主集成），不是日常画图。
+---
+
+这一分组讲怎么**扩展** retikz：内置组件覆盖不到的能力，通过运行时注入的扩展点补上。读者是发第三方包、做宿主集成、或给 retikz 加新基元的人——日常画图从 [组件](/core/components/tikz) 开始即可。
+
+> 扩展点都是**宿主 / 编译期能力，不写进 IR**——IR 始终是可序列化的纯数据（LLM / 持久化友好），扩展定义经 `CompileOptions` / 组件 props 在运行时注入。
+
+## 职责一览
+
+| 主题 | 扩展什么 | 何时用 |
+| --- | --- | --- |
+| 自定义 Shape | 注册新的 node 形状（`ShapeDefinition` + `CompileOptions.shapes`）| 内置 4 形状之外要 hexagon / cylinder / cloud 等 |
+
+## 章节内容
+
+<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+  <LinkedCard href="/core/reference/extending/shape-registry">
+    <span className="font-semibold">自定义 Shape</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">注册 / 注入自定义 node shape 的 ShapeDefinition</span>
+  </LinkedCard>
+</div>

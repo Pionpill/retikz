@@ -63,6 +63,13 @@ export const coreSection: Array<Section> = [
     label: 'core.reference',
     pages: [
       {
+        id: 'extending',
+        label: 'core.refExtending',
+        children: [
+          { id: 'shape-registry', label: 'core.refShapeRegistry' },
+        ],
+      },
+      {
         id: 'schema',
         label: 'core.refSchema',
         children: [
@@ -79,7 +86,6 @@ export const coreSection: Array<Section> = [
           { id: 'compile', label: 'core.refCompile' },
           { id: 'scene-primitive', label: 'core.refScenePrimitive' },
           { id: 'parser', label: 'core.refParser' },
-          { id: 'shape-registry', label: 'core.refShapeRegistry' },
         ],
       },
     ],

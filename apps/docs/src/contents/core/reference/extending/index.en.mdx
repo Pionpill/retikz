@@ -1,0 +1,23 @@
+---
+title: Extending
+description: Extending retikz — register new shapes and other extension points for needs the built-ins don't cover; for people building on top of retikz (third-party packages / host integrations), not everyday figure authoring.
+---
+
+This group is about **extending** retikz: capabilities the built-in components don't cover, filled in through runtime-injected extension points. The audience is people shipping third-party packages, doing host integration, or adding new primitives to retikz — for everyday figures, start from [Components](/core/components/tikz).
+
+> Extension points are **host / compile-time capabilities and never enter the IR** — the IR stays serializable plain data (LLM / persistence friendly); extension definitions are injected at runtime via `CompileOptions` / component props.
+
+## What each part covers
+
+| Topic | Extends | Reach for it when |
+| --- | --- | --- |
+| Custom Shapes | Registering new node shapes (`ShapeDefinition` + `CompileOptions.shapes`) | You need hexagon / cylinder / cloud beyond the built-in four |
+
+## In this section
+
+<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+  <LinkedCard href="/core/reference/extending/shape-registry">
+    <span className="font-semibold">Custom Shapes</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">Register / inject a ShapeDefinition for custom node shapes</span>
+  </LinkedCard>
+</div>
