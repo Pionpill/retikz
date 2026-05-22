@@ -63,7 +63,19 @@ On the React side, pass `shapes` to `<TikZ>`:
 </TikZ>
 ```
 
+## Examples
+
+### Polygon factory (single path)
+
+A factory like `createPolygonShape(n)` is just a plain function returning a `ShapeDefinition`. The example below injects a regular hexagon; the connector between the two nodes clips to its circumscribed boundary:
+
 <ComponentPreview name="custom-shape" size="md" />
+
+### Multiple primitives: a subroutine box
+
+`emit` returns an `Iterable<ScenePrimitive>`, so one shape can emit several primitives. The subroutine box below (outer frame + two vertical bars) emits 3 primitives; its geometry (circumscribe / boundaryPoint / anchor) reuses the built-in rectangle:
+
+<ComponentPreview name="subroutine" size="sm" />
 
 ## Overriding built-ins and unknown names
 
