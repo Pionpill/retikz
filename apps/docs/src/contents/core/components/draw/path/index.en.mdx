@@ -122,6 +122,7 @@ Three independent channels: `opacity` overall (multiplies onto stroke and fill),
 | `opacity` | `number` | — | Whole-path opacity 0..1 (multiplies onto stroke and fill) |
 | `fillOpacity` | `number` | — | Fill-only opacity 0..1 |
 | `drawOpacity` | `number` | — | Stroke-only opacity 0..1 |
+| `zIndex` | `number` (integer) | `0` | Explicit stacking order: higher draws on top; ties keep declaration order; effective only among siblings at the same level |
 | `children` | `Array<<Step>>` | — | At least 2; if the first isn't `move`, the compiler coerces it to `move`. `<Step>` supports `move` / `line` / `step` (folded) / `cycle` (close) / `curve` / `cubic` (Bezier) / `bend` (arc shorthand) / `arc` / `circlePath` / `ellipsePath` (circle / ellipse) |
 
 ## Related

@@ -187,6 +187,14 @@ Line 2`}</Node>
 
 <ComponentPreview name="node-rotated" size="sm" />
 
+#### 栈序（zIndex）
+
+默认渲染层叠 = 声明顺序（SVG 只认绘制顺序）。`zIndex` 显式覆盖：大者在上、缺省 0、同值保持声明顺序；只在同层（同 scope / 顶层）子节点间生效。例如把某个高亮节点 `zIndex={10}` 浮到所有连线之上，而不必把它挪到 JSX 末尾。`<Path>` / `<Scope>` 同样支持 `zIndex`（scope 的 `zIndex` 作用于整组在父层的位置，不影响 scope 内部相对栈序）。
+
+#### label 旋转
+
+`label.rotate` 让标签文字绕**自身中心**自旋：`'radial'` 沿"节点中心 → 标签中心"方向、`'tangent'` 取其切向（radial + 90°）、数字为显式角度（度）；`keepUpright` 在文字会倒置时翻 180° 保持可读。`rotate` 只改朝向，不改由 `position` / `distance` 决定的位置。
+
 ## API 参考
 
 | 属性 | 类型 | 默认值 | 描述 |
@@ -220,7 +228,8 @@ Line 2`}</Node>
 | `minimumSize` | `number` | — | 对称最小尺寸别名；轴特化字段优先 |
 | `scale` | `number` | `1` | 均匀缩放（含字号、padding、路径附着点） |
 | `xScale` / `yScale` | `number` | — | 分轴缩放，优先于 `scale` |
-| `label` | `NodeLabel \| Array<NodeLabel>` | — | 边挂标签；单对象或数组；`position` 接 8 方向枚举或数字角度，`distance` 缺省 12，`font` / `textColor` 缺省继承 node |
+| `zIndex` | `number`（整数） | `0` | 显式栈序：大者在上；同值保持声明顺序；只在同层子节点间生效 |
+| `label` | `NodeLabel \| Array<NodeLabel>` | — | 边挂标签；单对象或数组；`position` 接 8 方向枚举或数字角度，`distance` 缺省 12，`font` / `textColor` 缺省继承 node；`rotate`（`'none'` / `'radial'` / `'tangent'` / 数字度数）+ `keepUpright` 控制标签自旋 |
 
 ### margin 与 padding 的区别
 

@@ -122,6 +122,7 @@ import { Path, Step } from '@retikz/react';
 | `opacity` | `number` | — | 整 path 透明度 0~1（同时作用于 stroke 与 fill） |
 | `fillOpacity` | `number` | — | 仅 fill 透明度 0~1 |
 | `drawOpacity` | `number` | — | 仅 stroke 透明度 0~1 |
+| `zIndex` | `number`（整数） | `0` | 显式栈序：大者在上；同值保持声明顺序；只在同层子节点间生效 |
 | `children` | `Array<<Step>>` | — | 至少 2 个；首个非 `move` 时编译器会强制改成 `move`。`<Step>` 支持 `move` / `line` / `step`（折角）/ `cycle`（闭合）/ `curve` / `cubic`（贝塞尔曲线）/ `bend`（弧形简记）/ `arc` / `circlePath` / `ellipsePath`（圆 / 椭圆） |
 
 ## 相关

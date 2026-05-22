@@ -336,6 +336,7 @@ Inner overrides outer; within one frame the typed default overrides the cascade.
 | `labelDefault` | `object` | — | Label default style (node label + step label) |
 | `arrowDefault` | `object` | — | Arrow default style (shape / scale / color) |
 | `resetStyle` | `boolean \| Array` | `false` | Inheritance barrier: cut outer channels; details in § How it works §「Style inheritance resolution」 |
+| `zIndex` | `number` (integer) | `0` | Explicit stacking order: positions the scope as a whole (its GroupPrim) among its siblings without affecting the relative stacking inside it; higher draws on top, ties keep declaration order |
 
 ## Related
 

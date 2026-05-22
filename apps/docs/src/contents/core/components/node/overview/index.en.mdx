@@ -187,6 +187,14 @@ Most nodes only need `padding={N}`. Use `innerXSep` / `innerYSep` when horizonta
 
 <ComponentPreview name="node-rotated" size="sm" />
 
+#### Stacking order (zIndex)
+
+By default stacking = declaration order (SVG only honors paint order). `zIndex` overrides it explicitly: higher draws on top, omitted = 0, ties keep declaration order; effective only among siblings at the same level (same scope / top level). For example, lift a highlighted node with `zIndex={10}` above all connecting paths without moving it to the end of the JSX. `<Path>` / `<Scope>` support `zIndex` too (a scope's `zIndex` positions the whole group among its siblings without affecting the relative stacking inside it).
+
+#### Label rotation
+
+`label.rotate` spins the label text around **its own center**: `'radial'` along the node-center → label-center direction, `'tangent'` is its tangent (radial + 90°), a number is an explicit angle (degrees); `keepUpright` flips it 180° when it would otherwise read upside-down. `rotate` only changes orientation, not the placement determined by `position` / `distance`.
+
 ## API Reference
 
 | Prop | Type | Default | Description |
@@ -220,7 +228,8 @@ Most nodes only need `padding={N}`. Use `innerXSep` / `innerYSep` when horizonta
 | `minimumSize` | `number` | — | Symmetric minimum-size alias; axis-specific fields take precedence |
 | `scale` | `number` | `1` | Uniform scale (includes font, padding, path attachment) |
 | `xScale` / `yScale` | `number` | — | Per-axis scale; takes precedence over `scale` |
-| `label` | `NodeLabel \| Array<NodeLabel>` | — | Extra label(s) attached to the node border; single object or array; `position` accepts the 8-direction enum or a numeric angle, `distance` defaults to 12, `font` / `textColor` inherit from the node |
+| `zIndex` | `number` (integer) | `0` | Explicit stacking order: higher draws on top; ties keep declaration order; effective only among siblings at the same level |
+| `label` | `NodeLabel \| Array<NodeLabel>` | — | Extra label(s) attached to the node border; single object or array; `position` accepts the 8-direction enum or a numeric angle, `distance` defaults to 12, `font` / `textColor` inherit from the node; `rotate` (`'none'` / `'radial'` / `'tangent'` / a number of degrees) + `keepUpright` control label spin |
 
 ### margin vs padding
 

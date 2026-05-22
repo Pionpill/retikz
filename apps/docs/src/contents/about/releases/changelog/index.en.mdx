@@ -7,17 +7,24 @@ description: retikz release history grouped by MINOR version, newest first. Date
 
 ## v0.2.0-alpha.4
 
-The fourth v0.2 alpha: an internal bug fix — repairs the z-order regression introduced by the earlier compile pipeline rewrite. When nodes and paths are declared interleaved at the same level, paths are no longer all pushed to the very end; they once again stack in IR declaration order (SVG only honors paint order — there is no z-index). This is a prerequisite for later features such as explicit `zIndex` and Grid background fills.
+The fourth v0.2 alpha: **compile IR-order regression (A) + emit-layer enhancements (B)**. A repairs the z-order regression introduced by the earlier compile pipeline rewrite — interleaved sibling nodes/paths once again stack in IR declaration order (SVG only honors paint order — there is no z-index). B builds three emit-layer changes on top of A's restored IR-order baseline: explicit `zIndex` stacking override, text-bearing Nodes always wrapped in a `<g>`, and Node label `rotate`.
 
 ### `@retikz/core`
 
-- **IR declaration order restored for transform-free frames**: at the top level and inside transform-free scopes, a path primitive reserves a slot in its own sink during Pass 1 and is backfilled in place during Pass 2, restoring declaration order relative to sibling nodes; a transform-free scope containing only a path is no longer wrongly pruned.
-- **Known limitation**: inside a transformed scope a path's endpoints are already global, so it is still hoisted to the top-level `primitives` (to avoid double application of the transform), and its cross-frame z-order does not fully match IR order — left to a future coordinate-system approach / explicit `zIndex` override.
-- Pure internal compile fix: zero changes to IR / schema / public API; the internal placeholder type never leaks into Scene output (an unconditional check before return).
+- **(A) IR declaration order restored for transform-free frames**: at the top level and inside transform-free scopes, a path primitive reserves a slot in its own sink during Pass 1 and is backfilled in place during Pass 2, restoring declaration order relative to sibling nodes; a transform-free scope containing only a path is no longer wrongly pruned.
+- **(A) Known limitation**: inside a transformed scope a path's endpoints are already global, so it is still hoisted to the top-level `primitives` (to avoid double application of the transform), and its cross-frame z-order does not fully match IR order — left to a future coordinate-system approach / explicit `zIndex` override. Part A is a pure internal compile fix: the internal placeholder type never leaks into Scene output (an unconditional check before return).
+- **(B) Explicit `zIndex`**: `Node` / `Path` / `Scope` gain an optional `zIndex` (`Coordinate` does not); at the end of compile (after placeholder backfill + narrowing) primitives are stably sorted by `zIndex ?? 0`, ties keep IR order; `scope.zIndex` positions the scope as a whole among its siblings without affecting children's relative stacking; recorded out-of-band so the Scene primitive stays clean and renderers need zero changes. `zIndex` does not enter the `nodeDefault` / `pathDefault` every-X channels (it is positional, not an inheritable style).
+- **(B) Text-bearing Nodes always wrapped in `<g>`**: a Node with text (`layout.lines` non-empty) or rotation emits a single `GroupPrim` (no transform when unrotated), giving semantic nodes a stable DOM / stacking-unit boundary; purely geometric decorative nodes stay flat with zero extra DOM.
+- **(B) Node label `rotate`**: `NodeLabelSchema` gains `rotate` (`none` / `radial` / `tangent` / a number of degrees) + `keepUpright`; the label text spins around its own center. **Incidental fix**: on a rotated Node the label position is corrected from "double rotation" to a single rotation (`labelCenter` now uses an axis-aligned local rect; the node's own rotation is applied once by the outer group) — output for rotated Node + label changes; unrotated Nodes are unaffected.
+
+### `@retikz/react`
+
+- `<Node>` / `<Path>` / `<Scope>` gain a `zIndex` prop (stacking override); `<Node label>`'s `rotate` / `keepUpright` flow through `IRNodeLabel` with no extra React-side change.
 
 ### Docs
 
 - Scope internals corrected the description of where a path inside a scope lands: transform-free → backfilled into `GroupPrim.children`; transformed → hoisted to the top level (known limitation).
+- Node / Path / Scope API references gain `zIndex`; Node label docs gain `rotate` / `keepUpright` (radial / tangent / numeric angle + keep-upright).
 
 ## v0.2.0-alpha.3
 
