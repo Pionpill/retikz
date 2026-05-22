@@ -1,6 +1,6 @@
 # ADR-01：compile 输出 IR 顺序回归（占位槽回填恢复 transform-free frame 的声明序）
 
-- 状态：Proposed
+- 状态：Accepted
 - 决策日期：2026-05-23
 - 关联：[v0.2-alpha.4 plan](../../../plans/v0/v0.2-alpha.4.md) · [v0.2 总计划 §alpha.1 收尾遗留 / §alpha.4 设计预想](../../../plans/v0/v0.2.md) · [alpha.1 ADR-01 Scope IR/compile](../v0.2-alpha.1/01-scope-ir-and-compile.md) · [alpha.1 ADR-02 nodeIndex/anchor 解析](../v0.2-alpha.1/02-node-index-anchor-resolution.md) · [v0.1-alpha.5 ADR-01 Scene PathPrim/GroupPrim 结构化](../v0.1-alpha.5/01-scene-primitive-structured.md) · [DESIGN.md §1.2 AI 一等公民](../../../architecture/DESIGN.md)
 

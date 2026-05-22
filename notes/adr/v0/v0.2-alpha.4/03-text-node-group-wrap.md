@@ -1,6 +1,6 @@
 # ADR-03：带文本 Node 输出始终包 `<g>`（emit 以 Node 为 stacking / DOM 单位）
 
-- 状态：Proposed
+- 状态：Accepted
 - 决策日期：2026-05-23
 - 关联：[v0.2-alpha.4 plan §B-2](../../../plans/v0/v0.2-alpha.4.md) · [v0 roadmap §带文本 Node 输出始终包 g 提案](../../../plans/v0/roadmap.md#带文本-node-输出始终包-g-提案) · [本 milestone ADR-02 显式 zIndex](./02-explicit-zindex.md)（"以 Node 为 stacking 单位"同源）· [v0.1-alpha.5 ADR-01 Scene 结构化](../v0.1-alpha.5/01-scene-primitive-structured.md)（GroupPrim.transforms 结构化来源）
 

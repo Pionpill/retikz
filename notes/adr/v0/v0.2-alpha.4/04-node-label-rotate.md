@@ -1,6 +1,6 @@
 # ADR-04：Node label `rotate`（label 文本绕自身中心自旋 + 修 rotated-Node label 坐标空间）
 
-- 状态：Proposed
+- 状态：Accepted
 - 决策日期：2026-05-23
 - 关联：[v0.2-alpha.4 plan §B-3 + §待定 0](../../../plans/v0/v0.2-alpha.4.md) · [v0 roadmap §Node label 旋转能力计划](../../../plans/v0/roadmap.md#node-label-旋转能力计划) · [本 milestone ADR-03 文本 Node 包 g](./03-text-node-group-wrap.md)（同走 emit 末端 GroupPrim transform）· [v0.1-alpha.4 ADR-03 node label](../v0.1-alpha.4/03-node-label.md)（label 定位算法来源）
 
