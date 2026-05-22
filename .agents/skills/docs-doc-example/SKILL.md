@@ -12,6 +12,8 @@ description: retikz 示例类文档（apps/docs/src/contents/<module>/examples/*
 
 本 skill 只覆盖**示例页特有**的页面结构、step 写法、demo 命名、Prompt 节、Limitations 节。其它一切（三处协同、双语、写作风格、Comparison、自绘图示、宽度、阅读时间等）以 principle 为准。
 
+示例页必须站在第一次跟做的读者视角写：每一步先说“这一步让图多了什么、为什么现在加”，再链接到组件或提术语。不要用作者全知视角跳到最终架构、内部机制或完整 API；读者应能按 step 顺序复制、观察、理解。
+
 ## 定位
 
 示例页是 **retikz 能力综合 showcase**——以经典 / 实用图表为载体，**循序渐进教读者用 retikz 能力**。与现有三种 section 的边界：

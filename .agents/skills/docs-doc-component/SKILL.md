@@ -12,6 +12,8 @@ description: retikz 组件类文档（apps/docs/src/contents/<module>/components
 
 本 skill 只覆盖**组件页特有**的 6 段结构与子节写法；其它一切（三处协同、双语、写作风格、Comparison、自绘图示、宽度、阅读时间、ZodSchema、Common Mistakes 等）以 principle 为准。
 
+组件页尤其要遵守 principle 的“新手友好，不用全知视角”规则：Usage 先回答这个组件帮用户解决什么问题，再给最小骨架；Examples 先展示可复制写法，再解释术语；How it works 只在用户可观察行为需要解释时写，不能把内部类型名和实现决策当正文主线。
+
 ## 文档结构（6 段顺序）
 
 参考：<https://ui.shadcn.com/docs/components/spinner>（简单）/ <https://ui.shadcn.com/docs/components/radix/alert-dialog#usage>（复杂）
