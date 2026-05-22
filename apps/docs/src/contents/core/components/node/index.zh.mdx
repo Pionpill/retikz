@@ -1,0 +1,33 @@
+---
+title: 节点
+description: 节点家族——可被引用的命名图元，连同它的行级文字样式与纯占位点。
+---
+
+节点是图里「被引用」的主体：它有 id、有位置、有形状边界，连线会按 id 自动贴上它的边界。这一分组把节点本身、写在节点内部的行级文字样式、以及只命名不画形状的占位点收在一起。
+
+<ComponentPreview name="node-family" size="md" hideCode />
+
+## 职责一览
+
+| 组件 | 类型 | 职责 | 适合场景 |
+| --- | --- | --- | --- |
+| Node | Kernel | 命名图元，带位置 / 形状 / 文本，路径靠 id 贴它的边界 | 流程图节点、带文字的形状、任何要被连线引用的图元 |
+| Text | Sugar | 写在 Node 内部，给单独一行覆盖 fill / opacity / font | 一行里混排多种样式的文字 |
+| Coordinate | Kernel | 只命名一个点，不画任何形状 | 纯引用锚点、辅助定位、不需要可见图形时 |
+
+## 章节内容
+
+<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+  <LinkedCard href="/core/components/node/overview">
+    <span className="font-semibold">Node</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">形状、文字、样式、定位与标签的完整用法</span>
+  </LinkedCard>
+  <LinkedCard href="/core/components/node/text">
+    <span className="font-semibold">Text</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">在 Node 内逐行覆盖样式的 Sugar 写法</span>
+  </LinkedCard>
+  <LinkedCard href="/core/components/node/coordinate">
+    <span className="font-semibold">Coordinate</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">只命名引用点、不渲染形状</span>
+  </LinkedCard>
+</div>

@@ -1,0 +1,33 @@
+---
+title: Node
+description: The node family — referenceable named primitives, plus per-line text styling and pure placeholder points.
+---
+
+A node is what the rest of a figure *references*: it has an id, a position, and a shape boundary, and connectors auto-attach to that boundary by id. This group gathers the node itself, the per-line text styling that lives inside it, and the placeholder point that names a spot without drawing anything.
+
+<ComponentPreview name="node-family" size="md" hideCode />
+
+## What each part does
+
+| Component | Type | Responsibility | Use it when |
+| --- | --- | --- | --- |
+| Node | Kernel | Named primitive with position / shape / text; paths attach to its boundary by id | Flowchart nodes, shapes with text, anything a connector must reference |
+| Text | Sugar | Lives inside a Node and overrides fill / opacity / font for a single line | Mixing several styles within one line of text |
+| Coordinate | Kernel | Names a point without drawing any shape | Pure reference anchors, helper positioning, no visible geometry needed |
+
+## In this section
+
+<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+  <LinkedCard href="/core/components/node/overview">
+    <span className="font-semibold">Node</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">Full usage: shapes, text, styling, positioning, and labels</span>
+  </LinkedCard>
+  <LinkedCard href="/core/components/node/text">
+    <span className="font-semibold">Text</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">Sugar for overriding style line by line inside a Node</span>
+  </LinkedCard>
+  <LinkedCard href="/core/components/node/coordinate">
+    <span className="font-semibold">Coordinate</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">Names a reference point, renders no shape</span>
+  </LinkedCard>
+</div>

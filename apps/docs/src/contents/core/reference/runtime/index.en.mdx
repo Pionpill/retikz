@@ -1,0 +1,35 @@
+---
+title: Runtime
+description: Runtime reference — the IR-to-picture pipeline, covering the compile entry, the Primitive output, and Parser helpers.
+---
+
+This group is the runtime pipeline from IR to picture. `compile` is the entry point: it takes IR and emits a renderer-agnostic Scene Primitive; the Primitive is that renderer-agnostic drawing model; the Parser is the set of pure functions that turn sugar input into IR fragments. Look here when you drive compilation yourself, write a custom renderer, or reuse the sugar parsing logic.
+
+<ComponentPreview name="runtime-flow" size="sm" hideCode />
+
+> This is the reference layer, not component docs; to author figures, start from [Components](/core/components/tikz).
+
+## What each part covers
+
+| Topic | Responsibility | Reach for it when |
+| --- | --- | --- |
+| Compile | The IR → Scene entry point, layout options, text measuring, warning contract | Driving compilation yourself, configuring layout, receiving warnings |
+| Primitive | The renderer-agnostic drawing model produced by compile | Writing a custom renderer / exporter |
+| Parser | Pure conversion from sugar input to IR fragments | Reusing sugar parsing such as relative coordinates |
+
+## In this section
+
+<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+  <LinkedCard href="/core/reference/runtime/compile">
+    <span className="font-semibold">Compile</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">IR → Scene entry, layout, text measuring, and warnings</span>
+  </LinkedCard>
+  <LinkedCard href="/core/reference/runtime/scene-primitive">
+    <span className="font-semibold">Primitive</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">The renderer-agnostic drawing model</span>
+  </LinkedCard>
+  <LinkedCard href="/core/reference/runtime/parser">
+    <span className="font-semibold">Parser</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">Pure functions from sugar input to IR fragments</span>
+  </LinkedCard>
+</div>
