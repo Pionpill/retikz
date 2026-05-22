@@ -5,7 +5,7 @@ import { Node, type NodeProps } from './Node';
 import { Path } from './Path';
 import { Scope, type ScopeProps } from './Scope';
 import { Step } from './Step';
-import { NODE_FIELDS, pickDefined } from './_fields';
+import { NODE_FIELDS, SCOPE_FIELDS, pickDefined } from './_fields';
 
 /**
  * IR 'node' child → NodeProps；过滤 undefined 字段，不污染 React DevTools 显示
@@ -113,6 +113,7 @@ const childToElement = (child: IRChild, key: number): ReactNode => {
     case 'path':
       return createElement(Path, {
         key,
+        color: child.color,
         stroke: child.stroke,
         strokeWidth: child.strokeWidth,
         dashPattern: child.dashPattern,
@@ -141,20 +142,15 @@ const childToElement = (child: IRChild, key: number): ReactNode => {
   }
 };
 
-/** IR 'scope' child → ScopeProps；递归把 scope.children 还原为 Kernel element 数组 */
+/** IR 'scope' child → ScopeProps；样式 / 容器字段走 SCOPE_FIELDS 透传，递归把 scope.children 还原为 Kernel element 数组 */
 const scopePropsFromIR = (
   s: IRScope,
   key: number,
-): ScopeProps & { key: number } => {
-  const props: ScopeProps & { key: number } = {
-    key,
-    children: s.children.map((c, i) => childToElement(c, i)),
-  };
-  if (s.id !== undefined) props.id = s.id;
-  if (s.localNamespace !== undefined) props.localNamespace = s.localNamespace;
-  if (s.transforms !== undefined) props.transforms = s.transforms;
-  return props;
-};
+): ScopeProps & { key: number } => ({
+  key,
+  ...pickDefined(s, SCOPE_FIELDS),
+  children: s.children.map((c, i) => childToElement(c, i)),
+});
 
 /**
  * 把 IR JSON 反向还原为 Kernel element 数组（带 key、不裹外壳）

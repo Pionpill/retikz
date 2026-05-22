@@ -1,4 +1,4 @@
-import type { AssertEqual, IRNode, IRPath } from '@retikz/core';
+import type { AssertEqual, IRNode, IRPath, IRScope } from '@retikz/core';
 
 /**
  * IRNode 纯透传字段表（除 type / position / text / label 特化字段外）
@@ -10,6 +10,7 @@ export const NODE_FIELDS = [
   'rotate',
   'align',
   'lineHeight',
+  'color',
   'fill',
   'fillOpacity',
   'stroke',
@@ -48,6 +49,7 @@ void _assertNodeFieldsCheck;
  * @description 同 NODE_FIELDS 互锁防漂移
  */
 export const PATH_FIELDS = [
+  'color',
   'stroke',
   'strokeWidth',
   'dashPattern',
@@ -69,6 +71,36 @@ type _PathFieldsCheck = AssertEqual<
 >;
 const _assertPathFieldsCheck: _PathFieldsCheck = true;
 void _assertPathFieldsCheck;
+
+/**
+ * IRScope 纯透传字段表（除 type / children 特化字段外）
+ * @description 含 alpha.1 容器字段（id / localNamespace / transforms）+ alpha.2 样式默认字段
+ *   （级联 graphic state + 四通道 every-X + resetStyle）；同 NODE_FIELDS 互锁防漂移，builder / unbuilder 共用
+ */
+export const SCOPE_FIELDS = [
+  'id',
+  'localNamespace',
+  'transforms',
+  'color',
+  'stroke',
+  'fill',
+  'strokeWidth',
+  'opacity',
+  'fillOpacity',
+  'drawOpacity',
+  'nodeDefault',
+  'pathDefault',
+  'labelDefault',
+  'arrowDefault',
+  'resetStyle',
+] as const satisfies ReadonlyArray<keyof IRScope>;
+
+type _ScopeFieldsCheck = AssertEqual<
+  (typeof SCOPE_FIELDS)[number],
+  Exclude<keyof IRScope, 'type' | 'children'>
+>;
+const _assertScopeFieldsCheck: _ScopeFieldsCheck = true;
+void _assertScopeFieldsCheck;
 
 /**
  * 从源对象按字段表拣出 defined 字段

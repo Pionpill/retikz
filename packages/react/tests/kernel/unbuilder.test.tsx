@@ -782,6 +782,44 @@ describe('convertIRToReactNode', () => {
       expect(buildIR(convertIRToReactNode(ir))).toEqual(ir);
     });
 
+    it('round-trips IRScope 样式继承字段（alpha.2）：级联 + 四通道 + resetStyle + node/path color + step label 样式', () => {
+      const ir: IR = {
+        version: CURRENT_IR_VERSION,
+        type: 'scene',
+        children: [
+          {
+            type: 'scope',
+            color: 'blue',
+            stroke: 'red',
+            strokeWidth: 2,
+            opacity: 0.8,
+            nodeDefault: { shape: 'circle', fill: 'lightblue', font: { size: 12 } },
+            pathDefault: { stroke: 'green', dashPattern: [4, 2] },
+            labelDefault: { textColor: 'gray', font: { size: 10 } },
+            arrowDefault: { shape: 'stealth', scale: 1.5 },
+            resetStyle: ['label', 'arrow'],
+            children: [
+              { type: 'node', id: 'A', position: [0, 0], text: 'A', color: 'navy' },
+              {
+                type: 'path',
+                color: 'crimson',
+                children: [
+                  { type: 'step', kind: 'move', to: 'A' },
+                  {
+                    type: 'step',
+                    kind: 'line',
+                    to: [40, 0],
+                    label: { text: 'e', textColor: 'orange', opacity: 0.6, font: { size: 9 } },
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+      };
+      expect(buildIR(convertIRToReactNode(ir))).toEqual(ir);
+    });
+
     it('round-trips Coordinate 占位节点（alpha.4 ADR-02）', () => {
       const ir: IR = {
         version: CURRENT_IR_VERSION,

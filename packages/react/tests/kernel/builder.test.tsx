@@ -445,6 +445,63 @@ describe('buildIR', () => {
       expect(scope).not.toHaveProperty('transforms');
     });
 
+    it('<Node color> 主色透传到 IR（alpha.2）', () => {
+      const ir = buildIR(<Node id="A" position={[0, 0]} color="blue">A</Node>);
+      expect(ir.children[0]).toMatchObject({ type: 'node', color: 'blue' });
+    });
+
+    it('<Path color> 主色透传到 IR（alpha.2）', () => {
+      const ir = buildIR(
+        <Path color="crimson">
+          <Step kind="move" to="A" />
+          <Step to="B" />
+        </Path>,
+      );
+      expect(ir.children[0]).toMatchObject({ type: 'path', color: 'crimson' });
+    });
+
+    it('<Scope> 样式字段透传：级联 graphic state + 四通道 every-X + resetStyle（alpha.2）', () => {
+      const ir = buildIR(
+        <Scope
+          color="blue"
+          strokeWidth={2}
+          nodeDefault={{ shape: 'circle', fill: 'lightblue' }}
+          pathDefault={{ stroke: 'green' }}
+          labelDefault={{ font: { size: 10 } }}
+          arrowDefault={{ shape: 'stealth', scale: 1.5 }}
+          resetStyle={['label']}
+        >
+          <Node id="A" position={[0, 0]}>A</Node>
+        </Scope>,
+      );
+      expect(ir.children[0]).toMatchObject({
+        type: 'scope',
+        color: 'blue',
+        strokeWidth: 2,
+        nodeDefault: { shape: 'circle', fill: 'lightblue' },
+        pathDefault: { stroke: 'green' },
+        labelDefault: { font: { size: 10 } },
+        arrowDefault: { shape: 'stealth', scale: 1.5 },
+        resetStyle: ['label'],
+      });
+    });
+
+    it('<Step label> textColor / opacity / font 透传到 IR step.label（alpha.2）', () => {
+      const ir = buildIR(
+        <Path>
+          <Step kind="move" to="A" />
+          <Step to="B" label={{ text: 'x', textColor: 'red', opacity: 0.6, font: { size: 10 } }} />
+        </Path>,
+      );
+      const step = (ir.children[0] as { children: Array<{ label?: unknown }> }).children[1];
+      expect(step.label).toMatchObject({
+        text: 'x',
+        textColor: 'red',
+        opacity: 0.6,
+        font: { size: 10 },
+      });
+    });
+
     it('<Draw> way 中 label 与 fold / curve / arc 算子组合，全等价 Kernel 写法', () => {
       const fromSugar = buildIR(
         <Draw

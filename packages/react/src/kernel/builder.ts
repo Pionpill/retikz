@@ -26,7 +26,7 @@ import {
   TIKZ_STEP,
   TIKZ_TEXT,
 } from './_displayNames';
-import { NODE_FIELDS, PATH_FIELDS, pickDefined } from './_fields';
+import { NODE_FIELDS, PATH_FIELDS, SCOPE_FIELDS, pickDefined } from './_fields';
 
 /** 取 React 元素 type 上的 displayName；type 为字符串时直接返回，用于识别 Kernel/Sugar 组件 */
 const getDisplayName = (el: ReactElement): string | undefined => {
@@ -289,17 +289,12 @@ const buildCoordinateFromProps = (props: CoordinateProps): IRChild => ({
   position: props.position,
 });
 
-/** `<Scope>` props → IRScope；children 递归扫描走 readSceneChildren */
-const buildScopeFromProps = (props: ScopeProps): IRScope => {
-  const ir: IRScope = {
-    type: 'scope',
-    children: readSceneChildren(props.children),
-  };
-  if (props.id !== undefined) ir.id = props.id;
-  if (props.localNamespace !== undefined) ir.localNamespace = props.localNamespace;
-  if (props.transforms !== undefined) ir.transforms = props.transforms;
-  return ir;
-};
+/** `<Scope>` props → IRScope；样式 / 容器字段走 SCOPE_FIELDS 透传，children 递归扫描走 readSceneChildren */
+const buildScopeFromProps = (props: ScopeProps): IRScope => ({
+  type: 'scope',
+  ...pickDefined(props, SCOPE_FIELDS),
+  children: readSceneChildren(props.children),
+});
 
 /** `<Path>` props → IRChild；step 序列由 readPathChildren 收集 */
 const buildPathFromProps = (props: PathProps): IRChild => ({

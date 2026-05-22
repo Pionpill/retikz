@@ -1,5 +1,5 @@
 import type { FC, ReactNode } from 'react';
-import type { IRTransform } from '@retikz/core';
+import type { IRScope, IRTransform } from '@retikz/core';
 import { TIKZ_SCOPE } from './_displayNames';
 
 /** <Scope> 组件的 props */
@@ -19,6 +19,30 @@ export type ScopeProps = {
    * @description 支持 6 变体（translate / polar-translate / at-translate / offset-translate / rotate / scale）；4 个 translate 变体由 compile 阶段下沉为 Cartesian translate
    */
   transforms?: Array<IRTransform>;
+  /** 级联主色（TikZ scope `color=`）；内部元素 stroke / fill / 文字未单设则随它，并级联到边 label / 箭头 */
+  color?: IRScope['color'];
+  /** 级联默认描边色（覆盖主色的 stroke 通道） */
+  stroke?: IRScope['stroke'];
+  /** 级联默认填充色 */
+  fill?: IRScope['fill'];
+  /** 级联默认描边宽度（user units） */
+  strokeWidth?: IRScope['strokeWidth'];
+  /** 级联默认整体透明度 0~1（嵌套替换、不复合，与 TikZ 默认一致） */
+  opacity?: IRScope['opacity'];
+  /** 级联默认填充透明度 0~1 */
+  fillOpacity?: IRScope['fillOpacity'];
+  /** 级联默认描边透明度 0~1（TikZ `draw opacity`） */
+  drawOpacity?: IRScope['drawOpacity'];
+  /** every node 默认样式（TikZ `every node`），扁平独立通道 */
+  nodeDefault?: IRScope['nodeDefault'];
+  /** every path 默认样式（TikZ `every path`）；箭头走 arrowDefault 通道 */
+  pathDefault?: IRScope['pathDefault'];
+  /** every label 默认样式（node label + step label 共享） */
+  labelDefault?: IRScope['labelDefault'];
+  /** every arrow 默认样式（TikZ `every arrow`） */
+  arrowDefault?: IRScope['arrowDefault'];
+  /** 继承屏障：切外层对应通道继承（true 全切 / 数组按 'node'|'path'|'label'|'arrow' 切） */
+  resetStyle?: IRScope['resetStyle'];
   /** scope 子节点：嵌套 Node / Path / Coordinate / Scope */
   children?: ReactNode;
 };

@@ -4,6 +4,8 @@ import { TIKZ_PATH } from './_displayNames';
 
 /** <Path> 组件的 props */
 export type PathProps = {
+  /** 主色（TikZ `color=`）；stroke / 箭头 / step label 未单设则随它（跟主色不跟 stroke） */
+  color?: IRPath['color'];
   /** 描边色，省略时用 currentColor */
   stroke?: IRPath['stroke'];
   /** 描边宽度，省略时为 1 */

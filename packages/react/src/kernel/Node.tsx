@@ -51,6 +51,8 @@ export type NodeProps = {
   padding?: number;
   /** 外边距对称别名——等价于 `outerSep`；轴特化字段优先 */
   margin?: number;
+  /** 主色（TikZ `color=`）；stroke / fill / textColor 未单设则随它，并级联到内部文字与边 label */
+  color?: IRNode['color'];
   /** 背景色 */
   fill?: IRNode['fill'];
   /** 填充透明度 0~1 */
