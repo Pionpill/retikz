@@ -46,7 +46,7 @@ PATCH 不开目录——patch 仅修 bug、不写 ADR。
 | `v0.2-alpha.1` | 01-04（已完成） | — |
 | `v0.2-alpha.2` | 01-02（已完成） | — |
 | `v0.2-alpha.3` | 01（已完成） | — |
-| `v0.2-alpha.4` | 01 | 02 |
+| `v0.2-alpha.4` | 01-04 | 05 |
 
 ---
 
@@ -56,6 +56,9 @@ PATCH 不开目录——patch 仅修 bug、不写 ADR。
 
 | ADR | 标题 | 状态 |
 |---|---|---|
+| [ADR-04](v0/v0.2-alpha.4/04-node-label-rotate.md) | Node label `rotate`（绕自身中心自旋 + 修 rotated-Node label 坐标空间双重旋转）（B 部分） | Proposed |
+| [ADR-03](v0/v0.2-alpha.4/03-text-node-group-wrap.md) | 带文本 Node 输出始终包 `<g>`（以 Node 为 stacking / DOM 单位）（B 部分） | Proposed |
+| [ADR-02](v0/v0.2-alpha.4/02-explicit-zindex.md) | 显式 zIndex（Node / Path / Scope 栈序覆盖，compile 末端稳定排序）（B 部分） | Proposed |
 | [ADR-01](v0/v0.2-alpha.4/01-ir-order-regression.md) | compile 输出 IR 顺序回归（占位槽回填恢复 transform-free frame 的声明序）（A 部分） | Proposed |
 
 ---
