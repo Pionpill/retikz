@@ -72,6 +72,18 @@ export const NodeLabelSchema = z
     font: FontSchema.optional().describe(
       'Label font overrides; missing fields inherit from the parent node font, then renderer defaults.',
     ),
+    rotate: z
+      .union([z.enum(['none', 'radial', 'tangent']), z.number()])
+      .optional()
+      .describe(
+        'Rotate the label text around its own center. `none` (default) = horizontal; `radial` = along the node-center -> label-center direction; `tangent` = radial + 90 deg; a number = explicit degrees (screen y-down: 0 = +x, 90 = +y). Only changes text orientation, not placement.',
+      ),
+    keepUpright: z
+      .boolean()
+      .optional()
+      .describe(
+        'When true, flips the rotated label 180 deg if it would otherwise read upside-down (more than 90 deg from upright). Default false (strict geometric angle).',
+      ),
   })
   .describe(
     'Extra text attached around a node border. Multiple labels supported via array form on `Node.label`.',

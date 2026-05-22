@@ -112,6 +112,10 @@ export type NodeLabelLayout = {
   fontFamily?: string;
   fontWeight?: string | number;
   fontStyle?: 'normal' | 'italic' | 'oblique';
+  /** label 文本自旋模式（none / radial / tangent / 数字角度）；缺省 = 不旋转 */
+  rotate?: 'none' | 'radial' | 'tangent' | number;
+  /** 自旋后若文字倒置则翻 180°；缺省 false */
+  keepUpright?: boolean;
 };
 
 /** 把 Rect 各方向外扩 m（margin generic：所有 shape 都 w+2m, h+2m，由 boundaryPointOf 调用前膨胀） */
@@ -156,18 +160,53 @@ const LABEL_DIRECTION_MAP: Record<
 };
 
 /**
- * 算 label 中心点
- * @description 8 方向：节点对应 anchor 出发按单位向量 × distance 外推；数字角度：先取 angleBoundary 边界点再沿 (cos,sin) × distance 外推
+ * 算 label 中心点（节点局部坐标系，未旋转）
+ * @description 8 方向：节点对应 anchor 出发按单位向量 × distance 外推；数字角度：先取 angleBoundary 边界点再沿 (cos,sin) × distance 外推。
+ *   两个分支都在 **axis-aligned rect（rotate=0）** 上算——node 自身 rotate 由外层 GroupPrim 统一施加；
+ *   若用带 rotate 的 rect，label 位置会被 anchorOf / angleBoundaryOf 旋转一次、再被外层 group 旋转一次（双重旋转）。
+ *   anchorOf / angleBoundaryOf 本身不改（path anchor `'A.north'` / `'A.30'` 仍需带 rotate 的 rect）。
  */
 const labelCenter = (layout: NodeLayout, label: NodeLabelLayout): Position => {
+  const aaLayout: NodeLayout = { ...layout, rect: { ...layout.rect, rotate: 0 } };
   if (typeof label.position === 'number') {
     const rad = (label.position * Math.PI) / 180;
-    const [bx, by] = angleBoundaryOf(layout, label.position);
+    const [bx, by] = angleBoundaryOf(aaLayout, label.position);
     return [bx + Math.cos(rad) * label.distance, by + Math.sin(rad) * label.distance];
   }
   const { anchor, vec } = LABEL_DIRECTION_MAP[label.position];
-  const [bx, by] = anchorOf(layout, anchor);
+  const [bx, by] = anchorOf(aaLayout, anchor);
   return [bx + vec[0] * label.distance, by + vec[1] * label.distance];
+};
+
+/** 角度换算常量（弧度 → 度） */
+const RAD_TO_DEG = 180 / Math.PI;
+
+/**
+ * 算 label 文本自旋角度（度，屏幕 y-down，节点局部系）
+ * @description radial = atan2(label中心 − node中心)；tangent = radial + 90；number = 原值；none / 缺省 = 0。
+ *   keepUpright 时把"偏离正立 > 90°"的角度翻 180° 保阅读方向。方向向量在局部坐标算，node 自身 rotate 由外层 group 叠加。
+ */
+const resolveLabelRotateDeg = (
+  label: NodeLabelLayout,
+  lx: number,
+  ly: number,
+  cx: number,
+  cy: number,
+): number => {
+  const mode = label.rotate;
+  if (mode === undefined || mode === 'none') return 0;
+  let deg: number;
+  if (typeof mode === 'number') {
+    deg = mode;
+  } else {
+    const radial = Math.atan2(ly - cy, lx - cx) * RAD_TO_DEG;
+    deg = mode === 'tangent' ? radial + 90 : radial;
+  }
+  if (label.keepUpright) {
+    const norm = ((deg % 360) + 360) % 360;
+    if (norm > 90 && norm < 270) deg += 180;
+  }
+  return deg;
 };
 
 /**
@@ -322,6 +361,8 @@ export const layoutNode = (
       fontFamily: labFont?.family ?? labelDefault?.font?.family ?? fontFamily,
       fontWeight: labFont?.weight ?? labelDefault?.font?.weight ?? fontWeight,
       fontStyle: labFont?.style ?? labelDefault?.font?.style ?? fontStyle,
+      rotate: lab.rotate,
+      keepUpright: lab.keepUpright,
     };
   });
 
@@ -411,11 +452,13 @@ export const emitNodePrimitives = (
       measuredHeight: round(layout.textHeight),
     });
   }
-  // 每个 label 一个 TextPrim，放在 inner 同组 → 跟 node 旋转一致
+  // 每个 label 一个 TextPrim，放在 inner 同组 → 跟 node 旋转一致；rotate 时再包一层绕 label 自身中心的 group
   if (layout.labels) {
+    const cx = layout.rect.x;
+    const cy = layout.rect.y;
     for (const lab of layout.labels) {
       const [lx, ly] = labelCenter(layout, lab);
-      inner.push({
+      const textPrim: ScenePrimitive = {
         type: 'text',
         x: round(lx),
         y: round(ly),
@@ -431,7 +474,18 @@ export const emitNodePrimitives = (
         opacity: lab.opacity ?? layout.opacity,
         measuredWidth: 0,
         measuredHeight: round(lab.fontSize),
-      });
+      };
+      const deg = resolveLabelRotateDeg(lab, lx, ly, cx, cy);
+      if (deg === 0) {
+        inner.push(textPrim);
+      } else {
+        // 绕 label 自身中心自旋——位置仍由 position / distance 决定，rotate 只改朝向
+        inner.push({
+          type: 'group',
+          transforms: [{ kind: 'rotate', degrees: round(deg), cx: round(lx), cy: round(ly) }],
+          children: [textPrim],
+        });
+      }
     }
   }
   // 带文本（layout.lines 非空）或有旋转的 Node 包进单层 GroupPrim：给"语义化节点"一个稳定 DOM /
