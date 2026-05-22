@@ -52,11 +52,11 @@ PATCH 不开目录——patch 仅修 bug、不写 ADR。
 
 ## v0.2.0-alpha.4（进行中）
 
-> 主题：compile 输出按 IR 顺序回归——修复 alpha.1 重写 compile 管线后 path 顺序退化；alpha.5 / alpha.6 的硬前置
+> 主题：**compile IR 顺序回归（A）+ emit 层增强（B）**——A 修复 alpha.1 重写 compile 管线后 path 顺序退化（是 B 与 alpha.5 sugar 的硬前置）；B 加显式 `zIndex` + 带文本 Node 包 `<g>` + Node label `rotate`。原 alpha.4（A）与 alpha.5（B）2026-05-23 合并；ADR-01 为 A，B 的 emit 增强 ADR 续编 02+。
 
 | ADR | 标题 | 状态 |
 |---|---|---|
-| [ADR-01](v0/v0.2-alpha.4/01-ir-order-regression.md) | compile 输出 IR 顺序回归（占位槽回填恢复 transform-free frame 的声明序） | Proposed |
+| [ADR-01](v0/v0.2-alpha.4/01-ir-order-regression.md) | compile 输出 IR 顺序回归（占位槽回填恢复 transform-free frame 的声明序）（A 部分） | Proposed |
 
 ---
 

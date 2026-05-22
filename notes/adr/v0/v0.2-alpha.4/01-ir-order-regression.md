@@ -10,14 +10,16 @@ main `bc7431f` 修过的「z-order 严格 = IR 声明顺序」在 alpha.1 重写
 
 退化是两遍扫描的副作用。node 在 Pass 1 就能算出 layout，于是**带位置直接** push 到当前 `sink`（顶层 = `primitives`、scope 内 = `GroupPrim.children`），位置正确。path 因端点可能前向引用 node，必须延到 Pass 2 才能定坐标；alpha.1 的实现把所有 pending path 累积到 `pathsAccumulator`，Pass 2 `resolvePendingPaths` 解析后**一律 push 顶层 `primitives`**——既进错了数组（不是声明所在的 sink），又错了时机（顶层在所有 node 处理完后批量 resolve）。两重错位叠加，path 的声明位丢失。
 
-这不是用户可见的语义错误（坐标仍正确），但破坏了下游两段的硬前提：
+这不是用户可见的语义错误（坐标仍正确），但破坏了下游的硬前提：
 
-- **alpha.5「显式 `zIndex`」**的核心算法是「先按 IR 顺序、再按 `zIndex` 稳定排序」。IR 顺序基线已失效，稳定排序无从谈起。
-- **alpha.6 Grid「底纹背景」sugar** 靠 IR 顺序把底纹埋在最底层；当前所有 path 顶到末尾会把底纹叠到最上层。
+- **同段 emit 增强（B）的「显式 `zIndex`」**核心算法是「先按 IR 顺序、再按 `zIndex` 稳定排序」。IR 顺序基线已失效，稳定排序无从谈起。
+- **alpha.5 Grid「底纹背景」sugar** 靠 IR 顺序把底纹埋在最底层；当前所有 path 顶到末尾会把底纹叠到最上层。
 
-两段都被本回归卡死，故 alpha.4 单独成段先修。TikZ 本身 z-order 严格等于绘制（声明）顺序——本回归是偏离 TikZ 习惯，修复是回归对齐。
+> **段结构说明**（2026-05-23）：本回归（A）原为独立段 alpha.4，emit 增强（zIndex / 文本 Node 包 `<g>` / label rotate）原为 alpha.5；二者已合并为一段 alpha.4——A 是 B 的同段硬前置，A 先落、B 建在 A 的 sealSink 上。Grid sugar 段相应重编号为 alpha.5。本 ADR 是合并后 alpha.4 的 ADR-01（A 部分）；B 的 emit 增强 ADR 同目录续编。
 
-**为什么独立成 alpha 而非塞回 alpha.1**（与 v0.2.md §alpha.4 设计预想一致）：alpha.1 的 4 篇 ADR 已全部 Accepted / 闭合，回开第 5 篇会破「封闭后再开下一段」的拆分原则；且本回归是 alpha.5 / alpha.6 的硬前置，单独成段方便依赖标注与验收闭环。
+下游都被本回归卡死，故 A 先修。TikZ 本身 z-order 严格等于绘制（声明）顺序——本回归是偏离 TikZ 习惯，修复是回归对齐。
+
+**为什么 A 自成一块（而非塞回 alpha.1）**：alpha.1 的 4 篇 ADR 已全部 Accepted / 闭合，回开第 5 篇会破「封闭后再开下一段」的拆分原则；且本回归是同段 B 与 alpha.5 sugar 的硬前置，独立成块方便依赖标注与验收闭环。
 
 ## 选项
 
@@ -84,7 +86,7 @@ if (item.slot) {
 
 理由：
 
-1. **最小回归修复**：本段定位是修 alpha.1 退化、解锁 alpha.5 / alpha.6，不是重做坐标系。A 用占位槽精确恢复 transform-free frame 的声明序，node 路径零改动，改动全部集中在 `compile.ts` 一处。
+1. **最小回归修复**：本块定位是修 alpha.1 退化、解锁同段 emit 增强（B）与 alpha.5 sugar，不是重做坐标系。A 用占位槽精确恢复 transform-free frame 的声明序，node 路径零改动，改动全部集中在 `compile.ts` 一处。
 2. **与现有架构同构**：占位「Pass 1 占位 / Pass 2 回填」与 node「Pass 1 带位置 push」是同一个心智；不破坏 alpha.1 ADR-02 的 inside-out lookup、frame push/pop、`resolvePendingPaths(innerPaths)` 调用时机。
 3. **保 transformed scope path 坐标正确性**：`chain` 非空继续 hoist，端点全局坐标不二次 apply——与改造前逐字节相等，不引入回归。
 4. **不污染公开类型**：占位类型模块私有，公开 `ScenePrimitive` / IR / 导出 0 变化；AI 一等公民约束（IR JSON 可序列化）不受触碰。
@@ -174,12 +176,12 @@ const ir = {
 - **不动**：`emitPathPrimitive`（端点仍解析为全局坐标）、`emitNodePrimitives`、`NameStack`、scope 的 frame push/pop 与 `resolvePendingPaths(innerPaths)` 调用时机（保 ADR-02 inside-out lookup 语义）、`isPrunable` 判据。
 - **零破坏 schema / IR / 公开 API**：无字段 / 公开类型 / 导出变化；占位类型模块私有不泄漏。AST 白名单 / system prompt 不涉及。
 - **文档站**：Scope 技术原理订正「scope 内 path 落点」描述（无 transform 回填 `GroupPrim.children` / 带 transform hoist 顶层），更新日志加 v0.2.0-alpha.4 条目（双语）。无 DSL / API 变化，仅行为说明订正。
-- **下游解锁**：为 alpha.5「先按 IR 顺序、再按 `zIndex` 稳定排序」提供 transform-free frame 内可验收的 IR 顺序基线；transformed scope path hoist 限制需在 alpha.5 ADR 中继续显式承认。
+- **下游解锁**：为同段 emit 增强（B）「先按 IR 顺序、再按 `zIndex` 稳定排序」提供 transform-free frame 内可验收的 IR 顺序基线；transformed scope path hoist 限制需在 B 的 emit 增强 ADR 中继续显式承认。
 
 ## 不在本 ADR 范围
 
-- **transformed scope 内 path 的完整 z-order**（选项 C）：本段维持现有 hoist 行为（path 落在其所属 scope 的 `GroupPrim` 之前）以保端点坐标正确性。「path 端点改用 scope 局部坐标、让 transformed scope 内 path 也能进 `GroupPrim.children`」是更彻底方案，但要改 `emitPathPrimitive` 端点坐标系（与 alpha.1 ADR-02「path 端点全局坐标」相悖），体量超出 bug 修复，留未来单独 ADR。alpha.5 的显式 `zIndex` 只能覆盖一部分 stacking 诉求，不能替代坐标系层面的彻底修复——alpha.5 ADR 须显式承认此限制。
-- **顶层 / scope `primitives` 之外的 stacking 机制**（如显式 `zIndex`）→ alpha.5。
+- **transformed scope 内 path 的完整 z-order**（选项 C）：本块维持现有 hoist 行为（path 落在其所属 scope 的 `GroupPrim` 之前）以保端点坐标正确性。「path 端点改用 scope 局部坐标、让 transformed scope 内 path 也能进 `GroupPrim.children`」是更彻底方案，但要改 `emitPathPrimitive` 端点坐标系（与 alpha.1 ADR-02「path 端点全局坐标」相悖），体量超出 bug 修复，留未来单独 ADR。同段 emit 增强（B）的显式 `zIndex` 只能覆盖一部分 stacking 诉求，不能替代坐标系层面的彻底修复——B 的 emit 增强 ADR 须显式承认此限制。
+- **顶层 / scope `primitives` 之外的 stacking 机制**（如显式 `zIndex`）→ 同段 emit 增强（B），独立 ADR。
 - **占位类型方案 B（sink wrapper）**：评估后否决（与 A 正确性等价、改动面更大），保留记录避免重复立项。
 
 ---

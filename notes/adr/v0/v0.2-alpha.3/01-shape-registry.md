@@ -2,9 +2,9 @@
 
 - 状态：Accepted
 - 决策日期：2026-05-21
-- 关联：[v0 roadmap §Shape Registry 提案](../../../plans/v0/roadmap.md#shape-registry-提案) · [v0.2 总计划 §七段 alpha 节奏](../../../plans/v0/v0.2.md#七段-alpha-节奏) · [DESIGN.md §1.2 AI 一等公民](../../../architecture/DESIGN.md) · [alpha.1 ADR-02 nodeIndex/anchor 解析](../v0.2-alpha.1/02-node-index-anchor-resolution.md) · [v0.1-beta.1 ADR-03 geometry 共享 transform / 死 anchor 清理](../v0.1-beta.1/03-geometry-shared-transform-dead-anchor-cleanup.md) · [v0.1-beta.1 ADR-08 onWarn 收集器](../v0.1-beta.1/08-compile-on-warn-collector.md)
+- 关联：[v0 roadmap §Shape Registry 提案](../../../plans/v0/roadmap.md#shape-registry-提案) · [v0.2 总计划 §六段 alpha 节奏](../../../plans/v0/v0.2.md#六段-alpha-节奏) · [DESIGN.md §1.2 AI 一等公民](../../../architecture/DESIGN.md) · [alpha.1 ADR-02 nodeIndex/anchor 解析](../v0.2-alpha.1/02-node-index-anchor-resolution.md) · [v0.1-beta.1 ADR-03 geometry 共享 transform / 死 anchor 清理](../v0.1-beta.1/03-geometry-shared-transform-dead-anchor-cleanup.md) · [v0.1-beta.1 ADR-08 onWarn 收集器](../v0.1-beta.1/08-compile-on-warn-collector.md)
 
-> **前置依赖说明**：alpha.7（结构化 Target / Anchor）依赖本 ADR 先固化 anchor 接口。本 ADR 把 anchor 解释面收敛到 `ShapeDefinition.anchor(rect, name)`，alpha.7 的对象化 path target 直接消费同一入口，避免「内置 shape anchor 走旧路径、注册 shape anchor 走新路径」的双轨。是接口先后，非排期紧邻。
+> **前置依赖说明**：alpha.6（结构化 Target / Anchor）依赖本 ADR 先固化 anchor 接口。本 ADR 把 anchor 解释面收敛到 `ShapeDefinition.anchor(rect, name)`，alpha.6 的对象化 path target 直接消费同一入口，避免「内置 shape anchor 走旧路径、注册 shape anchor 走新路径」的双轨。是接口先后，非排期紧邻。
 
 ## 背景
 
@@ -107,7 +107,7 @@ roadmap 草案 `layout(text, padding): Rect` / `boundaryPoint(layout, from)` / `
 1. **达标**：`ShapeDefinition` + `CompileOptions.shapes` 让第三方能发 `@retikz/shapes-flow` / `-uml` 不依赖 core 修改；内置 4 shape 改注册项消除内置特权。
 2. **接口最小、贴现实**：4 方法精确对应 5 个分发点的多态部分（`circumscribe`↔layoutNode 外接、`boundaryPoint`↔boundaryPointOf+angleBoundaryOf、`anchor`↔anchorOf、`emit`↔emitNodePrimitives），generic 逻辑不外溢——第三方写 shape 只关心几何。
 3. **AI 友好 + IR 纯净**：IR `shape` 仍是字符串，`ShapeDefinition` 走运行时注入不进 IR，序列化 / LLM tool schema / JSON Patch 全不受影响；schema 只校验非空字符串、未注册名 compile 期拒，内置名经 describe / reference / system prompt 列出。
-4. **为 alpha.7 固化 anchor 接口**：`anchor(rect, name): Position | undefined` 是命名 anchor 唯一权威；数字角度 generic 走 boundaryPoint；alpha.7 对象化 path target 直接消费这套，不开双轨。
+4. **为 alpha.6 固化 anchor 接口**：`anchor(rect, name): Position | undefined` 是命名 anchor 唯一权威；数字角度 generic 走 boundaryPoint；alpha.6 对象化 path target 直接消费这套，不开双轨。
 5. **renderer-neutral**：emit 出 `ScenePrimitive`（`RectPrim` / `EllipsePrim` / `PathPrim` / `GroupPrim`），adapter 不感知 shape（延续 v0.1-beta.1 ADR）。
 
 ## 决策细节
@@ -212,8 +212,8 @@ compileToScene(ir, { shapes: { rectangle: myRoundedRectShape } });
 
 ## 不在本 ADR 范围
 
-- **`{ side, t }` 边上比例点 anchor** → alpha.7（你已拍板：`anchor` v0.2 只要命名 + 数字角度 generic；`{side,t}` 留作内置 shape 专属，第三方 shape 仅必须支持命名 anchor，角度免费）。
-- **字符串 target 解析重构**（`'A.north'` / `'A.30'` → 对象 IR）→ alpha.7；本 ADR 不动 `parseTarget` / `parseNodeRef`。
+- **`{ side, t }` 边上比例点 anchor** → alpha.6（你已拍板：`anchor` v0.2 只要命名 + 数字角度 generic；`{side,t}` 留作内置 shape 专属，第三方 shape 仅必须支持命名 anchor，角度免费）。
+- **字符串 target 解析重构**（`'A.north'` / `'A.30'` → 对象 IR）→ alpha.6；本 ADR 不动 `parseTarget` / `parseNodeRef`。
 - **shape 继承（`\inheritsavedanchors`）/ shape factory 具体实现 / 形状特化 every（`every diamond node`）** → v0.2 §范围外（v1+）。
 - **新增内置 shape**（trapezium / cylinder / cloud 等）→ 本 ADR 维持现有 4 内置，其余全走 registry 由第三方包注入（人工已确认）。
 - **AST 白名单 / system prompt 硬约束**：`shape` 是 `<Node>` 既有 prop，开放为字符串后不加新组件；system prompt 顺手补「shape 支持注册扩展、列举已注册名」为 green，不在本 ADR 硬约束。
