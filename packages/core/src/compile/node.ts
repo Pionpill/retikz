@@ -4,7 +4,7 @@ import { type Ellipse, ellipse as ellipseOps } from '../geometry/ellipse';
 import type { Position } from '../geometry/point';
 import type { Rect, RectAnchor } from '../geometry/rect';
 import { rect as rectOps } from '../geometry/rect';
-import type { AtDirection, IRLineSpec, IRNode, IRNodeLabel, NodeShape } from '../ir';
+import type { AtDirection, IRLabelDefault, IRLineSpec, IRNode, IRNodeLabel, NodeShape } from '../ir';
 import type { ScenePrimitive, TextLine, Transform } from '../primitive';
 import type { NameStack } from './name-stack';
 import { resolvePosition } from './position';
@@ -257,6 +257,7 @@ export const layoutNode = (
   nameStack: NameStack,
   nodeDistance?: number,
   scopeChain: ReadonlyArray<Transform> = [],
+  labelDefault?: IRLabelDefault,
 ): NodeLayout => {
   // 缩放：xScale/yScale 优先于 scale 别名，默认 1；乘进所有尺寸让 path 贴缩放后边界。
   // 字号取 min(sx,sy) 保 glyph 形状，避免非均匀缩放下文字被拉变形。
@@ -376,12 +377,13 @@ export const layoutNode = (
       text: lab.text,
       position: lab.position ?? 'above',
       distance: lab.distance ?? DEFAULT_LABEL_DISTANCE,
-      textColor: lab.textColor ?? node.textColor,
-      opacity: lab.opacity,
-      fontSize: (labFont?.size ?? baseFontSize) * fontScale,
-      fontFamily: labFont?.family ?? fontFamily,
-      fontWeight: labFont?.weight ?? fontWeight,
-      fontStyle: labFont?.style ?? fontStyle,
+      // 继承顺序：label 显式 > scope.labelDefault (textColor → color) > 宿主 node 主色（已解析进 node.textColor） > currentColor
+      textColor: lab.textColor ?? labelDefault?.textColor ?? labelDefault?.color ?? node.textColor,
+      opacity: lab.opacity ?? labelDefault?.opacity,
+      fontSize: (labFont?.size ?? labelDefault?.font?.size ?? baseFontSize) * fontScale,
+      fontFamily: labFont?.family ?? labelDefault?.font?.family ?? fontFamily,
+      fontWeight: labFont?.weight ?? labelDefault?.font?.weight ?? fontWeight,
+      fontStyle: labFont?.style ?? labelDefault?.font?.style ?? fontStyle,
     };
   });
 

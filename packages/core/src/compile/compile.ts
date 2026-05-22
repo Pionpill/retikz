@@ -13,6 +13,13 @@ import {
   projectLayoutToGlobal,
   registerScopeAsLayout,
 } from './scope';
+import {
+  type StyleFrame,
+  buildStyleFrame,
+  resolveEffectivePath,
+  resolveLabelDefault,
+  resolveNodeStyle,
+} from './style';
 import { type TextMeasurer, fallbackMeasurer } from './text-metrics';
 import { computeLayout } from './layout';
 
@@ -206,6 +213,7 @@ export const compileToScene = (ir: IR, options: CompileOptions = {}): Scene => {
    * @param locatorPrefix IR locator 前缀（如 `''` 表示顶层、`children[2].scope.` 表示某 scope 内）
    * @param layoutsAccumulator 当前 scope 子树所有"实体"layout（node / coordinate / 嵌套 scope.id synthetic）累积——专给上层 scope.id bbox 计算用；顶层调用传一个共享数组（用得着就用，丢弃也不影响）
    * @param pathsAccumulator 当前层级收集的 pending paths——由调用方分配并在合适时机 resolve
+   * @param styleStack 从根到当前层级累积的样式 frame 栈（scope 级联 graphic state + 四通道 every-X + resetStyle）；node / path 进入时按 inside-out per-field 解析 effective 样式
    */
   const processChildren = (
     children: ReadonlyArray<IRChild>,
@@ -214,11 +222,20 @@ export const compileToScene = (ir: IR, options: CompileOptions = {}): Scene => {
     locatorPrefix: string,
     layoutsAccumulator: Array<NodeLayout>,
     pathsAccumulator: Array<PendingPath>,
+    styleStack: ReadonlyArray<StyleFrame>,
   ): void => {
     for (let i = 0; i < children.length; i++) {
       const child = children[i];
       if (child.type === 'node') {
-        const layout = layoutNode(child, measureText, nameStack, nodeDistance, chain);
+        const effectiveNode = resolveNodeStyle(child, styleStack);
+        const layout = layoutNode(
+          effectiveNode,
+          measureText,
+          nameStack,
+          nodeDistance,
+          chain,
+          resolveLabelDefault(styleStack),
+        );
         const globalLayout = chain.length === 0 ? layout : projectLayoutToGlobal(layout, chain);
         if (child.id) {
           nameStack.register(child.id, globalLayout, `${locatorPrefix}children[${i}].node.id`);
@@ -297,6 +314,7 @@ export const compileToScene = (ir: IR, options: CompileOptions = {}): Scene => {
             `${locatorPrefix}children[${i}].scope.`,
             innerLayouts,
             innerPaths,
+            [...styleStack, buildStyleFrame(child)],
           );
           // 子树 register 完毕，先用真 bbox 覆盖 placeholder（仍在本 scope frame 上下文），再 resolve 本 scope 内 paths
           if (child.id) {
@@ -336,7 +354,7 @@ export const compileToScene = (ir: IR, options: CompileOptions = {}): Scene => {
         // `chain` 记录 path 所属 scope 累积 transform，让 step.to 内的 polar/at/offset 字面量
         // 按"当前 scope 局部度量 + 末端 apply chain"投影回全局
         pathsAccumulator.push({
-          path: child,
+          path: resolveEffectivePath(child, styleStack),
           irPath: `${locatorPrefix}children[${i}].path`,
           scopeChain: chain,
         });
@@ -347,7 +365,7 @@ export const compileToScene = (ir: IR, options: CompileOptions = {}): Scene => {
   // 递归处理整棵 IR child 树；顶层 paths 在所有 register 完成后统一 resolve
   // 顶层 layouts 累积无人消费——传一个临时数组即可（顶层无 scope.id 包裹）
   const rootPaths: Array<PendingPath> = [];
-  processChildren(ir.children, [], primitives, '', [], rootPaths);
+  processChildren(ir.children, [], primitives, '', [], rootPaths, []);
   resolvePendingPaths(rootPaths);
 
   return {

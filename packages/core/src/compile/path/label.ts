@@ -39,13 +39,30 @@ export const emitLabelPrimitive = (
   sample: SegmentSample,
   measureText: TextMeasurer,
   round: (n: number) => number,
+  hostOpacity?: number,
 ): { primitive: ScenePrimitive; points: Array<IRPosition> } => {
-  const fontSize = LABEL_FONT_SIZE;
+  // label.font / textColor / opacity 已由 compile/style 解析（fold scope labelDefault + 宿主 path 主色）
+  const fontSize = label.font?.size ?? LABEL_FONT_SIZE;
+  const fontFamily = label.font?.family;
+  const fontWeight = label.font?.weight;
+  const fontStyle = label.font?.style;
   const lineHeight = fontSize * LABEL_LINE_HEIGHT_FACTOR;
-  const m = measureText(label.text, { size: fontSize });
+  const m = measureText(label.text, {
+    size: fontSize,
+    family: fontFamily,
+    weight: fontWeight,
+    style: fontStyle,
+  });
   const measuredWidth = m.width;
   const measuredHeight = m.height || lineHeight;
   const side = label.side ?? 'above';
+  // label-only opacity 与宿主 path opacity 相乘（元素内轴）；label 缺省则跟随宿主 opacity
+  const labelOpacity =
+    label.opacity !== undefined
+      ? hostOpacity !== undefined
+        ? label.opacity * hostOpacity
+        : label.opacity
+      : hostOpacity;
 
   let x = sample.point[0];
   let y = sample.point[1];
@@ -80,8 +97,12 @@ export const emitLabelPrimitive = (
     lineHeight: round(lineHeight),
     measuredWidth: round(measuredWidth),
     measuredHeight: round(measuredHeight),
-    fill: 'currentColor',
+    fill: label.textColor ?? 'currentColor',
   };
+  if (fontFamily !== undefined) text.fontFamily = fontFamily;
+  if (fontWeight !== undefined) text.fontWeight = fontWeight;
+  if (fontStyle !== undefined) text.fontStyle = fontStyle;
+  if (labelOpacity !== undefined) text.opacity = labelOpacity;
 
   if (side === 'sloped') {
     const angleDeg = Math.atan2(sample.tangent[1], sample.tangent[0]) * RAD_TO_DEG;

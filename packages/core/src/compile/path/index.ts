@@ -116,7 +116,7 @@ export const emitPathPrimitive = (
     }
     const t = tForLabelPosition(step.label.position);
     const sample = sampleAt(t);
-    const r = emitLabelPrimitive(step.label, sample, measureText, round);
+    const r = emitLabelPrimitive(step.label, sample, measureText, round, path.opacity);
     labelPrims.push(r.primitive);
     for (const p of r.points) points.push(p);
   };
