@@ -9,7 +9,7 @@
 | [`architecture/`](./architecture) | 长期架构文档；少改、不带日期 | 永久（重大架构调整时**更新原文**，不另起新文） | 主题名，如 `DESIGN.md` |
 | [`adr/`](./adr) | 单点架构决策记录（Architecture Decision Records） | 永久、不可变；被推翻就写新 ADR 标 `Supersedes #N` | `NNNN-kebab-case-标题.md`，编号递增 |
 | [`analysis/`](./analysis) | 一次性研究 / 对比 / gap 分析 | 长期保留作历史参考，但不再更新 | `YYYY-MM-DD-kebab-case-标题.md` |
-| [`plans/`](./plans) | 临时实施方案、迁移步骤 | **完工即删**（git 历史还在），不留死文件 | 版本专属：`v<MAJOR>/v<MAJOR>.<MINOR>-<channel>.<N>.md`（plan 比 adr 粒度粗，单文件就够）；跨版本草案：顶层 `kebab-case-标题.md` |
+| [`plans/`](./plans) | 临时实施方案、迁移步骤 | **完工后保留留档**（标记完成、不再更新；摘要进 roadmap 跟踪段） | 版本专属：`v<MAJOR>/v<MAJOR>.<MINOR>-<channel>.<N>.md`（plan 比 adr 粒度粗，单文件就够）；跨版本草案：顶层 `kebab-case-标题.md` |
 
 ## 当前文档
 
@@ -40,9 +40,9 @@
 1. 是"为什么这么做"的单点决策？→ `adr/`，开新编号
 2. 是会持续更新的架构总图？→ `architecture/`
 3. 是一次性的研究 / 对比，写完不再改？→ `analysis/`，加日期
-4. 是"接下来要做什么"的实施方案？→ `plans/`，完工即删
+4. 是"接下来要做什么"的实施方案？→ `plans/`，完工后保留留档
 
-**有歧义就当 plans 写**——临时文档删起来零成本，永久目录里塞临时文档（CORE-REFACTOR / REACT-ADAPTER 的悲剧）才贵。
+**有歧义就当 plans 写**——plan 颗粒粗、变化快，完工后留档作实施记录即可；别把临时方案塞进永久架构目录（architecture / adr），那才是 CORE-REFACTOR / REACT-ADAPTER 的悲剧。
 
 ## superpowers/
 
