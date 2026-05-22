@@ -1,6 +1,6 @@
 # ADR-01：Scope 样式继承（扁平 every-X 默认 + 主色 color + resetStyle 屏障）
 
-- 状态：Proposed
+- 状态：Accepted
 - 决策日期：2026-05-21
 - 关联：[v0 roadmap §v0.2](../../../plans/v0/roadmap.md) · [v0.2 总计划 §alpha.2 设计预想](../../../plans/v0/v0.2.md#alpha2-设计预想scope-样式子集) · [v0.2-alpha.2 plan](../../../plans/v0/v0.2-alpha.2.md) · [DESIGN.md §1.2 AI 一等公民](../../../architecture/DESIGN.md) · [alpha.1 ADR-01 Scope 容器](../v0.2-alpha.1/01-scope-ir-and-compile.md) · [alpha.1 ADR-02 inside-out lookup](../v0.2-alpha.1/02-node-index-anchor-resolution.md)
 
@@ -96,9 +96,9 @@ export const ScopeSchema = z.object({
 8. **`resetStyle`**：`boolean | ('node'|'path'|'label'|'arrow')[]`,只切**scope 继承轴**（外层级联 graphic state + every-X 默认），只朝外；正交于 transforms / localNamespace / scope.id bbox。**不碰实例-host 轴**——label / arrow 仍跟随**所属 path/node 的已解析颜色**（结构关系,非 scope 继承）,避免脱离其线/节点成"孤岛"。即 `resetStyle=['label']` 只忽略外层 `labelDefault`、label 仍属它的线/节点；`resetStyle=['arrow']` 仍跟线色；`resetStyle=true` 把 scope 通道归零后 host-following 照常流动归零值（线 baseline 黑、label/arrow 跟着黑,仍不孤岛）。想让 label 真脱离线色 → 元素级显式 `textColor`（或未来 `'initial'`），不归 resetStyle。
 9. **未知 key**：`.strict()` 严拒,错误信息列合法字段集。
 10. **shape 作默认值**：scope/nodeDefault 的 shape 子节点未给则继承。
-11. **分项 vs 主色 跨源序**：`元素显式分项 > 元素 color > 外层 every-X 分项 > every-X color > scope 级联分项 > scope color > 内置`——元素自身意图优先,但元素的笼统主色让位于更具体的外层 every-X 分项；同源内分项盖主色。
+11. **分项 vs 主色 跨源序**：`元素显式分项 > 元素 color > 外层 every-X 分项 > every-X color > scope 级联分项 > scope color > 内置`——元素自身意图（显式分项、其次主色）整体优先于外层任何来源；每个来源内分项盖主色（every-X 分项 > every-X color、scope 分项 > scope color）。即 `<Node color="blue">` 在 `<Scope nodeDefault={{stroke:"green"}}>` 内最终 stroke=blue（元素 color > every-X 分项）。
 12. **级联 graphic state 字段集**：`color + stroke + fill + strokeWidth + opacity + fillOpacity + drawOpacity`（7）。dash 因 node（dashed/dotted/dashArray）与 path（dashPattern）命名不同,不进级联、各走自己 default。
-13. **arrow 跟色映射**：`arrow.color ← 宿主 path 已解析 color`；`arrow.lineWidth ← path.strokeWidth`；`arrow.fill ← arrow.color`（非 path.fill）；`shape/scale/length/width` 无 path 对应,只 `arrowDefault > 内置`。
+13. **arrow 跟色映射**：`arrow.color ← 宿主 path 已解析 color`（端点级——宿主主色清掉 arrowDefault 来源的 `start`/`end.color` 让端点回退主色，元素显式 `arrowDetail`(.start/.end).color 仍最高）；`shape/scale/length/width` 无 path 对应,只 `arrowDefault > 内置`。`arrow.lineWidth ← path.strokeWidth` / `arrow.fill ← arrow.color` 的主色映射**本 alpha 推迟**（render 端仍按现有兜底继承 path stroke）。
 14. **主色 `color` 上 Scope + Node + Path**：元素级 `color=` 贴 TikZ,且 ADR-02 的 path color→label 需要 path.color。
 15. **`pathDefault` 排除 `arrow` / `arrowDetail`**：arrow 走独立 `arrowDefault` 通道,免双入口。
 16. **`labelDefault` 单通道双宿主**：一个 labelDefault；host 按 label 种类分——node-label→node.color、step-label→path.color（细节 ADR-02）。
