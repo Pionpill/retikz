@@ -1,6 +1,6 @@
 ---
 name: package-publish
-description: 用于把 retikz 的 publishable 包（`@retikz/core` / `@retikz/react`）发布到 npm。一次发包 = 三处同步：版本号（`packages/<pkg>/package.json`）、文档站（`apps/docs/src/contents/reference/releases` + `i18n` 的 `versionTag`）、内部计划（`notes/plans/v0/roadmap.md` 勾选）。retikz 专用，其它项目可忽略。
+description: 用于把 retikz 的 publishable 包（`@retikz/core` / `@retikz/react`）发布到 npm。一次发包 = 三处同步：版本号（`packages/<pkg>/package.json`）、文档站（`apps/docs/src/contents/reference/releases` + `i18n` 的 `versionTag`）、内部计划（`notes/plans/v0/roadmap.md` 勾选）。发布后预 bump packages 到下一开发版本（plan 有下一版本直接改、没有则问用户）。retikz 专用，其它项目可忽略。
 ---
 
 # 发 retikz 到 npm
@@ -79,7 +79,7 @@ retikz 一次发包 = **3 处同步改动 + 用户确认 + npm publish**。
 - 是否同时打 git tag（默认是）
 - 是否 push tag 到 remote（默认是）
 
-## 全流程（5 阶段）
+## 全流程（6 阶段）
 
 ### 阶段 1 — 盘点 + 计划
 
@@ -309,6 +309,22 @@ git push origin v0.1.0-alpha.1
 git tag: v0.1.0-alpha.1（已 push）
 下游拉法：pnpm add @retikz/react@alpha
 ```
+
+### 阶段 6 — 发版后预 bump 到下一开发版本
+
+发布成功后，把 `packages/{core,react}/package.json` 的 `version` 预 bump 到**下一个开发版本**——避免下次开工时仓库版本号还停在已发布版本，造成「源码版本 = npm 已发布版本」的歧义。
+
+下一版本怎么定：
+
+1. 查计划文档的版本跟踪 checkbox——v0.2 看 [`v0.2.md`](../../../notes/plans/v0/v0.2.md) 的「v0.2 跟踪」段，v0.1 看 [`roadmap.md`](../../../notes/plans/v0/roadmap.md)。
+2. **plan 里明确有下一个未发布版本** → 直接把两个包 version 改成它。例：刚发 `0.2.0-alpha.2`、跟踪段下一行是 `- [ ] v0.2.0-alpha.3` → 两个包 version 改 `0.2.0-alpha.3`。
+3. **plan 里没有明确的下一个版本**（刚发的是该 milestone 最后一个 alpha、下一步 beta / rc / 正式版未排期、或跟踪段已到末尾）→ **停下来问用户**下一个版本号，不要瞎猜。
+
+约束：
+
+- 只改 `version` 字段，**不**重新 build / publish / tag——这是下一轮开发的起点，不是新发布。
+- 两个包同版本号（与发版规则一致）。
+- bump 改动按根 AGENTS.md 红线**等用户授权再 commit**；emoji 用 `:bookmark:`，message 如 `:bookmark: 预 bump 到 0.2.0-alpha.3 开发版`。
 
 ## Quick Reference
 
