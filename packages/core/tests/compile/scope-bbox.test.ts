@@ -12,6 +12,7 @@ import {
 } from '../../src/compile/scope';
 import type { CompileWarning, IR, ScenePrimitive } from '../../src';
 import type { NodeLayout } from '../../src/compile/node';
+import { BUILTIN_SHAPES } from '../../src/shapes';
 import type { TextMeasurer } from '../../src/compile/text-metrics';
 
 const scene = (children: IR['children']): IR => ({
@@ -34,7 +35,8 @@ const lineTo = (prim: ScenePrimitive | undefined): [number, number] | undefined 
 /** 构造一个 width/height 已知、中心已知的 0-rotate 测试 layout，供 computeScopeBoundingBox 单元测试 */
 const layoutAt = (cx: number, cy: number, w: number, h: number): NodeLayout => ({
   id: 'test',
-  shape: 'rectangle',
+  shapeName: 'rectangle',
+  shapeDef: BUILTIN_SHAPES.rectangle,
   rect: { x: cx, y: cy, width: w, height: h, rotate: 0 },
   rotateDeg: 0,
   margin: 0,
@@ -76,7 +78,8 @@ describe('computeScopeBoundingBox / registerScopeAsLayout 单元测试', () => {
   it('registerScopeAsLayout(bbox=null, fallback) → 0×0 占位 layout 落在 fallback 点', () => {
     const layout = registerScopeAsLayout('g', null, [50, 50]);
     expect(layout.id).toBe('g');
-    expect(layout.shape).toBe('rectangle');
+    expect(layout.shapeName).toBe('rectangle');
+    expect(layout.shapeDef).toBe(BUILTIN_SHAPES.rectangle);
     expect(layout.rect.x).toBe(50);
     expect(layout.rect.y).toBe(50);
     expect(layout.rect.width).toBe(0);

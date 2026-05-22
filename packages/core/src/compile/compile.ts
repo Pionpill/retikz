@@ -1,6 +1,8 @@
 import { rect as rectOps } from '../geometry/rect';
 import type { IR, IRChild, IRPath, IRPosition, IRScope } from '../ir';
 import type { GroupPrim, Scene, ScenePrimitive, Transform } from '../primitive';
+import { BUILTIN_SHAPES } from '../shapes';
+import type { ShapeDefinition } from '../shapes';
 import { type DuplicateRegisterInfo, NameStack } from './name-stack';
 import { type NodeLayout, emitNodePrimitives, layoutNode } from './node';
 import { emitPathPrimitive } from './path/index';
@@ -30,7 +32,8 @@ import { computeLayout } from './layout';
  */
 const zeroSizeRectAt = (id: string, [cx, cy]: IRPosition): NodeLayout => ({
   id,
-  shape: 'rectangle',
+  shapeName: 'rectangle',
+  shapeDef: BUILTIN_SHAPES.rectangle,
   rect: { x: cx, y: cy, width: 0, height: 0, rotate: 0 },
   rotateDeg: 0,
   margin: 0,
@@ -79,6 +82,7 @@ export type CompileWarning = {
     | 'RELATIVE_INITIAL_NO_PREV_END'
     | 'BBOX_EXTREME_INPUT'
     | 'DUPLICATE_NODE_ID'
+    | 'SHAPE_OVERRIDES_BUILTIN'
     | (string & {});
   /** 人类可读消息（英文） */
   message: string;
@@ -107,6 +111,12 @@ export type CompileOptions = {
    * @description path / position 解析失败时按 IR locator + code + message 同步触发；不传时 dev 模式（`process.env.NODE_ENV !== 'production'`）默认 `console.warn`、生产静默
    */
   onWarn?: (warning: CompileWarning) => void;
+  /**
+   * 运行时注入的第三方 shape（不进 IR）
+   * @description 有效 shape 表 = `{ ...BUILTIN_SHAPES, ...shapes }`——同名 key 覆盖内置，经 `onWarn` 发
+   *   `SHAPE_OVERRIDES_BUILTIN`。IR 的 `node.shape` 仍是字符串；未注册名在编译期 throw。
+   */
+  shapes?: Record<string, ShapeDefinition>;
 };
 
 /**
@@ -172,6 +182,22 @@ export const compileToScene = (ir: IR, options: CompileOptions = {}): Scene => {
   const nodeDistance = options.nodeDistance;
   const onWarn = options.onWarn ?? defaultWarnDispatcher;
 
+  // 有效 shape 表：内置 + 注入（同名注入覆盖内置）；覆盖内置经 onWarn 发 SHAPE_OVERRIDES_BUILTIN
+  const effectiveShapes: Record<string, ShapeDefinition> = options.shapes
+    ? { ...BUILTIN_SHAPES, ...options.shapes }
+    : BUILTIN_SHAPES;
+  if (options.shapes) {
+    for (const name of Object.keys(options.shapes)) {
+      if (Object.prototype.hasOwnProperty.call(BUILTIN_SHAPES, name)) {
+        onWarn({
+          code: 'SHAPE_OVERRIDES_BUILTIN',
+          message: `Injected shape '${name}' overrides the built-in shape of the same name.`,
+          path: `options.shapes.${name}`,
+        });
+      }
+    }
+  }
+
   const primitives: Array<ScenePrimitive> = [];
   const nameStack = new NameStack({
     onDuplicate: info => onWarn(formatDuplicateWarning(info)),
@@ -235,6 +261,7 @@ export const compileToScene = (ir: IR, options: CompileOptions = {}): Scene => {
           nodeDistance,
           chain,
           resolveLabelDefault(styleStack),
+          effectiveShapes,
         );
         const globalLayout = chain.length === 0 ? layout : projectLayoutToGlobal(layout, chain);
         if (child.id) {

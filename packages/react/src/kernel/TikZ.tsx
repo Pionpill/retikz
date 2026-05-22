@@ -4,6 +4,7 @@ import {
   type AssertEqual,
   type IR,
   type ScenePrimitive,
+  type ShapeDefinition,
   compileToScene,
 } from '@retikz/core';
 import { buildIR } from './builder';
@@ -31,6 +32,11 @@ export type TikZProps = {
    * @description 对应 TikZ `node distance=...`；节点 position 自带 `distance` 时优先用自带值，都缺省时回退到 1
    */
   nodeDistance?: number;
+  /**
+   * 运行时注入的第三方 / 自定义 shape（透传给 `compileToScene` 的 `CompileOptions.shapes`）
+   * @description IR 里 `<Node shape="...">` 仍只写字符串名；定义在此注入。同名覆盖内置时编译期发 `SHAPE_OVERRIDES_BUILTIN`；未注册名编译期 throw
+   */
+  shapes?: Record<string, ShapeDefinition>;
 };
 
 /** 递归收集 scene 里所有 PathPrim 用到的 arrow 端点 spec —— 按需注入 marker defs */
@@ -102,11 +108,11 @@ const hashKey = (key: string): string => {
  * @description 流水线：从 children 构造 IR（或直接接受外部 IR）→ compileToScene 得 Scene → 渲染 SVG 元素并按需注入 `<defs>` 与每种 arrow 端点 spec 的 `<marker>`；marker id 用 `useId()` 派生稳定前缀避免多实例冲突，每种 detail 一个定义（`${prefix}-${specHash}`），marker 内借 spec 字段（`color` / `fill` / `opacity` 等）替换硬编码，缺省字段回退到 `context-stroke` 让颜色继续跟随 path 同步
  */
 export const TikZ: FC<TikZProps> = props => {
-  const { ir: irFromProp, children, width, height, className, style, nodeDistance } = props;
+  const { ir: irFromProp, children, width, height, className, style, nodeDistance, shapes } = props;
   const ir = useMemo(() => irFromProp ?? buildIR(children), [irFromProp, children]);
   const scene = useMemo(
-    () => compileToScene(ir, { measureText: browserMeasurer, nodeDistance }),
-    [ir, nodeDistance],
+    () => compileToScene(ir, { measureText: browserMeasurer, nodeDistance, shapes }),
+    [ir, nodeDistance, shapes],
   );
 
   // useId 返回 ":r0:" 含冒号；SVG `url(#id)` 对冒号兼容性差，剥成纯字母数字

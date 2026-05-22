@@ -7,6 +7,7 @@ import type {
   PolarPosition,
 } from '../ir';
 import type { Transform } from '../primitive';
+import { BUILTIN_SHAPES } from '../shapes';
 import type { NameStack } from './name-stack';
 import type { NodeLayout } from './node';
 import { resolvePosition } from './position';
@@ -257,7 +258,8 @@ export const registerScopeAsLayout = (
     bbox ?? { x: fallbackOrigin[0], y: fallbackOrigin[1], width: 0, height: 0 };
   return {
     id,
-    shape: 'rectangle',
+    shapeName: 'rectangle',
+    shapeDef: BUILTIN_SHAPES.rectangle,
     rect: { x: box.x, y: box.y, width: box.width, height: box.height, rotate: 0 },
     rotateDeg: 0,
     margin: 0,

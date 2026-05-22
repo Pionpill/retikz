@@ -32,9 +32,9 @@ const computeAnchor = (layout: NodeLayout, anchorName: string): IRPosition => {
     const angle = Number(anchorName);
     return positionToIR(angleBoundaryOf(layout, angle));
   }
-  // anchorOf 内部按 layout.shape 分发到 rect / circle / ellipse / diamond 的 anchor()，已带 RectAnchor 校验
-  // anchorName 不在 RECT_ANCHORS 范围时 anchorOf 会抛错；调用方（parseNodeRef）通常已先校验 anchor 名合法性
-  return positionToIR(anchorOf(layout, anchorName as Parameters<typeof anchorOf>[1]));
+  // anchorOf 走 layout.shapeDef.anchor(rect, name)；shape 不认识的名字返回 undefined → anchorOf 抛 Unknown anchor。
+  // 调用方（parseNodeRef）通常已先按 RECT_ANCHORS 校验内置 anchor 名合法性
+  return positionToIR(anchorOf(layout, anchorName));
 };
 
 /** geometry Position（含 readonly 形态）转 IRPosition 元组（IRPosition === [number, number]） */

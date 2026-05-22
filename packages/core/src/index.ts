@@ -92,6 +92,7 @@ export type {
   IRArrowDetail,
   IRArrowEndDetail,
   NodeShape,
+  BuiltinShapeName,
   NodeTextAlign,
 } from './ir';
 export {
@@ -166,6 +167,10 @@ export type {
   PolarPosition,
 } from './geometry';
 export { point, rect, circle, ellipse, diamond, RECT_ANCHORS, polar } from './geometry';
+
+// Shapes (Shape Registry 扩展面：第三方 shape 注入 + 内置注册项 + 作者所需 helper)
+export type { ShapeDefinition, ShapeStyle } from './shapes';
+export { BUILTIN_SHAPES, worldToLocal, localToWorld } from './shapes';
 
 // Type utilities
 export type { ValueOf, AssertEqual } from './types';

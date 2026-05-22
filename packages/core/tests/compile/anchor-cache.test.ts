@@ -6,17 +6,20 @@
 import { describe, expect, it } from 'vitest';
 import { resolveAnchor } from '../../src/compile/anchor-cache';
 import type { NodeLayout } from '../../src/compile/node';
+import { BUILTIN_SHAPES } from '../../src/shapes';
+import type { BuiltinShapeName } from '../../src/ir';
 
-/** 构造一个最简 rectangle NodeLayout，rect 已是全局坐标 */
+/** 构造一个最简 NodeLayout，rect 已是全局坐标 */
 const makeLayout = (
-  shape: NodeLayout['shape'] = 'rectangle',
+  shape: BuiltinShapeName = 'rectangle',
   width = 40,
   height = 30,
   cx = 0,
   cy = 0,
   rotate = 0,
 ): NodeLayout => ({
-  shape,
+  shapeName: shape,
+  shapeDef: BUILTIN_SHAPES[shape],
   rect: { x: cx, y: cy, width, height, rotate },
   rotateDeg: (rotate * 180) / Math.PI,
   margin: 0,

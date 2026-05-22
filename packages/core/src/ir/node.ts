@@ -15,8 +15,18 @@ export const NODE_SHAPES = {
   diamond: 'diamond',
 } as const;
 
-/** 节点形状字面量类型 */
-export type NodeShape = ValueOf<typeof NODE_SHAPES>;
+/**
+ * 内置 4 shape 名联合
+ * @description `BUILTIN_SHAPES` 的 Record key（保穷尽性约束，不随 `NodeShape` 开放而退化为 `string`）
+ */
+export type BuiltinShapeName = ValueOf<typeof NODE_SHAPES>;
+
+/**
+ * 节点形状名：开放字符串
+ * @description 内置 `BuiltinShapeName`，或经 `CompileOptions.shapes` 注册的扩展 shape 名；
+ *   `& {}` 让 IDE 仍对内置 4 名自动补全，同时接受任意非空字符串
+ */
+export type NodeShape = BuiltinShapeName | (string & {});
 
 /** 节点文本对齐（TikZ `align=` 同义） */
 export const NODE_TEXT_ALIGNS = {
@@ -83,10 +93,11 @@ export const NodeSchema = z
         'Optional unique id; required if any path needs to reference this node by string',
       ),
     shape: z
-      .nativeEnum(NODE_SHAPES)
+      .string()
+      .min(1)
       .optional()
       .describe(
-        'Node visual shape; defaults to `rectangle`. The boundary fully contains text + padding (circumscribed for circle / ellipse / diamond).',
+        'Node visual shape name; built-in `rectangle` / `circle` / `ellipse` / `diamond`, or an extension shape registered via `CompileOptions.shapes`. Any non-empty string passes schema validation; unregistered names are rejected at compile time. Defaults to `rectangle`. The boundary fully contains text + padding (circumscribed for circle / ellipse / diamond).',
       ),
     position: z
       .union([PositionSchema, PolarPositionSchema, AtPositionSchema, OffsetPositionSchema])

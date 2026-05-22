@@ -1,11 +1,9 @@
-import { type Circle, circle as circleOps } from '../geometry/circle';
-import { type Diamond, diamond as diamondOps } from '../geometry/diamond';
-import { type Ellipse, ellipse as ellipseOps } from '../geometry/ellipse';
 import type { Position } from '../geometry/point';
 import type { Rect, RectAnchor } from '../geometry/rect';
-import { rect as rectOps } from '../geometry/rect';
-import type { AtDirection, IRLabelDefault, IRLineSpec, IRNode, IRNodeLabel, NodeShape } from '../ir';
+import type { AtDirection, IRLabelDefault, IRLineSpec, IRNode, IRNodeLabel } from '../ir';
 import type { ScenePrimitive, TextLine, Transform } from '../primitive';
+import { BUILTIN_SHAPES } from '../shapes';
+import type { ShapeDefinition, ShapeStyle } from '../shapes';
 import type { NameStack } from './name-stack';
 import { resolvePosition } from './position';
 import type { TextMeasurer } from './text-metrics';
@@ -16,7 +14,6 @@ const DEFAULT_LINE_HEIGHT_FACTOR = 1.2;
 const DEG_TO_RAD = Math.PI / 180;
 /** Node label 与 node 边界默认距离（TikZ 默认 0pt 视觉太贴） */
 const DEFAULT_LABEL_DISTANCE = 12;
-const SQRT2 = Math.SQRT2;
 /** dashed 预设：4 px 实线 + 2 px 间隙循环 */
 const DASHED_PATTERN: Array<number> = [4, 2];
 /** dotted 预设：1 px 圆点 + 2 px 间隙 */
@@ -43,8 +40,10 @@ const alignToTextAnchor = (
 export type NodeLayout = {
   /** 节点 id（其他位置可引用） */
   id?: string;
-  /** 节点形状，所有几何 / boundaryPoint 按 shape 多态 */
-  shape: NodeShape;
+  /** 节点形状名（诊断 / 错误信息用；几何走 shapeDef） */
+  shapeName: string;
+  /** 已解析的 shape 定义；circumscribe / boundaryPoint / anchor / emit 多点复用，取代旧 switch */
+  shapeDef: ShapeDefinition;
   /**
    * 节点视觉边界框（所有 shape 共享语义）
    * @description rectangle: rect 本身；circle: width=height=2×radius；ellipse: 2×rx,2×ry；diamond: 2×halfA,2×halfB。x,y 是几何中心，rotate 弧度
@@ -115,75 +114,30 @@ export type NodeLabelLayout = {
   fontStyle?: 'normal' | 'italic' | 'oblique';
 };
 
-/** 从 layout 构造 Rect（带 margin 扩张） */
-const rectOf = (layout: NodeLayout, marginAdd: number): Rect => ({
-  x: layout.rect.x,
-  y: layout.rect.y,
-  width: layout.rect.width + 2 * marginAdd,
-  height: layout.rect.height + 2 * marginAdd,
-  rotate: layout.rect.rotate,
-});
-
-/** 从 layout 构造 Circle（radius=外接框边长/2 + margin） */
-const circleOf = (layout: NodeLayout, marginAdd: number): Circle => ({
-  x: layout.rect.x,
-  y: layout.rect.y,
-  // circle 外接框宽=高
-  radius: layout.rect.width / 2 + marginAdd,
-  rotate: layout.rect.rotate,
-});
-
-/** 从 layout 构造 Ellipse（rx/ry 各加 margin） */
-const ellipseOf = (layout: NodeLayout, marginAdd: number): Ellipse => ({
-  x: layout.rect.x,
-  y: layout.rect.y,
-  rx: layout.rect.width / 2 + marginAdd,
-  ry: layout.rect.height / 2 + marginAdd,
-  rotate: layout.rect.rotate,
-});
-
-/** 从 layout 构造 Diamond（halfA/halfB 各加 margin） */
-const diamondOf = (layout: NodeLayout, marginAdd: number): Diamond => ({
-  x: layout.rect.x,
-  y: layout.rect.y,
-  halfA: layout.rect.width / 2 + marginAdd,
-  halfB: layout.rect.height / 2 + marginAdd,
-  rotate: layout.rect.rotate,
-});
+/** 把 Rect 各方向外扩 m（margin generic：所有 shape 都 w+2m, h+2m，由 boundaryPointOf 调用前膨胀） */
+const inflateRect = (r: Rect, m: number): Rect =>
+  m === 0
+    ? r
+    : { x: r.x, y: r.y, width: r.width + 2 * m, height: r.height + 2 * m, rotate: r.rotate };
 
 /**
  * 取节点 shape 在 toward 方向的附着点（path 端点贴边用）
- * @description 按 shape 多态调用各自 boundaryPoint；margin > 0 时形状先外扩，让 path 在 border 外停 margin
+ * @description 走 shapeDef.boundaryPoint；margin > 0 时先膨胀外接 Rect，让 path 在 border 外停 margin
  */
-export const boundaryPointOf = (layout: NodeLayout, toward: Position): Position => {
-  const m = layout.margin;
-  switch (layout.shape) {
-    case 'rectangle':
-      return rectOps.boundaryPoint(rectOf(layout, m), toward);
-    case 'circle':
-      return circleOps.boundaryPoint(circleOf(layout, m), toward);
-    case 'ellipse':
-      return ellipseOps.boundaryPoint(ellipseOf(layout, m), toward);
-    case 'diamond':
-      return diamondOps.boundaryPoint(diamondOf(layout, m), toward);
-  }
-};
+export const boundaryPointOf = (layout: NodeLayout, toward: Position): Position =>
+  layout.shapeDef.boundaryPoint(inflateRect(layout.rect, layout.margin), toward);
 
 /**
- * 取节点 shape 命名 anchor（center / north / east / north-east 等 9 个）
- * @description 不应用 margin——TikZ 语义中 explicit anchor 取视觉边界点不涉及 outer sep；用于 `'A.north'` 落点
+ * 取节点 shape 命名 anchor（center / north / east / north-east 等）
+ * @description 不应用 margin——TikZ 语义中 explicit anchor 取视觉边界点不涉及 outer sep；用于 `'A.north'` 落点。
+ *   shapeDef.anchor 不认识的名字返回 undefined，此处抛 Unknown anchor（列出 shape 名）
  */
-export const anchorOf = (layout: NodeLayout, name: RectAnchor): Position => {
-  switch (layout.shape) {
-    case 'rectangle':
-      return rectOps.anchor(rectOf(layout, 0), name);
-    case 'circle':
-      return circleOps.anchor(circleOf(layout, 0), name);
-    case 'ellipse':
-      return ellipseOps.anchor(ellipseOf(layout, 0), name);
-    case 'diamond':
-      return diamondOps.anchor(diamondOf(layout, 0), name);
+export const anchorOf = (layout: NodeLayout, name: string): Position => {
+  const p = layout.shapeDef.anchor(layout.rect, name);
+  if (p === undefined) {
+    throw new Error(`Unknown anchor '${name}' for shape '${layout.shapeName}'`);
   }
+  return p;
 };
 
 /** 8 方向 label position → (anchorName, 单位向量)；above 视觉上方即 y 减小 */
@@ -232,16 +186,8 @@ export const angleBoundaryOf = (layout: NodeLayout, angleDeg: number): Position 
     layout.rect.x + lx * cosR - ly * sinR,
     layout.rect.y + lx * sinR + ly * cosR,
   ];
-  switch (layout.shape) {
-    case 'rectangle':
-      return rectOps.boundaryPoint(rectOf(layout, 0), toward);
-    case 'circle':
-      return circleOps.boundaryPoint(circleOf(layout, 0), toward);
-    case 'ellipse':
-      return ellipseOps.boundaryPoint(ellipseOf(layout, 0), toward);
-    case 'diamond':
-      return diamondOps.boundaryPoint(diamondOf(layout, 0), toward);
-  }
+  // 数字角度 generic：任何实现了 boundaryPoint 的 shape 自动获得 `.30` 角度锚点
+  return layout.shapeDef.boundaryPoint(layout.rect, toward);
 };
 
 /**
@@ -258,7 +204,21 @@ export const layoutNode = (
   nodeDistance?: number,
   scopeChain: ReadonlyArray<Transform> = [],
   labelDefault?: IRLabelDefault,
+  shapes: Record<string, ShapeDefinition> = BUILTIN_SHAPES,
 ): NodeLayout => {
+  // shape 解析（入口 fail-fast）：node.shape ?? 'rectangle' 查有效表；未注册名抛错列出可用名
+  const shapeName = node.shape ?? 'rectangle';
+  // own-property 校验：既得到 `ShapeDefinition | undefined` 类型（让未注册分支成立），又避开
+  // `'toString'` 等原型链 key 被 Record 索引误命中（开放字符串 shape 名的边界安全）
+  const shapeDef = Object.prototype.hasOwnProperty.call(shapes, shapeName)
+    ? shapes[shapeName]
+    : undefined;
+  if (!shapeDef) {
+    throw new Error(
+      `Unknown shape '${shapeName}'; registered shapes: ${Object.keys(shapes).sort().join(', ')}`,
+    );
+  }
+
   // 缩放：xScale/yScale 优先于 scale 别名，默认 1；乘进所有尺寸让 path 贴缩放后边界。
   // 字号取 min(sx,sy) 保 glyph 形状，避免非均匀缩放下文字被拉变形。
   const sx = node.xScale ?? node.scale ?? 1;
@@ -328,34 +288,12 @@ export const layoutNode = (
   const minH = node.minimumHeight ?? node.minimumSize ?? 0;
   const innerHalfW = Math.max(textWidth / 2 + xSep, xSep, minW / 2);
   const innerHalfH = Math.max(textHeight / 2 + ySep, ySep, minH / 2);
-  const shape = node.shape ?? 'rectangle';
 
-  // 外接边界（bounding rect）半轴，按 shape 计算
-  let boundsHalfW: number;
-  let boundsHalfH: number;
-  switch (shape) {
-    case 'rectangle':
-      boundsHalfW = innerHalfW;
-      boundsHalfH = innerHalfH;
-      break;
-    case 'circle': {
-      // 外接圆半径 = 内框对角线/2
-      const r = Math.sqrt(innerHalfW * innerHalfW + innerHalfH * innerHalfH);
-      boundsHalfW = r;
-      boundsHalfH = r;
-      break;
-    }
-    case 'ellipse':
-      // 外接椭圆半轴 = 内框半轴 × √2（内框 4 顶点落在椭圆周上）
-      boundsHalfW = innerHalfW * SQRT2;
-      boundsHalfH = innerHalfH * SQRT2;
-      break;
-    case 'diamond':
-      // 外接菱形半轴 = 内框半轴 × 2（内框 4 顶点落在菱形 4 边上）
-      boundsHalfW = innerHalfW * 2;
-      boundsHalfH = innerHalfH * 2;
-      break;
-  }
+  // 外接边界（bounding rect）半轴：内框半轴经 shape.circumscribe 派生
+  const { halfWidth: boundsHalfW, halfHeight: boundsHalfH } = shapeDef.circumscribe(
+    innerHalfW,
+    innerHalfH,
+  );
 
   const rotateDeg = node.rotate ?? 0;
   const center = resolvePosition(node.position, nameStack, nodeDistance, scopeChain);
@@ -389,7 +327,8 @@ export const layoutNode = (
 
   return {
     id: node.id,
-    shape,
+    shapeName,
+    shapeDef,
     rect: {
       // x, y 是几何中心
       x: center[0],
@@ -423,104 +362,32 @@ export const layoutNode = (
   };
 };
 
-/** rectangle → RectPrim */
-const emitRectShape = (
-  layout: NodeLayout,
-  round: (n: number) => number,
-): ScenePrimitive => {
-  const halfW = layout.rect.width / 2;
-  const halfH = layout.rect.height / 2;
-  return {
-    type: 'rect',
-    x: round(layout.rect.x - halfW),
-    y: round(layout.rect.y - halfH),
-    width: round(layout.rect.width),
-    height: round(layout.rect.height),
-    fill: layout.fill ?? 'transparent',
-    fillOpacity: layout.fillOpacity,
-    stroke: layout.stroke ?? 'currentColor',
-    strokeOpacity: layout.strokeOpacity,
-    strokeWidth: layout.strokeWidth ?? 1,
-    dashPattern: layout.dashPattern,
-    cornerRadius: layout.roundedCorners,
-    opacity: layout.opacity,
-  };
-};
-
-/** circle/ellipse → EllipsePrim（圆形 rx=ry） */
-const emitEllipseShape = (
-  layout: NodeLayout,
-  round: (n: number) => number,
-): ScenePrimitive => ({
-  type: 'ellipse',
-  cx: round(layout.rect.x),
-  cy: round(layout.rect.y),
-  rx: round(layout.rect.width / 2),
-  ry: round(layout.rect.height / 2),
-  fill: layout.fill ?? 'transparent',
+/** 从 NodeLayout 收敛 emit 所需的视觉样式子集（ShapeStyle，不含几何 / 文本） */
+const toShapeStyle = (layout: NodeLayout): ShapeStyle => ({
+  fill: layout.fill,
   fillOpacity: layout.fillOpacity,
-  stroke: layout.stroke ?? 'currentColor',
+  stroke: layout.stroke,
   strokeOpacity: layout.strokeOpacity,
-  strokeWidth: layout.strokeWidth ?? 1,
+  strokeWidth: layout.strokeWidth,
   dashPattern: layout.dashPattern,
+  roundedCorners: layout.roundedCorners,
   opacity: layout.opacity,
 });
 
-/** diamond → PathPrim（4 顶点 + close 闭合） */
-const emitDiamondShape = (
-  layout: NodeLayout,
-  round: (n: number) => number,
-): ScenePrimitive => {
-  // 4 顶点：diamond 几何工具直接拿 anchor，已带旋转处理
-  const diam = diamondOf(layout, 0);
-  const e = diamondOps.anchor(diam, 'east');
-  const n = diamondOps.anchor(diam, 'north');
-  const w = diamondOps.anchor(diam, 'west');
-  const s = diamondOps.anchor(diam, 'south');
-  return {
-    type: 'path',
-    commands: [
-      { kind: 'move', to: [round(e[0]), round(e[1])] },
-      { kind: 'line', to: [round(n[0]), round(n[1])] },
-      { kind: 'line', to: [round(w[0]), round(w[1])] },
-      { kind: 'line', to: [round(s[0]), round(s[1])] },
-      { kind: 'close' },
-    ],
-    fill: layout.fill ?? 'transparent',
-    fillOpacity: layout.fillOpacity,
-    stroke: layout.stroke ?? 'currentColor',
-    strokeOpacity: layout.strokeOpacity,
-    strokeWidth: layout.strokeWidth ?? 1,
-    dashPattern: layout.dashPattern,
-    opacity: layout.opacity,
-  };
-};
-
 /**
  * NodeLayout → Scene primitives
- * @description shape 主体按 shape 分发（rect/ellipse/path）；text 始终走 TextPrim；有旋转时外层 GroupPrim 用 `rotate(deg cx cy)` 统一包裹（text 必须靠 group 旋转）
+ * @description shape 主体走 `shapeDef.emit`（收轴对齐 rect、可出多 primitive）；text 始终走 TextPrim；
+ *   有旋转时外层 GroupPrim 用 `rotate(deg cx cy)` 统一包裹 shape + text（diamond 顶点 / text 都靠 group 旋转）
  */
 export const emitNodePrimitives = (
   layout: NodeLayout,
   round: (n: number) => number,
 ): Array<ScenePrimitive> => {
-  let shapePrim: ScenePrimitive;
-  switch (layout.shape) {
-    case 'rectangle':
-      shapePrim = emitRectShape(layout, round);
-      break;
-    case 'circle':
-    case 'ellipse':
-      shapePrim = emitEllipseShape(layout, round);
-      break;
-    case 'diamond':
-      // diamond 4 顶点已按 layout.rect.rotate 旋转过，外层 group 会再旋转 text
-      // 不能让 diamond 被二次旋转——这里 emit 的 d 用"未旋转"版让外层 group 统一旋转
-      shapePrim = emitDiamondShape(unrotated(layout), round);
-      break;
-  }
-
-  const inner: Array<ScenePrimitive> = [shapePrim];
+  // shape 主体：emit 收**轴对齐 rect（rotate=0）**，rotate 由末端外层 GroupPrim 统一施加
+  const axisAlignedRect: Rect = { ...layout.rect, rotate: 0 };
+  const inner: Array<ScenePrimitive> = [
+    ...layout.shapeDef.emit(axisAlignedRect, toShapeStyle(layout), round),
+  ];
   if (layout.lines) {
     // align=start: x=中心-块半宽; align=end: x=中心+块半宽; align=middle: x=中心
     const halfBlockW = layout.textWidth / 2;
@@ -583,9 +450,3 @@ export const emitNodePrimitives = (
     },
   ];
 };
-
-/** layout 的"未旋转"副本，让 diamond 顶点先按未旋转算，外层 group 统一旋转 */
-const unrotated = (layout: NodeLayout): NodeLayout => ({
-  ...layout,
-  rect: { ...layout.rect, rotate: 0 },
-});
