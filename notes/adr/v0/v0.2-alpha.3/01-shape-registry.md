@@ -1,6 +1,6 @@
 # ADR-01：Shape Registry（NodeShape 开放为字符串 + ShapeDefinition 注入面 + 内置 4 shape 改造为注册项）
 
-- 状态：Proposed
+- 状态：Accepted
 - 决策日期：2026-05-21
 - 关联：[v0 roadmap §Shape Registry 提案](../../../plans/v0/roadmap.md#shape-registry-提案) · [v0.2 总计划 §七段 alpha 节奏](../../../plans/v0/v0.2.md#七段-alpha-节奏) · [DESIGN.md §1.2 AI 一等公民](../../../architecture/DESIGN.md) · [alpha.1 ADR-02 nodeIndex/anchor 解析](../v0.2-alpha.1/02-node-index-anchor-resolution.md) · [v0.1-beta.1 ADR-03 geometry 共享 transform / 死 anchor 清理](../v0.1-beta.1/03-geometry-shared-transform-dead-anchor-cleanup.md) · [v0.1-beta.1 ADR-08 onWarn 收集器](../v0.1-beta.1/08-compile-on-warn-collector.md)
 

@@ -5,6 +5,28 @@ description: retikz release history grouped by MINOR version, newest first. Date
 
 <Update label="May 2026" tags={["@retikz/core", "@retikz/react"]}>
 
+## v0.2.0-alpha.3
+
+The third v0.2 alpha: the Shape Registry — moves node shapes from the built-in four (hard-coded switch) to registerable, third-party-injectable shapes. The IR still stores `shape` as a string name; the definition is injected at runtime via `CompileOptions.shapes`, so a third party can ship a shape library like `@retikz/shapes-flow` without modifying core.
+
+### `@retikz/core`
+
+- **`ShapeDefinition` extension surface**: four methods `circumscribe` / `boundaryPoint` / `anchor` / `emit`, all operating on the circumscribing `Rect`; a plain object (factory-friendly), holding functions and never entering the IR. New `shapes/`; the built-in four become registry entries with no privilege.
+- **`shape` field opened to a string**: `NodeSchema.shape` changes from a closed enum to `z.string().min(1)`; schema only checks non-empty, unregistered names throw at compile time (listing available names). `BuiltinShapeName` (the four built-ins, Record key) is split from `NodeShape` (the open name).
+- **`CompileOptions.shapes` runtime injection**: effective table = `{ ...BUILTIN_SHAPES, ...shapes }`; overriding a built-in emits `SHAPE_OVERRIDES_BUILTIN` via `onWarn` (a user-supplied onWarn receives it even in production).
+- **Generic numeric angles**: any shape implementing `boundaryPoint` gets the `.30` angle anchor for free; emit receives an axis-aligned rect (rotation applied by the outer GroupPrim), eliminating diamond's `unrotated` special case.
+- **Public API**: `ShapeDefinition` / `ShapeStyle` / `BUILTIN_SHAPES` / `BuiltinShapeName` / `worldToLocal` / `localToWorld`.
+- Built-in shapes are byte-for-byte identical before/after the refactor (pure refactor, no behavior drift).
+
+### `@retikz/react`
+
+- **`<TikZ shapes={...}>`**: passes through `CompileOptions.shapes`, making custom shapes usable end-to-end; `<Node shape>` accepts any string name.
+
+### Docs
+
+- **New "Custom Shapes" reference page** (reference/runtime/shape-registry): the four ShapeDefinition methods, injection / override / unknown-name behavior, factory pattern + a custom hexagon live demo; prominently flags the two coordinate conventions (emit takes a rotate=0 axis-aligned rect, boundaryPoint/anchor take a rotate-bearing rect).
+- Node / schema entity / compile options docs note the open-string shape + injection extension point.
+
 ## v0.2.0-alpha.2
 
 The second v0.2 alpha: upgrades `<Scope>` into a style-default anchor — master color `color` cascade + four typed defaults (`nodeDefault` / `pathDefault` / `labelDefault` / `arrowDefault`); StepLabel gains `textColor` / `opacity` / `font`, so a colored line can finally carry a matching-colored label.
