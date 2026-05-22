@@ -22,6 +22,7 @@ export const NodeDefaultSchema = NodeSchema.omit({
   position: true,
   text: true,
   label: true,
+  zIndex: true,
 }).strict();
 
 /**
@@ -33,6 +34,7 @@ export const PathDefaultSchema = PathSchema.omit({
   children: true,
   arrow: true,
   arrowDetail: true,
+  zIndex: true,
 }).strict();
 
 /**
@@ -104,6 +106,7 @@ export type IRScope = {
   labelDefault?: IRLabelDefault;
   arrowDefault?: IRArrowDefault;
   resetStyle?: boolean | Array<StyleChannel>;
+  zIndex?: number;
   children: Array<IRNode | IRPath | IRCoordinate | IRScope>;
 };
 
@@ -208,6 +211,14 @@ export const ScopeSchema = z
       .optional()
       .describe(
         'Inheritance barrier: drop the outer scope cascade + every-X defaults for the listed channels (or all when true), falling back to the built-in baseline. Only cuts the scope-inheritance axis; labels / arrows still follow their host path / node resolved color (structural relation, not scope inheritance).',
+      ),
+    zIndex: z
+      .number()
+      .int()
+      .finite()
+      .optional()
+      .describe(
+        'Explicit stacking order of this scope as a whole among its sibling IR children. Higher draws on top. Applies to the scope group as a single unit in the parent; does NOT affect how children stack inside the scope. Omitted = 0 = source order.',
       ),
     children: z
       .array(

@@ -38,6 +38,8 @@ export type PathProps = {
   fillOpacity?: IRPath['fillOpacity'];
   /** 仅 stroke 透明度 0~1（TikZ `draw opacity`） */
   drawOpacity?: IRPath['drawOpacity'];
+  /** 显式栈序：大者在上；缺省 0 = 声明顺序；同值稳定保序；只在同层子节点间生效 */
+  zIndex?: IRPath['zIndex'];
   /** 应当全部是 <Step /> */
   children: ReactNode;
 };

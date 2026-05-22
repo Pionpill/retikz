@@ -260,6 +260,14 @@ export const NodeSchema = z
       .describe(
         'Extra label(s) attached around the node border (TikZ `[label=above:foo]`); single object or array form. Compiled into one TextPrim per label, positioned by `position` direction / angle and `distance`.',
       ),
+    zIndex: z
+      .number()
+      .int()
+      .finite()
+      .optional()
+      .describe(
+        'Explicit stacking order among sibling IR children. Higher draws on top. Omitted = 0 = source order. Sorting is stable: same zIndex keeps source order. Scoped per group (a node inside a scope only restacks within that scope).',
+      ),
   })
   .describe(
     'Node primitive: a positioned, optionally textual shape (rectangle / circle / ellipse / diamond)',

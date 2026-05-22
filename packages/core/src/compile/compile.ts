@@ -178,6 +178,8 @@ type PendingPath = {
    * Pass 2 原位 splice 回填；scopeChain 非空（transformed scope）时缺省，path 走 hoist 到顶层 primitives。
    */
   slot?: { sink: Array<InternalScenePrimitive>; placeholder: PathPlaceholder };
+  /** 该 path 的显式 zIndex（raw child.zIndex）；缺省 = 0。回填 / hoist 时复制到 real primitive */
+  zIndex?: number;
 };
 
 /** scope.transforms 解析失败时根据失败成因映射的 warn code */
@@ -238,6 +240,21 @@ export const compileToScene = (ir: IR, options: CompileOptions = {}): Scene => {
   const primitives: Array<InternalScenePrimitive> = [];
   /** 已 push 但未回填的占位计数；compileToScene 返回前必须归零（无条件守 Scene 公开契约） */
   let placeholderBalance = 0;
+  /**
+   * primitive → 显式 zIndex 旁路记录（缺省视为 0）；sealSink 后按它稳定排序，不写进 primitive 本体（保 Scene 输出纯净）。
+   * key 只会是 real ScenePrimitive——占位 PathPlaceholder 永不进此 Map（占位即将被回填替换）。
+   */
+  const zIndexOf = new Map<ScenePrimitive, number>();
+  /**
+   * 按 zIndex 升序原地稳定排序：同 zIndex 保持原 IR 顺序（decorate-sort 带原始下标）。全 0 键 = 恒等。
+   * 仅在 sealSink（占位已回填、类型已收窄回 ScenePrimitive）之后调用。
+   */
+  const stableSortByZIndex = (arr: Array<ScenePrimitive>): Array<ScenePrimitive> => {
+    const decorated = arr.map((prim, index) => ({ prim, index, z: zIndexOf.get(prim) ?? 0 }));
+    decorated.sort((a, b) => a.z - b.z || a.index - b.index);
+    for (let i = 0; i < arr.length; i++) arr[i] = decorated[i].prim;
+    return arr;
+  };
   const nameStack = new NameStack({
     onDuplicate: info => onWarn(formatDuplicateWarning(info)),
   });
@@ -265,11 +282,18 @@ export const compileToScene = (ir: IR, options: CompileOptions = {}): Scene => {
           if (idx === -1) {
             throw new Error('internal: path placeholder missing from its sink');
           }
-          item.slot.sink.splice(idx, 1, ...(result?.primitives ?? []));
+          const real = result?.primitives ?? [];
+          item.slot.sink.splice(idx, 1, ...real);
+          if (item.zIndex !== undefined) {
+            for (const prim of real) zIndexOf.set(prim, item.zIndex);
+          }
           placeholderBalance--;
         } else if (result) {
           // hoist：transformed scope 内 path 留在顶层 primitives（已知限制）
-          for (const prim of result.primitives) primitives.push(prim);
+          for (const prim of result.primitives) {
+            primitives.push(prim);
+            if (item.zIndex !== undefined) zIndexOf.set(prim, item.zIndex);
+          }
         }
         if (result) {
           for (const p of result.points) allPoints.push(p);
@@ -319,6 +343,7 @@ export const compileToScene = (ir: IR, options: CompileOptions = {}): Scene => {
         }
         for (const prim of emitNodePrimitives(layout, round)) {
           sink.push(prim);
+          if (child.zIndex !== undefined) zIndexOf.set(prim, child.zIndex);
         }
         // bbox 用全局坐标系下的 4 角点累积——scope 内 node 也参与顶层 layout 计算
         allPoints.push(
@@ -421,10 +446,13 @@ export const compileToScene = (ir: IR, options: CompileOptions = {}): Scene => {
         if (isPrunable) continue;
         const group: GroupPrim = {
           type: 'group',
-          children: sealSink(innerSink),
+          // sealSink 后对该层子序按 zIndex 稳定排序（占位已回填，类型已收窄）
+          children: stableSortByZIndex(sealSink(innerSink)),
         };
         if (hasOwnTransforms) group.transforms = [...ownTransforms];
         sink.push(group);
+        // scope 整体作一个 stacking 单位：把 group 在父层按 scope.zIndex 排序
+        if (child.zIndex !== undefined) zIndexOf.set(group, child.zIndex);
       } else {
         // child.type === 'path'：累积到调用方提供的 pathsAccumulator，让调用方决定 resolve 时机
         // path 端点从 NameStack（全局坐标）查得，几何已是全局。chain 空时先在本层 sink 占一个位（Pass 2
@@ -435,6 +463,7 @@ export const compileToScene = (ir: IR, options: CompileOptions = {}): Scene => {
           path: resolveEffectivePath(child, styleStack),
           irPath: `${locatorPrefix}children[${i}].path`,
           scopeChain: chain,
+          zIndex: child.zIndex,
         };
         if (chain.length === 0) {
           const placeholder = makePathPlaceholder();
@@ -465,7 +494,8 @@ export const compileToScene = (ir: IR, options: CompileOptions = {}): Scene => {
   }
 
   return {
-    primitives: sealSink(primitives),
+    // sealSink 后对顶层按 zIndex 稳定排序（占位已回填）
+    primitives: stableSortByZIndex(sealSink(primitives)),
     layout: computeLayout(allPoints, layoutPadding, round),
   };
 };

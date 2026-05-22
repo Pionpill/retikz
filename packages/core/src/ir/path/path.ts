@@ -97,6 +97,14 @@ export const PathSchema = z
       .describe(
         'Stroke opacity 0..1 (TikZ `draw opacity`); affects only the path stroke.',
       ),
+    zIndex: z
+      .number()
+      .int()
+      .finite()
+      .optional()
+      .describe(
+        'Explicit stacking order among sibling IR children. Higher draws on top. Omitted = 0 = source order. Sorting is stable: same zIndex keeps source order. Scoped per group (a path inside a scope only restacks within that scope).',
+      ),
     children: z
       .array(StepSchema)
       .min(2)

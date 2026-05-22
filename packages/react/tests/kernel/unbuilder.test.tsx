@@ -162,6 +162,31 @@ describe('convertIRToReactNode', () => {
     expect(back).toEqual(ir);
   });
 
+  it('zIndex round-trip：Node / Path / Scope 各自透传保留（重点验 path 手写分支不漏）', () => {
+    const ir: IR = {
+      version: CURRENT_IR_VERSION,
+      type: 'scene',
+      children: [
+        { type: 'node', id: 'A', position: [0, 0], text: 'A', zIndex: -1 },
+        {
+          type: 'path',
+          zIndex: 10,
+          children: [
+            { type: 'step', kind: 'move', to: [0, 0] },
+            { type: 'step', kind: 'line', to: [10, 0] },
+          ],
+        },
+        {
+          type: 'scope',
+          zIndex: 5,
+          children: [{ type: 'node', position: [20, 0], text: 'B' }],
+        },
+      ],
+    };
+    const back = buildIR(convertIRToReactNode(ir));
+    expect(back).toEqual(ir);
+  });
+
   it("Node shape round-trip：4 种 shape 字段透传保留", () => {
     for (const shape of ['rectangle', 'circle', 'ellipse', 'diamond'] as const) {
       const ir: IR = {

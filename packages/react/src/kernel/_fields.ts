@@ -34,6 +34,7 @@ export const NODE_FIELDS = [
   'padding',
   'margin',
   'font',
+  'zIndex',
 ] as const satisfies ReadonlyArray<keyof IRNode>;
 
 // 完备性互锁：NODE_FIELDS 必须恰好覆盖 IRNode 除特化字段外的所有 key
@@ -63,6 +64,7 @@ export const PATH_FIELDS = [
   'opacity',
   'fillOpacity',
   'drawOpacity',
+  'zIndex',
 ] as const satisfies ReadonlyArray<keyof IRPath>;
 
 type _PathFieldsCheck = AssertEqual<
@@ -93,6 +95,7 @@ export const SCOPE_FIELDS = [
   'labelDefault',
   'arrowDefault',
   'resetStyle',
+  'zIndex',
 ] as const satisfies ReadonlyArray<keyof IRScope>;
 
 type _ScopeFieldsCheck = AssertEqual<

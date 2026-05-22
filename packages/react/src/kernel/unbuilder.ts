@@ -127,6 +127,7 @@ const childToElement = (child: IRChild, key: number): ReactNode => {
         opacity: child.opacity,
         fillOpacity: child.fillOpacity,
         drawOpacity: child.drawOpacity,
+        zIndex: child.zIndex,
         children: child.children.map((s, j) => stepToElement(s, j)),
       });
     case 'coordinate':
