@@ -1,6 +1,6 @@
 ---
 name: package-publish
-description: 用于把 retikz 的 publishable 包（`@retikz/core` / `@retikz/react`）发布到 npm。一次发包 = 三处同步：版本号（`packages/<pkg>/package.json`）、文档站（`apps/docs/src/contents/reference/releases` + `i18n` 的 `versionTag`）、内部计划（`notes/plans/v0/roadmap.md` 勾选）。发布后预 bump packages 到下一开发版本（plan 有下一版本直接改、没有则问用户）。retikz 专用，其它项目可忽略。
+description: 用于把 retikz 的 publishable 包（`@retikz/core` / `@retikz/react`）发布到 npm。一次发包 = 三处同步：版本号（`packages/<pkg>/package.json`）、文档站（`apps/docs/src/contents/about/releases` + `i18n` 的 `versionTag`）、内部计划（`notes/plans/v0/roadmap.md` 勾选）。发布后预 bump packages 到下一开发版本（plan 有下一版本直接改、没有则问用户）。retikz 专用，其它项目可忽略。
 ---
 
 # 发 retikz 到 npm
@@ -12,8 +12,8 @@ retikz 一次发包 = **3 处同步改动 + 用户确认 + npm publish**。
 | 改动面 | 内容 |
 | --- | --- |
 | **包元数据** | `packages/<pkg>/package.json` 的 `version` 字段 |
-| **文档站** | `apps/docs/src/contents/reference/releases/changelog/{zh,en}.mdx` 加新条目 + `i18n/locales/{zh,en}.ts` 的 `versionTag`（仅 MINOR / MAJOR / 大里程碑变） |
-| **计划文档** | `notes/plans/v0/roadmap.md` 勾掉对应小版本 checkbox |
+| **文档站** | `apps/docs/src/contents/about/releases/changelog/index.{zh,en}.mdx` 加新条目 + `i18n/locales/{zh,en}.json` 的 `versionTag`（仅 MINOR / MAJOR / 大里程碑变） |
+| **计划文档** | 里程碑跟踪段勾掉对应小版本 checkbox（v0.2 看 `notes/plans/v0/v0.2.md`「v0.2 跟踪」段；v0.1 看 `notes/plans/v0/roadmap.md`） |
 
 漏一处的后果：
 
@@ -22,7 +22,7 @@ retikz 一次发包 = **3 处同步改动 + 用户确认 + npm publish**。
 - 漏 `versionTag` → 文档站顶部右上还是旧版徽章
 - 漏 roadmap 勾选 → 计划文档与现实脱节
 
-**AI 助手不得自行 `git commit` / `git push` / `npm publish`**——根 AGENTS.md 硬规则。本技能在做完 working tree 改动后**停下来等用户授权**，授权后才执行提交与发布。
+**AI 执行 `git commit` / `git push` / `npm publish` 前必须先拿到用户在当前对话里的明确确认**（根 AGENTS.md）；确认后 AI 可直接执行被确认的那一条。本技能做完 working tree 改动后**停下来等用户确认**，确认后再提交 / 发布。逐条确认，一次确认≠永久授权。
 
 **版本写入硬规则：先把目标版本写进仓库并提交，再 tag / publish。** 不允许拿上一个版本的 `package.json` 去发布时临时改版本，也不允许 tag 指向一个还显示旧版本号的 commit。npm 包版本、git tag、仓库 `package.json` 必须三者一致；否则会造成“源码显示旧版本、npm 实际是新版本”的可追溯性断裂。
 
@@ -118,7 +118,7 @@ monorepo 子包跑 `version` 不会触发 git commit，安全。
 
 #### 2.2 changelog mdx
 
-在 `apps/docs/src/contents/reference/releases/changelog/{zh,en}.mdx` 顶部插入新 `<Update>` 块（紧跟 frontmatter，放在已有 `<Update>` 之上）：
+在 `apps/docs/src/contents/about/releases/changelog/index.{zh,en}.mdx` 顶部插入新 `<Update>` 块（紧跟 frontmatter，放在已有 `<Update>` 之上）：
 
 ````mdx
 <Update label="2026.MM" tags={["@retikz/core", "@retikz/react"]}>
@@ -149,7 +149,7 @@ monorepo 子包跑 `version` 不会触发 git commit，安全。
 
 #### 2.3 i18n `versionTag`（仅 MINOR / MAJOR 切档时改）
 
-`apps/docs/src/i18n/locales/{zh,en}.ts` 里的 `versionTag` 是文档站顶部右上的版本徽章。
+`apps/docs/src/i18n/locales/{zh,en}.json` 里的 `versionTag` 是文档站顶部右上的版本徽章。
 
 | 本次发布 | versionTag 改不改 |
 | --- | --- |
@@ -160,7 +160,7 @@ monorepo 子包跑 `version` 不会触发 git commit，安全。
 
 #### 2.4 roadmap checklist
 
-`notes/plans/v0/roadmap.md` 末尾"v0.1 跟踪"区有 checkbox。本次发布对应版本前的 `[ ]` 改成 `[x]`：
+里程碑跟踪段有 checkbox（v0.2 在 `notes/plans/v0/v0.2.md`「v0.2 跟踪」段、v0.1 在 `notes/plans/v0/roadmap.md` 末尾"v0.1 跟踪"区）。本次发布对应版本前的 `[ ]` 改成 `[x]`：
 
 ```diff
 - - [ ] v0.1.0-alpha.1
@@ -230,15 +230,15 @@ pnpm --filter @retikz/react build
 #### 3.5 dry-run 看 tarball
 
 ```bash
-pnpm --filter @retikz/core  publish --dry-run --access public --tag alpha
-pnpm --filter @retikz/react publish --dry-run --access public --tag alpha
+pnpm --filter @retikz/core  publish --dry-run --access public --tag alpha --registry https://registry.npmjs.org/
+pnpm --filter @retikz/react publish --dry-run --access public --tag alpha --registry https://registry.npmjs.org/
 ```
 
 确认 tarball 只有 `dist/` + `README.md` + `LICENSE` + `package.json`，**没有** `src/` / `tests/` / `node_modules/` / `tsconfig.json` / `vite.config.ts` 等。控制者是 `packages/<pkg>/package.json` 的 `files` 字段。
 
 ### 阶段 4 — 暂停 → 等用户授权
 
-**不能省。** 根 AGENTS.md 明令 AI 不得自行 commit / push / publish。
+**不能省。** 根 AGENTS.md：commit / push / publish 前必须先拿到用户当次确认；确认后 AI 才执行。
 
 授权边界要说清楚：如果用户只说“提交”，只提交版本准备改动；如果用户说“发布 / publish / go”，才执行阶段 5。无论哪种授权，阶段 5 都必须保证 tag 之前目标版本已经在 HEAD 中。
 
@@ -254,8 +254,8 @@ pnpm --filter @retikz/react publish --dry-run --access public --tag alpha
 working tree 改动汇总：
   M  packages/core/package.json
   M  packages/react/package.json
-  M  apps/docs/src/contents/reference/releases/changelog/zh.mdx
-  M  apps/docs/src/contents/reference/releases/changelog/en.mdx
+  M  apps/docs/src/contents/about/releases/changelog/index.zh.mdx
+  M  apps/docs/src/contents/about/releases/changelog/index.en.mdx
   M  notes/plans/v0/roadmap.md
   ...
 
@@ -267,7 +267,7 @@ dry-run 关键行：
   1. git commit -m ":bookmark: 准备 0.1.0-alpha.1 发布"（若已提交则跳过）
   2. 确认 HEAD 的 package.json 版本就是 0.1.0-alpha.1
   3. git tag v0.1.0-alpha.1
-  4. pnpm publish (alpha tag)
+  4. pnpm publish --tag alpha --registry https://registry.npmjs.org/（2FA 时加 --otp）
   5. git push + git push tag
 ```
 
@@ -289,9 +289,9 @@ git status --short
 # 3. tag（轻量 tag 即可；annotated tag 用 -a -m）
 git tag v0.1.0-alpha.1
 
-# 4. publish（按子包逐个发；--access public 首次必带）
-pnpm --filter @retikz/core publish --access public --tag alpha
-pnpm --filter @retikz/react publish --access public --tag alpha
+# 4. publish（按子包逐个发；--access public 首次必带；--registry 指向真 npm，否则发去镜像；账号开 2FA 时加 --otp=<6位码>）
+pnpm --filter @retikz/core publish --access public --tag alpha --registry https://registry.npmjs.org/
+pnpm --filter @retikz/react publish --access public --tag alpha --registry https://registry.npmjs.org/
 
 # 5. push commit + tag；轻量 tag 不一定会被 --follow-tags 带上，必要时单独 push tag
 git push
@@ -343,10 +343,12 @@ git tag: v0.1.0-alpha.1（已 push）
 - **dist 里有 `src/`** —— `package.json` 的 `files` 字段没列对，或 build 没跑就发了
 - **没 build 就 publish** —— 发出去的包指向 `src/index.ts` 而不是 `dist/lib/index.cjs`，下游装上但 import 解析不出。**所以必须按 §3 顺序：先 build，再 dry-run，再 publish**
 - **catalog 改动忘记 `pnpm install`** —— lockfile 与 workspace.yaml 不一致，CI 报 `ERR_PNPM_OUTDATED_LOCKFILE`
-- **AI 自己 commit / publish** —— 根 AGENTS.md 红线，必须等用户当次授权才动
+- **未经确认就 commit / publish** —— 根 AGENTS.md：每次 commit / push / publish 前都要用户当次确认（一次确认≠永久授权）；确认后 AI 可自己执行
 - **tag 指向旧版本 commit** —— 先 tag / publish，后补 `package.json` 版本号，会让 npm、git tag、源码三方不一致。正确顺序是：改版本 → 验证 → commit → 确认 HEAD 版本 → tag → publish。
 - **正式版 `0.1.0` 跑了 `--tag alpha`** —— 正式版反而进 alpha 通道，下游永远拉不到。正式版**不带** `--tag` 参数（默认 latest）
 - **同月多发了几个 alpha 都新建 `<Update>` 块** —— 同月内可聚合到一个块（label 仍写 `YYYY.MM`），让 changelog 不至于太碎；但跨月必须分块
+- **没带 `--registry` 发去了镜像** —— 本机默认 registry 可能是淘宝镜像（`registry.npmmirror.com`，只读、发不出去）。publish / dry-run 一律带 `--registry https://registry.npmjs.org/`；发前可 `npm whoami --registry https://registry.npmjs.org/` 确认登录
+- **账号开了 2FA 报 `EOTP`** —— publish 命令加 `--otp=<6位验证码>`；TOTP 30s 时效，临发临取，两个包尽量在同一窗口内连着发（同一码通常可复用，过期则换新码再发剩下的）
 
 ## 与其它流程的衔接
 
