@@ -8,6 +8,7 @@ import type { IRTransform } from '../../src/ir';
 import { NameStack } from '../../src/compile/name-stack';
 import { type NodeLayout } from '../../src/compile/node';
 import { lowerScopeTransforms } from '../../src/compile/scope';
+import { BUILTIN_SHAPES } from '../../src/shapes';
 
 /** 把 id → 中心 entries 灌进新建的 NameStack，便于 lower 单测验证 referent lookup */
 const makeStack = (entries: Array<[string, [number, number]]>): NameStack => {
@@ -15,7 +16,8 @@ const makeStack = (entries: Array<[string, [number, number]]>): NameStack => {
   for (const [id, [x, y]] of entries) {
     const layout: NodeLayout = {
       id,
-      shape: 'rectangle',
+      shapeName: 'rectangle',
+      shapeDef: BUILTIN_SHAPES.rectangle,
       rect: { x, y, width: 0, height: 0, rotate: 0 },
       rotateDeg: 0,
       margin: 0,

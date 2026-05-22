@@ -5,10 +5,12 @@
 import { describe, expect, it, vi } from 'vitest';
 import { type DuplicateRegisterInfo, NameStack } from '../../src/compile/name-stack';
 import type { NodeLayout } from '../../src/compile/node';
+import { BUILTIN_SHAPES } from '../../src/shapes';
 
 const makeLayout = (id: string, x = 0, y = 0): NodeLayout => ({
   id,
-  shape: 'rectangle',
+  shapeName: 'rectangle',
+  shapeDef: BUILTIN_SHAPES.rectangle,
   rect: { x, y, width: 0, height: 0, rotate: 0 },
   rotateDeg: 0,
   margin: 0,
