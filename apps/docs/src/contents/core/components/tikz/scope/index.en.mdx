@@ -296,7 +296,7 @@ The 6 IR variants are uniformly flattened to 3 Scene variants (Cartesian transla
 
 The `transforms` array is applied in order — 0-th first (innermost), matching SVG `transform="t1 t2 t3"` / Scene `GroupPrim.transforms`. `transforms: [translate, rotate]` is equivalent to SVG `transform="translate(...) rotate(...)"`: translate first, then rotate.
 
-External nodeIndex sees node layouts already in **global coordinates** (compile has projected through the chain); path primitives inside a scope go to the top-level `primitives` directly (not into the GroupPrim, to avoid double application of the transform).
+External nodeIndex sees node layouts already in **global coordinates** (compile has projected through the chain); where a path primitive inside a scope lands depends on that scope's transform chain: in a **transform-free scope** the path is backfilled into that scope's `GroupPrim.children`, preserving declaration order relative to sibling nodes; in a **transformed scope** the endpoints are already global, so the path is still hoisted to the top-level `primitives` (not into the GroupPrim, to avoid double application of the transform), and its cross-frame z-order does not fully match IR order (a known limitation).
 
 ### Style inheritance resolution
 

@@ -5,6 +5,20 @@ description: retikz release history grouped by MINOR version, newest first. Date
 
 <Update label="May 2026" tags={["@retikz/core", "@retikz/react"]}>
 
+## v0.2.0-alpha.4
+
+The fourth v0.2 alpha: an internal bug fix — repairs the z-order regression introduced by the earlier compile pipeline rewrite. When nodes and paths are declared interleaved at the same level, paths are no longer all pushed to the very end; they once again stack in IR declaration order (SVG only honors paint order — there is no z-index). This is a prerequisite for later features such as explicit `zIndex` and Grid background fills.
+
+### `@retikz/core`
+
+- **IR declaration order restored for transform-free frames**: at the top level and inside transform-free scopes, a path primitive reserves a slot in its own sink during Pass 1 and is backfilled in place during Pass 2, restoring declaration order relative to sibling nodes; a transform-free scope containing only a path is no longer wrongly pruned.
+- **Known limitation**: inside a transformed scope a path's endpoints are already global, so it is still hoisted to the top-level `primitives` (to avoid double application of the transform), and its cross-frame z-order does not fully match IR order — left to a future coordinate-system approach / explicit `zIndex` override.
+- Pure internal compile fix: zero changes to IR / schema / public API; the internal placeholder type never leaks into Scene output (an unconditional check before return).
+
+### Docs
+
+- Scope internals corrected the description of where a path inside a scope lands: transform-free → backfilled into `GroupPrim.children`; transformed → hoisted to the top level (known limitation).
+
 ## v0.2.0-alpha.3
 
 The third v0.2 alpha: the Shape Registry — moves node shapes from the built-in four (hard-coded switch) to registerable, third-party-injectable shapes. The IR still stores `shape` as a string name; the definition is injected at runtime via `CompileOptions.shapes`, so a third party can ship a shape library like `@retikz/shapes-flow` without modifying core.

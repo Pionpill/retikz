@@ -296,7 +296,7 @@ IR 6 变体在 compile 阶段统一压成 Scene 3 变体（Cartesian translate /
 
 `transforms` 数组顺序应用——第 0 个最先生效（最内层），与 SVG `transform="t1 t2 t3"` / Scene `GroupPrim.transforms` 一致。`transforms: [translate, rotate]` 等价 SVG `transform="translate(...) rotate(...)"`：先 translate 再 rotate。
 
-外部 nodeIndex 看到的节点 layout 已是**全局坐标**（compile 累积 chain 投影完成）；scope 内 path primitive 直接走顶层 `primitives`（不进 GroupPrim 避免 transform 二次 apply）。
+外部 nodeIndex 看到的节点 layout 已是**全局坐标**（compile 累积 chain 投影完成）；scope 内 path primitive 的落点取决于该 scope 的 transform 链：**无 transform 的 scope**，path 回填到该 scope 的 `GroupPrim.children`、保住与同层 node 的 IR 声明顺序；**带 transform 的 scope**，path 端点已是全局坐标，仍 hoist 到顶层 `primitives`（不进 GroupPrim 避免 transform 二次 apply），其跨 frame z-order 不完全等于 IR 顺序（已知限制）。
 
 ### 样式继承解析
 
