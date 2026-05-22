@@ -173,7 +173,7 @@ const ir = {
   - 注释订正两处。
 - **不动**：`emitPathPrimitive`（端点仍解析为全局坐标）、`emitNodePrimitives`、`NameStack`、scope 的 frame push/pop 与 `resolvePendingPaths(innerPaths)` 调用时机（保 ADR-02 inside-out lookup 语义）、`isPrunable` 判据。
 - **零破坏 schema / IR / 公开 API**：无字段 / 公开类型 / 导出变化；占位类型模块私有不泄漏。AST 白名单 / system prompt 不涉及。
-- **文档站**：无影响（无用户可见 DSL 变化）。
+- **文档站**：Scope 技术原理订正「scope 内 path 落点」描述（无 transform 回填 `GroupPrim.children` / 带 transform hoist 顶层），更新日志加 v0.2.0-alpha.4 条目（双语）。无 DSL / API 变化，仅行为说明订正。
 - **下游解锁**：为 alpha.5「先按 IR 顺序、再按 `zIndex` 稳定排序」提供 transform-free frame 内可验收的 IR 顺序基线；transformed scope path hoist 限制需在 alpha.5 ADR 中继续显式承认。
 
 ## 不在本 ADR 范围
@@ -204,6 +204,7 @@ const ir = {
 
 - `packages/core/src/compile/compile.ts`（修改：`PendingPath.slot` + 占位类型 + Pass 1 path 占位 + `resolvePendingPaths` 回填 + scope prune 时机 + 末端断言 + 注释订正）
 - `packages/core/tests/compile/z-order.test.ts`（新建：IR 顺序回归测试，见测试象限）
+- `packages/core/tests/compile/scope-bbox.test.ts`（修改：既有 `scope_id_self_reference_in_inner_path` 改用该 scope 的 `group.children` 取内部 path——transform-free scope 内 path 修复后回填到 group、不再在顶层；断言意图（`g.east` 取真 bbox、`end[0] > 80`）与强度不变。扩展 scope 理由：该测试原本依赖被修复的旧 hoist 行为，属预期适配）
 
 偏离白名单的改动需要：加新条目到本段并自我注解「为什么扩展 scope」，或开新 ADR。
 

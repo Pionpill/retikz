@@ -134,6 +134,38 @@ const defaultWarnDispatcher = (warning: CompileWarning): void => {
  *   `scopeChain` 字段记录该 path 所在 scope 的累积 transform 链，让 path step 内 polar/at/offset
  *   `to` 在 scope 局部度量后由 path 端点 lookup 端走 `applyTransformChain` 投回全局。
  */
+/**
+ * 编译期占位 primitive：Pass 1 的 path 分支先在 sink 占一个位记住声明位置，Pass 2 解析出真 primitive 后按引用 splice 替换。绝不进入最终 Scene 输出（compileToScene 返回前由 placeholderBalance 无条件校验兜底）。
+ */
+type PathPlaceholder = { type: 'path-placeholder' };
+
+/** compile 内部 sink 元素类型：真 Scene primitive 或编译期占位；构造 GroupPrim / 返回 Scene 前收窄回 ScenePrimitive */
+type InternalScenePrimitive = ScenePrimitive | PathPlaceholder;
+
+const makePathPlaceholder = (): PathPlaceholder => ({ type: 'path-placeholder' });
+
+/** 把内部 sink 收窄回公开 ScenePrimitive[]：占位已全部回填（compileToScene 末端 placeholderBalance 无条件校验兜底） */
+const sealSink = (sink: Array<InternalScenePrimitive>): Array<ScenePrimitive> =>
+  sink as Array<ScenePrimitive>;
+
+/** dev 诊断：递归找出残留占位的 index 路径，供末端无条件校验报错时定位 */
+const collectPlaceholderLocators = (
+  prims: ReadonlyArray<InternalScenePrimitive>,
+  prefix = 'primitives',
+): Array<string> => {
+  const locators: Array<string> = [];
+  prims.forEach((prim, idx) => {
+    if (prim.type === 'path-placeholder') {
+      locators.push(`${prefix}[${idx}]`);
+    } else if (prim.type === 'group') {
+      locators.push(
+        ...collectPlaceholderLocators(prim.children, `${prefix}[${idx}].children`),
+      );
+    }
+  });
+  return locators;
+};
+
 type PendingPath = {
   /** path IR 节点本体 */
   path: IRPath;
@@ -141,6 +173,11 @@ type PendingPath = {
   irPath: string;
   /** 该 path 所属 scope 的累积 transform 链；顶层 path = [] */
   scopeChain: ReadonlyArray<Transform>;
+  /**
+   * 回填目标：scopeChain 为空（顶层 / 无 transform scope）时占位——记下所在 sink 与占位 marker，
+   * Pass 2 原位 splice 回填；scopeChain 非空（transformed scope）时缺省，path 走 hoist 到顶层 primitives。
+   */
+  slot?: { sink: Array<InternalScenePrimitive>; placeholder: PathPlaceholder };
 };
 
 /** scope.transforms 解析失败时根据失败成因映射的 warn code */
@@ -198,7 +235,9 @@ export const compileToScene = (ir: IR, options: CompileOptions = {}): Scene => {
     }
   }
 
-  const primitives: Array<ScenePrimitive> = [];
+  const primitives: Array<InternalScenePrimitive> = [];
+  /** 已 push 但未回填的占位计数；compileToScene 返回前必须归零（无条件守 Scene 公开契约） */
+  let placeholderBalance = 0;
   const nameStack = new NameStack({
     onDuplicate: info => onWarn(formatDuplicateWarning(info)),
   });
@@ -206,7 +245,7 @@ export const compileToScene = (ir: IR, options: CompileOptions = {}): Scene => {
 
   /**
    * 解析一批本层收集的 pending paths（lookup-only 阶段）
-   * @description path primitive 一律 push 到顶层 `primitives` —— 端点已是全局坐标，不能进 GroupPrim 否则被 scope.transform 二次 apply。NameStack 切到 pass2 守门：path 解析中误调 register 抛 internal error；解析完切回 pass1 让上层 scope 子树继续 register 子节点。
+   * @description 两种落点：有 `slot`（scopeChain 为空）→ 原位 splice 回填该 path 在本层 sink 占的位（按引用定位免索引漂移），保住与同层 node 的 IR 声明序；无 `slot`（scopeChain 非空）→ hoist 到顶层 `primitives`，因端点已是全局坐标、进 transformed GroupPrim 会被 scope.transform 二次 apply。NameStack 切到 pass2 守门：path 解析中误调 register 抛 internal error；解析完切回 pass1 让上层 scope 子树继续 register 子节点。
    *   `item.scopeChain` 记录该 path 所属 scope 累积 transform 链——传给 emitPathPrimitive，
    *   让 step.to 内的 polar/at/offset 字面量按"当前 scope 局部度量 + 末端 apply chain"投影回全局。
    */
@@ -220,8 +259,19 @@ export const compileToScene = (ir: IR, options: CompileOptions = {}): Scene => {
           irPath: item.irPath,
           scopeChain: item.scopeChain,
         });
-        if (result) {
+        if (item.slot) {
+          // 原位回填：按引用定位占位再 splice 替换为真 primitive（result 为 null 时替换成 0 个 = 删占位）
+          const idx = item.slot.sink.indexOf(item.slot.placeholder);
+          if (idx === -1) {
+            throw new Error('internal: path placeholder missing from its sink');
+          }
+          item.slot.sink.splice(idx, 1, ...(result?.primitives ?? []));
+          placeholderBalance--;
+        } else if (result) {
+          // hoist：transformed scope 内 path 留在顶层 primitives（已知限制）
           for (const prim of result.primitives) primitives.push(prim);
+        }
+        if (result) {
           for (const p of result.points) allPoints.push(p);
         }
       }
@@ -244,7 +294,7 @@ export const compileToScene = (ir: IR, options: CompileOptions = {}): Scene => {
   const processChildren = (
     children: ReadonlyArray<IRChild>,
     chain: ReadonlyArray<Transform>,
-    sink: Array<ScenePrimitive>,
+    sink: Array<InternalScenePrimitive>,
     locatorPrefix: string,
     layoutsAccumulator: Array<NodeLayout>,
     pathsAccumulator: Array<PendingPath>,
@@ -327,7 +377,7 @@ export const compileToScene = (ir: IR, options: CompileOptions = {}): Scene => {
         // 进入 scope 子 frame：localNamespace=true 时隔离子树命名空间
         const pushedFrame = child.localNamespace === true;
         if (pushedFrame) nameStack.pushFrame();
-        const innerSink: Array<ScenePrimitive> = [];
+        const innerSink: Array<InternalScenePrimitive> = [];
         /** 本 scope 子树的 layouts 累积器；子树结束后用于算 bbox */
         const innerLayouts: Array<NodeLayout> = [];
         /** 本 scope 子树收集的 pending paths——在 bbox replaceLayout 后 / popFrame 前 resolve，
@@ -371,20 +421,28 @@ export const compileToScene = (ir: IR, options: CompileOptions = {}): Scene => {
         if (isPrunable) continue;
         const group: GroupPrim = {
           type: 'group',
-          children: innerSink,
+          children: sealSink(innerSink),
         };
         if (hasOwnTransforms) group.transforms = [...ownTransforms];
         sink.push(group);
       } else {
         // child.type === 'path'：累积到调用方提供的 pathsAccumulator，让调用方决定 resolve 时机
-        // path 端点从 NameStack（全局坐标）查得，几何已是全局——primitive 在 resolvePendingPaths 中一律 push 顶层 primitives 避免被 scope.transform 重复 apply
-        // `chain` 记录 path 所属 scope 累积 transform，让 step.to 内的 polar/at/offset 字面量
+        // path 端点从 NameStack（全局坐标）查得，几何已是全局。chain 空时先在本层 sink 占一个位（Pass 2
+        // 原位回填）保住与同层 node 的声明序；chain 非空时维持 hoist 到顶层 primitives，避免被 scope.transform 二次 apply。
+        // `chain` 同时记录 path 所属 scope 累积 transform，让 step.to 内的 polar/at/offset 字面量
         // 按"当前 scope 局部度量 + 末端 apply chain"投影回全局
-        pathsAccumulator.push({
+        const pending: PendingPath = {
           path: resolveEffectivePath(child, styleStack),
           irPath: `${locatorPrefix}children[${i}].path`,
           scopeChain: chain,
-        });
+        };
+        if (chain.length === 0) {
+          const placeholder = makePathPlaceholder();
+          sink.push(placeholder);
+          pending.slot = { sink, placeholder };
+          placeholderBalance++;
+        }
+        pathsAccumulator.push(pending);
       }
     }
   };
@@ -395,8 +453,19 @@ export const compileToScene = (ir: IR, options: CompileOptions = {}): Scene => {
   processChildren(ir.children, [], primitives, '', [], rootPaths, []);
   resolvePendingPaths(rootPaths);
 
+  // 无条件校验：占位绝不能泄漏到 Scene 输出（守 compileToScene 返回 ScenePrimitive[] 的公开契约）
+  if (placeholderBalance !== 0) {
+    const detail =
+      typeof process !== 'undefined' && process.env.NODE_ENV !== 'production'
+        ? ` at ${collectPlaceholderLocators(primitives).join(', ')}`
+        : '';
+    throw new Error(
+      `internal: ${placeholderBalance} unresolved path placeholder(s) leaked into Scene output${detail}`,
+    );
+  }
+
   return {
-    primitives,
+    primitives: sealSink(primitives),
     layout: computeLayout(allPoints, layoutPadding, round),
   };
 };

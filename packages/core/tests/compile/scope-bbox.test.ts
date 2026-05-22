@@ -773,7 +773,9 @@ describe('scope.id bbox 交互', () => {
       },
     ]);
     const compiled = compileToScene(ir);
-    const end = lineTo(topPath(compiled.primitives));
+    // scope id='g' 无 transform：其内部 path 回填到该 scope 的 group.children（不再 hoist 到顶层）
+    const group = compiled.primitives.find(p => p.type === 'group');
+    const end = lineTo(group?.type === 'group' ? topPath(group.children) : undefined);
     expect(end).toBeDefined();
     // 真 bbox.east x ≥ B 中心 100；placeholder 0×0 east x ≈ 0；断 > 80 足以区分两种实现
     expect(end![0]).toBeGreaterThan(80);
