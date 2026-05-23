@@ -194,6 +194,12 @@ Scope 兼作样式默认值挂点，给内部元素提供三组样式表面：**
 
 </Comparison>
 
+### 栈序（zIndex）
+
+`zIndex` 作用于 **scope 整体**（它编译出的 `GroupPrim`）在父层的上下位置，**不影响 scope 内部子元素的相对栈序**。下面两组节点簇重叠、声明顺序 A 先 B 后（默认 B 整组压上），给先声明的 A 组设 `zIndex={1}` 即可把整组浮到 B 组之上：
+
+<ComponentPreview name="scope-z-index" size="sm" />
+
 ## 技术原理
 
 <ComponentAlert

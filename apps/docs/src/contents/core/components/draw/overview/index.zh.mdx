@@ -142,6 +142,12 @@ Draw 里的曲线分两类：`curve` / `cubic` / `bend` 连接前后两个目标
 
 <ComponentPreview name="draw-dashed" />
 
+#### 栈序（zIndex）
+
+`zIndex` 显式覆盖默认的声明顺序层叠：大者在上、缺省 0、同值保持声明顺序；只在同层子节点间生效。与 `<Path>` 的 `zIndex` 同义（Draw 编译即 Path）。下面两个填充方块声明顺序蓝先红后（默认红压上），给先声明的蓝色 Draw 设 `zIndex={1}` 即可把它抬到红色之上：
+
+<ComponentPreview name="draw-z-index" size="sm" />
+
 ## API 参考
 
 ### Props
@@ -162,6 +168,7 @@ Draw 里的曲线分两类：`curve` / `cubic` / `bend` 连接前后两个目标
 | `opacity` | `number` | — | 整 path 透明度 0..1 |
 | `fillOpacity` | `number` | — | 仅 fill 透明度 0..1 |
 | `drawOpacity` | `number` | — | 仅 stroke 透明度 0..1 |
+| `zIndex` | `number`（整数） | `0` | 显式栈序：大者在上；同值保持声明顺序；只在同层子节点间生效（透传到底层 `<Path>`） |
 
 <Comparison target="tikz" title="样式命名">
 

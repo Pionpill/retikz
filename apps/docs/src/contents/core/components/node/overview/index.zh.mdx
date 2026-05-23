@@ -191,9 +191,13 @@ Line 2`}</Node>
 
 默认渲染层叠 = 声明顺序（SVG 只认绘制顺序）。`zIndex` 显式覆盖：大者在上、缺省 0、同值保持声明顺序；只在同层（同 scope / 顶层）子节点间生效。例如把某个高亮节点 `zIndex={10}` 浮到所有连线之上，而不必把它挪到 JSX 末尾。`<Path>` / `<Scope>` 同样支持 `zIndex`（scope 的 `zIndex` 作用于整组在父层的位置，不影响 scope 内部相对栈序）。
 
+<ComponentPreview name="node-z-index" size="sm" />
+
 #### label 旋转
 
 `label.rotate` 让标签文字绕**自身中心**自旋：`'radial'` 沿"节点中心 → 标签中心"方向、`'tangent'` 取其切向（radial + 90°）、数字为显式角度（度）；`keepUpright` 在文字会倒置时翻 180° 保持可读。`rotate` 只改朝向，不改由 `position` / `distance` 决定的位置。
+
+<ComponentPreview name="node-label-rotate" size="md" />
 
 ## API 参考
 

@@ -104,6 +104,12 @@ import { Path, Step } from '@retikz/react';
 
 <ComponentPreview name="path-opacity" />
 
+#### 栈序（zIndex）
+
+默认层叠 = 声明顺序。`zIndex` 显式覆盖：大者在上、缺省 0、同值保持声明顺序；只在同层（同 scope / 顶层）子节点间生效。下面两个填充矩形声明顺序蓝先红后（默认红压上），给先声明的蓝色 path 设 `zIndex={1}` 即可把它抬到红色之上：
+
+<ComponentPreview name="path-z-index" size="sm" />
+
 ## API 参考
 
 | 属性 | 类型 | 默认值 | 描述 |

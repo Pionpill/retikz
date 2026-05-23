@@ -142,6 +142,12 @@ Full ellipses also use angular parametrization, not equal divisions by ellipse a
 
 <ComponentPreview name="draw-dashed" />
 
+#### Stacking order (zIndex)
+
+`zIndex` overrides the default declaration-order stacking: higher draws on top, omitted = 0, ties keep declaration order; effective only among siblings at the same level. Same meaning as `<Path>`'s `zIndex` (Draw compiles to Path). The two filled squares below are declared blue-then-red (red on top by default); setting `zIndex={1}` on the earlier blue Draw lifts it above the red one:
+
+<ComponentPreview name="draw-z-index" size="sm" />
+
 ## API Reference
 
 ### Props
@@ -162,6 +168,7 @@ Full ellipses also use angular parametrization, not equal divisions by ellipse a
 | `opacity` | `number` | — | Whole-path opacity, 0..1 |
 | `fillOpacity` | `number` | — | Fill-only opacity, 0..1 |
 | `drawOpacity` | `number` | — | Stroke-only opacity, 0..1 |
+| `zIndex` | `number` (integer) | `0` | Explicit stacking order: higher draws on top; ties keep declaration order; effective only among siblings at the same level (forwarded to the underlying `<Path>`) |
 
 <Comparison target="tikz" title="Style Naming">
 

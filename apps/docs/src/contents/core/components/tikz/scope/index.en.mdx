@@ -194,6 +194,12 @@ The master `color` maps to TikZ `color=` (sets the current color; draw / fill / 
 
 </Comparison>
 
+### Stacking order (zIndex)
+
+`zIndex` positions the **whole scope** (the `GroupPrim` it compiles to) among its siblings in the parent layer; it **does not affect the relative stacking of children inside the scope**. The two node clusters below overlap and are declared A-then-B (group B on top by default); setting `zIndex={1}` on the earlier A group lifts the entire group above B:
+
+<ComponentPreview name="scope-z-index" size="sm" />
+
 ## How it works
 
 <ComponentAlert
