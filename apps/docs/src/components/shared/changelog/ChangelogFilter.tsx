@@ -1,7 +1,7 @@
 import type { FC } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import { Toggle } from '@/components/ui/toggle';
+import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import type { Lang } from '@/i18n';
 import { PACKAGE_LABEL } from '@/data/changelog.types';
@@ -16,7 +16,7 @@ export type ChangelogFilterProps = {
   layout?: 'aside' | 'bar';
 };
 
-/** 包筛选(多选,替代 TOC):每个包一个 shadcn Toggle */
+/** 包筛选(多选,替代 TOC):每个包一个 shadcn Button —— 选中 secondary、未选中 ghost */
 export const ChangelogFilter: FC<ChangelogFilterProps> = ({ lang, layout = 'aside' }) => {
   const { t } = useTranslation();
   const selected = useChangelogFilterStore(s => s.selected);
@@ -29,19 +29,20 @@ export const ChangelogFilter: FC<ChangelogFilterProps> = ({ lang, layout = 'asid
         {t('changelog.filterPackages')}
       </p>
       <div className={cn('flex gap-1.5', layout === 'aside' ? 'flex-col items-stretch' : 'flex-wrap')}>
-        {packages.map(pkg => (
-          <Toggle
-            key={pkg}
-            size="sm"
-            variant="outline"
-            pressed={selected.includes(pkg)}
-            onPressedChange={() => toggle(pkg)}
-            aria-label={PACKAGE_LABEL[pkg][lang]}
-            className={cn('font-mono text-xs', layout === 'aside' && 'justify-start')}
-          >
-            {PACKAGE_LABEL[pkg][lang]}
-          </Toggle>
-        ))}
+        {packages.map(pkg => {
+          const on = selected.includes(pkg);
+          return (
+            <Button
+              key={pkg}
+              variant={on ? 'secondary' : 'ghost'}
+              onClick={() => toggle(pkg)}
+              aria-pressed={on}
+              className={cn('font-mono', layout === 'aside' && 'w-full justify-start')}
+            >
+              {PACKAGE_LABEL[pkg][lang]}
+            </Button>
+          );
+        })}
       </div>
     </nav>
   );
