@@ -4,9 +4,10 @@
  *   不同 layout 各自一份缓存；同 layout 多次 lookup 结果一致；数字角度 + 负号 / 小数支持
  */
 import { describe, expect, it } from 'vitest';
-import { resolveAnchor } from '../../src/compile/anchor-cache';
+import { resolveAnchor, resolveEdgePoint } from '../../src/compile/anchor-cache';
 import type { NodeLayout } from '../../src/compile/node';
 import { BUILTIN_SHAPES } from '../../src/shapes';
+import type { ShapeDefinition } from '../../src/shapes';
 import type { BuiltinShapeName } from '../../src/ir';
 
 /** 构造一个最简 NodeLayout，rect 已是全局坐标 */
@@ -142,5 +143,55 @@ describe('resolveAnchor 数字角度支持负号 / 小数', () => {
     const layout = makeLayout('circle', 40, 40, 0, 0);
     const fractional = resolveAnchor(layout, '45.5');
     expect(resolveAnchor(layout, '45.5')).toBe(fractional);
+  });
+});
+
+describe('resolveEdgePoint 边上比例点（ADR-02）', () => {
+  it('rect north t=0.5 = 上边中点', () => {
+    const layout = makeLayout('rectangle', 20, 10, 0, 0);
+    const p = resolveEdgePoint(layout, 'north', 0.5);
+    expect(p[0]).toBeCloseTo(0, 6);
+    expect(p[1]).toBeCloseTo(-5, 6);
+  });
+
+  it('缓存命中返回同一引用（key = `${side}:${t}`）', () => {
+    const layout = makeLayout('rectangle', 20, 10, 0, 0);
+    const first = resolveEdgePoint(layout, 'north', 0.25);
+    expect(resolveEdgePoint(layout, 'north', 0.25)).toBe(first);
+  });
+
+  it('与命名 anchor cache key 命名空间不冲突（north vs north:0.5）', () => {
+    const layout = makeLayout('rectangle', 20, 10, 0, 0);
+    const named = resolveAnchor(layout, 'north'); // 上边中点 (0,-5)
+    const edge = resolveEdgePoint(layout, 'north', 0); // NW 角 (-10,-5)
+    expect(named).not.toBe(edge);
+    expect(edge[0]).toBeCloseTo(-10, 6);
+  });
+
+  it('不支持 edgePoint 的自定义 shape → 抛明确错', () => {
+    const noEdge: ShapeDefinition = {
+      circumscribe: (hw, hh) => ({ halfWidth: hw, halfHeight: hh }),
+      boundaryPoint: r => [r.x, r.y],
+      anchor: (r, name) => (name === 'center' ? [r.x, r.y] : undefined),
+      *emit() {},
+    };
+    const layout: NodeLayout = {
+      shapeName: 'custom',
+      shapeDef: noEdge,
+      rect: { x: 0, y: 0, width: 20, height: 10, rotate: 0 },
+      rotateDeg: 0,
+      margin: 0,
+      textWidth: 0,
+      textHeight: 0,
+      align: 'middle',
+      lineHeight: 0,
+      fontSize: 0,
+    };
+    expect(() => resolveEdgePoint(layout, 'north', 0.5)).toThrow(/does not support side anchors/);
+  });
+
+  it('零尺寸 Coordinate → { side, t } 报错（决策细节 #10）', () => {
+    const layout = makeLayout('rectangle', 0, 0, 5, 5);
+    expect(() => resolveEdgePoint(layout, 'north', 0.5)).toThrow(/zero-size Coordinate/);
   });
 });

@@ -102,4 +102,46 @@ describe('custom ShapeDefinition is a plain object (factory-friendly)', () => {
     const prims = [...poly.emit({ x: 0, y: 0, width: 10, height: 10 }, {}, id)];
     expect(prims).toHaveLength(1);
   });
+
+  it('edgePoint is optional —— custom shape may omit it', () => {
+    const poly = createPolygonShape();
+    expect(poly.edgePoint).toBeUndefined();
+  });
+});
+
+describe('BUILTIN_SHAPES.edgePoint —— 内置 4 shape 必实现，落真实边界（ADR-02）', () => {
+  const r: Rect = { x: 0, y: 0, width: 20, height: 10, rotate: 0 };
+
+  it('内置 4 shape 都实现了 edgePoint', () => {
+    expect(typeof BUILTIN_SHAPES.rectangle.edgePoint).toBe('function');
+    expect(typeof BUILTIN_SHAPES.circle.edgePoint).toBe('function');
+    expect(typeof BUILTIN_SHAPES.ellipse.edgePoint).toBe('function');
+    expect(typeof BUILTIN_SHAPES.diamond.edgePoint).toBe('function');
+  });
+
+  it('rectangle.edgePoint 委托 rect 几何（north 上边中点）', () => {
+    expect(BUILTIN_SHAPES.rectangle.edgePoint!(r, 'north', 0.5)).toEqual([0, -5]);
+  });
+
+  it('circle.edgePoint 委托 ellipse（外接框 20×20 → radius 10，east t=0.5）', () => {
+    const square: Rect = { x: 0, y: 0, width: 20, height: 20, rotate: 0 };
+    const p = BUILTIN_SHAPES.circle.edgePoint!(square, 'east', 0.5);
+    expect(p[0]).toBeCloseTo(10, 6);
+    expect(p[1]).toBeCloseTo(0, 6);
+  });
+
+  it('ellipse.edgePoint：外接框 ×√2 后落椭圆周（east t=0.5 = (rx, 0)）', () => {
+    // shapes/ellipse 把 Rect(width) → rx = width/2 / √2？实际由 toEllipse 决定，仅校验在周长上
+    const p = BUILTIN_SHAPES.ellipse.edgePoint!(r, 'east', 0.5);
+    // east 中点必在 +x 轴上
+    expect(p[1]).toBeCloseTo(0, 6);
+    expect(p[0]).toBeGreaterThan(0);
+  });
+
+  it('diamond.edgePoint：north t=0.5 = 北顶点', () => {
+    const p = BUILTIN_SHAPES.diamond.edgePoint!(r, 'north', 0.5);
+    // diamond 外接框 20×10 → halfB = 5，北顶点 (0, -5)
+    expect(p[0]).toBeCloseTo(0, 6);
+    expect(p[1]).toBeCloseTo(-5, 6);
+  });
 });
