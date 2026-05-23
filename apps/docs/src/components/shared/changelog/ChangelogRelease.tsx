@@ -3,10 +3,8 @@ import type { FC } from 'react';
 import type { Lang } from '@/i18n';
 import type { Release } from '@/data/changelog.types';
 
+import { releaseAnchorId } from './anchor';
 import { ChangelogPackageBlock } from './ChangelogPackageBlock';
-
-/** 时间线锚点 id(供左 rail 点击滚动 / scroll-spy 定位) */
-export const releaseAnchorId = (minor: string): string => `release-${minor.replace(/[^\w.-]/g, '-')}`;
 
 export type ChangelogReleaseProps = {
   release: Release;

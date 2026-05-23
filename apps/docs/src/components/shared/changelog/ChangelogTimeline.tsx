@@ -6,7 +6,7 @@ import { cn } from '@/lib/utils';
 import type { Lang } from '@/i18n';
 import { PACKAGE_LABEL, type Release } from '@/data/changelog.types';
 
-import { releaseAnchorId } from './ChangelogRelease';
+import { releaseAnchorId } from './anchor';
 
 /** sticky header 高度 + 留白 */
 const SCROLL_OFFSET = 80;
