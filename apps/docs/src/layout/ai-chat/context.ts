@@ -28,9 +28,9 @@ const diagramProtocolZh = (preference: DiagramFormatPreference): string => {
 需要画图时用下面两种围栏代码块之一，否则正常用 markdown。
 
 - \`\`\`retikz-ir\`\`\`：直接给 @retikz/core 的 IR JSON。
-- \`\`\`retikz-tsx\`\`\`：JSX，仅允许 17 个 retikz 组件 — Kernel \`TikZ\` / \`Node\` / \`Path\` / \`Step\` / \`Text\` / \`Coordinate\` / \`Scope\`，Sugar \`Draw\` / \`EdgeLabel\` + 形状 \`Circle\` / \`Ellipse\` / \`Arc\` / \`Sector\` / \`Rectangle\` / \`Grid\` / \`RegularPolygon\` / \`Star\`；props 只能是字面量（字符串 / 数字 / 布尔 / null / 数组字面量 / 对象字面量）；**禁止** 变量引用、表达式、\`.map()\`、hooks、模板插值、spread。
+- \`\`\`retikz-tsx\`\`\`：JSX，仅允许 17 个 retikz 组件 — Kernel \`Layout\` / \`Node\` / \`Path\` / \`Step\` / \`Text\` / \`Coordinate\` / \`Scope\`，Sugar \`Draw\` / \`EdgeLabel\` + 形状 \`Circle\` / \`Ellipse\` / \`Arc\` / \`Sector\` / \`Rectangle\` / \`Grid\` / \`RegularPolygon\` / \`Star\`（\`TikZ\` 为 \`Layout\` 的 deprecated 别名，仍可用但请优先 \`Layout\`）；props 只能是字面量（字符串 / 数字 / 布尔 / null / 数组字面量 / 对象字面量）；**禁止** 变量引用、表达式、\`.map()\`、hooks、模板插值、spread。
 
-**两种围栏块都只用于"完整可运行单元"**——retikz-tsx 必须有最外层 \`<TikZ>\` 包裹；retikz-ir 必须是完整 Scene 对象（含 \`version\` / \`type\` / \`children\`）。**只展示改动 / 片段 / 单独几个标签时用普通 \`\`\`tsx 或 \`\`\`json 围栏**，不要用 retikz-* 否则会被当成完整图去渲染、报 parse 错。
+**两种围栏块都只用于"完整可运行单元"**——retikz-tsx 必须有最外层 \`<Layout>\` 包裹；retikz-ir 必须是完整 Scene 对象（含 \`version\` / \`type\` / \`children\`）。**只展示改动 / 片段 / 单独几个标签时用普通 \`\`\`tsx 或 \`\`\`json 围栏**，不要用 retikz-* 否则会被当成完整图去渲染、报 parse 错。
 
 ### ⚠️ 写图前**必须先看下面这段 Schema 速查**
 
@@ -95,11 +95,11 @@ Coordinate = {
 \`\`\`
 
 \`\`\`retikz-tsx
-<TikZ width={300} height={120}>
+<Layout width={300} height={120}>
   <Node id="a" position={[0, 0]}>Hello</Node>
   <Node id="b" position={[150, 0]}>World</Node>
   <Draw way={['a', 'b']} arrow="->" />
-</TikZ>
+</Layout>
 \`\`\`
 
 ### 形状 sugar（一行画几何形，仅 retikz-tsx）
@@ -134,9 +134,9 @@ const diagramProtocolEn = (preference: DiagramFormatPreference): string => {
 When you need to draw a diagram, use one of the two fenced blocks below; otherwise answer normally with markdown.
 
 - \`\`\`retikz-ir\`\`\`: feed @retikz/core IR JSON directly.
-- \`\`\`retikz-tsx\`\`\`: JSX, only the 17 retikz components allowed — Kernel \`TikZ\` / \`Node\` / \`Path\` / \`Step\` / \`Text\` / \`Coordinate\` / \`Scope\`, Sugar \`Draw\` / \`EdgeLabel\` + shapes \`Circle\` / \`Ellipse\` / \`Arc\` / \`Sector\` / \`Rectangle\` / \`Grid\` / \`RegularPolygon\` / \`Star\`. Props must be literals (string / number / boolean / null / array literal / object literal). **No** variable references, expressions, \`.map()\`, hooks, template interpolation, or spread.
+- \`\`\`retikz-tsx\`\`\`: JSX, only the 17 retikz components allowed — Kernel \`Layout\` / \`Node\` / \`Path\` / \`Step\` / \`Text\` / \`Coordinate\` / \`Scope\`, Sugar \`Draw\` / \`EdgeLabel\` + shapes \`Circle\` / \`Ellipse\` / \`Arc\` / \`Sector\` / \`Rectangle\` / \`Grid\` / \`RegularPolygon\` / \`Star\` (\`TikZ\` is a deprecated alias of \`Layout\`; still works but prefer \`Layout\`). Props must be literals (string / number / boolean / null / array literal / object literal). **No** variable references, expressions, \`.map()\`, hooks, template interpolation, or spread.
 
-**Both fenced blocks are for "complete, runnable units" only** — retikz-tsx must include the outer \`<TikZ>\` wrapper; retikz-ir must be a complete Scene object (with \`version\` / \`type\` / \`children\`). **When showing only changes / snippets / a handful of standalone tags, use plain \`\`\`tsx or \`\`\`json fences instead** — using retikz-* will be treated as a full diagram and will throw a parse error.
+**Both fenced blocks are for "complete, runnable units" only** — retikz-tsx must include the outer \`<Layout>\` wrapper; retikz-ir must be a complete Scene object (with \`version\` / \`type\` / \`children\`). **When showing only changes / snippets / a handful of standalone tags, use plain \`\`\`tsx or \`\`\`json fences instead** — using retikz-* will be treated as a full diagram and will throw a parse error.
 
 ### ⚠️ **Read the Schema cheatsheet below BEFORE drawing**
 
@@ -201,11 +201,11 @@ Coordinate = {
 \`\`\`
 
 \`\`\`retikz-tsx
-<TikZ width={300} height={120}>
+<Layout width={300} height={120}>
   <Node id="a" position={[0, 0]}>Hello</Node>
   <Node id="b" position={[150, 0]}>World</Node>
   <Draw way={['a', 'b']} arrow="->" />
-</TikZ>
+</Layout>
 \`\`\`
 
 ### Shape sugar (one-liner geometry, retikz-tsx only)
