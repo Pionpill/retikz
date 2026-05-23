@@ -1,6 +1,8 @@
 import { BlogFrontmatter } from '@/components/shared/blog-frontmatter';
 import type { MdxFrontmatter } from '@/components/shared/mdx-content';
+import { ChangelogFilter, ChangelogView, changelogToMarkdown } from '@/components/shared/changelog';
 import { InlineMdx, MdxContent, MdxToc } from '@/components/shared/mdx-content';
+import { changelog, changelogPageDescription } from '@/data/changelog';
 import { getSectionsByModule } from '@/data/sections';
 import { buildDocPageLinks } from '@/lib/docLinks';
 import { cn } from '@/lib/utils';
@@ -41,6 +43,9 @@ export const DocPage: FC<DocPageProps> = props => {
   const { source, notFound, resolvedLang } = useMdxSource();
   const tocOpen = useTocStore(state => state.tocOpen);
 
+  /** changelog 页走数据驱动渲染,不走 mdx 管线 */
+  const isChangelog = loc?.moduleId === 'about' && loc.sectionId === 'releases' && loc.pageId === 'changelog';
+
   const [frontmatter, setFrontmatter] = useState<MdxFrontmatter>({});
   /** 始终保留上一次非 null 的 source；过渡态时下游继续看见旧内容直至新 mdx 编译就绪 */
   const [stableSource, setStableSource] = useState<string | null>(source);
@@ -53,12 +58,14 @@ export const DocPage: FC<DocPageProps> = props => {
   const aiChatLang: 'zh' | 'en' = (i18n.resolvedLanguage ?? 'zh').startsWith('en') ? 'en' : 'zh';
   const aiChatTitleKey = target?.label ?? null;
   useEffect(() => {
-    if (!loc || !aiChatTitleKey || stableSource == null) return;
+    if (!loc || !aiChatTitleKey) return;
+    const mdx = isChangelog ? changelogToMarkdown(changelog, aiChatLang) : stableSource;
+    if (mdx == null) return;
     const title = String(t(aiChatTitleKey));
     const { rawUrl } = buildDocPageLinks(loc, aiChatLang);
     const path = `/${docPathSegments(loc).join('/')}`;
-    setAiChatCurrentPage({ title, mdx: stableSource, lang: aiChatLang, rawUrl, path });
-  }, [loc, aiChatTitleKey, stableSource, aiChatLang, t, setAiChatCurrentPage]);
+    setAiChatCurrentPage({ title, mdx, lang: aiChatLang, rawUrl, path });
+  }, [loc, aiChatTitleKey, stableSource, isChangelog, aiChatLang, t, setAiChatCurrentPage]);
   useEffect(
     () => () => {
       useAiChatStore.getState().setCurrentPage(null);
@@ -91,7 +98,11 @@ export const DocPage: FC<DocPageProps> = props => {
   }
 
   const title = t(target.label);
-  const description = typeof frontmatter.description === 'string' ? frontmatter.description : null;
+  const description = isChangelog
+    ? changelogPageDescription[aiChatLang]
+    : typeof frontmatter.description === 'string'
+      ? frontmatter.description
+      : null;
 
   return (
     <main className={cn('@container flex min-w-0 flex-1 w-full p-4 sm:p-6', className)} {...resProps}>
@@ -124,7 +135,9 @@ export const DocPage: FC<DocPageProps> = props => {
             )}
           </header>
           <div className="[&_p]:[overflow-wrap:anywhere] [&_li]:[overflow-wrap:anywhere] [&_h1]:[overflow-wrap:anywhere] [&_h2]:[overflow-wrap:anywhere] [&_h3]:[overflow-wrap:anywhere] [&_h4]:[overflow-wrap:anywhere]">
-            {notFound ? (
+            {isChangelog ? (
+              <ChangelogView />
+            ) : notFound ? (
               <p className="text-sm text-muted-foreground">{t('common.contentPlaceholder', { title })}</p>
             ) : (
               <MdxContent source={stableSource} onFrontmatter={setFrontmatter} />
@@ -146,7 +159,7 @@ export const DocPage: FC<DocPageProps> = props => {
             tocOpen ? 'translate-x-0' : 'pointer-events-none translate-x-2',
           )}
         >
-          {stableSource != null && <MdxToc source={stableSource} />}
+          {isChangelog ? <ChangelogFilter lang={aiChatLang} /> : stableSource != null ? <MdxToc source={stableSource} /> : null}
         </div>
       </aside>
     </main>
