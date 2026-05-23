@@ -4,7 +4,8 @@ import { InlineMdx } from '@/components/shared/mdx-content';
 import type { Lang } from '@/i18n';
 import type { ChangeItem } from '@/data/changelog.types';
 
-const SEP: Record<Lang, string> = { zh: '：', en: ': ' };
+/** label 与 content 的分隔:冒号放在加粗内,收尾 `**` 前不能是空格(否则英文加粗失效) */
+const SEP: Record<Lang, string> = { zh: '：', en: ':' };
 
 export type ChangelogItemsProps = {
   items: Array<ChangeItem>;
