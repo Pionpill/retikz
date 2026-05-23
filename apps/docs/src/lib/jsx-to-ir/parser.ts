@@ -3,13 +3,29 @@ import { Parser } from 'acorn';
 import jsx from 'acorn-jsx';
 import { type FC, type ReactElement, type ReactNode, createElement } from 'react';
 
-import { Coordinate, Draw, EdgeLabel, Node, Path, Scope, Step, Text, TikZ } from '@retikz/react';
+import {
+  Arc,
+  Circle,
+  Coordinate,
+  Draw,
+  EdgeLabel,
+  Ellipse,
+  Grid,
+  Node,
+  Path,
+  Rectangle,
+  Scope,
+  Sector,
+  Step,
+  Text,
+  TikZ,
+} from '@retikz/react';
 
 const JsxParser = Parser.extend(jsx());
 
 /**
  * 允许在 `retikz-tsx` 块里出现的组件白名单
- * @description 与 `@retikz/react` 当前 9 个公开组件一一对应；其它名（含原生 div / 用户自定义）一律拒绝
+ * @description 与 `@retikz/react` 当前 15 个公开组件一一对应；其它名（含原生 div / 用户自定义）一律拒绝
  */
 /** 标 `| undefined` 是为了让查表后的 `!Component` 守卫不被 TS 视作死代码 */
 const COMPONENT_REGISTRY: Record<string, FC<Record<string, unknown>> | undefined> = {
@@ -22,6 +38,12 @@ const COMPONENT_REGISTRY: Record<string, FC<Record<string, unknown>> | undefined
   Draw: Draw as unknown as FC<Record<string, unknown>>,
   EdgeLabel: EdgeLabel as unknown as FC<Record<string, unknown>>,
   Scope,
+  Circle: Circle as unknown as FC<Record<string, unknown>>,
+  Ellipse: Ellipse as unknown as FC<Record<string, unknown>>,
+  Arc: Arc as unknown as FC<Record<string, unknown>>,
+  Sector: Sector as unknown as FC<Record<string, unknown>>,
+  Rectangle: Rectangle as unknown as FC<Record<string, unknown>>,
+  Grid: Grid as unknown as FC<Record<string, unknown>>,
 };
 
 const componentNames = Object.keys(COMPONENT_REGISTRY).join(', ');
@@ -37,7 +59,7 @@ type AstNode = { type: string; [key: string]: unknown };
  * 把 retikz-tsx 源码解析成可渲染的 React element
  * @description 不执行 AI 的代码——纯 AST walk + `React.createElement(Whitelisted, props, ...children)`。
  *   props 只允许字面量（string / number / boolean / null / undefined / 数组 / 对象 / 模板字符串无插值 / 一元 -+ 字面量数字）；
- *   组件只允许 retikz 9 个公开 kernel + sugar；其它任何形式都给出**具体**错误描述
+ *   组件只允许 retikz 15 个公开 kernel + sugar；其它任何形式都给出**具体**错误描述
  */
 export const parseRetikzJsx = (source: string): ParseRetikzJsxResult => {
   const trimmed = source.trim();
