@@ -44,6 +44,20 @@ describe('parseNodeTarget 命名 anchor 模式（id.<name>）', () => {
   });
 });
 
+describe('parseNodeTarget 空 id 守卫（adversarial H1）', () => {
+  it("空串 '' → 抛错（不产出非法 { id: '' }）", () => {
+    expect(() => parseNodeTarget('')).toThrow(/empty node id/);
+  });
+
+  it("'.north'（空 id + anchor）→ 抛错", () => {
+    expect(() => parseNodeTarget('.north')).toThrow(/empty node id/);
+  });
+
+  it("'.30'（空 id + 角度）→ 抛错", () => {
+    expect(() => parseNodeTarget('.30')).toThrow(/empty node id/);
+  });
+});
+
 describe('parseNodeTarget 角度 anchor 模式（id.<deg>）', () => {
   it('正整数 / 负 / 小数角度 → { id, anchor: number }', () => {
     expect(parseNodeTarget('A.30')).toEqual({ id: 'A', anchor: 30 });

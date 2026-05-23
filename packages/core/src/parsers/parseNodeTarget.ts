@@ -19,8 +19,13 @@ const ANGLE_RE = /^-?\d+(\.\d+)?$/;
 /** 字符串节点 ref shorthand → NodeTarget 对象 */
 export const parseNodeTarget = (s: string): IRNodeTarget => {
   const dot = s.indexOf('.');
-  if (dot < 0) return { id: s };
-  const id = s.slice(0, dot);
+  const id = dot < 0 ? s : s.slice(0, dot);
+  // 空 id（`''` / `'.north'`）fail-fast——否则产出 NodeTargetSchema 非法的 `{ id: '' }`，
+  // 流到 compile 会误报"undefined node id ''"（拼写错误被当成缺节点）
+  if (id.length === 0) {
+    throw new Error(`parseNodeTarget: empty node id in '${s}'`);
+  }
+  if (dot < 0) return { id };
   const tail = s.slice(dot + 1);
   if (ANGLE_RE.test(tail)) {
     return { id, anchor: Number(tail) };
