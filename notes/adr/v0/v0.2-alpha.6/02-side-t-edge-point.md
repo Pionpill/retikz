@@ -1,6 +1,6 @@
 # ADR-02：`{ side, t }` 边上比例点几何（真实边界 + ShapeDefinition.edgePoint）
 
-- 状态：Proposed
+- 状态：Accepted
 - 决策日期：2026-05-23
 - 关联：[v0.2-alpha.6 plan §`{ side, t }` 边上比例点几何](../../../plans/v0/v0.2-alpha.6.md) · 本 milestone [ADR-01](./01-structured-target-anchor.md)（schema + compile 分发）· [alpha.3 ADR-01 Shape Registry](../v0.2-alpha.3/01-shape-registry.md)（`ShapeDefinition` / anchor 接口）· [v0.1-beta.1 ADR-03 geometry 共享 transform](../v0.1-beta.1/03-geometry-shared-transform-dead-anchor-cleanup.md)
 

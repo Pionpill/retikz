@@ -50,6 +50,37 @@ export const changelog: Array<Release> = [
         ],
         subVersions: [
           {
+            version: 'alpha.6',
+            date: '2026-05-23',
+            summary: {
+              zh: '结构化 Target / Anchor:path target 对象唯一(去 z.string)+ AnchorRef(命名 / 角度 / 边上比例点 { side, t })+ offset;{ side, t } 落 shape 真实边界。',
+              en: 'Structured Target / Anchor: object-only path target (drops z.string) + AnchorRef (named / angle / edge-proportional { side, t }) + offset; { side, t } lands on the real shape boundary.',
+            },
+            items: [
+              {
+                label: { zh: '对象唯一 path target', en: 'Object-only path target' },
+                content: {
+                  zh: '`TargetSchema` 删 `z.string()` 分支,节点引用主契约改 `{ id, anchor?, offset? }`;`parseNodeTarget`(parsers/)是字符串 shorthand → 对象的单一真源,core ir / compile 只见对象',
+                  en: '`TargetSchema` drops its `z.string()` branch; node references become `{ id, anchor?, offset? }`; `parseNodeTarget` (parsers/) is the single source for string-shorthand → object, so core ir / compile only ever see objects',
+                },
+              },
+              {
+                label: { zh: 'AnchorRef + offset', en: 'AnchorRef + offset' },
+                content: {
+                  zh: '`anchor` 支持命名 anchor / 角度 / `{ side, t }` 边上比例点;`offset` 在 anchor 解析后世界系叠加(不随节点 rotate 旋转)',
+                  en: '`anchor` accepts a named anchor / angle / `{ side, t }` edge-proportional point; `offset` adds a world-space delta after the anchor resolves (not rotated by the node)',
+                },
+              },
+              {
+                label: { zh: '{ side, t } 真实边界几何', en: '{ side, t } real-boundary geometry' },
+                content: {
+                  zh: '`ShapeDefinition.edgePoint?` + `resolveEdgePoint`:rect 直边 / circle·ellipse 周长弧段(等角)/ diamond 过顶点折线;不支持的 shape / 零尺寸 Coordinate 报明确错',
+                  en: '`ShapeDefinition.edgePoint?` + `resolveEdgePoint`: rect straight edge / circle·ellipse perimeter arc (equiangular) / diamond via-vertex polyline; clear errors for unsupported shapes / zero-size Coordinates',
+                },
+              },
+            ],
+          },
+          {
             version: 'alpha.5',
             date: '2026-05-23',
             summary: {
@@ -204,6 +235,30 @@ export const changelog: Array<Release> = [
         ],
         subVersions: [
           {
+            version: 'alpha.6',
+            date: '2026-05-23',
+            summary: {
+              zh: '`<TikZ>` → `<Layout>` 改名(`<TikZ>` 保留为 deprecated 别名,致敬 LaTeX TikZ);Step target 接受对象形态 + 字符串 shorthand。',
+              en: '`<TikZ>` → `<Layout>` rename (`<TikZ>` kept as a deprecated alias, a nod to LaTeX TikZ); Step targets accept the object form plus string shorthand.',
+            },
+            items: [
+              {
+                label: { zh: '<TikZ> → <Layout>', en: '<TikZ> → <Layout>' },
+                content: {
+                  zh: '顶层容器更名 `<Layout>`(贴近"声明布局交给渲染器输出");`<TikZ>` 作 deprecated 别名保留,旧代码无需改动,dev 下一次性更名提示',
+                  en: 'The top-level container is renamed `<Layout>` ("declare a layout, hand it to the renderer"); `<TikZ>` stays as a deprecated alias so existing code keeps working, with a one-time dev notice',
+                },
+              },
+              {
+                label: { zh: 'DslTarget 字符串 shorthand', en: 'DslTarget string shorthand' },
+                content: {
+                  zh: 'Step `to` / `from` / `center` 类型 `DslTarget = IRTarget | string`:JSX / Draw way 可写 `\'A.north\'` 等字符串,react 层 eager 解析成对象 IR',
+                  en: 'Step `to` / `from` / `center` are typed `DslTarget = IRTarget | string`: JSX / Draw way may use `\'A.north\'`-style strings, eager-parsed into object IR at the react layer',
+                },
+              },
+            ],
+          },
+          {
             version: 'alpha.5',
             date: '2026-05-23',
             items: [
@@ -285,6 +340,30 @@ export const changelog: Array<Release> = [
           },
         ],
         subVersions: [
+          {
+            version: 'alpha.6',
+            date: '2026-05-23',
+            summary: {
+              zh: '文档全量切 `<Layout>`、路由 `/components/tikz` → `/layout`;anchors 概念页主推对象形态 Target + `{ side, t }` 边上比例点。',
+              en: 'Docs switch to `<Layout>` throughout, route `/components/tikz` → `/layout`; the anchors page leads with object-form targets + `{ side, t }` edge-proportional points.',
+            },
+            items: [
+              {
+                label: { zh: 'demo / 路由切 Layout', en: 'demos / route to Layout' },
+                content: {
+                  zh: '全部 demo / mdx 的 `<TikZ>` → `<Layout>`;组件页路由 `/core/components/tikz` → `/layout`;AST 白名单 + system prompt 主推 `Layout`(`TikZ` 仍为别名)',
+                  en: 'All demos / mdx switch `<TikZ>` → `<Layout>`; the component page route `/core/components/tikz` → `/layout`; AST whitelist + system prompt lead with `Layout` (`TikZ` still an alias)',
+                },
+              },
+              {
+                label: { zh: 'anchors 页对象形态 + { side, t }', en: 'anchors page object form + { side, t }' },
+                content: {
+                  zh: 'anchors 概念页主推对象形态 `{ id, anchor?, offset? }`、字符串 shorthand 降级为 DSL 便捷写法,新增「边上比例点 { side, t }」小节 + demo',
+                  en: 'The anchors page leads with `{ id, anchor?, offset? }`, demotes string shorthand to DSL convenience, and adds an "edge-proportional { side, t }" section + demo',
+                },
+              },
+            ],
+          },
           {
             version: 'alpha.5',
             date: '2026-05-23',

@@ -1,6 +1,6 @@
 # ADR-03：`<TikZ>` → `<Layout>` 顶层容器命名整理（deprecated alias + 文档 / 白名单 / system prompt 同步）
 
-- 状态：Proposed
+- 状态：Accepted
 - 决策日期：2026-05-23
 - 关联：[v0.2-alpha.6 plan §第二部分](../../../plans/v0/v0.2-alpha.6.md) · [roadmap §`<TikZ>` → `<Layout>` 命名提案](../../../plans/v0/roadmap.md#tikz--layout-命名提案) · [v0.1-beta.2 ADR-02 `<TikZ>` 组件化](../v0.1-beta.2/02-tikz-to-tikz-component.md) · 本 milestone [ADR-01](./01-structured-target-anchor.md)（同窗口 system prompt / 白名单同步）
 
