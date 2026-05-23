@@ -113,3 +113,40 @@ describe('错误路径', () => {
     expect(scene.primitives.find(p => p.type === 'path')).toBeUndefined();
   });
 });
+
+describe('Coordinate（零尺寸）anchor 退化（ADR-01 决策细节 #10）', () => {
+  /** 编一条 line 到 target、终点（场景含 id='c' 的零尺寸 Coordinate 在 (50,50)） */
+  const coordEnd = (target: IRTarget): [number, number] => {
+    const ir: IR = {
+      version: 1,
+      type: 'scene',
+      children: [
+        { type: 'coordinate', id: 'c', position: [50, 50] },
+        {
+          type: 'path',
+          children: [
+            { type: 'step', kind: 'move', to: [0, 0] },
+            { type: 'step', kind: 'line', to: target },
+          ],
+        },
+      ],
+    };
+    const scene = compileToScene(ir);
+    const prim = findPathPrim(scene.primitives);
+    if (!prim) throw new Error('expected PathPrim');
+    return lastLineEnd(prim);
+  };
+
+  it('命名 anchor 退化为中心（零尺寸 → 9 anchor 都 = Coordinate 点）', () => {
+    expect(coordEnd({ id: 'c', anchor: 'north' })).toEqual([50, 50]);
+    expect(coordEnd({ id: 'c', anchor: 'south-west' })).toEqual([50, 50]);
+  });
+
+  it('角度 anchor 退化为中心', () => {
+    expect(coordEnd({ id: 'c', anchor: 30 })).toEqual([50, 50]);
+  });
+
+  it('{ side, t } 对零尺寸 Coordinate 报明确错', () => {
+    expect(() => coordEnd({ id: 'c', anchor: { side: 'north', t: 0.5 } })).toThrow(/zero-size Coordinate/);
+  });
+});

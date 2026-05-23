@@ -27,10 +27,23 @@ const typeName = (element: ReactElement): string | undefined => {
 };
 
 describe('parseRetikzJsx — happy path', () => {
-  it('解析空 TikZ', () => {
+  it('解析空 TikZ（deprecated alias 仍在白名单、可作根）', () => {
     const element = parseOk('<TikZ />');
     expect(isValidElement(element)).toBe(true);
     expect(typeName(element)).toBe('TikZ');
+  });
+
+  it('解析空 Layout（主名作根）', () => {
+    const element = parseOk('<Layout />');
+    expect(isValidElement(element)).toBe(true);
+    expect(typeName(element)).toBe('Layout');
+  });
+
+  it('Layout 作根 + Node child', () => {
+    const element = parseOk('<Layout><Node>Hi</Node></Layout>');
+    expect(typeName(element)).toBe('Layout');
+    const node = (element.props as { children?: ReactNode }).children as ReactElement;
+    expect(typeName(node)).toBe('Node');
   });
 
   it('解析带文本 child 的 Node', () => {
