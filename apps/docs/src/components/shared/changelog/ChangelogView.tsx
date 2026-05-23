@@ -7,10 +7,12 @@ import { changelog } from '@/data/changelog';
 import { useChangelogFilterStore } from '@/store/useChangelogFilterStore';
 
 import { ChangelogRelease } from './ChangelogRelease';
-import { ChangelogTimeline } from './ChangelogTimeline';
 import { filterReleases } from './filter';
 
-/** changelog 中栏:左时间线 rail + 右发布列表 */
+/**
+ * changelog 中栏:每个里程碑「左时间线节点 + 右内容」同行对齐。
+ * @description @[32rem] 起为两列网格(左节点固定宽 / 右内容),每个 ChangelogRelease 贡献该网格的一行两格;窄屏退为单列(日期在上、内容在下)。
+ */
 export const ChangelogView: FC = () => {
   const { i18n, t } = useTranslation();
   const lang: Lang = (i18n.resolvedLanguage ?? 'zh').startsWith('en') ? 'en' : 'zh';
@@ -22,11 +24,8 @@ export const ChangelogView: FC = () => {
   }
 
   return (
-    <div className="@container grid grid-cols-1 gap-8 @[32rem]:grid-cols-[140px_1fr]">
-      <aside className="@[32rem]:sticky @[32rem]:top-20 @[32rem]:self-start">
-        <ChangelogTimeline releases={visible} lang={lang} />
-      </aside>
-      <div className="min-w-0 space-y-12">
+    <div className="@container">
+      <div className="@[32rem]:grid @[32rem]:grid-cols-[132px_1fr] @[32rem]:gap-x-6">
         {visible.map(release => (
           <ChangelogRelease key={release.minor} release={release} lang={lang} />
         ))}
