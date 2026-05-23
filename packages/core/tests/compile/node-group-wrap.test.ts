@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { compileToScene } from '../../src/compile/compile';
 import type { IR } from '../../src/ir';
-import type { GroupPrim } from '../../src/primitive';
 
 const scene = (children: IR['children']): IR => ({ version: 1, type: 'scene', children });
 const silent = { onWarn: () => {} };

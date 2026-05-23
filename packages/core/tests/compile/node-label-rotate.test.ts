@@ -48,9 +48,7 @@ describe('Node label rotate', () => {
       { type: 'node', position: [0, 0], text: 'A', label: { text: 'L', position: 'right', rotate: 30 } },
     ]);
     const g = findLabelRotateGroup(compileToScene(ir, silent).primitives, 'L')!;
-    const rot = g.transforms!.find(t => t.kind === 'rotate')!;
-    if (rot.kind !== 'rotate') throw new Error('expected rotate');
-    expect(rot.degrees).toBe(30);
+    const rot = g.transforms!.find(t => t.kind === 'rotate')!;    expect(rot.degrees).toBe(30);
     const txt = g.children[0] as TextPrim;
     expect(rot.cx).toBe(txt.x);
     expect(rot.cy).toBe(txt.y);
@@ -61,9 +59,7 @@ describe('Node label rotate', () => {
       { type: 'node', position: [0, 0], text: 'A', label: { text: 'L', position: 'below', rotate: 'radial' } },
     ]);
     const g = findLabelRotateGroup(compileToScene(ir, silent).primitives, 'L')!;
-    const rot = g.transforms!.find(t => t.kind === 'rotate')!;
-    if (rot.kind !== 'rotate') throw new Error('expected rotate');
-    expect(rot.degrees).toBeCloseTo(90);
+    const rot = g.transforms!.find(t => t.kind === 'rotate')!;    expect(rot.degrees).toBeCloseTo(90);
   });
 
   it("radial：position='right'（+x 方向）→ 0° = 无旋转 = 不包 group", () => {
@@ -79,9 +75,7 @@ describe('Node label rotate', () => {
       { type: 'node', position: [0, 0], text: 'A', label: { text: 'L', position: 'right', rotate: 'tangent' } },
     ]);
     const g = findLabelRotateGroup(compileToScene(ir, silent).primitives, 'L')!;
-    const rot = g.transforms!.find(t => t.kind === 'rotate')!;
-    if (rot.kind !== 'rotate') throw new Error('expected rotate');
-    expect(rot.degrees).toBeCloseTo(90);
+    const rot = g.transforms!.find(t => t.kind === 'rotate')!;    expect(rot.degrees).toBeCloseTo(90);
   });
 
   // 边界
@@ -102,9 +96,7 @@ describe('Node label rotate', () => {
       },
     ]);
     const g = findLabelRotateGroup(compileToScene(ir, silent).primitives, 'L')!;
-    const rot = g.transforms!.find(t => t.kind === 'rotate')!;
-    if (rot.kind !== 'rotate') throw new Error('expected rotate');
-    const norm = ((rot.degrees % 360) + 360) % 360;
+    const rot = g.transforms!.find(t => t.kind === 'rotate')!;    const norm = ((rot.degrees % 360) + 360) % 360;
     expect(Math.min(norm, 360 - norm)).toBeCloseTo(0);
   });
 
@@ -118,9 +110,7 @@ describe('Node label rotate', () => {
       },
     ]);
     const g = findLabelRotateGroup(compileToScene(ir, silent).primitives, 'L')!;
-    const rot = g.transforms!.find(t => t.kind === 'rotate')!;
-    if (rot.kind !== 'rotate') throw new Error('expected rotate');
-    const norm = ((rot.degrees % 360) + 360) % 360;
+    const rot = g.transforms!.find(t => t.kind === 'rotate')!;    const norm = ((rot.degrees % 360) + 360) % 360;
     expect(norm).toBeCloseTo(180);
   });
 
