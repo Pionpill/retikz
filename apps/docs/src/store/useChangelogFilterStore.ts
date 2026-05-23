@@ -9,13 +9,11 @@ export type ChangelogFilterState = {
   selected: Array<PackageId>;
   /** 切换某个包的选中态 */
   toggle: (pkg: PackageId) => void;
-  /** 是否选中 */
-  isSelected: (pkg: PackageId) => boolean;
 };
 
 export const useChangelogFilterStore = create<ChangelogFilterState>()(
   persist(
-    (set, get) => ({
+    set => ({
       selected: [...PACKAGE_IDS],
       toggle: pkg =>
         set(state => ({
@@ -23,7 +21,6 @@ export const useChangelogFilterStore = create<ChangelogFilterState>()(
             ? state.selected.filter(p => p !== pkg)
             : [...state.selected, pkg],
         })),
-      isSelected: pkg => get().selected.includes(pkg),
     }),
     { name: 'retikz-changelog-filter' },
   ),
