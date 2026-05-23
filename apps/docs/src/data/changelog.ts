@@ -15,8 +15,8 @@ export const changelog: Array<Release> = [
         pkg: '@retikz/core',
         version: 'v0.2',
         description: {
-          zh: 'Scope 升级为样式默认值挂点、形状可注册第三方注入,并补齐 zIndex / label rotate 等 emit 层能力。',
-          en: 'Scope becomes a style-default host, shapes are registrable / third-party injectable, plus emit-layer additions like zIndex and label rotate.',
+          zh: 'Scope 升级为样式默认值挂点、形状可注册第三方注入,补齐 zIndex / label rotate 等 emit 层能力,并扩张 Path IR 支撑几何形 sugar(椭圆弧 / 部分圆椭圆 / 圆角矩形)。',
+          en: 'Scope becomes a style-default host, shapes are registrable, emit adds zIndex / label rotate, plus Path IR expansion backing shape sugar (elliptical arc / partial circle / rounded rect).',
         },
         highlights: [
           {
@@ -40,8 +40,46 @@ export const changelog: Array<Release> = [
               en: 'Node / Path / Scope stacking override, filling SVG’s lack of z-index',
             },
           },
+          {
+            label: { zh: 'Path IR 几何扩张', en: 'Path IR geometry' },
+            content: {
+              zh: 'arc 显式 center + 椭圆弧、circlePath / ellipsePath 部分裁剪、新增 rectangle step,几何下沉 `core/geometry/`',
+              en: 'arc explicit center + elliptical arc, circlePath / ellipsePath partial clipping, a new rectangle step, geometry moved to `core/geometry/`',
+            },
+          },
         ],
         subVersions: [
+          {
+            version: 'alpha.5',
+            date: '2026-05-23',
+            summary: {
+              zh: '扩张 Path IR 支撑几何形 sugar:arc 显式 center + 椭圆弧、circlePath / ellipsePath 部分裁剪、新增 rectangle step。本版后 IR 进入冻结准备。',
+              en: 'Expand Path IR to back geometric-shape sugar: arc explicit center + elliptical arc, circlePath / ellipsePath partial clipping, a new rectangle step.',
+            },
+            items: [
+              {
+                label: { zh: 'arc 显式 center + 椭圆弧', en: 'arc explicit center + elliptical arc' },
+                content: {
+                  zh: '`arc` step 加显式 `center`(不再隐式取前一锚点)+ `radiusX` / `radiusY`(椭圆弧,与 `radius` 互斥)',
+                  en: '`arc` step gains explicit `center` (no longer implicitly the previous anchor) + `radiusX` / `radiusY` (elliptical arc, mutually exclusive with `radius`)',
+                },
+              },
+              {
+                label: { zh: 'circlePath / ellipsePath 部分裁剪', en: 'circlePath / ellipsePath partial clipping' },
+                content: {
+                  zh: '加 `startAngle` / `endAngle` / `sweepAngle` / `closed`(`closed` / `chord` / `open`),支持半圆 / 1/4 椭圆 / 弓形',
+                  en: 'gain `startAngle` / `endAngle` / `sweepAngle` / `closed` (`closed` / `chord` / `open`) for half circles / quarter ellipses / segments',
+                },
+              },
+              {
+                label: { zh: '新增 rectangle step', en: 'new rectangle step' },
+                content: {
+                  zh: '`from` / `to` / `roundedCorners`,圆角矩形 outline 由 compile 一次算;几何下沉 `core/geometry/`(ellipseArc / rectOutline)',
+                  en: '`from` / `to` / `roundedCorners`; rounded-rect outline computed once at compile; geometry moved to `core/geometry/` (ellipseArc / rectOutline)',
+                },
+              },
+            ],
+          },
           {
             version: 'alpha.4',
             date: '2026-05-23',
@@ -144,8 +182,8 @@ export const changelog: Array<Release> = [
         pkg: '@retikz/react',
         version: 'v0.2',
         description: {
-          zh: '透传 core 新增能力:Scope 样式 props、自定义 shapes、zIndex / label rotate。',
-          en: 'Pass through new core capabilities: Scope style props, custom shapes, zIndex / label rotate.',
+          zh: '透传 core 新增能力:Scope 样式 props、自定义 shapes、zIndex / label rotate,并新增 8 个一行画几何形的 sugar 组件。',
+          en: 'Pass through new core capabilities — Scope style props, custom shapes, zIndex / label rotate — plus 8 one-line geometric-shape sugar components.',
         },
         highlights: [
           {
@@ -156,8 +194,35 @@ export const changelog: Array<Release> = [
             label: { zh: '<TikZ shapes>', en: '<TikZ shapes>' },
             content: { zh: '透传 `CompileOptions.shapes`,自定义 shape 端到端可用', en: 'Pass through `CompileOptions.shapes`; custom shapes work end to end' },
           },
+          {
+            label: { zh: '8 个形状 sugar', en: '8 shape sugar components' },
+            content: {
+              zh: 'Circle / Ellipse / Arc / Sector / Rectangle / Grid / RegularPolygon / Star,一行画 TikZ 习语级图元',
+              en: 'Circle / Ellipse / Arc / Sector / Rectangle / Grid / RegularPolygon / Star — TikZ-idiom shapes in one line',
+            },
+          },
         ],
         subVersions: [
+          {
+            version: 'alpha.5',
+            date: '2026-05-23',
+            items: [
+              {
+                label: { zh: '8 个形状 sugar', en: '8 shape sugar components' },
+                content: {
+                  zh: '`<Circle>` / `<Ellipse>` / `<Arc>` / `<Sector>` / `<Rectangle>` / `<Grid>` / `<RegularPolygon>` / `<Star>`,派发为等价 `<Path>` IR;可计算形态限 literal 笛卡尔、透传形态接任意 Target',
+                  en: '`<Circle>` / `<Ellipse>` / `<Arc>` / `<Sector>` / `<Rectangle>` / `<Grid>` / `<RegularPolygon>` / `<Star>`, dispatched to equivalent `<Path>` IR; computed forms take literal Cartesian only, passthrough forms take any Target',
+                },
+              },
+              {
+                label: { zh: 'Sector innerRadius', en: 'Sector innerRadius' },
+                content: {
+                  zh: '`<Sector>` 加 `innerRadius`,画空心扇形 / 环形扇区',
+                  en: '`<Sector>` gains `innerRadius` for hollow sectors / annular wedges',
+                },
+              },
+            ],
+          },
           {
             version: 'alpha.4',
             date: '2026-05-23',
@@ -220,6 +285,26 @@ export const changelog: Array<Release> = [
           },
         ],
         subVersions: [
+          {
+            version: 'alpha.5',
+            date: '2026-05-23',
+            items: [
+              {
+                label: { zh: '形状 sugar 页 + AST 白名单', en: 'Shape sugar pages + AST whitelist' },
+                content: {
+                  zh: '8 个形状 sugar 合并为 `draw/shapes` 单页(含空心扇形)+ demo + schema 引用;AST 白名单 9→17、system prompt 同步',
+                  en: '8 shape sugar components on a single `draw/shapes` page (incl. hollow sector) + demos + schema refs; AST whitelist 9→17 and system prompt synced',
+                },
+              },
+              {
+                label: { zh: 'changelog 重设计', en: 'Changelog redesign' },
+                content: {
+                  zh: '改为结构化数据驱动:中版本时间线 + 包筛选 + 预发布折叠 + markdown 序列化',
+                  en: 'Rebuilt as structured data: minor-version timeline + package filter + collapsible pre-releases + markdown serialization',
+                },
+              },
+            ],
+          },
           {
             version: 'alpha.4',
             date: '2026-05-23',
