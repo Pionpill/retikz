@@ -148,9 +148,21 @@ export type EllipsePathStepProps = {
   children?: ReactNode;
 };
 
+/** Rectangle action：两对角定义的轴对齐矩形（可圆角）；编译为 path 命令（TikZ `(a) rectangle (b)`） */
+export type RectangleStepProps = {
+  /** 矩形 step 鉴别字面量 */
+  kind: 'rectangle';
+  /** 一角 */
+  from: IRTarget;
+  /** 对角（顺序无关） */
+  to: IRTarget;
+  /** 四角同圆角半径；缺省直角，compile clamp 到边长一半 */
+  roundedCorners?: number;
+};
+
 /**
- * `<Step>` 组件的 props（10 种 step kind 的 discriminated union）
- * @description 十种 kind：'move' / 'line'（默认） / 'step'（折角） / 'cycle'（闭合） / 'curve'（二次贝塞尔） / 'cubic'（三次贝塞尔） / 'bend'（弧形简记） / 'arc'（圆弧段） / 'circlePath'（整圆） / 'ellipsePath'（整椭圆）。除 'move' / 'cycle' 外均可挂 `label?: IRStepLabel`，等价于 sugar `<EdgeLabel>` child（prop 优先）。每个 kind 有对应 named type export，便于 wrapper / forwardRef / `Pick<>` 派生。
+ * `<Step>` 组件的 props（11 种 step kind 的 discriminated union）
+ * @description 十一种 kind：'move' / 'line'（默认） / 'step'（折角） / 'cycle'（闭合） / 'curve'（二次贝塞尔） / 'cubic'（三次贝塞尔） / 'bend'（弧形简记） / 'arc'（圆 / 椭圆弧段） / 'circlePath'（整圆 / 部分圆） / 'ellipsePath'（整椭圆 / 部分椭圆） / 'rectangle'（矩形）。除 'move' / 'cycle' / 'rectangle' 外均可挂 `label?: IRStepLabel`，等价于 sugar `<EdgeLabel>` child（prop 优先）。每个 kind 有对应 named type export，便于 wrapper / forwardRef / `Pick<>` 派生。
  */
 export type StepProps =
   | MoveStepProps
@@ -162,7 +174,8 @@ export type StepProps =
   | BendStepProps
   | ArcStepProps
   | CirclePathStepProps
-  | EllipsePathStepProps;
+  | EllipsePathStepProps
+  | RectangleStepProps;
 
 /**
  * Step 是 DSL 标记组件——本身不渲染

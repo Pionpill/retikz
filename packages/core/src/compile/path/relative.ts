@@ -35,9 +35,15 @@ export const normalizeRelativeTargets = (
     }
     if (step.kind === 'arc') {
       out.push(step);
-      if (prevEnd) {
+      // 仅「正圆弧 + 圆心取游标」更新 prevEnd（原行为）；椭圆弧 / 显式 center 保守不变
+      if (prevEnd && step.radius !== undefined && step.center === undefined) {
         prevEnd = arcEndPoint(prevEnd, step.radius, step.endAngle);
       }
+      continue;
+    }
+    if (step.kind === 'rectangle') {
+      out.push(step);
+      // 自包含形状；prevEnd 不变（rectangle 用自身 from/to，不推进相对游标）
       continue;
     }
 

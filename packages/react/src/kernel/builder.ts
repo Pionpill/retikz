@@ -259,6 +259,18 @@ const readPathChildren = (children: ReactNode): Array<IRStep> => {
       out.push(step);
       return;
     }
+    if (kind === 'rectangle') {
+      const p = props as Extract<StepProps, { kind: 'rectangle' }>;
+      const step: Extract<IRStep, { kind: 'rectangle' }> = {
+        type: 'step',
+        kind: 'rectangle',
+        from: parseTargetSugar(p.from),
+        to: parseTargetSugar(p.to),
+      };
+      if (p.roundedCorners !== undefined) step.roundedCorners = p.roundedCorners;
+      out.push(step);
+      return;
+    }
     if (kind === 'move') {
       const p = props as Extract<StepProps, { kind: 'move' }>;
       out.push({ type: 'step', kind: 'move', to: parseTargetSugar(p.to) });

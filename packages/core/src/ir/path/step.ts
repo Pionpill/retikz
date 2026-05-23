@@ -268,6 +268,22 @@ export const EllipsePathStepSchema = z
   })
   .describe('EllipsePath action: full ellipse (no angles, pen returns to center) or partial elliptical arc (with angles, closed per chord/open).');
 
+export const RectangleStepSchema = z
+  .object({
+    type: z.literal('step').describe('Discriminator marking this as a path step node'),
+    kind: z
+      .literal('rectangle')
+      .describe('Axis-aligned rectangle between two opposite corners (TikZ `(a) rectangle (b)`); compiled to path commands (4 lines + close, or rounded corners via quarter arcs). Self-contained: corners come from from/to, not the cursor.'),
+    from: TargetSchema.describe('One corner of the rectangle'),
+    to: TargetSchema.describe('The opposite corner; order is irrelevant (compile normalizes to min/max)'),
+    roundedCorners: z
+      .number()
+      .nonnegative()
+      .optional()
+      .describe('Single corner radius applied to all four corners; omitted = sharp corners. Clamped to half the smaller side at compile time.'),
+  })
+  .describe('Rectangle action: closed axis-aligned rectangle (optionally rounded) drawn between two opposite corners.');
+
 export const StepSchema = z
   .discriminatedUnion('kind', [
     MoveStepSchema,
@@ -280,6 +296,7 @@ export const StepSchema = z
     ArcStepSchema,
     CirclePathStepSchema,
     EllipsePathStepSchema,
+    RectangleStepSchema,
   ])
   .describe('A single path action; the discriminator field is `kind`');
 
@@ -310,9 +327,11 @@ export type IRArcStep = z.infer<typeof ArcStepSchema>;
 export type IRCirclePathStep = z.infer<typeof CirclePathStepSchema>;
 /** EllipsePath step：以游标为圆心的整椭圆 */
 export type IREllipsePathStep = z.infer<typeof EllipsePathStepSchema>;
+/** Rectangle step：两对角定义的轴对齐矩形（可圆角） */
+export type IRRectangleStep = z.infer<typeof RectangleStepSchema>;
 
 /**
- * 路径上的一个动作（十种 kind）
- * @description 十种 kind：move / line / step（折角）/ cycle / curve / cubic / bend / arc / circlePath / ellipsePath；`to` 字段支持 relative / relativeAccumulate 变体；除 move/cycle 外可挂 `label?` 边标注
+ * 路径上的一个动作（十一种 kind）
+ * @description 十一种 kind：move / line / step（折角）/ cycle / curve / cubic / bend / arc / circlePath / ellipsePath / rectangle（矩形）；`to` 字段支持 relative / relativeAccumulate 变体；除 move/cycle/rectangle 外可挂 `label?` 边标注
  */
 export type IRStep = z.infer<typeof StepSchema>;

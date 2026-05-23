@@ -5,6 +5,7 @@ import {
   ellipseArcPoint,
 } from '../../geometry/arc';
 import { bendControlPoints } from '../../geometry/bend';
+import { rectOutline } from '../../geometry/rect';
 import {
   type SegmentSample,
   arcSegmentSample,
@@ -127,16 +128,21 @@ export const emitPathPrimitive = (
     for (const p of r.points) points.push(p);
   };
 
-  // "无 to" 的 step kinds：cycle / arc / circlePath / ellipsePath
+  // "无 to（作游标锚点）" 的 step kinds：cycle / arc / circlePath / ellipsePath / rectangle
   type StepWithTo = Exclude<
     IRStep,
-    { kind: 'cycle' } | { kind: 'arc' } | { kind: 'circlePath' } | { kind: 'ellipsePath' }
+    | { kind: 'cycle' }
+    | { kind: 'arc' }
+    | { kind: 'circlePath' }
+    | { kind: 'ellipsePath' }
+    | { kind: 'rectangle' }
   >;
   const hasTo = (s: IRStep): s is StepWithTo =>
     s.kind !== 'cycle' &&
     s.kind !== 'arc' &&
     s.kind !== 'circlePath' &&
-    s.kind !== 'ellipsePath';
+    s.kind !== 'ellipsePath' &&
+    s.kind !== 'rectangle';
 
   // 每个 step 的几何参考点（节点中心/直接坐标）；无 to 的 step kind 给 null
   const anchors: Array<IRPosition | null> = steps.map((s, idx) => {
@@ -324,6 +330,53 @@ export const emitPathPrimitive = (
       // 否则段独立：重新 move 起点再 line 到终点（不再用 close，避免回到错误的 subPathStart）
       startSegment(fromClip);
       emitLine(toClip);
+      continue;
+    }
+
+    if (step.kind === 'rectangle') {
+      // 自包含：from/to 自带对角，不依赖 prev / 游标
+      const fromPt = refPointOfTarget(step.from, nameStack, scopeChain);
+      const toPt = refPointOfTarget(step.to, nameStack, scopeChain);
+      if (!fromPt || !toPt) {
+        if (!fromPt && typeof step.from === 'string') {
+          warn(
+            'UNRESOLVED_NODE_REFERENCE',
+            `Rectangle from references undefined node id '${step.from}'; the entire path is skipped`,
+            `children[${i}].from`,
+          );
+        }
+        if (!toPt && typeof step.to === 'string') {
+          warn(
+            'UNRESOLVED_NODE_REFERENCE',
+            `Rectangle to references undefined node id '${step.to}'; the entire path is skipped`,
+            `children[${i}].to`,
+          );
+        }
+        return null;
+      }
+      let rectStart: IRPosition | null = null;
+      for (const op of rectOutline(fromPt, toPt, step.roundedCorners)) {
+        if (op.kind === 'move') {
+          // 闭合形状必须起新子路径（不用 startSegment——pen 恰在起点时它会跳过 move，
+          // 导致 close 闭回上一个 subPathStart 而非矩形自身起点）
+          emitMove(op.to);
+          rectStart = op.to;
+        } else if (op.kind === 'line') {
+          emitLine(op.to);
+        } else if (op.kind === 'arc') {
+          emitArc(op.center, op.radius, op.startAngle, op.endAngle);
+        } else {
+          emitClose();
+        }
+      }
+      // bbox：外接矩形四角（直角与圆角同界——各边都触及包围线）
+      const rx0 = Math.min(fromPt[0], toPt[0]);
+      const rx1 = Math.max(fromPt[0], toPt[0]);
+      const ry0 = Math.min(fromPt[1], toPt[1]);
+      const ry1 = Math.max(fromPt[1], toPt[1]);
+      points.push([rx0, ry0], [rx1, ry0], [rx1, ry1], [rx0, ry1]);
+      // 后续 step 从矩形起点续
+      if (rectStart) penOverride = rectStart;
       continue;
     }
 

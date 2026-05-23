@@ -67,7 +67,10 @@ const stepToElement = (step: IRStep, key: number): ReactNode => {
       kind: 'arc',
       startAngle: step.startAngle,
       endAngle: step.endAngle,
-      radius: step.radius,
+      ...(step.radius !== undefined && { radius: step.radius }),
+      ...(step.radiusX !== undefined && { radiusX: step.radiusX }),
+      ...(step.radiusY !== undefined && { radiusY: step.radiusY }),
+      ...(step.center !== undefined && { center: step.center }),
       ...(step.label !== undefined && { label: step.label }),
     });
   }
@@ -76,6 +79,9 @@ const stepToElement = (step: IRStep, key: number): ReactNode => {
       key,
       kind: 'circlePath',
       radius: step.radius,
+      ...(step.startAngle !== undefined && { startAngle: step.startAngle }),
+      ...(step.endAngle !== undefined && { endAngle: step.endAngle }),
+      ...(step.closed !== undefined && { closed: step.closed }),
       ...(step.label !== undefined && { label: step.label }),
     });
   }
@@ -85,7 +91,19 @@ const stepToElement = (step: IRStep, key: number): ReactNode => {
       kind: 'ellipsePath',
       radiusX: step.radiusX,
       radiusY: step.radiusY,
+      ...(step.startAngle !== undefined && { startAngle: step.startAngle }),
+      ...(step.endAngle !== undefined && { endAngle: step.endAngle }),
+      ...(step.closed !== undefined && { closed: step.closed }),
       ...(step.label !== undefined && { label: step.label }),
+    });
+  }
+  if (step.kind === 'rectangle') {
+    return createElement(Step, {
+      key,
+      kind: 'rectangle',
+      from: step.from,
+      to: step.to,
+      ...(step.roundedCorners !== undefined && { roundedCorners: step.roundedCorners }),
     });
   }
   if (step.kind === 'move') {
