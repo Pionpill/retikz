@@ -19,12 +19,12 @@ v0.2 第四个 alpha：**compile IR 顺序回归（A）+ emit 层增强（B）**
 
 ### `@retikz/react`
 
-- `<Node>` / `<Path>` / `<Scope>` 加 `zIndex` prop（栈序覆盖）；`<Node label>` 的 `rotate` / `keepUpright` 随 `IRNodeLabel` 透传，React 端零额外改动。
+- `<Node>` / `<Path>` / `<Scope>` / `<Draw>` 加 `zIndex` prop（栈序覆盖；`<Draw>` 透传到底层 `<Path>`）；`<Node label>` 的 `rotate` / `keepUpright` 随 `IRNodeLabel` 透传，React 端零额外改动。
 
 ### 文档站
 
 - Scope 技术原理订正「scope 内 path 落点」描述：无 transform → 回填 `GroupPrim.children`；带 transform → hoist 顶层（已知限制）。
-- Node / Path / Scope API 参考加 `zIndex`；Node label 文档加 `rotate` / `keepUpright`（径向 / 切向 / 数字角度 + 保持正立）。
+- Node / Path / Scope / Draw API 参考加 `zIndex`，并各配 `<ComponentPreview>` 实例 demo；Node label 文档加 `rotate` / `keepUpright`（径向 / 切向 / 数字角度 + 保持正立）+ radial / tangent demo。
 
 ## v0.2.0-alpha.3
 

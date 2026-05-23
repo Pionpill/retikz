@@ -19,12 +19,12 @@ The fourth v0.2 alpha: **compile IR-order regression (A) + emit-layer enhancemen
 
 ### `@retikz/react`
 
-- `<Node>` / `<Path>` / `<Scope>` gain a `zIndex` prop (stacking override); `<Node label>`'s `rotate` / `keepUpright` flow through `IRNodeLabel` with no extra React-side change.
+- `<Node>` / `<Path>` / `<Scope>` / `<Draw>` gain a `zIndex` prop (stacking override; `<Draw>` forwards it to the underlying `<Path>`); `<Node label>`'s `rotate` / `keepUpright` flow through `IRNodeLabel` with no extra React-side change.
 
 ### Docs
 
 - Scope internals corrected the description of where a path inside a scope lands: transform-free → backfilled into `GroupPrim.children`; transformed → hoisted to the top level (known limitation).
-- Node / Path / Scope API references gain `zIndex`; Node label docs gain `rotate` / `keepUpright` (radial / tangent / numeric angle + keep-upright).
+- Node / Path / Scope / Draw API references gain `zIndex`, each with a live `<ComponentPreview>` demo; Node label docs gain `rotate` / `keepUpright` (radial / tangent / numeric angle + keep-upright) with a radial/tangent demo.
 
 ## v0.2.0-alpha.3
 
