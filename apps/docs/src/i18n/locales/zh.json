@@ -295,5 +295,12 @@
     "errorWindow": "本会话上下文过长，开新会话或换更大窗口的模型。",
     "errorNetwork": "网络问题，检查连接或站点访问性。",
     "errorUnknown": "请求失败：{{message}}"
+  },
+  "changelog": {
+    "filterPackages": "筛选包",
+    "inDevelopment": "开发中",
+    "prereleaseCount": "展开 {{count}} 个预发布明细",
+    "collapse": "收起预发布明细",
+    "emptyFilter": "没有匹配所选包的内容,请在右侧勾选至少一个包。"
   }
 }

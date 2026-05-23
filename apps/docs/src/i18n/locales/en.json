@@ -295,5 +295,12 @@
     "errorWindow": "Conversation context too long. Start a new chat or pick a larger-window model.",
     "errorNetwork": "Network error. Check connection or site reachability.",
     "errorUnknown": "Request failed: {{message}}"
+  },
+  "changelog": {
+    "filterPackages": "Filter packages",
+    "inDevelopment": "In development",
+    "prereleaseCount": "Expand {{count}} pre-release details",
+    "collapse": "Collapse pre-release details",
+    "emptyFilter": "Nothing matches the selected packages. Pick at least one package on the right."
   }
 }
