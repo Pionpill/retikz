@@ -53,8 +53,8 @@ export const changelog: Array<Release> = [
             version: 'alpha.6',
             date: '2026-05-23',
             summary: {
-              zh: '结构化 Target / Anchor:path target 对象唯一(去 z.string)+ AnchorRef(命名 / 角度 / 边上比例点 { side, t })+ offset;{ side, t } 落 shape 真实边界。',
-              en: 'Structured Target / Anchor: object-only path target (drops z.string) + AnchorRef (named / angle / edge-proportional { side, t }) + offset; { side, t } lands on the real shape boundary.',
+              zh: '结构化 Target / Anchor:path target 对象唯一(去 z.string)+ AnchorRef(命名 / 角度 / 边上比例点 `{ side, t }`)+ offset;`{ side, t }` 落 shape 真实边界。',
+              en: 'Structured Target / Anchor: object-only path target (drops z.string) + AnchorRef (named / angle / edge-proportional `{ side, t }`) + offset; `{ side, t }` lands on the real shape boundary.',
             },
             items: [
               {
@@ -72,7 +72,7 @@ export const changelog: Array<Release> = [
                 },
               },
               {
-                label: { zh: '{ side, t } 真实边界几何', en: '{ side, t } real-boundary geometry' },
+                label: { zh: '`{ side, t }` 真实边界几何', en: '`{ side, t }` real-boundary geometry' },
                 content: {
                   zh: '`ShapeDefinition.edgePoint?` + `resolveEdgePoint`:rect 直边 / circle·ellipse 周长弧段(等角)/ diamond 过顶点折线;不支持的 shape / 零尺寸 Coordinate 报明确错',
                   en: '`ShapeDefinition.edgePoint?` + `resolveEdgePoint`: rect straight edge / circle·ellipse perimeter arc (equiangular) / diamond via-vertex polyline; clear errors for unsupported shapes / zero-size Coordinates',
@@ -356,10 +356,10 @@ export const changelog: Array<Release> = [
                 },
               },
               {
-                label: { zh: 'anchors 页对象形态 + { side, t }', en: 'anchors page object form + { side, t }' },
+                label: { zh: 'anchors 页对象形态 + `{ side, t }`', en: 'anchors page object form + `{ side, t }`' },
                 content: {
-                  zh: 'anchors 概念页主推对象形态 `{ id, anchor?, offset? }`、字符串 shorthand 降级为 DSL 便捷写法,新增「边上比例点 { side, t }」小节 + demo',
-                  en: 'The anchors page leads with `{ id, anchor?, offset? }`, demotes string shorthand to DSL convenience, and adds an "edge-proportional { side, t }" section + demo',
+                  zh: 'anchors 概念页主推对象形态 `{ id, anchor?, offset? }`、字符串 shorthand 降级为 DSL 便捷写法,新增「边上比例点 `{ side, t }`」小节 + demo',
+                  en: 'The anchors page leads with `{ id, anchor?, offset? }`, demotes string shorthand to DSL convenience, and adds an "edge-proportional `{ side, t }`" section + demo',
                 },
               },
             ],
