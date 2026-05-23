@@ -2,7 +2,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 import { type ScenePrimitive, type ShapeDefinition, localToWorld, worldToLocal } from '@retikz/core';
 import { Node } from '../../src/kernel/Node';
-import { TikZ } from '../../src/kernel/TikZ';
+import { TikZ } from '../../src/kernel/Layout';
 
 /**
  * <TikZ shapes={...}> 自定义 shape 注入透传

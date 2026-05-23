@@ -13,8 +13,8 @@ import { browserMeasurer } from '../render/browser-measurer';
 import { renderPrim } from '../render/renderPrim';
 import { formatViewBox } from '../render/viewBox';
 
-/** <TikZ> 组件的 props */
-export type TikZProps = {
+/** <Layout> 组件的 props */
+export type LayoutProps = {
   /** 直接喂 IR JSON（持久化 / AI / 编辑器场景），与 children 二选一 */
   ir?: IR;
   /** Kernel/Sugar JSX children */
@@ -104,10 +104,10 @@ const hashKey = (key: string): string => {
 };
 
 /**
- * <TikZ> 顶层容器
+ * <Layout> 顶层容器
  * @description 流水线：从 children 构造 IR（或直接接受外部 IR）→ compileToScene 得 Scene → 渲染 SVG 元素并按需注入 `<defs>` 与每种 arrow 端点 spec 的 `<marker>`；marker id 用 `useId()` 派生稳定前缀避免多实例冲突，每种 detail 一个定义（`${prefix}-${specHash}`），marker 内借 spec 字段（`color` / `fill` / `opacity` 等）替换硬编码，缺省字段回退到 `context-stroke` 让颜色继续跟随 path 同步
  */
-export const TikZ: FC<TikZProps> = props => {
+export const Layout: FC<LayoutProps> = props => {
   const { ir: irFromProp, children, width, height, className, style, nodeDistance, shapes } = props;
   const ir = useMemo(() => irFromProp ?? buildIR(children), [irFromProp, children]);
   const scene = useMemo(
@@ -142,4 +142,28 @@ export const TikZ: FC<TikZProps> = props => {
       {scene.primitives.map((p, i) => renderPrim(p, i, { arrowMarkerIdFor }))}
     </svg>
   );
+};
+
+/** @deprecated `<TikZ>` 旧名，已更名 `<Layout>`；保留为兼容别名（其 props 同 `LayoutProps`） */
+export type TikZProps = LayoutProps;
+
+let tikzDeprecationWarned = false;
+/** 确定性生产判定：仅当能读到 NODE_ENV==='production' 才算生产，其余（含裸 browser ESM）都当 dev */
+const isProductionEnv = (): boolean =>
+  typeof process !== 'undefined' && process.env.NODE_ENV === 'production';
+
+/**
+ * `<TikZ>` —— `<Layout>` 的 deprecated 兼容别名
+ * @deprecated 用 `<Layout>` 代替；本 alias 将在未来版本移除。
+ * @description fail-open dev warning：非确定性生产即 console.warn 一次（best-effort——让真实
+ *   browser dev 也拿到提示，仅确定性生产被 bundler 替换为静默）。渲染行为与 `<Layout>` 完全一致。
+ */
+export const TikZ: FC<TikZProps> = props => {
+  if (!isProductionEnv() && !tikzDeprecationWarned) {
+    // 模块级去重的一次性 deprecation 提示——render 内触发以覆盖 SSR（effect 不在 SSR 跑），同 React core `__DEV__` warnOnce 模式
+    // eslint-disable-next-line react-hooks/globals -- 迁移期一次性 deprecation 标记，刻意的模块级 once-warn
+    tikzDeprecationWarned = true;
+    console.warn('[retikz] <TikZ> is deprecated; use <Layout> instead.');
+  }
+  return <Layout {...props} />;
 };

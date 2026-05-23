@@ -1,4 +1,4 @@
-export * from './TikZ';
+export * from './Layout';
 export * from './Node';
 export * from './Path';
 export * from './Step';

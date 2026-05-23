@@ -2,7 +2,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 import { Path } from '../../src/kernel/Path';
 import { Step } from '../../src/kernel/Step';
-import { TikZ } from '../../src/kernel/TikZ';
+import { TikZ } from '../../src/kernel/Layout';
 
 /**
  * 多 `<TikZ>` 实例的 marker id 隔离

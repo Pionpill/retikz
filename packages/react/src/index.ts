@@ -1,14 +1,15 @@
 /**
  * @retikz/react 公开 API
  *
- * Kernel 组件：<TikZ> <Node> <Path> <Step> <Text> <Coordinate> <Scope>
+ * Kernel 组件：<Layout>（旧名 <TikZ> 保留为 deprecated alias）<Node> <Path> <Step> <Text> <Coordinate> <Scope>
  * Sugar 组件：<Draw> <EdgeLabel> + 形状 <Circle> <Ellipse> <Arc> <Sector> <Rectangle> <Grid> <RegularPolygon> <Star>
  *
  * 渲染管道：buildIR → compileToScene → renderPrim → SVG
  */
 
-export { TikZ, Node, Path, Step, Text, Coordinate, Scope } from './kernel';
+export { Layout, TikZ, Node, Path, Step, Text, Coordinate, Scope } from './kernel';
 export type {
+  LayoutProps,
   TikZProps,
   NodeProps,
   PathProps,
