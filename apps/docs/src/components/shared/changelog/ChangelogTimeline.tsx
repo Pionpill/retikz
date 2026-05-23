@@ -46,7 +46,7 @@ export const ChangelogTimeline: FC<ChangelogTimelineProps> = ({ releases, lang }
   };
 
   return (
-    <nav className="hidden @[48rem]:block">
+    <nav className="hidden @[32rem]:block">
       <ul>
         {releases.map(release => {
           const id = releaseAnchorId(release.minor);

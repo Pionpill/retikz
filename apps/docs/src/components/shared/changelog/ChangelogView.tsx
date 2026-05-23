@@ -22,8 +22,8 @@ export const ChangelogView: FC = () => {
   }
 
   return (
-    <div className="@container grid grid-cols-1 gap-8 @[48rem]:grid-cols-[150px_1fr]">
-      <aside className="@[48rem]:sticky @[48rem]:top-20 @[48rem]:self-start">
+    <div className="@container grid grid-cols-1 gap-8 @[32rem]:grid-cols-[140px_1fr]">
+      <aside className="@[32rem]:sticky @[32rem]:top-20 @[32rem]:self-start">
         <ChangelogTimeline releases={visible} lang={lang} />
       </aside>
       <div className="min-w-0 space-y-12">
