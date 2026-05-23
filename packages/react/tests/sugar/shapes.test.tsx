@@ -7,7 +7,7 @@ import { Rectangle } from '../../src/sugar/Rectangle';
 import { RegularPolygon } from '../../src/sugar/RegularPolygon';
 import { Sector } from '../../src/sugar/Sector';
 import { Star } from '../../src/sugar/Star';
-import { regularPolygonVertices, starVertices } from '../../src/sugar/_shared';
+import { polarXY, regularPolygonVertices, starVertices } from '../../src/sugar/_shared';
 import { Path } from '../../src/kernel/Path';
 import { Step } from '../../src/kernel/Step';
 import { buildIR } from '../../src/kernel/builder';
@@ -114,7 +114,7 @@ describe('Arc 等价性', () => {
 });
 
 describe('Sector 等价性（wedge）', () => {
-  it('move(arcStart) → arc(center) → line(center) → cycle', () => {
+  it('实心：move(arcStart) → arc(center) → line(center) → cycle', () => {
     expect(ir(<Sector center={[0, 0]} radius={10} startAngle={0} endAngle={90} />).children).toEqual(
       ir(
         <Path>
@@ -125,6 +125,29 @@ describe('Sector 等价性（wedge）', () => {
         </Path>,
       ).children,
     );
+  });
+
+  it('空心（innerRadius）：外弧 → line → 内弧反向 → line 回起点', () => {
+    const c: [number, number] = [0, 0];
+    expect(
+      ir(<Sector center={c} radius={60} innerRadius={30} startAngle={0} endAngle={90} />).children,
+    ).toEqual(
+      ir(
+        <Path>
+          <Step kind="move" to={polarXY(c, 60, 60, 0)} />
+          <Step kind="arc" center={c} startAngle={0} endAngle={90} radius={60} />
+          <Step kind="line" to={polarXY(c, 30, 30, 90)} />
+          <Step kind="arc" center={c} startAngle={90} endAngle={0} radius={30} />
+          <Step kind="line" to={polarXY(c, 60, 60, 0)} />
+        </Path>,
+      ).children,
+    );
+  });
+
+  it('椭圆空心只给一个 inner 半径 → 抛错', () => {
+    expect(() =>
+      ir(<Sector center={[0, 0]} radiusX={60} radiusY={40} innerRadiusX={30} startAngle={0} endAngle={90} />),
+    ).toThrow(/innerRadius/);
   });
 });
 
