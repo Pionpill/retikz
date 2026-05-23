@@ -1047,7 +1047,7 @@ export const changelog: Array<Release> = [
     stableDate: '2025-04-30',
     packages: [
       {
-        pkg: 'retikz',
+        pkg: '@retikz/core',
         version: 'v0.0',
         description: {
           zh: '第一个公开版本系列,从 `rc.0` 迭代到 `rc.3`。只发了 React 单包,没有 IR 与跨框架架构。',

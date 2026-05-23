@@ -15,14 +15,14 @@ const fixture: Array<Release> = [
     minor: 'v0.0',
     stableDate: '2025-04-30',
     packages: [
-      { pkg: 'retikz', version: 'v0.0', description: { zh: '', en: '' }, highlights: [], subVersions: [] },
+      { pkg: '@retikz/react', version: 'v0.0', description: { zh: '', en: '' }, highlights: [], subVersions: [] },
     ],
   },
 ];
 
 describe('allPackageIds', () => {
   it('按 PACKAGE_IDS 顺序返回数据中实际出现的包', () => {
-    expect(allPackageIds(fixture)).toEqual(['@retikz/core', 'docs', 'retikz']);
+    expect(allPackageIds(fixture)).toEqual(['@retikz/core', '@retikz/react', 'docs']);
   });
 });
 
@@ -39,7 +39,7 @@ describe('filterReleases', () => {
   });
 
   it('全选返回结构等价的全部里程碑', () => {
-    const out = filterReleases(fixture, new Set(['@retikz/core', 'docs', 'retikz']));
+    const out = filterReleases(fixture, new Set(['@retikz/core', '@retikz/react', 'docs']));
     expect(out.map(r => r.minor)).toEqual(['v0.2', 'v0.0']);
   });
 });
