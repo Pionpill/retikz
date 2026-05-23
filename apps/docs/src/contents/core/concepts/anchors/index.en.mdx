@@ -1,9 +1,9 @@
 ---
 title: Anchors
-description: 9 named anchors per node + three-form Target string syntax (auto / named / angle).
+description: 9 named anchors per node + object-form Target (named / angle / edge proportional / offset) + string shorthand.
 ---
 
-Every `<Node>` has 9 named anchors. Paths can either let retikz auto-pick the border point (the common case), or lock onto a specific position via `'A.north'` / `'A.30'`.
+Every `<Node>` has 9 named anchors. Paths can either let retikz auto-pick the border point (the common case), or lock onto a specific position with the object form `{ id, anchor?, offset? }` (in JSX you may use the `'A.north'` / `'A.30'` string shorthand).
 
 ## The 9 anchors
 
@@ -38,23 +38,41 @@ The 8 Draws below are all `[outerNode, 'Node']` — endpoints land near N / S / 
 
 Rule of thumb: for flowcharts, DAG edges, and ordinary relationship lines, write plain node ids and let retikz choose the border point. Use explicit anchors / angles only when a line must leave a specific side, align with a layout, or replicate an existing diagram. To create breathing room around a border, use `margin` instead of replacing the target with hand-computed coordinates.
 
-## Explicit anchor string syntax
+## Explicit anchor: object form (the contract)
 
-Don't want auto-selection, need a specific position? Target strings support three forms:
+Don't want auto-selection, need a specific position? A path target uses the **object form** `{ id, anchor?, offset? }` — this is the core IR contract (serialization / LLM generation / JSON patch all use objects):
 
-| Form | Meaning |
+| anchor form | Meaning |
 | --- | --- |
-| `'A'` | Node A, auto-attach to border (**most common**) |
-| `'A.<anchor>'` | Named anchor on A, e.g. `'A.north'` / `'A.center'` / `'A.north-east'` |
-| `'A.<deg>'` | Visual border point on A at the given degree, e.g. `'A.30'` / `'A.-45'` / `'A.180.5'` |
+| anchor omitted | `{ id: 'A' }`: auto-attach to border (same as plain id, **most common**) |
+| named anchor | `{ id: 'A', anchor: 'north' }`: one of the 9 named anchors |
+| angle anchor | `{ id: 'A', anchor: 30 }`: visual border point at the given degree |
+| edge proportional | `{ id: 'A', anchor: { side: 'north', t: 0.25 } }`: see "Edge proportional points" below |
+| anchor + offset | `{ id: 'A', anchor: 'west', offset: [-4, 0] }`: resolve the anchor / edge point, then add a world-space `[dx, dy]` (not rotated by the node's `rotate`) |
 
-`'A.<anchor>'` and `'A.<deg>'` are **fixed in place** — they don't move with neighbor step direction (only auto mode does). The 8 Draws below use 8 different named anchors as endpoints:
+Named / angle / edge-proportional anchors are **fixed in place** — they don't move with neighbor step direction (only auto mode does). The 8 Draws below use 8 different named anchors as endpoints:
 
 <ComponentPreview name="anchors-explicit" size="lg" />
 
-> **id naming constraints**: A node id starts with a letter or underscore, may include letters / digits / underscores / hyphens (`[A-Za-z_][\w-]*`), and **cannot contain `.`** — that's reserved as the anchor / angle separator.
+### String shorthand (React DSL convenience)
+
+In JSX / Draw way you may use a string shorthand; the React layer eager-parses it into the object form above (the core IR stays object-form):
+
+| shorthand | equivalent object |
+| --- | --- |
+| `'A'` | `{ id: 'A' }` |
+| `'A.north'` | `{ id: 'A', anchor: 'north' }` |
+| `'A.30'` | `{ id: 'A', anchor: 30 }` |
+
+> **dotted-id limitation**: the string shorthand splits on the **first `.`**, so an **id containing `.` cannot use the shorthand** — write the object form `{ id: 'a.b', anchor: 'north' }`. The `{ side, t }` edge proportional point is **object-form only**.
 >
-> **Supported anchor names**: retikz currently supports the 9 geometric anchors above. Text-baseline anchors such as `'text'` / `'base'` / `'mid'` are not part of the public API yet.
+> **Supported anchor names**: the 9 geometric anchors above. Text-baseline anchors such as `'text'` / `'base'` / `'mid'` are not part of the public API yet.
+
+## Edge proportional points `{ side, t }`
+
+`{ side, t }` takes the point at proportion `t ∈ [0, 1]` along an edge of the shape's **real boundary** — direction north/south west→east, east/west north→south: rectangle along the straight edge, circle / ellipse along that side's visible perimeter arc, diamond along the visible slanted edges. `{ side: 'west', t: 1/3 }` is the left edge's one-third point; `{ side: 'north', t: 0.5 }` is the top-edge midpoint (equals the named `'north'`).
+
+<ComponentPreview name="anchors-side-t" size="md" />
 
 ## `margin` gives lines breathing room
 
