@@ -10,6 +10,7 @@ import type {
   FoldStepProps,
   LineStepProps,
   MoveStepProps,
+  RectangleStepProps,
   StepProps,
 } from '../../src';
 
@@ -25,9 +26,10 @@ describe('StepProps named types', () => {
     expectTypeOf<ArcStepProps['kind']>().toEqualTypeOf<'arc'>();
     expectTypeOf<CirclePathStepProps['kind']>().toEqualTypeOf<'circlePath'>();
     expectTypeOf<EllipsePathStepProps['kind']>().toEqualTypeOf<'ellipsePath'>();
+    expectTypeOf<RectangleStepProps['kind']>().toEqualTypeOf<'rectangle'>();
   });
 
-  it('StepProps 是 10 个 named type 的并集', () => {
+  it('StepProps 是 11 个 named type 的并集', () => {
     expectTypeOf<StepProps>().toEqualTypeOf<
       | MoveStepProps
       | LineStepProps
@@ -39,6 +41,7 @@ describe('StepProps named types', () => {
       | ArcStepProps
       | CirclePathStepProps
       | EllipsePathStepProps
+      | RectangleStepProps
     >();
   });
 

@@ -155,7 +155,11 @@ export const Draw: FC<DrawProps> = props => {
             />
           );
         }
-        return <Step key={i} kind="line" to={s.to} label={s.label} />;
+        if (s.kind === 'line') {
+          return <Step key={i} kind="line" to={s.to} label={s.label} />;
+        }
+        // parseWay 不产 rectangle step（way DSL 无该算子）；穷举兜底
+        return null;
       })}
     </Path>
   );

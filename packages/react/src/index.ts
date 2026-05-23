@@ -1,8 +1,8 @@
 /**
  * @retikz/react 公开 API
  *
- * Kernel 组件：<TikZ> <Node> <Path> <Step>
- * Sugar 组件：<Draw>
+ * Kernel 组件：<TikZ> <Node> <Path> <Step> <Text> <Coordinate> <Scope>
+ * Sugar 组件：<Draw> <EdgeLabel> + 形状 <Circle> <Ellipse> <Arc> <Sector> <Rectangle> <Grid>
  *
  * 渲染管道：buildIR → compileToScene → renderPrim → SVG
  */
@@ -13,7 +13,7 @@ export type {
   NodeProps,
   PathProps,
   StepProps,
-  /** 10 个 named Step kind props（按 IR `IR*Step` 命名对照） */
+  /** 11 个 named Step kind props（按 IR `IR*Step` 命名对照） */
   MoveStepProps,
   LineStepProps,
   FoldStepProps,
@@ -24,13 +24,24 @@ export type {
   ArcStepProps,
   CirclePathStepProps,
   EllipsePathStepProps,
+  RectangleStepProps,
   TextProps,
   CoordinateProps,
   ScopeProps,
 } from './kernel';
 
-export { Draw, EdgeLabel } from './sugar';
-export type { DrawProps, EdgeLabelProps } from './sugar';
+export { Draw, EdgeLabel, Circle, Ellipse, Arc, Sector, Rectangle, Grid } from './sugar';
+export type {
+  DrawProps,
+  EdgeLabelProps,
+  CircleProps,
+  EllipseProps,
+  ArcProps,
+  SectorProps,
+  RectangleProps,
+  GridProps,
+  PathVisualProps,
+} from './sugar';
 
 // 透传 core 的 way 关键字常量与字面量类型，方便 react 用户单包 import
 export { DrawWay } from '@retikz/core';
