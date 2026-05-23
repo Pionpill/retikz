@@ -1,9 +1,10 @@
 import type { FC } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { cn } from '@/lib/utils';
 import type { Lang } from '@/i18n';
-import { PACKAGE_LABEL } from '@/data/changelog.types';
+import { PACKAGE_LABEL, type PackageId } from '@/data/changelog.types';
 import { changelog } from '@/data/changelog';
 import { useChangelogFilterStore } from '@/store/useChangelogFilterStore';
 
@@ -11,41 +12,42 @@ import { allPackageIds } from './filter';
 
 export type ChangelogFilterProps = {
   lang: Lang;
+  /** aside=右栏竖排;bar=窄屏内容区顶部横排 */
+  layout?: 'aside' | 'bar';
 };
 
-/** 右侧多选包筛选(替代 TOC) */
-export const ChangelogFilter: FC<ChangelogFilterProps> = ({ lang }) => {
+/** 包筛选(多选,替代 TOC):右栏竖排或窄屏横排,基于 shadcn ToggleGroup */
+export const ChangelogFilter: FC<ChangelogFilterProps> = ({ lang, layout = 'aside' }) => {
   const { t } = useTranslation();
   const selected = useChangelogFilterStore(s => s.selected);
-  const toggle = useChangelogFilterStore(s => s.toggle);
+  const setSelected = useChangelogFilterStore(s => s.setSelected);
   const packages = allPackageIds(changelog);
 
   return (
-    <nav>
-      <p className="mb-2.5 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+    <nav className={cn(layout === 'bar' && 'rounded-lg border bg-muted/30 p-3')}>
+      <p className="mb-2.5 text-xs font-medium tracking-wide text-muted-foreground uppercase">
         {t('changelog.filterPackages')}
       </p>
-      <ul className="space-y-1.5">
-        {packages.map(pkg => {
-          const on = selected.includes(pkg);
-          return (
-            <li key={pkg}>
-              <button
-                type="button"
-                onClick={() => toggle(pkg)}
-                aria-pressed={on}
-                className={cn(
-                  'flex w-full cursor-pointer items-center gap-2 rounded-md border px-2 py-1 font-mono text-xs transition-colors',
-                  on ? 'border-foreground font-semibold text-foreground' : 'border-border text-muted-foreground hover:text-foreground',
-                )}
-              >
-                <span className={cn('size-2 rounded-[3px] bg-foreground transition-opacity', on ? 'opacity-70' : 'opacity-25')} />
-                {PACKAGE_LABEL[pkg][lang]}
-              </button>
-            </li>
-          );
-        })}
-      </ul>
+      <ToggleGroup
+        type="multiple"
+        variant="outline"
+        size="sm"
+        spacing={1.5}
+        value={selected}
+        onValueChange={(value: Array<string>) => setSelected(value as Array<PackageId>)}
+        className={cn('flex-wrap', layout === 'aside' ? 'w-full flex-col items-stretch' : 'flex-row')}
+      >
+        {packages.map(pkg => (
+          <ToggleGroupItem
+            key={pkg}
+            value={pkg}
+            aria-label={PACKAGE_LABEL[pkg][lang]}
+            className={cn('font-mono text-xs', layout === 'aside' && 'justify-start')}
+          >
+            {PACKAGE_LABEL[pkg][lang]}
+          </ToggleGroupItem>
+        ))}
+      </ToggleGroup>
     </nav>
   );
 };
