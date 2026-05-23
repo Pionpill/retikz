@@ -14,8 +14,8 @@ const toSelected = (excluded: ReadonlyArray<PackageId>): Array<PackageId> =>
 export type ChangelogFilterState = {
   /** 当前选中的包(按 PACKAGE_IDS 顺序) */
   selected: Array<PackageId>;
-  /** 整体设置选中集合(配合多选 ToggleGroup) */
-  setSelected: (selected: Array<PackageId>) => void;
+  /** 切换某个包的选中态 */
+  toggle: (pkg: PackageId) => void;
 };
 
 /**
@@ -26,7 +26,13 @@ export const useChangelogFilterStore = create<ChangelogFilterState>()(
   persist(
     set => ({
       selected: [...PACKAGE_IDS],
-      setSelected: selected => set({ selected: PACKAGE_IDS.filter(id => selected.includes(id)) }),
+      toggle: pkg =>
+        set(state => {
+          const next = state.selected.includes(pkg)
+            ? state.selected.filter(p => p !== pkg)
+            : [...state.selected, pkg];
+          return { selected: PACKAGE_IDS.filter(id => next.includes(id)) };
+        }),
     }),
     {
       name: 'retikz-changelog-filter',
