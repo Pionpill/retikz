@@ -1,4 +1,4 @@
-import { Node, Path, Scope, Step, TikZ } from '@retikz/react';
+import { Layout, Node, Path, Scope, Step } from '@retikz/react';
 import type { FC } from 'react';
 
 /**
@@ -8,7 +8,7 @@ import type { FC } from 'react';
  *   另一条引用 `inner.south`（仅 B、C 的 south 边）——两 bbox 独立存在，外层包内层。
  */
 const Demo: FC = () => (
-  <TikZ width={560} height={180}>
+  <Layout width={560} height={180}>
     <Scope id="outer" transforms={[{ kind: 'translate', x: 80, y: 30 }]}>
       <Node id="A" position={[0, 0]}>A</Node>
       <Scope id="inner" transforms={[{ kind: 'translate', x: 140, y: 0 }]}>
@@ -24,7 +24,7 @@ const Demo: FC = () => (
       <Step kind="move" to={[540, 160]} />
       <Step to="inner.south" />
     </Path>
-  </TikZ>
+  </Layout>
 );
 
 export default Demo;

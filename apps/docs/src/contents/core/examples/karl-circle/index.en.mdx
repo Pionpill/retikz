@@ -70,7 +70,7 @@ x and y axes use [Draw](/core/components/draw/overview) with `arrow="->"` to get
 
 The background grid is a `.map()` over 5 horizontal + 5 vertical lines (IR has no `grid` operator yet); this `.map()` substitute for TikZ `\foreach` is common throughout retikz. Ticks are also array-driven: a short segment plus a transparent [Node](/core/components/node/overview) per tick; the label sits **slightly offset** from its tick (x-axis labels nudged 10px left, y-axis labels 10px down) so they don't clash with the circle or axis lines.
 
-retikz coordinates are SVG pixels with y pointing downward — so "1 unit up" is written as `[0, -100]` (this example uses 100px = unit-circle radius as the length basis). The top-level `<TikZ>` has no picture-level scale or y-flip, so math coordinates from the TikZ tutorial need their y manually negated.
+retikz coordinates are SVG pixels with y pointing downward — so "1 unit up" is written as `[0, -100]` (this example uses 100px = unit-circle radius as the length basis). The top-level `<Layout>` has no picture-level scale or y-flip, so math coordinates from the TikZ tutorial need their y manually negated.
 
 <ComponentPreview name="karl-circle-03-ticks" diffFrom="karl-circle-02-axes" size="lg" />
 
@@ -121,7 +121,7 @@ Finally, a colored info card on the right. The [Node](/core/components/node/over
 The items below will be filled in over upcoming releases; everything marked 🚧 is already on the roadmap.
 
 - 🚧 **`grid` operator**: planned. The example uses `.map()` to draw 5 horizontal + 5 vertical lines instead
-- 🚧 **Picture scale + y-up axis**: planned for `<TikZ>` (`scale` + `yAxis="up"`) to let users feed math coordinates directly. The example writes pixel literals with manual y negation instead
+- 🚧 **Picture scale + y-up axis**: planned for `<Layout>` (`scale` + `yAxis="up"`) to let users feed math coordinates directly. The example writes pixel literals with manual y negation instead
 - 🚧 **Projection target (`(A |- B)`)**: planned. The example hand-computes `[cos30 * 100, 0]`
 - 🚧 **Named path + intersection target**: planned. The example hand-computes `[100, -tan30 * 100]`
 - 🚧 **In-line spans inside LineSpec**: planned (add a `spans` field). The example switches color only at line granularity

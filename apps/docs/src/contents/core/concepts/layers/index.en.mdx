@@ -27,7 +27,7 @@ Why this matters in practice: use the DSL when authoring diagrams, use IR when s
 
 | Layer | Examples | Enters IR directly | Notes |
 | --- | --- | --- | --- |
-| Kernel | `<TikZ>` / `<Node>` / `<Coordinate>` / `<Path>` / `<Step>` | Yes | One-to-one with IR nodes |
+| Kernel | `<Layout>` / `<Node>` / `<Coordinate>` / `<Path>` / `<Step>` | Yes | One-to-one with IR nodes |
 | Sugar | `<Draw way={...}>`, `DrawWay.Cycle`, relative-coordinate strings | No | Synchronously expands to Kernel in the adapter |
 
 Sugar adds no new capability. Anything drawn with `<Draw>` can also be written manually with `<Path>` + `<Step>`.
@@ -35,10 +35,10 @@ Sugar adds no new capability. Anything drawn with `<Draw>` can also be written m
 ## Compile Chain
 
 ```tsx
-<TikZ>
+<Layout>
   <Node id="a" position={[0, 0]}>A</Node>
   <Draw way={['a', [80, 0]]} />
-</TikZ>
+</Layout>
 ```
 
 The adapter collects this JSX into IR. `@retikz/core` resolves positions, computes anchors, expands paths and bounds, then outputs Scene. In this example, `<Draw>` becomes a plain `path` node in IR.

@@ -1,4 +1,4 @@
-import { Node, Path, Scope, Step, TikZ } from '@retikz/react';
+import { Layout, Node, Path, Scope, Step } from '@retikz/react';
 import type { FC } from 'react';
 
 /**
@@ -8,7 +8,7 @@ import type { FC } from 'react';
  *   另一节点用 `{ of: 'left-cluster', offset: [0, 120] }` 落到 cluster bbox 中心下方。展示 scope.id 取 bbox 中心作 referent。
  */
 const Demo: FC = () => (
-  <TikZ width={560} height={220}>
+  <Layout width={560} height={220}>
     <Scope id="left-cluster" transforms={[{ kind: 'translate', x: 60, y: 30 }]}>
       <Node id="L1" position={[0, 0]}>L1</Node>
       <Node id="L2" position={[60, 40]}>L2</Node>
@@ -33,7 +33,7 @@ const Demo: FC = () => (
       <Step kind="move" to="left-cluster" />
       <Step to="below" />
     </Path>
-  </TikZ>
+  </Layout>
 );
 
 export default Demo;

@@ -1,8 +1,8 @@
-import { Draw, Node, TikZ } from '@retikz/react';
+import { Draw, Layout, Node } from '@retikz/react';
 import type { FC } from 'react';
 
 const Demo: FC = () => (
-  <TikZ width={420} height={220}>
+  <Layout width={420} height={220}>
     <Node id="A" position={[20, 40]}>a</Node>
     <Node id="B" position={[400, 40]}>b</Node>
     {/* 直线：t 即归一化弧长 */}
@@ -26,7 +26,7 @@ const Demo: FC = () => (
       ]}
       arrow="->"
     />
-  </TikZ>
+  </Layout>
 );
 
 export default Demo;

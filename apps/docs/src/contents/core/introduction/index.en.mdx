@@ -38,7 +38,7 @@ retikz's DSL surface has three kinds of constructs. Mixing them up is a migratio
 
 | Layer | Examples | In IR? | Where |
 | --- | --- | --- | --- |
-| **Kernel** | `<TikZ>` `<Node>` `<Path>` `<Step>` | ✅ Maps 1:1 to IR nodes | `@retikz/core` |
+| **Kernel** | `<Layout>` `<Node>` `<Path>` `<Step>` | ✅ Maps 1:1 to IR nodes | `@retikz/core` |
 | **Sugar** | `<Draw way={[...]} />` | ❌ Expands into Kernel at compile time | `@retikz/react` |
 | **Tier 2** | `<Axis>` `<BarPlot>` `<Tree>` | ✅ High-level node + lowering hook | Domain packages |
 
@@ -46,7 +46,7 @@ Hard rule: **Sugar introduces no new capabilities** — anything Sugar can expre
 
 ## General Primitives, Arbitrary Composition
 
-The Kernel is deliberately small: `<TikZ>`, `<Node>`, `<Coordinate>`, `<Path>`, and `<Step>`. It is still general enough to compose most 2D relationship diagrams. Sugar such as `<Draw>` / `<Text>` improves authoring ergonomics, but still lowers back to the same Kernel IR.
+The Kernel is deliberately small: `<Layout>`, `<Node>`, `<Coordinate>`, `<Path>`, and `<Step>`. It is still general enough to compose most 2D relationship diagrams. Sugar such as `<Draw>` / `<Text>` improves authoring ergonomics, but still lowers back to the same Kernel IR.
 
 | Category | Composed from Kernel | Where |
 | --- | --- | --- |

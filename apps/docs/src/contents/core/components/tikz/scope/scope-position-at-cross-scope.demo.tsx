@@ -1,4 +1,4 @@
-import { Node, Path, Scope, Step, TikZ } from '@retikz/react';
+import { Layout, Node, Path, Scope, Step } from '@retikz/react';
 import type { FC } from 'react';
 
 /**
@@ -8,7 +8,7 @@ import type { FC } from 'react';
  *   左侧 ref-B 同样 AtPosition 但 scope 外（无 rotate）→ B 在 A 右侧。
  */
 const Demo: FC = () => (
-  <TikZ width={400} height={200}>
+  <Layout width={400} height={200}>
     <Node id="A" position={[0, 0]} shape="circle" padding={4}>A</Node>
     <Scope transforms={[{ kind: 'rotate', degrees: 90 }]}>
       <Node id="B" position={{ direction: 'right', of: 'A', distance: 60 }} shape="circle" padding={4}>B</Node>
@@ -22,7 +22,7 @@ const Demo: FC = () => (
       <Step kind="move" to="A" />
       <Step to="B-ref" />
     </Path>
-  </TikZ>
+  </Layout>
 );
 
 export default Demo;

@@ -27,7 +27,7 @@ IR 是公开契约；Scene 是 renderer 输入。正常写图时不需要手写 
 
 | 层 | 例子 | 是否直接进 IR | 说明 |
 | --- | --- | --- | --- |
-| Kernel | `<TikZ>` / `<Node>` / `<Coordinate>` / `<Path>` / `<Step>` | 是 | 与 IR 节点一一对应 |
+| Kernel | `<Layout>` / `<Node>` / `<Coordinate>` / `<Path>` / `<Step>` | 是 | 与 IR 节点一一对应 |
 | Sugar | `<Draw way={...}>`、`DrawWay.Cycle`、相对坐标字符串 | 否 | adapter 同步展开为 Kernel |
 
 Sugar 不引入新能力。能用 `<Draw>` 画出来的图，也能用 `<Path>` + `<Step>` 手写出来。
@@ -35,10 +35,10 @@ Sugar 不引入新能力。能用 `<Draw>` 画出来的图，也能用 `<Path>` 
 ## 编译链路
 
 ```tsx
-<TikZ>
+<Layout>
   <Node id="a" position={[0, 0]}>A</Node>
   <Draw way={['a', [80, 0]]} />
-</TikZ>
+</Layout>
 ```
 
 这段 JSX 会被 adapter 收集成 IR，`@retikz/core` 再负责解析 position、计算 anchor、展开路径与边界，最后输出 Scene。上例中的 `<Draw>` 会在 IR 中成为普通 `path` 节点。

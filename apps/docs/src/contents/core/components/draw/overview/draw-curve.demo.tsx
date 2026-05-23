@@ -1,8 +1,8 @@
-import { Draw, Node, TikZ } from '@retikz/react';
+import { Draw, Layout, Node } from '@retikz/react';
 import type { FC } from 'react';
 
 const Demo: FC = () => (
-  <TikZ width={320} height={160}>
+  <Layout width={320} height={160}>
     <Node id="a" position={[0, 0]}>
       A
     </Node>
@@ -11,7 +11,7 @@ const Demo: FC = () => (
     </Node>
     {/* 二次贝塞尔：infix 算子 { curve: [cx, cy] } 坐落两个 target 之间 */}
     <Draw way={['a', { curve: [100, -60] }, 'b']} />
-  </TikZ>
+  </Layout>
 );
 
 export default Demo;

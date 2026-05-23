@@ -1,4 +1,4 @@
-import { Node, Scope, TikZ } from '@retikz/react';
+import { Layout, Node, Scope } from '@retikz/react';
 import type { FC } from 'react';
 
 /**
@@ -6,7 +6,7 @@ import type { FC } from 'react';
  * @description 两个 scope 的节点簇重叠。scope 的 zIndex 决定整组（其 GroupPrim）在父层的上下位置，不改组内相对栈序——先声明的 A 组设 zIndex={1}，整组浮到后声明的 B 组之上。
  */
 const Demo: FC = () => (
-  <TikZ width={300} height={190}>
+  <Layout width={300} height={190}>
     {/* A 组：先声明，zIndex=1 → 整组在上 */}
     <Scope transforms={[{ kind: 'translate', x: -22, y: -14 }]} zIndex={1}>
       <Node id="a1" position={[0, 0]} fill="#f87171" stroke="#ef4444" minimumSize={72}>
@@ -25,7 +25,7 @@ const Demo: FC = () => (
         B2
       </Node>
     </Scope>
-  </TikZ>
+  </Layout>
 );
 
 export default Demo;

@@ -1,4 +1,4 @@
-import { Coordinate, Draw, Node, TikZ } from '@retikz/react';
+import { Coordinate, Draw, Layout, Node } from '@retikz/react';
 import type { FC } from 'react';
 
 /**
@@ -6,7 +6,7 @@ import type { FC } from 'react';
  * @description ca → cb → cc three coordinates derived via `{ of, offset }`; nodes anchor to coordinates, so moving `ca` shifts the entire group.
  */
 const Demo: FC = () => (
-  <TikZ width={420} height={180}>
+  <Layout width={420} height={180}>
     <Coordinate id="ca" position={[-140, 0]} />
     <Coordinate id="cb" position={{ of: 'ca', offset: [120, 0] }} />
     <Coordinate id="cc" position={{ of: 'cb', offset: [120, 0] }} />
@@ -15,7 +15,7 @@ const Demo: FC = () => (
     <Node id="C" position={{ of: 'cc', offset: [0, -30] }}>c</Node>
     <Draw way={['A', 'B']} arrow="->" />
     <Draw way={['B', 'C']} arrow="->" />
-  </TikZ>
+  </Layout>
 );
 
 export default Demo;

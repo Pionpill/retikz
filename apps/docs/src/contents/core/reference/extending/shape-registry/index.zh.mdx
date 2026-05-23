@@ -75,12 +75,12 @@ const createPolygonShape = (sides: number): ShapeDefinition => ({
 const scene = compileToScene(ir, { shapes: { hexagon: createPolygonShape(6) } });
 ```
 
-在 React 里，把同一份 `shapes` 传给 `<TikZ>`：
+在 React 里，把同一份 `shapes` 传给 `<Layout>`：
 
 ```tsx
-<TikZ shapes={{ hexagon: createPolygonShape(6) }}>
+<Layout shapes={{ hexagon: createPolygonShape(6) }}>
   <Node shape="hexagon" position={[0, 0]} text="准备" />
-</TikZ>
+</Layout>
 ```
 
 ## 例子

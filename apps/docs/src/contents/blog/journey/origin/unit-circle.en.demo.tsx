@@ -1,6 +1,6 @@
 import { Fragment } from 'react';
 import type { FC } from 'react';
-import { Coordinate, Draw, Node, Path, Step, TikZ } from '@retikz/react';
+import { Coordinate, Draw, Layout, Node, Path, Step } from '@retikz/react';
 
 // Literal colors instead of CSS vars: downloaded SVGs resolve `var(--x)` in a different
 // context (or none), falling back to black; literal colors stay correct everywhere.
@@ -20,7 +20,7 @@ const SIN30 = Math.sin((30 * Math.PI) / 180);
 const TAN30 = SIN30 / COS30;
 
 const Demo: FC = () => (
-  <TikZ width={720} height={360}>
+  <Layout width={720} height={360}>
     {/* Background grid */}
     {[-100, -50, 0, 50, 100].map(v => (
       <Fragment key={`grid-${v}`}>
@@ -123,7 +123,7 @@ const Demo: FC = () => (
         '(length of orange line)',
       ]}
     />
-  </TikZ>
+  </Layout>
 );
 
 export default Demo;

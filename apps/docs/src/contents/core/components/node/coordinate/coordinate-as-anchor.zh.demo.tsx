@@ -1,4 +1,4 @@
-import { Coordinate, Draw, Node, TikZ } from '@retikz/react';
+import { Coordinate, Draw, Layout, Node } from '@retikz/react';
 import type { FC } from 'react';
 
 /**
@@ -6,7 +6,7 @@ import type { FC } from 'react';
  * @description hub 是不可见中心，4 个节点 `at.of='hub'` 对称分布、4 条 path 都终止在 hub 自身不画形状；没有 coordinate 的话节点 / path 都得各自重复 [0,0]。
  */
 const Demo: FC = () => (
-  <TikZ width={460} height={300}>
+  <Layout width={460} height={300}>
     {/* 命名虚拟中心——画面里看不见，但下面 4 个 at.of 都靠它 */}
     <Coordinate id="hub" position={[0, 0]} />
     <Node id="N" position={{ direction: 'above', of: 'hub', distance: 100 }}>北</Node>
@@ -18,7 +18,7 @@ const Demo: FC = () => (
     <Draw way={['S', 'hub']} arrow="->" />
     <Draw way={['E', 'hub']} arrow="->" />
     <Draw way={['W', 'hub']} arrow="->" />
-  </TikZ>
+  </Layout>
 );
 
 export default Demo;

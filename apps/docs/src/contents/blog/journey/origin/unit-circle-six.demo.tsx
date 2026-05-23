@@ -1,6 +1,6 @@
 import { Fragment } from 'react';
 import type { FC } from 'react';
-import { Coordinate, Draw, Node, Path, Step, TikZ } from '@retikz/react';
+import { Coordinate, Draw, Layout, Node, Path, Step } from '@retikz/react';
 
 // 字面色而非 CSS var：SVG 下载后 CSS var 不在新上下文里解析，会 fallback 成黑
 const HELP_LINE = '#e5e7eb';
@@ -25,7 +25,7 @@ const CSC30 = 1 / SIN30;     // y 轴上的截距 = 1/sin(α)
 const COT30 = 1 / TAN30;     // 顶部水平切线与原点射线的距离 = 1/tan(α)
 
 const Demo: FC = () => (
-  <TikZ width={760} height={480}>
+  <Layout width={760} height={480}>
     {/* 背景网格 */}
     {[-100, -50, 0, 50, 100].map(v => (
       <Fragment key={`grid-${v}`}>
@@ -161,7 +161,7 @@ const Demo: FC = () => (
         { text: 'cot α = √3', fill: COT_COLOR },
       ]}
     />
-  </TikZ>
+  </Layout>
 );
 
 export default Demo;

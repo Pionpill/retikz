@@ -1,4 +1,4 @@
-import { Node, Path, Step, TikZ } from '@retikz/react';
+import { Layout, Node, Path, Step } from '@retikz/react';
 import type { ArrowShape } from '@retikz/core';
 import type { FC } from 'react';
 
@@ -21,7 +21,7 @@ const COL_X_RIGHT = 220;
 const COL_X_RIGHT_END = 340;
 
 const Demo: FC = () => (
-  <TikZ width={400} height={220}>
+  <Layout width={400} height={220}>
     {pairs.flatMap(([filled, hollow], row) => {
       const y = row * ROW_GAP;
       const elements = [
@@ -52,7 +52,7 @@ const Demo: FC = () => (
       }
       return elements;
     })}
-  </TikZ>
+  </Layout>
 );
 
 export default Demo;

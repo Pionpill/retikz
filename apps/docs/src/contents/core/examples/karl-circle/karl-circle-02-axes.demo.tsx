@@ -1,5 +1,5 @@
 import type { FC } from 'react';
-import { Coordinate, Draw, Node, Path, Step, TikZ } from '@retikz/react';
+import { Coordinate, Draw, Layout, Node, Path, Step } from '@retikz/react';
 
 /** 数学变量字体——LaTeX 习惯：变量用衬线斜体（Computer Modern italic 风格）；Latin Modern Math 缺失时回退到系统 STIX / Cambria / Times */
 const MATH_FONT = {
@@ -8,7 +8,7 @@ const MATH_FONT = {
 };
 
 const Demo: FC = () => (
-  <TikZ width={600} height={360}>
+  <Layout width={600} height={360}>
     {/* 单位圆（半径 100px） */}
     <Path lineCap="round">
       <Step kind="move" to={[0, 0]} />
@@ -24,7 +24,7 @@ const Demo: FC = () => (
     <Draw way={[[0, 150], [0, -150]]} arrow="->" />
     <Node position={[0, -162]} stroke="none" padding={0} font={MATH_FONT}>y</Node>
     <Coordinate id="y-axis" position={[0, -150]} />
-  </TikZ>
+  </Layout>
 );
 
 export default Demo;

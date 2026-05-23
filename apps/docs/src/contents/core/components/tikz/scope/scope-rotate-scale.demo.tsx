@@ -1,4 +1,4 @@
-import { Node, Path, Scope, Step, TikZ } from '@retikz/react';
+import { Layout, Node, Path, Scope, Step } from '@retikz/react';
 import type { FC } from 'react';
 
 /**
@@ -6,7 +6,7 @@ import type { FC } from 'react';
  * @description 左侧 scope rotate 15 度，整组三节点 + path 绕 scope 局部原点小幅倾斜；右侧 scope scale 1.3，节点尺寸 + 间距 + 字号同步放大；path 端点 boundary clip 也按 scope 缩放 / 旋转后的视觉边界对齐。
  */
 const Demo: FC = () => (
-  <TikZ width={600} height={200}>
+  <Layout width={600} height={200}>
     <Scope transforms={[{ kind: 'translate', x: -170, y: 0 }, { kind: 'rotate', degrees: 15 }]}>
       <Node id="r1" position={[0, 0]}>1</Node>
       <Node id="r2" position={[60, 0]}>2</Node>
@@ -27,7 +27,7 @@ const Demo: FC = () => (
         <Step to="s3" />
       </Path>
     </Scope>
-  </TikZ>
+  </Layout>
 );
 
 export default Demo;

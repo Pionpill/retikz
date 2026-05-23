@@ -1,4 +1,4 @@
-import { Draw, Node, TikZ } from '@retikz/react';
+import { Draw, Layout, Node } from '@retikz/react';
 import type { FC } from 'react';
 
 /**
@@ -6,7 +6,7 @@ import type { FC } from 'react';
  * @description 透传到底层 PathPrim 的 marker；多节点路径按段独立 clip，箭头只贴整体起点 / 终点，不出现在中间节点。
  */
 const Demo: FC = () => (
-  <TikZ width={360} height={200}>
+  <Layout width={360} height={200}>
     <Node id="a" position={[0, 0]}>
       A
     </Node>
@@ -20,7 +20,7 @@ const Demo: FC = () => (
     <Draw way={['a', 'b']} arrow="->" />
     {/* 多段：A → C → B 整体只在 B 处放终点箭头（中间节点 C 不放） */}
     <Draw way={['a', 'c', 'b']} arrow="->" stroke="#3b82f6" strokeWidth={2} />
-  </TikZ>
+  </Layout>
 );
 
 export default Demo;

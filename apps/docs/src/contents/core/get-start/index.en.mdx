@@ -19,9 +19,9 @@ We'll build this diagram in 3 steps. Click **View Code** under any preview to in
 
 ## Step by Step
 
-### 1. The container `<TikZ />` + one `<Node />`
+### 1. The container `<Layout />` + one `<Node />`
 
-A minimal diagram starts with a container and a primitive. `<TikZ>` holds the whole diagram, sets the SVG's rendered size, and renders the primitives inside it. `<Node>` draws a positioned, named element with visible text. This first step places one node to confirm both the canvas and the basic primitive are working.
+A minimal diagram starts with a container and a primitive. `<Layout>` holds the whole diagram, sets the SVG's rendered size, and renders the primitives inside it. `<Node>` draws a positioned, named element with visible text. This first step places one node to confirm both the canvas and the basic primitive are working.
 
 <ComponentPreview name="get-start-step-1" size="xs" />
 
@@ -48,7 +48,7 @@ Three nodes joined by two lines — matching the final example at the top.
 Keep four rules in mind before moving on:
 
 - Canvas coordinates grow right on x and down on y; `[0, 0]` is the origin in retikz user units
-- `<TikZ width height>` controls the rendered SVG size; it does not rewrite internal coordinates into CSS pixels
+- `<Layout width height>` controls the rendered SVG size; it does not rewrite internal coordinates into CSS pixels
 - A node `id` is the name used by connectors, and `<Draw way={['a', 'b']}>` targets node borders rather than text centers
 - Use **View Code → IR** to inspect the compiled diagram data; it is the quickest way to debug connections
 

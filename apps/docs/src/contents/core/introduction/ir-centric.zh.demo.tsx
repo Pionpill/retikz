@@ -1,4 +1,4 @@
-import { Draw, Node, TikZ } from '@retikz/react';
+import { Draw, Layout, Node } from '@retikz/react';
 import type { FC } from 'react';
 
 /**
@@ -6,7 +6,7 @@ import type { FC } from 'react';
  * @description 4 路输入 → IR ↔ Scene → 4 路输出（hourglass / 漏斗双扇）；节点全 stroke="none" 当文字锚点，Draw 仍按 bbox 自动贴边；"持久化 / 编辑" 与 IR 间双向箭头表示 IR 是可读写持久层。
  */
 const Demo: FC = () => (
-  <TikZ width={640} height={210} style={{ maxWidth: '100%', height: 'auto' }}>
+  <Layout width={640} height={210} style={{ maxWidth: '100%', height: 'auto' }}>
     <Node id="sugar" position={[-160, -54]} stroke="none">
       Sugar JSX
     </Node>
@@ -61,7 +61,7 @@ const Demo: FC = () => (
     <Draw way={['scene', 'native']} arrow="->" />
 
     <Draw way={['ir', 'persist']} arrow="<->" />
-  </TikZ>
+  </Layout>
 );
 
 export default Demo;

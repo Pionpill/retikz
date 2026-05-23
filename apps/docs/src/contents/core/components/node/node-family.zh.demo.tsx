@@ -1,4 +1,4 @@
-import { Coordinate, Draw, Node, Text, TikZ } from '@retikz/react';
+import { Coordinate, Draw, Layout, Node, Text } from '@retikz/react';
 import type { FC } from 'react';
 
 /**
@@ -7,7 +7,7 @@ import type { FC } from 'react';
  *   Coordinate 不画形状，靠两条连线汇于它来体现；caption 用淡色 stroke/fill none 的 Node。
  */
 const Demo: FC = () => (
-  <TikZ width={560} height={260}>
+  <Layout width={560} height={260}>
     {/* Node：有形状、有文字的命名图元 */}
     <Node id="nodeDemo" position={[-190, 35]}>
       Node
@@ -62,7 +62,7 @@ const Demo: FC = () => (
     >
       {['Coordinate', '不可见的点']}
     </Node>
-  </TikZ>
+  </Layout>
 );
 
 export default Demo;

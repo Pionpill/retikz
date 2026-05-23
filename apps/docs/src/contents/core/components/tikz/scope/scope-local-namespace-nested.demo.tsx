@@ -1,4 +1,4 @@
-import { Node, Path, Scope, Step, TikZ } from '@retikz/react';
+import { Layout, Node, Path, Scope, Step } from '@retikz/react';
 import type { FC } from 'react';
 
 /**
@@ -6,7 +6,7 @@ import type { FC } from 'react';
  * @description root-anchor 在原点；外层 `<Scope localNamespace>` 在 translate(180, 0)、内含 L1-node；再嵌套一层 `<Scope localNamespace>` 在 translate(180, 0)、内含 L2-node。最内层 path 三次 line 分别引用 'L2-node' / 'L1-node' / 'root-anchor'——栈式 lookup 内层 → 中层 → 根 frame 各命中一次，演示跨 frame shadowing 不阻断外层 id 的可见性。
  */
 const Demo: FC = () => (
-  <TikZ width={600} height={140}>
+  <Layout width={600} height={140}>
     <Node id="root-anchor" position={[0, 0]} shape="circle" padding={4}>root</Node>
     <Scope localNamespace transforms={[{ kind: 'translate', x: 180, y: 0 }]}>
       <Node id="L1-node" position={[0, 0]} shape="circle" padding={4}>L1</Node>
@@ -19,7 +19,7 @@ const Demo: FC = () => (
         </Path>
       </Scope>
     </Scope>
-  </TikZ>
+  </Layout>
 );
 
 export default Demo;

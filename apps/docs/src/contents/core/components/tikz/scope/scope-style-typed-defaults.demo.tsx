@@ -1,4 +1,4 @@
-import { Node, Path, Scope, Step, TikZ } from '@retikz/react';
+import { Layout, Node, Path, Scope, Step } from '@retikz/react';
 import type { FC } from 'react';
 
 /**
@@ -7,7 +7,7 @@ import type { FC } from 'react';
  *   labelDefault 给边标注紫色。四通道扁平独立、互不干涉。
  */
 const Demo: FC = () => (
-  <TikZ width={420} height={130}>
+  <Layout width={420} height={130}>
     <Scope
       nodeDefault={{ shape: 'circle', fill: '#dbeafe' }}
       pathDefault={{ stroke: '#16a34a' }}
@@ -25,7 +25,7 @@ const Demo: FC = () => (
         <Step to="B" label={{ text: 'edge' }} />
       </Path>
     </Scope>
-  </TikZ>
+  </Layout>
 );
 
 export default Demo;

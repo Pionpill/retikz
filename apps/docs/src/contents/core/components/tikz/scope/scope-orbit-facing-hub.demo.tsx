@@ -1,4 +1,4 @@
-import { Node, Scope, TikZ } from '@retikz/react';
+import { Layout, Node, Scope } from '@retikz/react';
 import type { FC } from 'react';
 
 /**
@@ -11,7 +11,7 @@ import type { FC } from 'react';
  *   视觉验证：6 个标签都"低头看向 hub"——文字朝向随轨道角度连续变化。
  */
 const Demo: FC = () => (
-  <TikZ width={420} height={420}>
+  <Layout width={420} height={420}>
     <Node id="hub" position={[0, 0]} shape="circle" padding={6}>hub</Node>
     <Scope transforms={[
       { kind: 'polar-translate', origin: 'hub', angle: 0, radius: 140 },
@@ -49,7 +49,7 @@ const Demo: FC = () => (
     ]}>
       <Node position={[0, 0]} minimumWidth={50} minimumHeight={22}>300°</Node>
     </Scope>
-  </TikZ>
+  </Layout>
 );
 
 export default Demo;

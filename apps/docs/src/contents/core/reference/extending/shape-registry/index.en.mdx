@@ -75,12 +75,12 @@ const createPolygonShape = (sides: number): ShapeDefinition => ({
 const scene = compileToScene(ir, { shapes: { hexagon: createPolygonShape(6) } });
 ```
 
-In React, pass the same `shapes` table to `<TikZ>`:
+In React, pass the same `shapes` table to `<Layout>`:
 
 ```tsx
-<TikZ shapes={{ hexagon: createPolygonShape(6) }}>
+<Layout shapes={{ hexagon: createPolygonShape(6) }}>
   <Node shape="hexagon" position={[0, 0]} text="Ready" />
-</TikZ>
+</Layout>
 ```
 
 ## Examples

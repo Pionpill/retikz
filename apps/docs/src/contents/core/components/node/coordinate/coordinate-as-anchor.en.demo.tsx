@@ -1,4 +1,4 @@
-import { Coordinate, Draw, Node, TikZ } from '@retikz/react';
+import { Coordinate, Draw, Layout, Node } from '@retikz/react';
 import type { FC } from 'react';
 
 /**
@@ -6,7 +6,7 @@ import type { FC } from 'react';
  * @description hub is an invisible center; four nodes `at.of='hub'` lay out symmetrically and all paths terminate at hub — without a coordinate every node/path would duplicate `[0, 0]`.
  */
 const Demo: FC = () => (
-  <TikZ width={460} height={300}>
+  <Layout width={460} height={300}>
     {/* Named virtual center — invisible, but the four `at.of` references all rely on it */}
     <Coordinate id="hub" position={[0, 0]} />
     <Node id="N" position={{ direction: 'above', of: 'hub', distance: 100 }}>North</Node>
@@ -18,7 +18,7 @@ const Demo: FC = () => (
     <Draw way={['S', 'hub']} arrow="->" />
     <Draw way={['E', 'hub']} arrow="->" />
     <Draw way={['W', 'hub']} arrow="->" />
-  </TikZ>
+  </Layout>
 );
 
 export default Demo;

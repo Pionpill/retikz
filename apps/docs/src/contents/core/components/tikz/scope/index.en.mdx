@@ -37,7 +37,7 @@ The 4 translate variants mirror the 4 `<Node position>` shapes (Cartesian / pola
 |---|---|---|
 | `translate` | `{ x, y }` | Cartesian translation in user units |
 | `polar-translate` | `{ origin?, angle, radius }` | Polar translation; `origin` accepts `id` / `[x, y]` / `PolarPosition`; defaults to origin point |
-| `at-translate` | `{ direction, of, distance? }` | Place scope at `distance` from referent node along `direction`; `distance` defaults to `<TikZ nodeDistance>` |
+| `at-translate` | `{ direction, of, distance? }` | Place scope at `distance` from referent node along `direction`; `distance` defaults to `<Layout nodeDistance>` |
 | `offset-translate` | `{ of, offset? }` | Scope origin = referent global position + `[dx, dy]`; `offset` defaults to `[0, 0]` |
 | `rotate` | `{ degrees, cx?, cy? }` | Rotate by degrees; `cx/cy` default to scope local origin |
 | `scale` | `{ x, y? }` | Scale; `y` defaults to `x` (uniform) |
@@ -210,7 +210,7 @@ The master `color` maps to TikZ `color=` (sets the current color; draw / fill / 
 
 ### Namespace stack and lookup
 
-A scope does **not** introduce a namespace boundary by default — child node / coordinate / nested scope.id ids all register into the current top frame; ids from multiple stacked scopes flow up to the `<TikZ>` root frame, and outer paths can reference them directly. Only `localNamespace: true` makes the scope push its own frame and isolate the subtree.
+A scope does **not** introduce a namespace boundary by default — child node / coordinate / nested scope.id ids all register into the current top frame; ids from multiple stacked scopes flow up to the `<Layout>` root frame, and outer paths can reference them directly. Only `localNamespace: true` makes the scope push its own frame and isolate the subtree.
 
 <ComponentPreview name="scope-namespace-stack" hideCode />
 

@@ -1,4 +1,4 @@
-import { Node, TikZ } from '@retikz/react';
+import { Layout, Node } from '@retikz/react';
 import type { FC } from 'react';
 
 /**
@@ -6,7 +6,7 @@ import type { FC } from 'react';
  * @description bbox 沿用各 shape 的"外接内框"语义——rectangle 紧贴、circle 外接圆变圆胖、ellipse 多行 ry 显著大于 rx、diamond 多行垂直拉最长；顺便混用 4 种等价文本写法。
  */
 const Demo: FC = () => (
-  <TikZ width={520} height={200}>
+  <Layout width={520} height={200}>
     <Node id="rect" position={[-180, 0]}>{`rect
 multi
 lines`}</Node>
@@ -17,7 +17,7 @@ lines`}</Node>
       {['ellipse', 'multi', 'lines']}
     </Node>
     <Node id="diam" shape="diamond" position={[220, 0]} text={['diamond', 'multi', 'lines']} />
-  </TikZ>
+  </Layout>
 );
 
 export default Demo;

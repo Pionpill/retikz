@@ -1,8 +1,8 @@
-import { Path, Step, TikZ } from '@retikz/react';
+import { Layout, Path, Step } from '@retikz/react';
 import type { FC } from 'react';
 
 const Demo: FC = () => (
-  <TikZ width={360} height={220}>
+  <Layout width={360} height={220}>
     {/* 上：opacity 整体——同时打折 stroke 与 fill */}
     <Path
       stroke="currentColor"
@@ -60,7 +60,7 @@ const Demo: FC = () => (
       <Step kind="line" to={[80, 190]} />
       <Step kind="cycle" />
     </Path>
-  </TikZ>
+  </Layout>
 );
 
 export default Demo;

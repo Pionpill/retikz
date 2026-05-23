@@ -3,35 +3,35 @@ title: TikZ
 description: Top-level container — accepts a component tree or IR, compiles to Scene, and produces rendered output.
 ---
 
-`<TikZ>` is retikz's only required top-level wrapper. Every Kernel / Sugar component must live inside a `<TikZ>`.
+`<Layout>` is retikz's only required top-level wrapper. Every Kernel / Sugar component must live inside a `<Layout>`.
 
-`<TikZ>` is the entry point between the DSL and the renderer: with children, it converts the inner component tree into IR; with `ir`, it uses that pre-built IR directly. It then compiles the IR into a Scene and hands it to the current renderer. `width` / `height` control the rendered output's displayed size in the page; internal coordinates stay in retikz user units, and the compiler uses layout bounds to compute the visible range.
+`<Layout>` is the entry point between the DSL and the renderer: with children, it converts the inner component tree into IR; with `ir`, it uses that pre-built IR directly. It then compiles the IR into a Scene and hands it to the current renderer. `width` / `height` control the rendered output's displayed size in the page; internal coordinates stay in retikz user units, and the compiler uses layout bounds to compute the visible range.
 
 ## Usage
 
 ```tsx
-import { TikZ } from '@retikz/react';
+import { Layout } from '@retikz/react';
 ```
 
 ```tsx
-<TikZ width={300} height={80}>
+<Layout width={300} height={80}>
   {/* Kernel / Sugar children */}
-</TikZ>
+</Layout>
 ```
 
 ## Composition
 
-`<TikZ>` is a container; children are any Kernel / Sugar component tree:
+`<Layout>` is a container; children are any Kernel / Sugar component tree:
 
 ```tsx
-<TikZ>
+<Layout>
   <Node id="..." position={...}>label</Node>
   <Path>
     <Step kind="move" to="..." />
     <Step kind="line" to="..." />
   </Path>
   <Draw way={[...]} />
-</TikZ>
+</Layout>
 ```
 
 ## Examples
@@ -42,7 +42,7 @@ import { TikZ } from '@retikz/react';
 
 ### Render from IR
 
-`<TikZ>` accepts an `ir` prop — feed a persisted IR JSON directly and get a rendered image, **no JSX children needed**. Source can be anything: LLM-generated, a JSON editor, URL deserialization, or database storage.
+`<Layout>` accepts an `ir` prop — feed a persisted IR JSON directly and get a rendered image, **no JSX children needed**. Source can be anything: LLM-generated, a JSON editor, URL deserialization, or database storage.
 
 <ComponentPreview name="tikz-from-ir" size="sm" />
 
@@ -62,13 +62,13 @@ import { TikZ } from '@retikz/react';
 The `ir` prop fits scenarios where IR JSON is already in hand — AI generation, JSON editors, URL deserialization. Pair with `convertReactNodeToIR` / `convertIRToReactNode` for a DSL ↔ IR bridge:
 
 ```tsx
-import { TikZ, Node, convertReactNodeToIR } from '@retikz/react';
+import { Layout, Node, convertReactNodeToIR } from '@retikz/react';
 
 const ir = convertReactNodeToIR(
   <Node id="a" position={[0, 0]}>A</Node>,
 );
 // Serialize, send to LLM, store in DB...
-<TikZ ir={ir} width={200} height={80} />;
+<Layout ir={ir} width={200} height={80} />;
 ```
 
 `ir` and `children` are mutually exclusive; if both are supplied, `ir` wins.

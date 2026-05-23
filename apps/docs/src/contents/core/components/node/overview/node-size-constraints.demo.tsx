@@ -1,4 +1,4 @@
-import { Node, TikZ } from '@retikz/react';
+import { Layout, Node } from '@retikz/react';
 import type { FC } from 'react';
 
 /**
@@ -6,7 +6,7 @@ import type { FC } from 'react';
  * @description roundedCorners 圆角（仅 rectangle）、minimumSize 对称最小宽高、minimumWidth/Height 分轴最小尺寸（button 风格）、scale 均匀放大整个 node 含字号。
  */
 const Demo: FC = () => (
-  <TikZ width={560} height={140}>
+  <Layout width={560} height={140}>
     <Node id="round" position={[-200, 0]} roundedCorners={10} fill="#fef3c7">
       rounded
     </Node>
@@ -19,7 +19,7 @@ const Demo: FC = () => (
     <Node id="big" position={[230, 0]} scale={1.5} fill="#bbf7d0">
       scale=1.5
     </Node>
-  </TikZ>
+  </Layout>
 );
 
 export default Demo;

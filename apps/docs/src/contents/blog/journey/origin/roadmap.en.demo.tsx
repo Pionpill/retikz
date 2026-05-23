@@ -1,10 +1,10 @@
 import type { FC } from 'react';
-import { Draw, Node, TikZ } from '@retikz/react';
+import { Draw, Layout, Node } from '@retikz/react';
 
 const ARROW_COLOR = '#9ca3af';
 
 const Demo: FC = () => (
-  <TikZ width={640} height={160} style={{ maxWidth: '100%', height: 'auto' }}>
+  <Layout width={640} height={160} style={{ maxWidth: '100%', height: 'auto' }}>
     <Node id="v01" position={[-250, -45]} stroke="none">v0.1 (current)</Node>
     <Node id="v02" position={[-150, -45]} stroke="none">v0.2</Node>
     <Node id="v03" position={[-50, -45]} stroke="none">v0.3</Node>
@@ -24,7 +24,7 @@ const Demo: FC = () => (
     <Node position={[50, 10]} stroke="none">libraries</Node>
     <Node position={[150, 10]} stroke="none">+ canvas</Node>
     <Node position={[250, 10]} stroke="none">+ plot</Node>
-  </TikZ>
+  </Layout>
 );
 
 export default Demo;

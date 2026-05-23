@@ -1,6 +1,6 @@
 import { Fragment } from 'react';
 import type { FC } from 'react';
-import { Coordinate, Draw, Node, Path, Step, TikZ } from '@retikz/react';
+import { Coordinate, Draw, Layout, Node, Path, Step } from '@retikz/react';
 
 // 字面色而非 CSS var：SVG 下载后 CSS var 不在新上下文里解析，会 fallback 成黑
 const HELP_LINE = '#e5e7eb';
@@ -19,7 +19,7 @@ const SIN30 = Math.sin((30 * Math.PI) / 180);
 const TAN30 = SIN30 / COS30;
 
 const Demo: FC = () => (
-  <TikZ width={600} height={360}>
+  <Layout width={600} height={360}>
     {/* 背景网格 */}
     {[-100, -50, 0, 50, 100].map(v => (
       <Fragment key={`grid-${v}`}>
@@ -103,7 +103,7 @@ const Demo: FC = () => (
     <Coordinate id="t" position={[100, -TAN30 * 100]} />
     {/* 原点 → t 的辅助射线 */}
     <Draw way={[[0, 0], 't']} />
-  </TikZ>
+  </Layout>
 );
 
 export default Demo;

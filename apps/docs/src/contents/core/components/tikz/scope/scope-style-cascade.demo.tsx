@@ -1,4 +1,4 @@
-import { Node, Path, Scope, Step, TikZ } from '@retikz/react';
+import { Layout, Node, Path, Scope, Step } from '@retikz/react';
 import type { FC } from 'react';
 
 /**
@@ -7,7 +7,7 @@ import type { FC } from 'react';
  *   锚点节点显式 fill="white" 截断主色填充（color 同样会染 fill），让文字可读。
  */
 const Demo: FC = () => (
-  <TikZ width={420} height={130}>
+  <Layout width={420} height={130}>
     <Scope color="#2563eb">
       <Node id="A" position={[0, 0]} shape="circle" fill="white">
         A
@@ -20,7 +20,7 @@ const Demo: FC = () => (
         <Step to="B" label={{ text: 'flow' }} />
       </Path>
     </Scope>
-  </TikZ>
+  </Layout>
 );
 
 export default Demo;

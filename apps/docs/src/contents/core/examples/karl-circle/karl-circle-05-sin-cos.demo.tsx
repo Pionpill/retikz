@@ -1,6 +1,6 @@
 import { Fragment } from 'react';
 import type { FC } from 'react';
-import { Coordinate, Draw, Node, Path, Step, TikZ } from '@retikz/react';
+import { Coordinate, Draw, Layout, Node, Path, Step } from '@retikz/react';
 
 // 字面色而非 CSS var：SVG 下载后 CSS var 不在新上下文里解析，会 fallback 成黑
 const HELP_LINE = '#e5e7eb';
@@ -16,7 +16,7 @@ const MATH_FONT = {
 const COS30 = Math.cos((30 * Math.PI) / 180);
 
 const Demo: FC = () => (
-  <TikZ width={600} height={360}>
+  <Layout width={600} height={360}>
     {/* 背景网格 */}
     {[-100, -50, 0, 50, 100].map(v => (
       <Fragment key={`grid-${v}`}>
@@ -90,7 +90,7 @@ const Demo: FC = () => (
       stroke={COS_COLOR}
       thickness="thick"
     />
-  </TikZ>
+  </Layout>
 );
 
 export default Demo;

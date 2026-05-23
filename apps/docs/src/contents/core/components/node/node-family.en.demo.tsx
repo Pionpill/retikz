@@ -1,4 +1,4 @@
-import { Coordinate, Draw, Node, Text, TikZ } from '@retikz/react';
+import { Coordinate, Draw, Layout, Node, Text } from '@retikz/react';
 import type { FC } from 'react';
 
 /**
@@ -8,7 +8,7 @@ import type { FC } from 'react';
  *   reveal where it is. Captions are faint Nodes with stroke/fill none.
  */
 const Demo: FC = () => (
-  <TikZ width={560} height={260}>
+  <Layout width={560} height={260}>
     {/* Node: a named primitive with shape and text */}
     <Node id="nodeDemo" position={[-190, 35]}>
       Node
@@ -63,7 +63,7 @@ const Demo: FC = () => (
     >
       {['Coordinate', 'invisible point']}
     </Node>
-  </TikZ>
+  </Layout>
 );
 
 export default Demo;

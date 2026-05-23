@@ -1,12 +1,12 @@
 import { type PathCommand, type Position, type ShapeDefinition, localToWorld, worldToLocal } from '@retikz/core';
-import { Draw, Node, TikZ } from '@retikz/react';
+import { Draw, Layout, Node } from '@retikz/react';
 import type { FC } from 'react';
 
 /**
  * 自定义 hexagon shape 注入 demo
  * @description 普通函数返回 ShapeDefinition（factory 模式）：circumscribe 计算能包住内容的外接半径，
  *   boundaryPoint 解真实六边形射线交边，emit 出 6 顶点 path，anchor 只认 center。
- *   <TikZ shapes={{ hexagon }}> 注入；IR 里 <Node shape="hexagon"> 只写字符串名。
+ *   <Layout shapes={{ hexagon }}> 注入；IR 里 <Node shape="hexagon"> 只写字符串名。
  */
 const createHexagonVertices = (radius: number): Array<Position> =>
   Array.from({ length: 6 }, (_, index) => {
@@ -85,11 +85,11 @@ const createHexagon = (): ShapeDefinition => ({
 const hexagon = createHexagon();
 
 const Demo: FC = () => (
-  <TikZ width={420} height={180} shapes={{ hexagon }}>
+  <Layout width={420} height={180} shapes={{ hexagon }}>
     <Node id="a" shape="hexagon" position={[-90, 0]} text="A" fill="#e0ecff" stroke="#3b5bdb" strokeWidth={2} />
     <Node id="b" shape="hexagon" position={[90, 0]} text="B" fill="#fff0e0" stroke="#e8590c" strokeWidth={2} />
     <Draw way={['a', 'b']} arrow="->" />
-  </TikZ>
+  </Layout>
 );
 
 export default Demo;

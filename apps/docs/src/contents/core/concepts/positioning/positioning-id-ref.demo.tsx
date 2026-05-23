@@ -1,8 +1,8 @@
-import { Draw, Node, TikZ } from '@retikz/react';
+import { Draw, Layout, Node } from '@retikz/react';
 import type { FC } from 'react';
 
 const Demo: FC = () => (
-  <TikZ width={400} height={120}>
+  <Layout width={400} height={120}>
     <Node id="a" position={[0, 0]}>
       A
     </Node>
@@ -13,7 +13,7 @@ const Demo: FC = () => (
       C
     </Node>
     <Draw way={['a', 'b', 'c']} />
-  </TikZ>
+  </Layout>
 );
 
 export default Demo;

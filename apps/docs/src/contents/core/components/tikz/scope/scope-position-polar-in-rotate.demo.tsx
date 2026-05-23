@@ -1,4 +1,4 @@
-import { Node, Path, Scope, Step, TikZ } from '@retikz/react';
+import { Layout, Node, Path, Scope, Step } from '@retikz/react';
 import type { FC } from 'react';
 
 /**
@@ -8,7 +8,7 @@ import type { FC } from 'react';
  *   对比 scope 外（无 rotate）的 ref-orbit：同样 polar 落在 hub 全局右 80 = (80, 0)。
  */
 const Demo: FC = () => (
-  <TikZ width={400} height={200}>
+  <Layout width={400} height={200}>
     <Node id="hub" position={[0, 0]} shape="circle" padding={4}>hub</Node>
     <Scope transforms={[{ kind: 'rotate', degrees: 45 }]}>
       <Node id="orbit" position={{ origin: 'hub', angle: 0, radius: 80 }} shape="circle" padding={4}>orbit</Node>
@@ -22,7 +22,7 @@ const Demo: FC = () => (
       <Step kind="move" to="hub" />
       <Step to="ref" />
     </Path>
-  </TikZ>
+  </Layout>
 );
 
 export default Demo;

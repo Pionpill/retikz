@@ -3,7 +3,7 @@ title: 布局
 description: 布局家族——确立坐标语境的容器：每张图必需的顶层 TikZ 画布，与可嵌套、对一组 children 整体施加局部 transform 的 Scope。
 ---
 
-这一分组是图的「容器」层。`<TikZ>` 是每张图必需的最外层包装：接收组件树或 IR，编译出 Scene，再交给当前渲染器输出。`<Scope>` 则在内部把一组 children 聚成一个单元，对它们整体施加平移 / 旋转 / 缩放，并可凭 `id` 被外部当作一个整体引用 / 定位。两者都在「确立坐标语境」上分工：`<TikZ>` 给出根坐标系，`<Scope>` 在其中开一层局部坐标系。
+这一分组是图的「容器」层。`<Layout>` 是每张图必需的最外层包装：接收组件树或 IR，编译出 Scene，再交给当前渲染器输出。`<Scope>` 则在内部把一组 children 聚成一个单元，对它们整体施加平移 / 旋转 / 缩放，并可凭 `id` 被外部当作一个整体引用 / 定位。两者都在「确立坐标语境」上分工：`<Layout>` 给出根坐标系，`<Scope>` 在其中开一层局部坐标系。
 
 <ComponentPreview name="tikz-family" size="md" hideCode />
 

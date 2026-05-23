@@ -37,7 +37,7 @@ import { Scope } from '@retikz/react';
 |---|---|---|
 | `translate` | `{ x, y }` | 笛卡尔平移，user units |
 | `polar-translate` | `{ origin?, angle, radius }` | 极坐标平移，`origin` 为 `id` / `[x,y]` / `PolarPosition`，缺省 = 原点 |
-| `at-translate` | `{ direction, of, distance? }` | 落到 referent 节点的某方向 distance 处，`distance` 缺省走 `<TikZ nodeDistance>` |
+| `at-translate` | `{ direction, of, distance? }` | 落到 referent 节点的某方向 distance 处，`distance` 缺省走 `<Layout nodeDistance>` |
 | `offset-translate` | `{ of, offset? }` | scope 原点 = referent 全局坐标 + `[dx, dy]`，`offset` 缺省 = `[0, 0]` |
 | `rotate` | `{ degrees, cx?, cy? }` | 旋转 degrees 度，`cx/cy` 缺省 = scope 局部原点 |
 | `scale` | `{ x, y? }` | 缩放，`y` 缺省 = `x`（等比） |
@@ -210,7 +210,7 @@ Scope 兼作样式默认值挂点，给内部元素提供三组样式表面：**
 
 ### 命名空间栈与 lookup
 
-scope 默认**不引入命名空间边界**——子 node / coordinate / 嵌套 scope.id 全部注册到当前栈顶 frame；多层 scope 串起来 id 仍汇到 `<TikZ>` 根 frame，外部 path 可直接引用。`localNamespace: true` 才让 scope 推一个子 frame、隔离子树 id。
+scope 默认**不引入命名空间边界**——子 node / coordinate / 嵌套 scope.id 全部注册到当前栈顶 frame；多层 scope 串起来 id 仍汇到 `<Layout>` 根 frame，外部 path 可直接引用。`localNamespace: true` 才让 scope 推一个子 frame、隔离子树 id。
 
 <ComponentPreview name="scope-namespace-stack" hideCode />
 

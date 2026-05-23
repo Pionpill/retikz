@@ -1,4 +1,4 @@
-import { Node, Path, Scope, Step, TikZ } from '@retikz/react';
+import { Layout, Node, Path, Scope, Step } from '@retikz/react';
 import type { FC } from 'react';
 
 /**
@@ -8,7 +8,7 @@ import type { FC } from 'react';
  *   端点贴 cluster 整体视觉边界而非单个 node。
  */
 const Demo: FC = () => (
-  <TikZ width={560} height={180}>
+  <Layout width={560} height={180}>
     <Node id="external" position={[0, 20]}>external</Node>
     <Scope id="cluster" transforms={[{ kind: 'translate', x: 220, y: 0 }]}>
       <Node id="A" position={[0, 0]}>A</Node>
@@ -23,7 +23,7 @@ const Demo: FC = () => (
       <Step kind="move" to="external" />
       <Step to="cluster.east" />
     </Path>
-  </TikZ>
+  </Layout>
 );
 
 export default Demo;

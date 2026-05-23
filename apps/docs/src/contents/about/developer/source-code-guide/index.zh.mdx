@@ -83,7 +83,7 @@ retikz 的官方仓库目前发两个包：
 
 | 模块 | 职责 |
 | --- | --- |
-| [`kernel/`](https://github.com/Pionpill/retikz/tree/main/packages/react/src/kernel) | Kernel JSX 组件——`<TikZ>` / `<Node>` / `<Path>` / `<Step>` / `<Text>` / `<Coordinate>`，加 `_builder`（JSX → IR）与 `_unbuilder`（IR → JSX）桥 |
+| [`kernel/`](https://github.com/Pionpill/retikz/tree/main/packages/react/src/kernel) | Kernel JSX 组件——`<Layout>` / `<Node>` / `<Path>` / `<Step>` / `<Text>` / `<Coordinate>`，加 `_builder`（JSX → IR）与 `_unbuilder`（IR → JSX）桥 |
 | [`sugar/`](https://github.com/Pionpill/retikz/tree/main/packages/react/src/sugar) | Sugar JSX 组件——`<Draw way={[...]}>`、`<EdgeLabel>`；编译期展开为 Kernel，不引入新能力 |
 | [`render/`](https://github.com/Pionpill/retikz/tree/main/packages/react/src/render) | Scene → SVG element——`renderPrim`、`browser-measurer`（注入到 core 编译器）、`arrowMarkers`、SVG viewBox 格式化 |
 | [`index.ts`](https://github.com/Pionpill/retikz/blob/main/packages/react/src/index.ts) | 公开 API surface——Kernel + Sugar 组件 + `convertReactNodeToIR` / `convertIRToReactNode` 桥 |
@@ -94,7 +94,7 @@ retikz 的官方仓库目前发两个包：
    先看暴露了什么 Kernel / Sugar 组件、什么类型、什么桥接函数。core 的 `WayDSL` 等常量在这里透传一份，方便单包 import。
 
 2. **[`kernel/TikZ.tsx`](https://github.com/Pionpill/retikz/blob/main/packages/react/src/kernel/TikZ.tsx) ——顶层编排**<br />
-   `<TikZ>` 是整条管线的入口：children → `buildIR` → `compileToScene` → `renderPrim` → `<svg>`。把这一个文件读懂，整个 adapter 的形状就有了。
+   `<Layout>` 是整条管线的入口：children → `buildIR` → `compileToScene` → `renderPrim` → `<svg>`。把这一个文件读懂，整个 adapter 的形状就有了。
 
 3. **[`kernel/_builder.ts`](https://github.com/Pionpill/retikz/blob/main/packages/react/src/kernel/_builder.ts) ——JSX → IR**<br />
    按 child 的 displayName 分派到 IRNode / IRPath / IRStep 等构造，是 JSX 与 IR 的桥。同目录的 [`_unbuilder.ts`](https://github.com/Pionpill/retikz/blob/main/packages/react/src/kernel/_unbuilder.ts) 走反方向（IR → React element 树），用于编辑器 / AI 工作流"喂 IR 显示组件"。

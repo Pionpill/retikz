@@ -1,8 +1,8 @@
-import { Node, TikZ } from '@retikz/react';
+import { Layout, Node } from '@retikz/react';
 import type { FC } from 'react';
 
 const GetStartStep2: FC = () => (
-  <TikZ width={420} height={80}>
+  <Layout width={420} height={80}>
     <Node id="a" position={[0, 0]}>
       A
     </Node>
@@ -12,7 +12,7 @@ const GetStartStep2: FC = () => (
     <Node id="c" position={[200, 0]}>
       C
     </Node>
-  </TikZ>
+  </Layout>
 );
 
 export default GetStartStep2;

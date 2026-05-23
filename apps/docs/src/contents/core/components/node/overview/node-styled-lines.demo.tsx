@@ -1,4 +1,4 @@
-import { Node, Text, TikZ } from '@retikz/react';
+import { Layout, Node, Text } from '@retikz/react';
 import type { FC } from 'react';
 
 /**
@@ -6,7 +6,7 @@ import type { FC } from 'react';
  * @description 左：<Text> 写 heading + 普通 body；中：text prop 数组混 LineSpec 对象 + 字符串；右：每行单独 fill / opacity 行级独立染色。
  */
 const Demo: FC = () => (
-  <TikZ width={520} height={160}>
+  <Layout width={520} height={160}>
     <Node id="left" position={[-180, 0]} align="left">
       <Text fill="#dc2626" font={{ weight: 'bold', size: 16 }}>Heading</Text>
       body line 1
@@ -29,7 +29,7 @@ const Demo: FC = () => (
       <Text fill="#f59e0b">warning</Text>
       <Text fill="#dc2626" opacity={0.8}>error</Text>
     </Node>
-  </TikZ>
+  </Layout>
 );
 
 export default Demo;

@@ -1,4 +1,4 @@
-import { Node, Text, TikZ } from '@retikz/react';
+import { Layout, Node, Text } from '@retikz/react';
 import type { FC } from 'react';
 
 /**
@@ -6,7 +6,7 @@ import type { FC } from 'react';
  * @description 左 <Text> Sugar、右 text prop 数组里写 LineSpec 对象，编译产物完全相同。
  */
 const Demo: FC = () => (
-  <TikZ width={420} height={140}>
+  <Layout width={420} height={140}>
     <Node id="sugar" position={[-100, 0]} align="left">
       <Text fill="#dc2626" font={{ weight: 'bold', size: 16 }}>Heading</Text>
       body line 1
@@ -18,7 +18,7 @@ const Demo: FC = () => (
       'body line 1',
       { text: 'note', font: { style: 'italic' }, opacity: 0.6 },
     ]} />
-  </TikZ>
+  </Layout>
 );
 
 export default Demo;

@@ -1,4 +1,4 @@
-import { Node, Path, Step, TikZ } from '@retikz/react';
+import { Layout, Node, Path, Step } from '@retikz/react';
 import type { FC } from 'react';
 
 /**
@@ -6,7 +6,7 @@ import type { FC } from 'react';
  * @description 顶层 arrowDetail 留空、start / end 子对象各自只填 shape；compile 把两端解析为 2 个独立 spec、TikZ 容器按 detail hash 注入 2 个 marker defs
  */
 const Demo: FC = () => (
-  <TikZ width={320} height={80}>
+  <Layout width={320} height={80}>
     <Node id="a" position={[0, 0]}>
       A
     </Node>
@@ -21,7 +21,7 @@ const Demo: FC = () => (
       <Step kind="move" to="a" />
       <Step kind="line" to="b" />
     </Path>
-  </TikZ>
+  </Layout>
 );
 
 export default Demo;

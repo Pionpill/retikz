@@ -70,7 +70,7 @@ x 轴和 y 轴用 [Draw](/core/components/draw/overview) 配 `arrow="->"` 一键
 
 背景网格用 `.map()` 平铺 5 横 5 竖（IR 暂无 grid 算子）；这种 React 端 `.map()` 替代 TikZ `\foreach` 的写法在 retikz 里很常见。刻度同样靠数组遍历，每条短线配一个无背景的 [Node](/core/components/node/overview)；label 位置在 tick 基础上**轻微偏移**（x 轴左偏 10px / y 轴下偏 10px），避开圆周线与轴线交叠。
 
-retikz 坐标统一是 SVG 像素，y 向下为正——所以「向上 1 单位」写成 `[0, -100]`（本例取 100px = 单位圆半径作为长度基准）。顶层 `<TikZ>` 不接 picture-level scale + 不翻 y，TikZ 教程里的数学坐标得手动给 y 加负号。
+retikz 坐标统一是 SVG 像素，y 向下为正——所以「向上 1 单位」写成 `[0, -100]`（本例取 100px = 单位圆半径作为长度基准）。顶层 `<Layout>` 不接 picture-level scale + 不翻 y，TikZ 教程里的数学坐标得手动给 y 加负号。
 
 <ComponentPreview name="karl-circle-03-ticks" diffFrom="karl-circle-02-axes" size="lg" />
 
@@ -121,7 +121,7 @@ tan 线从 (1, 0) 垂直到 (1, tan30°)。原图用 TikZ 的 named path + inter
 下面这些限制在后续版本会逐渐补齐，🚧 标记的均已在 roadmap 中。
 
 - 🚧 **grid 算子**：未来计划支持。本例用 `.map()` 手画 5 横 5 竖兜底
-- 🚧 **整图 scale + y 翻转**：未来计划在 `<TikZ>` 容器加 `scale` / `yAxis="up"`，让用户直接喂数学坐标。本例直接写像素 literal + 手动给 y 加负号兜底
+- 🚧 **整图 scale + y 翻转**：未来计划在 `<Layout>` 容器加 `scale` / `yAxis="up"`，让用户直接喂数学坐标。本例直接写像素 literal + 手动给 y 加负号兜底
 - 🚧 **投影 target（`(A |- B)`）**：未来计划支持。本例手算 `[cos30 * 100, 0]` 兜底
 - 🚧 **named path + intersection target**：未来计划支持。本例手算 `[100, -tan30 * 100]` 兜底
 - 🚧 **LineSpec 行内 spans**：未来计划在 LineSpec 加 `spans` 字段。本例只能整行换色

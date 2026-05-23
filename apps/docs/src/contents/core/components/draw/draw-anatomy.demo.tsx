@@ -1,4 +1,4 @@
-import { Draw, Node, TikZ } from '@retikz/react';
+import { Draw, Layout, Node } from '@retikz/react';
 import type { FC } from 'react';
 
 /**
@@ -8,7 +8,7 @@ import type { FC } from 'react';
  *   纯技术 label，单文件共用。
  */
 const Demo: FC = () => (
-  <TikZ width={620} height={260}>
+  <Layout width={620} height={260}>
     {/* 主体：A→B→C 一条 Draw */}
     <Node id="aNode" position={[-200, -30]}>
       A
@@ -41,7 +41,7 @@ const Demo: FC = () => (
     <Node id="capWhole" position={[0, 80]} stroke="none" fill="none" textColor="gray" font={{ size: 12 }}>
       Draw (Sugar) / Path (Kernel)
     </Node>
-  </TikZ>
+  </Layout>
 );
 
 export default Demo;

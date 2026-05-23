@@ -1,5 +1,5 @@
 import { type PathCommand, type Position, type ShapeDefinition, localToWorld, worldToLocal } from '@retikz/core';
-import { Draw, Node, TikZ } from '@retikz/react';
+import { Draw, Layout, Node } from '@retikz/react';
 import type { FC } from 'react';
 
 const diode: ShapeDefinition = {
@@ -80,12 +80,12 @@ const diode: ShapeDefinition = {
 };
 
 const Demo: FC = () => (
-  <TikZ width={420} height={190} shapes={{ diode }}>
+  <Layout width={420} height={190} shapes={{ diode }}>
     <Node id="source" position={[-150, 0]} text="in" />
     <Node id="d" shape="diode" position={[0, 0]} fill="#fff4e6" stroke="#d9480f" strokeWidth={2} />
     <Node id="sink" position={[145, 55]} text="out" />
     <Draw way={['source', 'd', 'sink']} arrow="->" stroke="#495057" strokeWidth={1.5} />
-  </TikZ>
+  </Layout>
 );
 
 export default Demo;

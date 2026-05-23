@@ -1,4 +1,4 @@
-import { Draw, Node, TikZ } from '@retikz/react';
+import { Draw, Layout, Node } from '@retikz/react';
 import type { FC } from 'react';
 
 /**
@@ -12,7 +12,7 @@ import type { FC } from 'react';
  *   实线 = 推 frame；虚线 = 透传；红 × = 屏蔽。
  */
 const Demo: FC = () => (
-  <TikZ width={640} height={240} style={{ maxWidth: '100%', height: 'auto' }}>
+  <Layout width={640} height={240} style={{ maxWidth: '100%', height: 'auto' }}>
     {/* === 5 个 box Node（带 id，empty 内容，仅当 cascade 箭头的端点） === */}
     <Node id="B" position={[-155, -100]} minimumWidth={250} minimumHeight={40} stroke="#9ca3af" dashArray={[4, 3]} />
     <Node id="A" position={[-155, -30]} minimumWidth={250} minimumHeight={60} stroke="#9ca3af" />
@@ -57,7 +57,7 @@ const Demo: FC = () => (
     {/* 红 × 标记，叠在 A→root 箭头中点 (-155, 15)；两条短粗线交叉 */}
     <Draw way={[[-163, 7], [-147, 23]]} stroke="#ef4444" strokeWidth={2} />
     <Draw way={[[-147, 7], [-163, 23]]} stroke="#ef4444" strokeWidth={2} />
-  </TikZ>
+  </Layout>
 );
 
 export default Demo;

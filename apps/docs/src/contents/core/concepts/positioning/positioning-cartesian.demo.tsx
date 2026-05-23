@@ -1,8 +1,8 @@
-import { Node, TikZ } from '@retikz/react';
+import { Layout, Node } from '@retikz/react';
 import type { FC } from 'react';
 
 const Demo: FC = () => (
-  <TikZ width={300} height={120}>
+  <Layout width={300} height={120}>
     <Node id="a" position={[0, 0]}>
       [0, 0]
     </Node>
@@ -12,7 +12,7 @@ const Demo: FC = () => (
     <Node id="c" position={[50, 60]}>
       [50, 60]
     </Node>
-  </TikZ>
+  </Layout>
 );
 
 export default Demo;

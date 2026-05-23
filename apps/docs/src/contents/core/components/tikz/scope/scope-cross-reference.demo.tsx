@@ -1,4 +1,4 @@
-import { Node, Path, Scope, Step, TikZ } from '@retikz/react';
+import { Layout, Node, Path, Scope, Step } from '@retikz/react';
 import type { FC } from 'react';
 
 /**
@@ -6,7 +6,7 @@ import type { FC } from 'react';
  * @description external 在最左，scope 内 inner / inner-2 横向排在右侧；外层 path 用字符串 id 引用 inner / inner-2，端点取 nodeIndex 全局坐标（已 apply scope translate）——scope 不引入局部命名空间。
  */
 const Demo: FC = () => (
-  <TikZ width={560} height={120}>
+  <Layout width={560} height={120}>
     <Node id="external" position={[0, 0]}>external</Node>
     <Scope transforms={[{ kind: 'translate', x: 220, y: 0 }]}>
       <Node id="inner" position={[0, 0]}>inner</Node>
@@ -20,7 +20,7 @@ const Demo: FC = () => (
       <Step kind="move" to="inner" />
       <Step to="inner-2" />
     </Path>
-  </TikZ>
+  </Layout>
 );
 
 export default Demo;

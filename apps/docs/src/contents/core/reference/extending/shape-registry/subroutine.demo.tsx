@@ -1,5 +1,5 @@
 import { BUILTIN_SHAPES, type ShapeDefinition } from '@retikz/core';
-import { Node, TikZ } from '@retikz/react';
+import { Layout, Node } from '@retikz/react';
 import type { FC } from 'react';
 
 /**
@@ -55,9 +55,9 @@ const subroutine: ShapeDefinition = {
 };
 
 const Demo: FC = () => (
-  <TikZ width={320} height={130} shapes={{ subroutine }}>
+  <Layout width={320} height={130} shapes={{ subroutine }}>
     <Node id="p" shape="subroutine" position={[0, 0]} text="f(x)" fill="#f3f0ff" stroke="#7048e8" strokeWidth={2} padding={16} />
-  </TikZ>
+  </Layout>
 );
 
 export default Demo;

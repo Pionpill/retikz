@@ -83,7 +83,7 @@ Encoded in [`packages/core/AGENTS.md`](https://github.com/Pionpill/retikz/blob/m
 
 | Module | Responsibility |
 | --- | --- |
-| [`kernel/`](https://github.com/Pionpill/retikz/tree/main/packages/react/src/kernel) | Kernel JSX components — `<TikZ>` / `<Node>` / `<Path>` / `<Step>` / `<Text>` / `<Coordinate>`, plus `_builder` (JSX → IR) and `_unbuilder` (IR → JSX) bridges |
+| [`kernel/`](https://github.com/Pionpill/retikz/tree/main/packages/react/src/kernel) | Kernel JSX components — `<Layout>` / `<Node>` / `<Path>` / `<Step>` / `<Text>` / `<Coordinate>`, plus `_builder` (JSX → IR) and `_unbuilder` (IR → JSX) bridges |
 | [`sugar/`](https://github.com/Pionpill/retikz/tree/main/packages/react/src/sugar) | Sugar JSX components — `<Draw way={[...]}>`, `<EdgeLabel>`; expand into Kernel at compile time, introduce no new capabilities |
 | [`render/`](https://github.com/Pionpill/retikz/tree/main/packages/react/src/render) | Scene → SVG elements — `renderPrim`, `browser-measurer` (injected into core's compiler), `arrowMarkers`, SVG viewBox formatting |
 | [`index.ts`](https://github.com/Pionpill/retikz/blob/main/packages/react/src/index.ts) | Public API surface — Kernel + Sugar components and the `convertReactNodeToIR` / `convertIRToReactNode` bridges |
@@ -94,7 +94,7 @@ Encoded in [`packages/core/AGENTS.md`](https://github.com/Pionpill/retikz/blob/m
    See which Kernel / Sugar components, types, and bridges are exposed. `WayDSL` and related constants from core are re-exported here so React users can import from a single package.
 
 2. **[`kernel/TikZ.tsx`](https://github.com/Pionpill/retikz/blob/main/packages/react/src/kernel/TikZ.tsx) — Top-level orchestrator**<br />
-   `<TikZ>` is the entry point of the whole pipeline: children → `buildIR` → `compileToScene` → `renderPrim` → `<svg>`. One file gives you the adapter's overall shape.
+   `<Layout>` is the entry point of the whole pipeline: children → `buildIR` → `compileToScene` → `renderPrim` → `<svg>`. One file gives you the adapter's overall shape.
 
 3. **[`kernel/_builder.ts`](https://github.com/Pionpill/retikz/blob/main/packages/react/src/kernel/_builder.ts) — JSX → IR**<br />
    Dispatches by child `displayName` to construct IRNode / IRPath / IRStep, etc. The companion [`_unbuilder.ts`](https://github.com/Pionpill/retikz/blob/main/packages/react/src/kernel/_unbuilder.ts) goes the other way (IR → React element tree), useful for editor / AI workflows that "feed IR, render components".

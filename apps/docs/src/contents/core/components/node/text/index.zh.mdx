@@ -66,7 +66,7 @@ import { Node, Text } from '@retikz/react';
 
 ### 限制
 
-- **只能放在 `<Node>` 里**：放到 `<TikZ>` 顶层会被静默忽略。
+- **只能放在 `<Node>` 里**：放到 `<Layout>` 顶层会被静默忽略。
 - **children 必须是字符串**：嵌套元素或表达式不行。这是 Node 多行块的语义——一行就是一行。
 - **块级属性不能行级覆盖**：`align` / `lineHeight` 只能写在 `<Node>` 上。
 

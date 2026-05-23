@@ -1,4 +1,4 @@
-import { Draw, Node, TikZ } from '@retikz/react';
+import { Draw, Layout, Node } from '@retikz/react';
 import type { FC } from 'react';
 
 /**
@@ -6,7 +6,7 @@ import type { FC } from 'react';
  * @description 每行一个 stroke / strokeWidth / dashPattern 组合，左端 Node 当 row 标签，右端纯坐标终点。
  */
 const Demo: FC = () => (
-  <TikZ width={420} height={200}>
+  <Layout width={420} height={200}>
     <Node id="r1" position={[0, 0]} stroke="none">
       默认
     </Node>
@@ -33,7 +33,7 @@ const Demo: FC = () => (
     <Draw way={['r4', [320, 90]]} stroke="#10b981" strokeWidth={2} dashPattern={[6, 3]} />
     {/* 点线 */}
     <Draw way={['r5', [320, 120]]} stroke="#f97316" strokeWidth={2} dashPattern={[1, 4]} />
-  </TikZ>
+  </Layout>
 );
 
 export default Demo;

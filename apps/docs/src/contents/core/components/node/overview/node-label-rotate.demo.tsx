@@ -1,4 +1,4 @@
-import { Node, TikZ } from '@retikz/react';
+import { Layout, Node } from '@retikz/react';
 import type { FC } from 'react';
 
 /**
@@ -6,7 +6,7 @@ import type { FC } from 'react';
  * @description 同一圈四向标签：左侧 `'radial'` 让每个标签转到"指向外"的朝向，右侧 `'tangent'` 取其切向（radial + 90°）；`rotate` 只改朝向，不改由 `position` 决定的位置。
  */
 const Demo: FC = () => (
-  <TikZ width={460} height={220}>
+  <Layout width={460} height={220}>
     {/* radial：标签沿"节点中心 → 标签中心"方向 */}
     <Node
       id="r"
@@ -41,7 +41,7 @@ const Demo: FC = () => (
     >
       tangent
     </Node>
-  </TikZ>
+  </Layout>
 );
 
 export default Demo;

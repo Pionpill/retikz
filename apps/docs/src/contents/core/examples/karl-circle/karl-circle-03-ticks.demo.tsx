@@ -1,6 +1,6 @@
 import { Fragment } from 'react';
 import type { FC } from 'react';
-import { Coordinate, Draw, Node, Path, Step, TikZ } from '@retikz/react';
+import { Coordinate, Draw, Layout, Node, Path, Step } from '@retikz/react';
 
 /** 用字面色而非 `var(--border)`：SVG 下载后 CSS var 不在新上下文里解析，会 fallback 成黑 */
 const HELP_LINE = '#e5e7eb';
@@ -10,7 +10,7 @@ const MATH_FONT = {
 };
 
 const Demo: FC = () => (
-  <TikZ width={600} height={360}>
+  <Layout width={600} height={360}>
     {/* 背景网格（help lines）——5 横 5 竖。
         网格沿原点对称，所以 iteration 值同时当 x（竖线）和 y（横线）的像素位置 */}
     {[-100, -50, 0, 50, 100].map(v => (
@@ -65,7 +65,7 @@ const Demo: FC = () => (
         </Node>
       </Fragment>
     ))}
-  </TikZ>
+  </Layout>
 );
 
 export default Demo;

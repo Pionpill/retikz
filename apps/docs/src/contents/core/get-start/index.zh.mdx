@@ -19,9 +19,9 @@ retikz 的 React 适配器是 `@retikz/react`，peer 依赖 `react` / `react-dom
 
 ## 一步步搭建
 
-### 1. 容器 `<TikZ />` + 一个 `<Node />`
+### 1. 容器 `<Layout />` + 一个 `<Node />`
 
-最小图形从容器和基础图元开始。`<TikZ>` 负责承载整张图，决定 SVG 的显示尺寸，并把内部图元渲染出来；`<Node>` 负责画一个有位置、有名字、可显示文字的节点。这里先放一个节点，确认画布和基础图元都能工作。
+最小图形从容器和基础图元开始。`<Layout>` 负责承载整张图，决定 SVG 的显示尺寸，并把内部图元渲染出来；`<Node>` 负责画一个有位置、有名字、可显示文字的节点。这里先放一个节点，确认画布和基础图元都能工作。
 
 <ComponentPreview name="get-start-step-1" size="xs" />
 
@@ -48,7 +48,7 @@ retikz 的 React 适配器是 `@retikz/react`，peer 依赖 `react` / `react-dom
 到这里先记住 4 个规则：
 
 - 画布坐标 x 向右、y 向下；`[0, 0]` 是 retikz 内部 user units 的原点
-- `<TikZ width height>` 控制最终 SVG 显示尺寸，不等于强行把内部坐标改成 CSS 像素
+- `<Layout width height>` 控制最终 SVG 显示尺寸，不等于强行把内部坐标改成 CSS 像素
 - 节点 `id` 是连线的名字，`<Draw way={['a', 'b']}>` 引用的是节点边界，不是文本中心
 - 点开 **View Code → IR** 可以看到编译后的图形数据，调试连线时优先看这里
 

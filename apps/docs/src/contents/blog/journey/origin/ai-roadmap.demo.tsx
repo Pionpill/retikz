@@ -1,5 +1,5 @@
 import type { ComponentProps, FC } from 'react';
-import { Draw, Node, TikZ } from '@retikz/react';
+import { Draw, Layout, Node } from '@retikz/react';
 
 const REQUIRED_FILL = '#1f6286';
 const OPTIONAL_FILL = '#878787';
@@ -46,7 +46,7 @@ const RoadmapNode: FC<RoadmapNodeProps> = ({ id, position, variant = 'required',
 };
 
 const Demo: FC = () => (
-  <TikZ width={811} height={441} nodeDistance={41}>
+  <Layout width={811} height={441} nodeDistance={41}>
     <RoadmapNode id="title" position={[404, 20]} variant="title" width={200} height={40}>AI Expert in 2022</RoadmapNode>
     <RoadmapNode id="fundamentals" position={[404, 95]} variant="optional" width={90} height={30}>Fundamentals</RoadmapNode>
     <RoadmapNode id="choose" position={[404, 162]} variant="header" width={130} height={25}>Choose your path</RoadmapNode>
@@ -105,7 +105,7 @@ const Demo: FC = () => (
     {/* 3) 红色 X — 2 条 4px 粗交叉线 */}
     <Draw way={[[194, 258], [244, 308]]} stroke={EDGE_RED} strokeWidth={4} />
     <Draw way={[[194, 308], [244, 258]]} stroke={EDGE_RED} strokeWidth={4} />
-  </TikZ>
+  </Layout>
 );
 
 export default Demo;

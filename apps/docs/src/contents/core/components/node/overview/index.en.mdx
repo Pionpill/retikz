@@ -37,7 +37,7 @@ Choose the form by the role in the diagram: flowchart nodes usually use the defa
 > - ellipse: circumscribed, rx = innerHalfW × √2, ry = innerHalfH × √2
 > - diamond: circumscribed, halfA = 2 × innerHalfW, halfB = 2 × innerHalfH
 
-`shape` also accepts registered names beyond the built-ins (hexagon / cylinder / cloud…) — any string passes schema validation, the definition is injected via `CompileOptions.shapes` / `<TikZ shapes>`, and unregistered names throw at compile time. See [Custom Shapes](/core/reference/extending/shape-registry).
+`shape` also accepts registered names beyond the built-ins (hexagon / cylinder / cloud…) — any string passes schema validation, the definition is injected via `CompileOptions.shapes` / `<Layout shapes>`, and unregistered names throw at compile time. See [Custom Shapes](/core/reference/extending/shape-registry).
 
 ### Positioning
 
@@ -47,11 +47,11 @@ In addition to Cartesian / polar, `position` accepts **`{ direction, of, distanc
 
 - `direction`: 8 directions — `above` / `below` / `left` / `right` / `above-left` / `above-right` / `below-left` / `below-right`
 - `of`: id of the referenced node / coordinate (must be defined earlier in the IR; forward references rejected)
-- `distance`: falls back to `<TikZ nodeDistance>` then to 1 when omitted
+- `distance`: falls back to `<Layout nodeDistance>` then to 1 when omitted
 
 <Comparison target="tikz" title="Relative Positioning">
 
-`{ direction: 'above', of: 'a', distance: 20 }` maps to TikZ positioning-library forms like `[above=20 of a]`. `<TikZ nodeDistance={...}>` maps to TikZ's global `node distance` default.
+`{ direction: 'above', of: 'a', distance: 20 }` maps to TikZ positioning-library forms like `[above=20 of a]`. `<Layout nodeDistance={...}>` maps to TikZ's global `node distance` default.
 
 </Comparison>
 

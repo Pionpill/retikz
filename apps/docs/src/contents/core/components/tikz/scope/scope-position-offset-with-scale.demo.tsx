@@ -1,4 +1,4 @@
-import { Node, Path, Scope, Step, TikZ } from '@retikz/react';
+import { Layout, Node, Path, Scope, Step } from '@retikz/react';
 import type { FC } from 'react';
 
 /**
@@ -8,7 +8,7 @@ import type { FC } from 'react';
  *   右侧 ref-B 同样 offset 但 scope 外（无 scale）→ B 在 anchor 右 40。
  */
 const Demo: FC = () => (
-  <TikZ width={400} height={200}>
+  <Layout width={400} height={200}>
     <Node id="anchor" position={[-100, 0]} shape="circle" padding={4}>anchor</Node>
     <Scope transforms={[{ kind: 'scale', x: 2 }]}>
       <Node id="B" position={{ of: 'anchor', offset: [40, 0] }} shape="circle" padding={4}>B</Node>
@@ -22,7 +22,7 @@ const Demo: FC = () => (
       <Step kind="move" to="anchor" />
       <Step to="B-ref" />
     </Path>
-  </TikZ>
+  </Layout>
 );
 
 export default Demo;

@@ -1,4 +1,4 @@
-import { Path, Step, TikZ } from '@retikz/react';
+import { Layout, Path, Step } from '@retikz/react';
 import type { FC } from 'react';
 
 /**
@@ -7,7 +7,7 @@ import type { FC } from 'react';
  *   第三条 color=绿 + 显式 font / opacity → 小一号、淡化的绿标注。
  */
 const Demo: FC = () => (
-  <TikZ width={320} height={170}>
+  <Layout width={320} height={170}>
     <Path color="#dc2626">
       <Step kind="move" to={[0, 0]} />
       <Step to={[200, 0]} label={{ text: 'sin' }} />
@@ -20,7 +20,7 @@ const Demo: FC = () => (
       <Step kind="move" to={[0, 110]} />
       <Step to={[200, 110]} label={{ text: 'tan', font: { size: 10 }, opacity: 0.7 }} />
     </Path>
-  </TikZ>
+  </Layout>
 );
 
 export default Demo;

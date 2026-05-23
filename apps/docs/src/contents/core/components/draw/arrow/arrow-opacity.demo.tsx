@@ -1,4 +1,4 @@
-import { Node, Path, Step, TikZ } from '@retikz/react';
+import { Layout, Node, Path, Step } from '@retikz/react';
 import type { FC } from 'react';
 
 /**
@@ -6,7 +6,7 @@ import type { FC } from 'react';
  * @description path 实色描边、marker 0.5 opacity 视觉对照（区分于 path 整体 opacity）
  */
 const Demo: FC = () => (
-  <TikZ width={320} height={80}>
+  <Layout width={320} height={80}>
     <Node id="a" position={[0, 0]}>
       A
     </Node>
@@ -22,7 +22,7 @@ const Demo: FC = () => (
       <Step kind="move" to="a" />
       <Step kind="line" to="b" />
     </Path>
-  </TikZ>
+  </Layout>
 );
 
 export default Demo;

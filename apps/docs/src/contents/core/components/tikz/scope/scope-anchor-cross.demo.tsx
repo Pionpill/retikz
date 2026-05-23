@@ -1,4 +1,4 @@
-import { Node, Path, Scope, Step, TikZ } from '@retikz/react';
+import { Layout, Node, Path, Scope, Step } from '@retikz/react';
 import type { FC } from 'react';
 
 /**
@@ -8,7 +8,7 @@ import type { FC } from 'react';
  *   path 端点贴 hub 视觉边界而非中心。演示 anchor 字符串穿过 scope 边界仍能解析到正确的世界系点。
  */
 const Demo: FC = () => (
-  <TikZ width={560} height={140}>
+  <Layout width={560} height={140}>
     <Node id="ext" position={[0, 0]}>ext</Node>
     <Scope transforms={[{ kind: 'translate', x: 260, y: 0 }]}>
       <Node id="hub" position={[0, 0]} shape="circle" padding={8}>hub</Node>
@@ -21,7 +21,7 @@ const Demo: FC = () => (
       <Step kind="move" to="ext" />
       <Step to="hub.south-west" />
     </Path>
-  </TikZ>
+  </Layout>
 );
 
 export default Demo;

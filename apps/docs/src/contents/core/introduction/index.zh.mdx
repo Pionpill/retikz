@@ -38,7 +38,7 @@ retikz DSL 表面有三类构造，混淆它们是事后迁移噩梦：
 
 | 层         | 例子                                | 是否进 IR                   | 落在哪          |
 | ---------- | ----------------------------------- | --------------------------- | --------------- |
-| **Kernel** | `<TikZ>` `<Node>` `<Path>` `<Step>` | ✅ 直接对应 IR 节点         | `@retikz/core`  |
+| **Kernel** | `<Layout>` `<Node>` `<Path>` `<Step>` | ✅ 直接对应 IR 节点         | `@retikz/core`  |
 | **Sugar**  | `<Draw way={[...]} />`              | ❌ 编译期展开为 Kernel      | `@retikz/react` |
 | **Tier 2** | `<Axis>` `<BarPlot>` `<Tree>`       | ✅ 高层节点 + lowering 下沉 | 独立 domain 包  |
 
@@ -46,7 +46,7 @@ retikz DSL 表面有三类构造，混淆它们是事后迁移噩梦：
 
 ## 通用图元，任意组合
 
-core 的 Kernel 先保持很小——`<TikZ>`、`<Node>`、`<Coordinate>`、`<Path>`、`<Step>`——但它们足够通用，能拼出大多数二维关系图。`<Draw>` / `<Text>` 这类 Sugar 只改善书写体验，最终仍然落回同一批 Kernel IR。
+core 的 Kernel 先保持很小——`<Layout>`、`<Node>`、`<Coordinate>`、`<Path>`、`<Step>`——但它们足够通用，能拼出大多数二维关系图。`<Draw>` / `<Text>` 这类 Sugar 只改善书写体验，最终仍然落回同一批 Kernel IR。
 
 | 类别 | 由 Kernel 拼出 | 在哪 |
 | --- | --- | --- |

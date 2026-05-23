@@ -1,8 +1,8 @@
-import { Draw, Node, TikZ } from '@retikz/react';
+import { Draw, Layout, Node } from '@retikz/react';
 import type { FC } from 'react';
 
 const Demo: FC = () => (
-  <TikZ width={280} height={220}>
+  <Layout width={280} height={220}>
     <Node id="center" position={[140, 30]} stroke="none">·</Node>
     {/* Arc：t 线性映射 startAngle..endAngle；0..120° 弧上演示三档 */}
     <Draw
@@ -21,7 +21,7 @@ const Demo: FC = () => (
       ]}
       dashPattern={[3, 3]}
     />
-  </TikZ>
+  </Layout>
 );
 
 export default Demo;

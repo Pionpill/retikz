@@ -1,4 +1,4 @@
-import { Node, Path, Scope, Step, TikZ } from '@retikz/react';
+import { Layout, Node, Path, Scope, Step } from '@retikz/react';
 import type { FC } from 'react';
 
 /**
@@ -6,7 +6,7 @@ import type { FC } from 'react';
  * @description 左侧 0 是参照原点，右侧 scope 内 A/B/C 三节点 + path 共享同一 translate；组内坐标都在 y=0 baseline，整组横向出现在原点右侧。
  */
 const Demo: FC = () => (
-  <TikZ width={560} height={120}>
+  <Layout width={560} height={120}>
     <Node id="origin" position={[0, 0]} shape="circle" padding={4} stroke="gray">
       0
     </Node>
@@ -20,7 +20,7 @@ const Demo: FC = () => (
         <Step to="C" />
       </Path>
     </Scope>
-  </TikZ>
+  </Layout>
 );
 
 export default Demo;

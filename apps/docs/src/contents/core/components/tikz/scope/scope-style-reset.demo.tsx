@@ -1,4 +1,4 @@
-import { Node, Scope, TikZ } from '@retikz/react';
+import { Layout, Node, Scope } from '@retikz/react';
 import type { FC } from 'react';
 
 /**
@@ -7,7 +7,7 @@ import type { FC } from 'react';
  *   右节点恢复默认黑——本层自己的值仍生效、只切外层累积。
  */
 const Demo: FC = () => (
-  <TikZ width={420} height={130}>
+  <Layout width={420} height={130}>
     <Scope color="#dc2626">
       <Node id="A" position={[0, 0]} shape="circle" fill="white">
         A
@@ -18,7 +18,7 @@ const Demo: FC = () => (
         </Node>
       </Scope>
     </Scope>
-  </TikZ>
+  </Layout>
 );
 
 export default Demo;

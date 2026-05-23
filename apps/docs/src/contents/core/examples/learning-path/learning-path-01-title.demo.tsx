@@ -1,5 +1,5 @@
 import type { ComponentProps, FC } from 'react';
-import { Node, TikZ } from '@retikz/react';
+import { Layout, Node } from '@retikz/react';
 
 // 配色 — 节点底 / 边 / 必填白字用字面色（离线 SVG 下不会变黑）；
 // title / header 的黑字用 currentColor，跟随主题 light / dark 自适应
@@ -46,13 +46,13 @@ const RoadmapNode: FC<RoadmapNodeProps> = ({ id, position, variant = 'required',
 };
 
 const Demo: FC = () => (
-  <TikZ width={811} height={441}>
+  <Layout width={811} height={441}>
     {/* 标题：白底（无 fill）、24px 加粗黑字，居中顶部。
         位置 (404, 20) + 宽 200 × 高 40 完全复刻 intro.svg 的 (304, 0, 200×40) 标题框 */}
     <RoadmapNode id="title" position={[404, 20]} variant="title" width={200} height={40}>
       AI Expert in 2022
     </RoadmapNode>
-  </TikZ>
+  </Layout>
 );
 
 export default Demo;

@@ -1,5 +1,5 @@
 import type { ComponentProps, FC } from 'react';
-import { Draw, Node, TikZ } from '@retikz/react';
+import { Draw, Layout, Node } from '@retikz/react';
 
 const REQUIRED_FILL = '#1f6286';
 const OPTIONAL_FILL = '#878787';
@@ -44,7 +44,7 @@ const RoadmapNode: FC<RoadmapNodeProps> = ({ id, position, variant = 'required',
 };
 
 const Demo: FC = () => (
-  <TikZ width={811} height={441} nodeDistance={41}>
+  <Layout width={811} height={441} nodeDistance={41}>
     <RoadmapNode id="title" position={[404, 20]} variant="title" width={200} height={40}>
       AI Expert in 2022
     </RoadmapNode>
@@ -61,7 +61,7 @@ const Demo: FC = () => (
     {/* === Step 3：两侧色块条 ===
         左侧 "Required for any path" 列 —— 4 蓝色按钮紧贴堆叠；
         段头 papers 用绝对坐标，剩 3 个用 AtPosition direction=below，
-        靠 <TikZ nodeDistance={41}> 自动按 intro.svg 的 41 间隔堆叠 */}
+        靠 <Layout nodeDistance={41}> 自动按 intro.svg 的 41 间隔堆叠 */}
 
     <RoadmapNode id="required-header" position={[100, 35]} variant="header" width={160} height={22.5}>
       Required for any path
@@ -89,7 +89,7 @@ const Demo: FC = () => (
     <RoadmapNode id="legend-gray" position={{ direction: 'below', of: 'legend-blue' }} variant="optional" width={210} height={30}>
       Available Options
     </RoadmapNode>
-  </TikZ>
+  </Layout>
 );
 
 export default Demo;

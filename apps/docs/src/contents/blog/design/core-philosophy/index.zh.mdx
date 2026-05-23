@@ -120,7 +120,7 @@ Tier 2 目前还没在 core 里实装，规划中由 `@retikz/flow` / `@retikz/p
 
 `@retikz/react` 是当前唯一发出来的 adapter，整套架构反复强调它要"薄"：
 
-- 顶层 `<TikZ>` 容器（`packages/react/src/kernel/TikZ.tsx`）只做三件事：拿到 `ir` prop 或 `useMemo(buildIR(children))`、调 `compileToScene`、把 Scene primitive 翻成 `<svg>` 子元素。
+- 顶层 `<Layout>` 容器（`packages/react/src/kernel/TikZ.tsx`）只做三件事：拿到 `ir` prop 或 `useMemo(buildIR(children))`、调 `compileToScene`、把 Scene primitive 翻成 `<svg>` 子元素。
 - Builder（`packages/react/src/kernel/builder.ts`）做 JSX → IR 的同步转换，靠共享字段表（`NODE_FIELDS` / `PATH_FIELDS`）和组件 `displayName` 识别；它不调 hook、不进 React render 调用栈。
 - 文字度量用 `browserMeasurer`（canvas.measureText），作为 `TextMeasurer` 注入 compile——后续 SSR adapter 可换成 satori / sharp 之类的实现，compile 本身零改动。
 

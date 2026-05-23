@@ -1,4 +1,4 @@
-import { Node, Path, Scope, Step, TikZ } from '@retikz/react';
+import { Layout, Node, Path, Scope, Step } from '@retikz/react';
 import type { FC } from 'react';
 
 /**
@@ -8,7 +8,7 @@ import type { FC } from 'react';
  *   中层 path 同理命中中层 middle A。三层栈式 frame 各自的 'A' 互不冲突、不发 DUPLICATE_NODE_ID warn。
  */
 const Demo: FC = () => (
-  <TikZ width={600} height={160}>
+  <Layout width={600} height={160}>
     <Node id="A" position={[0, 0]} shape="circle" padding={6}>outer A</Node>
     <Scope localNamespace transforms={[{ kind: 'translate', x: 220, y: 0 }]}>
       <Node id="A" position={[0, 0]} shape="circle" padding={6}>middle A</Node>
@@ -24,7 +24,7 @@ const Demo: FC = () => (
         </Path>
       </Scope>
     </Scope>
-  </TikZ>
+  </Layout>
 );
 
 export default Demo;

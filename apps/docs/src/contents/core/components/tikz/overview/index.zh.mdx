@@ -3,35 +3,35 @@ title: TikZ
 description: 顶层容器：接收组件树或 IR，编译 Scene，并输出渲染结果。
 ---
 
-`<TikZ>` 是 retikz 唯一必需的顶层包装，所有 Kernel / Sugar 组件都必须放在它里面。
+`<Layout>` 是 retikz 唯一必需的顶层包装，所有 Kernel / Sugar 组件都必须放在它里面。
 
-`<TikZ>` 是 DSL 与渲染器之间的入口：使用 children 时，它会把内部组件树转换为 IR；使用 `ir` 时，则直接采用这份已构造好的 IR。随后它把 IR 编译为 Scene，并交给当前渲染器输出。`width` / `height` 控制的是最终结果在页面上的显示尺寸；内部坐标仍然使用 retikz 用户单位，编译阶段会根据布局边界计算可见范围。
+`<Layout>` 是 DSL 与渲染器之间的入口：使用 children 时，它会把内部组件树转换为 IR；使用 `ir` 时，则直接采用这份已构造好的 IR。随后它把 IR 编译为 Scene，并交给当前渲染器输出。`width` / `height` 控制的是最终结果在页面上的显示尺寸；内部坐标仍然使用 retikz 用户单位，编译阶段会根据布局边界计算可见范围。
 
 ## 用法
 
 ```tsx
-import { TikZ } from '@retikz/react';
+import { Layout } from '@retikz/react';
 ```
 
 ```tsx
-<TikZ width={300} height={80}>
+<Layout width={300} height={80}>
   {/* Kernel / Sugar children */}
-</TikZ>
+</Layout>
 ```
 
 ## 组合
 
-`<TikZ>` 是容器；children 是任意 Kernel / Sugar 组件树：
+`<Layout>` 是容器；children 是任意 Kernel / Sugar 组件树：
 
 ```tsx
-<TikZ>
+<Layout>
   <Node id="..." position={...}>label</Node>
   <Path>
     <Step kind="move" to="..." />
     <Step kind="line" to="..." />
   </Path>
   <Draw way={[...]} />
-</TikZ>
+</Layout>
 ```
 
 ## 例子
@@ -42,7 +42,7 @@ import { TikZ } from '@retikz/react';
 
 ### 从 IR 渲染
 
-`<TikZ>` 接受 `ir` prop——直接把一段已经持久化的 IR JSON 渲染成图，**不写一行 JSX children**。来源不限：LLM 生成、JSON 编辑器、URL 反序列化、数据库存档都可以。
+`<Layout>` 接受 `ir` prop——直接把一段已经持久化的 IR JSON 渲染成图，**不写一行 JSX children**。来源不限：LLM 生成、JSON 编辑器、URL 反序列化、数据库存档都可以。
 
 <ComponentPreview name="tikz-from-ir" size="sm" />
 
@@ -62,13 +62,13 @@ import { TikZ } from '@retikz/react';
 `ir` prop 适合"已经有 IR JSON"的场景——AI 生成、JSON 编辑器、URL 反序列化。配合 `convertReactNodeToIR` / `convertIRToReactNode` 做 DSL ↔ IR 双向桥：
 
 ```tsx
-import { TikZ, Node, convertReactNodeToIR } from '@retikz/react';
+import { Layout, Node, convertReactNodeToIR } from '@retikz/react';
 
 const ir = convertReactNodeToIR(
   <Node id="a" position={[0, 0]}>A</Node>,
 );
 // 序列化、传 LLM、存数据库……
-<TikZ ir={ir} width={200} height={80} />;
+<Layout ir={ir} width={200} height={80} />;
 ```
 
 `ir` 与 `children` 互斥；同时传时优先 `ir`。

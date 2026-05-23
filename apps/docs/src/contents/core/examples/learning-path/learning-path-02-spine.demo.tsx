@@ -1,5 +1,5 @@
 import type { ComponentProps, FC } from 'react';
-import { Draw, Node, TikZ } from '@retikz/react';
+import { Draw, Layout, Node } from '@retikz/react';
 
 const REQUIRED_FILL = '#1f6286';
 const OPTIONAL_FILL = '#878787';
@@ -44,7 +44,7 @@ const RoadmapNode: FC<RoadmapNodeProps> = ({ id, position, variant = 'required',
 };
 
 const Demo: FC = () => (
-  <TikZ width={811} height={441}>
+  <Layout width={811} height={441}>
     <RoadmapNode id="title" position={[404, 20]} variant="title" width={200} height={40}>
       AI Expert in 2022
     </RoadmapNode>
@@ -59,7 +59,7 @@ const Demo: FC = () => (
         Sugar Draw way 数组：[源 id, 目标 id]，retikz 自动用节点 id 解析锚点 */}
     <Draw way={['title', 'fundamentals']} stroke={EDGE_BLUE} strokeWidth={2} arrow="->" />
     <Draw way={['fundamentals', 'choose']} stroke={EDGE_BLUE} strokeWidth={2} arrow="->" />
-  </TikZ>
+  </Layout>
 );
 
 export default Demo;

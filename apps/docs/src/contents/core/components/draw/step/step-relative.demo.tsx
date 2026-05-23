@@ -1,4 +1,4 @@
-import { Path, Step, TikZ } from '@retikz/react';
+import { Layout, Path, Step } from '@retikz/react';
 import type { FC } from 'react';
 
 /**
@@ -6,7 +6,7 @@ import type { FC } from 'react';
  * @description 两条 path step 序列字面相同只差 IR target 形态；relative 每段从同一锚点 (move 终点) 解析，relativeAccumulate 累积更新 prevEnd 形成阶梯。
  */
 const Demo: FC = () => (
-  <TikZ width={320} height={200}>
+  <Layout width={320} height={200}>
     {/* relative：链式偏移都从同一锚点 (20, 60) 出发 */}
     <Path stroke="currentColor">
       <Step kind="move" to={[20, 60]} />
@@ -19,7 +19,7 @@ const Demo: FC = () => (
       <Step to={{ relativeAccumulate: [80, 0] }} />
       <Step to={{ relativeAccumulate: [80, 40] }} />
     </Path>
-  </TikZ>
+  </Layout>
 );
 
 export default Demo;

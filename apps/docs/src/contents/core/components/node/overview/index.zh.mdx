@@ -37,7 +37,7 @@ import { Node } from '@retikz/react';
 > - ellipse: 外接椭圆，rx = innerHalfW × √2、ry = innerHalfH × √2
 > - diamond: 外接菱形，halfA = 2 × innerHalfW、halfB = 2 × innerHalfH
 
-`shape` 还接受内置之外的注册名（hexagon / cylinder / cloud…）——任意字符串通过 schema 校验，定义经 `CompileOptions.shapes` / `<TikZ shapes>` 注入，未注册名编译期报错。见 [自定义形状](/core/reference/extending/shape-registry)。
+`shape` 还接受内置之外的注册名（hexagon / cylinder / cloud…）——任意字符串通过 schema 校验，定义经 `CompileOptions.shapes` / `<Layout shapes>` 注入，未注册名编译期报错。见 [自定义形状](/core/reference/extending/shape-registry)。
 
 ### 定位
 
@@ -47,11 +47,11 @@ import { Node } from '@retikz/react';
 
 - `direction` 接 8 方向：`above` / `below` / `left` / `right` / `above-left` / `above-right` / `below-left` / `below-right`
 - `of` 是被参照节点 / coordinate 的 id（要求先出现在 IR 中，前向引用拒绝）
-- `distance` 缺省时取 `<TikZ nodeDistance>`，再缺省回退到 1
+- `distance` 缺省时取 `<Layout nodeDistance>`，再缺省回退到 1
 
 <Comparison target="tikz" title="相对定位">
 
-`{ direction: 'above', of: 'a', distance: 20 }` 对应 TikZ positioning library 的 `[above=20 of a]` 一类写法。`<TikZ nodeDistance={...}>` 对应 TikZ 的全局 `node distance` 缺省值。
+`{ direction: 'above', of: 'a', distance: 20 }` 对应 TikZ positioning library 的 `[above=20 of a]` 一类写法。`<Layout nodeDistance={...}>` 对应 TikZ 的全局 `node distance` 缺省值。
 
 </Comparison>
 
