@@ -1,0 +1,51 @@
+---
+title: Sector
+description: 形状 sugar——一行画扇形（wedge 经圆心闭合），编译期展开为 Path（move + arc + line + cycle）。
+---
+
+`<Sector>` 画扇形（饼图片段）：给圆心 + 半径 + 角度，得到经圆心闭合的 wedge。圆扇形（`radius`）或椭圆扇形（`radiusX` / `radiusY`）。
+
+它编译期展开为 `<Path>` 的 `move(弧起点) → arc(显式 center) → line(圆心) → cycle`——显式 `center` 让弧圆心正确，`cycle` 干净闭合成扇形。`center` 须 literal 笛卡尔（要算弧起点）。
+
+## 用法
+
+```tsx
+import { Sector } from '@retikz/react';
+```
+
+```tsx
+<Sector center={[0, 0]} radius={40} startAngle={0} endAngle={90} fill="#eee" />
+```
+
+## 例子
+
+<ComponentPreview name="sector-basic" />
+
+三个扇形拼成的饼图。常配 `fill` 上色。
+
+## 形态
+
+| 形态 | prop |
+| --- | --- |
+| 圆扇形 | `{ center, radius, ...角度 }` |
+| 椭圆扇形 | `{ center, radiusX, radiusY, ...角度 }` |
+
+`center` 须 **literal `[x, y]`**（组件内算弧起点）。角度三键 `startAngle` / `endAngle` / `sweepAngle` 三选二，必给。
+
+想要 chord（弦）闭合而非经圆心，用 [Circle](/core/components/circle) 带角度（默认 chord）。
+
+## API 参考
+
+| 属性 | 类型 | 默认值 | 描述 |
+| --- | --- | --- | --- |
+| `center` | `[x, y]` | — | 圆心（literal） |
+| `radius` | `number` | — | 圆扇形半径（与 radiusX/radiusY 二选一） |
+| `radiusX` / `radiusY` | `number` | — | 椭圆扇形两半轴 |
+| `startAngle` / `endAngle` / `sweepAngle` | `number` | — | 角度（三选二，必给） |
+| 视觉 prop | 同 `<Path>` | — | `fill` / `stroke` / `fillOpacity` / `zIndex` 等 |
+
+## 相关
+
+- [Arc](/core/components/arc)：纯弧线（不闭合）
+- [Circle](/core/components/circle)：整圆 / 弓形（chord 闭合）
+- [Path](/core/components/draw/path)：底层容器

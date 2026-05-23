@@ -1,0 +1,52 @@
+---
+title: Rectangle
+description: Shape sugar — draw a rectangle / rounded rectangle in one line; expands to Path + rectangle step.
+---
+
+`<Rectangle>` draws a rectangle in one line: give two opposite corners (or center + size / center + side / one corner + size), with optional `roundedCorners`. It expands to `<Path>` + `<Step kind="rectangle">`.
+
+The component uses the full name `Rectangle` (not `Rect`). For a labelled, connectable rectangle node use [`<Node>`](/core/components/node/overview) (which is rectangular by default).
+
+## Usage
+
+```tsx
+import { Rectangle } from '@retikz/react';
+```
+
+```tsx
+<Rectangle corner1={[0, 0]} corner2={[40, 20]} roundedCorners={4} />
+```
+
+## Examples
+
+<ComponentPreview name="rectangle-basic" />
+
+Sharp rectangle (two corners) + rounded rectangle (center + size + `roundedCorners`).
+
+## Forms
+
+| Form | prop | Point type |
+| --- | --- | --- |
+| two corners | `{ corner1, corner2 }` | any Target (used directly as from/to) |
+| center + size | `{ center, width, height }` | literal `[x, y]` |
+| center + side (square) | `{ center, side }` | literal `[x, y]` |
+| one corner + size | `{ corner1, width, height }` | literal `[x, y]` |
+
+`{ corner1, corner2 }` is pass-through (corners may be node id / polar); the other forms compute coordinates → literal Cartesian only.
+
+## API reference
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `corner1` / `corner2` | `Target` / `[x,y]` | — | Two opposite corners (any Target in the `{corner1,corner2}` form) |
+| `center` | `[x, y]` | — | Center (center forms, literal) |
+| `width` / `height` | `number` | — | Size |
+| `side` | `number` | — | Square side |
+| `roundedCorners` | `number` | — | Single corner radius for all four corners, clamped to half the smaller side at compile time |
+| Visual props | same as `<Path>` | — | `fill` / `stroke` / `strokeWidth` / `zIndex` etc. |
+
+## Related
+
+- [Grid](/core/components/grid): background grid
+- [Node](/core/components/node/overview): rectangular node with text / anchors
+- [Path](/core/components/draw/path): the underlying container

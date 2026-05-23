@@ -33,7 +33,7 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
   AtPositionSchema:    { schema: IR.AtPositionSchema,    label: 'AtPosition',    url: '/core/reference/schema/placement#atposition' },
   OffsetPositionSchema:{ schema: IR.OffsetPositionSchema,label: 'OffsetPosition',url: '/core/reference/schema/placement#offsetposition' },
 
-  // Step 10 变体（同页 #anchor）
+  // Step 11 变体（同页 #anchor）
   MoveStepSchema:        { schema: IR.MoveStepSchema,        label: 'MoveStep',        url: '/core/reference/schema/path#move' },
   LineStepSchema:        { schema: IR.LineStepSchema,        label: 'LineStep',        url: '/core/reference/schema/path#line' },
   FoldStepSchema:        { schema: IR.FoldStepSchema,        label: 'FoldStep',        url: '/core/reference/schema/path#fold' },
@@ -44,6 +44,7 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
   ArcStepSchema:         { schema: IR.ArcStepSchema,         label: 'ArcStep',         url: '/core/reference/schema/path#arc' },
   CirclePathStepSchema:  { schema: IR.CirclePathStepSchema,  label: 'CirclePathStep',  url: '/core/reference/schema/path#circlepath' },
   EllipsePathStepSchema: { schema: IR.EllipsePathStepSchema, label: 'EllipsePathStep', url: '/core/reference/schema/path#ellipsepath' },
+  RectangleStepSchema:   { schema: IR.RectangleStepSchema,   label: 'RectangleStep',   url: '/core/reference/schema/path#rectangle' },
 
   // Target 2 变体（同页 #anchor）
   RelativeTargetSchema:           { schema: IR.RelativeTargetSchema,           label: 'RelativeTarget',           url: '/core/reference/schema/path#relative' },

@@ -120,12 +120,15 @@ description: 笔画外壳、step 动作序列与 step 目标点
 
 ### 圆弧（Arc）
 
-<ZodSchema name="ArcStepSchema" description="圆弧动作：以当前光标为圆心，按起止角和半径绘制弧段。" descriptions={{
+<ZodSchema name="ArcStepSchema" description="圆弧 / 椭圆弧动作：绕圆心按起止角扫弧；圆心缺省取光标，可显式指定。" descriptions={{
   type: '判别字段，标记本节点为 path step',
-  kind: '动作种类：`arc` —— 以光标为圆心，按起末角度 + 半径绘制弧段；笔停在弧端点而非圆心',
-  startAngle: '弧起始角（°），逆时针从 +x 轴起（数学约定；SVG y-down 视觉为顺时针）',
+  kind: '动作种类：`arc` —— 圆弧（radius）或椭圆弧（radiusX/radiusY），绕圆心扫角；笔停在弧端点而非圆心',
+  startAngle: '弧起始角（°），0=+x、90=+y（屏幕向下）',
   endAngle: '弧终止角（°）；扫向由 startAngle 与 endAngle 大小关系隐式决定',
-  radius: '弧半径（用户单位）',
+  radius: '正圆弧半径（用户单位）；与 radiusX/radiusY 二选一（约束在 sugar/compile）',
+  radiusX: '椭圆弧 x 半轴；需与 radiusY 同给',
+  radiusY: '椭圆弧 y 半轴；需与 radiusX 同给',
+  center: '显式圆心；缺省取光标（上一 step anchor）',
   label: '边标注：附在本段上的文字标签',
 }} />
 
@@ -133,10 +136,13 @@ description: 笔画外壳、step 动作序列与 step 目标点
 
 ### 整圆路径（CirclePath）
 
-<ZodSchema name="CirclePathStepSchema" description="整圆动作：以当前光标为圆心绘制一个完整圆。" descriptions={{
+<ZodSchema name="CirclePathStepSchema" description="圆动作：无角度=整圆（笔回圆心）；带 startAngle+endAngle=部分圆（chord/open）。" descriptions={{
   type: '判别字段，标记本节点为 path step',
-  kind: '动作种类：`circlePath` —— 以光标为圆心、给定半径的整圆，笔画结束后回到圆心',
+  kind: '动作种类：`circlePath` —— 无角度时整圆（笔回圆心）；带 startAngle+endAngle 时部分圆',
   radius: '圆半径（用户单位）',
+  startAngle: '部分圆起始角（°）；与 endAngle 同给才生效',
+  endAngle: '部分圆终止角（°）',
+  closed: '闭合模式：整圆 closed；部分圆 chord（弦，默认）/ open（纯弧）',
   label: '边标注：附在本段上的文字标签',
 }} />
 
@@ -144,12 +150,27 @@ description: 笔画外壳、step 动作序列与 step 目标点
 
 ### 整椭圆路径（EllipsePath）
 
-<ZodSchema name="EllipsePathStepSchema" description="整椭圆动作：以当前光标为中心绘制一个完整椭圆。" descriptions={{
+<ZodSchema name="EllipsePathStepSchema" description="椭圆动作：无角度=整椭圆（笔回中心）；带 startAngle+endAngle=部分椭圆。" descriptions={{
   type: '判别字段，标记本节点为 path step',
-  kind: '动作种类：`ellipsePath` —— 以光标为圆心、给定 x/y 半径的整椭圆，笔画结束后回到中心',
+  kind: '动作种类：`ellipsePath` —— 无角度时整椭圆（笔回中心）；带 startAngle+endAngle 时部分椭圆',
   radiusX: 'x 轴半径（半长轴或半短轴）',
   radiusY: 'y 轴半径（半长轴或半短轴）',
+  startAngle: '部分椭圆起始角（°）；与 endAngle 同给才生效',
+  endAngle: '部分椭圆终止角（°）',
+  closed: '闭合模式：整椭圆 closed；部分 chord（默认）/ open',
   label: '边标注：附在本段上的文字标签',
+}} />
+
+<span id="rectangle"></span>
+
+### 矩形（Rectangle）
+
+<ZodSchema name="RectangleStepSchema" description="矩形动作：两对角定义的轴对齐矩形，可选圆角；编译为 path 命令。" descriptions={{
+  type: '判别字段，标记本节点为 path step',
+  kind: '动作种类：`rectangle` —— 两对角间的轴对齐矩形（自带闭合），可圆角；自包含，不依赖光标',
+  from: '一角',
+  to: '对角（顺序无关，compile 归一化 min/max）',
+  roundedCorners: '四角同圆角半径；缺省直角，compile clamp 到边长一半',
 }} />
 
 <span id="steplabel"></span>

@@ -1,0 +1,52 @@
+---
+title: Rectangle
+description: 形状 sugar——一行画矩形 / 圆角矩形，编译期展开为 Path + rectangle step。
+---
+
+`<Rectangle>` 用一行画矩形：给两对角（或中心 + 宽高 / 中心 + 边长 / 一角 + 宽高），可选 `roundedCorners` 圆角。它编译期展开为 `<Path>` + `<Step kind="rectangle">`。
+
+组件名用全称 `Rectangle`（不缩 `Rect`）。要画含文字、可连线的矩形节点用 [`<Node>`](/core/components/node/overview)（默认就是矩形）。
+
+## 用法
+
+```tsx
+import { Rectangle } from '@retikz/react';
+```
+
+```tsx
+<Rectangle corner1={[0, 0]} corner2={[40, 20]} roundedCorners={4} />
+```
+
+## 例子
+
+<ComponentPreview name="rectangle-basic" />
+
+直角矩形（两对角）+ 圆角矩形（中心 + 宽高 + `roundedCorners`）。
+
+## 形态
+
+| 形态 | prop | 点位 |
+| --- | --- | --- |
+| 两角 | `{ corner1, corner2 }` | 任意 Target（直接作 from/to） |
+| 中心 + 宽高 | `{ center, width, height }` | 限 literal `[x, y]` |
+| 中心 + 边长（正方形） | `{ center, side }` | 限 literal `[x, y]` |
+| 一角 + 宽高 | `{ corner1, width, height }` | 限 literal `[x, y]` |
+
+`{ corner1, corner2 }` 透传（两角可用 node id / 极坐标）；其余形态需算坐标 → 限 literal 笛卡尔。
+
+## API 参考
+
+| 属性 | 类型 | 默认值 | 描述 |
+| --- | --- | --- | --- |
+| `corner1` / `corner2` | `Target` / `[x,y]` | — | 两对角（`{corner1,corner2}` 形态任意 Target） |
+| `center` | `[x, y]` | — | 中心（中心形态，literal） |
+| `width` / `height` | `number` | — | 宽高 |
+| `side` | `number` | — | 正方形边长 |
+| `roundedCorners` | `number` | — | 四角同圆角半径，compile clamp 到边长一半 |
+| 视觉 prop | 同 `<Path>` | — | `fill` / `stroke` / `strokeWidth` / `zIndex` 等 |
+
+## 相关
+
+- [Grid](/core/components/grid)：网格底纹
+- [Node](/core/components/node/overview)：带文字 / 锚点的矩形节点
+- [Path](/core/components/draw/path)：底层容器
