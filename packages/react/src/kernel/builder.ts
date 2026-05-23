@@ -237,6 +237,9 @@ const readPathChildren = (children: ReactNode): Array<IRStep> => {
         kind: 'circlePath',
         radius: p.radius,
       };
+      if (p.startAngle !== undefined) step.startAngle = p.startAngle;
+      if (p.endAngle !== undefined) step.endAngle = p.endAngle;
+      if (p.closed !== undefined) step.closed = p.closed;
       if (label) step.label = label;
       out.push(step);
       return;
@@ -249,6 +252,9 @@ const readPathChildren = (children: ReactNode): Array<IRStep> => {
         radiusX: p.radiusX,
         radiusY: p.radiusY,
       };
+      if (p.startAngle !== undefined) step.startAngle = p.startAngle;
+      if (p.endAngle !== undefined) step.endAngle = p.endAngle;
+      if (p.closed !== undefined) step.closed = p.closed;
       if (label) step.label = label;
       out.push(step);
       return;

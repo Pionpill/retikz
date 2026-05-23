@@ -110,19 +110,25 @@ export type ArcStepProps = {
   children?: ReactNode;
 };
 
-/** CirclePath action：以游标为圆心绘制整圆，画完笔位回圆心（TikZ `circle[radius=…]`） */
+/** CirclePath action：以游标为圆心绘制圆；无角度=整圆（画完回圆心），带角度=部分圆（TikZ `circle[radius=…]`） */
 export type CirclePathStepProps = {
   /** 整圆 step 鉴别字面量 */
   kind: 'circlePath';
   /** 圆半径（user units） */
   radius: number;
+  /** 部分圆起始角（度）；与 endAngle 同给才生效 */
+  startAngle?: number;
+  /** 部分圆终止角（度） */
+  endAngle?: number;
+  /** 闭合模式：无角度=closed（整圆）；带角度=chord（弦，默认）/ open（纯弧） */
+  closed?: 'closed' | 'chord' | 'open';
   /** 边标注 */
   label?: IRStepLabel;
   /** sugar 形态 */
   children?: ReactNode;
 };
 
-/** EllipsePath action：以游标为圆心绘制整椭圆，画完笔位回圆心（TikZ `ellipse[x radius=…, y radius=…]`） */
+/** EllipsePath action：以游标为圆心绘制椭圆；无角度=整椭圆（画完回圆心），带角度=部分椭圆（TikZ `ellipse[x radius=…, y radius=…]`） */
 export type EllipsePathStepProps = {
   /** 整椭圆 step 鉴别字面量 */
   kind: 'ellipsePath';
@@ -130,6 +136,12 @@ export type EllipsePathStepProps = {
   radiusX: number;
   /** 椭圆 y 轴半径 */
   radiusY: number;
+  /** 部分椭圆起始角（度）；与 endAngle 同给才生效 */
+  startAngle?: number;
+  /** 部分椭圆终止角（度） */
+  endAngle?: number;
+  /** 闭合模式：无角度=closed（整椭圆）；带角度=chord（默认）/ open */
+  closed?: 'closed' | 'chord' | 'open';
   /** 边标注 */
   label?: IRStepLabel;
   /** sugar 形态 */

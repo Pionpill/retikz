@@ -276,6 +276,22 @@ export const emitPathPrimitive = (
     emitMove(p);
   };
 
+  /** 部分圆/椭圆的闭合模式：'open' 直接返回；缺省 / 误给 'closed' 回退 'chord' */
+  const resolvePartialClosed = (
+    closed: 'closed' | 'chord' | 'open' | undefined,
+    idx: number,
+  ): 'chord' | 'open' => {
+    if (closed === 'open') return 'open';
+    if (closed === 'closed') {
+      warn(
+        'PARTIAL_ARC_CLOSED_INVALID',
+        "Partial circle/ellipse (with angles) cannot use closed:'closed'; falling back to 'chord'",
+        `children[${idx}]`,
+      );
+    }
+    return 'chord';
+  };
+
   for (let i = 0; i < steps.length; i++) {
     // 单调推进：上一 step 若 hasTo，则它成为新的 lastHasToIdx；move 也是 hasTo（其 to 仍可作为下个段的 prev）
     if (i > 0) {
@@ -376,23 +392,42 @@ export const emitPathPrimitive = (
     }
 
     if (step.kind === 'circlePath') {
-      // 圆心 = 上一 step anchor；以 ellipseArc 全 sweep 表达整圆
+      // 圆心 = 上一 step anchor
       const center = prev.anchor;
       const r = step.radius;
-      const right: IRPosition = [center[0] + r, center[1]];
 
-      startSegment(right);
+      if (step.startAngle !== undefined && step.endAngle !== undefined) {
+        // 部分圆
+        const startA = step.startAngle;
+        const endA = step.endAngle;
+        startSegment(ellipseArcPoint(center, r, r, startA));
+        emitEllipseArc(center, r, r, startA, endA);
+        for (const p of ellipseArcBoundingPoints(center, r, r, startA, endA)) points.push(p);
+        collectLabel(step, t => ellipseArcSegmentSample(center, r, r, startA, endA, t));
+        if (resolvePartialClosed(step.closed, i) === 'chord') {
+          emitClose(); // 弦：arcEnd → startPt + 收口
+          penOverride = ellipseArcPoint(center, r, r, startA);
+        } else {
+          penOverride = ellipseArcPoint(center, r, r, endA); // open：停弧终点
+        }
+        continue;
+      }
+
+      // 整圆（无角度）：全 sweep，画完回 center（原行为）
+      if (step.startAngle !== undefined || step.endAngle !== undefined) {
+        warn(
+          'PARTIAL_ARC_NEEDS_BOTH_ANGLES',
+          'circlePath needs both startAngle and endAngle for a partial circle; treated as a full circle',
+          `children[${i}]`,
+        );
+      }
+      startSegment([center[0] + r, center[1]]);
       emitEllipseArc(center, r, r, 0, 360);
-
-      // 整圆顶/底/左/右四点
       points.push([center[0] + r, center[1]]);
       points.push([center[0] - r, center[1]]);
       points.push([center[0], center[1] + r]);
       points.push([center[0], center[1] - r]);
-
       collectLabel(step, t => circleSegmentSample(center, r, t));
-
-      // 画完笔位回 center；下段用 penOverride=center 触发 startSegment 发 move
       penOverride = center;
       continue;
     }
@@ -401,18 +436,39 @@ export const emitPathPrimitive = (
       const center = prev.anchor;
       const rx = step.radiusX;
       const ry = step.radiusY;
-      const right: IRPosition = [center[0] + rx, center[1]];
 
-      startSegment(right);
+      if (step.startAngle !== undefined && step.endAngle !== undefined) {
+        // 部分椭圆
+        const startA = step.startAngle;
+        const endA = step.endAngle;
+        startSegment(ellipseArcPoint(center, rx, ry, startA));
+        emitEllipseArc(center, rx, ry, startA, endA);
+        for (const p of ellipseArcBoundingPoints(center, rx, ry, startA, endA)) points.push(p);
+        collectLabel(step, t => ellipseArcSegmentSample(center, rx, ry, startA, endA, t));
+        if (resolvePartialClosed(step.closed, i) === 'chord') {
+          emitClose();
+          penOverride = ellipseArcPoint(center, rx, ry, startA);
+        } else {
+          penOverride = ellipseArcPoint(center, rx, ry, endA);
+        }
+        continue;
+      }
+
+      // 整椭圆（无角度）：原行为
+      if (step.startAngle !== undefined || step.endAngle !== undefined) {
+        warn(
+          'PARTIAL_ARC_NEEDS_BOTH_ANGLES',
+          'ellipsePath needs both startAngle and endAngle for a partial ellipse; treated as a full ellipse',
+          `children[${i}]`,
+        );
+      }
+      startSegment([center[0] + rx, center[1]]);
       emitEllipseArc(center, rx, ry, 0, 360);
-
       points.push([center[0] + rx, center[1]]);
       points.push([center[0] - rx, center[1]]);
       points.push([center[0], center[1] + ry]);
       points.push([center[0], center[1] - ry]);
-
       collectLabel(step, t => ellipseSegmentSample(center, rx, ry, t));
-
       penOverride = center;
       continue;
     }

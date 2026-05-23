@@ -217,21 +217,33 @@ export const CirclePathStepSchema = z
     type: z.literal('step').describe('Discriminator marking this as a path step node'),
     kind: z
       .literal('circlePath')
-      .describe('Full circle centered at the cursor with given radius (TikZ `circle[radius=…]`); compiled to a single full-sweep ellipse arc command. Pen returns to the center.'),
+      .describe('Circle centered at the cursor. Without angles: a full circle (TikZ `circle[radius=…]`), pen returns to center. With startAngle + endAngle: a partial arc closed per `closed` (half circle / segment).'),
     radius: z
       .number()
       .positive()
       .describe('Circle radius in user units'),
-    label: StepLabelSchema.optional().describe('Edge label attached to this full circle'),
+    startAngle: z
+      .number()
+      .optional()
+      .describe('Partial-circle start angle in degrees (same convention as arc: 0°=+x, 90°=+y screen-down). Give both startAngle and endAngle for a partial circle, or neither for a full circle (enforced by the sugar/compile layer, not schema).'),
+    endAngle: z
+      .number()
+      .optional()
+      .describe('Partial-circle end angle in degrees; sweep direction inferred from startAngle vs endAngle.'),
+    closed: z
+      .enum(['closed', 'chord', 'open'])
+      .optional()
+      .describe("Closing mode. 'closed' = full circle (only valid with no angles; the default then). With angles: 'chord' (straight chord between the two arc ends → half circle / segment; default) or 'open' (pure unclosed arc)."),
+    label: StepLabelSchema.optional().describe('Edge label attached to this circle'),
   })
-  .describe('CirclePath action: full closed circle around the cursor as center; pen returns to center after.');
+  .describe('CirclePath action: full circle (no angles, pen returns to center) or partial arc (with angles, closed per chord/open).');
 
 export const EllipsePathStepSchema = z
   .object({
     type: z.literal('step').describe('Discriminator marking this as a path step node'),
     kind: z
       .literal('ellipsePath')
-      .describe('Full ellipse centered at the cursor with given x/y radii (TikZ `ellipse[x radius=…, y radius=…]`); compiled to a single full-sweep ellipse arc command. Pen returns to the center.'),
+      .describe('Ellipse centered at the cursor. Without angles: a full ellipse (TikZ `ellipse[x radius=…, y radius=…]`), pen returns to center. With startAngle + endAngle: a partial elliptical arc closed per `closed`.'),
     radiusX: z
       .number()
       .positive()
@@ -240,9 +252,21 @@ export const EllipsePathStepSchema = z
       .number()
       .positive()
       .describe('Ellipse y-axis radius (semi-major or semi-minor on y)'),
-    label: StepLabelSchema.optional().describe('Edge label attached to this full ellipse'),
+    startAngle: z
+      .number()
+      .optional()
+      .describe('Partial-ellipse start angle in degrees (parametric, same convention as arc). Give both startAngle and endAngle for a partial ellipse, or neither for a full ellipse.'),
+    endAngle: z
+      .number()
+      .optional()
+      .describe('Partial-ellipse end angle in degrees.'),
+    closed: z
+      .enum(['closed', 'chord', 'open'])
+      .optional()
+      .describe("Closing mode. 'closed' = full ellipse (only valid with no angles; default then). With angles: 'chord' (chord between arc ends; default) or 'open' (pure unclosed arc)."),
+    label: StepLabelSchema.optional().describe('Edge label attached to this ellipse'),
   })
-  .describe('EllipsePath action: full closed ellipse around the cursor; pen returns to center.');
+  .describe('EllipsePath action: full ellipse (no angles, pen returns to center) or partial elliptical arc (with angles, closed per chord/open).');
 
 export const StepSchema = z
   .discriminatedUnion('kind', [
