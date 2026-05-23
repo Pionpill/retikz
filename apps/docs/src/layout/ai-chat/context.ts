@@ -28,7 +28,7 @@ const diagramProtocolZh = (preference: DiagramFormatPreference): string => {
 需要画图时用下面两种围栏代码块之一，否则正常用 markdown。
 
 - \`\`\`retikz-ir\`\`\`：直接给 @retikz/core 的 IR JSON。
-- \`\`\`retikz-tsx\`\`\`：JSX，仅允许 15 个 retikz 组件 — Kernel \`TikZ\` / \`Node\` / \`Path\` / \`Step\` / \`Text\` / \`Coordinate\` / \`Scope\`，Sugar \`Draw\` / \`EdgeLabel\` + 形状 \`Circle\` / \`Ellipse\` / \`Arc\` / \`Sector\` / \`Rectangle\` / \`Grid\`；props 只能是字面量（字符串 / 数字 / 布尔 / null / 数组字面量 / 对象字面量）；**禁止** 变量引用、表达式、\`.map()\`、hooks、模板插值、spread。
+- \`\`\`retikz-tsx\`\`\`：JSX，仅允许 17 个 retikz 组件 — Kernel \`TikZ\` / \`Node\` / \`Path\` / \`Step\` / \`Text\` / \`Coordinate\` / \`Scope\`，Sugar \`Draw\` / \`EdgeLabel\` + 形状 \`Circle\` / \`Ellipse\` / \`Arc\` / \`Sector\` / \`Rectangle\` / \`Grid\` / \`RegularPolygon\` / \`Star\`；props 只能是字面量（字符串 / 数字 / 布尔 / null / 数组字面量 / 对象字面量）；**禁止** 变量引用、表达式、\`.map()\`、hooks、模板插值、spread。
 
 **两种围栏块都只用于"完整可运行单元"**——retikz-tsx 必须有最外层 \`<TikZ>\` 包裹；retikz-ir 必须是完整 Scene 对象（含 \`version\` / \`type\` / \`children\`）。**只展示改动 / 片段 / 单独几个标签时用普通 \`\`\`tsx 或 \`\`\`json 围栏**，不要用 retikz-* 否则会被当成完整图去渲染、报 parse 错。
 
@@ -104,7 +104,7 @@ Coordinate = {
 
 ### 形状 sugar（一行画几何形，仅 retikz-tsx）
 
-\`<Circle center={[0,0]} radius={20} />\` · \`<Ellipse center={[0,0]} radiusX={30} radiusY={15} />\` · \`<Arc center={[0,0]} radius={20} startAngle={0} endAngle={90} />\` · \`<Sector center={[0,0]} radius={20} startAngle={0} endAngle={60} fill="#eee" />\` · \`<Rectangle corner1={[0,0]} corner2={[40,20]} roundedCorners={4} />\` · \`<Grid corner1={[0,0]} corner2={[60,40]} step={10} />\`。Circle/Ellipse 带 \`startAngle\`+\`endAngle\` 画部分弧；视觉 prop（fill/stroke/...）与 Path 一致。**需算坐标的形态**（Circle from/to、bbox corner、Rectangle center+宽高、Sector、Grid）点位只接 literal \`[x, y]\`。
+\`<Circle center={[0,0]} radius={20} />\` · \`<Ellipse center={[0,0]} radiusX={30} radiusY={15} />\` · \`<Arc center={[0,0]} radius={20} startAngle={0} endAngle={90} />\` · \`<Sector center={[0,0]} radius={20} startAngle={0} endAngle={60} fill="#eee" />\` · \`<Rectangle corner1={[0,0]} corner2={[40,20]} roundedCorners={4} />\` · \`<Grid corner1={[0,0]} corner2={[60,40]} step={10} />\` · \`<RegularPolygon center={[0,0]} radius={25} sides={6} />\` · \`<Star center={[0,0]} outerRadius={25} points={5} fill="#fbbf24" />\`。Circle/Ellipse 带 \`startAngle\`+\`endAngle\` 画部分弧；视觉 prop（fill/stroke/...）与 Path 一致。**需算坐标的形态**（Circle from/to、bbox corner、Rectangle center+宽高、Sector、Grid、RegularPolygon、Star）点位只接 literal \`[x, y]\`。
 
 ### 复杂场景的扩展参考
 
@@ -113,7 +113,7 @@ Coordinate = {
 - 定位：\`/core/concepts/positioning\` · \`/core/reference/schema/placement\`
 - IR：\`/core/reference/schema/scene\` · \`.../entity\` · \`.../path\`
 - 组件：\`/core/components/{tikz,node/overview,draw/overview,draw/way,draw/path,draw/step,draw/arrow}\`
-- 形状 sugar：\`/core/components/{circle,ellipse,arc,sector,rectangle,grid}\`
+- 形状 sugar：\`/core/components/{circle,ellipse,arc,sector,rectangle,grid,regular-polygon,star}\`
 - 完整范例：\`/core/examples/karl-circle\`
 
 这些页面已经收录在 prompt 末尾的 llms.txt 索引里。Schema 不熟时**务必参照上面速查 + 引用页面**，不要凭记忆瞎写——产出非法 IR 会被自动校验拦下，比一次写对成本高得多。`;
@@ -134,7 +134,7 @@ const diagramProtocolEn = (preference: DiagramFormatPreference): string => {
 When you need to draw a diagram, use one of the two fenced blocks below; otherwise answer normally with markdown.
 
 - \`\`\`retikz-ir\`\`\`: feed @retikz/core IR JSON directly.
-- \`\`\`retikz-tsx\`\`\`: JSX, only the 15 retikz components allowed — Kernel \`TikZ\` / \`Node\` / \`Path\` / \`Step\` / \`Text\` / \`Coordinate\` / \`Scope\`, Sugar \`Draw\` / \`EdgeLabel\` + shapes \`Circle\` / \`Ellipse\` / \`Arc\` / \`Sector\` / \`Rectangle\` / \`Grid\`. Props must be literals (string / number / boolean / null / array literal / object literal). **No** variable references, expressions, \`.map()\`, hooks, template interpolation, or spread.
+- \`\`\`retikz-tsx\`\`\`: JSX, only the 17 retikz components allowed — Kernel \`TikZ\` / \`Node\` / \`Path\` / \`Step\` / \`Text\` / \`Coordinate\` / \`Scope\`, Sugar \`Draw\` / \`EdgeLabel\` + shapes \`Circle\` / \`Ellipse\` / \`Arc\` / \`Sector\` / \`Rectangle\` / \`Grid\` / \`RegularPolygon\` / \`Star\`. Props must be literals (string / number / boolean / null / array literal / object literal). **No** variable references, expressions, \`.map()\`, hooks, template interpolation, or spread.
 
 **Both fenced blocks are for "complete, runnable units" only** — retikz-tsx must include the outer \`<TikZ>\` wrapper; retikz-ir must be a complete Scene object (with \`version\` / \`type\` / \`children\`). **When showing only changes / snippets / a handful of standalone tags, use plain \`\`\`tsx or \`\`\`json fences instead** — using retikz-* will be treated as a full diagram and will throw a parse error.
 
@@ -210,7 +210,7 @@ Coordinate = {
 
 ### Shape sugar (one-liner geometry, retikz-tsx only)
 
-\`<Circle center={[0,0]} radius={20} />\` · \`<Ellipse center={[0,0]} radiusX={30} radiusY={15} />\` · \`<Arc center={[0,0]} radius={20} startAngle={0} endAngle={90} />\` · \`<Sector center={[0,0]} radius={20} startAngle={0} endAngle={60} fill="#eee" />\` · \`<Rectangle corner1={[0,0]} corner2={[40,20]} roundedCorners={4} />\` · \`<Grid corner1={[0,0]} corner2={[60,40]} step={10} />\`. Circle/Ellipse with \`startAngle\`+\`endAngle\` draw a partial arc; visual props (fill/stroke/...) match Path. **Forms that compute coordinates** (Circle from/to, bbox corners, Rectangle center+size, Sector, Grid) only accept literal \`[x, y]\` points.
+\`<Circle center={[0,0]} radius={20} />\` · \`<Ellipse center={[0,0]} radiusX={30} radiusY={15} />\` · \`<Arc center={[0,0]} radius={20} startAngle={0} endAngle={90} />\` · \`<Sector center={[0,0]} radius={20} startAngle={0} endAngle={60} fill="#eee" />\` · \`<Rectangle corner1={[0,0]} corner2={[40,20]} roundedCorners={4} />\` · \`<Grid corner1={[0,0]} corner2={[60,40]} step={10} />\` · \`<RegularPolygon center={[0,0]} radius={25} sides={6} />\` · \`<Star center={[0,0]} outerRadius={25} points={5} fill="#fbbf24" />\`. Circle/Ellipse with \`startAngle\`+\`endAngle\` draw a partial arc; visual props (fill/stroke/...) match Path. **Forms that compute coordinates** (Circle from/to, bbox corners, Rectangle center+size, Sector, Grid, RegularPolygon, Star) only accept literal \`[x, y]\` points.
 
 ### When you need more depth
 
@@ -219,7 +219,7 @@ For polar coordinates / multi-segment paths / Node anchors / Draw way DSL / Edge
 - Positioning: \`/core/concepts/positioning\` · \`/core/reference/schema/placement\`
 - IR: \`/core/reference/schema/scene\` · \`.../entity\` · \`.../path\`
 - Components: \`/core/components/{tikz,node/overview,draw/overview,draw/way,draw/path,draw/step,draw/arrow}\`
-- Shape sugar: \`/core/components/{circle,ellipse,arc,sector,rectangle,grid}\`
+- Shape sugar: \`/core/components/{circle,ellipse,arc,sector,rectangle,grid,regular-polygon,star}\`
 - Worked example: \`/core/examples/karl-circle\`
 
 These pages are already indexed in the llms.txt at the end of this prompt. When unsure about the schema, **follow the cheatsheet + cite the relevant page** — don't improvise. Invalid IR will be rejected by automated validation, costing more than getting it right once.`;

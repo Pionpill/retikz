@@ -76,6 +76,38 @@ export const polarXY = (
   center[1] + Math.sin(angleDeg * DEG) * radiusY,
 ];
 
+/** 正多边形顶点：center + 外接半轴 (rx, ry) + 边数 + 起始角°；按角度递增依次排布（共用 polarXY 约定） */
+export const regularPolygonVertices = (
+  center: [number, number],
+  radiusX: number,
+  radiusY: number,
+  sides: number,
+  rotateDeg: number,
+): Array<[number, number]> => {
+  const out: Array<[number, number]> = [];
+  for (let k = 0; k < sides; k++) {
+    out.push(polarXY(center, radiusX, radiusY, rotateDeg + (k * 360) / sides));
+  }
+  return out;
+};
+
+/** 星形顶点：2·points 个，交替外 / 内半径（正圆星，rx=ry） */
+export const starVertices = (
+  center: [number, number],
+  outerRadius: number,
+  innerRadius: number,
+  points: number,
+  rotateDeg: number,
+): Array<[number, number]> => {
+  const out: Array<[number, number]> = [];
+  const stepDeg = 360 / (points * 2);
+  for (let k = 0; k < points * 2; k++) {
+    const r = k % 2 === 0 ? outerRadius : innerRadius;
+    out.push(polarXY(center, r, r, rotateDeg + k * stepDeg));
+  }
+  return out;
+};
+
 /** 角度三键输入（start / end / sweep 求二） */
 export type AngleInput = {
   startAngle?: number;

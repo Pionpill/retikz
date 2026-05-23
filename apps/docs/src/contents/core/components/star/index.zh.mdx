@@ -1,0 +1,48 @@
+---
+title: Star
+description: 形状 sugar——一行画星形，编译期展开为 Path（move + 2N line + cycle，交替外/内半径）。
+---
+
+`<Star>` 画星形：给中心 + 外半径 + 角数（内半径可显式给或按比例）。它是**纯几何 sugar，无 IR 改动**——展开为 `<Path>`：`2·points` 个交替外 / 内半径顶点 + `cycle`。
+
+## 用法
+
+```tsx
+import { Star } from '@retikz/react';
+```
+
+```tsx
+<Star center={[0, 0]} outerRadius={40} points={5} fill="#fbbf24" />
+```
+
+## 例子
+
+<ComponentPreview name="star-basic" />
+
+5 角星（默认内半径比 0.5）+ 6 角星（`innerRatio={0.6}`）。缺省一个外角朝上。
+
+## 形态
+
+| 形态 | prop |
+| --- | --- |
+| 中心 + 外/内半径 + 角数 | `{ center, outerRadius, innerRadius, points }` |
+| 中心 + 外半径 + 角数（内半径按比例） | `{ center, outerRadius, points, innerRatio? }`（缺省 `innerRatio = 0.5`） |
+
+`center` 须 **literal `[x, y]`**。`points` 为 `>= 2` 的整数。
+
+## API 参考
+
+| 属性 | 类型 | 默认值 | 描述 |
+| --- | --- | --- | --- |
+| `center` | `[x, y]` | — | 中心（literal） |
+| `outerRadius` | `number` | — | 外接半径（外角顶点） |
+| `innerRadius` | `number` | — | 内半径（凹角顶点；与 innerRatio 二选一） |
+| `innerRatio` | `number` | `0.5` | 内/外半径比例（`innerRadius = outerRadius × innerRatio`） |
+| `points` | `number`（整数 ≥ 2） | — | 角数 |
+| `rotate` | `number` | `-90` | 整体起始角（°）；缺省一个外角朝上 |
+| 视觉 prop | 同 `<Path>` | — | `fill` / `stroke` / `fillRule` / `zIndex` 等 |
+
+## 相关
+
+- [RegularPolygon](/core/components/regular-polygon)：正多边形
+- [Path](/core/components/draw/path)：底层容器

@@ -2,7 +2,7 @@
  * @retikz/react 公开 API
  *
  * Kernel 组件：<TikZ> <Node> <Path> <Step> <Text> <Coordinate> <Scope>
- * Sugar 组件：<Draw> <EdgeLabel> + 形状 <Circle> <Ellipse> <Arc> <Sector> <Rectangle> <Grid>
+ * Sugar 组件：<Draw> <EdgeLabel> + 形状 <Circle> <Ellipse> <Arc> <Sector> <Rectangle> <Grid> <RegularPolygon> <Star>
  *
  * 渲染管道：buildIR → compileToScene → renderPrim → SVG
  */
@@ -30,7 +30,18 @@ export type {
   ScopeProps,
 } from './kernel';
 
-export { Draw, EdgeLabel, Circle, Ellipse, Arc, Sector, Rectangle, Grid } from './sugar';
+export {
+  Draw,
+  EdgeLabel,
+  Circle,
+  Ellipse,
+  Arc,
+  Sector,
+  Rectangle,
+  Grid,
+  RegularPolygon,
+  Star,
+} from './sugar';
 export type {
   DrawProps,
   EdgeLabelProps,
@@ -40,6 +51,8 @@ export type {
   SectorProps,
   RectangleProps,
   GridProps,
+  RegularPolygonProps,
+  StarProps,
   PathVisualProps,
 } from './sugar';
 

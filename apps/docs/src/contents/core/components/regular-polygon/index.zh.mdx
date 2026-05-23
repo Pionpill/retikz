@@ -1,0 +1,48 @@
+---
+title: RegularPolygon
+description: 形状 sugar——一行画正多边形，编译期展开为 Path（move + N line + cycle）。
+---
+
+`<RegularPolygon>` 画正多边形：给中心 + 外接圆半径（或边长）+ 边数。它是**纯几何 sugar，无 IR 改动**——编译期展开为 `<Path>` 的 `move + (sides-1) line + cycle`。
+
+## 用法
+
+```tsx
+import { RegularPolygon } from '@retikz/react';
+```
+
+```tsx
+<RegularPolygon center={[0, 0]} radius={40} sides={6} />
+```
+
+## 例子
+
+<ComponentPreview name="regular-polygon-basic" />
+
+五边形 / 六边形 / 八边形。缺省一个顶点朝上（`rotate` 默认 −90°）。
+
+## 形态
+
+| 形态 | prop |
+| --- | --- |
+| 中心 + 外接半径 + 边数 | `{ center, radius, sides }` |
+| 中心 + 边长 + 边数 | `{ center, sideLength, sides }`（由 `R = sideLength / (2·sin(π/sides))` 反算外接半径） |
+
+`center` 须 **literal `[x, y]`**（组件内算顶点）。`sides` 为 `>= 3` 的整数。
+
+## API 参考
+
+| 属性 | 类型 | 默认值 | 描述 |
+| --- | --- | --- | --- |
+| `center` | `[x, y]` | — | 中心（literal） |
+| `radius` | `number` | — | 外接圆半径（与 sideLength 二选一） |
+| `sideLength` | `number` | — | 边长 |
+| `sides` | `number`（整数 ≥ 3） | — | 边数 |
+| `rotate` | `number` | `-90` | 整体起始角（°）；缺省一个顶点朝上 |
+| 视觉 prop | 同 `<Path>` | — | `fill` / `stroke` / `strokeWidth` / `zIndex` 等 |
+
+## 相关
+
+- [Star](/core/components/star)：星形
+- [Circle](/core/components/circle)：圆
+- [Path](/core/components/draw/path)：底层容器

@@ -4,7 +4,10 @@ import { Circle } from '../../src/sugar/Circle';
 import { Ellipse } from '../../src/sugar/Ellipse';
 import { Grid } from '../../src/sugar/Grid';
 import { Rectangle } from '../../src/sugar/Rectangle';
+import { RegularPolygon } from '../../src/sugar/RegularPolygon';
 import { Sector } from '../../src/sugar/Sector';
+import { Star } from '../../src/sugar/Star';
+import { regularPolygonVertices, starVertices } from '../../src/sugar/_shared';
 import { Path } from '../../src/kernel/Path';
 import { Step } from '../../src/kernel/Step';
 import { buildIR } from '../../src/kernel/builder';
@@ -192,5 +195,63 @@ describe('点位契约 + 形态校验报错', () => {
 
   it('Grid 缺 step → 抛错', () => {
     expect(() => ir(<Grid corner1={[0, 0]} corner2={[2, 2]} />)).toThrow();
+  });
+});
+
+describe('RegularPolygon 等价性', () => {
+  it('正方形 sides=4 → move + 3 line + cycle（顶点 = regularPolygonVertices）', () => {
+    const verts = regularPolygonVertices([0, 0], 30, 30, 4, -90);
+    expect(ir(<RegularPolygon center={[0, 0]} radius={30} sides={4} />).children).toEqual(
+      ir(
+        <Path>
+          <Step kind="move" to={verts[0]} />
+          <Step kind="line" to={verts[1]} />
+          <Step kind="line" to={verts[2]} />
+          <Step kind="line" to={verts[3]} />
+          <Step kind="cycle" />
+        </Path>,
+      ).children,
+    );
+  });
+
+  it('边长形态由 R = side / (2·sin(π/n)) 反算', () => {
+    const R = 10 / (2 * Math.sin(Math.PI / 6));
+    expect(ir(<RegularPolygon center={[0, 0]} sideLength={10} sides={6} />).children).toEqual(
+      ir(<RegularPolygon center={[0, 0]} radius={R} sides={6} />).children,
+    );
+  });
+
+  it('sides < 3 / center 非 literal → 抛错', () => {
+    expect(() => ir(<RegularPolygon center={[0, 0]} radius={10} sides={2} />)).toThrow();
+    expect(() => ir(<RegularPolygon center={'a' as never} radius={10} sides={5} />)).toThrow(/literal/);
+  });
+});
+
+describe('Star 等价性', () => {
+  it('5 角星 → move + 9 line + cycle（10 交替顶点）', () => {
+    const verts = starVertices([0, 0], 30, 12, 5, -90);
+    const hand = ir(
+      <Path>
+        <Step kind="move" to={verts[0]} />
+        {verts.slice(1).map((v, i) => (
+          <Step key={i} kind="line" to={v} />
+        ))}
+        <Step kind="cycle" />
+      </Path>,
+    );
+    expect(ir(<Star center={[0, 0]} outerRadius={30} innerRadius={12} points={5} />).children).toEqual(
+      hand.children,
+    );
+  });
+
+  it('innerRatio 缺省 0.5', () => {
+    expect(ir(<Star center={[0, 0]} outerRadius={20} points={5} />).children).toEqual(
+      ir(<Star center={[0, 0]} outerRadius={20} innerRadius={10} points={5} />).children,
+    );
+  });
+
+  it('points < 2 / center 非 literal → 抛错', () => {
+    expect(() => ir(<Star center={[0, 0]} outerRadius={20} points={1} />)).toThrow();
+    expect(() => ir(<Star center={'a' as never} outerRadius={20} points={5} />)).toThrow(/literal/);
   });
 });

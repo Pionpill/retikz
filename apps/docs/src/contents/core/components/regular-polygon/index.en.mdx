@@ -1,0 +1,48 @@
+---
+title: RegularPolygon
+description: Shape sugar — draw a regular polygon in one line; expands to Path (move + N line + cycle).
+---
+
+`<RegularPolygon>` draws a regular polygon: give a center + circumradius (or side length) + number of sides. It is a **pure geometry sugar with no IR change** — it expands to a `<Path>`: `move + (sides-1) line + cycle`.
+
+## Usage
+
+```tsx
+import { RegularPolygon } from '@retikz/react';
+```
+
+```tsx
+<RegularPolygon center={[0, 0]} radius={40} sides={6} />
+```
+
+## Examples
+
+<ComponentPreview name="regular-polygon-basic" />
+
+Pentagon / hexagon / octagon. One vertex points up by default (`rotate` defaults to −90°).
+
+## Forms
+
+| Form | prop |
+| --- | --- |
+| center + circumradius + sides | `{ center, radius, sides }` |
+| center + side length + sides | `{ center, sideLength, sides }` (circumradius from `R = sideLength / (2·sin(π/sides))`) |
+
+`center` must be **literal `[x, y]`** (the component computes the vertices). `sides` is an integer `>= 3`.
+
+## API reference
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `center` | `[x, y]` | — | Center (literal) |
+| `radius` | `number` | — | Circumradius (xor sideLength) |
+| `sideLength` | `number` | — | Side length |
+| `sides` | `number` (integer ≥ 3) | — | Number of sides |
+| `rotate` | `number` | `-90` | Overall start angle (°); one vertex points up by default |
+| Visual props | same as `<Path>` | — | `fill` / `stroke` / `strokeWidth` / `zIndex` etc. |
+
+## Related
+
+- [Star](/core/components/star): star shape
+- [Circle](/core/components/circle): circle
+- [Path](/core/components/draw/path): the underlying container
