@@ -28,6 +28,7 @@ import { useComponentPreviewStore } from '@/store/useComponentPreviewStore';
 import { useLayoutStore } from '@/store/useLayoutStore';
 import { useTocStore } from '@/store/useTocStore';
 
+import { isChangelogLocation, useDocLocation } from '@/layout/doc-layout/docLocation';
 import { AUTHOR_GITHUB_URL, GITHUB_URL, TIKZ_DOCS_URL, useDocActions } from './useDocActions';
 import { useHeaderCompact } from './useHeaderCompact';
 
@@ -44,6 +45,8 @@ export const HeaderActions: FC = () => {
   const { theme, handleToggleTheme, handleCycleLang, handleCopyLink } = useDocActions();
   const tocOpen = useTocStore(state => state.tocOpen);
   const setTocOpen = useTocStore(state => state.setTocOpen);
+  /** changelog 页右栏是包筛选而非 TOC,toggle 标签随之改 */
+  const isChangelog = isChangelogLocation(useDocLocation());
   const layout = useLayoutStore(s => s.layout);
   const toggleLayout = useLayoutStore(s => s.toggleLayout);
   const previewHideCode = useComponentPreviewStore(s => s.hideCode);
@@ -141,7 +144,7 @@ export const HeaderActions: FC = () => {
               </DropdownMenuLabel>
               <DropdownMenuGroup>
                 <DropdownMenuCheckboxItem checked={tocOpen} onCheckedChange={setTocOpen}>
-                  {t('toc.outline')}
+                  {isChangelog ? t('changelog.filterPackages') : t('toc.outline')}
                   {!compact && (
                     <DropdownMenuShortcut>
                       <Shortcut keys={['mod', 'alt', 'B']} className="tracking-normal" />

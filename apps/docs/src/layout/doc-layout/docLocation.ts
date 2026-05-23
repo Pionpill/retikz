@@ -26,6 +26,10 @@ export const useDocLocation = (): DocLocation | null => {
   return null;
 };
 
+/** 是否为 changelog 页（数据驱动渲染，不走 mdx 管线；右栏出包筛选而非 TOC） */
+export const isChangelogLocation = (loc: DocLocation | null): boolean =>
+  loc?.moduleId === 'about' && loc.sectionId === 'releases' && loc.pageId === 'changelog';
+
 /** location → URL/文件路径所需的 segment 数组（无分组时跳过 sectionId 段） */
 export const docPathSegments = (loc: DocLocation): Array<string> => {
   const parts = [loc.moduleId];

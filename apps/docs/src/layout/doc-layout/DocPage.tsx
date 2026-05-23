@@ -11,7 +11,7 @@ import { useTocStore } from '@/store/useTocStore';
 import type { FC, HTMLAttributes } from 'react';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { docPathSegments, useDocLocation } from './docLocation';
+import { docPathSegments, isChangelogLocation, useDocLocation } from './docLocation';
 import { DocPageActions } from './DocPageActions';
 import { DocPageFooterNav } from './DocPageFooterNav';
 import { useMdxSource } from './useMdxSource';
@@ -44,7 +44,7 @@ export const DocPage: FC<DocPageProps> = props => {
   const tocOpen = useTocStore(state => state.tocOpen);
 
   /** changelog 页走数据驱动渲染,不走 mdx 管线 */
-  const isChangelog = loc?.moduleId === 'about' && loc.sectionId === 'releases' && loc.pageId === 'changelog';
+  const isChangelog = isChangelogLocation(loc);
 
   const [frontmatter, setFrontmatter] = useState<MdxFrontmatter>({});
   /** 始终保留上一次非 null 的 source；过渡态时下游继续看见旧内容直至新 mdx 编译就绪 */
@@ -136,7 +136,12 @@ export const DocPage: FC<DocPageProps> = props => {
           </header>
           <div className="[&_p]:[overflow-wrap:anywhere] [&_li]:[overflow-wrap:anywhere] [&_h1]:[overflow-wrap:anywhere] [&_h2]:[overflow-wrap:anywhere] [&_h3]:[overflow-wrap:anywhere] [&_h4]:[overflow-wrap:anywhere]">
             {isChangelog ? (
-              <ChangelogView />
+              <>
+                <div className="mb-6 @[64rem]:hidden">
+                  <ChangelogFilter lang={aiChatLang} layout="bar" />
+                </div>
+                <ChangelogView />
+              </>
             ) : notFound ? (
               <p className="text-sm text-muted-foreground">{t('common.contentPlaceholder', { title })}</p>
             ) : (
