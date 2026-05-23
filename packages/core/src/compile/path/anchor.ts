@@ -1,11 +1,27 @@
-import type { IRPosition, IRTarget } from '../../ir';
+import type { IRNodeTarget, IRPosition, IRTarget } from '../../ir';
 import type { Transform } from '../../primitive';
-import { resolveAnchor } from '../anchor-cache';
+import { resolveAnchor, resolveEdgePoint } from '../anchor-cache';
 import type { NameStack } from '../name-stack';
 import { boundaryPointOf } from '../node';
+import type { NodeLayout } from '../node';
 import { parseNodeRef } from '../parseTarget';
 import { resolvePosition } from '../position';
 import { applyTransformChain } from '../scope';
+
+/** target 是否对象形态 NodeTarget（`{ id, anchor?, offset? }`）；与 Position(array) / Polar / Offset(of) / Relative 区分（独有 `id`） */
+const isNodeTarget = (t: IRTarget): t is IRNodeTarget =>
+  typeof t === 'object' && !Array.isArray(t) && 'id' in t;
+
+/** 解析 NodeTarget 的 anchor（非 undefined）到世界坐标：命名 / 角度走 resolveAnchor，`{ side, t }` 走 resolveEdgePoint */
+const resolveAnchorRef = (node: NodeLayout, anchor: NonNullable<IRNodeTarget['anchor']>): IRPosition => {
+  if (typeof anchor === 'number') return resolveAnchor(node, String(anchor));
+  if (typeof anchor === 'string') return resolveAnchor(node, anchor);
+  return resolveEdgePoint(node, anchor.side, anchor.t);
+};
+
+/** anchor/边点解析后叠加世界系 offset（不随节点 rotate 旋转） */
+const addOffset = (base: IRPosition, offset: IRNodeTarget['offset']): IRPosition =>
+  offset ? [base[0] + offset[0], base[1] + offset[1]] : base;
 
 /**
  * 求 step.to 的参考点（给 boundary clip 算方向 / 折角 corner 用）
@@ -19,6 +35,16 @@ export const refPointOfTarget = (
   nameStack: NameStack,
   scopeChain: ReadonlyArray<Transform> = [],
 ): IRPosition | null => {
+  // 对象形态 NodeTarget：{ id, anchor?, offset? }（refPoint 用——anchor 缺省取中心）
+  if (isNodeTarget(target)) {
+    const node = nameStack.lookup(target.id);
+    if (!node) return null;
+    const base =
+      target.anchor === undefined
+        ? ([node.rect.x, node.rect.y] as IRPosition)
+        : resolveAnchorRef(node, target.anchor);
+    return addOffset(base, target.offset);
+  }
   if (typeof target === 'string') {
     const ref = parseNodeRef(target);
     const node = nameStack.lookup(ref.id);
@@ -61,6 +87,16 @@ export const clipForTarget = (
   nameStack: NameStack,
   scopeChain: ReadonlyArray<Transform> = [],
 ): IRPosition | null => {
+  // 对象形态 NodeTarget：{ id, anchor?, offset? }（clip 用——anchor 缺省按 shape 边界贴 toward）
+  if (isNodeTarget(target)) {
+    const node = nameStack.lookup(target.id);
+    if (!node) return null;
+    const base =
+      target.anchor === undefined
+        ? boundaryPointOf(node, toward)
+        : resolveAnchorRef(node, target.anchor);
+    return addOffset(base, target.offset);
+  }
   if (typeof target === 'string') {
     const ref = parseNodeRef(target);
     const node = nameStack.lookup(ref.id);
