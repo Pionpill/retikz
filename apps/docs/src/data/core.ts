@@ -46,6 +46,7 @@ export const coreSection: Array<Section> = [
           { id: 'path', label: 'core.path' },
           { id: 'arrow', label: 'core.arrow' },
           { id: 'step', label: 'core.step' },
+          { id: 'shapes', label: 'core.drawShapes' },
         ],
       },
     ],

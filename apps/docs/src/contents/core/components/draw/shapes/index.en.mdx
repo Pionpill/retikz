@@ -1,0 +1,223 @@
+---
+title: Shapes
+description: Use Circle, Rectangle, Grid, and other shape components to draw common geometry quickly.
+---
+
+Shapes are shortcut components for geometric drawings. Use them when you want a circle, an arc, a background grid, or a star without writing a long `<Path>` and `<Step>` sequence by hand.
+
+If the shape needs text inside it, or if edges should connect to its border, use [`<Node>`](/core/components/node/overview) with `shape` instead. Shapes only draw; they do not create text, anchors, or connectable boundaries.
+
+## Usage
+
+```tsx
+import { Circle, Rectangle, Grid } from '@retikz/react';
+```
+
+```tsx
+<Circle center={[0, 0]} radius={32} fill="none" />
+<Rectangle corner1={[-40, -20]} corner2={[40, 20]} roundedCorners={6} />
+<Grid corner1={[-80, -40]} corner2={[80, 40]} step={20} zIndex={-1} />
+```
+
+### Which one to use
+
+| You want | Use |
+| --- | --- |
+| Circle, half circle, segment | `<Circle>` |
+| Ellipse, partial ellipse | `<Ellipse>` |
+| Open arc | `<Arc>` |
+| Sector / wedge | `<Sector>` |
+| Rectangle, rounded rectangle | `<Rectangle>` |
+| Background grid | `<Grid>` |
+| Regular polygon | `<RegularPolygon>` |
+| Star | `<Star>` |
+
+All shape components accept common Path visual props, such as `stroke`, `strokeWidth`, `fill`, `dashPattern`, `opacity`, `arrow`, and `zIndex`.
+
+## Examples
+
+### Circle
+
+The common form is `center + radius`. Add `startAngle` / `endAngle` when you need a half circle or segment.
+
+| Form | Best for |
+| --- | --- |
+| `{ center, radius }` | Known center and radius |
+| `{ center, diameter }` | Known diameter |
+| `{ from, to }` | Diameter endpoints |
+| `{ corner1, corner2 }` | Fit inside a box |
+
+<ComponentPreview name="circle-basic" />
+
+### Ellipse
+
+Ellipse works like Circle, but the radius is split into `radiusX` and `radiusY`. You can also place it inside a box.
+
+| Form | Best for |
+| --- | --- |
+| `{ center, radiusX, radiusY }` | Known center and radii |
+| `{ center, diameterX, diameterY }` | Known diameters |
+| `{ corner1, corner2 }` | Fit inside a box |
+
+<ComponentPreview name="ellipse-basic" />
+
+### Arc
+
+`<Arc>` draws an open arc. It is useful for curved arrows, ring markers, and decorative strokes.
+
+| Form | Best for |
+| --- | --- |
+| `{ center, radius, startAngle, endAngle }` | Circular arc |
+| `{ center, radiusX, radiusY, startAngle, endAngle }` | Elliptical arc |
+
+Angles start from +x; `90` points downward on screen.
+
+<ComponentPreview name="arc-basic" />
+
+### Sector
+
+`<Sector>` starts from the center, draws an arc, then closes back to the center. For chord-closing, use Circle with angles instead. Add `innerRadius` for a **hollow sector** (annular sector / donut slice); for an elliptical hollow give `innerRadiusX` + `innerRadiusY`.
+
+| Form | Best for |
+| --- | --- |
+| `{ center, radius, startAngle, endAngle }` | Circular sector |
+| `{ center, radiusX, radiusY, startAngle, endAngle }` | Elliptical sector |
+| add `innerRadius` | Hollow circular sector |
+| add `innerRadiusX` + `innerRadiusY` | Hollow elliptical sector |
+
+The right side below varies `innerRadius` across the three slices to show how it controls the ring width.
+
+<ComponentPreview name="sector-basic" />
+
+### Rectangle
+
+`<Rectangle>` can use two corners, or derive the corners from a center and size. Use `roundedCorners` for rounded rectangles.
+
+| Form | Best for |
+| --- | --- |
+| `{ corner1, corner2 }` | Known opposite corners |
+| `{ center, width, height }` | Known center and size |
+| `{ center, side }` | Square |
+| `{ corner1, width, height }` | Expand from one corner |
+
+<ComponentPreview name="rectangle-basic" />
+
+### Grid
+
+`<Grid>` is useful for background guide lines. Set `zIndex={-1}` to place it behind other shapes.
+
+| Form | Best for |
+| --- | --- |
+| `{ corner1, corner2 }` | Range from two corners |
+| `{ center, width, height }` | Range from center and size |
+
+Use `step` for both axes, or `xStep` / `yStep` when the spacing differs.
+
+<ComponentPreview name="grid-basic" />
+
+### RegularPolygon
+
+`<RegularPolygon>` uses either a circumradius or a side length. `sides` must be at least 3.
+
+| Form | Best for |
+| --- | --- |
+| `{ center, radius, sides }` | Known circumradius |
+| `{ center, sideLength, sides }` | Known side length |
+
+<ComponentPreview name="regular-polygon-basic" />
+
+### Star
+
+`<Star>` alternates vertices on the outer and inner radii. `points` is the number of star points.
+
+| Form | Best for |
+| --- | --- |
+| `{ center, outerRadius, innerRadius, points }` | Control both radii |
+| `{ center, outerRadius, points, innerRatio? }` | Derive inner radius from a ratio |
+
+<ComponentPreview name="star-basic" />
+
+## How it works
+
+> Optional for everyday use; revisit this section when a point form throws an error, or when you want to mix Shapes with `<Path>`.
+
+### Points have two kinds
+
+Some forms pass the point directly to the underlying Path. They can use node ids, polar points, or plain `[x, y]` coordinates:
+
+```tsx
+<Circle center="A" radius={24} />
+<Rectangle corner1="A" corner2="B" />
+```
+
+Other forms must compute a midpoint, size, or vertices in React first. These forms only accept literal `[x, y]` coordinates:
+
+```tsx
+<Circle from={[-40, 0]} to={[40, 0]} />
+<Grid corner1={[-80, -40]} corner2={[80, 40]} step={20} />
+```
+
+Passing a node id to a computed form throws an error instead of guessing a result.
+
+### Shapes are still Path
+
+Every shape expands to an equivalent `<Path>` / `<Step>` sequence. That means:
+
+- They can use Path-style `stroke`, `fill`, `arrow`, and `zIndex`.
+- They do not create connectable anchors like Node does.
+- Use `<Node shape="circle">` when you need text, anchors, or edge attachment.
+
+## API Reference
+
+### Shared visual props
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `stroke` | `string` | `currentColor` | Stroke color |
+| `strokeWidth` | `number` | `1` | Stroke width |
+| `fill` | `string` | `none` | Fill color |
+| `dashPattern` | `Array<number>` | — | Dash and gap sequence |
+| `opacity` | `number` | — | Whole-shape opacity |
+| `arrow` | `'none' \| '->' \| '<-' \| '<->'` | — | Path arrow |
+| `zIndex` | `number` | `0` | Sibling stacking order; higher draws on top |
+
+### Shape-specific props
+
+Each component picks its form by a "prop combination" — `?` marks optional extras.
+
+| Component | Combination | Meaning |
+| --- | --- | --- |
+| `<Circle>` | `center` + `radius` | Circle from center and radius |
+| | `center` + `diameter` | Circle from center and diameter |
+| | `from` + `to` | Circle from two points (diameter endpoints) |
+| | `corner1` + `corner2` | Largest circle inscribed in the box |
+| | + angles (any two of `startAngle`/`endAngle`/`sweepAngle`) + `closed?` | Partial circle (`'chord'` default / `'open'`) |
+| `<Ellipse>` | `center` + `radiusX` + `radiusY` | Ellipse from center and two radii |
+| | `center` + `diameterX` + `diameterY` | Ellipse from center and two diameters |
+| | `corner1` + `corner2` | Ellipse inscribed in the box |
+| | + angles + `closed?` | Partial ellipse (same as Circle) |
+| `<Arc>` | `center` + `radius` + angles | Circular arc (open; angles required) |
+| | `center` + `radiusX` + `radiusY` + angles | Elliptical arc |
+| `<Sector>` | `center` + `radius` + angles | Circular sector (angles required) |
+| | `center` + `radiusX` + `radiusY` + angles | Elliptical sector |
+| | + `innerRadius?` (elliptical: `innerRadiusX?` + `innerRadiusY?`) | Hollow sector (annular) |
+| `<Rectangle>` | `corner1` + `corner2` | Rectangle from two opposite corners |
+| | `center` + `width` + `height` | Rectangle from center and size |
+| | `center` + `side` | Square from center and side |
+| | `corner1` + `width` + `height` | Rectangle from one corner and size |
+| | + `roundedCorners?` | Rounded rectangle (clamped to half the smaller side) |
+| `<Grid>` | `corner1` + `corner2` | Grid range from two corners |
+| | `center` + `width` + `height` | Grid range from center and size |
+| | `step` (or `xStep` + `yStep`) | Step: single / per-axis (per-axis overrides `step`) |
+| `<RegularPolygon>` | `center` + `radius` + `sides` | Polygon from circumradius and side count |
+| | `center` + `sideLength` + `sides` | Polygon from side length and side count |
+| | + `rotate?` | Overall start angle (default −90°, one vertex up) |
+| `<Star>` | `center` + `outerRadius` + `innerRadius` + `points` | Star with explicit outer/inner radii and point count |
+| | `center` + `outerRadius` + `points` + `innerRatio?` | Star with inner radius from a ratio (default 0.5) |
+| | + `rotate?` | Overall start angle (default −90°) |
+
+## Related
+
+- [Draw](/core/components/draw/overview): draw connections with a way array
+- [Path](/core/components/draw/path): see the full Path / Step form
+- [Node](/core/components/node/overview): shape nodes with text and anchors

@@ -5,7 +5,24 @@ description: Sugar component — a way array threads through nodes, coordinates,
 
 `<Draw>` is the default entry point for most connections. It accepts a `way` array and expands targets, folds, cycles, curves, shapes, and edge labels into Kernel `<Path>` + `<Step>`. Stroke, fill, arrow, and opacity props match `<Path>`.
 
-Choosing rule: use `<Draw>` for ordinary relationship lines, flowchart edges, and arrowed connections; switch to `<Path>` + `<Step>` when you need multiple `move`s, precise per-segment `kind` control, or IR-close debugging; work with IR directly only at AI / persistence boundaries.
+Choosing rule: use `<Draw>` for ordinary relationship lines, flowchart edges, and arrowed connections; switch to `<Path>` + `<Step>` when you need multiple `move`s, precise per-segment `kind` control, or IR-close debugging; use the **shape sugar** below to draw a single geometric shape (circle / rectangle / sector / grid, etc.); work with IR directly only at AI / persistence boundaries.
+
+## Shape sugar
+
+Beyond the `way` array, the Draw family also offers a set of **shape sugar** — draw a common geometric shape in one line, also expanding to `<Path>` and sharing the same visual props as `<Draw>` / `<Path>` (`fill` / `stroke` / `strokeWidth` / `dashPattern` / `arrow` / `zIndex`, etc.):
+
+| Component | Draws |
+| --- | --- |
+| `<Circle>` | circle / half circle / segment |
+| `<Ellipse>` | ellipse / partial ellipse |
+| `<Arc>` | open circular / elliptical arc |
+| `<Sector>` | wedge (closed through the center) |
+| `<Rectangle>` | rectangle / rounded rectangle |
+| `<Grid>` | background grid (expands to many lines) |
+| `<RegularPolygon>` | regular polygon |
+| `<Star>` | star |
+
+See [Shapes](/core/components/draw/shapes) for each form, the point contract (pass-through Target vs literal Cartesian), and per-component props. Difference from `<Node shape="...">`: shape sugar is a plain text-less path; a Node is an object with text / anchors that edges can connect to.
 
 ## Usage
 
@@ -203,4 +220,4 @@ Full ellipses also use angular parametrization, not equal divisions by ellipse a
 - [Path](/core/components/draw/path): the Kernel container Draw expands to and the full stroke field set
 - [Step](/core/components/draw/step): the Kernel step semantics behind each Draw segment
 - [Arrow](/core/components/draw/arrow): Arrow shape, size, color, and per-end overrides
-- Shape sugar: [Circle](/core/components/circle) · [Ellipse](/core/components/ellipse) · [Arc](/core/components/arc) · [Sector](/core/components/sector) · [Rectangle](/core/components/rectangle) · [Grid](/core/components/grid) · [RegularPolygon](/core/components/regular-polygon) · [Star](/core/components/star)
+- [Shapes](/core/components/draw/shapes): Circle / Ellipse / Arc / Sector / Rectangle / Grid / RegularPolygon / Star shape sugar
