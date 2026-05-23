@@ -54,6 +54,7 @@ describe('Draw: 基础展开', () => {
         opacity={0.8}
         fillOpacity={0.5}
         drawOpacity={0.7}
+        zIndex={5}
       />,
     );
     expect(out.children[0]).toMatchObject({
@@ -71,7 +72,19 @@ describe('Draw: 基础展开', () => {
       opacity: 0.8,
       fillOpacity: 0.5,
       drawOpacity: 0.7,
+      zIndex: 5,
     });
+  });
+
+  it('zIndex 透传——与等价 Kernel Path 的 IR 一致', () => {
+    const sugarIR = ir(<Draw way={['a', 'b']} zIndex={3} />);
+    const kernelIR = ir(
+      <Path zIndex={3}>
+        <Step kind="move" to="a" />
+        <Step kind="line" to="b" />
+      </Path>,
+    );
+    expect(sugarIR.children).toEqual(kernelIR.children);
   });
 });
 

@@ -43,6 +43,8 @@ export type DrawProps = {
   fillOpacity?: IRPath['fillOpacity'];
   /** 仅 stroke 透明度 0~1（TikZ `draw opacity`） */
   drawOpacity?: IRPath['drawOpacity'];
+  /** 显式栈序：大者在上；缺省 0 = 声明顺序；同值稳定保序；只在同层子节点间生效 */
+  zIndex?: IRPath['zIndex'];
 };
 
 /**
@@ -65,6 +67,7 @@ export const Draw: FC<DrawProps> = props => {
     opacity,
     fillOpacity,
     drawOpacity,
+    zIndex,
   } = props;
   const steps = parseWay(way);
 
@@ -83,6 +86,7 @@ export const Draw: FC<DrawProps> = props => {
       opacity={opacity}
       fillOpacity={fillOpacity}
       drawOpacity={drawOpacity}
+      zIndex={zIndex}
     >
       {steps.map((s, i) => {
         if (s.kind === 'cycle') return <Step key={i} kind="cycle" />;
