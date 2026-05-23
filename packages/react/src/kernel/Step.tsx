@@ -2,12 +2,18 @@ import type { FC, ReactNode } from 'react';
 import type { IRControlPoint, IRStepLabel, IRTarget } from '@retikz/core';
 import { TIKZ_STEP } from './_displayNames';
 
+/**
+ * React DSL 层的 target 类型：core 对象 `IRTarget` + 字符串 shorthand（`'A'` / `'A.north'` / `'A.30'` / `'+dx,dy'`）
+ * @description core IRTarget 已对象化（无字符串分支）；字符串 shorthand 仅活在 React DSL，builder 经 parseTargetSugar eager 转对象后才入 IR
+ */
+export type DslTarget = IRTarget | string;
+
 /** Move action：移动游标但不绘制（TikZ `(A)`） */
 export type MoveStepProps = {
   /** 移动 step 鉴别字面量 */
   kind: 'move';
   /** 移动目标点 */
-  to: IRTarget;
+  to: DslTarget;
 };
 
 /** Line action：从当前游标到目标点画直线（TikZ `(A) -- (B)`） */
@@ -15,7 +21,7 @@ export type LineStepProps = {
   /** 直线 step 鉴别字面量；省略时默认 'line' */
   kind?: 'line';
   /** 直线终点 */
-  to: IRTarget;
+  to: DslTarget;
   /** 边标注，等价于 sugar `<EdgeLabel>` child */
   label?: IRStepLabel;
   /** sugar 形态：`<Step><EdgeLabel>...</EdgeLabel></Step>`；其它 children 静默忽略 */
@@ -29,7 +35,7 @@ export type FoldStepProps = {
   /** 折角走向：`-|` 先水平后垂直；`|-` 先垂直后水平 */
   via: '-|' | '|-';
   /** 折角终点 */
-  to: IRTarget;
+  to: DslTarget;
   /** 边标注 */
   label?: IRStepLabel;
   /** sugar 形态 */
@@ -49,7 +55,7 @@ export type CurveStepProps = {
   /** 控制点（alpha.3 仅支持笛卡尔 `[x, y]`） */
   control: IRControlPoint;
   /** 曲线终点 */
-  to: IRTarget;
+  to: DslTarget;
   /** 边标注 */
   label?: IRStepLabel;
   /** sugar 形态 */
@@ -65,7 +71,7 @@ export type CubicStepProps = {
   /** 第二控制点（影响终点切线） */
   control2: IRControlPoint;
   /** 曲线终点 */
-  to: IRTarget;
+  to: DslTarget;
   /** 边标注 */
   label?: IRStepLabel;
   /** sugar 形态 */
@@ -81,7 +87,7 @@ export type BendStepProps = {
   /** 弯角度（度），缺省 30 */
   bendAngle?: number;
   /** 终点 */
-  to: IRTarget;
+  to: DslTarget;
   /** 边标注 */
   label?: IRStepLabel;
   /** sugar 形态 */
@@ -103,7 +109,7 @@ export type ArcStepProps = {
   /** 椭圆弧 y 半轴；需与 radiusX 同给 */
   radiusY?: number;
   /** 显式圆心；缺省取游标（上一 step anchor） */
-  center?: IRTarget;
+  center?: DslTarget;
   /** 边标注 */
   label?: IRStepLabel;
   /** sugar 形态 */
@@ -153,9 +159,9 @@ export type RectangleStepProps = {
   /** 矩形 step 鉴别字面量 */
   kind: 'rectangle';
   /** 一角 */
-  from: IRTarget;
+  from: DslTarget;
   /** 对角（顺序无关） */
-  to: IRTarget;
+  to: DslTarget;
   /** 四角同圆角半径；缺省直角，compile clamp 到边长一半 */
   roundedCorners?: number;
 };

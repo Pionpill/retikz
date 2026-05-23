@@ -40,14 +40,19 @@ describe('OffsetPosition: step.to schema 校验', () => {
     ).not.toThrow();
   });
 
-  it('TargetSchema 仍接受既有 5 形态（笛卡尔 / polar / string id / relative / relativeAccumulate）', () => {
+  it('TargetSchema 接受对象形态（笛卡尔 / polar / NodeTarget / relative / relativeAccumulate）', () => {
     expect(() => TargetSchema.parse([1, 2])).not.toThrow();
     expect(() =>
       TargetSchema.parse({ origin: 'A', angle: 0, radius: 30 }),
     ).not.toThrow();
-    expect(() => TargetSchema.parse('A')).not.toThrow();
+    expect(() => TargetSchema.parse({ id: 'A' })).not.toThrow();
     expect(() => TargetSchema.parse({ relative: [1, 0] })).not.toThrow();
     expect(() => TargetSchema.parse({ relativeAccumulate: [1, 0] })).not.toThrow();
+  });
+
+  it('TargetSchema 不再接受字符串节点引用（已对象化；字符串 shorthand 仅 React DSL 层）', () => {
+    expect(() => TargetSchema.parse('A')).toThrow();
+    expect(() => TargetSchema.parse('A.north')).toThrow();
   });
 });
 
@@ -62,7 +67,7 @@ describe('OffsetPosition: step.to compile resolve', () => {
           {
             type: 'path',
             children: [
-              { type: 'step', kind: 'move', to: 'A' },
+              { type: 'step', kind: 'move', to: { id: 'A' } },
               { type: 'step', kind: 'line', to: { of: 'A', offset: [50, 0] } },
             ],
           },

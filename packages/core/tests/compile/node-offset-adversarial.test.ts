@@ -246,7 +246,7 @@ describe('OffsetPosition adversarial: step.to 首步 / 极端', () => {
         {
           type: 'path',
           children: [
-            { type: 'step', kind: 'move', to: 'A' },
+            { type: 'step', kind: 'move', to: { id: 'A' } },
             {
               type: 'step',
               kind: 'line',

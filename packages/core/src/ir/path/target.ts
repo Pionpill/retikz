@@ -66,13 +66,12 @@ export const TargetSchema = z
     PositionSchema,
     PolarPositionSchema,
     NodeTargetSchema,
-    z.string().min(1),
     RelativeTargetSchema,
     RelativeAccumulateTargetSchema,
     OffsetPositionSchema,
   ])
   .describe(
-    'Path endpoint: Cartesian [x, y], polar position, node target object ({ id, anchor?, offset? }), node id string (React DSL shorthand), relative offset object ({ relative } / { relativeAccumulate }), or offset position ({ of, offset } mirroring TikZ `calc`) resolved at compile time',
+    'Path endpoint: Cartesian [x, y], polar position, node target object ({ id, anchor?, offset? }), relative offset object ({ relative } / { relativeAccumulate }), or offset position ({ of, offset } mirroring TikZ `calc`) resolved at compile time. Node id string shorthand is React DSL only (parsed to a node target object before reaching the IR).',
   );
 
 /** 路径端点：直接坐标 [x, y]、极坐标、节点 id 字符串、相对偏移对象 */

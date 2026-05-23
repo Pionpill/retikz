@@ -37,8 +37,8 @@ describe('跨 scope anchor keyword', () => {
       {
         type: 'path',
         children: [
-          { type: 'step', kind: 'move', to: 'ext' },
-          { type: 'step', kind: 'line', to: 'A.north' },
+          { type: 'step', kind: 'move', to: { id: 'ext' } },
+          { type: 'step', kind: 'line', to: { id: 'A', anchor: 'north' } },
         ],
       },
     ]);
@@ -61,8 +61,8 @@ describe('跨 scope anchor keyword', () => {
       {
         type: 'path',
         children: [
-          { type: 'step', kind: 'move', to: 'ext' },
-          { type: 'step', kind: 'line', to: 'A.east' },
+          { type: 'step', kind: 'move', to: { id: 'ext' } },
+          { type: 'step', kind: 'line', to: { id: 'A', anchor: 'east' } },
         ],
       },
     ]);
@@ -76,8 +76,8 @@ describe('跨 scope anchor keyword', () => {
       {
         type: 'path',
         children: [
-          { type: 'step', kind: 'move', to: 'ext' },
-          { type: 'step', kind: 'line', to: 'A.east' },
+          { type: 'step', kind: 'move', to: { id: 'ext' } },
+          { type: 'step', kind: 'line', to: { id: 'A', anchor: 'east' } },
         ],
       },
     ]);
@@ -102,8 +102,8 @@ describe('跨 scope 数字角度', () => {
       {
         type: 'path',
         children: [
-          { type: 'step', kind: 'move', to: 'ext' },
-          { type: 'step', kind: 'line', to: 'A.0' },
+          { type: 'step', kind: 'move', to: { id: 'ext' } },
+          { type: 'step', kind: 'line', to: { id: 'A', anchor: 0 } },
         ],
       },
     ]);
@@ -117,8 +117,8 @@ describe('跨 scope 数字角度', () => {
       {
         type: 'path',
         children: [
-          { type: 'step', kind: 'move', to: 'ext' },
-          { type: 'step', kind: 'line', to: 'A.0' },
+          { type: 'step', kind: 'move', to: { id: 'ext' } },
+          { type: 'step', kind: 'line', to: { id: 'A', anchor: 0 } },
         ],
       },
     ]);
@@ -145,7 +145,7 @@ describe('scope.id synthetic bbox 注册到父 frame，外部可 lookup', () => 
         type: 'path',
         children: [
           { type: 'step', kind: 'move', to: [0, 60] },
-          { type: 'step', kind: 'line', to: 'cluster' },
+          { type: 'step', kind: 'line', to: { id: 'cluster' } },
         ],
       },
     ]);
@@ -179,7 +179,7 @@ describe('跨 scope 位置引用（polar.origin / AtPosition.of / OffsetPosition
         type: 'path',
         children: [
           { type: 'step', kind: 'move', to: [0, 60] },
-          { type: 'step', kind: 'line', to: 'orbit' },
+          { type: 'step', kind: 'line', to: { id: 'orbit' } },
         ],
       },
     ]);
@@ -212,7 +212,7 @@ describe('跨 scope 位置引用（polar.origin / AtPosition.of / OffsetPosition
         type: 'path',
         children: [
           { type: 'step', kind: 'move', to: [0, 60] },
-          { type: 'step', kind: 'line', to: 'follower' },
+          { type: 'step', kind: 'line', to: { id: 'follower' } },
         ],
       },
     ]);
@@ -244,7 +244,7 @@ describe('跨 scope 位置引用（polar.origin / AtPosition.of / OffsetPosition
         type: 'path',
         children: [
           { type: 'step', kind: 'move', to: [0, 60] },
-          { type: 'step', kind: 'line', to: 'shifted' },
+          { type: 'step', kind: 'line', to: { id: 'shifted' } },
         ],
       },
     ]);
@@ -272,7 +272,7 @@ describe('跨 scope anchor 边界', () => {
         type: 'path',
         children: [
           { type: 'step', kind: 'move', to: [0, 60] },
-          { type: 'step', kind: 'line', to: 'cz.north' },
+          { type: 'step', kind: 'line', to: { id: 'cz', anchor: 'north' } },
         ],
       },
     ]);
@@ -293,7 +293,7 @@ describe('跨 scope anchor 边界', () => {
         type: 'path',
         children: [
           { type: 'step', kind: 'move', to: [-50, 0] },
-          { type: 'step', kind: 'line', to: 'A.north' },
+          { type: 'step', kind: 'line', to: { id: 'A', anchor: 'north' } },
         ],
       },
     ]);
@@ -307,7 +307,7 @@ describe('跨 scope anchor 边界', () => {
         type: 'path',
         children: [
           { type: 'step', kind: 'move', to: [-50, 0] },
-          { type: 'step', kind: 'line', to: 'A.north' },
+          { type: 'step', kind: 'line', to: { id: 'A', anchor: 'north' } },
         ],
       },
     ]);
@@ -336,7 +336,7 @@ describe('跨 scope anchor 边界', () => {
         type: 'path',
         children: [
           { type: 'step', kind: 'move', to: [0, 60] },
-          { type: 'step', kind: 'line', to: 'A.north' },
+          { type: 'step', kind: 'line', to: { id: 'A', anchor: 'north' } },
         ],
       },
     ]);
@@ -363,7 +363,7 @@ describe('跨 scope anchor 错误路径', () => {
         type: 'path',
         children: [
           { type: 'step', kind: 'move', to: [0, 60] },
-          { type: 'step', kind: 'line', to: 'ghost.north' },
+          { type: 'step', kind: 'line', to: { id: 'ghost', anchor: 'north' } },
         ],
       },
     ]);
@@ -372,7 +372,7 @@ describe('跨 scope anchor 错误路径', () => {
     expect(warnings.some(w => w.code === 'UNRESOLVED_NODE_REFERENCE')).toBe(true);
   });
 
-  it('scope_anchor_invalid_anchor_name：path 引用合法 id 但 anchor 名不在 RECT_ANCHORS → parseNodeRef 抛错', () => {
+  it('scope_anchor_invalid_anchor_name：path 引用合法 id 但 anchor 名不在 RECT_ANCHORS → compile 抛 Unknown anchor', () => {
     const ir = scene([
       {
         type: 'scope',
@@ -382,13 +382,13 @@ describe('跨 scope anchor 错误路径', () => {
         type: 'path',
         children: [
           { type: 'step', kind: 'move', to: [0, 0] },
-          { type: 'step', kind: 'line', to: 'A.invalid' },
+          // @ts-expect-error 故意传非法 anchor 名，测 compile 端 anchorOf 抛 Unknown anchor
+          { type: 'step', kind: 'line', to: { id: 'A', anchor: 'invalid' } },
         ],
       },
     ]);
-    // 当前实现：parseNodeRef 对未知 anchor 直接抛错（避免静默吞拼写错误）；
-    // 这里断言抛错语义——后续如改为 ANCHOR_RESOLUTION_FAILED warn 路线，更新此 case 即可
-    expect(() => compileToScene(ir)).toThrow(/unknown anchor/);
+    // 对象形态：compile 端 anchorOf（shapeDef.anchor 返回 undefined）抛错（避免静默吞拼写错误）
+    expect(() => compileToScene(ir)).toThrow(/Unknown anchor/);
   });
 });
 
@@ -403,7 +403,7 @@ describe('跨 scope anchor 交互场景', () => {
         type: 'path',
         children: [
           { type: 'step', kind: 'move', to: [-50, 0] },
-          { type: 'step', kind: 'line', to: 'A.45' },
+          { type: 'step', kind: 'line', to: { id: 'A', anchor: 45 } },
         ],
       },
     ]);
@@ -417,7 +417,7 @@ describe('跨 scope anchor 交互场景', () => {
         type: 'path',
         children: [
           { type: 'step', kind: 'move', to: [-50, 0] },
-          { type: 'step', kind: 'line', to: 'A.45' },
+          { type: 'step', kind: 'line', to: { id: 'A', anchor: 45 } },
         ],
       },
     ]);
@@ -451,7 +451,7 @@ describe('跨 scope anchor 交互场景', () => {
         type: 'path',
         children: [
           { type: 'step', kind: 'move', to: [0, 200] },
-          { type: 'step', kind: 'line', to: 'B.south' },
+          { type: 'step', kind: 'line', to: { id: 'B', anchor: 'south' } },
         ],
       },
     ]);
@@ -488,7 +488,7 @@ describe('跨 scope anchor 交互场景', () => {
         type: 'path',
         children: [
           { type: 'step', kind: 'move', to: [0, 100] },
-          { type: 'step', kind: 'line', to: 'B' },
+          { type: 'step', kind: 'line', to: { id: 'B' } },
         ],
       },
     ]);
@@ -514,7 +514,7 @@ describe('跨 scope anchor 交互场景', () => {
         type: 'path',
         children: [
           { type: 'step', kind: 'move', to: [0, 80] },
-          { type: 'step', kind: 'line', to: 'A.center' },
+          { type: 'step', kind: 'line', to: { id: 'A', anchor: 'center' } },
         ],
       },
     ]);

@@ -4,7 +4,6 @@ import { resolveAnchor, resolveEdgePoint } from '../anchor-cache';
 import type { NameStack } from '../name-stack';
 import { boundaryPointOf } from '../node';
 import type { NodeLayout } from '../node';
-import { parseNodeRef } from '../parseTarget';
 import { resolvePosition } from '../position';
 import { applyTransformChain } from '../scope';
 
@@ -45,19 +44,6 @@ export const refPointOfTarget = (
         : resolveAnchorRef(node, target.anchor);
     return addOffset(base, target.offset);
   }
-  if (typeof target === 'string') {
-    const ref = parseNodeRef(target);
-    const node = nameStack.lookup(ref.id);
-    if (!node) return null;
-    switch (ref.kind) {
-      case 'node':
-        return [node.rect.x, node.rect.y];
-      case 'anchor':
-        return resolveAnchor(node, ref.anchor);
-      case 'angle':
-        return resolveAnchor(node, String(ref.angle));
-    }
-  }
   // relative/relativeAccumulate 已被 normalizeRelativeTargets 预解析；防御性守卫给 TS narrowing 用
   if (typeof target === 'object' && !Array.isArray(target) && ('relative' in target || 'relativeAccumulate' in target)) {
     return null;
@@ -96,19 +82,6 @@ export const clipForTarget = (
         ? boundaryPointOf(node, toward)
         : resolveAnchorRef(node, target.anchor);
     return addOffset(base, target.offset);
-  }
-  if (typeof target === 'string') {
-    const ref = parseNodeRef(target);
-    const node = nameStack.lookup(ref.id);
-    if (!node) return null;
-    switch (ref.kind) {
-      case 'node':
-        return boundaryPointOf(node, toward);
-      case 'anchor':
-        return resolveAnchor(node, ref.anchor);
-      case 'angle':
-        return resolveAnchor(node, String(ref.angle));
-    }
   }
   // relative/relativeAccumulate 已被预解析；防御性守卫给 TS narrowing 用
   if (typeof target === 'object' && !Array.isArray(target) && ('relative' in target || 'relativeAccumulate' in target)) {

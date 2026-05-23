@@ -119,7 +119,7 @@ describe('Happy path：scope rotate 下 polar / at / offset 同 scope referent',
         type: 'path',
         children: [
           { type: 'step', kind: 'move', to: [200, 200] },
-          { type: 'step', kind: 'line', to: 'B' },
+          { type: 'step', kind: 'line', to: { id: 'B' } },
         ],
       },
     ]);
@@ -150,7 +150,7 @@ describe('Happy path：scope rotate 下 polar / at / offset 同 scope referent',
         type: 'path',
         children: [
           { type: 'step', kind: 'move', to: [200, 200] },
-          { type: 'step', kind: 'line', to: 'B' },
+          { type: 'step', kind: 'line', to: { id: 'B' } },
         ],
       },
     ]);
@@ -180,7 +180,7 @@ describe('Happy path：scope rotate 下 polar / at / offset 同 scope referent',
         type: 'path',
         children: [
           { type: 'step', kind: 'move', to: [200, 200] },
-          { type: 'step', kind: 'line', to: 'B' },
+          { type: 'step', kind: 'line', to: { id: 'B' } },
         ],
       },
     ]);
@@ -214,7 +214,7 @@ describe('Happy path：跨 scope referent（hub 在 scope 外）', () => {
         type: 'path',
         children: [
           { type: 'step', kind: 'move', to: [200, 200] },
-          { type: 'step', kind: 'line', to: 'orbit' },
+          { type: 'step', kind: 'line', to: { id: 'orbit' } },
         ],
       },
     ]);
@@ -245,7 +245,7 @@ describe('Happy path：跨 scope referent（hub 在 scope 外）', () => {
         type: 'path',
         children: [
           { type: 'step', kind: 'move', to: [200, 200] },
-          { type: 'step', kind: 'line', to: 'follower' },
+          { type: 'step', kind: 'line', to: { id: 'follower' } },
         ],
       },
     ]);
@@ -276,7 +276,7 @@ describe('Happy path：跨 scope referent（hub 在 scope 外）', () => {
         type: 'path',
         children: [
           { type: 'step', kind: 'move', to: [200, 200] },
-          { type: 'step', kind: 'line', to: 'shifted' },
+          { type: 'step', kind: 'line', to: { id: 'shifted' } },
         ],
       },
     ]);
@@ -315,7 +315,7 @@ describe('Happy path：跨 scope referent（hub 在 scope 外）', () => {
         type: 'path',
         children: [
           { type: 'step', kind: 'move', to: [200, 200] },
-          { type: 'step', kind: 'line', to: 'nested' },
+          { type: 'step', kind: 'line', to: { id: 'nested' } },
         ],
       },
     ]);
@@ -353,7 +353,7 @@ describe('边界：scope transform 单变体对 relative 的影响', () => {
         type: 'path',
         children: [
           { type: 'step', kind: 'move', to: [200, 200] },
-          { type: 'step', kind: 'line', to: 'B' },
+          { type: 'step', kind: 'line', to: { id: 'B' } },
         ],
       },
     ]);
@@ -385,7 +385,7 @@ describe('边界：scope transform 单变体对 relative 的影响', () => {
         type: 'path',
         children: [
           { type: 'step', kind: 'move', to: [200, 200] },
-          { type: 'step', kind: 'line', to: 'B' },
+          { type: 'step', kind: 'line', to: { id: 'B' } },
         ],
       },
     ]);
@@ -416,7 +416,7 @@ describe('边界：scope transform 单变体对 relative 的影响', () => {
         type: 'path',
         children: [
           { type: 'step', kind: 'move', to: [200, 200] },
-          { type: 'step', kind: 'line', to: 'B' },
+          { type: 'step', kind: 'line', to: { id: 'B' } },
         ],
       },
     ]);
@@ -452,7 +452,7 @@ describe('边界：scope transform 单变体对 relative 的影响', () => {
         type: 'path',
         children: [
           { type: 'step', kind: 'move', to: [200, 200] },
-          { type: 'step', kind: 'line', to: 'orbit' },
+          { type: 'step', kind: 'line', to: { id: 'orbit' } },
         ],
       },
     ]);
@@ -546,7 +546,7 @@ describe('交互场景', () => {
         type: 'path',
         children: [
           { type: 'step', kind: 'move', to: [200, 200] },
-          { type: 'step', kind: 'line', to: 'B' },
+          { type: 'step', kind: 'line', to: { id: 'B' } },
         ],
       },
     ]);
@@ -598,7 +598,7 @@ describe('交互场景', () => {
         type: 'path',
         children: [
           { type: 'step', kind: 'move', to: [200, 200] },
-          { type: 'step', kind: 'line', to: 'C' },
+          { type: 'step', kind: 'line', to: { id: 'C' } },
         ],
       },
     ]);
@@ -640,7 +640,7 @@ describe('交互场景', () => {
         type: 'path',
         children: [
           { type: 'step', kind: 'move', to: [300, 300] },
-          { type: 'step', kind: 'line', to: 'P' },
+          { type: 'step', kind: 'line', to: { id: 'P' } },
         ],
       },
     ]);
@@ -671,7 +671,7 @@ describe('交互场景', () => {
         type: 'path',
         children: [
           { type: 'step', kind: 'move', to: [200, 200] },
-          { type: 'step', kind: 'line', to: 'B' },
+          { type: 'step', kind: 'line', to: { id: 'B' } },
         ],
       },
     ]);

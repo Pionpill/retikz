@@ -131,7 +131,7 @@ describe('compile path 解析失败时占位被移除且不泄漏', () => {
       {
         type: 'path',
         children: [
-          { type: 'step', kind: 'move', to: 'undefinedNode' },
+          { type: 'step', kind: 'move', to: { id: 'undefinedNode' } },
           { type: 'step', kind: 'line', to: [10, 0] },
         ],
       },
@@ -167,7 +167,7 @@ describe('compile path 解析失败时占位被移除且不泄漏', () => {
         {
           type: 'path',
           children: [
-            { type: 'step', kind: 'move', to: 'undefinedNode' },
+            { type: 'step', kind: 'move', to: { id: 'undefinedNode' } },
             { type: 'step', kind: 'line', to: [10, 0] },
           ],
         },

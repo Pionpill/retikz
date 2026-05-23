@@ -127,7 +127,7 @@ describe('scope.id bbox happy path', () => {
         type: 'path',
         children: [
           { type: 'step', kind: 'move', to: [0, 400] },
-          { type: 'step', kind: 'line', to: 'orbit' },
+          { type: 'step', kind: 'line', to: { id: 'orbit' } },
         ],
       },
     ]);
@@ -156,7 +156,7 @@ describe('scope.id bbox happy path', () => {
         type: 'path',
         children: [
           { type: 'step', kind: 'move', to: [40, 200] },
-          { type: 'step', kind: 'line', to: 'g.north' },
+          { type: 'step', kind: 'line', to: { id: 'g', anchor: 'north' } },
         ],
       },
     ]);
@@ -182,7 +182,7 @@ describe('scope.id bbox happy path', () => {
         type: 'path',
         children: [
           { type: 'step', kind: 'move', to: [200, 25] },
-          { type: 'step', kind: 'line', to: 'g.east' },
+          { type: 'step', kind: 'line', to: { id: 'g', anchor: 'east' } },
         ],
       },
     ]);
@@ -208,7 +208,7 @@ describe('scope.id bbox happy path', () => {
         type: 'path',
         children: [
           { type: 'step', kind: 'move', to: [200, 0] },
-          { type: 'step', kind: 'line', to: 'g.30' },
+          { type: 'step', kind: 'line', to: { id: 'g', anchor: 30 } },
         ],
       },
     ]);
@@ -234,7 +234,7 @@ describe('scope.id bbox happy path', () => {
         type: 'path',
         children: [
           { type: 'step', kind: 'move', to: [200, 0] },
-          { type: 'step', kind: 'line', to: 'g.-45' },
+          { type: 'step', kind: 'line', to: { id: 'g', anchor: -45 } },
         ],
       },
     ]);
@@ -266,7 +266,7 @@ describe('scope.id bbox happy path', () => {
         type: 'path',
         children: [
           { type: 'step', kind: 'move', to: [0, 200] },
-          { type: 'step', kind: 'line', to: 'orbit' },
+          { type: 'step', kind: 'line', to: { id: 'orbit' } },
         ],
       },
     ]);
@@ -299,7 +299,7 @@ describe('scope.id bbox happy path', () => {
         type: 'path',
         children: [
           { type: 'step', kind: 'move', to: [0, 200] },
-          { type: 'step', kind: 'line', to: 'follower' },
+          { type: 'step', kind: 'line', to: { id: 'follower' } },
         ],
       },
     ]);
@@ -331,7 +331,7 @@ describe('scope.id bbox happy path', () => {
         type: 'path',
         children: [
           { type: 'step', kind: 'move', to: [0, 200] },
-          { type: 'step', kind: 'line', to: 'anchor-pt' },
+          { type: 'step', kind: 'line', to: { id: 'anchor-pt' } },
         ],
       },
     ]);
@@ -358,7 +358,7 @@ describe('scope.id bbox happy path', () => {
         type: 'path',
         children: [
           { type: 'step', kind: 'move', to: [0, 200] },
-          { type: 'step', kind: 'line', to: 'g' },
+          { type: 'step', kind: 'line', to: { id: 'g' } },
         ],
       },
     ]);
@@ -389,7 +389,7 @@ describe('scope.id bbox 边界', () => {
         type: 'path',
         children: [
           { type: 'step', kind: 'move', to: [0, 200] },
-          { type: 'step', kind: 'line', to: 'rel' },
+          { type: 'step', kind: 'line', to: { id: 'rel' } },
         ],
       },
     ]);
@@ -416,7 +416,7 @@ describe('scope.id bbox 边界', () => {
         type: 'path',
         children: [
           { type: 'step', kind: 'move', to: [0, 200] },
-          { type: 'step', kind: 'line', to: 'rel' },
+          { type: 'step', kind: 'line', to: { id: 'rel' } },
         ],
       },
     ]);
@@ -440,7 +440,7 @@ describe('scope.id bbox 边界', () => {
         type: 'path',
         children: [
           { type: 'step', kind: 'move', to: [0, 200] },
-          { type: 'step', kind: 'line', to: 'g' },
+          { type: 'step', kind: 'line', to: { id: 'g' } },
         ],
       },
     ]);
@@ -465,7 +465,7 @@ describe('scope.id bbox 边界', () => {
         type: 'path',
         children: [
           { type: 'step', kind: 'move', to: [100, 200] },
-          { type: 'step', kind: 'line', to: 'g.east' },
+          { type: 'step', kind: 'line', to: { id: 'g', anchor: 'east' } },
         ],
       },
     ]);
@@ -553,7 +553,7 @@ describe('scope.id bbox 错误路径', () => {
     expect(() => compileToScene(ir, { onWarn: () => {} })).toThrow();
   });
 
-  it('scope_id_unknown_anchor_name：path to="g.invalid" → parseNodeRef 抛 unknown anchor 错（v0.1 行为延续）', () => {
+  it('scope_id_unknown_anchor_name：path to={ id:"g", anchor:"invalid" } → compile 抛 Unknown anchor', () => {
     const ir = scene([
       {
         type: 'scope',
@@ -564,11 +564,12 @@ describe('scope.id bbox 错误路径', () => {
         type: 'path',
         children: [
           { type: 'step', kind: 'move', to: [0, 200] },
-          { type: 'step', kind: 'line', to: 'g.invalid' },
+          // @ts-expect-error 故意传非法 anchor 名，测 compile 端 anchorOf 抛 Unknown anchor
+          { type: 'step', kind: 'line', to: { id: 'g', anchor: 'invalid' } },
         ],
       },
     ]);
-    expect(() => compileToScene(ir)).toThrow(/unknown anchor/);
+    expect(() => compileToScene(ir)).toThrow(/Unknown anchor/);
   });
 });
 
@@ -590,7 +591,7 @@ describe('scope.id bbox 交互', () => {
         type: 'path',
         children: [
           { type: 'step', kind: 'move', to: [200, 200] },
-          { type: 'step', kind: 'line', to: 'g' },
+          { type: 'step', kind: 'line', to: { id: 'g' } },
         ],
       },
     ]);
@@ -627,7 +628,7 @@ describe('scope.id bbox 交互', () => {
         type: 'path',
         children: [
           { type: 'step', kind: 'move', to: [0, 200] },
-          { type: 'step', kind: 'line', to: 'outer.east' },
+          { type: 'step', kind: 'line', to: { id: 'outer', anchor: 'east' } },
         ],
       },
       // 外层 path 引用 inner.east（应只反映 B、C，east x 接近 C 的 (150, 0) east 边）
@@ -635,7 +636,7 @@ describe('scope.id bbox 交互', () => {
         type: 'path',
         children: [
           { type: 'step', kind: 'move', to: [0, 200] },
-          { type: 'step', kind: 'line', to: 'inner.east' },
+          { type: 'step', kind: 'line', to: { id: 'inner', anchor: 'east' } },
         ],
       },
     ]);
@@ -673,7 +674,7 @@ describe('scope.id bbox 交互', () => {
         type: 'path',
         children: [
           { type: 'step', kind: 'move', to: [0, 200] },
-          { type: 'step', kind: 'line', to: 'follower' },
+          { type: 'step', kind: 'line', to: { id: 'follower' } },
         ],
       },
     ]);
@@ -701,7 +702,7 @@ describe('scope.id bbox 交互', () => {
         type: 'path',
         children: [
           { type: 'step', kind: 'move', to: [0, 200] },
-          { type: 'step', kind: 'line', to: 'g' },
+          { type: 'step', kind: 'line', to: { id: 'g' } },
         ],
       },
     ]);
@@ -725,7 +726,7 @@ describe('scope.id bbox 交互', () => {
         type: 'path',
         children: [
           { type: 'step', kind: 'move', to: [0, 200] },
-          { type: 'step', kind: 'line', to: 'g.east' },
+          { type: 'step', kind: 'line', to: { id: 'g', anchor: 'east' } },
         ],
       },
     ]);
@@ -739,7 +740,7 @@ describe('scope.id bbox 交互', () => {
         type: 'path',
         children: [
           { type: 'step', kind: 'move', to: [0, 200] },
-          { type: 'step', kind: 'line', to: 'g.east' },
+          { type: 'step', kind: 'line', to: { id: 'g', anchor: 'east' } },
         ],
       },
     ]);
@@ -766,7 +767,7 @@ describe('scope.id bbox 交互', () => {
             type: 'path',
             children: [
               { type: 'step', kind: 'move', to: [0, 200] },
-              { type: 'step', kind: 'line', to: 'g.east' },
+              { type: 'step', kind: 'line', to: { id: 'g', anchor: 'east' } },
             ],
           },
         ],

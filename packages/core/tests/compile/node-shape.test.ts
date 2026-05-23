@@ -97,7 +97,7 @@ describe("Target 字符串锚点扩展", () => {
         {
           type: 'path',
           children: [
-            { type: 'step', kind: 'move', to: 'A.east' },
+            { type: 'step', kind: 'move', to: { id: 'A', anchor: 'east' } },
             { type: 'step', kind: 'line', to: [100, 50] },
           ],
         },
@@ -121,7 +121,7 @@ describe("Target 字符串锚点扩展", () => {
         {
           type: 'path',
           children: [
-            { type: 'step', kind: 'move', to: 'A.30' },
+            { type: 'step', kind: 'move', to: { id: 'A', anchor: 30 } },
             { type: 'step', kind: 'line', to: [100, 50] },
           ],
         },
@@ -145,7 +145,7 @@ describe("Target 字符串锚点扩展", () => {
           {
             type: 'path',
             children: [
-              { type: 'step', kind: 'move', to: 'A.north' },
+              { type: 'step', kind: 'move', to: { id: 'A', anchor: 'north' } },
               { type: 'step', kind: 'line', to: [0, -100] },
             ],
           },
@@ -176,7 +176,7 @@ describe("Target 字符串锚点扩展", () => {
         {
           type: 'path',
           children: [
-            { type: 'step', kind: 'move', to: 'A.center' },
+            { type: 'step', kind: 'move', to: { id: 'A', anchor: 'center' } },
             { type: 'step', kind: 'line', to: [100, 100] },
           ],
         },
@@ -202,7 +202,7 @@ describe("Node shape boundary clip 在 path 端点贴边时按 shape 多态", ()
         {
           type: 'path',
           children: [
-            { type: 'step', kind: 'move', to: 'A' },
+            { type: 'step', kind: 'move', to: { id: 'A' } },
             { type: 'step', kind: 'line', to: [100, 0] },
           ],
         },
@@ -230,7 +230,7 @@ describe("Node shape boundary clip 在 path 端点贴边时按 shape 多态", ()
         {
           type: 'path',
           children: [
-            { type: 'step', kind: 'move', to: 'A' },
+            { type: 'step', kind: 'move', to: { id: 'A' } },
             { type: 'step', kind: 'line', to: [100, 100] },
           ],
         },

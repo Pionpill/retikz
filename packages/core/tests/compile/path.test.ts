@@ -138,8 +138,8 @@ describe("compile path: 'step' 折角", () => {
         {
           type: 'path',
           children: [
-            { type: 'step', kind: 'move', to: 'A' },
-            { type: 'step', kind: 'step', via: '-|', to: 'B' },
+            { type: 'step', kind: 'move', to: { id: 'A' } },
+            { type: 'step', kind: 'step', via: '-|', to: { id: 'B' } },
           ],
         },
       ],
@@ -164,8 +164,8 @@ describe("compile path: 'step' 折角", () => {
         {
           type: 'path',
           children: [
-            { type: 'step', kind: 'move', to: 'A' },
-            { type: 'step', kind: 'step', via: '-|', to: 'B' },
+            { type: 'step', kind: 'move', to: { id: 'A' } },
+            { type: 'step', kind: 'step', via: '-|', to: { id: 'B' } },
           ],
         },
       ],
@@ -187,8 +187,8 @@ describe("compile path: 'step' 折角", () => {
         {
           type: 'path',
           children: [
-            { type: 'step', kind: 'move', to: 'A' },
-            { type: 'step', kind: 'step', via: '|-', to: 'B' },
+            { type: 'step', kind: 'move', to: { id: 'A' } },
+            { type: 'step', kind: 'step', via: '|-', to: { id: 'B' } },
           ],
         },
       ],
@@ -272,9 +272,9 @@ describe("compile path: 'cycle' 闭合", () => {
         {
           type: 'path',
           children: [
-            { type: 'step', kind: 'move', to: 'A' },
-            { type: 'step', kind: 'line', to: 'B' },
-            { type: 'step', kind: 'line', to: 'C' },
+            { type: 'step', kind: 'move', to: { id: 'A' } },
+            { type: 'step', kind: 'line', to: { id: 'B' } },
+            { type: 'step', kind: 'line', to: { id: 'C' } },
             { type: 'step', kind: 'cycle' },
           ],
         },
@@ -445,9 +445,9 @@ describe("compile path: arrow 箭头", () => {
           type: 'path',
           arrow: '->',
           children: [
-            { type: 'step', kind: 'move', to: 'A' },
-            { type: 'step', kind: 'line', to: 'B' },
-            { type: 'step', kind: 'line', to: 'C' },
+            { type: 'step', kind: 'move', to: { id: 'A' } },
+            { type: 'step', kind: 'line', to: { id: 'B' } },
+            { type: 'step', kind: 'line', to: { id: 'C' } },
           ],
         },
       ],
@@ -621,10 +621,10 @@ describe('compile path: 多节点连线段独立 clip（bugfix tikz-from-ir.demo
         {
           type: 'path',
           children: [
-            { type: 'step', kind: 'move', to: 'A' },
-            { type: 'step', kind: 'line', to: 'B' },
-            { type: 'step', kind: 'line', to: 'C' },
-            { type: 'step', kind: 'line', to: 'A' },
+            { type: 'step', kind: 'move', to: { id: 'A' } },
+            { type: 'step', kind: 'line', to: { id: 'B' } },
+            { type: 'step', kind: 'line', to: { id: 'C' } },
+            { type: 'step', kind: 'line', to: { id: 'A' } },
           ],
         },
       ],

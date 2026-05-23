@@ -20,8 +20,8 @@ describe('Draw: 基础展开', () => {
     expect(out.children[0]).toMatchObject({
       type: 'path',
       children: [
-        { type: 'step', kind: 'move', to: 'a' },
-        { type: 'step', kind: 'line', to: 'b' },
+        { type: 'step', kind: 'move', to: { id: 'a' } },
+        { type: 'step', kind: 'line', to: { id: 'b' } },
       ],
     });
   });
@@ -98,31 +98,31 @@ describe('Draw: 各 step kind 分派', () => {
   it('折角算子 -| → kind=step + via', () => {
     const out = ir(<Draw way={['a', '-|', 'b']} />);
     const steps = (out.children[0] as { children: Array<{ kind: string; via?: string }> }).children;
-    expect(steps[1]).toMatchObject({ kind: 'step', via: '-|', to: 'b' });
+    expect(steps[1]).toMatchObject({ kind: 'step', via: '-|', to: { id: 'b' } });
   });
 
   it('curve 算子 → kind=curve + control', () => {
     const out = ir(<Draw way={['a', { curve: [10, 20] }, 'b']} />);
     const steps = (out.children[0] as { children: Array<{ kind: string }> }).children;
-    expect(steps[1]).toMatchObject({ kind: 'curve', to: 'b', control: [10, 20] });
+    expect(steps[1]).toMatchObject({ kind: 'curve', to: { id: 'b' }, control: [10, 20] });
   });
 
   it('cubic 算子 → kind=cubic + control1 / control2', () => {
     const out = ir(<Draw way={['a', { cubic: [[10, 0], [10, 20]] }, 'b']} />);
     const steps = (out.children[0] as { children: Array<{ kind: string }> }).children;
-    expect(steps[1]).toMatchObject({ kind: 'cubic', to: 'b', control1: [10, 0], control2: [10, 20] });
+    expect(steps[1]).toMatchObject({ kind: 'cubic', to: { id: 'b' }, control1: [10, 0], control2: [10, 20] });
   });
 
   it('bend 算子（带 angle）→ kind=bend + bendDirection + bendAngle', () => {
     const out = ir(<Draw way={['a', { bend: 'left', angle: 45 }, 'b']} />);
     const steps = (out.children[0] as { children: Array<{ kind: string }> }).children;
-    expect(steps[1]).toMatchObject({ kind: 'bend', to: 'b', bendDirection: 'left', bendAngle: 45 });
+    expect(steps[1]).toMatchObject({ kind: 'bend', to: { id: 'b' }, bendDirection: 'left', bendAngle: 45 });
   });
 
   it('bend 算子（缺省 angle）→ 不写 bendAngle 字段', () => {
     const out = ir(<Draw way={['a', { bend: 'right' }, 'b']} />);
     const steps = (out.children[0] as { children: Array<{ kind: string; bendAngle?: number }> }).children;
-    expect(steps[1]).toMatchObject({ kind: 'bend', to: 'b', bendDirection: 'right' });
+    expect(steps[1]).toMatchObject({ kind: 'bend', to: { id: 'b' }, bendDirection: 'right' });
     expect(steps[1].bendAngle).toBeUndefined();
   });
 

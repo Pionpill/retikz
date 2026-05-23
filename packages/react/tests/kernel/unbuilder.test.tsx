@@ -74,7 +74,7 @@ describe('convertIRToReactNode', () => {
           type: 'path',
           stroke: 'red',
           children: [
-            { type: 'step', kind: 'move', to: 'A' },
+            { type: 'step', kind: 'move', to: { id: 'A' } },
             { type: 'step', kind: 'line', to: [100, 100] },
           ],
         },
@@ -87,7 +87,7 @@ describe('convertIRToReactNode', () => {
     const stepEls = toElements(pathEl.props.children as ReturnType<typeof convertIRToReactNode>);
     expect(stepEls).toHaveLength(2);
     expect((stepEls[0].type as { displayName?: string }).displayName).toBe(TIKZ_STEP);
-    expect(stepEls[0].props).toMatchObject({ kind: 'move', to: 'A' });
+    expect(stepEls[0].props).toMatchObject({ kind: 'move', to: { id: 'A' } });
     expect(stepEls[1].props).toMatchObject({ kind: 'line', to: [100, 100] });
   });
 
@@ -103,8 +103,8 @@ describe('convertIRToReactNode', () => {
           stroke: 'blue',
           strokeWidth: 1,
           children: [
-            { type: 'step', kind: 'move', to: 'A' },
-            { type: 'step', kind: 'line', to: 'B' },
+            { type: 'step', kind: 'move', to: { id: 'A' } },
+            { type: 'step', kind: 'line', to: { id: 'B' } },
           ],
         },
       ],
@@ -613,7 +613,7 @@ describe('convertIRToReactNode', () => {
           {
             type: 'path',
             children: [
-              { type: 'step', kind: 'move', to: 'A' },
+              { type: 'step', kind: 'move', to: { id: 'A' } },
               { type: 'step', kind: 'line', to: { of: 'A', offset: [50, 0] } },
             ],
           },
@@ -796,8 +796,8 @@ describe('convertIRToReactNode', () => {
               {
                 type: 'path',
                 children: [
-                  { type: 'step', kind: 'move', to: 'A' },
-                  { type: 'step', kind: 'line', to: 'B' },
+                  { type: 'step', kind: 'move', to: { id: 'A' } },
+                  { type: 'step', kind: 'line', to: { id: 'B' } },
                 ],
               },
             ],
@@ -829,7 +829,7 @@ describe('convertIRToReactNode', () => {
                 type: 'path',
                 color: 'crimson',
                 children: [
-                  { type: 'step', kind: 'move', to: 'A' },
+                  { type: 'step', kind: 'move', to: { id: 'A' } },
                   {
                     type: 'step',
                     kind: 'line',
@@ -854,7 +854,7 @@ describe('convertIRToReactNode', () => {
           {
             type: 'path',
             children: [
-              { type: 'step', kind: 'move', to: 'pivot' },
+              { type: 'step', kind: 'move', to: { id: 'pivot' } },
               { type: 'step', kind: 'line', to: [100, 50] },
             ],
           },

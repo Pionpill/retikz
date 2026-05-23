@@ -55,7 +55,7 @@ describe('arc 显式 center', () => {
         type: 'path',
         children: [
           { type: 'step', kind: 'move', to: [0, 0] },
-          { type: 'step', kind: 'arc', startAngle: 0, endAngle: 90, radius: 10, center: 'ghost' },
+          { type: 'step', kind: 'arc', startAngle: 0, endAngle: 90, radius: 10, center: { id: 'ghost' } },
         ],
       },
     ]);

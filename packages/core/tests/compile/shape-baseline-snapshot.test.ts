@@ -43,11 +43,11 @@ const richIR: IR = {
       label: { text: 'tag', position: 'above' },
     },
     // boundary clip：r（带 margin）→ c
-    { type: 'path', children: [{ type: 'step', kind: 'move', to: 'r' }, { type: 'step', kind: 'line', to: 'c' }] },
+    { type: 'path', children: [{ type: 'step', kind: 'move', to: { id: 'r' } }, { type: 'step', kind: 'line', to: { id: 'c' } }] },
     // 命名 anchor：d.north → e.south
-    { type: 'path', children: [{ type: 'step', kind: 'move', to: 'd.north' }, { type: 'step', kind: 'line', to: 'e.south' }] },
+    { type: 'path', children: [{ type: 'step', kind: 'move', to: { id: 'd', anchor: 'north' } }, { type: 'step', kind: 'line', to: { id: 'e', anchor: 'south' } }] },
     // 数字角度：c.30
-    { type: 'path', children: [{ type: 'step', kind: 'move', to: 'c.30' }, { type: 'step', kind: 'line', to: [300, 300] }] },
+    { type: 'path', children: [{ type: 'step', kind: 'move', to: { id: 'c', anchor: 30 } }, { type: 'step', kind: 'line', to: [300, 300] }] },
   ],
 };
 

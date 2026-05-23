@@ -269,8 +269,8 @@ describe('scope nested compose', () => {
       {
         type: 'path',
         children: [
-          { type: 'step', kind: 'move', to: 'external' },
-          { type: 'step', kind: 'line', to: 'A' },
+          { type: 'step', kind: 'move', to: { id: 'external' } },
+          { type: 'step', kind: 'line', to: { id: 'A' } },
         ],
       },
     ]);
@@ -319,8 +319,8 @@ describe('scope GroupPrim emit 形态', () => {
           {
             type: 'path',
             children: [
-              { type: 'step', kind: 'move', to: 'A' },
-              { type: 'step', kind: 'line', to: 'B' },
+              { type: 'step', kind: 'move', to: { id: 'A' } },
+              { type: 'step', kind: 'line', to: { id: 'B' } },
             ],
           },
         ],
@@ -397,8 +397,8 @@ describe('scope GroupPrim emit 形态', () => {
           {
             type: 'path',
             children: [
-              { type: 'step', kind: 'move', to: 's1' },
-              { type: 'step', kind: 'line', to: 's2' },
+              { type: 'step', kind: 'move', to: { id: 's1' } },
+              { type: 'step', kind: 'line', to: { id: 's2' } },
             ],
           },
         ],
@@ -447,8 +447,8 @@ describe('scope GroupPrim emit 形态', () => {
       {
         type: 'path',
         children: [
-          { type: 'step', kind: 'move', to: 'ext' },
-          { type: 'step', kind: 'line', to: 'inner' },
+          { type: 'step', kind: 'move', to: { id: 'ext' } },
+          { type: 'step', kind: 'line', to: { id: 'inner' } },
         ],
       },
     ]);
@@ -478,8 +478,8 @@ describe('scope 跨 scope path 引用', () => {
       {
         type: 'path',
         children: [
-          { type: 'step', kind: 'move', to: 'external' },
-          { type: 'step', kind: 'line', to: 'A' },
+          { type: 'step', kind: 'move', to: { id: 'external' } },
+          { type: 'step', kind: 'line', to: { id: 'A' } },
         ],
       },
     ]);
@@ -506,8 +506,8 @@ describe('scope 跨 scope path 引用', () => {
       {
         type: 'path',
         children: [
-          { type: 'step', kind: 'move', to: 'B' },
-          { type: 'step', kind: 'line', to: 'anchor' },
+          { type: 'step', kind: 'move', to: { id: 'B' } },
+          { type: 'step', kind: 'line', to: { id: 'anchor' } },
         ],
       },
     ]);
@@ -643,7 +643,7 @@ describe('scope.id synthetic bbox 注册', () => {
         type: 'path',
         children: [
           { type: 'step', kind: 'move', to: [0, 80] },
-          { type: 'step', kind: 'line', to: 'cluster' },
+          { type: 'step', kind: 'line', to: { id: 'cluster' } },
         ],
       },
     ]);
@@ -665,7 +665,7 @@ describe('同 frame 重复 id 触发 DUPLICATE_NODE_ID warn + last-wins', () => 
         type: 'path',
         children: [
           { type: 'step', kind: 'move', to: [0, -60] },
-          { type: 'step', kind: 'line', to: 'A' },
+          { type: 'step', kind: 'line', to: { id: 'A' } },
         ],
       },
     ]);

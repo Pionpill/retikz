@@ -159,7 +159,7 @@ export type {
   WayLabel,
   WayLabelOp,
 } from './parsers';
-export { parseWay, DrawWay, parseTargetSugar } from './parsers';
+export { parseWay, DrawWay, parseTargetSugar, parseNodeTarget } from './parsers';
 
 // Geometry
 // RECT_ANCHORS（const 集合，值）与 RectAnchor（派生 type）配对，名字不撞

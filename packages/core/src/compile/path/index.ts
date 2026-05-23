@@ -37,6 +37,10 @@ import { normalizeRelativeTargets } from './relative';
 import { applyArrowShrinks, computeShrink, endpointArrows } from './shrink';
 import { type PathBaseProps, splitSubPathsForEndpointArrows } from './split';
 
+/** 目标若是对象 NodeTarget（`{ id, ... }`）返回其 id，否则 undefined——给 UNRESOLVED_NODE_REFERENCE 诊断用 */
+const nodeRefId = (t: IRTarget): string | undefined =>
+  typeof t === 'object' && !Array.isArray(t) && 'id' in t ? t.id : undefined;
+
 /**
  * 语义 stroke 档位 → 数值（user units）
  * @description 对齐 TikZ 比例（thin=0.4pt→1=默认 strokeWidth）：ultraThin 0.25、veryThin 0.5、thin 1、semithick 1.5、thick 2、veryThick 3、ultraThick 4。显式 strokeWidth 覆盖 thickness。
@@ -148,10 +152,11 @@ export const emitPathPrimitive = (
   const anchors: Array<IRPosition | null> = steps.map((s, idx) => {
     if (!hasTo(s)) return null;
     const ref = refPointOfTarget(s.to, nameStack, scopeChain);
-    if (!ref && typeof s.to === 'string') {
+    const toId = nodeRefId(s.to);
+    if (!ref && toId !== undefined) {
       warn(
         'UNRESOLVED_NODE_REFERENCE',
-        `Step.to references undefined node id '${s.to}'; the entire path is skipped`,
+        `Step.to references undefined node id '${toId}'; the entire path is skipped`,
         `children[${idx}].to`,
       );
     }
@@ -338,17 +343,19 @@ export const emitPathPrimitive = (
       const fromPt = refPointOfTarget(step.from, nameStack, scopeChain);
       const toPt = refPointOfTarget(step.to, nameStack, scopeChain);
       if (!fromPt || !toPt) {
-        if (!fromPt && typeof step.from === 'string') {
+        const fromId = nodeRefId(step.from);
+        const rectToId = nodeRefId(step.to);
+        if (!fromPt && fromId !== undefined) {
           warn(
             'UNRESOLVED_NODE_REFERENCE',
-            `Rectangle from references undefined node id '${step.from}'; the entire path is skipped`,
+            `Rectangle from references undefined node id '${fromId}'; the entire path is skipped`,
             `children[${i}].from`,
           );
         }
-        if (!toPt && typeof step.to === 'string') {
+        if (!toPt && rectToId !== undefined) {
           warn(
             'UNRESOLVED_NODE_REFERENCE',
-            `Rectangle to references undefined node id '${step.to}'; the entire path is skipped`,
+            `Rectangle to references undefined node id '${rectToId}'; the entire path is skipped`,
             `children[${i}].to`,
           );
         }
@@ -390,10 +397,11 @@ export const emitPathPrimitive = (
       if (step.center !== undefined) {
         const c = refPointOfTarget(step.center, nameStack, scopeChain);
         if (!c) {
-          if (typeof step.center === 'string') {
+          const centerId = nodeRefId(step.center);
+          if (centerId !== undefined) {
             warn(
               'UNRESOLVED_NODE_REFERENCE',
-              `Arc step center references undefined node id '${step.center}'; the entire path is skipped`,
+              `Arc step center references undefined node id '${centerId}'; the entire path is skipped`,
               `children[${i}].center`,
             );
           }

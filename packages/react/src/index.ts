@@ -14,6 +14,8 @@ export type {
   NodeProps,
   PathProps,
   StepProps,
+  /** React DSL target：core `IRTarget` 对象 + 字符串 shorthand（仅 DSL 层，eager 转对象后入 IR） */
+  DslTarget,
   /** 11 个 named Step kind props（按 IR `IR*Step` 命名对照） */
   MoveStepProps,
   LineStepProps,

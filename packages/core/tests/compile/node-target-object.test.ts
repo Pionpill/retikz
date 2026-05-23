@@ -41,17 +41,30 @@ const endOf = (target: IRTarget): [number, number] => {
   return lastLineEnd(prim);
 };
 
-describe('对象 NodeTarget == 等价字符串 shorthand', () => {
-  it('命名 anchor：{ id, anchor:"north" } == "A.north"', () => {
-    expect(endOf({ id: 'A', anchor: 'north' })).toEqual(endOf('A.north'));
+describe('对象 NodeTarget 命名 / 角度 / auto 方向正确', () => {
+  it('命名 anchor：north 在 south 上方、east 在 west 右侧', () => {
+    const north = endOf({ id: 'A', anchor: 'north' });
+    const south = endOf({ id: 'A', anchor: 'south' });
+    const east = endOf({ id: 'A', anchor: 'east' });
+    const west = endOf({ id: 'A', anchor: 'west' });
+    expect(north[1]).toBeLessThan(south[1]); // y 向下：north 更小
+    expect(east[0]).toBeGreaterThan(west[0]);
   });
 
-  it('角度 anchor：{ id, anchor:30 } == "A.30"', () => {
-    expect(endOf({ id: 'A', anchor: 30 })).toEqual(endOf('A.30'));
+  it('角度 anchor：0° 落 east 侧、90° 落 south 侧（边界点）', () => {
+    const a0 = endOf({ id: 'A', anchor: 0 });
+    const a90 = endOf({ id: 'A', anchor: 90 });
+    const center = endOf({ id: 'A', anchor: 'center' });
+    expect(a0[0]).toBeGreaterThan(center[0]); // 0° 朝 +x
+    expect(a90[1]).toBeGreaterThan(center[1]); // 90° 朝 +y（下）
   });
 
-  it('auto clip：{ id:"A" } == "A"', () => {
-    expect(endOf({ id: 'A' })).toEqual(endOf('A'));
+  it('auto clip：{ id:"A" } 落在中心与 toward([100,100]) 之间的边界上（不等于中心）', () => {
+    const auto = endOf({ id: 'A' });
+    const center = endOf({ id: 'A', anchor: 'center' });
+    // auto 朝 [100,100] 贴边界 → 在中心的右下方向
+    expect(auto[0]).toBeGreaterThan(center[0]);
+    expect(auto[1]).toBeGreaterThan(center[1]);
   });
 });
 

@@ -86,6 +86,8 @@ export type WayLabelOp = { label: WayLabel };
  */
 export type WayItem =
   | IRTarget
+  // 节点 id / anchor / 角度 / 相对偏移字符串 shorthand（React DSL 层）——core IRTarget 已对象化，way 仍接受字符串、parseTargetSugar eager 转对象
+  | string
   | WayRelativeItem
   | WayVia
   | WayCycle

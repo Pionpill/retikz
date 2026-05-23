@@ -31,7 +31,7 @@ describe('CompileOptions.onWarn', () => {
       {
         type: 'path',
         children: [
-          { type: 'step', kind: 'move', to: 'bogus' },
+          { type: 'step', kind: 'move', to: { id: 'bogus' } },
           { type: 'step', kind: 'line', to: [10, 0] },
         ],
       },
@@ -50,8 +50,8 @@ describe('CompileOptions.onWarn', () => {
       {
         type: 'path',
         children: [
-          { type: 'step', kind: 'move', to: 'A' },
-          { type: 'step', kind: 'line', to: 'bogus' },
+          { type: 'step', kind: 'move', to: { id: 'A' } },
+          { type: 'step', kind: 'line', to: { id: 'bogus' } },
         ],
       },
     ]);
@@ -66,8 +66,8 @@ describe('CompileOptions.onWarn', () => {
       {
         type: 'path',
         children: [
-          { type: 'step', kind: 'move', to: 'bogus1' },
-          { type: 'step', kind: 'line', to: 'bogus2' },
+          { type: 'step', kind: 'move', to: { id: 'bogus1' } },
+          { type: 'step', kind: 'line', to: { id: 'bogus2' } },
         ],
       },
     ]);
@@ -82,7 +82,7 @@ describe('CompileOptions.onWarn', () => {
       {
         type: 'path',
         children: [
-          { type: 'step', kind: 'move', to: 'A' },
+          { type: 'step', kind: 'move', to: { id: 'A' } },
           { type: 'step', kind: 'line', to: [100, 0] },
         ],
       },

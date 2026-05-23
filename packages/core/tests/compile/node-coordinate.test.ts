@@ -39,8 +39,8 @@ describe('Coordinate placeholder', () => {
         {
           type: 'path',
           children: [
-            { type: 'step', kind: 'move', to: 'A' },
-            { type: 'step', kind: 'line', to: 'B' },
+            { type: 'step', kind: 'move', to: { id: 'A' } },
+            { type: 'step', kind: 'line', to: { id: 'B' } },
           ],
         },
       ],
@@ -94,7 +94,7 @@ describe('Coordinate placeholder', () => {
         {
           type: 'path',
           children: [
-            { type: 'step', kind: 'move', to: 'c' },
+            { type: 'step', kind: 'move', to: { id: 'c' } },
             { type: 'step', kind: 'line', to: [0, 0] },
           ],
         },

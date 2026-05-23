@@ -47,7 +47,7 @@ describe('localNamespace 隔离子 frame', () => {
             type: 'path',
             children: [
               { type: 'step', kind: 'move', to: [0, -50] },
-              { type: 'step', kind: 'line', to: 'A' },
+              { type: 'step', kind: 'line', to: { id: 'A' } },
             ],
           },
         ],
@@ -56,7 +56,7 @@ describe('localNamespace 隔离子 frame', () => {
         type: 'path',
         children: [
           { type: 'step', kind: 'move', to: [0, 50] },
-          { type: 'step', kind: 'line', to: 'A' },
+          { type: 'step', kind: 'line', to: { id: 'A' } },
         ],
       },
     ]);
@@ -87,8 +87,8 @@ describe('localNamespace 隔离子 frame', () => {
           {
             type: 'path',
             children: [
-              { type: 'step', kind: 'move', to: 'inner' },
-              { type: 'step', kind: 'line', to: 'hub' },
+              { type: 'step', kind: 'move', to: { id: 'inner' } },
+              { type: 'step', kind: 'line', to: { id: 'hub' } },
             ],
           },
         ],
@@ -117,8 +117,8 @@ describe('localNamespace 隔离子 frame', () => {
       {
         type: 'path',
         children: [
-          { type: 'step', kind: 'move', to: 'hub' },
-          { type: 'step', kind: 'line', to: 'hidden' },
+          { type: 'step', kind: 'move', to: { id: 'hub' } },
+          { type: 'step', kind: 'line', to: { id: 'hidden' } },
         ],
       },
     ]);
@@ -139,7 +139,7 @@ describe('localNamespace 隔离子 frame', () => {
             type: 'path',
             children: [
               { type: 'step', kind: 'move', to: [0, 60] },
-              { type: 'step', kind: 'line', to: 'A' },
+              { type: 'step', kind: 'line', to: { id: 'A' } },
             ],
           },
           {
@@ -152,7 +152,7 @@ describe('localNamespace 隔离子 frame', () => {
                 type: 'path',
                 children: [
                   { type: 'step', kind: 'move', to: [0, 60] },
-                  { type: 'step', kind: 'line', to: 'A' },
+                  { type: 'step', kind: 'line', to: { id: 'A' } },
                 ],
               },
             ],
@@ -225,7 +225,7 @@ describe('scope.id 始终注册到父 frame', () => {
         type: 'path',
         children: [
           { type: 'step', kind: 'move', to: [0, 60] },
-          { type: 'step', kind: 'line', to: 'cluster' },
+          { type: 'step', kind: 'line', to: { id: 'cluster' } },
         ],
       },
     ]);
@@ -245,7 +245,7 @@ describe('scope.id 始终注册到父 frame', () => {
         type: 'path',
         children: [
           { type: 'step', kind: 'move', to: [0, 0] },
-          { type: 'step', kind: 'line', to: 'B' },
+          { type: 'step', kind: 'line', to: { id: 'B' } },
         ],
       },
     ]);
@@ -265,7 +265,7 @@ describe('scope.id 始终注册到父 frame', () => {
         type: 'path',
         children: [
           { type: 'step', kind: 'move', to: [0, 60] },
-          { type: 'step', kind: 'line', to: 'flat' },
+          { type: 'step', kind: 'line', to: { id: 'flat' } },
         ],
       },
     ]);

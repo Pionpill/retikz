@@ -67,7 +67,7 @@ describe('Shape registry — injection (happy path)', () => {
       type: 'scene',
       children: [
         { type: 'node', id: 'A', shape: 'hexagon', position: [0, 0] },
-        { type: 'path', children: [{ type: 'step', kind: 'move', to: 'A.30' }, { type: 'step', kind: 'line', to: [100, 50] }] },
+        { type: 'path', children: [{ type: 'step', kind: 'move', to: { id: 'A', anchor: 30 } }, { type: 'step', kind: 'line', to: [100, 50] }] },
       ],
     };
     const scene = compileToScene(ir, { shapes: { hexagon: radialShape() } });
@@ -91,7 +91,7 @@ describe('Shape registry — boundary', () => {
       children: [
         { type: 'node', id: 'a', shape: 'circle', position: [0, 0], text: 'a' },
         { type: 'node', id: 'b', shape: 'diamond', position: [60, 0], rotate: 20 },
-        { type: 'path', children: [{ type: 'step', kind: 'move', to: 'a' }, { type: 'step', kind: 'line', to: 'b' }] },
+        { type: 'path', children: [{ type: 'step', kind: 'move', to: { id: 'a' } }, { type: 'step', kind: 'line', to: { id: 'b' } }] },
       ],
     };
     expect(compileToScene(ir, { shapes: {} })).toEqual(compileToScene(ir));
@@ -110,7 +110,7 @@ describe('Shape registry — boundary', () => {
         { type: 'coordinate', id: 'co', position: [50, 50] },
         { type: 'scope', id: 's', transforms: [], children: [{ type: 'node', id: 'inner', position: [0, 0], text: 'x' }] },
         // coordinate center (0×0 rect → boundary == center) and scope.id.north must not crash
-        { type: 'path', children: [{ type: 'step', kind: 'move', to: 'co' }, { type: 'step', kind: 'line', to: 's.north' }] },
+        { type: 'path', children: [{ type: 'step', kind: 'move', to: { id: 'co' } }, { type: 'step', kind: 'line', to: { id: 's', anchor: 'north' } }] },
       ],
     };
     const scene = compileToScene(ir);
@@ -142,7 +142,7 @@ describe('Shape registry — error path', () => {
       type: 'scene',
       children: [
         { type: 'node', id: 'A', shape: 'dot', position: [0, 0] },
-        { type: 'path', children: [{ type: 'step', kind: 'move', to: 'A.north' }, { type: 'step', kind: 'line', to: [0, -100] }] },
+        { type: 'path', children: [{ type: 'step', kind: 'move', to: { id: 'A', anchor: 'north' } }, { type: 'step', kind: 'line', to: [0, -100] }] },
       ],
     };
     expect(() => compileToScene(ir, { shapes: { dot: radialShape() } })).toThrow(/Unknown anchor 'north' for shape 'dot'/);
@@ -198,7 +198,7 @@ describe('Shape registry — interaction', () => {
       type: 'scene',
       children: [
         { type: 'node', id: 'A', shape: 'hexagon', position: [0, 0], outerSep: 10 },
-        { type: 'path', children: [{ type: 'step', kind: 'move', to: 'A' }, { type: 'step', kind: 'line', to: [100, 0] }] },
+        { type: 'path', children: [{ type: 'step', kind: 'move', to: { id: 'A' } }, { type: 'step', kind: 'line', to: [100, 0] }] },
       ],
     };
     const scene = compileToScene(ir, { shapes: { hexagon: radialShape() } });

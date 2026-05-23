@@ -99,7 +99,7 @@ describe('buildIR', () => {
     expect(ir.children[0]).toMatchObject({
       type: 'path',
       children: [
-        { type: 'step', kind: 'move', to: 'A' },
+        { type: 'step', kind: 'move', to: { id: 'A' } },
         { type: 'step', kind: 'line', to: [100, 100] },
       ],
     });
@@ -211,7 +211,7 @@ describe('buildIR', () => {
     expect(ir.children[0]).toMatchObject({
       type: 'path',
       children: [
-        { type: 'step', kind: 'move', to: 'A' },
+        { type: 'step', kind: 'move', to: { id: 'A' } },
         { type: 'step', kind: 'line', to: { relative: [1, 0] } },
       ],
     });
@@ -227,7 +227,7 @@ describe('buildIR', () => {
     expect(ir.children[0]).toMatchObject({
       type: 'path',
       children: [
-        { type: 'step', kind: 'move', to: 'A' },
+        { type: 'step', kind: 'move', to: { id: 'A' } },
         {
           type: 'step',
           kind: 'curve',
@@ -260,11 +260,11 @@ describe('buildIR', () => {
       expect(ir.children[0]).toMatchObject({
         type: 'path',
         children: [
-          { type: 'step', kind: 'move', to: 'A' },
+          { type: 'step', kind: 'move', to: { id: 'A' } },
           {
             type: 'step',
             kind: 'line',
-            to: 'B',
+            to: { id: 'B' },
             label: { text: 'accept', side: 'above' },
           },
         ],

@@ -203,8 +203,8 @@ describe('Node at relative positioning', () => {
           {
             type: 'path',
             children: [
-              { type: 'step', kind: 'move', to: 'A' },
-              { type: 'step', kind: 'line', to: 'B' },
+              { type: 'step', kind: 'move', to: { id: 'A' } },
+              { type: 'step', kind: 'line', to: { id: 'B' } },
             ],
           },
         ],

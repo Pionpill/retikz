@@ -319,8 +319,8 @@ describe('OffsetPosition: compile resolve（Node.position）', () => {
           {
             type: 'path',
             children: [
-              { type: 'step', kind: 'move', to: 'A' },
-              { type: 'step', kind: 'line', to: 'B' },
+              { type: 'step', kind: 'move', to: { id: 'A' } },
+              { type: 'step', kind: 'line', to: { id: 'B' } },
             ],
           },
         ],

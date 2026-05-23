@@ -59,7 +59,7 @@ describe('Happy: 主色级联 / 四通道', () => {
               type: 'path',
               arrow: '->',
               children: [
-                { type: 'step', kind: 'move', to: 'A' },
+                { type: 'step', kind: 'move', to: { id: 'A' } },
                 { type: 'step', kind: 'line', to: [60, 0], label: { text: 'e' } },
               ],
             },

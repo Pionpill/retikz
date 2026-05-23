@@ -13,10 +13,10 @@ const ir: IR = {
     {
       type: 'path',
       children: [
-        { type: 'step', kind: 'move', to: 'a' },
-        { type: 'step', kind: 'line', to: 'b' },
-        { type: 'step', kind: 'line', to: 'c' },
-        { type: 'step', kind: 'line', to: 'a' },
+        { type: 'step', kind: 'move', to: { id: 'a' } },
+        { type: 'step', kind: 'line', to: { id: 'b' } },
+        { type: 'step', kind: 'line', to: { id: 'c' } },
+        { type: 'step', kind: 'line', to: { id: 'a' } },
       ],
     },
   ],

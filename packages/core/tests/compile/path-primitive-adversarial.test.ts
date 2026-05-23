@@ -296,9 +296,9 @@ describe('GroupPrim.transforms：结构化形态约束', () => {
           type: 'path',
           arrow: '->',
           children: [
-            { type: 'step', kind: 'move', to: 'A' },
-            { type: 'step', kind: 'line', to: 'B' },
-            { type: 'step', kind: 'line', to: 'C' },
+            { type: 'step', kind: 'move', to: { id: 'A' } },
+            { type: 'step', kind: 'line', to: { id: 'B' } },
+            { type: 'step', kind: 'line', to: { id: 'C' } },
           ],
         },
       ],
@@ -391,7 +391,7 @@ describe('边界 / 错误路径', () => {
         {
           type: 'path',
           children: [
-            { type: 'step', kind: 'move', to: 'UNKNOWN' },
+            { type: 'step', kind: 'move', to: { id: 'UNKNOWN' } },
             { type: 'step', kind: 'line', to: [10, 0] },
           ],
         },

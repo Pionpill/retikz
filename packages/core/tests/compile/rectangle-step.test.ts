@@ -150,7 +150,7 @@ describe('rectangle step：node ref 角 + schema', () => {
   it('from/to 引用未定义节点 → 整 path 跳过', () => {
     const ir = path(
       { type: 'step', kind: 'move', to: [0, 0] },
-      { type: 'step', kind: 'rectangle', from: 'ghost', to: [10, 6] },
+      { type: 'step', kind: 'rectangle', from: { id: 'ghost' }, to: [10, 6] },
     );
     expect(compileToScene(ir, silent).primitives.find(p => p.type === 'path')).toBeUndefined();
   });
