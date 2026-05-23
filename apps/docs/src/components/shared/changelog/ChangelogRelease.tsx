@@ -25,7 +25,7 @@ export const ChangelogRelease: FC<ChangelogReleaseProps> = ({ release, lang }) =
         <div
           className={cn(
             'text-sm font-semibold tabular-nums',
-            !release.stableDate && 'font-medium text-muted-foreground italic',
+            !release.stableDate && 'font-medium text-muted-foreground',
           )}
         >
           {release.stableDate ?? t('changelog.inDevelopment')}
