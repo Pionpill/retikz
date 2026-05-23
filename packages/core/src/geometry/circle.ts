@@ -1,6 +1,9 @@
 import { localToWorld, worldToLocal } from './_transform';
+import { type Side, edgeAngleDeg } from './_edge';
 import type { Position } from './point';
 import type { RectAnchor } from './rect';
+
+const DEG_TO_RAD = Math.PI / 180;
 
 /** 圆形：几何中心 + 半径，预留旋转字段保持与 Rect 同形 API */
 export type Circle = {
@@ -69,5 +72,10 @@ export const circle = {
     if (len === 0) return [c.x, c.y];
     const t = c.radius / len;
     return localToWorld(c, [lx * t, ly * t]);
+  },
+  /** 边上比例点：side 的 90° 周长弧段 t∈[0,1] 处（等角，落真实圆周；含旋转） */
+  edgePoint: (c: Circle, side: Side, t: number): Position => {
+    const rad = edgeAngleDeg(side, t) * DEG_TO_RAD;
+    return localToWorld(c, [c.radius * Math.cos(rad), c.radius * Math.sin(rad)]);
   },
 };

@@ -1,6 +1,9 @@
 import { localToWorld, worldToLocal } from './_transform';
+import { type Side, edgeAngleDeg } from './_edge';
 import type { Position } from './point';
 import type { RectAnchor } from './rect';
+
+const DEG_TO_RAD = Math.PI / 180;
 
 /** 椭圆：中心 + 半长轴 rx / 半短轴 ry + 可选旋转 */
 export type Ellipse = {
@@ -77,5 +80,10 @@ export const ellipse = {
     const b = ly / e.ry;
     const t = 1 / Math.sqrt(a * a + b * b);
     return localToWorld(e, [lx * t, ly * t]);
+  },
+  /** 边上比例点：side 的 90° 周长弧段 t∈[0,1] 处（等角，落真实椭圆周；含旋转） */
+  edgePoint: (e: Ellipse, side: Side, t: number): Position => {
+    const rad = edgeAngleDeg(side, t) * DEG_TO_RAD;
+    return localToWorld(e, [e.rx * Math.cos(rad), e.ry * Math.sin(rad)]);
   },
 };

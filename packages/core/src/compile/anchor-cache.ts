@@ -9,6 +9,7 @@
  *   compile 结束 layout 引用释放，WeakMap entry 随 GC 一并回收。
  */
 
+import type { Side } from '../geometry/_edge';
 import type { Position } from '../geometry/point';
 import type { IRPosition } from '../ir';
 import { anchorOf, angleBoundaryOf } from './node';
@@ -61,5 +62,42 @@ export const resolveAnchor = (
   if (cached !== undefined) return cached;
   const result = computeAnchor(layout, anchorName);
   layoutCache.set(anchorName, result);
+  return result;
+};
+
+/**
+ * 取节点边上比例点 `{ side, t }` 的全局坐标，带 per-layout 缓存
+ * @description 走 `layout.shapeDef.edgePoint`——shape 未实现（如自定义 shape）抛"does not support side anchors"；
+ *   零尺寸 layout（Coordinate）抛错（边上比例点对一个点无意义，报错比退化中心更可诊断，见 alpha.6 ADR-01 决策细节 #10）。
+ *   缓存 key = `${side}:${t}`，与命名 anchor（`'north'` / `'30'`）共用 layout 的 Map——key 含 `:` 故命名空间不冲突。
+ * @param layout 已 Pass 1 完成的 NodeLayout（rect 已是全局坐标）
+ * @returns 全局坐标系下的 IRPosition `[x, y]`
+ */
+export const resolveEdgePoint = (
+  layout: NodeLayout,
+  side: Side,
+  t: number,
+): IRPosition => {
+  const { edgePoint } = layout.shapeDef;
+  if (!edgePoint) {
+    throw new Error(
+      `shape '${layout.shapeName}' does not support side anchors ({ side, t })`,
+    );
+  }
+  if (layout.rect.width === 0 && layout.rect.height === 0) {
+    throw new Error(
+      `{ side, t } is not meaningful on a zero-size Coordinate (shape '${layout.shapeName}')`,
+    );
+  }
+  let layoutCache = cache.get(layout);
+  if (!layoutCache) {
+    layoutCache = new Map<string, IRPosition>();
+    cache.set(layout, layoutCache);
+  }
+  const key = `${side}:${t}`;
+  const cached = layoutCache.get(key);
+  if (cached !== undefined) return cached;
+  const result = positionToIR(edgePoint(layout.rect, side, t));
+  layoutCache.set(key, result);
   return result;
 };

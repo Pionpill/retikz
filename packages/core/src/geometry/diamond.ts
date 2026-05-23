@@ -1,6 +1,15 @@
 import { localToWorld, worldToLocal } from './_transform';
+import { type Side, polylineViaVertex } from './_edge';
 import type { Position } from './point';
 import type { RectAnchor } from './rect';
+
+/** 每条 side 的过顶点折线三 anchor：[邻边中点, cardinal 顶点, 邻边中点]（方向 north/south=西→东、east/west=北→南） */
+const DIAMOND_EDGE = {
+  north: ['north-west', 'north', 'north-east'],
+  south: ['south-west', 'south', 'south-east'],
+  east: ['north-east', 'east', 'south-east'],
+  west: ['north-west', 'west', 'south-west'],
+} as const satisfies Record<Side, readonly [RectAnchor, RectAnchor, RectAnchor]>;
 
 /** 菱形：中心 + halfA/halfB 半轴长 + 可选旋转；顶点在 (±halfA,0) 与 (0,±halfB) */
 export type Diamond = {
@@ -71,5 +80,15 @@ export const diamond = {
     if (denom === 0) return [d.x, d.y];
     const t = 1 / denom;
     return localToWorld(d, [lx * t, ly * t]);
+  },
+  /** 边上比例点：side 过 cardinal 顶点的两段折线 t∈[0,1] 处（落真实斜边；含旋转） */
+  edgePoint: (d: Diamond, side: Side, t: number): Position => {
+    const [mid0, vertex, mid1] = DIAMOND_EDGE[side];
+    return polylineViaVertex(
+      diamond.anchor(d, mid0),
+      diamond.anchor(d, vertex),
+      diamond.anchor(d, mid1),
+      t,
+    );
   },
 };

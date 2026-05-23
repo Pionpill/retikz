@@ -22,5 +22,6 @@ export const circle: ShapeDefinition = {
     const a = asRectAnchor(name);
     return a ? circleOps.anchor(toCircle(r), a) : undefined;
   },
+  edgePoint: (r, side, t) => circleOps.edgePoint(toCircle(r), side, t),
   emit: (r, style, round) => ellipse.emit(r, style, round),
 };

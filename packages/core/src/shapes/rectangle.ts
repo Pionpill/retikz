@@ -15,6 +15,7 @@ export const rectangle: ShapeDefinition = {
     const a = asRectAnchor(name);
     return a ? rectOps.anchor(r, a) : undefined;
   },
+  edgePoint: (r, side, t) => rectOps.edgePoint(r, side, t),
   *emit (r, style, round): Iterable<ScenePrimitive> {
     const halfW = r.width / 2;
     const halfH = r.height / 2;

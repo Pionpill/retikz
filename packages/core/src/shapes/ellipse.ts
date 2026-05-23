@@ -25,6 +25,7 @@ export const ellipse: ShapeDefinition = {
     const a = asRectAnchor(name);
     return a ? ellipseOps.anchor(toEllipse(r), a) : undefined;
   },
+  edgePoint: (r, side, t) => ellipseOps.edgePoint(toEllipse(r), side, t),
   *emit (r, style, round): Iterable<ScenePrimitive> {
     yield {
       type: 'ellipse',

@@ -25,6 +25,7 @@ export const diamond: ShapeDefinition = {
     const a = asRectAnchor(name);
     return a ? diamondOps.anchor(toDiamond(r), a) : undefined;
   },
+  edgePoint: (r, side, t) => diamondOps.edgePoint(toDiamond(r), side, t),
   *emit (r, style, round): Iterable<ScenePrimitive> {
     const d = toDiamond(r);
     const e = diamondOps.anchor(d, 'east');

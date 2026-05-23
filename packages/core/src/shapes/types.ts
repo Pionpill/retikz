@@ -40,6 +40,16 @@ export type ShapeDefinition = {
   boundaryPoint: (rect: Rect, toward: Position) => Position;
   /** 命名 anchor 世界坐标；shape 不认识的名字返回 `undefined`（调用方据此抛清晰错误）。 */
   anchor: (rect: Rect, name: string) => Position | undefined;
+  /**
+   * 边上比例点：side 真实边界从约定起点起 t∈[0,1] 处（轴对齐空间求出后由 layout 投回世界系）。
+   * @description 可选——内置 4 shape 必实现，不实现的 shape 收到 `{ side, t }` 时编译期（resolveEdgePoint）抛明确错。
+   *   与 `anchor` 同坐标语义：收**带 rotate 的 Rect**，自行用 worldToLocal/localToWorld 处理旋转。
+   */
+  edgePoint?: (
+    rect: Rect,
+    side: 'north' | 'south' | 'east' | 'west',
+    t: number,
+  ) => Position;
   /** 视觉 primitive，**轴对齐空间**（rotate 由编译器外层 GroupPrim 统一施加）。 */
   emit: (rect: Rect, style: ShapeStyle, round: (n: number) => number) => Iterable<ScenePrimitive>;
 };

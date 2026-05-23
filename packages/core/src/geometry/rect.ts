@@ -1,4 +1,5 @@
 import { localToWorld, worldToLocal } from './_transform';
+import { EDGE_ENDS, type Side, lerpPoint } from './_edge';
 import type { Position } from './point';
 
 /** 轴对齐矩形：几何中心 + 宽高 + 可选绕中心旋转 */
@@ -87,6 +88,11 @@ export const rect = {
     const ty = localY === 0 ? Infinity : halfH / Math.abs(localY);
     const t = Math.min(tx, ty);
     return localToWorld(r, [localX * t, localY * t]);
+  },
+  /** 边上比例点：side 直边 t∈[0,1] 处（两角 anchor 线性插值，含旋转）；方向见 EDGE_ENDS */
+  edgePoint: (r: Rect, side: Side, t: number): Position => {
+    const [a, b] = EDGE_ENDS[side];
+    return lerpPoint(rect.anchor(r, a), rect.anchor(r, b), t);
   },
 };
 
