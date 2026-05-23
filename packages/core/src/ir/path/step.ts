@@ -183,7 +183,7 @@ export const ArcStepSchema = z
     type: z.literal('step').describe('Discriminator marking this as a path step node'),
     kind: z
       .literal('arc')
-      .describe('Arc segment from cursor as center, sweeping startAngle → endAngle on a circle of given radius (TikZ `arc[start angle=…, end angle=…, radius=…]`); pen ends at the arc endpoint, not the center'),
+      .describe('Arc segment sweeping startAngle → endAngle around a center. Circular (radius) or elliptical (radiusX/radiusY). Center defaults to the cursor but can be set explicitly. Pen ends at the arc endpoint, not the center (TikZ `arc[start angle=…, end angle=…, radius=…]`).'),
     startAngle: z
       .number()
       .describe('Arc start angle in degrees, measured from +x axis. 0° = +x, 90° = +y = screen-down (visual clockwise under screen y-down); matches polar / Node label angle convention.'),
@@ -193,10 +193,24 @@ export const ArcStepSchema = z
     radius: z
       .number()
       .positive()
-      .describe('Arc radius in user units'),
+      .optional()
+      .describe('Circular arc radius in user units. Give EITHER radius (circular) OR both radiusX and radiusY (elliptical), never both — enforced by the sugar/compile layer, not schema.'),
+    radiusX: z
+      .number()
+      .positive()
+      .optional()
+      .describe('Elliptical arc x-axis radius; requires radiusX and radiusY together (mutually exclusive with radius).'),
+    radiusY: z
+      .number()
+      .positive()
+      .optional()
+      .describe('Elliptical arc y-axis radius; requires radiusX and radiusY together (mutually exclusive with radius).'),
+    center: TargetSchema.optional().describe(
+      'Explicit arc center. Defaults to the cursor (previous step anchor) for backward compatibility; set it to anchor the arc independently of the cursor (used by <Sector> to draw a correct wedge).',
+    ),
     label: StepLabelSchema.optional().describe('Edge label attached to this arc'),
   })
-  .describe('Arc action: TikZ-style arc with implicit center at the cursor; startAngle / endAngle / radius give the geometry. Pen is left at the arc endpoint.');
+  .describe('Arc action: circular (radius) or elliptical (radiusX/radiusY) arc around a center (cursor by default, or explicit). Pen is left at the arc endpoint.');
 
 export const CirclePathStepSchema = z
   .object({

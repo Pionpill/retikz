@@ -1,10 +1,16 @@
-import { arcBoundingPoints, arcEndPoint } from '../../geometry/arc';
+import {
+  arcBoundingPoints,
+  arcEndPoint,
+  ellipseArcBoundingPoints,
+  ellipseArcPoint,
+} from '../../geometry/arc';
 import { bendControlPoints } from '../../geometry/bend';
 import {
   type SegmentSample,
   arcSegmentSample,
   circleSegmentSample,
   cubicSegmentSample,
+  ellipseArcSegmentSample,
   ellipseSegmentSample,
   foldSegmentSample,
   lineSegmentSample,
@@ -310,24 +316,63 @@ export const emitPathPrimitive = (
     if (!prev) return null;
 
     if (step.kind === 'arc') {
-      // 圆心 = 上一 step anchor (refPoint)
-      const center = prev.anchor;
-      const startPt = arcEndPoint(center, step.radius, step.startAngle);
-      const endPt = arcEndPoint(center, step.radius, step.endAngle);
-
-      startSegment(startPt);
-      emitArc(center, step.radius, step.startAngle, step.endAngle);
-
-      // 弧的极值点（90°·k 候选）算进 bbox
-      for (const p of arcBoundingPoints(center, step.radius, step.startAngle, step.endAngle)) {
-        points.push(p);
+      // 圆心：显式 center 优先，否则游标（上一 step anchor，向后兼容）
+      let center: IRPosition;
+      if (step.center !== undefined) {
+        const c = refPointOfTarget(step.center, nameStack, scopeChain);
+        if (!c) {
+          if (typeof step.center === 'string') {
+            warn(
+              'UNRESOLVED_NODE_REFERENCE',
+              `Arc step center references undefined node id '${step.center}'; the entire path is skipped`,
+              `children[${i}].center`,
+            );
+          }
+          return null;
+        }
+        center = c;
+      } else {
+        center = prev.anchor;
       }
-      collectLabel(step, t =>
-        arcSegmentSample(center, step.radius, step.startAngle, step.endAngle, t),
+
+      if (step.radiusX !== undefined && step.radiusY !== undefined) {
+        // 椭圆弧
+        const rx = step.radiusX;
+        const ry = step.radiusY;
+        startSegment(ellipseArcPoint(center, rx, ry, step.startAngle));
+        emitEllipseArc(center, rx, ry, step.startAngle, step.endAngle);
+        for (const p of ellipseArcBoundingPoints(center, rx, ry, step.startAngle, step.endAngle)) {
+          points.push(p);
+        }
+        collectLabel(step, t =>
+          ellipseArcSegmentSample(center, rx, ry, step.startAngle, step.endAngle, t),
+        );
+        penOverride = ellipseArcPoint(center, rx, ry, step.endAngle);
+        continue;
+      }
+
+      if (step.radius !== undefined) {
+        // 正圆弧（输出与改造前一致，emitArc 不变）
+        const r = step.radius;
+        startSegment(arcEndPoint(center, r, step.startAngle));
+        emitArc(center, r, step.startAngle, step.endAngle);
+        for (const p of arcBoundingPoints(center, r, step.startAngle, step.endAngle)) {
+          points.push(p);
+        }
+        collectLabel(step, t =>
+          arcSegmentSample(center, r, step.startAngle, step.endAngle, t),
+        );
+        penOverride = arcEndPoint(center, r, step.endAngle);
+        continue;
+      }
+
+      // 既无 radius 也无 radiusX/radiusY：malformed arc
+      warn(
+        'ARC_MISSING_RADIUS',
+        'Arc step requires radius (circular) or both radiusX and radiusY (elliptical); the entire path is skipped',
+        `children[${i}]`,
       );
-      // 后续段从弧终点继续（emitArc 已把 lastEnd 设为 endPt）
-      penOverride = endPt;
-      continue;
+      return null;
     }
 
     if (step.kind === 'circlePath') {

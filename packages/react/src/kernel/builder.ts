@@ -221,8 +221,11 @@ const readPathChildren = (children: ReactNode): Array<IRStep> => {
         kind: 'arc',
         startAngle: p.startAngle,
         endAngle: p.endAngle,
-        radius: p.radius,
       };
+      if (p.radius !== undefined) step.radius = p.radius;
+      if (p.radiusX !== undefined) step.radiusX = p.radiusX;
+      if (p.radiusY !== undefined) step.radiusY = p.radiusY;
+      if (p.center !== undefined) step.center = parseTargetSugar(p.center);
       if (label) step.label = label;
       out.push(step);
       return;

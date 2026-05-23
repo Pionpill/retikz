@@ -36,7 +36,7 @@ move(arcStart)          // 起点 = 弧起点；arcStart = center + polar(radius
 
 ## 待决点（已定）
 
-- **半径三互斥**：`radius`（单值 = 正圆弧）/ `radiusX` + `radiusY`（双值 = 椭圆弧）二选一；`.refine` 校验 `(radius !== undefined) XOR (radiusX !== undefined && radiusY !== undefined)`。
+- **半径三互斥**：`radius`（单值 = 正圆弧）/ `radiusX` + `radiusY`（双值 = 椭圆弧）二选一。**约束不放 zod schema**——`ArcStepSchema` 必须保持纯 `ZodObject`（`StepSchema` discriminatedUnion 成员 + docs `<ZodSchema>` `.shape` 自省 + 个体 `.safeParse` 用法都要求），加 `.refine`/`.superRefine` 会变 ZodEffects 破坏这些。三互斥改由 **sugar 构造时保证**（`<Arc>`/`<Sector>` 只发合法组合）+ **compile 优雅处理**（`radiusX && radiusY` → 椭圆弧；否则 `radius` → 圆弧；都缺 → warn + skip）。schema 仍保字段级 `.positive()`。
 - **center 缺省语义**：缺省 = `prev.anchor`（**完全向后兼容**现有 arc 用法）；给了 = 显式圆心（resolve 经 `refPointOfTarget`，与其它 Target 同路）。
 - **椭圆弧角度约定**：沿用 `geometry/arc.ts`（SVG y-down，0=+x，角增 = 屏幕顺时针）；椭圆弧端点 = `[cx + rx·cosθ, cy + ry·sinθ]`（参数角，非真实极角）。
 - **圆弧仍走 `emitArc`（零破坏），椭圆弧走 `emitEllipseArc`**：`radius` 分支沿用现有 `emitArc`（输出 `arc` PathCommand，**现有圆弧图逐字节不变**）；`radiusX/radiusY` 分支走 `emitEllipseArc`（`ellipseArc` PathCommand）。不统一，以免改动现有圆弧的命令表示触发快照漂移。
@@ -64,7 +64,8 @@ move(arcStart)          // 起点 = 弧起点；arcStart = center + polar(radius
 | `ir/path/step.ts` | 改 | `ArcStepSchema.radius` | `z.number().positive().optional()` | 正圆弧半径；与 radiusX/radiusY 三互斥 |
 | `ir/path/step.ts` | 加 | `radiusX` / `radiusY` | `z.number().positive().optional()` | 椭圆弧半轴；两者须同时给 |
 | `ir/path/step.ts` | 加 | `center` | `TargetSchema.optional()` | 显式圆心；缺省取游标（前一 step anchor） |
-| `ir/path/step.ts` | 加 | `ArcStepSchema.refine` | — | radius 单值 XOR (radiusX + radiusY) 双值 |
+
+> 三互斥**不进 zod**（保 ZodObject）：sugar 构造 + compile 处理；schema 仅字段级 `.positive()`。错误测试改为「sugar 传非法组合 → 抛 Error」+「compile 收 malformed arc → warn/skip」，不是 `safeParse` 失败。
 
 ### 测试象限（`packages/core/tests/compile/arc-center-elliptical.test.ts`，≥ 8）
 

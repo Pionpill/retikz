@@ -49,3 +49,48 @@ export const arcBoundingPoints = (
   }
   return points;
 };
+
+/**
+ * 椭圆弧参数点：中心 + 半轴 rx/ry + 参数角（度）→ 椭圆周上点
+ * @description 与 arcEndPoint 同角度约定（SVG y-down）；endpoint = [cx + rx·cosθ, cy + ry·sinθ]。
+ *   θ 是参数角（非真实极角，rx≠ry 时两者不等）
+ */
+export const ellipseArcPoint = (
+  center: Position,
+  radiusX: number,
+  radiusY: number,
+  angleDeg: number,
+): Position => {
+  const rad = angleDeg * DEG_TO_RAD;
+  return [
+    center[0] + Math.cos(rad) * radiusX,
+    center[1] + Math.sin(rad) * radiusY,
+  ];
+};
+
+/**
+ * 椭圆弧 bbox 极值候选：起点、终点，加 [start,end] 区间内所有 90°·k 参数角处的椭圆周点
+ * @description 轴对齐椭圆的 x 极值在 θ=0/180、y 极值在 θ=90/270，与正圆同结构（仅半轴用 rx/ry）
+ */
+export const ellipseArcBoundingPoints = (
+  center: Position,
+  radiusX: number,
+  radiusY: number,
+  startAngleDeg: number,
+  endAngleDeg: number,
+): Array<Position> => {
+  const points: Array<Position> = [
+    ellipseArcPoint(center, radiusX, radiusY, startAngleDeg),
+    ellipseArcPoint(center, radiusX, radiusY, endAngleDeg),
+  ];
+  const lo = Math.min(startAngleDeg, endAngleDeg);
+  const hi = Math.max(startAngleDeg, endAngleDeg);
+  const kStart = Math.ceil(lo / 90);
+  const kEnd = Math.floor(hi / 90);
+  for (let k = kStart; k <= kEnd; k++) {
+    const angle = k * 90;
+    if (angle === startAngleDeg || angle === endAngleDeg) continue;
+    points.push(ellipseArcPoint(center, radiusX, radiusY, angle));
+  }
+  return points;
+};

@@ -128,6 +128,26 @@ export const arcSegmentSample = (
   };
 };
 
+/** 椭圆弧段（参数角度数，与 ir/path arc 同约定）；点用 (rx·cos, ry·sin)，切线沿扫描方向 */
+export const ellipseArcSegmentSample = (
+  center: Position,
+  rx: number,
+  ry: number,
+  startAngleDeg: number,
+  endAngleDeg: number,
+  t: number,
+): SegmentSample => {
+  const angleDeg = startAngleDeg + t * (endAngleDeg - startAngleDeg);
+  const rad = angleDeg * DEG_TO_RAD;
+  const cos = Math.cos(rad);
+  const sin = Math.sin(rad);
+  const sweepSign = endAngleDeg >= startAngleDeg ? 1 : -1;
+  return {
+    point: [center[0] + rx * cos, center[1] + ry * sin],
+    tangent: normalize([-rx * sin * sweepSign, ry * cos * sweepSign]),
+  };
+};
+
 /** 整圆，从 0°(east) 开始，与 compile/path circlePath 输出方向（右→左→右，sweep=1）一致 */
 export const circleSegmentSample = (
   center: Position,

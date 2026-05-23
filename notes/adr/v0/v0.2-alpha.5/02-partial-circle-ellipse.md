@@ -29,8 +29,8 @@
 
 ## 待决点（已定）
 
-- **角度 both-or-neither**：`startAngle` / `endAngle` 要么都缺（整圆）、要么都给（部分）；`.refine` 拒单给一个。
-- **closed 默认 + 合法性**：无角度 → 视为 `'closed'`（compile 默认）；有角度 → 默认 `'chord'`。`.refine` 拒「有角度 + `closed:'closed'`」与「无角度 + `closed:'chord'|'open'`」（模式与是否带角度互锁）。
+- **角度 both-or-neither**：`startAngle` / `endAngle` 要么都缺（整圆）、要么都给（部分）。**约束不放 zod**（同 [ADR-01](./01-arc-center-and-elliptical.md)：step schema 保纯 ZodObject 供 discriminatedUnion + docs `<ZodSchema>` 自省）——由 sugar 构造保证、compile 处理（只给一个角度时 compile 视为整圆 + warn）。
+- **closed 默认 + 合法性**：无角度 → `'closed'`（compile 默认）；有角度 → 默认 `'chord'`。模式与是否带角度的互锁同由 sugar + compile 保证（compile：无角度恒 full；有角度时 `closed` 取 chord/open，误给 `'closed'` warn 回退 chord）。schema 仅 `closed: z.enum(['closed','chord','open']).optional()` 字段级。
 - **center 透传**：`<Circle>` / `<Ellipse>` 派发 `move(center) → circlePath/ellipsePath(...)`，center 由 compile 解析（circlePath 的圆心 = prev.anchor = move 的 center），**sugar 不算 arcStart** → center 可接**任意 Target**（透传形态，[ADR-04](./04-sugar-conventions.md)）。
 - **角度参数化**：同 [ADR-01](./01-arc-center-and-elliptical.md)（SVG y-down，参数角，非真实极角）；部分弧几何复用 `geometry/{circle,ellipse}.ts` 新增的 partial-outline 函数。
 - **fill 语义**：chord 闭合的弓形可被 path 级 `fill` 填充（弦 + 弧围成的区域）；open 不闭合，fill 行为同非闭合 path。
@@ -49,7 +49,7 @@
 
 ## 影响
 
-- `packages/core/src/ir/path/step.ts`：`CirclePathStepSchema` / `EllipsePathStepSchema` 各加 `startAngle?` / `endAngle?` / `closed?: z.enum(['closed','chord','open'])` + 两条 `.refine`。
+- `packages/core/src/ir/path/step.ts`：`CirclePathStepSchema` / `EllipsePathStepSchema` 各加 `startAngle?` / `endAngle?`（`z.number().optional()`）/ `closed?: z.enum(['closed','chord','open'])`——**保持纯 ZodObject，无 refine**（约束在 sugar + compile）。
 - `packages/core/src/geometry/{circle,ellipse}.ts`：加部分 outline（端点 + bbox）函数，供 compile 与未来 node shape 复用（[ADR-04](./04-sugar-conventions.md) 几何下沉原则）。
 - `packages/core/src/compile/path/index.ts`：circlePath / ellipsePath 分支按角度与 closed 分流——全 sweep（原） / 部分 + chord 收线 / 部分 + open。
 - `packages/react/src/kernel/Step.tsx` + `builder.ts`：两 step 变体 props + 透传新字段。
@@ -66,15 +66,15 @@
 | 文件 | 操作 | 字段 | 类型 | describe 摘要 |
 |---|---|---|---|---|
 | `ir/path/step.ts` | 加 | circlePath/ellipsePath `startAngle` / `endAngle` | `z.number().optional()` | 部分弧起 / 末角；两者同缺 = 整圆，同给 = 部分 |
-| `ir/path/step.ts` | 加 | `closed` | `z.enum(['closed','chord','open']).optional()` | 闭合模式；无角度默认 closed，有角度默认 chord，与是否带角度互锁 |
-| `ir/path/step.ts` | 加 | 两条 `.refine` | — | 角度 both-or-neither；closed 模式与带角度互锁 |
+| `ir/path/step.ts` | 加 | `closed` | `z.enum(['closed','chord','open']).optional()` | 闭合模式；无角度默认 closed，有角度默认 chord |
+| （约束） | sugar + compile | 角度 both-or-neither / closed 互锁 | — | 不进 zod（保 ZodObject）；sugar 构造 + compile 处理 |
 
 ### 测试象限（`packages/core/tests/compile/partial-circle-ellipse.test.ts`，≥ 8）
 
 - happy：半圆（start=0 end=180 chord）commands = `[move, ellipseArc, close]`；1/4 椭圆部分；open 模式 commands 无 close
 - 边界：整圆（无角度）输出与改造前一致（回归 / 快照）；start>end 跨向正确
 - **pen 语义（逐模式，接一条 line 验起点）**：open 后续 line 从 arcEnd 起；chord 后续 line 从 arcStart 起；full 后续 line 从 center 起；partial bbox 不含整圆四点
-- 错误：单给 startAngle 被拒；无角度 + closed:'chord' 被拒；有角度 + closed:'closed' 被拒
+- 错误（sugar + compile，非 safeParse）：sugar 单给 startAngle → 抛 Error；compile 收单角度 → 视整圆 + warn；compile 收「有角度 + closed:'closed'」→ warn 回退 chord
 - 交互：`<Circle>` 带角度派发 = 手写 circlePath(startAngle,endAngle,closed) IR 等价
 
 ### 依赖

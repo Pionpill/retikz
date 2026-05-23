@@ -88,7 +88,7 @@ export type BendStepProps = {
   children?: ReactNode;
 };
 
-/** Arc action：以游标为圆心，按起末角度 + 半径绘制圆弧段（TikZ `arc[start angle=…, end angle=…, radius=…]`） */
+/** Arc action：按起末角度绘制圆弧 / 椭圆弧段；圆心缺省取游标，可显式指定（TikZ `arc[start angle=…, end angle=…, radius=…]`） */
 export type ArcStepProps = {
   /** 弧段 step 鉴别字面量 */
   kind: 'arc';
@@ -96,8 +96,14 @@ export type ArcStepProps = {
   startAngle: number;
   /** 终止角度（度），sweep 方向由 startAngle vs endAngle 决定 */
   endAngle: number;
-  /** 弧半径（user units） */
-  radius: number;
+  /** 正圆弧半径（user units）；与 radiusX/radiusY 二选一 */
+  radius?: number;
+  /** 椭圆弧 x 半轴；需与 radiusY 同给 */
+  radiusX?: number;
+  /** 椭圆弧 y 半轴；需与 radiusX 同给 */
+  radiusY?: number;
+  /** 显式圆心；缺省取游标（上一 step anchor） */
+  center?: IRTarget;
   /** 边标注 */
   label?: IRStepLabel;
   /** sugar 形态 */
