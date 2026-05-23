@@ -21,11 +21,11 @@ export const coreSection: Array<Section> = [
     label: 'core.components',
     pages: [
       {
-        id: 'tikz',
-        label: 'core.tikz',
+        id: 'layout',
+        label: 'core.layout',
         children: [
-          { id: 'overview', label: 'core.tikzOverview' },
-          { id: 'scope', label: 'core.tikzScope' },
+          { id: 'overview', label: 'core.layoutOverview' },
+          { id: 'scope', label: 'core.layoutScope' },
         ],
       },
       {

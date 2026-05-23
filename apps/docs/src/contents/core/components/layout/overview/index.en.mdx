@@ -1,9 +1,11 @@
 ---
-title: TikZ
+title: Layout
 description: Top-level container — accepts a component tree or IR, compiles to Scene, and produces rendered output.
 ---
 
 `<Layout>` is retikz's only required top-level wrapper. Every Kernel / Sugar component must live inside a `<Layout>`.
+
+> The component was originally `<TikZ>` (a nod to LaTeX TikZ); it is now `<Layout>` to better reflect its job — "declare a layout and hand it to the current renderer". `<TikZ>` is kept as a deprecated alias, so existing code keeps working (with a one-time dev rename notice).
 
 `<Layout>` is the entry point between the DSL and the renderer: with children, it converts the inner component tree into IR; with `ir`, it uses that pre-built IR directly. It then compiles the IR into a Scene and hands it to the current renderer. `width` / `height` control the rendered output's displayed size in the page; internal coordinates stay in retikz user units, and the compiler uses layout bounds to compute the visible range.
 
@@ -38,13 +40,13 @@ import { Layout } from '@retikz/react';
 
 ### Basic
 
-<ComponentPreview name="tikz-basic" size="xs" />
+<ComponentPreview name="layout-basic" size="xs" />
 
 ### Render from IR
 
 `<Layout>` accepts an `ir` prop — feed a persisted IR JSON directly and get a rendered image, **no JSX children needed**. Source can be anything: LLM-generated, a JSON editor, URL deserialization, or database storage.
 
-<ComponentPreview name="tikz-from-ir" size="sm" />
+<ComponentPreview name="layout-from-ir" size="sm" />
 
 ## API Reference
 

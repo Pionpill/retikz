@@ -3,7 +3,7 @@ title: Extending
 description: Extending retikz — register new shapes and other extension points for needs the built-ins don't cover; for people building on top of retikz (third-party packages / host integrations), not everyday figure authoring.
 ---
 
-This group is about **extending** retikz: capabilities the built-in components don't cover, filled in through runtime-injected extension points. The audience is people shipping third-party packages, doing host integration, or adding new primitives to retikz — for everyday figures, start from [Components](/core/components/tikz).
+This group is about **extending** retikz: capabilities the built-in components don't cover, filled in through runtime-injected extension points. The audience is people shipping third-party packages, doing host integration, or adding new primitives to retikz — for everyday figures, start from [Components](/core/components/layout).
 
 > Extension points are **host / compile-time capabilities and never enter the IR** — the IR stays serializable plain data (LLM / persistence friendly); extension definitions are injected at runtime via `CompileOptions` / component props.
 
