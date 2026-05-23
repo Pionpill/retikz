@@ -8,6 +8,7 @@
 
 - **2026-05-07 初版**：基于 `@retikz/core` v0.1.0-alpha（仅 `move` / `line` step、矩形 node）盘点缺失项。
 - **2026-05-21 修订**：对照 `@retikz/core` v0.1.0 正式版按图元重排。初版列出的 P0 全部闭环，P1 / P2 绝大多数已补齐；当前缺口集中在结构化能力（Scope / 主题）、文本排版（LaTeX / 数学）与 P3 高级特性。
+- **2026-05-23 修订**：补 v0.2 alpha.1–4 已落项（`<Scope>` / 样式继承 / Shape Registry / `zIndex` / Node label rotate）+ 预留 alpha.5 行（Path-level shape sugar：circle/ellipse 部分裁剪、椭圆弧、`rectangle` step、grid / sector / 候选 regular-polygon / star sugar）。结构化能力缺口已基本闭合；当前缺口转向补全图元（更多形状 / parabola / sin-cos / patterns / shading）、文本排版（LaTeX / 数学）与 P3 高级特性。
 
 **状态图例**
 
@@ -17,6 +18,7 @@
 | ✅ | **相等**——能力对齐，写法不同但效果一致 |
 | ⚠️ | **不足**——部分支持，覆盖主流但有边界缺口 |
 | ❌ | **缺失**——尚未实现 |
+| 🔜 | **计划中**——v0.2 alpha.5 已排期 |
 
 ---
 
@@ -26,7 +28,7 @@
 
 | 能力 | ReTikZ | TikZ | 状态 | 备注 |
 |---|---|---|---|---|
-| 形状 | `shape: rectangle/circle/ellipse/diamond` | `[circle]` / `[diamond]` / `[regular polygon]` / `[cloud]` | ⚠️ | 4 种已支持；regular polygon / star / cylinder / cloud / chamfered 缺 |
+| 形状 | `shape: rectangle/circle/ellipse/diamond` + 开放字符串 | `[circle]` / `[diamond]` / `[regular polygon]` / `[cloud]` | ⚠️ | 4 内置；alpha.3 起 `shape` 开放为字符串 + `ShapeDefinition` 注入面（`CompileOptions.shapes`），第三方可发 shape 包；内置仍缺 regular polygon / star / cylinder / cloud / chamfered |
 | 文本内容 | `text`（单行 string 或多行 `LineSpec[]`） | `{文字}` + `\\` 手动换行 | ✅ | 多行用数组，JSON 友好无 escape |
 | 逐行样式覆盖 | `LineSpec` 的 `fill` / `opacity` / `font` | 需 inline `\textcolor` 等 | ✨ | 逐行结构化覆盖，AI 生成更直接 |
 | 数学 / LaTeX 排版 | —（纯文本） | `$x^2$` 等任意 LaTeX | ❌ | 文本为纯字符串，无数学 / 宏 |
@@ -43,7 +45,7 @@
 | 内 / 外边距 | `innerXSep` / `innerYSep` / `outerSep`（+ `padding` / `margin` 别名） | `[inner sep=, outer sep=]` | ✅ | retikz 支持分轴 inner sep |
 | 字体 | `font: family/size/weight/style` | `[font=\bfseries\Large]` | ✅ | `\Large` 等语义宏用数值 `size` 表达 |
 | 颜色 / 透明度 | `textColor` / `opacity` / `fillOpacity` / `drawOpacity` | `[text=, opacity=, fill opacity=, draw opacity=]` | ✅ | |
-| 标签 label | `label`（单 / 数组，方向或角度 + distance + 字体覆盖） | `[label=above:foo]` | ✅ | |
+| 标签 label | `label`（单 / 数组，方向或角度 + distance + 字体覆盖 + `rotate` none/radial/tangent/数字 + `keepUpright`） | `[label={[rotate=]above:foo}]` | ✅ | alpha.4 加 label 自旋；radial / tangent 自动朝向是便利档 |
 | 引脚 pin | — | `[pin=right:bar]` | ❌ | label 无引线 |
 | 双线边框 | — | `[double, double distance=2pt]` | ❌ | P3 |
 | 裁剪 clip | — | `[clip]` | ❌ | P3 |
@@ -63,7 +65,7 @@
 | 填充 | `fill` / `fillRule`（nonzero / evenodd） | `\fill` / `[fill=, even odd rule]` | ✅ | evenodd 可画环形 |
 | 线端 / 拐角 | `lineCap` / `lineJoin` | `[line cap=, line join=]` | ✅ | |
 | 透明度 | `opacity` / `fillOpacity` / `drawOpacity` | `[opacity=, fill opacity=, draw opacity=]` | ✅ | |
-| 路径整体变换 | — | `[rotate=30, shift={(1,2)}]` | ❌ | primitive 层有 GroupPrim，IR 未暴露 |
+| 路径整体变换 | `<Scope transforms>`（分组变换） | `[rotate=30, shift={(1,2)}]` | ⚠️ | alpha.1 `<Scope>` translate / rotate / scale 提供分组变换；单 path 自身 `[rotate]` 仍需包 Scope |
 | decorations | — | `decorate[decoration={snake}]` | ❌ | P3 |
 | intersections | — | `(intersection of A--B and C--D)` | ❌ | P3 |
 
@@ -71,7 +73,7 @@
 
 ## 3. Step 路径步骤
 
-Path 的子动作，十种 `kind`。除 `move` / `cycle` 外每段可挂 `label?` 边标注。端点 `to` 的坐标形态见 [§5 定位](#5-定位与坐标nodestep-共用)。
+Path 的子动作，当前十种 `kind`（alpha.5 加 `rectangle` → 十一）。除 `move` / `cycle` 外每段可挂 `label?` 边标注。端点 `to` 的坐标形态见 [§5 定位](#5-定位与坐标nodestep-共用)。
 
 | 能力 | ReTikZ | TikZ | 状态 | 备注 |
 |---|---|---|---|---|
@@ -82,9 +84,15 @@ Path 的子动作，十种 `kind`。除 `move` / `cycle` 外每段可挂 `label?
 | 二次贝塞尔 | `kind: curve` + `control` | `.. controls (c) ..` | ✅ | |
 | 三次贝塞尔 | `kind: cubic` + `control1/2` | `.. controls (a) and (b) ..` | ✅ | |
 | 弧形简记 | `kind: bend` + `bendDirection/bendAngle` | `to[bend left=30]` | ✅ | 编译为 cubic 近似 |
-| 圆弧 | `kind: arc` + `startAngle/endAngle/radius` | `arc[start angle=, end angle=, radius=]` | ✅ | |
-| 整圆 | `kind: circlePath` + `radius` | `circle[radius=]` | ✅ | |
-| 整椭圆 | `kind: ellipsePath` + `radiusX/Y` | `ellipse[x radius=, y radius=]` | ✅ | |
+| 圆弧 | `kind: arc` + `startAngle/endAngle/radius` | `arc[start angle=, end angle=, radius=]` | ✅ | alpha.5 加 `radiusX/Y` 椭圆弧 |
+| 整圆 / 部分圆 | `kind: circlePath` + `radius` | `circle[radius=]` | ✅ | alpha.5 加 `startAngle/endAngle/closed` 部分裁剪（半圆 / 弓形） |
+| 整椭圆 / 部分椭圆 | `kind: ellipsePath` + `radiusX/Y` | `ellipse[x radius=, y radius=]` | ✅ | alpha.5 加部分裁剪 |
+| 矩形 | `kind: rectangle` + `from/to/roundedCorners` | `(a) rectangle (b)` | 🔜 | alpha.5 新增 step（自带圆角） |
+| 网格 | `<Grid>` sugar 展开多 Path | `(a) grid (b)` | 🔜 | alpha.5 sugar 层拼装 |
+| 扇形 | `<Sector>` sugar | `arc` + 连圆心 cycle | 🔜 | alpha.5 sugar；圆心几何待 ADR |
+| 抛物线 | — | `parabola bend (c) (b)` | ❌ | |
+| 正弦 / 余弦波段 | — | `sin (b)` / `cos (b)` | ❌ | |
+| 广义曲线连接 | `kind: bend`（简记） | `to[out=, in=]` | ⚠️ | 仅 bend 子集，任意 out/in 角缺 |
 | 边标注 | step `label`：`pos`（0..1 或 7 档关键字）+ `above/below/left/right/sloped` | `-- node[midway, above] {x}` | ✅ | |
 | 路径中段任意 marking | —（仅文字 label） | `decoration={markings, mark=...}` | ⚠️ | 任意图形标记缺 |
 
@@ -124,8 +132,9 @@ Path 的子动作，十种 `kind`。除 `move` / `cycle` 外每段可挂 `label?
 
 | 能力 | ReTikZ | TikZ | 状态 | 备注 |
 |---|---|---|---|---|
-| 作用域 / 分组 | —（GroupPrim 仅 primitive 层，编译内部用） | `\begin{scope}` / `{[...]}` | ❌ | IR 层无用户可写的 scope / group |
-| 样式继承 / 主题 | — | `every node/.style={...}` | ❌ | 当前每个图元自带全量样式字段 |
+| 作用域 / 分组 | `<Scope>`（容器 + 局部 transform） | `\begin{scope}` / `{[...]}` | ✅ | alpha.1 落地 |
+| 样式继承 / 主题 | `color` 级联 + `nodeDefault` / `pathDefault` / `labelDefault` / `arrowDefault` + `resetStyle` 屏障 | `every node/.style={...}` / `\begin{scope}[draw=red]` | ✅ | alpha.2 落地 |
+| 显式栈序 z-index | `zIndex`（Node / Path / Scope；稳定排序，缺省 = 声明序） | —（绘制序 = 源码序） | ✨ | alpha.4；TikZ 无原生 z-index |
 | 自定义 viewBox | —（`computeViewBox` 自动） | `\useasboundingbox` | ❌ | 无逃生口 |
 | libraries 划分 | —（能力平铺） | `\usetikzlibrary{...}` | ❌ | 功能多已落地，缺的是组织方式 |
 
@@ -133,9 +142,9 @@ Path 的子动作，十种 `kind`。除 `move` / `cycle` 外每段可挂 `label?
 
 ## 7. 剩余优先级
 
-初版 **P0 闭环（箭头 / 折角 / shape 多态 / anchor / cycle + fill）已全部完成**，v0.1.0 已能画教科书级流程图、UML 类图、简单几何图。下一阶段杠杆点：
+初版 P0 闭环 + **v0.2 结构化能力已落（alpha.1–4：`<Scope>` / 样式继承 / Shape Registry / `zIndex` / Node label rotate）**。剩余杠杆点：
 
-1. **结构化能力（最高）**：`<Scope>` / `<Group>` IR + 样式继承 / 主题。primitive 层已有 `GroupPrim`，主要工作在 IR schema 与编译展开；落地后 AI 生成的 IR 会显著变短。
+1. **补全图元（进行中）**：alpha.5 path sugar（circle / ellipse 部分裁剪、椭圆弧、`rectangle`、`grid`、`sector`）+ 候选 `regular polygon` / `star`；之后 `parabola` / `sin`-`cos` / patterns / shading。
 2. **文本排版**：数学 / LaTeX 排版、`text width` 自动换行。
-3. **补全图元**：更多 shape（regular polygon / star / cylinder / cloud）、`pin`、node 语义粗细档位、非矩形圆角。
-4. **P3 高级特性**：路径整体变换、decorations、intersections、任意 markings、double border、clip、`useasboundingbox`、完整 calc 表达式。
+3. **更多内置 node 形状**：regular polygon / star / cylinder / cloud（经 Shape Registry / 第三方包）；`pin`、node 语义粗细档位、非矩形圆角。
+4. **P3 高级特性**：单 path 整体变换、decorations、intersections、任意 markings、double border、clip、`useasboundingbox`、完整 calc 表达式、patterns、shading。
