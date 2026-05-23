@@ -1,0 +1,102 @@
+/**
+ * 对象形态 NodeTarget 的 compile 解析（ADR-01）
+ * @description 对象 { id, anchor?, offset? } 与等价字符串 shorthand 编译结果一致（named / angle / auto）；
+ *   { side, t } t=0.5 == cardinal 命名 anchor；offset 世界系叠加；未定义 id 不产 PathPrim
+ */
+import { describe, expect, it } from 'vitest';
+import { compileToScene } from '../../src/compile/compile';
+import type { IR, IRTarget } from '../../src/ir';
+import type { PathPrim, ScenePrimitive } from '../../src/primitive';
+
+const findPathPrim = (prims: Array<ScenePrimitive>): PathPrim | undefined =>
+  prims.find((x): x is PathPrim => x.type === 'path');
+
+const lastLineEnd = (prim: PathPrim): [number, number] => {
+  for (let i = prim.commands.length - 1; i >= 0; i--) {
+    const cmd = prim.commands[i];
+    if (cmd.kind === 'line') return [cmd.to[0], cmd.to[1]];
+  }
+  throw new Error('no line cmd found');
+};
+
+/** 编一条从 (100,100) line 到 target 的 path，返回末端 line 终点 */
+const endOf = (target: IRTarget): [number, number] => {
+  const ir: IR = {
+    version: 1,
+    type: 'scene',
+    children: [
+      { type: 'node', id: 'A', position: [0, 0], text: 'Hello', shape: 'rectangle' },
+      {
+        type: 'path',
+        children: [
+          { type: 'step', kind: 'move', to: [100, 100] },
+          { type: 'step', kind: 'line', to: target },
+        ],
+      },
+    ],
+  };
+  const scene = compileToScene(ir);
+  const prim = findPathPrim(scene.primitives);
+  if (!prim) throw new Error('expected PathPrim');
+  return lastLineEnd(prim);
+};
+
+describe('对象 NodeTarget == 等价字符串 shorthand', () => {
+  it('命名 anchor：{ id, anchor:"north" } == "A.north"', () => {
+    expect(endOf({ id: 'A', anchor: 'north' })).toEqual(endOf('A.north'));
+  });
+
+  it('角度 anchor：{ id, anchor:30 } == "A.30"', () => {
+    expect(endOf({ id: 'A', anchor: 30 })).toEqual(endOf('A.30'));
+  });
+
+  it('auto clip：{ id:"A" } == "A"', () => {
+    expect(endOf({ id: 'A' })).toEqual(endOf('A'));
+  });
+});
+
+describe('{ side, t } 边上比例点', () => {
+  it('north t=0.5 == 命名 north anchor（edgePoint 中点 = cardinal）', () => {
+    expect(endOf({ id: 'A', anchor: { side: 'north', t: 0.5 } })).toEqual(endOf({ id: 'A', anchor: 'north' }));
+  });
+
+  it('west t=0 == north-west 角（rect 边端点 = 角 anchor）', () => {
+    expect(endOf({ id: 'A', anchor: { side: 'west', t: 0 } })).toEqual(endOf({ id: 'A', anchor: 'north-west' }));
+  });
+});
+
+describe('offset 世界系叠加', () => {
+  it('{ anchor:"north", offset:[5,-3] } == north 点 + [5,-3]', () => {
+    const [nx, ny] = endOf({ id: 'A', anchor: 'north' });
+    const [ox, oy] = endOf({ id: 'A', anchor: 'north', offset: [5, -3] });
+    expect(ox).toBeCloseTo(nx + 5, 6);
+    expect(oy).toBeCloseTo(ny - 3, 6);
+  });
+
+  it('无 anchor + offset：中心/边界点 + offset', () => {
+    const [bx, by] = endOf({ id: 'A' });
+    const [ox, oy] = endOf({ id: 'A', offset: [10, 0] });
+    expect(ox).toBeCloseTo(bx + 10, 6);
+    expect(oy).toBeCloseTo(by, 6);
+  });
+});
+
+describe('错误路径', () => {
+  it('未定义 id → 不产 PathPrim', () => {
+    const ir: IR = {
+      version: 1,
+      type: 'scene',
+      children: [
+        {
+          type: 'path',
+          children: [
+            { type: 'step', kind: 'move', to: [0, 0] },
+            { type: 'step', kind: 'line', to: { id: 'nonexistent' } },
+          ],
+        },
+      ],
+    };
+    const scene = compileToScene(ir);
+    expect(scene.primitives.find(p => p.type === 'path')).toBeUndefined();
+  });
+});
