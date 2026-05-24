@@ -1,0 +1,73 @@
+---
+title: 路径生成器
+description: generator step 让外部包注册自定义曲线（parabola / sin-cos / 二次方程…）。core 不内置任何曲线，只提供 IR 级注入面：params 限 JSON、targetParams 顶层 resolve、generate 产低层 PathCommand。
+---
+
+step 的内置 kind 是固定 12 种（move / line / fold / cycle / curve / cubic / bend / arc / circlePath / ellipsePath / rectangle / generator）。其中 **`generator`** 是开放注入口：parabola、sin-cos、二次方程曲线这类"曲线 step"由**外部包**注册，**core 不内置任何具体曲线**。
+
+注册靠 `CompileOptions.pathGenerators`（React 里是 `<Layout pathGenerators={...}>`）：IR 的 generator step 只写字符串 `name`，曲线定义在此注入。未注册名编译期报错（带可用名列表）。
+
+## 注册一个生成器
+
+下面注册一个 `parabola`——`from → to` 加一个顶层 Target `bend` 作控制点，产一段二次贝塞尔：
+
+<ComponentPreview name="path-generator-parabola" size="sm" />
+
+`PathGeneratorDefinition` 是普通对象（不进 IR，可由工厂返回），建议用 `definePathGenerator` 包一层（注册时 best-effort 元校验）：
+
+| 字段 | 类型 | 描述 |
+| --- | --- | --- |
+| `paramsSchema` | `ZodType<IRJsonObject>` | params 的 zod schema；类型约束输出 JSON-safe（运行时另有第二道护栏，见下） |
+| `generate` | `(ctx) => Array<PathCommand>` | 据 ctx 产低层路径命令（line / quad / cubic / move…），不再走 step 编译 |
+| `targetParams` | `Array<string>` | 哪些 params **顶层 key** 是 Target，compile 先 resolve 成世界坐标 |
+
+`generate` 拿到的 `PathGeneratorContext`：
+
+| 字段 | 类型 | 描述 |
+| --- | --- | --- |
+| `from` | `Position` | 当前游标世界坐标（上一段终点 / sub-path 起点） |
+| `to` | `Position?` | step.to resolve 后的世界坐标；step 无 `to` 时为 undefined |
+| `params` | `Record<string, unknown>` | paramsSchema 校验后的参数 |
+| `resolvedTargets` | `Record<string, Position>` | targetParams 顶层 key → 已 resolve 的世界坐标 |
+| `round` | `(n) => number` | 精度取整（与 compile / render 同一函数） |
+
+IR 里的 generator step：
+
+| 字段 | 类型 | 描述 |
+| --- | --- | --- |
+| `kind` | `'generator'` | step 鉴别 |
+| `name` | `string` | 注册名；未注册编译期 throw |
+| `to` | `Target?` | 可选终点，作 `ctx.to` |
+| `params` | `JsonObject` | JSON-only（守 IR 可序列化）；外部 paramsSchema 在此子树上 refine |
+| `label` | `StepLabel?` | 边标注 |
+
+## params 限 JSON（双 parse 护栏）
+
+IR 必须 100% JSON 可序列化，所以 generator 的 `params` **只能是 JSON 值**（`JsonObjectSchema`：string / 有限 number / boolean / null / 数组 / 对象，递归）。compile 解析 generator step 时跑**两道 parse**：
+
+1. `paramsSchema.parse(params)`——外部 schema 校验；
+2. `JsonObjectSchema.parse(parsed)`——**第二道护栏**：即便外部传了宽松 schema（`z.any()` 等），最终非 JSON 输出（function / undefined / `Infinity` / `NaN`）也在此被拦下。
+
+`generate` 产出的 `PathCommand` 坐标同样被审计：非有限值（NaN / Infinity）/ 未知命令 kind / 缺字段都在编译期报错（带 generator 名），不放任坏几何静默进 Scene。
+
+## targetParams：顶层 Target resolve
+
+`params` 里可以塞节点引用 / 坐标 Target（如 `parabola bend (C)` 的 `C`）。把这些**顶层 key** 列进 `targetParams`，compile 会先把它们 resolve 成世界坐标，放进 `ctx.resolvedTargets`：
+
+- **仅顶层 key**：嵌套（`{ control: { at: { id } } }`）/ 数组内的 Target 不解析，须放 params 顶层。
+- 值是字符串时按 **node id** 解析（与 step `to` 同语义）；想传普通字符串参数就别列进 targetParams。
+- 值不是 Target（number / boolean…）→ 编译期清晰报错。
+
+## generate → PathCommand[]
+
+`generate` 返回低层 `PathCommand[]`（可含 `move` 形成 sub-path，如多段波形），splice 进 path 命令流；游标落最后一个命令的终点，后续 step 从此续接。
+
+<ComponentPreview name="path-generator-sin" size="sm" />
+
+> generate 的坐标视作**已在世界系**：generator step 在 transformed scope 内时，`ctx.from` / `ctx.to` / `resolvedTargets` 已是世界坐标，scope 的 transform 不会对 generate 内部的增量二次作用。
+
+<Comparison target="tikz" title="路径生成器">
+
+TikZ 的 `to path` / decorations / `\pgfdeclarepathgenerator` 在 TeX 宏层算曲线。retikz 把它落成 IR 级注册面：曲线由外部包的 `generate` 产结构化 `PathCommand`，core 一次提供注入口、以后不为新曲线改动。parabola / sin-cos 都能作 `@retikz/*` 外部包实现。
+
+</Comparison>

@@ -1,0 +1,73 @@
+---
+title: Path Generators
+description: The generator step lets external packages register custom curves (parabola / sin-cos / quadratic…). core ships no curves — only an IR-level injection surface: JSON-only params, top-level targetParams resolution, generate returns low-level PathCommands.
+---
+
+A step's built-in kinds are a fixed set of 12 (move / line / fold / cycle / curve / cubic / bend / arc / circlePath / ellipsePath / rectangle / generator). Among them, **`generator`** is the open injection point: "curve steps" like parabola, sin-cos, or quadratic curves are registered by **external packages** — **core ships no concrete curve**.
+
+Registration goes through `CompileOptions.pathGenerators` (in React, `<Layout pathGenerators={...}>`): the IR's generator step only stores a string `name`; the curve definition is injected here. Unregistered names throw at compile time (with the list of available names).
+
+## Registering a generator
+
+Below registers a `parabola` — `from → to` plus a top-level Target `bend` as the control point, producing a quadratic Bézier:
+
+<ComponentPreview name="path-generator-parabola" size="sm" />
+
+A `PathGeneratorDefinition` is a plain object (not part of the IR, can be returned by a factory); wrap it in `definePathGenerator` for a best-effort registration-time meta-check:
+
+| Field | Type | Description |
+| --- | --- | --- |
+| `paramsSchema` | `ZodType<IRJsonObject>` | zod schema for params; type-constrains the output to be JSON-safe (a second runtime guard exists too, see below) |
+| `generate` | `(ctx) => Array<PathCommand>` | Produces low-level path commands (line / quad / cubic / move…) from ctx; does not re-enter step compilation |
+| `targetParams` | `Array<string>` | Which **top-level** params keys are Targets, resolved to world coordinates by compile first |
+
+The `PathGeneratorContext` passed to `generate`:
+
+| Field | Type | Description |
+| --- | --- | --- |
+| `from` | `Position` | Current cursor in world coords (previous segment end / sub-path start) |
+| `to` | `Position?` | step.to resolved to world coords; undefined when the step has no `to` |
+| `params` | `Record<string, unknown>` | Params after paramsSchema validation |
+| `resolvedTargets` | `Record<string, Position>` | targetParams top-level keys → resolved world coordinates |
+| `round` | `(n) => number` | Precision rounding (same function as compile / render) |
+
+The generator step in the IR:
+
+| Field | Type | Description |
+| --- | --- | --- |
+| `kind` | `'generator'` | step discriminant |
+| `name` | `string` | registered name; unregistered throws at compile time |
+| `to` | `Target?` | optional destination, passed as `ctx.to` |
+| `params` | `JsonObject` | JSON-only (keeps the IR serializable); the external paramsSchema refines this subtree |
+| `label` | `StepLabel?` | edge label |
+
+## JSON-only params (double-parse guard)
+
+The IR must be 100% JSON-serializable, so a generator's `params` **may only be JSON values** (`JsonObjectSchema`: string / finite number / boolean / null / array / object, recursive). When compile resolves a generator step it runs **two parses**:
+
+1. `paramsSchema.parse(params)` — the external schema validates;
+2. `JsonObjectSchema.parse(parsed)` — the **second guard**: even if the external schema is loose (`z.any()` etc.), any non-JSON output (function / undefined / `Infinity` / `NaN`) is caught here.
+
+The `PathCommand` coordinates produced by `generate` are audited too: non-finite values (NaN / Infinity), unknown command kinds, or missing fields all throw at compile time (naming the generator), so broken geometry never silently reaches the Scene.
+
+## targetParams: top-level Target resolution
+
+`params` may carry node references / coordinate Targets (e.g. the `C` in `parabola bend (C)`). List those **top-level keys** in `targetParams`, and compile resolves them to world coordinates into `ctx.resolvedTargets`:
+
+- **Top-level keys only**: nested (`{ control: { at: { id } } }`) or in-array Targets are not resolved — put them at the params top level.
+- A string value is resolved as a **node id** (same semantics as a step `to`); don't list plain string params in targetParams.
+- A value that isn't a Target (number / boolean…) throws a clear compile-time error.
+
+## generate → PathCommand[]
+
+`generate` returns low-level `PathCommand[]` (may include `move` to form a sub-path, e.g. multi-segment waves), spliced into the path command stream; the cursor lands on the last command's endpoint, and the next step continues from there.
+
+<ComponentPreview name="path-generator-sin" size="sm" />
+
+> generate's coordinates are treated as **already in world space**: when the generator step is inside a transformed scope, `ctx.from` / `ctx.to` / `resolvedTargets` are already world coordinates, and the scope's transform does not apply again to the increments computed inside generate.
+
+<Comparison target="tikz" title="Path generators">
+
+TikZ computes curves at the TeX macro layer with `to path` / decorations / `\pgfdeclarepathgenerator`. retikz lands the same idea as an IR-level registry: curves come from an external package's `generate` producing structured `PathCommand`s, and core provides the injection point once, never changing for new curves. parabola / sin-cos can both ship as external `@retikz/*` packages.
+
+</Comparison>

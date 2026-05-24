@@ -69,6 +69,7 @@ export const coreSection: Array<Section> = [
         children: [
           { id: 'shape-registry', label: 'core.refShapeRegistry' },
           { id: 'custom-arrow', label: 'core.refCustomArrow' },
+          { id: 'path-generator', label: 'core.refPathGenerator' },
         ],
       },
       {

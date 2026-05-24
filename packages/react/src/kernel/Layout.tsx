@@ -4,6 +4,7 @@ import {
   type ArrowEndSpec,
   type AssertEqual,
   type IR,
+  type PathGeneratorDefinition,
   type ScenePrimitive,
   type ShapeDefinition,
   compileToScene,
@@ -46,6 +47,12 @@ export type LayoutProps = {
    *   内置时编译期发 `ARROW_OVERRIDES_BUILTIN`；未注册名编译期 throw
    */
   arrows?: Record<string, ArrowDefinition>;
+  /**
+   * 运行时注入的第三方 / 自定义 path generator（透传给 `compileToScene` 的 `CompileOptions.pathGenerators`）
+   * @description IR 里 generator step 仍只写字符串 `name`；曲线生成器定义在此注入。core 不内置任何曲线；
+   *   未注册名编译期 throw（错误列出可用名）。`params` 经 generator 的 paramsSchema + JsonObjectSchema 双 parse 守 JSON 可序列化
+   */
+  pathGenerators?: Record<string, PathGeneratorDefinition>;
 };
 
 /** 递归收集 scene 里所有 PathPrim 用到的 arrow 端点 spec —— 按需注入 marker defs */
@@ -121,11 +128,11 @@ const hashKey = (key: string): string => {
  * @description 流水线：从 children 构造 IR（或直接接受外部 IR）→ compileToScene 得 Scene → 渲染 SVG 元素并按需注入 `<defs>` 与每种 arrow 端点 spec 的 `<marker>`；marker id 用 `useId()` 派生稳定前缀避免多实例冲突，每种 detail 一个定义（`${prefix}-${specHash}`），marker 内借 spec 字段（`color` / `fill` / `opacity` 等）替换硬编码，缺省字段回退到 `context-stroke` 让颜色继续跟随 path 同步
  */
 export const Layout: FC<LayoutProps> = props => {
-  const { ir: irFromProp, children, width, height, className, style, nodeDistance, shapes, arrows } = props;
+  const { ir: irFromProp, children, width, height, className, style, nodeDistance, shapes, arrows, pathGenerators } = props;
   const ir = useMemo(() => irFromProp ?? buildIR(children), [irFromProp, children]);
   const scene = useMemo(
-    () => compileToScene(ir, { measureText: browserMeasurer, nodeDistance, shapes, arrows }),
-    [ir, nodeDistance, shapes, arrows],
+    () => compileToScene(ir, { measureText: browserMeasurer, nodeDistance, shapes, arrows, pathGenerators }),
+    [ir, nodeDistance, shapes, arrows, pathGenerators],
   );
 
   // useId 返回 ":r0:" 含冒号；SVG `url(#id)` 对冒号兼容性差，剥成纯字母数字
