@@ -177,7 +177,7 @@ Most nodes only need `padding={N}`. Use `innerXSep` / `innerYSep` when horizonta
 
 #### Gradient fill (Paint)
 
-Besides a plain color string, `fill` accepts a **PaintSpec object** — a linear / radial gradient. Identical gradients are deduplicated at compile time into a Scene resource table and rendered as a gradient inside SVG `<defs>` (objectBoundingBox coordinates, scaling with the shape). `<Path fill>` supports it too.
+Besides a plain color string, `fill` accepts a **PaintSpec object** — linear / radial gradient, pattern, or image. Identical PaintSpecs are deduplicated at compile time into a Scene resource table and rendered as a paint server inside SVG `<defs>`. `<Path fill>` supports it too.
 
 - Linear: `{ type: 'linearGradient', angle?, stops }` — `angle` in degrees (0 = left→right, 90 = top→bottom)
 - Radial: `{ type: 'radialGradient', center?, radius?, stops }` — `center` / `radius` in 0..1 relative units
@@ -189,7 +189,14 @@ A stop's `opacity` gives a "solid → transparent" fade; `color` set to `current
 
 <ComponentPreview name="node-paint-stops" size="sm" />
 
-> Pattern / image fills are deferred (a later version).
+`fill` also accepts **pattern** and **image**:
+
+- Pattern: `{ type:'pattern', shape:'lines'|'dots'|'grid', color?, background?, size?, lineWidth?, rotation? }` — `color` defaults to `currentColor`, `size` is the tile period, `rotation` rotates the whole pattern
+- Image: `{ type:'image', href, fit? }` — `href` is a URL (incl. data URI), `fit`: `cover` (default) / `contain` / `fill`
+
+<ComponentPreview name="node-pattern-image" size="sm" />
+
+> Image fill currently supports a URL `href` only (incl. data URI); inlining for SSR / PNG export is deferred.
 
 #### Border style
 

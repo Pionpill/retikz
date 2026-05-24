@@ -177,7 +177,7 @@ Line 2`}</Node>
 
 #### 渐变填充（Paint）
 
-`fill` 除纯色字符串外还接 **PaintSpec 对象**——线性 / 径向渐变。编译期相同渐变去重、收进 Scene 资源表，渲染为 SVG `<defs>` 里的 gradient（坐标用 objectBoundingBox，随形状缩放）。`<Path fill>` 同样支持。
+`fill` 除纯色字符串外还接 **PaintSpec 对象**——线性 / 径向渐变、图案 pattern、图片 image。编译期相同 PaintSpec 去重、收进 Scene 资源表，渲染为 SVG `<defs>` 里的 paint server。`<Path fill>` 同样支持。
 
 - 线性：`{ type: 'linearGradient', angle?, stops }`——`angle` 度数（0 = 左→右，90 = 上→下）
 - 径向：`{ type: 'radialGradient', center?, radius?, stops }`——`center` / `radius` 用 0..1 相对值
@@ -189,7 +189,14 @@ Line 2`}</Node>
 
 <ComponentPreview name="node-paint-stops" size="sm" />
 
-> 图案 pattern / 图片 image 填充顺延（后续版本）。
+`fill` 还接 **图案 pattern** 和 **图片 image**：
+
+- 图案：`{ type:'pattern', shape:'lines'|'dots'|'grid', color?, background?, size?, lineWidth?, rotation? }`——`color` 缺省 `currentColor`、`size` 是 tile 周期、`rotation` 旋转整片
+- 图片：`{ type:'image', href, fit? }`——`href` 为 URL（含 data URI），`fit`：`cover`（默认）/ `contain` / `fill`
+
+<ComponentPreview name="node-pattern-image" size="sm" />
+
+> image 目前只支持 URL `href`（含 data URI）；SSR / 导出 PNG 时的图片内联待后续。
 
 #### 描边样式
 
