@@ -60,7 +60,7 @@ leader: z.object({
 4. **产出**：label 的 `TextPrim` + 一条引线 `PathPrim`（line），包进 label 的 `GroupPrim`（与 label rotate 同 group 管线）。
 5. **引线样式**：`leader.stroke` 缺省继承 node 主色 `color` / `currentColor`；`strokeWidth` 缺省细线；`dashPattern` 可选。
 6. **英文 `.describe`**：`pin` / `leader` 及 `leader` 内字段（stroke / strokeWidth / dashPattern）逐一英文 describe。
-7. **pin / label 均不计入 layout（已拍，评审 P2）**：保持与现有 label 一致语义（`ir/node.ts:42`「label 不参与 layout」），pin 也**不参与**——避免同一 label 体系出现两种 bbox 语义。远端 pin / label 若被裁，用 [alpha.9 viewBox override](../v0.2-alpha.9/03-viewbox-override.md) 扩框（文档提醒）。将来若要计入，对 label / pin 统一加**显式 `includeInLayout`**，不对 pin 暗改。
+7. **label / pin 计入 layout（实现期修正——原"不计入"反转）**：原决策"label/pin 不计入 layout、被裁用 alpha.9 viewBox override"在实现验证时立刻暴露问题——单 node + 远 label 的 demo 里 label 直接超出自动 viewBox 被裁，体验不可接受。改为 **label 文本框四角 + pin 一并计入 bbox**（`labelExtentPoints` → `allPoints`），与 **step.label 早已进 bbox**（`path-label.test.ts`）一致、也贴 TikZ（label 默认进 bounding box）。node 自身 rotate 时 label 四角绕 node 中心同步旋转。alpha.9 viewBox override 仍是"反向裁小 / 固定尺寸"的逃生口，但**默认不再裁掉 label**。
 8. **`strokeWidth` 用 `.finite().positive()`**：`.positive()` 单用放行 `Infinity`（`Infinity > 0` 为真），须加 `.finite()`（评审 P1，与全仓 finite 约定一致）。
 
 ## 待决策点
@@ -68,7 +68,7 @@ leader: z.object({
 - **引线终点锚定**：label 框朝 node 边中点 vs label center vs label 外接框相交点。倾向"框朝 node 边中点"（视觉自然，不穿过文字）。
 - **引线起点是否随 node `rotate`**：node 旋转时边界点随之转（边界本就随 rotate），引线起点应跟随；待确认与 label placement 角度的一致性。
 - **引线末端 arrow**：是否支持引线末端箭头（复用 arrow 系统）。倾向**留 alpha.8**（自定义 arrow 落地后增强），本段引线纯 line。
-- ~~pin 是否计入 layout~~ **已拍（评审 P2，见 §决策细节 #7）**：label / pin 均**不**计入 layout（一致语义）；远端被裁用 alpha.9 viewBox override；将来如需，加显式 `includeInLayout`（统一 label / pin），不对 pin 暗改。
+- ~~pin 是否计入 layout~~ **已拍 + 实现期修正（见 §决策细节 #7）**：label / pin **计入** layout（`labelExtentPoints`），与 step.label 一致、避免被裁；alpha.9 viewBox override 仅作"裁小 / 固定尺寸"逃生口。
 
 ## DSL 表面
 
@@ -157,7 +157,7 @@ leader: z.object({
 
 - `pin_with_label_rotate`：pin + label `rotate` → 文字旋转、引线几何正确（同 GroupPrim）
 - `pin_on_rotated_node`：旋转 node 上 pin → 引线起点随 node rotate 的边界点
-- `pin_not_in_layout`：pin 远端 label + 引线**不**计入 layout 外接框（与现有 label 一致；可被 alpha.9 viewBox 框住）
+- `pin_in_layout`：远处 label / pin 计入 layout 外接框（撑大 `scene.layout`，不被 viewBox 裁；与 step.label 一致）
 
 ### 依赖的现有元素
 

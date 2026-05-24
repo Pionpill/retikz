@@ -534,6 +534,42 @@ const toShapeStyle = (layout: NodeLayout): ShapeStyle => ({
  * @description shape 主体走 `shapeDef.emit`（收轴对齐 rect、可出多 primitive）；text 始终走 TextPrim；
  *   有旋转时外层 GroupPrim 用 `rotate(deg cx cy)` 统一包裹 shape + text（diamond 顶点 / text 都靠 group 旋转）
  */
+/**
+ * 节点 label 的外接点（供顶层 bbox / viewBox 计算，让 label 不被裁——与 step.label 进 bbox 一致）
+ * @description 每个 label 取其文本框四角；label 中心走 labelCenter（轴对齐系），node 自身 rotate 时绕 node 中心旋转
+ *   （与 emit 的 group rotate 同步）。pin 引线起点在 node 边界内、已被 node 四角覆盖，无需额外。
+ */
+export const labelExtentPoints = (layout: NodeLayout): Array<Position> => {
+  if (!layout.labels || layout.labels.length === 0) return [];
+  const cx = layout.rect.x;
+  const cy = layout.rect.y;
+  const rad = (layout.rotateDeg * Math.PI) / 180;
+  const cos = Math.cos(rad);
+  const sin = Math.sin(rad);
+  const pts: Array<Position> = [];
+  for (const lab of layout.labels) {
+    const [lx, ly] = labelCenter(layout, lab);
+    const halfW = lab.measuredWidth / 2;
+    const halfH = lab.fontSize / 2;
+    const corners: Array<Position> = [
+      [lx - halfW, ly - halfH],
+      [lx + halfW, ly - halfH],
+      [lx - halfW, ly + halfH],
+      [lx + halfW, ly + halfH],
+    ];
+    for (const [px, py] of corners) {
+      if (layout.rotateDeg === 0) {
+        pts.push([px, py]);
+      } else {
+        const dx = px - cx;
+        const dy = py - cy;
+        pts.push([cx + dx * cos - dy * sin, cy + dx * sin + dy * cos]);
+      }
+    }
+  }
+  return pts;
+};
+
 export const emitNodePrimitives = (
   layout: NodeLayout,
   round: (n: number) => number,

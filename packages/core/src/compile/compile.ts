@@ -4,7 +4,7 @@ import type { GroupPrim, Scene, ScenePrimitive, Transform } from '../primitive';
 import { BUILTIN_SHAPES } from '../shapes';
 import type { ShapeDefinition } from '../shapes';
 import { type DuplicateRegisterInfo, NameStack } from './name-stack';
-import { type NodeLayout, emitNodePrimitives, layoutNode } from './node';
+import { type NodeLayout, emitNodePrimitives, labelExtentPoints, layoutNode } from './node';
 import { emitPathPrimitive } from './path/index';
 import { resolvePosition } from './position';
 import { DEFAULT_PRECISION, makeRound } from './precision';
@@ -352,6 +352,8 @@ export const compileToScene = (ir: IR, options: CompileOptions = {}): Scene => {
           rectOps.anchor(globalLayout.rect, 'south-west'),
           rectOps.anchor(globalLayout.rect, 'south-east'),
         );
+        // label / pin 外接点也纳入 bbox——避免 label 超出 viewBox 被裁（与 step.label 进 bbox 一致）
+        for (const p of labelExtentPoints(globalLayout)) allPoints.push(p);
         // 把 node layout 加进 layoutsAccumulator，供上层 scope.id bbox 计算
         layoutsAccumulator.push(globalLayout);
       } else if (child.type === 'coordinate') {

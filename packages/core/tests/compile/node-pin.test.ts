@@ -74,3 +74,26 @@ describe('多 pin', () => {
     expect(paths).toHaveLength(2);
   });
 });
+
+describe('label / pin 进 bbox（不被 viewBox 裁切）', () => {
+  const sceneOf = (node: Record<string, unknown>): { width: number; height: number } => {
+    const ir: IR = {
+      version: 1,
+      type: 'scene',
+      children: [{ type: 'node', id: 'A', position: [0, 0], text: 'A', ...node } as never],
+    };
+    return compileToScene(ir).layout;
+  };
+
+  it('远处 label 撑大 scene.layout（与无 label 比）', () => {
+    const base = sceneOf({});
+    const withLabel = sceneOf({ label: { text: 'far above', position: 'above', distance: 60 } });
+    expect(withLabel.height).toBeGreaterThan(base.height);
+  });
+
+  it('pin label 同样进 bbox', () => {
+    const base = sceneOf({});
+    const withPin = sceneOf({ label: { text: 'note', position: 'right', distance: 50, pin: true } });
+    expect(withPin.width).toBeGreaterThan(base.width);
+  });
+});
