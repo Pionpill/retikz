@@ -27,10 +27,10 @@ const typeName = (element: ReactElement): string | undefined => {
 };
 
 describe('parseRetikzJsx — happy path', () => {
-  it('解析空 TikZ（deprecated alias 仍在白名单、可作根）', () => {
-    const element = parseOk('<TikZ />');
+  it('解析空 Layout（顶层容器，可作根）', () => {
+    const element = parseOk('<Layout />');
     expect(isValidElement(element)).toBe(true);
-    expect(typeName(element)).toBe('TikZ');
+    expect(typeName(element)).toBe('Layout');
   });
 
   it('解析空 Layout（主名作根）', () => {
@@ -47,8 +47,8 @@ describe('parseRetikzJsx — happy path', () => {
   });
 
   it('解析带文本 child 的 Node', () => {
-    const element = parseOk('<TikZ><Node>Hello</Node></TikZ>');
-    expect(typeName(element)).toBe('TikZ');
+    const element = parseOk('<Layout><Node>Hello</Node></Layout>');
+    expect(typeName(element)).toBe('Layout');
     const props = element.props as { children?: ReactNode };
     // React 单 child 时 props.children 不裹数组
     const node = props.children as ReactElement;
@@ -59,7 +59,7 @@ describe('parseRetikzJsx — happy path', () => {
 
   it('字面量 props：string / number / boolean / null / undefined', () => {
     const element = parseOk(
-      '<TikZ a="x" b={1} c={true} d={false} e={null} f={undefined} g />',
+      '<Layout a="x" b={1} c={true} d={false} e={null} f={undefined} g />',
     );
     const props = element.props as Record<string, unknown>;
     expect(props.a).toBe('x');
@@ -73,32 +73,32 @@ describe('parseRetikzJsx — happy path', () => {
   });
 
   it('一元 -/+ 数字字面量', () => {
-    const element = parseOk('<TikZ a={-1.5} b={+0.5} />');
+    const element = parseOk('<Layout a={-1.5} b={+0.5} />');
     const props = element.props as Record<string, unknown>;
     expect(props.a).toBe(-1.5);
     expect(props.b).toBe(0.5);
   });
 
   it('对象字面量 prop', () => {
-    const element = parseOk('<TikZ position={{ x: 0, y: 0 }} />');
+    const element = parseOk('<Layout position={{ x: 0, y: 0 }} />');
     const props = element.props as { position: unknown };
     expect(props.position).toEqual({ x: 0, y: 0 });
   });
 
   it('数组字面量 prop', () => {
-    const element = parseOk('<TikZ values={[1, 2, "three"]} />');
+    const element = parseOk('<Layout values={[1, 2, "three"]} />');
     const props = element.props as { values: unknown };
     expect(props.values).toEqual([1, 2, 'three']);
   });
 
   it('模板字符串（无插值）当字符串处理', () => {
-    const element = parseOk('<TikZ label={`hello world`} />');
+    const element = parseOk('<Layout label={`hello world`} />');
     const props = element.props as { label: unknown };
     expect(props.label).toBe('hello world');
   });
 
   it('嵌套 children + 字面量插值', () => {
-    const element = parseOk('<TikZ><Node>{1.5}</Node></TikZ>');
+    const element = parseOk('<Layout><Node>{1.5}</Node></Layout>');
     const tikzProps = element.props as { children?: ReactNode };
     const node = tikzProps.children as ReactElement;
     const nodeProps = node.props as { children?: ReactNode };
@@ -106,7 +106,7 @@ describe('parseRetikzJsx — happy path', () => {
   });
 
   it('多 children 顺序保留', () => {
-    const element = parseOk('<TikZ><Node>a</Node><Node>b</Node><Node>c</Node></TikZ>');
+    const element = parseOk('<Layout><Node>a</Node><Node>b</Node><Node>c</Node></Layout>');
     const props = element.props as { children?: ReactNode };
     const children = props.children as Array<ReactElement>;
     expect(Array.isArray(children)).toBe(true);
@@ -117,13 +117,13 @@ describe('parseRetikzJsx — happy path', () => {
   });
 
   it('源码前后空白容忍', () => {
-    const element = parseOk('   \n  <TikZ />  \n  ');
-    expect(typeName(element)).toBe('TikZ');
+    const element = parseOk('   \n  <Layout />  \n  ');
+    expect(typeName(element)).toBe('Layout');
   });
 
   it('与 convertReactNodeToIR 串联：能产出合法 IR', () => {
     const element = parseOk(
-      '<TikZ><Node position={{ x: 0, y: 0 }}>A</Node><Node position={{ x: 50, y: 0 }}>B</Node></TikZ>',
+      '<Layout><Node position={{ x: 0, y: 0 }}>A</Node><Node position={{ x: 50, y: 0 }}>B</Node></Layout>',
     );
     const tikzProps = element.props as { children?: ReactNode };
     const ir = convertReactNodeToIR(tikzProps.children);
@@ -146,13 +146,13 @@ describe('parseRetikzJsx — error cases', () => {
   });
 
   it('JSX 语法本身错误', () => {
-    expect(parseErr('<TikZ><Node></TikZ>')).toMatch(/JSX 语法解析失败/);
+    expect(parseErr('<Layout><Node></Layout>')).toMatch(/JSX 语法解析失败/);
   });
 
   it('白名单外的组件（原生 div）', () => {
     const err = parseErr('<div />');
     expect(err).toMatch(/不支持的组件：div/);
-    expect(err).toMatch(/TikZ/);
+    expect(err).toMatch(/Layout/);
   });
 
   it('白名单外的组件（自定义大写）', () => {
@@ -160,42 +160,42 @@ describe('parseRetikzJsx — error cases', () => {
   });
 
   it('成员组件名 <Foo.Bar/>', () => {
-    expect(parseErr('<TikZ.Foo />')).toMatch(/不支持的组件名形式：JSXMemberExpression/);
+    expect(parseErr('<Layout.Foo />')).toMatch(/不支持的组件名形式：JSXMemberExpression/);
   });
 
   it('表达式 prop：变量引用', () => {
-    expect(parseErr('<TikZ a={foo} />')).toMatch(/不支持的表达式：标识符 foo/);
+    expect(parseErr('<Layout a={foo} />')).toMatch(/不支持的表达式：标识符 foo/);
   });
 
   it('表达式 prop：函数调用', () => {
-    const err = parseErr('<TikZ a={Math.cos(0)} />');
+    const err = parseErr('<Layout a={Math.cos(0)} />');
     expect(err).toMatch(/不支持的表达式类型：CallExpression/);
   });
 
   it('表达式 prop：二元算式', () => {
-    const err = parseErr('<TikZ a={1 + 2} />');
+    const err = parseErr('<Layout a={1 + 2} />');
     expect(err).toMatch(/不支持的表达式类型：BinaryExpression/);
   });
 
   it('children 含 .map 调用', () => {
-    const err = parseErr('<TikZ>{nodes.map(n => <Node>{n}</Node>)}</TikZ>');
+    const err = parseErr('<Layout>{nodes.map(n => <Node>{n}</Node>)}</Layout>');
     expect(err).toMatch(/不支持的表达式类型：CallExpression/);
   });
 
   it('children 含变量引用', () => {
-    expect(parseErr('<TikZ>{foo}</TikZ>')).toMatch(/不支持的表达式：标识符 foo/);
+    expect(parseErr('<Layout>{foo}</Layout>')).toMatch(/不支持的表达式：标识符 foo/);
   });
 
   it('spread 属性 {...x}', () => {
-    expect(parseErr('<TikZ {...props} />')).toMatch(/不支持的属性形式：\{\.\.\.spread\}/);
+    expect(parseErr('<Layout {...props} />')).toMatch(/不支持的属性形式：\{\.\.\.spread\}/);
   });
 
   it('对象 spread 字段', () => {
-    expect(parseErr('<TikZ a={{ ...other, x: 0 }} />')).toMatch(/不支持的对象形式：.*\{\.\.\.spread\}/);
+    expect(parseErr('<Layout a={{ ...other, x: 0 }} />')).toMatch(/不支持的对象形式：.*\{\.\.\.spread\}/);
   });
 
   it('对象 computed key', () => {
-    expect(parseErr('<TikZ a={{ [k]: 1 }} />')).toMatch(/不支持的对象 key 形式：.*computed key/);
+    expect(parseErr('<Layout a={{ [k]: 1 }} />')).toMatch(/不支持的对象 key 形式：.*computed key/);
   });
 
   it('JSX Fragment 根节点', () => {
@@ -203,10 +203,10 @@ describe('parseRetikzJsx — error cases', () => {
   });
 
   it('JSX Fragment 作为 child', () => {
-    expect(parseErr('<TikZ><><Node /></></TikZ>')).toMatch(/不支持的 JSX Fragment/);
+    expect(parseErr('<Layout><><Node /></></Layout>')).toMatch(/不支持的 JSX Fragment/);
   });
 
   it('模板字符串含插值', () => {
-    expect(parseErr('<TikZ label={`hi ${x}`} />')).toMatch(/含模板插值/);
+    expect(parseErr('<Layout label={`hi ${x}`} />')).toMatch(/含模板插值/);
   });
 });
