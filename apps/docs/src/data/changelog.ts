@@ -15,8 +15,8 @@ export const changelog: Array<Release> = [
         pkg: '@retikz/core',
         version: 'v0.2',
         description: {
-          zh: 'Scope 样式默认值挂点、形状可注册注入、zIndex / label rotate emit 能力、Path IR 几何扩张,并引入 Paint 填充服务(渐变 / 图案 / 图片)与 Node 自动换行 / 引脚。',
-          en: 'Scope style-default host, registrable shapes, zIndex / label rotate, Path IR geometry, plus a Paint fill service (gradients / pattern / image) and Node auto-wrapping / pin leaders.',
+          zh: 'v0.2:形状 / 箭头 / 路径生成器三注册面 + Paint 填充(渐变 / 图案 / 图片),Scope 样式默认、zIndex、Node 换行 / 引脚,Path out/in·自环 / 变换 / 中段标记。',
+          en: 'v0.2: shape / arrow / path-generator registries + Paint fills (gradients / pattern / image), Scope style defaults, zIndex, Node wrapping / pins, and Path out/in / transform / marks.',
         },
         highlights: [
           {
@@ -31,6 +31,13 @@ export const changelog: Array<Release> = [
             content: {
               zh: 'ShapeDefinition 四方法,内置 4 形状改注册项,可发第三方形状库 [自定义形状](/core/reference/extending/shape-registry)',
               en: 'Four-method ShapeDefinition; the 4 built-ins become registry entries; third-party shape libs possible [shape registry](/core/reference/extending/shape-registry)',
+            },
+          },
+          {
+            label: { zh: '箭头 / 生成器注册面', en: 'Arrow / generator registries' },
+            content: {
+              zh: 'ArrowDefinition(自定义箭头,emit-in-compile,内置 7 降注册项)+ PathGeneratorDefinition(外部曲线包,JSON params 双 parse 护栏),与形状注册面同构 [自定义箭头](/core/reference/extending/custom-arrow)',
+              en: 'ArrowDefinition (custom arrows, emit-in-compile, the 7 built-ins demoted to entries) + PathGeneratorDefinition (external curve packages, JSON params with a double-parse guard), isomorphic to the shape registry [custom arrows](/core/reference/extending/custom-arrow)',
             },
           },
           {
@@ -56,6 +63,37 @@ export const changelog: Array<Release> = [
           },
         ],
         subVersions: [
+          {
+            version: 'alpha.8',
+            date: '2026-05-24',
+            summary: {
+              zh: '两大注册面:自定义箭头 ArrowDefinition(emit-in-compile,内置 7 降注册项)+ 路径生成器 PathGeneratorDefinition(外部曲线包,params 限 JSON 双 parse 护栏);Path 搭车 out/in·自环 / 整体变换 / 中段 marking。',
+              en: 'Two registries: custom arrows via ArrowDefinition (emit-in-compile, the 7 built-ins demoted to entries) and path generators via PathGeneratorDefinition (external curve packages, JSON-only params with a double-parse guard); plus Path out/in·self-loop / transform / mid-path marking.',
+            },
+            items: [
+              {
+                label: { zh: 'ArrowDefinition 注册面', en: 'ArrowDefinition registry' },
+                content: {
+                  zh: '`arrowDetail.shape` 开放为 string;`CompileOptions.arrows` 注入 ArrowDefinition;`emit` 在 compile 期调,产 `MarkerPrimitive[]` 窄子集(path / ellipse / rect / group,fill 限 `string | contextStroke`)写进 `ArrowEndSpec`,adapter 纯物化、不再 switch;内置 7 降为注册项,颜色经 `contextStroke` 跟随 path 描边',
+                  en: '`arrowDetail.shape` opens to a string; `CompileOptions.arrows` injects an ArrowDefinition; `emit` runs at compile time, producing a `MarkerPrimitive[]` narrow subset (path / ellipse / rect / group, fill limited to `string | contextStroke`) into `ArrowEndSpec` for the adapter to just materialize (no more switch); the 7 built-ins become registry entries, color follows the path stroke via `contextStroke`',
+                },
+              },
+              {
+                label: { zh: 'PathGeneratorDefinition 注册面', en: 'PathGeneratorDefinition registry' },
+                content: {
+                  zh: '新 `generator` step kind + `CompileOptions.pathGenerators`;外部包用 `definePathGenerator` 注册曲线(parabola / sin…),core 不内置任何曲线;`params` 限 `JsonObjectSchema`(递归 JSON,守序列化),paramsSchema + JsonObjectSchema 双 parse 护栏拦非 JSON 输出;`targetParams` 顶层 key 先 resolve 成世界坐标喂 `generate`',
+                  en: 'A new `generator` step kind + `CompileOptions.pathGenerators`; external packages register curves (parabola / sin…) via `definePathGenerator`, with no curve built into core; `params` is limited to `JsonObjectSchema` (recursive JSON, serialization-safe) with a paramsSchema + JsonObjectSchema double-parse guard against non-JSON output; `targetParams` top-level keys resolve to world coordinates before feeding `generate`',
+                },
+              },
+              {
+                label: { zh: 'Path out/in·自环 / 变换 / marking', en: 'Path out/in·self-loop / transform / marking' },
+                content: {
+                  zh: '`bend` step 加 `outAngle` / `inAngle` / `looseness`(out/in 优先于 bendDirection,`from==to` 退化为自环);`PathSchema` 加 `rotate` / `scale`(绕包围盒中心)与 `marks`(沿 `pos∈[0,1]` 放箭头、朝向随切线);非 finite 几何(NaN / Infinity / 溢出)编译期拦截,守 Scene 100% JSON 可序列化',
+                  en: '`bend` step gains `outAngle` / `inAngle` / `looseness` (out/in takes precedence over bendDirection, `from==to` degenerates to a self-loop); `PathSchema` gains `rotate` / `scale` (around the bbox center) and `marks` (arrows at `pos∈[0,1]`, tangent-oriented); non-finite geometry (NaN / Infinity / overflow) is rejected at compile to keep the Scene 100% JSON-serializable',
+                },
+              },
+            ],
+          },
           {
             version: 'alpha.7',
             date: '2026-05-24',
@@ -273,6 +311,30 @@ export const changelog: Array<Release> = [
         ],
         subVersions: [
           {
+            version: 'alpha.8',
+            date: '2026-05-24',
+            summary: {
+              zh: 'adapter 跟进 emit-in-compile:物化已解析的 `ArrowEndSpec.marker`(含 arc / ellipseArc),`<Layout>` 加 `arrows` / `pathGenerators` 注入;`<Path rotate/scale/marks>`、`<Step bend out/in/looseness>`(bendDirection 改 optional)。',
+              en: 'The adapter follows emit-in-compile: it materializes the resolved `ArrowEndSpec.marker` (incl. arc / ellipseArc), `<Layout>` gains `arrows` / `pathGenerators` injection; `<Path rotate/scale/marks>`, `<Step bend out/in/looseness>` (bendDirection now optional).',
+            },
+            items: [
+              {
+                label: { zh: 'arrow marker 物化', en: 'arrow marker materialization' },
+                content: {
+                  zh: 'arrow marker 改读 core 已解析的 `ArrowEndSpec.marker`(MarkerPrimitive→SVG,递归 group,`contextStroke`→`context-stroke`),删 switch / 不再算几何;marker path 复用 `buildPathD` 补全 arc / ellipseArc 段',
+                  en: 'Arrow markers now read core’s resolved `ArrowEndSpec.marker` (MarkerPrimitive→SVG, recursive group, `contextStroke`→`context-stroke`), dropping the switch and geometry math; marker paths reuse `buildPathD` to cover arc / ellipseArc segments',
+                },
+              },
+              {
+                label: { zh: '注入 prop + Path/Step 字段', en: 'Injection props + Path/Step fields' },
+                content: {
+                  zh: '`<Layout>` 加 `arrows` / `pathGenerators` prop 透传 `compileToScene`(对齐 `shapes`);`<Path>` 加 `rotate` / `scale` / `marks`;`<Step kind="bend">` 加 `outAngle` / `inAngle` / `looseness`,`bendDirection` 改 optional',
+                  en: '`<Layout>` gains `arrows` / `pathGenerators` props forwarded to `compileToScene` (matching `shapes`); `<Path>` gains `rotate` / `scale` / `marks`; `<Step kind="bend">` gains `outAngle` / `inAngle` / `looseness`, `bendDirection` becomes optional',
+                },
+              },
+            ],
+          },
+          {
             version: 'alpha.7',
             date: '2026-05-24',
             summary: {
@@ -402,6 +464,23 @@ export const changelog: Array<Release> = [
           },
         ],
         subVersions: [
+          {
+            version: 'alpha.8',
+            date: '2026-05-24',
+            summary: {
+              zh: 'reference/extending 新增自定义箭头 / 路径生成器两概念页(双语 + demo);Path 页补 out/in·自环 / 整体变换 / 中段 marking。',
+              en: 'New custom-arrow / path-generator pages under reference/extending (bilingual + demos); the Path page gains out/in·self-loop / transform / mid-path marking.',
+            },
+            items: [
+              {
+                label: { zh: '注册面概念页 + Path 扩展', en: 'Registry concept pages + Path extension' },
+                content: {
+                  zh: '[自定义箭头](/core/reference/extending/custom-arrow)(注册 + ArrowDefinition 契约 + emit/MarkerPrimitive + 颜色继承 + 2 demo)、[路径生成器](/core/reference/extending/path-generator)(契约 + 双 parse + targetParams + parabola/sin demo);[Path 页](/core/components/draw/path)补 out/in·自环 / rotate·scale / marks 三 demo 与 API 行',
+                  en: '[Custom Arrows](/core/reference/extending/custom-arrow) (registration + ArrowDefinition contract + emit/MarkerPrimitive + color inheritance + 2 demos), [Path Generators](/core/reference/extending/path-generator) (contract + double-parse + targetParams + parabola/sin demos); the [Path page](/core/components/draw/path) gains out/in·self-loop / rotate·scale / marks demos plus API rows',
+                },
+              },
+            ],
+          },
           {
             version: 'alpha.7',
             date: '2026-05-24',
