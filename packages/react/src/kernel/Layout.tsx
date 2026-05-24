@@ -4,6 +4,7 @@ import {
   type ArrowEndSpec,
   type AssertEqual,
   type IR,
+  type IRViewBox,
   type PathGeneratorDefinition,
   type PatternDefinition,
   type ScenePrimitive,
@@ -28,6 +29,12 @@ export type LayoutProps = {
   width?: number | string;
   /** SVG 元素高度（CSS 长度或数字） */
   height?: number | string;
+  /**
+   * 显式视框 `{ x, y, width, height }`，覆盖自动算的范围（固定尺寸 / 裁剪 / 多图对齐）
+   * @description 注入构造出的 IR 根（`ir.viewBox`）；设值时 `<svg viewBox>` 用它、忽略 padding。
+   *   与直接传 `ir` prop 自带的 viewBox 冲突时，本 prop 优先；都缺省时回退自动 AABB。
+   */
+  viewBox?: IRViewBox;
   /** 透传到 svg 元素的 className */
   className?: string;
   /** 透传到 svg 元素的内联样式 */
@@ -137,8 +144,12 @@ const hashKey = (key: string): string => {
  * @description 流水线：从 children 构造 IR（或直接接受外部 IR）→ compileToScene 得 Scene → 渲染 SVG 元素并按需注入 `<defs>` 与每种 arrow 端点 spec 的 `<marker>`；marker id 用 `useId()` 派生稳定前缀避免多实例冲突，每种 detail 一个定义（`${prefix}-${specHash}`），marker 内借 spec 字段（`color` / `fill` / `opacity` 等）替换硬编码，缺省字段回退到 `context-stroke` 让颜色继续跟随 path 同步
  */
 export const Layout: FC<LayoutProps> = props => {
-  const { ir: irFromProp, children, width, height, className, style, nodeDistance, shapes, arrows, patterns, pathGenerators } = props;
-  const ir = useMemo(() => irFromProp ?? buildIR(children), [irFromProp, children]);
+  const { ir: irFromProp, children, width, height, viewBox, className, style, nodeDistance, shapes, arrows, patterns, pathGenerators } = props;
+  const ir = useMemo(() => {
+    const base = irFromProp ?? buildIR(children);
+    // viewBox prop 注入 IR 根（显式 > IR 内置）；prop 缺省时保留 base 自带的 viewBox
+    return viewBox !== undefined ? { ...base, viewBox } : base;
+  }, [irFromProp, children, viewBox]);
   const scene = useMemo(
     () => compileToScene(ir, { measureText: browserMeasurer, nodeDistance, shapes, arrows, patterns, pathGenerators }),
     [ir, nodeDistance, shapes, arrows, patterns, pathGenerators],

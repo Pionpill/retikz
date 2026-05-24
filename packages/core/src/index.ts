@@ -53,6 +53,7 @@ export {
   JsonValueSchema,
   JsonObjectSchema,
   ClipSpecSchema,
+  ViewBoxSchema,
 } from './ir';
 export type {
   IRPosition,
@@ -116,6 +117,7 @@ export type {
   JsonValue,
   IRJsonObject,
   IRClipSpec,
+  IRViewBox,
 } from './ir';
 export {
   ARROW_SHAPES,

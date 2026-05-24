@@ -151,6 +151,28 @@ export type CompileOptions = {
 };
 
 /**
+ * 显式 viewBox → Scene.layout（finite 守卫 + round）
+ * @description schema 的 `.finite().positive()` 只在 IR parse 守门；compileToScene 直接收手搓 / LLM IR 会绕过，
+ *   故此处是唯一真实关口——非 finite / 非正尺寸会污染 Scene round-trip。非法即抛清晰错（不泄漏进 Scene）；
+ *   四字段按 Scene precision round（与自动算 layout 同口径）。
+ */
+const viewBoxToLayout = (
+  vb: { x: number; y: number; width: number; height: number },
+  round: (n: number) => number,
+): { x: number; y: number; width: number; height: number } => {
+  if (!Number.isFinite(vb.x) || !Number.isFinite(vb.y)) {
+    throw new Error(`viewBox has a non-finite origin (x=${String(vb.x)}, y=${String(vb.y)}); both must be finite.`);
+  }
+  if (!Number.isFinite(vb.width) || vb.width <= 0) {
+    throw new Error(`viewBox has an invalid width (${String(vb.width)}); it must be a finite number greater than 0.`);
+  }
+  if (!Number.isFinite(vb.height) || vb.height <= 0) {
+    throw new Error(`viewBox has an invalid height (${String(vb.height)}); it must be a finite number greater than 0.`);
+  }
+  return { x: round(vb.x), y: round(vb.y), width: round(vb.width), height: round(vb.height) };
+};
+
+/**
  * 默认 warn dispatcher：dev 模式 console.warn、生产静默
  * @description 用户传 onWarn 时使用用户的；不传走此 fallback
  */
@@ -579,7 +601,8 @@ export const compileToScene = (ir: IR, options: CompileOptions = {}): Scene => {
   return {
     // sealSink 后对顶层按 zIndex 稳定排序（占位已回填）
     primitives: stableSortByZIndex(sealSink(primitives)),
-    layout: computeLayout(allPoints, layoutPadding, round),
+    // 显式 viewBox 覆盖自动算（忽略 padding）；无则回退 AABB + padding
+    layout: ir.viewBox !== undefined ? viewBoxToLayout(ir.viewBox, round) : computeLayout(allPoints, layoutPadding, round),
     // 渲染无关资源（paint / clip）；无则省略，保 Scene 输出纯净
     ...(resources.length > 0 ? { resources } : {}),
   };

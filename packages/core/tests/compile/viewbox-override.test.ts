@@ -127,7 +127,7 @@ describe('手搓非法 viewBox 经 compileToScene 抛清晰错', () => {
       y: 0,
       width: Infinity,
       height: 200,
-    } as IR['viewBox']);
+    });
     expect(() => compileToScene(ir)).toThrow();
   });
 
@@ -137,7 +137,7 @@ describe('手搓非法 viewBox 经 compileToScene 抛清晰错', () => {
       y: 0,
       width: 200,
       height: NaN,
-    } as IR['viewBox']);
+    });
     expect(() => compileToScene(ir)).toThrow();
   });
 
@@ -147,7 +147,7 @@ describe('手搓非法 viewBox 经 compileToScene 抛清晰错', () => {
       y: 0,
       width: 0,
       height: 200,
-    } as IR['viewBox']);
+    });
     expect(() => compileToScene(ir)).toThrow();
   });
 });

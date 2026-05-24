@@ -26,6 +26,25 @@ export const ChildSchema: z.ZodType<IRChild> = z.lazy(() =>
 // 把 ChildSchema 注册回 scope.ts 让 ScopeSchema.children 能延迟解析此 schema（解决双向依赖）
 __registerChildSchema(ChildSchema);
 
+/**
+ * 显式视框 schema（覆盖自动算的 layout 范围）
+ * @description 具名四字段（与 Scene.layout / SVG viewBox 同构）；width / height `.positive().finite()`、
+ *   x / y `.finite()` 守 Scene JSON 可序列化。设值时 compile 直接用它作 Scene.layout、忽略 padding。
+ */
+export const ViewBoxSchema = z
+  .object({
+    x: z.number().finite().describe('ViewBox left-top x'),
+    y: z.number().finite().describe('ViewBox left-top y'),
+    width: z.number().finite().positive().describe('ViewBox width (> 0)'),
+    height: z.number().finite().positive().describe('ViewBox height (> 0)'),
+  })
+  .describe(
+    'Explicit viewBox overriding the auto-computed layout range (fixed size / clipping / multi-figure alignment). When set, Scene.layout uses it directly and padding is ignored.',
+  );
+
+/** 显式视框 IR 类型 `{ x, y, width, height }` */
+export type IRViewBox = z.infer<typeof ViewBoxSchema>;
+
 export const SceneSchema = z
   .object({
     version: z
@@ -41,6 +60,9 @@ export const SceneSchema = z
       .describe(
         'Top-level children of the scene; nodes register ids that paths can reference',
       ),
+    viewBox: ViewBoxSchema.optional().describe(
+      'Optional explicit viewBox; when set, Scene.layout uses it (ignoring padding) instead of the auto-computed bounding box. Omitted = automatic AABB + padding.',
+    ),
   })
   .describe(
     'Top-level retikz IR scene — the canonical, JSON-serializable representation of a drawing',
