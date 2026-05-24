@@ -209,7 +209,7 @@ By default stacking = declaration order (SVG only honors paint order). `zIndex` 
 
 #### Pin
 
-When `label.pin: true`, a **leader line** is drawn from the node border toward the label (TikZ `pin`). `leader` tunes the line style (`stroke` / `strokeWidth` / `dashPattern`); the default is a thin solid line inheriting the label color. The label is still placed by `position` / `distance` — pin only adds the leader.
+`label.pin` adds a **leader line** from the node border to the label (TikZ `pin`): `pin: true` is a default thin solid line (inherits the label color); `pin: { stroke, strokeWidth, dashPattern }` customizes it; omitted / `false` = no leader. The label is still placed by `position` / `distance` — pin only adds the leader.
 
 <Comparison target="tikz" title="Pin">
 
@@ -254,7 +254,7 @@ When `label.pin: true`, a **leader line** is drawn from the node border toward t
 | `scale` | `number` | `1` | Uniform scale (includes font, padding, path attachment) |
 | `xScale` / `yScale` | `number` | — | Per-axis scale; takes precedence over `scale` |
 | `zIndex` | `number` (integer) | `0` | Explicit stacking order: higher draws on top; ties keep declaration order; effective only among siblings at the same level |
-| `label` | `NodeLabel \| Array<NodeLabel>` | — | Extra label(s) attached to the node border; single object or array; `position` accepts the 8-direction enum or a numeric angle, `distance` defaults to 12, `font` / `textColor` inherit from the node; `rotate` (`'none'` / `'radial'` / `'tangent'` / a number of degrees) + `keepUpright` control label spin; `pin: true` draws a leader line, `leader` (`stroke` / `strokeWidth` / `dashPattern`) styles it |
+| `label` | `NodeLabel \| Array<NodeLabel>` | — | Extra label(s) attached to the node border; single object or array; `position` accepts the 8-direction enum or a numeric angle, `distance` defaults to 12, `font` / `textColor` inherit from the node; `rotate` (`'none'` / `'radial'` / `'tangent'` / a number of degrees) + `keepUpright` control label spin; `pin` (`true` default line / `{ stroke, strokeWidth, dashPattern }` styled / omitted = none) draws a leader |
 
 ### margin vs padding
 

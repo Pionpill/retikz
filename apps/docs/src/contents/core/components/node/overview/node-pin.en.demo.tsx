@@ -21,8 +21,7 @@ const Demo: FC = () => (
           text: 'initial',
           position: 'above-left',
           distance: 34,
-          pin: true,
-          leader: { stroke: '#999999', dashPattern: [3, 2] },
+          pin: { stroke: '#999999', dashPattern: [3, 2] },
         },
       ]}
     >

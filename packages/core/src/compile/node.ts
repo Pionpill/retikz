@@ -183,10 +183,8 @@ export type NodeLabelLayout = {
   keepUpright?: boolean;
   /** label 文本测量宽度（pin leader 算 label 框近边用） */
   measuredWidth: number;
-  /** pin：从 node 边界画引线到 label */
-  pin?: boolean;
-  /** 引线样式（pin 为 true 时生效） */
-  leader?: { stroke?: string; strokeWidth?: number; dashPattern?: Array<number> };
+  /** pin：true = 默认引线；对象 = 带样式引线（stroke / strokeWidth / dashPattern）；缺省 / false = 无引线 */
+  pin?: boolean | { stroke?: string; strokeWidth?: number; dashPattern?: Array<number> };
 };
 
 /** 把 Rect 各方向外扩 m（margin generic：所有 shape 都 w+2m, h+2m，由 boundaryPointOf 调用前膨胀） */
@@ -476,7 +474,6 @@ export const layoutNode = (
         style: labStyle,
       }).width,
       pin: lab.pin,
-      leader: lab.leader,
     };
   });
 
@@ -608,8 +605,9 @@ export const emitNodePrimitives = (
     const cy = layout.rect.y;
     for (const lab of layout.labels) {
       const [lx, ly] = labelCenter(layout, lab);
-      // pin：从 node 边界点画引线到 label 框近 node 边（在 textPrim 前 push → 线在文字下层）
+      // pin：true 或样式对象都画引线；false / 缺省跳过。从 node 边界画到 label 框近 node 边（textPrim 前 push → 线在文字下层）
       if (lab.pin) {
+        const style = typeof lab.pin === 'object' ? lab.pin : undefined;
         const [bx, by] = labelBorderPoint(layout, lab);
         const pad = 2;
         const [nx, ny] = labelBoxEdgeToward(
@@ -624,9 +622,9 @@ export const emitNodePrimitives = (
             { kind: 'move', to: [round(bx), round(by)] },
             { kind: 'line', to: [round(nx), round(ny)] },
           ],
-          stroke: lab.leader?.stroke ?? lab.textColor ?? 'currentColor',
-          strokeWidth: lab.leader?.strokeWidth ?? 1,
-          dashPattern: lab.leader?.dashPattern,
+          stroke: style?.stroke ?? lab.textColor ?? 'currentColor',
+          strokeWidth: style?.strokeWidth ?? 1,
+          dashPattern: style?.dashPattern,
           opacity: lab.opacity ?? layout.opacity,
         });
       }

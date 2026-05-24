@@ -85,19 +85,18 @@ export const NodeLabelSchema = z
         'When true, flips the rotated label 180 deg if it would otherwise read upside-down (more than 90 deg from upright). Default false (strict geometric angle).',
       ),
     pin: z
-      .boolean()
+      .union([
+        z.boolean(),
+        z.object({
+          stroke: z.string().optional().describe('Leader line color; defaults to the label color / currentColor'),
+          strokeWidth: z.number().finite().positive().optional().describe('Leader line width (user units); default 1'),
+          dashPattern: z.array(z.number().finite()).optional().describe('Leader dash pattern (e.g. [2, 2])'),
+        }),
+      ])
       .optional()
       .describe(
-        'When true, draws a leader line from the node border to the label (TikZ `pin`). The label is otherwise placed the same as a normal label.',
+        'Draw a leader line from the node border to the label (TikZ `pin`). `true` = default thin solid line; an object = leader with style overrides (`stroke` / `strokeWidth` / `dashPattern`); omitted / `false` = no leader. Label placement is unchanged either way.',
       ),
-    leader: z
-      .object({
-        stroke: z.string().optional().describe('Leader line color; defaults to the label color / currentColor'),
-        strokeWidth: z.number().finite().positive().optional().describe('Leader line width (user units); default 1'),
-        dashPattern: z.array(z.number().finite()).optional().describe('Leader dash pattern (e.g. [2, 2])'),
-      })
-      .optional()
-      .describe('Leader line style for a pinned label; effective only when `pin` is true. Omitted = thin solid line.'),
   })
   .describe(
     'Extra text attached around a node border. Multiple labels supported via array form on `Node.label`.',

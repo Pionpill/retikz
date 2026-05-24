@@ -48,18 +48,17 @@ describe('pin 引线产出', () => {
 });
 
 describe('pin 引线样式', () => {
-  it('leader.stroke / dashPattern 生效', () => {
+  it('pin 对象样式（stroke / dashPattern）生效', () => {
     const paths = compileNode({
       text: 'x',
       position: 'right',
-      pin: true,
-      leader: { stroke: 'gray', dashPattern: [2, 2] },
+      pin: { stroke: 'gray', dashPattern: [2, 2] },
     });
     expect(paths[0].stroke).toBe('gray');
     expect(paths[0].dashPattern).toEqual([2, 2]);
   });
 
-  it('leader.stroke 缺省继承 currentColor', () => {
+  it('pin:true 引线 stroke 缺省继承 currentColor', () => {
     const paths = compileNode({ text: 'x', position: 'above', pin: true });
     expect(paths[0].stroke).toBe('currentColor');
   });

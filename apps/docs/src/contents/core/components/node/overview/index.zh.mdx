@@ -209,7 +209,7 @@ Line 2`}</Node>
 
 #### 引脚 pin
 
-`label.pin: true` 时，从节点边界朝标签方向画一条**引线**连到标签（TikZ `pin`）。`leader` 可调引线样式（`stroke` / `strokeWidth` / `dashPattern`），缺省是继承标签色的细实线。标签摆放仍由 `position` / `distance` 决定，pin 只是多画一条引线。
+`label.pin` 给标签加一条**引线**连回节点边界（TikZ `pin`）：`pin: true` 是默认细实线（继承标签色）；`pin: { stroke, strokeWidth, dashPattern }` 自定义引线样式；不写 / `false` 则无引线。标签摆放仍由 `position` / `distance` 决定，pin 只是多画一条引线。
 
 <Comparison target="tikz" title="引脚">
 
@@ -254,7 +254,7 @@ Line 2`}</Node>
 | `scale` | `number` | `1` | 均匀缩放（含字号、padding、路径附着点） |
 | `xScale` / `yScale` | `number` | — | 分轴缩放，优先于 `scale` |
 | `zIndex` | `number`（整数） | `0` | 显式栈序：大者在上；同值保持声明顺序；只在同层子节点间生效 |
-| `label` | `NodeLabel \| Array<NodeLabel>` | — | 边挂标签；单对象或数组；`position` 接 8 方向枚举或数字角度，`distance` 缺省 12，`font` / `textColor` 缺省继承 node；`rotate`（`'none'` / `'radial'` / `'tangent'` / 数字度数）+ `keepUpright` 控制标签自旋；`pin: true` 画引线、`leader`（`stroke` / `strokeWidth` / `dashPattern`）调引线样式 |
+| `label` | `NodeLabel \| Array<NodeLabel>` | — | 边挂标签；单对象或数组；`position` 接 8 方向枚举或数字角度，`distance` 缺省 12，`font` / `textColor` 缺省继承 node；`rotate`（`'none'` / `'radial'` / `'tangent'` / 数字度数）+ `keepUpright` 控制标签自旋；`pin`（`true` 默认线 / `{ stroke, strokeWidth, dashPattern }` 带样式 / 省略无引线）画引线 |
 
 ### margin 与 padding 的区别
 
