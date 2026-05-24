@@ -61,8 +61,46 @@ export const changelog: Array<Release> = [
               en: 'arc explicit center + elliptical arc, circlePath / ellipsePath partial clipping, a new rectangle step, geometry moved to `core/geometry/`',
             },
           },
+          {
+            label: { zh: 'Scene / Position 能力完善', en: 'Scene / Position completion' },
+            content: {
+              zh: 'clip 裁切（Scope 级 ClipResource + clipRef）+ 自定义 viewBox override + 比例 partway 定位 `{ between, t }`（自包含 AbsoluteTarget）[Scope](/core/components/layout/scope)',
+              en: 'Clipping (Scope-level ClipResource + clipRef) + custom viewBox override + proportional partway positioning `{ between, t }` (self-contained AbsoluteTarget) [Scope](/core/components/layout/scope)',
+            },
+          },
         ],
         subVersions: [
+          {
+            version: 'alpha.9',
+            date: '2026-05-24',
+            summary: {
+              zh: 'Scene / Position 能力完善：clip 裁切（renderer-agnostic ClipResource + clipRef，Scope 级）+ 自定义 viewBox override（IR 根 viewBox 覆盖自动算、忽略 padding）+ 比例 partway 定位（{ between:[A,B], t }，自包含 AbsoluteTarget）。',
+              en: 'Scene / Position completion: clip (renderer-agnostic ClipResource + clipRef, Scope-level) + custom viewBox override (IR-root viewBox overriding the auto layout, ignoring padding) + proportional partway positioning ({ between:[A,B], t } with a self-contained AbsoluteTarget).',
+            },
+            items: [
+              {
+                label: { zh: 'clip 裁切', en: 'Clipping' },
+                content: {
+                  zh: '`Scope.clip` 接 rect / circle / ellipse / polygon 四形状（scope 局部坐标）；compile 去重成 `ClipResource` 进 Scene 资源表（`clip-N`，与 paint 同表）+ scope GroupPrim 挂 `clipRef`，`<clipPath>` 物化只在 adapter；finite 守卫 + 带 clip 不 prune [Scope](/core/components/layout/scope)',
+                  en: '`Scope.clip` takes rect / circle / ellipse / polygon (scope-local coords); compile dedups it into a `ClipResource` in the Scene resource table (`clip-N`, same table as paint) and attaches `clipRef` to the scope GroupPrim, `<clipPath>` materialized only in the adapter; finite guards + a clipped scope is never pruned [Scope](/core/components/layout/scope)',
+                },
+              },
+              {
+                label: { zh: '自定义 viewBox', en: 'Custom viewBox' },
+                content: {
+                  zh: 'IR 根加可选 `viewBox`（{ x, y, width, height }）；有值则直接用作 `Scene.layout`、忽略 padding（固定尺寸 / 裁剪 / 多图对齐），round 后复检 finite 守 round-trip [Layout](/core/components/layout/overview)',
+                  en: 'The IR root gains an optional `viewBox` ({ x, y, width, height }); when set it becomes `Scene.layout` directly and ignores padding (fixed size / clipping / multi-figure alignment), re-checked finite after rounding to guard round-trip [Layout](/core/components/layout/overview)',
+                },
+              },
+              {
+                label: { zh: '比例 partway 定位', en: 'Proportional partway' },
+                content: {
+                  zh: '`{ between: [A, B], t }` 比例定位 `lerp(A, B, t)`，进 `Node.position` / `Coordinate.position` / path `Step.to`；端点用自包含 `AbsoluteTarget`（笛卡尔 / 极坐标 / 节点引用 / offset / 嵌套 between，排除 path-relative，z.lazy 化解 schema 环）；复用 `refPointOfTarget` + `lerpPoint` + finite 守卫 [Coordinate](/core/components/node/coordinate)',
+                  en: '`{ between: [A, B], t }` proportional positioning `lerp(A, B, t)`, admitted into `Node.position` / `Coordinate.position` / path `Step.to`; endpoints use a self-contained `AbsoluteTarget` (Cartesian / polar / node ref / offset / nested between, excluding path-relative, z.lazy breaks the schema cycle); reuses `refPointOfTarget` + `lerpPoint` with finite guards [Coordinate](/core/components/node/coordinate)',
+                },
+              },
+            ],
+          },
           {
             version: 'alpha.8',
             date: '2026-05-24',
@@ -318,6 +356,30 @@ export const changelog: Array<Release> = [
         ],
         subVersions: [
           {
+            version: 'alpha.9',
+            date: '2026-05-24',
+            summary: {
+              zh: 'adapter 物化 clip：ClipDefs 产 `<clipPath>`、group 挂 `clip-path`；`<Layout viewBox>` prop；`<Node>` / `<Coordinate>` position 接 `{ between, t }`。',
+              en: 'The adapter materializes clip: ClipDefs emits `<clipPath>` and the group gains `clip-path`; a `<Layout viewBox>` prop; `<Node>` / `<Coordinate>` position accept `{ between, t }`.',
+            },
+            items: [
+              {
+                label: { zh: 'clip 物化', en: 'clip materialization' },
+                content: {
+                  zh: 'ClipDefs 把 `ClipResource` 物化成 `<clipPath>`（rect / circle / ellipse / polygon），`renderPrim` group 分支按 `clipRef` 加 `clip-path="url(#…)"`，`Layout` 资源按 kind 分流（paint / clip 各自 idFor 前缀）',
+                  en: 'ClipDefs materializes a `ClipResource` into `<clipPath>` (rect / circle / ellipse / polygon); the `renderPrim` group branch adds `clip-path="url(#…)"` from `clipRef`; `Layout` splits resources by kind (separate idFor prefixes for paint / clip)',
+                },
+              },
+              {
+                label: { zh: 'viewBox / partway DSL', en: 'viewBox / partway DSL' },
+                content: {
+                  zh: '`<Layout viewBox={{ x, y, width, height }}>` 注入 IR 根（prop 优先于 IR 内置）；`<Node position>` / `<Coordinate position>` 类型并入 `{ between, t }`（Step.to 走 DslTarget 已含）',
+                  en: '`<Layout viewBox={{ x, y, width, height }}>` injects the IR root (prop wins over IR-embedded); `<Node position>` / `<Coordinate position>` types include `{ between, t }` (Step.to already covered via DslTarget)',
+                },
+              },
+            ],
+          },
+          {
             version: 'alpha.8',
             date: '2026-05-24',
             summary: {
@@ -471,6 +533,23 @@ export const changelog: Array<Release> = [
           },
         ],
         subVersions: [
+          {
+            version: 'alpha.9',
+            date: '2026-05-24',
+            summary: {
+              zh: 'Scope 页补 clip 裁切、Layout 概览补自定义 viewBox、Coordinate 页补比例 partway，各带 demo；placement schema 参考补 BetweenPosition / AbsoluteTarget。',
+              en: 'The Scope page gains clipping, the Layout overview gains custom viewBox, the Coordinate page gains proportional partway — each with a demo; the placement schema reference gains BetweenPosition / AbsoluteTarget.',
+            },
+            items: [
+              {
+                label: { zh: 'clip / viewBox / partway 文档', en: 'clip / viewBox / partway docs' },
+                content: {
+                  zh: '[Scope](/core/components/layout/scope) clip 圆形取景窗 demo + 四形状 + 限制；[Layout](/core/components/layout/overview) 固定 viewBox demo；[Coordinate](/core/components/node/coordinate) partway（1/4·1/2·3/4）demo + AbsoluteTarget 端点；[placement 参考](/core/reference/schema/placement) 补 BetweenPosition / AbsoluteTarget 两 section',
+                  en: 'The [Scope](/core/components/layout/scope) clip demo (circular viewport) + four shapes + limits; the [Layout](/core/components/layout/overview) fixed-viewBox demo; the [Coordinate](/core/components/node/coordinate) partway (1/4·1/2·3/4) demo + AbsoluteTarget endpoints; the [placement reference](/core/reference/schema/placement) gains BetweenPosition / AbsoluteTarget sections',
+                },
+              },
+            ],
+          },
           {
             version: 'alpha.8',
             date: '2026-05-24',

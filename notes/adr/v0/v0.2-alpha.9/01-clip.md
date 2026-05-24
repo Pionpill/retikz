@@ -1,6 +1,6 @@
 # ADR-01：clip 裁切（Scope 级裁剪区 + renderer-agnostic ClipResource / clipRef）
 
-- 状态：Proposed
+- 状态：Accepted
 - 决策日期：2026-05-24
 - 关联：[v0 roadmap §v0.2](../../../plans/v0/roadmap.md) · [tikz-gap-analysis §6 Scene](../../../analysis/2026-05-07-tikz-gap-analysis.md) · [v0.2 计划 §alpha.9](../../../plans/v0/v0.2.md) · [DESIGN.md](../../../architecture/DESIGN.md)
 
