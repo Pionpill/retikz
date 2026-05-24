@@ -5,6 +5,7 @@ import type {
   MarkerPathCommand,
   MarkerPrimitive,
 } from '@retikz/core';
+import { buildPathD } from './path-d-builder';
 
 /**
  * marker fill 取值 → SVG fill 属性
@@ -17,28 +18,13 @@ const markerFillToSvg = (fill: MarkerFill | undefined): string => {
   return 'context-stroke';
 };
 
-/** marker-local path 命令序列 → SVG `d` 字符串（move/line/quad/cubic/close；arc/ellipseArc 走 A 段） */
+/**
+ * marker-local path 命令序列 → SVG `d` 字符串
+ * @description 复用主 path 的 `buildPathD`（move/line/quad/cubic/close + arc/ellipseArc 走 SVG A 段）；
+ *   `MarkerPathCommand` 与 Scene `PathCommand` 同词汇，结构兼容直接复用，避免 marker 与主 path 两套 d 翻译漂移。
+ */
 const markerCommandsToD = (commands: ReadonlyArray<MarkerPathCommand>): string =>
-  commands
-    .map(c => {
-      switch (c.kind) {
-        case 'move':
-          return `M ${c.to[0]} ${c.to[1]}`;
-        case 'line':
-          return `L ${c.to[0]} ${c.to[1]}`;
-        case 'quad':
-          return `Q ${c.control[0]} ${c.control[1]} ${c.to[0]} ${c.to[1]}`;
-        case 'cubic':
-          return `C ${c.control1[0]} ${c.control1[1]} ${c.control2[0]} ${c.control2[1]} ${c.to[0]} ${c.to[1]}`;
-        case 'close':
-          return 'Z';
-        default:
-          // arc / ellipseArc：marker 几何里少用；保守用端点直连兜底（实现 Agent 可细化为 A 段）
-          return '';
-      }
-    })
-    .filter(Boolean)
-    .join(' ');
+  buildPathD(commands);
 
 /**
  * 单个 `MarkerPrimitive` → SVG 元素（renderer-agnostic 几何的 react 物化）
