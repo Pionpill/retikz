@@ -6,7 +6,7 @@ import type { GroupPrim, ScenePrimitive, TextLine, Transform } from '../primitiv
 import { BUILTIN_SHAPES } from '../shapes';
 import type { ShapeDefinition, ShapeStyle } from '../shapes';
 import type { NameStack } from './name-stack';
-import { resolvePosition } from './position';
+import { type ResolveBetweenGlobal, resolvePosition } from './position';
 import type { FontSpec, TextMeasurer } from './text-metrics';
 
 const DEFAULT_FONT_SIZE = 14;
@@ -341,6 +341,7 @@ export const layoutNode = (
   scopeChain: ReadonlyArray<Transform> = [],
   labelDefault?: IRLabelDefault,
   shapes: Record<string, ShapeDefinition> = BUILTIN_SHAPES,
+  resolveBetweenGlobal?: ResolveBetweenGlobal,
 ): NodeLayout => {
   // shape 解析（入口 fail-fast）：node.shape ?? 'rectangle' 查有效表；未注册名抛错列出可用名
   const shapeName = node.shape ?? 'rectangle';
@@ -436,10 +437,10 @@ export const layoutNode = (
   );
 
   const rotateDeg = node.rotate ?? 0;
-  const center = resolvePosition(node.position, nameStack, nodeDistance, scopeChain);
+  const center = resolvePosition(node.position, nameStack, nodeDistance, scopeChain, resolveBetweenGlobal);
   if (!center) {
     throw new Error(
-      `Cannot resolve position for node ${node.id ?? '(unnamed)'}; polar.origin or at.of may reference an undefined node`,
+      `Cannot resolve position for node ${node.id ?? '(unnamed)'}; polar.origin / at.of / between endpoint may reference an undefined node`,
     );
   }
   // 标准化 label：单对象 → 单元素数组；继承 Node 的 font/textColor

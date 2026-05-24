@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { RECT_ANCHORS, type RectAnchor } from '../../geometry/rect';
-import { OffsetPositionSchema, PolarPositionSchema, PositionSchema } from '../position';
+import { BetweenPositionSchema, OffsetPositionSchema, PolarPositionSchema, PositionSchema } from '../position';
 
 /** 9 个命名 anchor（复用 geometry/rect.ts，避免两套常量） */
 const NAMED_ANCHORS = Object.values(RECT_ANCHORS) as [RectAnchor, ...Array<RectAnchor>];
@@ -69,9 +69,11 @@ export const TargetSchema = z
     RelativeTargetSchema,
     RelativeAccumulateTargetSchema,
     OffsetPositionSchema,
+    // between 经 z.lazy 引用，化解 target.ts ↔ between-position.ts 的模块环（between 端点又引 NodeTarget）
+    z.lazy(() => BetweenPositionSchema),
   ])
   .describe(
-    'Path endpoint: Cartesian [x, y], polar position, node target object ({ id, anchor?, offset? }), relative offset object ({ relative } / { relativeAccumulate }), or offset position ({ of, offset } mirroring TikZ `calc`) resolved at compile time. Node id string shorthand is React DSL only (parsed to a node target object before reaching the IR).',
+    'Path endpoint: Cartesian [x, y], polar position, node target object ({ id, anchor?, offset? }), relative offset object ({ relative } / { relativeAccumulate }), offset position ({ of, offset } mirroring TikZ `calc`), or between position ({ between: [A, B], t } proportional point) — all resolved at compile time. Node id string shorthand is React DSL only (parsed to a node target object before reaching the IR).',
   );
 
 /** 路径端点：直接坐标 [x, y]、极坐标、节点 id 字符串、相对偏移对象 */

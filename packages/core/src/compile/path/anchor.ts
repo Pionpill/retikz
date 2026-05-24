@@ -1,5 +1,6 @@
-import type { IRNodeTarget, IRPosition, IRTarget } from '../../ir';
+import type { IRBetweenPosition, IRNodeTarget, IRPosition, IRTarget } from '../../ir';
 import type { Transform } from '../../primitive';
+import { lerpPoint } from '../../geometry/_edge';
 import { resolveAnchor, resolveEdgePoint } from '../anchor-cache';
 import type { NameStack } from '../name-stack';
 import { boundaryPointOf } from '../node';
@@ -10,6 +11,10 @@ import { applyTransformChain } from '../scope';
 /** target 是否对象形态 NodeTarget（`{ id, anchor?, offset? }`）；与 Position(array) / Polar / Offset(of) / Relative 区分（独有 `id`） */
 const isNodeTarget = (t: IRTarget): t is IRNodeTarget =>
   typeof t === 'object' && !Array.isArray(t) && 'id' in t;
+
+/** target 是否 between 比例点（`{ between, t }`）；独有 `between` 字段 */
+const isBetween = (t: IRTarget): t is IRBetweenPosition =>
+  typeof t === 'object' && !Array.isArray(t) && 'between' in t;
 
 /** 解析 NodeTarget 的 anchor（非 undefined）到世界坐标：命名 / 角度走 resolveAnchor，`{ side, t }` 走 resolveEdgePoint */
 const resolveAnchorRef = (node: NodeLayout, anchor: NonNullable<IRNodeTarget['anchor']>): IRPosition => {
@@ -43,6 +48,14 @@ export const refPointOfTarget = (
         ? ([node.rect.x, node.rect.y] as IRPosition)
         : resolveAnchorRef(node, target.anchor);
     return addOffset(base, target.offset);
+  }
+  // between 比例点：两端点各 resolve 成世界坐标后 lerp（端点可嵌套 between，递归）；
+  // lerp 仿射 ⇒ 全局 lerp = 局部 lerp 投全局，无需逐端点反投影
+  if (isBetween(target)) {
+    const a = refPointOfTarget(target.between[0], nameStack, scopeChain);
+    const b = refPointOfTarget(target.between[1], nameStack, scopeChain);
+    if (!a || !b) return null;
+    return lerpPoint(a, b, target.t);
   }
   // relative/relativeAccumulate 已被 normalizeRelativeTargets 预解析；防御性守卫给 TS narrowing 用
   if (typeof target === 'object' && !Array.isArray(target) && ('relative' in target || 'relativeAccumulate' in target)) {
@@ -82,6 +95,10 @@ export const clipForTarget = (
         ? boundaryPointOf(node, toward)
         : resolveAnchorRef(node, target.anchor);
     return addOffset(base, target.offset);
+  }
+  // between 比例点是固定点（非节点边界），直接走 refPointOfTarget（不随 toward 变）
+  if (isBetween(target)) {
+    return refPointOfTarget(target, nameStack, scopeChain);
   }
   // relative/relativeAccumulate 已被预解析；防御性守卫给 TS narrowing 用
   if (typeof target === 'object' && !Array.isArray(target) && ('relative' in target || 'relativeAccumulate' in target)) {

@@ -244,9 +244,10 @@ describe('transforms scope 内 between 投影', () => {
       },
       {
         type: 'path',
+        // anchor:center 读 m 精确中心（裸 {id} 会贴节点边界、偏离中心，掩盖投影正确性）
         children: [
           { type: 'step', kind: 'move', to: [300, 300] },
-          { type: 'step', kind: 'line', to: { id: 'm' } },
+          { type: 'step', kind: 'line', to: { id: 'm', anchor: 'center' } },
         ],
       },
     ]);

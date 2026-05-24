@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import {
-  type IRAbsoluteTarget,
-  type IRBetweenPosition,
   AbsoluteTargetSchema,
   BetweenPositionSchema,
+  type IRAbsoluteTarget,
+  type IRBetweenPosition,
 } from '../../src/ir';
 
 describe('两端点之间按比例取点的端点形态', () => {

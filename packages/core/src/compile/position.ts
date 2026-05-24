@@ -1,7 +1,18 @@
-import type { AtDirection, IRAtPosition, IROffsetPosition, IRPosition, PolarPosition } from '../ir';
+import type { AtDirection, IRAtPosition, IRBetweenPosition, IROffsetPosition, IRPosition, PolarPosition } from '../ir';
 import type { Transform } from '../primitive';
 import type { NameStack } from './name-stack';
 import { inverseTransformChain } from './scope';
+
+/**
+ * between 端点 → 世界坐标解析器（依赖注入，避免 position.ts ↔ compile/path/anchor.ts 循环）
+ * @description 实参由 compile 层注入（= `refPointOfTarget`，处理 NodeTarget anchor / Cartesian / Polar /
+ *   Offset / 嵌套 between，返回世界坐标）。resolvePosition 收到 between 时调它取世界中点再反投影回局部。
+ */
+export type ResolveBetweenGlobal = (
+  between: IRBetweenPosition,
+  nameStack: NameStack,
+  scopeChain: ReadonlyArray<Transform>,
+) => IRPosition | null;
 
 /** 默认相对定位距离（CompileOptions.nodeDistance 未配时使用） */
 const DEFAULT_NODE_DISTANCE = 1;
@@ -41,10 +52,11 @@ const DIRECTION_VECTOR: Record<AtDirection, [number, number]> = {
  *     nodeDistance 为容器 prop 注入默认距离，AtPosition 自带 distance 优先
  */
 export const resolvePosition = (
-  pos: IRPosition | PolarPosition | IRAtPosition | IROffsetPosition | string,
+  pos: IRPosition | PolarPosition | IRAtPosition | IROffsetPosition | IRBetweenPosition | string,
   nameStack: NameStack,
   nodeDistance: number = DEFAULT_NODE_DISTANCE,
   scopeChain: ReadonlyArray<Transform> = [],
+  resolveBetweenGlobal?: ResolveBetweenGlobal,
 ): IRPosition | null => {
   if (typeof pos === 'string') {
     const node = nameStack.lookup(pos);
@@ -71,6 +83,14 @@ export const resolvePosition = (
     const base = resolvePosition(pos.of, nameStack, nodeDistance, scopeChain);
     if (!base) return null;
     return [base[0] + pos.offset[0], base[1] + pos.offset[1]];
+  }
+  if ('between' in pos) {
+    // BetweenPosition：注入的 resolver 取两端点 lerp 后的**世界**中点，再反投影回当前 scope 局部坐标
+    // （与本函数"返回局部坐标、调用方走 applyTransformChain 投全局"的契约一致）。
+    if (!resolveBetweenGlobal) return null;
+    const global = resolveBetweenGlobal(pos, nameStack, scopeChain);
+    if (!global) return null;
+    return scopeChain.length === 0 ? global : inverseTransformChain(global, scopeChain);
   }
   // PolarPosition：先解析 origin（递归走 scopeChain → 局部坐标），再叠加极偏移（局部度量）
   let origin: IRPosition;

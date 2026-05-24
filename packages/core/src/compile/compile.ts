@@ -13,6 +13,7 @@ import { type NodeLayout, emitNodePrimitives, labelExtentPoints, layoutNode } fr
 import { createPaintRegistry } from './paint';
 import { createClipRegistry } from './clip';
 import { emitPathPrimitive } from './path/index';
+import { refPointOfTarget } from './path/anchor';
 import { resolvePosition } from './position';
 import { DEFAULT_PRECISION, makeRound } from './precision';
 import {
@@ -434,6 +435,8 @@ export const compileToScene = (ir: IR, options: CompileOptions = {}): Scene => {
           chain,
           resolveLabelDefault(styleStack),
           effectiveShapes,
+          // between 端点世界坐标解析器（refPointOfTarget 处理 NodeTarget anchor / Cartesian / Polar / Offset / 嵌套 between）
+          refPointOfTarget,
         );
         const globalLayout = chain.length === 0 ? layout : projectLayoutToGlobal(layout, chain);
         if (child.id) {
@@ -455,7 +458,7 @@ export const compileToScene = (ir: IR, options: CompileOptions = {}): Scene => {
         // 把 node layout 加进 layoutsAccumulator，供上层 scope.id bbox 计算
         layoutsAccumulator.push(globalLayout);
       } else if (child.type === 'coordinate') {
-        const localCenter = resolvePosition(child.position, nameStack, nodeDistance, chain);
+        const localCenter = resolvePosition(child.position, nameStack, nodeDistance, chain, refPointOfTarget);
         if (!localCenter) {
           onWarn({
             code: 'POLAR_ORIGIN_UNRESOLVED',

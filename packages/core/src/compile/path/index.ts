@@ -45,9 +45,17 @@ import { type EffectiveArrows, applyArrowShrinks, endpointArrows, resolveMarkArr
 import { type PathBaseProps, splitSubPathsForEndpointArrows } from './split';
 import { BUILTIN_ARROWS } from '../../arrows';
 
-/** 目标若是对象 NodeTarget（`{ id, ... }`）返回其 id，否则 undefined——给 UNRESOLVED_NODE_REFERENCE 诊断用 */
-const nodeRefId = (t: IRTarget): string | undefined =>
-  typeof t === 'object' && !Array.isArray(t) && 'id' in t ? t.id : undefined;
+/**
+ * 目标里的一个代表性节点 id——给 UNRESOLVED_NODE_REFERENCE 诊断用
+ * @description 对象 NodeTarget（`{ id, ... }`）直接取 id；between 比例点递归挖端点里第一个节点引用
+ *   （端点未解析时整 between 失败，需照样报 unresolved 而非静默）；其余形态返回 undefined。
+ */
+const nodeRefId = (t: IRTarget): string | undefined => {
+  if (typeof t !== 'object' || Array.isArray(t)) return undefined;
+  if ('id' in t) return t.id;
+  if ('between' in t) return nodeRefId(t.between[0]) ?? nodeRefId(t.between[1]);
+  return undefined;
+};
 
 /** 有限数 */
 const isFiniteNum = (n: unknown): n is number => typeof n === 'number' && Number.isFinite(n);

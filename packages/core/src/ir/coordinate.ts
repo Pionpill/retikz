@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import {
   AtPositionSchema,
+  BetweenPositionSchema,
   OffsetPositionSchema,
   PolarPositionSchema,
   PositionSchema,
@@ -22,9 +23,15 @@ export const CoordinateSchema = z
         'Required unique id; the whole point of a coordinate is to be referenced by paths or other nodes',
       ),
     position: z
-      .union([PositionSchema, PolarPositionSchema, AtPositionSchema, OffsetPositionSchema])
+      .union([
+        PositionSchema,
+        PolarPositionSchema,
+        AtPositionSchema,
+        OffsetPositionSchema,
+        BetweenPositionSchema,
+      ])
       .describe(
-        'Coordinate position; Cartesian [x, y], polar, relative-to-another-node (`at`-style), or offset from a base point (`{ of, offset }` form). Resolved at compile time.',
+        'Coordinate position; Cartesian [x, y], polar, relative-to-another-node (`at`-style), offset from a base point (`{ of, offset }` form), or between two endpoints (`{ between: [A, B], t }`). Resolved at compile time.',
       ),
   })
   .describe(

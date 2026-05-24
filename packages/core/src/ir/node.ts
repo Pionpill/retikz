@@ -2,7 +2,7 @@ import { z } from 'zod';
 import type { ValueOf } from '../types';
 import { FontSchema } from './font';
 import { PaintSpecSchema } from './paint';
-import { AT_DIRECTIONS, AtPositionSchema, OffsetPositionSchema, PolarPositionSchema, PositionSchema } from './position';
+import { AT_DIRECTIONS, AtPositionSchema, BetweenPositionSchema, OffsetPositionSchema, PolarPositionSchema, PositionSchema } from './position';
 import { TextBlockSchema } from './text';
 
 /**
@@ -126,9 +126,15 @@ export const NodeSchema = z
         'Node visual shape name; built-in `rectangle` / `circle` / `ellipse` / `diamond`, or an extension shape registered via `CompileOptions.shapes`. Any non-empty string passes schema validation; unregistered names are rejected at compile time. Defaults to `rectangle`. The boundary fully contains text + padding (circumscribed for circle / ellipse / diamond).',
       ),
     position: z
-      .union([PositionSchema, PolarPositionSchema, AtPositionSchema, OffsetPositionSchema])
+      .union([
+        PositionSchema,
+        PolarPositionSchema,
+        AtPositionSchema,
+        OffsetPositionSchema,
+        BetweenPositionSchema,
+      ])
       .describe(
-        'Center point of the node content box; Cartesian [x, y], polar, relative-to-another-node (`at`-style with `direction` / `of` / `distance?`), or offset from a base point (`{ of, offset }` form mirroring TikZ `calc`). All non-Cartesian forms resolve at compile time.',
+        'Center point of the node content box; Cartesian [x, y], polar, relative-to-another-node (`at`-style with `direction` / `of` / `distance?`), offset from a base point (`{ of, offset }` form mirroring TikZ `calc`), or between two endpoints (`{ between: [A, B], t }` proportional point). All non-Cartesian forms resolve at compile time.',
       ),
     rotate: z
       .number()
