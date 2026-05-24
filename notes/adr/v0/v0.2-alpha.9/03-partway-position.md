@@ -45,7 +45,9 @@ BetweenPositionSchema = z.object({
 
 - 解析复用 `refPointOfTarget`（`compile/path/anchor.ts`）：它已处理 NodeTarget（anchor 缺省取中心）/ Cartesian / Polar / Offset、返回**世界坐标**、并正确处理 scopeChain。给它加一个 BetweenPosition 分支：`lerpPoint(refPointOfTarget(A), refPointOfTarget(B), t)`（端点递归、世界坐标 lerp）。`refPointOfTarget` 即"AbsoluteTarget resolver"。
 - Step.to：path 解析本就走 `refPointOfTarget` / `clipForTarget`，加 between 分支后天然支持，返回世界点与其它 target 同质。
-- Node / Coordinate position：compile 层检测 BetweenPosition → 走同一 AbsoluteTarget resolver。为避免 `position.ts ↔ anchor.ts` / `node.ts ↔ anchor.ts` 循环依赖，between resolver 与 `refPointOfTarget` 同居 `anchor.ts`，由 **compile.ts**（顶层消费者，单向 import anchor.ts，无反向 import）在 node / coordinate 分支显式分流到它，不下沉进 `resolvePosition`。
+- Node / Coordinate position：`resolvePosition`（`compile/position.ts`）加 between 分支，经**依赖注入**的 `resolveBetweenGlobal`(= `refPointOfTarget`，由 compile.ts 注入) 取世界中点，再 `inverseTransformChain` 反投回当前 scope 局部（与本函数"返回局部、调用方 apply chain 投全局"契约一致）。注入化解 `position.ts ↔ anchor.ts` 循环（position.ts 只持函数签名、不静态 import anchor.ts），同时让 node/coordinate 不必各写一遍分流。
+
+> **实现校准**：本待决策点原倾向"between resolver 留在 `anchor.ts`、compile.ts 显式分流、不下沉 `resolvePosition`"。最终实现选择**下沉进 `resolvePosition`** + 依赖注入——循环依赖与 scopeChain 投影两个目标都达成且少一处分支；Step.to 仍直接走 `anchor.ts` 的 `refPointOfTarget` between 分支（path 几何本就世界系）。两条路径共用同一 `refPointOfTarget`（全局 lerp，仿射等价）。
 - `t ∈ [0,1]` 严格（schema `.min(0).max(1)`）：对齐既有 `AnchorRef.{side,t}` 的 [0,1] 约定，可预期、不外插；将来放宽是 widening、非破坏。
 
 ### B. 端点直接用 `TargetSchema`（含 relative）
@@ -69,7 +71,7 @@ BetweenPositionSchema = z.object({
 - **AbsoluteTarget 成员集** = Cartesian / Polar / NodeTarget / OffsetPosition / BetweenPosition；**排除** RelativeTarget / RelativeAccumulateTarget。
 - **`t` 范围 = [0,1] 严格**（schema 守门）；外插（t<0 / t>1，TikZ `!1.5!`）推迟，写进"不在本 ADR 范围"。
 - **进 3 处 union**：TargetSchema（Step.to）/ Node.position / Coordinate.position。
-- **解析归位**：between resolver 在 `anchor.ts`（扩 `refPointOfTarget`）；compile.ts node/coordinate 分支显式分流，避免 position.ts/node.ts ↔ anchor.ts 循环。
+- **解析归位**：`refPointOfTarget`（`anchor.ts`）扩 between 分支供 Step.to；Node/Coordinate 走 `resolvePosition` 下沉的 between 分支 + 依赖注入 `resolveBetweenGlobal`(= refPointOfTarget) + `inverseTransformChain` 反投回局部，化解 `position.ts ↔ anchor.ts` 循环（见上「实现校准」）。
 - **scopeChain 投影**：`refPointOfTarget(endpoint, nameStack, scopeChain)` 返回世界坐标。Step.to 直接用世界点（path 几何本就世界系）。Node/Coordinate.position 需要送进 `layoutNode` / coordinate 注册的是"当前 scope 局部点再投全局"——between 世界点经 `inverseTransformChain(world, scopeChain)` 反投回局部后再走既有 local→global 通道，避免双重投影。无 transforms scope / 顶层时 chain 为空、恒等。
 - **端点未解析（引用未定义节点）**：refPointOfTarget 返回 null → 整个 between 解析失败 → 发既有 warn code（`UNRESOLVED_NODE_REFERENCE` 等），与其它 target 解析失败同路径处理。
 - **finite 守卫**：`t` schema `.min(0).max(1)`（隐含 finite）；lerp 结果若因端点异常出非 finite，沿用既有 position 解析的失败处理（Scene 不收非 finite）。
@@ -141,8 +143,10 @@ BetweenPositionSchema = z.object({
 - `packages/core/src/ir/node.ts`（改：position union 加分支）
 - `packages/core/src/ir/coordinate.ts`（改：position union 加分支）
 - `packages/core/src/ir/index.ts`（改：re-export AbsoluteTargetSchema / BetweenPositionSchema / 类型）
-- `packages/core/src/compile/path/anchor.ts`（改：refPointOfTarget / clipForTarget 加 between 分支 + 导出 resolveAbsoluteTarget 供 compile.ts 用）
-- `packages/core/src/compile/compile.ts`（改：node / coordinate 分支分流 between → resolveAbsoluteTarget + inverseTransformChain）
+- `packages/core/src/compile/path/anchor.ts`（改：refPointOfTarget / clipForTarget 加 between 分支 + finite 守卫，供 Step.to 与注入）
+- `packages/core/src/compile/position.ts`（改：resolvePosition 加 between 分支 + 注入参数 `resolveBetweenGlobal` + inverseTransformChain 反投）
+- `packages/core/src/compile/node.ts`（改：layoutNode 线程透传 `resolveBetweenGlobal` 给 resolvePosition）
+- `packages/core/src/compile/compile.ts`（改：node 分支 / coordinate 分支注入 `refPointOfTarget` 作 between resolver）
 - `packages/core/src/index.ts`（改：导出 schema + 类型）
 - `packages/core/tests/ir/between-position.schema.test.ts`（新建）
 - `packages/core/tests/compile/partway.test.ts`（新建）
