@@ -175,6 +175,18 @@ Most nodes only need `padding={N}`. Use `innerXSep` / `innerYSep` when horizonta
 
 <ComponentPreview name="node-color-opacity" size="sm" />
 
+#### Gradient fill (Paint)
+
+Besides a plain color string, `fill` accepts a **PaintSpec object** — a linear / radial gradient. Identical gradients are deduplicated at compile time into a Scene resource table and rendered as a gradient inside SVG `<defs>` (objectBoundingBox coordinates, scaling with the shape). `<Path fill>` supports it too.
+
+- Linear: `{ type: 'linearGradient', angle?, stops }` — `angle` in degrees (0 = left→right, 90 = top→bottom)
+- Radial: `{ type: 'radialGradient', center?, radius?, stops }` — `center` / `radius` in 0..1 relative units
+- `stops`: array of `{ offset (0..1), color, opacity? }`, at least 2; `color` may be `currentColor`
+
+<ComponentPreview name="node-paint" size="sm" />
+
+> Pattern / image fills are deferred (a later version).
+
 #### Border style
 
 `dashed` / `dotted` are presets; `dashArray` is an explicit dash/gap length sequence (priority: `dashArray` > `dashed` > `dotted`):
@@ -232,7 +244,7 @@ By default stacking = declaration order (SVG only honors paint order). `zIndex` 
 | `maxTextWidth` | `number` | — | Wrap threshold (user units); text wraps past it (Western per word / CJK per char) and the box shrinks for short text; not a fixed paragraph width |
 | `rotate` | `number` | `0` | Rotation around center, degrees, positive = clockwise |
 | `color` | `string` | — | Master color (TikZ `color=`); `stroke` / `fill` / `textColor` default to it unless individually set, and it cascades to inner text and edge labels |
-| `fill` | `string` | — | Background color (any CSS color) |
+| `fill` | `string \| PaintSpec` | — | Background fill: a plain CSS color string, or a gradient PaintSpec (linear / radial) |
 | `stroke` | `string` | `currentColor` | Border color |
 | `strokeWidth` | `number` | `1` | Border width (user units) |
 | `innerXSep` | `number` | — | Horizontal inner padding (text → left/right border); falls back to `padding` |

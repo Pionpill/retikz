@@ -175,6 +175,18 @@ Line 2`}</Node>
 
 <ComponentPreview name="node-color-opacity" size="sm" />
 
+#### 渐变填充（Paint）
+
+`fill` 除纯色字符串外还接 **PaintSpec 对象**——线性 / 径向渐变。编译期相同渐变去重、收进 Scene 资源表，渲染为 SVG `<defs>` 里的 gradient（坐标用 objectBoundingBox，随形状缩放）。`<Path fill>` 同样支持。
+
+- 线性：`{ type: 'linearGradient', angle?, stops }`——`angle` 度数（0 = 左→右，90 = 上→下）
+- 径向：`{ type: 'radialGradient', center?, radius?, stops }`——`center` / `radius` 用 0..1 相对值
+- `stops`：`{ offset (0..1), color, opacity? }` 数组，至少 2 个；`color` 可用 `currentColor`
+
+<ComponentPreview name="node-paint" size="sm" />
+
+> 图案 pattern / 图片 image 填充顺延（后续版本）。
+
 #### 描边样式
 
 `dashed` / `dotted` 是预设；`dashArray` 是显式 dash/gap 长度序列（优先级：`dashArray` > `dashed` > `dotted`）：
@@ -232,7 +244,7 @@ Line 2`}</Node>
 | `maxTextWidth` | `number` | — | 折行阈值（user units）；超过才折行（西文按词 / CJK 按字），短文本盒宽收缩；非固定段落宽 |
 | `rotate` | `number` | `0` | 绕中心旋转角度（度，正值顺时针） |
 | `color` | `string` | — | 主色（TikZ `color=`）；`stroke` / `fill` / `textColor` 未单设则随它，并级联到内部文字与边 label |
-| `fill` | `string` | — | 背景色（任意 CSS 颜色） |
+| `fill` | `string \| PaintSpec` | — | 背景填充：纯色 CSS 串，或渐变 PaintSpec（linear / radial） |
 | `stroke` | `string` | `currentColor` | 边框色 |
 | `strokeWidth` | `number` | `1` | 边框宽度（user units） |
 | `innerXSep` | `number` | — | 横向内边距（text → 左右 border）；不填走 `padding` 兜底 |
