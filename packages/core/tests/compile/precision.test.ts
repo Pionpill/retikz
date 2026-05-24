@@ -39,4 +39,15 @@ describe('makeRound', () => {
     expect(r(-Infinity)).toBe(-Infinity);
     expect(r(NaN)).toBeNaN();
   });
+
+  it('负的亚精度值归一为 +0（不产 -0，保 Scene JSON round-trip 在 Object.is 层稳定）', () => {
+    const r = makeRound(2);
+    // Math.round(-0.001*100)/100 = -0；归一后为 +0
+    expect(Object.is(r(-0.001), 0)).toBe(true);
+    expect(Object.is(r(-0), 0)).toBe(true);
+    expect(Object.is(r(-0.004), 0)).toBe(true);
+    // 数值上仍等于 0，序列化为 "0"（round-trip 不失真）
+    expect(r(-0.001)).toBe(0);
+    expect(JSON.stringify(r(-0.001))).toBe('0');
+  });
 });
