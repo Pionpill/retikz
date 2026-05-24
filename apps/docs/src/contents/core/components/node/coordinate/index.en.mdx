@@ -62,12 +62,20 @@ Use `{ of, offset }` to derive one coordinate from another — drive the whole g
 
 Debugging note: a Coordinate **does not** expand layout bounds. Registering a far-away coordinate alone will not make the canvas grow; an actual Node / Path primitive must land in that region for the final viewBox to cover it.
 
+### Proportional partway positioning
+
+`{ between: [A, B], t }` takes a point along the A→B segment at proportion t (0..1) — `lerp(A, B, t)`, matching TikZ `($(A)!t!(B)$)`. Placing a "midpoint / one-third" point this way beats hand-computing coordinates and keeps the proportion as A / B move. Endpoints are a self-contained **AbsoluteTarget** (Cartesian / polar / node reference `{ id, anchor? }` / `{ of, offset }` / nested between — **excluding** path-relative). The same shape works in `<Coordinate position>` / `<Node position>` / `<Step to>`:
+
+<ComponentPreview name="coordinate-between" size="sm" />
+
+> `t` is strict [0,1] (extrapolation not yet supported); when an endpoint references an undefined node, Coordinate / Node position resolution throws while a path `Step.to` warns and skips — the same as other positioning forms.
+
 ## API Reference
 
 | Prop | Type | Default | Description |
 | --- | --- | --- | --- |
 | `id` | `string` | — | **Required** — a placeholder's entire purpose is to be referenced by id |
-| `position` | `[x, y] \| PolarPosition \| { direction, of, distance? } \| { of, offset }` | — | Placeholder position; same shapes as `<Node position>` — includes the offset `{ of, offset }` form |
+| `position` | `[x, y] \| PolarPosition \| { direction, of, distance? } \| { of, offset } \| { between, t }` | — | Placeholder position; same shapes as `<Node position>` — includes the offset `{ of, offset }` and proportional partway `{ between: [A, B], t }` forms |
 
 ## Related
 

@@ -48,12 +48,21 @@ import { Layout } from '@retikz/react';
 
 <ComponentPreview name="layout-from-ir" size="sm" />
 
+### 自定义 viewBox
+
+默认 `viewBox` 由内容自动算（AABB + padding）。传 `viewBox={{ x, y, width, height }}` 显式定死视框——固定尺寸、故意裁剪、多图对齐、排除溢出都靠它。有 viewBox 则**覆盖**自动算、**忽略 padding**；`width` / `height` 必须 > 0。
+
+<ComponentPreview name="layout-viewbox" size="sm" />
+
+> viewBox 注入构造出的 IR 根（`ir.viewBox`）；直接传 `ir` prop 且 IR 自带 viewBox 时，prop 优先、prop 缺省则用 IR 内置值。与 `width` / `height`（渲染尺寸）正交。
+
 ## API 参考
 
 | 属性 | 类型 | 默认值 | 描述 |
 | --- | --- | --- | --- |
 | `width` | `number \| string` | — | 渲染结果宽度 |
 | `height` | `number \| string` | — | 渲染结果高度 |
+| `viewBox` | `{ x, y, width, height }` | — | 显式视框，覆盖自动算的范围（忽略 padding）；注入 IR 根、prop 优先于 IR 内置 |
 | `children` | `ReactNode` | — | Kernel / Sugar 组件树（与 `ir` 二选一） |
 | `ir` | `IR` | — | 已构造好的 IR JSON（与 `children` 二选一） |
 | `className` | `string` | — | 透传到渲染根元素 |

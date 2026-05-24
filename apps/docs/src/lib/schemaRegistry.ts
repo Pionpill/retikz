@@ -32,6 +32,8 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
   PolarPositionSchema: { schema: IR.PolarPositionSchema, label: 'PolarPosition', url: '/core/reference/schema/placement#polarposition' },
   AtPositionSchema:    { schema: IR.AtPositionSchema,    label: 'AtPosition',    url: '/core/reference/schema/placement#atposition' },
   OffsetPositionSchema:{ schema: IR.OffsetPositionSchema,label: 'OffsetPosition',url: '/core/reference/schema/placement#offsetposition' },
+  BetweenPositionSchema:{ schema: IR.BetweenPositionSchema, label: 'BetweenPosition', url: '/core/reference/schema/placement#betweenposition' },
+  AbsoluteTargetSchema:{ schema: IR.AbsoluteTargetSchema, label: 'AbsoluteTarget',  url: '/core/reference/schema/placement#absolutetarget' },
 
   // Step 11 变体（同页 #anchor）
   MoveStepSchema:        { schema: IR.MoveStepSchema,        label: 'MoveStep',        url: '/core/reference/schema/path#move' },

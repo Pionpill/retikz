@@ -48,12 +48,21 @@ import { Layout } from '@retikz/react';
 
 <ComponentPreview name="layout-from-ir" size="sm" />
 
+### Custom viewBox
+
+By default the `viewBox` is auto-computed from content (AABB + padding). Pass `viewBox={{ x, y, width, height }}` to pin it explicitly — for fixed size, deliberate clipping, multi-figure alignment, or excluding overflow. When set it **overrides** the auto computation and **ignores padding**; `width` / `height` must be > 0.
+
+<ComponentPreview name="layout-viewbox" size="sm" />
+
+> The viewBox is injected into the constructed IR root (`ir.viewBox`); when passing an `ir` prop whose IR already carries a viewBox, the prop wins and the IR value is used only if the prop is omitted. Orthogonal to `width` / `height` (render size).
+
 ## API Reference
 
 | Prop | Type | Default | Description |
 | --- | --- | --- | --- |
 | `width` | `number \| string` | — | Rendered output width |
 | `height` | `number \| string` | — | Rendered output height |
+| `viewBox` | `{ x, y, width, height }` | — | Explicit viewBox overriding the auto-computed range (ignores padding); injected into the IR root, prop wins over IR-embedded |
 | `children` | `ReactNode` | — | Kernel / Sugar component tree (mutually exclusive with `ir`) |
 | `ir` | `IR` | — | Pre-built IR JSON (mutually exclusive with `children`) |
 | `className` | `string` | — | Forwarded to the render root |

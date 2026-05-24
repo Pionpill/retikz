@@ -40,3 +40,25 @@ A `position` field can be filled with any of four forms. All resolve to Cartesia
 `OffsetPositionSchema` maps to TikZ `calc` library syntax `($(of) + (dx, dy)$)`.
 
 </Comparison>
+
+<span id="betweenposition"></span>
+
+## BetweenPosition
+
+`BetweenPositionSchema` takes a point along the segment between two endpoints at proportion `t` (0..1) — `lerp(A, B, t)`. Endpoints use the self-contained `AbsoluteTarget`.
+
+<ZodSchema name="BetweenPositionSchema" />
+
+<span id="absolutetarget"></span>
+
+## AbsoluteTarget
+
+`AbsoluteTargetSchema` is the endpoint type used by `between`: Cartesian / polar / node reference / offset / nested between, **excluding** path-relative (`{ relative }` / `{ relativeAccumulate }`) — which avoids a `Position` ↔ `Target` schema cycle.
+
+<ZodSchema name="AbsoluteTargetSchema" />
+
+<Comparison target="tikz" title="Proportional partway">
+
+`BetweenPositionSchema` maps to TikZ `calc` library syntax `($(A)!t!(B)$)`. The same form works in `Node.position` / `Coordinate.position` / path `Step.to`.
+
+</Comparison>

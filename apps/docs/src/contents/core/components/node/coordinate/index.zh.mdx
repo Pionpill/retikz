@@ -62,12 +62,20 @@ Coordinate 用 `{ of, offset }` 派生下一个 coordinate——靠一个根 coo
 
 调试时记住：Coordinate **不会**撑开 layout bounds。只把一个远处坐标点注册出来，画布不会因此自动变大；必须有实际 Node / Path primitive 落在那片区域，最终 viewBox 才会覆盖过去。
 
+### 比例 partway 定位
+
+`{ between: [A, B], t }` 在 A、B 两端点的连线上按比例 t（0..1）取点——`lerp(A, B, t)`，对应 TikZ `($(A)!t!(B)$)`。放"连线中点 / 1/3 处"的点比手算坐标更省、且随 A、B 移动自动保持比例。端点是**自包含 AbsoluteTarget**（笛卡尔 / 极坐标 / 节点引用 `{ id, anchor? }` / `{ of, offset }` / 嵌套 between，**不含** path-relative）。同一形态可用于 `<Coordinate position>` / `<Node position>` / `<Step to>`：
+
+<ComponentPreview name="coordinate-between" size="sm" />
+
+> `t` 严格 [0,1]（外插暂不支持）；端点引用未定义节点时，Coordinate / Node 位置解析失败抛错、path `Step.to` 发 warn 跳过——与其它定位形态同口径。
+
 ## API 参考
 
 | 属性 | 类型 | 默认值 | 描述 |
 | --- | --- | --- | --- |
 | `id` | `string` | — | **必填**——占位的全部意义就在于被 id 引用 |
-| `position` | `[x, y] \| PolarPosition \| { direction, of, distance? } \| { of, offset }` | — | 占位点位置；与 `<Node position>` 完全一致——包含偏移定位 `{ of, offset }` 形态 |
+| `position` | `[x, y] \| PolarPosition \| { direction, of, distance? } \| { of, offset } \| { between, t }` | — | 占位点位置；与 `<Node position>` 完全一致——含偏移定位 `{ of, offset }` 与比例 partway `{ between: [A, B], t }` 形态 |
 
 ## 相关
 

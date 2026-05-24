@@ -322,6 +322,21 @@ Inner overrides outer; within one frame the typed default overrides the cascade.
 | **opacity replaces, not compounds** | Nested scope opacity replaces (0.5 ⊃ 0.5 → 0.5 each, not 0.25), matching TikZ default; only label × element opacity multiplies within an element |
 | **resetStyle keeps the host axis** | Only the scope inheritance axis is cut; labels / arrows still follow the host path / node resolved color, never orphaned |
 
+## Clipping
+
+`<Scope clip={...}>` clips every child of the scope to a region — inside is visible, outside is cut away (TikZ `\begin{scope}\clip ...`). The clip region is one of four structured shapes, in scope-local coordinates:
+
+- `{ kind: 'rect', x, y, width, height }`
+- `{ kind: 'circle', cx, cy, r }`
+- `{ kind: 'ellipse', cx, cy, rx, ry }`
+- `{ kind: 'polygon', points: [x, y][] }` (≥ 3 points)
+
+<ComponentPreview name="scope-clip" size="sm" />
+
+> **Renderer-agnostic**: the region compiles into a `ClipResource` in the Scene resource table (deduped + stable id); `<clipPath>` materialization happens only in the SVG adapter — any adapter can reproduce it.
+>
+> **Limitations**: clip applies to the scope's GroupPrim children; a **path declared inside a transformed scope** is hoisted to the top level and is not clipped by that scope (existing architecture); to clip a single Node / Path, wrap it in `<Scope clip>`. Arbitrary Bézier clip paths are not yet supported.
+
 ## API Reference
 
 | Prop | Type | Default | Description |
@@ -343,6 +358,7 @@ Inner overrides outer; within one frame the typed default overrides the cascade.
 | `arrowDefault` | `object` | — | Arrow default style (shape / scale / color) |
 | `resetStyle` | `boolean \| Array` | `false` | Inheritance barrier: cut outer channels; details in § How it works §「Style inheritance resolution」 |
 | `zIndex` | `number` (integer) | `0` | Explicit stacking order: positions the scope as a whole (its GroupPrim) among its siblings without affecting the relative stacking inside it; higher draws on top, ties keep declaration order |
+| `clip` | `ClipSpec` | — | Clip region (rect / circle / ellipse / polygon, scope-local coords); clips every child of the scope |
 
 ## Related
 

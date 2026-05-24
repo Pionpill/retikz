@@ -93,14 +93,14 @@ describe('walker — tuple / lazy / union / discriminatedUnion', () => {
   });
 
   it('resolves union members to ref when registered', async () => {
-    // 用 IR 真实 schema 验证：CoordinateSchema.position 是 union of Position / PolarPosition / AtPosition / OffsetPosition，四者均注册
+    // 用 IR 真实 schema 验证：CoordinateSchema.position 是 union of Position / PolarPosition / AtPosition / OffsetPosition / BetweenPosition，五者均注册
     const { CoordinateSchema } = await import('@retikz/core');
     const positionField = CoordinateSchema.shape.position;
     const r = walkType(positionField);
     expect(r.kind).toBe('union');
     if (r.kind === 'union') {
       const labels = r.members.map(m => (m.kind === 'ref' ? m.name : `<${m.kind}>`));
-      expect(labels).toEqual(['Position', 'PolarPosition', 'AtPosition', 'OffsetPosition']);
+      expect(labels).toEqual(['Position', 'PolarPosition', 'AtPosition', 'OffsetPosition', 'BetweenPosition']);
     }
   });
 });
