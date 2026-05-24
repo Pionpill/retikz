@@ -3,37 +3,40 @@ import { Draw, Layout, Node } from '@retikz/react';
 import type { FC } from 'react';
 
 /**
- * 自定义箭头：三角尖 + 尾部圆点（复合几何，演示 emit 可产多个 MarkerPrimitive）。
- * 几何写在局部 baseSize=10 坐标系（viewBox 0 0 10 10）；lineContactX=0 表示线接在 x=0 的尾缘。
- * `fill` 直接取 ctx.fill（无 color override 时为 contextStroke，跟随 path 描边色）。
+ * 自定义箭头：TikZ Bracket 样式（空心方括号 [）——一条 stroke 路径勾出"┌…└"括号，与内置三角形箭头明显不同。
+ * 几何在局部 baseSize=10 坐标系（viewBox 0 0 10 10）；hollow:true → 框架丢 fill、用描边、lineContactX 自动减 lineWidth/2。
+ * stroke 取 ctx.stroke（无 color override 时为 contextStroke，跟随 path 描边色）。
  */
-const dotTip: ArrowDefinition = {
-  lineContactX: 0,
-  tipX: 10,
-  emit: ({ fill }) => [
+const bracket: ArrowDefinition = {
+  hollow: true,
+  lineContactX: 2,
+  tipX: 8,
+  defaultLength: 9,
+  defaultWidth: 9,
+  emit: ({ stroke, lineWidth }) => [
     {
       type: 'path',
       commands: [
-        { kind: 'move', to: [2, 0] },
-        { kind: 'line', to: [10, 5] },
-        { kind: 'line', to: [2, 10] },
-        { kind: 'close' },
+        { kind: 'move', to: [8, 1] },
+        { kind: 'line', to: [2, 1] },
+        { kind: 'line', to: [2, 9] },
+        { kind: 'line', to: [8, 9] },
       ],
-      fill,
+      stroke: typeof stroke === 'string' ? stroke : 'context-stroke',
+      strokeWidth: lineWidth,
     },
-    { type: 'ellipse', cx: 2, cy: 5, rx: 2, ry: 2, fill },
   ],
 };
 
 const Demo: FC = () => (
-  <Layout width={320} height={70} arrows={{ dotTip }}>
+  <Layout width={320} height={70} arrows={{ bracket }}>
     <Node id="a" position={[0, 0]}>
       A
     </Node>
     <Node id="b" position={[140, 0]}>
       B
     </Node>
-    <Draw way={['a', 'b']} arrow="->" arrowDetail={{ shape: 'dotTip' }} stroke="#3b82f6" strokeWidth={1.5} />
+    <Draw way={['a', 'b']} arrow="->" arrowDetail={{ shape: 'bracket' }} stroke="#3b82f6" strokeWidth={1.5} />
   </Layout>
 );
 

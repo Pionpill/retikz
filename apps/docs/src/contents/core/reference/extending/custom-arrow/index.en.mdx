@@ -9,7 +9,7 @@ Registration goes through `CompileOptions.arrows` (in React that's `<Layout arro
 
 ## Registering an arrow
 
-Below registers a `dotTip` — a triangle tip plus a dot at the base, showing that `emit` may produce **multiple** `MarkerPrimitive`s:
+Below registers a `bracket` — a TikZ Bracket-style hollow square bracket `[` (a single stroked path), clearly distinct from the built-in triangular tips:
 
 <ComponentPreview name="custom-arrow-basic" size="sm" />
 
@@ -55,7 +55,7 @@ The `ArrowEmitContext` passed to `emit`:
 
 <ComponentPreview name="custom-arrow-inherit" size="sm" />
 
-Both Draws use the same `tri` definition and set no arrow-specific color, so each arrow follows its path's `stroke`. To pin the arrow color, set `arrowDetail.color` (solid) or the top-level `arrowDetail` `color` (hollow stroke).
+Both Draws use the same `bracket` definition and set no arrow-specific color, so each bracket follows its path's `stroke`. To pin the arrow color, set `arrowDetail.color` (solid) or the top-level `arrowDetail` `color` (hollow stroke).
 
 <Comparison target="tikz" title="Custom arrows">
 

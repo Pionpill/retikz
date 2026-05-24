@@ -9,7 +9,7 @@ description: arrow shape 是开放字符串；内置 7 种之外，用 ArrowDefi
 
 ## 注册一个箭头
 
-下面注册一个 `dotTip`——三角尖 + 尾部圆点，演示 `emit` 可以产**多个** `MarkerPrimitive`：
+下面注册一个 `bracket`——TikZ Bracket 样式的空心方括号 `[`（一条 stroke 路径），与内置三角形箭头明显不同：
 
 <ComponentPreview name="custom-arrow-basic" size="sm" />
 
@@ -55,7 +55,7 @@ description: arrow shape 是开放字符串；内置 7 种之外，用 ArrowDefi
 
 <ComponentPreview name="custom-arrow-inherit" size="sm" />
 
-两条 Draw 用的是同一个 `tri` 定义、没给箭头单独设色，箭头颜色各自跟随 path 的 `stroke`。要钉死箭头色，给 `arrowDetail.color`（实心）或 `arrowDetail` 顶层 `color`（空心描边）即可。
+两条 Draw 用的是同一个 `bracket` 定义、没给箭头单独设色，括号颜色各自跟随 path 的 `stroke`。要钉死箭头色，给 `arrowDetail.color`（实心）或 `arrowDetail` 顶层 `color`（空心描边）即可。
 
 <Comparison target="tikz" title="自定义箭头">
 
