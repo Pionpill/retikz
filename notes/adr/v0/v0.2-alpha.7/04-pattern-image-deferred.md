@@ -1,6 +1,6 @@
 # ADR-04：pattern / image 填充
 
-- 状态：Proposed（实现期由 Deferred 提升——讨论后决定 alpha.7 一并做）
+- 状态：Accepted（实现期由 Deferred 提升——讨论后决定 alpha.7 一并做）
 - 决策日期：2026-05-24
 - 关联：[v0.2-alpha.7 plan §第一部分](../../../plans/v0/v0.2-alpha.7.md) · [ADR-01 Paint 基础](./01-paint-basics.md)（复用 `PaintValue` / `SceneResource` / `<defs>` 物化）
 

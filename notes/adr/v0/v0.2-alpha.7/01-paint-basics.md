@@ -1,6 +1,6 @@
 # ADR-01：Paint 基础（PaintValue 词汇表 + SceneResource discriminated 资源表 + gradient）
 
-- 状态：Proposed
+- 状态：Accepted
 - 决策日期：2026-05-24
 - 关联：[v0.2-alpha.7 plan §第一部分](../../../plans/v0/v0.2-alpha.7.md) · [tikz-gap-analysis §1 Node](../../../analysis/2026-05-07-tikz-gap-analysis.md) · [alpha.2 样式继承](../v0.2-alpha.2/)（`fill` 级联）· 下游 [alpha.8 ADR-01 ArrowDefinition](../v0.2-alpha.8/)（复用 `PaintValue.contextStroke`）· [alpha.9 ADR-02 clip](../v0.2-alpha.9/)（复用 `SceneResource` 资源表）· 本 milestone [ADR-02](./02-max-text-width.md) / [ADR-03](./03-pin.md) / [ADR-04](./04-pattern-image-deferred.md)
 
