@@ -902,6 +902,148 @@ describe('convertIRToReactNode', () => {
     });
   });
 
+  describe('能力补全阶段（alpha.7–9）新增形态 round-trip', () => {
+    it('round-trips Node fill PaintSpec：linearGradient / radialGradient / pattern / image', () => {
+      const fills = [
+        { type: 'linearGradient' as const, angle: 90, stops: [{ offset: 0, color: '#000' }, { offset: 1, color: '#fff' }] },
+        { type: 'radialGradient' as const, stops: [{ offset: 0, color: '#fff' }, { offset: 1, color: '#d33' }] },
+        { type: 'pattern' as const, shape: 'lines', color: '#08f', size: 8, rotation: 45 },
+        { type: 'image' as const, href: 'a.png', fit: 'cover' as const },
+      ];
+      for (const fill of fills) {
+        const ir: IR = {
+          version: CURRENT_IR_VERSION,
+          type: 'scene',
+          children: [{ type: 'node', id: 'A', position: [0, 0], shape: 'rectangle', fill }],
+        };
+        expect(buildIR(convertIRToReactNode(ir))).toEqual(ir);
+      }
+    });
+
+    it('round-trips Node maxTextWidth + label.pin（true / 对象样式）', () => {
+      const ir: IR = {
+        version: CURRENT_IR_VERSION,
+        type: 'scene',
+        children: [
+          {
+            type: 'node',
+            id: 'A',
+            position: [0, 0],
+            text: 'long text wraps',
+            maxTextWidth: 60,
+            label: [
+              { text: 'p1', pin: true },
+              { text: 'p2', position: 'right', pin: { stroke: 'red', strokeWidth: 2, dashPattern: [2, 2] } },
+            ],
+          },
+        ],
+      };
+      expect(buildIR(convertIRToReactNode(ir))).toEqual(ir);
+    });
+
+    it('round-trips Scope.clip：circle / rect / ellipse / polygon', () => {
+      const clips = [
+        { kind: 'circle' as const, cx: 0, cy: 0, r: 80 },
+        { kind: 'rect' as const, x: -10, y: -10, width: 40, height: 30 },
+        { kind: 'ellipse' as const, cx: 0, cy: 0, rx: 30, ry: 20 },
+        { kind: 'polygon' as const, points: [[0, 0], [40, 0], [20, 40]] as Array<[number, number]> },
+      ];
+      for (const clip of clips) {
+        const ir: IR = {
+          version: CURRENT_IR_VERSION,
+          type: 'scene',
+          children: [{ type: 'scope', clip, children: [{ type: 'node', id: 'A', position: [0, 0], text: 'A' }] }],
+        };
+        expect(buildIR(convertIRToReactNode(ir))).toEqual(ir);
+      }
+    });
+
+    it('round-trips between 定位：Node.position / Coordinate.position / Step.to', () => {
+      const ir: IR = {
+        version: CURRENT_IR_VERSION,
+        type: 'scene',
+        children: [
+          { type: 'node', id: 'A', position: [-50, 0], text: 'A' },
+          { type: 'node', id: 'B', position: [50, 0], text: 'B' },
+          { type: 'node', id: 'mid', position: { between: [{ id: 'A' }, { id: 'B' }], t: 0.5 }, text: 'm' },
+          { type: 'coordinate', id: 'q', position: { between: [[0, 0], [90, 0]], t: 0.333 } },
+          {
+            type: 'path',
+            children: [
+              { type: 'step', kind: 'move', to: [0, 100] },
+              { type: 'step', kind: 'line', to: { between: [{ id: 'A' }, { id: 'B' }], t: 0.25 } },
+            ],
+          },
+        ],
+      };
+      expect(buildIR(convertIRToReactNode(ir))).toEqual(ir);
+    });
+
+    it('round-trips Path rotate / scale（等比 + 非等比）/ marks', () => {
+      const ir: IR = {
+        version: CURRENT_IR_VERSION,
+        type: 'scene',
+        children: [
+          {
+            type: 'path',
+            rotate: 30,
+            scale: { x: 2, y: 1.5 },
+            marks: [{ pos: 0.5, mark: { kind: 'arrow', shape: 'stealth', scale: 1.2 } }],
+            children: [
+              { type: 'step', kind: 'move', to: [0, 0] },
+              { type: 'step', kind: 'line', to: [100, 0] },
+            ],
+          },
+          {
+            type: 'path',
+            scale: 2,
+            children: [
+              { type: 'step', kind: 'move', to: [0, 0] },
+              { type: 'step', kind: 'line', to: [10, 0] },
+            ],
+          },
+        ],
+      };
+      expect(buildIR(convertIRToReactNode(ir))).toEqual(ir);
+    });
+
+    it('round-trips bend out/in/looseness（asymmetric / self-loop）', () => {
+      const ir: IR = {
+        version: CURRENT_IR_VERSION,
+        type: 'scene',
+        children: [
+          {
+            type: 'path',
+            children: [
+              { type: 'step', kind: 'move', to: [0, 0] },
+              { type: 'step', kind: 'bend', to: [100, 0], outAngle: 30, inAngle: 150, looseness: 1.2 },
+            ],
+          },
+        ],
+      };
+      expect(buildIR(convertIRToReactNode(ir))).toEqual(ir);
+    });
+
+    it('generator step 无 React DSL 表示（IR-only）：convertIRToReactNode 明确抛错', () => {
+      // generator 是 IR 级能力（经 <Layout ir={...}> 用），暂无 <Step kind="generator"> JSX sugar；
+      // IR→JSX 反构对它 fail-loud（加 React DSL 属新功能，留待后续 alpha）。
+      const ir: IR = {
+        version: CURRENT_IR_VERSION,
+        type: 'scene',
+        children: [
+          {
+            type: 'path',
+            children: [
+              { type: 'step', kind: 'move', to: [0, 0] },
+              { type: 'step', kind: 'generator', name: 'parabola', params: { bend: [5, 5], samples: 20 } },
+            ],
+          },
+        ],
+      };
+      expect(() => convertIRToReactNode(ir)).toThrow(/generator step has no React DSL/);
+    });
+  });
+
   it('未知 child.type → 抛 "unknown IR child type" 错误', () => {
     const badIR = {
       version: CURRENT_IR_VERSION,

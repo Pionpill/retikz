@@ -5,7 +5,7 @@ import { Node, type NodeProps } from './Node';
 import { Path } from './Path';
 import { Scope, type ScopeProps } from './Scope';
 import { Step } from './Step';
-import { NODE_FIELDS, SCOPE_FIELDS, pickDefined } from './_fields';
+import { NODE_FIELDS, PATH_FIELDS, SCOPE_FIELDS, pickDefined } from './_fields';
 
 /**
  * IR 'node' child → NodeProps；过滤 undefined 字段，不污染 React DevTools 显示
@@ -138,23 +138,11 @@ const childToElement = (child: IRChild, key: number): ReactNode => {
     case 'node':
       return createElement(Node, { key, ...nodePropsFromIR(child) });
     case 'path':
+      // PATH_FIELDS 字段表透传纯字段（与 builder.ts 共享、互锁防漂移）——含 rotate / scale / marks 等所有非 type/children 字段；
+      // children 特化处理。改用 pickDefined 与 node / scope 分支一致，避免手写列字段漏掉后续新增。
       return createElement(Path, {
         key,
-        color: child.color,
-        stroke: child.stroke,
-        strokeWidth: child.strokeWidth,
-        dashPattern: child.dashPattern,
-        lineCap: child.lineCap,
-        lineJoin: child.lineJoin,
-        thickness: child.thickness,
-        arrow: child.arrow,
-        arrowDetail: child.arrowDetail,
-        fill: child.fill,
-        fillRule: child.fillRule,
-        opacity: child.opacity,
-        fillOpacity: child.fillOpacity,
-        drawOpacity: child.drawOpacity,
-        zIndex: child.zIndex,
+        ...pickDefined(child, PATH_FIELDS),
         children: child.children.map((s, j) => stepToElement(s, j)),
       });
     case 'coordinate':
