@@ -5,6 +5,7 @@ import { BUILTIN_SHAPES } from '../shapes';
 import type { ShapeDefinition } from '../shapes';
 import { type DuplicateRegisterInfo, NameStack } from './name-stack';
 import { type NodeLayout, emitNodePrimitives, labelExtentPoints, layoutNode } from './node';
+import { createPaintRegistry } from './paint';
 import { emitPathPrimitive } from './path/index';
 import { resolvePosition } from './position';
 import { DEFAULT_PRECISION, makeRound } from './precision';
@@ -259,6 +260,8 @@ export const compileToScene = (ir: IR, options: CompileOptions = {}): Scene => {
     onDuplicate: info => onWarn(formatDuplicateWarning(info)),
   });
   const allPoints: Array<IRPosition> = [];
+  // paint 登记表：node / path 的 PaintSpec fill 去重 + 派稳定 id → Scene.resources
+  const paint = createPaintRegistry();
 
   /**
    * 解析一批本层收集的 pending paths（lookup-only 阶段）
@@ -275,6 +278,7 @@ export const compileToScene = (ir: IR, options: CompileOptions = {}): Scene => {
           onWarn,
           irPath: item.irPath,
           scopeChain: item.scopeChain,
+          resolveFill: paint.resolve,
         });
         if (item.slot) {
           // 原位回填：按引用定位占位再 splice 替换为真 primitive（result 为 null 时替换成 0 个 = 删占位）
@@ -341,7 +345,7 @@ export const compileToScene = (ir: IR, options: CompileOptions = {}): Scene => {
         if (child.id) {
           nameStack.register(child.id, globalLayout, `${locatorPrefix}children[${i}].node.id`);
         }
-        for (const prim of emitNodePrimitives(layout, round)) {
+        for (const prim of emitNodePrimitives(layout, round, paint.resolve)) {
           sink.push(prim);
           if (child.zIndex !== undefined) zIndexOf.set(prim, child.zIndex);
         }
@@ -495,9 +499,12 @@ export const compileToScene = (ir: IR, options: CompileOptions = {}): Scene => {
     );
   }
 
+  const resources = paint.resources();
   return {
     // sealSink 后对顶层按 zIndex 稳定排序（占位已回填）
     primitives: stableSortByZIndex(sealSink(primitives)),
     layout: computeLayout(allPoints, layoutPadding, round),
+    // paint 资源（gradient）；无则省略，保 Scene 输出纯净
+    ...(resources.length > 0 ? { resources } : {}),
   };
 };

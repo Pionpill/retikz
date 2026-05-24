@@ -4,6 +4,9 @@ import type { PathPrim } from './path';
 import type { RectPrim } from './rect';
 import type { TextPrim } from './text';
 import type { Layout } from './layout';
+import type { SceneResource } from './paint';
+
+export type { PaintValue, SceneResource } from './paint';
 
 /**
  * Scene primitive：渲染目标无关的最大公约子集
@@ -17,4 +20,6 @@ export type Scene = {
   primitives: Array<ScenePrimitive>;
   /** 整个场景的布局边界 */
   layout: Layout;
+  /** 渲染无关资源表（paint server 等）；adapter 物化（SVG → `<defs>`）。无资源时省略 */
+  resources?: Array<SceneResource>;
 };

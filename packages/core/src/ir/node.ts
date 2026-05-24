@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import type { ValueOf } from '../types';
 import { FontSchema } from './font';
+import { PaintSpecSchema } from './paint';
 import { AT_DIRECTIONS, AtPositionSchema, OffsetPositionSchema, PolarPositionSchema, PositionSchema } from './position';
 import { TextBlockSchema } from './text';
 
@@ -164,10 +165,10 @@ export const NodeSchema = z
         'Master color (TikZ `color=`). When set, stroke / fill / text default to it unless individually overridden, and it cascades to the inner text and edge labels. Individual fields (stroke / fill / textColor) always win over this within the same node.',
       ),
     fill: z
-      .string()
+      .union([z.string(), PaintSpecSchema])
       .optional()
       .describe(
-        'Background color of the node shape; any CSS color (e.g. "lightblue", "#fafafa", "rgba(...)")',
+        'Node background paint: any CSS color string (e.g. "lightblue", "#fafafa", "rgba(...)") or a PaintSpec (linear / radial gradient).',
       ),
     fillOpacity: z
       .number()

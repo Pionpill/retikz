@@ -1,3 +1,5 @@
+import type { PaintValue } from './paint';
+
 /** 矩形原语 */
 export type RectPrim = {
   /** 类型判别符 */
@@ -10,8 +12,8 @@ export type RectPrim = {
   width: number;
   /** 矩形高度 */
   height: number;
-  /** 填充色，CSS 颜色字符串 */
-  fill?: string;
+  /** 填充：纯色 CSS 串、或指向资源表的 paint server（gradient）、或 contextStroke */
+  fill?: PaintValue;
   /** 填充透明度 0~1 */
   fillOpacity?: number;
   /** 描边色 */

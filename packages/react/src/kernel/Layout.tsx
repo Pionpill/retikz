@@ -10,6 +10,7 @@ import {
 import { buildIR } from './builder';
 import { ArrowMarker } from '../render/arrowMarkers';
 import { browserMeasurer } from '../render/browser-measurer';
+import { PaintDefs } from '../render/paintDefs';
 import { renderPrim } from '../render/renderPrim';
 import { formatViewBox } from '../render/viewBox';
 
@@ -130,16 +131,23 @@ export const Layout: FC<LayoutProps> = props => {
   const arrowMarkerIdFor = (spec: ArrowEndSpec) =>
     `${arrowMarkerPrefix}-${hashKey(stableSpecKey(spec))}`;
 
+  // paint 资源（gradient）：id 加同源实例前缀避免跨 SVG 撞；renderPrim 经 paintRefUrl 引用
+  const paintResources = scene.resources ?? [];
+  const paintIdFor = (id: string) => `retikz-paint-${rawId.replace(/[^a-zA-Z0-9]/g, '')}-${id}`;
+  const paintRefUrl = (id: string) => `url(#${paintIdFor(id)})`;
+  const hasDefs = uniqueByKey.size > 0 || paintResources.length > 0;
+
   return (
     <svg viewBox={formatViewBox(scene.layout)} width={width} height={height} className={className} style={style}>
-      {uniqueByKey.size > 0 && (
+      {hasDefs && (
         <defs>
           {Array.from(uniqueByKey.entries()).map(([k, spec]) => (
             <ArrowMarker key={k} id={`${arrowMarkerPrefix}-${hashKey(k)}`} spec={spec} />
           ))}
+          <PaintDefs resources={paintResources} idFor={paintIdFor} />
         </defs>
       )}
-      {scene.primitives.map((p, i) => renderPrim(p, i, { arrowMarkerIdFor }))}
+      {scene.primitives.map((p, i) => renderPrim(p, i, { arrowMarkerIdFor, paintRefUrl }))}
     </svg>
   );
 };

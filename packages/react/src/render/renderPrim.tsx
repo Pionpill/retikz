@@ -1,5 +1,5 @@
 import type { Key, ReactElement } from 'react';
-import type { ArrowEndSpec, ScenePrimitive } from '@retikz/core';
+import type { ArrowEndSpec, PaintValue, ScenePrimitive } from '@retikz/core';
 import { buildPathD } from './path-d-builder';
 import { buildTransform } from './transform-builder';
 
@@ -37,6 +37,37 @@ const baselineToDominant = (
 export type RenderContext = {
   /** 按 arrow 端点 spec 查 SVG `<defs><marker id>` id 的回调（按 detail hash 区分起末异形 / 异色） */
   arrowMarkerIdFor?: (spec: ArrowEndSpec) => string;
+  /** paint 资源 id → SVG `url(#...)` 引用（Layout 加 useId 前缀避免跨实例撞）；缺省 `url(#id)` */
+  paintRefUrl?: (id: string) => string;
+};
+
+/**
+ * PaintValue → SVG fill attribute / inline style
+ * @description string 纯色：含 `var(` 走 style（attribute 不解析 CSS var）否则 attribute；`resourceRef` → `url(#...)`（adapter 物化 `<defs>`）；`contextStroke` → `context-stroke`（继承 path 描边）
+ */
+const fillToSvg = (
+  fill: PaintValue | undefined,
+  paintRefUrl: (id: string) => string,
+): { attr: string | undefined; styleFill: string | undefined } => {
+  if (fill === undefined) return { attr: undefined, styleFill: undefined };
+  if (typeof fill === 'string') {
+    return fill.includes('var(')
+      ? { attr: undefined, styleFill: fill }
+      : { attr: fill, styleFill: undefined };
+  }
+  if (fill.kind === 'resourceRef') return { attr: paintRefUrl(fill.id), styleFill: undefined };
+  return { attr: 'context-stroke', styleFill: undefined };
+};
+
+/** 合并 fill（PaintValue 解析出的 var 值）+ stroke（含 var( 走 style）的 inline style */
+const mergeFillStrokeStyle = (
+  styleFill: string | undefined,
+  stroke: string | undefined,
+): { fill?: string; stroke?: string } | undefined => {
+  const out: { fill?: string; stroke?: string } = {};
+  if (styleFill !== undefined) out.fill = styleFill;
+  if (stroke !== undefined && stroke.includes('var(')) out.stroke = stroke;
+  return out.fill !== undefined || out.stroke !== undefined ? out : undefined;
 };
 
 /**
@@ -64,8 +95,10 @@ export const renderPrim = (
   key: Key,
   context: RenderContext = {},
 ): ReactElement => {
+  const paintRefUrl = context.paintRefUrl ?? ((id: string) => `url(#${id})`);
   switch (p.type) {
-    case 'rect':
+    case 'rect': {
+      const f = fillToSvg(p.fill, paintRefUrl);
       return (
         <rect
           key={key}
@@ -73,7 +106,7 @@ export const renderPrim = (
           y={p.y}
           width={p.width}
           height={p.height}
-          fill={paintAttr(p.fill)}
+          fill={f.attr}
           fillOpacity={p.fillOpacity}
           stroke={paintAttr(p.stroke)}
           strokeOpacity={p.strokeOpacity}
@@ -82,11 +115,13 @@ export const renderPrim = (
           rx={p.cornerRadius}
           ry={p.cornerRadius}
           opacity={p.opacity}
-          style={paintStyle(p.fill, p.stroke)}
+          style={mergeFillStrokeStyle(f.styleFill, p.stroke)}
         />
       );
+    }
     case 'ellipse': {
       const transform = p.rotate ? `rotate(${p.rotate} ${p.cx} ${p.cy})` : undefined;
+      const f = fillToSvg(p.fill, paintRefUrl);
       return (
         <ellipse
           key={key}
@@ -95,14 +130,14 @@ export const renderPrim = (
           rx={p.rx}
           ry={p.ry}
           transform={transform}
-          fill={paintAttr(p.fill)}
+          fill={f.attr}
           fillOpacity={p.fillOpacity}
           stroke={paintAttr(p.stroke)}
           strokeOpacity={p.strokeOpacity}
           strokeWidth={p.strokeWidth}
           strokeDasharray={p.dashPattern?.join(' ')}
           opacity={p.opacity}
-          style={paintStyle(p.fill, p.stroke)}
+          style={mergeFillStrokeStyle(f.styleFill, p.stroke)}
         />
       );
     }
@@ -157,11 +192,12 @@ export const renderPrim = (
         p.arrowStart && context.arrowMarkerIdFor ? context.arrowMarkerIdFor(p.arrowStart) : undefined;
       const endId =
         p.arrowEnd && context.arrowMarkerIdFor ? context.arrowMarkerIdFor(p.arrowEnd) : undefined;
+      const f = fillToSvg(p.fill, paintRefUrl);
       return (
         <path
           key={key}
           d={buildPathD(p.commands)}
-          fill={paintAttr(p.fill)}
+          fill={f.attr}
           fillOpacity={p.fillOpacity}
           fillRule={p.fillRule}
           stroke={paintAttr(p.stroke)}
@@ -173,7 +209,7 @@ export const renderPrim = (
           markerStart={startId ? `url(#${startId})` : undefined}
           markerEnd={endId ? `url(#${endId})` : undefined}
           opacity={p.opacity}
-          style={paintStyle(p.fill, p.stroke)}
+          style={mergeFillStrokeStyle(f.styleFill, p.stroke)}
         />
       );
     }

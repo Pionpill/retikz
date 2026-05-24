@@ -1,4 +1,5 @@
 import type { ArrowShape } from '../ir/path/arrow';
+import type { PaintValue } from './paint';
 
 /** Move command：移动游标到目标点，不绘制 */
 export type MovePathCommand = {
@@ -122,8 +123,8 @@ export type PathPrim = {
   type: 'path';
   /** 结构化路径命令序列，按数组顺序绘制 */
   commands: Array<PathCommand>;
-  /** 填充色；不填表示不填充 */
-  fill?: string;
+  /** 填充：纯色 / 资源表 paint server（gradient）/ contextStroke；不填表示不填充 */
+  fill?: PaintValue;
   /** 填充透明度 0~1 */
   fillOpacity?: number;
   /** 填充规则：`nonzero`（默认）/ `evenodd`（环形 / 孔洞场景） */

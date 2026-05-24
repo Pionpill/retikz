@@ -1,6 +1,6 @@
 import type { Position } from '../geometry/point';
 import type { Rect } from '../geometry/rect';
-import type { ScenePrimitive } from '../primitive';
+import type { PaintValue, ScenePrimitive } from '../primitive';
 
 /**
  * emit 需要的视觉样式子集
@@ -8,7 +8,7 @@ import type { ScenePrimitive } from '../primitive';
  *   字段名与 NodeLayout 样式字段一致（单一词汇表）。
  */
 export type ShapeStyle = {
-  fill?: string;
+  fill?: PaintValue;
   fillOpacity?: number;
   stroke?: string;
   strokeOpacity?: number;

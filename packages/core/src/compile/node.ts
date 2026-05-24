@@ -1,6 +1,7 @@
 import type { Position } from '../geometry/point';
 import type { Rect, RectAnchor } from '../geometry/rect';
-import type { AtDirection, IRLabelDefault, IRLineSpec, IRNode, IRNodeLabel } from '../ir';
+import type { AtDirection, IRLabelDefault, IRLineSpec, IRNode, IRNodeLabel, IRPaintSpec } from '../ir';
+import type { PaintResolver } from './paint';
 import type { GroupPrim, ScenePrimitive, TextLine, Transform } from '../primitive';
 import { BUILTIN_SHAPES } from '../shapes';
 import type { ShapeDefinition, ShapeStyle } from '../shapes';
@@ -139,8 +140,8 @@ export type NodeLayout = {
   fontWeight?: string | number;
   /** 字形 */
   fontStyle?: 'normal' | 'italic' | 'oblique';
-  /** 节点背景色，emit 时 'transparent' 兜底 */
-  fill?: string;
+  /** 节点背景填充（纯色 / PaintSpec gradient），emit 时经 resolveFill → PaintValue、'transparent' 兜底 */
+  fill?: string | IRPaintSpec;
   /** 填充透明度 0~1 */
   fillOpacity?: number;
   /** 节点边框色，emit 时 'currentColor' 兜底 */
@@ -514,9 +515,9 @@ export const layoutNode = (
   };
 };
 
-/** 从 NodeLayout 收敛 emit 所需的视觉样式子集（ShapeStyle，不含几何 / 文本） */
-const toShapeStyle = (layout: NodeLayout): ShapeStyle => ({
-  fill: layout.fill,
+/** 从 NodeLayout 收敛 emit 所需的视觉样式子集（ShapeStyle，不含几何 / 文本）；fill 经 resolveFill 转 PaintValue */
+const toShapeStyle = (layout: NodeLayout, resolveFill: PaintResolver): ShapeStyle => ({
+  fill: resolveFill(layout.fill),
   fillOpacity: layout.fillOpacity,
   stroke: layout.stroke,
   strokeOpacity: layout.strokeOpacity,
@@ -570,11 +571,12 @@ export const labelExtentPoints = (layout: NodeLayout): Array<Position> => {
 export const emitNodePrimitives = (
   layout: NodeLayout,
   round: (n: number) => number,
+  resolveFill: PaintResolver,
 ): Array<ScenePrimitive> => {
   // shape 主体：emit 收**轴对齐 rect（rotate=0）**，rotate 由末端外层 GroupPrim 统一施加
   const axisAlignedRect: Rect = { ...layout.rect, rotate: 0 };
   const inner: Array<ScenePrimitive> = [
-    ...layout.shapeDef.emit(axisAlignedRect, toShapeStyle(layout), round),
+    ...layout.shapeDef.emit(axisAlignedRect, toShapeStyle(layout, resolveFill), round),
   ];
   if (layout.lines) {
     // align=start: x=中心-块半宽; align=end: x=中心+块半宽; align=middle: x=中心

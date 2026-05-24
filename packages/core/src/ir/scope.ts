@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import type { IRCoordinate } from './coordinate';
 import { FontSchema } from './font';
+import { type IRPaintSpec, PaintSpecSchema } from './paint';
 import { type IRNode, NodeSchema } from './node';
 import { type IRPath, PathSchema } from './path';
 import { ArrowDetailSchema } from './path/arrow';
@@ -96,7 +97,7 @@ export type IRScope = {
   transforms?: Array<IRTransform>;
   color?: string;
   stroke?: string;
-  fill?: string;
+  fill?: string | IRPaintSpec;
   strokeWidth?: number;
   opacity?: number;
   fillOpacity?: number;
@@ -167,9 +168,9 @@ export const ScopeSchema = z
         'Cascading default stroke color for inner nodes and paths; overrides the cascading master color for the stroke channel.',
       ),
     fill: z
-      .string()
+      .union([z.string(), PaintSpecSchema])
       .optional()
-      .describe('Cascading default fill color for inner nodes and paths.'),
+      .describe('Cascading default fill (CSS color or PaintSpec gradient) for inner nodes and paths.'),
     strokeWidth: z
       .number()
       .optional()

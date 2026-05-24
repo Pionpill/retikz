@@ -6,6 +6,7 @@ import {
 } from '../../geometry/arc';
 import { bendControlPoints } from '../../geometry/bend';
 import { rectOutline } from '../../geometry/rect';
+import type { PaintResolver } from '../paint';
 import {
   type SegmentSample,
   arcSegmentSample,
@@ -80,6 +81,8 @@ export type EmitPathWarnHook = {
    *   投影回全局；顶层 path / 无 scope chain 时为 `[]`（恒等，等价 v0.1 行为）
    */
   scopeChain?: ReadonlyArray<Transform>;
+  /** fill 解析器（PaintSpec → resourceRef + 登记资源）；缺省时纯色透传、PaintSpec 退化为无填充 */
+  resolveFill?: PaintResolver;
 };
 
 /**
@@ -98,6 +101,9 @@ export const emitPathPrimitive = (
     warnHook.onWarn?.({ code, message, path: subPath ? `${irPath}.${subPath}` : irPath });
   };
   const scopeChain = warnHook.scopeChain ?? [];
+  // fill 解析：有 registry 走去重派 id；无（直调）时纯色透传、PaintSpec 退化无填充
+  const resolveFill: PaintResolver =
+    warnHook.resolveFill ?? (f => (typeof f === 'string' || f === undefined ? f : undefined));
   // 先把 relative/relativeAccumulate 解析为绝对坐标，后续算法可统一按绝对坐标处理
   const steps = normalizeRelativeTargets(path.children, nameStack, scopeChain);
   if (steps.length < 2) {
@@ -601,8 +607,8 @@ export const emitPathPrimitive = (
   const baseProps: PathBaseProps = {
     stroke: path.stroke ?? 'currentColor',
     strokeWidth,
-    // path.fill 缺省 'none'（仅描边）；传颜色即填充，可配 cycle 闭合画填充形状
-    fill: path.fill ?? 'none',
+    // path.fill 缺省 'none'（仅描边）；纯色 / PaintSpec gradient 经 resolveFill → PaintValue
+    fill: resolveFill(path.fill) ?? 'none',
     fillRule: path.fillRule,
     dashPattern: path.dashPattern,
     strokeLinecap: path.lineCap,

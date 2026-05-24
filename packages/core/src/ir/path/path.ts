@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { PaintSpecSchema } from '../paint';
 import { ArrowDetailSchema } from './arrow';
 import { StepSchema } from './step';
 
@@ -40,10 +41,10 @@ export const PathSchema = z
       'Detailed arrow visual config (shape / scale / length / width / color / fill / opacity / lineWidth) with optional `start` / `end` per-end overrides. Omitted = built-in defaults (shape `stealth`, all visuals inherit from path stroke / opacity).',
     ),
     fill: z
-      .string()
+      .union([z.string(), PaintSpecSchema])
       .optional()
       .describe(
-        'Fill color of the closed region; any CSS color. Omitted = no fill (stroke only). Pairs with `cycle` step for filled shapes.',
+        'Fill of the closed region: any CSS color string, or a PaintSpec (linear / radial gradient). Omitted = no fill (stroke only). Pairs with `cycle` step for filled shapes.',
       ),
     fillRule: z
       .enum(['nonzero', 'evenodd'])

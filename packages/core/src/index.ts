@@ -141,6 +141,8 @@ export type {
   ScaleTransform,
   Layout,
   Scene,
+  PaintValue,
+  SceneResource,
 } from './primitive';
 
 // Compile (IR → Scene)
