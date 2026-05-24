@@ -108,6 +108,8 @@ export type {
   NodeShape,
   BuiltinShapeName,
   NodeTextAlign,
+  PatternShapeName,
+  BuiltinPatternName,
   IRPaintSpec,
   IRGradientStop,
   JsonValue,
@@ -121,6 +123,7 @@ export {
   ARROW_MARKER_HOLLOW_DEFAULT_LINE_WIDTH,
   NODE_SHAPES,
   NODE_TEXT_ALIGNS,
+  PATTERN_SHAPES,
 } from './ir';
 
 // Primitive (Scene 数据模型)
@@ -151,6 +154,8 @@ export type {
   Scene,
   PaintValue,
   SceneResource,
+  /** 已解析 pattern tile（emit-in-compile 产物，进 Scene 资源，纯数据无函数） */
+  ResolvedPatternTile,
   /** marker 窄子集（ArrowDefinition.emit 产物，renderer-agnostic） */
   MarkerPrimitive,
   MarkerPathPrim,
@@ -203,6 +208,10 @@ export { BUILTIN_SHAPES, worldToLocal, localToWorld } from './shapes';
 // Arrows (Arrow Registry 扩展面：第三方 arrow 注入 + 内置注册项)
 export type { ArrowDefinition, ArrowEmitContext } from './arrows';
 export { BUILTIN_ARROWS } from './arrows';
+
+// Patterns (Pattern Registry 扩展面：第三方 pattern motif 注入 + 内置注册项)
+export type { PatternDefinition, PatternEmitContext } from './patterns';
+export { BUILTIN_PATTERNS } from './patterns';
 
 // Path Generators (Path Generator Registry 扩展面：第三方曲线生成器注入；core 无内置)
 export type { PathGeneratorDefinition, PathGeneratorContext } from './pathGenerators';

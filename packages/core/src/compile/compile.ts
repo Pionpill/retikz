@@ -5,6 +5,8 @@ import { BUILTIN_SHAPES } from '../shapes';
 import type { ShapeDefinition } from '../shapes';
 import { BUILTIN_ARROWS } from '../arrows';
 import type { ArrowDefinition } from '../arrows';
+import { BUILTIN_PATTERNS } from '../patterns';
+import type { PatternDefinition } from '../patterns';
 import type { PathGeneratorDefinition } from '../pathGenerators';
 import { type DuplicateRegisterInfo, NameStack } from './name-stack';
 import { type NodeLayout, emitNodePrimitives, labelExtentPoints, layoutNode } from './node';
@@ -88,6 +90,7 @@ export type CompileWarning = {
     | 'DUPLICATE_NODE_ID'
     | 'SHAPE_OVERRIDES_BUILTIN'
     | 'ARROW_OVERRIDES_BUILTIN'
+    | 'PATTERN_OVERRIDES_BUILTIN'
     | (string & {});
   /** 人类可读消息（英文） */
   message: string;
@@ -128,6 +131,13 @@ export type CompileOptions = {
    *   `ARROW_OVERRIDES_BUILTIN`。IR 的 `arrowDetail.shape` 仍是字符串；未注册名在编译期 throw。
    */
   arrows?: Record<string, ArrowDefinition>;
+  /**
+   * 运行时注入的第三方 pattern motif（不进 IR）
+   * @description 有效 pattern 表 = `{ ...BUILTIN_PATTERNS, ...patterns }`——同名 key 覆盖内置，经 `onWarn` 发
+   *   `PATTERN_OVERRIDES_BUILTIN`。IR 的 `pattern.shape` 仍是字符串；未注册名在编译期 throw。
+   *   compile 对 pattern 资源查本表 + 调 `PatternDefinition.emit` 产 tile，写进 `SceneResource.tile`。
+   */
+  patterns?: Record<string, PatternDefinition>;
   /**
    * 运行时注入的第三方 path generator（不进 IR）
    * @description generator step 编译时按 `name` 查本表；core 不内置任何曲线生成器，故无内置合并。
@@ -278,6 +288,22 @@ export const compileToScene = (ir: IR, options: CompileOptions = {}): Scene => {
     }
   }
 
+  // 有效 pattern 表：内置 + 注入（同名注入覆盖内置）；覆盖内置经 onWarn 发 PATTERN_OVERRIDES_BUILTIN
+  const effectivePatterns: Record<string, PatternDefinition> = options.patterns
+    ? { ...BUILTIN_PATTERNS, ...options.patterns }
+    : BUILTIN_PATTERNS;
+  if (options.patterns) {
+    for (const name of Object.keys(options.patterns)) {
+      if (Object.prototype.hasOwnProperty.call(BUILTIN_PATTERNS, name)) {
+        onWarn({
+          code: 'PATTERN_OVERRIDES_BUILTIN',
+          message: `Injected pattern '${name}' overrides the built-in pattern of the same name.`,
+          path: `options.patterns.${name}`,
+        });
+      }
+    }
+  }
+
   const primitives: Array<InternalScenePrimitive> = [];
   /** 已 push 但未回填的占位计数；compileToScene 返回前必须归零（无条件守 Scene 公开契约） */
   let placeholderBalance = 0;
@@ -301,7 +327,7 @@ export const compileToScene = (ir: IR, options: CompileOptions = {}): Scene => {
   });
   const allPoints: Array<IRPosition> = [];
   // paint 登记表：node / path 的 PaintSpec fill 去重 + 派稳定 id → Scene.resources
-  const paint = createPaintRegistry();
+  const paint = createPaintRegistry(effectivePatterns, onWarn);
 
   /**
    * 解析一批本层收集的 pending paths（lookup-only 阶段）

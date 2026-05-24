@@ -1,4 +1,29 @@
 import { z } from 'zod';
+import type { ValueOf } from '../types';
+
+/**
+ * 内置 pattern motif 名常量（用 const + ValueOf 派生，不用 TS enum）
+ * @description 内置 3 motif：`lines`（横向阴影线）/ `dots`（波点）/ `grid`（横竖网格）。
+ *   各 motif 的 tile 几何由 `BUILTIN_PATTERNS` 的 `PatternDefinition.emit` 在 compile 期产出。
+ */
+export const PATTERN_SHAPES = {
+  lines: 'lines',
+  dots: 'dots',
+  grid: 'grid',
+} as const;
+
+/**
+ * 内置 3 pattern motif 名联合
+ * @description `BUILTIN_PATTERNS` 的 Record key（保穷尽性约束，不随 `PatternShapeName` 开放而退化为 `string`）
+ */
+export type BuiltinPatternName = ValueOf<typeof PATTERN_SHAPES>;
+
+/**
+ * pattern motif 名：开放字符串
+ * @description 内置 `BuiltinPatternName`，或经 `CompileOptions.patterns` 注册的扩展 motif 名；
+ *   `& {}` 让 IDE 仍对内置 3 名自动补全，同时接受任意非空字符串
+ */
+export type PatternShapeName = BuiltinPatternName | (string & {});
 
 /**
  * 渐变 stop：位置 + 颜色 + 可选透明度
@@ -50,8 +75,11 @@ export const PaintSpecSchema = z
       .object({
         type: z.literal('pattern'),
         shape: z
-          .enum(['lines', 'dots', 'grid'])
-          .describe('Pattern motif: `lines` (hatching) / `dots` / `grid` (crosshatch)'),
+          .string()
+          .min(1)
+          .describe(
+            'Registered pattern motif name; built-in `lines` (hatching) / `dots` / `grid` (crosshatch), or an extension motif registered via `CompileOptions.patterns`. Any non-empty string passes schema validation; unregistered names are rejected at compile time.',
+          ),
         color: z.string().optional().describe('Motif color; any CSS color, defaults to `currentColor`'),
         background: z.string().optional().describe('Tile background fill; omitted = transparent'),
         size: z

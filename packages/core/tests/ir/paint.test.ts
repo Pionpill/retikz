@@ -147,8 +147,17 @@ describe('PaintSpecSchema — pattern', () => {
     ).not.toThrow();
   });
 
-  it('未知 shape / size 非正 被拒', () => {
-    expect(() => PaintSpecSchema.parse({ type: 'pattern', shape: 'zigzag' })).toThrow();
+  it('shape 开放：接受任意非空 string（未注册名拒绝移到 compile 期）', () => {
+    expect(() => PaintSpecSchema.parse({ type: 'pattern', shape: 'zigzag' })).not.toThrow();
+    expect(() => PaintSpecSchema.parse({ type: 'pattern', shape: 'my-custom-motif' })).not.toThrow();
+    // 内置 3 字面量仍合法
+    for (const shape of ['lines', 'dots', 'grid'] as const) {
+      expect(() => PaintSpecSchema.parse({ type: 'pattern', shape })).not.toThrow();
+    }
+  });
+
+  it('空串 shape / size 非正 被拒', () => {
+    expect(() => PaintSpecSchema.parse({ type: 'pattern', shape: '' })).toThrow();
     expect(() => PaintSpecSchema.parse({ type: 'pattern', shape: 'dots', size: 0 })).toThrow();
   });
 });
