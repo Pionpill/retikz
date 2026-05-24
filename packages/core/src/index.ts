@@ -52,6 +52,7 @@ export {
   GradientStopSchema,
   JsonValueSchema,
   JsonObjectSchema,
+  ClipSpecSchema,
 } from './ir';
 export type {
   IRPosition,
@@ -114,6 +115,7 @@ export type {
   IRGradientStop,
   JsonValue,
   IRJsonObject,
+  IRClipSpec,
 } from './ir';
 export {
   ARROW_SHAPES,
@@ -154,6 +156,10 @@ export type {
   Scene,
   PaintValue,
   SceneResource,
+  PaintResource,
+  /** 裁剪资源（renderer-agnostic，adapter 物化 `<clipPath>`） */
+  ClipResource,
+  ClipShape,
   /** 已解析 pattern tile（emit-in-compile 产物，进 Scene 资源，纯数据无函数） */
   ResolvedPatternTile,
   /** marker 窄子集（ArrowDefinition.emit 产物，renderer-agnostic） */

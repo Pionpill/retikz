@@ -11,6 +11,7 @@ import type { PathGeneratorDefinition } from '../pathGenerators';
 import { type DuplicateRegisterInfo, NameStack } from './name-stack';
 import { type NodeLayout, emitNodePrimitives, labelExtentPoints, layoutNode } from './node';
 import { createPaintRegistry } from './paint';
+import { createClipRegistry } from './clip';
 import { emitPathPrimitive } from './path/index';
 import { resolvePosition } from './position';
 import { DEFAULT_PRECISION, makeRound } from './precision';
@@ -329,6 +330,8 @@ export const compileToScene = (ir: IR, options: CompileOptions = {}): Scene => {
   // paint 登记表：node / path 的 PaintSpec fill 去重 + 派稳定 id → Scene.resources；
   // pattern 资源额外查 effectivePatterns + emit 产 tile（emit-in-compile），用同一 round 保几何一致
   const paint = createPaintRegistry(effectivePatterns, round);
+  // clip 登记表：scope.clip 去重 + 派稳定 id（clip-N）→ Scene.resources（与 paint 同表，id 命名空间不撞）
+  const clip = createClipRegistry(round);
 
   /**
    * 解析一批本层收集的 pending paths（lookup-only 阶段）
@@ -517,7 +520,8 @@ export const compileToScene = (ir: IR, options: CompileOptions = {}): Scene => {
         const isPrunable =
           innerSink.length === 0 &&
           !hasOwnTransforms &&
-          child.id === undefined;
+          child.id === undefined &&
+          child.clip === undefined;
         if (isPrunable) continue;
         const group: GroupPrim = {
           type: 'group',
@@ -525,6 +529,8 @@ export const compileToScene = (ir: IR, options: CompileOptions = {}): Scene => {
           children: stableSortByZIndex(sealSink(innerSink)),
         };
         if (hasOwnTransforms) group.transforms = [...ownTransforms];
+        // scope.clip → 去重派 clip 资源 id 挂 group.clipRef；裁剪区裁该 group 内全部子原语
+        if (child.clip !== undefined) group.clipRef = clip.resolve(child.clip);
         sink.push(group);
         // scope 整体作一个 stacking 单位：把 group 在父层按 scope.zIndex 排序
         if (child.zIndex !== undefined) zIndexOf.set(group, child.zIndex);
@@ -568,12 +574,13 @@ export const compileToScene = (ir: IR, options: CompileOptions = {}): Scene => {
     );
   }
 
-  const resources = paint.resources();
+  // paint（gradient / pattern / image）+ clip 资源同表（kind 判别，id 命名空间各自不撞）
+  const resources = [...paint.resources(), ...clip.resources()];
   return {
     // sealSink 后对顶层按 zIndex 稳定排序（占位已回填）
     primitives: stableSortByZIndex(sealSink(primitives)),
     layout: computeLayout(allPoints, layoutPadding, round),
-    // paint 资源（gradient）；无则省略，保 Scene 输出纯净
+    // 渲染无关资源（paint / clip）；无则省略，保 Scene 输出纯净
     ...(resources.length > 0 ? { resources } : {}),
   };
 };

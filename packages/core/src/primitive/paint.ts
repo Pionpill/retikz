@@ -1,4 +1,5 @@
 import type { IRPaintSpec } from '../ir/paint';
+import type { ClipResource } from './clip';
 import type { MarkerPrimitive } from './marker';
 
 /**
@@ -32,15 +33,21 @@ export type ResolvedPatternTile = {
 };
 
 /**
- * Scene 级渲染无关资源（adapter 各自物化；SVG → `<defs>`）
- * @description discriminated union——本段只 paint（gradient / pattern / image），后续 clip 加
- *   `{ kind:'clip' }` 分支不破契约。id 由 compile 去重 + 稳定分配，primitive 经 `{ kind:'resourceRef', id }`
- *   引用。pattern 资源额外带 `tile`（已解析 motif 几何，emit-in-compile 产物）；gradient / image 资源只 `spec`。
+ * paint 资源（gradient / pattern / image）
+ * @description id 由 compile 去重 + 稳定分配（`paint-1`…），primitive 经 `{ kind:'resourceRef', id }` 引用。
+ *   pattern 资源额外带 `tile`（已解析 motif 几何，emit-in-compile 产物）；gradient / image 资源只 `spec`。
  */
-export type SceneResource = {
+export type PaintResource = {
   kind: 'paint';
   id: string;
   spec: IRPaintSpec;
   /** 已解析 pattern tile；仅 pattern 资源有，gradient / image 资源缺省 */
   tile?: ResolvedPatternTile;
 };
+
+/**
+ * Scene 级渲染无关资源（adapter 各自物化；SVG → `<defs>`）
+ * @description discriminated union（`kind`）——`paint`（gradient / pattern / image）与 `clip`（裁剪区）；
+ *   消费方按 `kind` 分流。id 由 compile 去重 + 稳定分配（paint-N / clip-N，命名空间不撞），无 SVG-only 特性。
+ */
+export type SceneResource = PaintResource | ClipResource;

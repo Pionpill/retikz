@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { compileToScene } from '../../src/compile/compile';
 import type { CompileOptions, CompileWarning } from '../../src/compile/compile';
 import type { IR, IRPaintSpec } from '../../src/ir';
-import type { MarkerPathPrim, MarkerPrimitive, ResolvedPatternTile, SceneResource } from '../../src/primitive';
+import type { MarkerPathPrim, MarkerPrimitive, PaintResource, ResolvedPatternTile, SceneResource } from '../../src/primitive';
 import type { PatternDefinition } from '../../src/patterns';
 
 /**
@@ -26,8 +26,8 @@ const patternNodeIR = (spec: IRPaintSpec, second?: IRPaintSpec): IR => ({
   ],
 });
 
-const firstPatternResource = (resources: Array<SceneResource> | undefined): SceneResource | undefined =>
-  (resources ?? []).find(r => r.spec.type === 'pattern');
+const firstPatternResource = (resources: Array<SceneResource> | undefined): PaintResource | undefined =>
+  (resources ?? []).find((r): r is PaintResource => r.kind === 'paint' && r.spec.type === 'pattern');
 
 const tileOf = (spec: IRPaintSpec, opts?: CompileOptions): ResolvedPatternTile | undefined =>
   firstPatternResource(compileToScene(patternNodeIR(spec), opts).resources)?.tile;
@@ -207,7 +207,7 @@ describe('ADV — dedup / override / 交叉', () => {
     const scene = compileToScene(
       patternNodeIR({ type: 'pattern', shape: 'lines', size: 6 }, { type: 'pattern', shape: 'lines', size: 10 }),
     );
-    const pats = (scene.resources ?? []).filter(r => r.spec.type === 'pattern');
+    const pats = (scene.resources ?? []).filter((r): r is PaintResource => r.kind === 'paint' && r.spec.type === 'pattern');
     expect(pats).toHaveLength(2);
     expect(pats.map(p => p.tile?.size).sort((a, b) => (a ?? 0) - (b ?? 0))).toEqual([6, 10]);
   });
@@ -246,7 +246,7 @@ describe('ADV — dedup / override / 交叉', () => {
     const ids = (scene.resources ?? []).map(r => r.id);
     expect(new Set(ids).size).toBe(ids.length);
     expect(ids.length).toBe(3);
-    const withTile = (scene.resources ?? []).filter(r => r.tile !== undefined);
+    const withTile = (scene.resources ?? []).filter((r): r is PaintResource => r.kind === 'paint' && r.tile !== undefined);
     expect(withTile).toHaveLength(1);
     expect(withTile[0].spec.type).toBe('pattern');
   });

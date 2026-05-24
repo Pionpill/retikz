@@ -6,7 +6,8 @@ import type { TextPrim } from './text';
 import type { Layout } from './layout';
 import type { SceneResource } from './paint';
 
-export type { PaintValue, SceneResource, ResolvedPatternTile } from './paint';
+export type { PaintValue, SceneResource, PaintResource, ResolvedPatternTile } from './paint';
+export type { ClipShape, ClipResource } from './clip';
 
 /**
  * Scene primitive：渲染目标无关的最大公约子集

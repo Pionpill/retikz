@@ -9,6 +9,7 @@ import type {
   MarkerEllipsePrim,
   MarkerPathPrim,
   MarkerPrimitive,
+  PaintResource,
   ResolvedPatternTile,
   SceneResource,
 } from '../../src/primitive';
@@ -35,8 +36,8 @@ const patternNodeIR = (spec: IRPaintSpec, second?: IRPaintSpec): IR => ({
 });
 
 /** 从 Scene.resources 取首个 pattern 资源（spec.type === 'pattern'） */
-const firstPatternResource = (resources: Array<SceneResource> | undefined): SceneResource | undefined =>
-  (resources ?? []).find(r => r.spec.type === 'pattern');
+const firstPatternResource = (resources: Array<SceneResource> | undefined): PaintResource | undefined =>
+  (resources ?? []).find((r): r is PaintResource => r.kind === 'paint' && r.spec.type === 'pattern');
 
 /** 从 Scene.resources 取首个 pattern 资源的 tile（已解析 motif） */
 const tileOf = (
@@ -133,7 +134,7 @@ describe('Pattern registry — happy path', () => {
   it('pattern_dedup：同 pattern spec 多处 → 1 资源 1 tile', () => {
     const spec: IRPaintSpec = { type: 'pattern', shape: 'lines', size: 6 };
     const scene = compileToScene(patternNodeIR(spec, spec));
-    const patternResources = (scene.resources ?? []).filter(r => r.spec.type === 'pattern');
+    const patternResources = (scene.resources ?? []).filter((r): r is PaintResource => r.kind === 'paint' && r.spec.type === 'pattern');
     expect(patternResources).toHaveLength(1);
     expect(patternResources[0].tile).toBeDefined();
   });
@@ -173,8 +174,8 @@ describe('Pattern registry — boundary', () => {
     const ids = (scene.resources ?? []).map(r => r.id);
     expect(new Set(ids).size).toBe(2);
     // gradient 资源无 tile、pattern 资源有 tile
-    const gradRes = (scene.resources ?? []).find(r => r.spec.type === 'linearGradient');
-    const patRes = (scene.resources ?? []).find(r => r.spec.type === 'pattern');
+    const gradRes = (scene.resources ?? []).find((r): r is PaintResource => r.kind === 'paint' && r.spec.type === 'linearGradient');
+    const patRes = (scene.resources ?? []).find((r): r is PaintResource => r.kind === 'paint' && r.spec.type === 'pattern');
     expect(gradRes?.tile).toBeUndefined();
     expect(patRes?.tile).toBeDefined();
   });

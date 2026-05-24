@@ -2,6 +2,7 @@ export * from './position';
 export * from './font';
 export * from './json';
 export * from './paint';
+export * from './clip';
 export * from './text';
 export * from './path';
 export * from './node';

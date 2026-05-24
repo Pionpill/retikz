@@ -47,6 +47,12 @@ export type GroupPrim = {
   type: 'group';
   /** 结构化变换序列，按数组顺序应用；undefined / 空数组表示无变换 */
   transforms?: Array<Transform>;
+  /**
+   * 裁剪资源 id：指向 `Scene.resources` 里某 ClipResource。
+   * @description 有值时该 group 的所有子原语被裁到该资源描述的区域（adapter → `<g clip-path="url(#id)">`）；
+   *   裁剪区坐标在该 group 的局部坐标系（与 children 同帧）。缺省 = 不裁。
+   */
+  clipRef?: string;
   /** 组内子原语 */
   children: Array<ScenePrimitive>;
 };

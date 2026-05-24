@@ -106,7 +106,7 @@ describe('ClipDefs — 裁剪区物化为 clipPath', () => {
             { offset: 1, color: '#fff' },
           ],
         },
-      } as SceneResource,
+      },
       clipResource('clip-1', { kind: 'rect', x: 0, y: 0, width: 10, height: 10 }),
     ]);
     expect(cps).toHaveLength(1);

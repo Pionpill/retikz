@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { type IRClipSpec, ClipSpecSchema } from './clip';
 import type { IRCoordinate } from './coordinate';
 import { FontSchema } from './font';
 import { type IRPaintSpec, PaintSpecSchema } from './paint';
@@ -108,6 +109,7 @@ export type IRScope = {
   arrowDefault?: IRArrowDefault;
   resetStyle?: boolean | Array<StyleChannel>;
   zIndex?: number;
+  clip?: IRClipSpec;
   children: Array<IRNode | IRPath | IRCoordinate | IRScope>;
 };
 
@@ -221,6 +223,9 @@ export const ScopeSchema = z
       .describe(
         'Explicit stacking order of this scope as a whole among its sibling IR children. Higher draws on top. Applies to the scope group as a single unit in the parent; does NOT affect how children stack inside the scope. Omitted = 0 = source order.',
       ),
+    clip: ClipSpecSchema.optional().describe(
+      'Clip region (rect / circle / ellipse / polygon, in scope-local coords); when set, all children of this scope are clipped to it. Compiled into a renderer-agnostic ClipResource referenced via the group clipRef.',
+    ),
     children: z
       .array(
         z.lazy(() => {

@@ -100,6 +100,7 @@ export const SCOPE_FIELDS = [
   'arrowDefault',
   'resetStyle',
   'zIndex',
+  'clip',
 ] as const satisfies ReadonlyArray<keyof IRScope>;
 
 type _ScopeFieldsCheck = AssertEqual<

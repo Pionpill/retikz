@@ -39,6 +39,8 @@ export type RenderContext = {
   arrowMarkerIdFor?: (spec: ArrowEndSpec) => string;
   /** paint 资源 id → SVG `url(#...)` 引用（Layout 加 useId 前缀避免跨实例撞）；缺省 `url(#id)` */
   paintRefUrl?: (id: string) => string;
+  /** clip 资源 id → SVG `url(#...)` 引用（GroupPrim.clipRef 物化用，Layout 加 useId 前缀）；缺省 `url(#id)` */
+  clipRefUrl?: (id: string) => string;
 };
 
 /**
@@ -213,11 +215,14 @@ export const renderPrim = (
         />
       );
     }
-    case 'group':
+    case 'group': {
+      const clipRefUrl = context.clipRefUrl ?? ((id: string) => `url(#${id})`);
+      const clipPath = p.clipRef !== undefined ? clipRefUrl(p.clipRef) : undefined;
       return (
-        <g key={key} transform={buildTransform(p.transforms)}>
+        <g key={key} transform={buildTransform(p.transforms)} clipPath={clipPath}>
           {p.children.map((c, i) => renderPrim(c, i, context))}
         </g>
       );
+    }
   }
 };

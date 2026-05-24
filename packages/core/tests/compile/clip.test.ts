@@ -273,7 +273,7 @@ describe('退化裁剪区手搓 IR 编译期守卫', () => {
         clip: { kind: 'rect', x: 0, y: 0, width: Infinity, height: 10 },
         children: [{ type: 'node', id: 'A', position: [0, 0], text: 'A' }],
       },
-    ]) as IR;
+    ]);
     expect(() => compileToScene(ir)).toThrow();
   });
 
@@ -284,7 +284,7 @@ describe('退化裁剪区手搓 IR 编译期守卫', () => {
         clip: { kind: 'circle', cx: 0, cy: 0, r: NaN },
         children: [{ type: 'node', id: 'A', position: [0, 0], text: 'A' }],
       },
-    ]) as IR;
+    ]);
     expect(() => compileToScene(ir)).toThrow();
   });
 
@@ -301,7 +301,7 @@ describe('退化裁剪区手搓 IR 编译期守卫', () => {
         },
         children: [{ type: 'node', id: 'A', position: [0, 0], text: 'A' }],
       },
-    ]) as IR;
+    ]);
     expect(() => compileToScene(ir)).toThrow();
   });
 });

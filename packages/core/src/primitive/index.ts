@@ -5,4 +5,5 @@ export * from './path';
 export * from './group';
 export * from './marker';
 export * from './layout';
+export * from './clip';
 export * from './scene';

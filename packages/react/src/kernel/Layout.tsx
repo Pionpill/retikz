@@ -14,6 +14,7 @@ import { buildIR } from './builder';
 import { ArrowMarker } from '../render/arrowMarkers';
 import { browserMeasurer } from '../render/browser-measurer';
 import { PaintDefs } from '../render/paintDefs';
+import { ClipDefs } from '../render/clipDefs';
 import { renderPrim } from '../render/renderPrim';
 import { formatViewBox } from '../render/viewBox';
 
@@ -158,11 +159,16 @@ export const Layout: FC<LayoutProps> = props => {
   const arrowMarkerIdFor = (spec: ArrowEndSpec) =>
     `${arrowMarkerPrefix}-${hashKey(stableSpecKey(spec))}`;
 
-  // paint 资源（gradient）：id 加同源实例前缀避免跨 SVG 撞；renderPrim 经 paintRefUrl 引用
-  const paintResources = scene.resources ?? [];
-  const paintIdFor = (id: string) => `retikz-paint-${rawId.replace(/[^a-zA-Z0-9]/g, '')}-${id}`;
+  // 资源表按 kind 分流：paint（gradient / pattern / image）与 clip 各自物化；id 加同源实例前缀避免跨 SVG 撞
+  const allResources = scene.resources ?? [];
+  const paintResources = allResources.filter(r => r.kind === 'paint');
+  const clipResources = allResources.filter(r => r.kind === 'clip');
+  const idPrefix = rawId.replace(/[^a-zA-Z0-9]/g, '');
+  const paintIdFor = (id: string) => `retikz-paint-${idPrefix}-${id}`;
   const paintRefUrl = (id: string) => `url(#${paintIdFor(id)})`;
-  const hasDefs = uniqueByKey.size > 0 || paintResources.length > 0;
+  const clipIdFor = (id: string) => `retikz-clip-${idPrefix}-${id}`;
+  const clipRefUrl = (id: string) => `url(#${clipIdFor(id)})`;
+  const hasDefs = uniqueByKey.size > 0 || paintResources.length > 0 || clipResources.length > 0;
 
   return (
     <svg viewBox={formatViewBox(scene.layout)} width={width} height={height} className={className} style={style}>
@@ -172,9 +178,10 @@ export const Layout: FC<LayoutProps> = props => {
             <ArrowMarker key={k} id={`${arrowMarkerPrefix}-${hashKey(k)}`} spec={spec} />
           ))}
           <PaintDefs resources={paintResources} idFor={paintIdFor} />
+          <ClipDefs resources={clipResources} idFor={clipIdFor} />
         </defs>
       )}
-      {scene.primitives.map((p, i) => renderPrim(p, i, { arrowMarkerIdFor, paintRefUrl }))}
+      {scene.primitives.map((p, i) => renderPrim(p, i, { arrowMarkerIdFor, paintRefUrl, clipRefUrl }))}
     </svg>
   );
 };

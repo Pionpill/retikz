@@ -1,5 +1,5 @@
 import type { FC, ReactElement } from 'react';
-import type { IRPaintSpec, ResolvedPatternTile, SceneResource } from '@retikz/core';
+import type { IRPaintSpec, PaintResource, ResolvedPatternTile, SceneResource } from '@retikz/core';
 import { renderMarkerPrim } from './markerPrim';
 
 /**
@@ -48,7 +48,7 @@ const renderPatternTile = (tile: ResolvedPatternTile, id: string): ReactElement 
 );
 
 /** 一个 paint 资源 → 对应 SVG paint server 元素（key = 物化后的 SVG id） */
-const renderPaint = (resource: SceneResource, id: string): ReactElement => {
+const renderPaint = (resource: PaintResource, id: string): ReactElement => {
   const spec: IRPaintSpec = resource.spec;
   switch (spec.type) {
     case 'linearGradient': {
@@ -89,7 +89,7 @@ export const PaintDefs: FC<{ resources: Array<SceneResource>; idFor: (id: string
   idFor,
 }) => (
   <>
-    {/* 当前 SceneResource 仅 paint；后续加 clip 时这里按 kind 分流 */}
-    {resources.map(r => renderPaint(r, idFor(r.id)))}
+    {/* 资源表按 kind 分流：只物化 paint 资源（clip 资源走 ClipDefs） */}
+    {resources.map(r => (r.kind === 'paint' ? renderPaint(r, idFor(r.id)) : null))}
   </>
 );
