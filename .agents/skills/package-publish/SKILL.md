@@ -290,6 +290,8 @@ git status --short
 git tag v0.1.0-alpha.1
 
 # 4. publish（按子包逐个发；--access public 首次必带；--registry 指向真 npm，否则发去镜像；账号开 2FA 时加 --otp=<6位码>）
+# 前置：先确认登录的是官方源（默认 registry 是镜像）——`npm whoami --registry=https://registry.npmjs.org/`
+#       报 401 就先 `npm login --registry=https://registry.npmjs.org/`（必须显式指官方源，否则 token 落镜像、publish 报 E401/E404）
 pnpm --filter @retikz/core publish --access public --tag alpha --registry https://registry.npmjs.org/
 pnpm --filter @retikz/react publish --access public --tag alpha --registry https://registry.npmjs.org/
 
@@ -347,7 +349,7 @@ git tag: v0.1.0-alpha.1（已 push）
 - **tag 指向旧版本 commit** —— 先 tag / publish，后补 `package.json` 版本号，会让 npm、git tag、源码三方不一致。正确顺序是：改版本 → 验证 → commit → 确认 HEAD 版本 → tag → publish。
 - **正式版 `0.1.0` 跑了 `--tag alpha`** —— 正式版反而进 alpha 通道，下游永远拉不到。正式版**不带** `--tag` 参数（默认 latest）
 - **同月多发了几个 alpha 都新建 `<Update>` 块** —— 同月内可聚合到一个块（label 仍写 `YYYY.MM`），让 changelog 不至于太碎；但跨月必须分块
-- **没带 `--registry` 发去了镜像** —— 本机默认 registry 可能是淘宝镜像（`registry.npmmirror.com`，只读、发不出去）。publish / dry-run 一律带 `--registry https://registry.npmjs.org/`；发前可 `npm whoami --registry https://registry.npmjs.org/` 确认登录
+- **没带 `--registry` 发去了镜像 / 登录到了镜像** —— 本机默认 registry 可能是淘宝镜像（`registry.npmmirror.com`，只读、发不出去）。**登录也必须显式指官方源**：`npm login --registry=https://registry.npmjs.org/`——否则 token 落到镜像源、`~/.npmrc` 里官方源的 `_authToken` 还是旧的，publish 会报 E401（whoami 401）/ E404（PUT scoped 包 not found）。publish / dry-run 一律带 `--registry=https://registry.npmjs.org/`；发前用 `npm whoami --registry=https://registry.npmjs.org/` 确认确实登录到了官方源（不是镜像）
 - **账号开了 2FA 报 `EOTP`** —— publish 命令加 `--otp=<6位验证码>`；TOTP 30s 时效，临发临取，两个包尽量在同一窗口内连着发（同一码通常可复用，过期则换新码再发剩下的）
 
 ## 与其它流程的衔接
