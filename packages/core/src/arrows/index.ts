@@ -3,7 +3,7 @@
  * @description 内置 7 arrow 的注册项 + 第三方 arrow 作者所需的类型。
  *   `BUILTIN_ARROWS` 的 Record key 用 `BuiltinArrowName`（7 名穷尽），不用开放的 `ArrowShapeName`。
  *
- *   内置 7 的 `emit` 在局部 baseSize=10 坐标系产 `MarkerPrimitive` 几何，与历史 SVG 等价；
+ *   内置 7 的 `emit` 在局部 baseSize=10 坐标系产 `MarkerPrimitive` 几何（renderer-agnostic）；
  *   几何字段（baseSize / lineContactX / tipX / defaultLength / defaultWidth / hollow）按几何契约声明。
  */
 import type { MarkerPrimitive } from '../primitive/marker';
@@ -47,7 +47,7 @@ const hollowPath = (
  *   实心 normal/diamond/circle lineContactX=0；stealth=3；open/openDiamond base=1 + tipX=9 + hollow；
  *   openCircle base=0.75 + hollow。baseSize / defaultLength / defaultWidth 走类型缺省（10 / 6 / 6）。
  *   framework 对 hollow def 统一把 lineContactX 减 lineWidth/2 得实际 refX / shrink 接触点。
- *   emit 几何在局部 baseSize=10 坐标系，等价历史 SVG。
+ *   emit 几何在局部 baseSize=10 坐标系（renderer-agnostic）。
  */
 export const BUILTIN_ARROWS: Record<BuiltinArrowName, ArrowDefinition> = {
   normal: {
