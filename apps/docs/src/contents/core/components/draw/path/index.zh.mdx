@@ -110,6 +110,26 @@ import { Path, Step } from '@retikz/react';
 
 <ComponentPreview name="path-z-index" size="sm" />
 
+## 曲线与变换
+
+### 出 / 入射角与自环
+
+`<Step kind="bend">` 除对称的 `bendDirection` + `bendAngle` 外，还可用 `outAngle` / `inAngle` 指定起点出射角与终点入射角，画非对称曲线（对应 TikZ `out=` / `in=`）；`looseness` 调控制点距离（松紧，缺省 ≈1）。**out/in 给定时优先于 `bendDirection`**。当 `from == to`（同节点 / 同坐标）时退化为**自环**——这是 out/in 最大价值场景（状态机自跳转），对称 bend 画不出。
+
+<ComponentPreview name="path-outin-loop" size="md" />
+
+### 整体变换（rotate / scale）
+
+`rotate`（度）/ `scale`（数字等比，或 `{ x, y }` 非等比）把整条 path 绕**包围盒中心**变换，免去为单条 path 包一层 `<Scope transforms>`。变换顺序有硬契约：path 端点先 resolve、箭头 shrink 在**未变换的几何**上算，最后整体包进 group——故箭头方向随变换正确、不错位。
+
+<ComponentPreview name="path-transform" size="md" />
+
+### 中段标记（marks）
+
+`marks` 沿路径放方向标记：每项 `{ pos, mark }`，`pos ∈ [0, 1]`（越界 schema 拒），`mark` 首批为 `{ kind: 'arrow', shape, ... }`（复用已注册箭头名 + 视觉子集，见 [自定义箭头](/core/reference/extending/custom-arrow)），**朝向由该点切线决定**（不是固定方向）。直线 / 贝塞尔 / 弧段都按切线定向。
+
+<ComponentPreview name="path-marks" size="sm" />
+
 ## API 参考
 
 | 属性 | 类型 | 默认值 | 描述 |
@@ -129,7 +149,10 @@ import { Path, Step } from '@retikz/react';
 | `fillOpacity` | `number` | — | 仅 fill 透明度 0~1 |
 | `drawOpacity` | `number` | — | 仅 stroke 透明度 0~1 |
 | `zIndex` | `number`（整数） | `0` | 显式栈序：大者在上；同值保持声明顺序；只在同层子节点间生效 |
-| `children` | `Array<<Step>>` | — | 至少 2 个；首个非 `move` 时编译器会强制改成 `move`。`<Step>` 支持 `move` / `line` / `step`（折角）/ `cycle`（闭合）/ `curve` / `cubic`（贝塞尔曲线）/ `bend`（弧形简记）/ `arc` / `circlePath` / `ellipsePath`（圆 / 椭圆） |
+| `rotate` | `number` | — | 整条 path 旋转角（度，绕包围盒中心） |
+| `scale` | `number \| { x, y }` | — | 整条 path 缩放（数字等比 / `{ x, y }` 非等比，绕包围盒中心） |
+| `marks` | `Array<{ pos, mark }>` | — | 沿路径标记：`pos∈[0,1]`、`mark.kind:'arrow'` + 已注册箭头名，朝向随该点切线 |
+| `children` | `Array<<Step>>` | — | 至少 2 个；首个非 `move` 时编译器会强制改成 `move`。`<Step>` 支持 `move` / `line` / `step`（折角）/ `cycle`（闭合）/ `curve` / `cubic`（贝塞尔曲线）/ `bend`（弧形简记，可带 out/in 角与自环）/ `arc` / `circlePath` / `ellipsePath`（圆 / 椭圆） |
 
 ## 相关
 
