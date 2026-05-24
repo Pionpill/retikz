@@ -7,6 +7,14 @@ description: alpha 功能开发的文档阶段——把已实现已通过 advers
 
 实现已稳（Bug Hunter BLOCKING 清空），接下来把功能"用户化"——文档站给用户看的章节、API 表、demo 都补上。
 
+## 评审优先级（用户习惯，必读）
+
+> 用户 review 一个功能时**先看站点文档演示（site demo），再看代码细节**。由此三条铁律：
+>
+> 1. **站点 demo 是首要交付物**——能在 docs 站跑起来、直观演示该 ADR 能力的 `<name>.demo.tsx` 比代码注释 / 测试更先被看到；demo 必须真渲染出体现该功能的画面，不能是占位。
+> 2. **文档不可跳过 / 延后**——即使在自治 / 离线 / "先收口" 场景，一个功能**没补文档 demo 就不算 flow 走完**。stage 4 是硬关卡，不因赶进度或上下文预算省略；宁可少做一个功能、做完的功能必带 demo。
+> 3. **完工汇报先呈 demo**——给用户的完工报告**先给文档页路径 + 怎么看**（哪个组件页 / `pnpm dev:docs` 访问哪条路由），再讲代码改了哪里。
+
 ## 输入
 
 - ADR（已 Proposed，未 Accepted——Accepted 是 wrapup 阶段的事）
@@ -109,3 +117,4 @@ description: alpha 功能开发的文档阶段——把已实现已通过 advers
 - demo 文件能跑（`apps/docs` dev server 起来访问对应页面 SVG 渲染正常）
 - sidebar / i18n key 都注册
 - 文档相关的 commit 全部入 git，message 用 `:books:`
+- **向用户汇报完工时先呈站点 demo**：给出文档页路径 + 访问路由（`pnpm dev:docs` 看哪条），再讲代码细节（见 §评审优先级）
