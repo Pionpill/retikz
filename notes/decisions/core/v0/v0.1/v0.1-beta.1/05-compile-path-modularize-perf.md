@@ -2,7 +2,7 @@
 
 - 状态：Proposed
 - 决策日期：2026-05-13
-- 关联：[v0.1-beta.1 plan TODO-11](../../../plans/v0/v0.1-beta.1.md) · [alpha.5 ADR-01 PathPrim 结构化](../v0.1-alpha.5/01-scene-primitive-structured.md)
+- 关联：[v0.1-beta.1 plan TODO-11](./roadmap.md) · [alpha.5 ADR-01 PathPrim 结构化](../v0.1-alpha.5/01-scene-primitive-structured.md)
 
 ## 背景
 

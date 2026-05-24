@@ -2,7 +2,7 @@
 
 - 状态：Accepted
 - 决策日期：2026-05-23
-- 关联：[v0.2-alpha.6 plan §第二部分](../../../plans/v0/v0.2-alpha.6.md) · [roadmap §`<TikZ>` → `<Layout>` 命名提案](../../../plans/v0/roadmap.md#tikz--layout-命名提案) · [v0.1-beta.2 ADR-02 `<TikZ>` 组件化](../v0.1-beta.2/02-tikz-to-tikz-component.md) · 本 milestone [ADR-01](./01-structured-target-anchor.md)（同窗口 system prompt / 白名单同步）
+- 关联：[v0.2-alpha.6 plan §第二部分](./roadmap.md) · [roadmap §`<TikZ>` → `<Layout>` 命名提案](../../roadmap.md#tikz--layout-命名提案) · [v0.1-beta.2 ADR-02 `<TikZ>` 组件化](../../v0.1/v0.1-beta.2/02-tikz-to-tikz-component.md) · 本 milestone [ADR-01](./01-structured-target-anchor.md)（同窗口 system prompt / 白名单同步）
 
 > **为什么并入 alpha.6**：与 [ADR-01](./01-structured-target-anchor.md) 结构化 Target / Anchor 同属"DSL 表达力整理"主题——AST 白名单 + `composeSystem` system prompt 两处**两件事都要动**，并入一次同步；改名本身机械、低风险、与 IR / compile / sugar 工作面零交叉。
 

@@ -2,7 +2,7 @@
 
 - 状态：Accepted
 - 决策日期：2026-05-23
-- 关联：[v0.2-alpha.6 plan §第一部分](../../../plans/v0/v0.2-alpha.6.md) · [roadmap §结构化 Target / Anchor 提案](../../../plans/v0/roadmap.md#结构化-target--anchor-提案) · [alpha.3 ADR-01 Shape Registry](../v0.2-alpha.3/01-shape-registry.md)（anchor 接口先固化）· [alpha.1 ADR-02 nodeIndex/anchor 解析](../v0.2-alpha.1/02-node-index-anchor-resolution.md) · 本 milestone [ADR-02](./02-side-t-edge-point.md) / [ADR-03](./03-tikz-to-layout-rename.md)
+- 关联：[v0.2-alpha.6 plan §第一部分](./roadmap.md) · [roadmap §结构化 Target / Anchor 提案](../../roadmap.md#结构化-target--anchor-提案) · [alpha.3 ADR-01 Shape Registry](../v0.2-alpha.3/01-shape-registry.md)（anchor 接口先固化）· [alpha.1 ADR-02 nodeIndex/anchor 解析](../v0.2-alpha.1/02-node-index-anchor-resolution.md) · 本 milestone [ADR-02](./02-side-t-edge-point.md) / [ADR-03](./03-tikz-to-layout-rename.md)
 
 > **前置依赖**：本 ADR 的 anchor 解释面消费 alpha.3 ADR-01 固化的 `ShapeDefinition.anchor(rect, name)` + 数字角度 generic（`boundaryPoint`）。`{ side, t }` 边上比例点的几何由本 milestone [ADR-02](./02-side-t-edge-point.md) 定义，本篇只把它纳入 schema 与 compile 分发。
 

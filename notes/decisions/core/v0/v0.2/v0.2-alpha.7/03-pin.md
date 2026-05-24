@@ -2,7 +2,7 @@
 
 - 状态：Accepted
 - 决策日期：2026-05-24
-- 关联：[v0.2-alpha.7 plan §第三部分](../../../plans/v0/v0.2-alpha.7.md) · [tikz-gap-analysis §1 Node](../../../analysis/2026-05-07-tikz-gap-analysis.md) · 本 milestone [ADR-01](./01-paint-basics.md) / [ADR-02](./02-max-text-width.md) · [alpha.4 Node label rotate](../v0.2-alpha.4/)（label 体系）· [alpha.6 ADR-02 edgePoint](../v0.2-alpha.6/02-side-t-edge-point.md)（引线起点边界解析）
+- 关联：[v0.2-alpha.7 plan §第三部分](./roadmap.md) · [tikz-gap-analysis §1 Node](../../../../../analysis/2026-05-07-tikz-gap-analysis.md) · 本 milestone [ADR-01](./01-paint-basics.md) / [ADR-02](./02-max-text-width.md) · [alpha.4 Node label rotate](../v0.2-alpha.4/)（label 体系）· [alpha.6 ADR-02 edgePoint](../v0.2-alpha.6/02-side-t-edge-point.md)（引线起点边界解析）
 
 > **前置依赖**：复用 `NodeLabelSchema`（`packages/core/src/ir/node.ts:44-93`）的 placement 体系（`position` 8 方向 / 角度 + `distance`）+ alpha.6 的 `boundaryPointOf` / `edgePoint`（引线起点取 node 边界）。
 

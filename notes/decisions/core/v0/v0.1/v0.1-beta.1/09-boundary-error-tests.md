@@ -2,7 +2,7 @@
 
 - 状态：Proposed
 - 决策日期：2026-05-13
-- 关联：[v0.1-beta.1 plan TODO-15](../../../plans/v0/v0.1-beta.1.md)
+- 关联：[v0.1-beta.1 plan TODO-15](./roadmap.md)
 
 ## 背景
 

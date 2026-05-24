@@ -2,7 +2,7 @@
 
 - 状态：Accepted
 - 决策日期：2026-05-23
-- 关联：[v0.2-alpha.4 plan §B-1](../../../plans/v0/v0.2-alpha.4.md) · [v0 roadmap §显式 z-index 提案](../../../plans/v0/roadmap.md#显式-z-index-提案) · [本 milestone ADR-01 IR 顺序回归](./01-ir-order-regression.md)（提供 IR 顺序基线 + sealSink 对接点）· [DESIGN.md §1.2 AI 一等公民](../../../architecture/DESIGN.md)
+- 关联：[v0.2-alpha.4 plan §B-1](./roadmap.md) · [v0 roadmap §显式 z-index 提案](../../roadmap.md#显式-z-index-提案) · [本 milestone ADR-01 IR 顺序回归](./01-ir-order-regression.md)（提供 IR 顺序基线 + sealSink 对接点）· [DESIGN.md §1.2 AI 一等公民](../../../../../architecture/DESIGN.md)
 
 ## 背景
 

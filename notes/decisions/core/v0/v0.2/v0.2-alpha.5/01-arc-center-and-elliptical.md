@@ -2,7 +2,7 @@
 
 - 状态：Accepted
 - 决策日期：2026-05-23
-- 关联：[v0.2-alpha.5 plan §IR 改动清单 / §`<Arc>` / §`<Sector>`](../../../plans/v0/v0.2-alpha.5.md) · [本 milestone ADR-04 sugar 设计约定](./04-sugar-conventions.md)
+- 关联：[v0.2-alpha.5 plan §IR 改动清单 / §`<Arc>` / §`<Sector>`](./roadmap.md) · [本 milestone ADR-04 sugar 设计约定](./04-sugar-conventions.md)
 
 ## 背景
 

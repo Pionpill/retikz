@@ -2,7 +2,7 @@
 
 - 状态：Accepted
 - 决策日期：2026-05-21
-- 关联：[v0 roadmap §Step label 自定义样式提案](../../../plans/v0/roadmap.md#step-label-自定义样式提案) · [v0.2-alpha.2 plan](../../../plans/v0/v0.2-alpha.2.md) · [DESIGN.md §1.2 AI 一等公民](../../../architecture/DESIGN.md) · [本 milestone ADR-01 Scope 样式继承](./01-scope-style-inheritance.md)
+- 关联：[v0 roadmap §Step label 自定义样式提案](../../roadmap.md#step-label-自定义样式提案) · [v0.2-alpha.2 plan](./roadmap.md) · [DESIGN.md §1.2 AI 一等公民](../../../../../architecture/DESIGN.md) · [本 milestone ADR-01 Scope 样式继承](./01-scope-style-inheritance.md)
 
 ## 背景
 

@@ -2,7 +2,7 @@
 
 - 状态：Proposed
 - 决策日期：2026-05-13
-- 关联：[v0.1-beta.1 plan TODO-14](../../../plans/v0/v0.1-beta.1.md) · [DESIGN.md "core 错误信息原则"](../../../architecture/DESIGN.md)
+- 关联：[v0.1-beta.1 plan TODO-14](./roadmap.md) · [DESIGN.md "core 错误信息原则"](../../../../../architecture/DESIGN.md)
 
 ## 背景
 

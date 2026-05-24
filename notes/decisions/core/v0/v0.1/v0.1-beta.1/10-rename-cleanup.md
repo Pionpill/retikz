@@ -2,7 +2,7 @@
 
 - 状态：Proposed
 - 决策日期：2026-05-13
-- 关联：[v0.1-beta.1 plan TODO-16](../../../plans/v0/v0.1-beta.1.md) · [AGENTS.md "不缩写命名"](../../../../AGENTS.md)
+- 关联：[v0.1-beta.1 plan TODO-16](./roadmap.md) · [AGENTS.md "不缩写命名"](../../../../../../AGENTS.md)
 
 ## 背景
 

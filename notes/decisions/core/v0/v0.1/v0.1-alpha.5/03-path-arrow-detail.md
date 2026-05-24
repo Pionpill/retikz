@@ -2,7 +2,7 @@
 
 - 状态：Accepted
 - 决策日期：2026-05-12
-- 关联：[v0 roadmap §v0.1.0-alpha.5](../../../plans/v0/roadmap.md) · [DESIGN.md §4.5](../../../architecture/DESIGN.md)
+- 关联：[v0 roadmap §v0.1.0-alpha.5](../../roadmap.md) · [DESIGN.md §4.5](../../../../../architecture/DESIGN.md)
 
 ## 背景
 

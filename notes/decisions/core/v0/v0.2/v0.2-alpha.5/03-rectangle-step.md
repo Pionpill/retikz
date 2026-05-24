@@ -2,7 +2,7 @@
 
 - 状态：Accepted
 - 决策日期：2026-05-23
-- 关联：[v0.2-alpha.5 plan §`<Rectangle>` / §IR 改动清单](../../../plans/v0/v0.2-alpha.5.md)
+- 关联：[v0.2-alpha.5 plan §`<Rectangle>` / §IR 改动清单](./roadmap.md)
 
 ## 背景
 

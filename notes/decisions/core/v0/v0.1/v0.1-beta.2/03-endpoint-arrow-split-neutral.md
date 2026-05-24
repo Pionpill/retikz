@@ -2,7 +2,7 @@
 
 - 状态：Accepted
 - 决策日期：2026-05-14
-- 关联：[v0.1-beta.2 plan TODO-3](../../../plans/v0/v0.1-beta.2.md) · [beta.1 ADR-01 renderer-neutral core](../v0.1-beta.1/01-core-comments-renderer-neutral.md)
+- 关联：[v0.1-beta.2 plan TODO-3](./roadmap.md) · [beta.1 ADR-01 renderer-neutral core](../v0.1-beta.1/01-core-comments-renderer-neutral.md)
 
 ## 背景
 

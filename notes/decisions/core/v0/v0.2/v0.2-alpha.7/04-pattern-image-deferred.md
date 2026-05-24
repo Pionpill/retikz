@@ -2,7 +2,7 @@
 
 - 状态：Accepted（实现期由 Deferred 提升——讨论后决定 alpha.7 一并做）
 - 决策日期：2026-05-24
-- 关联：[v0.2-alpha.7 plan §第一部分](../../../plans/v0/v0.2-alpha.7.md) · [ADR-01 Paint 基础](./01-paint-basics.md)（复用 `PaintValue` / `SceneResource` / `<defs>` 物化）
+- 关联：[v0.2-alpha.7 plan §第一部分](./roadmap.md) · [ADR-01 Paint 基础](./01-paint-basics.md)（复用 `PaintValue` / `SceneResource` / `<defs>` 物化）
 
 > **从 Deferred 提升**：原计划占位顺延（控 alpha.7 体量）。Paint wiring（ADR-01）落地后，**管线成本归零**（registry 对任意 PaintSpec 去重 + ref、PaintDefs 物化），pattern / image 只需 ① schema 加分支 ② PaintDefs 加物化，**零 core compile 改动**。讨论后决定一并做（image 暂只支持 URL）。
 

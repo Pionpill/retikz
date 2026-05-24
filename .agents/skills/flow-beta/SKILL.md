@@ -23,7 +23,7 @@ retikz beta 期 plan TODO 端到端执行的**编排器**。beta 与 alpha / rc 
 调用本 SKILL 前必须先确认两件事：
 
 1. **当前在 beta 期**（`packages/core/package.json` 版本号含 `-beta.`）——否则 halt，去用 `flow-alpha`
-2. **TODO 候选已在 plan 文件登记**（`notes/plans/v<MAJOR>/v<MAJOR>.<MINOR>-beta.<N>.md`）——没登记的不接
+2. **TODO 候选已在 milestone roadmap 登记**（`notes/decisions/core/v<MAJOR>/v<MAJOR>.<MINOR>/v<MAJOR>.<MINOR>-beta.<N>/roadmap.md`）——没登记的不接
 
 启动模式与 `flow-alpha` 对齐：
 
@@ -153,7 +153,7 @@ beta 阶段最大风险是**重构引入回归 + breaking 改名漏改调用方*
 | Contract Auditor adversarial 对账 | **不走**（beta 没 ADR 可对，stage 2 多 LLM 评估已覆盖等价性审计） |
 | ADR Proposed → Accepted | **不做**（beta 不开 ADR） |
 | roadmap checkbox 勾选 | **做**——按 plan TODO 编号勾 |
-| plan TODO 删除 / 标完成 | **做**——`notes/plans/v<MAJOR>/v<MAJOR>.<MINOR>-beta.<N>.md` 该条标 ✅ + commit hash |
+| roadmap TODO 删除 / 标完成 | **做**——`notes/decisions/core/v<MAJOR>/v<MAJOR>.<MINOR>/v<MAJOR>.<MINOR>-beta.<N>/roadmap.md` 该条标 ✅ + commit hash |
 | 人工授权 commit | **必走**——commit 必须显式 ack |
 
 **与 alpha-wrapup 的硬差异**：
@@ -187,7 +187,7 @@ beta 阶段三个角色对应的 LLM 分工：
 
 ## 与上下游衔接
 
-- **上游**：beta plan TODO 已登记（`notes/plans/v<MAJOR>/v<MAJOR>.<MINOR>-beta.<N>.md`）
+- **上游**：beta roadmap TODO 已登记（`notes/decisions/core/v<MAJOR>/v<MAJOR>.<MINOR>/v<MAJOR>.<MINOR>-beta.<N>/roadmap.md`）
 - **下游**：可能的 [`package-publish`](../package-publish/SKILL.md)（当 plan 全部 TODO 完成、想发版到 npm 时）；否则结束、等下条 TODO 走本 SKILL 再来一次
 
 ## 完成标志（每条 TODO）

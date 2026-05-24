@@ -2,7 +2,7 @@
 
 - 状态：Accepted
 - 决策日期：2026-05-16
-- 关联：[v0.2-alpha.1 plan](../../../plans/v0/v0.2-alpha.1.md) · [本 milestone ADR-01](./01-scope-ir-and-compile.md) · [本 milestone ADR-03](./03-scope-id-bounding-box.md) · [alpha.5 ADR-03 (arrow geometry)](../v0.1-alpha.5/03-path-arrow-detail.md)
+- 关联：[v0.2-alpha.1 plan](./roadmap.md) · [本 milestone ADR-01](./01-scope-ir-and-compile.md) · [本 milestone ADR-03](./03-scope-id-bounding-box.md) · [alpha.5 ADR-03 (arrow geometry)](../../v0.1/v0.1-alpha.5/03-path-arrow-detail.md)
 
 ## 背景
 

@@ -2,7 +2,7 @@
 
 - 状态：Accepted
 - 决策日期：2026-05-23
-- 关联：[v0.2-alpha.5 plan §`<Circle>` / §`<Ellipse>`](../../../plans/v0/v0.2-alpha.5.md) · [本 milestone ADR-01 arc](./01-arc-center-and-elliptical.md)（部分弧几何同源）
+- 关联：[v0.2-alpha.5 plan §`<Circle>` / §`<Ellipse>`](./roadmap.md) · [本 milestone ADR-01 arc](./01-arc-center-and-elliptical.md)（部分弧几何同源）
 
 ## 背景
 

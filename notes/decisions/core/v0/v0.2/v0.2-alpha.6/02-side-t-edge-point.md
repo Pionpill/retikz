@@ -2,7 +2,7 @@
 
 - 状态：Accepted
 - 决策日期：2026-05-23
-- 关联：[v0.2-alpha.6 plan §`{ side, t }` 边上比例点几何](../../../plans/v0/v0.2-alpha.6.md) · 本 milestone [ADR-01](./01-structured-target-anchor.md)（schema + compile 分发）· [alpha.3 ADR-01 Shape Registry](../v0.2-alpha.3/01-shape-registry.md)（`ShapeDefinition` / anchor 接口）· [v0.1-beta.1 ADR-03 geometry 共享 transform](../v0.1-beta.1/03-geometry-shared-transform-dead-anchor-cleanup.md)
+- 关联：[v0.2-alpha.6 plan §`{ side, t }` 边上比例点几何](./roadmap.md) · 本 milestone [ADR-01](./01-structured-target-anchor.md)（schema + compile 分发）· [alpha.3 ADR-01 Shape Registry](../v0.2-alpha.3/01-shape-registry.md)（`ShapeDefinition` / anchor 接口）· [v0.1-beta.1 ADR-03 geometry 共享 transform](../../v0.1/v0.1-beta.1/03-geometry-shared-transform-dead-anchor-cleanup.md)
 
 > **承接**：[ADR-01](./01-structured-target-anchor.md) 把 `{ side, t }` 纳入 `AnchorRefSchema` 并在 compile 分发到 `resolveEdgePoint`；本篇定义 `resolveEdgePoint` / `ShapeDefinition.edgePoint` 算什么几何。alpha.3 ADR-01 §不在范围 已拍板：「`{side,t}` 留作内置 shape 专属，第三方 shape 仅必须支持命名 anchor」——本篇据此把 `edgePoint` 设为**可选**方法。
 

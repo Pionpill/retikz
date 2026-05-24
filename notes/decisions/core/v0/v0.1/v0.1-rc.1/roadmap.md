@@ -2,7 +2,7 @@
 
 > 写于 2026-05-14。rc 期公开 API 冻结，不再做破坏性改动；本文记录 rc.1 的文档站结构整理、组件页组织、旧术语清理、可选对照内容、schema reference 对齐与安装验收 TODO。
 >
-> 关联：[`v0 roadmap`](./roadmap.md) · [`flow-rc`](../../../.agents/skills/flow-rc/SKILL.md) · [`docs-doc-write`](../../../.agents/skills/docs-doc-write/SKILL.md)
+> 关联：[`v0 roadmap`](./roadmap.md) · [`flow-rc`](../../../../../../.agents/skills/flow-rc/SKILL.md) · [`docs-doc-write`](../../../../../../.agents/skills/docs-doc-principle/SKILL.md)
 
 ## 背景与定位
 

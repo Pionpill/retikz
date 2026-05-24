@@ -2,7 +2,7 @@
 
 > 写于 2026-05-24。完工后保留留档（摘要写进 `v0.2.md` 跟踪段）。
 >
-> 关联：[`v0 roadmap`](./roadmap.md) · [`v0.2 总计划`](./v0.2.md) · [`flow-beta` SKILL](../../../.agents/skills/flow-beta/SKILL.md)
+> 关联：[`v0 roadmap`](./roadmap.md) · [`v0.2 总计划`](../roadmap.md) · [`flow-beta` SKILL](../../../../../../.agents/skills/flow-beta/SKILL.md)
 
 ## 背景与定位
 

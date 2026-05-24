@@ -2,7 +2,7 @@
 
 > 写于 2026-05-14。rc.2 承接 rc.1 暂不处理的用户体验增强：独立 Examples / Recipes section、搜索索引增强、AI 对话输入框重构、AI 回复渲染 retikz 图。
 >
-> 关联：[`v0.1-rc.1.md`](./v0.1-rc.1.md) · [`flow-rc`](../../../.agents/skills/flow-rc/SKILL.md)
+> 关联：[`v0.1-rc.1.md`](../v0.1-rc.1/roadmap.md) · [`flow-rc`](../../../../../../.agents/skills/flow-rc/SKILL.md)
 
 ## 背景与定位
 

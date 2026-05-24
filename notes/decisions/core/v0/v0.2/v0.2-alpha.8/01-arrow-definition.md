@@ -2,7 +2,7 @@
 
 - 状态：Accepted
 - 决策日期：2026-05-24
-- 关联：[v0.2-alpha.8 plan §第一部分](../../../plans/v0/v0.2-alpha.8.md) · [tikz-gap-analysis §2 Path](../../../analysis/2026-05-07-tikz-gap-analysis.md) · [alpha.3 ADR-01 Shape Registry](../v0.2-alpha.3/01-shape-registry.md)（注册面先例）· [alpha.7 ADR-01 Paint](../v0.2-alpha.7/01-paint-basics.md)（`PaintValue.contextStroke` 颜色继承）· 本 milestone [ADR-02](./02-path-generator-definition.md) / [ADR-03](./03-curve-transform-marking.md)
+- 关联：[v0.2-alpha.8 plan §第一部分](./roadmap.md) · [tikz-gap-analysis §2 Path](../../../../../analysis/2026-05-07-tikz-gap-analysis.md) · [alpha.3 ADR-01 Shape Registry](../v0.2-alpha.3/01-shape-registry.md)（注册面先例）· [alpha.7 ADR-01 Paint](../v0.2-alpha.7/01-paint-basics.md)（`PaintValue.contextStroke` 颜色继承）· 本 milestone [ADR-02](./02-path-generator-definition.md) / [ADR-03](./03-curve-transform-marking.md)
 
 > **前置依赖**：颜色继承依赖 alpha.7 ADR-01 定下的 `PaintValue.contextStroke`。**故 alpha.8 紧跟 alpha.7、ArrowDefinition 先于 PathGeneratorDefinition 实现**（评审 P2#2）。
 

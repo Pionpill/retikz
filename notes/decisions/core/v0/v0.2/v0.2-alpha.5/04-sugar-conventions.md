@@ -2,7 +2,7 @@
 
 - 状态：Accepted
 - 决策日期：2026-05-23
-- 关联：[v0.2-alpha.5 plan §跨 sugar 设计约定 / §扩展性 / §与 Node shape 的关系](../../../plans/v0/v0.2-alpha.5.md) · 本 milestone [ADR-01](./01-arc-center-and-elliptical.md) / [ADR-02](./02-partial-circle-ellipse.md) / [ADR-03](./03-rectangle-step.md)
+- 关联：[v0.2-alpha.5 plan §跨 sugar 设计约定 / §扩展性 / §与 Node shape 的关系](./roadmap.md) · 本 milestone [ADR-01](./01-arc-center-and-elliptical.md) / [ADR-02](./02-partial-circle-ellipse.md) / [ADR-03](./03-rectangle-step.md)
 
 ## 背景
 

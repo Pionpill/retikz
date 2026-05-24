@@ -2,7 +2,7 @@
 
 > 写于 2026-05-23。v0.2 第六段（末段）。两件事同窗口收尾：**主任务**把 path target 从字符串形态（`'A'` / `'A.north'` / `'A.30'`）升级为对象 IR（`{ id, anchor?, offset? }`）、core schema / compile / 错误诊断以对象字段为准；**并入项**把 React 顶层容器 `<TikZ>` 改名 `<Layout>`（`<TikZ>` 保留 deprecated alias）。两者同属"DSL 表达力整理"主题，AST 白名单 + system prompt 一次同步。
 >
-> 关联：[`v0.2 总计划 §alpha.6 设计预想`](./v0.2.md) · [`roadmap §结构化 Target / Anchor 提案`](./roadmap.md) · [`roadmap §<TikZ> → <Layout> 命名提案`](./roadmap.md) · [`v0.2-alpha.5.md`](./v0.2-alpha.5.md)（前一段，sugar 透传形态的 target 直接受益于本段对象化）
+> 关联：[`v0.2 总计划 §alpha.6 设计预想`](../roadmap.md) · [`roadmap §结构化 Target / Anchor 提案`](./roadmap.md) · [`roadmap §<TikZ> → <Layout> 命名提案`](./roadmap.md) · [`v0.2-alpha.5.md`](../v0.2-alpha.5/roadmap.md)（前一段，sugar 透传形态的 target 直接受益于本段对象化）
 
 ## 背景
 
@@ -328,7 +328,7 @@ export const TikZ: FC<TikZProps> = props => {
 7. **docs 白名单 + parser 根 + system prompt**（`parser.ts` + `convertReactNodeToIR` + `context.ts`）：白名单加 Layout 留 TikZ；根组件接受 Layout；system prompt 组件列举 + `to` 字段对象形态。**测试**：`parser.test.ts` 根为 Layout 解析通过 + TikZ 兼容用例 + `registry.test.ts` 计数。
 8. **docs codemod 全量切换**（171 demo + 66 mdx）：脚本替换 import / JSX 标签；保留一页 alias 演示。**验收**：`grep '<TikZ'` 仅剩 alias 演示页 + 兼容说明；docs build 通过。
 9. **文档页**：`core/components/layout/index.{zh,en}.mdx`（Layout 主页 + TikZ alias 小节）；Target/Anchor 概念页（`core/concepts/anchors/`）补对象形态主推 + `{side,t}` 边上比例点示例；含 anchor 的 11 个 demo 补一个对象形态对照。
-10. **全量验收 + ADR 落档**：core / react / docs 三包测试全绿；ADR 集合（`notes/adr/v0/v0.2-alpha.6/`）固化全部待定项。
+10. **全量验收 + ADR 落档**：core / react / docs 三包测试全绿；ADR 集合（`notes/decisions/core/v0/v0.2/v0.2-alpha.6/`）固化全部待定项。
 
 ---
 
@@ -368,7 +368,7 @@ export const TikZ: FC<TikZProps> = props => {
 - **决策 2 — core 字符串分支直接去除**：alpha.6 即从 `TargetSchema` 删 `z.string()`，不留到 rc。IR 主契约 = 对象 target，docs / system prompt / API 示例全部只推对象；字符串 shorthand 仅作 React DSL / Draw way sugar（eager 转对象后入 core）。
 - **决策 3 — `offset` 用世界系 / 已解析坐标系，不随节点 rotate**：先把 `{ id, anchor }` / `{ side, t }` 解析到最终点，再直接加 `[dx, dy]`；节点旋转只影响 anchor / 边点位置，不旋转 offset。未来若需节点局部偏移，另加显式字段，不让 `offset` 变双语义。
 - **schema 禁非有限数值**：角度 anchor `z.number().finite()`、`offset` 两分量 `.finite()`（与 `position` / `transform` / `font` 既有 `.finite()` 约定一致；NaN/Infinity 与 JSON 可序列化 IR 契约冲突）。
-- **dev-warning 守卫（fail-open + best-effort）**：`<TikZ>` alias 仅当 `typeof process !== 'undefined' && process.env.NODE_ENV === 'production'`（确定性生产）才静默，其余一切环境（含裸 browser ESM / process 未定义）fail-open 到 warn——让真实 docs browser dev 也拿到 deprecation warning；不用 `import.meta.env.DEV`（Vite 专属、CJS 构建 `import.meta` 语法错、跨打包器不可移植）。详 [ADR-03 决策细节 #1](../../adr/v0/v0.2-alpha.6/03-tikz-to-layout-rename.md)。
+- **dev-warning 守卫（fail-open + best-effort）**：`<TikZ>` alias 仅当 `typeof process !== 'undefined' && process.env.NODE_ENV === 'production'`（确定性生产）才静默，其余一切环境（含裸 browser ESM / process 未定义）fail-open 到 warn——让真实 docs browser dev 也拿到 deprecation warning；不用 `import.meta.env.DEV`（Vite 专属、CJS 构建 `import.meta` 语法错、跨打包器不可移植）。详 [ADR-03 决策细节 #1](.//03-tikz-to-layout-rename.md)。
 - **`parseNodeTarget` 落 parser 层**：放 `packages/core/src/parsers/`，避免 parser / adapter 反向依赖 compile。
 - **计数口径**：parser registry 接受 18 个名字（17 主组件 + `TikZ` 兼容别名）；面向 LLM / 文档的主契约 17 个组件，只列 `Layout`，`TikZ` 为 deprecated alias 不计入。
 
@@ -383,7 +383,7 @@ export const TikZ: FC<TikZProps> = props => {
 
 ## 设计 ADR
 
-开工前另起（位置 `notes/adr/v0/v0.2-alpha.6/`，编号到时定），固化上节全部"待定"项，并落以下交付物：
+开工前另起（位置 `notes/decisions/core/v0/v0.2/v0.2-alpha.6/`，编号到时定），固化上节全部"待定"项，并落以下交付物：
 
 - `AnchorRefSchema` / `NodeTargetSchema` 最终字段清单 + `{ side, t }` 方向约定表（`EDGE_ENDS`）+ circle/ellipse 弧角度区间。
 - 字符串 shorthand → 对象的归一规则（`parsers/parseNodeTarget` 单一真源，仅 React DSL 层）+ dotted-id 限制声明 + core 去除字符串分支的破坏性边界。

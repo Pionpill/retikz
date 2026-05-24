@@ -2,7 +2,7 @@
 
 - 状态：Proposed
 - 决策日期：2026-05-24
-- 关联：[v0.2-alpha.9 plan §第一部分](../../../plans/v0/v0.2-alpha.9.md) · [tikz-gap-analysis §5 定位](../../../analysis/2026-05-07-tikz-gap-analysis.md) · [alpha.6 ADR-01 结构化 Target](../v0.2-alpha.6/01-structured-target-anchor.md)（对象主契约 + target resolve）· [alpha.6 ADR-02 edgePoint](../v0.2-alpha.6/02-side-t-edge-point.md)（`_edge.ts` lerpPoint）· 本 milestone [ADR-02](./02-clip.md) / [ADR-03](./03-viewbox-override.md)
+- 关联：[v0.2-alpha.9 plan §第一部分](./roadmap.md) · [tikz-gap-analysis §5 定位](../../../../../analysis/2026-05-07-tikz-gap-analysis.md) · [alpha.6 ADR-01 结构化 Target](../v0.2-alpha.6/01-structured-target-anchor.md)（对象主契约 + target resolve）· [alpha.6 ADR-02 edgePoint](../v0.2-alpha.6/02-side-t-edge-point.md)（`_edge.ts` lerpPoint）· 本 milestone [ADR-02](./02-clip.md) / [ADR-03](./03-viewbox-override.md)
 
 > **前置依赖**：复用 alpha.6 的 target resolve（NodeTarget → 世界坐标，含 anchor / edgePoint）+ `geometry/_edge.ts` 的 `lerpPoint`。
 

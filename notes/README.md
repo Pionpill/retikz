@@ -1,49 +1,76 @@
 # retikz 内部文档地图
 
-按**生命周期**组织，不按主题。每个子目录给出装什么、何时归档 / 删。
+面向项目内部协作，不面向终端用户。用户文档放在 `apps/docs/`。
 
 ## 子目录
 
 | 目录 | 装什么 | 生命周期 | 命名 |
 |---|---|---|---|
-| [`architecture/`](./architecture) | 长期架构文档；少改、不带日期 | 永久（重大架构调整时**更新原文**，不另起新文） | 主题名，如 `DESIGN.md` |
-| [`adr/`](./adr) | 单点架构决策记录（Architecture Decision Records） | 永久、不可变；被推翻就写新 ADR 标 `Supersedes #N` | `NNNN-kebab-case-标题.md`，编号递增 |
+| [`architecture/`](./architecture) | 长期架构文档；少改、不带日期 | 永久。重大架构调整时更新原文，不另起临时副本 | 主题名，如 `DESIGN.md` |
+| [`decisions/`](./decisions) | 路线、执行追踪、ADR 决策记录 | roadmap 可更新；ADR 永久保留，Accepted 后不改历史 | 见下文 decisions 规则 |
 | [`analysis/`](./analysis) | 一次性研究 / 对比 / gap 分析 | 长期保留作历史参考，但不再更新 | `YYYY-MM-DD-kebab-case-标题.md` |
-| [`plans/`](./plans) | 实施方案、迁移步骤、版本 TODO | 活跃期保留；完工后把长期信息沉淀到 roadmap / changelog / ADR / docs，执行稿可删除 | 版本专属：`v<MAJOR>/v<MAJOR>.<MINOR>-<channel>.<N>.md`（plan 比 adr 粒度粗，单文件就够）；跨版本草案：顶层 `kebab-case-标题.md` |
+
+## decisions 规则
+
+`decisions/` 合并原 `adr/` 与 `plans/`，按库 / 包能力域组织：
+
+```text
+notes/decisions/
+└── core/
+    ├── _template.md
+    └── v0/
+        ├── roadmap.md
+        ├── v0.1/
+        │   ├── roadmap.md
+        │   └── v0.1-beta.1/
+        │       ├── roadmap.md
+        │       ├── 01-xxx.md
+        │       └── 02-xxx.md
+        └── v0.2/
+            ├── roadmap.md
+            └── v0.2-alpha.9/
+                ├── roadmap.md
+                ├── 01-xxx.md
+                └── 02-xxx.md
+```
+
+- 一级能力域：`core/` 承载 `@retikz/core` 以及强依赖 core 的 `@retikz/react`、SVG / Canvas adapter、文档运行时等决策；未来 `plot/` 承载 `@retikz/plot` 及其强相关内容。
+- `v0/roadmap.md`：major 总路线。
+- `v0/v0.1/roadmap.md`：minor 总路线。
+- `v0/v0.1/<milestone>/roadmap.md`：milestone 路线 / TODO / 验收记录，替代旧的独立 plan 文件。
+- `v0/v0.1/<milestone>/<NN>-<slug>.md`：该 milestone 下的 ADR；文件名不用 `adr-` 前缀。
+- PATCH 版本不开目录；patch 仅修 bug，不写 roadmap / ADR，除非它推翻了既有决策。
+
+## roadmap 与 ADR 的生命周期
+
+- **roadmap** 记录"接下来要做什么"：路线、TODO、实施步骤、验收记录。它可更新，完成后可精简；纯执行过程若长期信息已沉淀到 changelog / docs / ADR，可删除。
+- **ADR** 记录"为什么这么做"：架构、接口、字段语义、公开行为等单点决策。ADR 永久保留；状态变为 `Accepted` 后不改历史内容。若后续推翻，新增 ADR 并在旧文标 `Superseded by <milestone> ADR-NN`。
+- 有歧义时先写 milestone `roadmap.md`；当某个方案需要成为长期契约，再拆出 `NN-*.md` ADR。
 
 ## 当前文档
 
 ### architecture/
 
-- [`DESIGN.md`](./architecture/DESIGN.md)：retikz v0.1 总架构设计——分层模型、IR、Scene、AI 友好原则、跨平台策略
+- [`DESIGN.md`](./architecture/DESIGN.md)：retikz 总架构设计，包含分层模型、IR、Scene、AI 友好原则、跨平台策略。
 
-### adr/
+### decisions/
 
-> alpha.1 / alpha.2 / alpha.3 期间的 ADR 已随版本发布归档进 changelog（旧约定，每个 alpha 重新起号）。
->
-> alpha.4 起转为永久保留 + 全局单调编号——alpha.4 的 3 篇 ADR 在 [`adr/v0/v0.1-alpha.4/`](./adr/v0/v0.1-alpha.4)；后续版本的 ADR 写入 [`adr/v0/<version>/`](./adr/v0)，索引见 [`adr/README.md`](./adr/README.md)。
+- [`core/v0/roadmap.md`](./decisions/core/v0/roadmap.md)：core v0 总路线。
+- [`core/v0/v0.1/roadmap.md`](./decisions/core/v0/v0.1/roadmap.md)：core v0.1 路线与 milestone 索引。
+- [`core/v0/v0.2/roadmap.md`](./decisions/core/v0/v0.2/roadmap.md)：core v0.2 路线与已完成 alpha / beta 跟踪。
+- ADR 模板：[`core/_template.md`](./decisions/core/_template.md)。
 
 ### analysis/
 
-- [`2026-05-07-tikz-gap-analysis.md`](./analysis/2026-05-07-tikz-gap-analysis.md)：当前 Node / Path 能力对比 TikZ 的缺失项 + 优先级
-
-### plans/
-
-详细索引见 [`plans/README.md`](./plans/README.md)。当前活跃 plan：
-
-- [`v0/roadmap.md`](./plans/v0/roadmap.md)：v0 总路线与跨 minor 追踪
-- [`v0/v0.2.md`](./plans/v0/v0.2.md)：v0.2 总计划与已完成 alpha / beta 跟踪
-- [`v0/v0.2-beta.1.md`](./plans/v0/v0.2-beta.1.md)：v0.2 beta.1 优化窗口收口记录
+- [`2026-05-07-tikz-gap-analysis.md`](./analysis/2026-05-07-tikz-gap-analysis.md)：当前 Node / Path 能力对比 TikZ 的缺失项与优先级。
 
 ## 写文档前先选生命周期
 
-1. 是"为什么这么做"的单点决策？→ `adr/`，开新编号
-2. 是会持续更新的架构总图？→ `architecture/`
-3. 是一次性的研究 / 对比，写完不再改？→ `analysis/`，加日期
-4. 是"接下来要做什么"的实施方案？→ `plans/`，活跃期保留；完工后把结论沉淀到长期文档，执行稿可删
-
-**有歧义就当 plans 写**——plan 颗粒粗、变化快，适合承载探索期和执行期的不稳定信息；完工后只保留仍有检索价值的版本级计划，纯执行稿 / 迁移脚本 / 已落地 spec 应删掉或把摘要并入 roadmap / changelog / ADR。别把临时方案塞进永久架构目录（architecture / adr），那才是 CORE-REFACTOR / REACT-ADAPTER 的悲剧。
+1. 是长期架构总图？写进 `architecture/`。
+2. 是一次性研究 / 对比，写完不再改？写进 `analysis/`。
+3. 是版本路线、实施步骤、TODO？写进对应 `decisions/<domain>/<major>/<minor>/<milestone>/roadmap.md`。
+4. 是需要长期保留的单点决策？写进对应 milestone 目录下的 `<NN>-<slug>.md`。
 
 ## superpowers/
 
-`superpowers/` 目录下的 specs / plans 是 superpowers skill 的工作流产物，生命周期由 skill 自己管，**不要混进上面的体系**。
+`superpowers/` 目录下的 specs / plans 是 superpowers skill 的工作流产物，生命周期由 skill 自己管理，不要混进上面的体系。

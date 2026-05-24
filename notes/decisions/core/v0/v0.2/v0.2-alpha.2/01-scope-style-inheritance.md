@@ -2,7 +2,7 @@
 
 - 状态：Accepted
 - 决策日期：2026-05-21
-- 关联：[v0 roadmap §v0.2](../../../plans/v0/roadmap.md) · [v0.2 总计划 §alpha.2 设计预想](../../../plans/v0/v0.2.md#alpha2-设计预想scope-样式子集) · [v0.2-alpha.2 plan](../../../plans/v0/v0.2-alpha.2.md) · [DESIGN.md §1.2 AI 一等公民](../../../architecture/DESIGN.md) · [alpha.1 ADR-01 Scope 容器](../v0.2-alpha.1/01-scope-ir-and-compile.md) · [alpha.1 ADR-02 inside-out lookup](../v0.2-alpha.1/02-node-index-anchor-resolution.md)
+- 关联：[v0 roadmap §v0.2](../../roadmap.md) · [v0.2 总计划 §alpha.2 设计预想](../roadmap.md#alpha2-设计预想scope-样式子集) · [v0.2-alpha.2 plan](./roadmap.md) · [DESIGN.md §1.2 AI 一等公民](../../../../../architecture/DESIGN.md) · [alpha.1 ADR-01 Scope 容器](../v0.2-alpha.1/01-scope-ir-and-compile.md) · [alpha.1 ADR-02 inside-out lookup](../v0.2-alpha.1/02-node-index-anchor-resolution.md)
 
 ## 背景
 
@@ -92,7 +92,7 @@ export const ScopeSchema = z.object({
 4. **颜色级联**：容器已解析 color 下传子元素色默认（node→文字/边label；path→stroke/arrow/step-label）。
 5. **优先级链**：见选项 A；model A 就近优先,同层分项 > 主色,跨层内 > 外。
 6. **per-field 合并 + 按存在性 merge（`!== undefined`）+ 内置默认 fold 末尾补**：缺省让位、显式 `none`/`0`/`false` 截断；禁 schema `.default()`。
-7. **opacity 替换、不复合**（TikZ 默认,见 [plan §opacity](../../../plans/v0/v0.2-alpha.2.md)）；逐元素解析,compile 不落 scope `<g opacity>`；元素内 label×元素 opacity 相乘是另一轴。
+7. **opacity 替换、不复合**（TikZ 默认,见 [plan §opacity](./roadmap.md)）；逐元素解析,compile 不落 scope `<g opacity>`；元素内 label×元素 opacity 相乘是另一轴。
 8. **`resetStyle`**：`boolean | ('node'|'path'|'label'|'arrow')[]`,只切**scope 继承轴**（外层级联 graphic state + every-X 默认），只朝外；正交于 transforms / localNamespace / scope.id bbox。**不碰实例-host 轴**——label / arrow 仍跟随**所属 path/node 的已解析颜色**（结构关系,非 scope 继承）,避免脱离其线/节点成"孤岛"。即 `resetStyle=['label']` 只忽略外层 `labelDefault`、label 仍属它的线/节点；`resetStyle=['arrow']` 仍跟线色；`resetStyle=true` 把 scope 通道归零后 host-following 照常流动归零值（线 baseline 黑、label/arrow 跟着黑,仍不孤岛）。想让 label 真脱离线色 → 元素级显式 `textColor`（或未来 `'initial'`），不归 resetStyle。
 9. **未知 key**：`.strict()` 严拒,错误信息列合法字段集。
 10. **shape 作默认值**：scope/nodeDefault 的 shape 子节点未给则继承。

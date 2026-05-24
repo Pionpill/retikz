@@ -2,7 +2,7 @@
 
 > 写于 2026-05-23。v0.2「能力补全阶段」首段（gap §1 Node）。三块 core 横切能力：**填充服务 Paint**（`fill` 从单色升级为纯色 / 渐变，renderer-agnostic 资源表；图案 / 图片顺延）、**text width 自动换行**（给定宽度自动折行）、**pin 引脚**（label + 引线）。
 >
-> 关联：[`v0.2 总计划 §alpha.7 设计预想`](./v0.2.md) · [`tikz-gap-analysis §1 Node`](../../analysis/2026-05-07-tikz-gap-analysis.md) · 后续段 [`v0.2-alpha.8.md`](./v0.2-alpha.8.md)（自定义 arrow 复用本段 Paint 颜色继承）
+> 关联：[`v0.2 总计划 §alpha.7 设计预想`](../roadmap.md) · [`tikz-gap-analysis §1 Node`](../../../../../analysis/2026-05-07-tikz-gap-analysis.md) · 后续段 [`v0.2-alpha.8.md`](../v0.2-alpha.8/roadmap.md)（自定义 arrow 复用本段 Paint 颜色继承）
 >
 > **贯穿约束（评审 P1，本段两处命中）**：① ScenePrimitive 渲染无关（`packages/core/src/primitive/scene.ts:8`：不允许 SVG-only 特性）——Paint 由 core 产 renderer-agnostic 资源表 + primitive 挂 `paintRef`，`<defs>` 物化只在 React SVG adapter；② IR 100% JSON 可序列化——`PaintSpec` 字段只用 JSON 值，禁 function / `z.any`。
 
@@ -181,7 +181,7 @@ pin 复用 label 体系 + 加引线。两条路（ADR 二选一）：
 4. **react adapter 物化**（新 `render/defs.tsx` + `renderPrim.tsx`）：`scene.resources` → `<defs>` gradient；`fillRef` → `fill="url(#id)"`；纯色走现有 `paintAttr`/`paintStyle`。**测试**：渲染含 gradient 的 node/path 出 `<defs>` + `url(#)`；纯色无 `<defs>`；`var(` 仍 inline style。
 5. **text width 折行**（`ir/node.ts` `maxTextWidth` + `compile/node.ts` 折行器）：贪心断行（西文按词 / CJK 按字），并入多行布局。**测试**：给定 `maxTextWidth` 长文本折多行；西文 / CJK / 混排断点；未给 `maxTextWidth` 行为不变；折行行继承 `LineSpec` 样式 + `align` 生效。
 6. **pin 引脚**（`ir/node.ts` label `pin`/`leader` + compile/emit 引线）：引线起点边界点 + 终点 label 锚 + TextPrim + 引线 PathPrim 包 GroupPrim。**测试**：pin 渲出 label + 引线；引线起点在 node 边界朝 label 方向；引线样式（stroke/dash）；多 pin。
-7. **全量验收 + ADR 落档**：core / react / docs 三包测试全绿；ADR 集合（`notes/adr/v0/v0.2-alpha.7/`）固化全部待定项；pattern / image 留**顺延 ADR 占位**（不实现）。
+7. **全量验收 + ADR 落档**：core / react / docs 三包测试全绿；ADR 集合（`notes/decisions/core/v0/v0.2/v0.2-alpha.7/`）固化全部待定项；pattern / image 留**顺延 ADR 占位**（不实现）。
 
 ---
 
@@ -228,7 +228,7 @@ pin 复用 label 体系 + 加引线。两条路（ADR 二选一）：
 
 ## 设计 ADR
 
-开工前另起（`notes/adr/v0/v0.2-alpha.7/`，编号到时定），固化上节待定项 + 落交付物：
+开工前另起（`notes/decisions/core/v0/v0.2/v0.2-alpha.7/`，编号到时定），固化上节待定项 + 落交付物：
 
 - **ADR-01 Paint 基础**：`PaintSpec`（gradient）字段清单 + **`PaintValue` 词汇表**（`string` ∪ `resourceRef` ∪ `contextStroke`，alpha.8 arrow 颜色继承依赖）+ **`SceneResource` discriminated 资源表**（去重键 / 稳定 id 在 core，alpha.9 clip 复用）+ adapter 物化 `<defs>` 边界 + scope 级联交互。
 - **ADR-02 text width 自动换行**：折行算法（贪心、CJK / 西文断点）+ 与 `LineSpec` / `align` / `lineHeight` / 外接框的关系。

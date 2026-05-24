@@ -1,8 +1,8 @@
 # v0.2.0-alpha.4 实施待办：compile IR 顺序回归 + emit 层增强（zIndex + 文本 Node 包 `<g>` + label rotate）
 
-> 写于 2026-05-22（A：IR 顺序回归）；2026-05-23 并入原 alpha.5 的 emit 层增强（B：zIndex / 文本 Node 包 `<g>` / label rotate），两段合一。承接 [`v0.2 总计划`](./v0.2.md) §"alpha.4 设计预想" + §"alpha.1 收尾遗留" §1 + roadmap 三处 emit 提案（[显式 zIndex](./roadmap.md#显式-z-index-提案) / [带文本 Node 输出始终包 `<g>`](./roadmap.md#带文本-node-输出始终包-g-提案) / [Node label 旋转能力](./roadmap.md#node-label-旋转能力计划)）。完工后保留留档（摘要见 v0.2.md 跟踪段）。
+> 写于 2026-05-22（A：IR 顺序回归）；2026-05-23 并入原 alpha.5 的 emit 层增强（B：zIndex / 文本 Node 包 `<g>` / label rotate），两段合一。承接 [`v0.2 总计划`](../roadmap.md) §"alpha.4 设计预想" + §"alpha.1 收尾遗留" §1 + roadmap 三处 emit 提案（[显式 zIndex](./roadmap.md#显式-z-index-提案) / [带文本 Node 输出始终包 `<g>`](./roadmap.md#带文本-node-输出始终包-g-提案) / [Node label 旋转能力](./roadmap.md#node-label-旋转能力计划)）。完工后保留留档（摘要见 v0.2.md 跟踪段）。
 >
-> 关联：[`v0.2 总计划 §六段 alpha 节奏`](./v0.2.md#六段-alpha-节奏) · [`alpha.1 ADR-02 anchor / path 解析`](../../adr/v0/v0.2-alpha.1/02-node-index-anchor-resolution.md)（inside-out lookup / frame pop 语义同源）· [`v0.2-alpha.5.md`](./v0.2-alpha.5.md)（Path sugar 派发出的 Path 自动享受本段 zIndex）· alpha.4 ADR（`notes/adr/v0/v0.2-alpha.4/`）：[`01` IR 顺序回归](../../adr/v0/v0.2-alpha.4/01-ir-order-regression.md)（A）·[`02` 显式 zIndex](../../adr/v0/v0.2-alpha.4/02-explicit-zindex.md)·[`03` 文本 Node 包 g](../../adr/v0/v0.2-alpha.4/03-text-node-group-wrap.md)·[`04` label rotate](../../adr/v0/v0.2-alpha.4/04-node-label-rotate.md)（B）
+> 关联：[`v0.2 总计划 §六段 alpha 节奏`](../roadmap.md#六段-alpha-节奏) · [`alpha.1 ADR-02 anchor / path 解析`](../v0.2-alpha.1/02-node-index-anchor-resolution.md)（inside-out lookup / frame pop 语义同源）· [`v0.2-alpha.5.md`](../v0.2-alpha.5/roadmap.md)（Path sugar 派发出的 Path 自动享受本段 zIndex）· alpha.4 ADR（`notes/decisions/core/v0/v0.2/v0.2-alpha.4/`）：[`01` IR 顺序回归](.//01-ir-order-regression.md)（A）·[`02` 显式 zIndex](.//02-explicit-zindex.md)·[`03` 文本 Node 包 g](.//03-text-node-group-wrap.md)·[`04` label rotate](.//04-node-label-rotate.md)（B）
 
 ## 背景与定位
 
@@ -741,7 +741,7 @@ describe('Node label rotate', () => {
 
 ## 待定（实施 / ADR 前拍板）
 
-0. ~~**【硬前置，B-3】rotated Node 上 label 的坐标空间**~~ ✅ **已在 [ADR-04](../../adr/v0/v0.2-alpha.4/04-node-label-rotate.md) 拍板（选 A）**：`labelCenter` 改用 axis-aligned rect 算局部坐标，label 位置 + 自旋都进 `inner`、由外层 Node rotate group 统一旋转一次——顺带修掉"rotated Node label 位置被绕 node center 转两次"的 latent bug。**这是行为修正**：rotated-Node + label 的快照会变（不旋转 Node 零变化），变更日志须显式声明。B-3 emit 改动可按此实施。
+0. ~~**【硬前置，B-3】rotated Node 上 label 的坐标空间**~~ ✅ **已在 [ADR-04](.//04-node-label-rotate.md) 拍板（选 A）**：`labelCenter` 改用 axis-aligned rect 算局部坐标，label 位置 + 自旋都进 `inner`、由外层 Node rotate group 统一旋转一次——顺带修掉"rotated Node label 位置被绕 node center 转两次"的 latent bug。**这是行为修正**：rotated-Node + label 的快照会变（不旋转 Node 零变化），变更日志须显式声明。B-3 emit 改动可按此实施。
 1. **A：transformed scope 内 path 的 z-order**：维持 hoist 到顶层末尾（最小修复，保 transform 正确性）。彻底方案（path 端点改 scope 局部坐标）留未来段；B 的 `zIndex` 只覆盖部分 stacking 诉求。
 2. **keepUpright 翻转阈值边界**：当前用 `90 < norm < 270` 翻 180°（恰好 90° / 270° 即垂直时不翻）。边界归属（≥90 还是 >90）影响临界外观，ADR 敲定。
 3. **`GroupPrim.meta`（`data-node-id` 钩子）**：本段**不做**；是否顺手加 `meta?: Record<string,string>` 让 `<g>` 挂 `data-node-id` / `data-node-shape`，留独立 ADR / 未来段（避免本段 schema 扩面）。
@@ -760,10 +760,10 @@ describe('Node label rotate', () => {
 8. **带文本才包 `<g>`**（非无条件全包）：纯几何 Node 维持极简平铺；带文本 = 语义化节点，给 DOM 边界 + stacking 单位。`layout.lines` 为判据。
 9. **label rotate 中心 = label 自身中心 `[lx, ly]`**：位置仍由 `position` / `distance` 决定，`rotate` 只改朝向。**注意**：旋转 Node 上 `[lx, ly]` 取局部还是世界坐标由 §待定 0 决定，未拍板前不实施 B-3 emit。
 
-## 设计 ADR（位置 `notes/adr/v0/v0.2-alpha.4/`）
+## 设计 ADR（位置 `notes/decisions/core/v0/v0.2/v0.2-alpha.4/`）
 
-- **A：IR 顺序回归** —— [`01-ir-order-regression.md`](../../adr/v0/v0.2-alpha.4/01-ir-order-regression.md) 已落（占位槽回填、transform-free frame 范围、transformed-scope path hoist 限制、内部 placeholder 类型收窄）。
+- **A：IR 顺序回归** —— [`01-ir-order-regression.md`](.//01-ir-order-regression.md) 已落（占位槽回填、transform-free frame 范围、transformed-scope path hoist 限制、内部 placeholder 类型收窄）。
 - **B：emit 层增强** —— 已落（同目录，编号续 01 之后）：
-  - [`02-explicit-zindex.md`](../../adr/v0/v0.2-alpha.4/02-explicit-zindex.md)：显式 zIndex（Node / Path / Scope 都加、Coordinate 不加；scope-整体 vs 内部两层独立；zIndex 不进 every-X 默认通道；占位不入 `zIndexOf`、排序在 sealSink 后；transformed-scope path 及其 zIndex hoist 限制）。
-  - [`03-text-node-group-wrap.md`](../../adr/v0/v0.2-alpha.4/03-text-node-group-wrap.md)：带文本 Node 包 `<g>`（判据 `layout.lines` + 无旋转 group 无 transform + 不加 `data-node-id`）。
-  - [`04-node-label-rotate.md`](../../adr/v0/v0.2-alpha.4/04-node-label-rotate.md)：label `rotate`（四模式 + keepUpright + radial/tangent 角度定义）；**核心决策 = rotated-Node label 坐标空间（§待定 0）选 A：`labelCenter` 改 axis-aligned 局部坐标，顺带修双重旋转**——已在该 ADR 拍板。
+  - [`02-explicit-zindex.md`](.//02-explicit-zindex.md)：显式 zIndex（Node / Path / Scope 都加、Coordinate 不加；scope-整体 vs 内部两层独立；zIndex 不进 every-X 默认通道；占位不入 `zIndexOf`、排序在 sealSink 后；transformed-scope path 及其 zIndex hoist 限制）。
+  - [`03-text-node-group-wrap.md`](.//03-text-node-group-wrap.md)：带文本 Node 包 `<g>`（判据 `layout.lines` + 无旋转 group 无 transform + 不加 `data-node-id`）。
+  - [`04-node-label-rotate.md`](.//04-node-label-rotate.md)：label `rotate`（四模式 + keepUpright + radial/tangent 角度定义）；**核心决策 = rotated-Node label 坐标空间（§待定 0）选 A：`labelCenter` 改 axis-aligned 局部坐标，顺带修双重旋转**——已在该 ADR 拍板。

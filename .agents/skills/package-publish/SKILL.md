@@ -1,6 +1,6 @@
 ---
 name: package-publish
-description: 用于把 retikz 的 publishable 包（`@retikz/core` / `@retikz/react`）发布到 npm。一次发包 = 三处同步：版本号（`packages/<pkg>/package.json`）、文档站结构化 changelog（`apps/docs/src/data/changelog.ts` + 必要时 `i18n` 的 `versionTag`）、内部计划（v0.2 看 `notes/plans/v0/v0.2.md`，v0.1 看 `notes/plans/v0/roadmap.md`）。发布后预 bump packages 到下一开发版本（plan 有下一版本直接改、没有则问用户）。retikz 专用，其它项目可忽略。
+description: 用于把 retikz 的 publishable 包（`@retikz/core` / `@retikz/react`）发布到 npm。一次发包 = 三处同步：版本号（`packages/<pkg>/package.json`）、文档站结构化 changelog（`apps/docs/src/data/changelog.ts` + 必要时 `i18n` 的 `versionTag`）、内部路线（v0.2 看 `notes/decisions/core/v0/v0.2/roadmap.md`，v0.1 看 `notes/decisions/core/v0/v0.1/roadmap.md`）。发布后预 bump packages 到下一开发版本（roadmap 有下一版本直接改、没有则问用户）。retikz 专用，其它项目可忽略。
 ---
 
 # 发 retikz 到 npm
@@ -13,14 +13,14 @@ retikz 一次发包 = **3 处同步改动 + 用户确认 + npm publish**。
 | --- | --- |
 | **包元数据** | `packages/<pkg>/package.json` 的 `version` 字段 |
 | **文档站** | `apps/docs/src/data/changelog.ts` 加结构化发布条目 + `i18n/locales/{zh,en}.json` 的 `versionTag`（仅 MINOR / MAJOR / 大里程碑变） |
-| **计划文档** | 里程碑跟踪段勾掉对应小版本 checkbox（v0.2 看 `notes/plans/v0/v0.2.md`「v0.2 跟踪」段；v0.1 看 `notes/plans/v0/roadmap.md`） |
+| **路线文档** | 里程碑跟踪段勾掉对应小版本 checkbox（v0.2 看 `notes/decisions/core/v0/v0.2/roadmap.md`「v0.2 跟踪」段；v0.1 看 `notes/decisions/core/v0/v0.1/roadmap.md`） |
 
 漏一处的后果：
 
 - 漏 `package.json` → 发版失败 / 发出旧版本
 - 漏 changelog → 文档站不显示新版本说明
 - 漏 `versionTag` → 文档站顶部右上还是旧版徽章
-- 漏 roadmap 勾选 → 计划文档与现实脱节
+- 漏 roadmap 勾选 → 路线文档与现实脱节
 
 **AI 执行 `git commit` / `git push` / `npm publish` 前必须先拿到用户在当前对话里的明确确认**（根 AGENTS.md）；用户可一次性授权本技能的提交序列，但 `push` / `tag` / `npm publish` 仍需明确点名。本技能做完 working tree 改动后**停下来等用户确认**，确认范围内的后续操作可由 AI 直接执行。一次确认≠永久授权。
 
@@ -49,7 +49,7 @@ retikz 一次发包 = **3 处同步改动 + 用户确认 + npm publish**。
 
 ## 版本节奏
 
-参考 `notes/plans/v0/roadmap.md`。pre-stable（v1.0 之前）走 `-alpha.N` / `-beta.N` / `-rc.N`：
+参考 `notes/decisions/core/v0/roadmap.md`。pre-stable（v1.0 之前）走 `-alpha.N` / `-beta.N` / `-rc.N`：
 
 | 形态 | 示例 | npm dist-tag | 下游默认 install |
 | --- | --- | --- | --- |
@@ -158,7 +158,7 @@ monorepo 子包跑 `version` 不会触发 git commit，安全。
 
 #### 2.4 roadmap checklist
 
-里程碑跟踪段有 checkbox（v0.2 在 `notes/plans/v0/v0.2.md`「v0.2 跟踪」段、v0.1 在 `notes/plans/v0/roadmap.md` 末尾"v0.1 跟踪"区）。本次发布对应版本前的 `[ ]` 改成 `[x]`：
+里程碑跟踪段有 checkbox（v0.2 在 `notes/decisions/core/v0/v0.2/roadmap.md`「v0.2 跟踪」段、v0.1 在 `notes/decisions/core/v0/v0.1/roadmap.md` 末尾"v0.1 跟踪"区）。本次发布对应版本前的 `[ ]` 改成 `[x]`：
 
 ```diff
 - - [ ] v0.1.0-alpha.1
@@ -253,7 +253,7 @@ working tree 改动汇总：
   M  packages/core/package.json
   M  packages/react/package.json
   M  apps/docs/src/data/changelog.ts
-  M  notes/plans/v0/roadmap.md
+  M  notes/decisions/core/v0/roadmap.md
   ...
 
 dry-run 关键行：
@@ -315,7 +315,7 @@ git tag: v0.1.0-alpha.1（已 push）
 
 下一版本怎么定：
 
-1. 查计划文档的版本跟踪 checkbox——v0.2 看 [`v0.2.md`](../../../notes/plans/v0/v0.2.md) 的「v0.2 跟踪」段，v0.1 看 [`roadmap.md`](../../../notes/plans/v0/roadmap.md)。
+1. 查路线文档的版本跟踪 checkbox——v0.2 看 [`v0.2/roadmap.md`](../../../notes/decisions/core/v0/v0.2/roadmap.md) 的「v0.2 跟踪」段，v0.1 看 [`v0.1/roadmap.md`](../../../notes/decisions/core/v0/v0.1/roadmap.md)。
 2. **plan 里明确有下一个未发布版本** → 直接把两个包 version 改成它。例：刚发 `0.2.0-alpha.2`、跟踪段下一行是 `- [ ] v0.2.0-alpha.3` → 两个包 version 改 `0.2.0-alpha.3`。
 3. **plan 里没有明确的下一个版本**（刚发的是该 milestone 最后一个 alpha、下一步 beta / rc / 正式版未排期、或跟踪段已到末尾）→ **停下来问用户**下一个版本号，不要瞎猜。
 
@@ -353,7 +353,7 @@ git tag: v0.1.0-alpha.1（已 push）
 
 - **根 AGENTS.md commit 规则**：阶段 5 的 commit / push / publish 都需要用户**当次明确授权**。授权一次只覆盖本次发布，下次发版要再问一遍
 - **`docs-doc-principle` 技能**：本技能里 changelog 数据写法是简版规范；如果要做更复杂的版本说明页（迁移指南、breaking changes 详解），改完后参考 `docs-doc-principle` 写正文
-- **roadmap 完结**：v0.1.0 正式发布后，`notes/plans/v0/roadmap.md` 按 `notes/README.md` 约定**整篇删除**——临时方案完工即删，不留死文档
+- **milestone roadmap 完结**：正式发布后，按 `notes/README.md` 约定精简或删除对应 milestone 的 `roadmap.md`；major / minor 的 `roadmap.md` 保留作长期路线索引。
 
 ## 验证清单
 

@@ -2,7 +2,7 @@
 
 > 写于 2026-05-13。完工后保留留档（摘要见 roadmap v0.1 跟踪段）。
 >
-> 关联：[`v0 roadmap`](./roadmap.md) · [`packages/core/AGENTS.md`](../../../packages/core/AGENTS.md) · [`beta.1 ADRs`](../../adr/v0/v0.1-beta.1/)
+> 关联：[`v0 roadmap`](./roadmap.md) · [`packages/core/AGENTS.md`](../../../../../../packages/core/AGENTS.md) · [`beta.1 ADRs`](../v0.1-beta.1/)
 
 ## 背景与定位
 
@@ -20,11 +20,11 @@ v0.1 beta 阶段：**持续优化 + 不考虑兼容性，rc 才冻结公开 API*
 
 | # | 标题 | 状态 | 工作量 | 优先级 |
 |---|---|---|---|---|
-| 1 | [Scene `ViewBox` → `Layout` 抽象（去 SVG 命名）](../../adr/v0/v0.1-beta.2/01-scene-viewbox-to-layout.md) | ✅ 完成（人工裁定跳过多 LLM 评估） | 中（core Scene + react adapter + tests + docs） | P1 |
-| 2 | [`<TikZ>` → `<TikZ>` 组件改名（与 TikZ 原品牌大小写一致）](../../adr/v0/v0.1-beta.2/02-tikz-to-tikz-component.md) | ✅ 完成（人工裁定跳过多 LLM 评估） | 中（公开组件名 + 全 mdx + 测试） | P1 |
-| 3 | [core endpoint arrow split 命名中性化](../../adr/v0/v0.1-beta.2/03-endpoint-arrow-split-neutral.md) | ✅ 完成（人工裁定跳过多 LLM 评估） | 小（core internal helper + tests 文案） | P1 |
-| 4 | [arrow shrink 几何从 SVG viewBox/refX 语义中抽离](../../adr/v0/v0.1-beta.2/04-arrow-geometry-neutral.md) | ✅ 完成（人工裁定跳过多 LLM 评估） | 中（core/react arrow geometry 对齐 + tests） | P1 |
-| 5 | [Path 线型命名对齐 TikZ 术语](../../adr/v0/v0.1-beta.2/05-path-dash-pattern-naming.md) | ✅ 完成（人工裁定跳过多 LLM 评估） | 中到大（`strokeDasharray` → `dashPattern: Array<number>` breaking + docs） | P2 |
+| 1 | [Scene `ViewBox` → `Layout` 抽象（去 SVG 命名）](.//01-scene-viewbox-to-layout.md) | ✅ 完成（人工裁定跳过多 LLM 评估） | 中（core Scene + react adapter + tests + docs） | P1 |
+| 2 | [`<TikZ>` → `<TikZ>` 组件改名（与 TikZ 原品牌大小写一致）](.//02-tikz-to-tikz-component.md) | ✅ 完成（人工裁定跳过多 LLM 评估） | 中（公开组件名 + 全 mdx + 测试） | P1 |
+| 3 | [core endpoint arrow split 命名中性化](.//03-endpoint-arrow-split-neutral.md) | ✅ 完成（人工裁定跳过多 LLM 评估） | 小（core internal helper + tests 文案） | P1 |
+| 4 | [arrow shrink 几何从 SVG viewBox/refX 语义中抽离](.//04-arrow-geometry-neutral.md) | ✅ 完成（人工裁定跳过多 LLM 评估） | 中（core/react arrow geometry 对齐 + tests） | P1 |
+| 5 | [Path 线型命名对齐 TikZ 术语](.//05-path-dash-pattern-naming.md) | ✅ 完成（人工裁定跳过多 LLM 评估） | 中到大（`strokeDasharray` → `dashPattern: Array<number>` breaking + docs） | P2 |
 
 > beta.1 原推延的 ADR-05 / 06b / 07 / 11 已在 beta.1 内补完（详 `v0.1-beta.1.md` 看板 ✅），beta.2 仅剩本 2 条 BREAKING 命名抽象。
 
@@ -81,7 +81,7 @@ type Scene = {
 
 ### ADR 拆分
 
-已拆为 [ADR-01：Scene `ViewBox` → `Layout` 抽象](../../adr/v0/v0.1-beta.2/01-scene-viewbox-to-layout.md)。虽然是命名抽象，但它改动 core 公开 type / Scene 字段 / helper export，属于 beta breaking，需要独立记录实现契约、测试象限与迁移路径。
+已拆为 [ADR-01：Scene `ViewBox` → `Layout` 抽象](.//01-scene-viewbox-to-layout.md)。虽然是命名抽象，但它改动 core 公开 type / Scene 字段 / helper export，属于 beta breaking，需要独立记录实现契约、测试象限与迁移路径。
 
 ---
 
@@ -130,7 +130,7 @@ Migration helper: boundary replace `'Tikz'` -> `'TikZ'`.
 
 ### ADR 拆分
 
-已拆为 [ADR-02：`<Tikz>` -> `<TikZ>` 组件改名](../../adr/v0/v0.1-beta.2/02-tikz-to-tikz-component.md)。该条影响 `@retikz/react` 公开组件名，并需要同步 docs demo，属于 beta breaking。
+已拆为 [ADR-02：`<Tikz>` -> `<TikZ>` 组件改名](.//02-tikz-to-tikz-component.md)。该条影响 `@retikz/react` 公开组件名，并需要同步 docs demo，属于 beta breaking。
 
 ---
 

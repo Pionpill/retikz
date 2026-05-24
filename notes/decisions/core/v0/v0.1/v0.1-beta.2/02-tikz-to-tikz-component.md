@@ -2,7 +2,7 @@
 
 - 状态：Accepted
 - 决策日期：2026-05-14
-- 关联：[v0.1-beta.2 plan TODO-2](../../../plans/v0/v0.1-beta.2.md) · [AGENTS.md Kernel / Sugar / Tier 2 分层](../../../../AGENTS.md)
+- 关联：[v0.1-beta.2 plan TODO-2](./roadmap.md) · [AGENTS.md Kernel / Sugar / Tier 2 分层](../../../../../../AGENTS.md)
 
 ## 背景
 
@@ -121,7 +121,7 @@ import { TikZ } from '@retikz/react';
 - `apps/docs/public/llms.txt`
 - `apps/docs/AGENTS.md`
 - 根 `AGENTS.md` 中当前 DSL 示例
-- `notes/plans/v0/roadmap.md` 和本 beta.2 plan 的完成摘要
+- `notes/decisions/core/v0/roadmap.md` 和本 beta.2 plan 的完成摘要
 
 ### 测试象限
 

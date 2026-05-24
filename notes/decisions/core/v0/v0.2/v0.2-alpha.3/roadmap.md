@@ -1,10 +1,10 @@
 # v0.2.0-alpha.3 实施待办：Shape Registry（打开 NodeShape + ShapeDefinition 注入面）
 
-> ✅ **完工留档（2026-05-22）**：按本 plan + [ADR-01](../../adr/v0/v0.2-alpha.3/01-shape-registry.md)（已 Accepted）落地。新建 `packages/core/src/shapes/`（`ShapeDefinition` / `ShapeStyle` + 内置 4 注册项 + `BUILTIN_SHAPES`）；`NodeSchema.shape` 开放 `z.string().min(1)`、`BuiltinShapeName` / `NodeShape` 分离；`compile/node.ts` 5 分发点查表 + `NodeLayout` `shape`→`shapeName`+`shapeDef`、`inflateRect` generic、删 `*Of`/`unrotated`；`CompileOptions.shapes` 注入 + `SHAPE_OVERRIDES_BUILTIN` warn + 未知名 throw；synthetic layout 挂 `BUILTIN_SHAPES.rectangle`；公开 API + `<TikZ shapes>` 透传 + 文档站「自定义 Shape」页。内置 4 shape 改造前后 Scene 逐字节相等（`tests/compile/shape-baseline-snapshot.test.ts`）。core 941 / react 264 / docs 54 全过。
+> ✅ **完工留档（2026-05-22）**：按本 plan + [ADR-01](.//01-shape-registry.md)（已 Accepted）落地。新建 `packages/core/src/shapes/`（`ShapeDefinition` / `ShapeStyle` + 内置 4 注册项 + `BUILTIN_SHAPES`）；`NodeSchema.shape` 开放 `z.string().min(1)`、`BuiltinShapeName` / `NodeShape` 分离；`compile/node.ts` 5 分发点查表 + `NodeLayout` `shape`→`shapeName`+`shapeDef`、`inflateRect` generic、删 `*Of`/`unrotated`；`CompileOptions.shapes` 注入 + `SHAPE_OVERRIDES_BUILTIN` warn + 未知名 throw；synthetic layout 挂 `BUILTIN_SHAPES.rectangle`；公开 API + `<TikZ shapes>` 透传 + 文档站「自定义 Shape」页。内置 4 shape 改造前后 Scene 逐字节相等（`tests/compile/shape-baseline-snapshot.test.ts`）。core 941 / react 264 / docs 54 全过。
 >
 > 写于 2026-05-21。v0.2 第三段；plan 与 ADR 在 next 分支起草，alpha.1 出关后再开实施代码。完工后保留留档（摘要见 v0.2.md 跟踪段）。
 >
-> 关联：[`v0.2 总计划 §六段 alpha 节奏`](./v0.2.md#六段-alpha-节奏) · [`v0 roadmap §Shape Registry 提案`](./roadmap.md#shape-registry-提案) · alpha.3 ADR（`notes/adr/v0/v0.2-alpha.3/` 已起草：[ADR-01](../../adr/v0/v0.2-alpha.3/01-shape-registry.md)）· [alpha.1 ADR-02 anchor 解析](../../adr/v0/v0.2-alpha.1/02-node-index-anchor-resolution.md)（anchor lookup 同方向）
+> 关联：[`v0.2 总计划 §六段 alpha 节奏`](../roadmap.md#六段-alpha-节奏) · [`v0 roadmap §Shape Registry 提案`](./roadmap.md#shape-registry-提案) · alpha.3 ADR（`notes/decisions/core/v0/v0.2/v0.2-alpha.3/` 已起草：[ADR-01](.//01-shape-registry.md)）· [alpha.1 ADR-02 anchor 解析](../v0.2-alpha.1/02-node-index-anchor-resolution.md)（anchor lookup 同方向）
 
 ## 背景与定位
 
@@ -117,12 +117,12 @@ export type ShapeDefinition = {
 
 ## 待定（全部拍板）
 
-> **全部拍板**（2026-05-21 收敛）：接口 A、命名 anchor + 数字角度 generic、同名覆盖 + warn、未知 throw、维持 4 内置；`ShapeStyle` 独立 type、`circle.emit` 复用 `ellipse.emit`、`shapeDef` 存进 `NodeLayout`、`circumscribe` 半轴进 / 半轴出、覆盖内置不加 opt-in 开关。详见 [ADR-01 §决策细节](../../adr/v0/v0.2-alpha.3/01-shape-registry.md)（10–14 项）。无遗留待决项。
+> **全部拍板**（2026-05-21 收敛）：接口 A、命名 anchor + 数字角度 generic、同名覆盖 + warn、未知 throw、维持 4 内置；`ShapeStyle` 独立 type、`circle.emit` 复用 `ellipse.emit`、`shapeDef` 存进 `NodeLayout`、`circumscribe` 半轴进 / 半轴出、覆盖内置不加 opt-in 开关。详见 [ADR-01 §决策细节](.//01-shape-registry.md)（10–14 项）。无遗留待决项。
 
 ## 设计 ADR
 
-已起草（`notes/adr/v0/v0.2-alpha.3/`，状态 Proposed）：
+已起草（`notes/decisions/core/v0/v0.2/v0.2-alpha.3/`，状态 Proposed）：
 
-### [ADR-01 — Shape Registry](../../adr/v0/v0.2-alpha.3/01-shape-registry.md)
+### [ADR-01 — Shape Registry](.//01-shape-registry.md)
 
 `ShapeDefinition` 四方法（circumscribe / boundaryPoint / anchor / emit，操作外接 Rect）+ `BUILTIN_SHAPES` 注册表（key 用 `BuiltinShapeName`）+ `CompileOptions.shapes` 运行时注入 + `shape` 字段开放为 `z.string().min(1)`；内置 4 shape 改注册项；数字角度 generic、`anchor` 命名权威、emit 轴对齐（收 rotate=0 rect）；同名覆盖经 onWarn 发 warning、未知 shape throw-only；synthetic layout（coordinate / scope.id）挂 rectangle shapeDef；IR 仍纯字符串、ShapeDefinition 不进 IR；factory 接口预留断言；renderer-neutral 出 ScenePrimitive。含 Level=red 实现契约（Schema 改动表 / 文件 scope / 测试象限 / 依赖现有元素）。

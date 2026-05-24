@@ -2,7 +2,7 @@
 
 - 状态：Accepted
 - 决策日期：2026-05-14
-- 关联：[v0.1-beta.2 plan TODO-5](../../../plans/v0/v0.1-beta.2.md) · [TikZ actions](https://tikz.dev/tikz-actions)
+- 关联：[v0.1-beta.2 plan TODO-5](./roadmap.md) · [TikZ actions](https://tikz.dev/tikz-actions)
 
 ## 背景
 

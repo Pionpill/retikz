@@ -2,7 +2,7 @@
 
 > 写于 2026-05-21。v0.2 第二段；plan 与 ADR 在 next 分支起草，alpha.1 出关后再开实施代码。完工后保留留档（摘要见 v0.2.md 跟踪段）。
 >
-> 关联：[`v0.2 总计划 §alpha.2 设计预想`](./v0.2.md#alpha2-设计预想scope-样式子集) · [`v0 roadmap §Step label 自定义样式提案`](./roadmap.md#step-label-自定义样式提案) · [`v0.2-alpha.1.md`](./v0.2-alpha.1.md)（Scope 容器地基）· alpha.2 ADRs（`notes/adr/v0/v0.2-alpha.2/` 已起草：[ADR-01](../../adr/v0/v0.2-alpha.2/01-scope-style-inheritance.md) / [ADR-02](../../adr/v0/v0.2-alpha.2/02-step-label-style.md)）
+> 关联：[`v0.2 总计划 §alpha.2 设计预想`](../roadmap.md#alpha2-设计预想scope-样式子集) · [`v0 roadmap §Step label 自定义样式提案`](./roadmap.md#step-label-自定义样式提案) · [`v0.2-alpha.1.md`](../v0.2-alpha.1/roadmap.md)（Scope 容器地基）· alpha.2 ADRs（`notes/decisions/core/v0/v0.2/v0.2-alpha.2/` 已起草：[ADR-01](.//01-scope-style-inheritance.md) / [ADR-02](.//02-step-label-style.md)）
 
 ## 背景与定位
 
@@ -31,7 +31,7 @@ Scope 上有三组样式表面 + 一个屏障：
 
 主色 `color` 同时加到 **Node / Path** 元素本身（贴 TikZ 元素级 `color=`；ADR-02 的"path color=红 → label 红"需要 `path.color`）。
 
-**为什么不是"Scope 直挂 Node 样式窄子集"**（早稿方案，已弃）：那把 node 形状字段（shape/minimum*）也铺到 Scope，且没法表达"颜色跟随"。TikZ 的真实模型是**主色（跟随）+ every-X（每类默认）两套正交**——node 形状专属字段进 `nodeDefault`，跨类共享的色 / 线宽走级联，颜色跟随归主色。详见 [ADR-01 §背景](../../adr/v0/v0.2-alpha.2/01-scope-style-inheritance.md)。
+**为什么不是"Scope 直挂 Node 样式窄子集"**（早稿方案，已弃）：那把 node 形状字段（shape/minimum*）也铺到 Scope，且没法表达"颜色跟随"。TikZ 的真实模型是**主色（跟随）+ every-X（每类默认）两套正交**——node 形状专属字段进 `nodeDefault`，跨类共享的色 / 线宽走级联，颜色跟随归主色。详见 [ADR-01 §背景](.//01-scope-style-inheritance.md)。
 
 ## 样式继承机制
 
@@ -144,12 +144,12 @@ for S in stack 外→内：
 
 ## 设计 ADR
 
-已起草（`notes/adr/v0/v0.2-alpha.2/`，状态 Proposed）：
+已起草（`notes/decisions/core/v0/v0.2/v0.2-alpha.2/`，状态 Proposed）：
 
-### [ADR-01 — Scope 样式继承（扁平 every-X + 主色 color + resetStyle）](../../adr/v0/v0.2-alpha.2/01-scope-style-inheritance.md)
+### [ADR-01 — Scope 样式继承（扁平 every-X + 主色 color + resetStyle）](.//01-scope-style-inheritance.md)
 
 四通道派生 + 主色 `color`（Scope/Node/Path + default map）+ 级联 graphic state + resetStyle；优先级链 + 主色展开 + 颜色级联；model A 就近、per-field 合并、按存在性 merge、opacity 替换、strict 严拒、shape 继承；compile renderer-neutral 解析进 primitive。
 
-### [ADR-02 — StepLabel 样式扩展](../../adr/v0/v0.2-alpha.2/02-step-label-style.md)
+### [ADR-02 — StepLabel 样式扩展](.//02-step-label-style.md)
 
 `StepLabelSchema` 加 `textColor` / `opacity` / `font`；继承顺序 `label 显式 > scope.labelDefault > 宿主 path 主色 color > currentColor`（跟主色不跟 stroke，修正早稿）；`compile/path/label.ts` fill / font 回退链；opacity 元素内相乘、跨 scope 不复合。

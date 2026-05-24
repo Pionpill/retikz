@@ -2,7 +2,7 @@
 
 - 状态：Proposed
 - 决策日期：2026-05-24
-- 关联：[v0.2-alpha.9 plan §第二部分](../../../plans/v0/v0.2-alpha.9.md) · [tikz-gap-analysis §6 Scene](../../../analysis/2026-05-07-tikz-gap-analysis.md) · [alpha.7 ADR-01 Paint](../v0.2-alpha.7/01-paint-basics.md)（`SceneResource` discriminated 资源表 + adapter 物化范式）· [alpha.1 Scope](../v0.2-alpha.1/)（裁剪作用域挂点）· 本 milestone [ADR-01](./01-partway-absolute-target.md) / [ADR-03](./03-viewbox-override.md)
+- 关联：[v0.2-alpha.9 plan §第二部分](./roadmap.md) · [tikz-gap-analysis §6 Scene](../../../../../analysis/2026-05-07-tikz-gap-analysis.md) · [alpha.7 ADR-01 Paint](../v0.2-alpha.7/01-paint-basics.md)（`SceneResource` discriminated 资源表 + adapter 物化范式）· [alpha.1 Scope](../v0.2-alpha.1/)（裁剪作用域挂点）· 本 milestone [ADR-01](./01-partway-absolute-target.md) / [ADR-03](./03-viewbox-override.md)
 
 > **前置依赖**：clip 资源进 alpha.7 ADR-01 定下的 `SceneResource` discriminated 资源表（复用同套去重 + 稳定 id + adapter 物化范式）。
 

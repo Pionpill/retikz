@@ -2,7 +2,7 @@
 
 - 状态：Accepted
 - 决策日期：2026-05-16
-- 关联：[v0 roadmap §v0.2 预备](../../../plans/v0/roadmap.md) · [v0.2 总计划](../../../plans/v0/v0.2.md) · [v0.2-alpha.1 plan](../../../plans/v0/v0.2-alpha.1.md) · [alpha.5 ADR-01 (Scene 结构化)](../v0.1-alpha.5/01-scene-primitive-structured.md)
+- 关联：[v0 roadmap §v0.2 预备](../../roadmap.md) · [v0.2 总计划](../roadmap.md) · [v0.2-alpha.1 plan](./roadmap.md) · [alpha.5 ADR-01 (Scene 结构化)](../../v0.1/v0.1-alpha.5/01-scene-primitive-structured.md)
 
 ## 背景
 

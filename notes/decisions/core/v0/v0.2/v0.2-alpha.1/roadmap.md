@@ -2,7 +2,7 @@
 
 > 写于 2026-05-16。alpha.1 计划与 ADR 在 next 分支起草；v0.1.0 出关后再开实施代码。完工后保留留档（摘要见 v0.2.md 跟踪段）。
 >
-> 关联：[`v0.2 总计划`](./v0.2.md) · [`v0 roadmap §v0.2 预备`](./roadmap.md) · [`alpha.1 ADRs`](../../adr/v0/v0.2-alpha.1/)
+> 关联：[`v0.2 总计划`](../roadmap.md) · [`v0 roadmap §v0.2 预备`](./roadmap.md) · [`alpha.1 ADRs`](.//)
 
 ## 背景与定位
 
@@ -14,16 +14,16 @@ Q2 决策：retikz 只引入 `<Scope>` 一个 IR 一等基元，Scene Tier 3 `Gr
 
 | # | 标题 | 状态 | 工作量 | 优先级 |
 |---|---|---|---|---|
-| 1 | [Scope IR schema + compile 下沉到 GroupPrim](../../adr/v0/v0.2-alpha.1/01-scope-ir-and-compile.md)（含 `scope.id` 字段 + PolarTranslate 第 4 transform 变体） | ✅ Accepted | 大 | P0 |
-| 2 | [nodeIndex / anchor 跨 scope 解析](../../adr/v0/v0.2-alpha.1/02-node-index-anchor-resolution.md)（id 冲突共享命名空间 + 前向引用） | ✅ Accepted | 中 | P0 |
-| 3 | [scope.id 注册 synthetic bbox layout](../../adr/v0/v0.2-alpha.1/03-scope-id-bounding-box.md)（scope 作为整体引用目标，对应 TikZ `local bounding box`） | ✅ Accepted | 中 | P0 |
-| 4 | [scope 下相对定位语义](../../adr/v0/v0.2-alpha.1/04-relative-position-in-scope.md) | ✅ Accepted | 中 | P0 |
+| 1 | [Scope IR schema + compile 下沉到 GroupPrim](.//01-scope-ir-and-compile.md)（含 `scope.id` 字段 + PolarTranslate 第 4 transform 变体） | ✅ Accepted | 大 | P0 |
+| 2 | [nodeIndex / anchor 跨 scope 解析](.//02-node-index-anchor-resolution.md)（id 冲突共享命名空间 + 前向引用） | ✅ Accepted | 中 | P0 |
+| 3 | [scope.id 注册 synthetic bbox layout](.//03-scope-id-bounding-box.md)（scope 作为整体引用目标，对应 TikZ `local bounding box`） | ✅ Accepted | 中 | P0 |
+| 4 | [scope 下相对定位语义](.//04-relative-position-in-scope.md) | ✅ Accepted | 中 | P0 |
 
 ---
 
 ## TODO-1 — Scope IR schema + compile 下沉
 
-详 [`ADR-01`](../../adr/v0/v0.2-alpha.1/01-scope-ir-and-compile.md)。要点：
+详 [`ADR-01`](.//01-scope-ir-and-compile.md)。要点：
 
 - 加 `IRScope = { type: 'scope', id?: string, transforms?: IRTransform[], children: IRChild[] }`，作为 IRChild 第 4 类 discriminator（已有 node / path / coordinate）
 - 嵌套：children 含 IRScope 自己 → 任意深度
@@ -33,7 +33,7 @@ Q2 决策：retikz 只引入 `<Scope>` 一个 IR 一等基元，Scene Tier 3 `Gr
 
 ## TODO-2 — nodeIndex / anchor 跨 scope 解析
 
-详 [`ADR-02`](../../adr/v0/v0.2-alpha.1/02-node-index-anchor-resolution.md)。要点：
+详 [`ADR-02`](.//02-node-index-anchor-resolution.md)。要点：
 
 - **nodeIndex 全局扁平**：scope 内 node 仍可被外层 path 通过 `id` 引用（与 v0.1 行为一致，不引入 scope 局部命名空间）
 - **anchor 坐标投影**：scope 内 node 的 layout 在局部坐标系；外层引用 `.north` / `.30` 时由 transform 链投影到全局
@@ -42,7 +42,7 @@ Q2 决策：retikz 只引入 `<Scope>` 一个 IR 一等基元，Scene Tier 3 `Gr
 
 ## TODO-3 — scope.id 注册 synthetic bbox layout
 
-详 [`ADR-03`](../../adr/v0/v0.2-alpha.1/03-scope-id-bounding-box.md)。要点：
+详 [`ADR-03`](.//03-scope-id-bounding-box.md)。要点：
 
 - scope.id 设值时 Pass 1 结束后算 scope 子树的 axis-aligned 全局 bbox
 - 注册为 synthetic rectangle NodeLayout 进 nodeIndex（shape='rectangle', rect.rotate=0）
@@ -52,7 +52,7 @@ Q2 决策：retikz 只引入 `<Scope>` 一个 IR 一等基元，Scene Tier 3 `Gr
 
 ## TODO-4 — scope 下相对定位语义
 
-详 [`ADR-04`](../../adr/v0/v0.2-alpha.1/04-relative-position-in-scope.md)。要点：
+详 [`ADR-04`](.//04-relative-position-in-scope.md)。要点：
 
 - `Node.position = { of, direction, distance? }`（AtPosition）/ `{ of, offset }`（OffsetPosition）/ `{ origin, angle, radius }`（PolarPosition）在 scope 下的语义
 - 关键决策：relative 部分在**当前 scope 局部坐标系**度量；referent 坐标取全局；末端 apply 当前 scope transform chain 投影回全局

@@ -2,7 +2,7 @@
 
 > 写于 2026-05-17 作为独立提案；2026-05-18 并入 alpha.6 节奏（原文件 `v0.2-path-shape-sugar.md`）；2026-05-23 原 alpha.4（IR 顺序回归）与 alpha.5（emit 层增强）合并为一段后，本段从 alpha.6 重编号为 **alpha.5**。v0.2 主线之一：补一组面向"画几何形"的 sugar 组件，让用户和 AI 都能用一行写出 TikZ 习语级的图元，不必下到 IR 层手拼 `<Path><Step>` 长串。
 >
-> 关联：[`v0.2 总计划`](./v0.2.md) · [`v0.1-rc.2.md`](./v0.1-rc.2.md)（最初讨论起点，已撤回 TODO-5）· [`roadmap.md`](./roadmap.md) v0.2 段
+> 关联：[`v0.2 总计划`](../roadmap.md) · [`v0.1-rc.2.md`](../../v0.1/v0.1-rc.2/roadmap.md)（最初讨论起点，已撤回 TODO-5）· [`roadmap.md`](./roadmap.md) v0.2 段
 
 ## 背景
 
@@ -362,7 +362,7 @@ Path 级 sugar 与 Node shape（`shape="..."` + `ShapeDefinition`）共享「形
 
 ## 设计 ADR
 
-v0.2 开工前另起 ADR（位置 `notes/adr/v0/v0.2-alpha.5/`，编号到时定），固化上节全部「待定」项的最终取舍（命名歧义 / `closed` 模式暴露 / Sector 闭合 / rect-vs-path primitive / corner 命名等），并落以下交付物：
+v0.2 开工前另起 ADR（位置 `notes/decisions/core/v0/v0.2/v0.2-alpha.5/`，编号到时定），固化上节全部「待定」项的最终取舍（命名歧义 / `closed` 模式暴露 / Sector 闭合 / rect-vs-path primitive / corner 命名等），并落以下交付物：
 
 - 6 个 sugar 的最终 prop 形态清单 + 等价派发 IR
 - IR 改动字段清单（arc 椭圆弧 / circlePath-ellipsePath 部分裁剪 / 新增 rectangle step）

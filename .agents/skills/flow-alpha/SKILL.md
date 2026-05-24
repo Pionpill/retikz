@@ -161,7 +161,7 @@ pnpm hardlink store 下每个 worktree 的 node_modules 占用极小。
 
 ```
 1. 进 worktree（cwd = ../<repo>-adr-XX）
-2. 读 notes/adr/v0/<milestone>/<XX>-*.md
+2. 读 notes/decisions/core/v0/<minor>/<milestone>/<XX>-*.md
 3. 按本 SKILL 5 阶段跑（红 / 黄 / 绿 按判级走 Spec-First / 常规 / 直跑）
 4. 每个 stage 内部 commit 跑现有约束（lint / tsc / vitest 三关 + emoji + ADR 编号）
 5. 所有 stage 跑完后再跑一次最终三关：

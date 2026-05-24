@@ -2,7 +2,7 @@
 
 - 状态：Proposed
 - 决策日期：2026-05-13
-- 关联：[v0.1-beta.1 plan TODO-4 + TODO-9](../../../plans/v0/v0.1-beta.1.md) · [AGENTS.md "类型每个属性都要 JSDoc"](../../../../AGENTS.md)
+- 关联：[v0.1-beta.1 plan TODO-4 + TODO-9](./roadmap.md) · [AGENTS.md "类型每个属性都要 JSDoc"](../../../../../../AGENTS.md)
 
 ## 背景
 

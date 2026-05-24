@@ -2,7 +2,7 @@
 
 - 状态：Accepted
 - 决策日期：2026-05-24
-- 关联：[v0.2-alpha.8 plan §第二部分](../../../plans/v0/v0.2-alpha.8.md) · [tikz-gap-analysis §3 Step](../../../analysis/2026-05-07-tikz-gap-analysis.md) · [alpha.3 ADR-01 Shape Registry](../v0.2-alpha.3/01-shape-registry.md)（注册面先例）· 本 milestone [ADR-01](./01-arrow-definition.md)（先实现）/ [ADR-03](./03-curve-transform-marking.md)
+- 关联：[v0.2-alpha.8 plan §第二部分](./roadmap.md) · [tikz-gap-analysis §3 Step](../../../../../analysis/2026-05-07-tikz-gap-analysis.md) · [alpha.3 ADR-01 Shape Registry](../v0.2-alpha.3/01-shape-registry.md)（注册面先例）· 本 milestone [ADR-01](./01-arrow-definition.md)（先实现）/ [ADR-03](./03-curve-transform-marking.md)
 
 > **顺序**：本注册面与 [ADR-01 ArrowDefinition](./01-arrow-definition.md) 是两个独立 public API surface，**ArrowDefinition 先实现**（依赖 alpha.7 Paint），本篇随后；两者互不阻塞（评审 P2#2）。
 

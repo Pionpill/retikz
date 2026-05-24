@@ -2,7 +2,7 @@
 
 > 写于 2026-05-23。v0.2「能力补全阶段」末段（gap §5 定位 + §6 Scene）。三块能力，均低中成本：**clip 裁切**（renderer-agnostic 裁剪资源）、**自定义 viewBox override**（覆盖自动包围盒的逃生口）、**比例 partway 定位**（两点间 t 比例点）。本段后 v0.2 转入收尾 / beta / rc。
 >
-> 关联：[`v0.2 总计划 §alpha.9 设计预想`](./v0.2.md) · [`tikz-gap-analysis §5 定位 / §6 Scene`](../../analysis/2026-05-07-tikz-gap-analysis.md) · 前一段 [`v0.2-alpha.8.md`](./v0.2-alpha.8.md)
+> 关联：[`v0.2 总计划 §alpha.9 设计预想`](../roadmap.md) · [`tikz-gap-analysis §5 定位 / §6 Scene`](../../../../../analysis/2026-05-07-tikz-gap-analysis.md) · 前一段 [`v0.2-alpha.8.md`](../v0.2-alpha.8/roadmap.md)
 >
 > **依赖**：clip 的资源管理复用 alpha.7 Paint 的 renderer-agnostic 资源表 + 稳定 id；partway 复用 alpha.6 Target 解析 + `geometry/_edge.ts` lerpPoint；viewBox 复用现有 layout 计算。无新硬前置。
 >
@@ -138,7 +138,7 @@ export type ClipResource = {
 3. **partway compile**（`compile/position.ts` / target resolve + `geometry/_edge.ts` lerp）：resolve A/B → lerp；嵌套递归；A/B 含 NodeTarget 走 anchor 解析。**测试**：两 literal 点中点 = lerp；t=0/1 = 端点；NodeTarget 端点（A.north → B.south 中点）；嵌套 between；t 外插（ADR 定后补）。
 4. **clip 资源 + clipRef**（`primitive/scene.ts` `ClipResource` + `GroupPrim.clipRef` + `ScopeSchema.clip` + compile 收集进资源表 + react `defs.tsx` 物化）：复用 alpha.7 资源表去重 / 稳定 id。**测试**：Scope clip → `GroupPrim.clipRef` + 资源表 1 条；相同裁剪区域去重；react 渲 `<clipPath>` + `clip-path="url(#id)"`；裁剪生效（区域外不可见）。
 5. **viewBox override**（`Layout` / Scene override 字段 + compile 跳过自动算）。**测试**：override 给定 → `Layout` = override（react `formatViewBox` 输出对应 viewBox）；未给 → 自动算不变；与 padding 关系（ADR 定后补）。
-6. **全量验收 + ADR 落档**：三包测试全绿；ADR 集合（`notes/adr/v0/v0.2-alpha.9/`）固化待定项。
+6. **全量验收 + ADR 落档**：三包测试全绿；ADR 集合（`notes/decisions/core/v0/v0.2/v0.2-alpha.9/`）固化待定项。
 
 ---
 
@@ -179,7 +179,7 @@ export type ClipResource = {
 
 ## 设计 ADR
 
-开工前另起（`notes/adr/v0/v0.2-alpha.9/`，编号到时定）：
+开工前另起（`notes/decisions/core/v0/v0.2/v0.2-alpha.9/`，编号到时定）：
 
 - **ADR-01 partway / AbsoluteTarget**：`AbsoluteTarget` 成员集 + 排除 relative 的理由（避免递归，P1#1）+ `AbsoluteOffsetPositionSchema`（`of` 仅对象，不复用含字符串的 legacy，P1#3）+ `BetweenPosition` 字段 + `t` 范围 + 落点（Position / Target）+ compile lerp 路径。
 - **ADR-02 clip**：裁剪源形态 + 作用域 + renderer-agnostic `ClipResource` / `clipRef`（复用 alpha.7 资源表）+ adapter 物化边界。

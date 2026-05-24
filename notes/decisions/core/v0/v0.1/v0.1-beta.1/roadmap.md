@@ -2,7 +2,7 @@
 
 > 写于 2026-05-11。完工后保留留档（摘要见 roadmap v0.1 跟踪段）。
 >
-> 关联：[`v0 roadmap`](./roadmap.md) · [`packages/core/AGENTS.md`](../../../packages/core/AGENTS.md) · [`alpha.5 ADRs`](../../adr/v0/v0.1-alpha.5/)
+> 关联：[`v0 roadmap`](./roadmap.md) · [`packages/core/AGENTS.md`](../../../../../../packages/core/AGENTS.md) · [`alpha.5 ADRs`](../v0.1-alpha.5/)
 
 ## 背景与定位
 
@@ -371,7 +371,7 @@ export type StepProps =
 
 ### 问题陈述
 
-`apps/docs/src/contents/about/releases/versioning/index.{zh,en}.mdx:38` 写 `[AI 辅助开发](../ai-assisted-development)`——retikz 的 mdx `<a>` 只对 `/` 开头走 react-router，相对路径会落到浏览器原生导航，从 `/about/releases/versioning` 加 `../ai-assisted-development` 解析为不存在的 `/about/releases/ai-assisted-development`。
+`apps/docs/src/contents/about/releases/versioning/index.{zh,en}.mdx:38` 写 `[AI 辅助开发](../../../../../../apps/docs/src/contents/about/developer/ai-assisted-development)`——retikz 的 mdx `<a>` 只对 `/` 开头走 react-router，相对路径会落到浏览器原生导航，从 `/about/releases/versioning` 加 `../../../../../../apps/docs/src/contents/about/developer/ai-assisted-development` 解析为不存在的 `/about/releases/ai-assisted-development`。
 
 ### 已落地方案
 

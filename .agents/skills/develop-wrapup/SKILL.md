@@ -141,7 +141,7 @@ INFO（一致 / 文档质量"好消息"）：
 主 AI 把以下材料整理给人工：
 
 ```
-ADR：notes/adr/<NNNN>-*.md
+ADR：notes/decisions/core/<major>/<minor>/<milestone>/<NNNN>-*.md
 本 ADR commit 列表：
   - <hash> <message>
   - ...
@@ -171,14 +171,15 @@ Adversarial 第二关 Contract Auditor 结果：
 
 ```bash
 # 1. ADR 状态翻 Accepted
-sed -i 's/^- 状态：Proposed/- 状态：Accepted/' notes/adr/v<MAJOR>/v<MAJOR>.<MINOR>-<channel>.<N>/NNNN-*.md
-git add notes/adr/v<MAJOR>/v<MAJOR>.<MINOR>-<channel>.<N>/NNNN-*.md
+sed -i 's/^- 状态：Proposed/- 状态：Accepted/' notes/decisions/core/v<MAJOR>/v<MAJOR>.<MINOR>/v<MAJOR>.<MINOR>-<channel>.<N>/NNNN-*.md
+git add notes/decisions/core/v<MAJOR>/v<MAJOR>.<MINOR>/v<MAJOR>.<MINOR>-<channel>.<N>/NNNN-*.md
 git commit -m ":pencil: ADR-NN 完工：标记 Accepted"
 
 # 2. roadmap 勾选（如果是本 alpha 段最后一条 ADR）
-# 编辑 notes/plans/v0/roadmap.md 把 - [ ] vX → - [x] vX
-git add notes/plans/v0/roadmap.md
-git commit -m ":pencil: 勾掉 v0 roadmap §<段>"
+# 编辑对应 minor / milestone roadmap，把 - [ ] vX → - [x] vX
+git add notes/decisions/core/v<MAJOR>/v<MAJOR>.<MINOR>/roadmap.md
+git add notes/decisions/core/v<MAJOR>/v<MAJOR>.<MINOR>/v<MAJOR>.<MINOR>-<channel>.<N>/roadmap.md
+git commit -m ":pencil: 勾掉 <milestone> roadmap §<段>"
 
 # 3. changelog 入库
 git add apps/docs/src/data/changelog.ts

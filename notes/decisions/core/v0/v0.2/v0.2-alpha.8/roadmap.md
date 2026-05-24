@@ -2,7 +2,7 @@
 
 > 写于 2026-05-23。v0.2「能力补全阶段」第二段（gap §2 Path + §3 Step；Path 与 Step 同体，一段处理）。五块能力，**两块大的（自定义 arrow / 路径生成器注册面）拆独立 ADR、固定实现顺序**，其余三块（out/in·self-loop / 路径变换 / 中段 marking）为低成本搭车项。
 >
-> 关联：[`v0.2 总计划 §alpha.8 设计预想`](./v0.2.md) · [`tikz-gap-analysis §2 Path / §3 Step`](../../analysis/2026-05-07-tikz-gap-analysis.md) · 前一段 [`v0.2-alpha.7.md`](./v0.2-alpha.7.md)（自定义 arrow 颜色继承复用本段前置 Paint）
+> 关联：[`v0.2 总计划 §alpha.8 设计预想`](../roadmap.md) · [`tikz-gap-analysis §2 Path / §3 Step`](../../../../../analysis/2026-05-07-tikz-gap-analysis.md) · 前一段 [`v0.2-alpha.7.md`](../v0.2-alpha.7/roadmap.md)（自定义 arrow 颜色继承复用本段前置 Paint）
 >
 > **依赖**：自定义 arrow 依赖 alpha.7 Paint 的「继承 path 描边」sentinel；其余四块复用既有机器。**故 alpha.8 紧跟 alpha.7。**
 >
@@ -175,7 +175,7 @@ export const GeneratorStepSchema = z.object({
 
 ## 第二部分补：pattern 自定义 motif（PatternDefinition）
 
-> alpha.7 的 pattern（[ADR-04](../../adr/v0/v0.2-alpha.7/04-pattern-image-deferred.md)）motif 是**固定 enum**（`lines` / `dots` / `grid`，react 写死渲染）。开放自定义 motif 与 ArrowDefinition 同源——都是"renderer-agnostic 局部坐标 tile 几何"，**复用 alpha.8 的 `MarkerPrimitive` emit 契约**，故放本段。
+> alpha.7 的 pattern（[ADR-04](../v0.2-alpha.7/04-pattern-image-deferred.md)）motif 是**固定 enum**（`lines` / `dots` / `grid`，react 写死渲染）。开放自定义 motif 与 ArrowDefinition 同源——都是"renderer-agnostic 局部坐标 tile 几何"，**复用 alpha.8 的 `MarkerPrimitive` emit 契约**，故放本段。
 
 - IR：`PaintSpec` 的 `pattern.shape` 从 enum 开放为 `string`（同 `node.shape` / `arrow.shape` / generator name 开放）；未注册名编译期 throw。
 - 注入：`CompileOptions.patterns?: Record<string, PatternDefinition>`；内置 3 motif（lines/dots/grid）降注册项（无特权，同内置 shape / arrow）。
@@ -231,7 +231,7 @@ export const GeneratorStepSchema = z.object({
 5. **out/in + self-loop**（`bend` step 加字段 + compile → cubic + self-loop 退化）。**测试**：out/in 角控制曲线方向；self-loop（from==to）成环；looseness 调紧致度。
 6. **路径整体变换**（`PathSchema` rotate/scale + compile 包 GroupPrim）。**测试**：单 path 旋转 / 缩放等价包 Scope；旋转支点（ADR 定后补例）。
 7. **中段 marking**（IR `marks` + compile 复用 segment.ts + arrow marker）。**测试**：mark 在 pos 处、按 tangent 定向（line / 贝塞尔 / arc 各一）；多 mark；无 mark 零开销。
-8. **全量验收 + ADR 落档**：三包测试全绿；ADR 集合（`notes/adr/v0/v0.2-alpha.8/`）固化待定项。
+8. **全量验收 + ADR 落档**：三包测试全绿；ADR 集合（`notes/decisions/core/v0/v0.2/v0.2-alpha.8/`）固化待定项。
 
 ---
 
@@ -277,7 +277,7 @@ export const GeneratorStepSchema = z.object({
 
 ## 设计 ADR
 
-开工前另起（`notes/adr/v0/v0.2-alpha.8/`，编号到时定）：
+开工前另起（`notes/decisions/core/v0/v0.2/v0.2-alpha.8/`，编号到时定）：
 
 - **ADR-01 ArrowDefinition**：契约 + `MarkerPrimitive` 窄子集（评审 P1#2）+ 颜色继承（依赖 alpha.7 `PaintValue.contextStroke`）+ marker emit 局部坐标 + 内置 7 迁移 + `CompileOptions.arrows` 覆盖语义。**`PatternDefinition`（pattern 自定义 motif）复用同 `MarkerPrimitive` emit + contextStroke 契约**（见 §第二部分补）——作本 ADR 延伸切片或并列 ADR-04。
 - **ADR-02 PathGeneratorDefinition**：契约（`paramsSchema: ZodType<IRJsonObject>` + `definePathGenerator` 注册校验，评审 P1#4）+ `params` JSON 约束 + `targetParams` 顶层限制（评审 P2#3）+ resolve 时序 + generator step IR + 游标语义。

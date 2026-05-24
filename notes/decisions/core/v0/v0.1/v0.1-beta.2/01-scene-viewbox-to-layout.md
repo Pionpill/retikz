@@ -2,7 +2,7 @@
 
 - 状态：Accepted
 - 决策日期：2026-05-14
-- 关联：[v0.1-beta.2 plan TODO-1](../../../plans/v0/v0.1-beta.2.md) · [alpha.5 ADR-01 Scene primitive structured](../v0.1-alpha.5/01-scene-primitive-structured.md) · [beta.1 ADR-01 renderer-neutral core](../v0.1-beta.1/01-core-comments-renderer-neutral.md)
+- 关联：[v0.1-beta.2 plan TODO-1](./roadmap.md) · [alpha.5 ADR-01 Scene primitive structured](../v0.1-alpha.5/01-scene-primitive-structured.md) · [beta.1 ADR-01 renderer-neutral core](../v0.1-beta.1/01-core-comments-renderer-neutral.md)
 
 ## 背景
 

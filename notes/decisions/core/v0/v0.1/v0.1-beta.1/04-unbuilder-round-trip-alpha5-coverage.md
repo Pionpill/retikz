@@ -2,7 +2,7 @@
 
 - 状态：Proposed
 - 决策日期:2026-05-13
-- 关联：[v0.1-beta.1 plan TODO-10](../../../plans/v0/v0.1-beta.1.md) · [alpha.5 ADR-03 arrowDetail](../v0.1-alpha.5/03-path-arrow-detail.md) · [alpha.5 ADR-04 OffsetPosition](../v0.1-alpha.5/04-position-offset.md) · [alpha.5 ADR-02 StepLabel position](../v0.1-alpha.5/02-step-label-position-t.md)
+- 关联：[v0.1-beta.1 plan TODO-10](./roadmap.md) · [alpha.5 ADR-03 arrowDetail](../v0.1-alpha.5/03-path-arrow-detail.md) · [alpha.5 ADR-04 OffsetPosition](../v0.1-alpha.5/04-position-offset.md) · [alpha.5 ADR-02 StepLabel position](../v0.1-alpha.5/02-step-label-position-t.md)
 
 ## 背景
 
