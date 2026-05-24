@@ -35,7 +35,7 @@ import { type TextMeasurer, fallbackMeasurer } from '../text-metrics';
 import { clipForTarget, cornerOf, refPointOfTarget, samePoint } from './anchor';
 import { emitLabelPrimitive, tForLabelPosition } from './label';
 import { normalizeRelativeTargets } from './relative';
-import { applyArrowShrinks, computeShrink, endpointArrows } from './shrink';
+import { applyArrowShrinks, endpointArrows } from './shrink';
 import { type PathBaseProps, splitSubPathsForEndpointArrows } from './split';
 
 /** 目标若是对象 NodeTarget（`{ id, ... }`）返回其 id，否则 undefined——给 UNRESOLVED_NODE_REFERENCE 诊断用 */
@@ -621,11 +621,14 @@ export const emitPathPrimitive = (
 
   const arrows = endpointArrows(path.arrow, path.arrowDetail);
 
-  // 按 shape + spec（length / scale / lineWidth）把首/末段端点向内缩短，让 line 端点接在 hollow arrow 尾部外缘，不贯穿 back outline；shrink=0 的实心 shape 跳过
-  const shrinkStart = arrows.arrowStart ? computeShrink(arrows.arrowStart) : 0;
-  const shrinkEnd = arrows.arrowEnd ? computeShrink(arrows.arrowEnd) : 0;
-  applyArrowShrinks(commands, shrinkStart, shrinkEnd, strokeWidth, round);
+  // shrink 在 compile 算（端点收缩与 emit 落点无关）：按 shape + 视觉输入把首/末段端点向内缩短，
+  // 让 line 端点接在 hollow arrow 尾部外缘、不贯穿 back outline；shrink=0 的实心 shape 跳过
+  applyArrowShrinks(commands, arrows.shrinkStart, arrows.shrinkEnd, strokeWidth, round);
 
-  const { primitive } = splitSubPathsForEndpointArrows(commands, baseProps, arrows);
+  // 只在端点有箭头时塞 key——避免给无箭头 path 注入 `arrowStart: undefined` / `arrowEnd: undefined`（保 Scene 输出纯净）
+  const endpointSpecs: { arrowStart?: typeof arrows.arrowStart; arrowEnd?: typeof arrows.arrowEnd } = {};
+  if (arrows.arrowStart) endpointSpecs.arrowStart = arrows.arrowStart;
+  if (arrows.arrowEnd) endpointSpecs.arrowEnd = arrows.arrowEnd;
+  const { primitive } = splitSubPathsForEndpointArrows(commands, baseProps, endpointSpecs);
   return { primitives: [primitive, ...labelPrims], points };
 };

@@ -1,87 +1,108 @@
 import type { FC, ReactElement } from 'react';
-import {
-  ARROW_MARKER_DEFAULT_SIZE,
-  ARROW_MARKER_HOLLOW_DEFAULT_LINE_WIDTH,
-  type ArrowEndSpec,
-  HOLLOW_ARROW_SHAPES,
+import type {
+  ArrowEndSpec,
+  MarkerFill,
+  MarkerPathCommand,
+  MarkerPrimitive,
 } from '@retikz/core';
 
-/** 形状的 SVG 几何元素 + 路径线段接触位置 */
-type RenderedShape = {
-  lineContactX: number;
-  inner: ReactElement;
+/**
+ * marker fill 取值 → SVG fill 属性
+ * @description 纯色字符串直传；`{ kind:'contextStroke' }` → SVG `context-stroke`（继承所在元素描边，主题反应）。
+ */
+const markerFillToSvg = (fill: MarkerFill | undefined): string | undefined => {
+  if (fill === undefined) return undefined;
+  if (typeof fill === 'string') return fill;
+  return 'context-stroke';
 };
 
-const renderInner = (spec: ArrowEndSpec): RenderedShape => {
-  const isHollow = HOLLOW_ARROW_SHAPES.has(spec.shape);
-  const stroke = isHollow ? (spec.color ?? 'context-stroke') : undefined;
-  // 实心 shape：fill 优先 → color 备用 → context-stroke 兜底
-  const fill = isHollow ? 'none' : (spec.fill ?? spec.color ?? 'context-stroke');
-  const lineWidth = isHollow
-    ? (spec.lineWidth ?? ARROW_MARKER_HOLLOW_DEFAULT_LINE_WIDTH)
-    : undefined;
-  const strokeWidth = lineWidth;
+/** marker-local path 命令序列 → SVG `d` 字符串（move/line/quad/cubic/close；arc/ellipseArc 走 A 段） */
+const markerCommandsToD = (commands: ReadonlyArray<MarkerPathCommand>): string =>
+  commands
+    .map(c => {
+      switch (c.kind) {
+        case 'move':
+          return `M ${c.to[0]} ${c.to[1]}`;
+        case 'line':
+          return `L ${c.to[0]} ${c.to[1]}`;
+        case 'quad':
+          return `Q ${c.control[0]} ${c.control[1]} ${c.to[0]} ${c.to[1]}`;
+        case 'cubic':
+          return `C ${c.control1[0]} ${c.control1[1]} ${c.control2[0]} ${c.control2[1]} ${c.to[0]} ${c.to[1]}`;
+        case 'close':
+          return 'Z';
+        default:
+          // arc / ellipseArc：marker 几何里少用；保守用端点直连兜底（实现 Agent 可细化为 A 段）
+          return '';
+      }
+    })
+    .filter(Boolean)
+    .join(' ');
 
-  switch (spec.shape) {
-    case 'normal':
-      return {
-        lineContactX: 0,
-        inner: <path d="M 0 0 L 10 5 L 0 10 Z" fill={fill} />,
-      };
-    case 'open':
-      return {
-        lineContactX: 1 - (lineWidth ?? 0) / 2,
-        inner: (
-          <path
-            d="M 1 1 L 9 5 L 1 9 Z"
-            fill={fill}
-            stroke={stroke}
-            strokeWidth={strokeWidth}
-          />
-        ),
-      };
-    case 'stealth':
-      return {
-        lineContactX: 3,
-        inner: <path d="M 0 0 L 10 5 L 0 10 L 3 5 Z" fill={fill} />,
-      };
-    case 'diamond':
-      return {
-        lineContactX: 0,
-        inner: <path d="M 0 5 L 5 0 L 10 5 L 5 10 Z" fill={fill} />,
-      };
-    case 'openDiamond':
-      return {
-        lineContactX: 1 - (lineWidth ?? 0) / 2,
-        inner: (
-          <path
-            d="M 1 5 L 5 1 L 9 5 L 5 9 Z"
-            fill={fill}
-            stroke={stroke}
-            strokeWidth={strokeWidth}
-            strokeLinejoin="round"
-          />
-        ),
-      };
-    case 'circle':
-      return {
-        lineContactX: 0,
-        inner: <circle cx={5} cy={5} r={5} fill={fill} />,
-      };
-    case 'openCircle':
-      return {
-        lineContactX: 0.75 - (lineWidth ?? 0) / 2,
-        inner: (
-          <circle
-            cx={5}
-            cy={5}
-            r={4.25}
-            fill={fill}
-            stroke={stroke}
-            strokeWidth={strokeWidth}
-          />
-        ),
-      };
+/**
+ * 单个 `MarkerPrimitive` → SVG 元素（renderer-agnostic 几何的 react 物化）
+ * @description core 已在 compile 把 def.emit 几何解析进 `ArrowEndSpec.marker`；react 只翻成 SVG。
+ *   group 递归；fill 走 `markerFillToSvg`（contextStroke → context-stroke）。
+ */
+const renderMarkerPrim = (prim: MarkerPrimitive, key: number): ReactElement => {
+  switch (prim.type) {
+    case 'path':
+      return (
+        <path
+          key={key}
+          d={markerCommandsToD(prim.commands)}
+          fill={markerFillToSvg(prim.fill)}
+          fillOpacity={prim.fillOpacity}
+          fillRule={prim.fillRule}
+          stroke={prim.stroke}
+          strokeOpacity={prim.strokeOpacity}
+          strokeWidth={prim.strokeWidth}
+          strokeDasharray={prim.dashPattern?.join(' ')}
+          strokeLinecap={prim.strokeLinecap}
+          strokeLinejoin={prim.strokeLinejoin}
+        />
+      );
+    case 'ellipse':
+      return (
+        <ellipse
+          key={key}
+          cx={prim.cx}
+          cy={prim.cy}
+          rx={prim.rx}
+          ry={prim.ry}
+          fill={markerFillToSvg(prim.fill)}
+          fillOpacity={prim.fillOpacity}
+          stroke={prim.stroke}
+          strokeOpacity={prim.strokeOpacity}
+          strokeWidth={prim.strokeWidth}
+          strokeDasharray={prim.dashPattern?.join(' ')}
+          transform={prim.rotate ? `rotate(${prim.rotate} ${prim.cx} ${prim.cy})` : undefined}
+        />
+      );
+    case 'rect':
+      return (
+        <rect
+          key={key}
+          x={prim.x}
+          y={prim.y}
+          width={prim.width}
+          height={prim.height}
+          rx={prim.cornerRadius}
+          ry={prim.cornerRadius}
+          fill={markerFillToSvg(prim.fill)}
+          fillOpacity={prim.fillOpacity}
+          stroke={prim.stroke}
+          strokeOpacity={prim.strokeOpacity}
+          strokeWidth={prim.strokeWidth}
+          strokeDasharray={prim.dashPattern?.join(' ')}
+        />
+      );
+    case 'group':
+      return (
+        <g key={key}>
+          {prim.children.map((child, i) => renderMarkerPrim(child, i))}
+        </g>
+      );
   }
 };
 
@@ -89,35 +110,34 @@ const renderInner = (spec: ArrowEndSpec): RenderedShape => {
 export type ArrowMarkerProps = {
   /** marker 元素 id，用于 path markerStart / markerEnd 引用 */
   id: string;
-  /** 端点级箭头视觉规格（compile 已 resolve start/end merge + 空心 silent fill ignore） */
+  /** 端点级已解析 marker 描述（compile 已 merge / 查表 / 调 def.emit 产几何 + wrapper 参数） */
   spec: ArrowEndSpec;
 };
 
 /**
  * 单个 `<marker>` 元素，由 `<defs>` 包起来
- * @description spec.scale 乘到 length/width 之后；spec.opacity 落到 marker 元素层；空心 shape 的 lineWidth 走 strokeWidth；overflow=visible 允许空心描边落在标准几何边界外；缺省视觉字段全部走 context-stroke / ARROW_MARKER_DEFAULT_SIZE 兜底
+ * @description emit-in-compile 物化：marker 内部几何来自 `spec.marker`（core 已产 `MarkerPrimitive[]`），
+ *   wrapper 参数来自 `spec.baseSize`（viewBox `0 0 baseSize baseSize` + refY = baseSize/2）/ `spec.refX` /
+ *   `spec.markerWidth` / `spec.markerHeight`。react 不再 switch shape、不算几何、不需 arrows 注册表。
+ *   overflow=visible 允许空心描边落在标准几何边界外。
  */
 export const ArrowMarker: FC<ArrowMarkerProps> = props => {
   const { id, spec } = props;
-  const scale = spec.scale ?? 1;
-  const length = (spec.length ?? ARROW_MARKER_DEFAULT_SIZE) * scale;
-  const width = (spec.width ?? ARROW_MARKER_DEFAULT_SIZE) * scale;
-  const { lineContactX, inner } = renderInner(spec);
   return (
     <marker
       id={id}
-      viewBox="0 0 10 10"
-      refX={lineContactX}
-      refY={5}
-      markerWidth={length}
-      markerHeight={width}
+      viewBox={`0 0 ${spec.baseSize} ${spec.baseSize}`}
+      refX={spec.refX}
+      refY={spec.baseSize / 2}
+      markerWidth={spec.markerWidth}
+      markerHeight={spec.markerHeight}
       orient="auto-start-reverse"
       markerUnits="strokeWidth"
       preserveAspectRatio="none"
       overflow="visible"
       opacity={spec.opacity}
     >
-      {inner}
+      {spec.marker.map((prim, i) => renderMarkerPrim(prim, i))}
     </marker>
   );
 };

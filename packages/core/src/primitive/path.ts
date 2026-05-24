@@ -1,4 +1,5 @@
-import type { ArrowShape } from '../ir/path/arrow';
+import type { ArrowShapeName } from '../ir/path/arrow';
+import type { MarkerPrimitive } from './marker';
 import type { PaintValue } from './paint';
 
 /** Move command：移动游标到目标点，不绘制 */
@@ -95,26 +96,29 @@ export type PathCommand =
   | ClosePathCommand;
 
 /**
- * 端点级解析后的箭头视觉规格（Scene primitive 层）
- * @description compile/path.ts 把 IR `arrowDetail` 顶层 + start/end merge 后产出此结构。`shape` 必填、其余视觉字段全 optional：缺省字段交给 renderer 走 context-stroke / 硬编码 fallback，保持向后兼容
+ * 端点级已解析的箭头 marker 描述（Scene primitive 层，renderer-agnostic）
+ * @description compile 把 IR `arrowDetail` 顶层 + start/end merge、查 effective arrow 表、调 `def.emit`
+ *   产几何，所有视觉输入（scale / length / width / color / fill / lineWidth）在 compile 解析阶段被消费、
+ *   **不**出现在本结构里。最终挂在 `PathPrim.arrowStart` / `arrowEnd` 上的是"已解析 marker 描述"：内部几何
+ *   `marker`（`MarkerPrimitive[]`，局部 baseSize 坐标系）+ wrapper 参数（`baseSize` / `refX` / `markerWidth` /
+ *   `markerHeight` / `opacity`）。adapter 只**物化**——把 `marker` 嵌进 `<marker viewBox refX refY markerWidth
+ *   markerHeight>`，不再 switch、不调 emit、不需要 arrows 注册表。纯 JSON 数据（无函数）。
  */
 export type ArrowEndSpec = {
-  /** 形状名 */
-  shape: ArrowShape;
-  /** 等比缩放因子（乘到 length/width 上）；缺省 1 */
-  scale?: number;
-  /** 尖长（user units）；缺省让 renderer 走默认 6 */
-  length?: number;
-  /** 尖宽（user units）；缺省让 renderer 走默认 6 */
-  width?: number;
-  /** 描边颜色 override；缺省走 context-stroke（继承 path stroke） */
-  color?: string;
-  /** 填充色 override（仅实心 shape 生效；空心 shape 已在 compile 阶段被丢） */
-  fill?: string;
-  /** 箭头不透明度 0..1；缺省继承 path opacity */
+  /** 形状名：内置 7 或经 `CompileOptions.arrows` 注册的扩展名；标识 / 调试用，已解析后渲染不依赖（保留） */
+  shape: ArrowShapeName;
+  /** marker viewBox 边长（`def.baseSize ?? 10`）；adapter 据此推 viewBox `0 0 baseSize baseSize` 与 refY = baseSize/2 */
+  baseSize: number;
+  /** 线接触点（marker refX）；hollow 已在 compile 解析阶段减 lineWidth/2（adapter 不再算） */
+  refX: number;
+  /** 已解析尖长 = `(length ?? def.defaultLength) * scale`（adapter 直接当 markerWidth 用） */
+  markerWidth: number;
+  /** 已解析尖宽 = `(width ?? def.defaultWidth) * scale`（adapter 直接当 markerHeight 用） */
+  markerHeight: number;
+  /** marker 元素级不透明度 0..1；缺省继承 path opacity */
   opacity?: number;
-  /** 空心 shape 描边粗细（user units）；缺省 1.5。实心 shape 忽略 */
-  lineWidth?: number;
+  /** `def.emit` 产物：局部 baseSize 坐标系下的内部几何（fill 限 `string | { kind:'contextStroke' }`） */
+  marker: Array<MarkerPrimitive>;
 };
 
 /** 路径原语：结构化 commands 数组；adapter 在 render 时翻译为各自原生 API */

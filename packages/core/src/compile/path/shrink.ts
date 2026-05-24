@@ -1,19 +1,47 @@
-import { DEFAULT_ARROW_SHAPE, type IRArrowDetail, type IRArrowEndDetail, type IRPosition } from '../../ir';
+import {
+  ARROW_MARKER_DEFAULT_SIZE,
+  ARROW_MARKER_HOLLOW_DEFAULT_LINE_WIDTH,
+  DEFAULT_ARROW_SHAPE,
+  type IRArrowDetail,
+  type IRArrowEndDetail,
+  type IRPosition,
+} from '../../ir';
 import type { ArrowEndSpec, PathCommand } from '../../primitive';
 import { shiftToward } from './anchor';
 import { isHollowArrowShape, resolveArrowShapeGeometry } from './arrow-geometry';
 
 /**
- * 端点级 spec：顶层默认 ⊕ end-side override（逐字段 merge）
- * @description 缺省字段继承顶层（不是"完全替换"）；空心 shape 上 fill 字段被丢（silent no-op）
+ * compile 内部中间体：把顶层默认 ⊕ end-side override merge 后的"视觉输入"集合
+ * @description 仅 compile 解析阶段用——shrink 几何 + 调 def.emit 都读它；这些视觉输入字段（scale /
+ *   length / width / color / fill / lineWidth）解析完即消费，**不**进最终 `ArrowEndSpec`（已解析 marker 描述）。
+ *   这是 compile-internal 类型，不导出公开 API。
+ *
+ *   注意：本文件目前是 stub——`endpointArrows` 产出的最终 `ArrowEndSpec`（含 def.emit 物化的 marker 几何 +
+ *   解析后的 baseSize / refX / markerWidth / markerHeight）由实现 Agent 接 effective arrow 表 + compile 调
+ *   `def.emit` 落地。stub 阶段 marker 为空数组、wrapper 参数走中性几何，让 tsc 过、端点 shrink 测试有结果。
  */
-const resolveArrowEndSpec = (
+type ResolvedArrowVisual = {
+  shape: string;
+  scale?: number;
+  length?: number;
+  width?: number;
+  color?: string;
+  fill?: string;
+  opacity?: number;
+  lineWidth?: number;
+};
+
+/**
+ * 端点级视觉输入：顶层默认 ⊕ end-side override（逐字段 merge）
+ * @description 缺省字段继承顶层（不是"完全替换"）；空心 shape 上 fill 字段被丢（silent no-op）。
+ *   产 compile-internal 中间体，供 shrink + emit 消费。
+ */
+const resolveArrowVisual = (
   topLevel: IRArrowDetail,
   endSide: IRArrowEndDetail | undefined,
-): ArrowEndSpec => {
-  // ArrowDetail 的顶层字段含 start / end —— 提取 end-end 候选字段集（不含 start/end 自身）
+): ResolvedArrowVisual => {
   const baseShape = endSide?.shape ?? topLevel.shape ?? DEFAULT_ARROW_SHAPE;
-  const out: ArrowEndSpec = { shape: baseShape };
+  const out: ResolvedArrowVisual = { shape: baseShape };
   const scale = endSide?.scale ?? topLevel.scale;
   if (scale !== undefined) out.scale = scale;
   const length = endSide?.length ?? topLevel.length;
@@ -26,7 +54,6 @@ const resolveArrowEndSpec = (
   if (opacity !== undefined) out.opacity = opacity;
   const lineWidth = endSide?.lineWidth ?? topLevel.lineWidth;
   if (lineWidth !== undefined) out.lineWidth = lineWidth;
-  // fill 仅实心 shape 保留；空心 shape silent no-op
   if (!isHollowArrowShape(baseShape)) {
     const fill = endSide?.fill ?? topLevel.fill;
     if (fill !== undefined) out.fill = fill;
@@ -34,33 +61,80 @@ const resolveArrowEndSpec = (
   return out;
 };
 
-/** IR path-level `arrow` + `arrowDetail` → PathPrim 起末端点箭头规格 */
-export const endpointArrows = (
-  arrow: 'none' | '->' | '<-' | '<->' | undefined,
-  detail: IRArrowDetail | undefined,
-): { arrowStart?: ArrowEndSpec; arrowEnd?: ArrowEndSpec } => {
-  if (!arrow || arrow === 'none') return {};
-  const top: IRArrowDetail = detail ?? {};
-  const startSpec = resolveArrowEndSpec(top, top.start);
-  const endSpec = resolveArrowEndSpec(top, top.end);
-  switch (arrow) {
-    case '->':
-      return { arrowEnd: endSpec };
-    case '<-':
-      return { arrowStart: startSpec };
-    case '<->':
-      return { arrowStart: startSpec, arrowEnd: endSpec };
-  }
-};
-
 /**
  * 端点级 shrink（strokeWidth 倍）：line 末端朝起点缩这么多，让箭头尖端落回原 target
  * @description 不分实心 / 空心：路径端点接在箭头尾部或凹口，箭头尖端仍贴原 target。低 opacity 下不会再透出 line。
+ *   签名变更：接 compile-internal 视觉中间体（不再接最终 `ArrowEndSpec`——后者已无 length / scale / lineWidth）。
  */
-export const computeShrink = (spec: ArrowEndSpec): number => {
-  const geometry = resolveArrowShapeGeometry(spec);
-  const length = (spec.length ?? geometry.defaultLength) * (spec.scale ?? 1);
+const computeShrink = (visual: ResolvedArrowVisual): number => {
+  const geometry = resolveArrowShapeGeometry(visual);
+  const length = (visual.length ?? geometry.defaultLength) * (visual.scale ?? 1);
   return ((geometry.tipX - geometry.lineContactX) * length) / geometry.baseSize;
+};
+
+/**
+ * 把视觉中间体物化成最终 `ArrowEndSpec`（已解析 marker 描述）
+ * @description stub：实现 Agent 在此查 effective arrow 表（`{ ...BUILTIN_ARROWS, ...options.arrows }`）+ 构
+ *   `ArrowEmitContext`（stroke 无 override = `{ kind:'contextStroke' }`、空心据 hollow 丢 fill / 启用 lineWidth）+
+ *   调 `def.emit` 收集 `MarkerPrimitive[]`，并算 baseSize / refX（hollow 减 lineWidth/2）/ markerWidth = 解析
+ *   length / markerHeight = 解析 width。stub 阶段产中性几何 + 空 marker，让 tsc 过、端点 shrink 测试有结果。
+ */
+const materializeArrowEndSpec = (visual: ResolvedArrowVisual): ArrowEndSpec => {
+  const geometry = resolveArrowShapeGeometry(visual);
+  const scale = visual.scale ?? 1;
+  const out: ArrowEndSpec = {
+    shape: visual.shape,
+    baseSize: geometry.baseSize,
+    refX: geometry.lineContactX,
+    markerWidth: (visual.length ?? ARROW_MARKER_DEFAULT_SIZE) * scale,
+    markerHeight: (visual.width ?? ARROW_MARKER_DEFAULT_SIZE) * scale,
+    // stub：def.emit 物化的内部几何由实现 Agent 落；空数组让 render 路径测试明确 fail（不静默产几何）
+    marker: [],
+  };
+  if (visual.opacity !== undefined) out.opacity = visual.opacity;
+  void ARROW_MARKER_HOLLOW_DEFAULT_LINE_WIDTH;
+  return out;
+};
+
+/**
+ * IR path-level `arrow` + `arrowDetail` → PathPrim 起末端点已解析 marker 描述
+ * @description merge 视觉输入 → 算 shrink → 物化最终 `ArrowEndSpec`。返回同时带 compile-internal 的 shrink
+ *   量（端点收缩在 compile 落，与 emit 落点无关）。
+ */
+export const endpointArrows = (
+  arrow: 'none' | '->' | '<-' | '<->' | undefined,
+  detail: IRArrowDetail | undefined,
+): {
+  arrowStart?: ArrowEndSpec;
+  arrowEnd?: ArrowEndSpec;
+  shrinkStart: number;
+  shrinkEnd: number;
+} => {
+  if (!arrow || arrow === 'none') return { shrinkStart: 0, shrinkEnd: 0 };
+  const top: IRArrowDetail = detail ?? {};
+  const startVisual = resolveArrowVisual(top, top.start);
+  const endVisual = resolveArrowVisual(top, top.end);
+  switch (arrow) {
+    case '->':
+      return {
+        arrowEnd: materializeArrowEndSpec(endVisual),
+        shrinkStart: 0,
+        shrinkEnd: computeShrink(endVisual),
+      };
+    case '<-':
+      return {
+        arrowStart: materializeArrowEndSpec(startVisual),
+        shrinkStart: computeShrink(startVisual),
+        shrinkEnd: 0,
+      };
+    case '<->':
+      return {
+        arrowStart: materializeArrowEndSpec(startVisual),
+        arrowEnd: materializeArrowEndSpec(endVisual),
+        shrinkStart: computeShrink(startVisual),
+        shrinkEnd: computeShrink(endVisual),
+      };
+  }
 };
 
 /** 取一个 PathCommand 末端 endpoint（move/line/quad/cubic → to；arc/ellipseArc → polar(end)；close 无端点） */

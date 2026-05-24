@@ -18,6 +18,20 @@ export const ARROW_SHAPES = {
 /** 箭头形状字面量类型 */
 export type ArrowShape = ValueOf<typeof ARROW_SHAPES>;
 
+/**
+ * 内置 7 箭头名联合
+ * @description `BUILTIN_ARROWS` 的 Record key（保穷尽性约束，不随 `ArrowShapeName` 开放而退化为 `string`）；
+ *   等价于历史 `ArrowShape`，独立命名对齐 `node.ts` 的 `BuiltinShapeName` 范式
+ */
+export type BuiltinArrowName = ValueOf<typeof ARROW_SHAPES>;
+
+/**
+ * 箭头形状名：开放字符串
+ * @description 内置 `BuiltinArrowName`，或经 `CompileOptions.arrows` 注册的扩展箭头名；
+ *   `& {}` 让 IDE 仍对内置 7 名自动补全，同时接受任意非空字符串（对齐 `node.ts` 的 `NodeShape`）
+ */
+export type ArrowShapeName = BuiltinArrowName | (string & {});
+
 /** 箭头默认形状 */
 export const DEFAULT_ARROW_SHAPE = ARROW_SHAPES.stealth;
 
@@ -40,10 +54,11 @@ export const ARROW_MARKER_HOLLOW_DEFAULT_LINE_WIDTH = 1.5;
 export const ArrowEndDetailSchema = z
   .object({
     shape: z
-      .nativeEnum(ARROW_SHAPES)
+      .string()
+      .min(1)
       .optional()
       .describe(
-        'Arrow tip shape. Defaults to `stealth` (sharp barb). Other values: `normal` (filled triangle), `open` (hollow triangle), `diamond`, `openDiamond`, `circle`, `openCircle`.',
+        'Registered arrow name: built-in 7 (`normal` / `open` / `stealth` / `diamond` / `openDiamond` / `circle` / `openCircle`) or an extension arrow registered via `CompileOptions.arrows`. Any non-empty string passes schema validation; unregistered names are rejected at compile time (throw). Defaults to `stealth`.',
       ),
     scale: z
       .number()

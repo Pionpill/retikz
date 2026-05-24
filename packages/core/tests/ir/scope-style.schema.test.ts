@@ -123,8 +123,14 @@ describe('ArrowDefaultSchema（every arrow 默认）', () => {
     ).toBe(true);
   });
 
-  it('拒非法 shape', () => {
-    expect(ArrowDefaultSchema.safeParse({ shape: 'bogus' }).success).toBe(false);
+  it('接受任意非空 shape 名（未注册名拒绝移到 compile 期）', () => {
+    // shape 已开成开放字符串（z.string().min(1)）：schema 不再门控名字白名单，
+    // 未注册名的拒绝移到 compile 期（见 arrows/builtin-registry.test.ts 的 compile throw 用例）
+    expect(ArrowDefaultSchema.safeParse({ shape: 'bogus' }).success).toBe(true);
+  });
+
+  it('拒空串 shape（min(1)）', () => {
+    expect(ArrowDefaultSchema.safeParse({ shape: '' }).success).toBe(false);
   });
 });
 

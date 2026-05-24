@@ -1,10 +1,20 @@
 import { type ReactElement } from 'react';
 import { describe, expect, it } from 'vitest';
-import type { GroupPrim, PathPrim, RectPrim, ScenePrimitive, TextPrim } from '@retikz/core';
+import type { ArrowEndSpec, GroupPrim, PathPrim, RectPrim, ScenePrimitive, TextPrim } from '@retikz/core';
 import { renderPrim } from '../../src/render/renderPrim';
 
 /** 测试在 node env 跑，不实际挂载——只检查返回的 React element 类型 / props 是否正确 */
 type AnyEl = ReactElement<Record<string, unknown> & { children?: unknown }>;
+
+/** 构造一个已解析 ArrowEndSpec（emit-in-compile 后的 PathPrim.arrowStart / arrowEnd 形态） */
+const resolvedSpec = (shape: string): ArrowEndSpec => ({
+  shape,
+  baseSize: 10,
+  refX: 0,
+  markerWidth: 6,
+  markerHeight: 6,
+  marker: [{ type: 'path', commands: [{ kind: 'move', to: [0, 0] }] }],
+});
 
 describe('renderPrim: rect', () => {
   const base: RectPrim = {
@@ -71,7 +81,7 @@ describe('renderPrim: path', () => {
 
   it('arrowStart / arrowEnd 通过 ctx.arrowMarkerIdFor 映射为 url(#id)', () => {
     const el = renderPrim(
-      { ...base, arrowStart: { shape: 'normal' }, arrowEnd: { shape: 'stealth' } },
+      { ...base, arrowStart: resolvedSpec('normal'), arrowEnd: resolvedSpec('stealth') },
       0,
       { arrowMarkerIdFor: spec => `mk-${spec.shape}` },
     ) as AnyEl;
@@ -80,7 +90,7 @@ describe('renderPrim: path', () => {
   });
 
   it('有 arrowEnd 但 ctx 未提供 arrowMarkerIdFor → markerEnd 静默 undefined', () => {
-    const el = renderPrim({ ...base, arrowEnd: { shape: 'normal' } }, 0) as AnyEl;
+    const el = renderPrim({ ...base, arrowEnd: resolvedSpec('normal') }, 0) as AnyEl;
     expect(el.props.markerEnd).toBeUndefined();
   });
 });

@@ -3,6 +3,7 @@ import type { IR, IRChild, IRPath, IRPosition, IRScope } from '../ir';
 import type { GroupPrim, Scene, ScenePrimitive, Transform } from '../primitive';
 import { BUILTIN_SHAPES } from '../shapes';
 import type { ShapeDefinition } from '../shapes';
+import type { ArrowDefinition } from '../arrows';
 import { type DuplicateRegisterInfo, NameStack } from './name-stack';
 import { type NodeLayout, emitNodePrimitives, labelExtentPoints, layoutNode } from './node';
 import { createPaintRegistry } from './paint';
@@ -84,6 +85,7 @@ export type CompileWarning = {
     | 'BBOX_EXTREME_INPUT'
     | 'DUPLICATE_NODE_ID'
     | 'SHAPE_OVERRIDES_BUILTIN'
+    | 'ARROW_OVERRIDES_BUILTIN'
     | (string & {});
   /** 人类可读消息（英文） */
   message: string;
@@ -118,6 +120,12 @@ export type CompileOptions = {
    *   `SHAPE_OVERRIDES_BUILTIN`。IR 的 `node.shape` 仍是字符串；未注册名在编译期 throw。
    */
   shapes?: Record<string, ShapeDefinition>;
+  /**
+   * 运行时注入的第三方 arrow（不进 IR）
+   * @description 有效 arrow 表 = `{ ...BUILTIN_ARROWS, ...arrows }`——同名 key 覆盖内置，经 `onWarn` 发
+   *   `ARROW_OVERRIDES_BUILTIN`。IR 的 `arrowDetail.shape` 仍是字符串；未注册名在编译期 throw。
+   */
+  arrows?: Record<string, ArrowDefinition>;
 };
 
 /**

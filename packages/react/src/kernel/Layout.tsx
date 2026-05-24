@@ -1,5 +1,6 @@
 import { type CSSProperties, type FC, type ReactNode, useId, useMemo } from 'react';
 import {
+  type ArrowDefinition,
   type ArrowEndSpec,
   type AssertEqual,
   type IR,
@@ -38,6 +39,13 @@ export type LayoutProps = {
    * @description IR 里 `<Node shape="...">` 仍只写字符串名；定义在此注入。同名覆盖内置时编译期发 `SHAPE_OVERRIDES_BUILTIN`；未注册名编译期 throw
    */
   shapes?: Record<string, ShapeDefinition>;
+  /**
+   * 运行时注入的第三方 / 自定义 arrow（透传给 `compileToScene` 的 `CompileOptions.arrows`）
+   * @description IR 里 `<Path arrowDetail={{ shape: '...' }}>` 仍只写字符串名；定义在此注入。emit-in-compile：
+   *   compile 调 `def.emit` 产 marker 几何进 `ArrowEndSpec`，react adapter 只物化、不需 arrows 表。同名覆盖
+   *   内置时编译期发 `ARROW_OVERRIDES_BUILTIN`；未注册名编译期 throw
+   */
+  arrows?: Record<string, ArrowDefinition>;
 };
 
 /** 递归收集 scene 里所有 PathPrim 用到的 arrow 端点 spec —— 按需注入 marker defs */
@@ -58,36 +66,40 @@ const collectArrowSpecs = (prims: Array<ScenePrimitive>): Array<ArrowEndSpec> =>
 };
 
 /**
- * `ArrowEndSpec` 全部可选字段（不含必填 `shape`）的字段表——`stableSpecKey` 遍历此表拼 key
- * @description `as const satisfies` 拒不存在的 key；下方 `_OptionalCheck` 静态校验完备性——未来 `ArrowEndSpec` 加新可选字段时此表漏写 TS 编译期报错，防"字段表漂移"
+ * `ArrowEndSpec`（已解析 marker 描述）除必填 `shape` 外的全部字段表——`stableSpecKey` 遍历此表拼 key
+ * @description `as const satisfies` 拒不存在的 key；下方 `_OptionalCheck` 静态校验完备性——未来 `ArrowEndSpec`
+ *   加新字段时此表漏写 TS 编译期报错，防"字段表漂移"。emit-in-compile 后 spec 字段集为 wrapper 参数
+ *   （baseSize / refX / markerWidth / markerHeight / opacity）+ 已解析几何（marker）。
  */
-const ARROW_END_SPEC_OPTIONAL_FIELDS = [
-  'scale',
-  'length',
-  'width',
-  'color',
-  'fill',
+const ARROW_END_SPEC_KEY_FIELDS = [
+  'baseSize',
+  'refX',
+  'markerWidth',
+  'markerHeight',
   'opacity',
-  'lineWidth',
+  'marker',
 ] as const satisfies ReadonlyArray<keyof ArrowEndSpec>;
 
 // 类型层完备性互锁：字段表必须覆盖 ArrowEndSpec 除 `shape` 外的所有 key（漏 / 多 字段 TS 报错）
-type _OptionalCheck = AssertEqual<
-  (typeof ARROW_END_SPEC_OPTIONAL_FIELDS)[number],
+type _KeyFieldsCheck = AssertEqual<
+  (typeof ARROW_END_SPEC_KEY_FIELDS)[number],
   Exclude<keyof ArrowEndSpec, 'shape'>
 >;
-const _assertOptionalCheck: _OptionalCheck = true;
-void _assertOptionalCheck;
+const _assertKeyFieldsCheck: _KeyFieldsCheck = true;
+void _assertKeyFieldsCheck;
 
 /**
  * spec → 稳定字符串 key
- * @description 必填 `shape` 头部输出，其余 optional 字段按 `ARROW_END_SPEC_OPTIONAL_FIELDS` 顺序遍历——不依赖对象字面量字段顺序、不漏字段；输出仅含 [A-Za-z0-9_-=|]，可安全嵌入 SVG id；不同 spec → 不同 key、相同 spec → 同 key（dedup）
+ * @description 必填 `shape` 头部输出，其余字段按 `ARROW_END_SPEC_KEY_FIELDS` 顺序遍历——不依赖对象字面量
+ *   字段顺序、不漏字段；标量直接拼，`marker`（结构化几何数组）走 JSON.stringify。不同 spec → 不同 key、
+ *   相同 spec → 同 key（dedup）。
  */
 const stableSpecKey = (spec: ArrowEndSpec): string => {
   const parts: Array<string> = [`shape=${spec.shape}`];
-  for (const field of ARROW_END_SPEC_OPTIONAL_FIELDS) {
+  for (const field of ARROW_END_SPEC_KEY_FIELDS) {
     const value = spec[field];
-    if (value !== undefined) parts.push(`${field}=${value}`);
+    if (value === undefined) continue;
+    parts.push(`${field}=${typeof value === 'object' ? JSON.stringify(value) : value}`);
   }
   return parts.join('|');
 };
@@ -109,11 +121,11 @@ const hashKey = (key: string): string => {
  * @description 流水线：从 children 构造 IR（或直接接受外部 IR）→ compileToScene 得 Scene → 渲染 SVG 元素并按需注入 `<defs>` 与每种 arrow 端点 spec 的 `<marker>`；marker id 用 `useId()` 派生稳定前缀避免多实例冲突，每种 detail 一个定义（`${prefix}-${specHash}`），marker 内借 spec 字段（`color` / `fill` / `opacity` 等）替换硬编码，缺省字段回退到 `context-stroke` 让颜色继续跟随 path 同步
  */
 export const Layout: FC<LayoutProps> = props => {
-  const { ir: irFromProp, children, width, height, className, style, nodeDistance, shapes } = props;
+  const { ir: irFromProp, children, width, height, className, style, nodeDistance, shapes, arrows } = props;
   const ir = useMemo(() => irFromProp ?? buildIR(children), [irFromProp, children]);
   const scene = useMemo(
-    () => compileToScene(ir, { measureText: browserMeasurer, nodeDistance, shapes }),
-    [ir, nodeDistance, shapes],
+    () => compileToScene(ir, { measureText: browserMeasurer, nodeDistance, shapes, arrows }),
+    [ir, nodeDistance, shapes, arrows],
   );
 
   // useId 返回 ":r0:" 含冒号；SVG `url(#id)` 对冒号兼容性差，剥成纯字母数字

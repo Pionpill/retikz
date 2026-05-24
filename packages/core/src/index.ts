@@ -97,6 +97,8 @@ export type {
   IRChild,
   IR,
   ArrowShape,
+  BuiltinArrowName,
+  ArrowShapeName,
   IRArrowDetail,
   IRArrowEndDetail,
   NodeShape,
@@ -143,6 +145,14 @@ export type {
   Scene,
   PaintValue,
   SceneResource,
+  /** marker 窄子集（ArrowDefinition.emit 产物，renderer-agnostic） */
+  MarkerPrimitive,
+  MarkerPathPrim,
+  MarkerEllipsePrim,
+  MarkerRectPrim,
+  MarkerGroupPrim,
+  MarkerPathCommand,
+  MarkerFill,
 } from './primitive';
 
 // Compile (IR → Scene)
@@ -183,6 +193,10 @@ export { point, rect, circle, ellipse, diamond, RECT_ANCHORS, polar } from './ge
 // Shapes (Shape Registry 扩展面：第三方 shape 注入 + 内置注册项 + 作者所需 helper)
 export type { ShapeDefinition, ShapeStyle } from './shapes';
 export { BUILTIN_SHAPES, worldToLocal, localToWorld } from './shapes';
+
+// Arrows (Arrow Registry 扩展面：第三方 arrow 注入 + 内置注册项)
+export type { ArrowDefinition, ArrowEmitContext } from './arrows';
+export { BUILTIN_ARROWS } from './arrows';
 
 // Type utilities
 export type { ValueOf, AssertEqual } from './types';

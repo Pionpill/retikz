@@ -2,13 +2,16 @@
  * Scope 样式继承 compile 测试（alpha.2 ADR-01）
  * @description 主色级联 + 同源分项覆盖主色 + 颜色级联到 label/arrow + 四通道 every-X + 优先级链（就近 model A）+
  *   缺省/显式 none + resetStyle 四通道（不碰 host 轴）+ opacity 替换不复合 + 与 transforms / localNamespace 正交。
- *   断言层级：node → rect/ellipse fill/stroke + text fill；path → PathPrim.stroke + arrowEnd.color + step-label TextPrim.fill
+ *   断言层级：node → rect/ellipse fill/stroke + text fill；path → PathPrim.stroke + 已解析 marker 几何颜色（markerPaintColor）+ step-label TextPrim.fill
  */
 import { describe, expect, it } from 'vitest';
 import { compileToScene } from '../../src/compile/compile';
 import type { IR } from '../../src/ir';
 import type {
+  ArrowEndSpec,
   EllipsePrim,
+  MarkerFill,
+  MarkerPrimitive,
   PathPrim,
   RectPrim,
   ScenePrimitive,
@@ -39,6 +42,32 @@ const textsOf = (ir: IR): Array<TextPrim> =>
 /** 取指定文字内容的 TextPrim（node 文本 vs step label 文本区分） */
 const textWith = (ir: IR, content: string): TextPrim | undefined =>
   textsOf(ir).find(t => t.lines[0]?.text === content);
+
+/**
+ * 从已解析 `ArrowEndSpec` 的 marker 几何里抽"主导箭头颜色"
+ * @description 新契约下视觉输入（color）在 compile 被消费、不再挂 `ArrowEndSpec`——解析后的颜色物化进
+ *   `marker[]` 内部几何的 fill / stroke（实心走 fill、空心走 stroke；contextStroke 表示继承 path stroke）。
+ *   测断言箭头颜色优先级链时改读此处。递归穿 group 子原语，返回首个非 contextStroke 的纯色字符串；
+ *   全部 contextStroke / 无 paint 时返回 undefined（= 走继承，未冻结颜色）。
+ */
+const markerPaintColor = (spec: ArrowEndSpec | undefined): string | undefined => {
+  if (!spec) return undefined;
+  const pickFill = (f: MarkerFill | undefined): string | undefined =>
+    typeof f === 'string' ? f : undefined;
+  const walk = (prims: ReadonlyArray<MarkerPrimitive>): string | undefined => {
+    for (const p of prims) {
+      if (p.type === 'group') {
+        const c = walk(p.children);
+        if (c !== undefined) return c;
+        continue;
+      }
+      const c = pickFill(p.fill) ?? (typeof p.stroke === 'string' ? p.stroke : undefined);
+      if (c !== undefined && c !== 'context-stroke') return c;
+    }
+    return undefined;
+  };
+  return walk(spec.marker);
+};
 
 // ===========================================================================
 // Happy path
@@ -73,7 +102,8 @@ describe('Happy: 主色级联 / 四通道', () => {
     expect(textWith(ir, 'A')?.fill).toBe('blue');
     const path = linePathOf(ir);
     expect(path?.stroke).toBe('blue');
-    expect(path?.arrowEnd?.color).toBe('blue');
+    // 解析后的箭头颜色物化进 marker 几何（新契约：color 不再挂 ArrowEndSpec）
+    expect(markerPaintColor(path?.arrowEnd)).toBe('blue');
     expect(textWith(ir, 'e')?.fill).toBe('blue');
   });
 
@@ -109,7 +139,7 @@ describe('Happy: 主色级联 / 四通道', () => {
       ],
     };
     expect(linePathOf(ir)?.stroke).toBe('crimson');
-    expect(linePathOf(ir)?.arrowEnd?.color).toBe('crimson');
+    expect(markerPaintColor(linePathOf(ir)?.arrowEnd)).toBe('crimson');
     expect(textWith(ir, 'sin')?.fill).toBe('crimson');
   });
 
@@ -135,7 +165,8 @@ describe('Happy: 主色级联 / 四通道', () => {
       ],
     };
     expect(linePathOf(ir)?.arrowEnd?.shape).toBe('stealth');
-    expect(linePathOf(ir)?.arrowEnd?.scale).toBe(1.5);
+    // scale 1.5 在 compile 被消费乘进 markerWidth（默认 length 6 × 1.5 = 9）；scale 不再挂 ArrowEndSpec
+    expect(linePathOf(ir)?.arrowEnd?.markerWidth).toBeCloseTo(9, 5);
   });
 });
 
@@ -313,7 +344,7 @@ describe('交互: 优先级 / resetStyle / opacity / 正交', () => {
     };
     // 外层 arrowDefault circle 被切 → 回内置 stealth；但 color 仍跟宿主 path 红（host 轴不切）
     expect(linePathOf(ir)?.arrowEnd?.shape).toBe('stealth');
-    expect(linePathOf(ir)?.arrowEnd?.color).toBe('red');
+    expect(markerPaintColor(linePathOf(ir)?.arrowEnd)).toBe('red');
   });
 
   it('reset_style_label_keeps_host_color：resetStyle=[label] 切外层 labelDefault，label 仍跟宿主线红', () => {
@@ -436,7 +467,7 @@ describe('交互: 优先级 / resetStyle / opacity / 正交', () => {
         (p): p is PathPrim =>
           p.type === 'path' && !p.commands.some(c => c.kind === 'close'),
       )
-      .map(p => p.arrowEnd?.color);
+      .map(p => markerPaintColor(p.arrowEnd));
     // 第一条：主色 red 覆盖 arrowDefault green（host 轴 > every-X color）；第二条：元素 arrowDetail.color=purple 最高
     expect(arrowColors).toEqual(['red', 'purple']);
   });
@@ -478,7 +509,7 @@ describe('交互: 优先级 / resetStyle / opacity / 正交', () => {
         (p): p is PathPrim =>
           p.type === 'path' && !p.commands.some(c => c.kind === 'close'),
       )
-      .map(p => p.arrowEnd?.color);
+      .map(p => markerPaintColor(p.arrowEnd));
     // 第一条：主色 red 覆盖 arrowDefault.end.color=green（端点回退主色）；第二条：显式 arrowDetail.end.color=purple 最高
     expect(arrowColors).toEqual(['red', 'purple']);
   });
@@ -513,6 +544,6 @@ describe('交互: 优先级 / resetStyle / opacity / 正交', () => {
     const arrow = linePathOf(ir)?.arrowEnd;
     // per-field merge：内层 shape=circle 覆盖，外层 end.color=red 保留（path 无主色，arrowDefault 端点色生效）
     expect(arrow?.shape).toBe('circle');
-    expect(arrow?.color).toBe('red');
+    expect(markerPaintColor(arrow)).toBe('red');
   });
 });

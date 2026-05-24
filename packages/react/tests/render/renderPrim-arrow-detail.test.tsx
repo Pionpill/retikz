@@ -1,6 +1,6 @@
 import { type ReactElement } from 'react';
 import { describe, expect, it } from 'vitest';
-import type { ArrowEndSpec, PathPrim } from '@retikz/core';
+import type { ArrowEndSpec, MarkerPrimitive, PathPrim } from '@retikz/core';
 import { renderPrim } from '../../src/render/renderPrim';
 
 type AnyEl = ReactElement<Record<string, unknown> & { children?: unknown }>;
@@ -9,6 +9,16 @@ type AnyEl = ReactElement<Record<string, unknown> & { children?: unknown }>;
 const markerIdFor = (spec: ArrowEndSpec): string => {
   // 测试用简化 hash：JSON.stringify
   return `mk-${JSON.stringify(spec)}`;
+};
+
+/** 构造一个已解析 ArrowEndSpec（emit-in-compile 后的形态）；marker 颜色用来区分不同 detail */
+const resolvedSpec = (shape: string, fill?: string): ArrowEndSpec => {
+  const path: MarkerPrimitive = {
+    type: 'path',
+    commands: [{ kind: 'move', to: [0, 0] }],
+    ...(fill !== undefined ? { fill } : {}),
+  };
+  return { shape, baseSize: 10, refX: 0, markerWidth: 6, markerHeight: 6, marker: [path] };
 };
 
 describe('renderPrim path: arrowStart / arrowEnd 是 ArrowEndSpec', () => {
@@ -22,8 +32,8 @@ describe('renderPrim path: arrowStart / arrowEnd 是 ArrowEndSpec', () => {
     strokeWidth: 1,
   };
 
-  it("仅传 { shape } 时 markerEnd id 反映 detail（与 shape-only ABI 兼容）", () => {
-    const spec: ArrowEndSpec = { shape: 'normal' };
+  it("传已解析 spec 时 markerEnd id 反映 detail", () => {
+    const spec = resolvedSpec('normal');
     const el = renderPrim(
       { ...base, arrowEnd: spec },
       0,
@@ -33,8 +43,8 @@ describe('renderPrim path: arrowStart / arrowEnd 是 ArrowEndSpec', () => {
   });
 
   it("start / end 不同 detail → markerStart / markerEnd 不同 url", () => {
-    const startSpec: ArrowEndSpec = { shape: 'normal', color: 'red' };
-    const endSpec: ArrowEndSpec = { shape: 'stealth', color: 'blue' };
+    const startSpec = resolvedSpec('normal', 'red');
+    const endSpec = resolvedSpec('stealth', 'blue');
     const el = renderPrim(
       { ...base, arrowStart: startSpec, arrowEnd: endSpec },
       0,
@@ -47,14 +57,14 @@ describe('renderPrim path: arrowStart / arrowEnd 是 ArrowEndSpec', () => {
 
   it("ctx.arrowMarkerIdFor 缺省 → markerEnd 静默 undefined（与旧行为一致）", () => {
     const el = renderPrim(
-      { ...base, arrowEnd: { shape: 'normal' } },
+      { ...base, arrowEnd: resolvedSpec('normal') },
       0,
     ) as AnyEl;
     expect(el.props.markerEnd).toBeUndefined();
   });
 
   it("起末同 detail → id 完全一致（dedup 复用同一个 defs）", () => {
-    const spec: ArrowEndSpec = { shape: 'stealth', color: 'red' };
+    const spec = resolvedSpec('stealth', 'red');
     const el = renderPrim(
       { ...base, arrowStart: spec, arrowEnd: spec },
       0,
@@ -77,7 +87,7 @@ describe('renderPrim path: arrowEnd 字段顺序不影响 id', () => {
 
   it("renderPrim 把 arrowEnd spec 原样喂给 arrowMarkerIdFor", () => {
     let captured: ArrowEndSpec | undefined;
-    const spec: ArrowEndSpec = { shape: 'stealth', color: 'red', scale: 1.5 };
+    const spec = resolvedSpec('stealth', 'red');
     renderPrim(
       { ...base, arrowEnd: spec },
       0,

@@ -3,8 +3,19 @@ import {
   ARROW_MARKER_HOLLOW_DEFAULT_LINE_WIDTH,
   HOLLOW_ARROW_SHAPES,
 } from '../../ir';
-import type { ArrowShape } from '../../ir';
-import type { ArrowEndSpec } from '../../primitive';
+import type { ArrowShape, ArrowShapeName } from '../../ir';
+
+/**
+ * 解析端点几何所需的视觉输入子集（compile-internal）
+ * @description 仅 `shape`（决定中性几何）+ `lineWidth`（空心 refX 调整）；与 `shrink.ts` 的
+ *   `ResolvedArrowVisual` 结构兼容。不耦合最终 `ArrowEndSpec`（后者已无 lineWidth）。
+ */
+type ArrowVisualInput = {
+  /** 形状名（内置 7 或开放扩展名） */
+  shape: ArrowShapeName;
+  /** 空心 shape 描边粗细（user units）；缺省 1.5 */
+  lineWidth?: number;
+};
 
 /** 标准箭头局部坐标基准尺寸 */
 const ARROW_GEOMETRY_BASE_SIZE = 10;
@@ -25,12 +36,12 @@ export type ArrowShapeGeometry = {
   hollowLineWidth?: number;
 };
 
-/** 箭头形状是否为空心描边形状 */
-export const isHollowArrowShape = (shape: ArrowShape): boolean =>
-  HOLLOW_ARROW_SHAPES.has(shape);
+/** 箭头形状是否为空心描边形状（接受开放名；非内置空心名按实心处理） */
+export const isHollowArrowShape = (shape: ArrowShapeName): boolean =>
+  HOLLOW_ARROW_SHAPES.has(shape as ArrowShape);
 
 /** 解析端点箭头在标准局部坐标中的中性几何 */
-export const resolveArrowShapeGeometry = (spec: ArrowEndSpec): ArrowShapeGeometry => {
+export const resolveArrowShapeGeometry = (spec: ArrowVisualInput): ArrowShapeGeometry => {
   const lineWidth = spec.lineWidth ?? ARROW_MARKER_HOLLOW_DEFAULT_LINE_WIDTH;
   const base: ArrowShapeGeometry = {
     baseSize: ARROW_GEOMETRY_BASE_SIZE,
@@ -61,5 +72,8 @@ export const resolveArrowShapeGeometry = (spec: ArrowEndSpec): ArrowShapeGeometr
         lineContactX: 0.75 - lineWidth / 2,
         hollowLineWidth: lineWidth,
       };
+    default:
+      // 开放名（扩展 arrow）落默认实心几何；registry 查表 / 未注册名 throw 由编译期落
+      return base;
   }
 };
