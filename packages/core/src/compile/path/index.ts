@@ -45,6 +45,61 @@ import { BUILTIN_ARROWS } from '../../arrows';
 const nodeRefId = (t: IRTarget): string | undefined =>
   typeof t === 'object' && !Array.isArray(t) && 'id' in t ? t.id : undefined;
 
+/** 有限数 */
+const isFiniteNum = (n: unknown): n is number => typeof n === 'number' && Number.isFinite(n);
+
+/** 有限坐标点 `[number, number]` */
+const isFinitePoint = (pt: unknown): boolean =>
+  Array.isArray(pt) && pt.length >= 2 && isFiniteNum(pt[0]) && isFiniteNum(pt[1]);
+
+/**
+ * 校验 path generator 产出的单条命令合法（kind 已知 + 引用坐标 / 数值有限）
+ * @description 第三方 / LLM 写的 generate 误产坏命令（NaN/Infinity 坐标、未知 kind、缺字段、字符串当命令）时
+ *   抛含 generator 名的清晰错——守 Scene 100% finite / JSON 可序列化，不放任非 finite 静默入 Scene
+ *   （JSON.stringify(NaN/Infinity)=null 会让 round-trip 失真）。
+ */
+const assertValidGeneratedCommand = (name: string, cmd: unknown): void => {
+  const bad = (detail: string): never => {
+    throw new Error(`path generator '${name}' produced a ${detail}.`);
+  };
+  if (cmd === null || typeof cmd !== 'object') {
+    bad(`non-object command (expected an object with a 'kind')`);
+    return;
+  }
+  const c = cmd as Record<string, unknown>;
+  switch (c.kind) {
+    case 'move':
+    case 'line':
+      if (!isFinitePoint(c.to)) bad(`non-finite coordinate in a '${String(c.kind)}' command`);
+      break;
+    case 'quad':
+      if (!isFinitePoint(c.control) || !isFinitePoint(c.to)) bad(`non-finite coordinate in a 'quad' command`);
+      break;
+    case 'cubic':
+      if (!isFinitePoint(c.control1) || !isFinitePoint(c.control2) || !isFinitePoint(c.to))
+        bad(`non-finite coordinate in a 'cubic' command`);
+      break;
+    case 'arc':
+      if (!isFinitePoint(c.center) || !isFiniteNum(c.radius) || !isFiniteNum(c.startAngle) || !isFiniteNum(c.endAngle))
+        bad(`non-finite value in an 'arc' command`);
+      break;
+    case 'ellipseArc':
+      if (
+        !isFinitePoint(c.center) ||
+        !isFiniteNum(c.radiusX) ||
+        !isFiniteNum(c.radiusY) ||
+        !isFiniteNum(c.startAngle) ||
+        !isFiniteNum(c.endAngle)
+      )
+        bad(`non-finite value in an 'ellipseArc' command`);
+      break;
+    case 'close':
+      break;
+    default:
+      bad(`command with unknown kind '${String(c.kind)}'`);
+  }
+};
+
 /**
  * 语义 stroke 档位 → 数值（user units）
  * @description 对齐 TikZ 比例（thin=0.4pt→1=默认 strokeWidth）：ultraThin 0.25、veryThin 0.5、thin 1、semithick 1.5、thick 2、veryThick 3、ultraThick 4。显式 strokeWidth 覆盖 thickness。
@@ -355,7 +410,7 @@ export const emitPathPrimitive = (
         ? generators[step.name]
         : undefined;
       if (!def) {
-        const available = Object.keys(generators).sort().join(', ');
+        const available = Object.keys(generators).sort().join(', ') || '(none registered)';
         throw new Error(
           `Unknown path generator '${step.name}'; available: ${available}`,
         );
@@ -375,6 +430,13 @@ export const emitPathPrimitive = (
         if (key.includes('.')) continue;
         const raw = paramsObj[key];
         if (raw === undefined) continue;
+        // 值须是 Target 形态（node id 串 / [x,y] / target 对象）；number / boolean / null 等非 Target →
+        // 清晰错（否则 refPointOfTarget 内的 `'id' in raw` 对原始值抛裸 TypeError，LLM 无从自修）
+        if (raw === null || (typeof raw !== 'string' && typeof raw !== 'object')) {
+          throw new Error(
+            `path generator '${step.name}' targetParams key '${key}' must be a target (node id, coordinate, or target object); got ${raw === null ? 'null' : typeof raw}.`,
+          );
+        }
         const resolved = refPointOfTarget(raw as IRTarget, nameStack, scopeChain);
         if (resolved) resolvedTargets[key] = resolved;
       }
@@ -391,13 +453,28 @@ export const emitPathPrimitive = (
           : null;
       const toGen = resolvedTo ?? undefined;
 
-      const generated = def.generate({
-        from: fromGen,
-        ...(toGen !== undefined ? { to: toGen } : {}),
-        params: paramsObj,
-        resolvedTargets,
-        round,
-      });
+      let produced: unknown;
+      try {
+        produced = def.generate({
+          from: fromGen,
+          ...(toGen !== undefined ? { to: toGen } : {}),
+          params: paramsObj,
+          resolvedTargets,
+          round,
+        });
+      } catch (e) {
+        throw new Error(
+          `path generator '${step.name}' threw: ${e instanceof Error ? e.message : String(e)}`,
+          { cause: e },
+        );
+      }
+      if (!Array.isArray(produced)) {
+        throw new Error(
+          `path generator '${step.name}' must return an array of path commands; got ${produced === null ? 'null' : typeof produced}.`,
+        );
+      }
+      for (const cmd of produced) assertValidGeneratedCommand(step.name, cmd);
+      const generated = produced as Array<PathCommand>;
 
       // 段起点：generator 首命令非 move 时补一个 move（与 lastEnd 相同则复用游标）
       startSegment(fromGen);
@@ -427,8 +504,9 @@ export const emitPathPrimitive = (
               cmd.endAngle,
             );
             break;
-          default:
+          case 'close':
             emitClose();
+            break;
         }
       }
 

@@ -10,7 +10,7 @@ export const JsonValueSchema: z.ZodType<JsonValue> = z.lazy(() =>
   z
     .union([
       z.string(),
-      z.number(),
+      z.number().finite(),
       z.boolean(),
       z.null(),
       z.array(JsonValueSchema),
