@@ -15,8 +15,8 @@ export const changelog: Array<Release> = [
         pkg: '@retikz/core',
         version: 'v0.2',
         description: {
-          zh: 'v0.2:形状 / 箭头 / 路径生成器三注册面 + Paint 填充(渐变 / 图案 / 图片),Scope 样式默认、zIndex、Node 换行 / 引脚,Path out/in·自环 / 变换 / 中段标记。',
-          en: 'v0.2: shape / arrow / path-generator registries + Paint fills (gradients / pattern / image), Scope style defaults, zIndex, Node wrapping / pins, and Path out/in / transform / marks.',
+          zh: 'v0.2:形状 / 箭头 / 图案 / 路径生成器四注册面 + Paint 填充(渐变 / 图案 / 图片),Scope 样式默认、zIndex、Node 换行 / 引脚,Path out/in·自环 / 变换 / 中段标记。',
+          en: 'v0.2: shape / arrow / pattern / path-generator registries + Paint fills (gradients / pattern / image), Scope style defaults, zIndex, Node wrapping / pins, and Path out/in / transform / marks.',
         },
         highlights: [
           {
@@ -34,10 +34,10 @@ export const changelog: Array<Release> = [
             },
           },
           {
-            label: { zh: '箭头 / 生成器注册面', en: 'Arrow / generator registries' },
+            label: { zh: '箭头 / 图案 / 生成器注册面', en: 'Arrow / pattern / generator registries' },
             content: {
-              zh: 'ArrowDefinition(自定义箭头,emit-in-compile,内置 7 降注册项)+ PathGeneratorDefinition(外部曲线包,JSON params 双 parse 护栏),与形状注册面同构 [自定义箭头](/core/reference/extending/custom-arrow)',
-              en: 'ArrowDefinition (custom arrows, emit-in-compile, the 7 built-ins demoted to entries) + PathGeneratorDefinition (external curve packages, JSON params with a double-parse guard), isomorphic to the shape registry [custom arrows](/core/reference/extending/custom-arrow)',
+              zh: 'ArrowDefinition(自定义箭头,emit-in-compile,内置 7 降注册项)+ PatternDefinition(自定义图案 motif,复用 MarkerPrimitive)+ PathGeneratorDefinition(外部曲线包,JSON params 双 parse 护栏),与形状注册面同构 [自定义箭头](/core/reference/extending/custom-arrow)',
+              en: 'ArrowDefinition (custom arrows, emit-in-compile, the 7 built-ins demoted to entries) + PatternDefinition (custom pattern motifs, reusing MarkerPrimitive) + PathGeneratorDefinition (external curve packages, JSON params with a double-parse guard), isomorphic to the shape registry [custom arrows](/core/reference/extending/custom-arrow)',
             },
           },
           {
@@ -90,6 +90,13 @@ export const changelog: Array<Release> = [
                 content: {
                   zh: '`bend` step 加 `outAngle` / `inAngle` / `looseness`(out/in 优先于 bendDirection,`from==to` 退化为自环);`PathSchema` 加 `rotate` / `scale`(绕包围盒中心)与 `marks`(沿 `pos∈[0,1]` 放箭头、朝向随切线);非 finite 几何(NaN / Infinity / 溢出)编译期拦截,守 Scene 100% JSON 可序列化',
                   en: '`bend` step gains `outAngle` / `inAngle` / `looseness` (out/in takes precedence over bendDirection, `from==to` degenerates to a self-loop); `PathSchema` gains `rotate` / `scale` (around the bbox center) and `marks` (arrows at `pos∈[0,1]`, tangent-oriented); non-finite geometry (NaN / Infinity / overflow) is rejected at compile to keep the Scene 100% JSON-serializable',
+                },
+              },
+              {
+                label: { zh: 'PatternDefinition 注册面', en: 'PatternDefinition registry' },
+                content: {
+                  zh: '`pattern.shape` 开放为 string + `CompileOptions.patterns`;内置 lines / dots / grid 降注册项;复用 ADR-01 的 `MarkerPrimitive` emit + emit-in-compile——compile 调 `def.emit` 产 motif tile 写进 `SceneResource.tile`,adapter 物化 `<pattern>`;motif 颜色缺省 `currentColor`;size / rotation / motif 坐标 finite 守卫',
+                  en: '`pattern.shape` opens to a string + `CompileOptions.patterns`; built-in lines / dots / grid become registry entries; reuses ADR-01’s `MarkerPrimitive` emit + emit-in-compile — compile calls `def.emit` to produce the motif tile into `SceneResource.tile`, the adapter materializes the `<pattern>`; motif color defaults to `currentColor`; size / rotation / motif coordinates are finite-guarded',
                 },
               },
             ],
@@ -328,8 +335,8 @@ export const changelog: Array<Release> = [
               {
                 label: { zh: '注入 prop + Path/Step 字段', en: 'Injection props + Path/Step fields' },
                 content: {
-                  zh: '`<Layout>` 加 `arrows` / `pathGenerators` prop 透传 `compileToScene`(对齐 `shapes`);`<Path>` 加 `rotate` / `scale` / `marks`;`<Step kind="bend">` 加 `outAngle` / `inAngle` / `looseness`,`bendDirection` 改 optional',
-                  en: '`<Layout>` gains `arrows` / `pathGenerators` props forwarded to `compileToScene` (matching `shapes`); `<Path>` gains `rotate` / `scale` / `marks`; `<Step kind="bend">` gains `outAngle` / `inAngle` / `looseness`, `bendDirection` becomes optional',
+                  zh: '`<Layout>` 加 `arrows` / `patterns` / `pathGenerators` prop 透传 `compileToScene`(对齐 `shapes`);`<Path>` 加 `rotate` / `scale` / `marks`;`<Step kind="bend">` 加 `outAngle` / `inAngle` / `looseness`,`bendDirection` 改 optional;paintDefs 物化 pattern `tile`(MarkerPrimitive→SVG,删 motif switch)',
+                  en: '`<Layout>` gains `arrows` / `patterns` / `pathGenerators` props forwarded to `compileToScene` (matching `shapes`); `<Path>` gains `rotate` / `scale` / `marks`; `<Step kind="bend">` gains `outAngle` / `inAngle` / `looseness`, `bendDirection` becomes optional; paintDefs materializes the pattern `tile` (MarkerPrimitive→SVG, motif switch removed)',
                 },
               },
             ],
@@ -468,15 +475,15 @@ export const changelog: Array<Release> = [
             version: 'alpha.8',
             date: '2026-05-24',
             summary: {
-              zh: 'reference/extending 新增自定义箭头 / 路径生成器两概念页(双语 + demo);Path 页补 out/in·自环 / 整体变换 / 中段 marking。',
-              en: 'New custom-arrow / path-generator pages under reference/extending (bilingual + demos); the Path page gains out/in·self-loop / transform / mid-path marking.',
+              zh: 'reference/extending 新增自定义箭头 / 路径生成器 / 自定义图案三概念页(双语 + demo);Path 页补 out/in·自环 / 整体变换 / 中段 marking;custom-arrow demo 改 TikZ Bracket 样式。',
+              en: 'New custom-arrow / path-generator / custom-pattern pages under reference/extending (bilingual + demos); the Path page gains out/in·self-loop / transform / mid-path marking; the custom-arrow demo switches to a TikZ Bracket style.',
             },
             items: [
               {
                 label: { zh: '注册面概念页 + Path 扩展', en: 'Registry concept pages + Path extension' },
                 content: {
-                  zh: '[自定义箭头](/core/reference/extending/custom-arrow)(注册 + ArrowDefinition 契约 + emit/MarkerPrimitive + 颜色继承 + 2 demo)、[路径生成器](/core/reference/extending/path-generator)(契约 + 双 parse + targetParams + parabola/sin demo);[Path 页](/core/components/draw/path)补 out/in·自环 / rotate·scale / marks 三 demo 与 API 行',
-                  en: '[Custom Arrows](/core/reference/extending/custom-arrow) (registration + ArrowDefinition contract + emit/MarkerPrimitive + color inheritance + 2 demos), [Path Generators](/core/reference/extending/path-generator) (contract + double-parse + targetParams + parabola/sin demos); the [Path page](/core/components/draw/path) gains out/in·self-loop / rotate·scale / marks demos plus API rows',
+                  zh: '[自定义箭头](/core/reference/extending/custom-arrow)(注册 + ArrowDefinition 契约 + emit/MarkerPrimitive + 颜色继承 + Bracket demo)、[路径生成器](/core/reference/extending/path-generator)(契约 + 双 parse + targetParams + parabola/sin demo)、[自定义图案](/core/reference/extending/custom-pattern)(PatternDefinition + emit-in-compile tile + cross/size demo);[Path 页](/core/components/draw/path)补 out/in·自环 / rotate·scale / marks 三 demo 与 API 行',
+                  en: '[Custom Arrows](/core/reference/extending/custom-arrow) (registration + ArrowDefinition contract + emit/MarkerPrimitive + color inheritance + a Bracket demo), [Path Generators](/core/reference/extending/path-generator) (contract + double-parse + targetParams + parabola/sin demos), [Custom Patterns](/core/reference/extending/custom-pattern) (PatternDefinition + emit-in-compile tile + cross/size demos); the [Path page](/core/components/draw/path) gains out/in·self-loop / rotate·scale / marks demos plus API rows',
                 },
               },
             ],
