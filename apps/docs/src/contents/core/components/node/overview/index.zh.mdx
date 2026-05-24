@@ -196,7 +196,13 @@ Line 2`}</Node>
 
 <ComponentPreview name="node-pattern-image" size="sm" />
 
-> image 目前只支持 URL `href`（含 data URI）；SSR / 导出 PNG 时的图片内联待后续。
+`href` 接任意外部图片 URL(http(s))或 data URI;`fit` 控制图片如何映射到形状盒——同一张外部横图(`picsum.photos`,320×200)按三种 fit 填进方形盒:
+
+<ComponentPreview name="node-image-fit" size="sm" />
+
+> `fit` 按形状盒归一计算:方形盒时与 CSS `object-fit` 一致;强非方形盒下 cover/contain 为近似(按归一方形而非真实长宽比)。源图与盒同形(都方/都横)时三种 fit 视觉无差异。
+>
+> image 走运行期 `<image href>`,外部 URL 在浏览器侧加载;SSR / 导出 PNG 时的图片内联待后续。
 
 #### 描边样式
 

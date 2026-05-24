@@ -196,7 +196,13 @@ A stop's `opacity` gives a "solid → transparent" fade; `color` set to `current
 
 <ComponentPreview name="node-pattern-image" size="sm" />
 
-> Image fill currently supports a URL `href` only (incl. data URI); inlining for SSR / PNG export is deferred.
+`href` takes any external image URL (http(s)) or a data URI; `fit` controls how the image maps into the shape box — the same external landscape image (`picsum.photos`, 320×200) under all three fits in a square box:
+
+<ComponentPreview name="node-image-fit" size="sm" />
+
+> `fit` is computed against the normalized shape box: it matches CSS `object-fit` for square boxes; for strongly non-square boxes cover/contain are approximate (against the normalized square, not the true aspect ratio). When the source and box share a shape (both square / both landscape) the three fits look identical.
+>
+> Image fill renders via a runtime `<image href>`, so external URLs load on the browser side; inlining for SSR / PNG export is deferred.
 
 #### Border style
 
