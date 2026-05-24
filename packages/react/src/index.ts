@@ -74,6 +74,18 @@ export type {
 // 结构化 Target / Anchor 对象形态（alpha.6 ADR-01）：用户写对象 target 时有类型
 export type { IRNodeTarget, IRAnchorRef } from '@retikz/core';
 
+// 扩展面：自定义箭头 / 路径生成器注册——react 用户单包 import 即可定义并注入 <Layout arrows / pathGenerators>
+export { definePathGenerator } from '@retikz/core';
+export type {
+  ArrowDefinition,
+  ArrowEmitContext,
+  MarkerPrimitive,
+  MarkerFill,
+  PathGeneratorDefinition,
+  PathGeneratorContext,
+  IRJsonObject,
+} from '@retikz/core';
+
 // React 节点 ↔ IR 桥接：buildIR 内部名保留，对外以 convertReactNodeToIR 暴露（命名 pattern 给后续多框架 adapter 留位）
 export { buildIR as convertReactNodeToIR } from './kernel/builder';
 // IR JSON → Kernel element 树（带 key、不裹 TikZ/Fragment 外壳）；Sugar 不可逆——只产 <Node/>/<Path/>/<Step/> 三件套
