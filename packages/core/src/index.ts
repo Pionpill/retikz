@@ -26,6 +26,7 @@ export {
   CirclePathStepSchema,
   EllipsePathStepSchema,
   RectangleStepSchema,
+  GeneratorStepSchema,
   ControlPointSchema,
   StepLabelSchema,
   StepSchema,
@@ -49,6 +50,8 @@ export {
   CURRENT_IR_VERSION,
   PaintSpecSchema,
   GradientStopSchema,
+  JsonValueSchema,
+  JsonObjectSchema,
 } from './ir';
 export type {
   IRPosition,
@@ -71,6 +74,7 @@ export type {
   IRCirclePathStep,
   IREllipsePathStep,
   IRRectangleStep,
+  IRGeneratorStep,
   IRControlPoint,
   IRStepLabel,
   IRStep,
@@ -106,6 +110,8 @@ export type {
   NodeTextAlign,
   IRPaintSpec,
   IRGradientStop,
+  JsonValue,
+  IRJsonObject,
 } from './ir';
 export {
   ARROW_SHAPES,
@@ -197,6 +203,10 @@ export { BUILTIN_SHAPES, worldToLocal, localToWorld } from './shapes';
 // Arrows (Arrow Registry 扩展面：第三方 arrow 注入 + 内置注册项)
 export type { ArrowDefinition, ArrowEmitContext } from './arrows';
 export { BUILTIN_ARROWS } from './arrows';
+
+// Path Generators (Path Generator Registry 扩展面：第三方曲线生成器注入；core 无内置)
+export type { PathGeneratorDefinition, PathGeneratorContext } from './pathGenerators';
+export { definePathGenerator } from './pathGenerators';
 
 // Type utilities
 export type { ValueOf, AssertEqual } from './types';

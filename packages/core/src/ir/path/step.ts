@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { FontSchema } from '../font';
+import { JsonObjectSchema } from '../json';
 import { PositionSchema } from '../position';
 import { TargetSchema } from './target';
 
@@ -284,6 +285,34 @@ export const RectangleStepSchema = z
   })
   .describe('Rectangle action: closed axis-aligned rectangle (optionally rounded) drawn between two opposite corners.');
 
+export const GeneratorStepSchema = z
+  .object({
+    type: z.literal('step').describe('Discriminator marking this as a path step node'),
+    kind: z
+      .literal('generator')
+      .describe(
+        'Delegate this segment to a registered path generator looked up by `name` in CompileOptions.pathGenerators; the generator turns `from` / `to` / `params` into low-level path commands at compile time',
+      ),
+    name: z
+      .string()
+      .min(1)
+      .describe(
+        'Registered generator name; resolved against CompileOptions.pathGenerators at compile time. An unregistered name throws at compile time (the error lists the available names). The IR only stores the string; the generator function itself is injected at runtime and never enters the IR.',
+      ),
+    to: TargetSchema.optional().describe(
+      'Optional destination point passed to the generator as the segment end; omit for pure parametric curves that need no end target (e.g. a closed loop or a fixed-extent wave).',
+    ),
+    params: JsonObjectSchema.describe(
+      'JSON-only parameter object handed to the generator. Must be a plain JSON object (validated by JsonObjectSchema); the generator validates its own shape via paramsSchema. Top-level keys listed in the generator targetParams are resolved from node targets to world coordinates before the generator runs.',
+    ),
+    label: StepLabelSchema.optional().describe(
+      'Edge label attached to the generated segment; positioned along the produced commands.',
+    ),
+  })
+  .describe(
+    'Generator action: produce a sub-path by invoking a registered path generator (parabola / sin / etc.); core ships no built-in curve generators.',
+  );
+
 export const StepSchema = z
   .discriminatedUnion('kind', [
     MoveStepSchema,
@@ -297,6 +326,7 @@ export const StepSchema = z
     CirclePathStepSchema,
     EllipsePathStepSchema,
     RectangleStepSchema,
+    GeneratorStepSchema,
   ])
   .describe('A single path action; the discriminator field is `kind`');
 
@@ -329,9 +359,11 @@ export type IRCirclePathStep = z.infer<typeof CirclePathStepSchema>;
 export type IREllipsePathStep = z.infer<typeof EllipsePathStepSchema>;
 /** Rectangle step：两对角定义的轴对齐矩形（可圆角） */
 export type IRRectangleStep = z.infer<typeof RectangleStepSchema>;
+/** Generator step：按 name 调注册的 path generator 产 sub-path（params 为 JSON 对象） */
+export type IRGeneratorStep = z.infer<typeof GeneratorStepSchema>;
 
 /**
- * 路径上的一个动作（十一种 kind）
- * @description 十一种 kind：move / line / step（折角）/ cycle / curve / cubic / bend / arc / circlePath / ellipsePath / rectangle（矩形）；`to` 字段支持 relative / relativeAccumulate 变体；除 move/cycle/rectangle 外可挂 `label?` 边标注
+ * 路径上的一个动作（十二种 kind）
+ * @description 十二种 kind：move / line / step（折角）/ cycle / curve / cubic / bend / arc / circlePath / ellipsePath / rectangle（矩形）/ generator（注册生成器）；`to` 字段支持 relative / relativeAccumulate 变体；除 move/cycle/rectangle 外可挂 `label?` 边标注
  */
 export type IRStep = z.infer<typeof StepSchema>;

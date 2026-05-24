@@ -295,7 +295,8 @@ const readPathChildren = (children: ReactNode): Array<IRStep> => {
       first.kind === 'cycle' ||
       first.kind === 'arc' ||
       first.kind === 'circlePath' ||
-      first.kind === 'ellipsePath'
+      first.kind === 'ellipsePath' ||
+      first.kind === 'generator'
         ? [0, 0]
         : first.to;
     out[0] = { type: 'step', kind: 'move', to: fallbackTo };

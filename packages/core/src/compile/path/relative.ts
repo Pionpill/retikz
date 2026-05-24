@@ -46,6 +46,11 @@ export const normalizeRelativeTargets = (
       // 自包含形状；prevEnd 不变（rectangle 用自身 from/to，不推进相对游标）
       continue;
     }
+    if (step.kind === 'generator') {
+      out.push(step);
+      // generator 的 to 可选、relative 解析由 generator 编译时落地；此处不推进 prevEnd（实现时按产段终点推进）
+      continue;
+    }
 
     // 有 to 字段的 step：move/line/step(fold)/curve/cubic/bend
     const original = step.to;

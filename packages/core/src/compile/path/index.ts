@@ -30,6 +30,7 @@ import type {
   Transform,
 } from '../../primitive';
 import type { AssertEqual } from '../../types';
+import type { PathGeneratorDefinition } from '../../pathGenerators';
 import type { NameStack } from '../name-stack';
 import { type TextMeasurer, fallbackMeasurer } from '../text-metrics';
 import { clipForTarget, cornerOf, refPointOfTarget, samePoint } from './anchor';
@@ -90,6 +91,13 @@ export type EmitPathWarnHook = {
    *   endpointArrows 据此查表算 shrink / 调 def.emit；未注册名编译期 throw
    */
   effectiveArrows?: EffectiveArrows;
+  /**
+   * 有效 path generator 表（注入即全部，core 无内置）；缺省 = 空表
+   * @description compileToScene 传 `options.pathGenerators ?? {}`；generator step 据此查表（未注册名
+   *   编译期 throw，错误列出可用名）→ 双 parse 护栏 → targetParams resolve → 调 generate splice 命令。
+   *   解析逻辑由后续实现落地（此处仅声明 hook 入口）。
+   */
+  effectivePathGenerators?: Record<string, PathGeneratorDefinition>;
 };
 
 /**
@@ -145,7 +153,8 @@ export const emitPathPrimitive = (
     for (const p of r.points) points.push(p);
   };
 
-  // "无 to（作游标锚点）" 的 step kinds：cycle / arc / circlePath / ellipsePath / rectangle
+  // "无必有 to（不当普通 boundary clip 段处理）" 的 step kinds：
+  // cycle / arc / circlePath / ellipsePath / rectangle / generator（generator 的 to 可选、由 generate 消费）
   type StepWithTo = Exclude<
     IRStep,
     | { kind: 'cycle' }
@@ -153,13 +162,15 @@ export const emitPathPrimitive = (
     | { kind: 'circlePath' }
     | { kind: 'ellipsePath' }
     | { kind: 'rectangle' }
+    | { kind: 'generator' }
   >;
   const hasTo = (s: IRStep): s is StepWithTo =>
     s.kind !== 'cycle' &&
     s.kind !== 'arc' &&
     s.kind !== 'circlePath' &&
     s.kind !== 'ellipsePath' &&
-    s.kind !== 'rectangle';
+    s.kind !== 'rectangle' &&
+    s.kind !== 'generator';
 
   // 每个 step 的几何参考点（节点中心/直接坐标）；无 to 的 step kind 给 null
   const anchors: Array<IRPosition | null> = steps.map((s, idx) => {
@@ -328,6 +339,15 @@ export const emitPathPrimitive = (
 
     // move 自身不绘制；其 to 仅供下个绘制段的 findPrev 引用
     if (step.kind === 'move') continue;
+
+    if (step.kind === 'generator') {
+      // TODO 实现：查 warnHook.effectivePathGenerators[step.name]（未注册 throw + 列可用名）→
+      // paramsSchema.parse(step.params) → JsonObjectSchema.parse 二次护栏 → targetParams resolve 成
+      // resolvedTargets → from = 当前游标、to = step.to resolve → 调 def.generate(ctx) → splice
+      // PathCommand[] 进 commands、cursor 落最后命令终点 → collectLabel。当前未接线。
+      void step;
+      throw new Error('Path generator step compilation is not yet implemented');
+    }
 
     if (step.kind === 'cycle') {
       const moveTo = lastMoveTo;

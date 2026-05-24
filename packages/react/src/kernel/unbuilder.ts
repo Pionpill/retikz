@@ -109,6 +109,12 @@ const stepToElement = (step: IRStep, key: number): ReactNode => {
   if (step.kind === 'move') {
     return createElement(Step, { key, kind: 'move', to: step.to });
   }
+  if (step.kind === 'generator') {
+    // generator step 暂无对应 React DSL <Step> kind（React sugar 另行实现）；IR→React 反构尚不支持
+    throw new Error(
+      'convertIRToReactNode: generator step has no React DSL representation yet',
+    );
+  }
   // line（默认）
   return createElement(Step, {
     key,

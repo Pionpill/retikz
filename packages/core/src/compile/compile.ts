@@ -5,6 +5,7 @@ import { BUILTIN_SHAPES } from '../shapes';
 import type { ShapeDefinition } from '../shapes';
 import { BUILTIN_ARROWS } from '../arrows';
 import type { ArrowDefinition } from '../arrows';
+import type { PathGeneratorDefinition } from '../pathGenerators';
 import { type DuplicateRegisterInfo, NameStack } from './name-stack';
 import { type NodeLayout, emitNodePrimitives, labelExtentPoints, layoutNode } from './node';
 import { createPaintRegistry } from './paint';
@@ -127,6 +128,15 @@ export type CompileOptions = {
    *   `ARROW_OVERRIDES_BUILTIN`。IR 的 `arrowDetail.shape` 仍是字符串；未注册名在编译期 throw。
    */
   arrows?: Record<string, ArrowDefinition>;
+  /**
+   * 运行时注入的第三方 path generator（不进 IR）
+   * @description generator step 编译时按 `name` 查本表；core 不内置任何曲线生成器，故无内置合并。
+   *   解析时序：查表（未注册 throw，错误列出可用名）→ `paramsSchema.parse(params)` →
+   *   对结果再跑 `JsonObjectSchema.parse` 二次确认 JSON-safe → `targetParams` 顶层 key 经 target lookup
+   *   resolve 成世界坐标 → 调 `generate(ctx)` → splice 产出的 `PathCommand[]` 进命令流。IR 的
+   *   `generator.name` 仍是字符串；generator 函数本身只在此运行时注入面、不进 IR。
+   */
+  pathGenerators?: Record<string, PathGeneratorDefinition>;
 };
 
 /**
@@ -247,6 +257,11 @@ export const compileToScene = (ir: IR, options: CompileOptions = {}): Scene => {
     }
   }
 
+  // 有效 path generator 表：core 无内置，注入即全部（未注册名编译期 throw）。
+  // 解析逻辑（查表 / 双 parse / targetParams resolve / generate splice）由 path 层落地。
+  const effectivePathGenerators: Record<string, PathGeneratorDefinition> =
+    options.pathGenerators ?? {};
+
   // 有效 arrow 表：内置 + 注入（同名注入覆盖内置）；覆盖内置经 onWarn 发 ARROW_OVERRIDES_BUILTIN
   const effectiveArrows: Record<string, ArrowDefinition> = options.arrows
     ? { ...BUILTIN_ARROWS, ...options.arrows }
@@ -305,6 +320,7 @@ export const compileToScene = (ir: IR, options: CompileOptions = {}): Scene => {
           scopeChain: item.scopeChain,
           resolveFill: paint.resolve,
           effectiveArrows,
+          effectivePathGenerators,
         });
         if (item.slot) {
           // 原位回填：按引用定位占位再 splice 替换为真 primitive（result 为 null 时替换成 0 个 = 删占位）
