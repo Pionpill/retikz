@@ -92,7 +92,7 @@ description: alpha 功能开发的文档阶段——把已实现已通过 advers
 按章节粒度 commit，不要把"3 个新 demo + 2 个 API 表行 + sidebar"全揉一坨：
 
 ```
-:books: alpha.X 文档：<组件>/<新章节> + zh/en 双语 demo
+:pencil: alpha.X 文档：<组件>/<新章节> + zh/en 双语 demo
 ```
 
 如果改动跨多个组件页，**每个组件页一个 commit**。这样 review 时一目了然。
@@ -116,5 +116,5 @@ description: alpha 功能开发的文档阶段——把已实现已通过 advers
 - zh + en mdx 两份都更新且结构对齐
 - demo 文件能跑（`apps/docs` dev server 起来访问对应页面 SVG 渲染正常）
 - sidebar / i18n key 都注册
-- 文档相关的 commit 全部入 git，message 用 `:books:`
+- 文档相关的 commit 全部入 git，message 用 `:pencil:`
 - **向用户汇报完工时先呈站点 demo**：给出文档页路径 + 访问路由（`pnpm dev:docs` 看哪条），再讲代码细节（见 §评审优先级）

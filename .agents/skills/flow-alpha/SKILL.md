@@ -167,7 +167,9 @@ pnpm hardlink store 下每个 worktree 的 node_modules 占用极小。
 5. 所有 stage 跑完后再跑一次最终三关：
      pnpm lint
      pnpm test
-     pnpm -r exec tsc -b --noEmit
+     pnpm --filter @retikz/core exec tsc --noEmit
+     pnpm --filter @retikz/react exec tsc --noEmit
+     pnpm --filter @retikz/docs exec tsc --noEmit
 6. 三关绿 → 进 7；不绿 → REVIEW.md 写明失败原因后 halt，不"完工"
 7. worktree 根写 REVIEW.md（**未追踪、不 commit、不 stage**）—— 模板见下节
 8. halt，报告"ADR-XX 已就绪可 review，分支 adr/<milestone>/XX-..."
@@ -176,7 +178,7 @@ pnpm hardlink store 下每个 worktree 的 node_modules 占用极小。
 **绝不 push、绝不切回 main、绝不 merge、绝不调 develop-wrapup**。
 批量模式下 wrapup 在所有 worktree 合并完后**整 milestone 一次性**跑，不每条 ADR 单独 wrapup。
 
-> Branch 内的中间 commit 由 AI 自跑（受 stage 内三关约束）；
+> Branch 内的中间 commit 可在用户授权按本 skill 执行并提交后由 AI 自跑（受 stage 内三关约束）；未授权时 stage 后停下给用户审阅。
 > push / merge / 切 main 这三条是**真正的硬红线**，批量模式不放宽。
 
 ### REVIEW.md 模板（每个 worktree 根目录、不追踪）
@@ -193,7 +195,7 @@ pnpm hardlink store 下每个 worktree 的 node_modules 占用极小。
 
 - pnpm lint：                    ✅ / ❌ <详情>
 - pnpm test：                    ✅ <N passed> / ❌ <失败列表>
-- pnpm -r exec tsc -b --noEmit： ✅ / ❌
+- tsc --noEmit（core / react / docs）： ✅ / ❌
 
 ## 关键改动（2-3 句讲清干了啥）
 
@@ -270,7 +272,7 @@ git branch -d adr/<milestone>/XX-...
 - 本 SKILL 是 alpha 期单条 ADR 的端到端编排
 - [`package-publish`](../package-publish/SKILL.md) 在 1+ 条 ADR 累积成版本节点后才调（与本 SKILL 互斥不同时跑）
 - [`docs-doc-principle`](../docs-doc-principle/SKILL.md)（+ 按页型 [`docs-doc-component`](../docs-doc-component/SKILL.md) / [`docs-doc-example`](../docs-doc-example/SKILL.md)）是 develop-document 的实现细节，本 SKILL 透过 stage 4 间接调
-- AGENTS.md commit / publish 红线全部继承——AI 不得自行 commit / publish；阶段间 commit 需用户 当次授权
+- AGENTS.md commit / publish 红线全部继承——未获用户授权不得 commit / publish；用户授权本轮按 skill 执行并提交后，AI 可按本 skill 的 commit 粒度自行 commit，但仍不得自行 push / tag / publish
 
 ## 失败 / 升级阈值
 

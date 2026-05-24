@@ -165,7 +165,7 @@ rg --files packages | rg "packages/.*/src/.*\.(d\.ts|d\.ts\.map|js)$"
 rc 期优先补齐这些面：
 
 - 安装与第一个图。
-- `TikZ`、`Node`、`Path`、`Step`、`Draw`、`Text`、`Coordinate` API 参考。
+- `Layout`、`Node`、`Path`、`Step`、`Draw`、`Text`、`Coordinate` API 参考。
 - Kernel / Sugar / IR / Scene 的概念关系。
 - 坐标、anchor、relative step、path label 的心智模型。
 - alpha / beta 到 rc 的迁移指南。
@@ -179,7 +179,7 @@ rc 期优先补齐这些面：
 
 - `pnpm add @retikz/react@next`
 - TypeScript 可解析 `@retikz/react` 与 `@retikz/core` 类型。
-- Vite React 项目可渲染一个最小 `<TikZ>` 示例。
+- Vite React 项目可渲染一个最小 `<Layout>` 示例。
 - React peer dependency 覆盖 React 18；如声明兼容 React 19，则也验证。
 - tarball 不包含 `src/`、`tests/`、`node_modules/`、源码配置文件。
 - `@retikz/react` 发布包内 `@retikz/core` 依赖不是 `workspace:*`，而是目标版本。

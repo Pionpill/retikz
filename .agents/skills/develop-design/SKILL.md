@@ -104,7 +104,7 @@ cp notes/adr/_template.md notes/adr/v<MAJOR>/v<MAJOR>.<MINOR>-<channel>.<N>/<NNN
    - 文件 scope 至少包含 IR 文件 + 测试文件
    - 测试象限四类各达下限（≥ 3 / ≥ 2 / ≥ 2 / ≥ 2 = 9 起步）
    - 校验失败 → 报告人工补充
-6. **人工 commit ADR**（emoji `:books:` 或 `:sparkles:`）—— 状态仍 Proposed，直到 develop-wrapup 阶段才翻 Accepted
+6. **人工 commit ADR**（emoji `:pencil:` 或 `:sparkles:`）—— 状态仍 Proposed，直到 develop-wrapup 阶段才翻 Accepted
 
 完成本阶段的标志：`notes/adr/v<MAJOR>/v<MAJOR>.<MINOR>-<channel>.<N>/<NNNN>-*.md` 已 commit、实现契约段 4 件齐、多 LLM 评估意见已合并、人工说"可以进实现"。
 

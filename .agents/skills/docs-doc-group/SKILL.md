@@ -61,7 +61,7 @@ frontmatter `title` + `description` 始终在；正文不写 `# 标题`（H1 走
 列：`组件 | 类型 | 职责 | 适合场景`（en：`Component | Type | Responsibility | Use it when`）
 
 - `类型` 填 **Sugar / Kernel**，权威来源是 `concepts/layers`：
-  - Kernel：`TikZ` / `Node` / `Coordinate` / `Path` / `Step`
+  - Kernel：`Layout` / `Node` / `Coordinate` / `Path` / `Step`
   - Sugar：`Draw` / `Text` / `Way`(DrawWay) / 相对坐标字符串
 - 不是严格组件的子项照实标：`Way` 归 Sugar（Draw 的 way 写法），`Arrow` 标「通用 / Shared」（Path、Draw 共用的箭头配置）
 
@@ -70,7 +70,7 @@ frontmatter `title` + `description` 始终在；正文不写 `# 标题`（H1 走
 不是组件，Sugar/Kernel 不适用。列换成：`主题 | 职责 | 何时查阅`（en：`Topic | Responsibility | Reach for it when`），并在导言后加一句参考层提示：
 
 ```mdx
-> 这里是参考层，不是组件文档；写图请从 [组件](/core/components/tikz) 开始。
+> 这里是参考层，不是组件文档；写图请从 [组件](/core/components/layout) 开始。
 ```
 
 ## LinkedCard 子页索引

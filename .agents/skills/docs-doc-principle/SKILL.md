@@ -229,7 +229,7 @@ Draw way 简短、语义直白、与文档站现有 demo 风格一致。**唯一
 </Draw>
 ```
 
-> **当前已知限制**：alpha.5（截至本 commit）的 `StepLabelSchema` 还没有 `textColor` 字段——edge label 上色需要先扩 schema（建议另开 ADR）。在 schema 支持前，**省略边标注**而非用默认色，避免标注抢视觉。视觉信息靠 stroke 颜色 / 节点位置传达。
+`StepLabelSchema` 已支持 `textColor` / `opacity` / `font`；边标注需要弱化时优先显式给 `textColor`，不要靠降低整条 path 的视觉层级来让文字变淡。
 
 ### 最小用例先行
 
