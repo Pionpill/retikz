@@ -9,7 +9,7 @@
 - **2026-05-07 初版**：基于 `@retikz/core` v0.1.0-alpha（仅 `move` / `line` step、矩形 node）盘点缺失项。
 - **2026-05-21 修订**：对照 `@retikz/core` v0.1.0 正式版按图元重排。初版列出的 P0 全部闭环，P1 / P2 绝大多数已补齐；当前缺口集中在结构化能力（Scope / 主题）、文本排版（LaTeX / 数学）与 P3 高级特性。
 - **2026-05-23 修订**：补 v0.2 alpha.1–4 已落项（`<Scope>` / 样式继承 / Shape Registry / `zIndex` / Node label rotate）+ 预留 alpha.5 行（Path-level shape sugar：circle/ellipse 部分裁剪、椭圆弧、`rectangle` step、grid / sector / 候选 regular-polygon / star sugar）。结构化能力缺口已基本闭合；当前缺口转向补全图元（更多形状 / parabola / sin-cos / patterns / shading）、文本排版（LaTeX / 数学）与 P3 高级特性。
-- **2026-05-24 续修**：v0.2 能力补全阶段 alpha.7 完工——Node 三块：`fill` 升 Paint 填充服务（`PaintValue` / `SceneResource` 资源表 + linear / radial 渐变 + pattern 斜线 / 网点 / 网格 + image URL，渲染目标无关）；`maxTextWidth` 自动换行（折行阈值 + 短文本收缩，西文按词 / CJK 按字）；`pin` 引脚（从节点边界牵引线到 label，计入 layout）。对应 §1 Node「text width 自动换行」「引脚 pin」转 ✅、「填充 / 描边」补 Paint；「数学 / LaTeX 排版」备注归 `@retikz/math` 专包（仍 ❌）。
+- **2026-05-24 续修 (alpha.8)**：v0.2 能力补全阶段 alpha.8 完工——Path / Step 三 ADR：自定义箭头 `ArrowDefinition` 注册面（`arrowDetail.shape` 开放 string + `CompileOptions.arrows`，emit-in-compile 产 `MarkerPrimitive` 进 `ArrowEndSpec`、内置 7 降注册项、contextStroke 颜色继承）；路径生成器 `PathGeneratorDefinition` 注册面（`generator` step + `CompileOptions.pathGenerators` + `definePathGenerator`，JSON params 双 parse 护栏，core 不内置曲线、parabola / sin-cos 外部注册）；out/in·self-loop（bend 加 `outAngle`/`inAngle`/`looseness`）+ 路径整体变换（`PathSchema` `rotate`/`scale` 绕包围盒中心）+ 中段 marking（`marks` 复用 segment.ts + arrow marker，朝向随切线）。对应 §2 Path「路径整体变换」⚠️→✅、§3 Step「广义曲线连接(out/in)」⚠️→✅、「抛物线 / 正弦余弦」❌→✅(经注册面外部实现)、「中段 marking」⚠️→✅；箭头细节补 `ArrowDefinition` 注册。**pattern 注册面（PatternDefinition）顺延**（复用 MarkerPrimitive 契约，待后续单独 ADR）。
 - **2026-05-23 续修**：v0.2 六段 alpha 全部完工。alpha.5 Path-level shape sugar 落地——`rectangle` step、椭圆弧（arc `radiusX/Y`）、circle/ellipse 部分裁剪（`startAngle/endAngle/closed`）+ `<Grid>` / `<Sector>` / `<RegularPolygon>` / `<Star>` sugar（原 🔜 行转 ✅）。alpha.6 结构化 Target / Anchor——path 节点引用从字符串升级为对象主契约 `{ id, anchor?, offset? }`，新增 `{ side, t }` 真实边界比例点；字符串 `'A'` / `'A.north'` / `'A.30'` 降为 React DSL shorthand（eager 转对象后入 IR）；顶层容器 `<TikZ>` 改名 `<Layout>`（`<TikZ>` 留 deprecated alias）。结构化能力缺口全闭；剩余缺口集中在补全图元（parabola / sin-cos / patterns / shading / 更多内置 node 形状）、文本排版（LaTeX / 数学 / text width 自动换行）与 P3 高级特性。
 
 **状态图例**
@@ -62,11 +62,11 @@
 | 描边 | `stroke` / `strokeWidth` / `dashPattern` | `[draw=, line width=, dash pattern=]` | ✅ | |
 | 语义粗细 | `thickness: ultraThin…ultraThick` | `[ultra thin]…[ultra thick]` | ✅ | |
 | 箭头方向 | `arrow: ->` / `<-` / `<->` | `[->]` / `[<-]` / `[<->]` | ✅ | |
-| 箭头细节 | `arrowDetail`：7 shape + scale/length/width/color/fill/opacity/lineWidth + `start`/`end` 逐端覆盖 | `[>=Stealth]` + `arrows.meta` | ✅ | UML open / diamond / openDiamond 内置 |
+| 箭头细节 | `arrowDetail`：开放 shape 名 + scale/length/width/color/fill/opacity/lineWidth + `start`/`end` 逐端覆盖 | `[>=Stealth]` + `arrows.meta` | ✅ | 内置 7（UML open / diamond…）；alpha.8 `ArrowDefinition` + `CompileOptions.arrows` 注册自定义箭头（emit-in-compile，内置 7 降注册项） |
 | 填充 | `fill` / `fillRule`（nonzero / evenodd） | `\fill` / `[fill=, even odd rule]` | ✅ | evenodd 可画环形 |
 | 线端 / 拐角 | `lineCap` / `lineJoin` | `[line cap=, line join=]` | ✅ | |
 | 透明度 | `opacity` / `fillOpacity` / `drawOpacity` | `[opacity=, fill opacity=, draw opacity=]` | ✅ | |
-| 路径整体变换 | `<Scope transforms>`（分组变换） | `[rotate=30, shift={(1,2)}]` | ⚠️ | alpha.1 `<Scope>` translate / rotate / scale 提供分组变换；单 path 自身 `[rotate]` 仍需包 Scope |
+| 路径整体变换 | `PathSchema` `rotate` / `scale`（绕包围盒中心）+ `<Scope transforms>`（分组变换） | `[rotate=30, shift={(1,2)}]` | ✅ | alpha.8 单 path 自身 `rotate` / `scale`（免包 Scope，变换顺序硬契约）；分组仍用 `<Scope>` |
 | decorations | — | `decorate[decoration={snake}]` | ❌ | P3 |
 | intersections | — | `(intersection of A--B and C--D)` | ❌ | P3 |
 
@@ -74,7 +74,7 @@
 
 ## 3. Step 路径步骤
 
-Path 的子动作，当前十一种 `kind`。除 `move` / `cycle` / `rectangle` 外每段可挂 `label?` 边标注。端点 `to` 的坐标形态见 [§5 定位](#5-定位与坐标nodestep-共用)。
+Path 的子动作，当前 IR 十二种 `kind`（含 alpha.8 IR 级 `generator`，无 JSX DSL、经 `<Layout ir>` 直传 + `pathGenerators` 注入）。除 `move` / `cycle` / `rectangle` 外每段可挂 `label?` 边标注。端点 `to` 的坐标形态见 [§5 定位](#5-定位与坐标nodestep-共用)。
 
 | 能力 | ReTikZ | TikZ | 状态 | 备注 |
 |---|---|---|---|---|
@@ -93,11 +93,11 @@ Path 的子动作，当前十一种 `kind`。除 `move` / `cycle` / `rectangle` 
 | 扇形 | `<Sector>` sugar（`move + line + arc + cycle`） | `arc` + 连圆心 cycle | ✅ | alpha.5 sugar；arc step 显式 `center` 画正确 wedge |
 | 正多边形 | `<RegularPolygon>` sugar（`move + line·(n-1) + cycle`） | `[regular polygon]`（node 形状） | ✅ | alpha.5 sugar；画几何而非带文本 node |
 | 星形 | `<Star>` sugar（外 / 内半径交替顶点） | `[star]`（node 形状） | ✅ | alpha.5 sugar；画几何而非带文本 node |
-| 抛物线 | — | `parabola bend (c) (b)` | ❌ | |
-| 正弦 / 余弦波段 | — | `sin (b)` / `cos (b)` | ❌ | |
-| 广义曲线连接 | `kind: bend`（简记） | `to[out=, in=]` | ⚠️ | 仅 bend 子集，任意 out/in 角缺 |
+| 抛物线 | 经路径生成器注册面外部实现 | `parabola bend (c) (b)` | ✅ | alpha.8 `PathGeneratorDefinition` + `CompileOptions.pathGenerators`；core 不内置曲线，外部包注册 |
+| 正弦 / 余弦波段 | 经路径生成器注册面外部实现 | `sin (b)` / `cos (b)` | ✅ | 同上；generator step 采样多段（可含 move sub-path） |
+| 广义曲线连接 | `kind: bend` + `outAngle` / `inAngle` / `looseness` | `to[out=, in=, looseness=]` | ✅ | alpha.8 任意出 / 入射角 + looseness；`from==to` 退化自环 |
 | 边标注 | step `label`：`pos`（0..1 或 7 档关键字）+ `above/below/left/right/sloped` | `-- node[midway, above] {x}` | ✅ | |
-| 路径中段任意 marking | —（仅文字 label） | `decoration={markings, mark=...}` | ⚠️ | 任意图形标记缺 |
+| 路径中段任意 marking | `PathSchema.marks`（`pos∈[0,1]` + arrow marker，朝向随切线） | `decoration={markings, mark=...}` | ✅ | alpha.8 首批 `mark.kind:'arrow'`（复用注册箭头名）；任意小图形 mark 留扩展 |
 
 ---
 
@@ -150,6 +150,6 @@ Path 的子动作，当前十一种 `kind`。除 `move` / `cycle` / `rectangle` 
 初版 P0 闭环 + **v0.2 结构化能力全落（alpha.1–6：`<Scope>` / 样式继承 / Shape Registry / `zIndex` / Node label rotate / Path-level shape sugar / 结构化 Target·Anchor / `<TikZ>`→`<Layout>`）**。剩余杠杆点：
 
 1. **补全图元**：`parabola` / `sin`-`cos` 波段（新 Step kind）、patterns（填充图案）、shading（渐变）。Path-level shape sugar（circle / ellipse 部分裁剪、椭圆弧、`rectangle` / `grid` / `sector` / `regular polygon` / `star`）已于 alpha.5 落地。
-2. **文本排版**：数学 / LaTeX 排版、`text width` 自动换行。
-3. **更多内置 node 形状**：cylinder / cloud / chamfered（经 Shape Registry / 第三方包）；regular polygon / star 已可用 Path sugar 画几何，但仍缺带文本 / anchor 的 node 形态；`pin`、node 语义粗细档位、非矩形圆角。
-4. **P3 高级特性**：单 path 整体变换、decorations、intersections、任意 markings、double border、clip、`useasboundingbox`、完整 calc 表达式。
+2. **文本排版**：数学 / LaTeX 排版（`text width` 自动换行已 alpha.7 ✅）。
+3. **更多内置 node 形状**：cylinder / cloud / chamfered（经 Shape Registry / 第三方包）；regular polygon / star 已可用 Path sugar 画几何，但仍缺带文本 / anchor 的 node 形态；node 语义粗细档位、非矩形圆角（`pin` 已 alpha.7 ✅）。
+4. **P3 高级特性**：decorations、intersections、任意小图形 marking（alpha.8 marking 首批仅 arrow）、pattern 自定义 motif（`PatternDefinition`，顺延）、double border、clip、`useasboundingbox`、完整 calc 表达式（单 path 整体变换已 alpha.8 ✅）。
