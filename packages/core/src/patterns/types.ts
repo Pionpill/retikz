@@ -4,7 +4,8 @@ import type { MarkerPrimitive } from '../primitive/marker';
  * emit 拿到的运行时上下文
  * @description compile 把已解析的 tile 周期 / 颜色 / 描边粗细传进来；def 据此在局部 tile 坐标系产 motif 几何。
  *   `color` 是 CSS 串（缺省 `currentColor`，主题反应天然——pattern motif 是 `<defs>` 内独立元素，继承 svg color）；
- *   `background` 是可选 tile 底色（缺省透明）；`lineWidth` 作线 / 网格描边宽，dots motif 用作半径。
+ *   `background` 是可选 tile 底色（缺省透明）；`lineWidth` 是用户显式给的描边粗细 / dots 半径，**用户未设时缺省**
+ *   （字段不存在）——这样不同 motif 各自定缺省：lines / grid 缺省描边 1，dots 缺省半径 `size / 5`。
  */
 export type PatternEmitContext = {
   /** 解析后 tile 周期（user units）；= 解析后 pattern.size */
@@ -13,8 +14,12 @@ export type PatternEmitContext = {
   color: string;
   /** tile 背景填充（CSS 串）；缺省透明（字段缺省） */
   background?: string;
-  /** 线 / 网格描边宽；dots motif 用作半径 */
-  lineWidth: number;
+  /**
+   * 线 / 网格描边宽；dots motif 用作半径。
+   * @description 仅当用户在 `pattern.lineWidth` 显式给值时存在；缺省（字段不存在）让各 motif 自定默认
+   *   （lines / grid 用 1，dots 用 `size / 5`），保历史几何不退化。
+   */
+  lineWidth?: number;
   /** 精度取整函数（与 compile/render 同一 round，保几何一致） */
   round: (n: number) => number;
 };

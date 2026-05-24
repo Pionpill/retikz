@@ -90,14 +90,59 @@ describe('PaintDefs — 渐变物化', () => {
     expect(g.props.r).toBe(0.5);
   });
 
-  it('pattern：<pattern> userSpaceOnUse + tile size + 旋转', () => {
+  it('pattern：<pattern> userSpaceOnUse + tile size + 旋转（物化已解析 tile）', () => {
     const [p] = childrenOf([
-      { kind: 'paint', id: 'paint-1', spec: { type: 'pattern', shape: 'lines', size: 6, rotation: 45 } },
+      {
+        kind: 'paint',
+        id: 'paint-1',
+        spec: { type: 'pattern', shape: 'lines', size: 6, rotation: 45 },
+        tile: {
+          size: 6,
+          rotation: 45,
+          motif: [
+            {
+              type: 'path',
+              commands: [
+                { kind: 'move', to: [0, 0] },
+                { kind: 'line', to: [6, 0] },
+              ],
+              stroke: 'currentColor',
+              strokeWidth: 1,
+            },
+          ],
+        },
+      },
     ]);
     expect(p.type).toBe('pattern');
     expect(p.props.patternUnits).toBe('userSpaceOnUse');
     expect(p.props.width).toBe(6);
+    expect(p.props.height).toBe(6);
     expect(p.props.patternTransform).toBe('rotate(45)');
+    // tile.motif 物化进 <pattern>（复用 arrow 的 renderMarkerPrim）：横线 path
+    const motif = (p.props.children as Array<AnyEl>).filter(Boolean);
+    expect(motif).toHaveLength(1);
+    expect(motif[0].type).toBe('path');
+    expect(motif[0].props.stroke).toBe('currentColor');
+  });
+
+  it('pattern：tile.motif 含背景 rect + dots ellipse 都物化', () => {
+    const [p] = childrenOf([
+      {
+        kind: 'paint',
+        id: 'paint-1',
+        spec: { type: 'pattern', shape: 'dots', background: '#eee' },
+        tile: {
+          size: 8,
+          background: '#eee',
+          motif: [
+            { type: 'rect', x: 0, y: 0, width: 8, height: 8, fill: '#eee' },
+            { type: 'ellipse', cx: 4, cy: 4, rx: 1.6, ry: 1.6, fill: 'currentColor' },
+          ],
+        },
+      },
+    ]);
+    const motif = (p.props.children as Array<AnyEl>).filter(Boolean);
+    expect(motif.map(m => m.type)).toEqual(['rect', 'ellipse']);
   });
 
   it('image：<pattern> 套 <image>，fit cover → slice', () => {

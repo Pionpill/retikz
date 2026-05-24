@@ -9,6 +9,7 @@ import {
 } from '../../ir';
 import type { ArrowDefinition, ArrowEmitContext } from '../../arrows';
 import type { ArrowEndSpec, MarkerFill, MarkerPrimitive, PathCommand } from '../../primitive';
+import { validateMarkerPrimitives } from '../marker-prim';
 import { shiftToward } from './anchor';
 
 /** 有效 arrow 表：内置 7 + 注入（同名注入覆盖内置） */
@@ -76,9 +77,6 @@ const resolveArrowVisual = (
   return out;
 };
 
-/** marker 子集允许的 primitive type（窄子集运行时栅栏） */
-const MARKER_PRIM_TYPES = new Set(['path', 'ellipse', 'rect', 'group']);
-
 /**
  * 校验 def 几何字段有限（baseSize 还须 > 0）
  * @description 第三方 / LLM 写出的 def 可能漏字段或塞 NaN / Infinity / 0 baseSize；这些数会经 shrink 公式
@@ -102,58 +100,10 @@ const assertFiniteGeometry = (shape: string, def: ArrowDefinition): void => {
   }
 };
 
-/** 深度查 marker 产物里有没有函数（守 Scene 100% JSON 可序列化） */
-const assertNoFunction = (shape: string, value: unknown): void => {
-  if (typeof value === 'function') {
-    throw new Error(
-      `Arrow '${shape}' emit produced a marker containing a function; markers must be plain JSON data.`,
-    );
-  }
-  if (Array.isArray(value)) {
-    for (const v of value) assertNoFunction(shape, v);
-  } else if (value !== null && typeof value === 'object') {
-    for (const v of Object.values(value)) assertNoFunction(shape, v);
-  }
-};
-
-/**
- * 递归校验单个 emit 产物符合 `MarkerPrimitive` 窄子集（运行时栅栏，TS 只能编译期守门）
- * @description type 限 path/ellipse/rect/group（拒 text 等）；fill 限 string | contextStroke（拒 resourceRef
- *   等外部资源引用）；group 递归 children。守 ADR 的"marker 内无文本布局 / 无外部资源 / 无递归 marker"契约。
- */
-const assertValidMarkerPrim = (shape: string, prim: unknown): void => {
-  if (prim === null || typeof prim !== 'object') {
-    throw new Error(`Arrow '${shape}' emit produced a non-object marker primitive.`);
-  }
-  const type = (prim as { type?: unknown }).type;
-  if (typeof type !== 'string' || !MARKER_PRIM_TYPES.has(type)) {
-    throw new Error(
-      `Arrow '${shape}' emit produced an invalid marker primitive type '${String(type)}'; allowed: group, path, ellipse, rect.`,
-    );
-  }
-  const fill = (prim as { fill?: unknown }).fill;
-  if (
-    fill !== undefined &&
-    typeof fill !== 'string' &&
-    !(typeof fill === 'object' && fill !== null && (fill as { kind?: unknown }).kind === 'contextStroke')
-  ) {
-    throw new Error(
-      `Arrow '${shape}' marker fill must be a color string or { kind: 'contextStroke' }; external paint references are not allowed inside markers.`,
-    );
-  }
-  if (type === 'group') {
-    const children = (prim as { children?: unknown }).children;
-    if (!Array.isArray(children)) {
-      throw new Error(`Arrow '${shape}' marker group must have a children array.`);
-    }
-    for (const child of children) assertValidMarkerPrim(shape, child);
-  }
-};
-
 /**
  * 调 def.emit 收集 marker 并跑窄子集 + JSON-safe 校验
  * @description emit 缺失 / 非函数 / 抛错 / 返回非 iterable 都包成含 shape 名的清晰错（便于第三方 / LLM 自修），
- *   不泄漏内部变量名；产物逐个过 `assertValidMarkerPrim` + 深度无函数检查。
+ *   不泄漏内部变量名；产物逐个过共享 `validateMarkerPrimitives`（窄子集 + 深度无函数检查，与 pattern motif 同套）。
  */
 const callEmit = (
   shape: string,
@@ -171,8 +121,7 @@ const callEmit = (
       cause: e,
     });
   }
-  for (const prim of marker) assertValidMarkerPrim(shape, prim);
-  assertNoFunction(shape, marker);
+  validateMarkerPrimitives(`Arrow '${shape}'`, marker);
   return marker;
 };
 

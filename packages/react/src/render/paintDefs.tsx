@@ -1,5 +1,6 @@
 import type { FC, ReactElement } from 'react';
-import type { IRPaintSpec, SceneResource } from '@retikz/core';
+import type { IRPaintSpec, ResolvedPatternTile, SceneResource } from '@retikz/core';
+import { renderMarkerPrim } from './markerPrim';
 
 /**
  * 渐变角度（度，polar 约定 0=+x / 90=+y 屏幕下）→ objectBoundingBox 下的 x1/y1/x2/y2
@@ -27,8 +28,28 @@ const Stops: FC<{ spec: IRPaintSpec }> = ({ spec }) =>
 const fitToPAR = (fit: 'fill' | 'contain' | 'cover' | undefined): string =>
   fit === 'fill' ? 'none' : fit === 'contain' ? 'xMidYMid meet' : 'xMidYMid slice';
 
+/**
+ * 物化已解析 pattern tile（emit-in-compile 产物）成 `<pattern>`
+ * @description 宽高 = `tile.size`、`patternUnits=userSpaceOnUse`（tile 固定 user units）、可选整体旋转；
+ *   `tile.motif`（`MarkerPrimitive[]`，含可选背景 rect）复用 arrow 的 `renderMarkerPrim` 物化（contextStroke →
+ *   context-stroke）。react 不再 switch motif shape、不算几何——几何全在 core compile 期产出。
+ */
+const renderPatternTile = (tile: ResolvedPatternTile, id: string): ReactElement => (
+  <pattern
+    key={id}
+    id={id}
+    width={tile.size}
+    height={tile.size}
+    patternUnits="userSpaceOnUse"
+    patternTransform={tile.rotation ? `rotate(${tile.rotation})` : undefined}
+  >
+    {tile.motif.map((prim, i) => renderMarkerPrim(prim, i))}
+  </pattern>
+);
+
 /** 一个 paint 资源 → 对应 SVG paint server 元素（key = 物化后的 SVG id） */
-const renderPaint = (spec: IRPaintSpec, id: string): ReactElement => {
+const renderPaint = (resource: SceneResource, id: string): ReactElement => {
+  const spec: IRPaintSpec = resource.spec;
   switch (spec.type) {
     case 'linearGradient': {
       const l = angleToLine(spec.angle);
@@ -46,31 +67,9 @@ const renderPaint = (spec: IRPaintSpec, id: string): ReactElement => {
         </radialGradient>
       );
     }
-    case 'pattern': {
-      const size = spec.size ?? 8;
-      const color = spec.color ?? 'currentColor';
-      const stroke = spec.lineWidth ?? 1;
-      const transform = spec.rotation ? `rotate(${spec.rotation})` : undefined;
-      return (
-        <pattern
-          key={id}
-          id={id}
-          width={size}
-          height={size}
-          patternUnits="userSpaceOnUse"
-          patternTransform={transform}
-        >
-          {spec.background !== undefined && <rect width={size} height={size} fill={spec.background} />}
-          {spec.shape === 'lines' && <path d={`M0 0 H${size}`} stroke={color} strokeWidth={stroke} />}
-          {spec.shape === 'grid' && (
-            <path d={`M0 0 H${size} M0 0 V${size}`} stroke={color} strokeWidth={stroke} fill="none" />
-          )}
-          {spec.shape === 'dots' && (
-            <circle cx={size / 2} cy={size / 2} r={spec.lineWidth ?? size / 5} fill={color} />
-          )}
-        </pattern>
-      );
-    }
+    case 'pattern':
+      // pattern 资源带 compile 期已解析的 tile（motif 几何 + size + rotation）；缺 tile 是不该出现的 compile bug
+      return resource.tile ? renderPatternTile(resource.tile, id) : <pattern key={id} id={id} />;
     case 'image':
       return (
         <pattern key={id} id={id} width={1} height={1} patternContentUnits="objectBoundingBox">
@@ -90,7 +89,7 @@ export const PaintDefs: FC<{ resources: Array<SceneResource>; idFor: (id: string
   idFor,
 }) => (
   <>
-    {/* 当前 SceneResource 仅 paint；alpha.9 加 clip 时这里按 kind 分流 */}
-    {resources.map(r => renderPaint(r.spec, idFor(r.id)))}
+    {/* 当前 SceneResource 仅 paint；后续加 clip 时这里按 kind 分流 */}
+    {resources.map(r => renderPaint(r, idFor(r.id)))}
   </>
 );

@@ -326,8 +326,9 @@ export const compileToScene = (ir: IR, options: CompileOptions = {}): Scene => {
     onDuplicate: info => onWarn(formatDuplicateWarning(info)),
   });
   const allPoints: Array<IRPosition> = [];
-  // paint 登记表：node / path 的 PaintSpec fill 去重 + 派稳定 id → Scene.resources
-  const paint = createPaintRegistry(effectivePatterns, onWarn);
+  // paint 登记表：node / path 的 PaintSpec fill 去重 + 派稳定 id → Scene.resources；
+  // pattern 资源额外查 effectivePatterns + emit 产 tile（emit-in-compile），用同一 round 保几何一致
+  const paint = createPaintRegistry(effectivePatterns, round);
 
   /**
    * 解析一批本层收集的 pending paths（lookup-only 阶段）

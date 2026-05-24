@@ -74,11 +74,14 @@ export type {
 // 结构化 Target / Anchor 对象形态（alpha.6 ADR-01）：用户写对象 target 时有类型
 export type { IRNodeTarget, IRAnchorRef } from '@retikz/core';
 
-// 扩展面：自定义箭头 / 路径生成器注册——react 用户单包 import 即可定义并注入 <Layout arrows / pathGenerators>
+// 扩展面：自定义箭头 / pattern motif / 路径生成器注册——react 用户单包 import 即可定义并注入
+// <Layout arrows / patterns / pathGenerators>
 export { definePathGenerator } from '@retikz/core';
 export type {
   ArrowDefinition,
   ArrowEmitContext,
+  PatternDefinition,
+  PatternEmitContext,
   MarkerPrimitive,
   MarkerFill,
   PathGeneratorDefinition,

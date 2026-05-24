@@ -5,6 +5,7 @@ import {
   type AssertEqual,
   type IR,
   type PathGeneratorDefinition,
+  type PatternDefinition,
   type ScenePrimitive,
   type ShapeDefinition,
   compileToScene,
@@ -47,6 +48,13 @@ export type LayoutProps = {
    *   内置时编译期发 `ARROW_OVERRIDES_BUILTIN`；未注册名编译期 throw
    */
   arrows?: Record<string, ArrowDefinition>;
+  /**
+   * 运行时注入的第三方 / 自定义 pattern motif（透传给 `compileToScene` 的 `CompileOptions.patterns`）
+   * @description IR 里 `fill={{ type: 'pattern', shape: '...' }}` 仍只写字符串名；motif 定义在此注入。
+   *   emit-in-compile：compile 调 `def.emit` 产 motif 几何进 `SceneResource.tile`，react adapter 只物化、
+   *   不需 patterns 表。同名覆盖内置时编译期发 `PATTERN_OVERRIDES_BUILTIN`；未注册名编译期 throw
+   */
+  patterns?: Record<string, PatternDefinition>;
   /**
    * 运行时注入的第三方 / 自定义 path generator（透传给 `compileToScene` 的 `CompileOptions.pathGenerators`）
    * @description IR 里 generator step 仍只写字符串 `name`；曲线生成器定义在此注入。core 不内置任何曲线；
@@ -128,11 +136,11 @@ const hashKey = (key: string): string => {
  * @description 流水线：从 children 构造 IR（或直接接受外部 IR）→ compileToScene 得 Scene → 渲染 SVG 元素并按需注入 `<defs>` 与每种 arrow 端点 spec 的 `<marker>`；marker id 用 `useId()` 派生稳定前缀避免多实例冲突，每种 detail 一个定义（`${prefix}-${specHash}`），marker 内借 spec 字段（`color` / `fill` / `opacity` 等）替换硬编码，缺省字段回退到 `context-stroke` 让颜色继续跟随 path 同步
  */
 export const Layout: FC<LayoutProps> = props => {
-  const { ir: irFromProp, children, width, height, className, style, nodeDistance, shapes, arrows, pathGenerators } = props;
+  const { ir: irFromProp, children, width, height, className, style, nodeDistance, shapes, arrows, patterns, pathGenerators } = props;
   const ir = useMemo(() => irFromProp ?? buildIR(children), [irFromProp, children]);
   const scene = useMemo(
-    () => compileToScene(ir, { measureText: browserMeasurer, nodeDistance, shapes, arrows, pathGenerators }),
-    [ir, nodeDistance, shapes, arrows, pathGenerators],
+    () => compileToScene(ir, { measureText: browserMeasurer, nodeDistance, shapes, arrows, patterns, pathGenerators }),
+    [ir, nodeDistance, shapes, arrows, patterns, pathGenerators],
   );
 
   // useId 返回 ":r0:" 含冒号；SVG `url(#id)` 对冒号兼容性差，剥成纯字母数字
