@@ -1,6 +1,6 @@
 # ADR-04：PatternDefinition 注册面（自定义 pattern motif + 内置 3 降注册项）
 
-- 状态：Proposed
+- 状态：Accepted
 - 决策日期：2026-05-24
 - 关联：[v0.2-alpha.8 plan §第二部分补](../../../plans/v0/v0.2-alpha.8.md) · [tikz-gap-analysis §1 填充](../../../analysis/2026-05-07-tikz-gap-analysis.md) · 本 milestone [ADR-01 ArrowDefinition](./01-arrow-definition.md)（复用 `MarkerPrimitive` emit + emit-in-compile 落点）· [alpha.7 ADR-04 pattern/image](../v0.2-alpha.7/04-pattern-image-deferred.md)（pattern motif 固定 enum，本篇开放）
 
@@ -26,7 +26,7 @@ export type PatternEmitContext = {
   size: number;           // 解析后 tile 周期（user units）
   color: string;          // motif 主色（CSS 串，缺省 currentColor）
   background?: string;    // tile 背景（缺省透明）
-  lineWidth: number;      // 线 / 网格描边宽；dots 用作半径
+  lineWidth?: number;     // 线 / 网格描边宽；undefined 时各 motif 自定缺省（lines/grid 用 1、dots 半径用 size/5）
   round: (n: number) => number;
 };
 ```
@@ -58,7 +58,7 @@ export type PatternEmitContext = {
 
 1. **`pattern.shape` 开放 string**：`z.enum` → `z.string().min(1)`；新增 `BuiltinPatternName = ValueOf<typeof PATTERN_SHAPES>` / `PatternShapeName = BuiltinPatternName | (string & {})`（照抄 node.shape / arrow.shape）。`image` 分支不变（非 motif，spec 驱动）。
 2. **PatternDefinition / PatternEmitContext 为 TS type**（非 zod，运行时注入不进 IR）。`color` 为 CSS 串（缺省 `currentColor`，主题反应天然——`<defs>` 内 motif 继承 svg color）。
-3. **emit-in-compile**：`createPaintRegistry(effectivePatterns, onWarn)`——`resolve` 见 pattern spec 时查 `effectivePatterns[shape]`（未注册 throw、带可用名）、构 `PatternEmitContext`、调 `def.emit` 产 motif → 连同 size / background / rotation 写进 `SceneResource.tile`。gradient / image 资源不变（spec 驱动）。
+3. **emit-in-compile**：`createPaintRegistry(effectivePatterns, round)`——`resolve` 见 pattern spec 时查 `effectivePatterns[shape]`（未注册 throw、带可用名）、构 `PatternEmitContext`、调 `def.emit` 产 motif → 连同 size / background / rotation 写进 `SceneResource.tile`。gradient / image 资源不变（spec 驱动）。
 4. **`SceneResource` 扩**：加可选 `tile?: ResolvedPatternTile`（`{ size, background?, rotation?, motif: MarkerPrimitive[] }`）——仅 pattern 资源有；gradient / image 资源仍只 `{ kind, id, spec }`。
 5. **react 物化**：`paintDefs.tsx` 对带 `tile` 的 paint 资源物化 `<pattern width=size height=size patternUnits="userSpaceOnUse" patternTransform=rotate(...)>` + 可选 background rect + motif `MarkerPrimitive[]`（删 motif switch）；gradient / image 分支不变。
 6. **内置 3 迁移 + 回归**：lines / dots / grid 迁成 PatternDefinition，物化几何与旧 switch 逐一等价（回归）。
@@ -88,7 +88,7 @@ compileToScene(ir, { patterns: { cross } });
 - `packages/core/src/ir/paint.ts`：`pattern.shape` `z.enum` → `z.string().min(1)` + `PATTERN_SHAPES` / `BuiltinPatternName` / `PatternShapeName`。
 - `packages/core/src/patterns/{types,index}.ts`（新建，仿 `arrows/`）：`PatternDefinition` / `PatternEmitContext` + `BUILTIN_PATTERNS`（lines/dots/grid 迁入）。
 - `packages/core/src/primitive/paint.ts`：`SceneResource` 加 `tile?: ResolvedPatternTile`；新 `ResolvedPatternTile` 类型。
-- `packages/core/src/compile/paint.ts`：`createPaintRegistry(effectivePatterns, onWarn)` 查表 + 调 emit 产 tile；未注册 throw、同名覆盖 warn。
+- `packages/core/src/compile/paint.ts`：`createPaintRegistry(effectivePatterns, round)` 查表 + 调 emit 产 tile；未注册 throw、同名覆盖 warn。
 - `packages/core/src/compile/compile.ts`：`CompileOptions.patterns` + 有效表合并 + 传给 registry；`PATTERN_OVERRIDES_BUILTIN` warn code。
 - `packages/react/src/render/paintDefs.tsx`：带 `tile` 的资源物化 motif（删 switch）。
 - `packages/react/src/kernel/Layout.tsx`：`<Layout patterns>` prop 转发 compile。
