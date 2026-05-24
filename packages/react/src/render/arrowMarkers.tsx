@@ -8,10 +8,11 @@ import type {
 
 /**
  * marker fill 取值 → SVG fill 属性
- * @description 纯色字符串直传；`{ kind:'contextStroke' }` → SVG `context-stroke`（继承所在元素描边，主题反应）。
+ * @description 纯色字符串直传；`{ kind:'contextStroke' }` → SVG `context-stroke`（继承所在元素描边，主题反应）；
+ *   省略（hollow 几何无 fill）→ `none`（SVG `<path>` 缺省填黑，空心箭头必须显式置 `none`）。
  */
-const markerFillToSvg = (fill: MarkerFill | undefined): string | undefined => {
-  if (fill === undefined) return undefined;
+const markerFillToSvg = (fill: MarkerFill | undefined): string => {
+  if (fill === undefined) return 'none';
   if (typeof fill === 'string') return fill;
   return 'context-stroke';
 };

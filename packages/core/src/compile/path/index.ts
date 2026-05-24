@@ -35,8 +35,9 @@ import { type TextMeasurer, fallbackMeasurer } from '../text-metrics';
 import { clipForTarget, cornerOf, refPointOfTarget, samePoint } from './anchor';
 import { emitLabelPrimitive, tForLabelPosition } from './label';
 import { normalizeRelativeTargets } from './relative';
-import { applyArrowShrinks, endpointArrows } from './shrink';
+import { type EffectiveArrows, applyArrowShrinks, endpointArrows } from './shrink';
 import { type PathBaseProps, splitSubPathsForEndpointArrows } from './split';
+import { BUILTIN_ARROWS } from '../../arrows';
 
 /** 目标若是对象 NodeTarget（`{ id, ... }`）返回其 id，否则 undefined——给 UNRESOLVED_NODE_REFERENCE 诊断用 */
 const nodeRefId = (t: IRTarget): string | undefined =>
@@ -83,6 +84,12 @@ export type EmitPathWarnHook = {
   scopeChain?: ReadonlyArray<Transform>;
   /** fill 解析器（PaintSpec → resourceRef + 登记资源）；缺省时纯色透传、PaintSpec 退化为无填充 */
   resolveFill?: PaintResolver;
+  /**
+   * 有效 arrow 表（内置 7 + 注入）；缺省 = 仅内置 7
+   * @description compileToScene 合并 `{ ...BUILTIN_ARROWS, ...options.arrows }` 传入；
+   *   endpointArrows 据此查表算 shrink / 调 def.emit；未注册名编译期 throw
+   */
+  effectiveArrows?: EffectiveArrows;
 };
 
 /**
@@ -619,7 +626,8 @@ export const emitPathPrimitive = (
     strokeOpacity: path.drawOpacity,
   };
 
-  const arrows = endpointArrows(path.arrow, path.arrowDetail);
+  const effectiveArrows = warnHook.effectiveArrows ?? BUILTIN_ARROWS;
+  const arrows = endpointArrows(path.arrow, path.arrowDetail, effectiveArrows, round);
 
   // shrink 在 compile 算（端点收缩与 emit 落点无关）：按 shape + 视觉输入把首/末段端点向内缩短，
   // 让 line 端点接在 hollow arrow 尾部外缘、不贯穿 back outline；shrink=0 的实心 shape 跳过

@@ -3,6 +3,7 @@ import type { IR, IRChild, IRPath, IRPosition, IRScope } from '../ir';
 import type { GroupPrim, Scene, ScenePrimitive, Transform } from '../primitive';
 import { BUILTIN_SHAPES } from '../shapes';
 import type { ShapeDefinition } from '../shapes';
+import { BUILTIN_ARROWS } from '../arrows';
 import type { ArrowDefinition } from '../arrows';
 import { type DuplicateRegisterInfo, NameStack } from './name-stack';
 import { type NodeLayout, emitNodePrimitives, labelExtentPoints, layoutNode } from './node';
@@ -246,6 +247,22 @@ export const compileToScene = (ir: IR, options: CompileOptions = {}): Scene => {
     }
   }
 
+  // 有效 arrow 表：内置 + 注入（同名注入覆盖内置）；覆盖内置经 onWarn 发 ARROW_OVERRIDES_BUILTIN
+  const effectiveArrows: Record<string, ArrowDefinition> = options.arrows
+    ? { ...BUILTIN_ARROWS, ...options.arrows }
+    : BUILTIN_ARROWS;
+  if (options.arrows) {
+    for (const name of Object.keys(options.arrows)) {
+      if (Object.prototype.hasOwnProperty.call(BUILTIN_ARROWS, name)) {
+        onWarn({
+          code: 'ARROW_OVERRIDES_BUILTIN',
+          message: `Injected arrow '${name}' overrides the built-in arrow of the same name.`,
+          path: `options.arrows.${name}`,
+        });
+      }
+    }
+  }
+
   const primitives: Array<InternalScenePrimitive> = [];
   /** 已 push 但未回填的占位计数；compileToScene 返回前必须归零（无条件守 Scene 公开契约） */
   let placeholderBalance = 0;
@@ -287,6 +304,7 @@ export const compileToScene = (ir: IR, options: CompileOptions = {}): Scene => {
           irPath: item.irPath,
           scopeChain: item.scopeChain,
           resolveFill: paint.resolve,
+          effectiveArrows,
         });
         if (item.slot) {
           // 原位回填：按引用定位占位再 splice 替换为真 primitive（result 为 null 时替换成 0 个 = 删占位）
