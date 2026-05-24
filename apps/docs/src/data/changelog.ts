@@ -15,10 +15,17 @@ export const changelog: Array<Release> = [
         pkg: '@retikz/core',
         version: 'v0.2',
         description: {
-          zh: 'Scope 升级为样式默认值挂点、形状可注册第三方注入,补齐 zIndex / label rotate 等 emit 层能力,并扩张 Path IR 支撑几何形 sugar(椭圆弧 / 部分圆椭圆 / 圆角矩形)。',
-          en: 'Scope becomes a style-default host, shapes are registrable, emit adds zIndex / label rotate, plus Path IR expansion backing shape sugar (elliptical arc / partial circle / rounded rect).',
+          zh: 'Scope 样式默认值挂点、形状可注册注入、zIndex / label rotate emit 能力、Path IR 几何扩张,并引入 Paint 填充服务(渐变 / 图案 / 图片)与 Node 自动换行 / 引脚。',
+          en: 'Scope style-default host, registrable shapes, zIndex / label rotate, Path IR geometry, plus a Paint fill service (gradients / pattern / image) and Node auto-wrapping / pin leaders.',
         },
         highlights: [
+          {
+            label: { zh: 'Paint 填充服务', en: 'Paint fill service' },
+            content: {
+              zh: '`fill` 升 `PaintValue` + `SceneResource` 资源表,支持渐变 / 图案 pattern / 图片 image,渲染目标无关(`<defs>` 由 adapter 物化)[Node 概览](/core/components/node/overview)',
+              en: '`fill` upgrades to `PaintValue` + a `SceneResource` table supporting gradients / pattern / image, render-target agnostic (`<defs>` materialized by the adapter) [Node overview](/core/components/node/overview)',
+            },
+          },
           {
             label: { zh: '形状注册', en: 'Shape registry' },
             content: {
@@ -49,6 +56,37 @@ export const changelog: Array<Release> = [
           },
         ],
         subVersions: [
+          {
+            version: 'alpha.7',
+            date: '2026-05-24',
+            summary: {
+              zh: 'Paint 填充服务(线性 / 径向渐变 + 图案 pattern + 图片 image),Node `maxTextWidth` 自动换行,以及 `pin` 引脚(从节点边界牵引线到 label)。',
+              en: 'A Paint fill service (linear / radial gradients + pattern + image), Node `maxTextWidth` auto-wrapping, and `pin` leaders (a line from the node border to the label).',
+            },
+            items: [
+              {
+                label: { zh: 'Paint 填充服务', en: 'Paint fill service' },
+                content: {
+                  zh: '`fill` 从纯色升为 `PaintValue`(纯色 / `resourceRef` / `contextStroke`)+ Scene 级 `SceneResource` 资源表;`PaintSpec` 支持 `linearGradient` / `radialGradient` / `pattern`(lines / dots / grid)/ `image`(URL);compile 端 `createPaintRegistry` 按结构去重、派稳定 id,渲染目标无关(`<defs>` 由 adapter 物化)',
+                  en: '`fill` upgrades from a plain color to `PaintValue` (solid / `resourceRef` / `contextStroke`) plus a Scene-level `SceneResource` table; `PaintSpec` supports `linearGradient` / `radialGradient` / `pattern` (lines / dots / grid) / `image` (URL); compile-side `createPaintRegistry` dedups by structure and assigns stable ids, render-target agnostic (`<defs>` materialized by the adapter)',
+                },
+              },
+              {
+                label: { zh: 'maxTextWidth 自动换行', en: 'maxTextWidth auto-wrapping' },
+                content: {
+                  zh: '`NodeSchema.maxTextWidth` 折行阈值(user units):超过才折行、短文本盒收缩到内容(非固定段落宽);西文按词 / CJK 按字,折出物理行继承逻辑行 `LineSpec` 样式并走现有 `align` / `lineHeight`',
+                  en: '`NodeSchema.maxTextWidth` is a wrap threshold (user units): wraps only past it and shrinks the box to content for short text (not a fixed paragraph width); western by word / CJK by character, wrapped physical lines inherit the logical line’s `LineSpec` style and reuse existing `align` / `lineHeight`',
+                },
+              },
+              {
+                label: { zh: 'pin 引脚', en: 'pin leaders' },
+                content: {
+                  zh: '`NodeLabelSchema.pin`(`boolean | { stroke?, strokeWidth?, dashPattern? }`)从节点边界朝 label 方向牵一条引线,复用 label 的 placement / distance / rotate;label 与 pin 计入 layout 外接框(不被自动 viewBox 裁)',
+                  en: '`NodeLabelSchema.pin` (`boolean | { stroke?, strokeWidth?, dashPattern? }`) draws a leader from the node border toward the label, reusing the label’s placement / distance / rotate; labels and pins count into the layout bounding box (not clipped by the auto viewBox)',
+                },
+              },
+            ],
+          },
           {
             version: 'alpha.6',
             date: '2026-05-23',
@@ -235,6 +273,30 @@ export const changelog: Array<Release> = [
         ],
         subVersions: [
           {
+            version: 'alpha.7',
+            date: '2026-05-24',
+            summary: {
+              zh: '物化 Paint 资源表为 `<defs>`(渐变 / pattern / image)、`renderPrim` 按 `PaintValue` 分派 `fill`,并透传 Node `maxTextWidth`。',
+              en: 'Materialize the Paint resource table into `<defs>` (gradients / pattern / image), dispatch `fill` by `PaintValue` in `renderPrim`, and forward Node `maxTextWidth`.',
+            },
+            items: [
+              {
+                label: { zh: 'PaintDefs 物化', en: 'PaintDefs materialization' },
+                content: {
+                  zh: '`scene.resources` → `<defs>` 的 `<linearGradient>` / `<radialGradient>` / `<pattern>`(图案与图片);`renderPrim` 按 `PaintValue` 分派 `fill`:纯色走 attribute / `var()` 走 inline style / `resourceRef` → `fill="url(#id)"`;`<defs>` id 经 `useId` 前缀跨实例唯一',
+                  en: '`scene.resources` → `<defs>` `<linearGradient>` / `<radialGradient>` / `<pattern>` (pattern + image); `renderPrim` dispatches `fill` by `PaintValue`: solid via attribute / `var()` via inline style / `resourceRef` → `fill="url(#id)"`; `<defs>` ids stay unique across instances via a `useId` prefix',
+                },
+              },
+              {
+                label: { zh: 'maxTextWidth 透传', en: 'maxTextWidth passthrough' },
+                content: {
+                  zh: '`<Node maxTextWidth>` 透传到 IR(`NODE_FIELDS` + `NodeProps` 字段互锁)',
+                  en: '`<Node maxTextWidth>` forwards to IR (`NODE_FIELDS` + `NodeProps` field interlock)',
+                },
+              },
+            ],
+          },
+          {
             version: 'alpha.6',
             date: '2026-05-23',
             summary: {
@@ -340,6 +402,23 @@ export const changelog: Array<Release> = [
           },
         ],
         subVersions: [
+          {
+            version: 'alpha.7',
+            date: '2026-05-24',
+            summary: {
+              zh: 'Node 概览页补 Paint(渐变 / pattern / image)、`maxTextWidth` 自动换行、`pin` 引脚 demo 与 API。',
+              en: 'The Node overview page gains Paint (gradients / pattern / image), `maxTextWidth` auto-wrapping, and `pin` leader demos plus API.',
+            },
+            items: [
+              {
+                label: { zh: 'Node Paint / 换行 / 引脚 demo', en: 'Node Paint / wrap / pin demos' },
+                content: {
+                  zh: '[Node 概览](/core/components/node/overview)加渐变填充(含 `stops` opacity 渐隐 + `currentColor`)、pattern·image(斜线 / 网点 / 网格 + 图片)、`maxTextWidth` 自动换行(中英混排)、`pin` 引脚 demo,API 表补 `maxTextWidth` / `pin` / `fill` PaintSpec 行',
+                  en: 'The [Node overview](/core/components/node/overview) adds gradient fills (incl. `stops` opacity fade + `currentColor`), pattern·image (lines / dots / grid + image), `maxTextWidth` auto-wrapping (mixed CJK / western), and `pin` leader demos; the API table gains `maxTextWidth` / `pin` / `fill` PaintSpec rows',
+                },
+              },
+            ],
+          },
           {
             version: 'alpha.6',
             date: '2026-05-23',
