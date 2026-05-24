@@ -90,7 +90,7 @@ const walkJsxElement = (node: AstNode, key?: number): ReactElement => {
   const opening = node.openingElement as AstNode;
   const nameNode = opening.name as AstNode;
   if (nameNode.type !== 'JSXIdentifier') {
-    throw new Error(`不支持的组件名形式：${nameNode.type}（仅支持简单标识符，例如 TikZ / Node）`);
+    throw new Error(`不支持的组件名形式：${nameNode.type}（仅支持简单标识符，例如 Layout / Node）`);
   }
   const componentName = nameNode.name as string;
   const Component = COMPONENT_REGISTRY[componentName];
