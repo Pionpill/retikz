@@ -181,6 +181,12 @@ export type NodeLabelLayout = {
   rotate?: 'none' | 'radial' | 'tangent' | number;
   /** 自旋后若文字倒置则翻 180°；缺省 false */
   keepUpright?: boolean;
+  /** label 文本测量宽度（pin leader 算 label 框近边用） */
+  measuredWidth: number;
+  /** pin：从 node 边界画引线到 label */
+  pin?: boolean;
+  /** 引线样式（pin 为 true 时生效） */
+  leader?: { stroke?: string; strokeWidth?: number; dashPattern?: Array<number> };
 };
 
 /** 把 Rect 各方向外扩 m（margin generic：所有 shape 都 w+2m, h+2m，由 boundaryPointOf 调用前膨胀） */
@@ -231,16 +237,43 @@ const LABEL_DIRECTION_MAP: Record<
  *   若用带 rotate 的 rect，label 位置会被 anchorOf / angleBoundaryOf 旋转一次、再被外层 group 旋转一次（双重旋转）。
  *   anchorOf / angleBoundaryOf 本身不改（path anchor `'A.north'` / `'A.30'` 仍需带 rotate 的 rect）。
  */
-const labelCenter = (layout: NodeLayout, label: NodeLabelLayout): Position => {
+/** label 在 node 边界上的附着点（未旋转局部系；pin 引线起点 = 此点） */
+const labelBorderPoint = (layout: NodeLayout, label: NodeLabelLayout): Position => {
   const aaLayout: NodeLayout = { ...layout, rect: { ...layout.rect, rotate: 0 } };
   if (typeof label.position === 'number') {
+    return angleBoundaryOf(aaLayout, label.position);
+  }
+  const { anchor } = LABEL_DIRECTION_MAP[label.position];
+  return anchorOf(aaLayout, anchor);
+};
+
+const labelCenter = (layout: NodeLayout, label: NodeLabelLayout): Position => {
+  const [bx, by] = labelBorderPoint(layout, label);
+  if (typeof label.position === 'number') {
     const rad = (label.position * Math.PI) / 180;
-    const [bx, by] = angleBoundaryOf(aaLayout, label.position);
     return [bx + Math.cos(rad) * label.distance, by + Math.sin(rad) * label.distance];
   }
-  const { anchor, vec } = LABEL_DIRECTION_MAP[label.position];
-  const [bx, by] = anchorOf(aaLayout, anchor);
+  const { vec } = LABEL_DIRECTION_MAP[label.position];
   return [bx + vec[0] * label.distance, by + vec[1] * label.distance];
+};
+
+/** 从 label 中心朝 border 方向，求 label 框（halfW×halfH）边界交点（pin 引线终点 = label 框近 node 边） */
+const labelBoxEdgeToward = (
+  center: Position,
+  border: Position,
+  halfW: number,
+  halfH: number,
+): Position => {
+  const dx = border[0] - center[0];
+  const dy = border[1] - center[1];
+  const len = Math.hypot(dx, dy);
+  if (len < 1e-9) return center;
+  const ux = dx / len;
+  const uy = dy / len;
+  const sx = Math.abs(ux) > 1e-9 ? halfW / Math.abs(ux) : Number.POSITIVE_INFINITY;
+  const sy = Math.abs(uy) > 1e-9 ? halfH / Math.abs(uy) : Number.POSITIVE_INFINITY;
+  const s = Math.min(sx, sy, len); // 不越过 border 本身
+  return [center[0] + ux * s, center[1] + uy * s];
 };
 
 /** 角度换算常量（弧度 → 度） */
@@ -419,6 +452,10 @@ export const layoutNode = (
         : [node.label];
   const labels: Array<NodeLabelLayout> | undefined = rawLabels?.map(lab => {
     const labFont = lab.font;
+    const labFontSize = (labFont?.size ?? labelDefault?.font?.size ?? baseFontSize) * fontScale;
+    const labFamily = labFont?.family ?? labelDefault?.font?.family ?? fontFamily;
+    const labWeight = labFont?.weight ?? labelDefault?.font?.weight ?? fontWeight;
+    const labStyle = labFont?.style ?? labelDefault?.font?.style ?? fontStyle;
     return {
       text: lab.text,
       position: lab.position ?? 'above',
@@ -426,12 +463,20 @@ export const layoutNode = (
       // 继承顺序：label 显式 > scope.labelDefault (textColor → color) > 宿主 node 主色（已解析进 node.textColor） > currentColor
       textColor: lab.textColor ?? labelDefault?.textColor ?? labelDefault?.color ?? node.textColor,
       opacity: lab.opacity ?? labelDefault?.opacity,
-      fontSize: (labFont?.size ?? labelDefault?.font?.size ?? baseFontSize) * fontScale,
-      fontFamily: labFont?.family ?? labelDefault?.font?.family ?? fontFamily,
-      fontWeight: labFont?.weight ?? labelDefault?.font?.weight ?? fontWeight,
-      fontStyle: labFont?.style ?? labelDefault?.font?.style ?? fontStyle,
+      fontSize: labFontSize,
+      fontFamily: labFamily,
+      fontWeight: labWeight,
+      fontStyle: labStyle,
       rotate: lab.rotate,
       keepUpright: lab.keepUpright,
+      measuredWidth: measureText(lab.text, {
+        size: labFontSize,
+        family: labFamily,
+        weight: labWeight,
+        style: labStyle,
+      }).width,
+      pin: lab.pin,
+      leader: lab.leader,
     };
   });
 
@@ -527,6 +572,28 @@ export const emitNodePrimitives = (
     const cy = layout.rect.y;
     for (const lab of layout.labels) {
       const [lx, ly] = labelCenter(layout, lab);
+      // pin：从 node 边界点画引线到 label 框近 node 边（在 textPrim 前 push → 线在文字下层）
+      if (lab.pin) {
+        const [bx, by] = labelBorderPoint(layout, lab);
+        const pad = 2;
+        const [nx, ny] = labelBoxEdgeToward(
+          [lx, ly],
+          [bx, by],
+          lab.measuredWidth / 2 + pad,
+          lab.fontSize / 2 + pad,
+        );
+        inner.push({
+          type: 'path',
+          commands: [
+            { kind: 'move', to: [round(bx), round(by)] },
+            { kind: 'line', to: [round(nx), round(ny)] },
+          ],
+          stroke: lab.leader?.stroke ?? lab.textColor ?? 'currentColor',
+          strokeWidth: lab.leader?.strokeWidth ?? 1,
+          dashPattern: lab.leader?.dashPattern,
+          opacity: lab.opacity ?? layout.opacity,
+        });
+      }
       const textPrim: ScenePrimitive = {
         type: 'text',
         x: round(lx),
