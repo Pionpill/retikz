@@ -486,6 +486,13 @@ export const changelog: Array<Release> = [
                   en: '[Custom Arrows](/core/reference/extending/custom-arrow) (registration + ArrowDefinition contract + emit/MarkerPrimitive + color inheritance + a Bracket demo), [Path Generators](/core/reference/extending/path-generator) (contract + double-parse + targetParams + parabola/sin demos), [Custom Patterns](/core/reference/extending/custom-pattern) (PatternDefinition + emit-in-compile tile + cross/size demos); the [Path page](/core/components/draw/path) gains out/in·self-loop / rotate·scale / marks demos plus API rows',
                 },
               },
+              {
+                label: { zh: 'image 填充补外部 URL + fit 演示', en: 'Image fill: external URL + fit demo' },
+                content: {
+                  zh: '[Node 概览](/core/components/node/overview) image 填充补外部 URL(`picsum`)demo,对照 `cover`/`contain`/`fill` 三模式,并说明 fit 按形状盒归一计算的口径',
+                  en: 'The [Node overview](/core/components/node/overview) image fill gains an external-URL (`picsum`) demo contrasting `cover`/`contain`/`fill`, plus a note on how `fit` is computed against the normalized shape box',
+                },
+              },
             ],
           },
           {
