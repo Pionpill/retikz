@@ -127,6 +127,14 @@ Line 2`}</Node>
 
 `text` wins over `children` whenever both are supplied.
 
+#### Auto-wrap
+
+`maxTextWidth` sets a **wrap threshold** (user units): text wraps past the threshold (Western on word boundaries, CJK per character), and short text shrinks the box to its actual content instead of filling the width. It is **not a fixed paragraph width** — that is where it differs from TikZ `text width`.
+
+<ComponentPreview name="node-max-text-width" size="sm" />
+
+> An unbreakable long token (a long run with no whitespace) that exceeds the threshold overflows as a whole rather than being hard-cut.
+
 #### Per-line styling
 
 Each line can override `fill` / `opacity` / `font` (any subset of family / size / weight / style); unset fields inherit block defaults. Two equivalent paths:
@@ -199,6 +207,18 @@ By default stacking = declaration order (SVG only honors paint order). `zIndex` 
 
 <ComponentPreview name="node-label-rotate" size="md" />
 
+#### Pin
+
+When `label.pin: true`, a **leader line** is drawn from the node border toward the label (TikZ `pin`). `leader` tunes the line style (`stroke` / `strokeWidth` / `dashPattern`); the default is a thin solid line inheriting the label color. The label is still placed by `position` / `distance` — pin only adds the leader.
+
+<Comparison target="tikz" title="Pin">
+
+`label={{ text: 'foo', position: 'right', pin: true }}` maps to TikZ `[pin=right:foo]`.
+
+</Comparison>
+
+<ComponentPreview name="node-pin" size="md" />
+
 ## API Reference
 
 | Prop | Type | Default | Description |
@@ -209,6 +229,7 @@ By default stacking = declaration order (SVG only honors paint order). `zIndex` 
 | `children` / `text` | `string \| Array<string>` | — | Visible label; string = one line, array = one element per line; `text` wins over `children` |
 | `align` | `'left' \| 'center' \| 'right'` | `'center'` | Horizontal alignment of lines within the multi-line text block |
 | `lineHeight` | `number` | `font.size × 1.2` | Line height of the multi-line block (user units) |
+| `maxTextWidth` | `number` | — | Wrap threshold (user units); text wraps past it (Western per word / CJK per char) and the box shrinks for short text; not a fixed paragraph width |
 | `rotate` | `number` | `0` | Rotation around center, degrees, positive = clockwise |
 | `color` | `string` | — | Master color (TikZ `color=`); `stroke` / `fill` / `textColor` default to it unless individually set, and it cascades to inner text and edge labels |
 | `fill` | `string` | — | Background color (any CSS color) |
@@ -233,7 +254,7 @@ By default stacking = declaration order (SVG only honors paint order). `zIndex` 
 | `scale` | `number` | `1` | Uniform scale (includes font, padding, path attachment) |
 | `xScale` / `yScale` | `number` | — | Per-axis scale; takes precedence over `scale` |
 | `zIndex` | `number` (integer) | `0` | Explicit stacking order: higher draws on top; ties keep declaration order; effective only among siblings at the same level |
-| `label` | `NodeLabel \| Array<NodeLabel>` | — | Extra label(s) attached to the node border; single object or array; `position` accepts the 8-direction enum or a numeric angle, `distance` defaults to 12, `font` / `textColor` inherit from the node; `rotate` (`'none'` / `'radial'` / `'tangent'` / a number of degrees) + `keepUpright` control label spin |
+| `label` | `NodeLabel \| Array<NodeLabel>` | — | Extra label(s) attached to the node border; single object or array; `position` accepts the 8-direction enum or a numeric angle, `distance` defaults to 12, `font` / `textColor` inherit from the node; `rotate` (`'none'` / `'radial'` / `'tangent'` / a number of degrees) + `keepUpright` control label spin; `pin: true` draws a leader line, `leader` (`stroke` / `strokeWidth` / `dashPattern`) styles it |
 
 ### margin vs padding
 
