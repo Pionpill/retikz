@@ -26,6 +26,28 @@ export const assertNoFunction = (owner: string, value: unknown): void => {
 };
 
 /**
+ * 深度查 emit 产物里有没有非 finite 数（NaN / Infinity）
+ * @description 第三方 / LLM 的 emit 算错坐标（除零 / 溢出）会产 NaN / Infinity；`JSON.stringify` 把它们变成
+ *   `null`，破坏 Scene round-trip 等价。故在此抛含 owner 的清晰错，不放任非 finite 流入 Scene（与 arrow
+ *   geometry / path generator 的 finite 守卫同源）。
+ */
+export const assertFiniteNumbers = (owner: string, value: unknown): void => {
+  if (typeof value === 'number') {
+    if (!Number.isFinite(value)) {
+      throw new Error(
+        `${owner} emit produced a marker with a non-finite number (${String(value)}); marker coordinates must be finite.`,
+      );
+    }
+    return;
+  }
+  if (Array.isArray(value)) {
+    for (const v of value) assertFiniteNumbers(owner, v);
+  } else if (value !== null && typeof value === 'object') {
+    for (const v of Object.values(value)) assertFiniteNumbers(owner, v);
+  }
+};
+
+/**
  * 递归校验单个 emit 产物符合 `MarkerPrimitive` 窄子集（运行时栅栏，TS 只能编译期守门）
  * @description type 限 path/ellipse/rect/group（拒 text 等）；fill 限 string | contextStroke（拒 resourceRef
  *   等外部资源引用）；group 递归 children。守"marker 内无文本布局 / 无外部资源 / 无递归 marker"契约。
@@ -69,4 +91,5 @@ export const validateMarkerPrimitives = (
 ): void => {
   for (const prim of marker) assertValidMarkerPrim(owner, prim);
   assertNoFunction(owner, marker);
+  assertFiniteNumbers(owner, marker);
 };

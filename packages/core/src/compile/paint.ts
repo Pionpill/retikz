@@ -44,7 +44,26 @@ const resolvePatternTile = (
   round: (n: number) => number,
 ): ResolvedPatternTile => {
   const def = lookupPatternDef(spec.shape, effectivePatterns);
-  const size = round(spec.size ?? def.defaultSize ?? FALLBACK_PATTERN_SIZE);
+  // size / lineWidth / rotation 的 schema `.finite().positive()` 只在 PathSchema.parse 守门；compileToScene
+  // 直接收 IR（手搓 / LLM 写法）会绕过，故 compile 是唯一真实关口——非 finite / 非正会污染 tile + Scene
+  // round-trip（JSON.stringify(NaN/Infinity)=null），在此抛清晰错（含 shape 名），对齐 arrow finite 守卫。
+  const rawSize = spec.size ?? def.defaultSize ?? FALLBACK_PATTERN_SIZE;
+  if (!Number.isFinite(rawSize) || rawSize <= 0) {
+    throw new Error(
+      `Pattern '${spec.shape}' has an invalid size (${String(rawSize)}); it must be a finite number greater than 0.`,
+    );
+  }
+  if (spec.lineWidth !== undefined && (!Number.isFinite(spec.lineWidth) || spec.lineWidth <= 0)) {
+    throw new Error(
+      `Pattern '${spec.shape}' has an invalid lineWidth (${String(spec.lineWidth)}); it must be a finite number greater than 0.`,
+    );
+  }
+  if (spec.rotation !== undefined && !Number.isFinite(spec.rotation)) {
+    throw new Error(
+      `Pattern '${spec.shape}' has a non-finite rotation (${String(spec.rotation)}); it must be a finite number.`,
+    );
+  }
+  const size = round(rawSize);
   const ctx: PatternEmitContext = {
     size,
     color: spec.color ?? DEFAULT_MOTIF_COLOR,
