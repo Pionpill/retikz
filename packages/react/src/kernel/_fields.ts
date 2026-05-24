@@ -10,6 +10,7 @@ export const NODE_FIELDS = [
   'rotate',
   'align',
   'lineHeight',
+  'maxTextWidth',
   'color',
   'fill',
   'fillOpacity',

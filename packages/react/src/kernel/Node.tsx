@@ -39,6 +39,8 @@ export type NodeProps = {
   align?: NodeTextAlign;
   /** 行高（user units）；不填走 `font.size × 1.2` 默认 */
   lineHeight?: number;
+  /** 折行阈值（user units）：超过才折行、短文本盒收缩（非固定段落宽）；西文按词、CJK 按字。不填 = 不自动折行 */
+  maxTextWidth?: number;
   /** 字体规格：family / size / weight / style 全部可选；不填走渲染端默认值 */
   font?: IRFont;
   /** 横向内边距（text → 左右 border）；不填走 `padding` 兜底，再走默认 */
