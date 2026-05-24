@@ -9,6 +9,7 @@
 - **2026-05-07 初版**：基于 `@retikz/core` v0.1.0-alpha（仅 `move` / `line` step、矩形 node）盘点缺失项。
 - **2026-05-21 修订**：对照 `@retikz/core` v0.1.0 正式版按图元重排。初版列出的 P0 全部闭环，P1 / P2 绝大多数已补齐；当前缺口集中在结构化能力（Scope / 主题）、文本排版（LaTeX / 数学）与 P3 高级特性。
 - **2026-05-23 修订**：补 v0.2 alpha.1–4 已落项（`<Scope>` / 样式继承 / Shape Registry / `zIndex` / Node label rotate）+ 预留 alpha.5 行（Path-level shape sugar：circle/ellipse 部分裁剪、椭圆弧、`rectangle` step、grid / sector / 候选 regular-polygon / star sugar）。结构化能力缺口已基本闭合；当前缺口转向补全图元（更多形状 / parabola / sin-cos / patterns / shading）、文本排版（LaTeX / 数学）与 P3 高级特性。
+- **2026-05-24 续修**：v0.2 能力补全阶段 alpha.7 完工——Node 三块：`fill` 升 Paint 填充服务（`PaintValue` / `SceneResource` 资源表 + linear / radial 渐变 + pattern 斜线 / 网点 / 网格 + image URL，渲染目标无关）；`maxTextWidth` 自动换行（折行阈值 + 短文本收缩，西文按词 / CJK 按字）；`pin` 引脚（从节点边界牵引线到 label，计入 layout）。对应 §1 Node「text width 自动换行」「引脚 pin」转 ✅、「填充 / 描边」补 Paint；「数学 / LaTeX 排版」备注归 `@retikz/math` 专包（仍 ❌）。
 - **2026-05-23 续修**：v0.2 六段 alpha 全部完工。alpha.5 Path-level shape sugar 落地——`rectangle` step、椭圆弧（arc `radiusX/Y`）、circle/ellipse 部分裁剪（`startAngle/endAngle/closed`）+ `<Grid>` / `<Sector>` / `<RegularPolygon>` / `<Star>` sugar（原 🔜 行转 ✅）。alpha.6 结构化 Target / Anchor——path 节点引用从字符串升级为对象主契约 `{ id, anchor?, offset? }`，新增 `{ side, t }` 真实边界比例点；字符串 `'A'` / `'A.north'` / `'A.30'` 降为 React DSL shorthand（eager 转对象后入 IR）；顶层容器 `<TikZ>` 改名 `<Layout>`（`<TikZ>` 留 deprecated alias）。结构化能力缺口全闭；剩余缺口集中在补全图元（parabola / sin-cos / patterns / shading / 更多内置 node 形状）、文本排版（LaTeX / 数学 / text width 自动换行）与 P3 高级特性。
 
 **状态图例**
@@ -31,11 +32,11 @@
 | 形状 | `shape: rectangle/circle/ellipse/diamond` + 开放字符串 | `[circle]` / `[diamond]` / `[regular polygon]` / `[cloud]` | ⚠️ | 4 内置；alpha.3 起 `shape` 开放为字符串 + `ShapeDefinition` 注入面（`CompileOptions.shapes`），第三方可发 shape 包；内置 node 形状仍缺 regular polygon / star / cylinder / cloud / chamfered（regular polygon / star 可用 Path sugar `<RegularPolygon>` / `<Star>` 画几何，但非带文本 / anchor 的 Node 形状） |
 | 文本内容 | `text`（单行 string 或多行 `LineSpec[]`） | `{文字}` + `\\` 手动换行 | ✅ | 多行用数组，JSON 友好无 escape |
 | 逐行样式覆盖 | `LineSpec` 的 `fill` / `opacity` / `font` | 需 inline `\textcolor` 等 | ✨ | 逐行结构化覆盖，AI 生成更直接 |
-| 数学 / LaTeX 排版 | —（纯文本） | `$x^2$` 等任意 LaTeX | ❌ | 文本为纯字符串，无数学 / 宏 |
+| 数学 / LaTeX 排版 | —（纯文本） | `$x^2$` 等任意 LaTeX | ❌ | 文本为纯字符串，无数学 / 宏；数学排版规划归 `@retikz/math` 专包 |
 | 多行对齐 | `align: left/center/right` | `[align=center]` | ✅ | |
 | 行高 | `lineHeight` | 字体间接控制 | ✅ | |
-| text width 自动换行 | —（仅手动分行） | `[text width=3cm]` | ❌ | 按宽度自动折行缺 |
-| 填充 / 描边 | `fill` / `stroke` / `strokeWidth` | `[fill=, draw=, line width=]` | ✅ | |
+| text width 自动换行 | `maxTextWidth`（折行阈值 + 短文本收缩） | `[text width=3cm]` | ✅ | 折行阈值语义（超过才折、短文本盒收缩，非固定段落宽）；西文按词 / CJK 按字 |
+| 填充 / 描边 | `fill`（纯色 / 渐变 / 图案 / 图片 PaintSpec） / `stroke` / `strokeWidth` | `[fill=, draw=, line width=]` + shadings / patterns lib | ✅ | `fill` 支持 linear / radial 渐变、pattern（斜线 / 网点 / 网格）、image（URL）；渲染目标无关（`<defs>` adapter 物化） |
 | 边框线型 | `dashed` / `dotted` / `dashArray` | `[dashed]` / `[dotted]` / `[dash pattern=]` | ✅ | |
 | 边框语义粗细 | —（仅数值 `strokeWidth`） | `[very thick]` / `[ultra thin]` | ❌ | 语义档位目前仅 Path 有 |
 | 圆角 | `roundedCorners`（仅 rectangle） | `[rounded corners=2pt]` | ⚠️ | 非矩形圆角缺 |
@@ -46,7 +47,7 @@
 | 字体 | `font: family/size/weight/style` | `[font=\bfseries\Large]` | ✅ | `\Large` 等语义宏用数值 `size` 表达 |
 | 颜色 / 透明度 | `textColor` / `opacity` / `fillOpacity` / `drawOpacity` | `[text=, opacity=, fill opacity=, draw opacity=]` | ✅ | |
 | 标签 label | `label`（单 / 数组，方向或角度 + distance + 字体覆盖 + `rotate` none/radial/tangent/数字 + `keepUpright`） | `[label={[rotate=]above:foo}]` | ✅ | alpha.4 加 label 自旋；radial / tangent 自动朝向是便利档 |
-| 引脚 pin | — | `[pin=right:bar]` | ❌ | label 无引线 |
+| 引脚 pin | `label.pin`（`true` / `{ stroke, strokeWidth, dashPattern }`） | `[pin=right:bar]` | ✅ | 从节点边界牵引线到 label，复用 label placement / distance / rotate；计入 layout 外接框 |
 | 双线边框 | — | `[double, double distance=2pt]` | ❌ | P3 |
 | 裁剪 clip | — | `[clip]` | ❌ | P3 |
 
