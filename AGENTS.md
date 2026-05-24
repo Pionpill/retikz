@@ -30,7 +30,7 @@ retikz/
 └── tsconfig.json
 ```
 
-v0.1 alpha 在 `next` 分支上发布中。架构设计见 `notes/architecture/DESIGN.md`。
+架构设计见 `notes/architecture/DESIGN.md`。开发分支策略见下文“分支策略”。
 
 ## 依赖管理
 
@@ -105,6 +105,37 @@ pnpm lint                                  # 全部包 ESLint（不带 --fix）
 > 判断口诀：如果用户读现有文档**可能据此写出与新代码不一致的代码**，就必须更新文档。
 >
 > 与 commit 规则的耦合：**文档没补齐之前不算"改完"**——多块 staging 流程里，某个用户可见改动的 commit 必须把它对应的 mdx / demo 一起 stage 进同一块；不允许"代码先 commit、文档随后再补"。
+
+## 分支策略
+
+retikz 从 v0.3 起允许多线并行开发，但所有功能仍必须经过统一集成线再发布，避免各方向分支各自形成事实版本。
+
+### 长期分支职责
+
+| 分支 | 职责 |
+| --- | --- |
+| `main` | 稳定发布线，只接正式发布、hotfix、发布后文档补丁；后续主要职能是修 bug 和承载稳定版本。 |
+| `next` | 总开发集成分支，所有计划进入下一个版本的功能最终都合到这里；发布候选只能从 `next` 切出。 |
+| `next-core` | core / renderer / runtime / animation 方向的开发集成分支。 |
+| `next-plot` | `@retikz/plot` 与 Tier 2 能力方向的开发集成分支。 |
+| `feature/*` | 具体 ADR / task 的短期工作分支，完成后合入对应方向分支或直接合入 `next`。 |
+| `release/*` | 从 `next` 切出的发布候选分支，只做 bug fix、文档、changelog、版本号和发布验收。 |
+| `hotfix/*` | 从 `main` 切出的稳定版紧急修复分支，修完合回 `main`，再回灌 `next`。 |
+
+### 合并流向
+
+- `next-core` / `next-plot` 可以定期合入 `main` 的稳定修复，保持基线不过期。
+- 功能改动不从 `next-core` / `next-plot` 直接进入 `main`；必须先合入 `next` 做统一集成。
+- `next-core` 与 `next-plot` 之间不互相合功能。若 plot 需要 core 新 hook，先让 core 改动进入 `next-core`，再合入 `next`，随后由 `next` 回灌到 `next-plot`。
+- 发布时从 `next` 切 `release/<version>`，通过验收后合入 `main`，并把发布修复回灌 `next`。
+- hotfix 从 `main` 切出，修复后合回 `main`，再合回 `next`；如影响方向分支，再由 `next` 回灌到对应 `next-*`。
+
+### 分支使用原则
+
+- `next` 是唯一的下版本集成真源；`next-core` / `next-plot` 是方向分支，不直接发版。
+- 方向分支适合承载跨多个 ADR / 多个包的长期工作；单个小改动优先用 `feature/*` 短分支。
+- 分支命名可用 `next-core` / `next-plot`，也可在工具支持良好时使用 `next/core` / `next/plot`；同一阶段内保持一致即可。
+- AI 助手创建、切换、合并、删除分支前，先确认当前任务是否真的需要分支操作；任何 `git commit` / `git push` 仍遵守下文 Commit 规范，必须获得用户明确确认。
 
 ## Commit 规范
 
