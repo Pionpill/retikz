@@ -55,7 +55,11 @@ export const refPointOfTarget = (
     const a = refPointOfTarget(target.between[0], nameStack, scopeChain);
     const b = refPointOfTarget(target.between[1], nameStack, scopeChain);
     if (!a || !b) return null;
-    return lerpPoint(a, b, target.t);
+    const mid = lerpPoint(a, b, target.t);
+    // finite 守卫：端点（极坐标 radius=Infinity / offset NaN 等）或手搓 t=NaN 会产非 finite 中点；
+    // 返回 null 走"端点未解析"路径（Step.to → warn / Node·Coordinate → throw），不让非 finite 进 Scene
+    if (!Number.isFinite(mid[0]) || !Number.isFinite(mid[1])) return null;
+    return mid;
   }
   // relative/relativeAccumulate 已被 normalizeRelativeTargets 预解析；防御性守卫给 TS narrowing 用
   if (typeof target === 'object' && !Array.isArray(target) && ('relative' in target || 'relativeAccumulate' in target)) {

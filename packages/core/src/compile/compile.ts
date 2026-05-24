@@ -161,6 +161,9 @@ const viewBoxToLayout = (
   vb: { x: number; y: number; width: number; height: number },
   round: (n: number) => number,
 ): { x: number; y: number; width: number; height: number } => {
+  // 先守 raw（直接 NaN/Infinity/退化的清晰错），再 round，再复检 round 后值——
+  // 极端 precision（10**p 溢出 Infinity）/ 极值坐标（×10**p 溢出）/ 负 precision（round 成 0 宽）
+  // 都可能让"合法 raw" round 后变脏；round 产物才是真正进 Scene 的值，故 round 后是最终关口。
   if (!Number.isFinite(vb.x) || !Number.isFinite(vb.y)) {
     throw new Error(`viewBox has a non-finite origin (x=${String(vb.x)}, y=${String(vb.y)}); both must be finite.`);
   }
@@ -170,7 +173,16 @@ const viewBoxToLayout = (
   if (!Number.isFinite(vb.height) || vb.height <= 0) {
     throw new Error(`viewBox has an invalid height (${String(vb.height)}); it must be a finite number greater than 0.`);
   }
-  return { x: round(vb.x), y: round(vb.y), width: round(vb.width), height: round(vb.height) };
+  const x = round(vb.x);
+  const y = round(vb.y);
+  const width = round(vb.width);
+  const height = round(vb.height);
+  if (!Number.isFinite(x) || !Number.isFinite(y) || !Number.isFinite(width) || width <= 0 || !Number.isFinite(height) || height <= 0) {
+    throw new Error(
+      `viewBox rounds to an invalid layout (x=${String(x)}, y=${String(y)}, width=${String(width)}, height=${String(height)}); check precision and coordinate magnitude.`,
+    );
+  }
+  return { x, y, width, height };
 };
 
 /**
