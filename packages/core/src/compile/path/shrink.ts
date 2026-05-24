@@ -205,6 +205,13 @@ const resolveGeometry = (
   const scale = visual.scale ?? 1;
   const resolvedLength = (visual.length ?? def.defaultLength ?? ARROW_MARKER_DEFAULT_SIZE) * scale;
   const resolvedWidth = (visual.width ?? def.defaultWidth ?? ARROW_MARKER_DEFAULT_SIZE) * scale;
+  // length / width 与 scale 各自 finite，但乘积可能溢出成 Infinity（如 1e308 × 10）；非 finite 会污染 marker
+  // 尺寸 + path shrink + layout，故在此抛清晰错（含 shape 名），不放任非 finite 流入 Scene
+  if (!Number.isFinite(resolvedLength) || !Number.isFinite(resolvedWidth)) {
+    throw new Error(
+      `Arrow '${visual.shape}' resolved length/width is non-finite (length × scale overflowed); use smaller length / scale values.`,
+    );
+  }
   return { def, baseSize, tipX, contactX, lineWidth, resolvedLength, resolvedWidth };
 };
 

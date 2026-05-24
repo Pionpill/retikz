@@ -876,6 +876,12 @@ export const emitPathPrimitive = (
               step.bendDirection ?? 'left',
               step.bendAngle ?? 30,
             );
+      // looseness × chord 可能把 finite 输入放大溢出成 Infinity；非 finite 控制点会污染 Scene + layout
+      if (!isFinitePoint(c1) || !isFinitePoint(c2)) {
+        throw new Error(
+          'Bend produced a non-finite control point (looseness / angle too large); use smaller values.',
+        );
+      }
       const fromClip = usedOverride ?? clipForTarget(prev.step.to, c1, nameStack, scopeChain);
       const toClip = clipForTarget(step.to, c2, nameStack, scopeChain);
       if (!fromClip || !toClip) return null;
@@ -956,6 +962,12 @@ export const emitPathPrimitive = (
       const group: GroupPrim = { type: 'group', transforms, children: bodyPrims };
       // layout 据变换后 bbox：把当前 points 经同一变换链投影后回收（应用顺序与 GroupPrim 渲染一致）
       const transformedPoints = points.map(p => applyTransformChain(p, transforms));
+      // scale × 坐标可能把 finite 输入放大溢出成 Infinity；非 finite 会污染 layout（round-trip 失真）
+      if (!transformedPoints.every(isFinitePoint)) {
+        throw new Error(
+          'Path rotate / scale produced a non-finite coordinate (scale too large); use a smaller scale.',
+        );
+      }
       return { primitives: [group], points: transformedPoints };
     }
   }

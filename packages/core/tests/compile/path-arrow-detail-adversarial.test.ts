@@ -347,9 +347,8 @@ describe('adv 6: schema 边界（NaN / Infinity / 字符串数字 / boolean）',
   it('scale=NaN 拒绝', () => {
     expect(ArrowDetailSchema.safeParse({ scale: NaN }).success).toBe(false);
   });
-  it('scale=Infinity 接受（zod number 不拒绝 Infinity，但 positive 要求 > 0）', () => {
-    // 这里记录现行行为：zod number().positive() 不拒绝 Infinity
-    expect(ArrowDetailSchema.safeParse({ scale: Number.POSITIVE_INFINITY }).success).toBe(true);
+  it('scale=Infinity 拒绝（.finite() 守 IR JSON 可序列化）', () => {
+    expect(ArrowDetailSchema.safeParse({ scale: Number.POSITIVE_INFINITY }).success).toBe(false);
   });
   it('opacity=NaN 拒绝（min(0) 检查 NaN 失败）', () => {
     expect(ArrowDetailSchema.safeParse({ opacity: NaN }).success).toBe(false);

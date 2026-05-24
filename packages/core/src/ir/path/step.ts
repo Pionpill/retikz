@@ -176,6 +176,7 @@ export const BendStepSchema = z
       ),
     bendAngle: z
       .number()
+      .finite()
       .optional()
       .describe('Bend angle in degrees; default 30 (matches TikZ `bend left` without explicit angle)'),
     outAngle: z
