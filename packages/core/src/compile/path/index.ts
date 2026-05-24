@@ -24,6 +24,7 @@ import type {
   IRStep,
   IRTarget,
 } from '../../ir';
+import { JsonObjectSchema } from '../../ir';
 import type {
   PathCommand,
   ScenePrimitive,
@@ -215,6 +216,13 @@ export const emitPathPrimitive = (
    */
   let penOverride: IRPosition | null = null;
 
+  /**
+   * 读当前游标（生成器分支用）
+   * @description 经函数边界读 `lastEnd`，让 TS 用其声明类型（`IRPosition | null`）而非按分支位置 narrow
+   *   成字面 `null`——generator 分支在源码上位于 lastEnd 各赋值点之前，直接读会被误判恒 null
+   */
+  const readCursor = (): IRPosition | null => lastEnd;
+
   const roundPoint = (p: IRPosition): IRPosition => [round(p[0]), round(p[1])];
 
   const emitMove = (p: IRPosition) => {
@@ -341,12 +349,96 @@ export const emitPathPrimitive = (
     if (step.kind === 'move') continue;
 
     if (step.kind === 'generator') {
-      // TODO 实现：查 warnHook.effectivePathGenerators[step.name]（未注册 throw + 列可用名）→
-      // paramsSchema.parse(step.params) → JsonObjectSchema.parse 二次护栏 → targetParams resolve 成
-      // resolvedTargets → from = 当前游标、to = step.to resolve → 调 def.generate(ctx) → splice
-      // PathCommand[] 进 commands、cursor 落最后命令终点 → collectLabel。当前未接线。
-      void step;
-      throw new Error('Path generator step compilation is not yet implemented');
+      const generators = warnHook.effectivePathGenerators ?? {};
+      // hasOwnProperty 守门：避免 `'toString'` 等原型链 key 被 Record 索引误命中（开放 name 的边界安全）
+      const def = Object.prototype.hasOwnProperty.call(generators, step.name)
+        ? generators[step.name]
+        : undefined;
+      if (!def) {
+        const available = Object.keys(generators).sort().join(', ');
+        throw new Error(
+          `Unknown path generator '${step.name}'; available: ${available}`,
+        );
+      }
+
+      // 外部校验：generator 自带 paramsSchema 先 parse step.params
+      const parsed = def.paramsSchema.parse(step.params);
+      // 第二道护栏：即便 paramsSchema 宽松（z.any() 等），对 parse 结果再跑 JsonObjectSchema，
+      // 拦下非 JSON 输出（function / undefined 等），守 IR 可序列化
+      JsonObjectSchema.parse(parsed);
+      const paramsObj = parsed as Record<string, unknown>;
+
+      // targetParams（仅顶层 key）：取 params[key] 当 Target，resolve 成世界坐标喂 resolvedTargets；
+      // 含 '.' 的嵌套路径不解析（仅顶层约定），resolvedTargets 不含该 key
+      const resolvedTargets: Record<string, IRPosition> = {};
+      for (const key of def.targetParams ?? []) {
+        if (key.includes('.')) continue;
+        const raw = paramsObj[key];
+        if (raw === undefined) continue;
+        const resolved = refPointOfTarget(raw as IRTarget, nameStack, scopeChain);
+        if (resolved) resolvedTargets[key] = resolved;
+      }
+
+      // 起点：当前游标（前一绘制段终点 / arc 等留下的 penOverride）；首段时回退最近 hasTo step 的 anchor。
+      // 经闭包 readCursor 读 lastEnd/penOverride（循环外声明的宽类型 let，不被分支位置 narrow 成 null）
+      const prevGen = findPrev();
+      const fromGen: IRPosition =
+        readCursor() ?? (prevGen ? prevGen.anchor : [0, 0]);
+      // 终点：step.to resolve 后的世界坐标（无 to 则 undefined）
+      const resolvedTo =
+        step.to !== undefined
+          ? refPointOfTarget(step.to, nameStack, scopeChain)
+          : null;
+      const toGen = resolvedTo ?? undefined;
+
+      const generated = def.generate({
+        from: fromGen,
+        ...(toGen !== undefined ? { to: toGen } : {}),
+        params: paramsObj,
+        resolvedTargets,
+        round,
+      });
+
+      // 段起点：generator 首命令非 move 时补一个 move（与 lastEnd 相同则复用游标）
+      startSegment(fromGen);
+      for (const cmd of generated) {
+        switch (cmd.kind) {
+          case 'move':
+            startSegment(cmd.to);
+            break;
+          case 'line':
+            emitLine(cmd.to);
+            break;
+          case 'quad':
+            emitQuad(cmd.control, cmd.to);
+            break;
+          case 'cubic':
+            emitCubic(cmd.control1, cmd.control2, cmd.to);
+            break;
+          case 'arc':
+            emitArc(cmd.center, cmd.radius, cmd.startAngle, cmd.endAngle);
+            break;
+          case 'ellipseArc':
+            emitEllipseArc(
+              cmd.center,
+              cmd.radiusX,
+              cmd.radiusY,
+              cmd.startAngle,
+              cmd.endAngle,
+            );
+            break;
+          default:
+            emitClose();
+        }
+      }
+
+      // label 沿生成段定位：用段起点→末端的直线近似采样（midway 取中点）
+      const genEnd = readCursor() ?? fromGen;
+      collectLabel(step, t => lineSegmentSample(fromGen, genEnd, t));
+
+      // 游标推进：后续段从生成段末端续接（penOverride 让下个 hasTo 段复用此点、不重发 move）
+      penOverride = readCursor();
+      continue;
     }
 
     if (step.kind === 'cycle') {

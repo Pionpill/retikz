@@ -48,7 +48,12 @@ export const normalizeRelativeTargets = (
     }
     if (step.kind === 'generator') {
       out.push(step);
-      // generator 的 to 可选、relative 解析由 generator 编译时落地；此处不推进 prevEnd（实现时按产段终点推进）
+      // generator 产段终点要等编译期 generate 才知；预处理阶段以 step.to 近似推进 prevEnd（多数曲线收于 to），
+      // 供后续相对定位。无 to 的纯参数曲线保守不推进（产段末端不可预知）。
+      if (step.to !== undefined) {
+        const pos = refPointOfTarget(step.to, nameStack, scopeChain);
+        if (pos) prevEnd = pos;
+      }
       continue;
     }
 
