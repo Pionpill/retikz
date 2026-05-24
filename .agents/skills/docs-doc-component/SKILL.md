@@ -65,7 +65,7 @@ import { Path, Step } from '@retikz/react';
 
 | 组件 | 是否写 Composition |
 | --- | --- |
-| `<Tikz>` | ✅ 容器，children 是 Kernel/Sugar |
+| `<Layout>` | ✅ 容器，children 是 Kernel/Sugar |
 | `<Path>` | ✅ 必须配 `<Step>` 子节点 |
 | `<Node>` `<Draw>` | ❌ 单组件 |
 | `<Step>` | ❌ 只作 `<Path>` 子节点；写在父组件页里 |

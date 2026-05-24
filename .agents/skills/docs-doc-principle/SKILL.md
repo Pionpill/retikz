@@ -1,6 +1,6 @@
 ---
 name: docs-doc-principle
-description: retikz 文档站的总原则，所有页型（组件 / 示例 / 概念 / 入口 / Reference 词典）都必须遵守。涵盖三处协同（contents + data + i18n）、双语规则、写作风格、DSL 优先、Comparison 写法、自绘图示规则、演示位置/关系类 demo 规范、文档宽度限制、阅读时间、Reference (ZodSchema) 页型、入口页/概念页例外、与 shadcn 的差异、可用 MDX 元素。具体页型规范分流到 docs-doc-component（组件页）/ docs-doc-example（示例页）/ docs-doc-group（分组落地页）。retikz 专用。
+description: retikz 文档站的总原则，所有页型（组件 / 示例 / 概念 / 入口 / Reference 词典）都必须遵守。涵盖三处协同（contents + data + i18n）、双语规则、写作风格、读者视角、DSL 优先、Comparison 写法、自绘图示规则、演示位置/关系类 demo 规范、文档宽度限制、阅读时间、Reference (ZodSchema) 页型、入口页/概念页例外、与 shadcn 的差异、可用 MDX 元素。具体页型规范分流到 docs-doc-component（组件页）/ docs-doc-example（示例页）/ docs-doc-group（分组落地页），完稿后可用 docs-doc-review 做独立评审。retikz 专用。
 ---
 
 # retikz 文档总原则
@@ -23,6 +23,7 @@ retikz 文档站，1 个页面 = **3 处同步改动**：内容（`contents/`）
 | 概念页 / 入口页 | `contents/<module>/concepts/**` / `introduction` / `get-start` | 本 skill 的「入口页 / 概念页例外」节 |
 | Reference 词典页 | `contents/<module>/reference/**` | 本 skill 的「Reference 词典页」节 |
 | 博客文章 | `contents/blog/**` | [`docs-doc-blog`](../docs-doc-blog/SKILL.md)（差异较大，blog skill 独立成体；通用规则仍继承本 skill） |
+| 文档评审 | 任意文档初稿 / 改稿 / demo 补充后 | [`docs-doc-review`](../docs-doc-review/SKILL.md) |
 
 本 skill 也直接覆盖：i18n 改 key、改菜单、改正文、加 demo 这类"对页结构无大改"的杂活。
 
@@ -87,7 +88,9 @@ apps/docs/src/
 
 **文字尽量精简——没人喜欢一直看文字。** 能用表格 / 示例 / 代码块表达的，不要写成段落。
 
-**文档优先服务新手，而不是展示作者全知视角。** 写作时默认读者第一次接触这个能力，不知道内部缩写、历史决策、实现分层和术语边界。先用普通话解释“它解决什么问题 / 为什么需要 / 用户要怎么判断”，再引入 `ShapeDefinition`、`Rect`、`ScenePrimitive` 这类专名；不要一开头就写“内置 xxx 都是注册项”“emit 收轴对齐 rect”这种只有实现者秒懂的句子。
+**文档优先服务新手，而不是展示作者全知视角。** 默认读者是**初级前端工程师**：会 React / TypeScript 基础，能读 JSX 和常见 props，但不熟 TikZ、编译器、几何术语、IR 分层、渲染管线和项目历史。写作时假设读者第一次接触这个能力，不知道内部缩写、历史决策、实现分层和术语边界。先用普通话解释“它解决什么问题 / 为什么需要 / 用户要怎么判断”，再引入 `ShapeDefinition`、`Rect`、`ScenePrimitive` 这类专名；不要一开头就写“内置 xxx 都是注册项”“emit 收轴对齐 rect”这种只有实现者秒懂的句子。
+
+**少用专业词，必须用时先翻译成用户问题。** 术语不是禁用，但每个术语都要有读者收益：能少一个就少一个；必须出现时，先说“什么时候会用到它”，再给名字。进阶内容（内部原理、性能权衡、schema 边界、几何推导、AI/IR 细节）要放在 `ComponentAlert` / tip 或 `How it works` 中，并明确提示初次阅读可以跳过。
 
 把每一节当作线性阅读路径来写：
 
@@ -114,10 +117,10 @@ apps/docs/src/
 
 ## DSL 优先，IR 克制
 
-retikz 文档面向**用户**——用户写的是 DSL（`<Tikz>` / `<Node>` / `<Path>` / `<Draw>` 等 JSX）。正文以 DSL 用法为主；IR 是底层的持久化 / AI 生成中间表示，对用户**默认隐藏**，只在以下场景下出现：
+retikz 文档面向**用户**——用户写的是 DSL（`<Layout>` / `<Node>` / `<Path>` / `<Draw>` 等 JSX）。正文以 DSL 用法为主；IR 是底层的持久化 / AI 生成中间表示，对用户**默认隐藏**，只在以下场景下出现：
 
 - 介绍页 / 设计哲学页里讲整体架构
-- 持久化、`<Tikz ir={...}>` 直喂、AI 接入相关章节
+- 持久化、`<Layout ir={...}>` 直喂、AI 接入相关章节
 - 该组件的行为只能借 IR 解释清楚（如"Sugar 编译期展开为 Kernel"这种 Sugar 与 Kernel 关系的引子）
 
 普通用法页**不要**为了"完整"硬塞 IR JSON 节录或字段表——`<ComponentPreview>` 的 IR Tab 已经把"想看的人能看"留好了，不必正文复述。编译器内部（`compileToScene` / Scene primitive）一律不进用户文档。

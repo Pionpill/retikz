@@ -203,7 +203,7 @@ beta 阶段三个角色对应的 LLM 分工：
 发现需要**加新功能**（新 IR 形态 / 新公开字段 / 新行为）时——立刻 halt 本 SKILL，把该需求登记为下个 alpha 窗口候选（v0.2 alpha / v1 alpha），用 [`flow-alpha`](../flow-alpha/SKILL.md) 走 ADR 流程。
 
 **beta 范围内允许**（不需要换流程）：
-- 公开 type / schema / 组件名 rename（如 `Tikz → TikZ`、`ViewBox → Layout`）
+- 公开 type / schema / 组件名 rename（如 `TikZ → Layout`、`ViewBox → Layout`）
 - 公开函数签名重构（如 cast 收敛、参数名 `ctx → context`）
 - 删 deprecated / 删 alias
 - 改默认值（合理边界值修正）

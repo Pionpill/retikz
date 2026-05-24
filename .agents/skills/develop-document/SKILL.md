@@ -34,8 +34,22 @@ description: alpha 功能开发的文档阶段——把已实现已通过 advers
 委托给 [`docs-doc-principle`](../docs-doc-principle/SKILL.md) SKILL（按页型再分流到 [`docs-doc-component`](../docs-doc-component/SKILL.md) / [`docs-doc-example`](../docs-doc-example/SKILL.md)）。本 SKILL 主要负责：
 
 - 列出本 ADR 必须落到文档站的清单
+- 功能性改动先读 `apps/docs/src/contents/**` 下相关现有页面，判断哪些页面会被新行为影响
 - 检查 doc-skill 产出是否覆盖了清单
 - 校验双语并行 / API 表 / sidebar 注册的完整性
+
+## 先读现有 docs（功能性改动硬规则）
+
+任何功能性改动（新增 / 删除 / 重命名组件或 props、IR schema 字段、React DSL 行为、sugar 解析、渲染行为、默认值或用户可观察错误信息）都必须先阅读 `apps/docs/src/contents/**` 下相关页面，再决定是更新、修改还是补充新文档。
+
+读取范围按影响面定：
+
+- 改组件 / prop：读对应组件页 zh + en、相关 demo、Related 指向的概念页 / reference 页
+- 改 schema / IR：读对应 reference schema 页、使用该字段的组件页、相关概念页
+- 改 DSL / sugar：读 sugar 所在组件页、示例页、入门 / learning path 中可能复用的 demo
+- 改默认值 / 行为语义：全局搜索旧字段名 / 旧默认值 / 旧说法，避免文档里同时出现新旧行为
+
+结论必须落到必落清单：需要更新的 mdx / demo / API 表 / sidebar / i18n 都列出来；如果读完判断不需要改文档，也要在汇报里说明“已读哪些页面，为什么无需更新”。
 
 ## 必落清单
 
@@ -81,6 +95,8 @@ description: alpha 功能开发的文档阶段——把已实现已通过 advers
 - API 表行是否完整（4 列填全）？
 - sidebar / i18n 是否两端都注册？
 ```
+
+文档初稿完成后，推荐运行 [`docs-doc-review`](../docs-doc-review/SKILL.md) 做一次独立评审；红色 / 黄色功能改动建议把评审作为进入 wrapup 前的固定关卡。
 
 ## demo 文件命名（与 doc-skill 一致）
 
