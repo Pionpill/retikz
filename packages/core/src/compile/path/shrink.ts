@@ -4,6 +4,7 @@ import {
   DEFAULT_ARROW_SHAPE,
   type IRArrowDetail,
   type IRArrowEndDetail,
+  type IRArrowMark,
   type IRPosition,
 } from '../../ir';
 import type { ArrowDefinition, ArrowEmitContext } from '../../arrows';
@@ -296,6 +297,32 @@ export const endpointArrows = (
     result.shrinkEnd = computeShrink(geometry);
   }
   return result;
+};
+
+/**
+ * 解析一个中段标记 `IRArrowMark` 为已物化的 marker 描述（`ArrowEndSpec`）
+ * @description 复用端点箭头同一管线：mark 自身视觉子集字段（shape / scale / length / width / color /
+ *   fill / opacity / lineWidth）即 `ResolvedArrowVisual`（空心 def 上 fill 字段被丢）→ 查 effective 表
+ *   解析几何 → 调 def.emit 物化局部 baseSize 几何 + wrapper 参数。方向由调用方按路径切线决定，本函数不含定向。
+ *   未注册 shape 名在此 throw（lookupArrowDef）。
+ */
+export const resolveMarkArrowSpec = (
+  mark: IRArrowMark,
+  effective: EffectiveArrows,
+  round: (n: number) => number,
+): ArrowEndSpec => {
+  const baseShape = mark.shape ?? DEFAULT_ARROW_SHAPE;
+  const visual: ResolvedArrowVisual = { shape: baseShape };
+  if (mark.scale !== undefined) visual.scale = mark.scale;
+  if (mark.length !== undefined) visual.length = mark.length;
+  if (mark.width !== undefined) visual.width = mark.width;
+  if (mark.color !== undefined) visual.color = mark.color;
+  if (mark.opacity !== undefined) visual.opacity = mark.opacity;
+  if (mark.lineWidth !== undefined) visual.lineWidth = mark.lineWidth;
+  const def = lookupArrowDef(baseShape, effective);
+  if (!def.hollow && mark.fill !== undefined) visual.fill = mark.fill;
+  const geometry = resolveGeometry(visual, effective);
+  return materializeArrowEndSpec(visual, geometry, round);
 };
 
 /** 取一个 PathCommand 末端 endpoint（move/line/quad/cubic → to；arc/ellipseArc → polar(end)；close 无端点） */

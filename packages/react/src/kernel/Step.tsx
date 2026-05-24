@@ -78,14 +78,24 @@ export type CubicStepProps = {
   children?: ReactNode;
 };
 
-/** Bend action：弧形简记，按方向 + 角度自动算控制点生成 cubic（TikZ `to[bend left=N]` / `to[bend right=N]`） */
+/**
+ * Bend action：弧形简记，自动算控制点生成 cubic（TikZ `to[bend left=N]` / `to[out=…, in=…]`）
+ * @description 两套互补字段：`bendDirection`/`bendAngle` 对称弯，或 `outAngle`/`inAngle`/`looseness` 非对称弯 / 自环；
+ *   同给时 out/in 优先（编译层）。三者全省时默认 left 对称弯。`from == to`（同节点 / 同坐标）配合 out/in 画自环。
+ */
 export type BendStepProps = {
   /** 弧形简记 step 鉴别字面量 */
   kind: 'bend';
-  /** 弯向：'left' / 'right'（视觉左右，相对 from→to） */
-  bendDirection: 'left' | 'right';
+  /** 弯向：'left' / 'right'（视觉左右，相对 from→to）；可选，与 out/in 互补 */
+  bendDirection?: 'left' | 'right';
   /** 弯角度（度），缺省 30 */
   bendAngle?: number;
+  /** 出射角（度，TikZ `out=`）；与 inAngle 一起编译成 cubic，给定时优先于 bendDirection */
+  outAngle?: number;
+  /** 入射角（度，TikZ `in=`）；与 outAngle 一起编译成 cubic */
+  inAngle?: number;
+  /** 曲线松紧系数（TikZ `looseness=`，控制控制点距离），缺省约 1；也缩放自环默认大小 */
+  looseness?: number;
   /** 终点 */
   to: DslTarget;
   /** 边标注 */

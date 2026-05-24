@@ -40,6 +40,20 @@ export type PathProps = {
   drawOpacity?: IRPath['drawOpacity'];
   /** 显式栈序：大者在上；缺省 0 = 声明顺序；同值稳定保序；只在同层子节点间生效 */
   zIndex?: IRPath['zIndex'];
+  /**
+   * 整条 path 旋转（度，绕包围盒中心，正向 = 屏幕 y-down 视觉顺时针）
+   * @description 等价把 path 包一层绕其包围盒中心旋转的 Scope；端点先在当前 scope resolve 再整体旋转
+   */
+  rotate?: IRPath['rotate'];
+  /**
+   * 整条 path 缩放（绕包围盒中心）：number 等比，或 `{ x, y }` 非等比
+   */
+  scale?: IRPath['scale'];
+  /**
+   * 沿路径在归一化位置放标记（首批仅箭头）
+   * @description 每个 `{ pos, mark }`：`pos∈[0,1]`，`mark.kind:'arrow'` + 视觉子集（shape 为已注册箭头名，方向随路径切线）
+   */
+  marks?: IRPath['marks'];
   /** 应当全部是 <Step /> */
   children: ReactNode;
 };

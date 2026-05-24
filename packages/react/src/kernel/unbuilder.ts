@@ -56,8 +56,11 @@ const stepToElement = (step: IRStep, key: number): ReactNode => {
       key,
       kind: 'bend',
       to: step.to,
-      bendDirection: step.bendDirection,
+      ...(step.bendDirection !== undefined && { bendDirection: step.bendDirection }),
       ...(step.bendAngle !== undefined && { bendAngle: step.bendAngle }),
+      ...(step.outAngle !== undefined && { outAngle: step.outAngle }),
+      ...(step.inAngle !== undefined && { inAngle: step.inAngle }),
+      ...(step.looseness !== undefined && { looseness: step.looseness }),
       ...(step.label !== undefined && { label: step.label }),
     });
   }

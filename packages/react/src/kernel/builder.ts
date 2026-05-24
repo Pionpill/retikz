@@ -207,9 +207,12 @@ const readPathChildren = (children: ReactNode): Array<IRStep> => {
         type: 'step',
         kind: 'bend',
         to: parseTargetSugar(p.to),
-        bendDirection: p.bendDirection,
       };
+      if (p.bendDirection !== undefined) step.bendDirection = p.bendDirection;
       if (p.bendAngle !== undefined) step.bendAngle = p.bendAngle;
+      if (p.outAngle !== undefined) step.outAngle = p.outAngle;
+      if (p.inAngle !== undefined) step.inAngle = p.inAngle;
+      if (p.looseness !== undefined) step.looseness = p.looseness;
       if (label) step.label = label;
       out.push(step);
       return;

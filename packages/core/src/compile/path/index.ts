@@ -4,7 +4,7 @@ import {
   ellipseArcBoundingPoints,
   ellipseArcPoint,
 } from '../../geometry/arc';
-import { bendControlPoints } from '../../geometry/bend';
+import { bendControlPoints, outInControlPoints } from '../../geometry/bend';
 import { rectOutline } from '../../geometry/rect';
 import type { PaintResolver } from '../paint';
 import {
@@ -20,12 +20,15 @@ import {
 } from '../../geometry/segment';
 import type {
   IRPath,
+  IRPathScale,
   IRPosition,
   IRStep,
   IRTarget,
 } from '../../ir';
 import { JsonObjectSchema } from '../../ir';
 import type {
+  ArrowEndSpec,
+  GroupPrim,
   PathCommand,
   ScenePrimitive,
   Transform,
@@ -37,7 +40,8 @@ import { type TextMeasurer, fallbackMeasurer } from '../text-metrics';
 import { clipForTarget, cornerOf, refPointOfTarget, samePoint } from './anchor';
 import { emitLabelPrimitive, tForLabelPosition } from './label';
 import { normalizeRelativeTargets } from './relative';
-import { type EffectiveArrows, applyArrowShrinks, endpointArrows } from './shrink';
+import { applyTransformChain } from '../scope';
+import { type EffectiveArrows, applyArrowShrinks, endpointArrows, resolveMarkArrowSpec } from './shrink';
 import { type PathBaseProps, splitSubPathsForEndpointArrows } from './split';
 import { BUILTIN_ARROWS } from '../../arrows';
 
@@ -156,6 +160,78 @@ export type EmitPathWarnHook = {
   effectivePathGenerators?: Record<string, PathGeneratorDefinition>;
 };
 
+/** 一组点的 axis-aligned 包围盒中心 */
+const bboxCenter = (pts: ReadonlyArray<IRPosition>): IRPosition => {
+  let minX = Infinity;
+  let minY = Infinity;
+  let maxX = -Infinity;
+  let maxY = -Infinity;
+  for (const [x, y] of pts) {
+    if (x < minX) minX = x;
+    if (y < minY) minY = y;
+    if (x > maxX) maxX = x;
+    if (y > maxY) maxY = y;
+  }
+  return [(minX + maxX) / 2, (minY + maxY) / 2];
+};
+
+/**
+ * path 整体 rotate / scale → 绕包围盒中心的 GroupPrim transforms
+ * @description rotate 写成 `{ kind:'rotate', degrees, cx, cy }`（cx/cy = bbox center），等价包一个绕同中心旋转的 Scope；
+ *   scale number → `{ kind:'scale', x }`（等比，y 省略），`{x,y}` → `{ kind:'scale', x, y }`。
+ *   缩放支点同为 bbox center：用 translate(center) ∘ scale ∘ translate(-center) 三段表达。两者都缺时返回空数组。
+ *   数组顺序与 GroupPrim 渲染一致（array[0] 最外层、最后 apply）：先 rotate 段再 scale 段（rotate 在外）。
+ */
+const buildPathTransforms = (
+  rotate: number | undefined,
+  scale: IRPathScale | undefined,
+  center: IRPosition,
+  round: (n: number) => number,
+): Array<Transform> => {
+  const out: Array<Transform> = [];
+  if (rotate !== undefined) {
+    out.push({ kind: 'rotate', degrees: rotate, cx: round(center[0]), cy: round(center[1]) });
+  }
+  if (scale !== undefined) {
+    const sx = typeof scale === 'number' ? scale : scale.x;
+    const sy = typeof scale === 'number' ? undefined : scale.y;
+    // 绕 bbox center 缩放：translate(center) ∘ scale ∘ translate(-center)
+    const scaleT: Transform = { kind: 'scale', x: sx };
+    if (sy !== undefined) scaleT.y = sy;
+    out.push(
+      { kind: 'translate', x: round(center[0]), y: round(center[1]) },
+      scaleT,
+      { kind: 'translate', x: round(-center[0]), y: round(-center[1]) },
+    );
+  }
+  return out;
+};
+
+/**
+ * 把已物化的 arrow marker（局部 baseSize 坐标系，尖端 +x）按路径切线定向放到采样点
+ * @description marker 局部系：viewBox `0 0 baseSize baseSize`，参考点 (refX, baseSize/2)，尖端朝 +x。
+ *   GroupPrim transforms 数组语义 array[0] 最外层（最后 apply），故链 = translate(point) ∘ rotate(tangentDeg)
+ *   ∘ scale(markerWidth/baseSize, markerHeight/baseSize) ∘ translate(-refX, -baseSize/2)：先把参考点移到原点、
+ *   缩放到目标尺寸、绕切线角旋转、平移到采样点。marker 几何（`MarkerPrimitive[]`）是 ScenePrimitive 的结构子集，直接作 children。
+ */
+const buildMarkMarkerGroup = (
+  spec: ArrowEndSpec,
+  sample: SegmentSample,
+  round: (n: number) => number,
+): GroupPrim => {
+  const angleDeg = (Math.atan2(sample.tangent[1], sample.tangent[0]) * 180) / Math.PI;
+  const sx = spec.markerWidth / spec.baseSize;
+  const sy = spec.markerHeight / spec.baseSize;
+  const refY = spec.baseSize / 2;
+  const transforms: Array<Transform> = [
+    { kind: 'translate', x: round(sample.point[0]), y: round(sample.point[1]) },
+    { kind: 'rotate', degrees: round(angleDeg) },
+    { kind: 'scale', x: round(sx), y: round(sy) },
+    { kind: 'translate', x: round(-spec.refX), y: round(-refY) },
+  ];
+  return { type: 'group', transforms, children: [...spec.marker] };
+};
+
 /**
  * IR Path → PathPrim
  * @description 每个绘制段独立用节点中心算两端 boundary clip——中段节点的入/出 boundary 点通常不同，path 在该节点可见"断开"（与 TikZ `\draw (A)--(B)--(C);` 段独立 clip 一致）。仍产一个 PathPrim：commands 用多组 move/line 表达 sub-path；段起点等于上段终点时复用 cursor 省 move。cycle 段闭回最近 move 起点，起点==lastEnd && 终点==subPathStart 时输出 close，否则显式画段 line。引用未定义节点/解析失败返回 null，并通过 `warnHook.onWarn` 同步触发 warning
@@ -189,11 +265,19 @@ export const emitPathPrimitive = (
   /** 每段 step.label 翻译出的 TextPrim（或 sloped 旋转的 group），与 path 主体同级返回 */
   const labelPrims: Array<ScenePrimitive> = [];
 
-  /** 算 sample 后 emitLabelPrimitive，结果累积到 labelPrims/points */
+  /**
+   * 每个绘制段的几何采样器（按声明序）；中段 marking 用——把整条 path 的 pos∈[0,1] 分摊到 N 段
+   * @description 与 step label 同款便宜模型：N 段等分 pos 区间，pos 落在第 ⌊pos·N⌋ 段、段内参数 = 余数；
+   *   段内 t 的几何含义随段类型（line/step 弧长、curve/cubic/bend Bezier 参数、arc 角度），由各 `*SegmentSample` 决定。
+   */
+  const segmentSamplers: Array<(t: number) => SegmentSample> = [];
+
+  /** 算 sample 后 emitLabelPrimitive，结果累积到 labelPrims/points；同时登记本段采样器供 marks 用 */
   const collectLabel = (
     step: IRStep,
     sampleAt: (t: number) => SegmentSample,
   ): void => {
+    segmentSamplers.push(sampleAt);
     if (
       step.kind === 'move' ||
       step.kind === 'cycle' ||
@@ -776,8 +860,22 @@ export const emitPathPrimitive = (
       continue;
     }
     if (step.kind === 'bend') {
-      const angle = step.bendAngle ?? 30;
-      const [c1, c2] = bendControlPoints(prev.anchor, currAnchor, step.bendDirection, angle);
+      // out/in 角（任一给定）优先于 bendDirection 对称弯；都缺则按 bendDirection 对称弯，仍缺则默认 left 弯
+      const [c1, c2] =
+        step.outAngle !== undefined || step.inAngle !== undefined
+          ? outInControlPoints(
+              prev.anchor,
+              currAnchor,
+              step.outAngle ?? 0,
+              step.inAngle ?? 180,
+              step.looseness,
+            )
+          : bendControlPoints(
+              prev.anchor,
+              currAnchor,
+              step.bendDirection ?? 'left',
+              step.bendAngle ?? 30,
+            );
       const fromClip = usedOverride ?? clipForTarget(prev.step.to, c1, nameStack, scopeChain);
       const toClip = clipForTarget(step.to, c2, nameStack, scopeChain);
       if (!fromClip || !toClip) return null;
@@ -819,6 +917,24 @@ export const emitPathPrimitive = (
   const effectiveArrows = warnHook.effectiveArrows ?? BUILTIN_ARROWS;
   const arrows = endpointArrows(path.arrow, path.arrowDetail, effectiveArrows, round);
 
+  // 中段 marking：把整条 path 的 pos∈[0,1] 分摊到 N 个绘制段，取该处 { point, tangent }，
+  // 产一个按 tangent 定向的 arrow marker（复用端点箭头同款 def.emit 几何）；point 计入 bbox（远端 mark 不被裁）。
+  const markPrims: Array<ScenePrimitive> = [];
+  if (path.marks && path.marks.length > 0 && segmentSamplers.length > 0) {
+    const segCount = segmentSamplers.length;
+    for (const { pos, mark } of path.marks) {
+      // pos·N 落第 segIdx 段（pos=1 收口落末段尾），段内参数 = 余数
+      const scaled = pos * segCount;
+      const segIdx = Math.min(Math.floor(scaled), segCount - 1);
+      const localT = scaled - segIdx;
+      const sample = segmentSamplers[segIdx](pos === 1 ? 1 : localT);
+      const spec = resolveMarkArrowSpec(mark, effectiveArrows, round);
+      markPrims.push(buildMarkMarkerGroup(spec, sample, round));
+      // marker 落点纳入 bbox（保守取采样点；marker 自身尺寸相对小，端点已足够避免被裁）
+      points.push(sample.point);
+    }
+  }
+
   // shrink 在 compile 算（端点收缩与 emit 落点无关）：按 shape + 视觉输入把首/末段端点向内缩短，
   // 让 line 端点接在 hollow arrow 尾部外缘、不贯穿 back outline；shrink=0 的实心 shape 跳过
   applyArrowShrinks(commands, arrows.shrinkStart, arrows.shrinkEnd, strokeWidth, round);
@@ -828,5 +944,20 @@ export const emitPathPrimitive = (
   if (arrows.arrowStart) endpointSpecs.arrowStart = arrows.arrowStart;
   if (arrows.arrowEnd) endpointSpecs.arrowEnd = arrows.arrowEnd;
   const { primitive } = splitSubPathsForEndpointArrows(commands, baseProps, endpointSpecs);
-  return { primitives: [primitive, ...labelPrims], points };
+  const bodyPrims: Array<ScenePrimitive> = [primitive, ...labelPrims, ...markPrims];
+
+  // 路径整体变换：rotate / scale 给定时，以包围盒中心为支点把本 path 的 primitive 包进 GroupPrim 写 transforms。
+  // 顺序硬契约：端点已在当前 scope resolve 到世界坐标、arrow shrink 已在未变换几何上完成（上方），
+  // 这里才以 bbox center 为支点包 group（geometry 留原坐标、变换由外层 group 承担）；layout 外接框据变换后 bbox 计。
+  if ((path.rotate !== undefined || path.scale !== undefined) && points.length > 0) {
+    const center = bboxCenter(points);
+    const transforms = buildPathTransforms(path.rotate, path.scale, center, round);
+    if (transforms.length > 0) {
+      const group: GroupPrim = { type: 'group', transforms, children: bodyPrims };
+      // layout 据变换后 bbox：把当前 points 经同一变换链投影后回收（应用顺序与 GroupPrim 渲染一致）
+      const transformedPoints = points.map(p => applyTransformChain(p, transforms));
+      return { primitives: [group], points: transformedPoints };
+    }
+  }
+  return { primitives: bodyPrims, points };
 };

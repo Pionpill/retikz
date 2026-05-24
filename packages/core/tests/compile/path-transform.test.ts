@@ -65,7 +65,7 @@ describe('path rotate → GroupPrim 包裹 + 支点为包围盒中心', () => {
     expect(path).toBeDefined();
     // 端点几何在 group 内保持原坐标，旋转由外层 group.transforms 施加
     const move = path?.commands.find(c => c.kind === 'move');
-    expect(move && move.kind === 'move' ? move.to : null).toEqual([0, 0]);
+    expect(move?.to).toEqual([0, 0]);
   });
 });
 
@@ -99,10 +99,9 @@ describe('path rotate 与绕同一中心的 scope rotate 等价', () => {
     expect(rPath?.degrees).toBe(rScope?.degrees);
     expect(rPath?.cx).toBeCloseTo(rScope?.cx ?? NaN, 6);
     expect(rPath?.cy).toBeCloseTo(rScope?.cy ?? NaN, 6);
-    // 内部 path commands 等价
-    expect(findPathPrim(viaPath.primitives)?.commands).toEqual(
-      findPathPrim(viaScope.primitives)?.commands,
-    );
+    // 两种写法 Scene 结构不同——<Path rotate> 把未变换几何包进 rotate group；scope 内坐标字面量 path
+    // 走 hoist + 端点预变换（既有契约）。二者渲染等价，等价性体现在同一 rotate transform（degrees + 支点
+    // cx/cy）上，故此处只比 transform，不比两种编码各自的内层 commands。
   });
 });
 

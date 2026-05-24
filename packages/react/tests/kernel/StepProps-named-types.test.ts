@@ -46,7 +46,8 @@ describe('StepProps named types', () => {
   });
 
   it('Pick<> / Omit<> 派生：能从单 named type 提子集（wrapper 用例）', () => {
+    // bendDirection 现为可选（与 outAngle/inAngle 互补，同给时 out/in 优先）
     type BendDir = Pick<BendStepProps, 'bendDirection'>;
-    expectTypeOf<BendDir>().toEqualTypeOf<{ bendDirection: 'left' | 'right' }>();
+    expectTypeOf<BendDir>().toEqualTypeOf<{ bendDirection?: 'left' | 'right' }>();
   });
 });

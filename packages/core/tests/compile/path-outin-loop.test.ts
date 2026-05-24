@@ -33,7 +33,7 @@ const firstCubic = (path: PathPrim): CubicPathCommand => {
 /** 段起点（首个 move 的 to） */
 const firstMove = (path: PathPrim): [number, number] => {
   const m = path.commands.find(x => x.kind === 'move');
-  if (!m || m.kind !== 'move') throw new Error('expected a move command');
+  if (!m) throw new Error('expected a move command');
   return m.to;
 };
 
@@ -43,7 +43,7 @@ const angleDeg = (dx: number, dy: number): number =>
 
 /** 角度归一到 (-180, 180] 的差值绝对值 */
 const angleDiff = (a: number, b: number): number => {
-  let d = ((a - b) % 360 + 540) % 360 - 180;
+  const d = ((a - b) % 360 + 540) % 360 - 180;
   return Math.abs(d);
 };
 
