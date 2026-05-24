@@ -63,16 +63,17 @@ export type ArrowEmitContext = { stroke: PaintValue; fill: PaintValue; lineWidth
 1. **`MarkerPrimitive` 窄子集**：仅 marker-local `path` / `ellipse` / `rect` / `group`；`fill` 收窄到 `string | { kind:'contextStroke' }`（无 `resourceRef` / 外部资源）；禁 `text`、禁 `arrowStart/End`、禁 `clipRef`。
 2. **颜色继承**：`ArrowEmitContext.stroke` 无 override 时 = `{ kind:'contextStroke' }`（alpha.7 `PaintValue`）；adapter 映射 `context-stroke`，保 `currentColor` / `var()` 主题反应。
 3. **compile 查表算 shrink**：`arrow-geometry` / `shrink` 不再 `switch(shape)`，改读 `def` 的 `lineContactX` / `tipX` / `defaultLength` 等。
-4. **render 用 def.emit**：`arrowMarkers.tsx` 不再 `switch`，把 `def.emit(ctx)` 的 `MarkerPrimitive` 嵌进 `<marker>`（framework 统一 `viewBox` / `refX=lineContactX` / `refY=baseSize/2` / `orient="auto-start-reverse"` / scale·length·width·opacity）。
-5. **视觉字段分工**：`scale` / `length` / `width` / `opacity` framework 统一处理；`hollow` / `lineWidth` / 几何交给 `def`。
+4. **emit 在 compile 调（对齐 `ShapeDefinition`，修正原 adapter-emit 设计）**：`def.emit(ctx)` 在 **compile** 期调（与 `ShapeDefinition.emit` 同位——shape 几何也在 compile 产 ScenePrimitive 进 Scene），产 `MarkerPrimitive[]` + 解析后的 wrapper 参数（`baseSize` / `refX`=hollow 已减 lineWidth/2 / `markerWidth`=length / `markerHeight`=width / `opacity`），一起写进 Scene 的 `ArrowEndSpec`（成"已解析 marker 描述"，渲染无关）。adapter（react / canvas / pdf）只**物化**：react 把 `ArrowEndSpec` 的 `MarkerPrimitive[]` 嵌进 `<marker viewBox refX refY=baseSize/2 markerWidth markerHeight orient="auto-start-reverse" markerUnits="strokeWidth">`，不再 `switch`、不再调 emit、不需要 arrows 注册表。`arrows` 像 `shapes` 一样**只**喂 `compileToScene`（react `<TikZ>` 加 `arrows` prop 转发给内部 compile）。
+5. **视觉字段分工**：`scale` / `length` / `width` / `opacity` framework（compile）统一处理；`hollow` / `lineWidth` / 几何交给 `def`。
 6. **内置 7 迁移 + 回归**：逐一迁成 ArrowDefinition，渲染 / shrink 与旧 switch 逐一等价（快照不变）。
 7. **英文 `.describe`**：`shape` 字段 describe 更新为"registered arrow name; built-ins + CompileOptions.arrows"。
 
-## 待决策点
+## 已决策（实现期拍板）
 
-- `MarkerPrimitive` 是否允许 `group`（嵌套 transform）——倾向允许（复合箭头），但禁再套 marker。
-- `ArrowEmitContext` 是否传 `hollow` 给 def，还是 def 自带 `hollow` 标志 framework 据此处理 fill/lineWidth（倾向后者）。
-- 同名覆盖内置：warn 还是 error（倾向 warn，对齐 shape）。
+- **emit 落点 = compile**（非原文的 react adapter）：对齐 `ShapeDefinition.emit`，自定义 arrow 只传 `compileToScene`，Canvas/PDF adapter 零 arrow 逻辑。`ArrowEndSpec` 升级为"已解析 marker 描述"（见决策细节 #4）。
+- `MarkerPrimitive` **允许 `group`**（嵌套 transform，复合箭头），但禁再套 marker / text。
+- `ArrowEmitContext` **不传 `hollow`**；`def` 自带 `hollow` 标志，framework 据此丢 fill / 启用 lineWidth / 对 `lineContactX` 减 `lineWidth/2`。
+- 同名覆盖内置 = **warn**（`ARROW_OVERRIDES_BUILTIN`，对齐 `SHAPE_OVERRIDES_BUILTIN`，不 error）。
 
 ## DSL 表面
 
@@ -90,8 +91,10 @@ compileToScene(ir, { arrows: { myTip: myArrow } });
 - `packages/core/src/arrows/`（新建，仿 `shapes/`）：`ArrowDefinition` 类型 + `BUILTIN_ARROWS`（7 内置迁入）。
 - `packages/core/src/primitive/`（新 `MarkerPrimitive` 类型，可挂 scene.ts 或独立）。
 - `packages/core/src/compile/compile.ts`：`CompileOptions.arrows` + 有效表合并 + 同名 warn。
-- `packages/core/src/compile/path/{arrow-geometry,shrink}.ts`：查表替 switch。
-- `packages/react/src/render/arrowMarkers.tsx`：def.emit → `<marker>`，删 switch。
+- `packages/core/src/compile/path/{arrow-geometry,shrink}.ts`：查表替 switch；**新增**：compile 调 `def.emit` 产 `MarkerPrimitive[]` + wrapper 参数，写进 `ArrowEndSpec`。
+- `packages/core/src/primitive/path.ts`：`ArrowEndSpec` 升级为"已解析 marker 描述"——加 `marker: MarkerPrimitive[]`（已解析内部几何）+ `baseSize` / `refX` / `markerWidth` / `markerHeight`（wrapper 参数）；`shape` 保留作标识。
+- `packages/react/src/render/arrowMarkers.tsx`：删 switch，改**物化** `ArrowEndSpec.marker`（嵌进 `<marker>`），不调 emit、不需 arrows 表。
+- `packages/react/src/kernel/Layout.tsx`：`<TikZ>` 加 `arrows` prop，转发给内部 `compileToScene`（对齐既有 `shapes` prop）。
 - `packages/core/src/index.ts` / `packages/react/src/index.ts`：公开 `ArrowDefinition` / `MarkerPrimitive`。
 - 对外 API：`arrowDetail.shape` 类型从 7 枚举扩为 string（向后兼容，旧字面量仍合法）；内置 7 行为零回归。
 
@@ -125,8 +128,10 @@ compileToScene(ir, { arrows: { myTip: myArrow } });
 - `packages/core/src/arrows/{types,index}.ts`（新建：`ArrowDefinition` + `BUILTIN_ARROWS`）
 - `packages/core/src/primitive/marker.ts`（新建：`MarkerPrimitive` 窄子集）
 - `packages/core/src/compile/compile.ts`（`CompileOptions.arrows`）
-- `packages/core/src/compile/path/{arrow-geometry,shrink}.ts`（查表替 switch）
-- `packages/react/src/render/arrowMarkers.tsx`（def.emit → marker）
+- `packages/core/src/compile/path/{arrow-geometry,shrink}.ts`（查表替 switch + compile 调 `def.emit` 产 marker 写进 `ArrowEndSpec`）
+- `packages/core/src/primitive/path.ts`（`ArrowEndSpec` 升级为已解析 marker 描述：加 `marker: MarkerPrimitive[]` + `baseSize`/`refX`/`markerWidth`/`markerHeight`）
+- `packages/react/src/render/arrowMarkers.tsx`（删 switch，物化 `ArrowEndSpec.marker`）
+- `packages/react/src/kernel/Layout.tsx`（`<TikZ>` 加 `arrows` prop 转发内部 compile）
 - `packages/core/src/index.ts` / `packages/react/src/index.ts`（公开）
 - `packages/core/tests/arrows/builtin-registry.test.ts`（新建）+ `packages/react/tests/render/arrowMarkers.test.tsx`（扩 / 回归）
 
