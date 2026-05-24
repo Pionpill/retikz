@@ -71,6 +71,23 @@ export const changelog: Array<Release> = [
         ],
         subVersions: [
           {
+            version: 'beta.1',
+            date: '2026-05-24',
+            summary: {
+              zh: '优化窗口 + 最后破坏性清理：makeRound -0 归一（Scene JSON round-trip 在 Object.is 层稳定）；IR discriminator 命名约定文档化（实体 / paint = type、子变体 = kind）。',
+              en: 'Optimization window + final breaking cleanup: makeRound -0 normalization (stable Scene JSON round-trip under Object.is); IR discriminator convention documented (entity / paint = type, sub-variant = kind).',
+            },
+            items: [
+              {
+                label: { zh: 'makeRound -0 归一', en: 'makeRound -0 normalization' },
+                content: {
+                  zh: '`makeRound` 末端 `-0` → `+0`——负的亚精度值 round 出 `-0`、`JSON.stringify(-0) = "0"` 让 Scene round-trip 在 `Object.is` 层失真；归一后序列化往返稳定（数值 / 渲染无影响）',
+                  en: '`makeRound` normalizes `-0` → `+0` at the end — negative sub-precision values round to `-0` and `JSON.stringify(-0) = "0"` made the Scene round-trip diverge under `Object.is`; normalization keeps serialization stable (no numeric / render effect)',
+                },
+              },
+            ],
+          },
+          {
             version: 'alpha.9',
             date: '2026-05-24',
             summary: {
@@ -356,6 +373,30 @@ export const changelog: Array<Release> = [
         ],
         subVersions: [
           {
+            version: 'beta.1',
+            date: '2026-05-24',
+            summary: {
+              zh: 'BREAKING：删 `<TikZ>` deprecated alias（迁移 `<Layout>`）；修 unbuilder path round-trip 丢 rotate / scale / marks。',
+              en: 'BREAKING: the `<TikZ>` deprecated alias is removed (migrate to `<Layout>`); fixed the unbuilder path round-trip dropping rotate / scale / marks.',
+            },
+            items: [
+              {
+                label: { zh: 'BREAKING：删 `<TikZ>` alias', en: 'BREAKING: `<TikZ>` alias removed' },
+                content: {
+                  zh: 'alpha.6 留的 `<TikZ>` / `TikZProps` 兼容别名移除（rc 起冻结公开 API，beta 是最后窗口）。**迁移**：`<TikZ ...>` → `<Layout ...>`，props 完全一致',
+                  en: 'The `<TikZ>` / `TikZProps` alias kept since alpha.6 is removed (rc freezes the public API, beta is the last window). **Migration**: `<TikZ ...>` → `<Layout ...>`, props identical',
+                },
+              },
+              {
+                label: { zh: 'unbuilder round-trip 修复', en: 'unbuilder round-trip fix' },
+                content: {
+                  zh: 'unbuilder 的 path 分支手写漏 `rotate` / `scale` / `marks`（IR → JSX → IR 静默丢失）→ 改用 `pickDefined(PATH_FIELDS)`（与 node / scope 一致、互锁防漂移）修复；补 paint / clip / between / marks 等 round-trip 覆盖',
+                  en: "The unbuilder path branch hand-listed fields and dropped `rotate` / `scale` / `marks` (silently lost on IR → JSX → IR) → fixed via `pickDefined(PATH_FIELDS)` (consistent with node / scope, interlocked against drift); added round-trip coverage for paint / clip / between / marks",
+                },
+              },
+            ],
+          },
+          {
             version: 'alpha.9',
             date: '2026-05-24',
             summary: {
@@ -533,6 +574,23 @@ export const changelog: Array<Release> = [
           },
         ],
         subVersions: [
+          {
+            version: 'beta.1',
+            date: '2026-05-24',
+            summary: {
+              zh: '配合删 `<TikZ>`：retikz-tsx AST 白名单 / AI system prompt / mdx 描述全清 alias；Layout 页文档更新。',
+              en: 'Following the `<TikZ>` removal: the retikz-tsx AST whitelist / AI system prompt / mdx descriptions drop the alias; Layout pages updated.',
+            },
+            items: [
+              {
+                label: { zh: '清 `<TikZ>` 文档残留', en: 'drop `<TikZ>` doc residue' },
+                content: {
+                  zh: 'retikz-tsx AST 白名单（18 → 17 组件）+ AI system prompt 去 `TikZ`；[Layout](/core/components/layout/overview) / custom-arrow 等 mdx 把"`<TikZ>` 保留为别名"改为"已移除"',
+                  en: 'The retikz-tsx AST whitelist (18 → 17 components) + AI system prompt drop `TikZ`; [Layout](/core/components/layout/overview) / custom-arrow mdx change "`<TikZ>` kept as an alias" to "removed"',
+                },
+              },
+            ],
+          },
           {
             version: 'alpha.9',
             date: '2026-05-24',
