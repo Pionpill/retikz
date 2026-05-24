@@ -2,10 +2,10 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 import { type ScenePrimitive, type ShapeDefinition, localToWorld, worldToLocal } from '@retikz/core';
 import { Node } from '../../src/kernel/Node';
-import { TikZ } from '../../src/kernel/Layout';
+import { Layout } from '../../src/kernel/Layout';
 
 /**
- * <TikZ shapes={...}> 自定义 shape 注入透传
+ * <Layout shapes={...}> 自定义 shape 注入透传
  * @description React 把 shapes prop 透传给 compileToScene 的 CompileOptions.shapes；
  *   IR 里 <Node shape="..."> 仍只写字符串名，定义在此注入。
  */
@@ -35,12 +35,12 @@ const radialShape = (): ShapeDefinition => ({
   },
 });
 
-describe('<TikZ shapes> 自定义 shape 注入', () => {
+describe('<Layout shapes> 自定义 shape 注入', () => {
   it('注入 shapes 后 <Node shape="hexagon"> 渲染出自定义 emit（ellipse）', () => {
     const svg = renderToStaticMarkup(
-      <TikZ width={100} height={100} shapes={{ hexagon: radialShape() }}>
+      <Layout width={100} height={100} shapes={{ hexagon: radialShape() }}>
         <Node id="A" shape="hexagon" position={[0, 0]} text="hex" />
-      </TikZ>,
+      </Layout>,
     );
     expect(svg).toContain('<ellipse');
   });
@@ -48,9 +48,9 @@ describe('<TikZ shapes> 自定义 shape 注入', () => {
   it('未注入对应 shape 时编译期 throw Unknown shape', () => {
     expect(() =>
       renderToStaticMarkup(
-        <TikZ width={100} height={100}>
+        <Layout width={100} height={100}>
           <Node id="A" shape="hexagon" position={[0, 0]} text="hex" />
-        </TikZ>,
+        </Layout>,
       ),
     ).toThrow(/Unknown shape 'hexagon'/);
   });

@@ -2,10 +2,10 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 import { Path } from '../../src/kernel/Path';
 import { Step } from '../../src/kernel/Step';
-import { TikZ } from '../../src/kernel/Layout';
+import { Layout } from '../../src/kernel/Layout';
 
 /**
- * 多 `<TikZ>` 实例的 marker id 隔离
+ * 多 `<Layout>` 实例的 marker id 隔离
  * @description marker id 走 `useId()` 派生前缀，多实例同页应分配不同前缀，避免 SVG `<defs>` 冲突
  */
 const extractMarkerIds = (svg: string): Array<string> => {
@@ -24,22 +24,22 @@ const extractPrefix = (id: string): string => {
   return match ? match[1] : '';
 };
 
-describe('多 TikZ 实例 marker id 隔离', () => {
-  it('两个 TikZ 实例 + 同 spec → marker id 不同前缀（useId 派生）', () => {
+describe('多 Layout 实例 marker id 隔离', () => {
+  it('两个 Layout 实例 + 同 spec → marker id 不同前缀（useId 派生）', () => {
     const svg = renderToStaticMarkup(
       <div>
-        <TikZ width={100} height={100}>
+        <Layout width={100} height={100}>
           <Path arrow="->" arrowDetail={{ shape: 'stealth' }}>
             <Step kind="move" to={[0, 0]} />
             <Step kind="line" to={[80, 0]} />
           </Path>
-        </TikZ>
-        <TikZ width={100} height={100}>
+        </Layout>
+        <Layout width={100} height={100}>
           <Path arrow="->" arrowDetail={{ shape: 'stealth' }}>
             <Step kind="move" to={[0, 0]} />
             <Step kind="line" to={[80, 0]} />
           </Path>
-        </TikZ>
+        </Layout>
       </div>,
     );
 
@@ -54,18 +54,18 @@ describe('多 TikZ 实例 marker id 隔离', () => {
   it('两实例不同 spec → 各自独立 marker，不互相串话', () => {
     const svg = renderToStaticMarkup(
       <div>
-        <TikZ width={100} height={100}>
+        <Layout width={100} height={100}>
           <Path arrow="->" arrowDetail={{ shape: 'stealth', color: '#dc2626' }}>
             <Step kind="move" to={[0, 0]} />
             <Step kind="line" to={[80, 0]} />
           </Path>
-        </TikZ>
-        <TikZ width={100} height={100}>
+        </Layout>
+        <Layout width={100} height={100}>
           <Path arrow="->" arrowDetail={{ shape: 'open' }}>
             <Step kind="move" to={[0, 0]} />
             <Step kind="line" to={[80, 0]} />
           </Path>
-        </TikZ>
+        </Layout>
       </div>,
     );
 

@@ -22,7 +22,7 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { parseRetikzJsx } from '@/lib/jsx-to-ir';
 import { type IR, SceneSchema } from '@retikz/core';
-import { TikZ, convertReactNodeToIR } from '@retikz/react';
+import { Layout, convertReactNodeToIR } from '@retikz/react';
 
 import { formatZodError } from '../retikz-validation';
 
@@ -68,7 +68,7 @@ const resolveIr = (source: string): Resolved => {
   }
   const ir: IR = parsed.data;
   // 强制传 width/height：SVG 不带 width/height attr 时 flex 容器里浏览器算 intrinsic size 不一致（Chrome 偶尔 0×0），导致看似"没渲染"
-  const Component: FC = () => <TikZ ir={ir} width={DEFAULT_TIKZ_WIDTH} height={DEFAULT_TIKZ_HEIGHT} />;
+  const Component: FC = () => <Layout ir={ir} width={DEFAULT_TIKZ_WIDTH} height={DEFAULT_TIKZ_HEIGHT} />;
   // ComponentRender 只展示 IR 视图：source.react 留空即可触发"单视图、不出 toggle"分支
   return { ok: true, Component, renderSource: { ir: formatIR(ir) } };
 };
@@ -77,7 +77,7 @@ const resolveTsx = (source: string): Resolved => {
   const parsed = parseRetikzJsx(source);
   if (!parsed.ok) return { ok: false, errorKind: 'tsx', errorDetail: parsed.error };
   const element = parsed.element as ReactElement<{ children?: ReactNode; width?: number; height?: number }>;
-  // 同 IR 路径：AI 偶尔写 `<TikZ>...` 不带 width/height，cloneElement 补默认。已有的 width/height 不动
+  // 同 IR 路径：AI 偶尔写 `<Layout>...` 不带 width/height，cloneElement 补默认。已有的 width/height 不动
   const enriched = isValidElement(element)
     ? cloneElement(element, {
         width: element.props.width ?? DEFAULT_TIKZ_WIDTH,
@@ -107,7 +107,7 @@ export const RetikzPreview: FC<RetikzPreviewProps> = props => {
   );
 
   if (!resolved.ok) {
-    // AI 经常用 retikz-tsx 围栏块写"改动片段"（裸的几行 <Node>，不带 <TikZ> 外壳）来说明 diff——
+    // AI 经常用 retikz-tsx 围栏块写"改动片段"（裸的几行 <Node>，不带 <Layout> 外壳）来说明 diff——
     // 这种情况 parser 报 "Adjacent JSX elements must be wrapped in an enclosing tag"。
     // 降级成 plain code block：用户看的是改动片段，不是要再跑一次预览
     if (

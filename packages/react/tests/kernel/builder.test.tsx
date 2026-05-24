@@ -531,7 +531,7 @@ describe('buildIR', () => {
   });
 
   describe('React.Fragment 透明展开', () => {
-    it('Fragment 直接子元素被展开为 TikZ 子级', () => {
+    it('Fragment 直接子元素被展开为 Layout 子级', () => {
       const ir = buildIR(
         <Fragment>
           <Node id="A" position={[0, 0]}>a</Node>

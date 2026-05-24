@@ -196,27 +196,3 @@ export const Layout: FC<LayoutProps> = props => {
     </svg>
   );
 };
-
-/** @deprecated `<TikZ>` 旧名，已更名 `<Layout>`；保留为兼容别名（其 props 同 `LayoutProps`） */
-export type TikZProps = LayoutProps;
-
-let tikzDeprecationWarned = false;
-/** 确定性生产判定：仅当能读到 NODE_ENV==='production' 才算生产，其余（含裸 browser ESM）都当 dev */
-const isProductionEnv = (): boolean =>
-  typeof process !== 'undefined' && process.env.NODE_ENV === 'production';
-
-/**
- * `<TikZ>` —— `<Layout>` 的 deprecated 兼容别名
- * @deprecated 用 `<Layout>` 代替；本 alias 将在未来版本移除。
- * @description fail-open dev warning：非确定性生产即 console.warn 一次（best-effort——让真实
- *   browser dev 也拿到提示，仅确定性生产被 bundler 替换为静默）。渲染行为与 `<Layout>` 完全一致。
- */
-export const TikZ: FC<TikZProps> = props => {
-  if (!isProductionEnv() && !tikzDeprecationWarned) {
-    // 模块级去重的一次性 deprecation 提示——render 内触发以覆盖 SSR（effect 不在 SSR 跑），同 React core `__DEV__` warnOnce 模式
-    // eslint-disable-next-line react-hooks/globals -- 迁移期一次性 deprecation 标记，刻意的模块级 once-warn
-    tikzDeprecationWarned = true;
-    console.warn('[retikz] <TikZ> is deprecated; use <Layout> instead.');
-  }
-  return <Layout {...props} />;
-};

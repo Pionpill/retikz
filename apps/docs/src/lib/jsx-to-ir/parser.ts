@@ -21,19 +21,17 @@ import {
   Star,
   Step,
   Text,
-  TikZ,
 } from '@retikz/react';
 
 const JsxParser = Parser.extend(jsx());
 
 /**
  * 允许在 `retikz-tsx` 块里出现的组件白名单
- * @description 18 个名字 = 17 个主组件（含 `Layout`）+ `TikZ` deprecated 兼容别名；其它名（含原生 div / 用户自定义）一律拒绝
+ * @description 17 个主组件名（含 `Layout`）；其它名（含原生 div / 用户自定义）一律拒绝
  */
 /** 标 `| undefined` 是为了让查表后的 `!Component` 守卫不被 TS 视作死代码 */
 const COMPONENT_REGISTRY: Record<string, FC<Record<string, unknown>> | undefined> = {
   Layout,
-  TikZ,
   Node: Node as unknown as FC<Record<string, unknown>>,
   Path: Path as unknown as FC<Record<string, unknown>>,
   Step: Step as unknown as FC<Record<string, unknown>>,
