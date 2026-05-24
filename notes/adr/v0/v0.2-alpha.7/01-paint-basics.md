@@ -72,13 +72,13 @@ export type Scene = {
 8. **`contextStroke` 留给 alpha.8**：本段 node / path fill 不主动产 `contextStroke`（它是 arrow marker 的继承语义），但词汇表此处定稳，alpha.8 直接用。
 9. **英文 `.describe` 硬要求**：`PaintSpecSchema`（顶层）+ `GradientStopSchema` 各字段（`offset` / `color` / `opacity`）+ gradient 方向 / center / radius 字段，逐一带英文 `.describe`（schema reference + LLM tool schema 来源）。
 
-## 待决策点
+## 待决策点（实现期已敲定）
 
-- **linear gradient 方向**：`angle`（度，polar 约定）vs 两端点 `[x1,y1]`→`[x2,y2]`（objectBoundingBox 0..1）。倾向 `angle`（简单、与角度约定一致）。
-- **radial center / radius 坐标系**：`objectBoundingBox`（0..1 相对形状）vs `userSpaceOnUse`。倾向 objectBoundingBox（随形状缩放）。
-- **stop `color` 是否支持 `currentColor` / `var()`**：支持则 gradient 也主题反应，但 `<defs>` 内 `var()` 解析有坑（需 inline style 或 CSS 变量穿透）。倾向本段支持 `currentColor`、`var()` 留待定。
-- **资源 id 策略**：内容 hash（去重天然）vs 递增序号（短、需 Map 旁路）。倾向内容 hash（确定性 + 天然去重）。
-- **`PaintValue` 是否需要 `contextFill`**：arrow 实心形状继承 path fill 的对称项；alpha.8 评估，本段先不加。
+- **linear gradient 方向**：✅ 用 `angle`（度，polar 约定 0=左→右 / 90=上→下）；react `angleToLine` 过中心 (0.5,0.5) 沿方向画长 1 渐变线。
+- **radial center / radius 坐标系**：✅ `objectBoundingBox`（0..1 相对形状，随缩放）；缺省 center (0.5,0.5)、radius 0.5。
+- **stop `color`**：✅ 支持 `currentColor`（SVG `<stop stop-color>` 天然继承元素 color）；`var()` 在 `<defs>` 内未特殊处理（留待）。
+- **资源 id 策略**：实现选**递增首见序**（`paint-1`/`paint-2`…，Map<jsonKey,id> 去重）——**偏离 ADR 原"倾向内容 hash"**：首见序对同一 IR 同样确定性（SSR/CSR 一致），且短、可读、无需 hash 依赖；跨 SVG 唯一性由 react adapter 加 `useId` 前缀解决，hash 的"跨编译稳定"优势在 scene-local id 场景用不上。
+- **`PaintValue` 是否需要 `contextFill`**：本段未加；alpha.8 arrow 评估（`contextStroke` 已够 node/path fill 不用）。
 
 ## DSL 表面
 
