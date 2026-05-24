@@ -47,6 +47,8 @@ export {
   ChildSchema,
   SceneSchema,
   CURRENT_IR_VERSION,
+  PaintSpecSchema,
+  GradientStopSchema,
 } from './ir';
 export type {
   IRPosition,
@@ -100,6 +102,8 @@ export type {
   NodeShape,
   BuiltinShapeName,
   NodeTextAlign,
+  IRPaintSpec,
+  IRGradientStop,
 } from './ir';
 export {
   ARROW_SHAPES,
