@@ -3,7 +3,7 @@ import type { FC } from 'react';
 
 /**
  * pin 引脚：带引线的标签
- * @description 节点边界画引线连到标签；右侧实线 pin、左上虚线 pin（leader.dashPattern）。
+ * @description 节点边界画引线连到标签；右侧实线 pin、左上虚线 pin（pin.dashPattern）。
  */
 const Demo: FC = () => (
   <Layout width={440} height={240}>

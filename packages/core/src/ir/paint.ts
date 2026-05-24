@@ -13,8 +13,8 @@ export const GradientStopSchema = z
   .describe('A single gradient color stop');
 
 /**
- * Paint server 规格（渐变）；纯色仍是 `fill` / `stroke` 上的 string，不进此 schema
- * @description alpha.7 只做 linear / radial gradient；pattern / image 顺延（ADR-04）。纯 JSON 形态，保 IR 可序列化。
+ * Paint server 规格（渐变 / 图案 / 图片）；纯色仍是 `fill` / `stroke` 上的 string，不进此 schema
+ * @description 四种 paint server：linear / radial gradient、pattern（图案）、image（图片）。纯 JSON 形态，保 IR 可序列化。
  *   linear 方向用 `angle`（度，polar 约定：0°=+x，90°=+y 屏幕下）；radial 的 `center` / `radius` 用 objectBoundingBox（0..1，随形状缩放）。
  */
 export const PaintSpecSchema = z
@@ -65,7 +65,7 @@ export const PaintSpecSchema = z
           .finite()
           .positive()
           .optional()
-          .describe('Line / grid stroke width; also drives dot radius. Default 1'),
+          .describe('Line / grid stroke width; for dots, drives the dot radius. Default 1 (dots default to size/5)'),
         rotation: z
           .number()
           .finite()

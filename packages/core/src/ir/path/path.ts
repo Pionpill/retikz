@@ -44,7 +44,7 @@ export const PathSchema = z
       .union([z.string(), PaintSpecSchema])
       .optional()
       .describe(
-        'Fill of the closed region: any CSS color string, or a PaintSpec (linear / radial gradient). Omitted = no fill (stroke only). Pairs with `cycle` step for filled shapes.',
+        'Fill of the closed region: any CSS color string, or a PaintSpec (linear / radial gradient, pattern, or image). Omitted = no fill (stroke only). Pairs with `cycle` step for filled shapes.',
       ),
     fillRule: z
       .enum(['nonzero', 'evenodd'])

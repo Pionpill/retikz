@@ -255,7 +255,7 @@ Line 2`}</Node>
 | `maxTextWidth` | `number` | — | 折行阈值（user units）；超过才折行（西文按词 / CJK 按字），短文本盒宽收缩；非固定段落宽 |
 | `rotate` | `number` | `0` | 绕中心旋转角度（度，正值顺时针） |
 | `color` | `string` | — | 主色（TikZ `color=`）；`stroke` / `fill` / `textColor` 未单设则随它，并级联到内部文字与边 label |
-| `fill` | `string \| PaintSpec` | — | 背景填充：纯色 CSS 串，或渐变 PaintSpec（linear / radial） |
+| `fill` | `string \| PaintSpec` | — | 背景填充：纯色 CSS 串，或 PaintSpec（渐变 linear / radial、图案 pattern、图片 image） |
 | `stroke` | `string` | `currentColor` | 边框色 |
 | `strokeWidth` | `number` | `1` | 边框宽度（user units） |
 | `innerXSep` | `number` | — | 横向内边距（text → 左右 border）；不填走 `padding` 兜底 |

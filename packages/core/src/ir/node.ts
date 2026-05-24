@@ -168,7 +168,7 @@ export const NodeSchema = z
       .union([z.string(), PaintSpecSchema])
       .optional()
       .describe(
-        'Node background paint: any CSS color string (e.g. "lightblue", "#fafafa", "rgba(...)") or a PaintSpec (linear / radial gradient).',
+        'Node background paint: any CSS color string (e.g. "lightblue", "#fafafa", "rgba(...)") or a PaintSpec (linear / radial gradient, pattern, or image).',
       ),
     fillOpacity: z
       .number()

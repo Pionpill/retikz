@@ -255,7 +255,7 @@ By default stacking = declaration order (SVG only honors paint order). `zIndex` 
 | `maxTextWidth` | `number` | — | Wrap threshold (user units); text wraps past it (Western per word / CJK per char) and the box shrinks for short text; not a fixed paragraph width |
 | `rotate` | `number` | `0` | Rotation around center, degrees, positive = clockwise |
 | `color` | `string` | — | Master color (TikZ `color=`); `stroke` / `fill` / `textColor` default to it unless individually set, and it cascades to inner text and edge labels |
-| `fill` | `string \| PaintSpec` | — | Background fill: a plain CSS color string, or a gradient PaintSpec (linear / radial) |
+| `fill` | `string \| PaintSpec` | — | Background fill: a plain CSS color string, or a PaintSpec (gradient linear / radial, pattern, or image) |
 | `stroke` | `string` | `currentColor` | Border color |
 | `strokeWidth` | `number` | `1` | Border width (user units) |
 | `innerXSep` | `number` | — | Horizontal inner padding (text → left/right border); falls back to `padding` |

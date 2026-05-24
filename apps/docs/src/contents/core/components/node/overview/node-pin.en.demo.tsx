@@ -4,7 +4,7 @@ import type { FC } from 'react';
 /**
  * pin: a label with a leader line
  * @description Draws a leader from the node border to the label; solid pin on the right, dashed pin
- *   (leader.dashPattern) at the upper-left.
+ *   (pin.dashPattern) at the upper-left.
  */
 const Demo: FC = () => (
   <Layout width={460} height={240}>

@@ -170,7 +170,7 @@ export const ScopeSchema = z
     fill: z
       .union([z.string(), PaintSpecSchema])
       .optional()
-      .describe('Cascading default fill (CSS color or PaintSpec gradient) for inner nodes and paths.'),
+      .describe('Cascading default fill (CSS color or PaintSpec: gradient / pattern / image) for inner nodes and paths.'),
     strokeWidth: z
       .number()
       .optional()

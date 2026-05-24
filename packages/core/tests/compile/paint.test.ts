@@ -1,7 +1,7 @@
 /**
- * Paint 编译：PaintSpec fill → 资源表 + resourceRef（alpha.7 ADR-01）
- * @description node / path 的 PaintSpec fill 收进 scene.resources（去重 + 稳定 id），primitive.fill 变 { kind:'resourceRef', id }；
- *   纯色 string 原样、不进资源表；同 spec 多处复用 → 1 条资源、同 id。
+ * Paint 编译：PaintSpec fill → 资源表 + resourceRef
+ * @description node / path / scope 的 PaintSpec fill 收进 scene.resources（去重 + 稳定 id），primitive.fill 变 { kind:'resourceRef', id }；
+ *   纯色 string 原样、不进资源表；同 spec 多处复用 → 1 条资源、同 id；scope fill 级联到内部 node；纯色与渐变同场景互不干扰。
  */
 import { describe, expect, it } from 'vitest';
 import { compileToScene } from '../../src/compile/compile';
@@ -110,5 +110,45 @@ describe('path PaintSpec fill', () => {
     const path = flattenPrims(scene.primitives).find(p => p.type === 'path');
     expect(path?.type === 'path' && path.fill).toEqual({ kind: 'resourceRef', id: 'paint-1' });
     expect(scene.resources).toHaveLength(1);
+  });
+});
+
+describe('交互：scope 级联 + 纯色/渐变共存', () => {
+  it('scope fill 级联到内部无 fill node → 收进资源表（去重）', () => {
+    const ir: IR = {
+      version: 1,
+      type: 'scene',
+      children: [
+        {
+          type: 'scope',
+          fill: grad,
+          children: [
+            { type: 'node', id: 'A', position: [0, 0], text: 'A' },
+            { type: 'node', id: 'B', position: [60, 0], text: 'B' },
+          ],
+        },
+      ],
+    };
+    const scene = compileToScene(ir);
+    const rects = rectsOf(scene.primitives);
+    expect(rects[0].fill).toEqual({ kind: 'resourceRef', id: 'paint-1' });
+    expect(rects[1].fill).toEqual({ kind: 'resourceRef', id: 'paint-1' });
+    expect(scene.resources).toEqual([{ kind: 'paint', id: 'paint-1', spec: grad }]);
+  });
+
+  it('纯色与渐变同场景 → 纯色不进表、渐变进表，互不干扰', () => {
+    const ir: IR = {
+      version: 1,
+      type: 'scene',
+      children: [
+        { type: 'node', id: 'A', position: [0, 0], text: 'A', fill: 'lightblue' },
+        { type: 'node', id: 'B', position: [60, 0], text: 'B', fill: grad },
+      ],
+    };
+    const scene = compileToScene(ir);
+    const rects = rectsOf(scene.primitives);
+    expect(rects[0].fill).toBe('lightblue');
+    expect(rects[1].fill).toEqual({ kind: 'resourceRef', id: 'paint-1' });
+    expect(scene.resources).toEqual([{ kind: 'paint', id: 'paint-1', spec: grad }]);
   });
 });
