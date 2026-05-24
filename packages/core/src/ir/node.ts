@@ -136,6 +136,14 @@ export const NodeSchema = z
       .describe(
         'Line height in user units; falls back to `font.size × 1.2` when omitted.',
       ),
+    maxTextWidth: z
+      .number()
+      .finite()
+      .positive()
+      .optional()
+      .describe(
+        'Max line width before wrapping (user units). The text box shrinks to the actual longest line for short text — this is a wrap threshold, NOT a fixed paragraph width. Western text wraps on word boundaries, CJK per character. Omitted = no auto-wrap (only manual line breaks).',
+      ),
     color: z
       .string()
       .optional()

@@ -6,12 +6,77 @@ import { BUILTIN_SHAPES } from '../shapes';
 import type { ShapeDefinition, ShapeStyle } from '../shapes';
 import type { NameStack } from './name-stack';
 import { resolvePosition } from './position';
-import type { TextMeasurer } from './text-metrics';
+import type { FontSpec, TextMeasurer } from './text-metrics';
 
 const DEFAULT_FONT_SIZE = 14;
 const DEFAULT_PADDING = 8;
 const DEFAULT_LINE_HEIGHT_FACTOR = 1.2;
 const DEG_TO_RAD = Math.PI / 180;
+
+/** CJK / fullwidth ranges: break per-character (no whitespace needed) */
+const isCjk = (ch: string): boolean => {
+  const c = ch.codePointAt(0) ?? 0;
+  return (
+    (c >= 0x3000 && c <= 0x303f) ||
+    (c >= 0x3040 && c <= 0x30ff) ||
+    (c >= 0x3400 && c <= 0x4dbf) ||
+    (c >= 0x4e00 && c <= 0x9fff) ||
+    (c >= 0xf900 && c <= 0xfaff) ||
+    (c >= 0xff00 && c <= 0xffef)
+  );
+};
+/**
+ * 按 maxWidth 贪心折行：西文按词（空白分割）、CJK 按字；长不可断 token 溢出不硬断
+ * @description 用注入的 measureText 度量；连续空白归一为单空格分隔。空文本返回 [''].
+ */
+const wrapText = (
+  text: string,
+  font: FontSpec,
+  maxWidth: number,
+  measure: TextMeasurer,
+): Array<string> => {
+  // 拆 unit：空白段 → 单空格分隔符；非空白段把 CJK 拆单字、非 CJK 连续 run 保整
+  const units: Array<string> = [];
+  for (const seg of text.split(/(\s+)/)) {
+    if (seg === '') continue;
+    if (/^\s+$/.test(seg)) {
+      units.push(' ');
+      continue;
+    }
+    let run = '';
+    for (const ch of seg) {
+      if (isCjk(ch)) {
+        if (run) {
+          units.push(run);
+          run = '';
+        }
+        units.push(ch);
+      } else {
+        run += ch;
+      }
+    }
+    if (run) units.push(run);
+  }
+
+  const lines: Array<string> = [];
+  let cur = '';
+  for (const u of units) {
+    if (u === ' ') {
+      if (cur !== '') cur += ' ';
+      continue;
+    }
+    const candidate = cur === '' ? u : cur + u;
+    // cur 为空时即使溢出也接受（单 token 宽于阈值 → 溢出不硬断）
+    if (cur !== '' && measure(candidate, font).width > maxWidth) {
+      lines.push(cur.trimEnd());
+      cur = u;
+    } else {
+      cur = candidate;
+    }
+  }
+  if (cur.trimEnd() !== '') lines.push(cur.trimEnd());
+  return lines.length > 0 ? lines : [''];
+};
 /** Node label 与 node 边界默认距离（TikZ 默认 0pt 视觉太贴） */
 const DEFAULT_LABEL_DISTANCE = 12;
 /** dashed 预设：4 px 实线 + 2 px 间隙循环 */
@@ -285,39 +350,43 @@ export const layoutNode = (
         ? [node.text]
         : node.text;
 
-  // 每行解析覆盖样式 + 度量；仅写真正被覆盖的字段，未填字段由下游走块级默认
+  // 折行阈值（user units，受 x 缩放）；未给 = 不折行
+  const maxTextWidth = node.maxTextWidth !== undefined ? node.maxTextWidth * sx : undefined;
+  // 每行解析覆盖样式 + 度量；maxTextWidth 给定时按词 / 字贪心折行（折出物理行继承该逻辑行样式）
   let textWidth = 0;
   let textHeight = 0;
   let lines: Array<TextLine> | undefined;
   if (rawLines) {
-    lines = rawLines.map(spec => {
+    lines = [];
+    for (const spec of rawLines) {
       const isObj = typeof spec !== 'string';
       const text = isObj ? spec.text : spec;
       // 行级 font 与块级合并：行级优先，没有走块级（透传 undefined）
       const lineFont = isObj ? spec.font : undefined;
-      const lineSize = lineFont?.size ?? fontSize;
-      const lineFamily = lineFont?.family ?? fontFamily;
-      const lineWeight = lineFont?.weight ?? fontWeight;
-      const lineStyle = lineFont?.style ?? fontStyle;
-      const m = measureText(text, {
-        size: lineSize,
-        family: lineFamily,
-        weight: lineWeight,
-        style: lineStyle,
-      });
-      if (m.width > textWidth) textWidth = m.width;
-      const out: TextLine = { text };
-      // 行级与块级不同时才写出（精简 emit JSON，明确下游 fallback）
-      if (isObj) {
-        if (spec.fill !== undefined) out.fill = spec.fill;
-        if (spec.opacity !== undefined) out.opacity = spec.opacity;
-        if (lineFont?.size !== undefined) out.fontSize = lineFont.size;
-        if (lineFont?.family !== undefined) out.fontFamily = lineFont.family;
-        if (lineFont?.weight !== undefined) out.fontWeight = lineFont.weight;
-        if (lineFont?.style !== undefined) out.fontStyle = lineFont.style;
+      const font: FontSpec = {
+        size: lineFont?.size ?? fontSize,
+        family: lineFont?.family ?? fontFamily,
+        weight: lineFont?.weight ?? fontWeight,
+        style: lineFont?.style ?? fontStyle,
+      };
+      const physical =
+        maxTextWidth !== undefined ? wrapText(text, font, maxTextWidth, measureText) : [text];
+      for (const ptext of physical) {
+        const m = measureText(ptext, font);
+        if (m.width > textWidth) textWidth = m.width;
+        const out: TextLine = { text: ptext };
+        // 行级与块级不同时才写出（精简 emit JSON，明确下游 fallback）
+        if (isObj) {
+          if (spec.fill !== undefined) out.fill = spec.fill;
+          if (spec.opacity !== undefined) out.opacity = spec.opacity;
+          if (lineFont?.size !== undefined) out.fontSize = lineFont.size;
+          if (lineFont?.family !== undefined) out.fontFamily = lineFont.family;
+          if (lineFont?.weight !== undefined) out.fontWeight = lineFont.weight;
+          if (lineFont?.style !== undefined) out.fontStyle = lineFont.style;
+        }
+        lines.push(out);
       }
-      return out;
-    });
+    }
     textHeight = lines.length * lineHeight;
   }
 
