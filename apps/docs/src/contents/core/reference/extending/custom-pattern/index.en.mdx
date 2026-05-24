@@ -1,0 +1,49 @@
+---
+title: Custom Patterns
+description: pattern.shape is an open string; beyond the built-in lines / dots / grid, register any motif with a PatternDefinition — emit produces MarkerPrimitive geometry in tile-local coordinates (emit-in-compile) into a Scene resource, and the adapter materializes the <pattern>.
+---
+
+In a `fill` `PaintSpec`, `pattern.shape` is an **open string**: beyond the three built-in motifs (`lines` hatching / `dots` / `grid`), you can register your own pattern. The registry mirrors the [shape registry](/core/reference/extending/shape-registry) / [custom arrows](/core/reference/extending/custom-arrow) — the 3 built-ins are themselves registry entries, with no special privilege.
+
+Registration goes through `CompileOptions.patterns` (in React, `<Layout patterns={...}>`): the IR's `fill={{ type:'pattern', shape:'...' }}` still only stores a string name; the motif geometry is injected here. Unregistered names throw at compile time (with the list of available names); overriding a built-in emits a `PATTERN_OVERRIDES_BUILTIN` warning.
+
+## Registering a motif
+
+Below registers a `cross` motif, clearly distinct from the three built-ins:
+
+<ComponentPreview name="custom-pattern-basic" size="sm" />
+
+A `PatternDefinition` is a plain object (not part of the IR, can be returned by a factory):
+
+| Field | Type | Default | Description |
+| --- | --- | --- | --- |
+| `emit` | `(ctx) => Iterable<MarkerPrimitive>` | required | Produces motif geometry in the tile-local coordinate system (`0..size`) |
+| `defaultSize` | `number` | `8` | Default tile period (user units); overridden by `pattern.size` |
+
+The `PatternEmitContext` passed to `emit`:
+
+| Field | Type | Description |
+| --- | --- | --- |
+| `size` | `number` | Resolved tile period (`spec.size ?? defaultSize ?? 8`) |
+| `color` | `string` | Motif color; defaults to `currentColor` (inherits the svg color, theme-reactive) |
+| `background` | `string?` | Tile background (omitted = transparent) |
+| `lineWidth` | `number?` | Stroke width; when `undefined` each motif picks its own default (lines / grid use 1, dots use `size/5` for the radius) |
+| `round` | `(n) => number` | Precision rounding (same function as compile / render) |
+
+## emit and the tile
+
+`emit` runs at **compile time** (same place as a shape's or arrow's emit): the resulting motif `MarkerPrimitive[]`, together with the tile params (`size` / `background` / `rotation`), is resolved into a `ResolvedPatternTile` and written into the Scene resource (`SceneResource.tile`); the adapter only **materializes** the `<pattern>`, knowing nothing about the pattern registry and recomputing no geometry.
+
+The motif geometry reuses the [custom arrows](/core/reference/extending/custom-arrow) `MarkerPrimitive` **narrow subset** — `path` / `ellipse` / `rect` / `group`, with `fill` / `stroke` limited to a color string or `{ kind:'contextStroke' }`; `text`, external `resourceRef`, and functions are forbidden; coordinates must be finite (non-finite throws at compile, keeping the Scene JSON-serializable).
+
+## Size and color
+
+`pattern.size` overrides `defaultSize` to control motif density; `pattern.color` overrides the motif color, defaulting to `currentColor` to follow the svg color. The same `pattern` spec used in multiple places dedups to one resource / one tile; different `size` values produce separate resources.
+
+<ComponentPreview name="custom-pattern-size" size="sm" />
+
+<Comparison target="tikz" title="Custom patterns">
+
+TikZ declares patterns at the PGF layer with `\pgfdeclarepatternformonly`. retikz lands the same idea as a renderer-agnostic `PatternDefinition`: tile geometry is described with structured `MarkerPrimitive`s, emit-in-compile writes it into the Scene resource, any adapter can materialize it, and third parties can publish `@retikz/patterns-*` packages.
+
+</Comparison>

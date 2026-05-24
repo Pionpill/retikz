@@ -1,0 +1,49 @@
+---
+title: 自定义图案
+description: pattern.shape 是开放字符串；内置 lines / dots / grid 之外，用 PatternDefinition 注册任意 motif——emit 在局部 tile 坐标产 MarkerPrimitive，emit-in-compile 写进 Scene 资源，adapter 物化 <pattern>。
+---
+
+`fill` 的 `PaintSpec` 里 `pattern.shape` 是**开放字符串**:内置三种 motif(`lines` 斜纹 / `dots` 网点 / `grid` 网格)之外,可以注册自己的图案。注册面对齐 [自定义形状](/core/reference/extending/shape-registry) / [自定义箭头](/core/reference/extending/custom-arrow)——内置 3 种本身也是注册项,没有特权。
+
+注册靠 `CompileOptions.patterns`(React 里是 `<Layout patterns={...}>`):IR 的 `fill={{ type:'pattern', shape:'...' }}` 仍只写字符串名,motif 几何定义在此注入。未注册名编译期报错(带可用名列表);同名覆盖内置发 `PATTERN_OVERRIDES_BUILTIN` 警告。
+
+## 注册一个 motif
+
+下面注册一个 `cross`——十字图案,与内置三种明显不同:
+
+<ComponentPreview name="custom-pattern-basic" size="sm" />
+
+`PatternDefinition` 是普通对象(不进 IR、可由工厂返回):
+
+| 字段 | 类型 | 默认值 | 描述 |
+| --- | --- | --- | --- |
+| `emit` | `(ctx) => Iterable<MarkerPrimitive>` | 必填 | 在局部 tile 坐标系(`0..size`)产 motif 几何 |
+| `defaultSize` | `number` | `8` | tile 周期默认(user units);用户 `pattern.size` 覆盖 |
+
+`emit` 拿到的 `PatternEmitContext`:
+
+| 字段 | 类型 | 描述 |
+| --- | --- | --- |
+| `size` | `number` | 解析后 tile 周期(`spec.size ?? defaultSize ?? 8`) |
+| `color` | `string` | motif 主色;缺省 `currentColor`(继承 svg color,主题反应) |
+| `background` | `string?` | tile 背景(缺省透明) |
+| `lineWidth` | `number?` | 描边宽;`undefined` 时各 motif 自定缺省(lines / grid 用 1,dots 半径用 `size/5`) |
+| `round` | `(n) => number` | 精度取整(与 compile / render 同一函数) |
+
+## emit 与 tile
+
+`emit` 在 **compile 阶段**调用(与 shape / arrow 的 emit 同位):产出的 motif `MarkerPrimitive[]` 连同 tile 参数(`size` / `background` / `rotation`)解析成 `ResolvedPatternTile`,写进 Scene 资源(`SceneResource.tile`);adapter 只**物化** `<pattern>`,不认识 pattern 注册表、也不重算几何。
+
+motif 几何复用 [自定义箭头](/core/reference/extending/custom-arrow) 的 `MarkerPrimitive` **窄子集**——`path` / `ellipse` / `rect` / `group`,`fill` / `stroke` 限纯色串或 `{ kind:'contextStroke' }`;禁 `text` / 外部 `resourceRef` / 函数;坐标须 finite(非 finite 编译期报错,守 Scene JSON 可序列化)。
+
+## size 与颜色
+
+`pattern.size` 覆盖 `defaultSize` 控制图案疏密;`pattern.color` 覆盖 motif 主色,缺省 `currentColor` 跟随 svg color。相同 `pattern` spec 多处使用 → 去重为一个资源 / 一个 tile;`size` 不同 → 各自独立资源。
+
+<ComponentPreview name="custom-pattern-size" size="sm" />
+
+<Comparison target="tikz" title="自定义图案">
+
+TikZ 用 `\pgfdeclarepatternformonly` 在 PGF 层声明图案。retikz 把它落成 renderer-agnostic 的 `PatternDefinition`:tile 几何用结构化 `MarkerPrimitive` 描述,emit-in-compile 写进 Scene 资源,任何 adapter 都能物化,第三方可发 `@retikz/patterns-*` 包。
+
+</Comparison>

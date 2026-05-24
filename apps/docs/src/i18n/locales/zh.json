@@ -63,6 +63,7 @@
     "refParser": "解析器（Parser）",
     "refShapeRegistry": "自定义形状（Shape）",
     "refCustomArrow": "自定义箭头（Arrow）",
+    "refCustomPattern": "自定义图案（Pattern）",
     "refPathGenerator": "路径生成器（Generator）"
   },
   "blog": {

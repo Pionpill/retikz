@@ -63,6 +63,7 @@
     "refParser": "Parser",
     "refShapeRegistry": "Custom Shapes",
     "refCustomArrow": "Custom Arrows",
+    "refCustomPattern": "Custom Patterns",
     "refPathGenerator": "Path Generators"
   },
   "blog": {
