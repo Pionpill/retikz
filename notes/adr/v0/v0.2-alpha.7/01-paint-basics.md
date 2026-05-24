@@ -64,7 +64,7 @@ export type Scene = {
 
 1. **`PaintValue` = paint 属性通用取值（fill / stroke 共用，非 fill-only，评审 P1）**：`string`（纯色）/ `{ kind:'resourceRef', id }`（资源引用）/ `{ kind:'contextStroke' }`（继承描边）。本段 primitive `fill?: PaintValue`；alpha.8 arrow 的 stroke / fill 同用此类型。命名 + `.describe` / 注释按"可用于 fill 与 stroke 的 paint value"写，避免 alpha.8 像借用 fill-only 类型。
 2. **`SceneResource` discriminated**：本段只 `{ kind:'paint', id, spec }`；alpha.9 加 `{ kind:'clip', ... }`。`Scene.resources?: Array<SceneResource>`，无资源时省略。
-3. **`PaintSpec` 仅 gradient（评审 P2#1 分阶段）**：`linearGradient` / `radialGradient`，纯 JSON；**pattern / image 顺延**（[ADR-04](./04-pattern-image-deferred.md) 占位，本段不实现）。
+3. **`PaintSpec` 分阶段（评审 P2#1）**：本 ADR 定 `linearGradient` / `radialGradient` 基础；**pattern / image 由 [ADR-04](./04-pattern-image-deferred.md) 实现**（wiring 落地后管线成本归零，讨论后 alpha.7 一并做，image 暂 URL-only）。
 4. **去重 + 稳定 id 在 core**：`compile/paint.ts` 对 `PaintSpec` 结构化深比较合并、派稳定 id（hash / 递增序号，见待决策）；primitive 写 `resourceRef`。
 5. **纯色与 `var()` 不进资源表**：`fill` 是 `string` 时不收集；`var(--x)` 仍走 react inline style（现 `paintStyle` 逻辑不动）。
 6. **scope 级联 PaintSpec**：alpha.2 的 `fill` 级联默认值若是 `PaintSpec`，继承链解析后再进资源收集（去重兜底，避免每继承点重复收集）。
@@ -120,7 +120,7 @@ export type Scene = {
 
 ## 不在本 ADR 范围
 
-- **pattern / image**→ [ADR-04](./04-pattern-image-deferred.md)（顺延占位，本段不实现）。
+- **pattern / image**→ [ADR-04](./04-pattern-image-deferred.md)（复用本 ADR 基建实现）。
 - **maxTextWidth 折行**→ [ADR-02](./02-max-text-width.md)；**pin 引脚**→ [ADR-03](./03-pin.md)。
 - **arrow 颜色继承用 `contextStroke`**→ alpha.8 ADR-01（本篇只定 `PaintValue` 词汇表，不产 arrow marker）。
 - **clip 资源**→ alpha.9 ADR-02（本篇只把 `SceneResource` 定成 discriminated，clip 分支在 alpha.9 加）。

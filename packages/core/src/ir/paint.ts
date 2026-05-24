@@ -46,10 +46,47 @@ export const PaintSpecSchema = z
           .describe('Radius in objectBoundingBox units (0..1); omitted = 0.5'),
       })
       .describe('Radial gradient paint server'),
+    z
+      .object({
+        type: z.literal('pattern'),
+        shape: z
+          .enum(['lines', 'dots', 'grid'])
+          .describe('Pattern motif: `lines` (hatching) / `dots` / `grid` (crosshatch)'),
+        color: z.string().optional().describe('Motif color; any CSS color, defaults to `currentColor`'),
+        background: z.string().optional().describe('Tile background fill; omitted = transparent'),
+        size: z
+          .number()
+          .finite()
+          .positive()
+          .optional()
+          .describe('Tile period in user units (line gap / dot spacing); default 8'),
+        lineWidth: z
+          .number()
+          .finite()
+          .positive()
+          .optional()
+          .describe('Line / grid stroke width; also drives dot radius. Default 1'),
+        rotation: z
+          .number()
+          .finite()
+          .optional()
+          .describe('Rotate the whole pattern, in degrees'),
+      })
+      .describe('Pattern paint server (hatching / dots / grid)'),
+    z
+      .object({
+        type: z.literal('image'),
+        href: z.string().min(1).describe('Image URL (http(s) or data URI)'),
+        fit: z
+          .enum(['fill', 'contain', 'cover'])
+          .optional()
+          .describe('How the image maps to the shape: `fill` (stretch) / `contain` / `cover`. Default `cover`'),
+      })
+      .describe('Image paint server (fills the shape with an image)'),
   ])
-  .describe('Paint server spec (gradient). Solid color stays a plain string on `fill` / `stroke`; pattern / image deferred.');
+  .describe('Paint server spec: gradient / pattern / image. Solid color stays a plain string on `fill` / `stroke`.');
 
 /** 渐变 stop 类型 */
 export type IRGradientStop = z.infer<typeof GradientStopSchema>;
-/** Paint server 规格类型（渐变） */
+/** Paint server 规格类型（渐变 / 图案 / 图片） */
 export type IRPaintSpec = z.infer<typeof PaintSpecSchema>;

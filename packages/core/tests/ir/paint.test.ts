@@ -126,6 +126,47 @@ describe('PaintSpecSchema — 错误路径', () => {
   });
 });
 
+describe('PaintSpecSchema — pattern', () => {
+  it('接受 lines / dots / grid（仅 shape 必填）', () => {
+    for (const shape of ['lines', 'dots', 'grid'] as const) {
+      expect(() => PaintSpecSchema.parse({ type: 'pattern', shape })).not.toThrow();
+    }
+  });
+
+  it('接受全字段（color / background / size / lineWidth / rotation）', () => {
+    expect(() =>
+      PaintSpecSchema.parse({
+        type: 'pattern',
+        shape: 'lines',
+        color: 'currentColor',
+        background: '#eee',
+        size: 6,
+        lineWidth: 1.5,
+        rotation: 45,
+      }),
+    ).not.toThrow();
+  });
+
+  it('未知 shape / size 非正 被拒', () => {
+    expect(() => PaintSpecSchema.parse({ type: 'pattern', shape: 'zigzag' })).toThrow();
+    expect(() => PaintSpecSchema.parse({ type: 'pattern', shape: 'dots', size: 0 })).toThrow();
+  });
+});
+
+describe('PaintSpecSchema — image', () => {
+  it('接受 href + 可选 fit', () => {
+    expect(() => PaintSpecSchema.parse({ type: 'image', href: 'https://x/y.png' })).not.toThrow();
+    for (const fit of ['fill', 'contain', 'cover'] as const) {
+      expect(() => PaintSpecSchema.parse({ type: 'image', href: 'a.png', fit })).not.toThrow();
+    }
+  });
+
+  it('空 href / 未知 fit 被拒', () => {
+    expect(() => PaintSpecSchema.parse({ type: 'image', href: '' })).toThrow();
+    expect(() => PaintSpecSchema.parse({ type: 'image', href: 'a.png', fit: 'tile' })).toThrow();
+  });
+});
+
 describe('PaintSpecSchema — JSON 可序列化', () => {
   it('parse 结果 round-trip JSON 不丢失', () => {
     const spec = {

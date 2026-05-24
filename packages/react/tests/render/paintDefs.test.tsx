@@ -89,4 +89,25 @@ describe('PaintDefs — 渐变物化', () => {
     expect(g.props.cy).toBe(0.5);
     expect(g.props.r).toBe(0.5);
   });
+
+  it('pattern：<pattern> userSpaceOnUse + tile size + 旋转', () => {
+    const [p] = childrenOf([
+      { kind: 'paint', id: 'paint-1', spec: { type: 'pattern', shape: 'lines', size: 6, rotation: 45 } },
+    ]);
+    expect(p.type).toBe('pattern');
+    expect(p.props.patternUnits).toBe('userSpaceOnUse');
+    expect(p.props.width).toBe(6);
+    expect(p.props.patternTransform).toBe('rotate(45)');
+  });
+
+  it('image：<pattern> 套 <image>，fit cover → slice', () => {
+    const [p] = childrenOf([
+      { kind: 'paint', id: 'paint-1', spec: { type: 'image', href: 'a.png' } },
+    ]);
+    expect(p.type).toBe('pattern');
+    const img = p.props.children as AnyEl;
+    expect(img.type).toBe('image');
+    expect(img.props.href).toBe('a.png');
+    expect(img.props.preserveAspectRatio).toBe('xMidYMid slice');
+  });
 });
