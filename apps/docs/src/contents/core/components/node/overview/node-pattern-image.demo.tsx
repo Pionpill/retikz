@@ -7,30 +7,39 @@ const IMG =
 
 /**
  * pattern / image 填充
- * @description 左：斜线 pattern（rotation 45）；中：网点 pattern；右：image 填充（fit cover，data URI）。
+ * @description 斜线 lines（rotation 45）/ 网点 dots / 网格 grid 三种 pattern motif + image 填充（fit cover，data URI）。
  */
 const Demo: FC = () => (
-  <Layout width={520} height={180}>
+  <Layout width={640} height={180}>
     <Node
       id="hatch"
-      position={[-165, 0]}
+      position={[-225, 0]}
       shape="rectangle"
-      minimumWidth={100}
+      minimumWidth={96}
       minimumHeight={80}
       stroke="#888888"
       fill={{ type: 'pattern', shape: 'lines', color: '#1466a8', rotation: 45 }}
     />
     <Node
       id="dots"
-      position={[-30, 0]}
+      position={[-75, 0]}
       shape="circle"
       minimumSize={84}
       stroke="#888888"
       fill={{ type: 'pattern', shape: 'dots', color: '#16a34a', size: 10 }}
     />
     <Node
+      id="grid"
+      position={[75, 0]}
+      shape="rectangle"
+      minimumWidth={96}
+      minimumHeight={80}
+      stroke="#888888"
+      fill={{ type: 'pattern', shape: 'grid', color: '#9333ea', size: 10 }}
+    />
+    <Node
       id="img"
-      position={[120, 0]}
+      position={[225, 0]}
       shape="circle"
       minimumSize={84}
       stroke="#888888"
