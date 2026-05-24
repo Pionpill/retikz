@@ -1,7 +1,54 @@
 import { z } from 'zod';
 import { PaintSpecSchema } from '../paint';
-import { ArrowDetailSchema } from './arrow';
+import { ArrowDetailSchema, ArrowEndDetailSchema } from './arrow';
 import { StepSchema } from './step';
+
+/**
+ * 路径整条缩放 schema：等比 number 或非等比 {x,y}
+ * @description 与 Node scale 字段对齐；number = 等比，{x,y} = 各轴独立。全部要求有限正数。
+ */
+export const PathScaleSchema = z
+  .union([
+    z.number().finite().positive(),
+    z
+      .object({
+        x: z
+          .number()
+          .finite()
+          .positive()
+          .describe('Scale factor on the x axis (finite, positive).'),
+        y: z
+          .number()
+          .finite()
+          .positive()
+          .describe('Scale factor on the y axis (finite, positive).'),
+      })
+      .describe('Anisotropic scale with independent x / y factors.'),
+  ])
+  .describe(
+    'Whole-path scale: a single finite positive number for uniform scaling, or an { x, y } object for anisotropic scaling. Applied around the path bounding-box center together with rotate.',
+  );
+
+/** 路径整条缩放类型：number（等比）或 {x,y}（非等比） */
+export type IRPathScale = z.infer<typeof PathScaleSchema>;
+
+/**
+ * 路径中段标记 schema（首批仅箭头）
+ * @description `kind:'arrow'` 判别符 + 复用 ArrowEndDetail 视觉子集（shape / scale / length / width / color / fill / opacity / lineWidth）；
+ *   方向由该处路径切线决定，shape 是已注册箭头名（不是 `->` 方向记号）。后续可扩展更多 mark kind。
+ */
+export const ArrowMarkSchema = ArrowEndDetailSchema.extend({
+  kind: z
+    .literal('arrow')
+    .describe(
+      'Discriminator marking this mark as an arrow tip. Only `arrow` is supported in the first batch; other kinds are rejected by schema.',
+    ),
+}).describe(
+  'Arrow mark placed along the path: an arrow tip whose direction follows the path tangent at the mark position. Reuses the per-end arrow visual subset (shape / scale / length / width / color / fill / opacity / lineWidth); `shape` is a registered arrow name, NOT a `->` direction token.',
+);
+
+/** 路径中段箭头标记类型 */
+export type IRArrowMark = z.infer<typeof ArrowMarkSchema>;
 
 export const PathSchema = z
   .object({
@@ -105,6 +152,35 @@ export const PathSchema = z
       .optional()
       .describe(
         'Explicit stacking order among sibling IR children. Higher draws on top. Omitted = 0 = source order. Sorting is stable: same zIndex keeps source order. Scoped per group (a path inside a scope only restacks within that scope).',
+      ),
+    rotate: z
+      .number()
+      .finite()
+      .optional()
+      .describe(
+        'Rotate the whole path by this many degrees about its bounding-box center (positive = visually clockwise under screen y-down). Equivalent to wrapping the path in a Scope with a rotate transform centered on the path. Endpoints are resolved in the current scope first; the rotation wraps the resulting geometry.',
+      ),
+    scale: PathScaleSchema.optional().describe(
+      'Scale the whole path about its bounding-box center: a finite positive number (uniform) or { x, y } (anisotropic). Applied together with rotate around the same center.',
+    ),
+    marks: z
+      .array(
+        z.object({
+          pos: z
+            .number()
+            .min(0)
+            .max(1)
+            .describe(
+              'Normalized position along the path in [0, 1] (0 = start, 1 = end). Values outside [0, 1] are rejected by schema. The geometric meaning of the parameter matches step labels: arc length for line/step, Bezier parameter for curve/cubic/bend.',
+            ),
+          mark: ArrowMarkSchema.describe(
+            'The mark to place at this position; currently an arrow tip oriented by the path tangent.',
+          ),
+        }),
+      )
+      .optional()
+      .describe(
+        'Marks placed along the path at normalized positions; each is rendered at its position with its direction taken from the path tangent there. First batch supports arrow marks only.',
       ),
     children: z
       .array(StepSchema)

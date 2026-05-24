@@ -66,6 +66,9 @@ export const PATH_FIELDS = [
   'fillOpacity',
   'drawOpacity',
   'zIndex',
+  'rotate',
+  'scale',
+  'marks',
 ] as const satisfies ReadonlyArray<keyof IRPath>;
 
 type _PathFieldsCheck = AssertEqual<

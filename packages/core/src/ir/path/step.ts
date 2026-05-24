@@ -170,11 +170,36 @@ export const BendStepSchema = z
     to: TargetSchema.describe('Destination point of the bend'),
     bendDirection: z
       .enum(['left', 'right'])
-      .describe('Bend side relative to from→to direction (visual left vs right of the chord)'),
+      .optional()
+      .describe(
+        'Bend side relative to from→to direction (visual left vs right of the chord). Optional: provide bendDirection/bendAngle for a symmetric bend, or outAngle/inAngle for an asymmetric curve / self-loop (out/in takes precedence when both are given).',
+      ),
     bendAngle: z
       .number()
       .optional()
       .describe('Bend angle in degrees; default 30 (matches TikZ `bend left` without explicit angle)'),
+    outAngle: z
+      .number()
+      .finite()
+      .optional()
+      .describe(
+        'Out angle in degrees at the start point (TikZ `out=`). Together with inAngle, compiles to a cubic Bezier whose start control point lies along this direction. When out/in angles are given they take precedence over bendDirection / bendAngle.',
+      ),
+    inAngle: z
+      .number()
+      .finite()
+      .optional()
+      .describe(
+        'In angle in degrees at the end point (TikZ `in=`). Together with outAngle, compiles to a cubic Bezier whose end control point lies along this direction.',
+      ),
+    looseness: z
+      .number()
+      .finite()
+      .positive()
+      .optional()
+      .describe(
+        'Curve looseness factor controlling control-point distance from the endpoints (TikZ `looseness=`); default ~1. Larger values push the control points further out for a slacker curve. Also scales the default self-loop size when from equals to.',
+      ),
     label: StepLabelSchema.optional().describe('Edge label attached to this bend segment'),
   })
   .describe('Bend action: shorthand for an arc-like cubic; control points computed at compile time');
