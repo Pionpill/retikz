@@ -9,7 +9,7 @@
 | [`architecture/`](./architecture) | 长期架构文档；少改、不带日期 | 永久（重大架构调整时**更新原文**，不另起新文） | 主题名，如 `DESIGN.md` |
 | [`adr/`](./adr) | 单点架构决策记录（Architecture Decision Records） | 永久、不可变；被推翻就写新 ADR 标 `Supersedes #N` | `NNNN-kebab-case-标题.md`，编号递增 |
 | [`analysis/`](./analysis) | 一次性研究 / 对比 / gap 分析 | 长期保留作历史参考，但不再更新 | `YYYY-MM-DD-kebab-case-标题.md` |
-| [`plans/`](./plans) | 临时实施方案、迁移步骤 | **完工后保留留档**（标记完成、不再更新；摘要进 roadmap 跟踪段） | 版本专属：`v<MAJOR>/v<MAJOR>.<MINOR>-<channel>.<N>.md`（plan 比 adr 粒度粗，单文件就够）；跨版本草案：顶层 `kebab-case-标题.md` |
+| [`plans/`](./plans) | 实施方案、迁移步骤、版本 TODO | 活跃期保留；完工后把长期信息沉淀到 roadmap / changelog / ADR / docs，执行稿可删除 | 版本专属：`v<MAJOR>/v<MAJOR>.<MINOR>-<channel>.<N>.md`（plan 比 adr 粒度粗，单文件就够）；跨版本草案：顶层 `kebab-case-标题.md` |
 
 ## 当前文档
 
@@ -31,18 +31,18 @@
 
 详细索引见 [`plans/README.md`](./plans/README.md)。当前活跃 plan：
 
-- [`v0/roadmap.md`](./plans/v0/roadmap.md)：v0 总路线（v0.1 → v0.4 → v0 收尾）含 v0.1 各 alpha 详细拆分
-- [`v0/v0.1-beta.1.md`](./plans/v0/v0.1-beta.1.md)：v0.1.0-beta.1 非破坏性优化 TODO 列表
-- [`docs-ai-chat-panel.md`](./plans/docs-ai-chat-panel.md)：文档站侧边栏 AI 聊天面板设计讨论（草案 / 待续）；BYOK 浏览器直连方向
+- [`v0/roadmap.md`](./plans/v0/roadmap.md)：v0 总路线与跨 minor 追踪
+- [`v0/v0.2.md`](./plans/v0/v0.2.md)：v0.2 总计划与已完成 alpha / beta 跟踪
+- [`v0/v0.2-beta.1.md`](./plans/v0/v0.2-beta.1.md)：v0.2 beta.1 优化窗口收口记录
 
 ## 写文档前先选生命周期
 
 1. 是"为什么这么做"的单点决策？→ `adr/`，开新编号
 2. 是会持续更新的架构总图？→ `architecture/`
 3. 是一次性的研究 / 对比，写完不再改？→ `analysis/`，加日期
-4. 是"接下来要做什么"的实施方案？→ `plans/`，完工后保留留档
+4. 是"接下来要做什么"的实施方案？→ `plans/`，活跃期保留；完工后把结论沉淀到长期文档，执行稿可删
 
-**有歧义就当 plans 写**——plan 颗粒粗、变化快，完工后留档作实施记录即可；别把临时方案塞进永久架构目录（architecture / adr），那才是 CORE-REFACTOR / REACT-ADAPTER 的悲剧。
+**有歧义就当 plans 写**——plan 颗粒粗、变化快，适合承载探索期和执行期的不稳定信息；完工后只保留仍有检索价值的版本级计划，纯执行稿 / 迁移脚本 / 已落地 spec 应删掉或把摘要并入 roadmap / changelog / ADR。别把临时方案塞进永久架构目录（architecture / adr），那才是 CORE-REFACTOR / REACT-ADAPTER 的悲剧。
 
 ## superpowers/
 
