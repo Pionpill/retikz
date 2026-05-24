@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { type IRClipSpec, ClipSpecSchema } from './clip';
+import { ClipSpecSchema, type IRClipSpec } from './clip';
 import type { IRCoordinate } from './coordinate';
 import { FontSchema } from './font';
 import { type IRPaintSpec, PaintSpecSchema } from './paint';
