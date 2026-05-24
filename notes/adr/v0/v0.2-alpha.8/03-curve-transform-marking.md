@@ -1,6 +1,6 @@
 # ADR-03：out/in 曲线 + self-loop / 路径整体变换 / 中段 marking（三搭车项）
 
-- 状态：Proposed
+- 状态：Accepted
 - 决策日期：2026-05-24
 - 关联：[v0.2-alpha.8 plan §第三~五部分](../../../plans/v0/v0.2-alpha.8.md) · [tikz-gap-analysis §2 Path / §3 Step](../../../analysis/2026-05-07-tikz-gap-analysis.md) · 本 milestone [ADR-01](./01-arrow-definition.md)（marking 复用 arrow marker）/ [ADR-02](./02-path-generator-definition.md) · [alpha.1 Scope transform](../v0.2-alpha.1/)（路径变换复用）
 
