@@ -61,7 +61,9 @@
     "refCompile": "Compile",
     "refScenePrimitive": "Primitive",
     "refParser": "Parser",
-    "refShapeRegistry": "Custom Shapes"
+    "refShapeRegistry": "Custom Shapes",
+    "refCustomArrow": "Custom Arrows",
+    "refPathGenerator": "Path Generators"
   },
   "blog": {
     "label": "Blog",

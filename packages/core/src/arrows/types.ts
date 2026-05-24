@@ -1,16 +1,16 @@
-import type { MarkerPrimitive } from '../primitive/marker';
-import type { PaintValue } from '../primitive/paint';
+import type { MarkerFill, MarkerPrimitive } from '../primitive/marker';
 
 /**
  * emit 拿到的运行时上下文
  * @description framework 把宿主 path 已解析的颜色 / 描边粗细传进来；def 据此产 marker 几何。
- *   `stroke` 无 override 时 = `{ kind: 'contextStroke' }`（继承 path stroke，主题反应不冻结）。
+ *   `stroke` / `fill` 是 `MarkerFill`（纯色串或 `{ kind: 'contextStroke' }`，无 override 时取 contextStroke
+ *   继承 path stroke、主题反应不冻结）——可直接当 marker primitive 的 `fill` / `stroke` 用，无需收窄。
  */
 export type ArrowEmitContext = {
   /** 描边颜色（无 override 时 = `{ kind: 'contextStroke' }`，继承 path stroke） */
-  stroke: PaintValue;
+  stroke: MarkerFill;
   /** 填充颜色（实心箭头主导色；空心箭头由 framework 据 `hollow` 处理后传入） */
-  fill: PaintValue;
+  fill: MarkerFill;
   /** 描边粗细（marker 局部坐标，user units）；空心箭头据此画外轮廓 */
   lineWidth: number;
   /** 精度取整函数（与 compile/render 同一 round，保几何一致） */

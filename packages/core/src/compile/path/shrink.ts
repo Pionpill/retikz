@@ -7,7 +7,7 @@ import {
   type IRPosition,
 } from '../../ir';
 import type { ArrowDefinition, ArrowEmitContext } from '../../arrows';
-import type { ArrowEndSpec, MarkerPrimitive, PaintValue, PathCommand } from '../../primitive';
+import type { ArrowEndSpec, MarkerFill, MarkerPrimitive, PathCommand } from '../../primitive';
 import { shiftToward } from './anchor';
 
 /** 有效 arrow 表：内置 7 + 注入（同名注入覆盖内置） */
@@ -224,9 +224,9 @@ const buildEmitContext = (
   geometry: ResolvedArrowGeometry,
   round: (n: number) => number,
 ): ArrowEmitContext => {
-  const contextStroke: PaintValue = { kind: 'contextStroke' };
-  const stroke: PaintValue = visual.color ?? contextStroke;
-  const fill: PaintValue = geometry.def.hollow
+  const contextStroke: MarkerFill = { kind: 'contextStroke' };
+  const stroke: MarkerFill = visual.color ?? contextStroke;
+  const fill: MarkerFill = geometry.def.hollow
     ? contextStroke
     : (visual.fill ?? visual.color ?? contextStroke);
   return { stroke, fill, lineWidth: geometry.lineWidth, round };

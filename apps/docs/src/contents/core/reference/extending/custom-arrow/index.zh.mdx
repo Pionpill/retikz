@@ -1,0 +1,64 @@
+---
+title: 自定义箭头
+description: arrow shape 是开放字符串；内置 7 种之外，用 ArrowDefinition 注册任意箭头——emit 在局部坐标产 MarkerPrimitive 几何，颜色经 contextStroke 跟随 path 描边。
+---
+
+`arrowDetail.shape` 是**开放字符串**：内置 7 种（`normal` / `open` / `stealth` / `diamond` / `openDiamond` / `circle` / `openCircle`）之外，可以注册自己的箭头。注册面对齐 [shape 注册面](/core/reference/extending/shape-registry)——内置 7 种本身也是注册项，没有特权。
+
+注册靠 `CompileOptions.arrows`（在 React 里就是 `<Layout arrows={...}>` / `<TikZ arrows={...}>`）：IR 里 `arrowDetail.shape` 仍只写字符串名，箭头的几何定义在此注入。未注册的名字在编译期报错（带可用名列表）；同名覆盖内置会发 `ARROW_OVERRIDES_BUILTIN` 警告。
+
+## 注册一个箭头
+
+下面注册一个 `dotTip`——三角尖 + 尾部圆点，演示 `emit` 可以产**多个** `MarkerPrimitive`：
+
+<ComponentPreview name="custom-arrow-basic" size="sm" />
+
+`ArrowDefinition` 是个普通对象（不进 IR、不需序列化，可由工厂函数返回）：
+
+| 字段 | 类型 | 默认值 | 描述 |
+| --- | --- | --- | --- |
+| `lineContactX` | `number` | 必填 | 线接触点 x（局部坐标）：决定 path 端点收缩量 + marker `refX`。空心箭头框架再自动减 `lineWidth/2` |
+| `emit` | `(ctx) => Iterable<MarkerPrimitive>` | 必填 | 在局部 `baseSize` 坐标系产箭头几何 |
+| `baseSize` | `number` | `10` | marker 局部基准边长（viewBox `0 0 baseSize baseSize`，`refY = baseSize/2`） |
+| `tipX` | `number` | `= baseSize` | 尖端 x（算 path 收缩用） |
+| `hollow` | `boolean` | `false` | 空心：框架丢 `fill`、`color` 主导描边、启用 `lineWidth` |
+| `defaultLength` | `number` | `6` | 默认尖长（`length` 缺省值，user units） |
+| `defaultWidth` | `number` | `6` | 默认尖宽（`width` 缺省值，user units） |
+
+`length` / `width` / `scale` / `opacity` 这些视觉字段由框架统一处理（`markerWidth = (length ?? defaultLength) × scale`）；`hollow` / `lineWidth` / 具体几何交给 `def`。
+
+## emit 与 MarkerPrimitive
+
+`emit` 在 **compile 阶段**调用（与 shape 的 emit 同位）：产出的 `MarkerPrimitive[]` 连同已解析的 wrapper 参数（`baseSize` / `refX` / `markerWidth` / `markerHeight`）一起写进 Scene 的 `ArrowEndSpec`，渲染器（SVG / Canvas / …）只负责**物化**，不认识箭头注册表、也不重算几何。core / IR 里不出现 SVG `<marker>`。
+
+`MarkerPrimitive` 是 `ScenePrimitive` 的**窄子集**——只允许 marker 局部几何，杜绝"marker 内递归引用 marker / clip / 文本布局"：
+
+| 允许 | 说明 |
+| --- | --- |
+| `path` / `ellipse` / `rect` | 局部几何；`fill` 限 `string`（CSS 色）或 `{ kind: 'contextStroke' }` |
+| `group` | 可带 `transforms` 的复合箭头；`children` 只能再套 `MarkerPrimitive` |
+
+禁 `text`、禁 `arrowStart` / `arrowEnd`（不递归）、禁外部 `resourceRef`（marker 内无 paint server 引用）。违反者编译期报错。
+
+`emit` 拿到的 `ArrowEmitContext`：
+
+| 字段 | 类型 | 描述 |
+| --- | --- | --- |
+| `fill` | `MarkerFill` | 填充色（实心主导）；无 `color` override 时 = `{ kind: 'contextStroke' }` |
+| `stroke` | `MarkerFill` | 描边色（空心主导）；无 override 时 = `{ kind: 'contextStroke' }` |
+| `lineWidth` | `number` | 空心描边宽 |
+| `round` | `(n) => number` | 精度取整（与 compile / render 同一函数，保几何一致） |
+
+## 颜色继承
+
+`emit` 把 `ctx.fill` / `ctx.stroke` 原样交给 marker 即可——它们是 `MarkerFill`，可直接当 primitive 的 `fill` / `stroke` 用，**不必收窄**。无 `color` override 时它们是 `{ kind: 'contextStroke' }`，物化为 SVG `context-stroke`：同一个箭头定义用在不同描边色的 path 上，箭头自动跟随各自的 `stroke`，`currentColor` / `var()` 主题切换也不冻结。
+
+<ComponentPreview name="custom-arrow-inherit" size="sm" />
+
+两条 Draw 用的是同一个 `tri` 定义、没给箭头单独设色，箭头颜色各自跟随 path 的 `stroke`。要钉死箭头色，给 `arrowDetail.color`（实心）或 `arrowDetail` 顶层 `color`（空心描边）即可。
+
+<Comparison target="tikz" title="自定义箭头">
+
+TikZ 用 `\pgfdeclarearrow` 在 TeX 宏层声明箭头。retikz 把它落成一个 renderer-agnostic 的 `ArrowDefinition`：几何用结构化 `MarkerPrimitive` 描述（而非 SVG / PGF 字符串），任何 adapter 都能物化，第三方可发 `@retikz/arrows-*` 包。
+
+</Comparison>

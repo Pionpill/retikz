@@ -61,7 +61,9 @@
     "refCompile": "编译（Compile）",
     "refScenePrimitive": "原语（Primitive）",
     "refParser": "解析器（Parser）",
-    "refShapeRegistry": "自定义形状（Shape）"
+    "refShapeRegistry": "自定义形状（Shape）",
+    "refCustomArrow": "自定义箭头（Arrow）",
+    "refPathGenerator": "路径生成器（Generator）"
   },
   "blog": {
     "label": "博客",

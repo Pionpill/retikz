@@ -1,0 +1,64 @@
+---
+title: Custom Arrows
+description: arrowDetail.shape is an open string; beyond the 7 built-ins, register any arrow with an ArrowDefinition — emit produces MarkerPrimitive geometry in local coordinates, and color follows the path stroke via contextStroke.
+---
+
+`arrowDetail.shape` is an **open string**: beyond the 7 built-ins (`normal` / `open` / `stealth` / `diamond` / `openDiamond` / `circle` / `openCircle`), you can register your own arrow tips. The registry mirrors the [shape registry](/core/reference/extending/shape-registry) — the 7 built-ins are themselves registry entries, with no special privileges.
+
+Registration goes through `CompileOptions.arrows` (in React that's `<Layout arrows={...}>` / `<TikZ arrows={...}>`): the IR still only stores a string name in `arrowDetail.shape`; the geometry is injected here. An unregistered name throws at compile time (with the list of available names); overriding a built-in name emits an `ARROW_OVERRIDES_BUILTIN` warning.
+
+## Registering an arrow
+
+Below registers a `dotTip` — a triangle tip plus a dot at the base, showing that `emit` may produce **multiple** `MarkerPrimitive`s:
+
+<ComponentPreview name="custom-arrow-basic" size="sm" />
+
+An `ArrowDefinition` is a plain object (not part of the IR, no serialization needed, can be returned by a factory):
+
+| Field | Type | Default | Description |
+| --- | --- | --- | --- |
+| `lineContactX` | `number` | required | Line contact point x (local coords): drives the path-endpoint shrink and the marker `refX`. For hollow arrows the framework also subtracts `lineWidth/2` |
+| `emit` | `(ctx) => Iterable<MarkerPrimitive>` | required | Produces the arrow geometry in the local `baseSize` coordinate system |
+| `baseSize` | `number` | `10` | Marker local base length (viewBox `0 0 baseSize baseSize`, `refY = baseSize/2`) |
+| `tipX` | `number` | `= baseSize` | Tip x (used for path shrink) |
+| `hollow` | `boolean` | `false` | Hollow: the framework drops `fill`, lets `color` drive the stroke, and enables `lineWidth` |
+| `defaultLength` | `number` | `6` | Default tip length (fallback for `length`, user units) |
+| `defaultWidth` | `number` | `6` | Default tip width (fallback for `width`, user units) |
+
+Visual fields `length` / `width` / `scale` / `opacity` are handled uniformly by the framework (`markerWidth = (length ?? defaultLength) × scale`); `hollow` / `lineWidth` / the actual geometry are left to the `def`.
+
+## emit and MarkerPrimitive
+
+`emit` runs at **compile time** (same place as a shape's emit): the resulting `MarkerPrimitive[]`, together with the resolved wrapper params (`baseSize` / `refX` / `markerWidth` / `markerHeight`), is written into the Scene's `ArrowEndSpec`. The renderer (SVG / Canvas / …) only **materializes** it — it doesn't know the arrow registry and doesn't recompute geometry. No SVG `<marker>` appears in core / IR.
+
+`MarkerPrimitive` is a **narrow subset** of `ScenePrimitive` — only marker-local geometry, which rules out "a marker recursively referencing markers / clips / text layout":
+
+| Allowed | Notes |
+| --- | --- |
+| `path` / `ellipse` / `rect` | Local geometry; `fill` limited to `string` (CSS color) or `{ kind: 'contextStroke' }` |
+| `group` | Composite arrow with optional `transforms`; `children` may only nest more `MarkerPrimitive`s |
+
+`text` is forbidden, `arrowStart` / `arrowEnd` are forbidden (no recursion), and external `resourceRef` is forbidden (no paint-server references inside a marker). Violations throw at compile time.
+
+The `ArrowEmitContext` passed to `emit`:
+
+| Field | Type | Description |
+| --- | --- | --- |
+| `fill` | `MarkerFill` | Fill color (drives solid tips); with no `color` override = `{ kind: 'contextStroke' }` |
+| `stroke` | `MarkerFill` | Stroke color (drives hollow tips); with no override = `{ kind: 'contextStroke' }` |
+| `lineWidth` | `number` | Stroke width for hollow tips |
+| `round` | `(n) => number` | Precision rounding (same function as compile / render, keeping geometry consistent) |
+
+## Color inheritance
+
+`emit` can hand `ctx.fill` / `ctx.stroke` straight to the marker — they are `MarkerFill`, usable directly as a primitive's `fill` / `stroke` with **no narrowing**. With no `color` override they are `{ kind: 'contextStroke' }`, which materializes to SVG `context-stroke`: the same arrow definition used on paths with different stroke colors follows each path's `stroke`, and `currentColor` / `var()` theme switches stay live.
+
+<ComponentPreview name="custom-arrow-inherit" size="sm" />
+
+Both Draws use the same `tri` definition and set no arrow-specific color, so each arrow follows its path's `stroke`. To pin the arrow color, set `arrowDetail.color` (solid) or the top-level `arrowDetail` `color` (hollow stroke).
+
+<Comparison target="tikz" title="Custom arrows">
+
+TikZ declares arrow tips at the TeX macro layer with `\pgfdeclarearrow`. retikz lands the same idea as a renderer-agnostic `ArrowDefinition`: geometry is described with structured `MarkerPrimitive`s (instead of SVG / PGF strings), any adapter can materialize it, and third parties can publish `@retikz/arrows-*` packages.
+
+</Comparison>
