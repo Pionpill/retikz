@@ -4,7 +4,7 @@ import type { FC } from 'react';
 const Demo: FC = () => (
   <Layout width={300} height={150}>
     {/* 整圆 */}
-    <Circle center={[50, 50]} radius={45} stroke="blue" strokeWidth={2} />
+    <Circle center={[50, 50]} radius={45} stroke="teal" strokeWidth={2} />
     {/* 半圆（带角度 → 默认 chord 弦闭合） */}
     <Circle center={[170, 50]} radius={45} startAngle={0} endAngle={180} fill="lightgray" stroke="red" strokeWidth={2} />
     {/* 纯弧（open） */}

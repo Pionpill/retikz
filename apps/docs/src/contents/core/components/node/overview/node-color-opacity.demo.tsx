@@ -10,10 +10,10 @@ const Demo: FC = () => (
     <Node id="tc" position={[-180, 0]} fill="lightgray" textColor="red">
       textColor
     </Node>
-    <Node id="op" position={[-50, 0]} fill="blue" opacity={0.4} textColor="white">
+    <Node id="op" position={[-50, 0]} fill="teal" opacity={0.4} textColor="white">
       opacity 0.4
     </Node>
-    <Node id="fo" position={[80, 0]} fill="blue" fillOpacity={0.3}>
+    <Node id="fo" position={[80, 0]} fill="teal" fillOpacity={0.3}>
       fillOpacity
     </Node>
     <Node id="do" position={[210, 0]} stroke="red" strokeWidth={3} drawOpacity={0.3}>

@@ -3,6 +3,11 @@ import { Layout, Node } from '@retikz/react';
 
 // 配色 — 节点底 / 边 / 必填白字用字面色（离线 SVG 下不会变黑）；
 // title / header 的黑字用 currentColor，跟随主题 light / dark 自适应
+const REQUIRED_FILL = '#1f6286';
+const OPTIONAL_FILL = '#878787';
+const LEAF_TEXT = '#ffffff';
+const NODE_STROKE = '#000000';
+const TITLE_TEXT = 'currentColor';
 const SANS_FONT = { family: 'Helvetica, Arial, sans-serif' };
 
 type RoadmapNodeProps = {
@@ -19,7 +24,7 @@ const RoadmapNode: FC<RoadmapNodeProps> = ({ id, position, variant = 'required',
   const isTitle = variant === 'title';
   const isHeader = variant === 'header';
   const hasBox = !isTitle && !isHeader;
-  const fill = variant === 'required' ? 'blue' : variant === 'optional' ? 'gray' : undefined;
+  const fill = variant === 'required' ? REQUIRED_FILL : variant === 'optional' ? OPTIONAL_FILL : undefined;
   return (
     <Node
       id={id}
@@ -27,9 +32,9 @@ const RoadmapNode: FC<RoadmapNodeProps> = ({ id, position, variant = 'required',
       shape="rectangle"
       roundedCorners={hasBox ? 4.5 : 0}
       fill={fill}
-      stroke={hasBox ? 'currentColor' : 'none'}
+      stroke={hasBox ? NODE_STROKE : 'none'}
       strokeWidth={hasBox ? 0.5 : 0}
-      textColor={hasBox ? 'currentColor' : 'currentColor'}
+      textColor={hasBox ? LEAF_TEXT : TITLE_TEXT}
       font={{ ...SANS_FONT, size: isTitle ? 24 : isHeader ? 14 : 12, weight: isTitle || isHeader ? 'bold' : 'normal' }}
       padding={hasBox ? 5 : 4}
       minimumWidth={width}

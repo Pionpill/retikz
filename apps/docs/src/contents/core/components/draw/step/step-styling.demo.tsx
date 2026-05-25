@@ -27,7 +27,7 @@ const Demo: FC = () => (
       <Step kind="move" to="r1" />
       <Step kind="line" to={[320, 0]} />
     </Path>
-    <Path stroke="blue" strokeWidth={2}>
+    <Path stroke="teal" strokeWidth={2}>
       <Step kind="move" to="r2" />
       <Step kind="line" to={[320, 30]} />
     </Path>

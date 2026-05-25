@@ -12,7 +12,7 @@ const Demo: FC = () => (
       nodeDefault={{ shape: 'circle', fill: 'lightgray' }}
       pathDefault={{ stroke: 'green' }}
       arrowDefault={{ shape: 'stealth', scale: 1.6 }}
-      labelDefault={{ textColor: 'blue' }}
+      labelDefault={{ textColor: 'teal' }}
     >
       <Node id="A" position={[0, 0]}>
         A

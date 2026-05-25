@@ -86,7 +86,7 @@ const hexagon = createHexagon();
 
 const Demo: FC = () => (
   <Layout width={420} height={180} shapes={{ hexagon }}>
-    <Node id="a" shape="hexagon" position={[-90, 0]} text="A" fill="lightgray" stroke="blue" strokeWidth={2} />
+    <Node id="a" shape="hexagon" position={[-90, 0]} text="A" fill="lightgray" stroke="teal" strokeWidth={2} />
     <Node id="b" shape="hexagon" position={[90, 0]} text="B" fill="lightgray" stroke="orange" strokeWidth={2} />
     <Draw way={['a', 'b']} arrow="->" />
   </Layout>

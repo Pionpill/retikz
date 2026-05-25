@@ -89,7 +89,7 @@ retikz demo 里若用了 CSS var（如 `var(--foreground)`、`hsl(var(--primary)
 
 | 模式 | 状态 |
 |---|---|
-| 字面色 `red` / `blue` / `orange` / `gray` / `lightgray` / `dimgray` / `#ef4444` / `oklch(0.55 0.16 145)` | ✅ 离线可用 |
+| 字面色 `red` / `teal` / `orange` / `gray` / `lightgray` / `dimgray` / `#ef4444` / `oklch(0.55 0.16 145)` | ✅ 离线可用 |
 | `var(--foreground)` / `hsl(var(--primary))` 等 token | ❌ 离线变黑 |
 | `currentColor` | ⚠️ 取决于 SVG 外层是否有 color；下载后通常变黑 |
 

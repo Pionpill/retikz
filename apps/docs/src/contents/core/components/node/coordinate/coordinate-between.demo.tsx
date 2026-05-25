@@ -8,7 +8,7 @@ import type { FC } from 'react';
  */
 const Demo: FC = () => (
   <Layout width={360} height={120}>
-    <Node id="A" position={[-140, 0]} shape="circle" minimumSize={32} fill="blue" textColor="white">
+    <Node id="A" position={[-140, 0]} shape="circle" minimumSize={32} fill="teal" textColor="white">
       A
     </Node>
     <Node id="B" position={[140, 0]} shape="circle" minimumSize={32} fill="green" textColor="white">

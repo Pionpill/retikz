@@ -23,7 +23,7 @@ const ir: IR = {
   children: [
     {
       type: 'path',
-      stroke: 'blue',
+      stroke: 'teal',
       strokeWidth: 1.5,
       arrow: '->',
       children: [

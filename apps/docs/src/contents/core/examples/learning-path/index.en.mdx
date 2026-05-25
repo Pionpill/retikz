@@ -16,7 +16,7 @@ This is not a recommendation to hard-code every diagram. Absolute coordinates ar
 Send the prompt below to the AI chat panel — the LLM will produce retikz IR / JSX for this figure directly. For variants (change labels, add path buttons, swap step kinds), edit the prompt inside the chat panel and resend.
 
 <ExamplePrompt
-  short="**Replicate the intro.svg cover of [AMAI-GmbH/AI-Expert-Roadmap](https://github.com/AMAI-GmbH/AI-Expert-Roadmap)**: centered title `AI Expert in 2022` on top + gray `Fundamentals` button + bold black header `Choose your path`; 4 blue `Required for any path` buttons on the left, 2 legend buttons on the right; 5 gray path buttons in the center (split 3 + 2 in two sub-columns); 2 Bezier merge curves + 1 cyan dashed 'recommended path' + 2 short 'more below' dashed lines + 1 red X decoration."
+  short="**Replicate the intro.svg cover of [AMAI-GmbH/AI-Expert-Roadmap](https://github.com/AMAI-GmbH/AI-Expert-Roadmap)**: centered title `AI Expert in 2022` on top + gray `Fundamentals` button + bold black header `Choose your path`; 4 teal `Required for any path` buttons on the left, 2 legend buttons on the right; 5 gray path buttons in the center (split 3 + 2 in two sub-columns); 2 Bezier merge curves + 1 cyan dashed 'recommended path' + 2 short 'more below' dashed lines + 1 red X decoration."
   detailed={`**Pixel-perfect replica of [AMAI-GmbH/AI-Expert-Roadmap](https://github.com/AMAI-GmbH/AI-Expert-Roadmap)'s intro.svg cover**
 
 **Canvas**: width 811 × height 441, white background; y-axis grows downward; reuse intro.svg's raw pixel coordinates
@@ -26,13 +26,13 @@ Send the prompt below to the AI chat panel — the LLM will produce retikz IR / 
 - Title \`AI Expert in 2022\`: 24px bold, currentColor, no background; (404, 20), width 200 × height 40
 - Center gray button \`Fundamentals\`: 12px white text, gray fill \`#878787\`, black border; (404, 95), width 90 × height 30
 - Center bold currentColor sub-header \`Choose your path\`: 14px bold, no background; (404, 162), width 130 × height 25
-- 4 blue \`Required for any path\` buttons on the left: 12px white text, blue fill \`#1f6286\`, black border, width 210 × height 30; x=105, y=68/109/149.5/189.5 (tightly stacked)
-- 2 legend buttons on the right: width 210 × height 30; top blue \`Personal Recommendation!\`, bottom gray \`Available Options\`; x=705, y=68/109
+- 4 teal \`Required for any path\` buttons on the left: 12px white text, teal fill \`#1f6286\`, black border, width 210 × height 30; x=105, y=68/109/149.5/189.5 (tightly stacked)
+- 2 legend buttons on the right: width 210 × height 30; top teal \`Personal Recommendation!\`, bottom gray \`Available Options\`; x=705, y=68/109
 - 5 center path buttons (gray fill): width 111 × height 30
   - Left sub-column x=316: \`Data Scientist\` y=245, \`Machine Learning\` y=306, \`Deep Learning\` y=366
   - Right sub-column x=495: \`Data Engineer\` y=245, \`Big Data Engineer\` y=306
 
-**Connectors** (all blue \`#1f6286\`, strokeWidth=2, arrow at end)
+**Connectors** (all teal \`#1f6286\`, strokeWidth=2, arrow at end)
 
 - title → Fundamentals: vertical line
 - Fundamentals → Choose: vertical line
@@ -43,12 +43,12 @@ Send the prompt below to the AI chat panel — the LLM will produce retikz IR / 
 **Decoration**
 
 - Cyan \`#287fad\` dashed \`dashPattern=[6,6]\` "recommended path": meanders from above Deep Learning (251.88, 359.77) through 3 quadratic Bezier segments to Choose bottom (404, 174.5); arrow at the start pointing into Deep Learning; mid-curve label "recommended"
-- 2 blue \`#1f6286\` short dashed lines \`dashPattern=[4,4]\` 4px wide, vertical "more below" hints
+- 2 teal \`#1f6286\` short dashed lines \`dashPattern=[4,4]\` 4px wide, vertical "more below" hints
 - 1 red \`#ff0000\` X: two 4px-wide diagonals`}
   extensions={[
   'Swap the path buttons: replace the 5 path buttons with your team’s career tracks (e.g. "Frontend / Backend / Fullstack / DevOps / SRE"), keeping the rest of the layout.',
-  'Add more sections: add an "Advanced" blue stack below the Required column, connected to Choose with an orthogonal step (fold) connector.',
-  'Render a dark-mode variant: switch the background to dark, brighten the blues and dim the grays, invert the text colors, and render a second copy.',
+  'Add more sections: add an "Advanced" teal stack below the Required column, connected to Choose with an orthogonal step (fold) connector.',
+  'Render a dark-mode variant: switch the background to dark, brighten the teals and dim the grays, invert the text colors, and render a second copy.',
   ]}
   />
 
@@ -62,7 +62,7 @@ Factor a `RoadmapNode` helper first — 4 variants sharing [Node](/core/componen
 | ---------- | --------------- | ------------------------------------------------------ |
 | `title`    | top title       | 24px bold, `currentColor` (theme-aware), no background |
 | `header`   | sub-header      | 14px bold, `currentColor`, no background               |
-| `required` | required button | 12px white text, blue fill `#1f6286`, black border     |
+| `required` | required button | 12px white text, teal fill `#1f6286`, black border     |
 | `optional` | optional button | 12px white text, gray fill `#878787`, black border     |
 
 Step 1 places one `title` — "AI Expert in 2022" — showing the `title` variant: bold + `currentColor` (theme-aware) + no background.
@@ -87,7 +87,7 @@ Add the `Fundamentals` gray mini button and the `Choose your path` sub-header be
 
 ### Step 3: side stacks — AtPosition tight stacking
 
-Add two independent stacks — 4 blue "required" buttons on the left, 2 legend buttons on the right (1 blue + 1 gray). Each column's **head** uses an absolute Cartesian first, and the rest use [AtPosition](/core/concepts/positioning) `{ direction: 'below', of: 'prev-id' }` for tight stacking: set the spine first, then let the column grow downward on its own.
+Add two independent stacks — 4 teal "required" buttons on the left, 2 legend buttons on the right (1 teal + 1 gray). Each column's **head** uses an absolute Cartesian first, and the rest use [AtPosition](/core/concepts/positioning) `{ direction: 'below', of: 'prev-id' }` for tight stacking: set the spine first, then let the column grow downward on its own.
 
 - `<Layout ... nodeDistance={41}>` sets the global node distance on the container
 - Each AtPosition node references the previous node's id, gluing them visually into a "color bar"

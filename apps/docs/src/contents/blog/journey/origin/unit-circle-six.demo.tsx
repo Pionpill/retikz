@@ -89,7 +89,7 @@ const Demo: FC = () => (
     />
     <Draw
       way={[[COS30 * 100, 0], { label: { text: 'cos α', side: 'below' } }, [0, 0]]}
-      stroke="blue"
+      stroke="teal"
       thickness="thick"
     />
     <Draw
@@ -106,7 +106,7 @@ const Demo: FC = () => (
         { label: { text: 'sec α', position: 'at-end', side: 'below' } },
         [SEC30 * 100, 0],
       ]}
-      stroke="blue"
+      stroke="teal"
       thickness="thick"
     />
 
@@ -145,9 +145,9 @@ const Demo: FC = () => (
       text={[
         { text: 'α = 30°', fill: "green" },
         { text: 'sin α = 1/2', fill: "red" },
-        { text: 'cos α = √3/2', fill: "blue" },
+        { text: 'cos α = √3/2', fill: "teal" },
         { text: 'tan α = 1/√3', fill: "orange" },
-        { text: 'sec α = 2/√3', fill: "blue" },
+        { text: 'sec α = 2/√3', fill: "teal" },
         { text: 'csc α = 2', fill: "red" },
         { text: 'cot α = √3', fill: "green" },
       ]}

@@ -18,10 +18,10 @@ const Demo: FC = () => (
     </Scope>
     {/* B 组：后声明，默认应在上，但被 A 组整体压住 */}
     <Scope transforms={[{ kind: 'translate', x: 22, y: 26 }]}>
-      <Node id="b1" position={[0, 0]} fill="blue" stroke="blue" minimumSize={72}>
+      <Node id="b1" position={[0, 0]} fill="teal" stroke="teal" minimumSize={72}>
         B1
       </Node>
-      <Node id="b2" position={[38, 0]} fill="blue" stroke="blue" minimumSize={72}>
+      <Node id="b2" position={[38, 0]} fill="teal" stroke="teal" minimumSize={72}>
         B2
       </Node>
     </Scope>

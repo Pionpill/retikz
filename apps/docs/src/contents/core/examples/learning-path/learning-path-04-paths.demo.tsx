@@ -1,6 +1,12 @@
 import type { ComponentProps, FC } from 'react';
 import { Draw, Layout, Node } from '@retikz/react';
 
+const REQUIRED_FILL = '#1f6286';
+const OPTIONAL_FILL = '#878787';
+const LEAF_TEXT = '#ffffff';
+const NODE_STROKE = '#000000';
+const EDGE_BLUE = '#1f6286';
+const TITLE_TEXT = 'currentColor';
 const SANS_FONT = { family: 'Helvetica, Arial, sans-serif' };
 
 type RoadmapNodeProps = {
@@ -16,7 +22,7 @@ const RoadmapNode: FC<RoadmapNodeProps> = ({ id, position, variant = 'required',
   const isTitle = variant === 'title';
   const isHeader = variant === 'header';
   const hasBox = !isTitle && !isHeader;
-  const fill = variant === 'required' ? 'blue' : variant === 'optional' ? 'gray' : undefined;
+  const fill = variant === 'required' ? REQUIRED_FILL : variant === 'optional' ? OPTIONAL_FILL : undefined;
   return (
     <Node
       id={id}
@@ -24,9 +30,9 @@ const RoadmapNode: FC<RoadmapNodeProps> = ({ id, position, variant = 'required',
       shape="rectangle"
       roundedCorners={hasBox ? 4.5 : 0}
       fill={fill}
-      stroke={hasBox ? 'currentColor' : 'none'}
+      stroke={hasBox ? NODE_STROKE : 'none'}
       strokeWidth={hasBox ? 0.5 : 0}
-      textColor={hasBox ? 'currentColor' : 'currentColor'}
+      textColor={hasBox ? LEAF_TEXT : TITLE_TEXT}
       font={{ ...SANS_FONT, size: isTitle ? 24 : isHeader ? 14 : 12, weight: isTitle || isHeader ? 'bold' : 'normal' }}
       padding={hasBox ? 5 : 4}
       minimumWidth={width}
@@ -53,8 +59,8 @@ const Demo: FC = () => (
     <RoadmapNode id="legend-blue" position={[705, 68]} variant="required" width={210} height={30}>Personal Recommendation!</RoadmapNode>
     <RoadmapNode id="legend-gray" position={{ direction: 'below', of: 'legend-blue' }} variant="optional" width={210} height={30}>Available Options</RoadmapNode>
 
-    <Draw way={['title', 'fundamentals']} stroke="blue" strokeWidth={2} arrow="->" />
-    <Draw way={['fundamentals', 'choose']} stroke="blue" strokeWidth={2} arrow="->" />
+    <Draw way={['title', 'fundamentals']} stroke={EDGE_BLUE} strokeWidth={2} arrow="->" />
+    <Draw way={['fundamentals', 'choose']} stroke={EDGE_BLUE} strokeWidth={2} arrow="->" />
 
     {/* === Step 4：5 个 Path 按钮（2 子列 3 + 2）+ 段间 / 段内连线 ===
         段头 (316, 245) / (495, 245) 绝对坐标；子列内 AtPosition 紧贴堆叠（distance 61 / 60） */}
@@ -69,9 +75,9 @@ const Demo: FC = () => (
     <RoadmapNode id="big-data-engineer" position={{ direction: 'below', of: 'data-engineer', distance: 61 }} variant="optional" width={111} height={30}>Big Data Engineer</RoadmapNode>
 
     {/* 子列内 3 条短直线：Draw way=[源 id, 目标 id]，retikz 自动锚到节点边框 */}
-    <Draw way={['data-scientist', 'machine-learning']} stroke="blue" strokeWidth={2} arrow="->" />
-    <Draw way={['machine-learning', 'deep-learning']} stroke="blue" strokeWidth={2} arrow="->" />
-    <Draw way={['data-engineer', 'big-data-engineer']} stroke="blue" strokeWidth={2} arrow="->" />
+    <Draw way={['data-scientist', 'machine-learning']} stroke={EDGE_BLUE} strokeWidth={2} arrow="->" />
+    <Draw way={['machine-learning', 'deep-learning']} stroke={EDGE_BLUE} strokeWidth={2} arrow="->" />
+    <Draw way={['data-engineer', 'big-data-engineer']} stroke={EDGE_BLUE} strokeWidth={2} arrow="->" />
 
     {/* Choose → 2 子列段顶的合并曲线：way 数组中 { curve: [cx, cy] } infix 算子修饰下一段；
         2 段 quadratic 串联（对应 intro.svg path d= 里的 M ... Q ... Q ...） */}
@@ -81,7 +87,7 @@ const Demo: FC = () => (
         { curve: [404, 200] }, [360, 195],
         { curve: [316, 190] }, 'data-scientist',
       ]}
-      stroke="blue"
+      stroke={EDGE_BLUE}
       strokeWidth={2}
       arrow="->"
     />
@@ -91,7 +97,7 @@ const Demo: FC = () => (
         { curve: [404, 200] }, [449.5, 195],
         { curve: [495, 190] }, 'data-engineer',
       ]}
-      stroke="blue"
+      stroke={EDGE_BLUE}
       strokeWidth={2}
       arrow="->"
     />

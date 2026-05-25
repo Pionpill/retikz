@@ -18,7 +18,7 @@ const Demo: FC = () => (
       minimumWidth={96}
       minimumHeight={80}
       stroke="gray"
-      fill={{ type: 'pattern', shape: 'lines', color: 'blue', rotation: 45 }}
+      fill={{ type: 'pattern', shape: 'lines', color: 'teal', rotation: 45 }}
     />
     <Node
       id="dots"
@@ -35,7 +35,7 @@ const Demo: FC = () => (
       minimumWidth={96}
       minimumHeight={80}
       stroke="gray"
-      fill={{ type: 'pattern', shape: 'grid', color: 'blue', size: 10 }}
+      fill={{ type: 'pattern', shape: 'grid', color: 'teal', size: 10 }}
     />
     <Node
       id="img"

@@ -8,7 +8,7 @@ import type { FC } from 'react';
  */
 const Demo: FC = () => (
   <Layout width={220} height={220} viewBox={{ x: -120, y: -120, width: 240, height: 240 }}>
-    <Node id="o" position={[0, 0]} shape="circle" minimumSize={44} fill="blue" textColor="white">
+    <Node id="o" position={[0, 0]} shape="circle" minimumSize={44} fill="teal" textColor="white">
       0,0
     </Node>
     <Node id="c" position={[70, 70]} shape="circle" minimumSize={24} fill="orange" />

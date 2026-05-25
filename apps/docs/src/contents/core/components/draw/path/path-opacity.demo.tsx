@@ -48,7 +48,7 @@ const Demo: FC = () => (
     {/* 三者叠加：opacity 0.7 × fillOpacity 0.5 × drawOpacity 0.4 */}
     <Path
       stroke="currentColor"
-      fill="blue"
+      fill="teal"
       strokeWidth={6}
       opacity={0.7}
       fillOpacity={0.5}

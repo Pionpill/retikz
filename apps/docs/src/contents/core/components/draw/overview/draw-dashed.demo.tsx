@@ -26,7 +26,7 @@ const Demo: FC = () => (
     {/* 默认：currentColor + 1px 实线 */}
     <Draw way={['r1', [320, 0]]} />
     {/* 自定义颜色 */}
-    <Draw way={['r2', [320, 30]]} stroke="blue" strokeWidth={2} />
+    <Draw way={['r2', [320, 30]]} stroke="teal" strokeWidth={2} />
     {/* 加粗 */}
     <Draw way={['r3', [320, 60]]} strokeWidth={4} />
     {/* 虚线 */}

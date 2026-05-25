@@ -70,7 +70,7 @@ const Demo: FC = () => (
     {/* cos α 蓝色横线：投影点 → 原点 */}
     <Draw
       way={[[COS30 * 100, 0], { label: { text: 'cos α', side: 'below' } }, [0, 0]]}
-      stroke="blue"
+      stroke="teal"
       thickness="thick"
     />
   </Layout>
