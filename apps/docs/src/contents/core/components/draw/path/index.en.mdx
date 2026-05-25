@@ -110,21 +110,21 @@ By default stacking = declaration order. `zIndex` overrides it explicitly: highe
 
 <ComponentPreview name="path-z-index" size="sm" />
 
-## Curves and transforms
+### Curves and transforms
 
-### Out / in angles and self-loops
+#### Out / in angles and self-loops
 
 Besides the symmetric `bendDirection` + `bendAngle`, `<Step kind="bend">` accepts `outAngle` / `inAngle` for the start out-angle and end in-angle to draw asymmetric curves (TikZ `out=` / `in=`); `looseness` tunes the control-point distance (default ≈1). **out/in take precedence over `bendDirection`.** When `from == to` (same node / same coordinate) it degenerates into a **self-loop** — the prime use case for out/in (a state-machine self transition), which a symmetric bend cannot draw.
 
 <ComponentPreview name="path-outin-loop" size="md" />
 
-### Whole-path transform (rotate / scale)
+#### Whole-path transform (rotate / scale)
 
 `rotate` (degrees) / `scale` (a number for uniform, or `{ x, y }` for non-uniform) transform the whole path around its **bounding-box center**, sparing a wrapping `<Scope transforms>` for a single path. The order is a hard contract: path endpoints resolve first, arrow shrink is computed on the **untransformed** geometry, then everything is wrapped in a group — so arrow direction follows the transform correctly without misalignment.
 
 <ComponentPreview name="path-transform" size="md" />
 
-### Mid-path marks
+#### Mid-path marks
 
 `marks` places directional marks along the path: each `{ pos, mark }` has `pos ∈ [0, 1]` (out-of-range rejected by the schema), and `mark` is initially `{ kind: 'arrow', shape, ... }` (a registered arrow name + visual subset, see [Custom Arrows](/core/reference/extending/custom-arrow)), **oriented by the tangent at that point** (not a fixed direction). Lines, Béziers, and arcs are all tangent-oriented.
 

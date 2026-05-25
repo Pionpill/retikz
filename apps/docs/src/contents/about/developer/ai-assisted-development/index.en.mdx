@@ -12,7 +12,7 @@ This page explains how the model runs, who owns what, and what hard constraints 
 Hooking AI into the dev flow doesn't mean "let AI write the code for you" — it means **shifting human attention from implementation labor to decision labor**. Two iron rules:
 
 1. **Architecture / schema decisions are human-only.** Irreversible changes — IR field names, default values, trade-offs between options — are decided by humans writing ADRs. AI only provides option analysis and trade-off descriptions inside the ADR.
-2. **AI never commits / publishes on the human's behalf.** When the code is written, AI must stop and wait for human review and explicit authorization. This rule is in the [repo-root AGENTS.md](https://github.com/Pionpill/retikz/blob/main/AGENTS.md) commit-policy section and admits no exceptions (auto mode, long tasks, seemingly harmless edits, prior approval of similar changes — none of these waive it; every commit requires fresh authorization).
+2. **AI never commits / publishes on the human's behalf.** When the code is written, AI must stop and wait for human review and explicit authorization. This is a hard workflow boundary and admits no exceptions (auto mode, long tasks, seemingly harmless edits, prior approval of similar changes — none of these waive it; every commit requires fresh authorization).
 
 Everything else — the "middle work" of writing specs, implementations, tests, docs, and changelog drafts — AI can relay end-to-end. Humans only step in at the key checkpoints to review.
 
@@ -109,9 +109,9 @@ Combined with isolated sessions (no shared context), three angles produce notabl
 
 Users can also **manually paste the same input into another LLM** (e.g. ChatGPT) running the same prompt and union the opinions back to the Anthropic side — different vendor models have less correlated blind spots, and this is a low-cost hardening worth doing. The main AI does not auto-dispatch to other vendors; the user syncs manually, and the main AI merges the BLOCKING lists.
 
-## Hard rules (from AGENTS.md)
+## Hard rules
 
-The constraints written into the [repo-root AGENTS.md](https://github.com/Pionpill/retikz/blob/main/AGENTS.md) that AI must follow throughout:
+The workflow constraints AI must follow throughout:
 
 | Constraint | Meaning |
 | --- | --- |
@@ -126,8 +126,6 @@ The constraints written into the [repo-root AGENTS.md](https://github.com/Pionpi
 
 | If you want to know about | Look here |
 | --- | --- |
-| Project hard rules (naming / commits / lint / bilingual / IR schema style) | [AGENTS.md](https://github.com/Pionpill/retikz/blob/main/AGENTS.md) |
-| Docs-site-specific conventions (mdx style / bilingual demos / link policy) | [apps/docs/AGENTS.md](https://github.com/Pionpill/retikz/blob/main/apps/docs/AGENTS.md) |
 | Project thesis and first design principle | [core-design.md](https://github.com/Pionpill/retikz/blob/main/notes/architecture/core-design.md) |
 | All SKILLs (dev flow, releases, docs writing) | [.agents/skills/](https://github.com/Pionpill/retikz/tree/main/.agents/skills) |
 | 5-stage orchestrator | [flow-alpha SKILL](https://github.com/Pionpill/retikz/blob/main/.agents/skills/flow-alpha/SKILL.md) |
@@ -136,7 +134,7 @@ The constraints written into the [repo-root AGENTS.md](https://github.com/Pionpi
 | Docs-writing SKILL | [docs-doc-principle](https://github.com/Pionpill/retikz/blob/main/.agents/skills/docs-doc-principle/SKILL.md) · [docs-doc-component](https://github.com/Pionpill/retikz/blob/main/.agents/skills/docs-doc-component/SKILL.md) · [docs-doc-example](https://github.com/Pionpill/retikz/blob/main/.agents/skills/docs-doc-example/SKILL.md) |
 | ADR archive | [notes/decisions/core/](https://github.com/Pionpill/retikz/tree/main/notes/decisions/core) (with [template](https://github.com/Pionpill/retikz/blob/main/notes/decisions/core/_template.md) and [index](https://github.com/Pionpill/retikz/blob/main/notes/README.md)) |
 
-In practice the main AI reads AGENTS.md + the relevant SKILL when it picks up a task, then dispatches sub-agents per the SKILL flow. Each sub-agent only sees its own role prompt + the inputs it's given — no context cross-contamination.
+In practice the main AI aligns on the project constraints and the relevant SKILL when it picks up a task, then dispatches sub-agents per the SKILL flow. Each sub-agent only sees its own role prompt + the inputs it's given — no context cross-contamination.
 
 ## Transparency
 
@@ -155,4 +153,4 @@ retikz does not pretend to be "all human" — most implementation commits carry 
 
 ---
 
-To bring this flow to your own open-source project, retikz's [AGENTS.md](https://github.com/Pionpill/retikz/blob/main/AGENTS.md) and [.agents/skills/](https://github.com/Pionpill/retikz/tree/main/.agents/skills) are MIT-licensed and free to reference / fork / adapt. The key isn't the tooling — it's **how clearly the boundary between human and AI is drawn**: decisions to humans, implementation to AI, reconciliation to independent sub-agents, releases to humans.
+To bring this flow to your own open-source project, retikz's [.agents/skills/](https://github.com/Pionpill/retikz/tree/main/.agents/skills) are MIT-licensed and free to reference / fork / adapt. The key isn't the tooling — it's **how clearly the boundary between human and AI is drawn**: decisions to humans, implementation to AI, reconciliation to independent sub-agents, releases to humans.

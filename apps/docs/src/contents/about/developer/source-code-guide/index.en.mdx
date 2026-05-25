@@ -67,7 +67,7 @@ Walk inward from both ends: input contract (IR) first, then output contract (Sce
 
 ### Constraints to Keep in Mind
 
-Encoded in [`packages/core/AGENTS.md`](https://github.com/Pionpill/retikz/blob/main/packages/core/AGENTS.md) and enforced by CI:
+Keep these constraints in mind when reading core; they explain why some implementation paths go through an extra layer instead of depending directly on the browser or React:
 
 - **Zero React, zero DOM** — core must not `import 'react'` / `import 'react-dom'`; browser-specific capabilities (text measurement, events) are injected by the adapter.
 - **IR data is 100% JSON-serializable** — no functions, class instances, refs, or Symbols in the IR schema.
@@ -145,6 +145,4 @@ If you're building `@retikz/vue` / `@retikz/svelte` / etc., the React adapter ma
 ## Further Reading
 
 - Project pitch & IR-centric design: [core-design.md](https://github.com/Pionpill/retikz/blob/main/notes/architecture/core-design.md)
-- Repository-wide rules: [AGENTS.md](https://github.com/Pionpill/retikz/blob/main/AGENTS.md)
-- `@retikz/core` developer notes: [packages/core/AGENTS.md](https://github.com/Pionpill/retikz/blob/main/packages/core/AGENTS.md)
 - Decision records: [notes/decisions/core/](https://github.com/Pionpill/retikz/tree/main/notes/decisions/core)

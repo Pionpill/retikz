@@ -87,7 +87,7 @@ SVG / Canvas / PDF / ...
 
 ## Component layering: Tier 1 / Tier 2
 
-`@retikz/react` splits components into two gradients — Tier 1 is the in-core low-level primitives (Kernel and its syntactic sugar Sugar), Tier 2 is the high-level domain packages (flow charts, plots, etc.). Three criteria decide which tier a new component belongs in (see the component-layering section in AGENTS.md):
+`@retikz/react` splits components into two gradients — Tier 1 is the in-core low-level primitives (Kernel and its syntactic sugar Sugar), Tier 2 is the high-level domain packages (flow charts, plots, etc.). Three criteria decide which tier a new component belongs in:
 
 1. **Reversibility**: After expansion, can you 1:1 recover the original intent by removing the construct's name?
 2. **Algorithm presence**: Does expansion involve decisions (auto-tick / layout / scale)?

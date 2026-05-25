@@ -87,7 +87,7 @@ SVG / Canvas / PDF / ...
 
 ## 组件分层：Tier 1 / Tier 2
 
-`@retikz/react` 的组件分成两个梯度——Tier 1 是 in-core 的底层原语（Kernel 与它的语法糖 Sugar），Tier 2 是高层 domain 包（流程图、图表等）。三条标准判定一个新组件该归哪层（详见 AGENTS.md 的组件分层章节）：
+`@retikz/react` 的组件分成两个梯度——Tier 1 是 in-core 的底层原语（Kernel 与它的语法糖 Sugar），Tier 2 是高层 domain 包（流程图、图表等）。三条标准判定一个新组件该归哪层：
 
 1. **可逆性**：展开后删掉构造名字，能 1:1 还原原意吗？
 2. **算法存在性**：展开涉及决策（auto-tick / 布局 / scale）吗？

@@ -67,7 +67,7 @@ retikz 的官方仓库目前发两个包：
 
 ### 阅读约束
 
-写进 [`packages/core/AGENTS.md`](https://github.com/Pionpill/retikz/blob/main/packages/core/AGENTS.md) 的硬规则，PR 时 CI 守门：
+读 core 源码时先记住这些约束；它们解释了为什么很多实现看起来“绕一层”，而不是直接依赖浏览器或 React：
 
 - **零 React、零 DOM**——core 不准 `import 'react'` / `import 'react-dom'`；浏览器特化能力（文字度量、事件）由 adapter 通过依赖注入提供
 - **进 IR 的数据 100% JSON 可序列化**——禁止函数 / class 实例 / ref / Symbol 进 IR schema
@@ -145,6 +145,4 @@ retikz 的官方仓库目前发两个包：
 ## 相关阅读
 
 - 项目立项主张 / IR 居中设计：[core-design.md](https://github.com/Pionpill/retikz/blob/main/notes/architecture/core-design.md)
-- 仓库根硬规则：[AGENTS.md](https://github.com/Pionpill/retikz/blob/main/AGENTS.md)
-- `@retikz/core` 工作指南：[packages/core/AGENTS.md](https://github.com/Pionpill/retikz/blob/main/packages/core/AGENTS.md)
 - ADR 决策档案：[notes/decisions/core/](https://github.com/Pionpill/retikz/tree/main/notes/decisions/core)
