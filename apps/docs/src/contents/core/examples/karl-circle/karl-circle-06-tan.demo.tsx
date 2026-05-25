@@ -1,6 +1,6 @@
 import { Fragment } from 'react';
 import type { FC } from 'react';
-import { Coordinate, Draw, Layout, Node, Path, Step } from '@retikz/react';
+import { Circle, Coordinate, Draw, Grid, Layout, Node, Sector } from '@retikz/react';
 
 // 字面色而非 CSS var：SVG 下载后 CSS var 不在新上下文里解析，会 fallback 成黑
 const HELP_LINE = '#e5e7eb';
@@ -21,18 +21,10 @@ const TAN30 = SIN30 / COS30;
 const Demo: FC = () => (
   <Layout width={600} height={360}>
     {/* 背景网格 */}
-    {[-100, -50, 0, 50, 100].map(v => (
-      <Fragment key={`grid-${v}`}>
-        <Draw way={[[v, -140], [v, 140]]} stroke={HELP_LINE} strokeWidth={0.5} />
-        <Draw way={[[-140, v], [140, v]]} stroke={HELP_LINE} strokeWidth={0.5} />
-      </Fragment>
-    ))}
+    <Grid corner1={[-100, -100]} corner2={[100, 100]} step={50} stroke={HELP_LINE} strokeWidth={0.5} />
 
     {/* 单位圆 */}
-    <Path lineCap="round">
-      <Step kind="move" to={[0, 0]} />
-      <Step kind="circlePath" radius={100} />
-    </Path>
+    <Circle center={[0, 0]} radius={100} lineCap="round" />
 
     {/* 坐标轴 */}
     <Draw way={[[-150, 0], [150, 0]]} arrow="->" />
@@ -70,11 +62,7 @@ const Demo: FC = () => (
     ))}
 
     {/* 30° 扇形 + α */}
-    <Path fill={ANGLE_FILL} stroke={ANGLE_STROKE}>
-      <Step kind="move" to={[0, 0]} />
-      <Step kind="arc" startAngle={0} endAngle={-30} radius={30} />
-      <Step kind="line" to={[0, 0]} />
-    </Path>
+    <Sector center={[0, 0]} radius={30} startAngle={0} endAngle={-30} fill={ANGLE_FILL} stroke={ANGLE_STROKE} />
     <Node position={{ angle: -15, radius: 22 }} stroke="none" textColor={ANGLE_STROKE} padding={1} font={MATH_FONT}>
       α
     </Node>

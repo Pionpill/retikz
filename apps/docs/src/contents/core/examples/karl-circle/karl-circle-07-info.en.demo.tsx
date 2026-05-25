@@ -1,6 +1,6 @@
 import { Fragment } from 'react';
 import type { FC } from 'react';
-import { Coordinate, Draw, Layout, Node, Path, Step } from '@retikz/react';
+import { Circle, Coordinate, Draw, Grid, Layout, Node, Sector } from '@retikz/react';
 
 // Literal colors instead of CSS vars: downloaded SVGs resolve `var(--x)` in a different
 // context (or none), falling back to black; literal colors stay correct everywhere.
@@ -22,18 +22,10 @@ const TAN30 = SIN30 / COS30;
 const Demo: FC = () => (
   <Layout width={720} height={360}>
     {/* Background grid */}
-    {[-100, -50, 0, 50, 100].map(v => (
-      <Fragment key={`grid-${v}`}>
-        <Draw way={[[v, -140], [v, 140]]} stroke={HELP_LINE} strokeWidth={0.5} />
-        <Draw way={[[-140, v], [140, v]]} stroke={HELP_LINE} strokeWidth={0.5} />
-      </Fragment>
-    ))}
+    <Grid corner1={[-100, -100]} corner2={[100, 100]} step={50} stroke={HELP_LINE} strokeWidth={0.5} />
 
     {/* Unit circle */}
-    <Path lineCap="round">
-      <Step kind="move" to={[0, 0]} />
-      <Step kind="circlePath" radius={100} />
-    </Path>
+    <Circle center={[0, 0]} radius={100} lineCap="round" />
 
     {/* Axes */}
     <Draw way={[[-150, 0], [150, 0]]} arrow="->" />
@@ -71,11 +63,7 @@ const Demo: FC = () => (
     ))}
 
     {/* 30° wedge + α */}
-    <Path fill={ANGLE_FILL} stroke={ANGLE_STROKE}>
-      <Step kind="move" to={[0, 0]} />
-      <Step kind="arc" startAngle={0} endAngle={-30} radius={30} />
-      <Step kind="line" to={[0, 0]} />
-    </Path>
+    <Sector center={[0, 0]} radius={30} startAngle={0} endAngle={-30} fill={ANGLE_FILL} stroke={ANGLE_STROKE} />
     <Node position={{ angle: -15, radius: 22 }} stroke="none" textColor={ANGLE_STROKE} padding={1} font={MATH_FONT}>
       α
     </Node>

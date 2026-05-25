@@ -1,5 +1,5 @@
 import type { FC } from 'react';
-import { Coordinate, Draw, Layout, Node, Path, Step } from '@retikz/react';
+import { Circle, Coordinate, Draw, Layout, Node } from '@retikz/react';
 
 /** 数学变量字体——LaTeX 习惯：变量用衬线斜体（Computer Modern italic 风格）；Latin Modern Math 缺失时回退到系统 STIX / Cambria / Times */
 const MATH_FONT = {
@@ -10,10 +10,7 @@ const MATH_FONT = {
 const Demo: FC = () => (
   <Layout width={600} height={360}>
     {/* 单位圆（半径 100px） */}
-    <Path lineCap="round">
-      <Step kind="move" to={[0, 0]} />
-      <Step kind="circlePath" radius={100} />
-    </Path>
+    <Circle center={[0, 0]} radius={100} lineCap="round" />
 
     {/* x 轴：箭头 path + 端点 label + 命名锚 */}
     <Draw way={[[-150, 0], [150, 0]]} arrow="->" />

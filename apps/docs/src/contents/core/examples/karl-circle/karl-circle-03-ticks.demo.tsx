@@ -1,6 +1,6 @@
 import { Fragment } from 'react';
 import type { FC } from 'react';
-import { Coordinate, Draw, Layout, Node, Path, Step } from '@retikz/react';
+import { Circle, Coordinate, Draw, Grid, Layout, Node } from '@retikz/react';
 
 /** 用字面色而非 `var(--border)`：SVG 下载后 CSS var 不在新上下文里解析，会 fallback 成黑 */
 const HELP_LINE = '#e5e7eb';
@@ -11,20 +11,11 @@ const MATH_FONT = {
 
 const Demo: FC = () => (
   <Layout width={600} height={360}>
-    {/* 背景网格（help lines）——5 横 5 竖。
-        网格沿原点对称，所以 iteration 值同时当 x（竖线）和 y（横线）的像素位置 */}
-    {[-100, -50, 0, 50, 100].map(v => (
-      <Fragment key={`grid-${v}`}>
-        <Draw way={[[v, -140], [v, 140]]} stroke={HELP_LINE} strokeWidth={0.5} />
-        <Draw way={[[-140, v], [140, v]]} stroke={HELP_LINE} strokeWidth={0.5} />
-      </Fragment>
-    ))}
+    {/* 背景网格（help lines）——直接用 Grid sugar，比手写 10 条线更短 */}
+    <Grid corner1={[-100, -100]} corner2={[100, 100]} step={50} stroke={HELP_LINE} strokeWidth={0.5} />
 
     {/* 单位圆（半径 100px） */}
-    <Path lineCap="round">
-      <Step kind="move" to={[0, 0]} />
-      <Step kind="circlePath" radius={100} />
-    </Path>
+    <Circle center={[0, 0]} radius={100} lineCap="round" />
 
     {/* 坐标轴 + 端点 label + 命名锚 */}
     <Draw way={[[-150, 0], [150, 0]]} arrow="->" />

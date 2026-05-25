@@ -7,11 +7,11 @@ description: Academic illustration example — sin / cos / tan geometry for a 30
 
 This is the final figure from the [TikZ tutorial](https://tikz.dev/tutorial) — "Karl teaching his daughter trigonometry": a unit circle plus the sin / cos / tan geometry around a 30° angle.
 
-The page breaks it into 7 accumulative steps. From a single naked circle each step adds one visible element and one retikz capability — by the end you have the full figure and have walked through how [Path](/core/components/draw/path) / [Draw](/core/components/draw/overview) / [Coordinate](/core/components/node/coordinate) / [Node](/core/components/node/overview) combine, plus polar positions, accumulative paths, multi-Draw coordination, and multi-line / multi-color Node text.
+The page breaks it into 7 accumulative steps. From a single naked circle each step adds one visible element and one retikz capability — by the end you have the full figure and have also seen the three most beginner-friendly v0.2 sugars: [Circle](/core/components/draw/shapes) / [Grid](/core/components/draw/shapes) / [Sector](/core/components/draw/shapes). They shorten the hand-written Path / Step pieces, while [Draw](/core/components/draw/overview) / [Coordinate](/core/components/node/coordinate) / [Node](/core/components/node/overview) keep building the full figure, plus polar positions, multi-Draw coordination, and multi-line / multi-color Node text.
 
 <ComponentPreview name="karl-circle-07-info" size="lg" />
 
-If you are coming from TikZ, watch four differences in this page: retikz coordinates grow downward on y; `arc` treats the cursor as the center rather than a point on the arc; projections / intersections are currently hand-computed or named with Coordinate; and `foreach`-style repeated primitives are usually generated with React `.map()`.
+If you are coming from TikZ, watch four differences in this page: retikz coordinates grow downward on y; circle / grid / sector now have dedicated sugar; projections / intersections are currently hand-computed or named with Coordinate; and `foreach`-style repeated primitives are usually generated with React `.map()`.
 
 ## Prompt
 
@@ -56,7 +56,7 @@ Send the prompt below to the AI chat panel — the LLM will produce retikz IR / 
 
 ### Step 1 — Unit circle
 
-Minimal start — one circle centered at the origin. The [Path](/core/components/draw/path) container with [`<Step kind="circlePath">`](/core/components/draw/step#circlepath): `circlePath` takes the previous step's anchor as the center, so we `move (0, 0)` first to position the cursor at the origin. `lineCap="round"` softens the line endpoints.
+Minimal start — one circle centered at the origin. Use [Circle](/core/components/draw/shapes) here: `center + radius` keeps the first step short, and it still expands to the same underlying Path / Step shape, but the code reads like “this is a circle” at a glance. `lineCap="round"` softens the line endpoints.
 
 <ComponentPreview name="karl-circle-01-circle" size="lg" />
 
@@ -68,7 +68,7 @@ x and y axes use [Draw](/core/components/draw/overview) with `arrow="->"` to get
 
 ### Step 3 — Grid + ticks
 
-The background grid is a `.map()` over 5 horizontal + 5 vertical lines (IR has no `grid` operator yet); this `.map()` substitute for TikZ `\foreach` is common throughout retikz. Ticks are also array-driven: a short segment plus a transparent [Node](/core/components/node/overview) per tick; the label sits **slightly offset** from its tick (x-axis labels nudged 10px left, y-axis labels 10px down) so they don't clash with the circle or axis lines.
+The background grid now uses [Grid](/core/components/draw/shapes) sugar, which expands to many lines for you. Ticks are also array-driven: a short segment plus a transparent [Node](/core/components/node/overview) per tick; the label sits **slightly offset** from its tick (x-axis labels nudged 10px left, y-axis labels 10px down) so they don't clash with the circle or axis lines, and the step reads like “give me a grid” instead of “assemble 10 lines.”
 
 retikz coordinates are SVG pixels with y pointing downward — so "1 unit up" is written as `[0, -100]` (this example uses 100px = unit-circle radius as the length basis). The top-level `<Layout>` has no picture-level scale or y-flip, so math coordinates from the TikZ tutorial need their y manually negated.
 
@@ -76,7 +76,7 @@ retikz coordinates are SVG pixels with y pointing downward — so "1 unit up" is
 
 ### Step 4 — 30° wedge + α label
 
-The wedge is the trickiest step. [`<Step kind="arc">`](/core/components/draw/step#arc) treats the previous step's anchor as the **center** (note: TikZ instead treats it as a point on the arc). So `move (0, 0)` → `arc start=0 end=−30 radius=30` automatically starts drawing from (radius, 0) → `line` back to the origin lets [Path](/core/components/draw/path)'s fill implicitly close into a pie slice.
+The wedge is the trickiest step. Use [Sector](/core/components/draw/shapes) here: it starts from the center, draws the arc, and closes back to the center, so the intent reads more directly than a hand-written `arc` + `line` path, and it is easier for a first-time reader to remember as one clear API.
 
 The α label is a [Node](/core/components/node/overview) at a polar position (`{ angle, radius }`) — `polar(15, 0.22)` places it visually centered in the wedge.
 
@@ -110,9 +110,10 @@ Finally, a colored info card on the right. The [Node](/core/components/node/over
 
 | Component | Role in this example | Main steps |
 | --- | --- | --- |
-| [Path](/core/components/draw/path) | Unit circle body + 30° wedge | [1](#step-1--unit-circle), [4](#step-4--30-wedge--α-label) |
-| [Step](/core/components/draw/step) | circlePath / arc / move / line kinds | [1](#step-1--unit-circle), [4](#step-4--30-wedge--α-label) |
-| [Draw](/core/components/draw/overview) | Axes + grid + tick marks + sin/cos/tan colored lines + auxiliary ray | [2](#step-2--axes--endpoint-labels--named-anchors), [3](#step-3--grid--ticks), [5](#step-5--sin-α-red-line--cos-α-blue-line), [6](#step-6--tan-α-orange-line--auxiliary-ray) |
+| [Circle](/core/components/draw/shapes) | Unit circle | [1](#step-1--unit-circle), [3](#step-3--grid--ticks), [4](#step-4--30-wedge--α-label) |
+| [Sector](/core/components/draw/shapes) | 30° wedge | [4](#step-4--30-wedge--α-label), [5](#step-5--sin-α-red-line--cos-α-blue-line), [6](#step-6--tan-α-orange-line--auxiliary-ray) |
+| [Grid](/core/components/draw/shapes) | Background grid | [3](#step-3--grid--ticks) |
+| [Draw](/core/components/draw/overview) | Axes + tick marks + sin/cos/tan colored lines + auxiliary ray | [2](#step-2--axes--endpoint-labels--named-anchors), [3](#step-3--grid--ticks), [5](#step-5--sin-α-red-line--cos-α-blue-line), [6](#step-6--tan-α-orange-line--auxiliary-ray) |
 | [Node](/core/components/node/overview) | Axis-end labels + tick text + α label + right info box | [2](#step-2--axes--endpoint-labels--named-anchors), [3](#step-3--grid--ticks), [4](#step-4--30-wedge--α-label), [7](#step-7--right-hand-multi-color-info-box) |
 | [Coordinate](/core/components/node/coordinate) | Named x/y axis endpoints + tan intersection `t` | [2](#step-2--axes--endpoint-labels--named-anchors), [6](#step-6--tan-α-orange-line--auxiliary-ray) |
 
