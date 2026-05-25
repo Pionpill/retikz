@@ -5,8 +5,6 @@ description: Top-level container — accepts a component tree or IR, compiles to
 
 `<Layout>` is retikz's only required top-level wrapper. Every Kernel / Sugar component must live inside a `<Layout>`.
 
-> The component was originally `<TikZ>` (a nod to LaTeX TikZ); it is now `<Layout>` to better reflect its job — "declare a layout and hand it to the current renderer". The `<TikZ>` alias was removed in v0.2 beta — use `<Layout>`.
-
 `<Layout>` is the entry point between the DSL and the renderer: with children, it converts the inner component tree into IR; with `ir`, it uses that pre-built IR directly. It then compiles the IR into a Scene and hands it to the current renderer. `width` / `height` control the rendered output's displayed size in the page; internal coordinates stay in retikz user units, and the compiler uses layout bounds to compute the visible range.
 
 ## Usage

@@ -9,7 +9,7 @@ import type { FC } from 'react';
  */
 const Demo: FC = () => (
   <Layout width={620} height={260}>
-    {/* 左：直接画在 TikZ 顶层坐标 */}
+    {/* 左：直接画在 Layout 顶层坐标 */}
     <Node id="a0" position={[-260, 0]}>
       A
     </Node>
@@ -25,7 +25,7 @@ const Demo: FC = () => (
       <Step to="c0" />
     </Path>
     <Node id="capPlain" position={[-200, 50]} stroke="none" fill="none" textColor="gray" font={{ size: 12 }}>
-      TikZ
+      Layout
     </Node>
 
     {/* 右：同一组包进 Scope，整组 translate + rotate */}

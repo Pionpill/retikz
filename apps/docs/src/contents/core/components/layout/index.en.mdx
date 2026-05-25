@@ -1,6 +1,6 @@
 ---
 title: Layout
-description: The layout family — containers that establish coordinate context: the required top-level Layout canvas (formerly TikZ), and the nestable Scope that applies a local transform to a group of children as a unit.
+description: The layout family — containers that establish coordinate context: the required top-level Layout canvas, and the nestable Scope that applies a local transform to a group of children as a unit.
 ---
 
 This group is the figure's *container* layer. `<Layout>` is the mandatory outermost wrapper of every figure: it takes a component tree or IR, compiles a Scene, and hands it to the current renderer. `<Scope>` gathers a group of children into one unit inside it, applies a shared translate / rotate / scale, and can be referenced or positioned as a whole through its `id`. Both divide up the job of *establishing coordinate context*: `<Layout>` provides the root coordinate system, and `<Scope>` opens a local one within it.
@@ -11,7 +11,7 @@ This group is the figure's *container* layer. `<Layout>` is the mandatory outerm
 
 | Component | Type | Responsibility | Use it when |
 | --- | --- | --- | --- |
-| Layout | Kernel | The one required top-level container: children / IR entry, compiles and emits the Scene; `width` / `height` set display size (formerly `<TikZ>`) | The outermost wrapper of every figure |
+| Layout | Kernel | The one required top-level container: children / IR entry, compiles and emits the Scene; `width` / `height` set display size | The outermost wrapper of every figure |
 | Scope | Kernel | Local transform container: translates / rotates / scales a group of children as a unit, referenceable as a whole by `id` | Transforming a sub-figure as one, local coordinate frames, id namespace isolation |
 
 ## In this section
