@@ -101,7 +101,7 @@ frontmatter `title` + `description` 始终在；正文不写 `# 标题`（H1 走
 | 参考家族（runtime） | 管线示意：`JSX → IR → Scene → 渲染目标`，灰注各 API 在哪起作用 |
 | 参考家族（schema） | 可省；schema 是数据形状，表 + 卡足够 |
 
-图一律走 [`docs-figure-draw`](../docs-figure-draw/SKILL.md)：`hideCode`、备注灰色（关键字 `gray`）且置于被标注元素**下方**、强调色用 `orange`、纯技术 label 用单文件。
+图一律走 [`docs-figure-draw`](../docs-figure-draw/SKILL.md)：`hideCode`、备注灰色（关键字 `gray`）且置于被标注元素**下方**、强调色用 `darkorange`、纯技术 label 用单文件。
 
 ## Common Mistakes
 

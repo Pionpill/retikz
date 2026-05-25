@@ -16,8 +16,8 @@ const Demo: FC = () => (
 
     {/* Text: override the style of a single line inside a node */}
     <Node id="textDemo" position={[0, 35]} align="left">
-      <Text fill="orange" font={{ weight: 'bold' }}>
-        bold orange
+      <Text fill="darkorange" font={{ weight: 'bold' }}>
+        bold darkorange
       </Text>
       plain line
     </Node>

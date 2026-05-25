@@ -32,7 +32,7 @@ const Demo: FC = () => (
     {/* 虚线 */}
     <Draw way={['r4', [320, 90]]} stroke="green" strokeWidth={2} dashPattern={[6, 3]} />
     {/* 点线 */}
-    <Draw way={['r5', [320, 120]]} stroke="orange" strokeWidth={2} dashPattern={[1, 4]} />
+    <Draw way={['r5', [320, 120]]} stroke="darkorange" strokeWidth={2} dashPattern={[1, 4]} />
   </Layout>
 );
 

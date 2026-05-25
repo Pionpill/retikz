@@ -6,7 +6,7 @@ const Demo: FC = () => (
     {/* 上：opacity 整体——同时打折 stroke 与 fill */}
     <Path
       stroke="currentColor"
-      fill="orange"
+      fill="darkorange"
       strokeWidth={4}
       opacity={0.4}
     >
@@ -20,7 +20,7 @@ const Demo: FC = () => (
     {/* 中：fillOpacity 只打折 fill，stroke 不变 */}
     <Path
       stroke="currentColor"
-      fill="orange"
+      fill="darkorange"
       strokeWidth={4}
       fillOpacity={0.3}
     >
@@ -34,7 +34,7 @@ const Demo: FC = () => (
     {/* 下：drawOpacity 只打折 stroke，fill 不变 */}
     <Path
       stroke="currentColor"
-      fill="orange"
+      fill="darkorange"
       strokeWidth={4}
       drawOpacity={0.2}
     >

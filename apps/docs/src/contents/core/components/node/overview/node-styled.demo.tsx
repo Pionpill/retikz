@@ -3,7 +3,7 @@ import type { FC } from 'react';
 
 const Demo: FC = () => (
   <Layout width={400} height={80}>
-    <Node id="a" position={[-90, 0]} fill="lightgray" stroke="orange">
+    <Node id="a" position={[-90, 0]} fill="lightgray" stroke="darkorange">
       Filled
     </Node>
     <Node id="b" position={[0, 0]} stroke="dodgerblue" strokeWidth={2}>

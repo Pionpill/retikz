@@ -11,7 +11,7 @@ const Demo: FC = () => (
     <Node id="o" position={[0, 0]} shape="circle" minimumSize={44} fill="dodgerblue" textColor="white">
       0,0
     </Node>
-    <Node id="c" position={[70, 70]} shape="circle" minimumSize={24} fill="orange" />
+    <Node id="c" position={[70, 70]} shape="circle" minimumSize={24} fill="darkorange" />
     <Node
       id="frame"
       position={[0, 0]}

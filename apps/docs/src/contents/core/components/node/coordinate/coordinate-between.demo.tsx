@@ -19,21 +19,21 @@ const Demo: FC = () => (
       position={{ between: [{ id: 'A' }, { id: 'B' }], t: 0.25 }}
       shape="circle"
       minimumSize={14}
-      fill="orange"
+      fill="darkorange"
     />
     <Node
       id="mid"
       position={{ between: [{ id: 'A' }, { id: 'B' }], t: 0.5 }}
       shape="circle"
       minimumSize={20}
-      fill="orange"
+      fill="darkorange"
     />
     <Node
       id="q3"
       position={{ between: [{ id: 'A' }, { id: 'B' }], t: 0.75 }}
       shape="circle"
       minimumSize={14}
-      fill="orange"
+      fill="darkorange"
     />
   </Layout>
 );

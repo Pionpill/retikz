@@ -15,7 +15,7 @@ const Demo: FC = () => (
 
     {/* Text：在节点内给单独一行覆盖样式 */}
     <Node id="textDemo" position={[0, 35]} align="left">
-      <Text fill="orange" font={{ weight: 'bold' }}>
+      <Text fill="darkorange" font={{ weight: 'bold' }}>
         橙色加粗
       </Text>
       普通行

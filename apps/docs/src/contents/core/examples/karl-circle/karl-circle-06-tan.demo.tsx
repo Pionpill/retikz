@@ -79,7 +79,7 @@ const Demo: FC = () => (
         Coordinate t 命名供下方 ray 引用 */}
     <Draw
       way={[[100, 0], { label: { text: 'tan α = sin α / cos α', side: 'right' } }, [100, -TAN30 * 100]]}
-      stroke="orange"
+      stroke="darkorange"
       thickness="thick"
     />
     <Coordinate id="t" position={[100, -TAN30 * 100]} />

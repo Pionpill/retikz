@@ -87,7 +87,7 @@ const Demo: FC = () => (
     />
     <Draw
       way={[[100, 0], { label: { text: 'tan α = sin α / cos α', side: 'right' } }, [100, -TAN30 * 100]]}
-      stroke="orange"
+      stroke="darkorange"
       thickness="thick"
     />
     <Coordinate id="t" position={[100, -TAN30 * 100]} />
@@ -113,8 +113,8 @@ const Demo: FC = () => (
         '(length of red line)',
         { text: 'cos α = √3/2', fill: "dodgerblue" },
         '(length of dodgerblue line)',
-        { text: 'tan α = 1/√3', fill: "orange" },
-        '(length of orange line)',
+        { text: 'tan α = 1/√3', fill: "darkorange" },
+        '(length of darkorange line)',
       ]}
     />
   </Layout>

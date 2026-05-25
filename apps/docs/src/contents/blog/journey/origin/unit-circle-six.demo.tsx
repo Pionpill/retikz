@@ -94,7 +94,7 @@ const Demo: FC = () => (
     />
     <Draw
       way={[[100, 0], { label: { text: 'tan α', side: 'right' } }, [100, -TAN30 * 100]]}
-      stroke="orange"
+      stroke="darkorange"
       thickness="thick"
     />
 
@@ -146,7 +146,7 @@ const Demo: FC = () => (
         { text: 'α = 30°', fill: "green" },
         { text: 'sin α = 1/2', fill: "red" },
         { text: 'cos α = √3/2', fill: "dodgerblue" },
-        { text: 'tan α = 1/√3', fill: "orange" },
+        { text: 'tan α = 1/√3', fill: "darkorange" },
         { text: 'sec α = 2/√3', fill: "dodgerblue" },
         { text: 'csc α = 2', fill: "red" },
         { text: 'cot α = √3', fill: "green" },

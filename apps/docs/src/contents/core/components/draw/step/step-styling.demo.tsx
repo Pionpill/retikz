@@ -39,7 +39,7 @@ const Demo: FC = () => (
       <Step kind="move" to="r4" />
       <Step kind="line" to={[320, 90]} />
     </Path>
-    <Path stroke="orange" strokeWidth={2} dashPattern={[1, 4]}>
+    <Path stroke="darkorange" strokeWidth={2} dashPattern={[1, 4]}>
       <Step kind="move" to="r5" />
       <Step kind="line" to={[320, 120]} />
     </Path>

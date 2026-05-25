@@ -26,7 +26,7 @@ const Demo: FC = () => (
 
     <Node id="right" position={[180, 0]} align="left">
       <Text fill="green">success</Text>
-      <Text fill="orange">warning</Text>
+      <Text fill="darkorange">warning</Text>
       <Text fill="red" opacity={0.8}>error</Text>
     </Node>
   </Layout>
