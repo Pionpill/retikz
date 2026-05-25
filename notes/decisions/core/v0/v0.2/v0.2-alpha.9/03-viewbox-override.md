@@ -2,7 +2,7 @@
 
 - 状态：Proposed
 - 决策日期：2026-05-24
-- 关联：[v0.2-alpha.9 plan §第三部分](./roadmap.md) · [tikz-gap-analysis §6 Scene](../../../../../analysis/2026-05-07-tikz-gap-analysis.md) · 本 milestone [ADR-01](./01-partway-absolute-target.md) / [ADR-02](./02-clip.md)
+- 关联：[v0.2-alpha.9 plan §第三部分](./roadmap.md) · [tikz-gap-analysis §6 Scene](../../../../../analysis/tikz-gap-analysis.md) · 本 milestone [ADR-01](./01-partway-absolute-target.md) / [ADR-02](./02-clip.md)
 
 > **前置依赖**：复用 core 现有 scene `Layout` 计算 + react `formatViewBox`（`packages/react/src/render/viewBox.ts:4`）。本 ADR 只加 override 入口，不改度量。
 

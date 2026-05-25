@@ -2,7 +2,7 @@
 
 > 写于 2026-05-23。v0.2「能力补全阶段」末段（gap §5 定位 + §6 Scene）。三块能力，均低中成本：**clip 裁切**（renderer-agnostic 裁剪资源）、**自定义 viewBox override**（覆盖自动包围盒的逃生口）、**比例 partway 定位**（两点间 t 比例点）。本段后 v0.2 转入收尾 / beta / rc。
 >
-> 关联：[`v0.2 总计划 §alpha.9 设计预想`](../roadmap.md) · [`tikz-gap-analysis §5 定位 / §6 Scene`](../../../../../analysis/2026-05-07-tikz-gap-analysis.md) · 前一段 [`v0.2-alpha.8.md`](../v0.2-alpha.8/roadmap.md)
+> 关联：[`v0.2 总计划 §alpha.9 设计预想`](../roadmap.md) · [`tikz-gap-analysis §5 定位 / §6 Scene`](../../../../../analysis/tikz-gap-analysis.md) · 前一段 [`v0.2-alpha.8.md`](../v0.2-alpha.8/roadmap.md)
 >
 > **依赖**：clip 的资源管理复用 alpha.7 Paint 的 renderer-agnostic 资源表 + 稳定 id；partway 复用 alpha.6 Target 解析 + `geometry/_edge.ts` lerpPoint；viewBox 复用现有 layout 计算。无新硬前置。
 >

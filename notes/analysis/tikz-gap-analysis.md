@@ -1,6 +1,6 @@
 # retikz 图元与 TikZ 能力对照
 
-> 关联文档：[`architecture/DESIGN.md`](../architecture/DESIGN.md) · [`packages/core/AGENTS.md`](../../packages/core/AGENTS.md)
+> 关联文档：[`architecture/core-design.md`](../architecture/core-design.md) · [`packages/core/AGENTS.md`](../../packages/core/AGENTS.md)
 
 ## 总览
 

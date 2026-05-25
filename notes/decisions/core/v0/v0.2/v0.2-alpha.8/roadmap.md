@@ -2,7 +2,7 @@
 
 > 写于 2026-05-23。v0.2「能力补全阶段」第二段（gap §2 Path + §3 Step；Path 与 Step 同体，一段处理）。五块能力，**两块大的（自定义 arrow / 路径生成器注册面）拆独立 ADR、固定实现顺序**，其余三块（out/in·self-loop / 路径变换 / 中段 marking）为低成本搭车项。
 >
-> 关联：[`v0.2 总计划 §alpha.8 设计预想`](../roadmap.md) · [`tikz-gap-analysis §2 Path / §3 Step`](../../../../../analysis/2026-05-07-tikz-gap-analysis.md) · 前一段 [`v0.2-alpha.7.md`](../v0.2-alpha.7/roadmap.md)（自定义 arrow 颜色继承复用本段前置 Paint）
+> 关联：[`v0.2 总计划 §alpha.8 设计预想`](../roadmap.md) · [`tikz-gap-analysis §2 Path / §3 Step`](../../../../../analysis/tikz-gap-analysis.md) · 前一段 [`v0.2-alpha.7.md`](../v0.2-alpha.7/roadmap.md)（自定义 arrow 颜色继承复用本段前置 Paint）
 >
 > **依赖**：自定义 arrow 依赖 alpha.7 Paint 的「继承 path 描边」sentinel；其余四块复用既有机器。**故 alpha.8 紧跟 alpha.7。**
 >

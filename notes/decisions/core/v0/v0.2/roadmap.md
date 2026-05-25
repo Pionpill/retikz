@@ -2,7 +2,7 @@
 
 > 写于 2026-05-16；2026-05-18 第一次增补 alpha.4 / .5；同日二次重排为 6 段 alpha（拆分 emit 增强、Path sugar 落 alpha.6）；2026-05-21 合并 main 的三个新提案，扩为 8 段 alpha（新增 alpha.7 结构化 Target/Anchor、alpha.8 `<TikZ>` → `<Layout>` 命名；Node label 旋转折入 alpha.5）；同日三次调整：alpha.8（`<TikZ>` → `<Layout>` 命名）并入 alpha.7（同属 DSL 整理、AST 白名单 / system prompt 一次同步），收回 7 段 alpha。**2026-05-23：原 alpha.4（IR 顺序回归，纯内部、体量小）与原 alpha.5（emit 层增强）合并为一段 alpha.4——zIndex 稳定排序直接建在 IR 顺序回归的 sealSink 上，强协同；其后各段顺次重编号（原 alpha.6 sugar → alpha.5、原 alpha.7 Target/Anchor → alpha.6），收回 6 段 alpha。** **2026-05-23 续：六段结构化闭环后，v0.2 进入「能力补全」阶段——以 `tikz-gap-analysis` 为底逐段补 TikZ 能力；首段 alpha.7「Node 能力完善」（text width 自动换行 + pin 引脚 + 填充服务 Paint：纯色 / 渐变 / 图案 / 图片）；alpha.8「Path / Step 能力完善」（自定义 arrow + 路径生成器注册面 + 路径整体变换 + out/in·self-loop + 中段 marking）；alpha.9「Scene / Position 能力完善」（clip 裁切 + 自定义 viewBox override + 比例 partway 定位）。能力补全阶段 alpha.7–9 覆盖 gap §1–6 全部值得做的项，其后转入收尾 / beta / rc。** **2026-05-23 评审：多 LLM 评审落 5 项——partway 端点改自包含 `AbsoluteTarget`（排除 path-relative、避免 schema 递归）；Paint / clip 改 renderer-agnostic 资源表 + `paintRef` / `clipRef`（`<defs>` / `<clipPath>` 物化只在 adapter）；生成器 `params` 限 `JsonObjectSchema`（守 IR JSON 可序列化）；alpha.7 Paint 分阶段（基础先行、图案 / 图片顺延）；alpha.8 两注册面拆独立 ADR、`ArrowDefinition` 先于 `PathGeneratorDefinition`。** v0.1 在 main 分支收尾（rc.1 / rc.2 / 0.1.0），v0.2 在 next 分支并行启动**计划与 ADR**；v0.2 实施代码在 v0.1.0 出关后再开。
 >
-> 关联：[`v0 roadmap §v0.2`](../roadmap.md) · [`架构 DESIGN.md`](../../../../architecture/DESIGN.md) · [`tikz-gap-analysis`](../../../../analysis/2026-05-07-tikz-gap-analysis.md)
+> 关联：[`v0 roadmap §v0.2`](../roadmap.md) · [`架构 core-design.md`](../../../../architecture/core-design.md) · [`tikz-gap-analysis`](../../../../analysis/tikz-gap-analysis.md)
 
 ## 定位
 
@@ -34,7 +34,7 @@ v0.2 主题：把 retikz 从"扁平 IR + 闭合 shape 枚举"推进到"分组 IR
 
 ## 能力补全阶段（alpha.7+）
 
-六段结构化 alpha 闭环后，v0.2 转入「能力补全」——以 [`tikz-gap-analysis`](../../../../analysis/2026-05-07-tikz-gap-analysis.md) 为底，逐段补齐 TikZ 在通用图表场景下值得有的能力。
+六段结构化 alpha 闭环后，v0.2 转入「能力补全」——以 [`tikz-gap-analysis`](../../../../analysis/tikz-gap-analysis.md) 为底，逐段补齐 TikZ 在通用图表场景下值得有的能力。
 
 **定位过滤**（决定哪些进 core）：
 
@@ -58,7 +58,7 @@ v0.2 主题：把 retikz 从"扁平 IR + 闭合 shape 枚举"推进到"分组 IR
 
 ### alpha.7 设计预想：Node 能力完善
 
-承接 [`tikz-gap-analysis §1 Node`](../../../../analysis/2026-05-07-tikz-gap-analysis.md)。三块 core 能力 + 两处 gap 状态修订。
+承接 [`tikz-gap-analysis §1 Node`](../../../../analysis/tikz-gap-analysis.md)。三块 core 能力 + 两处 gap 状态修订。
 
 **三块能力**：
 
@@ -93,7 +93,7 @@ v0.2 主题：把 retikz 从"扁平 IR + 闭合 shape 枚举"推进到"分组 IR
 
 ### alpha.8 设计预想：Path / Step 能力完善
 
-承接 [`tikz-gap-analysis §2 Path`](../../../../analysis/2026-05-07-tikz-gap-analysis.md) + §3 Step（Path 与 Step 同体，一段处理）。五块能力，**自定义 arrow 与路径生成器注册面是两块大的，其余为低成本搭车项**。
+承接 [`tikz-gap-analysis §2 Path`](../../../../analysis/tikz-gap-analysis.md) + §3 Step（Path 与 Step 同体，一段处理）。五块能力，**自定义 arrow 与路径生成器注册面是两块大的，其余为低成本搭车项**。
 
 | 子项 | gap 现状 | 目标 | 落点 |
 |---|---|---|---|
@@ -130,7 +130,7 @@ v0.2 主题：把 retikz 从"扁平 IR + 闭合 shape 枚举"推进到"分组 IR
 
 ### alpha.9 设计预想：Scene / Position 能力完善
 
-承接 [`tikz-gap-analysis §5 定位`](../../../../analysis/2026-05-07-tikz-gap-analysis.md) + §6 Scene。三块能力，均低中成本，是能力补全阶段收尾段。
+承接 [`tikz-gap-analysis §5 定位`](../../../../analysis/tikz-gap-analysis.md) + §6 Scene。三块能力，均低中成本，是能力补全阶段收尾段。
 
 | 子项 | gap 现状 | 目标 | 落点 |
 |---|---|---|---|

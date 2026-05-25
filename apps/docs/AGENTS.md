@@ -142,10 +142,10 @@ H1 走 frontmatter，**mdx 正文里不要再写 `# 标题`**。
 ## 文档内容规范
 
 - **不引用第三方外链**——mdx 正文里不主动加任何指向第三方网站的链接（zod 官网、RFC、第三方库主页、博客等）。需要时由维护者自己加。
-- **不要在 mdx 中暴露项目结构路径（文件名 / 目录路径）**——文档站用户看不到也点不到这些路径。例如不要写"详见 `notes/architecture/DESIGN.md` §1.2"或"参 `.agents/skills/flow-alpha/SKILL.md`"——用户读到这种描述只能去仓库 / 本地手动找。
+- **不要在 mdx 中暴露项目结构路径（文件名 / 目录路径）**——文档站用户看不到也点不到这些路径。例如不要写"详见 `notes/architecture/core-design.md` §1.2"或"参 `.agents/skills/flow-alpha/SKILL.md`"——用户读到这种描述只能去仓库 / 本地手动找。
   - 如果确实要引用项目仓库内的文件（设计文档 / SKILL / AGENTS.md / ADR 等），**用 GitHub 完整 URL 作超链接**，让用户能点进去：
     ```mdx
-    详见 [DESIGN.md §1.2](https://github.com/Pionpill/retikz/blob/main/notes/architecture/DESIGN.md)
+    详见 [core-design.md §1.2](https://github.com/Pionpill/retikz/blob/main/notes/architecture/core-design.md)
     ```
     GitHub URL 是这条规则的**例外**——它指向项目自家 repo，对用户来说是可达的"项目延伸阅读"，与第三方外链性质不同。
   - 仅与"项目目录约定"相关的纯文字描述（如"ADR 起新文件用 `cp _template.md ...`"这种命令示例）可以保留路径作为 inline code，不需要超链接——因为这是给已经在用 retikz 的人看的操作说明

@@ -2,7 +2,7 @@
 
 - 状态：Proposed
 - 决策日期：2026-05-13
-- 关联：[v0.1-beta.1 plan TODO-14](./roadmap.md) · [DESIGN.md "core 错误信息原则"](../../../../../architecture/DESIGN.md)
+- 关联：[v0.1-beta.1 plan TODO-14](./roadmap.md) · [core-design.md "core 错误信息原则"](../../../../../architecture/core-design.md)
 
 ## 背景
 
@@ -22,7 +22,7 @@
 
 `compile.ts:96` 调用方只 `if (result) push(...)` —— 任一失败 path 静默从 Scene 消失、控制台零信息。用户写 `<Path><Step to="bogusId"/></Path>` 整条 path 消失，调试体验最差点之一。
 
-DESIGN.md 已有错误信息原则——"AI / LLM 一等公民、错误信息必须可调试"。silent fail 直接违背。
+core-design.md 已有错误信息原则——"AI / LLM 一等公民、错误信息必须可调试"。silent fail 直接违背。
 
 ## 选项
 
@@ -72,7 +72,7 @@ export type CompileOptions = {
 
 ### C. 不动，保留 silent fail
 
-代价：调试体验持续最差点；DESIGN.md 原则被违背。
+代价：调试体验持续最差点；core-design.md 原则被违背。
 
 ## 决策：A
 

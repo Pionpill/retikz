@@ -18,7 +18,7 @@ retikz 的实现劳动大部分由 AI 完成——节点 / 路径 / 边标注 / 
 
 ## 项目设计原则：AI 一等公民
 
-这套工作流不是工程化炫技——它服务一个明确的产品立项主张：**retikz 是 AI 一等公民的绘图库，IR 是为 AI 设计的**（详见 [DESIGN.md §1.2 第一设计原则与 §7 AI 友好性](https://github.com/Pionpill/retikz/blob/main/notes/architecture/DESIGN.md)）。
+这套工作流不是工程化炫技——它服务一个明确的产品立项主张：**retikz 是 AI 一等公民的绘图库，IR 是为 AI 设计的**（详见 [core-design.md §1.2 第一设计原则与 §7 AI 友好性](https://github.com/Pionpill/retikz/blob/main/notes/architecture/core-design.md)）。
 
 具体含义：
 
@@ -128,7 +128,7 @@ retikz 当前三个 sub-Agent 默认全部用 Claude Opus 4.7。同 model 同上
 | --- | --- |
 | 项目硬规则（命名 / commit / lint / 双语 / IR schema 风格） | [AGENTS.md](https://github.com/Pionpill/retikz/blob/main/AGENTS.md) |
 | 文档站特有约定（mdx 风格 / 双语 demo / 链接策略） | [apps/docs/AGENTS.md](https://github.com/Pionpill/retikz/blob/main/apps/docs/AGENTS.md) |
-| 项目立项主张与第一设计原则 | [DESIGN.md](https://github.com/Pionpill/retikz/blob/main/notes/architecture/DESIGN.md) |
+| 项目立项主张与第一设计原则 | [core-design.md](https://github.com/Pionpill/retikz/blob/main/notes/architecture/core-design.md) |
 | 全部 SKILL（开发流程、发版、文档写作） | [.agents/skills/](https://github.com/Pionpill/retikz/tree/main/.agents/skills) |
 | 5 阶段编排器 | [flow-alpha SKILL](https://github.com/Pionpill/retikz/blob/main/.agents/skills/flow-alpha/SKILL.md) |
 | 设计 / 实现 / 测试 / 文档 / 收尾子 SKILL | [develop-design](https://github.com/Pionpill/retikz/blob/main/.agents/skills/develop-design/SKILL.md) · [develop-implement](https://github.com/Pionpill/retikz/blob/main/.agents/skills/develop-implement/SKILL.md) · [develop-test](https://github.com/Pionpill/retikz/blob/main/.agents/skills/develop-test/SKILL.md) · [develop-document](https://github.com/Pionpill/retikz/blob/main/.agents/skills/develop-document/SKILL.md) · [develop-wrapup](https://github.com/Pionpill/retikz/blob/main/.agents/skills/develop-wrapup/SKILL.md) |

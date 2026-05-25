@@ -2,7 +2,7 @@
 
 > 写于 2026-05-23。v0.2「能力补全阶段」首段（gap §1 Node）。三块 core 横切能力：**填充服务 Paint**（`fill` 从单色升级为纯色 / 渐变，renderer-agnostic 资源表；图案 / 图片顺延）、**text width 自动换行**（给定宽度自动折行）、**pin 引脚**（label + 引线）。
 >
-> 关联：[`v0.2 总计划 §alpha.7 设计预想`](../roadmap.md) · [`tikz-gap-analysis §1 Node`](../../../../../analysis/2026-05-07-tikz-gap-analysis.md) · 后续段 [`v0.2-alpha.8.md`](../v0.2-alpha.8/roadmap.md)（自定义 arrow 复用本段 Paint 颜色继承）
+> 关联：[`v0.2 总计划 §alpha.7 设计预想`](../roadmap.md) · [`tikz-gap-analysis §1 Node`](../../../../../analysis/tikz-gap-analysis.md) · 后续段 [`v0.2-alpha.8.md`](../v0.2-alpha.8/roadmap.md)（自定义 arrow 复用本段 Paint 颜色继承）
 >
 > **贯穿约束（评审 P1，本段两处命中）**：① ScenePrimitive 渲染无关（`packages/core/src/primitive/scene.ts:8`：不允许 SVG-only 特性）——Paint 由 core 产 renderer-agnostic 资源表 + primitive 挂 `paintRef`，`<defs>` 物化只在 React SVG adapter；② IR 100% JSON 可序列化——`PaintSpec` 字段只用 JSON 值，禁 function / `z.any`。
 

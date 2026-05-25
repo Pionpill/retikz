@@ -6,7 +6,7 @@
 
 | 目录 | 装什么 | 生命周期 | 命名 |
 |---|---|---|---|
-| [`architecture/`](./architecture) | 长期架构文档；少改、不带日期 | 永久。重大架构调整时更新原文，不另起临时副本 | 主题名，如 `DESIGN.md` |
+| [`architecture/`](./architecture) | 长期架构文档；少改、不带日期 | 永久。重大架构调整时更新原文，不另起临时副本 | 主题名，如 `core-design.md` |
 | [`decisions/`](./decisions) | 路线、执行追踪、ADR 决策记录 | roadmap 可更新；ADR 永久保留，Accepted 后不改历史 | 见下文 decisions 规则 |
 | [`analysis/`](./analysis) | 一次性研究 / 对比 / gap 分析 | 长期保留作历史参考，但不再更新 | `YYYY-MM-DD-kebab-case-标题.md` |
 
@@ -51,7 +51,7 @@ notes/decisions/
 
 ### architecture/
 
-- [`DESIGN.md`](./architecture/DESIGN.md)：retikz 总架构设计，包含分层模型、IR、Scene、AI 友好原则、跨平台策略。
+- [`core-design.md`](./architecture/core-design.md)：retikz 总架构设计，包含分层模型、IR、Scene、AI 友好原则、跨平台策略。
 
 ### decisions/
 
@@ -62,7 +62,7 @@ notes/decisions/
 
 ### analysis/
 
-- [`2026-05-07-tikz-gap-analysis.md`](./analysis/2026-05-07-tikz-gap-analysis.md)：当前 Node / Path 能力对比 TikZ 的缺失项与优先级。
+- [`tikz-gap-analysis.md`](./analysis/tikz-gap-analysis.md)：当前 Node / Path 能力对比 TikZ 的缺失项与优先级。
 
 ## 写文档前先选生命周期
 

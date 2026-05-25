@@ -2,7 +2,7 @@
 
 - 状态：Accepted
 - 决策日期：2026-05-21
-- 关联：[v0 roadmap §Shape Registry 提案](../../roadmap.md#shape-registry-提案) · [v0.2 总计划 §六段 alpha 节奏](../roadmap.md#六段-alpha-节奏) · [DESIGN.md §1.2 AI 一等公民](../../../../../architecture/DESIGN.md) · [alpha.1 ADR-02 nodeIndex/anchor 解析](../v0.2-alpha.1/02-node-index-anchor-resolution.md) · [v0.1-beta.1 ADR-03 geometry 共享 transform / 死 anchor 清理](../../v0.1/v0.1-beta.1/03-geometry-shared-transform-dead-anchor-cleanup.md) · [v0.1-beta.1 ADR-08 onWarn 收集器](../../v0.1/v0.1-beta.1/08-compile-on-warn-collector.md)
+- 关联：[v0 roadmap §Shape Registry 提案](../../roadmap.md#shape-registry-提案) · [v0.2 总计划 §六段 alpha 节奏](../roadmap.md#六段-alpha-节奏) · [core-design.md §1.2 AI 一等公民](../../../../../architecture/core-design.md) · [alpha.1 ADR-02 nodeIndex/anchor 解析](../v0.2-alpha.1/02-node-index-anchor-resolution.md) · [v0.1-beta.1 ADR-03 geometry 共享 transform / 死 anchor 清理](../../v0.1/v0.1-beta.1/03-geometry-shared-transform-dead-anchor-cleanup.md) · [v0.1-beta.1 ADR-08 onWarn 收集器](../../v0.1/v0.1-beta.1/08-compile-on-warn-collector.md)
 
 > **前置依赖说明**：alpha.6（结构化 Target / Anchor）依赖本 ADR 先固化 anchor 接口。本 ADR 把 anchor 解释面收敛到 `ShapeDefinition.anchor(rect, name)`，alpha.6 的对象化 path target 直接消费同一入口，避免「内置 shape anchor 走旧路径、注册 shape anchor 走新路径」的双轨。是接口先后，非排期紧邻。
 
@@ -17,7 +17,7 @@
 
 **不能套 Tier 2 `lowerComposites` 钩子**：shape 是 Tier 1 一等基元——`boundaryPoint` / `anchor` / `circumscribe` / `emit` 四件事下沉不到 Kernel，它本身就是 Kernel 的一部分。
 
-**AI 一等公民校验**（DESIGN.md §1.2）：核心约束——**IR 的 `shape` 字段仍是字符串（JSON 可序列化），`ShapeDefinition` 含函数、不进 IR，走 `CompileOptions.shapes` 运行时注入**。LLM 生成的 IR 永远只写 shape 名字符串，扩展能力靠宿主在编译期注入。内置 4 名通过 `.describe` + schema reference + system prompt 列举（schema 校验只 `z.string().min(1)`、不门控内置名；未注册名 compile 期拒）。
+**AI 一等公民校验**（core-design.md §1.2）：核心约束——**IR 的 `shape` 字段仍是字符串（JSON 可序列化），`ShapeDefinition` 含函数、不进 IR，走 `CompileOptions.shapes` 运行时注入**。LLM 生成的 IR 永远只写 shape 名字符串，扩展能力靠宿主在编译期注入。内置 4 名通过 `.describe` + schema reference + system prompt 列举（schema 校验只 `z.string().min(1)`、不门控内置名；未注册名 compile 期拒）。
 
 ## 选项
 

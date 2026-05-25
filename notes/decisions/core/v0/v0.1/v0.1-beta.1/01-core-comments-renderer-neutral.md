@@ -2,7 +2,7 @@
 
 - 状态：Proposed
 - 决策日期：2026-05-13
-- 关联：[v0.1-beta.1 plan TODO-3](./roadmap.md) · [packages/core/AGENTS.md](../../../../../../packages/core/AGENTS.md) · [DESIGN.md](../../../../../architecture/DESIGN.md)
+- 关联：[v0.1-beta.1 plan TODO-3](./roadmap.md) · [packages/core/AGENTS.md](../../../../../../packages/core/AGENTS.md) · [core-design.md](../../../../../architecture/core-design.md)
 
 ## 背景
 

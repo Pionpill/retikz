@@ -2,7 +2,7 @@
 
 - 状态：Accepted
 - 决策日期：2026-05-21
-- 关联：[v0 roadmap §v0.2](../../roadmap.md) · [v0.2 总计划 §alpha.2 设计预想](../roadmap.md#alpha2-设计预想scope-样式子集) · [v0.2-alpha.2 plan](./roadmap.md) · [DESIGN.md §1.2 AI 一等公民](../../../../../architecture/DESIGN.md) · [alpha.1 ADR-01 Scope 容器](../v0.2-alpha.1/01-scope-ir-and-compile.md) · [alpha.1 ADR-02 inside-out lookup](../v0.2-alpha.1/02-node-index-anchor-resolution.md)
+- 关联：[v0 roadmap §v0.2](../../roadmap.md) · [v0.2 总计划 §alpha.2 设计预想](../roadmap.md#alpha2-设计预想scope-样式子集) · [v0.2-alpha.2 plan](./roadmap.md) · [core-design.md §1.2 AI 一等公民](../../../../../architecture/core-design.md) · [alpha.1 ADR-01 Scope 容器](../v0.2-alpha.1/01-scope-ir-and-compile.md) · [alpha.1 ADR-02 inside-out lookup](../v0.2-alpha.1/02-node-index-anchor-resolution.md)
 
 ## 背景
 
@@ -15,7 +15,7 @@ alpha.1 落了 `<Scope>` IR 容器，但**只做容器本身**——分组 + 局
 
 retikz 现状缺第 2 套：只有 `stroke` / `fill` / `textColor` 分项，**没有主色**。所以颜色跟随才一直要靠各种补丁（ADR-02 早稿的"段级 stroke 推导"即是补丁，且不 TikZ：`draw=red` 时 TikZ label 不变色，我们却让它变）。本 ADR 把这两套机制都补齐。
 
-**AI 一等公民校验**（DESIGN.md §1.2）：新增字段全 JSON 可序列化；`color` 是 TikZ 最基础词汇、LLM 烂熟；每类 default map 复用既有字段名，零额外心智；扁平结构比通道树更易 LLM 生成 / 编辑。
+**AI 一等公民校验**（core-design.md §1.2）：新增字段全 JSON 可序列化；`color` 是 TikZ 最基础词汇、LLM 烂熟；每类 default map 复用既有字段名，零额外心智；扁平结构比通道树更易 LLM 生成 / 编辑。
 
 ## 选项
 

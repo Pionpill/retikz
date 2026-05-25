@@ -2,13 +2,13 @@
 
 - 状态：Accepted
 - 决策日期：2026-05-12
-- 关联：[v0 roadmap §v0.1.0-alpha.5](../../roadmap.md) · [DESIGN.md §4.5](../../../../../architecture/DESIGN.md)
+- 关联：[v0 roadmap §v0.1.0-alpha.5](../../roadmap.md) · [core-design.md §4.5](../../../../../architecture/core-design.md)
 
 ## 背景
 
 `packages/core/src/primitive/path.ts` 的 `PathPrim.d: string` 是 SVG path mini-language 字符串（`"M 0 0 L 10 0 A r r 0 1 0 ..."`）；`primitive/group.ts` 的 `GroupPrim.transform?: string` 是 SVG transform 字符串（`"translate(10 20) rotate(30)"`）。`compile/path.ts` 整段工作就是把结构化 IRStep 编译成 `d` 字符串。
 
-这与 [DESIGN.md §4.5](../../../../../architecture/DESIGN.md) "Scene primitive 是矢量图形最大公约子集"原则冲突——`d` 字符串和 SVG transform 字符串本质都是 SVG mini-language，把它们当成"公约"等于让 SVG 渲染端的细节渗透到 core。后果：
+这与 [core-design.md §4.5](../../../../../architecture/core-design.md) "Scene primitive 是矢量图形最大公约子集"原则冲突——`d` 字符串和 SVG transform 字符串本质都是 SVG mini-language，把它们当成"公约"等于让 SVG 渲染端的细节渗透到 core。后果：
 
 - **Canvas adapter 进退两难**：要么自己 parse SVG path string（要写解析器），要么用浏览器 `new Path2D(d)`（Node / 非浏览器 canvas 没有 `Path2D`）
 - **Skia / PDF / native adapter 同样要 parse SVG mini-language**——core 内部本来就有结构化数据，吐成字符串再让 adapter parse 回来是反向操作
@@ -79,7 +79,7 @@ type GroupPrim = {
 
 理由：
 
-1. **跨 adapter 是 retikz 第一原则**——B / C 都让 core 继续依赖 SVG mini-language 知识，背离 DESIGN.md §4.5 "core 不假定任何具体渲染端"
+1. **跨 adapter 是 retikz 第一原则**——B / C 都让 core 继续依赖 SVG mini-language 知识，背离 core-design.md §4.5 "core 不假定任何具体渲染端"
 2. **双源是已知错误模式**——字符串 + 结构化双源同步问题在很多项目反复出现；保持单源（结构化）最稳
 3. **`arcSvgFlags` 顺手清理**——A 让 SVG-only flag 计算自然落进 react adapter，`core/geometry/` 回归"跨平台纯数学"定位（与本 ADR 同步落实）
 4. **AI 友好性不削弱**——`PathPrim` / `GroupPrim` 是 Scene primitive，不是 IR；LLM 直接生成的是 IR（`<Path>` / `<Step>` 这一层），不会写 PathCommand[]。所以这层结构化对 LLM 输入面无影响

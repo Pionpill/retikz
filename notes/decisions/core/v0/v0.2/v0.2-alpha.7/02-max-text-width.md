@@ -2,7 +2,7 @@
 
 - 状态：Accepted
 - 决策日期：2026-05-24
-- 关联：[v0.2-alpha.7 plan §第二部分](./roadmap.md) · [tikz-gap-analysis §1 Node](../../../../../analysis/2026-05-07-tikz-gap-analysis.md) · 本 milestone [ADR-01](./01-paint-basics.md) / [ADR-03](./03-pin.md)
+- 关联：[v0.2-alpha.7 plan §第二部分](./roadmap.md) · [tikz-gap-analysis §1 Node](../../../../../analysis/tikz-gap-analysis.md) · 本 milestone [ADR-01](./01-paint-basics.md) / [ADR-03](./03-pin.md)
 
 > **前置依赖**：复用编译期注入的文字度量接口 `TextMeasurer`（`packages/core/src/compile/text-metrics.ts:29`）+ 现有 node 多行布局（`compile/node.ts`）。本 ADR 不改度量接口，只在其上加折行。
 

@@ -2,7 +2,7 @@
 
 - 状态：Accepted
 - 决策日期：2026-05-24
-- 关联：[v0.2-alpha.8 plan §第二部分补](./roadmap.md) · [tikz-gap-analysis §1 填充](../../../../../analysis/2026-05-07-tikz-gap-analysis.md) · 本 milestone [ADR-01 ArrowDefinition](./01-arrow-definition.md)（复用 `MarkerPrimitive` emit + emit-in-compile 落点）· [alpha.7 ADR-04 pattern/image](../v0.2-alpha.7/04-pattern-image-deferred.md)（pattern motif 固定 enum，本篇开放）
+- 关联：[v0.2-alpha.8 plan §第二部分补](./roadmap.md) · [tikz-gap-analysis §1 填充](../../../../../analysis/tikz-gap-analysis.md) · 本 milestone [ADR-01 ArrowDefinition](./01-arrow-definition.md)（复用 `MarkerPrimitive` emit + emit-in-compile 落点）· [alpha.7 ADR-04 pattern/image](../v0.2-alpha.7/04-pattern-image-deferred.md)（pattern motif 固定 enum，本篇开放）
 
 > **前置依赖**：复用 ADR-01 的 `MarkerPrimitive` 窄子集 + emit-in-compile 落点（compile 调 emit、adapter 物化）。**故排在 ArrowDefinition 之后。**
 

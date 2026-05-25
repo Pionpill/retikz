@@ -2,7 +2,7 @@
 
 - 状态：Accepted
 - 决策日期：2026-05-12
-- 关联：[v0 roadmap §v0.1.0-alpha.5](../../roadmap.md) · [DESIGN.md §4.5](../../../../../architecture/DESIGN.md) · [alpha.4 ADR-01](../v0.1-alpha.4/01-node-at-positioning.md) · [alpha.4 ADR-02](../v0.1-alpha.4/02-coordinate-placeholder.md)
+- 关联：[v0 roadmap §v0.1.0-alpha.5](../../roadmap.md) · [core-design.md §4.5](../../../../../architecture/core-design.md) · [alpha.4 ADR-01](../v0.1-alpha.4/01-node-at-positioning.md) · [alpha.4 ADR-02](../v0.1-alpha.4/02-coordinate-placeholder.md)
 
 ## 背景
 
