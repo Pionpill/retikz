@@ -36,7 +36,7 @@ const Demo: FC = () => (
     <Node id="b" position={[140, 0]}>
       B
     </Node>
-    <Draw way={['a', 'b']} arrow="->" arrowDetail={{ shape: 'bracket' }} stroke="dodgerblue" strokeWidth={1.5} />
+    <Draw way={['a', 'b']} arrow="->" arrowDetail={{ shape: 'bracket' }} stroke="darkorange" strokeWidth={1.5} />
   </Layout>
 );
 

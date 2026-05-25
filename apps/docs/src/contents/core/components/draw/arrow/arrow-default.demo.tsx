@@ -13,7 +13,7 @@ const Demo: FC = () => (
     <Node id="b" position={[260, 0]}>
       B
     </Node>
-    <Path arrow="->" stroke="dodgerblue" strokeWidth={2}>
+    <Path arrow="->" stroke="darkorange" strokeWidth={2}>
       <Step kind="move" to="a" />
       <Step kind="line" to="b" />
     </Path>

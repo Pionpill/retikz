@@ -7,7 +7,7 @@ import type { FC } from 'react';
  *   跟随元素 color（这里由 <Layout style={{ color }}> 提供），主题切换自动生效。
  */
 const Demo: FC = () => (
-  <Layout width={420} height={180} style={{ color: 'dodgerblue' }}>
+  <Layout width={420} height={180} style={{ color: 'darkorange' }}>
     {/* opacity：实色 → 透明 */}
     <Node
       id="fade"
@@ -20,8 +20,8 @@ const Demo: FC = () => (
         type: 'linearGradient',
         angle: 0,
         stops: [
-          { offset: 0, color: 'dodgerblue', opacity: 1 },
-          { offset: 1, color: 'dodgerblue', opacity: 0 },
+          { offset: 0, color: 'darkorange', opacity: 1 },
+          { offset: 1, color: 'darkorange', opacity: 0 },
         ],
       }}
     />

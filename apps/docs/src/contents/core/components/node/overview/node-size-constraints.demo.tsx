@@ -13,7 +13,7 @@ const Demo: FC = () => (
     <Node id="msize" position={[-70, 0]} minimumSize={60} fill="lightgray">
       hi
     </Node>
-    <Node id="btn" position={[80, 0]} minimumWidth={120} minimumHeight={28} roundedCorners={6} fill="dodgerblue" textColor="white">
+    <Node id="btn" position={[80, 0]} minimumWidth={120} minimumHeight={28} roundedCorners={6} fill="darkorange" textColor="white">
       Submit
     </Node>
     <Node id="big" position={[230, 0]} scale={1.5} fill="lightgray">

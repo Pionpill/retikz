@@ -56,7 +56,7 @@ const subroutine: ShapeDefinition = {
 
 const Demo: FC = () => (
   <Layout width={320} height={130} shapes={{ subroutine }}>
-    <Node id="p" shape="subroutine" position={[0, 0]} text="f(x)" fill="lightgray" stroke="dodgerblue" strokeWidth={2} padding={16} />
+    <Node id="p" shape="subroutine" position={[0, 0]} text="f(x)" fill="lightgray" stroke="darkorange" strokeWidth={2} padding={16} />
   </Layout>
 );
 
