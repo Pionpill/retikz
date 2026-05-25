@@ -5,7 +5,7 @@ description: IR 到 Scene 的编译入口、布局选项、文字度量与 warni
 
 `@retikz/core` 的 compile 层把 JSON 化的 IR 转成已布局的 `Scene`。React 渲染器、未来的 SSR / Canvas adapter、以及任何自定义导出流程都应该从这里接入。
 
-## 函数（Functions）
+## 函数
 
 | API | Signature | 用途 |
 | --- | --- | --- |
@@ -15,7 +15,7 @@ description: IR 到 Scene 的编译入口、布局选项、文字度量与 warni
 
 `compileToScene` 分两步：先按 IR 顺序布局 node / coordinate 并注册 id，再按原始 children 顺序发出 primitive。这样路径可以引用任意已经注册的 node / coordinate，最终渲染顺序仍保持用户写入顺序。
 
-## 编译选项（CompileOptions）
+## 编译选项
 
 | Option | Type | Default | 说明 |
 | --- | --- | --- | --- |
@@ -26,7 +26,7 @@ description: IR 到 Scene 的编译入口、布局选项、文字度量与 warni
 | `onWarn` | `(warning) => void` | dev: `console.warn`<br />production: silent | 收集可恢复的编译期 warning |
 | `shapes` | `Record<string, ShapeDefinition>` | `—` | 运行时注入自定义 node shape；同名覆盖内置发 `SHAPE_OVERRIDES_BUILTIN`。见 [自定义形状](/core/reference/extending/shape-registry) |
 
-## 文字度量（Text Measuring）
+## 文字度量
 
 `TextMeasurer` 是 compile 层唯一需要外部环境帮助的地方：
 
@@ -41,7 +41,7 @@ type TextMeasurer = (text: string, font: FontSpec) => TextMetrics;
 
 如果不传 `measureText`，`fallbackMeasurer` 用 `text.length * size * 0.55` 估算宽度、`size * 1.2` 估算高度。它能保证编译可跑，但不适合做精确排版。
 
-## 警告（Warnings）
+## 警告
 
 `CompileWarning` 是机器可读的同步 warning：
 
@@ -66,7 +66,7 @@ type TextMeasurer = (text: string, font: FontSpec) => TextMetrics;
 
 大多数 warning 不会中断编译；coordinate 自身位置无法解析时会先触发 warning，然后抛错，因为它会破坏后续引用合同。
 
-## 输出（Output）
+## 输出
 
 `compileToScene` 返回：
 

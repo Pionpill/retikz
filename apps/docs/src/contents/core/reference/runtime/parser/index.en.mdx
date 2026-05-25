@@ -10,7 +10,7 @@ Parser reference covers the sugar parsing helpers exported by `@retikz/core`. Th
 | API | Signature | Purpose |
 | --- | --- | --- |
 | `parseWay` | `(way: WayDSL) => Array<IRStep>` | Converts the `<Draw way={...}>` way array into path steps |
-| `parseTargetSugar` | `(input: unknown) => IRTarget` | Converts TikZ-style relative coordinate strings into IR targets; returns other inputs unchanged |
+| `parseTargetSugar` | `(input: unknown) => IRTarget` | Converts React DSL string shorthand into IR targets: `'+dx,dy'` / `'++dx,dy'` become relative offsets, and `'A.north'` / `'A.30'` become node target objects; returns other inputs unchanged |
 
 ## DrawWay
 
@@ -30,7 +30,7 @@ Parser reference covers the sugar parsing helpers exported by `@retikz/core`. Th
 
 | Shape | Output | Notes |
 | --- | --- | --- |
-| `IRTarget` | `move` / `line` | First item becomes move; later targets become line |
+| `IRTarget` / string shorthand | `move` / `line` | First item becomes move; later targets become line; strings pass through `parseTargetSugar` before entering IR |
 | `{ position, type }` | `relative` / `relativeAccumulate` target | TS-friendly relative offset object |
 | `DrawWay.Hv` / `DrawWay.Vh` | `kind: 'step'` | Merged with the next target into a folded step |
 | `DrawWay.Cycle` | `kind: 'cycle'` | Closes the current subpath |
@@ -59,14 +59,17 @@ Parser reference covers the sugar parsing helpers exported by `@retikz/core`. Th
 
 ## Relative Target Sugar
 
-`parseTargetSugar` only special-cases string relative coordinates:
+`parseTargetSugar` only handles React DSL string shorthand. Non-string input is returned unchanged, so object targets such as `{ id, anchor? }`, `{ of, offset }`, and `{ between, t }` are not rewritten:
 
 | Input | Output | Meaning |
 | --- | --- | --- |
 | `'+10,0'` | `{ relative: [10, 0] }` | Relative to previous endpoint; does not update prevEnd |
 | `'++10,0'` | `{ relativeAccumulate: [10, 0] }` | Relative to previous endpoint; updates prevEnd |
-| `'node-id'` | `'node-id'` | Ordinary node id, returned unchanged |
+| `'node-id'` | `{ id: 'node-id' }` | Ordinary node target |
+| `'node-id.north'` | `{ id: 'node-id', anchor: 'north' }` | Named anchor |
+| `'node-id.30'` | `{ id: 'node-id', anchor: 30 }` | Numeric-angle anchor |
 | `[10, 20]` | `[10, 20]` | Non-string input, returned unchanged |
+| `{ between: ['a', 'b'], t: 0.5 }` | `{ between: ['a', 'b'], t: 0.5 }` | Object target returned unchanged; compile resolves endpoints later |
 
 The regex accepts whitespace and negative numbers, such as `'+ -4, 8'` / `'++-4,8'`.
 

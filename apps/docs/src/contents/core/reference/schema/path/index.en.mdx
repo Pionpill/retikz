@@ -73,9 +73,11 @@ A `path` is the outer container for a drawn line. Its `children` field is an ord
 
 ## Target
 
-`TargetSchema` is a union over six forms — Cartesian / polar / node id / offset (`{ of, offset }`) / relative offsets (relative / relativeAccumulate):
+`TargetSchema` is the union for path endpoints: Cartesian / polar / node target object `{ id, anchor?, offset? }` / offset placement `{ of, offset }` / proportional placement `{ between, t }` / relative offsets (relative / relativeAccumulate). Node id strings are React DSL shorthand and are parsed into objects before reaching the IR:
 
 <ZodSchema name="TargetSchema" />
+
+For the endpoint rules of proportional placement, see [Placement](/core/reference/schema/placement#betweenposition): `between` endpoints must be self-contained and do not accept path-relative targets.
 
 ### Relative
 
