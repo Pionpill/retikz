@@ -7,12 +7,12 @@ import type { FC } from 'react';
  */
 const Demo: FC = () => (
   <Layout width={320} height={140}>
-    <Path stroke="#3b82f6" strokeWidth={2}>
+    <Path stroke="blue" strokeWidth={2}>
       <Step kind="move" to={[20, 20]} />
       <Step kind="line" to={[20, 90]} />
       <Step kind="line" to={[90, 90]} />
     </Path>
-    <Path stroke="#ef4444" strokeWidth={2} rotate={40}>
+    <Path stroke="red" strokeWidth={2} rotate={40}>
       <Step kind="move" to={[190, 20]} />
       <Step kind="line" to={[190, 90]} />
       <Step kind="line" to={[260, 90]} />

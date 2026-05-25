@@ -27,13 +27,13 @@ const Demo: FC = () => (
     </Node>
     <Draw way={['fixed-a.east', 'fixed-b.west']} stroke="currentColor" strokeWidth={2} />
 
-    <Node position={[-215, 42]} stroke="none" padding={0} textColor="#6b7280">
+    <Node position={[-215, 42]} stroke="none" padding={0} textColor="gray">
       auto: no margin
     </Node>
-    <Node position={[15, 42]} stroke="none" padding={0} textColor="#6b7280">
+    <Node position={[15, 42]} stroke="none" padding={0} textColor="gray">
       auto: margin=10
     </Node>
-    <Node position={[245, 42]} stroke="none" padding={0} textColor="#6b7280">
+    <Node position={[245, 42]} stroke="none" padding={0} textColor="gray">
       explicit anchor
     </Node>
   </Layout>

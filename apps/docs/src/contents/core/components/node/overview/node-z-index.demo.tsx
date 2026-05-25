@@ -8,15 +8,15 @@ import type { FC } from 'react';
 const Demo: FC = () => (
   <Layout width={260} height={170}>
     {/* 先声明，但 zIndex=2 → 浮到最上层 */}
-    <Node id="a" position={[-26, -18]} fill="#f87171" stroke="#ef4444" minimumSize={90} zIndex={2}>
+    <Node id="a" position={[-26, -18]} fill="red" stroke="red" minimumSize={90} zIndex={2}>
       z=2
     </Node>
     {/* 默认 z=0，按声明顺序在 c 之下 */}
-    <Node id="b" position={[0, 0]} fill="#60a5fa" stroke="#3b82f6" minimumSize={90}>
+    <Node id="b" position={[0, 0]} fill="blue" stroke="blue" minimumSize={90}>
       z=0
     </Node>
     {/* 默认 z=0，按声明顺序压在 b 上、但仍在 a 之下 */}
-    <Node id="c" position={[26, 18]} fill="#34d399" stroke="#10b981" minimumSize={90}>
+    <Node id="c" position={[26, 18]} fill="green" stroke="green" minimumSize={90}>
       z=0
     </Node>
   </Layout>

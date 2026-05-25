@@ -8,14 +8,14 @@ import type { FC } from 'react';
 const Demo: FC = () => (
   <Layout width={360} height={160}>
     {/* 蓝色填充三角形 */}
-    <Path fill="#3b82f680" stroke="#3b82f6" strokeWidth={2}>
+    <Path fill="blue" stroke="blue" strokeWidth={2}>
       <Step kind="move" to={[20, 20]} />
       <Step kind="line" to={[100, 20]} />
       <Step kind="line" to={[60, 110]} />
       <Step kind="cycle" />
     </Path>
     {/* 绿色填充菱形 */}
-    <Path fill="#10b98180" stroke="#10b981" strokeWidth={2}>
+    <Path fill="green" stroke="green" strokeWidth={2}>
       <Step kind="move" to={[180, 65]} />
       <Step kind="line" to={[230, 20]} />
       <Step kind="line" to={[280, 65]} />

@@ -7,7 +7,7 @@ import type { FC } from 'react';
  *   跟随元素 color（这里由 <Layout style={{ color }}> 提供），主题切换自动生效。
  */
 const Demo: FC = () => (
-  <Layout width={420} height={180} style={{ color: '#7c3aed' }}>
+  <Layout width={420} height={180} style={{ color: 'blue' }}>
     {/* opacity：实色 → 透明 */}
     <Node
       id="fade"
@@ -20,8 +20,8 @@ const Demo: FC = () => (
         type: 'linearGradient',
         angle: 0,
         stops: [
-          { offset: 0, color: '#1466a8', opacity: 1 },
-          { offset: 1, color: '#1466a8', opacity: 0 },
+          { offset: 0, color: 'blue', opacity: 1 },
+          { offset: 1, color: 'blue', opacity: 0 },
         ],
       }}
     />
@@ -35,7 +35,7 @@ const Demo: FC = () => (
       fill={{
         type: 'radialGradient',
         stops: [
-          { offset: 0, color: '#ffffff' },
+          { offset: 0, color: 'white' },
           { offset: 1, color: 'currentColor' },
         ],
       }}

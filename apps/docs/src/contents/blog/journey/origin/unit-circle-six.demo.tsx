@@ -3,15 +3,6 @@ import type { FC } from 'react';
 import { Coordinate, Draw, Layout, Node, Path, Step } from '@retikz/react';
 
 // 字面色而非 CSS var：SVG 下载后 CSS var 不在新上下文里解析，会 fallback 成黑
-const HELP_LINE = '#e5e7eb';
-const ANGLE_STROKE = 'oklch(0.55 0.16 145)';
-const ANGLE_FILL = 'oklch(0.92 0.10 145)';
-const SIN_COLOR = '#ef4444';
-const COS_COLOR = '#2563eb';
-const TAN_COLOR = 'oklch(0.72 0.16 60)';
-const SEC_COLOR = '#a855f7';
-const CSC_COLOR = '#ec4899';
-const COT_COLOR = '#14b8a6';
 const MATH_FONT = {
   family: '"Latin Modern Math", "STIX Two Math", "Cambria Math", "Times New Roman", serif',
   style: 'italic' as const,
@@ -29,8 +20,8 @@ const Demo: FC = () => (
     {/* 背景网格 */}
     {[-100, -50, 0, 50, 100].map(v => (
       <Fragment key={`grid-${v}`}>
-        <Draw way={[[v, -210], [v, 140]]} stroke={HELP_LINE} strokeWidth={0.5} />
-        <Draw way={[[-140, v], [140, v]]} stroke={HELP_LINE} strokeWidth={0.5} />
+        <Draw way={[[v, -210], [v, 140]]} stroke="lightgray" strokeWidth={0.5} />
+        <Draw way={[[-140, v], [140, v]]} stroke="lightgray" strokeWidth={0.5} />
       </Fragment>
     ))}
 
@@ -77,12 +68,12 @@ const Demo: FC = () => (
     ))}
 
     {/* 30° 扇形 + α */}
-    <Path fill={ANGLE_FILL} stroke={ANGLE_STROKE}>
+    <Path fill="lightgray" stroke="green">
       <Step kind="move" to={[0, 0]} />
       <Step kind="arc" startAngle={0} endAngle={-30} radius={30} />
       <Step kind="line" to={[0, 0]} />
     </Path>
-    <Node position={{ angle: -15, radius: 22 }} stroke="none" textColor={ANGLE_STROKE} padding={1} font={MATH_FONT}>
+    <Node position={{ angle: -15, radius: 22 }} stroke="none" textColor="green" padding={1} font={MATH_FONT}>
       α
     </Node>
 
@@ -93,17 +84,17 @@ const Demo: FC = () => (
     {/* sin α 红 / cos α 蓝 / tan α 橙；label.textColor 与线色一致 */}
     <Draw
       way={[{ angle: -30, radius: 100 }, { label: { text: 'sin α', side: 'left' } }, [COS30 * 100, 0]]}
-      stroke={SIN_COLOR}
+      stroke="red"
       thickness="thick"
     />
     <Draw
       way={[[COS30 * 100, 0], { label: { text: 'cos α', side: 'below' } }, [0, 0]]}
-      stroke={COS_COLOR}
+      stroke="blue"
       thickness="thick"
     />
     <Draw
       way={[[100, 0], { label: { text: 'tan α', side: 'right' } }, [100, -TAN30 * 100]]}
-      stroke={TAN_COLOR}
+      stroke="orange"
       thickness="thick"
     />
 
@@ -115,7 +106,7 @@ const Demo: FC = () => (
         { label: { text: 'sec α', position: 'at-end', side: 'below' } },
         [SEC30 * 100, 0],
       ]}
-      stroke={SEC_COLOR}
+      stroke="blue"
       thickness="thick"
     />
 
@@ -126,7 +117,7 @@ const Demo: FC = () => (
         { label: { text: 'csc α', side: 'left' } },
         [0, -CSC30 * 100],
       ]}
-      stroke={CSC_COLOR}
+      stroke="red"
       thickness="thick"
     />
 
@@ -137,7 +128,7 @@ const Demo: FC = () => (
         { label: { text: 'cot α', side: 'above' } },
         [COT30 * 100, -100],
       ]}
-      stroke={COT_COLOR}
+      stroke="green"
       thickness="thick"
     />
 
@@ -145,20 +136,20 @@ const Demo: FC = () => (
     <Node
       position={[320, -70]}
       shape="rectangle"
-      stroke="#d4d4d4"
+      stroke="lightgray"
       dashed
       roundedCorners={6}
       innerXSep={10}
       innerYSep={4}
       align="left"
       text={[
-        { text: 'α = 30°', fill: ANGLE_STROKE },
-        { text: 'sin α = 1/2', fill: SIN_COLOR },
-        { text: 'cos α = √3/2', fill: COS_COLOR },
-        { text: 'tan α = 1/√3', fill: TAN_COLOR },
-        { text: 'sec α = 2/√3', fill: SEC_COLOR },
-        { text: 'csc α = 2', fill: CSC_COLOR },
-        { text: 'cot α = √3', fill: COT_COLOR },
+        { text: 'α = 30°', fill: "green" },
+        { text: 'sin α = 1/2', fill: "red" },
+        { text: 'cos α = √3/2', fill: "blue" },
+        { text: 'tan α = 1/√3', fill: "orange" },
+        { text: 'sec α = 2/√3', fill: "blue" },
+        { text: 'csc α = 2', fill: "red" },
+        { text: 'cot α = √3', fill: "green" },
       ]}
     />
   </Layout>

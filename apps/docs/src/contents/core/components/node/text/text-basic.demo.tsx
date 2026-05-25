@@ -5,7 +5,7 @@ import type { FC } from 'react';
 const Demo: FC = () => (
   <Layout width={300} height={80}>
     <Node id="a" position={[0, 0]} align="left">
-      <Text fill="#dc2626" font={{ weight: 'bold' }}>Heading</Text>
+      <Text fill="red" font={{ weight: 'bold' }}>Heading</Text>
       body line 1
       body line 2
     </Node>

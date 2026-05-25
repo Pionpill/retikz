@@ -8,10 +8,10 @@ import type { FC } from 'react';
  */
 const Demo: FC = () => (
   <Layout width={560} height={200}>
-    <Node id="wide" position={[-130, 20]} fill="#eef2ff" stroke="#8893d8">
+    <Node id="wide" position={[-130, 20]} fill="lightgray" stroke="mediumpurple">
       a longer node label
     </Node>
-    <Node id="wrapped" position={[150, 20]} maxTextWidth={90} fill="#eafaf0" stroke="#74b48a">
+    <Node id="wrapped" position={[150, 20]} maxTextWidth={90} fill="lightgray" stroke="green">
       a longer node label
     </Node>
     <Node position={[-130, 88]} stroke="none" fill="none" textColor="gray" font={{ size: 12 }}>

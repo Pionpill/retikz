@@ -8,7 +8,7 @@ import type { FC } from 'react';
 const Demo: FC = () => (
   <Layout width={220} height={200}>
     {/* 蓝：先声明，但 zIndex=1 → 浮到上层 */}
-    <Path fill="#3b82f6" stroke="#1d4ed8" strokeWidth={2} zIndex={1}>
+    <Path fill="blue" stroke="blue" strokeWidth={2} zIndex={1}>
       <Step kind="move" to={[20, 20]} />
       <Step kind="line" to={[120, 20]} />
       <Step kind="line" to={[120, 120]} />
@@ -16,7 +16,7 @@ const Demo: FC = () => (
       <Step kind="cycle" />
     </Path>
     {/* 红：后声明，默认应在上，但被蓝压住 */}
-    <Path fill="#ef4444" stroke="#b91c1c" strokeWidth={2}>
+    <Path fill="red" stroke="red" strokeWidth={2}>
       <Step kind="move" to={[70, 70]} />
       <Step kind="line" to={[170, 70]} />
       <Step kind="line" to={[170, 170]} />

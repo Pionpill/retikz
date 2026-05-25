@@ -54,10 +54,11 @@ contents/<...>/<page>/
 
 ## 配色
 
-配图颜色**一律用常见 CSS 关键字**（`gray` / `red` / `blue` / `orange`…），不写十六进制随手值——关键字语义清晰、跨主题稳定、好记。
+配图颜色**优先用常见 CSS 关键字**，不要写十六进制随手值——关键字语义清晰、跨主题稳定、好记。推荐顺序是 `orange` → `blue` → `red` / `green`；中性色只保留 `gray` / `lightgray` / `dimgray`，并尽量不用 `black` / `white`。
 
-- **默认 `gray`**：描述性 / 次要文字、辅助标记优先用 `gray`
-- **需要强调 / 区分时上彩色，`orange` 优先**（其次 `red` / `blue`）
+- **默认 `currentColor` / `gray`**：描述性 / 次要文字、辅助标记优先用 `currentColor` 或 `gray`
+- **需要强调 / 区分时上彩色，`orange` 优先**（其次 `blue`，再到 `red` / `green`）
+- **浅弱视觉**：背景、网格、边框优先 `lightgray`
 - 主节点文字不染色，保持默认 `currentColor`（继承主题前景色）
 
 ## 连线：贴边 + 箭头语义

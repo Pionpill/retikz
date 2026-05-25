@@ -97,7 +97,7 @@ description: <一句话：建什么图 + 主要教什么能力>
 | 双语 | **按文本是否实际不同**判断：通用数学 / 公式 / 符号 label（`sin α` / `f(x)` / `α`）单 `.demo.tsx`；含本地化散文 / 解释性文本的 step 才分 `.zh.demo.tsx` / `.en.demo.tsx` |
 | Helpers | **内联**在每个 demo——ComponentPreview 源码视图只显示 `.demo.tsx` 本体，要求每个 demo 独立可读 |
 | Hero 复用 | 引言里 hero `<ComponentPreview>` 复用最后一个 step 的 demo（不另起 `-final` 文件） |
-| 颜色字面值 | demo 里的 `stroke` / `fill` / `bg` 等 **必须用 hex / oklch / 命名色字面量**——不能用 `var(--border)` / `var(--background)` 等 CSS 自定义属性。预览工具条可下载 SVG，CSS var 在新上下文里无定义 → fallback 成黑，下载后图变样 |
+| 颜色字面值 | demo 里的 `stroke` / `fill` / `bg` 等 **必须用字面量颜色**——优先命名色，默认用 `orange` / `blue` / `red` / `green` 做强调，灰阶只保留 `gray` / `lightgray` / `dimgray`，并尽量不用 `black` / `white`；只有需要精确对齐时才用 hex / oklch。不能用 `var(--border)` / `var(--background)` 等 CSS 自定义属性。预览工具条可下载 SVG，CSS var 在新上下文里无定义 → fallback 成黑，下载后图变样 |
 | DSL 选择 | **默认用 Sugar `<Draw way={[...]}>`，不用 Kernel `<Path><Step /></Path>`**。`way` 数组 1 行就能表达 line / curve / cubic / bend / step (fold) / cycle / label，比 Kernel 的多行 children 更短、与 components/draw/* 例子风格一致。例外：示例**本身**就是教 `<Path>` / `<Step>` Kernel 用法、或需要 fill + 闭合（`DrawWay.Cycle`）的填充形状 |
 
 ### 累加式的代价与好处

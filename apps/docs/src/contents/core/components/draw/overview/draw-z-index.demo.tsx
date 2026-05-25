@@ -10,16 +10,16 @@ const Demo: FC = () => (
     {/* 蓝：先声明，但 zIndex=1 → 浮到上层 */}
     <Draw
       way={[[20, 20], [120, 20], [120, 120], [20, 120], DrawWay.Cycle]}
-      fill="#3b82f6"
-      stroke="#1d4ed8"
+      fill="blue"
+      stroke="blue"
       strokeWidth={2}
       zIndex={1}
     />
     {/* 红：后声明，默认应在上，但被蓝压住 */}
     <Draw
       way={[[70, 70], [170, 70], [170, 170], [70, 170], DrawWay.Cycle]}
-      fill="#ef4444"
-      stroke="#b91c1c"
+      fill="red"
+      stroke="red"
       strokeWidth={2}
     />
   </Layout>

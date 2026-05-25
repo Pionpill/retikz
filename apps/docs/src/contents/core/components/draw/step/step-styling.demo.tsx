@@ -27,7 +27,7 @@ const Demo: FC = () => (
       <Step kind="move" to="r1" />
       <Step kind="line" to={[320, 0]} />
     </Path>
-    <Path stroke="#3b82f6" strokeWidth={2}>
+    <Path stroke="blue" strokeWidth={2}>
       <Step kind="move" to="r2" />
       <Step kind="line" to={[320, 30]} />
     </Path>
@@ -35,11 +35,11 @@ const Demo: FC = () => (
       <Step kind="move" to="r3" />
       <Step kind="line" to={[320, 60]} />
     </Path>
-    <Path stroke="#10b981" strokeWidth={2} dashPattern={[6, 3]}>
+    <Path stroke="green" strokeWidth={2} dashPattern={[6, 3]}>
       <Step kind="move" to="r4" />
       <Step kind="line" to={[320, 90]} />
     </Path>
-    <Path stroke="#f97316" strokeWidth={2} dashPattern={[1, 4]}>
+    <Path stroke="orange" strokeWidth={2} dashPattern={[1, 4]}>
       <Step kind="move" to="r5" />
       <Step kind="line" to={[320, 120]} />
     </Path>

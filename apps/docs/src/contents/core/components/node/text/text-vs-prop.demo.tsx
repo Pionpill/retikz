@@ -8,13 +8,13 @@ import type { FC } from 'react';
 const Demo: FC = () => (
   <Layout width={420} height={140}>
     <Node id="sugar" position={[-100, 0]} align="left">
-      <Text fill="#dc2626" font={{ weight: 'bold', size: 16 }}>Heading</Text>
+      <Text fill="red" font={{ weight: 'bold', size: 16 }}>Heading</Text>
       body line 1
       <Text font={{ style: 'italic' }} opacity={0.6}>note</Text>
     </Node>
 
     <Node id="prop" position={[100, 0]} align="left" text={[
-      { text: 'Heading', fill: '#dc2626', font: { weight: 'bold', size: 16 } },
+      { text: 'Heading', fill: 'red', font: { weight: 'bold', size: 16 } },
       'body line 1',
       { text: 'note', font: { style: 'italic' }, opacity: 0.6 },
     ]} />

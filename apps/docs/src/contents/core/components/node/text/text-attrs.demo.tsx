@@ -8,9 +8,9 @@ import type { FC } from 'react';
 const Demo: FC = () => (
   <Layout width={520} height={130}>
     <Node id="fill" position={[-180, 0]} align="left">
-      <Text fill="#dc2626">red line</Text>
-      <Text fill="#16a34a">green line</Text>
-      <Text fill="#2563eb">blue line</Text>
+      <Text fill="red">red line</Text>
+      <Text fill="green">green line</Text>
+      <Text fill="blue">blue line</Text>
     </Node>
 
     <Node id="op" position={[-30, 0]} align="left">

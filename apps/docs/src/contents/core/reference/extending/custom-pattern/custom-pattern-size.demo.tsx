@@ -15,8 +15,8 @@ const dotsGrid: PatternDefinition = {
 
 const Demo: FC = () => (
   <Layout width={260} height={110} patterns={{ dotsGrid }}>
-    <Node id="a" position={[0, 0]} minimumWidth={90} minimumHeight={80} fill={{ type: 'pattern', shape: 'dotsGrid', size: 6, color: '#10b981' }} stroke="#10b981" />
-    <Node id="b" position={[120, 0]} minimumWidth={90} minimumHeight={80} fill={{ type: 'pattern', shape: 'dotsGrid', size: 16, color: '#10b981' }} stroke="#10b981" />
+    <Node id="a" position={[0, 0]} minimumWidth={90} minimumHeight={80} fill={{ type: 'pattern', shape: 'dotsGrid', size: 6, color: 'green' }} stroke="green" />
+    <Node id="b" position={[120, 0]} minimumWidth={90} minimumHeight={80} fill={{ type: 'pattern', shape: 'dotsGrid', size: 16, color: 'green' }} stroke="green" />
   </Layout>
 );
 

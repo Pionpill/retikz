@@ -25,8 +25,8 @@ const Demo: FC = () => (
       position={[0, 0]}
       minimumWidth={140}
       minimumHeight={90}
-      fill={{ type: 'pattern', shape: 'cross', color: '#3b82f6' }}
-      stroke="#3b82f6"
+      fill={{ type: 'pattern', shape: 'cross', color: 'blue' }}
+      stroke="blue"
     />
   </Layout>
 );

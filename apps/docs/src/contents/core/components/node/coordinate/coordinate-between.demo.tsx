@@ -8,10 +8,10 @@ import type { FC } from 'react';
  */
 const Demo: FC = () => (
   <Layout width={360} height={120}>
-    <Node id="A" position={[-140, 0]} shape="circle" minimumSize={32} fill="#2563eb" textColor="white">
+    <Node id="A" position={[-140, 0]} shape="circle" minimumSize={32} fill="blue" textColor="white">
       A
     </Node>
-    <Node id="B" position={[140, 0]} shape="circle" minimumSize={32} fill="#16a34a" textColor="white">
+    <Node id="B" position={[140, 0]} shape="circle" minimumSize={32} fill="green" textColor="white">
       B
     </Node>
     <Node
@@ -19,21 +19,21 @@ const Demo: FC = () => (
       position={{ between: [{ id: 'A' }, { id: 'B' }], t: 0.25 }}
       shape="circle"
       minimumSize={14}
-      fill="#f59e0b"
+      fill="orange"
     />
     <Node
       id="mid"
       position={{ between: [{ id: 'A' }, { id: 'B' }], t: 0.5 }}
       shape="circle"
       minimumSize={20}
-      fill="#f59e0b"
+      fill="orange"
     />
     <Node
       id="q3"
       position={{ between: [{ id: 'A' }, { id: 'B' }], t: 0.75 }}
       shape="circle"
       minimumSize={14}
-      fill="#f59e0b"
+      fill="orange"
     />
   </Layout>
 );

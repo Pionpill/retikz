@@ -33,7 +33,7 @@ const ir: IR = {
   children: [
     {
       type: 'path',
-      stroke: '#10b981',
+      stroke: 'green',
       strokeWidth: 1.5,
       children: [
         { type: 'step', kind: 'move', to: [0, 0] },

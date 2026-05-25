@@ -19,8 +19,8 @@ const Demo: FC = () => (
         type: 'linearGradient',
         angle: 90,
         stops: [
-          { offset: 0, color: '#7bdcff' },
-          { offset: 1, color: '#1466a8' },
+          { offset: 0, color: 'blue' },
+          { offset: 1, color: 'blue' },
         ],
       }}
     />
@@ -33,8 +33,8 @@ const Demo: FC = () => (
       fill={{
         type: 'radialGradient',
         stops: [
-          { offset: 0, color: '#ffffff' },
-          { offset: 1, color: '#d6453b' },
+          { offset: 0, color: 'white' },
+          { offset: 1, color: 'red' },
         ],
       }}
     />

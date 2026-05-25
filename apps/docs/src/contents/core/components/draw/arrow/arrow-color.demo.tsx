@@ -13,7 +13,7 @@ const Demo: FC = () => (
     <Node id="b1" position={[260, 0]}>
       B
     </Node>
-    <Path arrow="->" arrowDetail={{ color: '#dc2626' }} stroke="#9ca3af" strokeWidth={2}>
+    <Path arrow="->" arrowDetail={{ color: 'red' }} stroke="gray" strokeWidth={2}>
       <Step kind="move" to="a1" />
       <Step kind="line" to="b1" />
     </Path>
@@ -27,10 +27,10 @@ const Demo: FC = () => (
       arrow="<->"
       arrowDetail={{
         shape: 'stealth',
-        start: { color: '#dc2626' },
-        end: { color: '#2563eb' },
+        start: { color: 'red' },
+        end: { color: 'blue' },
       }}
-      stroke="#9ca3af"
+      stroke="gray"
       strokeWidth={2}
     >
       <Step kind="move" to="a2" />

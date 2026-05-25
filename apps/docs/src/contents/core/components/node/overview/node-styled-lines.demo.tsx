@@ -8,7 +8,7 @@ import type { FC } from 'react';
 const Demo: FC = () => (
   <Layout width={520} height={160}>
     <Node id="left" position={[-180, 0]} align="left">
-      <Text fill="#dc2626" font={{ weight: 'bold', size: 16 }}>Heading</Text>
+      <Text fill="red" font={{ weight: 'bold', size: 16 }}>Heading</Text>
       body line 1
       body line 2
     </Node>
@@ -18,16 +18,16 @@ const Demo: FC = () => (
       position={[0, 0]}
       align="left"
       text={[
-        { text: 'Title', font: { weight: 'bold', size: 16 }, fill: '#2563eb' },
+        { text: 'Title', font: { weight: 'bold', size: 16 }, fill: 'blue' },
         'body 1',
         { text: 'note', font: { style: 'italic' }, opacity: 0.6 },
       ]}
     />
 
     <Node id="right" position={[180, 0]} align="left">
-      <Text fill="#16a34a">success</Text>
-      <Text fill="#f59e0b">warning</Text>
-      <Text fill="#dc2626" opacity={0.8}>error</Text>
+      <Text fill="green">success</Text>
+      <Text fill="orange">warning</Text>
+      <Text fill="red" opacity={0.8}>error</Text>
     </Node>
   </Layout>
 );

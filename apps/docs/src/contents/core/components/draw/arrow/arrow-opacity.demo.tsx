@@ -15,8 +15,8 @@ const Demo: FC = () => (
     </Node>
     <Path
       arrow="->"
-      arrowDetail={{ shape: 'stealth', opacity: 0.5, color: '#dc2626' }}
-      stroke="#1f2937"
+      arrowDetail={{ shape: 'stealth', opacity: 0.5, color: 'red' }}
+      stroke="gray"
       strokeWidth={2}
     >
       <Step kind="move" to="a" />

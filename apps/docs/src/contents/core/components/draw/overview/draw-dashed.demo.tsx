@@ -26,13 +26,13 @@ const Demo: FC = () => (
     {/* 默认：currentColor + 1px 实线 */}
     <Draw way={['r1', [320, 0]]} />
     {/* 自定义颜色 */}
-    <Draw way={['r2', [320, 30]]} stroke="#3b82f6" strokeWidth={2} />
+    <Draw way={['r2', [320, 30]]} stroke="blue" strokeWidth={2} />
     {/* 加粗 */}
     <Draw way={['r3', [320, 60]]} strokeWidth={4} />
     {/* 虚线 */}
-    <Draw way={['r4', [320, 90]]} stroke="#10b981" strokeWidth={2} dashPattern={[6, 3]} />
+    <Draw way={['r4', [320, 90]]} stroke="green" strokeWidth={2} dashPattern={[6, 3]} />
     {/* 点线 */}
-    <Draw way={['r5', [320, 120]]} stroke="#f97316" strokeWidth={2} dashPattern={[1, 4]} />
+    <Draw way={['r5', [320, 120]]} stroke="orange" strokeWidth={2} dashPattern={[1, 4]} />
   </Layout>
 );
 

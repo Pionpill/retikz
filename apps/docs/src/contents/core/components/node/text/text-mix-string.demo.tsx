@@ -9,7 +9,7 @@ const Demo: FC = () => (
   <Layout width={320} height={140}>
     <Node id="mix" position={[0, 0]} align="left">
       {'before\nplain1'}
-      <Text fill="#dc2626" font={{ weight: 'bold' }}>RED + BOLD</Text>
+      <Text fill="red" font={{ weight: 'bold' }}>RED + BOLD</Text>
       <Text font={{ style: 'italic' }}>italic note</Text>
       {'plain2\nafter'}
     </Node>

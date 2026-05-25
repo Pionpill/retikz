@@ -2,8 +2,7 @@ import { Fragment } from 'react';
 import type { FC } from 'react';
 import { Circle, Coordinate, Draw, Grid, Layout, Node } from '@retikz/react';
 
-/** 用字面色而非 `var(--border)`：SVG 下载后 CSS var 不在新上下文里解析，会 fallback 成黑 */
-const HELP_LINE = '#e5e7eb';
+/** 用字面色而非 `lightgray`：SVG 下载后 CSS var 不在新上下文里解析，会 fallback 成黑 */
 const MATH_FONT = {
   family: '"Latin Modern Math", "STIX Two Math", "Cambria Math", "Times New Roman", serif',
   style: 'italic' as const,
@@ -12,7 +11,7 @@ const MATH_FONT = {
 const Demo: FC = () => (
   <Layout width={600} height={360}>
     {/* 背景网格（help lines）——直接用 Grid sugar，比手写 10 条线更短 */}
-    <Grid corner1={[-100, -100]} corner2={[100, 100]} step={50} stroke={HELP_LINE} strokeWidth={0.5} />
+    <Grid corner1={[-100, -100]} corner2={[100, 100]} step={50} stroke="lightgray" strokeWidth={0.5} />
 
     {/* 单位圆（半径 100px） */}
     <Circle center={[0, 0]} radius={100} lineCap="round" />

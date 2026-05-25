@@ -12,7 +12,7 @@ const Demo: FC = () => (
     <Draw
       way={['A', { of: [120, 60], offset: [0, 0] }]}
       arrow="->"
-      stroke="#888"
+      stroke="gray"
     />
     <Draw
       way={[
@@ -23,7 +23,7 @@ const Demo: FC = () => (
         },
       ]}
       arrow="->"
-      stroke="#bbb"
+      stroke="lightgray"
     />
   </Layout>
 );

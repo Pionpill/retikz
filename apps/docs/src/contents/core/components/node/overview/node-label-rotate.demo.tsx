@@ -13,8 +13,8 @@ const Demo: FC = () => (
       shape="circle"
       position={[-120, 0]}
       minimumSize={50}
-      fill="#dbeafe"
-      stroke="#3b82f6"
+      fill="lightgray"
+      stroke="blue"
       label={[
         { text: 'radial', position: 'above', rotate: 'radial' },
         { text: 'radial', position: 'right', rotate: 'radial' },
@@ -30,8 +30,8 @@ const Demo: FC = () => (
       shape="circle"
       position={[120, 0]}
       minimumSize={50}
-      fill="#dcfce7"
-      stroke="#10b981"
+      fill="lightgray"
+      stroke="green"
       label={[
         { text: 'tangent', position: 'above', rotate: 'tangent' },
         { text: 'tangent', position: 'right', rotate: 'tangent' },

@@ -8,15 +8,15 @@ import type { FC } from 'react';
  */
 const Demo: FC = () => (
   <Layout width={320} height={170}>
-    <Path color="#dc2626">
+    <Path color="red">
       <Step kind="move" to={[0, 0]} />
       <Step to={[200, 0]} label={{ text: 'sin' }} />
     </Path>
-    <Path stroke="#2563eb">
+    <Path stroke="blue">
       <Step kind="move" to={[0, 55]} />
       <Step to={[200, 55]} label={{ text: 'cos' }} />
     </Path>
-    <Path color="#16a34a">
+    <Path color="green">
       <Step kind="move" to={[0, 110]} />
       <Step to={[200, 110]} label={{ text: 'tan', font: { size: 10 }, opacity: 0.7 }} />
     </Path>

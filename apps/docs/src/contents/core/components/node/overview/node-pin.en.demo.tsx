@@ -12,8 +12,8 @@ const Demo: FC = () => (
       id="q0"
       position={[0, 10]}
       shape="circle"
-      fill="#eef2ff"
-      stroke="#8893d8"
+      fill="lightgray"
+      stroke="mediumpurple"
       minimumSize={40}
       label={[
         { text: 'entry state', position: 'right', distance: 34, pin: true },
@@ -21,7 +21,7 @@ const Demo: FC = () => (
           text: 'initial',
           position: 'above-left',
           distance: 34,
-          pin: { stroke: '#999999', dashPattern: [3, 2] },
+          pin: { stroke: 'gray', dashPattern: [3, 2] },
         },
       ]}
     >

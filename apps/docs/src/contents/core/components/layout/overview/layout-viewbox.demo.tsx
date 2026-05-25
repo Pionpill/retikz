@@ -8,10 +8,10 @@ import type { FC } from 'react';
  */
 const Demo: FC = () => (
   <Layout width={220} height={220} viewBox={{ x: -120, y: -120, width: 240, height: 240 }}>
-    <Node id="o" position={[0, 0]} shape="circle" minimumSize={44} fill="#2563eb" textColor="white">
+    <Node id="o" position={[0, 0]} shape="circle" minimumSize={44} fill="blue" textColor="white">
       0,0
     </Node>
-    <Node id="c" position={[70, 70]} shape="circle" minimumSize={24} fill="#f59e0b" />
+    <Node id="c" position={[70, 70]} shape="circle" minimumSize={24} fill="orange" />
     <Node
       id="frame"
       position={[0, 0]}
@@ -19,7 +19,7 @@ const Demo: FC = () => (
       minimumWidth={236}
       minimumHeight={236}
       fill="none"
-      stroke="#cbd5e1"
+      stroke="lightgray"
       dashed
     />
   </Layout>

@@ -16,10 +16,10 @@ const Demo: FC = () => (
         minimumWidth={220}
         minimumHeight={220}
         stroke="none"
-        fill={{ type: 'pattern', shape: 'grid', color: '#2563eb', size: 16 }}
+        fill={{ type: 'pattern', shape: 'grid', color: 'blue', size: 16 }}
       />
     </Scope>
-    <Node id="ring" position={[0, 0]} shape="circle" minimumSize={190} fill="none" stroke="#94a3b8" />
+    <Node id="ring" position={[0, 0]} shape="circle" minimumSize={190} fill="none" stroke="gray" />
   </Layout>
 );
 

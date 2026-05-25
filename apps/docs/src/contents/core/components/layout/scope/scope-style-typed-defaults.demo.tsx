@@ -9,10 +9,10 @@ import type { FC } from 'react';
 const Demo: FC = () => (
   <Layout width={420} height={130}>
     <Scope
-      nodeDefault={{ shape: 'circle', fill: '#dbeafe' }}
-      pathDefault={{ stroke: '#16a34a' }}
+      nodeDefault={{ shape: 'circle', fill: 'lightgray' }}
+      pathDefault={{ stroke: 'green' }}
       arrowDefault={{ shape: 'stealth', scale: 1.6 }}
-      labelDefault={{ textColor: '#9333ea' }}
+      labelDefault={{ textColor: 'blue' }}
     >
       <Node id="A" position={[0, 0]}>
         A

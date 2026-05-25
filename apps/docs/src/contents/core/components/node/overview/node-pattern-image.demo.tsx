@@ -17,16 +17,16 @@ const Demo: FC = () => (
       shape="rectangle"
       minimumWidth={96}
       minimumHeight={80}
-      stroke="#888888"
-      fill={{ type: 'pattern', shape: 'lines', color: '#1466a8', rotation: 45 }}
+      stroke="gray"
+      fill={{ type: 'pattern', shape: 'lines', color: 'blue', rotation: 45 }}
     />
     <Node
       id="dots"
       position={[-75, 0]}
       shape="circle"
       minimumSize={84}
-      stroke="#888888"
-      fill={{ type: 'pattern', shape: 'dots', color: '#16a34a', size: 10 }}
+      stroke="gray"
+      fill={{ type: 'pattern', shape: 'dots', color: 'green', size: 10 }}
     />
     <Node
       id="grid"
@@ -34,15 +34,15 @@ const Demo: FC = () => (
       shape="rectangle"
       minimumWidth={96}
       minimumHeight={80}
-      stroke="#888888"
-      fill={{ type: 'pattern', shape: 'grid', color: '#9333ea', size: 10 }}
+      stroke="gray"
+      fill={{ type: 'pattern', shape: 'grid', color: 'blue', size: 10 }}
     />
     <Node
       id="img"
       position={[225, 0]}
       shape="circle"
       minimumSize={84}
-      stroke="#888888"
+      stroke="gray"
       fill={{ type: 'image', href: IMG, fit: 'cover' }}
     />
   </Layout>

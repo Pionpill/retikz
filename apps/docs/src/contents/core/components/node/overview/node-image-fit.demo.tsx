@@ -2,7 +2,6 @@ import { Layout, Node } from '@retikz/react';
 import type { FC } from 'react';
 
 // 真·外部图片 URL：Lorem Picsum，带 seed 固定取同一张「横图」（320×200），用方形盒才看得出 fit 差异
-const IMG = 'https://picsum.photos/seed/retikz/320/200';
 
 /**
  * image 填充 + fit 三模式（外部 URL）
@@ -17,8 +16,8 @@ const Demo: FC = () => (
       shape="rectangle"
       minimumWidth={100}
       minimumHeight={100}
-      stroke="#888888"
-      fill={{ type: 'image', href: IMG, fit: 'cover' }}
+      stroke="gray"
+      fill={{ type: 'image', href: "https://picsum.photos/seed/retikz/320/200", fit: 'cover' }}
     />
     <Node
       id="contain"
@@ -26,8 +25,8 @@ const Demo: FC = () => (
       shape="rectangle"
       minimumWidth={100}
       minimumHeight={100}
-      stroke="#888888"
-      fill={{ type: 'image', href: IMG, fit: 'contain' }}
+      stroke="gray"
+      fill={{ type: 'image', href: "https://picsum.photos/seed/retikz/320/200", fit: 'contain' }}
     />
     <Node
       id="fill"
@@ -35,8 +34,8 @@ const Demo: FC = () => (
       shape="rectangle"
       minimumWidth={100}
       minimumHeight={100}
-      stroke="#888888"
-      fill={{ type: 'image', href: IMG, fit: 'fill' }}
+      stroke="gray"
+      fill={{ type: 'image', href: "https://picsum.photos/seed/retikz/320/200", fit: 'fill' }}
     />
     <Node id="cap-cover" position={[-150, 60]} stroke="none">
       fit: cover

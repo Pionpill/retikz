@@ -7,16 +7,16 @@ import type { FC } from 'react';
  */
 const Demo: FC = () => (
   <Layout width={560} height={140}>
-    <Node id="round" position={[-200, 0]} roundedCorners={10} fill="#fef3c7">
+    <Node id="round" position={[-200, 0]} roundedCorners={10} fill="lightgray">
       rounded
     </Node>
-    <Node id="msize" position={[-70, 0]} minimumSize={60} fill="#dbeafe">
+    <Node id="msize" position={[-70, 0]} minimumSize={60} fill="lightgray">
       hi
     </Node>
-    <Node id="btn" position={[80, 0]} minimumWidth={120} minimumHeight={28} roundedCorners={6} fill="#3b82f6" textColor="white">
+    <Node id="btn" position={[80, 0]} minimumWidth={120} minimumHeight={28} roundedCorners={6} fill="blue" textColor="white">
       Submit
     </Node>
-    <Node id="big" position={[230, 0]} scale={1.5} fill="#bbf7d0">
+    <Node id="big" position={[230, 0]} scale={1.5} fill="lightgray">
       scale=1.5
     </Node>
   </Layout>

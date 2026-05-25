@@ -7,10 +7,10 @@ import type { FC } from 'react';
  */
 const Demo: FC = () => (
   <Layout width={540} height={200}>
-    <Node id="wide" position={[-120, 20]} fill="#eef2ff" stroke="#8893d8">
+    <Node id="wide" position={[-120, 20]} fill="lightgray" stroke="mediumpurple">
       较长的节点说明文字
     </Node>
-    <Node id="wrapped" position={[140, 20]} maxTextWidth={84} fill="#eafaf0" stroke="#74b48a">
+    <Node id="wrapped" position={[140, 20]} maxTextWidth={84} fill="lightgray" stroke="green">
       较长的节点说明文字
     </Node>
     <Node position={[-120, 88]} stroke="none" fill="none" textColor="gray" font={{ size: 12 }}>

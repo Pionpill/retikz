@@ -30,8 +30,8 @@ const bracket: ArrowDefinition = {
 
 const Demo: FC = () => (
   <Layout width={320} height={90} arrows={{ bracket }}>
-    <Draw way={[[0, 0], [140, 0]]} arrow="->" arrowDetail={{ shape: 'bracket' }} stroke="#ef4444" strokeWidth={1.5} />
-    <Draw way={[[0, 40], [140, 40]]} arrow="->" arrowDetail={{ shape: 'bracket' }} stroke="#10b981" strokeWidth={1.5} />
+    <Draw way={[[0, 0], [140, 0]]} arrow="->" arrowDetail={{ shape: 'bracket' }} stroke="red" strokeWidth={1.5} />
+    <Draw way={[[0, 40], [140, 40]]} arrow="->" arrowDetail={{ shape: 'bracket' }} stroke="green" strokeWidth={1.5} />
   </Layout>
 );
 
