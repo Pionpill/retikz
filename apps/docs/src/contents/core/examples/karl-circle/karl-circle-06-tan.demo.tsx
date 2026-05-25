@@ -69,7 +69,7 @@ const Demo: FC = () => (
     />
     <Draw
       way={[[COS30 * 100, 0], { label: { text: 'cos α', side: 'below' } }, [0, 0]]}
-      stroke="teal"
+      stroke="dodgerblue"
       thickness="thick"
     />
 

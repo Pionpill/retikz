@@ -10,7 +10,7 @@ const Demo: FC = () => (
     <Node id="fill" position={[-180, 0]} align="left">
       <Text fill="red">red line</Text>
       <Text fill="green">green line</Text>
-      <Text fill="teal">teal line</Text>
+      <Text fill="dodgerblue">dodgerblue line</Text>
     </Node>
 
     <Node id="op" position={[-30, 0]} align="left">

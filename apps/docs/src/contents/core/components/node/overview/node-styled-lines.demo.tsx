@@ -18,7 +18,7 @@ const Demo: FC = () => (
       position={[0, 0]}
       align="left"
       text={[
-        { text: 'Title', font: { weight: 'bold', size: 16 }, fill: 'teal' },
+        { text: 'Title', font: { weight: 'bold', size: 16 }, fill: 'dodgerblue' },
         'body 1',
         { text: 'note', font: { style: 'italic' }, opacity: 0.6 },
       ]}

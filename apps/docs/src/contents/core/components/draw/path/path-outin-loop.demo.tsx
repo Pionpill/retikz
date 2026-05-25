@@ -14,7 +14,7 @@ const Demo: FC = () => (
       T
     </Node>
     {/* 自环：from==to 同节点，out/in 角撑开 */}
-    <Path arrow="->" stroke="teal">
+    <Path arrow="->" stroke="dodgerblue">
       <Step kind="move" to="S" />
       <Step kind="bend" to="S" outAngle={120} inAngle={60} />
     </Path>

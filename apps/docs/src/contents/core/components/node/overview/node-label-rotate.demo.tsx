@@ -14,7 +14,7 @@ const Demo: FC = () => (
       position={[-120, 0]}
       minimumSize={50}
       fill="lightgray"
-      stroke="teal"
+      stroke="dodgerblue"
       label={[
         { text: 'radial', position: 'above', rotate: 'radial' },
         { text: 'radial', position: 'right', rotate: 'radial' },

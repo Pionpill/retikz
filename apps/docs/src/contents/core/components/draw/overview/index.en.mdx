@@ -144,7 +144,7 @@ Full ellipses also use angular parametrization, not equal divisions by ellipse a
 
 #### Stacking order (zIndex)
 
-`zIndex` overrides the default declaration-order stacking: higher draws on top, omitted = 0, ties keep declaration order; effective only among siblings at the same level. Same meaning as `<Path>`'s `zIndex` (Draw compiles to Path). The two filled squares below are declared teal-then-red (red on top by default); setting `zIndex={1}` on the earlier teal Draw lifts it above the red one:
+`zIndex` overrides the default declaration-order stacking: higher draws on top, omitted = 0, ties keep declaration order; effective only among siblings at the same level. Same meaning as `<Path>`'s `zIndex` (Draw compiles to Path). The two filled squares below are declared dodgerblue-then-red (red on top by default); setting `zIndex={1}` on the earlier dodgerblue Draw lifts it above the red one:
 
 <ComponentPreview name="draw-z-index" size="sm" />
 

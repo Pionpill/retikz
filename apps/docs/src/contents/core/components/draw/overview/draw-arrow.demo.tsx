@@ -19,7 +19,7 @@ const Demo: FC = () => (
     {/* 单段：A → B 终点箭头 */}
     <Draw way={['a', 'b']} arrow="->" />
     {/* 多段：A → C → B 整体只在 B 处放终点箭头（中间节点 C 不放） */}
-    <Draw way={['a', 'c', 'b']} arrow="->" stroke="teal" strokeWidth={2} />
+    <Draw way={['a', 'c', 'b']} arrow="->" stroke="dodgerblue" strokeWidth={2} />
   </Layout>
 );
 

@@ -8,7 +8,7 @@ import type { FC } from 'react';
  */
 const Demo: FC = () => (
   <Layout width={420} height={130}>
-    <Scope color="teal">
+    <Scope color="dodgerblue">
       <Node id="A" position={[0, 0]} shape="circle" fill="white">
         A
       </Node>

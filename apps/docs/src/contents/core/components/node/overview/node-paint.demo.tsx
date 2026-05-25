@@ -19,8 +19,8 @@ const Demo: FC = () => (
         type: 'linearGradient',
         angle: 90,
         stops: [
-          { offset: 0, color: 'teal' },
-          { offset: 1, color: 'teal' },
+          { offset: 0, color: 'dodgerblue' },
+          { offset: 1, color: 'dodgerblue' },
         ],
       }}
     />

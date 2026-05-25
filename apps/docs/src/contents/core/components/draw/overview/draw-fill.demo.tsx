@@ -10,8 +10,8 @@ const Demo: FC = () => (
     {/* 蓝色填充三角形 */}
     <Draw
       way={[[20, 20], [100, 20], [60, 110], DrawWay.Cycle]}
-      fill="teal"
-      stroke="teal"
+      fill="dodgerblue"
+      stroke="dodgerblue"
       strokeWidth={2}
     />
     {/* 绿色填充菱形 */}

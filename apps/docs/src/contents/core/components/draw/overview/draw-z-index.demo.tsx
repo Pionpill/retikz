@@ -10,8 +10,8 @@ const Demo: FC = () => (
     {/* 蓝：先声明，但 zIndex=1 → 浮到上层 */}
     <Draw
       way={[[20, 20], [120, 20], [120, 120], [20, 120], DrawWay.Cycle]}
-      fill="teal"
-      stroke="teal"
+      fill="dodgerblue"
+      stroke="dodgerblue"
       strokeWidth={2}
       zIndex={1}
     />

@@ -6,7 +6,7 @@ const Demo: FC = () => (
     <Node id="a" position={[-90, 0]} fill="lightgray" stroke="orange">
       Filled
     </Node>
-    <Node id="b" position={[0, 0]} stroke="teal" strokeWidth={2}>
+    <Node id="b" position={[0, 0]} stroke="dodgerblue" strokeWidth={2}>
       Stroked
     </Node>
     <Node id="c" position={[90, 0]} padding={12} font={{ size: 18 }}>

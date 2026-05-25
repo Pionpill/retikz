@@ -12,7 +12,7 @@ const Demo: FC = () => (
       <Step kind="move" to={[0, 0]} />
       <Step to={[200, 0]} label={{ text: 'sin' }} />
     </Path>
-    <Path stroke="teal">
+    <Path stroke="dodgerblue">
       <Step kind="move" to={[0, 55]} />
       <Step to={[200, 55]} label={{ text: 'cos' }} />
     </Path>

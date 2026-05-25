@@ -12,7 +12,7 @@ const Demo: FC = () => (
       z=2
     </Node>
     {/* 默认 z=0，按声明顺序在 c 之下 */}
-    <Node id="b" position={[0, 0]} fill="teal" stroke="teal" minimumSize={90}>
+    <Node id="b" position={[0, 0]} fill="dodgerblue" stroke="dodgerblue" minimumSize={90}>
       z=0
     </Node>
     {/* 默认 z=0，按声明顺序压在 b 上、但仍在 a 之下 */}

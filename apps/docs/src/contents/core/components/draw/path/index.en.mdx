@@ -106,7 +106,7 @@ Three independent channels: `opacity` overall (multiplies onto stroke and fill),
 
 #### Stacking order (zIndex)
 
-By default stacking = declaration order. `zIndex` overrides it explicitly: higher draws on top, omitted = 0, ties keep declaration order; effective only among siblings at the same level (same scope / top level). The two filled rectangles below are declared teal-then-red (red on top by default); setting `zIndex={1}` on the earlier teal path lifts it above the red one:
+By default stacking = declaration order. `zIndex` overrides it explicitly: higher draws on top, omitted = 0, ties keep declaration order; effective only among siblings at the same level (same scope / top level). The two filled rectangles below are declared dodgerblue-then-red (red on top by default); setting `zIndex={1}` on the earlier dodgerblue path lifts it above the red one:
 
 <ComponentPreview name="path-z-index" size="sm" />
 

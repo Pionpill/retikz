@@ -81,7 +81,7 @@ const Demo: FC = () => (
     />
     <Draw
       way={[[COS30 * 100, 0], { label: { text: 'cos α', side: 'below' } }, [0, 0]]}
-      stroke="teal"
+      stroke="dodgerblue"
       thickness="thick"
     />
     <Draw
@@ -110,7 +110,7 @@ const Demo: FC = () => (
         '即 π/6 弧度',
         { text: 'sin α = 1/2', fill: "red" },
         '（红线长度）',
-        { text: 'cos α = √3/2', fill: "teal" },
+        { text: 'cos α = √3/2', fill: "dodgerblue" },
         '（蓝线长度）',
         { text: 'tan α = 1/√3', fill: "orange" },
         '（橙线长度）',

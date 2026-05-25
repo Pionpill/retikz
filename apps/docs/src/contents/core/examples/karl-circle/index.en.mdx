@@ -18,7 +18,7 @@ If you are coming from TikZ, watch four differences in this page: retikz coordin
 Send the prompt below to the AI chat panel — the LLM will produce retikz IR / JSX for this figure directly. For variants (different angle, colors, radius), edit the prompt inside the chat panel after sending and resend.
 
 <ExamplePrompt
-  short="**Draw a 30° angle sin / cos / tan geometry diagram**: unit circle + axes with arrows + ticks (−1, −1/2, 1/2, 1) + green-filled wedge + red / teal / orange function lines + a right-hand multi-color info box."
+  short="**Draw a 30° angle sin / cos / tan geometry diagram**: unit circle + axes with arrows + ticks (−1, −1/2, 1/2, 1) + green-filled wedge + red / dodgerblue / orange function lines + a right-hand multi-color info box."
   detailed={`**Draw the unit-circle trigonometry diagram**
 
 **Geometry**
@@ -32,13 +32,13 @@ Send the prompt below to the AI chat panel — the LLM will produce retikz IR / 
 **Function lines**
 
 - sin α (red): from (cos30°, sin30°) down to the x-axis
-- cos α (teal): from the projection point back to the origin
+- cos α (dodgerblue): from the projection point back to the origin
 - tan α (orange): from (1, 0) up to (1, tan30°); a ray from the origin through that point
 
 **Colors**
 
 - Wedge: light-green fill, dark-green stroke
-- sin: red, cos: teal, tan: orange
+- sin: red, cos: dodgerblue, tan: orange
 
 **Labels**
 
@@ -82,7 +82,7 @@ The α label is a [Node](/core/components/node/overview) at a polar position (`{
 
 <ComponentPreview name="karl-circle-04-wedge" diffFrom="karl-circle-03-ticks" size="lg" />
 
-### Step 5 — sin α red line + cos α teal line
+### Step 5 — sin α red line + cos α dodgerblue line
 
 `sin` drops from (30°, 100px) vertically to the x-axis; `cos` goes from that foot back to the origin. Both use [Draw](/core/components/draw/overview), with a `{ label: { text, side } }` operator threaded into the `way` array to attach an edge label. `thickness="veryThick"` is a semantic stroke preset — saves having to pick a numeric width.
 
@@ -111,9 +111,9 @@ Finally, a colored info card on the right. The [Node](/core/components/node/over
 | Component | Role in this example | Main steps |
 | --- | --- | --- |
 | [Circle](/core/components/draw/shapes) | Unit circle | [1](#step-1--unit-circle), [3](#step-3--grid--ticks), [4](#step-4--30-wedge--α-label) |
-| [Sector](/core/components/draw/shapes) | 30° wedge | [4](#step-4--30-wedge--α-label), [5](#step-5--sin-α-red-line--cos-α-teal-line), [6](#step-6--tan-α-orange-line--auxiliary-ray) |
+| [Sector](/core/components/draw/shapes) | 30° wedge | [4](#step-4--30-wedge--α-label), [5](#step-5--sin-α-red-line--cos-α-dodgerblue-line), [6](#step-6--tan-α-orange-line--auxiliary-ray) |
 | [Grid](/core/components/draw/shapes) | Background grid | [3](#step-3--grid--ticks) |
-| [Draw](/core/components/draw/overview) | Axes + tick marks + sin/cos/tan colored lines + auxiliary ray | [2](#step-2--axes--endpoint-labels--named-anchors), [3](#step-3--grid--ticks), [5](#step-5--sin-α-red-line--cos-α-teal-line), [6](#step-6--tan-α-orange-line--auxiliary-ray) |
+| [Draw](/core/components/draw/overview) | Axes + tick marks + sin/cos/tan colored lines + auxiliary ray | [2](#step-2--axes--endpoint-labels--named-anchors), [3](#step-3--grid--ticks), [5](#step-5--sin-α-red-line--cos-α-dodgerblue-line), [6](#step-6--tan-α-orange-line--auxiliary-ray) |
 | [Node](/core/components/node/overview) | Axis-end labels + tick text + α label + right info box | [2](#step-2--axes--endpoint-labels--named-anchors), [3](#step-3--grid--ticks), [4](#step-4--30-wedge--α-label), [7](#step-7--right-hand-multi-color-info-box) |
 | [Coordinate](/core/components/node/coordinate) | Named x/y axis endpoints + tan intersection `t` | [2](#step-2--axes--endpoint-labels--named-anchors), [6](#step-6--tan-α-orange-line--auxiliary-ray) |
 

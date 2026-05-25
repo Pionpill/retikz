@@ -28,7 +28,7 @@ const Demo: FC = () => (
       arrowDetail={{
         shape: 'stealth',
         start: { color: 'red' },
-        end: { color: 'teal' },
+        end: { color: 'dodgerblue' },
       }}
       stroke="gray"
       strokeWidth={2}
