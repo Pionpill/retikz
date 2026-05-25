@@ -12,6 +12,9 @@ This group is about **extending** retikz: capabilities the built-in components d
 | Topic | Extends | Reach for it when |
 | --- | --- | --- |
 | Custom Shapes | Registering new node shapes (`ShapeDefinition` + `CompileOptions.shapes`) | You need hexagon / cylinder / cloud beyond the built-in four |
+| Custom Arrows | Registering new arrow styles (`ArrowDefinition` + `CompileOptions.arrows`) | You need bracket / domain-specific end caps |
+| Custom Patterns | Registering new fill patterns (`PatternDefinition` + `CompileOptions.patterns`) | You need cross / stripes / special motifs |
+| Path Generators | Registering new curve generators (`PathGeneratorDefinition` + `CompileOptions.pathGenerators`) | You need parabola / waves / custom curves |
 
 ## In this section
 
@@ -19,5 +22,17 @@ This group is about **extending** retikz: capabilities the built-in components d
   <LinkedCard href="/core/reference/extending/shape-registry">
     <span className="font-semibold">Custom Shapes</span>
     <span className="mt-1 text-center text-sm text-muted-foreground">Register / inject a ShapeDefinition for custom node shapes</span>
+  </LinkedCard>
+  <LinkedCard href="/core/reference/extending/custom-arrow">
+    <span className="font-semibold">Custom Arrows</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">Register / inject an ArrowDefinition for custom arrow tips</span>
+  </LinkedCard>
+  <LinkedCard href="/core/reference/extending/custom-pattern">
+    <span className="font-semibold">Custom Patterns</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">Register / inject a PatternDefinition for custom fills</span>
+  </LinkedCard>
+  <LinkedCard href="/core/reference/extending/path-generator">
+    <span className="font-semibold">Path Generators</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">Register / inject a PathGeneratorDefinition for custom curves</span>
   </LinkedCard>
 </div>

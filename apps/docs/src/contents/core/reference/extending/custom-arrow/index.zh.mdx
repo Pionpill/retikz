@@ -13,6 +13,8 @@ description: arrow shape 是开放字符串；内置 7 种之外，用 ArrowDefi
 
 <ComponentPreview name="custom-arrow-basic" size="sm" />
 
+如果你只是想先做一个能用的箭头，最少实现 `lineContactX` 和 `emit` 就够了；`baseSize`、`tipX`、`hollow`、`defaultLength`、`defaultWidth` 都是在调视觉手感。
+
 `ArrowDefinition` 是个普通对象（不进 IR、不需序列化，可由工厂函数返回）：
 
 | 字段 | 类型 | 默认值 | 描述 |

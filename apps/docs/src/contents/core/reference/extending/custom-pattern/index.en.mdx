@@ -13,6 +13,8 @@ Below registers a `cross` motif, clearly distinct from the three built-ins:
 
 <ComponentPreview name="custom-pattern-basic" size="sm" />
 
+If you only want to get a pattern working first, implement `emit`; `defaultSize` just supplies the fallback period when `pattern.size` is omitted.
+
 A `PatternDefinition` is a plain object (not part of the IR, can be returned by a factory):
 
 | Field | Type | Default | Description |

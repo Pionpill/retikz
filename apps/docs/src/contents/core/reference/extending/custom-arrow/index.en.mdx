@@ -13,6 +13,8 @@ Below registers a `bracket` — a TikZ Bracket-style hollow square bracket `[` (
 
 <ComponentPreview name="custom-arrow-basic" size="sm" />
 
+If you only want the minimum viable arrow, implement `lineContactX` and `emit` first; `baseSize`, `tipX`, `hollow`, `defaultLength`, and `defaultWidth` only tune the look.
+
 An `ArrowDefinition` is a plain object (not part of the IR, no serialization needed, can be returned by a factory):
 
 | Field | Type | Default | Description |
