@@ -11,7 +11,7 @@ It brings a mature vocabulary of nodes, paths, and anchors into the browser, exp
 
 <ComponentPreview name="minimal-example" size="xs" />
 
-The stable v0.1 surface is intentionally focused on **Node / Coordinate / Path / Step / Draw / Text**: named nodes, reference points, path actions, arrows, edge labels, multi-line text, and IR rendering. Chart / flow / codec packages and additional framework adapters mentioned below are architectural directions or future domain packages, not APIs already shipped in `@retikz/react`.
+The current v0.2 surface focuses on **general primitives plus extensible drawing semantics**: named nodes, reference points, path actions, arrows, edge labels, multi-line text, Scope grouping / local transforms / style inheritance, plus gradient / pattern / image fills and registries for shapes, arrows, patterns, and path generators. Charting, flow layout, codecs, and additional framework adapters remain domain-package or future integration directions, not core `@retikz/react` APIs.
 
 ## AI-First
 
@@ -46,12 +46,14 @@ Hard rule: **Sugar introduces no new capabilities** — anything Sugar can expre
 
 ## General Primitives, Arbitrary Composition
 
-The Kernel is deliberately small: `<Layout>`, `<Node>`, `<Coordinate>`, `<Path>`, and `<Step>`. It is still general enough to compose most 2D relationship diagrams. Sugar such as `<Draw>` / `<Text>` improves authoring ergonomics, but still lowers back to the same Kernel IR.
+The Kernel stays deliberately restrained: `<Layout>`, `<Scope>`, `<Node>`, `<Coordinate>`, `<Path>`, and `<Step>`. It is still general enough to compose most 2D relationship diagrams. Sugar such as `<Draw>` / `<Text>` improves authoring ergonomics, but still lowers back to the same Kernel IR.
+
+v0.2 pushes composition further: `<Scope>` moves, rotates, scales, or styles a group of primitives; Paint and registries make fills, shapes, arrows, and path generators extensible without baking charting or layout algorithms into core.
 
 | Category | Composed from Kernel | Where |
 | --- | --- | --- |
-| **Flow charts / DAG** | Node + Step + Anchor + dagre/elkjs layout | `@retikz/flow` (v1.x) |
-| **Charts** | Step + Path + Node + data binding | `@retikz/plot` (v2.x) |
+| **Flow charts / DAG** | Node + Step + Anchor + external layout algorithms | Domain packages |
+| **Charts** | Step + Path + Node + data binding | `@retikz/plot` direction |
 | **UML / topology / mind maps** | Same Kernel, different layout & styling | Domain packages |
 | **Anything custom** | Write Kernel JSX directly | Your app |
 
@@ -65,8 +67,8 @@ retikz follows a **core + thin per-framework adapter** architecture: every frame
 
 | Role | Purpose | Status |
 | --- | --- | --- |
-| `@retikz/core` | IR + Scene compiler; zero React / zero DOM | ✅ Official, v0.1 |
-| `@retikz/react` | React adapter (peerDep: react) | ✅ Official, v0.1 |
+| `@retikz/core` | IR + Scene compiler; zero React / zero DOM | ✅ Current v0.2 line |
+| `@retikz/react` | React adapter (peerDep: react) | ✅ Current v0.2 line |
 | `@retikz/vue` / `svelte` / `solid` …<br />`@retikz/ssr` / `canvas` / `native` … | Other framework / target adapters | ⏳ Community / later |
 
 **Architecturally retikz isn't tied to any framework — the IR is universal; DSLs may legitimately differ between frameworks.** A diagram you draw today with `@retikz/react` produces an IR that any future adapter can render unchanged.
@@ -83,7 +85,7 @@ retikz's naming, path actions, and anchor model are direct tributes to LaTeX's T
 | Interactivity | None | React events & state |
 | Persistence | `.tex` source | JSON IR |
 
-In the long run, `@retikz/codec` will provide bidirectional IR ↔ TikZ source — sketch in the browser, paste straight into a LaTeX paper; or take TikZ from a `.tex` file and bring it live (v3.x+).
+IR ↔ TikZ source conversion belongs to a future codec direction: the goal is to edit in the browser and still fit into a LaTeX workflow, or migrate existing TikZ figures from `.tex` files into retikz IR / React.
 
 You do not need to know TikZ to use retikz. retikz borrows naming vocabulary (node / path / anchor / step), while the API remains plain React components.
 
