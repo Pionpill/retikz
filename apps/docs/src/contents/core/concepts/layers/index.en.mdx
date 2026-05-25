@@ -18,8 +18,8 @@ retikz turns the JSX DSL into IR first, then compiles IR into Scene. The DSL opt
 | Layer | Role | Audience |
 | --- | --- | --- |
 | DSL | React component syntax, split into Kernel and Sugar | Everyday authors |
-| IR | JSON-serializable declaration model that preserves Node / Path / Step / Coordinate semantics | Users, LLMs, persistence, converters |
-| Scene | Render-target-neutral primitive list with measured text, paths, and layout bounds | Renderers |
+| IR | JSON-serializable declaration model that preserves Node / Path / Step / Coordinate / Scope semantics | Users, LLMs, persistence, converters |
+| Scene | Render-target-neutral primitive list with measured text, paths, groups, and layout bounds | Renderers |
 
 IR is the public contract; Scene is renderer input. You normally do not write Scene by hand.
 
@@ -29,7 +29,7 @@ Why this matters in practice: use the DSL when authoring diagrams, use IR when s
 
 | Layer | Examples | Enters IR directly | Notes |
 | --- | --- | --- | --- |
-| Kernel | `<Layout>` / `<Node>` / `<Coordinate>` / `<Path>` / `<Step>` | Yes | One-to-one with IR nodes |
+| Kernel | `<Layout>` / `<Scope>` / `<Node>` / `<Coordinate>` / `<Path>` / `<Step>` | Yes | One-to-one with IR nodes |
 | Sugar | `<Draw way={...}>`, `DrawWay.Cycle`, relative-coordinate strings | No | Synchronously expands to Kernel in the adapter |
 
 Sugar adds no new capability. Anything drawn with `<Draw>` can also be written manually with `<Path>` + `<Step>`.
@@ -45,6 +45,8 @@ Sugar adds no new capability. Anything drawn with `<Draw>` can also be written m
 
 The adapter collects this JSX into IR. `@retikz/core` resolves positions, computes anchors, expands paths and bounds, then outputs Scene. In this example, `<Draw>` becomes a plain `path` node in IR.
 
+In v0.2, `<Scope>` is Kernel too: it preserves grouping semantics in IR, lowers to a Scene `group`, and carries group-level behavior such as local transforms, clipping, style defaults, and `zIndex`.
+
 ## Choosing a Layer
 
 | Scenario | Prefer |
@@ -54,4 +56,4 @@ The adapter collects this JSX into IR. `@retikz/core` resolves positions, comput
 | Tests or converter output closest to IR | Kernel |
 | Persistence, AI generation, or local patching | IR |
 
-Sugar expansion is called synchronously by the builder, so it must not depend on React hooks or async state. The complete IR schema lives in [Schema Reference](/core/reference/schema/scene).
+Sugar expansion is called synchronously by the builder, so it must not depend on React hooks or async state. Start from [Schema Reference](/core/reference/schema); the IR root lives in [Scene](/core/reference/schema/scene), with fields split across Entity / Path / Placement.

@@ -1,6 +1,6 @@
 ---
 title: Positioning
-description: Position expressions in retikz cover Cartesian, polar, node references, relative placement, offset placement, and relative targets for entity placement and path target resolution.
+description: Position expressions in retikz cover Cartesian, polar, node references, relative placement, offset placement, proportional placement, and relative targets for entity placement and path target resolution.
 ---
 
 retikz uses a unified set of position expressions for entity placement and path target resolution. `<Node>.position` / `<Coordinate>.position` determine the center of a visible entity or reference point; `<Step>.to` / `<Draw>.way` resolve the targets that a path connects to or passes through.
@@ -12,6 +12,7 @@ retikz uses a unified set of position expressions for entity placement and path 
 | Node id | `'node-id'` | Reference a named Node or Coordinate; paths auto-attach to the boundary | **Path target only** (`Step.to` / way item) |
 | Relative placement | `{ direction, of, distance? }` | Place around another Node / Coordinate by direction and distance | Node position, Coordinate position |
 | Offset placement | `{ of, offset }` | Apply a 2D offset from a node, coordinate, or polar base | Node position, Coordinate position, path target |
+| Proportional placement | `{ between: [A, B], t }` | Take a proportional point along A → B | Node position, Coordinate position, path target |
 | Relative target | `{ relative }` / `{ relativeAccumulate }` or `'+x,y'` / `'++x,y'` | Offset from the previous segment endpoint | **Path target only** |
 
 > Coordinate system: x grows right, y grows down (matches SVG / Canvas; opposite of math textbooks). Units are user units, not pixels — final physical size depends on `<Layout>`'s `width` / `height` and the compiled layout bounds.
@@ -56,9 +57,53 @@ The actual line endpoints are computed by retikz automatically — see [Anchors]
 
 `<Node>` / `<Coordinate>` do not accept a bare node id as `position`, because "place this entity at another entity's center" is rarely the useful default. Use `{ direction, of, distance? }` for relational placement, or `{ of, offset }` for arbitrary 2D offsets. Both keep layout intent in the document instead of baking every coordinate up front.
 
+## Relative Placement
+
+Relative placement uses `{ direction, of, distance? }` to say "place this entity in a direction from another entity." It is useful for flowcharts, concept maps, and local layout because the code states that B is to the right of A instead of making readers infer it from two absolute coordinates.
+
+```tsx
+<Node id="a" position={[0, 0]}>A</Node>
+<Node id="b" position={{ direction: 'right', of: 'a', distance: 80 }}>B</Node>
+```
+
+`direction` accepts 8 visual directions: `above` / `below` / `left` / `right` / `above-left` / `above-right` / `below-left` / `below-right`. When `distance` is omitted, retikz uses `<Layout nodeDistance>`, then falls back to the default.
+
+## Offset Placement
+
+Offset placement uses `{ of, offset }`: resolve a base point first, then add `[dx, dy]`. `of` may be a node id, Cartesian point, or polar position; `offset` is always a 2D user-unit offset.
+
+```tsx
+<Node id="a" position={[0, 0]}>A</Node>
+<Node id="note" position={{ of: 'a', offset: [40, -24] }}>note</Node>
+```
+
+It is more flexible than directional placement. When you want "40 units right and 24 units up from A" rather than one of the 8 named directions, offset placement is the direct form.
+
+## Proportional Placement `{ between, t }`
+
+Proportional placement takes a point along A → B: `t = 0` is A, `t = 1` is B, and `t = 0.5` is the midpoint. Use it for mid-line labels, helper points between two nodes, or a path step that should land at a proportional point.
+
+```tsx
+<Node id="a" position={[0, 0]}>A</Node>
+<Node id="b" position={[120, 0]}>B</Node>
+<Coordinate id="mid" position={{ between: ['a', 'b'], t: 0.5 }} />
+```
+
+The two `between` endpoints are self-contained absolute targets: Cartesian, polar, node / Coordinate references, offset placement, or nested `{ between, t }`. They do not accept path-relative targets (`relative` / `relativeAccumulate`) because proportional placement must resolve independently.
+
+## Path-Relative Targets
+
+Paths also support relative targets that are only valid in `<Step>.to` / `<Draw>.way`: `{ relative: [dx, dy] }` offsets from the previous segment endpoint without updating the accumulated base; `{ relativeAccumulate: [dx, dy] }` offsets and then uses the new endpoint as the next base. React sugar may also use `'+10,0'` / `'++10,0'`.
+
+```tsx
+<Draw way={[[0, 0], { relativeAccumulate: [40, 0] }, { relativeAccumulate: [0, 30] }]} />
+```
+
+These forms are path targets only; they are not valid for `<Node>.position` / `<Coordinate>.position`. For entity placement, use Cartesian, polar, relative placement, offset placement, or proportional placement.
+
 ## Forward-reference requirement
 
-String references and `origin: 'node-id'` both require the **referenced node to appear before the referrer** (in IR children source order). Referencing an undefined node fails compilation and the path is dropped.
+String references, `origin: 'node-id'`, `of: 'node-id'`, and ids inside `between` endpoints all require the **referenced entity to appear before the referrer** (in IR children source order). An unresolved entity position cannot be resolved; an unresolved path target prevents that path from being emitted normally and produces a diagnostic.
 
 ```tsx
 // ✅ b references a, a defined first

@@ -18,8 +18,8 @@ retikz 把用户写下的 JSX DSL 先转成 IR，再编译成 Scene。DSL 负责
 | 层 | 作用 | 面向谁 |
 | --- | --- | --- |
 | DSL | React 组件写法，分为 Kernel 与 Sugar | 日常作者 |
-| IR | JSON 可序列化的声明结构，保留 Node / Path / Step / Coordinate 语义 | 用户、LLM、持久化、转换器 |
-| Scene | 渲染目标无关的 primitive 列表，包含测量后的文本、路径、layout bounds | renderer |
+| IR | JSON 可序列化的声明结构，保留 Node / Path / Step / Coordinate / Scope 语义 | 用户、LLM、持久化、转换器 |
+| Scene | 渲染目标无关的 primitive 列表，包含测量后的文本、路径、group、layout bounds | renderer |
 
 IR 是公开契约；Scene 是 renderer 输入。正常写图时不需要手写 Scene。
 
@@ -29,7 +29,7 @@ IR 是公开契约；Scene 是 renderer 输入。正常写图时不需要手写 
 
 | 层 | 例子 | 是否直接进 IR | 说明 |
 | --- | --- | --- | --- |
-| Kernel | `<Layout>` / `<Node>` / `<Coordinate>` / `<Path>` / `<Step>` | 是 | 与 IR 节点一一对应 |
+| Kernel | `<Layout>` / `<Scope>` / `<Node>` / `<Coordinate>` / `<Path>` / `<Step>` | 是 | 与 IR 节点一一对应 |
 | Sugar | `<Draw way={...}>`、`DrawWay.Cycle`、相对坐标字符串 | 否 | adapter 同步展开为 Kernel |
 
 Sugar 不引入新能力。能用 `<Draw>` 画出来的图，也能用 `<Path>` + `<Step>` 手写出来。
@@ -45,6 +45,8 @@ Sugar 不引入新能力。能用 `<Draw>` 画出来的图，也能用 `<Path>` 
 
 这段 JSX 会被 adapter 收集成 IR，`@retikz/core` 再负责解析 position、计算 anchor、展开路径与边界，最后输出 Scene。上例中的 `<Draw>` 会在 IR 中成为普通 `path` 节点。
 
+v0.2 的 `<Scope>` 也属于 Kernel：它在 IR 中保留分组语义，编译到 Scene 时下沉为 `group`，并承载局部 transform、clip、样式默认值和 `zIndex` 等组级行为。
+
 ## 选择建议
 
 | 场景 | 推荐 |
@@ -54,4 +56,4 @@ Sugar 不引入新能力。能用 `<Draw>` 画出来的图，也能用 `<Path>` 
 | 需要最接近 IR 的测试或转换器输出 | Kernel |
 | 需要持久化、AI 生成或局部修改图 | IR |
 
-Sugar 的展开逻辑由 builder 同步调用，不能依赖 React hooks 或异步状态。完整 IR schema 见 [Schema Reference](/core/reference/schema/scene)。
+Sugar 的展开逻辑由 builder 同步调用，不能依赖 React hooks 或异步状态。完整 IR schema 从 [结构参考](/core/reference/schema) 进入；IR 根见 [Scene](/core/reference/schema/scene)，字段细分见 Entity / Path / Placement。
