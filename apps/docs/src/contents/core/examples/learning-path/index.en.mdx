@@ -9,7 +9,7 @@ This page uses [AMAI-GmbH/AI-Expert-Roadmap](https://github.com/AMAI-GmbH/AI-Exp
 
 <ComponentPreview name="learning-path-05-dashed" size="xl" />
 
-This is not a recommendation to hard-code every diagram. Absolute coordinates are the direct choice when replicating an existing SVG / poster; once a figure needs reuse, text swaps, or changing node counts, extract repeated visuals into small components, encode stable relationships with `AtPosition` / `Draw`, and leave only a few anchors as absolute coordinates.
+This is not a recommendation to hard-code every diagram. Absolute coordinates are the direct choice when replicating an existing SVG / poster; once a figure needs reuse, text swaps, or changing node counts, extract repeated visuals into small components, encode stable relationships with `AtPosition` / `Draw`, and leave only a few anchors as absolute coordinates. In other words, this example is teaching when to package things up and when to place them directly.
 
 ## Prompt
 
@@ -87,7 +87,7 @@ Add the `Fundamentals` gray mini button and the `Choose your path` sub-header be
 
 ### Step 3: side stacks — AtPosition tight stacking
 
-Add two independent stacks — 4 blue "required" buttons on the left, 2 legend buttons on the right (1 blue + 1 gray). Each column's **head** uses an absolute Cartesian; the rest use [AtPosition](/core/concepts/positioning) `{ direction: 'below', of: 'prev-id' }` for tight stacking:
+Add two independent stacks — 4 blue "required" buttons on the left, 2 legend buttons on the right (1 blue + 1 gray). Each column's **head** uses an absolute Cartesian first, and the rest use [AtPosition](/core/concepts/positioning) `{ direction: 'below', of: 'prev-id' }` for tight stacking: set the spine first, then let the column grow downward on its own.
 
 - `<Layout ... nodeDistance={41}>` sets the global node distance on the container
 - Each AtPosition node references the previous node's id, gluing them visually into a "color bar"
@@ -98,13 +98,13 @@ Add two independent stacks — 4 blue "required" buttons on the left, 2 legend b
 <RoadmapNode id="semver" position={{ direction: 'below', of: 'git' }} ...>Semantic Versioning</RoadmapNode>
 ```
 
-This step only adds nodes — no new connectors.
+This step only adds nodes — no new connectors. A first-time reader can treat it as "arrange the two button columns neatly" without having to think about edges yet.
 
 <ComponentPreview name="learning-path-03-stacks" diffFrom="learning-path-02-spine" />
 
 ### Step 4: 5 path buttons + curve merge
 
-Add 5 center path buttons (two sub-columns of 3 + 2 tightly stacked), then use [Draw](/core/components/draw/overview)'s `{ curve }` infix operator to connect the `Choose` header down to each sub-column head.
+Add 5 center path buttons (two sub-columns of 3 + 2 tightly stacked), then use [Draw](/core/components/draw/overview)'s `{ curve }` infix operator to connect the `Choose` header down to each sub-column head. This is where the example starts doing structured connections: place the nodes first, then draw the branch curves.
 
 The merge curve is a 2-segment quadratic Bezier — that maps directly to **2 consecutive `{ curve: [cx, cy] }` infix operators** in the way array, each modifying the next segment:
 
@@ -135,7 +135,7 @@ The last target is the node id `'data-scientist'`, which retikz auto-anchors to 
 
 ### Step 5: decoration — dashed recommended + short dashed + red X
 
-The final decoration layer demonstrates `dashPattern` / `arrow` at start / edge label in one pass:
+The final decoration layer demonstrates `dashPattern` / `arrow` at start / edge label in one pass. It is there to add character, not to change the structure, so it belongs at the end.
 
 | Decoration                     | Draw config                                                    | way operators                                                                                        |
 | ------------------------------ | -------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
