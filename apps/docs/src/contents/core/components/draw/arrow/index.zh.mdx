@@ -86,7 +86,7 @@ description: Path / Draw 的箭头详解。`arrow` 控制方向、`arrowDetail` 
 
 | 字段 | 类型 | 默认值 | 描述 |
 | --- | --- | --- | --- |
-| `shape` | `'normal' \| 'open' \| 'stealth' \| 'diamond' \| 'openDiamond' \| 'circle' \| 'openCircle'` | `'stealth'` | 箭头形状 |
+| `shape` | `'normal' \| 'open' \| 'stealth' \| 'diamond' \| 'openDiamond' \| 'circle' \| 'openCircle' \| string` | `'stealth'` | 箭头形状；内置 7 种或经 `<Layout arrows>` / `CompileOptions.arrows` 注册的自定义箭头名 |
 | `scale` | `number > 0` | `1` | 等比缩放因子；乘到 `length` / `width` 之后（`length=10, scale=1.5` → 实际 15） |
 | `length` | `number ≥ 0` | `6` | 尖长（用户单位，沿路径方向） |
 | `width` | `number ≥ 0` | `6` | 尖宽（用户单位，垂直路径方向） |
@@ -101,3 +101,4 @@ description: Path / Draw 的箭头详解。`arrow` 控制方向、`arrowDetail` 
 
 - [Draw](/core/components/draw/overview)：日常连线的 Sugar 写法
 - [Path](/core/components/draw/path)：底层路径容器，`arrow` / `arrowDetail` 行为一致
+- [自定义箭头](/core/reference/extending/custom-arrow)：注册项目自己的箭头 shape

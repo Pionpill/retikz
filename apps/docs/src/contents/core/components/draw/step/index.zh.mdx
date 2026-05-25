@@ -1,9 +1,9 @@
 ---
 title: Step
-description: Path 的子节点——一个 step = 一个动作（move / line / step 折角 / cycle 闭合 / curve / cubic / bend 曲线 / arc 弧段 / circlePath 整圆 / ellipsePath 整椭圆）；`to` 支持节点 id / 笛卡尔 / 极坐标 / 偏移定位（of+offset）/ 相对偏移（relative / relativeAccumulate）；只能作为 `<Path>` 的直接 children。
+description: Path 的子节点——一个 step = 一个动作（move / line / step 折角 / cycle 闭合 / curve / cubic / bend 曲线 / arc 弧段 / circlePath / ellipsePath / rectangle）；`to` 支持节点 id / 笛卡尔 / 极坐标 / 偏移定位 / 比例定位 / 相对偏移；只能作为 `<Path>` 的直接 children。
 ---
 
-`<Step>` 描述路径上的一个动作：`move` 抬笔到目标点，`line` 落笔从游标画直线，`step` 经一个直角拐点折到目标点，`cycle` 闭合回 path 起点，`curve` / `cubic` / `bend` 画各类曲线，`arc` / `circlePath` / `ellipsePath` 以游标为圆心画弧段 / 整圆 / 整椭圆。它**只能**作为 `<Path>` 的直接 children；放在其它地方会被忽略。
+`<Step>` 描述路径上的一个动作：`move` 抬笔到目标点，`line` 落笔从游标画直线，`step` 经一个直角拐点折到目标点，`cycle` 闭合回 path 起点，`curve` / `cubic` / `bend` 画各类曲线，`arc` / `circlePath` / `ellipsePath` 以游标为圆心画弧段 / 整圆 / 整椭圆，`rectangle` 用两对角画矩形。它**只能**作为 `<Path>` 的直接 children；放在其它地方会被忽略。
 
 先用这张表定位 `kind`：
 
@@ -14,6 +14,7 @@ description: Path 的子节点——一个 step = 一个动作（move / line / s
 | `cycle` | 否 | 是 | 回到子路径起点 | 否 |
 | `arc` | 否 | 是 | 到弧段终点 | 是 |
 | `circlePath` / `ellipsePath` | 否 | 是 | 回到圆心 / 椭圆中心 | 是 |
+| `rectangle` | 是 | 是 | 到对角点 | 否 |
 
 ## 用法
 
@@ -102,6 +103,12 @@ import { Path, Step } from '@retikz/react';
 `kind="ellipsePath"` 以**游标为圆心**，按 `radiusX` / `radiusY` 画一个完整闭合的椭圆——画完画笔回到圆心。`radiusX === radiusY` 时退化为圆：
 
 <ComponentPreview name="step-ellipse" />
+
+### 矩形（rectangle）
+
+`kind="rectangle"` 用 `from` 和 `to` 作为两个对角点画一个轴对齐矩形；可选 `roundedCorners` 做圆角。它不像 `line` 那样依赖当前游标，所以更接近 TikZ 的 `(a) rectangle (b)`。日常画矩形更推荐用 [Shapes](/core/components/draw/shapes) 里的 `<Rectangle>` sugar，写底层 IR 或需要和其它 step 混排时再直接用这个 kind。
+
+<ComponentPreview name="step-rectangle" size="sm" />
 
 ### 边标注（label）
 
@@ -233,9 +240,10 @@ t 是沿整段的归一化参数，不同 kind 有不同参数化方式：
 
 | 属性 | 类型 | 默认值 | 描述 |
 | --- | --- | --- | --- |
-| `kind` | `'move' \| 'line' \| 'step' \| 'cycle' \| 'curve' \| 'cubic' \| 'bend' \| 'arc' \| 'circlePath' \| 'ellipsePath'` | `'line'` | 见下方"十种取值"表 |
+| `kind` | `'move' \| 'line' \| 'step' \| 'cycle' \| 'curve' \| 'cubic' \| 'bend' \| 'arc' \| 'circlePath' \| 'ellipsePath' \| 'rectangle'` | `'line'` | 见下方"十一种取值"表；IR 另有 `generator`，无 React `<Step>` DSL |
 | `via` | `'-\|' \| '\|-'` | — | 仅 `kind="step"` 必填：`-\|` 先水平后垂直；`\|-` 先垂直后水平 |
-| `to` | `IRTarget` | — | `kind="cycle"` / `'arc'` / `'circlePath'` / `'ellipsePath'` 时不需要；其余 kind 必填——目标点：节点 id、笛卡尔 `[x, y]`、极坐标对象、偏移定位对象 `{ of, offset }`、相对偏移对象 `{ relative }` / `{ relativeAccumulate }`，或 sugar 字符串 `'+dx,dy'` / `'++dx,dy'` |
+| `from` | `IRTarget` | — | 仅 `kind="rectangle"` 必填：矩形一个角点 |
+| `to` | `IRTarget` | — | `kind="cycle"` / `'arc'` / `'circlePath'` / `'ellipsePath'` 时不需要；`kind="rectangle"` 与其它会推进游标的 kind 必填——目标点：节点 id、笛卡尔 `[x, y]`、极坐标对象、偏移定位对象 `{ of, offset }`、比例定位 `{ between, t }`、相对偏移对象 `{ relative }` / `{ relativeAccumulate }`，或 sugar 字符串 `'+dx,dy'` / `'++dx,dy'` |
 | `control` | `[number, number]` | — | 仅 `kind="curve"` 必填：二次贝塞尔的单个控制点 |
 | `control1` | `[number, number]` | — | 仅 `kind="cubic"` 必填：三次贝塞尔的第一控制点（影响起点切线） |
 | `control2` | `[number, number]` | — | 仅 `kind="cubic"` 必填：三次贝塞尔的第二控制点（影响终点切线） |
@@ -246,9 +254,10 @@ t 是沿整段的归一化参数，不同 kind 有不同参数化方式：
 | `radius` | `number` | — | `kind="arc"` / `'circlePath'` 必填：圆 / 弧的半径 |
 | `radiusX` | `number` | — | 仅 `kind="ellipsePath"` 必填：椭圆 x 轴半径 |
 | `radiusY` | `number` | — | 仅 `kind="ellipsePath"` 必填：椭圆 y 轴半径 |
+| `roundedCorners` | `number` | — | 仅 `kind="rectangle"` 可选：矩形圆角半径 |
 | `label` | `IRStepLabel` | — | 边标注（`'move'` / `'cycle'` 外八种 kind 通用）：`{ text, position?, side?, textColor?, opacity?, font? }`；等价 sugar 写法 `<Step><EdgeLabel>…</EdgeLabel></Step>`，prop 优先 |
 
-### kind 的十种取值
+### kind 的十一种取值
 
 | kind | 行为 | 底层路径类比 |
 | --- | --- | --- |
@@ -262,6 +271,9 @@ t 是沿整段的归一化参数，不同 kind 有不同参数化方式：
 | `'arc'` | 以游标为圆心，按起末角度 + 半径画弧 | path "A" |
 | `'circlePath'` | 以游标为圆心画整圆，画完回到圆心 | path "A"×2 |
 | `'ellipsePath'` | 以游标为圆心画整椭圆，画完回到圆心 | path "A"×2 |
+| `'rectangle'` | 用 `from` 和 `to` 作为两对角画矩形 | TikZ `(a) rectangle (b)` |
+
+IR schema 还包含 `generator` step，用于外部路径生成器注册面；它没有对应的 React `<Step kind="generator">` DSL，通常通过 IR 直传或上层包生成。
 
 `<Path>` 第一个 step 必须是 `move`——如果你写 `'line'` / `'step'` / `'cycle'`，编译器会自动改成 `move`（cycle 无 `to`，回退到原点 `[0, 0]`）。
 
@@ -289,7 +301,7 @@ t 是沿整段的归一化参数，不同 kind 有不同参数化方式：
 
 不同 step kind 上 t 的几何解释见上方 "[t 在每种 step kind 上的几何含义](#t-在每种-step-kind-上的几何含义)" 表。要点：line 按弧长归一化；fold 按折线段数均分 t 区间（拐角恒在 t=0.5）；curve / cubic / bend 用 Bezier 参数 t（**非弧长**——t=0.5 通常不是视觉中点）；arc 用角度参数化；circlePath / ellipsePath 沿整圆从 angle 0（+x）CCW 增长。
 
-### to 的六种形态
+### to 的七种形态
 
 | 形态 | 例 | 行为 |
 | --- | --- | --- |
@@ -297,6 +309,7 @@ t 是沿整段的归一化参数，不同 kind 有不同参数化方式：
 | 笛卡尔 | `[60, 0]` | 直接坐标 |
 | 极坐标 | `{ origin: 'a', angle: 30, radius: 50 }` | 极坐标（参看 [定位](/core/concepts/positioning)） |
 | 偏移定位 | `{ of: 'a', offset: [10, 5] }` | 基准 + `(dx, dy)`；`of` 三态——节点 id / 笛卡尔字面值 / PolarPosition |
+| 比例定位 | `{ between: ['a', 'b'], t: 0.5 }` | A 到 B 连线上的比例点；端点必须是可独立解析的 absolute target |
 | 相对偏移 (relative) | `{ relative: [10, 0] }` 或 `'+10,0'` | 基于前一 step 终点 + `[dx, dy]`；**不**更新 prevEnd |
 | 相对偏移 (relativeAccumulate) | `{ relativeAccumulate: [10, 0] }` 或 `'++10,0'` | 基于前一 step 终点 + `[dx, dy]`；**更新** prevEnd |
 

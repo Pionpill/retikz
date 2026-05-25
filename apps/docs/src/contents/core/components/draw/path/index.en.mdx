@@ -143,7 +143,7 @@ Besides the symmetric `bendDirection` + `bendAngle`, `<Step kind="bend">` accept
 | `thickness` | `'ultraThin' \| 'veryThin' \| 'thin' \| 'semithick' \| 'thick' \| 'veryThick' \| 'ultraThick'` | — | Semantic stroke preset (`thin = 1`); explicit `strokeWidth` always wins |
 | `arrow` | `'none' \| '->' \| '<-' \| '<->'` | — | Path-level arrow direction (see [Arrow](/core/components/draw/arrow)) |
 | `arrowDetail` | `ArrowDetail` object | — | Arrow visual config; fields documented on [Arrow](/core/components/draw/arrow) |
-| `fill` | `string` | `'none'` | Fill color of the closed region (any CSS color) |
+| `fill` | `string \| PaintSpec` | `'none'` | Fill of the closed region: any CSS color, or PaintSpec (gradient / pattern / image) |
 | `fillRule` | `'nonzero' \| 'evenodd'` | `'nonzero'` | Fill rule; use `'evenodd'` for rings / holes |
 | `opacity` | `number` | — | Whole-path opacity 0..1 (multiplies onto stroke and fill) |
 | `fillOpacity` | `number` | — | Fill-only opacity 0..1 |

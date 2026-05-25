@@ -86,7 +86,7 @@ With `arrowDetail` omitted, the arrow defaults to a stealth tip inheriting the p
 
 | Field | Type | Default | Description |
 | --- | --- | --- | --- |
-| `shape` | `'normal' \| 'open' \| 'stealth' \| 'diamond' \| 'openDiamond' \| 'circle' \| 'openCircle'` | `'stealth'` | Arrow tip shape |
+| `shape` | `'normal' \| 'open' \| 'stealth' \| 'diamond' \| 'openDiamond' \| 'circle' \| 'openCircle' \| string` | `'stealth'` | Arrow tip shape; one of the 7 built-ins or a custom arrow name registered via `<Layout arrows>` / `CompileOptions.arrows` |
 | `scale` | `number > 0` | `1` | Uniform scale factor; multiplied **after** `length` / `width` (`length=10, scale=1.5` → effective 15) |
 | `length` | `number ≥ 0` | `6` | Arrow length along the path direction (user units) |
 | `width` | `number ≥ 0` | `6` | Arrow width perpendicular to the path (user units) |
@@ -101,3 +101,4 @@ With `arrowDetail` omitted, the arrow defaults to a stealth tip inheriting the p
 
 - [Draw](/core/components/draw/overview): Sugar for everyday connections
 - [Path](/core/components/draw/path): Low-level path container with the same `arrow` / `arrowDetail` behavior
+- [Custom arrows](/core/reference/extending/custom-arrow): Register project-specific arrow shapes

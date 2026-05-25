@@ -7,23 +7,6 @@ description: Sugar component — a way array threads through nodes, coordinates,
 
 Choosing rule: use `<Draw>` for ordinary relationship lines, flowchart edges, and arrowed connections; switch to `<Path>` + `<Step>` when you need multiple `move`s, precise per-segment `kind` control, or IR-close debugging; use the **shape sugar** below to draw a single geometric shape (circle / rectangle / sector / grid, etc.); work with IR directly only at AI / persistence boundaries.
 
-## Shape sugar
-
-Beyond the `way` array, the Draw family also offers a set of **shape sugar** — draw a common geometric shape in one line, also expanding to `<Path>` and sharing the same visual props as `<Draw>` / `<Path>` (`fill` / `stroke` / `strokeWidth` / `dashPattern` / `arrow` / `zIndex`, etc.):
-
-| Component | Draws |
-| --- | --- |
-| `<Circle>` | circle / half circle / segment |
-| `<Ellipse>` | ellipse / partial ellipse |
-| `<Arc>` | open circular / elliptical arc |
-| `<Sector>` | wedge (closed through the center) |
-| `<Rectangle>` | rectangle / rounded rectangle |
-| `<Grid>` | background grid (expands to many lines) |
-| `<RegularPolygon>` | regular polygon |
-| `<Star>` | star |
-
-See [Shapes](/core/components/draw/shapes) for each form, the point contract (pass-through Target vs literal Cartesian), and per-component props. Difference from `<Node shape="...">`: shape sugar is a plain text-less path; a Node is an object with text / anchors that edges can connect to.
-
 ## Usage
 
 ```tsx
@@ -165,6 +148,23 @@ Full ellipses also use angular parametrization, not equal divisions by ellipse a
 
 <ComponentPreview name="draw-z-index" size="sm" />
 
+### Shape sugar
+
+Beyond the `way` array, the Draw family also offers a set of **shape sugar** — draw a common geometric shape in one line, also expanding to `<Path>` and sharing the same visual props as `<Draw>` / `<Path>` (`fill` / `stroke` / `strokeWidth` / `dashPattern` / `arrow` / `zIndex`, etc.):
+
+| Component | Draws |
+| --- | --- |
+| `<Circle>` | circle / half circle / segment |
+| `<Ellipse>` | ellipse / partial ellipse |
+| `<Arc>` | open circular / elliptical arc |
+| `<Sector>` | wedge (closed through the center) |
+| `<Rectangle>` | rectangle / rounded rectangle |
+| `<Grid>` | background grid (expands to many lines) |
+| `<RegularPolygon>` | regular polygon |
+| `<Star>` | star |
+
+See [Shapes](/core/components/draw/shapes) for each form, the point contract (pass-through Target vs literal Cartesian), and per-component props. Difference from `<Node shape="...">`: shape sugar is a plain text-less path; a Node is an object with text / anchors that edges can connect to.
+
 ## API Reference
 
 ### Props
@@ -180,7 +180,7 @@ Full ellipses also use angular parametrization, not equal divisions by ellipse a
 | `thickness` | `'ultraThin' \| 'veryThin' \| 'thin' \| 'semithick' \| 'thick' \| 'veryThick' \| 'ultraThick'` | — | Semantic stroke preset; explicit `strokeWidth` wins |
 | `arrow` | `'none' \| '->' \| '<-' \| '<->'` | — | Path-level arrow direction |
 | `arrowDetail` | `{ shape?, scale?, length?, width?, color?, fill?, opacity?, lineWidth?, start?, end? }` | — | Detailed arrow configuration; see [Arrow](/core/components/draw/arrow) |
-| `fill` | `string` | `'none'` | Fill color for closed regions |
+| `fill` | `string \| PaintSpec` | `'none'` | Fill for closed regions: plain color or PaintSpec (gradient / pattern / image) |
 | `fillRule` | `'nonzero' \| 'evenodd'` | `'nonzero'` | Fill rule |
 | `opacity` | `number` | — | Whole-path opacity, 0..1 |
 | `fillOpacity` | `number` | — | Fill-only opacity, 0..1 |

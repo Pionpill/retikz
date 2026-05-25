@@ -1,9 +1,9 @@
 ---
 title: Step
-description: Path's child node — one step = one action (move / line / step fold / cycle close / curve / cubic / bend / arc / circlePath / ellipsePath); `to` accepts node id / Cartesian / polar / offset (of+offset) / relative offsets (relative / relativeAccumulate); only valid as a direct child of `<Path>`.
+description: Path's child node — one step = one action (move / line / step fold / cycle close / curve / cubic / bend / arc / circlePath / ellipsePath / rectangle); `to` accepts node id / Cartesian / polar / offset / proportional placement / relative offsets; only valid as a direct child of `<Path>`.
 ---
 
-`<Step>` describes a single path action: `move` lifts the pen, `line` draws a straight line, `step` folds through a single right-angle corner, `cycle` closes the path, `curve` / `cubic` / `bend` draw curves of various shapes, and `arc` / `circlePath` / `ellipsePath` use the cursor as the center to draw an arc / full circle / full ellipse. It is **only** valid as a direct child of `<Path>`; placed elsewhere it is silently ignored.
+`<Step>` describes a single path action: `move` lifts the pen, `line` draws a straight line, `step` folds through a single right-angle corner, `cycle` closes the path, `curve` / `cubic` / `bend` draw curves of various shapes, `arc` / `circlePath` / `ellipsePath` use the cursor as the center to draw an arc / full circle / full ellipse, and `rectangle` draws an axis-aligned rectangle from two opposite corners. It is **only** valid as a direct child of `<Path>`; placed elsewhere it is silently ignored.
 
 Use this table to pick a `kind` first:
 
@@ -14,6 +14,7 @@ Use this table to pick a `kind` first:
 | `cycle` | No | Yes | Back to subpath start | No |
 | `arc` | No | Yes | To arc endpoint | Yes |
 | `circlePath` / `ellipsePath` | No | Yes | Back to circle / ellipse center | Yes |
+| `rectangle` | Yes | Yes | To opposite corner | No |
 
 ## Usage
 
@@ -102,6 +103,12 @@ You can also write the sugar strings `'+dx,dy'` / `'++dx,dy'` (e.g. `<Step to="+
 `kind="ellipsePath"` uses the **cursor as center** and draws a fully closed ellipse by `radiusX` / `radiusY` — the pen returns to the center. When `radiusX === radiusY` it degenerates into a circle:
 
 <ComponentPreview name="step-ellipse" />
+
+### Rectangle
+
+`kind="rectangle"` uses `from` and `to` as opposite corners of an axis-aligned rectangle; optional `roundedCorners` rounds the corners. Unlike `line`, it does not depend on the current cursor, which keeps it close to TikZ `(a) rectangle (b)`. For everyday rectangles prefer the `<Rectangle>` sugar in [Shapes](/core/components/draw/shapes); use this low-level kind when authoring IR-like step sequences or mixing it with other step kinds.
+
+<ComponentPreview name="step-rectangle" size="sm" />
 
 ### Edge label
 
@@ -233,9 +240,10 @@ Full ellipses also place labels by angle parameter; this is not equal spacing by
 
 | Prop | Type | Default | Description |
 | --- | --- | --- | --- |
-| `kind` | `'move' \| 'line' \| 'step' \| 'cycle' \| 'curve' \| 'cubic' \| 'bend' \| 'arc' \| 'circlePath' \| 'ellipsePath'` | `'line'` | See the "Ten kinds" table below |
+| `kind` | `'move' \| 'line' \| 'step' \| 'cycle' \| 'curve' \| 'cubic' \| 'bend' \| 'arc' \| 'circlePath' \| 'ellipsePath' \| 'rectangle'` | `'line'` | See the "Eleven kinds" table below; IR also has `generator`, without React `<Step>` DSL |
 | `via` | `'-\|' \| '\|-'` | — | Required for `kind="step"`: `-\|` horizontal-then-vertical; `\|-` vertical-then-horizontal |
-| `to` | `IRTarget` | — | Not used for `kind="cycle"` / `'arc'` / `'circlePath'` / `'ellipsePath'`; required for the rest. Target: node id, Cartesian `[x, y]`, polar object, offset object `{ of, offset }`, relative-offset object `{ relative }` / `{ relativeAccumulate }`, or sugar string `'+dx,dy'` / `'++dx,dy'` |
+| `from` | `IRTarget` | — | Required only for `kind="rectangle"`: one rectangle corner |
+| `to` | `IRTarget` | — | Not used for `kind="cycle"` / `'arc'` / `'circlePath'` / `'ellipsePath'`; required for `kind="rectangle"` and other cursor-advancing kinds. Target: node id, Cartesian `[x, y]`, polar object, offset object `{ of, offset }`, proportional placement `{ between, t }`, relative-offset object `{ relative }` / `{ relativeAccumulate }`, or sugar string `'+dx,dy'` / `'++dx,dy'` |
 | `control` | `[number, number]` | — | Required for `kind="curve"`: single control point of the quadratic Bezier |
 | `control1` | `[number, number]` | — | Required for `kind="cubic"`: first control point (shapes start tangent) |
 | `control2` | `[number, number]` | — | Required for `kind="cubic"`: second control point (shapes end tangent) |
@@ -246,9 +254,10 @@ Full ellipses also place labels by angle parameter; this is not equal spacing by
 | `radius` | `number` | — | Required for `kind="arc"` / `'circlePath'`: radius of the circle / arc |
 | `radiusX` | `number` | — | Required for `kind="ellipsePath"`: x-axis radius |
 | `radiusY` | `number` | — | Required for `kind="ellipsePath"`: y-axis radius |
+| `roundedCorners` | `number` | — | Optional for `kind="rectangle"`: corner radius |
 | `label` | `IRStepLabel` | — | Edge label (works on every kind except `'move'` / `'cycle'`): `{ text, position?, side?, textColor?, opacity?, font? }`; equivalent sugar form `<Step><EdgeLabel>…</EdgeLabel></Step>`, prop wins on conflict |
 
-### Ten kinds
+### Eleven kinds
 
 | kind | Behavior | Path analogue |
 | --- | --- | --- |
@@ -262,6 +271,9 @@ Full ellipses also place labels by angle parameter; this is not equal spacing by
 | `'arc'` | Cursor as center; arc by start / end angle + radius | path "A" |
 | `'circlePath'` | Cursor as center; full circle, pen returns to center | path "A"×2 |
 | `'ellipsePath'` | Cursor as center; full ellipse, pen returns to center | path "A"×2 |
+| `'rectangle'` | Draw a rectangle using `from` and `to` as opposite corners | TikZ `(a) rectangle (b)` |
+
+The IR schema also contains a `generator` step for external path-generator registries. It has no corresponding React `<Step kind="generator">` DSL and is usually supplied through direct IR or a higher-level package.
 
 The first step of a `<Path>` must be `move` — if you write `'line'` / `'step'` / `'cycle'`, the compiler coerces it to `move` (cycle has no `to`, so it falls back to origin `[0, 0]`).
 
@@ -289,7 +301,7 @@ Only meaningful when `kind="step"`. Given cursor `(px, py)` and target `(tx, ty)
 
 The geometric meaning of t per step kind is in the "[Geometric meaning of t per step kind](#geometric-meaning-of-t-per-step-kind)" table above. In short: line uses normalized arc length; fold splits the t interval evenly by polyline leg count (the corner is always at t=0.5); curve / cubic / bend use the Bezier parameter t (**not** arc length — t=0.5 is usually not the visual midpoint); arc uses angle parametrization; circlePath / ellipsePath traverse the full curve starting at angle 0 (+x), CCW.
 
-### Six forms of `to`
+### Seven forms of `to`
 
 | Form | Example | Behavior |
 | --- | --- | --- |
@@ -297,6 +309,7 @@ The geometric meaning of t per step kind is in the "[Geometric meaning of t per 
 | Cartesian | `[60, 0]` | Literal `[x, y]` |
 | Polar | `{ origin: 'a', angle: 30, radius: 50 }` | Polar (see [Positioning](/core/concepts/positioning)) |
 | Offset | `{ of: 'a', offset: [10, 5] }` | Base + `(dx, dy)`; `of` accepts node id, Cartesian literal, or PolarPosition |
+| Proportional placement | `{ between: ['a', 'b'], t: 0.5 }` | Proportional point along A → B; endpoints must be independently resolvable absolute targets |
 | Relative (relative) | `{ relative: [10, 0] }` or `'+10,0'` | Previous step's endpoint + `[dx, dy]`; does **not** update prevEnd |
 | Relative (relativeAccumulate) | `{ relativeAccumulate: [10, 0] }` or `'++10,0'` | Previous step's endpoint + `[dx, dy]`; **updates** prevEnd |
 

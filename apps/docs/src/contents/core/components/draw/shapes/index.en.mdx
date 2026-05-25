@@ -175,7 +175,7 @@ Every shape expands to an equivalent `<Path>` / `<Step>` sequence. That means:
 | --- | --- | --- | --- |
 | `stroke` | `string` | `currentColor` | Stroke color |
 | `strokeWidth` | `number` | `1` | Stroke width |
-| `fill` | `string` | `none` | Fill color |
+| `fill` | `string \| PaintSpec` | `none` | Fill: plain color or PaintSpec (gradient / pattern / image) |
 | `dashPattern` | `Array<number>` | — | Dash and gap sequence |
 | `opacity` | `number` | — | Whole-shape opacity |
 | `arrow` | `'none' \| '->' \| '<-' \| '<->'` | — | Path arrow |

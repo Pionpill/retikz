@@ -27,7 +27,7 @@ import { Node } from '@retikz/react';
 
 ### shape 多态
 
-`shape` 控制节点形状：`'rectangle'`（默认）/ `'circle'` / `'ellipse'` / `'diamond'`。任意 shape 的节点都被 path / draw 当作有边界的图元，连线端点自动贴对应形状的边：
+`shape` 控制节点形状：`'rectangle'`（默认）/ `'circle'` / `'ellipse'` / `'diamond'`，也可以是经 `<Layout shapes>` / `CompileOptions.shapes` 注册的自定义形状名。任意 shape 的节点都被 path / draw 当作有边界的图元，连线端点自动贴对应形状的边：
 
 <ComponentPreview name="node-shapes" size="lg" />
 
@@ -74,6 +74,10 @@ import { Node } from '@retikz/react';
 </Comparison>
 
 <ComponentPreview name="node-offset-position" />
+
+#### 比例定位
+
+v0.2 起，`position` 还接受 **`{ between, t }`**：把节点放在两个端点连线的比例位置上，`t=0.5` 就是中点。端点可用节点 id、坐标、极坐标、offset 或嵌套 between；更适合辅助点和中点标注的完整示例见 [Coordinate](/core/components/node/coordinate)。
 
 ### 节点附属标签
 
@@ -253,8 +257,8 @@ Line 2`}</Node>
 | 属性 | 类型 | 默认值 | 描述 |
 | --- | --- | --- | --- |
 | `id` | `string` | — | 唯一标识；被 `<Path>` / `<Draw>` 用来引用 |
-| `shape` | `'rectangle' \| 'circle' \| 'ellipse' \| 'diamond'` | `'rectangle'` | 节点形状 |
-| `position` | `[x, y] \| PolarPosition \| { direction, of, distance? } \| { of, offset }` | — | 节点中心位置：笛卡尔 / 极坐标 / 相对定位 / 偏移定位；`of` 三态：节点 id、笛卡尔、PolarPosition |
+| `shape` | `'rectangle' \| 'circle' \| 'ellipse' \| 'diamond' \| string` | `'rectangle'` | 节点形状；内置 4 种或经 `<Layout shapes>` / `CompileOptions.shapes` 注册的自定义形状名 |
+| `position` | `[x, y] \| PolarPosition \| { direction, of, distance? } \| { of, offset } \| { between, t }` | — | 节点中心位置：笛卡尔 / 极坐标 / 相对定位 / 偏移定位 / 比例定位；`of` 三态：节点 id、笛卡尔、PolarPosition |
 | `children` / `text` | `string \| Array<string>` | — | 节点内可见文字；字符串单行 / 数组多行；`text` 优先于 `children` |
 | `align` | `'left' \| 'center' \| 'right'` | `'center'` | 多行文本块内各行水平对齐方式 |
 | `lineHeight` | `number` | `font.size × 1.2` | 多行块的行高（user units） |

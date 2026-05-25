@@ -21,7 +21,7 @@ import { Draw, DrawWay } from '@retikz/react';
 
 ### Target 形态
 
-同一条 `way` 可以混合节点 id、笛卡尔坐标与极坐标。
+同一条 `way` 可以混合节点 id、笛卡尔坐标、极坐标和对象形态 target。
 
 <ComponentPreview name="draw-way-types" />
 
@@ -56,8 +56,11 @@ import { Draw, DrawWay } from '@retikz/react';
 | 形态 | 例 | 含义 |
 | --- | --- | --- |
 | 节点 id | `'a'` | 引用同一张图内的 Node；端点自动贴 border |
+| 显式锚点 | `{ id: 'a', anchor: 'north' }` 或 `'a.north'` | 锁定命名 anchor / 角度 / 边上比例点；对象形态是 IR 主契约 |
 | 笛卡尔 | `[120, 0]` | 直接给坐标 |
 | 极坐标 | `{ origin: 'a', angle: 60, radius: 80 }` | 极坐标，详见 [定位](/core/concepts/positioning) |
+| 偏移定位 | `{ of: 'a', offset: [10, 5] }` | 基准 + `(dx, dy)`，与 `<Node position>` 的 offset 形态一致 |
+| 比例定位 | `{ between: ['a', 'b'], t: 0.5 }` | A 到 B 连线上的比例点 |
 | Relative | `{ position: [10, 0], type: DrawWay.Relative }` 或 `'+10,0'` | 基于前一 step 终点偏移，不更新 prevEnd |
 | Accumulate | `{ position: [10, 0], type: DrawWay.Accumulate }` 或 `'++10,0'` | 基于前一 step 终点偏移，并更新 prevEnd |
 | 折角算子 | `'-\|'` / `'\|-'` | 把上一项到下一项改成折角 |

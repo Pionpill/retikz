@@ -27,7 +27,7 @@ Choose the form by the role in the diagram: flowchart nodes usually use the defa
 
 ### Shape polymorphism
 
-`shape` picks the visual shape: `'rectangle'` (default) / `'circle'` / `'ellipse'` / `'diamond'`. Any shape works as an attachable target — connecting lines clip to that shape's boundary automatically:
+`shape` picks the visual shape: `'rectangle'` (default) / `'circle'` / `'ellipse'` / `'diamond'`, or a custom shape name registered via `<Layout shapes>` / `CompileOptions.shapes`. Any shape works as an attachable target — connecting lines clip to that shape's boundary automatically:
 
 <ComponentPreview name="node-shapes" size="lg" />
 
@@ -74,6 +74,10 @@ In addition to Cartesian / polar, `position` accepts **`{ direction, of, distanc
 </Comparison>
 
 <ComponentPreview name="node-offset-position" />
+
+#### Proportional positioning
+
+Since v0.2, `position` also accepts **`{ between, t }`**: place the node at a proportional point between two endpoints, with `t=0.5` as the midpoint. Endpoints may be node ids, coordinates, polar positions, offsets, or nested between positions; see [Coordinate](/core/components/node/coordinate) for a fuller midpoint-helper example.
 
 ### Node labels
 
@@ -253,8 +257,8 @@ By default stacking = declaration order (SVG only honors paint order). `zIndex` 
 | Prop | Type | Default | Description |
 | --- | --- | --- | --- |
 | `id` | `string` | — | Unique identifier; referenced by `<Path>` / `<Draw>` |
-| `shape` | `'rectangle' \| 'circle' \| 'ellipse' \| 'diamond'` | `'rectangle'` | Node shape |
-| `position` | `[x, y] \| PolarPosition \| { direction, of, distance? } \| { of, offset }` | — | Node center: Cartesian / polar / relative / offset; `of` accepts node id, Cartesian literal, or PolarPosition |
+| `shape` | `'rectangle' \| 'circle' \| 'ellipse' \| 'diamond' \| string` | `'rectangle'` | Node shape; one of the 4 built-ins or a custom shape name registered via `<Layout shapes>` / `CompileOptions.shapes` |
+| `position` | `[x, y] \| PolarPosition \| { direction, of, distance? } \| { of, offset } \| { between, t }` | — | Node center: Cartesian / polar / relative / offset / proportional placement; `of` accepts node id, Cartesian literal, or PolarPosition |
 | `children` / `text` | `string \| Array<string>` | — | Visible label; string = one line, array = one element per line; `text` wins over `children` |
 | `align` | `'left' \| 'center' \| 'right'` | `'center'` | Horizontal alignment of lines within the multi-line text block |
 | `lineHeight` | `number` | `font.size × 1.2` | Line height of the multi-line block (user units) |
