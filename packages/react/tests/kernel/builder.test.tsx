@@ -105,6 +105,28 @@ describe('buildIR', () => {
     });
   });
 
+  it('<Path> 仅一个自包含 rectangle step（无 move）→ 不抛错，保留 rectangle（不被 move 替换）', () => {
+    const ir = buildIR(
+      <Path>
+        <Step kind="rectangle" from={[0, 0]} to={[10, 6]} />
+      </Path>,
+    );
+    expect(ir.children[0]).toMatchObject({
+      type: 'path',
+      children: [{ type: 'step', kind: 'rectangle', from: [0, 0], to: [10, 6] }],
+    });
+  });
+
+  it('<Path> 仅一个非自包含 step（单 line）→ 仍抛 "requires at least 2"', () => {
+    expect(() =>
+      buildIR(
+        <Path>
+          <Step to="A" />
+        </Path>,
+      ),
+    ).toThrow(/requires at least 2/);
+  });
+
   it('<Draw> 与等价 <Path><Step/></Path> 产出相同 IR（Sugar = Kernel 等价性）', () => {
     const fromSugar = buildIR(<Draw way={['A', 'B']} stroke="red" />);
     const fromKernel = buildIR(

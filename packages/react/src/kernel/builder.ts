@@ -149,7 +149,7 @@ const resolveStepLabel = (props: LabelableStepProps): IRStepLabel | undefined =>
 
 /**
  * 扫描 <Path> children 收集 <Step> 序列
- * @description 至少 2 段；首段不是 move 时强制改为 move；cycle/arc/circlePath/ellipsePath 首段降级到 (0,0)
+ * @description 至少 2 段（例外：单个自包含 rectangle step 自带两对角，可独立成 path）；首段不是 move 时强制改为 move；cycle/arc/circlePath/ellipsePath 首段降级到 (0,0)
  */
 const readPathChildren = (children: ReactNode): Array<IRStep> => {
   const out: Array<IRStep> = [];
@@ -289,10 +289,12 @@ const readPathChildren = (children: ReactNode): Array<IRStep> => {
     if (label) step.label = label;
     out.push(step);
   });
-  if (out.length < 2) {
+  // rectangle 自带 from/to 两对角、不依赖游标，单独成 path 合法；不抛错、也不被下方 move 替换
+  const soloSelfContained = out.length === 1 && out[0].kind === 'rectangle';
+  if (out.length < 2 && !soloSelfContained) {
     throw new Error('<Path> requires at least 2 <Step> children');
   }
-  if (out[0].kind !== 'move') {
+  if (!soloSelfContained && out[0].kind !== 'move') {
     const first = out[0];
     const fallbackTo: IRTarget =
       first.kind === 'cycle' ||

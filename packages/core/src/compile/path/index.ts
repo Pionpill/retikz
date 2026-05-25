@@ -261,7 +261,10 @@ export const emitPathPrimitive = (
     warnHook.resolveFill ?? (f => (typeof f === 'string' || f === undefined ? f : undefined));
   // 先把 relative/relativeAccumulate 解析为绝对坐标，后续算法可统一按绝对坐标处理
   const steps = normalizeRelativeTargets(path.children, nameStack, scopeChain);
-  if (steps.length < 2) {
+  // 自包含 shape step（rectangle 自带 from/to 两对角、不依赖游标）单独成 path 合法；
+  // 其余 step 需"起点 + 至少一段绘制"故最少 2 段
+  const soloSelfContained = steps.length === 1 && steps[0].kind === 'rectangle';
+  if (steps.length < 2 && !soloSelfContained) {
     warn(
       'PATH_TOO_SHORT',
       `Path requires at least 2 steps (got ${steps.length}); the entire path is skipped`,
