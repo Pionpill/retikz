@@ -1,0 +1,73 @@
+---
+title: Arc and Sector
+description: Use Arc and Sector for angle spans, ring marks, and hollow sectors.
+---
+
+`<Arc>` draws an open arc. `<Sector>` draws a wedge that starts at the center, follows an arc, and closes back to the center. Both are angle-based shapes, useful for angle markers, ring fragments, and highlighted sectors.
+
+## Usage
+
+```tsx
+import { Arc, Sector } from '@retikz/react';
+```
+
+```tsx
+<Arc center={[0, 0]} radius={40} startAngle={0} endAngle={90} />
+<Sector center={[0, 0]} radius={40} startAngle={0} endAngle={90} fill="darkorange" />
+```
+
+## Examples
+
+### Arc
+
+`<Arc>` draws an open arc. It is useful for curved arrows, ring markers, and decorative strokes.
+
+| Form | Best for |
+| --- | --- |
+| `{ center, radius, startAngle, endAngle }` | Circular arc |
+| `{ center, radiusX, radiusY, startAngle, endAngle }` | Elliptical arc |
+
+Angles start from +x; `90` points downward on screen.
+
+<ComponentPreview name="arc-basic" />
+
+### Sector
+
+`<Sector>` starts from the center, draws an arc, then closes back to the center. Add `innerRadius` for a hollow circular sector; for an elliptical hollow sector, use `innerRadiusX` + `innerRadiusY`.
+
+| Form | Best for |
+| --- | --- |
+| `{ center, radius, startAngle, endAngle }` | Circular sector |
+| `{ center, radiusX, radiusY, startAngle, endAngle }` | Elliptical sector |
+| add `innerRadius` | Hollow circular sector |
+| add `innerRadiusX` + `innerRadiusY` | Hollow elliptical sector |
+
+<ComponentPreview name="sector-basic" />
+
+## How it works
+
+> Optional for everyday use; revisit this section when angle direction or closing behavior looks surprising.
+
+### Angles follow screen coordinates
+
+The docs examples use screen coordinates: x points right and y points down. So `0` degrees points right, `90` points down, and `-90` points up.
+
+### Arc and Sector close differently
+
+`<Arc>` is an open path, so it does not create a fillable region on its own. `<Sector>` closes a region and can be filled directly. If you want a chord-closed partial circle, see the angle forms on [Circle and Ellipse](../circle-ellipse).
+
+## API Reference
+
+| Component | Combination | Meaning |
+| --- | --- | --- |
+| `<Arc>` | `center` + `radius` + angles | Circular arc (open; angles required) |
+| | `center` + `radiusX` + `radiusY` + angles | Elliptical arc |
+| `<Sector>` | `center` + `radius` + angles | Circular sector (angles required) |
+| | `center` + `radiusX` + `radiusY` + angles | Elliptical sector |
+| | + `innerRadius?` | Hollow circular sector |
+| | + `innerRadiusX?` + `innerRadiusY?` | Hollow elliptical sector |
+
+## Related
+
+- [Circle and Ellipse](../circle-ellipse): half circles, segments, and partial ellipses
+- [Shapes](/core/components/sugar/circle-ellipse): Shapes overview

@@ -1,0 +1,43 @@
+---
+title: Shapes
+description: Short JSX forms for common drawing intent, still expanding to Kernel components underneath.
+---
+
+This page groups the shorthand forms that let you write common drawing intent in a shorter way: draw a circle in one line, draw a grid in one line, or describe a connection with an array. In the React package they still expand to Kernel / Sugar combinations such as `<Path>`, `<Step>`, and `<Draw>`.
+
+`<Draw>` also belongs to this family of shortcut forms, but it is common enough to live in its own [Draw](/core/components/draw/overview) group, so we do not repeat it here.
+
+## What it contains
+
+| Page | Type | Responsibility | Use it when |
+| --- | --- | --- | --- |
+| Circle / Ellipse | Shapes | Circles, ellipses, half circles, and segments | You know a center, radius, diameter, or bounding box |
+| Arc / Sector | Shapes | Arcs, sectors, and donut sectors | You want angle marks, sector highlights, or ring fragments |
+| Rectangle / Polygon | Shapes | Rectangles, rounded rectangles, and regular polygons | You want boxes or equal-sided polygons without hand-writing vertices |
+| Star | Shapes | Alternating inner / outer radius stars | You want rating stars, emphasis marks, or decorative multi-point shapes |
+| Grid | Shapes | Grids, guide lines, borders, and major lines | You want a background grid or a set of regular reference lines |
+
+## Entry points
+
+<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+  <LinkedCard href="/core/components/sugar/circle-ellipse">
+    <span className="font-semibold">Circle / Ellipse</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">Circles, ellipses, half circles, and segments</span>
+  </LinkedCard>
+  <LinkedCard href="/core/components/sugar/arc-sector">
+    <span className="font-semibold">Arc / Sector</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">Arcs, sectors, and donut sectors</span>
+  </LinkedCard>
+  <LinkedCard href="/core/components/sugar/rectangle-polygon">
+    <span className="font-semibold">Rectangle / Polygon</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">Rectangles, rounded rectangles, and regular polygons</span>
+  </LinkedCard>
+  <LinkedCard href="/core/components/sugar/star">
+    <span className="font-semibold">Star</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">Alternating inner / outer radius stars</span>
+  </LinkedCard>
+  <LinkedCard href="/core/components/sugar/grid">
+    <span className="font-semibold">Grid</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">Background grids, reference lines, borders, and major lines</span>
+  </LinkedCard>
+</div>

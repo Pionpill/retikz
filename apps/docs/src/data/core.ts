@@ -46,7 +46,17 @@ export const coreSection: Array<Section> = [
           { id: 'path', label: 'core.path' },
           { id: 'arrow', label: 'core.arrow' },
           { id: 'step', label: 'core.step' },
-          { id: 'shapes', label: 'core.drawShapes' },
+        ],
+      },
+      {
+        id: 'sugar',
+        label: 'core.sugar',
+        children: [
+          { id: 'circle-ellipse', label: 'core.sugarCircleEllipse' },
+          { id: 'arc-sector', label: 'core.sugarArcSector' },
+          { id: 'rectangle-polygon', label: 'core.sugarRectanglePolygon' },
+          { id: 'star', label: 'core.sugarStar' },
+          { id: 'grid', label: 'core.sugarGrid' },
         ],
       },
     ],

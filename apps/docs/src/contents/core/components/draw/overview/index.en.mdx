@@ -1,11 +1,11 @@
 ---
 title: Draw
-description: Sugar component â€” a way array threads through nodes, coordinates, folds, curves, close operations, edge labels, and styling, then expands to equivalent Path + Step.
+description: Sugar component â€?a way array threads through nodes, coordinates, folds, curves, close operations, edge labels, and styling, then expands to equivalent Path + Step.
 ---
 
 `<Draw>` is the default entry point for most connections. It accepts a `way` array and expands targets, folds, cycles, curves, shapes, and edge labels into Kernel `<Path>` + `<Step>`. Stroke, fill, arrow, and opacity props match `<Path>`.
 
-Choosing rule: use `<Draw>` for ordinary relationship lines, flowchart edges, and arrowed connections; switch to `<Path>` + `<Step>` when you need multiple `move`s, precise per-segment `kind` control, or IR-close debugging; use the **shape sugar** below to draw a single geometric shape (circle / rectangle / sector / grid, etc.); work with IR directly only at AI / persistence boundaries.
+Choosing rule: use `<Draw>` for ordinary relationship lines, flowchart edges, and arrowed connections; switch to `<Path>` + `<Step>` when you need multiple `move`s, precise per-segment `kind` control, or IR-close debugging; use the **shape sugar** below to draw a single geometric shape (circle / rectangle / sector, etc.); use [Grid](/core/components/sugar/grid) for background reference lines. Work with IR directly only at AI / persistence boundaries.
 
 ## Usage
 
@@ -150,8 +150,6 @@ Full ellipses also use angular parametrization, not equal divisions by ellipse a
 
 ### Shape sugar
 
-Beyond the `way` array, the Draw family also offers a set of **shape sugar** â€” draw a common geometric shape in one line, also expanding to `<Path>` and sharing the same visual props as `<Draw>` / `<Path>` (`fill` / `stroke` / `strokeWidth` / `dashPattern` / `arrow` / `zIndex`, etc.):
-
 | Component | Draws |
 | --- | --- |
 | `<Circle>` | circle / half circle / segment |
@@ -163,7 +161,7 @@ Beyond the `way` array, the Draw family also offers a set of **shape sugar** â€”
 | `<RegularPolygon>` | regular polygon |
 | `<Star>` | star |
 
-See [Shapes](/core/components/draw/shapes) for each form, the point contract (pass-through Target vs literal Cartesian), and per-component props. Difference from `<Node shape="...">`: shape sugar is a plain text-less path; a Node is an object with text / anchors that edges can connect to.
+One-line forms for circles, rectangles, sectors, Grid, and similar helpers now live under the [Shapes](/core/components/sugar) group. They still expand to `<Path>` / `<Step>` and share the same visual props as `<Draw>` / `<Path>`. See [Geometry](/core/components/sugar/circle-ellipse) for geometric shapes and [Grid](/core/components/sugar/grid) for regular reference lines.
 
 ## API Reference
 
@@ -171,20 +169,20 @@ See [Shapes](/core/components/draw/shapes) for each form, the point contract (pa
 
 | Prop | Type | Default | Description |
 | --- | --- | --- | --- |
-| `way` | `Array<WayItem>` | â€” | At least 2 items; first is always `move`, rest become `line` / `step` / `cycle` and related actions based on item form |
+| `way` | `Array<WayItem>` | â€?| At least 2 items; first is always `move`, rest become `line` / `step` / `cycle` and related actions based on item form |
 | `stroke` | `string` | `currentColor` | Stroke color |
 | `strokeWidth` | `number` | `1` | Stroke width |
-| `dashPattern` | `Array<number>` | â€” | Dash / gap length sequence, for example `[4, 2]` |
+| `dashPattern` | `Array<number>` | â€?| Dash / gap length sequence, for example `[4, 2]` |
 | `lineCap` | `'butt' \| 'round' \| 'square'` | `'butt'` | Stroke endpoint shape |
 | `lineJoin` | `'miter' \| 'round' \| 'bevel'` | `'miter'` | Stroke corner shape |
-| `thickness` | `'ultraThin' \| 'veryThin' \| 'thin' \| 'semithick' \| 'thick' \| 'veryThick' \| 'ultraThick'` | â€” | Semantic stroke preset; explicit `strokeWidth` wins |
-| `arrow` | `'none' \| '->' \| '<-' \| '<->'` | â€” | Path-level arrow direction |
-| `arrowDetail` | `{ shape?, scale?, length?, width?, color?, fill?, opacity?, lineWidth?, start?, end? }` | â€” | Detailed arrow configuration; see [Arrow](/core/components/draw/arrow) |
+| `thickness` | `'ultraThin' \| 'veryThin' \| 'thin' \| 'semithick' \| 'thick' \| 'veryThick' \| 'ultraThick'` | â€?| Semantic stroke preset; explicit `strokeWidth` wins |
+| `arrow` | `'none' \| '->' \| '<-' \| '<->'` | â€?| Path-level arrow direction |
+| `arrowDetail` | `{ shape?, scale?, length?, width?, color?, fill?, opacity?, lineWidth?, start?, end? }` | â€?| Detailed arrow configuration; see [Arrow](/core/components/draw/arrow) |
 | `fill` | `string \| PaintSpec` | `'none'` | Fill for closed regions: plain color or PaintSpec (gradient / pattern / image) |
 | `fillRule` | `'nonzero' \| 'evenodd'` | `'nonzero'` | Fill rule |
-| `opacity` | `number` | â€” | Whole-path opacity, 0..1 |
-| `fillOpacity` | `number` | â€” | Fill-only opacity, 0..1 |
-| `drawOpacity` | `number` | â€” | Stroke-only opacity, 0..1 |
+| `opacity` | `number` | â€?| Whole-path opacity, 0..1 |
+| `fillOpacity` | `number` | â€?| Fill-only opacity, 0..1 |
+| `drawOpacity` | `number` | â€?| Stroke-only opacity, 0..1 |
 | `zIndex` | `number` (integer) | `0` | Explicit stacking order: higher draws on top; ties keep declaration order; effective only among siblings at the same level (forwarded to the underlying `<Path>`) |
 
 <Comparison target="tikz" title="Style Naming">
@@ -210,7 +208,7 @@ See [Shapes](/core/components/draw/shapes) for each form, the point contract (pa
 
 | Field | Type | Default | Description |
 | --- | --- | --- | --- |
-| `text` | `string` | â€” | Label text |
+| `text` | `string` | â€?| Label text |
 | `position` | `StepLabelPosition \| number` | `'midway'` | Keyword or numeric `0..1` t value |
 | `side` | `'above' \| 'below'` | `'above'` | Which side of the line to place the text on |
 
@@ -220,4 +218,4 @@ See [Shapes](/core/components/draw/shapes) for each form, the point contract (pa
 - [Path](/core/components/draw/path): the Kernel container Draw expands to and the full stroke field set
 - [Step](/core/components/draw/step): the Kernel step semantics behind each Draw segment
 - [Arrow](/core/components/draw/arrow): Arrow shape, size, color, and per-end overrides
-- [Shapes](/core/components/draw/shapes): Circle / Ellipse / Arc / Sector / Rectangle / Grid / RegularPolygon / Star shape sugar
+- [Shapes](/core/components/sugar): shortcut forms such as Circle / Ellipse / Arc / Sector / Rectangle / Grid / RegularPolygon / Star

@@ -1,0 +1,88 @@
+---
+title: Circle and Ellipse
+description: Sugar forms for circles and ellipses, suited to radius, diameter, and bounding-box inputs.
+---
+
+`<Circle>` and `<Ellipse>` are sugar forms that expand common geometry into `<Path>`. They fit the cases where you know the center and radius, have a bounding box, or just want a half circle without hand-writing steps.
+
+## Usage
+
+```tsx
+import { Circle, Ellipse } from '@retikz/react';
+```
+
+```tsx
+<Circle center={[0, 0]} radius={32} fill="none" />
+<Ellipse center={[0, 0]} radiusX={48} radiusY={28} fill="none" />
+```
+
+## Examples
+
+### Circle
+
+The common form is `center + radius`. Add `startAngle` / `endAngle` when you need a half circle or segment.
+
+| Form | Best for |
+| --- | --- |
+| `{ center, radius }` | Known center and radius |
+| `{ center, diameter }` | Known diameter |
+| `{ from, to }` | Diameter endpoints |
+| `{ corner1, corner2 }` | Fit inside a box |
+
+<ComponentPreview name="circle-basic" />
+
+### Ellipse
+
+Ellipse works like Circle, but the radius is split into `radiusX` and `radiusY`. You can also place it inside a box.
+
+| Form | Best for |
+| --- | --- |
+| `{ center, radiusX, radiusY }` | Known center and radii |
+| `{ center, diameterX, diameterY }` | Known diameters |
+| `{ corner1, corner2 }` | Fit inside a box |
+
+<ComponentPreview name="ellipse-basic" />
+
+## How it works
+
+> Optional for everyday use; revisit this section when a point form throws an error, or when you want to mix these shapes with `<Path>`.
+
+### Points have two kinds
+
+Some forms pass the point directly to the underlying Path. They can use node ids, polar points, or plain `[x, y]` coordinates:
+
+```tsx
+<Circle center="A" radius={24} />
+<Ellipse corner1="A" corner2="B" />
+```
+
+Other forms must compute a midpoint, size, or vertices in React first. These forms only accept literal `[x, y]` coordinates:
+
+```tsx
+<Circle from={[-40, 0]} to={[40, 0]} />
+```
+
+Passing a node id to a computed form throws an error instead of guessing a result.
+
+### They are still Path
+
+Every circle or ellipse expands to an equivalent `<Path>` / `<Step>` sequence. That means they can use `stroke`, `fill`, `arrow`, and `zIndex` like any other path.
+
+## API Reference
+
+| Component | Combination | Meaning |
+| --- | --- | --- |
+| `<Circle>` | `center` + `radius` | Circle from center and radius |
+| | `center` + `diameter` | Circle from center and diameter |
+| | `from` + `to` | Circle from two points (diameter endpoints) |
+| | `corner1` + `corner2` | Largest circle inscribed in the box |
+| | + angles (`startAngle` / `endAngle` / `sweepAngle`, any two) + `closed?` | Partial circle (`chord` default / `open`) |
+| `<Ellipse>` | `center` + `radiusX` + `radiusY` | Ellipse from center and two radii |
+| | `center` + `diameterX` + `diameterY` | Ellipse from center and two diameters |
+| | `corner1` + `corner2` | Ellipse inscribed in the box |
+| | + angles + `closed?` | Partial ellipse (same as Circle) |
+
+## Related
+
+- [Arc and Sector](../arc-sector): angle-based shapes
+- [Shapes](/core/components/sugar/circle-ellipse): Shapes overview

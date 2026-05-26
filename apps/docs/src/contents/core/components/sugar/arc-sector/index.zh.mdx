@@ -1,0 +1,73 @@
+---
+title: Arc / Sector
+description: 用 Arc 和 Sector 表达角度片段、环形标记和空心扇形。
+---
+
+`<Arc>` 画不闭合的弧线，`<Sector>` 画从中心出发并闭合回中心的扇形。它们都围绕“角度范围”工作，适合角度标记、圆环片段、扇区高亮这类图。
+
+## 用法
+
+```tsx
+import { Arc, Sector } from '@retikz/react';
+```
+
+```tsx
+<Arc center={[0, 0]} radius={40} startAngle={0} endAngle={90} />
+<Sector center={[0, 0]} radius={40} startAngle={0} endAngle={90} fill="darkorange" />
+```
+
+## 例子
+
+### Arc
+
+`<Arc>` 只画一段不闭合的弧。它适合做箭头弧线、环形标记或装饰线。
+
+| 写法 | 适合 |
+| --- | --- |
+| `{ center, radius, startAngle, endAngle }` | 圆弧 |
+| `{ center, radiusX, radiusY, startAngle, endAngle }` | 椭圆弧 |
+
+角度从 +x 方向开始；`90` 指向屏幕下方。
+
+<ComponentPreview name="arc-basic" />
+
+### Sector
+
+`<Sector>` 会从圆心出发，画弧，再回到圆心。给 `innerRadius` 可以画空心扇形；椭圆空心写法用 `innerRadiusX` + `innerRadiusY`。
+
+| 写法 | 适合 |
+| --- | --- |
+| `{ center, radius, startAngle, endAngle }` | 圆扇形 |
+| `{ center, radiusX, radiusY, startAngle, endAngle }` | 椭圆扇形 |
+| 加 `innerRadius` | 空心圆扇形 |
+| 加 `innerRadiusX` + `innerRadiusY` | 空心椭圆扇形 |
+
+<ComponentPreview name="sector-basic" />
+
+## 技术原理
+
+> 日常使用可以跳过本节；只有在角度方向或闭合方式不符合预期时再回来读。
+
+### 角度跟屏幕坐标一致
+
+retikz 的文档示例使用屏幕坐标：x 向右，y 向下。因此 `0` 度指向右侧，`90` 度指向下方，`-90` 度指向上方。
+
+### 弧线和扇形的闭合不同
+
+`<Arc>` 是开放路径，不会自动填充一个区域。`<Sector>` 会闭合成区域，所以可以直接设置 `fill`。如果你想要“弦闭合”的部分圆，优先看 [Circle / Ellipse](../circle-ellipse) 里的 `<Circle>` 角度写法。
+
+## API 参考
+
+| 组件 | 组合 | 含义 |
+| --- | --- | --- |
+| `<Arc>` | `center` + `radius` + 角度 | 圆弧（不闭合；角度必填） |
+| | `center` + `radiusX` + `radiusY` + 角度 | 椭圆弧 |
+| `<Sector>` | `center` + `radius` + 角度 | 圆扇形（角度必填） |
+| | `center` + `radiusX` + `radiusY` + 角度 | 椭圆扇形 |
+| | + `innerRadius?` | 空心圆扇形 |
+| | + `innerRadiusX?` + `innerRadiusY?` | 空心椭圆扇形 |
+
+## 相关
+
+- [Circle / Ellipse](../circle-ellipse)：半圆、弓形和部分椭圆
+- [Shapes](/core/components/sugar)：形状分组入口

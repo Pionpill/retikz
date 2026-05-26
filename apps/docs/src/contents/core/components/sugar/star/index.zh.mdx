@@ -1,0 +1,53 @@
+---
+title: Star
+description: 用 Star 画内外半径交替的星形，并控制角数、比例和旋转。
+---
+
+`<Star>` 会在外半径和内半径之间交替取点，再连成闭合路径。它适合画评级星、强调标记、装饰性的多角形。
+
+## 用法
+
+```tsx
+import { Star } from '@retikz/react';
+```
+
+```tsx
+<Star center={[0, 0]} outerRadius={36} innerRadius={16} points={5} />
+```
+
+## 例子
+
+### Basic Star
+
+`points` 是星角数量。你可以显式给 `innerRadius`，也可以用 `innerRatio` 按比例自动算内半径。
+
+| 写法 | 适合 |
+| --- | --- |
+| `{ center, outerRadius, innerRadius, points }` | 自己控制内外半径 |
+| `{ center, outerRadius, points, innerRatio? }` | 用比例自动计算内半径 |
+
+<ComponentPreview name="star-basic" />
+
+## 技术原理
+
+> 日常使用可以跳过本节；只有在星形朝向或内外半径比例不符合预期时再回来读。
+
+`<Star>` 会先计算 `points * 2` 个顶点：外点落在 `outerRadius` 上，内点落在 `innerRadius` 上。默认 `innerRatio` 是 `0.5`，也就是内半径为外半径的一半。
+
+`rotate` 改变第一个外点的起始角度。默认起始角让一个外点朝上；在屏幕坐标里，正角度会顺时针旋转。
+
+## API 参考
+
+| 属性 | 类型 | 默认值 | 描述 |
+| --- | --- | --- | --- |
+| `center` | `[number, number]` | — | 星形中心 |
+| `outerRadius` | `number` | — | 外半径 |
+| `innerRadius` | `number` | — | 内半径；显式给出时优先 |
+| `innerRatio` | `number` | `0.5` | 未给 `innerRadius` 时，内半径相对外半径的比例 |
+| `points` | `number` | — | 星角数量 |
+| `rotate` | `number` | `-90` | 起始角度 |
+
+## 相关
+
+- [Rectangle / Polygon](../rectangle-polygon)：等边多边形
+- [Shapes](/core/components/sugar)：形状分组入口

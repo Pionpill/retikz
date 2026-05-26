@@ -1,0 +1,53 @@
+---
+title: Star
+description: Use Star for alternating outer and inner radii, with point count, ratio, and rotation controls.
+---
+
+`<Star>` alternates points on an outer radius and an inner radius, then connects them into a closed path. It is useful for rating stars, emphasis marks, and decorative multi-point shapes.
+
+## Usage
+
+```tsx
+import { Star } from '@retikz/react';
+```
+
+```tsx
+<Star center={[0, 0]} outerRadius={36} innerRadius={16} points={5} />
+```
+
+## Examples
+
+### Basic star
+
+`points` is the number of star points. Give `innerRadius` directly, or use `innerRatio` to derive it from the outer radius.
+
+| Form | Best for |
+| --- | --- |
+| `{ center, outerRadius, innerRadius, points }` | Control both radii |
+| `{ center, outerRadius, points, innerRatio? }` | Derive inner radius from a ratio |
+
+<ComponentPreview name="star-basic" />
+
+## How it works
+
+> Optional for everyday use; revisit this section when the orientation or inner-radius ratio looks surprising.
+
+`<Star>` computes `points * 2` vertices: outer vertices land on `outerRadius`, and inner vertices land on `innerRadius`. The default `innerRatio` is `0.5`, so the inner radius is half of the outer radius.
+
+`rotate` changes the starting angle of the first outer vertex. By default, one outer point faces upward; in screen coordinates, positive angles rotate clockwise.
+
+## API Reference
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `center` | `[number, number]` | â€?| Star center |
+| `outerRadius` | `number` | â€?| Outer radius |
+| `innerRadius` | `number` | â€?| Inner radius; wins when provided |
+| `innerRatio` | `number` | `0.5` | Inner radius as a ratio of `outerRadius` when `innerRadius` is omitted |
+| `points` | `number` | â€?| Number of star points |
+| `rotate` | `number` | `-90` | Starting angle |
+
+## Related
+
+- [Rectangle and RegularPolygon](../rectangle-polygon): equal-sided polygons
+- [Shapes](/core/components/sugar/circle-ellipse): Shapes overview

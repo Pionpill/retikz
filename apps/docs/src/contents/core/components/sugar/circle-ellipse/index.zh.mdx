@@ -1,0 +1,88 @@
+---
+title: Circle / Ellipse
+description: 圆和椭圆的语法糖写法，适合处理半径、直径和包围盒这几类常见输入。
+---
+
+`<Circle>` 和 `<Ellipse>` 都是把常见几何写法展开成 `<Path>` 的语法糖。它们适合那些“我知道中心和半径”“我有两个角点包围盒”“我只想画一个半圆”这样的场景。
+
+## 用法
+
+```tsx
+import { Circle, Ellipse } from '@retikz/react';
+```
+
+```tsx
+<Circle center={[0, 0]} radius={32} fill="none" />
+<Ellipse center={[0, 0]} radiusX={48} radiusY={28} fill="none" />
+```
+
+## 例子
+
+### Circle
+
+最常见的是 `center + radius`。需要半圆或弓形时，再加 `startAngle` / `endAngle`。
+
+| 写法 | 适合 |
+| --- | --- |
+| `{ center, radius }` | 已知圆心和半径 |
+| `{ center, diameter }` | 已知直径 |
+| `{ from, to }` | 两点作为直径端点 |
+| `{ corner1, corner2 }` | 放进一个包围盒 |
+
+<ComponentPreview name="circle-basic" />
+
+### Ellipse
+
+椭圆和圆很像，只是半径分成 `radiusX` 和 `radiusY`。也可以用两个角点给出一个包围盒。
+
+| 写法 | 适合 |
+| --- | --- |
+| `{ center, radiusX, radiusY }` | 已知中心和两个半轴 |
+| `{ center, diameterX, diameterY }` | 已知两个直径 |
+| `{ corner1, corner2 }` | 放进一个包围盒 |
+
+<ComponentPreview name="ellipse-basic" />
+
+## 技术原理
+
+> 日常使用可以跳过本节；只有在点位报错，或想混用 `<Path>` 时再回来读。
+
+### 点位分两类
+
+有些写法是直接把点交给底层 Path。它们可以用节点 id、极坐标点或普通 `[x, y]` 坐标：
+
+```tsx
+<Circle center="A" radius={24} />
+<Ellipse corner1="A" corner2="B" />
+```
+
+另一些写法要先在 React 里算出中心、尺寸或端点，所以只接受字面量 `[x, y]` 坐标：
+
+```tsx
+<Circle from={[-40, 0]} to={[40, 0]} />
+```
+
+把节点 id 传给这类需要先计算的写法时，组件会直接报错，不会替你猜结果。
+
+### 它们最后还是 Path
+
+`<Circle>` 和 `<Ellipse>` 最后都会展开成等价的 `<Path>` / `<Step>` 序列。这意味着它们可以直接用 `stroke`、`fill`、`arrow`、`zIndex` 这类 Path 风格属性。
+
+## API 参考
+
+| 组件 | 组合 | 含义 |
+| --- | --- | --- |
+| `<Circle>` | `center` + `radius` | 通过圆心和半径确定圆 |
+| | `center` + `diameter` | 通过圆心和直径确定圆 |
+| | `from` + `to` | 通过两点（直径两端）确定圆 |
+| | `corner1` + `corner2` | 通过包围盒确定最大内接圆 |
+| | + 角度（`startAngle` / `endAngle` / `sweepAngle` 任意两项）+ `closed?` | 部分圆（默认 `chord`，也可 `open`） |
+| `<Ellipse>` | `center` + `radiusX` + `radiusY` | 通过中心和两个半轴确定椭圆 |
+| | `center` + `diameterX` + `diameterY` | 通过中心和两个直径确定椭圆 |
+| | `corner1` + `corner2` | 通过包围盒确定内切椭圆 |
+| | + 角度 + `closed?` | 部分椭圆（规则同 Circle） |
+
+## 相关
+
+- [Arc / Sector](../arc-sector)：再看角度和空心扇形
+- [Shapes](/core/components/sugar)：形状分组入口

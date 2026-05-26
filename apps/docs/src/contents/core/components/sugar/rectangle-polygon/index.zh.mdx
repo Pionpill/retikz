@@ -1,0 +1,73 @@
+---
+title: Rectangle / Polygon
+description: 用 Rectangle 和 RegularPolygon 画矩形、圆角矩形和等边多边形。
+---
+
+`<Rectangle>` 适合已知两个角、中心尺寸或从一个角向外展开的场景。`<RegularPolygon>` 适合画等边三角形、五边形、六边形这类规则多边形。
+
+## 用法
+
+```tsx
+import { Rectangle, RegularPolygon } from '@retikz/react';
+```
+
+```tsx
+<Rectangle corner1={[-40, -20]} corner2={[40, 20]} roundedCorners={6} />
+<RegularPolygon center={[0, 0]} radius={36} sides={6} />
+```
+
+## 例子
+
+### Rectangle
+
+`<Rectangle>` 可以直接给两个角，也可以从中心和尺寸算出四个角。`roundedCorners` 用来画圆角。
+
+| 写法 | 适合 |
+| --- | --- |
+| `{ corner1, corner2 }` | 已知两个对角 |
+| `{ center, width, height }` | 已知中心和尺寸 |
+| `{ center, side }` | 正方形 |
+| `{ corner1, width, height }` | 从一个角向右下展开 |
+
+<ComponentPreview name="rectangle-basic" />
+
+### RegularPolygon
+
+`<RegularPolygon>` 用外接半径或边长确定大小。`sides` 至少为 `3`，`rotate` 可以调整整体朝向。
+
+| 写法 | 适合 |
+| --- | --- |
+| `{ center, radius, sides }` | 已知外接半径 |
+| `{ center, sideLength, sides }` | 已知边长 |
+
+<ComponentPreview name="regular-polygon-basic" />
+
+## 技术原理
+
+> 日常使用可以跳过本节；只有在点位报错或旋转方向不符合预期时再回来读。
+
+### 矩形可以透传点位
+
+`corner1 + corner2` 这种写法可以把点位交给底层 Path，因此能引用节点 id。需要组件先计算尺寸或顶点的写法，例如 `center + width + height`，只接受 `[x, y]` 字面量坐标。
+
+### 正多边形先计算顶点
+
+`<RegularPolygon>` 会先根据中心、半径或边长计算所有顶点，然后展开成一条闭合 Path。`rotate` 改的是第一个顶点的起始角度，而不是 SVG transform。
+
+## API 参考
+
+| 组件 | 组合 | 含义 |
+| --- | --- | --- |
+| `<Rectangle>` | `corner1` + `corner2` | 通过两个对角确定矩形 |
+| | `center` + `width` + `height` | 通过中心和宽高确定矩形 |
+| | `center` + `side` | 通过中心和边长确定正方形 |
+| | `corner1` + `width` + `height` | 通过一个角和宽高确定矩形 |
+| | + `roundedCorners?` | 圆角矩形（会限制到边长的一半以内） |
+| `<RegularPolygon>` | `center` + `radius` + `sides` | 通过外接半径和边数确定正多边形 |
+| | `center` + `sideLength` + `sides` | 通过边长和边数确定正多边形 |
+| | + `rotate?` | 整体起始角 |
+
+## 相关
+
+- [Star](../star)：内外半径交替的多角形
+- [Shapes](/core/components/sugar)：形状分组入口
