@@ -10,6 +10,7 @@ import remarkGfm from 'remark-gfm';
 import { cn } from '@/lib/utils';
 
 import { mdxComponents } from './components';
+import { escapeBareJsxTriggers } from './escapeBareJsxTriggers';
 
 const runtime = {
   jsx: jsxRuntime.jsx,
@@ -23,16 +24,6 @@ const compileOptions: CompileOptions = {
   development: import.meta.env.DEV,
   remarkPlugins: [remarkGfm],
 };
-
-/**
- * 给代码段外的裸 `<` 加反斜杠转义
- * @description CommonMark 中 `\<` 是 ASCII punctuation 转义，渲染回字面量 `<`，避免 MDX 把 `<Tag>` 当 JSX 解析
- */
-const escapeBareAngles = (source: string): string =>
-  source
-    .split(/(`[^`]*`)/)
-    .map((part, i) => (i % 2 === 0 ? part.replace(/</g, '\\<') : part))
-    .join('');
 
 export type InlineMdxProps = {
   source: string;
@@ -49,7 +40,7 @@ export type InlineMdxProps = {
 export const InlineMdx: FC<InlineMdxProps> = ({ source, className, components: componentOverrides }) => {
   const Content = useMemo<MDXContentType | null>(() => {
     try {
-      const compiled = compileSync(escapeBareAngles(source), compileOptions);
+      const compiled = compileSync(escapeBareJsxTriggers(source), compileOptions);
       const mod = runSync(compiled, runtime);
       return mod.default;
     } catch {
