@@ -202,6 +202,169 @@ describe('Grid 等价性（展开多 Path）', () => {
     // 竖线 floor(4/2)+1=3，横线 floor(2/1)+1=3 → 共 6 path
     expect(out.children).toHaveLength(6);
   });
+
+  it('showVertical/showHorizontal 控制线条方向', () => {
+    expect(ir(<Grid corner1={[0, 0]} corner2={[2, 2]} step={1} showHorizontal={false} />).children).toEqual(
+      ir(
+        <>
+          <Path><Step kind="move" to={[0, 0]} /><Step kind="line" to={[0, 2]} /></Path>
+          <Path><Step kind="move" to={[1, 0]} /><Step kind="line" to={[1, 2]} /></Path>
+          <Path><Step kind="move" to={[2, 0]} /><Step kind="line" to={[2, 2]} /></Path>
+        </>,
+      ).children,
+    );
+    expect(ir(<Grid corner1={[0, 0]} corner2={[2, 2]} step={1} showVertical={false} />).children).toHaveLength(3);
+    expect(ir(<Grid corner1={[0, 0]} corner2={[2, 2]} yStep={1} showVertical={false} />).children).toHaveLength(3);
+    expect(ir(<Grid corner1={[0, 0]} corner2={[2, 2]} xStep={1} showHorizontal={false} />).children).toHaveLength(3);
+  });
+
+  it('origin + offset 控制网格对齐基准', () => {
+    expect(
+      ir(<Grid corner1={[-5, -5]} corner2={[25, 25]} step={10} origin={[0, 0]} offset={[2, 4]} />).children,
+    ).toEqual(
+      ir(
+        <>
+          <Path><Step kind="move" to={[2, -5]} /><Step kind="line" to={[2, 25]} /></Path>
+          <Path><Step kind="move" to={[12, -5]} /><Step kind="line" to={[12, 25]} /></Path>
+          <Path><Step kind="move" to={[22, -5]} /><Step kind="line" to={[22, 25]} /></Path>
+          <Path><Step kind="move" to={[-5, 4]} /><Step kind="line" to={[25, 4]} /></Path>
+          <Path><Step kind="move" to={[-5, 14]} /><Step kind="line" to={[25, 14]} /></Path>
+          <Path><Step kind="move" to={[-5, 24]} /><Step kind="line" to={[25, 24]} /></Path>
+        </>,
+      ).children,
+    );
+  });
+
+  it('includeBoundary 在非整除范围补最后边界线', () => {
+    expect(ir(<Grid corner1={[0, 0]} corner2={[25, 25]} step={10} includeBoundary />).children).toEqual(
+      ir(
+        <>
+          <Path><Step kind="move" to={[0, 0]} /><Step kind="line" to={[0, 25]} /></Path>
+          <Path><Step kind="move" to={[10, 0]} /><Step kind="line" to={[10, 25]} /></Path>
+          <Path><Step kind="move" to={[20, 0]} /><Step kind="line" to={[20, 25]} /></Path>
+          <Path><Step kind="move" to={[25, 0]} /><Step kind="line" to={[25, 25]} /></Path>
+          <Path><Step kind="move" to={[0, 0]} /><Step kind="line" to={[25, 0]} /></Path>
+          <Path><Step kind="move" to={[0, 10]} /><Step kind="line" to={[25, 10]} /></Path>
+          <Path><Step kind="move" to={[0, 20]} /><Step kind="line" to={[25, 20]} /></Path>
+          <Path><Step kind="move" to={[0, 25]} /><Step kind="line" to={[25, 25]} /></Path>
+        </>,
+      ).children,
+    );
+  });
+
+  it('majorEvery/majorOffset 给主网格线覆盖样式', () => {
+    expect(
+      ir(
+        <Grid
+          corner1={[0, 0]}
+          corner2={[2, 0]}
+          step={1}
+          showHorizontal={false}
+          stroke="lightgray"
+          majorEvery={2}
+          majorOffset={1}
+          majorStroke="gray"
+          majorStrokeWidth={2}
+          majorDashPattern={[3, 2]}
+        />,
+      ).children,
+    ).toEqual(
+      ir(
+        <>
+          <Path stroke="lightgray"><Step kind="move" to={[0, 0]} /><Step kind="line" to={[0, 0]} /></Path>
+          <Path stroke="gray" strokeWidth={2} dashPattern={[3, 2]}><Step kind="move" to={[1, 0]} /><Step kind="line" to={[1, 0]} /></Path>
+          <Path stroke="lightgray"><Step kind="move" to={[2, 0]} /><Step kind="line" to={[2, 0]} /></Path>
+        </>,
+      ).children,
+    );
+  });
+
+  it('border + borderPadding 追加外边框 Path', () => {
+    expect(
+      ir(
+        <Grid
+          corner1={[0, 0]}
+          corner2={[2, 2]}
+          step={2}
+          border
+          borderPadding={1}
+          borderStroke="gray"
+          borderStrokeWidth={2}
+          borderDashPattern={[4, 2]}
+        />,
+      ).children,
+    ).toEqual(
+      ir(
+        <>
+          <Path><Step kind="move" to={[0, 0]} /><Step kind="line" to={[0, 2]} /></Path>
+          <Path><Step kind="move" to={[2, 0]} /><Step kind="line" to={[2, 2]} /></Path>
+          <Path><Step kind="move" to={[0, 0]} /><Step kind="line" to={[2, 0]} /></Path>
+          <Path><Step kind="move" to={[0, 2]} /><Step kind="line" to={[2, 2]} /></Path>
+          <Path stroke="gray" strokeWidth={2} dashPattern={[4, 2]}>
+            <Step kind="move" to={[-1, -1]} />
+            <Step kind="line" to={[3, -1]} />
+            <Step kind="line" to={[3, 3]} />
+            <Step kind="line" to={[-1, 3]} />
+            <Step kind="cycle" />
+          </Path>
+        </>,
+      ).children,
+    );
+  });
+
+  it('borderRenderOrder="before" 时边框先于网格线输出', () => {
+    const out = ir(
+      <Grid
+        corner1={[0, 0]}
+        corner2={[2, 2]}
+        step={2}
+        border
+        borderRenderOrder="before"
+        borderStroke="gray"
+      />,
+    );
+    expect(out.children[0]).toEqual(
+      ir(
+        <Path stroke="gray">
+          <Step kind="move" to={[0, 0]} />
+          <Step kind="line" to={[2, 0]} />
+          <Step kind="line" to={[2, 2]} />
+          <Step kind="line" to={[0, 2]} />
+          <Step kind="cycle" />
+        </Path>,
+      ).children[0],
+    );
+  });
+
+  it('clipToBorder 让内部线延伸到外边框', () => {
+    expect(
+      ir(
+        <Grid
+          corner1={[0, 0]}
+          corner2={[2, 2]}
+          step={2}
+          border
+          borderPadding={1}
+          clipToBorder
+          showHorizontal={false}
+        />,
+      ).children,
+    ).toEqual(
+      ir(
+        <>
+          <Path><Step kind="move" to={[0, -1]} /><Step kind="line" to={[0, 3]} /></Path>
+          <Path><Step kind="move" to={[2, -1]} /><Step kind="line" to={[2, 3]} /></Path>
+          <Path>
+            <Step kind="move" to={[-1, -1]} />
+            <Step kind="line" to={[3, -1]} />
+            <Step kind="line" to={[3, 3]} />
+            <Step kind="line" to={[-1, 3]} />
+            <Step kind="cycle" />
+          </Path>
+        </>,
+      ).children,
+    );
+  });
 });
 
 describe('点位契约 + 形态校验报错', () => {
@@ -218,6 +381,17 @@ describe('点位契约 + 形态校验报错', () => {
 
   it('Grid 缺 step → 抛错', () => {
     expect(() => ir(<Grid corner1={[0, 0]} corner2={[2, 2]} />)).toThrow();
+  });
+
+  it('Grid 只画边框时可以不传 step', () => {
+    expect(() => ir(<Grid corner1={[0, 0]} corner2={[2, 2]} border showVertical={false} showHorizontal={false} />)).not.toThrow();
+  });
+
+  it('Grid 非法尺寸和间距 → 抛错', () => {
+    expect(() => ir(<Grid center={[0, 0]} width={0} height={2} step={1} />)).toThrow();
+    expect(() => ir(<Grid center={[0, 0]} width={2} height={0} step={1} />)).toThrow();
+    expect(() => ir(<Grid corner1={[0, 0]} corner2={[2, 2]} step={1} majorEvery={0} />)).toThrow();
+    expect(() => ir(<Grid corner1={[0, 0]} corner2={[2, 2]} step={1} borderPadding={-1} />)).toThrow();
   });
 });
 

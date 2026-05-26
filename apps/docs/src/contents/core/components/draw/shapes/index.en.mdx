@@ -28,9 +28,9 @@ import { Circle, Rectangle, Grid } from '@retikz/react';
 | Open arc | `<Arc>` |
 | Sector / wedge | `<Sector>` |
 | Rectangle, rounded rectangle | `<Rectangle>` |
-| Background grid | `<Grid>` |
 | Regular polygon | `<RegularPolygon>` |
 | Star | `<Star>` |
+| Background grid, guide lines | `<Grid>` |
 
 All shape components accept common Path visual props, such as `stroke`, `strokeWidth`, `fill`, `dashPattern`, `opacity`, `arrow`, and `zIndex`.
 
@@ -102,19 +102,6 @@ The right side below varies `innerRadius` across the three slices to show how it
 
 <ComponentPreview name="rectangle-basic" />
 
-### Grid
-
-`<Grid>` is useful for background guide lines. Set `zIndex={-1}` to place it behind other shapes.
-
-| Form | Best for |
-| --- | --- |
-| `{ corner1, corner2 }` | Range from two corners |
-| `{ center, width, height }` | Range from center and size |
-
-Use `step` for both axes, or `xStep` / `yStep` when the spacing differs.
-
-<ComponentPreview name="grid-basic" />
-
 ### RegularPolygon
 
 `<RegularPolygon>` uses either a circumradius or a side length. `sides` must be at least 3.
@@ -136,6 +123,27 @@ Use `step` for both axes, or `xStep` / `yStep` when the spacing differs.
 | `{ center, outerRadius, points, innerRatio? }` | Derive inner radius from a ratio |
 
 <ComponentPreview name="star-basic" />
+
+### Grid
+
+`<Grid>` is useful for background guides, graph paper, and reference lines. It has more controls than the other shapes: per-axis spacing, horizontal-only or vertical-only lines, separate major-line styling, and an optional outer border.
+
+| Form | Best for |
+| --- | --- |
+| `{ corner1, corner2 }` | Range from two corners |
+| `{ center, width, height }` | Range from center and size |
+
+Use `step` for both axes, or `xStep` / `yStep` when the spacing differs.
+
+<ComponentPreview name="grid-basic" />
+
+Turn off one direction when you only need guide lines.
+
+<ComponentPreview name="grid-lines" />
+
+Use `majorEvery` for stronger guide lines, and `border` when the grid needs its own frame. Use `origin` to align the grid to a reference point. `includeBoundary` adds the final edge line when the range is not divisible by the step.
+
+<ComponentPreview name="grid-origin" />
 
 ## How it works
 
@@ -209,6 +217,12 @@ Each component picks its form by a "prop combination" — `?` marks optional ext
 | `<Grid>` | `corner1` + `corner2` | Grid range from two corners |
 | | `center` + `width` + `height` | Grid range from center and size |
 | | `step` (or `xStep` + `yStep`) | Step: single / per-axis (per-axis overrides `step`) |
+| | `showVertical?` + `showHorizontal?` | Toggle vertical / horizontal grid lines |
+| | `origin?` + `offset?` | Align the grid to a base point and phase offset |
+| | `includeBoundary?` | Add final edge lines when the range is not divisible by the step |
+| | `majorEvery?` + `majorOffset?` + `major*` | Use a separate style every N lines |
+| | `border?` + `borderPadding?` + `border*` | Draw an outer border with separate visual props |
+| | `borderRenderOrder?` + `clipToBorder?` | Control border order and whether lines extend to the border |
 | `<RegularPolygon>` | `center` + `radius` + `sides` | Polygon from circumradius and side count |
 | | `center` + `sideLength` + `sides` | Polygon from side length and side count |
 | | + `rotate?` | Overall start angle (default −90°, one vertex up) |

@@ -28,9 +28,9 @@ import { Circle, Rectangle, Grid } from '@retikz/react';
 | 不闭合的弧线 | `<Arc>` |
 | 扇形 | `<Sector>` |
 | 矩形、圆角矩形 | `<Rectangle>` |
-| 背景网格 | `<Grid>` |
 | 正多边形 | `<RegularPolygon>` |
 | 星形 | `<Star>` |
+| 背景网格、辅助线 | `<Grid>` |
 
 这些组件都接收常见的 Path 视觉属性，例如 `stroke`、`strokeWidth`、`fill`、`dashPattern`、`opacity`、`arrow` 和 `zIndex`。
 
@@ -102,19 +102,6 @@ import { Circle, Rectangle, Grid } from '@retikz/react';
 
 <ComponentPreview name="rectangle-basic" />
 
-### 网格
-
-`<Grid>` 常用来做背景辅助线。给 `zIndex={-1}` 可以让它沉到其它图形后面。
-
-| 写法 | 适合 |
-| --- | --- |
-| `{ corner1, corner2 }` | 两个角确定范围 |
-| `{ center, width, height }` | 中心和尺寸确定范围 |
-
-`step` 同时控制横向和纵向间距；需要不同间距时用 `xStep` / `yStep`。
-
-<ComponentPreview name="grid-basic" />
-
 ### 正多边形
 
 `<RegularPolygon>` 用外接半径或边长来确定大小。`sides` 至少为 3。
@@ -136,6 +123,27 @@ import { Circle, Rectangle, Grid } from '@retikz/react';
 | `{ center, outerRadius, points, innerRatio? }` | 用比例自动算内半径 |
 
 <ComponentPreview name="star-basic" />
+
+### 网格
+
+`<Grid>` 常用来做背景辅助线、坐标纸或分隔参考线。它比其它形状多一些控制项：可以分轴设置间距，只画横线或竖线，给主网格线单独设样式，也可以加外边框。
+
+| 写法 | 适合 |
+| --- | --- |
+| `{ corner1, corner2 }` | 两个角确定范围 |
+| `{ center, width, height }` | 中心和尺寸确定范围 |
+
+`step` 同时控制横向和纵向间距；需要不同间距时用 `xStep` / `yStep`。
+
+<ComponentPreview name="grid-basic" />
+
+只需要一组参考线时，关掉另一个方向即可。
+
+<ComponentPreview name="grid-lines" />
+
+`majorEvery` 让每隔几条线变成主网格线，`border` 给网格加外边框。`origin` 可以让网格线按某个基准点对齐；`includeBoundary` 会在范围不能被步长整除时补上最后的边界线。
+
+<ComponentPreview name="grid-origin" />
 
 ## 技术原理
 
@@ -209,6 +217,12 @@ Shapes 最后都会展开成等价的 `<Path>` / `<Step>`。这意味着：
 | `<Grid>` | `corner1` + `corner2` | 通过两角确定网格范围 |
 | | `center` + `width` + `height` | 通过中心和尺寸确定网格范围 |
 | | `step`（或 `xStep` + `yStep`） | 步长：单值 / 分轴（分轴覆盖 `step`） |
+| | `showVertical?` + `showHorizontal?` | 控制是否画竖线 / 横线 |
+| | `origin?` + `offset?` | 控制网格对齐基准和相位偏移 |
+| | `includeBoundary?` | 非整除范围内补最后边界线 |
+| | `majorEvery?` + `majorOffset?` + `major*` | 每隔几条线使用主网格样式 |
+| | `border?` + `borderPadding?` + `border*` | 显示外边框并单独设置边框样式 |
+| | `borderRenderOrder?` + `clipToBorder?` | 控制边框绘制顺序和线段是否延伸到边框 |
 | `<RegularPolygon>` | `center` + `radius` + `sides` | 通过外接半径和边数确定正多边形 |
 | | `center` + `sideLength` + `sides` | 通过边长和边数确定正多边形 |
 | | + `rotate?` | 整体起始角（缺省 −90°，一顶点朝上） |
