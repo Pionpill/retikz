@@ -1,6 +1,6 @@
 import type { CompileOptions } from '@mdx-js/mdx';
 import { compileSync, runSync } from '@mdx-js/mdx';
-import type { MDXContent as MDXContentType } from 'mdx/types';
+import type { MDXComponents, MDXContent as MDXContentType } from 'mdx/types';
 import type { ComponentPropsWithoutRef, FC } from 'react';
 import { useMemo } from 'react';
 import * as jsxDevRuntime from 'react/jsx-dev-runtime';
@@ -38,13 +38,15 @@ export type InlineMdxProps = {
   source: string;
   /** 合并到内部 `<p>` 上的 className——让段落样式由调用方控制（text-muted-foreground 等） */
   className?: string;
+  /** 局部覆盖 MDX 元素映射，用于短文本场景微调 strong / code 等局部样式 */
+  components?: MDXComponents;
 };
 
 /**
  * 单段内联 Markdown 渲染（用于 frontmatter `description` 等短字符串）
  * @description 同步编译 + useMemo 记忆化（省掉 skeleton 与异步状态机）；代码段外裸 `<` 自动转义；`<p>` className 由调用方注入；编译失败回退到原文
  */
-export const InlineMdx: FC<InlineMdxProps> = ({ source, className }) => {
+export const InlineMdx: FC<InlineMdxProps> = ({ source, className, components: componentOverrides }) => {
   const Content = useMemo<MDXContentType | null>(() => {
     try {
       const compiled = compileSync(escapeBareAngles(source), compileOptions);
@@ -59,8 +61,9 @@ export const InlineMdx: FC<InlineMdxProps> = ({ source, className }) => {
     () => ({
       ...mdxComponents,
       p: ({ className: c, ...rest }: ComponentPropsWithoutRef<'p'>) => <p className={cn(className, c)} {...rest} />,
+      ...componentOverrides,
     }),
-    [className],
+    [className, componentOverrides],
   );
 
   if (!Content) return <p className={className}>{source}</p>;

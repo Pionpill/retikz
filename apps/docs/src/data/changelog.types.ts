@@ -1,7 +1,7 @@
 /** 双语文本:zh / en 各一份 markdown 字符串 */
 export type Localized = { zh: string; en: string };
 
-/** 一条变更:加粗 label + markdown content,可嵌套 */
+/** 一条变更:label 前缀 + markdown content,可嵌套 */
 export type ChangeItem = {
   label: Localized;
   content: Localized;

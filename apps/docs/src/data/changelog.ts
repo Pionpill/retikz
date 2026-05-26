@@ -383,8 +383,8 @@ export const changelog: Array<Release> = [
               {
                 label: { zh: 'BREAKING：删 `<TikZ>` alias', en: 'BREAKING: `<TikZ>` alias removed' },
                 content: {
-                  zh: 'alpha.6 留的 `<TikZ>` / `TikZProps` 兼容别名移除（rc 起冻结公开 API，beta 是最后窗口）。**迁移**：`<TikZ ...>` → `<Layout ...>`，props 完全一致',
-                  en: 'The `<TikZ>` / `TikZProps` alias kept since alpha.6 is removed (rc freezes the public API, beta is the last window). **Migration**: `<TikZ ...>` → `<Layout ...>`, props identical',
+                  zh: 'alpha.6 留的 `<TikZ>` / `TikZProps` 兼容别名移除（rc 起冻结公开 API，beta 是最后窗口）。迁移：`<TikZ ...>` → `<Layout ...>`，props 完全一致',
+                  en: 'The `<TikZ>` / `TikZProps` alias kept since alpha.6 is removed (rc freezes the public API, beta is the last window). Migration: `<TikZ ...>` → `<Layout ...>`, props identical',
                 },
               },
               {
