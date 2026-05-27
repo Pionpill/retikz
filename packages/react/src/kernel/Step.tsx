@@ -136,8 +136,8 @@ export type CirclePathStepProps = {
   startAngle?: number;
   /** 部分圆终止角（度） */
   endAngle?: number;
-  /** 闭合模式：无角度=closed（整圆）；带角度=chord（弦，默认）/ open（纯弧） */
-  closed?: 'closed' | 'chord' | 'open';
+  /** 闭合模式：无角度=closed（整圆）；带角度=chord（弦，默认）/ sector（连回中心）/ open（纯弧） */
+  closed?: 'closed' | 'chord' | 'open' | 'sector';
   /** 边标注 */
   label?: IRStepLabel;
   /** sugar 形态 */
@@ -156,8 +156,8 @@ export type EllipsePathStepProps = {
   startAngle?: number;
   /** 部分椭圆终止角（度） */
   endAngle?: number;
-  /** 闭合模式：无角度=closed（整椭圆）；带角度=chord（默认）/ open */
-  closed?: 'closed' | 'chord' | 'open';
+  /** 闭合模式：无角度=closed（整椭圆）；带角度=chord（默认）/ sector（连回中心）/ open */
+  closed?: 'closed' | 'chord' | 'open' | 'sector';
   /** 边标注 */
   label?: IRStepLabel;
   /** sugar 形态 */

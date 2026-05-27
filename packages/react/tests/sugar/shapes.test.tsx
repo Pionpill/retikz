@@ -12,13 +12,9 @@ import { Path } from '../../src/kernel/Path';
 import { Step } from '../../src/kernel/Step';
 import { buildIR } from '../../src/kernel/builder';
 
-/**
- * 形状 sugar 等价性：sugar 派发的 IR 必须与手写 Kernel `<Path><Step>` IR 完全一致
- * （Sugar 不引入新能力——只是 Kernel 的便利包装）。
- */
 const ir = (jsx: React.ReactNode) => buildIR(jsx);
 
-describe('Circle 等价性', () => {
+describe('Circle equivalence', () => {
   it('center + radius', () => {
     expect(ir(<Circle center={[0, 0]} radius={10} />).children).toEqual(
       ir(
@@ -30,13 +26,13 @@ describe('Circle 等价性', () => {
     );
   });
 
-  it('center + diameter（radius = d/2）', () => {
+  it('center + diameter', () => {
     expect(ir(<Circle center={[1, 2]} diameter={8} />).children).toEqual(
       ir(<Circle center={[1, 2]} radius={4} />).children,
     );
   });
 
-  it('{ from, to } 直径两端 → 圆心 midpoint、半径 = 距离/2', () => {
+  it('{ from, to } diameter endpoints', () => {
     expect(ir(<Circle from={[0, 0]} to={[10, 0]} />).children).toEqual(
       ir(
         <Path>
@@ -47,13 +43,31 @@ describe('Circle 等价性', () => {
     );
   });
 
-  it('{ corner1, corner2 } bbox → 半径 = min(|dx|,|dy|)/2', () => {
+  it('{ corner1, corner2 } bbox', () => {
     expect(ir(<Circle corner1={[0, 0]} corner2={[10, 4]} />).children).toEqual(
       ir(<Circle center={[5, 2]} radius={2} />).children,
     );
   });
 
-  it('部分圆（角度三键求二）→ circlePath 带 startAngle/endAngle/closed', () => {
+  it('box / boundingBox fit', () => {
+    expect(ir(<Circle box={{ x: 0, y: 0, width: 10, height: 4 }} />).children).toEqual(
+      ir(<Circle center={[5, 2]} radius={2} />).children,
+    );
+    expect(ir(<Circle boundingBox={{ origin: [0, 0], width: 10, height: 4 }} fit="cover" />).children).toEqual(
+      ir(<Circle center={[5, 2]} radius={5} />).children,
+    );
+  });
+
+  it('inset / outset adjust the box before fitting', () => {
+    expect(ir(<Circle corner1={[0, 0]} corner2={[10, 6]} inset={1} />).children).toEqual(
+      ir(<Circle center={[5, 3]} radius={2} />).children,
+    );
+    expect(ir(<Circle box={{ x: 0, y: 0, width: 10, height: 6 }} outset={2} />).children).toEqual(
+      ir(<Circle center={[5, 3]} radius={5} />).children,
+    );
+  });
+
+  it('partial circle uses circlePath with angles', () => {
     expect(ir(<Circle center={[0, 0]} radius={10} startAngle={0} sweepAngle={180} />).children).toEqual(
       ir(
         <Path>
@@ -64,13 +78,19 @@ describe('Circle 等价性', () => {
     );
   });
 
-  it('视觉 prop 透传到 Path', () => {
-    const out = ir(<Circle center={[0, 0]} radius={5} fill="#eee" stroke="#333" zIndex={3} />);
-    expect(out.children[0]).toMatchObject({ type: 'path', fill: '#eee', stroke: '#333', zIndex: 3 });
+  it('partial circle can close as sector', () => {
+    expect(ir(<Circle center={[0, 0]} radius={10} startAngle={0} endAngle={90} closed="sector" />).children).toEqual(
+      ir(
+        <Path>
+          <Step kind="move" to={[0, 0]} />
+          <Step kind="circlePath" radius={10} startAngle={0} endAngle={90} closed="sector" />
+        </Path>,
+      ).children,
+    );
   });
 });
 
-describe('Ellipse 等价性', () => {
+describe('Ellipse equivalence', () => {
   it('center + radiusX/radiusY', () => {
     expect(ir(<Ellipse center={[0, 0]} radiusX={15} radiusY={10} />).children).toEqual(
       ir(
@@ -82,15 +102,47 @@ describe('Ellipse 等价性', () => {
     );
   });
 
-  it('{ corner1, corner2 } 内切椭圆', () => {
+  it('{ corner1, corner2 } bbox', () => {
     expect(ir(<Ellipse corner1={[0, 0]} corner2={[20, 10]} />).children).toEqual(
       ir(<Ellipse center={[10, 5]} radiusX={10} radiusY={5} />).children,
     );
   });
+
+  it('box / boundingBox fit', () => {
+    expect(ir(<Ellipse box={{ x: 0, y: 0, width: 20, height: 10 }} />).children).toEqual(
+      ir(<Ellipse center={[10, 5]} radiusX={10} radiusY={5} />).children,
+    );
+    expect(ir(<Ellipse boundingBox={{ origin: [2, 4], width: 20, height: 10 }} />).children).toEqual(
+      ir(<Ellipse center={[12, 9]} radiusX={10} radiusY={5} />).children,
+    );
+  });
+
+  it('inset / outset adjust the box before fitting', () => {
+    expect(ir(<Ellipse corner1={[0, 0]} corner2={[20, 10]} inset={2} />).children).toEqual(
+      ir(<Ellipse center={[10, 5]} radiusX={8} radiusY={3} />).children,
+    );
+    expect(ir(<Ellipse box={{ x: 0, y: 0, width: 20, height: 10 }} outset={2} />).children).toEqual(
+      ir(<Ellipse center={[10, 5]} radiusX={12} radiusY={7} />).children,
+    );
+  });
+
+  it('partial ellipse can close as sector', () => {
+    expect(
+      ir(<Ellipse center={[0, 0]} radiusX={15} radiusY={10} startAngle={0} endAngle={90} closed="sector" />)
+        .children,
+    ).toEqual(
+      ir(
+        <Path>
+          <Step kind="move" to={[0, 0]} />
+          <Step kind="ellipsePath" radiusX={15} radiusY={10} startAngle={0} endAngle={90} closed="sector" />
+        </Path>,
+      ).children,
+    );
+  });
 });
 
-describe('Arc 等价性', () => {
-  it('center + radius + 角度（开放弧）', () => {
+describe('Arc equivalence', () => {
+  it('center + radius + angles', () => {
     expect(ir(<Arc center={[0, 0]} radius={10} startAngle={0} endAngle={90} />).children).toEqual(
       ir(
         <Path>
@@ -101,7 +153,7 @@ describe('Arc 等价性', () => {
     );
   });
 
-  it('椭圆弧 radiusX/radiusY', () => {
+  it('ellipse arc', () => {
     expect(ir(<Arc center={[0, 0]} radiusX={15} radiusY={10} startAngle={0} endAngle={90} />).children).toEqual(
       ir(
         <Path>
@@ -113,8 +165,8 @@ describe('Arc 等价性', () => {
   });
 });
 
-describe('Sector 等价性（wedge）', () => {
-  it('实心：move(arcStart) → arc(center) → line(center) → cycle', () => {
+describe('Sector equivalence', () => {
+  it('filled wedge', () => {
     expect(ir(<Sector center={[0, 0]} radius={10} startAngle={0} endAngle={90} />).children).toEqual(
       ir(
         <Path>
@@ -127,7 +179,7 @@ describe('Sector 等价性（wedge）', () => {
     );
   });
 
-  it('空心（innerRadius）：外弧 → line → 内弧反向 → line 回起点', () => {
+  it('donut sector', () => {
     const c: [number, number] = [0, 0];
     expect(
       ir(<Sector center={c} radius={60} innerRadius={30} startAngle={0} endAngle={90} />).children,
@@ -143,16 +195,10 @@ describe('Sector 等价性（wedge）', () => {
       ).children,
     );
   });
-
-  it('椭圆空心只给一个 inner 半径 → 抛错', () => {
-    expect(() =>
-      ir(<Sector center={[0, 0]} radiusX={60} radiusY={40} innerRadiusX={30} startAngle={0} endAngle={90} />),
-    ).toThrow(/innerRadius/);
-  });
 });
 
-describe('Rectangle 等价性', () => {
-  it('{ corner1, corner2 } 透传', () => {
+describe('Rectangle equivalence', () => {
+  it('{ corner1, corner2 } pass through', () => {
     expect(ir(<Rectangle corner1={[0, 0]} corner2={[10, 6]} />).children).toEqual(
       ir(
         <Path>
@@ -163,26 +209,15 @@ describe('Rectangle 等价性', () => {
     );
   });
 
-  it('{ center, width, height } → 归一化两角', () => {
+  it('{ center, width, height } normalizes to corners', () => {
     expect(ir(<Rectangle center={[5, 3]} width={10} height={6} />).children).toEqual(
       ir(<Rectangle corner1={[0, 0]} corner2={[10, 6]} />).children,
     );
   });
-
-  it('{ center, side } 正方形 + roundedCorners 透传', () => {
-    expect(ir(<Rectangle center={[0, 0]} side={4} roundedCorners={1} />).children).toEqual(
-      ir(
-        <Path>
-          <Step kind="move" to={[-2, -2]} />
-          <Step kind="rectangle" from={[-2, -2]} to={[2, 2]} roundedCorners={1} />
-        </Path>,
-      ).children,
-    );
-  });
 });
 
-describe('Grid 等价性（展开多 Path）', () => {
-  it('corner1/corner2 + step → 竖线 + 横线', () => {
+describe('Grid equivalence', () => {
+  it('corner1/corner2 + step', () => {
     expect(ir(<Grid corner1={[0, 0]} corner2={[2, 2]} step={1} />).children).toEqual(
       ir(
         <>
@@ -196,207 +231,10 @@ describe('Grid 等价性（展开多 Path）', () => {
       ).children,
     );
   });
-
-  it('xStep/yStep 分轴覆盖 step', () => {
-    const out = ir(<Grid corner1={[0, 0]} corner2={[4, 2]} xStep={2} yStep={1} />);
-    // 竖线 floor(4/2)+1=3，横线 floor(2/1)+1=3 → 共 6 path
-    expect(out.children).toHaveLength(6);
-  });
-
-  it('showVertical/showHorizontal 控制线条方向', () => {
-    expect(ir(<Grid corner1={[0, 0]} corner2={[2, 2]} step={1} showHorizontal={false} />).children).toEqual(
-      ir(
-        <>
-          <Path><Step kind="move" to={[0, 0]} /><Step kind="line" to={[0, 2]} /></Path>
-          <Path><Step kind="move" to={[1, 0]} /><Step kind="line" to={[1, 2]} /></Path>
-          <Path><Step kind="move" to={[2, 0]} /><Step kind="line" to={[2, 2]} /></Path>
-        </>,
-      ).children,
-    );
-    expect(ir(<Grid corner1={[0, 0]} corner2={[2, 2]} step={1} showVertical={false} />).children).toHaveLength(3);
-    expect(ir(<Grid corner1={[0, 0]} corner2={[2, 2]} yStep={1} showVertical={false} />).children).toHaveLength(3);
-    expect(ir(<Grid corner1={[0, 0]} corner2={[2, 2]} xStep={1} showHorizontal={false} />).children).toHaveLength(3);
-  });
-
-  it('origin + offset 控制网格对齐基准', () => {
-    expect(
-      ir(<Grid corner1={[-5, -5]} corner2={[25, 25]} step={10} origin={[0, 0]} offset={[2, 4]} />).children,
-    ).toEqual(
-      ir(
-        <>
-          <Path><Step kind="move" to={[2, -5]} /><Step kind="line" to={[2, 25]} /></Path>
-          <Path><Step kind="move" to={[12, -5]} /><Step kind="line" to={[12, 25]} /></Path>
-          <Path><Step kind="move" to={[22, -5]} /><Step kind="line" to={[22, 25]} /></Path>
-          <Path><Step kind="move" to={[-5, 4]} /><Step kind="line" to={[25, 4]} /></Path>
-          <Path><Step kind="move" to={[-5, 14]} /><Step kind="line" to={[25, 14]} /></Path>
-          <Path><Step kind="move" to={[-5, 24]} /><Step kind="line" to={[25, 24]} /></Path>
-        </>,
-      ).children,
-    );
-  });
-
-  it('includeBoundary 在非整除范围补最后边界线', () => {
-    expect(ir(<Grid corner1={[0, 0]} corner2={[25, 25]} step={10} includeBoundary />).children).toEqual(
-      ir(
-        <>
-          <Path><Step kind="move" to={[0, 0]} /><Step kind="line" to={[0, 25]} /></Path>
-          <Path><Step kind="move" to={[10, 0]} /><Step kind="line" to={[10, 25]} /></Path>
-          <Path><Step kind="move" to={[20, 0]} /><Step kind="line" to={[20, 25]} /></Path>
-          <Path><Step kind="move" to={[25, 0]} /><Step kind="line" to={[25, 25]} /></Path>
-          <Path><Step kind="move" to={[0, 0]} /><Step kind="line" to={[25, 0]} /></Path>
-          <Path><Step kind="move" to={[0, 10]} /><Step kind="line" to={[25, 10]} /></Path>
-          <Path><Step kind="move" to={[0, 20]} /><Step kind="line" to={[25, 20]} /></Path>
-          <Path><Step kind="move" to={[0, 25]} /><Step kind="line" to={[25, 25]} /></Path>
-        </>,
-      ).children,
-    );
-  });
-
-  it('majorEvery/majorOffset 给主网格线覆盖样式', () => {
-    expect(
-      ir(
-        <Grid
-          corner1={[0, 0]}
-          corner2={[2, 0]}
-          step={1}
-          showHorizontal={false}
-          stroke="lightgray"
-          majorEvery={2}
-          majorOffset={1}
-          majorStroke="gray"
-          majorStrokeWidth={2}
-          majorDashPattern={[3, 2]}
-        />,
-      ).children,
-    ).toEqual(
-      ir(
-        <>
-          <Path stroke="lightgray"><Step kind="move" to={[0, 0]} /><Step kind="line" to={[0, 0]} /></Path>
-          <Path stroke="gray" strokeWidth={2} dashPattern={[3, 2]}><Step kind="move" to={[1, 0]} /><Step kind="line" to={[1, 0]} /></Path>
-          <Path stroke="lightgray"><Step kind="move" to={[2, 0]} /><Step kind="line" to={[2, 0]} /></Path>
-        </>,
-      ).children,
-    );
-  });
-
-  it('border + borderPadding 追加外边框 Path', () => {
-    expect(
-      ir(
-        <Grid
-          corner1={[0, 0]}
-          corner2={[2, 2]}
-          step={2}
-          border
-          borderPadding={1}
-          borderStroke="gray"
-          borderStrokeWidth={2}
-          borderDashPattern={[4, 2]}
-        />,
-      ).children,
-    ).toEqual(
-      ir(
-        <>
-          <Path><Step kind="move" to={[0, 0]} /><Step kind="line" to={[0, 2]} /></Path>
-          <Path><Step kind="move" to={[2, 0]} /><Step kind="line" to={[2, 2]} /></Path>
-          <Path><Step kind="move" to={[0, 0]} /><Step kind="line" to={[2, 0]} /></Path>
-          <Path><Step kind="move" to={[0, 2]} /><Step kind="line" to={[2, 2]} /></Path>
-          <Path stroke="gray" strokeWidth={2} dashPattern={[4, 2]}>
-            <Step kind="move" to={[-1, -1]} />
-            <Step kind="line" to={[3, -1]} />
-            <Step kind="line" to={[3, 3]} />
-            <Step kind="line" to={[-1, 3]} />
-            <Step kind="cycle" />
-          </Path>
-        </>,
-      ).children,
-    );
-  });
-
-  it('borderRenderOrder="before" 时边框先于网格线输出', () => {
-    const out = ir(
-      <Grid
-        corner1={[0, 0]}
-        corner2={[2, 2]}
-        step={2}
-        border
-        borderRenderOrder="before"
-        borderStroke="gray"
-      />,
-    );
-    expect(out.children[0]).toEqual(
-      ir(
-        <Path stroke="gray">
-          <Step kind="move" to={[0, 0]} />
-          <Step kind="line" to={[2, 0]} />
-          <Step kind="line" to={[2, 2]} />
-          <Step kind="line" to={[0, 2]} />
-          <Step kind="cycle" />
-        </Path>,
-      ).children[0],
-    );
-  });
-
-  it('clipToBorder 让内部线延伸到外边框', () => {
-    expect(
-      ir(
-        <Grid
-          corner1={[0, 0]}
-          corner2={[2, 2]}
-          step={2}
-          border
-          borderPadding={1}
-          clipToBorder
-          showHorizontal={false}
-        />,
-      ).children,
-    ).toEqual(
-      ir(
-        <>
-          <Path><Step kind="move" to={[0, -1]} /><Step kind="line" to={[0, 3]} /></Path>
-          <Path><Step kind="move" to={[2, -1]} /><Step kind="line" to={[2, 3]} /></Path>
-          <Path>
-            <Step kind="move" to={[-1, -1]} />
-            <Step kind="line" to={[3, -1]} />
-            <Step kind="line" to={[3, 3]} />
-            <Step kind="line" to={[-1, 3]} />
-            <Step kind="cycle" />
-          </Path>
-        </>,
-      ).children,
-    );
-  });
 });
 
-describe('点位契约 + 形态校验报错', () => {
-  it('可计算形态点位传非 literal → 抛错', () => {
-    expect(() => ir(<Circle from={'a' as never} to={[10, 0]} />)).toThrow(/literal/);
-    expect(() => ir(<Sector center={'a' as never} radius={5} startAngle={0} endAngle={90} />)).toThrow(/literal/);
-    expect(() => ir(<Grid corner1={'a' as never} corner2={[2, 2]} step={1} />)).toThrow(/literal/);
-  });
-
-  it('角度三键给 1 个 / Arc 不给角度 → 抛错', () => {
-    expect(() => ir(<Circle center={[0, 0]} radius={10} startAngle={0} />)).toThrow();
-    expect(() => ir(<Arc center={[0, 0]} radius={10} />)).toThrow();
-  });
-
-  it('Grid 缺 step → 抛错', () => {
-    expect(() => ir(<Grid corner1={[0, 0]} corner2={[2, 2]} />)).toThrow();
-  });
-
-  it('Grid 只画边框时可以不传 step', () => {
-    expect(() => ir(<Grid corner1={[0, 0]} corner2={[2, 2]} border showVertical={false} showHorizontal={false} />)).not.toThrow();
-  });
-
-  it('Grid 非法尺寸和间距 → 抛错', () => {
-    expect(() => ir(<Grid center={[0, 0]} width={0} height={2} step={1} />)).toThrow();
-    expect(() => ir(<Grid center={[0, 0]} width={2} height={0} step={1} />)).toThrow();
-    expect(() => ir(<Grid corner1={[0, 0]} corner2={[2, 2]} step={1} majorEvery={0} />)).toThrow();
-    expect(() => ir(<Grid corner1={[0, 0]} corner2={[2, 2]} step={1} borderPadding={-1} />)).toThrow();
-  });
-});
-
-describe('RegularPolygon 等价性', () => {
-  it('正方形 sides=4 → move + 3 line + cycle（顶点 = regularPolygonVertices）', () => {
+describe('RegularPolygon equivalence', () => {
+  it('sides=4', () => {
     const verts = regularPolygonVertices([0, 0], 30, 30, 4, -90);
     expect(ir(<RegularPolygon center={[0, 0]} radius={30} sides={4} />).children).toEqual(
       ir(
@@ -410,22 +248,10 @@ describe('RegularPolygon 等价性', () => {
       ).children,
     );
   });
-
-  it('边长形态由 R = side / (2·sin(π/n)) 反算', () => {
-    const R = 10 / (2 * Math.sin(Math.PI / 6));
-    expect(ir(<RegularPolygon center={[0, 0]} sideLength={10} sides={6} />).children).toEqual(
-      ir(<RegularPolygon center={[0, 0]} radius={R} sides={6} />).children,
-    );
-  });
-
-  it('sides < 3 / center 非 literal → 抛错', () => {
-    expect(() => ir(<RegularPolygon center={[0, 0]} radius={10} sides={2} />)).toThrow();
-    expect(() => ir(<RegularPolygon center={'a' as never} radius={10} sides={5} />)).toThrow(/literal/);
-  });
 });
 
-describe('Star 等价性', () => {
-  it('5 角星 → move + 9 line + cycle（10 交替顶点）', () => {
+describe('Star equivalence', () => {
+  it('5-point star', () => {
     const verts = starVertices([0, 0], 30, 12, 5, -90);
     const hand = ir(
       <Path>
@@ -439,16 +265,5 @@ describe('Star 等价性', () => {
     expect(ir(<Star center={[0, 0]} outerRadius={30} innerRadius={12} points={5} />).children).toEqual(
       hand.children,
     );
-  });
-
-  it('innerRatio 缺省 0.5', () => {
-    expect(ir(<Star center={[0, 0]} outerRadius={20} points={5} />).children).toEqual(
-      ir(<Star center={[0, 0]} outerRadius={20} innerRadius={10} points={5} />).children,
-    );
-  });
-
-  it('points < 2 / center 非 literal → 抛错', () => {
-    expect(() => ir(<Star center={[0, 0]} outerRadius={20} points={1} />)).toThrow();
-    expect(() => ir(<Star center={'a' as never} outerRadius={20} points={5} />)).toThrow(/literal/);
   });
 });

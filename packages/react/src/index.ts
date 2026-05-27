@@ -55,7 +55,10 @@ export type {
   GridProps,
   RegularPolygonProps,
   StarProps,
+  AngleInput,
+  BoxAdjustmentProps,
   PathVisualProps,
+  ShapeBox,
 } from './sugar';
 
 // 透传 core 的 way 关键字常量与字面量类型，方便 react 用户单包 import

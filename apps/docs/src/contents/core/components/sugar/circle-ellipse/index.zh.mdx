@@ -1,9 +1,9 @@
 ---
 title: Circle / Ellipse
-description: 圆和椭圆的语法糖写法，适合处理半径、直径和包围盒这几类常见输入。
+description: 圆和椭圆的语法糖写法，适合处理半径、直径、包围盒和范围收缩输入。
 ---
 
-`<Circle>` 和 `<Ellipse>` 都是把常见几何写法展开成 `<Path>` 的语法糖。它们适合那些“我知道中心和半径”“我有两个角点包围盒”“我只想画一个半圆”这样的场景。
+`<Circle>` 和 `<Ellipse>` 都是把常见几何写法展开成 `<Path>` 的语法糖。它们适合那些“我知道中心和半径”“我只有一个包围盒”“我想在一块矩形区域里塞一个圆或椭圆”的场景。
 
 ## 用法
 
@@ -16,53 +16,70 @@ import { Circle, Ellipse } from '@retikz/react';
 <Ellipse center={[0, 0]} radiusX={48} radiusY={28} fill="none" />
 ```
 
-## 例子
+## 示例
 
 ### Circle
 
-最常见的是 `center + radius`。需要半圆或弓形时，再加 `startAngle` / `endAngle`。
+最常见的是 `center + radius`。如果手上是一个矩形范围，也可以直接用 `corner1 + corner2`、`box` 或 `boundingBox`。
 
 | 写法 | 适合 |
 | --- | --- |
 | `{ center, radius }` | 已知圆心和半径 |
 | `{ center, diameter }` | 已知直径 |
-| `{ from, to }` | 两点作为直径端点 |
+| `{ from, to }` | 直径两端点 |
 | `{ corner1, corner2 }` | 放进一个包围盒 |
+| `{ box }` / `{ boundingBox }` | 用 `x/y/origin + width + height` 直接描述矩形范围 |
+| + `fit="contain" \| "cover"` | 让圆按范围内切或外接 |
+| + `inset` / `outset` | 在原范围基础上先收缩或扩展再绘制 |
+| + angles + `closed="sector"` | 画 1/4 圆、30° 圆这类连回圆心的残缺圆 |
 
 <ComponentPreview name="circle-basic" />
 
 ### Ellipse
 
-椭圆和圆很像，只是半径分成 `radiusX` 和 `radiusY`。也可以用两个角点给出一个包围盒。
+椭圆和圆很像，只是半径拆成了 `radiusX` 和 `radiusY`。它也支持 `corner1 + corner2`、`box` 和 `boundingBox`。
 
 | 写法 | 适合 |
 | --- | --- |
 | `{ center, radiusX, radiusY }` | 已知中心和两个半轴 |
 | `{ center, diameterX, diameterY }` | 已知两个直径 |
 | `{ corner1, corner2 }` | 放进一个包围盒 |
+| `{ box }` / `{ boundingBox }` | 用 `x/y/origin + width + height` 直接描述矩形范围 |
+| + `inset` / `outset` | 先收缩或扩展范围再画椭圆 |
+| + angles + `closed="sector"` | 画连回中心的部分椭圆 |
 
 <ComponentPreview name="ellipse-basic" />
 
 ## 技术原理
 
-> 日常使用可以跳过本节；只有在点位报错，或想混用 `<Path>` 时再回来读。
+> 日常使用可以跳过本节；只有在点位报错，或者想把它们和 `<Path>` 混用时再回来读。
 
-### 点位分两类
+### 有些写法直接透传点，有些写法要先计算
 
-有些写法是直接把点交给底层 Path。它们可以用节点 id、极坐标点或普通 `[x, y]` 坐标：
+有些写法是直接把点交给底层 `Path`。它们可以用节点 id、极坐标点或普通 `[x, y]` 坐标：
 
 ```tsx
 <Circle center="A" radius={24} />
 <Ellipse corner1="A" corner2="B" />
 ```
 
-另一些写法要先在 React 里算出中心、尺寸或端点，所以只接受字面量 `[x, y]` 坐标：
+另外一些写法要先在 React 里算出圆心、尺寸或边界，所以只接受字面量 `[x, y]` 坐标：
 
 ```tsx
 <Circle from={[-40, 0]} to={[40, 0]} />
 ```
 
 把节点 id 传给这类需要先计算的写法时，组件会直接报错，不会替你猜结果。
+
+### 部分圆有三种闭合方式
+
+带角度时，`closed` 决定弧线两端怎么收口：
+
+| 值 | 效果 |
+| --- | --- |
+| `chord` | 默认值，直接连接两个弧端点 |
+| `sector` | 从弧终点连到中心，再回到弧起点 |
+| `open` | 只画弧线，不闭合 |
 
 ### 它们最后还是 Path
 
@@ -72,15 +89,20 @@ import { Circle, Ellipse } from '@retikz/react';
 
 | 组件 | 组合 | 含义 |
 | --- | --- | --- |
-| `<Circle>` | `center` + `radius` | 通过圆心和半径确定圆 |
-| | `center` + `diameter` | 通过圆心和直径确定圆 |
-| | `from` + `to` | 通过两点（直径两端）确定圆 |
-| | `corner1` + `corner2` | 通过包围盒确定最大内接圆 |
-| | + 角度（`startAngle` / `endAngle` / `sweepAngle` 任意两项）+ `closed?` | 部分圆（默认 `chord`，也可 `open`） |
-| `<Ellipse>` | `center` + `radiusX` + `radiusY` | 通过中心和两个半轴确定椭圆 |
-| | `center` + `diameterX` + `diameterY` | 通过中心和两个直径确定椭圆 |
-| | `corner1` + `corner2` | 通过包围盒确定内切椭圆 |
-| | + 角度 + `closed?` | 部分椭圆（规则同 Circle） |
+| `<Circle>` | `center` + `radius` | 用圆心和半径画圆 |
+| | `center` + `diameter` | 用圆心和直径画圆 |
+| | `from` + `to` | 用两点画圆 |
+| | `corner1` + `corner2` | 用包围盒画内切圆 |
+| | `box` / `boundingBox` | 用矩形范围描述圆，配合 `fit` / `inset` / `outset` |
+| | + `fit?` | `contain` 取内切，`cover` 取外接 |
+| | + `inset?` / `outset?` | 收缩或扩展 box 范围后再计算 |
+| | + angles (`startAngle` / `endAngle` / `sweepAngle`, any two) + `closed?` | 部分圆：`chord` / `sector` / `open` |
+| `<Ellipse>` | `center` + `radiusX` + `radiusY` | 用中心和两个半轴画椭圆 |
+| | `center` + `diameterX` + `diameterY` | 用中心和两个直径画椭圆 |
+| | `corner1` + `corner2` | 用包围盒画内切椭圆 |
+| | `box` / `boundingBox` | 用矩形范围描述椭圆，配合 `inset` / `outset` |
+| | + `inset?` / `outset?` | 收缩或扩展 box 范围后再计算 |
+| | + angles + `closed?` | 部分椭圆：`chord` / `sector` / `open` |
 
 ## 相关
 

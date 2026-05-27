@@ -469,12 +469,13 @@ export const emitPathPrimitive = (
     emitMove(p);
   };
 
-  /** 部分圆/椭圆的闭合模式：'open' 直接返回；缺省 / 误给 'closed' 回退 'chord' */
+  /** 部分圆/椭圆的闭合模式：'open' 直接返回；'sector' 连回中心；缺省 / 误给 'closed' 回退 'chord' */
   const resolvePartialClosed = (
-    closed: 'closed' | 'chord' | 'open' | undefined,
+    closed: 'closed' | 'chord' | 'open' | 'sector' | undefined,
     idx: number,
-  ): 'chord' | 'open' => {
+  ): 'chord' | 'open' | 'sector' => {
     if (closed === 'open') return 'open';
+    if (closed === 'sector') return 'sector';
     if (closed === 'closed') {
       warn(
         'PARTIAL_ARC_CLOSED_INVALID',
@@ -763,9 +764,14 @@ export const emitPathPrimitive = (
         emitEllipseArc(center, r, r, startA, endA);
         for (const p of ellipseArcBoundingPoints(center, r, r, startA, endA)) points.push(p);
         collectLabel(step, t => ellipseArcSegmentSample(center, r, r, startA, endA, t));
-        if (resolvePartialClosed(step.closed, i) === 'chord') {
+        const closing = resolvePartialClosed(step.closed, i);
+        if (closing === 'chord') {
           emitClose(); // 弦：arcEnd → startPt + 收口
           penOverride = ellipseArcPoint(center, r, r, startA);
+        } else if (closing === 'sector') {
+          emitLine(center);
+          emitClose();
+          penOverride = center;
         } else {
           penOverride = ellipseArcPoint(center, r, r, endA); // open：停弧终点
         }
@@ -804,9 +810,14 @@ export const emitPathPrimitive = (
         emitEllipseArc(center, rx, ry, startA, endA);
         for (const p of ellipseArcBoundingPoints(center, rx, ry, startA, endA)) points.push(p);
         collectLabel(step, t => ellipseArcSegmentSample(center, rx, ry, startA, endA, t));
-        if (resolvePartialClosed(step.closed, i) === 'chord') {
+        const closing = resolvePartialClosed(step.closed, i);
+        if (closing === 'chord') {
           emitClose();
           penOverride = ellipseArcPoint(center, rx, ry, startA);
+        } else if (closing === 'sector') {
+          emitLine(center);
+          emitClose();
+          penOverride = center;
         } else {
           penOverride = ellipseArcPoint(center, rx, ry, endA);
         }

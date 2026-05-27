@@ -1,9 +1,9 @@
 ---
-title: Circle and Ellipse
-description: Sugar forms for circles and ellipses, suited to radius, diameter, and bounding-box inputs.
+title: Circle / Ellipse
+description: Sugar forms for circles and ellipses, with support for box-based fitting and box adjustments.
 ---
 
-`<Circle>` and `<Ellipse>` are sugar forms that expand common geometry into `<Path>`. They fit the cases where you know the center and radius, have a bounding box, or just want a half circle without hand-writing steps.
+`<Circle>` and `<Ellipse>` are sugar forms that expand common geometry into `<Path>`. They fit cases where you know the center and radius, only have a box, or want to pad a circle or ellipse in or out from that box.
 
 ## Usage
 
@@ -20,7 +20,7 @@ import { Circle, Ellipse } from '@retikz/react';
 
 ### Circle
 
-The common form is `center + radius`. Add `startAngle` / `endAngle` when you need a half circle or segment.
+The common form is `center + radius`. If you already have a rectangular area, you can also use `corner1 + corner2`, `box`, or `boundingBox`.
 
 | Form | Best for |
 | --- | --- |
@@ -28,18 +28,25 @@ The common form is `center + radius`. Add `startAngle` / `endAngle` when you nee
 | `{ center, diameter }` | Known diameter |
 | `{ from, to }` | Diameter endpoints |
 | `{ corner1, corner2 }` | Fit inside a box |
+| `{ box }` / `{ boundingBox }` | Describe the box with `x/y/origin + width + height` |
+| + `fit="contain" \| "cover"` | Fit the circle inside or outside the box |
+| + `inset` / `outset` | Shrink or expand the box before fitting |
+| + angles + `closed="sector"` | Draw a partial circle whose arc ends connect to the center |
 
 <ComponentPreview name="circle-basic" />
 
 ### Ellipse
 
-Ellipse works like Circle, but the radius is split into `radiusX` and `radiusY`. You can also place it inside a box.
+Ellipse works like Circle, but the radius is split into `radiusX` and `radiusY`. It also supports `corner1 + corner2`, `box`, and `boundingBox`.
 
 | Form | Best for |
 | --- | --- |
 | `{ center, radiusX, radiusY }` | Known center and radii |
 | `{ center, diameterX, diameterY }` | Known diameters |
 | `{ corner1, corner2 }` | Fit inside a box |
+| `{ box }` / `{ boundingBox }` | Describe the box with `x/y/origin + width + height` |
+| + `inset` / `outset` | Shrink or expand the box before fitting |
+| + angles + `closed="sector"` | Draw a partial ellipse whose arc ends connect to the center |
 
 <ComponentPreview name="ellipse-basic" />
 
@@ -47,7 +54,7 @@ Ellipse works like Circle, but the radius is split into `radiusX` and `radiusY`.
 
 > Optional for everyday use; revisit this section when a point form throws an error, or when you want to mix these shapes with `<Path>`.
 
-### Points have two kinds
+### Some forms pass points through, others compute first
 
 Some forms pass the point directly to the underlying Path. They can use node ids, polar points, or plain `[x, y]` coordinates:
 
@@ -56,13 +63,23 @@ Some forms pass the point directly to the underlying Path. They can use node ids
 <Ellipse corner1="A" corner2="B" />
 ```
 
-Other forms must compute a midpoint, size, or vertices in React first. These forms only accept literal `[x, y]` coordinates:
+Other forms must compute a midpoint, size, or bounding box in React first. These forms only accept literal `[x, y]` coordinates:
 
 ```tsx
 <Circle from={[-40, 0]} to={[40, 0]} />
 ```
 
 Passing a node id to a computed form throws an error instead of guessing a result.
+
+### Partial shapes have three closing modes
+
+When angles are present, `closed` decides how the arc ends are connected:
+
+| Value | Effect |
+| --- | --- |
+| `chord` | Default, draw a straight chord between the arc ends |
+| `sector` | Draw from the arc end to the center, then back to the arc start |
+| `open` | Draw only the arc |
 
 ### They are still Path
 
@@ -76,13 +93,18 @@ Every circle or ellipse expands to an equivalent `<Path>` / `<Step>` sequence. T
 | | `center` + `diameter` | Circle from center and diameter |
 | | `from` + `to` | Circle from two points (diameter endpoints) |
 | | `corner1` + `corner2` | Largest circle inscribed in the box |
-| | + angles (`startAngle` / `endAngle` / `sweepAngle`, any two) + `closed?` | Partial circle (`chord` default / `open`) |
+| | `box` / `boundingBox` | Circle from a box, with `fit` / `inset` / `outset` |
+| | + `fit?` | `contain` uses the shorter side, `cover` uses the longer side |
+| | + `inset?` / `outset?` | Shrink or expand the box before fitting |
+| | + angles (`startAngle` / `endAngle` / `sweepAngle`, any two) + `closed?` | Partial circle: `chord` / `sector` / `open` |
 | `<Ellipse>` | `center` + `radiusX` + `radiusY` | Ellipse from center and two radii |
 | | `center` + `diameterX` + `diameterY` | Ellipse from center and two diameters |
 | | `corner1` + `corner2` | Ellipse inscribed in the box |
-| | + angles + `closed?` | Partial ellipse (same as Circle) |
+| | `box` / `boundingBox` | Ellipse from a box, with `inset` / `outset` |
+| | + `inset?` / `outset?` | Shrink or expand the box before fitting |
+| | + angles + `closed?` | Partial ellipse: `chord` / `sector` / `open` |
 
 ## Related
 
-- [Arc and Sector](../arc-sector): angle-based shapes
+- [Arc / Sector](../arc-sector): angle-based shapes
 - [Shapes](/core/components/sugar/circle-ellipse): Shapes overview

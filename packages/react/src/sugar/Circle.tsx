@@ -4,34 +4,67 @@ import { Path } from '../kernel/Path';
 import { Step } from '../kernel/Step';
 import {
   type AngleInput,
+  type BoxAdjustmentProps,
   type PathVisualProps,
+  type ShapeBox,
+  adjustShapeBox,
+  boxCenter,
+  boxSize,
   midpoint,
+  normalizeCornerBox,
+  normalizeShapeBox,
   pickPathVisual,
   requireXY,
   resolveAngles,
 } from './_shared';
 
-/** `<Circle>` 形态：四选一定圆心 + 半径，外加可选部分裁剪角度 */
+/** Circle sugar props. */
 export type CircleProps = PathVisualProps &
-  AngleInput & {
-    /** 部分裁剪闭合模式（带角度时）：chord（弦，默认）/ open（纯弧）；不给角度=整圆 */
-    closed?: 'chord' | 'open';
+  AngleInput &
+  BoxAdjustmentProps & {
+    /** Fit a circle to the box with either the shortest or longest side. */
+    fit?: 'contain' | 'cover';
+    /** Box input for fitting a circle. */
+    box?: ShapeBox;
+    /** Alias of `box` for layout-style code. */
+    boundingBox?: ShapeBox;
+    /** Partial closing mode when angles are present. */
+    closed?: 'chord' | 'open' | 'sector';
   } & (
     | { center: IRTarget; radius: number }
     | { center: IRTarget; diameter: number }
     | { from: [number, number]; to: [number, number] }
     | { corner1: [number, number]; corner2: [number, number] }
+    | { box: ShapeBox }
+    | { boundingBox: ShapeBox }
   );
 
+const resolveCircleByBox = (
+  props: CircleProps,
+  sugarName: string,
+  rawBox: ShapeBox,
+): { center: [number, number]; radius: number } => {
+  const normalized = adjustShapeBox(normalizeShapeBox(rawBox, sugarName, 'box'), props, sugarName);
+  const center = boxCenter(normalized);
+  const [width, height] = boxSize(normalized);
+  const fit = props.fit ?? 'contain';
+  return {
+    center,
+    radius: (fit === 'cover' ? Math.max(width, height) : Math.min(width, height)) / 2,
+  };
+};
+
 /**
- * Circle sugar——展开为 `<Path><Step move><Step circlePath></Path>`
- * @description 纯函数（builder 在 IR 构造期同步调用，不能用 hooks）。center 透传形态可接任意 Target；
- *   from/to、corner 形态需算坐标 → 点位限 literal 笛卡尔。带角度（三键求二）= 部分圆（chord/open）。
+ * Circle sugar - expands to a Path + circlePath step.
  */
 export const Circle: FC<CircleProps> = props => {
   let center: IRTarget;
   let radius: number;
-  if ('radius' in props) {
+  if ('box' in props) {
+    ({ center, radius } = resolveCircleByBox(props, 'Circle', props.box!));
+  } else if ('boundingBox' in props) {
+    ({ center, radius } = resolveCircleByBox(props, 'Circle', props.boundingBox!));
+  } else if ('radius' in props) {
     center = props.center;
     radius = props.radius;
   } else if ('diameter' in props) {
@@ -45,11 +78,14 @@ export const Circle: FC<CircleProps> = props => {
   } else if ('corner1' in props) {
     const c1 = requireXY(props.corner1, 'Circle', 'corner1');
     const c2 = requireXY(props.corner2, 'Circle', 'corner2');
-    center = midpoint(c1, c2);
-    radius = Math.min(Math.abs(c2[0] - c1[0]), Math.abs(c2[1] - c1[1])) / 2;
+    const normalized = adjustShapeBox(normalizeCornerBox(c1, c2), props, 'Circle');
+    center = boxCenter(normalized);
+    const [width, height] = boxSize(normalized);
+    const fit = props.fit ?? 'contain';
+    radius = (fit === 'cover' ? Math.max(width, height) : Math.min(width, height)) / 2;
   } else {
     throw new Error(
-      '<Circle> 需要 { center, radius } / { center, diameter } / { from, to } / { corner1, corner2 } 之一',
+      '<Circle> needs one of { center, radius }, { center, diameter }, { from, to }, { corner1, corner2 }, { box }, or { boundingBox }',
     );
   }
 

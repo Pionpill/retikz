@@ -8,4 +8,4 @@ export * from './Rectangle';
 export * from './Grid';
 export * from './RegularPolygon';
 export * from './Star';
-export type { PathVisualProps } from './_shared';
+export type { AngleInput, BoxAdjustmentProps, PathVisualProps, ShapeBox } from './_shared';

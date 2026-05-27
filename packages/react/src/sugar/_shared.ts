@@ -1,12 +1,10 @@
 import type { PathProps } from '../kernel/Path';
 
 /**
- * 形状 sugar 共享的 Path 视觉 prop（= PathProps 去掉 children）
- * @description 公开类型——用户写自定义形状 sugar 时可 `...rest` 透传全部视觉字段，与内置 6 sugar 共用同一面
+ * Shared visual props for sugar components.
  */
 export type PathVisualProps = Omit<PathProps, 'children'>;
 
-/** Path 视觉字段名清单；`satisfies` 与 PathVisualProps 互锁（漏键 / 错字编译期报错） */
 const PATH_VISUAL_KEYS = [
   'color',
   'stroke',
@@ -25,22 +23,19 @@ const PATH_VISUAL_KEYS = [
   'zIndex',
 ] as const satisfies ReadonlyArray<keyof PathVisualProps>;
 
-/** 从 sugar props 里挑出 Path 视觉字段（透传给底层 `<Path>`），忽略形状专属字段 */
+/** Pick visual props from sugar props and pass them to the underlying Path. */
 export const pickPathVisual = (props: object): PathVisualProps => {
   const src = props as Record<string, unknown>;
   const out: Record<string, unknown> = {};
-  for (const k of PATH_VISUAL_KEYS) {
-    if (src[k] !== undefined) out[k] = src[k];
+  for (const key of PATH_VISUAL_KEYS) {
+    if (src[key] !== undefined) out[key] = src[key];
   }
   return out;
 };
 
 const DEG = Math.PI / 180;
 
-/**
- * 可计算形态的点位守卫：只接 literal 笛卡尔 `[x, y]`
- * @description sugar 内无编译期坐标，凡需算 midpoint / bbox / arcStart 的形态，点位传 node id / 极坐标 / 相对坐标都明确报错（不静默兜底）
- */
+/** Point-like inputs that must be literal [x, y] coordinates. */
 export const requireXY = (
   value: unknown,
   sugarName: string,
@@ -55,17 +50,113 @@ export const requireXY = (
     return [value[0], value[1]];
   }
   throw new Error(
-    `<${sugarName}> 的 ${propName} 需 literal 笛卡尔 [x, y]——该形态要在组件内算坐标，不能用 node id / 极坐标 / 相对坐标`,
+    `<${sugarName}> prop ${propName} must be a literal [x, y] coordinate. Node ids, polar coordinates, and relative coordinates are not allowed here.`,
   );
 };
 
-/** 两点中点 */
+/** Two-point midpoint. */
 export const midpoint = (
   a: [number, number],
   b: [number, number],
 ): [number, number] => [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2];
 
-/** 极坐标 → 笛卡尔：center + 半轴 (rx, ry) + 角度°（y-down，与 core arc 同约定；正圆用 rx=ry） */
+/** Box input for sugar shapes. */
+export type ShapeBox =
+  | {
+      x: number;
+      y: number;
+      width: number;
+      height: number;
+    }
+  | {
+      origin: [number, number];
+      width: number;
+      height: number;
+    };
+
+/** Box expansion / contraction controls. */
+export type BoxAdjustmentProps = {
+  inset?: number;
+  outset?: number;
+};
+
+/** Normalized box coordinates. */
+export type NormalizedShapeBox = {
+  left: number;
+  top: number;
+  right: number;
+  bottom: number;
+};
+
+/** Convert a box object into normalized edges. */
+export const normalizeShapeBox = (
+  value: ShapeBox,
+  sugarName: string,
+  propName: string,
+): NormalizedShapeBox => {
+  const origin: [number, number] =
+    'origin' in value ? requireXY(value.origin, sugarName, `${propName}.origin`) : [value.x, value.y];
+  if (!Number.isFinite(value.width) || value.width <= 0 || !Number.isFinite(value.height) || value.height <= 0) {
+    throw new Error(`<${sugarName}> ${propName}.width and ${propName}.height must be positive numbers`);
+  }
+  return {
+    left: origin[0],
+    top: origin[1],
+    right: origin[0] + value.width,
+    bottom: origin[1] + value.height,
+  };
+};
+
+/** Convert two opposite corners into normalized edges. */
+export const normalizeCornerBox = (
+  corner1: [number, number],
+  corner2: [number, number],
+): NormalizedShapeBox => ({
+  left: Math.min(corner1[0], corner2[0]),
+  top: Math.min(corner1[1], corner2[1]),
+  right: Math.max(corner1[0], corner2[0]),
+  bottom: Math.max(corner1[1], corner2[1]),
+});
+
+/** Apply inset / outset to a normalized box. */
+export const adjustShapeBox = (
+  box: NormalizedShapeBox,
+  props: BoxAdjustmentProps,
+  sugarName: string,
+): NormalizedShapeBox => {
+  const { inset, outset } = props;
+  if (inset !== undefined && outset !== undefined) {
+    throw new Error(`<${sugarName}> cannot accept inset and outset at the same time`);
+  }
+  const delta = outset ?? (inset !== undefined ? -inset : 0);
+  if (!Number.isFinite(delta)) {
+    throw new Error(`<${sugarName}> inset / outset must be finite numbers`);
+  }
+  const adjusted = {
+    left: box.left - delta,
+    top: box.top - delta,
+    right: box.right + delta,
+    bottom: box.bottom + delta,
+  };
+  if (adjusted.right <= adjusted.left || adjusted.bottom <= adjusted.top) {
+    throw new Error(`<${sugarName}> inset / outset would collapse the box`);
+  }
+  return adjusted;
+};
+
+/** Box center. */
+export const boxCenter = (box: NormalizedShapeBox): [number, number] => [
+  (box.left + box.right) / 2,
+  (box.top + box.bottom) / 2,
+];
+
+/** Box size. */
+export const boxSize = (box: NormalizedShapeBox): [number, number] => [
+  box.right - box.left,
+  box.bottom - box.top,
+];
+
+/** Polar angle to Cartesian point for an axis-aligned ellipse/circle. */
 export const polarXY = (
   center: [number, number],
   radiusX: number,
@@ -76,7 +167,7 @@ export const polarXY = (
   center[1] + Math.sin(angleDeg * DEG) * radiusY,
 ];
 
-/** 正多边形顶点：center + 外接半轴 (rx, ry) + 边数 + 起始角°；按角度递增依次排布（共用 polarXY 约定） */
+/** Regular polygon vertices on an axis-aligned ellipse. */
 export const regularPolygonVertices = (
   center: [number, number],
   radiusX: number,
@@ -91,7 +182,7 @@ export const regularPolygonVertices = (
   return out;
 };
 
-/** 星形顶点：2·points 个，交替外 / 内半径（正圆星，rx=ry） */
+/** Star vertices on a circle. */
 export const starVertices = (
   center: [number, number],
   outerRadius: number,
@@ -108,17 +199,14 @@ export const starVertices = (
   return out;
 };
 
-/** 角度三键输入（start / end / sweep 求二） */
+/** Angle inputs shared by circle / ellipse / arc sugars. */
 export type AngleInput = {
   startAngle?: number;
   endAngle?: number;
   sweepAngle?: number;
 };
 
-/**
- * 角度三键（startAngle / endAngle / sweepAngle）求二 → `{ startAngle, endAngle }`
- * @description 全缺：`required` 为 false 时返回 undefined（整形），true 时报错；恰给两个：解析第三个；给 1 / 3 个：报错
- */
+/** Resolve a two-angle specification. */
 export const resolveAngles = (
   input: AngleInput,
   sugarName: string,
@@ -131,23 +219,18 @@ export const resolveAngles = (
     (sweepAngle !== undefined ? 1 : 0);
   if (given === 0) {
     if (required) {
-      throw new Error(
-        `<${sugarName}> 需给角度（startAngle / endAngle / sweepAngle 三选二）`,
-      );
+      throw new Error(`<${sugarName}> requires angles: provide any two of startAngle / endAngle / sweepAngle`);
     }
     return undefined;
   }
   if (given !== 2) {
     throw new Error(
-      `<${sugarName}> 角度三键（startAngle / endAngle / sweepAngle）须恰好给两个，当前给了 ${given} 个`,
+      `<${sugarName}> angle inputs must provide exactly two of startAngle / endAngle / sweepAngle; got ${given}`,
     );
   }
-  if (startAngle !== undefined && endAngle !== undefined) {
-    return { startAngle, endAngle };
-  }
+  if (startAngle !== undefined && endAngle !== undefined) return { startAngle, endAngle };
   if (startAngle !== undefined && sweepAngle !== undefined) {
     return { startAngle, endAngle: startAngle + sweepAngle };
   }
-  // endAngle + sweepAngle
   return { startAngle: (endAngle as number) - (sweepAngle as number), endAngle: endAngle as number };
 };

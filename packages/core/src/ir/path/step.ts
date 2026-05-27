@@ -258,9 +258,9 @@ export const CirclePathStepSchema = z
       .optional()
       .describe('Partial-circle end angle in degrees; sweep direction inferred from startAngle vs endAngle.'),
     closed: z
-      .enum(['closed', 'chord', 'open'])
+      .enum(['closed', 'chord', 'open', 'sector'])
       .optional()
-      .describe("Closing mode. 'closed' = full circle (only valid with no angles; the default then). With angles: 'chord' (straight chord between the two arc ends → half circle / segment; default) or 'open' (pure unclosed arc)."),
+      .describe("Closing mode. 'closed' = full circle (only valid with no angles; the default then). With angles: 'chord' (straight chord between the two arc ends; default), 'sector' (connect both arc ends to the center, then close), or 'open' (pure unclosed arc)."),
     label: StepLabelSchema.optional().describe('Edge label attached to this circle'),
   })
   .describe('CirclePath action: full circle (no angles, pen returns to center) or partial arc (with angles, closed per chord/open).');
@@ -288,9 +288,9 @@ export const EllipsePathStepSchema = z
       .optional()
       .describe('Partial-ellipse end angle in degrees.'),
     closed: z
-      .enum(['closed', 'chord', 'open'])
+      .enum(['closed', 'chord', 'open', 'sector'])
       .optional()
-      .describe("Closing mode. 'closed' = full ellipse (only valid with no angles; default then). With angles: 'chord' (chord between arc ends; default) or 'open' (pure unclosed arc)."),
+      .describe("Closing mode. 'closed' = full ellipse (only valid with no angles; default then). With angles: 'chord' (chord between arc ends; default), 'sector' (connect both arc ends to the center, then close), or 'open' (pure unclosed arc)."),
     label: StepLabelSchema.optional().describe('Edge label attached to this ellipse'),
   })
   .describe('EllipsePath action: full ellipse (no angles, pen returns to center) or partial elliptical arc (with angles, closed per chord/open).');

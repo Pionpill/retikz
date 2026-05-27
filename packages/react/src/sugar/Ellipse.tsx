@@ -4,49 +4,82 @@ import { Path } from '../kernel/Path';
 import { Step } from '../kernel/Step';
 import {
   type AngleInput,
+  type BoxAdjustmentProps,
   type PathVisualProps,
-  midpoint,
+  type ShapeBox,
+  adjustShapeBox,
+  boxCenter,
+  boxSize,
+  normalizeCornerBox,
+  normalizeShapeBox,
   pickPathVisual,
   requireXY,
   resolveAngles,
 } from './_shared';
 
-/** `<Ellipse>` 形态：三选一定中心 + 两半轴，外加可选部分裁剪角度 */
+/** Ellipse sugar props. */
 export type EllipseProps = PathVisualProps &
-  AngleInput & {
-    /** 部分裁剪闭合模式（带角度时）：chord（默认）/ open；不给角度=整椭圆 */
-    closed?: 'chord' | 'open';
+  AngleInput &
+  BoxAdjustmentProps & {
+    /** Box input for fitting an ellipse. */
+    box?: ShapeBox;
+    /** Alias of `box` for layout-style code. */
+    boundingBox?: ShapeBox;
+    /** Partial closing mode when angles are present. */
+    closed?: 'chord' | 'open' | 'sector';
   } & (
     | { center: IRTarget; radiusX: number; radiusY: number }
     | { center: IRTarget; diameterX: number; diameterY: number }
     | { corner1: [number, number]; corner2: [number, number] }
+    | { box: ShapeBox }
+    | { boundingBox: ShapeBox }
   );
 
+const resolveEllipseByBox = (
+  props: EllipseProps,
+  sugarName: string,
+  rawBox: ShapeBox,
+): { center: [number, number]; radiusX: number; radiusY: number } => {
+  const normalized = adjustShapeBox(normalizeShapeBox(rawBox, sugarName, 'box'), props, sugarName);
+  const center = boxCenter(normalized);
+  const [width, height] = boxSize(normalized);
+  return {
+    center,
+    radiusX: width / 2,
+    radiusY: height / 2,
+  };
+};
+
 /**
- * Ellipse sugar——展开为 `<Path><Step move><Step ellipsePath></Path>`
- * @description center 透传形态可接任意 Target；corner 形态（内切椭圆）需算坐标 → 限 literal 笛卡尔。
+ * Ellipse sugar - expands to a Path + ellipsePath step.
  */
 export const Ellipse: FC<EllipseProps> = props => {
-  let center: IRTarget;
+  let center: [number, number];
   let radiusX: number;
   let radiusY: number;
-  if ('radiusX' in props) {
-    center = props.center;
+  if ('box' in props) {
+    ({ center, radiusX, radiusY } = resolveEllipseByBox(props, 'Ellipse', props.box!));
+  } else if ('boundingBox' in props) {
+    ({ center, radiusX, radiusY } = resolveEllipseByBox(props, 'Ellipse', props.boundingBox!));
+  } else if ('radiusX' in props) {
+    center = requireXY(props.center, 'Ellipse', 'center');
     radiusX = props.radiusX;
     radiusY = props.radiusY;
   } else if ('diameterX' in props) {
-    center = props.center;
+    center = requireXY(props.center, 'Ellipse', 'center');
     radiusX = props.diameterX / 2;
     radiusY = props.diameterY / 2;
   } else if ('corner1' in props) {
-    const c1 = requireXY(props.corner1, 'Ellipse', 'corner1');
-    const c2 = requireXY(props.corner2, 'Ellipse', 'corner2');
-    center = midpoint(c1, c2);
-    radiusX = Math.abs(c2[0] - c1[0]) / 2;
-    radiusY = Math.abs(c2[1] - c1[1]) / 2;
+    const normalized = adjustShapeBox(
+      normalizeCornerBox(props.corner1, props.corner2),
+      props,
+      'Ellipse',
+    );
+    center = boxCenter(normalized);
+    [radiusX, radiusY] = boxSize(normalized).map(value => value / 2) as [number, number];
   } else {
     throw new Error(
-      '<Ellipse> 需要 { center, radiusX, radiusY } / { center, diameterX, diameterY } / { corner1, corner2 } 之一',
+      '<Ellipse> needs one of { center, radiusX, radiusY }, { center, diameterX, diameterY }, { corner1, corner2 }, { box }, or { boundingBox }',
     );
   }
 

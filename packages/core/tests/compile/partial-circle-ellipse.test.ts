@@ -41,6 +41,19 @@ describe('部分 circlePath', () => {
     ]);
   });
 
+  it('sector 模式 → 弧终点连中心再 close', () => {
+    const ir = path(
+      { type: 'step', kind: 'move', to: [0, 0] },
+      { type: 'step', kind: 'circlePath', radius: 10, startAngle: 0, endAngle: 90, closed: 'sector' },
+    );
+    expect(findPathPrim(compileToScene(ir, silent).primitives).commands).toEqual([
+      move([10, 0]),
+      ellipseArc([0, 0], 10, 10, 0, 90),
+      line([0, 0]),
+      close(),
+    ]);
+  });
+
   it('整圆（无角度）输出与改造前一致', () => {
     const ir = path(
       { type: 'step', kind: 'move', to: [0, 0] },
@@ -74,6 +87,19 @@ describe('部分 ellipsePath', () => {
     expect(findPathPrim(compileToScene(ir, silent).primitives).commands).toEqual([
       move([15, 0]),
       ellipseArc([0, 0], 15, 10, 0, 90),
+      close(),
+    ]);
+  });
+
+  it('sector 椭圆 → 弧终点连中心再 close', () => {
+    const ir = path(
+      { type: 'step', kind: 'move', to: [0, 0] },
+      { type: 'step', kind: 'ellipsePath', radiusX: 15, radiusY: 10, startAngle: 0, endAngle: 90, closed: 'sector' },
+    );
+    expect(findPathPrim(compileToScene(ir, silent).primitives).commands).toEqual([
+      move([15, 0]),
+      ellipseArc([0, 0], 15, 10, 0, 90),
+      line([0, 0]),
       close(),
     ]);
   });
@@ -114,6 +140,21 @@ describe('pen 语义（逐模式，后接 line 验起点）', () => {
     expect(findPathPrim(compileToScene(ir, silent).primitives).commands).toEqual([
       move([10, 0]),
       ellipseArc([0, 0], 10, 10, 0, 180),
+      close(),
+      line([50, 50]),
+    ]);
+  });
+
+  it('sector：后续 line 从 center 起', () => {
+    const ir = path(
+      { type: 'step', kind: 'move', to: [0, 0] },
+      { type: 'step', kind: 'circlePath', radius: 10, startAngle: 0, endAngle: 90, closed: 'sector' },
+      { type: 'step', kind: 'line', to: [50, 50] },
+    );
+    expect(findPathPrim(compileToScene(ir, silent).primitives).commands).toEqual([
+      move([10, 0]),
+      ellipseArc([0, 0], 10, 10, 0, 90),
+      line([0, 0]),
       close(),
       line([50, 50]),
     ]);
