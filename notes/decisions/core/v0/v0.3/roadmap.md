@@ -259,7 +259,7 @@ v0.3 需要注意：
 
 ## 待决策
 
-1. `@retikz/svg` 的公开 API：只出 `renderToSvgString`，还是同时出 descriptor / React helper。
+1. ~~`@retikz/svg` 的公开 API：只出 `renderToSvgString`，还是同时出 descriptor / React helper。~~ ✅ **已决（→ [alpha.1 ADR-01](./v0.3-alpha.1/01-svg-descriptor-contract.md)）**：以 framework-neutral `SvgNode` descriptor 为核心,出 `buildSvgDocument` + `renderToSvgString`,公开 `SvgNode` 类型;**不出 React helper**（svg 包零 React 依赖,React 映射留在 `@retikz/react`）。同时解掉「`renderPrim` 拆 neutral builder + React binding」。
 2. `@retikz/canvas` 的公开 API：接收 IR、Scene，还是两者都支持。
 3. `@retikz/vanilla` 是否直接 re-export `@retikz/svg` / `@retikz/canvas` 的核心 API，还是只提供 runtime 封装。
 4. `@retikz/vanilla` 是否同时覆盖 SVG DOM 挂载与 SSR 字符串输出，还是拆成更细入口。
