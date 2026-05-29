@@ -113,7 +113,7 @@ Coordinate = {
 - 定位：\`/core/concepts/positioning\` · \`/core/reference/schema/placement\`
 - IR：\`/core/reference/schema/scene\` · \`.../entity\` · \`.../path\`
 - 组件：\`/core/components/{tikz,node/overview,draw/overview,draw/way,draw/path,draw/step,draw/arrow}\`
-- 形状 sugar：\`/core/components/sugar/circle-ellipse\`
+- 形状 sugar：\`/core/components/shapes/circle-ellipse\`
 - 完整范例：\`/core/examples/karl-circle\`
 
 这些页面已经收录在 prompt 末尾的 llms.txt 索引里。Schema 不熟时**务必参照上面速查 + 引用页面**，不要凭记忆瞎写——产出非法 IR 会被自动校验拦下，比一次写对成本高得多。`;
@@ -219,7 +219,7 @@ For polar coordinates / multi-segment paths / Node anchors / Draw way DSL / Edge
 - Positioning: \`/core/concepts/positioning\` · \`/core/reference/schema/placement\`
 - IR: \`/core/reference/schema/scene\` · \`.../entity\` · \`.../path\`
 - Components: \`/core/components/{tikz,node/overview,draw/overview,draw/way,draw/path,draw/step,draw/arrow}\`
-- Shape sugar: \`/core/components/sugar/circle-ellipse\`
+- Shape sugar: \`/core/components/shapes/circle-ellipse\`
 - Worked example: \`/core/examples/karl-circle\`
 
 These pages are already indexed in the llms.txt at the end of this prompt. When unsure about the schema, **follow the cheatsheet + cite the relevant page** — don't improvise. Invalid IR will be rejected by automated validation, costing more than getting it right once.`;

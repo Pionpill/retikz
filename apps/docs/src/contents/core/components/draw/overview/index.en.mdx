@@ -5,7 +5,7 @@ description: Sugar component â€?a way array threads through nodes, coordinates, 
 
 `<Draw>` is the default entry point for most connections. It accepts a `way` array and expands targets, folds, cycles, curves, shapes, and edge labels into Kernel `<Path>` + `<Step>`. Stroke, fill, arrow, and opacity props match `<Path>`.
 
-Choosing rule: use `<Draw>` for ordinary relationship lines, flowchart edges, and arrowed connections; switch to `<Path>` + `<Step>` when you need multiple `move`s, precise per-segment `kind` control, or IR-close debugging; use the **shape sugar** below to draw a single geometric shape (circle / rectangle / sector, etc.); use [Grid](/core/components/sugar/grid) for background reference lines. Work with IR directly only at AI / persistence boundaries.
+Choosing rule: use `<Draw>` for ordinary relationship lines, flowchart edges, and arrowed connections; switch to `<Path>` + `<Step>` when you need multiple `move`s, precise per-segment `kind` control, or IR-close debugging; use the **shape sugar** below to draw a single geometric shape (circle / rectangle / sector, etc.); use [Grid](/core/components/shapes/grid) for background reference lines. Work with IR directly only at AI / persistence boundaries.
 
 ## Usage
 
@@ -161,7 +161,7 @@ Full ellipses also use angular parametrization, not equal divisions by ellipse a
 | `<RegularPolygon>` | regular polygon |
 | `<Star>` | star |
 
-One-line forms for circles, rectangles, sectors, Grid, and similar helpers now live under the [Shapes](/core/components/sugar) group. They still expand to `<Path>` / `<Step>` and share the same visual props as `<Draw>` / `<Path>`. See [Geometry](/core/components/sugar/circle-ellipse) for geometric shapes and [Grid](/core/components/sugar/grid) for regular reference lines.
+One-line forms for circles, rectangles, sectors, Grid, and similar helpers now live under the [Shapes](/core/components/shapes) group. They still expand to `<Path>` / `<Step>` and share the same visual props as `<Draw>` / `<Path>`. See [Geometry](/core/components/shapes/circle-ellipse) for geometric shapes and [Grid](/core/components/shapes/grid) for regular reference lines.
 
 ## API Reference
 
@@ -218,4 +218,4 @@ One-line forms for circles, rectangles, sectors, Grid, and similar helpers now l
 - [Path](/core/components/draw/path): the Kernel container Draw expands to and the full stroke field set
 - [Step](/core/components/draw/step): the Kernel step semantics behind each Draw segment
 - [Arrow](/core/components/draw/arrow): Arrow shape, size, color, and per-end overrides
-- [Shapes](/core/components/sugar): shortcut forms such as Circle / Ellipse / Arc / Sector / Rectangle / Grid / RegularPolygon / Star
+- [Shapes](/core/components/shapes): shortcut forms such as Circle / Ellipse / Arc / Sector / Rectangle / Grid / RegularPolygon / Star
