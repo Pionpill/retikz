@@ -11,6 +11,7 @@ import {
 import { buildSvgDocument } from '@retikz/svg';
 import { buildIR } from './builder';
 import { browserMeasurer } from '../render/browser-measurer';
+import { CanvasHost } from '../render/canvasHost';
 import { svgToReact } from '../render/svgToReact';
 
 /** <Layout> 组件的 props */
@@ -33,6 +34,8 @@ export type LayoutProps = {
   className?: string;
   /** 透传到 svg 元素的内联样式 */
   style?: CSSProperties;
+  /** 渲染目标；缺省为 SVG，设为 canvas 时用同一份 Scene 绘制到 `<canvas>` */
+  renderer?: 'svg' | 'canvas';
   /**
    * SVG `<defs>` 资源 id 前缀，覆盖默认的 `useId()` 派生值
    * @description marker / paint / clip 的 id 与 `url(#...)` 引用共用此前缀确保多实例不撞。缺省回退剥冒号的
@@ -80,7 +83,7 @@ export type LayoutProps = {
  *   `@retikz/svg`，react 只做 `SvgNode→ReactElement` 薄映射 + `useId` 绑定。
  */
 export const Layout: FC<LayoutProps> = props => {
-  const { ir: irFromProp, children, width, height, viewBox, className, style, idPrefix, nodeDistance, shapes, arrows, patterns, pathGenerators } = props;
+  const { ir: irFromProp, children, width, height, viewBox, className, style, renderer = 'svg', idPrefix, nodeDistance, shapes, arrows, patterns, pathGenerators } = props;
   const ir = useMemo(() => {
     const base = irFromProp ?? buildIR(children);
     // viewBox prop 注入 IR 根（显式 > IR 内置）；prop 缺省时保留 base 自带的 viewBox
@@ -94,13 +97,17 @@ export const Layout: FC<LayoutProps> = props => {
   // useId 返回 ":r0:" 含冒号；SVG `url(#id)` 对冒号兼容性差，剥成纯字母数字。caller 显式 idPrefix 优先（SSR 水合对齐）
   const rawId = useId();
   const resolvedIdPrefix = idPrefix ?? rawId.replace(/[^a-zA-Z0-9]/g, '');
+  const doc = useMemo(
+    () => (renderer === 'canvas' ? null : buildSvgDocument(scene, { idPrefix: resolvedIdPrefix })),
+    [renderer, scene, resolvedIdPrefix],
+  );
+
+  if (renderer === 'canvas') {
+    return <CanvasHost scene={scene} width={width} height={height} className={className} style={style} />;
+  }
 
   // Scene → 中性 SvgNode 描述树（buildSvgDocument 内部完成 arrow dedup / defs 组装 / id 前缀派生）→ React 元素
-  const doc = useMemo(
-    () => buildSvgDocument(scene, { idPrefix: resolvedIdPrefix }),
-    [scene, resolvedIdPrefix],
-  );
-  const svgEl = svgToReact(doc) as ReactElement;
+  const svgEl = svgToReact(doc as NonNullable<typeof doc>) as ReactElement;
 
   // svg 元素级附加（width / height / className / 框架 style）由 react 层补：非 svg 包职责
   return cloneElement(svgEl, { width, height, className, style });
