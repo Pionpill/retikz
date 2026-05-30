@@ -148,7 +148,7 @@ const resolveFillStyle = (
   bbox: BBox,
 ): string | CanvasGradient | CanvasPattern | undefined => {
   if (fill === undefined) return undefined;
-  if (typeof fill === 'string') return resolveColor(fill, options);
+  if (typeof fill === 'string') return fill === 'none' ? undefined : resolveColor(fill, options);
   if (fill.kind === 'contextStroke') return resolveColor(stroke, options) ?? String(ctx.strokeStyle);
   const resource = resources.get(fill.id);
   if (resource !== undefined && resource.kind === 'paint') {
@@ -244,7 +244,7 @@ const strokeCurrentPath = (
   dashPattern: Array<number> | undefined,
   options: DrawOptions,
 ): void => {
-  if (stroke === undefined) return;
+  if (stroke === undefined || stroke === 'none') return;
   if (strokeOpacity !== undefined) ctx.save();
   applyStrokeStyle(ctx, stroke, strokeWidth, strokeOpacity, dashPattern, options);
   ctx.stroke();
@@ -369,7 +369,7 @@ const drawText = (ctx: CanvasRenderingContext2D, p: TextPrim, options: DrawOptio
   ctx.font = buildFont(p.fontSize, p.fontFamily, p.fontWeight, p.fontStyle, options);
   ctx.textAlign = p.align === 'middle' ? 'center' : p.align;
   ctx.textBaseline = p.baseline;
-  if (p.fill !== undefined) ctx.fillStyle = resolveColor(p.fill, options) ?? p.fill;
+  if (p.fill !== undefined && p.fill !== 'none') ctx.fillStyle = resolveColor(p.fill, options) ?? p.fill;
   const offset = firstLineDy(p);
   p.lines.forEach((line, index) => {
     const shouldRestore =
@@ -390,8 +390,10 @@ const drawText = (ctx: CanvasRenderingContext2D, p: TextPrim, options: DrawOptio
         options,
       );
     }
-    if (line.fill !== undefined) ctx.fillStyle = resolveColor(line.fill, options) ?? line.fill;
-    ctx.fillText(line.text, p.x, p.y + (index === 0 ? offset : offset + index * p.lineHeight));
+    if (line.fill !== undefined && line.fill !== 'none') ctx.fillStyle = resolveColor(line.fill, options) ?? line.fill;
+    if ((line.fill ?? p.fill) !== 'none') {
+      ctx.fillText(line.text, p.x, p.y + (index === 0 ? offset : offset + index * p.lineHeight));
+    }
     if (shouldRestore) ctx.restore();
   });
 };
@@ -519,7 +521,7 @@ const resolveMarkerFill = (
   options: DrawOptions,
 ): string | undefined => {
   if (fill === undefined) return undefined;
-  if (typeof fill === 'string') return resolveColor(fill, options);
+  if (typeof fill === 'string') return fill === 'none' ? undefined : resolveColor(fill, options);
   return pathStroke ?? String(ctx.strokeStyle);
 };
 
@@ -530,7 +532,7 @@ const resolveMarkerStroke = (
   pathStroke: string | undefined,
   options: DrawOptions,
 ): string | undefined => {
-  if (stroke === undefined) return undefined;
+  if (stroke === undefined || stroke === 'none') return undefined;
   if (stroke === 'context-stroke') return pathStroke ?? String(ctx.strokeStyle);
   return resolveColor(stroke, options) ?? stroke;
 };
