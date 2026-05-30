@@ -236,6 +236,7 @@ const drawPrim = (
   p: ScenePrimitive,
   options: DrawOptions,
 ): void => {
+  ctx.save();
   switch (p.type) {
     case 'rect':
       withOpacity(ctx, p.opacity, () => {
@@ -285,6 +286,7 @@ const drawPrim = (
       ctx.restore();
       break;
   }
+  ctx.restore();
 };
 
 /** 绘制已编译 Scene 到 Canvas 2D context */

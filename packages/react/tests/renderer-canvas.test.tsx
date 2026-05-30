@@ -152,4 +152,36 @@ describe('Layout renderer 规格', () => {
     root.unmount();
     getContext.mockRestore();
   });
+
+  it('canvas-host-dpr-fallback：非法 devicePixelRatio 回退为 1', async () => {
+    const getContext = vi
+      .spyOn(HTMLCanvasElement.prototype, 'getContext')
+      .mockImplementation((contextId: string) =>
+        (contextId === '2d' ? (createTestCanvasContext() as unknown as CanvasRenderingContext2D) : null)
+      );
+    const descriptor = Object.getOwnPropertyDescriptor(globalThis, 'devicePixelRatio');
+    Object.defineProperty(globalThis, 'devicePixelRatio', { configurable: true, value: Number.NaN });
+    const container = document.createElement('div');
+    const root = createRoot(container);
+
+    await act(() => {
+      root.render(
+        <Layout renderer="canvas" width={120} height={80}>
+          <Node id="a" position={[0, 0]}>
+            A
+          </Node>
+        </Layout>,
+      );
+    });
+
+    const canvas = container.querySelector('canvas');
+    expect(canvas?.getAttribute('width')).toBe('120');
+    expect(canvas?.getAttribute('height')).toBe('80');
+
+    root.unmount();
+    getContext.mockRestore();
+    if (descriptor) {
+      Object.defineProperty(globalThis, 'devicePixelRatio', descriptor);
+    }
+  });
 });

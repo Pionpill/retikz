@@ -5,6 +5,9 @@ import { drawScene } from '../src';
 type CanvasCall = {
   name: string;
   args: Array<unknown>;
+  lineCap?: CanvasLineCap;
+  lineJoin?: CanvasLineJoin;
+  lineWidth?: number;
 };
 
 type SpyCanvasContext = Pick<
@@ -44,11 +47,8 @@ type SpyCanvasContext = Pick<
 
 const createSpyCanvasContext = (): SpyCanvasContext => {
   const calls: Array<CanvasCall> = [];
-  const record = (name: string) => (...args: Array<unknown>) => {
-    calls.push({ name, args });
-  };
-
-  return {
+  const stack: Array<Pick<SpyCanvasContext, 'lineCap' | 'lineJoin' | 'lineWidth'>> = [];
+  const context = {
     calls,
     fillStyle: '#000',
     font: '',
@@ -59,6 +59,25 @@ const createSpyCanvasContext = (): SpyCanvasContext => {
     strokeStyle: '#000',
     textAlign: 'start',
     textBaseline: 'alphabetic',
+  } as SpyCanvasContext;
+  const record = (name: string) => (...args: Array<unknown>) => {
+    if (name === 'save') {
+      stack.push({ lineCap: context.lineCap, lineJoin: context.lineJoin, lineWidth: context.lineWidth });
+    }
+    if (name === 'restore') {
+      const snapshot = stack.pop();
+      if (snapshot) Object.assign(context, snapshot);
+    }
+    calls.push({
+      name,
+      args,
+      lineCap: context.lineCap,
+      lineJoin: context.lineJoin,
+      lineWidth: context.lineWidth,
+    });
+  };
+
+  Object.assign(context, {
     arc: record('arc'),
     beginPath: record('beginPath'),
     bezierCurveTo: record('bezierCurveTo'),
@@ -79,7 +98,9 @@ const createSpyCanvasContext = (): SpyCanvasContext => {
     setTransform: record('setTransform'),
     stroke: record('stroke'),
     translate: record('translate'),
-  };
+  });
+
+  return context;
 };
 
 const scene: Scene = {
@@ -130,7 +151,7 @@ describe('drawScene 规格', () => {
 
     drawScene(context as unknown as CanvasRenderingContext2D, scene);
 
-    expect(context.calls.map(call => call.name)).toEqual([
+    expect(context.calls.map(call => call.name).filter(name => name !== 'save' && name !== 'restore')).toEqual([
       'beginPath',
       'rect',
       'fill',
@@ -149,19 +170,66 @@ describe('drawScene 规格', () => {
       'setLineDash',
       'stroke',
       'fillText',
-      'save',
       'translate',
       'beginPath',
       'rect',
       'setLineDash',
       'stroke',
-      'restore',
     ]);
     expect(context.calls.find(call => call.name === 'rect')?.args).toEqual([1, 2, 30, 20]);
     expect(context.calls.find(call => call.name === 'ellipse')?.args.slice(0, 4)).toEqual([50, 20, 10, 5]);
     expect(context.calls.find(call => call.name === 'fillText')?.args).toEqual(['Hello', 4, 6]);
-    expect(context.lineWidth).toBe(2);
-    expect(context.lineCap).toBe('round');
-    expect(context.lineJoin).toBe('bevel');
+    expect(context.lineWidth).toBe(1);
+    expect(context.lineCap).toBe('butt');
+    expect(context.lineJoin).toBe('miter');
+  });
+
+  it('stroke-style-state-leak：独立图元不会继承前一个图元的 strokeWidth', () => {
+    const context = createSpyCanvasContext();
+    const isolatedScene: Scene = {
+      layout: { x: 0, y: 0, width: 80, height: 40 },
+      primitives: [
+        { type: 'rect', x: 0, y: 0, width: 20, height: 20, stroke: '#111', strokeWidth: 20 },
+        { type: 'rect', x: 30, y: 0, width: 20, height: 20, stroke: '#222' },
+      ],
+    };
+
+    drawScene(context as unknown as CanvasRenderingContext2D, isolatedScene);
+
+    const strokeCalls = context.calls.filter(call => call.name === 'stroke');
+    expect(strokeCalls.map(call => call.lineWidth)).toEqual([20, 1]);
+  });
+
+  it('path-linecap-linejoin-state-leak：独立 path 不继承前一个 path 的 lineCap / lineJoin', () => {
+    const context = createSpyCanvasContext();
+    const isolatedScene: Scene = {
+      layout: { x: 0, y: 0, width: 80, height: 40 },
+      primitives: [
+        {
+          type: 'path',
+          commands: [
+            { kind: 'move', to: [0, 0] },
+            { kind: 'line', to: [20, 0] },
+          ],
+          stroke: '#111',
+          strokeLinecap: 'round',
+          strokeLinejoin: 'bevel',
+        },
+        {
+          type: 'path',
+          commands: [
+            { kind: 'move', to: [0, 10] },
+            { kind: 'line', to: [20, 10] },
+          ],
+          stroke: '#222',
+        },
+      ],
+    };
+
+    drawScene(context as unknown as CanvasRenderingContext2D, isolatedScene);
+
+    const strokeCalls = context.calls.filter(call => call.name === 'stroke');
+    expect(strokeCalls.map(call => call.lineCap)).toEqual(['round', 'butt']);
+    expect(strokeCalls.map(call => call.lineJoin)).toEqual(['bevel', 'miter']);
   });
 });

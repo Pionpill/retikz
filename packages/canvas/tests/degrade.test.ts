@@ -90,7 +90,7 @@ describe('canvas 降级与边界规格', () => {
 
     expect(() => drawScene(context as unknown as CanvasRenderingContext2D, scene)).not.toThrow();
     expect(warn).toHaveBeenCalledWith(expect.stringMatching(/paint-1|linearGradient|unsupported|degrad/i));
-    expect(context.calls.map(call => call.name)).toEqual(['beginPath', 'rect', 'setLineDash', 'stroke']);
+    expect(context.calls.map(call => call.name).filter(name => name !== 'save' && name !== 'restore')).toEqual(['beginPath', 'rect', 'setLineDash', 'stroke']);
 
     warn.mockRestore();
   });

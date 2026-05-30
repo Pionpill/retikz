@@ -79,7 +79,7 @@ describe('renderToCanvas 规格', () => {
     renderToCanvas(canvas, frameScene, { devicePixelRatio: 2 });
 
     expect(getContext).toHaveBeenCalledWith('2d');
-    expect(context.calls.map(call => call.name)).toEqual([
+    expect(context.calls.map(call => call.name).filter(name => name !== 'save' && name !== 'restore')).toEqual([
       'setTransform',
       'clearRect',
       'setTransform',
@@ -109,5 +109,17 @@ describe('renderToCanvas 规格', () => {
     const { canvas } = createCanvas(null);
 
     expect(() => renderToCanvas(canvas, frameScene)).toThrow(/2d context|CanvasRenderingContext2D|canvas/i);
+  });
+
+  it('non-finite-frame-transform：非法 DPR 或布局尺寸不会把 NaN / Infinity 写入 transform', () => {
+    const context = createSpyCanvasContext();
+    const { canvas } = createCanvas(context as unknown as CanvasRenderingContext2D);
+    const badFrameScene: Scene = {
+      layout: { x: 0, y: 0, width: 0, height: 50 },
+      primitives: [],
+    };
+
+    expect(() => renderToCanvas(canvas, badFrameScene, { devicePixelRatio: Number.NaN })).toThrow(/layout|width|height|finite|positive/i);
+    expect(context.calls.flatMap(call => call.args).every(arg => typeof arg !== 'number' || Number.isFinite(arg))).toBe(true);
   });
 });

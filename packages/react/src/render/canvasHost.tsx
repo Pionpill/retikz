@@ -24,6 +24,11 @@ const numericLength = (
   return fallback;
 };
 
+const devicePixelRatio = (): number => {
+  const ratio = globalThis.devicePixelRatio;
+  return typeof ratio === 'number' && Number.isFinite(ratio) && ratio > 0 ? ratio : 1;
+};
+
 const displayStyle = (
   width: number | string | undefined,
   height: number | string | undefined,
@@ -41,12 +46,12 @@ export const CanvasHost: FC<CanvasHostProps> = props => {
   useEffect(() => {
     const canvas = ref.current;
     if (!canvas) return;
-    const devicePixelRatio = globalThis.devicePixelRatio;
+    const ratio = devicePixelRatio();
     const cssWidth = numericLength(width, scene.layout.width);
     const cssHeight = numericLength(height, scene.layout.height);
-    canvas.width = Math.max(1, Math.round(cssWidth * devicePixelRatio));
-    canvas.height = Math.max(1, Math.round(cssHeight * devicePixelRatio));
-    renderToCanvas(canvas, scene, { devicePixelRatio });
+    canvas.width = Math.max(1, Math.round(cssWidth * ratio));
+    canvas.height = Math.max(1, Math.round(cssHeight * ratio));
+    renderToCanvas(canvas, scene, { devicePixelRatio: ratio });
   }, [height, scene, width]);
 
   return <canvas ref={ref} className={className} style={displayStyle(width, height, style)} />;
