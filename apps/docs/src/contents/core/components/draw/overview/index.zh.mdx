@@ -44,25 +44,25 @@ Draw 里的曲线分两类：`curve` / `cubic` / `bend` 连接前后两个目标
 
 </Comparison>
 
-<ComponentPreview name="draw-curve" />
+<ComponentPreview name="draw-curve" size="sm" />
 
 #### 三次贝塞尔
 
 `{ cubic: [[c1x, c1y], [c2x, c2y]] }` 等价 `<Step kind="cubic">`。它用两个控制点画更可控的贝塞尔曲线：第一个控制点影响曲线离开起点时的方向，第二个控制点影响曲线靠近终点时的方向，因此比二次贝塞尔更适合 S 形或需要精细调整的连线。
 
-<ComponentPreview name="draw-cubic" />
+<ComponentPreview name="draw-cubic" size="sm" />
 
 #### 弯曲简写
 
 `{ bend: 'left' | 'right', angle?: number }` 等价 `<Step kind="bend">`。它是弧形连线的简写：你只需要说明从起点看向终点时向左还是向右弯，以及弯曲角度；编译期会自动计算控制点，并展开为三次贝塞尔。
 
-<ComponentPreview name="draw-bend" size="lg" />
+<ComponentPreview name="draw-bend" size="md" />
 
 #### 弧段
 
 `{ arc: { startAngle, endAngle, radius } }` 等价 `<Step kind="arc">`。它以上一项为圆心画弧段，不连接到下一个目标点，也不消耗下一项。它描述的是"从哪个角度扫到哪个角度的圆弧"，常用于画角度、圆周的一部分或辅助几何线。
 
-<ComponentPreview name="draw-arc" />
+<ComponentPreview name="draw-arc" size="sm" />
 
 ### 形状
 
@@ -70,13 +70,13 @@ Draw 里的曲线分两类：`curve` / `cubic` / `bend` 连接前后两个目标
 
 `{ circle: { radius } }` 以上一项为圆心画整圆，画完画笔回到圆心。
 
-<ComponentPreview name="draw-circle" />
+<ComponentPreview name="draw-circle" size="sm" />
 
 #### 整椭圆
 
 `{ ellipse: { radiusX, radiusY } }` 以上一项为中心画整椭圆。
 
-<ComponentPreview name="draw-ellipse" />
+<ComponentPreview name="draw-ellipse" size="sm" />
 
 ### 边标注
 
@@ -84,7 +84,7 @@ Draw 里的曲线分两类：`curve` / `cubic` / `bend` 连接前后两个目标
 
 `{ label }` 是 Draw way 里的 infix 标注算子。它修饰下一段产生的 `step.label`，不自己产生路径段。短写 `{ label: 'ok' }` 等价 `{ label: { text: 'ok' } }`。
 
-<ComponentPreview name="draw-label" size="lg" />
+<ComponentPreview name="draw-label" size="md" />
 
 #### 位置规则
 
@@ -96,19 +96,19 @@ Draw 里的曲线分两类：`curve` / `cubic` / `bend` 连接前后两个目标
 
 折角段会把 t 平均分配给每一段折线；`midway` 固定落在拐角处，而不是按两段实际长度取视觉中点。
 
-<ComponentPreview name="draw-label-fold" />
+<ComponentPreview name="draw-label-fold" size="sm" />
 
 二次贝塞尔使用曲线参数 t。`midway` 是 Bezier t=0.5 的位置，不一定是视觉弧长的一半。
 
-<ComponentPreview name="draw-label-curve" />
+<ComponentPreview name="draw-label-curve" size="sm" />
 
 三次贝塞尔同样按 Bezier 参数放置标注；控制点变化会影响 t 对应的位置和切线方向。
 
-<ComponentPreview name="draw-label-cubic" />
+<ComponentPreview name="draw-label-cubic" size="sm" />
 
 `bend` 会先展开成三次贝塞尔，因此标注位置规则与 cubic 一致。
 
-<ComponentPreview name="draw-label-bend" />
+<ComponentPreview name="draw-label-bend" size="sm" />
 
 弧段按角度插值放置标注；`midway` 表示起始角度与终止角度的中间角。
 
@@ -116,11 +116,11 @@ Draw 里的曲线分两类：`curve` / `cubic` / `bend` 连接前后两个目标
 
 整圆从 0° 位置开始绕一圈，数值 t 映射到圆周角度。
 
-<ComponentPreview name="draw-label-circle" />
+<ComponentPreview name="draw-label-circle" size="lg" />
 
 整椭圆也按角度参数放置标注；这不是按椭圆弧长等分。
 
-<ComponentPreview name="draw-label-ellipse" />
+<ComponentPreview name="draw-label-ellipse" size="sm" />
 
 ### 样式
 
@@ -128,19 +128,19 @@ Draw 里的曲线分两类：`curve` / `cubic` / `bend` 连接前后两个目标
 
 `arrow` 控制路径两端的箭头：`'->'` / `'<-'` / `'<->'` / `'none'`。更细的 shape、尺寸、颜色和起末分别配置见 [Arrow](/core/components/draw/arrow)。
 
-<ComponentPreview name="draw-arrow" />
+<ComponentPreview name="draw-arrow" size="sm" />
 
 #### 填充
 
 `fill` 给闭合区域填色，`fillRule` 控制嵌套子路径填充规则。常配合 `DrawWay.Cycle` 使用。
 
-<ComponentPreview name="draw-fill" />
+<ComponentPreview name="draw-fill" size="sm" />
 
 #### Dash
 
 `dashPattern` 使用 `Array<number>` 表达 dash / gap 长度序列。`[4, 2]` 表示画 4、空 2，单位是 user units。
 
-<ComponentPreview name="draw-dashed" />
+<ComponentPreview name="draw-dashed" size="sm" />
 
 #### 栈序（zIndex）
 

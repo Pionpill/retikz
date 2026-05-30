@@ -7,7 +7,7 @@ description: "A high-school series-measurement circuit example built with custom
 
 This page builds a textbook-style Ohm's law experiment circuit while showing how [Layout](/core/components/layout/overview), [Scope](/core/components/layout/scope), [Node](/core/components/node/overview), [Draw](/core/components/draw/overview), [Coordinate](/core/components/node/coordinate), and the [Shape Registry](/core/reference/extending/shape-registry) work together.
 
-<ComponentPreview name="ohms-law-circuit-06-labels" size="xl" />
+<ComponentPreview name="ohms-law-circuit-06-labels" size="xxl" />
 
 The final figure stays clean: no background boxes around the measurement branches, no explanation card in the lower-left corner, and no extra arrows near `R1` / `R2`. The workflow is to place each circuit symbol as a custom `Node` first. Each symbol owns stable terminals, and wires connect those terminals afterward.
 
@@ -51,37 +51,37 @@ You can send the prompt below to the AI chat panel to draw a similar circuit. It
 
 Start by fixing the [Layout](/core/components/layout/overview) `viewBox`, then place the battery, switch, ammeter, and the first `R + V` measurement unit as [Node](/core/components/node/overview) elements. Each circuit symbol is a custom shape that already knows its input, output, or polarity terminals; no wires are drawn yet.
 
-<ComponentPreview name="ohms-law-circuit-01-loop" size="xl" />
+<ComponentPreview name="ohms-law-circuit-01-loop" size="xxl" />
 
 ### Step 2: Connect The Main Loop
 
 Once the elements exist, use [Draw](/core/components/draw/overview) to wire the main loop: battery positive to switch, switch to ammeter, ammeter to the first resistor, then back along the bottom branch to the battery negative. The wires reference element terminals instead of guessed center coordinates.
 
-<ComponentPreview name="ohms-law-circuit-02-instruments" diffFrom="ohms-law-circuit-01-loop" size="xl" />
+<ComponentPreview name="ohms-law-circuit-02-instruments" diffFrom="ohms-law-circuit-01-loop" size="xxl" />
 
 ### Step 3: Wire The First Measurement Branch
 
 The first measurement branch connects both ends of `R1` to the voltmeter below it. The `R1` label uses [Coordinate](/core/components/node/coordinate) with `between` to stay at the midpoint between the resistor terminals, while the parallel branch only marks that this voltmeter measures that resistor section.
 
-<ComponentPreview name="ohms-law-circuit-03-first-cell" diffFrom="ohms-law-circuit-02-instruments" size="xl" />
+<ComponentPreview name="ohms-law-circuit-03-first-cell" diffFrom="ohms-law-circuit-02-instruments" size="xxl" />
 
 ### Step 4: Duplicate The Second Branch
 
 The second `R2 + V2` branch is not redrawn from scratch. The same local measurement unit is wrapped in [Scope](/core/components/layout/scope) and translated as a group, so the resistor, voltmeter, parallel branch, and midpoint rule stay consistent while only the id prefix and labels change.
 
-<ComponentPreview name="ohms-law-circuit-04-duplicate-cell" diffFrom="ohms-law-circuit-03-first-cell" size="xl" />
+<ComponentPreview name="ohms-law-circuit-04-duplicate-cell" diffFrom="ohms-law-circuit-03-first-cell" size="xxl" />
 
 ### Step 5: Add The Rheostat And Texture
 
 Add the sliding rheostat at the bottom and reroute the lower branch through its left and right terminals. It is still one custom `Node`: the zigzag, slider stroke, and internal `pattern` texture are packaged inside the element.
 
-<ComponentPreview name="ohms-law-circuit-05-rheostat" diffFrom="ohms-law-circuit-04-duplicate-cell" size="xl" />
+<ComponentPreview name="ohms-law-circuit-05-rheostat" diffFrom="ohms-law-circuit-04-duplicate-cell" size="xxl" />
 
 ### Step 6: Finish Labels And Reading Order
 
 Finish with only the necessary labels: `E`, `S`, `R1`, `R2`, `U1`, `U2`, and the sliding-rheostat name. No extra arrows or explanation card are added, because the figure now reads naturally from the main loop into the two parallel voltage branches.
 
-<ComponentPreview name="ohms-law-circuit-06-labels" diffFrom="ohms-law-circuit-05-rheostat" size="xl" />
+<ComponentPreview name="ohms-law-circuit-06-labels" diffFrom="ohms-law-circuit-05-rheostat" size="xxl" />
 
 ## Capabilities
 

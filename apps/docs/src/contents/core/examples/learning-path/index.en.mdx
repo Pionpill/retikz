@@ -7,7 +7,7 @@ description: Roadmap illustration example — using AMAI-GmbH/AI-Expert-Roadmap'
 
 This page uses [AMAI-GmbH/AI-Expert-Roadmap](https://github.com/AMAI-GmbH/AI-Expert-Roadmap)'s cover as the subject, walking through five core [Draw](/core/components/draw/overview) capabilities in 5 steps: straight `line`, quadratic Bezier `curve`, `dashPattern`, `arrow`, and edge `label`.
 
-<ComponentPreview name="learning-path-05-dashed" size="xl" />
+<ComponentPreview name="learning-path-05-dashed" size="xxl" />
 
 This is not a recommendation to hard-code every diagram. Absolute coordinates are the direct choice when replicating an existing SVG / poster; once a figure needs reuse, text swaps, or changing node counts, extract repeated visuals into small components, encode stable relationships with `AtPosition` / `Draw`, and leave only a few anchors as absolute coordinates. In other words, this example is teaching when to package things up and when to place them directly.
 
@@ -67,7 +67,7 @@ Factor a `RoadmapNode` helper first — 4 variants sharing [Node](/core/componen
 
 Step 1 places one `title` — "AI Expert in 2022" — showing the `title` variant: bold + `currentColor` (theme-aware) + no background.
 
-<ComponentPreview name="learning-path-01-title" size="md" />
+<ComponentPreview name="learning-path-01-title" size="xxl" />
 
 ### Step 2: center spine — 2 Draw lines
 
@@ -83,7 +83,7 @@ Add the `Fundamentals` gray mini button and the `Choose your path` sub-header be
 - `arrow="->"` adds an arrowhead at the end (`<-` at start / `<->` both ends)
 - `strokeWidth={2}` sets the connector thickness
 
-<ComponentPreview name="learning-path-02-spine" diffFrom="learning-path-01-title" size="lg" />
+<ComponentPreview name="learning-path-02-spine" diffFrom="learning-path-01-title" size="xxl" />
 
 ### Step 3: side stacks — AtPosition tight stacking
 
@@ -100,7 +100,7 @@ Add two independent stacks — 4 dodgerblue "required" buttons on the left, 2 le
 
 This step only adds nodes — no new connectors. A first-time reader can treat it as "arrange the two button columns neatly" without having to think about edges yet.
 
-<ComponentPreview name="learning-path-03-stacks" diffFrom="learning-path-02-spine" />
+<ComponentPreview name="learning-path-03-stacks" diffFrom="learning-path-02-spine" size="xxl" />
 
 ### Step 4: 5 path buttons + curve merge
 
@@ -131,7 +131,7 @@ The last target is the node id `'data-scientist'`, which retikz auto-anchors to 
 <Draw way={['data-engineer', 'big-data-engineer']}  stroke="#1f6286" strokeWidth={2} arrow="->" />
 ```
 
-<ComponentPreview name="learning-path-04-paths" diffFrom="learning-path-03-stacks" size="lg" />
+<ComponentPreview name="learning-path-04-paths" diffFrom="learning-path-03-stacks" size="xxl" />
 
 ### Step 5: decoration — dashed recommended + short dashed + red X
 
@@ -164,7 +164,7 @@ The final decoration layer demonstrates `dashPattern` / `arrow` at start / edge 
 
 `arrow="<-"` puts the arrow at the **start** instead of the end — here the start (251.88, 359.77) sits above Deep Learning, so the arrow points "go to Deep Learning." `{ label: 'recommended' }` is a prefix operator that modifies the **next** segment — it lands on the first curve's midpoint (default `position: 'midway'` + `side: 'above'`).
 
-<ComponentPreview name="learning-path-05-dashed" diffFrom="learning-path-04-paths" size="xl" />
+<ComponentPreview name="learning-path-05-dashed" diffFrom="learning-path-04-paths" size="xxl" />
 
 ## Capabilities
 

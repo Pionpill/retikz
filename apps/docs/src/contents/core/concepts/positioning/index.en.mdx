@@ -21,7 +21,7 @@ retikz uses a unified set of position expressions for entity placement and path 
 
 Cartesian coordinates are the most direct form: `[x, y]` names a point on the canvas. x grows to the right and y grows downward, so `[120, 40]` means 120 units right and 40 units down from the origin. Use this for small hand-placed diagrams, reproducing existing SVG coordinates, or providing a base point for other position forms.
 
-<ComponentPreview name="positioning-cartesian" size="sm" />
+<ComponentPreview name="positioning-cartesian" size="xs" />
 
 ## Polar
 
@@ -51,7 +51,7 @@ Six nodes around `O` at radius 80, every 60° from 0 to 300 — the canonical ra
 
 `<Step>` / `<Draw>` targets also accept a **string** — referencing a node id inside the same `<Layout>`:
 
-<ComponentPreview name="positioning-id-ref" size="sm" />
+<ComponentPreview name="positioning-id-ref" size="xs" />
 
 The actual line endpoints are computed by retikz automatically — see [Anchors](/core/concepts/anchors).
 

@@ -29,7 +29,7 @@ Choose the form by the role in the diagram: flowchart nodes usually use the defa
 
 `shape` picks the visual shape: `'rectangle'` (default) / `'circle'` / `'ellipse'` / `'diamond'`, or a custom shape name registered via `<Layout shapes>` / `CompileOptions.shapes`. Any shape works as an attachable target — connecting lines clip to that shape's boundary automatically:
 
-<ComponentPreview name="node-shapes" size="lg" />
+<ComponentPreview name="node-shapes" size="md" />
 
 > Each shape's outer boundary contains "text rectangle + padding":
 > - rectangle: boundary = inner rect
@@ -73,7 +73,7 @@ In addition to Cartesian / polar, `position` accepts **`{ direction, of, distanc
 
 </Comparison>
 
-<ComponentPreview name="node-offset-position" />
+<ComponentPreview name="node-offset-position" size="sm" />
 
 #### Proportional positioning
 
@@ -89,11 +89,11 @@ Since v0.2, `position` also accepts **`{ between, t }`**: place the node at a pr
 
 </Comparison>
 
-<ComponentPreview name="node-label-basic" size="lg" />
+<ComponentPreview name="node-label-basic" size="md" />
 
 `distance` controls how far the label is pushed outward from the node border, still in retikz user units. It defaults to `12`; for example, `position: 'above', distance: 20` places the label further above the node's top border.
 
-<ComponentPreview name="node-label-distance" size="sm" />
+<ComponentPreview name="node-label-distance" size="md" />
 
 ### Styling
 
@@ -146,13 +146,13 @@ Each line can override `fill` / `opacity` / `font` (any subset of family / size 
 1. **Mix LineSpec objects into the `text` array** — JSON / AI-friendly, schema-expressible
 2. **`<Text>` child elements** — natural JSX; see the [Text page](/core/components/node/text) for the dedicated docs
 
-<ComponentPreview name="node-styled-lines" />
+<ComponentPreview name="node-styled-lines" size="sm" />
 
 > Block-level `align` / `lineHeight` cannot be overridden per line — they apply to the whole multi-line block.
 
 Multi-line text combined with each shape — outer boundary follows the shape-specific circumscription (circle / ellipse / diamond):
 
-<ComponentPreview name="node-multiline-shapes" />
+<ComponentPreview name="node-multiline-shapes" size="sm" />
 
 #### Inner / outer sep
 
@@ -177,7 +177,7 @@ Most nodes only need `padding={N}`. Use `innerXSep` / `innerYSep` when horizonta
 - `opacity` — whole-node 0..1 (applies to shape + text)
 - `fillOpacity` / `drawOpacity` — fill-only / stroke-only opacity
 
-<ComponentPreview name="node-color-opacity" size="sm" />
+<ComponentPreview name="node-color-opacity" size="xs" />
 
 #### Gradient fill (Paint)
 
@@ -212,7 +212,7 @@ A stop's `opacity` gives a "solid → transparent" fade; `color` set to `current
 
 `dashed` / `dotted` are presets; `dashArray` is an explicit dash/gap length sequence (priority: `dashArray` > `dashed` > `dotted`):
 
-<ComponentPreview name="node-stroke-style" size="sm" />
+<ComponentPreview name="node-stroke-style" size="xs" />
 
 #### Size constraints + scale
 
@@ -226,7 +226,7 @@ A stop's `opacity` gives a "solid → transparent" fade; `color` set to `current
 
 `rotate` rotates around the node center; attached paths follow the new border:
 
-<ComponentPreview name="node-rotated" size="sm" />
+<ComponentPreview name="node-rotated" size="xs" />
 
 #### Stacking order (zIndex)
 

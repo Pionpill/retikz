@@ -23,7 +23,7 @@ import { Draw, DrawWay } from '@retikz/react';
 
 One `way` can mix node ids, Cartesian coordinates, polar coordinates, and object-form targets.
 
-<ComponentPreview name="draw-way-types" />
+<ComponentPreview name="draw-way-types" size="sm" />
 
 ### Fold
 
@@ -35,19 +35,19 @@ These raw literals follow TikZ path syntax: `(A) -| (B)` / `(A) |- (B)`. `'-|'` 
 
 </Comparison>
 
-<ComponentPreview name="draw-fold" />
+<ComponentPreview name="draw-fold" size="sm" />
 
 ### Cycle
 
 `DrawWay.Cycle` closes the last segment back to the first item.
 
-<ComponentPreview name="draw-cycle" />
+<ComponentPreview name="draw-cycle" size="sm" />
 
 ### Relative Coordinates
 
 `DrawWay.Relative` leaves prevEnd unchanged; `DrawWay.Accumulate` advances prevEnd. The two Draws below differ only by `type`.
 
-<ComponentPreview name="draw-rel" />
+<ComponentPreview name="draw-rel" size="sm" />
 
 ## API Reference
 

@@ -38,25 +38,25 @@ import { Path, Step } from '@retikz/react';
 
 ### Polyline
 
-<ComponentPreview name="path-basic" size="sm" />
+<ComponentPreview name="path-basic" size="xs" />
 
 ### Folded (step)
 
 `<Step kind="step" via="-|" \| "\|-">` inserts a right-angle corner between cursor and target — essential for flow charts and UML relationships. Below is a path mixing `line` and both `via` directions:
 
-<ComponentPreview name="path-fold" size="lg" />
+<ComponentPreview name="path-fold" size="md" />
 
 ### Closing (cycle)
 
 `<Step kind="cycle" />` closes the current path back to the most recent `move` target — saves writing one explicit endpoint vs. a `line` back to the start. Compiles to SVG path `Z`:
 
-<ComponentPreview name="path-cycle" />
+<ComponentPreview name="path-cycle" size="sm" />
 
 ### Filling
 
 `fill` colors the closed region (default `'none'` — stroke only, backward compatible); `fillRule` controls how self-intersecting / nested sub-paths fill (`'nonzero'` default / `'evenodd'` for ring & hole shapes). Pairs with `cycle`:
 
-<ComponentPreview name="path-fill" />
+<ComponentPreview name="path-fill" size="sm" />
 
 ### Arrows
 
@@ -90,7 +90,7 @@ These presets reuse TikZ names from `ultra thin` through `ultra thick`; retikz e
 
 </Comparison>
 
-<ComponentPreview name="path-thickness" size="lg" />
+<ComponentPreview name="path-thickness" size="md" />
 
 #### Opacity
 
@@ -116,19 +116,19 @@ By default stacking = declaration order. `zIndex` overrides it explicitly: highe
 
 Besides the symmetric `bendDirection` + `bendAngle`, `<Step kind="bend">` accepts `outAngle` / `inAngle` for the start out-angle and end in-angle to draw asymmetric curves (TikZ `out=` / `in=`); `looseness` tunes the control-point distance (default ≈1). **out/in take precedence over `bendDirection`.** When `from == to` (same node / same coordinate) it degenerates into a **self-loop** — the prime use case for out/in (a state-machine self transition), which a symmetric bend cannot draw.
 
-<ComponentPreview name="path-outin-loop" size="md" />
+<ComponentPreview name="path-outin-loop" size="sm" />
 
 #### Whole-path transform (rotate / scale)
 
 `rotate` (degrees) / `scale` (a number for uniform, or `{ x, y }` for non-uniform) transform the whole path around its **bounding-box center**, sparing a wrapping `<Scope transforms>` for a single path. The order is a hard contract: path endpoints resolve first, arrow shrink is computed on the **untransformed** geometry, then everything is wrapped in a group — so arrow direction follows the transform correctly without misalignment.
 
-<ComponentPreview name="path-transform" size="md" />
+<ComponentPreview name="path-transform" size="sm" />
 
 #### Mid-path marks
 
 `marks` places directional marks along the path: each `{ pos, mark }` has `pos ∈ [0, 1]` (out-of-range rejected by the schema), and `mark` is initially `{ kind: 'arrow', shape, ... }` (a registered arrow name + visual subset, see [Custom Arrows](/core/reference/extending/custom-arrow)), **oriented by the tangent at that point** (not a fixed direction). Lines, Béziers, and arcs are all tangent-oriented.
 
-<ComponentPreview name="path-marks" size="sm" />
+<ComponentPreview name="path-marks" size="xs" />
 
 ## API Reference
 

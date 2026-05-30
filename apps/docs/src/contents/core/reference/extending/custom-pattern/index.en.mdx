@@ -11,7 +11,7 @@ Registration goes through `CompileOptions.patterns` (in React, `<Layout patterns
 
 Below registers a `cross` motif, clearly distinct from the three built-ins:
 
-<ComponentPreview name="custom-pattern-basic" size="sm" />
+<ComponentPreview name="custom-pattern-basic" size="xs" />
 
 If you only want to get a pattern working first, implement `emit`; `defaultSize` just supplies the fallback period when `pattern.size` is omitted.
 
@@ -42,7 +42,7 @@ The motif geometry reuses the [custom arrows](/core/reference/extending/custom-a
 
 `pattern.size` overrides `defaultSize` to control motif density; `pattern.color` overrides the motif color, defaulting to `currentColor` to follow the svg color. The same `pattern` spec used in multiple places dedups to one resource / one tile; different `size` values produce separate resources.
 
-<ComponentPreview name="custom-pattern-size" size="sm" />
+<ComponentPreview name="custom-pattern-size" size="xs" />
 
 <Comparison target="tikz" title="Custom patterns">
 

@@ -53,7 +53,7 @@ description: Path / Draw 的箭头详解。`arrow` 控制方向、`arrowDetail` 
 
 `color` 把箭头描边 / 实心填充改为指定颜色，不再继承路径描边色；`fill` 仅实心形状生效。`start.color` / `end.color` 同样支持单端覆盖——常用于"线浅色、箭头深色"或起末异色：
 
-<ComponentPreview name="arrow-color" size="sm" />
+<ComponentPreview name="arrow-color" size="xs" />
 
 > **空心形状会静默忽略 `fill`**：`shape ∈ { open / openDiamond / openCircle }` 时，`fill` 字段被静默丢弃——空心形状由 `color`（描边色） + `lineWidth`（描边粗细）共同决定视觉，写 `fill='red'` 不会渲染红色填充。
 
@@ -63,7 +63,7 @@ description: Path / Draw 的箭头详解。`arrow` 控制方向、`arrowDetail` 
 - `length` 控制箭头沿路径方向的长度（默认 6）
 - `width` 控制箭头垂直路径方向的宽度（默认 6）
 
-<ComponentPreview name="arrow-scale" size="md" />
+<ComponentPreview name="arrow-scale" size="sm" />
 
 #### 半透明
 

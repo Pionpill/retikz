@@ -38,25 +38,25 @@ import { Path, Step } from '@retikz/react';
 
 ### 折线
 
-<ComponentPreview name="path-basic" size="sm" />
+<ComponentPreview name="path-basic" size="xs" />
 
 ### 折角
 
 `<Step kind="step" via="-|" \| "\|-">` 在两端之间插一个直角拐点——流程图、UML 关系线刚需。下面这条 path 混合 `line` + 两种 `via` 折角：
 
-<ComponentPreview name="path-fold" size="lg" />
+<ComponentPreview name="path-fold" size="md" />
 
 ### 闭合
 
 `<Step kind="cycle" />` 把当前路径闭合回最近一次 `move` 的起点——比手动 `line` 回起点少写一个端点，对应 SVG 路径的 `Z`：
 
-<ComponentPreview name="path-cycle" />
+<ComponentPreview name="path-cycle" size="sm" />
 
 ### 填充
 
 `fill` 给闭合区域填色（缺省 `'none'` = 仅描边，向后兼容）；`fillRule` 控制自交 / 嵌套子路径的填充规则（`'nonzero'` 默认 / `'evenodd'` 环形孔洞场景）。配合 cycle 步使用：
 
-<ComponentPreview name="path-fill" />
+<ComponentPreview name="path-fill" size="sm" />
 
 ### 箭头
 
@@ -90,7 +90,7 @@ import { Path, Step } from '@retikz/react';
 
 </Comparison>
 
-<ComponentPreview name="path-thickness" size="lg" />
+<ComponentPreview name="path-thickness" size="md" />
 
 #### 透明度
 
@@ -116,19 +116,19 @@ import { Path, Step } from '@retikz/react';
 
 `<Step kind="bend">` 除对称的 `bendDirection` + `bendAngle` 外，还可用 `outAngle` / `inAngle` 指定起点出射角与终点入射角，画非对称曲线（对应 TikZ `out=` / `in=`）；`looseness` 调控制点距离（松紧，缺省 ≈1）。**out/in 给定时优先于 `bendDirection`**。当 `from == to`（同节点 / 同坐标）时退化为**自环**——这是 out/in 最大价值场景（状态机自跳转），对称 bend 画不出。
 
-<ComponentPreview name="path-outin-loop" size="md" />
+<ComponentPreview name="path-outin-loop" size="sm" />
 
 #### 整体变换（rotate / scale）
 
 `rotate`（度）/ `scale`（数字等比，或 `{ x, y }` 非等比）把整条 path 绕**包围盒中心**变换，免去为单条 path 包一层 `<Scope transforms>`。变换顺序有硬契约：path 端点先 resolve、箭头 shrink 在**未变换的几何**上算，最后整体包进 group——故箭头方向随变换正确、不错位。
 
-<ComponentPreview name="path-transform" size="md" />
+<ComponentPreview name="path-transform" size="sm" />
 
 #### 中段标记（marks）
 
 `marks` 沿路径放方向标记：每项 `{ pos, mark }`，`pos ∈ [0, 1]`（越界 schema 拒），`mark` 首批为 `{ kind: 'arrow', shape, ... }`（复用已注册箭头名 + 视觉子集，见 [自定义箭头](/core/reference/extending/custom-arrow)），**朝向由该点切线决定**（不是固定方向）。直线 / 贝塞尔 / 弧段都按切线定向。
 
-<ComponentPreview name="path-marks" size="sm" />
+<ComponentPreview name="path-marks" size="xs" />
 
 ## API 参考
 

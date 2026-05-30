@@ -11,7 +11,7 @@ Registration goes through `CompileOptions.pathGenerators` (in React, `<Layout pa
 
 Below registers a `parabola` — `from → to` plus a top-level Target `bend` as the control point, producing a quadratic Bézier:
 
-<ComponentPreview name="path-generator-parabola" size="sm" />
+<ComponentPreview name="path-generator-parabola" size="xs" />
 
 A `PathGeneratorDefinition` is a plain object (not part of the IR, can be returned by a factory); wrap it in `definePathGenerator` for a best-effort registration-time meta-check:
 
@@ -62,7 +62,7 @@ The `PathCommand` coordinates produced by `generate` are audited too: non-finite
 
 `generate` returns low-level `PathCommand[]` (may include `move` to form a sub-path, e.g. multi-segment waves), spliced into the path command stream; the cursor lands on the last command's endpoint, and the next step continues from there.
 
-<ComponentPreview name="path-generator-sin" size="sm" />
+<ComponentPreview name="path-generator-sin" size="xs" />
 
 > generate's coordinates are treated as **already in world space**: when the generator step is inside a transformed scope, `ctx.from` / `ctx.to` / `resolvedTargets` are already world coordinates, and the scope's transform does not apply again to the increments computed inside generate.
 

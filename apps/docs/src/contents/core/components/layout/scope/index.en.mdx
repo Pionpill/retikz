@@ -70,25 +70,25 @@ Array order is application order — the 0-th entry takes effect first (innermos
 
 Cartesian translate is the most common form — the cluster of nodes + paths share one shift:
 
-<ComponentPreview name="scope-translate-basic" size="md" />
+<ComponentPreview name="scope-translate-basic" size="xs" />
 
 Polar applies a polar offset:
 
-<ComponentPreview name="scope-polar-translate" size="md" />
+<ComponentPreview name="scope-polar-translate" size="xs" />
 
 At uses direction-relative (`direction` + referent + optional `distance`):
 
-<ComponentPreview name="scope-at-translate" size="md" />
+<ComponentPreview name="scope-at-translate" size="xs" />
 
 Offset applies an arbitrary `[dx, dy]`:
 
-<ComponentPreview name="scope-offset-translate" size="md" />
+<ComponentPreview name="scope-offset-translate" size="xs" />
 
 ### Rotate and scale
 
 `rotate` rotates around the scope's local origin by `degrees`; `scale` is uniform or per-axis — node sizes, font sizes, spacing, and path endpoint boundary clip all align with the scope's visual dimensions:
 
-<ComponentPreview name="scope-rotate-scale" size="md" />
+<ComponentPreview name="scope-rotate-scale" size="sm" />
 
 #### Recipe: orbit + self-rotation facing the center
 
@@ -102,27 +102,27 @@ Chain application order: in `[t0, t1]` the **last** element is applied first (in
 
 A scope can contain another scope — outer scope positions the cluster, inner scope positions children within; no depth limit:
 
-<ComponentPreview name="scope-nested-compose" size="md" />
+<ComponentPreview name="scope-nested-compose" size="xs" />
 
 ### Cross-scope references
 
 Child node ids register into the global nodeIndex by default, and outer path endpoints / `at.of` can reference them:
 
-<ComponentPreview name="scope-cross-reference" size="md" />
+<ComponentPreview name="scope-cross-reference" size="xs" />
 
 Append `.<anchor>` / `.<deg>` to the id for the node's visual border point (computed on the global rect with accumulated rotate / scale):
 
-<ComponentPreview name="scope-anchor-cross" size="md" />
+<ComponentPreview name="scope-anchor-cross" size="sm" />
 
 ### scope.id: reference the scope as a whole
 
 When `<Scope id="cluster">` is set, external paths can use `'cluster'` / `'cluster.<anchor>'` / `'cluster.<deg>'` to reference the scope's visual boundary — same as a normal rectangle node:
 
-<ComponentPreview name="scope-id-reference" size="md" />
+<ComponentPreview name="scope-id-reference" size="sm" />
 
 When nested, each scope.id keeps its own bbox:
 
-<ComponentPreview name="scope-id-nested" size="md" />
+<ComponentPreview name="scope-id-nested" size="sm" />
 
 scope.id can also be a `polar.origin` / `at.of` / `offset.of` referent (resolves to bbox center):
 
@@ -134,15 +134,15 @@ bbox compute timing / nesting rules / which layouts contribute are in § How it 
 
 Inside a scope, `<Node>` / `<Coordinate>` / `<Path>` `Step.to` using polar / at / offset resolve the referent globally, while the relative part rotates / scales with the current scope:
 
-<ComponentPreview name="scope-position-polar-in-rotate" size="md" />
+<ComponentPreview name="scope-position-polar-in-rotate" size="sm" />
 
 `direction: 'right'` is the **current scope's local** right — after the scope rotates 90°, "right" visually becomes "down":
 
-<ComponentPreview name="scope-position-at-cross-scope" size="md" />
+<ComponentPreview name="scope-position-at-cross-scope" size="sm" />
 
 `offset: [40, 0]` is measured in scope local; after `scale(2)`, the visual offset becomes (80, 0):
 
-<ComponentPreview name="scope-position-offset-with-scale" size="md" />
+<ComponentPreview name="scope-position-offset-with-scale" size="sm" />
 
 Detailed projection formula / edge cases (nested polar / scope translate / scale=0 / path step.to) are in § How it works §「Relative positioning projection」.
 
@@ -156,15 +156,15 @@ Detailed projection formula / edge cases (nested polar / scope translate / scale
   description="localNamespace introduces a namespace stack: inside-out lookup makes id resolution depend on nesting depth, shadowing silently masks same-named outer ids, and outside code can no longer reference the isolated inner ids. Unless you are genuinely doing subdiagram reuse / templating, prefer giving ids distinct names (e.g. a prefix) rather than leaning on localNamespace to dodge name clashes."
 />
 
-<ComponentPreview name="scope-local-namespace-basic" size="md" />
+<ComponentPreview name="scope-local-namespace-basic" size="sm" />
 
 Nested localNamespace forms a stack of namespace frames; an inner path's id lookup walks from inner to outer:
 
-<ComponentPreview name="scope-local-namespace-nested" size="md" />
+<ComponentPreview name="scope-local-namespace-nested" size="sm" />
 
 The same id across different frames is not a conflict; inside-out lookup automatically shadows outer ids:
 
-<ComponentPreview name="scope-local-namespace-shadowing" size="md" />
+<ComponentPreview name="scope-local-namespace-shadowing" size="sm" />
 
 inside-out / shadowing / scope.id-registers-in-parent-frame semantics are in § How it works §「Namespace stack and lookup」.
 
@@ -172,7 +172,7 @@ inside-out / shadowing / scope.id-registers-in-parent-frame semantics are in § 
 
 A duplicate id in the same frame triggers a `DUPLICATE_NODE_ID` warning and the later definition overrides the earlier one (last-wins, **does not throw**):
 
-<ComponentPreview name="scope-duplicate-id-warn" size="md" />
+<ComponentPreview name="scope-duplicate-id-warn" size="sm" />
 
 Trigger conditions / cross-frame behavior / v0.1 comparison are in § How it works §「Duplicate id and conflict handling」.
 
@@ -184,7 +184,7 @@ A scope doubles as a style-default anchor, exposing three style surfaces to its 
 
 `<Scope color>` cascades the current color to every inner element — node border / text, path stroke / arrow / edge label all default to it; individual fields (`stroke` / `fill` / `textColor`) override the master when set explicitly:
 
-<ComponentPreview name="scope-style-cascade" size="md" />
+<ComponentPreview name="scope-style-cascade" size="xs" />
 
 The master color also tints node `fill`; the anchor nodes above set `fill="white"` to cut that fill so their text stays readable. What follows the color is the **master `color`**, not `stroke` — `<Path color>` colors the label / arrow too, while `<Path stroke>` only paints the line and leaves the label unchanged.
 
@@ -192,13 +192,13 @@ The master color also tints node `fill`; the anchor nodes above set `fill="white
 
 `nodeDefault` / `pathDefault` / `labelDefault` / `arrowDefault` each attach defaults to one element type, flat and independent. `nodeDefault` carries node-only fields like shape / spacing (a bare `color` can't reach `shape` — use `nodeDefault`); arrows go through the separate `arrowDefault`, so `pathDefault` excludes them:
 
-<ComponentPreview name="scope-style-typed-defaults" size="md" />
+<ComponentPreview name="scope-style-typed-defaults" size="xs" />
 
 #### resetStyle inheritance barrier
 
 `resetStyle` cuts the outer scope's inheritance (master-color cascade + typed defaults) back to the built-in baseline; the scope's own values and inner scopes still apply. `true` cuts all; pass a channel array (`['node' | 'path' | 'label' | 'arrow']`) to cut per type:
 
-<ComponentPreview name="scope-style-reset" size="md" />
+<ComponentPreview name="scope-style-reset" size="xs" />
 
 `resetStyle` only cuts the scope inheritance, **not the structural relation between an element and its host** — labels / arrows still follow their owning path / node's resolved color: `resetStyle={['label']}` only ignores the outer `labelDefault`, the label still follows its line. Priority chain / master-color expansion / opacity-does-not-compound details are in § How it works §「Style inheritance resolution」.
 
@@ -224,7 +224,7 @@ The master `color` maps to TikZ `color=` (sets the current color; draw / fill / 
 </Scope>
 ```
 
-<ComponentPreview name="scope-clip" size="sm" />
+<ComponentPreview name="scope-clip" size="md" />
 
 ## How it works
 

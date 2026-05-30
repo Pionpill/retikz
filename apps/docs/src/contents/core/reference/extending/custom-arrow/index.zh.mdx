@@ -11,7 +11,7 @@ description: arrow shape 是开放字符串；内置 7 种之外，用 ArrowDefi
 
 下面注册一个 `bracket`——TikZ Bracket 样式的空心方括号 `[`（一条 stroke 路径），与内置三角形箭头明显不同：
 
-<ComponentPreview name="custom-arrow-basic" size="sm" />
+<ComponentPreview name="custom-arrow-basic" size="xs" />
 
 如果你只是想先做一个能用的箭头，最少实现 `lineContactX` 和 `emit` 就够了；`baseSize`、`tipX`、`hollow`、`defaultLength`、`defaultWidth` 都是在调视觉手感。
 
@@ -55,7 +55,7 @@ description: arrow shape 是开放字符串；内置 7 种之外，用 ArrowDefi
 
 `emit` 把 `ctx.fill` / `ctx.stroke` 原样交给 marker 即可——它们是 `MarkerFill`，可直接当 primitive 的 `fill` / `stroke` 用，**不必收窄**。无 `color` override 时它们是 `{ kind: 'contextStroke' }`，物化为 SVG `context-stroke`：同一个箭头定义用在不同描边色的 path 上，箭头自动跟随各自的 `stroke`，`currentColor` / `var()` 主题切换也不冻结。
 
-<ComponentPreview name="custom-arrow-inherit" size="sm" />
+<ComponentPreview name="custom-arrow-inherit" size="xs" />
 
 两条 Draw 用的是同一个 `bracket` 定义、没给箭头单独设色，括号颜色各自跟随 path 的 `stroke`。要钉死箭头色，给 `arrowDetail.color`（实心）或 `arrowDetail` 顶层 `color`（空心描边）即可。
 

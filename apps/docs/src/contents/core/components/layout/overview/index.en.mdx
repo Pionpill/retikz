@@ -44,13 +44,13 @@ import { Layout } from '@retikz/react';
 
 `<Layout>` accepts an `ir` prop — feed a persisted IR JSON directly and get a rendered image, **no JSX children needed**. Source can be anything: LLM-generated, a JSON editor, URL deserialization, or database storage.
 
-<ComponentPreview name="layout-from-ir" size="sm" />
+<ComponentPreview name="layout-from-ir" size="xs" />
 
 ### Custom viewBox
 
 By default the `viewBox` is auto-computed from content (AABB + padding). Pass `viewBox={{ x, y, width, height }}` to pin it explicitly — for fixed size, deliberate clipping, multi-figure alignment, or excluding overflow. When set it **overrides** the auto computation and **ignores padding**; `width` / `height` must be > 0.
 
-<ComponentPreview name="layout-viewbox" size="sm" />
+<ComponentPreview name="layout-viewbox" size="md" />
 
 > The viewBox is injected into the constructed IR root (`ir.viewBox`); when passing an `ir` prop whose IR already carries a viewBox, the prop wins and the IR value is used only if the prop is omitted. Orthogonal to `width` / `height` (render size).
 

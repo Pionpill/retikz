@@ -89,13 +89,13 @@ In React, pass the same `shapes` table to `<Layout>`:
 
 A factory like `createPolygonShape(n)` is just a plain function returning a `ShapeDefinition`. The example below injects a regular hexagon; when the two nodes are connected, the path endpoints stop on the actual hexagon boundary instead of the node center:
 
-<ComponentPreview name="custom-shape" size="md" />
+<ComponentPreview name="custom-shape" size="sm" />
 
 ### Multiple primitives: a subroutine box
 
 `emit` can return several drawing primitives at once. The subroutine box below consists of an outer frame and two vertical bars, so it returns 3 primitives. Its outer outline is still a rectangle, so `circumscribe` / `boundaryPoint` / `anchor` can reuse the built-in rectangle:
 
-<ComponentPreview name="subroutine" size="sm" />
+<ComponentPreview name="subroutine" size="xs" />
 
 ### Semantic terminals: a diode
 
