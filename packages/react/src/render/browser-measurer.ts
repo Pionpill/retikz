@@ -14,6 +14,13 @@ const getCtx = (): CanvasRenderingContext2D | null => {
   return ctx;
 };
 
+/** 读取浏览器页面的默认字体族，供 SVG 继承路径和 Canvas 测量路径对齐 */
+export const browserDefaultFontFamily = (): string | undefined => {
+  if (typeof document === 'undefined' || typeof getComputedStyle === 'undefined') return undefined;
+  const fontFamily = getComputedStyle(document.body).fontFamily.trim();
+  return fontFamily.length > 0 ? fontFamily : undefined;
+};
+
 /**
  * 浏览器端 text measurer：基于 canvas measureText
  * @description SSR 路径下走不到这里，会自动降级 fallback
@@ -21,7 +28,7 @@ const getCtx = (): CanvasRenderingContext2D | null => {
 export const browserMeasurer: TextMeasurer = (text, font) => {
   const c = getCtx();
   if (!c) return fallbackMeasurer(text, font);
-  const family = font.family ?? 'sans-serif';
+  const family = font.family ?? browserDefaultFontFamily() ?? 'sans-serif';
   const weight = font.weight ?? 'normal';
   const style = font.style ?? 'normal';
   c.font = `${style} ${weight} ${font.size}px ${family}`;

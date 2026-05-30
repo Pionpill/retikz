@@ -5,12 +5,13 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Scene } from '@retikz/core';
 import { buildSvgDocument } from '@retikz/svg';
-import { renderToCanvas } from '@retikz/canvas';
+import { type RenderOptions, renderToCanvas } from '@retikz/canvas';
 import { Layout, Node } from '../src';
 
 const svgScenes: Array<Scene> = [];
 const canvasScenes: Array<Scene> = [];
 const canvasDrawCalls: Array<HTMLCanvasElement> = [];
+const canvasDrawOptions: Array<RenderOptions | undefined> = [];
 
 type TestCanvasContext = Pick<CanvasRenderingContext2D, 'fillRect' | 'measureText'> & {
   font: string;
@@ -41,9 +42,10 @@ vi.mock('@retikz/svg', () => ({
 }));
 
 vi.mock('@retikz/canvas', () => ({
-  renderToCanvas: vi.fn((canvas: HTMLCanvasElement, scene: Scene) => {
+  renderToCanvas: vi.fn((canvas: HTMLCanvasElement, scene: Scene, options?: RenderOptions) => {
     canvasScenes.push(scene);
     canvasDrawCalls.push(canvas);
+    canvasDrawOptions.push(options);
     const context = canvas.getContext('2d');
     context?.fillRect(0, 0, 1, 1);
   }),
@@ -57,6 +59,7 @@ afterEach(() => {
   svgScenes.length = 0;
   canvasScenes.length = 0;
   canvasDrawCalls.length = 0;
+  canvasDrawOptions.length = 0;
   vi.clearAllMocks();
 });
 
@@ -90,6 +93,32 @@ describe('Layout renderer 规格', () => {
     expect(canvasDrawCalls[0]).toBe(canvas);
     expect(getContext).toHaveBeenCalledWith('2d');
     expect(fillRect).toHaveBeenCalledWith(0, 0, 1, 1);
+
+    root.unmount();
+    getContext.mockRestore();
+  });
+
+  it('canvas-host-font-family: 画布渲染时把 CSS font-family 传给 Canvas renderer', async () => {
+    const context = createTestCanvasContext();
+    const getContext = vi
+      .spyOn(HTMLCanvasElement.prototype, 'getContext')
+      .mockImplementation((contextId: string) =>
+        (contextId === '2d' ? (context as unknown as CanvasRenderingContext2D) : null)
+      );
+    const container = document.createElement('div');
+    const root = createRoot(container);
+
+    await act(() => {
+      root.render(
+        <Layout renderer="canvas" width={120} height={80} style={{ fontFamily: 'Inter, sans-serif' }}>
+          <Node id="a" position={[0, 0]}>
+            A
+          </Node>
+        </Layout>,
+      );
+    });
+
+    expect(canvasDrawOptions[0]?.defaultFontFamily).toBe('Inter, sans-serif');
 
     root.unmount();
     getContext.mockRestore();

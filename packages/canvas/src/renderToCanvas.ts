@@ -16,6 +16,13 @@ const assertPositiveFinite = (name: string, value: number): void => {
   }
 };
 
+const getCanvasDefaultFontFamily = (canvas: HTMLCanvasElement): string | undefined => {
+  if (typeof getComputedStyle === 'undefined') return undefined;
+  if (typeof Element === 'undefined' || !(canvas instanceof Element)) return undefined;
+  const fontFamily = getComputedStyle(canvas).fontFamily.trim();
+  return fontFamily.length > 0 ? fontFamily : undefined;
+};
+
 const computeCanvasTransform = (
   canvas: HTMLCanvasElement,
   scene: Scene,
@@ -64,5 +71,8 @@ export const renderToCanvas = (
   }
 
   ctx.setTransform(...computeCanvasTransform(canvas, scene, devicePixelRatio));
-  drawScene(ctx, scene, options);
+  drawScene(ctx, scene, {
+    ...options,
+    defaultFontFamily: options.defaultFontFamily ?? getCanvasDefaultFontFamily(canvas),
+  });
 };

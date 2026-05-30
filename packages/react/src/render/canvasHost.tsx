@@ -38,6 +38,12 @@ const displayStyle = (
   return { width, height, ...style };
 };
 
+const canvasFontFamily = (canvas: HTMLCanvasElement): string | undefined => {
+  if (typeof getComputedStyle === 'undefined') return undefined;
+  const fontFamily = getComputedStyle(canvas).fontFamily.trim();
+  return fontFamily.length > 0 ? fontFamily : undefined;
+};
+
 /** React canvas 宿主：管理 `<canvas>` 与全量重绘 effect */
 export const CanvasHost: FC<CanvasHostProps> = props => {
   const { scene, width, height, className, style } = props;
@@ -51,8 +57,8 @@ export const CanvasHost: FC<CanvasHostProps> = props => {
     const cssHeight = numericLength(height, scene.layout.height);
     canvas.width = Math.max(1, Math.round(cssWidth * ratio));
     canvas.height = Math.max(1, Math.round(cssHeight * ratio));
-    renderToCanvas(canvas, scene, { devicePixelRatio: ratio });
-  }, [height, scene, width]);
+    renderToCanvas(canvas, scene, { devicePixelRatio: ratio, defaultFontFamily: canvasFontFamily(canvas) });
+  }, [className, height, scene, style, width]);
 
   return <canvas ref={ref} className={className} style={displayStyle(width, height, style)} />;
 };

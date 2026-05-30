@@ -6,6 +6,7 @@ import {
   type PathGeneratorDefinition,
   type PatternDefinition,
   type ShapeDefinition,
+  type TextMeasurer,
   compileToScene,
 } from '@retikz/core';
 import { buildSvgDocument } from '@retikz/svg';
@@ -13,6 +14,23 @@ import { buildIR } from './builder';
 import { browserMeasurer } from '../render/browser-measurer';
 import { CanvasHost } from '../render/canvasHost';
 import { svgToReact } from '../render/svgToReact';
+
+const styleFontFamily = (style: CSSProperties | undefined): string | undefined => {
+  const fontFamily = style?.fontFamily;
+  return typeof fontFamily === 'string' && fontFamily.trim().length > 0 ? fontFamily : undefined;
+};
+
+const withDefaultFontFamily = (
+  measureText: TextMeasurer,
+  defaultFontFamily: string | undefined,
+): TextMeasurer => {
+  if (defaultFontFamily === undefined) return measureText;
+  return (text, font) =>
+    measureText(text, {
+      ...font,
+      family: typeof font.family === 'string' && font.family.trim().length > 0 ? font.family : defaultFontFamily,
+    });
+};
 
 /** <Layout> 组件的 props */
 export type LayoutProps = {
@@ -89,9 +107,14 @@ export const Layout: FC<LayoutProps> = props => {
     // viewBox prop 注入 IR 根（显式 > IR 内置）；prop 缺省时保留 base 自带的 viewBox
     return viewBox !== undefined ? { ...base, viewBox } : base;
   }, [irFromProp, children, viewBox]);
+  const defaultFontFamily = styleFontFamily(style);
+  const measureText = useMemo(
+    () => withDefaultFontFamily(browserMeasurer, defaultFontFamily),
+    [defaultFontFamily],
+  );
   const scene = useMemo(
-    () => compileToScene(ir, { measureText: browserMeasurer, nodeDistance, shapes, arrows, patterns, pathGenerators }),
-    [ir, nodeDistance, shapes, arrows, patterns, pathGenerators],
+    () => compileToScene(ir, { measureText, nodeDistance, shapes, arrows, patterns, pathGenerators }),
+    [ir, measureText, nodeDistance, shapes, arrows, patterns, pathGenerators],
   );
 
   // useId 返回 ":r0:" 含冒号；SVG `url(#id)` 对冒号兼容性差，剥成纯字母数字。caller 显式 idPrefix 优先（SSR 水合对齐）

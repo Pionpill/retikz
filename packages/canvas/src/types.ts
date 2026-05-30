@@ -13,6 +13,8 @@ export type CanvasWarning = {
 export type DrawOptions = {
   /** 接收未支持能力的诊断告警；缺省写入 `console.warn` */
   warnUnsupported?: (warning: CanvasWarning) => void;
+  /** 文本 primitive 未指定 fontFamily 时的默认 CSS font-family */
+  defaultFontFamily?: string;
 };
 
 /** HTMLCanvasElement 渲染选项 */

@@ -5,6 +5,7 @@ import { drawScene } from '../src';
 type CanvasCall = {
   name: string;
   args: Array<unknown>;
+  font?: string;
   lineCap?: CanvasLineCap;
   lineJoin?: CanvasLineJoin;
   lineWidth?: number;
@@ -47,7 +48,7 @@ type SpyCanvasContext = Pick<
 
 const createSpyCanvasContext = (): SpyCanvasContext => {
   const calls: Array<CanvasCall> = [];
-  const stack: Array<Pick<SpyCanvasContext, 'lineCap' | 'lineJoin' | 'lineWidth'>> = [];
+  const stack: Array<Pick<SpyCanvasContext, 'font' | 'lineCap' | 'lineJoin' | 'lineWidth'>> = [];
   const context = {
     calls,
     fillStyle: '#000',
@@ -62,7 +63,7 @@ const createSpyCanvasContext = (): SpyCanvasContext => {
   } as SpyCanvasContext;
   const record = (name: string) => (...args: Array<unknown>) => {
     if (name === 'save') {
-      stack.push({ lineCap: context.lineCap, lineJoin: context.lineJoin, lineWidth: context.lineWidth });
+      stack.push({ font: context.font, lineCap: context.lineCap, lineJoin: context.lineJoin, lineWidth: context.lineWidth });
     }
     if (name === 'restore') {
       const snapshot = stack.pop();
@@ -71,6 +72,7 @@ const createSpyCanvasContext = (): SpyCanvasContext => {
     calls.push({
       name,
       args,
+      font: context.font,
       lineCap: context.lineCap,
       lineJoin: context.lineJoin,
       lineWidth: context.lineWidth,
@@ -231,5 +233,60 @@ describe('drawScene 规格', () => {
     const strokeCalls = context.calls.filter(call => call.name === 'stroke');
     expect(strokeCalls.map(call => call.lineCap)).toEqual(['round', 'butt']);
     expect(strokeCalls.map(call => call.lineJoin)).toEqual(['bevel', 'miter']);
+  });
+
+  it('text-default-font-family: uses DrawOptions.defaultFontFamily when text has no fontFamily', () => {
+    const context = createSpyCanvasContext();
+    const textScene: Scene = {
+      layout: { x: 0, y: 0, width: 80, height: 40 },
+      primitives: [
+        {
+          type: 'text',
+          x: 0,
+          y: 0,
+          lines: [{ text: 'Base' }],
+          fontSize: 12,
+          align: 'start',
+          baseline: 'top',
+          lineHeight: 14,
+          measuredWidth: 24,
+          measuredHeight: 14,
+        },
+      ],
+    };
+
+    drawScene(context as unknown as CanvasRenderingContext2D, textScene, {
+      defaultFontFamily: 'Inter, sans-serif',
+    });
+
+    expect(context.calls.find(call => call.name === 'fillText')?.font).toBe('12px Inter, sans-serif');
+  });
+
+  it('text-explicit-font-family: text fontFamily wins over DrawOptions.defaultFontFamily', () => {
+    const context = createSpyCanvasContext();
+    const textScene: Scene = {
+      layout: { x: 0, y: 0, width: 80, height: 40 },
+      primitives: [
+        {
+          type: 'text',
+          x: 0,
+          y: 0,
+          lines: [{ text: 'Mono' }],
+          fontSize: 12,
+          fontFamily: 'monospace',
+          align: 'start',
+          baseline: 'top',
+          lineHeight: 14,
+          measuredWidth: 24,
+          measuredHeight: 14,
+        },
+      ],
+    };
+
+    drawScene(context as unknown as CanvasRenderingContext2D, textScene, {
+      defaultFontFamily: 'Inter, sans-serif',
+    });
+
+    expect(context.calls.find(call => call.name === 'fillText')?.font).toBe('12px monospace');
   });
 });

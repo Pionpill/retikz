@@ -184,8 +184,33 @@ const firstLineDy = (text: TextPrim): number =>
       ? -(text.lines.length - 1) * text.lineHeight
       : 0;
 
-const drawText = (ctx: CanvasRenderingContext2D, p: TextPrim): void => {
-  ctx.font = `${p.fontStyle ? `${p.fontStyle} ` : ''}${p.fontWeight ? `${p.fontWeight} ` : ''}${p.fontSize}px ${p.fontFamily ?? 'sans-serif'}`;
+const resolveFontFamily = (
+  fontFamily: string | undefined,
+  options: DrawOptions,
+): string => {
+  if (typeof fontFamily === 'string' && fontFamily.trim().length > 0) return fontFamily;
+  if (typeof options.defaultFontFamily === 'string' && options.defaultFontFamily.trim().length > 0) {
+    return options.defaultFontFamily;
+  }
+  return 'sans-serif';
+};
+
+const buildFont = (
+  fontSize: number,
+  fontFamily: string | undefined,
+  fontWeight: string | number | undefined,
+  fontStyle: string | undefined,
+  options: DrawOptions,
+): string =>
+  [
+    fontStyle,
+    fontWeight,
+    `${fontSize}px`,
+    resolveFontFamily(fontFamily, options),
+  ].filter(part => part !== undefined && part !== '').join(' ');
+
+const drawText = (ctx: CanvasRenderingContext2D, p: TextPrim, options: DrawOptions): void => {
+  ctx.font = buildFont(p.fontSize, p.fontFamily, p.fontWeight, p.fontStyle, options);
   ctx.textAlign = p.align === 'middle' ? 'center' : p.align;
   ctx.textBaseline = p.baseline;
   if (p.fill !== undefined) ctx.fillStyle = p.fill;
@@ -201,7 +226,13 @@ const drawText = (ctx: CanvasRenderingContext2D, p: TextPrim): void => {
     if (shouldRestore) ctx.save();
     if (line.opacity !== undefined) ctx.globalAlpha *= line.opacity;
     if (line.fontSize !== undefined || line.fontFamily !== undefined || line.fontWeight !== undefined || line.fontStyle !== undefined) {
-      ctx.font = `${line.fontStyle ?? p.fontStyle ?? ''} ${line.fontWeight ?? p.fontWeight ?? ''} ${line.fontSize ?? p.fontSize}px ${line.fontFamily ?? p.fontFamily ?? 'sans-serif'}`.trim();
+      ctx.font = buildFont(
+        line.fontSize ?? p.fontSize,
+        line.fontFamily ?? p.fontFamily,
+        line.fontWeight ?? p.fontWeight,
+        line.fontStyle ?? p.fontStyle,
+        options,
+      );
     }
     if (line.fill !== undefined) ctx.fillStyle = line.fill;
     ctx.fillText(line.text, p.x, p.y + (index === 0 ? offset : offset + index * p.lineHeight));
@@ -274,7 +305,7 @@ const drawPrim = (
       });
       break;
     case 'text':
-      withOpacity(ctx, p.opacity, () => drawText(ctx, p));
+      withOpacity(ctx, p.opacity, () => drawText(ctx, p, options));
       break;
     case 'group':
       ctx.save();
