@@ -23,6 +23,14 @@ const getCanvasDefaultFontFamily = (canvas: HTMLCanvasElement): string | undefin
   return fontFamily.length > 0 ? fontFamily : undefined;
 };
 
+/** 读取 canvas 元素的计算 CSS `color`，用于解析 Scene 里的 `currentColor`（主题反应 / 暗色模式） */
+const getCanvasCurrentColor = (canvas: HTMLCanvasElement): string | undefined => {
+  if (typeof getComputedStyle === 'undefined') return undefined;
+  if (typeof Element === 'undefined' || !(canvas instanceof Element)) return undefined;
+  const color = getComputedStyle(canvas).color.trim();
+  return color.length > 0 ? color : undefined;
+};
+
 const computeCanvasTransform = (
   canvas: HTMLCanvasElement,
   scene: Scene,
@@ -74,5 +82,6 @@ export const renderToCanvas = (
   drawScene(ctx, scene, {
     ...options,
     defaultFontFamily: options.defaultFontFamily ?? getCanvasDefaultFontFamily(canvas),
+    currentColor: options.currentColor ?? getCanvasCurrentColor(canvas),
   });
 };

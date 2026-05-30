@@ -15,6 +15,12 @@ export type DrawOptions = {
   warnUnsupported?: (warning: CanvasWarning) => void;
   /** 文本 primitive 未指定 fontFamily 时的默认 CSS font-family */
   defaultFontFamily?: string;
+  /**
+   * `currentColor` 解析目标
+   * @description canvas 是即时模式、无法从 DOM 继承 CSS `color`；`renderToCanvas` 读 `getComputedStyle(canvas).color`
+   *   写入此项，drawScene 把颜色串 `currentColor` 解析为它（缺省不解析、保持原串）。修复主题反应 / 暗色模式。
+   */
+  currentColor?: string;
 };
 
 /** HTMLCanvasElement 渲染选项 */

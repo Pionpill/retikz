@@ -26,6 +26,15 @@ const warnUnsupported = (
   console.warn(`[retikz/canvas] ${message}`);
 };
 
+/**
+ * 解析颜色串：`currentColor` → `DrawOptions.currentColor`（缺省保持原串）
+ * @description canvas 不继承 CSS `color`，故主题色 `currentColor` 需显式解析；其余颜色原样返回。
+ */
+const resolveColor = (color: string | undefined, options: DrawOptions): string | undefined => {
+  if (color === 'currentColor' && options.currentColor !== undefined) return options.currentColor;
+  return color;
+};
+
 const withOpacity = (
   ctx: CanvasRenderingContext2D,
   opacity: number | undefined,
@@ -52,8 +61,9 @@ const applyStrokeStyle = (
   strokeWidth: number | undefined,
   strokeOpacity: number | undefined,
   dashPattern: Array<number> | undefined,
+  options: DrawOptions,
 ): void => {
-  if (stroke !== undefined) ctx.strokeStyle = stroke;
+  if (stroke !== undefined) ctx.strokeStyle = resolveColor(stroke, options) ?? stroke;
   if (strokeWidth !== undefined) ctx.lineWidth = strokeWidth;
   if (strokeOpacity !== undefined) ctx.globalAlpha *= strokeOpacity;
   applyDash(ctx, dashPattern);
@@ -66,8 +76,8 @@ const resolveFillStyle = (
   options: DrawOptions,
 ): string | CanvasGradient | CanvasPattern | undefined => {
   if (fill === undefined) return undefined;
-  if (typeof fill === 'string') return fill;
-  if (fill.kind === 'contextStroke') return stroke ?? String(ctx.strokeStyle);
+  if (typeof fill === 'string') return resolveColor(fill, options);
+  if (fill.kind === 'contextStroke') return resolveColor(stroke, options) ?? String(ctx.strokeStyle);
   warnUnsupported(options, 'paint', `Canvas renderer does not support paint resource "${fill.id}" yet; fill is skipped.`);
   return undefined;
 };
@@ -97,10 +107,11 @@ const strokeCurrentPath = (
   strokeOpacity: number | undefined,
   strokeWidth: number | undefined,
   dashPattern: Array<number> | undefined,
+  options: DrawOptions,
 ): void => {
   if (stroke === undefined) return;
   if (strokeOpacity !== undefined) ctx.save();
-  applyStrokeStyle(ctx, stroke, strokeWidth, strokeOpacity, dashPattern);
+  applyStrokeStyle(ctx, stroke, strokeWidth, strokeOpacity, dashPattern, options);
   ctx.stroke();
   if (strokeOpacity !== undefined) ctx.restore();
 };
@@ -223,7 +234,7 @@ const drawText = (ctx: CanvasRenderingContext2D, p: TextPrim, options: DrawOptio
   ctx.font = buildFont(p.fontSize, p.fontFamily, p.fontWeight, p.fontStyle, options);
   ctx.textAlign = p.align === 'middle' ? 'center' : p.align;
   ctx.textBaseline = p.baseline;
-  if (p.fill !== undefined) ctx.fillStyle = p.fill;
+  if (p.fill !== undefined) ctx.fillStyle = resolveColor(p.fill, options) ?? p.fill;
   const offset = firstLineDy(p);
   p.lines.forEach((line, index) => {
     const shouldRestore =
@@ -244,7 +255,7 @@ const drawText = (ctx: CanvasRenderingContext2D, p: TextPrim, options: DrawOptio
         options,
       );
     }
-    if (line.fill !== undefined) ctx.fillStyle = line.fill;
+    if (line.fill !== undefined) ctx.fillStyle = resolveColor(line.fill, options) ?? line.fill;
     ctx.fillText(line.text, p.x, p.y + (index === 0 ? offset : offset + index * p.lineHeight));
     if (shouldRestore) ctx.restore();
   });
@@ -370,9 +381,10 @@ const resolveMarkerFill = (
   ctx: CanvasRenderingContext2D,
   fill: MarkerFill | undefined,
   pathStroke: string | undefined,
+  options: DrawOptions,
 ): string | undefined => {
   if (fill === undefined) return undefined;
-  if (typeof fill === 'string') return fill;
+  if (typeof fill === 'string') return resolveColor(fill, options);
   return pathStroke ?? String(ctx.strokeStyle);
 };
 
@@ -381,10 +393,11 @@ const resolveMarkerStroke = (
   ctx: CanvasRenderingContext2D,
   stroke: string | undefined,
   pathStroke: string | undefined,
+  options: DrawOptions,
 ): string | undefined => {
   if (stroke === undefined) return undefined;
   if (stroke === 'context-stroke') return pathStroke ?? String(ctx.strokeStyle);
-  return stroke;
+  return resolveColor(stroke, options) ?? stroke;
 };
 
 const fillMarkerPath = (
@@ -425,6 +438,7 @@ const drawMarkerPrim = (
   ctx: CanvasRenderingContext2D,
   prim: MarkerPrimitive,
   pathStroke: string | undefined,
+  options: DrawOptions,
 ): void => {
   ctx.save();
   switch (prim.type) {
@@ -432,8 +446,8 @@ const drawMarkerPrim = (
       buildPath(ctx, prim.commands);
       if (prim.strokeLinecap !== undefined) ctx.lineCap = prim.strokeLinecap;
       if (prim.strokeLinejoin !== undefined) ctx.lineJoin = prim.strokeLinejoin;
-      fillMarkerPath(ctx, resolveMarkerFill(ctx, prim.fill, pathStroke), prim.fillOpacity, prim.fillRule);
-      strokeMarkerPath(ctx, resolveMarkerStroke(ctx, prim.stroke, pathStroke), prim.strokeOpacity, prim.strokeWidth, prim.dashPattern);
+      fillMarkerPath(ctx, resolveMarkerFill(ctx, prim.fill, pathStroke, options), prim.fillOpacity, prim.fillRule);
+      strokeMarkerPath(ctx, resolveMarkerStroke(ctx, prim.stroke, pathStroke, options), prim.strokeOpacity, prim.strokeWidth, prim.dashPattern);
       break;
     case 'ellipse':
       if (prim.rotate) {
@@ -443,17 +457,17 @@ const drawMarkerPrim = (
       }
       ctx.beginPath();
       ctx.ellipse(prim.cx, prim.cy, prim.rx, prim.ry, 0, 0, Math.PI * 2);
-      fillMarkerPath(ctx, resolveMarkerFill(ctx, prim.fill, pathStroke), prim.fillOpacity, undefined);
-      strokeMarkerPath(ctx, resolveMarkerStroke(ctx, prim.stroke, pathStroke), prim.strokeOpacity, prim.strokeWidth, prim.dashPattern);
+      fillMarkerPath(ctx, resolveMarkerFill(ctx, prim.fill, pathStroke, options), prim.fillOpacity, undefined);
+      strokeMarkerPath(ctx, resolveMarkerStroke(ctx, prim.stroke, pathStroke, options), prim.strokeOpacity, prim.strokeWidth, prim.dashPattern);
       break;
     case 'rect':
       roundedRectPath(ctx, prim.x, prim.y, prim.width, prim.height, prim.cornerRadius);
-      fillMarkerPath(ctx, resolveMarkerFill(ctx, prim.fill, pathStroke), prim.fillOpacity, undefined);
-      strokeMarkerPath(ctx, resolveMarkerStroke(ctx, prim.stroke, pathStroke), prim.strokeOpacity, prim.strokeWidth, prim.dashPattern);
+      fillMarkerPath(ctx, resolveMarkerFill(ctx, prim.fill, pathStroke, options), prim.fillOpacity, undefined);
+      strokeMarkerPath(ctx, resolveMarkerStroke(ctx, prim.stroke, pathStroke, options), prim.strokeOpacity, prim.strokeWidth, prim.dashPattern);
       break;
     case 'group':
       for (const transform of prim.transforms ?? []) applyTransform(ctx, transform);
-      for (const child of prim.children) drawMarkerPrim(ctx, child, pathStroke);
+      for (const child of prim.children) drawMarkerPrim(ctx, child, pathStroke, options);
       break;
   }
   ctx.restore();
@@ -471,6 +485,7 @@ const drawArrowMarker = (
   angle: number,
   strokeWidth: number,
   pathStroke: string | undefined,
+  options: DrawOptions,
 ): void => {
   ctx.save();
   if (spec.opacity !== undefined) ctx.globalAlpha *= spec.opacity;
@@ -484,7 +499,7 @@ const drawArrowMarker = (
     (spec.markerHeight * strokeWidth) / spec.baseSize,
   );
   ctx.translate(-spec.refX, -spec.baseSize / 2);
-  for (const prim of spec.marker) drawMarkerPrim(ctx, prim, pathStroke);
+  for (const prim of spec.marker) drawMarkerPrim(ctx, prim, pathStroke, options);
   ctx.restore();
 };
 
@@ -499,7 +514,7 @@ const drawPrim = (
       withOpacity(ctx, p.opacity, () => {
         roundedRectPath(ctx, p.x, p.y, p.width, p.height, p.cornerRadius);
         fillCurrentPath(ctx, p.fill, p.stroke, p.fillOpacity, undefined, options);
-        strokeCurrentPath(ctx, p.stroke, p.strokeOpacity, p.strokeWidth, p.dashPattern);
+        strokeCurrentPath(ctx, p.stroke, p.strokeOpacity, p.strokeWidth, p.dashPattern, options);
       });
       break;
     case 'ellipse':
@@ -514,7 +529,7 @@ const drawPrim = (
         ctx.beginPath();
         ctx.ellipse(p.cx, p.cy, p.rx, p.ry, 0, 0, Math.PI * 2);
         fillCurrentPath(ctx, p.fill, p.stroke, p.fillOpacity, undefined, options);
-        strokeCurrentPath(ctx, p.stroke, p.strokeOpacity, p.strokeWidth, p.dashPattern);
+        strokeCurrentPath(ctx, p.stroke, p.strokeOpacity, p.strokeWidth, p.dashPattern, options);
         if (shouldRestore) ctx.restore();
       });
       break;
@@ -524,16 +539,17 @@ const drawPrim = (
         if (p.strokeLinecap !== undefined) ctx.lineCap = p.strokeLinecap;
         if (p.strokeLinejoin !== undefined) ctx.lineJoin = p.strokeLinejoin;
         fillCurrentPath(ctx, p.fill, p.stroke, p.fillOpacity, p.fillRule, options);
-        strokeCurrentPath(ctx, p.stroke, p.strokeOpacity, p.strokeWidth, p.dashPattern);
+        strokeCurrentPath(ctx, p.stroke, p.strokeOpacity, p.strokeWidth, p.dashPattern, options);
         if (p.arrowStart || p.arrowEnd) {
           const strokeWidth = p.strokeWidth ?? 1;
+          const pathStroke = resolveColor(p.stroke, options);
           if (p.arrowStart) {
             const placement = startArrowPlacement(p.commands);
-            if (placement) drawArrowMarker(ctx, p.arrowStart, placement.vertex, placement.angle, strokeWidth, p.stroke);
+            if (placement) drawArrowMarker(ctx, p.arrowStart, placement.vertex, placement.angle, strokeWidth, pathStroke, options);
           }
           if (p.arrowEnd) {
             const placement = endArrowPlacement(p.commands);
-            if (placement) drawArrowMarker(ctx, p.arrowEnd, placement.vertex, placement.angle, strokeWidth, p.stroke);
+            if (placement) drawArrowMarker(ctx, p.arrowEnd, placement.vertex, placement.angle, strokeWidth, pathStroke, options);
           }
         }
       });
