@@ -81,8 +81,19 @@ const canvasFontFamily = (canvas: HTMLCanvasElement): string | undefined => {
 export const CanvasHost: FC<CanvasHostProps> = props => {
   const { scene, width, height, className, style } = props;
   const ref = useRef<HTMLCanvasElement>(null);
-  // image paint server 加载完触发重绘（缓存命中后 renderToCanvas 即可绘出图片）
-  const [imageTick, bumpImageTick] = useReducer((n: number) => n + 1, 0);
+  // image 加载完 / 主题切换都触发重绘（renderToCanvas 重读 getComputedStyle 的 color → currentColor）
+  const [renderTick, bumpRender] = useReducer((n: number) => n + 1, 0);
+
+  // 主题切换（<html> 的 class / data-theme / style 变化）→ 重绘，让 currentColor 跟随（canvas 命令式、不像 SVG 声明式自动响应）
+  useEffect(() => {
+    if (typeof MutationObserver === 'undefined' || typeof document === 'undefined') return undefined;
+    const observer = new MutationObserver(() => bumpRender());
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['class', 'data-theme', 'style'],
+    });
+    return () => observer.disconnect();
+  }, []);
 
   useEffect(() => {
     const canvas = ref.current;
@@ -95,9 +106,9 @@ export const CanvasHost: FC<CanvasHostProps> = props => {
     renderToCanvas(canvas, scene, {
       devicePixelRatio: ratio,
       defaultFontFamily: canvasFontFamily(canvas),
-      getImage: href => loadImage(href, bumpImageTick),
+      getImage: href => loadImage(href, bumpRender),
     });
-  }, [className, height, imageTick, scene, style, width]);
+  }, [className, height, renderTick, scene, style, width]);
 
   return <canvas ref={ref} className={className} style={displayStyle(width, height, style)} />;
 };
