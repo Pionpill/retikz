@@ -193,13 +193,29 @@ export const ComponentRender: FC<ComponentRenderProps> = props => {
     setRendererMode(value => (value === 'svg' ? 'canvas' : 'svg'));
   };
 
-  /**
-   * 下载当前渲染图。目前 retikz 只输出 SVG，所以直接序列化 SVG → blob → 触发 anchor 点击。
-   * @todo 等渲染管线支持 canvas / WebGPU 后台后，把这里改成多格式 picker（SVG / PNG / JPEG / WebP），
-   *   PNG/JPEG 走 `new Image() + canvas.drawImage` 路径（注意外部字体 / CSS var 在 canvas 里的 fallback）
-   */
-  const handleDownload = () => {
-    if (rendererMode !== 'svg') return;
+  const downloadBlob = (blob: Blob, fileName: string) => {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = fileName;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
+  const downloadDataUrl = (dataUrl: string, fileName: string) => {
+    const [header = '', payload = ''] = dataUrl.split(',');
+    const mimeType = header.match(/^data:([^;]+)/)?.[1] ?? 'application/octet-stream';
+    const binary = window.atob(payload);
+    const bytes = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) {
+      bytes[i] = binary.charCodeAt(i);
+    }
+    downloadBlob(new Blob([bytes], { type: mimeType }), fileName);
+  };
+
+  const downloadSvg = () => {
     const svg = renderPaneRef.current?.querySelector('svg');
     if (!svg) return;
     let svgSource = new XMLSerializer().serializeToString(svg);
@@ -207,17 +223,39 @@ export const ComponentRender: FC<ComponentRenderProps> = props => {
     if (!/\sxmlns=/.test(svgSource)) {
       svgSource = svgSource.replace(/<svg\b/, '<svg xmlns="http://www.w3.org/2000/svg"');
     }
-    const blob = new Blob([`<?xml version="1.0" encoding="UTF-8"?>\n${svgSource}`], {
-      type: 'image/svg+xml;charset=utf-8',
-    });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${name || 'retikz'}.svg`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    downloadBlob(
+      new Blob([`<?xml version="1.0" encoding="UTF-8"?>\n${svgSource}`], {
+        type: 'image/svg+xml;charset=utf-8',
+      }),
+      `${name || 'retikz'}.svg`,
+    );
+  };
+
+  const downloadCanvas = () => {
+    const canvas = renderPaneRef.current?.querySelector('canvas');
+    if (!canvas) return;
+    try {
+      const fileName = `${name || 'retikz'}.png`;
+      if (typeof canvas.toBlob === 'function') {
+        canvas.toBlob(blob => {
+          if (!blob) return;
+          downloadBlob(blob, fileName);
+        }, 'image/png');
+        return;
+      }
+      downloadDataUrl(canvas.toDataURL('image/png'), fileName);
+    } catch {
+      // canvas 可能因跨域图片被标记为 tainted，此时浏览器会阻止导出
+    }
+  };
+
+  /** 下载当前渲染图：SVG 模式导出 `.svg`，Canvas 模式导出 `.png`。 */
+  const handleDownload = () => {
+    if (rendererMode === 'canvas') {
+      downloadCanvas();
+      return;
+    }
+    downloadSvg();
   };
 
   const handleAskAi = () => {

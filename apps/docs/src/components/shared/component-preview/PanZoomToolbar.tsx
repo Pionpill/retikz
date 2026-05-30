@@ -21,7 +21,7 @@ export type PanZoomToolbarProps = {
   /** 当前 size 档位（受控）+ 切换回调；用户在工具条里改完后由父级 ComponentRender 落到 sizeClass */
   size: SizeKey;
   onSizeChange: (next: SizeKey) => void;
-  /** 下载当前渲染图（目前仅支持 SVG；未来通过 canvas 转 PNG / JPEG 再开多格式） */
+  /** 下载当前渲染图：SVG 模式下载 SVG，Canvas 模式下载 PNG */
   onDownload: () => void;
   /** 当前渲染目标 */
   rendererMode: RendererMode;
@@ -61,7 +61,7 @@ export const PanZoomToolbar: FC<PanZoomToolbarProps> = props => {
     toggleRendererMode,
     pinned,
   } = props;
-  const downloadDisabled = rendererMode !== 'svg';
+  const downloadLabel = rendererMode === 'canvas' ? 'Download PNG' : 'Download SVG';
   return (
     <div
       className={cn(
@@ -117,7 +117,7 @@ export const PanZoomToolbar: FC<PanZoomToolbarProps> = props => {
         >
           <RotateCcw className="size-3.5" />
         </ToolbarIconButton>
-        <ToolbarIconButton label="Download SVG" disabled={downloadDisabled} onClick={onDownload}>
+        <ToolbarIconButton label={downloadLabel} title={downloadLabel} onClick={onDownload}>
           <Download className="size-3.5" />
         </ToolbarIconButton>
         <ToolbarIconButton label="Maximize" onClick={onMaximize} className="hidden md:inline-flex">
