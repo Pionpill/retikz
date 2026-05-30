@@ -1,5 +1,6 @@
 import type {
   ArrowEndSpec,
+  ClipShape,
   IRPaintSpec,
   MarkerFill,
   MarkerPrimitive,
@@ -625,6 +626,27 @@ const pathBBox = (commands: ReadonlyArray<PathCommand>): BBox => {
   return { x: minX, y: minY, w: maxX - minX, h: maxY - minY };
 };
 
+/** 按裁剪形状构建路径并 ctx.clip()（坐标在 group 局部帧，须在 group transform 之后调用） */
+const applyClip = (ctx: CanvasRenderingContext2D, shape: ClipShape): void => {
+  ctx.beginPath();
+  switch (shape.kind) {
+    case 'rect':
+      ctx.rect(shape.x, shape.y, shape.width, shape.height);
+      break;
+    case 'circle':
+      ctx.arc(shape.cx, shape.cy, shape.r, 0, Math.PI * 2);
+      break;
+    case 'ellipse':
+      ctx.ellipse(shape.cx, shape.cy, shape.rx, shape.ry, 0, 0, Math.PI * 2);
+      break;
+    case 'polygon':
+      shape.points.forEach((pt, i) => (i === 0 ? ctx.moveTo(pt[0], pt[1]) : ctx.lineTo(pt[0], pt[1])));
+      ctx.closePath();
+      break;
+  }
+  ctx.clip();
+};
+
 const drawPrim = (
   ctx: CanvasRenderingContext2D,
   p: ScenePrimitive,
@@ -692,10 +714,15 @@ const drawPrim = (
       break;
     case 'group':
       ctx.save();
-      if (p.clipRef !== undefined) {
-        warnUnsupported(options, 'clip', `Canvas renderer does not support clip resource "${p.clipRef}" yet; clip is skipped.`);
-      }
       for (const transform of p.transforms ?? []) applyTransform(ctx, transform);
+      if (p.clipRef !== undefined) {
+        const clip = resources.get(p.clipRef);
+        if (clip !== undefined && clip.kind === 'clip') {
+          applyClip(ctx, clip.shape);
+        } else {
+          warnUnsupported(options, 'clip', `Canvas renderer: clip resource "${p.clipRef}" not found; clip is skipped.`);
+        }
+      }
       for (const child of p.children) drawPrim(ctx, child, options, resources);
       ctx.restore();
       break;
