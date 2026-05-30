@@ -1,4 +1,4 @@
-import { Layout, Node, Path, Scope, Step } from '@retikz/react';
+import { Draw, Layout, Node, Scope } from '@retikz/react';
 import type { FC } from 'react';
 
 /**
@@ -25,14 +25,8 @@ const Demo: FC = () => (
     >
       below-cluster
     </Node>
-    <Path arrow="->">
-      <Step kind="move" to="left-cluster" />
-      <Step to="follower" />
-    </Path>
-    <Path arrow="->">
-      <Step kind="move" to="left-cluster" />
-      <Step to="below" />
-    </Path>
+    <Draw way={['left-cluster', 'follower']} arrow="->" />
+    <Draw way={['left-cluster', 'below']} arrow="->" />
   </Layout>
 );
 

@@ -1,4 +1,4 @@
-import { Layout, Node, Path, Step } from '@retikz/react';
+import { Draw, Layout, Node } from '@retikz/react';
 import type { FC } from 'react';
 
 /**
@@ -9,10 +9,7 @@ const Demo: FC = () => (
   <Layout width={520} height={140}>
     <Node id="dup" position={[80, 0]}>first dup</Node>
     <Node id="dup" position={[360, 0]}>second dup</Node>
-    <Path arrow="->">
-      <Step kind="move" to={[0, 50]} />
-      <Step to="dup" />
-    </Path>
+    <Draw way={[[0, 50], 'dup']} arrow="->" />
   </Layout>
 );
 

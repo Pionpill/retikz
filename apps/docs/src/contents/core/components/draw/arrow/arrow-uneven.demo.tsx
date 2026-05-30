@@ -1,4 +1,4 @@
-import { Layout, Node, Path, Step } from '@retikz/react';
+import { Draw, Layout, Node } from '@retikz/react';
 import type { FC } from 'react';
 
 /**
@@ -13,14 +13,12 @@ const Demo: FC = () => (
     <Node id="b" position={[260, 0]}>
       B
     </Node>
-    <Path
+    <Draw
+      way={['a', 'b']}
       arrow="<->"
       arrowDetail={{ start: { shape: 'diamond' }, end: { shape: 'normal' } }}
       strokeWidth={2}
-    >
-      <Step kind="move" to="a" />
-      <Step kind="line" to="b" />
-    </Path>
+    />
   </Layout>
 );
 

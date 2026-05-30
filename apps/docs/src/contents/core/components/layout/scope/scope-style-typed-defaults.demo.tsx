@@ -1,4 +1,4 @@
-import { Layout, Node, Path, Scope, Step } from '@retikz/react';
+import { Draw, Layout, Node, Scope } from '@retikz/react';
 import type { FC } from 'react';
 
 /**
@@ -20,10 +20,7 @@ const Demo: FC = () => (
       <Node id="B" position={[180, 0]}>
         B
       </Node>
-      <Path arrow="->">
-        <Step kind="move" to="A" />
-        <Step to="B" label={{ text: 'edge' }} />
-      </Path>
+      <Draw way={['A', { label: 'edge' }, 'B']} arrow="->" />
     </Scope>
   </Layout>
 );

@@ -1,4 +1,4 @@
-import { Layout, Node, Path, Scope, Step } from '@retikz/react';
+import { Draw, Layout, Node, Scope } from '@retikz/react';
 import type { FC } from 'react';
 
 /**
@@ -19,11 +19,7 @@ const Demo: FC = () => (
     <Node id="c0" position={[-140, 0]}>
       C
     </Node>
-    <Path arrow="->">
-      <Step kind="move" to="a0" />
-      <Step to="b0" />
-      <Step to="c0" />
-    </Path>
+    <Draw way={['a0', 'b0', 'c0']} arrow="->" />
     <Node id="capPlain" position={[-200, 50]} stroke="none" fill="none" textColor="gray" font={{ size: 12 }}>
       Layout
     </Node>
@@ -39,11 +35,7 @@ const Demo: FC = () => (
       <Node id="c1" position={[120, 0]}>
         C
       </Node>
-      <Path arrow="->">
-        <Step kind="move" to="a1" />
-        <Step to="b1" />
-        <Step to="c1" />
-      </Path>
+      <Draw way={['a1', 'b1', 'c1']} arrow="->" />
     </Scope>
     <Node id="capScope" position={[150, 90]} stroke="none" fill="none" textColor="gray" font={{ size: 12 }}>
       Scope: translate + rotate

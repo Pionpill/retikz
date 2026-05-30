@@ -1,4 +1,4 @@
-import { Layout, Node, Path, Scope, Step } from '@retikz/react';
+import { Draw, Layout, Node, Scope } from '@retikz/react';
 import type { FC } from 'react';
 
 /**
@@ -14,14 +14,8 @@ const Demo: FC = () => (
       <Node id="B" position={{ of: 'anchor', offset: [40, 0] }} shape="circle" padding={4}>B</Node>
     </Scope>
     <Node id="B-ref" position={{ of: 'anchor', offset: [40, 40] }} shape="circle" padding={4} stroke="gray">B-ref</Node>
-    <Path arrow="->" stroke="gray" dashPattern={[4, 2]}>
-      <Step kind="move" to="anchor" />
-      <Step to="B" />
-    </Path>
-    <Path arrow="->" stroke="gray" dashPattern={[4, 2]}>
-      <Step kind="move" to="anchor" />
-      <Step to="B-ref" />
-    </Path>
+    <Draw way={['anchor', 'B']} arrow="->" stroke="gray" dashPattern={[4, 2]} />
+    <Draw way={['anchor', 'B-ref']} arrow="->" stroke="gray" dashPattern={[4, 2]} />
   </Layout>
 );
 
