@@ -122,4 +122,16 @@ describe('renderToCanvas 规格', () => {
     expect(() => renderToCanvas(canvas, badFrameScene, { devicePixelRatio: Number.NaN })).toThrow(/layout|width|height|finite|positive/i);
     expect(context.calls.flatMap(call => call.args).every(arg => typeof arg !== 'number' || Number.isFinite(arg))).toBe(true);
   });
+
+  it('non-finite-layout-origin-transform：非法 layout origin 不会写入 transform', () => {
+    const context = createSpyCanvasContext();
+    const { canvas } = createCanvas(context as unknown as CanvasRenderingContext2D);
+    const badOriginScene: Scene = {
+      layout: { x: Number.NaN, y: 0, width: 100, height: 50 },
+      primitives: [],
+    };
+
+    expect(() => renderToCanvas(canvas, badOriginScene)).toThrow(/layout|x|finite/i);
+    expect(context.calls.flatMap(call => call.args).every(arg => typeof arg !== 'number' || Number.isFinite(arg))).toBe(true);
+  });
 });

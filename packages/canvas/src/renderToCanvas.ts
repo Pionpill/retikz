@@ -26,6 +26,12 @@ export const renderToCanvas = (
   if (!ctx) throw new Error('renderToCanvas: unable to acquire 2d canvas context.');
 
   const devicePixelRatio = getDevicePixelRatio(options);
+  if (!Number.isFinite(scene.layout.x)) {
+    throw new Error('renderToCanvas: scene.layout.x must be a finite number.');
+  }
+  if (!Number.isFinite(scene.layout.y)) {
+    throw new Error('renderToCanvas: scene.layout.y must be a finite number.');
+  }
   assertPositiveFinite('canvas.width', canvas.width);
   assertPositiveFinite('canvas.height', canvas.height);
   assertPositiveFinite('scene.layout.width', scene.layout.width);
