@@ -6,9 +6,11 @@ type CanvasCall = {
   name: string;
   args: Array<unknown>;
   font?: string;
+  fillStyle?: string | CanvasGradient | CanvasPattern;
   lineCap?: CanvasLineCap;
   lineJoin?: CanvasLineJoin;
   lineWidth?: number;
+  strokeStyle?: string | CanvasGradient | CanvasPattern;
 };
 
 type SpyCanvasContext = Pick<
@@ -73,9 +75,11 @@ const createSpyCanvasContext = (): SpyCanvasContext => {
       name,
       args,
       font: context.font,
+      fillStyle: context.fillStyle,
       lineCap: context.lineCap,
       lineJoin: context.lineJoin,
       lineWidth: context.lineWidth,
+      strokeStyle: context.strokeStyle,
     });
   };
 
@@ -288,5 +292,192 @@ describe('drawScene 规格', () => {
     });
 
     expect(context.calls.find(call => call.name === 'fillText')?.font).toBe('12px monospace');
+  });
+});
+
+/** stealth 实心箭头（`arrow="->"` 默认形状）的已解析 marker 描述：refX=3 / baseSize=10 / 6×6 / 实心三角 contextStroke */
+const stealthSpec = {
+  shape: 'stealth' as const,
+  baseSize: 10,
+  refX: 3,
+  markerWidth: 6,
+  markerHeight: 6,
+  marker: [
+    {
+      type: 'path' as const,
+      commands: [
+        { kind: 'move' as const, to: [0, 0] as [number, number] },
+        { kind: 'line' as const, to: [10, 5] as [number, number] },
+        { kind: 'line' as const, to: [0, 10] as [number, number] },
+        { kind: 'line' as const, to: [3, 5] as [number, number] },
+        { kind: 'close' as const },
+      ],
+      fill: { kind: 'contextStroke' as const },
+    },
+  ],
+};
+
+describe('drawScene 箭头 marker', () => {
+  it('arrow-end-renders：末端 marker 贴终点、沿切线定向、按 markerUnits=strokeWidth 缩放、contextStroke 解析为线色', () => {
+    const context = createSpyCanvasContext();
+    const arrowScene: Scene = {
+      layout: { x: 0, y: 0, width: 80, height: 40 },
+      primitives: [
+        {
+          type: 'path',
+          commands: [
+            { kind: 'move', to: [0, 0] },
+            { kind: 'line', to: [40, 0] },
+          ],
+          stroke: '#222',
+          strokeWidth: 2,
+          arrowEnd: stealthSpec,
+        },
+      ],
+    };
+
+    drawScene(context as unknown as CanvasRenderingContext2D, arrowScene);
+
+    // 定位到终点 [40,0]，并将 marker 参考点 (refX=3, refY=baseSize/2=5) 平移回原点
+    expect(context.calls.some(c => c.name === 'translate' && c.args[0] === 40 && c.args[1] === 0)).toBe(true);
+    expect(context.calls.some(c => c.name === 'translate' && c.args[0] === -3 && c.args[1] === -5)).toBe(true);
+    // 切线方向为 +x → 旋转角 0
+    expect(context.calls.some(c => c.name === 'rotate' && c.args[0] === 0)).toBe(true);
+    // 缩放 = markerWidth/baseSize × strokeWidth = 6/10 × 2 = 1.2（两轴各自）
+    const scaleCall = context.calls.find(c => c.name === 'scale');
+    expect(scaleCall?.args).toEqual([1.2, 1.2]);
+    // 实心三角被填充，contextStroke 解析为 path 的 stroke 色
+    const markerFill = [...context.calls].reverse().find(c => c.name === 'fill');
+    expect(markerFill?.fillStyle).toBe('#222');
+    // marker 几何按局部 baseSize 坐标绘制
+    const moveTos = context.calls.filter(c => c.name === 'moveTo').map(c => c.args);
+    expect(moveTos).toContainEqual([0, 0]);
+    expect(context.calls.some(c => c.name === 'lineTo' && c.args[0] === 10 && c.args[1] === 5)).toBe(true);
+  });
+
+  it('arrow-start-reverse：起点 marker 朝向反向（auto-start-reverse）', () => {
+    const context = createSpyCanvasContext();
+    const arrowScene: Scene = {
+      layout: { x: 0, y: 0, width: 80, height: 40 },
+      primitives: [
+        {
+          type: 'path',
+          commands: [
+            { kind: 'move', to: [0, 0] },
+            { kind: 'line', to: [40, 0] },
+          ],
+          stroke: '#222',
+          strokeWidth: 1,
+          arrowStart: stealthSpec,
+        },
+      ],
+    };
+
+    drawScene(context as unknown as CanvasRenderingContext2D, arrowScene);
+
+    // 起点 [0,0]；离开方向 +x，反向后角度为 π
+    expect(context.calls.some(c => c.name === 'translate' && c.args[0] === 0 && c.args[1] === 0)).toBe(true);
+    const rotateCall = context.calls.find(c => c.name === 'rotate');
+    expect(rotateCall?.args[0]).toBeCloseTo(Math.PI);
+    // strokeWidth=1 → 缩放 0.6
+    expect(context.calls.find(c => c.name === 'scale')?.args).toEqual([0.6, 0.6]);
+  });
+
+  it('arrow-orient-diagonal：切线为对角线时旋转角等于 atan2', () => {
+    const context = createSpyCanvasContext();
+    const arrowScene: Scene = {
+      layout: { x: 0, y: 0, width: 80, height: 80 },
+      primitives: [
+        {
+          type: 'path',
+          commands: [
+            { kind: 'move', to: [0, 0] },
+            { kind: 'line', to: [30, 30] },
+          ],
+          stroke: '#000',
+          strokeWidth: 1,
+          arrowEnd: stealthSpec,
+        },
+      ],
+    };
+
+    drawScene(context as unknown as CanvasRenderingContext2D, arrowScene);
+
+    expect(context.calls.find(c => c.name === 'rotate')?.args[0]).toBeCloseTo(Math.atan2(30, 30));
+  });
+
+  it('arrow-marker-isolated-strokestyle：空心 marker 描边不继承 path 的 lineCap / lineJoin（如 SVG defs marker）', () => {
+    const context = createSpyCanvasContext();
+    const hollowSpec = {
+      shape: 'open' as const,
+      baseSize: 10,
+      refX: 1,
+      markerWidth: 6,
+      markerHeight: 6,
+      marker: [
+        {
+          type: 'path' as const,
+          commands: [
+            { kind: 'move' as const, to: [1, 1] as [number, number] },
+            { kind: 'line' as const, to: [9, 5] as [number, number] },
+            { kind: 'line' as const, to: [1, 9] as [number, number] },
+            { kind: 'close' as const },
+          ],
+          stroke: 'context-stroke',
+          strokeWidth: 1,
+        },
+      ],
+    };
+    const arrowScene: Scene = {
+      layout: { x: 0, y: 0, width: 80, height: 40 },
+      primitives: [
+        {
+          type: 'path',
+          commands: [
+            { kind: 'move', to: [0, 0] },
+            { kind: 'line', to: [40, 0] },
+          ],
+          stroke: '#222',
+          strokeWidth: 1,
+          strokeLinecap: 'round',
+          strokeLinejoin: 'round',
+          arrowEnd: hollowSpec,
+        },
+      ],
+    };
+
+    drawScene(context as unknown as CanvasRenderingContext2D, arrowScene);
+
+    // path 自身用 round；marker 描边应回到 canvas 默认 butt / miter（与 SVG defs marker 一致）
+    const strokeCalls = context.calls.filter(c => c.name === 'stroke');
+    const markerStroke = strokeCalls[strokeCalls.length - 1];
+    expect(markerStroke.lineCap).toBe('butt');
+    expect(markerStroke.lineJoin).toBe('miter');
+  });
+
+  it('arrow-no-marker-warning：渲染箭头不再发 marker 降级告警', () => {
+    const context = createSpyCanvasContext();
+    const warnings: Array<string> = [];
+    const arrowScene: Scene = {
+      layout: { x: 0, y: 0, width: 80, height: 40 },
+      primitives: [
+        {
+          type: 'path',
+          commands: [
+            { kind: 'move', to: [0, 0] },
+            { kind: 'line', to: [40, 0] },
+          ],
+          stroke: '#222',
+          strokeWidth: 1,
+          arrowEnd: stealthSpec,
+        },
+      ],
+    };
+
+    drawScene(context as unknown as CanvasRenderingContext2D, arrowScene, {
+      warnUnsupported: w => warnings.push(w.feature),
+    });
+
+    expect(warnings).not.toContain('marker');
   });
 });

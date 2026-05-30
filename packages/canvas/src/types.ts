@@ -1,5 +1,5 @@
 /** Canvas renderer 暂不支持能力的降级类别 */
-export type UnsupportedCanvasFeature = 'paint' | 'clip' | 'marker';
+export type UnsupportedCanvasFeature = 'paint' | 'clip';
 
 /** Canvas renderer 降级告警 */
 export type CanvasWarning = {

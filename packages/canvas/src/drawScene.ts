@@ -1,4 +1,14 @@
-import type { PaintValue, PathCommand, Scene, ScenePrimitive, TextPrim, Transform } from '@retikz/core';
+import type {
+  ArrowEndSpec,
+  MarkerFill,
+  MarkerPrimitive,
+  PaintValue,
+  PathCommand,
+  Scene,
+  ScenePrimitive,
+  TextPrim,
+  Transform,
+} from '@retikz/core';
 import type { CanvasWarning, DrawOptions, UnsupportedCanvasFeature } from './types';
 
 const DEG_TO_RAD = Math.PI / 180;
@@ -262,6 +272,222 @@ const applyTransform = (ctx: CanvasRenderingContext2D, transform: Transform): vo
   }
 };
 
+type Point = [number, number];
+
+const vecSub = (a: Point, b: Point): Point => [a[0] - b[0], a[1] - b[1]];
+
+const isZeroVec = (v: Point): boolean => v[0] === 0 && v[1] === 0;
+
+/** 取一个 PathCommand 末端 endpoint（与 core 同口径：arc/ellipseArc 取极坐标末点；close 无端点） */
+const commandEndpoint = (cmd: PathCommand): Point | null => {
+  switch (cmd.kind) {
+    case 'move':
+    case 'line':
+    case 'quad':
+    case 'cubic':
+      return [cmd.to[0], cmd.to[1]];
+    case 'arc': {
+      const rad = cmd.endAngle * DEG_TO_RAD;
+      return [cmd.center[0] + Math.cos(rad) * cmd.radius, cmd.center[1] + Math.sin(rad) * cmd.radius];
+    }
+    case 'ellipseArc': {
+      const rad = cmd.endAngle * DEG_TO_RAD;
+      return [cmd.center[0] + Math.cos(rad) * cmd.radiusX, cmd.center[1] + Math.sin(rad) * cmd.radiusY];
+    }
+    case 'close':
+      return null;
+  }
+};
+
+/**
+ * 末端箭头定位：终点 + 入射切线角（指向终点的方向）
+ * @description 带箭头的 path 末段恒为 line/cubic，故 cubic 用 to−control2、line/quad 退化为弦向；
+ *   arc/ellipseArc 不会作为带箭头 path 末段，统一退化为前一端点的弦向。无法判向则角度取 0。
+ */
+const endArrowPlacement = (
+  commands: ReadonlyArray<PathCommand>,
+): { vertex: Point; angle: number } | null => {
+  let lastIdx = -1;
+  for (let i = commands.length - 1; i >= 0; i--) {
+    if (commands[i].kind !== 'close') {
+      lastIdx = i;
+      break;
+    }
+  }
+  if (lastIdx < 0) return null;
+  const cmd = commands[lastIdx];
+  const vertex = commandEndpoint(cmd);
+  if (!vertex) return null;
+  let prevIdx = lastIdx - 1;
+  while (prevIdx >= 0 && commands[prevIdx].kind === 'close') prevIdx--;
+  const prev = prevIdx >= 0 ? commandEndpoint(commands[prevIdx]) : null;
+  let dir: Point | null = null;
+  if (cmd.kind === 'cubic') {
+    dir = vecSub(vertex, cmd.control2);
+    if (isZeroVec(dir)) dir = vecSub(vertex, cmd.control1);
+  } else if (cmd.kind === 'quad') {
+    dir = vecSub(vertex, cmd.control);
+  }
+  if ((dir === null || isZeroVec(dir)) && prev) dir = vecSub(vertex, prev);
+  const angle = dir !== null && !isZeroVec(dir) ? Math.atan2(dir[1], dir[0]) : 0;
+  return { vertex, angle };
+};
+
+/**
+ * 起点箭头定位：起点 + 离开切线角的反向（对应 SVG `orient="auto-start-reverse"`）
+ * @description 起点后首段恒为 line/cubic，cubic 用 control1−起点、line/quad 退化为弦向；无法判向则角度取 0。
+ */
+const startArrowPlacement = (
+  commands: ReadonlyArray<PathCommand>,
+): { vertex: Point; angle: number } | null => {
+  if (commands.length === 0) return null;
+  let baseIdx = commands.findIndex(c => c.kind === 'move');
+  if (baseIdx < 0) baseIdx = 0;
+  const vertex = commandEndpoint(commands[baseIdx]);
+  if (!vertex) return null;
+  let nextIdx = baseIdx + 1;
+  while (nextIdx < commands.length && commands[nextIdx].kind === 'close') nextIdx++;
+  const next = nextIdx < commands.length ? commands[nextIdx] : undefined;
+  let dir: Point | null = null;
+  if (next) {
+    if (next.kind === 'cubic') {
+      dir = vecSub(next.control1, vertex);
+      if (isZeroVec(dir)) dir = vecSub(next.control2, vertex);
+    } else if (next.kind === 'quad') {
+      dir = vecSub(next.control, vertex);
+    }
+    if (dir === null || isZeroVec(dir)) {
+      const nextPt = commandEndpoint(next);
+      if (nextPt) dir = vecSub(nextPt, vertex);
+    }
+  }
+  const angle = dir !== null && !isZeroVec(dir) ? Math.atan2(dir[1], dir[0]) + Math.PI : 0;
+  return { vertex, angle };
+};
+
+/** marker-local fill 取值 → canvas 颜色：contextStroke 解析为线的 stroke（缺省回退当前 strokeStyle） */
+const resolveMarkerFill = (
+  ctx: CanvasRenderingContext2D,
+  fill: MarkerFill | undefined,
+  pathStroke: string | undefined,
+): string | undefined => {
+  if (fill === undefined) return undefined;
+  if (typeof fill === 'string') return fill;
+  return pathStroke ?? String(ctx.strokeStyle);
+};
+
+/** marker-local stroke 取值 → canvas 颜色：`context-stroke` 解析为线的 stroke（缺省回退当前 strokeStyle） */
+const resolveMarkerStroke = (
+  ctx: CanvasRenderingContext2D,
+  stroke: string | undefined,
+  pathStroke: string | undefined,
+): string | undefined => {
+  if (stroke === undefined) return undefined;
+  if (stroke === 'context-stroke') return pathStroke ?? String(ctx.strokeStyle);
+  return stroke;
+};
+
+const fillMarkerPath = (
+  ctx: CanvasRenderingContext2D,
+  fill: string | undefined,
+  fillOpacity: number | undefined,
+  fillRule: CanvasFillRule | undefined,
+): void => {
+  if (fill === undefined) return;
+  if (fillOpacity !== undefined) {
+    ctx.save();
+    ctx.globalAlpha *= fillOpacity;
+  }
+  ctx.fillStyle = fill;
+  ctx.fill(fillRule);
+  if (fillOpacity !== undefined) ctx.restore();
+};
+
+const strokeMarkerPath = (
+  ctx: CanvasRenderingContext2D,
+  stroke: string | undefined,
+  strokeOpacity: number | undefined,
+  strokeWidth: number | undefined,
+  dashPattern: Array<number> | undefined,
+): void => {
+  if (stroke === undefined) return;
+  if (strokeOpacity !== undefined) ctx.save();
+  ctx.strokeStyle = stroke;
+  if (strokeWidth !== undefined) ctx.lineWidth = strokeWidth;
+  if (strokeOpacity !== undefined) ctx.globalAlpha *= strokeOpacity;
+  applyDash(ctx, dashPattern);
+  ctx.stroke();
+  if (strokeOpacity !== undefined) ctx.restore();
+};
+
+/** 绘制单个 marker-local primitive（path/ellipse/rect/group 窄子集）；fill/stroke 的 contextStroke 解析为线色 */
+const drawMarkerPrim = (
+  ctx: CanvasRenderingContext2D,
+  prim: MarkerPrimitive,
+  pathStroke: string | undefined,
+): void => {
+  ctx.save();
+  switch (prim.type) {
+    case 'path':
+      buildPath(ctx, prim.commands);
+      if (prim.strokeLinecap !== undefined) ctx.lineCap = prim.strokeLinecap;
+      if (prim.strokeLinejoin !== undefined) ctx.lineJoin = prim.strokeLinejoin;
+      fillMarkerPath(ctx, resolveMarkerFill(ctx, prim.fill, pathStroke), prim.fillOpacity, prim.fillRule);
+      strokeMarkerPath(ctx, resolveMarkerStroke(ctx, prim.stroke, pathStroke), prim.strokeOpacity, prim.strokeWidth, prim.dashPattern);
+      break;
+    case 'ellipse':
+      if (prim.rotate) {
+        ctx.translate(prim.cx, prim.cy);
+        ctx.rotate(prim.rotate * DEG_TO_RAD);
+        ctx.translate(-prim.cx, -prim.cy);
+      }
+      ctx.beginPath();
+      ctx.ellipse(prim.cx, prim.cy, prim.rx, prim.ry, 0, 0, Math.PI * 2);
+      fillMarkerPath(ctx, resolveMarkerFill(ctx, prim.fill, pathStroke), prim.fillOpacity, undefined);
+      strokeMarkerPath(ctx, resolveMarkerStroke(ctx, prim.stroke, pathStroke), prim.strokeOpacity, prim.strokeWidth, prim.dashPattern);
+      break;
+    case 'rect':
+      roundedRectPath(ctx, prim.x, prim.y, prim.width, prim.height, prim.cornerRadius);
+      fillMarkerPath(ctx, resolveMarkerFill(ctx, prim.fill, pathStroke), prim.fillOpacity, undefined);
+      strokeMarkerPath(ctx, resolveMarkerStroke(ctx, prim.stroke, pathStroke), prim.strokeOpacity, prim.strokeWidth, prim.dashPattern);
+      break;
+    case 'group':
+      for (const transform of prim.transforms ?? []) applyTransform(ctx, transform);
+      for (const child of prim.children) drawMarkerPrim(ctx, child, pathStroke);
+      break;
+  }
+  ctx.restore();
+};
+
+/**
+ * 绘制端点箭头 marker：参考点 (refX, baseSize/2) 贴端点 V、沿切线旋转、按 markerUnits=strokeWidth 缩放
+ * @description 复刻 SVG `<marker>` 物化：viewBox `0 0 baseSize baseSize` 经 preserveAspectRatio=none 拉伸到
+ *   markerWidth×markerHeight，再乘 strokeWidth（markerUnits）。spec.opacity 叠加到 path opacity 上。
+ */
+const drawArrowMarker = (
+  ctx: CanvasRenderingContext2D,
+  spec: ArrowEndSpec,
+  vertex: Point,
+  angle: number,
+  strokeWidth: number,
+  pathStroke: string | undefined,
+): void => {
+  ctx.save();
+  if (spec.opacity !== undefined) ctx.globalAlpha *= spec.opacity;
+  // marker 在独立坐标系渲染（如 SVG defs marker），描边样式不继承 path 的 lineCap / lineJoin
+  ctx.lineCap = 'butt';
+  ctx.lineJoin = 'miter';
+  ctx.translate(vertex[0], vertex[1]);
+  ctx.rotate(angle);
+  ctx.scale(
+    (spec.markerWidth * strokeWidth) / spec.baseSize,
+    (spec.markerHeight * strokeWidth) / spec.baseSize,
+  );
+  ctx.translate(-spec.refX, -spec.baseSize / 2);
+  for (const prim of spec.marker) drawMarkerPrim(ctx, prim, pathStroke);
+  ctx.restore();
+};
+
 const drawPrim = (
   ctx: CanvasRenderingContext2D,
   p: ScenePrimitive,
@@ -294,14 +520,22 @@ const drawPrim = (
       break;
     case 'path':
       withOpacity(ctx, p.opacity, () => {
-        if (p.arrowStart || p.arrowEnd) {
-          warnUnsupported(options, 'marker', 'Canvas renderer does not support arrow markers yet; marker is skipped.');
-        }
         buildPath(ctx, p.commands);
         if (p.strokeLinecap !== undefined) ctx.lineCap = p.strokeLinecap;
         if (p.strokeLinejoin !== undefined) ctx.lineJoin = p.strokeLinejoin;
         fillCurrentPath(ctx, p.fill, p.stroke, p.fillOpacity, p.fillRule, options);
         strokeCurrentPath(ctx, p.stroke, p.strokeOpacity, p.strokeWidth, p.dashPattern);
+        if (p.arrowStart || p.arrowEnd) {
+          const strokeWidth = p.strokeWidth ?? 1;
+          if (p.arrowStart) {
+            const placement = startArrowPlacement(p.commands);
+            if (placement) drawArrowMarker(ctx, p.arrowStart, placement.vertex, placement.angle, strokeWidth, p.stroke);
+          }
+          if (p.arrowEnd) {
+            const placement = endArrowPlacement(p.commands);
+            if (placement) drawArrowMarker(ctx, p.arrowEnd, placement.vertex, placement.angle, strokeWidth, p.stroke);
+          }
+        }
       });
       break;
     case 'text':
