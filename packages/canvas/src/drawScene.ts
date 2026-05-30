@@ -6,6 +6,7 @@ import type {
   MarkerPrimitive,
   PaintValue,
   PathCommand,
+  ResolvedPatternTile,
   Scene,
   ScenePrimitive,
   SceneResource,
@@ -154,6 +155,10 @@ const resolveFillStyle = (
     const spec = resource.spec;
     if (spec.type === 'linearGradient' || spec.type === 'radialGradient') {
       return buildGradient(ctx, spec, bbox, options);
+    }
+    if (spec.type === 'pattern' && resource.tile !== undefined) {
+      const pattern = buildPattern(ctx, resource.tile, options);
+      if (pattern !== undefined) return pattern;
     }
   }
   warnUnsupported(options, 'paint', `Canvas renderer does not support paint resource "${fill.id}" yet; fill is skipped.`);
@@ -601,6 +606,34 @@ const drawMarkerPrim = (
       break;
   }
   ctx.restore();
+};
+
+/**
+ * pattern paint server 填充：离屏渲染 motif tile → ctx.createPattern('repeat')
+ * @description tile 已由 compile 解析（size / background / rotation / motif 几何）。motif 复用 drawMarkerPrim
+ *   画进 size×size 离屏 context；contextStroke / currentColor 走 options.currentColor（缺省黑）。rotation 经
+ *   pattern.setTransform 旋转。缺 createOffscreen 工厂返回 undefined（caller 据此降级告警）。
+ */
+const buildPattern = (
+  ctx: CanvasRenderingContext2D,
+  tile: ResolvedPatternTile,
+  options: DrawOptions,
+): CanvasPattern | undefined => {
+  const off = options.createOffscreen?.(tile.size, tile.size) ?? null;
+  if (off === null) return undefined;
+  if (tile.background !== undefined) {
+    off.fillStyle = tile.background;
+    off.fillRect(0, 0, tile.size, tile.size);
+  }
+  const motifColor = options.currentColor ?? '#000';
+  for (const prim of tile.motif) drawMarkerPrim(off, prim, motifColor, options);
+  const pattern = ctx.createPattern(off.canvas, 'repeat');
+  if (pattern === null) return undefined;
+  if (tile.rotation) {
+    const rad = tile.rotation * DEG_TO_RAD;
+    pattern.setTransform({ a: Math.cos(rad), b: Math.sin(rad), c: -Math.sin(rad), d: Math.cos(rad), e: 0, f: 0 });
+  }
+  return pattern;
 };
 
 /**

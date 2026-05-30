@@ -31,6 +31,15 @@ const getCanvasCurrentColor = (canvas: HTMLCanvasElement): string | undefined =>
   return color.length > 0 ? color : undefined;
 };
 
+/** 创建 size×size 离屏 2D context（pattern motif tile 用）；无 document 环境返回 null */
+const createOffscreenContext = (width: number, height: number): CanvasRenderingContext2D | null => {
+  if (typeof document === 'undefined') return null;
+  const el = document.createElement('canvas');
+  el.width = Math.max(1, Math.ceil(width));
+  el.height = Math.max(1, Math.ceil(height));
+  return el.getContext('2d');
+};
+
 const computeCanvasTransform = (
   canvas: HTMLCanvasElement,
   scene: Scene,
@@ -83,5 +92,6 @@ export const renderToCanvas = (
     ...options,
     defaultFontFamily: options.defaultFontFamily ?? getCanvasDefaultFontFamily(canvas),
     currentColor: options.currentColor ?? getCanvasCurrentColor(canvas),
+    createOffscreen: options.createOffscreen ?? createOffscreenContext,
   });
 };

@@ -28,6 +28,13 @@ export type DrawOptions = {
    *   缺省（未提供）时 image 填充降级告警 paint。
    */
   getImage?: (href: string) => CanvasImageSource | null;
+  /**
+   * pattern paint server 的离屏 2D context 工厂
+   * @description pattern 需把 motif tile 离屏渲染后 `createPattern`；canvas/OffscreenCanvas 创建依赖宿主环境，
+   *   故由调用方（如 `renderToCanvas`）提供。返回 `size×size` 的 2D context（其 `.canvas` 作为 pattern 图源）；
+   *   缺省（未提供）时 pattern 填充降级告警 paint。
+   */
+  createOffscreen?: (width: number, height: number) => CanvasRenderingContext2D | null;
 };
 
 /** HTMLCanvasElement 渲染选项 */
