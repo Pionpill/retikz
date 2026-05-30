@@ -52,9 +52,11 @@ export const HeaderActions: FC = () => {
   const previewHideCode = useComponentPreviewStore(s => s.hideCode);
   const previewIsExpand = useComponentPreviewStore(s => s.isExpand);
   const previewDragEnabled = useComponentPreviewStore(s => s.dragEnabled);
+  const previewRendererMode = useComponentPreviewStore(s => s.rendererMode);
   const togglePreviewHideCode = useComponentPreviewStore(s => s.toggleHideCode);
   const togglePreviewIsExpand = useComponentPreviewStore(s => s.toggleIsExpand);
   const togglePreviewDragEnabled = useComponentPreviewStore(s => s.toggleDragEnabled);
+  const togglePreviewRendererMode = useComponentPreviewStore(s => s.toggleRendererMode);
   const comparisonTargets = useComparisonStore(s => s.visibleTargets);
   const setComparisonTargetVisible = useComparisonStore(s => s.setTargetVisible);
 
@@ -165,6 +167,13 @@ export const HeaderActions: FC = () => {
                 {t('preview.groupLabel')}
               </DropdownMenuLabel>
               <DropdownMenuGroup>
+                <DropdownMenuCheckboxItem
+                  checked={previewRendererMode === 'canvas'}
+                  onCheckedChange={togglePreviewRendererMode}
+                >
+                  {t('preview.renderMode')}
+                  <DropdownMenuShortcut>{previewRendererMode.toUpperCase()}</DropdownMenuShortcut>
+                </DropdownMenuCheckboxItem>
                 <DropdownMenuCheckboxItem checked={previewHideCode} onCheckedChange={togglePreviewHideCode}>
                   {t('preview.hideAllCode')}
                   {!compact && (

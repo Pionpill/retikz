@@ -103,6 +103,7 @@
   },
   "preview": {
     "groupLabel": "组件演示",
+    "renderMode": "渲染模式",
     "hideAllCode": "隐藏所有代码",
     "expandAllCode": "展开所有代码",
     "dragComponent": "拖动组件"

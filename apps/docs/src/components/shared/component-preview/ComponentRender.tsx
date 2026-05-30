@@ -13,7 +13,6 @@ import { CopyButton, ToolbarIconButton, ViewToggle } from './_parts';
 import {
   type AlignKey,
   type DiffMode,
-  type RendererMode,
   type SizeKey,
   type SourceView,
   type UnifiedDiff,
@@ -121,7 +120,6 @@ export const ComponentRender: FC<ComponentRenderProps> = props => {
   // 工具条 pinned：移动端没 hover，靠 tap preview 区域 toggle
   const [toolbarPinned, setToolbarPinned] = useState(false);
   const [isMaximized, setIsMaximized] = useState(false);
-  const [rendererMode, setRendererMode] = useState<RendererMode>('svg');
   const { transform, isDragging, panBy, zoomBy, resetTransform, isTransformed, transformStyle, beginDrag } =
     usePanZoom();
   // outer card ref：Ask AI 时反查最近前置 heading 拼 prompt 用
@@ -135,6 +133,8 @@ export const ComponentRender: FC<ComponentRenderProps> = props => {
   const globalHideCode = useComponentPreviewStore(s => s.hideCode);
   const globalIsExpand = useComponentPreviewStore(s => s.isExpand);
   const globalDragEnabled = useComponentPreviewStore(s => s.dragEnabled);
+  const rendererMode = useComponentPreviewStore(s => s.rendererMode);
+  const toggleRendererMode = useComponentPreviewStore(s => s.toggleRendererMode);
   const isCodeVisible = localIsCodeVisible ?? globalHideCode;
   const isExpanded = localIsExpanded ?? globalIsExpand;
   const dragEnabled = localDragEnabled ?? globalDragEnabled;
@@ -187,10 +187,6 @@ export const ComponentRender: FC<ComponentRenderProps> = props => {
     setLocalIsCodeVisible(false);
     setLocalIsExpanded(false);
     setView('react');
-  };
-
-  const toggleRendererMode = () => {
-    setRendererMode(value => (value === 'svg' ? 'canvas' : 'svg'));
   };
 
   const downloadBlob = (blob: Blob, fileName: string) => {

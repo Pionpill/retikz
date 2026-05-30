@@ -7,6 +7,7 @@ import { Layout } from '@retikz/react';
 import { DemoRenderer } from '../../src/components/shared/component-preview/DemoRenderer';
 import { RendererModeButton } from '../../src/components/shared/component-preview/_parts';
 import { PanZoomToolbar } from '../../src/components/shared/component-preview/PanZoomToolbar';
+import { useComponentPreviewStore } from '../../src/store/useComponentPreviewStore';
 
 const Demo: FC = () => <Layout width={40} height={20} />;
 const noop = () => {};
@@ -32,6 +33,23 @@ describe('RendererModeButton', () => {
 
     const canvasMarkup = renderToStaticMarkup(<RendererModeButton rendererMode="canvas" onToggle={noop} />);
     expect(canvasMarkup).toContain('aria-label="Canvas renderer"');
+  });
+});
+
+describe('useComponentPreviewStore', () => {
+  it('defaults to svg and toggles canvas globally', () => {
+    const originalMode = useComponentPreviewStore.getState().rendererMode;
+    useComponentPreviewStore.getState().setRendererMode('svg');
+
+    expect(useComponentPreviewStore.getState().rendererMode).toBe('svg');
+
+    useComponentPreviewStore.getState().toggleRendererMode();
+    expect(useComponentPreviewStore.getState().rendererMode).toBe('canvas');
+
+    useComponentPreviewStore.getState().toggleRendererMode();
+    expect(useComponentPreviewStore.getState().rendererMode).toBe('svg');
+
+    useComponentPreviewStore.getState().setRendererMode(originalMode);
   });
 });
 

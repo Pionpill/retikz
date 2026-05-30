@@ -103,6 +103,7 @@
   },
   "preview": {
     "groupLabel": "Component Preview",
+    "renderMode": "Render mode",
     "hideAllCode": "Hide all code",
     "expandAllCode": "Expand all code",
     "dragComponent": "Drag component"
