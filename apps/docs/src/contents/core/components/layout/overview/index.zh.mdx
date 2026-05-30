@@ -65,6 +65,7 @@ import { Layout } from '@retikz/react';
 | `ir` | `IR` | — | 已构造好的 IR JSON（与 `children` 二选一） |
 | `className` | `string` | — | 透传到渲染根元素 |
 | `style` | `CSSProperties` | — | 透传到渲染根元素 |
+| `idPrefix` | `string` | — | 覆盖 `<defs>` 资源 id 前缀；SSR 输出和客户端 `<Layout>` 传同一值时可保持引用 id 一致 |
 
 ### 直接喂 IR
 
