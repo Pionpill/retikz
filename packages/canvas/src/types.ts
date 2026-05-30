@@ -21,6 +21,13 @@ export type DrawOptions = {
    *   写入此项，drawScene 把颜色串 `currentColor` 解析为它（缺省不解析、保持原串）。修复主题反应 / 暗色模式。
    */
   currentColor?: string;
+  /**
+   * image paint server 的图片获取器
+   * @description canvas 同步绘制、无法 await 图片加载；调用方（如 React canvasHost）维护按 href 的图片缓存，
+   *   返回已解码可绘制的 `CanvasImageSource`，未就绪返回 `null`（drawScene 本帧跳过、加载完由调用方触发重绘）。
+   *   缺省（未提供）时 image 填充降级告警 paint。
+   */
+  getImage?: (href: string) => CanvasImageSource | null;
 };
 
 /** HTMLCanvasElement 渲染选项 */

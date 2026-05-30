@@ -160,6 +160,49 @@ const resolveFillStyle = (
   return undefined;
 };
 
+type ImageSpec = Extract<IRPaintSpec, { type: 'image' }>;
+
+/** 取图片源的固有尺寸（HTMLImageElement 用 naturalWidth，其余回退 width/height） */
+const imageNaturalSize = (img: CanvasImageSource): { w: number; h: number } => {
+  const any = img as { naturalWidth?: number; naturalHeight?: number; width?: number; height?: number };
+  return { w: any.naturalWidth || any.width || 0, h: any.naturalHeight || any.height || 0 };
+};
+
+/**
+ * image paint server 填充：clip 到当前形状路径，按 fit 把图片放进 bbox 后 drawImage
+ * @description fill 拉伸铺满、contain 等比装入、cover（默认）等比覆盖；均居中。未提供 getImage → 降级告警；
+ *   已提供但未就绪（返回 null）→ 本帧静默跳过（加载完由调用方重绘）。
+ */
+const fillImage = (
+  ctx: CanvasRenderingContext2D,
+  spec: ImageSpec,
+  bbox: BBox,
+  fillOpacity: number | undefined,
+  options: DrawOptions,
+): void => {
+  const img = options.getImage?.(spec.href) ?? null;
+  if (img === null) {
+    if (options.getImage === undefined) {
+      warnUnsupported(options, 'paint', `Canvas renderer requires a getImage loader to render image paint "${spec.href}"; fill is skipped.`);
+    }
+    return;
+  }
+  ctx.save();
+  if (fillOpacity !== undefined) ctx.globalAlpha *= fillOpacity;
+  ctx.clip();
+  const { w: iw, h: ih } = imageNaturalSize(img);
+  const fit = spec.fit ?? 'cover';
+  if (fit === 'fill' || iw <= 0 || ih <= 0) {
+    ctx.drawImage(img, bbox.x, bbox.y, bbox.w, bbox.h);
+  } else {
+    const scale = fit === 'contain' ? Math.min(bbox.w / iw, bbox.h / ih) : Math.max(bbox.w / iw, bbox.h / ih);
+    const dw = iw * scale;
+    const dh = ih * scale;
+    ctx.drawImage(img, bbox.x + (bbox.w - dw) / 2, bbox.y + (bbox.h - dh) / 2, dw, dh);
+  }
+  ctx.restore();
+};
+
 const fillCurrentPath = (
   ctx: CanvasRenderingContext2D,
   fill: PaintValue | undefined,
@@ -170,6 +213,13 @@ const fillCurrentPath = (
   resources: ResourceMap,
   bbox: BBox,
 ): void => {
+  if (fill !== undefined && typeof fill !== 'string' && fill.kind === 'resourceRef') {
+    const resource = resources.get(fill.id);
+    if (resource !== undefined && resource.kind === 'paint' && resource.spec.type === 'image') {
+      fillImage(ctx, resource.spec, bbox, fillOpacity, options);
+      return;
+    }
+  }
   const fillStyle = resolveFillStyle(ctx, fill, stroke, options, resources, bbox);
   if (fillStyle === undefined) return;
   if (fillOpacity !== undefined) {
