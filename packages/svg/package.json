@@ -1,12 +1,11 @@
 {
-  "name": "@retikz/react",
+  "name": "@retikz/svg",
   "version": "0.3.0-alpha.1",
-  "description": "React adapter for retikz: Kernel/Sugar JSX components and SVG renderer.",
+  "description": "Framework-neutral SVG descriptor for retikz: Scene → SvgNode builder and string serializer.",
   "type": "module",
   "author": "Pionpill",
   "homepage": "https://pionpill.github.io/retikz/",
   "keywords": [
-    "react",
     "tikz",
     "diagram",
     "svg",
@@ -16,7 +15,7 @@
   "repository": {
     "type": "git",
     "url": "git+https://github.com/Pionpill/retikz.git",
-    "directory": "packages/react"
+    "directory": "packages/svg"
   },
   "bugs": {
     "url": "https://github.com/Pionpill/retikz/issues"
@@ -57,21 +56,12 @@
     "test": "vitest",
     "test:run": "vitest run"
   },
-  "peerDependencies": {
-    "react": ">=18",
-    "react-dom": ">=18"
-  },
   "dependencies": {
     "@retikz/core": "workspace:*",
-    "@retikz/svg": "workspace:*"
+    "csstype": "catalog:"
   },
   "devDependencies": {
     "@types/node": "catalog:",
-    "@types/react": "catalog:",
-    "@types/react-dom": "catalog:",
-    "@vitejs/plugin-react": "catalog:",
-    "react": "catalog:",
-    "react-dom": "catalog:",
     "typescript": "catalog:",
     "vite": "catalog:",
     "vite-plugin-dts": "catalog:",
