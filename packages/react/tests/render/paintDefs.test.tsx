@@ -66,7 +66,12 @@ describe('PaintDefs — 渐变物化', () => {
     expect(g.props.x2).toBeCloseTo(0.5, 6);
     expect(g.props.y1).toBeCloseTo(0, 6);
     expect(g.props.y2).toBeCloseTo(1, 6);
-    expect((g.props.children as { props: { spec: unknown } }).props.spec).toBeDefined();
+    // stops 直接物化成 <stop> 子元素（不再经 <Stops> 包装组件）
+    const stops = g.props.children as Array<AnyEl>;
+    expect(stops).toHaveLength(2);
+    expect(stops[0].type).toBe('stop');
+    expect(stops[0].props.offset).toBe(0);
+    expect(stops[0].props.stopColor).toBe('#4f8');
   });
 
   it('radialGradient：type / id / 缺省 center·r', () => {
@@ -150,7 +155,7 @@ describe('PaintDefs — 渐变物化', () => {
       { kind: 'paint', id: 'paint-1', spec: { type: 'image', href: 'a.png' } },
     ]);
     expect(p.type).toBe('pattern');
-    const img = p.props.children as AnyEl;
+    const img = (p.props.children as Array<AnyEl>)[0];
     expect(img.type).toBe('image');
     expect(img.props.href).toBe('a.png');
     expect(img.props.preserveAspectRatio).toBe('xMidYMid slice');

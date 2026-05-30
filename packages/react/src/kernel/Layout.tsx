@@ -1,23 +1,17 @@
-import { type CSSProperties, type FC, type ReactNode, useId, useMemo } from 'react';
+import { type CSSProperties, type FC, type ReactElement, type ReactNode, cloneElement, useId, useMemo } from 'react';
 import {
   type ArrowDefinition,
-  type ArrowEndSpec,
-  type AssertEqual,
   type IR,
   type IRViewBox,
   type PathGeneratorDefinition,
   type PatternDefinition,
-  type ScenePrimitive,
   type ShapeDefinition,
   compileToScene,
 } from '@retikz/core';
+import { buildSvgDocument } from '@retikz/svg';
 import { buildIR } from './builder';
-import { ArrowMarker } from '../render/arrowMarkers';
 import { browserMeasurer } from '../render/browser-measurer';
-import { PaintDefs } from '../render/paintDefs';
-import { ClipDefs } from '../render/clipDefs';
-import { renderPrim } from '../render/renderPrim';
-import { formatViewBox } from '../render/viewBox';
+import { svgToReact } from '../render/svgToReact';
 
 /** <Layout> 组件的 props */
 export type LayoutProps = {
@@ -39,6 +33,13 @@ export type LayoutProps = {
   className?: string;
   /** 透传到 svg 元素的内联样式 */
   style?: CSSProperties;
+  /**
+   * SVG `<defs>` 资源 id 前缀，覆盖默认的 `useId()` 派生值
+   * @description marker / paint / clip 的 id 与 `url(#...)` 引用共用此前缀确保多实例不撞。缺省回退剥冒号的
+   *   `useId()`（纯 React 用户无感）。SSR→客户端水合需 id 逐字一致时：服务端 `renderToSvgString(scene,
+   *   { idPrefix })` 与客户端 `<Layout idPrefix>` 传同一前缀即可对齐。
+   */
+  idPrefix?: string;
   /**
    * 节点相对定位（`Node.position = { direction, of }`）的默认距离，单位 user units
    * @description 对应 TikZ `node distance=...`；节点 position 自带 `distance` 时优先用自带值，都缺省时回退到 1
@@ -71,80 +72,15 @@ export type LayoutProps = {
   pathGenerators?: Record<string, PathGeneratorDefinition>;
 };
 
-/** 递归收集 scene 里所有 PathPrim 用到的 arrow 端点 spec —— 按需注入 marker defs */
-const collectArrowSpecs = (prims: Array<ScenePrimitive>): Array<ArrowEndSpec> => {
-  const out: Array<ArrowEndSpec> = [];
-  const visit = (p: ScenePrimitive | undefined | null): void => {
-    // 防御：上游（如 AI 生成的非法 IR、有空槽位的 group.children）可能塞 undefined，命中后直接 noop，别让属性访问抛
-    if (!p) return;
-    if (p.type === 'path') {
-      if (p.arrowStart) out.push(p.arrowStart);
-      if (p.arrowEnd) out.push(p.arrowEnd);
-    } else if (p.type === 'group') {
-      for (const c of p.children) visit(c);
-    }
-  };
-  for (const p of prims) visit(p);
-  return out;
-};
-
-/**
- * `ArrowEndSpec`（已解析 marker 描述）除必填 `shape` 外的全部字段表——`stableSpecKey` 遍历此表拼 key
- * @description `as const satisfies` 拒不存在的 key；下方 `_OptionalCheck` 静态校验完备性——未来 `ArrowEndSpec`
- *   加新字段时此表漏写 TS 编译期报错，防"字段表漂移"。emit-in-compile 后 spec 字段集为 wrapper 参数
- *   （baseSize / refX / markerWidth / markerHeight / opacity）+ 已解析几何（marker）。
- */
-const ARROW_END_SPEC_KEY_FIELDS = [
-  'baseSize',
-  'refX',
-  'markerWidth',
-  'markerHeight',
-  'opacity',
-  'marker',
-] as const satisfies ReadonlyArray<keyof ArrowEndSpec>;
-
-// 类型层完备性互锁：字段表必须覆盖 ArrowEndSpec 除 `shape` 外的所有 key（漏 / 多 字段 TS 报错）
-type _KeyFieldsCheck = AssertEqual<
-  (typeof ARROW_END_SPEC_KEY_FIELDS)[number],
-  Exclude<keyof ArrowEndSpec, 'shape'>
->;
-const _assertKeyFieldsCheck: _KeyFieldsCheck = true;
-void _assertKeyFieldsCheck;
-
-/**
- * spec → 稳定字符串 key
- * @description 必填 `shape` 头部输出，其余字段按 `ARROW_END_SPEC_KEY_FIELDS` 顺序遍历——不依赖对象字面量
- *   字段顺序、不漏字段；标量直接拼，`marker`（结构化几何数组）走 JSON.stringify。不同 spec → 不同 key、
- *   相同 spec → 同 key（dedup）。
- */
-const stableSpecKey = (spec: ArrowEndSpec): string => {
-  const parts: Array<string> = [`shape=${spec.shape}`];
-  for (const field of ARROW_END_SPEC_KEY_FIELDS) {
-    const value = spec[field];
-    if (value === undefined) continue;
-    parts.push(`${field}=${typeof value === 'object' ? JSON.stringify(value) : value}`);
-  }
-  return parts.join('|');
-};
-
-/**
- * key → 短 hash（SVG id 中可安全嵌入的 ascii；non-cryptographic）
- * @description djb2 变体；只用十六进制末 8 位避免 id 过长。同 spec → 同 hash、不同 spec → 不同 hash（碰撞概率极低，且我们已在 useId() 前缀里加了组件实例隔离，不会跨 svg 串话）
- */
-const hashKey = (key: string): string => {
-  let h = 5381;
-  for (let i = 0; i < key.length; i++) {
-    h = ((h << 5) + h + key.charCodeAt(i)) | 0;
-  }
-  return (h >>> 0).toString(16).padStart(8, '0');
-};
-
 /**
  * <Layout> 顶层容器
- * @description 流水线：从 children 构造 IR（或直接接受外部 IR）→ compileToScene 得 Scene → 渲染 SVG 元素并按需注入 `<defs>` 与每种 arrow 端点 spec 的 `<marker>`；marker id 用 `useId()` 派生稳定前缀避免多实例冲突，每种 detail 一个定义（`${prefix}-${specHash}`），marker 内借 spec 字段（`color` / `fill` / `opacity` 等）替换硬编码，缺省字段回退到 `context-stroke` 让颜色继续跟随 path 同步
+ * @description 流水线：从 children 构造 IR（或直接接受外部 IR）→ `compileToScene` 得 Scene →
+ *   `@retikz/svg` 的 `buildSvgDocument` 产中性 `SvgNode` 描述树（含 `<defs>` 与按需 dedup 的 `<marker>` /
+ *   paint / clip 资源，id 用 `idPrefix` 派生）→ `svgToReact` 映射成 React 元素。Scene→SVG 逻辑单一数据源在
+ *   `@retikz/svg`，react 只做 `SvgNode→ReactElement` 薄映射 + `useId` 绑定。
  */
 export const Layout: FC<LayoutProps> = props => {
-  const { ir: irFromProp, children, width, height, viewBox, className, style, nodeDistance, shapes, arrows, patterns, pathGenerators } = props;
+  const { ir: irFromProp, children, width, height, viewBox, className, style, idPrefix, nodeDistance, shapes, arrows, patterns, pathGenerators } = props;
   const ir = useMemo(() => {
     const base = irFromProp ?? buildIR(children);
     // viewBox prop 注入 IR 根（显式 > IR 内置）；prop 缺省时保留 base 自带的 viewBox
@@ -155,44 +91,17 @@ export const Layout: FC<LayoutProps> = props => {
     [ir, nodeDistance, shapes, arrows, patterns, pathGenerators],
   );
 
-  // useId 返回 ":r0:" 含冒号；SVG `url(#id)` 对冒号兼容性差，剥成纯字母数字
+  // useId 返回 ":r0:" 含冒号；SVG `url(#id)` 对冒号兼容性差，剥成纯字母数字。caller 显式 idPrefix 优先（SSR 水合对齐）
   const rawId = useId();
-  const arrowMarkerPrefix = `retikz-arrow-${rawId.replace(/[^a-zA-Z0-9]/g, '')}`;
+  const resolvedIdPrefix = idPrefix ?? rawId.replace(/[^a-zA-Z0-9]/g, '');
 
-  // 收集 + 按 key dedup
-  const specs = collectArrowSpecs(scene.primitives);
-  const uniqueByKey = new Map<string, ArrowEndSpec>();
-  for (const s of specs) {
-    const k = stableSpecKey(s);
-    if (!uniqueByKey.has(k)) uniqueByKey.set(k, s);
-  }
-
-  const arrowMarkerIdFor = (spec: ArrowEndSpec) =>
-    `${arrowMarkerPrefix}-${hashKey(stableSpecKey(spec))}`;
-
-  // 资源表按 kind 分流：paint（gradient / pattern / image）与 clip 各自物化；id 加同源实例前缀避免跨 SVG 撞
-  const allResources = scene.resources ?? [];
-  const paintResources = allResources.filter(r => r.kind === 'paint');
-  const clipResources = allResources.filter(r => r.kind === 'clip');
-  const idPrefix = rawId.replace(/[^a-zA-Z0-9]/g, '');
-  const paintIdFor = (id: string) => `retikz-paint-${idPrefix}-${id}`;
-  const paintRefUrl = (id: string) => `url(#${paintIdFor(id)})`;
-  const clipIdFor = (id: string) => `retikz-clip-${idPrefix}-${id}`;
-  const clipRefUrl = (id: string) => `url(#${clipIdFor(id)})`;
-  const hasDefs = uniqueByKey.size > 0 || paintResources.length > 0 || clipResources.length > 0;
-
-  return (
-    <svg viewBox={formatViewBox(scene.layout)} width={width} height={height} className={className} style={style}>
-      {hasDefs && (
-        <defs>
-          {Array.from(uniqueByKey.entries()).map(([k, spec]) => (
-            <ArrowMarker key={k} id={`${arrowMarkerPrefix}-${hashKey(k)}`} spec={spec} />
-          ))}
-          <PaintDefs resources={paintResources} idFor={paintIdFor} />
-          <ClipDefs resources={clipResources} idFor={clipIdFor} />
-        </defs>
-      )}
-      {scene.primitives.map((p, i) => renderPrim(p, i, { arrowMarkerIdFor, paintRefUrl, clipRefUrl }))}
-    </svg>
+  // Scene → 中性 SvgNode 描述树（buildSvgDocument 内部完成 arrow dedup / defs 组装 / id 前缀派生）→ React 元素
+  const doc = useMemo(
+    () => buildSvgDocument(scene, { idPrefix: resolvedIdPrefix }),
+    [scene, resolvedIdPrefix],
   );
+  const svgEl = svgToReact(doc) as ReactElement;
+
+  // svg 元素级附加（width / height / className / 框架 style）由 react 层补：非 svg 包职责
+  return cloneElement(svgEl, { width, height, className, style });
 };

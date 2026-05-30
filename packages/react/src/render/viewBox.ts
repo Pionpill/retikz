@@ -1,5 +1,5 @@
-import type { Layout } from '@retikz/core';
-
-/** 把 Layout 对象格式化为 SVG `viewBox` 属性字符串 */
-export const formatViewBox = (layout: Layout): string =>
-  `${layout.x} ${layout.y} ${layout.width} ${layout.height}`;
+/**
+ * `formatViewBox` 已下沉到 `@retikz/svg`（renderer-neutral，纯函数）；此处 re-export 保持 react 内部引用与
+ * 既有测试入口不变。
+ */
+export { formatViewBox } from '@retikz/svg';
