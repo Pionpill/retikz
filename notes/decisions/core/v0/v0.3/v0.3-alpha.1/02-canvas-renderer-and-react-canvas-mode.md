@@ -85,12 +85,12 @@ renderToCanvas(canvas: HTMLCanvasElement, scene: Scene, options?: RenderOptions)
 ```tsx
 // 默认 svg —— 现有用户零改动
 <Layout>
-  <Node name="a" />
+  <Node id="a" position={[0, 0]}>a</Node>
 </Layout>
 
 // 切 canvas —— 同一套 JSX / IR,只换输出目标
 <Layout renderer="canvas" width={400} height={300}>
-  <Node name="a" />
+  <Node id="a" position={[0, 0]}>a</Node>
 </Layout>
 ```
 
