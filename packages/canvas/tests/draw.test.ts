@@ -19,7 +19,12 @@ type SpyCanvasContext = Pick<
   | 'beginPath'
   | 'bezierCurveTo'
   | 'clearRect'
+  | 'clip'
   | 'closePath'
+  | 'createLinearGradient'
+  | 'createPattern'
+  | 'createRadialGradient'
+  | 'drawImage'
   | 'ellipse'
   | 'fill'
   | 'fillText'
@@ -83,12 +88,32 @@ const createSpyCanvasContext = (): SpyCanvasContext => {
     });
   };
 
+  const makeGradient = (): CanvasGradient => ({
+    addColorStop: (...a: Array<unknown>) => {
+      calls.push({ name: 'addColorStop', args: a });
+    },
+  });
+
   Object.assign(context, {
     arc: record('arc'),
     beginPath: record('beginPath'),
     bezierCurveTo: record('bezierCurveTo'),
     clearRect: record('clearRect'),
+    clip: record('clip'),
     closePath: record('closePath'),
+    createLinearGradient: (...args: Array<unknown>) => {
+      record('createLinearGradient')(...args);
+      return makeGradient();
+    },
+    createRadialGradient: (...args: Array<unknown>) => {
+      record('createRadialGradient')(...args);
+      return makeGradient();
+    },
+    createPattern: (...args: Array<unknown>) => {
+      record('createPattern')(...args);
+      return { setTransform: () => undefined };
+    },
+    drawImage: record('drawImage'),
     ellipse: record('ellipse'),
     fill: record('fill'),
     fillText: record('fillText'),
@@ -584,5 +609,132 @@ describe('drawScene currentColor 解析', () => {
 
     expect(() => drawScene(context as unknown as CanvasRenderingContext2D, s)).not.toThrow();
     expect(context.calls.find(c => c.name === 'stroke')?.strokeStyle).toBe('currentColor');
+  });
+});
+
+describe('drawScene 渐变填充', () => {
+  it('linear-gradient：rect 线性渐变按 bbox + angle 映射 createLinearGradient + addColorStop', () => {
+    const context = createSpyCanvasContext();
+    const warnings: Array<string> = [];
+    const s: Scene = {
+      layout: { x: 0, y: 0, width: 100, height: 50 },
+      resources: [
+        {
+          kind: 'paint',
+          id: 'paint-1',
+          spec: {
+            type: 'linearGradient',
+            stops: [
+              { offset: 0, color: '#f00' },
+              { offset: 1, color: '#00f' },
+            ],
+          },
+        },
+      ],
+      primitives: [
+        { type: 'rect', x: 0, y: 0, width: 100, height: 50, fill: { kind: 'resourceRef', id: 'paint-1' } },
+      ],
+    };
+
+    drawScene(context as unknown as CanvasRenderingContext2D, s, {
+      warnUnsupported: w => warnings.push(w.feature),
+    });
+
+    // angle 缺省 0（左→右）：bbox(0,0,100,50) → 渐变线 (0,25)→(100,25)
+    expect(context.calls.find(c => c.name === 'createLinearGradient')?.args).toEqual([0, 25, 100, 25]);
+    expect(context.calls.filter(c => c.name === 'addColorStop').map(c => c.args)).toEqual([
+      [0, '#f00'],
+      [1, '#00f'],
+    ]);
+    expect(context.calls.some(c => c.name === 'fill')).toBe(true);
+    expect(warnings).not.toContain('paint');
+  });
+
+  it('linear-gradient-angle：angle=90 沿 +y 方向映射渐变线', () => {
+    const context = createSpyCanvasContext();
+    const s: Scene = {
+      layout: { x: 0, y: 0, width: 100, height: 50 },
+      resources: [
+        {
+          kind: 'paint',
+          id: 'g',
+          spec: {
+            type: 'linearGradient',
+            angle: 90,
+            stops: [
+              { offset: 0, color: '#000' },
+              { offset: 1, color: '#fff' },
+            ],
+          },
+        },
+      ],
+      primitives: [
+        { type: 'rect', x: 0, y: 0, width: 100, height: 50, fill: { kind: 'resourceRef', id: 'g' } },
+      ],
+    };
+
+    drawScene(context as unknown as CanvasRenderingContext2D, s);
+
+    // angle 90（+y 屏幕下）：渐变线 (50,0)→(50,50)
+    const call = context.calls.find(c => c.name === 'createLinearGradient');
+    expect((call?.args as Array<number>).map(n => Math.round(n))).toEqual([50, 0, 50, 50]);
+  });
+
+  it('radial-gradient：rect 径向渐变映射 createRadialGradient（中心 bbox 相对、半径 cover）', () => {
+    const context = createSpyCanvasContext();
+    const s: Scene = {
+      layout: { x: 0, y: 0, width: 80, height: 80 },
+      resources: [
+        {
+          kind: 'paint',
+          id: 'r',
+          spec: {
+            type: 'radialGradient',
+            stops: [
+              { offset: 0, color: '#fff' },
+              { offset: 1, color: '#000' },
+            ],
+          },
+        },
+      ],
+      primitives: [
+        { type: 'rect', x: 0, y: 0, width: 80, height: 80, fill: { kind: 'resourceRef', id: 'r' } },
+      ],
+    };
+
+    drawScene(context as unknown as CanvasRenderingContext2D, s);
+
+    // center 默认 (0.5,0.5) → (40,40)，radius 默认 0.5 → 0.5*max(80,80)=40
+    expect(context.calls.find(c => c.name === 'createRadialGradient')?.args).toEqual([40, 40, 0, 40, 40, 40]);
+    expect(context.calls.filter(c => c.name === 'addColorStop').length).toBe(2);
+  });
+
+  it('gradient-stop-opacity：带 opacity 的 stop 烘焙成 rgba', () => {
+    const context = createSpyCanvasContext();
+    const s: Scene = {
+      layout: { x: 0, y: 0, width: 100, height: 50 },
+      resources: [
+        {
+          kind: 'paint',
+          id: 'g',
+          spec: {
+            type: 'linearGradient',
+            stops: [
+              { offset: 0, color: '#ff0000', opacity: 0.5 },
+              { offset: 1, color: '#0000ff' },
+            ],
+          },
+        },
+      ],
+      primitives: [
+        { type: 'rect', x: 0, y: 0, width: 100, height: 50, fill: { kind: 'resourceRef', id: 'g' } },
+      ],
+    };
+
+    drawScene(context as unknown as CanvasRenderingContext2D, s);
+
+    const stops = context.calls.filter(c => c.name === 'addColorStop').map(c => c.args);
+    expect(stops[0]).toEqual([0, 'rgba(255, 0, 0, 0.5)']);
+    expect(stops[1]).toEqual([1, '#0000ff']);
   });
 });

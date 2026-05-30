@@ -1,11 +1,13 @@
 import type {
   ArrowEndSpec,
+  IRPaintSpec,
   MarkerFill,
   MarkerPrimitive,
   PaintValue,
   PathCommand,
   Scene,
   ScenePrimitive,
+  SceneResource,
   TextPrim,
   Transform,
 } from '@retikz/core';
@@ -69,15 +71,90 @@ const applyStrokeStyle = (
   applyDash(ctx, dashPattern);
 };
 
+/** 被填充图元的包围盒（user units）；gradient/image 的 objectBoundingBox(0..1) 据此映射为绝对坐标 */
+type BBox = { x: number; y: number; w: number; h: number };
+
+/** Scene 资源按 id 索引（fill resourceRef 查表） */
+type ResourceMap = ReadonlyMap<string, SceneResource>;
+
+type GradientSpec = Extract<IRPaintSpec, { type: 'linearGradient' | 'radialGradient' }>;
+
+/**
+ * 把 stop 的 opacity 烘焙进颜色（canvas addColorStop 无 stop-opacity）
+ * @description hex / rgb(a) 可解析者转 rgba 并乘 alpha；命名色 / hsl 等无法解析则按 best-effort 忽略 opacity。
+ */
+const applyStopAlpha = (color: string, opacity: number | undefined): string => {
+  if (opacity === undefined || opacity >= 1) return color;
+  const hex = /^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.exec(color);
+  if (hex) {
+    let h = hex[1];
+    if (h.length === 3) h = h[0] + h[0] + h[1] + h[1] + h[2] + h[2];
+    const r = parseInt(h.slice(0, 2), 16);
+    const g = parseInt(h.slice(2, 4), 16);
+    const b = parseInt(h.slice(4, 6), 16);
+    return `rgba(${r}, ${g}, ${b}, ${opacity})`;
+  }
+  const rgb = /^rgba?\(([^)]+)\)$/.exec(color);
+  if (rgb) {
+    const parts = rgb[1].split(',').map(s => s.trim());
+    const a = parts.length > 3 ? parseFloat(parts[3]) : 1;
+    return `rgba(${parts[0]}, ${parts[1]}, ${parts[2]}, ${a * opacity})`;
+  }
+  return color;
+};
+
+/**
+ * 据 gradient spec + 被填充图元 bbox 构建 CanvasGradient
+ * @description objectBoundingBox(0..1) → 绝对坐标：linear 过中心沿 angle（polar，0=+x / 90=+y 屏幕下）取长度 1；
+ *   radial 圆形近似（canvas 不支持椭圆渐变）半径 = radius × max(w,h)（cover 观感）。stop 颜色解析 currentColor + 烘焙 opacity。
+ */
+const buildGradient = (
+  ctx: CanvasRenderingContext2D,
+  spec: GradientSpec,
+  bbox: BBox,
+  options: DrawOptions,
+): CanvasGradient => {
+  let gradient: CanvasGradient;
+  if (spec.type === 'linearGradient') {
+    const rad = (spec.angle ?? 0) * DEG_TO_RAD;
+    const dx = Math.cos(rad);
+    const dy = Math.sin(rad);
+    gradient = ctx.createLinearGradient(
+      bbox.x + (0.5 - dx * 0.5) * bbox.w,
+      bbox.y + (0.5 - dy * 0.5) * bbox.h,
+      bbox.x + (0.5 + dx * 0.5) * bbox.w,
+      bbox.y + (0.5 + dy * 0.5) * bbox.h,
+    );
+  } else {
+    const [cx, cy] = spec.center ?? [0.5, 0.5];
+    const acx = bbox.x + cx * bbox.w;
+    const acy = bbox.y + cy * bbox.h;
+    gradient = ctx.createRadialGradient(acx, acy, 0, acx, acy, (spec.radius ?? 0.5) * Math.max(bbox.w, bbox.h));
+  }
+  for (const stop of spec.stops) {
+    gradient.addColorStop(stop.offset, applyStopAlpha(resolveColor(stop.color, options) ?? stop.color, stop.opacity));
+  }
+  return gradient;
+};
+
 const resolveFillStyle = (
   ctx: CanvasRenderingContext2D,
   fill: PaintValue | undefined,
   stroke: string | undefined,
   options: DrawOptions,
+  resources: ResourceMap,
+  bbox: BBox,
 ): string | CanvasGradient | CanvasPattern | undefined => {
   if (fill === undefined) return undefined;
   if (typeof fill === 'string') return resolveColor(fill, options);
   if (fill.kind === 'contextStroke') return resolveColor(stroke, options) ?? String(ctx.strokeStyle);
+  const resource = resources.get(fill.id);
+  if (resource !== undefined && resource.kind === 'paint') {
+    const spec = resource.spec;
+    if (spec.type === 'linearGradient' || spec.type === 'radialGradient') {
+      return buildGradient(ctx, spec, bbox, options);
+    }
+  }
   warnUnsupported(options, 'paint', `Canvas renderer does not support paint resource "${fill.id}" yet; fill is skipped.`);
   return undefined;
 };
@@ -89,8 +166,10 @@ const fillCurrentPath = (
   fillOpacity: number | undefined,
   fillRule: CanvasFillRule | undefined,
   options: DrawOptions,
+  resources: ResourceMap,
+  bbox: BBox,
 ): void => {
-  const fillStyle = resolveFillStyle(ctx, fill, stroke, options);
+  const fillStyle = resolveFillStyle(ctx, fill, stroke, options, resources, bbox);
   if (fillStyle === undefined) return;
   if (fillOpacity !== undefined) {
     ctx.save();
@@ -503,17 +582,66 @@ const drawArrowMarker = (
   ctx.restore();
 };
 
+/** path commands 的轴对齐包围盒（曲线用控制点 / 弧用半径外接，gradient 映射够用） */
+const pathBBox = (commands: ReadonlyArray<PathCommand>): BBox => {
+  let minX = Infinity;
+  let minY = Infinity;
+  let maxX = -Infinity;
+  let maxY = -Infinity;
+  const add = (x: number, y: number): void => {
+    if (x < minX) minX = x;
+    if (y < minY) minY = y;
+    if (x > maxX) maxX = x;
+    if (y > maxY) maxY = y;
+  };
+  for (const c of commands) {
+    switch (c.kind) {
+      case 'move':
+      case 'line':
+        add(c.to[0], c.to[1]);
+        break;
+      case 'quad':
+        add(c.control[0], c.control[1]);
+        add(c.to[0], c.to[1]);
+        break;
+      case 'cubic':
+        add(c.control1[0], c.control1[1]);
+        add(c.control2[0], c.control2[1]);
+        add(c.to[0], c.to[1]);
+        break;
+      case 'arc':
+        add(c.center[0] - c.radius, c.center[1] - c.radius);
+        add(c.center[0] + c.radius, c.center[1] + c.radius);
+        break;
+      case 'ellipseArc':
+        add(c.center[0] - c.radiusX, c.center[1] - c.radiusY);
+        add(c.center[0] + c.radiusX, c.center[1] + c.radiusY);
+        break;
+      case 'close':
+        break;
+    }
+  }
+  if (minX > maxX) return { x: 0, y: 0, w: 0, h: 0 };
+  return { x: minX, y: minY, w: maxX - minX, h: maxY - minY };
+};
+
 const drawPrim = (
   ctx: CanvasRenderingContext2D,
   p: ScenePrimitive,
   options: DrawOptions,
+  resources: ResourceMap,
 ): void => {
   ctx.save();
   switch (p.type) {
     case 'rect':
       withOpacity(ctx, p.opacity, () => {
         roundedRectPath(ctx, p.x, p.y, p.width, p.height, p.cornerRadius);
-        fillCurrentPath(ctx, p.fill, p.stroke, p.fillOpacity, undefined, options);
+        fillCurrentPath(ctx, p.fill, p.stroke, p.fillOpacity, undefined, options, resources, {
+          x: p.x,
+          y: p.y,
+          w: p.width,
+          h: p.height,
+        });
         strokeCurrentPath(ctx, p.stroke, p.strokeOpacity, p.strokeWidth, p.dashPattern, options);
       });
       break;
@@ -528,7 +656,12 @@ const drawPrim = (
         }
         ctx.beginPath();
         ctx.ellipse(p.cx, p.cy, p.rx, p.ry, 0, 0, Math.PI * 2);
-        fillCurrentPath(ctx, p.fill, p.stroke, p.fillOpacity, undefined, options);
+        fillCurrentPath(ctx, p.fill, p.stroke, p.fillOpacity, undefined, options, resources, {
+          x: p.cx - p.rx,
+          y: p.cy - p.ry,
+          w: 2 * p.rx,
+          h: 2 * p.ry,
+        });
         strokeCurrentPath(ctx, p.stroke, p.strokeOpacity, p.strokeWidth, p.dashPattern, options);
         if (shouldRestore) ctx.restore();
       });
@@ -538,7 +671,7 @@ const drawPrim = (
         buildPath(ctx, p.commands);
         if (p.strokeLinecap !== undefined) ctx.lineCap = p.strokeLinecap;
         if (p.strokeLinejoin !== undefined) ctx.lineJoin = p.strokeLinejoin;
-        fillCurrentPath(ctx, p.fill, p.stroke, p.fillOpacity, p.fillRule, options);
+        fillCurrentPath(ctx, p.fill, p.stroke, p.fillOpacity, p.fillRule, options, resources, pathBBox(p.commands));
         strokeCurrentPath(ctx, p.stroke, p.strokeOpacity, p.strokeWidth, p.dashPattern, options);
         if (p.arrowStart || p.arrowEnd) {
           const strokeWidth = p.strokeWidth ?? 1;
@@ -563,7 +696,7 @@ const drawPrim = (
         warnUnsupported(options, 'clip', `Canvas renderer does not support clip resource "${p.clipRef}" yet; clip is skipped.`);
       }
       for (const transform of p.transforms ?? []) applyTransform(ctx, transform);
-      for (const child of p.children) drawPrim(ctx, child, options);
+      for (const child of p.children) drawPrim(ctx, child, options, resources);
       ctx.restore();
       break;
   }
@@ -576,5 +709,6 @@ export const drawScene = (
   scene: Scene,
   options: DrawOptions = {},
 ): void => {
-  for (const primitive of scene.primitives) drawPrim(ctx, primitive, options);
+  const resources: ResourceMap = new Map((scene.resources ?? []).map(r => [r.id, r]));
+  for (const primitive of scene.primitives) drawPrim(ctx, primitive, options, resources);
 };

@@ -66,12 +66,8 @@ describe('canvas 降级与边界规格', () => {
           kind: 'paint',
           id: 'paint-1',
           spec: {
-            type: 'linearGradient',
-            angle: 0,
-            stops: [
-              { offset: 0, color: '#f00' },
-              { offset: 1, color: '#00f' },
-            ],
+            type: 'image',
+            href: 'https://example.com/x.png',
           },
         },
       ],
