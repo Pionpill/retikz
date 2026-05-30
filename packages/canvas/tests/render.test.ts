@@ -92,6 +92,20 @@ describe('renderToCanvas 规格', () => {
     expect(context.calls[2].args).toEqual([3, 0, 0, 3, -30, -60]);
   });
 
+  it('viewbox-meet-fit：画布宽高比不一致时保持等比缩放并居中', () => {
+    const context = createSpyCanvasContext();
+    const { canvas } = createCanvas(context as unknown as CanvasRenderingContext2D);
+    canvas.height = 200;
+    const wideScene: Scene = {
+      layout: { x: 0, y: 0, width: 100, height: 50 },
+      primitives: [],
+    };
+
+    renderToCanvas(canvas, wideScene, { devicePixelRatio: 1 });
+
+    expect(context.calls.filter(call => call.name === 'setTransform')[1].args).toEqual([3, 0, 0, 3, 0, 25]);
+  });
+
   it('empty-scene-canvas：空 Scene 只清屏和设置帧，不发出绘制命令', () => {
     const context = createSpyCanvasContext();
     const { canvas } = createCanvas(context as unknown as CanvasRenderingContext2D);
@@ -119,8 +133,12 @@ describe('renderToCanvas 规格', () => {
       primitives: [],
     };
 
-    expect(() => renderToCanvas(canvas, badFrameScene, { devicePixelRatio: Number.NaN })).toThrow(/layout|width|height|finite|positive/i);
-    expect(context.calls.flatMap(call => call.args).every(arg => typeof arg !== 'number' || Number.isFinite(arg))).toBe(true);
+    expect(() => renderToCanvas(canvas, badFrameScene, { devicePixelRatio: Number.NaN })).toThrow(
+      /layout|width|height|finite|positive/i,
+    );
+    expect(context.calls.flatMap(call => call.args).every(arg => typeof arg !== 'number' || Number.isFinite(arg))).toBe(
+      true,
+    );
   });
 
   it('non-finite-layout-origin-transform：非法 layout origin 不会写入 transform', () => {
@@ -132,6 +150,8 @@ describe('renderToCanvas 规格', () => {
     };
 
     expect(() => renderToCanvas(canvas, badOriginScene)).toThrow(/layout|x|finite/i);
-    expect(context.calls.flatMap(call => call.args).every(arg => typeof arg !== 'number' || Number.isFinite(arg))).toBe(true);
+    expect(context.calls.flatMap(call => call.args).every(arg => typeof arg !== 'number' || Number.isFinite(arg))).toBe(
+      true,
+    );
   });
 });

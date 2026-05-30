@@ -16,6 +16,26 @@ const assertPositiveFinite = (name: string, value: number): void => {
   }
 };
 
+const computeCanvasTransform = (
+  canvas: HTMLCanvasElement,
+  scene: Scene,
+  devicePixelRatio: number,
+): [number, number, number, number, number, number] => {
+  const cssWidth = canvas.width / devicePixelRatio;
+  const cssHeight = canvas.height / devicePixelRatio;
+  const scale = Math.min(cssWidth / scene.layout.width, cssHeight / scene.layout.height);
+  const offsetX = (cssWidth - scene.layout.width * scale) / 2;
+  const offsetY = (cssHeight - scene.layout.height * scale) / 2;
+  return [
+    devicePixelRatio * scale,
+    0,
+    0,
+    devicePixelRatio * scale,
+    (offsetX - scene.layout.x * scale) * devicePixelRatio,
+    (offsetY - scene.layout.y * scale) * devicePixelRatio,
+  ];
+};
+
 /** 将 Scene 渲染到 HTMLCanvasElement */
 export const renderToCanvas = (
   canvas: HTMLCanvasElement,
@@ -43,15 +63,6 @@ export const renderToCanvas = (
     ctx.clearRect(0, 0, canvas.width, canvas.height);
   }
 
-  const scaleX = canvas.width / devicePixelRatio / scene.layout.width;
-  const scaleY = canvas.height / devicePixelRatio / scene.layout.height;
-  ctx.setTransform(
-    devicePixelRatio * scaleX,
-    0,
-    0,
-    devicePixelRatio * scaleY,
-    -scene.layout.x * devicePixelRatio * scaleX,
-    -scene.layout.y * devicePixelRatio * scaleY,
-  );
+  ctx.setTransform(...computeCanvasTransform(canvas, scene, devicePixelRatio));
   drawScene(ctx, scene, options);
 };
