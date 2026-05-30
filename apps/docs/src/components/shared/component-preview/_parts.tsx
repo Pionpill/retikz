@@ -1,15 +1,15 @@
-import { Check, Copy } from 'lucide-react';
+import { Brush, Check, Copy, LineDotRightHorizontal } from 'lucide-react';
 import { type ComponentProps, type FC, type ReactNode } from 'react';
 
 import { JsonIcon, ReactIcon } from '@/components/icons';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
-import type { SourceView } from './_shared';
+import type { RendererMode, SourceView } from './_shared';
 
 /**
- * 工具条小号 ghost icon button
- * @description 统一外观（size-7、rounded-sm、muted 色）；透传 button 属性 + `pressed` toggle 态（变 secondary + aria-pressed）
+ * 工具条小型 ghost icon button
+ * @description 统一外观（size-7、rounded-sm、muted 色）；透传 button 属性 + `pressed` toggle 态（可用 secondary + aria-pressed）
  */
 export type ToolbarIconButtonProps = Omit<ComponentProps<'button'>, 'aria-label'> & {
   label: string;
@@ -35,9 +35,27 @@ export const ToolbarIconButton: FC<ToolbarIconButtonProps> = props => {
   );
 };
 
+/** 渲染模式切换按钮 */
+export type RendererModeButtonProps = {
+  rendererMode: RendererMode;
+  onToggle: () => void;
+  className?: string;
+};
+
+export const RendererModeButton: FC<RendererModeButtonProps> = props => {
+  const { rendererMode, onToggle, className } = props;
+  const isCanvas = rendererMode === 'canvas';
+  const label = isCanvas ? 'Canvas renderer' : 'SVG renderer';
+  return (
+    <ToolbarIconButton label={label} title={label} pressed={isCanvas} onClick={onToggle} className={className}>
+      {isCanvas ? <Brush className="size-3.5" /> : <LineDotRightHorizontal className="size-3.5" />}
+    </ToolbarIconButton>
+  );
+};
+
 /**
  * React / IR 视图切换的两连按钮
- * @description 卡内底部代码栏与 Dialog 右栏共用；未选用 ghost + 透明边框占位避免布局抖动
+ * @description 卡内底部代码栏与 Dialog 右侧共用；未选用 ghost + 透明边框占位避免布局抖动
  */
 export type ViewToggleProps = {
   view: SourceView;

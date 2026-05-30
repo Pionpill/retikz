@@ -5,6 +5,9 @@ export type Transform = { x: number; y: number; scale: number };
 /** 源码视图切换：React 源码 / IR JSON */
 export type SourceView = 'react' | 'ir';
 
+/** demo 渲染目标：SVG DOM 或 Canvas 2D */
+export type RendererMode = 'svg' | 'canvas';
+
 export const alignClass = {
   center: 'items-center',
   start: 'items-start',

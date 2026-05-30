@@ -5,8 +5,8 @@ import { Separator } from '@/components/ui/separator';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { cn } from '@/lib/utils';
 
-import { ToolbarIconButton } from './_parts';
-import { SIZE_KEYS, type SizeKey, type Transform } from './_shared';
+import { RendererModeButton, ToolbarIconButton } from './_parts';
+import { type RendererMode, SIZE_KEYS, type SizeKey, type Transform } from './_shared';
 import { PAN_STEP, ZOOM_FACTOR, ZOOM_MAX, ZOOM_MIN } from './usePanZoom';
 
 export type PanZoomToolbarProps = {
@@ -23,6 +23,10 @@ export type PanZoomToolbarProps = {
   onSizeChange: (next: SizeKey) => void;
   /** 下载当前渲染图（目前仅支持 SVG；未来通过 canvas 转 PNG / JPEG 再开多格式） */
   onDownload: () => void;
+  /** 当前渲染目标 */
+  rendererMode: RendererMode;
+  /** 切换当前渲染目标 */
+  toggleRendererMode: () => void;
   /**
    * 强制可见（覆盖 hover-only 默认）；移动端没有 hover，由父级通过 tap 切换 pinned 真值。
    * 未指定时沿用原 group-hover/focus-within 显示规则
@@ -53,8 +57,11 @@ export const PanZoomToolbar: FC<PanZoomToolbarProps> = props => {
     size,
     onSizeChange,
     onDownload,
+    rendererMode,
+    toggleRendererMode,
     pinned,
   } = props;
+  const downloadDisabled = rendererMode !== 'svg';
   return (
     <div
       className={cn(
@@ -110,12 +117,13 @@ export const PanZoomToolbar: FC<PanZoomToolbarProps> = props => {
         >
           <RotateCcw className="size-3.5" />
         </ToolbarIconButton>
-        <ToolbarIconButton label="Download SVG" onClick={onDownload}>
+        <ToolbarIconButton label="Download SVG" disabled={downloadDisabled} onClick={onDownload}>
           <Download className="size-3.5" />
         </ToolbarIconButton>
         <ToolbarIconButton label="Maximize" onClick={onMaximize} className="hidden md:inline-flex">
           <Maximize2 className="size-3.5" />
         </ToolbarIconButton>
+        <RendererModeButton rendererMode={rendererMode} onToggle={toggleRendererMode} />
       </div>
       <Separator className="w-full" />
       <ToggleGroup

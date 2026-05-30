@@ -13,6 +13,7 @@ import { CopyButton, ToolbarIconButton, ViewToggle } from './_parts';
 import {
   type AlignKey,
   type DiffMode,
+  type RendererMode,
   type SizeKey,
   type SourceView,
   type UnifiedDiff,
@@ -21,6 +22,7 @@ import {
   sizeClass,
 } from './_shared';
 import { ComponentDetailDialog } from './ComponentDetailDialog';
+import { DemoRenderer } from './DemoRenderer';
 import { PanZoomToolbar } from './PanZoomToolbar';
 import { usePanZoom } from './usePanZoom';
 
@@ -119,6 +121,7 @@ export const ComponentRender: FC<ComponentRenderProps> = props => {
   // 工具条 pinned：移动端没 hover，靠 tap preview 区域 toggle
   const [toolbarPinned, setToolbarPinned] = useState(false);
   const [isMaximized, setIsMaximized] = useState(false);
+  const [rendererMode, setRendererMode] = useState<RendererMode>('svg');
   const { transform, isDragging, panBy, zoomBy, resetTransform, isTransformed, transformStyle, beginDrag } =
     usePanZoom();
   // outer card ref：Ask AI 时反查最近前置 heading 拼 prompt 用
@@ -186,12 +189,17 @@ export const ComponentRender: FC<ComponentRenderProps> = props => {
     setView('react');
   };
 
+  const toggleRendererMode = () => {
+    setRendererMode(value => (value === 'svg' ? 'canvas' : 'svg'));
+  };
+
   /**
    * 下载当前渲染图。目前 retikz 只输出 SVG，所以直接序列化 SVG → blob → 触发 anchor 点击。
    * @todo 等渲染管线支持 canvas / WebGPU 后台后，把这里改成多格式 picker（SVG / PNG / JPEG / WebP），
    *   PNG/JPEG 走 `new Image() + canvas.drawImage` 路径（注意外部字体 / CSS var 在 canvas 里的 fallback）
    */
   const handleDownload = () => {
+    if (rendererMode !== 'svg') return;
     const svg = renderPaneRef.current?.querySelector('svg');
     if (!svg) return;
     let svgSource = new XMLSerializer().serializeToString(svg);
@@ -244,14 +252,13 @@ export const ComponentRender: FC<ComponentRenderProps> = props => {
         <div
           ref={renderPaneRef}
           className={cn(
-            // [&>svg]:max-w-full + max-h-full：让 demo 的 SVG 自动按 viewBox aspect 缩进
-            // 父框，不超出宽 / 高；TikZ 自身 width/height 属性只是 intrinsic 上限，CSS max 收紧
-            'flex items-center justify-center max-w-full max-h-full [&>svg]:max-w-full [&>svg]:max-h-full',
+            // SVG / Canvas 都按父框收紧，不超出宽 / 高；TikZ 自身 width/height 只是 intrinsic 上限
+            'flex items-center justify-center max-w-full max-h-full [&>canvas]:max-w-full [&>canvas]:max-h-full [&>svg]:max-w-full [&>svg]:max-h-full',
             !isDragging && 'transition-transform duration-150',
           )}
           style={{ transform: transformStyle }}
         >
-          <Component />
+          <DemoRenderer Component={Component} rendererMode={rendererMode} />
         </div>
         <PanZoomToolbar
           transform={transform}
@@ -265,6 +272,8 @@ export const ComponentRender: FC<ComponentRenderProps> = props => {
           size={effectiveSize}
           onSizeChange={setLocalSize}
           onDownload={handleDownload}
+          rendererMode={rendererMode}
+          toggleRendererMode={toggleRendererMode}
           pinned={toolbarPinned}
         />
       </div>
@@ -388,6 +397,8 @@ export const ComponentRender: FC<ComponentRenderProps> = props => {
         Component={Component}
         source={source}
         align={align}
+        rendererMode={rendererMode}
+        toggleRendererMode={toggleRendererMode}
       />
     </div>
   );

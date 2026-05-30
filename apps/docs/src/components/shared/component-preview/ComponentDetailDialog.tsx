@@ -7,8 +7,9 @@ import { cn } from '@/lib/utils';
 
 import { HighlightedCode } from '../highlight-code';
 import type { ComponentRenderSource } from './ComponentRender';
-import { CopyButton, ToolbarIconButton, ViewToggle } from './_parts';
-import { type AlignKey, type SourceView, alignClass, filterDiffByMode } from './_shared';
+import { CopyButton, RendererModeButton, ToolbarIconButton, ViewToggle } from './_parts';
+import { type AlignKey, type RendererMode, type SourceView, alignClass, filterDiffByMode } from './_shared';
+import { DemoRenderer } from './DemoRenderer';
 import { usePanZoom } from './usePanZoom';
 
 export type ComponentDetailDialogProps = {
@@ -20,6 +21,10 @@ export type ComponentDetailDialogProps = {
   /** 代码区视图集合；缺省 / 双字段都空时退化为单 panel 仅显示渲染区 */
   source?: ComponentRenderSource;
   align: AlignKey;
+  /** 当前渲染目标 */
+  rendererMode: RendererMode;
+  /** 切换当前渲染目标 */
+  toggleRendererMode: () => void;
 };
 
 /** Dialog 左侧渲染区的「透明」点状底纹（仿 PS/Figma 棋盘的 dot 版本，用 color-mix 同步主题） */
@@ -54,7 +59,10 @@ const DialogDemoPane: FC<DialogDemoPaneProps> = props => {
       onTouchStart={beginDrag(true)}
     >
       <div
-        className={cn('flex items-center justify-center', !isDragging && 'transition-transform duration-150')}
+        className={cn(
+          'flex items-center justify-center [&>canvas]:max-h-full [&>canvas]:max-w-full [&>svg]:max-h-full [&>svg]:max-w-full',
+          !isDragging && 'transition-transform duration-150',
+        )}
         style={{ transform: transformStyle }}
       >
         {children}
@@ -69,7 +77,7 @@ const DialogDemoPane: FC<DialogDemoPaneProps> = props => {
  *   仅一个视图存在时不出 React/IR toggle；两视图都缺（如 hideCode demo）时退化为单 panel 仅渲染区
  */
 export const ComponentDetailDialog: FC<ComponentDetailDialogProps> = props => {
-  const { open, onOpenChange, name, Component, source, align } = props;
+  const { open, onOpenChange, name, Component, source, align, rendererMode, toggleRendererMode } = props;
   const hasReact = (source?.react ?? '').length > 0;
   const hasIr = (source?.ir ?? '').length > 0;
   const hasCode = hasReact || hasIr;
@@ -110,17 +118,20 @@ export const ComponentDetailDialog: FC<ComponentDetailDialogProps> = props => {
       >
         <header className="flex shrink-0 items-center justify-between border-b px-4 py-2">
           <DialogTitle className="font-mono text-sm font-normal text-muted-foreground">{name}</DialogTitle>
-          <DialogClose asChild>
-            <ToolbarIconButton label="Close">
-              <X className="size-4" />
-            </ToolbarIconButton>
-          </DialogClose>
+          <div className="flex items-center gap-1">
+            <RendererModeButton rendererMode={rendererMode} onToggle={toggleRendererMode} />
+            <DialogClose asChild>
+              <ToolbarIconButton label="Close">
+                <X className="size-4" />
+              </ToolbarIconButton>
+            </DialogClose>
+          </div>
         </header>
         {hasCode ? (
           <ResizablePanelGroup direction="horizontal" className="min-h-0 flex-1">
             <ResizablePanel defaultSize={60} minSize={30} maxSize={85}>
               <DialogDemoPane align={align}>
-                <Component />
+                <DemoRenderer Component={Component} rendererMode={rendererMode} />
               </DialogDemoPane>
             </ResizablePanel>
             <ResizableHandle withHandle />
@@ -145,7 +156,7 @@ export const ComponentDetailDialog: FC<ComponentDetailDialogProps> = props => {
         ) : (
           <div className="min-h-0 flex-1">
             <DialogDemoPane align={align}>
-              <Component />
+              <DemoRenderer Component={Component} rendererMode={rendererMode} />
             </DialogDemoPane>
           </div>
         )}
