@@ -1,13 +1,19 @@
 import type { FC, ReactElement, ReactNode } from 'react';
-import { useMemo } from 'react';
+import { isValidElement, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { docPathSegments, useDocLocation } from '@/layout/doc-layout/docLocation';
 import type { IR } from '@retikz/core';
-import { convertReactNodeToIR } from '@retikz/react';
+import { Layout, convertReactNodeToIR } from '@retikz/react';
 
 import { ComponentRender, type ComponentRenderSource } from './ComponentRender';
-import { type AlignKey, type SizeKey, computeUnifiedDiff, formatIR } from './_shared';
+import {
+  type AlignKey,
+  type ComponentSourceFile,
+  type SizeKey,
+  computeUnifiedDiff,
+  formatIR,
+} from './_shared';
 
 /**
  * 收集 contents 下全部 demo 模块 + 源码字符串
@@ -21,10 +27,52 @@ const demoSources: Record<string, string | undefined> = import.meta.glob<string>
   import: 'default',
   eager: true,
 });
+const localSourceFiles: Record<string, string | undefined> = import.meta.glob<string>(
+  ['../../../contents/**/*.{ts,tsx}', '!../../../contents/**/*.demo.tsx'],
+  {
+    query: '?raw',
+    import: 'default',
+    eager: true,
+  },
+);
 
 const buildKey = (segments: Array<string>, name: string) => `../../../contents/${segments.join('/')}/${name}.demo.tsx`;
 const buildLangKey = (segments: Array<string>, name: string, lang: string) =>
   `../../../contents/${segments.join('/')}/${name}.${lang}.demo.tsx`;
+const buildSourceFileKey = (segments: Array<string>, filename: string) =>
+  `../../../contents/${segments.join('/')}/${filename}`;
+const filenameFromKey = (key: string) => key.slice(key.lastIndexOf('/') + 1);
+const COMPONENT_EXPANSION_LIMIT = 16;
+
+type PreviewRootProps = {
+  children?: ReactNode;
+  ir?: IR;
+  viewBox?: IR['viewBox'];
+};
+
+type FunctionComponentProps = Record<string, unknown> & {
+  children?: ReactNode;
+};
+
+const resolvePreviewRootElement = (
+  node: ReactNode,
+  depth = COMPONENT_EXPANSION_LIMIT,
+): ReactElement<PreviewRootProps> | null => {
+  if (!isValidElement(node)) return null;
+  const element = node as ReactElement<FunctionComponentProps>;
+  if (element.type === Layout || typeof element.type !== 'function' || depth <= 0) {
+    return element as ReactElement<PreviewRootProps>;
+  }
+  const component = element.type as (props: FunctionComponentProps) => ReactNode;
+  return resolvePreviewRootElement(component(element.props), depth - 1);
+};
+
+const buildPreviewIR = (Component: FC): IR => {
+  const rootElement = resolvePreviewRootElement(Component({}));
+  const base = rootElement?.props.ir ?? convertReactNodeToIR(rootElement?.props.children);
+  const viewBox = rootElement?.type === Layout ? rootElement.props.viewBox : undefined;
+  return viewBox !== undefined ? { ...base, viewBox } : base;
+};
 
 /**
  * 解析 demo key
@@ -47,6 +95,8 @@ export type ComponentPreviewProps = {
   componentClassName?: string;
   /** 隐藏底部「View Code / 源码 / IR」面板与 Dialog 右栏，只保留 demo 渲染区——用于叙述性插图 */
   hideCode?: boolean;
+  /** 与 demo 一起展示的附加源码文件，路径相对当前页面目录 */
+  sourceFiles?: Array<string>;
   /**
    * 另一个 demo 的 id（与 `name` 同名规则），作为 React 源码"新增行高亮"的 baseline
    * @description 用于 Example 类多 Step 教学页：让当前 step 的代码视图自动标出相比上一 step 新增的行（浅绿底 + 左侧色条）。
@@ -60,7 +110,8 @@ export type ComponentPreviewProps = {
  * @description 只负责 demo 文件 glob 加载 + IR 派生 + "Demo not found" 兜底；卡片 / pan&zoom / 代码面板 / 放大 dialog 全部走 `ComponentRender` 核心
  */
 export const ComponentPreview: FC<ComponentPreviewProps> = props => {
-  const { name, align = 'center', size = 'md', componentClassName, hideCode = false, diffFrom } = props;
+  const { name, align = 'center', size = 'md', componentClassName, hideCode = false, sourceFiles, diffFrom } =
+    props;
   const loc = useDocLocation();
   const { i18n } = useTranslation();
   const lang = i18n.language.startsWith('zh') ? 'zh' : 'en';
@@ -75,20 +126,18 @@ export const ComponentPreview: FC<ComponentPreviewProps> = props => {
   const baselineKey = segments && diffFrom ? resolveDemoKey(segments, diffFrom, lang) : null;
   const baselineRawSource = baselineKey ? demoSources[baselineKey] : undefined;
 
-  // IR 视图：调一次 Component()（demo 是无 hooks 的纯 FC）；优先看 TikZ 的 ir prop，否则把 children 喂给 convertReactNodeToIR；失败回落到错误文本；hideCode 时跳过整次计算
+  // IR 视图：同步展开 demo 的无 hooks 组件树，停在 <Layout> 后读取 children / ir；失败回落到错误文本；hideCode 时跳过整次计算
   const irJson = useMemo(() => {
     if (!Component || hideCode) return '';
     try {
-      const tikzElement = Component({}) as ReactElement<{ children?: ReactNode; ir?: IR }> | null;
-      const irFromProp = tikzElement?.props.ir;
-      const ir = irFromProp ?? convertReactNodeToIR(tikzElement?.props.children);
-      return formatIR(ir);
+      return formatIR(buildPreviewIR(Component));
     } catch (err) {
       return `// Failed to compute IR: ${err instanceof Error ? err.message : String(err)}`;
     }
   }, [Component, hideCode]);
 
   if (!loc) return null;
+  if (!segments) return null;
 
   if (!mod || rawSource == null || !key || !Component) {
     return (
@@ -105,9 +154,25 @@ export const ComponentPreview: FC<ComponentPreviewProps> = props => {
     !hideCode && baselineRawSource !== undefined
       ? computeUnifiedDiff(baselineRawSource.replace(/\n$/, ''), trimmedSource)
       : undefined;
+  const extraSourceFiles: Array<ComponentSourceFile> = (sourceFiles ?? []).map(filename => {
+    const sourceKey = buildSourceFileKey(segments, filename);
+    const rawSourceFile = localSourceFiles[sourceKey];
+    return {
+      filename,
+      code: rawSourceFile?.replace(/\n$/, '') ?? `// Source file not found: ${filename}`,
+    };
+  });
+  const files: Array<ComponentSourceFile> = [
+    {
+      filename: filenameFromKey(key),
+      code: trimmedSource,
+      diff: reactDiff,
+    },
+    ...extraSourceFiles,
+  ];
   const source: ComponentRenderSource | undefined = hideCode
     ? undefined
-    : { react: trimmedSource, ir: irJson, reactDiff };
+    : { reactFiles: files, ir: irJson };
 
   return (
     <ComponentRender

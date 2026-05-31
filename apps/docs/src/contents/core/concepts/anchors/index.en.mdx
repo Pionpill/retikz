@@ -36,7 +36,7 @@ The most common case: when a path references a node by plain id (`<Step to="a">`
 
 The 8 Draws below are all `[outerNode, 'Node']` — endpoints land near N / S / E / W / NE / NW / SE / SW respectively:
 
-<ComponentPreview name="anchors-auto-attach" size="lg" hideCode />
+<ComponentPreview name="anchors-auto-attach" size="md" hideCode />
 
 Rule of thumb: for flowcharts, DAG edges, and ordinary relationship lines, write plain node ids and let retikz choose the border point. Use explicit anchors / angles only when a line must leave a specific side, align with a layout, or replicate an existing diagram. To create breathing room around a border, use `margin` instead of replacing the target with hand-computed coordinates.
 
@@ -56,7 +56,7 @@ Don't want auto-selection, need a specific position? A path target uses the **ob
 
 Named / angle / edge-proportional anchors are **fixed in place** — they don't move with neighbor step direction (only auto mode does). The 8 Draws below use 8 different named anchors as endpoints:
 
-<ComponentPreview name="anchors-explicit" size="lg" />
+<ComponentPreview name="anchors-explicit" size="md" />
 
 ### String shorthand (React DSL convenience)
 
@@ -76,12 +76,12 @@ In JSX / Draw way you may use a string shorthand; the React layer eager-parses i
 
 `{ side, t }` takes the point at proportion `t ∈ [0, 1]` along an edge of the shape's **real boundary** — direction north/south west→east, east/west north→south: rectangle along the straight edge, circle / ellipse along that side's visible perimeter arc, diamond along the visible slanted edges. `{ side: 'west', t: 1/3 }` is the left edge's one-third point; `{ side: 'north', t: 0.5 }` is the top-edge midpoint (equals the named `'north'`).
 
-<ComponentPreview name="anchors-side-t" size="md" />
+<ComponentPreview name="anchors-side-t" size="sm" />
 
 ## `margin` gives lines breathing room
 
 With `<Node margin={n}>`: the border stays put, but path endpoints in **auto mode** back off `n` user units. In multi-node flow charts, `margin={4}` keeps lines from touching the border directly.
 
-<ComponentPreview name="anchors-margin" size="sm" />
+<ComponentPreview name="anchors-margin" size="xs" />
 
 Note: explicit anchors / angles (`'A.east'` / `'A.30'`) hit the **visual border** — `margin` does not apply. If you need the endpoint pushed further out, use extra padding or explicit coordinate offset.

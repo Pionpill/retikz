@@ -1,11 +1,12 @@
-import { Brush, Check, Copy, LineDotRightHorizontal } from 'lucide-react';
+import { Brush, Check, ChevronDown, Copy, FileCode2, LineDotRightHorizontal } from 'lucide-react';
 import { type ComponentProps, type FC, type ReactNode } from 'react';
 
 import { JsonIcon, ReactIcon } from '@/components/icons';
 import { Button, buttonVariants } from '@/components/ui/button';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib/utils';
 
-import type { RendererMode, SourceView } from './_shared';
+import type { ComponentSourceFile, RendererMode, SourceView } from './_shared';
 
 /**
  * 工具条小型 ghost icon button
@@ -111,6 +112,55 @@ export const ViewToggle: FC<ViewToggleProps> = props => {
         onClick={() => onChange('ir')}
       />
     </>
+  );
+};
+
+/** 源码面板的文件切换菜单 */
+export type SourceFileMenuProps = {
+  /** 当前源码视图可切换的文件列表 */
+  files: Array<ComponentSourceFile>;
+  /** 当前激活文件的下标 */
+  activeIndex: number;
+  /** 用户切换文件时回传新的下标 */
+  onChange: (index: number) => void;
+};
+
+export const SourceFileMenu: FC<SourceFileMenuProps> = props => {
+  const { files, activeIndex, onChange } = props;
+  if (files.length <= 1) return null;
+  const activeFile = files.at(activeIndex) ?? files[0];
+
+  return (
+    <DropdownMenu modal={false}>
+      <DropdownMenuTrigger
+        className={cn(
+          buttonVariants({ variant: 'outline', size: 'sm' }),
+          'h-8 max-w-[150px] min-w-0 cursor-pointer gap-1.5 px-2 font-mono text-xs',
+        )}
+        aria-label="Source file"
+        title={activeFile.filename}
+      >
+        <FileCode2 className="size-3.5 shrink-0" />
+        <span className="truncate">{activeFile.filename}</span>
+        <ChevronDown className="size-3.5 shrink-0 text-muted-foreground" />
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="start" className="w-72">
+        {files.map((file, index) => {
+          const active = index === activeIndex;
+          return (
+            <DropdownMenuItem
+              key={`${file.filename}-${index}`}
+              className="cursor-pointer gap-2"
+              title={file.filename}
+              onSelect={() => onChange(index)}
+            >
+              <Check className={cn('size-3.5 shrink-0', !active && 'opacity-0')} />
+              <span className="truncate font-mono text-xs">{file.filename}</span>
+            </DropdownMenuItem>
+          );
+        })}
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 };
 

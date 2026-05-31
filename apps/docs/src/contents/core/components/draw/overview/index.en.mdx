@@ -1,11 +1,11 @@
 ---
 title: Draw
-description: Sugar component â€?a way array threads through nodes, coordinates, folds, curves, close operations, edge labels, and styling, then expands to equivalent Path + Step.
+description: Sugar component â€” a way array threads through nodes, coordinates, folds, curves, close operations, edge labels, and styling, then expands to equivalent Path + Step.
 ---
 
 `<Draw>` is the default entry point for most connections. It accepts a `way` array and expands targets, folds, cycles, curves, shapes, and edge labels into Kernel `<Path>` + `<Step>`. Stroke, fill, arrow, and opacity props match `<Path>`.
 
-Choosing rule: use `<Draw>` for ordinary relationship lines, flowchart edges, and arrowed connections; switch to `<Path>` + `<Step>` when you need multiple `move`s, precise per-segment `kind` control, or IR-close debugging; use the **shape sugar** below to draw a single geometric shape (circle / rectangle / sector, etc.); use [Grid](/core/components/sugar/grid) for background reference lines. Work with IR directly only at AI / persistence boundaries.
+Choosing rule: use `<Draw>` for ordinary relationship lines, flowchart edges, and arrowed connections; switch to `<Path>` + `<Step>` when you need multiple `move`s, precise per-segment `kind` control, or IR-close debugging; use the **shape sugar** below to draw a single geometric shape (circle / rectangle / sector, etc.); use [Grid](/core/components/shapes/grid) for background reference lines. Work with IR directly only at AI / persistence boundaries.
 
 ## Usage
 
@@ -44,25 +44,25 @@ Draw has two curve families: `curve` / `cubic` / `bend` connect the previous tar
 
 </Comparison>
 
-<ComponentPreview name="draw-curve" />
+<ComponentPreview name="draw-curve" size="xs" />
 
 #### Cubic Bezier
 
 `{ cubic: [[c1x, c1y], [c2x, c2y]] }` is equivalent to `<Step kind="cubic">`. It draws a more controllable Bezier curve with two control points: the first shapes how the curve leaves the start point; the second shapes how it approaches the end point. This makes it better than a quadratic curve for S-curves or connectors that need precise tuning.
 
-<ComponentPreview name="draw-cubic" />
+<ComponentPreview name="draw-cubic" size="xs" />
 
 #### Bend
 
 `{ bend: 'left' | 'right', angle?: number }` is equivalent to `<Step kind="bend">`. It is shorthand for a curved connection: you only choose whether the curve bends left or right as seen from start to end, plus an optional angle; the compiler computes the control points and expands it to a cubic Bezier.
 
-<ComponentPreview name="draw-bend" size="lg" />
+<ComponentPreview name="draw-bend" size="md" />
 
 #### Arc
 
 `{ arc: { startAngle, endAngle, radius } }` is equivalent to `<Step kind="arc">`. It draws a circular arc around the previous item. It does not connect to the next target and does not consume the next item. Think of it as "sweep from one angle to another at this radius"; it is useful for angle marks, circle fragments, and geometry helpers.
 
-<ComponentPreview name="draw-arc" />
+<ComponentPreview name="draw-arc" size="sm" />
 
 ### Shapes
 
@@ -70,13 +70,13 @@ Draw has two curve families: `curve` / `cubic` / `bend` connect the previous tar
 
 `{ circle: { radius } }` draws a full circle around the previous item; the pen returns to the center.
 
-<ComponentPreview name="draw-circle" />
+<ComponentPreview name="draw-circle" size="xs" />
 
 #### Ellipse
 
 `{ ellipse: { radiusX, radiusY } }` draws a full ellipse centered on the previous item.
 
-<ComponentPreview name="draw-ellipse" />
+<ComponentPreview name="draw-ellipse" size="sm" />
 
 ### Edge Labels
 
@@ -84,7 +84,7 @@ Draw has two curve families: `curve` / `cubic` / `bend` connect the previous tar
 
 `{ label }` is an infix label operator in Draw way. It decorates the next produced segment by setting `step.label`; it does not produce a segment itself. The shorthand `{ label: 'ok' }` is equivalent to `{ label: { text: 'ok' } }`.
 
-<ComponentPreview name="draw-label" size="lg" />
+<ComponentPreview name="draw-label" size="sm" />
 
 #### Position Rules
 
@@ -96,19 +96,19 @@ Line segments are the most direct: `start` / `midway` / `end` land near the star
 
 Folded segments divide t evenly across the folded legs. `midway` lands on the corner, not at the visual midpoint by actual segment length.
 
-<ComponentPreview name="draw-label-fold" />
+<ComponentPreview name="draw-label-fold" size="sm" />
 
 Quadratic Beziers use the curve parameter t. `midway` means Bezier t=0.5, which is not always halfway along the visible curve.
 
-<ComponentPreview name="draw-label-curve" />
+<ComponentPreview name="draw-label-curve" size="sm" />
 
 Cubic Beziers also place labels by Bezier t; changing the control points changes both the position and tangent at that t.
 
-<ComponentPreview name="draw-label-cubic" />
+<ComponentPreview name="draw-label-cubic" size="sm" />
 
 `bend` expands to a cubic Bezier, so its label positioning follows the same rule as cubic.
 
-<ComponentPreview name="draw-label-bend" />
+<ComponentPreview name="draw-label-bend" size="sm" />
 
 Arcs place labels by angle interpolation; `midway` means the middle angle between `startAngle` and `endAngle`.
 
@@ -116,11 +116,11 @@ Arcs place labels by angle interpolation; `midway` means the middle angle betwee
 
 Full circles start at the 0Â° position and traverse the circle; numeric t maps to the circular angle.
 
-<ComponentPreview name="draw-label-circle" />
+<ComponentPreview name="draw-label-circle" size="lg" />
 
 Full ellipses also use angular parametrization, not equal divisions by ellipse arc length.
 
-<ComponentPreview name="draw-label-ellipse" />
+<ComponentPreview name="draw-label-ellipse" size="sm" />
 
 ### Style
 
@@ -128,19 +128,19 @@ Full ellipses also use angular parametrization, not equal divisions by ellipse a
 
 `arrow` controls endpoint arrows: `'->'` / `'<-'` / `'<->'` / `'none'`. For shape, size, color, and per-end overrides, see [Arrow](/core/components/draw/arrow).
 
-<ComponentPreview name="draw-arrow" />
+<ComponentPreview name="draw-arrow" size="sm" />
 
 #### Fill
 
 `fill` colors closed regions, and `fillRule` controls nested sub-path filling. It is commonly used with `DrawWay.Cycle`.
 
-<ComponentPreview name="draw-fill" />
+<ComponentPreview name="draw-fill" size="sm" />
 
 #### Dash
 
 `dashPattern` uses `Array<number>` for dash / gap lengths. `[4, 2]` means draw 4, skip 2, in user units.
 
-<ComponentPreview name="draw-dashed" />
+<ComponentPreview name="draw-dashed" size="sm" />
 
 #### Stacking order (zIndex)
 
@@ -161,7 +161,7 @@ Full ellipses also use angular parametrization, not equal divisions by ellipse a
 | `<RegularPolygon>` | regular polygon |
 | `<Star>` | star |
 
-One-line forms for circles, rectangles, sectors, Grid, and similar helpers now live under the [Shapes](/core/components/sugar) group. They still expand to `<Path>` / `<Step>` and share the same visual props as `<Draw>` / `<Path>`. See [Geometry](/core/components/sugar/circle-ellipse) for geometric shapes and [Grid](/core/components/sugar/grid) for regular reference lines.
+One-line forms for circles, rectangles, sectors, Grid, and similar helpers now live under the [Shapes](/core/components/shapes) group. They still expand to `<Path>` / `<Step>` and share the same visual props as `<Draw>` / `<Path>`. See [Geometry](/core/components/shapes/circle-ellipse) for geometric shapes and [Grid](/core/components/shapes/grid) for regular reference lines.
 
 ## API Reference
 
@@ -169,20 +169,20 @@ One-line forms for circles, rectangles, sectors, Grid, and similar helpers now l
 
 | Prop | Type | Default | Description |
 | --- | --- | --- | --- |
-| `way` | `Array<WayItem>` | â€?| At least 2 items; first is always `move`, rest become `line` / `step` / `cycle` and related actions based on item form |
+| `way` | `Array<WayItem>` | â€” | At least 2 items; first is always `move`, rest become `line` / `step` / `cycle` and related actions based on item form |
 | `stroke` | `string` | `currentColor` | Stroke color |
 | `strokeWidth` | `number` | `1` | Stroke width |
-| `dashPattern` | `Array<number>` | â€?| Dash / gap length sequence, for example `[4, 2]` |
+| `dashPattern` | `Array<number>` | â€” | Dash / gap length sequence, for example `[4, 2]` |
 | `lineCap` | `'butt' \| 'round' \| 'square'` | `'butt'` | Stroke endpoint shape |
 | `lineJoin` | `'miter' \| 'round' \| 'bevel'` | `'miter'` | Stroke corner shape |
-| `thickness` | `'ultraThin' \| 'veryThin' \| 'thin' \| 'semithick' \| 'thick' \| 'veryThick' \| 'ultraThick'` | â€?| Semantic stroke preset; explicit `strokeWidth` wins |
-| `arrow` | `'none' \| '->' \| '<-' \| '<->'` | â€?| Path-level arrow direction |
-| `arrowDetail` | `{ shape?, scale?, length?, width?, color?, fill?, opacity?, lineWidth?, start?, end? }` | â€?| Detailed arrow configuration; see [Arrow](/core/components/draw/arrow) |
+| `thickness` | `'ultraThin' \| 'veryThin' \| 'thin' \| 'semithick' \| 'thick' \| 'veryThick' \| 'ultraThick'` | â€” | Semantic stroke preset; explicit `strokeWidth` wins |
+| `arrow` | `'none' \| '->' \| '<-' \| '<->'` | â€” | Path-level arrow direction |
+| `arrowDetail` | `{ shape?, scale?, length?, width?, color?, fill?, opacity?, lineWidth?, start?, end? }` | â€” | Detailed arrow configuration; see [Arrow](/core/components/draw/arrow) |
 | `fill` | `string \| PaintSpec` | `'none'` | Fill for closed regions: plain color or PaintSpec (gradient / pattern / image) |
 | `fillRule` | `'nonzero' \| 'evenodd'` | `'nonzero'` | Fill rule |
-| `opacity` | `number` | â€?| Whole-path opacity, 0..1 |
-| `fillOpacity` | `number` | â€?| Fill-only opacity, 0..1 |
-| `drawOpacity` | `number` | â€?| Stroke-only opacity, 0..1 |
+| `opacity` | `number` | â€” | Whole-path opacity, 0..1 |
+| `fillOpacity` | `number` | â€” | Fill-only opacity, 0..1 |
+| `drawOpacity` | `number` | â€” | Stroke-only opacity, 0..1 |
 | `zIndex` | `number` (integer) | `0` | Explicit stacking order: higher draws on top; ties keep declaration order; effective only among siblings at the same level (forwarded to the underlying `<Path>`) |
 
 <Comparison target="tikz" title="Style Naming">
@@ -208,7 +208,7 @@ One-line forms for circles, rectangles, sectors, Grid, and similar helpers now l
 
 | Field | Type | Default | Description |
 | --- | --- | --- | --- |
-| `text` | `string` | â€?| Label text |
+| `text` | `string` | â€” | Label text |
 | `position` | `StepLabelPosition \| number` | `'midway'` | Keyword or numeric `0..1` t value |
 | `side` | `'above' \| 'below'` | `'above'` | Which side of the line to place the text on |
 
@@ -218,4 +218,4 @@ One-line forms for circles, rectangles, sectors, Grid, and similar helpers now l
 - [Path](/core/components/draw/path): the Kernel container Draw expands to and the full stroke field set
 - [Step](/core/components/draw/step): the Kernel step semantics behind each Draw segment
 - [Arrow](/core/components/draw/arrow): Arrow shape, size, color, and per-end overrides
-- [Shapes](/core/components/sugar): shortcut forms such as Circle / Ellipse / Arc / Sector / Rectangle / Grid / RegularPolygon / Star
+- [Shapes](/core/components/shapes): shortcut forms such as Circle / Ellipse / Arc / Sector / Rectangle / Grid / RegularPolygon / Star

@@ -3,13 +3,13 @@ import type { FC } from 'react';
 
 const MinimalExample: FC = () => (
   <Layout width={320} height={80}>
-    <Node id="a" position={[0, 0]}>
+    <Node id="a" position={[0, 0]} stroke="none">
       A
     </Node>
-    <Node id="b" position={[100, 0]}>
+    <Node id="b" position={[100, 0]} stroke="none">
       B
     </Node>
-    <Draw way={['a', 'b']} />
+    <Draw way={['a', 'b']} arrow="->" />
   </Layout>
 );
 

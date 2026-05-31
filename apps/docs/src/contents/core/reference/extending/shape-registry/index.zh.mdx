@@ -89,13 +89,13 @@ const scene = compileToScene(ir, { shapes: { hexagon: createPolygonShape(6) } })
 
 `createPolygonShape(n)` 这类工厂只是返回 `ShapeDefinition` 的普通函数。下面注入一个正六边形；两节点之间连线时，路径端点会停在真实的六边形边界上，而不是停在节点中心：
 
-<ComponentPreview name="custom-shape" size="md" />
+<ComponentPreview name="custom-shape" size="sm" />
 
 ### 多 primitive：子程序框
 
 `emit` 可以一次返回多个图元。下面的子程序框由一个外框和左右两条竖线组成，所以它返回 3 个 primitive。它的外轮廓仍然是矩形，因此 `circumscribe` / `boundaryPoint` / `anchor` 可以直接复用内置 rectangle：
 
-<ComponentPreview name="subroutine" size="sm" />
+<ComponentPreview name="subroutine" size="xs" />
 
 ### 语义端点：二极管
 

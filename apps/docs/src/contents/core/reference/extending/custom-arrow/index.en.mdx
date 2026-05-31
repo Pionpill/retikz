@@ -11,7 +11,7 @@ Registration goes through `CompileOptions.arrows` (in React that's `<Layout arro
 
 Below registers a `bracket` — a TikZ Bracket-style hollow square bracket `[` (a single stroked path), clearly distinct from the built-in triangular tips:
 
-<ComponentPreview name="custom-arrow-basic" size="sm" />
+<ComponentPreview name="custom-arrow-basic" size="xs" />
 
 If you only want the minimum viable arrow, implement `lineContactX` and `emit` first; `baseSize`, `tipX`, `hollow`, `defaultLength`, and `defaultWidth` only tune the look.
 
@@ -55,7 +55,7 @@ The `ArrowEmitContext` passed to `emit`:
 
 `emit` can hand `ctx.fill` / `ctx.stroke` straight to the marker — they are `MarkerFill`, usable directly as a primitive's `fill` / `stroke` with **no narrowing**. With no `color` override they are `{ kind: 'contextStroke' }`, which materializes to SVG `context-stroke`: the same arrow definition used on paths with different stroke colors follows each path's `stroke`, and `currentColor` / `var()` theme switches stay live.
 
-<ComponentPreview name="custom-arrow-inherit" size="sm" />
+<ComponentPreview name="custom-arrow-inherit" size="xs" />
 
 Both Draws use the same `bracket` definition and set no arrow-specific color, so each bracket follows its path's `stroke`. To pin the arrow color, set `arrowDetail.color` (solid) or the top-level `arrowDetail` `color` (hollow stroke).
 

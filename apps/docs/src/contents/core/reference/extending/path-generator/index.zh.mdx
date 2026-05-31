@@ -11,7 +11,7 @@ step 的内置 kind 是固定 12 种（move / line / fold / cycle / curve / cubi
 
 下面注册一个 `parabola`——`from → to` 加一个顶层 Target `bend` 作控制点，产一段二次贝塞尔：
 
-<ComponentPreview name="path-generator-parabola" size="sm" />
+<ComponentPreview name="path-generator-parabola" size="xs" />
 
 `PathGeneratorDefinition` 是普通对象（不进 IR，可由工厂返回），建议用 `definePathGenerator` 包一层（注册时 best-effort 元校验）：
 
@@ -62,7 +62,7 @@ IR 必须 100% JSON 可序列化，所以 generator 的 `params` **只能是 JSO
 
 `generate` 返回低层 `PathCommand[]`（可含 `move` 形成 sub-path，如多段波形），splice 进 path 命令流；游标落最后一个命令的终点，后续 step 从此续接。
 
-<ComponentPreview name="path-generator-sin" size="sm" />
+<ComponentPreview name="path-generator-sin" size="xs" />
 
 > generate 的坐标视作**已在世界系**：generator step 在 transformed scope 内时，`ctx.from` / `ctx.to` / `resolvedTargets` 已是世界坐标，scope 的 transform 不会对 generate 内部的增量二次作用。
 

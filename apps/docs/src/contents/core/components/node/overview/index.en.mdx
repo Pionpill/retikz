@@ -29,7 +29,7 @@ Choose the form by the role in the diagram: flowchart nodes usually use the defa
 
 `shape` picks the visual shape: `'rectangle'` (default) / `'circle'` / `'ellipse'` / `'diamond'`, or a custom shape name registered via `<Layout shapes>` / `CompileOptions.shapes`. Any shape works as an attachable target — connecting lines clip to that shape's boundary automatically:
 
-<ComponentPreview name="node-shapes" size="lg" />
+<ComponentPreview name="node-shapes" size="sm" />
 
 > Each shape's outer boundary contains "text rectangle + padding":
 > - rectangle: boundary = inner rect
@@ -55,7 +55,7 @@ In addition to Cartesian / polar, `position` accepts **`{ direction, of, distanc
 
 </Comparison>
 
-<ComponentPreview name="node-at-relative" />
+<ComponentPreview name="node-at-relative" size="sm" />
 
 #### Offset positioning
 
@@ -73,7 +73,7 @@ In addition to Cartesian / polar, `position` accepts **`{ direction, of, distanc
 
 </Comparison>
 
-<ComponentPreview name="node-offset-position" />
+<ComponentPreview name="node-offset-position" size="sm" />
 
 #### Proportional positioning
 
@@ -89,11 +89,11 @@ Since v0.2, `position` also accepts **`{ between, t }`**: place the node at a pr
 
 </Comparison>
 
-<ComponentPreview name="node-label-basic" size="lg" />
+<ComponentPreview name="node-label-basic" size="xs" />
 
 `distance` controls how far the label is pushed outward from the node border, still in retikz user units. It defaults to `12`; for example, `position: 'above', distance: 20` places the label further above the node's top border.
 
-<ComponentPreview name="node-label-distance" size="sm" />
+<ComponentPreview name="node-label-distance" size="xs" />
 
 ### Styling
 
@@ -111,7 +111,7 @@ Since v0.2, `position` also accepts **`{ between, t }`**: place the node at a pr
 
 `text` accepts a string (one line) or an array of strings (one line each). `align` controls horizontal alignment within the text block (`'left'` / `'center'` (default) / `'right'`), and `lineHeight` controls vertical spacing between lines, defaulting to `font.size × 1.2`.
 
-<ComponentPreview name="node-multiline" size="sm" />
+<ComponentPreview name="node-multiline" size="xs" />
 
 > Arrays beat `'\n'`-delimited strings: JSON-friendly (no escape headaches), and leaves room for per-line attributes later.
 
@@ -146,13 +146,13 @@ Each line can override `fill` / `opacity` / `font` (any subset of family / size 
 1. **Mix LineSpec objects into the `text` array** — JSON / AI-friendly, schema-expressible
 2. **`<Text>` child elements** — natural JSX; see the [Text page](/core/components/node/text) for the dedicated docs
 
-<ComponentPreview name="node-styled-lines" />
+<ComponentPreview name="node-styled-lines" size="xs" />
 
 > Block-level `align` / `lineHeight` cannot be overridden per line — they apply to the whole multi-line block.
 
 Multi-line text combined with each shape — outer boundary follows the shape-specific circumscription (circle / ellipse / diamond):
 
-<ComponentPreview name="node-multiline-shapes" />
+<ComponentPreview name="node-multiline-shapes" size="xs" />
 
 #### Inner / outer sep
 
@@ -163,7 +163,7 @@ Both **symmetric aliases** and **axis-specific** forms are supported. If both ar
 
 Most nodes only need `padding={N}`. Use `innerXSep` / `innerYSep` when horizontal and vertical spacing need different values.
 
-<ComponentPreview name="node-sep" size="sm" />
+<ComponentPreview name="node-sep" size="xs" />
 
 <Comparison target="tikz" title="Sep Naming">
 
@@ -177,7 +177,7 @@ Most nodes only need `padding={N}`. Use `innerXSep` / `innerYSep` when horizonta
 - `opacity` — whole-node 0..1 (applies to shape + text)
 - `fillOpacity` / `drawOpacity` — fill-only / stroke-only opacity
 
-<ComponentPreview name="node-color-opacity" size="sm" />
+<ComponentPreview name="node-color-opacity" size="xs" />
 
 #### Gradient fill (Paint)
 
@@ -212,7 +212,7 @@ A stop's `opacity` gives a "solid → transparent" fade; `color` set to `current
 
 `dashed` / `dotted` are presets; `dashArray` is an explicit dash/gap length sequence (priority: `dashArray` > `dashed` > `dotted`):
 
-<ComponentPreview name="node-stroke-style" size="sm" />
+<ComponentPreview name="node-stroke-style" size="xs" />
 
 #### Size constraints + scale
 
@@ -220,13 +220,13 @@ A stop's `opacity` gives a "solid → transparent" fade; `color` set to `current
 - `minimumWidth` / `minimumHeight` / `minimumSize` — floor the bbox without shrinking natural text width
 - `scale` / `xScale` / `yScale` — uniform / per-axis scale; affects bbox, font size, padding, and path attachment
 
-<ComponentPreview name="node-size-constraints" size="sm" />
+<ComponentPreview name="node-size-constraints" size="xs" />
 
 #### Rotation
 
 `rotate` rotates around the node center; attached paths follow the new border:
 
-<ComponentPreview name="node-rotated" size="sm" />
+<ComponentPreview name="node-rotated" size="xs" />
 
 #### Stacking order (zIndex)
 
@@ -238,7 +238,7 @@ By default stacking = declaration order (SVG only honors paint order). `zIndex` 
 
 `label.rotate` spins the label text around **its own center**: `'radial'` along the node-center → label-center direction, `'tangent'` is its tangent (radial + 90°), a number is an explicit angle (degrees); `keepUpright` flips it 180° when it would otherwise read upside-down. `rotate` only changes orientation, not the placement determined by `position` / `distance`.
 
-<ComponentPreview name="node-label-rotate" size="md" />
+<ComponentPreview name="node-label-rotate" size="sm" />
 
 #### Pin
 

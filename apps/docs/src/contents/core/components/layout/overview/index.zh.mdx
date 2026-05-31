@@ -44,13 +44,13 @@ import { Layout } from '@retikz/react';
 
 `<Layout>` 接受 `ir` prop——直接把一段已经持久化的 IR JSON 渲染成图，**不写一行 JSX children**。来源不限：LLM 生成、JSON 编辑器、URL 反序列化、数据库存档都可以。
 
-<ComponentPreview name="layout-from-ir" size="sm" />
+<ComponentPreview name="layout-from-ir" size="xs" />
 
 ### 自定义 viewBox
 
 默认 `viewBox` 由内容自动算（AABB + padding）。传 `viewBox={{ x, y, width, height }}` 显式定死视框——固定尺寸、故意裁剪、多图对齐、排除溢出都靠它。有 viewBox 则**覆盖**自动算、**忽略 padding**；`width` / `height` 必须 > 0。
 
-<ComponentPreview name="layout-viewbox" size="sm" />
+<ComponentPreview name="layout-viewbox" size="md" />
 
 > viewBox 注入构造出的 IR 根（`ir.viewBox`）；直接传 `ir` prop 且 IR 自带 viewBox 时，prop 优先、prop 缺省则用 IR 内置值。与 `width` / `height`（渲染尺寸）正交。
 

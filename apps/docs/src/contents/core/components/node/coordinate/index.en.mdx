@@ -44,7 +44,7 @@ Without `<Coordinate>`, anchoring "a named point" forces you to fake an empty `<
 
 The most common pattern: name a virtual center, then have multiple nodes position around it and multiple paths terminate at it.
 
-<ComponentPreview name="coordinate-as-anchor" size="lg" />
+<ComponentPreview name="coordinate-as-anchor" size="md" />
 
 The four nodes above all use `at.of='hub'` to reference the same hub; moving hub moves the whole arrangement. Without a coordinate, each `at.of` would have to be replaced with absolute coordinates and each path would need `[0, 0]` literals — repetitive and unrenameable.
 
@@ -52,13 +52,13 @@ The four nodes above all use `at.of='hub'` to reference the same hub; moving hub
 
 In flow charts, multiple paths often converge at a virtual point — that point isn't a real node (no rectangle / no text), but it needs an id so several `way`s can route through it.
 
-<ComponentPreview name="coordinate-fold-junction" size="lg" />
+<ComponentPreview name="coordinate-fold-junction" size="sm" />
 
 ### Offset positioning chain
 
 Use `{ of, offset }` to derive one coordinate from another — drive the whole group from a single root, and moving the root drags everything along. Lower coupling than hand-writing each absolute coordinate:
 
-<ComponentPreview name="coordinate-offset-chain" size="lg" />
+<ComponentPreview name="coordinate-offset-chain" size="sm" />
 
 Debugging note: a Coordinate **does not** expand layout bounds. Registering a far-away coordinate alone will not make the canvas grow; an actual Node / Path primitive must land in that region for the final viewBox to cover it.
 
@@ -66,7 +66,7 @@ Debugging note: a Coordinate **does not** expand layout bounds. Registering a fa
 
 `{ between: [A, B], t }` takes a point along the A→B segment at proportion t (0..1) — `lerp(A, B, t)`, matching TikZ `($(A)!t!(B)$)`. Placing a "midpoint / one-third" point this way beats hand-computing coordinates and keeps the proportion as A / B move. Endpoints are a self-contained **AbsoluteTarget** (Cartesian / polar / node reference `{ id, anchor? }` / `{ of, offset }` / nested between — **excluding** path-relative). The same shape works in `<Coordinate position>` / `<Node position>` / `<Step to>`:
 
-<ComponentPreview name="coordinate-between" size="sm" />
+<ComponentPreview name="coordinate-between" size="xs" />
 
 > `t` is strict [0,1] (extrapolation not yet supported); when an endpoint references an undefined node, Coordinate / Node position resolution throws while a path `Step.to` warns and skips — the same as other positioning forms.
 

@@ -61,6 +61,16 @@ export type UnifiedDiff = {
   lineKinds: ReadonlyArray<DiffLineKind>;
 };
 
+/** ComponentPreview 源码面板中的单个文件 */
+export type ComponentSourceFile = {
+  /** 展示在文件切换条里的文件名 */
+  filename: string;
+  /** 当前文件的原始源码 */
+  code: string;
+  /** 可选的教学 diff 数据，仅主 demo 文件通常会提供 */
+  diff?: UnifiedDiff;
+};
+
 /**
  * Diff 展示模式
  * @description off = 不显示 diff（展示真实 current 源码）；full = 完整 unified（current + removed 交织）；added = 只显示新增 + context（≈ current 源码 + 新增行染色）；removed = 只显示删除 + context（≈ baseline 视角 + 删除行染色）

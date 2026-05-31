@@ -9,7 +9,11 @@ It brings a mature vocabulary of nodes, paths, and anchors into the browser, exp
 
 ## A Minimal Example
 
+This diagram does one small thing: it places two named nodes, then uses one arrowed `Draw` to connect them. It shows retikz's basic flow: place reusable points first, then stitch primitives together with path relationships.
+
 <ComponentPreview name="minimal-example" size="xs" />
+
+## Current Version
 
 The current v0.2 surface focuses on **general primitives plus extensible drawing semantics**: named nodes, reference points, path actions, arrows, edge labels, multi-line text, Scope grouping / local transforms / style inheritance, plus gradient / pattern / image fills and registries for shapes, arrows, patterns, and path generators. Charting, flow layout, codecs, and additional framework adapters remain domain-package or future integration directions, not core `@retikz/react` APIs.
 
@@ -31,6 +35,10 @@ retikz picks IR JSON over JSX as the primary AI interface, leveraging OpenAI Str
 
 Every input form (JSX / DSL / AI) compiles to the same IR; every output form (renderer) reads from it.
 **Persistence, cross-platform support, and AI integration aren't separate features — they're the same dividend paid by an IR-centric model.**
+The practical benefit is straightforward:
+- You maintain saving, editing, and rendering around one IR contract.
+- You do not need separate formats for JSX, AI output, or each renderer.
+- System boundaries stay clearer, and future extensions get cheaper.
 
 ## Layered Abstraction
 

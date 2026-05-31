@@ -1,13 +1,13 @@
 ---
 title: Karl's Unit Circle
-description: Academic illustration example �?sin / cos / tan geometry for a 30° angle; start from a circle and grow the figure in seven steps, exercising Path / Draw / Coordinate / Node side by side
+description: Academic illustration example — sin / cos / tan geometry for a 30° angle; start from a circle and grow the figure in seven steps, exercising Path / Draw / Coordinate / Node side by side
 ---
 
 ## Introduction
 
-This is the final figure from the [TikZ tutorial](https://tikz.dev/tutorial) �?"Karl teaching his daughter trigonometry": a unit circle plus the sin / cos / tan geometry around a 30° angle.
+This is the final figure from the [TikZ tutorial](https://tikz.dev/tutorial) — "Karl teaching his daughter trigonometry": a unit circle plus the sin / cos / tan geometry around a 30° angle.
 
-The page breaks it into 7 accumulative steps. From a single naked circle each step adds one visible element and one retikz capability �?by the end you have the full figure and have also seen the three most beginner-friendly v0.2 sugars: [Circle](/core/components/sugar/circle-ellipse) / [Grid](/core/components/sugar/grid) / [Sector](/core/components/sugar/circle-ellipse). They shorten the hand-written Path / Step pieces, while [Draw](/core/components/draw/overview) / [Coordinate](/core/components/node/coordinate) / [Node](/core/components/node/overview) keep building the full figure, plus polar positions, multi-Draw coordination, and multi-line / multi-color Node text.
+The page breaks it into 7 accumulative steps. From a single naked circle each step adds one visible element and one retikz capability — by the end you have the full figure and have also seen the three most beginner-friendly v0.2 sugars: [Circle](/core/components/shapes/circle-ellipse) / [Grid](/core/components/shapes/grid) / [Sector](/core/components/shapes/circle-ellipse). They shorten the hand-written Path / Step pieces, while [Draw](/core/components/draw/overview) / [Coordinate](/core/components/node/coordinate) / [Node](/core/components/node/overview) keep building the full figure, plus polar positions, multi-Draw coordination, and multi-line / multi-color Node text.
 
 <ComponentPreview name="karl-circle-07-info" size="lg" />
 
@@ -15,17 +15,17 @@ If you are coming from TikZ, watch four differences in this page: retikz coordin
 
 ## Prompt
 
-Send the prompt below to the AI chat panel �?the LLM will produce retikz IR / JSX for this figure directly. For variants (different angle, colors, radius), edit the prompt inside the chat panel after sending and resend.
+Send the prompt below to the AI chat panel — the LLM will produce retikz IR / JSX for this figure directly. For variants (different angle, colors, radius), edit the prompt inside the chat panel after sending and resend.
 
 <ExamplePrompt
-  short="**Draw a 30° angle sin / cos / tan geometry diagram**: unit circle + axes with arrows + ticks (�?, �?/2, 1/2, 1) + green-filled wedge + red / dodgerblue / darkorange function lines + a right-hand multi-color info box."
+  short="**Draw a 30° angle sin / cos / tan geometry diagram**: unit circle + axes with arrows + ticks (−1, −1/2, 1/2, 1) + green-filled wedge + red / dodgerblue / darkorange function lines + a right-hand multi-color info box."
   detailed={`**Draw the unit-circle trigonometry diagram**
 
 **Geometry**
 
 - Unit circle, r = 100px
-- Axes x / y from �?.5 to 1.5, with arrows
-- Ticks: x at �? / �?/2 / 1; y at �? / �?/2 / 1/2 / 1
+- Axes x / y from −1.5 to 1.5, with arrows
+- Ticks: x at −1 / −1/2 / 1; y at −1 / −1/2 / 1/2 / 1
 - Light background grid, 50px spacing
 - 30° wedge centered at the origin, radius 30px
 
@@ -46,62 +46,62 @@ Send the prompt below to the AI chat panel �?the LLM will produce retikz IR / J
 - each function line carries its own name label
 - right-hand multi-line info box, per-line color, describing α / sin / cos / tan values`}
   extensions={[
-    "**Switch to an obtuse angle (120°)**: change the angle from 30° to 120° and see what it looks like geometrically when cos goes negative �?the sin projection lands on the left side of the y-axis, and the tan tangent flips with it.",
-    "**Draw all six trig functions**: add sec / csc / cot to the same figure following their geometric definitions �?sec as the x-axis intercept, csc as the y-axis intercept, cot as the distance from (0, 1) along the horizontal tangent to where the origin ray hits.",
+    "**Switch to an obtuse angle (120°)**: change the angle from 30° to 120° and see what it looks like geometrically when cos goes negative — the sin projection lands on the left side of the y-axis, and the tan tangent flips with it.",
+    "**Draw all six trig functions**: add sec / csc / cot to the same figure following their geometric definitions — sec as the x-axis intercept, csc as the y-axis intercept, cot as the distance from (0, 1) along the horizontal tangent to where the origin ray hits.",
     "**Side-by-side angle comparison**: render three ComponentPreviews in a row for 30° / 60° / 120° using the same diagram, so the geometric change in sin / cos / tan across angles is visible at a glance.",
   ]}
 />
 
 ## Steps
 
-### Step 1 �?Unit circle
+### Step 1 — Unit circle
 
-Minimal start �?one circle centered at the origin. Use [Circle](/core/components/sugar/circle-ellipse) here: `center + radius` keeps the first step short, and it still expands to the same underlying Path / Step shape, but the code reads like “this is a circle�?at a glance. `lineCap="round"` softens the line endpoints.
+Minimal start — one circle centered at the origin. Use [Circle](/core/components/shapes/circle-ellipse) here: `center + radius` keeps the first step short, and it still expands to the same underlying Path / Step shape, but the code reads like “this is a circle— at a glance. `lineCap="round"` softens the line endpoints.
 
 <ComponentPreview name="karl-circle-01-circle" size="lg" />
 
-### Step 2 �?Axes + endpoint labels + named anchors
+### Step 2 — Axes + endpoint labels + named anchors
 
-x and y axes use [Draw](/core/components/draw/overview) with `arrow="->"` to get arrow-tipped segments. The `x` / `y` labels at the axis ends are [Node](/core/components/node/overview)s (with `stroke="none"` to hide the default border) placed just past each axis. [Coordinate](/core/components/node/coordinate) names the two endpoints (`x-axis` / `y-axis`) so later steps could reference them by id string �?this example doesn't end up using them, but we keep them for fidelity to TikZ's `coordinate(x axis)` idiom.
+x and y axes use [Draw](/core/components/draw/overview) with `arrow="->"` to get arrow-tipped segments. The `x` / `y` labels at the axis ends are [Node](/core/components/node/overview)s (with `stroke="none"` to hide the default border) placed just past each axis. [Coordinate](/core/components/node/coordinate) names the two endpoints (`x-axis` / `y-axis`) so later steps could reference them by id string — this example doesn't end up using them, but we keep them for fidelity to TikZ's `coordinate(x axis)` idiom.
 
 <ComponentPreview name="karl-circle-02-axes" diffFrom="karl-circle-01-circle" size="lg" />
 
-### Step 3 �?Grid + ticks
+### Step 3 — Grid + ticks
 
-The background grid now uses [Grid](/core/components/sugar/grid) sugar, which expands to many lines for you. Ticks are also array-driven: a short segment plus a transparent [Node](/core/components/node/overview) per tick; the label sits **slightly offset** from its tick (x-axis labels nudged 10px left, y-axis labels 10px down) so they don't clash with the circle or axis lines, and the step reads like “give me a grid�?instead of “assemble 10 lines.�?
-retikz coordinates are SVG pixels with y pointing downward �?so "1 unit up" is written as `[0, -100]` (this example uses 100px = unit-circle radius as the length basis). The top-level `<Layout>` has no picture-level scale or y-flip, so math coordinates from the TikZ tutorial need their y manually negated.
+The background grid now uses [Grid](/core/components/shapes/grid) sugar, which expands to many lines for you. Ticks are also array-driven: a short segment plus a transparent [Node](/core/components/node/overview) per tick; the label sits **slightly offset** from its tick (x-axis labels nudged 10px left, y-axis labels 10px down) so they don't clash with the circle or axis lines, and the step reads like “give me a grid— instead of “assemble 10 lines.— 
+retikz coordinates are SVG pixels with y pointing downward — so "1 unit up" is written as `[0, -100]` (this example uses 100px = unit-circle radius as the length basis). The top-level `<Layout>` has no picture-level scale or y-flip, so math coordinates from the TikZ tutorial need their y manually negated.
 
 <ComponentPreview name="karl-circle-03-ticks" diffFrom="karl-circle-02-axes" size="lg" />
 
-### Step 4 �?30° wedge + α label
+### Step 4 — 30° wedge + α label
 
-The wedge is the trickiest step. Use [Sector](/core/components/sugar/circle-ellipse) here: it starts from the center, draws the arc, and closes back to the center, so the intent reads more directly than a hand-written `arc` + `line` path, and it is easier for a first-time reader to remember as one clear API.
+The wedge is the trickiest step. Use [Sector](/core/components/shapes/circle-ellipse) here: it starts from the center, draws the arc, and closes back to the center, so the intent reads more directly than a hand-written `arc` + `line` path, and it is easier for a first-time reader to remember as one clear API.
 
-The α label is a [Node](/core/components/node/overview) at a polar position (`{ angle, radius }`) �?`polar(15, 0.22)` places it visually centered in the wedge.
+The α label is a [Node](/core/components/node/overview) at a polar position (`{ angle, radius }`) — `polar(15, 0.22)` places it visually centered in the wedge.
 
 <ComponentPreview name="karl-circle-04-wedge" diffFrom="karl-circle-03-ticks" size="lg" />
 
-### Step 5 �?sin α red line + cos α dodgerblue line
+### Step 5 — sin α red line + cos α dodgerblue line
 
-`sin` drops from (30°, 100px) vertically to the x-axis; `cos` goes from that foot back to the origin. Both use [Draw](/core/components/draw/overview), with a `{ label: { text, side } }` operator threaded into the `way` array to attach an edge label. `thickness="veryThick"` is a semantic stroke preset �?saves having to pick a numeric width.
+`sin` drops from (30°, 100px) vertically to the x-axis; `cos` goes from that foot back to the origin. Both use [Draw](/core/components/draw/overview), with a `{ label: { text, side } }` operator threaded into the `way` array to attach an edge label. `thickness="veryThick"` is a semantic stroke preset — saves having to pick a numeric width.
 
-Note: the original TikZ uses `(30:1cm |- x axis)` to express "horizontal projection of (30°, 1cm) onto the x-axis" directly. retikz has no projection target yet �?geometrically that equals (cos30°, 0), so we hand-compute the coordinate.
+Note: the original TikZ uses `(30:1cm |- x axis)` to express "horizontal projection of (30°, 1cm) onto the x-axis" directly. retikz has no projection target yet — geometrically that equals (cos30°, 0), so we hand-compute the coordinate.
 
 <ComponentPreview name="karl-circle-05-sin-cos" diffFrom="karl-circle-04-wedge" size="lg" />
 
-### Step 6 �?tan α darkorange line + auxiliary ray
+### Step 6 — tan α darkorange line + auxiliary ray
 
 The tan line goes from (1, 0) up to (1, tan30°). The original uses TikZ's `name path` + `name intersections` to compute "intersection of x=1 vertical and 30° ray from origin"; retikz has no such constructs, so we hand-compute (1, tan30°) and name it `t` via [Coordinate](/core/components/node/coordinate). The auxiliary ray from the origin through `t` then just references the id.
 
-The pattern here �?multiple [Draw](/core/components/draw/overview)s coordinating through shared named anchors �?is retikz's standard way to wire up a multi-segment figure.
+The pattern here — multiple [Draw](/core/components/draw/overview)s coordinating through shared named anchors — is retikz's standard way to wire up a multi-segment figure.
 
 <ComponentPreview name="karl-circle-06-tan" diffFrom="karl-circle-05-sin-cos" size="lg" />
 
-### Step 7 �?Right-hand multi-color info box
+### Step 7 — Right-hand multi-color info box
 
-Finally, a colored info card on the right. The [Node](/core/components/node/overview) `text` prop takes an array of lines �?**each entry can be a string or `{ text, fill }`**, the latter switching color for that line. Visual grouping comes from alternating "colored formula line + default-color caption line"; we don't insert empty `''` separators because they inflate `textHeight` (counted as a full lineHeight) while empty `tspan` `dy` advance is inconsistent across browsers, leaving a visible empty strip below the text.
+Finally, a colored info card on the right. The [Node](/core/components/node/overview) `text` prop takes an array of lines — **each entry can be a string or `{ text, fill }`**, the latter switching color for that line. Visual grouping comes from alternating "colored formula line + default-color caption line"; we don't insert empty `''` separators because they inflate `textHeight` (counted as a full lineHeight) while empty `tspan` `dy` advance is inconsistent across browsers, leaving a visible empty strip below the text.
 
-`shape="rectangle"` + `roundedCorners` + `align="left"` packs the lines into a left-aligned rounded card; `stroke="#d4d4d4"` + `dashed` add a light-gray dashed border (no fill, visible in both light and dark themes). Note: in-line span coloring (multiple colors within a single line) is not supported yet �?only whole-line color switches. See Limitations.
+`shape="rectangle"` + `roundedCorners` + `align="left"` packs the lines into a left-aligned rounded card; `stroke="#d4d4d4"` + `dashed` add a light-gray dashed border (no fill, visible in both light and dark themes). Note: in-line span coloring (multiple colors within a single line) is not supported yet — only whole-line color switches. See Limitations.
 
 <ComponentPreview name="karl-circle-07-info" diffFrom="karl-circle-06-tan" size="lg" />
 
@@ -109,9 +109,9 @@ Finally, a colored info card on the right. The [Node](/core/components/node/over
 
 | Component | Role in this example | Main steps |
 | --- | --- | --- |
-| [Circle](/core/components/sugar/circle-ellipse) | Unit circle | [1](#step-1--unit-circle), [3](#step-3--grid--ticks), [4](#step-4--30-wedge--α-label) |
-| [Sector](/core/components/sugar/circle-ellipse) | 30° wedge | [4](#step-4--30-wedge--α-label), [5](#step-5--sin-α-red-line--cos-α-dodgerblue-line), [6](#step-6--tan-α-darkorange-line--auxiliary-ray) |
-| [Grid](/core/components/sugar/grid) | Background grid | [3](#step-3--grid--ticks) |
+| [Circle](/core/components/shapes/circle-ellipse) | Unit circle | [1](#step-1--unit-circle), [3](#step-3--grid--ticks), [4](#step-4--30-wedge--α-label) |
+| [Sector](/core/components/shapes/circle-ellipse) | 30° wedge | [4](#step-4--30-wedge--α-label), [5](#step-5--sin-α-red-line--cos-α-dodgerblue-line), [6](#step-6--tan-α-darkorange-line--auxiliary-ray) |
+| [Grid](/core/components/shapes/grid) | Background grid | [3](#step-3--grid--ticks) |
 | [Draw](/core/components/draw/overview) | Axes + tick marks + sin/cos/tan colored lines + auxiliary ray | [2](#step-2--axes--endpoint-labels--named-anchors), [3](#step-3--grid--ticks), [5](#step-5--sin-α-red-line--cos-α-dodgerblue-line), [6](#step-6--tan-α-darkorange-line--auxiliary-ray) |
 | [Node](/core/components/node/overview) | Axis-end labels + tick text + α label + right info box | [2](#step-2--axes--endpoint-labels--named-anchors), [3](#step-3--grid--ticks), [4](#step-4--30-wedge--α-label), [7](#step-7--right-hand-multi-color-info-box) |
 | [Coordinate](/core/components/node/coordinate) | Named x/y axis endpoints + tan intersection `t` | [2](#step-2--axes--endpoint-labels--named-anchors), [6](#step-6--tan-α-darkorange-line--auxiliary-ray) |
@@ -125,7 +125,7 @@ The items below will be filled in over upcoming releases; everything marked 🚧
 - 🚧 **Projection target (`(A |- B)`)**: planned. The example hand-computes `[cos30 * 100, 0]`
 - 🚧 **Named path + intersection target**: planned. The example hand-computes `[100, -tan30 * 100]`
 - 🚧 **In-line spans inside LineSpec**: planned (add a `spans` field). The example switches color only at line granularity
-- �?**Inline LaTeX math typography** (`$\frac{1}{2}$` / `$\sin \alpha$`): not planned. The example uses plain characters (`1/2` / `sin α`)
+- ❌ **Inline LaTeX math typography** (`$\frac{1}{2}$` / `$\sin \alpha$`): not planned. The example uses plain characters (`1/2` / `sin α`)
 
 ## Related
 

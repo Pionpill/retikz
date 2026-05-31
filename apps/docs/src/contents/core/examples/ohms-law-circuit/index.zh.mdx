@@ -1,0 +1,143 @@
+---
+title: "欧姆定律电路"
+description: "高中物理串联测量电路示例：用自定义形状、固定端点和 Scope 复制画出完整电路图"
+---
+
+## 引言
+
+这一页用一张高中物理课本风的欧姆定律实验电路图，展示 [Layout](/core/components/layout/overview)、[Scope](/core/components/layout/scope)、[Node](/core/components/node/overview)、[Draw](/core/components/draw/overview)、[Coordinate](/core/components/node/coordinate) 和 [Shape Registry](/core/reference/extending/shape-registry) 如何配合。
+
+<ComponentPreview
+  name="ohms-law-circuit-06-labels"
+  sourceFiles={['circuitScene.tsx', 'circuitElements.tsx', 'circuitEndpoints.ts', 'circuitShapes.ts']}
+  size="xxl"
+/>
+
+最终图保持干净：测量支路没有背景框，左下角没有说明卡，`R1` / `R2` 周围也没有多余箭头。这里的画法是先把电源、开关、电表、电阻这些电路元件作为自定义 `Node` 放好，每个元件自己提供固定连接端点；导线再去连接这些端点。
+
+## Prompt
+
+下面这段 prompt 可以直接发给 AI 对话面板，让它画出类似的电路图。它只描述目标画面和视觉约束，不强迫模型记住具体 API 名称。
+
+<ExamplePrompt
+  short="**画一张高中物理欧姆定律实验电路图**：一个闭合主回路，左侧是电源和开关，上方是电流表，中间是两段串联电阻，每段电阻下方各有一个并联电压表，底部是滑动变阻器；整体像课本插图，干净清楚，不要测量支路背景框，也不要在 R1 / R2 周围放多余箭头。"
+  detailed={`**画一张高中物理欧姆定律实验电路图**
+
+**电路结构**
+
+- 主回路是一个横向展开的闭合导线框
+- 左侧放电源和开关，上方放电流表
+- 中间放两段串联电阻，标成 R1 和 R2
+- 每段电阻下方各放一个并联电压表，标成 U1 / U2
+- 底部放一个滑动变阻器
+
+**视觉风格**
+
+- 元件像课本里的电路符号，不要用装饰卡片拼贴
+- 电表用圆形表头，只保留 A 或 V
+- 电阻用锯齿线，滑动变阻器用更长的锯齿和轻微底纹
+- 全图用 currentColor 单色绘制，不要给电表加填充，也不要给测量支路加背景框
+
+**标注**
+
+- 保留必要标签：E、S、A、R1、R2、V、U1、U2、滑动变阻器
+- 不要加方向箭头，正文会解释串联电流相同，以及两个电压表分别测量两段电阻`}
+  extensions={[
+    '把电阻改成三段串联，并复用同一组测量单元。',
+    '把滑动变阻器放到右侧，但保持主回路的阅读顺序清楚。',
+    '改成更深一点的讲义风格，但依然保证导线和标注清楚可读。',
+  ]}
+/>
+
+## 过程
+
+### Step 1: 先放元件和固定端点
+
+先固定 [Layout](/core/components/layout/overview) 的 `viewBox`，再把电源、开关、电流表和第一组 `R + V` 测量单元都作为 [Node](/core/components/node/overview) 放到画布上。每个电路符号都是自定义 shape，内部已经知道自己的输入、输出或正负极端点；这一步还不画导线。
+
+<ComponentPreview
+  name="ohms-law-circuit-01-loop"
+  sourceFiles={['circuitScene.tsx', 'circuitElements.tsx', 'circuitEndpoints.ts', 'circuitShapes.ts']}
+  size="xxl"
+/>
+
+### Step 2: 再连接主回路
+
+有了元件之后，再用 [Draw](/core/components/draw/overview) 把主回路接起来：电源正极到开关，开关到电流表，电流表到第一段电阻，再回到底部和电源负极。导线引用的是元件端点，而不是手工猜出的中心坐标。
+
+<ComponentPreview
+  name="ohms-law-circuit-02-instruments"
+  diffFrom="ohms-law-circuit-01-loop"
+  sourceFiles={['circuitScene.tsx', 'circuitElements.tsx', 'circuitEndpoints.ts', 'circuitShapes.ts']}
+  size="xxl"
+/>
+
+### Step 3: 接第一组测量支路
+
+第一组测量支路把 `R1` 两端分别接到下方电压表的两端。`R1` 的文字位置用 [Coordinate](/core/components/node/coordinate) 的 `between` 放在电阻两端的中点；并联支路只表达“这个电压表测这段电阻”。
+
+<ComponentPreview
+  name="ohms-law-circuit-03-first-cell"
+  diffFrom="ohms-law-circuit-02-instruments"
+  sourceFiles={['circuitScene.tsx', 'circuitElements.tsx', 'circuitEndpoints.ts', 'circuitShapes.ts']}
+  size="xxl"
+/>
+
+### Step 4: 复制第二组测量支路
+
+第二组 `R2 + V2` 不重新手画，而是把同一组测量单元包进 [Scope](/core/components/layout/scope) 后平移复制。局部结构里的电阻、电压表、并联支路和中点定位规则保持一致，只替换 id 前缀和显示标签。
+
+<ComponentPreview
+  name="ohms-law-circuit-04-duplicate-cell"
+  diffFrom="ohms-law-circuit-03-first-cell"
+  sourceFiles={['circuitScene.tsx', 'circuitElements.tsx', 'circuitEndpoints.ts', 'circuitShapes.ts']}
+  size="xxl"
+/>
+
+### Step 5: 加滑动变阻器和底纹
+
+底部加入滑动变阻器，并把主回路的下边接到它的左右端点上。它仍然是一个自定义 `Node`，锯齿线、滑片斜线和内部的 `pattern` 底纹都封装在这个元件里。
+
+<ComponentPreview
+  name="ohms-law-circuit-05-rheostat"
+  diffFrom="ohms-law-circuit-04-duplicate-cell"
+  sourceFiles={['circuitScene.tsx', 'circuitElements.tsx', 'circuitEndpoints.ts', 'circuitShapes.ts']}
+  size="xxl"
+/>
+
+### Step 6: 补齐标签和阅读顺序
+
+最后只补必要标注：`E`、`S`、`R1`、`R2`、`U1`、`U2` 和滑动变阻器名称。图上不再添加箭头或说明卡，读者可以按“主回路 -> 两段串联电阻 -> 两条并联测量支路”的顺序自然读下去。
+
+<ComponentPreview
+  name="ohms-law-circuit-06-labels"
+  diffFrom="ohms-law-circuit-05-rheostat"
+  sourceFiles={['circuitScene.tsx', 'circuitElements.tsx', 'circuitEndpoints.ts', 'circuitShapes.ts']}
+  size="xxl"
+/>
+
+## 能力
+
+| 组件 | 本例中的角色 | 主要步骤 |
+| --- | --- | --- |
+| [Layout](/core/components/layout/overview) | 固定 1280 × 760 视图，让 6 个 demo 共用同一套坐标系 | [1](#step-1-先放元件和固定端点) |
+| [Scope](/core/components/layout/scope) | 统一样式默认值，并平移复制第二组测量支路 | [1](#step-1-先放元件和固定端点), [4](#step-4-复制第二组测量支路) |
+| [Node](/core/components/node/overview) | 承载电源、开关、电表、电阻、滑动变阻器和文字标注 | [1](#step-1-先放元件和固定端点), [5](#step-5-加滑动变阻器和底纹), [6](#step-6-补齐标签和阅读顺序) |
+| [Draw](/core/components/draw/overview) | 在元件放好之后连接主回路和测量支路 | [2](#step-2-再连接主回路), [3](#step-3-接第一组测量支路), [4](#step-4-复制第二组测量支路), [5](#step-5-加滑动变阻器和底纹) |
+| [Coordinate](/core/components/node/coordinate) | 通过 `between` 定位 `R1` / `R2` 标签的稳定中点 | [3](#step-3-接第一组测量支路), [4](#step-4-复制第二组测量支路) |
+| [ShapeDefinition](/core/reference/extending/shape-registry) | 把电源、开关、电表、电阻和滑动变阻器做成有固定端点的自定义形状 | [1](#step-1-先放元件和固定端点), [2](#step-2-再连接主回路) |
+| PaintSpec | 给滑动变阻器做 `currentColor` 线条底纹 | [5](#step-5-加滑动变阻器和底纹) |
+
+## 已知限制
+
+- **不是电路专用组件库**：这些电路符号只是本例里的自定义形状，适合展示底层能力，不适合直接当大规模电路编辑器用。
+- **没有单独展示路径生成器注册面**：电阻锯齿封装在 shape 的绘制逻辑里，本页重点是“元件端点 + 连线”的建图流程。
+- **不做电学校验**：retikz 只负责几何和渲染，不判断电压表接法或开关状态是否真的符合实验规范。
+
+## 相关阅读
+
+- [Shape Registry](/core/reference/extending/shape-registry)
+- [Custom Patterns](/core/reference/extending/custom-pattern)
+- [Node](/core/components/node/overview) / [Scope](/core/components/layout/scope) / [Draw](/core/components/draw/overview) / [Coordinate](/core/components/node/coordinate)
+- [定位](/core/concepts/positioning) - 了解 `between`、`of` 和偏移式关系定位
+- [Karl 单位圆](/core/examples/karl-circle) - 另一个由多种基础组件拼成完整图的示例
