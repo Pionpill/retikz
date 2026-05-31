@@ -7,7 +7,11 @@ description: "高中物理串联测量电路示例：用自定义形状、固定
 
 这一页用一张高中物理课本风的欧姆定律实验电路图，展示 [Layout](/core/components/layout/overview)、[Scope](/core/components/layout/scope)、[Node](/core/components/node/overview)、[Draw](/core/components/draw/overview)、[Coordinate](/core/components/node/coordinate) 和 [Shape Registry](/core/reference/extending/shape-registry) 如何配合。
 
-<ComponentPreview name="ohms-law-circuit-06-labels" size="xxl" />
+<ComponentPreview
+  name="ohms-law-circuit-06-labels"
+  sourceFiles={['circuitScene.tsx', 'circuitElements.tsx', 'circuitEndpoints.ts', 'circuitShapes.ts']}
+  size="xxl"
+/>
 
 最终图保持干净：测量支路没有背景框，左下角没有说明卡，`R1` / `R2` 周围也没有多余箭头。这里的画法是先把电源、开关、电表、电阻这些电路元件作为自定义 `Node` 放好，每个元件自己提供固定连接端点；导线再去连接这些端点。
 
@@ -51,37 +55,66 @@ description: "高中物理串联测量电路示例：用自定义形状、固定
 
 先固定 [Layout](/core/components/layout/overview) 的 `viewBox`，再把电源、开关、电流表和第一组 `R + V` 测量单元都作为 [Node](/core/components/node/overview) 放到画布上。每个电路符号都是自定义 shape，内部已经知道自己的输入、输出或正负极端点；这一步还不画导线。
 
-<ComponentPreview name="ohms-law-circuit-01-loop" size="xxl" />
+<ComponentPreview
+  name="ohms-law-circuit-01-loop"
+  sourceFiles={['circuitScene.tsx', 'circuitElements.tsx', 'circuitEndpoints.ts', 'circuitShapes.ts']}
+  size="xxl"
+/>
 
 ### Step 2: 再连接主回路
 
 有了元件之后，再用 [Draw](/core/components/draw/overview) 把主回路接起来：电源正极到开关，开关到电流表，电流表到第一段电阻，再回到底部和电源负极。导线引用的是元件端点，而不是手工猜出的中心坐标。
 
-<ComponentPreview name="ohms-law-circuit-02-instruments" diffFrom="ohms-law-circuit-01-loop" size="xxl" />
+<ComponentPreview
+  name="ohms-law-circuit-02-instruments"
+  diffFrom="ohms-law-circuit-01-loop"
+  sourceFiles={['circuitScene.tsx', 'circuitElements.tsx', 'circuitEndpoints.ts', 'circuitShapes.ts']}
+  size="xxl"
+/>
 
 ### Step 3: 接第一组测量支路
 
 第一组测量支路把 `R1` 两端分别接到下方电压表的两端。`R1` 的文字位置用 [Coordinate](/core/components/node/coordinate) 的 `between` 放在电阻两端的中点；并联支路只表达“这个电压表测这段电阻”。
 
-<ComponentPreview name="ohms-law-circuit-03-first-cell" diffFrom="ohms-law-circuit-02-instruments" size="xxl" />
+<ComponentPreview
+  name="ohms-law-circuit-03-first-cell"
+  diffFrom="ohms-law-circuit-02-instruments"
+  sourceFiles={['circuitScene.tsx', 'circuitElements.tsx', 'circuitEndpoints.ts', 'circuitShapes.ts']}
+  size="xxl"
+/>
 
 ### Step 4: 复制第二组测量支路
 
 第二组 `R2 + V2` 不重新手画，而是把同一组测量单元包进 [Scope](/core/components/layout/scope) 后平移复制。局部结构里的电阻、电压表、并联支路和中点定位规则保持一致，只替换 id 前缀和显示标签。
 
-<ComponentPreview name="ohms-law-circuit-04-duplicate-cell" diffFrom="ohms-law-circuit-03-first-cell" size="xxl" />
+<ComponentPreview
+  name="ohms-law-circuit-04-duplicate-cell"
+  diffFrom="ohms-law-circuit-03-first-cell"
+  sourceFiles={['circuitScene.tsx', 'circuitElements.tsx', 'circuitEndpoints.ts', 'circuitShapes.ts']}
+  size="xxl"
+/>
 
 ### Step 5: 加滑动变阻器和底纹
 
 底部加入滑动变阻器，并把主回路的下边接到它的左右端点上。它仍然是一个自定义 `Node`，锯齿线、滑片斜线和内部的 `pattern` 底纹都封装在这个元件里。
 
-<ComponentPreview name="ohms-law-circuit-05-rheostat" diffFrom="ohms-law-circuit-04-duplicate-cell" size="xxl" />
+<ComponentPreview
+  name="ohms-law-circuit-05-rheostat"
+  diffFrom="ohms-law-circuit-04-duplicate-cell"
+  sourceFiles={['circuitScene.tsx', 'circuitElements.tsx', 'circuitEndpoints.ts', 'circuitShapes.ts']}
+  size="xxl"
+/>
 
 ### Step 6: 补齐标签和阅读顺序
 
 最后只补必要标注：`E`、`S`、`R1`、`R2`、`U1`、`U2` 和滑动变阻器名称。图上不再添加箭头或说明卡，读者可以按“主回路 -> 两段串联电阻 -> 两条并联测量支路”的顺序自然读下去。
 
-<ComponentPreview name="ohms-law-circuit-06-labels" diffFrom="ohms-law-circuit-05-rheostat" size="xxl" />
+<ComponentPreview
+  name="ohms-law-circuit-06-labels"
+  diffFrom="ohms-law-circuit-05-rheostat"
+  sourceFiles={['circuitScene.tsx', 'circuitElements.tsx', 'circuitEndpoints.ts', 'circuitShapes.ts']}
+  size="xxl"
+/>
 
 ## 能力
 

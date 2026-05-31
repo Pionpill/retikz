@@ -7,7 +7,7 @@ import { cn } from '@/lib/utils';
 
 import { HighlightedCode } from '../highlight-code';
 import type { ComponentRenderSource } from './ComponentRender';
-import { CopyButton, ToolbarIconButton, ViewToggle } from './_parts';
+import { CopyButton, SourceFileMenu, ToolbarIconButton, ViewToggle } from './_parts';
 import { type AlignKey, type SourceView, alignClass, filterDiffByMode } from './_shared';
 import { usePanZoom } from './usePanZoom';
 
@@ -20,6 +20,10 @@ export type ComponentDetailDialogProps = {
   /** 代码区视图集合；缺省 / 双字段都空时退化为单 panel 仅显示渲染区 */
   source?: ComponentRenderSource;
   align: AlignKey;
+  /** 当前 React 源码文件序号，与卡片内源码面板共享 */
+  sourceFileIndex: number;
+  /** 切换 React 源码文件时同步回卡片层 */
+  onSourceFileIndexChange: (index: number) => void;
 };
 
 /** Dialog 左侧渲染区的「透明」点状底纹（仿 PS/Figma 棋盘的 dot 版本，用 color-mix 同步主题） */
@@ -69,9 +73,16 @@ const DialogDemoPane: FC<DialogDemoPaneProps> = props => {
  *   仅一个视图存在时不出 React/IR toggle；两视图都缺（如 hideCode demo）时退化为单 panel 仅渲染区
  */
 export const ComponentDetailDialog: FC<ComponentDetailDialogProps> = props => {
-  const { open, onOpenChange, name, Component, source, align } = props;
-  const hasReact = (source?.react ?? '').length > 0;
-  const hasIr = (source?.ir ?? '').length > 0;
+  const { open, onOpenChange, name, Component, source, align, sourceFileIndex, onSourceFileIndexChange } = props;
+  const reactFiles =
+    source?.reactFiles !== undefined && source.reactFiles.length > 0
+      ? source.reactFiles
+      : (source?.react ?? '').length > 0
+        ? [{ filename: `${name}.demo.tsx`, code: source?.react ?? '', diff: source?.reactDiff }]
+        : [];
+  const hasReact = reactFiles.length > 0;
+  const irSource = source?.ir ?? '';
+  const hasIr = irSource.length > 0;
   const hasCode = hasReact || hasIr;
   const showViewToggle = hasReact && hasIr;
 
@@ -86,11 +97,17 @@ export const ComponentDetailDialog: FC<ComponentDetailDialogProps> = props => {
     };
   }, []);
 
+  const effectiveView: SourceView = hasReact && hasIr ? view : hasReact ? 'react' : 'ir';
+  const activeSourceFileIndex = Math.min(sourceFileIndex, Math.max(reactFiles.length - 1, 0));
+  const activeSourceFile = reactFiles.at(activeSourceFileIndex);
+  const reactSource = activeSourceFile?.code ?? '';
+  const activeDiff = activeSourceFile?.diff;
+
   // Copy 用的是真实 React / IR 源码；displayedCode 在 React 视图下有 reactDiff 时切换为 'added' 模式过滤后的内容
   // Dialog 暂不出 diff mode 切换，固定 'added'（与卡片默认一致——教学场景优先看新增）
-  const copyCode = view === 'ir' ? (source?.ir ?? '') : (source?.react ?? '');
-  const reactDiffActive = view === 'react' && source?.reactDiff !== undefined;
-  const displayedDiff = reactDiffActive ? filterDiffByMode(source.reactDiff!, 'added') : null;
+  const copyCode = effectiveView === 'ir' ? irSource : reactSource;
+  const displayedDiff =
+    effectiveView === 'react' && activeDiff !== undefined ? filterDiffByMode(activeDiff, 'added') : null;
   const displayedCode = displayedDiff?.code ?? copyCode;
   const displayedLineKinds = displayedDiff?.lineKinds;
 
@@ -126,14 +143,23 @@ export const ComponentDetailDialog: FC<ComponentDetailDialogProps> = props => {
             <ResizableHandle withHandle />
             <ResizablePanel defaultSize={40} minSize={15}>
               <div className="flex h-full min-w-0 flex-col bg-muted/30">
-                <div className="flex shrink-0 items-center gap-1 border-b p-1 px-2">
-                  {showViewToggle ? <ViewToggle view={view} onChange={setView} /> : null}
-                  <CopyButton copied={copied} onCopy={handleCopy} className="ml-auto" />
+                <div className="flex shrink-0 items-center justify-between gap-2 border-b p-1 px-2">
+                  <div className="flex min-w-0 flex-1 items-center gap-1">
+                    {effectiveView === 'react' ? (
+                      <SourceFileMenu
+                        files={reactFiles}
+                        activeIndex={activeSourceFileIndex}
+                        onChange={onSourceFileIndexChange}
+                      />
+                    ) : null}
+                    {showViewToggle ? <ViewToggle view={effectiveView} onChange={setView} /> : null}
+                  </div>
+                  <CopyButton copied={copied} onCopy={handleCopy} />
                 </div>
                 {/* `[&_pre]:!text-xs` 用 ! 覆盖 react-syntax-highlighter 主题注入的 inline font-size */}
                 <div className="min-h-0 flex-1 overflow-auto [&_code]:!text-sm [&_pre]:!text-xs">
                   <HighlightedCode
-                    lang={view === 'ir' ? 'json' : 'tsx'}
+                    lang={effectiveView === 'ir' ? 'json' : 'tsx'}
                     code={displayedCode}
                     showLineNumbers
                     lineKinds={displayedLineKinds}

@@ -9,9 +9,10 @@ import { useAiChatStore } from '@/store/useAiChatStore';
 import { useComponentPreviewStore } from '@/store/useComponentPreviewStore';
 
 import { HighlightedCode } from '../highlight-code';
-import { CopyButton, ToolbarIconButton, ViewToggle } from './_parts';
+import { CopyButton, SourceFileMenu, ToolbarIconButton, ViewToggle } from './_parts';
 import {
   type AlignKey,
+  type ComponentSourceFile,
   type DiffMode,
   type SizeKey,
   type SourceView,
@@ -67,6 +68,7 @@ const COLLAPSE_THRESHOLD_LINES = 10;
  */
 export type ComponentRenderSource = {
   react?: string;
+  reactFiles?: Array<ComponentSourceFile>;
   ir?: string;
   /**
    * 相比 baseline 的 unified diff（current 与 baseline 删除行交织后的展示代码 + 每行 kind）
@@ -97,7 +99,13 @@ export type ComponentRenderProps = {
  */
 export const ComponentRender: FC<ComponentRenderProps> = props => {
   const { name, Component, source, align = 'center', size = 'md', componentClassName, showAskAi = true } = props;
-  const hasReact = (source?.react ?? '').length > 0;
+  const reactFiles =
+    source?.reactFiles !== undefined && source.reactFiles.length > 0
+      ? source.reactFiles
+      : (source?.react ?? '').length > 0
+        ? [{ filename: `${name}.demo.tsx`, code: source?.react ?? '', diff: source?.reactDiff }]
+        : [];
+  const hasReact = reactFiles.length > 0;
   const hasIr = (source?.ir ?? '').length > 0;
   const hasCode = hasReact || hasIr;
 
@@ -105,6 +113,7 @@ export const ComponentRender: FC<ComponentRenderProps> = props => {
   const [localIsCodeVisible, setLocalIsCodeVisible] = useState<boolean | undefined>(undefined);
   // view 仅在双视图时由用户控制；单视图情境下 effectiveView 派生兜底，避免在 effect 里同步 setState
   const [view, setView] = useState<SourceView>('react');
+  const [sourceFileIndex, setSourceFileIndex] = useState(0);
   const [localIsExpanded, setLocalIsExpanded] = useState<boolean | undefined>(undefined);
   // diff 模式默认 'added'（有 reactDiff 数据时）；用户选过一次后 localDiffMode 胜出。
   // 偏好 added/removed 优先于 full：full unified（current + 删除行交织）阅读噪声大，教学场景只看新增 / 只看删除更直观
@@ -142,7 +151,10 @@ export const ComponentRender: FC<ComponentRenderProps> = props => {
     };
   }, []);
 
-  const reactSource = source?.react ?? '';
+  const activeSourceFileIndex = Math.min(sourceFileIndex, Math.max(reactFiles.length - 1, 0));
+  const activeSourceFile = reactFiles.at(activeSourceFileIndex);
+  const reactSource = activeSourceFile?.code ?? '';
+  const activeDiff = activeSourceFile?.diff;
   const irSource = source?.ir ?? '';
 
   // 单视图情境派生兜底：仅 ir 时 view 当前值无意义，effectiveView 强制返回 ir；React/IR toggle 只在双视图时渲染，所以 setView 也只能在双视图时被触发
@@ -158,11 +170,13 @@ export const ComponentRender: FC<ComponentRenderProps> = props => {
   // Copy 用的源码：始终是真实 React / IR 源码，与 diff 视觉装饰解耦
   const copyCode = effectiveView === 'ir' ? irSource : reactSource;
   // 默认 'added'：有 diff 数据 → 默认只看新增；用户在下拉里改过 mode 后 local 胜出
-  const hasReactDiff = source?.reactDiff !== undefined;
+  const hasReactDiff = activeDiff !== undefined;
   const diffMode: DiffMode = localDiffMode ?? (hasReactDiff ? 'added' : 'off');
   // 展示代码：React 视图 + 展开态 + 有数据 + mode != off → 按 mode 过滤 unified diff；其余情况维持原行为
-  const reactDiffActive = effectiveView === 'react' && showFull && hasReactDiff && diffMode !== 'off';
-  const displayedDiff: UnifiedDiff | null = reactDiffActive ? filterDiffByMode(source.reactDiff!, diffMode) : null;
+  const displayedDiff: UnifiedDiff | null =
+    effectiveView === 'react' && showFull && activeDiff !== undefined && diffMode !== 'off'
+      ? filterDiffByMode(activeDiff, diffMode)
+      : null;
   const fullCode = effectiveView === 'ir' ? irSource : (displayedDiff?.code ?? reactSource);
   const fullLang = effectiveView === 'ir' ? 'json' : 'tsx';
   const displayedCode = showFull ? fullCode : reactPreview;
@@ -273,7 +287,14 @@ export const ComponentRender: FC<ComponentRenderProps> = props => {
           {showFull ? (
             <>
               <div className="flex items-center justify-between p-1 px-2">
-                <div className="flex items-center gap-1">
+                <div className="flex min-w-0 flex-1 items-center gap-1">
+                  {effectiveView === 'react' ? (
+                    <SourceFileMenu
+                      files={reactFiles}
+                      activeIndex={activeSourceFileIndex}
+                      onChange={setSourceFileIndex}
+                    />
+                  ) : null}
                   {showViewToggle ? <ViewToggle view={view} onChange={setView} /> : null}
                 </div>
                 {/* 工具条上每个按钮用 native title 而非 radix Tooltip + asChild：
@@ -388,6 +409,8 @@ export const ComponentRender: FC<ComponentRenderProps> = props => {
         Component={Component}
         source={source}
         align={align}
+        sourceFileIndex={activeSourceFileIndex}
+        onSourceFileIndexChange={setSourceFileIndex}
       />
     </div>
   );
