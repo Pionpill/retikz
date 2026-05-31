@@ -163,17 +163,63 @@ describe('Arc equivalence', () => {
       ).children,
     );
   });
+
+  it('close="chord" delegates to circlePath chord', () => {
+    expect(ir(<Arc center={[0, 0]} radius={10} startAngle={0} endAngle={90} close="chord" />).children).toEqual(
+      ir(
+        <Path>
+          <Step kind="move" to={[0, 0]} />
+          <Step kind="circlePath" radius={10} startAngle={0} endAngle={90} closed="chord" />
+        </Path>,
+      ).children,
+    );
+  });
+
+  it('close="sector" on an ellipse delegates to ellipsePath sector', () => {
+    expect(
+      ir(<Arc center={[0, 0]} radiusX={15} radiusY={10} startAngle={0} endAngle={90} close="sector" />).children,
+    ).toEqual(
+      ir(
+        <Path>
+          <Step kind="move" to={[0, 0]} />
+          <Step kind="ellipsePath" radiusX={15} radiusY={10} startAngle={0} endAngle={90} closed="sector" />
+        </Path>,
+      ).children,
+    );
+  });
 });
 
 describe('Sector equivalence', () => {
-  it('filled wedge', () => {
+  it('filled wedge uses circlePath sector close (center accepts any target)', () => {
     expect(ir(<Sector center={[0, 0]} radius={10} startAngle={0} endAngle={90} />).children).toEqual(
       ir(
         <Path>
-          <Step kind="move" to={[10, 0]} />
-          <Step kind="arc" center={[0, 0]} startAngle={0} endAngle={90} radius={10} />
-          <Step kind="line" to={[0, 0]} />
-          <Step kind="cycle" />
+          <Step kind="move" to={[0, 0]} />
+          <Step kind="circlePath" radius={10} startAngle={0} endAngle={90} closed="sector" />
+        </Path>,
+      ).children,
+    );
+  });
+
+  it('elliptical filled wedge uses ellipsePath sector close', () => {
+    expect(
+      ir(<Sector center={[0, 0]} radiusX={15} radiusY={10} startAngle={0} endAngle={90} />).children,
+    ).toEqual(
+      ir(
+        <Path>
+          <Step kind="move" to={[0, 0]} />
+          <Step kind="ellipsePath" radiusX={15} radiusY={10} startAngle={0} endAngle={90} closed="sector" />
+        </Path>,
+      ).children,
+    );
+  });
+
+  it('filled wedge accepts a node-id center', () => {
+    expect(ir(<Sector center="hub" radius={10} startAngle={0} sweepAngle={90} />).children).toEqual(
+      ir(
+        <Path>
+          <Step kind="move" to="hub" />
+          <Step kind="circlePath" radius={10} startAngle={0} endAngle={90} closed="sector" />
         </Path>,
       ).children,
     );
