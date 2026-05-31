@@ -13,6 +13,7 @@ import { CopyButton, ToolbarIconButton, ViewToggle } from './_parts';
 import {
   type AlignKey,
   type DiffMode,
+  type RendererMode,
   type SizeKey,
   type SourceView,
   type UnifiedDiff,
@@ -114,6 +115,8 @@ export const ComponentRender: FC<ComponentRenderProps> = props => {
   const timerRef = useRef<number | null>(null);
   // 卡内 drag 默认关闭：local 为 undefined 时跟随全局；单卡点过 Hand 后本地胜出
   const [localDragEnabled, setLocalDragEnabled] = useState<boolean | undefined>(undefined);
+  // 卡内 svg/canvas 切换只作用于本卡：local 为 undefined 时跟随全局默认（Header 菜单设），单卡切过一次后本地胜出
+  const [localRendererMode, setLocalRendererMode] = useState<RendererMode | undefined>(undefined);
   // 用户在 PanZoomToolbar 切了 size 之后本地胜出；未切时跟随 prop 的 size
   const [localSize, setLocalSize] = useState<SizeKey | undefined>(undefined);
   const effectiveSize = localSize ?? size;
@@ -133,11 +136,13 @@ export const ComponentRender: FC<ComponentRenderProps> = props => {
   const globalHideCode = useComponentPreviewStore(s => s.hideCode);
   const globalIsExpand = useComponentPreviewStore(s => s.isExpand);
   const globalDragEnabled = useComponentPreviewStore(s => s.dragEnabled);
-  const rendererMode = useComponentPreviewStore(s => s.rendererMode);
-  const toggleRendererMode = useComponentPreviewStore(s => s.toggleRendererMode);
+  const globalRendererMode = useComponentPreviewStore(s => s.rendererMode);
   const isCodeVisible = localIsCodeVisible ?? globalHideCode;
   const isExpanded = localIsExpanded ?? globalIsExpand;
   const dragEnabled = localDragEnabled ?? globalDragEnabled;
+  const rendererMode = localRendererMode ?? globalRendererMode;
+  // 单卡 svg/canvas 切换写本地 override，不动全局 store → 只影响当前卡
+  const toggleRendererMode = () => setLocalRendererMode(rendererMode === 'svg' ? 'canvas' : 'svg');
 
   useEffect(() => {
     return () => {
