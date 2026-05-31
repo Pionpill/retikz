@@ -29,7 +29,7 @@ Choose the form by the role in the diagram: flowchart nodes usually use the defa
 
 `shape` picks the visual shape: `'rectangle'` (default) / `'circle'` / `'ellipse'` / `'diamond'`, or a custom shape name registered via `<Layout shapes>` / `CompileOptions.shapes`. Any shape works as an attachable target — connecting lines clip to that shape's boundary automatically:
 
-<ComponentPreview name="node-shapes" size="md" />
+<ComponentPreview name="node-shapes" size="sm" />
 
 > Each shape's outer boundary contains "text rectangle + padding":
 > - rectangle: boundary = inner rect
@@ -55,7 +55,7 @@ In addition to Cartesian / polar, `position` accepts **`{ direction, of, distanc
 
 </Comparison>
 
-<ComponentPreview name="node-at-relative" />
+<ComponentPreview name="node-at-relative" size="sm" />
 
 #### Offset positioning
 
@@ -89,11 +89,11 @@ Since v0.2, `position` also accepts **`{ between, t }`**: place the node at a pr
 
 </Comparison>
 
-<ComponentPreview name="node-label-basic" size="md" />
+<ComponentPreview name="node-label-basic" size="xs" />
 
 `distance` controls how far the label is pushed outward from the node border, still in retikz user units. It defaults to `12`; for example, `position: 'above', distance: 20` places the label further above the node's top border.
 
-<ComponentPreview name="node-label-distance" size="md" />
+<ComponentPreview name="node-label-distance" size="xs" />
 
 ### Styling
 
@@ -111,7 +111,7 @@ Since v0.2, `position` also accepts **`{ between, t }`**: place the node at a pr
 
 `text` accepts a string (one line) or an array of strings (one line each). `align` controls horizontal alignment within the text block (`'left'` / `'center'` (default) / `'right'`), and `lineHeight` controls vertical spacing between lines, defaulting to `font.size × 1.2`.
 
-<ComponentPreview name="node-multiline" size="sm" />
+<ComponentPreview name="node-multiline" size="xs" />
 
 > Arrays beat `'\n'`-delimited strings: JSON-friendly (no escape headaches), and leaves room for per-line attributes later.
 
