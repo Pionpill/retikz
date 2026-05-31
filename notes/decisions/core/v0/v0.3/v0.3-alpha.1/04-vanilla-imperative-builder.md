@@ -81,6 +81,8 @@ f.mount(container);
 签名集：
 
 ```ts
+function figure(): Figure;                                            // 空图
+function figure(children: Child[]): Figure;                           // 省略 config 直接传子节点
 function figure(config?: FigureConfig): Figure;                       // fluent
 function figure(config: FigureConfig, children: Child[]): Figure;     // hyperscript
 function node(config?: NodeConfig): Child;                            // 匿名

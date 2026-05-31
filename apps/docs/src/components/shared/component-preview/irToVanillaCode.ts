@@ -170,11 +170,21 @@ const BUILDER_ORDER: ReadonlyArray<string> = ['figure', 'node', 'draw', 'coordin
 export const irToVanillaCode = (ir: IR): string => {
   const ctx: Ctx = { used: new Set(['figure']), usesDrawWay: false };
   const childrenStr = childListCode(ir.children, 0, ctx);
-  const figureConfig = ir.viewBox ? formatObject({ viewBox: ir.viewBox }, 0) : '{}';
+  // 省略不必要的入参：无 viewBox 时不传空 config（用 figure(children) / figure() 重载）
+  const configStr = ir.viewBox ? formatObject({ viewBox: ir.viewBox }, 0) : null;
+  const hasChildren = ir.children.length > 0;
+  const figureArgs =
+    configStr !== null
+      ? hasChildren
+        ? `${configStr}, ${childrenStr}`
+        : configStr
+      : hasChildren
+        ? childrenStr
+        : '';
 
   const builders = BUILDER_ORDER.filter(name => ctx.used.has(name));
   const imports = [`import { ${builders.join(', ')} } from '@retikz/vanilla';`];
   if (ctx.usesDrawWay) imports.push("import { DrawWay } from '@retikz/core';");
 
-  return `${imports.join('\n')}\n\nconst fig = figure(${figureConfig}, ${childrenStr});\n`;
+  return `${imports.join('\n')}\n\nconst fig = figure(${figureArgs});\n`;
 };

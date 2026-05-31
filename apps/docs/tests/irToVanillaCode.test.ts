@@ -15,7 +15,8 @@ describe('irToVanillaCode', () => {
     const code = irToVanillaCode(ir([{ type: 'node', id: 'a', position: [0, 0], text: 'A' }]));
     expect(code).toContain("from '@retikz/vanilla'");
     expect(code).toContain('figure(');
-    expect(code).toContain('const fig = figure({}, [');
+    // 无 viewBox → 省略空 config，直接 figure(children)
+    expect(code).toContain('const fig = figure([');
   });
 
   it('node-codegen：具名 / 匿名 / 字段映射', () => {
@@ -118,7 +119,8 @@ describe('irToVanillaCode', () => {
     expect(withVb).toContain('viewBox: { x: 0, y: 0, width: 100, height: 80 }');
 
     const noVb = irToVanillaCode(ir([{ type: 'node', id: 'a', position: [0, 0] }]));
-    expect(noVb).toContain('figure({}, [');
+    expect(noVb).toContain('figure([');
+    expect(noVb).not.toContain('figure({}');
   });
 
   it('import-tailoring：只用 node 时 import 不含 draw/scope/coordinate', () => {
@@ -137,8 +139,8 @@ describe('irToVanillaCode', () => {
     expect(code).not.toContain('"position"');
   });
 
-  it('empty-scene：空 children → figure({}, [])，不抛', () => {
+  it('empty-scene：空 children + 无 config → figure()，不抛', () => {
     expect(() => irToVanillaCode(ir([]))).not.toThrow();
-    expect(irToVanillaCode(ir([]))).toContain('figure({}, [])');
+    expect(irToVanillaCode(ir([]))).toContain('const fig = figure();');
   });
 });

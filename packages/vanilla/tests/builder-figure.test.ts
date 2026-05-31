@@ -41,6 +41,13 @@ describe('@retikz/vanilla figure() — IR 装配', () => {
   it('figure-no-config：figure() 全空 → 空 scene', () => {
     expect(figure().ir).toEqual({ version: 1, type: 'scene', children: [] });
   });
+
+  it('figure-children-first：figure(children) 省略 config 直接传子节点，等价 figure({}, children)', () => {
+    const direct = figure([node('a', { position: [0, 0], text: 'A' }), draw(['a', 'b'])]);
+    const withConfig = figure({}, [node('a', { position: [0, 0], text: 'A' }), draw(['a', 'b'])]);
+    expect(direct.ir).toEqual(withConfig.ir);
+    expect(direct.ir.children).toHaveLength(2);
+  });
 });
 
 describe('@retikz/vanilla 公开导出', () => {
