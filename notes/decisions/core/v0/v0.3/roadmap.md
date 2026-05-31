@@ -261,8 +261,8 @@ v0.3 需要注意：
 
 1. ~~`@retikz/svg` 的公开 API：只出 `renderToSvgString`，还是同时出 descriptor / React helper。~~ ✅ **已决（→ [alpha.1 ADR-01](./v0.3-alpha.1/01-svg-descriptor-contract.md)）**：以 framework-neutral `SvgNode` descriptor 为核心,出 `buildSvgDocument` + `renderToSvgString`,公开 `SvgNode` 类型;**不出 React helper**（svg 包零 React 依赖,React 映射留在 `@retikz/react`）。同时解掉「`renderPrim` 拆 neutral builder + React binding」。
 2. `@retikz/canvas` 的公开 API：接收 IR、Scene，还是两者都支持。
-3. `@retikz/vanilla` 是否直接 re-export `@retikz/svg` / `@retikz/canvas` 的核心 API，还是只提供 runtime 封装。
-4. `@retikz/vanilla` 是否同时覆盖 SVG DOM 挂载与 SSR 字符串输出，还是拆成更细入口。
+3. ~~`@retikz/vanilla` 是否直接 re-export `@retikz/svg` / `@retikz/canvas` 的核心 API，还是只提供 runtime 封装。~~ ✅ **已决（→ [alpha.1 ADR-03](./v0.3-alpha.1/03-vanilla-runtime-and-dependency-graph.md)）**：**runtime 门面（组合）**——`renderToSvgString` 薄包 svg、`mountSvg` 经 `buildSvgDocument` + `svgNodeToDom` 物化 DOM；Scene→SVG 内核仍单一留 svg 包，不纯 re-export、不复制内核。
+4. ~~`@retikz/vanilla` 是否同时覆盖 SVG DOM 挂载与 SSR 字符串输出，还是拆成更细入口。~~ ✅ **已决（→ [ADR-03](./v0.3-alpha.1/03-vanilla-runtime-and-dependency-graph.md)）**：**单包多 named export**（`renderToSvgString` + `mountSvg` 同包）；Canvas 侧入口（`mountCanvas` / 导出）后置 alpha.3+。
 5. 水合 API 命名：`hydrate` / `hydrateInteractions` / `bind` / `attachHandlers`。
 6. interaction manifest 是否进入 IR，还是只作为 `renderToSvgString` 的 runtime options。
 7. Plot 支撑能力应只写接口草案，还是在 v0.3 里落最小实现。
@@ -271,7 +271,7 @@ v0.3 需要注意：
 10. React API 是否只用 `<Layout renderer="...">`，还是同时新增 `<SvgLayout>` / `<CanvasLayout>`。
 11. Canvas 文本测量如何与现有 browser measurer 协作，是否需要把 measurer 再抽一层公共接口。
 12. Canvas 对 pattern / image / marker 的首版支持范围，以及哪些行为允许降级。
-13. 包依赖方向：`@retikz/react` 是否直接依赖 `@retikz/svg` / `@retikz/canvas` / `@retikz/vanilla`，还是把 Canvas 作为可选 peer 以控制默认安装体积。
+13. ~~包依赖方向：`@retikz/react` 是否直接依赖 `@retikz/svg` / `@retikz/canvas` / `@retikz/vanilla`，还是把 Canvas 作为可选 peer 以控制默认安装体积。~~ ✅ **已决（→ [ADR-03](./v0.3-alpha.1/03-vanilla-runtime-and-dependency-graph.md)）**：**全直接依赖、无 optional peer**（react → core/svg/canvas；vanilla → core/svg/canvas；react 不依赖 vanilla）。canvas 仅 core 依赖、极轻，dual-renderer 零配置优先；体积靠 renderer 已拆包的 tree-shaking，optional peer 留 v0.4 再议。
 
 ## 备注
 
