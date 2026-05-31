@@ -14,10 +14,10 @@ const Demo: FC = () => (
     <Node id="wrapped" position={[150, 20]} maxTextWidth={90} fill="lightgray" stroke="green">
       a longer node label
     </Node>
-    <Node position={[-130, 88]} stroke="none" fill="none" textColor="gray" font={{ size: 12 }}>
+    <Node position={[-130, 76]} stroke="none" fill="none" textColor="gray" font={{ size: 12 }}>
       no maxTextWidth
     </Node>
-    <Node position={[150, 88]} stroke="none" fill="none" textColor="gray" font={{ size: 12 }}>
+    <Node position={[150, 76]} stroke="none" fill="none" textColor="gray" font={{ size: 12 }}>
       maxTextWidth=90
     </Node>
   </Layout>

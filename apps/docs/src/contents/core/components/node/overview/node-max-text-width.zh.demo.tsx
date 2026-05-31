@@ -13,10 +13,10 @@ const Demo: FC = () => (
     <Node id="wrapped" position={[140, 20]} maxTextWidth={84} fill="lightgray" stroke="green">
       较长的节点说明文字
     </Node>
-    <Node position={[-120, 88]} stroke="none" fill="none" textColor="gray" font={{ size: 12 }}>
+    <Node position={[-120, 76]} stroke="none" fill="none" textColor="gray" font={{ size: 12 }}>
       无 maxTextWidth
     </Node>
-    <Node position={[140, 88]} stroke="none" fill="none" textColor="gray" font={{ size: 12 }}>
+    <Node position={[140, 76]} stroke="none" fill="none" textColor="gray" font={{ size: 12 }}>
       maxTextWidth=84
     </Node>
   </Layout>

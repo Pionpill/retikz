@@ -146,13 +146,13 @@ Line 2`}</Node>
 1. **`text` 数组里混 LineSpec 对象**——AI / JSON 友好，schema 直接表达
 2. **`<Text>` 子元素**——JSX 写起来顺手；详见 [Text 章节](/core/components/node/text)
 
-<ComponentPreview name="node-styled-lines" size="sm" />
+<ComponentPreview name="node-styled-lines" size="xs" />
 
 > 块级 `align` / `lineHeight` 不能行级覆盖（多行块整体属性）。
 
 多行文本套到不同 shape 上，外接边界沿用各自 shape 多态规则（外接圆 / 外接椭圆 / 外接菱形）：
 
-<ComponentPreview name="node-multiline-shapes" size="sm" />
+<ComponentPreview name="node-multiline-shapes" size="xs" />
 
 #### 内 / 外边距
 
@@ -163,7 +163,7 @@ Line 2`}</Node>
 
 多数节点只需要写 `padding={N}`。当水平留白和垂直留白需要不同数值时，再改用 `innerXSep` / `innerYSep`。
 
-<ComponentPreview name="node-sep" size="sm" />
+<ComponentPreview name="node-sep" size="xs" />
 
 <Comparison target="tikz" title="Sep 命名">
 
@@ -220,7 +220,7 @@ Line 2`}</Node>
 - `minimumWidth` / `minimumHeight` / `minimumSize`——撑开 bbox（不缩水 text 自然宽度）
 - `scale` / `xScale` / `yScale`——均匀 / 分轴缩放，影响 bbox + 字号 + padding + 路径附着点
 
-<ComponentPreview name="node-size-constraints" size="sm" />
+<ComponentPreview name="node-size-constraints" size="xs" />
 
 #### 旋转
 
@@ -238,7 +238,7 @@ Line 2`}</Node>
 
 `label.rotate` 让标签文字绕**自身中心**自旋：`'radial'` 沿"节点中心 → 标签中心"方向、`'tangent'` 取其切向（radial + 90°）、数字为显式角度（度）；`keepUpright` 在文字会倒置时翻 180° 保持可读。`rotate` 只改朝向，不改由 `position` / `distance` 决定的位置。
 
-<ComponentPreview name="node-label-rotate" size="md" />
+<ComponentPreview name="node-label-rotate" size="sm" />
 
 #### 引脚 pin
 
