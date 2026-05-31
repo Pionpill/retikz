@@ -1,6 +1,6 @@
 ---
 title: Draw
-description: Sugar component �?a way array threads through nodes, coordinates, folds, curves, close operations, edge labels, and styling, then expands to equivalent Path + Step.
+description: Sugar component — a way array threads through nodes, coordinates, folds, curves, close operations, edge labels, and styling, then expands to equivalent Path + Step.
 ---
 
 `<Draw>` is the default entry point for most connections. It accepts a `way` array and expands targets, folds, cycles, curves, shapes, and edge labels into Kernel `<Path>` + `<Step>`. Stroke, fill, arrow, and opacity props match `<Path>`.
@@ -169,20 +169,20 @@ One-line forms for circles, rectangles, sectors, Grid, and similar helpers now l
 
 | Prop | Type | Default | Description |
 | --- | --- | --- | --- |
-| `way` | `Array<WayItem>` | �?| At least 2 items; first is always `move`, rest become `line` / `step` / `cycle` and related actions based on item form |
+| `way` | `Array<WayItem>` | — | At least 2 items; first is always `move`, rest become `line` / `step` / `cycle` and related actions based on item form |
 | `stroke` | `string` | `currentColor` | Stroke color |
 | `strokeWidth` | `number` | `1` | Stroke width |
-| `dashPattern` | `Array<number>` | �?| Dash / gap length sequence, for example `[4, 2]` |
+| `dashPattern` | `Array<number>` | — | Dash / gap length sequence, for example `[4, 2]` |
 | `lineCap` | `'butt' \| 'round' \| 'square'` | `'butt'` | Stroke endpoint shape |
 | `lineJoin` | `'miter' \| 'round' \| 'bevel'` | `'miter'` | Stroke corner shape |
-| `thickness` | `'ultraThin' \| 'veryThin' \| 'thin' \| 'semithick' \| 'thick' \| 'veryThick' \| 'ultraThick'` | �?| Semantic stroke preset; explicit `strokeWidth` wins |
-| `arrow` | `'none' \| '->' \| '<-' \| '<->'` | �?| Path-level arrow direction |
-| `arrowDetail` | `{ shape?, scale?, length?, width?, color?, fill?, opacity?, lineWidth?, start?, end? }` | �?| Detailed arrow configuration; see [Arrow](/core/components/draw/arrow) |
+| `thickness` | `'ultraThin' \| 'veryThin' \| 'thin' \| 'semithick' \| 'thick' \| 'veryThick' \| 'ultraThick'` | — | Semantic stroke preset; explicit `strokeWidth` wins |
+| `arrow` | `'none' \| '->' \| '<-' \| '<->'` | — | Path-level arrow direction |
+| `arrowDetail` | `{ shape?, scale?, length?, width?, color?, fill?, opacity?, lineWidth?, start?, end? }` | — | Detailed arrow configuration; see [Arrow](/core/components/draw/arrow) |
 | `fill` | `string \| PaintSpec` | `'none'` | Fill for closed regions: plain color or PaintSpec (gradient / pattern / image) |
 | `fillRule` | `'nonzero' \| 'evenodd'` | `'nonzero'` | Fill rule |
-| `opacity` | `number` | �?| Whole-path opacity, 0..1 |
-| `fillOpacity` | `number` | �?| Fill-only opacity, 0..1 |
-| `drawOpacity` | `number` | �?| Stroke-only opacity, 0..1 |
+| `opacity` | `number` | — | Whole-path opacity, 0..1 |
+| `fillOpacity` | `number` | — | Fill-only opacity, 0..1 |
+| `drawOpacity` | `number` | — | Stroke-only opacity, 0..1 |
 | `zIndex` | `number` (integer) | `0` | Explicit stacking order: higher draws on top; ties keep declaration order; effective only among siblings at the same level (forwarded to the underlying `<Path>`) |
 
 <Comparison target="tikz" title="Style Naming">
@@ -208,7 +208,7 @@ One-line forms for circles, rectangles, sectors, Grid, and similar helpers now l
 
 | Field | Type | Default | Description |
 | --- | --- | --- | --- |
-| `text` | `string` | �?| Label text |
+| `text` | `string` | — | Label text |
 | `position` | `StepLabelPosition \| number` | `'midway'` | Keyword or numeric `0..1` t value |
 | `side` | `'above' \| 'below'` | `'above'` | Which side of the line to place the text on |
 

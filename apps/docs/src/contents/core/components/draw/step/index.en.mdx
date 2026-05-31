@@ -1,6 +1,6 @@
 ---
 title: Step
-description: Path's child node �?one step = one action (move / line / step fold / cycle close / curve / cubic / bend / arc / circlePath / ellipsePath / rectangle); `to` accepts node id / Cartesian / polar / offset / proportional placement / relative offsets; only valid as a direct child of `<Path>`.
+description: Path's child node — one step = one action (move / line / step fold / cycle close / curve / cubic / bend / arc / circlePath / ellipsePath / rectangle); `to` accepts node id / Cartesian / polar / offset / proportional placement / relative offsets; only valid as a direct child of `<Path>`.
 ---
 
 `<Step>` describes a single path action: `move` lifts the pen, `line` draws a straight line, `step` folds through a single right-angle corner, `cycle` closes the path, `curve` / `cubic` / `bend` draw curves of various shapes, `arc` / `circlePath` / `ellipsePath` use the cursor as the center to draw an arc / full circle / full ellipse, and `rectangle` draws an axis-aligned rectangle from two opposite corners. It is **only** valid as a direct child of `<Path>`; placed elsewhere it is silently ignored.
@@ -71,7 +71,7 @@ The path below draws A→B with one `move` + `line`, then lifts the pen with ano
 
 ### Offset positioning
 
-`to` also accepts the **`{ of, offset }`** form �?a base point plus an arbitrary `(dx, dy)`. `of` has three shapes �?node id, Cartesian literal, or PolarPosition (recursive polar) �?symmetric with `<Node position>`'s offset form:
+`to` also accepts the **`{ of, offset }`** form — a base point plus an arbitrary `(dx, dy)`. `of` has three shapes — node id, Cartesian literal, or PolarPosition (recursive polar) — symmetric with `<Node position>`'s offset form:
 
 <ComponentPreview name="step-offset-target" size="sm" />
 
@@ -79,10 +79,10 @@ The path below draws A→B with one `move` + `line`, then lifts the pen with ano
 
 `to` also accepts relative-offset objects: `{ relative: [dx, dy] }` and `{ relativeAccumulate: [dx, dy] }` both resolve against the **previous step's endpoint** (`prevEnd`, falling back to `[0, 0]` when there is none). The only difference is **whether prevEnd advances**:
 
-- `{ relative }` �?chained offsets all anchor on the **same** point; prevEnd does **not** update
-- `{ relativeAccumulate }` �?each segment accumulates and prevEnd moves with it
+- `{ relative }` — chained offsets all anchor on the **same** point; prevEnd does **not** update
+- `{ relativeAccumulate }` — each segment accumulates and prevEnd moves with it
 
-You can also write the sugar strings `'+dx,dy'` / `'++dx,dy'` (e.g. `<Step to="+1,0" />`); the React adapter rewrites them in place to the matching IR objects. In the demo below, the two paths have identical step sequences and only the target form differs �?the solid line (relative) traces an L, while the dashed line (relativeAccumulate) climbs a staircase:
+You can also write the sugar strings `'+dx,dy'` / `'++dx,dy'` (e.g. `<Step to="+1,0" />`); the React adapter rewrites them in place to the matching IR objects. In the demo below, the two paths have identical step sequences and only the target form differs — the solid line (relative) traces an L, while the dashed line (relativeAccumulate) climbs a staircase:
 
 <ComponentPreview name="step-relative" size="sm" />
 
@@ -94,13 +94,13 @@ You can also write the sugar strings `'+dx,dy'` / `'++dx,dy'` (e.g. `<Step to="+
 
 ### Circle
 
-`kind="circlePath"` uses the **cursor as center** and draws a fully closed circle by `radius` �?the pen returns to the center after closing. Useful for endpoint dots, circular node borders, etc.:
+`kind="circlePath"` uses the **cursor as center** and draws a fully closed circle by `radius` — the pen returns to the center after closing. Useful for endpoint dots, circular node borders, etc.:
 
 <ComponentPreview name="step-circle" size="xs" />
 
 ### Ellipse
 
-`kind="ellipsePath"` uses the **cursor as center** and draws a fully closed ellipse by `radiusX` / `radiusY` �?the pen returns to the center. When `radiusX === radiusY` it degenerates into a circle:
+`kind="ellipsePath"` uses the **cursor as center** and draws a fully closed ellipse by `radiusX` / `radiusY` — the pen returns to the center. When `radiusX === radiusY` it degenerates into a circle:
 
 <ComponentPreview name="step-ellipse" size="sm" />
 
@@ -117,17 +117,17 @@ Attach a `label` to a `<Step>` to drop a single line of text near the segment's 
 - `text`: required, single-line label content
 - `position`: one of seven keywords `'at-start' | 'very-near-start' | 'near-start' | 'midway' | 'near-end' | 'very-near-end' | 'at-end'`, or a numeric t in `[0, 1]` for any fine position; default `'midway'` (t=0.5)
 - `side`: `'above'` / `'below'` / `'left'` / `'right'` / `'sloped'`, default `'above'`; `'sloped'` rotates the label along the tangent so it sits on the line
-- `textColor`: label text color; falls back to scope `labelDefault` �?the owning path's master `color` �?currentColor (follows the master color, not stroke)
+- `textColor`: label text color; falls back to scope `labelDefault` → the owning path's master `color` → currentColor (follows the master color, not stroke)
 - `opacity`: label-only opacity 0..1; multiplied with the owning path opacity (element-internal axis; does not compound across scopes)
-- `font`: label font overrides (family / size / weight / style); per-field fallback to `labelDefault` �?renderer default
+- `font`: label font overrides (family / size / weight / style); per-field fallback to `labelDefault` → renderer default
 
-Two equivalent forms �?the prop form `<Step label={{...}} />`, or the sugar form `<Step><EdgeLabel>...</EdgeLabel></Step>` (needs `import { EdgeLabel } from '@retikz/react'`); **the prop wins when both are set**. `'move'` and `'cycle'` cannot carry a label �?they don't draw a segment, so any label on them is silently dropped:
+Two equivalent forms — the prop form `<Step label={{...}} />`, or the sugar form `<Step><EdgeLabel>...</EdgeLabel></Step>` (needs `import { EdgeLabel } from '@retikz/react'`); **the prop wins when both are set**. `'move'` and `'cycle'` cannot carry a label — they don't draw a segment, so any label on them is silently dropped:
 
 <ComponentPreview name="step-label" />
 
 #### Label color and font
 
-An edge label's color follows the owning path's **master `color`** �?with `<Path color>` the label is auto-colored to match; setting only `stroke` (no `color`) does not, so the label keeps its default color. Use `textColor` to override explicitly, and `font` / `opacity` for smaller / faded secondary labels:
+An edge label's color follows the owning path's **master `color`** — with `<Path color>` the label is auto-colored to match; setting only `stroke` (no `color`) does not, so the label keeps its default color. Use `textColor` to override explicitly, and `font` / `opacity` for smaller / faded secondary labels:
 
 <ComponentPreview name="step-label-color" size="sm" />
 
@@ -156,14 +156,14 @@ t is normalized along the whole segment; each kind has its own parametrization:
 | Step kind | Parametrization | t=0.25 | t=0.5 | t=0.75 |
 | --- | --- | --- | --- | --- |
 | `'line'` | Normalized arc length | 1/4 in | Midpoint | 3/4 in |
-| `'step'` (fold N=2) | Each leg gets `1/N` of t �?the corner is always at `t = j/N`, **independent of leg length** | Leg-1 midpoint | **Corner** | Leg-2 midpoint |
+| `'step'` (fold N=2) | Each leg gets `1/N` of t — the corner is always at `t = j/N`, **independent of leg length** | Leg-1 midpoint | **Corner** | Leg-2 midpoint |
 | `'curve'` / `'cubic'` | Bezier parameter t (**not arc length**) | Bezier t=0.25 | Bezier t=0.5 (usually **not** the visual midpoint) | Bezier t=0.75 |
 | `'bend'` | Lowered to cubic, then Bezier t | Same as cubic | Same as cubic | Same as cubic |
 | `'arc'` | t maps linearly across `startAngle..endAngle` (degrees) | Quarter of the angle sweep | Mid angle | Three-quarters of the sweep |
 | `'circlePath'` | Full circle t∈[0, 1]: t=0 at angle 0 (+x), CCW growth | 90° (visually down) | 180° (−x) | 270° (visually up) |
 | `'ellipsePath'` | Same as circlePath: t=0 at angle 0, CCW growth | Ellipse at 90° | Ellipse at 180° (**not** arc-length midpoint) | Ellipse at 270° |
 
-The eight demos below show one set of t markers per kind �?`t=0.25` vs `'midway'` side-by-side �?so the keyword-as-sugar relationship and the per-kind geometry of t are clear at a glance.
+The eight demos below show one set of t markers per kind — `t=0.25` vs `'midway'` side-by-side — so the keyword-as-sugar relationship and the per-kind geometry of t are clear at a glance.
 
 ##### Line
 
@@ -215,7 +215,7 @@ Full ellipses also place labels by angle parameter; this is not equal spacing by
 
 ### Styling
 
-`<Step>` itself has no stroke-related visual props �?styling lives on the parent `<Path>`, and all child Steps share the same `stroke` / `strokeWidth` / `dashPattern`:
+`<Step>` itself has no stroke-related visual props — styling lives on the parent `<Path>`, and all child Steps share the same `stroke` / `strokeWidth` / `dashPattern`:
 
 <ComponentPreview name="step-styling" size="sm" />
 
@@ -230,8 +230,8 @@ Full ellipses also place labels by angle parameter; this is not equal spacing by
 | `kind="bend"` | `to[bend left=N]` / `to[bend right=N]` |
 | `{ of, offset }` target | `calc` library syntax `($(of) + (dx, dy)$)` |
 | `{ relative }` / `{ relativeAccumulate }` | `(+x, +y)` / `(++x, ++y)` |
-| `kind="arc"` | `arc[start angle=�? end angle=�? radius=…]` |
-| `kind="circlePath"` / `kind="ellipsePath"` | `circle[radius=…]` / `ellipse[x radius=�? y radius=…]` |
+| `kind="arc"` | `arc[start angle=…, end angle=…, radius=…]` |
+| `kind="circlePath"` / `kind="ellipsePath"` | `circle[radius=…]` / `ellipse[x radius=…, y radius=…]` |
 | `label={{ text, position, side }}` | `(a) -- node[midway, above] {text} (b)`; numeric t maps to `pos=<float>` |
 
 </Comparison>
@@ -241,21 +241,21 @@ Full ellipses also place labels by angle parameter; this is not equal spacing by
 | Prop | Type | Default | Description |
 | --- | --- | --- | --- |
 | `kind` | `'move' \| 'line' \| 'step' \| 'cycle' \| 'curve' \| 'cubic' \| 'bend' \| 'arc' \| 'circlePath' \| 'ellipsePath' \| 'rectangle'` | `'line'` | See the "Eleven kinds" table below; IR also has `generator`, without React `<Step>` DSL |
-| `via` | `'-\|' \| '\|-'` | �?| Required for `kind="step"`: `-\|` horizontal-then-vertical; `\|-` vertical-then-horizontal |
-| `from` | `IRTarget` | �?| Required only for `kind="rectangle"`: one rectangle corner |
-| `to` | `IRTarget` | �?| Not used for `kind="cycle"` / `'arc'` / `'circlePath'` / `'ellipsePath'`; required for `kind="rectangle"` and other cursor-advancing kinds. Target: node id, Cartesian `[x, y]`, polar object, offset object `{ of, offset }`, proportional placement `{ between, t }`, relative-offset object `{ relative }` / `{ relativeAccumulate }`, or sugar string `'+dx,dy'` / `'++dx,dy'` |
-| `control` | `[number, number]` | �?| Required for `kind="curve"`: single control point of the quadratic Bezier |
-| `control1` | `[number, number]` | �?| Required for `kind="cubic"`: first control point (shapes start tangent) |
-| `control2` | `[number, number]` | �?| Required for `kind="cubic"`: second control point (shapes end tangent) |
-| `bendDirection` | `'left' \| 'right'` | �?| Required for `kind="bend"`: visual left / right relative to from→to direction |
+| `via` | `'-\|' \| '\|-'` | — | Required for `kind="step"`: `-\|` horizontal-then-vertical; `\|-` vertical-then-horizontal |
+| `from` | `IRTarget` | — | Required only for `kind="rectangle"`: one rectangle corner |
+| `to` | `IRTarget` | — | Not used for `kind="cycle"` / `'arc'` / `'circlePath'` / `'ellipsePath'`; required for `kind="rectangle"` and other cursor-advancing kinds. Target: node id, Cartesian `[x, y]`, polar object, offset object `{ of, offset }`, proportional placement `{ between, t }`, relative-offset object `{ relative }` / `{ relativeAccumulate }`, or sugar string `'+dx,dy'` / `'++dx,dy'` |
+| `control` | `[number, number]` | — | Required for `kind="curve"`: single control point of the quadratic Bezier |
+| `control1` | `[number, number]` | — | Required for `kind="cubic"`: first control point (shapes start tangent) |
+| `control2` | `[number, number]` | — | Required for `kind="cubic"`: second control point (shapes end tangent) |
+| `bendDirection` | `'left' \| 'right'` | — | Required for `kind="bend"`: visual left / right relative to from→to direction |
 | `bendAngle` | `number` | `30` | Optional for `kind="bend"`: bend angle in degrees |
-| `startAngle` | `number` | �?| Required for `kind="arc"`: start angle in degrees (0° �?+x, 90° �?visually down) |
-| `endAngle` | `number` | �?| Required for `kind="arc"`: end angle in degrees |
-| `radius` | `number` | �?| Required for `kind="arc"` / `'circlePath'`: radius of the circle / arc |
-| `radiusX` | `number` | �?| Required for `kind="ellipsePath"`: x-axis radius |
-| `radiusY` | `number` | �?| Required for `kind="ellipsePath"`: y-axis radius |
-| `roundedCorners` | `number` | �?| Optional for `kind="rectangle"`: corner radius |
-| `label` | `IRStepLabel` | �?| Edge label (works on every kind except `'move'` / `'cycle'`): `{ text, position?, side?, textColor?, opacity?, font? }`; equivalent sugar form `<Step><EdgeLabel>�?/EdgeLabel></Step>`, prop wins on conflict |
+| `startAngle` | `number` | — | Required for `kind="arc"`: start angle in degrees (0° → +x, 90° → visually down) |
+| `endAngle` | `number` | — | Required for `kind="arc"`: end angle in degrees |
+| `radius` | `number` | — | Required for `kind="arc"` / `'circlePath'`: radius of the circle / arc |
+| `radiusX` | `number` | — | Required for `kind="ellipsePath"`: x-axis radius |
+| `radiusY` | `number` | — | Required for `kind="ellipsePath"`: y-axis radius |
+| `roundedCorners` | `number` | — | Optional for `kind="rectangle"`: corner radius |
+| `label` | `IRStepLabel` | — | Edge label (works on every kind except `'move'` / `'cycle'`): `{ text, position?, side?, textColor?, opacity?, font? }`; equivalent sugar form `<Step><EdgeLabel>…</EdgeLabel></Step>`, prop wins on conflict |
 
 ### Eleven kinds
 
@@ -275,7 +275,7 @@ Full ellipses also place labels by angle parameter; this is not equal spacing by
 
 The IR schema also contains a `generator` step for external path-generator registries. It has no corresponding React `<Step kind="generator">` DSL and is usually supplied through direct IR or a higher-level package.
 
-The first step of a `<Path>` must be `move` �?if you write `'line'` / `'step'` / `'cycle'`, the compiler coerces it to `move` (cycle has no `to`, so it falls back to origin `[0, 0]`).
+The first step of a `<Path>` must be `move` — if you write `'line'` / `'step'` / `'cycle'`, the compiler coerces it to `move` (cycle has no `to`, so it falls back to origin `[0, 0]`).
 
 ### Two via values
 
@@ -292,14 +292,14 @@ Only meaningful when `kind="step"`. Given cursor `(px, py)` and target `(tx, ty)
 
 | Field | Type | Default | Description |
 | --- | --- | --- | --- |
-| `text` | `string` | �?| Required label text (single line) |
-| `position` | one of 7 keywords or `number` (0..1) | `'midway'` | Normalized position t along the segment �?keywords are sugar for t (at-start=0 / very-near-start=0.125 / near-start=0.25 / midway=0.5 / near-end=0.75 / very-near-end=0.875 / at-end=1); values outside `[0, 1]` are rejected by the schema |
+| `text` | `string` | — | Required label text (single line) |
+| `position` | one of 7 keywords or `number` (0..1) | `'midway'` | Normalized position t along the segment — keywords are sugar for t (at-start=0 / very-near-start=0.125 / near-start=0.25 / midway=0.5 / near-end=0.75 / very-near-end=0.875 / at-end=1); values outside `[0, 1]` are rejected by the schema |
 | `side` | `'above' \| 'below' \| 'left' \| 'right' \| 'sloped'` | `'above'` | Anchor + offset direction; `above` / `below` shift along y, `left` / `right` along x; `sloped` keeps the anchor and rotates the label along the tangent |
-| `textColor` | `string` | �?| Label text color; falls back to scope `labelDefault` �?host path master `color` �?currentColor (follows the master color, not stroke) |
-| `opacity` | `number` | �?| Label-only opacity 0..1; multiplied with the owning path opacity (does not compound across scopes) |
-| `font` | `object` | �?| Label font overrides (family / size / weight / style); per-field fallback to `labelDefault` �?renderer default |
+| `textColor` | `string` | — | Label text color; falls back to scope `labelDefault` → host path master `color` → currentColor (follows the master color, not stroke) |
+| `opacity` | `number` | — | Label-only opacity 0..1; multiplied with the owning path opacity (does not compound across scopes) |
+| `font` | `object` | — | Label font overrides (family / size / weight / style); per-field fallback to `labelDefault` → renderer default |
 
-The geometric meaning of t per step kind is in the "[Geometric meaning of t per step kind](#geometric-meaning-of-t-per-step-kind)" table above. In short: line uses normalized arc length; fold splits the t interval evenly by polyline leg count (the corner is always at t=0.5); curve / cubic / bend use the Bezier parameter t (**not** arc length �?t=0.5 is usually not the visual midpoint); arc uses angle parametrization; circlePath / ellipsePath traverse the full curve starting at angle 0 (+x), CCW.
+The geometric meaning of t per step kind is in the "[Geometric meaning of t per step kind](#geometric-meaning-of-t-per-step-kind)" table above. In short: line uses normalized arc length; fold splits the t interval evenly by polyline leg count (the corner is always at t=0.5); curve / cubic / bend use the Bezier parameter t (**not** arc length — t=0.5 is usually not the visual midpoint); arc uses angle parametrization; circlePath / ellipsePath traverse the full curve starting at angle 0 (+x), CCW.
 
 ### Seven forms of `to`
 
@@ -309,7 +309,7 @@ The geometric meaning of t per step kind is in the "[Geometric meaning of t per 
 | Cartesian | `[60, 0]` | Literal `[x, y]` |
 | Polar | `{ origin: 'a', angle: 30, radius: 50 }` | Polar (see [Positioning](/core/concepts/positioning)) |
 | Offset | `{ of: 'a', offset: [10, 5] }` | Base + `(dx, dy)`; `of` accepts node id, Cartesian literal, or PolarPosition |
-| Proportional placement | `{ between: ['a', 'b'], t: 0.5 }` | Proportional point along A �?B; endpoints must be independently resolvable absolute targets |
+| Proportional placement | `{ between: ['a', 'b'], t: 0.5 }` | Proportional point along A → B; endpoints must be independently resolvable absolute targets |
 | Relative (relative) | `{ relative: [10, 0] }` or `'+10,0'` | Previous step's endpoint + `[dx, dy]`; does **not** update prevEnd |
 | Relative (relativeAccumulate) | `{ relativeAccumulate: [10, 0] }` or `'++10,0'` | Previous step's endpoint + `[dx, dy]`; **updates** prevEnd |
 

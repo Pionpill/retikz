@@ -1,18 +1,20 @@
 ---
 title: Step
-description: Path 的子节点——一�?step = 一个动作（move / line / step 折角 / cycle 闭合 / curve / cubic / bend 曲线 / arc 弧段 / circlePath / ellipsePath / rectangle）；`to` 支持节点 id / 笛卡�?/ 极坐�?/ 偏移定位 / 比例定位 / 相对偏移；只能作�?`<Path>` 的直�?children�?---
+description: Path 的子节点——一个 step = 一个动作（move / line / step 折角 / cycle 闭合 / curve / cubic / bend 曲线 / arc 弧段 / circlePath / ellipsePath / rectangle）；`to` 支持节点 id / 笛卡尔 / 极坐标 / 偏移定位 / 比例定位 / 相对偏移；只能作为 `<Path>` 的直接 children。
+---
 
-`<Step>` 描述路径上的一个动作：`move` 抬笔到目标点，`line` 落笔从游标画直线，`step` 经一个直角拐点折到目标点，`cycle` 闭合�?path 起点，`curve` / `cubic` / `bend` 画各类曲线，`arc` / `circlePath` / `ellipsePath` 以游标为圆心画弧�?/ 整圆 / 整椭圆，`rectangle` 用两对角画矩形。它**只能**作为 `<Path>` 的直�?children；放在其它地方会被忽略�?
-先用这张表定�?`kind`�?
+`<Step>` 描述路径上的一个动作：`move` 抬笔到目标点，`line` 落笔从游标画直线，`step` 经一个直角拐点折到目标点，`cycle` 闭合回 path 起点，`curve` / `cubic` / `bend` 画各类曲线，`arc` / `circlePath` / `ellipsePath` 以游标为圆心画弧段 / 整圆 / 整椭圆，`rectangle` 用两对角画矩形。它**只能**作为 `<Path>` 的直接 children；放在其它地方会被忽略。
 
-| kind | 需�?`to` | 画线 | 推进游标 | 支持 label |
+先用这张表定位 `kind`：
+
+| kind | 需要 `to` | 画线 | 推进游标 | 支持 label |
 | --- | --- | --- | --- | --- |
-| `move` | �?| �?| �?| �?|
-| `line` / `step` / `curve` / `cubic` / `bend` | �?| �?| �?| �?|
-| `cycle` | �?| �?| 回到子路径起�?| �?|
-| `arc` | �?| �?| 到弧段终�?| �?|
-| `circlePath` / `ellipsePath` | �?| �?| 回到圆心 / 椭圆中心 | �?|
-| `rectangle` | �?| �?| 到对角点 | �?|
+| `move` | 是 | 否 | 是 | 否 |
+| `line` / `step` / `curve` / `cubic` / `bend` | 是 | 是 | 是 | 是 |
+| `cycle` | 否 | 是 | 回到子路径起点 | 否 |
+| `arc` | 否 | 是 | 到弧段终点 | 是 |
+| `circlePath` / `ellipsePath` | 否 | 是 | 回到圆心 / 椭圆中心 | 是 |
+| `rectangle` | 是 | 是 | 到对角点 | 否 |
 
 ## 用法
 
@@ -27,194 +29,197 @@ import { Path, Step } from '@retikz/react';
 </Path>
 ```
 
-当你需要逐段控制 Kernel 路径动作时使�?`<Step>`：例如多�?`move`、混合直�?/ 折角 / 曲线 / 圆弧，或排查 `<Draw>` 展开后的结构。日常连线优先用 [Draw](/core/components/draw/overview)�?
+当你需要逐段控制 Kernel 路径动作时使用 `<Step>`：例如多次 `move`、混合直线 / 折角 / 曲线 / 圆弧，或排查 `<Draw>` 展开后的结构。日常连线优先用 [Draw](/core/components/draw/overview)。
 
 ## 例子
 
 ### 基础
 
-下面这个 path 用一�?`move` + `line` �?A→B，再 `move` 抬笔�?`line` 画一条独立的线：
+下面这个 path 用一次 `move` + `line` 画 A→B，再 `move` 抬笔后 `line` 画一条独立的线：
 
 <ComponentPreview name="step-basic" size="xs" />
 
-### 折角（step�?
+### 折角（step）
 
-`kind="step"` 在游标与目标点之间插一个直角拐点。流程图常用�?
+`kind="step"` 在游标与目标点之间插一个直角拐点。流程图常用：
 
 <ComponentPreview name="step-fold" size="sm" />
 
-### 闭合（cycle�?
+### 闭合（cycle）
 
-`kind="cycle"` 把当前子路径闭合回最近一�?`move` 的起点，对应 SVG path �?`Z`。`cycle` 没有 `to` 字段（目标隐�?= 起点）。比手动 `line` 回起点少写一个端点：
+`kind="cycle"` 把当前子路径闭合回最近一次 `move` 的起点，对应 SVG path 的 `Z`。`cycle` 没有 `to` 字段（目标隐式 = 起点）。比手动 `line` 回起点少写一个端点：
 
 <ComponentPreview name="step-cycle" size="sm" />
 
-### 二次贝塞尔（curve�?
+### 二次贝塞尔（curve）
 
-`kind="curve"` 用一个控制点画二次贝塞尔曲线，对�?SVG path �?`Q`。贝塞尔曲线不要求经过控制点；控制点更像一只手柄，用来把起点到终点之间的线段拉弯。控制点离直线越远，弯曲越明显。当前控制点使用笛卡�?`[x, y]`�?
+`kind="curve"` 用一个控制点画二次贝塞尔曲线，对应 SVG path 的 `Q`。贝塞尔曲线不要求经过控制点；控制点更像一只手柄，用来把起点到终点之间的线段拉弯。控制点离直线越远，弯曲越明显。当前控制点使用笛卡尔 `[x, y]`：
 
 <ComponentPreview name="step-curve" size="xs" />
 
-### 三次贝塞尔（cubic�?
+### 三次贝塞尔（cubic）
 
-`kind="cubic"` 用两个控制点画三次贝塞尔曲线，对�?SVG path �?`C`。`control1` 影响曲线离开起点时的方向，`control2` 影响曲线靠近终点时的方向；两端方向可分别控制，因此常用于 S 形曲线、复杂连接：
+`kind="cubic"` 用两个控制点画三次贝塞尔曲线，对应 SVG path 的 `C`。`control1` 影响曲线离开起点时的方向，`control2` 影响曲线靠近终点时的方向；两端方向可分别控制，因此常用于 S 形曲线、复杂连接：
 
 <ComponentPreview name="step-cubic" size="xs" />
 
-### 弧形简记（bend�?
+### 弧形简记（bend）
 
-`kind="bend"` 是弧形连线的简记——只说明从起点看向终点时向左还是向右弯，以及弯曲角度；编译期会自动计算控制点，并展开为三次贝塞尔。`bendDirection` 是相�?from→to 路径方向的视觉左 / 右；`bendAngle` 缺省 30�?
+`kind="bend"` 是弧形连线的简记——只说明从起点看向终点时向左还是向右弯，以及弯曲角度；编译期会自动计算控制点，并展开为三次贝塞尔。`bendDirection` 是相对 from→to 路径方向的视觉左 / 右；`bendAngle` 缺省 30：
 
 <ComponentPreview name="step-bend" size="md" />
 
-### 偏移定位（offset�?
+### 偏移定位（offset）
 
-`to` 也接�?**`{ of, offset }`** 形态——基�?+ `(dx, dy)` 任意偏移。`of` 三态：节点 id、笛卡尔字面值、PolarPosition（递归极坐标）；和 `<Node position>` 的偏移定位完全对称：
+`to` 也接受 **`{ of, offset }`** 形态——基准 + `(dx, dy)` 任意偏移。`of` 三态：节点 id、笛卡尔字面值、PolarPosition（递归极坐标）；和 `<Node position>` 的偏移定位完全对称：
 
 <ComponentPreview name="step-offset-target" size="sm" />
 
-### 相对坐标（relative / relativeAccumulate�?
+### 相对坐标（relative / relativeAccumulate）
 
-`to` 还可以是相对偏移对象：`{ relative: [dx, dy] }` �?`{ relativeAccumulate: [dx, dy] }` 都基�?*前一 step 的终�?*（`prevEnd`，无前段时回退�?`[0, 0]`）解析；区别只是**是否推进 prevEnd**�?
+`to` 还可以是相对偏移对象：`{ relative: [dx, dy] }` 与 `{ relativeAccumulate: [dx, dy] }` 都基于**前一 step 的终点**（`prevEnd`，无前段时回退到 `[0, 0]`）解析；区别只是**是否推进 prevEnd**：
 
-- `{ relative }`：多段链式偏移都基于**同一**锚点�?*�?*更新 prevEnd
+- `{ relative }`：多段链式偏移都基于**同一**锚点，**不**更新 prevEnd
 - `{ relativeAccumulate }`：每段累积，prevEnd 跟着推进
 
-也可写作 sugar 字符�?`'+dx,dy'` / `'++dx,dy'`（`<Step to="+1,0" />`），React adapter 会就地转成对�?IR 对象。下例两条路�?step 序列字面相同，仅�?target 形态——实线（relative）走�?L 形，虚线（relativeAccumulate）走出阶梯：
+也可写作 sugar 字符串 `'+dx,dy'` / `'++dx,dy'`（`<Step to="+1,0" />`），React adapter 会就地转成对应 IR 对象。下例两条路径 step 序列字面相同，仅差 target 形态——实线（relative）走出 L 形，虚线（relativeAccumulate）走出阶梯：
 
 <ComponentPreview name="step-relative" size="sm" />
 
-### 弧段（arc�?
+### 弧段（arc）
 
-`kind="arc"` �?*游标为圆�?*，按起末角度 + 半径画一段圆弧。它描述的是“从哪个角度扫到哪个角度的圆弧”，不需�?`to`，常用于角度标注、圆周片段或几何辅助线。角度沿 retikz polar 约定�?° �?+x�?0° 视觉朝下；画完画笔停在弧的终点：
+`kind="arc"` 以**游标为圆心**，按起末角度 + 半径画一段圆弧。它描述的是“从哪个角度扫到哪个角度的圆弧”，不需要 `to`，常用于角度标注、圆周片段或几何辅助线。角度沿 retikz polar 约定：0° 朝 +x，90° 视觉朝下；画完画笔停在弧的终点：
 
 <ComponentPreview name="step-arc" size="sm" />
 
-### 整圆（circlePath�?
+### 整圆（circlePath）
 
-`kind="circlePath"` �?*游标为圆�?*，按 `radius` 画一个完整闭合的圆——画完画笔回到圆心。常用于画端点圆点、圆形节点边框等场景�?
+`kind="circlePath"` 以**游标为圆心**，按 `radius` 画一个完整闭合的圆——画完画笔回到圆心。常用于画端点圆点、圆形节点边框等场景：
 
 <ComponentPreview name="step-circle" size="xs" />
 
-### 整椭圆（ellipsePath�?
+### 整椭圆（ellipsePath）
 
-`kind="ellipsePath"` �?*游标为圆�?*，按 `radiusX` / `radiusY` 画一个完整闭合的椭圆——画完画笔回到圆心。`radiusX === radiusY` 时退化为圆：
+`kind="ellipsePath"` 以**游标为圆心**，按 `radiusX` / `radiusY` 画一个完整闭合的椭圆——画完画笔回到圆心。`radiusX === radiusY` 时退化为圆：
 
 <ComponentPreview name="step-ellipse" size="sm" />
 
-### 矩形（rectangle�?
-`kind="rectangle"` �?`from` �?`to` 作为两个对角点画一个轴对齐矩形；可�?`roundedCorners` 做圆角。它不像 `line` 那样依赖当前游标，所以更接近 TikZ �?`(a) rectangle (b)`。日常画矩形更推荐用 [Shapes](/core/components/shapes/circle-ellipse) 里的 `<Rectangle>` sugar，写底层 IR 或需要和其它 step 混排时再直接用这�?kind�?
+### 矩形（rectangle）
+
+`kind="rectangle"` 用 `from` 和 `to` 作为两个对角点画一个轴对齐矩形；可选 `roundedCorners` 做圆角。它不像 `line` 那样依赖当前游标，所以更接近 TikZ 的 `(a) rectangle (b)`。日常画矩形更推荐用 [Shapes](/core/components/shapes/circle-ellipse) 里的 `<Rectangle>` sugar，写底层 IR 或需要和其它 step 混排时再直接用这个 kind。
+
 <ComponentPreview name="step-rectangle" size="sm" />
 
-### 边标注（label�?
-�?`<Step>` 挂一�?`label` 就能在该段画线的中部 / 起点 / 终点附近放一段文字。`label` 是个对象�?
+### 边标注（label）
+
+给 `<Step>` 挂一个 `label` 就能在该段画线的中部 / 起点 / 终点附近放一段文字。`label` 是个对象：
 
 - `text`：必填，标签文字（单行）
-- `position`：`'at-start' | 'very-near-start' | 'near-start' | 'midway' | 'near-end' | 'very-near-end' | 'at-end'` 七个 keyword，或 0..1 的数�?t（任意精细位置），缺�?`'midway'`（t=0.5�?
-- `side`：`'above'` / `'below'` / `'left'` / `'right'` / `'sloped'`，缺�?`'above'`；`'sloped'` 让标签沿段切线方向旋转贴�?
-- `textColor`：标签文字色；缺省按 **scope `labelDefault` �?宿主 path 主色 `color` �?currentColor** 回退（跟主色不跟 stroke�?
-- `opacity`：标签独立透明�?0..1；与所�?path �?opacity 相乘（元素内轴；�?scope 不复合）
-- `font`：标签字体覆盖（family / size / weight / style），逐字段回退 `labelDefault` �?渲染端默�?
+- `position`：`'at-start' | 'very-near-start' | 'near-start' | 'midway' | 'near-end' | 'very-near-end' | 'at-end'` 七个 keyword，或 0..1 的数值 t（任意精细位置），缺省 `'midway'`（t=0.5）
+- `side`：`'above'` / `'below'` / `'left'` / `'right'` / `'sloped'`，缺省 `'above'`；`'sloped'` 让标签沿段切线方向旋转贴线
+- `textColor`：标签文字色；缺省按 **scope `labelDefault` → 宿主 path 主色 `color` → currentColor** 回退（跟主色不跟 stroke）
+- `opacity`：标签独立透明度 0..1；与所属 path 的 opacity 相乘（元素内轴；跨 scope 不复合）
+- `font`：标签字体覆盖（family / size / weight / style），逐字段回退 `labelDefault` → 渲染端默认
 
-两种等价写法——prop 形�?`<Step label={{...}} />`，或 sugar 形�?`<Step><EdgeLabel>...</EdgeLabel></Step>`（需 `import { EdgeLabel } from '@retikz/react'`）；**两者并存时 prop 优先**。`'move'` �?`'cycle'` 不挂 label——前者不画线、后者是闭合标记，挂上去会被静默忽略�?
+两种等价写法——prop 形态 `<Step label={{...}} />`，或 sugar 形态 `<Step><EdgeLabel>...</EdgeLabel></Step>`（需 `import { EdgeLabel } from '@retikz/react'`）；**两者并存时 prop 优先**。`'move'` 与 `'cycle'` 不挂 label——前者不画线、后者是闭合标记，挂上去会被静默忽略：
 
 <ComponentPreview name="step-label" />
 
-#### 标签颜色与字�?
+#### 标签颜色与字体
 
-边标注颜色跟随宿�?path �?*主色 `color`**——`<Path color>` 时标注自动同色；只设 `stroke`（不�?`color`）标注不跟，保持默认色。也可用 `textColor` 显式覆盖，`font` / `opacity` 做小一�?/ 淡化的辅助标注：
+边标注颜色跟随宿主 path 的**主色 `color`**——`<Path color>` 时标注自动同色；只设 `stroke`（不设 `color`）标注不跟，保持默认色。也可用 `textColor` 显式覆盖，`font` / `opacity` 做小一号 / 淡化的辅助标注：
 
 <ComponentPreview name="step-label-color" size="sm" />
 
-scope `labelDefault` 给整组标注统一默认（见 [Scope 样式继承](/core/components/layout/scope)）；继承顺序：label 显式 > `labelDefault` > 宿主 path 主色 > currentColor�?
+scope `labelDefault` 给整组标注统一默认（见 [Scope 样式继承](/core/components/layout/scope)）；继承顺序：label 显式 > `labelDefault` > 宿主 path 主色 > currentColor。
 
-#### label.position�? �?keyword + 任意数�?t
+#### label.position：7 个 keyword + 任意数值 t
 
-`position` 接受 7 �?keyword �?0..1 的数�?t，keyword �?t 的语义糖�?
+`position` 接受 7 个 keyword 或 0..1 的数值 t，keyword 是 t 的语义糖：
 
 | keyword | 对应 t | 说明 |
 | --- | --- | --- |
-| `'at-start'` | `0` | 段起�?|
+| `'at-start'` | `0` | 段起点 |
 | `'very-near-start'` | `0.125` | 起点附近 |
-| `'near-start'` | `0.25` | 起点 1/4 �?|
-| `'midway'` | `0.5` | 段中点（缺省�?|
-| `'near-end'` | `0.75` | 终点 1/4 �?|
+| `'near-start'` | `0.25` | 起点 1/4 处 |
+| `'midway'` | `0.5` | 段中点（缺省） |
+| `'near-end'` | `0.75` | 终点 1/4 处 |
 | `'very-near-end'` | `0.875` | 终点附近 |
-| `'at-end'` | `1` | 段终�?|
+| `'at-end'` | `1` | 段终点 |
 
-`position={0.3}` 这种任意数值可以精确指定段上位置�?*数值超�?`[0, 1]` 区间�?schema 阶段直接拒绝，不在编译阶�?clamp**（`position={-0.1}` / `position={1.2}` 均会�?IR 校验失败）�?
+`position={0.3}` 这种任意数值可以精确指定段上位置。**数值超出 `[0, 1]` 区间在 schema 阶段直接拒绝，不在编译阶段 clamp**（`position={-0.1}` / `position={1.2}` 均会让 IR 校验失败）。
 
-#### t 在每�?step kind 上的几何含义
+#### t 在每种 step kind 上的几何含义
 
-t 是沿整段的归一化参数，不同 kind 有不同参数化方式�?
+t 是沿整段的归一化参数，不同 kind 有不同参数化方式：
 
-| Step kind | 参数化方�?| t=0.25 | t=0.5 | t=0.75 |
+| Step kind | 参数化方式 | t=0.25 | t=0.5 | t=0.75 |
 | --- | --- | --- | --- | --- |
-| `'line'` | 归一化弧�?| 1/4 �?| 中点 | 3/4 �?|
-| `'step'`（fold N=2�?| 每段�?`1/N` t 区间——拐角恒�?`t = j/N`�?*与段长无�?* | �?1 中点 | **拐角** | �?2 中点 |
-| `'curve'` / `'cubic'` | Bezier 参数 t�?*非弧�?*�?| Bezier t=0.25 位置 | Bezier t=0.5 位置（通常**非视觉中�?*�?| Bezier t=0.75 位置 |
-| `'bend'` | 内部 lower �?cubic �?Bezier t | �?cubic | �?cubic | �?cubic |
-| `'arc'` | t 线性映�?`startAngle..endAngle`（度�?| 起末角度 1/4 �?| 起末中点角度 | 起末角度 3/4 �?|
-| `'circlePath'` | 沿整�?t∈[0, 1]：t=0 �?angle 0�?x），CCW 增长 | 圆周 90°（视觉下方） | 圆周 180°�?x�?| 圆周 270°（视觉上方） |
-| `'ellipsePath'` | �?circlePath：t=0 �?angle 0，CCW 增长 | 椭圆 90° �?| 椭圆 180° 处（**非弧长中�?*�?| 椭圆 270° �?|
+| `'line'` | 归一化弧长 | 1/4 处 | 中点 | 3/4 处 |
+| `'step'`（fold N=2） | 每段占 `1/N` t 区间——拐角恒在 `t = j/N`，**与段长无关** | 段 1 中点 | **拐角** | 段 2 中点 |
+| `'curve'` / `'cubic'` | Bezier 参数 t（**非弧长**） | Bezier t=0.25 位置 | Bezier t=0.5 位置（通常**非视觉中点**） | Bezier t=0.75 位置 |
+| `'bend'` | 内部 lower 成 cubic 后 Bezier t | 同 cubic | 同 cubic | 同 cubic |
+| `'arc'` | t 线性映射 `startAngle..endAngle`（度） | 起末角度 1/4 处 | 起末中点角度 | 起末角度 3/4 处 |
+| `'circlePath'` | 沿整圆 t∈[0, 1]：t=0 为 angle 0（+x），CCW 增长 | 圆周 90°（视觉下方） | 圆周 180°（-x） | 圆周 270°（视觉上方） |
+| `'ellipsePath'` | 同 circlePath：t=0 在 angle 0，CCW 增长 | 椭圆 90° 处 | 椭圆 180° 处（**非弧长中点**） | 椭圆 270° 处 |
 
-下面 8 �?demo 每种 kind 各演示一�?t——`t=0.25` / `'midway'` 两档对比，让 keyword=数值的语义糖关系与不同 kind �?t 的几何含义一目了然�?
+下面 8 个 demo 每种 kind 各演示一组 t——`t=0.25` / `'midway'` 两档对比，让 keyword=数值的语义糖关系与不同 kind 上 t 的几何含义一目了然。
 
 ##### Line
 
-直线段最直观：`t=0.25`、`midway`、`t=0.75` 分别落在段长�?1/4、中点和 3/4 处�?
+直线段最直观：`t=0.25`、`midway`、`t=0.75` 分别落在段长的 1/4、中点和 3/4 处。
 
 <ComponentPreview name="edge-label-on-line" size="md" />
 
 ##### Fold (step)
 
-折角段把 t 区间平均分给每一段折线；`midway` 固定落在拐角处，而不是按两段实际长度取视觉中点�?
+折角段把 t 区间平均分给每一段折线；`midway` 固定落在拐角处，而不是按两段实际长度取视觉中点。
 
 <ComponentPreview name="edge-label-on-fold" size="sm" />
 
 ##### Quadratic Bezier (curve)
 
-二次贝塞尔使用曲线参�?t；`midway` �?Bezier t=0.5 的位置，不一定是视觉弧长的一半�?
+二次贝塞尔使用曲线参数 t；`midway` 是 Bezier t=0.5 的位置，不一定是视觉弧长的一半。
 
 <ComponentPreview name="edge-label-on-curve" size="sm" />
 
 ##### Cubic Bezier (cubic)
 
-三次贝塞尔同样按 Bezier 参数放置标注；两个控制点会同时影�?t 对应的位置和切线方向�?
+三次贝塞尔同样按 Bezier 参数放置标注；两个控制点会同时影响 t 对应的位置和切线方向。
 
 <ComponentPreview name="edge-label-on-cubic" size="sm" />
 
 ##### Bend
 
-`bend` 会先展开成三次贝塞尔，因此标注位置规则与 cubic 一致�?
+`bend` 会先展开成三次贝塞尔，因此标注位置规则与 cubic 一致。
 
 <ComponentPreview name="edge-label-on-bend" size="sm" />
 
 ##### Arc
 
-弧段按角度插值放置标注；`midway` 表示起始角度与终止角度的中间角�?
+弧段按角度插值放置标注；`midway` 表示起始角度与终止角度的中间角。
 
 <ComponentPreview name="edge-label-on-arc" />
 
 ##### Circle (circlePath)
 
-整圆�?0° 位置开始绕一圈，数�?t 映射到圆周角度�?
+整圆从 0° 位置开始绕一圈，数值 t 映射到圆周角度。
 
 <ComponentPreview name="edge-label-on-circle" size="lg" />
 
 ##### Ellipse (ellipsePath)
 
-整椭圆也按角度参数放置标注；这不是按椭圆弧长等分�?
+整椭圆也按角度参数放置标注；这不是按椭圆弧长等分。
 
 <ComponentPreview name="edge-label-on-ellipse" size="sm" />
 
 ### 样式
 
-`<Step>` 自身没有 stroke 类视觉属性——样式都挂在�?`<Path>` 上，整条 Path 的所�?Step 共享同一�?`stroke` / `strokeWidth` / `dashPattern`�?
+`<Step>` 自身没有 stroke 类视觉属性——样式都挂在父 `<Path>` 上，整条 Path 的所有 Step 共享同一套 `stroke` / `strokeWidth` / `dashPattern`：
 
 <ComponentPreview name="step-styling" size="sm" />
 
-<Comparison target="tikz" title="Step �?TikZ 路径语法">
+<Comparison target="tikz" title="Step 与 TikZ 路径语法">
 
 | retikz | TikZ 对照 |
 | --- | --- |
@@ -223,90 +228,93 @@ t 是沿整段的归一化参数，不同 kind 有不同参数化方式�?
 | `kind="curve"` | `.. controls (B) ..` |
 | `kind="cubic"` | `.. controls (B) and (C) ..` |
 | `kind="bend"` | `to[bend left=N]` / `to[bend right=N]` |
-| `{ of, offset }` target | `calc` library �?`($(of) + (dx, dy)$)` |
+| `{ of, offset }` target | `calc` library 的 `($(of) + (dx, dy)$)` |
 | `{ relative }` / `{ relativeAccumulate }` | `(+x, +y)` / `(++x, ++y)` |
-| `kind="arc"` | `arc[start angle=�? end angle=�? radius=…]` |
-| `kind="circlePath"` / `kind="ellipsePath"` | `circle[radius=…]` / `ellipse[x radius=�? y radius=…]` |
-| `label={{ text, position, side }}` | `(a) -- node[midway, above] {text} (b)`；数�?t 对应 `pos=<float>` |
+| `kind="arc"` | `arc[start angle=…, end angle=…, radius=…]` |
+| `kind="circlePath"` / `kind="ellipsePath"` | `circle[radius=…]` / `ellipse[x radius=…, y radius=…]` |
+| `label={{ text, position, side }}` | `(a) -- node[midway, above] {text} (b)`；数值 t 对应 `pos=<float>` |
 
 </Comparison>
 
-## API 参�?
+## API 参考
 
-| 属�?| 类型 | 默认�?| 描述 |
+| 属性 | 类型 | 默认值 | 描述 |
 | --- | --- | --- | --- |
-| `kind` | `'move' \| 'line' \| 'step' \| 'cycle' \| 'curve' \| 'cubic' \| 'bend' \| 'arc' \| 'circlePath' \| 'ellipsePath' \| 'rectangle'` | `'line'` | 见下�?十一种取�?表；IR 另有 `generator`，无 React `<Step>` DSL |
-| `via` | `'-\|' \| '\|-'` | �?| �?`kind="step"` 必填：`-\|` 先水平后垂直；`\|-` 先垂直后水平 |
-| `from` | `IRTarget` | �?| �?`kind="rectangle"` 必填：矩形一个角�?|
-| `to` | `IRTarget` | �?| `kind="cycle"` / `'arc'` / `'circlePath'` / `'ellipsePath'` 时不需要；`kind="rectangle"` 与其它会推进游标�?kind 必填——目标点：节�?id、笛卡尔 `[x, y]`、极坐标对象、偏移定位对�?`{ of, offset }`、比例定�?`{ between, t }`、相对偏移对�?`{ relative }` / `{ relativeAccumulate }`，或 sugar 字符�?`'+dx,dy'` / `'++dx,dy'` |
-| `control` | `[number, number]` | �?| �?`kind="curve"` 必填：二次贝塞尔的单个控制点 |
-| `control1` | `[number, number]` | �?| �?`kind="cubic"` 必填：三次贝塞尔的第一控制点（影响起点切线�?|
-| `control2` | `[number, number]` | �?| �?`kind="cubic"` 必填：三次贝塞尔的第二控制点（影响终点切线） |
-| `bendDirection` | `'left' \| 'right'` | �?| �?`kind="bend"` 必填：相�?from→to 路径方向的视觉左 / �?|
-| `bendAngle` | `number` | `30` | �?`kind="bend"` 可选：弯角度（度） |
-| `startAngle` | `number` | �?| �?`kind="arc"` 必填：弧的起始角度（度，0° �?+x�?0° 视觉朝下�?|
-| `endAngle` | `number` | �?| �?`kind="arc"` 必填：弧的终止角度（度） |
-| `radius` | `number` | �?| `kind="arc"` / `'circlePath'` 必填：圆 / 弧的半径 |
-| `radiusX` | `number` | �?| �?`kind="ellipsePath"` 必填：椭�?x 轴半�?|
-| `radiusY` | `number` | �?| �?`kind="ellipsePath"` 必填：椭�?y 轴半�?|
-| `roundedCorners` | `number` | �?| �?`kind="rectangle"` 可选：矩形圆角半径 |
-| `label` | `IRStepLabel` | �?| 边标注（`'move'` / `'cycle'` 外八�?kind 通用）：`{ text, position?, side?, textColor?, opacity?, font? }`；等�?sugar 写法 `<Step><EdgeLabel>�?/EdgeLabel></Step>`，prop 优先 |
+| `kind` | `'move' \| 'line' \| 'step' \| 'cycle' \| 'curve' \| 'cubic' \| 'bend' \| 'arc' \| 'circlePath' \| 'ellipsePath' \| 'rectangle'` | `'line'` | 见下方"十一种取值"表；IR 另有 `generator`，无 React `<Step>` DSL |
+| `via` | `'-\|' \| '\|-'` | — | 仅 `kind="step"` 必填：`-\|` 先水平后垂直；`\|-` 先垂直后水平 |
+| `from` | `IRTarget` | — | 仅 `kind="rectangle"` 必填：矩形一个角点 |
+| `to` | `IRTarget` | — | `kind="cycle"` / `'arc'` / `'circlePath'` / `'ellipsePath'` 时不需要；`kind="rectangle"` 与其它会推进游标的 kind 必填——目标点：节点 id、笛卡尔 `[x, y]`、极坐标对象、偏移定位对象 `{ of, offset }`、比例定位 `{ between, t }`、相对偏移对象 `{ relative }` / `{ relativeAccumulate }`，或 sugar 字符串 `'+dx,dy'` / `'++dx,dy'` |
+| `control` | `[number, number]` | — | 仅 `kind="curve"` 必填：二次贝塞尔的单个控制点 |
+| `control1` | `[number, number]` | — | 仅 `kind="cubic"` 必填：三次贝塞尔的第一控制点（影响起点切线） |
+| `control2` | `[number, number]` | — | 仅 `kind="cubic"` 必填：三次贝塞尔的第二控制点（影响终点切线） |
+| `bendDirection` | `'left' \| 'right'` | — | 仅 `kind="bend"` 必填：相对 from→to 路径方向的视觉左 / 右 |
+| `bendAngle` | `number` | `30` | 仅 `kind="bend"` 可选：弯角度（度） |
+| `startAngle` | `number` | — | 仅 `kind="arc"` 必填：弧的起始角度（度，0° 朝 +x，90° 视觉朝下） |
+| `endAngle` | `number` | — | 仅 `kind="arc"` 必填：弧的终止角度（度） |
+| `radius` | `number` | — | `kind="arc"` / `'circlePath'` 必填：圆 / 弧的半径 |
+| `radiusX` | `number` | — | 仅 `kind="ellipsePath"` 必填：椭圆 x 轴半径 |
+| `radiusY` | `number` | — | 仅 `kind="ellipsePath"` 必填：椭圆 y 轴半径 |
+| `roundedCorners` | `number` | — | 仅 `kind="rectangle"` 可选：矩形圆角半径 |
+| `label` | `IRStepLabel` | — | 边标注（`'move'` / `'cycle'` 外八种 kind 通用）：`{ text, position?, side?, textColor?, opacity?, font? }`；等价 sugar 写法 `<Step><EdgeLabel>…</EdgeLabel></Step>`，prop 优先 |
 
-### kind 的十一种取�?
+### kind 的十一种取值
+
 | kind | 行为 | 底层路径类比 |
 | --- | --- | --- |
-| `'move'` | 移动游标�?*不画�?* | path "M" |
+| `'move'` | 移动游标，**不画线** | path "M" |
 | `'line'` | 从当前游标画直线到目标点 | path "L" |
 | `'step'` | 经一个直角拐点折到目标点 | 两段 path "L" |
-| `'cycle'` | 闭合回最近一�?move 起点（无 `to`�?| path "Z" |
-| `'curve'` | 二次贝塞尔（一个控制点�?| path "Q" |
+| `'cycle'` | 闭合回最近一次 move 起点（无 `to`） | path "Z" |
+| `'curve'` | 二次贝塞尔（一个控制点） | path "Q" |
 | `'cubic'` | 三次贝塞尔（两个控制点） | path "C" |
-| `'bend'` | 弧形简记（方向 + 角度），编译期退�?cubic | path "C" |
+| `'bend'` | 弧形简记（方向 + 角度），编译期退到 cubic | path "C" |
 | `'arc'` | 以游标为圆心，按起末角度 + 半径画弧 | path "A" |
 | `'circlePath'` | 以游标为圆心画整圆，画完回到圆心 | path "A"×2 |
-| `'ellipsePath'` | 以游标为圆心画整椭圆，画完回到圆�?| path "A"×2 |
-| `'rectangle'` | �?`from` �?`to` 作为两对角画矩形 | TikZ `(a) rectangle (b)` |
+| `'ellipsePath'` | 以游标为圆心画整椭圆，画完回到圆心 | path "A"×2 |
+| `'rectangle'` | 用 `from` 和 `to` 作为两对角画矩形 | TikZ `(a) rectangle (b)` |
 
-IR schema 还包�?`generator` step，用于外部路径生成器注册面；它没有对应的 React `<Step kind="generator">` DSL，通常通过 IR 直传或上层包生成�?
-`<Path>` 第一�?step 必须�?`move`——如果你�?`'line'` / `'step'` / `'cycle'`，编译器会自动改�?`move`（cycle �?`to`，回退到原�?`[0, 0]`）�?
+IR schema 还包含 `generator` step，用于外部路径生成器注册面；它没有对应的 React `<Step kind="generator">` DSL，通常通过 IR 直传或上层包生成。
 
-### via 的两种取�?
+`<Path>` 第一个 step 必须是 `move`——如果你写 `'line'` / `'step'` / `'cycle'`，编译器会自动改成 `move`（cycle 无 `to`，回退到原点 `[0, 0]`）。
 
-�?`kind="step"` 时生效，决定折角中间点的位置。设当前游标 `(px, py)`，目�?`(tx, ty)`�?
+### via 的两种取值
 
-| via | 中间�?| 走向 |
+仅 `kind="step"` 时生效，决定折角中间点的位置。设当前游标 `(px, py)`，目标 `(tx, ty)`：
+
+| via | 中间点 | 走向 |
 | --- | --- | --- |
-| `'-\|'` | `(tx, py)` | 先水平到 `tx`，再垂直�?`ty` |
-| `'\|-'` | `(px, ty)` | 先垂直到 `ty`，再水平�?`tx` |
+| `'-\|'` | `(tx, py)` | 先水平到 `tx`，再垂直到 `ty` |
+| `'\|-'` | `(px, ty)` | 先垂直到 `ty`，再水平到 `tx` |
 
-### label 的字�?
+### label 的字段
 
-`label` 是单个对象，对所有可�?label �?kind 透明�?
+`label` 是单个对象，对所有可挂 label 的 kind 透明：
 
 | 字段 | 类型 | 默认 | 描述 |
 | --- | --- | --- | --- |
-| `text` | `string` | �?| 必填，标签文字（单行�?|
-| `position` | 7 keyword 之一 �?`number`�?..1�?| `'midway'` | 段上归一化位�?t——keyword �?t 的语义糖（at-start=0 / very-near-start=0.125 / near-start=0.25 / midway=0.5 / near-end=0.75 / very-near-end=0.875 / at-end=1）；超出 [0, 1] �?schema 拒绝 |
-| `side` | `'above' \| 'below' \| 'left' \| 'right' \| 'sloped'` | `'above'` | 锚点 + 偏移方向；`above` / `below` �?y 轴、`left` / `right` �?x 轴；`sloped` 不偏移、按段切线方向旋�?|
-| `textColor` | `string` | �?| 标签文字色；缺省回退 scope `labelDefault` �?宿主 path 主色 `color` �?currentColor（跟主色不跟 stroke�?|
-| `opacity` | `number` | �?| 标签独立透明�?0..1；与所�?path opacity 相乘（跨 scope 不复合） |
-| `font` | `object` | �?| 标签字体覆盖（family / size / weight / style）；逐字段回退 `labelDefault` �?渲染端默�?|
+| `text` | `string` | — | 必填，标签文字（单行） |
+| `position` | 7 keyword 之一 或 `number`（0..1） | `'midway'` | 段上归一化位置 t——keyword 是 t 的语义糖（at-start=0 / very-near-start=0.125 / near-start=0.25 / midway=0.5 / near-end=0.75 / very-near-end=0.875 / at-end=1）；超出 [0, 1] 由 schema 拒绝 |
+| `side` | `'above' \| 'below' \| 'left' \| 'right' \| 'sloped'` | `'above'` | 锚点 + 偏移方向；`above` / `below` 偏 y 轴、`left` / `right` 偏 x 轴；`sloped` 不偏移、按段切线方向旋转 |
+| `textColor` | `string` | — | 标签文字色；缺省回退 scope `labelDefault` → 宿主 path 主色 `color` → currentColor（跟主色不跟 stroke） |
+| `opacity` | `number` | — | 标签独立透明度 0..1；与所属 path opacity 相乘（跨 scope 不复合） |
+| `font` | `object` | — | 标签字体覆盖（family / size / weight / style）；逐字段回退 `labelDefault` → 渲染端默认 |
 
-不同 step kind �?t 的几何解释见上方 "[t 在每�?step kind 上的几何含义](#t-在每�?step-kind-上的几何含义)" 表。要点：line 按弧长归一化；fold 按折线段数均�?t 区间（拐角恒�?t=0.5）；curve / cubic / bend �?Bezier 参数 t�?*非弧�?*——t=0.5 通常不是视觉中点）；arc 用角度参数化；circlePath / ellipsePath 沿整圆从 angle 0�?x）CCW 增长�?
+不同 step kind 上 t 的几何解释见上方 "[t 在每种 step kind 上的几何含义](#t-在每种-step-kind-上的几何含义)" 表。要点：line 按弧长归一化；fold 按折线段数均分 t 区间（拐角恒在 t=0.5）；curve / cubic / bend 用 Bezier 参数 t（**非弧长**——t=0.5 通常不是视觉中点）；arc 用角度参数化；circlePath / ellipsePath 沿整圆从 angle 0（+x）CCW 增长。
 
-### to 的七种形�?
-| 形�?| �?| 行为 |
+### to 的七种形态
+
+| 形态 | 例 | 行为 |
 | --- | --- | --- |
-| 节点 id | `'a'` | 自动�?Node 边界（参�?[锚点](/core/concepts/anchors)�?|
-| 笛卡�?| `[60, 0]` | 直接坐标 |
-| 极坐�?| `{ origin: 'a', angle: 30, radius: 50 }` | 极坐标（参看 [定位](/core/concepts/positioning)�?|
-| 偏移定位 | `{ of: 'a', offset: [10, 5] }` | 基准 + `(dx, dy)`；`of` 三态——节�?id / 笛卡尔字面�?/ PolarPosition |
-| 比例定位 | `{ between: ['a', 'b'], t: 0.5 }` | A �?B 连线上的比例点；端点必须是可独立解析�?absolute target |
-| 相对偏移 (relative) | `{ relative: [10, 0] }` �?`'+10,0'` | 基于前一 step 终点 + `[dx, dy]`�?*�?*更新 prevEnd |
-| 相对偏移 (relativeAccumulate) | `{ relativeAccumulate: [10, 0] }` �?`'++10,0'` | 基于前一 step 终点 + `[dx, dy]`�?*更新** prevEnd |
+| 节点 id | `'a'` | 自动贴 Node 边界（参看 [锚点](/core/concepts/anchors)） |
+| 笛卡尔 | `[60, 0]` | 直接坐标 |
+| 极坐标 | `{ origin: 'a', angle: 30, radius: 50 }` | 极坐标（参看 [定位](/core/concepts/positioning)） |
+| 偏移定位 | `{ of: 'a', offset: [10, 5] }` | 基准 + `(dx, dy)`；`of` 三态——节点 id / 笛卡尔字面值 / PolarPosition |
+| 比例定位 | `{ between: ['a', 'b'], t: 0.5 }` | A 到 B 连线上的比例点；端点必须是可独立解析的 absolute target |
+| 相对偏移 (relative) | `{ relative: [10, 0] }` 或 `'+10,0'` | 基于前一 step 终点 + `[dx, dy]`；**不**更新 prevEnd |
+| 相对偏移 (relativeAccumulate) | `{ relativeAccumulate: [10, 0] }` 或 `'++10,0'` | 基于前一 step 终点 + `[dx, dy]`；**更新** prevEnd |
 
 ## 相关
 
 - [Path](/core/components/draw/path)：`<Step>` 所在的 Kernel 路径容器
 - [Draw Way](/core/components/draw/way)：日常使用的 Sugar way 写法
-- [Draw](/core/components/draw/overview)：曲线、圆 / 椭圆和边标注�?Sugar 写法
+- [Draw](/core/components/draw/overview)：曲线、圆 / 椭圆和边标注的 Sugar 写法
