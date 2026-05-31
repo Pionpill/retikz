@@ -1,4 +1,4 @@
-import { type CompileOptions, type IR, type Scene, compileToScene } from '@retikz/core';
+import { type IR, type Scene, compileToScene } from '@retikz/core';
 import type { CommonOptions } from './types';
 
 /**
@@ -9,7 +9,9 @@ import type { CommonOptions } from './types';
  */
 export const toScene = (input: Scene | IR, options: CommonOptions): Scene => {
   if ('primitives' in input) return input;
-  const { idPrefix: _idPrefix, width: _width, height: _height, ...compile } = options;
-  const compileOptions: CompileOptions = compile;
+  const compileOptions: CommonOptions = { ...options };
+  delete compileOptions.idPrefix;
+  delete compileOptions.width;
+  delete compileOptions.height;
   return compileToScene(input, compileOptions);
 };

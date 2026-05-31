@@ -5,23 +5,21 @@ import { node } from '../src/builder/node';
 
 /** 录制型 fake 2d context：只验 Figure.toCanvas 把编译好的 Scene 喂进 canvas renderer（不验像素） */
 const makeFakeCanvas = (width = 200, height = 150): HTMLCanvasElement => {
-  const calls: string[] = [];
-  const ctx = new Proxy(
-    { canvas: null as unknown, fillStyle: '#000', strokeStyle: '#000' } as Record<string | symbol, unknown>,
-    {
-      get(target, prop) {
-        if (prop in target) return target[prop];
-        return (...args: unknown[]) => {
-          calls.push(String(prop));
-          void args;
-        };
-      },
-      set(target, prop, value) {
-        target[prop] = value;
-        return true;
-      },
+  const calls: Array<string> = [];
+  const target: Record<string | symbol, unknown> = { canvas: null, fillStyle: '#000', strokeStyle: '#000' };
+  const ctx = new Proxy(target, {
+    get(t, prop) {
+      if (prop in t) return t[prop];
+      return (...args: Array<unknown>) => {
+        calls.push(String(prop));
+        void args;
+      };
     },
-  ) as unknown as CanvasRenderingContext2D;
+    set(t, prop, value) {
+      t[prop] = value;
+      return true;
+    },
+  }) as unknown as CanvasRenderingContext2D;
   const canvas = {
     width,
     height,
@@ -38,7 +36,7 @@ describe('@retikz/vanilla Figure.toCanvas', () => {
       node('a', { position: [0, 0], shape: 'rectangle', minimumWidth: 40, minimumHeight: 20, fill: '#0a0' }),
     ]);
     expect(() => fig.toCanvas(canvas)).not.toThrow();
-    const calls = (canvas as unknown as { __calls: string[] }).__calls;
+    const calls = (canvas as unknown as { __calls: Array<string> }).__calls;
     expect(calls).toContain('setTransform');
   });
 

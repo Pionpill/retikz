@@ -31,11 +31,12 @@ export type Figure = {
 };
 
 /** figure() 的内部入口：装配 Figure（持 config + children，方法闭包其上） */
-export const createFigure = (config: FigureConfig, children: Child[]): Figure => {
+export const createFigure = (config: FigureConfig, children: Array<Child>): Figure => {
   /** call-site options 覆盖 figure 存的 config（call-site wins）：viewBox 已并进 ir，其余（width/height/idPrefix + 全套 CompileOptions）全透传 */
   const renderOptions = (callSite?: MountOptions): MountOptions => {
-    const { viewBox: _viewBox, ...stored } = config;
-    return { ...stored, ...callSite };
+    const merged: FigureConfig = { ...config, ...callSite };
+    delete merged.viewBox;
+    return merged;
   };
 
   const fig: Figure = {
@@ -56,7 +57,11 @@ export const createFigure = (config: FigureConfig, children: Child[]): Figure =>
     },
     toCanvas(canvas, options) {
       // figure 的 compile 选项（shapes/measureText…）走 toScene；canvas RenderOptions 是独立一套，原样透传
-      const { viewBox: _viewBox, idPrefix: _idPrefix, width: _width, height: _height, ...compile } = config;
+      const compile: FigureConfig = { ...config };
+      delete compile.viewBox;
+      delete compile.idPrefix;
+      delete compile.width;
+      delete compile.height;
       const scene = toScene(fig.ir, compile);
       renderToCanvas(canvas, scene, options ?? {});
     },

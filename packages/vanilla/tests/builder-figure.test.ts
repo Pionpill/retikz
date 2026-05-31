@@ -42,3 +42,14 @@ describe('@retikz/vanilla figure() — IR 装配', () => {
     expect(figure().ir).toEqual({ version: 1, type: 'scene', children: [] });
   });
 });
+
+describe('@retikz/vanilla 公开导出', () => {
+  it('public-exports：figure/node/draw/coordinate/scope 从包根导出', async () => {
+    const api = await import('../src');
+    expect(typeof api.figure).toBe('function');
+    expect(typeof api.node).toBe('function');
+    expect(typeof api.draw).toBe('function');
+    expect(typeof api.coordinate).toBe('function');
+    expect(typeof api.scope).toBe('function');
+  });
+});
