@@ -3,8 +3,8 @@ import { describe, expect, it } from 'vitest';
 import { availableSourceViews } from '../src/components/shared/component-preview/_shared';
 
 describe('availableSourceViews：react/ir/vanilla 三者全可选，只显示对应选项', () => {
-  it('全有 → 三视图按固定顺序', () => {
-    expect(availableSourceViews({ react: true, ir: true, vanilla: true })).toEqual(['react', 'ir', 'vanilla']);
+  it('全有 → 三视图按固定顺序（vanilla 居中）', () => {
+    expect(availableSourceViews({ react: true, ir: true, vanilla: true })).toEqual(['react', 'vanilla', 'ir']);
   });
 
   it('全无 → 空（不渲染代码面板）', () => {
@@ -22,7 +22,7 @@ describe('availableSourceViews：react/ir/vanilla 三者全可选，只显示对
     expect(availableSourceViews({ react: true, ir: true, vanilla: false })).toEqual(['react', 'ir']);
     // react + vanilla（无 ir）
     expect(availableSourceViews({ react: true, ir: false, vanilla: true })).toEqual(['react', 'vanilla']);
-    // ir + vanilla（无 react）
-    expect(availableSourceViews({ react: false, ir: true, vanilla: true })).toEqual(['ir', 'vanilla']);
+    // ir + vanilla（无 react）：vanilla 在 ir 之前
+    expect(availableSourceViews({ react: false, ir: true, vanilla: true })).toEqual(['vanilla', 'ir']);
   });
 });

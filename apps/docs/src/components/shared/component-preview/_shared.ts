@@ -5,8 +5,8 @@ export type Transform = { x: number; y: number; scale: number };
 /** 源码视图切换：React 源码 / IR JSON / Vanilla builder 代码 */
 export type SourceView = 'react' | 'ir' | 'vanilla';
 
-/** 视图展示顺序（toggle 按这个顺序渲染可用视图） */
-export const SOURCE_VIEW_ORDER: ReadonlyArray<SourceView> = ['react', 'ir', 'vanilla'];
+/** 视图展示顺序（toggle 按这个顺序渲染可用视图）：vanilla 夹在 react 与 ir 之间 */
+export const SOURCE_VIEW_ORDER: ReadonlyArray<SourceView> = ['react', 'vanilla', 'ir'];
 
 /**
  * 按各视图是否有内容，算出可用视图列表（固定顺序）
