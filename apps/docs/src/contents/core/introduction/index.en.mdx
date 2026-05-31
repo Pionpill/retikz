@@ -35,6 +35,10 @@ retikz picks IR JSON over JSX as the primary AI interface, leveraging OpenAI Str
 
 Every input form (JSX / DSL / AI) compiles to the same IR; every output form (renderer) reads from it.
 **Persistence, cross-platform support, and AI integration aren't separate features — they're the same dividend paid by an IR-centric model.**
+The practical benefit is straightforward:
+- You maintain saving, editing, and rendering around one IR contract.
+- You do not need separate formats for JSX, AI output, or each renderer.
+- System boundaries stay clearer, and future extensions get cheaper.
 
 ## Layered Abstraction
 
