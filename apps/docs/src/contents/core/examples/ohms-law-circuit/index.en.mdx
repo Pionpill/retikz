@@ -1,47 +1,41 @@
 ---
 title: "Ohm's Law Circuit"
-description: "A high-school series-measurement circuit example built with custom shapes, fixed terminals, and Scope duplication"
+description: "A high-school Ohm's law circuit example: custom shapes, Scope duplication, and elbow wiring build the full circuit step by step"
 ---
 
 ## Introduction
 
-This page builds a textbook-style Ohm's law experiment circuit while showing how [Layout](/core/components/layout/overview), [Scope](/core/components/layout/scope), [Node](/core/components/node/overview), [Draw](/core/components/draw/overview), [Coordinate](/core/components/node/coordinate), and the [Shape Registry](/core/reference/extending/shape-registry) work together.
+This page builds a textbook-style Ohm's law experiment circuit while showing how [Layout](/core/components/layout/overview), [Scope](/core/components/layout/scope), [Node](/core/components/node/overview), [Draw](/core/components/draw/overview), and the [Shape Registry](/core/reference/extending/shape-registry) work together.
 
-<ComponentPreview
-  name="ohms-law-circuit-06-labels"
-  sourceFiles={['circuitScene.tsx', 'circuitElements.tsx', 'circuitEndpoints.ts', 'circuitShapes.ts']}
-  size="xxl"
-/>
+<ComponentPreview name="ohms-law-circuit-06-labels" size="sm" />
 
-The final figure stays clean: no background boxes around the measurement branches, no explanation card in the lower-left corner, and no extra arrows near `R1` / `R2`. The workflow is to place each circuit symbol as a custom `Node` first. Each symbol owns stable terminals, and wires connect those terminals afterward.
+The meters, battery, switch, resistors, and rheostat are all custom shapes that wire up through fixed terminals. The figure is built in "shapes first, then place, then wire and label" order.
 
 ## Prompt
 
 You can send the prompt below to the AI chat panel to draw a similar circuit. It describes the target figure and visual constraints without forcing the model to memorize exact API names.
 
 <ExamplePrompt
-  short="**Draw a high-school physics Ohm's law experiment circuit**: one closed main loop with a battery, switch, ammeter, two series resistors, one voltmeter in parallel with each resistor, and a sliding rheostat at the bottom; keep it clean and textbook-like, without measurement-cell backgrounds or extra arrows around R1 / R2."
+  short="**Draw a high-school physics Ohm's law experiment circuit**: a closed main loop with the battery standing on the left, the switch / ammeter / resistor R1 on the top row, the rheostat / resistor R2 on the bottom row, and a voltmeter in parallel directly below each resistor; keep it clean and textbook-like."
   detailed={`**Draw a high-school physics Ohm's law experiment circuit**
 
 **Circuit structure**
 
-- The main loop is a horizontally expanded closed wire frame
-- Place the battery and switch on the left, with the ammeter on the top branch
-- Put two series resistors in the middle, labeled R1 and R2
-- Put one parallel voltmeter below each resistor, labeled U1 / U2
-- Place a sliding rheostat on the bottom branch
+- A closed main loop, with the battery standing vertically on the left
+- The top row holds the switch, ammeter, and the first resistor R1
+- The bottom row holds the sliding rheostat and the second resistor R2
+- A voltmeter sits in parallel directly below each resistor, labeled U1 / U2
 
 **Visual style**
 
-- Make the symbols look like textbook circuit components, not decorative cards
-- Use circular meters with only A or V inside
-- Draw resistors as zigzags, and draw the rheostat as a longer zigzag with a light texture
-- Use only currentColor for the whole figure, and do not add fills to the meters or background boxes around the measurement branches
+- Make the symbols look like textbook circuit components, drawn as single-color strokes
+- Use circular meters with only A or V inside, no fill
+- Draw resistors as plain rectangles, and the rheostat as a rectangle with a diagonal arrow across it
 
 **Labels**
 
 - Keep the necessary labels: E, S, A, R1, R2, V, U1, U2, sliding rheostat
-- Do not add direction arrows; prose will explain that the series current is shared and that the two voltmeters measure the two resistor sections`}
+- Prose will explain that the series current is shared and that the two voltmeters measure the two resistor sections`}
   extensions={[
     'Change the circuit to three series resistors and reuse the same measurement unit for each section.',
     'Move the sliding rheostat to the right side while keeping the reading order clear.',
@@ -51,93 +45,91 @@ You can send the prompt below to the AI chat panel to draw a similar circuit. It
 
 ## Process
 
-### Step 1: Place Elements And Fixed Terminals
+### Step 1: Build the meter as a custom shape
 
-Start by fixing the [Layout](/core/components/layout/overview) `viewBox`, then place the battery, switch, ammeter, and the first `R + V` measurement unit as [Node](/core/components/node/overview) elements. Each circuit symbol is a custom shape that already knows its input, output, or polarity terminals; no wires are drawn yet.
-
-<ComponentPreview
-  name="ohms-law-circuit-01-loop"
-  sourceFiles={['circuitScene.tsx', 'circuitElements.tsx', 'circuitEndpoints.ts', 'circuitShapes.ts']}
-  size="xxl"
-/>
-
-### Step 2: Connect The Main Loop
-
-Once the elements exist, use [Draw](/core/components/draw/overview) to wire the main loop: battery positive to switch, switch to ammeter, ammeter to the first resistor, then back along the bottom branch to the battery negative. The wires reference element terminals instead of guessed center coordinates.
+The voltmeter and ammeter are a round meter head with a lead on each side, wiring only at the left/right terminals (the same idea as the "semantic terminals: diode" in the [Shape Registry](/core/reference/extending/shape-registry)). Build it as a custom `circuit-meter` shape and flatten two of them (A / V) to start.
 
 <ComponentPreview
-  name="ohms-law-circuit-02-instruments"
-  diffFrom="ohms-law-circuit-01-loop"
-  sourceFiles={['circuitScene.tsx', 'circuitElements.tsx', 'circuitEndpoints.ts', 'circuitShapes.ts']}
-  size="xxl"
+  name="circuit-01-meters"
+  sourceFiles={['circuit-01-meters.meter.tsx']}
+  size="xs"
 />
 
-### Step 3: Wire The First Measurement Branch
+### Step 2: Flatten the remaining custom symbols
 
-The first measurement branch connects both ends of `R1` to the voltmeter below it. The `R1` label uses [Coordinate](/core/components/node/coordinate) with `between` to stay at the midpoint between the resistor terminals, while the parallel branch only marks that this voltmeter measures that resistor section.
+The battery, switch, resistor, and rheostat are not built into core either, so they are custom shapes in the [Shape Registry](/core/reference/extending/shape-registry), collected in `circuitShapes.tsx`. They each expose only left-right terminals (the battery's long plate is the positive on the right, the short plate the negative on the left); the plates, contacts, rectangles, and arrow are all drawn inside the shape.
 
 <ComponentPreview
-  name="ohms-law-circuit-03-first-cell"
-  diffFrom="ohms-law-circuit-02-instruments"
-  sourceFiles={['circuitScene.tsx', 'circuitElements.tsx', 'circuitEndpoints.ts', 'circuitShapes.ts']}
-  size="xxl"
+  name="ohms-law-circuit-02-custom-shapes"
+  sourceFiles={['circuitShapes.tsx']}
+  size="xs"
 />
 
-### Step 4: Duplicate The Second Branch
+### Step 3: Place the elements on the circuit
 
-The second `R2 + V2` branch is not redrawn from scratch. The same local measurement unit is wrapped in [Scope](/core/components/layout/scope) and translated as a group, so the resistor, voltmeter, parallel branch, and midpoint rule stay consistent while only the id prefix and labels change.
+Place the battery, switch, ammeter, and rheostat in their final positions — the resistors and voltmeters are left out for now, to be assembled in the next step. The battery stands on the left (rotated 90°), the switch and ammeter sit on the top row, and the rheostat on the bottom row.
 
 <ComponentPreview
-  name="ohms-law-circuit-04-duplicate-cell"
-  diffFrom="ohms-law-circuit-03-first-cell"
-  sourceFiles={['circuitScene.tsx', 'circuitElements.tsx', 'circuitEndpoints.ts', 'circuitShapes.ts']}
-  size="xxl"
+  name="ohms-law-circuit-03-placement"
+  sourceFiles={['circuitShapes.tsx', 'circuit-01-meters.meter.tsx']}
+  size="sm"
 />
 
-### Step 5: Add The Rheostat And Texture
+### Step 4: Compose and reuse the measurement unit with Scope
 
-Add the sliding rheostat at the bottom and reroute the lower branch through its left and right terminals. It is still one custom `Node`: the zigzag, slider stroke, and internal `pattern` texture are packaged inside the element.
+A resistor plus a voltmeter right below it, with both ends joined by elbow polylines, all wrapped in one [Scope](/core/components/layout/scope) — that is a "measurement unit". The second one is not rewritten: a `Scope` `translate` duplicates it, changing only the id prefix. The diff highlights exactly these two newly added units.
 
 <ComponentPreview
-  name="ohms-law-circuit-05-rheostat"
-  diffFrom="ohms-law-circuit-04-duplicate-cell"
-  sourceFiles={['circuitScene.tsx', 'circuitElements.tsx', 'circuitEndpoints.ts', 'circuitShapes.ts']}
-  size="xxl"
+  name="ohms-law-circuit-04-measurement-cells"
+  diffFrom="ohms-law-circuit-03-placement"
+  sourceFiles={['circuitShapes.tsx', 'circuit-01-meters.meter.tsx']}
+  size="sm"
 />
 
-### Step 6: Finish Labels And Reading Order
+### Step 5: Wire a closed loop with elbow connectors
 
-Finish with only the necessary labels: `E`, `S`, `R1`, `R2`, `U1`, `U2`, and the sliding-rheostat name. No extra arrows or explanation card are added, because the figure now reads naturally from the main loop into the two parallel voltage branches.
+Once the elements are placed, use [Draw](/core/components/draw/overview) to connect them in order: battery top → switch → ammeter → R1 → down the right side → R2 → rheostat → back to the battery bottom. The wires run as right-angle elbows (`|- -|`) and reference element terminals instead of guessed coordinates.
+
+<ComponentPreview
+  name="ohms-law-circuit-05-main-loop"
+  diffFrom="ohms-law-circuit-04-measurement-cells"
+  sourceFiles={['circuitShapes.tsx', 'circuit-01-meters.meter.tsx']}
+  size="sm"
+/>
+
+### Step 6: Label the components
+
+Finish with the `E`, `S`, `R1` / `R2`, `U1` / `U2`, and rheostat-name text labels and the figure reads clearly (the A / V already live inside the meter heads). The rheostat name is the only localized text, written directly in the zh / en demos.
 
 <ComponentPreview
   name="ohms-law-circuit-06-labels"
-  diffFrom="ohms-law-circuit-05-rheostat"
-  sourceFiles={['circuitScene.tsx', 'circuitElements.tsx', 'circuitEndpoints.ts', 'circuitShapes.ts']}
-  size="xxl"
+  diffFrom="ohms-law-circuit-05-main-loop"
+  sourceFiles={['circuitShapes.tsx', 'circuit-01-meters.meter.tsx']}
+  size="sm"
 />
 
 ## Capabilities
 
 | Component | Role in this example | Main steps |
 | --- | --- | --- |
-| [Layout](/core/components/layout/overview) | Fixes the 1280 × 760 view so all 6 demos share one coordinate system | [1](#step-1-place-elements-and-fixed-terminals) |
-| [Scope](/core/components/layout/scope) | Sets style defaults and duplicates the second measurement branch by translation | [1](#step-1-place-elements-and-fixed-terminals), [4](#step-4-duplicate-the-second-branch) |
-| [Node](/core/components/node/overview) | Holds the battery, switch, meters, resistors, rheostat, and text labels | [1](#step-1-place-elements-and-fixed-terminals), [5](#step-5-add-the-rheostat-and-texture), [6](#step-6-finish-labels-and-reading-order) |
-| [Draw](/core/components/draw/overview) | Connects the main loop and the measurement branches after the elements are placed | [2](#step-2-connect-the-main-loop), [3](#step-3-wire-the-first-measurement-branch), [4](#step-4-duplicate-the-second-branch), [5](#step-5-add-the-rheostat-and-texture) |
-| [Coordinate](/core/components/node/coordinate) | Uses `between` to place stable `R1` / `R2` labels at resistor midpoints | [3](#step-3-wire-the-first-measurement-branch), [4](#step-4-duplicate-the-second-branch) |
-| [ShapeDefinition](/core/reference/extending/shape-registry) | Turns the battery, switch, meters, resistors, and rheostat into custom shapes with fixed terminals | [1](#step-1-place-elements-and-fixed-terminals), [2](#step-2-connect-the-main-loop) |
-| PaintSpec | Adds the rheostat line texture with `currentColor` | [5](#step-5-add-the-rheostat-and-texture) |
+| [Layout](/core/components/layout/overview) | Fixes the 1280 x 760 view so every demo shares one coordinate system | [1](#step-1-build-the-meter-as-a-custom-shape), [2](#step-2-flatten-the-remaining-custom-symbols), [3](#step-3-place-the-elements-on-the-circuit) |
+| [Scope](/core/components/layout/scope) | Sets style defaults and duplicates the measurement unit by translation | [4](#step-4-compose-and-reuse-the-measurement-unit-with-scope) |
+| [Node](/core/components/node/overview) | Holds the meters, battery, switch, resistors, rheostat, and text labels | [1](#step-1-build-the-meter-as-a-custom-shape), [3](#step-3-place-the-elements-on-the-circuit), [4](#step-4-compose-and-reuse-the-measurement-unit-with-scope), [6](#step-6-label-the-components) |
+| [Draw](/core/components/draw/overview) | Wires each measurement unit and joins the main loop with elbow connectors | [4](#step-4-compose-and-reuse-the-measurement-unit-with-scope), [5](#step-5-wire-a-closed-loop-with-elbow-connectors) |
+| [ShapeDefinition](/core/reference/extending/shape-registry) | Turns the meter, battery, switch, resistor, and rheostat into custom shapes with fixed terminals | [1](#step-1-build-the-meter-as-a-custom-shape), [2](#step-2-flatten-the-remaining-custom-symbols) |
 
 ## Limitations
 
-- **Not a dedicated circuit component library**: these symbols are custom shapes for this example, useful for demonstrating the low-level hooks but not enough for a large circuit editor.
-- **No separate path-generator registry demo**: the resistor zigzags live inside the shape emitters here, because this page focuses on the element-terminal wiring workflow.
-- **No electrical validation**: retikz handles geometry and rendering, not whether the voltmeter wiring or switch state is physically correct.
+| Capability / limitation | Plan | Status / fallback |
+| --- | --- | --- |
+| Dedicated circuit component library | ❌ Won't support | these symbols are custom shapes for this example — good for the low-level hooks, not a large circuit editor |
+| Resistor / rheostat drawing as a path generator | 🔧 Optimization | the rectangle and arrow are drawn inside the shape emitter; could move to a [path generator](/core/reference/extending/path-generator) or a dedicated component, left inline here to focus on terminal wiring |
+| Electrical validation | ❌ Won't support | retikz handles geometry and rendering, not whether the voltmeter wiring or switch state is physically correct |
 
-## Related
+## Further reading
 
-- [Shape Registry](/core/reference/extending/shape-registry)
-- [Custom Patterns](/core/reference/extending/custom-pattern)
-- [Node](/core/components/node/overview) / [Scope](/core/components/layout/scope) / [Draw](/core/components/draw/overview) / [Coordinate](/core/components/node/coordinate)
-- [Positioning](/core/concepts/positioning) - for `between`, `of`, and offset-style relation placement
-- [Karl's Unit Circle](/core/examples/karl-circle) - another comprehensive example built from multiple base components
+- **More extension points**: beyond custom shapes ([Shape Registry](/core/reference/extending/shape-registry)), retikz also opens up [custom arrows](/core/reference/extending/custom-arrow), [custom patterns](/core/reference/extending/custom-pattern), and [custom path generators](/core/reference/extending/path-generator).
+- **Going further**: this page is only a usage example; when you draw circuits like this often, wrapping them into dedicated (higher-tier) components cuts repetitive code and trims the persisted IR.
+- **Make the figure AI-friendly**: attaching metadata like `description` to nodes / paths in the IR helps AI understand the figure's semantics more accurately.
+- **Related components & concepts**: [Node](/core/components/node/overview) / [Scope](/core/components/layout/scope) / [Draw](/core/components/draw/overview), plus [Positioning](/core/concepts/positioning) (the `of` relation placement used by the E label).
+- [Karl's Unit Circle](/core/examples/karl-circle) - another comprehensive example built from multiple base components.

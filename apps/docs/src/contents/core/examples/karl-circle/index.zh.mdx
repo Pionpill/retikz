@@ -117,18 +117,17 @@ tan 线从 (1, 0) 垂直到 (1, tan30°)。原图用 TikZ 的 named path + inter
 | [Node](/core/components/node/overview) | 轴端 label + 刻度文字 + α 标签 + 右侧信息框 | [2](#步骤-2加坐标轴--端点标签--命名锚), [3](#步骤-3加网格--刻度), [4](#步骤-4画-30-扇形--α-标签), [7](#步骤-7右侧多色信息说明框) |
 | [Coordinate](/core/components/node/coordinate) | 命名 x/y 轴端点 + tan 交点 t | [2](#步骤-2加坐标轴--端点标签--命名锚), [6](#步骤-6tan-α-橙线--辅助射线) |
 
-## 已知限制
+## 限制
 
-下面这些限制在后续版本会逐渐补齐，🚧 标记的均已在 roadmap 中。
+| 能力 | 计划 | 现状 / 兜底 |
+| --- | --- | --- |
+| 数学 y-up 坐标系 | 🚧 未来支持 | 缩放本身可用 Scope 的 `scale` 变换；但还没有 Layout 级的「y 轴朝上」开关（`scale` 的 y 取负会连文字一起翻转），本例直接写像素坐标 + 手动给 y 加负号 |
+| 投影 target（`(A \|- B)`） | 🚧 未来支持 | 手算 `[cos30 * 100, 0]` |
+| named path + intersection target | 🚧 未来支持 | 手算 `[100, -tan30 * 100]` |
+| LineSpec 行内 spans | 🚧 未来支持 | 只能整行换色；未来 LineSpec 加 `spans` 字段 |
+| inline LaTeX 数学排版（`$\frac{1}{2}$`） | ❌ 不支持 | 用纯文本字符兜底（`1/2` / `sin α`） |
 
-- 🚧 **grid 算子**：未来计划支持。本例用 `.map()` 手画 5 横 5 竖兜底
-- 🚧 **整图 scale + y 翻转**：未来计划在 `<Layout>` 容器加 `scale` / `yAxis="up"`，让用户直接喂数学坐标。本例直接写像素 literal + 手动给 y 加负号兜底
-- 🚧 **投影 target（`(A |- B)`）**：未来计划支持。本例手算 `[cos30 * 100, 0]` 兜底
-- 🚧 **named path + intersection target**：未来计划支持。本例手算 `[100, -tan30 * 100]` 兜底
-- 🚧 **LineSpec 行内 spans**：未来计划在 LineSpec 加 `spans` 字段。本例只能整行换色
-- ❌ **inline LaTeX 数学排版**（`$\frac{1}{2}$` / `$\sin \alpha$`）：暂无计划。本例用纯文本字符兜底（`1/2` / `sin α`）
-
-## 相关阅读
+## 扩展阅读
 
 - [Path](/core/components/draw/path) · [Step](/core/components/draw/step) · [Draw](/core/components/draw/overview) · [Node](/core/components/node/overview) · [Coordinate](/core/components/node/coordinate)
 - [定位](/core/concepts/positioning) · [锚点](/core/concepts/anchors)

@@ -80,6 +80,8 @@ export type ComponentSourceFile = {
   code: string;
   /** 可选的教学 diff 数据，仅主 demo 文件通常会提供 */
   diff?: UnifiedDiff;
+  /** 是否为 demo 主文件（`name` 对应文件）；用于文件选择器区分图标，sourceFiles 引入的其他文件为 false */
+  isMain?: boolean;
 };
 
 /**

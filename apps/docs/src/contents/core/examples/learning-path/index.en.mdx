@@ -177,12 +177,14 @@ The final decoration layer demonstrates `dashPattern` / `arrow` at start / edge 
 
 ## Limitations
 
-- 🚧 **Picture-level scale + y-flip**: [`<Layout>`](/core/components/layout) doesn't support picture-level scale or y-flip yet, so this example uses intro.svg's raw pixel coordinates (y grows downward, origin top-left). `scale` / `yAxis="up"` are planned
-- 🚧 **Node hyperlinks**: [`<Node>`](/core/components/node/overview) doesn't accept `href` today, so intro.svg's `<a xlink:href="...">` wrappers are lost — buttons are visible but not clickable. Wrap the SVG in an `<a>` externally or render a separate text-link list alongside the figure
-- 🚧 **Node drop shadow**: intro.svg's buttons use a duplicated rect with `transform="translate(2,3)" opacity="0.25"` as a drop shadow; [`<Node>`](/core/components/node/overview) has no shadow support today, so this example omits it
-- 🚧 **Curve arrow shrink along chord**: arrow-end shrink currently shortens the endpoint **along the chord** toward the start (not along the tangent), so arrows on `curve` / `cubic` segments drift a few pixels off the node border. Straight `line` / `step` (fold) segments aren't affected (chord == tangent). Tangent-direction shrink is on the roadmap
+| Capability | Plan | Status / fallback |
+| --- | --- | --- |
+| Math y-up axis | 🚧 Planned | scaling itself works via a Scope `scale` transform, but [`<Layout>`](/core/components/layout) has no y-up switch yet (a negative `y` scale flips text too); this example uses intro.svg's raw pixel coordinates |
+| Node hyperlinks | 🚧 Planned | [`<Node>`](/core/components/node/overview) doesn't accept `href` today, so intro.svg's `<a xlink:href>` wrappers are lost (visible but not clickable); wrap externally in `<a>` or render a separate link list |
+| Node drop shadow | 🚧 Planned | [`<Node>`](/core/components/node/overview) has no shadow support yet, so the duplicated-rect drop shadow is omitted |
+| Curve arrow shrink along chord | 🚧 Planned | arrow shrink currently shortens along the chord, so arrows on `curve` / `cubic` drift a few pixels off the border (`line` / `step` unaffected); tangent-direction shrink is on the roadmap |
 
-## Related
+## Further reading
 
 - [Draw](/core/components/draw/overview) · [Way operators](/core/components/draw/way) · [Node](/core/components/node/overview) · [Positioning](/core/concepts/positioning)
 - [Karl's Unit Circle](/core/examples/karl-circle) — another comprehensive example, this one on trigonometry geometry

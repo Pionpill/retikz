@@ -14,12 +14,12 @@ const Demo: FC = () => (
       T
     </Node>
     {/* 自环：from==to 同节点，out/in 角撑开 */}
-    <Path arrow="->" stroke="dodgerblue">
+    <Path arrow="->" stroke="currentColor">
       <Step kind="move" to="S" />
       <Step kind="bend" to="S" outAngle={120} inAngle={60} />
     </Path>
     {/* out/in 非对称曲线 S→T */}
-    <Path arrow="->" stroke="green">
+    <Path arrow="->" stroke="currentColor">
       <Step kind="move" to="S" />
       <Step kind="bend" to="T" outAngle={-25} inAngle={-155} />
     </Path>

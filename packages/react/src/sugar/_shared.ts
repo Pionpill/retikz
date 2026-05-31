@@ -21,6 +21,9 @@ const PATH_VISUAL_KEYS = [
   'fillOpacity',
   'drawOpacity',
   'zIndex',
+  'rotate',
+  'scale',
+  'marks',
 ] as const satisfies ReadonlyArray<keyof PathVisualProps>;
 
 /** Pick visual props from sugar props and pass them to the underlying Path. */
