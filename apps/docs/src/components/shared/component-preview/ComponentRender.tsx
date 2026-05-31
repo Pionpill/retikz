@@ -15,11 +15,11 @@ import {
   type ComponentSourceFile,
   type DiffMode,
   type RendererMode,
-  SOURCE_VIEW_ORDER,
   type SizeKey,
   type SourceView,
   type UnifiedDiff,
   alignClass,
+  availableSourceViews,
   filterDiffByMode,
   sizeClass,
 } from './_shared';
@@ -114,10 +114,8 @@ export const ComponentRender: FC<ComponentRenderProps> = props => {
   const hasIr = (source?.ir ?? '').length > 0;
   const hasVanilla = (source?.vanilla ?? '').length > 0;
   const hasCode = hasReact || hasIr || hasVanilla;
-  // 可用视图（按固定顺序），≥ 2 个才出 toggle
-  const availableViews = SOURCE_VIEW_ORDER.filter(
-    v => (v === 'react' && hasReact) || (v === 'ir' && hasIr) || (v === 'vanilla' && hasVanilla),
-  );
+  // 可用视图（按固定顺序），≥ 2 个才出 toggle；react/ir/vanilla 全可选
+  const availableViews = availableSourceViews({ react: hasReact, ir: hasIr, vanilla: hasVanilla });
 
   // 局部状态用 `boolean | undefined`：undefined 跟随全局默认；用户单卡操作过一次后本地选择胜出
   const [localIsCodeVisible, setLocalIsCodeVisible] = useState<boolean | undefined>(undefined);

@@ -11,9 +11,9 @@ import { CopyButton, RendererModeButton, SourceFileMenu, ToolbarIconButton, View
 import {
   type AlignKey,
   type RendererMode,
-  SOURCE_VIEW_ORDER,
   type SourceView,
   alignClass,
+  availableSourceViews,
   filterDiffByMode,
 } from './_shared';
 import { DemoRenderer } from './DemoRenderer';
@@ -101,9 +101,7 @@ export const ComponentDetailDialog: FC<ComponentDetailDialogProps> = props => {
   const vanillaSource = source?.vanilla ?? '';
   const hasVanilla = vanillaSource.length > 0;
   const hasCode = hasReact || hasIr || hasVanilla;
-  const availableViews = SOURCE_VIEW_ORDER.filter(
-    v => (v === 'react' && hasReact) || (v === 'ir' && hasIr) || (v === 'vanilla' && hasVanilla),
-  );
+  const availableViews = availableSourceViews({ react: hasReact, ir: hasIr, vanilla: hasVanilla });
   const showViewToggle = availableViews.length >= 2;
 
   // Dialog 自己的视图 / copied 状态——和外部卡完全独立

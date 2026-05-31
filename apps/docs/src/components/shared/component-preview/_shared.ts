@@ -8,6 +8,14 @@ export type SourceView = 'react' | 'ir' | 'vanilla';
 /** 视图展示顺序（toggle 按这个顺序渲染可用视图） */
 export const SOURCE_VIEW_ORDER: ReadonlyArray<SourceView> = ['react', 'ir', 'vanilla'];
 
+/**
+ * 按各视图是否有内容，算出可用视图列表（固定顺序）
+ * @description react / ir / vanilla 三者全可选——不传 / 空串即视为缺省、不出对应选项。调用方据此决定显示哪些
+ *   toggle 按钮（≥ 2 个才出 toggle），单视图直接展示、零视图不渲染代码面板。
+ */
+export const availableSourceViews = (present: Record<SourceView, boolean>): Array<SourceView> =>
+  SOURCE_VIEW_ORDER.filter(v => present[v]);
+
 /** demo 渲染目标：SVG DOM 或 Canvas 2D */
 export type RendererMode = 'svg' | 'canvas';
 
