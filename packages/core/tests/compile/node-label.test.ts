@@ -1,7 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import { compileToScene } from '../../src/compile/compile';
+import { ASCENT_FACTOR, DESCENT_FACTOR } from '../../src/compile/text-baseline';
 import type { IR } from '../../src/ir';
 import type { ScenePrimitive, TextPrim } from '../../src/primitive';
+
+// core emit alphabetic 基线，按字体度量从基线还原单行文本视觉中心，验证垂直居中落点
+const visualMiddle = (t: TextPrim): number =>
+  t.y - (t.fontSize * ASCENT_FACTOR - t.fontSize * DESCENT_FACTOR) / 2;
 
 /** 收集 scene 里所有 TextPrim（包括 group 嵌套里的） */
 const collectTexts = (prims: Array<ScenePrimitive>): Array<TextPrim> => {
@@ -136,8 +141,8 @@ describe('Node label', () => {
       const scene = compileToScene(ir);
       const labelText = findLabel(scene.primitives, 'L')!;
       expect(labelText.x).toBeGreaterThan(10);
-      // y 接近 0 - cos(0) = 1, sin(0) = 0
-      expect(labelText.y).toBeCloseTo(0);
+      // east 方向（角度 0）：label 垂直居中于节点中心线 → 视觉中心 y ≈ 0
+      expect(visualMiddle(labelText)).toBeCloseTo(0);
     });
 
     it("数字角度 90：retikz polar y 向下，相当于 below", () => {

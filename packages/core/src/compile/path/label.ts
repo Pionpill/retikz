@@ -1,6 +1,7 @@
 import type { SegmentSample } from '../../geometry/segment';
 import type { IRPosition, IRStepLabel } from '../../ir';
 import type { ScenePrimitive, TextPrim } from '../../primitive';
+import { toAlphabeticBaselineY } from '../text-baseline';
 import type { TextMeasurer } from '../text-metrics';
 
 /** 边标注默认字号 / 偏移量 */
@@ -86,15 +87,16 @@ export const emitLabelPrimitive = (
     baseline = 'bottom';
   }
 
+  const emittedLineHeight = round(lineHeight);
   const text: TextPrim = {
     type: 'text',
     x: round(x),
-    y: round(y),
+    y: round(toAlphabeticBaselineY(y, baseline, 1, emittedLineHeight, fontSize)),
     lines: [{ text: label.text }],
     fontSize,
     align,
-    baseline,
-    lineHeight: round(lineHeight),
+    baseline: 'alphabetic',
+    lineHeight: emittedLineHeight,
     measuredWidth: round(measuredWidth),
     measuredHeight: round(measuredHeight),
     fill: label.textColor ?? 'currentColor',

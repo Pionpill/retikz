@@ -1,9 +1,14 @@
 import { describe, expect, it } from 'vitest';
 import { compileToScene } from '../../src/compile/compile';
+import { ASCENT_FACTOR, DESCENT_FACTOR } from '../../src/compile/text-baseline';
 import { NodeLabelSchema } from '../../src/ir';
 import type { IR } from '../../src/ir';
 import type { GroupPrim, ScenePrimitive, TextPrim } from '../../src/primitive';
 import { flattenPrims } from '../helpers/flatten';
+
+// core emit alphabetic 基线，按字体度量从基线还原单行文本视觉中心（= label 旋转中心 ly）
+const visualMiddle = (t: TextPrim): number =>
+  t.y - (t.fontSize * ASCENT_FACTOR - t.fontSize * DESCENT_FACTOR) / 2;
 
 const scene = (children: IR['children']): IR => ({ version: 1, type: 'scene', children });
 const silent = { onWarn: () => {} };
@@ -50,8 +55,9 @@ describe('Node label rotate', () => {
     const g = findLabelRotateGroup(compileToScene(ir, silent).primitives, 'L')!;
     const rot = g.transforms!.find(t => t.kind === 'rotate')!;    expect(rot.degrees).toBe(30);
     const txt = g.children[0] as TextPrim;
+    // 绕 label 视觉中心自旋：cx = 文本水平锚点，cy = 文本视觉中心（alphabetic 基线上推回中心）
     expect(rot.cx).toBe(txt.x);
-    expect(rot.cy).toBe(txt.y);
+    expect(rot.cy).toBeCloseTo(visualMiddle(txt), 2);
   });
 
   it("radial：position='below'（+y 方向，屏幕下）→ 角度 ≈ 90", () => {

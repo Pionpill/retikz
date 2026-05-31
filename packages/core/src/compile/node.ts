@@ -7,6 +7,7 @@ import { BUILTIN_SHAPES } from '../shapes';
 import type { ShapeDefinition, ShapeStyle } from '../shapes';
 import type { NameStack } from './name-stack';
 import { type ResolveBetweenGlobal, resolvePosition } from './position';
+import { toAlphabeticBaselineY } from './text-baseline';
 import type { FontSpec, TextMeasurer } from './text-metrics';
 
 const DEFAULT_FONT_SIZE = 14;
@@ -584,18 +585,21 @@ export const emitNodePrimitives = (
     const halfBlockW = layout.textWidth / 2;
     const xOffset =
       layout.align === 'start' ? -halfBlockW : layout.align === 'end' ? halfBlockW : 0;
+    const lineHeight = round(layout.lineHeight);
     inner.push({
       type: 'text',
       x: round(layout.rect.x + xOffset),
-      y: round(layout.rect.y),
+      y: round(
+        toAlphabeticBaselineY(layout.rect.y, 'middle', layout.lines.length, lineHeight, layout.fontSize),
+      ),
       lines: layout.lines,
       fontSize: layout.fontSize,
       fontFamily: layout.fontFamily,
       fontWeight: layout.fontWeight,
       fontStyle: layout.fontStyle,
       align: layout.align,
-      baseline: 'middle',
-      lineHeight: round(layout.lineHeight),
+      baseline: 'alphabetic',
+      lineHeight,
       fill: layout.textColor ?? 'currentColor',
       opacity: layout.opacity,
       measuredWidth: round(layout.textWidth),
@@ -631,18 +635,19 @@ export const emitNodePrimitives = (
           opacity: lab.opacity ?? layout.opacity,
         });
       }
+      const labLineHeight = round(lab.fontSize * DEFAULT_LINE_HEIGHT_FACTOR);
       const textPrim: ScenePrimitive = {
         type: 'text',
         x: round(lx),
-        y: round(ly),
+        y: round(toAlphabeticBaselineY(ly, 'middle', 1, labLineHeight, lab.fontSize)),
         lines: [{ text: lab.text }],
         fontSize: lab.fontSize,
         fontFamily: lab.fontFamily,
         fontWeight: lab.fontWeight,
         fontStyle: lab.fontStyle,
         align: 'middle',
-        baseline: 'middle',
-        lineHeight: round(lab.fontSize * DEFAULT_LINE_HEIGHT_FACTOR),
+        baseline: 'alphabetic',
+        lineHeight: labLineHeight,
         fill: lab.textColor ?? 'currentColor',
         opacity: lab.opacity ?? layout.opacity,
         measuredWidth: 0,

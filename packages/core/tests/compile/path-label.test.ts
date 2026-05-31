@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { compileToScene } from '../../src/compile/compile';
+import { ASCENT_FACTOR, DESCENT_FACTOR } from '../../src/compile/text-baseline';
 import type { IR } from '../../src/ir';
 import type { GroupPrim, ScenePrimitive, TextPrim } from '../../src/primitive';
 
@@ -8,6 +9,13 @@ const findTextPrims = (prims: Array<ScenePrimitive>): Array<TextPrim> =>
 
 const findGroupPrim = (prims: Array<ScenePrimitive>): GroupPrim | undefined =>
   prims.find((p): p is GroupPrim => p.type === 'group');
+
+// core 统一 emit alphabetic 基线，故按字体度量从基线 y 还原单行文本块视觉上/中/下边，
+// 用于验证 label 实际落点（与 baseline 编码方式解耦）
+const visualTop = (t: TextPrim): number => t.y - t.fontSize * ASCENT_FACTOR;
+const visualBottom = (t: TextPrim): number => t.y + t.fontSize * DESCENT_FACTOR;
+const visualMiddle = (t: TextPrim): number =>
+  t.y - (t.fontSize * ASCENT_FACTOR - t.fontSize * DESCENT_FACTOR) / 2;
 
 const linePathIR = (label: NonNullable<Parameters<typeof JSON.stringify>[0]>): IR => ({
   version: 1,
@@ -31,10 +39,10 @@ describe('step.label：line 段的 label 几何', () => {
     expect(labels).toHaveLength(1);
     const t = labels[0];
     expect(t.x).toBe(5);
-    // above 默认 4px 偏移（compile/path 内部常量）；y 不可超过原始中点
-    expect(t.y).toBeLessThan(0);
+    // above 默认 4px 偏移（compile/path 内部常量）；文本块底边落在原始中点上方
+    expect(visualBottom(t)).toBeLessThanOrEqual(0);
     expect(t.align).toBe('middle');
-    expect(t.baseline).toBe('bottom');
+    expect(t.baseline).toBe('alphabetic');
     expect(t.lines).toEqual([{ text: 'accept' }]);
   });
 
@@ -54,26 +62,27 @@ describe('step.label：line 段的 label 几何', () => {
     const scene = compileToScene(linePathIR({ text: 'x', side: 'below' }));
     const t = findTextPrims(scene.primitives)[0];
     expect(t.align).toBe('middle');
-    expect(t.baseline).toBe('top');
-    expect(t.y).toBeGreaterThan(0);
+    expect(t.baseline).toBe('alphabetic');
+    // below：文本块顶边落在原始中点下方
+    expect(visualTop(t)).toBeGreaterThan(0);
   });
 
-  it('side=left → align=end baseline=middle，x 在中点左侧', () => {
+  it('side=left → align=end，垂直居中于中点，x 在中点左侧', () => {
     const scene = compileToScene(linePathIR({ text: 'x', side: 'left' }));
     const t = findTextPrims(scene.primitives)[0];
     expect(t.align).toBe('end');
-    expect(t.baseline).toBe('middle');
+    expect(t.baseline).toBe('alphabetic');
     expect(t.x).toBeLessThan(5);
-    expect(t.y).toBe(0);
+    expect(visualMiddle(t)).toBeCloseTo(0, 2);
   });
 
-  it('side=right → align=start baseline=middle，x 在中点右侧', () => {
+  it('side=right → align=start，垂直居中于中点，x 在中点右侧', () => {
     const scene = compileToScene(linePathIR({ text: 'x', side: 'right' }));
     const t = findTextPrims(scene.primitives)[0];
     expect(t.align).toBe('start');
-    expect(t.baseline).toBe('middle');
+    expect(t.baseline).toBe('alphabetic');
     expect(t.x).toBeGreaterThan(5);
-    expect(t.y).toBe(0);
+    expect(visualMiddle(t)).toBeCloseTo(0, 2);
   });
 
   it('side=sloped → 外裹 group 旋转，水平段 angle=0', () => {
@@ -83,9 +92,9 @@ describe('step.label：line 段的 label 几何', () => {
     expect(grp!.transforms).toEqual([{ kind: 'rotate', degrees: 0, cx: 5, cy: 0 }]);
     const inner = grp!.children.find((c): c is TextPrim => c.type === 'text');
     expect(inner).toBeDefined();
-    // 锚点不偏移
+    // 锚点不偏移：sloped 文本块底边落在采样点上（文字在线上方）
     expect(inner!.x).toBe(5);
-    expect(inner!.y).toBe(0);
+    expect(visualBottom(inner!)).toBeCloseTo(0, 2);
   });
 
   it('sloped 在垂直段上 angle=90', () => {
@@ -436,8 +445,8 @@ describe('label on fold (step kind="step")：N=2 段等 t 拼接、拐角恒在 
     const scene = compileToScene(foldIR(0.75));
     const t = findTextPrims(scene.primitives)[0];
     expect(t.x).toBe(40);
-    // 段 2 中点 y=15，above 上移 4 → y ≈ 15（左/右偏移不挪 y；above 挪 y-）
-    expect(t.y).toBeCloseTo(15 - 4, 2);
+    // 段 2 中点 y=15，above 上移 4 → 文本块底边 ≈ 11
+    expect(visualBottom(t)).toBeCloseTo(15 - 4, 2);
   });
   it('label_fold_t_0_at_start：position=0 落在 (0, 0)', () => {
     const scene = compileToScene(foldIR(0));
@@ -449,7 +458,7 @@ describe('label on fold (step kind="step")：N=2 段等 t 拼接、拐角恒在 
     const scene = compileToScene(foldIR(1));
     const t = findTextPrims(scene.primitives)[0];
     expect(t.x).toBe(40);
-    expect(t.y).toBeCloseTo(30 - 4, 2);
+    expect(visualBottom(t)).toBeCloseTo(30 - 4, 2);
   });
   it('label_fold_unequal_segments_corner_still_at_t_0_5：段长悬殊，拐角恒在 t=0.5', () => {
     // 段 1 长 100 / 段 2 长 1：via='-|' from (0,0) to (100, 1) → corner (100, 0)
@@ -723,14 +732,14 @@ describe('label on circlePath：整圆 t∈[0,1]，t=0 = angle 0 (+x), CCW', () 
     const scene = compileToScene(circleIR(0));
     const t = findTextPrims(scene.primitives)[0];
     expect(t.x).toBe(100);
-    expect(t.y).toBeCloseTo(0 - 4, 2); // above 偏移
+    expect(visualBottom(t)).toBeCloseTo(0 - 4, 2); // above 偏移
   });
   it('label_circlePath_t_0_25_at_90deg：position=0.25 → 90° (0, +100)（SVG y 朝下视觉朝下）', () => {
     const scene = compileToScene(circleIR(0.25));
     const t = findTextPrims(scene.primitives)[0];
     expect(t.x).toBeCloseTo(0, 1);
     // 90° in math convention with SVG y-down → y = sin(90)·100 = 100
-    expect(t.y).toBeGreaterThan(95); // above 偏移 -4，y ≈ 96
+    expect(visualBottom(t)).toBeGreaterThan(95); // above 偏移 -4，块底 ≈ 96
   });
   it('label_circlePath_t_0_5_at_180deg：position=0.5 → 180° (-100, 0)', () => {
     const scene = compileToScene(circleIR(0.5));
@@ -986,8 +995,8 @@ describe('label.position adversarial：构造让实现挂的输入', () => {
     const t = findTextPrims(scene.primitives)[0];
     // via='|-' corner=(0, 30)
     expect(t.x).toBe(0);
-    // above 偏移 corner y=30 → y ≈ 26
-    expect(t.y).toBeCloseTo(30 - 4, 2);
+    // above 偏移 corner y=30 → 块底 ≈ 26
+    expect(visualBottom(t)).toBeCloseTo(30 - 4, 2);
   });
   it('adv_fold_t_just_above_half：t=0.500001 落第二段起点（边界刚过）', () => {
     const ir: IR = {
@@ -1013,7 +1022,7 @@ describe('label.position adversarial：构造让实现挂的输入', () => {
     const t = findTextPrims(scene.primitives)[0];
     // corner=(40,0)；t=0.5+eps 段 2 内 (2t-1) ≈ 2e-6 → 几乎贴 corner
     expect(t.x).toBe(40);
-    expect(t.y).toBeCloseTo(0 - 4, 2);
+    expect(visualBottom(t)).toBeCloseTo(0 - 4, 2);
   });
   it('adv_line_keyword_vs_number_consistency：每个 keyword 与对应数值 t 落点完全相同', () => {
     const pairs: Array<[string, number]> = [
