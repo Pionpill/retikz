@@ -16,15 +16,6 @@ const Demo: FC = () => (
         label={{ text: 't=0.25', position: 0.25, side: 'below' }}
       />
     </Path>
-    <Path stroke="currentColor" dashPattern={[3, 3]}>
-      <Step kind="move" to="center" />
-      <Step
-        kind="ellipsePath"
-        radiusX={170}
-        radiusY={70}
-        label={{ text: 'midway (180°)', position: 'midway' }}
-      />
-    </Path>
   </Layout>
 );
 

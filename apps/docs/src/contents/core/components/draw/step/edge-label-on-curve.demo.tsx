@@ -19,15 +19,6 @@ const Demo: FC = () => (
         label={{ text: 't=0.25', position: 0.25 }}
       />
     </Path>
-    <Path stroke="currentColor" dashPattern={[3, 3]}>
-      <Step kind="move" to="a" />
-      <Step
-        kind="curve"
-        control={[210, 20]}
-        to="b"
-        label={{ text: 'midway (Bezier t=0.5)', position: 'midway', side: 'below' }}
-      />
-    </Path>
   </Layout>
 );
 

@@ -20,16 +20,6 @@ const Demo: FC = () => (
         label={{ text: 't=0.25', position: 0.25 }}
       />
     </Path>
-    <Path stroke="currentColor" dashPattern={[3, 3]}>
-      <Step kind="move" to="a" />
-      <Step
-        kind="bend"
-        to="b"
-        bendDirection="left"
-        bendAngle={45}
-        label={{ text: 'midway', position: 'midway', side: 'above' }}
-      />
-    </Path>
   </Layout>
 );
 
