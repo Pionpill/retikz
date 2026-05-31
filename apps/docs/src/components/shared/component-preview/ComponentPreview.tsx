@@ -95,8 +95,11 @@ export type ComponentPreviewProps = {
   componentClassName?: string;
   /** 隐藏底部「View Code / 源码 / IR」面板与 Dialog 右栏，只保留 demo 渲染区——用于叙述性插图 */
   hideCode?: boolean;
-  /** 与 demo 一起展示的附加源码文件，路径相对当前页面目录 */
-  sourceFiles?: Array<string>;
+  /**
+   * 与 demo 一起展示的附加源码文件，路径相对当前页面目录
+   * @description 元素为 `string` 时展示单文件；为 `{ file, diffFrom }` 时展示 `file` 并高亮其相对 `diffFrom` 文件的差异（默认只看新增，同主 demo `diffFrom`）。`diffFrom` 文件找不到时静默退化为无 diff
+   */
+  sourceFiles?: Array<string | { file: string; diffFrom: string }>;
   /**
    * 另一个 demo 的 id（与 `name` 同名规则），作为 React 源码"新增行高亮"的 baseline
    * @description 用于 Example 类多 Step 教学页：让当前 step 的代码视图自动标出相比上一 step 新增的行（浅绿底 + 左侧色条）。
@@ -154,21 +157,26 @@ export const ComponentPreview: FC<ComponentPreviewProps> = props => {
     !hideCode && baselineRawSource !== undefined
       ? computeUnifiedDiff(baselineRawSource.replace(/\n$/, ''), trimmedSource)
       : undefined;
-  const extraSourceFiles: Array<ComponentSourceFile> = (sourceFiles ?? []).map(filename => {
-    const sourceKey = buildSourceFileKey(segments, filename);
-    const rawSourceFile = localSourceFiles[sourceKey];
-    return {
-      filename,
-      code: rawSourceFile?.replace(/\n$/, '') ?? `// Source file not found: ${filename}`,
-    };
+  const extraSourceFiles: Array<ComponentSourceFile> = (sourceFiles ?? []).map(entry => {
+    const filename = typeof entry === 'string' ? entry : entry.file;
+    const rawSourceFile = localSourceFiles[buildSourceFileKey(segments, filename)];
+    const code = rawSourceFile?.replace(/\n$/, '') ?? `// Source file not found: ${filename}`;
+    if (typeof entry === 'string') return { filename, code };
+    // 对象项：相对 diffFrom 文件计算教学 diff；baseline / 本文件任一缺失时静默退化为无 diff（同主 demo diffFrom）
+    const baselineRaw = localSourceFiles[buildSourceFileKey(segments, entry.diffFrom)];
+    const diff =
+      !hideCode && rawSourceFile !== undefined && baselineRaw !== undefined
+        ? computeUnifiedDiff(baselineRaw.replace(/\n$/, ''), code)
+        : undefined;
+    return { filename, code, diff };
   });
   const files: Array<ComponentSourceFile> = [
+    ...extraSourceFiles,
     {
       filename: filenameFromKey(key),
       code: trimmedSource,
       diff: reactDiff,
     },
-    ...extraSourceFiles,
   ];
   const source: ComponentRenderSource | undefined = hideCode
     ? undefined
