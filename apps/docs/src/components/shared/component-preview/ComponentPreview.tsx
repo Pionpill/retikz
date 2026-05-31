@@ -161,9 +161,16 @@ export const ComponentPreview: FC<ComponentPreviewProps> = props => {
     const filename = typeof entry === 'string' ? entry : entry.file;
     const rawSourceFile = localSourceFiles[buildSourceFileKey(segments, filename)];
     const code = rawSourceFile?.replace(/\n$/, '') ?? `// Source file not found: ${filename}`;
-    if (typeof entry === 'string') return { filename, code };
-    // 对象项：相对 diffFrom 文件计算教学 diff；baseline / 本文件任一缺失时静默退化为无 diff（同主 demo diffFrom）
-    const baselineRaw = localSourceFiles[buildSourceFileKey(segments, entry.diffFrom)];
+    // diff baseline：对象项用显式 diffFrom；字符串项若是「当前 demo 名为前缀」的步内子文件，自动配对上一步 diffFrom 下的同名子文件（`<diffFrom>.<subName>`）。共享子文件（非该前缀）不 diff
+    const baselineFilename =
+      typeof entry !== 'string'
+        ? entry.diffFrom
+        : diffFrom !== undefined && filename.startsWith(`${name}.`)
+          ? `${diffFrom}.${filename.slice(name.length + 1)}`
+          : undefined;
+    if (baselineFilename === undefined) return { filename, code };
+    // baseline / 本文件任一缺失时静默退化为无 diff（同主 demo diffFrom）
+    const baselineRaw = localSourceFiles[buildSourceFileKey(segments, baselineFilename)];
     const diff =
       !hideCode && rawSourceFile !== undefined && baselineRaw !== undefined
         ? computeUnifiedDiff(baselineRaw.replace(/\n$/, ''), code)

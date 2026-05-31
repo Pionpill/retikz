@@ -1,6 +1,6 @@
 ---
 name: docs-doc-example
-description: retikz 示例类文档（apps/docs/src/contents/<module>/examples/**/*.mdx）的页面结构规范——以经典 / 实用图表为载体循序渐进教读者用 retikz 能力。固定 6 段（引言含 hero / Prompt / 过程 / 能力 / Limitations / Related）、过程节 step 用 H3 进 TOC、demo 累加式拼搭、命名 <id>-NN-<theme>.demo.tsx、Prompt 节用 ExamplePrompt 组件（只读 + markdown + 复制/发送双按钮）。本 skill 只覆盖示例页特有规则；通用规则（三处协同、双语、写作风格、Comparison、宽度、阅读时间等）见 docs-doc-principle。retikz 专用。
+description: retikz 示例类文档（apps/docs/src/contents/<module>/examples/**/*.mdx）的页面结构规范——以经典 / 实用图表为载体循序渐进教读者用 retikz 能力。固定 6 段（引言含 hero / Prompt / 过程 / 能力 / Limitations / Related）、过程节 step 用 H3 进 TOC、demo 累加式拼搭、命名 <id>-NN-<theme>.demo.tsx、多文件 demo 拆子文件（步内 <主demo名>.<subName>.tsx 随 diffFrom 自动 diff / 共享件独立命名 / 子文件不带 .demo）、Prompt 节用 ExamplePrompt 组件（只读 + markdown + 复制/发送双按钮）。本 skill 只覆盖示例页特有规则；通用规则（三处协同、双语、写作风格、Comparison、宽度、阅读时间等）见 docs-doc-principle。retikz 专用。
 ---
 
 # 示例类文档写法
@@ -95,7 +95,7 @@ description: <一句话：建什么图 + 主要教什么能力>
 | 形态 | **累加式**——第 N 个 demo = 前 N-1 step 的全部内容 + 本 step 新增 |
 | 命名 | `<example-id>-NN-<theme>.demo.tsx`，NN 两位 0 补齐（如 `karl-circle-01-circle.demo.tsx`） |
 | 双语 | **按文本是否实际不同**判断：通用数学 / 公式 / 符号 label（`sin α` / `f(x)` / `α`）单 `.demo.tsx`；含本地化散文 / 解释性文本的 step 才分 `.zh.demo.tsx` / `.en.demo.tsx` |
-| Helpers | **内联**在每个 demo——ComponentPreview 源码视图只显示 `.demo.tsx` 本体，要求每个 demo 独立可读 |
+| Helpers | **默认内联**在每个 demo，保证独立可读；demo 体量过大、或多步共用同一套基础设施时，按下文「多文件 demo」拆成子文件（`sourceFiles` 会一并展示，不再被隐藏） |
 | Hero 复用 | 引言里 hero `<ComponentPreview>` 复用最后一个 step 的 demo（不另起 `-final` 文件） |
 | 颜色字面值 | demo 里的 `stroke` / `fill` / `bg` 等 **必须用字面量颜色**——优先命名色，默认用 `darkorange` 做强调；只有一张图里需要两个以上并列示例，或明确要做对比时才用 `dodgerblue`；若同图已经用了 `darkorange` + `dodgerblue` 仍需要第三个强调色，再用 `darkviolet`。`red` / `green` 只保留给错误 / 成功语义，灰阶只保留 `gray` / `lightgray` / `dimgray`，并尽量不用 `black` / `white`；只有需要精确对齐时才用 hex / oklch。不能用 `var(--border)` / `var(--background)` 等 CSS 自定义属性。预览工具条可下载 SVG，CSS var 在新上下文里无定义 → fallback 成黑，下载后图变样 |
 | DSL 选择 | **默认用 Sugar `<Draw way={[...]}>`，不用 Kernel `<Path><Step /></Path>`**。`way` 数组 1 行就能表达 line / curve / cubic / bend / step (fold) / cycle / label，比 Kernel 的多行 children 更短、与 components/draw/* 例子风格一致。例外：示例**本身**就是教 `<Path>` / `<Step>` Kernel 用法、或需要 fill + 闭合（`DrawWay.Cycle`）的填充形状 |
@@ -106,7 +106,7 @@ description: <一句话：建什么图 + 主要教什么能力>
 
 - 读者点开任意 step 的"查看源码"，拿到的就是该阶段的**可运行完整版本**，可直接复制改造
 - ComponentPreview 视觉上呈现"图在生长"，比"每 step 一个孤立小图"更有教学感
-- 不需要把 helpers 拆到独立模块——每个 demo 自包含
+- 简单例子无需把 helpers 拆到独立模块——每个 demo 自包含；体量大 / 跨步复用基础设施的复杂例子改用「多文件 demo」（见下）
 
 ### 命名示例
 
@@ -124,6 +124,40 @@ karl-circle-07-info.en.demo.tsx         # 同上 en
 ```
 
 引言 hero 直接 `<ComponentPreview name="karl-circle-07-info" />`，最后一个 step 的 ComponentPreview 同样 name——一份 demo 用两次。
+
+## 多文件 demo（子文件 + 自动 diff）
+
+默认每个 demo 内联自包含（见上）。当 demo 体量过大、或多步共用同一套基础设施（自定义形状 / 布局 / 端点表）时，把内容拆成**子文件**，由 `<ComponentPreview sourceFiles={[...]}>` 一并展示。`sourceFiles` 里**主 demo 自己不用列**（由 `name` 自动加载），只列附加子文件。子文件分两类：
+
+| 类别 | 命名 | 用途 | diff |
+| --- | --- | --- | --- |
+| 步内子文件 | `<主demo名>.<subName>.tsx`（**无 `.demo`**，如 `ohms-law-circuit-02-shapes.elements.tsx`） | 只属于某一步、随步演进 | 自动（见下） |
+| 共享子文件 | 独立名 `<name>.tsx`（如 `circuitShapes.tsx`） | 跨多步复用、基本不变的基础设施 | 不 diff |
+
+- 子文件是**纯源码**（不渲染），用普通 `.tsx` / `.ts`，**不要带 `.demo.tsx`**——带了会被当成可渲染 demo（要求 default 导出 FC、并去算 IR）。
+- 步内子文件以**所属步的主 demo 名**为前缀，`<subName>` 在各步间保持稳定（如各步都叫 `.elements.tsx`），这是自动 diff 配对的钥匙。
+
+### 渐进式例子的子文件 = 自包含快照
+
+渐进式例子若用子文件，**每步的步内子文件必须是该阶段的自包含快照**——直接写出本步完整内容，**不要 `import` 上一步的子文件**。import 链虽 DRY，但相邻步是不同模块、diff 没有意义；自包含快照换来「步与步之间真正可 diff」。跨步不变的部分才抽进共享子文件。
+
+### 自动 diff 配对
+
+`<ComponentPreview>` 设了 `diffFrom="<上一步主 demo 名>"` 后：
+
+- `sourceFiles` 里**以当前 demo 名为前缀**的步内子文件，自动与 `<diffFrom>.<同 subName>.tsx` 做 diff（默认只看新增高亮，同主 demo `diffFrom`）；baseline 不存在则静默无 diff。
+- 共享子文件（非该前缀）不 diff，原样展示。
+
+```mdx
+<ComponentPreview
+  name="ohms-law-circuit-02-shapes"
+  diffFrom="ohms-law-circuit-01-meters"
+  sourceFiles={['ohms-law-circuit-02-shapes.elements.tsx', 'circuitShapes.tsx']}
+/>
+{/* elements.tsx 自动 diff ohms-law-circuit-01-meters.elements.tsx；circuitShapes.tsx 共享件不 diff */}
+```
+
+跨步 / 跨名的特殊配对，用显式对象形式覆盖：`{ file: 'a.tsx', diffFrom: 'b.tsx' }`。
 
 ## Prompt 节
 
@@ -298,7 +332,8 @@ import { Draw, DrawWay } from '@retikz/react';
 - **section 标题写成 `## AI Prompt`** —— 用 `## Prompt`，AI 是工具不是主语
 - **demo 非累加** —— 每个 step 的 demo 必须包含之前所有内容，不能只画"本 step 新增"的孤立小图
 - **demo 文件名缺序号** —— 必须 `<id>-NN-<theme>.demo.tsx`，NN 两位 0 补齐（`-01-` 而非 `-1-`）
-- **demo 之间共用 helpers 模块** —— ComponentPreview 源码视图只显示 `.demo.tsx` 本体，shared helpers 用户看不到；每个 demo 内联 helpers
+- **简单 demo 过度拆子文件** —— 能内联读懂的小 demo 不要拆；只有体量过大 / 跨步复用基础设施时才按「多文件 demo」拆，且拆出的子文件必须用 `sourceFiles` 显式列出（否则读者看不到）。反过来，**渐进式例子的步内子文件不要 `import` 上一步**——那样 diff 失效，必须写成自包含快照
+- **子文件带了 `.demo.tsx` 后缀** —— 子文件是纯源码、不渲染，用普通 `.tsx` / `.ts`；带 `.demo.tsx` 会被当成可渲染 demo
 - **过程节用 `####` 而非 `###`** —— H4 不入 TOC，读者无法跳到具体 step；统一用 `###`
 - **过度拆 zh/en demo** —— 只在文本**实际不同**时才拆；`sin α` / `α` / `f(x)` 这种通用符号留单文件
 - **demo 颜色用 CSS var**（`var(--border)` / `var(--muted)` 等） —— 工具条 SVG 下载在新上下文里 var 解析失败 fallback 成黑；颜色统一用字面量（hex / oklch / 命名色）。需要 light/dark 适配的"装饰性"色（grid help line / 背景遮罩）取浅色字面值（如 `#e5e7eb` / `#ffffff`），下载后在白底文档里仍然好看
