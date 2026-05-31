@@ -8,7 +8,7 @@ import type { FC } from 'react';
 const Demo: FC = () => (
   <Layout width={320} height={100}>
     <Path
-      stroke="green"
+      stroke="currentColor"
       strokeWidth={1.5}
       marks={[
         { pos: 0.25, mark: { kind: 'arrow', shape: 'stealth' } },
