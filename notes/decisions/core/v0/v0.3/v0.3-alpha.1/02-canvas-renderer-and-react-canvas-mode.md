@@ -1,6 +1,6 @@
 # ADR-02：`@retikz/canvas` Canvas 2D renderer + `@retikz/react` 的 `renderer="canvas"` 渲染模式
 
-- 状态：Proposed
+- 状态：Accepted（实现完成；**超出首版 MVP**：首版列为「降级 + 警告」的 gradient / pattern / image / clip / marker 已全部转为真实 Canvas 实现，另含 currentColor 解析 + 主题响应 + 文本基线统一 + 弧扫描方向 + 尺寸对齐 SVG）
 - 决策日期：2026-05-29
 - 关联：[v0.3 roadmap §Canvas 包首版范围 / §React API 方向 / §待决策 2·10·11·12·13](../roadmap.md) · [v0 roadmap](../../roadmap.md) · [ADR-01 `@retikz/svg` descriptor 契约](./01-svg-descriptor-contract.md)(并列 renderer + react 接 svg) · [core-design.md §5 / §6](../../../../../architecture/core-design.md) · [tikz-gap-analysis](../../../../../analysis/tikz-gap-analysis.md)
 

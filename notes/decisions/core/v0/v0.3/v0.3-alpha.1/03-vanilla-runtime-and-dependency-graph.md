@@ -1,6 +1,6 @@
 # ADR-03：`@retikz/vanilla` framework-free runtime + 包依赖图收口
 
-- 状态：Proposed
+- 状态：Accepted（实现完成 2026-05-31，见文末「实现偏离记录」；**已超出 alpha.1 骨架**：`@retikz/vanilla` 的 SVG 路径 `renderToSvgString` + `mountSvg` + `svgNodeToDom` 一并落地、12 测试全绿，提前完成 alpha.3 的 SVG 行为；Canvas 侧入口仍后置）
 - 决策日期：2026-05-31
 - 关联：[v0.3 roadmap §Vanilla runtime 范围 / §包拆分目标 / §待决策 3·4·13](../roadmap.md) · [v0 roadmap](../../roadmap.md) · [ADR-01 `@retikz/svg` descriptor 契约](./01-svg-descriptor-contract.md)（vanilla 复用其 `renderToSvgString` / `buildSvgDocument`）· [ADR-02 `@retikz/canvas` + react canvas mode](./02-canvas-renderer-and-react-canvas-mode.md)（依赖方向 #13 由本 ADR 收口）· [core-design.md §5 / §6](../../../../../architecture/core-design.md)
 
@@ -218,3 +218,17 @@ view.dispose();        // 卸载、清容器
 - `svgToReact`（`packages/react/src/render/svgToReact.ts`）—— **不依赖**，仅作 `svgNodeToDom` 的同构参照（descriptor 物化模式对齐）。
 - `document` / `SVGElement` / `createElementNS`（`lib.dom.d.ts` 内置）—— `mountSvg` / `svgNodeToDom` 引用，需 `packages/vanilla/tsconfig.json` 开 `lib: ["ESNext", "DOM"]`，无需 `@types`。
 - `@retikz/react`—— **明确不依赖**（vanilla 是 react 的并列 runtime，非其子）。
+
+---
+
+## 实现偏离记录（2026-05-31）
+
+> 落地与本 ADR 决策一致，差异均为「做得比骨架多」或实现期补细，记此备查。
+
+- **提前完成 alpha.3 的 SVG 行为**：本 ADR 范围是 alpha.1（骨架 + 可解析 exports + 架构守卫测试），实际把 `@retikz/vanilla` 的**整条 SVG 路径**（`renderToSvgString` + `mountSvg` + `svgNodeToDom` + `toScene` + `applyAttrs`）连行为测试一并实现（参照 ADR-02 合并 alpha.6/7 的先例）。Canvas 侧入口（`mountCanvas` / 导出）仍按计划后置。
+- **默认 `idPrefix = 'r'`**：核实发现 `@retikz/svg` 的 `buildSvgDocument` / `renderToSvgString` 的 `idPrefix` 为**必填** `string`，故 vanilla 缺省注入常量 `'r'`（确定性）；多实例同页须经 `options.idPrefix` 显式区分以免 id 撞（已在 `types.ts` 注释）。
+- **`svgNodeToDom` 不公开导出**：按 ADR 待决倾向（YAGNI）只内部用，`index.ts` 不导出；另抽出 `applyAttrs`（`svgNodeToDom` 与 `mountSvg` 的 root 原地复用共用一个 attrs 物化器）。
+- **measurer 契约落地**：`toScene` 收 `ir` 时 `compileToScene(ir, { measureText? })`，缺省由 core 回退 `fallbackMeasurer`——与「文本测量 contract 定死」决策一致，Node 下确定可运行。
+- **测试落点**：12 case（架构守卫 3 / SSR 字符串 3 / DOM 挂载 6），node + jsdom 双环境（默认 node 天然验证 SSR 导入安全，挂载用例 `// @vitest-environment jsdom`）。文件 `deps-guard.test.ts` / `render-string.test.ts` / `mount-svg.test.ts`（与 ADR 列表对齐，render-string 即 ADR 的同名行为测试）。
+- **包配置**：`package.json` / `tsconfig.json`（`lib ESNext+DOM`）/ `vite.config.ts` 对齐 svg/canvas 模板；`pnpm-workspace.yaml` 未改（`packages/*` glob 已覆盖，与 ADR 一致）。`jsdom` 不进 devDeps（沿用 react 做法，vitest 从 store 解析）。
+- **校验**：vanilla `tsc` / `eslint` 干净、12 测试全绿；core 1575 / svg 14 / canvas 46 / react 294 不回归（core 1 失败为预存 `partial-circle-ellipse > sector`，与本次无关）。
