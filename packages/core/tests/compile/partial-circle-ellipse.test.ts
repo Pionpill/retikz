@@ -151,11 +151,14 @@ describe('pen 语义（逐模式，后接 line 验起点）', () => {
       { type: 'step', kind: 'circlePath', radius: 10, startAngle: 0, endAngle: 90, closed: 'sector' },
       { type: 'step', kind: 'line', to: [50, 50] },
     );
+    // sector 闭合后笔位经 close 回子路径起点 [10,0]；penOverride=center 让续接 line 从 center 起，
+    // 故 close 与 line 间需一个 move([0,0])（与 full 同语义）。
     expect(findPathPrim(compileToScene(ir, silent).primitives).commands).toEqual([
       move([10, 0]),
       ellipseArc([0, 0], 10, 10, 0, 90),
       line([0, 0]),
       close(),
+      move([0, 0]),
       line([50, 50]),
     ]);
   });
