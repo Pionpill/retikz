@@ -333,7 +333,9 @@ const pathCommand = (ctx: CanvasRenderingContext2D, command: PathCommand): void 
         command.radius,
         command.startAngle * DEG_TO_RAD,
         command.endAngle * DEG_TO_RAD,
-        command.counterClockwise ?? false,
+        // counterClockwise 缺省时按角度顺序推断扫描方向（endAngle < startAngle = 逆时针），与 SVG sweep-flag 一致；
+        // 否则 ctx.arc 对 end<start 会绕远（如 0→-30 画成 330°）
+        command.counterClockwise ?? command.endAngle < command.startAngle,
       );
       break;
     case 'ellipseArc':
@@ -345,9 +347,10 @@ const pathCommand = (ctx: CanvasRenderingContext2D, command: PathCommand): void 
         (command.rotation ?? 0) * DEG_TO_RAD,
         command.startAngle * DEG_TO_RAD,
         command.endAngle * DEG_TO_RAD,
-        command.counterClockwise ?? false,
+        command.counterClockwise ?? command.endAngle < command.startAngle,
       );
       break;
+
   }
 };
 
