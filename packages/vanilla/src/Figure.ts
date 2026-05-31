@@ -29,12 +29,11 @@ export type Figure = {
 
 /** figure() 的内部入口：装配 Figure（持 config + children，方法闭包其上） */
 export const createFigure = (config: FigureConfig, children: Child[]): Figure => {
-  /** call-site options 覆盖 figure 存的 config（call-site wins）；Task 6 扩成全套 compile opts + width/height */
-  const renderOptions = (callSite?: MountOptions): MountOptions => ({
-    idPrefix: config.idPrefix,
-    measureText: config.measureText,
-    ...callSite,
-  });
+  /** call-site options 覆盖 figure 存的 config（call-site wins）：viewBox 已并进 ir，其余（width/height/idPrefix + 全套 CompileOptions）全透传 */
+  const renderOptions = (callSite?: MountOptions): MountOptions => {
+    const { viewBox: _viewBox, ...stored } = config;
+    return { ...stored, ...callSite };
+  };
 
   const fig: Figure = {
     [FIGURE_BRAND]: true,

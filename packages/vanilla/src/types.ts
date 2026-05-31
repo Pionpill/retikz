@@ -1,18 +1,21 @@
-import type { IR, Scene, TextMeasurer } from '@retikz/core';
+import type { CompileOptions, IR, Scene } from '@retikz/core';
+import type { Figure } from './Figure';
 
-/** mountSvg / renderToSvgString 的入参：已编译 `Scene` 或待编译 `IR` */
-export type RenderInput = Scene | IR;
+/** mountSvg / renderToSvgString 的入参：已编译 `Scene`、待编译 `IR`，或命令式 builder 的 `Figure` */
+export type RenderInput = Scene | IR | Figure;
 
 /**
  * 两个入口共享的选项
- * @description `idPrefix`：SVG 资源 id 前缀，确定性（SSR↔客户端一致）；缺省 `'r'`，多实例同页须显式区分以免 id 撞。
- *   `measureText`：文本度量器；收 `ir` 且未给时回退 core `fallbackMeasurer`（近似、零 DOM、Node/浏览器一致），
- *   收 `scene` 时忽略（已在 compile 期测量）。要精确换行 / 节点尺寸须显式注入。
+ * @description `idPrefix`：SVG 资源 id 前缀，确定性（SSR↔客户端一致），缺省 `'r'`。`width`/`height`：写回根
+ *   `<svg>` 的显示尺寸（adapter 职责，`@retikz/svg` 只产 viewBox）；缺省不写、由 CSS/容器定。其余继承 core
+ *   `CompileOptions`（`measureText` / `shapes` / `arrows` / `patterns` / `pathGenerators` / `padding` /
+ *   `precision` / `nodeDistance` / `onWarn`）——收 `ir` 时透传给 `compileToScene`，收 `scene` 时忽略。
  */
 export type CommonOptions = {
   idPrefix?: string;
-  measureText?: TextMeasurer;
-};
+  width?: number;
+  height?: number;
+} & CompileOptions;
 
 export type RenderToStringOptions = CommonOptions;
 export type MountOptions = CommonOptions;
