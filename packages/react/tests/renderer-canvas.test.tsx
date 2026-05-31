@@ -87,12 +87,74 @@ describe('Layout renderer 规格', () => {
 
     const canvas = container.querySelector('canvas');
     expect(canvas).toBeInstanceOf(HTMLCanvasElement);
-    expect(canvas?.getAttribute('width')).toBe('320');
-    expect(canvas?.getAttribute('height')).toBe('180');
+    // 位图按 Scene 内容边界开（ratio=1）；名义 720×360 只进 CSS displayStyle
+    expect(canvas?.width).toBe(Math.round(canvasScenes[0].layout.width));
+    expect(canvas?.height).toBe(Math.round(canvasScenes[0].layout.height));
     expect(renderToCanvas).toHaveBeenCalledTimes(1);
     expect(canvasDrawCalls[0]).toBe(canvas);
     expect(getContext).toHaveBeenCalledWith('2d');
     expect(fillRect).toHaveBeenCalledWith(0, 0, 1, 1);
+
+    root.unmount();
+    getContext.mockRestore();
+  });
+
+  it('canvas-host-object-fit-contain：canvas 用 object-fit:contain，受限容器宽度下按比例 letterbox 不拉伸高度', async () => {
+    const context = createTestCanvasContext();
+    const getContext = vi
+      .spyOn(HTMLCanvasElement.prototype, 'getContext')
+      .mockImplementation((contextId: string) =>
+        (contextId === '2d' ? (context as unknown as CanvasRenderingContext2D) : null)
+      );
+    const container = document.createElement('div');
+    const root = createRoot(container);
+
+    await act(() => {
+      root.render(
+        <Layout renderer="canvas" width={320} height={180}>
+          <Node id="a" position={[0, 0]}>
+            A
+          </Node>
+        </Layout>,
+      );
+    });
+
+    // bitmap 与 CSS 盒比例不一致时（容器 max-width 收窄宽度但高度固定），object-fit:contain 让位图按比例
+    // letterbox（对齐 SVG preserveAspectRatio="meet"），而非拉伸填充
+    const canvas = container.querySelector('canvas');
+    expect(canvas?.style.objectFit).toBe('contain');
+
+    root.unmount();
+    getContext.mockRestore();
+  });
+
+  it('canvas-host-bitmap-equals-scene-layout：位图按 Scene 内容边界开（对齐 SVG viewBox），与名义 width/height 解耦', async () => {
+    const context = createTestCanvasContext();
+    const getContext = vi
+      .spyOn(HTMLCanvasElement.prototype, 'getContext')
+      .mockImplementation((contextId: string) =>
+        (contextId === '2d' ? (context as unknown as CanvasRenderingContext2D) : null)
+      );
+    const container = document.createElement('div');
+    const root = createRoot(container);
+
+    // 名义盒 720×360 远大于单个节点的内容边界
+    await act(() => {
+      root.render(
+        <Layout renderer="canvas" width={720} height={360}>
+          <Node id="a" position={[0, 0]}>
+            A
+          </Node>
+        </Layout>,
+      );
+    });
+
+    const canvas = container.querySelector('canvas');
+    const scene = canvasScenes[0];
+    // jsdom 无 devicePixelRatio → ratio=1；位图 = 内容边界 × ratio，而非名义 720×360（否则两次 letterbox 致 canvas 偏小）
+    expect(canvas?.width).toBe(Math.round(scene.layout.width));
+    expect(canvas?.height).toBe(Math.round(scene.layout.height));
+    expect(scene.layout.width).not.toBe(720);
 
     root.unmount();
     getContext.mockRestore();
@@ -204,8 +266,9 @@ describe('Layout renderer 规格', () => {
     });
 
     const canvas = container.querySelector('canvas');
-    expect(canvas?.getAttribute('width')).toBe('120');
-    expect(canvas?.getAttribute('height')).toBe('80');
+    // ratio 回退为 1：位图 = 内容边界 × 1（有限值；若 ratio=NaN 则会得 NaN）
+    expect(canvas?.width).toBe(Math.round(canvasScenes[0].layout.width));
+    expect(canvas?.height).toBe(Math.round(canvasScenes[0].layout.height));
 
     root.unmount();
     getContext.mockRestore();

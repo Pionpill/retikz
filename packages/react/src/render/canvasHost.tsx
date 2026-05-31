@@ -49,14 +49,6 @@ export type CanvasHostProps = {
   style?: CSSProperties;
 };
 
-const numericLength = (
-  value: number | string | undefined,
-  fallback: number,
-): number => {
-  if (typeof value === 'number' && Number.isFinite(value) && value > 0) return value;
-  return fallback;
-};
-
 const devicePixelRatio = (): number => {
   const ratio = globalThis.devicePixelRatio;
   return typeof ratio === 'number' && Number.isFinite(ratio) && ratio > 0 ? ratio : 1;
@@ -99,10 +91,11 @@ export const CanvasHost: FC<CanvasHostProps> = props => {
     const canvas = ref.current;
     if (!canvas) return;
     const ratio = devicePixelRatio();
-    const cssWidth = numericLength(width, scene.layout.width);
-    const cssHeight = numericLength(height, scene.layout.height);
-    canvas.width = Math.max(1, Math.round(cssWidth * ratio));
-    canvas.height = Math.max(1, Math.round(cssHeight * ratio));
+    // 位图按 Scene 内容边界（scene.layout）开，对齐 SVG 的 viewBox=scene.layout：位图宽高比 = 内容比，
+    // 这样 object-fit:contain 只做一次 fit（= SVG preserveAspectRatio meet），canvas 与 SVG 像素一致。
+    // 名义 width/height 仅作 CSS 显示盒（displayStyle），不参与位图分辨率，否则名义比 ≠ 内容比会二次 letterbox 致偏小。
+    canvas.width = Math.max(1, Math.round(scene.layout.width * ratio));
+    canvas.height = Math.max(1, Math.round(scene.layout.height * ratio));
     renderToCanvas(canvas, scene, {
       devicePixelRatio: ratio,
       defaultFontFamily: canvasFontFamily(canvas),
@@ -110,5 +103,9 @@ export const CanvasHost: FC<CanvasHostProps> = props => {
     });
   }, [className, height, renderTick, scene, style, width]);
 
-  return <canvas ref={ref} className={className} style={displayStyle(width, height, style)} />;
+  // object-fit:contain：受限容器（如 max-width 收窄宽度但高度固定）下让位图按比例 letterbox 不拉伸，
+  // 对齐 SVG preserveAspectRatio="meet"；用户可经 style.objectFit 覆盖
+  return (
+    <canvas ref={ref} className={className} style={{ objectFit: 'contain', ...displayStyle(width, height, style) }} />
+  );
 };
