@@ -428,6 +428,37 @@ importers:
         specifier: 'catalog:'
         version: 4.1.5(@types/node@25.6.0)(jsdom@26.1.0)(vite@8.0.10(@types/node@25.6.0)(esbuild@0.27.7)(jiti@2.6.1)(yaml@2.8.4))
 
+  packages/vanilla:
+    dependencies:
+      '@retikz/canvas':
+        specifier: workspace:*
+        version: link:../canvas
+      '@retikz/core':
+        specifier: workspace:*
+        version: link:../core
+      '@retikz/svg':
+        specifier: workspace:*
+        version: link:../svg
+    devDependencies:
+      '@types/node':
+        specifier: 'catalog:'
+        version: 25.6.0
+      typescript:
+        specifier: 'catalog:'
+        version: 6.0.3
+      vite:
+        specifier: 'catalog:'
+        version: 8.0.10(@types/node@25.6.0)(esbuild@0.27.7)(jiti@2.6.1)(yaml@2.8.4)
+      vite-plugin-dts:
+        specifier: 'catalog:'
+        version: 4.5.4(@types/node@25.6.0)(rollup@4.60.2)(typescript@6.0.3)(vite@8.0.10(@types/node@25.6.0)(esbuild@0.27.7)(jiti@2.6.1)(yaml@2.8.4))
+      vite-tsconfig-paths:
+        specifier: 'catalog:'
+        version: 6.1.1(typescript@6.0.3)(vite@8.0.10(@types/node@25.6.0)(esbuild@0.27.7)(jiti@2.6.1)(yaml@2.8.4))
+      vitest:
+        specifier: 'catalog:'
+        version: 4.1.5(@types/node@25.6.0)(jsdom@26.1.0)(vite@8.0.10(@types/node@25.6.0)(esbuild@0.27.7)(jiti@2.6.1)(yaml@2.8.4))
+
 packages:
 
   '@asamuzakjp/css-color@3.2.0':
