@@ -1,6 +1,6 @@
 ---
 name: docs-doc-example
-description: retikz 示例类文档（apps/docs/src/contents/<module>/examples/**/*.mdx）的页面结构规范——以经典 / 实用图表为载体循序渐进教读者用 retikz 能力。固定 6 段（引言含 hero / Prompt / 过程 / 能力 / Limitations / Related）、过程节 step 用 H3 进 TOC、demo 累加式拼搭、命名 <id>-NN-<theme>.demo.tsx、多文件 demo 拆子文件（步内 <主demo名>.<subName>.tsx 随 diffFrom 自动 diff / 共享件独立命名 / 子文件不带 .demo）、Prompt 节用 ExamplePrompt 组件（只读 + markdown + 复制/发送双按钮）。本 skill 只覆盖示例页特有规则；通用规则（三处协同、双语、写作风格、Comparison、宽度、阅读时间等）见 docs-doc-principle。retikz 专用。
+description: retikz 示例类文档（apps/docs/src/contents/<module>/examples/**/*.mdx）的页面结构规范——以经典 / 实用图表为载体循序渐进教读者用 retikz 能力。固定 6 段（引言含 hero / Prompt / 过程 / 能力 / 限制 / 扩展阅读）、过程节 step 用 H3 进 TOC、demo 累加式拼搭、命名 <id>-NN-<theme>.demo.tsx、多文件 demo 拆子文件（步内 <主demo名>.<subName>.tsx 随 diffFrom 自动 diff / 共享件独立命名 / 子文件不带 .demo）、Prompt 节用 ExamplePrompt 组件（只读 + markdown + 复制/发送双按钮）。本 skill 只覆盖示例页特有规则；通用规则（三处协同、双语、写作风格、Comparison、宽度、阅读时间等）见 docs-doc-principle。retikz 专用。
 ---
 
 # 示例类文档写法
@@ -10,7 +10,7 @@ description: retikz 示例类文档（apps/docs/src/contents/<module>/examples/*
 - 在 `apps/docs/src/contents/<module>/examples/**` 下加 / 改示例页
 - 即将动手前**必须先读** [`docs-doc-principle`](../docs-doc-principle/SKILL.md) 拿通用规则
 
-本 skill 只覆盖**示例页特有**的页面结构、step 写法、demo 命名、Prompt 节、Limitations 节。其它一切（三处协同、双语、写作风格、Comparison、自绘图示、宽度、阅读时间等）以 principle 为准。
+本 skill 只覆盖**示例页特有**的页面结构、step 写法、demo 命名、Prompt 节、限制 节。其它一切（三处协同、双语、写作风格、Comparison、自绘图示、宽度、阅读时间等）以 principle 为准。
 
 示例页必须站在第一次跟做的读者视角写：每一步先说“这一步让图多了什么、为什么现在加”，再链接到组件或提术语。不要用作者全知视角跳到最终架构、内部机制或完整 API；读者应能按 step 顺序复制、观察、理解。
 
@@ -64,18 +64,19 @@ description: <一句话：建什么图 + 主要教什么能力>
 | [Path](.../draw/path) | 单位圆主体 + 扇形 | 1, 4 |
 | ...
 
-## Limitations
-- 🚧 grid 算子：未来计划支持
-- 🚧 投影 target：未来计划支持
-- ❌ inline LaTeX 数学排版：暂不支持
+## 限制
+| 能力 / 限制 | 计划 | 现状 / 兜底 |
+| --- | --- | --- |
+| grid 算子 | 🚧 未来支持 | `.map()` 手画兜底 |
+| inline LaTeX 数学排版 | ❌ 不支持 | 纯文本兜底 |
 
-## Related
-- [相关组件 / 概念 / sister example]
+## 扩展阅读
+- 更多扩展点（自定义箭头 / 图案 / 路径生成器…）/ 进阶 / 优化（如封装专门 tier 组件）/ 相关组件 / 概念 / sister example
 ```
 
 **6 段顺序固定**，缺哪段都不行——除非：
-- Limitations 全部为空可整节省略
-- Related 没合适项可整节省略
+- 限制 全部为空可整节省略
+- 扩展阅读 没合适内容可整节省略
 
 ## Step 内部 4 行骨架
 
@@ -253,29 +254,42 @@ cd apps/docs && node -e "import('github-slugger').then(({default: S}) => { const
 - 空格 ` ` → `-`；被剥掉的标点周围的空格仍各自变 `-`，所以 ` + ` 会变成 `--`（两个连字符）
 - 中文字符、希腊字母（`α`）、半角连字符 `-` 都保留
 
-## Limitations 节
+## 限制 节
 
-示例图中**用 retikz 实现不了 / 实现得绕**的能力沉到这一节，与正文分离不打断教学节奏：
+示例图中**用 retikz 实现不了 / 实现得绕**的能力沉到这一节（zh 标题用「限制」，en 用「Limitations」），用**表格**呈现，与正文分离不打断教学节奏：
 
 ```mdx
-## Limitations
+## 限制
 
-- 🚧 grid 算子：未来计划支持。本例用 `.map()` 手画 5 横 5 竖替代
-- 🚧 投影 target（`(A |- B)`）：未来计划支持。本例手算 `cm(cos30, 0)` 兜底
-- 🚧 inline color span 文本：未来计划支持（LineSpec 加 `spans` 字段）。本例用 LineSpec 行级 `fill` 兜底，只能整行换色
-- ❌ inline LaTeX 数学排版（`$\frac{1}{2}$`）：暂无计划。本例用 `"1/2"` 纯文本兜底
+| 能力 / 限制 | 计划 | 现状 / 兜底 |
+| --- | --- | --- |
+| `grid` 算子 | 🚧 未来支持 | 用 `.map()` 手画 5 横 5 竖 |
+| 投影 target（`(A \|- B)`） | 🚧 未来支持 | 手算 `cm(cos30, 0)` |
+| 电路专用组件库 | ❌ 不支持 | 本例符号只是自定义形状，不适合大规模电路编辑器 |
+| 电阻画法拆成路径生成器 | 🔧 优化方案 | 当前画在 shape emit 里，可改用路径生成器 / 专门组件 |
 ```
 
-- 🚧 = 未来计划支持（大多数 gap 在这里）
-- ❌ = 明确不支持（少见；多数 example 这一类为空，整条 bullet 省略即可）
-- 每条格式：`<图标> <能力名>：<状态说明>。本例如何兜底`
-- 不要写"未来支持的话会让代码简化为 XXX"——简化方案不属于教程本身
+- **计划列**三类取值：🚧 **未来支持**（已在 roadmap）/ ❌ **不支持**（明确不做）/ 🔧 **优化方案**（能做、但本例为聚焦主题没做，指出更优做法）
+- **现状 / 兜底列**写当前状态以及本例怎么绕过
+- 表格 cell 里出现 `|` 必须转义成 `\|`（如 `(A \|- B)`）
+- 没有触到任何 gap 时整节省略
+- 不要把与本例无关的 roadmap 塞进来；也不要写"未来支持的话代码会简化成 XXX"——简化方案不属于教程本身
+
+## 扩展阅读 节
+
+页面最后一节（原 Related，已更名）。**不只放链接**——可以基于本例写一些**扩展 / 优化 / 进阶**内容，给读者指出下一步往哪走：
+
+- **更多扩展点**：本例往往只演示了某一面（如自定义形状），可顺手指向其它扩展面——[自定义箭头](/core/reference/extending/custom-arrow) / [自定义图案](/core/reference/extending/custom-pattern) / [路径生成器](/core/reference/extending/path-generator) 等。
+- **进阶 / 优化**：基于本例的下一步深入方向，例如把反复出现的结构封装成专门的（更高 tier 的）组件，以减少重复代码、精简 IR 持久化体积。
+- **相关组件 / 概念 / sister example**：跳到本例用到的组件页、相关概念、或同系列的另一个示例。
+
+没有可写的扩展 / 进阶、也没有相关链接时，整节可省略。
 
 ## 阅读时间
 
 教程类，目标 ≤ 10 分钟。超过就拆子页（如 example 太大，可拆成「基础版 / 完整版」两页，或按主题拆「Karl 单位圆 - 几何篇 / 装饰篇」）。
 
-7-9 step + 引言 + Prompt + 能力 + Limitations + Related 一般在 8-10 分钟以内。
+7-9 step + 引言 + Prompt + 能力 + 限制 + 扩展阅读 一般在 8-10 分钟以内。
 
 ## 与组件页的边界
 
@@ -328,7 +342,7 @@ import { Draw, DrawWay } from '@retikz/react';
 
 ## 常见错误（示例页特有）
 
-- **6 段顺序错乱** —— 严格按"引言 / Prompt / 过程 / 能力 / Limitations / Related"；缺哪段除非整节为空否则不许
+- **6 段顺序错乱** —— 严格按"引言 / Prompt / 过程 / 能力 / 限制 / 扩展阅读"；缺哪段除非整节为空否则不许
 - **section 标题写成 `## AI Prompt`** —— 用 `## Prompt`，AI 是工具不是主语
 - **demo 非累加** —— 每个 step 的 demo 必须包含之前所有内容，不能只画"本 step 新增"的孤立小图
 - **demo 文件名缺序号** —— 必须 `<id>-NN-<theme>.demo.tsx`，NN 两位 0 补齐（`-01-` 而非 `-1-`）
@@ -339,7 +353,8 @@ import { Draw, DrawWay } from '@retikz/react';
 - **demo 颜色用 CSS var**（`var(--border)` / `var(--muted)` 等） —— 工具条 SVG 下载在新上下文里 var 解析失败 fallback 成黑；颜色统一用字面量（hex / oklch / 命名色）。需要 light/dark 适配的"装饰性"色（grid help line / 背景遮罩）取浅色字面值（如 `#e5e7eb` / `#ffffff`），下载后在白底文档里仍然好看
 - **demo 用 `<Path><Step />` 而非 `<Draw way={[...]}>`** —— 示例 edge 一律走 Draw sugar（way 数组 1 行就能表达），Kernel Path 仅在示例**本身**教 Path/Step 内部或需要 fill+cycle 时用；理由见 demo 文件约定的「DSL 选择」行
 - **正文里散落 TikZ 对照** —— TikZ 关系一律走 `<Comparison>`（principle 已规定）；正文专心讲 retikz
-- **Limitations 当成「未来 roadmap」写** —— 只列**本例触到的** gap；与本例无关的 roadmap 别塞进来
+- **限制 当成「未来 roadmap」写** —— 只列**本例触到的** gap；与本例无关的 roadmap 别塞进来
+- **限制 还写成 bullet 列表** —— 现在统一用表格（能力 / 限制 · 计划 · 现状 / 兜底 三列），计划列取 🚧 未来支持 / ❌ 不支持 / 🔧 优化方案；cell 内 `|` 记得转义
 - **能力节列表里组件名不带 link** —— 第一列必须 markdown link 跳到对应 components/ 页
 - **能力节第三列 step 数字裸写** —— 必须改写成 `[N](#<H3-slug>)` 锚链接，读者能从能力反向跳到对应 step；中文 H3 的 slug 别手写、用 github-slugger 跑一下确认
 - **Prompt 给精确坐标 / 列 retikz 组件清单** —— prompt 只描述意图与视觉约束，不写"用 Path / Node / ..."这种 API 提示；让 LLM 自由发挥

@@ -1,4 +1,4 @@
-import { Check, ChevronDown, Copy, FileCode2 } from 'lucide-react';
+import { Check, ChevronDown, Copy, FileCode2, FileSymlink } from 'lucide-react';
 import { type ComponentProps, type FC, type ReactNode } from 'react';
 
 import { JsonIcon, ReactIcon } from '@/components/icons';
@@ -97,6 +97,10 @@ export const ViewToggle: FC<ViewToggleProps> = props => {
   );
 };
 
+/** 文件类型图标：主 demo 文件用 FileCode2，sourceFiles 引入的其他文件用 FileSymlink */
+const FileKindIcon: FC<{ isMain?: boolean; className?: string }> = ({ isMain, className }) =>
+  isMain ? <FileCode2 className={className} /> : <FileSymlink className={className} />;
+
 /** 源码面板的文件切换菜单 */
 export type SourceFileMenuProps = {
   /** 当前源码视图可切换的文件列表 */
@@ -122,7 +126,7 @@ export const SourceFileMenu: FC<SourceFileMenuProps> = props => {
         aria-label="Source file"
         title={activeFile.filename}
       >
-        <FileCode2 className="size-3.5 shrink-0" />
+        <FileKindIcon isMain={activeFile.isMain} className="size-3.5 shrink-0" />
         <span className="truncate">{activeFile.filename}</span>
         <ChevronDown className="size-3.5 shrink-0 text-muted-foreground" />
       </DropdownMenuTrigger>
@@ -136,8 +140,9 @@ export const SourceFileMenu: FC<SourceFileMenuProps> = props => {
               title={file.filename}
               onSelect={() => onChange(index)}
             >
-              <Check className={cn('size-3.5 shrink-0', !active && 'opacity-0')} />
+              <FileKindIcon isMain={file.isMain} className="size-3.5 shrink-0 text-muted-foreground" />
               <span className="truncate font-mono text-xs">{file.filename}</span>
+              <Check className={cn('ml-auto size-3.5 shrink-0', !active && 'opacity-0')} />
             </DropdownMenuItem>
           );
         })}

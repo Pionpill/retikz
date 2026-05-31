@@ -118,16 +118,16 @@ Finally, a colored info card on the right. The [Node](/core/components/node/over
 
 ## Limitations
 
-The items below will be filled in over upcoming releases; everything marked 🚧 is already on the roadmap.
+| Capability | Plan | Status / fallback |
+| --- | --- | --- |
+| `grid` lines | 🔧 Optimization | the example hand-draws 5+5 lines with `.map()`; the built-in `<Grid>` component can now replace it |
+| Math y-up axis | 🚧 Planned | scaling itself works via a Scope `scale` transform, but there's no `<Layout>`-level y-up switch yet (a negative `y` scale flips text too); the example writes pixel coordinates with manual y negation |
+| Projection target (`(A \|- B)`) | 🚧 Planned | hand-compute `[cos30 * 100, 0]` |
+| Named path + intersection target | 🚧 Planned | hand-compute `[100, -tan30 * 100]` |
+| In-line spans inside LineSpec | 🚧 Planned | color switches only at line granularity; `spans` field planned |
+| Inline LaTeX math typography (`$\frac{1}{2}$`) | ❌ Won't support | plain characters (`1/2` / `sin α`) |
 
-- 🚧 **`grid` operator**: planned. The example uses `.map()` to draw 5 horizontal + 5 vertical lines instead
-- 🚧 **Picture scale + y-up axis**: planned for `<Layout>` (`scale` + `yAxis="up"`) to let users feed math coordinates directly. The example writes pixel literals with manual y negation instead
-- 🚧 **Projection target (`(A |- B)`)**: planned. The example hand-computes `[cos30 * 100, 0]`
-- 🚧 **Named path + intersection target**: planned. The example hand-computes `[100, -tan30 * 100]`
-- 🚧 **In-line spans inside LineSpec**: planned (add a `spans` field). The example switches color only at line granularity
-- ❌ **Inline LaTeX math typography** (`$\frac{1}{2}$` / `$\sin \alpha$`): not planned. The example uses plain characters (`1/2` / `sin α`)
-
-## Related
+## Further reading
 
 - [Path](/core/components/draw/path) · [Step](/core/components/draw/step) · [Draw](/core/components/draw/overview) · [Node](/core/components/node/overview) · [Coordinate](/core/components/node/coordinate)
 - [Positioning](/core/concepts/positioning) · [Anchors](/core/concepts/anchors)

@@ -178,12 +178,13 @@ export const ComponentPreview: FC<ComponentPreviewProps> = props => {
     return { filename, code, diff };
   });
   const files: Array<ComponentSourceFile> = [
-    ...extraSourceFiles,
     {
       filename: filenameFromKey(key),
       code: trimmedSource,
       diff: reactDiff,
+      isMain: true,
     },
+    ...extraSourceFiles,
   ];
   const source: ComponentRenderSource | undefined = hideCode
     ? undefined
