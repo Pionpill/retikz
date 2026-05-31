@@ -1,4 +1,6 @@
 import type { IR } from '@retikz/core';
+import { renderToCanvas } from '@retikz/canvas';
+import type { RenderOptions } from '@retikz/canvas';
 import { coordinate } from './builder/coordinate';
 import { draw } from './builder/draw';
 import { FIGURE_BRAND } from './builder/isFigure';
@@ -8,6 +10,7 @@ import type { ScopeBuilder } from './builder/scope';
 import type { Child, CoordinateConfig, DrawConfig, FigureConfig, ScopeConfig, Way } from './builder/types';
 import { mountSvg } from './mountSvg';
 import { renderToSvgString } from './renderToSvgString';
+import { toScene } from './toScene';
 import type { MountOptions, RenderToStringOptions, VanillaView } from './types';
 
 /**
@@ -20,7 +23,7 @@ export type Figure = {
   readonly ir: IR;
   mount: (container: Element, options?: MountOptions) => VanillaView;
   toSvgString: (options?: RenderToStringOptions) => string;
-  // toCanvas 在 Task 7 接上
+  toCanvas: (canvas: HTMLCanvasElement, options?: RenderOptions) => void;
   node: (...args: Parameters<typeof node>) => Figure;
   draw: (way: Way, config?: DrawConfig) => Figure;
   coordinate: (id: string, config: CoordinateConfig) => Figure;
@@ -50,6 +53,12 @@ export const createFigure = (config: FigureConfig, children: Child[]): Figure =>
     },
     toSvgString(options) {
       return renderToSvgString(fig.ir, renderOptions(options));
+    },
+    toCanvas(canvas, options) {
+      // figure 的 compile 选项（shapes/measureText…）走 toScene；canvas RenderOptions 是独立一套，原样透传
+      const { viewBox: _viewBox, idPrefix: _idPrefix, width: _width, height: _height, ...compile } = config;
+      const scene = toScene(fig.ir, compile);
+      renderToCanvas(canvas, scene, options ?? {});
     },
     node(...args) {
       children.push(node(...args));
