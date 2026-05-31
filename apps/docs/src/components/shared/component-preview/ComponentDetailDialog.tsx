@@ -8,7 +8,14 @@ import { cn } from '@/lib/utils';
 import { HighlightedCode } from '../highlight-code';
 import type { ComponentRenderSource } from './ComponentRender';
 import { CopyButton, RendererModeButton, SourceFileMenu, ToolbarIconButton, ViewToggle } from './_parts';
-import { type AlignKey, type RendererMode, type SourceView, alignClass, filterDiffByMode } from './_shared';
+import {
+  type AlignKey,
+  type RendererMode,
+  SOURCE_VIEW_ORDER,
+  type SourceView,
+  alignClass,
+  filterDiffByMode,
+} from './_shared';
 import { DemoRenderer } from './DemoRenderer';
 import { usePanZoom } from './usePanZoom';
 
@@ -91,11 +98,16 @@ export const ComponentDetailDialog: FC<ComponentDetailDialogProps> = props => {
   const hasReact = reactFiles.length > 0;
   const irSource = source?.ir ?? '';
   const hasIr = irSource.length > 0;
-  const hasCode = hasReact || hasIr;
-  const showViewToggle = hasReact && hasIr;
+  const vanillaSource = source?.vanilla ?? '';
+  const hasVanilla = vanillaSource.length > 0;
+  const hasCode = hasReact || hasIr || hasVanilla;
+  const availableViews = SOURCE_VIEW_ORDER.filter(
+    v => (v === 'react' && hasReact) || (v === 'ir' && hasIr) || (v === 'vanilla' && hasVanilla),
+  );
+  const showViewToggle = availableViews.length >= 2;
 
   // Dialog 自己的视图 / copied 状态——和外部卡完全独立
-  const [view, setView] = useState<SourceView>(hasReact ? 'react' : 'ir');
+  const [view, setView] = useState<SourceView>('react');
   const [copied, setCopied] = useState(false);
   const copyTimerRef = useRef<number | null>(null);
 
@@ -105,15 +117,15 @@ export const ComponentDetailDialog: FC<ComponentDetailDialogProps> = props => {
     };
   }, []);
 
-  const effectiveView: SourceView = hasReact && hasIr ? view : hasReact ? 'react' : 'ir';
+  const effectiveView: SourceView = availableViews.includes(view) ? view : (availableViews[0] ?? 'react');
   const activeSourceFileIndex = Math.min(sourceFileIndex, Math.max(reactFiles.length - 1, 0));
   const activeSourceFile = reactFiles.at(activeSourceFileIndex);
   const reactSource = activeSourceFile?.code ?? '';
   const activeDiff = activeSourceFile?.diff;
 
-  // Copy 用的是真实 React / IR 源码；displayedCode 在 React 视图下有 reactDiff 时切换为 'added' 模式过滤后的内容
+  // Copy 用的是真实 React / IR / Vanilla 源码；displayedCode 在 React 视图下有 reactDiff 时切换为 'added' 模式过滤后的内容
   // Dialog 暂不出 diff mode 切换，固定 'added'（与卡片默认一致——教学场景优先看新增）
-  const copyCode = effectiveView === 'ir' ? irSource : reactSource;
+  const copyCode = effectiveView === 'ir' ? irSource : effectiveView === 'vanilla' ? vanillaSource : reactSource;
   const displayedDiff =
     effectiveView === 'react' && activeDiff !== undefined ? filterDiffByMode(activeDiff, 'added') : null;
   const displayedCode = displayedDiff?.code ?? copyCode;
@@ -163,14 +175,16 @@ export const ComponentDetailDialog: FC<ComponentDetailDialogProps> = props => {
                         onChange={onSourceFileIndexChange}
                       />
                     ) : null}
-                    {showViewToggle ? <ViewToggle view={effectiveView} onChange={setView} /> : null}
+                    {showViewToggle ? (
+                      <ViewToggle views={availableViews} view={effectiveView} onChange={setView} />
+                    ) : null}
                   </div>
                   <CopyButton copied={copied} onCopy={handleCopy} />
                 </div>
                 {/* `[&_pre]:!text-xs` 用 ! 覆盖 react-syntax-highlighter 主题注入的 inline font-size */}
                 <div className="min-h-0 flex-1 overflow-auto [&_code]:!text-sm [&_pre]:!text-xs">
                   <HighlightedCode
-                    lang={effectiveView === 'ir' ? 'json' : 'tsx'}
+                    lang={effectiveView === 'ir' ? 'json' : effectiveView === 'vanilla' ? 'ts' : 'tsx'}
                     code={displayedCode}
                     showLineNumbers
                     lineKinds={displayedLineKinds}

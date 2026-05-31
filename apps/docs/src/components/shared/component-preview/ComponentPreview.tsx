@@ -7,6 +7,7 @@ import type { IR } from '@retikz/core';
 import { Layout, convertReactNodeToIR } from '@retikz/react';
 
 import { ComponentRender, type ComponentRenderSource } from './ComponentRender';
+import { irToVanillaCode } from './irToVanillaCode';
 import {
   type AlignKey,
   type ComponentSourceFile,
@@ -35,12 +36,23 @@ const localSourceFiles: Record<string, string | undefined> = import.meta.glob<st
     eager: true,
   },
 );
+// vanilla 代码视图的手写覆盖：同级 `<name>.vanilla.ts`（命中则原文优先，否则走 IR codegen）
+const vanillaOverrides: Record<string, string | undefined> = import.meta.glob<string>(
+  '../../../contents/**/*.vanilla.ts',
+  {
+    query: '?raw',
+    import: 'default',
+    eager: true,
+  },
+);
 
 const buildKey = (segments: Array<string>, name: string) => `../../../contents/${segments.join('/')}/${name}.demo.tsx`;
 const buildLangKey = (segments: Array<string>, name: string, lang: string) =>
   `../../../contents/${segments.join('/')}/${name}.${lang}.demo.tsx`;
 const buildSourceFileKey = (segments: Array<string>, filename: string) =>
   `../../../contents/${segments.join('/')}/${filename}`;
+const buildVanillaKey = (segments: Array<string>, name: string) =>
+  `../../../contents/${segments.join('/')}/${name}.vanilla.ts`;
 const filenameFromKey = (key: string) => key.slice(key.lastIndexOf('/') + 1);
 const COMPONENT_EXPANSION_LIMIT = 16;
 
@@ -136,6 +148,19 @@ export const ComponentPreview: FC<ComponentPreviewProps> = props => {
     }
   }, [Component, hideCode]);
 
+  // Vanilla 视图：同级 `<name>.vanilla.ts` 手写覆盖优先，否则从同一份 IR codegen；失败回落错误文本
+  const vanillaKey = segments ? buildVanillaKey(segments, name) : null;
+  const vanillaOverride = vanillaKey ? vanillaOverrides[vanillaKey] : undefined;
+  const vanillaCode = useMemo(() => {
+    if (!Component || hideCode) return '';
+    if (vanillaOverride !== undefined) return vanillaOverride.replace(/\n$/, '');
+    try {
+      return irToVanillaCode(buildPreviewIR(Component));
+    } catch (err) {
+      return `// Failed to generate vanilla code: ${err instanceof Error ? err.message : String(err)}`;
+    }
+  }, [Component, hideCode, vanillaOverride]);
+
   if (!loc) return null;
   if (!segments) return null;
 
@@ -172,7 +197,7 @@ export const ComponentPreview: FC<ComponentPreviewProps> = props => {
   ];
   const source: ComponentRenderSource | undefined = hideCode
     ? undefined
-    : { reactFiles: files, ir: irJson };
+    : { reactFiles: files, ir: irJson, vanilla: vanillaCode };
 
   return (
     <ComponentRender

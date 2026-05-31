@@ -15,6 +15,7 @@ import {
   type ComponentSourceFile,
   type DiffMode,
   type RendererMode,
+  SOURCE_VIEW_ORDER,
   type SizeKey,
   type SourceView,
   type UnifiedDiff,
@@ -72,6 +73,8 @@ export type ComponentRenderSource = {
   react?: string;
   reactFiles?: Array<ComponentSourceFile>;
   ir?: string;
+  /** Vanilla builder 代码（从 IR codegen 或同级 `<name>.vanilla.ts` 手写覆盖）；非空则出 Vanilla 视图 */
+  vanilla?: string;
   /**
    * 相比 baseline 的 unified diff（current 与 baseline 删除行交织后的展示代码 + 每行 kind）
    * @description 仅在 React 视图 + 展开态下喂给 HighlightedCode：替换展示代码为 unified 版本、按 kind 给行加 `+`/`-` 字符与背景；teaser 折叠态 / IR 视图 / hideCode 跳过。Copy 始终复制真实 React 源码，不带 diff 装饰
@@ -109,7 +112,12 @@ export const ComponentRender: FC<ComponentRenderProps> = props => {
         : [];
   const hasReact = reactFiles.length > 0;
   const hasIr = (source?.ir ?? '').length > 0;
-  const hasCode = hasReact || hasIr;
+  const hasVanilla = (source?.vanilla ?? '').length > 0;
+  const hasCode = hasReact || hasIr || hasVanilla;
+  // 可用视图（按固定顺序），≥ 2 个才出 toggle
+  const availableViews = SOURCE_VIEW_ORDER.filter(
+    v => (v === 'react' && hasReact) || (v === 'ir' && hasIr) || (v === 'vanilla' && hasVanilla),
+  );
 
   // 局部状态用 `boolean | undefined`：undefined 跟随全局默认；用户单卡操作过一次后本地选择胜出
   const [localIsCodeVisible, setLocalIsCodeVisible] = useState<boolean | undefined>(undefined);
@@ -164,9 +172,10 @@ export const ComponentRender: FC<ComponentRenderProps> = props => {
   const reactSource = activeSourceFile?.code ?? '';
   const activeDiff = activeSourceFile?.diff;
   const irSource = source?.ir ?? '';
+  const vanillaSource = source?.vanilla ?? '';
 
-  // 单视图情境派生兜底：仅 ir 时 view 当前值无意义，effectiveView 强制返回 ir；React/IR toggle 只在双视图时渲染，所以 setView 也只能在双视图时被触发
-  const effectiveView: SourceView = hasReact && hasIr ? view : hasReact ? 'react' : 'ir';
+  // 当前 view 若不在可用集合里（单视图 / 用户上次选的视图已不存在）→ 兜底到第一个可用视图
+  const effectiveView: SourceView = availableViews.includes(view) ? view : (availableViews[0] ?? 'react');
 
   // teaser 判定基于 react 源码行数（IR 通常更长但不是用户期望的"概览"内容）
   const reactLineCount = reactSource.split('\n').length;
@@ -175,8 +184,8 @@ export const ComponentRender: FC<ComponentRenderProps> = props => {
   const usesTeaser = hasReact && reactHasMoreLines;
   const showFull = !usesTeaser || isCodeVisible;
 
-  // Copy 用的源码：始终是真实 React / IR 源码，与 diff 视觉装饰解耦
-  const copyCode = effectiveView === 'ir' ? irSource : reactSource;
+  // Copy 用的源码：按当前视图取真实源码，与 diff 视觉装饰解耦
+  const copyCode = effectiveView === 'ir' ? irSource : effectiveView === 'vanilla' ? vanillaSource : reactSource;
   // 默认 'added'：有 diff 数据 → 默认只看新增；用户在下拉里改过 mode 后 local 胜出
   const hasReactDiff = activeDiff !== undefined;
   const diffMode: DiffMode = localDiffMode ?? (hasReactDiff ? 'added' : 'off');
@@ -185,8 +194,9 @@ export const ComponentRender: FC<ComponentRenderProps> = props => {
     effectiveView === 'react' && showFull && activeDiff !== undefined && diffMode !== 'off'
       ? filterDiffByMode(activeDiff, diffMode)
       : null;
-  const fullCode = effectiveView === 'ir' ? irSource : (displayedDiff?.code ?? reactSource);
-  const fullLang = effectiveView === 'ir' ? 'json' : 'tsx';
+  const fullCode =
+    effectiveView === 'ir' ? irSource : effectiveView === 'vanilla' ? vanillaSource : (displayedDiff?.code ?? reactSource);
+  const fullLang = effectiveView === 'ir' ? 'json' : effectiveView === 'vanilla' ? 'ts' : 'tsx';
   const displayedCode = showFull ? fullCode : reactPreview;
   const displayedLang = showFull ? fullLang : 'tsx';
   const displayedLineCount = displayedCode.split('\n').length;
@@ -284,7 +294,7 @@ export const ComponentRender: FC<ComponentRenderProps> = props => {
   };
 
   const cardDragCursor = dragEnabled ? (isDragging ? 'cursor-grabbing' : 'cursor-grab') : '';
-  const showViewToggle = hasReact && hasIr;
+  const showViewToggle = availableViews.length >= 2;
 
   return (
     <div ref={containerRef} className="my-6 overflow-hidden rounded-xl border">
@@ -343,7 +353,9 @@ export const ComponentRender: FC<ComponentRenderProps> = props => {
                       onChange={setSourceFileIndex}
                     />
                   ) : null}
-                  {showViewToggle ? <ViewToggle view={view} onChange={setView} /> : null}
+                  {showViewToggle ? (
+                    <ViewToggle views={availableViews} view={effectiveView} onChange={setView} />
+                  ) : null}
                 </div>
                 {/* 工具条上每个按钮用 native title 而非 radix Tooltip + asChild：
                    项目 React 18.2 下 shadcn Button / DropdownMenuTrigger / TooltipTrigger 都是 FC 不 forwardRef，

@@ -1,4 +1,4 @@
-import { Brush, Check, ChevronDown, Copy, FileCode2, LineDotRightHorizontal } from 'lucide-react';
+import { Braces, Brush, Check, ChevronDown, Copy, FileCode2, LineDotRightHorizontal } from 'lucide-react';
 import { type ComponentProps, type FC, type ReactNode } from 'react';
 
 import { JsonIcon, ReactIcon } from '@/components/icons';
@@ -55,26 +55,33 @@ export const RendererModeButton: FC<RendererModeButtonProps> = props => {
 };
 
 /**
- * React / IR 视图切换的两连按钮
- * @description 卡内底部代码栏与 Dialog 右侧共用；未选用 ghost + 透明边框占位避免布局抖动
+ * React / IR / Vanilla 视图切换按钮组
+ * @description 卡内底部代码栏与 Dialog 右侧共用；按 `views`（可用视图，外部已按 react→ir→vanilla 排好）动态渲染，
+ *   未选用 ghost + 透明边框占位避免布局抖动
  */
 export type ViewToggleProps = {
+  views: ReadonlyArray<SourceView>;
   view: SourceView;
   onChange: (next: SourceView) => void;
+};
+
+/** 各视图的展示元数据（图标 / 文案 / aria-label） */
+const VIEW_META: Record<SourceView, { label: string; text: string; icon: ReactNode }> = {
+  react: { label: 'React source', text: 'React', icon: <ReactIcon className="size-3.5" /> },
+  ir: { label: 'IR JSON', text: 'IR', icon: <JsonIcon className="size-3.5" /> },
+  vanilla: { label: 'Vanilla builder code', text: 'Vanilla', icon: <Braces className="size-3.5" /> },
 };
 
 type ViewButtonProps = {
   current: SourceView;
   target: SourceView;
-  label: string;
-  icon: ReactNode;
-  text: string;
   onClick: () => void;
 };
 
 const ViewButton: FC<ViewButtonProps> = props => {
-  const { current, target, label, icon, text, onClick } = props;
+  const { current, target, onClick } = props;
   const active = current === target;
+  const meta = VIEW_META[target];
   return (
     <Button
       type="button"
@@ -82,35 +89,22 @@ const ViewButton: FC<ViewButtonProps> = props => {
       variant={active ? 'outline' : 'ghost'}
       className={active ? '' : 'border border-transparent'}
       aria-pressed={active}
-      aria-label={label}
+      aria-label={meta.label}
       onClick={onClick}
     >
-      {icon}
-      {text}
+      {meta.icon}
+      {meta.text}
     </Button>
   );
 };
 
 export const ViewToggle: FC<ViewToggleProps> = props => {
-  const { view, onChange } = props;
+  const { views, view, onChange } = props;
   return (
     <>
-      <ViewButton
-        current={view}
-        target="react"
-        label="React source"
-        icon={<ReactIcon className="size-3.5" />}
-        text="React"
-        onClick={() => onChange('react')}
-      />
-      <ViewButton
-        current={view}
-        target="ir"
-        label="IR JSON"
-        icon={<JsonIcon className="size-3.5" />}
-        text="IR"
-        onClick={() => onChange('ir')}
-      />
+      {views.map(target => (
+        <ViewButton key={target} current={view} target={target} onClick={() => onChange(target)} />
+      ))}
     </>
   );
 };

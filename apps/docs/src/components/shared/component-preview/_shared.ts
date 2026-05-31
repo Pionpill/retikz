@@ -2,8 +2,11 @@
 
 export type Transform = { x: number; y: number; scale: number };
 
-/** 源码视图切换：React 源码 / IR JSON */
-export type SourceView = 'react' | 'ir';
+/** 源码视图切换：React 源码 / IR JSON / Vanilla builder 代码 */
+export type SourceView = 'react' | 'ir' | 'vanilla';
+
+/** 视图展示顺序（toggle 按这个顺序渲染可用视图） */
+export const SOURCE_VIEW_ORDER: ReadonlyArray<SourceView> = ['react', 'ir', 'vanilla'];
 
 /** demo 渲染目标：SVG DOM 或 Canvas 2D */
 export type RendererMode = 'svg' | 'canvas';
