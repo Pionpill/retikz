@@ -156,11 +156,11 @@ Detailed projection formula / edge cases (nested polar / scope translate / scale
   description="localNamespace introduces a namespace stack: inside-out lookup makes id resolution depend on nesting depth, shadowing silently masks same-named outer ids, and outside code can no longer reference the isolated inner ids. Unless you are genuinely doing subdiagram reuse / templating, prefer giving ids distinct names (e.g. a prefix) rather than leaning on localNamespace to dodge name clashes."
 />
 
-<ComponentPreview name="scope-local-namespace-basic" size="sm" />
+<ComponentPreview name="scope-local-namespace-basic" size="xs" />
 
 Nested localNamespace forms a stack of namespace frames; an inner path's id lookup walks from inner to outer:
 
-<ComponentPreview name="scope-local-namespace-nested" size="sm" />
+<ComponentPreview name="scope-local-namespace-nested" size="xs" />
 
 The same id across different frames is not a conflict; inside-out lookup automatically shadows outer ids:
 
@@ -172,7 +172,7 @@ inside-out / shadowing / scope.id-registers-in-parent-frame semantics are in § 
 
 A duplicate id in the same frame triggers a `DUPLICATE_NODE_ID` warning and the later definition overrides the earlier one (last-wins, **does not throw**):
 
-<ComponentPreview name="scope-duplicate-id-warn" size="sm" />
+<ComponentPreview name="scope-duplicate-id-warn" size="xs" />
 
 Trigger conditions / cross-frame behavior / v0.1 comparison are in § How it works §「Duplicate id and conflict handling」.
 
