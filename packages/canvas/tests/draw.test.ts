@@ -743,6 +743,38 @@ describe('drawScene 渐变填充', () => {
     expect(stops[0]).toEqual([0, 'rgba(255, 0, 0, 0.5)']);
     expect(stops[1]).toEqual([1, '#0000ff']);
   });
+
+  it('gradient-stop-opacity-named：命名色 stop 经 resolveCssColor 归一后烘焙 alpha（否则退化纯色）', () => {
+    const context = createSpyCanvasContext();
+    const s: Scene = {
+      layout: { x: 0, y: 0, width: 100, height: 50 },
+      resources: [
+        {
+          kind: 'paint',
+          id: 'g',
+          spec: {
+            type: 'linearGradient',
+            stops: [
+              { offset: 0, color: 'darkorange', opacity: 1 },
+              { offset: 1, color: 'darkorange', opacity: 0 },
+            ],
+          },
+        },
+      ],
+      primitives: [
+        { type: 'rect', x: 0, y: 0, width: 100, height: 50, fill: { kind: 'resourceRef', id: 'g' } },
+      ],
+    };
+
+    drawScene(context as unknown as CanvasRenderingContext2D, s, {
+      resolveCssColor: c => (c === 'darkorange' ? '#ff8c00' : c),
+    });
+
+    const stops = context.calls.filter(c => c.name === 'addColorStop').map(c => c.args);
+    // opacity 1 → 原样命名色；opacity 0 → 经归一成 hex 再烘焙成 rgba（不再丢 alpha 退化纯色）
+    expect(stops[0]).toEqual([0, 'darkorange']);
+    expect(stops[1]).toEqual([1, 'rgba(255, 140, 0, 0)']);
+  });
 });
 
 describe('drawScene clip 裁剪', () => {

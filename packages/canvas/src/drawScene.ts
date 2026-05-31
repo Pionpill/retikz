@@ -82,11 +82,10 @@ type ResourceMap = ReadonlyMap<string, SceneResource>;
 type GradientSpec = Extract<IRPaintSpec, { type: 'linearGradient' | 'radialGradient' }>;
 
 /**
- * 把 stop 的 opacity 烘焙进颜色（canvas addColorStop 无 stop-opacity）
- * @description hex / rgb(a) 可解析者转 rgba 并乘 alpha；命名色 / hsl 等无法解析则按 best-effort 忽略 opacity。
+ * 把 hex / rgb(a) 颜色乘上 alpha 转成 rgba 串；无法正则解析则返回 undefined
+ * @description 纯字符串解析（不依赖 ctx），命名色 / hsl 等返回 undefined 交由上层归一后重试。
  */
-const applyStopAlpha = (color: string, opacity: number | undefined): string => {
-  if (opacity === undefined || opacity >= 1) return color;
+const bakeAlpha = (color: string, opacity: number): string | undefined => {
   const hex = /^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.exec(color);
   if (hex) {
     let h = hex[1];
@@ -101,6 +100,27 @@ const applyStopAlpha = (color: string, opacity: number | undefined): string => {
     const parts = rgb[1].split(',').map(s => s.trim());
     const a = parts.length > 3 ? parseFloat(parts[3]) : 1;
     return `rgba(${parts[0]}, ${parts[1]}, ${parts[2]}, ${a * opacity})`;
+  }
+  return undefined;
+};
+
+/**
+ * 把 stop 的 opacity 烘焙进颜色（canvas addColorStop 无 stop-opacity）
+ * @description 先直接正则烘焙 hex / rgb；命名色 / hsl 等用宿主 `resolveCssColor` 归一成 hex / rgb 后再烘焙。
+ *   归一器缺省（无宿主）时按 best-effort 忽略 opacity（渐变退化纯色，与历史一致）。
+ */
+const applyStopAlpha = (
+  color: string,
+  opacity: number | undefined,
+  resolveCssColor: ((color: string) => string) | undefined,
+): string => {
+  if (opacity === undefined || opacity >= 1) return color;
+  const direct = bakeAlpha(color, opacity);
+  if (direct !== undefined) return direct;
+  const normalized = resolveCssColor?.(color);
+  if (normalized !== undefined && normalized !== color) {
+    const baked = bakeAlpha(normalized, opacity);
+    if (baked !== undefined) return baked;
   }
   return color;
 };
@@ -134,7 +154,10 @@ const buildGradient = (
     gradient = ctx.createRadialGradient(acx, acy, 0, acx, acy, (spec.radius ?? 0.5) * Math.max(bbox.w, bbox.h));
   }
   for (const stop of spec.stops) {
-    gradient.addColorStop(stop.offset, applyStopAlpha(resolveColor(stop.color, options) ?? stop.color, stop.opacity));
+    gradient.addColorStop(
+      stop.offset,
+      applyStopAlpha(resolveColor(stop.color, options) ?? stop.color, stop.opacity, options.resolveCssColor),
+    );
   }
   return gradient;
 };

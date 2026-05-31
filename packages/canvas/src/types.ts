@@ -35,6 +35,14 @@ export type DrawOptions = {
    *   缺省（未提供）时 pattern 填充降级告警 paint。
    */
   createOffscreen?: (width: number, height: number) => CanvasRenderingContext2D | null;
+  /**
+   * 把任意 CSS 颜色串归一成 hex / rgb(a)（用于渐变 stop 烘焙 alpha）
+   * @description canvas `addColorStop` 无 stop-opacity，stop 的 opacity 须烘焙进颜色串；而命名色（darkorange）
+   *   / hsl 等无法直接正则解析。drawScene 跑在 spy ctx 上无法解析 CSS 色，故归一由宿主注入：`renderToCanvas`
+   *   缺省用真实 canvas 的 `fillStyle` 往返（浏览器规范化为 `#rrggbb` / `rgba(...)`）。未提供时命名色 stop 的
+   *   opacity 按 best-effort 忽略（渐变退化为纯色，与历史一致）。
+   */
+  resolveCssColor?: (color: string) => string;
 };
 
 /** HTMLCanvasElement 渲染选项 */

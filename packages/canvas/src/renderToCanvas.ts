@@ -40,6 +40,32 @@ const createOffscreenContext = (width: number, height: number): CanvasRenderingC
   return el.getContext('2d');
 };
 
+/** 颜色归一专用的 1×1 离屏 ctx（懒建一次复用；无 document 环境为 null） */
+let colorScratchCtx: CanvasRenderingContext2D | null | undefined;
+const getColorScratchCtx = (): CanvasRenderingContext2D | null => {
+  if (colorScratchCtx === undefined) {
+    colorScratchCtx = typeof document === 'undefined' ? null : document.createElement('canvas').getContext('2d');
+  }
+  return colorScratchCtx;
+};
+
+/**
+ * 用真实 canvas 把任意 CSS 颜色归一成 `#rrggbb` / `rgba(...)`（渐变 stop 烘焙 alpha 用）
+ * @description 浏览器把 `fillStyle` 规范化后读回即得可解析串；非法色浏览器保留原值不变，用黑/白双哨兵探测、
+ *   不一致则退回原串。无 canvas 环境（无 document）原样返回。
+ */
+const normalizeCssColorViaCanvas = (color: string): string => {
+  const ctx = getColorScratchCtx();
+  if (!ctx) return color;
+  ctx.fillStyle = '#000';
+  ctx.fillStyle = color;
+  const onBlack = ctx.fillStyle;
+  ctx.fillStyle = '#fff';
+  ctx.fillStyle = color;
+  const onWhite = ctx.fillStyle;
+  return onBlack === onWhite && typeof onBlack === 'string' ? onBlack : color;
+};
+
 const computeCanvasTransform = (
   canvas: HTMLCanvasElement,
   scene: Scene,
@@ -93,5 +119,6 @@ export const renderToCanvas = (
     defaultFontFamily: options.defaultFontFamily ?? getCanvasDefaultFontFamily(canvas),
     currentColor: options.currentColor ?? getCanvasCurrentColor(canvas),
     createOffscreen: options.createOffscreen ?? createOffscreenContext,
+    resolveCssColor: options.resolveCssColor ?? normalizeCssColorViaCanvas,
   });
 };
