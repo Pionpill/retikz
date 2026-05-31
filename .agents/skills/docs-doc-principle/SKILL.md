@@ -373,7 +373,7 @@ union / array 内部的 object 不会被平铺（如 `NodeSchema.label` 是 unio
 | Demo 位置 | 集中在 `registry/` | mdx **同级目录** |
 | Demo 形态 | 任意 React 组件 | `default export` 的**纯 FC**，**不能用 hooks**（IR 视图会调用一次该组件） |
 | 双语 | 单语言 | 同目录 `zh.mdx` + `en.mdx` |
-| 代码 Tab | React 源码 | React 源码 + IR JSON（自动算） |
+| 代码 Tab | React 源码 | React 源码 + IR JSON + Vanilla builder 代码（IR / Vanilla 均自动算） |
 
 `ComponentPreview` props：
 - `name: string` —— 同级 `<name>.demo.tsx` 的 stem，必填
@@ -381,6 +381,15 @@ union / array 内部的 object 不会被平铺（如 `NodeSchema.label` 是 unio
 - `size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl'` —— 渲染区高度档位，默认 `md`
 - `componentClassName?: string` —— 覆盖渲染区容器样式（如想去掉默认 `h-72 p-10`）
 - `hideCode?: boolean` —— 隐藏底部 View Code / 源码 / IR 面板，默认 `false`；**叙述性插图**必须开 `hideCode`，**演示组件用法**保持默认
+
+### 代码视图：React / IR / Vanilla 三套
+
+> **约定**：retikz 是多渲染器库，用户分两类——用 React 包（JSX DSL）和用 `@retikz/vanilla` 包（命令式 builder）。`ComponentPreview` 的代码面板**默认提供 react 与 vanilla 两套 authoring 代码**（外加 IR JSON），让两类用户都能直接复制等价写法。
+
+- **React**：demo 源文件原文（`<name>.demo.tsx`）。
+- **IR**：`buildPreviewIR(Component)` 派生的 IR JSON（自动算）。
+- **Vanilla**：从同一份 IR codegen 出等价 `figure()` / `node()` / `draw()` / `coordinate()` / `scope()` 代码（自动算，与 demo 永远同步）。某 demo 若需更地道的 way / 写法，可同级放手写 `<name>.vanilla.ts` 覆盖 codegen。
+- 不要为「只演示 React」省掉 vanilla 视图——保持两套 authoring surface 对等是库的定位；codegen 默认就给了，无需 per-demo 维护。
 
 ## MDX 可用元素
 
