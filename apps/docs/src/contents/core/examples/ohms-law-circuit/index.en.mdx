@@ -7,7 +7,11 @@ description: "A high-school Ohm's law circuit example: custom shapes, Scope dupl
 
 This page builds a textbook-style Ohm's law experiment circuit while showing how [Layout](/core/components/layout/overview), [Scope](/core/components/layout/scope), [Node](/core/components/node/overview), [Draw](/core/components/draw/overview), and the [Shape Registry](/core/reference/extending/shape-registry) work together.
 
-<ComponentPreview name="ohms-law-circuit-06-labels" size="sm" />
+<ComponentPreview
+  name="ohms-law-circuit-06-labels"
+  sourceFiles={['circuitShapes.tsx', 'circuit-01-meters.meter.tsx']}
+  size="sm"
+/>
 
 The meters, battery, switch, resistors, and rheostat are all custom shapes that wire up through fixed terminals. The figure is built in "shapes first, then place, then wire and label" order.
 

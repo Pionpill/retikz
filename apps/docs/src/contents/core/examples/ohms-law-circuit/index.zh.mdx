@@ -7,7 +7,11 @@ description: "高中物理欧姆定律实验电路示例：用自定义形状、
 
 这一页用一张高中物理课本风的欧姆定律实验电路图，展示 [Layout](/core/components/layout/overview)、[Scope](/core/components/layout/scope)、[Node](/core/components/node/overview)、[Draw](/core/components/draw/overview) 和 [Shape Registry](/core/reference/extending/shape-registry) 如何配合。
 
-<ComponentPreview name="ohms-law-circuit-06-labels" size="sm" />
+<ComponentPreview
+  name="ohms-law-circuit-06-labels"
+  sourceFiles={['circuitShapes.tsx', 'circuit-01-meters.meter.tsx']}
+  size="sm"
+/>
 
 电表、电源、开关、电阻、滑动变阻器这些课本符号全都做成自定义形状，靠固定端点参与连线。下面按「先做形状 → 再摆元件 → 最后连线标注」的顺序一步步搭。
 
