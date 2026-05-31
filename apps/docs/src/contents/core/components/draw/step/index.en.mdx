@@ -55,13 +55,13 @@ The path below draws A→B with one `move` + `line`, then lifts the pen with ano
 
 `kind="curve"` draws a quadratic Bezier with one control point, matching SVG path `Q`. A Bezier curve does not have to pass through the control point; the control point acts more like a handle that pulls the segment from start to end. The farther it is from the straight line, the stronger the bend. Control points currently use Cartesian `[x, y]`:
 
-<ComponentPreview name="step-curve" size="sm" />
+<ComponentPreview name="step-curve" size="xs" />
 
 ### Cubic curve
 
 `kind="cubic"` draws a cubic Bezier with two control points, matching SVG path `C`. `control1` shapes the direction as the curve leaves the start; `control2` shapes the direction as it approaches the end. Because both ends can be controlled separately, this is useful for S-shaped curves and complex connectors:
 
-<ComponentPreview name="step-cubic" size="sm" />
+<ComponentPreview name="step-cubic" size="xs" />
 
 ### Bend (arc shorthand)
 
@@ -96,7 +96,7 @@ You can also write the sugar strings `'+dx,dy'` / `'++dx,dy'` (e.g. `<Step to="+
 
 `kind="circlePath"` uses the **cursor as center** and draws a fully closed circle by `radius` �?the pen returns to the center after closing. Useful for endpoint dots, circular node borders, etc.:
 
-<ComponentPreview name="step-circle" size="sm" />
+<ComponentPreview name="step-circle" size="xs" />
 
 ### Ellipse
 

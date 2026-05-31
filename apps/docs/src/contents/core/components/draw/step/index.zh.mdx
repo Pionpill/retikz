@@ -53,13 +53,13 @@ import { Path, Step } from '@retikz/react';
 
 `kind="curve"` 用一个控制点画二次贝塞尔曲线，对�?SVG path �?`Q`。贝塞尔曲线不要求经过控制点；控制点更像一只手柄，用来把起点到终点之间的线段拉弯。控制点离直线越远，弯曲越明显。当前控制点使用笛卡�?`[x, y]`�?
 
-<ComponentPreview name="step-curve" size="sm" />
+<ComponentPreview name="step-curve" size="xs" />
 
 ### 三次贝塞尔（cubic�?
 
 `kind="cubic"` 用两个控制点画三次贝塞尔曲线，对�?SVG path �?`C`。`control1` 影响曲线离开起点时的方向，`control2` 影响曲线靠近终点时的方向；两端方向可分别控制，因此常用于 S 形曲线、复杂连接：
 
-<ComponentPreview name="step-cubic" size="sm" />
+<ComponentPreview name="step-cubic" size="xs" />
 
 ### 弧形简记（bend�?
 
@@ -94,7 +94,7 @@ import { Path, Step } from '@retikz/react';
 
 `kind="circlePath"` �?*游标为圆�?*，按 `radius` 画一个完整闭合的圆——画完画笔回到圆心。常用于画端点圆点、圆形节点边框等场景�?
 
-<ComponentPreview name="step-circle" size="sm" />
+<ComponentPreview name="step-circle" size="xs" />
 
 ### 整椭圆（ellipsePath�?
 

@@ -44,13 +44,13 @@ Draw has two curve families: `curve` / `cubic` / `bend` connect the previous tar
 
 </Comparison>
 
-<ComponentPreview name="draw-curve" size="sm" />
+<ComponentPreview name="draw-curve" size="xs" />
 
 #### Cubic Bezier
 
 `{ cubic: [[c1x, c1y], [c2x, c2y]] }` is equivalent to `<Step kind="cubic">`. It draws a more controllable Bezier curve with two control points: the first shapes how the curve leaves the start point; the second shapes how it approaches the end point. This makes it better than a quadratic curve for S-curves or connectors that need precise tuning.
 
-<ComponentPreview name="draw-cubic" size="sm" />
+<ComponentPreview name="draw-cubic" size="xs" />
 
 #### Bend
 
@@ -70,7 +70,7 @@ Draw has two curve families: `curve` / `cubic` / `bend` connect the previous tar
 
 `{ circle: { radius } }` draws a full circle around the previous item; the pen returns to the center.
 
-<ComponentPreview name="draw-circle" size="sm" />
+<ComponentPreview name="draw-circle" size="xs" />
 
 #### Ellipse
 
@@ -84,7 +84,7 @@ Draw has two curve families: `curve` / `cubic` / `bend` connect the previous tar
 
 `{ label }` is an infix label operator in Draw way. It decorates the next produced segment by setting `step.label`; it does not produce a segment itself. The shorthand `{ label: 'ok' }` is equivalent to `{ label: { text: 'ok' } }`.
 
-<ComponentPreview name="draw-label" size="md" />
+<ComponentPreview name="draw-label" size="sm" />
 
 #### Position Rules
 

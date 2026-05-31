@@ -44,13 +44,13 @@ Draw 里的曲线分两类：`curve` / `cubic` / `bend` 连接前后两个目标
 
 </Comparison>
 
-<ComponentPreview name="draw-curve" size="sm" />
+<ComponentPreview name="draw-curve" size="xs" />
 
 #### 三次贝塞尔
 
 `{ cubic: [[c1x, c1y], [c2x, c2y]] }` 等价 `<Step kind="cubic">`。它用两个控制点画更可控的贝塞尔曲线：第一个控制点影响曲线离开起点时的方向，第二个控制点影响曲线靠近终点时的方向，因此比二次贝塞尔更适合 S 形或需要精细调整的连线。
 
-<ComponentPreview name="draw-cubic" size="sm" />
+<ComponentPreview name="draw-cubic" size="xs" />
 
 #### 弯曲简写
 
@@ -70,7 +70,7 @@ Draw 里的曲线分两类：`curve` / `cubic` / `bend` 连接前后两个目标
 
 `{ circle: { radius } }` 以上一项为圆心画整圆，画完画笔回到圆心。
 
-<ComponentPreview name="draw-circle" size="sm" />
+<ComponentPreview name="draw-circle" size="xs" />
 
 #### 整椭圆
 
@@ -84,7 +84,7 @@ Draw 里的曲线分两类：`curve` / `cubic` / `bend` 连接前后两个目标
 
 `{ label }` 是 Draw way 里的 infix 标注算子。它修饰下一段产生的 `step.label`，不自己产生路径段。短写 `{ label: 'ok' }` 等价 `{ label: { text: 'ok' } }`。
 
-<ComponentPreview name="draw-label" size="md" />
+<ComponentPreview name="draw-label" size="sm" />
 
 #### 位置规则
 
