@@ -1,7 +1,8 @@
 # ADR-01：`<Layout>` 顶层支持 Scope 级联样式（隐式根 Scope）
 
-- 状态：Proposed
+- 状态：Accepted
 - 决策日期：2026-05-31
+- 落地日期：2026-06-01（yellow；react kernel + 测试 + 文档；core 零改动）
 - 关联：[v0 roadmap](../../roadmap.md) · [core-design.md §4](../../../../../architecture/core-design.md) · [`flow-beta` SKILL](../../../../../../.agents/skills/flow-beta/SKILL.md)（**本 ADR 是对其"beta 不开新功能 ADR"的有意破例**）· `<Scope>`（复用其级联语义）
 
 > ⚠️ **流程破例说明**：给 `LayoutProps` 加公开级联样式 props 属于"新增公开 API 字段 / 新功能"，按 `flow-beta` 规则应推到下一个 alpha 窗口。**2026-05-31 由维护者决定在 v0.2-beta.2 内有意破例接入本 ADR**——理由：改动小、纯增量（非破坏）、且把高频样板（每张图都套一层根 `<Scope>`）一次性消掉，收益明确。记录在案以保审计 trail 完整。
@@ -164,11 +165,13 @@ const base = irFromProp ?? buildIR(wrapped);
 ### 文件 scope
 
 - `packages/react/src/kernel/Layout.tsx`（修改：`LayoutProps` 加样式 props + render 按需包 Scope）
-- `packages/react/src/kernel/_fields.ts`（修改 / 新建共享 `ScopeStyleProps` 类型）
+- `packages/react/src/kernel/_fields.ts`（修改 / 新建共享 `ScopeStyleProps` 类型 + `SCOPE_STYLE_FIELDS` 字段表）
 - `packages/react/src/kernel/Scope.tsx`（修改：`ScopeProps` 复用共享样式类型，保持等价）
+- `packages/react/src/kernel/builder.ts`（修改：新增 `wrapRootScope` 合成函数）—— **偏离白名单**：`wrapRootScope` 原计划放 Layout.tsx，但 Layout.tsx 是组件文件，导出非组件函数触发 `react-refresh/only-export-components` lint。落到 builder.ts（非组件模块、React-node→IR 桥接的天然归属，用 `createElement` 而非 JSX 留在 `.ts`），Layout 从 builder import 调用。
 - `packages/react/tests/kernel/layout-scope-style.test.tsx`（新建：本 ADR 测试象限）
 - `apps/docs/src/contents/core/components/layout/overview/index.{zh,en}.mdx`（修改：加"全图默认样式"小节）
 - `apps/docs/src/contents/core/components/layout/overview/*.demo.tsx`（新建：1 个 demo）
+- `apps/docs/src/components/shared/component-preview/ComponentPreview.tsx`（修改：`buildPreviewIR` 复刻 Layout 隐式根 scope）—— **偏离白名单**：该 helper 原本只对 Layout `children` / `ir` / `viewBox` 派生 IR，不含本 ADR 新增的级联样式 props，导致"全图默认样式"demo 的"View Code → IR"面板与渲染图不一致（IR 缺合成 scope）。用已公开的 `<Scope>` + `convertReactNodeToIR` 复刻包裹，**不改 `packages/*/src/index.ts`**（仍 yellow）。
 
 偏离白名单需加条到本段或开新 ADR。
 

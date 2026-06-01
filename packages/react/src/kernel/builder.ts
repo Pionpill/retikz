@@ -1,4 +1,11 @@
-import { Children, Fragment, type ReactElement, type ReactNode, isValidElement } from 'react';
+import {
+  Children,
+  Fragment,
+  type ReactElement,
+  type ReactNode,
+  createElement,
+  isValidElement,
+} from 'react';
 import type {
   IR,
   IRChild,
@@ -13,7 +20,7 @@ import { CURRENT_IR_VERSION, parseTargetSugar } from '@retikz/core';
 import type { CoordinateProps } from './Coordinate';
 import type { NodeProps } from './Node';
 import type { PathProps } from './Path';
-import type { ScopeProps } from './Scope';
+import { Scope, type ScopeProps } from './Scope';
 import type { StepProps } from './Step';
 import type { TextProps } from './Text';
 import type { EdgeLabelProps } from '../sugar/EdgeLabel';
@@ -26,7 +33,14 @@ import {
   TIKZ_STEP,
   TIKZ_TEXT,
 } from './_displayNames';
-import { NODE_FIELDS, PATH_FIELDS, SCOPE_FIELDS, pickDefined } from './_fields';
+import {
+  NODE_FIELDS,
+  PATH_FIELDS,
+  SCOPE_FIELDS,
+  SCOPE_STYLE_FIELDS,
+  type ScopeStyleProps,
+  pickDefined,
+} from './_fields';
 
 /** 取 React 元素 type 上的 displayName；type 为字符串时直接返回，用于识别 Kernel/Sugar 组件 */
 const getDisplayName = (el: ReactElement): string | undefined => {
@@ -369,6 +383,38 @@ const readSceneChildren = (children: ReactNode): Array<IRChild> => {
     }
   });
   return out;
+};
+
+/**
+ * 拣出真正携带样式指令的根样式字段
+ * @description 在 `pickDefined`（仅取 `!== undefined`）基础上，再剔除**空对象的四通道 default**
+ *   （`nodeDefault={{}}` / `pathDefault={{}}` 等）——空 default 不携带任何样式指令，留着只会让 `<Layout>`
+ *   无谓地包一层空合成 `<Scope>`、改变 IR / Scene 拓扑却无视觉差异（违背 ADR「避免无谓的空 scope」）。
+ *   标量通道的 falsy-但-defined 值（`strokeWidth={0}` / `opacity={0}`）是有意义的样式、保留。
+ */
+export const pickScopeStyle = (style: ScopeStyleProps): Partial<ScopeStyleProps> => {
+  const picked = pickDefined(style, SCOPE_STYLE_FIELDS);
+  for (const key of SCOPE_STYLE_FIELDS) {
+    const value = picked[key];
+    // 四通道 default 是对象；标量通道是 string / number。空对象 default 无样式指令、剔除
+    if (typeof value === 'object' && Object.keys(value).length === 0) {
+      delete picked[key];
+    }
+  }
+  return picked;
+};
+
+/**
+ * 按需把 children 包进合成根 `<Scope>` 承载全图级联默认样式（`<Layout>` 顶层样式 props 的落地）
+ * @description 至少一个字段真正携带样式指令时才包一层合成 `<Scope>`（字段经 `pickScopeStyle` 透传）；
+ *   全缺省 / 仅空 default 时原样返回 children，保持 IR 形态与改动前逐字段一致（round-trip 稳定、不引入空 scope）。
+ *   合成 scope 经 buildIR 产出标准 IRScope 节点，走既有 cascade，行为与用户手写 `<Scope>` 完全一致。
+ *   用 createElement 而非 JSX 以留在非组件模块（避免 react-refresh 报「组件文件混出函数」）
+ */
+export const wrapRootScope = (children: ReactNode, style: ScopeStyleProps): ReactNode => {
+  const picked = pickScopeStyle(style);
+  if (Object.keys(picked).length === 0) return children;
+  return createElement(Scope, picked, children);
 };
 
 /**

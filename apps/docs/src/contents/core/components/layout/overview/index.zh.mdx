@@ -40,6 +40,29 @@ import { Layout } from '@retikz/react';
 
 <ComponentPreview name="layout-basic" size="xs" />
 
+### 全图默认样式
+
+`<Layout>` 直接接受 [`<Scope>`](/core/components/layout/scope) 的级联样式子集（`color` / `stroke` / `fill` / `strokeWidth` / `opacity` / `fillOpacity` / `drawOpacity` + `nodeDefault` / `pathDefault` / `labelDefault` / `arrowDefault`）。设了任一样式 prop，Layout 会把 children 包进一个**隐式根 `<Scope>`**——等价于你手写一层根 `<Scope>`，省掉每张图都套一层的样板。内层 `<Scope>` 与图元显式属性照常级联覆盖。
+
+<ComponentPreview name="layout-scope-style" size="sm" />
+
+```tsx
+// 给整张图设默认样式：不用再手写嵌套 <Scope>
+<Layout stroke="gray" nodeDefault={{ shape: 'circle', fill: 'white' }} pathDefault={{ strokeWidth: 3 }}>
+  <Node id="A" position={[0, 0]}>A</Node>
+  <Draw way={['A', 'B']} arrow="->" />
+</Layout>
+
+// 等价于旧写法（手写根 <Scope>）
+<Layout>
+  <Scope stroke="gray" nodeDefault={{ shape: 'circle', fill: 'white' }} pathDefault={{ strokeWidth: 3 }}>
+    {/* ... */}
+  </Scope>
+</Layout>
+```
+
+> 仅当至少一个样式 prop 真正携带样式指令时才包隐式 scope；无样式 prop（或只传空对象 default 如 `nodeDefault={{}}`）时 IR 形态保持不变、不引入空 scope。与 `ir` prop 并用时样式 props 被忽略（dev 模式发 console 警告）——`ir` 已是完整 IR，根样式请写进 IR 里的根 `<Scope>` 节点。
+
 ### 从 IR 渲染
 
 `<Layout>` 接受 `ir` prop——直接把一段已经持久化的 IR JSON 渲染成图，**不写一行 JSX children**。来源不限：LLM 生成、JSON 编辑器、URL 反序列化、数据库存档都可以。
@@ -65,6 +88,8 @@ import { Layout } from '@retikz/react';
 | `ir` | `IR` | — | 已构造好的 IR JSON（与 `children` 二选一） |
 | `className` | `string` | — | 透传到渲染根元素 |
 | `style` | `CSSProperties` | — | 透传到渲染根元素 |
+| `color` / `stroke` / `fill` / `strokeWidth` / `opacity` / `fillOpacity` / `drawOpacity` | 同 [`<Scope>`](/core/components/layout/scope) | — | 全图级联 graphic state；设值则把 children 包进隐式根 `<Scope>` |
+| `nodeDefault` / `pathDefault` / `labelDefault` / `arrowDefault` | 同 [`<Scope>`](/core/components/layout/scope) | — | 全图 every-X 默认样式（四通道）；同上挂隐式根 scope |
 
 ### 直接喂 IR
 

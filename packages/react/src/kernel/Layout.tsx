@@ -11,7 +11,8 @@ import {
   type ShapeDefinition,
   compileToScene,
 } from '@retikz/core';
-import { buildIR } from './builder';
+import { buildIR, pickScopeStyle, wrapRootScope } from './builder';
+import type { ScopeStyleProps } from './_fields';
 import { ArrowMarker } from '../render/arrowMarkers';
 import { browserMeasurer } from '../render/browser-measurer';
 import { PaintDefs } from '../render/paintDefs';
@@ -19,8 +20,13 @@ import { ClipDefs } from '../render/clipDefs';
 import { renderPrim } from '../render/renderPrim';
 import { formatViewBox } from '../render/viewBox';
 
-/** <Layout> 组件的 props */
-export type LayoutProps = {
+/**
+ * <Layout> 组件的 props
+ * @description 含 {@link ScopeStyleProps} 级联样式子集——设任一样式 prop 时把 children 包进合成根 `<Scope>`，
+ *   等价于用户手写一层根 `<Scope>`（编译产物同一 IR）。内层 `<Scope>` / 图元显式属性照常级联覆盖。
+ *   与直接传 `ir` prop 并用时样式 props 被忽略（dev 警告）。
+ */
+export type LayoutProps = ScopeStyleProps & {
   /** 直接喂 IR JSON（持久化 / AI / 编辑器场景），与 children 二选一 */
   ir?: IR;
   /** Kernel/Sugar JSX children */
@@ -141,15 +147,27 @@ const hashKey = (key: string): string => {
 
 /**
  * <Layout> 顶层容器
- * @description 流水线：从 children 构造 IR（或直接接受外部 IR）→ compileToScene 得 Scene → 渲染 SVG 元素并按需注入 `<defs>` 与每种 arrow 端点 spec 的 `<marker>`；marker id 用 `useId()` 派生稳定前缀避免多实例冲突，每种 detail 一个定义（`${prefix}-${specHash}`），marker 内借 spec 字段（`color` / `fill` / `opacity` 等）替换硬编码，缺省字段回退到 `context-stroke` 让颜色继续跟随 path 同步
+ * @description 流水线：从 children 构造 IR（或直接接受外部 IR）→ compileToScene 得 Scene → 渲染 SVG 元素并按需注入 `<defs>` 与每种 arrow 端点 spec 的 `<marker>`；marker id 用 `useId()` 派生稳定前缀避免多实例冲突，每种 detail 一个定义（`${prefix}-${specHash}`），marker 内借 spec 字段（`color` / `fill` / `opacity` 等）替换硬编码，缺省字段回退到 `context-stroke` 让颜色继续跟随 path 同步。设级联样式 props（color / nodeDefault / pathDefault 等）时把 children 包进合成根 `<Scope>`（见 wrapRootScope）；与 `ir` prop 并用时样式被忽略并在 dev 模式发警告
  */
 export const Layout: FC<LayoutProps> = props => {
   const { ir: irFromProp, children, width, height, viewBox, className, style, nodeDistance, shapes, arrows, patterns, pathGenerators } = props;
+  const { color, stroke, fill, strokeWidth, opacity, fillOpacity, drawOpacity, nodeDefault, pathDefault, labelDefault, arrowDefault } = props;
+  const scopeStyle: ScopeStyleProps = { color, stroke, fill, strokeWidth, opacity, fillOpacity, drawOpacity, nodeDefault, pathDefault, labelDefault, arrowDefault };
+  const hasScopeStyle = Object.keys(pickScopeStyle(scopeStyle)).length > 0;
+
+  // ir prop 已是完整 IR，再叠根样式语义不清——dev 警告 + 忽略样式（prod 静默兼容）
+  // 在 render 体内直接 warn（React 官方诊断惯例）：dev-only、生产被 process.env 剥除，不影响产物
+  if (process.env.NODE_ENV !== 'production' && irFromProp !== undefined && hasScopeStyle) {
+    console.warn(
+      '[retikz] <Layout>：同时提供 `ir` 与级联样式 props（color / nodeDefault / pathDefault 等）时，样式 props 被忽略——`ir` 已是完整 IR。请把根样式写进 IR 根的 `<Scope>` 节点，或改用 children。',
+    );
+  }
+
   const ir = useMemo(() => {
-    const base = irFromProp ?? buildIR(children);
+    const base = irFromProp ?? buildIR(wrapRootScope(children, { color, stroke, fill, strokeWidth, opacity, fillOpacity, drawOpacity, nodeDefault, pathDefault, labelDefault, arrowDefault }));
     // viewBox prop 注入 IR 根（显式 > IR 内置）；prop 缺省时保留 base 自带的 viewBox
     return viewBox !== undefined ? { ...base, viewBox } : base;
-  }, [irFromProp, children, viewBox]);
+  }, [irFromProp, children, viewBox, color, stroke, fill, strokeWidth, opacity, fillOpacity, drawOpacity, nodeDefault, pathDefault, labelDefault, arrowDefault]);
   const scene = useMemo(
     () => compileToScene(ir, { measureText: browserMeasurer, nodeDistance, shapes, arrows, patterns, pathGenerators }),
     [ir, nodeDistance, shapes, arrows, patterns, pathGenerators],
