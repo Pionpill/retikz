@@ -6,7 +6,7 @@ import tsconfigPaths from 'vite-tsconfig-paths';
 import pkg from './package.json' with { type: 'json' };
 
 /**
- * 把 dependencies 都视为 external，避免把 @retikz/core 打进库产物
+ * dependencies 全视为 external，避免把 @retikz/core / csstype 打进库产物
  * （同时支持 'foo' 和 'foo/sub' 子路径）。
  */
 const runtimeDeps = [...Object.keys(pkg.dependencies)];
@@ -26,8 +26,9 @@ export default defineConfig({
     outDir: 'dist',
     minify: false,
     lib: {
-      entry: 'src/index.ts',
-      name: 'retikz-canvas',
+      // 每个 renderer 后端一个子路径入口（@retikz/render/svg、@retikz/render/canvas）
+      entry: ['src/svg/index.ts', 'src/canvas/index.ts'],
+      name: 'retikz-render',
       fileName: '[name]',
       formats: ['es', 'cjs'],
     },

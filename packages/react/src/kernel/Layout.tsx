@@ -9,7 +9,7 @@ import {
   type TextMeasurer,
   compileToScene,
 } from '@retikz/core';
-import { buildSvgDocument } from '@retikz/svg';
+import { buildSvgDocument } from '@retikz/render/svg';
 import { buildIR } from './builder';
 import { browserMeasurer } from '../render/browser-measurer';
 import { CanvasHost } from '../render/canvasHost';
@@ -96,9 +96,9 @@ export type LayoutProps = {
 /**
  * <Layout> 顶层容器
  * @description 流水线：从 children 构造 IR（或直接接受外部 IR）→ `compileToScene` 得 Scene →
- *   `@retikz/svg` 的 `buildSvgDocument` 产中性 `SvgNode` 描述树（含 `<defs>` 与按需 dedup 的 `<marker>` /
+ *   `@retikz/render/svg` 的 `buildSvgDocument` 产中性 `SvgNode` 描述树（含 `<defs>` 与按需 dedup 的 `<marker>` /
  *   paint / clip 资源，id 用 `idPrefix` 派生）→ `svgToReact` 映射成 React 元素。Scene→SVG 逻辑单一数据源在
- *   `@retikz/svg`，react 只做 `SvgNode→ReactElement` 薄映射 + `useId` 绑定。
+ *   `@retikz/render/svg`，react 只做 `SvgNode→ReactElement` 薄映射 + `useId` 绑定。
  */
 export const Layout: FC<LayoutProps> = props => {
   const { ir: irFromProp, children, width, height, viewBox, className, style, renderer = 'svg', idPrefix, nodeDistance, shapes, arrows, patterns, pathGenerators } = props;

@@ -6,9 +6,9 @@ import type {
   ScenePrimitive,
   TextPrim,
 } from '@retikz/core';
-import { buildPrim } from '../src/builders/prim';
-import { buildPaintDef } from '../src/builders/paintDefs';
-import { collectArrowSpecs } from '../src/builders/arrowCollect';
+import { buildPrim } from '../src/svg/builders/prim';
+import { buildPaintDef } from '../src/svg/builders/paintDefs';
+import { collectArrowSpecs } from '../src/svg/builders/arrowCollect';
 
 describe('buildPrim —— primitive → SvgNode', () => {
   it('prim-rect-to-node：rect → tag/kebab/SVG 真名属性，无 React camelCase', () => {

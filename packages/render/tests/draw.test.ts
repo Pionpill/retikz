@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { Scene } from '@retikz/core';
-import { drawScene } from '../src';
+import { drawScene } from '../src/canvas';
 
 type CanvasCall = {
   name: string;

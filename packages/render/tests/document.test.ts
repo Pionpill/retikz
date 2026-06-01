@@ -1,8 +1,8 @@
 import type { ArrowEndSpec, PathPrim, RectPrim, Scene, SceneResource } from '@retikz/core';
-import type { SvgNode } from '@retikz/svg';
+import type { SvgNode } from '@retikz/render/svg';
 import { describe, expect, it } from 'vitest';
-import { buildSvgDocument } from '../src/builders/document';
-import { renderToSvgString } from '../src/serialize/toString';
+import { buildSvgDocument } from '../src/svg/builders/document';
+import { renderToSvgString } from '../src/svg/serialize/toString';
 
 const layout = { x: 0, y: 0, width: 10, height: 10 };
 

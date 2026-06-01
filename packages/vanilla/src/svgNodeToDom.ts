@@ -1,4 +1,4 @@
-import type { SvgNode } from '@retikz/svg';
+import type { SvgNode } from '@retikz/render/svg';
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
 
@@ -20,7 +20,7 @@ export const applyAttrs = (el: SVGElement, node: SvgNode): void => {
 
 /**
  * `SvgNode` descriptor → 真实 SVG DOM（与 react `svgToReact` 同层物化）
- * @description Scene→SvgNode 仍单一留 `@retikz/svg`；本函数只把描述树物化成 DOM。仅在**调用时**触 DOM
+ * @description Scene→SvgNode 仍单一留 `@retikz/render/svg`；本函数只把描述树物化成 DOM。仅在**调用时**触 DOM
  *   （`document.createElementNS`），模块顶层不碰任何 DOM 全局——守 SSR 导入安全。
  */
 export const svgNodeToDom = (node: SvgNode): SVGElement => {

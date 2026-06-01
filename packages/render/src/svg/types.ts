@@ -112,7 +112,7 @@ export type SvgTag =
   | 'stop';
 
 /**
- * framework-neutral SVG 描述节点（`@retikz/svg` 的核心产物）
+ * framework-neutral SVG 描述节点（`@retikz/render/svg` 的核心产物）
  * @description 公开但非持久化：第三方框架 adapter（Vue / Svelte / Solid）消费它，受 semver 约束；但它不是
  *   IR，不写盘、不进 core。`attrs` 的 key 一律用 SVG 真名（呈现属性 kebab、结构属性规范拼写），于是字符串 /
  *   Vanilla / 多框架逐字输出零转换，唯有 React 需把呈现属性 kebab→camelCase。

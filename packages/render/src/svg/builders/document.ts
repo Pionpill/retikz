@@ -89,7 +89,7 @@ export const buildSvgFragment = (
 
 /**
  * Scene → 整棵 `<svg>` 描述树（含 viewBox + `<defs>` + primitives）
- * @description `@retikz/svg` 的核心总装入口。width / height / className / 框架级 style 等 svg 元素附加由
+ * @description `@retikz/render/svg` 的核心总装入口。width / height / className / 框架级 style 等 svg 元素附加由
  *   framework adapter 自理（非本包职责）。
  */
 export const buildSvgDocument = (scene: Scene, options: BuildDocumentOptions): SvgNode => ({

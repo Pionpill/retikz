@@ -4,8 +4,8 @@ import { act } from 'react-dom/test-utils';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Scene } from '@retikz/core';
-import { buildSvgDocument } from '@retikz/svg';
-import { type RenderOptions, renderToCanvas } from '@retikz/canvas';
+import { buildSvgDocument } from '@retikz/render/svg';
+import { type RenderOptions, renderToCanvas } from '@retikz/render/canvas';
 import { Layout, Node } from '../src';
 
 const svgScenes: Array<Scene> = [];
@@ -30,7 +30,7 @@ const createTestCanvasContext = (fillRect = vi.fn()): TestCanvasContext => ({
   ),
 });
 
-vi.mock('@retikz/svg', () => ({
+vi.mock('@retikz/render/svg', () => ({
   buildSvgDocument: vi.fn((scene: Scene) => {
     svgScenes.push(scene);
     return {
@@ -41,7 +41,7 @@ vi.mock('@retikz/svg', () => ({
   }),
 }));
 
-vi.mock('@retikz/canvas', () => ({
+vi.mock('@retikz/render/canvas', () => ({
   renderToCanvas: vi.fn((canvas: HTMLCanvasElement, scene: Scene, options?: RenderOptions) => {
     canvasScenes.push(scene);
     canvasDrawCalls.push(canvas);

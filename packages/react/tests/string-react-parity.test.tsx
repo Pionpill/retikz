@@ -1,6 +1,6 @@
 import { type ReactElement } from 'react';
 import type { ArrowEndSpec, Scene, SceneResource } from '@retikz/core';
-import { buildSvgDocument, renderToSvgString } from '@retikz/svg';
+import { buildSvgDocument, renderToSvgString } from '@retikz/render/svg';
 import { describe, expect, it } from 'vitest';
 import { svgToReact } from '../src/render/svgToReact';
 

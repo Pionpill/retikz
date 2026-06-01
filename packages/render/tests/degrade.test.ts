@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import type { Scene } from '@retikz/core';
-import { drawScene } from '../src';
+import { drawScene } from '../src/canvas';
 
 type CanvasCall = {
   name: string;
@@ -91,20 +91,32 @@ describe('canvas 降级与边界规格', () => {
     warn.mockRestore();
   });
 
-  it('no-svg-roundtrip/core-only-dep：canvas 包只依赖 core，源码不得导入 svg 或走 SVG 字符串中转', () => {
+  it('render 内部边界：canvas 不引用 svg、svg 不引用 canvas（替代原跨包边界）', () => {
     const packageJson = JSON.parse(readFileSync('package.json', 'utf8')) as {
       dependencies?: Record<string, string>;
     };
-    expect(packageJson.dependencies).toEqual({ '@retikz/core': 'workspace:*' });
+    // render 仅依赖 core + csstype（纯类型）；不依赖 react / 任何框架
+    expect(packageJson.dependencies).toEqual({ '@retikz/core': 'workspace:*', csstype: 'catalog:' });
 
-    const source = collectFiles('src')
-      .filter(file => file.endsWith('.ts') || file.endsWith('.tsx'))
-      .map(file => readFileSync(file, 'utf8'))
-      .join('\n');
+    const readSrc = (dir: string): string =>
+      collectFiles(dir)
+        .filter(file => file.endsWith('.ts') || file.endsWith('.tsx'))
+        .map(file => readFileSync(file, 'utf8'))
+        .join('\n');
 
-    expect(source).not.toContain('@retikz/svg');
-    expect(source).not.toContain('buildSvgDocument');
-    expect(source).not.toContain('renderToSvgString');
-    expect(source).not.toContain('<svg');
+    // canvas 后端不得导入 svg、不走 SVG 字符串中转（ADR-02 并列 renderer、不走 SVG 中转）
+    const canvasSrc = readSrc('src/canvas');
+    expect(canvasSrc).not.toContain('render/svg');
+    expect(canvasSrc).not.toContain('../svg');
+    expect(canvasSrc).not.toContain('buildSvgDocument');
+    expect(canvasSrc).not.toContain('renderToSvgString');
+    expect(canvasSrc).not.toContain('<svg');
+
+    // svg 后端不得反向依赖 canvas
+    const svgSrc = readSrc('src/svg');
+    expect(svgSrc).not.toContain('render/canvas');
+    expect(svgSrc).not.toContain('../canvas');
+    expect(svgSrc).not.toContain('drawScene');
+    expect(svgSrc).not.toContain('renderToCanvas');
   });
 });

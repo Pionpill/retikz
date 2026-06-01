@@ -63,8 +63,7 @@
   },
   "dependencies": {
     "@retikz/core": "workspace:*",
-    "@retikz/canvas": "workspace:*",
-    "@retikz/svg": "workspace:*"
+    "@retikz/render": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "catalog:",

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { compileToScene } from '@retikz/core';
 import type { IR } from '@retikz/core';
-import { renderToSvgString as svgRenderToString } from '@retikz/svg';
+import { renderToSvgString as svgRenderToString } from '@retikz/render/svg';
 import { renderToSvgString } from '../src';
 
 /**
@@ -14,7 +14,7 @@ const nodeIr: IR = {
 };
 
 describe('@retikz/vanilla renderToSvgString', () => {
-  it('render-string-matches-svg：与 @retikz/svg 输出逐字一致（薄包、未另写序列化）', () => {
+  it('render-string-matches-svg：与 @retikz/render/svg 输出逐字一致（薄包、未另写序列化）', () => {
     const scene = compileToScene(nodeIr);
     // vanilla 缺省 idPrefix='r'，与显式 'r' 的 svg 输出应逐字相同
     expect(renderToSvgString(scene)).toBe(svgRenderToString(scene, { idPrefix: 'r' }));

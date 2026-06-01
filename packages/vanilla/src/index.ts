@@ -1,7 +1,7 @@
 /**
  * @retikz/vanilla 公开 API —— framework-free runtime / SSR 入口 + 命令式 builder
  *
- * 无框架 / SSR 的 runtime 门面：组合 `@retikz/svg`（descriptor / 字符串）与 `@retikz/canvas`（后置），
+ * 无框架 / SSR 的 runtime 门面：组合 `@retikz/render/svg`（descriptor / 字符串）与 `@retikz/render/canvas`（后置），
  * 不自维护第二套 Scene→输出内核。`renderToSvgString` 走 SSR（零 DOM）；`mountSvg` 走浏览器 DOM 挂载。
  * `figure`/`node`/`draw`/`coordinate`/`scope` 是命令式 builder：用具名图元 + 自定义 shape 构图、产同一份 IR。
  * 模块顶层不触碰任何 DOM 全局——`import` 在纯 Node 下安全。

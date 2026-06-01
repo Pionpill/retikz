@@ -1,45 +1,51 @@
 {
-  "name": "@retikz/canvas",
+  "name": "@retikz/render",
   "version": "0.3.0-alpha.1",
-  "description": "Canvas 2D renderer for retikz Scene primitives.",
+  "description": "retikz renderers: Scene → SVG (descriptor / string) and Canvas 2D. Subpath exports per backend (./svg, ./canvas).",
   "type": "module",
   "author": "Pionpill",
   "homepage": "https://pionpill.github.io/retikz/",
   "keywords": [
     "tikz",
     "diagram",
+    "svg",
     "canvas",
+    "renderer",
     "visualization"
   ],
   "license": "MIT",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/Pionpill/retikz.git",
-    "directory": "packages/canvas"
+    "directory": "packages/render"
   },
   "bugs": {
     "url": "https://github.com/Pionpill/retikz/issues"
   },
   "sideEffects": false,
-  "main": "./src/index.ts",
-  "module": "./src/index.ts",
-  "types": "./src/index.ts",
   "exports": {
-    ".": {
-      "types": "./src/index.ts",
-      "default": "./src/index.ts"
+    "./svg": {
+      "types": "./src/svg/index.ts",
+      "default": "./src/svg/index.ts"
+    },
+    "./canvas": {
+      "types": "./src/canvas/index.ts",
+      "default": "./src/canvas/index.ts"
     }
   },
   "publishConfig": {
-    "main": "dist/lib/index.cjs",
-    "module": "dist/es/index.js",
-    "types": "dist/lib/index.d.ts",
     "exports": {
-      ".": {
-        "types": "./dist/lib/index.d.ts",
-        "import": "./dist/es/index.js",
-        "require": "./dist/lib/index.cjs",
-        "default": "./dist/es/index.js"
+      "./svg": {
+        "types": "./dist/lib/svg/index.d.ts",
+        "import": "./dist/es/svg/index.js",
+        "require": "./dist/lib/svg/index.cjs",
+        "default": "./dist/es/svg/index.js"
+      },
+      "./canvas": {
+        "types": "./dist/lib/canvas/index.d.ts",
+        "import": "./dist/es/canvas/index.js",
+        "require": "./dist/lib/canvas/index.cjs",
+        "default": "./dist/es/canvas/index.js"
       }
     }
   },
@@ -57,7 +63,8 @@
     "test:run": "vitest run"
   },
   "dependencies": {
-    "@retikz/core": "workspace:*"
+    "@retikz/core": "workspace:*",
+    "csstype": "catalog:"
   },
   "devDependencies": {
     "@types/node": "catalog:",

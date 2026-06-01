@@ -24,7 +24,7 @@ export type TextMetrics = {
 
 /**
  * 文字度量函数接口（编译期由 adapter 注入）
- * @description @retikz/react: canvas measureText；@retikz/ssr: opentype.js/fontkit；@retikz/canvas: ctx.measureText
+ * @description @retikz/react: canvas measureText；@retikz/ssr: opentype.js/fontkit；@retikz/render/canvas: ctx.measureText
  */
 export type TextMeasurer = (text: string, font: FontSpec) => TextMetrics;
 

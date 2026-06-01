@@ -1,6 +1,6 @@
 import type { IR } from '@retikz/core';
-import { renderToCanvas } from '@retikz/canvas';
-import type { RenderOptions } from '@retikz/canvas';
+import { renderToCanvas } from '@retikz/render/canvas';
+import type { RenderOptions } from '@retikz/render/canvas';
 import { coordinate } from './builder/coordinate';
 import { draw } from './builder/draw';
 import { FIGURE_BRAND } from './builder/isFigure';

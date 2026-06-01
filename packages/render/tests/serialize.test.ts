@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { RectPrim, Scene } from '@retikz/core';
-import { renderToSvgString } from '../src/serialize/toString';
+import { renderToSvgString } from '../src/svg/serialize/toString';
 
 const sceneOf = (primitives: Scene['primitives'], resources?: Scene['resources']): Scene => ({
   primitives,

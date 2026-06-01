@@ -5,7 +5,7 @@ import { describe, expect, it } from 'vitest';
 
 /**
  * @retikz/vanilla 架构守卫（alpha.1 骨架即测，node 环境）
- * @description 钉死 ADR-03 的三条不可越界：仅依赖 core/svg/canvas（无 react）、不复制 Scene→SVG 内核、
+ * @description 钉死 ADR-03 的三条不可越界：仅依赖 core/render（无 react）、不复制 Scene→SVG 内核、
  *   作 SSR 门面必须「导入不触 DOM」（无 document 的 Node 下 import + renderToSvgString 不炸）。
  */
 const here = path.dirname(fileURLToPath(import.meta.url));
@@ -13,19 +13,19 @@ const pkg = JSON.parse(readFileSync(path.resolve(here, '../package.json'), 'utf8
 const readSrc = (f: string) => readFileSync(path.resolve(here, '../src', f), 'utf8');
 
 describe('@retikz/vanilla 架构守卫', () => {
-  it('no-react-dep：运行时依赖仅 core/svg/canvas，无 react', () => {
+  it('no-react-dep：运行时依赖仅 core/render，无 react', () => {
     const deps = Object.keys(pkg.dependencies ?? {}).sort();
-    expect(deps).toEqual(['@retikz/canvas', '@retikz/core', '@retikz/svg']);
+    expect(deps).toEqual(['@retikz/core', '@retikz/render']);
     expect(JSON.stringify(pkg)).not.toContain('@retikz/react');
     expect(pkg.dependencies).not.toHaveProperty('react');
   });
 
-  it('no-renderer-core-duplication：经 @retikz/svg builder，不自写 Scene→SVG', () => {
+  it('no-renderer-core-duplication：经 @retikz/render/svg builder，不自写 Scene→SVG', () => {
     const mountSrc = readSrc('mountSvg.ts');
     const strSrc = readSrc('renderToSvgString.ts');
-    expect(mountSrc).toMatch(/from ['"]@retikz\/svg['"]/);
+    expect(mountSrc).toMatch(/from ['"]@retikz\/render\/svg['"]/);
     expect(mountSrc).toMatch(/buildSvgDocument/);
-    expect(strSrc).toMatch(/from ['"]@retikz\/svg['"]/);
+    expect(strSrc).toMatch(/from ['"]@retikz\/render\/svg['"]/);
     // 不在 vanilla 复制 prim→attrs（stroke-width 这类呈现属性映射是 svg 的活）
     expect(mountSrc + strSrc).not.toMatch(/['"]stroke-width['"]/);
   });

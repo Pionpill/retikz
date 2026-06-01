@@ -1,5 +1,5 @@
 import { type CSSProperties, type Key, type ReactElement, createElement } from 'react';
-import type { SvgNode, SvgStyle } from '@retikz/svg';
+import type { SvgNode, SvgStyle } from '@retikz/render/svg';
 
 /**
  * 呈现属性 kebab → React camelCase 映射表（手工小表，零依赖）
@@ -45,8 +45,8 @@ const toReactStyle = (style: SvgStyle): CSSProperties => {
 };
 
 /**
- * `SvgNode` → React 元素（`@retikz/svg` 描述树的 React 薄消费层）
- * @description 仅做名字映射 + `createElement`，不持有任何渲染逻辑（逻辑全在 `@retikz/svg` builder）。
+ * `SvgNode` → React 元素（`@retikz/render/svg` 描述树的 React 薄消费层）
+ * @description 仅做名字映射 + `createElement`，不持有任何渲染逻辑（逻辑全在 `@retikz/render/svg` builder）。
  *   产出 100% 正常的 React element 树：reconciliation / `key` / `React.memo` / 并发特性照常可用。
  */
 export const svgToReact = (node: SvgNode | string, key?: Key): ReactElement | string => {

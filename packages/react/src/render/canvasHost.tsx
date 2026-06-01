@@ -1,6 +1,6 @@
 import { type CSSProperties, type FC, useEffect, useReducer, useRef } from 'react';
 import type { Scene } from '@retikz/core';
-import { renderToCanvas } from '@retikz/canvas';
+import { renderToCanvas } from '@retikz/render/canvas';
 
 /** 按 href 缓存的图片加载态（image paint server 用；跨 CanvasHost 实例共享去重） */
 type ImageEntry = { img: HTMLImageElement; loaded: boolean; failed: boolean; waiters: Set<() => void> };
