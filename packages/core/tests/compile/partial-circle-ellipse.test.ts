@@ -156,6 +156,9 @@ describe('pen 语义（逐模式，后接 line 验起点）', () => {
       ellipseArc([0, 0], 10, 10, 0, 90),
       line([0, 0]),
       close(),
+      // sector 后 penOverride=center；close 把笔位带回 subpathStart([10,0])，故下段需发 move 回 center
+      // 才能"从 center 起"（与下方 full 用例同语义：penOverride=center → 发 move）
+      move([0, 0]),
       line([50, 50]),
     ]);
   });
