@@ -83,7 +83,7 @@ const Demo: FC = () => (
     {/* 右侧信息说明框 —— LineSpec.fill 行级换色（行内片段着色暂不支持）。
         浅灰虚线边框 + 无填充：light/dark 主题都能看见，不抢主视觉 */}
     <Node
-      position={[320, 10]}
+      position={[380, 10]}
       shape="rectangle"
       stroke="lightgray"
       dashed
