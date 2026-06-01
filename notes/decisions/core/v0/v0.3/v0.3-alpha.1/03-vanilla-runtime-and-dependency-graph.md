@@ -1,12 +1,12 @@
 # ADR-03：`@retikz/vanilla` framework-free runtime + 包依赖图收口
 
-- 状态：Accepted（实现完成 2026-05-31，见文末「实现偏离记录」；**已超出 alpha.1 骨架**：`@retikz/vanilla` 的 SVG 路径 `renderToSvgString` + `mountSvg` + `svgNodeToDom` 一并落地、12 测试全绿，提前完成 alpha.3 的 SVG 行为；Canvas 侧入口仍后置）
+- 状态：Accepted（实现完成 2026-05-31，见文末「实现偏离记录」；`@retikz/vanilla` 的 SVG 路径 `renderToSvgString` + `mountSvg` + `svgNodeToDom` 一并落地、12 测试全绿——SVG runtime 完整归 **alpha.1**；Canvas 侧入口仍后置 **alpha.2**）
 - 决策日期：2026-05-31
 - 关联：[v0.3 roadmap §Vanilla runtime 范围 / §包拆分目标 / §待决策 3·4·13](../roadmap.md) · [v0 roadmap](../../roadmap.md) · [ADR-01 `@retikz/svg` descriptor 契约](./01-svg-descriptor-contract.md)（vanilla 复用其 `renderToSvgString` / `buildSvgDocument`）· [ADR-02 `@retikz/canvas` + react canvas mode](./02-canvas-renderer-and-react-canvas-mode.md)（依赖方向 #13 由本 ADR 收口）· [core-design.md §5 / §6](../../../../../architecture/core-design.md)
 
 > **范围**：本 ADR 做两件事——① 定 `@retikz/vanilla`（无框架 runtime / SSR 入口）的**包形态与 API 边界**（收口 roadmap 待决策 **#3 / #4**）；② 把 `@retikz/svg` / `@retikz/canvas` / `@retikz/vanilla` / `@retikz/react` 的**包依赖图**一次画清（收口待决策 **#13**，兑现 ADR-02 文末「依赖方向留 ADR-03」）。
 >
-> ⚠️ **alpha 位置**：依赖图与包形态属 roadmap **alpha.1**（「renderer 边界 ADR + 包骨架：新增 `packages/svg` / `packages/canvas` / `@retikz/vanilla` 包骨架，明确 package exports、依赖关系、测试策略」）——svg / canvas 骨架已在 ADR-01 / 02 落地，**vanilla 骨架是 alpha.1 的最后一块缺口**，本 ADR 补上。`mountSvg` / SSR 的**完整实现闭环**属 **alpha.3**；本 ADR **决策一次定清 + 落骨架（含可解析 exports 与架构守卫测试）**，行为实现排到 alpha.3。文件延续本轮 ADR 编号置于 `v0.3-alpha.1/`。
+> **alpha 位置（alpha.1）**：依赖图、包形态与 `@retikz/vanilla` 的 **SVG runtime 完整实现**（`renderToSvgString` / `mountSvg` / `svgNodeToDom` + 行为测试）均属 roadmap **alpha.1**（renderer 架构出关）——svg / canvas 已在 ADR-01 / 02 落地，vanilla 是 renderer 决策簇最后一块,本 ADR 补上并实现。Canvas 侧入口（`mountCanvas` / 导出）后置 **alpha.2**。文件置于 `v0.3-alpha.1/`。
 
 ## 背景
 
@@ -43,7 +43,7 @@ mountSvg(document.querySelector('#diagram'), ir);
 
 ### 维度②：SVG / SSR 入口拆分（#4）
 
-**A. 单包 `@retikz/vanilla`，多 named export（推荐）**：`renderToSvgString`（SSR / 构建期）、`mountSvg`（浏览器 DOM）同包导出；Canvas 侧 `mountCanvas` / canvas 导出**后置**（alpha.3+，先保 SVG 闭环，对齐 roadmap「SSR 首版优先 SVG」）。与 roadmap 候选 API 一致。
+**A. 单包 `@retikz/vanilla`，多 named export（推荐）**：`renderToSvgString`（SSR / 构建期）、`mountSvg`（浏览器 DOM）同包导出；Canvas 侧 `mountCanvas` / canvas 导出**后置**（alpha.2，先保 SVG 闭环，对齐 roadmap「SSR 首版优先 SVG」）。与 roadmap 候选 API 一致。
 
 **B. 拆细包**（`@retikz/vanilla-svg` / `-ssr` / `-canvas`）：包数量膨胀、跨包共享类型麻烦、用户认知成本高。无框架场景本就轻量，单包多入口足够 tree-shake。否决。
 
@@ -79,21 +79,21 @@ mountSvg(document.querySelector('#diagram'), ir);
 
 ### 边界：vanilla 无状态门面 + 为水合留缝、不实现水合
 
-1. **首版一次性渲染闭环，`update` 原地复用 root（不重建、不失效）**：`mountSvg` 物化出一个 `<svg>` 挂进容器、返回 `view`，`view.root` = 该 `<svg>`。`view.update(nextIr|scene)` 做**整图重渲染但复用同一个 root 元素**：清空 `root` 的子节点 → 据新 scene 重设 `root` 自身 attrs（`width` / `height` / `viewBox`）→ 重新物化子树进**同一** `<svg>`。**`root` 的元素 identity 跨 `update` 稳定、永不失效**——调用方持有的 `root` 引用始终有效，alpha.4 挂在 `root` 上的根级事件委托也不被 `update` 冲掉。`view.dispose()` 把 `root` 从容器移除、置 view 失效（再调 noop / throw，实现期定一）。**不承诺 patch stream / 局部 DOM 替换 / 子树 diff**（v0.4+，对齐 roadmap §AI 增量渲染预留「不阻断后续，但不先做」）。
-2. **复用 svg 的水合结构口、不实现水合**：`data-retikz-id` 由 `@retikz/svg` 在 alpha.4 填值；vanilla 的 `renderToSvgString` 预留 `interactions` option 承载点，但 `hydrate` / handler 绑定是 **alpha.4**（ADR-04 或本轮后续 ADR），不在本 ADR。
+1. **首版一次性渲染闭环，`update` 原地复用 root（不重建、不失效）**：`mountSvg` 物化出一个 `<svg>` 挂进容器、返回 `view`，`view.root` = 该 `<svg>`。`view.update(nextIr|scene)` 做**整图重渲染但复用同一个 root 元素**：清空 `root` 的子节点 → 据新 scene 重设 `root` 自身 attrs（`width` / `height` / `viewBox`）→ 重新物化子树进**同一** `<svg>`。**`root` 的元素 identity 跨 `update` 稳定、永不失效**——调用方持有的 `root` 引用始终有效，alpha.3 挂在 `root` 上的根级事件委托也不被 `update` 冲掉。`view.dispose()` 把 `root` 从容器移除、置 view 失效（再调 noop / throw，实现期定一）。**不承诺 patch stream / 局部 DOM 替换 / 子树 diff**（v0.4+，对齐 roadmap §AI 增量渲染预留「不阻断后续，但不先做」）。
+2. **复用 svg 的水合结构口、不实现水合**：`data-retikz-id` 由 `@retikz/svg` 在 alpha.3 填值；vanilla 的 `renderToSvgString` 预留 `interactions` option 承载点，但 `hydrate` / handler 绑定是 **alpha.3**（后续水合 ADR），不在本 ADR。
 3. **确定性 id**：SSR↔客户端 id 一致依赖 ADR-01 的 `idPrefix` 缝；vanilla `renderToSvgString` / `mountSvg` 透传 `idPrefix`，不引入随机 id。
 4. **SSR 导入安全（契约，非建议）**：`@retikz/vanilla` 的**模块顶层不得触碰 `document` / `window` / 任何 DOM 全局**；DOM 只在 `mountSvg` / `view.*` 被**调用时**惰性使用。`import '@retikz/vanilla'` + `renderToSvgString(scene|ir)` 在纯 Node（无 `document`）下必须可用、不抛。这条是「vanilla 作 SSR 门面」的硬约束，由「Node import 安全」测试钉死（见测试象限）。
 
 ## 待决策点
 
-> 选项已选，内部小决策列细，alpha.3 实现不用猜。
+> 选项已选，内部小决策列细，alpha.1 实现不用猜。
 
-- **`mountSvg` 物化方式**：倾向 `SvgNode → document.createElementNS` 走 `svgNodeToDom`（与 react `svgToReact` 同构、保元素引用供 alpha.4 水合 `querySelector`、免字符串再 parse）；**不**用 `container.innerHTML = renderToSvgString(...)`（虽更短，但丢引用、且重复一次 parse）。
+- **`mountSvg` 物化方式**：倾向 `SvgNode → document.createElementNS` 走 `svgNodeToDom`（与 react `svgToReact` 同构、保元素引用供 alpha.3 水合 `querySelector`、免字符串再 parse）；**不**用 `container.innerHTML = renderToSvgString(...)`（虽更短，但丢引用、且重复一次 parse）。
 - **`view` 形状**：`{ update(nextIr|scene): void; dispose(): void; readonly root: SVGSVGElement }`。`update` 首版「原地复用 root 重渲染」（见边界 §1：清子节点 + 重设 root attrs + 重物化，root identity 稳定），diff 留 v0.4；`root` 始终指向同一个活节点，调用方不会拿到 stale node。
-- **`renderToSvgString` 是 re-export 还是薄包**：倾向**薄包**（`@retikz/vanilla` 出自己的 `renderToSvgString`，内部调 `@retikz/svg`），给 alpha.4 的 `interactions` option 留扩展位；纯透传期它与 svg 版签名一致。
+- **`renderToSvgString` 是 re-export 还是薄包**：倾向**薄包**（`@retikz/vanilla` 出自己的 `renderToSvgString`，内部调 `@retikz/svg`），给 alpha.3 的 `interactions` option 留扩展位；纯透传期它与 svg 版签名一致。
 - **入参 `ir` vs `scene`**：vanilla 入口收 **`ir`**（无框架用户手上是 IR / JSON），内部 `compileToScene`；同时允许传**已编译 `scene`**（SSR 复用、测试）。compile 走 `@retikz/core`，measurer 见下条。
 - **文本测量（contract 定死，不留待决）**：入口收可选 `measureText?: TextMeasurer`（`@retikz/core` 已有类型）。缺省解析**统一、不按环境分支**：① 收**已编译 `scene`** → 文本尺寸已在 compile 期算好，**不需** measurer；② 收 **`ir`** 且未传 `measureText` → 用 `@retikz/core` 的 `fallbackMeasurer`（平均字宽 `len×size×0.55` 近似，**确定性、零 DOM、Node/浏览器一致可运行**，但非精确）；③ 要精确换行 / 节点尺寸 → caller 显式传 `measureText`（浏览器可传 DOM / canvas 度量器，Node 可传字体度量库）。**故 `renderToSvgString(ir)` 在 Node 下 contract 完整**：默认近似或注入精确，二者皆确定，无未定义行为。**不在 vanilla 内置 DOM measurer**（避免依赖 react 的 `browserMeasurer` 或在 vanilla 复制一份 DOM 逻辑、破坏「SSR 导入安全」）；如需浏览器精确度量，未来可加 **opt-in 的 `domMeasurer` 导出**（additive、惰性触 DOM，非默认）。对应 roadmap 待决策 #11 的 SSR 侧在此收口。
-- **Canvas 侧入口**（`mountCanvas` / canvas 导出 / `canvas.toBlob` 封装）：后置 alpha.3+，本 ADR 只在依赖图与 exports 留位，不定 API。
+- **Canvas 侧入口**（`mountCanvas` / canvas 导出 / `canvas.toBlob` 封装）：后置 alpha.2，本 ADR 只在依赖图与 exports 留位，不定 API。
 - **`@retikz/vanilla` 包名**：roadmap 注「当前首选，可再调」；本 ADR 暂用 `vanilla`。
 
 ## DSL 表面
@@ -112,7 +112,7 @@ const view = mountSvg(document.querySelector('#diagram')!, ir);
 view.update(nextIr);   // 整图重渲染，原地复用 view.root（root 恒等、不失效）
 view.dispose();        // 卸载、清容器
 
-// Canvas 侧（mountCanvas / 导出）后置 alpha.3+，本 ADR 不定
+// Canvas 侧（mountCanvas / 导出）后置 alpha.2，本 ADR 不定
 ```
 
 ```ts
@@ -124,10 +124,10 @@ view.dispose();        // 卸载、清容器
 
 ## 测试设计
 
-`packages/vanilla/tests/**` 覆盖（骨架阶段先落**架构守卫**，行为测试随 alpha.3 实现补全；详见「实现契约 § 测试象限」）：
+`packages/vanilla/tests/**` 覆盖（骨架阶段先落**架构守卫**，行为测试随 alpha.1 实现补全；详见「实现契约 § 测试象限」）：
 
 - **架构守卫（alpha.1，骨架即测）**：`@retikz/vanilla` 运行时依赖仅 `@retikz/core` / `@retikz/svg` / `@retikz/canvas`、**无 `@retikz/react`**；不重新实现 Scene→SVG/Canvas 内核（import / package.json 断言）。
-- **行为（alpha.3）**：`renderToSvgString(ir)` 与直接走 `@retikz/svg` 输出逐字一致；`mountSvg` 把 scene 挂成真实 `<svg>` DOM（jsdom 断言 tag / attrs / 层级）；空 scene 不抛；容器为 `null` / 非法 → 可诊断错误不静默；`idPrefix` 透传后 SSR 串与挂载 DOM 的 id 一致。
+- **行为（alpha.1）**：`renderToSvgString(ir)` 与直接走 `@retikz/svg` 输出逐字一致；`mountSvg` 把 scene 挂成真实 `<svg>` DOM（jsdom 断言 tag / attrs / 层级）；空 scene 不抛；容器为 `null` / 非法 → 可诊断错误不静默；`idPrefix` 透传后 SSR 串与挂载 DOM 的 id 一致。
 
 ## 影响
 
@@ -136,16 +136,16 @@ view.dispose();        // 卸载、清容器
 - **`@retikz/react` 依赖声明不变**：本 ADR 把「react 直接依赖 svg + canvas」从「ADR-02 暂定」**正式确认**（#13 选 A），不新增 optional peer。
 - **公开 API**：新增 `@retikz/vanilla` 的 `renderToSvgString` / `mountSvg` / `view` 类型；以及内部新增 `svgNodeToDom` 物化器（是否公开导出见待决策，倾向暂不公开，YAGNI）。
 - **无 breaking**：纯新增包；现有 svg / canvas / react 用户无感。
-- **alpha 排期**：依赖图 + 包形态 + 骨架（可解析 exports + 架构守卫测试）属 **alpha.1**，本 ADR 落；`mountSvg` / SSR measurer / 行为测试属 **alpha.3**；Canvas 侧入口属 alpha.3+。
+- **alpha 排期**：依赖图 + 包形态 + 骨架（可解析 exports + 架构守卫测试）属 **alpha.1**，本 ADR 落；`mountSvg` / SSR measurer / 行为测试属 **alpha.1**；Canvas 侧入口属 alpha.2。
 
 ## 不在本 ADR 范围
 
-- **水合**（`hydrate` / handler 绑定 / `data-retikz-id` 填值 / `interactions` manifest 落地）→ alpha.4 单独 ADR；本 ADR 只保证 vanilla runtime 存在、并透传 `idPrefix` / 预留 `interactions` 承载点。
-- **Canvas 服务端导出**（`@napi-rs/canvas` / Node Canvas / 图片导出）→ alpha.3+ / 单独入口。
-- **`mountCanvas` / canvas runtime 入口的完整实现** → alpha.3+（本 ADR 只在依赖图 / exports 留位）。
+- **水合**（`hydrate` / handler 绑定 / `data-retikz-id` 填值 / `interactions` manifest 落地）→ alpha.3 单独 ADR；本 ADR 只保证 vanilla runtime 存在、并透传 `idPrefix` / 预留 `interactions` 承载点。
+- **Canvas 服务端导出**（`@napi-rs/canvas` / Node Canvas / 图片导出）→ beta.1 / 单独入口。
+- **`mountCanvas` / canvas runtime 入口的完整实现** → alpha.2（本 ADR 只在依赖图 / exports 留位）。
 - **局部 DOM patch / progressive / `update` 的 diff 实现** → v0.4+（首版 `update` 仅整图重挂）。
 - **浏览器精确度量的 opt-in `domMeasurer` 导出** → 后续 additive（本 ADR 已定默认 = `scene` 免测量 / `ir` 回退 `fallbackMeasurer` / caller 可注入 `measureText`；vanilla **不内置** DOM measurer，守 SSR 导入安全）。
-- **Plot 支撑能力**（alpha.5）。
+- **Plot 支撑能力**（alpha.4）。
 
 ---
 
@@ -165,17 +165,17 @@ view.dispose();        // 卸载、清容器
 
 ### 文件 scope
 
-新建（`@retikz/vanilla`，alpha.1 落骨架 + 可解析 exports + 架构守卫测试；`mountSvg` / `svgNodeToDom` / 行为测试 alpha.3 填实现，骨架阶段先占位/最小实现）：
+新建（`@retikz/vanilla`，alpha.1 落骨架 + 可解析 exports + 架构守卫测试；`mountSvg` / `svgNodeToDom` / 行为测试 alpha.1 填实现，骨架阶段先占位/最小实现）：
 
 - `packages/vanilla/package.json`（`dependencies`: `@retikz/core` + `@retikz/svg` + `@retikz/canvas`，均 `workspace:*`；devDeps 对齐 svg/canvas 的 catalog 集）
 - `packages/vanilla/tsconfig.json`（`extends ../../tsconfig.json`，`lib: ["ESNext", "DOM"]`）
 - `packages/vanilla/vite.config.ts`（dts / build / test，对齐现有包）
 - `packages/vanilla/src/index.ts`（导出 `renderToSvgString` / `mountSvg` + `view` 类型）
 - `packages/vanilla/src/types.ts`（`MountOptions` / `RenderToStringOptions` / `VanillaView`）
-- `packages/vanilla/src/renderToSvgString.ts`（薄包 `@retikz/svg` 的 `renderToSvgString`，预留 `interactions` 承载点——alpha.4 用）
-- `packages/vanilla/src/mountSvg.ts`（`compileToScene`?/收 scene → `buildSvgDocument` → `svgNodeToDom` → 容器；返回 `view`）—— **alpha.3 实现**，骨架阶段最小桩
-- `packages/vanilla/src/svgNodeToDom.ts`（`SvgNode → SVG DOM` 物化，平行 react `svgToReact`）—— **alpha.3 实现**
-- `packages/vanilla/tests/deps-guard.test.ts`（架构守卫，**alpha.1**）/ `render-string.test.ts` / `mount-svg.test.ts`（**alpha.3**）
+- `packages/vanilla/src/renderToSvgString.ts`（薄包 `@retikz/svg` 的 `renderToSvgString`，预留 `interactions` 承载点——alpha.3 用）
+- `packages/vanilla/src/mountSvg.ts`（`compileToScene`?/收 scene → `buildSvgDocument` → `svgNodeToDom` → 容器；返回 `view`）—— **alpha.1 实现**，骨架阶段最小桩
+- `packages/vanilla/src/svgNodeToDom.ts`（`SvgNode → SVG DOM` 物化，平行 react `svgToReact`）—— **alpha.1 实现**
+- `packages/vanilla/tests/deps-guard.test.ts`（架构守卫，**alpha.1**）/ `render-string.test.ts` / `mount-svg.test.ts`（**alpha.1**）
 
 确认（`@retikz/react`，**不改源码**，仅作为依赖图决策的现状锚点）：
 
@@ -185,24 +185,24 @@ view.dispose();        // 卸载、清容器
 
 ### 测试象限
 
-至少 11 个 case，四象限分布（标注 alpha.1 骨架即测 / alpha.3 行为）：
+至少 11 个 case，四象限分布（标注 alpha.1 骨架即测 / alpha.1 行为）：
 
 **Happy path（≥ 3）**：
 
-- `render-string-matches-svg`（alpha.3）：`renderToSvgString(scene)` 与直接 `@retikz/svg` 的 `renderToSvgString(scene)` 逐字一致——证明 vanilla 是薄包、未另写序列化。
-- `mount-svg-builds-dom`（alpha.3）：`mountSvg(container, scene)` → 容器内出现 `<svg>`，子节点 tag / 关键 attrs / 层级与 `buildSvgDocument` 描述一致（jsdom）。
-- `view-update-reuses-root`（alpha.3）：`view.update(nextIr)` 后容器 SVG 反映新 scene，**且 `view.root` 仍是同一个 `<svg>` 元素**（`===` 恒等、未被替换），其 `width`/`height`/`viewBox` 已按新 scene 更新——证明 root 跨 update 不失效、调用方不拿 stale node。
+- `render-string-matches-svg`（alpha.1）：`renderToSvgString(scene)` 与直接 `@retikz/svg` 的 `renderToSvgString(scene)` 逐字一致——证明 vanilla 是薄包、未另写序列化。
+- `mount-svg-builds-dom`（alpha.1）：`mountSvg(container, scene)` → 容器内出现 `<svg>`，子节点 tag / 关键 attrs / 层级与 `buildSvgDocument` 描述一致（jsdom）。
+- `view-update-reuses-root`（alpha.1）：`view.update(nextIr)` 后容器 SVG 反映新 scene，**且 `view.root` 仍是同一个 `<svg>` 元素**（`===` 恒等、未被替换），其 `width`/`height`/`viewBox` 已按新 scene 更新——证明 root 跨 update 不失效、调用方不拿 stale node。
 
 **边界（≥ 3）**：
 
-- `empty-scene-mounts`（alpha.3）：空 scene → `mountSvg` 产空 `<svg>`、不抛；`renderToSvgString` 产合法空 `<svg>`。
-- `idprefix-ssr-mount-parity`（alpha.3）：同 `idPrefix` 下 `renderToSvgString` 串里的 id 与 `mountSvg` DOM 里的 id 逐字一致（水合前置）。
-- `ir-default-fallback-measurer`（alpha.3）：`renderToSvgString(ir)` 不传 `measureText` → 经 `@retikz/core` `fallbackMeasurer` 确定性出串（同输入逐字一致）；传 `measureText` → 文本尺寸随注入度量器变。证明「ir 入参在 Node 下 contract 完整」。
+- `empty-scene-mounts`（alpha.1）：空 scene → `mountSvg` 产空 `<svg>`、不抛；`renderToSvgString` 产合法空 `<svg>`。
+- `idprefix-ssr-mount-parity`（alpha.1）：同 `idPrefix` 下 `renderToSvgString` 串里的 id 与 `mountSvg` DOM 里的 id 逐字一致（水合前置）。
+- `ir-default-fallback-measurer`（alpha.1）：`renderToSvgString(ir)` 不传 `measureText` → 经 `@retikz/core` `fallbackMeasurer` 确定性出串（同输入逐字一致）；传 `measureText` → 文本尺寸随注入度量器变。证明「ir 入参在 Node 下 contract 完整」。
 
 **错误路径（≥ 2）**：
 
-- `mount-null-container`（alpha.3）：容器为 `null` / 非 Element → `mountSvg` throw 可诊断错误，不静默。
-- `dispose-clears`（alpha.3）：`view.dispose()` 后容器被清空、再调不抛。
+- `mount-null-container`（alpha.1）：容器为 `null` / 非 Element → `mountSvg` throw 可诊断错误，不静默。
+- `dispose-clears`（alpha.1）：`view.dispose()` 后容器被清空、再调不抛。
 
 **交互 / 架构（≥ 3）**：
 
@@ -213,7 +213,7 @@ view.dispose();        // 卸载、清容器
 ### 依赖的现有元素
 
 - `renderToSvgString` / `buildSvgDocument` / `SvgNode` / `SvgAttrs`（`@retikz/svg`）—— vanilla 复用（`renderToSvgString` 薄包、`buildSvgDocument`+`SvgNode` 喂 `svgNodeToDom`）。
-- `drawScene` / `renderToCanvas` / `RenderOptions`（`@retikz/canvas`）—— 依赖图留位，Canvas 侧入口 alpha.3+ 才接。
+- `drawScene` / `renderToCanvas` / `RenderOptions`（`@retikz/canvas`）—— 依赖图留位，Canvas 侧入口 alpha.2 才接。
 - `Scene` / `compileToScene`（`@retikz/core`）—— vanilla 入口收 `ir` 时调 `compileToScene`；收 `scene` 时直接用。
 - `svgToReact`（`packages/react/src/render/svgToReact.ts`）—— **不依赖**，仅作 `svgNodeToDom` 的同构参照（descriptor 物化模式对齐）。
 - `document` / `SVGElement` / `createElementNS`（`lib.dom.d.ts` 内置）—— `mountSvg` / `svgNodeToDom` 引用，需 `packages/vanilla/tsconfig.json` 开 `lib: ["ESNext", "DOM"]`，无需 `@types`。
@@ -225,7 +225,7 @@ view.dispose();        // 卸载、清容器
 
 > 落地与本 ADR 决策一致，差异均为「做得比骨架多」或实现期补细，记此备查。
 
-- **提前完成 alpha.3 的 SVG 行为**：本 ADR 范围是 alpha.1（骨架 + 可解析 exports + 架构守卫测试），实际把 `@retikz/vanilla` 的**整条 SVG 路径**（`renderToSvgString` + `mountSvg` + `svgNodeToDom` + `toScene` + `applyAttrs`）连行为测试一并实现（参照 ADR-02 合并 alpha.6/7 的先例）。Canvas 侧入口（`mountCanvas` / 导出）仍按计划后置。
+- **SVG 行为一并落地（原计划拆后，现统归 alpha.1）**：本 ADR 原把 alpha.1 定为骨架 + 可解析 exports + 架构守卫测试、行为实现拆后；实际把 `@retikz/vanilla` 的**整条 SVG 路径**（`renderToSvgString` + `mountSvg` + `svgNodeToDom` + `toScene` + `applyAttrs`）连行为测试一并实现（参照 ADR-02 合并先例）——故 vanilla 的 SVG runtime 完整归 **alpha.1**。Canvas 侧入口（`mountCanvas` / 导出）仍按计划后置 **alpha.2**。
 - **默认 `idPrefix = 'r'`**：核实发现 `@retikz/svg` 的 `buildSvgDocument` / `renderToSvgString` 的 `idPrefix` 为**必填** `string`，故 vanilla 缺省注入常量 `'r'`（确定性）；多实例同页须经 `options.idPrefix` 显式区分以免 id 撞（已在 `types.ts` 注释）。
 - **`svgNodeToDom` 不公开导出**：按 ADR 待决倾向（YAGNI）只内部用，`index.ts` 不导出；另抽出 `applyAttrs`（`svgNodeToDom` 与 `mountSvg` 的 root 原地复用共用一个 attrs 物化器）。
 - **measurer 契约落地**：`toScene` 收 `ir` 时 `compileToScene(ir, { measureText? })`，缺省由 core 回退 `fallbackMeasurer`——与「文本测量 contract 定死」决策一致，Node 下确定可运行。

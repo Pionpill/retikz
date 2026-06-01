@@ -6,7 +6,7 @@
 
 > **备注（范围已扩，取代早期"骨架/不动 react"定位）**：本 ADR 覆盖 **Canvas renderer 端到端 + `@retikz/react` 经 `<Layout renderer="canvas">` 渲染 Canvas**,即把 roadmap 原 alpha.6(React 双渲染模式)与 alpha.7(Canvas MVP)的**核心**并入本条。与 ADR-01(react 接 `@retikz/svg`)对称:每条 renderer ADR 各自包含对 `@retikz/react` 渲染层的替换 / 接入。
 >
-> ⚠️ **alpha 位置**:本 ADR 的内容跨 roadmap alpha.6 / alpha.7,已超出 alpha.1。文件暂置于 `v0.3-alpha.1/`(延续本轮 ADR 编号),实现排期与是否迁目录见文末"影响"。
+> **alpha 位置(已决:保留本目录)**:本 ADR 内容跨 roadmap alpha.6 / alpha.7,但**与 ADR-01/03/04 同属一次性决策的 renderer 决策簇、相互交叉引用**,故**保留在 `v0.3-alpha.1/`**(决策内聚 > 目录与 alpha 严格对齐;拆散会断引用、乱序号)。"哪个 alpha 实现哪部分"由 roadmap §Alpha 切分表的「进度」列追踪,不靠目录表达。
 
 ## 背景
 
@@ -120,13 +120,13 @@ canvasEl.toBlob(blob => { /* 导出 */ });
 - **改 `@retikz/react`**:`Layout` 新增 `renderer?: "svg" | "canvas"`(默认 `"svg"`,**additive、无 breaking**);新增 canvas 渲染分支(管 `<canvas>` + effect + `renderToCanvas`);`package.json` 加 `@retikz/canvas` 依赖。svg 路径(ADR-01)不变。
 - **不动 `packages/core`**(无 IR / schema 改动);**`@retikz/canvas` 不依赖 `@retikz/svg`**(Canvas 不走 SVG 中转)。
 - **公开 API**:新增 `@retikz/canvas` 的 `drawScene` / `renderToCanvas` / options 类型;`@retikz/react` `Layout` 加 `renderer` prop。
-- **alpha 排期**:本 ADR 内容对应 roadmap alpha.6 + alpha.7 的核心。实现时若仍想保留 roadmap 的"SVG 优先、Canvas 靠后"节奏,可把本 ADR 的**实现**拆到 alpha.6 / alpha.7 落地,但**决策在此一次定清**。文件是否从 `v0.3-alpha.1/` 迁到 `v0.3-alpha.6/` 或 `alpha.7/` 待定(本轮先按编号留此)。
+- **alpha 排期**:本 ADR 内容对应 roadmap alpha.6 + alpha.7 的核心,决策一次定清。**文件保留 `v0.3-alpha.1/`**(renderer 决策簇内聚,见文首"alpha 位置")。实现已提前贯通 alpha.6 / alpha.7(见状态行 + roadmap 进度列)。
 - **无 breaking**:canvas 包纯新增;react `renderer` 默认 svg。
 
 ## 不在本 ADR 范围
 
 - 高级 paint(gradient / pattern / image)、clip、marker / arrow 的**完整** Canvas 实现(首版仅降级 + 警告)→ 后续细化(待决策 #12)。
-- Node canvas / `@napi-rs/canvas` 服务端 Canvas 导出 → alpha.7+ / 单独入口。
+- Node canvas / `@napi-rs/canvas` 服务端 Canvas 导出 → beta.1 / 单独入口。
 - 新增 `<SvgLayout>` / `<CanvasLayout>` 显式组件 → 暂只用 `renderer` prop(待决策 #10);如需另议。
 - `@retikz/vanilla` 的 `mountCanvas`、跨包依赖图、canvas 是否 optional peer → **ADR-03**(待决策 #3 / #4 / #13)。
 - layer canvas / dirty rect / hit-test / 增量渲染 → v0.4+。

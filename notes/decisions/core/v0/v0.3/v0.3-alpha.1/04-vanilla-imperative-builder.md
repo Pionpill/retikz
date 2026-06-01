@@ -6,7 +6,7 @@
 
 > **范围**：ADR-03 定了 `@retikz/vanilla` 能消费 IR / Scene 渲染（`mountSvg` / `renderToSvgString`）。本 ADR 在其上加一套**命令式 builder API**——让无框架用户像 React 一样用具名图元（`node` / `draw` / `coordinate` / `scope` …）+ 自定义 shape 构图，产出同一份 IR 再走现有 renderer。**只动 `@retikz/vanilla`，不碰 `@retikz/react`。**
 >
-> ⚠️ **alpha 位置**：属 roadmap alpha.3+（vanilla runtime 增强）。决策在此一次定清，实现可随 alpha.3 落地。
+> **alpha 位置（已定：alpha.1）**：本 ADR 是 alpha.1 renderer 决策簇的**第 4 条**（与 [ADR-01](./01-svg-descriptor-contract.md)/[02](./02-canvas-renderer-and-react-canvas-mode.md)/[03](./03-vanilla-runtime-and-dependency-graph.md) 同期决策）。决策已定清；**实现属 alpha.1、待落地**（ADR-01/02/03 已实现，本 ADR 是 alpha.1 仅剩的实现缺口）。
 
 ## 背景
 
