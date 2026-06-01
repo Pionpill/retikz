@@ -4,6 +4,8 @@
 - 决策日期：2026-05-29
 - 关联：[v0.3 roadmap §Canvas 包首版范围 / §React API 方向 / §待决策 2·10·11·12·13](../roadmap.md) · [v0 roadmap](../../roadmap.md) · [ADR-01 `@retikz/svg` descriptor 契约](./01-svg-descriptor-contract.md)(并列 renderer + react 接 svg) · [core-design.md §5 / §6](../../../../../architecture/core-design.md) · [tikz-gap-analysis](../../../../../analysis/tikz-gap-analysis.md)
 
+> **打包变更（2026-06-01，[ADR-05](./05-renderer-repackage.md)）**：`@retikz/canvas` 已并入 `@retikz/render`、以子路径 **`@retikz/render/canvas`** 发布；下文 `@retikz/canvas` ≡ `@retikz/render/canvas`、`packages/canvas/` ≡ `packages/render/src/canvas/`，**渲染设计与决策不变**。
+>
 > **备注（范围已扩，取代早期"骨架/不动 react"定位）**：本 ADR 覆盖 **Canvas renderer 端到端 + `@retikz/react` 经 `<Layout renderer="canvas">` 渲染 Canvas**,即把 roadmap 原 alpha.6(React 双渲染模式)与 alpha.7(Canvas MVP)的**核心**并入本条。与 ADR-01(react 接 `@retikz/svg`)对称:每条 renderer ADR 各自包含对 `@retikz/react` 渲染层的替换 / 接入。
 >
 > **alpha 位置(已决:保留本目录)**:本 ADR 内容跨 roadmap alpha.6 / alpha.7,但**与 ADR-01/03/04 同属一次性决策的 renderer 决策簇、相互交叉引用**,故**保留在 `v0.3-alpha.1/`**(决策内聚 > 目录与 alpha 严格对齐;拆散会断引用、乱序号)。"哪个 alpha 实现哪部分"由 roadmap §Alpha 切分表的「进度」列追踪,不靠目录表达。

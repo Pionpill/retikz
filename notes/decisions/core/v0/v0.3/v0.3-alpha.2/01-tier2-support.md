@@ -4,6 +4,8 @@
 - 决策日期：2026-06-01
 - 关联：[v0.3 roadmap §alpha.2 Tier 2 支撑能力 / §Alpha 切分](../roadmap.md) · [core-design.md §4.3 Tier 2 / Composite](../../../../../architecture/core-design.md) · [plot-design.md](../../../../../architecture/plot-design.md) · [alpha.1 ADR-01~04](../v0.3-alpha.1/) · [v0.2-alpha.3 ADR-01 shape-registry](../v0.2/v0.2-alpha.3/01-shape-registry.md)（registry 模式参照）
 
+> **打包变更（2026-06-01，[../v0.3-alpha.1/05-renderer-repackage.md](../v0.3-alpha.1/05-renderer-repackage.md)）**：renderer 已合并为 `@retikz/render`；本 ADR 下述「`@retikz/svg` / `@retikz/canvas` 零源码改动」对应 `@retikz/render/{svg,canvas}` 子路径，其对照测试落 `packages/render/tests/`。
+>
 > **范围**：alpha.2 把 v0.2 起在 core-design §4.3 定义、但**至今只在文档里**的 Tier 2 / Composite 接入面**真正落地成可注册的展开管线**：domain 包注册「Tier 2 type → 展开（lowering）函数」，`compileToScene` 据注册表把 Tier 2 节点解析、展开成 Tier 1 Kernel。`@retikz/plot` 是首个消费者,但**本 ADR 不实现 plot 本体**——只交付基础设施 + 一个示例 composite 验证端到端。
 
 ## 背景

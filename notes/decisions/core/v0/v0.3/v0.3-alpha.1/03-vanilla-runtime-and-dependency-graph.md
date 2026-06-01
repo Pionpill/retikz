@@ -4,6 +4,8 @@
 - 决策日期：2026-05-31
 - 关联：[v0.3 roadmap §Vanilla runtime 范围 / §包拆分目标 / §待决策 3·4·13](../roadmap.md) · [v0 roadmap](../../roadmap.md) · [ADR-01 `@retikz/svg` descriptor 契约](./01-svg-descriptor-contract.md)（vanilla 复用其 `renderToSvgString` / `buildSvgDocument`）· [ADR-02 `@retikz/canvas` + react canvas mode](./02-canvas-renderer-and-react-canvas-mode.md)（依赖方向 #13 由本 ADR 收口）· [core-design.md §5 / §6](../../../../../architecture/core-design.md)
 
+> **打包变更（2026-06-01，[ADR-05](./05-renderer-repackage.md)）**：renderer 由 `@retikz/svg` + `@retikz/canvas` 两包合并为 **`@retikz/render`**（子路径 `./svg` / `./canvas`）。本 ADR 的依赖图、vanilla / react 依赖、架构守卫据此调整：vanilla / react **依赖 `@retikz/render` 一条**（非 svg+canvas 两条）；下文 `@retikz/svg` ≡ `@retikz/render/svg`、`@retikz/canvas` ≡ `@retikz/render/canvas`。#13 结论同步见 ADR-05 依赖图。
+>
 > **范围**：本 ADR 做两件事——① 定 `@retikz/vanilla`（无框架 runtime / SSR 入口）的**包形态与 API 边界**（收口 roadmap 待决策 **#3 / #4**）；② 把 `@retikz/svg` / `@retikz/canvas` / `@retikz/vanilla` / `@retikz/react` 的**包依赖图**一次画清（收口待决策 **#13**，兑现 ADR-02 文末「依赖方向留 ADR-03」）。
 >
 > **alpha 位置（alpha.1）**：依赖图、包形态与 `@retikz/vanilla` 的 **SVG runtime 完整实现**（`renderToSvgString` / `mountSvg` / `svgNodeToDom` + 行为测试）均属 roadmap **alpha.1**（renderer 架构出关）——svg / canvas 已在 ADR-01 / 02 落地，vanilla 是 renderer 决策簇最后一块,本 ADR 补上并实现。Canvas 侧入口（`mountCanvas` / 导出）后置 **alpha.4**。文件置于 `v0.3-alpha.1/`。
@@ -63,18 +65,19 @@ mountSvg(document.querySelector('#diagram'), ir);
 
 ### 依赖图（本 ADR 收口的核心产物）
 
+> 下图为**合并后（ADR-05）的现状**：`svg` / `canvas` 已并入 `@retikz/render` 的子路径。
+
 ```text
-@retikz/core            （zod）                      —— 零 React / DOM / renderer
-   ├── @retikz/svg       （core, csstype[type]）      —— Scene → SvgNode / 字符串
-   ├── @retikz/canvas    （core）                      —— Scene → Canvas 2D
-   ├── @retikz/vanilla   （core, svg, canvas）         —— 无框架 / SSR runtime 门面（组合）
-   └── @retikz/react     （core, svg, canvas; react peer）—— JSX DSL + renderer glue
+@retikz/core            （zod）                       —— 零 React / DOM / renderer
+   ├── @retikz/render    （core, csstype[type]）       —— ./svg (Scene→SvgNode/字符串) + ./canvas (Scene→Canvas 2D)；后续 ./webgl
+   ├── @retikz/vanilla   （core, render）              —— 无框架 / SSR runtime 门面（组合）
+   └── @retikz/react     （core, render; react peer）  —— JSX DSL + renderer glue
 ```
 
 不可越界的方向约束（架构守卫测试钉死）：
 
-- `svg` / `canvas` **互不依赖**（并列 renderer，canvas 不走 SVG 中转——ADR-02 已立）。
-- `vanilla` **不依赖 react**、**不依赖框架**；只组合 `svg` / `canvas`，不引入第三套 Scene→输出内核。
+- `render/svg` / `render/canvas` **互不依赖**（并列 renderer，canvas 不走 SVG 中转——ADR-02 立，合包后由 render **包内**边界守卫钉死，见 ADR-05）。
+- `vanilla` **不依赖 react**、**不依赖框架**；只组合 `@retikz/render`，不引入第三套 Scene→输出内核。
 - `core` 仍零下游依赖（不认识任何 renderer）。
 
 ### 边界：vanilla 无状态门面 + 为水合留缝、不实现水合

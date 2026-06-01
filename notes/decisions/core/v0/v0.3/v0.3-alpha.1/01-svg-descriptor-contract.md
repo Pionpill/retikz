@@ -4,6 +4,8 @@
 - 决策日期：2026-05-29
 - 关联：[v0.3 roadmap §SVG 包拆分范围 / §待决策 1·2](../roadmap.md) · [v0 roadmap](../../roadmap.md) · [core-design.md §5 / §6](../../../../../architecture/core-design.md) · [tikz-gap-analysis](../../../../../analysis/tikz-gap-analysis.md)
 
+> **打包变更（2026-06-01，[ADR-05](./05-renderer-repackage.md)）**：`@retikz/svg` 已并入 `@retikz/render`、以子路径 **`@retikz/render/svg`** 发布；下文 `@retikz/svg` ≡ `@retikz/render/svg`、`packages/svg/` ≡ `packages/render/src/svg/`，**渲染设计与决策不变**。
+>
 > **备注**：本 ADR 不止定义 `@retikz/svg` 包,**同时包含对 `@retikz/react` 渲染层的替换**——把 react 现有 SVG 渲染核心(`packages/react/src/render/**`)下沉到 `@retikz/svg`,react 改为消费 `SvgNode` descriptor。该替换的 scope 见"影响"与"实现契约 § 文件 scope"。
 
 ## 背景

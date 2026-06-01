@@ -10,7 +10,7 @@
 
 ## 定位
 
-本部分关注 v0.3 的 **renderer 架构出关**：把现有 `@retikz/react` 中的 SVG 渲染能力拆成独立 `@retikz/svg` 包，同时新增 `@retikz/canvas` 与 `@retikz/vanilla` 原生 runtime；`@retikz/react` 在此之上支撑 SVG 与 Canvas 两套渲染模式。
+本部分关注 v0.3 的 **renderer 架构出关**：把现有 `@retikz/react` 中的 SVG 渲染能力拆出，与 Canvas 一起放进独立的 `@retikz/render` 包（子路径 `./svg` / `./canvas`），同时新增 `@retikz/vanilla` 原生 runtime；`@retikz/react` 在此之上支撑 SVG 与 Canvas 两套渲染模式。
 
 Vanilla runtime 面向两个场景：
 
@@ -23,14 +23,17 @@ Vanilla runtime 面向两个场景：
 @retikz/core
   IR / schema / compileToScene / Scene / resources
         |
-        +--> @retikz/svg      Scene -> SVG
-        |
-        +--> @retikz/canvas   Scene -> Canvas 2D
+        +--> @retikz/render   Scene -> 渲染后端（子路径）
+        |       ./svg      Scene -> SVG（descriptor / 字符串）
+        |       ./canvas   Scene -> Canvas 2D
+        |       (./webgl   后续)
         |
         +--> @retikz/vanilla  framework-free runtime / SSR entry
         |
         +--> @retikz/react    Kernel / Sugar JSX + renderer glue
 ```
+
+> renderer 打包：`@retikz/svg` / `@retikz/canvas` 已合并为 `@retikz/render`，按后端走子路径 `@retikz/render/svg` / `@retikz/render/canvas`（见 [alpha.1 ADR-05](./v0.3-alpha.1/05-renderer-repackage.md)）。
 
 **衡量标准**：同一份 IR 经 `compileToScene` 后，可以被 SVG 与 Canvas 两条 renderer 路径消费；Vanilla 用户不经任何框架也能完成渲染；SSR 可以直接拿到 SVG 字符串等服务端输出；`@retikz/react` 不再拥有 SVG 渲染核心，只负责 React DSL、IR 构建、生命周期与渲染模式选择。
 
@@ -39,12 +42,11 @@ Vanilla runtime 面向两个场景：
 | 包                | v0.3 职责                                                                                                    | 不做                                                                  | 依赖项                                                 |
 | ----------------- | ------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------- | ------------------------------------------------------ |
 | `@retikz/core`    | 继续提供 IR、zod schema、Scene primitive、资源表、`compileToScene`、几何与 parser                            | 不依赖 React / DOM / SVG / Canvas；不做 renderer 专属布局             | `zod`                                                  |
-| `@retikz/svg`     | 新包，负责 Scene / resources -> SVG 输出；承接现有 React 包中的 SVG 渲染核心                                 | 不负责 JSX DSL；不重新编译 IR；不做 Canvas fallback                   | `@retikz/core`                                         |
-| `@retikz/canvas`  | 新包，负责 Scene / resources -> Canvas 2D 原生绘制；首版优先浏览器 Canvas                                    | 不通过 SVG 字符串中转；不引入 chart / domain 语义                     | `@retikz/core`，后续可选 Canvas runtime                |
-| `@retikz/vanilla` | 新包，framework-free runtime；提供 DOM 挂载、Canvas 挂载、SSR 字符串渲染等普通 JS 入口                       | 不提供组件 DSL；不绑定任何 UI 框架；不复制 SVG / Canvas renderer 内核 | `@retikz/core`，`@retikz/svg`，`@retikz/canvas`        |
-| `@retikz/react`   | React Kernel / Sugar 组件、IR builder、`Layout` runtime；对接 `@retikz/svg` 与 `@retikz/canvas` 两套渲染模式 | 不内置 SVG renderer 细节；不复制 Canvas 绘制逻辑                      | `@retikz/core`，`@retikz/svg`，`@retikz/canvas`，React |
+| `@retikz/render`  | 新包，渲染后端命名空间；子路径 `./svg`（Scene → SVG descriptor / 字符串）、`./canvas`（Scene → Canvas 2D），后续 `./webgl`；承接现有 React 包中的 SVG 渲染核心 | 不负责 JSX DSL；不重新编译 IR；子路径后端互不依赖（svg 不走 canvas、canvas 不走 SVG 中转） | `@retikz/core`，`csstype`[type] |
+| `@retikz/vanilla` | 新包，framework-free runtime；提供 DOM 挂载、Canvas 挂载、SSR 字符串渲染等普通 JS 入口                       | 不提供组件 DSL；不绑定任何 UI 框架；不复制 render 内核 | `@retikz/core`，`@retikz/render`        |
+| `@retikz/react`   | React Kernel / Sugar 组件、IR builder、`Layout` runtime；对接 `@retikz/render/svg` 与 `@retikz/render/canvas` 两套渲染模式 | 不内置 SVG renderer 细节；不复制 Canvas 绘制逻辑                      | `@retikz/core`，`@retikz/render`，React |
 
-> 包名 `@retikz/vanilla` 作为当前首选命名；若后续 ADR 评审认为更合适，仍可再调整。
+> 包名 `@retikz/vanilla` 作为当前首选命名；若后续 ADR 评审认为更合适，仍可再调整。`@retikz/svg` / `@retikz/canvas` 已合并为 `@retikz/render`（子路径后端，见 [alpha.1 ADR-05](./v0.3-alpha.1/05-renderer-repackage.md)）。
 
 ## React API 方向
 
@@ -223,8 +225,8 @@ v0.3 需要注意：
 
 一次决策 + 实现贯通,交付 v0.3 renderer 架构核心(原 alpha.1/2/6/7 + alpha.3-SVG 合并于此;命令式 builder 亦归本段):
 
-- **`@retikz/svg`**（[ADR-01](./v0.3-alpha.1/01-svg-descriptor-contract.md)，原 alpha.1+2）：framework-neutral `SvgNode` descriptor + `buildSvgDocument` / `renderToSvgString`；react SVG 渲染核心下沉、改消费 descriptor,现有 SVG 行为回归全绿;svg 包零 React 依赖。
-- **`@retikz/canvas` + React 双渲染模式**（[ADR-02](./v0.3-alpha.1/02-canvas-renderer-and-react-canvas-mode.md)，原 alpha.6+7）：`drawScene` / `renderToCanvas`（消费 Scene、不走 SVG 中转）；`<Layout renderer="svg"｜"canvas">`，默认 svg、无 breaking；**超额**——gradient / pattern / image / clip / marker 全部真实实现（含 currentColor / 主题响应 / 文本基线统一 / 弧扫描 / 尺寸对齐 SVG）。react 两路共用 `compileToScene` + `browserMeasurer`,同 Scene 保等价。
+- **`@retikz/render/svg`**（[ADR-01](./v0.3-alpha.1/01-svg-descriptor-contract.md)，原 alpha.1+2；并入 `@retikz/render` 见 [ADR-05](./v0.3-alpha.1/05-renderer-repackage.md)）：framework-neutral `SvgNode` descriptor + `buildSvgDocument` / `renderToSvgString`；react SVG 渲染核心下沉、改消费 descriptor,现有 SVG 行为回归全绿;零 React 依赖。
+- **`@retikz/render/canvas` + React 双渲染模式**（[ADR-02](./v0.3-alpha.1/02-canvas-renderer-and-react-canvas-mode.md)，原 alpha.6+7）：`drawScene` / `renderToCanvas`（消费 Scene、不走 SVG 中转）；`<Layout renderer="svg"｜"canvas">`，默认 svg、无 breaking；**超额**——gradient / pattern / image / clip / marker 全部真实实现（含 currentColor / 主题响应 / 文本基线统一 / 弧扫描 / 尺寸对齐 SVG）。react 两路共用 `compileToScene` + `browserMeasurer`,同 Scene 保等价。
 - **`@retikz/vanilla` SVG runtime + 依赖图**（[ADR-03](./v0.3-alpha.1/03-vanilla-runtime-and-dependency-graph.md)，原 alpha.3-SVG）：`mountSvg` / `renderToSvgString` / `svgNodeToDom`（runtime 门面、组合 svg 内核,不复制）、12 测试绿；全直接依赖、无 optional peer。
 - **vanilla 命令式 builder**（[ADR-04](./v0.3-alpha.1/04-vanilla-imperative-builder.md)）：**alpha.1 的第 4 条 renderer ADR**——`figure`/`node`/`draw`/`coordinate`/`scope` + `Figure`,让无框架用户像 React 一样具名构图、产同一份 IR。**已实现**(`Figure` 含 `.toSvgString`/`.mount`/`.toCanvas`,vanilla 39 测试全绿)。
 

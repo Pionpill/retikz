@@ -4,6 +4,8 @@
 - 决策日期：2026-05-31
 - 关联：[ADR-03 `@retikz/vanilla` runtime + 依赖图](./03-vanilla-runtime-and-dependency-graph.md)（本 ADR 在其 vanilla 包上加 authoring API）· [ADR-01 `@retikz/svg` descriptor 契约](./01-svg-descriptor-contract.md) · [v0.3 roadmap §Vanilla runtime 范围](../roadmap.md)
 
+> **打包变更（2026-06-01，[ADR-05](./05-renderer-repackage.md)）**：`Figure.toCanvas` 经 **`@retikz/render/canvas`**（原 `@retikz/canvas`）；下文 `@retikz/canvas` ≡ `@retikz/render/canvas`。
+>
 > **范围**：ADR-03 定了 `@retikz/vanilla` 能消费 IR / Scene 渲染（`mountSvg` / `renderToSvgString`）。本 ADR 在其上加一套**命令式 builder API**——让无框架用户像 React 一样用具名图元（`node` / `draw` / `coordinate` / `scope` …）+ 自定义 shape 构图，产出同一份 IR 再走现有 renderer。**只动 `@retikz/vanilla`，不碰 `@retikz/react`。**
 >
 > **alpha 位置（已定：alpha.1）**：本 ADR 是 alpha.1 renderer 决策簇的**第 4 条**（与 [ADR-01](./01-svg-descriptor-contract.md)/[02](./02-canvas-renderer-and-react-canvas-mode.md)/[03](./03-vanilla-runtime-and-dependency-graph.md) 同期决策）。决策已定清、**实现已落地（属 alpha.1）**——至此 alpha.1 renderer 决策簇 4 条 ADR 全部实现完成。
