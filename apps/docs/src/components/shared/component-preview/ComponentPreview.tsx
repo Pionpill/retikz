@@ -1,10 +1,10 @@
 import type { FC, ReactElement, ReactNode } from 'react';
-import { isValidElement, useMemo } from 'react';
+import { createElement, isValidElement, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { docPathSegments, useDocLocation } from '@/layout/doc-layout/docLocation';
 import type { IR } from '@retikz/core';
-import { Layout, convertReactNodeToIR } from '@retikz/react';
+import { Layout, Scope, convertReactNodeToIR } from '@retikz/react';
 
 import { ComponentRender, type ComponentRenderSource } from './ComponentRender';
 import { irToVanillaCode } from './irToVanillaCode';
@@ -79,9 +79,40 @@ const resolvePreviewRootElement = (
   return resolvePreviewRootElement(component(element.props), depth - 1);
 };
 
+/**
+ * `<Layout>` 自身（非级联样式）的 prop 名——从 root props 里剔除这些，剩下的就是级联样式子集
+ * @description 与 `LayoutProps` 的非样式字段对齐；新增非样式 Layout prop 时需同步此集
+ */
+const LAYOUT_OWN_PROPS = new Set([
+  'children',
+  'ir',
+  'width',
+  'height',
+  'viewBox',
+  'className',
+  'style',
+  'nodeDistance',
+  'shapes',
+  'arrows',
+  'patterns',
+  'pathGenerators',
+]);
+
 const buildPreviewIR = (Component: FC): IR => {
   const rootElement = resolvePreviewRootElement(Component({}));
-  const base = rootElement?.props.ir ?? convertReactNodeToIR(rootElement?.props.children);
+  const props = (rootElement?.props ?? {}) as PreviewRootProps & Record<string, unknown>;
+  // 复刻 <Layout> 的隐式根 scope：设了任一级联样式 prop（非 Layout 专属 prop）时把 children 包一层合成 <Scope>，
+  // 让"View Code → IR"与真实渲染一致（合成 scope 的字段由 Scope builder 按 SCOPE_FIELDS 自行拣选）。ir prop 在手时跳过包裹
+  let childNode = props.children;
+  if (props.ir === undefined) {
+    const styleProps = Object.fromEntries(
+      Object.entries(props).filter(([key, value]) => !LAYOUT_OWN_PROPS.has(key) && value !== undefined),
+    );
+    if (Object.keys(styleProps).length > 0) {
+      childNode = createElement(Scope, styleProps, props.children);
+    }
+  }
+  const base = props.ir ?? convertReactNodeToIR(childNode);
   const viewBox = rootElement?.type === Layout ? rootElement.props.viewBox : undefined;
   return viewBox !== undefined ? { ...base, viewBox } : base;
 };

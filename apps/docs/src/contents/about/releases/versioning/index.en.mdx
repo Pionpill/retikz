@@ -5,6 +5,8 @@ description: retikz follows Semantic Versioning with pre-release channels. 0.x i
 
 retikz follows Semantic Versioning 2.0.0: versions read as `MAJOR.MINOR.PATCH`, optionally tagged `-alpha.x` / `-beta.x` / `-rc.x`.
 
+The current repository version is `0.2.0-rc.1`. That means v0.2 is in rc validation: public APIs are frozen, and only compatible bug fixes, docs completion, installation acceptance, and release-note cleanup should land. The previous stable line is `0.1.0`.
+
 ## Segment meanings
 
 | Segment | Bumped when | Upgrade guidance |
@@ -13,7 +15,7 @@ retikz follows Semantic Versioning 2.0.0: versions read as `MAJOR.MINOR.PATCH`, 
 | MINOR | Backward-compatible new capability | Upgrade freely |
 | PATCH | Backward-compatible bug fix | Upgrade freely |
 
-`@retikz/core` and `@retikz/react` share the same version and **ship in lockstep at the major level** — you never upgrade core without react or vice versa.
+`@retikz/core` and `@retikz/react` normally share the same version and **ship together** — unless release notes say otherwise, users should not need to upgrade one without the other.
 
 ## 0.x vs 1.x
 
@@ -28,10 +30,10 @@ Breaking changes before `1.0.0` **do not force a MAJOR bump**, but the changelog
 
 | Channel | Format | Main content | Main driver | Suitable for |
 | --- | --- | --- | --- | --- |
-| alpha | `0.1.0-alpha.x` | New features / new IR fields / API reshaping (schema in flux, IR unstable) | **Human-designed + AI-implemented** | Exploration / feedback |
-| beta | `0.1.0-beta.x` | Performance / readability / refactoring / test hardening / docs completion; final breaking renames are still allowed | **Human-led optimization and refactoring** | Integration testing |
-| rc | `0.1.0-rc.x` | Public API frozen; compatible bug fixes, docs, installation acceptance, and release notes only | Human-led | Pre-production rehearsal |
-| stable | `0.1.0` | Under SemVer; normal PATCH / MINOR / MAJOR cadence | — | Production |
+| alpha | `0.2.0-alpha.x` | New features / new IR fields / API reshaping (schema in flux, IR unstable) | **Human-designed + AI-implemented** | Exploration / feedback |
+| beta | `0.2.0-beta.x` | Performance / readability / refactoring / test hardening / docs completion; final breaking renames are still allowed | **Human-led optimization and refactoring** | Integration testing |
+| rc | `0.2.0-rc.x` | Public API frozen; compatible bug fixes, docs, installation acceptance, and release notes only | Human-led | Pre-production rehearsal |
+| stable | `0.2.0` | Under SemVer; normal PATCH / MINOR / MAJOR cadence | — | Production |
 
 Channels move forward only: alpha → beta → rc → stable. There's no rollback.
 

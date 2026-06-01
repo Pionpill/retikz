@@ -4,6 +4,7 @@ import type { FC } from 'react';
 /**
  * 简介页"IR 居中"插图
  * @description 4 路输入 → IR ↔ Scene → 4 路输出（hourglass / 漏斗双扇）；节点全 stroke="none" 当文字锚点，Draw 仍按 bbox 自动贴边；"持久化 / 编辑" 与 IR 间双向箭头表示 IR 是可读写持久层。
+ *   已落地的部分用默认色（currentColor），规划中 / 未实现的（Text DSL、React 以外的 adapter）用灰色弱化。
  */
 const Demo: FC = () => (
   <Layout width={640} height={210} style={{ maxWidth: '100%', height: 'auto' }}>
@@ -13,7 +14,7 @@ const Demo: FC = () => (
     <Node id="kernel" position={[-160, -18]} stroke="none">
       Kernel JSX
     </Node>
-    <Node id="dsl" position={[-160, 18]} stroke="none">
+    <Node id="dsl" position={[-160, 18]} stroke="none" textColor="gray">
       Text DSL*
     </Node>
     <Node id="ai" position={[-160, 54]} stroke="none">
@@ -30,16 +31,16 @@ const Demo: FC = () => (
     <Node id="react" position={[200, -54]} stroke="none">
       React + SVG
     </Node>
-    <Node id="svg" position={[200, -18]} stroke="none">
+    <Node id="svg" position={[200, -18]} stroke="none" textColor="gray">
       pure SVG 字符串
     </Node>
-    <Node id="canvas" position={[200, 18]} stroke="none">
+    <Node id="canvas" position={[200, 18]} stroke="none" textColor="gray">
       Canvas
     </Node>
-    <Node id="raster" position={[350, 18]} stroke="none">
+    <Node id="raster" position={[350, 18]} stroke="none" textColor="gray">
       PNG/JPEG/WebP
     </Node>
-    <Node id="native" position={[200, 54]} stroke="none">
+    <Node id="native" position={[200, 54]} stroke="none" textColor="gray">
       Native (Skia/RN) / PDF
     </Node>
 
@@ -49,16 +50,16 @@ const Demo: FC = () => (
 
     <Draw way={['sugar', 'ir']} arrow="->" />
     <Draw way={['kernel', 'ir']} arrow="->" />
-    <Draw way={['dsl', 'ir']} arrow="->" />
+    <Draw way={['dsl', 'ir']} arrow="->" stroke="gray" />
     <Draw way={['ai', 'ir']} arrow="->" />
 
     <Draw way={['ir', 'scene']} arrow="->" />
 
     <Draw way={['scene', 'react']} arrow="->" />
-    <Draw way={['scene', 'svg']} arrow="->" />
-    <Draw way={['scene', 'canvas']} arrow="->" />
-    <Draw way={['canvas', 'raster']} arrow="->" />
-    <Draw way={['scene', 'native']} arrow="->" />
+    <Draw way={['scene', 'svg']} arrow="->" stroke="gray" />
+    <Draw way={['scene', 'canvas']} arrow="->" stroke="gray" />
+    <Draw way={['canvas', 'raster']} arrow="->" stroke="gray" />
+    <Draw way={['scene', 'native']} arrow="->" stroke="gray" />
 
     <Draw way={['ir', 'persist']} arrow="<->" />
   </Layout>

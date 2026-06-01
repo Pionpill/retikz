@@ -1,6 +1,6 @@
 ---
 title: Overview
-description: Meta-information beyond the docs body — release history, versioning policy, roadmap. The docs teach how to use; the About section tells when to upgrade, where to, and what to expect.
+description: Meta-information beyond the docs body — release history, versioning policy, roadmap. The docs teach how to use; the About section tells where the project is now, when to upgrade, and what to expect.
 ---
 
 The About section is the meta-layer around the docs: how versions are scheduled, what shipped, and what is planned.
@@ -9,21 +9,21 @@ The About section is the meta-layer around the docs: how versions are scheduled,
 
 | Page | Content |
 | --- | --- |
-| [Source Code Guide](/about/developer/source-code-guide) | core / react source layout, module responsibilities, and reading order |
-| [AI-assisted development](/about/developer/ai-assisted-development) | The "human-designed + AI-implemented" workflow this project runs on |
+| [Source Code Guide](/about/developer/source-code-guide) | core / react source layout, extension surfaces, and reading order |
+| [AI-assisted development](/about/developer/ai-assisted-development) | Human / AI responsibility across alpha, beta, and rc |
 | [Changelog](/about/releases/changelog) | Per-version release notes |
 | [Versioning](/about/releases/versioning) | SemVer + pre-release channels + per-channel dev model + deprecation |
 | [Roadmap](/about/releases/roadmap) | Now / short / mid / long term goals |
 
-## Current versions
+## Current repository versions
 
 | Package | Version | Notes |
 | --- | --- | --- |
-| `@retikz/core` | `0.1.0` | IR + scene compiler, zero React |
-| `@retikz/react` | `0.1.0` | React adapter |
+| `@retikz/core` | `0.2.0-rc.1` | IR + scene compiler, zero React / zero DOM |
+| `@retikz/react` | `0.2.0-rc.1` | React adapter + SVG renderer |
 
-`0.1.0` is retikz's first stable version. The public API now follows SemVer compatibility guarantees; later patch releases focus on compatible fixes and docs. See [Versioning](/about/releases/versioning).
+`0.2.0-rc.1` means v0.2 is in release-candidate validation: public APIs are frozen, and only compatible bug fixes, docs completion, installation acceptance, and release-note cleanup should land. `0.1.0` remains the previous stable line; `0.2.0` joins the stable / latest cadence only after the final cut. See [Versioning](/about/releases/versioning).
 
 ## Feedback
 
-retikz is in the stable v0.1 line. Feedback should focus on bugs, missing docs, unreproducible examples, installation, and real-project integration issues.
+retikz is in the v0.2 rc phase. Feedback should focus on installation issues, missing docs, unreproducible examples, real-project integration issues, and bugs that can be fixed without breaking public APIs.

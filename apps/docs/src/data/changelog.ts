@@ -373,6 +373,23 @@ export const changelog: Array<Release> = [
         ],
         subVersions: [
           {
+            version: 'beta.2',
+            date: '2026-06-01',
+            summary: {
+              zh: '`<Layout>` 顶层直接接受 `<Scope>` 级联样式子集——全图默认样式不必再手写一层根 `<Scope>`。纯增量、非破坏。',
+              en: '`<Layout>` directly accepts the `<Scope>` cascade style subset — whole-figure defaults no longer need a hand-written root `<Scope>`. Additive, non-breaking.',
+            },
+            items: [
+              {
+                label: { zh: '<Layout> 全图默认样式', en: '<Layout> whole-figure defaults' },
+                content: {
+                  zh: '`<Layout>` 加 11 个级联样式 props（`color` / `stroke` / `fill` / `strokeWidth` / `opacity` / `fillOpacity` / `drawOpacity` + `nodeDefault` / `pathDefault` / `labelDefault` / `arrowDefault`）；设任一项时把 children 包进合成的隐式根 `<Scope>`，编译产物与手写根 `<Scope>` 完全同一 IR，内层 `<Scope>` / 图元显式属性照常级联覆盖。与 `ir` prop 并用时样式被忽略（dev 警告）[Layout 概览](/core/components/layout/overview)',
+                  en: '`<Layout>` gains 11 cascade style props (`color` / `stroke` / `fill` / `strokeWidth` / `opacity` / `fillOpacity` / `drawOpacity` + `nodeDefault` / `pathDefault` / `labelDefault` / `arrowDefault`); setting any wraps children in a synthetic implicit root `<Scope>` producing the exact same IR as a hand-written root `<Scope>`, with inner `<Scope>` / explicit primitive props cascading over it. Ignored (dev warning) when combined with the `ir` prop [Layout overview](/core/components/layout/overview)',
+                },
+              },
+            ],
+          },
+          {
             version: 'beta.1',
             date: '2026-05-24',
             summary: {

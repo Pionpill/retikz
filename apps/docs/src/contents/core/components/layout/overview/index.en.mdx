@@ -40,6 +40,29 @@ import { Layout } from '@retikz/react';
 
 <ComponentPreview name="layout-basic" size="xs" />
 
+### Whole-figure Default Style
+
+`<Layout>` directly accepts the same cascade style subset as [`<Scope>`](/core/components/layout/scope) (`color` / `stroke` / `fill` / `strokeWidth` / `opacity` / `fillOpacity` / `drawOpacity` + `nodeDefault` / `pathDefault` / `labelDefault` / `arrowDefault`). When any style prop is set, Layout wraps its children in an **implicit root `<Scope>`** — equivalent to hand-writing one root `<Scope>`, removing the boilerplate of nesting one on every figure. Inner `<Scope>` and explicit primitive props still cascade over it as usual.
+
+<ComponentPreview name="layout-scope-style" size="sm" />
+
+```tsx
+// Set defaults for the whole figure — no nested <Scope> needed
+<Layout stroke="gray" nodeDefault={{ shape: 'circle', fill: 'white' }} pathDefault={{ strokeWidth: 3 }}>
+  <Node id="A" position={[0, 0]}>A</Node>
+  <Draw way={['A', 'B']} arrow="->" />
+</Layout>
+
+// Equivalent to the old form (hand-written root <Scope>)
+<Layout>
+  <Scope stroke="gray" nodeDefault={{ shape: 'circle', fill: 'white' }} pathDefault={{ strokeWidth: 3 }}>
+    {/* ... */}
+  </Scope>
+</Layout>
+```
+
+> The implicit scope is added only when at least one style prop carries an actual style directive; with no style prop (or only empty-object defaults like `nodeDefault={{}}`) the IR shape stays unchanged and no empty scope is introduced. When combined with the `ir` prop, the style props are ignored (a dev-mode console warning fires) — `ir` is already a complete IR, so put root styles in the IR's own root `<Scope>` node.
+
 ### Render from IR
 
 `<Layout>` accepts an `ir` prop — feed a persisted IR JSON directly and get a rendered image, **no JSX children needed**. Source can be anything: LLM-generated, a JSON editor, URL deserialization, or database storage.
@@ -66,6 +89,8 @@ By default the `viewBox` is auto-computed from content (AABB + padding). Pass `v
 | `className` | `string` | — | Forwarded to the render root |
 | `style` | `CSSProperties` | — | Forwarded to the render root |
 | `idPrefix` | `string` | — | Overrides the `<defs>` resource id prefix; pass the same value to SSR output and client `<Layout>` to keep reference ids aligned |
+| `color` / `stroke` / `fill` / `strokeWidth` / `opacity` / `fillOpacity` / `drawOpacity` | same as [`<Scope>`](/core/components/layout/scope) | — | Whole-figure cascade graphic state; when set, wraps children in an implicit root `<Scope>` |
+| `nodeDefault` / `pathDefault` / `labelDefault` / `arrowDefault` | same as [`<Scope>`](/core/components/layout/scope) | — | Whole-figure every-X defaults (four channels); wraps the same implicit root scope |
 
 ### Feeding IR Directly
 

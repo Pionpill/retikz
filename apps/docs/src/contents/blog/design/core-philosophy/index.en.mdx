@@ -45,10 +45,10 @@ The top layer is `Scene`, fixed in shape:
 
 The middle layer is **Node** and **Path**:
 
-- **Node** is a positionable, rotatable shape container (rectangle / circle / ellipse / diamond) with fields like text / label / padding / scale; position supports four forms (Cartesian / polar / `at`-reference / offset).
-- **Path** is a sequence of drawing commands — at least 2 `Step` entries in `children`, plus stroke / fill / arrow / dashPattern and other visual attributes.
+- **Node** is a positionable, rotatable shape container (built-in rectangle / circle / ellipse / diamond, with more registrable via the ShapeRegistry) with fields like text / label / padding / scale; position supports five forms (Cartesian / polar / `at`-reference / offset / proportional partway `{ between, t }`).
+- **Path** is a sequence of drawing commands — usually at least 2 `Step` entries in `children` (a self-contained rectangle step can stand alone), plus stroke / fill / arrow / dashPattern / rotate / scale / marks and other visual attributes.
 
-The bottom layer is **Step**: 10 `kind`s cover the full set of path actions:
+The bottom layer is **Step**: 12 `kind`s cover the full set of path actions:
 
 | kind | Params | Semantics |
 |---|---|---|
@@ -58,12 +58,14 @@ The bottom layer is **Step**: 10 `kind`s cover the full set of path actions:
 | `cycle` | — | Close back to the start point |
 | `curve` | `to`, `control`, `label?` | Quadratic Bézier |
 | `cubic` | `to`, `control1`, `control2`, `label?` | Cubic Bézier |
-| `bend` | `to`, `bendDirection`, `bendAngle?` | Arc shorthand (compiled to cubic) |
-| `arc` | `startAngle`, `endAngle`, `radius` | Circular arc (cursor as center) |
-| `circlePath` | `radius` | Full circle |
-| `ellipsePath` | `radiusX`, `radiusY` | Full ellipse |
+| `bend` | `to`, `bendDirection?` / `outAngle?` `inAngle?`, `looseness?` | Arc shorthand (bend angle or out/in angles, self-loops supported; compiled to cubic) |
+| `arc` | `startAngle`, `endAngle`, `radius` or `radiusX`/`radiusY`, `center?` | Circular / elliptical arc (cursor as center by default, or explicit `center`) |
+| `circlePath` | `radius`, `startAngle?`, `endAngle?`, `closed?` | Full circle or partial arc (chord / sector / open) |
+| `ellipsePath` | `radiusX`, `radiusY`, `startAngle?`, `endAngle?`, `closed?` | Full ellipse or partial arc |
+| `rectangle` | `from`, `to`, `roundedCorners?` | Axis-aligned rectangle (two corners, self-contained) |
+| `generator` | `name`, `to?`, `params` | Delegates to a registered path generator (parabola / sin…; none built into core) |
 
-These 10 are the result of repeated trimming — TikZ has dozens of native path actions, and most can be expressed by composing these 10. More `kind`s push up LLM learning cost and adapter implementation cost; fewer and the sugar layer can't paper over the gap.
+These 12 are the result of repeated trimming — TikZ has dozens of native path actions, and most can be expressed by composing these 12. More `kind`s push up LLM learning cost and adapter implementation cost; fewer and the sugar layer can't paper over the gap.
 
 ## The Scene compiler: what the two passes do
 
@@ -74,13 +76,13 @@ These 10 are the result of repeated trimming — TikZ has dozens of native path 
 
 Why two passes? Because nodes and paths reference each other — a node's position may depend on another node's anchor, and a path endpoint may reference some node's compass direction. Lay out all nodes first, and paths can consume the result without hitting undefined references.
 
-The compile output `Scene` consists of 5 primitive types: `RectPrim` / `EllipsePrim` / `TextPrim` / `PathPrim` / `GroupPrim`. That's the greatest-common subset of vector graphics — SVG, Canvas, PDF, native drawing can all consume it directly, without depending on any runtime feature. Text measurement must complete at this stage (`measuredWidth` / `measuredHeight` already filled), so adapters never need to touch side-effecting APIs like `canvas.measureText`.
+The compile output `Scene` consists of 5 primitive types: `RectPrim` / `EllipsePrim` / `TextPrim` / `PathPrim` / `GroupPrim`, plus a render-target-agnostic resource table (gradients / patterns / clips are deduped behind stable ids; primitives reference them via `paintRef` / `clipRef`, which adapters materialize into `<defs>` / `<clipPath>`). That's the greatest-common subset of vector graphics — SVG, Canvas, PDF, native drawing can all consume it directly, without depending on any runtime feature. Text measurement must complete at this stage (`measuredWidth` / `measuredHeight` already filled), so adapters never need to touch side-effecting APIs like `canvas.measureText`.
 
 ```text
 IR (JSON)
   ↓ Pass 1: node layout + nodeIndex registration
   ↓ Pass 2: path resolution + primitive emission
-Scene (primitive list + viewBox)
+Scene (primitive list + layout viewport + resource table)
   ↓ adapter (pure translation)
 SVG / Canvas / PDF / ...
 ```
@@ -120,7 +122,7 @@ The shared trait is that they involve algorithmic decisions (dagre layout, auto-
 
 `@retikz/react` is currently the only shipped adapter, and the whole architecture insists it stay "thin":
 
-- The top-level `<Layout>` container (`packages/react/src/kernel/TikZ.tsx`) does three things only: receive an `ir` prop or `useMemo(buildIR(children))`, call `compileToScene`, and translate Scene primitives into `<svg>` children.
+- The top-level `<Layout>` container (`packages/react/src/kernel/Layout.tsx`) does three things only: receive an `ir` prop or `useMemo(buildIR(children))`, call `compileToScene`, and translate Scene primitives into `<svg>` children.
 - The builder (`packages/react/src/kernel/builder.ts`) does synchronous JSX → IR conversion, using a shared field table (`NODE_FIELDS` / `PATH_FIELDS`) and component `displayName` to recognize types; it doesn't call hooks and isn't part of the React render call stack.
 - Text measurement uses `browserMeasurer` (canvas.measureText), injected into compile as a `TextMeasurer` — later SSR adapters can swap in satori / sharp etc., with zero changes to compile itself.
 
@@ -151,4 +153,5 @@ So `padding` / `margin` in IR map directly to TikZ's `inner sep` / `outer sep`, 
 ## References
 
 - In-site: [karl-circle example](/core/examples/karl-circle) — retikz v0.1's signature diagram, demonstrating Kernel primitive composition
+- In-site: [Ohm's law circuit example](/core/examples/ohms-law-circuit) — custom shapes, Scope duplication, and elbow wiring building a full circuit diagram step by step
 - In-site: [Origins of retikz](/blog/journey/origin) — project inspiration, roadmap, and release cadence

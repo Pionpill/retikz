@@ -1,6 +1,6 @@
 ---
 title: AI 辅助开发
-description: retikz 在 alpha 阶段以"人工设计 + AI 实现"分工运转——人工写 ADR 决策、AI 接力写 spec / 实现 / 测试 / 文档、人工对账审稿。本文说明这套模式怎么跑、约束在哪里、为什么这么做。
+description: retikz 在 v0.x 以分阶段的人机协作运转：alpha 人工设计 + AI 实现，beta 人工主导优化 + 多 LLM 评估，rc API 冻结后聚焦文档、验收与兼容修复。
 ---
 
 retikz 的实现劳动大部分由 AI 完成——节点 / 路径 / 边标注 / 占位锚点这些 IR 字段的代码、对应的测试用例、配套的文档段落，绝大多数 commit 都有 `Co-Authored-By: Claude`。这不是技术博客噱头，是项目从 v0.1 起的实际工作模式。
@@ -56,7 +56,7 @@ alpha 阶段每条 ADR / 每条新功能都按 5 阶段走，编排在 [`flow-al
 | 阶段 | 主体 | 输出 |
 | --- | --- | --- |
 | 1. 设计 | **人工**主导 / AI 辅助起草 | ADR（schema 字段表 / 文件 scope / 测试象限 / 选项决策） |
-| 2. 实现 | AI（红色改动走 Spec-First TDD） | spec test commit + 实现 commit |
+| 2. 实现 | AI（红色改动走 Spec-First TDD） | spec test diff + 实现 diff（经人工授权后按粒度提交） |
 | 3. 自测 | AI（Adversarial Bug Hunter sub-Agent） | bug 修复 + 加固测试 |
 | 4. 文档 | AI（衔接 docs-doc-principle SKILL） | 双语 mdx + demo + API 表 |
 | 5. 收尾 | AI 起草 / Adversarial Contract Auditor / **人工**最终 ack | changelog + ADR 标 Accepted + roadmap 勾掉 |
@@ -64,6 +64,17 @@ alpha 阶段每条 ADR / 每条新功能都按 5 阶段走，编排在 [`flow-al
 **人工只动 1 和 5**——中间的 2、3、4 由独立 sub-Agent 接力完成，每阶段设硬关卡（lint / tsc / 测试 / 对账报告）不过即 halt。
 
 每个阶段对应一个独立的子 SKILL：[`develop-design`](https://github.com/Pionpill/retikz/blob/main/.agents/skills/develop-design/SKILL.md) / [`develop-implement`](https://github.com/Pionpill/retikz/blob/main/.agents/skills/develop-implement/SKILL.md) / [`develop-test`](https://github.com/Pionpill/retikz/blob/main/.agents/skills/develop-test/SKILL.md) / [`develop-document`](https://github.com/Pionpill/retikz/blob/main/.agents/skills/develop-document/SKILL.md) / [`develop-wrapup`](https://github.com/Pionpill/retikz/blob/main/.agents/skills/develop-wrapup/SKILL.md)。SKILL 文件里写明输入、输出、子 Agent prompt、失败 / 升级阈值。
+
+## beta / rc 阶段
+
+v0.2 以后，alpha 之外也有独立编排，但边界更窄：
+
+| 阶段 | 编排 | 边界 |
+| --- | --- | --- |
+| beta | [`flow-beta`](https://github.com/Pionpill/retikz/blob/main/.agents/skills/flow-beta/SKILL.md) | 不开新功能 ADR；做重构、命名、测试、性能、文档与最后一轮破坏性整理；核心关卡是多 LLM 评估 |
+| rc | [`flow-rc`](https://github.com/Pionpill/retikz/blob/main/.agents/skills/flow-rc/SKILL.md) | 公开 API 冻结；只做兼容 bug fix、文档站补齐、安装验收、迁移说明与 release notes |
+
+也就是说，AI 的自由度会随着版本通道逐步收窄：alpha 可以协助实现新契约；beta 主要帮人收敛和查回归；rc 只协助把已经冻结的 API 交付得可靠。
 
 ## 三个 sub-Agent 角色
 
@@ -77,7 +88,7 @@ alpha 阶段每条 ADR / 每条新功能都按 5 阶段走，编排在 [`flow-al
 
 实现 Agent 接到 Spec 后**不允许动测试文件 / 不允许改 schema 字段名**——发现测试错了或字段定义错了，必须 halt 报告，由主 AI 决定退回 Spec Writer 重写还是裁决人工。
 
-Spec commit 用 `:construction:` emoji 标 WIP（测试此刻必然 fail，因为实现还没写），与项目惯例对齐。
+如果本轮流程已经得到人工明确授权，Spec commit 用 `:construction:` emoji 标 WIP（测试此刻必然 fail，因为实现还没写），与项目惯例对齐。没有授权时，它只是待审的 diff / stage 内容，不由 AI 自行提交。
 
 ### Adversarial Bug Hunter
 
@@ -128,9 +139,9 @@ retikz 当前三个 sub-Agent 默认全部用 Claude Opus 4.7。同 model 同上
 | --- | --- |
 | 项目立项主张与第一设计原则 | [core-design.md](https://github.com/Pionpill/retikz/blob/main/notes/architecture/core-design.md) |
 | 全部 SKILL（开发流程、发版、文档写作） | [.agents/skills/](https://github.com/Pionpill/retikz/tree/main/.agents/skills) |
-| 5 阶段编排器 | [flow-alpha SKILL](https://github.com/Pionpill/retikz/blob/main/.agents/skills/flow-alpha/SKILL.md) |
+| alpha / beta / rc 编排器 | [flow-alpha](https://github.com/Pionpill/retikz/blob/main/.agents/skills/flow-alpha/SKILL.md) · [flow-beta](https://github.com/Pionpill/retikz/blob/main/.agents/skills/flow-beta/SKILL.md) · [flow-rc](https://github.com/Pionpill/retikz/blob/main/.agents/skills/flow-rc/SKILL.md) |
 | 设计 / 实现 / 测试 / 文档 / 收尾子 SKILL | [develop-design](https://github.com/Pionpill/retikz/blob/main/.agents/skills/develop-design/SKILL.md) · [develop-implement](https://github.com/Pionpill/retikz/blob/main/.agents/skills/develop-implement/SKILL.md) · [develop-test](https://github.com/Pionpill/retikz/blob/main/.agents/skills/develop-test/SKILL.md) · [develop-document](https://github.com/Pionpill/retikz/blob/main/.agents/skills/develop-document/SKILL.md) · [develop-wrapup](https://github.com/Pionpill/retikz/blob/main/.agents/skills/develop-wrapup/SKILL.md) |
-| 发版 SKILL（npm publish 5 阶段守门） | [package-publish SKILL](https://github.com/Pionpill/retikz/blob/main/.agents/skills/package-publish/SKILL.md) |
+| 发版 SKILL（版本号 / changelog / roadmap / npm 发布守门） | [package-publish SKILL](https://github.com/Pionpill/retikz/blob/main/.agents/skills/package-publish/SKILL.md) |
 | 文档写作 SKILL | [docs-doc-principle](https://github.com/Pionpill/retikz/blob/main/.agents/skills/docs-doc-principle/SKILL.md) · [docs-doc-component](https://github.com/Pionpill/retikz/blob/main/.agents/skills/docs-doc-component/SKILL.md) · [docs-doc-example](https://github.com/Pionpill/retikz/blob/main/.agents/skills/docs-doc-example/SKILL.md) |
 | ADR 决策档案 | [notes/decisions/core/](https://github.com/Pionpill/retikz/tree/main/notes/decisions/core)（含 [模板](https://github.com/Pionpill/retikz/blob/main/notes/decisions/core/_template.md) 与 [索引](https://github.com/Pionpill/retikz/blob/main/notes/README.md)） |
 
@@ -142,11 +153,11 @@ retikz 不假装"全人工"——commit 历史里大部分实现 commit 带 `Co-
 
 - **决策由人**：每条 ADR 状态 Accepted 之前由人审；每次 npm publish 由人当次授权（含 2FA OTP 由人输入）
 - **AI 不替人对外发声**：commit message、PR 描述、issue 回复都是 AI 起草、人工 review，不存在 AI 直发
-- **可逆性兜底**：alpha 通道每次发版都标 `--tag alpha`，下游 `pnpm add @retikz/...` 默认拉不到——出问题不污染 latest 通道，24h 内可 unpublish
+- **可逆性兜底**：预发布分别走 `alpha` / `beta` / `next` dist-tag，下游 `pnpm add @retikz/...` 默认只拉稳定版——出问题不污染 latest 通道
 
 ## 局限
 
-- 当前 SKILL 主要服务 alpha 阶段。beta / rc 阶段以人工主导，没有专门的 SKILL 编排
+- alpha 流程最重，beta / rc 虽有独立编排，但仍以人工确认和人工审稿为关键门槛
 - ADR 模板硬要求测试象限 ≥ 9 case——简单改动可能感觉繁琐，但项目预期 alpha 期改动都涉及 IR 或核心，门槛设这里换的是后期回归成本可控
 - 多模型并行（同时跑 Anthropic + OpenAI 同 prompt）目前靠用户手动同步——主 AI 不会自动调用其它 vendor，用户贴回来主 AI 才合并意见
 - Adversarial sub-Agent 找出的 BLOCKING 通常是 corner case；happy path 的 bug 多数被 Spec Writer 覆盖。这套流程对"复杂逻辑 + 数值边界"型 bug 抓得好，对"用户体验 / 视觉效果不对"型问题抓不到——后者仍需人工 review demo
