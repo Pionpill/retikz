@@ -5,6 +5,8 @@ description: retikz 用语义化版本（SemVer），三段加预发布通道。
 
 retikz 遵循 Semantic Versioning 2.0.0：版本号写作 `MAJOR.MINOR.PATCH`，必要时附预发布标签 `-alpha.x` / `-beta.x` / `-rc.x`。
 
+当前仓库版本是 `0.2.0-rc.1`。这表示 v0.2 已进入 rc 验收窗口：公开 API 冻结，只接受兼容 bug fix、文档补齐、安装验收与发布说明收敛。上一条稳定线是 `0.1.0`。
+
 ## 三段含义
 
 | 段 | 何时 +1 | 升级建议 |
@@ -13,7 +15,7 @@ retikz 遵循 Semantic Versioning 2.0.0：版本号写作 `MAJOR.MINOR.PATCH`，
 | MINOR | 向下兼容的新能力 | 直接升 |
 | PATCH | 向下兼容的 bug fix | 直接升 |
 
-`@retikz/core` 与 `@retikz/react` 共享同一版号、**主版本同步发布**——不存在单独升 core 不升 react 的情况。
+`@retikz/core` 与 `@retikz/react` 默认共享同一版号、**同步发布**——除非发布说明特别写明，否则用户不需要单独升级其中一个包。
 
 ## 0.x 与 1.x 的差别
 
@@ -28,10 +30,10 @@ retikz 遵循 Semantic Versioning 2.0.0：版本号写作 `MAJOR.MINOR.PATCH`，
 
 | 通道 | 形如 | 主要内容 | 主要执行 | 适合 |
 | --- | --- | --- | --- | --- |
-| alpha | `0.1.0-alpha.x` | 新功能 / 新 IR 字段 / API 形态重塑（schema 仍在重塑、IR 不稳） | **人工设计 + AI 实现** | 探索 / 反馈 |
-| beta | `0.1.0-beta.x` | 性能 / 可读性 / 重构 / 测试加固 / 文档完善；允许最后一轮破坏性命名调整 | **人工主导优化与重构** | 集成验证 |
-| rc | `0.1.0-rc.x` | 公开 API 冻结；只做兼容 bug 修复、文档、安装验收与发布说明 | 人工主导 | 生产前演练 |
-| 稳定 | `0.1.0` | 进入 SemVer 守护，按 PATCH / MINOR / MAJOR 节奏迭代 | — | 生产 |
+| alpha | `0.2.0-alpha.x` | 新功能 / 新 IR 字段 / API 形态重塑（schema 仍在重塑、IR 不稳） | **人工设计 + AI 实现** | 探索 / 反馈 |
+| beta | `0.2.0-beta.x` | 性能 / 可读性 / 重构 / 测试加固 / 文档完善；允许最后一轮破坏性命名调整 | **人工主导优化与重构** | 集成验证 |
+| rc | `0.2.0-rc.x` | 公开 API 冻结；只做兼容 bug 修复、文档、安装验收与发布说明 | 人工主导 | 生产前演练 |
+| 稳定 | `0.2.0` | 进入 SemVer 守护，按 PATCH / MINOR / MAJOR 节奏迭代 | — | 生产 |
 
 通道升级是单向的：alpha → beta → rc → stable，不会回退。
 

@@ -1,50 +1,57 @@
 ---
 title: Roadmap
-description: retikz milestones — short term stabilize core / react, mid term ship flow / plot, long term cross-framework adapters and TikZ interop.
+description: retikz's current and near-future roadmap: v0.2 rc validation, v0.3 renderer/runtime split, v0.4 incremental-rendering candidates, and v1+ domain packages.
 ---
 
 The roadmap is a **goal list, not a promise** — it adjusts with community feedback and maintainer bandwidth. Concrete releases land by version in the [Changelog](/about/releases/changelog).
 
 ## Now
 
-**v0.1 alpha** — iterating on the `next` branch.
+**v0.2.0-rc.1** — release-candidate validation.
 
 | Item | Status |
 | --- | --- |
-| IR + scene compiler | ✅ |
-| `@retikz/react` Kernel + Sugar | ✅ |
-| Docs site v0.1 | ✅ |
+| v0.2 core capabilities | ✅ Complete |
+| Public API | ✅ Frozen |
+| Installation / docs / release notes | ⏳ In rc validation |
 
-## Short term: v0.x → v0.1 stable
+## Short term: v0.2.0 stable
 
-Freeze Kernel and Sugar APIs, stabilize the IR schema.
+Turn the rc line into the stable release.
 
 | Goal | Content |
 | --- | --- |
-| Kernel convergence | 5–8 components: `<Layout>` `<Node>` `<Path>` `<Step>` `<Anchor>` `<Scope>` |
-| Sugar convergence | `<Draw way={[...]} />` and friends compile down to Kernel |
-| Public IR schema | One zod source → TypeScript types + JSON Schema |
-| AI integration spike | OpenAI Structured Outputs / Anthropic Tool Use emitting IR directly |
+| API freeze | No new components, props, IR fields, or public exports |
+| Installation acceptance | npm package, type exports, examples, and docs links all work |
+| Release notes | Changelog, versioning notes, and migration hints stay aligned |
 
-## Mid term: domain packages
+## Mid term: v0.3 renderer / runtime
 
-| Version | Package | Content |
-| --- | --- | --- |
-| v1.x | `@retikz/flow` | DAG / flowcharts / topology: node + step + anchor + dagre / elkjs layout |
-| v2.x | `@retikz/plot` | Charts: step + path + node + data binding |
+Split Scene output and runtime responsibilities into clearer layers.
+
+| Goal | Content |
+| --- | --- |
+| `@retikz/svg` | Scene / resources → SVG |
+| `@retikz/canvas` | Scene → Canvas 2D |
+| `@retikz/vanilla` | Framework-free mounting and SSR entry points |
+| `@retikz/react` | Unified `renderer="svg"` / `renderer="canvas"` entry |
+| Hydration | Stable ids + event-binding semantics |
+| Plot support | Lowering, coordinate scopes, layers, locator / anchor interfaces |
 
 ## Long term
 
 | Topic | Where |
 | --- | --- |
-| `@retikz/codec` | v3.x, IR ↔ TikZ source bidirectional conversion |
-| Cross-framework adapters | Vue / Svelte / Native (Skia or RN) |
-| Text DSL | Adopt TikZ native syntax, reuse LLM training data |
+| v0.4 | Incremental rendering, Progressive IR, AI step updates, view-layer experiments |
+| v1+ | Domain packages such as `plot` / `graph` / `flow`, plus the broader ecosystem |
 
 ## Not on the roadmap
 
 To keep scope honest, things we are **not** doing:
 
-- Built-in LaTeX math rendering — delegate to KaTeX / MathJax, retikz handles graphics only
-- Keyframe animation DSL — basic transitions yes, full animation system no
-- Dedicated SSR adapter — the renderer is already pure, SSR works generically
+- Built-in LaTeX math layout
+- Visual editor
+- Full TikZ library-loading semantics
+- Complete calc expression language
+- Complex decorations such as `snake` / `coil`
+- Canvas implemented by piping through SVG

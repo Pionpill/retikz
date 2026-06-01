@@ -1,6 +1,6 @@
 ---
 title: AI-assisted development
-description: retikz operates on a "human-designed + AI-implemented" split during alpha — humans write ADRs and decide; AI relays through spec / implementation / tests / docs; humans reconcile and review at the end. This page explains how it runs, where the constraints are, and why.
+description: retikz runs on staged human / AI collaboration during v0.x: alpha is human-designed + AI-implemented, beta is human-led optimization + multi-LLM evaluation, and rc freezes APIs for docs, acceptance, and compatible fixes.
 ---
 
 Most of retikz's implementation work is done by AI — the IR-field code for nodes / paths / edge labels / coordinate placeholders, the test cases, the documentation paragraphs that come with them. The vast majority of commits carry `Co-Authored-By: Claude`. This is not a tech-blog gimmick — it's the actual working model the project has used since v0.1.
@@ -56,7 +56,7 @@ Every ADR / new feature in alpha goes through 5 stages, orchestrated by the [`fl
 | Stage | Driver | Output |
 | --- | --- | --- |
 | 1. Design | **Human-led**, AI assists drafting | ADR (schema field table / file scope / test quadrants / option decisions) |
-| 2. Implement | AI (red-level changes go through Spec-First TDD) | spec test commit + implementation commit |
+| 2. Implement | AI (red-level changes go through Spec-First TDD) | spec test diff + implementation diff (committed by granularity only after human authorization) |
 | 3. Self-test | AI (Adversarial Bug Hunter sub-agent) | bug fixes + hardened tests |
 | 4. Document | AI (delegates to docs-doc-principle SKILL) | bilingual mdx + demos + API table |
 | 5. Wrap-up | AI drafts / Adversarial Contract Auditor / **human** final ack | changelog + ADR marked Accepted + roadmap ticked |
@@ -64,6 +64,17 @@ Every ADR / new feature in alpha goes through 5 stages, orchestrated by the [`fl
 **Humans only act on stages 1 and 5** — stages 2, 3, 4 are handed off to independent sub-agents in sequence, with hard gates at each stage (lint / tsc / tests / reconciliation report) that halt the flow on failure.
 
 Each stage has its own SKILL: [`develop-design`](https://github.com/Pionpill/retikz/blob/main/.agents/skills/develop-design/SKILL.md) / [`develop-implement`](https://github.com/Pionpill/retikz/blob/main/.agents/skills/develop-implement/SKILL.md) / [`develop-test`](https://github.com/Pionpill/retikz/blob/main/.agents/skills/develop-test/SKILL.md) / [`develop-document`](https://github.com/Pionpill/retikz/blob/main/.agents/skills/develop-document/SKILL.md) / [`develop-wrapup`](https://github.com/Pionpill/retikz/blob/main/.agents/skills/develop-wrapup/SKILL.md). Each spells out its inputs, outputs, sub-agent prompts, and failure / escalation thresholds.
+
+## beta / rc phases
+
+After v0.2, alpha is no longer the only orchestrated phase, but the boundaries get narrower:
+
+| Phase | Orchestrator | Boundary |
+| --- | --- | --- |
+| beta | [`flow-beta`](https://github.com/Pionpill/retikz/blob/main/.agents/skills/flow-beta/SKILL.md) | No new feature ADRs; handles refactors, naming, tests, performance, docs, and the final breaking cleanup window; the key gate is multi-LLM evaluation |
+| rc | [`flow-rc`](https://github.com/Pionpill/retikz/blob/main/.agents/skills/flow-rc/SKILL.md) | Public APIs are frozen; only compatible bug fixes, docs completion, installation acceptance, migration notes, and release notes should land |
+
+In practice, AI freedom narrows with each channel: alpha can help implement new contracts; beta helps converge and check regressions; rc helps ship the frozen API reliably.
 
 ## Three sub-agent roles
 
@@ -77,7 +88,7 @@ Stages 2, 3, 5 dispatch three independent sub-agents, **each in its own session*
 
 The Implementation Agent then **may not modify the spec test file or the schema field names**. If it thinks a test is wrong or a field definition is off, it must halt and report — the main AI decides whether to send it back to Spec Writer for a rewrite or escalate to a human.
 
-The spec commit uses the `:construction:` emoji to mark WIP (the tests fail at this point because the implementation isn't written yet), aligning with project convention.
+If the current flow has explicit human authorization to commit, the spec commit uses the `:construction:` emoji to mark WIP (the tests fail at this point because the implementation isn't written yet), aligning with project convention. Without that authorization, it is only presented as a diff / staged block for review.
 
 ### Adversarial Bug Hunter
 
@@ -128,9 +139,9 @@ The workflow constraints AI must follow throughout:
 | --- | --- |
 | Project thesis and first design principle | [core-design.md](https://github.com/Pionpill/retikz/blob/main/notes/architecture/core-design.md) |
 | All SKILLs (dev flow, releases, docs writing) | [.agents/skills/](https://github.com/Pionpill/retikz/tree/main/.agents/skills) |
-| 5-stage orchestrator | [flow-alpha SKILL](https://github.com/Pionpill/retikz/blob/main/.agents/skills/flow-alpha/SKILL.md) |
+| alpha / beta / rc orchestrators | [flow-alpha](https://github.com/Pionpill/retikz/blob/main/.agents/skills/flow-alpha/SKILL.md) · [flow-beta](https://github.com/Pionpill/retikz/blob/main/.agents/skills/flow-beta/SKILL.md) · [flow-rc](https://github.com/Pionpill/retikz/blob/main/.agents/skills/flow-rc/SKILL.md) |
 | Design / Implement / Test / Document / Wrap-up child SKILLs | [develop-design](https://github.com/Pionpill/retikz/blob/main/.agents/skills/develop-design/SKILL.md) · [develop-implement](https://github.com/Pionpill/retikz/blob/main/.agents/skills/develop-implement/SKILL.md) · [develop-test](https://github.com/Pionpill/retikz/blob/main/.agents/skills/develop-test/SKILL.md) · [develop-document](https://github.com/Pionpill/retikz/blob/main/.agents/skills/develop-document/SKILL.md) · [develop-wrapup](https://github.com/Pionpill/retikz/blob/main/.agents/skills/develop-wrapup/SKILL.md) |
-| Release SKILL (npm publish 5-stage gating) | [package-publish SKILL](https://github.com/Pionpill/retikz/blob/main/.agents/skills/package-publish/SKILL.md) |
+| Release SKILL (version / changelog / roadmap / npm publish gates) | [package-publish SKILL](https://github.com/Pionpill/retikz/blob/main/.agents/skills/package-publish/SKILL.md) |
 | Docs-writing SKILL | [docs-doc-principle](https://github.com/Pionpill/retikz/blob/main/.agents/skills/docs-doc-principle/SKILL.md) · [docs-doc-component](https://github.com/Pionpill/retikz/blob/main/.agents/skills/docs-doc-component/SKILL.md) · [docs-doc-example](https://github.com/Pionpill/retikz/blob/main/.agents/skills/docs-doc-example/SKILL.md) |
 | ADR archive | [notes/decisions/core/](https://github.com/Pionpill/retikz/tree/main/notes/decisions/core) (with [template](https://github.com/Pionpill/retikz/blob/main/notes/decisions/core/_template.md) and [index](https://github.com/Pionpill/retikz/blob/main/notes/README.md)) |
 
@@ -142,11 +153,11 @@ retikz does not pretend to be "all human" — most implementation commits carry 
 
 - **Decisions are human**: every ADR is human-reviewed before flipping to Accepted; every npm publish requires fresh human authorization (including the 2FA OTP, typed by a human)
 - **AI doesn't speak for the human in public**: commit messages, PR descriptions, issue replies are AI-drafted, human-reviewed; AI never publishes them directly
-- **Reversibility safety net**: every alpha release ships with `--tag alpha`, so downstream `pnpm add @retikz/...` doesn't pull it by default — bad releases don't pollute the latest channel and can be unpublished within 24 hours
+- **Reversibility safety net**: pre-releases use `alpha` / `beta` / `next` dist-tags, so downstream `pnpm add @retikz/...` pulls only stable releases by default — bad pre-releases do not pollute `latest`
 
 ## Limitations
 
-- The current SKILL set serves the alpha phase. beta / rc phases are human-led with no dedicated SKILL orchestration
+- The alpha flow is the heaviest; beta / rc now have dedicated orchestration, but human authorization and human review remain the key gates
 - The ADR template requires ≥ 9 test-quadrant cases — small changes may feel like overhead, but the project assumes alpha-era changes touch IR or core, and the cost trades against future regression burden
 - Multi-vendor parallelism (running the same prompt through Anthropic + OpenAI simultaneously) currently relies on manual user sync — the main AI does not auto-call other vendors; opinions only merge after the user pastes them back
 - Adversarial sub-agents catch corner cases best; happy-path bugs are mostly covered by Spec Writer. This flow handles "complex logic + numerical edge" bugs well, but doesn't catch "UX / visual rendering wrong" issues — those still require human review of demos

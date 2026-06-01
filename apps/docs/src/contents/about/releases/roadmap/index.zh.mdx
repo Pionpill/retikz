@@ -1,50 +1,57 @@
 ---
 title: 路线图
-description: retikz 的版本目标。短期看 core / react 稳定，中期上 flow / plot，远期跨框架与 TikZ 互转。
+description: retikz 的当前与近未来版本路线：v0.2 rc 验收、v0.3 renderer/runtime 拆分、v0.4 增量渲染候选、v1+ 领域包。
 ---
 
-路线图是**目标**而非承诺——会随社区反馈与维护者带宽调整。具体的发布按版本号在[更新日志](/about/releases/changelog)里出现。
+路线图是**目标**而非承诺——会随社区反馈与维护者带宽调整。具体发布按版本号在[更新日志](/about/releases/changelog)里出现。
 
 ## 当前
 
-**v0.1 alpha** — 在 `next` 分支迭代。
+**v0.2.0-rc.1** — 发布候选验收中。
 
-| 子项 | 状态 |
+| 项目 | 状态 |
 | --- | --- |
-| IR + Scene 编译器 | ✅ |
-| `@retikz/react` Kernel + Sugar | ✅ |
-| 文档站 v0.1 | ✅ |
+| v0.2 核心能力 | ✅ 已完工 |
+| 公开 API | ✅ 已冻结 |
+| 安装 / 文档 / 发布说明 | ⏳ rc 验收中 |
 
-## 短期：v0.x → v0.1 stable
+## 短期：v0.2.0 stable
 
-把 Kernel 与 Sugar 的 API 冻结，IR Schema 稳定。
+把 rc 验收收尾成稳定版。
 
 | 目标 | 内容 |
 | --- | --- |
-| Kernel 收敛 | `<Layout>` `<Node>` `<Path>` `<Step>` `<Anchor>` `<Scope>` 共 5–8 个组件 |
-| Sugar 收敛 | `<Draw way={[...]} />` 等糖语法编译期展开为 Kernel |
-| IR Schema 公开 | zod 单源 → TypeScript 类型 + JSON Schema |
-| AI 接入实验 | OpenAI Structured Outputs / Anthropic Tool Use 直吐 IR |
+| API 冻结 | 不再新增组件、prop、IR 字段或公开导出 |
+| 安装验收 | npm 包、类型导出、示例与文档链接都能正常工作 |
+| 发布说明 | changelog、版本说明与迁移提示保持一致 |
 
-## 中期：domain 子包
+## 中期：v0.3 renderer / runtime
 
-| 版本 | 子包 | 内容 |
-| --- | --- | --- |
-| v1.x | `@retikz/flow` | DAG / 流程图 / 拓扑：node + step + anchor + dagre / elkjs 布局 |
-| v2.x | `@retikz/plot` | 图表：step + path + node + 数据绑定 |
+把 Scene 的输出与运行时拆成更清楚的层次。
+
+| 目标 | 内容 |
+| --- | --- |
+| `@retikz/svg` | Scene / resources → SVG |
+| `@retikz/canvas` | Scene → Canvas 2D |
+| `@retikz/vanilla` | 无框架挂载与 SSR 入口 |
+| `@retikz/react` | `renderer="svg"` / `renderer="canvas"` 的统一入口 |
+| 水合 | 稳定 id + 事件绑定语义 |
+| plot 支撑 | lowering、坐标化、layer、locator / anchor 接入面 |
 
 ## 远期
 
 | 主题 | 落点 |
 | --- | --- |
-| `@retikz/codec` | v3.x，IR ↔ TikZ 源码双向转换 |
-| 跨框架 adapter | Vue / Svelte / Native（Skia 或 RN） |
-| 文本 DSL | 直接采用 TikZ 原生语法，复用 LLM 训练数据 |
+| v0.4 | 增量渲染、Progressive IR、AI 逐步更新、视角层实验 |
+| v1+ | `plot` / `graph` / `flow` 等领域包与更广生态 |
 
 ## 不在路线图
 
 为避免范围蔓延，明确**不做**的事：
 
-- 自带 LaTeX 数学渲染——交给 KaTeX / MathJax，retikz 只负责图
-- 关键帧动画 DSL——基础过渡保留，复杂动画建议外接
-- 服务端渲染专属 adapter——renderer 已是纯函数，SSR 通用
+- 内建 LaTeX 数学排版
+- 可视化编辑器
+- 完整 TikZ library loading 语义
+- 完整 calc 表达式语言
+- `snake` / `coil` 等复杂 decorations
+- 依赖 SVG 中转的 Canvas 实现
