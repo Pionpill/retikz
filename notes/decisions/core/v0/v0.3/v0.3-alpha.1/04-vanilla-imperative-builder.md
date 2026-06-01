@@ -1,12 +1,12 @@
 # ADR-04：`@retikz/vanilla` 命令式 builder API（hyperscript 核 + fluent 糖）
 
-- 状态：Proposed
+- 状态：Accepted（实现完成 2026-05-31，见文末「实现偏离记录」；命令式 builder 全套落地、vanilla 39 测试全绿）
 - 决策日期：2026-05-31
 - 关联：[ADR-03 `@retikz/vanilla` runtime + 依赖图](./03-vanilla-runtime-and-dependency-graph.md)（本 ADR 在其 vanilla 包上加 authoring API）· [ADR-01 `@retikz/svg` descriptor 契约](./01-svg-descriptor-contract.md) · [v0.3 roadmap §Vanilla runtime 范围](../roadmap.md)
 
 > **范围**：ADR-03 定了 `@retikz/vanilla` 能消费 IR / Scene 渲染（`mountSvg` / `renderToSvgString`）。本 ADR 在其上加一套**命令式 builder API**——让无框架用户像 React 一样用具名图元（`node` / `draw` / `coordinate` / `scope` …）+ 自定义 shape 构图，产出同一份 IR 再走现有 renderer。**只动 `@retikz/vanilla`，不碰 `@retikz/react`。**
 >
-> **alpha 位置（已定：alpha.1）**：本 ADR 是 alpha.1 renderer 决策簇的**第 4 条**（与 [ADR-01](./01-svg-descriptor-contract.md)/[02](./02-canvas-renderer-and-react-canvas-mode.md)/[03](./03-vanilla-runtime-and-dependency-graph.md) 同期决策）。决策已定清；**实现属 alpha.1、待落地**（ADR-01/02/03 已实现，本 ADR 是 alpha.1 仅剩的实现缺口）。
+> **alpha 位置（已定：alpha.1）**：本 ADR 是 alpha.1 renderer 决策簇的**第 4 条**（与 [ADR-01](./01-svg-descriptor-contract.md)/[02](./02-canvas-renderer-and-react-canvas-mode.md)/[03](./03-vanilla-runtime-and-dependency-graph.md) 同期决策）。决策已定清、**实现已落地（属 alpha.1）**——至此 alpha.1 renderer 决策簇 4 条 ADR 全部实现完成。
 
 ## 背景
 
@@ -221,3 +221,14 @@ type Figure = {
 - `compileToScene` / `parseWay` / `DrawWay`（`@retikz/core`）—— figure→scene 编译、way→steps 解析（复用、不自写）。
 - `mountSvg` / `renderToSvgString`（`@retikz/vanilla`，ADR-03）—— `Figure` 方法内部复用，入参扩成接受 `Figure`。
 - `drawScene` / `renderToCanvas` / `RenderOptions`（`@retikz/canvas`）—— `Figure.toCanvas` 复用。
+
+---
+
+## 实现偏离记录（2026-05-31）
+
+> 落地与本 ADR 决策一致；差异为实现期补的小项，记此备查。alpha.1 renderer 决策簇（ADR-01~04）至此全部实现完成。
+
+- **全套 builder 落地**：`src/builder/{figure,node,draw,coordinate,scope}.ts` + `Figure.ts`；`index.ts` 导出 `figure` / `node` / `draw` / `coordinate` / `scope` + `Figure` 类型。`Figure` 含 `.ir` / `.toSvgString` / `.mount` / `.toCanvas` + fluent 方法；hyperscript 与 fluent 同产 `Figure`。
+- **新增 `isFigure.ts`（`FIGURE_BRAND`）**：ADR 文件清单未列；用 brand 标记 `Figure`，供 `mountSvg` / `renderToSvgString` 入参区分 `Figure | IR | Scene`（实现期补的判别工具，纯内部、不导出）。
+- **`toCanvas` 已通**：`Figure.toCanvas(canvas, options)` 走 `@retikz/canvas` 的 `renderToCanvas`，命令式 builder→Canvas 路径可用（独立 `mountCanvas` 入口仍按计划属 alpha.2）。
+- **测试**：新增 `builder-{figure,node,draw,coordinate,scope,render,canvas}.test.ts`；`@retikz/vanilla` 合计 **10 测试文件 / 39 case 全绿**（含 ADR-03 的 `deps-guard` / `mount-svg` / `render-string`）。

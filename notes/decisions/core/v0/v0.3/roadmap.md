@@ -6,7 +6,7 @@
 
 > 本文件记录 v0.3 的完整计划：renderer 架构拆分、`@retikz/vanilla`、水合、`@retikz/plot` 支撑能力，以及 React 双渲染模式与 Canvas renderer MVP。
 >
-> **进度（2026-06-01）**：renderer 架构核心已在 alpha.1 一次交付（svg / canvas / vanilla-SVG + React 双渲染模式，见 [ADR-01~04](./v0.3-alpha.1/)）。剩余主线已按实际进度重排为 alpha.2（vanilla Canvas 入口）→ alpha.3（水合）→ alpha.4（Plot 支撑）→ beta.1（加固）,详见 §Alpha 切分。命令式 builder（ADR-04）属 alpha.1、实现待落地。
+> **进度（2026-06-01）**：renderer 架构核心已在 alpha.1 一次交付（svg / canvas / vanilla-SVG + React 双渲染模式，见 [ADR-01~04](./v0.3-alpha.1/)）。剩余主线已按实际进度重排为 alpha.2（vanilla Canvas 入口）→ alpha.3（水合）→ alpha.4（Plot 支撑）→ beta.1（加固）,详见 §Alpha 切分。命令式 builder（ADR-04）属 alpha.1、已实现。**至此 alpha.1 renderer 架构出关全部完成。**
 
 ## 定位
 
@@ -219,14 +219,14 @@ v0.3 需要注意：
 
 > 原计划把 renderer 架构拆成 alpha.1–alpha.7 七段递进。实际推进中,alpha.1 的 renderer 决策簇（[ADR-01](./v0.3-alpha.1/01-svg-descriptor-contract.md) / [02](./v0.3-alpha.1/02-canvas-renderer-and-react-canvas-mode.md) / [03](./v0.3-alpha.1/03-vanilla-runtime-and-dependency-graph.md) / [04](./v0.3-alpha.1/04-vanilla-imperative-builder.md)）一次定清,实现**提前贯通**了原 alpha.2（SVG 下沉）、alpha.6（React 双渲染模式）、alpha.7（Canvas MVP，且超额）与 alpha.3 的 SVG runtime。故此处把**已交付的都归入 alpha.1**,并对**剩余功能重新分段**。
 
-### alpha.1：renderer 架构出关（ADR-01/02/03 ✅ 已实现；ADR-04 命令式 builder 决策已定、实现待落地）
+### alpha.1 ✅ 已完成：renderer 架构出关（ADR-01/02/03/04 全部实现）
 
 一次决策 + 实现贯通,交付 v0.3 renderer 架构核心(原 alpha.1/2/6/7 + alpha.3-SVG 合并于此;命令式 builder 亦归本段):
 
 - **`@retikz/svg`**（[ADR-01](./v0.3-alpha.1/01-svg-descriptor-contract.md)，原 alpha.1+2）：framework-neutral `SvgNode` descriptor + `buildSvgDocument` / `renderToSvgString`；react SVG 渲染核心下沉、改消费 descriptor,现有 SVG 行为回归全绿;svg 包零 React 依赖。
 - **`@retikz/canvas` + React 双渲染模式**（[ADR-02](./v0.3-alpha.1/02-canvas-renderer-and-react-canvas-mode.md)，原 alpha.6+7）：`drawScene` / `renderToCanvas`（消费 Scene、不走 SVG 中转）；`<Layout renderer="svg"｜"canvas">`，默认 svg、无 breaking；**超额**——gradient / pattern / image / clip / marker 全部真实实现（含 currentColor / 主题响应 / 文本基线统一 / 弧扫描 / 尺寸对齐 SVG）。react 两路共用 `compileToScene` + `browserMeasurer`,同 Scene 保等价。
 - **`@retikz/vanilla` SVG runtime + 依赖图**（[ADR-03](./v0.3-alpha.1/03-vanilla-runtime-and-dependency-graph.md)，原 alpha.3-SVG）：`mountSvg` / `renderToSvgString` / `svgNodeToDom`（runtime 门面、组合 svg 内核,不复制）、12 测试绿；全直接依赖、无 optional peer。
-- **vanilla 命令式 builder**（[ADR-04](./v0.3-alpha.1/04-vanilla-imperative-builder.md)）：**alpha.1 的第 4 条 renderer ADR**——`figure`/`node`/`draw`/`coordinate`/`scope` + `Figure`,让无框架用户像 React 一样具名构图、产同一份 IR。决策已定、**实现待落地（属 alpha.1）**;不写新源、由后续实现 pass 补。
+- **vanilla 命令式 builder**（[ADR-04](./v0.3-alpha.1/04-vanilla-imperative-builder.md)）：**alpha.1 的第 4 条 renderer ADR**——`figure`/`node`/`draw`/`coordinate`/`scope` + `Figure`,让无框架用户像 React 一样具名构图、产同一份 IR。**已实现**(`Figure` 含 `.toSvgString`/`.mount`/`.toCanvas`,vanilla 39 测试全绿)。
 
 衡量标准（见§定位）已达：同一 IR 经 `compileToScene` 后被 SVG 与 Canvas 两条 renderer 消费；vanilla 无框架完成 SVG 渲染；SSR 拿到 SVG 字符串；`@retikz/react` 不再拥有 SVG 渲染核心。
 
