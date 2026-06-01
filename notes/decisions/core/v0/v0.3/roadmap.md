@@ -1,10 +1,10 @@
-# v0.3 总计划：Renderer 架构拆分 + Vanilla runtime + 水合 + Plot 支撑能力
+# v0.3 总计划：Renderer 架构拆分 + Vanilla runtime + 水合 + Tier 2 支撑
 
 > 写于 2026-05-26。承接 v0.2 已完成的 renderer-agnostic Scene 契约、Paint / clip 资源表、MarkerPrimitive、`viewBox` override 与 `compileToScene` 纯函数边界。
 >
 > 关联：[`v0 roadmap`](../roadmap.md) · [`v0.2 总计划`](../v0.2/roadmap.md) · [`架构 core-design.md §2.1 / §5 / §6`](../../../../architecture/core-design.md) · [`tikz-gap-analysis`](../../../../analysis/tikz-gap-analysis.md)
 
-> 本文件记录 v0.3 的完整计划：renderer 架构拆分、`@retikz/vanilla`、水合、`@retikz/plot` 支撑能力，以及 React 双渲染模式与 Canvas renderer MVP。
+> 本文件记录 v0.3 的完整计划：renderer 架构拆分、`@retikz/vanilla`、水合、Tier 2 支撑（`@retikz/plot` 为首个消费者），以及 React 双渲染模式与 Canvas renderer MVP。
 >
 > **进度（2026-06-01）**：renderer 架构核心已在 alpha.1 一次交付（svg / canvas / vanilla-SVG + React 双渲染模式，见 [ADR-01~04](./v0.3-alpha.1/)）。剩余主线已按实际进度重排为 **alpha.2（Tier 2 支撑）→ alpha.3（水合）→ alpha.4（canvas/svg 能力补全）→ beta.1（加固）**,详见 §Alpha 切分。命令式 builder（ADR-04）属 alpha.1、已实现。**至此 alpha.1 renderer 架构出关全部完成。**
 
@@ -200,7 +200,7 @@ renderer 架构（alpha.1）一稳，Tier 2 支撑就是下一段：
 
 ## 后续方向：AI 增量渲染预留
 
-AI 增量渲染不作为 v0.3 的正式交付能力，但 v0.3 拆 renderer / runtime / hydration / plot 支撑能力时需要预留条件，避免后续重构。
+AI 增量渲染不作为 v0.3 的正式交付能力，但 v0.3 拆 renderer / runtime / hydration / Tier 2 支撑时需要预留条件，避免后续重构。
 
 后续目标是让 AI 可以按步骤输出图形内容，例如先渲染坐标轴，再渲染圆，再渲染角度、标签和说明，而不是等待完整图形一次性生成完。
 
@@ -211,7 +211,7 @@ v0.3 需要注意：
 - `@retikz/vanilla` 返回的 view 对象可以预留 `update(nextIr)` 这类整图更新入口，但不承诺 patch stream。
 - SVG renderer 拆分时避免把“整图字符串输出”写死成唯一模式，后续应能扩展到局部 DOM 替换。
 - Canvas renderer 首版可以全量重绘，但设计上不要阻断后续 layer canvas / dirty rect / hit-test cache。
-- plot 支撑能力中的 layer / mark / guide 来源信息，应为后续 progressive layer rendering 留空间。
+- Tier 2 支撑中的 layer / mark / guide 来源信息，应为后续 progressive layer rendering 留空间。
 
 正式的 Progressive IR / JSON Patch stream / append layer / AI step protocol / SVG 局部更新优化，放到 v0.4 或后续版本再设计和实现。
 
@@ -278,7 +278,7 @@ v0.3 需要注意：
 4. ~~`@retikz/vanilla` 是否同时覆盖 SVG DOM 挂载与 SSR 字符串输出，还是拆成更细入口。~~ ✅ **已决（→ [ADR-03](./v0.3-alpha.1/03-vanilla-runtime-and-dependency-graph.md)）**：**单包多 named export**（`renderToSvgString` + `mountSvg` 同包）；Canvas 侧入口（`mountCanvas` / 导出）后置 **alpha.2**（见 §Alpha 切分重排）。
 5. 水合 API 命名：`hydrate` / `hydrateInteractions` / `bind` / `attachHandlers`。
 6. interaction manifest 是否进入 IR，还是只作为 `renderToSvgString` 的 runtime options。
-7. Plot 支撑能力应只写接口草案，还是在 v0.3 里落最小实现。
+7. Tier 2 支撑（plot）应只写接口草案，还是在 v0.3 里落最小实现。
 8. `lowerComposites` 是否足够支撑 plot，还是需要更明确的 domain lowering pipeline。
 9. plot semantic locator（panel / axis / datum / series）应由 core 预留通用形态，还是完全留给 plot 包。
 10. ~~React API 是否只用 `<Layout renderer="...">`，还是同时新增 `<SvgLayout>` / `<CanvasLayout>`。~~ ✅ **已决（→ [alpha.1 ADR-02](./v0.3-alpha.1/02-canvas-renderer-and-react-canvas-mode.md)）**：**只用 `<Layout renderer="svg"｜"canvas">`**（默认 svg、additive、无 breaking）；不新增 `<SvgLayout>` / `<CanvasLayout>` 组件,缩小 API 面。
