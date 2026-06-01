@@ -1,4 +1,4 @@
-import type { Figure } from '../Figure';
+import type { Figure } from '../figure';
 
 /** Figure 品牌标记（Symbol.for 跨包/重复 import 仍同一）；标准 mountSvg/renderToSvgString 用它区分 Figure 与 IR/Scene */
 export const FIGURE_BRAND: unique symbol = Symbol.for('retikz.vanilla.figure');

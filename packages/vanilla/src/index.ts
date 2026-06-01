@@ -13,7 +13,7 @@ export { node } from './builder/node';
 export { draw } from './builder/draw';
 export { coordinate } from './builder/coordinate';
 export { scope } from './builder/scope';
-export type { Figure } from './Figure';
+export type { Figure } from './figure';
 export type { ScopeBuilder } from './builder/scope';
 export type {
   Child,

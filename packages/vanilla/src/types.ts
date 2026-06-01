@@ -1,5 +1,5 @@
 import type { CompileOptions, IR, Scene } from '@retikz/core';
-import type { Figure } from './Figure';
+import type { Figure } from './figure';
 
 /** mountSvg / renderToSvgString 的入参：已编译 `Scene`、待编译 `IR`，或命令式 builder 的 `Figure` */
 export type RenderInput = Scene | IR | Figure;

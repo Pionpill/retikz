@@ -1,4 +1,4 @@
-import { type Figure, createFigure } from '../Figure';
+import { type Figure, createFigure } from '../figure';
 import type { Child, FigureConfig } from './types';
 
 /**
