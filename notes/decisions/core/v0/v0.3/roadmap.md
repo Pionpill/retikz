@@ -6,7 +6,7 @@
 
 > 本文件记录 v0.3 的完整计划：renderer 架构拆分、`@retikz/vanilla`、水合、Tier 2 支撑（`@retikz/plot` 为首个消费者），以及 React 双渲染模式与 Canvas renderer MVP。
 >
-> **进度（2026-06-01）**：renderer 架构核心已在 alpha.1 一次交付（svg / canvas / vanilla-SVG + React 双渲染模式，见 [ADR-01~04](./v0.3-alpha.1/)）。剩余主线已按实际进度重排为 **alpha.2（Tier 2 支撑）→ alpha.3（水合）→ alpha.4（canvas/svg 能力补全）→ beta.1（加固）**,详见 §Alpha 切分。命令式 builder（ADR-04）属 alpha.1、已实现。**至此 alpha.1 renderer 架构出关全部完成。**
+> **进度（2026-06-02）**：renderer 架构核心已在 alpha.1 一次交付（svg / canvas / vanilla-SVG + React 双渲染模式，见 [ADR-01~04](./v0.3-alpha.1/)）；**alpha.2 Tier 2 支撑（可注册 composite 展开管线，见 [ADR-01](./v0.3-alpha.2/01-tier2-support.md)）亦已完成**。剩余主线为 **alpha.3（水合）→ alpha.4（canvas/svg 能力补全）→ beta.1（加固）**,详见 §Alpha 切分。命令式 builder（ADR-04）属 alpha.1、已实现。
 
 ## 定位
 
@@ -232,11 +232,22 @@ v0.3 需要注意：
 
 衡量标准（见§定位）已达：同一 IR 经 `compileToScene` 后被 SVG 与 Canvas 两条 renderer 消费；vanilla 无框架完成 SVG 渲染；SSR 拿到 SVG 字符串；`@retikz/react` 不再拥有 SVG 渲染核心。
 
+### alpha.2 ✅ 已完成：Tier 2 支撑——可注册的 composite 展开管线（[ADR-01](./v0.3-alpha.2/01-tier2-support.md)）
+
+把 core-design §4.3 的 Tier 2 / Composite 接入面落地为**可注册的展开（lowering）管线**——domain 包注册「领域节点 schema + expand」，`compileToScene` 第一步据注册表把 Tier 2 节点下沉成 Tier 1 Kernel，core 仍零 chart 语义：
+
+- **core（[ADR-01](./v0.3-alpha.2/01-tier2-support.md)，red）**：`CompositeBaseSchema`（domain 用 zod `.extend()` 继承必填 `namespace` / `type`）+ `defineComposite({ schema, expand })`；`CompileOptions.composites` 注册表 + `lowerComposites`（compile 第一步，据 `${namespace}.${type}` 查表 → `schema.parse` → `expand` → 递归 fixpoint）；`ChildSchema` 由严格 4-way `discriminatedUnion` 放宽为 `union(core4 + 开放 composite 节点)`，**判别靠有无 `namespace`**（tier2 必有、core4 没有，core4 零改动）；未注册 namespace/type → `onWarn(COMPOSITE_NOT_REGISTERED)` + 跳过（非硬失败），环 / 超深度（默认 32、`maxCompositeDepth` 可配）才 throw。core 不内置任何 composite。
+- **render**：零源码改动——Tier 2 已在 compile 期展开成 Scene，`./svg` / `./canvas` 消费同一 Scene；补 tier2 IR → Scene → svg/canvas 对照测试。
+- **react / vanilla**：`<Layout composites>` 透传（react）/ `composites` 随 `& CompileOptions` 自动透传（vanilla）。
+- **文档**：reference 新增「复合 / Composite」分组（extending 后 schema 前）+ Tier 2 节点页。
+- **自测**：core 18 测试全绿（10 功能 + 8 对抗：注册校验 / 环 / 深度 / scope 嵌套 / 判别陷阱）。
+
+**本段刻意收窄**（见 [ADR-01](./v0.3-alpha.2/01-tier2-support.md) §不在本 ADR 范围）：`@retikz/plot` 本体（axis / panel / mark 等具体 Tier 2 节点及其 `expand`）→ 后续独立子包；`dataRef` / `scale registry` / `encoding` 接入面 → 划归 plot 包、不进 core；`<Composite>` JSX authoring 通道 / `expand` ctx / lowering 缓存 / vanilla `composite()` 糖 → [ADR-02](./v0.3-alpha.2/02-composite-authoring-context-cache.md)（已采纳延后、未排期）。本段只交付「Tier 2 跑通所需的底层注册管线 + 端到端 fixture 验证 + runtime 透传」。
+
 ### 后续分段（重新设计）
 
 | 子版本         | 主题                | 内容                                                                                                                                                                                                                                    | 依赖 / 待决策                                                                                    |
 | -------------- | ------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
-| v0.3.0-alpha.2 | Tier 2 支撑 | domain 包（plot 等）的 **Tier 2 composite type** 经**可注册的展开 / lowering 逻辑**解析成 Tier 1 Kernel——把 `lowerComposites` 钩子泛化成「Tier 2 type → 展开函数」注册管线；**plot 提供其 Tier 2 type 作首个消费者**，并为其预留坐标化 / locator·anchor / layer·z-order / dataRef·scale 接入面。不在 core 实现 chart 本体（承 core-design §4.3 Tier 2）                                                                                                | —                                                                                                |
 | v0.3.0-alpha.3 | 水合                | SVG 根级事件委托（`data-retikz-id` + `closest` 反查 + runtime handler 注册表，非逐图元绑定）+ `hydrate` API + react handler 映射到同一 binding 语义；非冒泡事件用 `pointerover/out` + `relatedTarget` 合成；canvas 水合（hit-test）后置 | 待决策 #5（命名）/ #6（manifest 入口）；svg `data-retikz-id` 填值、vanilla `interactions` 承载点 |
 | v0.3.0-alpha.4 | canvas / svg 能力补全 | vanilla 独立 `mountCanvas` 入口（`Figure.toCanvas` 已通，补无框架直挂）；canvas / svg 两 renderer 剩余能力与降级项补全 + SVG↔Canvas 对照测试 | — |
 | v0.3.0-beta.1  | 体验加固 | 文档 demo、Node canvas / `@napi-rs` 服务端导出、包体与 public API 清理、release | — |

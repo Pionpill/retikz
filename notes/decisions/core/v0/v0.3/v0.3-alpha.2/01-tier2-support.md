@@ -1,6 +1,6 @@
 # ADR-01：Tier 2 支撑——领域节点 schema + 可注册的 lowering 管线
 
-- 状态：Proposed
+- 状态：Accepted（已实现，2026-06-02；core composites 管线 + react/vanilla 透传 + render 对照测试 + 文档全落地）
 - 决策日期：2026-06-01
 - 更新：2026-06-02 ①路径对齐 monorepo 重组；②范围收窄（延后项拆入 [ADR-02](./02-composite-authoring-context-cache.md)）；③**类型重设计**——Tier 2 节点是**像 Node 一样的一等领域节点**（自定义完整 zod schema + 字段一等 + 每字段 describe）；**判别靠「有无 `namespace`」：tier2 必有 `namespace`，tier1 没有**（core4 零改动）；`ChildSchema = union(core4 discriminatedUnion + 开放 tier2 节点)`；注册项 `{ namespace, type, schema, expand }`，`expand` 收 `schema.parse` 后的强类型节点
 - 关联：[ADR-02 Tier 2 延后项](./02-composite-authoring-context-cache.md) · [v0.3 roadmap §alpha.2](../roadmap.md) · [core-design.md §4.3 Tier 2 / Composite](../../../../../architecture/core-design.md) · [plot-design.md](../../../../../architecture/plot-design.md) · [alpha.1 ADR-01~04](../v0.3-alpha.1/) · [v0.2-alpha.3 ADR-01 shape-registry](../v0.2/v0.2-alpha.3/01-shape-registry.md)（registry 模式参照）

@@ -43,6 +43,23 @@ export const changelog: Array<Release> = [
         ],
         subVersions: [
           {
+            version: 'alpha.2',
+            date: '2026-06-02',
+            summary: {
+              zh: '无源码改动：Tier 2 已在 compile 期展开成 Tier 1 → Scene，`./svg` / `./canvas` 消费同一 Scene 不变；仅补 tier2 IR → Scene → svg/canvas 对照测试，随四包 version lockstep 对齐。',
+              en: 'No source change: Tier 2 is lowered to Tier 1 → Scene at compile time, so `./svg` / `./canvas` consume the same Scene unchanged; only a tier2 IR → Scene → svg/canvas parity test is added, aligned under the four-package version lockstep.',
+            },
+            items: [
+              {
+                label: { zh: 'tier2 对照测试', en: 'tier2 parity test' },
+                content: {
+                  zh: '含 tier2 节点的 IR 经 `compileToScene` 展开后，`buildSvgDocument`（svg）与 `drawScene`（canvas）消费同一 Scene、语义等价；renderer 无需识别 tier2，零源码改动。',
+                  en: 'After IR with tier2 nodes is expanded by `compileToScene`, `buildSvgDocument` (svg) and `drawScene` (canvas) consume the same Scene equivalently; renderers need not recognize tier2, zero source change.',
+                },
+              },
+            ],
+          },
+          {
             version: 'alpha.1',
             date: '2026-06-02',
             summary: {
@@ -100,6 +117,23 @@ export const changelog: Array<Release> = [
         ],
         subVersions: [
           {
+            version: 'alpha.2',
+            date: '2026-06-02',
+            summary: {
+              zh: 'Tier 2 透传：`composites` 随 `CommonOptions = { … } & CompileOptions` 自动透传到 `compileToScene`，无框架 / SSR 渲染含 tier2 节点的 IR 无需额外接线。',
+              en: 'Tier 2 passthrough: `composites` flows automatically to `compileToScene` via `CommonOptions = { … } & CompileOptions`; framework-free / SSR rendering of IR with tier2 nodes needs no extra wiring.',
+            },
+            items: [
+              {
+                label: { zh: '`composites` 自动透传', en: '`composites` auto-passthrough' },
+                content: {
+                  zh: 'vanilla 的 `CommonOptions` 由 `& CompileOptions` 自动继承 `composites`，`toScene` 的 `{ ...options }` 原样转交；本版仅补类型注释与透传测试，无源码逻辑改动。',
+                  en: 'vanilla’s `CommonOptions` inherits `composites` automatically via `& CompileOptions`, and `toScene`’s `{ ...options }` forwards it verbatim; this version only adds type comments and a passthrough test, no source-logic change.',
+                },
+              },
+            ],
+          },
+          {
             version: 'alpha.1',
             date: '2026-06-02',
             summary: {
@@ -150,6 +184,23 @@ export const changelog: Array<Release> = [
         ],
         subVersions: [
           {
+            version: 'alpha.2',
+            date: '2026-06-02',
+            summary: {
+              zh: 'Tier 2 透传：`<Layout>` 加可选 `composites` prop，与 `shapes` / `arrows` 同一行透传给 `compileToScene`；含 tier2 节点的 IR 经 `<Layout ir>` 直喂即可渲染。',
+              en: 'Tier 2 passthrough: `<Layout>` gains an optional `composites` prop, forwarded to `compileToScene` alongside `shapes` / `arrows`; IR containing tier2 nodes renders when fed via `<Layout ir>`.',
+            },
+            items: [
+              {
+                label: { zh: '`<Layout composites>` 透传', en: '`<Layout composites>` passthrough' },
+                content: {
+                  zh: '`Layout` 加 `composites?: Array<CompositeDefinition>`，与现有 `shapes` / `arrows` / `patterns` / `pathGenerators` 同构透传到 `compileToScene`，无其它逻辑；Tier 2 节点本版经 `ir` prop 直喂进入，JSX authoring 通道见后续 ADR。',
+                  en: '`Layout` gains `composites?: Array<CompositeDefinition>`, forwarded to `compileToScene` isomorphically with the existing `shapes` / `arrows` / `patterns` / `pathGenerators`, with no other logic; tier2 nodes enter via the `ir` prop this version, with a JSX authoring channel deferred to a later ADR.',
+                },
+              },
+            ],
+          },
+          {
             version: 'alpha.1',
             date: '2026-06-02',
             summary: {
@@ -179,10 +230,17 @@ export const changelog: Array<Release> = [
         pkg: '@retikz/core',
         version: 'v0.3',
         description: {
-          zh: 'v0.3 renderer 架构出关期 core 无 IR / 公开 API 变更，仅随四包 version lockstep 对齐到 0.3.0-alpha.1；继续保持零 React / 零 DOM / 零 renderer runtime 依赖。',
-          en: 'During the v0.3 renderer phase core has no IR / public-API change; it only aligns to 0.3.0-alpha.1 under the four-package version lockstep, staying zero React / DOM / renderer-runtime deps.',
+          zh: 'v0.3：renderer 架构出关（alpha.1，core 无 API 变更）后，alpha.2 新增 Tier 2 支撑——可注册的 composite 展开管线（`composites` 注册表 + `lowerComposites`），core 仍零 React / DOM / renderer 依赖、零 chart 语义。',
+          en: 'v0.3: after the renderer architecture (alpha.1), alpha.2 adds Tier 2 support — a composite lowering pipeline (`composites` + `lowerComposites`); core stays zero React / DOM / chart semantics.',
         },
         highlights: [
+          {
+            label: { zh: 'Tier 2 / Composite 支撑', en: 'Tier 2 / Composite support' },
+            content: {
+              zh: 'core-design §4.3 的 Tier 2 接入面落地为可注册展开管线：`CompositeBaseSchema` + `defineComposite` + `CompileOptions.composites`，`compileToScene` 第一步 `lowerComposites` 把领域高层节点下沉成 Tier 1；`@retikz/plot` 为首个消费者（独立包，不进 core）。',
+              en: 'The Tier 2 surface from core-design §4.3 lands as a registrable lowering pipeline: `CompositeBaseSchema` + `defineComposite` + `CompileOptions.composites`; `compileToScene`’s first step `lowerComposites` lowers domain high-level nodes to Tier 1; `@retikz/plot` is the first consumer (a standalone package, not in core).',
+            },
+          },
           {
             label: { zh: 'Scene 契约多 renderer 验证', en: 'Scene contract validated across renderers' },
             content: {
@@ -192,6 +250,37 @@ export const changelog: Array<Release> = [
           },
         ],
         subVersions: [
+          {
+            version: 'alpha.2',
+            date: '2026-06-02',
+            summary: {
+              zh: 'Tier 2 支撑：可注册的 composite 展开管线——domain 包（plot 等）注册「领域节点 schema + expand」，compileToScene 第一步据注册表把 Tier 2 节点下沉成 Tier 1 Kernel；core 仍零 chart 语义。',
+              en: 'Tier 2 support: a registrable composite lowering pipeline — domain packages (plot, etc.) register a "domain-node schema + expand"; compileToScene lowers Tier 2 nodes to Tier 1 Kernel as its first step, while core keeps zero chart semantics.',
+            },
+            items: [
+              {
+                label: { zh: '可注册 composite 管线', en: 'Registrable composite pipeline' },
+                content: {
+                  zh: '新增 `CompositeBaseSchema`（domain 用 zod `.extend()` 继承必填 `namespace` / `type`）+ `defineComposite({ schema, expand })`；`CompileOptions.composites` 注册表 + `lowerComposites` 在 compile 第一步据 `${namespace}.${type}` 查表、`schema.parse` 精确校验后 `expand` 成 Tier 1，递归到 fixpoint。',
+                  en: 'Adds `CompositeBaseSchema` (domain packages inherit the required `namespace` / `type` via zod `.extend()`) + `defineComposite({ schema, expand })`; a `CompileOptions.composites` registry + `lowerComposites` looks up `${namespace}.${type}` as the first compile step, validates via `schema.parse`, then `expand`s to Tier 1, recursing to a fixpoint.',
+                },
+              },
+              {
+                label: { zh: '有无 namespace 判别 tier1/tier2', en: 'namespace presence discriminates tier1/tier2' },
+                content: {
+                  zh: '`ChildSchema` 由严格 4-way `discriminatedUnion` 放宽为 `z.union([discriminatedUnion(core4), CompositeNodeSchema])`：tier2 必有 `namespace`、tier1（core4）没有——`\'namespace\' in node` 即判 tier2，core4 四类 schema 零改动；放宽非 breaking，原合法 IR 仍合法。',
+                  en: '`ChildSchema` relaxes from a strict 4-way `discriminatedUnion` to `z.union([discriminatedUnion(core4), CompositeNodeSchema])`: tier2 must carry `namespace`, tier1 (core4) carries none — `\'namespace\' in node` decides tier2, the four core schemas are untouched; the relaxation is non-breaking, existing valid IR stays valid.',
+                },
+              },
+              {
+                label: { zh: '未注册容错 + 深度 / 环守卫', en: 'Unregistered tolerance + depth / cycle guards' },
+                content: {
+                  zh: '未注册的 `namespace/type` → `onWarn(COMPOSITE_NOT_REGISTERED)`（带 key + locator）+ 跳过该节点、继续编译其余，非硬失败；递归带深度上限（默认 32，`CompileOptions.maxCompositeDepth` 可配）与环守卫，超限 throw。core 不内置任何 composite。',
+                  en: 'An unregistered `namespace/type` → `onWarn(COMPOSITE_NOT_REGISTERED)` (with key + locator) + skips that node and keeps compiling the rest, never a hard failure; recursion is bounded by a depth limit (default 32, configurable via `CompileOptions.maxCompositeDepth`) and a cycle guard that throws past the limit. core ships no built-in composite.',
+                },
+              },
+            ],
+          },
           {
             version: 'alpha.1',
             date: '2026-06-02',
@@ -205,6 +294,59 @@ export const changelog: Array<Release> = [
                 content: {
                   zh: 'renderer 架构改动集中在 render / react / vanilla，core IR、`compileToScene`、Scene primitive 均未变；本版仅为四包 version lockstep 同步发布。',
                   en: 'The renderer-architecture work is confined to render / react / vanilla; core IR, `compileToScene`, and Scene primitives are unchanged — this version ships only for the four-package version lockstep.',
+                },
+              },
+            ],
+          },
+        ],
+      },
+      {
+        pkg: 'docs',
+        version: 'v0.3',
+        description: {
+          zh: 'v0.3 文档：introduction 补「包关系」一节 + retikz 自绘依赖图；reference 新增「复合 / Composite」分组，收录 Tier 2 节点（composite）的注册与展开管线。',
+          en: 'v0.3 docs: the introduction gains a "package relationships" section + a retikz-drawn dependency diagram; reference adds a "Composite" group covering Tier 2 node registration and the lowering pipeline.',
+        },
+        highlights: [
+          {
+            label: { zh: '复合 / Composite 分组', en: 'Composite group' },
+            content: {
+              zh: 'reference 下 extending 之后、schema 之前新增「复合 / Composite」分组，落地页 + Tier 2 节点页（defineComposite / namespace·type 判别 / lowering 管线）[复合](/core/reference/composites)',
+              en: 'A "Composite" group between extending and schema under reference — a landing page + a Tier 2 nodes page (defineComposite / namespace·type discrimination / lowering pipeline) [Composite](/core/reference/composites)',
+            },
+          },
+        ],
+        subVersions: [
+          {
+            version: 'alpha.2',
+            date: '2026-06-02',
+            summary: {
+              zh: '新增「复合 / Composite」分组（reference，extending 后 schema 前）：Tier 2 节点的注册（defineComposite）/ 判别 / lowering 文档。',
+              en: 'A new "Composite" group (reference, between extending and schema): docs on Tier 2 node registration (defineComposite) / discrimination / lowering.',
+            },
+            items: [
+              {
+                label: { zh: '复合分组 + Tier 2 节点页', en: 'Composite group + Tier 2 nodes page' },
+                content: {
+                  zh: '[复合](/core/reference/composites) 分组落地页 + [Tier 2 节点](/core/reference/composites/composite) 详细页（`defineComposite({ schema, expand })`、有无 namespace 判别、`lowerComposites` 展开、未注册 warn+skip）；三处协同（contents + data + i18n）同步。',
+                  en: 'A [Composite](/core/reference/composites) landing page + a [Tier 2 nodes](/core/reference/composites/composite) page (`defineComposite({ schema, expand })`, namespace-presence discrimination, `lowerComposites` expansion, unregistered warn+skip); three-place sync (contents + data + i18n).',
+                },
+              },
+            ],
+          },
+          {
+            version: 'alpha.1',
+            date: '2026-06-02',
+            summary: {
+              zh: 'introduction 补「包关系」一节 + 一张 retikz 自绘的四包依赖图（core → render → react / vanilla）。',
+              en: 'The introduction gains a "package relationships" section + a retikz-drawn four-package dependency diagram (core → render → react / vanilla).',
+            },
+            items: [
+              {
+                label: { zh: '包关系 section + 依赖图', en: 'Package-relationship section + dependency diagram' },
+                content: {
+                  zh: '[introduction](/core/introduction) 新增「包关系」一节，描述 core / render / react / vanilla 四包职责与依赖方向，并用 retikz 自身画出依赖关系图（dogfooding）。',
+                  en: 'The [introduction](/core/introduction) gains a "package relationships" section describing the duties and dependency direction of core / render / react / vanilla, with the dependency diagram drawn by retikz itself (dogfooding).',
                 },
               },
             ],

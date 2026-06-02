@@ -1,6 +1,6 @@
 # ADR-02：Tier 2 延后项——`<Composite>` JSX authoring 通道 + expand 上下文 + lowering 缓存
 
-- 状态：Proposed（未排期；从 [ADR-01](./01-tier2-support.md) 收窄时拆出）
+- 状态：Accepted（延后方案已采纳；三项**未排期、未实现**，从 [ADR-01](./01-tier2-support.md) 收窄时拆出，待后续版本触发）
 - 决策日期：2026-06-02
 - 关联：[ADR-01 Tier 2 支撑](./01-tier2-support.md) · [v0.3 roadmap §alpha.2](../roadmap.md) · [core-design.md §4.3 Tier 2](../../../../../architecture/core-design.md)
 
