@@ -1,6 +1,7 @@
 import { type FC, useEffect, useRef, useState } from 'react';
 
 import { DocsSearch } from '@/components/shared/docs-search';
+import { ButtonGroup } from '@/components/ui/button-group';
 
 import { AiChatTrigger } from '../ai-chat';
 import { MobileNav } from '../mobile/MobileNav';
@@ -35,10 +36,7 @@ const AppHeader: FC = () => {
     if (!el) return;
     const ro = new ResizeObserver(([entry]) => {
       // Tailwind 容器查询走 border-box；与 CSS 保持一致避免边界值附近 portal 与 in-tree 状态错位
-      const width =
-        entry.borderBoxSize.length > 0
-          ? entry.borderBoxSize[0].inlineSize
-          : entry.contentRect.width;
+      const width = entry.borderBoxSize.length > 0 ? entry.borderBoxSize[0].inlineSize : entry.contentRect.width;
       setCompact(width < COMPACT_THRESHOLD_PX);
     });
     ro.observe(el);
@@ -56,11 +54,11 @@ const AppHeader: FC = () => {
           <BrandLink />
           <ModuleNav />
         </div>
-        <div className="flex shrink-0 items-center gap-2">
-          <DocsSearch />
-          <AiChatTrigger />
-        </div>
-        <div className="flex min-w-0 shrink-0 items-center justify-end gap-2 @4xl/header:flex-1 @4xl/header:basis-0 @4xl/header:gap-3">
+        <div className="flex min-w-0 shrink-0 items-center justify-end gap-2 @4xl/header:flex-1 @4xl/header:basis-0 @4xl/header:gap-1">
+          <ButtonGroup>
+            <AiChatTrigger />
+            <DocsSearch />
+          </ButtonGroup>
           <HeaderActions />
         </div>
       </header>

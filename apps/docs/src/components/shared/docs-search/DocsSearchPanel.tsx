@@ -2,14 +2,7 @@ import { Check } from 'lucide-react';
 import { type FC, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from '@/components/ui/command';
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import type { Lang } from '@/i18n';
 import { cn } from '@/lib/utils';
 
@@ -96,9 +89,7 @@ export const DocsSearchPanel: FC<DocsSearchPanelProps> = ({
   const pinnedItems = useMemo(() => {
     if (pinnedSet.size === 0) return [];
     const byPath = new Map(entries.map(entry => [entry.path, entry]));
-    return (pinnedPaths ?? [])
-      .map(path => byPath.get(path))
-      .filter((entry): entry is SearchEntry => Boolean(entry));
+    return (pinnedPaths ?? []).map(path => byPath.get(path)).filter((entry): entry is SearchEntry => Boolean(entry));
   }, [entries, pinnedPaths, pinnedSet]);
 
   const grouped = useMemo(() => {
@@ -163,9 +154,7 @@ export const DocsSearchPanel: FC<DocsSearchPanelProps> = ({
       <CommandInput placeholder={placeholder} value={input} onValueChange={setInput} />
       <CommandList>
         {hasPinned && (
-          <CommandGroup heading={pinnedHeading}>
-            {pinnedItems.map(entry => renderEntry(entry, null))}
-          </CommandGroup>
+          <CommandGroup heading={pinnedHeading}>{pinnedItems.map(entry => renderEntry(entry, null))}</CommandGroup>
         )}
         {!hasPinned && !hasGrouped && <CommandEmpty>{emptyText}</CommandEmpty>}
         {grouped.map(([moduleLabel, items]) => (
