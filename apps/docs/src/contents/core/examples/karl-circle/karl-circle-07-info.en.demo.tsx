@@ -84,7 +84,7 @@ const Demo: FC = () => (
     {/* Right-hand info box — LineSpec.fill switches color per line (inline-span coloring not yet supported).
         Light-gray dashed border, no fill: visible in both light / dark themes without stealing focus */}
     <Node
-      position={[320, 10]}
+      position={[380, 10]}
       shape="rectangle"
       stroke="lightgray"
       dashed

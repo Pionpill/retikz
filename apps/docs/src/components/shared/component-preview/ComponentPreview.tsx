@@ -7,6 +7,7 @@ import type { IR } from '@retikz/core';
 import { Layout, Scope, convertReactNodeToIR } from '@retikz/react';
 
 import { ComponentRender, type ComponentRenderSource } from './ComponentRender';
+import { useDemoSegments } from './demoLocationContext';
 import { irToVanillaCode } from './irToVanillaCode';
 import {
   type AlignKey,
@@ -163,7 +164,10 @@ export const ComponentPreview: FC<ComponentPreviewProps> = props => {
   const lang = i18n.language.startsWith('zh') ? 'zh' : 'en';
 
   // 允许「找不到」时为 undefined，不在这里 early return（hooks 顺序要稳）
-  const segments = loc ? docPathSegments(loc) : null;
+  // segments 优先取 DemoLocationContext（与屏幕上正在渲染的那份 MDX 内容配对），缺省再回退实时路由——
+  // 切页过渡窗口里旧内容仍挂着、实时路由已是新页，直接用实时路由会把旧 demo 名拼到新目录下误报 not found
+  const ctxSegments = useDemoSegments();
+  const segments = ctxSegments ?? (loc ? docPathSegments(loc) : null);
   const key = segments ? resolveDemoKey(segments, name, lang) : null;
   const mod = key ? demoModules[key] : undefined;
   const rawSource = key ? demoSources[key] : undefined;
