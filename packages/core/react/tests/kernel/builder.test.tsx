@@ -445,7 +445,7 @@ describe('buildIR', () => {
       );
       const scope = ir.children[0];
       expect(scope.type).toBe('scope');
-      if (scope.type === 'scope') {
+      if (!('namespace' in scope) && scope.type === 'scope') {
         expect(scope.children).toHaveLength(4);
         expect(scope.children[0]).toMatchObject({ type: 'node', id: 'A' });
         expect(scope.children[1]).toMatchObject({ type: 'coordinate', id: 'anchor' });

@@ -1,6 +1,7 @@
 import { type CSSProperties, type FC, type ReactElement, type ReactNode, cloneElement, useId, useMemo } from 'react';
 import {
   type ArrowDefinition,
+  type CompositeDefinition,
   type IR,
   type IRViewBox,
   type PathGeneratorDefinition,
@@ -97,6 +98,12 @@ export type LayoutProps = ScopeStyleProps & {
    *   未注册名编译期 throw（错误列出可用名）。`params` 经 generator 的 paramsSchema + JsonObjectSchema 双 parse 守 JSON 可序列化
    */
   pathGenerators?: Record<string, PathGeneratorDefinition>;
+  /**
+   * 运行时注入的 Tier 2 composite 展开逻辑（透传给 `compileToScene` 的 `CompileOptions.composites`）
+   * @description IR 里含 namespace 的 tier2 节点经此注册表在 compile 第一步展开成 Tier 1；core 无内置，
+   *   未注册 namespace/type → 警告并跳过。展开始终在 core，不在 React 层。
+   */
+  composites?: Array<CompositeDefinition>;
 };
 
 /**
@@ -107,7 +114,7 @@ export type LayoutProps = ScopeStyleProps & {
  *   `@retikz/render/svg`，react 只做 `SvgNode→ReactElement` 薄映射 + `useId` 绑定。
  */
 export const Layout: FC<LayoutProps> = props => {
-  const { ir: irFromProp, children, width, height, viewBox, className, style, renderer = 'svg', idPrefix, nodeDistance, shapes, arrows, patterns, pathGenerators } = props;
+  const { ir: irFromProp, children, width, height, viewBox, className, style, renderer = 'svg', idPrefix, nodeDistance, shapes, arrows, patterns, pathGenerators, composites } = props;
   const { color, stroke, fill, strokeWidth, opacity, fillOpacity, drawOpacity, nodeDefault, pathDefault, labelDefault, arrowDefault } = props;
   const scopeStyle: ScopeStyleProps = { color, stroke, fill, strokeWidth, opacity, fillOpacity, drawOpacity, nodeDefault, pathDefault, labelDefault, arrowDefault };
   const hasScopeStyle = Object.keys(pickScopeStyle(scopeStyle)).length > 0;
@@ -131,8 +138,8 @@ export const Layout: FC<LayoutProps> = props => {
     [defaultFontFamily],
   );
   const scene = useMemo(
-    () => compileToScene(ir, { measureText, nodeDistance, shapes, arrows, patterns, pathGenerators }),
-    [ir, measureText, nodeDistance, shapes, arrows, patterns, pathGenerators],
+    () => compileToScene(ir, { measureText, nodeDistance, shapes, arrows, patterns, pathGenerators, composites }),
+    [ir, measureText, nodeDistance, shapes, arrows, patterns, pathGenerators, composites],
   );
 
   // useId 返回 ":r0:" 含冒号；SVG `url(#id)` 对冒号兼容性差，剥成纯字母数字。caller 显式 idPrefix 优先（SSR 水合对齐）
