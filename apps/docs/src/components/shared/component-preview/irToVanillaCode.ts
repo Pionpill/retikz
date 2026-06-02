@@ -146,6 +146,10 @@ const scopeCode = (scope: IRScope, indent: number, ctx: Ctx): string => {
 };
 
 const childCode = (child: IRChild, indent: number, ctx: Ctx): string => {
+  if ('namespace' in child) {
+    // Tier 2 composite 经 IR 直喂（<Layout ir>）；命令式 composite builder 见 ADR-02
+    return `null /* Tier 2 composite "${child.namespace}.${child.type}"，经 IR 直喂 */`;
+  }
   switch (child.type) {
     case 'node':
       return nodeCode(child, indent, ctx);

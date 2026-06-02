@@ -1,0 +1,45 @@
+---
+title: Tier 2 Composites
+description: Composites let domain packages register high-level nodes (axis / bars / tree…) — discriminated by namespace + type, each a full zod schema, lowered to Tier 1 at compile time. core ships no composite, only the registry and the lowering pipeline.
+---
+
+retikz's IR children come in two tiers: **Tier 1** (`node` / `path` / `coordinate` / `scope` — built into core, **no namespace**) and **Tier 2 composites** (a domain package's high-level nodes, which **always carry a `namespace`**, e.g. `plot`'s `axis`). Discrimination is purely by **presence of `namespace`**: present → tier2, absent → tier1.
+
+A Tier 2 node has its own **complete zod schema** (fields first-class, each described) just like `Node`. At the first compile step it is lowered to Tier 1 by a registered expand function, after which layout / anchor / zIndex / renderer all apply automatically. core ships no composite and understands no chart / domain semantics.
+
+## Registering a composite
+
+`defineComposite({ schema, expand })`: `schema` extends `CompositeBaseSchema` (which declares the required `namespace` / `type`) plus domain fields; `expand` receives the schema-validated, strongly-typed node and produces Tier 1. Register via `CompileOptions.composites` (in React, `<Layout composites={[...]}>`); the node enters via raw IR (`<Layout ir>`):
+
+<ComponentPreview name="composite-basic" size="sm" />
+
+| Field | Type | Description |
+| --- | --- | --- |
+| `schema` | `ZodType` | Full node schema: `CompositeBaseSchema.extend({ namespace: z.literal(...), type: z.literal(...), ...fields })`; core extracts `namespace.type` from the two literals as the registry key |
+| `expand` | `(node) => IRChild \| IRChild[]` | Lowers the node to Tier 1 (pure, props-driven; may produce many, may nest composites) |
+
+> `namespace` / `type` are **not repeated at the definition top level** — core extracts them from the `z.literal`s in `schema`. The schema must be a ZodObject extending `CompositeBaseSchema` with both as `z.literal`, otherwise registration throws.
+
+## Lowering
+
+`compileToScene` walks the IR first, and for a tier2 node (`namespace` present) looks up the `${namespace}.${type}` registry → `schema.parse(node)` (precise validation + strong typing + default filling) → `expand` → replace; expansion output may contain composites, recursing to all Tier 1 (fixpoint).
+
+- **Unregistered** `namespace/type` → warns (`COMPOSITE_NOT_REGISTERED`) and **skips that node**, rendering the rest — the whole figure is not aborted.
+- **Nesting depth** defaults to 32, adjustable via `CompileOptions.maxCompositeDepth`; cycles / over-depth throw (runaway guard).
+- When the expansion output carries an `id`, other elements can anchor-reference it as usual (lowering happens before anchor resolution).
+
+## vs. Sugar
+
+| | Sugar (`<Draw>` etc.) | Tier 2 composite |
+| --- | --- | --- |
+| Enters IR | ❌ flattened to Kernel at the adapter | ✅ enters IR as a high-level node, persistable / AI-generatable |
+| Expanded | At framework build time | At core compile time (shared by all renderers / runtimes) |
+| For | Shorthand that round-trips 1:1 | High-level structures involving algorithms (auto-tick / layout / scale) |
+
+Lowering is **always in core**, never in the framework layer — svg / canvas / vanilla / SSR / AI all get it for free, with no per-framework implementation.
+
+<Comparison target="tikz" title="Tier 2 and PGFPlots">
+
+PGFPlots is to TikZ as Tier 2 is to retikz's Tier 1: charts (axis / plot) are a layer above TikZ that expands into low-level node / path. retikz lands this layer as IR-level composites + lowering: `@retikz/plot` is a standalone package registering `plot.axis` and friends with their expand logic, while core knows no chart type.
+
+</Comparison>

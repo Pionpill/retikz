@@ -70,7 +70,8 @@
     "refShapeRegistry": "Custom Shapes",
     "refCustomArrow": "Custom Arrows",
     "refCustomPattern": "Custom Patterns",
-    "refPathGenerator": "Path Generators"
+    "refPathGenerator": "Path Generators",
+    "refComposite": "Tier 2 Composites"
   },
   "blog": {
     "label": "Blog",

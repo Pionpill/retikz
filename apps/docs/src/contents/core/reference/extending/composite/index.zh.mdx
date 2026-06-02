@@ -1,0 +1,45 @@
+---
+title: Tier 2 节点
+description: composite 让 domain 包注册高层节点（axis / bars / tree…）——namespace + type 判别、完整 zod schema、compile 期 lowering 展开成 Tier 1。core 不内置任何 composite，只提供注册面与展开管线。
+---
+
+retikz 的 IR 子节点分两层：**Tier 1**（`node` / `path` / `coordinate` / `scope`，core 内置、**无 namespace**）与 **Tier 2 composite**（domain 包的高层节点，**必有 `namespace`**，如 `plot` 的 `axis`）。判别只看**有无 `namespace`**：有 → tier2、无 → tier1。
+
+Tier 2 节点像 `Node` 一样有自己**完整的 zod schema**（字段一等、每字段带说明），在 compile 第一步经注册的展开函数下沉成 Tier 1，之后布局 / anchor / zIndex / renderer 全自动复用。core 不内置任何 composite，也不懂任何 chart / domain 语义。
+
+## 注册一个 composite
+
+`defineComposite({ schema, expand })`：`schema` 继承 `CompositeBaseSchema`（定义必填的 `namespace` / `type`）再加领域字段；`expand` 收 schema 校验后的强类型节点、产 Tier 1。注册经 `CompileOptions.composites`（React 里 `<Layout composites={[...]}>`），节点经 IR 直传（`<Layout ir>`）：
+
+<ComponentPreview name="composite-basic" size="sm" />
+
+| 字段 | 类型 | 描述 |
+| --- | --- | --- |
+| `schema` | `ZodType` | 完整节点 schema：`CompositeBaseSchema.extend({ namespace: z.literal(...), type: z.literal(...), ...字段 })`；core 从两个 literal 提取 `namespace.type` 作注册 key |
+| `expand` | `(node) => IRChild \| IRChild[]` | 据节点字段展开成 Tier 1（纯函数、props 驱动；可产多个、可嵌套 composite） |
+
+> `namespace` / `type` **不在 definition 顶层重复写**——core 从 `schema` 的 `z.literal` 提取。schema 必须是 extend `CompositeBaseSchema` 的 ZodObject、且两者为 `z.literal`，否则注册期报错。
+
+## 展开（lowering）
+
+`compileToScene` 第一步遍历 IR，遇 tier2 节点（`namespace` 存在）查 `${namespace}.${type}` 注册表 → `schema.parse(node)`（精确校验 + 强类型 + 默认值填充）→ `expand` → 替换；展开产物可含 composite，递归到全 Tier 1（fixpoint）。
+
+- **未注册** `namespace/type` → 警告（`COMPOSITE_NOT_REGISTERED`）并**跳过该节点**、渲染其余——不中断整图。
+- **嵌套深度**默认 32 层，可经 `CompileOptions.maxCompositeDepth` 调整；环 / 超深度报错（防死循环）。
+- 展开产物带 `id` 时，其它元素可照常 anchor 引用（展开在 anchor 解析之前）。
+
+## 与 Sugar 的区别
+
+| | Sugar（`<Draw>` 等） | Tier 2 composite |
+| --- | --- | --- |
+| 进 IR | ❌ adapter 期展平为 Kernel | ✅ 作为高层节点进 IR、可持久化 / AI 生成 |
+| 展开时机 | 框架构建期 | core compile 期（所有 renderer / runtime 共享） |
+| 适用 | 可 1:1 反推的简写 | 含算法（auto-tick / 布局 / scale）的高层结构 |
+
+展开**始终在 core**、不在框架层——svg / canvas / vanilla / SSR / AI 都自动获得，无需各自实现。
+
+<Comparison target="tikz" title="Tier 2 与 PGFPlots">
+
+PGFPlots 之于 TikZ ≈ Tier 2 之于 retikz Tier 1：图表（axis / plot）是 TikZ 之上的独立层，展开成底层 node / path。retikz 把这层落成 IR 级 composite + lowering：`@retikz/plot` 作为独立包注册 `plot.axis` 等节点与展开逻辑，core 不认识任何 chart 类型。
+
+</Comparison>
