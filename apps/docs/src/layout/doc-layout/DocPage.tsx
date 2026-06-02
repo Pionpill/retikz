@@ -40,7 +40,7 @@ export const DocPage: FC<DocPageProps> = props => {
   /** 当前 URL 实际指向的节点：4 段时是 subPage，否则是 page */
   const target = loc?.subPageId ? subPage : page;
 
-  const { source, notFound, resolvedLang } = useMdxSource();
+  const { source, segments: sourceSegments, notFound, resolvedLang } = useMdxSource();
   const tocOpen = useTocStore(state => state.tocOpen);
 
   /** changelog 页走数据驱动渲染,不走 mdx 管线 */
@@ -49,8 +49,11 @@ export const DocPage: FC<DocPageProps> = props => {
   const [frontmatter, setFrontmatter] = useState<MdxFrontmatter>({});
   /** 始终保留上一次非 null 的 source；过渡态时下游继续看见旧内容直至新 mdx 编译就绪 */
   const [stableSource, setStableSource] = useState<string | null>(source);
+  /** 与 stableSource 锁步更新的 segments：保证下游 demo 解析用的是"屏幕上这份内容所属页面"的目录，而非实时路由 */
+  const [stableSegments, setStableSegments] = useState<Array<string> | null>(sourceSegments);
   if (source != null && source !== stableSource) {
     setStableSource(source);
+    setStableSegments(sourceSegments);
   }
 
   // 把当前页 mdx + 元信息推给 AI 聊天面板（Sheet 打开时按当前页作为 context）
@@ -145,7 +148,7 @@ export const DocPage: FC<DocPageProps> = props => {
             ) : notFound ? (
               <p className="text-sm text-muted-foreground">{t('common.contentPlaceholder', { title })}</p>
             ) : (
-              <MdxContent source={stableSource} onFrontmatter={setFrontmatter} />
+              <MdxContent source={stableSource} segments={stableSegments} onFrontmatter={setFrontmatter} />
             )}
           </div>
           <DocPageFooterNav />
