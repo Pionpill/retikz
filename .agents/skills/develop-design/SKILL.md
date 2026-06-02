@@ -84,9 +84,8 @@ cp notes/decisions/core/_template.md notes/decisions/core/v<MAJOR>/v<MAJOR>.<MIN
 - 标题（`# ADR-NN：<一句话>`）
 - 状态 / 决策日期 / 关联（v0 roadmap / tikz-gap-analysis / DESIGN.md）
 - 背景（现状 + 痛点 + TikZ 等价）
-- 选项（≥ 2 个，含 schema 草案 + DSL 表面）
-- 决策（选哪个 + 理由）
-- 待决策点（选项内部的小决策，越细越好）
+- 决策（定稿方案：schema 草案 + DSL 表面 + 理由；只写最终采纳的做法，不列被否决的中间方案）
+- 待决策点（方案内部的小决策，越细越好）
 - DSL 表面（用户角度示例 JSX）
 - 测试设计（case 类别概述，具体 case 在实现契约段）
 - 影响（对现有代码 / 文档 / IR 的牵动）
@@ -105,7 +104,7 @@ cp notes/decisions/core/_template.md notes/decisions/core/v<MAJOR>/v<MAJOR>.<MIN
 ## 流程
 
 1. **人工与 AI 对话整理需求** → AI 复述确认
-2. AI 起草 ADR：背景 / 选项 / 决策 / DSL 表面 / 测试设计部分
+2. AI 起草 ADR：背景 / 决策 / DSL 表面 / 测试设计部分
 3. **多 LLM 评估同一份 ADR 草案**（见下"多 LLM 设计评估"段）
 4. **人工 review 并填实现契约段**——schema 字段表 / 文件 scope / 测试象限 必填
 5. AI 校验完整性：
@@ -160,7 +159,7 @@ cp notes/decisions/core/_template.md notes/decisions/core/v<MAJOR>/v<MAJOR>.<MIN
 
 评估对话不进 git，但**评估结论**要在 ADR 中体现：
 
-- 采纳的替代方案 → 写进"决策"段对应选项
+- 采纳的方案 → 写进"决策"段
 - 拒绝的意见 → 写进"待决策点"或"不在本 ADR 范围"附理由
 - 不在 ADR 里出现 = 没评估过；审计时按 missing 处理
 
