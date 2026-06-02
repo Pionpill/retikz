@@ -71,6 +71,23 @@ export const changelog: Array<Release> = [
         ],
         subVersions: [
           {
+            version: 'rc.1',
+            date: '2026-06-02',
+            summary: {
+              zh: '候选发布：公开 API 冻结（IR schema 字段名 / 导出名 / 函数签名 / 公开 type 自此不再破坏性变更）。能力补全（alpha.7–9）+ beta 收口后无新增功能，进入发布候选。',
+              en: 'Release candidate: the public API freezes here (IR schema field names / exports / function signatures / public types take no breaking changes from now). After the capability completion (alpha.7–9) and beta cleanup there are no new features — this is the release candidate.',
+            },
+            items: [
+              {
+                label: { zh: 'API 冻结', en: 'API freeze' },
+                content: {
+                  zh: '自 rc 起公开 API 冻结；后续到 0.2.0 stable 只接 bug fix，不再改 schema 字段 / 导出名 / 函数签名。',
+                  en: 'From rc onward the public API is frozen; only bug fixes land until 0.2.0 stable — no more schema field / export / signature changes.',
+                },
+              },
+            ],
+          },
+          {
             version: 'beta.1',
             date: '2026-05-24',
             summary: {
@@ -372,6 +389,23 @@ export const changelog: Array<Release> = [
           },
         ],
         subVersions: [
+          {
+            version: 'rc.1',
+            date: '2026-06-02',
+            summary: {
+              zh: '候选发布：公开 API（组件名 / props / 扩展面导出）冻结。含 beta.2 的 `<Layout>` 顶层级联样式，无新增功能。',
+              en: 'Release candidate: the public API (component names / props / extension-surface exports) freezes here. Includes the beta.2 `<Layout>` cascade styling; no new features.',
+            },
+            items: [
+              {
+                label: { zh: 'API 冻结', en: 'API freeze' },
+                content: {
+                  zh: '`<Layout>` / `<Node>` / `<Draw>` 等组件名、props 与扩展面导出自此冻结；到 0.2.0 stable 只接 bug fix。',
+                  en: 'Component names, props, and extension-surface exports (`<Layout>` / `<Node>` / `<Draw>` …) freeze here; only bug fixes until 0.2.0 stable.',
+                },
+              },
+            ],
+          },
           {
             version: 'beta.2',
             date: '2026-06-01',
