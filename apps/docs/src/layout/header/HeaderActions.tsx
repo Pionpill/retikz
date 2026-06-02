@@ -102,7 +102,9 @@ export const HeaderActions: FC = () => {
               {t('common.switchLanguage')} · {i18n.resolvedLanguage?.toUpperCase()}
             </TooltipContent>
           </Tooltip>
-          <DropdownMenu>
+          {/* modal={false}：避免 Radix 模态层给 body 加 data-scroll-locked（overflow:hidden + position:relative），
+              否则窗口级滚动 + sticky 顶栏会在页面已下滑时把 header 顶出视口（详见滚动容器是 window 而非 body） */}
+          <DropdownMenu modal={false}>
             <Tooltip>
               <TooltipTrigger asChild>
                 <DropdownMenuTrigger className={triggerClass}>
