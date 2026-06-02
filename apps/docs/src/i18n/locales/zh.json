@@ -71,7 +71,8 @@
     "refCustomArrow": "自定义箭头",
     "refCustomPattern": "自定义图案",
     "refPathGenerator": "路径生成器",
-    "refComposite": "Tier 2 节点"
+    "refComposite": "Tier 2 节点",
+    "refComposites": "复合"
   },
   "blog": {
     "label": "博客",

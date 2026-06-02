@@ -1,0 +1,17 @@
+---
+title: Composite
+description: Tier 2 composites — high-level nodes a domain package registers above Tier 1, lowered to base primitives at compile time. core ships no composite, only the registry and lowering pipeline.
+---
+
+retikz's primitives come in two tiers: **Tier 1** (`node` / `path` / `coordinate` / `scope` — core's built-in primitives) and **Tier 2 composites** — high-level nodes a domain package (e.g. `@retikz/plot`) registers above Tier 1. A composite has its own complete zod schema, is discriminated by `namespace` + `type`, and is lowered to Tier 1 at the first compile step; afterwards layout / anchor / renderer all apply automatically. core ships no composite and understands no chart / domain semantics.
+
+> Composites are a domain package's high-level abstraction above core: core provides the registry (`CompileOptions.composites`) and the lowering pipeline (`lowerComposites`); concrete node types come from standalone packages like `@retikz/plot`.
+
+## In this section
+
+<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+  <LinkedCard href="/core/reference/composites/composite">
+    <span className="font-semibold">Tier 2 Composites</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">Register via defineComposite (schema + expand), namespace/type discrimination, the lowering pipeline</span>
+  </LinkedCard>
+</div>

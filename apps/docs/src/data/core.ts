@@ -82,6 +82,12 @@ export const coreSection: Array<Section> = [
           { id: 'custom-arrow', label: 'core.refCustomArrow' },
           { id: 'custom-pattern', label: 'core.refCustomPattern' },
           { id: 'path-generator', label: 'core.refPathGenerator' },
+        ],
+      },
+      {
+        id: 'composites',
+        label: 'core.refComposites',
+        children: [
           { id: 'composite', label: 'core.refComposite' },
         ],
       },

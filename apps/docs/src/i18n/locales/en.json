@@ -71,7 +71,8 @@
     "refCustomArrow": "Custom Arrows",
     "refCustomPattern": "Custom Patterns",
     "refPathGenerator": "Path Generators",
-    "refComposite": "Tier 2 Composites"
+    "refComposite": "Tier 2 Composites",
+    "refComposites": "Composite"
   },
   "blog": {
     "label": "Blog",
