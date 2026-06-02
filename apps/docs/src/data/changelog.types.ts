@@ -42,12 +42,14 @@ export type Release = {
 };
 
 /** 全部可能的包标识(筛选 chips 由数据中实际出现者派生) */
-export const PACKAGE_IDS = ['@retikz/core', '@retikz/react', 'docs'] as const;
+export const PACKAGE_IDS = ['@retikz/core', '@retikz/render', '@retikz/react', '@retikz/vanilla', 'docs'] as const;
 export type PackageId = (typeof PACKAGE_IDS)[number];
 
 /** 包标识 → 展示名(多数包名两语一致,docs 例外) */
 export const PACKAGE_LABEL: Record<PackageId, Localized> = {
   '@retikz/core': { zh: '@retikz/core', en: '@retikz/core' },
+  '@retikz/render': { zh: '@retikz/render', en: '@retikz/render' },
   '@retikz/react': { zh: '@retikz/react', en: '@retikz/react' },
+  '@retikz/vanilla': { zh: '@retikz/vanilla', en: '@retikz/vanilla' },
   docs: { zh: '文档站', en: 'Docs' },
 };

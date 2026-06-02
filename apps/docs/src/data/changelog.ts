@@ -8,6 +8,213 @@ export const changelogPageDescription: Localized = {
 
 export const changelog: Array<Release> = [
   {
+    minor: 'v0.3',
+    stableDate: null,
+    packages: [
+      {
+        pkg: '@retikz/render',
+        version: 'v0.3',
+        description: {
+          zh: '新包：渲染后端命名空间，子路径 ./svg（Scene → SVG descriptor / 字符串）、./canvas（Scene → Canvas 2D），由原 @retikz/svg + @retikz/canvas 合并而来，承接原 React 包的 SVG 渲染核心。',
+          en: 'New package: a render-backend namespace — subpaths ./svg (Scene → SVG descriptor / string) and ./canvas (Scene → Canvas 2D), merged from the former @retikz/svg + @retikz/canvas.',
+        },
+        highlights: [
+          {
+            label: { zh: 'framework-neutral SVG descriptor', en: 'Framework-neutral SVG descriptor' },
+            content: {
+              zh: '`./svg` 出 framework-neutral `SvgNode` descriptor + `buildSvgDocument` / `renderToSvgString`，零 React 依赖；React / Vanilla / SSR 共用同一 Scene→SVG 内核。',
+              en: '`./svg` exposes a framework-neutral `SvgNode` descriptor + `buildSvgDocument` / `renderToSvgString`, zero React dependency; React / Vanilla / SSR share one Scene→SVG core.',
+            },
+          },
+          {
+            label: { zh: 'Canvas 2D 后端', en: 'Canvas 2D backend' },
+            content: {
+              zh: '`./canvas` 出 `drawScene` / `renderToCanvas`，直接消费 Scene、不走 SVG 中转；gradient / pattern / image / clip / marker 全部真实绘制（含 currentColor / 主题响应 / 弧扫描 / 尺寸对齐 SVG）。',
+              en: '`./canvas` exposes `drawScene` / `renderToCanvas`, consuming the Scene directly with no SVG round-trip; gradient / pattern / image / clip / marker are all really drawn (incl. currentColor / theme response / arc sweep / size parity with SVG).',
+            },
+          },
+          {
+            label: { zh: '子路径分包', en: 'Subpath packaging' },
+            content: {
+              zh: 'svg / canvas 走子路径 `@retikz/render/svg` / `@retikz/render/canvas`，互不依赖；为后续 `./webgl` 预留命名空间。',
+              en: 'svg / canvas live at subpaths `@retikz/render/svg` / `@retikz/render/canvas`, mutually independent; the namespace reserves room for a future `./webgl`.',
+            },
+          },
+        ],
+        subVersions: [
+          {
+            version: 'alpha.1',
+            date: '2026-06-02',
+            summary: {
+              zh: '首发：把原 @retikz/svg + @retikz/canvas 合并为 @retikz/render（子路径 ./svg / ./canvas），承接原 React 包的 SVG 渲染核心；Canvas 后端能力超额（gradient / pattern / image / clip / marker 全实现）。',
+              en: 'First release: merge the former @retikz/svg + @retikz/canvas into @retikz/render (subpaths ./svg / ./canvas), taking over the React package’s SVG render core; the Canvas backend over-delivers (gradient / pattern / image / clip / marker all implemented).',
+            },
+            items: [
+              {
+                label: { zh: 'SVG descriptor 内核', en: 'SVG descriptor core' },
+                content: {
+                  zh: '`SvgNode`（`{ tag, attrs, style?, children? }`）+ `buildSvgDocument` / `renderToSvgString`，从原 `packages/react/src/render/` 下沉、React 无关化；React 改为消费 descriptor 再映射 React element（唯一做 kebab→camelCase 的一层）。',
+                  en: '`SvgNode` (`{ tag, attrs, style?, children? }`) + `buildSvgDocument` / `renderToSvgString`, lifted out of the former `packages/react/src/render/` and made React-agnostic; React now consumes the descriptor and maps it to React elements (the lone kebab→camelCase layer).',
+                },
+              },
+              {
+                label: { zh: 'Canvas 2D 后端', en: 'Canvas 2D backend' },
+                content: {
+                  zh: '`drawScene(ctx, scene)` 低层 + `renderToCanvas(canvas, scene)` 便利，消费已编译 Scene、不在包内 compile、不走 SVG 中转；gradient / pattern / image / clip / marker 全部真实实现，无降级遗留。',
+                  en: '`drawScene(ctx, scene)` low-level + `renderToCanvas(canvas, scene)` convenience, consuming a pre-compiled Scene, no in-package compile, no SVG round-trip; gradient / pattern / image / clip / marker are all really implemented with no degradation left.',
+                },
+              },
+              {
+                label: { zh: '子路径 exports + 内部边界守卫', en: 'Subpath exports + internal boundary guard' },
+                content: {
+                  zh: 'package exports 只出 `./svg` / `./canvas`（无根 `.`）；合并后用 import-boundary 测试替代原跨包边界，禁止 svg↔canvas 互相引用，保持两后端解耦。',
+                  en: 'Package exports expose only `./svg` / `./canvas` (no root `.`); after the merge an import-boundary test replaces the former cross-package boundary, forbidding svg↔canvas references to keep the two backends decoupled.',
+                },
+              },
+            ],
+          },
+        ],
+      },
+      {
+        pkg: '@retikz/vanilla',
+        version: 'v0.3',
+        description: {
+          zh: '新包：framework-free runtime / SSR。不提供 JSX DSL，只消费 IR / Scene；组合 @retikz/render 内核完成无框架 DOM 挂载与服务端 SVG 字符串输出，并提供命令式具名 builder。',
+          en: 'New package: a framework-free runtime / SSR entry. No JSX DSL — it consumes IR / Scene, composing the @retikz/render core for DOM mounting and SSR SVG output, plus an imperative builder.',
+        },
+        highlights: [
+          {
+            label: { zh: '无框架 runtime + SSR', en: 'Framework-free runtime + SSR' },
+            content: {
+              zh: '`mountSvg(container, ir)` 浏览器 DOM 挂载、`renderToSvgString(ir)` 服务端 / 构建期产 SVG 字符串；组合 render 的 svg 内核，不复制渲染逻辑。',
+              en: '`mountSvg(container, ir)` mounts into the browser DOM; `renderToSvgString(ir)` produces an SVG string on the server / at build time; composes render’s svg core without duplicating render logic.',
+            },
+          },
+          {
+            label: { zh: '命令式具名 builder', en: 'Imperative named builder' },
+            content: {
+              zh: '`figure` / `node` / `draw` / `coordinate` / `scope` + `Figure`，让无框架用户像 React 一样具名构图、产同一份 IR；`Figure` 自带 `.toSvgString` / `.mount` / `.toCanvas`。',
+              en: '`figure` / `node` / `draw` / `coordinate` / `scope` + `Figure` let framework-free users compose by name like in React, producing the same IR; `Figure` carries `.toSvgString` / `.mount` / `.toCanvas`.',
+            },
+          },
+        ],
+        subVersions: [
+          {
+            version: 'alpha.1',
+            date: '2026-06-02',
+            summary: {
+              zh: '首发：SVG runtime 门面（`mountSvg` / `renderToSvgString` / `svgNodeToDom`，组合 render 内核、不复制）+ 命令式 builder（`figure`/`node`/`draw`/`coordinate`/`scope` + `Figure`）。全直接依赖、无 optional peer。',
+              en: 'First release: an SVG runtime façade (`mountSvg` / `renderToSvgString` / `svgNodeToDom`, composing the render core without duplication) + an imperative builder (`figure`/`node`/`draw`/`coordinate`/`scope` + `Figure`). All direct deps, no optional peer.',
+            },
+            items: [
+              {
+                label: { zh: 'SVG runtime 门面', en: 'SVG runtime façade' },
+                content: {
+                  zh: '`renderToSvgString` 薄包 render 的 svg；`mountSvg` 经 `buildSvgDocument` + `svgNodeToDom` 物化 DOM；Scene→SVG 内核仍单一留在 render，vanilla 只做组合。',
+                  en: '`renderToSvgString` thinly wraps render’s svg; `mountSvg` materializes the DOM via `buildSvgDocument` + `svgNodeToDom`; the Scene→SVG core stays solely in render, vanilla only composes.',
+                },
+              },
+              {
+                label: { zh: '命令式 builder', en: 'Imperative builder' },
+                content: {
+                  zh: '`figure`/`node`/`draw`/`coordinate`/`scope` 具名构图 API + `Figure`（`.toSvgString` / `.mount` / `.toCanvas`），产出与 React DSL 同一份 IR，供无框架 / SSR 直接使用。',
+                  en: 'The `figure`/`node`/`draw`/`coordinate`/`scope` named-composition API + `Figure` (`.toSvgString` / `.mount` / `.toCanvas`) produce the same IR as the React DSL, usable framework-free / in SSR.',
+                },
+              },
+            ],
+          },
+        ],
+      },
+      {
+        pkg: '@retikz/react',
+        version: 'v0.3',
+        description: {
+          zh: 'SVG 渲染核心下沉到 @retikz/render，React 只保留 DSL / IR 构建 / 生命周期与渲染模式选择；新增 `<Layout renderer="svg"｜"canvas">` 双渲染模式，默认 svg、无 breaking。',
+          en: 'The SVG render core moves to @retikz/render; React keeps the DSL / IR build / lifecycle / render-mode choice and adds a `<Layout renderer>` svg|canvas dual mode (svg default, no breaking).',
+        },
+        highlights: [
+          {
+            label: { zh: '双渲染模式', en: 'Dual render mode' },
+            content: {
+              zh: '`<Layout renderer="svg"｜"canvas">`，两路共用同一 `compileToScene` + `browserMeasurer`，同 Scene 保等价；默认 svg，现有代码零改动。',
+              en: '`<Layout renderer="svg"｜"canvas">`, both paths sharing one `compileToScene` + `browserMeasurer` for an equivalent Scene; defaults to svg, existing code unchanged.',
+            },
+          },
+          {
+            label: { zh: 'SVG 核心下沉', en: 'SVG core moved out' },
+            content: {
+              zh: 'React 不再拥有 SVG 渲染核心，改消费 `@retikz/render/svg` 的 `SvgNode` descriptor，只做 descriptor→React element 绑定。',
+              en: 'React no longer owns the SVG render core; it consumes the `SvgNode` descriptor from `@retikz/render/svg` and only binds descriptor→React element.',
+            },
+          },
+        ],
+        subVersions: [
+          {
+            version: 'alpha.1',
+            date: '2026-06-02',
+            summary: {
+              zh: 'renderer 架构出关：SVG 渲染核心下沉 @retikz/render，依赖从 @retikz/svg + @retikz/canvas 改为单一 @retikz/render；新增 `<Layout renderer>` 双渲染模式（默认 svg、additive、无 breaking）。',
+              en: 'Renderer architecture lands: the SVG render core moves to @retikz/render, deps switch from @retikz/svg + @retikz/canvas to a single @retikz/render; adds the `<Layout renderer>` dual mode (svg default, additive, no breaking).',
+            },
+            items: [
+              {
+                label: { zh: '`<Layout renderer>` 双渲染模式', en: '`<Layout renderer>` dual mode' },
+                content: {
+                  zh: '`<Layout renderer="svg"｜"canvas">` 用同一套 Kernel / Sugar JSX 构建 IR，只在最终 Scene 渲染阶段切换输出目标；canvas 路复用 svg 路的 `compileToScene` + `browserMeasurer`，同 Scene 等价。默认 `svg`、无 breaking。',
+                  en: '`<Layout renderer="svg"｜"canvas">` builds IR with the same Kernel / Sugar JSX, switching output target only at the final Scene render; the canvas path reuses the svg path’s `compileToScene` + `browserMeasurer` for an equivalent Scene. Defaults to `svg`, no breaking.',
+                },
+              },
+              {
+                label: { zh: '依赖切到 @retikz/render', en: 'Deps switch to @retikz/render' },
+                content: {
+                  zh: 'SVG 渲染核心从 `packages/react/src/render/` 下沉到 `@retikz/render/svg`，React 改消费 descriptor；包依赖从 `@retikz/svg` + `@retikz/canvas` 收敛为单一 `@retikz/render`。',
+                  en: 'The SVG render core moves from `packages/react/src/render/` to `@retikz/render/svg` and React consumes the descriptor; package deps converge from `@retikz/svg` + `@retikz/canvas` to a single `@retikz/render`.',
+                },
+              },
+            ],
+          },
+        ],
+      },
+      {
+        pkg: '@retikz/core',
+        version: 'v0.3',
+        description: {
+          zh: 'v0.3 renderer 架构出关期 core 无 IR / 公开 API 变更，仅随四包 version lockstep 对齐到 0.3.0-alpha.1；继续保持零 React / 零 DOM / 零 renderer runtime 依赖。',
+          en: 'During the v0.3 renderer phase core has no IR / public-API change; it only aligns to 0.3.0-alpha.1 under the four-package version lockstep, staying zero React / DOM / renderer-runtime deps.',
+        },
+        highlights: [
+          {
+            label: { zh: 'Scene 契约多 renderer 验证', en: 'Scene contract validated across renderers' },
+            content: {
+              zh: 'v0.2 打下的 renderer-agnostic Scene 契约在 alpha.1 被 SVG 与 Canvas 两条后端同时消费，验证 core 不需为单一 renderer 让步。',
+              en: 'The renderer-agnostic Scene contract from v0.2 is consumed by both the SVG and Canvas backends in alpha.1, confirming core need not concede to any single renderer.',
+            },
+          },
+        ],
+        subVersions: [
+          {
+            version: 'alpha.1',
+            date: '2026-06-02',
+            summary: {
+              zh: 'version lockstep 对齐到 0.3.0-alpha.1，无 IR / 公开 API 变更；与 0.2.0-beta.2 行为一致。',
+              en: 'Aligned to 0.3.0-alpha.1 under version lockstep, with no IR / public-API change; behavior identical to 0.2.0-beta.2.',
+            },
+            items: [
+              {
+                label: { zh: '无 API 变更', en: 'No API change' },
+                content: {
+                  zh: 'renderer 架构改动集中在 render / react / vanilla，core IR、`compileToScene`、Scene primitive 均未变；本版仅为四包 version lockstep 同步发布。',
+                  en: 'The renderer-architecture work is confined to render / react / vanilla; core IR, `compileToScene`, and Scene primitives are unchanged — this version ships only for the four-package version lockstep.',
+                },
+              },
+            ],
+          },
+        ],
+      },
+    ],
+  },
+
+  {
     minor: 'v0.2',
     stableDate: null,
     packages: [
