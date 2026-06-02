@@ -8,6 +8,8 @@ import type { ArrowDefinition } from '../arrows';
 import { BUILTIN_PATTERNS } from '../patterns';
 import type { PatternDefinition } from '../patterns';
 import type { PathGeneratorDefinition } from '../pathGenerators';
+import type { CompositeDefinition } from '../composites';
+import { lowerComposites } from './lowerComposites';
 import { type DuplicateRegisterInfo, NameStack } from './name-stack';
 import { type NodeLayout, emitNodePrimitives, labelExtentPoints, layoutNode } from './node';
 import { createPaintRegistry } from './paint';
@@ -93,6 +95,7 @@ export type CompileWarning = {
     | 'SHAPE_OVERRIDES_BUILTIN'
     | 'ARROW_OVERRIDES_BUILTIN'
     | 'PATTERN_OVERRIDES_BUILTIN'
+    | 'COMPOSITE_NOT_REGISTERED'
     | (string & {});
   /** 人类可读消息（英文） */
   message: string;
@@ -149,6 +152,17 @@ export type CompileOptions = {
    *   `generator.name` 仍是字符串；generator 函数本身只在此运行时注入面、不进 IR。
    */
   pathGenerators?: Record<string, PathGeneratorDefinition>;
+  /**
+   * 运行时注入的 Tier 2 composite 展开逻辑（不进 IR）
+   * @description compileToScene 第一步据各 def 的 schema 提取的 `${namespace}.${type}` 把 IR 里的 composite
+   *   节点展开成 Tier 1；core 无内置。未注册 namespace/type → `onWarn(COMPOSITE_NOT_REGISTERED)` + 跳过该节点。
+   */
+  composites?: Array<CompositeDefinition>;
+  /**
+   * composite 嵌套展开的最大深度（防环 / 防失控递归）
+   * @description 默认 32；composite 展开出 composite 时累加，超限或环 throw。
+   */
+  maxCompositeDepth?: number;
 };
 
 /**
@@ -286,6 +300,12 @@ export const compileToScene = (ir: IR, options: CompileOptions = {}): Scene => {
   const round = makeRound(options.precision ?? DEFAULT_PRECISION);
   const nodeDistance = options.nodeDistance;
   const onWarn = options.onWarn ?? defaultWarnDispatcher;
+
+  // Tier 2：第一步据注册表把 composite 节点展开成 Tier 1（未注册 warn + skip），后续 pass 只见 Tier 1
+  const loweredIr = lowerComposites(ir, options.composites ?? [], {
+    onWarn,
+    maxDepth: options.maxCompositeDepth,
+  });
 
   // 有效 shape 表：内置 + 注入（同名注入覆盖内置）；覆盖内置经 onWarn 发 SHAPE_OVERRIDES_BUILTIN
   const effectiveShapes: Record<string, ShapeDefinition> = options.shapes
@@ -437,6 +457,12 @@ export const compileToScene = (ir: IR, options: CompileOptions = {}): Scene => {
   ): void => {
     for (let i = 0; i < children.length; i++) {
       const child = children[i];
+      if ('namespace' in child) {
+        // lowerComposites 已在 compileToScene 第一步展开 / 跳过所有 tier2 composite；走到这里说明管线被绕过
+        throw new Error(
+          `Unexpected composite node '${child.namespace}.${child.type}' reached compile; composites must be lowered via lowerComposites first.`,
+        );
+      }
       if (child.type === 'node') {
         const effectiveNode = resolveNodeStyle(child, styleStack);
         const layout = layoutNode(
@@ -597,7 +623,7 @@ export const compileToScene = (ir: IR, options: CompileOptions = {}): Scene => {
   // 递归处理整棵 IR child 树；顶层 paths 在所有 register 完成后统一 resolve
   // 顶层 layouts 累积无人消费——传一个临时数组即可（顶层无 scope.id 包裹）
   const rootPaths: Array<PendingPath> = [];
-  processChildren(ir.children, [], primitives, '', [], rootPaths, []);
+  processChildren(loweredIr.children, [], primitives, '', [], rootPaths, []);
   resolvePendingPaths(rootPaths);
 
   // 无条件校验：占位绝不能泄漏到 Scene 输出（守 compileToScene 返回 ScenePrimitive[] 的公开契约）
@@ -617,7 +643,7 @@ export const compileToScene = (ir: IR, options: CompileOptions = {}): Scene => {
     // sealSink 后对顶层按 zIndex 稳定排序（占位已回填）
     primitives: stableSortByZIndex(sealSink(primitives)),
     // 显式 viewBox 覆盖自动算（忽略 padding）；无则回退 AABB + padding
-    layout: ir.viewBox !== undefined ? viewBoxToLayout(ir.viewBox, round) : computeLayout(allPoints, layoutPadding, round),
+    layout: loweredIr.viewBox !== undefined ? viewBoxToLayout(loweredIr.viewBox, round) : computeLayout(allPoints, layoutPadding, round),
     // 渲染无关资源（paint / clip）；无则省略，保 Scene 输出纯净
     ...(resources.length > 0 ? { resources } : {}),
   };

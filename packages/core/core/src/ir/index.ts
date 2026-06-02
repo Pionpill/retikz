@@ -9,4 +9,5 @@ export * from './node';
 export * from './coordinate';
 export * from './transform';
 export * from './scope';
+export * from './composite';
 export * from './scene';

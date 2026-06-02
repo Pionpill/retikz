@@ -560,11 +560,11 @@ describe('scope.id bbox 错误路径', () => {
         id: 'g',
         children: [{ type: 'node', id: 'a', position: [0, 0], text: 'a' }],
       },
+      // @ts-expect-error 故意传非法 anchor 名，测 compile 端 anchorOf 抛 Unknown anchor
       {
         type: 'path',
         children: [
           { type: 'step', kind: 'move', to: [0, 200] },
-          // @ts-expect-error 故意传非法 anchor 名，测 compile 端 anchorOf 抛 Unknown anchor
           { type: 'step', kind: 'line', to: { id: 'g', anchor: 'invalid' } },
         ],
       },

@@ -42,6 +42,7 @@ export {
   ArrowDetailSchema,
   ArrowEndDetailSchema,
   ScopeSchema,
+  CompositeBaseSchema,
   NodeDefaultSchema,
   PathDefaultSchema,
   LabelDefaultSchema,
@@ -92,6 +93,7 @@ export type {
   IRTextBlock,
   IRPath,
   IRScope,
+  IRComposite,
   IRNodeDefault,
   IRPathDefault,
   IRLabelDefault,
@@ -228,6 +230,10 @@ export { BUILTIN_PATTERNS } from './patterns';
 // Path Generators (Path Generator Registry 扩展面：第三方曲线生成器注入；core 无内置)
 export type { PathGeneratorDefinition, PathGeneratorContext } from './pathGenerators';
 export { definePathGenerator } from './pathGenerators';
+
+// Composites (Tier 2 注册面：domain 节点 schema + 展开逻辑；core 无内置)
+export type { CompositeDefinition } from './composites';
+export { defineComposite } from './composites';
 
 // Type utilities
 export type { ValueOf, AssertEqual } from './types';

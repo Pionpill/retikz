@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { ClipSpecSchema, type IRClipSpec } from './clip';
+import type { IRComposite } from './composite';
 import type { IRCoordinate } from './coordinate';
 import { FontSchema } from './font';
 import { type IRPaintSpec, PaintSpecSchema } from './paint';
@@ -110,7 +111,7 @@ export type IRScope = {
   resetStyle?: boolean | Array<StyleChannel>;
   zIndex?: number;
   clip?: IRClipSpec;
-  children: Array<IRNode | IRPath | IRCoordinate | IRScope>;
+  children: Array<IRNode | IRPath | IRCoordinate | IRScope | IRComposite>;
 };
 
 // ChildSchema 在 scene.ts 中定义并通过 z.lazy 注入；让 scope.children 能在

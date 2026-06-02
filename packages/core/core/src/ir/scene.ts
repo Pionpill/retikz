@@ -1,26 +1,33 @@
 import { z } from 'zod';
+import { CompositeNodeSchema, type IRComposite } from './composite';
 import { CoordinateSchema, type IRCoordinate } from './coordinate';
 import { type IRNode, NodeSchema } from './node';
 import { type IRPath, PathSchema } from './path';
 import { type IRScope, ScopeSchema, __registerChildSchema } from './scope';
 
 /**
- * 顶层 Scene 的子节点：node / path / coordinate / scope
+ * 顶层 Scene 的子节点：tier1 node / path / coordinate / scope，或 tier2 composite（有 namespace）
  * @description 手写而非 z.infer 派生，与 ScopeSchema 互递归（scope.children 也是 IRChild[]）
  */
-export type IRChild = IRNode | IRPath | IRCoordinate | IRScope;
+export type IRChild = IRNode | IRPath | IRCoordinate | IRScope | IRComposite;
 
 /**
- * ChildSchema：4 类 IR 子节点的 discriminated union
- * @description 用 `z.ZodType<IRChild>` + `z.lazy` 包裹整个 union 让 ScopeSchema.children 能递归引用自己；
- * scope 内嵌 scope 无深度限制（与 polar/offset 嵌套规则一致）
+ * ChildSchema：tier1 四类 discriminatedUnion（按 type）+ tier2 开放节点（有 namespace）
+ * @description tier1 节点无 namespace、按 `type` 判别；tier2 节点有 namespace（CompositeNodeSchema passthrough）。
+ *   namespace 必填 / 缺失互斥，union 天然无歧义分流；精确字段校验在 compile 期由 lowerComposites 用注册 schema 完成。
+ *   用 `z.ZodType<IRChild>` + `z.lazy` 让 ScopeSchema.children 能递归引用自己。
  */
 export const ChildSchema: z.ZodType<IRChild> = z.lazy(() =>
-  z
-    .discriminatedUnion('type', [NodeSchema, PathSchema, CoordinateSchema, ScopeSchema])
-    .describe(
-      'Top-level scene child: a node, a path, a coordinate placeholder, or a scope container; discriminator field is `type`',
+  z.union([
+    z
+      .discriminatedUnion('type', [NodeSchema, PathSchema, CoordinateSchema, ScopeSchema])
+      .describe(
+        'Tier 1 scene child: a node, a path, a coordinate placeholder, or a scope container; discriminator field is `type`',
+      ),
+    CompositeNodeSchema.describe(
+      'Tier 2 composite node: carries `namespace` + `type`; precise field validation happens at compile via the registered domain schema',
     ),
+  ]),
 );
 
 // 把 ChildSchema 注册回 scope.ts 让 ScopeSchema.children 能延迟解析此 schema（解决双向依赖）
