@@ -29,6 +29,7 @@
 ## 参考来源
 
 - 架构与里程碑详情：[`plot-design.md`](../../../architecture/plot-design.md)（§11 模块划分 / §13 里程碑）
+- v0.1 执行计划：[`v0.1/roadmap.md`](./v0.1/roadmap.md)
 - ADR：`notes/decisions/plot/`
 - core 路线与能力：[`core v0 roadmap`](../../core/v0/roadmap.md)
 - TikZ gap 分析：[`tikz-gap-analysis.md`](../../../analysis/tikz-gap-analysis.md)
