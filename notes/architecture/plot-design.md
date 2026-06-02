@@ -493,7 +493,7 @@ intent
 
 `@retikz/plot` 内部按 §4 管线切模块，模块与管线阶段大致一一对应。`coordinate` / `mark` / `scale` 等「可自定义」能力走 **注册表**，不写死枚举（对齐 core 的 `ShapeDefinition` 等扩展位，见 §9）。
 
-### 10.1 模块清单
+### 11.1 模块清单
 
 | 管线阶段 | 模块 | 职责 |
 |---|---|---|
@@ -511,7 +511,7 @@ intent
 
 `ir` / `scale` / `guide` / `lowering` 是常被忽略却必备的模块——没有 `guide` 画不出轴与图例，没有 `lowering` 图停在内存里无法渲染，没有 `scale` 位置与颜色都无从映射。「数学计算」不单列为模块：数据层聚合归 `transform`、通道映射与 ticks 归 `scale`、投影与曲线几何归 `coordinate` / `mark` 各自承担。
 
-### 10.2 MVP 范围（最小端到端闭环）
+### 11.2 MVP 范围（最小端到端闭环）
 
 目标：同一份 Plot IR 端到端画出 **带坐标轴与网格的折线图 / 柱状图**，验证 §4 管线与 §8 lowering 真正打通。
 
@@ -587,7 +587,7 @@ intent
 >
 > 现在预留近乎零成本，事后补极痛。
 
-### 12.1 v0.1 — 基础纵向闭环
+### 13.1 v0.1 — 基础纵向闭环
 
 - 目标：对 ≥1 个 mark 跑通全 8 段管线，并在 **cartesian + polar** 两套坐标系下都成立；产出带轴与网格的基本图。
 - 模块：`ir`、`transform`（最小）、`scale`、`coordinate`（cartesian + polar）、`mark`（point / line / bar）、`relation`（order）、`guide`（x/y 轴 + 径向 / 角向轴 + grid）、`lowering`；并埋入 anchor、scope（见上贯穿原则）。
@@ -595,34 +595,34 @@ intent
 - 包：`@retikz/plot`；渲染走现有 `@retikz/react` / `@retikz/vanilla`（消费 core IR，plot 暂不出框架绑定）。
 - 备注：polar 进 v0.1 是为逼出通用 coordinate 抽象、避免写死笛卡尔，代价是 guide / coordinate 工作量约翻倍。
 
-### 12.2 v0.2 — 图形横向扩展（仍为静态）
+### 13.2 v0.2 — 图形横向扩展（仍为静态）
 
 - 目标：铺开常见图——折线、柱状、散点、面积等。
 - 模块新增：非位置通道 `scale`（color / size）、`guide`（legend）、`relation`（stack / dodge）、更多 `mark`（area、scatter 用 point + size、bar 变体）。
 - 依赖 core 能力：Path / Step / Paint 等几何与资源（已具备）。
 - 包：`@retikz/plot`。
 
-### 12.3 v0.2+（并行支线）— `@retikz/chart` preset 层
+### 13.3 v0.2+（并行支线）— `@retikz/chart` preset 层
 
 - 目标：在足够 primitive 之上做 `type` + 配置的快速封装（§5 Preset API / §6）。
 - 约束：preset 必须展开成 plot primitive，不得新增底层无法表达的能力。
 - 包：`@retikz/chart`（依赖 `@retikz/plot`）。
 
-### 12.4 v0.3 — 动态能力（跨包里程碑）
+### 13.4 v0.3 — 动态能力（跨包里程碑）
 
 - 目标：tooltip、hover、函数回调等交互。
 - 关键：交互是 **框架 runtime** 的事，不是纯 IR——靠 v0.1 预留的 anchor 做命中，事件绑定落在框架绑定包。
 - 依赖 core 能力：hydration / runtime（core v0.3 的水合）。
 - 包：新增 `@retikz/plot-react`、`@retikz/plot-vanilla`（必要时 `@retikz/chart-react` / `-vanilla`）。
 
-### 12.5 v0.4 — AI 渐进生成
+### 13.5 v0.4 — AI 渐进生成
 
 - 目标：分层渐进产出 / 渲染——坐标轴 → 图元 → label。
 - 依赖 core 能力：**Progressive IR / JSON Patch stream**（core v0.4 方向）+ 分层 lowering（§3.10 layer）。
 - 顺序说明：与 v0.3 互相独立（都只需 v0.1–v0.2 打底）；排在 v0.3 之后，是因为它依赖的 core Progressive IR 比交互依赖的 hydration 晚就绪——plot 里程碑随 core 能力就绪排序。
 - 包：`@retikz/plot`（+ 框架绑定承接增量渲染）。
 
-### 12.6 v0.5 — facet 小多图 + 组合就绪
+### 13.6 v0.5 — facet 小多图 + 组合就绪
 
 - 目标：(1) plot 内 **facet** 小多图（按字段拆多个 coordinate scope，scale 可共享或独立）；(2) 跨图 connector / ribbon；(3) 验证 plot 能被 **通用组合能力** 正常编排。
 - 关键：**跨域内容组合（plot 与 uml / table / 任意业务内容混排）不由 plot 实现**——它是基于 core 现有 `Scope` 的通用能力（§7 / §14），任意 Tier 2 内容共用同一套。plot 的职责仅是「可被组合」，而这在 v0.1 已通过「lower 进可引用 scope + 暴露 anchor」满足；本版只新增 facet / connector 与对接验证。
