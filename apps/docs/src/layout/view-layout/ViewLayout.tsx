@@ -32,7 +32,7 @@ const useViewportWidth = (): number => {
  *   按 viewport 把 MIN/MAX/DEFAULT_AI_PX 换算成 % 喂进去，viewport 变化由 useViewportWidth
  *   触发重算，库内 clamp 收回超界宽度。autoSaveId 把用户拖到的宽度存 localStorage。
  *
- *   移动（< lg）用 bottom Sheet 80vh 弹出，与桌面共用 store.open 与 AiChatPanel 内容；
+ *   移动（< lg）用 bottom Sheet 全高（h-dvh）弹出，与桌面共用 store.open 与 AiChatPanel 内容；
  *   生成中 Esc 由 AiChatPanel 自身的窗口监听负责 abort，这里阻止 Sheet 关闭以免抢键。
  */
 export const ViewLayout: FC = () => {
@@ -87,7 +87,7 @@ export const ViewLayout: FC = () => {
           <SheetContent
             side="bottom"
             showCloseButton={false}
-            className="h-[90vh] gap-0 p-0"
+            className="h-dvh gap-0 p-0"
             onEscapeKeyDown={e => {
               // 生成中 Esc 让 AiChatPanel 的全局 keydown 自己 abort，不让 Sheet 抢去关闭
               if (isGenerating) e.preventDefault();
