@@ -69,15 +69,33 @@ v0.2 pushes composition further: `<Scope>` moves, rotates, scales, or styles a g
 
 A domain package is a thin layer of data binding, layout algorithms, and default styling on top of the Kernel; the underlying structure, persistence, and AI surface stay identical across domains. The current release keeps core focused on primitives first, instead of baking charting or layout algorithms into the base package too early.
 
+## Package Relationships
+
+retikz ships as four packages, layered from the framework-agnostic base up to the user-facing entry points:
+
+<ComponentPreview name="package-graph" size="md" hideCode />
+
+Solid lines are the main build chain — packages on the right build on those on the left; dashed lines mark that `@retikz/react` / `@retikz/vanilla` also consume `@retikz/core`'s IR directly. All four ship at the same version.
+
+| Package | Role | Depends on |
+| --- | --- | --- |
+| `@retikz/core` | IR, the `compileToScene` compiler, the Scene contract; zero React / zero DOM | `zod` |
+| `@retikz/render` | Render backends: `./svg` (Scene → SVG descriptor / string), `./canvas` (Scene → Canvas 2D) | core |
+| `@retikz/react` | React adapter: build IR with JSX, pick the svg / canvas backend via `<Layout renderer>` | core · render |
+| `@retikz/vanilla` | Framework-free runtime / SSR: mount to the DOM or emit an SVG string, plus an imperative builder | core · render |
+
+`@retikz/render` lifts the SVG render core out of `@retikz/react` and merges it with the new Canvas backend into a standalone package; neither `@retikz/react` nor `@retikz/vanilla` maintains its own rendering logic — they just compose render's backends.
+
 ## Framework-Agnostic, React Today
 
 retikz follows a **core + thin per-framework adapter** architecture: every framework shares the same IR, the same `compileToScene` compiler, and the same Scene contract; an adapter only translates Scene primitives into that framework's element type — typically tens of lines of code.
 
 | Role | Purpose | Status |
 | --- | --- | --- |
-| `@retikz/core` | IR + Scene compiler; zero React / zero DOM | ✅ Current v0.2 line |
-| `@retikz/react` | React adapter (peerDep: react) | ✅ Current v0.2 line |
-| `@retikz/vue` / `svelte` / `solid` …<br />`@retikz/ssr` / `canvas` / `native` … | Other framework / target adapters | ⏳ Community / later |
+| `@retikz/core` / `@retikz/render` | Framework-agnostic IR + compiler + render backends | ✅ Current line |
+| `@retikz/react` | React adapter (peerDep: react) | ✅ Current line |
+| `@retikz/vanilla` | Framework-free runtime / SSR | ✅ Current line |
+| `@retikz/vue` / `svelte` / `native` … | Other framework / target adapters | ⏳ Community / later |
 
 **Architecturally retikz isn't tied to any framework — the IR is universal; DSLs may legitimately differ between frameworks.** A diagram you draw today with `@retikz/react` produces an IR that any future adapter can render unchanged.
 
