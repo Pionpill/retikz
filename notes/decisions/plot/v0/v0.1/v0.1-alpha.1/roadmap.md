@@ -55,6 +55,7 @@
 
 > 原单条 ADR-01「Plot IR 骨架」按数据结构拆为 01-05（[拆分背景见各 ADR 的「背景」段]）；原 ADR-02 lowering 顺延为 ADR-06。
 > ADR-06 在 ADR-01~05 Accepted 后起草并分配文件名（`06-<slug>.md`）。
+> **ADR-06 硬约束**：必须遵守 [plot-design §8.1「id 绑定与可连接性」](../../../../../architecture/plot-design.md)——Tier 2 的 `id` 凡 lower 成 core `Node` / `Coordinate` / `Scope` 都绑到其 `id` 字段（root→Scope.id、series/datum→对应元素 id + `<plotId>.` 前缀命名空间），datum 级逐点绑 id 的高基数风险见该节备注。
 
 ## 贯穿原则落点
 

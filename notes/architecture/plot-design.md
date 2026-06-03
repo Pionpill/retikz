@@ -412,6 +412,22 @@ Lowering 原则：
 - lowering 后的 core IR 仍应保留必要 `meta`，让工具可追踪来源。
 - plot 包不做自己的 renderer。
 
+### 8.1 id 绑定与可连接性（跨 Tier 2 lowering 硬约束）
+
+> 适用于 plot 及后续所有 Tier 2（chart / graph / …）。这是 ADR-06（plot lowering）的**硬约束**，新 Tier 2 包的 lowering 同样遵守。
+
+core 的「连接」本质是 id 驱动的：`Path` 的 step target 用 `{ id, anchor?, offset? }` 引用具名 `Node` / `Coordinate` / `Scope`（`Node.id` 可选「要被引用才需」，`Coordinate.id` 必填，`Scope.id` 设了即在父帧注册 bbox 节点成为外部句柄）。因此 **Tier 2 的 `id` 凡 lower 成 core `Node` / `Coordinate` / `Scope`，必须绑到对应 core 元素的 `id` 字段**——这是「可被连接 / 可被组合」的唯一前提；不绑则 lower 成不可引用的黑盒 primitive（§7 已明确要避免）。
+
+绑定层级与命名：
+
+- **整图 root id** → lower 成的外层 core `Scope.id`（外部句柄；父帧 bbox 让整图可被指向）。
+- **series / 用户显式命名单元 id** → 承载它的 `Scope` / `Node` 的 id，对应 anchor `plot.series.<id>`。
+- **datum 级** → **默认通过 id 字段绑定**：把数据行的某个属性当 id 源，lower 成 `Node` / `Coordinate` 的 id，对应 anchor `plot.datum.<id>`。**作为 id 源的数据属性名可配置**（缺省约定 + lowering option 覆盖，具体配置面在 ADR-06 定）。
+- **namespace 防撞**：plot 整体 lower 成 `localNamespace` scope，只有 root id + 显式 anchor 上浮；内部 id 统一带 `<plotId>.` 前缀（点路径 `plot.series.<id>` / `plot.datum.<id>` 即此约定），避免同页多图 id 在父 namespace 相撞。
+- **唯一性**：用户提供的 id 优先；缺省时 lowering 按确定性规则合成（如 `<plotId>.series.<markIndex>`），保证可复现、可被 anchor 路径寻址。
+
+> ⚠️ **风险备注（datum 级逐点绑 id）**：把每个数据点都绑 id 会在 core `nodeIndex` 里产生与数据量等量的具名注册——万级散点 = 万级注册，显著抬高 IR 体积、编译成本与 namespace 压力。故 datum id 绑定应**按需开启**（仅在确需逐点被引用时配置 id 字段）；高基数且只需「按规则定位」的场景，优先用 locator 解析（`<plotId>.datum.<rowIndex>` 连接时按需算出），而非逐点预注册。
+
 例子：
 
 ```txt

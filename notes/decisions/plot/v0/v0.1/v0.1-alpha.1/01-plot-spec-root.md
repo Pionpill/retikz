@@ -18,15 +18,15 @@ Plot grammar 属 Tier 2：Plot IR 是 plot 包私有的高层语义，最终 low
 
 一份 Plot IR 是一个 `type: 'plot'` 根对象，挂四块：内联 `data`、命名 `scales` 数组、单个 `coordinate`、`marks` 图层数组。根**不重复**任何子结构的内部决策——`data` / `scales` / `coordinate` / `marks` 分别引用 [ADR-02](./02-plot-data.md) / [ADR-03](./03-plot-scale.md) / [ADR-04](./04-plot-coordinate.md) / [ADR-05](./05-plot-encoding-mark.md) 定义的 schema。anchor / scope 预留为根上的可选 `id` + `meta` 透传。
 
-`meta` 的值需要「任意 JSON 可序列化」约束，故根 ADR 同时定义本地 `JSONValueSchema`（递归 JSON value）作为基础设施——若 `@retikz/core` 已导出等价 schema 则复用（见「依赖现有元素」）。
+`meta` 的值需要「任意 JSON 可序列化」约束。`@retikz/core` 已导出 `ir/json.ts` 的 `JsonObjectSchema`（= `z.record(JsonValueSchema)`，递归 JSON 对象），**直接复用、不在 plot 本地另建 `json.ts`**（见「依赖现有元素」）。
 
 ```ts
 // packages/plot/plot/src/ir/plot.ts
+import { JsonObjectSchema } from '@retikz/core'; // 复用 core ir/json.ts，不在 plot 本地另建
 import { PlotDataSchema } from './data';        // ADR-02
 import { ScaleSchema } from './scale';          // ADR-03
 import { CoordinateSchema } from './coordinate'; // ADR-04
 import { MarkSchema } from './mark';            // ADR-05
-import { JSONValueSchema } from './json';
 
 export const PlotSpecSchema = z
   .object({
@@ -42,10 +42,7 @@ export const PlotSpecSchema = z
     scales: z.array(ScaleSchema).describe('Named scales; referenced by coordinate (and by non-positional channels in later versions)'),
     coordinate: CoordinateSchema.describe('The coordinate system; owns positional scale bindings (alpha.1: cartesian2D only)'),
     marks: z.array(MarkSchema).min(1).describe('Mark layers, drawn in array order (stable z-order)'),
-    meta: z
-      .record(JSONValueSchema)
-      .optional()
-      .describe('Free-form JSON-serializable source metadata passthrough; reserved so lowering can preserve provenance into core IR meta (plot-design §8)'),
+    meta: JsonObjectSchema.optional().describe('Free-form JSON-serializable source metadata passthrough; reserved so lowering can preserve provenance into core IR meta (plot-design §8)'),
   })
   .describe('Plot IR root: a JSON-serializable grammar-of-graphics document that lowers to core Scope/Node/Path/Step/Coordinate (ADR-06)');
 
@@ -57,6 +54,7 @@ export type PlotSpec = z.infer<typeof PlotSpecSchema>;
 1. **根只管组合，不管内部**：四槽位各引用子 ADR 的 schema，根 ADR 改动面仅 `plot.ts` + `json.ts`。子结构演进（scale 加 band、mark 加 bar）不动根；根加槽位（未来 guide）不动子结构。职责边界与文件边界对齐。
 2. **AI 友好优先**（core-design §7）：根全字段 JSON 可序列化（无函数 / ReactNode / Map）；用全称 grammar 词汇（`data` / `scales` / `coordinate` / `marks`），每槽位清晰 `type` / 显式引用，不把语义藏进字符串。
 3. **非破坏可扩展**：`id` / `meta` 预留位让 alpha.5 的 anchor / scope-aware 与 ADR-06 的 provenance 都能非破坏接入；`marks.min(1)` 锁定「至少一层」的根级不变量（空数据是数据层的事，空图层无意义）。
+4. **`id` 是「可被连接」的句柄，不是 scope 容器本身**：根 `id` 在 lowering 时**必须绑到 plot lower 成的 core `Scope.id`**（外部句柄，core 的连接 = path step 用 `{ id, anchor }` 引用具名元素）。这是跨 Tier 2 的 lowering 硬约束，规则见 [plot-design §8.1 「id 绑定与可连接性」](../../../../../architecture/plot-design.md)；ADR-06 lowering 必须遵守。alpha.1 只埋字段位、不解析（语义在 alpha.5 接通）。
 
 ## 待决策点
 
@@ -64,7 +62,7 @@ export type PlotSpec = z.infer<typeof PlotSpecSchema>;
 
 - **根类型名**：`PlotSpec`（schema `PlotSpecSchema`，`type: 'plot'`）。备选 `PlotIR` / `Plot`。倾向 `PlotSpec`——「spec」表意「声明式规格」，与 Vega-Lite 习惯一致、对 AI 友好。
 - **anchor / scope 预留形态**：根 `id?: string` + 根 `meta?`。mark 上的 `id?` 归 [ADR-05](./05-plot-encoding-mark.md)。是否现在就给根 `meta` 之外再加结构化 provenance 字段？倾向 alpha.1 只放自由 `meta`，alpha.5 / ADR-06 再按需补。
-- **`JSONValueSchema` 归属**：放根 ADR 的 `ir/json.ts`（因 `meta` 用它）。若 core 已导出等价 schema 则复用、不新建（实现期确认）。
+- ~~**`JSONValueSchema` 归属**~~（已定）：`@retikz/core` 已导出 `JsonObjectSchema` / `JsonValueSchema`（`packages/core/core/src/ir/json.ts`，由包根 re-export），`meta` 直接 `JsonObjectSchema.optional()` 复用，**不在 plot 建 `ir/json.ts`**。
 
 ## DSL 表面
 
@@ -116,10 +114,9 @@ const withHandles: PlotSpec = {
 ## 影响
 
 - **新增包 `@retikz/plot`**（`packages/plot/plot`）：前置 setup 步骤建脚手架（见 [alpha.1 待办](./roadmap.md)），本 ADR 在其 `src/ir/` 落根 schema + json helper。
-- **`packages/plot/plot/src/ir/plot.ts`**（全新）：`PlotSpecSchema` + `PlotSpec` 类型，import 四子 schema。
-- **`packages/plot/plot/src/ir/json.ts`**（全新，**仅当** core 未导出可复用 JSON value schema）：`JSONValueSchema`。
+- **`packages/plot/plot/src/ir/plot.ts`**（全新）：`PlotSpecSchema` + `PlotSpec` 类型，import 四子 schema + core `JsonObjectSchema`。
 - **`packages/plot/plot/src/ir/index.ts` + `src/index.ts`**：barrel + 公开 API 导出根 schema 与类型（含各子 ADR 的导出）。
-- **对 core 的影响**：无——plot 只 import `@retikz/core` 的类型 / JSON value schema（lowering 在 ADR-06 才用）。
+- **对 core 的影响**：core 自身不改；但 plot **运行时 import** `@retikz/core` 的 `JsonObjectSchema`（值复用，非仅类型），使 `@retikz/core` 成为 plot 的运行时依赖（workspace 链，前置 setup 已建）。lowering 目标类型（Scope/Node/...）在 ADR-06 才 import。
 - **对文档站的影响**：plot 文档分组尚未建；schema 介绍页随 ADR-06 端到端能出图后再补。
 - **对外 API 的影响**：`@retikz/plot` 首次公开 `PlotSpecSchema` / `PlotSpec`。
 
@@ -159,13 +156,11 @@ const withHandles: PlotSpec = {
 | `packages/plot/plot/src/ir/plot.ts` | 新建字段 | `PlotSpecSchema.scales` | `z.array(ScaleSchema)`（ADR-03） | — | 命名 scale 数组（引用） |
 | `packages/plot/plot/src/ir/plot.ts` | 新建字段 | `PlotSpecSchema.coordinate` | `CoordinateSchema`（ADR-04） | — | 坐标系（引用）；持有位置 scale 绑定 |
 | `packages/plot/plot/src/ir/plot.ts` | 新建字段 | `PlotSpecSchema.marks` | `z.array(MarkSchema).min(1)`（ADR-05） | — | mark 图层，数组顺序 = z-order |
-| `packages/plot/plot/src/ir/plot.ts` | 新建字段 | `PlotSpecSchema.meta` | `z.record(JSONValueSchema).optional()` | undefined | 来源 meta 透传，预留 provenance（ADR-06 lowering 保留） |
-| `packages/plot/plot/src/ir/json.ts` | 新建 schema（仅当 core 未导出可复用者） | `JSONValueSchema` | 递归 JSON value（`string\|number\|boolean\|null\|array\|object`） | — | JSON 可序列化值；meta 单元约束 |
+| `packages/plot/plot/src/ir/plot.ts` | 新建字段 | `PlotSpecSchema.meta` | `JsonObjectSchema.optional()`（复用 `@retikz/core`） | undefined | 来源 meta 透传，预留 provenance（ADR-06 lowering 保留） |
 
 ### 文件 scope
 
 - `packages/plot/plot/src/ir/plot.ts`（新建）
-- `packages/plot/plot/src/ir/json.ts`（新建，**仅当** core 未导出可复用 JSON value schema）
 - `packages/plot/plot/src/ir/index.ts`（新建：barrel 导出全部 schema + 类型；本 ADR 落根，子 ADR 各自补充导出）
 - `packages/plot/plot/src/index.ts`（修改：公开 API 转出 ir barrel）
 - `packages/plot/plot/tests/ir/plot-spec.schema.test.ts`（新建）
@@ -203,5 +198,5 @@ const withHandles: PlotSpec = {
 ### 依赖现有元素
 
 - `zod` —— **引用**：根 schema 基于 zod（catalog 版本，与 core 一致）。
-- `@retikz/core` 的 JSON value schema（若有，实现期确认导出名）—— **可选复用**：`meta` 的 JSON 约束若 core 已有等价 schema 则复用，否则 plot 本地定义 `json.ts`。**仅复用、不修改 core**。
+- `@retikz/core` 的 `JsonObjectSchema` / `JsonValueSchema`（`packages/core/core/src/ir/json.ts`，已由包根 re-export）—— **复用**：`meta` = `JsonObjectSchema.optional()`。**仅复用、不修改 core**，plot 不自建 `json.ts`。
 - [ADR-02 `PlotDataSchema`](./02-plot-data.md) / [ADR-03 `ScaleSchema`](./03-plot-scale.md) / [ADR-04 `CoordinateSchema`](./04-plot-coordinate.md) / [ADR-05 `MarkSchema`](./05-plot-encoding-mark.md) —— **引用**：根的四槽位 import 这些子 schema。实现顺序上四者先于本 ADR。
