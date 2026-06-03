@@ -65,7 +65,7 @@ Data + Transform + Channel(Encoding):
 - **外部数据不受 IR 的 JSON 约束**（它不进 IR），可直接喂 API 返回的嵌套 JSON；但 **lowered 后的 core IR 仍 100% JSON-safe**（全是算好的标量 / 几何）。
 - **共享**：同一 Plot Scene 内多个 coordinate scope 可按同一 `ref` 共享数据集。
 
-> 小数据 / 示例的便利（如 React DSL 里 `data` 当 prop）由框架 adapter 在 authoring 期把数据拆进 `datasets`、IR 仍只存 `ref`（v0.3），不破坏「数据不进 IR」。
+> 小数据 / 示例的便利（如 React DSL 里 `data` 当 prop）由框架 adapter 在 authoring 期把数据拆进 `datasets`、IR 仍只存 `ref`（`@retikz/plot-react`，v0.1 ADR-07/08），不破坏「数据不进 IR」。
 
 ### 3.2 Dimension
 
@@ -644,7 +644,7 @@ intent
 - 目标：对 ≥1 个 mark 跑通全 8 段管线，并在 **cartesian + polar** 两套坐标系下都成立；产出带轴与网格的基本图。
 - 模块：`ir`、`transform`（最小）、`scale`、`coordinate`（cartesian + polar）、`mark`（point / line / bar）、`relation`（order）、`guide`（x/y 轴 + 径向 / 角向轴 + grid）、`lowering`；并埋入 anchor、scope（见上贯穿原则）。
 - 依赖 core 能力：IR / Scene / `compileToScene`、Tier 2 composite 接入与 `lowerComposites` 管线（core v0.3 起的 Tier 2 支撑，现已就绪）。
-- 包：`@retikz/plot`；渲染走现有 `@retikz/react` / `@retikz/vanilla`（消费 core IR，plot 暂不出框架绑定）。
+- 包：`@retikz/plot`（IR + lowering）、`@retikz/plot-react`（`<Plot>` + 组合 DSL）、`@retikz/plot-vanilla`（builder + SSR）——**三包从 v0.1 起 lockstep 协同**，每加一个 plot 能力同步在 react/vanilla 表面 + 文档 demo 露出（原计划把绑定推到 v0.3 已废除：否则文档只能写 `<Layout ir composites={lowerPlots(...)}/>` 这种低可读示例）。底层渲染仍走 `@retikz/react` / `@retikz/vanilla`（消费 core IR）。**交互**（tooltip/hover/事件）仍留 v0.3（依赖 core 水合，非 authoring）。
 - 备注：polar 进 v0.1 是为逼出通用 coordinate 抽象、避免写死笛卡尔，代价是 guide / coordinate 工作量约翻倍。
 
 ### 13.2 v0.2 — 图形横向扩展（仍为静态）
@@ -665,7 +665,7 @@ intent
 - 目标：tooltip、hover、函数回调等交互。
 - 关键：交互是 **框架 runtime** 的事，不是纯 IR——靠 v0.1 预留的 anchor 做命中，事件绑定落在框架绑定包。
 - 依赖 core 能力：hydration / runtime（core v0.3 的水合）。
-- 包：新增 `@retikz/plot-react`、`@retikz/plot-vanilla`（必要时 `@retikz/chart-react` / `-vanilla`）。
+- 包：`@retikz/plot-react` / `@retikz/plot-vanilla` **已在 v0.1 创建**（authoring 绑定，见 §13.1）；本版只**给已有绑定包加交互**（事件 / 回调 / 命中），不新建包。
 
 ### 13.5 v0.4 — AI 渐进生成
 

@@ -83,7 +83,7 @@ export type PlotSpec = z.infer<typeof PlotSpecSchema>;
 
 ## DSL 表面
 
-alpha.1 的 `@retikz/plot` **产出 Plot IR 对象（schema 校验）+ lowering 函数**，不出框架绑定组件。authoring 表面是 **Plot IR 字面量 + 外部数据**：渲染 = `compileToScene(plotIR, { composites: lowerPlots(datasets) })`（lowering 在 ADR-06）。框架绑定（`<Plot>` JSX，data 当 prop 由 adapter 拆进 datasets）留到 v0.3。
+alpha.1 的 `@retikz/plot` **产出 Plot IR 对象（schema 校验）+ lowering 函数**，不出框架绑定组件。authoring 表面是 **Plot IR 字面量 + 外部数据**：渲染 = `compileToScene(plotIR, { composites: lowerPlots(datasets) })`（lowering 在 ADR-06）。框架绑定（`<Plot>` JSX，data 当 prop 由 adapter 拆进 datasets）见 ADR-07（薄包装）/ ADR-08（组合 DSL）——三包 lockstep，已提前到 alpha.1。
 
 ```ts
 import { PlotSpecSchema, type PlotSpec } from '@retikz/plot';
@@ -156,7 +156,7 @@ const minimal: PlotSpec = {
 - **lowering / 数据绑定 `lowerPlots(datasets)`** → ADR-06。本 ADR 无运行时行为。
 - **guide（axis / grid / legend）schema** → alpha.2。
 - **anchor 命中 / datum locator / scope-aware 解析** → alpha.5（本 ADR 只留 `id` / `meta` 字段位）。
-- **框架绑定 authoring（`<Plot>` JSX / data prop 拆分 / vanilla plot builder）** → v0.3。
+- **框架绑定 authoring（`<Plot>` JSX / data prop 拆分 / vanilla plot builder）** → ADR-07 / ADR-08（提前到 alpha.1，三包 lockstep）。
 
 ---
 

@@ -38,7 +38,7 @@
 新建包 `packages/plot/plot`（`@retikz/plot`）脚手架，镜像 `packages/core/core` 工程约定：
 
 - `package.json`（catalog 依赖 zod；workspace 链 `@retikz/core`）、`tsconfig`、`vite` 库构建、`vitest`、`src/index.ts` 空 barrel。
-- 暂不出框架绑定包（`@retikz/plot-react` 等留到 v0.3）。
+- 框架绑定包 `@retikz/plot-react` / `@retikz/plot-vanilla` 的脚手架由 ADR-07 建（三包 lockstep，不再推迟到 v0.3）。
 
 作为本 milestone 第一条落地 ADR（实现顺序上的 ADR-02 data）的前置步骤提交（emoji `:tada:` / `:package:`），不单独写 ADR。
 
@@ -52,8 +52,11 @@
 | [04](./04-plot-coordinate.md) | Plot 坐标系（Cartesian2D + Coordinate union，持有位置 scale 绑定） | red | 前置 setup | Accepted |
 | [05](./05-plot-encoding-mark.md) | Plot 编码与图元（Channel / Encoding + Point / Line / Mark union） | red | ADR-02 | Accepted |
 | [06](./06-plot-lowering.md) | 最薄 lowering 纵向闭环（lowerPlots：单 mark · linear · cartesian，Plot IR + 数据 → core IR） | red | ADR-01~05 | Accepted |
+| [07](./07-plot-bindings.md) | 框架绑定脚手架 + 薄包装（`@retikz/plot-react` `<Plot spec data/>` + `@retikz/plot-vanilla` `renderPlot`） | red | ADR-06 | Proposed |
+| [08](./08-plot-react-dsl.md) | React 组合 DSL（`<Plot>` + `<LineMark>` / `<PointMark>` + builder，自动推断 scale / coordinate） | red | ADR-07 | Proposed |
 
-> alpha.1 已实现并提交：setup（`@retikz/plot` 脚手架）+ 01-06，58 schema/lowering test 全绿。**文档（stage 4）待定**——见下「文档待办」。待决策点均按各 ADR「倾向」锁定实现。
+> alpha.1 已实现并提交：setup（`@retikz/plot` 脚手架）+ 01-06，58 schema/lowering test 全绿。**文档（stage 4）随 ADR-07/08 出 `<Plot>` 后用它写可读 demo**（不再用 `<Layout ir composites>` 的低可读写法）。待决策点均按各 ADR「倾向」锁定实现。
+> **ADR-07/08（框架绑定）**：原计划 v0.3，现按「三包 lockstep」提前到 alpha.1（见 [plot v0.1 roadmap 拆分策略](../roadmap.md)）；交互能力仍留 v0.3。
 
 > 原单条 ADR-01「Plot IR 骨架」按数据结构拆为 01-05（[拆分背景见各 ADR 的「背景」段]）；原 ADR-02 lowering 顺延为 ADR-06。
 > ADR-06 在 ADR-01~05 Accepted 后起草并分配文件名（`06-<slug>.md`）。

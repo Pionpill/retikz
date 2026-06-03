@@ -20,6 +20,8 @@ v0.1 是 `@retikz/plot` 的**基础纵向闭环**：对 ≥1 个 mark 跑通全 
 
 **纵向薄片优先**：先打通最薄的端到端（单 mark · linear · cartesian · 最小 lowering），再逐层加宽。每个 milestone 都应产出可渲染的结果，对齐 [plot-design §13](../../../../architecture/plot-design.md) 主线「纵向闭环」。
 
+**三包 lockstep 协同（改原计划）**：`@retikz/plot`（IR + lowering）/ `@retikz/plot-react`（`<Plot>` 组件 + 组合 DSL）/ `@retikz/plot-vanilla`（builder + SSR）**从 alpha.1 起一起迭代**——每加一个 plot 能力（mark / scale / coordinate…），同步在 react / vanilla 表面与文档 demo 露出。原计划把框架绑定整体推到 v0.3，现废除：否则文档站只能写 `<Layout ir={{...}} composites={lowerPlots(...)}/>` 这种低可读性示例，对用户极不友好。**注意区分**：authoring 绑定（构图 + 渲染）随 plot 同步；**交互能力**（tooltip / hover / 事件回调）仍留 v0.3——那依赖 core 水合，不只是 authoring 表面。
+
 ## Milestones
 
 | Milestone | 主题 | 模块 / 产出 | 记录 |
@@ -36,7 +38,7 @@ v0.1 是 `@retikz/plot` 的**基础纵向闭环**：对 ≥1 个 mark 跑通全 
 
 - core IR / Scene / `compileToScene`；
 - Tier 2 composite 接入与 `lowerComposites` 管线（core v0.3 起的 Tier 2 支撑，现已就绪）——plot 作为 Tier 2 内容 lower 进可引用的 `Scope`；
-- 渲染走现有 `@retikz/react` / `@retikz/vanilla`（消费 core IR），**plot v0.1 暂不出框架绑定**。
+- 渲染走现有 `@retikz/react` / `@retikz/vanilla`（消费 core IR）；**plot v0.1 起即出 authoring 绑定** `@retikz/plot-react` / `@retikz/plot-vanilla`（薄 `<Plot>` + 组合 DSL + SSR），与 plot 本体 lockstep（见「拆分策略」）。交互绑定留 v0.3。
 
 plot 只消费 core 能力、不反向依赖，也不改 core 内部。
 

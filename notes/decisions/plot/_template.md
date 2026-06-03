@@ -7,7 +7,7 @@
 > - 二级 = MINOR 版本号（`v0.1/` / `v0.2/`）
 > - 三级 = 版本通道节点（`v0.1-alpha.1/` / `v0.1-beta.1/` / `v0.1-rc.1/` / `v0.1/` 表稳定）
 > - PATCH 不开目录（patch 仅修 bug，不写 ADR）
-> NN 是**按 milestone 重置**的两位数编号（目录已分组，编号无需全局唯一）。alpha.1 是 01-06，alpha.2 从 01 重新起计；跨 milestone 引用带前缀：`alpha.1 ADR-01`
+> NN 是**按 milestone 重置**的两位数编号（目录已分组，编号无需全局唯一）。alpha.1 是 01-08，alpha.2 从 01 重新起计；跨 milestone 引用带前缀：`alpha.1 ADR-01`
 > slug 用 kebab-case
 > **plot 版本线独立**：`@retikz/plot` 有自身演进节奏，**不与 core 版本号对齐**——它只消费 core 能力、不反向依赖，里程碑由「所需 core 能力是否就绪」gating（见 [plot-design §13](../../../architecture/plot-design.md)）。
 > 模板对应 [`develop-design`](../../../.agents/skills/develop-design/SKILL.md) SKILL；改 ADR 结构时同步改两边
