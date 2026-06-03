@@ -52,11 +52,12 @@
 | [04](./04-plot-coordinate.md) | Plot 坐标系（Cartesian2D + Coordinate union，持有位置 scale 绑定） | red | 前置 setup | Accepted |
 | [05](./05-plot-encoding-mark.md) | Plot 编码与图元（Channel / Encoding + Point / Line / Mark union） | red | ADR-02 | Accepted |
 | [06](./06-plot-lowering.md) | 最薄 lowering 纵向闭环（lowerPlots：单 mark · linear · cartesian，Plot IR + 数据 → core IR） | red | ADR-01~05 | Accepted |
-| [07](./07-plot-bindings.md) | 框架绑定脚手架 + 薄包装（`@retikz/plot-react` `<Plot spec data/>` + `@retikz/plot-vanilla` `renderPlot`） | red | ADR-06 | Proposed |
-| [08](./08-plot-react-dsl.md) | React 组合 DSL（`<Plot>` + `<LineMark>` / `<PointMark>` + builder，自动推断 scale / coordinate） | red | ADR-07 | Proposed |
+| [07](./07-plot-bindings.md) | 框架绑定脚手架 + 薄包装（`@retikz/plot-react` `<Plot spec data/>` + `@retikz/plot-vanilla` `renderPlot`） | red | ADR-06 | Accepted |
+| [08](./08-plot-react-dsl.md) | React 组合 DSL（`<Plot>` + `<LineMark>` / `<PointMark>` + builder，自动推断 scale / coordinate） | red | ADR-07 | Accepted |
 
-> alpha.1 已实现并提交：setup（`@retikz/plot` 脚手架）+ 01-06，58 schema/lowering test 全绿。**文档（stage 4）随 ADR-07/08 出 `<Plot>` 后用它写可读 demo**（不再用 `<Layout ir composites>` 的低可读写法）。待决策点均按各 ADR「倾向」锁定实现。
+> alpha.1 已实现并提交：setup（`@retikz/plot` + `@retikz/plot-react` + `@retikz/plot-vanilla` 脚手架）+ 01-08；plot 58 + plot-react 13 + plot-vanilla 5 test 全绿。文档 introduction 页已用 `<Plot>` 组合 DSL 写可读 demo（不再用 `<Layout ir composites>`）。待决策点均按各 ADR「倾向」锁定实现。changelog 推迟到 plot 首发 publish 时按 01-08 整体补（plot 独立版本线，走 package-publish）。
 > **ADR-07/08（框架绑定）**：原计划 v0.3，现按「三包 lockstep」提前到 alpha.1（见 [plot v0.1 roadmap 拆分策略](../roadmap.md)）；交互能力仍留 v0.3。
+> **alpha.1 待办（adversarial 留痕）**：Bug Hunter W1——非 finite 的绘图区 `width`/`height` 会一路流进投影器产出 `cx="NaN"` 坏 SVG 且无报错。单一真源修法在 `lowerPlots`（width/height 的唯一消费点），超出 ADR-07/08 文件 scope，留作后续小修（alpha.2 或独立 bugfix）。
 
 > 原单条 ADR-01「Plot IR 骨架」按数据结构拆为 01-05（[拆分背景见各 ADR 的「背景」段]）；原 ADR-02 lowering 顺延为 ADR-06。
 > ADR-06 在 ADR-01~05 Accepted 后起草并分配文件名（`06-<slug>.md`）。
