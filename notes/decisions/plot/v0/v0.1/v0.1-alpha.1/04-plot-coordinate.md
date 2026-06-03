@@ -2,11 +2,11 @@
 
 - 状态：Proposed
 - 决策日期：2026-06-03
-- 关联：[plot v0.1-alpha.1 待办](./roadmap.md) · [plot v0.1 roadmap](../roadmap.md) · [plot-design.md §3.5](../../../../../architecture/plot-design.md) · 根容器：[ADR-01 PlotSpec](./01-plot-spec-root.md) · 关联方：[ADR-03 scale](./03-plot-scale.md) · [ADR-05 encoding+mark](./05-plot-encoding-mark.md)
+- 关联：[plot v0.1-alpha.1 待办](./roadmap.md) · [plot v0.1 roadmap](../roadmap.md) · [plot-design.md §3.5](../../../../../architecture/plot-design.md) · 根节点：[ADR-01 PlotSpec](./01-plot-spec-root.md) · 关联方：[ADR-03 scale](./03-plot-scale.md) · [ADR-05 encoding+mark](./05-plot-encoding-mark.md)
 
 ## 背景
 
-[根容器（ADR-01）](./01-plot-spec-root.md)的 `coordinate` 槽位定义图的坐标空间。本 ADR 定义坐标系 schema，并承担一个**关键跨切决策**：位置通道（x / y）的 scale 绑定**由 coordinate 持有**——coordinate 声明「哪个 scale 驱动 x、哪个驱动 y」。
+[根节点（ADR-01）](./01-plot-spec-root.md)的 `coordinate` 槽位定义图的坐标空间。本 ADR 定义坐标系 schema，并承担一个**关键跨切决策**：位置通道（x / y）的 scale 绑定**由 coordinate 持有**——coordinate 声明「哪个 scale 驱动 x、哪个驱动 y」。
 
 这是 Plot IR 的一个分叉点：Vega-Lite 风格让每个 channel 自带 scale 引用；本设计把位置 scale 绑定收归 coordinate。本 ADR 锁定后者，并解释代价与收益（见理由）。[encoding（ADR-05）](./05-plot-encoding-mark.md)的位置通道因此**不带 scale 引用**。
 
@@ -18,8 +18,15 @@ alpha.1 仅 `cartesian2D`；coordinate 设计成 discriminated union，为 alpha
 
 ```ts
 // packages/plot/plot/src/ir/coordinate.ts
+import { z } from 'zod';
+import type { ValueOf } from '@retikz/core';
+
+/** 坐标系类型判别值集（const 对象 + 派生类型；后续加 polar2D / linear1D…） */
+export const COORDINATE_TYPES = { cartesian2D: 'cartesian2D' } as const;
+export type CoordinateType = ValueOf<typeof COORDINATE_TYPES>;
+
 export const Cartesian2DSchema = z.object({
-  type: z.literal('cartesian2D').describe('Discriminator: 2D cartesian space, x horizontal / y vertical'),
+  type: z.literal(COORDINATE_TYPES.cartesian2D).describe('Discriminator: 2D cartesian space, x horizontal / y vertical'),
   x: z.string().min(1).describe('Scale name driving the x (horizontal) position channel'),
   y: z.string().min(1).describe('Scale name driving the y (vertical) position channel'),
 });
@@ -93,7 +100,8 @@ CoordinateSchema.parse({ type: 'cartesian2D', x: 'nonexistent', y: 'alsoMissing'
 
 | 文件 | 操作 | 字段名 | 类型 | 默认值 | describe 中文摘要 |
 |---|---|---|---|---|---|
-| `packages/plot/plot/src/ir/coordinate.ts` | 新建 schema | `Cartesian2DSchema` | `z.object({ type:literal('cartesian2D'), x:string, y:string })` | — | 笛卡尔 2D；x/y = scale 名 |
+| `packages/plot/plot/src/ir/coordinate.ts` | 新建常量 | `COORDINATE_TYPES` | `{ cartesian2D: 'cartesian2D' } as const`（派生 `CoordinateType`） | — | 坐标系类型判别值集（const 对象 + 派生类型，AGENTS.md 规则） |
+| `packages/plot/plot/src/ir/coordinate.ts` | 新建 schema | `Cartesian2DSchema` | `z.object({ type:z.literal(COORDINATE_TYPES.cartesian2D), x:string, y:string })` | — | 笛卡尔 2D；x/y = scale 名 |
 | `packages/plot/plot/src/ir/coordinate.ts` | 新建字段 | `Cartesian2DSchema.x` | `z.string().min(1)` | — | 驱动 x（水平）位置通道的 scale 名 |
 | `packages/plot/plot/src/ir/coordinate.ts` | 新建字段 | `Cartesian2DSchema.y` | `z.string().min(1)` | — | 驱动 y（垂直）位置通道的 scale 名 |
 | `packages/plot/plot/src/ir/coordinate.ts` | 新建 schema | `CoordinateSchema` | `z.discriminatedUnion('type', [Cartesian2DSchema])` | — | coordinate union（可扩展） |
@@ -129,4 +137,5 @@ CoordinateSchema.parse({ type: 'cartesian2D', x: 'nonexistent', y: 'alsoMissing'
 ### 依赖现有元素
 
 - `zod` —— **引用**。
+- `@retikz/core` 的 `ValueOf`（`packages/core/core/src/types.ts`，包根 re-export）—— **引用**：派生 `CoordinateType`。
 - [ADR-03 scale 的 `name`](./03-plot-scale.md) —— **弱引用（仅约定）**：x/y 是字符串，语义上指向 `scales[].name`，但 schema 层不 import scale、不校验存在性。

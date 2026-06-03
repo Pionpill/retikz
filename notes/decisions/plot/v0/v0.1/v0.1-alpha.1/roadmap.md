@@ -13,22 +13,22 @@
 
 **单条串行**：每条 ADR 走完 5 阶段（设计 → 实现 → 自测 → 文档 → 收尾）、人工 review 后再开下一条。
 
-**实现顺序按依赖叶子优先**（ADR 编号 ≠ 实现顺序）：根容器 ADR-01 在代码上 import 全部子结构（`plot.ts` import data/scale/coordinate/mark），故先落叶子、再拼根、最后 lowering——
+**实现顺序按依赖叶子优先**（ADR 编号 ≠ 实现顺序）：根节点 ADR-01 在代码上 import 全部子结构（`plot.ts` import data/scale/coordinate/mark），故先落叶子、再拼根、最后 lowering——
 
 ```
 02 data ─┐         03 scale ──┐   04 coordinate ──┐
-         ├─ DatumValue        │                   │
-05 encoding+mark ◄┘(channel.value 复用 DatumValue) │
+         ├─ ScalarValue       │                   │
+05 encoding+mark ◄┘(channel.value 复用 ScalarValue)│
          │                    │                   │
-01 root ◄┴────────────────────┴───────────────────┘ (plot.ts import 全部叶子 + 自带 json.ts)
+01 root ◄┴────────────────────┴───────────────────┘ (plot composite 节点；data 槽位用 DataRef；复用 core CompositeBaseSchema/JsonObjectSchema)
          │
-06 lowering ◄ 依赖 01-05
+06 lowering ◄ 依赖 01-05（= lowerPlots(datasets) 数据绑定）
 ```
 
 - **02 / 03 / 04 互相独立**，可任意先后；
-- **05 依赖 02**（`ChannelSchema.value` 复用 `DatumValueSchema`）；
-- **01 依赖 02-05**（根 import 所有叶子），自带 `JSONValueSchema`（`meta` 用）；
-- **06 依赖 01-05**。
+- **05 依赖 02**（`ChannelSchema.value` 复用 `ScalarValueSchema`；`field` 路径解析 `ExternalRow`）；
+- **01 依赖 02-05**（根 import 所有叶子），extend core `CompositeBaseSchema`、复用 `JsonObjectSchema`（`meta`）；`data` 槽位用 02 的 `DataRef`；
+- **06 依赖 01-05**，且数据经 `lowerPlots(datasets)` 闭包注入（数据不进 IR，见 [plot-design §3 / §8](../../../../../architecture/plot-design.md)）；
 - 实现顺序：`02·03·04 → 05 → 01 → 06`。
 
 > **测试 case 规则放宽**：本 milestone 把 IR 拆为细粒度 ADR，**不强求模板「每 ADR ≥ 9 case」**——按 schema 复杂度适量取 case，只覆盖真实有意义的 accept/reject（极小 schema 如 coordinate 取数条即可，复杂的如 encoding+mark 取较全）。
@@ -46,8 +46,8 @@
 
 | ADR | 主题 | Level | 依赖 | 状态 |
 |---|---|---|---|---|
-| [01](./01-plot-spec-root.md) | PlotSpec 根容器（Plot IR 根 + JSON 透传约束，含 anchor / scope 预留 `id` / `meta`） | red | 02-05、前置 setup | Proposed |
-| [02](./02-plot-data.md) | Plot 数据结构（DatumValue / Datum / PlotData） | red | 前置 setup | Proposed |
+| [01](./01-plot-spec-root.md) | Plot 根节点（`plot` composite 节点 + 数据引用 + JSON 透传，含 anchor / scope 预留 `id` / `meta`） | red | 02-05、前置 setup | Proposed |
+| [02](./02-plot-data.md) | Plot 数据引用与数据模型（DataRef / DataModel + 外部数据契约；**数据不进 IR**） | red | 前置 setup（core `ValueOf`） | Proposed |
 | [03](./03-plot-scale.md) | Plot 比例尺（LinearScale + Scale union） | red | 前置 setup | Proposed |
 | [04](./04-plot-coordinate.md) | Plot 坐标系（Cartesian2D + Coordinate union，持有位置 scale 绑定） | red | 前置 setup | Proposed |
 | [05](./05-plot-encoding-mark.md) | Plot 编码与图元（Channel / Encoding + Point / Line / Mark union） | red | ADR-02 | Proposed |

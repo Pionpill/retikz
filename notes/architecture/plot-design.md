@@ -55,13 +55,17 @@ Data + Transform + Channel(Encoding):
 
 ### 3.1 Data
 
-Data 是原始记录集合或经过外部查询得到的表格数据。小数据集可以直接进入 Plot IR；大数据集或动态数据应预留 `dataRef` / external dataset 的路径，避免 IR 膨胀。
+**数据不进 IR。** 一张图拆成三层：① **IR（配置）**——图类型 / 数据引用与模型 / scale / coordinate / mark；② **数据**——外部单独存储，任意 JS（可嵌套），不进 IR；③ **绑定逻辑**——写死在代码里的函数，`(IR + 数据) → core IR`。把整张数据集内联进 IR 会让 IR 体积随数据量爆炸，拖垮持久化、传输与 LLM 生成。
 
-要求：
+这套「配置 / 数据 / 函数」三分正是 core 处理所有 Tier 2 与扩展点的既定模式——shapes / arrows / patterns / pathGenerators / composites **无一例外**都是「含函数与数据、不进 IR、经 `CompileOptions` 运行时注入」。plot 据此实现：
 
-- Data 进入 IR 时必须 JSON 可序列化。
-- 数据记录不携带函数、ReactNode 或运行时对象。
-- 同一个 Plot Scene 内多个 coordinate scope 可以共享同一份 data。
+- **IR 只持数据引用**：`data = { ref, model? }`——具名数据集名 `ref` + 可选数据模型 `model`（字段名 + 类型声明）。`ref` / `model` 是 JSON-safe 的 IR 内容；**数据值从不进 IR**。
+- **数据经闭包注入**：编译期 `compileToScene(plotIR, { composites: lowerPlots(datasets) })`，`datasets` 是 `Record<string, Array<Row>>`，`Row` 为任意 JS（可嵌套）；`data.ref` 按名查 `datasets`。
+- **字段经路径 accessor 取值**：encoding 的 `field` 是 `'a.b.c'` 路径，对 `Row` 解析，**解析后须落到标量**才能喂 scale；只有抽出的标量进 lowered core IR。
+- **外部数据不受 IR 的 JSON 约束**（它不进 IR），可直接喂 API 返回的嵌套 JSON；但 **lowered 后的 core IR 仍 100% JSON-safe**（全是算好的标量 / 几何）。
+- **共享**：同一 Plot Scene 内多个 coordinate scope 可按同一 `ref` 共享数据集。
+
+> 小数据 / 示例的便利（如 React DSL 里 `data` 当 prop）由框架 adapter 在 authoring 期把数据拆进 `datasets`、IR 仍只存 `ref`（v0.3），不破坏「数据不进 IR」。
 
 ### 3.2 Dimension
 
@@ -427,6 +431,38 @@ core 的「连接」本质是 id 驱动的：`Path` 的 step target 用 `{ id, a
 - **唯一性**：用户提供的 id 优先；缺省时 lowering 按确定性规则合成（如 `<plotId>.series.<markIndex>`），保证可复现、可被 anchor 路径寻址。
 
 > ⚠️ **风险备注（datum 级逐点绑 id）**：把每个数据点都绑 id 会在 core `nodeIndex` 里产生与数据量等量的具名注册——万级散点 = 万级注册，显著抬高 IR 体积、编译成本与 namespace 压力。故 datum id 绑定应**按需开启**（仅在确需逐点被引用时配置 id 字段）；高基数且只需「按规则定位」的场景，优先用 locator 解析（`<plotId>.datum.<rowIndex>` 连接时按需算出），而非逐点预注册。
+
+### 8.2 数据绑定（IR + 外部数据 → core IR；数据不进 IR）
+
+承 §3.1「数据不进 IR」：Plot IR 是 Tier 2 **composite 节点**（`namespace: 'plot'`），数据外置，绑定逻辑是写死的函数——三者经 core 既有 `CompileOptions.composites` 通道汇合，**无需 core 新增钩子**。
+
+- **注册**：plot 包提供 `lowerPlots(datasets)`，返回 `CompositeDefinition[]`（`{ schema, expand }`），其 `expand` **闭包 `datasets`**。数据随函数从 `CompileOptions` 进来，不进 IR。
+- **展开**：`compileToScene(plotIR, { composites: lowerPlots(datasets) })` 第一步 `lowerComposites` 按 `plot.plot` 路由调 `expand(plotNode)`：`data.ref` 按名查 `datasets` → encoding `field` 路径对每行取值 → 抽标量 → 过 `scale` → 经 `coordinate` 投影 → 产 Tier 1 `Scope` / `Node` / `Path` / `Step` / `Coordinate`。
+- **id 绑定**：`expand` 产出的 `Scope` / `Node` / `Coordinate` 按 §8.1 绑 id（root → 外层 `Scope.id`、series/datum → 对应元素 id + `<plotId>.` 前缀）。
+- **后端无感**：renderer 后端只见 lowered 后含具体数字的 core IR，碰不到 plot 原始数据；数据访问全发生在 `expand` 期。
+- **数据模型**：`data.model`（可选，在 IR）给了则校验 encoding 字段引用 + 推 scale 类型；缺省则 `expand` 从 `datasets` 推断。
+
+### 8.3 mark 几何 × coordinate：正交配置与投影分层（alpha.4 / ADR-06 待决策）
+
+plot 的本质 = 在一个**正交配置空间** `coordinate × mark × scale × encoding` 里，由 lowering 把每个组合投影 / 下沉成 core 几何。其中最吃设计的是 **mark 几何 = f(mark 类型, coordinate)**：同一 mark 在不同坐标系产出不同几何。
+
+```
+            point            bar
+cartesian   圆点 @ (x,y)     矩形
+polar       圆点 @ (r,θ)     扇形（环楔）
+```
+
+要点：
+
+- **定位永远过 coordinate 投影**；mark 之间差在「几何形状是否依赖坐标系」——point 的 glyph 不依赖（位置仍投影）、bar / line / area 的几何强依赖（line 在 polar 成螺旋 / 径向折线）。
+- **靠分层避免 `N_mark × N_coord` 爆炸**：`scale`（数据值 → 归一化位置，坐标系无关）→ `coordinate`（归一化 → 实际 2D 点，笛卡尔 vs 极坐标差在此）→ `mark`（投影点 + 坐标系的「区间 / 带」概念 → 几何）。
+
+但 bar 类几何无法完全坐标无关，故有**两条实现路线，互斥，需在 polar 落地时拍板**：
+
+- **(i) mark 坐标无关 + coordinate 投影整形**：mark 在归一化空间出形（bar 出单位矩形），coordinate 投影其边——极坐标下直边**采样弯成弧** → 自然成扇形。**加新坐标系 O(1)**（所有 mark 自动适配），近 ggplot `coord_*`。代价：投影须把直边采样成弧，不能只投影角点。
+- **(ii) mark 自带每坐标系几何分支**：bar 内写死「笛卡尔→矩形、极坐标→扇形」。直白，但**等于把 N×M 矩阵塞进逻辑**，加新坐标系 = O(N_marks)，近 Vega 分立的 `rect` / `arc` mark。
+
+**决策推迟到 alpha.4**（polar 落地）：alpha.1 只有笛卡尔，(i)/(ii) 无从分辨；polar 一来立刻见真章。因此 **alpha.1 的 lowering 不得把笛卡尔假设写死进 mark**（如直接用矩形角点），以免堵死 (i) 路线——保持坐标系投影是一个可替换的中间层。详见 [plot v0.1 roadmap](../decisions/plot/v0/v0.1/roadmap.md) alpha.4。
 
 例子：
 
