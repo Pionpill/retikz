@@ -58,7 +58,10 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
   const yScale = resolveLinearScale(yScaleDef, axisValues('y'), [height, 0]);
   const project = createCartesianProjector(xScale, yScale);
 
-  const children: Array<IRChild> = node.marks.flatMap(mark => lowerMark(mark, rows, project));
+  // 每个 mark 下沉成一个图层 Scope（样式上提到 nodeDefault/pathDefault）；空图层（无可绘制点）丢弃
+  const children: Array<IRChild> = node.marks
+    .map(mark => lowerMark(mark, rows, project))
+    .filter((layer): layer is IRChild => layer !== null);
 
   return node.id
     ? { type: 'scope', id: node.id, localNamespace: true, children }
