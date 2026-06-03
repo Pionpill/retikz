@@ -40,3 +40,14 @@ export const DemoRenderer: FC<DemoRendererProps> = props => {
   if (interactive) return <Component />;
   return <>{applyRendererMode(Component({}), rendererMode)}</>;
 };
+
+/**
+ * 把一段 SVG 字符串注入渲染区（vanilla 视图用：`renderPlot` 等 SSR 产物）
+ * @description 自身约束子 svg 不超出父框（与 react/canvas 路径同口径）；下载时 renderPane 的 querySelector('svg') 照样命中
+ */
+export const RawSvgFrame: FC<{ svg: string }> = ({ svg }) => (
+  <div
+    className="flex max-h-full max-w-full [&>svg]:max-h-full [&>svg]:max-w-full"
+    dangerouslySetInnerHTML={{ __html: svg }}
+  />
+);

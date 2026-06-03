@@ -1,5 +1,7 @@
 /** ComponentPreview 套件内部共享：类型、对齐 class 表、IR 格式化 */
 
+import type { ReactNode } from 'react';
+
 export type Transform = { x: number; y: number; scale: number };
 
 /** 源码视图切换：React 源码 / IR JSON / Vanilla builder 代码 */
@@ -9,12 +11,11 @@ export type SourceView = 'react' | 'ir' | 'vanilla';
 export const SOURCE_VIEW_ORDER: ReadonlyArray<SourceView> = ['react', 'vanilla', 'ir'];
 
 /**
- * 按各视图是否有内容，算出可用视图列表（固定顺序）
- * @description react / ir / vanilla 三者全可选——不传 / 空串即视为缺省、不出对应选项。调用方据此决定显示哪些
- *   toggle 按钮（≥ 2 个才出 toggle），单视图直接展示、零视图不渲染代码面板。
+ * 从 source 算出可用视图列表（固定顺序）
+ * @description 一个视图「可用」= 它有至少一个源码文件。≥ 2 个可用视图才出视图切换；单视图直接展示、零视图不渲染代码面板。
  */
-export const availableSourceViews = (present: Record<SourceView, boolean>): Array<SourceView> =>
-  SOURCE_VIEW_ORDER.filter(v => present[v]);
+export const availableSourceViews = (source: ComponentRenderSource): Array<SourceView> =>
+  SOURCE_VIEW_ORDER.filter(v => (source[v]?.files.length ?? 0) > 0);
 
 /** demo 渲染目标：SVG DOM 或 Canvas 2D */
 export type RendererMode = 'svg' | 'canvas';
@@ -72,17 +73,41 @@ export type UnifiedDiff = {
   lineKinds: ReadonlyArray<DiffLineKind>;
 };
 
+/** 源码文件语法高亮语言 */
+export type SourceLang = 'tsx' | 'ts' | 'json';
+
 /** ComponentPreview 源码面板中的单个文件 */
 export type ComponentSourceFile = {
   /** 展示在文件切换条里的文件名 */
   filename: string;
   /** 当前文件的原始源码 */
   code: string;
-  /** 可选的教学 diff 数据，仅主 demo 文件通常会提供 */
+  /** 语法高亮语言（react→tsx、vanilla→ts、ir→json） */
+  lang: SourceLang;
+  /** 可选的教学 diff 数据（任意视图、任意文件都可带——不再限 React 主文件） */
   diff?: UnifiedDiff;
   /** 是否为 demo 主文件（`name` 对应文件）；用于文件选择器区分图标，sourceFiles 引入的其他文件为 false */
   isMain?: boolean;
 };
+
+/**
+ * 单个源码视图的数据：一组源码文件 + 可选的「用对应 runtime 渲染」实现
+ * @description react / ir / vanilla 三视图同构——每个都是一组文件（各自可带 diff），统一支持多文件 + 文件级 diff。
+ *   `render` 缺省时该视图复用 React demo 的渲染（如 Tier 2 的 IR 视图无外部数据、无法独立渲染）；
+ *   提供时切到该视图即用对应 runtime 真渲染（vanilla→renderPlot 出的 SVG 串、Tier 1 IR→`<Layout ir>`）。
+ */
+export type SourceViewData = {
+  /** 该视图的源码文件（≥ 1）；> 1 时出文件分段 */
+  files: Array<ComponentSourceFile>;
+  /** 用对应 runtime 渲染该视图的产物；缺省则复用 React demo 渲染 */
+  render?: (mode: RendererMode) => ReactNode;
+};
+
+/**
+ * 演示卡的源码视图集合
+ * @description 三视图全可选，每个视图是一组文件（统一模型）。任一视图有文件即该视图可用；全空 / 缺省则不渲染代码面板。
+ */
+export type ComponentRenderSource = Partial<Record<SourceView, SourceViewData>>;
 
 /**
  * Diff 展示模式
