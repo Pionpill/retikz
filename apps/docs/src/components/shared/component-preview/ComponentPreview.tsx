@@ -301,7 +301,11 @@ export const ComponentPreview: FC<ComponentPreviewProps> = props => {
         ...(vanillaCode.length > 0
           ? {
               vanilla: {
-                files: [{ filename: `${name}.vanilla.ts`, code: vanillaCode, lang: 'ts' as const }],
+                // vanilla 复用同一份数据 sourceFiles（data 文件只此一份，react / vanilla 共享）
+                files: [
+                  { filename: `${name}.vanilla.ts`, code: vanillaCode, lang: 'ts' as const },
+                  ...extraSourceFiles,
+                ],
                 render: vanillaSvg !== undefined ? () => <RawSvgFrame svg={vanillaSvg} /> : undefined,
               },
             }

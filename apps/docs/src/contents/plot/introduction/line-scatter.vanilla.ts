@@ -1,14 +1,7 @@
 import type { PlotSpec } from '@retikz/plot';
 import { renderPlot } from '@retikz/plot-vanilla';
 
-/** 外部数据集：不进 IR，renderPlot 时单独传入 */
-const sales = [
-  { month: 0, revenue: 10 },
-  { month: 1, revenue: 14 },
-  { month: 2, revenue: 9 },
-  { month: 3, revenue: 18 },
-  { month: 4, revenue: 15 },
-];
+import { sales } from './line-scatter.data';
 
 /** vanilla 暂无组合 DSL，直接写规范化 Plot IR（与 React 端 <Plot>{marks} 装配出的等价） */
 const spec: PlotSpec = {
