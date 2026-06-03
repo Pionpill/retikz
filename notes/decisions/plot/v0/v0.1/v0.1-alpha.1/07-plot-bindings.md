@@ -64,7 +64,8 @@ export const renderPlot = (spec: PlotSpec, data: ExternalDatasets, options: Lowe
     { version: 1, type: 'scene', children: [validated] },
     { composites: lowerPlots(data, options) },
   );
-  return renderToSvgString(scene);
+  // width/height 既喂 lowerPlots（绘图区 user units），也注入 `<svg>` 像素尺寸（与 React `<Plot width height>` 对齐，产物有显示尺寸）
+  return renderToSvgString(scene, { width: options.width, height: options.height });
 };
 ```
 

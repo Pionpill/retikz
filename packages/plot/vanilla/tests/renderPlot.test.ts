@@ -57,6 +57,12 @@ describe('renderPlot 薄包装（SSR SVG 串）', () => {
       { version: 1, type: 'scene', children: [spec] },
       { composites: lowerPlots(data, { width: 480, height: 300 }) },
     );
-    expect(viaRenderPlot).toBe(renderToSvgString(scene));
+    expect(viaRenderPlot).toBe(renderToSvgString(scene, { width: 480, height: 300 }));
+  });
+
+  it('注入 width/height 到 <svg>（产物有显示尺寸，与 React <Plot> 对齐）', () => {
+    const svg = renderPlot(spec, data, { width: 360, height: 200 });
+    expect(svg).toMatch(/<svg[^>]*\swidth="360"/);
+    expect(svg).toMatch(/<svg[^>]*\sheight="200"/);
   });
 });
