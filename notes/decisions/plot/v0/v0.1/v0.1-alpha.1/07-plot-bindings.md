@@ -1,6 +1,6 @@
 # ADR-07：框架绑定脚手架 + 薄包装（plot-react `<Plot>` / plot-vanilla `renderPlot`）
 
-- 状态：Proposed
+- 状态：Accepted
 - 决策日期：2026-06-03
 - 关联：[plot v0.1-alpha.1 待办](./roadmap.md) · [plot v0.1 roadmap 拆分策略](../roadmap.md) · [plot-design.md §6 / §13.1](../../../../../architecture/plot-design.md) · 依赖：[ADR-06 lowerPlots](./06-plot-lowering.md) · 后续：[ADR-08 组合 DSL](./08-plot-react-dsl.md)
 
@@ -59,18 +59,21 @@ import { renderToSvgString } from '@retikz/vanilla';
 import { lowerPlots, type ExternalDatasets, type LowerPlotsOptions, type PlotSpec } from '@retikz/plot';
 
 export const renderPlot = (spec: PlotSpec, data: ExternalDatasets, options: LowerPlotsOptions = {}): string => {
+  const validated = PlotSpecSchema.parse(spec); // 入口校验：非法 spec 抛清晰 ZodError，合法 spec 恒等
   const scene = compileToScene(
-    { version: 1, type: 'scene', children: [spec] },
+    { version: 1, type: 'scene', children: [validated] },
     { composites: lowerPlots(data, options) },
   );
   return renderToSvgString(scene);
 };
 ```
 
+> 入口校验（薄包装的唯一「语义」）：两路在转发前对 spec 做一次 `PlotSpecSchema.parse`。合法 spec 为恒等、渲染结果不变；非法 spec（缺 `namespace` / `type` 等判别字段，否则会绕过 composite 路由落到 core 内部崩出与 plot 无关的 TypeError）抛清晰 ZodError，对齐 §7「AI 可据报错自我修正」契约。`<Plot>` 同理在分流后 `parse` 最终 spec。
+
 理由：
 
 1. **消除样板**：`<Plot spec data/>` / `renderPlot(spec, data)` 把「scene 包裹 + lowerPlots 注入 + Layout/compile」收进一处，文档示例从「`<Layout ir composites>` 那串」变干净。
-2. **薄=不引入新语义**：本层只转发，PlotSpec / lowerPlots / Layout 的语义不变；数据仍走 `datasets` 注入、不进 IR。
+2. **薄=不改渲染语义**：除入口 `PlotSpecSchema.parse`（合法 spec 恒等）外只转发，PlotSpec / lowerPlots / Layout 的渲染语义不变；数据仍走 `datasets` 注入、不进 IR。
 3. **两包对称**：react 出组件、vanilla 出函数 + SSR，对齐库「双 runtime」定位（plot-design §6）；组合 DSL（ADR-08）在 plot-react 之上再加。
 4. **lockstep 地基**：先把包建起来 + 最薄能渲染，ADR-08 的 DSL、后续 alpha 的新 mark/scale 都在这两包上长。
 

@@ -1,6 +1,6 @@
 # ADR-08：React 组合 DSL（`<Plot>` + `<LineMark>` / `<PointMark>`，自动推断 scale / coordinate）
 
-- 状态：Proposed
+- 状态：Accepted
 - 决策日期：2026-06-03
 - 关联：[plot v0.1-alpha.1 待办](./roadmap.md) · [plot v0.1 roadmap 拆分策略](../roadmap.md) · [plot-design.md §5.2 Primitive API / §6.1](../../../../../architecture/plot-design.md) · 依赖：[ADR-07 薄包装](./07-plot-bindings.md) · [ADR-01~06](./01-plot-spec-root.md) · core 抽象分层（Sugar = builder、不在 render 栈）见 [CLAUDE.md / AGENTS.md]
 
@@ -50,8 +50,10 @@ const Plot: FC<PlotDslProps> = props => {
 组件集（alpha.1）：
 
 - `<Plot data={rows} width? height?>` —— 根，收单数据集（裸 `rows`）+ 子图层；内部生成内部 ref、装配 spec、渲染。
-- `<LineMark x={fieldPath} y={fieldPath} order?={fieldPath} />` —— 折线图层。
-- `<PointMark x={fieldPath} y={fieldPath} />` —— 散点图层。
+- `<LineMark x={fieldPath} y={fieldPath} order?={fieldPath} id?={string} />` —— 折线图层。
+- `<PointMark x={fieldPath} y={fieldPath} id?={string} />` —— 散点图层。
+
+> mark 另带可选 `id` 句柄（透传到底层 `MarkSchema` 的预留 `id`，作 scope/anchor 目标，解析留 alpha.5）；`x`/`y` 在 props 类型层为**必填**，缺通道在 TS 静态即被拦。
 
 理由：
 
@@ -152,7 +154,8 @@ const rows = [{ month: 0, revenue: 10 }, { month: 1, revenue: 14 }, { month: 2, 
 
 **错误路径**：
 
-- `dsl_mark_missing_xy`：mark 缺 x/y → encoding 缺通道（schema 允许 optional，但 lowering 跳过；本 case 锁 DSL 不强补）
+- `dsl_mark_missing_xy`：mark 缺 x/y → 由 `LineMarkProps`/`PointMarkProps` 必填 `x`/`y` 在 TS 静态拦截，不另设运行时用例（类型系统已满足该覆盖意图）
+- `dsl_built_spec_passes_schema` / `dsl_empty_children_rejected`（见边界）覆盖非法装配产物经 `PlotSpecSchema` 拒绝
 
 **交互**：
 
