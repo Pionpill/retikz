@@ -191,6 +191,9 @@ importers:
       '@retikz/plot':
         specifier: workspace:*
         version: link:../../packages/plot/plot
+      '@retikz/plot-react':
+        specifier: workspace:*
+        version: link:../../packages/plot/react
       '@retikz/react':
         specifier: workspace:*
         version: link:../../packages/core/react

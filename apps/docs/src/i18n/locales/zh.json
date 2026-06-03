@@ -73,6 +73,10 @@
     "refComposite": "Tier 2 节点",
     "refComposites": "复合"
   },
+  "plot": {
+    "label": "绘图",
+    "introduction": "简介"
+  },
   "blog": {
     "label": "博客",
     "design": "设计理念",

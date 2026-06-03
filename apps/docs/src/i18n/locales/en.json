@@ -73,6 +73,10 @@
     "refComposite": "Tier 2 Composites",
     "refComposites": "Composite"
   },
+  "plot": {
+    "label": "Plot",
+    "introduction": "Introduction"
+  },
   "blog": {
     "label": "Blog",
     "design": "Design Philosophy",
