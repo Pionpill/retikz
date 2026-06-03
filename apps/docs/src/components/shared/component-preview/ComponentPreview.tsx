@@ -223,9 +223,10 @@ export const ComponentPreview: FC<ComponentPreviewProps> = props => {
   const vanillaModule = vanillaKey ? vanillaModules[vanillaKey] : undefined;
   const vanillaSvg = typeof vanillaModule?.svg === 'string' ? vanillaModule.svg : undefined;
   const vanillaCode = useMemo(() => {
-    if (!Component || hideCode || interactive) return '';
+    if (!Component || hideCode) return '';
+    // 手写覆盖不需静态求值，interactive demo 也可有 vanilla 视图；仅自动 codegen 依赖静态 IR（interactive 无法静态展开）
     if (vanillaOverride !== undefined) return vanillaOverride.replace(/\n$/, '');
-    if (!irState.previewIr) return '';
+    if (interactive || !irState.previewIr) return '';
     try {
       return irToVanillaCode(irState.previewIr.ir);
     } catch (err) {
