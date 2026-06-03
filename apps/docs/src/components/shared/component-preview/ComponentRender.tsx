@@ -96,6 +96,8 @@ export type ComponentRenderProps = {
   componentClassName?: string;
   /** 是否显示右侧工具条的 Ask AI 按钮，默认 true；在 AI 面板内（如 RetikzPreview）渲染时关掉避免自指 */
   showAskAi?: boolean;
+  /** 交互式 demo（含 hooks / 异步）：真渲染 `<Component/>`，隐藏 svg/canvas 切换；IR / Vanilla 视图由调用方置空后自动消失 */
+  interactive?: boolean;
 };
 
 /**
@@ -103,7 +105,8 @@ export type ComponentRenderProps = {
  * @description 不接触 demo 文件加载、AST 解析或 IR 派生——那些由调用方（`ComponentPreview` 走 glob、`RetikzPreview` 走 source string）准备好后喂进来
  */
 export const ComponentRender: FC<ComponentRenderProps> = props => {
-  const { name, Component, source, align = 'center', size = 'md', componentClassName, showAskAi = true } = props;
+  const { name, Component, source, align = 'center', size = 'md', componentClassName, showAskAi = true, interactive } =
+    props;
   const reactFiles =
     source?.reactFiles !== undefined && source.reactFiles.length > 0
       ? source.reactFiles
@@ -319,7 +322,7 @@ export const ComponentRender: FC<ComponentRenderProps> = props => {
           )}
           style={{ transform: transformStyle }}
         >
-          <DemoRenderer Component={Component} rendererMode={rendererMode} />
+          <DemoRenderer Component={Component} rendererMode={rendererMode} interactive={interactive} />
         </div>
         <PanZoomToolbar
           transform={transform}
@@ -335,6 +338,7 @@ export const ComponentRender: FC<ComponentRenderProps> = props => {
           onDownload={handleDownload}
           rendererMode={rendererMode}
           toggleRendererMode={toggleRendererMode}
+          interactive={interactive}
           pinned={toolbarPinned}
         />
       </div>
@@ -469,6 +473,7 @@ export const ComponentRender: FC<ComponentRenderProps> = props => {
         align={align}
         rendererMode={rendererMode}
         toggleRendererMode={toggleRendererMode}
+        interactive={interactive}
         sourceFileIndex={activeSourceFileIndex}
         onSourceFileIndexChange={setSourceFileIndex}
       />

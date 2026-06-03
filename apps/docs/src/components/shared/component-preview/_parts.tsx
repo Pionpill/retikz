@@ -1,4 +1,4 @@
-import { Braces, Brush, Check, ChevronDown, Copy, FileCode2, FileSymlink, LineDotRightHorizontal } from 'lucide-react';
+import { Braces, Brush, Check, ChevronDown, Copy, Database, FileCode2, FileSymlink, LineDotRightHorizontal } from 'lucide-react';
 import { type ComponentProps, type FC, type ReactNode } from 'react';
 
 import { JsonIcon, ReactIcon } from '@/components/icons';
@@ -109,9 +109,18 @@ export const ViewToggle: FC<ViewToggleProps> = props => {
   );
 };
 
-/** 文件类型图标：主 demo 文件用 FileCode2，sourceFiles 引入的其他文件用 FileSymlink */
-const FileKindIcon: FC<{ isMain?: boolean; className?: string }> = ({ isMain, className }) =>
-  isMain ? <FileCode2 className={className} /> : <FileSymlink className={className} />;
+/** 数据集文件命名约定：`<主demo名>.data.ts` / `<主demo名>.<dataset>.data.ts`（多数据集），用专属 Database 图标区分 */
+const DATA_FILE_PATTERN = /\.data\.tsx?$/;
+
+/** 文件类型图标：数据文件（`*.data.ts`）用 Database，主 demo 文件用 FileCode2，其他 sourceFiles 用 FileSymlink */
+const FileKindIcon: FC<{ filename: string; isMain?: boolean; className?: string }> = ({ filename, isMain, className }) =>
+  DATA_FILE_PATTERN.test(filename) ? (
+    <Database className={className} />
+  ) : isMain ? (
+    <FileCode2 className={className} />
+  ) : (
+    <FileSymlink className={className} />
+  );
 
 /** 源码面板的文件切换菜单 */
 export type SourceFileMenuProps = {
@@ -138,7 +147,7 @@ export const SourceFileMenu: FC<SourceFileMenuProps> = props => {
         aria-label="Source file"
         title={activeFile.filename}
       >
-        <FileKindIcon isMain={activeFile.isMain} className="size-3.5 shrink-0" />
+        <FileKindIcon filename={activeFile.filename} isMain={activeFile.isMain} className="size-3.5 shrink-0" />
         <span className="truncate">{activeFile.filename}</span>
         <ChevronDown className="size-3.5 shrink-0 text-muted-foreground" />
       </DropdownMenuTrigger>
@@ -152,7 +161,7 @@ export const SourceFileMenu: FC<SourceFileMenuProps> = props => {
               title={file.filename}
               onSelect={() => onChange(index)}
             >
-              <FileKindIcon isMain={file.isMain} className="size-3.5 shrink-0 text-muted-foreground" />
+              <FileKindIcon filename={file.filename} isMain={file.isMain} className="size-3.5 shrink-0 text-muted-foreground" />
               <span className="truncate font-mono text-xs">{file.filename}</span>
               <Check className={cn('ml-auto size-3.5 shrink-0', !active && 'opacity-0')} />
             </DropdownMenuItem>

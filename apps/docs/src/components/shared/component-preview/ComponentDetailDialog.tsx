@@ -32,6 +32,8 @@ export type ComponentDetailDialogProps = {
   rendererMode: RendererMode;
   /** 切换当前渲染目标 */
   toggleRendererMode: () => void;
+  /** 交互式 demo：真渲染 `<Component/>`，隐藏 svg/canvas 切换 */
+  interactive?: boolean;
   /** 当前 React 源码文件序号，与卡片内源码面板共享 */
   sourceFileIndex: number;
   /** 切换 React 源码文件时同步回卡片层 */
@@ -88,7 +90,7 @@ const DialogDemoPane: FC<DialogDemoPaneProps> = props => {
  *   仅一个视图存在时不出 React/IR toggle；两视图都缺（如 hideCode demo）时退化为单 panel 仅渲染区
  */
 export const ComponentDetailDialog: FC<ComponentDetailDialogProps> = props => {
-  const { open, onOpenChange, name, Component, source, align, rendererMode, toggleRendererMode, sourceFileIndex, onSourceFileIndexChange } = props;
+  const { open, onOpenChange, name, Component, source, align, rendererMode, toggleRendererMode, interactive, sourceFileIndex, onSourceFileIndexChange } = props;
   const reactFiles =
     source?.reactFiles !== undefined && source.reactFiles.length > 0
       ? source.reactFiles
@@ -146,7 +148,7 @@ export const ComponentDetailDialog: FC<ComponentDetailDialogProps> = props => {
         <header className="flex shrink-0 items-center justify-between border-b px-4 py-2">
           <DialogTitle className="font-mono text-sm font-normal text-muted-foreground">{name}</DialogTitle>
           <div className="flex items-center gap-1">
-            <RendererModeButton rendererMode={rendererMode} onToggle={toggleRendererMode} />
+            {!interactive && <RendererModeButton rendererMode={rendererMode} onToggle={toggleRendererMode} />}
             <DialogClose asChild>
               <ToolbarIconButton label="Close">
                 <X className="size-4" />
@@ -158,7 +160,7 @@ export const ComponentDetailDialog: FC<ComponentDetailDialogProps> = props => {
           <ResizablePanelGroup direction="horizontal" className="min-h-0 flex-1">
             <ResizablePanel defaultSize={60} minSize={30} maxSize={85}>
               <DialogDemoPane align={align}>
-                <DemoRenderer Component={Component} rendererMode={rendererMode} />
+                <DemoRenderer Component={Component} rendererMode={rendererMode} interactive={interactive} />
               </DialogDemoPane>
             </ResizablePanel>
             <ResizableHandle withHandle />

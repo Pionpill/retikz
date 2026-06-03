@@ -150,6 +150,13 @@ export type ComponentPreviewProps = {
    *   baseline 同样走 `<id>.<lang>.demo.tsx` 优先、回退到 `<id>.demo.tsx` 的解析；找不到时静默关闭高亮、不报错
    */
   diffFrom?: string;
+  /**
+   * 交互式 demo：demo 自身用 hooks（`useState` / `useEffect` / 异步 fetch 外部数据等）
+   * @description 默认 demo 必须是无 hooks 的纯 FC（IR / Vanilla 视图会 `Component({})` 静态执行一次求 IR）。
+   *   交互 demo 无法被静态执行，故开启后：以真元素 `<Component/>` 渲染让 hooks 生效、隐藏 svg/canvas 切换、
+   *   并跳过 IR / Vanilla 视图（异步数据无法静态求值），代码面板只保留 React 源码（+ `sourceFiles`）
+   */
+  interactive?: boolean;
 };
 
 /**
@@ -157,7 +164,7 @@ export type ComponentPreviewProps = {
  * @description 只负责 demo 文件 glob 加载 + IR 派生 + "Demo not found" 兜底；卡片 / pan&zoom / 代码面板 / 放大 dialog 全部走 `ComponentRender` 核心
  */
 export const ComponentPreview: FC<ComponentPreviewProps> = props => {
-  const { name, align = 'center', size = 'md', componentClassName, hideCode = false, sourceFiles, diffFrom } =
+  const { name, align = 'center', size = 'md', componentClassName, hideCode = false, sourceFiles, diffFrom, interactive = false } =
     props;
   const loc = useDocLocation();
   const { i18n } = useTranslation();
@@ -178,26 +185,26 @@ export const ComponentPreview: FC<ComponentPreviewProps> = props => {
 
   // IR 视图：同步展开 demo 的无 hooks 组件树，停在 <Layout> 后读取 children / ir；失败回落到错误文本；hideCode 时跳过整次计算
   const irJson = useMemo(() => {
-    if (!Component || hideCode) return '';
+    if (!Component || hideCode || interactive) return '';
     try {
       return formatIR(buildPreviewIR(Component));
     } catch (err) {
       return `// Failed to compute IR: ${err instanceof Error ? err.message : String(err)}`;
     }
-  }, [Component, hideCode]);
+  }, [Component, hideCode, interactive]);
 
   // Vanilla 视图：同级 `<name>.vanilla.ts` 手写覆盖优先，否则从同一份 IR codegen；失败回落错误文本
   const vanillaKey = segments ? buildVanillaKey(segments, name) : null;
   const vanillaOverride = vanillaKey ? vanillaOverrides[vanillaKey] : undefined;
   const vanillaCode = useMemo(() => {
-    if (!Component || hideCode) return '';
+    if (!Component || hideCode || interactive) return '';
     if (vanillaOverride !== undefined) return vanillaOverride.replace(/\n$/, '');
     try {
       return irToVanillaCode(buildPreviewIR(Component));
     } catch (err) {
       return `// Failed to generate vanilla code: ${err instanceof Error ? err.message : String(err)}`;
     }
-  }, [Component, hideCode, vanillaOverride]);
+  }, [Component, hideCode, vanillaOverride, interactive]);
 
   if (!loc) return null;
   if (!segments) return null;
@@ -258,6 +265,7 @@ export const ComponentPreview: FC<ComponentPreviewProps> = props => {
       align={align}
       size={size}
       componentClassName={componentClassName}
+      interactive={interactive}
     />
   );
 };
