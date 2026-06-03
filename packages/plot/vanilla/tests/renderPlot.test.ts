@@ -28,17 +28,17 @@ const data: ExternalDatasets = {
 };
 
 describe('renderPlot 薄包装（SSR SVG 串）', () => {
-  it('返回含 <svg / <path / <circle 的字符串', () => {
+  it('返回含 <svg / <path / <ellipse（散点 glyph）的字符串', () => {
     const svg = renderPlot(spec, data, { width: 480, height: 300 });
     expect(typeof svg).toBe('string');
     expect(svg).toContain('<svg');
     expect(svg).toContain('<path');
-    expect(svg).toContain('<circle');
+    expect(svg).toContain('<ellipse');
   });
 
   it('省略 options 时用默认尺寸仍渲染', () => {
     const svg = renderPlot(spec, data);
-    expect(svg).toContain('<circle');
+    expect(svg).toContain('<ellipse');
   });
 
   it('data 缺 spec 引用的数据集 → 调用期抛错', () => {

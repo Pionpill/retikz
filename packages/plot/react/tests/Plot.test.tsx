@@ -27,16 +27,16 @@ const data: ExternalDatasets = {
   ],
 };
 
-/** 抽出 SVG 里所有 circle 的 cx,cy 与 path 的 d（与资源 id 无关，作几何等价比较） */
+/** 抽出 SVG 里所有点 glyph（circle 节点渲染为 ellipse）的 cx,cy 与 path 的 d（与资源 id 无关，作几何等价比较） */
 const geometry = (svg: string) => {
-  const circles = (svg.match(/<circle[^>]*>/g) ?? [])
+  const glyphs = (svg.match(/<ellipse[^>]*>/g) ?? [])
     .map(c => {
       const m = /cx="([^"]+)"\s+cy="([^"]+)"/.exec(c);
       return m ? `${m[1]},${m[2]}` : c;
     })
     .sort();
   const paths = (svg.match(/\sd="[^"]+"/g) ?? []).sort();
-  return { circles, paths };
+  return { glyphs, paths };
 };
 
 describe('<Plot spec data> 薄包装', () => {
@@ -44,13 +44,13 @@ describe('<Plot spec data> 薄包装', () => {
     const svg = renderToStaticMarkup(<Plot spec={spec} data={data} width={480} height={300} />);
     expect(svg).toContain('<svg');
     expect(svg).toContain('<path');
-    expect(svg).toContain('<circle');
+    expect(svg).toContain('<ellipse');
   });
 
   it('省略 width/height 时仍渲染（Layout 自动布局）', () => {
     const svg = renderToStaticMarkup(<Plot spec={spec} data={data} />);
     expect(svg).toContain('<svg');
-    expect(svg).toContain('<circle');
+    expect(svg).toContain('<ellipse');
   });
 
   it('data 缺 spec 引用的数据集 → 渲染期抛错', () => {
