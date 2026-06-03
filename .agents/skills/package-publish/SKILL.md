@@ -1,6 +1,6 @@
 ---
 name: package-publish
-description: 用于把 retikz 的 publishable 包（`@retikz/core` / `@retikz/react`）发布到 npm。一次发包 = 三处同步：版本号（`packages/<pkg>/package.json`）、文档站结构化 changelog（`apps/docs/src/data/changelog.ts` + 必要时 `i18n` 的 `versionTag`）、内部路线（v0.2 看 `notes/decisions/core/v0/v0.2/roadmap.md`，v0.1 看 `notes/decisions/core/v0/v0.1/roadmap.md`）。发布后预 bump packages 到下一开发版本（roadmap 有下一版本直接改、没有则问用户）。retikz 专用，其它项目可忽略。
+description: 用于把 retikz 的 publishable 包（`@retikz/core` / `@retikz/react`）发布到 npm。一次发包 = 三处同步：版本号（`packages/<pkg>/package.json`）、文档站结构化 changelog（`apps/docs/src/data/changelog.ts` + 必要时 `apps/docs/src/data/module.ts` 对应模块的 `version` 版本徽章）、内部路线（v0.2 看 `notes/decisions/core/v0/v0.2/roadmap.md`，v0.1 看 `notes/decisions/core/v0/v0.1/roadmap.md`）。发布后预 bump packages 到下一开发版本（roadmap 有下一版本直接改、没有则问用户）。retikz 专用，其它项目可忽略。
 ---
 
 # 发 retikz 到 npm
@@ -12,14 +12,14 @@ retikz 一次发包 = **3 处同步改动 + 用户确认 + npm publish**。
 | 改动面 | 内容 |
 | --- | --- |
 | **包元数据** | `packages/<pkg>/package.json` 的 `version` 字段 |
-| **文档站** | `apps/docs/src/data/changelog.ts` 加结构化发布条目 + `i18n/locales/{zh,en}.json` 的 `versionTag`（仅 MINOR / MAJOR / 大里程碑变） |
+| **文档站** | `apps/docs/src/data/changelog.ts` 加结构化发布条目 + `apps/docs/src/data/module.ts` 对应模块条目的 `version`（顶栏版本徽章，仅 MINOR / MAJOR / 大里程碑变） |
 | **路线文档** | 里程碑跟踪段勾掉对应小版本 checkbox（v0.2 看 `notes/decisions/core/v0/v0.2/roadmap.md`「v0.2 跟踪」段；v0.1 看 `notes/decisions/core/v0/v0.1/roadmap.md`） |
 
 漏一处的后果：
 
 - 漏 `package.json` → 发版失败 / 发出旧版本
 - 漏 changelog → 文档站不显示新版本说明
-- 漏 `versionTag` → 文档站顶部右上还是旧版徽章
+- 漏 `module.ts` 的 `version` → 文档站顶栏左侧该模块还是旧版徽章
 - 漏 roadmap 勾选 → 路线文档与现实脱节
 
 **AI 执行 `git commit` / `git push` / `npm publish` 前必须先拿到用户在当前对话里的明确确认**（根 AGENTS.md）；用户可一次性授权本技能的提交序列，但 `push` / `tag` / `npm publish` 仍需明确点名。本技能做完 working tree 改动后**停下来等用户确认**，确认范围内的后续操作可由 AI 直接执行。一次确认≠永久授权。
@@ -145,11 +145,11 @@ monorepo 子包跑 `version` 不会触发 git commit，安全。
 - npm 发布条目主要写下游可感知的包行为；文档站 / mdx / demo / ADR / AGENTS.md 改动只在它们影响用户入口、迁移说明或发布说明本身时写入 `docs` 包块。
 - 更新后保持 `changelog` 数组倒序、同一 package block 下 `subVersions` 倒序，并跑 changelog data 测试（若存在）。
 
-#### 2.3 i18n `versionTag`（仅 MINOR / MAJOR 切档时改）
+#### 2.3 module `version` 徽章（仅 MINOR / MAJOR 切档时改）
 
-`apps/docs/src/i18n/locales/{zh,en}.json` 里的 `versionTag` 是文档站顶部右上的版本徽章。
+`apps/docs/src/data/module.ts` 里每个模块条目的 `version` 是文档站顶栏左侧的版本徽章，**按模块独立**（core / plot 各自一份；blog / about 无）。发哪个包就改哪个模块的 `version`（发 `@retikz/core` 改 `core`，发 `@retikz/plot` 改 `plot`）。
 
-| 本次发布 | versionTag 改不改 |
+| 本次发布 | version 改不改 |
 | --- | --- |
 | `0.1.0-alpha.0` → `0.1.0-alpha.1` | 不改（仍是 `v0.1 alpha`） |
 | `0.1.0-alpha.4` → `0.1.0-beta.1` | **改**（`v0.1 alpha` → `v0.1 beta`） |
@@ -330,8 +330,8 @@ git tag: v0.1.0-alpha.1（已 push）
 | 任务 | 改动 |
 | --- | --- |
 | 发 alpha.N+1 | 包版本 × 2 + `apps/docs/src/data/changelog.ts` + roadmap 勾选 |
-| 升 alpha → beta | 同上 + i18n `versionTag` × 2 |
-| 升 beta → 0（正式） | 同上 + i18n `versionTag` × 2 + roadmap 整篇删（如已写完） |
+| 升 alpha → beta | 同上 + `module.ts` 对应模块 `version` |
+| 升 beta → 0（正式） | 同上 + `module.ts` 对应模块 `version` + roadmap 整篇删（如已写完） |
 | 撤回某版本 | `npm unpublish @retikz/<pkg>@<version>`（24h 内有效；超过只能 deprecate） |
 
 ## 常见错误
@@ -368,7 +368,7 @@ git tag: v0.1.0-alpha.1（已 push）
 - [ ] `dist/` 已重新构建（`ls -la packages/<pkg>/dist` 时间戳是新的）
 - [ ] dry-run tarball 只含 `dist/` + `LICENSE` + `README.md` + `package.json`
 - [ ] `apps/docs/src/data/changelog.ts` 已加入目标版本条目，zh / en 字段结构对齐
-- [ ] `versionTag` 该改时已改（看版本节奏表）
+- [ ] `module.ts` 对应模块 `version` 该改时已改（看版本节奏表）
 - [ ] roadmap checkbox 已勾
 - [ ] `pnpm install` 跑过，lockfile 没游离改动
 - [ ] 没有 `*.d.ts` / `*.js` 误生成在 `packages/*/src/`
