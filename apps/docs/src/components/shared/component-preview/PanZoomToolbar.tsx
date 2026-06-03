@@ -86,9 +86,7 @@ export const PanZoomToolbar: FC<PanZoomToolbarProps> = props => {
         <ToolbarIconButton label="Pan left" onClick={() => panBy(-PAN_STEP, 0)}>
           <ArrowLeft className="size-3.5" />
         </ToolbarIconButton>
-        <ToolbarIconButton label="Reset" disabled={!isTransformed} onClick={resetTransform}>
-          <RotateCcw className="size-3.5" />
-        </ToolbarIconButton>
+        <span />
         <ToolbarIconButton label="Pan right" onClick={() => panBy(PAN_STEP, 0)}>
           <ArrowRight className="size-3.5" />
         </ToolbarIconButton>
@@ -106,11 +104,10 @@ export const PanZoomToolbar: FC<PanZoomToolbarProps> = props => {
         <ToolbarIconButton label="Zoom out" disabled={transform.scale <= ZOOM_MIN} onClick={() => zoomBy(1 / ZOOM_FACTOR)}>
           <ZoomOut className="size-3.5" />
         </ToolbarIconButton>
-        {isSmallPreview && (
-          <ToolbarIconButton label="Reset" disabled={!isTransformed} onClick={resetTransform}>
-            <RotateCcw className="size-3.5" />
-          </ToolbarIconButton>
-        )}
+        {/* Reset 始终放底排（所有 size / 视口一致可见）；未变换时置灰 */}
+        <ToolbarIconButton label="Reset" title="Reset" disabled={!isTransformed} onClick={resetTransform}>
+          <RotateCcw className="size-3.5" />
+        </ToolbarIconButton>
         <ToolbarIconButton
           label={dragEnabled ? 'Disable drag' : 'Enable drag'}
           pressed={dragEnabled}
@@ -118,16 +115,6 @@ export const PanZoomToolbar: FC<PanZoomToolbarProps> = props => {
         >
           <Hand className="size-3.5" />
         </ToolbarIconButton>
-        {!isSmallPreview && (
-          <ToolbarIconButton
-            label="Reset"
-            disabled={!isTransformed}
-            onClick={resetTransform}
-            className="md:hidden"
-          >
-            <RotateCcw className="size-3.5" />
-          </ToolbarIconButton>
-        )}
         <ToolbarIconButton label={downloadLabel} title={downloadLabel} onClick={onDownload}>
           <Download className="size-3.5" />
         </ToolbarIconButton>
