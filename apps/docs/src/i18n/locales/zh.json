@@ -6,7 +6,7 @@
     "searchHint": "搜索文档",
     "pageCount": "{{count}} 页",
     "notFound": "页面不存在：/{{section}}/{{page}}",
-    "versionTag": "v0.2 rc",
+    "versionTag": "v0.2",
     "contentPlaceholder": "{{title}} —— 该文档暂未提供正文。",
     "github": "GitHub",
     "githubRepo": "Pionpill/retikz",

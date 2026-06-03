@@ -9,7 +9,7 @@ export const changelogPageDescription: Localized = {
 export const changelog: Array<Release> = [
   {
     minor: 'v0.2',
-    stableDate: null,
+    stableDate: '2026-06-03',
     packages: [
       {
         pkg: '@retikz/core',
