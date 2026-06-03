@@ -6,9 +6,13 @@ import type { ValueOf } from '@retikz/core';
  * @description grammar-of-graphics 标准字段类型；驱动 lowering 的默认 scale 选择。alpha.1 仅消费 quantitative（linear scale）
  */
 export const FIELD_TYPES = {
+  /** 定量：连续可度量、间距有意义的数值（销量 / 温度 / 价格），默认 linear scale */
   quantitative: 'quantitative',
+  /** 名义：无序分类标签（国家 / 颜色名），只判等无大小 */
   nominal: 'nominal',
+  /** 有序分类：有序但间距无意义的类别（低 / 中 / 高、评级），保序离散映射 */
   ordinal: 'ordinal',
+  /** 时间：日期 / 时间戳，走 time scale */
   temporal: 'temporal',
 } as const;
 
