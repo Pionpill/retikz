@@ -1,5 +1,6 @@
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
+import { ZodError } from 'zod';
 import { Layout } from '@retikz/react';
 import { type ExternalDatasets, type PlotSpec, lowerPlots } from '@retikz/plot';
 import { Plot } from '../src';
@@ -55,6 +56,12 @@ describe('<Plot spec data> 薄包装', () => {
 
   it('data 缺 spec 引用的数据集 → 渲染期抛错', () => {
     expect(() => renderToStaticMarkup(<Plot spec={spec} data={{}} width={480} height={300} />)).toThrow();
+  });
+
+  it('非法 spec（缺判别字段）→ 抛清晰 ZodError，不落到 core 内部崩', () => {
+    // 模拟运行时拿到的残缺 spec（如 LLM 生成漏字段）
+    const malformed = {} as unknown as PlotSpec;
+    expect(() => renderToStaticMarkup(<Plot spec={malformed} data={{}} width={480} height={300} />)).toThrow(ZodError);
   });
 
   it('几何与手写 <Layout ir composites> 一致（证明薄包装不引入额外语义）', () => {

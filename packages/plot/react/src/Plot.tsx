@@ -1,6 +1,6 @@
 import type { FC, ReactNode } from 'react';
 import { Layout, type LayoutProps } from '@retikz/react';
-import { type ExternalDatasets, type ExternalRow, type LowerPlotsOptions, type PlotSpec, lowerPlots } from '@retikz/plot';
+import { type ExternalDatasets, type ExternalRow, type LowerPlotsOptions, type PlotSpec, PlotSpecSchema, lowerPlots } from '@retikz/plot';
 import { buildPlotSpec } from './dsl';
 
 /** <Plot> 两条入口共享的展示 props + lowerPlots 选项 */
@@ -47,10 +47,12 @@ export const Plot: FC<PlotProps> = props => {
     spec = buildPlotSpec(props.children, DSL_DATA_REF);
     datasets = { [DSL_DATA_REF]: props.data };
   }
+  // 入口校验：非法 spec（缺判别字段等）抛清晰 ZodError，而非落到 core 内部崩
+  const validated = PlotSpecSchema.parse(spec);
 
   return (
     <Layout
-      ir={{ version: 1, type: 'scene', children: [spec] }}
+      ir={{ version: 1, type: 'scene', children: [validated] }}
       composites={lowerPlots(datasets, { width, height })}
       width={width}
       height={height}
