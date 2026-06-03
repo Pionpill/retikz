@@ -15,7 +15,7 @@ It deliberately splits a chart into three parts, each with one job:
 
 `@retikz/plot-react` wraps these three into a single `<Plot>` component. The chart below draws five months of revenue as both a line and scatter points — same data, same scales, two stacked marks:
 
-<ComponentPreview name="line-scatter" />
+<ComponentPreview name="line-scatter" sourceFiles={['line-scatter.data.ts']} />
 
 The composition DSL is the most direct way to write it: you only declare what to draw (which field becomes a line, which becomes points); scales and the coordinate system are inferred by `<Plot>`, and the data is a plain array of rows passed in separately:
 
@@ -64,6 +64,31 @@ For server-side / build-time use, `@retikz/plot-vanilla`'s `renderPlot` returns 
 import { renderPlot } from '@retikz/plot-vanilla';
 
 const svg = renderPlot(spec, { sales }, { width: 360, height: 200 }); // SSR: SVG string
+```
+
+## Data can come from anywhere
+
+The data above is hard-coded, but in the real world it usually comes from elsewhere — a backend endpoint, a public API, a CSV. Because the data **never enters the IR** and is only passed in as plain rows at render time, fetching a large dataset from an external source and charting it works exactly like local data: fetch it first, then hand it to `<Plot data>` the same way.
+
+The chart below pulls roughly seven days of hourly temperature (~168 points) live from [Open-Meteo](https://open-meteo.com/) and draws it as a line once loaded:
+
+<ComponentPreview name="line-scatter-fetch" size="sm" interactive />
+
+```tsx
+const [data, setData] = useState(null);
+
+useEffect(() => {
+  fetch('https://api.open-meteo.com/v1/forecast?...&hourly=temperature_2m')
+    .then(res => res.json())
+    .then(json => setData(json.hourly.temperature_2m.map((temperature, hour) => ({ hour, temperature }))));
+}, []);
+
+if (!data) return <p>Loading…</p>;
+
+// Where the data came from is transparent to <Plot>: the charting code is unchanged
+<Plot data={data} width={480} height={220}>
+  <LineMark x="hour" y="temperature" order="hour" />
+</Plot>;
 ```
 
 <ComponentAlert title="Current stage" description="alpha.1 ships three packages: @retikz/plot (Plot IR + lowerPlots), @retikz/plot-react (<Plot> component + composition DSL), and @retikz/plot-vanilla (renderPlot for SSR). alpha.1 has only a linear scale + cartesian2D coordinate and point / line marks; axes / gridlines, bar, polar, and interaction (tooltip / events) arrive in later versions. The plot-area size is a render option, not part of the IR." />

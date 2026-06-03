@@ -381,6 +381,8 @@ union / array 内部的 object 不会被平铺（如 `NodeSchema.label` 是 unio
 - `size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl'` —— 渲染区高度档位，默认 `md`
 - `componentClassName?: string` —— 覆盖渲染区容器样式（如想去掉默认 `h-72 p-10`）
 - `hideCode?: boolean` —— 隐藏底部 View Code / 源码 / IR 面板，默认 `false`；**叙述性插图**必须开 `hideCode`，**演示组件用法**保持默认
+- `sourceFiles?: Array<string | { file; diffFrom }>` —— 与主 demo 一起展示的附加源码文件（相对当前页目录），如抽出去的数据文件 / 共享 helper；详见下「demo 的数据文件」与 [`docs-doc-example`](../docs-doc-example/SKILL.md) 多文件 demo
+- `interactive?: boolean` —— 默认 demo 必须是**无 hooks 的纯 FC**（IR / Vanilla 视图会 `Component({})` 静态执行一次求 IR）。demo 确需 hooks（`useState` / `useEffect` / 异步 `fetch` 外部数据等）时开 `interactive`：改以真元素 `<Component/>` 渲染让 hooks 生效、隐藏 svg/canvas 切换、并**跳过 IR / Vanilla 视图**（异步数据无法静态求值），代码面板只留 React 源码（+ `sourceFiles`）。仅在真需要时开——绝大多数 demo 应保持纯 FC
 
 ### 代码视图：React / IR / Vanilla 三套
 
@@ -390,6 +392,17 @@ union / array 内部的 object 不会被平铺（如 `NodeSchema.label` 是 unio
 - **IR**：`buildPreviewIR(Component)` 派生的 IR JSON（自动算）。
 - **Vanilla**：从同一份 IR codegen 出等价 `figure()` / `node()` / `draw()` / `coordinate()` / `scope()` 代码（自动算，与 demo 永远同步）。某 demo 若需更地道的 way / 写法，可同级放手写 `<name>.vanilla.ts` 覆盖 codegen。
 - 不要为「只演示 React」省掉 vanilla 视图——保持两套 authoring surface 对等是库的定位；codegen 默认就给了，无需 per-demo 维护。
+- **`interactive` demo（含 hooks）是 IR / Vanilla 视图的唯一例外**：异步 / hooks demo 无法被静态执行求 IR，开 `interactive` 后只保留 React 视图（见上 props 表）。这是被允许的例外，不违反「两套 authoring surface 对等」——因为这类 demo 的重点本就是运行时行为（如 fetch），而非可静态 codegen 的图形。
+
+### demo 的数据文件（造的数据一律抽成 `.data.ts`）
+
+demo 里**自己造的数据集**（plot 的数据行、示例用的坐标表等）**不内联在 `.demo.tsx` 里**，统一抽到同级数据文件，由 `sourceFiles` 一并展示：
+
+- **命名**：`<主demo名>.data.ts`，其中 `<主demo名>` 与主 demo 文件名一致（如 `line-scatter.demo.tsx` → `line-scatter.data.ts`）。
+- **多数据集**：一个 demo 用多份数据时加中段限定词 `<主demo名>.<dataset>.data.ts`（如 `line-scatter.sales.data.ts` / `line-scatter.cost.data.ts`），`<dataset>` 可选、单数据集时省略。
+- **接线**：`.demo.tsx` 里 `import { foo } from './<主demo名>.data'`；mdx 里 `<ComponentPreview name="<主demo名>" sourceFiles={['<主demo名>.data.ts']} />`。
+- **图标**：源码面板对 `*.data.ts` 自动用专属 **Database 图标**（区别于主 demo 的代码图标、其他附加文件的 symlink 图标），靠文件名匹配，无需额外配置。
+- **真实数据 / 大数据集**：从外部 `fetch` 的数据**不写进 `.data.ts`**（它是运行时取的），改用 `interactive` demo 在组件里 `useEffect` + `fetch`（见上 props 表）；`.data.ts` 只放写死的小型造数据。
 
 ## MDX 可用元素
 
