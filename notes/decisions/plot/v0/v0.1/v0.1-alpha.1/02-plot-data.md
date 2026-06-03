@@ -1,6 +1,6 @@
 # ADR-02：Plot 数据引用与数据模型（DataRef / DataModel + 外部数据契约）
 
-- 状态：Proposed
+- 状态：Accepted
 - 决策日期：2026-06-03
 - 关联：[plot v0.1-alpha.1 待办](./roadmap.md) · [plot v0.1 roadmap](../roadmap.md) · [plot-design.md §3 核心概念 / §8 lowering](../../../../../architecture/plot-design.md) · 根节点：[ADR-01 PlotSpec](./01-plot-spec-root.md) · 消费方：[ADR-05 encoding+mark](./05-plot-encoding-mark.md)
 

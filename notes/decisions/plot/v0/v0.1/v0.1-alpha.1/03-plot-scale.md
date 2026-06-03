@@ -1,6 +1,6 @@
 # ADR-03：Plot 比例尺（LinearScale + Scale union）
 
-- 状态：Proposed
+- 状态：Accepted
 - 决策日期：2026-06-03
 - 关联：[plot v0.1-alpha.1 待办](./roadmap.md) · [plot v0.1 roadmap](../roadmap.md) · [plot-design.md §3.5 / §11.1](../../../../../architecture/plot-design.md) · 根节点：[ADR-01 PlotSpec](./01-plot-spec-root.md) · 引用方：[ADR-04 coordinate](./04-plot-coordinate.md)
 

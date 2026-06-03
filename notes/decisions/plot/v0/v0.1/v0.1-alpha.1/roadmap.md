@@ -46,12 +46,14 @@
 
 | ADR | 主题 | Level | 依赖 | 状态 |
 |---|---|---|---|---|
-| [01](./01-plot-spec-root.md) | Plot 根节点（`plot` composite 节点 + 数据引用 + JSON 透传，含 anchor / scope 预留 `id` / `meta`） | red | 02-05、前置 setup | Proposed |
-| [02](./02-plot-data.md) | Plot 数据引用与数据模型（DataRef / DataModel + 外部数据契约；**数据不进 IR**） | red | 前置 setup（core `ValueOf`） | Proposed |
-| [03](./03-plot-scale.md) | Plot 比例尺（LinearScale + Scale union） | red | 前置 setup | Proposed |
-| [04](./04-plot-coordinate.md) | Plot 坐标系（Cartesian2D + Coordinate union，持有位置 scale 绑定） | red | 前置 setup | Proposed |
-| [05](./05-plot-encoding-mark.md) | Plot 编码与图元（Channel / Encoding + Point / Line / Mark union） | red | ADR-02 | Proposed |
-| 06 | 最薄 lowering 纵向闭环（单 mark · linear · cartesian，Plot IR → core IR 下沉） | red | ADR-01~05 | 待起草 |
+| [01](./01-plot-spec-root.md) | Plot 根节点（`plot` composite 节点 + 数据引用 + JSON 透传，含 anchor / scope 预留 `id` / `meta`） | red | 02-05、前置 setup | Accepted |
+| [02](./02-plot-data.md) | Plot 数据引用与数据模型（DataRef / DataModel + 外部数据契约；**数据不进 IR**） | red | 前置 setup（core `ValueOf`） | Accepted |
+| [03](./03-plot-scale.md) | Plot 比例尺（LinearScale + Scale union） | red | 前置 setup | Accepted |
+| [04](./04-plot-coordinate.md) | Plot 坐标系（Cartesian2D + Coordinate union，持有位置 scale 绑定） | red | 前置 setup | Accepted |
+| [05](./05-plot-encoding-mark.md) | Plot 编码与图元（Channel / Encoding + Point / Line / Mark union） | red | ADR-02 | Accepted |
+| [06](./06-plot-lowering.md) | 最薄 lowering 纵向闭环（lowerPlots：单 mark · linear · cartesian，Plot IR + 数据 → core IR） | red | ADR-01~05 | Accepted |
+
+> alpha.1 已实现并提交：setup（`@retikz/plot` 脚手架）+ 01-06，58 schema/lowering test 全绿。**文档（stage 4）待定**——见下「文档待办」。待决策点均按各 ADR「倾向」锁定实现。
 
 > 原单条 ADR-01「Plot IR 骨架」按数据结构拆为 01-05（[拆分背景见各 ADR 的「背景」段]）；原 ADR-02 lowering 顺延为 ADR-06。
 > ADR-06 在 ADR-01~05 Accepted 后起草并分配文件名（`06-<slug>.md`）。

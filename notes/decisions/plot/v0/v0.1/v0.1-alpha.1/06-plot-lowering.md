@@ -1,6 +1,6 @@
 # ADR-06：最薄 lowering 纵向闭环（lowerPlots：Plot IR + 数据 → core IR）
 
-- 状态：Proposed
+- 状态：Accepted
 - 决策日期：2026-06-03
 - 关联：[plot v0.1-alpha.1 待办](./roadmap.md) · [plot-design.md §8 / §8.1 / §8.2 / §8.3](../../../../../architecture/plot-design.md) · 依赖：[ADR-01](./01-plot-spec-root.md) · [ADR-02](./02-plot-data.md) · [ADR-03](./03-plot-scale.md) · [ADR-04](./04-plot-coordinate.md) · [ADR-05](./05-plot-encoding-mark.md)
 
