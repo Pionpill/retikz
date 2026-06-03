@@ -9,20 +9,23 @@ import { ScaleSchema } from './scale';
 export const PLOT_NAMESPACE = 'plot';
 
 /**
- * plot namespace 内的 composite 类型判别值集（const 对象 + 派生类型；后续加 axis / legend…）
- * @description discriminated union 判别字段，成员里写 z.literal(PLOT_NODE_TYPES.x)（不用 nativeEnum）
+ * plot namespace 内的 composite 类型关键字（暴露给用户；成员值即 IR 判别串，裸 `'plot'` 同样可用）
+ * @description discriminated union 判别字段，成员里写 z.literal(PlotComposite.x)（不用 nativeEnum）；后续加 axis / legend…
  */
-export const PLOT_NODE_TYPES = { plot: 'plot' } as const;
+export const PlotComposite = {
+  /** 顶层 grammar-of-graphics spec 节点 */
+  Plot: 'plot',
+} as const;
 
 /** plot composite 类型 */
-export type PlotNodeType = ValueOf<typeof PLOT_NODE_TYPES>;
+export type PlotNodeType = ValueOf<typeof PlotComposite>;
 
 export const PlotSpecSchema = CompositeBaseSchema.extend({
   namespace: z
     .literal(PLOT_NAMESPACE)
     .describe('Tier 2 domain namespace; routes this node to the plot lowering registered via CompileOptions.composites'),
   type: z
-    .literal(PLOT_NODE_TYPES.plot)
+    .literal(PlotComposite.Plot)
     .describe('Composite type within the plot namespace: the top-level grammar-of-graphics spec node'),
   id: z
     .string()

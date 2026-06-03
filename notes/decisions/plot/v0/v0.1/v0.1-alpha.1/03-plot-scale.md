@@ -22,11 +22,11 @@ import { z } from 'zod';
 import type { ValueOf } from '@retikz/core';
 
 /** scale 类型判别值集（const 对象 + 派生类型；后续加 band / log / time / ordinal…） */
-export const SCALE_TYPES = { linear: 'linear' } as const;
-export type ScaleType = ValueOf<typeof SCALE_TYPES>;
+export const PlotScale = { Linear: 'linear' } as const;
+export type ScaleType = ValueOf<typeof PlotScale>;
 
 export const LinearScaleSchema = z.object({
-  type: z.literal(SCALE_TYPES.linear).describe('Discriminator: continuous linear scale'),
+  type: z.literal(PlotScale.Linear).describe('Discriminator: continuous linear scale'),
   name: z.string().min(1).describe('Scale name; referenced by coordinate.x / coordinate.y'),
   domain: z
     .tuple([z.number(), z.number()])
@@ -108,8 +108,8 @@ ScaleSchema.parse({ type: 'linear', name: 'y', domain: [0, 100], range: [0, 480]
 
 | 文件 | 操作 | 字段名 | 类型 | 默认值 | describe 中文摘要 |
 |---|---|---|---|---|---|
-| `packages/plot/plot/src/ir/scale.ts` | 新建常量 | `SCALE_TYPES` | `{ linear: 'linear' } as const`（派生 `ScaleType = ValueOf<…>`） | — | scale 类型判别值集（const 对象 + 派生类型，AGENTS.md 规则） |
-| `packages/plot/plot/src/ir/scale.ts` | 新建 schema | `LinearScaleSchema` | `z.object({ type:z.literal(SCALE_TYPES.linear), name, domain?, range?, nice?, clamp? })` | nice/clamp 语义默认 false（不写 schema default） | 线性 scale |
+| `packages/plot/plot/src/ir/scale.ts` | 新建常量 | `PlotScale` | `{ Linear: 'linear' } as const`（派生 `ScaleType = ValueOf<…>`） | — | scale 类型判别值集（const 对象 + 派生类型，AGENTS.md 规则） |
+| `packages/plot/plot/src/ir/scale.ts` | 新建 schema | `LinearScaleSchema` | `z.object({ type:z.literal(PlotScale.Linear), name, domain?, range?, nice?, clamp? })` | nice/clamp 语义默认 false（不写 schema default） | 线性 scale |
 | `packages/plot/plot/src/ir/scale.ts` | 新建字段 | `LinearScaleSchema.name` | `z.string().min(1)` | — | scale 名；被 coordinate 引用 |
 | `packages/plot/plot/src/ir/scale.ts` | 新建字段 | `LinearScaleSchema.domain` | `z.tuple([number, number]).optional()` | undefined | [min,max] 输入区间，省略→lowering 推断 |
 | `packages/plot/plot/src/ir/scale.ts` | 新建字段 | `LinearScaleSchema.range` | `z.tuple([number, number]).optional()` | undefined | [start,end] 输出区间，省略→lowering 推断 |

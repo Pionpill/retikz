@@ -32,15 +32,15 @@ import { MarkSchema } from './mark';            // ADR-05
 /** plot 域 namespace（单一固定值，作 Tier 2 路由键的单一真源） */
 export const PLOT_NAMESPACE = 'plot';
 /** plot namespace 内的 composite 类型判别值集（后续加 axis / legend…） */
-export const PLOT_NODE_TYPES = { plot: 'plot' } as const;
-export type PlotNodeType = ValueOf<typeof PLOT_NODE_TYPES>;
+export const PlotComposite = { Plot: 'plot' } as const;
+export type PlotNodeType = ValueOf<typeof PlotComposite>;
 
 export const PlotSpecSchema = CompositeBaseSchema.extend({
   namespace: z
     .literal(PLOT_NAMESPACE)
     .describe('Tier 2 domain namespace; routes this node to the plot lowering registered via CompileOptions.composites'),
   type: z
-    .literal(PLOT_NODE_TYPES.plot)
+    .literal(PlotComposite.Plot)
     .describe('Composite type within the plot namespace: the top-level grammar-of-graphics spec node'),
   id: z
     .string()
@@ -179,10 +179,10 @@ const minimal: PlotSpec = {
 
 | 文件 | 操作 | 字段名 | 类型 | 默认值 | describe 中文摘要 |
 |---|---|---|---|---|---|
-| `packages/plot/plot/src/ir/plot.ts` | 新建常量 | `PLOT_NAMESPACE` / `PLOT_NODE_TYPES` | `'plot'` / `{ plot:'plot' } as const`（派生 `PlotNodeType`） | — | namespace 单一真源 + composite 类型判别值集（const 对象，AGENTS.md 规则） |
+| `packages/plot/plot/src/ir/plot.ts` | 新建常量 | `PLOT_NAMESPACE` / `PlotComposite` | `'plot'` / `{ Plot:'plot' } as const`（派生 `PlotNodeType`） | — | namespace 单一真源 + composite 类型判别值集（const 对象，AGENTS.md 规则） |
 | `packages/plot/plot/src/ir/plot.ts` | 新建 schema | `PlotSpecSchema` | `CompositeBaseSchema.extend({ namespace, type, id?, data, scales, coordinate, marks, meta? })` | — | Plot IR 根 composite 节点；JSON 可序列化、无数据值，lower 到 core IR（ADR-06） |
 | `packages/plot/plot/src/ir/plot.ts` | 新建字段 | `PlotSpecSchema.namespace` | `z.literal(PLOT_NAMESPACE)` | — | Tier 2 namespace；路由到 plot lowering |
-| `packages/plot/plot/src/ir/plot.ts` | 新建字段 | `PlotSpecSchema.type` | `z.literal(PLOT_NODE_TYPES.plot)` | — | plot namespace 内的顶层 composite type |
+| `packages/plot/plot/src/ir/plot.ts` | 新建字段 | `PlotSpecSchema.type` | `z.literal(PlotComposite.Plot)` | — | plot namespace 内的顶层 composite type |
 | `packages/plot/plot/src/ir/plot.ts` | 新建字段 | `PlotSpecSchema.id` | `z.string().min(1).optional()` | undefined | 整图 handle；预留 scope 引用 / anchor 目标（解析在 alpha.5），alpha.1 仅校验 |
 | `packages/plot/plot/src/ir/plot.ts` | 新建字段 | `PlotSpecSchema.data` | `DataRefSchema`（ADR-02：`{ ref, model? }`） | — | 数据引用（具名 ref + 可选模型）；**无值** |
 | `packages/plot/plot/src/ir/plot.ts` | 新建字段 | `PlotSpecSchema.scales` | `z.array(ScaleSchema)`（ADR-03） | — | 命名 scale 数组（引用） |

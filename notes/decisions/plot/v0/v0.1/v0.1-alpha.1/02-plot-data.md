@@ -27,17 +27,17 @@ import { z } from 'zod';
 import type { ValueOf } from '@retikz/core';
 
 /** 字段类型：grammar-of-graphics 标准集；alpha.1 lowering 仅消费 quantitative（linear scale） */
-export const FIELD_TYPES = {
-  quantitative: 'quantitative',
-  nominal: 'nominal',
-  ordinal: 'ordinal',
-  temporal: 'temporal',
+export const PlotFieldType = {
+  Quantitative: 'quantitative',
+  Nominal: 'nominal',
+  Ordinal: 'ordinal',
+  Temporal: 'temporal',
 } as const;
-export type FieldType = ValueOf<typeof FIELD_TYPES>;
+export type FieldType = ValueOf<typeof PlotFieldType>;
 
 export const FieldDefSchema = z.object({
   name: z.string().min(1).describe('Field name as referenced by encoding channels (a path accessor like "a.b.c")'),
-  type: z.nativeEnum(FIELD_TYPES).describe('Field measurement type; drives default scale selection at lowering (alpha.1 consumes quantitative)'),
+  type: z.nativeEnum(PlotFieldType).describe('Field measurement type; drives default scale selection at lowering (alpha.1 consumes quantitative)'),
 });
 
 export const DataModelSchema = z
@@ -119,7 +119,7 @@ DataRefSchema.parse({
 - **`packages/plot/plot/src/ir/index.ts`**：补充导出 data schema 与类型。
 - **被引用**：[ADR-01](./01-plot-spec-root.md) `data` 槽位用 `DataRefSchema`；[ADR-05](./05-plot-encoding-mark.md) `ChannelSchema.value` 用 `ScalarValueSchema`、`field` 路径对 `ExternalRow` 解析。
 - **依赖**：`@retikz/core` 的 `ValueOf`（派生 `FieldType`）。
-- **对外 API**：`@retikz/plot` 公开 `DataRefSchema` / `DataModelSchema` / `FieldDefSchema` / `ScalarValueSchema` / `FIELD_TYPES` 及类型。
+- **对外 API**：`@retikz/plot` 公开 `DataRefSchema` / `DataModelSchema` / `FieldDefSchema` / `ScalarValueSchema` / `PlotFieldType` 及类型。
 
 ## 不在本 ADR 范围
 
@@ -143,7 +143,7 @@ DataRefSchema.parse({
 
 | 文件 | 操作 | 字段名 | 类型 | 默认值 | describe 中文摘要 |
 |---|---|---|---|---|---|
-| `packages/plot/plot/src/ir/data.ts` | 新建常量 | `FIELD_TYPES` | `as const` 对象（quantitative/nominal/ordinal/temporal） | — | 字段类型枚举（ValueOf 派生 `FieldType`） |
+| `packages/plot/plot/src/ir/data.ts` | 新建常量 | `PlotFieldType` | `as const` 对象（Quantitative/Nominal/Ordinal/Temporal → 值 quantitative/…） | — | 字段类型关键字（DrawWay 风格，暴露；ValueOf 派生 `FieldType`） |
 | `packages/plot/plot/src/ir/data.ts` | 新建 schema | `FieldDefSchema` | `z.object({ name, type })` | — | 字段声明：名 + 类型 |
 | `packages/plot/plot/src/ir/data.ts` | 新建 schema | `DataModelSchema` | `z.array(FieldDefSchema)` | — | 可选数据模型（字段声明数组） |
 | `packages/plot/plot/src/ir/data.ts` | 新建 schema | `DataRefSchema` | `z.object({ ref: string.min(1), model?: DataModelSchema })` | — | IR 数据槽位：具名引用 + 可选模型，**无值** |

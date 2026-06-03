@@ -3,13 +3,18 @@ import type { ValueOf } from '@retikz/core';
 import { EncodingSchema } from './encoding';
 
 /**
- * mark 类型判别值集（const 对象 + 派生类型；后续加 bar / area / sector / rule / text…）
- * @description discriminated union 判别字段，成员里写 z.literal(MARK_TYPES.x)（不用 nativeEnum）
+ * mark 类型关键字（暴露给用户；成员值即 IR 判别串，裸字面量 `'point'` 同样可用）
+ * @description discriminated union 判别字段，成员里写 z.literal(PlotMark.x)（不用 nativeEnum）；后续加 bar / area / sector / rule / text…
  */
-export const MARK_TYPES = { point: 'point', line: 'line' } as const;
+export const PlotMark = {
+  /** 散点：每行一个 glyph */
+  Point: 'point',
+  /** 折线：按顺序连点成路径 */
+  Line: 'line',
+} as const;
 
 /** mark 类型 */
-export type MarkType = ValueOf<typeof MARK_TYPES>;
+export type MarkType = ValueOf<typeof PlotMark>;
 
 /** 各 mark 变体共享的基础字段（可选 id 句柄 + 必填 encoding） */
 const markBase = {
@@ -22,12 +27,12 @@ const markBase = {
 };
 
 export const PointMarkSchema = z
-  .object({ type: z.literal(MARK_TYPES.point).describe('Discriminator: one glyph per record'), ...markBase })
+  .object({ type: z.literal(PlotMark.Point).describe('Discriminator: one glyph per record'), ...markBase })
   .describe('Point mark: scatter / dot');
 
 export const LineMarkSchema = z
   .object({
-    type: z.literal(MARK_TYPES.line).describe('Discriminator: ordered points connected by a path'),
+    type: z.literal(PlotMark.Line).describe('Discriminator: ordered points connected by a path'),
     order: z
       .string()
       .min(1)

@@ -45,8 +45,8 @@ export const EncodingSchema = z
 import type { ValueOf } from '@retikz/core';
 
 /** mark 类型判别值集（const 对象 + 派生类型；后续加 bar / area / sector / rule / text…） */
-export const MARK_TYPES = { point: 'point', line: 'line' } as const;
-export type MarkType = ValueOf<typeof MARK_TYPES>;
+export const PlotMark = { Point: 'point', Line: 'line' } as const;
+export type MarkType = ValueOf<typeof PlotMark>;
 
 const markBase = {
   id: z
@@ -58,12 +58,12 @@ const markBase = {
 };
 
 export const PointMarkSchema = z
-  .object({ type: z.literal(MARK_TYPES.point).describe('Discriminator: one glyph per record'), ...markBase })
+  .object({ type: z.literal(PlotMark.Point).describe('Discriminator: one glyph per record'), ...markBase })
   .describe('Point mark: scatter / dot');
 
 export const LineMarkSchema = z
   .object({
-    type: z.literal(MARK_TYPES.line).describe('Discriminator: ordered points connected by a path'),
+    type: z.literal(PlotMark.Line).describe('Discriminator: ordered points connected by a path'),
     order: z
       .string()
       .min(1)
@@ -164,9 +164,9 @@ MarkSchema.parse({ type: 'line', id: 'trend', order: 'month', encoding: { x: { f
 | `packages/plot/plot/src/ir/encoding.ts` | 新建 schema | `EncodingSchema` | `z.object({ x?: ChannelSchema, y?: ChannelSchema })` | — | mark 通道绑定（位置通道，无 scale 引用） |
 | `packages/plot/plot/src/ir/mark.ts` | 新建字段（markBase） | `<mark>.id` | `z.string().min(1).optional()` | undefined | mark handle；预留 scope/anchor（解析 alpha.5） |
 | `packages/plot/plot/src/ir/mark.ts` | 新建字段（markBase） | `<mark>.encoding` | `EncodingSchema` | — | mark 通道绑定 |
-| `packages/plot/plot/src/ir/mark.ts` | 新建常量 | `MARK_TYPES` | `{ point:'point', line:'line' } as const`（派生 `MarkType`） | — | mark 类型判别值集（const 对象 + 派生类型，AGENTS.md 规则） |
-| `packages/plot/plot/src/ir/mark.ts` | 新建 schema | `PointMarkSchema` | `z.object({ type:z.literal(MARK_TYPES.point), id?, encoding })` | — | 点 mark |
-| `packages/plot/plot/src/ir/mark.ts` | 新建 schema | `LineMarkSchema` | `z.object({ type:z.literal(MARK_TYPES.line), id?, order?, encoding })` | — | 线 mark |
+| `packages/plot/plot/src/ir/mark.ts` | 新建常量 | `PlotMark` | `{ Point:'point', Line:'line' } as const`（派生 `MarkType`） | — | mark 类型判别值集（const 对象 + 派生类型，AGENTS.md 规则） |
+| `packages/plot/plot/src/ir/mark.ts` | 新建 schema | `PointMarkSchema` | `z.object({ type:z.literal(PlotMark.Point), id?, encoding })` | — | 点 mark |
+| `packages/plot/plot/src/ir/mark.ts` | 新建 schema | `LineMarkSchema` | `z.object({ type:z.literal(PlotMark.Line), id?, order?, encoding })` | — | 线 mark |
 | `packages/plot/plot/src/ir/mark.ts` | 新建字段 | `LineMarkSchema.order` | `z.string().min(1).optional()` | undefined | 连接顺序字段，省略→数据顺序 |
 | `packages/plot/plot/src/ir/mark.ts` | 新建 schema | `MarkSchema` | `z.discriminatedUnion('type', [PointMarkSchema, LineMarkSchema])` | — | mark union（可扩展） |
 

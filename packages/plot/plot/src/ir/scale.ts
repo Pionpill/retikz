@@ -2,17 +2,20 @@ import { z } from 'zod';
 import type { ValueOf } from '@retikz/core';
 
 /**
- * scale 类型判别值集（const 对象 + 派生类型；后续加 band / log / time / ordinal…）
- * @description discriminated union 判别字段，成员里写 z.literal(SCALE_TYPES.x)（不用 nativeEnum）
+ * scale 类型关键字（暴露给用户；成员值即 IR 判别串，裸字面量 `'linear'` 同样可用）
+ * @description discriminated union 判别字段，成员里写 z.literal(PlotScale.x)（不用 nativeEnum）；后续加 band / log / time / ordinal…
  */
-export const SCALE_TYPES = { linear: 'linear' } as const;
+export const PlotScale = {
+  /** 连续线性映射 */
+  Linear: 'linear',
+} as const;
 
 /** scale 类型 */
-export type ScaleType = ValueOf<typeof SCALE_TYPES>;
+export type ScaleType = ValueOf<typeof PlotScale>;
 
 export const LinearScaleSchema = z
   .object({
-    type: z.literal(SCALE_TYPES.linear).describe('Discriminator: continuous linear scale'),
+    type: z.literal(PlotScale.Linear).describe('Discriminator: continuous linear scale'),
     name: z.string().min(1).describe('Scale name; referenced by coordinate.x / coordinate.y'),
     domain: z
       .tuple([z.number(), z.number()])

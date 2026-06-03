@@ -22,11 +22,11 @@ import { z } from 'zod';
 import type { ValueOf } from '@retikz/core';
 
 /** 坐标系类型判别值集（const 对象 + 派生类型；后续加 polar2D / linear1D…） */
-export const COORDINATE_TYPES = { cartesian2D: 'cartesian2D' } as const;
-export type CoordinateType = ValueOf<typeof COORDINATE_TYPES>;
+export const PlotCoordinate = { Cartesian2D: 'cartesian2D' } as const;
+export type CoordinateType = ValueOf<typeof PlotCoordinate>;
 
 export const Cartesian2DSchema = z.object({
-  type: z.literal(COORDINATE_TYPES.cartesian2D).describe('Discriminator: 2D cartesian space, x horizontal / y vertical'),
+  type: z.literal(PlotCoordinate.Cartesian2D).describe('Discriminator: 2D cartesian space, x horizontal / y vertical'),
   x: z.string().min(1).describe('Scale name driving the x (horizontal) position channel'),
   y: z.string().min(1).describe('Scale name driving the y (vertical) position channel'),
 });
@@ -100,8 +100,8 @@ CoordinateSchema.parse({ type: 'cartesian2D', x: 'nonexistent', y: 'alsoMissing'
 
 | 文件 | 操作 | 字段名 | 类型 | 默认值 | describe 中文摘要 |
 |---|---|---|---|---|---|
-| `packages/plot/plot/src/ir/coordinate.ts` | 新建常量 | `COORDINATE_TYPES` | `{ cartesian2D: 'cartesian2D' } as const`（派生 `CoordinateType`） | — | 坐标系类型判别值集（const 对象 + 派生类型，AGENTS.md 规则） |
-| `packages/plot/plot/src/ir/coordinate.ts` | 新建 schema | `Cartesian2DSchema` | `z.object({ type:z.literal(COORDINATE_TYPES.cartesian2D), x:string, y:string })` | — | 笛卡尔 2D；x/y = scale 名 |
+| `packages/plot/plot/src/ir/coordinate.ts` | 新建常量 | `PlotCoordinate` | `{ Cartesian2D: 'cartesian2D' } as const`（派生 `CoordinateType`） | — | 坐标系类型判别值集（const 对象 + 派生类型，AGENTS.md 规则） |
+| `packages/plot/plot/src/ir/coordinate.ts` | 新建 schema | `Cartesian2DSchema` | `z.object({ type:z.literal(PlotCoordinate.Cartesian2D), x:string, y:string })` | — | 笛卡尔 2D；x/y = scale 名 |
 | `packages/plot/plot/src/ir/coordinate.ts` | 新建字段 | `Cartesian2DSchema.x` | `z.string().min(1)` | — | 驱动 x（水平）位置通道的 scale 名 |
 | `packages/plot/plot/src/ir/coordinate.ts` | 新建字段 | `Cartesian2DSchema.y` | `z.string().min(1)` | — | 驱动 y（垂直）位置通道的 scale 名 |
 | `packages/plot/plot/src/ir/coordinate.ts` | 新建 schema | `CoordinateSchema` | `z.discriminatedUnion('type', [Cartesian2DSchema])` | — | coordinate union（可扩展） |
