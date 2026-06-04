@@ -219,6 +219,35 @@ v0.3 需要注意：
 
 正式的 Progressive IR / JSON Patch stream / append layer / AI step protocol / SVG 局部更新优化，放到 v0.4 或后续版本再设计和实现。
 
+## 动画（候选 v0.4，排在水合之后）
+
+动画是「时间 → 属性插值」的纯数据，与水合的「事件 → handler 函数」正交：**声明式动画进 IR 持久化**（可序列化、SSR 可纯 CSS 自播、AI 可声明），**播放控制 / 事件触发留 runtime**（与水合同源，函数不进 IR）。排在水合之后，复用其 runtime 基建（rAF 循环、事件绑定）。
+
+对标提炼：数据模型抄 **WAAPI**（keyframes + timing options），多端范式抄 **Lottie**（一份描述，SVG 走 WAAPI/CSS、Canvas 走 rAF 时间线），高层词汇抄 **Manim / Framer**（`drawOn` / `fadeIn` / `morph`），声明式时间轴 + 数学图动画词汇参照 **TikZ `animate` 库**——但**不绑 SMIL**（TikZ 动画仅 SVG、Canvas 上不存在，故 IR 保持 renderer 无关）。
+
+分两块，机制不同、归属不同：
+
+### A. 时间轴动画（core IR + renderer，本段主线）
+
+固定元素按时间打关键帧——入场（fadeIn / scaleIn）、路径画出（drawOn）、循环（pulse）、沿路径运动、镜头（动 IR 根 `viewBox`）。
+
+- **IR（Kernel）**：元素加 `animations?: Array<AnimationTrack>`；`AnimationTrack = { property, keyframes: [{ at: 0..1, value, easing? }], duration, delay, easing, repeat, direction, fill, trigger }`。`property` 为 renderer 无关枚举（`opacity` / `fill` / `stroke` / `strokeWidth` / `translateX|Y` / `rotate` / `scale` / **`pathDraw` 0..1**）；关键帧时间归一化（抄 WAAPI offset，与 duration 解耦）；颜色按 oklch 插值。
+- **`pathDraw` 用 0..1 进度而非 `dashOffset`**：SVG 翻成 `pathLength=1` + dashoffset、Canvas 按几何 lerp 部分路径——保持 renderer 无关。
+- **`trigger` 是枚举/数据**：`load`（渲染即播，SSR 友好）/ `visible`（runtime 用 IntersectionObserver 实现）/ `manual`（runtime API 控）/ `{ onEvent }`（桥水合，runtime 绑事件）；**回调函数（onComplete 等）绝不进 IR，留 runtime**。
+- **Sugar**：`drawOn` / `fadeIn` / `scaleIn` / `slideIn` / `pulse` / `loop` 展开成 track（react sugar + 共享 parser，配等价性测试）。
+- **renderer 实现**：SVG 主走 WAAPI，`trigger:'load'` 额外 emit CSS `@keyframes`（零 JS / SSR）；Canvas `drawScene(ctx, scene, { time })` 加可选 `time` 参、runtime 跑 rAF 推进（additive，默认静态）。**motion-along-path 与 Scene 级共享时钟 / timeline 需一等**——编排式入场（如 D3 connected-scatterplot：线头画出 + 圆点同步移动 + 标签错峰浮现）要求多 track 走同一时钟。
+- **静态截帧**（抄 TikZ `snapshot`）：`renderToSvgString(ir, { at: t })` / canvas `{ at: t }` 渲染某时刻一帧，供 SSR / Node 导出 / 封面。
+- **layout / viewBox 按静止态算**，动画可瞬态溢出（不让动画影响 bbox，否则布局不可定）。
+
+### B. 数据过渡 / 形变（runtime + Tier 2，本段只备注，排更后）
+
+> 老数据 → 新数据的平滑过渡（柱子改高、折线 morph、饼图重分片，echarts / recharts 招牌）是 **keyed-diff + 几何插值**，机制不同于 A 的固定元素关键帧，**不做成持久化 IR 字段**（无"两个状态塞一份 IR"之理），是 **runtime + Tier 2** 的事，本段仅备注待决策：
+>
+> - **runtime**：给已预留的 `view.update(nextIr, { transition })` 入口加语义——按稳定 `id` diff IR_old/new，分 enter / update / exit；update 的元素**生成 `AnimationTrack` 喂给同一 renderer animator**（复用 A 的底座）。与「水合」「AI 增量渲染」共用 `update(nextIr)` 通道。
+> - **Tier 2（plot）要做的**：① path morph 的形状插值算法（不同点数重采样，flubber / d3-interpolate-path 那类）是 **plot 包依赖、不进 core**（core 仅 zod）；新增 `pathMorph` track 类型，core 只认类型、不实现算法。② plot 须给数据绑定元素**派稳定 id**（datum key → 元素 id），diff 才配得上对（与 plot 的 locator / dataRef 接入面一致）。
+>
+> core 只背"可持久化的时间轴动画"（A）；"数据驱动的过渡 / 形变"（B）按 Tier 2 边界推给 plot + runtime，不撑爆 core 与 LLM schema。
+
 ## Alpha 切分（2026-06-01 按实际进度重排）
 
 > 原计划把 renderer 架构拆成 alpha.1–alpha.7 七段递进。实际推进中,alpha.1 的 renderer 决策簇（[ADR-01](./v0.3-alpha.1/01-svg-descriptor-contract.md) / [02](./v0.3-alpha.1/02-canvas-renderer-and-react-canvas-mode.md) / [03](./v0.3-alpha.1/03-vanilla-runtime-and-dependency-graph.md) / [04](./v0.3-alpha.1/04-vanilla-imperative-builder.md)）一次定清,实现**提前贯通**了原 alpha.2（SVG 下沉）、alpha.6（React 双渲染模式）、alpha.7（Canvas MVP，且超额）与 alpha.3 的 SVG runtime。故此处把**已交付的都归入 alpha.1**,并对**剩余功能重新分段**。
