@@ -16,6 +16,11 @@ const spec: PlotSpec = {
   ],
   coordinate: { type: 'cartesian2D', x: 'xHour', y: 'yTemperature' },
   marks: [{ type: 'line', order: 'hour', encoding: { x: { field: 'hour' }, y: { field: 'temperature' } } }],
+  // 与 React 端 <Plot> 默认一致：x/y 轴 + y 网格
+  guides: [
+    { type: 'axis', dimension: 'x' },
+    { type: 'axis', dimension: 'y', grid: true },
+  ],
 };
 
 /** 数据来自哪里对 renderPlot 透明：先 fetch、拿到裸数据行后照样喂 renderPlot 出 SVG 串（SSR / 零 DOM） */

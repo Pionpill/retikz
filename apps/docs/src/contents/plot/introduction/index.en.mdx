@@ -13,7 +13,7 @@ It deliberately splits a chart into three parts, each with one job:
 | **Data** | External dataset, arbitrary JS | Provides the actual values; **never enters the IR**, so the IR does not grow with the data |
 | **lowerPlots** | Fixed lowering function | Projects IR + data into core points / lines for the existing renderer |
 
-`@retikz/plot-react` wraps these three into a single `<Plot>` component. The chart below draws five months of revenue as both a line and scatter points — same data, same scales, two stacked marks:
+`@retikz/plot-react` wraps these three into a single `<Plot>` component. The chart below draws five months of revenue as both a line and scatter points, with axes and gridlines added automatically — same data, same scales, two stacked marks:
 
 <ComponentPreview name="line-scatter" sourceFiles={['line-scatter.data.ts']} />
 
@@ -23,6 +23,30 @@ The JSX is just an authoring surface: `<Plot>` reads its mark children synchrono
 
 For server-side / build-time use, `@retikz/plot-vanilla`'s `renderPlot(spec, data, options)` returns an SVG string (zero DOM) — the **Vanilla** tab in the panel.
 
+## Axes and gridlines are drawn by default
+
+The ticks, axis lines, and grid in the chart above are all automatic — you only wrote marks, and `<Plot>` adds x / y axes plus a horizontal grid by default. To customize, add `<Axis>` children; once you write any `<Axis>`, you get **exactly what you list** and no defaults are filled in:
+
+```tsx
+<Plot data={sales} width={360} height={200}>
+  <LineMark x="month" y="revenue" order="month" />
+  <Axis dimension="x" tickCount={5} />
+  <Axis dimension="y" grid />
+</Plot>
+```
+
+`<Axis>` switches: `tickCount` (target number of ticks), `grid` (whether this axis draws gridlines aligned to its ticks), and `tickLabels={false}` (keep the axis line and ticks, drop the numbers). Grid is a **property of an axis**, not a separate component — an x-axis grid is vertical lines, a y-axis grid is horizontal lines, and the two overlaid is what reads as a "grid".
+
+When you want a bare plot with no axes at all, pass `bare` to `<Plot>`:
+
+```tsx
+<Plot data={sales} width={360} height={200} bare>
+  <LineMark x="month" y="revenue" order="month" />
+</Plot>
+```
+
+`width × height` is the **outer box** including axes and tick labels: once the axes and labels claim the edges, the remaining rectangle is the actual plotting area. Tune the label font size and surrounding whitespace with `fontSize` and `margin`.
+
 ## Data can come from anywhere
 
 The data above is hard-coded, but in the real world it usually comes from elsewhere — a backend endpoint, a public API, a CSV. Because the data **never enters the IR** and is only passed in as plain rows at render time, fetching a large dataset from an external source and charting it works exactly like local data: fetch it first, then hand it to `<Plot data>` the same way.
@@ -31,4 +55,4 @@ The fetching logic (`fetch` + state) is pulled out into a sibling `.data` file j
 
 <ComponentPreview name="line-scatter-fetch" size="md" sourceFiles={['line-scatter-fetch.data.ts']} interactive />
 
-<ComponentAlert title="Current stage" description="alpha.1 ships three packages: @retikz/plot (Plot IR + lowerPlots), @retikz/plot-react (<Plot> component + composition DSL), and @retikz/plot-vanilla (renderPlot for SSR). alpha.1 has only a linear scale + cartesian2D coordinate and point / line marks; axes / gridlines, bar, polar, and interaction (tooltip / events) arrive in later versions. The plot-area size is a render option, not part of the IR." />
+<ComponentAlert title="Current stage" description="alpha.2 adds axes and gridlines on top of the three packages: <Plot> draws x/y axes + a horizontal grid by default, <Axis> children customize them (tick count / grid / hiding labels), and bare returns to a plain axis-free plot. Still a linear scale + cartesian2D coordinate and point / line marks; bar, polar, and interaction (tooltip / events) arrive in later versions. The plot-area size is a render option, not part of the IR." />
