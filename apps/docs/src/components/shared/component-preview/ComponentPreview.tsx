@@ -25,8 +25,9 @@ import {
  * 收集 contents 下全部 demo 模块 + 源码字符串
  * @description 双 glob 同 key 一一对应：default 导出当渲染组件，?raw 取源码喂底部代码段。`undefined` 显式声明，让 TS 知道存在性检查不是冗余
  */
-const demoModules: Record<string, { default: FC } | undefined> = import.meta.glob<{
+const demoModules: Record<string, { default: FC; previewIR?: IR } | undefined> = import.meta.glob<{
   default: FC;
+  previewIR?: IR;
 }>('../../../contents/**/*.demo.tsx', { eager: true });
 const demoSources: Record<string, string | undefined> = import.meta.glob<string>('../../../contents/**/*.demo.tsx', {
   query: '?raw',
@@ -206,15 +207,19 @@ export const ComponentPreview: FC<ComponentPreviewProps> = props => {
   const baselineRawSource = baselineKey ? demoSources[baselineKey] : undefined;
 
   // IR 视图：同步展开 demo 的无 hooks 组件树，停在 <Layout> 后读取 children / ir；一次求值供 IR 代码 + IR 真渲染共用；失败回落错误文本
+  // interactive demo 静态执行不了组件（hooks 会抛），但可显式 `export const previewIR`（图形描述 IR，与数据无关）来保留 IR 代码视图；
+  // 此时 previewIr 仍为 null（不给 IR 真渲染 thunk，预览区复用 live <Component/>），只展示这份静态 IR JSON
+  const exportedPreviewIR = mod?.previewIR;
   const irState = useMemo<{ previewIr: PreviewIR | null; irJson: string }>(() => {
-    if (!Component || hideCode || interactive) return { previewIr: null, irJson: '' };
+    if (!Component || hideCode) return { previewIr: null, irJson: '' };
+    if (interactive) return { previewIr: null, irJson: exportedPreviewIR !== undefined ? formatIR(exportedPreviewIR) : '' };
     try {
       const previewIr = buildPreviewIR(Component);
       return { previewIr, irJson: formatIR(previewIr.ir) };
     } catch (err) {
       return { previewIr: null, irJson: `// Failed to compute IR: ${err instanceof Error ? err.message : String(err)}` };
     }
-  }, [Component, hideCode, interactive]);
+  }, [Component, hideCode, interactive, exportedPreviewIR]);
 
   // Vanilla 视图：同级 `<name>.vanilla.ts` 手写覆盖优先，否则从同一份 IR codegen；失败回落错误文本
   const vanillaKey = segments ? buildVanillaKey(segments, name) : null;
