@@ -134,7 +134,7 @@ v0.3 的另一个重点是支持水合：服务端或静态环境先把图形渲
 - **IR / Scene 提供稳定挂点**：可交互图元需要稳定 `id`，renderer 输出时保留 `data-retikz-id` 等可定位标记。
 - **绑定表在 runtime 层**：函数回调由 `@retikz/vanilla` / `@retikz/react` 等 runtime 接收，不进入 core schema。
 - **SSR 只输出静态结构**：服务端可以输出 SVG 字符串和可选 interaction manifest，但不执行、不序列化函数。
-- **客户端完成水合**：浏览器端根据图元 id 和事件名，把用户提供的 handler 绑定到已存在的 SVG DOM；Canvas 水合先作为后续能力，不抢 v0.3 主线。
+- **客户端完成水合**：浏览器端根据图元 id 和事件名，把用户提供的 handler 绑定到对应图元——SVG 绑到已存在的 DOM、Canvas 经 hit-test 命中。SVG 与 Canvas 水合在 alpha.3 一起落地（共用上层绑定语义，定位层各自实现）。
 
 候选 API 形态：
 
@@ -161,10 +161,12 @@ hydrate(container, {
 });
 ```
 
-SVG 的水合机制应先落地，语义上预留与 Canvas 一致的绑定模型：
+SVG 与 Canvas 水合在 alpha.3 一起落地，共用同一套绑定语义；区别只在「如何把 pointer 事件定位到图元 id」这一定位层：
 
-- SVG：根据 `data-retikz-id` 查询 DOM 元素并绑定 DOM event listener。
-- React：组件 props 中的 handler 不落 IR，最终也应映射到同一套 runtime binding 语义。
+- **绑定语义（renderer 无关，两条共用）**：runtime 维护 `id → { event → handler }` 注册表；根级单 listener 接 pointer / click 等事件，定位出图元 id 后查表分发；非冒泡事件（`pointerenter/leave`）用 `pointerover/out` + `relatedTarget` 在根层合成。
+- **SVG 定位层**：事件 target 经 `closest('[data-retikz-id]')` 反查图元 id（图元已是真实 DOM）。
+- **Canvas 定位层**：Canvas 无逐图元 DOM，需 hit-test——`pointer(x,y) → 命中图元 id`（候选：几何 point-in-shape 测试 / 离屏 pick canvas 唯一色编码 / bbox 空间索引，见待决策 #14）。
+- **React**：组件 props 中的 handler 不落 IR，最终映射到同一套 runtime binding 注册表（与 vanilla 命令式 handler 同源）。
 
 水合不是完整框架 hydration：retikz 不需要重建 React 组件树，也不接管页面应用状态；它只负责把 retikz 图形输出与用户函数绑定起来。
 
@@ -248,8 +250,8 @@ v0.3 需要注意：
 
 | 子版本         | 主题                | 内容                                                                                                                                                                                                                                    | 依赖 / 待决策                                                                                    |
 | -------------- | ------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
-| v0.3.0-alpha.3 | 水合                | SVG 根级事件委托（`data-retikz-id` + `closest` 反查 + runtime handler 注册表，非逐图元绑定）+ `hydrate` API + react handler 映射到同一 binding 语义；非冒泡事件用 `pointerover/out` + `relatedTarget` 合成；canvas 水合（hit-test）后置 | 待决策 #5（命名）/ #6（manifest 入口）；svg `data-retikz-id` 填值、vanilla `interactions` 承载点 |
-| v0.3.0-alpha.4 | canvas / svg 能力补全 | vanilla 独立 `mountCanvas` 入口（`Figure.toCanvas` 已通，补无框架直挂）；canvas / svg 两 renderer 剩余能力与降级项补全 + SVG↔Canvas 对照测试 | — |
+| v0.3.0-alpha.3 | 水合                | **SVG + Canvas 水合一起落地**。统一绑定语义分两层：上层 renderer 无关——`id → { event → handler }` 注册表 + 事件分发（SVG / Canvas 共用）；下层 renderer 提供定位——SVG 走 `data-retikz-id` + 根级 `closest` 委托、Canvas 走 hit-test（`pointer(x,y) → 图元 id`）。`hydrate` API + react handler 映射到同一 binding 语义；非冒泡事件用 `pointerover/out` + `relatedTarget` 合成。**vanilla 独立 `mountCanvas` 入口提前到本段**（`Figure.toCanvas` 已通，补无框架直挂，作为 Canvas 水合的挂载基座） | 待决策 #5（命名）/ #6（manifest 入口）/ #14（canvas hit-test 策略）；svg `data-retikz-id` 填值、vanilla `interactions` 承载点 |
+| v0.3.0-alpha.4 | canvas / svg 能力补全 | canvas / svg 两 renderer 剩余能力与降级项补全 + SVG↔Canvas 对照测试 | — |
 | v0.3.0-beta.1  | 体验加固 | 文档 demo、Node canvas / `@napi-rs` 服务端导出、包体与 public API 清理、release | — |
 
 每段保持一个可验证闭环;切分可在开工前微调。
@@ -262,7 +264,8 @@ v0.3 需要注意：
 - `@retikz/vanilla` 可以在无框架浏览器环境中挂载 SVG / Canvas。
 - `@retikz/vanilla` 可以在 SSR / Node 环境中直接产出 SVG 字符串。
 - SSR / 静态 SVG 输出可以在客户端通过水合绑定事件函数。
-- React props 形式的 handler 与 Vanilla 命令式 handler 共享同一套绑定语义。
+- Canvas 渲染输出可以通过 hit-test 把 pointer 事件命中到图元 id 并绑定 handler，与 SVG 共用上层绑定语义。
+- React props 形式的 handler 与 Vanilla 命令式 handler 共享同一套绑定语义（SVG / Canvas 皆然）。
 - `@retikz/plot` 可以作为独立子包通过 lowering 接入 core，不需要 core 认识 chart type。
 - plot 所需的 layer、locator / anchor、dataRef / scale 接入边界有明确 ADR 或接口草案。
 - `@retikz/react` 支持 SVG 与 Canvas 两套渲染模式，且默认 SVG 兼容现有用户代码。
@@ -288,7 +291,7 @@ v0.3 需要注意：
 1. ~~`@retikz/svg` 的公开 API：只出 `renderToSvgString`，还是同时出 descriptor / React helper。~~ ✅ **已决（→ [alpha.1 ADR-01](./v0.3-alpha.1/01-svg-descriptor-contract.md)）**：以 framework-neutral `SvgNode` descriptor 为核心,出 `buildSvgDocument` + `renderToSvgString`,公开 `SvgNode` 类型;**不出 React helper**（svg 包零 React 依赖,React 映射留在 `@retikz/react`）。同时解掉「`renderPrim` 拆 neutral builder + React binding」。
 2. ~~`@retikz/canvas` 的公开 API：接收 IR、Scene，还是两者都支持。~~ ✅ **已决（→ [alpha.1 ADR-02](./v0.3-alpha.1/02-canvas-renderer-and-react-canvas-mode.md)）**：**接收已编译 `Scene`**（与 svg 对称,`compile` 留 core/runtime）；`drawScene(ctx, scene)` 低层核心 + `renderToCanvas(canvas, scene)` 便利。不接 IR、不在包内 compile。
 3. ~~`@retikz/vanilla` 是否直接 re-export `@retikz/svg` / `@retikz/canvas` 的核心 API，还是只提供 runtime 封装。~~ ✅ **已决（→ [alpha.1 ADR-03](./v0.3-alpha.1/03-vanilla-runtime-and-dependency-graph.md)）**：**runtime 门面（组合）**——`renderToSvgString` 薄包 svg、`mountSvg` 经 `buildSvgDocument` + `svgNodeToDom` 物化 DOM；Scene→SVG 内核仍单一留 svg 包，不纯 re-export、不复制内核。
-4. ~~`@retikz/vanilla` 是否同时覆盖 SVG DOM 挂载与 SSR 字符串输出，还是拆成更细入口。~~ ✅ **已决（→ [ADR-03](./v0.3-alpha.1/03-vanilla-runtime-and-dependency-graph.md)）**：**单包多 named export**（`renderToSvgString` + `mountSvg` 同包）；Canvas 侧入口（`mountCanvas` / 导出）后置 **alpha.2**（见 §Alpha 切分重排）。
+4. ~~`@retikz/vanilla` 是否同时覆盖 SVG DOM 挂载与 SSR 字符串输出，还是拆成更细入口。~~ ✅ **已决（→ [ADR-03](./v0.3-alpha.1/03-vanilla-runtime-and-dependency-graph.md)）**：**单包多 named export**（`renderToSvgString` + `mountSvg` 同包）；Canvas 侧入口（`mountCanvas` / 导出）排 **alpha.3**（随 Canvas 水合一起，作其挂载基座；见 §Alpha 切分）。
 5. 水合 API 命名：`hydrate` / `hydrateInteractions` / `bind` / `attachHandlers`。
 6. interaction manifest 是否进入 IR，还是只作为 `renderToSvgString` 的 runtime options。
 7. Tier 2 支撑（plot）应只写接口草案，还是在 v0.3 里落最小实现。
@@ -298,6 +301,7 @@ v0.3 需要注意：
 11. ~~Canvas 文本测量如何与现有 browser measurer 协作，是否需要把 measurer 再抽一层公共接口。~~ ✅ **已决（→ [ADR-02](./v0.3-alpha.1/02-canvas-renderer-and-react-canvas-mode.md)）**：react canvas 路与 svg 路**共用同一 `compileToScene` + 同一 `browserMeasurer`** → 同一份 Scene → 两 renderer 等价;`drawScene` 收已编译 Scene、不自己测量。非 react 环境是否抽 measurer 公共接口留后续。
 12. ~~Canvas 对 pattern / image / marker 的首版支持范围，以及哪些行为允许降级。~~ ✅ **已决（→ [ADR-02](./v0.3-alpha.1/02-canvas-renderer-and-react-canvas-mode.md)）**：ADR 定"核心 primitives 真绘制 + 高级能力可诊断降级（不静默）";**实现超额**——gradient / pattern / image / clip / marker 已全部转真实 Canvas 实现（+ currentColor / 主题响应 / 文本基线统一 / 弧扫描方向 / 尺寸对齐 SVG），无降级遗留。
 13. ~~包依赖方向：`@retikz/react` 是否直接依赖 `@retikz/svg` / `@retikz/canvas` / `@retikz/vanilla`，还是把 Canvas 作为可选 peer 以控制默认安装体积。~~ ✅ **已决（→ [ADR-03](./v0.3-alpha.1/03-vanilla-runtime-and-dependency-graph.md)）**：**全直接依赖、无 optional peer**（react → core/svg/canvas；vanilla → core/svg/canvas；react 不依赖 vanilla）。canvas 仅 core 依赖、极轻，dual-renderer 零配置优先；体积靠 renderer 已拆包的 tree-shaking，optional peer 留 v0.4 再议。
+14. **Canvas 水合 hit-test 策略**（alpha.3，Canvas 一起上后新增）：`pointer(x,y) → 图元 id` 怎么实现——(a) 几何 point-in-shape 测试（用 Scene primitive 几何 + bbox 预筛）；(b) 离屏 pick canvas（每图元唯一色重绘一遍，读 (x,y) 像素反查 id，需同步重绘）；(c) bbox 空间索引（quadtree / R-tree，先粗筛再精测）。命中口径（描边宽容差 / 透明填充是否可点 / z-order 取最上层）一并在 alpha.3 ADR 定。
 
 ## 备注
 
