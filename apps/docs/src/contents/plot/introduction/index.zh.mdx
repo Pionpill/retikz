@@ -17,87 +17,18 @@ description: retikz 的图表层——声明式 Plot IR 描述「画什么」，
 
 <ComponentPreview name="line-scatter" sourceFiles={['line-scatter.data.ts']} />
 
-用组合 DSL 写最直观：只声明「画什么」（哪个字段画成线、哪个画成点），比例尺与坐标系由 `<Plot>` 自动推断，数据是一组裸数据行单独传入：
+用**组合 DSL** 写最直观：只声明「画什么」（哪个字段画成线、哪个画成点），比例尺与坐标系由 `<Plot>` 自动推断；数据是一组裸数据行，单独抽在 `line-scatter.data.ts` 里传入。完整写法见上图下方的「代码」面板——React 源码、装配出的 **Plot IR**、等价的 **Vanilla** builder 代码、以及数据文件都在那里。
 
-```tsx
-import { LineMark, Plot, PointMark } from '@retikz/plot-react';
+JSX 只是书写面：`<Plot>` 同步读取子图层、装配成一份规范化的 **Plot IR**（即代码面板的 **IR** 一栏）。你也可以反过来——直接手写或由程序 / LLM 生成这份 IR，再用 `<Plot spec={spec} data={{ sales }}>` 入口渲染。无论走哪条路，IR 里关于数据都只写一个引用名（`data: { ref: 'sales' }`）：真正的数据在渲染时单独传入，同一份 spec 换一份字段相符的数据集就能复用——这正是「IR 与数据解耦」的意义，配置描述形态、数据只填内容。
 
-const sales = [
-  { month: 0, revenue: 10 },
-  { month: 1, revenue: 14 },
-  // ...
-];
-
-<Plot data={sales} width={360} height={200}>
-  <LineMark x="month" y="revenue" order="month" />
-  <PointMark x="month" y="revenue" />
-</Plot>;
-```
-
-JSX 只是书写面：`<Plot>` 同步读取子图层，装配成一份规范化的 **Plot IR**——你也可以直接手写或由程序 / LLM 生成这份 IR，再用 `<Plot spec>` 入口渲染：
-
-```tsx
-const spec = {
-  namespace: 'plot',
-  type: 'plot',
-  data: { ref: 'sales' }, // 只引用名字，不含数据
-  scales: [
-    { type: 'linear', name: '__x' },
-    { type: 'linear', name: '__y' },
-  ],
-  coordinate: { type: 'cartesian2D', x: '__x', y: '__y' },
-  marks: [
-    { type: 'line', order: 'month', encoding: { x: { field: 'month' }, y: { field: 'revenue' } } },
-    { type: 'point', encoding: { x: { field: 'month' }, y: { field: 'revenue' } } },
-  ],
-};
-
-// 已有完整 IR 时：用 spec 入口 + 具名数据集
-<Plot spec={spec} data={{ sales }} width={360} height={200} />;
-```
-
-IR 里只写了 `data: { ref: 'sales' }`（一个名字），真正的数据在渲染时单独传入——同一份 `spec` 换一份字段相符的数据集就能复用，这正是「IR 与数据解耦」的意义：配置描述形态，数据只填内容。
-
-服务端 / 构建期可用 `@retikz/plot-vanilla` 的 `renderPlot` 出 SVG 字符串（零 DOM）：
-
-```ts
-import { renderPlot } from '@retikz/plot-vanilla';
-
-const svg = renderPlot(spec, { sales }, { width: 360, height: 200 }); // SSR：SVG 字符串
-```
+服务端 / 构建期则用 `@retikz/plot-vanilla` 的 `renderPlot(spec, data, options)` 直接出 SVG 字符串（零 DOM），对应代码面板的 **Vanilla** 一栏。
 
 ## 数据来自哪里都一样
 
 上面的数据是写死的，真实场景里数据通常来自别处——后端接口、公开 API、CSV。因为数据**不进 IR**、只在渲染时作为裸数据行传入，所以从外部 `fetch` 一份大数据集再作图，写法和本地数据完全一致：先把数据取回来，拿到后照样丢给 `<Plot data>`。
 
-取数逻辑（`fetch` + 状态）和造的数据一样**抽到同级 `.data` 文件**，主 demo 只消费、保持简单：React 端把它封装成一个 hook（`line-scatter-fetch.data.ts` 的 `useCarPerformance()`）。下面这张图实时从 CDN 拉取 [vega-datasets](https://github.com/vega/vega-datasets) 的经典「汽车性能」数据集（约 400 条），把马力与油耗画成散点：
+取数逻辑（`fetch` + 状态）和造的数据一样**抽到同级 `.data` 文件**、主 demo 只消费保持简单——React 端封装成一个 hook（`line-scatter-fetch.data.ts` 的 `useCarPerformance()`，见代码面板里的数据文件）。下面这张图实时从 CDN 拉取 [vega-datasets](https://github.com/vega/vega-datasets) 的经典「汽车性能」数据集（约 400 条），把马力与油耗画成散点；作图那几行和本地数据完全一样，数据来自哪里对 `<Plot>` 透明：
 
 <ComponentPreview name="line-scatter-fetch" size="md" sourceFiles={['line-scatter-fetch.data.ts']} interactive />
-
-```tsx
-// line-scatter-fetch.data.ts —— 取数 + 清洗封装成 hook
-export const useCarPerformance = () => {
-  const [data, setData] = useState(null);
-  useEffect(() => {
-    fetch('https://cdn.jsdelivr.net/npm/vega-datasets@2/data/cars.json')
-      .then(res => (res.ok ? res.json() : Promise.reject(new Error(`HTTP ${res.status}`))))
-      .then(rows =>
-        setData(
-          rows
-            .filter(r => typeof r.Horsepower === 'number' && typeof r.Miles_per_Gallon === 'number')
-            .map(r => ({ horsepower: r.Horsepower, mpg: r.Miles_per_Gallon })),
-        ),
-      );
-  }, []);
-  return { data };
-};
-
-// line-scatter-fetch.demo.tsx —— 主文件只消费，作图写法不变（数据来自哪里对 <Plot> 透明）
-const { data } = useCarPerformance();
-if (!data) return <p>加载中…</p>;
-<Plot data={data} width={480} height={260}>
-  <PointMark x="horsepower" y="mpg" />
-</Plot>;
-```
 
 <ComponentAlert title="当前阶段" description="alpha.1 已提供三包：@retikz/plot（Plot IR + lowerPlots）、@retikz/plot-react（<Plot> 组件 + 组合 DSL）、@retikz/plot-vanilla（renderPlot SSR）。alpha.1 只有 linear 比例尺 + cartesian2D 坐标系、point / line 两种 mark；轴 / 网格、bar、极坐标、交互（tooltip / 事件）等在后续版本逐步加。绘图区尺寸是渲染选项，不进 IR。" />
