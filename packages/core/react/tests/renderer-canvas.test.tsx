@@ -87,9 +87,9 @@ describe('Layout renderer 规格', () => {
 
     const canvas = container.querySelector('canvas');
     expect(canvas).toBeInstanceOf(HTMLCanvasElement);
-    // 位图按 Scene 内容边界开（ratio=1）；名义 720×360 只进 CSS displayStyle
-    expect(canvas?.width).toBe(Math.round(canvasScenes[0].layout.width));
-    expect(canvas?.height).toBe(Math.round(canvasScenes[0].layout.height));
+    // 位图按名义显示尺寸开（ratio=1），renderToCanvas 把内容 meet-fit 进去——镜像 svg width/height attrs
+    expect(canvas?.width).toBe(320);
+    expect(canvas?.height).toBe(180);
     expect(renderToCanvas).toHaveBeenCalledTimes(1);
     expect(canvasDrawCalls[0]).toBe(canvas);
     expect(getContext).toHaveBeenCalledWith('2d');
@@ -128,7 +128,7 @@ describe('Layout renderer 规格', () => {
     getContext.mockRestore();
   });
 
-  it('canvas-host-bitmap-equals-scene-layout：位图按 Scene 内容边界开（对齐 SVG viewBox），与名义 width/height 解耦', async () => {
+  it('canvas-host-bitmap-equals-nominal-size：位图按名义 width/height 开（镜像 svg attrs），renderToCanvas 内部 meet-fit', async () => {
     const context = createTestCanvasContext();
     const getContext = vi
       .spyOn(HTMLCanvasElement.prototype, 'getContext')
@@ -151,9 +151,10 @@ describe('Layout renderer 规格', () => {
 
     const canvas = container.querySelector('canvas');
     const scene = canvasScenes[0];
-    // jsdom 无 devicePixelRatio → ratio=1；位图 = 内容边界 × ratio，而非名义 720×360（否则两次 letterbox 致 canvas 偏小）
-    expect(canvas?.width).toBe(Math.round(scene.layout.width));
-    expect(canvas?.height).toBe(Math.round(scene.layout.height));
+    // jsdom 无 devicePixelRatio → ratio=1；位图 = 名义 720×360（intrinsic 比对齐 svg width/height attrs，
+    // 响应式 height:auto 下与 svg 一致），renderToCanvas 把内容 meet-fit 进位图，而非位图 = 内容边界
+    expect(canvas?.width).toBe(720);
+    expect(canvas?.height).toBe(360);
     expect(scene.layout.width).not.toBe(720);
 
     root.unmount();
@@ -266,9 +267,9 @@ describe('Layout renderer 规格', () => {
     });
 
     const canvas = container.querySelector('canvas');
-    // ratio 回退为 1：位图 = 内容边界 × 1（有限值；若 ratio=NaN 则会得 NaN）
-    expect(canvas?.width).toBe(Math.round(canvasScenes[0].layout.width));
-    expect(canvas?.height).toBe(Math.round(canvasScenes[0].layout.height));
+    // ratio 回退为 1：位图 = 名义 120×80 × 1（有限值；若 ratio=NaN 则会得 NaN）
+    expect(canvas?.width).toBe(120);
+    expect(canvas?.height).toBe(80);
 
     root.unmount();
     getContext.mockRestore();
