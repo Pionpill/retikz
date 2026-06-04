@@ -20,12 +20,18 @@ mark 投影从「整图 range」改为「plot area range」（改 alpha.1 [ADR-0
 // packages/plot/plot/src/lower/layout.ts
 /** 估算用常量（plot lowering 在 compile 前、无 measureText，故估算） */
 export const DEFAULT_FONT_SIZE = 11;       // label 字号（估算 + 实绘共用）
-const CHAR_WIDTH_FACTOR = 0.6;             // 数字字宽 ≈ 0.6em
-const TICK_LENGTH = 6;                     // 刻度线长
-const LABEL_GAP = 4;                       // 刻度线 → label 间距
+export const CHAR_WIDTH_FACTOR = 0.6;      // 数字字宽 ≈ 0.6em
+export const AXIS_TICK_LENGTH = 6;         // 刻度线长（ADR-04 共用，导出避免跨文件复制常量）
+export const AXIS_LABEL_GAP = 4;           // 刻度线 → label 间距（ADR-04 共用）
 
 export type Rect = { x: number; y: number; width: number; height: number };
 export type Margins = { top: number; right: number; bottom: number; left: number };
+
+/**
+ * 估算一段文字的像素宽（plot lowering 无 measureText，用字符数 × 字号 × 因子估）
+ * @description 单一来源：ADR-03 的 left margin 与 ADR-04 的 y label 水平偏移都调它，避免两处各算一份
+ */
+export const estimateLabelWidth = (text: string, fontSize: number): number => text.length * fontSize * CHAR_WIDTH_FACTOR;
 
 type PlotAreaInput = {
   hasXAxis: boolean;
@@ -36,7 +42,7 @@ type PlotAreaInput = {
 type PlotAreaOptions = { fontSize?: number; margin?: Partial<Margins> };
 
 const maxLabelWidth = (labels: ReadonlyArray<string>, fontSize: number): number =>
-  (labels.length === 0 ? 0 : Math.max(...labels.map(l => l.length))) * fontSize * CHAR_WIDTH_FACTOR;
+  labels.length === 0 ? 0 : Math.max(...labels.map(l => estimateLabelWidth(l, fontSize)));
 
 /**
  * 由整图尺寸 + axis 占位估算 plot area（margin convention）
@@ -48,8 +54,8 @@ export const computePlotArea = (width: number, height: number, input: PlotAreaIn
   const auto: Margins = {
     top: input.hasYAxis ? fontSize * 0.5 : 0,                                  // y 轴最高 label 半行溢出
     right: input.hasXAxis ? maxLabelWidth(input.xLabels.slice(-1), fontSize) * 0.5 : 0, // x 轴最右 label 半宽溢出
-    bottom: input.hasXAxis ? TICK_LENGTH + LABEL_GAP + fontSize : 0,
-    left: input.hasYAxis ? TICK_LENGTH + LABEL_GAP + maxLabelWidth(input.yLabels, fontSize) : 0,
+    bottom: input.hasXAxis ? AXIS_TICK_LENGTH + AXIS_LABEL_GAP + fontSize : 0,
+    left: input.hasYAxis ? AXIS_TICK_LENGTH + AXIS_LABEL_GAP + maxLabelWidth(input.yLabels, fontSize) : 0,
   };
   const m: Margins = { ...auto, ...options.margin };
   return {
@@ -80,7 +86,7 @@ export type LowerPlotsOptions = {
 
 ## 待决策点
 
-- **估算常量值**：`fontSize=11` / `CHAR_WIDTH_FACTOR=0.6` / `TICK_LENGTH=6` / `LABEL_GAP=4`。都是经验值，可调；review 时若觉得轴太挤/太松改这里。
+- **估算常量值**：`DEFAULT_FONT_SIZE=11` / `CHAR_WIDTH_FACTOR=0.6` / `AXIS_TICK_LENGTH=6` / `AXIS_LABEL_GAP=4`。都是经验值，可调；review 时若觉得轴太挤/太松改这里。
 - **margin 配置位置**：放 `LowerPlotsOptions`（不进 IR，跟 width/height）vs `PlotSpec.margin`（进 IR）。倾向 **options**（布局是渲染参数，非数据；与 width/height 一致）。备选进 IR（若希望 margin 随 spec 持久化）。
 - **top/right 防溢出小留白**：用「对侧最末 label 半宽/半高」估算（上面草案）vs 固定常量 vs 0。倾向估算（最贴）；嫌复杂可固定 `fontSize*0.5`。
 - **CHAR_WIDTH_FACTOR 对非数字 label**：0.6 是数字经验值；将来 ordinal / 长文本 label 偏窄会裁。alpha.2 只有 linear 数字轴，够用；非数字 label 的估算留 alpha.3。
@@ -106,7 +112,7 @@ export type LowerPlotsOptions = {
 
 ## 影响
 
-- **`packages/plot/plot/src/lower/layout.ts`**（全新）：`computePlotArea` / `Rect` / `Margins` / `DEFAULT_FONT_SIZE`。
+- **`packages/plot/plot/src/lower/layout.ts`**（全新）：`computePlotArea` / `Rect` / `Margins` / `DEFAULT_FONT_SIZE` / `AXIS_TICK_LENGTH` / `AXIS_LABEL_GAP` / `estimateLabelWidth`（后三者导出供 [ADR-04](./04-guide-lowering.md) 复用，不跨文件复制常量 / 算法——评审 P2.4）。
 - **`packages/plot/plot/src/lower/scale.ts`**（修改）：拆出 domain resolve 与 range 应用（供「先 domain → 算 plot area → 再 range」的顺序）；**domain resolve 必须保持 alpha.1 的 `def.domain ?? extent(values)` 推断逐字不变**（守 `domain_inferred_from_data` / `explicit_domain_range_respected` 测试），`resolveLinearScale` 以拆出的两步组合实现、对外行为不变。
 - **`packages/plot/plot/src/lower/expand.ts`**（修改）：mark 投影 range 由整图改为 plot area；`LowerPlotsOptions` 加 `margin?` / `fontSize?`；编排顺序 domain → ticks → plotArea → range → 投影。（guide 子节点的产出在 [ADR-04](./04-guide-lowering.md)。）
 - **`packages/plot/plot/src/lower/project.ts`**（可能修改）：投影器接受 plot area 派生的 range（若 alpha.1 的 `createCartesianProjector` 已按 range 参数化则无需改）。

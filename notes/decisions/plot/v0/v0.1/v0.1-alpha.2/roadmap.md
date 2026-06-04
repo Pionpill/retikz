@@ -60,7 +60,7 @@
 
 [plot v0.1 roadmap](../roadmap.md) 的贯穿原则在 alpha.2 的体现：
 
-- **anchor / scope 预留**：guide lower 出的轴区给 `plot.xAxis` / `plot.yAxis` 埋 id（plot-design §14），延续 alpha.1「字段位就位、解析留 alpha.5」。
+- **anchor / scope 预留**：guide lower 出的轴区给 `plot.xAxis` / `plot.yAxis` 埋 id（plot-design §14），延续 alpha.1「字段位就位、解析留 alpha.5」。注意：根 plot scope `localNamespace:true` 会把子 id 隔离在内部 frame——**alpha.2 仅内部埋点、不承诺外部可引用**，对外 semantic handle 的导出结构留 alpha.5（评审 P1.2）。
 - **guide 绑 coordinate scope（为 facet 预留）**：guide 不做成全局单份语义；分面（多 coordinate scope）时各自带轴/网格，结构非破坏扩展。详见 [ADR-01](./01-guide-ir.md) 决策与待决策点。
 
 ## ADR 约定

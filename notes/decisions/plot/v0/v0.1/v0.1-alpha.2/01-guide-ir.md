@@ -98,7 +98,7 @@ guides: z
 - **`tickLabels` 默认值表达**：用 `optional`（lowering 视 undefined 为 true），与 alpha.1 scale 的 `nice`/`clamp` 一致；备选 `.default(true)`（IR 规范化后显式）。倾向 optional。字段名 `tickLabels`（非 `label`）以免与未来轴标题混（采纳评审 I3）。
 - **轴标题（title）**：alpha.2 **不含**（schema 不加 `title`）——标题要额外占 margin + 富排版，聚焦先做轴线/刻度/标签/网格。留后续（非破坏加 `title?`）。
 - **`tickCount` 归 axis 还是 scale**：放 **AxisGuide**（更像「这根轴想要几个刻度」的展示配置），而非污染 alpha.1 的 `LinearScale`。grid 与同 `dimension` 的 axis 共享 ticks（lowering 按 dimension 统一算一次，[ADR-04](./04-guide-lowering.md)）。
-- **grid 是否需要独立 tickCount**：不需要——grid 复用同维度 axis 的刻度位置；无对应 axis 时按默认 tickCount 算（[ADR-04](./04-guide-lowering.md) 决定）。
+- **grid 是否需要独立 tickCount**：不需要——grid 复用同维度 axis 的刻度位置；无对应 axis 时按默认 tickCount 算（[ADR-04](./04-guide-lowering.md)）。**同 (type, dimension) guide 唯一**——重复（如两个 `axis y` 且 tickCount 不同）由 lowering **拒绝**（[ADR-04](./04-guide-lowering.md)，评审 P2.5），免得 grid 复用哪个 axis 的 ticks 不确定。
 
 ## DSL 表面
 

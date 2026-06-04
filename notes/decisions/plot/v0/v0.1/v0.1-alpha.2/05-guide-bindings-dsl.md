@@ -13,7 +13,7 @@
 `<Axis>` / `<Grid>` 与 `<LineMark>`/`<PointMark>` 同构——**配置载体**（返回 `null`、不进 render 栈、无 hooks），由 `buildPlotSpec` 同步内省装配进 `PlotSpec.guides`。装配规则：
 
 - **`bare`**：`<Plot bare>` → `guides: []` 且布局不留 margin（plot area = 整图）= alpha.1 行为；忽略任何 `<Axis>`/`<Grid>`。
-- **无任何 `<Axis>`/`<Grid>` 子组件**：默认填全套 `DEFAULT_GUIDES = [axis x, axis y, grid x, grid y]`（开箱即用、demo 干净）。
+- **无任何 `<Axis>`/`<Grid>` 子组件**：默认填 `DEFAULT_GUIDES = [axis x, axis y, grid y]`（双轴 + y 网格，开箱即用、不过密——评审 P2.6 统一措辞）。
 - **写了任意 `<Axis>`/`<Grid>`**：**完全显式所得**（不再补默认）——`<Axis dimension="x"/>` 单独写就只出 x 轴，精确可控。
 
 ```tsx

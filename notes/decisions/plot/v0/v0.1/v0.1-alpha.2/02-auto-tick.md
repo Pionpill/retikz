@@ -32,12 +32,14 @@ const niceStep = (span: number, count: number): number => {
 
 /**
  * 在 [min,max] 内生成 nice 刻度位置（不改 domain）
- * @description domain 非有限或退化（min===max）时返回单刻度 [min]，避免除零 / 无限循环
+ * @description 假定 **min ≤ max（升序 domain）**。domain 非有限 → []；退化（min===max）→ 单刻度 [min]；
+ *   反向（min>max）→ []（alpha.2 不支持反向 domain，明确不画而非乱画——评审 P1.3）。均不除零 / 不死循环
  */
 export const linearTicks = (domain: readonly [number, number], count = DEFAULT_TICK_COUNT): Array<number> => {
   const [min, max] = domain;
   if (!Number.isFinite(min) || !Number.isFinite(max)) return [];
   if (min === max) return [min];
+  if (min > max) return []; // 反向 domain：alpha.2 不支持（见 JSDoc / 待决策点）
   const step = niceStep(max - min, count);
   const start = Math.ceil(min / step) * step;
   const out: Array<number> = [];
@@ -57,7 +59,9 @@ export type TickSet = { values: Array<number>; labels: Array<string>; step: numb
 
 export const computeTicks = (domain: readonly [number, number], count = DEFAULT_TICK_COUNT): TickSet => {
   const values = linearTicks(domain, count);
-  const step = values.length >= 2 ? values[1] - values[0] : 1;
+  // 单刻度（退化 domain）：直接用值本身的精度，不靠 step 推小数位——否则 computeTicks([3.14,3.14]) 会被标成 '3'（评审 P1.3）
+  if (values.length < 2) return { values, labels: values.map(v => String(v)), step: 0 };
+  const step = values[1] - values[0];
   return { values, labels: values.map(v => formatTickLabel(v, step)), step };
 };
 ```
@@ -76,7 +80,7 @@ export const computeTicks = (domain: readonly [number, number], count = DEFAULT_
 - **是否对外 public**：alpha.2 作 lowering 内部模块（测试直接 import `lower/ticks.ts`，不进包 barrel），与 alpha.1 的 `field`/`scale`/`project` 一致。用户想自定义刻度的能力（显式 tick 数组 / 自定义 formatter）留后续。
 - **是否顺带实现 `LinearScale.nice`**：alpha.1 给 scale 留了 `nice` 字段但没用。**本 ADR 不碰**——auto-tick 只取 domain 内刻度；nice domain 扩展涉及改 `resolveLinearScale` + 牵动 mark 投影，单独评估。
 - **标签格式化的极端量级**（如 1e-7 / 1e9）：alpha.2 用 `toFixed` 朴素格式，超大 / 超小不转科学计数。够用；科学计数 / 千分位留后续 formatter。
-- **`min===max` 的单刻度位置**：返回 `[min]`（轴上一根刻度）。备选造 `[min-1, min, min+1]` 假范围。倾向最简单刻度。
+- **退化 / 反向 domain（评审 P1.3，已定）**：`min===max` → 单刻度 `[min]`，且 `computeTicks` 单刻度时标签用 `String(min)` **保原值精度**（不被 step 取整成 `'3'`）；非有限 → `[]`；`min>max`（反向）→ `[]`——alpha.2 **不支持反向 domain**（domain 来自 `resolveLinearScale` 通常升序）。显式反向 domain 的支持（swap 升序 vs 明确报错）留后续。
 
 ## DSL 表面
 
@@ -132,6 +136,7 @@ export const computeTicks = (domain: readonly [number, number], count = DEFAULT_
 - `ticks_nice_from_messy_domain`：`linearTicks([0,9.7],5)` → `[0,2,4,6,8]`（落 domain 内、1/2/5 步长）
 - `ticks_cross_zero`：`linearTicks([-5,5],5)` → `[-4,-2,0,2,4]`
 - `compute_ticks_labels_aligned`：`computeTicks([0,10],5).labels` → `['0','2','4','6','8','10']`，`values.length===labels.length`
+- `compute_single_decimal_label_preserved`：`computeTicks([3.14,3.14]).labels` → `['3.14']`（单刻度用原值精度，**不**取整成 `'3'`——评审 P1.3）
 
 **边界**：
 
@@ -141,7 +146,8 @@ export const computeTicks = (domain: readonly [number, number], count = DEFAULT_
 
 **错误路径 / 退化**：
 
-- `ticks_reversed_or_zero_span`：`linearTicks([5,5])` → `[3]`?→ 实际 `[5]`（min===max 单刻度，不崩、不空循环）
+- `ticks_zero_span_single`：`linearTicks([5,5])` → `[5]`（min===max 单刻度，不崩、不空循环）
+- `ticks_reversed_empty`：`linearTicks([5,0])` → `[]`（反向 domain，alpha.2 明确不画——评审 P1.3）
 - `format_no_float_noise`：`formatTickLabel(0.30000000000000004, 0.1)` → `'0.3'`
 
 **交互**：
