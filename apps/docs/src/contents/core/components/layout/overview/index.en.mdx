@@ -77,6 +77,21 @@ By default the `viewBox` is auto-computed from content (AABB + padding). Pass `v
 
 > The viewBox is injected into the constructed IR root (`ir.viewBox`); when passing an `ir` prop whose IR already carries a viewBox, the prop wins and the IR value is used only if the prop is omitted. Orthogonal to `width` / `height` (render size).
 
+## Render target (SVG / Canvas)
+
+`renderer` selects the output backend: `'svg'` by default, or `'canvas'` to draw the same Scene onto a `<canvas>`. When the `renderer` prop is omitted, `<Layout>` falls back to the nearest `RendererModeProvider` value — precedence is **explicit `renderer` prop > context > `'svg'`**.
+
+This fits the case where an outer layer wants to switch a whole subtree it can't reach into per-`<Layout>` — e.g. toggling an interactive (hooks / async) subtree between svg / canvas: you can't edit its inner `<Layout renderer>`, but wrapping it in the Provider does it:
+
+```tsx
+import { Layout, RendererModeProvider } from '@retikz/react';
+
+// Inner <Layout>s without an explicit renderer follow the Provider; those with one are unaffected
+<RendererModeProvider mode="canvas">
+  <SomeInteractiveChart />
+</RendererModeProvider>;
+```
+
 ## API Reference
 
 | Prop | Type | Default | Description |
@@ -89,6 +104,7 @@ By default the `viewBox` is auto-computed from content (AABB + padding). Pass `v
 | `className` | `string` | — | Forwarded to the render root |
 | `style` | `CSSProperties` | — | Forwarded to the render root |
 | `idPrefix` | `string` | — | Overrides the `<defs>` resource id prefix; pass the same value to SSR output and client `<Layout>` to keep reference ids aligned |
+| `renderer` | `'svg' \| 'canvas'` | `'svg'` | Render backend; when omitted, falls back to the nearest `RendererModeProvider` context value (prop > context > svg) |
 | `color` / `stroke` / `fill` / `strokeWidth` / `opacity` / `fillOpacity` / `drawOpacity` | same as [`<Scope>`](/core/components/layout/scope) | — | Whole-figure cascade graphic state; when set, wraps children in an implicit root `<Scope>` |
 | `nodeDefault` / `pathDefault` / `labelDefault` / `arrowDefault` | same as [`<Scope>`](/core/components/layout/scope) | — | Whole-figure every-X defaults (four channels); wraps the same implicit root scope |
 

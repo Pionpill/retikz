@@ -1,5 +1,5 @@
 import { X } from 'lucide-react';
-import { type FC, type ReactNode, useEffect, useRef, useState } from 'react';
+import { type FC, type ReactNode } from 'react';
 
 import { Dialog, DialogClose, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable';
@@ -7,16 +7,10 @@ import { cn } from '@/lib/utils';
 
 import { HighlightedCode } from '../highlight-code';
 import type { ComponentRenderSource } from './ComponentRender';
-import { CopyButton, RendererModeButton, SourceFileMenu, ToolbarIconButton, ViewToggle } from './_parts';
-import {
-  type AlignKey,
-  type RendererMode,
-  type SourceView,
-  alignClass,
-  availableSourceViews,
-  filterDiffByMode,
-} from './_shared';
+import { CopyButton, RendererModeButton, SourceViewBar, ToolbarIconButton } from './_parts';
+import { type AlignKey, type RendererMode, alignClass, filterDiffByMode } from './_shared';
 import { DemoRenderer } from './DemoRenderer';
+import { useSourceViews } from './useSourceViews';
 import { usePanZoom } from './usePanZoom';
 
 export type ComponentDetailDialogProps = {
@@ -32,6 +26,8 @@ export type ComponentDetailDialogProps = {
   rendererMode: RendererMode;
   /** 切换当前渲染目标 */
   toggleRendererMode: () => void;
+  /** 交互式 demo：真渲染 `<Component/>`，隐藏 svg/canvas 切换 */
+  interactive?: boolean;
   /** 当前 React 源码文件序号，与卡片内源码面板共享 */
   sourceFileIndex: number;
   /** 切换 React 源码文件时同步回卡片层 */
@@ -88,53 +84,19 @@ const DialogDemoPane: FC<DialogDemoPaneProps> = props => {
  *   仅一个视图存在时不出 React/IR toggle；两视图都缺（如 hideCode demo）时退化为单 panel 仅渲染区
  */
 export const ComponentDetailDialog: FC<ComponentDetailDialogProps> = props => {
-  const { open, onOpenChange, name, Component, source, align, rendererMode, toggleRendererMode, sourceFileIndex, onSourceFileIndexChange } = props;
-  const reactFiles =
-    source?.reactFiles !== undefined && source.reactFiles.length > 0
-      ? source.reactFiles
-      : (source?.react ?? '').length > 0
-        ? [{ filename: `${name}.demo.tsx`, code: source?.react ?? '', diff: source?.reactDiff }]
-        : [];
-  const hasReact = reactFiles.length > 0;
-  const irSource = source?.ir ?? '';
-  const hasIr = irSource.length > 0;
-  const vanillaSource = source?.vanilla ?? '';
-  const hasVanilla = vanillaSource.length > 0;
-  const hasCode = hasReact || hasIr || hasVanilla;
-  const availableViews = availableSourceViews({ react: hasReact, ir: hasIr, vanilla: hasVanilla });
-  const showViewToggle = availableViews.length >= 2;
+  const { open, onOpenChange, name, Component, source, align, rendererMode, toggleRendererMode, interactive, sourceFileIndex, onSourceFileIndexChange } = props;
+  // 视图 / 文件 / 复制走共享 hook（与卡片同源推导）；view 状态本 Dialog 独立、fileIndex 经 prop 与卡片共享
+  const { views, view, setView, files, activeFileIndex, activeFile, render: activeRender, copied, handleCopy } =
+    useSourceViews(source, sourceFileIndex);
+  const hasCode = views.length > 0;
 
-  // Dialog 自己的视图 / copied 状态——和外部卡完全独立
-  const [view, setView] = useState<SourceView>('react');
-  const [copied, setCopied] = useState(false);
-  const copyTimerRef = useRef<number | null>(null);
-
-  useEffect(() => {
-    return () => {
-      if (copyTimerRef.current !== null) window.clearTimeout(copyTimerRef.current);
-    };
-  }, []);
-
-  const effectiveView: SourceView = availableViews.includes(view) ? view : (availableViews[0] ?? 'react');
-  const activeSourceFileIndex = Math.min(sourceFileIndex, Math.max(reactFiles.length - 1, 0));
-  const activeSourceFile = reactFiles.at(activeSourceFileIndex);
-  const reactSource = activeSourceFile?.code ?? '';
-  const activeDiff = activeSourceFile?.diff;
-
-  // Copy 用的是真实 React / IR / Vanilla 源码；displayedCode 在 React 视图下有 reactDiff 时切换为 'added' 模式过滤后的内容
-  // Dialog 暂不出 diff mode 切换，固定 'added'（与卡片默认一致——教学场景优先看新增）
-  const copyCode = effectiveView === 'ir' ? irSource : effectiveView === 'vanilla' ? vanillaSource : reactSource;
-  const displayedDiff =
-    effectiveView === 'react' && activeDiff !== undefined ? filterDiffByMode(activeDiff, 'added') : null;
-  const displayedCode = displayedDiff?.code ?? copyCode;
+  const activeCode = activeFile?.code ?? '';
+  const activeLang = activeFile?.lang ?? 'tsx';
+  const activeDiff = activeFile?.diff;
+  // Dialog 暂不出 diff mode 切换，固定 'added'（与卡片默认一致——教学场景优先看新增）；任意视图均可带 diff
+  const displayedDiff = activeDiff !== undefined ? filterDiffByMode(activeDiff, 'added') : null;
+  const displayedCode = displayedDiff?.code ?? activeCode;
   const displayedLineKinds = displayedDiff?.lineKinds;
-
-  const handleCopy = () => {
-    void navigator.clipboard.writeText(copyCode);
-    setCopied(true);
-    if (copyTimerRef.current !== null) window.clearTimeout(copyTimerRef.current);
-    copyTimerRef.current = window.setTimeout(() => setCopied(false), 3000);
-  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -158,7 +120,11 @@ export const ComponentDetailDialog: FC<ComponentDetailDialogProps> = props => {
           <ResizablePanelGroup direction="horizontal" className="min-h-0 flex-1">
             <ResizablePanel defaultSize={60} minSize={30} maxSize={85}>
               <DialogDemoPane align={align}>
-                <DemoRenderer Component={Component} rendererMode={rendererMode} />
+                {activeRender ? (
+                  activeRender(rendererMode)
+                ) : (
+                  <DemoRenderer Component={Component} rendererMode={rendererMode} interactive={interactive} />
+                )}
               </DialogDemoPane>
             </ResizablePanel>
             <ResizableHandle withHandle />
@@ -166,23 +132,21 @@ export const ComponentDetailDialog: FC<ComponentDetailDialogProps> = props => {
               <div className="flex h-full min-w-0 flex-col bg-muted/30">
                 <div className="flex shrink-0 items-center justify-between gap-2 border-b p-1 px-2">
                   <div className="flex min-w-0 flex-1 items-center gap-1">
-                    {effectiveView === 'react' ? (
-                      <SourceFileMenu
-                        files={reactFiles}
-                        activeIndex={activeSourceFileIndex}
-                        onChange={onSourceFileIndexChange}
-                      />
-                    ) : null}
-                    {showViewToggle ? (
-                      <ViewToggle views={availableViews} view={effectiveView} onChange={setView} />
-                    ) : null}
+                    <SourceViewBar
+                      views={views}
+                      view={view}
+                      onViewChange={setView}
+                      files={files}
+                      activeFileIndex={activeFileIndex}
+                      onFileChange={onSourceFileIndexChange}
+                    />
                   </div>
                   <CopyButton copied={copied} onCopy={handleCopy} />
                 </div>
                 {/* `[&_pre]:!text-xs` 用 ! 覆盖 react-syntax-highlighter 主题注入的 inline font-size */}
                 <div className="min-h-0 flex-1 overflow-auto [&_code]:!text-sm [&_pre]:!text-xs">
                   <HighlightedCode
-                    lang={effectiveView === 'ir' ? 'json' : effectiveView === 'vanilla' ? 'ts' : 'tsx'}
+                    lang={activeLang}
                     code={displayedCode}
                     showLineNumbers
                     lineKinds={displayedLineKinds}

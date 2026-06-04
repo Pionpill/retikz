@@ -137,6 +137,7 @@ karl-circle-07-info.en.demo.tsx         # 同上 en
 
 - 子文件是**纯源码**（不渲染），用普通 `.tsx` / `.ts`，**不要带 `.demo.tsx`**——带了会被当成可渲染 demo（要求 default 导出 FC、并去算 IR）。
 - 步内子文件以**所属步的主 demo 名**为前缀，`<subName>` 在各步间保持稳定（如各步都叫 `.elements.tsx`），这是自动 diff 配对的钥匙。
+- **造的数据集**用专门的 `<主demo名>.data.ts` 子文件（多数据集 `<主demo名>.<dataset>.data.ts`），有专属 Database 图标——通用约定见 [`docs-doc-principle`](../docs-doc-principle/SKILL.md)「demo 的数据文件」。
 
 ### 渐进式例子的子文件 = 自包含快照
 

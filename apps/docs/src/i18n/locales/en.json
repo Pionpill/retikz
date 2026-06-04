@@ -6,7 +6,6 @@
     "searchHint": "Search the docs",
     "pageCount": "{{count}} page(s)",
     "notFound": "Not found: /{{section}}/{{page}}",
-    "versionTag": "v0.3 alpha",
     "contentPlaceholder": "{{title}} — this page does not have body content yet.",
     "github": "GitHub",
     "githubRepo": "Pionpill/retikz",
@@ -73,6 +72,10 @@
     "refPathGenerator": "Path Generators",
     "refComposite": "Tier 2 Composites",
     "refComposites": "Composite"
+  },
+  "plot": {
+    "label": "Plot",
+    "introduction": "Introduction"
   },
   "blog": {
     "label": "Blog",

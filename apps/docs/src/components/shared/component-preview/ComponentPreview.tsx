@@ -6,13 +6,17 @@ import { docPathSegments, useDocLocation } from '@/layout/doc-layout/docLocation
 import type { IR } from '@retikz/core';
 import { Layout, Scope, convertReactNodeToIR } from '@retikz/react';
 
-import { ComponentRender, type ComponentRenderSource } from './ComponentRender';
+import { ComponentRender } from './ComponentRender';
+import { RawSvgFrame } from './DemoRenderer';
 import { useDemoSegments } from './demoLocationContext';
 import { irToVanillaCode } from './irToVanillaCode';
 import {
   type AlignKey,
+  type ComponentRenderSource,
   type ComponentSourceFile,
+  type RendererMode,
   type SizeKey,
+  type SourceLang,
   computeUnifiedDiff,
   formatIR,
 } from './_shared';
@@ -46,6 +50,10 @@ const vanillaOverrides: Record<string, string | undefined> = import.meta.glob<st
     eager: true,
   },
 );
+// vanilla 视图的「真渲染」：同 `<name>.vanilla.ts` 导出的 `svg` 字符串（renderPlot 等 SSR 产物）；有则切到 vanilla 视图用它真渲染
+const vanillaModules: Record<string, { svg?: unknown } | undefined> = import.meta.glob('../../../contents/**/*.vanilla.ts', {
+  eager: true,
+});
 
 const buildKey = (segments: Array<string>, name: string) => `../../../contents/${segments.join('/')}/${name}.demo.tsx`;
 const buildLangKey = (segments: Array<string>, name: string, lang: string) =>
@@ -99,7 +107,10 @@ const LAYOUT_OWN_PROPS = new Set([
   'pathGenerators',
 ]);
 
-const buildPreviewIR = (Component: FC): IR => {
+/** buildPreviewIR 产物：派生的 IR + 根 `<Layout>` 的尺寸（供 IR 视图真渲染时对齐 demo 尺寸） */
+type PreviewIR = { ir: IR; width?: number | string; height?: number | string };
+
+const buildPreviewIR = (Component: FC): PreviewIR => {
   const rootElement = resolvePreviewRootElement(Component({}));
   const props = (rootElement?.props ?? {}) as PreviewRootProps & Record<string, unknown>;
   // 复刻 <Layout> 的隐式根 scope：设了任一级联样式 prop（非 Layout 专属 prop）时把 children 包一层合成 <Scope>，
@@ -114,9 +125,20 @@ const buildPreviewIR = (Component: FC): IR => {
     }
   }
   const base = props.ir ?? convertReactNodeToIR(childNode);
-  const viewBox = rootElement?.type === Layout ? rootElement.props.viewBox : undefined;
-  return viewBox !== undefined ? { ...base, viewBox } : base;
+  const isLayout = rootElement?.type === Layout;
+  const viewBox = isLayout ? rootElement.props.viewBox : undefined;
+  const ir = viewBox !== undefined ? { ...base, viewBox } : base;
+  const width = isLayout ? (props.width as number | string | undefined) : undefined;
+  const height = isLayout ? (props.height as number | string | undefined) : undefined;
+  return { ir, width, height };
 };
+
+/** IR 是否含 Tier 2 composite（带 namespace）顶层节点——含则无法仅凭 IR 独立渲染（外部数据不在 IR 内），IR 视图复用 React 渲染 */
+const irHasComposite = (ir: IR): boolean => ir.children.some(child => 'namespace' in child);
+
+/** 由文件名后缀推语法高亮语言 */
+const langOfFilename = (filename: string): SourceLang =>
+  filename.endsWith('.json') ? 'json' : filename.endsWith('.tsx') ? 'tsx' : 'ts';
 
 /**
  * 解析 demo key
@@ -150,6 +172,13 @@ export type ComponentPreviewProps = {
    *   baseline 同样走 `<id>.<lang>.demo.tsx` 优先、回退到 `<id>.demo.tsx` 的解析；找不到时静默关闭高亮、不报错
    */
   diffFrom?: string;
+  /**
+   * 交互式 demo：demo 自身用 hooks（`useState` / `useEffect` / 异步 fetch 外部数据等）
+   * @description 默认 demo 必须是无 hooks 的纯 FC（IR / Vanilla 视图会 `Component({})` 静态执行一次求 IR）。
+   *   交互 demo 无法被静态执行，故开启后：以真元素 `<Component/>` 渲染让 hooks 生效、隐藏 svg/canvas 切换、
+   *   并跳过 IR / Vanilla 视图（异步数据无法静态求值），代码面板只保留 React 源码（+ `sourceFiles`）
+   */
+  interactive?: boolean;
 };
 
 /**
@@ -157,7 +186,7 @@ export type ComponentPreviewProps = {
  * @description 只负责 demo 文件 glob 加载 + IR 派生 + "Demo not found" 兜底；卡片 / pan&zoom / 代码面板 / 放大 dialog 全部走 `ComponentRender` 核心
  */
 export const ComponentPreview: FC<ComponentPreviewProps> = props => {
-  const { name, align = 'center', size = 'md', componentClassName, hideCode = false, sourceFiles, diffFrom } =
+  const { name, align = 'center', size = 'md', componentClassName, hideCode = false, sourceFiles, diffFrom, interactive = false } =
     props;
   const loc = useDocLocation();
   const { i18n } = useTranslation();
@@ -176,28 +205,34 @@ export const ComponentPreview: FC<ComponentPreviewProps> = props => {
   const baselineKey = segments && diffFrom ? resolveDemoKey(segments, diffFrom, lang) : null;
   const baselineRawSource = baselineKey ? demoSources[baselineKey] : undefined;
 
-  // IR 视图：同步展开 demo 的无 hooks 组件树，停在 <Layout> 后读取 children / ir；失败回落到错误文本；hideCode 时跳过整次计算
-  const irJson = useMemo(() => {
-    if (!Component || hideCode) return '';
+  // IR 视图：同步展开 demo 的无 hooks 组件树，停在 <Layout> 后读取 children / ir；一次求值供 IR 代码 + IR 真渲染共用；失败回落错误文本
+  const irState = useMemo<{ previewIr: PreviewIR | null; irJson: string }>(() => {
+    if (!Component || hideCode || interactive) return { previewIr: null, irJson: '' };
     try {
-      return formatIR(buildPreviewIR(Component));
+      const previewIr = buildPreviewIR(Component);
+      return { previewIr, irJson: formatIR(previewIr.ir) };
     } catch (err) {
-      return `// Failed to compute IR: ${err instanceof Error ? err.message : String(err)}`;
+      return { previewIr: null, irJson: `// Failed to compute IR: ${err instanceof Error ? err.message : String(err)}` };
     }
-  }, [Component, hideCode]);
+  }, [Component, hideCode, interactive]);
 
   // Vanilla 视图：同级 `<name>.vanilla.ts` 手写覆盖优先，否则从同一份 IR codegen；失败回落错误文本
   const vanillaKey = segments ? buildVanillaKey(segments, name) : null;
   const vanillaOverride = vanillaKey ? vanillaOverrides[vanillaKey] : undefined;
+  // 手写覆盖导出的 `svg` 字符串 → vanilla 视图真渲染（仅手写覆盖有；自动 codegen 无可执行产物，复用 React 渲染）
+  const vanillaModule = vanillaKey ? vanillaModules[vanillaKey] : undefined;
+  const vanillaSvg = typeof vanillaModule?.svg === 'string' ? vanillaModule.svg : undefined;
   const vanillaCode = useMemo(() => {
     if (!Component || hideCode) return '';
+    // 手写覆盖不需静态求值，interactive demo 也可有 vanilla 视图；仅自动 codegen 依赖静态 IR（interactive 无法静态展开）
     if (vanillaOverride !== undefined) return vanillaOverride.replace(/\n$/, '');
+    if (interactive || !irState.previewIr) return '';
     try {
-      return irToVanillaCode(buildPreviewIR(Component));
+      return irToVanillaCode(irState.previewIr.ir);
     } catch (err) {
       return `// Failed to generate vanilla code: ${err instanceof Error ? err.message : String(err)}`;
     }
-  }, [Component, hideCode, vanillaOverride]);
+  }, [Component, hideCode, vanillaOverride, interactive, irState]);
 
   if (!loc) return null;
   if (!segments) return null;
@@ -228,27 +263,55 @@ export const ComponentPreview: FC<ComponentPreviewProps> = props => {
         : diffFrom !== undefined && filename.startsWith(`${name}.`)
           ? `${diffFrom}.${filename.slice(name.length + 1)}`
           : undefined;
-    if (baselineFilename === undefined) return { filename, code };
+    if (baselineFilename === undefined) return { filename, code, lang: langOfFilename(filename) };
     // baseline / 本文件任一缺失时静默退化为无 diff（同主 demo diffFrom）
     const baselineRaw = localSourceFiles[buildSourceFileKey(segments, baselineFilename)];
     const diff =
       !hideCode && rawSourceFile !== undefined && baselineRaw !== undefined
         ? computeUnifiedDiff(baselineRaw.replace(/\n$/, ''), code)
         : undefined;
-    return { filename, code, diff };
+    return { filename, code, lang: langOfFilename(filename), diff };
   });
-  const files: Array<ComponentSourceFile> = [
-    {
-      filename: filenameFromKey(key),
-      code: trimmedSource,
-      diff: reactDiff,
-      isMain: true,
-    },
+  const mainFilename = filenameFromKey(key);
+  const reactFiles: Array<ComponentSourceFile> = [
+    { filename: mainFilename, code: trimmedSource, lang: langOfFilename(mainFilename), diff: reactDiff, isMain: true },
     ...extraSourceFiles,
   ];
+
+  // 统一 source 模型：每个视图 = 一组文件 + 可选「对应 runtime 渲染」。
+  // react 渲染走 ComponentRender 的 <Component/> 兜底（无 render thunk）；
+  // ir 仅 Tier 1 可独立渲染（Tier 2 外部数据不在 IR 内 → 复用 React 渲染）；vanilla 有可执行 svg 导出时真渲染。
+  const previewIr = irState.previewIr;
   const source: ComponentRenderSource | undefined = hideCode
     ? undefined
-    : { reactFiles: files, ir: irJson, vanilla: vanillaCode };
+    : {
+        react: { files: reactFiles },
+        ...(irState.irJson.length > 0
+          ? {
+              ir: {
+                files: [{ filename: `${name}.ir.json`, code: irState.irJson, lang: 'json' as const }],
+                render:
+                  previewIr !== null && !irHasComposite(previewIr.ir)
+                    ? (mode: RendererMode) => (
+                        <Layout ir={previewIr.ir} renderer={mode} width={previewIr.width} height={previewIr.height} />
+                      )
+                    : undefined,
+              },
+            }
+          : {}),
+        ...(vanillaCode.length > 0
+          ? {
+              vanilla: {
+                // vanilla 复用同一份数据 sourceFiles（data 文件只此一份，react / vanilla 共享）
+                files: [
+                  { filename: `${name}.vanilla.ts`, code: vanillaCode, lang: 'ts' as const },
+                  ...extraSourceFiles,
+                ],
+                render: vanillaSvg !== undefined ? () => <RawSvgFrame svg={vanillaSvg} /> : undefined,
+              },
+            }
+          : {}),
+      };
 
   return (
     <ComponentRender
@@ -258,6 +321,7 @@ export const ComponentPreview: FC<ComponentPreviewProps> = props => {
       align={align}
       size={size}
       componentClassName={componentClassName}
+      interactive={interactive}
     />
   );
 };

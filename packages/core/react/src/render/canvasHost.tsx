@@ -91,11 +91,17 @@ export const CanvasHost: FC<CanvasHostProps> = props => {
     const canvas = ref.current;
     if (!canvas) return;
     const ratio = devicePixelRatio();
-    // 位图按 Scene 内容边界（scene.layout）开，对齐 SVG 的 viewBox=scene.layout：位图宽高比 = 内容比，
-    // 这样 object-fit:contain 只做一次 fit（= SVG preserveAspectRatio meet），canvas 与 SVG 像素一致。
-    // 名义 width/height 仅作 CSS 显示盒（displayStyle），不参与位图分辨率，否则名义比 ≠ 内容比会二次 letterbox 致偏小。
-    canvas.width = Math.max(1, Math.round(scene.layout.width * ratio));
-    canvas.height = Math.max(1, Math.round(scene.layout.height * ratio));
+    // 位图按「名义显示尺寸」width/height 开（两者均为有限数值时），renderToCanvas 再把 Scene 内容 meet-fit 进去——
+    // 完全镜像 SVG：`<svg width height viewBox=scene.layout preserveAspectRatio=meet>`。二者 intrinsic 宽高比一致，
+    // 故 CSS `height:auto` / `maxWidth` 等响应式写法下 canvas 与 svg 显示尺寸严格一致（否则位图取内容比时，
+    // height:auto 会让 canvas 跟随内容比、与 svg 的名义比不符而偏大/偏小）。还顺带消除名义盒 >> 内容时的上采样模糊。
+    // 未给数值尺寸时回退内容边界——此时 svg 也无 width/height attr、intrinsic 取 viewBox 比，仍然对齐。
+    const hasNominalSize =
+      typeof width === 'number' && Number.isFinite(width) && typeof height === 'number' && Number.isFinite(height);
+    const bitmapWidth = hasNominalSize ? width : scene.layout.width;
+    const bitmapHeight = hasNominalSize ? height : scene.layout.height;
+    canvas.width = Math.max(1, Math.round(bitmapWidth * ratio));
+    canvas.height = Math.max(1, Math.round(bitmapHeight * ratio));
     renderToCanvas(canvas, scene, {
       devicePixelRatio: ratio,
       defaultFontFamily: canvasFontFamily(canvas),

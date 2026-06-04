@@ -1,0 +1,94 @@
+---
+title: 简介
+description: retikz 的图表层——声明式 Plot IR 描述「画什么」，数据单独喂入，由 lowerPlots 下沉成 core 图元渲染。
+---
+
+`@retikz/plot` 是建在 core 之上的图表层。你用一份 **Plot IR** 声明「这是一张什么图」——坐标系、比例尺、把哪个字段画成点还是线——数据则单独提供，最后由一个函数把两者合成可渲染的图。
+
+它刻意把一张图拆成三块，各管一件事：
+
+| 部分 | 是什么 | 职责 |
+| --- | --- | --- |
+| **Plot IR** | 配置对象（JSON 可序列化） | 决定图长什么样：图元、比例尺、坐标系、字段绑定 |
+| **数据** | 外部数据集，任意 JS | 提供具体数值；**不进 IR**，避免 IR 随数据量膨胀 |
+| **lowerPlots** | 写死的下沉函数 | 把 IR + 数据投影成 core 的点 / 线，交给现有 renderer |
+
+`@retikz/plot-react` 把这三块包成一个 `<Plot>` 组件。下面这张图把 5 个月的营收同时画成折线和散点——同一份数据、同一套坐标，叠两层 mark：
+
+<ComponentPreview name="line-scatter" sourceFiles={['line-scatter.data.ts']} />
+
+用组合 DSL 写最直观：只声明「画什么」（哪个字段画成线、哪个画成点），比例尺与坐标系由 `<Plot>` 自动推断，数据是一组裸数据行单独传入：
+
+```tsx
+import { LineMark, Plot, PointMark } from '@retikz/plot-react';
+
+const sales = [
+  { month: 0, revenue: 10 },
+  { month: 1, revenue: 14 },
+  // ...
+];
+
+<Plot data={sales} width={360} height={200}>
+  <LineMark x="month" y="revenue" order="month" />
+  <PointMark x="month" y="revenue" />
+</Plot>;
+```
+
+JSX 只是书写面：`<Plot>` 同步读取子图层，装配成一份规范化的 **Plot IR**——你也可以直接手写或由程序 / LLM 生成这份 IR，再用 `<Plot spec>` 入口渲染：
+
+```tsx
+const spec = {
+  namespace: 'plot',
+  type: 'plot',
+  data: { ref: 'sales' }, // 只引用名字，不含数据
+  scales: [
+    { type: 'linear', name: '__x' },
+    { type: 'linear', name: '__y' },
+  ],
+  coordinate: { type: 'cartesian2D', x: '__x', y: '__y' },
+  marks: [
+    { type: 'line', order: 'month', encoding: { x: { field: 'month' }, y: { field: 'revenue' } } },
+    { type: 'point', encoding: { x: { field: 'month' }, y: { field: 'revenue' } } },
+  ],
+};
+
+// 已有完整 IR 时：用 spec 入口 + 具名数据集
+<Plot spec={spec} data={{ sales }} width={360} height={200} />;
+```
+
+IR 里只写了 `data: { ref: 'sales' }`（一个名字），真正的数据在渲染时单独传入——同一份 `spec` 换一份字段相符的数据集就能复用，这正是「IR 与数据解耦」的意义：配置描述形态，数据只填内容。
+
+服务端 / 构建期可用 `@retikz/plot-vanilla` 的 `renderPlot` 出 SVG 字符串（零 DOM）：
+
+```ts
+import { renderPlot } from '@retikz/plot-vanilla';
+
+const svg = renderPlot(spec, { sales }, { width: 360, height: 200 }); // SSR：SVG 字符串
+```
+
+## 数据来自哪里都一样
+
+上面的数据是写死的，真实场景里数据通常来自别处——后端接口、公开 API、CSV。因为数据**不进 IR**、只在渲染时作为裸数据行传入，所以从外部 `fetch` 一份大数据集再作图，写法和本地数据完全一致：先把数据取回来，拿到后照样丢给 `<Plot data>`。
+
+下面这张图实时从 [Open-Meteo](https://open-meteo.com/) 拉取某地近 7 天的逐小时气温（约 168 个点），加载完成后画成折线：
+
+<ComponentPreview name="line-scatter-fetch" size="sm" interactive />
+
+```tsx
+const [data, setData] = useState(null);
+
+useEffect(() => {
+  fetch('https://api.open-meteo.com/v1/forecast?...&hourly=temperature_2m')
+    .then(res => res.json())
+    .then(json => setData(json.hourly.temperature_2m.map((temperature, hour) => ({ hour, temperature }))));
+}, []);
+
+if (!data) return <p>加载中…</p>;
+
+// 数据来自哪里对 <Plot> 透明：作图写法不变
+<Plot data={data} width={480} height={220}>
+  <LineMark x="hour" y="temperature" order="hour" />
+</Plot>;
+```
+
+<ComponentAlert title="当前阶段" description="alpha.1 已提供三包：@retikz/plot（Plot IR + lowerPlots）、@retikz/plot-react（<Plot> 组件 + 组合 DSL）、@retikz/plot-vanilla（renderPlot SSR）。alpha.1 只有 linear 比例尺 + cartesian2D 坐标系、point / line 两种 mark；轴 / 网格、bar、极坐标、交互（tooltip / 事件）等在后续版本逐步加。绘图区尺寸是渲染选项，不进 IR。" />

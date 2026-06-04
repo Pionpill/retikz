@@ -103,6 +103,7 @@ export const PanZoomToolbar: FC<PanZoomToolbarProps> = props => {
         <ToolbarIconButton label="Zoom out" disabled={transform.scale <= ZOOM_MIN} onClick={() => zoomBy(1 / ZOOM_FACTOR)}>
           <ZoomOut className="size-3.5" />
         </ToolbarIconButton>
+        {/* 小预览（xs/sm）无 d-pad，Reset 放底排；md+ 的 Reset 在上方 d-pad 中心 */}
         {isSmallPreview && (
           <ToolbarIconButton label="Reset" disabled={!isTransformed} onClick={resetTransform}>
             <RotateCcw className="size-3.5" />
@@ -115,13 +116,9 @@ export const PanZoomToolbar: FC<PanZoomToolbarProps> = props => {
         >
           <Hand className="size-3.5" />
         </ToolbarIconButton>
+        {/* 非小预览但视口 < md（d-pad 隐藏）：底排补 Reset */}
         {!isSmallPreview && (
-          <ToolbarIconButton
-            label="Reset"
-            disabled={!isTransformed}
-            onClick={resetTransform}
-            className="md:hidden"
-          >
+          <ToolbarIconButton label="Reset" disabled={!isTransformed} onClick={resetTransform} className="md:hidden">
             <RotateCcw className="size-3.5" />
           </ToolbarIconButton>
         )}

@@ -1,5 +1,5 @@
 import { Ban, BotMessageSquare, ChevronsDownUp, ChevronsUpDown, Diff, Minus, Plus, X } from 'lucide-react';
-import { type FC, useEffect, useRef, useState } from 'react';
+import { type FC, useRef, useState } from 'react';
 
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
@@ -9,24 +9,25 @@ import { useAiChatStore } from '@/store/useAiChatStore';
 import { useComponentPreviewStore } from '@/store/useComponentPreviewStore';
 
 import { HighlightedCode } from '../highlight-code';
-import { CopyButton, SourceFileMenu, ToolbarIconButton, ViewToggle } from './_parts';
+import { CopyButton, SourceViewBar, ToolbarIconButton } from './_parts';
 import {
   type AlignKey,
-  type ComponentSourceFile,
+  type ComponentRenderSource,
   type DiffMode,
   type RendererMode,
   type SizeKey,
-  type SourceView,
   type UnifiedDiff,
   alignClass,
-  availableSourceViews,
   filterDiffByMode,
   sizeClass,
 } from './_shared';
 import { ComponentDetailDialog } from './ComponentDetailDialog';
 import { DemoRenderer } from './DemoRenderer';
 import { PanZoomToolbar } from './PanZoomToolbar';
+import { useSourceViews } from './useSourceViews';
 import { usePanZoom } from './usePanZoom';
+
+export type { ComponentRenderSource } from './_shared';
 
 /**
  * 反查最近的前置 heading：从当前节点出发往左找兄弟，找不到就上一层继续
@@ -64,24 +65,6 @@ const COLLAPSED_CODE_MAX_H = '[&_pre]:max-h-[15rem] [&_pre]:overflow-y-auto';
 /** 触发「展开/收起」按钮的最小行数门槛 */
 const COLLAPSE_THRESHOLD_LINES = 10;
 
-/**
- * 已解析好的代码视图集合
- * @description react / ir 任一字段非空则该视图可见；两者都空（或 source 缺省）时整段代码面板不渲染。
- *   仅有一个视图时不出 React/IR toggle；teaser「View Code」流仅在 react 视图存在且行数超阈值时触发
- */
-export type ComponentRenderSource = {
-  react?: string;
-  reactFiles?: Array<ComponentSourceFile>;
-  ir?: string;
-  /** Vanilla builder 代码（从 IR codegen 或同级 `<name>.vanilla.ts` 手写覆盖）；非空则出 Vanilla 视图 */
-  vanilla?: string;
-  /**
-   * 相比 baseline 的 unified diff（current 与 baseline 删除行交织后的展示代码 + 每行 kind）
-   * @description 仅在 React 视图 + 展开态下喂给 HighlightedCode：替换展示代码为 unified 版本、按 kind 给行加 `+`/`-` 字符与背景；teaser 折叠态 / IR 视图 / hideCode 跳过。Copy 始终复制真实 React 源码，不带 diff 装饰
-   */
-  reactDiff?: UnifiedDiff;
-};
-
 export type ComponentRenderProps = {
   /** demo 标识（仅用于 Dialog header 显示） */
   name: string;
@@ -96,6 +79,8 @@ export type ComponentRenderProps = {
   componentClassName?: string;
   /** 是否显示右侧工具条的 Ask AI 按钮，默认 true；在 AI 面板内（如 RetikzPreview）渲染时关掉避免自指 */
   showAskAi?: boolean;
+  /** 交互式 demo（含 hooks / 异步）：真渲染 `<Component/>`，隐藏 svg/canvas 切换；IR / Vanilla 视图由调用方置空后自动消失 */
+  interactive?: boolean;
 };
 
 /**
@@ -103,31 +88,19 @@ export type ComponentRenderProps = {
  * @description 不接触 demo 文件加载、AST 解析或 IR 派生——那些由调用方（`ComponentPreview` 走 glob、`RetikzPreview` 走 source string）准备好后喂进来
  */
 export const ComponentRender: FC<ComponentRenderProps> = props => {
-  const { name, Component, source, align = 'center', size = 'md', componentClassName, showAskAi = true } = props;
-  const reactFiles =
-    source?.reactFiles !== undefined && source.reactFiles.length > 0
-      ? source.reactFiles
-      : (source?.react ?? '').length > 0
-        ? [{ filename: `${name}.demo.tsx`, code: source?.react ?? '', diff: source?.reactDiff }]
-        : [];
-  const hasReact = reactFiles.length > 0;
-  const hasIr = (source?.ir ?? '').length > 0;
-  const hasVanilla = (source?.vanilla ?? '').length > 0;
-  const hasCode = hasReact || hasIr || hasVanilla;
-  // 可用视图（按固定顺序），≥ 2 个才出 toggle；react/ir/vanilla 全可选
-  const availableViews = availableSourceViews({ react: hasReact, ir: hasIr, vanilla: hasVanilla });
-
+  const { name, Component, source, align = 'center', size = 'md', componentClassName, showAskAi = true, interactive } =
+    props;
   // 局部状态用 `boolean | undefined`：undefined 跟随全局默认；用户单卡操作过一次后本地选择胜出
   const [localIsCodeVisible, setLocalIsCodeVisible] = useState<boolean | undefined>(undefined);
-  // view 仅在双视图时由用户控制；单视图情境下 effectiveView 派生兜底，避免在 effect 里同步 setState
-  const [view, setView] = useState<SourceView>('react');
   const [sourceFileIndex, setSourceFileIndex] = useState(0);
   const [localIsExpanded, setLocalIsExpanded] = useState<boolean | undefined>(undefined);
-  // diff 模式默认 'added'（有 reactDiff 数据时）；用户选过一次后 localDiffMode 胜出。
+  // diff 模式默认 'added'（有 diff 数据时）；用户选过一次后 localDiffMode 胜出。
   // 偏好 added/removed 优先于 full：full unified（current + 删除行交织）阅读噪声大，教学场景只看新增 / 只看删除更直观
   const [localDiffMode, setLocalDiffMode] = useState<DiffMode | undefined>(undefined);
-  const [copied, setCopied] = useState(false);
-  const timerRef = useRef<number | null>(null);
+  // 视图选择 + 当前视图文件 + 复制：统一走 useSourceViews（与 Dialog 共用同一份推导，任意视图都能多文件 + diff）
+  const { views, view, setView, files, activeFileIndex, activeFile, render: activeRender, copied, handleCopy } =
+    useSourceViews(source, sourceFileIndex);
+  const hasCode = views.length > 0;
   // 卡内 drag 默认关闭：local 为 undefined 时跟随全局；单卡点过 Hand 后本地胜出
   const [localDragEnabled, setLocalDragEnabled] = useState<boolean | undefined>(undefined);
   // 卡内 svg/canvas 切换只作用于本卡：local 为 undefined 时跟随全局默认（Header 菜单设），单卡切过一次后本地胜出
@@ -159,56 +132,30 @@ export const ComponentRender: FC<ComponentRenderProps> = props => {
   // 单卡 svg/canvas 切换写本地 override，不动全局 store → 只影响当前卡
   const toggleRendererMode = () => setLocalRendererMode(rendererMode === 'svg' ? 'canvas' : 'svg');
 
-  useEffect(() => {
-    return () => {
-      if (timerRef.current !== null) window.clearTimeout(timerRef.current);
-    };
-  }, []);
+  // 当前文件的真实源码 / 语言 / diff（任意视图均可带 diff，不再限 React）
+  const activeCode = activeFile?.code ?? '';
+  const activeLang = activeFile?.lang ?? 'tsx';
+  const activeDiff = activeFile?.diff;
 
-  const activeSourceFileIndex = Math.min(sourceFileIndex, Math.max(reactFiles.length - 1, 0));
-  const activeSourceFile = reactFiles.at(activeSourceFileIndex);
-  const reactSource = activeSourceFile?.code ?? '';
-  const activeDiff = activeSourceFile?.diff;
-  const irSource = source?.ir ?? '';
-  const vanillaSource = source?.vanilla ?? '';
-
-  // 当前 view 若不在可用集合里（单视图 / 用户上次选的视图已不存在）→ 兜底到第一个可用视图
-  const effectiveView: SourceView = availableViews.includes(view) ? view : (availableViews[0] ?? 'react');
-
-  // teaser 判定基于 react 源码行数（IR 通常更长但不是用户期望的"概览"内容）
-  const reactLineCount = reactSource.split('\n').length;
-  const reactHasMoreLines = reactLineCount > PREVIEW_MAX_LINES;
-  const reactPreview = reactSource.split('\n').slice(0, PREVIEW_MAX_LINES).join('\n');
-  const usesTeaser = hasReact && reactHasMoreLines;
+  // teaser 判定基于当前文件行数（初始 view=react，展示首几行 + View Code）
+  const codeLineCount = activeCode.split('\n').length;
+  const codeHasMoreLines = codeLineCount > PREVIEW_MAX_LINES;
+  const codePreview = activeCode.split('\n').slice(0, PREVIEW_MAX_LINES).join('\n');
+  const usesTeaser = hasCode && codeHasMoreLines;
   const showFull = !usesTeaser || isCodeVisible;
 
-  // Copy 用的源码：按当前视图取真实源码，与 diff 视觉装饰解耦
-  const copyCode = effectiveView === 'ir' ? irSource : effectiveView === 'vanilla' ? vanillaSource : reactSource;
   // 默认 'added'：有 diff 数据 → 默认只看新增；用户在下拉里改过 mode 后 local 胜出
-  const hasReactDiff = activeDiff !== undefined;
-  const diffMode: DiffMode = localDiffMode ?? (hasReactDiff ? 'added' : 'off');
-  // 展示代码：React 视图 + 展开态 + 有数据 + mode != off → 按 mode 过滤 unified diff；其余情况维持原行为
+  const hasActiveDiff = activeDiff !== undefined;
+  const diffMode: DiffMode = localDiffMode ?? (hasActiveDiff ? 'added' : 'off');
+  // 展开态 + 有 diff + mode≠off → 按 mode 过滤 unified diff（任意视图）
   const displayedDiff: UnifiedDiff | null =
-    effectiveView === 'react' && showFull && activeDiff !== undefined && diffMode !== 'off'
-      ? filterDiffByMode(activeDiff, diffMode)
-      : null;
-  const fullCode =
-    effectiveView === 'ir' ? irSource : effectiveView === 'vanilla' ? vanillaSource : (displayedDiff?.code ?? reactSource);
-  const fullLang = effectiveView === 'ir' ? 'json' : effectiveView === 'vanilla' ? 'ts' : 'tsx';
-  const displayedCode = showFull ? fullCode : reactPreview;
-  const displayedLang = showFull ? fullLang : 'tsx';
+    showFull && activeDiff !== undefined && diffMode !== 'off' ? filterDiffByMode(activeDiff, diffMode) : null;
+  const displayedCode = showFull ? (displayedDiff?.code ?? activeCode) : codePreview;
+  const displayedLang = activeLang;
   const displayedLineCount = displayedCode.split('\n').length;
   const displayedLineKinds = displayedDiff?.lineKinds;
-  // 右侧工具条 diff 下拉仅在 React 视图 + 展开态 + 有数据时出
-  const showDiffPicker = hasReactDiff && effectiveView === 'react' && showFull;
-
-  // 复制内容跟随当前视图（IR 模式复制 IR JSON，React 模式复制真实源码——即便当下显示的是 unified diff）
-  const handleCopy = () => {
-    void navigator.clipboard.writeText(copyCode);
-    setCopied(true);
-    if (timerRef.current !== null) window.clearTimeout(timerRef.current);
-    timerRef.current = window.setTimeout(() => setCopied(false), 3000);
-  };
+  // 右侧工具条 diff 下拉：展开态 + 有 diff 数据时出（任意视图）
+  const showDiffPicker = hasActiveDiff && showFull;
 
   const handleHideAll = () => {
     setLocalIsCodeVisible(false);
@@ -292,7 +239,6 @@ export const ComponentRender: FC<ComponentRenderProps> = props => {
   };
 
   const cardDragCursor = dragEnabled ? (isDragging ? 'cursor-grabbing' : 'cursor-grab') : '';
-  const showViewToggle = availableViews.length >= 2;
 
   return (
     <div ref={containerRef} className="my-6 overflow-hidden rounded-xl border">
@@ -319,7 +265,11 @@ export const ComponentRender: FC<ComponentRenderProps> = props => {
           )}
           style={{ transform: transformStyle }}
         >
-          <DemoRenderer Component={Component} rendererMode={rendererMode} />
+          {activeRender ? (
+            activeRender(rendererMode)
+          ) : (
+            <DemoRenderer Component={Component} rendererMode={rendererMode} interactive={interactive} />
+          )}
         </div>
         <PanZoomToolbar
           transform={transform}
@@ -344,16 +294,14 @@ export const ComponentRender: FC<ComponentRenderProps> = props => {
             <>
               <div className="flex items-center justify-between p-1 px-2">
                 <div className="flex min-w-0 flex-1 items-center gap-1">
-                  {effectiveView === 'react' ? (
-                    <SourceFileMenu
-                      files={reactFiles}
-                      activeIndex={activeSourceFileIndex}
-                      onChange={setSourceFileIndex}
-                    />
-                  ) : null}
-                  {showViewToggle ? (
-                    <ViewToggle views={availableViews} view={effectiveView} onChange={setView} />
-                  ) : null}
+                  <SourceViewBar
+                    views={views}
+                    view={view}
+                    onViewChange={setView}
+                    files={files}
+                    activeFileIndex={activeFileIndex}
+                    onFileChange={setSourceFileIndex}
+                  />
                 </div>
                 {/* 工具条上每个按钮用 native title 而非 radix Tooltip + asChild：
                    项目 React 18.2 下 shadcn Button / DropdownMenuTrigger / TooltipTrigger 都是 FC 不 forwardRef，
@@ -469,7 +417,8 @@ export const ComponentRender: FC<ComponentRenderProps> = props => {
         align={align}
         rendererMode={rendererMode}
         toggleRendererMode={toggleRendererMode}
-        sourceFileIndex={activeSourceFileIndex}
+        interactive={interactive}
+        sourceFileIndex={activeFileIndex}
         onSourceFileIndexChange={setSourceFileIndex}
       />
     </div>

@@ -69,8 +69,8 @@ const resolveIr = (source: string): Resolved => {
   const ir: IR = parsed.data;
   // 强制传 width/height：SVG 不带 width/height attr 时 flex 容器里浏览器算 intrinsic size 不一致（Chrome 偶尔 0×0），导致看似"没渲染"
   const Component: FC = () => <Layout ir={ir} width={DEFAULT_TIKZ_WIDTH} height={DEFAULT_TIKZ_HEIGHT} />;
-  // ComponentRender 只展示 IR 视图：source.react 留空即可触发"单视图、不出 toggle"分支
-  return { ok: true, Component, renderSource: { ir: formatIR(ir) } };
+  // 只给 IR 视图（单视图、不出 toggle）；无 render thunk → 渲染走 Component（即 <Layout ir>）
+  return { ok: true, Component, renderSource: { ir: { files: [{ filename: 'scene.ir.json', code: formatIR(ir), lang: 'json' }] } } };
 };
 
 const resolveTsx = (source: string): Resolved => {
@@ -91,7 +91,14 @@ const resolveTsx = (source: string): Resolved => {
   } catch (err) {
     irJson = `// Failed to compute IR: ${err instanceof Error ? err.message : String(err)}`;
   }
-  return { ok: true, Component, renderSource: { react: source, ir: irJson } };
+  return {
+    ok: true,
+    Component,
+    renderSource: {
+      react: { files: [{ filename: 'diagram.tsx', code: source, lang: 'tsx' }] },
+      ir: { files: [{ filename: 'scene.ir.json', code: irJson, lang: 'json' }] },
+    },
+  };
 };
 
 /**
