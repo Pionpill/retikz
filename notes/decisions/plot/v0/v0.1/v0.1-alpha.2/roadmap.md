@@ -48,13 +48,13 @@
 
 | ADR | 主题 | Level | 依赖 | 状态 |
 |---|---|---|---|---|
-| [01](./01-guide-ir.md) | guide IR（Axis + grid 子属性，Guide union 可扩展，绑 coordinate scope，anchor 预留 `plot.xAxis`/`yAxis`） | red | 前置无 | Proposed |
-| [02](./02-d3-scale.md) | 采用 d3-scale 作 scale/刻度/格式化基础（scaleLinear + ticks/tickFormat，回溯 alpha.1 自写 linear） | red | 前置无 | Proposed |
-| [03](./03-plot-area-layout.md) | 绘图区布局（margin convention：整图 → 估算 label/axis 占位 → plot area；mark 改投影到 plot area；用户 margin 覆盖） | red | ADR-02 | Proposed |
-| [04](./04-guide-lowering.md) | guide lowering（Axis（含 grid 子属性）+ ticks + plot area → core `Path` / `Node`(text)，绑 anchor id） | red | ADR-01~03 | Proposed |
-| [05](./05-guide-bindings-dsl.md) | 三包 guide 露出（`<Axis>` 子组件（含 `grid` prop）、默认自动出、`bare` 开关；vanilla / docs 同步） | red | ADR-01、04 | Proposed |
+| [01](./01-guide-ir.md) | guide IR（Axis + grid 子属性，Guide union 可扩展，绑 coordinate scope，anchor 预留 `plot.xAxis`/`yAxis`） | red | 前置无 | Accepted |
+| [02](./02-d3-scale.md) | 采用 d3-scale 作 scale/刻度/格式化基础（scaleLinear + ticks/tickFormat，回溯 alpha.1 自写 linear） | red | 前置无 | Accepted |
+| [03](./03-plot-area-layout.md) | 绘图区布局（margin convention：整图 → 估算 label/axis 占位 → plot area；mark 改投影到 plot area；用户 margin 覆盖） | red | ADR-02 | Accepted |
+| [04](./04-guide-lowering.md) | guide lowering（Axis（含 grid 子属性）+ ticks + plot area → core `Path` / `Node`(text)，绑 anchor id） | red | ADR-01~03 | Accepted |
+| [05](./05-guide-bindings-dsl.md) | 三包 guide 露出（`<Axis>` 子组件（含 `grid` prop）、默认自动出、`bare` 开关；vanilla / docs 同步） | red | ADR-01、04 | Accepted |
 
-> 全部 `Proposed`，等用户 review。review ack 后按实现顺序逐条走 flow-alpha。
+> 全部 `Accepted`：5 条 ADR 已实现 + 自测（对抗 Bug Hunter）+ 文档 + Contract Auditor 审计，落在 `next-plot`。
 
 ## 贯穿原则落点
 

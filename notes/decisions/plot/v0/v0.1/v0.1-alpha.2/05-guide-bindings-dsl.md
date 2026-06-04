@@ -1,6 +1,6 @@
 # ADR-05：三包 guide 露出（`<Axis>` 子组件（含 `grid` prop）、默认自动出、`bare` 开关）
 
-- 状态：Proposed
+- 状态：Accepted
 - 决策日期：2026-06-04
 - 关联：[plot v0.1-alpha.2 待办](./roadmap.md) · [plot v0.1 roadmap 拆分策略（三包 lockstep）](../roadmap.md) · 依赖：[ADR-01 guide IR](./01-guide-ir.md) · [ADR-04 guide lowering](./04-guide-lowering.md) · 基座：[alpha.1 ADR-08 组合 DSL](../v0.1-alpha.1/08-plot-react-dsl.md) · [alpha.1 ADR-07 薄包装](../v0.1-alpha.1/07-plot-bindings.md)
 

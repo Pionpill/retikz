@@ -1,6 +1,6 @@
 # ADR-02：采用 d3-scale 作 scale / 刻度 / 格式化基础（回溯 alpha.1 自写 linear）
 
-- 状态：Proposed
+- 状态：Accepted
 - 决策日期：2026-06-04
 - 关联：[plot v0.1-alpha.2 待办](./roadmap.md) · [plot v0.1 roadmap](../roadmap.md) · [plot-design.md §3.5 scale / §3.9 guide / §13（plot 可拉 d3-scale）](../../../../../architecture/plot-design.md) · 回溯：[alpha.1 ADR-06 lowerPlots](../v0.1-alpha.1/06-plot-lowering.md) · 消费方：[ADR-03 布局](./03-plot-area-layout.md) · [ADR-04 guide lowering](./04-guide-lowering.md)
 

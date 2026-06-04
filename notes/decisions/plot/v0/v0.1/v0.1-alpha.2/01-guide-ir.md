@@ -1,6 +1,6 @@
 # ADR-01：guide IR（Axis + grid 子属性，Guide union 可扩展，绑 coordinate scope）
 
-- 状态：Proposed
+- 状态：Accepted
 - 决策日期：2026-06-04
 - 关联：[plot v0.1-alpha.2 待办](./roadmap.md) · [plot v0.1 roadmap](../roadmap.md) · [plot-design.md §3.9 guide / §3.6 coordinate scope / §7 多坐标 / §14 anchor](../../../../../architecture/plot-design.md) · 根节点：[alpha.1 ADR-01 PlotSpec](../v0.1-alpha.1/01-plot-spec-root.md) · 坐标系：[alpha.1 ADR-04 coordinate](../v0.1-alpha.1/04-plot-coordinate.md) · 消费方：[ADR-04 guide lowering](./04-guide-lowering.md)
 
@@ -183,7 +183,7 @@ GuideSchema.parse({ type: 'axis', dimension: 'y', tickCount: 5, grid: true, tick
 - `packages/plot/plot/src/ir/plot.ts`（修改：加 `guides` 槽位 + import）
 - `packages/plot/plot/src/ir/index.ts`（修改：补 guide 导出）
 - `packages/plot/plot/tests/ir/guide.schema.test.ts`（新建）
-- `packages/plot/plot/tests/ir/plot.schema.test.ts`（修改：补 guides 槽位 case）
+- `packages/plot/plot/tests/ir/plot-spec.schema.test.ts`（修改：补 guides 槽位 case）
 
 ### 测试象限
 

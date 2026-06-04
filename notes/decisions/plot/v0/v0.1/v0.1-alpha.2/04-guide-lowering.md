@@ -1,6 +1,6 @@
 # ADR-04：guide lowering（Axis（含 grid 子属性）+ ticks + plot area → core Path / Node(text)，绑 anchor id）
 
-- 状态：Proposed
+- 状态：Accepted
 - 决策日期：2026-06-04
 - 关联：[plot v0.1-alpha.2 待办](./roadmap.md) · [plot v0.1 roadmap](../roadmap.md) · [plot-design.md §8 lowering / §3.9 guide / §14 anchor](../../../../../architecture/plot-design.md) · 依赖：[ADR-01 guide IR](./01-guide-ir.md) · [ADR-02 d3-scale](./02-d3-scale.md) · [ADR-03 布局](./03-plot-area-layout.md) · 改动：[alpha.1 ADR-06 lowerPlots](../v0.1-alpha.1/06-plot-lowering.md)
 
