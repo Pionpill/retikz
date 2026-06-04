@@ -2,11 +2,11 @@
 
 - 状态：Proposed
 - 决策日期：2026-06-04
-- 关联：[plot v0.1-alpha.2 待办](./roadmap.md) · [plot v0.1 roadmap](../roadmap.md) · [plot-design.md §8 lowering / §3.9 guide / §14 anchor](../../../../../architecture/plot-design.md) · 依赖：[ADR-01 guide IR](./01-guide-ir.md) · [ADR-02 auto-tick](./02-auto-tick.md) · [ADR-03 布局](./03-plot-area-layout.md) · 改动：[alpha.1 ADR-06 lowerPlots](../v0.1-alpha.1/06-plot-lowering.md)
+- 关联：[plot v0.1-alpha.2 待办](./roadmap.md) · [plot v0.1 roadmap](../roadmap.md) · [plot-design.md §8 lowering / §3.9 guide / §14 anchor](../../../../../architecture/plot-design.md) · 依赖：[ADR-01 guide IR](./01-guide-ir.md) · [ADR-02 d3-scale](./02-d3-scale.md) · [ADR-03 布局](./03-plot-area-layout.md) · 改动：[alpha.1 ADR-06 lowerPlots](../v0.1-alpha.1/06-plot-lowering.md)
 
 ## 背景
 
-[ADR-01](./01-guide-ir.md) 定了 guide IR（声明画哪根轴/网格），[ADR-02](./02-auto-tick.md) 算 nice 刻度，[ADR-03](./03-plot-area-layout.md) 缩出 plot area + 投影器。本 ADR 把它们**拼起来**：把每个 axis / grid guide **下沉成 core 图元**——轴线 / 刻度线 / 网格线是 `Path`，刻度标签是 `Node`(text)——并编排进 plot 的根 scope，与 mark 一起渲染。这是管线第 6 段 guide 真正产出几何、第 8 段 lowering 落到 core 的合流点（plot-design §8：plot 不自渲染，只产 core `Scope/Node/Path/Step/Coordinate`）。
+[ADR-01](./01-guide-ir.md) 定了 guide IR（声明画哪根轴/网格），[ADR-02](./02-d3-scale.md) 算 nice 刻度，[ADR-03](./03-plot-area-layout.md) 缩出 plot area + 投影器。本 ADR 把它们**拼起来**：把每个 axis / grid guide **下沉成 core 图元**——轴线 / 刻度线 / 网格线是 `Path`，刻度标签是 `Node`(text)——并编排进 plot 的根 scope，与 mark 一起渲染。这是管线第 6 段 guide 真正产出几何、第 8 段 lowering 落到 core 的合流点（plot-design §8：plot 不自渲染，只产 core `Scope/Node/Path/Step/Coordinate`）。
 
 ## 决策：每个 guide → 一层 core scope（样式上提）；grid 在 mark 之下、axis 在 mark 之上；标签用 Node(text) + anchor 对齐
 
@@ -20,7 +20,7 @@
 // packages/plot/plot/src/lower/guide.ts
 import { type IRChild } from '@retikz/core';
 import { AXIS_TICK_LENGTH, AXIS_LABEL_GAP, estimateLabelWidth } from './layout'; // 复用 ADR-03 导出的常量 + 估算（不跨文件复制算法）
-import { computeTicks } from './ticks';            // ADR-02
+import { type TickSet } from './scale';            // ADR-02（d3-scale）：expand.ts 调 scaleTicks 产 TickSet 传入 ctx
 
 /** lowerGuide 上下文：plot area + 该维度投影 + 字号 */
 export type GuideContext = {
@@ -73,7 +73,7 @@ return { type: 'scope', localNamespace: true, ...(node.id ? { id: node.id } : {}
 3. **样式上提 scope**：一根轴几十个刻度 / 标签，stroke / fontSize 写一次在 scope，core IR 体积小（延续 alpha.1 原则）。
 4. **标签靠 core Node center 定位**（无需改 core）：core `Node.position` 是节点中心、无 self-anchor（已查证 `packages/core/core/src/ir/node.ts`）。x label 水平居中天然、垂直用 `fontSize` 估高偏移；y label 垂直居中天然、水平用与 [ADR-03](./03-plot-area-layout.md) 同源的半宽估算偏移。不发明新图元、不依赖 core 未有的能力。
 5. **anchor id 预留 = 仅内部埋点（评审 P1.2）**：axis 层 scope 带 `id`，但根 plot scope `localNamespace:true` 把子 id 隔离在内部 frame——**alpha.2 不承诺 `plot.xAxis`/`plot.yAxis` 外部可引用**，只埋字段位；对外导出 semantic handle 的结构留 alpha.5（与 alpha.1 anchor「埋而不解析」一致）。
-6. **空安全**：tick 集为空（退化 domain，[ADR-02](./02-auto-tick.md)）/ guide 列表为空 → 该层省略或返回 null，不产空 scope。
+6. **空安全**：tick 集为空（退化 domain，[ADR-02](./02-d3-scale.md)）/ guide 列表为空 → 该层省略或返回 null，不产空 scope。
 
 ## 待决策点
 
@@ -106,7 +106,7 @@ const scene = compileToScene({ version:1, type:'scene', children:[spec] }, { com
 ## 影响
 
 - **`packages/plot/plot/src/lower/guide.ts`**（全新）：`lowerGuide` + `GuideContext`。
-- **`packages/plot/plot/src/lower/expand.ts`**（修改）：编排 grid→mark→axis 进根 scope；按 dimension 预算 `xTicks`/`yTicks`（[ADR-02](./02-auto-tick.md)）并喂 mark 投影（[ADR-03](./03-plot-area-layout.md)）与 guide。
+- **`packages/plot/plot/src/lower/expand.ts`**（修改）：编排 grid→mark→axis 进根 scope；按 dimension 预算 `xTicks`/`yTicks`（[ADR-02](./02-d3-scale.md)）并喂 mark 投影（[ADR-03](./03-plot-area-layout.md)）与 guide。
 - **对 IR**：无（产 core IR）。
 - **对外 API**：无（`lowerGuide` 内部，不进包 barrel）。
 - **依赖 core**：`IRScope` / `IRPath` / `IRStep` / `IRNode`（text + anchor）—— 仅消费、不改 core。
@@ -152,7 +152,7 @@ const scene = compileToScene({ version:1, type:'scene', children:[spec] }, { com
 **边界**：
 
 - `axis_ticklabels_false_no_text`：`tickLabels:false` → 该轴无 label Node（仍有轴线 + 刻度线）
-- `lower_axis_single_tick`：退化 domain（单刻度，[ADR-02](./02-auto-tick.md)）→ 一根刻度，不崩
+- `lower_axis_single_tick`：退化 domain（单刻度，[ADR-02](./02-d3-scale.md)）→ 一根刻度，不崩
 - `grid_empty_ticks_skipped`：tick 空 → grid 层省略 / null（不产空 scope）
 
 **错误路径 / 退化**：
@@ -169,7 +169,7 @@ const scene = compileToScene({ version:1, type:'scene', children:[spec] }, { com
 ### 依赖现有元素
 
 - [ADR-01 guide IR](./01-guide-ir.md)（`packages/plot/plot/src/ir/guide.ts`）—— **消费**：读 `guides` 的 type/dimension/tickCount/label/id。
-- [ADR-02 `computeTicks`](./02-auto-tick.md)（`lower/ticks.ts`）—— **消费**：每维 ticks，axis 与 grid 复用。
+- [ADR-02 `scaleTicks` / `TickSet`](./02-d3-scale.md)（`lower/scale.ts`，d3-scale）—— **消费**：expand.ts 按维度 `scaleTicks(scale)` 产 `TickSet` 传入 ctx，axis 与 grid 复用；`scale(value)` 投影。
 - [ADR-03 `computePlotArea` / projector / fontSize](./03-plot-area-layout.md)（`lower/layout.ts` / `expand.ts`）—— **消费**：plot area 边界与投影器、字号。
 - alpha.1 `lowerMark` / `expand` / `createCartesianProjector`（`lower/mark.ts` / `expand.ts` / `project.ts`）—— **复用 / 修改**：编排同 scope、共享投影器。
 - `@retikz/core` 的 `IRScope` / `IRPath` / `IRStep` / `IRNode`（text + `position`=中心，**无 self-anchor**，见 B1）/ `IRChild` —— **消费**：lowering 目标，仅产不改 core。

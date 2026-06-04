@@ -9,7 +9,7 @@
 
 随之引入两块 alpha.1 没有的能力：
 
-- **auto-tick**：linear scale → nice 刻度（位置 + 标签），纯算法。
+- **scale & 刻度（d3-scale）**：采用 `d3-scale` 的 `scaleLinear`（ticks / tickFormat / nice），回溯 alpha.1 自写的 linear——plot 是 Tier 2、可依赖 d3（plot-design §13），不再自造轮子。
 - **绘图区布局（margin convention）**：`width×height` 是**整图整体**尺寸；由外向内挤——量 label（估算）→ 减 axis 区 → 剩余才是 plot area；mark 自此投影到 plot area（缩进矩形），不再是整图。
 
 不在 alpha.2：横向补 mark（bar）/ band·time·ordinal scale（alpha.3）、polar 坐标系与径向 / 角向 guide（alpha.4）、scope/anchor 接通与 datum locator（alpha.5）、legend / reference line（更后）、轴标题富排版。
@@ -23,7 +23,7 @@
 ## 实现顺序（编号 ≠ 实现顺序，依赖叶子优先）
 
 ```
-01 guide IR ─┐          02 auto-tick ──┐
+01 guide IR ─┐          02 d3-scale ──┐
              │                         │
              │   03 绘图区布局 ◄────────┘（估算 margin 需 label，来自 ticks；并改 mark 投影到 plot area）
              │            │
@@ -42,14 +42,14 @@
 
 ## 前置 setup
 
-无（三包脚手架 alpha.1 已建）。auto-tick / 布局是 `packages/plot/plot/src/lower/**` 下的新纯模块，guide IR 是 `src/ir/**` 下的新 schema 文件。
+无新包（三包脚手架 alpha.1 已建）。scale（`lower/scale.ts` 用 d3-scale 重构）/ 布局是 `packages/plot/plot/src/lower/**` 下的模块，guide IR 是 `src/ir/**` 下的新 schema 文件。plot 包新增 `d3-scale` / `d3-array` 依赖（catalog 登记，见 [ADR-02](./02-d3-scale.md)）。
 
 ## ADR 清单
 
 | ADR | 主题 | Level | 依赖 | 状态 |
 |---|---|---|---|---|
 | [01](./01-guide-ir.md) | guide IR（Axis / Grid + Guide union，绑 coordinate scope，anchor 预留 `plot.xAxis`/`yAxis`） | red | 前置无 | Proposed |
-| [02](./02-auto-tick.md) | auto-tick 算法（linear domain → nice 刻度位置 + 默认标签格式化） | red | 前置无 | Proposed |
+| [02](./02-d3-scale.md) | 采用 d3-scale 作 scale/刻度/格式化基础（scaleLinear + ticks/tickFormat，回溯 alpha.1 自写 linear） | red | 前置无 | Proposed |
 | [03](./03-plot-area-layout.md) | 绘图区布局（margin convention：整图 → 估算 label/axis 占位 → plot area；mark 改投影到 plot area；用户 margin 覆盖） | red | ADR-02 | Proposed |
 | [04](./04-guide-lowering.md) | guide lowering（Axis/Grid + ticks + plot area → core `Path` / `Node`(text)，绑 anchor id） | red | ADR-01~03 | Proposed |
 | [05](./05-guide-bindings-dsl.md) | 三包 guide 露出（`<Axis>`/`<Grid>` 子组件、默认自动出、`bare` 开关；vanilla / docs 同步） | red | ADR-01、04 | Proposed |

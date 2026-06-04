@@ -8,7 +8,7 @@
 
 alpha.1 打通了 mark（散点 / 折线），但图**无坐标轴、无网格**——读者看不出数值刻度。plot-design §3.9 把 **guide**（坐标轴 / 网格 / 刻度 / 图例 / 参考线）列为与 mark **并列的一等输出**，由 scale + 坐标系**派生**（§4.3 管线第 6 段）。alpha.2 落 guide 的前两类：**axis（坐标轴 + 刻度 + 刻度标签）与 grid（网格线）**，cartesian2D 下。
 
-本 ADR 只定 guide 的 **IR 声明形态**（画什么轴/网格、绑哪个维度），不含刻度怎么算（[ADR-02 auto-tick](./02-auto-tick.md)）、画在哪（[ADR-03 布局](./03-plot-area-layout.md)）、怎么 lower 成 core 图元（[ADR-04](./04-guide-lowering.md)）。
+本 ADR 只定 guide 的 **IR 声明形态**（画什么轴/网格、绑哪个维度），不含刻度怎么算（[ADR-02 d3-scale](./02-d3-scale.md)）、画在哪（[ADR-03 布局](./03-plot-area-layout.md)）、怎么 lower 成 core 图元（[ADR-04](./04-guide-lowering.md)）。
 
 **关键设计约束——为分面（facet）预留**：plot-design §7 / §3.6 指出分面 = 多个 **coordinate scope**，每个 scope 有自己的 local range / clip / **guide**。因此 guide 不能是「全图全局单份」的语义，必须**归属于某个坐标系**——否则将来做分面时每个子图各自的轴无从表达、被迫重构。
 
@@ -135,7 +135,7 @@ GuideSchema.parse({ type: 'grid', dimension: 'y' });
 
 ## 不在本 ADR 范围
 
-- **刻度算法（auto-tick）** → [ADR-02](./02-auto-tick.md)。
+- **刻度算法（auto-tick）** → [ADR-02](./02-d3-scale.md)。
 - **轴/网格画在哪（plot area 布局、margin）** → [ADR-03](./03-plot-area-layout.md)。
 - **guide → core IR 的 lowering** → [ADR-04](./04-guide-lowering.md)。
 - **`<Axis>`/`<Grid>` 子组件、默认自动出、`bare`** → [ADR-05](./05-guide-bindings-dsl.md)。
