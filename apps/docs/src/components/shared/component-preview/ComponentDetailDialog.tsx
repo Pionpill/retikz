@@ -108,7 +108,7 @@ export const ComponentDetailDialog: FC<ComponentDetailDialogProps> = props => {
         <header className="flex shrink-0 items-center justify-between border-b px-4 py-2">
           <DialogTitle className="font-mono text-sm font-normal text-muted-foreground">{name}</DialogTitle>
           <div className="flex items-center gap-1">
-            {!interactive && <RendererModeButton rendererMode={rendererMode} onToggle={toggleRendererMode} />}
+            <RendererModeButton rendererMode={rendererMode} onToggle={toggleRendererMode} />
             <DialogClose asChild>
               <ToolbarIconButton label="Close">
                 <X className="size-4" />

@@ -27,8 +27,6 @@ export type PanZoomToolbarProps = {
   rendererMode: RendererMode;
   /** 切换当前渲染目标 */
   toggleRendererMode: () => void;
-  /** 交互式 demo：渲染目标由 demo 自身决定，隐藏 svg/canvas 切换按钮（切了也不生效） */
-  interactive?: boolean;
   /**
    * 强制可见（覆盖 hover-only 默认）；移动端没有 hover，由父级通过 tap 切换 pinned 真值。
    * 未指定时沿用原 group-hover/focus-within 显示规则
@@ -61,7 +59,6 @@ export const PanZoomToolbar: FC<PanZoomToolbarProps> = props => {
     onDownload,
     rendererMode,
     toggleRendererMode,
-    interactive,
     pinned,
   } = props;
   const downloadLabel = rendererMode === 'canvas' ? 'Download PNG' : 'Download SVG';
@@ -131,7 +128,7 @@ export const PanZoomToolbar: FC<PanZoomToolbarProps> = props => {
         <ToolbarIconButton label="Maximize" onClick={onMaximize} className="hidden md:inline-flex">
           <Maximize2 className="size-3.5" />
         </ToolbarIconButton>
-        {!interactive && <RendererModeButton rendererMode={rendererMode} onToggle={toggleRendererMode} />}
+        <RendererModeButton rendererMode={rendererMode} onToggle={toggleRendererMode} />
       </div>
       <Separator className="w-full" />
       <ToggleGroup

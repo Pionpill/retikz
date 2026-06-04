@@ -285,7 +285,6 @@ export const ComponentRender: FC<ComponentRenderProps> = props => {
           onDownload={handleDownload}
           rendererMode={rendererMode}
           toggleRendererMode={toggleRendererMode}
-          interactive={interactive}
           pinned={toolbarPinned}
         />
       </div>

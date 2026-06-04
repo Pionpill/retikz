@@ -77,6 +77,21 @@ import { Layout } from '@retikz/react';
 
 > viewBox 注入构造出的 IR 根（`ir.viewBox`）；直接传 `ir` prop 且 IR 自带 viewBox 时，prop 优先、prop 缺省则用 IR 内置值。与 `width` / `height`（渲染尺寸）正交。
 
+## 渲染目标（SVG / Canvas）
+
+`renderer` 选择输出后端：默认 `'svg'`，设 `'canvas'` 则用同一份 Scene 画到 `<canvas>`。缺省 `renderer` prop 时，`<Layout>` 回退读取最近的 `RendererModeProvider` 注入值——优先级 **显式 `renderer` prop > context > `'svg'`**。
+
+这适合「外层想统一切换一棵无法逐个改 `renderer` 的子树」的场景，比如把一个交互式（含 hooks / 异步）子树整体在 svg / canvas 间切——你改不到它内部的 `<Layout renderer>`，但用 Provider 一包就行：
+
+```tsx
+import { Layout, RendererModeProvider } from '@retikz/react';
+
+// 子树内未写 renderer 的 <Layout> 随 Provider 切换；写了 renderer 的不受影响
+<RendererModeProvider mode="canvas">
+  <SomeInteractiveChart />
+</RendererModeProvider>;
+```
+
 ## API 参考
 
 | 属性 | 类型 | 默认值 | 描述 |
@@ -89,6 +104,7 @@ import { Layout } from '@retikz/react';
 | `className` | `string` | — | 透传到渲染根元素 |
 | `style` | `CSSProperties` | — | 透传到渲染根元素 |
 | `idPrefix` | `string` | — | 覆盖 `<defs>` 资源 id 前缀；SSR 输出和客户端 `<Layout>` 传同一值时可保持引用 id 一致 |
+| `renderer` | `'svg' \| 'canvas'` | `'svg'` | 渲染后端；缺省时回退最近 `RendererModeProvider` 的 context 值（prop > context > svg） |
 | `color` / `stroke` / `fill` / `strokeWidth` / `opacity` / `fillOpacity` / `drawOpacity` | 同 [`<Scope>`](/core/components/layout/scope) | — | 全图级联 graphic state；设值则把 children 包进隐式根 `<Scope>` |
 | `nodeDefault` / `pathDefault` / `labelDefault` / `arrowDefault` | 同 [`<Scope>`](/core/components/layout/scope) | — | 全图 every-X 默认样式（四通道）；同上挂隐式根 scope |
 
