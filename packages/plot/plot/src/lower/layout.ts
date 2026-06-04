@@ -82,6 +82,13 @@ export const computePlotArea = (
     left: input.hasYAxis ? AXIS_TICK_LENGTH + AXIS_LABEL_GAP + maxLabelWidth(input.yLabels, fontSize) : 0,
   };
   const margins: Margins = { ...auto, ...options.margin };
+  // 用户 margin 可能传入 NaN / 负值——会一路污染出坏坐标，逐边校验有限非负（与 width/height 入口校验同思路）
+  for (const side of ['top', 'right', 'bottom', 'left'] as const) {
+    const value = margins[side];
+    if (!Number.isFinite(value) || value < 0) {
+      throw new Error(`lowerPlots: margin.${side} must be a non-negative finite number, got ${value}`);
+    }
+  }
   const plotArea: Rect = {
     x: margins.left,
     y: margins.top,

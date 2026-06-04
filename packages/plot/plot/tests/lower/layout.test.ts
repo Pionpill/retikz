@@ -55,4 +55,14 @@ describe('computePlotArea (ADR-03)', () => {
     expect(() => computePlotArea(480, 300, noAxis, { margin: { left: 300, right: 300 } })).toThrow();
     expect(() => computePlotArea(480, 300, noAxis, { margin: { top: 200, bottom: 200 } })).toThrow();
   });
+
+  it('area_nan_margin_throws', () => {
+    // NaN <= 0 为 false，旧 plotArea 守卫漏过——须逐边校验有限非负
+    expect(() => computePlotArea(480, 300, noAxis, { margin: { left: Number.NaN } })).toThrow(/margin/);
+  });
+
+  it('area_negative_margin_throws', () => {
+    // 负 margin 会让 plot area 比画布还宽、图元跑到画布外
+    expect(() => computePlotArea(480, 300, noAxis, { margin: { left: -50 } })).toThrow(/margin/);
+  });
 });

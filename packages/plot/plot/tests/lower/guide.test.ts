@@ -149,4 +149,26 @@ describe('lowerPlots guide orchestration (ADR-04)', () => {
   it('duplicate_axis_dimension_rejected', () => {
     expect(() => expandOf(guidedSpec([{ type: 'axis', dimension: 'y' }, { type: 'axis', dimension: 'y' }]))).toThrow(/dimension/);
   });
+
+  it('explicit_range_axis_line_aligns_with_ticks', () => {
+    // 显式 range 时轴线须随实际 range 走（而非 margin 的 plotArea），与刻度/mark 对齐
+    const spec = PlotSpecSchema.parse({
+      namespace: 'plot',
+      type: 'plot',
+      data: { ref: 'sales' },
+      scales: [
+        { type: 'linear', name: 'xMonth', range: [100, 200] },
+        { type: 'linear', name: 'yRevenue', range: [200, 0] },
+      ],
+      coordinate: { type: 'cartesian2D', x: 'xMonth', y: 'yRevenue' },
+      marks: [{ type: 'line', order: 'month', encoding: { x: { field: 'month' }, y: { field: 'revenue' } } }],
+      guides: [{ type: 'axis', dimension: 'x' }],
+    });
+    const outer = expandOf(spec);
+    // children = [mark 层, x 轴层]；轴线起止 x 须落在显式 range [100,200] 上（domain [0,2] → x [100,200]）
+    const axisLayer = outer.children[outer.children.length - 1] as IRScope;
+    const axisLine = (axisLayer.children[0] as IRPath).children;
+    expect((axisLine[0] as { to: [number, number] }).to[0]).toBe(100);
+    expect((axisLine[1] as { to: [number, number] }).to[0]).toBe(200);
+  });
 });

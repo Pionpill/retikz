@@ -2,7 +2,7 @@ import { type CompositeDefinition, type IRChild, type IRScope, defineComposite }
 import { type ExternalDatasets, type Guide, type PlotSpec, PlotSpecSchema } from '../ir';
 import { channelValue, isFiniteNumber } from './field';
 import { type GuideContext, lowerGuide } from './guide';
-import { DEFAULT_FONT_SIZE, type Margins, computePlotArea } from './layout';
+import { DEFAULT_FONT_SIZE, type Margins, type Rect, computePlotArea } from './layout';
 import { lowerMark } from './mark';
 import { createCartesianProjector } from './project';
 import { type TickSet, resolveLinearScale, scaleTicks } from './scale';
@@ -107,6 +107,17 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
   if (!yScaleDef.range) yScale.range([plotArea.y + plotArea.height, plotArea.y]);
   const project = createCartesianProjector(xScale, yScale);
 
+  // guide 的轴线/网格框取 scale 的实际 range（而非 margin 算的 plotArea）：无显式 range 时两者相同，
+  // 有显式 range 时轴线/网格随实际绘制区走，与刻度/mark 严格对齐（不因显式 range 而错位）
+  const [xRangeStart, xRangeEnd] = xScale.range();
+  const [yRangeStart, yRangeEnd] = yScale.range();
+  const guideFrame: Rect = {
+    x: Math.min(xRangeStart, xRangeEnd),
+    y: Math.min(yRangeStart, yRangeEnd),
+    width: Math.abs(xRangeEnd - xRangeStart),
+    height: Math.abs(yRangeEnd - yRangeStart),
+  };
+
   // 每个 mark 下沉成一个图层 Scope（样式上提到 nodeDefault/pathDefault）；空图层（无可绘制点）丢弃
   const markLayers: Array<IRChild> = node.marks
     .map(mark => lowerMark(mark, rows, project))
@@ -114,7 +125,7 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
 
   // guide 下沉：每个 axis → 网格层（垫底）+ 轴层（压顶），刻度与 mark 共用同一投影器（严格对齐）
   const guideContext: GuideContext = {
-    plotArea,
+    plotArea: guideFrame,
     projectX: xScale,
     projectY: yScale,
     xTicks: xTicks ?? EMPTY_TICKS,
