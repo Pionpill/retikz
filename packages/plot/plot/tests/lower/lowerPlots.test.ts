@@ -129,6 +129,17 @@ describe('lowerPlots (ADR-06)', () => {
     expect(layer.children).toHaveLength(2); // 非有限 x 的那行被跳过
   });
 
+  it('non_finite_size_throws', () => {
+    // 非有限的绘图区尺寸会一路污染出 cx="NaN" 坏坐标——入口抛清晰错误而非静默出坏图
+    expect(() => expandOf(lineSpec, { sales: SALES }, { width: Number.NaN, height: 300 })).toThrow(/width/);
+    expect(() => expandOf(lineSpec, { sales: SALES }, { width: 480, height: Number.POSITIVE_INFINITY })).toThrow(/height/);
+  });
+
+  it('non_positive_size_throws', () => {
+    expect(() => expandOf(lineSpec, { sales: SALES }, { width: 0, height: 300 })).toThrow(/width/);
+    expect(() => expandOf(lineSpec, { sales: SALES }, { width: 480, height: -10 })).toThrow(/height/);
+  });
+
   // 交互
   it('explicit_domain_range_respected', () => {
     const spec = PlotSpecSchema.parse({

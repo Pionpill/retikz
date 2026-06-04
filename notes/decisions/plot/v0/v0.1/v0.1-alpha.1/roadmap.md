@@ -57,7 +57,7 @@
 
 > alpha.1 已实现并提交：setup（`@retikz/plot` + `@retikz/plot-react` + `@retikz/plot-vanilla` 脚手架）+ 01-08；plot 58 + plot-react 13 + plot-vanilla 5 test 全绿。文档 introduction 页已用 `<Plot>` 组合 DSL 写可读 demo（不再用 `<Layout ir composites>`）。待决策点均按各 ADR「倾向」锁定实现。changelog 推迟到 plot 首发 publish 时按 01-08 整体补（plot 独立版本线，走 package-publish）。
 > **ADR-07/08（框架绑定）**：原计划 v0.3，现按「三包 lockstep」提前到 alpha.1（见 [plot v0.1 roadmap 拆分策略](../roadmap.md)）；交互能力仍留 v0.3。
-> **alpha.1 待办（adversarial 留痕）**：Bug Hunter W1——非 finite 的绘图区 `width`/`height` 会一路流进投影器产出 `cx="NaN"` 坏 SVG 且无报错。单一真源修法在 `lowerPlots`（width/height 的唯一消费点），超出 ADR-07/08 文件 scope，留作后续小修（alpha.2 或独立 bugfix）。
+> **alpha.1 adversarial 留痕（已处理）**：Bug Hunter W1——非 finite / 非正数的绘图区 `width`/`height` 会一路流进投影器产出 `cx="NaN"` 坏 SVG 且无报错。已在 `lowerPlots`（width/height 的单一消费点）入口加有限性 + 正数校验，非法尺寸抛清晰错误（对齐 §7 AI 可自我修正）；配 `non_finite_size_throws` / `non_positive_size_throws` 测试。
 
 > 原单条 ADR-01「Plot IR 骨架」按数据结构拆为 01-05（[拆分背景见各 ADR 的「背景」段]）；原 ADR-02 lowering 顺延为 ADR-06。
 > ADR-06 在 ADR-01~05 Accepted 后起草并分配文件名（`06-<slug>.md`）。

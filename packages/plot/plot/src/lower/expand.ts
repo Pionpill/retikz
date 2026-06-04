@@ -24,6 +24,13 @@ export type LowerPlotsOptions = {
 const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPlotsOptions): IRChild => {
   const width = options.width ?? DEFAULT_WIDTH;
   const height = options.height ?? DEFAULT_HEIGHT;
+  // 绘图区尺寸是 scale range / 投影的单一来源；非有限或非正数会一路污染出 cx="NaN" 等坏坐标——入口抛清晰错误
+  if (!Number.isFinite(width) || width <= 0) {
+    throw new Error(`lowerPlots: width must be a positive finite number, got ${width}`);
+  }
+  if (!Number.isFinite(height) || height <= 0) {
+    throw new Error(`lowerPlots: height must be a positive finite number, got ${height}`);
+  }
 
   if (!(node.data.ref in datasets)) {
     throw new Error(`lowerPlots: dataset "${node.data.ref}" not found in provided datasets`);
