@@ -12,6 +12,7 @@ import {
 } from '@retikz/core';
 import { buildSvgDocument } from '@retikz/render/svg';
 import { buildIR, pickScopeStyle, wrapRootScope } from './builder';
+import { useRendererMode } from './rendererContext';
 import type { ScopeStyleProps } from './_fields';
 import { browserMeasurer } from '../render/browser-measurer';
 import { CanvasHost } from '../render/canvasHost';
@@ -114,8 +115,11 @@ export type LayoutProps = ScopeStyleProps & {
  *   `@retikz/render/svg`，react 只做 `SvgNode→ReactElement` 薄映射 + `useId` 绑定。
  */
 export const Layout: FC<LayoutProps> = props => {
-  const { ir: irFromProp, children, width, height, viewBox, className, style, renderer = 'svg', idPrefix, nodeDistance, shapes, arrows, patterns, pathGenerators, composites } = props;
+  const { ir: irFromProp, children, width, height, viewBox, className, style, renderer: rendererProp, idPrefix, nodeDistance, shapes, arrows, patterns, pathGenerators, composites } = props;
   const { color, stroke, fill, strokeWidth, opacity, fillOpacity, drawOpacity, nodeDefault, pathDefault, labelDefault, arrowDefault } = props;
+  // 渲染目标：显式 prop > 祖先 RendererModeProvider 注入的 context > 默认 svg（hook 必须无条件调用）
+  const contextRenderer = useRendererMode();
+  const renderer = rendererProp ?? contextRenderer ?? 'svg';
   const scopeStyle: ScopeStyleProps = { color, stroke, fill, strokeWidth, opacity, fillOpacity, drawOpacity, nodeDefault, pathDefault, labelDefault, arrowDefault };
   const hasScopeStyle = Object.keys(pickScopeStyle(scopeStyle)).length > 0;
 

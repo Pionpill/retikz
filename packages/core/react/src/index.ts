@@ -7,7 +7,8 @@
  * 渲染管道：buildIR → compileToScene → renderPrim → SVG
  */
 
-export { Layout, Node, Path, Step, Text, Coordinate, Scope } from './kernel';
+export { Layout, Node, Path, Step, Text, Coordinate, Scope, RendererModeProvider, useRendererMode } from './kernel';
+export type { RendererMode } from './kernel';
 export type {
   LayoutProps,
   NodeProps,

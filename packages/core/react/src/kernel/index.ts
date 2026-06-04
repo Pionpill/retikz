@@ -5,3 +5,5 @@ export * from './Step';
 export * from './Text';
 export * from './Coordinate';
 export * from './Scope';
+export * from './rendererContext';
+export * from './RendererModeProvider';
