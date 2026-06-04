@@ -1,10 +1,25 @@
-import { type CompositeDefinition, type IRChild, defineComposite } from '@retikz/core';
-import { type ExternalDatasets, type PlotSpec, PlotSpecSchema } from '../ir';
+import { type CompositeDefinition, type IRChild, type IRScope, defineComposite } from '@retikz/core';
+import { type ExternalDatasets, type Guide, type PlotSpec, PlotSpecSchema } from '../ir';
 import { channelValue, isFiniteNumber } from './field';
-import { type Margins, computePlotArea } from './layout';
+import { type GuideContext, lowerGuide } from './guide';
+import { DEFAULT_FONT_SIZE, type Margins, computePlotArea } from './layout';
 import { lowerMark } from './mark';
 import { createCartesianProjector } from './project';
 import { type TickSet, resolveLinearScale, scaleTicks } from './scale';
+
+/** 空刻度集（某维度无 axis 时给 GuideContext 的占位；实际不会被该维度的 guide 触达） */
+const EMPTY_TICKS: TickSet = { values: [], labels: [] };
+
+/** 一根维度只能一根轴：重复同 dimension 的 axis → 刻度数不确定，抛清晰错误 */
+const assertUniqueAxisDimension = (guides: Array<Guide>): void => {
+  const seen = new Set<string>();
+  for (const guide of guides) {
+    if (seen.has(guide.dimension)) {
+      throw new Error(`lowerPlots: duplicate axis for dimension "${guide.dimension}"; one axis per dimension`);
+    }
+    seen.add(guide.dimension);
+  }
+};
 
 /** 默认整图尺寸（user units）；尺寸是渲染选项、不进 IR */
 const DEFAULT_WIDTH = 480;
@@ -72,17 +87,19 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
 
   // 哪些维度有坐标轴（决定 margin / 是否算 ticks）；alpha.2 guide 仅 axis 类型，按 dimension 取
   const guides = node.guides ?? [];
+  assertUniqueAxisDimension(guides);
   const xAxis = guides.find(guide => guide.dimension === 'x');
   const yAxis = guides.find(guide => guide.dimension === 'y');
   const xTicks: TickSet | undefined = xAxis ? scaleTicks(xScale, xAxis.tickCount) : undefined;
   const yTicks: TickSet | undefined = yAxis ? scaleTicks(yScale, yAxis.tickCount) : undefined;
 
   // 由整图尺寸 + axis 占位缩出 plot area（无 axis → margin 全 0 → plot area = 整图，向后兼容）
+  const fontSize = options.fontSize ?? DEFAULT_FONT_SIZE;
   const { plotArea } = computePlotArea(
     width,
     height,
     { hasXAxis: !!xAxis, hasYAxis: !!yAxis, xLabels: xTicks?.labels ?? [], yLabels: yTicks?.labels ?? [] },
-    { fontSize: options.fontSize, margin: options.margin },
+    { fontSize, margin: options.margin },
   );
 
   // range 收敛到 plot area（y 屏幕向下，故倒置）；显式 range 的 scale 不覆盖——尊重用户手设
@@ -91,9 +108,25 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
   const project = createCartesianProjector(xScale, yScale);
 
   // 每个 mark 下沉成一个图层 Scope（样式上提到 nodeDefault/pathDefault）；空图层（无可绘制点）丢弃
-  const children: Array<IRChild> = node.marks
+  const markLayers: Array<IRChild> = node.marks
     .map(mark => lowerMark(mark, rows, project))
     .filter((layer): layer is IRChild => layer !== null);
+
+  // guide 下沉：每个 axis → 网格层（垫底）+ 轴层（压顶），刻度与 mark 共用同一投影器（严格对齐）
+  const guideContext: GuideContext = {
+    plotArea,
+    projectX: xScale,
+    projectY: yScale,
+    xTicks: xTicks ?? EMPTY_TICKS,
+    yTicks: yTicks ?? EMPTY_TICKS,
+    fontSize,
+  };
+  const lowered = guides.map(guide => lowerGuide(guide, guideContext));
+  const gridLayers = lowered.map(layer => layer.gridLayer).filter((layer): layer is IRScope => layer !== null);
+  const axisLayers = lowered.map(layer => layer.axisLayer).filter((layer): layer is IRScope => layer !== null);
+
+  // z-order：所有网格层 → marks → 所有轴层（网格垫底、坐标轴压顶不被数据盖）
+  const children: Array<IRChild> = [...gridLayers, ...markLayers, ...axisLayers];
 
   return node.id
     ? { type: 'scope', id: node.id, localNamespace: true, children }
