@@ -99,6 +99,7 @@ guides: z
 - **轴标题（title）**：alpha.2 **不含**（schema 不加 `title`）——标题要额外占 margin + 富排版，聚焦先做轴线/刻度/标签/网格。留后续（非破坏加 `title?`）。
 - **`tickCount` 归 axis 还是 scale**：放 **AxisGuide**（更像「这根轴想要几个刻度」的展示配置），而非污染 alpha.1 的 `LinearScale`。grid 与同 `dimension` 的 axis 共享 ticks（lowering 按 dimension 统一算一次，[ADR-04](./04-guide-lowering.md)）。
 - **grid 是否需要独立 tickCount**：不需要——grid 复用同维度 axis 的刻度位置；无对应 axis 时按默认 tickCount 算（[ADR-04](./04-guide-lowering.md)）。**同 (type, dimension) guide 唯一**——重复（如两个 `axis y` 且 tickCount 不同）由 lowering **拒绝**（[ADR-04](./04-guide-lowering.md)，评审 P2.5），免得 grid 复用哪个 axis 的 ticks 不确定。
+- **grid 独立 guide vs 收编为 axis 成分（已评估、维持现状）**：考虑过把 grid 做成 `AxisGuide` 的 `line?`/`grid?` 开关（Vega `axis.grid` 风格，与同维 axis 共享一套 ticks、彻底消除 grid↔axis 刻度的隐式关联与重复歧义）。**决定维持现方案**（grid 是独立 `GuideSchema` union 成员）：与 mark 对称、`guide` union 对 legend / 参考线的扩展统一、grammar 派（Observable Plot）的「grid 是独立视觉层」纯粹性。**已知代价**：grid 复用同维 axis 的 ticks 属隐式关联，靠「同 (type,dimension) 拒绝重复」维持。
 
 ## DSL 表面
 
