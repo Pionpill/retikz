@@ -1,20 +1,25 @@
 import { type CompositeDefinition, type IRChild, defineComposite } from '@retikz/core';
 import { type ExternalDatasets, type PlotSpec, PlotSpecSchema } from '../ir';
 import { channelValue, isFiniteNumber } from './field';
+import { type Margins, computePlotArea } from './layout';
 import { lowerMark } from './mark';
 import { createCartesianProjector } from './project';
-import { resolveLinearScale } from './scale';
+import { type TickSet, resolveLinearScale, scaleTicks } from './scale';
 
-/** 默认绘图区尺寸（user units）；尺寸是渲染选项、不进 IR */
+/** 默认整图尺寸（user units）；尺寸是渲染选项、不进 IR */
 const DEFAULT_WIDTH = 480;
 const DEFAULT_HEIGHT = 300;
 
-/** lowerPlots 运行时选项：绘图区尺寸（不进 IR） */
+/** lowerPlots 运行时选项：整图尺寸 + label 字号 + margin（均不进 IR） */
 export type LowerPlotsOptions = {
-  /** 绘图区宽（user units），默认 480 */
+  /** 整图宽（user units），默认 480 */
   width?: number;
-  /** 绘图区高（user units），默认 300 */
+  /** 整图高（user units），默认 300 */
   height?: number;
+  /** label 字号（估算占位 + 实绘 label 共用），默认 DEFAULT_FONT_SIZE */
+  fontSize?: number;
+  /** 逐边覆盖自动估算的 margin */
+  margin?: Partial<Margins>;
 };
 
 /**
@@ -61,8 +66,28 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
     return out;
   };
 
+  // 先按 domain 建 scale（range 暂用整图，后续按 plot area 改）；ticks 只依赖 domain + count，与 range 无关
   const xScale = resolveLinearScale(xScaleDef, axisValues('x'), [0, width]);
   const yScale = resolveLinearScale(yScaleDef, axisValues('y'), [height, 0]);
+
+  // 哪些维度有坐标轴（决定 margin / 是否算 ticks）；alpha.2 guide 仅 axis 类型，按 dimension 取
+  const guides = node.guides ?? [];
+  const xAxis = guides.find(guide => guide.dimension === 'x');
+  const yAxis = guides.find(guide => guide.dimension === 'y');
+  const xTicks: TickSet | undefined = xAxis ? scaleTicks(xScale, xAxis.tickCount) : undefined;
+  const yTicks: TickSet | undefined = yAxis ? scaleTicks(yScale, yAxis.tickCount) : undefined;
+
+  // 由整图尺寸 + axis 占位缩出 plot area（无 axis → margin 全 0 → plot area = 整图，向后兼容）
+  const { plotArea } = computePlotArea(
+    width,
+    height,
+    { hasXAxis: !!xAxis, hasYAxis: !!yAxis, xLabels: xTicks?.labels ?? [], yLabels: yTicks?.labels ?? [] },
+    { fontSize: options.fontSize, margin: options.margin },
+  );
+
+  // range 收敛到 plot area（y 屏幕向下，故倒置）；显式 range 的 scale 不覆盖——尊重用户手设
+  if (!xScaleDef.range) xScale.range([plotArea.x, plotArea.x + plotArea.width]);
+  if (!yScaleDef.range) yScale.range([plotArea.y + plotArea.height, plotArea.y]);
   const project = createCartesianProjector(xScale, yScale);
 
   // 每个 mark 下沉成一个图层 Scope（样式上提到 nodeDefault/pathDefault）；空图层（无可绘制点）丢弃

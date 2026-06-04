@@ -169,4 +169,59 @@ describe('lowerPlots (ADR-06)', () => {
     // 首点应是 month 最小 (=0) -> x 0
     expect(path.children[0]).toEqual({ type: 'step', kind: 'move', to: [0, 240] });
   });
+
+  // ADR-03：绘图区布局（margin convention）
+  const guidedLineSpec: PlotSpec = PlotSpecSchema.parse({
+    namespace: 'plot',
+    type: 'plot',
+    data: { ref: 'sales' },
+    scales: [
+      { type: 'linear', name: 'xMonth' },
+      { type: 'linear', name: 'yRevenue' },
+    ],
+    coordinate: { type: 'cartesian2D', x: 'xMonth', y: 'yRevenue' },
+    marks: [{ type: 'line', order: 'month', encoding: { x: { field: 'month' }, y: { field: 'revenue' } } }],
+    guides: [
+      { type: 'axis', dimension: 'x' },
+      { type: 'axis', dimension: 'y' },
+    ],
+  });
+
+  it('legacy_no_guides_projection_unchanged', () => {
+    // 守 alpha.1：无 guides → plot area = 整图 → 投影坐标逐字不变
+    const path = (firstLayer(lineSpec, { sales: SALES }, opts).children[0] as IRPath).children;
+    expect(path).toEqual([
+      { type: 'step', kind: 'move', to: [0, 240] },
+      { type: 'step', kind: 'line', to: [240, 0] },
+      { type: 'step', kind: 'line', to: [480, 300] },
+    ]);
+  });
+
+  it('mark_projects_into_plot_area', () => {
+    // 有 x+y 轴 → mark 投影到缩进的 plot area：首点 x>0（左移过 left margin）、末点 x<480（右留白）
+    const path = (firstLayer(guidedLineSpec, { sales: SALES }, opts).children[0] as IRPath).children;
+    const firstX = (path[0] as { to: [number, number] }).to[0];
+    const lastX = (path[path.length - 1] as { to: [number, number] }).to[0];
+    expect(firstX).toBeGreaterThan(0);
+    expect(lastX).toBeLessThan(480);
+    expect(firstX).toBeLessThan(lastX);
+  });
+
+  it('explicit_range_not_overridden_by_plot_area', () => {
+    // 显式 range 的 scale 即便有 axis 也不被 plot area 覆盖（尊重用户手设）
+    const spec = PlotSpecSchema.parse({
+      namespace: 'plot',
+      type: 'plot',
+      data: { ref: 'sales' },
+      scales: [
+        { type: 'linear', name: 'xMonth', domain: [0, 10], range: [0, 100] },
+        { type: 'linear', name: 'yRevenue', domain: [0, 100], range: [100, 0] },
+      ],
+      coordinate: { type: 'cartesian2D', x: 'xMonth', y: 'yRevenue' },
+      marks: [{ type: 'point', encoding: { x: { field: 'month' }, y: { field: 'revenue' } } }],
+      guides: [{ type: 'axis', dimension: 'x' }, { type: 'axis', dimension: 'y' }],
+    });
+    const layer = firstLayer(spec, { sales: [{ month: 5, revenue: 50 }] }, opts);
+    expect((layer.children[0] as IRNode).position).toEqual([50, 50]);
+  });
 });
