@@ -13,15 +13,18 @@ export type PlotSpecProps = PlotCommonProps & {
   /** 外部数据集表（data.ref 按名查）；数据不进 IR，编译期经 lowerPlots 注入 */
   data: ExternalDatasets;
   children?: never;
+  bare?: never;
 };
 
-/** 组合 DSL 入口：给裸数据行 + <LineMark>/<PointMark> 子图层 */
+/** 组合 DSL 入口：给裸数据行 + <LineMark>/<PointMark>/<Axis> 子组件 */
 export type PlotDslProps = PlotCommonProps & {
   spec?: never;
   /** 裸数据行数组；内部包成单数据集注入，不进 IR */
   data: Array<ExternalRow>;
-  /** mark 子图层（<LineMark> / <PointMark>） */
+  /** mark / guide 子组件（<LineMark> / <PointMark> / <Axis>） */
   children: ReactNode;
+  /** 总开关：什么都不出（无轴无网格、plot area = 整图），只绘图 = alpha.1 行为；忽略任何 <Axis> */
+  bare?: boolean;
 };
 
 /** <Plot> props：spec 入口与组合 DSL 入口二选一（按 spec/children 分流） */
@@ -36,7 +39,7 @@ const DSL_DATA_REF = '__plot';
  *   两路都把 spec 包成 scene、经 lowerPlots 注入数据后交 <Layout>；data 不进 IR
  */
 export const Plot: FC<PlotProps> = props => {
-  const { width, height, className, style, renderer } = props;
+  const { width, height, className, style, renderer, fontSize, margin } = props;
 
   let spec: PlotSpec;
   let datasets: ExternalDatasets;
@@ -44,7 +47,7 @@ export const Plot: FC<PlotProps> = props => {
     spec = props.spec;
     datasets = props.data;
   } else {
-    spec = buildPlotSpec(props.children, DSL_DATA_REF);
+    spec = buildPlotSpec(props.children, DSL_DATA_REF, { bare: props.bare });
     datasets = { [DSL_DATA_REF]: props.data };
   }
   // 入口校验：非法 spec（缺判别字段等）抛清晰 ZodError，而非落到 core 内部崩
@@ -53,7 +56,7 @@ export const Plot: FC<PlotProps> = props => {
   return (
     <Layout
       ir={{ version: 1, type: 'scene', children: [validated] }}
-      composites={lowerPlots(datasets, { width, height })}
+      composites={lowerPlots(datasets, { width, height, fontSize, margin })}
       width={width}
       height={height}
       className={className}

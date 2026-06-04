@@ -40,6 +40,7 @@ describe('<Plot data>{marks} 组合 DSL（ADR-08）', () => {
         <PointMark x="month" y="revenue" />
       </Plot>,
     );
+    // 等价 spec 须带 DSL 默认 guides（x 轴 + y 轴带网格），否则轴/网格几何对不上
     const equivalentSpec: PlotSpec = {
       namespace: 'plot',
       type: 'plot',
@@ -53,8 +54,51 @@ describe('<Plot data>{marks} 组合 DSL（ADR-08）', () => {
         { type: 'line', order: 'month', encoding: { x: { field: 'month' }, y: { field: 'revenue' } } },
         { type: 'point', encoding: { x: { field: 'month' }, y: { field: 'revenue' } } },
       ],
+      guides: [
+        { type: 'axis', dimension: 'x' },
+        { type: 'axis', dimension: 'y', grid: true },
+      ],
     };
     const viaSpec = renderToStaticMarkup(<Plot spec={equivalentSpec} data={{ __plot: rows }} width={480} height={300} />);
     expect(geometry(viaDsl)).toEqual(geometry(viaSpec));
+  });
+
+  // ADR-05：默认出轴 / bare
+  it('dsl_default_renders_axis：默认 <Plot> 渲出轴线 + 刻度文字', () => {
+    const svg = renderToStaticMarkup(
+      <Plot data={rows} width={480} height={300}>
+        <LineMark x="month" y="revenue" order="month" />
+      </Plot>,
+    );
+    expect(svg).toContain('<path');
+    // 刻度标签文字（如 revenue 域内的数字）渲为 <text>
+    expect(svg).toContain('<text');
+  });
+
+  it('dsl_bare_equals_alpha1_geometry：bare 几何等价于无 guides 的 spec 入口（plot area = 整图）', () => {
+    const viaBare = renderToStaticMarkup(
+      <Plot data={rows} width={480} height={300} bare>
+        <LineMark x="month" y="revenue" order="month" />
+        <PointMark x="month" y="revenue" />
+      </Plot>,
+    );
+    const bareSpec: PlotSpec = {
+      namespace: 'plot',
+      type: 'plot',
+      data: { ref: '__plot' },
+      scales: [
+        { type: 'linear', name: '__x' },
+        { type: 'linear', name: '__y' },
+      ],
+      coordinate: { type: 'cartesian2D', x: '__x', y: '__y' },
+      marks: [
+        { type: 'line', order: 'month', encoding: { x: { field: 'month' }, y: { field: 'revenue' } } },
+        { type: 'point', encoding: { x: { field: 'month' }, y: { field: 'revenue' } } },
+      ],
+    };
+    const viaSpec = renderToStaticMarkup(<Plot spec={bareSpec} data={{ __plot: rows }} width={480} height={300} />);
+    expect(geometry(viaBare)).toEqual(geometry(viaSpec));
+    // bare 不出轴文字
+    expect(viaBare).not.toContain('<text');
   });
 });
