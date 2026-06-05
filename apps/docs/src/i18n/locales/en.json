@@ -319,6 +319,9 @@
   },
   "changelog": {
     "filterPackages": "Filter packages",
+    "groupCore": "Core",
+    "groupPlot": "Plot",
+    "groupOther": "Other",
     "inDevelopment": "In development",
     "prereleaseCount": "Expand {{count}} pre-release details",
     "collapse": "Collapse pre-release details",

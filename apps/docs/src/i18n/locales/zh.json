@@ -319,6 +319,9 @@
   },
   "changelog": {
     "filterPackages": "筛选包",
+    "groupCore": "核心",
+    "groupPlot": "绘图",
+    "groupOther": "其他",
     "inDevelopment": "开发中",
     "prereleaseCount": "展开 {{count}} 个预发布明细",
     "collapse": "收起预发布明细",

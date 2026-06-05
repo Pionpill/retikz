@@ -498,6 +498,135 @@ export const changelog: Array<Release> = [
   },
 
   {
+    minor: 'plot-v0.1',
+    stableDate: null,
+    packages: [
+      {
+        pkg: '@retikz/plot',
+        version: 'v0.1',
+        description: {
+          zh: 'Tier 2 图表层的 IR 与下沉核心：把一张图声明成 JSON 可序列化的 Plot IR（grammar of graphics），经 lowerPlots 在 compile 期下沉成 core 图元；数据与 IR 解耦，core 不认识任何 chart 语义。',
+          en: 'The IR and lowering core of the Tier 2 charting layer: a chart is a JSON-serializable Plot IR that lowerPlots lowers into core primitives at compile time; data stays out of the IR.',
+        },
+        highlights: [
+          {
+            label: { zh: 'Plot IR + lowerPlots', en: 'Plot IR + lowerPlots' },
+            content: {
+              zh: '一份 `PlotSpec`（坐标系 / 比例尺 / mark / 字段绑定）描述「画什么」，`lowerPlots`（core `lowerComposites` 钩子的实现）把它展开成 core 的 node / path，交给现有 svg / canvas / vanilla renderer。',
+              en: 'A single `PlotSpec` (coordinate system / scales / marks / field bindings) describes what to draw, and `lowerPlots` (the implementation of core’s `lowerComposites` hook) expands it into core `node` / `path` for the existing svg / canvas / vanilla renderers.',
+            },
+          },
+          {
+            label: { zh: '数据与 IR 解耦', en: 'Data decoupled from IR' },
+            content: {
+              zh: 'IR 里只写 `data: { ref }`（一个名字），真实数据集渲染时单独注入、不进 IR——同一份 spec 换字段相符的数据即可复用，IR 不随数据量膨胀。',
+              en: 'The IR only carries `data: { ref }` (a name); the actual dataset is injected at render time and never enters the IR — the same spec is reusable with any matching dataset, and the IR never bloats with data volume.',
+            },
+          },
+        ],
+        subVersions: [
+          {
+            version: 'alpha.1',
+            date: '2026-06-05',
+            summary: {
+              zh: '首发：最薄纵向闭环——linear 比例尺 + cartesian2D 坐标系 + point / line 两种 mark，经 lowerPlots 下沉成 core 图元；IR 预留 anchor / scope-aware 字段。',
+              en: 'First release: the thinnest end-to-end slice — linear scale + cartesian2D coordinate + point / line marks, lowered into core primitives by lowerPlots; the IR reserves anchor / scope-aware fields.',
+            },
+            items: [
+              {
+                label: { zh: 'Plot IR 骨架', en: 'Plot IR skeleton' },
+                content: {
+                  zh: '`PlotSpec` 根节点 + data / scale / coordinate / encoding / mark 各 schema，全字段 `.describe()`、100% JSON 可序列化;判别字段走 `PlotMark` / `PlotScale` / `PlotCoordinate` 等 `as const` 枚举。',
+                  en: 'The `PlotSpec` root plus data / scale / coordinate / encoding / mark schemas, every field `.describe()`d and 100% JSON-serializable; discriminants use `as const` enums like `PlotMark` / `PlotScale` / `PlotCoordinate`.',
+                },
+              },
+              {
+                label: { zh: 'lowerPlots 下沉', en: 'lowerPlots lowering' },
+                content: {
+                  zh: '把 Plot IR + 注入数据投影成 core 的点 / 线，作为 `lowerComposites` 钩子接入 `compileToScene`;linear scale + cartesian2D 投影最小集打通。',
+                  en: 'Projects the Plot IR + injected data into core points / lines, wired into `compileToScene` as a `lowerComposites` hook; the minimal linear-scale + cartesian2D projection is end-to-end.',
+                },
+              },
+            ],
+          },
+        ],
+      },
+      {
+        pkg: '@retikz/plot-react',
+        version: 'v0.1',
+        description: {
+          zh: 'plot 的 React authoring 面：把 Plot IR + 数据包成一个 `<Plot>` 组件，支持 spec 入口与组合 DSL 两种写法。',
+          en: 'plot’s React authoring surface: wraps the Plot IR + data into a single `<Plot>` component, supporting both a spec entry and a composition DSL.',
+        },
+        highlights: [
+          {
+            label: { zh: '<Plot> 两条入口', en: 'Two `<Plot>` entries' },
+            content: {
+              zh: '`<Plot spec data>` 直喂完整 IR + 具名数据集;`<Plot data>` + `<LineMark>` / `<PointMark>` 子图层用组合 DSL 声明，`buildPlotSpec` 同步装配成规范化 Plot IR。',
+              en: '`<Plot spec data>` feeds a full IR + named datasets; `<Plot data>` + `<LineMark>` / `<PointMark>` children declare via the composition DSL, with `buildPlotSpec` assembling a normalized Plot IR.',
+            },
+          },
+        ],
+        subVersions: [
+          {
+            version: 'alpha.1',
+            date: '2026-06-05',
+            summary: {
+              zh: '首发：`<Plot>` 组件（spec 入口 + 组合 DSL）、`LineMark` / `PointMark`、`buildPlotSpec`;与 @retikz/plot lockstep。',
+              en: 'First release: the `<Plot>` component (spec entry + composition DSL), `LineMark` / `PointMark`, and `buildPlotSpec`; lockstep with @retikz/plot.',
+            },
+            items: [
+              {
+                label: { zh: '组合 DSL', en: 'Composition DSL' },
+                content: {
+                  zh: '裸数据行传 `data`、子图层声明 mark，比例尺 / 坐标系由 `<Plot>` 自动推断;入口处校验非法 spec 抛清晰 ZodError，不落到 core 内部崩。',
+                  en: 'Pass bare data rows to `data` and declare marks as children; scales / coordinate are inferred by `<Plot>`; the entry validates malformed specs with a clear ZodError instead of crashing inside core.',
+                },
+              },
+            ],
+          },
+        ],
+      },
+      {
+        pkg: '@retikz/plot-vanilla',
+        version: 'v0.1',
+        description: {
+          zh: 'plot 的无框架 / SSR 面：`renderPlot` 把 Plot IR + 数据直接出 SVG 字符串，零 DOM，可在 Node / 构建期跑。',
+          en: 'plot’s framework-free / SSR surface: `renderPlot` turns a Plot IR + data straight into an SVG string, zero DOM, runnable in Node / at build time.',
+        },
+        highlights: [
+          {
+            label: { zh: 'renderPlot SSR', en: 'renderPlot SSR' },
+            content: {
+              zh: '`renderPlot(spec, datasets, options)` 经 lowerPlots + core 编译 + `@retikz/render/svg` 出 SVG 字符串;与 react 面共用同一 Plot IR 与下沉逻辑。',
+              en: '`renderPlot(spec, datasets, options)` goes through lowerPlots + core compile + `@retikz/render/svg` to an SVG string; shares the same Plot IR and lowering as the React surface.',
+            },
+          },
+        ],
+        subVersions: [
+          {
+            version: 'alpha.1',
+            date: '2026-06-05',
+            summary: {
+              zh: '首发：`renderPlot` SSR 字符串入口;与 @retikz/plot lockstep。',
+              en: 'First release: the `renderPlot` SSR string entry; lockstep with @retikz/plot.',
+            },
+            items: [
+              {
+                label: { zh: 'SSR 出图', en: 'SSR rendering' },
+                content: {
+                  zh: '服务端 / 构建期把图表预渲成 SVG 字符串，下游直接塞进 HTML;数据来源对 `renderPlot` 透明，本地造数据与外部 fetch 写法一致。',
+                  en: 'Pre-renders charts to an SVG string on the server / at build time for direct HTML embedding; the data source is transparent to `renderPlot`, with local and fetched data written the same way.',
+                },
+              },
+            ],
+          },
+        ],
+      },
+    ],
+  },
+
+  {
     minor: 'v0.2',
     stableDate: null,
     packages: [
