@@ -31,6 +31,10 @@
     "./canvas": {
       "types": "./src/canvas/index.ts",
       "default": "./src/canvas/index.ts"
+    },
+    "./hydration": {
+      "types": "./src/hydration/index.ts",
+      "default": "./src/hydration/index.ts"
     }
   },
   "publishConfig": {
@@ -46,6 +50,12 @@
         "import": "./dist/es/canvas/index.js",
         "require": "./dist/lib/canvas/index.cjs",
         "default": "./dist/es/canvas/index.js"
+      },
+      "./hydration": {
+        "types": "./dist/lib/hydration/index.d.ts",
+        "import": "./dist/es/hydration/index.js",
+        "require": "./dist/lib/hydration/index.cjs",
+        "default": "./dist/es/hydration/index.js"
       }
     }
   },
