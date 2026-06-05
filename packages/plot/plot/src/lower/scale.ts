@@ -1,7 +1,17 @@
 import { extent } from 'd3-array';
-import { type ScaleBand, type ScaleLinear, type ScalePoint, scaleBand, scaleLinear, scaleOrdinal, scalePoint } from 'd3-scale';
+import {
+  type ScaleBand,
+  type ScaleLinear,
+  type ScalePoint,
+  type ScaleTime,
+  scaleBand,
+  scaleLinear,
+  scaleOrdinal,
+  scalePoint,
+  scaleUtc,
+} from 'd3-scale';
 import { schemeCategory10 } from 'd3-scale-chromatic';
-import { type BandScale, type OrdinalScale, PlotScale, type PointScale, type ScalarValue, type Scale } from '../ir';
+import { type BandScale, type OrdinalScale, PlotScale, type PointScale, type ScalarValue, type Scale, type TimeScale } from '../ir';
 import { isFiniteNumber } from './field';
 
 /** 默认目标刻度数（d3 ticks 的提示值，非硬约束——实际数量按 nice 区间取整定） */
@@ -195,10 +205,61 @@ export const pointPositionScale = (scale: ScalePoint<string | number>): Position
   },
 });
 
+/** 字段值 → epoch ms（数值原样；ISO / 可解析字符串走 Date.parse；其余 → null） */
+export const toTimestamp = (value: unknown): number | null => {
+  if (typeof value === 'number') return Number.isFinite(value) ? value : null;
+  if (typeof value === 'string') {
+    const parsed = Date.parse(value);
+    return Number.isNaN(parsed) ? null : parsed;
+  }
+  return null;
+};
+
+/** 时间 scale 的刻度：值用 epoch ms（供 coordinate 再投影）、标签走 UTC tickFormat */
+export const timeTicks = (scale: ScaleTime<number, number>, count: number = DEFAULT_TICK_COUNT): TickSet => {
+  const ticks = scale.ticks(count);
+  const format = scale.tickFormat(count);
+  return { values: ticks.map(date => date.getTime()), labels: ticks.map(format) };
+};
+
+/** 建时间 scale（d3 scaleUtc，UTC 语义、环境无关）；domain 缺省从字段时间戳 extent 推断 */
+export const resolveTimeScale = (
+  def: TimeScale,
+  values: Array<unknown>,
+  fallbackRange: readonly [number, number],
+): ScaleTime<number, number> => {
+  const stamps = values.map(toTimestamp).filter((stamp): stamp is number => stamp !== null);
+  const [lo, hi] = def.domain ?? safeExtent(stamps);
+  const scale = scaleUtc()
+    .domain([new Date(lo), new Date(hi)])
+    .range([fallbackRange[0], fallbackRange[1]]);
+  if (def.nice) scale.nice();
+  if (def.clamp) scale.clamp(true);
+  return scale;
+};
+
+/** time scale → PositionScale（连续语义，bandwidth=0；coordinate 解析时间戳后投影） */
+export const timePositionScale = (scale: ScaleTime<number, number>): PositionScale => ({
+  coordinate: value => {
+    const stamp = toTimestamp(value);
+    return stamp === null ? NaN : scale(new Date(stamp));
+  },
+  get bandwidth() {
+    return 0;
+  },
+  ticks: count => timeTicks(scale, count),
+  range: () => {
+    const [start, end] = scale.range();
+    return [start, end];
+  },
+  setRange: range => {
+    scale.range([range[0], range[1]]);
+  },
+});
+
 /**
  * 按 scale 定义建对应 PositionScale
- * @description linear → 连续（values 过滤为有限数值求 extent）；band / point → 分类（按数据序去重推断 domain）。
- *   ordinal / time 在 ADR-04 / ADR-06 接入。
+ * @description linear / time → 连续；band / point → 分类（按数据序去重推断 domain）。ordinal 不可作位置通道。
  */
 export const resolvePositionScale = (
   def: Scale,
@@ -212,6 +273,8 @@ export const resolvePositionScale = (
       return pointPositionScale(resolvePointScale(def, values, fallbackRange));
     case PlotScale.Linear:
       return linearPositionScale(resolveLinearScale(def, values.filter(isFiniteNumber), fallbackRange));
+    case PlotScale.Time:
+      return timePositionScale(resolveTimeScale(def, values, fallbackRange));
     case PlotScale.Ordinal:
       throw new Error(`resolvePositionScale: ordinal scale "${def.name}" cannot drive a positional (x/y) channel`);
   }

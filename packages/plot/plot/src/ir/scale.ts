@@ -14,6 +14,8 @@ export const PlotScale = {
   Point: 'point',
   /** 序数：分类域 → 离散输出域（典型为颜色），多系列着色主力 */
   Ordinal: 'ordinal',
+  /** 时间：连续时间映射（epoch 毫秒），刻度落人类可读时间边界（UTC） */
+  Time: 'time',
 } as const;
 
 /** scale 类型 */
@@ -108,9 +110,22 @@ export const OrdinalScaleSchema = z
   })
   .describe('Ordinal scale: discrete domain to discrete output range (colors); the workhorse for series color');
 
+export const TimeScaleSchema = z
+  .object({
+    type: z.literal(PlotScale.Time).describe('Discriminator: continuous time scale over epoch-millisecond instants'),
+    name: z.string().min(1).describe('Scale name; referenced by coordinate.x / coordinate.y'),
+    domain: z
+      .tuple([z.number(), z.number()])
+      .optional()
+      .describe('[startMs, endMs] epoch-millisecond extent; omit to infer from the bound field timestamps at lowering. Dates never enter the IR — only millisecond numbers'),
+    nice: z.boolean().optional().describe('Round the domain outward to nice time boundaries (day / month / year); default false'),
+    clamp: z.boolean().optional().describe('Clamp out-of-domain instants to the range ends; default false'),
+  })
+  .describe('Time scale: continuous mapping from time instants (epoch ms) to range; ticks land on human-readable time boundaries');
+
 export const ScaleSchema = z
-  .discriminatedUnion('type', [LinearScaleSchema, BandScaleSchema, PointScaleSchema, OrdinalScaleSchema])
-  .describe('Scale union: linear (continuous) / band / point (categorical) / ordinal (discrete output, colors); extensible to time later');
+  .discriminatedUnion('type', [LinearScaleSchema, BandScaleSchema, PointScaleSchema, OrdinalScaleSchema, TimeScaleSchema])
+  .describe('Scale union: linear / band / point / ordinal / time');
 
 /** 分类标量：类别取值 */
 export type CategoryValue = z.infer<typeof CategoryValueSchema>;
@@ -122,5 +137,7 @@ export type BandScale = z.infer<typeof BandScaleSchema>;
 export type PointScale = z.infer<typeof PointScaleSchema>;
 /** ordinal scale（分类 → 离散输出，颜色） */
 export type OrdinalScale = z.infer<typeof OrdinalScaleSchema>;
-/** scale（linear / band / point / ordinal） */
+/** time scale（连续时间，epoch ms） */
+export type TimeScale = z.infer<typeof TimeScaleSchema>;
+/** scale（linear / band / point / ordinal / time） */
 export type Scale = z.infer<typeof ScaleSchema>;

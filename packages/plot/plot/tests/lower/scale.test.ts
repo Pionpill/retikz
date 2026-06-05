@@ -5,6 +5,7 @@ import {
   resolveLinearScale,
   resolvePositionScale,
   scaleTicks,
+  toTimestamp,
 } from '../../src/lower/scale';
 
 describe('resolveLinearScale (ADR-02 d3-scale)', () => {
@@ -176,5 +177,52 @@ describe('resolvePositionScale linear back-compat (ADR-01)', () => {
     const pos = resolvePositionScale({ type: 'linear', name: 'x' }, [3, 'skip', 7, null], [0, 100]);
     expect(pos.coordinate(3)).toBe(0);
     expect(pos.coordinate(7)).toBe(100);
+  });
+});
+
+describe('resolveTimeScale / toTimestamp (ADR-06, UTC)', () => {
+  it('to_timestamp_number_iso_invalid', () => {
+    expect(toTimestamp(1000)).toBe(1000);
+    expect(toTimestamp('2024-03-01')).toBe(Date.parse('2024-03-01'));
+    expect(toTimestamp('not-a-date')).toBeNull();
+    expect(toTimestamp({})).toBeNull();
+  });
+
+  it('time_coordinate_endpoints', () => {
+    const lo = Date.UTC(2024, 0, 1);
+    const hi = Date.UTC(2024, 3, 1);
+    const pos = resolvePositionScale({ type: 'time', name: 'x', domain: [lo, hi] }, [], [0, 300]);
+    expect(pos.coordinate(lo)).toBeCloseTo(0, 6);
+    expect(pos.coordinate(hi)).toBeCloseTo(300, 6);
+    expect(pos.bandwidth).toBe(0);
+  });
+
+  it('time_parses_iso_value', () => {
+    const lo = Date.UTC(2024, 0, 1);
+    const hi = Date.UTC(2024, 0, 3);
+    const pos = resolvePositionScale({ type: 'time', name: 'x', domain: [lo, hi] }, [], [0, 200]);
+    // 2024-01-02（中点）→ 100
+    expect(pos.coordinate('2024-01-02T00:00:00Z')).toBeCloseTo(100, 6);
+  });
+
+  it('time_ticks_month_boundary_utc', () => {
+    const lo = Date.UTC(2024, 0, 1);
+    const hi = Date.UTC(2024, 3, 1);
+    const { values, labels } = resolvePositionScale({ type: 'time', name: 'x', domain: [lo, hi] }, [], [0, 300]).ticks(3);
+    // UTC 确定性：Feb 1 在刻度里（值用 epoch ms）
+    expect(values).toContain(Date.UTC(2024, 1, 1));
+    expect(labels).toHaveLength(values.length);
+    expect(labels.every(label => label.length > 0)).toBe(true);
+  });
+
+  it('time_domain_inferred_from_values', () => {
+    const pos = resolvePositionScale({ type: 'time', name: 'x' }, ['2024-01-01', '2024-12-31'], [0, 100]);
+    expect(pos.coordinate('2024-01-01')).toBeCloseTo(0, 6);
+    expect(pos.coordinate('2024-12-31')).toBeCloseTo(100, 6);
+  });
+
+  it('time_bad_string_nan', () => {
+    const pos = resolvePositionScale({ type: 'time', name: 'x', domain: [0, 1000] }, [], [0, 100]);
+    expect(Number.isNaN(pos.coordinate('nope'))).toBe(true);
   });
 });

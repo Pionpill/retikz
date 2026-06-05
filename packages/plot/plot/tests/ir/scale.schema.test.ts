@@ -95,3 +95,19 @@ describe('ScaleSchema ordinal (ADR-04)', () => {
     expect(() => ScaleSchema.parse({ type: 'ordinal', name: 'col', range: [1, 2] })).toThrow();
   });
 });
+
+describe('ScaleSchema time (ADR-06)', () => {
+  it('time_schema_valid', () => {
+    const s = { type: 'time', name: 'x' };
+    expect(ScaleSchema.parse(s)).toEqual(s);
+  });
+
+  it('time_with_domain_nice_valid', () => {
+    const s = { type: 'time', name: 'x', domain: [1704067200000, 1735689600000], nice: true };
+    expect(ScaleSchema.parse(s)).toEqual(s);
+  });
+
+  it('time_domain_non_number_rejected', () => {
+    expect(() => ScaleSchema.parse({ type: 'time', name: 'x', domain: ['2024', '2025'] })).toThrow();
+  });
+});
