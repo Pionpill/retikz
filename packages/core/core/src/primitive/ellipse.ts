@@ -6,6 +6,8 @@ import type { PaintValue } from './paint';
 
 export type EllipsePrim = {
   type: 'ellipse';
+  /** 稳定挂点 id：compile 从 IR 元素 user id stamp，供 renderer emit data-retikz-id / canvas hit-test */
+  id?: string;
   cx: number;
   cy: number;
   rx: number;

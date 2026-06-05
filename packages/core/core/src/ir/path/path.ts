@@ -55,6 +55,13 @@ export const PathSchema = z
     type: z
       .literal('path')
       .describe('Discriminator marking this child as a path'),
+    id: z
+      .string()
+      .min(1)
+      .optional()
+      .describe(
+        'Optional stable id; required if another path needs to reference this path by string, and used as the hydration hook so client-side event handlers can be bound to the primitives this path emits.',
+      ),
     color: z
       .string()
       .optional()

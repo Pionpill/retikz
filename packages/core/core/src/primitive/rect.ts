@@ -4,6 +4,8 @@ import type { PaintValue } from './paint';
 export type RectPrim = {
   /** 类型判别符 */
   type: 'rect';
+  /** 稳定挂点 id：compile 从 IR 元素 user id stamp，供 renderer emit data-retikz-id / canvas hit-test */
+  id?: string;
   /** 左上角横坐标 */
   x: number;
   /** 左上角纵坐标 */
