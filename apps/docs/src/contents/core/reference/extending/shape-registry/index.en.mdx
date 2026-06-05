@@ -15,6 +15,8 @@ A third-party package (`@retikz/shapes-flow` / `-uml`, etc.) or host code can re
 
 The actual shape definition is called `ShapeDefinition`. It contains functions, so it **never enters the IR**. Instead, those functions are passed to retikz at compile time through `CompileOptions.shapes`. Schema validation only checks that `shape` is a non-empty string; if the name is not registered, the error is thrown during **compile**, with the available shape names listed.
 
+`node.shape` also accepts a nested form `{ type, params }`: `type` is the shape name and `params` is a plain JSON parameter object (e.g. a sector's `{ innerRadius, outerRadius, startAngle, endAngle }`), which is equally safe in the IR. A bare string `'rectangle'` is equivalent to `{ type: 'rectangle', params: {} }` — both forms are identical for parameterless shapes. At compile time the params are first validated by the shape's own `paramsSchema`, then by a JSON guard, and finally passed to each computation function below.
+
 ## ShapeDefinition
 
 A custom shape answers four questions. retikz already handles text measurement, style merging, rotation grouping, and final rendering; the shape author only describes the geometry and drawing behavior that is specific to that shape.
@@ -25,12 +27,15 @@ Read the core types in the table like this:
 - `Position` is a point coordinate, shaped as `[x, y]`.
 - `ScenePrimitive` is a low-level drawing primitive passed to the renderer, such as `path`, `rect`, or `ellipse`.
 
+Every computation function receives a final, **already-validated** `params` argument (parameterless shapes receive `{}` and may ignore it). `paramsSchema` declares the shape of those params: use `z.strictObject({})` for parameterless shapes (rejects extra fields), or a concrete schema for parametric ones.
+
 | Method | Parameters and return value | Role |
 | --- | --- | --- |
-| `circumscribe`<br />`(innerHalfW, innerHalfH) => { halfWidth, halfHeight }` | `innerHalfW` / `innerHalfH`: half-width and half-height already occupied by text and padding.<br />`halfWidth` / `halfHeight`: half-width and half-height required by the outer shape. | Called during node layout. It answers “how large must the outer rectangle be to contain the content and padding”. A diamond usually expands it; a rectangle usually returns it unchanged. |
-| `boundaryPoint`<br />`(rect, toward) => Position` | `rect`: the node's outer rectangle.<br />`toward`: the target point seen from the node center.<br />Return value: the point where the ray from the center toward `toward` hits the shape boundary. | Called when a path attaches to a node boundary, and when numeric anchors such as `A.30` are resolved. It decides where the line should stop on the shape edge. |
-| `anchor`<br />`(rect, name) => Position \| undefined` | `rect`: the node's outer rectangle.<br />`name`: an anchor name such as `north`, `south east`, or `center`.<br />Return value: a coordinate for known anchors, or `undefined` for names this shape does not own. | Called when users write `A.north`, `A.center`, or a custom anchor name. Unknown anchors are reported by the compiler with the standard Unknown anchor error. |
-| `emit`<br />`(rect, style, round) => Iterable<ScenePrimitive>` | `rect`: the node's outer rectangle.<br />`style`: merged fill, stroke, opacity, and related style values.<br />`round`: a helper that keeps coordinate precision consistent.<br />Return value: one or more primitives to draw. | Called when compiling the visible node body. Simple shapes often return one path or rect; complex shapes can return several primitives, such as an outer frame plus two vertical bars. |
+| `paramsSchema`<br />`z.ZodType<JsonObject>` | A zod schema for the shape params. | Validates `shape.params` at compile time. Use `z.strictObject({})` for parameterless shapes; its output is run through a JSON guard as well to stay serializable. |
+| `circumscribe`<br />`(innerHalfW, innerHalfH, params) => { halfWidth, halfHeight }` | `innerHalfW` / `innerHalfH`: half-width and half-height already occupied by text and padding.<br />`params`: the validated shape params.<br />`halfWidth` / `halfHeight`: half-width and half-height required by the outer shape. | Called during node layout. It answers “how large must the outer rectangle be to contain the content and padding”. A diamond usually expands it; a rectangle usually returns it unchanged. |
+| `boundaryPoint`<br />`(rect, toward, params) => Position` | `rect`: the node's outer rectangle.<br />`toward`: the target point seen from the node center.<br />`params`: the validated shape params.<br />Return value: the point where the ray from the center toward `toward` hits the shape boundary. | Called when a path attaches to a node boundary, and when numeric anchors such as `A.30` are resolved. It decides where the line should stop on the shape edge. |
+| `anchor`<br />`(rect, name, params) => Position \| undefined` | `rect`: the node's outer rectangle.<br />`name`: an anchor name such as `north`, `south east`, or `center`.<br />`params`: the validated shape params.<br />Return value: a coordinate for known anchors, or `undefined` for names this shape does not own. | Called when users write `A.north`, `A.center`, or a custom anchor name. Unknown anchors are reported by the compiler with the standard Unknown anchor error. |
+| `emit`<br />`(rect, style, round, params) => Iterable<ScenePrimitive>` | `rect`: the node's outer rectangle.<br />`style`: merged fill, stroke, opacity, and related style values.<br />`round`: a helper that keeps coordinate precision consistent.<br />`params`: the validated shape params.<br />Return value: one or more primitives to draw. | Called when compiling the visible node body. Simple shapes often return one path or rect; complex shapes can return several primitives, such as an outer frame plus two vertical bars. |
 
 <ComponentAlert
   type="warn"
@@ -43,33 +48,37 @@ Numeric angles (`A.30`) do not need a separate hook. Once a shape implements `bo
 ## Injection: CompileOptions.shapes
 
 ```ts
-import { compileToScene, type ShapeDefinition } from '@retikz/core';
+import { compileToScene, defineShape, type ShapeDefinition } from '@retikz/core';
 import { worldToLocal, localToWorld } from '@retikz/core';
+import { z } from 'zod';
 
 // a factory is just a plain function: pass parameters in, return a ShapeDefinition
-const createPolygonShape = (sides: number): ShapeDefinition => ({
-  circumscribe: (hw, hh) => {
-    const r = Math.hypot(hw, hh);
-    return { halfWidth: r, halfHeight: r };
-  },
-  boundaryPoint: (rect, toward) => {
-    /* map toward to local coordinates first, then intersect the ray with polygon edges */
-  },
-  anchor: (rect, name) => (name === 'center' ? [rect.x, rect.y] : undefined),
-  *emit(rect, style, round) {
-    yield {
-      type: 'path',
-      commands: [/* n vertices + close */],
-      fill: style.fill ?? 'transparent',
-      fillOpacity: style.fillOpacity,
-      stroke: style.stroke ?? 'currentColor',
-      strokeOpacity: style.strokeOpacity,
-      strokeWidth: style.strokeWidth ?? 1,
-      dashPattern: style.dashPattern,
-      opacity: style.opacity,
-    };
-  },
-});
+// defineShape gives definition-site type safety: the paramsSchema output type flows into every function's params
+const createPolygonShape = (sides: number): ShapeDefinition =>
+  defineShape({
+    paramsSchema: z.strictObject({}), // parameterless shape
+    circumscribe: (hw, hh) => {
+      const r = Math.hypot(hw, hh);
+      return { halfWidth: r, halfHeight: r };
+    },
+    boundaryPoint: (rect, toward) => {
+      /* map toward to local coordinates first, then intersect the ray with polygon edges */
+    },
+    anchor: (rect, name) => (name === 'center' ? [rect.x, rect.y] : undefined),
+    *emit(rect, style, round) {
+      yield {
+        type: 'path',
+        commands: [/* n vertices + close */],
+        fill: style.fill ?? 'transparent',
+        fillOpacity: style.fillOpacity,
+        stroke: style.stroke ?? 'currentColor',
+        strokeOpacity: style.strokeOpacity,
+        strokeWidth: style.strokeWidth ?? 1,
+        dashPattern: style.dashPattern,
+        opacity: style.opacity,
+      };
+    },
+  });
 
 // the IR only writes shape: 'hexagon'; options supply the concrete definition
 const scene = compileToScene(ir, { shapes: { hexagon: createPolygonShape(6) } });
@@ -122,4 +131,4 @@ When writing a third-party shape, check these points first:
 
 ## Public helpers
 
-`@retikz/core` exports for third-party shape authors: `ShapeDefinition` / `ShapeStyle` / `BUILTIN_SHAPES` / `BuiltinShapeName` / `Rect` / `Position` / `worldToLocal` / `localToWorld`.
+`@retikz/core` exports for third-party shape authors: `defineShape` / `ShapeDefinition` / `ShapeStyle` / `BUILTIN_SHAPES` / `BuiltinShapeName` / `Rect` / `Position` / `worldToLocal` / `localToWorld`.

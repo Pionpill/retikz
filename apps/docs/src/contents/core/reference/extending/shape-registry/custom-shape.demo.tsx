@@ -1,5 +1,6 @@
-import { type PathCommand, type Position, type ShapeDefinition, localToWorld, worldToLocal } from '@retikz/core';
+import { type PathCommand, type Position, type ShapeDefinition, defineShape, localToWorld, worldToLocal } from '@retikz/core';
 import { Draw, Layout, Node } from '@retikz/react';
+import { z } from 'zod';
 import type { FC } from 'react';
 
 /**
@@ -40,8 +41,10 @@ const findHexagonBoundaryPoint = (radius: number, direction: Position): Position
   return [ray[0] * distance, ray[1] * distance];
 };
 
-const createHexagon = (): ShapeDefinition => ({
-  circumscribe: (hw, hh) => {
+const createHexagon = (): ShapeDefinition =>
+  defineShape({
+    paramsSchema: z.strictObject({}),
+    circumscribe: (hw, hh) => {
     const corners: Array<Position> = [
       [hw, hh],
       [hw, -hh],

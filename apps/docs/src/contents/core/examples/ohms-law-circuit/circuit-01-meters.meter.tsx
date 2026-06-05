@@ -1,5 +1,6 @@
-import { type IRNodeLabel, type Position, type ShapeDefinition, localToWorld, worldToLocal } from '@retikz/core';
+import { type IRNodeLabel, type Position, type ShapeDefinition, defineShape, localToWorld, worldToLocal } from '@retikz/core';
 import { Node } from '@retikz/react';
+import { z } from 'zod';
 import type { FC } from 'react';
 
 const INK = 'currentColor';
@@ -11,7 +12,8 @@ const FONT = { family: 'Arial, sans-serif' } as const;
  *   导线只会落到左右两个引线端点，不会接到上下；圆形表头大小沿用内置 circle 的外接算法（√(hw²+hh²)）
  */
 // eslint-disable-next-line react-refresh/only-export-components -- 形状定义与电表组件同处一处，便于成组复用；本文件不是 HMR 热点
-export const circuitMeter: ShapeDefinition = {
+export const circuitMeter: ShapeDefinition = defineShape({
+  paramsSchema: z.strictObject({}),
   circumscribe: (innerHalfWidth, innerHalfHeight) => {
     const radius = Math.sqrt(innerHalfWidth * innerHalfWidth + innerHalfHeight * innerHalfHeight);
     return { halfWidth: radius + 55, halfHeight: radius };
@@ -64,7 +66,7 @@ export const circuitMeter: ShapeDefinition = {
       ...shared,
     };
   },
-};
+});
 
 /** 电表：圆形表头 + 单个字母（A 电流表 / V 电压表），用 circuit-meter 形状 */
 export const Meter: FC<{
