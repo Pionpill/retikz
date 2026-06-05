@@ -88,4 +88,38 @@ describe('PlotSpecSchema (ADR-01)', () => {
     const spec = { ...baseLine, coordinate: { type: 'cartesian2D', x: 'nope', y: 'missing' } };
     expect(PlotSpecSchema.parse(spec)).toEqual(spec);
   });
+
+  // guides 槽位（ADR-01 alpha.2）
+  it('plot_with_guides_valid', () => {
+    const spec = {
+      ...baseLine,
+      guides: [
+        { type: 'axis', dimension: 'x' },
+        { type: 'axis', dimension: 'y', grid: true },
+      ],
+    };
+    expect(PlotSpecSchema.parse(spec)).toEqual(spec);
+  });
+
+  it('plot_omits_guides_valid', () => {
+    // 非破坏：alpha.1 不带 guides 的 spec 仍合法
+    expect(PlotSpecSchema.parse(baseLine)).toEqual(baseLine);
+  });
+
+  it('plot_empty_guides_valid', () => {
+    const spec = { ...baseLine, guides: [] };
+    expect(PlotSpecSchema.parse(spec)).toEqual(spec);
+  });
+
+  it('guides_coexist_with_marks', () => {
+    const spec = {
+      ...baseLine,
+      marks: [
+        { type: 'line', encoding: { x: { field: 'month' }, y: { field: 'revenue' } } },
+        { type: 'point', encoding: { x: { field: 'month' }, y: { field: 'revenue' } } },
+      ],
+      guides: [{ type: 'axis', dimension: 'x' }],
+    };
+    expect(PlotSpecSchema.parse(spec)).toEqual(spec);
+  });
 });

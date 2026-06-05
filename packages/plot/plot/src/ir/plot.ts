@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { CompositeBaseSchema, JsonObjectSchema, type ValueOf } from '@retikz/core';
 import { CoordinateSchema } from './coordinate';
 import { DataRefSchema } from './data';
+import { GuideSchema } from './guide';
 import { MarkSchema } from './mark';
 import { ScaleSchema } from './scale';
 
@@ -42,6 +43,12 @@ export const PlotSpecSchema = CompositeBaseSchema.extend({
     .describe('Named scales; referenced by coordinate (and by non-positional channels in later versions)'),
   coordinate: CoordinateSchema.describe('The coordinate system; owns positional scale bindings (alpha.1: cartesian2D only)'),
   marks: z.array(MarkSchema).min(1).describe('Mark layers, drawn in array order (stable z-order)'),
+  guides: z
+    .array(GuideSchema)
+    .optional()
+    .describe(
+      'Guide layers (axes, each with optional grid lines), derived from scales + coordinate; omit for no guides. Grid lines draw behind marks; axis lines / ticks / labels around the plot area.',
+    ),
   meta: JsonObjectSchema.optional().describe(
     'Free-form JSON-serializable source metadata passthrough; reserved so lowering can preserve provenance into core IR meta',
   ),

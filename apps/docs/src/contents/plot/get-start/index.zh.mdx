@@ -1,0 +1,108 @@
+---
+title: 快速开始
+description: 安装 plot React 入口，并用本地数据搭出一张带坐标轴和网格的折线 + 散点图。
+---
+
+## 安装
+
+React 项目里使用 plot 时，入口包是 `@retikz/plot-react`。它会带上 `@retikz/plot` 与底层 retikz 依赖；你的应用仍需要提供 React peer 依赖。
+
+<PackageManagerInstall packages="@retikz/plot-react react react-dom" />
+
+## 最终效果
+
+这张图用同一份月度营收数据叠了两层 mark：折线负责趋势，散点负责每个数据点。`<Plot>` 会自动推断 linear scale、cartesian2D 坐标系，并在没有显式 `<Axis>` 时加上 x/y 轴和 y 方向网格。
+
+<ComponentPreview name="line-scatter" sourceFiles={['line-scatter.data.ts']} />
+
+## 一步步搭建
+
+### 1. 准备裸数据行
+
+数据是普通对象数组，不进 IR，也不需要包成特殊类。字段名会在 mark 里通过 `x` / `y` props 引用。
+
+```ts
+const sales = [
+  { month: 0, revenue: 10 },
+  { month: 1, revenue: 14 },
+  { month: 2, revenue: 9 },
+  { month: 3, revenue: 18 },
+  { month: 4, revenue: 15 },
+];
+```
+
+### 2. 用 `<Plot>` 和 `<LineMark>` 画趋势
+
+`<Plot>` 接收数据和显示尺寸；`<LineMark>` 声明哪个字段放到 x / y 通道。`order="month"` 表示按月份连线，避免数据行顺序变化时折线乱跳。
+
+```tsx
+<Plot data={sales} width={360} height={200}>
+  <LineMark x="month" y="revenue" order="month" />
+</Plot>
+```
+
+### 3. 叠一层 `<PointMark>`
+
+同一张 `<Plot>` 里的 mark 共用坐标系和比例尺。再加一个 `<PointMark>`，就能在折线上标出每个观测点。
+
+```tsx
+<Plot data={sales} width={360} height={200}>
+  <LineMark x="month" y="revenue" order="month" />
+  <PointMark x="month" y="revenue" />
+</Plot>
+```
+
+到这里先记住 4 个规则：
+
+- `data` 是裸数据行数组，字段值必须能转成有限数字。
+- `<LineMark>` / `<PointMark>` 只声明字段映射，不直接写像素坐标。
+- 无显式 `<Axis>` 时，`<Plot>` 默认画 x/y 轴和 y 网格。
+- 代码面板里的 IR tab 展示的是 `<Plot>` 装配出的 Plot IR；数据仍然单独传入。
+
+## 常用开关
+
+显式写任意 `<Axis>` 后，默认轴不再自动补齐；你列什么就画什么。
+
+```tsx
+<Plot data={sales} width={360} height={200}>
+  <LineMark x="month" y="revenue" order="month" />
+  <Axis dimension="y" grid tickCount={5} />
+</Plot>
+```
+
+只想画数据、不画轴和网格时，用 `bare`：
+
+```tsx
+<Plot data={sales} width={360} height={200} bare>
+  <LineMark x="month" y="revenue" order="month" />
+</Plot>
+```
+
+`width × height` 是包含坐标轴和刻度标签在内的外框。刻度标签太挤时，用 `fontSize` 调字号，用 `margin` 覆盖四周留白：
+
+```tsx
+<Plot data={sales} width={360} height={200} fontSize={12} margin={{ left: 48 }}>
+  <LineMark x="month" y="revenue" order="month" />
+</Plot>
+```
+
+## 接下来
+
+<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+  <LinkedCard href="/plot/components/plot">
+    <span className="font-semibold">Plot</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">了解 spec 入口、data 入口和渲染选项</span>
+  </LinkedCard>
+  <LinkedCard href="/plot/components/mark">
+    <span className="font-semibold">Mark</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">继续看折线、散点与 mark 共用坐标系</span>
+  </LinkedCard>
+  <LinkedCard href="/plot/components/axis">
+    <span className="font-semibold">Axis</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">定制刻度、标签、网格和裸图模式</span>
+  </LinkedCard>
+  <LinkedCard href="/plot/grammar/data">
+    <span className="font-semibold">Data</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">理解数据为什么不进入 Plot IR</span>
+  </LinkedCard>
+</div>

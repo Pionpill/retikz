@@ -1,94 +1,56 @@
 ---
 title: Introduction
-description: retikz's charting layer — a declarative Plot IR describes what to draw, data is supplied separately, and lowerPlots lowers both into core primitives.
+description: "retikz's charting layer: describe chart semantics with Plot IR, supply data separately, then lower into core primitives for rendering."
 ---
 
-`@retikz/plot` is a charting layer built on top of core. You declare a **Plot IR** that says what a chart is — its coordinate system, scales, and which field becomes a point or a line — while the data is supplied separately, and one function combines the two into something renderable.
+`@retikz/plot` is the Tier 2 charting layer built on top of core. Core handles general primitives, paths, and render-neutral compilation; plot organizes how data fields become visual marks into a serializable, validated chart specification.
 
-It deliberately splits a chart into three parts, each with one job:
+It is for cases where you want to draw structured data as charts while keeping retikz's IR, AI, and multi-renderer workflow. The current version focuses on the smallest useful loop: linear scales, a 2D cartesian coordinate system, line and point marks, axes, and gridlines.
+
+## Core + Graphic Grammar
+
+<ComponentPreview name="plot-grammar-parts" size="md" hideCode />
+
+plot is essentially **core + graphic grammar**. Core provides the renderable nodes, paths, scopes, and Scene contract; plot does not create a separate renderer. It adds a grammar layer above core for describing how data fields become visual marks.
+
+| Part | In the implementation | Role |
+| --- | --- | --- |
+| **Graphic grammar** | `marks`, `encoding`, `scales`, `coordinate`, `guides`; in React, `<LineMark>` / `<PointMark>` / `<Axis>` | The drawing idea: declare which field maps to which visual channel, then let scales, coordinates, and guides place it on the canvas |
+| **data** | `data.ref` + optional `model` point to an external dataset; lowering resolves each row into `x` / `y` data channels | Holds real values and field declarations; values stay outside IR, field paths enter channels through `field`, and constants enter through `value` |
+| **`@retikz/plot`** | `PlotSpecSchema`, `buildPlotSpec`, `lowerPlots`, `renderPlot`, `<Plot>` | The logic wrapper: validates PlotSpec, fills default linear scale / cartesian2D / Axis, computes domains / ticks / projectors, and lowers the result to core IR |
+
+## Plot IR at the Center
+
+<ComponentPreview name="plot-ir-centric" size="md" hideCode />
+
+The center of plot is not a large data table; it is a Plot IR document that describes chart semantics. Components, handwritten specs, and AI output all converge on that IR. The real data joins only during lowering, where `lowerPlots` turns the spec + data into core nodes and paths.
+
+## Three parts
+
+A plot chart does not put the dataset into the IR. The IR says what to draw; the actual data is supplied at render time.
 
 | Part | What it is | Responsibility |
 | --- | --- | --- |
-| **Plot IR** | Config object (JSON-serializable) | Decides how the chart looks: marks, scales, coordinate, field bindings |
-| **Data** | External dataset, arbitrary JS | Provides the actual values; **never enters the IR**, so the IR does not grow with the data |
-| **lowerPlots** | Fixed lowering function | Projects IR + data into core points / lines for the existing renderer |
+| **Plot IR** | JSON-serializable config | Stores marks, scales, coordinate, axes, and field bindings |
+| **Data** | External dataset | Supplies the actual values; never enters the IR, so config size does not grow with row count |
+| **lowerPlots** | Lowering function | Turns Plot IR + Data into core nodes and paths |
 
-`@retikz/plot-react` wraps these three into a single `<Plot>` component. The chart below draws five months of revenue as both a line and scatter points — same data, same scales, two stacked marks:
+React users usually do not need to write the whole IR by hand. `@retikz/plot-react`'s `<Plot>` assembles Plot IR synchronously from child components such as `<LineMark>`, `<PointMark>`, and `<Axis>`; when a program or AI generates the spec directly, you can render it with `<Plot spec={spec} data={{ sales }} />`.
 
-<ComponentPreview name="line-scatter" sourceFiles={['line-scatter.data.ts']} />
+## Packages
 
-The composition DSL is the most direct way to write it: you only declare what to draw (which field becomes a line, which becomes points); scales and the coordinate system are inferred by `<Plot>`, and the data is a plain array of rows passed in separately:
+plot is split into three packages so chart semantics and framework entrypoints stay separate:
 
-```tsx
-import { LineMark, Plot, PointMark } from '@retikz/plot-react';
+| Package | Responsibility | Typical entry |
+| --- | --- | --- |
+| `@retikz/plot` | Plot IR schemas, data lowering, and core algorithms | `lowerPlots(datasets)` |
+| `@retikz/plot-react` | React composition DSL and the `<Plot>` wrapper | `<Plot data={rows}>...</Plot>` |
+| `@retikz/plot-vanilla` | Framework-free / SSR rendering entry | `renderPlot(spec, data, options)` |
 
-const sales = [
-  { month: 0, revenue: 10 },
-  { month: 1, revenue: 14 },
-  // ...
-];
+Whether you start from React components, a handwritten spec, or the vanilla entry, the chart goes through the same Plot IR and the same lowering path.
 
-<Plot data={sales} width={360} height={200}>
-  <LineMark x="month" y="revenue" order="month" />
-  <PointMark x="month" y="revenue" />
-</Plot>;
-```
+## Current Stage
 
-The JSX is just an authoring surface: `<Plot>` reads its mark children synchronously and assembles a normalized **Plot IR**. You can also hand-write or generate that IR (e.g. from a program / LLM) and render it through the `<Plot spec>` entry:
+<ComponentAlert title="v0.1 alpha.2" description="The current plot layer supports linear scales, cartesian2D coordinates, LineMark / PointMark, Axis guides, and a default y grid. When <Plot> has no explicit Axis children, it adds x/y axes plus a y grid; bare returns to an axis-free plot; fontSize and margin tune tick-label size and whitespace. Bar, polar, legend, tooltip, and event interactions are still planned for later versions." />
 
-```tsx
-const spec = {
-  namespace: 'plot',
-  type: 'plot',
-  data: { ref: 'sales' }, // a reference only, no data
-  scales: [
-    { type: 'linear', name: '__x' },
-    { type: 'linear', name: '__y' },
-  ],
-  coordinate: { type: 'cartesian2D', x: '__x', y: '__y' },
-  marks: [
-    { type: 'line', order: 'month', encoding: { x: { field: 'month' }, y: { field: 'revenue' } } },
-    { type: 'point', encoding: { x: { field: 'month' }, y: { field: 'revenue' } } },
-  ],
-};
-
-// when you already hold a full IR: use the spec entry + a named dataset
-<Plot spec={spec} data={{ sales }} width={360} height={200} />;
-```
-
-The IR only carries `data: { ref: 'sales' }` (a name); the real data is passed in separately at render time — the same `spec` works with any dataset whose fields match. That is the point of decoupling IR from data: config describes the shape, data only fills in the content.
-
-For server-side / build-time use, `@retikz/plot-vanilla`'s `renderPlot` returns an SVG string (zero DOM):
-
-```ts
-import { renderPlot } from '@retikz/plot-vanilla';
-
-const svg = renderPlot(spec, { sales }, { width: 360, height: 200 }); // SSR: SVG string
-```
-
-## Data can come from anywhere
-
-The data above is hard-coded, but in the real world it usually comes from elsewhere — a backend endpoint, a public API, a CSV. Because the data **never enters the IR** and is only passed in as plain rows at render time, fetching a large dataset from an external source and charting it works exactly like local data: fetch it first, then hand it to `<Plot data>` the same way.
-
-The chart below pulls roughly seven days of hourly temperature (~168 points) live from [Open-Meteo](https://open-meteo.com/) and draws it as a line once loaded:
-
-<ComponentPreview name="line-scatter-fetch" size="sm" interactive />
-
-```tsx
-const [data, setData] = useState(null);
-
-useEffect(() => {
-  fetch('https://api.open-meteo.com/v1/forecast?...&hourly=temperature_2m')
-    .then(res => res.json())
-    .then(json => setData(json.hourly.temperature_2m.map((temperature, hour) => ({ hour, temperature }))));
-}, []);
-
-if (!data) return <p>Loading…</p>;
-
-// Where the data came from is transparent to <Plot>: the charting code is unchanged
-<Plot data={data} width={480} height={220}>
-  <LineMark x="hour" y="temperature" order="hour" />
-</Plot>;
-```
-
-<ComponentAlert title="Current stage" description="alpha.1 ships three packages: @retikz/plot (Plot IR + lowerPlots), @retikz/plot-react (<Plot> component + composition DSL), and @retikz/plot-vanilla (renderPlot for SSR). alpha.1 has only a linear scale + cartesian2D coordinate and point / line marks; axes / gridlines, bar, polar, and interaction (tooltip / events) arrive in later versions. The plot-area size is a render option, not part of the IR." />
+If this is your first time using plot, start with Get Started and build the local-data line + scatter chart first. The IR / data / lowering split will read more naturally after that.

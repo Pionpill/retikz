@@ -80,7 +80,26 @@
   },
   "plot": {
     "label": "Plot",
-    "introduction": "Introduction"
+    "introduction": "Introduction",
+    "getStart": "Get Started",
+    "grammar": "Grammar",
+    "grammarData": "Data",
+    "grammarScale": "Scales",
+    "grammarCoordinate": "Coordinates",
+    "grammarMark": "Marks",
+    "grammarGuide": "Guides",
+    "components": "Primitives",
+    "compPlot": "Plot",
+    "compMark": "Marks",
+    "compMarkOverview": "Overview",
+    "compLineMark": "LineMark",
+    "compPointMark": "PointMark",
+    "compAxis": "Axis",
+    "examples": "Charts",
+    "exampleLineScatter": "Line & Scatter",
+    "reference": "Reference",
+    "refPlotIr": "Plot IR",
+    "refLowering": "Lowering"
   },
   "blog": {
     "label": "Blog",
