@@ -1,6 +1,6 @@
 # ADR-07：三包 DSL 露出（&lt;BarMark&gt;、series/stack/color props、scale 类型选择；vanilla / docs 同步）
 
-- 状态：Proposed
+- 状态：Accepted（已实现）
 - 决策日期：2026-06-05
 - 关联：[plot v0.1-alpha.3 待办](./roadmap.md) · [plot-design.md §5.2 Primitive API / §6 包结构](../../../../../architecture/plot-design.md) · 回溯：[alpha.1 ADR-07 bindings](../v0.1-alpha.1/07-plot-bindings.md) · [alpha.1 ADR-08 react DSL](../v0.1-alpha.1/08-plot-react-dsl.md) · [alpha.2 ADR-05 guide DSL](../v0.1-alpha.2/05-guide-bindings-dsl.md) · 依赖：[ADR-01](./01-band-scale.md)~[ADR-06](./06-time-scale.md)
 

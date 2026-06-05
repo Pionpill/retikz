@@ -1,6 +1,6 @@
 # ADR-05：relation —— series + group(dodge) + stack（多系列柱 / 折线几何）
 
-- 状态：Proposed
+- 状态：Accepted（已实现）
 - 决策日期：2026-06-05
 - 关联：[plot v0.1-alpha.3 待办](./roadmap.md) · [plot-design.md §3.8 relation / §4.5 mark 构造（relation 是输入非后处理）](../../../../../architecture/plot-design.md) · 依赖：[ADR-02 bar mark](./02-interval-mark.md) · [ADR-03 transform](./03-transform.md) · [ADR-04 color](./04-color-scale.md) · 回溯：[alpha.1 ADR-05 mark（line.order）](../v0.1-alpha.1/05-plot-encoding-mark.md)
 

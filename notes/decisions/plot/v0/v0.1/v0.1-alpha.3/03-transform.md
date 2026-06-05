@@ -1,6 +1,6 @@
 # ADR-03：transform 阶段（sort / stack；groupBy 作为 stack 的分组参数）
 
-- 状态：Proposed
+- 状态：Accepted（已实现）
 - 决策日期：2026-06-05
 - 关联：[plot v0.1-alpha.3 待办](./roadmap.md) · [plot-design.md §3.3 transform / §4.1 管线第 1 段 / §3.8 relation](../../../../../architecture/plot-design.md) · 回溯：[alpha.1 ADR-06 lowering](../v0.1-alpha.1/06-plot-lowering.md) · 消费方：[ADR-05 relation](./05-relation.md) · [ADR-02 bar mark](./02-interval-mark.md)
 

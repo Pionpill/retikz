@@ -1,6 +1,6 @@
 # ADR-04：ordinal·color scale + color 非位置通道（首个非位置通道，按系列着色）
 
-- 状态：Proposed
+- 状态：Accepted（已实现）
 - 决策日期：2026-06-05
 - 关联：[plot v0.1-alpha.3 待办](./roadmap.md) · [plot-design.md §3.4 scale / §3.6 encoding（位置 / 非位置）/ §4.2 通道分流](../../../../../architecture/plot-design.md) · 回溯：[alpha.1 ADR-05 encoding/mark](../v0.1-alpha.1/05-plot-encoding-mark.md) · 依赖：[ADR-01 band scale（inferCategoryDomain / CategoryValueSchema）](./01-band-scale.md) · 消费方：[ADR-05 relation](./05-relation.md) · [ADR-07 DSL](./07-bindings-dsl.md)
 

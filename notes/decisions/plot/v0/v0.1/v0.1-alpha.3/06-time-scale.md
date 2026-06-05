@@ -1,6 +1,6 @@
 # ADR-06：time scale（scaleUtc 刻度 / 格式 + 时间轴；UTC 语义，domain 用 epoch ms 进 IR）
 
-- 状态：Proposed
+- 状态：Accepted（已实现）
 - 决策日期：2026-06-05
 - 关联：[plot v0.1-alpha.3 待办](./roadmap.md) · [plot-design.md §3.4 scale（time）/ §3.9 guide](../../../../../architecture/plot-design.md) · 回溯：[alpha.2 ADR-02 d3-scale](../v0.1-alpha.2/02-d3-scale.md) · 依赖：[ADR-01 PositionScale](./01-band-scale.md) · 关联消费：[ADR-07 DSL](./07-bindings-dsl.md)
 

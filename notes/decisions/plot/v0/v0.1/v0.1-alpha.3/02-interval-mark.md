@@ -1,6 +1,6 @@
 # ADR-02：interval(bar) mark（baseline→value 矩形，bandwidth 定柱宽，下沉 rectangle Node）
 
-- 状态：Proposed
+- 状态：Accepted（已实现）
 - 决策日期：2026-06-05
 - 关联：[plot v0.1-alpha.3 待办](./roadmap.md) · [plot-design.md §3.7 mark / §4.5 mark 构造](../../../../../architecture/plot-design.md) · 回溯：[alpha.1 ADR-05 encoding/mark](../v0.1-alpha.1/05-plot-encoding-mark.md) · [alpha.1 ADR-06 lowering](../v0.1-alpha.1/06-plot-lowering.md) · 依赖：[ADR-01 band scale](./01-band-scale.md) · 消费方：[ADR-05 relation](./05-relation.md)
 

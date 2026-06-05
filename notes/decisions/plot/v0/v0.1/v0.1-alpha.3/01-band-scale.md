@@ -1,6 +1,6 @@
 # ADR-01：band / point scale（分类域 + bandwidth；projector 抽象为 PositionScale）
 
-- 状态：Proposed
+- 状态：Accepted（已实现）
 - 决策日期：2026-06-05
 - 关联：[plot v0.1-alpha.3 待办](./roadmap.md) · [plot v0.1 roadmap](../roadmap.md) · [plot-design.md §3.4 scale / §3.5 coordinate / §4.3 管线](../../../../../architecture/plot-design.md) · 回溯：[alpha.1 ADR-03 scale](../v0.1-alpha.1/03-plot-scale.md) · [alpha.2 ADR-02 d3-scale](../v0.1-alpha.2/02-d3-scale.md) · 消费方：[ADR-02 bar mark](./02-interval-mark.md) · [ADR-05 relation](./05-relation.md)
 

@@ -53,13 +53,13 @@
 
 | ADR | 主题 | Level | 依赖 | 状态 |
 |---|---|---|---|---|
-| [01](./01-band-scale.md) | band / point scale（分类域按数据序去重，projector 处理 `bandwidth`，guide 刻度落 band 中心、无 nice） | red | 前置无 | Proposed |
-| [02](./02-interval-mark.md) | interval(bar) mark（baseline→value 矩形，`bandwidth` 定柱宽，下沉 core `Node`/`Path`） | red | ADR-01 | Proposed |
-| [03](./03-transform.md) | transform 最小集（sort / groupBy / stack；`expandPlot` 前插管线段，纯 JSON 进出） | red | 前置无 | Proposed |
-| [04](./04-color-scale.md) | ordinal·color scale + color 非位置通道（encoding 加 color，scale 加 ordinal，mark 消费 color 着色） | red | ADR-01 | Proposed |
-| [05](./05-relation.md) | relation：group(dodge) + stack（多系列柱 / 折线几何，集成 02+03+04；order 已有） | red | ADR-02、03、04 | Proposed |
-| [06](./06-time-scale.md) | time scale（`scaleUtc` 刻度 / 格式 + 时间轴，UTC 语义，与折线正交） | red | ADR-01 | Proposed |
-| [07](./07-bindings-dsl.md) | 三包 guide 露出（`<BarMark>`、group/stack/series props、color encoding；vanilla / docs 同步） | red | ADR-01~06 | Proposed |
+| [01](./01-band-scale.md) | band / point scale（分类域按数据序去重，projector 处理 `bandwidth`，guide 刻度落 band 中心、无 nice） | red | 前置无 | Accepted |
+| [02](./02-interval-mark.md) | interval(bar) mark（baseline→value 矩形，`bandwidth` 定柱宽，下沉 core `Node`/`Path`） | red | ADR-01 | Accepted |
+| [03](./03-transform.md) | transform 最小集（sort / groupBy / stack；`expandPlot` 前插管线段，纯 JSON 进出） | red | 前置无 | Accepted |
+| [04](./04-color-scale.md) | ordinal·color scale + color 非位置通道（encoding 加 color，scale 加 ordinal，mark 消费 color 着色） | red | ADR-01 | Accepted |
+| [05](./05-relation.md) | relation：group(dodge) + stack（多系列柱 / 折线几何，集成 02+03+04；order 已有） | red | ADR-02、03、04 | Accepted |
+| [06](./06-time-scale.md) | time scale（`scaleUtc` 刻度 / 格式 + 时间轴，UTC 语义，与折线正交） | red | ADR-01 | Accepted |
+| [07](./07-bindings-dsl.md) | 三包 guide 露出（`<BarMark>`、group/stack/series props、color encoding；vanilla / docs 同步） | red | ADR-01~06 | Accepted |
 
 > 起草阶段全部 `Proposed`；逐条实现 + 自测（对抗 Bug Hunter）+ 文档 + 审计后改 `Accepted`，落在 `next-plot`。
 
