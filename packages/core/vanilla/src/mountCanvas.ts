@@ -1,5 +1,6 @@
 import type { Scene } from '@retikz/core';
-import { renderToCanvas } from '@retikz/render/canvas';
+import { hitTest, renderToCanvas } from '@retikz/render/canvas';
+import { createHydrationController } from '@retikz/render/hydration';
 import { isFigure } from './builder/isFigure';
 import { toScene } from './toScene';
 import type { CanvasView, HydrateOptions, MountCanvasOptions, RenderInput, ScenePoint } from './types';
@@ -59,24 +60,42 @@ export const mountCanvas = (
 
   /**
    * 把指针的 client 像素坐标逆 meet-fit 映射成 Scene user units
-   * @description meet-fit 正向：scenePx = scale·(sceneUnit − layout.origin) + offset（letterbox 居中）；
-   *   此处求逆——读 `canvas.getBoundingClientRect()` 把 client 坐标降到 canvas 局部 CSS 像素，再除 scale + 还原
-   *   layout origin / letterbox offset。stub 暂返回原始 client 坐标占位，留 Impl 接逆 fit。
+   * @description meet-fit 正向（CSS 显示盒内，镜像 renderToCanvas / CanvasHost，dpr 在 client→CSS 这步已无关）：
+   *   `scale = min(cssWidth/layout.width, cssHeight/layout.height)`；`offset = (cssSize − layout.size·scale)/2`
+   *   居中 letterbox；`cssX = offset.x + (sceneX − layout.x)·scale`。此处求逆——读 `canvas.getBoundingClientRect()`
+   *   把 client 坐标降到 canvas 局部 CSS 像素，再去 letterbox offset、除 scale、加 layout origin。落在 letterbox
+   *   黑边外的点会得到 layout 区域外坐标，交由 `hitTest` 自然判为无命中（不在此截断）。
    */
   const clientToScene = (clientX: number, clientY: number): ScenePoint => {
-    void currentScene;
-    // stub：Impl Agent 接逆 meet-fit（getBoundingClientRect + scale + letterbox offset + layout origin）
-    return { x: clientX, y: clientY };
+    const { layout } = currentScene;
+    const rect = canvas.getBoundingClientRect();
+    const scale = Math.min(rect.width / layout.width, rect.height / layout.height);
+    const offsetX = (rect.width - layout.width * scale) / 2;
+    const offsetY = (rect.height - layout.height * scale) / 2;
+    const contentX = clientX - rect.left - offsetX;
+    const contentY = clientY - rect.top - offsetY;
+    return { x: contentX / scale + layout.x, y: contentY / scale + layout.y };
   };
 
   let disposed = false;
 
-  const hydrate = (hydrateOptions: HydrateOptions) => {
-    void hydrateOptions;
-    void clientToScene;
-    // stub：Impl Agent 接 createHydrationController(canvas, handlers, locate)，
-    //   locate = event → hitTest(currentScene, clientToScene(event.clientX, event.clientY), { context2d })
-    return { dispose() {} };
+  /**
+   * canvas 水合：把 handler 经 hitTest 定位绑到 `<canvas>`
+   * @description canvas 无逐图元 DOM，`locate(event)` = client 坐标经 `clientToScene` 逆 meet-fit 成 Scene 点
+   *   （落 letterbox 黑边 → null、不命中），再 `hitTest(currentScene, point, { context2d })` 返回命中图元 id。
+   *   `context2d` 用 canvas 自己的 2D context（生产真实；测试 spy 的 harness context 经 `getContext('2d')` 返回）
+   *   作几何重建 + 原生点测的载体。绑定经 `createHydrationController`（根级委托 + enter/leave 合成 + dispose）。
+   */
+  const hydrate = (hydrateOptions: HydrateOptions): { dispose: () => void } => {
+    const context2d = canvas.getContext('2d') ?? undefined;
+    const controller = createHydrationController(canvas, hydrateOptions.handlers, event => {
+      const scenePoint = clientToScene((event as MouseEvent).clientX, (event as MouseEvent).clientY);
+      // hitTest 把点测点表达在 Scene user units / 各图元局部帧、自管 group transform 栈；live canvas context
+      // 经 renderToCanvas 后残留 meet-fit transform，须先归一到 identity 再点测，否则路径被二次缩放偏移。
+      context2d?.setTransform(1, 0, 0, 1, 0, 0);
+      return hitTest(currentScene, scenePoint, { context2d });
+    });
+    return { dispose: controller.dispose };
   };
 
   return {

@@ -65,7 +65,11 @@ export type CanvasView = {
   dispose: () => void;
   /** 绑定 handler：以 `hitTest` + `clientToScene` 构造 `locate`，经 `createHydrationController` 委托 */
   hydrate: (options: HydrateOptions) => HydrationHandle;
-  /** 把指针的 client 像素坐标逆 meet-fit 映射成 Scene user units（命中映射用） */
+  /**
+   * 把指针的 client 像素坐标逆 meet-fit 映射成 Scene user units（命中映射用）
+   * @description 始终返回逆 fit 后的 Scene 点；落在 letterbox 黑边外的点会得到 layout 区域外坐标，
+   *   交给 `hitTest` 自然判为无命中（无需在此截断），故无 `null` 返回。
+   */
   clientToScene: (clientX: number, clientY: number) => ScenePoint;
 };
 
