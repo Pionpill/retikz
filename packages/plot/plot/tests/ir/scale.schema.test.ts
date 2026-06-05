@@ -79,3 +79,19 @@ describe('ScaleSchema band / point (ADR-01)', () => {
     expect(() => ScaleSchema.parse({ type: 'band', name: 'x', domain: [{}] })).toThrow();
   });
 });
+
+describe('ScaleSchema ordinal (ADR-04)', () => {
+  it('ordinal_schema_valid', () => {
+    const s = { type: 'ordinal', name: 'col' };
+    expect(ScaleSchema.parse(s)).toEqual(s);
+  });
+
+  it('ordinal_with_range_valid', () => {
+    const s = { type: 'ordinal', name: 'col', domain: ['a', 'b'], range: ['#a', '#b'] };
+    expect(ScaleSchema.parse(s)).toEqual(s);
+  });
+
+  it('ordinal_range_non_string_rejected', () => {
+    expect(() => ScaleSchema.parse({ type: 'ordinal', name: 'col', range: [1, 2] })).toThrow();
+  });
+});

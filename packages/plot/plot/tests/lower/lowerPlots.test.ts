@@ -1,5 +1,6 @@
 import { compileToScene } from '@retikz/core';
 import type { IRNode, IRPath, IRScope } from '@retikz/core';
+import { schemeCategory10 } from 'd3-scale-chromatic';
 import { describe, expect, it } from 'vitest';
 import { type PlotSpec, PlotSpecSchema } from '../../src/ir';
 import { type LowerPlotsOptions, lowerPlots } from '../../src/lower/expand';
@@ -318,5 +319,149 @@ describe('lowerPlots interval/bar (ADR-02)', () => {
     expect(outer.children).toHaveLength(2);
     expect((outer.children[0] as IRScope).nodeDefault?.shape).toBe('rectangle'); // interval 层
     expect((outer.children[1] as IRScope).nodeDefault?.shape).toBe('circle'); // point 层
+  });
+});
+
+// ADR-04：ordinal·color scale + color 通道
+describe('lowerPlots color (ADR-04)', () => {
+  const COUNTRIES = [
+    { gdp: 1, life: 70, continent: 'Asia' },
+    { gdp: 2, life: 80, continent: 'Europe' },
+    { gdp: 3, life: 75, continent: 'Asia' },
+  ];
+  const coloredPoint = (scales: Array<unknown>): PlotSpec =>
+    PlotSpecSchema.parse({
+      namespace: 'plot',
+      type: 'plot',
+      data: { ref: 'c' },
+      scales,
+      coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
+      marks: [{ type: 'point', encoding: { x: { field: 'gdp' }, y: { field: 'life' }, color: { field: 'continent', scale: 'col' } } }],
+    });
+
+  it('point_color_groups_into_subscopes', () => {
+    const layer = firstLayer(
+      coloredPoint([
+        { type: 'linear', name: 'x' },
+        { type: 'linear', name: 'y' },
+        { type: 'ordinal', name: 'col', range: ['#aa', '#bb'] },
+      ]),
+      { c: COUNTRIES },
+      opts,
+    );
+    // 2 类别 → 2 子 Scope（Asia 先于 Europe，按数据序）
+    expect(layer.children).toHaveLength(2);
+    const asia = layer.children[0] as IRScope;
+    expect(asia.nodeDefault?.shape).toBe('circle');
+    expect(asia.nodeDefault?.fill).toBe('#aa');
+    expect(asia.children).toHaveLength(2);
+    const europe = layer.children[1] as IRScope;
+    expect(europe.nodeDefault?.fill).toBe('#bb');
+    expect(europe.children).toHaveLength(1);
+  });
+
+  it('point_color_default_scheme', () => {
+    const layer = firstLayer(
+      coloredPoint([
+        { type: 'linear', name: 'x' },
+        { type: 'linear', name: 'y' },
+        { type: 'ordinal', name: 'col' },
+      ]),
+      { c: COUNTRIES },
+      opts,
+    );
+    expect((layer.children[0] as IRScope).nodeDefault?.fill).toBe(schemeCategory10[0]);
+    expect((layer.children[1] as IRScope).nodeDefault?.fill).toBe(schemeCategory10[1]);
+  });
+
+  it('point_color_auto_synthesized_scale', () => {
+    // color 有 field 无 scale ref → 自动合成 ordinal 色 scale（默认配色）
+    const spec = PlotSpecSchema.parse({
+      namespace: 'plot',
+      type: 'plot',
+      data: { ref: 'c' },
+      scales: [
+        { type: 'linear', name: 'x' },
+        { type: 'linear', name: 'y' },
+      ],
+      coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
+      marks: [{ type: 'point', encoding: { x: { field: 'gdp' }, y: { field: 'life' }, color: { field: 'continent' } } }],
+    });
+    const layer = firstLayer(spec, { c: COUNTRIES }, opts);
+    expect(layer.children).toHaveLength(2);
+    expect((layer.children[0] as IRScope).nodeDefault?.fill).toBe(schemeCategory10[0]);
+  });
+
+  it('point_color_constant_single_subscope', () => {
+    const spec = PlotSpecSchema.parse({
+      namespace: 'plot',
+      type: 'plot',
+      data: { ref: 'c' },
+      scales: [
+        { type: 'linear', name: 'x' },
+        { type: 'linear', name: 'y' },
+      ],
+      coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
+      marks: [{ type: 'point', encoding: { x: { field: 'gdp' }, y: { field: 'life' }, color: { value: '#333' } } }],
+    });
+    const layer = firstLayer(spec, { c: COUNTRIES }, opts);
+    expect(layer.children).toHaveLength(1);
+    expect((layer.children[0] as IRScope).nodeDefault?.fill).toBe('#333');
+    expect((layer.children[0] as IRScope).children).toHaveLength(3);
+  });
+
+  it('color_unknown_scale_ref_throws', () => {
+    const spec = coloredPoint([
+      { type: 'linear', name: 'x' },
+      { type: 'linear', name: 'y' },
+    ]);
+    expect(() => expandOf(spec, { c: COUNTRIES }, opts)).toThrow(/unknown scale/);
+  });
+
+  it('color_non_ordinal_scale_ref_throws', () => {
+    const spec = coloredPoint([
+      { type: 'linear', name: 'x' },
+      { type: 'linear', name: 'y' },
+      { type: 'linear', name: 'col' },
+    ]);
+    expect(() => expandOf(spec, { c: COUNTRIES }, opts)).toThrow(/ordinal/);
+  });
+
+  it('line_color_constant_to_stroke', () => {
+    const spec = PlotSpecSchema.parse({
+      namespace: 'plot',
+      type: 'plot',
+      data: { ref: 'c' },
+      scales: [
+        { type: 'linear', name: 'x' },
+        { type: 'linear', name: 'y' },
+      ],
+      coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
+      marks: [{ type: 'line', order: 'gdp', encoding: { x: { field: 'gdp' }, y: { field: 'life' }, color: { value: 'tomato' } } }],
+    });
+    expect(firstLayer(spec, { c: COUNTRIES }, opts).pathDefault?.stroke).toBe('tomato');
+  });
+
+  it('bar_color_groups_into_subscopes', () => {
+    const spec = PlotSpecSchema.parse({
+      namespace: 'plot',
+      type: 'plot',
+      data: { ref: 'c' },
+      scales: [
+        { type: 'band', name: 'x' },
+        { type: 'linear', name: 'y' },
+        { type: 'ordinal', name: 'col' },
+      ],
+      coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
+      marks: [{ type: 'interval', encoding: { x: { field: 'gdp' }, y: { field: 'life' }, color: { field: 'continent', scale: 'col' } } }],
+    });
+    const layer = firstLayer(spec, { c: COUNTRIES }, opts);
+    expect(layer.children).toHaveLength(2);
+    expect((layer.children[0] as IRScope).nodeDefault?.shape).toBe('rectangle');
+  });
+
+  it('uncolored_point_keeps_single_scope', () => {
+    // 无 color：守 alpha.1 结构（单层 nodeDefault，不分子 Scope）
+    expect(firstLayer(pointSpec(), { sales: SALES }, opts).nodeDefault?.shape).toBe('circle');
   });
 });

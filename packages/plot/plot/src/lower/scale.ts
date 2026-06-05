@@ -1,6 +1,7 @@
 import { extent } from 'd3-array';
-import { type ScaleBand, type ScaleLinear, type ScalePoint, scaleBand, scaleLinear, scalePoint } from 'd3-scale';
-import { type BandScale, PlotScale, type PointScale, type ScalarValue, type Scale } from '../ir';
+import { type ScaleBand, type ScaleLinear, type ScalePoint, scaleBand, scaleLinear, scaleOrdinal, scalePoint } from 'd3-scale';
+import { schemeCategory10 } from 'd3-scale-chromatic';
+import { type BandScale, type OrdinalScale, PlotScale, type PointScale, type ScalarValue, type Scale } from '../ir';
 import { isFiniteNumber } from './field';
 
 /** 默认目标刻度数（d3 ticks 的提示值，非硬约束——实际数量按 nice 区间取整定） */
@@ -117,6 +118,21 @@ export const resolvePointScale = (
   return scale;
 };
 
+/**
+ * 建序数 scale（d3 scaleOrdinal）：分类域 → 离散输出（颜色）
+ * @description range 省略用默认配色方案（schemeCategory10，10 色，域超出循环复用）；domain 省略按数据序去重推断。
+ *   返回 (category) => 输出串；非位置通道（color）消费。
+ */
+export const resolveOrdinalScale = (
+  def: OrdinalScale | undefined,
+  values: Array<unknown>,
+): ((value: string | number) => string) => {
+  const domain = def?.domain ?? inferCategoryDomain(values);
+  const range = def?.range ?? [...schemeCategory10];
+  const scale = scaleOrdinal<string | number, string>().domain(domain).range(range);
+  return value => scale(value);
+};
+
 /** 分类 scale 的刻度 = 每类别一刻度（值 = 类别、标签 = 类别串） */
 const categoryTicks = (scale: ScaleBand<string | number> | ScalePoint<string | number>): TickSet => {
   const domain = scale.domain();
@@ -196,5 +212,7 @@ export const resolvePositionScale = (
       return pointPositionScale(resolvePointScale(def, values, fallbackRange));
     case PlotScale.Linear:
       return linearPositionScale(resolveLinearScale(def, values.filter(isFiniteNumber), fallbackRange));
+    case PlotScale.Ordinal:
+      throw new Error(`resolvePositionScale: ordinal scale "${def.name}" cannot drive a positional (x/y) channel`);
   }
 };

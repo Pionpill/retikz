@@ -61,11 +61,13 @@
     "@retikz/core": "workspace:*",
     "d3-array": "catalog:",
     "d3-scale": "catalog:",
+    "d3-scale-chromatic": "catalog:",
     "zod": "catalog:"
   },
   "devDependencies": {
     "@types/d3-array": "catalog:",
     "@types/d3-scale": "catalog:",
+    "@types/d3-scale-chromatic": "catalog:",
     "@types/node": "catalog:",
     "typescript": "catalog:",
     "vite": "catalog:",

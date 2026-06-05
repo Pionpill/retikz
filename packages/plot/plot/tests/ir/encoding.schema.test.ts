@@ -37,4 +37,24 @@ describe('ChannelSchema / EncodingSchema (ADR-05)', () => {
   it('channel_value_uses_scalar', () => {
     expect(() => ChannelSchema.parse({ value: { a: 1 } })).toThrow();
   });
+
+  // ADR-04：color 通道 + scale 引用
+  it('channel_with_scale_ref_valid', () => {
+    const c = { field: 'continent', scale: 'col' };
+    expect(ChannelSchema.parse(c)).toEqual(c);
+  });
+
+  it('encoding_color_channel_valid', () => {
+    const e = { x: { field: 'gdp' }, y: { field: 'life' }, color: { field: 'continent', scale: 'col' } };
+    expect(EncodingSchema.parse(e)).toEqual(e);
+  });
+
+  it('encoding_color_constant_valid', () => {
+    const e = { x: { field: 'gdp' }, y: { field: 'life' }, color: { value: '#e4572e' } };
+    expect(EncodingSchema.parse(e)).toEqual(e);
+  });
+
+  it('color_channel_both_field_value_rejected', () => {
+    expect(() => ChannelSchema.parse({ field: 'c', value: '#000', scale: 'col' })).toThrow();
+  });
 });

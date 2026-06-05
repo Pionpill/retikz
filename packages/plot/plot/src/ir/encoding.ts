@@ -11,18 +11,28 @@ export const ChannelSchema = z
         'Path accessor into a data row bound to this channel (e.g. "month" or "user.age"); resolved against the externally-supplied dataset at lowering and must yield a scalar',
       ),
     value: ScalarValueSchema.optional().describe('Constant scalar literal for this channel (mutually exclusive with field)'),
+    scale: z
+      .string()
+      .min(1)
+      .optional()
+      .describe(
+        'Scale name driving this channel (required for non-positional channels like color; positional x / y derive their scale from the coordinate system and omit this)',
+      ),
   })
   .refine(c => (c.field === undefined) !== (c.value === undefined), {
     message: 'channel must set exactly one of `field` or `value`',
   })
-  .describe('A channel binding: exactly one of field (data-driven) / value (constant)');
+  .describe('A channel binding: exactly one of field (data-driven) / value (constant), plus an optional scale reference');
 
 export const EncodingSchema = z
   .object({
     x: ChannelSchema.optional().describe('x position channel'),
     y: ChannelSchema.optional().describe('y position channel'),
+    color: ChannelSchema.optional().describe(
+      'Color channel (non-positional): maps a field through an ordinal / color scale to the mark fill / stroke',
+    ),
   })
-  .describe('Channel bindings for a mark; non-positional channels (color / size / ...) reserved for alpha.3');
+  .describe('Channel bindings for a mark; positional x / y consumed by the coordinate system, non-positional color fed to mark paint');
 
 /** 通道绑定：field（数据驱动）/ value（常量）二选一 */
 export type Channel = z.infer<typeof ChannelSchema>;

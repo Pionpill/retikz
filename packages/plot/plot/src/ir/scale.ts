@@ -12,6 +12,8 @@ export const PlotScale = {
   Band: 'band',
   /** 分类点：band 的退化，类别落在等距点上（分类轴上的折线 / 散点） */
   Point: 'point',
+  /** 序数：分类域 → 离散输出域（典型为颜色），多系列着色主力 */
+  Ordinal: 'ordinal',
 } as const;
 
 /** scale 类型 */
@@ -91,9 +93,24 @@ export const PointScaleSchema = z
   })
   .describe('Point scale: degenerate band (zero width) placing categories on evenly spaced positions');
 
+export const OrdinalScaleSchema = z
+  .object({
+    type: z.literal(PlotScale.Ordinal).describe('Discriminator: ordinal scale mapping a discrete domain to a discrete output range (typically colors)'),
+    name: z.string().min(1).describe('Scale name; referenced by a non-positional channel scale ref'),
+    domain: z
+      .array(CategoryValueSchema)
+      .optional()
+      .describe('Ordered category list; omit to infer the distinct field values in data-encounter order at lowering'),
+    range: z
+      .array(z.string())
+      .optional()
+      .describe('Output values cycled across the domain (e.g. color strings); omit to use a default categorical color scheme'),
+  })
+  .describe('Ordinal scale: discrete domain to discrete output range (colors); the workhorse for series color');
+
 export const ScaleSchema = z
-  .discriminatedUnion('type', [LinearScaleSchema, BandScaleSchema, PointScaleSchema])
-  .describe('Scale union: linear (continuous) / band / point (categorical); extensible to ordinal / time in later ADRs');
+  .discriminatedUnion('type', [LinearScaleSchema, BandScaleSchema, PointScaleSchema, OrdinalScaleSchema])
+  .describe('Scale union: linear (continuous) / band / point (categorical) / ordinal (discrete output, colors); extensible to time later');
 
 /** 分类标量：类别取值 */
 export type CategoryValue = z.infer<typeof CategoryValueSchema>;
@@ -103,5 +120,7 @@ export type LinearScale = z.infer<typeof LinearScaleSchema>;
 export type BandScale = z.infer<typeof BandScaleSchema>;
 /** point scale */
 export type PointScale = z.infer<typeof PointScaleSchema>;
-/** scale（linear / band / point） */
+/** ordinal scale（分类 → 离散输出，颜色） */
+export type OrdinalScale = z.infer<typeof OrdinalScaleSchema>;
+/** scale（linear / band / point / ordinal） */
 export type Scale = z.infer<typeof ScaleSchema>;

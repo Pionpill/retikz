@@ -1,11 +1,11 @@
 import { type CompositeDefinition, type IRChild, type IRScope, defineComposite } from '@retikz/core';
-import { type ExternalDatasets, type Guide, PlotScale, type PlotSpec, PlotSpecSchema } from '../ir';
-import { channelValue } from './field';
+import { type ExternalDatasets, type Guide, type Mark, type OrdinalScale, PlotScale, type PlotSpec, PlotSpecSchema } from '../ir';
+import { channelValue, resolveFieldPath } from './field';
 import { type GuideContext, lowerGuide } from './guide';
 import { DEFAULT_FONT_SIZE, type Margins, type Rect, computePlotArea } from './layout';
-import { lowerMark } from './mark';
+import { type ColorOf, lowerMark } from './mark';
 import { createCartesianProjector } from './project';
-import { type TickSet, resolvePositionScale } from './scale';
+import { type TickSet, resolveOrdinalScale, resolvePositionScale } from './scale';
 import { applyTransforms } from './transform';
 
 /** 空刻度集（某维度无 axis 时给 GuideContext 的占位；实际不会被该维度的 guide 触达） */
@@ -128,9 +128,38 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
     height: Math.abs(yRangeEnd - yRangeStart),
   };
 
+  // 解析某 mark 的 color 编码 → 行→颜色串：常量 value 直用；字段过 ordinal scale（显式引用或自动合成默认配色）
+  const resolveColor = (mark: Mark): ColorOf | undefined => {
+    const channel = mark.encoding.color;
+    if (!channel) return undefined;
+    if (channel.value !== undefined) {
+      const constant = String(channel.value);
+      return () => constant;
+    }
+    if (channel.field === undefined) return undefined;
+    const field = channel.field;
+    let ordinalDef: OrdinalScale | undefined;
+    if (channel.scale !== undefined) {
+      const def = scaleByName.get(channel.scale);
+      if (!def) throw new Error(`lowerPlots: color channel references unknown scale "${channel.scale}"`);
+      if (def.type !== PlotScale.Ordinal) {
+        throw new Error(`lowerPlots: color channel scale "${channel.scale}" must be an ordinal scale`);
+      }
+      ordinalDef = def;
+    }
+    const ordinal = resolveOrdinalScale(
+      ordinalDef,
+      rows.map(row => resolveFieldPath(row, field)),
+    );
+    return row => {
+      const value = resolveFieldPath(row, field);
+      return typeof value === 'string' || typeof value === 'number' ? ordinal(value) : undefined;
+    };
+  };
+
   // 每个 mark 下沉成一个图层 Scope（样式上提到 nodeDefault/pathDefault）；空图层（无可绘制点）丢弃
   const markLayers: Array<IRChild> = node.marks
-    .map(mark => lowerMark(mark, rows, project))
+    .map(mark => lowerMark(mark, rows, project, resolveColor(mark)))
     .filter((layer): layer is IRChild => layer !== null);
 
   // guide 下沉：每个 axis → 网格层（垫底）+ 轴层（压顶），刻度与 mark 共用同一投影器（严格对齐）
