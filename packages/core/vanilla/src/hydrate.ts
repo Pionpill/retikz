@@ -9,10 +9,6 @@ import type { HydrateOptions, HydrationHandle } from './types';
  *   对应 handler；`pointerEnter` / `pointerLeave` 由控制器据 `relatedTarget` 合成。返回 `{ dispose }` 解绑。
  */
 export const hydrate = (root: Element, options: HydrateOptions): HydrationHandle => {
-  void root;
-  void options;
-  void createHydrationController;
-  void locateSvg;
-  // stub：Impl Agent 接 createHydrationController(root, options.handlers, locateSvg) 并回传其 { dispose }
-  return { dispose() {} };
+  const controller = createHydrationController(root, options.handlers, locateSvg);
+  return { dispose: controller.dispose };
 };
