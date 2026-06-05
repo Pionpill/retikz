@@ -6,6 +6,7 @@ import { DEFAULT_FONT_SIZE, type Margins, type Rect, computePlotArea } from './l
 import { lowerMark } from './mark';
 import { createCartesianProjector } from './project';
 import { type TickSet, resolvePositionScale } from './scale';
+import { applyTransforms } from './transform';
 
 /** 空刻度集（某维度无 axis 时给 GuideContext 的占位；实际不会被该维度的 guide 触达） */
 const EMPTY_TICKS: TickSet = { values: [], labels: [] };
@@ -58,7 +59,8 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
   if (!(node.data.ref in datasets)) {
     throw new Error(`lowerPlots: dataset "${node.data.ref}" not found in provided datasets`);
   }
-  const rows = datasets[node.data.ref];
+  // 取数后先过 transform 管线（sort / stack…）：域推断与 mark 下沉都用变换后的行
+  const rows = applyTransforms(datasets[node.data.ref], node.transform);
 
   const coordinate = node.coordinate;
   const scaleByName = new Map(node.scales.map(scale => [scale.name, scale] as const));

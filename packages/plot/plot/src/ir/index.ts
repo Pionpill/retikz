@@ -5,3 +5,4 @@ export * from './guide';
 export * from './mark';
 export * from './plot';
 export * from './scale';
+export * from './transform';
