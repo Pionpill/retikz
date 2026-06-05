@@ -97,7 +97,7 @@ export const resolveEdgePoint = (
   const key = `${side}:${t}`;
   const cached = layoutCache.get(key);
   if (cached !== undefined) return cached;
-  const result = positionToIR(edgePoint(layout.rect, side, t));
+  const result = positionToIR(edgePoint(layout.rect, side, t, layout.shapeParams ?? {}));
   layoutCache.set(key, result);
   return result;
 };

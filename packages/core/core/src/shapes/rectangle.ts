@@ -1,14 +1,17 @@
+import { z } from 'zod';
 import type { ScenePrimitive } from '../primitive';
 import { rect as rectOps } from '../geometry/rect';
 import { asRectAnchor } from './_shared';
-import type { ShapeDefinition } from './types';
+import { defineShape } from './define';
 
 /**
  * rectangle 注册项
  * @description circumscribe = identity（视觉边界 = 内框）；boundaryPoint / anchor 直接走 rect 数学层；
- *   emit 出 RectPrim（圆角走 cornerRadius），与旧 `emitRectShape` 逐字段等价
+ *   emit 出 RectPrim（圆角走 cornerRadius），与旧 `emitRectShape` 逐字段等价。无参形状：`paramsSchema` 为
+ *   `z.strictObject({})`、5 函数忽略末位 `params`。
  */
-export const rectangle: ShapeDefinition = {
+export const rectangle = defineShape({
+  paramsSchema: z.strictObject({}),
   circumscribe: (hw, hh) => ({ halfWidth: hw, halfHeight: hh }),
   boundaryPoint: (r, toward) => rectOps.boundaryPoint(r, toward),
   anchor: (r, name) => {
@@ -35,4 +38,4 @@ export const rectangle: ShapeDefinition = {
       opacity: style.opacity,
     };
   },
-};
+});

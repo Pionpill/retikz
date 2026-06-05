@@ -1,8 +1,9 @@
+import { z } from 'zod';
 import type { ScenePrimitive } from '../primitive';
 import { type Diamond, diamond as diamondOps } from '../geometry/diamond';
 import type { Rect } from '../geometry/rect';
 import { asRectAnchor } from './_shared';
-import type { ShapeDefinition } from './types';
+import { defineShape } from './define';
 
 /** 外接框 Rect → Diamond（halfA/halfB = 半宽/半高；顶点在 ±halfA / ±halfB） */
 const toDiamond = (r: Rect): Diamond => ({
@@ -16,9 +17,11 @@ const toDiamond = (r: Rect): Diamond => ({
 /**
  * diamond 注册项
  * @description circumscribe = 内框 ×2（内框 4 顶点落在菱形 4 边上）；几何由外接框半轴派生；
- *   emit 在**轴对齐空间**取 4 顶点出 PathPrim（rotate 由外层 group 施加），与旧 `emitDiamondShape(unrotated(...))` 等价
+ *   emit 在**轴对齐空间**取 4 顶点出 PathPrim（rotate 由外层 group 施加），与旧 `emitDiamondShape(unrotated(...))` 等价。
+ *   无参形状：`paramsSchema` 为 `z.strictObject({})`、5 函数忽略末位 `params`。
  */
-export const diamond: ShapeDefinition = {
+export const diamond = defineShape({
+  paramsSchema: z.strictObject({}),
   circumscribe: (hw, hh) => ({ halfWidth: hw * 2, halfHeight: hh * 2 }),
   boundaryPoint: (r, toward) => diamondOps.boundaryPoint(toDiamond(r), toward),
   anchor: (r, name) => {
@@ -50,4 +53,4 @@ export const diamond: ShapeDefinition = {
       opacity: style.opacity,
     };
   },
-};
+});
