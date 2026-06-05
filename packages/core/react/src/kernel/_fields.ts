@@ -51,6 +51,7 @@ void _assertNodeFieldsCheck;
  * @description 同 NODE_FIELDS 互锁防漂移
  */
 export const PATH_FIELDS = [
+  'id',
   'color',
   'stroke',
   'strokeWidth',

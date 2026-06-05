@@ -7,3 +7,5 @@ export * from './Coordinate';
 export * from './Scope';
 export * from './rendererContext';
 export * from './RendererModeProvider';
+export { collectHydrationHandlers } from './collectHydrationHandlers';
+export type { HydrationEventProps } from './eventProps';

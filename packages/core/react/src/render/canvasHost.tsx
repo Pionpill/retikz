@@ -1,6 +1,7 @@
 import { type CSSProperties, type FC, useEffect, useReducer, useRef } from 'react';
 import type { Scene } from '@retikz/core';
 import { renderToCanvas } from '@retikz/render/canvas';
+import type { HydrationHandlers } from '@retikz/render/hydration';
 
 /** 按 href 缓存的图片加载态（image paint server 用；跨 CanvasHost 实例共享去重） */
 type ImageEntry = { img: HTMLImageElement; loaded: boolean; failed: boolean; waiters: Set<() => void> };
@@ -39,6 +40,12 @@ const loadImage = (href: string, onReady: () => void): HTMLImageElement | null =
 export type CanvasHostProps = {
   /** 已编译 Scene */
   scene: Scene;
+  /**
+   * 水合 handler 注册表（按图元 id）
+   * @description 经 `createHydrationController(canvas, handlers, locate)` 绑到 `<canvas>`，
+   *   locate 由 `hitTest` + client→Scene 坐标映射（逆 meet-fit）构成，与 svg 模式共用同一注册表语义。
+   */
+  handlers?: HydrationHandlers;
   /** 透传显示宽度 */
   width?: number | string;
   /** 透传显示高度 */
@@ -71,7 +78,7 @@ const canvasFontFamily = (canvas: HTMLCanvasElement): string | undefined => {
 
 /** React canvas 宿主：管理 `<canvas>` 与全量重绘 effect */
 export const CanvasHost: FC<CanvasHostProps> = props => {
-  const { scene, width, height, className, style } = props;
+  const { scene, handlers, width, height, className, style } = props;
   const ref = useRef<HTMLCanvasElement>(null);
   // image 加载完 / 主题切换都触发重绘（renderToCanvas 重读 getComputedStyle 的 color → currentColor）
   const [renderTick, bumpRender] = useReducer((n: number) => n + 1, 0);
@@ -108,6 +115,16 @@ export const CanvasHost: FC<CanvasHostProps> = props => {
       getImage: href => loadImage(href, bumpRender),
     });
   }, [className, height, renderTick, scene, style, width]);
+
+  // 水合：把 handler 注册表经 createHydrationController + (hitTest + 逆 meet-fit 坐标映射) 绑到 <canvas>。
+  // stub：实际控制器接线留待 Impl 实装，当前 effect 不绑定（canvas 水合 / parity 测试此刻预期 fail）。
+  useEffect(() => {
+    const canvas = ref.current;
+    if (!canvas) return undefined;
+    void handlers;
+    void scene;
+    return undefined;
+  }, [handlers, scene]);
 
   // object-fit:contain：受限容器（如 max-width 收窄宽度但高度固定）下让位图按比例 letterbox 不拉伸，
   // 对齐 SVG preserveAspectRatio="meet"；用户可经 style.objectFit 覆盖

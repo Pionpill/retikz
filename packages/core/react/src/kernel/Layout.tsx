@@ -1,4 +1,15 @@
-import { type CSSProperties, type FC, type ReactElement, type ReactNode, cloneElement, useId, useMemo } from 'react';
+import {
+  type CSSProperties,
+  type FC,
+  type ReactElement,
+  type ReactNode,
+  cloneElement,
+  useCallback,
+  useEffect,
+  useId,
+  useMemo,
+  useRef,
+} from 'react';
 import {
   type ArrowDefinition,
   type CompositeDefinition,
@@ -10,8 +21,10 @@ import {
   type TextMeasurer,
   compileToScene,
 } from '@retikz/core';
+import type { HydrationHandlers } from '@retikz/render/hydration';
 import { buildSvgDocument } from '@retikz/render/svg';
 import { buildIR, pickScopeStyle, wrapRootScope } from './builder';
+import { collectHydrationHandlers } from './collectHydrationHandlers';
 import { useRendererMode } from './rendererContext';
 import type { ScopeStyleProps } from './_fields';
 import { browserMeasurer } from '../render/browser-measurer';
@@ -46,6 +59,13 @@ export type LayoutProps = ScopeStyleProps & {
   ir?: IR;
   /** Kernel/Sugar JSX children */
   children?: ReactNode;
+  /**
+   * `ir` prop 模式下按图元 id 提供的水合 handler 注册表（无 JSX children 可收集时用）
+   * @description JSX 模式经组件 `on<Event>` props 收集，无需此 prop；直接传 `ir` 时无组件 props，
+   *   改由此 prop 按 `{ [id]: { click, ... } }` 提供。两路结果经 `createHydrationController` 绑到 figure root
+   *   （svg root 或 `<canvas>`），svg / canvas 双模共用同一注册表与分发。
+   */
+  handlers?: HydrationHandlers;
   /** SVG 元素宽度（CSS 长度或数字） */
   width?: number | string;
   /** SVG 元素高度（CSS 长度或数字） */
@@ -108,6 +128,30 @@ export type LayoutProps = ScopeStyleProps & {
 };
 
 /**
+ * 把水合 handler 注册表绑到 svg figure root（renderer 无关控制器 + locateSvg 定位）
+ * @description JSX / `ir` 两路收集出的 `HydrationHandlers` 经 `createHydrationController(root, handlers, locateSvg)`
+ *   绑到 svg root DOM（由 callback ref 在挂载后写入）；canvas 模式的绑定在 `CanvasHost` 内（hitTest 定位）、
+ *   此处不接管。卸载 / 依赖变化时 dispose。
+ *
+ * @remarks stub：实际控制器接线留待 Impl 实装，当前 effect 不绑定（svg 水合测试此刻预期 fail）。
+ */
+const useSvgHydration = (
+  handlers: HydrationHandlers,
+): ((element: SVGSVGElement | null) => void) => {
+  const rootRef = useRef<SVGSVGElement | null>(null);
+  const setRoot = useCallback((element: SVGSVGElement | null) => {
+    rootRef.current = element;
+  }, []);
+  useEffect(() => {
+    const root = rootRef.current;
+    if (root === null) return undefined;
+    void handlers;
+    return undefined;
+  }, [handlers]);
+  return setRoot;
+};
+
+/**
  * <Layout> 顶层容器
  * @description 流水线：从 children 构造 IR（或直接接受外部 IR）→ `compileToScene` 得 Scene →
  *   `@retikz/render/svg` 的 `buildSvgDocument` 产中性 `SvgNode` 描述树（含 `<defs>` 与按需 dedup 的 `<marker>` /
@@ -115,7 +159,7 @@ export type LayoutProps = ScopeStyleProps & {
  *   `@retikz/render/svg`，react 只做 `SvgNode→ReactElement` 薄映射 + `useId` 绑定。
  */
 export const Layout: FC<LayoutProps> = props => {
-  const { ir: irFromProp, children, width, height, viewBox, className, style, renderer: rendererProp, idPrefix, nodeDistance, shapes, arrows, patterns, pathGenerators, composites } = props;
+  const { ir: irFromProp, children, width, height, viewBox, className, style, renderer: rendererProp, idPrefix, nodeDistance, shapes, arrows, patterns, pathGenerators, composites, handlers } = props;
   const { color, stroke, fill, strokeWidth, opacity, fillOpacity, drawOpacity, nodeDefault, pathDefault, labelDefault, arrowDefault } = props;
   // 渲染目标：显式 prop > 祖先 RendererModeProvider 注入的 context > 默认 svg（hook 必须无条件调用）
   const contextRenderer = useRendererMode();
@@ -154,13 +198,31 @@ export const Layout: FC<LayoutProps> = props => {
     [renderer, scene, resolvedIdPrefix],
   );
 
+  // 水合 handler 注册表：JSX 模式从 children 同源收集，`ir` prop 模式用 `handlers` prop（无 children 可收集）
+  const resolvedHandlers = useMemo(
+    () => (irFromProp !== undefined ? (handlers ?? {}) : collectHydrationHandlers(children)),
+    [irFromProp, handlers, children],
+  );
+
+  // svg root 的 callback ref——水合控制器（createHydrationController + locateSvg）绑定的 figure root
+  const setSvgRoot = useSvgHydration(resolvedHandlers);
+
   if (renderer === 'canvas') {
-    return <CanvasHost scene={scene} width={width} height={height} className={className} style={style} />;
+    return (
+      <CanvasHost
+        scene={scene}
+        handlers={resolvedHandlers}
+        width={width}
+        height={height}
+        className={className}
+        style={style}
+      />
+    );
   }
 
   // Scene → 中性 SvgNode 描述树（buildSvgDocument 内部完成 arrow dedup / defs 组装 / id 前缀派生）→ React 元素
   const svgEl = svgToReact(doc as NonNullable<typeof doc>) as ReactElement;
 
   // svg 元素级附加（width / height / className / 框架 style）由 react 层补：非 svg 包职责
-  return cloneElement(svgEl, { width, height, className, style });
+  return cloneElement(svgEl, { width, height, className, style, ref: setSvgRoot });
 };

@@ -1,6 +1,7 @@
 import type { FC, ReactNode } from 'react';
 import type { IRScope, IRTransform } from '@retikz/core';
 import { TIKZ_SCOPE } from './_displayNames';
+import type { HydrationEventProps } from './eventProps';
 import type { ScopeStyleProps } from './_fields';
 
 /**
@@ -8,7 +9,7 @@ import type { ScopeStyleProps } from './_fields';
  * @description 级联样式子集（graphic state + 四通道 every-X）抽到共享 {@link ScopeStyleProps}，与 `<Layout>` 复用；
  *   本类型额外带容器 / 命名空间 / 局部变换 / 屏障 / 栈序 / 裁剪等 scope 专属字段
  */
-export type ScopeProps = ScopeStyleProps & {
+export type ScopeProps = ScopeStyleProps & HydrationEventProps & {
   /**
    * 可选 scope 引用 id；设值则注册一个 synthetic bbox 节点到父 namespace frame
    * @description 设值则注册一个 synthetic bbox 节点到父 namespace frame，供外部 path / position 引用 scope 整体（注册行为尚未启用）
