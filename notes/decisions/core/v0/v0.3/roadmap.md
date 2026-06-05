@@ -6,7 +6,7 @@
 
 > 本文件记录 v0.3 的完整计划：renderer 架构拆分、`@retikz/vanilla`、水合、Tier 2 支撑（`@retikz/plot` 为首个消费者），以及 React 双渲染模式与 Canvas renderer MVP。
 >
-> **进度（2026-06-02）**：renderer 架构核心已在 alpha.1 一次交付（svg / canvas / vanilla-SVG + React 双渲染模式，见 [ADR-01~04](./v0.3-alpha.1/)）；**alpha.2 Tier 2 支撑（可注册 composite 展开管线，见 [ADR-01](./v0.3-alpha.2/01-tier2-support.md)）亦已完成**。剩余主线为 **alpha.3（水合）→ alpha.4（canvas/svg 能力补全）→ beta.1（加固）**,详见 §Alpha 切分。命令式 builder（ADR-04）属 alpha.1、已实现。
+> **进度（2026-06-05）**：renderer 架构核心已在 alpha.1 一次交付（svg / canvas / vanilla-SVG + React 双渲染模式，见 [ADR-01~04](./v0.3-alpha.1/)）；**alpha.2 Tier 2 支撑**（可注册 composite 展开管线，见 [ADR-01](./v0.3-alpha.2/01-tier2-support.md)）、**alpha.3 水合**（SVG + Canvas 统一事件绑定，见 [ADR-01](./v0.3-alpha.3/01-hydration.md)）均已完成。canvas / svg 能力在 alpha.1 已**超额交付**（gradient / pattern / image / clip / marker 全部真实现、无降级遗留——剩余 `warnUnsupported` 仅为缺配置 / 悬空引用的可诊断降级，非能力缺口），原拟的 **alpha.4「canvas/svg 能力补全」已退役**（2026-06-05）；其唯一残值 SVG↔Canvas 对照测试并入 beta.1。剩余主线重排为 **alpha.4（时间轴动画，§动画 A 转正）→ beta.1（加固）**,详见 §Alpha 切分。命令式 builder（ADR-04）属 alpha.1、已实现。
 
 ## 定位
 
@@ -134,7 +134,7 @@ v0.3 的另一个重点是支持水合：服务端或静态环境先把图形渲
 - **IR / Scene 提供稳定挂点**：可交互图元需要稳定 `id`，renderer 输出时保留 `data-retikz-id` 等可定位标记。
 - **绑定表在 runtime 层**：函数回调由 `@retikz/vanilla` / `@retikz/react` 等 runtime 接收，不进入 core schema。
 - **SSR 只输出静态结构**：服务端可以输出 SVG 字符串和可选 interaction manifest，但不执行、不序列化函数。
-- **客户端完成水合**：浏览器端根据图元 id 和事件名，把用户提供的 handler 绑定到已存在的 SVG DOM；Canvas 水合先作为后续能力，不抢 v0.3 主线。
+- **客户端完成水合**：浏览器端根据图元 id 和事件名，把用户提供的 handler 绑定到对应图元——SVG 绑到已存在的 DOM、Canvas 经 hit-test 命中。SVG 与 Canvas 水合在 alpha.3 一起落地（共用上层绑定语义，定位层各自实现）。
 
 候选 API 形态：
 
@@ -161,10 +161,12 @@ hydrate(container, {
 });
 ```
 
-SVG 的水合机制应先落地，语义上预留与 Canvas 一致的绑定模型：
+SVG 与 Canvas 水合在 alpha.3 一起落地，共用同一套绑定语义；区别只在「如何把 pointer 事件定位到图元 id」这一定位层：
 
-- SVG：根据 `data-retikz-id` 查询 DOM 元素并绑定 DOM event listener。
-- React：组件 props 中的 handler 不落 IR，最终也应映射到同一套 runtime binding 语义。
+- **绑定语义（renderer 无关，两条共用）**：runtime 维护 `id → { event → handler }` 注册表；根级单 listener 接 pointer / click 等事件，定位出图元 id 后查表分发；非冒泡事件（`pointerenter/leave`）用 `pointerover/out` + `relatedTarget` 在根层合成。
+- **SVG 定位层**：事件 target 经 `closest('[data-retikz-id]')` 反查图元 id（图元已是真实 DOM）。
+- **Canvas 定位层**：Canvas 无逐图元 DOM，需 hit-test——`pointer(x,y) → 命中图元 id`（候选：几何 point-in-shape 测试 / 离屏 pick canvas 唯一色编码 / bbox 空间索引，见待决策 #14）。
+- **React**：组件 props 中的 handler 不落 IR，最终映射到同一套 runtime binding 注册表（与 vanilla 命令式 handler 同源）。
 
 水合不是完整框架 hydration：retikz 不需要重建 React 组件树，也不接管页面应用状态；它只负责把 retikz 图形输出与用户函数绑定起来。
 
@@ -198,7 +200,7 @@ renderer 架构（alpha.1）一稳，Tier 2 支撑就是下一段：
 
 1. alpha.2 落「可注册展开管线」+ plot 所需的坐标化、锚点 / locator、层次 / z-order、数据接入面。
 2. `@retikz/plot` 随后作为独立子包进场——注册自己的 Tier 2 type 与展开逻辑，不和 core 绑死。
-3. 水合（alpha.3）、canvas/svg 能力补全（alpha.4）在其后。
+3. 水合（alpha.3）、时间轴动画（alpha.4，原「canvas/svg 能力补全」已退役，见 §动画）在其后。
 
 ## 后续方向：AI 增量渲染预留
 
@@ -216,6 +218,37 @@ v0.3 需要注意：
 - Tier 2 支撑中的 layer / mark / guide 来源信息，应为后续 progressive layer rendering 留空间。
 
 正式的 Progressive IR / JSON Patch stream / append layer / AI step protocol / SVG 局部更新优化，放到 v0.4 或后续版本再设计和实现。
+
+## 动画（A 时间轴动画 → v0.3-alpha.4 转正；B 数据过渡留 runtime + Tier 2）
+
+> **2026-06-05 重排**：原拟 alpha.4「canvas/svg 能力补全」退役（alpha.1 已超额交付），本节 **A（时间轴动画）转正为 v0.3-alpha.4**；B（数据过渡 / 形变）仍是 runtime + Tier 2 的后续候选，不进 core。
+
+动画是「时间 → 属性插值」的纯数据，与水合的「事件 → handler 函数」正交：**声明式动画进 IR 持久化**（可序列化、SSR 可纯 CSS 自播、AI 可声明），**播放控制 / 事件触发留 runtime**（与水合同源，函数不进 IR）。排在水合之后，复用其 runtime 基建（rAF 循环、事件绑定）。
+
+对标提炼：数据模型抄 **WAAPI**（keyframes + timing options），多端范式抄 **Lottie**（一份描述，SVG 走 WAAPI/CSS、Canvas 走 rAF 时间线），高层词汇抄 **Manim / Framer**（`drawOn` / `fadeIn` / `morph`），声明式时间轴 + 数学图动画词汇参照 **TikZ `animate` 库**——但**不绑 SMIL**（TikZ 动画仅 SVG、Canvas 上不存在，故 IR 保持 renderer 无关）。
+
+分两块，机制不同、归属不同：
+
+### A. 时间轴动画（core IR + renderer）—— v0.3-alpha.4
+
+固定元素按时间打关键帧——入场（fadeIn / scaleIn）、路径画出（drawOn）、循环（pulse）、沿路径运动、镜头（动 IR 根 `viewBox`）。
+
+- **IR（Kernel）**：元素加 `animations?: Array<AnimationTrack>`；`AnimationTrack = { property, keyframes: [{ at: 0..1, value, easing? }], duration, delay, easing, repeat, direction, fill, trigger }`。`property` 为 renderer 无关枚举（`opacity` / `fill` / `stroke` / `strokeWidth` / `translateX|Y` / `rotate` / `scale` / **`pathDraw` 0..1**）；关键帧时间归一化（抄 WAAPI offset，与 duration 解耦）；颜色按 oklch 插值。
+- **`pathDraw` 用 0..1 进度而非 `dashOffset`**：SVG 翻成 `pathLength=1` + dashoffset、Canvas 按几何 lerp 部分路径——保持 renderer 无关。
+- **`trigger` 是枚举/数据**：`load`（渲染即播，SSR 友好）/ `visible`（runtime 用 IntersectionObserver 实现）/ `manual`（runtime API 控）/ `{ onEvent }`（桥水合，runtime 绑事件）；**回调函数（onComplete 等）绝不进 IR，留 runtime**。
+- **Sugar**：`drawOn` / `fadeIn` / `scaleIn` / `slideIn` / `pulse` / `loop` 展开成 track（react sugar + 共享 parser，配等价性测试）。
+- **renderer 实现**：SVG 主走 WAAPI，`trigger:'load'` 额外 emit CSS `@keyframes`（零 JS / SSR）；Canvas `drawScene(ctx, scene, { time })` 加可选 `time` 参、runtime 跑 rAF 推进（additive，默认静态）。**motion-along-path 与 Scene 级共享时钟 / timeline 需一等**——编排式入场（如 D3 connected-scatterplot：线头画出 + 圆点同步移动 + 标签错峰浮现）要求多 track 走同一时钟。
+- **静态截帧**（抄 TikZ `snapshot`）：`renderToSvgString(ir, { at: t })` / canvas `{ at: t }` 渲染某时刻一帧，供 SSR / Node 导出 / 封面。
+- **layout / viewBox 按静止态算**，动画可瞬态溢出（不让动画影响 bbox，否则布局不可定）。
+
+### B. 数据过渡 / 形变（runtime + Tier 2，本段只备注，排更后）
+
+> 老数据 → 新数据的平滑过渡（柱子改高、折线 morph、饼图重分片，echarts / recharts 招牌）是 **keyed-diff + 几何插值**，机制不同于 A 的固定元素关键帧，**不做成持久化 IR 字段**（无"两个状态塞一份 IR"之理），是 **runtime + Tier 2** 的事，本段仅备注待决策：
+>
+> - **runtime**：给已预留的 `view.update(nextIr, { transition })` 入口加语义——按稳定 `id` diff IR_old/new，分 enter / update / exit；update 的元素**生成 `AnimationTrack` 喂给同一 renderer animator**（复用 A 的底座）。与「水合」「AI 增量渲染」共用 `update(nextIr)` 通道。
+> - **Tier 2（plot）要做的**：① path morph 的形状插值算法（不同点数重采样，flubber / d3-interpolate-path 那类）是 **plot 包依赖、不进 core**（core 仅 zod）；新增 `pathMorph` track 类型，core 只认类型、不实现算法。② plot 须给数据绑定元素**派稳定 id**（datum key → 元素 id），diff 才配得上对（与 plot 的 locator / dataRef 接入面一致）。
+>
+> core 只背"可持久化的时间轴动画"（A）；"数据驱动的过渡 / 形变"（B）按 Tier 2 边界推给 plot + runtime，不撑爆 core 与 LLM schema。
 
 ## Alpha 切分（2026-06-01 按实际进度重排）
 
@@ -244,13 +277,27 @@ v0.3 需要注意：
 
 **本段刻意收窄**（见 [ADR-01](./v0.3-alpha.2/01-tier2-support.md) §不在本 ADR 范围）：`@retikz/plot` 本体（axis / panel / mark 等具体 Tier 2 节点及其 `expand`）→ 后续独立子包；`dataRef` / `scale registry` / `encoding` 接入面 → 划归 plot 包、不进 core；`<Composite>` JSX authoring 通道 / `expand` ctx / lowering 缓存 / vanilla `composite()` 糖 → [ADR-02](./v0.3-alpha.2/02-composite-authoring-context-cache.md)（已采纳延后、未排期）。本段只交付「Tier 2 跑通所需的底层注册管线 + 端到端 fixture 验证 + runtime 透传」。
 
+### alpha.3 ✅ 已完成：水合——SVG + Canvas 统一事件绑定（[ADR-01](./v0.3-alpha.3/01-hydration.md)）
+
+SSR / 静态先渲染出图，客户端把用户 handler 绑回图元——函数不进 IR、只在 runtime；SVG + Canvas 共用同一绑定语义，差异只在「如何把 pointer 事件定位到图元 id」这一定位层：
+
+- **core（red）**：`IRPath` 新增可选 `id`（水合 / 引用挂点；Node / Coordinate / Scope 早有）；`ScenePrimitive` 加 `id?`，compile 把 user id stamp 到 emit 出的每个 top-level 图元（纯几何 Node 逐个平铺图元、文本 / rotate Node 的 GroupPrim、Path 的 PathPrim、Scope 的 GroupPrim）。
+- **render（red）**：svg emit `data-retikz-id`；canvas 新增纯函数 `hitTest`（逆 z-order + 原生 `isPointInPath`/`isPointInStroke`，复用抽出的共享 `pathGeometry`）；新子路径 `@retikz/render/hydration`——`createHydrationController`（根级单 listener 委托 + `pointerEnter`/`pointerLeave` 经 **`pointermove` + 命中 id 状态机**合成，renderer 无关）+ `locateSvg`。
+- **vanilla（red）**：`hydrate(root, { handlers })`（SVG，closest 委托）+ `mountCanvas(container, ir)`（无框架 canvas 直挂，view 自带 `hydrate`，client→Scene 逆 meet-fit 坐标映射 + hitTest 命中）。
+- **react（red）**：Kernel `<Node>` / `<Path>` / `<Scope>` 加事件 props（`onClick` / `onDoubleClick` / `onRightClick` / `onPointerDown`·`Up`·`Move`·`Enter`·`Leave` / `onWheel`，全程命名、仅有 `id` 可绑，Coordinate 类型层排除）；`<Path id>`；`collectHydrationHandlers`（穿透 Fragment / 展开 Sugar / 无 id warn / 重复 id 合并）；`<Layout handlers>`（ir 模式）；**`renderer="svg"｜"canvas"` 双模 handler 等价**。
+- **文档**：reference 新增「水合 / Hydration」单页（事件 props + vanilla hydrate / mountCanvas + 交互 demo）+ Path 页 `id` 行。
+- **自测**：4 包全绿（core 1607 / render 83 / vanilla 56 / react 328）。Adversarial 两关——第一关修 1 BLOCKING（canvas enter/leave 用 over/out 合成失效 → 改 pointermove 状态机）+ W1（状态机抗 handler 异常）/ I1（stale JSDoc）；第二关 contract 对账无 BLOCKING。
+
+**待决策落定**：#5 命名 = `hydrate`；#6 manifest = 不进 IR（挂点 = user id 存在性 + runtime handlers map）；#14 hit-test = 几何 pick + 原生 isPointInPath/Stroke。事件集对标 ECharts / Highcharts / Vega 无缺失（Pointer Events 统一 touch）。
+
+**本段延后**：键盘 / 焦点 / a11y、拖拽 / brush / pan / 缩放手势编排、touch 多指、hit-test 空间索引性能优化、整图 leave hook、interaction manifest 外部导出。数据过渡 / 形变（keyed-diff + morph）归 [§动画 B](#动画a-时间轴动画--v03-alpha4-转正b-数据过渡留-runtime--tier-2)（runtime + Tier 2）。
+
 ### 后续分段（重新设计）
 
 | 子版本         | 主题                | 内容                                                                                                                                                                                                                                    | 依赖 / 待决策                                                                                    |
 | -------------- | ------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
-| v0.3.0-alpha.3 | 水合                | SVG 根级事件委托（`data-retikz-id` + `closest` 反查 + runtime handler 注册表，非逐图元绑定）+ `hydrate` API + react handler 映射到同一 binding 语义；非冒泡事件用 `pointerover/out` + `relatedTarget` 合成；canvas 水合（hit-test）后置 | 待决策 #5（命名）/ #6（manifest 入口）；svg `data-retikz-id` 填值、vanilla `interactions` 承载点 |
-| v0.3.0-alpha.4 | canvas / svg 能力补全 | vanilla 独立 `mountCanvas` 入口（`Figure.toCanvas` 已通，补无框架直挂）；canvas / svg 两 renderer 剩余能力与降级项补全 + SVG↔Canvas 对照测试 | — |
-| v0.3.0-beta.1  | 体验加固 | 文档 demo、Node canvas / `@napi-rs` 服务端导出、包体与 public API 清理、release | — |
+| v0.3.0-alpha.4 | 时间轴动画（§动画 A 转正） | 元素 `animations?: Array<AnimationTrack>`（renderer 无关 property 枚举 + 归一化关键帧 + `trigger`）；SVG 走 WAAPI、`trigger:'load'` emit CSS `@keyframes`（零 JS / SSR）；Canvas `drawScene(…, { time })` + runtime rAF + 共享时钟编排；`drawOn` / `fadeIn` 等 sugar；静态截帧 `{ at: t }`。详见 §动画 A | core IR schema 扩展；多 track 共享时钟；layout 按静止态算 |
+| v0.3.0-beta.1  | 体验加固 | 文档 demo、**SVG↔Canvas 对照 / parity 测试**（原 alpha.4 残值）、Node canvas / `@napi-rs` 服务端导出、包体与 public API 清理、release | — |
 
 每段保持一个可验证闭环;切分可在开工前微调。
 
@@ -262,7 +309,8 @@ v0.3 需要注意：
 - `@retikz/vanilla` 可以在无框架浏览器环境中挂载 SVG / Canvas。
 - `@retikz/vanilla` 可以在 SSR / Node 环境中直接产出 SVG 字符串。
 - SSR / 静态 SVG 输出可以在客户端通过水合绑定事件函数。
-- React props 形式的 handler 与 Vanilla 命令式 handler 共享同一套绑定语义。
+- Canvas 渲染输出可以通过 hit-test 把 pointer 事件命中到图元 id 并绑定 handler，与 SVG 共用上层绑定语义。
+- React props 形式的 handler 与 Vanilla 命令式 handler 共享同一套绑定语义（SVG / Canvas 皆然）。
 - `@retikz/plot` 可以作为独立子包通过 lowering 接入 core，不需要 core 认识 chart type。
 - plot 所需的 layer、locator / anchor、dataRef / scale 接入边界有明确 ADR 或接口草案。
 - `@retikz/react` 支持 SVG 与 Canvas 两套渲染模式，且默认 SVG 兼容现有用户代码。
@@ -288,7 +336,7 @@ v0.3 需要注意：
 1. ~~`@retikz/svg` 的公开 API：只出 `renderToSvgString`，还是同时出 descriptor / React helper。~~ ✅ **已决（→ [alpha.1 ADR-01](./v0.3-alpha.1/01-svg-descriptor-contract.md)）**：以 framework-neutral `SvgNode` descriptor 为核心,出 `buildSvgDocument` + `renderToSvgString`,公开 `SvgNode` 类型;**不出 React helper**（svg 包零 React 依赖,React 映射留在 `@retikz/react`）。同时解掉「`renderPrim` 拆 neutral builder + React binding」。
 2. ~~`@retikz/canvas` 的公开 API：接收 IR、Scene，还是两者都支持。~~ ✅ **已决（→ [alpha.1 ADR-02](./v0.3-alpha.1/02-canvas-renderer-and-react-canvas-mode.md)）**：**接收已编译 `Scene`**（与 svg 对称,`compile` 留 core/runtime）；`drawScene(ctx, scene)` 低层核心 + `renderToCanvas(canvas, scene)` 便利。不接 IR、不在包内 compile。
 3. ~~`@retikz/vanilla` 是否直接 re-export `@retikz/svg` / `@retikz/canvas` 的核心 API，还是只提供 runtime 封装。~~ ✅ **已决（→ [alpha.1 ADR-03](./v0.3-alpha.1/03-vanilla-runtime-and-dependency-graph.md)）**：**runtime 门面（组合）**——`renderToSvgString` 薄包 svg、`mountSvg` 经 `buildSvgDocument` + `svgNodeToDom` 物化 DOM；Scene→SVG 内核仍单一留 svg 包，不纯 re-export、不复制内核。
-4. ~~`@retikz/vanilla` 是否同时覆盖 SVG DOM 挂载与 SSR 字符串输出，还是拆成更细入口。~~ ✅ **已决（→ [ADR-03](./v0.3-alpha.1/03-vanilla-runtime-and-dependency-graph.md)）**：**单包多 named export**（`renderToSvgString` + `mountSvg` 同包）；Canvas 侧入口（`mountCanvas` / 导出）后置 **alpha.2**（见 §Alpha 切分重排）。
+4. ~~`@retikz/vanilla` 是否同时覆盖 SVG DOM 挂载与 SSR 字符串输出，还是拆成更细入口。~~ ✅ **已决（→ [ADR-03](./v0.3-alpha.1/03-vanilla-runtime-and-dependency-graph.md)）**：**单包多 named export**（`renderToSvgString` + `mountSvg` 同包）；Canvas 侧入口（`mountCanvas` / 导出）排 **alpha.3**（随 Canvas 水合一起，作其挂载基座；见 §Alpha 切分）。
 5. 水合 API 命名：`hydrate` / `hydrateInteractions` / `bind` / `attachHandlers`。
 6. interaction manifest 是否进入 IR，还是只作为 `renderToSvgString` 的 runtime options。
 7. Tier 2 支撑（plot）应只写接口草案，还是在 v0.3 里落最小实现。
@@ -298,6 +346,7 @@ v0.3 需要注意：
 11. ~~Canvas 文本测量如何与现有 browser measurer 协作，是否需要把 measurer 再抽一层公共接口。~~ ✅ **已决（→ [ADR-02](./v0.3-alpha.1/02-canvas-renderer-and-react-canvas-mode.md)）**：react canvas 路与 svg 路**共用同一 `compileToScene` + 同一 `browserMeasurer`** → 同一份 Scene → 两 renderer 等价;`drawScene` 收已编译 Scene、不自己测量。非 react 环境是否抽 measurer 公共接口留后续。
 12. ~~Canvas 对 pattern / image / marker 的首版支持范围，以及哪些行为允许降级。~~ ✅ **已决（→ [ADR-02](./v0.3-alpha.1/02-canvas-renderer-and-react-canvas-mode.md)）**：ADR 定"核心 primitives 真绘制 + 高级能力可诊断降级（不静默）";**实现超额**——gradient / pattern / image / clip / marker 已全部转真实 Canvas 实现（+ currentColor / 主题响应 / 文本基线统一 / 弧扫描方向 / 尺寸对齐 SVG），无降级遗留。
 13. ~~包依赖方向：`@retikz/react` 是否直接依赖 `@retikz/svg` / `@retikz/canvas` / `@retikz/vanilla`，还是把 Canvas 作为可选 peer 以控制默认安装体积。~~ ✅ **已决（→ [ADR-03](./v0.3-alpha.1/03-vanilla-runtime-and-dependency-graph.md)）**：**全直接依赖、无 optional peer**（react → core/svg/canvas；vanilla → core/svg/canvas；react 不依赖 vanilla）。canvas 仅 core 依赖、极轻，dual-renderer 零配置优先；体积靠 renderer 已拆包的 tree-shaking，optional peer 留 v0.4 再议。
+14. **Canvas 水合 hit-test 策略**（alpha.3，Canvas 一起上后新增）：`pointer(x,y) → 图元 id` 怎么实现——(a) 几何 point-in-shape 测试（用 Scene primitive 几何 + bbox 预筛）；(b) 离屏 pick canvas（每图元唯一色重绘一遍，读 (x,y) 像素反查 id，需同步重绘）；(c) bbox 空间索引（quadtree / R-tree，先粗筛再精测）。命中口径（描边宽容差 / 透明填充是否可点 / z-order 取最上层）一并在 alpha.3 ADR 定。
 
 ## 备注
 

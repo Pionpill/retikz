@@ -71,7 +71,12 @@
     "refCustomPattern": "Custom Patterns",
     "refPathGenerator": "Path Generators",
     "refComposite": "Tier 2 Composites",
-    "refComposites": "Composite"
+    "refComposites": "Composite",
+    "refPlot": "Plotting",
+    "refRenderer": "Renderer",
+    "refRendererSvg": "SVG",
+    "refRendererCanvas": "Canvas",
+    "refHydration": "Hydration"
   },
   "plot": {
     "label": "Plot",
@@ -334,6 +339,9 @@
   },
   "changelog": {
     "filterPackages": "Filter packages",
+    "groupCore": "Core",
+    "groupPlot": "Plot",
+    "groupOther": "Other",
     "inDevelopment": "In development",
     "prereleaseCount": "Expand {{count}} pre-release details",
     "collapse": "Collapse pre-release details",

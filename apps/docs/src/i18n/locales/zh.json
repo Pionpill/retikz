@@ -71,7 +71,12 @@
     "refCustomPattern": "自定义图案",
     "refPathGenerator": "路径生成器",
     "refComposite": "Tier 2 节点",
-    "refComposites": "复合"
+    "refComposites": "复合",
+    "refPlot": "绘图",
+    "refRenderer": "渲染器",
+    "refRendererSvg": "SVG",
+    "refRendererCanvas": "Canvas",
+    "refHydration": "水合"
   },
   "plot": {
     "label": "绘图",
@@ -334,6 +339,9 @@
   },
   "changelog": {
     "filterPackages": "筛选包",
+    "groupCore": "核心",
+    "groupPlot": "绘图",
+    "groupOther": "其他",
     "inDevelopment": "开发中",
     "prereleaseCount": "展开 {{count}} 个预发布明细",
     "collapse": "收起预发布明细",

@@ -32,8 +32,14 @@ export const ChangelogRelease: FC<ChangelogReleaseProps> = ({ release, lang }) =
         </div>
         <div className="mt-1 flex flex-col gap-0.5">
           {release.packages.map(block => (
-            <span key={block.pkg} className="font-mono text-[11px] text-muted-foreground">
-              {PACKAGE_LABEL[block.pkg][lang]} <span className="opacity-80">{block.version}</span>
+            <span
+              key={block.pkg}
+              className="flex items-baseline justify-end gap-1 font-mono text-[11px] text-muted-foreground"
+            >
+              <span className="min-w-0 truncate" title={PACKAGE_LABEL[block.pkg][lang]}>
+                {PACKAGE_LABEL[block.pkg][lang]}
+              </span>
+              <span className="shrink-0 opacity-80">{block.version}</span>
             </span>
           ))}
         </div>

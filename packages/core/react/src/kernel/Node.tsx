@@ -12,9 +12,10 @@ import type {
   PolarPosition,
 } from '@retikz/core';
 import { TIKZ_NODE } from './_displayNames';
+import type { HydrationEventProps } from './eventProps';
 
 /** <Node> 组件的 props */
-export type NodeProps = {
+export type NodeProps = HydrationEventProps & {
   /** 节点 id；其他 Path/Draw 通过这个 id 引用本节点 */
   id?: string;
   /** 节点形状：rectangle（默认）/ circle / ellipse / diamond */

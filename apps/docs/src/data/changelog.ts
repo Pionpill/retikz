@@ -43,6 +43,44 @@ export const changelog: Array<Release> = [
         ],
         subVersions: [
           {
+            version: 'alpha.3',
+            date: '2026-06-05',
+            summary: {
+              zh: '水合定位层：svg emit `data-retikz-id`、canvas 新增 `hitTest`（逆 z-order + isPointInPath/Stroke），并新增 renderer 无关的 `@retikz/render/hydration` 子路径（根级委托 + enter/leave 合成）；canvas 几何抽成共享 `pathGeometry`。',
+              en: 'Hydration locating layer: svg emits `data-retikz-id`, canvas gains `hitTest` (reverse z-order + isPointInPath/Stroke), plus a renderer-agnostic `@retikz/render/hydration` subpath (root delegation + enter/leave synthesis); canvas geometry is extracted into a shared `pathGeometry`.',
+            },
+            items: [
+              {
+                label: { zh: 'svg emit `data-retikz-id`', en: 'svg emits `data-retikz-id`' },
+                content: {
+                  zh: '`buildPrim` 各分支按 `prim.id` emit `data-retikz-id="<id>"`（仅 user id 才带），让静态 / SSR 的 SVG 输出携带稳定挂点，客户端经 `closest` 即可反查图元 id；无 id 元素不带，零运行时开销。',
+                  en: 'Each `buildPrim` branch emits `data-retikz-id="<id>"` from `prim.id` (only when a user id exists), so static / SSR SVG output carries a stable hook the client resolves via `closest`; id-less elements stay clean, with zero runtime cost.',
+                },
+              },
+              {
+                label: { zh: 'canvas `hitTest`', en: 'canvas `hitTest`' },
+                content: {
+                  zh: '新增纯函数 `hitTest(scene, point, options?) → string | null`：按逆 z-order（最上层优先）重走 Scene，用与 `drawScene` 完全相同的路径构建 + 原生 `isPointInPath`（填充区）/ `isPointInStroke`（描边线，可选 `strokeTolerance`）判定，命中返回最近 id-bearing 祖先 id；不重写点测、不离屏重绘。',
+                  en: 'A new pure function `hitTest(scene, point, options?) → string | null`: re-walks the Scene in reverse z-order (topmost first), reusing the exact path construction of `drawScene` plus native `isPointInPath` (fill) / `isPointInStroke` (stroke, optional `strokeTolerance`), returning the nearest id-bearing ancestor id on hit; no re-implemented point test, no offscreen redraw.',
+                },
+              },
+              {
+                label: { zh: '`@retikz/render/hydration` 子路径', en: '`@retikz/render/hydration` subpath' },
+                content: {
+                  zh: '新增 renderer 无关子路径：`createHydrationController(root, handlers, locate)` 做根级单 listener 委托，非冒泡的 `pointerEnter` / `pointerLeave` 经 `pointermove` + 「上一帧命中 id」状态机合成，并附 svg 用的 `locateSvg`；svg / canvas 共用同一分发与注册表，不引 React、不污染纯 svg / canvas 子路径。',
+                  en: 'A new renderer-agnostic subpath: `createHydrationController(root, handlers, locate)` does single-listener root delegation, synthesizing non-bubbling `pointerEnter` / `pointerLeave` via `pointermove` + a "last-hit id" state machine, plus `locateSvg` for svg; svg / canvas share one dispatch + registry, no React, and the pure svg / canvas subpaths stay untouched.',
+                },
+              },
+              {
+                label: { zh: '抽 `pathGeometry` 共享几何', en: 'shared `pathGeometry` extraction' },
+                content: {
+                  zh: '把 `drawScene.ts` 私有的 `buildPath` / `roundedRectPath` / `pathCommand` / `applyClip` 抽到 `pathGeometry`，`drawScene` 与 `hitTest` 共用同一几何构建；纯重构、`drawScene` 行为零回归。',
+                  en: 'The private `buildPath` / `roundedRectPath` / `pathCommand` / `applyClip` from `drawScene.ts` move into `pathGeometry`, shared by both `drawScene` and `hitTest`; a pure refactor, `drawScene` behavior unchanged.',
+                },
+              },
+            ],
+          },
+          {
             version: 'alpha.2',
             date: '2026-06-02',
             summary: {
@@ -117,6 +155,30 @@ export const changelog: Array<Release> = [
         ],
         subVersions: [
           {
+            version: 'alpha.3',
+            date: '2026-06-05',
+            summary: {
+              zh: '无框架水合：新增 `hydrate(root, { handlers })`（SVG 水合，根级 closest 委托）+ `mountCanvas(container, ir)`（无框架 canvas 直挂，view 自带 `hydrate`，client→Scene 逆 meet-fit 坐标映射 + hitTest 命中）。',
+              en: 'Framework-free hydration: a new `hydrate(root, { handlers })` (SVG hydration via root-level closest delegation) + `mountCanvas(container, ir)` (framework-free canvas mount whose view carries `hydrate`, with client→Scene reverse meet-fit coordinate mapping + hitTest).',
+            },
+            items: [
+              {
+                label: { zh: '`hydrate` SVG 水合', en: '`hydrate` SVG hydration' },
+                content: {
+                  zh: '`hydrate(root, { handlers })` 把按 id 提供的事件 handler 绑到容器内已挂或 SSR 注入的 `<svg>`：根级单 listener + `closest(\'[data-retikz-id]\')` 委托，不重渲染组件树、不接管状态；返回 `{ dispose }` 解绑。',
+                  en: '`hydrate(root, { handlers })` binds id-keyed event handlers onto an already-mounted or SSR-injected `<svg>`: a single root-level listener + `closest(\'[data-retikz-id]\')` delegation, with no component re-render and no state takeover; returns `{ dispose }` to unbind.',
+                },
+              },
+              {
+                label: { zh: '`mountCanvas` 无框架直挂', en: '`mountCanvas` framework-free mount' },
+                content: {
+                  zh: '`mountCanvas(container, ir)` 对齐 `mountSvg`，无框架把 IR 直挂成 canvas（复用 `Figure.toCanvas` 同款 meet-fit）；返回的 view 暴露 `hydrate({ handlers })`，以 `hitTest` + client px → Scene units 的逆 meet-fit 坐标映射定位命中，`renderer="svg"｜"canvas"` 下同一 handlers 行为一致。',
+                  en: '`mountCanvas(container, ir)` mirrors `mountSvg`, mounting IR into a canvas framework-free (reusing `Figure.toCanvas`’ meet-fit); the returned view exposes `hydrate({ handlers })`, locating hits via `hitTest` + a client px → Scene units reverse-meet-fit mapping, so the same handlers behave identically across `renderer="svg"｜"canvas"`.',
+                },
+              },
+            ],
+          },
+          {
             version: 'alpha.2',
             date: '2026-06-02',
             summary: {
@@ -183,6 +245,37 @@ export const changelog: Array<Release> = [
           },
         ],
         subVersions: [
+          {
+            version: 'alpha.3',
+            date: '2026-06-05',
+            summary: {
+              zh: '水合事件：Kernel `<Node>` / `<Path>` / `<Scope>` 加事件 props（`onClick` / `onDoubleClick` / `onRightClick` / `onPointerDown`·`Up`·`Move`·`Enter`·`Leave` / `onWheel`），`<Path>` 加 `id` prop，`<Layout handlers>`（ir 模式）；`renderer="svg"｜"canvas"` 双模 handler 等价，handler 不进 IR、只在 runtime。',
+              en: 'Hydration events: Kernel `<Node>` / `<Path>` / `<Scope>` gain event props (`onClick` / `onDoubleClick` / `onRightClick` / `onPointerDown`·`Up`·`Move`·`Enter`·`Leave` / `onWheel`), `<Path>` gains an `id` prop, plus `<Layout handlers>` (ir mode); handlers are equivalent across `renderer="svg"｜"canvas"`, never entering IR and living only at runtime.',
+            },
+            items: [
+              {
+                label: { zh: '事件 props + `<Path id>`', en: 'event props + `<Path id>`' },
+                content: {
+                  zh: '`<Node>` / `<Path>` / `<Scope>` 加 9 个事件 props（`onClick` / `onDoubleClick` / `onRightClick` / `onPointerDown` / `onPointerUp` / `onPointerMove` / `onPointerEnter` / `onPointerLeave` / `onWheel`），仅有 `id` 的元素可绑；`<Path>` 同时加 `id` prop（透传新 `IRPath.id`）。`<Coordinate>` 无可点面积、不接 handler。',
+                  en: '`<Node>` / `<Path>` / `<Scope>` gain 9 event props (`onClick` / `onDoubleClick` / `onRightClick` / `onPointerDown` / `onPointerUp` / `onPointerMove` / `onPointerEnter` / `onPointerLeave` / `onWheel`), bindable only on elements that carry an `id`; `<Path>` also gains an `id` prop (forwarding the new `IRPath.id`). `<Coordinate>` has no clickable area and takes no handler.',
+                },
+              },
+              {
+                label: { zh: '`collectHydrationHandlers` 收集', en: '`collectHydrationHandlers` collection' },
+                content: {
+                  zh: '新 `collectHydrationHandlers` 与 `buildIR` 同源遍历 children：穿透 `Fragment`、展开 Sugar 后按各元素 `id` 收 handler；无 `id` 带 handler → dev warn + 跳过，重复 `id` → dev warn + 同 id 合并（同事件后者覆盖），Sugar 的 handler 归到承载 `id` 的 Kernel 元素。',
+                  en: 'A new `collectHydrationHandlers` walks children in sync with `buildIR`: it pierces `Fragment`, expands Sugar, then collects handlers by each element’s `id`; a handler without `id` → dev warn + skip, a duplicate `id` → dev warn + merge (later wins per event), and a Sugar element’s handler maps onto the Kernel element carrying the `id`.',
+                },
+              },
+              {
+                label: { zh: '`<Layout handlers>` + 双模等价', en: '`<Layout handlers>` + dual-mode parity' },
+                content: {
+                  zh: 'JSX 模式经 `collectHydrationHandlers` 收集、`ir` prop 模式经 `<Layout handlers={{ id: { click } }}>` 提供，两路结果都经 `createHydrationController` 绑到 figure root（svg root 或 `<canvas>`）；同一 `<Node onClick>` 在 `renderer="svg"` 与 `"canvas"` 下走同一注册表 + 同一分发，handler 语义等价。',
+                  en: 'JSX mode collects via `collectHydrationHandlers`; `ir`-prop mode supplies them via `<Layout handlers={{ id: { click } }}>`; both feed `createHydrationController` bound to the figure root (svg root or `<canvas>`); the same `<Node onClick>` shares one registry + one dispatch under `renderer="svg"` and `"canvas"`, with equivalent handler semantics.',
+                },
+              },
+            ],
+          },
           {
             version: 'alpha.2',
             date: '2026-06-02',
@@ -251,6 +344,30 @@ export const changelog: Array<Release> = [
         ],
         subVersions: [
           {
+            version: 'alpha.3',
+            date: '2026-06-05',
+            summary: {
+              zh: '水合挂点：`IRPath` 新增可选稳定 `id`（水合 / 引用挂点）；`ScenePrimitive` 加 `id?`，compile 把 user id stamp 到 emit 出的图元——纯几何 Node 逐个平铺图元、文本 / rotate Node 的 group、Path、Scope 都带上 id。',
+              en: 'Hydration hooks: `IRPath` gains an optional stable `id` (a hydration / reference hook); `ScenePrimitive` gains `id?`, and compile stamps the user id onto emitted primitives — each tiled primitive of a plain-geometry Node, the group of a text / rotate Node, the Path, and the Scope all carry it.',
+            },
+            items: [
+              {
+                label: { zh: '`IRPath.id`', en: '`IRPath.id`' },
+                content: {
+                  zh: '`PathSchema` 新增可选 `id`（`z.string().min(1).optional()`，additive）——Node / Coordinate / Scope 早已有 id，Path 此前缺；作水合与引用的稳定挂点，IR 仍 100% JSON 可序列化、round-trip 保 id。',
+                  en: '`PathSchema` gains an optional `id` (`z.string().min(1).optional()`, additive) — Node / Coordinate / Scope already had one, Path was missing it; it serves as a stable hydration / reference hook, with IR still 100% JSON-serializable and id preserved through round-trip.',
+                },
+              },
+              {
+                label: { zh: '`ScenePrimitive.id` + compile stamp', en: '`ScenePrimitive.id` + compile stamp' },
+                content: {
+                  zh: 'Scene 图元各 type 加可选 `id?`（纯 TS、非 zod、不影响 IR 序列化）；compile 把元素 user `id` stamp 到它 emit 的每个 top-level 图元：纯几何 Node（不包 group）逐个平铺 shape 图元都带同一 id，文本 / rotate Node → 其 GroupPrim，Path → PathPrim，Scope → GroupPrim。仅 user id，Coordinate 不 emit 图元、跳过。',
+                  en: 'Each Scene primitive type gains an optional `id?` (pure TS, non-zod, no effect on IR serialization); compile stamps an element’s user `id` onto every top-level primitive it emits: a plain-geometry Node (no wrapper group) carries the same id on each tiled shape primitive, a text / rotate Node → its GroupPrim, a Path → its PathPrim, a Scope → its GroupPrim. Only user ids; Coordinate emits no primitive and is skipped.',
+                },
+              },
+            ],
+          },
+          {
             version: 'alpha.2',
             date: '2026-06-02',
             summary: {
@@ -318,6 +435,30 @@ export const changelog: Array<Release> = [
         ],
         subVersions: [
           {
+            version: 'alpha.3',
+            date: '2026-06-05',
+            summary: {
+              zh: '新增「水合 / Hydration」reference 页（React 事件 props + vanilla `hydrate` / `mountCanvas` + 交互 demo）；Path 组件页 API 表加 `id` 行。',
+              en: 'A new "Hydration" reference page (React event props + vanilla `hydrate` / `mountCanvas` + an interactive demo); the Path component page gains an `id` API row.',
+            },
+            items: [
+              {
+                label: { zh: '水合 reference 页', en: 'Hydration reference page' },
+                content: {
+                  zh: '新增「水合 / Hydration」reference 页：讲 SSR / 静态先渲染、客户端按 id + 事件名绑 handler；含 React 事件 props（`onClick`… on `<Node>` / `<Path>` / `<Scope>`）、vanilla `hydrate`（SVG）/ `mountCanvas`（canvas）两路用法，及 `renderer="svg"｜"canvas"` 双模等价的 `<ComponentPreview>` 交互 demo；三处协同（contents + data + i18n）双语同步。',
+                  en: 'A new "Hydration" reference page: it covers SSR / static-first rendering then client-side binding handlers by id + event name; it includes React event props (`onClick`… on `<Node>` / `<Path>` / `<Scope>`), vanilla `hydrate` (SVG) / `mountCanvas` (canvas) usage, and a `<ComponentPreview>` interactive demo that is equivalent across `renderer="svg"｜"canvas"`; three-place sync (contents + data + i18n), bilingual.',
+                },
+              },
+              {
+                label: { zh: 'Path 页 `id` API 行', en: 'Path page `id` API row' },
+                content: {
+                  zh: '[Path 组件页](/core/components/draw/path) API 表加 `id` 行（可选稳定 id，水合 / 引用挂点），对齐 Node / Coordinate / Scope；zh / en 并行。',
+                  en: 'The [Path component page](/core/components/draw/path) API table gains an `id` row (an optional stable id, a hydration / reference hook), aligned with Node / Coordinate / Scope; zh / en in parallel.',
+                },
+              },
+            ],
+          },
+          {
             version: 'alpha.2',
             date: '2026-06-02',
             summary: {
@@ -347,6 +488,193 @@ export const changelog: Array<Release> = [
                 content: {
                   zh: '[introduction](/core/introduction) 新增「包关系」一节，描述 core / render / react / vanilla 四包职责与依赖方向，并用 retikz 自身画出依赖关系图（dogfooding）。',
                   en: 'The [introduction](/core/introduction) gains a "package relationships" section describing the duties and dependency direction of core / render / react / vanilla, with the dependency diagram drawn by retikz itself (dogfooding).',
+                },
+              },
+            ],
+          },
+        ],
+      },
+    ],
+  },
+
+  {
+    minor: 'plot-v0.1',
+    stableDate: null,
+    packages: [
+      {
+        pkg: '@retikz/plot',
+        version: 'v0.1',
+        description: {
+          zh: 'Tier 2 图表层的 IR 与下沉核心：把一张图声明成 JSON 可序列化的 Plot IR（grammar of graphics），经 lowerPlots 在 compile 期下沉成 core 图元；数据与 IR 解耦，core 不认识任何 chart 语义。',
+          en: 'The IR and lowering core of the Tier 2 charting layer: a chart is a JSON-serializable Plot IR that lowerPlots lowers into core primitives at compile time; data stays out of the IR.',
+        },
+        highlights: [
+          {
+            label: { zh: 'Plot IR + lowerPlots', en: 'Plot IR + lowerPlots' },
+            content: {
+              zh: '一份 `PlotSpec`（坐标系 / 比例尺 / mark / 字段绑定）描述「画什么」，`lowerPlots`（core `lowerComposites` 钩子的实现）把它展开成 core 的 node / path，交给现有 svg / canvas / vanilla renderer。',
+              en: 'A single `PlotSpec` (coordinate system / scales / marks / field bindings) describes what to draw, and `lowerPlots` (the implementation of core’s `lowerComposites` hook) expands it into core `node` / `path` for the existing svg / canvas / vanilla renderers.',
+            },
+          },
+          {
+            label: { zh: '数据与 IR 解耦', en: 'Data decoupled from IR' },
+            content: {
+              zh: 'IR 里只写 `data: { ref }`（一个名字），真实数据集渲染时单独注入、不进 IR——同一份 spec 换字段相符的数据即可复用，IR 不随数据量膨胀。',
+              en: 'The IR only carries `data: { ref }` (a name); the actual dataset is injected at render time and never enters the IR — the same spec is reusable with any matching dataset, and the IR never bloats with data volume.',
+            },
+          },
+        ],
+        subVersions: [
+          {
+            version: 'alpha.2',
+            date: '2026-06-05',
+            summary: {
+              zh: 'guide：由 scale + 坐标系派生坐标轴 / 刻度 / 网格并 lower 进 core；scale 改用 d3-scale（scaleLinear + ticks/tickFormat）；引入绘图区 margin 布局，mark 改投影到 plot area。仍限 cartesian2D。',
+              en: 'guide: derive axes / ticks / grid from scale + coordinate and lower into core; scales move to d3-scale (scaleLinear + ticks/tickFormat); a plot-area margin layout lands and marks now project into the plot area. Still cartesian2D only.',
+            },
+            items: [
+              {
+                label: { zh: 'guide IR + lowering', en: 'guide IR + lowering' },
+                content: {
+                  zh: '新增 `GuideSchema`（Axis + grid 子属性，绑 coordinate scope、预留 `plot.xAxis` / `plot.yAxis` anchor）；guide lowering 把轴 / 刻度 / 网格展开成 core `Path` / `Node`(text)。',
+                  en: 'New `GuideSchema` (Axis + grid sub-fields, bound to the coordinate scope, reserving `plot.xAxis` / `plot.yAxis` anchors); guide lowering expands axes / ticks / grid into core `Path` / `Node`(text).',
+                },
+              },
+              {
+                label: { zh: 'd3-scale + 绘图区布局', en: 'd3-scale + plot-area layout' },
+                content: {
+                  zh: 'scale 回溯自写 linear、改用 `d3-scale` 的 `scaleLinear`（ticks / tickFormat / nice）；`width×height` 改为整图尺寸，由外向内挤出 axis 区，mark 投影到缩进的 plot area。',
+                  en: 'scales drop the hand-rolled linear for `d3-scale`’s `scaleLinear` (ticks / tickFormat / nice); `width×height` becomes the whole-figure size, the axis band is carved from the outside in, and marks project into the inset plot area.',
+                },
+              },
+            ],
+          },
+          {
+            version: 'alpha.1',
+            date: '2026-06-05',
+            summary: {
+              zh: '首发：最薄纵向闭环——linear 比例尺 + cartesian2D 坐标系 + point / line 两种 mark，经 lowerPlots 下沉成 core 图元；IR 预留 anchor / scope-aware 字段。',
+              en: 'First release: the thinnest end-to-end slice — linear scale + cartesian2D coordinate + point / line marks, lowered into core primitives by lowerPlots; the IR reserves anchor / scope-aware fields.',
+            },
+            items: [
+              {
+                label: { zh: 'Plot IR 骨架', en: 'Plot IR skeleton' },
+                content: {
+                  zh: '`PlotSpec` 根节点 + data / scale / coordinate / encoding / mark 各 schema，全字段 `.describe()`、100% JSON 可序列化;判别字段走 `PlotMark` / `PlotScale` / `PlotCoordinate` 等 `as const` 枚举。',
+                  en: 'The `PlotSpec` root plus data / scale / coordinate / encoding / mark schemas, every field `.describe()`d and 100% JSON-serializable; discriminants use `as const` enums like `PlotMark` / `PlotScale` / `PlotCoordinate`.',
+                },
+              },
+              {
+                label: { zh: 'lowerPlots 下沉', en: 'lowerPlots lowering' },
+                content: {
+                  zh: '把 Plot IR + 注入数据投影成 core 的点 / 线，作为 `lowerComposites` 钩子接入 `compileToScene`;linear scale + cartesian2D 投影最小集打通。',
+                  en: 'Projects the Plot IR + injected data into core points / lines, wired into `compileToScene` as a `lowerComposites` hook; the minimal linear-scale + cartesian2D projection is end-to-end.',
+                },
+              },
+            ],
+          },
+        ],
+      },
+      {
+        pkg: '@retikz/plot-react',
+        version: 'v0.1',
+        description: {
+          zh: 'plot 的 React authoring 面：把 Plot IR + 数据包成一个 `<Plot>` 组件，支持 spec 入口与组合 DSL 两种写法。',
+          en: 'plot’s React authoring surface: wraps the Plot IR + data into a single `<Plot>` component, supporting both a spec entry and a composition DSL.',
+        },
+        highlights: [
+          {
+            label: { zh: '<Plot> 两条入口', en: 'Two `<Plot>` entries' },
+            content: {
+              zh: '`<Plot spec data>` 直喂完整 IR + 具名数据集;`<Plot data>` + `<LineMark>` / `<PointMark>` 子图层用组合 DSL 声明，`buildPlotSpec` 同步装配成规范化 Plot IR。',
+              en: '`<Plot spec data>` feeds a full IR + named datasets; `<Plot data>` + `<LineMark>` / `<PointMark>` children declare via the composition DSL, with `buildPlotSpec` assembling a normalized Plot IR.',
+            },
+          },
+        ],
+        subVersions: [
+          {
+            version: 'alpha.2',
+            date: '2026-06-05',
+            summary: {
+              zh: '新增 `<Axis>` 子组件（`dimension` / `tickCount` / `tickLabels` / `grid`），默认自动出 x/y 轴、`bare` 关；组合 DSL 目录 `dsl/` 更名 `components/`。',
+              en: 'New `<Axis>` child component (`dimension` / `tickCount` / `tickLabels` / `grid`), with x/y axes auto-emitted by default and a `bare` switch; the composition DSL folder `dsl/` is renamed `components/`.',
+            },
+            items: [
+              {
+                label: { zh: '<Axis> 子组件', en: '`<Axis>` child component' },
+                content: {
+                  zh: '声明式坐标轴 + 网格：`<Plot>` 默认按 scale 自动出 x/y 轴，`<Axis>` 可覆盖刻度数 / 标签 / 网格；`bare` 一键去除所有 guide。',
+                  en: 'Declarative axes + grid: `<Plot>` auto-emits x/y axes from the scales by default; `<Axis>` overrides tick count / labels / grid; `bare` strips all guides in one switch.',
+                },
+              },
+            ],
+          },
+          {
+            version: 'alpha.1',
+            date: '2026-06-05',
+            summary: {
+              zh: '首发：`<Plot>` 组件（spec 入口 + 组合 DSL）、`LineMark` / `PointMark`、`buildPlotSpec`;与 @retikz/plot lockstep。',
+              en: 'First release: the `<Plot>` component (spec entry + composition DSL), `LineMark` / `PointMark`, and `buildPlotSpec`; lockstep with @retikz/plot.',
+            },
+            items: [
+              {
+                label: { zh: '组合 DSL', en: 'Composition DSL' },
+                content: {
+                  zh: '裸数据行传 `data`、子图层声明 mark，比例尺 / 坐标系由 `<Plot>` 自动推断;入口处校验非法 spec 抛清晰 ZodError，不落到 core 内部崩。',
+                  en: 'Pass bare data rows to `data` and declare marks as children; scales / coordinate are inferred by `<Plot>`; the entry validates malformed specs with a clear ZodError instead of crashing inside core.',
+                },
+              },
+            ],
+          },
+        ],
+      },
+      {
+        pkg: '@retikz/plot-vanilla',
+        version: 'v0.1',
+        description: {
+          zh: 'plot 的无框架 / SSR 面：`renderPlot` 把 Plot IR + 数据直接出 SVG 字符串，零 DOM，可在 Node / 构建期跑。',
+          en: 'plot’s framework-free / SSR surface: `renderPlot` turns a Plot IR + data straight into an SVG string, zero DOM, runnable in Node / at build time.',
+        },
+        highlights: [
+          {
+            label: { zh: 'renderPlot SSR', en: 'renderPlot SSR' },
+            content: {
+              zh: '`renderPlot(spec, datasets, options)` 经 lowerPlots + core 编译 + `@retikz/render/svg` 出 SVG 字符串;与 react 面共用同一 Plot IR 与下沉逻辑。',
+              en: '`renderPlot(spec, datasets, options)` goes through lowerPlots + core compile + `@retikz/render/svg` to an SVG string; shares the same Plot IR and lowering as the React surface.',
+            },
+          },
+        ],
+        subVersions: [
+          {
+            version: 'alpha.2',
+            date: '2026-06-05',
+            summary: {
+              zh: '随 plot guide lockstep：`renderPlot` 的 SSR 产物自动带上坐标轴 / 刻度 / 网格与绘图区布局（共用同一份下沉逻辑，无新 API）。',
+              en: 'Lockstep with plot guide: `renderPlot` SSR output now carries axes / ticks / grid and the plot-area layout automatically (shares the same lowering, no new API).',
+            },
+            items: [
+              {
+                label: { zh: 'SSR 带轴出图', en: 'SSR output with axes' },
+                content: {
+                  zh: '服务端 / 构建期出的 SVG 字符串与 react 面视觉一致——guide 与绘图区布局由共享的 lowerPlots 产出，vanilla 侧零额外代码。',
+                  en: 'Server / build-time SVG strings now match the React surface visually — guides and plot-area layout come from the shared lowerPlots, with zero extra code on the vanilla side.',
+                },
+              },
+            ],
+          },
+          {
+            version: 'alpha.1',
+            date: '2026-06-05',
+            summary: {
+              zh: '首发：`renderPlot` SSR 字符串入口;与 @retikz/plot lockstep。',
+              en: 'First release: the `renderPlot` SSR string entry; lockstep with @retikz/plot.',
+            },
+            items: [
+              {
+                label: { zh: 'SSR 出图', en: 'SSR rendering' },
+                content: {
+                  zh: '服务端 / 构建期把图表预渲成 SVG 字符串，下游直接塞进 HTML;数据来源对 `renderPlot` 透明，本地造数据与外部 fetch 写法一致。',
+                  en: 'Pre-renders charts to an SVG string on the server / at build time for direct HTML embedding; the data source is transparent to `renderPlot`, with local and fetched data written the same way.',
                 },
               },
             ],

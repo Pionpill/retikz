@@ -45,6 +45,8 @@ export type Transform =
 export type GroupPrim = {
   /** 类型判别符 */
   type: 'group';
+  /** 稳定挂点 id：compile 从 IR 元素 user id stamp，供 renderer emit data-retikz-id / canvas hit-test */
+  id?: string;
   /** 结构化变换序列，按数组顺序应用；undefined / 空数组表示无变换 */
   transforms?: Array<Transform>;
   /**

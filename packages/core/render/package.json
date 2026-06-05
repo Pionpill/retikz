@@ -1,6 +1,6 @@
 {
   "name": "@retikz/render",
-  "version": "0.3.0-alpha.1",
+  "version": "0.3.0-alpha.4",
   "description": "retikz renderers: Scene → SVG (descriptor / string) and Canvas 2D. Subpath exports per backend (./svg, ./canvas).",
   "type": "module",
   "author": "Pionpill",
@@ -17,7 +17,7 @@
   "repository": {
     "type": "git",
     "url": "git+https://github.com/Pionpill/retikz.git",
-    "directory": "packages/render"
+    "directory": "packages/core/render"
   },
   "bugs": {
     "url": "https://github.com/Pionpill/retikz/issues"
@@ -31,6 +31,10 @@
     "./canvas": {
       "types": "./src/canvas/index.ts",
       "default": "./src/canvas/index.ts"
+    },
+    "./hydration": {
+      "types": "./src/hydration/index.ts",
+      "default": "./src/hydration/index.ts"
     }
   },
   "publishConfig": {
@@ -46,6 +50,12 @@
         "import": "./dist/es/canvas/index.js",
         "require": "./dist/lib/canvas/index.cjs",
         "default": "./dist/es/canvas/index.js"
+      },
+      "./hydration": {
+        "types": "./dist/lib/hydration/index.d.ts",
+        "import": "./dist/es/hydration/index.js",
+        "require": "./dist/lib/hydration/index.cjs",
+        "default": "./dist/es/hydration/index.js"
       }
     }
   },

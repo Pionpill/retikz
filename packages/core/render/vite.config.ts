@@ -26,8 +26,8 @@ export default defineConfig({
     outDir: 'dist',
     minify: false,
     lib: {
-      // 每个 renderer 后端一个子路径入口（@retikz/render/svg、@retikz/render/canvas）
-      entry: ['src/svg/index.ts', 'src/canvas/index.ts'],
+      // 每个子路径一个入口（@retikz/render/svg、@retikz/render/canvas、@retikz/render/hydration）
+      entry: ['src/svg/index.ts', 'src/canvas/index.ts', 'src/hydration/index.ts'],
       name: 'retikz-render',
       fileName: '[name]',
       formats: ['es', 'cjs'],

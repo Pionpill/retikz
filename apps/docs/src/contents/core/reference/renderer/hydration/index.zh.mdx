@@ -1,0 +1,102 @@
+---
+title: 水合
+description: 先静态渲染出图，客户端再把事件 handler 绑回图元——函数不进 IR、只在 runtime，SVG 与 Canvas 同一套绑定语义。
+---
+
+> 这里是参考层，不是组件文档；先会画图（从 [组件](/core/components/layout) 开始）再回来给图加交互。
+
+retikz 的图是先画出来、再加交互的：服务端或静态先渲染出一张完整的图（SSR / 字符串输出），客户端拿到这张图后，按图元 id 把你的事件 handler 绑回去。这个绑定步骤叫**水合（hydration）**。它不重建组件树、不接管应用状态，只做一件事：把「图元 ↔ 用户函数」对应起来。
+
+之所以分两步，是因为事件 handler 是函数、不能被序列化——它不进 IR，只活在 runtime。IR 里只留一个稳定的挂点：元素的 `id`。渲染时这个 id 会被带到图元上（SVG 写成 `data-retikz-id`，Canvas 留作命中查询的返回值），客户端就能按 id + 事件名把函数绑上。SVG 与 Canvas 走的是**同一套绑定语义**，差别只在「怎么把一次指针事件定位到图元」这一层。
+
+<ComponentAlert title="挂点来自 id" description="只有带 id 的元素才能绑 handler。给了 handler 却没写 id，开发模式会警告并跳过该绑定。" />
+
+## React：在组件上写事件 props
+
+给 `<Node>` / `<Path>` / `<Scope>` 加 `on<事件>` props 即可——前提是元素有 `id`。handler 签名统一是 `(event) => void`，收到的是原生 DOM `Event`。
+
+<ComponentPreview name="hydration-click" size="md" interactive />
+
+<p className="text-center text-sm text-muted-foreground">点击橙色节点切换高亮，旁边的计数同步累加。</p>
+
+```tsx
+import { Layout, Node } from '@retikz/react';
+
+<Layout>
+  <Node id="box" onClick={event => toggle('box')} onPointerEnter={highlight}>
+    点我
+  </Node>
+</Layout>
+```
+
+可用事件 props：
+
+| Prop | 触发时机 |
+| --- | --- |
+| `onClick` | 单击图元 |
+| `onDoubleClick` | 双击图元 |
+| `onRightClick` | 右键图元（默认不抑制浏览器菜单，需自行 `event.preventDefault()`） |
+| `onPointerDown` / `onPointerUp` | 指针在图元上按下 / 抬起 |
+| `onPointerMove` | 指针在图元上移动 |
+| `onPointerEnter` / `onPointerLeave` | 指针进入 / 离开图元（跨子元素不重复触发） |
+| `onWheel` | 在图元上滚轮 |
+
+几条约束：
+
+- handler 只在元素**有 `id`** 时可绑；无 id 带 handler 会被开发模式警告并跳过。
+- `<Coordinate>` 是命名点、不绘制任何图形、没有可点面积，**不接** handler。
+- `id` 重复时同 id 的不同事件会合并、同事件后者覆盖前者（开发模式给警告）。
+
+### ir 模式：用 Layout 的 handlers prop
+
+直接喂 IR（`<Layout ir={...}>`、没有 JSX children）时，没有组件 props 可写，改用 `<Layout>` 的 `handlers` prop，按 id 提供：
+
+```tsx
+<Layout
+  ir={ir}
+  handlers={{
+    box: { click: event => toggle('box') },
+    edge1: { click: selectEdge },
+  }}
+/>
+```
+
+## Vanilla：hydrate 与 mountCanvas
+
+无框架场景下，先渲染出图、再调一个水合函数。SVG 与 Canvas 各有入口，但传入的 `handlers` 形态一致。
+
+**SVG**——已挂好的 `<svg>`（`mountSvg` 或注入 SSR 字符串产物）上根级委托绑定：
+
+```ts
+import { mountSvg, hydrate } from '@retikz/vanilla';
+
+const view = mountSvg(container, ir);
+const handle = hydrate(view.root, {
+  handlers: { box: { click: event => toggle('box') } },
+});
+// handle.dispose() 解绑；view.dispose() 一并解绑
+```
+
+**Canvas**——`mountCanvas` 把 IR 挂成 `<canvas>`，返回的 view 自带坐标映射，`view.hydrate` 用命中查询定位图元：
+
+```ts
+import { mountCanvas } from '@retikz/vanilla';
+
+const view = mountCanvas(container, ir);
+const handle = view.hydrate({
+  handlers: { box: { click: event => toggle('box') } },
+});
+```
+
+`handlers` 是一张 `{ [id]: { 事件名: handler } }` 表，事件名用 `click` / `doubleClick` / `rightClick` / `pointerDown` / `pointerUp` / `pointerMove` / `pointerEnter` / `pointerLeave` / `wheel`（与 React 的 `on<事件>` 一一对应，去掉 `on` 前缀、首字母小写）。
+
+## 双模等价
+
+同一张 `handlers` 表，在 `renderer="svg"` 与 `renderer="canvas"` 下行为完全一致——共用同一注册表与分发逻辑，只有「怎么定位图元」这层不同：SVG 用 `data-retikz-id` 反查最近祖先，Canvas 用几何命中查询返回图元 id。切换 renderer 不需要改任何 handler。
+
+| 模式 | 定位方式 |
+| --- | --- |
+| `renderer="svg"` | 事件目标向上找最近带 `data-retikz-id` 的祖先 |
+| `renderer="canvas"` | 指针坐标经命中查询定位到图元 id |
+
+<ComponentAlert type="warn" title="右键菜单不会自动抑制" description="onRightClick / rightClick 默认保留浏览器的右键菜单；想接管要在 handler 里自行 event.preventDefault()。" />

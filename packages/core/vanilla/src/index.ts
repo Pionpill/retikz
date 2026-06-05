@@ -8,6 +8,8 @@
  */
 export { renderToSvgString } from './renderToSvgString';
 export { mountSvg } from './mountSvg';
+export { hydrate } from './hydrate';
+export { mountCanvas } from './mountCanvas';
 export { figure } from './builder/figure';
 export { node } from './builder/node';
 export { draw } from './builder/draw';
@@ -24,4 +26,15 @@ export type {
   FigureConfig,
   Way,
 } from './builder/types';
-export type { RenderInput, CommonOptions, MountOptions, RenderToStringOptions, VanillaView } from './types';
+export type {
+  RenderInput,
+  CommonOptions,
+  MountOptions,
+  RenderToStringOptions,
+  VanillaView,
+  CanvasView,
+  MountCanvasOptions,
+  HydrateOptions,
+  HydrationHandle,
+  ScenePoint,
+} from './types';

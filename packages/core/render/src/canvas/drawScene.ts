@@ -1,6 +1,5 @@
 import type {
   ArrowEndSpec,
-  ClipShape,
   IRPaintSpec,
   MarkerFill,
   MarkerPrimitive,
@@ -11,11 +10,9 @@ import type {
   ScenePrimitive,
   SceneResource,
   TextPrim,
-  Transform,
 } from '@retikz/core';
 import type { CanvasWarning, DrawOptions, UnsupportedCanvasFeature } from './types';
-
-const DEG_TO_RAD = Math.PI / 180;
+import { DEG_TO_RAD, applyClip, applyTransform, buildPath, roundedRectPath } from './pathGeometry';
 
 const warnUnsupported = (
   options: DrawOptions,
@@ -274,91 +271,6 @@ const strokeCurrentPath = (
   if (strokeOpacity !== undefined) ctx.restore();
 };
 
-const roundedRectPath = (
-  ctx: CanvasRenderingContext2D,
-  x: number,
-  y: number,
-  width: number,
-  height: number,
-  radius: number | undefined,
-): void => {
-  const r = Math.min(radius ?? 0, Math.abs(width) / 2, Math.abs(height) / 2);
-  ctx.beginPath();
-  if (r <= 0) {
-    ctx.rect(x, y, width, height);
-    return;
-  }
-  const right = x + width;
-  const bottom = y + height;
-  ctx.moveTo(x + r, y);
-  ctx.lineTo(right - r, y);
-  ctx.quadraticCurveTo(right, y, right, y + r);
-  ctx.lineTo(right, bottom - r);
-  ctx.quadraticCurveTo(right, bottom, right - r, bottom);
-  ctx.lineTo(x + r, bottom);
-  ctx.quadraticCurveTo(x, bottom, x, bottom - r);
-  ctx.lineTo(x, y + r);
-  ctx.quadraticCurveTo(x, y, x + r, y);
-  ctx.closePath();
-};
-
-const pathCommand = (ctx: CanvasRenderingContext2D, command: PathCommand): void => {
-  switch (command.kind) {
-    case 'move':
-      ctx.moveTo(command.to[0], command.to[1]);
-      break;
-    case 'line':
-      ctx.lineTo(command.to[0], command.to[1]);
-      break;
-    case 'quad':
-      ctx.quadraticCurveTo(command.control[0], command.control[1], command.to[0], command.to[1]);
-      break;
-    case 'cubic':
-      ctx.bezierCurveTo(
-        command.control1[0],
-        command.control1[1],
-        command.control2[0],
-        command.control2[1],
-        command.to[0],
-        command.to[1],
-      );
-      break;
-    case 'close':
-      ctx.closePath();
-      break;
-    case 'arc':
-      ctx.arc(
-        command.center[0],
-        command.center[1],
-        command.radius,
-        command.startAngle * DEG_TO_RAD,
-        command.endAngle * DEG_TO_RAD,
-        // counterClockwise 缺省时按角度顺序推断扫描方向（endAngle < startAngle = 逆时针），与 SVG sweep-flag 一致；
-        // 否则 ctx.arc 对 end<start 会绕远（如 0→-30 画成 330°）
-        command.counterClockwise ?? command.endAngle < command.startAngle,
-      );
-      break;
-    case 'ellipseArc':
-      ctx.ellipse(
-        command.center[0],
-        command.center[1],
-        command.radiusX,
-        command.radiusY,
-        (command.rotation ?? 0) * DEG_TO_RAD,
-        command.startAngle * DEG_TO_RAD,
-        command.endAngle * DEG_TO_RAD,
-        command.counterClockwise ?? command.endAngle < command.startAngle,
-      );
-      break;
-
-  }
-};
-
-const buildPath = (ctx: CanvasRenderingContext2D, commands: ReadonlyArray<PathCommand>): void => {
-  ctx.beginPath();
-  for (const command of commands) pathCommand(ctx, command);
-};
-
 const firstLineDy = (text: TextPrim): number =>
   text.baseline === 'middle'
     ? (-(text.lines.length - 1) / 2) * text.lineHeight
@@ -422,28 +334,6 @@ const drawText = (ctx: CanvasRenderingContext2D, p: TextPrim, options: DrawOptio
     }
     if (shouldRestore) ctx.restore();
   });
-};
-
-const applyTransform = (ctx: CanvasRenderingContext2D, transform: Transform): void => {
-  switch (transform.kind) {
-    case 'translate':
-      ctx.translate(transform.x, transform.y);
-      break;
-    case 'rotate':
-      if (transform.cx !== undefined || transform.cy !== undefined) {
-        const cx = transform.cx ?? 0;
-        const cy = transform.cy ?? 0;
-        ctx.translate(cx, cy);
-        ctx.rotate(transform.degrees * DEG_TO_RAD);
-        ctx.translate(-cx, -cy);
-      } else {
-        ctx.rotate(transform.degrees * DEG_TO_RAD);
-      }
-      break;
-    case 'scale':
-      ctx.scale(transform.x, transform.y ?? transform.x);
-      break;
-  }
 };
 
 type Point = [number, number];
@@ -735,27 +625,6 @@ const pathBBox = (commands: ReadonlyArray<PathCommand>): BBox => {
   }
   if (minX > maxX) return { x: 0, y: 0, w: 0, h: 0 };
   return { x: minX, y: minY, w: maxX - minX, h: maxY - minY };
-};
-
-/** 按裁剪形状构建路径并 ctx.clip()（坐标在 group 局部帧，须在 group transform 之后调用） */
-const applyClip = (ctx: CanvasRenderingContext2D, shape: ClipShape): void => {
-  ctx.beginPath();
-  switch (shape.kind) {
-    case 'rect':
-      ctx.rect(shape.x, shape.y, shape.width, shape.height);
-      break;
-    case 'circle':
-      ctx.arc(shape.cx, shape.cy, shape.r, 0, Math.PI * 2);
-      break;
-    case 'ellipse':
-      ctx.ellipse(shape.cx, shape.cy, shape.rx, shape.ry, 0, 0, Math.PI * 2);
-      break;
-    case 'polygon':
-      shape.points.forEach((pt, i) => (i === 0 ? ctx.moveTo(pt[0], pt[1]) : ctx.lineTo(pt[0], pt[1])));
-      ctx.closePath();
-      break;
-  }
-  ctx.clip();
 };
 
 const drawPrim = (

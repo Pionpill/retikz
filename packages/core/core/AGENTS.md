@@ -50,7 +50,7 @@
 - 与 IR `Node.position` 语义一致——TikZ 节点定位的是中心
 - 不同形状类型保持一致的位置语义，避免心智割裂
 - 操作上"在某点放一个东西"是常见心智，center 是天然锚点
-- 渲染输出层（`scene/primitives.ts` 的 `RectPrim` / 未来 `CirclePrim` 等）保持各形状原生的 SVG 位置约定（`<rect>` 用左上角，`<circle>` 用 `cx/cy`）。**坐标转换发生在 emit primitive 时，不污染上游几何代码。**
+- 渲染输出层（`primitive/*.ts` 的 `RectPrim` / `EllipsePrim` 等）保持各形状原生的 SVG 位置约定（`<rect>` 用左上角，`<circle>` 用 `cx/cy`）。**坐标转换发生在 emit primitive 时，不污染上游几何代码。**
 
 ### 纯函数 + plain data，不用 class
 
@@ -58,7 +58,7 @@
 - 函数集合用 `const xxx = { method1, method2 }` 命名空间形态
 - 每个方法独立 JSDoc（见根 AGENTS.md "对象字面量当命名空间"规则）
 
-## Scene 编译器（`scene/`）
+## Scene 编译器（`compile/` 产出 `primitive/` 类型）
 
 - `ScenePrimitive` 是矢量图形的最大公约子集
   - 禁止 SVG-only 特性（`<filter>` / `<marker>` / `<defs>` 共享）
@@ -87,9 +87,9 @@
 
 ## 公开 API（`src/index.ts`）
 
-- 只通过 `src/index.ts` 暴露公开 API；adapter 不准 import 子路径（如 `@retikz/core/scene/compile`）
+- 只通过 `src/index.ts` 暴露公开 API；adapter 不准 import 子路径（如 `@retikz/core/compile`）
 - 顶层 `src/index.ts` 用**显式 named re-export**——这是公开契约面，让 API 一目了然
-- 内部子 barrel（`ir/index.ts`、`scene/index.ts` 等）用 `export *`——维护轻
+- 内部子 barrel（`ir/index.ts`、`primitive/index.ts`、`compile/index.ts` 等）用 `export *`——维护轻
 
 ## Scope IR 容器（`ir/scope.ts` + `compile/scope.ts`）
 

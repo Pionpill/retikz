@@ -1,0 +1,102 @@
+---
+title: Hydration
+description: Render the figure statically first, then bind event handlers back to elements on the client — functions stay out of the IR and live only at runtime, with the same binding semantics for SVG and Canvas.
+---
+
+> This is the reference layer, not component docs; learn to draw first (start from [Components](/core/components/layout)), then come back to add interactivity.
+
+A retikz figure is drawn first and made interactive second: the server (or a static build) renders a complete figure (SSR / string output), and once the client has that figure it binds your event handlers back to the elements by their id. That binding step is called **hydration**. It does not rebuild the component tree or take over application state — it does exactly one thing: pair "element ↔ user function".
+
+The two-step split exists because an event handler is a function and cannot be serialized — it never enters the IR and lives only at runtime. The IR keeps just one stable attach point: each element's `id`. At render time that id is carried onto the element (SVG emits it as `data-retikz-id`, Canvas keeps it as the return value of a hit query), so the client can bind functions by id + event name. SVG and Canvas share the **same binding semantics**; they differ only in how a pointer event gets located to an element.
+
+<ComponentAlert title="The attach point is the id" description="Only elements with an id can bind a handler. A handler given to an element without an id is warned about and skipped in development." />
+
+## React: event props on components
+
+Add `on<Event>` props to `<Node>` / `<Path>` / `<Scope>` — as long as the element has an `id`. The handler signature is uniformly `(event) => void`, receiving a native DOM `Event`.
+
+<ComponentPreview name="hydration-click" size="md" interactive />
+
+<p className="text-center text-sm text-muted-foreground">Click the orange node to toggle the highlight; the counter next to it ticks up.</p>
+
+```tsx
+import { Layout, Node } from '@retikz/react';
+
+<Layout>
+  <Node id="box" onClick={event => toggle('box')} onPointerEnter={highlight}>
+    Click me
+  </Node>
+</Layout>
+```
+
+Available event props:
+
+| Prop | Fires on |
+| --- | --- |
+| `onClick` | Single click on the element |
+| `onDoubleClick` | Double click on the element |
+| `onRightClick` | Right click (does not suppress the browser menu — call `event.preventDefault()` yourself) |
+| `onPointerDown` / `onPointerUp` | Pointer pressed / released on the element |
+| `onPointerMove` | Pointer moving over the element |
+| `onPointerEnter` / `onPointerLeave` | Pointer entering / leaving the element (no repeat across child elements) |
+| `onWheel` | Wheel over the element |
+
+A few constraints:
+
+- A handler binds only when the element **has an `id`**; a handler without an id is warned about and skipped in development.
+- `<Coordinate>` is a named point, draws nothing, and has no clickable area, so it **takes no** handlers.
+- On duplicate `id`s, different events for the same id merge and the later handler for the same event wins (warned in development).
+
+### ir mode: the Layout handlers prop
+
+When you feed IR directly (`<Layout ir={...}>`, no JSX children) there are no component props to write, so use the `handlers` prop on `<Layout>`, keyed by id:
+
+```tsx
+<Layout
+  ir={ir}
+  handlers={{
+    box: { click: event => toggle('box') },
+    edge1: { click: selectEdge },
+  }}
+/>
+```
+
+## Vanilla: hydrate and mountCanvas
+
+Without a framework, render the figure first and then call a hydration function. SVG and Canvas each have their own entry point, but the `handlers` you pass in have the same shape.
+
+**SVG** — root-level delegation on an already-mounted `<svg>` (from `mountSvg` or an injected SSR string):
+
+```ts
+import { mountSvg, hydrate } from '@retikz/vanilla';
+
+const view = mountSvg(container, ir);
+const handle = hydrate(view.root, {
+  handlers: { box: { click: event => toggle('box') } },
+});
+// handle.dispose() unbinds; view.dispose() unbinds too
+```
+
+**Canvas** — `mountCanvas` mounts the IR into a `<canvas>`; the returned view carries its own coordinate mapping, and `view.hydrate` locates elements via a hit query:
+
+```ts
+import { mountCanvas } from '@retikz/vanilla';
+
+const view = mountCanvas(container, ir);
+const handle = view.hydrate({
+  handlers: { box: { click: event => toggle('box') } },
+});
+```
+
+`handlers` is a `{ [id]: { eventName: handler } }` table; event names are `click` / `doubleClick` / `rightClick` / `pointerDown` / `pointerUp` / `pointerMove` / `pointerEnter` / `pointerLeave` / `wheel` (a one-to-one match with React's `on<Event>`, with the `on` prefix dropped and the first letter lowercased).
+
+## Same behavior in both modes
+
+The same `handlers` table behaves identically under `renderer="svg"` and `renderer="canvas"` — they share one registry and one dispatch path, differing only in how an element is located: SVG looks up the nearest ancestor carrying `data-retikz-id`, Canvas returns an element id from a geometric hit query. Switching renderer requires no handler changes.
+
+| Mode | Locating |
+| --- | --- |
+| `renderer="svg"` | Walk up from the event target to the nearest ancestor with `data-retikz-id` |
+| `renderer="canvas"` | Map the pointer coordinate through a hit query to an element id |
+
+<ComponentAlert type="warn" title="The context menu is not suppressed for you" description="onRightClick / rightClick leaves the browser context menu in place by default; to take it over, call event.preventDefault() inside the handler." />

@@ -591,6 +591,8 @@ export const compileToScene = (ir: IR, options: CompileOptions = {}): Scene => {
           // sealSink 后对该层子序按 zIndex 稳定排序（占位已回填，类型已收窄）
           children: stableSortByZIndex(sealSink(innerSink)),
         };
+        // 水合挂点：scope user id stamp 到其 GroupPrim（子图元不重复 stamp）
+        if (child.id !== undefined) group.id = child.id;
         if (hasOwnTransforms) group.transforms = [...ownTransforms];
         // scope.clip → 去重派 clip 资源 id 挂 group.clipRef；裁剪区裁该 group 内全部子原语
         if (child.clip !== undefined) group.clipRef = clip.resolve(child.clip);

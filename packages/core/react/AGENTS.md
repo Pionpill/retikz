@@ -10,7 +10,7 @@
 
 `@retikz/core` 之上的 **React adapter**：把 Kernel/Sugar JSX 编译成 `IR` → 调 `compileToScene` 拿 `Scene` → 渲染成 SVG。
 
-- **Kernel 组件**：`<TikZ>` `<Node>` `<Path>` `<Step>` `<Text>` `<Coordinate>` `<Scope>`——一对一映射 IR
+- **Kernel 组件**：`<Layout>` `<Node>` `<Path>` `<Step>` `<Text>` `<Coordinate>` `<Scope>`——一对一映射 IR
 - **Sugar 组件**：`<Draw>` `<EdgeLabel>` 等——builder 同步展开为 Kernel，IR 完全等价
 - **桥接函数**：`convertReactNodeToIR`（buildIR 别名）/ `convertIRToReactNode`（unbuilder）
 - **renderer**：浏览器 SVG，`render/renderPrim.tsx` 把 ScenePrimitive 翻译为 React 元素
@@ -31,9 +31,11 @@
 src/
 ├── index.ts          # 公开 API barrel（显式 named export）
 ├── kernel/           # Kernel 组件 + builder/unbuilder（JSX ↔ IR）
-│   ├── TikZ.tsx Node.tsx Path.tsx Step.tsx Text.tsx Coordinate.tsx Scope.tsx
+│   ├── Layout.tsx Node.tsx Path.tsx Step.tsx Text.tsx Coordinate.tsx Scope.tsx
 │   ├── builder.ts    # React 元素树 → IR（同步遍历 children）
-│   ├── unbuilder.ts  # IR → React 元素树（带 key、不裹 TikZ 外壳）
+│   ├── collectHydrationHandlers.ts / eventProps.ts  # 水合：按 id 收集 on<Event> handler
+│   ├── rendererContext.ts / RendererModeProvider.tsx  # svg/canvas 双渲染模式
+│   ├── unbuilder.ts  # IR → React 元素树（带 key、不裹 Layout 外壳）
 │   ├── _displayNames.ts / _fields.ts  # 内部常量（_前缀 = 不导出）
 │   └── index.ts
 ├── sugar/            # Sugar 组件（同步展开为 Kernel）
@@ -61,7 +63,7 @@ src/
 - **Sugar = Kernel 等价性**（根 AGENTS.md 已述）——产出的 IR 必须完全等价于手写 Kernel JSX，每加一种 Sugar 配一条等价性测试
 - **同步展开**：Sugar 组件函数被 builder 同步调用、拿到返回的 JSX 后立即递归展开；与 Kernel 一样**禁止 hooks**
 - **不在 sugar 里引入新 IR 字段**——展开后只能由 Kernel 已暴露的字段组合而成；想要新字段先升级 core 的 schema + 给 Kernel 加 prop
-- 复杂解析（如 `way` 字符串解析）走 `packages/core/src/parsers/`，sugar 调用纯函数获取展开结果——pure parser 既能被 React adapter 复用，未来 SSR / canvas adapter 也直接复用
+- 复杂解析（如 `way` 字符串解析）走 `packages/core/core/src/parsers/`，sugar 调用纯函数获取展开结果——pure parser 既能被 React adapter 复用，未来 SSR / canvas adapter 也直接复用
 
 ## Renderer 规范（`render/`）
 
@@ -69,13 +71,13 @@ src/
 - **输入是 `Scene`，不是 IR**——不要在 renderer 里重做 IR → Scene 编译；走 `compileToScene` 一次
 - **不做几何运算**——所有坐标 / anchor / bbox 在 `@retikz/core` 已算完；renderer 只做"把 primitive 字段翻译成 SVG 属性"
 - **`browser-measurer.ts` 注入到 `compileToScene` 的 `measureText`**——服务端 / 测试环境换 fallback measurer，不要在 measurer 内部判 `typeof window`
-- **箭头 marker 用 `<defs>` 注入 `<marker>`**，id 必须包含哈希避免多 `<TikZ>` 实例间冲突
+- **箭头 marker 用 `<defs>` 注入 `<marker>`**，id 必须包含哈希避免多 `<Layout>` 实例间冲突
 
 ## 公开 API（`src/index.ts`）
 
 - **显式 named export**（与 core 同——见根 AGENTS.md）；不要 `export *`
 - 透传 core 的常量 / 类型（如 `DrawWay`、`WayItem`）让 react 用户单包 import 就够用，避免迫使消费者同时装 `@retikz/core`
-- **prop 类型必须 export**（`TikZProps` / `NodeProps` 等）——消费者写 wrapper / forwardRef 时要派生
+- **prop 类型必须 export**（`LayoutProps` / `NodeProps` 等）——消费者写 wrapper / forwardRef 时要派生
 - 内部辅助（`_displayNames` / `_fields` 等下划线开头的 module）**不导出**
 
 ## 测试

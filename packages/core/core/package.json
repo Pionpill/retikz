@@ -1,6 +1,6 @@
 {
   "name": "@retikz/core",
-  "version": "0.3.0-alpha.1",
+  "version": "0.3.0-alpha.4",
   "description": "retikz v0.1 core: framework-agnostic IR, scene compiler, and pure parsers.",
   "type": "module",
   "author": "Pionpill",
@@ -14,7 +14,7 @@
   "repository": {
     "type": "git",
     "url": "git+https://github.com/Pionpill/retikz.git",
-    "directory": "packages/core"
+    "directory": "packages/core/core"
   },
   "bugs": {
     "url": "https://github.com/Pionpill/retikz/issues"

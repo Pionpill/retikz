@@ -1,6 +1,8 @@
 import { type CSSProperties, type FC, useEffect, useReducer, useRef } from 'react';
 import type { Scene } from '@retikz/core';
-import { renderToCanvas } from '@retikz/render/canvas';
+import { hitTest, renderToCanvas } from '@retikz/render/canvas';
+import type { HydrationHandlers } from '@retikz/render/hydration';
+import { createHydrationController } from '@retikz/render/hydration';
 
 /** 按 href 缓存的图片加载态（image paint server 用；跨 CanvasHost 实例共享去重） */
 type ImageEntry = { img: HTMLImageElement; loaded: boolean; failed: boolean; waiters: Set<() => void> };
@@ -39,6 +41,12 @@ const loadImage = (href: string, onReady: () => void): HTMLImageElement | null =
 export type CanvasHostProps = {
   /** 已编译 Scene */
   scene: Scene;
+  /**
+   * 水合 handler 注册表（按图元 id）
+   * @description 经 `createHydrationController(canvas, handlers, locate)` 绑到 `<canvas>`，
+   *   locate 由 `hitTest` + client→Scene 坐标映射（逆 meet-fit）构成，与 svg 模式共用同一注册表语义。
+   */
+  handlers?: HydrationHandlers;
   /** 透传显示宽度 */
   width?: number | string;
   /** 透传显示高度 */
@@ -69,9 +77,32 @@ const canvasFontFamily = (canvas: HTMLCanvasElement): string | undefined => {
   return fontFamily.length > 0 ? fontFamily : undefined;
 };
 
+/**
+ * 把指针的 client 像素坐标逆 meet-fit 映射成 Scene user units
+ * @description 与 `renderToCanvas` 的 `computeCanvasTransform` / vanilla `mountCanvas.clientToScene` 同口径：
+ *   读 `canvas.getBoundingClientRect()` 把 client 坐标降到 canvas 局部 CSS 像素（dpr 在 client→CSS 这步已无关），
+ *   再去 letterbox offset、除 scale、加 layout origin。落在 letterbox 黑边外的点会得到 layout 区域外坐标，
+ *   交由 `hitTest` 自然判为无命中。
+ */
+const clientToScene = (
+  canvas: HTMLCanvasElement,
+  scene: Scene,
+  clientX: number,
+  clientY: number,
+): { x: number; y: number } => {
+  const { layout } = scene;
+  const rect = canvas.getBoundingClientRect();
+  const scale = Math.min(rect.width / layout.width, rect.height / layout.height);
+  const offsetX = (rect.width - layout.width * scale) / 2;
+  const offsetY = (rect.height - layout.height * scale) / 2;
+  const contentX = clientX - rect.left - offsetX;
+  const contentY = clientY - rect.top - offsetY;
+  return { x: contentX / scale + layout.x, y: contentY / scale + layout.y };
+};
+
 /** React canvas 宿主：管理 `<canvas>` 与全量重绘 effect */
 export const CanvasHost: FC<CanvasHostProps> = props => {
-  const { scene, width, height, className, style } = props;
+  const { scene, handlers, width, height, className, style } = props;
   const ref = useRef<HTMLCanvasElement>(null);
   // image 加载完 / 主题切换都触发重绘（renderToCanvas 重读 getComputedStyle 的 color → currentColor）
   const [renderTick, bumpRender] = useReducer((n: number) => n + 1, 0);
@@ -108,6 +139,23 @@ export const CanvasHost: FC<CanvasHostProps> = props => {
       getImage: href => loadImage(href, bumpRender),
     });
   }, [className, height, renderTick, scene, style, width]);
+
+  // 水合：把 handler 注册表经 createHydrationController + (hitTest + 逆 meet-fit 坐标映射) 绑到 <canvas>。
+  // locate(event) = client 坐标 → clientToScene 逆 meet-fit 成 Scene 点 → hitTest 返回命中图元 id。
+  // context2d 用 canvas 自身 2D context；renderToCanvas 后残留 meet-fit transform，须先 setTransform 归一为
+  // identity 再点测（hitTest 在 Scene user units 自管 group transform 栈，否则路径被二次缩放偏移）。
+  useEffect(() => {
+    const canvas = ref.current;
+    if (!canvas) return undefined;
+    const context2d = canvas.getContext('2d') ?? undefined;
+    const controller = createHydrationController(canvas, handlers ?? {}, event => {
+      const mouse = event as MouseEvent;
+      const point = clientToScene(canvas, scene, mouse.clientX, mouse.clientY);
+      context2d?.setTransform(1, 0, 0, 1, 0, 0);
+      return hitTest(scene, point, { context2d });
+    });
+    return () => controller.dispose();
+  }, [handlers, scene]);
 
   // object-fit:contain：受限容器（如 max-width 收窄宽度但高度固定）下让位图按比例 letterbox 不拉伸，
   // 对齐 SVG preserveAspectRatio="meet"；用户可经 style.objectFit 覆盖

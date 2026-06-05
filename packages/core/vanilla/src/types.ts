@@ -1,4 +1,5 @@
 import type { CompileOptions, IR, Scene } from '@retikz/core';
+import type { HydrationHandlers } from '@retikz/render/hydration';
 import type { Figure } from './figure';
 
 /** mountSvg / renderToSvgString 的入参：已编译 `Scene`、待编译 `IR`，或命令式 builder 的 `Figure` */
@@ -28,4 +29,52 @@ export type VanillaView = {
   update: (next: RenderInput) => void;
   /** 卸载：移除 `root`、置 view 失效（再调 `update` 抛、`dispose` noop） */
   dispose: () => void;
+};
+
+/** `hydrate` / `view.hydrate` 返回的解绑句柄 */
+export type HydrationHandle = {
+  /** 解绑本次水合的全部 listener，之后事件不再触发 */
+  dispose: () => void;
+};
+
+/** 水合入参：按 id 提供的 handler 注册表（事件名 → handler） */
+export type HydrateOptions = {
+  /** id → 事件名 → handler 的注册表（透传给 `@retikz/render/hydration` 控制器） */
+  handlers: HydrationHandlers;
+};
+
+/** Scene user units 坐标点（hitTest 入参 / 坐标映射出参） */
+export type ScenePoint = {
+  /** Scene user units 横坐标 */
+  x: number;
+  /** Scene user units 纵坐标 */
+  y: number;
+};
+
+/**
+ * `mountCanvas` 返回的句柄：在 `VanillaView` 基础上加 canvas 侧水合 + 坐标映射
+ * @description `root` 是挂出的 `<canvas>`（非 svg），与 `mountSvg` 的 `<svg>` 对应；`hydrate` 用 `hitTest` +
+ *   client→Scene 坐标映射做定位；`clientToScene` 把指针的 client 像素逆 meet-fit 映射回 Scene user units（供 hitTest）。
+ */
+export type CanvasView = {
+  /** 挂载出的 `<canvas>`；跨 `update` 同一元素（不被替换） */
+  readonly root: HTMLCanvasElement;
+  /** 整图重渲染（原地复用 `root`、重设位图尺寸 + 重绘），不承诺局部 patch */
+  update: (next: RenderInput) => void;
+  /** 卸载：移除 `root`、解绑水合、置 view 失效（再调 `update` 抛、`dispose` noop） */
+  dispose: () => void;
+  /** 绑定 handler：以 `hitTest` + `clientToScene` 构造 `locate`，经 `createHydrationController` 委托 */
+  hydrate: (options: HydrateOptions) => HydrationHandle;
+  /**
+   * 把指针的 client 像素坐标逆 meet-fit 映射成 Scene user units（命中映射用）
+   * @description 始终返回逆 fit 后的 Scene 点；落在 letterbox 黑边外的点会得到 layout 区域外坐标，
+   *   交给 `hitTest` 自然判为无命中（无需在此截断），故无 `null` 返回。
+   */
+  clientToScene: (clientX: number, clientY: number) => ScenePoint;
+};
+
+/** `mountCanvas` 选项：继承 SSR / compile 公共项，外加 canvas 显示 / dpr 透传 */
+export type MountCanvasOptions = CommonOptions & {
+  /** 设备像素比；缺省读 `globalThis.devicePixelRatio`、再回退 1（镜像 react CanvasHost） */
+  devicePixelRatio?: number;
 };

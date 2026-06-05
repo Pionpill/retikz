@@ -577,9 +577,10 @@ export const emitNodePrimitives = (
 ): Array<ScenePrimitive> => {
   // shape 主体：emit 收**轴对齐 rect（rotate=0）**，rotate 由末端外层 GroupPrim 统一施加
   const axisAlignedRect: Rect = { ...layout.rect, rotate: 0 };
-  const inner: Array<ScenePrimitive> = [
+  const shapePrims: Array<ScenePrimitive> = [
     ...layout.shapeDef.emit(axisAlignedRect, toShapeStyle(layout, resolveFill), round),
   ];
+  const inner: Array<ScenePrimitive> = [...shapePrims];
   if (layout.lines) {
     // align=start: x=中心-块半宽; align=end: x=中心+块半宽; align=middle: x=中心
     const halfBlockW = layout.textWidth / 2;
@@ -669,8 +670,17 @@ export const emitNodePrimitives = (
   // 带文本（layout.lines 非空）或有旋转的 Node 包进单层 GroupPrim：给"语义化节点"一个稳定 DOM /
   // stacking 单位边界；纯几何装饰 Node 维持平铺、零额外 DOM 层。无旋转时 group 不带 transforms。
   const needsGroup = layout.rotateDeg !== 0 || layout.lines !== undefined;
-  if (!needsGroup) return inner;
+  if (!needsGroup) {
+    // 纯几何 Node（不包 group）：把 user id stamp 到每个平铺 shape 图元（多 shape emit 时共享同一 id）；
+    // label / pin 等附属图元不 stamp。无 user id 时保持 undefined。
+    if (layout.id !== undefined) {
+      for (const prim of shapePrims) prim.id = layout.id;
+    }
+    return inner;
+  }
+  // 带文本 / rotate Node：user id 落到单层 GroupPrim（top-level emit 图元），子图元不重复 stamp。
   const group: GroupPrim = { type: 'group', children: inner };
+  if (layout.id !== undefined) group.id = layout.id;
   if (layout.rotateDeg !== 0) {
     group.transforms = [
       {

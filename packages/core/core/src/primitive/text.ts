@@ -22,6 +22,8 @@ export type TextLine = {
  */
 export type TextPrim = {
   type: 'text';
+  /** 稳定挂点 id：compile 从 IR 元素 user id stamp，供 renderer emit data-retikz-id / canvas hit-test */
+  id?: string;
   /** 锚点横坐标（具体含义由 align 决定） */
   x: number;
   /** 锚点纵坐标（具体含义由 baseline 决定） */

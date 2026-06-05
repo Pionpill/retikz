@@ -1,9 +1,12 @@
 import type { FC, ReactNode } from 'react';
 import type { IRPath } from '@retikz/core';
 import { TIKZ_PATH } from './_displayNames';
+import type { HydrationEventProps } from './eventProps';
 
 /** <Path> 组件的 props */
-export type PathProps = {
+export type PathProps = HydrationEventProps & {
+  /** 路径 id；其他 path / position 通过这个 id 引用本路径，也作为水合挂点供事件 handler 绑定 */
+  id?: IRPath['id'];
   /** 主色（TikZ `color=`）；stroke / 箭头 / step label 未单设则随它（跟主色不跟 stroke） */
   color?: IRPath['color'];
   /** 描边色，省略时用 currentColor */

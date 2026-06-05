@@ -11,6 +11,7 @@
 > slug 用 kebab-case
 > 模板对应 [`develop-design`](../../../.agents/skills/develop-design/SKILL.md) SKILL；改 ADR 结构时同步改两边
 > 路径假设实例位于 `notes/decisions/core/<MAJOR>/<MAJOR>.<MINOR>/<MAJOR>.<MINOR>-channel.N/<NN>-...md`，模板里的相对链接按此位置写（在模板自身处链接会断，cp 到实例位置后才正确）
+> **ADR 生命周期**：Proposed 期是「施工蓝图」，带完整实现契约供下游 implement / test / document Agent 执行；该里程碑**发布后、bump 到下一版本前**（也可平时主动单独发起），由 [`package-publish`](../../../.agents/skills/package-publish/SKILL.md) 阶段 6.1 把本里程碑目录下的 Accepted ADR **压缩成「决策记录」**——只留「只有 ADR 能告诉你的 WHY」：删 🔻 两段（待决策点并进「决策」/ 实现契约折成指针）、背景压成几条硬约束、DSL 表面 / 落地分布并进文档站 + 指针、删完工即失效的过渡文本（「受限于… / 待…处理」这类）。保留：决策 / 被否决选项 + 理由 / 不在范围；代码块只留核心数据结构。完整施工契约留在 Proposed commit 的 git 历史（`git show <commit>:<path>` 可捞回），工作区只留定稿态、零信息损失。详见 package-publish 阶段 6.1。
 
 - 状态：Proposed
 - 决策日期：YYYY-MM-DD
@@ -34,9 +35,10 @@
 2. <第二条>
 3. <第三条>
 
-## 待决策点
+## 待决策点 🔻
 
 > 方案已定，但方案内部仍有的小决策。**列得越细，下游 Spec / 实现 Agent 越不需要猜**。
+> 🔻 临时段：带硬「倾向」的其实已是决策、应直接并进「决策」段而非停在这里；封板（bump 前）时把实现期已拍板项并进「决策」、删除本段，真正悬而未决的挪「不在本 ADR 范围」。
 
 - **<决策点 1>**：<选项与倾向>
 - **<决策点 2>**：<选项与倾向>
@@ -49,7 +51,7 @@
 
 ## 测试设计
 
-`packages/core/tests/<对应路径>.test.ts` 覆盖：
+`packages/core/core/tests/<对应路径>.test.ts` 覆盖：
 
 - <case 类别 1>
 - <case 类别 2>
@@ -70,9 +72,10 @@
 
 ---
 
-## 实现契约（必填）
+## 实现契约（必填）🔻
 
 > 本段是下游 implement / test / document / wrapup 阶段的硬契约。AI 子 Agent 严格按此执行，偏离需开新 ADR 或本 ADR 加新条目重审。
+> 🔻 临时段：前瞻施工指令，仅 Proposed → 实现窗口内有效。该里程碑发布、bump 到下一版本前（package-publish 阶段 6）整段折成一行指针——实现 commit range + 测试路径 +「最终 schema / 行为以代码为准」；完整契约留在 Proposed commit 的 git 历史。Accepted 后代码 + 测试才是真源，此表只会与代码漂移。
 
 ### Level
 
@@ -80,8 +83,8 @@
 
 判级规则（参 [`flow-alpha`](../../../.agents/skills/flow-alpha/SKILL.md) "自动判级" 表）：
 
-- **red**：动 `packages/core/src/ir/**` · `packages/core/src/compile/**` · `packages/*/src/index.ts`
-- **yellow**：动 `packages/react/src/{kernel,sugar,render}/**` · `packages/core/src/parsers/**`
+- **red**：动 `packages/core/core/src/ir/**` · `packages/core/core/src/compile/**` · `packages/*/*/src/index.ts`
+- **yellow**：动 `packages/core/react/src/{kernel,sugar,render}/**` · `packages/core/core/src/parsers/**`
 - **green**：仅 `apps/docs/**` / 测试 / 注释 / 配置
 
 跨级取最高 level。本 ADR 自评 level：`<red / yellow / green>`，与"文件 scope" 段相符。
@@ -90,7 +93,7 @@
 
 | 文件 | 操作 | 字段名 | 类型 | 默认值 | describe 中文摘要 |
 |---|---|---|---|---|---|
-| `packages/core/src/ir/<...>.ts` | 加 / 改 / 删 | `<exact name>` | `<zod 类型>` | `<default 或 —>` | <一句话> |
+| `packages/core/core/src/ir/<...>.ts` | 加 / 改 / 删 | `<exact name>` | `<zod 类型>` | `<default 或 —>` | <一句话> |
 | ... | ... | ... | ... | ... | ... |
 
 每行一条字段改动。**字段名一旦写死，下游 Spec / 实现 Agent 不允许改**——发现需要改 → 回本 ADR 加条 / 开新 ADR。
@@ -101,10 +104,10 @@
 
 本 ADR 实现允许触碰的文件白名单：
 
-- `packages/core/src/ir/<新建>.ts`
-- `packages/core/src/compile/<...>.ts`（修改）
-- `packages/core/tests/<.../...>.test.ts`（新建）
-- `packages/react/src/kernel/<...>.tsx`（新建 / 修改）
+- `packages/core/core/src/ir/<新建>.ts`
+- `packages/core/core/src/compile/<...>.ts`（修改）
+- `packages/core/core/tests/<.../...>.test.ts`（新建）
+- `packages/core/react/src/kernel/<...>.tsx`（新建 / 修改）
 - `apps/docs/src/contents/<...>/<...>.mdx`（修改）
 - `apps/docs/src/contents/<...>/<...>.demo.tsx`（新建）
 - ...

@@ -125,6 +125,8 @@ export type ArrowEndSpec = {
 export type PathPrim = {
   /** 类型判别符 */
   type: 'path';
+  /** 稳定挂点 id：compile 从 IR 元素 user id stamp，供 renderer emit data-retikz-id / canvas hit-test */
+  id?: string;
   /** 结构化路径命令序列，按数组顺序绘制 */
   commands: Array<PathCommand>;
   /** 填充：纯色 / 资源表 paint server（gradient）/ contextStroke；不填表示不填充 */
