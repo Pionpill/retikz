@@ -51,7 +51,7 @@
 
 ## 测试设计
 
-`packages/core/tests/<对应路径>.test.ts` 覆盖：
+`packages/core/core/tests/<对应路径>.test.ts` 覆盖：
 
 - <case 类别 1>
 - <case 类别 2>
@@ -83,8 +83,8 @@
 
 判级规则（参 [`flow-alpha`](../../../.agents/skills/flow-alpha/SKILL.md) "自动判级" 表）：
 
-- **red**：动 `packages/core/src/ir/**` · `packages/core/src/compile/**` · `packages/*/src/index.ts`
-- **yellow**：动 `packages/react/src/{kernel,sugar,render}/**` · `packages/core/src/parsers/**`
+- **red**：动 `packages/core/core/src/ir/**` · `packages/core/core/src/compile/**` · `packages/*/*/src/index.ts`
+- **yellow**：动 `packages/core/react/src/{kernel,sugar,render}/**` · `packages/core/core/src/parsers/**`
 - **green**：仅 `apps/docs/**` / 测试 / 注释 / 配置
 
 跨级取最高 level。本 ADR 自评 level：`<red / yellow / green>`，与"文件 scope" 段相符。
@@ -93,7 +93,7 @@
 
 | 文件 | 操作 | 字段名 | 类型 | 默认值 | describe 中文摘要 |
 |---|---|---|---|---|---|
-| `packages/core/src/ir/<...>.ts` | 加 / 改 / 删 | `<exact name>` | `<zod 类型>` | `<default 或 —>` | <一句话> |
+| `packages/core/core/src/ir/<...>.ts` | 加 / 改 / 删 | `<exact name>` | `<zod 类型>` | `<default 或 —>` | <一句话> |
 | ... | ... | ... | ... | ... | ... |
 
 每行一条字段改动。**字段名一旦写死，下游 Spec / 实现 Agent 不允许改**——发现需要改 → 回本 ADR 加条 / 开新 ADR。
@@ -104,10 +104,10 @@
 
 本 ADR 实现允许触碰的文件白名单：
 
-- `packages/core/src/ir/<新建>.ts`
-- `packages/core/src/compile/<...>.ts`（修改）
-- `packages/core/tests/<.../...>.test.ts`（新建）
-- `packages/react/src/kernel/<...>.tsx`（新建 / 修改）
+- `packages/core/core/src/ir/<新建>.ts`
+- `packages/core/core/src/compile/<...>.ts`（修改）
+- `packages/core/core/tests/<.../...>.test.ts`（新建）
+- `packages/core/react/src/kernel/<...>.tsx`（新建 / 修改）
 - `apps/docs/src/contents/<...>/<...>.mdx`（修改）
 - `apps/docs/src/contents/<...>/<...>.demo.tsx`（新建）
 - ...
