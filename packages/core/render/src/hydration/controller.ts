@@ -70,19 +70,22 @@ export const createHydrationController = (
     let lastHitId: string | null = null;
 
     // pointermove：算当前命中 id；与上次不同 → 旧 id fire leave、新 id fire enter，各一次。
+    // 先推进 lastHitId 再 invoke：某个 handler 抛出也不会污染命中配对（避免重复 enter / 漏 leave / 卡死）。
     listen('pointermove', event => {
       const currentId = locate(event);
       if (currentId === lastHitId) return;
-      if (lastHitId !== null) invoke(handlers, lastHitId, HYDRATION_EVENTS.pointerLeave, event);
-      if (currentId !== null) invoke(handlers, currentId, HYDRATION_EVENTS.pointerEnter, event);
+      const previousId = lastHitId;
       lastHitId = currentId;
+      if (previousId !== null) invoke(handlers, previousId, HYDRATION_EVENTS.pointerLeave, event);
+      if (currentId !== null) invoke(handlers, currentId, HYDRATION_EVENTS.pointerEnter, event);
     });
 
-    // 离开整图：清空命中态、把 lastHitId 的 leave 补一次。
+    // 离开整图：清空命中态、把 lastHitId 的 leave 补一次（同样先清状态再 invoke）。
     const leaveWhole = (event: Event): void => {
       if (lastHitId === null) return;
-      invoke(handlers, lastHitId, HYDRATION_EVENTS.pointerLeave, event);
+      const previousId = lastHitId;
       lastHitId = null;
+      invoke(handlers, previousId, HYDRATION_EVENTS.pointerLeave, event);
     };
     // pointerleave 不冒泡、只在指针真正离开 root 时触发——最干净的「离开整图」信号。
     listen('pointerleave', leaveWhole);

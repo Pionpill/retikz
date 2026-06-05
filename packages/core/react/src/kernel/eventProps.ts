@@ -20,9 +20,9 @@ export type HydrationEventProps = {
   onPointerUp?: (event: Event) => void;
   /** 指针在该图元上移动（DOM `pointermove`） */
   onPointerMove?: (event: Event) => void;
-  /** 指针进入该图元（由 `pointerover/out` 合成，跨子元素不重复触发） */
+  /** 指针进入该图元（由 `pointermove` + 命中 id 状态机合成，跨子元素不重复触发） */
   onPointerEnter?: (event: Event) => void;
-  /** 指针离开该图元（由 `pointerover/out` 合成） */
+  /** 指针离开该图元（由 `pointermove` + 命中 id 状态机合成） */
   onPointerLeave?: (event: Event) => void;
   /** 在该图元上滚轮（DOM `wheel`） */
   onWheel?: (event: Event) => void;
