@@ -4,10 +4,12 @@
  *   `'A'`→`{id:'A'}`；`'A.<name>'`→命名 anchor（center/north/.../south-west）；`'A.<deg>'`→角度 anchor。
  *   按**第一个点**切分——含 `.` 的 id 不能用 shorthand，必须写对象 `{ id: 'a.b', anchor: 'north' }`。
  *   {side,t} 边上比例点是结构化新能力、shorthand 不表达（仅对象形态）。
- *   不命中 anchor 名抛错（避免静默吞拼写错误）。放 parser 层（非 compile）避免 adapter 反向依赖 compile。
+ *   字符串 shorthand 只认内置 9 名 anchor（提前拦拼写错误）；shape 自定义 anchor（如 sector 的
+ *   `outer-arc-mid`）走对象形态 `{ id, anchor: 'outer-arc-mid' }`，由 compile 据目标 shape 解释。
+ *   放 parser 层（非 compile）避免 adapter 反向依赖 compile。
  */
 
-import { RECT_ANCHORS, type RectAnchor } from '../geometry/rect';
+import { RECT_ANCHORS } from '../geometry/rect';
 import type { IRNodeTarget } from '../ir';
 
 /** RECT_ANCHORS 的 9 个 anchor 名 */
@@ -32,8 +34,8 @@ export const parseNodeTarget = (s: string): IRNodeTarget => {
   }
   if (!ANCHOR_NAMES.has(tail)) {
     throw new Error(
-      `parseNodeTarget: unknown anchor '${tail}' in '${s}' (supports: ${[...ANCHOR_NAMES].join(', ')}); for ids containing '.', use the object form { id, anchor }`,
+      `parseNodeTarget: unknown anchor '${tail}' in '${s}' (supports: ${[...ANCHOR_NAMES].join(', ')}); for ids containing '.' or shape-specific anchors, use the object form { id, anchor }`,
     );
   }
-  return { id, anchor: tail as RectAnchor };
+  return { id, anchor: tail };
 };

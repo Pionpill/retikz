@@ -1,13 +1,14 @@
 import { z } from 'zod';
-import { RECT_ANCHORS, type RectAnchor } from '../../geometry/rect';
 import { BetweenPositionSchema, OffsetPositionSchema, PolarPositionSchema, PositionSchema } from '../position';
-
-/** 9 个命名 anchor（复用 geometry/rect.ts，避免两套常量） */
-const NAMED_ANCHORS = Object.values(RECT_ANCHORS) as [RectAnchor, ...Array<RectAnchor>];
 
 export const AnchorRefSchema = z
   .union([
-    z.enum(NAMED_ANCHORS).describe('Named anchor (center / north / ... / south-west)'),
+    z
+      .string()
+      .min(1)
+      .describe(
+        'Named anchor: one of the 9 built-in rect anchors (center / north / ... / south-west) or any anchor name interpreted by the referenced shape (e.g. sector apex / outer-arc-mid). Unrecognized names throw at compile time.',
+      ),
     z.number().finite().describe('Angle anchor in degrees (boundary point in that direction)'),
     z
       .object({

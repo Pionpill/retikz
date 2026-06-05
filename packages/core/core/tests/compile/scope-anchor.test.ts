@@ -378,7 +378,7 @@ describe('跨 scope anchor 错误路径', () => {
         type: 'scope',
         children: [{ type: 'node', id: 'A', position: [0, 0], text: 'A' }],
       },
-      // @ts-expect-error 故意传非法 anchor 名，测 compile 端 anchorOf 抛 Unknown anchor
+      // 非法 anchor 名（schema 接受任意非空串，compile 端 anchorOf 据 shape 抛 Unknown anchor）
       {
         type: 'path',
         children: [
