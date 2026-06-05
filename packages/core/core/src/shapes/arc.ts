@@ -5,6 +5,7 @@ import type { Position } from '../geometry/point';
 import type { Rect } from '../geometry/rect';
 import type { PathCommand, ScenePrimitive } from '../primitive';
 import { defineShape } from './define';
+import { normalizeAngularRange } from './_shared';
 
 /**
  * arc shape 的 per-instance params 类型
@@ -17,16 +18,6 @@ type ArcParams = {
   close?: boolean;
 };
 
-/** 起止角规范化：保证 end ≥ start（end<start 时加 360°），并给中分角 */
-const normalizeRange = (
-  startAngle: number,
-  endAngle: number,
-): { start: number; end: number; mid: number } => {
-  let end = endAngle;
-  while (end < startAngle) end += 360;
-  return { start: startAngle, end, mid: (startAngle + end) / 2 };
-};
-
 /** arc 的派生几何：圆心局部系 AABB + 圆心相对 AABB 中心偏移 */
 const arcGeometry = (
   params: ArcParams,
@@ -36,7 +27,7 @@ const arcGeometry = (
   centerOffset: Position;
 } => {
   const { radius } = params;
-  const range = normalizeRange(params.startAngle, params.endAngle);
+  const range = normalizeAngularRange(params.startAngle, params.endAngle);
   const center: Position = [0, 0];
   // close=true（弓形）含弦 / 区域，AABB 由弧 bbox 点决定；圆心本身不强制进框（开放弧 / 弓形都不含圆心）
   const points = arcBoundingPoints(center, radius, range.start, range.end);

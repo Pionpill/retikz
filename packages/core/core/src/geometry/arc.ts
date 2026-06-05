@@ -9,6 +9,25 @@ import type { Position } from './point';
 
 const DEG_TO_RAD = Math.PI / 180;
 
+/**
+ * 在 [lo, hi] 内枚举所有 90°·k 方向角（弧轴向极值候选）
+ * @description 一圈最多 4 个轴向，合法弧 sweep ≤ 360° → 至多 5 个 90°·k；正常区间直接 for 扫。
+ *   但 lo/hi 为巨型角度（如 1e308）时 k=ceil(lo/90) 落在浮点无整数分辨率区，`k++` 满足 k+1===k →
+ *   for 循环永不前进而挂死（DoS）。此时端点投影已覆盖全部 x/y 极值（巨角下弧实际是退化点 / 单端），
+ *   轴向点无新增信息 → 直接跳过枚举。守卫：仅当 kEnd−kStart 是 finite 且 ≤ 安全上界（远大于
+ *   任何合法弧的轴向点数）时才枚举，否则返回空（端点已足够定界）。
+ */
+const axisAngles = (lo: number, hi: number): Array<number> => {
+  const kStart = Math.ceil(lo / 90); // 第一个 >= lo 的 90°·k
+  const kEnd = Math.floor(hi / 90);  // 最后一个 <= hi 的 90°·k
+  const span = kEnd - kStart;
+  // span 非 finite / 过大（巨型角度落入浮点无整数分辨率区，k++ 不前进）→ 端点已定界，无需轴向点
+  if (!Number.isFinite(span) || span < 0 || span > 1_000_000) return [];
+  const angles: Array<number> = [];
+  for (let k = kStart; k <= kEnd; k++) angles.push(k * 90);
+  return angles;
+};
+
 /** 圆心、半径、角度（度，与 polar.toPosition 同约定）→ 圆周上对应点 */
 export const arcEndPoint = (
   center: Position,
@@ -39,10 +58,7 @@ export const arcBoundingPoints = (
 
   const lo = Math.min(startAngleDeg, endAngleDeg);
   const hi = Math.max(startAngleDeg, endAngleDeg);
-  const kStart = Math.ceil(lo / 90); // 第一个 >= lo 的 90°·k
-  const kEnd = Math.floor(hi / 90);  // 最后一个 <= hi 的 90°·k
-  for (let k = kStart; k <= kEnd; k++) {
-    const angle = k * 90;
+  for (const angle of axisAngles(lo, hi)) {
     // 端角已通过端点投影包含
     if (angle === startAngleDeg || angle === endAngleDeg) continue;
     points.push(arcEndPoint(center, radius, angle));
@@ -85,10 +101,7 @@ export const ellipseArcBoundingPoints = (
   ];
   const lo = Math.min(startAngleDeg, endAngleDeg);
   const hi = Math.max(startAngleDeg, endAngleDeg);
-  const kStart = Math.ceil(lo / 90);
-  const kEnd = Math.floor(hi / 90);
-  for (let k = kStart; k <= kEnd; k++) {
-    const angle = k * 90;
+  for (const angle of axisAngles(lo, hi)) {
     if (angle === startAngleDeg || angle === endAngleDeg) continue;
     points.push(ellipseArcPoint(center, radiusX, radiusY, angle));
   }

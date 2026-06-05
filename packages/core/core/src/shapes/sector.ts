@@ -199,8 +199,9 @@ const sectorBoundaryHit = (
     return [(-b - sq) / 2, (-b + sq) / 2];
   };
   const angleInRange = (px: number, py: number): boolean => {
-    let a = (Math.atan2(py, px) * 180) / Math.PI;
-    while (a < start) a += 360;
+    const a0 = (Math.atan2(py, px) * 180) / Math.PI;
+    // 把 atan2 角（[-180,180]）一次性抬到 ≥ start 的最小同余值（O(1)，巨型 start 下不退化 / 不死循环）
+    const a = a0 + 360 * Math.max(0, Math.ceil((start - a0) / 360));
     return a <= end + 1e-9;
   };
   for (const R of innerRadius > 0 ? [innerRadius, outerRadius] : [outerRadius]) {

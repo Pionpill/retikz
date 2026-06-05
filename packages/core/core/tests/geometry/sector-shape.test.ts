@@ -132,6 +132,18 @@ describe('sector — 边界 AABB / 角度', () => {
     expect(compiled.layout.width).toBeGreaterThan(0);
     expect(compiled.layout.height).toBeGreaterThan(0);
   });
+
+  it('sector_large_angle_no_hang：startAngle:1e9 → 角度规范化 O(1)，编译快速完成且 layout finite（不死循环）', () => {
+    // 巨型起始角下旧 while 循环（end += 360）退化成数百万次迭代（1e308 时浮点 end+360===end 直接挂死）；
+    // O(1) 规范化 + axisAngles 守卫下编译应在毫秒级返回，且 layout 四值全 finite。
+    const start = Date.now();
+    const compiled = compileToScene(
+      scene([wedgeNode({ innerRadius: 20, outerRadius: 60, startAngle: 1e9, endAngle: 1e9 + 90 })]),
+    );
+    expect(Date.now() - start).toBeLessThan(1000);
+    expect(Number.isFinite(compiled.layout.width)).toBe(true);
+    expect(Number.isFinite(compiled.layout.height)).toBe(true);
+  });
 });
 
 // ─────────────────────────── 错误路径（≥2）───────────────────────────
