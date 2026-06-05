@@ -1,7 +1,7 @@
 import type { FC, ReactNode } from 'react';
 import { Layout, type LayoutProps } from '@retikz/react';
 import { type ExternalDatasets, type ExternalRow, type LowerPlotsOptions, type PlotSpec, PlotSpecSchema, lowerPlots } from '@retikz/plot';
-import { buildPlotSpec } from './dsl';
+import { buildPlotSpec } from './components';
 
 /** <Plot> 两条入口共享的展示 props + lowerPlots 选项 */
 type PlotCommonProps = Pick<LayoutProps, 'width' | 'height' | 'className' | 'style' | 'renderer'> & LowerPlotsOptions;

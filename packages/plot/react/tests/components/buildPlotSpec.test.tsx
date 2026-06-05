@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { type PlotSpec, PlotSpecSchema } from '@retikz/plot';
-import { buildPlotSpec } from '../../src/dsl/buildPlotSpec';
-import { Axis } from '../../src/dsl/guides';
-import { LineMark, PointMark } from '../../src/dsl/marks';
+import { buildPlotSpec } from '../../src/components/buildPlotSpec';
+import { Axis } from '../../src/components/guides';
+import { LineMark, PointMark } from '../../src/components/marks';
 
 describe('buildPlotSpec 装配（ADR-08 / ADR-05）', () => {
   it('单 line：装配出等价手写 PlotSpec（含默认 guides）', () => {
