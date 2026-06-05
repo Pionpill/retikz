@@ -65,6 +65,12 @@ describe('arc — happy path', () => {
     expect(Number.isFinite(compiled.layout.width)).toBe(true);
     expect(Number.isFinite(compiled.layout.height)).toBe(true);
   });
+
+  it('arc_huge_radius_finite_guard：radius:1e308 → AABB 聚合溢出 Infinity 被 finite 守卫拦截（throw）', () => {
+    // 半轴 finite 但 center ± halfWidth 聚合溢出 Infinity；自动 layout 守卫应抛清晰错而非把 Infinity 漏进 Scene。
+    const ir = scene([arcNode({ radius: 1e308, startAngle: 0, endAngle: 90 })]);
+    expect(() => compileToScene(ir)).toThrow(/non-finite|overflow|bounds/);
+  });
 });
 
 // ─────────────────────────── schema / 错误路径 ───────────────────────────

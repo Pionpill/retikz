@@ -144,6 +144,12 @@ describe('sector — 边界 AABB / 角度', () => {
     expect(Number.isFinite(compiled.layout.width)).toBe(true);
     expect(Number.isFinite(compiled.layout.height)).toBe(true);
   });
+
+  it('sector_huge_radius_finite_guard：outerRadius:1e308 → AABB 聚合溢出 Infinity 被 finite 守卫拦截（throw）', () => {
+    // 半轴 5e307 finite，但 center ± halfWidth 聚合溢出 Infinity；自动 layout 守卫应抛清晰错而非把 Infinity 漏进 Scene。
+    const ir = scene([wedgeNode({ innerRadius: 20, outerRadius: 1e308, startAngle: 0, endAngle: 90 })]);
+    expect(() => compileToScene(ir)).toThrow(/non-finite|overflow|bounds/);
+  });
 });
 
 // ─────────────────────────── 错误路径（≥2）───────────────────────────
