@@ -48,6 +48,7 @@ exports[`Shape baseline snapshot (byte-for-byte regression net) > rich multi-sha
           "y": 4.2,
         },
       ],
+      "id": "r",
       "transforms": [
         {
           "cx": 0,
@@ -96,6 +97,7 @@ exports[`Shape baseline snapshot (byte-for-byte regression net) > rich multi-sha
           "y": 4.2,
         },
       ],
+      "id": "c",
       "type": "group",
     },
     {
@@ -136,6 +138,7 @@ exports[`Shape baseline snapshot (byte-for-byte regression net) > rich multi-sha
           "y": 4.2,
         },
       ],
+      "id": "e",
       "type": "group",
     },
     {
@@ -205,6 +208,7 @@ exports[`Shape baseline snapshot (byte-for-byte regression net) > rich multi-sha
           "y": 124.2,
         },
       ],
+      "id": "d",
       "transforms": [
         {
           "cx": 0,
@@ -278,6 +282,7 @@ exports[`Shape baseline snapshot (byte-for-byte regression net) > rich multi-sha
           "y": 87.4,
         },
       ],
+      "id": "p",
       "type": "group",
     },
     {
