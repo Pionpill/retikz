@@ -1,5 +1,5 @@
-import type { ElementHandlers, EventName, HydrationHandlers, Locate } from './events';
-import { EVENT_DOM_TYPE, HYDRATION_EVENTS } from './events';
+import type { ElementHandlers, HydrationHandlers, Locate, RetikzEventName } from './events';
+import { EVENT_DOM_TYPE, RetikzEvent } from './events';
 
 /** 水合控制器：根级委托 + enter/leave 合成 + dispose 解绑 */
 export type HydrationController = {
@@ -7,11 +7,11 @@ export type HydrationController = {
   dispose: () => void;
 };
 
-/** 收集 handlers 注册表中实际用到的 EventName 集合（决定要在 root 上挂哪些 DOM listener） */
-const collectUsedEvents = (handlers: HydrationHandlers): Set<EventName> => {
-  const used = new Set<EventName>();
+/** 收集 handlers 注册表中实际用到的 RetikzEventName 集合（决定要在 root 上挂哪些 DOM listener） */
+const collectUsedEvents = (handlers: HydrationHandlers): Set<RetikzEventName> => {
+  const used = new Set<RetikzEventName>();
   for (const id of Object.keys(handlers)) {
-    for (const name of Object.keys(handlers[id]) as Array<EventName>) {
+    for (const name of Object.keys(handlers[id]) as Array<RetikzEventName>) {
       if (handlers[id][name] !== undefined) used.add(name);
     }
   }
@@ -22,11 +22,11 @@ const collectUsedEvents = (handlers: HydrationHandlers): Set<EventName> => {
 const invoke = (
   handlers: HydrationHandlers,
   id: string | null,
-  name: EventName,
+  name: RetikzEventName,
   event: Event,
 ): void => {
   if (id === null || !Object.hasOwn(handlers, id)) return;
-  const handler: ElementHandlers[EventName] = handlers[id][name];
+  const handler: ElementHandlers[RetikzEventName] = handlers[id][name];
   if (handler !== undefined) handler(event);
 };
 
@@ -36,7 +36,7 @@ const hasContains = (target: EventTarget): target is Node =>
 
 /**
  * 创建水合控制器：在 root 上挂根级委托，把命中图元 id 的事件分发给 handlers
- * @description renderer 无关上层。直接委托的事件（click / rightClick / pointerMove 等）对每个用到的 EventName 在
+ * @description renderer 无关上层。直接委托的事件（click / rightClick / pointerMove 等）对每个用到的 RetikzEventName 在
  *   root 注册一个 EVENT_DOM_TYPE 监听器，事件到来时经 locate 定位到图元 id、查 handlers 触发。
  *   pointerEnter / pointerLeave 不直接监听、由 pointermove + 「上一帧命中 id」状态机合成（renderer 无关、经
  *   同一 locate）：仅当 handlers 含任一 enter/leave 时才在 root 挂 pointermove；每次 move 算 currentId = locate(event)，
@@ -59,13 +59,13 @@ export const createHydrationController = (
 
   // 直接委托的事件（enter/leave 除外，它们走 pointermove 合成）：locate(event) → 查 handler → 调用。
   for (const name of used) {
-    if (name === HYDRATION_EVENTS.pointerEnter || name === HYDRATION_EVENTS.pointerLeave) continue;
+    if (name === RetikzEvent.PointerEnter || name === RetikzEvent.PointerLeave) continue;
     listen(EVENT_DOM_TYPE[name], event => invoke(handlers, locate(event), name, event));
   }
 
   // enter/leave 合成：仅当注册表里有 enter 或 leave handler 时，才挂 pointermove + 离开整图监听。
-  const hasEnter = used.has(HYDRATION_EVENTS.pointerEnter);
-  const hasLeave = used.has(HYDRATION_EVENTS.pointerLeave);
+  const hasEnter = used.has(RetikzEvent.PointerEnter);
+  const hasLeave = used.has(RetikzEvent.PointerLeave);
   if (hasEnter || hasLeave) {
     let lastHitId: string | null = null;
 
@@ -76,8 +76,8 @@ export const createHydrationController = (
       if (currentId === lastHitId) return;
       const previousId = lastHitId;
       lastHitId = currentId;
-      if (previousId !== null) invoke(handlers, previousId, HYDRATION_EVENTS.pointerLeave, event);
-      if (currentId !== null) invoke(handlers, currentId, HYDRATION_EVENTS.pointerEnter, event);
+      if (previousId !== null) invoke(handlers, previousId, RetikzEvent.PointerLeave, event);
+      if (currentId !== null) invoke(handlers, currentId, RetikzEvent.PointerEnter, event);
     });
 
     // 离开整图：清空命中态、把 lastHitId 的 leave 补一次（同样先清状态再 invoke）。
@@ -85,7 +85,7 @@ export const createHydrationController = (
       if (lastHitId === null) return;
       const previousId = lastHitId;
       lastHitId = null;
-      invoke(handlers, previousId, HYDRATION_EVENTS.pointerLeave, event);
+      invoke(handlers, previousId, RetikzEvent.PointerLeave, event);
     };
     // pointerleave 不冒泡、只在指针真正离开 root 时触发——最干净的「离开整图」信号。
     listen('pointerleave', leaveWhole);

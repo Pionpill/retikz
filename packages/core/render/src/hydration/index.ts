@@ -1,10 +1,10 @@
 /** @retikz/render/hydration 公开 API：renderer 无关的事件绑定 runtime */
 export {
-  HYDRATION_EVENTS,
+  RetikzEvent,
   EVENT_DOM_TYPE,
 } from './events';
 export type {
-  EventName,
+  RetikzEventName,
   ElementHandlers,
   HydrationHandlers,
   Locate,
