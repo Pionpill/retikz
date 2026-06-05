@@ -24,7 +24,7 @@
 ## 设计要点
 
 1. **绑定语义分两层**（renderer 无关 + renderer 提供定位）：
-   - **上层（renderer 无关，runtime）**：handler 注册表 `Map<id, Map<eventName, handler>>` + 根级单 listener 分发器；非冒泡事件（pointerenter/leave）用 `pointerover/out` + `relatedTarget` 在根层合成。**两条 renderer 共用同一实现。**
+   - **上层（renderer 无关，runtime）**：handler 注册表 `Map<id, Map<eventName, handler>>` + 根级单 listener 分发器；非冒泡的 `pointerEnter` / `pointerLeave` 用 **`pointermove` + 「上一帧命中 id」状态机**合成（每次 move 调 `locate(event) → id`，与上次命中 id 不同则 fire `leave(旧 id)` + `enter(新 id)`；根级 `pointerleave`/离开整图时清空命中态）。**关键：经统一的 `locate` 故 SVG（`closest`）与 Canvas（`hitTest` 坐标命中）共用同一实现**——`pointerover/out` + `relatedTarget` 那套只对逐元素 DOM 的 SVG 成立、对单 `<canvas>` 失效（图元间移动不产生 over/out），故不用。**两条 renderer 共用同一实现。**
    - **下层（定位，各自实现）**：把一次 DOM 事件定位到图元 id——SVG 走 `event.target.closest('[data-retikz-id]')`；Canvas 走 hit-test（pointer 坐标 → Scene 坐标 → 命中图元 id）。
 2. **稳定挂点来自 IR `id`，stamp 到每个 top-level emit 图元**（评审 P1.2 修正）：compile 把 IR 元素 user `id` **stamp 到它 emit 的每个 top-level ScenePrimitive**——带文本 / rotate 的 Node → 其 `GroupPrim`（一个）；纯几何 Node → 直接平铺的 shape 图元（逐个 stamp 同一 id）；Path → 其 `PathPrim`；Scope → 其 `GroupPrim`。**不为挂点强制包 group**（避免改 emit 结构 / layout）。SVG emit `data-retikz-id="<id>"`，Canvas hit-test 返回该 id（命中 group 子图元 → 上溯最近 id-bearing 祖先）；同一节点的多个平铺图元共享同一 id，SVG `closest` / Canvas hitTest 命中任一皆解析到该 id，无歧义。**只为 user `id` stamp**（compile 内部 id 不 emit），天然 opt-in、不膨胀输出、无需 manifest。
    - **可作挂点的元素**（评审 P1.1 / P1.3）：**Node ✓**、**Path ✓**（需新增 `IRPath.id`）、**Scope ✓**（仅在命中其可见 children 时归到该 scope；空 / 纯 id scope 自身无可点面积）。**Coordinate ✗**——无视觉、不 emit 图元、无可点面积，首版不暴露 handler props（给了也 dev-warn / no-op）。
@@ -52,12 +52,13 @@ const HYDRATION_EVENTS = {
   wheel: 'wheel',
 } as const;
 type EventName = ValueOf<typeof HYDRATION_EVENTS>;
-// EventName → 真实 DOM 事件类型（根级 addEventListener 用）。enter/leave 不直接监听、由 over/out 合成；
+// EventName → 真实 DOM 事件类型（根级 addEventListener 用）。
+// pointerEnter/pointerLeave 不直接 addEventListener——由 pointermove + 命中 id 状态机合成（见控制器）；
 // rightClick 默认不抑制浏览器菜单，handler 自行 event.preventDefault()。
-const EVENT_DOM_TYPE: Record<EventName, string> = {
+const EVENT_DOM_TYPE: Record<Exclude<EventName, 'pointerEnter' | 'pointerLeave'>, string> = {
   click: 'click', doubleClick: 'dblclick', rightClick: 'contextmenu',
   pointerDown: 'pointerdown', pointerUp: 'pointerup', pointerMove: 'pointermove',
-  pointerEnter: 'pointerenter', pointerLeave: 'pointerleave', wheel: 'wheel',
+  wheel: 'wheel',
 };
 type HydrationHandlers = Record<string /* id */, Partial<Record<EventName, (event: Event) => void>>>;
 
@@ -155,7 +156,7 @@ view.hydrate({ handlers: { a: { click: e => ... } } });   // hitTest 定位
 - **svg**：`buildPrim` 各分支 emit `data-retikz-id`（来自 `prim.id`）。
 - **canvas — 先抽共享几何**（评审 P2.1）：把 `drawScene.ts` 私有的 `buildPath` / `roundedRectPath` / `pathCommand` / `applyClip` 抽到 `canvas/pathGeometry.ts`，`drawScene.ts` 改为 import（♻️ 纯重构、行为不变、回归绿）。
 - **canvas — hitTest**：新增 `hitTest(scene, point, options?) → string | null`——逆 z-order 重走 Scene，复用 `pathGeometry` 构建路径 + `isPointInPath`（填充区）/ `isPointInStroke`（描边线），命中返回最近 id-bearing 祖先 id；可选 `strokeTolerance`（缺省 strokeWidth/2）。
-- **新子路径 `@retikz/render/hydration`**：`createHydrationController(root, handlers, locate)`（根级委托 + pointerenter/leave 经 pointerover/out + relatedTarget 合成 + dispose）+ `locateSvg`。renderer 无关 runtime，独立子路径、不进 svg / canvas 纯子路径，不引 React。
+- **新子路径 `@retikz/render/hydration`**：`createHydrationController(root, handlers, locate)`（根级委托 + `pointerEnter/Leave` 经 `pointermove` + 命中 id 状态机合成（renderer 无关，经 `locate`）+ 根级离开整图清空命中态 + dispose）+ `locateSvg`。renderer 无关 runtime，独立子路径、不进 svg / canvas 纯子路径，不引 React。
 
 ### `@retikz/vanilla`（hydrate + mountCanvas，yellow→red）
 - `hydrate(container, { handlers }): { dispose }`——SVG 水合：用 `locateSvg` + `createHydrationController` 绑到容器内已挂的 `<svg>` root。
@@ -276,7 +277,7 @@ view.hydrate({ handlers: { a: { click: e => ... } } });   // hitTest 定位
 - `canvas-hittest-hit`：含两个图元的 Scene，hitTest 命中点落在上层图元 → 返回上层 id（逆 z-order）。
 
 **边界（≥ 3）**：
-- `enter-leave-synthesis`：pointerenter / leave 经 pointerover/out + relatedTarget 合成，跨图元移动只在进 / 出触发一次。
+- `enter-leave-synthesis`：pointerEnter / Leave 经 `pointermove` + 命中 id 状态机合成，跨图元移动时旧 id fire leave、新 id fire enter 各一次；同 id 内部移动不重复触发；**SVG 与 Canvas 同一机制、双模等价**（含 relatedTarget 非 null 的 over 场景）。
 - `hittest-stroke-only`：fill=none 的 path，点落填充区内不命中、落描边线（含 tolerance）命中。
 - `nested-group-id`：命中 GroupPrim 子图元 → 返回最近 id-bearing 祖先（group）id。
 
