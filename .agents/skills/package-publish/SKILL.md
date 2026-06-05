@@ -361,13 +361,15 @@ git tag: v0.3.0-alpha.x（已 push；plot 组为 plot-v<version>）
 
 压缩是纯文档改动（`:pencil:`），与版本 bump 同属「封板 / 起新版」语义，可与 6.2 的 bump 同一 commit，也可单独成一个 `:pencil: 压缩 <milestone> ADR 为决策记录` commit——按根 AGENTS.md 红线**等用户授权再 commit**。
 
-**封板溯源行（压缩 commit 落地后补，整批一个 commit）**：压缩把施工蓝图删成决策记录，正文「实现指针」已泛指「完整原文见 git 历史」；为让日后溯源**不必翻历史靠猜**，压缩 commit 落地后给本批每篇压缩稿**末尾追加一行**，注明它的封板压缩 commit——
+**封板溯源行（与压缩同一个 commit，引用父提交蓝图）**：压缩把施工蓝图删成决策记录，正文「实现指针」已泛指「完整原文见 git 历史」；为让日后溯源**不必翻历史靠猜**，给每篇压缩稿**末尾追加一行**指向压缩前全文所在的 commit——
 
 ```
-> 🔖 封板压缩 commit `<hash>`；压缩前完整施工蓝图 = `git show <hash>^:<path>`。
+> 🔖 本文件压缩前完整施工蓝图 = `git show <BLUEPRINT>:<path>`（封板全文）。
 ```
 
-`<hash>` = 该文件所在里程碑的压缩 commit；**`<hash>^`（父提交）即压缩前全文**，`git show <hash>^:<path>` 一条命令取回。因 hash 要等压缩 commit 落地才知道，这是压缩之后的一道补充步骤：所有里程碑压完后，按「里程碑目录 → 其压缩 commit」映射一次性给全批追加溯源行，**整批统一一个** `:pencil: ADR 封板溯源行` commit（同样等用户授权）。
+**引用「父提交」而非压缩 commit 自己**：`<BLUEPRINT>` = 压缩 commit 的**父提交**（即压缩前那一版，ADR 全文还在），它在提交*之前*就已知，所以溯源行能**和压缩改动并进同一个 commit**——不必拆第二个 commit。落地：压缩各文件后、`git add` 之前先取锚点 `BLUEPRINT=$(git rev-parse HEAD)`（当前 tip 即将成为压缩 commit 的父提交），给每篇末尾追加上面那行（`<path>` = 该 ADR 仓库相对路径），再把压缩 + 溯源行**一并** add + commit。`git show <BLUEPRINT>:<path>` 一条命令取回压缩前全文。
+
+> ⚠️ 不要让溯源行点名「压缩 commit 自己的 hash」——commit 算不出含自身 hash 的内容（自引用悖论），那会逼你拆成第二个补充 commit。早期 skill 如此，现已废除。
 
 > AI 自动压缩时**只删 🔻 两段 / 施工脚手架 / 过期过渡文本 + 压背景 + 去腐 file:line**，不得改写「决策 / 被否决理由」的实质内容（那是人工拍的板）；拿不准某条「待决策点」是否真已拍板、或某句过渡文本所指是否已落地 → 保留并标注，呈人工裁。
 
