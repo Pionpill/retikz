@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { DEFAULT_TICK_COUNT, resolveLinearScale, scaleTicks } from '../../src/lower/scale';
+import {
+  DEFAULT_TICK_COUNT,
+  inferCategoryDomain,
+  resolveLinearScale,
+  resolvePositionScale,
+  scaleTicks,
+} from '../../src/lower/scale';
 
 describe('resolveLinearScale (ADR-02 d3-scale)', () => {
   // Happy path
@@ -78,5 +84,97 @@ describe('scaleTicks (ADR-02)', () => {
     const { values, labels } = scaleTicks(scale, 5);
     expect(values.length).toBeGreaterThan(0);
     expect(labels).toHaveLength(values.length);
+  });
+});
+
+describe('inferCategoryDomain (ADR-01)', () => {
+  it('category_domain_dedup_order', () => {
+    expect(inferCategoryDomain(['b', 'a', 'b', 'c', 'a'])).toEqual(['b', 'a', 'c']);
+  });
+
+  it('category_domain_numeric', () => {
+    expect(inferCategoryDomain([2021, 2022, 2021])).toEqual([2021, 2022]);
+  });
+
+  it('category_domain_filter_nonscalar', () => {
+    expect(inferCategoryDomain(['a', null, undefined, {}, 'b'])).toEqual(['a', 'b']);
+  });
+});
+
+describe('resolvePositionScale band / point (ADR-01)', () => {
+  it('band_coordinate_center_ordered', () => {
+    const scale = resolvePositionScale({ type: 'band', name: 'x', domain: ['a', 'b', 'c'] }, [], [0, 300]);
+    const ca = scale.coordinate('a');
+    const cb = scale.coordinate('b');
+    const cc = scale.coordinate('c');
+    expect(ca).toBeLessThan(cb);
+    expect(cb).toBeLessThan(cc);
+    // band 中心等距
+    expect(cb - ca).toBeCloseTo(cc - cb, 6);
+  });
+
+  it('band_bandwidth_positive', () => {
+    const scale = resolvePositionScale({ type: 'band', name: 'x', domain: ['a', 'b', 'c'] }, [], [0, 300]);
+    expect(scale.bandwidth).toBeGreaterThan(0);
+  });
+
+  it('band_single_category_full_range', () => {
+    // paddingInner/Outer 0 + 单类别 → 占满整个 range，中心居中
+    const scale = resolvePositionScale(
+      { type: 'band', name: 'x', domain: ['only'], paddingInner: 0, paddingOuter: 0 },
+      [],
+      [0, 300],
+    );
+    expect(scale.bandwidth).toBeCloseTo(300, 6);
+    expect(scale.coordinate('only')).toBeCloseTo(150, 6);
+  });
+
+  it('band_infers_domain_from_values', () => {
+    const scale = resolvePositionScale({ type: 'band', name: 'x' }, ['x', 'y', 'x'], [0, 200]);
+    expect(scale.ticks().values).toEqual(['x', 'y']);
+  });
+
+  it('band_unknown_category_nan', () => {
+    const scale = resolvePositionScale({ type: 'band', name: 'x', domain: ['a', 'b'] }, [], [0, 300]);
+    expect(Number.isNaN(scale.coordinate('zzz'))).toBe(true);
+  });
+
+  it('band_ticks_at_centers', () => {
+    const scale = resolvePositionScale({ type: 'band', name: 'x', domain: ['a', 'b'] }, [], [0, 300]);
+    const { values, labels } = scale.ticks();
+    expect(values).toEqual(['a', 'b']);
+    expect(labels).toEqual(['a', 'b']);
+  });
+
+  it('point_coordinate_zero_bandwidth', () => {
+    const scale = resolvePositionScale({ type: 'point', name: 'x', domain: ['a', 'b'] }, [], [0, 100]);
+    expect(scale.bandwidth).toBe(0);
+    expect(scale.coordinate('a')).toBeLessThan(scale.coordinate('b'));
+  });
+});
+
+describe('resolvePositionScale linear back-compat (ADR-01)', () => {
+  it('linear_through_positionscale_unchanged', () => {
+    const pos = resolvePositionScale({ type: 'linear', name: 'x', domain: [0, 2] }, [], [0, 480]);
+    expect(pos.coordinate(1)).toBe(240);
+    expect(pos.bandwidth).toBe(0);
+    // ticks 与直接 scaleTicks 等价
+    const direct = scaleTicks(resolveLinearScale({ domain: [0, 2] }, [], [0, 480]), DEFAULT_TICK_COUNT);
+    expect(pos.ticks(DEFAULT_TICK_COUNT)).toEqual(direct);
+  });
+
+  it('linear_skips_non_numeric', () => {
+    // 守 alpha.1 跳过语义：非数值（含数字字符串）→ NaN，不投影
+    const pos = resolvePositionScale({ type: 'linear', name: 'x', domain: [0, 10] }, [], [0, 100]);
+    expect(Number.isNaN(pos.coordinate('5'))).toBe(true);
+    expect(Number.isNaN(pos.coordinate(undefined))).toBe(true);
+    expect(pos.coordinate(5)).toBe(50);
+  });
+
+  it('linear_infers_domain_from_numeric_values', () => {
+    // 原始值混入非数值，连续 scale 内部过滤后求 extent
+    const pos = resolvePositionScale({ type: 'linear', name: 'x' }, [3, 'skip', 7, null], [0, 100]);
+    expect(pos.coordinate(3)).toBe(0);
+    expect(pos.coordinate(7)).toBe(100);
   });
 });

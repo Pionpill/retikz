@@ -1,11 +1,11 @@
 import { type CompositeDefinition, type IRChild, type IRScope, defineComposite } from '@retikz/core';
-import { type ExternalDatasets, type Guide, type PlotSpec, PlotSpecSchema } from '../ir';
-import { channelValue, isFiniteNumber } from './field';
+import { type ExternalDatasets, type Guide, PlotScale, type PlotSpec, PlotSpecSchema } from '../ir';
+import { channelValue } from './field';
 import { type GuideContext, lowerGuide } from './guide';
 import { DEFAULT_FONT_SIZE, type Margins, type Rect, computePlotArea } from './layout';
 import { lowerMark } from './mark';
 import { createCartesianProjector } from './project';
-import { type TickSet, resolveLinearScale, scaleTicks } from './scale';
+import { type TickSet, resolvePositionScale } from './scale';
 
 /** 空刻度集（某维度无 axis 时给 GuideContext 的占位；实际不会被该维度的 guide 触达） */
 const EMPTY_TICKS: TickSet = { values: [], labels: [] };
@@ -71,30 +71,30 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
     throw new Error(`lowerPlots: coordinate.y references unknown scale "${coordinate.y}"`);
   }
 
-  const axisValues = (axis: 'x' | 'y'): Array<number> => {
-    const out: Array<number> = [];
+  // 收集某维所有 mark 的通道原始值（不预过滤）：连续 scale 内部过滤为有限数求 extent、分类 scale 按数据序去重推断 domain
+  const axisValues = (axis: 'x' | 'y'): Array<unknown> => {
+    const out: Array<unknown> = [];
     for (const mark of node.marks) {
       const channel = mark.encoding[axis];
       if (!channel) continue;
       for (const row of rows) {
-        const value = channelValue(channel, row);
-        if (isFiniteNumber(value)) out.push(value);
+        out.push(channelValue(channel, row));
       }
     }
     return out;
   };
 
   // 先按 domain 建 scale（range 暂用整图，后续按 plot area 改）；ticks 只依赖 domain + count，与 range 无关
-  const xScale = resolveLinearScale(xScaleDef, axisValues('x'), [0, width]);
-  const yScale = resolveLinearScale(yScaleDef, axisValues('y'), [height, 0]);
+  const xScale = resolvePositionScale(xScaleDef, axisValues('x'), [0, width]);
+  const yScale = resolvePositionScale(yScaleDef, axisValues('y'), [height, 0]);
 
   // 哪些维度有坐标轴（决定 margin / 是否算 ticks）；alpha.2 guide 仅 axis 类型，按 dimension 取
   const guides = node.guides ?? [];
   assertUniqueAxisDimension(guides);
   const xAxis = guides.find(guide => guide.dimension === 'x');
   const yAxis = guides.find(guide => guide.dimension === 'y');
-  const xTicks: TickSet | undefined = xAxis ? scaleTicks(xScale, xAxis.tickCount) : undefined;
-  const yTicks: TickSet | undefined = yAxis ? scaleTicks(yScale, yAxis.tickCount) : undefined;
+  const xTicks: TickSet | undefined = xAxis ? xScale.ticks(xAxis.tickCount) : undefined;
+  const yTicks: TickSet | undefined = yAxis ? yScale.ticks(yAxis.tickCount) : undefined;
 
   // 由整图尺寸 + axis 占位缩出 plot area（无 axis → margin 全 0 → plot area = 整图，向后兼容）
   const fontSize = options.fontSize ?? DEFAULT_FONT_SIZE;
@@ -106,8 +106,11 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
   );
 
   // range 收敛到 plot area（y 屏幕向下，故倒置）；显式 range 的 scale 不覆盖——尊重用户手设
-  if (!xScaleDef.range) xScale.range([plotArea.x, plotArea.x + plotArea.width]);
-  if (!yScaleDef.range) yScale.range([plotArea.y + plotArea.height, plotArea.y]);
+  // 仅连续 scale 可带显式 range（band / point 的 range 始终派生）
+  const xHasExplicitRange = xScaleDef.type === PlotScale.Linear && xScaleDef.range !== undefined;
+  const yHasExplicitRange = yScaleDef.type === PlotScale.Linear && yScaleDef.range !== undefined;
+  if (!xHasExplicitRange) xScale.setRange([plotArea.x, plotArea.x + plotArea.width]);
+  if (!yHasExplicitRange) yScale.setRange([plotArea.y + plotArea.height, plotArea.y]);
   const project = createCartesianProjector(xScale, yScale);
 
   // guide 的轴线/网格框取 scale 的实际 range（而非 margin 算的 plotArea）：无显式 range 时两者相同，

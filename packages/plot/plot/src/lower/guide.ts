@@ -1,16 +1,16 @@
 import type { IRNode, IRPath, IRScope, IRStep } from '@retikz/core';
 import type { AxisGuide } from '../ir';
 import { AXIS_LABEL_GAP, AXIS_TICK_LENGTH, type Rect, estimateLabelWidth } from './layout';
-import type { LinearScaleFn, TickSet } from './scale';
+import type { PositionScale, TickSet } from './scale';
 
 /** lowerGuide 上下文：plot area + 两维投影 + 两维 ticks + 字号 */
 export type GuideContext = {
   /** 缩进后的绘图区矩形 */
   plotArea: Rect;
-  /** x 值 → 像素 x（来自 plot-area-range 的 scale） */
-  projectX: LinearScaleFn;
-  /** y 值 → 像素 y */
-  projectY: LinearScaleFn;
+  /** x 维位置 scale（值 → 像素 x，含 band 中心） */
+  projectX: PositionScale;
+  /** y 维位置 scale（值 → 像素 y） */
+  projectY: PositionScale;
   /** x 轴刻度集（axis 与同维 grid 复用） */
   xTicks: TickSet;
   /** y 轴刻度集 */
@@ -61,13 +61,13 @@ export const lowerGuide = (guide: AxisGuide, ctx: GuideContext): LoweredGuide =>
   // ---- 轴层 ----
   const axisLine: Segment = isX ? [[left, bottom], [right, bottom]] : [[left, top], [left, bottom]];
   const tickSegments: Array<Segment> = ticks.values.map(value => {
-    const p = project(value);
+    const p = project.coordinate(value);
     return isX ? [[p, bottom], [p, bottom + AXIS_TICK_LENGTH]] : [[left, p], [left - AXIS_TICK_LENGTH, p]];
   });
   const linePath = segmentsToPath([axisLine, ...tickSegments]);
   const labels: Array<IRNode> = showLabels
     ? ticks.values.map((value, index): IRNode => {
-        const p = project(value);
+        const p = project.coordinate(value);
         const text = ticks.labels[index];
         const position: [number, number] = isX
           ? [p, bottom + AXIS_TICK_LENGTH + AXIS_LABEL_GAP + fontSize / 2]
@@ -90,7 +90,7 @@ export const lowerGuide = (guide: AxisGuide, ctx: GuideContext): LoweredGuide =>
   let gridLayer: IRScope | null = null;
   if (guide.grid) {
     const gridSegments: Array<Segment> = ticks.values.map(value => {
-      const p = project(value);
+      const p = project.coordinate(value);
       return isX ? [[p, top], [p, bottom]] : [[left, p], [right, p]];
     });
     const gridPath = segmentsToPath(gridSegments);

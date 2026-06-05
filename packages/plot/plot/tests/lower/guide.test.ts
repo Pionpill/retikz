@@ -4,11 +4,21 @@ import { describe, expect, it } from 'vitest';
 import { type PlotSpec, PlotSpecSchema } from '../../src/ir';
 import { lowerPlots } from '../../src/lower/expand';
 import { type GuideContext, lowerGuide } from '../../src/lower/guide';
+import type { PositionScale } from '../../src/lower/scale';
+
+/** 测试用最小 PositionScale：guide 只调 coordinate，其余成员给占位 */
+const fakeScale = (coordinate: (value: number) => number): PositionScale => ({
+  coordinate: value => coordinate(value as number),
+  bandwidth: 0,
+  ticks: () => ({ values: [], labels: [] }),
+  range: () => [0, 0],
+  setRange: () => {},
+});
 
 const ctx: GuideContext = {
   plotArea: { x: 40, y: 10, width: 400, height: 250 },
-  projectX: value => 40 + value * 40,
-  projectY: value => 260 - value * 25,
+  projectX: fakeScale(value => 40 + value * 40),
+  projectY: fakeScale(value => 260 - value * 25),
   xTicks: { values: [0, 1, 2], labels: ['0', '1', '2'] },
   yTicks: { values: [9, 10, 11], labels: ['9', '10', '11'] },
   fontSize: 11,

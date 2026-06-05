@@ -37,6 +37,45 @@ describe('ScaleSchema (ADR-03)', () => {
   });
 
   it('scale_unknown_type_rejected', () => {
-    expect(() => ScaleSchema.parse({ type: 'band', name: 'x' })).toThrow();
+    expect(() => ScaleSchema.parse({ type: 'log', name: 'x' })).toThrow();
+  });
+});
+
+describe('ScaleSchema band / point (ADR-01)', () => {
+  // Happy path
+  it('band_schema_valid', () => {
+    const s = { type: 'band', name: 'x', domain: ['a', 'b'] };
+    expect(ScaleSchema.parse(s)).toEqual(s);
+  });
+
+  it('band_full_fields_valid', () => {
+    const s = { type: 'band', name: 'x', domain: ['a', 'b'], paddingInner: 0.2, paddingOuter: 0.1, align: 0 };
+    expect(ScaleSchema.parse(s)).toEqual(s);
+  });
+
+  it('point_schema_valid', () => {
+    const s = { type: 'point', name: 'x', padding: 0.5 };
+    expect(ScaleSchema.parse(s)).toEqual(s);
+  });
+
+  it('band_numeric_domain_valid', () => {
+    // 类别可为数值（如年份）
+    const s = { type: 'band', name: 'x', domain: [2021, 2022, 2023] };
+    expect(ScaleSchema.parse(s)).toEqual(s);
+  });
+
+  // 边界 / 错误路径
+  it('band_omits_optionals_valid', () => {
+    expect(ScaleSchema.parse({ type: 'band', name: 'x' })).toEqual({ type: 'band', name: 'x' });
+  });
+
+  it('band_padding_out_of_range_rejected', () => {
+    expect(() => ScaleSchema.parse({ type: 'band', name: 'x', paddingInner: 1.5 })).toThrow();
+    expect(() => ScaleSchema.parse({ type: 'band', name: 'x', paddingInner: -0.1 })).toThrow();
+  });
+
+  it('band_domain_bad_element_rejected', () => {
+    expect(() => ScaleSchema.parse({ type: 'band', name: 'x', domain: [true] })).toThrow();
+    expect(() => ScaleSchema.parse({ type: 'band', name: 'x', domain: [{}] })).toThrow();
   });
 });
