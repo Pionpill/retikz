@@ -1,4 +1,4 @@
-import type { ClipShape, PathCommand } from '@retikz/core';
+import type { ClipShape, PathCommand, Transform } from '@retikz/core';
 
 /** 角度转弧度系数（canvas 角度用弧度、Scene 用度） */
 export const DEG_TO_RAD = Math.PI / 180;
@@ -95,6 +95,29 @@ export const pathCommand = (ctx: CanvasRenderingContext2D, command: PathCommand)
 export const buildPath = (ctx: CanvasRenderingContext2D, commands: ReadonlyArray<PathCommand>): void => {
   ctx.beginPath();
   for (const command of commands) pathCommand(ctx, command);
+};
+
+/** 把单个 group Transform 应用到当前 context（translate / rotate（可选 cx,cy）/ scale）；drawScene 与 hitTest 共用 */
+export const applyTransform = (ctx: CanvasRenderingContext2D, transform: Transform): void => {
+  switch (transform.kind) {
+    case 'translate':
+      ctx.translate(transform.x, transform.y);
+      break;
+    case 'rotate':
+      if (transform.cx !== undefined || transform.cy !== undefined) {
+        const cx = transform.cx ?? 0;
+        const cy = transform.cy ?? 0;
+        ctx.translate(cx, cy);
+        ctx.rotate(transform.degrees * DEG_TO_RAD);
+        ctx.translate(-cx, -cy);
+      } else {
+        ctx.rotate(transform.degrees * DEG_TO_RAD);
+      }
+      break;
+    case 'scale':
+      ctx.scale(transform.x, transform.y ?? transform.x);
+      break;
+  }
 };
 
 /** 按裁剪形状构建路径并 ctx.clip()（坐标在 group 局部帧，须在 group transform 之后调用） */

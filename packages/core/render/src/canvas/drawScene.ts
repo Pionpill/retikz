@@ -10,10 +10,9 @@ import type {
   ScenePrimitive,
   SceneResource,
   TextPrim,
-  Transform,
 } from '@retikz/core';
 import type { CanvasWarning, DrawOptions, UnsupportedCanvasFeature } from './types';
-import { DEG_TO_RAD, applyClip, buildPath, roundedRectPath } from './pathGeometry';
+import { DEG_TO_RAD, applyClip, applyTransform, buildPath, roundedRectPath } from './pathGeometry';
 
 const warnUnsupported = (
   options: DrawOptions,
@@ -335,28 +334,6 @@ const drawText = (ctx: CanvasRenderingContext2D, p: TextPrim, options: DrawOptio
     }
     if (shouldRestore) ctx.restore();
   });
-};
-
-const applyTransform = (ctx: CanvasRenderingContext2D, transform: Transform): void => {
-  switch (transform.kind) {
-    case 'translate':
-      ctx.translate(transform.x, transform.y);
-      break;
-    case 'rotate':
-      if (transform.cx !== undefined || transform.cy !== undefined) {
-        const cx = transform.cx ?? 0;
-        const cy = transform.cy ?? 0;
-        ctx.translate(cx, cy);
-        ctx.rotate(transform.degrees * DEG_TO_RAD);
-        ctx.translate(-cx, -cy);
-      } else {
-        ctx.rotate(transform.degrees * DEG_TO_RAD);
-      }
-      break;
-    case 'scale':
-      ctx.scale(transform.x, transform.y ?? transform.x);
-      break;
-  }
 };
 
 type Point = [number, number];
