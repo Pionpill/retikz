@@ -1,0 +1,25 @@
+---
+title: 绘图
+description: "@retikz/plot 是基于 composite 机制做出的第一个 Tier 2 领域包——把图表声明成 Plot IR，经 lowerPlots 下沉成 core 图元；完整用法见独立的绘图模块。"
+---
+
+上一页讲的 composite 是**机制**:core 提供注册面和展开管线,但不内置任何高层节点。`@retikz/plot` 就是用这套机制做出来的第一个 **Tier 2 领域包**,也就是 retikz 的图表层。
+
+它把「一张图」声明成一份 **Plot IR**(坐标系、比例尺、把哪个字段画成点还是线),数据单独喂入,再由 `lowerPlots`——也就是 core `lowerComposites` 钩子的具体实现——把 IR + 数据展开成 core 的 node / path,交给现有 renderer。core 不认识任何 chart 类型,plot 的全部语义都装在这个独立包里。
+
+`@retikz/plot-react` 把这套包成一个 `<Plot>` 组件:
+
+```tsx
+import { LineMark, Plot, PointMark } from '@retikz/plot-react';
+
+<Plot data={sales} width={360} height={200}>
+  <LineMark x="month" y="revenue" order="month" />
+  <PointMark x="month" y="revenue" />
+</Plot>;
+```
+
+三个包各管一段:`@retikz/plot`(Plot IR + `lowerPlots`)、`@retikz/plot-react`(`<Plot>` 组件 + 组合 DSL)、`@retikz/plot-vanilla`(`renderPlot` SSR 字符串)。
+
+<ComponentAlert title="这里只是 composite 的落地范例" description="本页把 plot 作为 composite 机制的真实例子点一下。marks、比例尺、坐标系、IR 与数据解耦、SSR、从外部 fetch 作图等完整用法在独立的绘图模块,从它的简介页开始读。" />
+
+完整文档见 [绘图模块 · 简介](/plot/introduction)。

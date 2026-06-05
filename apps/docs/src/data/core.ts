@@ -89,6 +89,7 @@ export const coreSection: Array<Section> = [
         label: 'core.refComposites',
         children: [
           { id: 'composite', label: 'core.refComposite' },
+          { id: 'plot', label: 'core.refPlot' },
         ],
       },
       {
