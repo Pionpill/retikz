@@ -93,6 +93,7 @@ export const buildPrim = (p: ScenePrimitive, context: BuildContext = {}): SvgNod
         {
           tag: 'rect',
           attrs: compact({
+            'data-retikz-id': p.id,
             x: p.x,
             y: p.y,
             width: p.width,
@@ -118,6 +119,7 @@ export const buildPrim = (p: ScenePrimitive, context: BuildContext = {}): SvgNod
         {
           tag: 'ellipse',
           attrs: compact({
+            'data-retikz-id': p.id,
             cx: p.cx,
             cy: p.cy,
             rx: p.rx,
@@ -170,6 +172,7 @@ export const buildPrim = (p: ScenePrimitive, context: BuildContext = {}): SvgNod
         {
           tag: 'text',
           attrs: compact({
+            'data-retikz-id': p.id,
             x: p.x,
             y: p.y,
             'font-size': p.fontSize,
@@ -196,6 +199,7 @@ export const buildPrim = (p: ScenePrimitive, context: BuildContext = {}): SvgNod
         {
           tag: 'path',
           attrs: compact({
+            'data-retikz-id': p.id,
             d: buildPathD(p.commands),
             fill: f.attr,
             'fill-opacity': p.fillOpacity,
@@ -223,7 +227,11 @@ export const buildPrim = (p: ScenePrimitive, context: BuildContext = {}): SvgNod
         .map(c => buildPrim(c, context));
       return {
         tag: 'g',
-        attrs: compact({ transform: buildTransform(p.transforms), 'clip-path': clipPath }),
+        attrs: compact({
+          'data-retikz-id': p.id,
+          transform: buildTransform(p.transforms),
+          'clip-path': clipPath,
+        }),
         children,
       };
     }
