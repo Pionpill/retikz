@@ -1,6 +1,6 @@
 ---
 name: package-publish
-description: 用于把 retikz 的 publishable 包（`@retikz/core` / `@retikz/react`）发布到 npm。一次发包 = 三处同步：版本号（`packages/<pkg>/package.json`）、文档站结构化 changelog（`apps/docs/src/data/changelog.ts` + 必要时 `apps/docs/src/data/module.ts` 对应模块的 `version` 版本徽章）、内部路线（v0.2 看 `notes/decisions/core/v0/v0.2/roadmap.md`，v0.1 看 `notes/decisions/core/v0/v0.1/roadmap.md`）。发布后预 bump packages 到下一开发版本（roadmap 有下一版本直接改、没有则问用户）。retikz 专用，其它项目可忽略。
+description: 用于把 retikz 的 publishable 包（`@retikz/core` / `@retikz/react`）发布到 npm。一次发包 = 三处同步：版本号（`packages/<pkg>/package.json`）、文档站结构化 changelog（`apps/docs/src/data/changelog.ts` + 必要时 `apps/docs/src/data/module.ts` 对应模块的 `version` 版本徽章）、内部路线（v0.2 看 `notes/decisions/core/v0/v0.2/roadmap.md`，v0.1 看 `notes/decisions/core/v0/v0.1/roadmap.md`）。发布后先把本里程碑的 Accepted ADR 压缩成决策记录（删施工契约 / 待决策点两段），再预 bump packages 到下一开发版本（roadmap 有下一版本直接改、没有则问用户）。retikz 专用，其它项目可忽略。
 ---
 
 # 发 retikz 到 npm
@@ -309,7 +309,42 @@ git tag: v0.1.0-alpha.1（已 push）
 下游拉法：pnpm add @retikz/react@alpha
 ```
 
-### 阶段 6 — 发版后预 bump 到下一开发版本
+### 阶段 6 — 发版后：清理本里程碑 ADR + 预 bump 到下一开发版本
+
+#### 6.1 清理本里程碑 ADR 的施工指令（bump 前必做，平时也可主动发起）
+
+刚发布的里程碑已封板，其 ADR 全部 Accepted、代码 + 测试已是真源——**bump 到下一版本前**，把该里程碑目录下的 ADR 从「施工蓝图」压缩成「决策记录」。这是 ADR 生命周期的封口动作（模板 §header「ADR 生命周期」、`_template.md` 里标 🔻 的两段）。
+
+**压缩目的 = 去噪、不是删历史**：删掉完工后会变噪声的无效内容（前瞻施工指令 / 已拍板的待决策点 / 现状快照 / 临时过渡话），**保留设计思路、具体决策、未来兼容性考虑**——这三类是「只有 ADR 能告诉你的 WHY」，删了就再也回不来（代码只记录 WHAT）。判不准就保留。
+
+**API 已定型 → 路径引用代码、不重复粘贴**：该阶段 schema / 类型 / 枚举 / 函数签名多已在代码里定稿，ADR 里再贴一份只会随代码漂移。改成指向 `path/to/file.ts` 的指针即可；代码块**仅当「字面形态本身就是决策」**（命名取舍、字段语义、判别串选择等代码读不出的意图）才留**最小片段** + 一句为什么。
+
+**为什么在 bump 前做、而非 develop-wrapup 翻 Accepted 时**：刚 Accept 的那一版，紧接着的修补 / 跟进窗口里施工契约还可能被翻看；真正「不会再回头施工」的封板点是切下一版。所以把清理收在版本 bump 这一刻批量做。
+
+> **bump 不是唯一时机**：压缩是幂等的纯文档操作，任何时候发现某条已 Accepted 的 ADR 还挂着施工脚手架 / 过期过渡文本，都可**主动发起**单独清（用户说「压缩 xx ADR」即可），不必等下次发版。bump 前那一遍是兜底——保证没有里程碑漏掉。
+
+**目标文件**：刚发布版本对应的里程碑目录，例：发 `0.3.0-alpha.3` → `notes/decisions/core/v0/v0.3/v0.3-alpha.3/*.md`（plot 同理在 `notes/decisions/plot/...`）。只清状态已 `Accepted` 的；仍 `Proposed`（跨版本未完工）的不动。
+
+**逐个 ADR 的压缩规则**（完整原文永久留在该 ADR 的 Proposed/实现期 commit，`git show <commit>:<path>` 可捞回，故零信息损失）：
+
+| 段 | 处理 |
+|---|---|
+| 标题 / 状态行 / 决策日期 / 关联 | **保留**（状态行已是 Accepted + 完工摘要） |
+| 背景 | **压成几条「塑造决策的硬约束」**，删 / 去腐 `file.ts:行号` 现状快照（行号随重构 rot）与逐项「摸底」流水，只留 WHY |
+| 决策 / 设计思路 / 被否决选项 + 理由 / **未来兼容性考虑** | **保留**（决策记录核心、不可再生的 WHY）；代码块改成**代码路径引用**，只在「字面形态即决策」（命名 / 字段语义）时留最小片段 + 一句为什么 |
+| DSL 表面 | **删或缩成一行指向文档站**——用户侧示例已在 reference / 组件页，文档站是更好真源 |
+| 落地分布 / 各包分工 / 影响 | **并进「实现指针」一行**；只把 breaking / 跨包 lockstep 这种真·决策性影响留在正文 |
+| 不在本 ADR 范围 | **保留**（真延后项 + 从「待决策点」挪来的悬而未决项） |
+| **待决策点 🔻** | 实现期已拍板项并进「决策」段或删；真正悬而未决的挪「不在本 ADR 范围」并注明；整段无残留则删 |
+| **实现契约 🔻**（Level / Schema 改动表 / 文件 scope / 测试象限 / 依赖现有元素） | **整段折成一行指针**，例：<br>`> 实现见 commit \`<range>\`；测试见 \`packages/.../tests/...\`；最终 schema / 行为以代码（\`IRxxx\` 类型）为准。完整施工契约见本 ADR Proposed commit \`<hash>\`。` |
+
+**临时性过渡文本一并删**：完工后语境消失的措辞——「受限于 xxx，暂…」「待 xxx 处理 / 待后续」「目前先…」「评审 P1.x」这类指向「写时未决 / 当时受限」的过渡话——若所指的事已落地，删掉；若指向真延后项，挪「不在本 ADR 范围」。它们只在 in-flight 期有意义，留着会让人误以为还有未尽事项。
+
+压缩是纯文档改动（`:pencil:`），与版本 bump 同属「封板 / 起新版」语义，可与 6.2 的 bump 同一 commit，也可单独成一个 `:pencil: 压缩 <milestone> ADR 为决策记录` commit——按根 AGENTS.md 红线**等用户授权再 commit**。
+
+> AI 自动压缩时**只删 🔻 两段 / 施工脚手架 / 过期过渡文本 + 压背景 + 去腐 file:line**，不得改写「决策 / 被否决理由」的实质内容（那是人工拍的板）；拿不准某条「待决策点」是否真已拍板、或某句过渡文本所指是否已落地 → 保留并标注，呈人工裁。
+
+#### 6.2 预 bump 到下一开发版本
 
 发布成功后，把 `packages/{core,react}/package.json` 的 `version` 预 bump 到**下一个开发版本**——避免下次开工时仓库版本号还停在已发布版本，造成「源码版本 = npm 已发布版本」的歧义。
 
@@ -354,6 +389,7 @@ git tag: v0.1.0-alpha.1（已 push）
 - **根 AGENTS.md commit 规则**：阶段 5 的 commit / push / publish 都需要用户**当次明确授权**。授权一次只覆盖本次发布，下次发版要再问一遍
 - **`docs-doc-principle` 技能**：本技能里 changelog 数据写法是简版规范；如果要做更复杂的版本说明页（迁移指南、breaking changes 详解），改完后参考 `docs-doc-principle` 写正文
 - **milestone roadmap 完结**：正式发布后，按 `notes/README.md` 约定精简或删除对应 milestone 的 `roadmap.md`；major / minor 的 `roadmap.md` 保留作长期路线索引。
+- **ADR 封板压缩**（阶段 6.1）：发版后、bump 前把本里程碑 Accepted ADR 从「施工蓝图」压成「决策记录」（删 🔻 待决策点 / 实现契约两段、折成指针）。规则与生命周期定义见 `notes/decisions/core/_template.md` header「ADR 生命周期」段。
 
 ## 验证清单
 
