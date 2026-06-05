@@ -19,10 +19,13 @@ const EMPTY_SHAPE_PARAMS: IRJsonObject = {};
 /**
  * 规范化 `Node.shape` 为 `{ type, params }`
  * @description 裸 string → `{ type, params: {} }`；`{ type, params? }` → params 缺省补 `{}`；
- *   缺省（undefined）→ `{ type: 'rectangle', params: {} }`。仅做形态归一，不查表 / 不校验。
+ *   缺省（undefined）→ `{ type: 'rectangle', params: {} }`。`'circle'`（裸 string）消解为
+ *   `{ type: 'ellipse', params: { circumscribe: 'equal' } }`——circle 无独立几何，是 ellipse 等轴 preset 别名。
+ *   仅做形态归一，不查表 / 不校验。
  */
 const normalizeShape = (shape: IRNode['shape']): { type: string; params: IRJsonObject } => {
   if (shape === undefined) return { type: 'rectangle', params: {} };
+  if (shape === 'circle') return { type: 'ellipse', params: { circumscribe: 'equal' } };
   if (typeof shape === 'string') return { type: shape, params: {} };
   const ref: IRShapeRef = shape;
   return { type: ref.type, params: ref.params ?? {} };
