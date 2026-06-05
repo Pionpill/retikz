@@ -53,3 +53,5 @@
 > - 真源以代码为准：`ChannelSchema`（加 `scale?`）/ `EncodingSchema`（加 `color?`）（`packages/plot/plot/src/ir/encoding.ts`）、`OrdinalScaleSchema` / `PlotScale.Ordinal` / `ScaleSchema` 4 成员 union（`packages/plot/plot/src/ir/scale.ts`）、`resolveOrdinalScale` + 自动合成（`packages/plot/plot/src/lower/scale.ts`）、按 color 分组着色（`packages/plot/plot/src/lower/mark.ts`）、解析 / 合成 color scale（`packages/plot/plot/src/lower/expand.ts`）。基于 `d3-scale`（`scaleOrdinal`）+ `d3-scale-chromatic`（`schemeCategory10`），版本在 `pnpm-workspace.yaml` catalog；color 在 lowering 内部算、不进 IR。
 > - 测试见 `packages/plot/plot/tests/ir/encoding.schema.test.ts` / `tests/ir/scale.schema.test.ts`（color 通道 + scale ref accept/reject、ordinal schema、range 非串拒、field/value 互斥）与 `tests/lower/lowerPlots.test.ts`（按值分子 Scope、默认方案循环、显式 range、固定 `color.value`、无 scale ref 自动合成、point 落 fill / line 落 stroke、color 域与 band 域同源）。
 > - 完整施工契约（Schema 改动表 / 测试象限 / 文件 scope）见本 ADR Proposed commit。
+
+> 🔖 封板压缩 commit `82295fcc`；压缩前完整施工蓝图 = `git show 82295fcc^:notes/decisions/plot/v0/v0.1/v0.1-alpha.3/04-color-scale.md`。

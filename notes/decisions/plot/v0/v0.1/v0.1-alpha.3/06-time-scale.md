@@ -50,3 +50,5 @@ export const PlotScale = { Linear:'linear', Band:'band', Point:'point', Ordinal:
 > - 真源以代码为准：`TimeScaleSchema` / `ScaleSchema`（`plot/src/ir/scale.ts`）、`resolveTimeScale` / `toTimestamp` / `timeTicks`（`plot/src/lower/scale.ts`，基于 `d3-scale` `scaleUtc` + `d3-array` `extent`）；time 域推断走时间戳 extent 见 `plot/src/lower/expand.ts`。复用 [ADR-01](./01-band-scale.md) `PositionScale`（time 作连续 scale、bandwidth=0）。
 > - 测试见 `plot/tests/ir/scale.schema.test.ts`（time schema accept/reject、domain 非 number 拒）与 `plot/tests/lower/scale.test.ts`（ISO / ms 解析、月边界刻度 UTC 确定性、时间标签、domain 推断、nice 开关、非法串跳过、bandwidth=0、经 PositionScale 与 linear 同形、time 折线端到端）。
 > - 完整施工契约（Schema 改动表 / 测试象限 / 文件 scope / DSL 表面）见本 ADR git 历史。
+
+> 🔖 封板压缩 commit `82295fcc`；压缩前完整施工蓝图 = `git show 82295fcc^:notes/decisions/plot/v0/v0.1/v0.1-alpha.3/06-time-scale.md`。

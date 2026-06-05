@@ -56,3 +56,5 @@
 > - 真源以代码为准：`BarMark` / `BarMarkProps` + `LineMark`/`PointMark` 扩 props（`packages/plot/react/src/components/marks.tsx`）、scale 推断 + transform 装配 + `options.scaleX`（`packages/plot/react/src/components/buildPlotSpec.ts`）、`PlotDslProps.scaleX` 透传（`packages/plot/react/src/Plot.tsx`）、导出（`packages/plot/react/src/components/index.ts`）；vanilla `renderPlot`（`packages/plot/vanilla/src/renderPlot.ts`，spec 进 SVG 出、不随 mark 种类变）。
 > - 测试见 `packages/plot/react/tests/components/buildPlotSpec.test.tsx`（BarMark 等价 / 自动 band / color→ordinal / series 默认 color / stack 装配 transform + 字段对齐 / dodge 默认 / `scaleX="time"` / 多 mark / bare 守旧 / 混合 bar+line band x / 等价性 `toEqual`）、`Plot.composition.test.tsx`（`scaleX` 透传端到端）、`packages/plot/vanilla/tests/renderPlot.test.ts`（端到端出柱状 SVG）；docs demo 见 `apps/docs/src/contents/plot/**`（`*.demo.tsx` + `<ComponentPreview>`）。
 > - 完整施工契约（文件 scope / 测试象限 / 依赖现有元素）见本 ADR Proposed commit。
+
+> 🔖 封板压缩 commit `82295fcc`；压缩前完整施工蓝图 = `git show 82295fcc^:notes/decisions/plot/v0/v0.1/v0.1-alpha.3/07-bindings-dsl.md`。

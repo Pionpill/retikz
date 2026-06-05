@@ -58,3 +58,5 @@ export type ScaleType = ValueOf<typeof PlotScale>;
 > - 被消费：[ADR-02](./02-interval-mark.md) 用 `bandwidth` 定柱宽、`coordinate` 定柱位；[ADR-05](./05-relation.md) dodge 在 band 内切子带；guide lowering 复用 `PositionScale.ticks`。
 > - 测试见 `plot/tests/ir/scale.schema.test.ts`（band/point accept/reject、padding 越界、domain 元素校验）与 `plot/tests/lower/scale.test.ts`（分类域保序去重 / 过滤非标量、band coordinate 居中、bandwidth 取值、band 刻度落中心、linear 经 PositionScale 逐字等价），及 `plot/tests/lower/lowerPlots.test.ts`（守 linear 向后兼容）。
 > - 完整施工契约（Schema 改动表 / 测试象限 / 文件 scope）见本 ADR Proposed commit。
+
+> 🔖 封板压缩 commit `82295fcc`；压缩前完整施工蓝图 = `git show 82295fcc^:notes/decisions/plot/v0/v0.1/v0.1-alpha.3/01-band-scale.md`。

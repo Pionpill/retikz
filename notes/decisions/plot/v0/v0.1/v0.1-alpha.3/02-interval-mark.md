@@ -63,3 +63,5 @@ export const PlotMark = { Point: 'point', Line: 'line', Interval: 'interval' } a
 > - 真源以代码为准：`IntervalMarkSchema` / `PlotMark`（含 `Interval`）/ `MarkSchema`（`packages/plot/plot/src/ir/mark.ts`）；interval 下沉分支与 baseline=0 入 y 域见 `src/lower/mark.ts` / `src/lower/expand.ts`，消费 [ADR-01](./01-band-scale.md) projector 的 `xBandwidth` / `xCoordinate` / `yCoordinate`。柱下沉目标是 core `NodeSchema`（`shape:'rectangle'` / `minimumWidth` / `minimumHeight` / `padding`），仅用既有字段不改 core。
 > - 测试见 `packages/plot/plot/tests/ir/mark.schema.test.ts`（schema accept/reject）与 `tests/lower/lowerPlots.test.ts`（柱宽=bandwidth、柱高=|baseline−value|、柱中心、负值跨 baseline、0 值仍产 Node、缺失跳过 / 全跳过 null 图层、与 point/line 共存、band 轴对齐、Node 盒=柱）。
 > - 完整施工契约（Schema 改动表 / 测试象限 / 文件 scope）见本 ADR Proposed commit。
+
+> 🔖 封板压缩 commit `82295fcc`；压缩前完整施工蓝图 = `git show 82295fcc^:notes/decisions/plot/v0/v0.1/v0.1-alpha.3/02-interval-mark.md`。
