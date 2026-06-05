@@ -1,7 +1,8 @@
 import type { IRChild, IRNode, IRNodeDefault, IRScope, IRStep } from '@retikz/core';
 import type { ExternalRow, Mark } from '../ir';
-import { channelValue, compareByPath } from './field';
+import { channelValue, compareByPath, isFiniteNumber, resolveFieldPath } from './field';
 import type { Projector } from './project';
+import { inferCategoryDomain } from './scale';
 
 /** 散点 glyph 默认直径（user units，已补偿 circle 外接） */
 const POINT_SIZE = 10;
@@ -64,9 +65,12 @@ const lowerPoint = (mark: Mark, rows: Array<ExternalRow>, project: Projector, co
   return colorGroupedScope(placed, pointStyle);
 };
 
-/** 区间柱：每行一个 rectangle Node（baseline→value） */
-const lowerInterval = (mark: Mark, rows: Array<ExternalRow>, project: Projector, colorOf?: ColorOf): IRChild | null => {
-  const bandwidth = project.xScale.bandwidth;
+/** 把一组「已就位 node + 其颜色」收成图层（有 color 分子 Scope、无则单层 nodeDefault） */
+const barLayer = (placed: Array<{ color: string | undefined; node: IRNode }>, colorOf?: ColorOf): IRScope =>
+  colorOf ? colorGroupedScope(placed, barStyle) : { type: 'scope', nodeDefault: barStyle(DEFAULT_FILL), children: placed.map(p => p.node) };
+
+/** 普通柱：x band 中心、宽 bandwidth、baseline→value */
+const lowerPlainBars = (mark: Mark, rows: Array<ExternalRow>, project: Projector, colorOf: ColorOf | undefined, bandwidth: number): IRChild | null => {
   const yBase = project.yScale.coordinate(BAR_BASELINE);
   if (!Number.isFinite(yBase)) return null;
   const placed: Array<{ color: string | undefined; node: IRNode }> = [];
@@ -74,47 +78,115 @@ const lowerInterval = (mark: Mark, rows: Array<ExternalRow>, project: Projector,
     const xCenter = project.xScale.coordinate(channelValue(mark.encoding.x, row));
     const yValue = project.yScale.coordinate(channelValue(mark.encoding.y, row));
     if (!Number.isFinite(xCenter) || !Number.isFinite(yValue)) continue;
-    // 柱 = 中心在 [xCenter, (yBase+yValue)/2]、宽 bandwidth、高 |yBase−yValue| 的 rectangle Node
-    const node: IRNode = {
-      type: 'node',
-      position: [xCenter, (yBase + yValue) / 2],
-      minimumWidth: bandwidth,
-      minimumHeight: Math.abs(yBase - yValue),
-    };
-    placed.push({ color: colorOf?.(row), node });
+    placed.push({
+      color: colorOf?.(row),
+      node: { type: 'node', position: [xCenter, (yBase + yValue) / 2], minimumWidth: bandwidth, minimumHeight: Math.abs(yBase - yValue) },
+    });
   }
-  if (placed.length === 0) return null;
-  if (!colorOf) return { type: 'scope', nodeDefault: barStyle(DEFAULT_FILL), children: placed.map(p => p.node) };
-  return colorGroupedScope(placed, barStyle);
+  return placed.length === 0 ? null : barLayer(placed, colorOf);
 };
 
-/** 折线：按 order（缺省数据序）连点成一条 Path；alpha.3 仅常量 color（field 多色线留 ADR-05 series 拆分） */
-const lowerLine = (mark: Mark, rows: Array<ExternalRow>, project: Projector): IRChild | null => {
+/** 分组柱（dodge）：band 内按系列切等分子带，系列 i 占第 i 子带 */
+const lowerDodgedBars = (mark: Mark, rows: Array<ExternalRow>, project: Projector, colorOf: ColorOf | undefined, bandwidth: number): IRChild | null => {
+  if (mark.type !== 'interval' || !mark.series) return null;
+  const seriesField = mark.series;
+  const yBase = project.yScale.coordinate(BAR_BASELINE);
+  if (!Number.isFinite(yBase)) return null;
+  const seriesValues = inferCategoryDomain(rows.map(row => resolveFieldPath(row, seriesField)));
+  const seriesRank = new Map(seriesValues.map((series, index) => [series, index] as const));
+  const subCount = seriesValues.length || 1;
+  const subWidth = bandwidth / subCount;
+  const placed: Array<{ color: string | undefined; node: IRNode }> = [];
+  for (const row of rows) {
+    const xCenter = project.xScale.coordinate(channelValue(mark.encoding.x, row));
+    const yValue = project.yScale.coordinate(channelValue(mark.encoding.y, row));
+    if (!Number.isFinite(xCenter) || !Number.isFinite(yValue)) continue;
+    const series = resolveFieldPath(row, seriesField);
+    const index = (typeof series === 'string' || typeof series === 'number' ? seriesRank.get(series) : undefined) ?? 0;
+    const subCenter = xCenter - bandwidth / 2 + (index + 0.5) * subWidth;
+    placed.push({
+      color: colorOf?.(row),
+      node: { type: 'node', position: [subCenter, (yBase + yValue) / 2], minimumWidth: subWidth, minimumHeight: Math.abs(yBase - yValue) },
+    });
+  }
+  return placed.length === 0 ? null : barLayer(placed, colorOf);
+};
+
+/** 堆叠柱：读 stack transform 派生的 y0 / y1，柱从 y0 画到 y1（缺字段抛清晰错误） */
+const lowerStackedBars = (mark: Mark, rows: Array<ExternalRow>, project: Projector, colorOf: ColorOf | undefined, bandwidth: number): IRChild | null => {
+  if (mark.type !== 'interval') return null;
+  const y0Field = mark.y0Field ?? 'y0';
+  const y1Field = mark.y1Field ?? 'y1';
+  const placed: Array<{ color: string | undefined; node: IRNode }> = [];
+  for (const row of rows) {
+    const v0 = resolveFieldPath(row, y0Field);
+    const v1 = resolveFieldPath(row, y1Field);
+    if (!isFiniteNumber(v0) || !isFiniteNumber(v1)) {
+      throw new Error(`lowerPlots: stacked interval requires numeric ${y0Field} / ${y1Field} fields (run the stack transform first)`);
+    }
+    const xCenter = project.xScale.coordinate(channelValue(mark.encoding.x, row));
+    const top = project.yScale.coordinate(v1);
+    const bottom = project.yScale.coordinate(v0);
+    if (!Number.isFinite(xCenter) || !Number.isFinite(top) || !Number.isFinite(bottom)) continue;
+    placed.push({
+      color: colorOf?.(row),
+      node: { type: 'node', position: [xCenter, (top + bottom) / 2], minimumWidth: bandwidth, minimumHeight: Math.abs(top - bottom) },
+    });
+  }
+  return placed.length === 0 ? null : barLayer(placed, colorOf);
+};
+
+/** 区间柱：按 arrangement / series 分派普通 / dodge / stack 三种几何 */
+const lowerInterval = (mark: Mark, rows: Array<ExternalRow>, project: Projector, colorOf?: ColorOf): IRChild | null => {
+  if (mark.type !== 'interval') return null;
+  const bandwidth = project.xScale.bandwidth;
+  if (mark.arrangement === 'stack') return lowerStackedBars(mark, rows, project, colorOf, bandwidth);
+  if (mark.series) return lowerDodgedBars(mark, rows, project, colorOf, bandwidth);
+  return lowerPlainBars(mark, rows, project, colorOf, bandwidth);
+};
+
+/** 把一组数据行连成一条折线的 steps（按 order / 数据序）；<2 点返回 null */
+const buildLineSteps = (mark: Mark, rows: Array<ExternalRow>, project: Projector): Array<IRStep> | null => {
   const ordered = mark.type === 'line' && mark.order ? [...rows].sort((a, b) => compareByPath(a, b, mark.order as string)) : rows;
   const points = ordered.map(row => project(mark, row)).filter((point): point is [number, number] => point !== null);
   if (points.length < 2) return null;
-  const steps: Array<IRStep> = [
+  return [
     { type: 'step', kind: 'move', to: points[0] },
     ...points.slice(1).map((point): IRStep => ({ type: 'step', kind: 'line', to: point })),
   ];
+};
+
+/** 折线：单线（常量 color → stroke）或多系列（series 拆多线、各取系列色） */
+const lowerLine = (mark: Mark, rows: Array<ExternalRow>, project: Projector, colorOf?: ColorOf): IRChild | null => {
+  if (mark.type !== 'line') return null;
+  if (mark.series) {
+    const seriesField = mark.series;
+    const seriesValues = inferCategoryDomain(rows.map(row => resolveFieldPath(row, seriesField)));
+    const paths: Array<IRChild> = [];
+    for (const series of seriesValues) {
+      const seriesRows = rows.filter(row => resolveFieldPath(row, seriesField) === series);
+      const steps = buildLineSteps(mark, seriesRows, project);
+      if (!steps) continue;
+      const stroke = colorOf?.(seriesRows[0]) ?? DEFAULT_FILL;
+      paths.push({ type: 'path', stroke, children: steps });
+    }
+    return paths.length === 0 ? null : { type: 'scope', pathDefault: { strokeWidth: LINE_STROKE_WIDTH }, children: paths };
+  }
+  const steps = buildLineSteps(mark, rows, project);
+  if (!steps) return null;
   const colorValue = mark.encoding.color?.value;
   const stroke = colorValue !== undefined ? String(colorValue) : DEFAULT_FILL;
-  const layer: IRScope = {
-    type: 'scope',
-    pathDefault: { stroke, strokeWidth: LINE_STROKE_WIDTH },
-    children: [{ type: 'path', children: steps }],
-  };
-  return layer;
+  return { type: 'scope', pathDefault: { stroke, strokeWidth: LINE_STROKE_WIDTH }, children: [{ type: 'path', children: steps }] };
 };
 
 /**
  * 把一个 mark + 数据行下沉成一个图层 Scope
  * @description **原则：尽可能用 Scope 承载共享信息，把每个 Node / Path 压到最小，以减小生成的 core IR 体积。**
  *   一个 mark 会展成 N 个图元（N = 数据点数），任何能提到图层的东西——样式、默认值、共享上下文——都别逐元素重复写。
- *   color 编码时按颜色分子 Scope（颜色上提、不逐元素写）。无可绘制图元返回 null。
+ *   color 编码时按颜色分子 Scope；series 把记录拆成多系列（多线 / 分组 / 堆叠柱）。无可绘制图元返回 null。
  */
 export const lowerMark = (mark: Mark, rows: Array<ExternalRow>, project: Projector, colorOf?: ColorOf): IRChild | null => {
   if (mark.type === 'point') return lowerPoint(mark, rows, project, colorOf);
   if (mark.type === 'interval') return lowerInterval(mark, rows, project, colorOf);
-  return lowerLine(mark, rows, project);
+  return lowerLine(mark, rows, project, colorOf);
 };

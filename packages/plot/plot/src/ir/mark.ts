@@ -18,6 +18,20 @@ export const PlotMark = {
 /** mark 类型 */
 export type MarkType = ValueOf<typeof PlotMark>;
 
+/**
+ * 多系列柱的组合方式关键字（暴露给用户；裸 `'dodge'` / `'stack'` 同样可用）
+ * @description relation 字段，决定同类别多系列柱如何摆放：并排 / 累叠
+ */
+export const PlotArrangement = {
+  /** 并排：band 内按系列切等分子带 */
+  Dodge: 'dodge',
+  /** 累叠：读 stack transform 派生的 y0 / y1 */
+  Stack: 'stack',
+} as const;
+
+/** 多系列柱组合方式 */
+export type ArrangementType = ValueOf<typeof PlotArrangement>;
+
 /** 各 mark 变体共享的基础字段（可选 id 句柄 + 必填 encoding） */
 const markBase = {
   id: z
@@ -40,12 +54,39 @@ export const LineMarkSchema = z
       .min(1)
       .optional()
       .describe('Data field driving connection order; omit for data array order (minimal relation)'),
+    series: z
+      .string()
+      .min(1)
+      .optional()
+      .describe('Series field: split records into one line per distinct value (multi-series); each series gets its own color via the color scale'),
     ...markBase,
   })
   .describe('Line mark: connects records in order');
 
 export const IntervalMarkSchema = z
-  .object({ type: z.literal(PlotMark.Interval).describe('Discriminator: a rectangular interval from a baseline to the value (bar)'), ...markBase })
+  .object({
+    type: z.literal(PlotMark.Interval).describe('Discriminator: a rectangular interval from a baseline to the value (bar)'),
+    series: z
+      .string()
+      .min(1)
+      .optional()
+      .describe('Series field: split records into multiple bar series per distinct value'),
+    arrangement: z
+      .nativeEnum(PlotArrangement)
+      .optional()
+      .describe("How multiple series combine within one category: 'dodge' (side-by-side sub-bands; default when series is set) / 'stack' (cumulative, reading the stack-transform y0 / y1)"),
+    y0Field: z
+      .string()
+      .min(1)
+      .optional()
+      .describe('Lower-bound field for stacked bars (matches the stack transform startField; default "y0"). Only read when arrangement = stack'),
+    y1Field: z
+      .string()
+      .min(1)
+      .optional()
+      .describe('Upper-bound field for stacked bars (matches the stack transform endField; default "y1"). Only read when arrangement = stack'),
+    ...markBase,
+  })
   .describe('Interval mark: bar from baseline (0) to the value; width taken from the band scale');
 
 export const MarkSchema = z

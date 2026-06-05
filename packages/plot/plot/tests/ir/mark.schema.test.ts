@@ -57,4 +57,24 @@ describe('MarkSchema (ADR-05)', () => {
   it('mark_interval_missing_encoding_rejected', () => {
     expect(() => MarkSchema.parse({ type: 'interval' })).toThrow();
   });
+
+  // ADR-05：relation（series / arrangement）
+  it('mark_interval_series_dodge_valid', () => {
+    const m = { type: 'interval', series: 'product', arrangement: 'dodge', encoding: { x: { field: 'm' }, y: { field: 'r' } } };
+    expect(MarkSchema.parse(m)).toEqual(m);
+  });
+
+  it('mark_interval_stack_valid', () => {
+    const m = { type: 'interval', series: 'product', arrangement: 'stack', y0Field: 'lo', y1Field: 'hi', encoding: { x: { field: 'm' }, y: { field: 'r' } } };
+    expect(MarkSchema.parse(m)).toEqual(m);
+  });
+
+  it('mark_interval_arrangement_bad_rejected', () => {
+    expect(() => MarkSchema.parse({ type: 'interval', arrangement: 'pile', encoding: { x: { field: 'm' }, y: { field: 'r' } } })).toThrow();
+  });
+
+  it('mark_line_series_valid', () => {
+    const m = { type: 'line', series: 'city', order: 't', encoding: { x: { field: 't' }, y: { field: 'v' } } };
+    expect(MarkSchema.parse(m)).toEqual(m);
+  });
 });

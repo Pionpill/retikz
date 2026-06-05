@@ -77,6 +77,15 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
   const axisValues = (axis: 'x' | 'y'): Array<unknown> => {
     const out: Array<unknown> = [];
     for (const mark of node.marks) {
+      // 堆叠柱的 y 域取累积上 / 下界（来自 stack transform），而非每段原值
+      if (axis === 'y' && mark.type === 'interval' && mark.arrangement === 'stack') {
+        const y0Field = mark.y0Field ?? 'y0';
+        const y1Field = mark.y1Field ?? 'y1';
+        for (const row of rows) {
+          out.push(resolveFieldPath(row, y0Field), resolveFieldPath(row, y1Field));
+        }
+        continue;
+      }
       const channel = mark.encoding[axis];
       if (!channel) continue;
       for (const row of rows) {

@@ -465,3 +465,151 @@ describe('lowerPlots color (ADR-04)', () => {
     expect(firstLayer(pointSpec(), { sales: SALES }, opts).nodeDefault?.shape).toBe('circle');
   });
 });
+
+// ADR-05：relation（series / dodge / stack / 多系列折线）
+describe('lowerPlots relation (ADR-05)', () => {
+  const SALES2 = [
+    { month: 'Jan', product: 'A', revenue: 3 },
+    { month: 'Jan', product: 'B', revenue: 5 },
+    { month: 'Feb', product: 'A', revenue: 2 },
+    { month: 'Feb', product: 'B', revenue: 4 },
+  ];
+  const allNodes = (layer: IRScope): Array<IRNode> =>
+    layer.children.flatMap(child => (child as IRScope).children as Array<IRNode>);
+
+  it('dodge_subbands_equal_width_offset', () => {
+    const spec = PlotSpecSchema.parse({
+      namespace: 'plot',
+      type: 'plot',
+      data: { ref: 's' },
+      scales: [
+        { type: 'band', name: 'x' },
+        { type: 'linear', name: 'y' },
+        { type: 'ordinal', name: 'col' },
+      ],
+      coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
+      marks: [{ type: 'interval', series: 'product', encoding: { x: { field: 'month' }, y: { field: 'revenue' }, color: { field: 'product', scale: 'col' } } }],
+    });
+    const layer = firstLayer(spec, { s: SALES2 }, opts);
+    // 2 系列 → 2 子 Scope（按颜色），共 4 柱
+    expect(layer.children).toHaveLength(2);
+    const nodes = allNodes(layer);
+    expect(nodes).toHaveLength(4);
+    // 所有子带等宽
+    const widths = nodes.map(n => n.minimumWidth as number);
+    expect(widths.every(w => Math.abs(w - widths[0]) < 1e-6)).toBe(true);
+    // 同类别内 A（系列 0）在 B（系列 1）左侧：A.Jan.x < B.Jan.x
+    const seriesA = layer.children[0] as IRScope;
+    const seriesB = layer.children[1] as IRScope;
+    const aJanX = ((seriesA.children[0] as IRNode).position as [number, number])[0];
+    const bJanX = ((seriesB.children[0] as IRNode).position as [number, number])[0];
+    expect(aJanX).toBeLessThan(bJanX);
+  });
+
+  it('stack_bars_from_transform', () => {
+    const spec = PlotSpecSchema.parse({
+      namespace: 'plot',
+      type: 'plot',
+      data: { ref: 's' },
+      transform: [{ kind: 'stack', x: 'month', y: 'revenue', groupBy: 'product' }],
+      scales: [
+        { type: 'band', name: 'x' },
+        { type: 'linear', name: 'y' },
+        { type: 'ordinal', name: 'col' },
+      ],
+      coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
+      marks: [{ type: 'interval', series: 'product', arrangement: 'stack', encoding: { x: { field: 'month' }, y: { field: 'revenue' }, color: { field: 'product', scale: 'col' } } }],
+    });
+    const layer = firstLayer(spec, { s: SALES2 }, opts);
+    const nodes = allNodes(layer);
+    expect(nodes).toHaveLength(4);
+    // 全宽柱（堆叠不切子带）：宽度都相等
+    const widths = nodes.map(n => n.minimumWidth as number);
+    expect(widths.every(w => Math.abs(w - widths[0]) < 1e-6)).toBe(true);
+    // Jan：B（值更高、堆在上）中心像素 < A（y 屏幕向下，越高像素越小）
+    const aJan = (layer.children[0] as IRScope).children[0] as IRNode; // 系列 A
+    const bJan = (layer.children[1] as IRScope).children[0] as IRNode; // 系列 B
+    expect((bJan.position as [number, number])[1]).toBeLessThan((aJan.position as [number, number])[1]);
+  });
+
+  it('stack_without_transform_throws', () => {
+    const spec = PlotSpecSchema.parse({
+      namespace: 'plot',
+      type: 'plot',
+      data: { ref: 's' },
+      scales: [
+        { type: 'band', name: 'x' },
+        { type: 'linear', name: 'y' },
+      ],
+      coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
+      marks: [{ type: 'interval', series: 'product', arrangement: 'stack', encoding: { x: { field: 'month' }, y: { field: 'revenue' } } }],
+    });
+    expect(() => expandOf(spec, { s: SALES2 }, opts)).toThrow(/stack transform/);
+  });
+
+  it('line_series_multi_paths', () => {
+    const TREND = [
+      { t: 0, v: 1, city: 'X' },
+      { t: 1, v: 3, city: 'X' },
+      { t: 0, v: 2, city: 'Y' },
+      { t: 1, v: 4, city: 'Y' },
+    ];
+    const spec = PlotSpecSchema.parse({
+      namespace: 'plot',
+      type: 'plot',
+      data: { ref: 't' },
+      scales: [
+        { type: 'linear', name: 'x' },
+        { type: 'linear', name: 'y' },
+        { type: 'ordinal', name: 'col', range: ['#aa', '#bb'] },
+      ],
+      coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
+      marks: [{ type: 'line', series: 'city', order: 't', encoding: { x: { field: 't' }, y: { field: 'v' }, color: { field: 'city', scale: 'col' } } }],
+    });
+    const layer = firstLayer(spec, { t: TREND }, opts);
+    // 2 系列 → 2 条 Path，各自一色
+    expect(layer.children).toHaveLength(2);
+    expect((layer.children[0] as IRPath).type).toBe('path');
+    expect((layer.children[0] as IRPath & { stroke?: string }).stroke).toBe('#aa');
+    expect((layer.children[1] as IRPath & { stroke?: string }).stroke).toBe('#bb');
+  });
+
+  it('series_omitted_single_bar_layer', () => {
+    // 无 series → 退化普通柱（单层 nodeDefault）
+    const spec = PlotSpecSchema.parse({
+      namespace: 'plot',
+      type: 'plot',
+      data: { ref: 's' },
+      scales: [
+        { type: 'band', name: 'x' },
+        { type: 'linear', name: 'y' },
+      ],
+      coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
+      marks: [{ type: 'interval', encoding: { x: { field: 'month' }, y: { field: 'revenue' } } }],
+    });
+    const layer = firstLayer(spec, { s: SALES2 }, opts);
+    expect(layer.nodeDefault?.shape).toBe('rectangle');
+  });
+
+  it('stacked_bar_compiles_to_scene', () => {
+    const spec = PlotSpecSchema.parse({
+      namespace: 'plot',
+      type: 'plot',
+      data: { ref: 's' },
+      transform: [{ kind: 'stack', x: 'month', y: 'revenue', groupBy: 'product' }],
+      scales: [
+        { type: 'band', name: 'x' },
+        { type: 'linear', name: 'y' },
+        { type: 'ordinal', name: 'col' },
+      ],
+      coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
+      marks: [{ type: 'interval', series: 'product', arrangement: 'stack', encoding: { x: { field: 'month' }, y: { field: 'revenue' }, color: { field: 'product', scale: 'col' } } }],
+      guides: [{ type: 'axis', dimension: 'x' }, { type: 'axis', dimension: 'y', grid: true }],
+    });
+    const scene = compileToScene(
+      { version: 1, type: 'scene', children: [spec] },
+      { composites: lowerPlots({ s: SALES2 }, opts) },
+    );
+    expect(scene.primitives.length).toBeGreaterThan(0);
+  });
+});
