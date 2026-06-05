@@ -1,6 +1,6 @@
 # ADR-01：水合（hydration）—— SVG + Canvas 统一事件绑定
 
-- 状态：Proposed
+- 状态：Accepted（已实现，2026-06-05；core IRPath.id + 图元 id stamp / render data-retikz-id + hitTest + hydration 控制器 / vanilla hydrate + mountCanvas / react 事件 props + collectHydrationHandlers + 双模等价 / 文档全落地。Adversarial 两关：第一关修 1 BLOCKING（canvas enter/leave 改 pointermove 状态机）+ W1/I1；第二关 contract 对账无 BLOCKING）
 - 决策日期：2026-06-04
 - 关联：[v0.3 roadmap §水合 / §动画 / §Alpha 切分 alpha.3](../roadmap.md) · [core-design.md §4.4 IR 100% 可序列化](../../../../../architecture/core-design.md) · [alpha.1 ADR-01 svg descriptor](../v0.3-alpha.1/01-svg-descriptor-contract.md) · [alpha.1 ADR-02 canvas + react 双渲染](../v0.3-alpha.1/02-canvas-renderer-and-react-canvas-mode.md) · [alpha.1 ADR-03 vanilla runtime / 依赖图](../v0.3-alpha.1/03-vanilla-runtime-and-dependency-graph.md) · [alpha.2 ADR-01 Tier 2 支撑](../v0.3-alpha.2/01-tier2-support.md)
 
@@ -80,7 +80,9 @@ const locateSvg: Locate = e => (e.target as Element).closest?.('[data-retikz-id]
 export const hitTest = (
   scene: Scene,
   point: { x: number; y: number },  // Scene user units
-  options?: { strokeTolerance?: number },
+  // context2d：原生 isPointInPath/isPointInStroke 需一个真实 2D context（即时模式无逐图元 DOM）；
+  // 生产由 mountCanvas / CanvasHost 注入已挂 canvas 的 context，缺省自建离屏；SSR 无 canvas → 返回 null。
+  options?: { strokeTolerance?: number; context2d?: CanvasRenderingContext2D },
 ): string | null;                    // 逆 z-order、命中即最近 id-bearing 祖先 id
 ```
 
@@ -182,7 +184,7 @@ view.hydrate({ handlers: { a: { click: e => ... } } });   // hitTest 定位
   - **对标 ECharts / Highcharts / Vega**（已核）：三家的交互原始事件（click / dblclick / contextmenu / hover / down·up·move / wheel）本集**全覆盖、无缺失、无多余**。差异：① 三家历史用 `mouse*` 命名，本集用 **Pointer Events 统一 mouse + touch + pen → 不另列 `touchstart/move/end`**（优点）；② 三家 hover 实际用冒泡的 `mouseover/out`，本集对 id-粒度语义单位用**合成 enter/leave** 更顺手（冒泡版 over/out 见下，可选）；③ `select` / `unselect` / `brush` / `datazoom` 是**语义态 / 复合手势**，非原始 DOM 事件 → 归 Tier 2（plot）或延后手势编排，不进 core。
   - **两处可选补充（待定）**：① root 级「离开整图」hook（≈ ECharts `globalout`，用于离开图时清空所有 tooltip）；② 冒泡版 `pointerover` / `pointerout`（三家 hover 的底层，enter/leave 之外按需暴露）。
   - **延后**：键盘 / 焦点 / a11y（Vega 有 keydown/up）、拖拽 / brush / pan / 缩放手势编排（down·move·up 原语已具备、可自拼，命名手势延后）、多指 touch 手势。
-- **坐标映射归属**：canvas client px → Scene units 的逆 meet-fit 由谁算——`mountCanvas` 的 view（它知道 fit 参数）；react `CanvasHost` 同样需暴露。统一在 view 层。
+- **坐标映射归属**（已落地）：canvas client px → Scene units 的逆 meet-fit 在 view 层算——vanilla `mountCanvas.clientToScene` 与 react `CanvasHost` 同口径（读 `getBoundingClientRect` + `scene.layout` + scale/letterbox）。`clientToScene` **始终返回 `ScenePoint`（不返 null）**：落 letterbox 黑边时得到 layout 区域外坐标，「无命中」判定下推给 `hitTest` 自然处理（纯坐标函数无 null 分支，更顺）。
 
 ## 影响
 
@@ -239,9 +241,9 @@ view.hydrate({ handlers: { a: { click: e => ... } } });   // hitTest 定位
 - `packages/core/render/src/canvas/drawScene.ts`（改：改 import `pathGeometry`，♻️ 行为不变）
 - `packages/core/render/src/canvas/hitTest.ts`（新建：复用 `pathGeometry` + isPointInPath/isPointInStroke，逆 z-order）
 - `packages/core/render/src/canvas/index.ts`（导出 `hitTest`）
-- `packages/core/render/src/hydration/{controller,locateSvg,synthesizeEnterLeave}.ts` + `index.ts`（新建子路径）
+- `packages/core/render/src/hydration/{controller,events,locateSvg}.ts` + `index.ts`（新建子路径；enter/leave 合成内联进 controller，`events.ts` 集中 `HYDRATION_EVENTS` / `EVENT_DOM_TYPE` / 类型）
 - `packages/core/render/package.json`（exports 加 `./hydration`）
-- `packages/core/render/tests/{svg-data-id,canvas-hittest,hydration-controller,drawscene-regression}.test.ts`（新建 / 回归）
+- `packages/core/render/tests/{svg-data-id,canvas-hittest,hydration-controller}.test.ts`（新建）；`pathGeometry` 抽取的回归由既有 `draw` / `render` 套件承载（纯重构、既有用例继续绿即等价证明），不单建专用文件
 
 `@retikz/vanilla`：
 - `packages/core/vanilla/src/hydrate.ts`（新建：svg 水合）
@@ -269,7 +271,7 @@ view.hydrate({ handlers: { a: { click: e => ... } } });   // hitTest 定位
 **id 挂点 / emit（≥ 3，评审 P1.1 / P1.2 / P1.3）**：
 - `path-id-roundtrip`：`<Path id="e1">` → `IRPath.id="e1"`，parse + codec round-trip 保 id。
 - `plain-node-stamps-each-prim`：纯几何 Node（无文本 / rotate，不包 group）带 `id` → 其平铺 shape 图元都 stamp 同一 id（不强制包 group）；文本 Node → id 在 GroupPrim。
-- `coordinate-no-emit-no-handler`：`<Coordinate id>` 不 emit 图元、不可命中；react 给 Coordinate handler（若误用）→ dev warn / no-op、不抛。
+- `coordinate-no-emit-no-handler`：`<Coordinate id>` 不 emit 图元、不可命中（compile scene-id 测试覆盖）；Coordinate 在 **react 类型层就不含任何 `on*` prop**（`CoordinateProps` 无事件 props）→ 误用 handler 编译期即被拒，**无运行时 warn / no-op 分支**。
 
 **Happy path（≥ 3）**：
 - `svg-emits-data-id`：带 `id` 的 Node / Path → SVG 输出含 `data-retikz-id="<id>"`；无 id 元素不含。
