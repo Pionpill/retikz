@@ -1,58 +1,56 @@
 ---
 title: 简介
-description: retikz 的图表层——声明式 Plot IR 描述「画什么」，数据单独喂入，由 lowerPlots 下沉成 core 图元渲染。
+description: retikz 的图表层：用 Plot IR 描述图表语义，把数据单独传入，再下沉成 core 图元渲染。
 ---
 
-`@retikz/plot` 是建在 core 之上的图表层。你用一份 **Plot IR** 声明「这是一张什么图」——坐标系、比例尺、把哪个字段画成点还是线——数据则单独提供，最后由一个函数把两者合成可渲染的图。
+`@retikz/plot` 是建在 core 之上的 Tier 2 图表层。core 负责通用图元、路径和渲染目标无关的编译；plot 负责把「数据字段如何映射到图形」这件事整理成一份可持久化、可校验的图表规格。
 
-它刻意把一张图拆成三块，各管一件事：
+它适合需要把结构化数据画成图表、又希望保留 retikz 的 IR / AI / 多渲染器能力的场景。当前版本先把最小闭环打通：线性比例尺、二维笛卡尔坐标、折线与散点、坐标轴和网格。
+
+## core + 图形语法
+
+<ComponentPreview name="plot-grammar-parts" size="md" hideCode />
+
+plot 的本质是 **core + 图形语法**。core 提供最终能渲染的节点、路径、Scope 和 Scene；plot 不另造一套渲染器，而是在 core 之上增加“字段如何变成图形”的语法层。
+
+| 部分 | 实现里对应什么 | 作用 |
+| --- | --- | --- |
+| **图形语法** | `marks`、`encoding`、`scales`、`coordinate`、`guides`；React 侧是 `<LineMark>` / `<PointMark>` / `<Axis>` | 绘图指导思想：先声明“哪个字段映射到哪个视觉通道”，再由 scale、coordinate 和 guide 决定如何落到画布 |
+| **数据** | `data.ref` + 可选 `model` 指向外部数据集；lowering 时把每一行解析成 `x` / `y` 数据通道 | 保存真实数据和字段模型；数据值不进入 IR，字段路径通过 `field` 解析，常量通过 `value` 进入通道 |
+| **`@retikz/plot`** | `PlotSpecSchema`、`buildPlotSpec`、`lowerPlots`、`renderPlot`、`<Plot>` | 逻辑封装：校验 PlotSpec、补默认 linear scale / cartesian2D / Axis、计算 domain / ticks / projector，并把结果下沉成 core IR |
+
+## Plot IR 居中
+
+<ComponentPreview name="plot-ir-centric" size="md" hideCode />
+
+Plot 的中心不是一份巨大的数据表，而是一份描述图表语义的 Plot IR。组件、手写 spec 或 AI 都先形成同一份 IR；真实数据在下沉时才和 IR 汇合，经 `lowerPlots` 变成 core 能理解的节点与路径。
+
+## 三块一起工作
+
+一张 plot 图不会把数据塞进 IR。IR 只描述「画什么」，真实数据在渲染时单独传入。
 
 | 部分 | 是什么 | 职责 |
 | --- | --- | --- |
-| **Plot IR** | 配置对象（JSON 可序列化） | 决定图长什么样：图元、比例尺、坐标系、字段绑定 |
-| **数据** | 外部数据集，任意 JS | 提供具体数值；**不进 IR**，避免 IR 随数据量膨胀 |
-| **lowerPlots** | 写死的下沉函数 | 把 IR + 数据投影成 core 的点 / 线，交给现有 renderer |
+| **Plot IR** | JSON 可序列化的配置 | 记录 mark、scale、coordinate、axis 与字段绑定 |
+| **数据** | 外部数据集 | 提供具体数值；不进入 IR，避免配置随数据量膨胀 |
+| **lowerPlots** | 下沉函数 | 把 Plot IR + 数据转成 core 能渲染的节点和路径 |
 
-`@retikz/plot-react` 把这三块包成一个 `<Plot>` 组件。下面这张图把 5 个月的营收同时画成折线和散点，并自动配上坐标轴和网格——同一份数据、同一套坐标，叠两层 mark：
+React 用户通常不需要手写整份 IR。`@retikz/plot-react` 的 `<Plot>` 会从 `<LineMark>`、`<PointMark>`、`<Axis>` 这些子组件同步装配出 Plot IR；想直接从程序或 AI 生成 IR 时，也可以用 `<Plot spec={spec} data={{ sales }} />`。
 
-<ComponentPreview name="line-scatter" sourceFiles={['line-scatter.data.ts']} />
+## 包职责
 
-用**组合 DSL** 写最直观：只声明「画什么」（哪个字段画成线、哪个画成点），比例尺与坐标系由 `<Plot>` 自动推断；数据是一组裸数据行，单独抽在 `line-scatter.data.ts` 里传入。完整写法见上图下方的「代码」面板——React 源码、装配出的 **Plot IR**、等价的 **Vanilla** builder 代码、以及数据文件都在那里。
+plot 拆成三包，是为了让「图表语义」和「框架入口」分开：
 
-JSX 只是书写面：`<Plot>` 同步读取子图层、装配成一份规范化的 **Plot IR**（即代码面板的 **IR** 一栏）。你也可以反过来——直接手写或由程序 / LLM 生成这份 IR，再用 `<Plot spec={spec} data={{ sales }}>` 入口渲染。无论走哪条路，IR 里关于数据都只写一个引用名（`data: { ref: 'sales' }`）：真正的数据在渲染时单独传入，同一份 spec 换一份字段相符的数据集就能复用——这正是「IR 与数据解耦」的意义，配置描述形态、数据只填内容。
+| 包 | 职责 | 典型入口 |
+| --- | --- | --- |
+| `@retikz/plot` | Plot IR schema、数据下沉与核心算法 | `lowerPlots(datasets)` |
+| `@retikz/plot-react` | React 组合 DSL 与 `<Plot>` 包装 | `<Plot data={rows}>...</Plot>` |
+| `@retikz/plot-vanilla` | 无框架 / SSR 渲染入口 | `renderPlot(spec, data, options)` |
 
-服务端 / 构建期则用 `@retikz/plot-vanilla` 的 `renderPlot(spec, data, options)` 直接出 SVG 字符串（零 DOM），对应代码面板的 **Vanilla** 一栏。
+无论从 React 组件、手写 spec，还是 vanilla 入口开始，最后都会走同一份 Plot IR 和同一条 lowering 路径。
 
-## 坐标轴和网格默认就画
+## 当前能力
 
-上图的刻度、轴线、网格都是自动出的——你只写了 mark，`<Plot>` 默认就配上 x / y 轴和一层水平网格。要定制就加 `<Axis>` 子组件；一旦写了任意 `<Axis>`，就**完全按你列的来**，不再自动补默认：
+<ComponentAlert title="v0.1 alpha.2" description="当前 plot 支持 linear scale、cartesian2D 坐标系、LineMark / PointMark、Axis 坐标轴，以及默认 y 方向网格。<Plot> 无显式 Axis 时会自动给出 x/y 轴和 y 网格；bare 会回到无轴纯绘图；fontSize 与 margin 用来调刻度标签字号和边距。bar、polar、legend、tooltip 与事件交互还在后续版本。" />
 
-```tsx
-<Plot data={sales} width={360} height={200}>
-  <LineMark x="month" y="revenue" order="month" />
-  <Axis dimension="x" tickCount={5} />
-  <Axis dimension="y" grid />
-</Plot>
-```
-
-`<Axis>` 的开关：`tickCount`（目标刻度数）、`grid`（这根轴是否画对齐刻度的网格线）、`tickLabels={false}`（只留轴线和刻度、不写数字）。网格是**轴的属性**、不是独立组件——x 轴的网格是竖线、y 轴的是横线，两者叠加才成「网格」。
-
-只想要纯绘图、连轴都不要时，给 `<Plot>` 加 `bare`：
-
-```tsx
-<Plot data={sales} width={360} height={200} bare>
-  <LineMark x="month" y="revenue" order="month" />
-</Plot>
-```
-
-`width × height` 是含坐标轴和刻度标签在内的**外框**：轴和标签占掉边缘后，剩下的矩形才是真正画数据的绘图区。标签字号、四周留白可分别用 `fontSize`、`margin` 调。
-
-## 数据来自哪里都一样
-
-上面的数据是写死的，真实场景里数据通常来自别处——后端接口、公开 API、CSV。因为数据**不进 IR**、只在渲染时作为裸数据行传入，所以从外部 `fetch` 一份大数据集再作图，写法和本地数据完全一致：先把数据取回来，拿到后照样丢给 `<Plot data>`。
-
-取数逻辑（`fetch` + 状态）和造的数据一样**抽到同级 `.data` 文件**、主 demo 只消费保持简单——React 端封装成一个 hook（`line-scatter-fetch.data.ts` 的 `useCarPerformance()`，见代码面板里的数据文件）。下面这张图实时从 CDN 拉取 [vega-datasets](https://github.com/vega/vega-datasets) 的经典「汽车性能」数据集（约 400 条），把马力与油耗画成散点；作图那几行和本地数据完全一样，数据来自哪里对 `<Plot>` 透明：
-
-<ComponentPreview name="line-scatter-fetch" size="md" sourceFiles={['line-scatter-fetch.data.ts']} interactive />
-
-<ComponentAlert title="当前阶段" description="alpha.2 在三包基础上加了坐标轴与网格：<Plot> 默认画 x/y 轴 + 水平网格，<Axis> 子组件可定制（刻度数 / 网格 / 关标签），bare 回到无轴的纯绘图。仍是 linear 比例尺 + cartesian2D 坐标系、point / line 两种 mark；bar、极坐标、交互（tooltip / 事件）等在后续版本逐步加。绘图区尺寸是渲染选项，不进 IR。" />
+如果你是第一次使用 plot，先从快速开始走一遍本地数据的折线 + 散点图，再回来看这里的 IR / 数据 / lowering 分工会更顺。
