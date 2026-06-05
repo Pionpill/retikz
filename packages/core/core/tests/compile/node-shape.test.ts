@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { compileToScene } from '../../src/compile/compile';
-import type { IR } from '../../src/ir';
+import type { IR, IRNode } from '../../src/ir';
+import { NodeSchema } from '../../src/ir';
 import type { ScenePrimitive } from '../../src/primitive';
 import { line, move } from '../helpers/path-command-factory';
 import { flattenPrims } from '../helpers/flatten';
@@ -185,6 +186,152 @@ describe("Target 字符串锚点扩展", () => {
     const linePath = compileToScene(ir).primitives.find(p => p.type === 'path');
     if (linePath?.type === 'path') {
       expect(linePath.commands[0]).toEqual(move([10, 20]));
+    }
+  });
+});
+
+describe("ellipse nested params IR round-trip", () => {
+  it("含 ellipse {circumscribe:'equal'} 的 Node IR → JSON → parse 等价（params 全在 IR）", () => {
+    const node = {
+      type: 'node',
+      id: 'A',
+      position: [0, 0],
+      shape: { type: 'ellipse', params: { circumscribe: 'equal' } },
+    };
+    const parsed = NodeSchema.parse(node);
+    const roundTripped = NodeSchema.parse(JSON.parse(JSON.stringify(parsed)));
+    expect(roundTripped).toEqual(parsed);
+    expect(roundTripped.shape).toEqual({ type: 'ellipse', params: { circumscribe: 'equal' } });
+  });
+
+  it("非法 circumscribe 枚举 → NodeSchema 不 reject（shape 枚举校验在编译期 paramsSchema），但编译期 throw", () => {
+    // ShapeRefSchema 的 params 是开放 JSON object（IR 层不知具体 shape 的 paramsSchema），
+    // 枚举校验落在 compile 的 shapeDef.paramsSchema.parse —— 非法枚举编译期 throw。
+    const ir: IR = {
+      version: 1,
+      type: 'scene',
+      children: [
+        {
+          type: 'node',
+          id: 'A',
+          shape: { type: 'ellipse', params: { circumscribe: 'diagonal' } },
+          position: [0, 0],
+        },
+      ],
+    };
+    expect(() => compileToScene(ir)).toThrow();
+  });
+});
+
+describe("circle 收为 ellipse equal preset 别名", () => {
+  // 以下 case 依赖实现 Agent 的 circle 规范化（compile/node.ts 把裸 'circle' →
+  // { type: 'ellipse', params: { circumscribe: 'equal' } }，并删 circle.ts 独立几何）。
+  // 规范化未落地前此刻 fail —— 预期。
+  it("circle_normalizes_to_ellipse_equal：shape:'circle' 编译等价显式 ellipse equal", () => {
+    const bareIr: IR = {
+      version: 1,
+      type: 'scene',
+      children: [{ type: 'node', id: 'A', shape: 'circle', position: [0, 0], text: 'long text' }],
+    };
+    const explicitIr: IR = {
+      version: 1,
+      type: 'scene',
+      children: [
+        {
+          type: 'node',
+          id: 'A',
+          shape: { type: 'ellipse', params: { circumscribe: 'equal' } },
+          position: [0, 0],
+          text: 'long text',
+        },
+      ],
+    };
+    expect(compileToScene(bareIr).primitives).toEqual(compileToScene(explicitIr).primitives);
+  });
+
+  it("circle_emit_equivalent：circle 规范化后 emit EllipsePrim 且 rx == ry（等轴）", () => {
+    const ir: IR = {
+      version: 1,
+      type: 'scene',
+      // 非正方内框（宽文本）下仍须 rx == ry，验证走的是 equal（等轴）而非 proportional
+      children: [{ type: 'node', id: 'A', shape: 'circle', position: [0, 0], text: 'long text' }],
+    };
+    const el = findByType(compileToScene(ir).primitives, 'ellipse');
+    expect(el).toBeDefined();
+    expect(el!.rx).toBe(el!.ry);
+  });
+
+  it("circle_with_extra_params_rejected：{type:'ellipse', params:{foo:1}} → strictObject reject", () => {
+    const ir: IR = {
+      version: 1,
+      type: 'scene',
+      children: [
+        {
+          type: 'node',
+          id: 'A',
+          // params 是开放 JSON object（IR 层不查具体 shape 的 paramsSchema）；非法字段编译期被 strictObject 拒
+          shape: { type: 'ellipse', params: { foo: 1 } },
+          position: [0, 0],
+        },
+      ],
+    };
+    expect(() => compileToScene(ir)).toThrow();
+  });
+
+  it("circle_with_scale：circle 规范化后 × scale → 尺寸协同放大、仍正圆（rx == ry）", () => {
+    const base = compileToScene({
+      version: 1,
+      type: 'scene',
+      children: [{ type: 'node', id: 'A', shape: 'circle', position: [0, 0], text: 'X' }],
+    });
+    const scaled = compileToScene({
+      version: 1,
+      type: 'scene',
+      children: [{ type: 'node', id: 'A', shape: 'circle', position: [0, 0], text: 'X', scale: 2 }],
+    });
+    const baseEl = findByType(base.primitives, 'ellipse');
+    const scaledEl = findByType(scaled.primitives, 'ellipse');
+    expect(baseEl).toBeDefined();
+    expect(scaledEl).toBeDefined();
+    expect(scaledEl!.rx).toBe(scaledEl!.ry); // 仍正圆
+    expect(scaledEl!.rx).toBeGreaterThan(baseEl!.rx); // 尺寸协同放大
+  });
+
+  it("circle_anchor_matches_legacy：circle 各命名 anchor 与 ellipse equal 一致", () => {
+    // circle 与显式 ellipse-equal 在所有命名 anchor 落点一致（回归：收敛不改 anchor 几何）
+    for (const anchor of [
+      'center',
+      'north',
+      'south',
+      'east',
+      'west',
+      'north-east',
+      'north-west',
+      'south-east',
+      'south-west',
+    ] as const) {
+      const mk = (shape: IRNode['shape']): IR => ({
+        version: 1,
+        type: 'scene',
+        children: [
+          { type: 'node', id: 'A', shape, position: [0, 0], text: 'long text' },
+          {
+            type: 'path',
+            children: [
+              { type: 'step', kind: 'move', to: { id: 'A', anchor } },
+              { type: 'step', kind: 'line', to: [200, 200] },
+            ],
+          },
+        ],
+      });
+      const findLine = (ir: IR) =>
+        compileToScene(ir).primitives.find(
+          (p): p is Extract<ScenePrimitive, { type: 'path' }> =>
+            p.type === 'path' && !p.commands.some(c => c.kind === 'close'),
+        );
+      const circleLine = findLine(mk('circle'));
+      const ellipseLine = findLine(mk({ type: 'ellipse', params: { circumscribe: 'equal' } }));
+      expect(circleLine?.commands[0]).toEqual(ellipseLine?.commands[0]);
     }
   });
 });

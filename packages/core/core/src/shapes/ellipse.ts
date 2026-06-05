@@ -16,13 +16,24 @@ const toEllipse = (r: Rect): Ellipse => ({
 
 /**
  * ellipse 注册项
- * @description circumscribe = 内框 ×√2（内框 4 顶点落在椭圆周上）；几何由外接框半轴派生；
- *   emit 出 EllipsePrim，与旧 `emitEllipseShape` 逐字段等价。无参形状：`paramsSchema` 为
- *   `z.strictObject({})`、5 函数忽略末位 `params`。
+ * @description circumscribe 受 `params.circumscribe` 控制：`'equal'`（等轴，circle：两轴 = 内框对角线半长
+ *   `√(hw²+hh²)`）/ `'proportional'`（默认，各轴 ×√2，内框 4 顶点落在椭圆周上）。几何由外接框半轴派生；
+ *   emit / anchor / edgePoint / boundaryPoint 只一套（不读 `params`）。circle 在 compile 期规范化为
+ *   `{ type: 'ellipse', params: { circumscribe: 'equal' } }`。
  */
 export const ellipse = defineShape({
-  paramsSchema: z.strictObject({}),
-  circumscribe: (hw, hh) => ({ halfWidth: hw * Math.SQRT2, halfHeight: hh * Math.SQRT2 }),
+  paramsSchema: z.strictObject({
+    circumscribe: z
+      .enum(['proportional', 'equal'])
+      .optional()
+      .describe(
+        'Circumscription policy from the inner content box: "proportional" (per-axis ×√2, ellipse) or "equal" (isotropic, circle: r = diagonal half-length). Default "proportional".',
+      ),
+  }),
+  circumscribe: (hw, hh, params) =>
+    params.circumscribe === 'equal'
+      ? { halfWidth: Math.hypot(hw, hh), halfHeight: Math.hypot(hw, hh) }
+      : { halfWidth: hw * Math.SQRT2, halfHeight: hh * Math.SQRT2 },
   boundaryPoint: (r, toward) => ellipseOps.boundaryPoint(toEllipse(r), toward),
   anchor: (r, name) => {
     const a = asRectAnchor(name);
