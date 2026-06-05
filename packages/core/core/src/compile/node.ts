@@ -504,6 +504,11 @@ export const layoutNode = (
       `Cannot resolve position for node ${node.id ?? '(unnamed)'}; polar.origin / at.of / between endpoint may reference an undefined node`,
     );
   }
+  // shape 可声明 AABB 中心相对 position 的偏移（如 sector：position=圆心 apex，AABB 中心偏在一侧）；
+  // rect 中心 = position + 偏移，使 bbox 罩住完整形状、anchor 以 AABB 中心 rect 计算时 apex 落回 position。
+  const aabbOffset = shapeDef.circumscribeOffset?.(shapeParams);
+  const rectCenterX = center[0] + (aabbOffset?.[0] ?? 0);
+  const rectCenterY = center[1] + (aabbOffset?.[1] ?? 0);
   // 标准化 label：单对象 → 单元素数组；继承 Node 的 font/textColor
   const rawLabels: Array<IRNodeLabel> | undefined =
     node.label === undefined
@@ -546,9 +551,9 @@ export const layoutNode = (
     shapeDef,
     shapeParams,
     rect: {
-      // x, y 是几何中心
-      x: center[0],
-      y: center[1],
+      // x, y 是外接 AABB 几何中心（= position + shape circumscribeOffset）
+      x: rectCenterX,
+      y: rectCenterY,
       width: 2 * boundsHalfW,
       height: 2 * boundsHalfH,
       // IR 用度数，geometry 用弧度

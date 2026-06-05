@@ -48,6 +48,14 @@ export type ShapeDefinitionInput<TParams extends IRJsonObject> = {
     innerHalfHeight: number,
     params: TParams,
   ) => { halfWidth: number; halfHeight: number };
+  /**
+   * AABB 中心相对 node `position` 的偏移（可选；缺省 `[0, 0]` = AABB 中心即 position）。
+   * @description 多数 shape 的视觉 AABB 以 position 为中心（rectangle / ellipse / diamond）；但 sector 等
+   *   形状的语义锚点（圆心 apex）才是 position，其外接 AABB 中心偏在一侧——此 hook 让 compile 把
+   *   `rect.center` 放到 `position + offset`，使 bbox / viewBox 罩住完整形状、anchor 以 AABB 中心 rect 计算时
+   *   apex 落回 position。返回**未旋转**局部偏移（compile 在施加 node rotate 前用于定位 rect 中心）。
+   */
+  circumscribeOffset?: (params: TParams) => Position;
   /** 中心 → toward 射线 ∩ 边界（rect 带 rotate）；params 喂参数化边界。 */
   boundaryPoint: (rect: Rect, toward: Position, params: TParams) => Position;
   /** 命名 anchor 世界坐标；shape 不认识的名字返回 `undefined`（调用方据此抛清晰错误）。 */
