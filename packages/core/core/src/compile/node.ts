@@ -21,11 +21,13 @@ const EMPTY_SHAPE_PARAMS: IRJsonObject = {};
  * @description 裸 string → `{ type, params: {} }`；`{ type, params? }` → params 缺省补 `{}`；
  *   缺省（undefined）→ `{ type: 'rectangle', params: {} }`。`'circle'`（裸 string）消解为
  *   `{ type: 'ellipse', params: { circumscribe: 'equal' } }`——circle 无独立几何，是 ellipse 等轴 preset 别名。
- *   仅做形态归一，不查表 / 不校验。
+ *   `'diamond'`（裸 string）消解为 `{ type: 'polygon', params: { sides: 4, rotate: 45 } }`——diamond 无独立几何，
+ *   是 polygon 4 边形（自旋 45°）preset 别名。仅做形态归一，不查表 / 不校验。
  */
 const normalizeShape = (shape: IRNode['shape']): { type: string; params: IRJsonObject } => {
   if (shape === undefined) return { type: 'rectangle', params: {} };
   if (shape === 'circle') return { type: 'ellipse', params: { circumscribe: 'equal' } };
+  if (shape === 'diamond') return { type: 'polygon', params: { sides: 4, rotate: 45 } };
   if (typeof shape === 'string') return { type: shape, params: {} };
   const ref: IRShapeRef = shape;
   return { type: ref.type, params: ref.params ?? {} };

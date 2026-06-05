@@ -4,10 +4,10 @@ import type { IR } from '../../src/ir';
 
 /**
  * Shape Registry 重构的「逐字节」回归网
- * @description 在重构前捕获一张覆盖 4 内置 shape 全路径（circumscribe / emit / boundaryPoint /
- *   命名 anchor / 数字角度 / rotate / margin）的 Scene 快照。把 shape 从硬编码 switch 抽成
- *   ShapeDefinition 注册项后，本快照必须逐字节不变——证明纯重构无行为漂移。
- *   只 import compileToScene（重构无关），故可在重构前先跑出基线 .snap。
+ * @description 捕获一张覆盖内置 shape 全路径（circumscribe / emit / boundaryPoint /
+ *   命名 anchor / 数字角度 / rotate / margin）的 Scene 快照，作为编译输出回归网。
+ *   diamond 已收为 polygon 4 边形 45° preset（几何由正多边形定义、非旧 rhombus），其相关字节随之更新；
+ *   rectangle / circle / ellipse 路径仍须逐字节稳定。
  */
 const richIR: IR = {
   version: 1,

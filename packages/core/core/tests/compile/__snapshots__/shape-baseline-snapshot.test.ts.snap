@@ -4,8 +4,8 @@ exports[`Shape baseline snapshot (byte-for-byte regression net) > rich multi-sha
 {
   "layout": {
     "height": 345.9028,
-    "width": 368.0321,
-    "x": -41.3817,
+    "width": 365.1154,
+    "x": -38.465,
     "y": -35.9028,
   },
   "primitives": [
@@ -148,29 +148,29 @@ exports[`Shape baseline snapshot (byte-for-byte regression net) > rich multi-sha
             {
               "kind": "move",
               "to": [
-                23.7,
-                120,
+                16.4,
+                136.4,
               ],
             },
             {
               "kind": "line",
               "to": [
-                0,
-                87.2,
+                -16.4,
+                136.4,
               ],
             },
             {
               "kind": "line",
               "to": [
-                -23.7,
-                120,
+                -16.4,
+                103.6,
               ],
             },
             {
               "kind": "line",
               "to": [
-                0,
-                152.8,
+                16.4,
+                103.6,
               ],
             },
             {
@@ -319,8 +319,8 @@ exports[`Shape baseline snapshot (byte-for-byte regression net) > rich multi-sha
         {
           "kind": "move",
           "to": [
-            8.4893,
-            88.3176,
+            4.2446,
+            104.1588,
           ],
         },
         {
