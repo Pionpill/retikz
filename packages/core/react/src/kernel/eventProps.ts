@@ -1,10 +1,10 @@
-import type { EventName } from '@retikz/render/hydration';
+import type { RetikzEventName } from '@retikz/render/hydration';
 
 /**
  * Kernel 图元的水合事件 props（`on<Event>`）
  * @description 仅类型声明——handler 不进 IR、不在组件 render 时使用，由 `collectHydrationHandlers`
- *   按元素 `id` 收集后喂给 `createHydrationController`。每个 `on<Event>` 对应一个 {@link EventName}：
- *   prop 名 = `on` + EventName 首字母大写；签名收 DOM `Event`（与 renderer 无关的原生事件）。
+ *   按元素 `id` 收集后喂给 `createHydrationController`。每个 `on<Event>` 对应一个 {@link RetikzEventName}：
+ *   prop 名 = `on` + RetikzEventName 首字母大写；签名收 DOM `Event`（与 renderer 无关的原生事件）。
  *   `<Node>` / `<Path>` / `<Scope>` 复用此类型；`<Coordinate>` 无可点面积、不带这些 props。
  */
 export type HydrationEventProps = {
@@ -29,8 +29,8 @@ export type HydrationEventProps = {
 };
 
 /**
- * `HydrationEventProps` 的 prop 名 → {@link EventName} 映射
- * @description 收集逻辑用它把组件上的 `on<Event>` props 翻译为注册表里的 EventName 键
+ * `HydrationEventProps` 的 prop 名 → {@link RetikzEventName} 映射
+ * @description 收集逻辑用它把组件上的 `on<Event>` props 翻译为注册表里的 RetikzEventName 键
  *   （`onClick` → `click`、`onRightClick` → `rightClick`、`onPointerEnter` → `pointerEnter`）。
  *   单一来源，避免在收集器里散写字符串规则。
  */
@@ -44,7 +44,7 @@ export const EVENT_PROP_TO_NAME = {
   onPointerEnter: 'pointerEnter',
   onPointerLeave: 'pointerLeave',
   onWheel: 'wheel',
-} as const satisfies Record<keyof HydrationEventProps, EventName>;
+} as const satisfies Record<keyof HydrationEventProps, RetikzEventName>;
 
 /** 水合事件 prop 名联合（`onClick` | `onDoubleClick` | …） */
 export type HydrationEventPropName = keyof typeof EVENT_PROP_TO_NAME;

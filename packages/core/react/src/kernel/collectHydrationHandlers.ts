@@ -15,7 +15,7 @@ const getDisplayName = (element: ReactElement): string | undefined => {
   return type.displayName;
 };
 
-/** 从一个元素 props 读出 `on<Event>` handler，翻译成 EventName → handler 的 ElementHandlers（无 handler 返回空对象） */
+/** 从一个元素 props 读出 `on<Event>` handler，翻译成 RetikzEventName → handler 的 ElementHandlers（无 handler 返回空对象） */
 const readElementHandlers = (props: Record<string, unknown>): ElementHandlers => {
   const handlers: ElementHandlers = {};
   for (const propName of Object.keys(EVENT_PROP_TO_NAME) as Array<HydrationEventPropName>) {
@@ -92,7 +92,7 @@ const visit = (registry: HydrationHandlers, children: ReactNode): void => {
  * 与 `buildIR` 同源遍历 children，按元素 `id` 收集水合 handler props
  * @description 穿透 `Fragment`、同步展开 Sugar（与 builder 的 `readSceneChildren` 一致），把各元素上的
  *   `on<Event>` props 按其 `id` 收成 `{ [id]: { click, pointerEnter, ... } }`（prop 名经 `EVENT_PROP_TO_NAME`
- *   翻译为 EventName）。规则：带 handler 但无 `id` → dev warn + 跳过；重复 `id` → dev warn，同 id 合并不同事件、
+ *   翻译为 RetikzEventName）。规则：带 handler 但无 `id` → dev warn + 跳过；重复 `id` → dev warn，同 id 合并不同事件、
  *   同事件后者覆盖；Sugar 元素的 handler 归到其承载 `id` 的挂点。函数 / handler 绝不进 IR，只活在 runtime 注册表。
  */
 export const collectHydrationHandlers = (children: ReactNode): HydrationHandlers => {
