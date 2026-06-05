@@ -526,6 +526,51 @@ export const changelog: Array<Release> = [
         ],
         subVersions: [
           {
+            version: 'alpha.3',
+            date: '2026-06-06',
+            summary: {
+              zh: '横向补宽到柱状图与多系列：mark 补 interval(bar)，scale 补 band/point + time + ordinal·color，新增 transform 管线段（sort/stack）与 color 非位置通道，relation 补 group(dodge)/stack。仍限 cartesian2D。',
+              en: 'Widens to bar charts and multi-series: marks add interval(bar); scales add band/point + time + ordinal·color; a transform stage (sort/stack) and the color non-position channel land; relations add group(dodge)/stack. Still cartesian2D only.',
+            },
+            items: [
+              {
+                label: { zh: 'band/point scale + PositionScale', en: 'band/point scale + PositionScale' },
+                content: {
+                  zh: '`ScaleSchema` 补 band/point 分类比例尺（域按数据出现序去重）;lowering 引入统一 `PositionScale`（`coordinate` / `bandwidth` / `ticks`），projector 与 guide 都改吃它，linear 行为逐字不变。',
+                  en: '`ScaleSchema` adds band/point categorical scales (domain deduped in data order); lowering introduces a unified `PositionScale` (`coordinate` / `bandwidth` / `ticks`) consumed by both projector and guide, with linear behavior unchanged.',
+                },
+              },
+              {
+                label: { zh: 'interval(bar) mark + transform', en: 'interval(bar) mark + transform' },
+                content: {
+                  zh: '新增 interval(bar) mark（baseline→value 矩形，`bandwidth` 定柱宽，下沉 core `Node`/`Path`）;scale/mark 前插 transform 管线段（sort/stack），纯 JSON 进出。',
+                  en: 'New interval(bar) mark (baseline→value rectangles, `bandwidth` sets bar width, lowered to core `Node`/`Path`); a transform stage (sort/stack) is inserted before scale/mark, pure JSON in and out.',
+                },
+              },
+              {
+                label: { zh: 'color 非位置通道 + ordinal·color scale', en: 'color channel + ordinal·color scale' },
+                content: {
+                  zh: 'encoding 加 color 非位置通道 + ordinal·color scale（d3-scale-chromatic 配色），mark 据此着色——确立「位置通道喂坐标系、非位置通道喂 mark 视觉」的分流。',
+                  en: 'encoding gains the color non-position channel + ordinal·color scale (d3-scale-chromatic palettes); marks color by it, establishing the split where position channels feed the coordinate system and non-position channels feed mark visuals.',
+                },
+              },
+              {
+                label: { zh: 'time scale', en: 'time scale' },
+                content: {
+                  zh: '补 time scale（`scaleUtc`，UTC 语义，刻度 / 格式），时间轴与折线正交可用。',
+                  en: 'Adds a time scale (`scaleUtc`, UTC semantics, ticks / format); the time axis works orthogonally with lines.',
+                },
+              },
+              {
+                label: { zh: 'relation：group / stack', en: 'relation: group / stack' },
+                content: {
+                  zh: 'relation 补 group(dodge) / stack：多系列柱按系列并排 / 堆叠，多系列折线按 color 区分;group/stack/order 是 mark 构造输入而非后处理，bar 与 line 共用同一套 relation 语义。',
+                  en: 'relation adds group(dodge) / stack: multi-series bars dodge / stack by series and multi-series lines split by color; group/stack/order are inputs to mark construction rather than post-processing, with bar and line sharing one relation semantics.',
+                },
+              },
+            ],
+          },
+          {
             version: 'alpha.2',
             date: '2026-06-05',
             summary: {
@@ -593,6 +638,30 @@ export const changelog: Array<Release> = [
         ],
         subVersions: [
           {
+            version: 'alpha.3',
+            date: '2026-06-06',
+            summary: {
+              zh: '新增 `<BarMark>` 柱图层;mark 补 `color` / `series` / `stack` 多系列 props;`<Plot scaleX>` 可选连续 x scale 类型（`linear` / `time` / `point`，含 `<BarMark>` 时自动 band）。',
+              en: 'New `<BarMark>` bar layer; marks gain multi-series props `color` / `series` / `stack`; `<Plot scaleX>` selects the continuous x scale type (`linear` / `time` / `point`, auto band when a `<BarMark>` is present).',
+            },
+            items: [
+              {
+                label: { zh: '<BarMark> + 多系列 props', en: '`<BarMark>` + multi-series props' },
+                content: {
+                  zh: '`<BarMark x y>` 声明柱图层，配 `color` / `series` / `stack`（布尔）直接写分组柱（并排）/ 堆叠柱;`<LineMark>` 也补 `series` / `color` 拆多系列折线，由 `buildPlotSpec` 同步装配。',
+                  en: '`<BarMark x y>` declares a bar layer; with `color` / `series` / `stack` (boolean) it expresses grouped (dodged) / stacked bars directly; `<LineMark>` also gains `series` / `color` for multi-series lines, all assembled by `buildPlotSpec`.',
+                },
+              },
+              {
+                label: { zh: 'scaleX 覆盖', en: 'scaleX override' },
+                content: {
+                  zh: '`<Plot scaleX>`（`linear` / `time` / `point`）显式指定连续 x scale 类型，覆盖默认推断;含 `<BarMark>` 时强制 band、忽略此项。',
+                  en: '`<Plot scaleX>` (`linear` / `time` / `point`) explicitly sets the continuous x scale type, overriding the default inference; when a `<BarMark>` is present band is forced and this is ignored.',
+                },
+              },
+            ],
+          },
+          {
             version: 'alpha.2',
             date: '2026-06-05',
             summary: {
@@ -645,6 +714,23 @@ export const changelog: Array<Release> = [
           },
         ],
         subVersions: [
+          {
+            version: 'alpha.3',
+            date: '2026-06-06',
+            summary: {
+              zh: '随 plot mark / scale lockstep：`renderPlot` SSR 自动支持柱状 / 分组柱 / 堆叠柱 / 多系列折线与 band / time / 颜色比例尺（共用同一份 lowerPlots，无新 API）。',
+              en: 'Lockstep with plot marks / scales: `renderPlot` SSR now supports bar / grouped / stacked / multi-series charts and band / time / color scales automatically (shared lowerPlots, no new API).',
+            },
+            items: [
+              {
+                label: { zh: 'SSR 覆盖新 mark / scale', en: 'SSR covers new marks / scales' },
+                content: {
+                  zh: '服务端 / 构建期出的 SVG 字符串覆盖 alpha.3 全部新 mark 与 scale，与 react 面视觉一致，vanilla 侧零额外代码。',
+                  en: 'Server / build-time SVG strings cover all new alpha.3 marks and scales, visually matching the React surface with zero extra code on the vanilla side.',
+                },
+              },
+            ],
+          },
           {
             version: 'alpha.2',
             date: '2026-06-05',
