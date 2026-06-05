@@ -6,7 +6,7 @@
 
 > 本文件记录 v0.3 的完整计划：renderer 架构拆分、`@retikz/vanilla`、水合、Tier 2 支撑（`@retikz/plot` 为首个消费者），以及 React 双渲染模式与 Canvas renderer MVP。
 >
-> **进度（2026-06-02）**：renderer 架构核心已在 alpha.1 一次交付（svg / canvas / vanilla-SVG + React 双渲染模式，见 [ADR-01~04](./v0.3-alpha.1/)）；**alpha.2 Tier 2 支撑（可注册 composite 展开管线，见 [ADR-01](./v0.3-alpha.2/01-tier2-support.md)）亦已完成**。剩余主线为 **alpha.3（水合）→ alpha.4（canvas/svg 能力补全）→ beta.1（加固）**,详见 §Alpha 切分。命令式 builder（ADR-04）属 alpha.1、已实现。
+> **进度（2026-06-05）**：renderer 架构核心已在 alpha.1 一次交付（svg / canvas / vanilla-SVG + React 双渲染模式，见 [ADR-01~04](./v0.3-alpha.1/)）；**alpha.2 Tier 2 支撑**（可注册 composite 展开管线，见 [ADR-01](./v0.3-alpha.2/01-tier2-support.md)）、**alpha.3 水合**（SVG + Canvas 统一事件绑定，见 [ADR-01](./v0.3-alpha.3/01-hydration.md)）均已完成。剩余主线为 **alpha.4（canvas/svg 能力补全）→ beta.1（加固）**,详见 §Alpha 切分。命令式 builder（ADR-04）属 alpha.1、已实现。
 
 ## 定位
 
@@ -275,11 +275,25 @@ v0.3 需要注意：
 
 **本段刻意收窄**（见 [ADR-01](./v0.3-alpha.2/01-tier2-support.md) §不在本 ADR 范围）：`@retikz/plot` 本体（axis / panel / mark 等具体 Tier 2 节点及其 `expand`）→ 后续独立子包；`dataRef` / `scale registry` / `encoding` 接入面 → 划归 plot 包、不进 core；`<Composite>` JSX authoring 通道 / `expand` ctx / lowering 缓存 / vanilla `composite()` 糖 → [ADR-02](./v0.3-alpha.2/02-composite-authoring-context-cache.md)（已采纳延后、未排期）。本段只交付「Tier 2 跑通所需的底层注册管线 + 端到端 fixture 验证 + runtime 透传」。
 
+### alpha.3 ✅ 已完成：水合——SVG + Canvas 统一事件绑定（[ADR-01](./v0.3-alpha.3/01-hydration.md)）
+
+SSR / 静态先渲染出图，客户端把用户 handler 绑回图元——函数不进 IR、只在 runtime；SVG + Canvas 共用同一绑定语义，差异只在「如何把 pointer 事件定位到图元 id」这一定位层：
+
+- **core（red）**：`IRPath` 新增可选 `id`（水合 / 引用挂点；Node / Coordinate / Scope 早有）；`ScenePrimitive` 加 `id?`，compile 把 user id stamp 到 emit 出的每个 top-level 图元（纯几何 Node 逐个平铺图元、文本 / rotate Node 的 GroupPrim、Path 的 PathPrim、Scope 的 GroupPrim）。
+- **render（red）**：svg emit `data-retikz-id`；canvas 新增纯函数 `hitTest`（逆 z-order + 原生 `isPointInPath`/`isPointInStroke`，复用抽出的共享 `pathGeometry`）；新子路径 `@retikz/render/hydration`——`createHydrationController`（根级单 listener 委托 + `pointerEnter`/`pointerLeave` 经 **`pointermove` + 命中 id 状态机**合成，renderer 无关）+ `locateSvg`。
+- **vanilla（red）**：`hydrate(root, { handlers })`（SVG，closest 委托）+ `mountCanvas(container, ir)`（无框架 canvas 直挂，view 自带 `hydrate`，client→Scene 逆 meet-fit 坐标映射 + hitTest 命中）。
+- **react（red）**：Kernel `<Node>` / `<Path>` / `<Scope>` 加事件 props（`onClick` / `onDoubleClick` / `onRightClick` / `onPointerDown`·`Up`·`Move`·`Enter`·`Leave` / `onWheel`，全程命名、仅有 `id` 可绑，Coordinate 类型层排除）；`<Path id>`；`collectHydrationHandlers`（穿透 Fragment / 展开 Sugar / 无 id warn / 重复 id 合并）；`<Layout handlers>`（ir 模式）；**`renderer="svg"｜"canvas"` 双模 handler 等价**。
+- **文档**：reference 新增「水合 / Hydration」单页（事件 props + vanilla hydrate / mountCanvas + 交互 demo）+ Path 页 `id` 行。
+- **自测**：4 包全绿（core 1607 / render 83 / vanilla 56 / react 328）。Adversarial 两关——第一关修 1 BLOCKING（canvas enter/leave 用 over/out 合成失效 → 改 pointermove 状态机）+ W1（状态机抗 handler 异常）/ I1（stale JSDoc）；第二关 contract 对账无 BLOCKING。
+
+**待决策落定**：#5 命名 = `hydrate`；#6 manifest = 不进 IR（挂点 = user id 存在性 + runtime handlers map）；#14 hit-test = 几何 pick + 原生 isPointInPath/Stroke。事件集对标 ECharts / Highcharts / Vega 无缺失（Pointer Events 统一 touch）。
+
+**本段延后**：键盘 / 焦点 / a11y、拖拽 / brush / pan / 缩放手势编排、touch 多指、hit-test 空间索引性能优化、整图 leave hook、interaction manifest 外部导出。数据过渡 / 形变（keyed-diff + morph）归 [§动画 B](#动画候选-v04排在水合之后)（runtime + Tier 2）。
+
 ### 后续分段（重新设计）
 
 | 子版本         | 主题                | 内容                                                                                                                                                                                                                                    | 依赖 / 待决策                                                                                    |
 | -------------- | ------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
-| v0.3.0-alpha.3 | 水合                | **SVG + Canvas 水合一起落地**。统一绑定语义分两层：上层 renderer 无关——`id → { event → handler }` 注册表 + 事件分发（SVG / Canvas 共用）；下层 renderer 提供定位——SVG 走 `data-retikz-id` + 根级 `closest` 委托、Canvas 走 hit-test（`pointer(x,y) → 图元 id`）。`hydrate` API + react handler 映射到同一 binding 语义；非冒泡事件用 `pointerover/out` + `relatedTarget` 合成。**vanilla 独立 `mountCanvas` 入口提前到本段**（`Figure.toCanvas` 已通，补无框架直挂，作为 Canvas 水合的挂载基座） | 待决策 #5（命名）/ #6（manifest 入口）/ #14（canvas hit-test 策略）；svg `data-retikz-id` 填值、vanilla `interactions` 承载点 |
 | v0.3.0-alpha.4 | canvas / svg 能力补全 | canvas / svg 两 renderer 剩余能力与降级项补全 + SVG↔Canvas 对照测试 | — |
 | v0.3.0-beta.1  | 体验加固 | 文档 demo、Node canvas / `@napi-rs` 服务端导出、包体与 public API 清理、release | — |
 
