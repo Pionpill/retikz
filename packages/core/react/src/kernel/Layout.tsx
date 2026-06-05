@@ -22,6 +22,7 @@ import {
   compileToScene,
 } from '@retikz/core';
 import type { HydrationHandlers } from '@retikz/render/hydration';
+import { createHydrationController, locateSvg } from '@retikz/render/hydration';
 import { buildSvgDocument } from '@retikz/render/svg';
 import { buildIR, pickScopeStyle, wrapRootScope } from './builder';
 import { collectHydrationHandlers } from './collectHydrationHandlers';
@@ -131,9 +132,7 @@ export type LayoutProps = ScopeStyleProps & {
  * 把水合 handler 注册表绑到 svg figure root（renderer 无关控制器 + locateSvg 定位）
  * @description JSX / `ir` 两路收集出的 `HydrationHandlers` 经 `createHydrationController(root, handlers, locateSvg)`
  *   绑到 svg root DOM（由 callback ref 在挂载后写入）；canvas 模式的绑定在 `CanvasHost` 内（hitTest 定位）、
- *   此处不接管。卸载 / 依赖变化时 dispose。
- *
- * @remarks stub：实际控制器接线留待 Impl 实装，当前 effect 不绑定（svg 水合测试此刻预期 fail）。
+ *   此处不接管。`locateSvg` 走 `event.target.closest('[data-retikz-id]')` 反查图元 id。卸载 / 依赖变化时 dispose、重建。
  */
 const useSvgHydration = (
   handlers: HydrationHandlers,
@@ -145,8 +144,8 @@ const useSvgHydration = (
   useEffect(() => {
     const root = rootRef.current;
     if (root === null) return undefined;
-    void handlers;
-    return undefined;
+    const controller = createHydrationController(root, handlers, locateSvg);
+    return () => controller.dispose();
   }, [handlers]);
   return setRoot;
 };
