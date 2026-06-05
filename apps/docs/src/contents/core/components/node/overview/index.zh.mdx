@@ -27,17 +27,42 @@ import { Node } from '@retikz/react';
 
 ### shape 多态
 
-`shape` 控制节点形状：`'rectangle'`（默认）/ `'circle'` / `'ellipse'` / `'diamond'`，也可以是经 `<Layout shapes>` / `CompileOptions.shapes` 注册的自定义形状名。任意 shape 的节点都被 path / draw 当作有边界的图元，连线端点自动贴对应形状的边：
+`shape` 控制节点形状，两种写法：
+
+- **裸字符串**（无参形状）：`'rectangle'`（默认）/ `'circle'` / `'ellipse'` / `'diamond'` / `'polygon'` / `'sector'` / `'arc'` / `'star'`，或经 `<Layout shapes>` / `CompileOptions.shapes` 注册的自定义名。
+- **`{ type, params }` 对象**（带参形状）：当形状需要额外几何参数（边数 / 内外半径 / 起止角…）时，用 `type` 选形状、`params` 给参数。
+
+不论哪种写法，节点都被 path / draw 当作有边界的图元，连线端点自动贴对应形状的边。
+
+按"尺寸从哪来"分两类：
+
+**文本容器形状**——边界包住"text 矩形 + padding"，尺寸由文字内容驱动。适合流程图节点、标签、徽章。
+
+| shape | 写法 | 边界 |
+| --- | --- | --- |
+| rectangle | `'rectangle'` | 边界 = 内框 |
+| circle | `'circle'` | 外接圆（= ellipse 等轴预设） |
+| ellipse | `'ellipse'` | 外接椭圆，各轴 × √2 |
+| polygon | `{ type:'polygon', params:{ sides, rotate? }}` | 能容纳内框的正多边形外接圆 |
+| diamond | `'diamond'` | = `polygon{ sides:4, rotate:45 }`（正方形旋转 45°） |
 
 <ComponentPreview name="node-shapes" size="sm" />
 
-> 形状的"外接边界"包住"text 矩形 + padding"——
-> - rectangle: 边界 = 内框
-> - circle: 外接圆，半径 = √(innerHalfW² + innerHalfH²)
-> - ellipse: 外接椭圆，rx = innerHalfW × √2、ry = innerHalfH × √2
-> - diamond: 外接菱形，halfA = 2 × innerHalfW、halfB = 2 × innerHalfH
+> `circle` 是 `ellipse` 的等轴预设，`diamond` 是 `polygon` 的 4 边 45° 预设——两个裸字符串都仍可写，编译期规范化为对应带参形状。
 
-`shape` 还接受内置之外的注册名（hexagon / cylinder / cloud…）——任意字符串通过 schema 校验，定义经 `CompileOptions.shapes` / `<Layout shapes>` 注入，未注册名编译期报错。见 [自定义形状](/core/reference/extending/shape-registry)。
+**params 驱动的几何形状**——尺寸由 `params` 里的半径 / 角度定，**不依赖文字内框**，可当作可连接的图形 glyph / 标记用。
+
+| shape | params | 说明 |
+| --- | --- | --- |
+| sector | `{ innerRadius, outerRadius, startAngle, endAngle }` | 环楔；`innerRadius:0` 为实心扇片 |
+| arc | `{ radius, startAngle, endAngle, close? }` | 单半径弧；`close:true` 闭合成弓形 |
+| star | `{ points, innerRadius, outerRadius, rotate? }` | 内外半径交替的星形 |
+
+<ComponentPreview name="node-shape-params" size="md" />
+
+这些形状除了 9 个内置 rect anchor（`north` / `center`…）外还提供按几何命名的 anchor，可用 `{ id, anchor }` 精确连线：sector 有 `outer-arc-mid` / `inner-arc-mid` / `apex` / `centroid` / `start-edge-mid` / `end-edge-mid`，star 有 `tip-N`（第 N 尖角）/ `notch-N`（第 N 凹角）/ `center`，arc 有 `arc-mid` / `start` / `end` / `center`。
+
+`shape` 还接受内置之外的注册名（hexagon / cylinder / cloud…）——任意字符串通过 schema 校验，定义经 `CompileOptions.shapes` / `<Layout shapes>` 注入，未注册名编译期报错。带参注册形状用 `{ type, params }` 把参数传进去。见 [自定义形状](/core/reference/extending/shape-registry)。
 
 ### 定位
 
@@ -150,7 +175,7 @@ Line 2`}</Node>
 
 > 块级 `align` / `lineHeight` 不能行级覆盖（多行块整体属性）。
 
-多行文本套到不同 shape 上，外接边界沿用各自 shape 多态规则（外接圆 / 外接椭圆 / 外接菱形）：
+多行文本套到不同 shape 上，外接边界沿用各自 shape 多态规则（外接圆 / 外接椭圆 / 多边形外接）：
 
 <ComponentPreview name="node-multiline-shapes" size="xs" />
 
@@ -216,7 +241,7 @@ Line 2`}</Node>
 
 #### 尺寸约束 + 缩放
 
-- `roundedCorners`——圆角（仅 `rectangle` shape 生效）
+- `roundedCorners`——圆角（仅 `rectangle` 形状生效）；也可写成 `shape={{ type:'rectangle', params:{ roundedCorners } }}`，顶层 `roundedCorners` 仍兼容，两者并存时 params 优先
 - `minimumWidth` / `minimumHeight` / `minimumSize`——撑开 bbox（不缩水 text 自然宽度）
 - `scale` / `xScale` / `yScale`——均匀 / 分轴缩放，影响 bbox + 字号 + padding + 路径附着点
 
@@ -257,7 +282,7 @@ Line 2`}</Node>
 | 属性 | 类型 | 默认值 | 描述 |
 | --- | --- | --- | --- |
 | `id` | `string` | — | 唯一标识；被 `<Path>` / `<Draw>` 用来引用 |
-| `shape` | `'rectangle' \| 'circle' \| 'ellipse' \| 'diamond' \| string` | `'rectangle'` | 节点形状；内置 4 种或经 `<Layout shapes>` / `CompileOptions.shapes` 注册的自定义形状名 |
+| `shape` | `'rectangle' \| 'circle' \| 'ellipse' \| 'diamond' \| 'polygon' \| 'sector' \| 'arc' \| 'star' \| string`<br />`\| { type, params }` | `'rectangle'` | 节点形状：裸字符串（无参形状 / 注册名）或 `{ type, params }`（带参形状）；内置见上，或经 `<Layout shapes>` / `CompileOptions.shapes` 注册 |
 | `position` | `[x, y] \| PolarPosition \| { direction, of, distance? } \| { of, offset } \| { between, t }` | — | 节点中心位置：笛卡尔 / 极坐标 / 相对定位 / 偏移定位 / 比例定位；`of` 三态：节点 id、笛卡尔、PolarPosition |
 | `children` / `text` | `string \| Array<string>` | — | 节点内可见文字；字符串单行 / 数组多行；`text` 优先于 `children` |
 | `align` | `'left' \| 'center' \| 'right'` | `'center'` | 多行文本块内各行水平对齐方式 |
@@ -281,7 +306,7 @@ Line 2`}</Node>
 | `dashed` | `boolean` | — | 虚线预设（`[4, 2]`） |
 | `dotted` | `boolean` | — | 点线预设（`[1, 2]`） |
 | `dashArray` | `Array<number>` | — | 显式 dash/gap 长度序列；优先级最高 |
-| `roundedCorners` | `number` | — | 圆角半径；仅 `rectangle` 生效 |
+| `roundedCorners` | `number` | — | 圆角半径；仅 `rectangle` 生效；亦可走 `shape={{ type:'rectangle', params:{ roundedCorners } }}`（params 优先） |
 | `minimumWidth` / `minimumHeight` | `number` | — | 撑开最小 bbox 宽高 |
 | `minimumSize` | `number` | — | 对称最小尺寸别名；轴特化字段优先 |
 | `scale` | `number` | `1` | 均匀缩放（含字号、padding、路径附着点） |

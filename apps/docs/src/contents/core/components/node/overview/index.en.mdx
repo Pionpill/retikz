@@ -27,17 +27,42 @@ Choose the form by the role in the diagram: flowchart nodes usually use the defa
 
 ### Shape polymorphism
 
-`shape` picks the visual shape: `'rectangle'` (default) / `'circle'` / `'ellipse'` / `'diamond'`, or a custom shape name registered via `<Layout shapes>` / `CompileOptions.shapes`. Any shape works as an attachable target — connecting lines clip to that shape's boundary automatically:
+`shape` picks the visual shape in two forms:
+
+- **Bare string** (parameterless shapes): `'rectangle'` (default) / `'circle'` / `'ellipse'` / `'diamond'` / `'polygon'` / `'sector'` / `'arc'` / `'star'`, or a custom name registered via `<Layout shapes>` / `CompileOptions.shapes`.
+- **`{ type, params }` object** (parametric shapes): when a shape needs extra geometry (sides / inner & outer radii / start & end angles…), pick it with `type` and pass the params.
+
+Either way, the node works as an attachable target — connecting lines clip to that shape's boundary automatically.
+
+Shapes split into two families by where their size comes from:
+
+**Text-container shapes** — the boundary wraps "text rectangle + padding"; size is driven by the text content. Good for flowchart nodes, labels, badges.
+
+| shape | form | boundary |
+| --- | --- | --- |
+| rectangle | `'rectangle'` | boundary = inner rect |
+| circle | `'circle'` | circumscribed circle (= ellipse `equal` preset) |
+| ellipse | `'ellipse'` | circumscribed ellipse, each axis × √2 |
+| polygon | `{ type:'polygon', params:{ sides, rotate? }}` | regular polygon circumscribing the inner box |
+| diamond | `'diamond'` | = `polygon{ sides:4, rotate:45 }` (square rotated 45°) |
 
 <ComponentPreview name="node-shapes" size="sm" />
 
-> Each shape's outer boundary contains "text rectangle + padding":
-> - rectangle: boundary = inner rect
-> - circle: circumscribed, radius = √(innerHalfW² + innerHalfH²)
-> - ellipse: circumscribed, rx = innerHalfW × √2, ry = innerHalfH × √2
-> - diamond: circumscribed, halfA = 2 × innerHalfW, halfB = 2 × innerHalfH
+> `circle` is the `equal` preset of `ellipse`, and `diamond` is the 4-side / 45° preset of `polygon` — both bare strings still work and are normalized to the equivalent parametric shape at compile time.
 
-`shape` also accepts registered names beyond the built-ins (hexagon / cylinder / cloud…) — any string passes schema validation, the definition is injected via `CompileOptions.shapes` / `<Layout shapes>`, and unregistered names throw at compile time. See [Custom Shapes](/core/reference/extending/shape-registry).
+**Params-driven geometric shapes** — size comes from the radii / angles in `params` and does **not** depend on the text box; use them as attachable graphic glyphs / marks.
+
+| shape | params | notes |
+| --- | --- | --- |
+| sector | `{ innerRadius, outerRadius, startAngle, endAngle }` | annular wedge; `innerRadius:0` = solid pie slice |
+| arc | `{ radius, startAngle, endAngle, close? }` | single-radius arc; `close:true` closes into a segment |
+| star | `{ points, innerRadius, outerRadius, rotate? }` | star with alternating inner / outer radii |
+
+<ComponentPreview name="node-shape-params" size="md" />
+
+Beyond the 9 built-in rect anchors (`north` / `center`…), these shapes expose geometry-named anchors so you can attach precisely via `{ id, anchor }`: sector has `outer-arc-mid` / `inner-arc-mid` / `apex` / `centroid` / `start-edge-mid` / `end-edge-mid`, star has `tip-N` (Nth tip) / `notch-N` (Nth notch) / `center`, and arc has `arc-mid` / `start` / `end` / `center`.
+
+`shape` also accepts registered names beyond the built-ins (hexagon / cylinder / cloud…) — any string passes schema validation, the definition is injected via `CompileOptions.shapes` / `<Layout shapes>`, and unregistered names throw at compile time. Parametric registered shapes pass their params through `{ type, params }`. See [Custom Shapes](/core/reference/extending/shape-registry).
 
 ### Positioning
 
@@ -150,7 +175,7 @@ Each line can override `fill` / `opacity` / `font` (any subset of family / size 
 
 > Block-level `align` / `lineHeight` cannot be overridden per line — they apply to the whole multi-line block.
 
-Multi-line text combined with each shape — outer boundary follows the shape-specific circumscription (circle / ellipse / diamond):
+Multi-line text combined with each shape — outer boundary follows the shape-specific circumscription (circle / ellipse / polygon):
 
 <ComponentPreview name="node-multiline-shapes" size="xs" />
 
@@ -216,7 +241,7 @@ A stop's `opacity` gives a "solid → transparent" fade; `color` set to `current
 
 #### Size constraints + scale
 
-- `roundedCorners` — corner radius (only on `rectangle` shape)
+- `roundedCorners` — corner radius (only on `rectangle` shape); can also be written as `shape={{ type:'rectangle', params:{ roundedCorners } }}`, with the top-level `roundedCorners` still supported (params wins when both are set)
 - `minimumWidth` / `minimumHeight` / `minimumSize` — floor the bbox without shrinking natural text width
 - `scale` / `xScale` / `yScale` — uniform / per-axis scale; affects bbox, font size, padding, and path attachment
 
@@ -257,7 +282,7 @@ By default stacking = declaration order (SVG only honors paint order). `zIndex` 
 | Prop | Type | Default | Description |
 | --- | --- | --- | --- |
 | `id` | `string` | — | Unique identifier; referenced by `<Path>` / `<Draw>` |
-| `shape` | `'rectangle' \| 'circle' \| 'ellipse' \| 'diamond' \| string` | `'rectangle'` | Node shape; one of the 4 built-ins or a custom shape name registered via `<Layout shapes>` / `CompileOptions.shapes` |
+| `shape` | `'rectangle' \| 'circle' \| 'ellipse' \| 'diamond' \| 'polygon' \| 'sector' \| 'arc' \| 'star' \| string`<br />`\| { type, params }` | `'rectangle'` | Node shape: bare string (parameterless / registered name) or `{ type, params }` (parametric shape); built-ins above, or registered via `<Layout shapes>` / `CompileOptions.shapes` |
 | `position` | `[x, y] \| PolarPosition \| { direction, of, distance? } \| { of, offset } \| { between, t }` | — | Node center: Cartesian / polar / relative / offset / proportional placement; `of` accepts node id, Cartesian literal, or PolarPosition |
 | `children` / `text` | `string \| Array<string>` | — | Visible label; string = one line, array = one element per line; `text` wins over `children` |
 | `align` | `'left' \| 'center' \| 'right'` | `'center'` | Horizontal alignment of lines within the multi-line text block |
@@ -281,7 +306,7 @@ By default stacking = declaration order (SVG only honors paint order). `zIndex` 
 | `dashed` | `boolean` | ? | Dashed border preset (`[4, 2]`) |
 | `dotted` | `boolean` | ? | Dotted border preset (`[1, 2]`) |
 | `dashArray` | `Array<number>` | ? | Explicit dash/gap lengths; highest priority |
-| `roundedCorners` | `number` | — | Corner radius (only on `rectangle` shape) |
+| `roundedCorners` | `number` | — | Corner radius (only on `rectangle` shape); also settable via `shape={{ type:'rectangle', params:{ roundedCorners } }}` (params wins) |
 | `minimumWidth` / `minimumHeight` | `number` | — | Floors the bbox dimensions |
 | `minimumSize` | `number` | — | Symmetric minimum-size alias; axis-specific fields take precedence |
 | `scale` | `number` | `1` | Uniform scale (includes font, padding, path attachment) |
