@@ -336,6 +336,84 @@ describe("circle 收为 ellipse equal preset 别名", () => {
   });
 });
 
+describe("diamond 收为 polygon preset 别名（ADR-04）", () => {
+  // 以下 case 依赖实现 Agent 的 diamond 规范化（compile/node.ts 把裸 'diamond' →
+  // { type: 'polygon', params: { sides: 4, rotate: 45 } }，并删 diamond.ts 独立几何）。
+  // 规范化 + polygon 真实几何（anchor / boundaryPoint）未落地前以下 case fail —— 预期。
+  it("diamond_normalizes_to_polygon：shape:'diamond' 编译等价显式 polygon 4/45", () => {
+    const bareIr: IR = {
+      version: 1,
+      type: 'scene',
+      children: [{ type: 'node', id: 'A', shape: 'diamond', position: [0, 0], text: 'A' }],
+    };
+    const explicitIr: IR = {
+      version: 1,
+      type: 'scene',
+      children: [
+        {
+          type: 'node',
+          id: 'A',
+          shape: { type: 'polygon', params: { sides: 4, rotate: 45 } },
+          position: [0, 0],
+          text: 'A',
+        },
+      ],
+    };
+    expect(compileToScene(bareIr).primitives).toEqual(compileToScene(explicitIr).primitives);
+  });
+
+  it("diamond_emit_topology：diamond（规范化）emit 闭合 path（4 顶点 + close）", () => {
+    const ir: IR = {
+      version: 1,
+      type: 'scene',
+      children: [{ type: 'node', id: 'A', shape: 'diamond', position: [0, 0], text: 'A' }],
+    };
+    const p = findByType(compileToScene(ir).primitives, 'path');
+    expect(p).toBeDefined();
+    // polygon sides:4 → move + 3 line + close（与旧 diamond E/N/W/S 同拓扑）
+    expect(p!.commands.map(c => c.kind)).toEqual(['move', 'line', 'line', 'line', 'close']);
+  });
+
+  it("diamond_anchor_matches_legacy：diamond（规范化）命名 anchor 与旧 diamond 一致", () => {
+    // diamond 规范化为 polygon 4/45 后，各命名 anchor 落点须与（旧）diamond 几何一致。
+    // 用 path 连接 'A.<anchor>' 比对两种 shape 写法的首端点（move 落点）。
+    for (const anchor of [
+      'center',
+      'north',
+      'south',
+      'east',
+      'west',
+      'north-east',
+      'north-west',
+      'south-east',
+      'south-west',
+    ] as const) {
+      const mk = (shape: IRNode['shape']): IR => ({
+        version: 1,
+        type: 'scene',
+        children: [
+          { type: 'node', id: 'A', shape, position: [0, 0], text: 'long text' },
+          {
+            type: 'path',
+            children: [
+              { type: 'step', kind: 'move', to: { id: 'A', anchor } },
+              { type: 'step', kind: 'line', to: [200, 200] },
+            ],
+          },
+        ],
+      });
+      const findLine = (ir: IR) =>
+        compileToScene(ir).primitives.find(
+          (p): p is Extract<ScenePrimitive, { type: 'path' }> =>
+            p.type === 'path' && !p.commands.some(c => c.kind === 'close'),
+        );
+      const diamondLine = findLine(mk('diamond'));
+      const polygonLine = findLine(mk({ type: 'polygon', params: { sides: 4, rotate: 45 } }));
+      expect(diamondLine?.commands[0]).toEqual(polygonLine?.commands[0]);
+    }
+  });
+});
+
 describe("Node shape boundary clip 在 path 端点贴边时按 shape 多态", () => {
   it("circle 节点 path 端点贴圆周（距中心 = radius）", () => {
     // A=(0,0) 圆形 + B=(100,0) 笛卡尔点；line 从 A 到 B

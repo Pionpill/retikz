@@ -134,7 +134,8 @@ describe('Shape registry — error path', () => {
     const ir: IR = { version: 1, type: 'scene', children: [{ type: 'node', id: 'A', shape: 'cloud', position: [0, 0] }] };
     expect(() => compileToScene(ir)).toThrow(/Unknown shape 'cloud'/);
     // circle 已收为 ellipse 等轴 preset，不在注册表（裸 'circle' 由 normalizeShape 先消解为 ellipse，不走查表）
-    expect(() => compileToScene(ir)).toThrow(/diamond, ellipse, rectangle/);
+    // 注册表含 polygon（ADR-04）：排序后落在 ellipse 与 rectangle 之间
+    expect(() => compileToScene(ir)).toThrow(/ellipse, polygon, rectangle/);
   });
 
   it('unknown_shape_string_in_schema_passes_validation: schema accepts any non-empty string', () => {
