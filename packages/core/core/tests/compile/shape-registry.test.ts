@@ -133,7 +133,8 @@ describe('Shape registry — error path', () => {
   it('unknown_shape_throws_with_list: unregistered shape → throw with sorted available names', () => {
     const ir: IR = { version: 1, type: 'scene', children: [{ type: 'node', id: 'A', shape: 'cloud', position: [0, 0] }] };
     expect(() => compileToScene(ir)).toThrow(/Unknown shape 'cloud'/);
-    expect(() => compileToScene(ir)).toThrow(/circle, diamond, ellipse, rectangle/);
+    // circle 已收为 ellipse 等轴 preset，不在注册表（裸 'circle' 由 normalizeShape 先消解为 ellipse，不走查表）
+    expect(() => compileToScene(ir)).toThrow(/diamond, ellipse, rectangle/);
   });
 
   it('unknown_shape_string_in_schema_passes_validation: schema accepts any non-empty string', () => {

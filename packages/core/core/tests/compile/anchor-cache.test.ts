@@ -19,18 +19,23 @@ const makeLayout = (
   cx = 0,
   cy = 0,
   rotate = 0,
-): NodeLayout => ({
-  shapeName: shape,
-  shapeDef: BUILTIN_SHAPES[shape],
-  rect: { x: cx, y: cy, width, height, rotate },
-  rotateDeg: (rotate * 180) / Math.PI,
-  margin: 0,
-  textWidth: 0,
-  textHeight: 0,
-  align: 'middle',
-  lineHeight: 0,
-  fontSize: 0,
-});
+): NodeLayout => {
+  // circle 无独立 shapeDef（收为 ellipse 等轴 preset）：解析为 ellipse + circumscribe:'equal'
+  const def = shape === 'circle' ? BUILTIN_SHAPES.ellipse : BUILTIN_SHAPES[shape];
+  return {
+    shapeName: shape,
+    shapeDef: def,
+    shapeParams: shape === 'circle' ? { circumscribe: 'equal' } : undefined,
+    rect: { x: cx, y: cy, width, height, rotate },
+    rotateDeg: (rotate * 180) / Math.PI,
+    margin: 0,
+    textWidth: 0,
+    textHeight: 0,
+    align: 'middle',
+    lineHeight: 0,
+    fontSize: 0,
+  };
+};
 
 describe('resolveAnchor cache 命中返回同一引用', () => {
   it('anchor_cache_hit_returns_same_reference：keyword 第二次 lookup 返回 === 引用', () => {
