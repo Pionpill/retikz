@@ -1,0 +1,21 @@
+{
+  "version": 1,
+  "type": "scene",
+  "children": [
+    {
+      "type": "node",
+      "position": [0, 0],
+      "id": "box",
+      "fill": "#f1f5f9",
+      "stroke": "darkorange",
+      "text": "点我"
+    },
+    {
+      "type": "node",
+      "position": [0, -50],
+      "id": "count",
+      "stroke": "none",
+      "text": "点击次数：0"
+    }
+  ]
+}

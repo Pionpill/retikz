@@ -54,6 +54,17 @@ const vanillaOverrides: Record<string, string | undefined> = import.meta.glob<st
 const vanillaModules: Record<string, { svg?: unknown } | undefined> = import.meta.glob('../../../contents/**/*.vanilla.ts', {
   eager: true,
 });
+// IR 视图的手写覆盖：同级 `<name>.ir.json`（命中则该文本即 IR 源 + 真渲染来源，不论 interactive 与否）。
+// 用途：interactive demo 带 hooks 无法静态求 IR，配一份初始态 IR.json 让 IR 视图照样出现（React + IR 两视图）。
+// 语言无关（IR 里中文文本即中文）——单文件、两语共用，故 key 用 name 不含 lang。
+const irJsonOverrides: Record<string, string | undefined> = import.meta.glob<string>(
+  '../../../contents/**/*.ir.json',
+  {
+    query: '?raw',
+    import: 'default',
+    eager: true,
+  },
+);
 
 const buildKey = (segments: Array<string>, name: string) => `../../../contents/${segments.join('/')}/${name}.demo.tsx`;
 const buildLangKey = (segments: Array<string>, name: string, lang: string) =>
@@ -62,6 +73,8 @@ const buildSourceFileKey = (segments: Array<string>, filename: string) =>
   `../../../contents/${segments.join('/')}/${filename}`;
 const buildVanillaKey = (segments: Array<string>, name: string) =>
   `../../../contents/${segments.join('/')}/${name}.vanilla.ts`;
+const buildIrJsonKey = (segments: Array<string>, name: string) =>
+  `../../../contents/${segments.join('/')}/${name}.ir.json`;
 const filenameFromKey = (key: string) => key.slice(key.lastIndexOf('/') + 1);
 const COMPONENT_EXPANSION_LIMIT = 16;
 
@@ -205,16 +218,29 @@ export const ComponentPreview: FC<ComponentPreviewProps> = props => {
   const baselineKey = segments && diffFrom ? resolveDemoKey(segments, diffFrom, lang) : null;
   const baselineRawSource = baselineKey ? demoSources[baselineKey] : undefined;
 
-  // IR 视图：同步展开 demo 的无 hooks 组件树，停在 <Layout> 后读取 children / ir；一次求值供 IR 代码 + IR 真渲染共用；失败回落错误文本
+  // IR 视图：优先同级 `<name>.ir.json` 手写覆盖（不论 interactive，文本即 IR 源、解析后真渲染、尺寸交 <Layout ir> 自适配）；
+  // 无覆盖时维持现状——非 interactive 同步展开无 hooks 组件树求 IR，interactive 跳过（带 hooks 无法静态求值）。一次求值供 IR 代码 + IR 真渲染共用；失败回落错误文本
+  const irJsonOverrideKey = segments ? buildIrJsonKey(segments, name) : null;
+  const irJsonOverride = irJsonOverrideKey ? irJsonOverrides[irJsonOverrideKey] : undefined;
   const irState = useMemo<{ previewIr: PreviewIR | null; irJson: string }>(() => {
-    if (!Component || hideCode || interactive) return { previewIr: null, irJson: '' };
+    if (!Component || hideCode) return { previewIr: null, irJson: '' };
+    if (irJsonOverride !== undefined) {
+      const irJson = irJsonOverride.replace(/\n$/, '');
+      try {
+        const ir = JSON.parse(irJson) as IR;
+        return { previewIr: { ir, width: undefined, height: undefined }, irJson };
+      } catch (err) {
+        return { previewIr: null, irJson: `// Failed to parse IR override: ${err instanceof Error ? err.message : String(err)}` };
+      }
+    }
+    if (interactive) return { previewIr: null, irJson: '' };
     try {
       const previewIr = buildPreviewIR(Component);
       return { previewIr, irJson: formatIR(previewIr.ir) };
     } catch (err) {
       return { previewIr: null, irJson: `// Failed to compute IR: ${err instanceof Error ? err.message : String(err)}` };
     }
-  }, [Component, hideCode, interactive]);
+  }, [Component, hideCode, interactive, irJsonOverride]);
 
   // Vanilla 视图：同级 `<name>.vanilla.ts` 手写覆盖优先，否则从同一份 IR codegen；失败回落错误文本
   const vanillaKey = segments ? buildVanillaKey(segments, name) : null;
