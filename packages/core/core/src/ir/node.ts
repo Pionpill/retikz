@@ -8,7 +8,7 @@ import { TextBlockSchema } from './text';
 
 /**
  * 节点形状常量（用 const + ValueOf 派生，不用 TS enum）
- * @description rectangle 默认；circle/ellipse/diamond 几何语义：node 视觉边界包"text 矩形 + padding"；rectangle: 视觉=text；circle: r=√(innerHalfW²+innerHalfH²)；ellipse: rx=innerHalfW×√2,ry=innerHalfH×√2；diamond: halfA=2×innerHalfW,halfB=2×innerHalfH
+ * @description rectangle 默认；几何语义：node 视觉边界包"text 矩形 + padding"；rectangle: 视觉=text；ellipse: rx=innerHalfW×√2,ry=innerHalfH×√2；diamond: halfA=2×innerHalfW,halfB=2×innerHalfH。circle 是 ellipse 等轴 preset 别名（`{ type:'ellipse', params:{ circumscribe:'equal' } }`，两轴 = 内框对角线半长 √(innerHalfW²+innerHalfH²)）——保留为合法 shape 名向后兼容，编译期消解为 ellipse，不进 shape 注册表
  */
 export const NODE_SHAPES = {
   rectangle: 'rectangle',
