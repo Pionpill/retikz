@@ -3,6 +3,7 @@ import type { ValueOf } from '../types';
 import { FontSchema } from './font';
 import { PaintSpecSchema } from './paint';
 import { AT_DIRECTIONS, AtPositionSchema, BetweenPositionSchema, OffsetPositionSchema, PolarPositionSchema, PositionSchema } from './position';
+import { ShapeRefSchema } from './shape';
 import { TextBlockSchema } from './text';
 
 /**
@@ -119,11 +120,10 @@ export const NodeSchema = z
         'Optional unique id; required if any path needs to reference this node by string',
       ),
     shape: z
-      .string()
-      .min(1)
+      .union([z.string().min(1), ShapeRefSchema])
       .optional()
       .describe(
-        'Node visual shape name; built-in `rectangle` / `circle` / `ellipse` / `diamond`, or an extension shape registered via `CompileOptions.shapes`. Any non-empty string passes schema validation; unregistered names are rejected at compile time. Defaults to `rectangle`. The boundary fully contains text + padding (circumscribed for circle / ellipse / diamond).',
+        'Node visual shape: a bare name string (parameterless, e.g. "rectangle") or `{ type, params }` carrying a JSON params object (e.g. `{ type:"sector", params:{ innerRadius, outerRadius, startAngle, endAngle } }`). Built-in or registered via CompileOptions.shapes; unregistered type rejected at compile time. Defaults to "rectangle".',
       ),
     position: z
       .union([

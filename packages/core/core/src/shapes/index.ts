@@ -5,6 +5,7 @@
  */
 import type { BuiltinShapeName } from '../ir/node';
 import { circle } from './circle';
+import { defineShape } from './define';
 import { diamond } from './diamond';
 import { ellipse } from './ellipse';
 import { rectangle } from './rectangle';
@@ -18,8 +19,8 @@ export const BUILTIN_SHAPES: Record<BuiltinShapeName, ShapeDefinition> = {
   diamond,
 };
 
-export { rectangle, circle, ellipse, diamond };
-export type { ShapeDefinition, ShapeStyle } from './types';
+export { rectangle, circle, ellipse, diamond, defineShape };
+export type { ShapeDefinition, ShapeDefinitionInput, ShapeStyle } from './types';
 // 第三方 shape 作者所需 helper / 类型（提升为公开 API）
 export type { Rect } from '../geometry/rect';
 export type { Position } from '../geometry/point';
