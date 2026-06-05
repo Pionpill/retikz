@@ -38,29 +38,29 @@
 ```ts
 // ── 上层：renderer 无关分发器（@retikz/render/hydration）──────────────
 // 事件名：全程、无缩写（AGENTS.md house style），as const 对象 + ValueOf 派生。
-// EventName 是面向用户的语义名；EVENT_DOM_TYPE 映射到真实 DOM 事件类型供根级 addEventListener。
+// RetikzEventName 是面向用户的语义名；EVENT_DOM_TYPE 映射到真实 DOM 事件类型供根级 addEventListener。
 import type { ValueOf } from '@retikz/core';
-const HYDRATION_EVENTS = {
-  click: 'click',
-  doubleClick: 'doubleClick',   // 不用 dblclick 缩写
-  rightClick: 'rightClick',     // 右键；不用 contextmenu
-  pointerDown: 'pointerDown',
-  pointerUp: 'pointerUp',
-  pointerMove: 'pointerMove',
-  pointerEnter: 'pointerEnter',
-  pointerLeave: 'pointerLeave',
-  wheel: 'wheel',
+const RetikzEvent = {
+  Click: 'click',
+  DoubleClick: 'doubleClick',   // 不用 dblclick 缩写
+  RightClick: 'rightClick',     // 右键；不用 contextmenu
+  PointerDown: 'pointerDown',
+  PointerUp: 'pointerUp',
+  PointerMove: 'pointerMove',
+  PointerEnter: 'pointerEnter',
+  PointerLeave: 'pointerLeave',
+  Wheel: 'wheel',
 } as const;
-type EventName = ValueOf<typeof HYDRATION_EVENTS>;
-// EventName → 真实 DOM 事件类型（根级 addEventListener 用）。
+type RetikzEventName = ValueOf<typeof RetikzEvent>;
+// RetikzEventName → 真实 DOM 事件类型（根级 addEventListener 用）。
 // pointerEnter/pointerLeave 不直接 addEventListener——由 pointermove + 命中 id 状态机合成（见控制器）；
 // rightClick 默认不抑制浏览器菜单，handler 自行 event.preventDefault()。
-const EVENT_DOM_TYPE: Record<Exclude<EventName, 'pointerEnter' | 'pointerLeave'>, string> = {
+const EVENT_DOM_TYPE: Record<Exclude<RetikzEventName, 'pointerEnter' | 'pointerLeave'>, string> = {
   click: 'click', doubleClick: 'dblclick', rightClick: 'contextmenu',
   pointerDown: 'pointerdown', pointerUp: 'pointerup', pointerMove: 'pointermove',
   wheel: 'wheel',
 };
-type HydrationHandlers = Record<string /* id */, Partial<Record<EventName, (event: Event) => void>>>;
+type HydrationHandlers = Record<string /* id */, Partial<Record<RetikzEventName, (event: Event) => void>>>;
 
 // locate：把一次 DOM 事件定位到图元 id（svg / canvas 各注入一份）
 type Locate = (event: Event) => string | null;
@@ -166,7 +166,7 @@ view.hydrate({ handlers: { a: { click: e => ... } } });   // hitTest 定位
 - `view.update(nextIr)` 维持（数据过渡 / 形变是后续，见 roadmap §动画 B，本 ADR 不做）。
 
 ### `@retikz/react`（handler props → 注册表，yellow→red）
-- Kernel 组件 **`Node` / `Path` / `Scope`** 加事件 props，按 `EventName`（`on` + PascalCase）：`onClick` / `onDoubleClick` / `onRightClick` / `onPointerDown` / `onPointerUp` / `onPointerMove` / `onPointerEnter` / `onPointerLeave` / `onWheel`；**`Coordinate` 不加**（无可点面积）。`Path` 同时加 `id` prop（透传新 `IRPath.id`；react builder 的 PATH 字段表加 `id`）。
+- Kernel 组件 **`Node` / `Path` / `Scope`** 加事件 props，按 `RetikzEventName`（`on` + PascalCase）：`onClick` / `onDoubleClick` / `onRightClick` / `onPointerDown` / `onPointerUp` / `onPointerMove` / `onPointerEnter` / `onPointerLeave` / `onWheel`；**`Coordinate` 不加**（无可点面积）。`Path` 同时加 `id` prop（透传新 `IRPath.id`；react builder 的 PATH 字段表加 `id`）。
 - **`collectHydrationHandlers(children)`**（新模块，评审 P2.2）：与 `buildIR` **同源遍历** children——穿透 `Fragment`、展开 Sugar 后按各元素 `id` 收 handler props 组装 `HydrationHandlers`。规则：无 `id` 带 handler → dev warn、跳过；重复 `id` → dev warn，同 id 合并不同事件、同事件后者覆盖；Sugar 元素的 handler 归到其展开后承载 `id` 的 Kernel 元素。
 - `Layout` / `CanvasHost`：**JSX 模式**用 `collectHydrationHandlers` 收集，**`ir` prop 模式**改用 `<Layout handlers={...}>` prop（无 JSX children 可收集，`ir` + JSX children 本就是既有非法组合）；两路结果经 `createHydrationController` 绑到 figure root（svg root 或 `<canvas>`）。svg / canvas 双模共用同一控制器与注册表。
 
@@ -179,7 +179,7 @@ view.hydrate({ handlers: { a: { click: e => ... } } });   // hitTest 定位
 - **#6 interaction manifest 落点**（roadmap 待决策 #6）：进 IR vs runtime option vs 不需要。**倾向"不需要"**——挂点 = user-provided id 的存在性，绑定 = runtime handlers map，二者已足；`renderToSvgString` 仅在需要"为外部工具导出机器可读清单"或"限制哪些 id emit 以压输出"时提供可选 `interactions` option。默认不引入。
 - **#14 Canvas hit-test 策略**（roadmap 待决策 #14）：**选 (a) 几何 pick + 原生 `isPointInPath`/`isPointInStroke`**（复用 `drawScene` 几何，逆 z-order）。(b) 离屏色拾取 / (c) bbox 空间索引留作超大图的后续性能优化。命中口径先定：描边按 `strokeTolerance`（缺省 = strokeWidth/2）、透明填充（fill=none）仅描边可命中、z-order 取最上层、group 命中归到最近 id-bearing 祖先。
 - **render/hydration 落点**：放 `@retikz/render` 新子路径（react / vanilla 唯一共同依赖）vs 新建独立小包。**倾向 render 子路径**（不增依赖图复杂度；svg/canvas 纯子路径不受影响）。
-- **事件集首版范围**：`HYDRATION_EVENTS`（`as const` + `ValueOf`）含 `click` / `doubleClick` / `rightClick` / `pointerDown` / `pointerUp` / `pointerMove` / `pointerEnter` / `pointerLeave` / `wheel`——**全程无缩写命名**（house style）；`EVENT_DOM_TYPE` 映射到真实 DOM 类型供根级 `addEventListener`（`doubleClick→dblclick`、`rightClick→contextmenu`），enter/leave 经 over/out 合成。**事件集是注册表、加值即扩展**。`rightClick` 默认不抑制浏览器菜单，handler 自行 `preventDefault`。
+- **事件集首版范围**：`RetikzEvent`（`as const` + `ValueOf`）含 `click` / `doubleClick` / `rightClick` / `pointerDown` / `pointerUp` / `pointerMove` / `pointerEnter` / `pointerLeave` / `wheel`——**全程无缩写命名**（house style）；`EVENT_DOM_TYPE` 映射到真实 DOM 类型供根级 `addEventListener`（`doubleClick→dblclick`、`rightClick→contextmenu`），enter/leave 经 over/out 合成。**事件集是注册表、加值即扩展**。`rightClick` 默认不抑制浏览器菜单，handler 自行 `preventDefault`。
   - **命名取舍**（参考组件库）：React `onDoubleClick` 已把双击写全、但右键留 `onContextMenu`；Flutter 用 `onDoubleTap` / `onSecondaryTap`（语义化）。本库取**全程 + 直白**：`doubleClick`（非 `dblclick`）、`rightClick`（非 `contextmenu`）；DOM 技术名只藏在 `EVENT_DOM_TYPE` 内部。
   - **对标 ECharts / Highcharts / Vega**（已核）：三家的交互原始事件（click / dblclick / contextmenu / hover / down·up·move / wheel）本集**全覆盖、无缺失、无多余**。差异：① 三家历史用 `mouse*` 命名，本集用 **Pointer Events 统一 mouse + touch + pen → 不另列 `touchstart/move/end`**（优点）；② 三家 hover 实际用冒泡的 `mouseover/out`，本集对 id-粒度语义单位用**合成 enter/leave** 更顺手（冒泡版 over/out 见下，可选）；③ `select` / `unselect` / `brush` / `datazoom` 是**语义态 / 复合手势**，非原始 DOM 事件 → 归 Tier 2（plot）或延后手势编排，不进 core。
   - **两处可选补充（待定）**：① root 级「离开整图」hook（≈ ECharts `globalout`，用于离开图时清空所有 tooltip）；② 冒泡版 `pointerover` / `pointerout`（三家 hover 的底层，enter/leave 之外按需暴露）。
@@ -241,7 +241,7 @@ view.hydrate({ handlers: { a: { click: e => ... } } });   // hitTest 定位
 - `packages/core/render/src/canvas/drawScene.ts`（改：改 import `pathGeometry`，♻️ 行为不变）
 - `packages/core/render/src/canvas/hitTest.ts`（新建：复用 `pathGeometry` + isPointInPath/isPointInStroke，逆 z-order）
 - `packages/core/render/src/canvas/index.ts`（导出 `hitTest`）
-- `packages/core/render/src/hydration/{controller,events,locateSvg}.ts` + `index.ts`（新建子路径；enter/leave 合成内联进 controller，`events.ts` 集中 `HYDRATION_EVENTS` / `EVENT_DOM_TYPE` / 类型）
+- `packages/core/render/src/hydration/{controller,events,locateSvg}.ts` + `index.ts`（新建子路径；enter/leave 合成内联进 controller，`events.ts` 集中 `RetikzEvent` / `EVENT_DOM_TYPE` / 类型）
 - `packages/core/render/package.json`（exports 加 `./hydration`）
 - `packages/core/render/tests/{svg-data-id,canvas-hittest,hydration-controller}.test.ts`（新建）；`pathGeometry` 抽取的回归由既有 `draw` / `render` 套件承载（纯重构、既有用例继续绿即等价证明），不单建专用文件
 
