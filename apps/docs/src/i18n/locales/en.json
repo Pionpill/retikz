@@ -89,6 +89,7 @@
     "compMarkOverview": "Overview",
     "compLineMark": "LineMark",
     "compPointMark": "PointMark",
+    "compBarMark": "BarMark",
     "compAxis": "Axis",
     "examples": "Charts",
     "exampleLineScatter": "Line & Scatter",

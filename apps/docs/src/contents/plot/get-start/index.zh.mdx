@@ -86,6 +86,12 @@ const sales = [
 </Plot>
 ```
 
+## 时间轴
+
+x 是日期时，给 `<Plot scaleX="time">`——刻度会落在整月 / 整年这样的时间边界上，标签也按时间格式化。日期字段可以是 ISO 字符串或毫秒时间戳。
+
+<ComponentPreview name="time-axis" sourceFiles={['time-axis.data.ts']} />
+
 ## 接下来
 
 <div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">

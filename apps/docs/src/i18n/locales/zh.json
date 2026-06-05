@@ -89,6 +89,7 @@
     "compMarkOverview": "总览",
     "compLineMark": "折线",
     "compPointMark": "散点",
+    "compBarMark": "柱",
     "compAxis": "坐标轴",
     "examples": "封装组件",
     "exampleLineScatter": "折线与散点",
