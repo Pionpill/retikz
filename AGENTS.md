@@ -279,6 +279,8 @@ import { lowerPlots } from '@retikz/plot';
 
 代码归属：Kernel → `packages/core/react/src/kernel/`；Sugar → `packages/core/react/src/sugar/`（React DSL）+ `packages/core/core/src/parsers/`（共享 pure 解析）；Tier 2 → 独立分组（`packages/plot/*` 等），不进 core。
 
+**子组遇到 core 能力不足：先补 core，别另起一套**。core 的 **Node-图元模型**（一切可见物是节点）、**step-图元关系**（路径 step 串接图元 / 锚点）、**scope-图元层级**（scope 嵌套传递坐标系与样式）是 retikz 的核心理念，所有 Tier 2 下沉的终点都是这套 Kernel 原语。当子组（core 以外的分组）发现现有 Kernel 表达不了需求时，正确做法是**把缺的能力抽象成 core 的通用原语 / IR 字段 / hook 再补进 core**（走 `next-core` 集成线），让全仓共享；**不要**在子组里绕开 core 自造一套平行机制（私有渲染路径、脱离 IR 的几何模型、复制一份图元体系）——那会让该能力无法被其他子组复用、绕过 Scene primitive 后端、并使 IR 不再是单一真源。判断顺序：能用现有 Kernel 表达 → 直接用；不能但属通用底座能力 → 抽象补 core；确属高层领域语义 → 才落 Tier 2。
+
 ## 基础设施层细则（指针）
 
 基础设施分组（core / render / react / vanilla）的跨包规范——分组定位、**版本 lockstep（同改同发）** 等——见分组级 [`packages/core/AGENTS.md`](./packages/core/AGENTS.md)；各包更细的实现规范见各自的 `AGENTS.md`。
