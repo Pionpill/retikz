@@ -1,9 +1,10 @@
 import { z } from 'zod';
-import { localToWorld } from '../geometry/_transform';
+import { localToWorld, worldToLocal } from '../geometry/_transform';
 import type { Position } from '../geometry/point';
-import type { Rect } from '../geometry/rect';
+import { type Rect, rect as rectGeometry } from '../geometry/rect';
 import type { PathCommand, ScenePrimitive } from '../primitive';
 import { defineShape } from './define';
+import { asRectAnchor } from './_shared';
 
 /**
  * star shape 的 per-instance params 类型
@@ -41,12 +42,26 @@ type StarGeometry = {
  *   （对称 → 中心即原点）。
  */
 const starGeometry = (params: StarParams): StarGeometry => {
-  // 实现 Agent 填真实数学：按上面契约算出 2·points 顶点 + 对称 AABB 半轴。
-  void DEG_TO_RAD;
-  void params;
+  const { points, innerRadius, outerRadius } = params;
+  const rotate = params.rotate ?? 0;
+  // 顶点总数 = 2·points（外径尖角 / 内径凹角交替），步进 = 180/points 度。
+  const step = 180 / points;
+  const vertices: Array<Position> = [];
+  let maxAbsX = 0;
+  let maxAbsY = 0;
+  for (let k = 0; k < 2 * points; k++) {
+    const angle = (rotate + k * step) * DEG_TO_RAD;
+    const radius = k % 2 === 0 ? outerRadius : innerRadius;
+    const x = radius * Math.cos(angle);
+    const y = radius * Math.sin(angle);
+    vertices.push([x, y]);
+    if (Math.abs(x) > maxAbsX) maxAbsX = Math.abs(x);
+    if (Math.abs(y) > maxAbsY) maxAbsY = Math.abs(y);
+  }
+  // 星形关于中心对称 → AABB 中心 = 原点，半轴 = 各顶点 |x| / |y| 最大值。
   return {
-    vertices: [],
-    aabbHalfAxes: { halfWidth: 0, halfHeight: 0 },
+    vertices,
+    aabbHalfAxes: { halfWidth: maxAbsX, halfHeight: maxAbsY },
   };
 };
 
@@ -91,11 +106,30 @@ export const star = defineShape({
     }),
   circumscribe: (_hw, _hh, params: StarParams) => starGeometry(params).aabbHalfAxes,
   boundaryPoint: (rect: Rect, toward: Position, params: StarParams): Position => {
-    const geo = starGeometry(params);
-    // 实现 Agent 填：中心向 toward 射线 ∩ 星形边（局部系求解后投回世界）。
-    void geo;
-    void toward;
-    return localToWorld(rect, [0, 0]);
+    const { vertices } = starGeometry(params);
+    // 局部系（中心为原点）：toward 反投到局部得射线方向，求与 2·points 条边的最近正向交点。
+    const local = worldToLocal(rect, toward);
+    const dl = Math.hypot(local[0], local[1]);
+    if (dl < 1e-12) return localToWorld(rect, [0, 0]);
+    const ux = local[0] / dl;
+    const uy = local[1] / dl;
+    let best = Infinity;
+    const n = vertices.length;
+    for (let i = 0; i < n; i++) {
+      const a = vertices[i];
+      const b = vertices[(i + 1) % n];
+      // 射线 (0,0)+s·u 与线段 a→b 交点：解 s·u = a + q·(b−a)，q∈[0,1]、s>0。
+      const ex = b[0] - a[0];
+      const ey = b[1] - a[1];
+      const det = ux * -ey - -ex * uy; // ux·(−ey) − (−ex)·uy
+      if (Math.abs(det) < 1e-12) continue;
+      const s = (a[0] * -ey - -ex * a[1]) / det;
+      const q = (ux * a[1] - a[0] * uy) / det;
+      if (s <= 1e-9 || s >= best) continue;
+      if (q >= -1e-9 && q <= 1 + 1e-9) best = s;
+    }
+    if (!Number.isFinite(best)) return localToWorld(rect, [0, 0]);
+    return localToWorld(rect, [best * ux, best * uy]);
   },
   anchor: (rect: Rect, name: string, params: StarParams): Position | undefined => {
     const geo = starGeometry(params);
@@ -113,6 +147,9 @@ export const star = defineShape({
       if (index >= geo.vertices.length) return undefined;
       return toWorld(rect, geo.vertices[index]);
     }
+    // 内置 9 名 rect anchor（north / south-east 等）走外接 AABB（rect 已是 AABB 中心 + 半轴）。
+    const rectName = asRectAnchor(name);
+    if (rectName) return rectGeometry.anchor(rect, rectName);
     return undefined;
   },
   *emit (rect: Rect, style, round, params: StarParams): Iterable<ScenePrimitive> {

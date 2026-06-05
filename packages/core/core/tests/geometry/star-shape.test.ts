@@ -91,7 +91,7 @@ describe('star — happy path 几何', () => {
     expect(cmds[cmds.length - 1].kind).toBe('close');
     // points=5 → 10 顶点：move + 9 line + close
     expect(cmds.map(c => c.kind)).toEqual([
-      'move', 'line', 'line', 'line', 'line', 'line', 'line', 'line', 'line', 'close',
+      'move', 'line', 'line', 'line', 'line', 'line', 'line', 'line', 'line', 'line', 'close',
     ]);
   });
 
