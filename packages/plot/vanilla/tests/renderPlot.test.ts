@@ -65,4 +65,20 @@ describe('renderPlot 薄包装（SSR SVG 串）', () => {
     expect(svg).toMatch(/<svg[^>]*\swidth="360"/);
     expect(svg).toMatch(/<svg[^>]*\sheight="200"/);
   });
+
+  // ADR-07：柱状 / 堆叠柱 SSR
+  it('柱状 spec 渲出矩形（<rect>）', () => {
+    const barSpec: PlotSpec = {
+      namespace: 'plot',
+      type: 'plot',
+      data: { ref: 'sales' },
+      scales: [
+        { type: 'band', name: 'x' },
+        { type: 'linear', name: 'y' },
+      ],
+      coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
+      marks: [{ type: 'interval', encoding: { x: { field: 'month' }, y: { field: 'revenue' } } }],
+    };
+    expect(renderPlot(barSpec, data, { width: 480, height: 300 })).toMatch(/<rect/);
+  });
 });

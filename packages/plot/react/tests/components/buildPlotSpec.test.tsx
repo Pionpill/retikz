@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { type PlotSpec, PlotSpecSchema } from '@retikz/plot';
 import { buildPlotSpec } from '../../src/components/buildPlotSpec';
 import { Axis } from '../../src/components/guides';
-import { LineMark, PointMark } from '../../src/components/marks';
+import { BarMark, LineMark, PointMark } from '../../src/components/marks';
 
 describe('buildPlotSpec 装配（ADR-08 / ADR-05）', () => {
   it('单 line：装配出等价手写 PlotSpec（含默认 guides）', () => {
@@ -142,5 +142,82 @@ describe('buildPlotSpec 装配（ADR-08 / ADR-05）', () => {
       '__plot',
     );
     expect(() => PlotSpecSchema.parse(spec)).toThrow();
+  });
+});
+
+describe('buildPlotSpec ADR-07（BarMark / color / series / stack / scaleX）', () => {
+  it('barmark_equivalence_band_x', () => {
+    const spec = buildPlotSpec(<BarMark x="month" y="revenue" />, '__plot');
+    const expected: PlotSpec = {
+      namespace: 'plot',
+      type: 'plot',
+      data: { ref: '__plot' },
+      scales: [
+        { type: 'band', name: '__x' },
+        { type: 'linear', name: '__y' },
+      ],
+      coordinate: { type: 'cartesian2D', x: '__x', y: '__y' },
+      marks: [{ type: 'interval', encoding: { x: { field: 'month' }, y: { field: 'revenue' } } }],
+      guides: [
+        { type: 'axis', dimension: 'x' },
+        { type: 'axis', dimension: 'y', grid: true },
+      ],
+    };
+    expect(spec).toEqual(expected);
+  });
+
+  it('point_color_builds_ordinal_scale_and_ref', () => {
+    const spec = buildPlotSpec(<PointMark x="gdp" y="life" color="continent" />, '__plot');
+    expect(spec.scales).toContainEqual({ type: 'ordinal', name: '__color' });
+    expect(spec.marks[0]?.encoding.color).toEqual({ field: 'continent', scale: '__color' });
+  });
+
+  it('no_color_no_ordinal_scale', () => {
+    const spec = buildPlotSpec(<PointMark x="m" y="r" />, '__plot');
+    expect(spec.scales.some(s => s.type === 'ordinal')).toBe(false);
+  });
+
+  it('bar_series_dodge_default_and_color_eq_series', () => {
+    const spec = buildPlotSpec(<BarMark x="month" y="revenue" series="product" />, '__plot');
+    const mark = spec.marks[0];
+    expect(mark).toMatchObject({ type: 'interval', series: 'product', arrangement: 'dodge' });
+    // color 缺省取 series
+    expect(mark.encoding.color).toEqual({ field: 'product', scale: '__color' });
+    expect(spec.transform).toBeUndefined();
+  });
+
+  it('bar_stack_assembles_transform', () => {
+    const spec = buildPlotSpec(<BarMark x="month" y="revenue" series="product" stack />, '__plot');
+    expect(spec.marks[0]).toMatchObject({ type: 'interval', series: 'product', arrangement: 'stack' });
+    expect(spec.transform).toEqual([{ kind: 'stack', x: 'month', y: 'revenue', groupBy: 'product' }]);
+  });
+
+  it('scalex_time', () => {
+    const spec = buildPlotSpec(<LineMark x="date" y="v" />, '__plot', { scaleX: 'time' });
+    expect(spec.scales[0]).toEqual({ type: 'time', name: '__x' });
+  });
+
+  it('line_series_color_eq_series', () => {
+    const spec = buildPlotSpec(<LineMark x="t" y="v" series="city" order="t" />, '__plot');
+    expect(spec.marks[0]).toMatchObject({ type: 'line', series: 'city', order: 't' });
+    expect(spec.marks[0]?.encoding.color).toEqual({ field: 'city', scale: '__color' });
+  });
+
+  it('all_dsl_products_pass_schema', () => {
+    expect(() => PlotSpecSchema.parse(buildPlotSpec(<BarMark x="m" y="r" series="p" stack />, '__plot'))).not.toThrow();
+    expect(() => PlotSpecSchema.parse(buildPlotSpec(<PointMark x="m" y="r" color="c" />, '__plot'))).not.toThrow();
+  });
+
+  it('mixed_bar_line_band_x', () => {
+    // 混合 BarMark + LineMark → x band（BarMark 优先）
+    const spec = buildPlotSpec(
+      <>
+        <BarMark x="month" y="revenue" />
+        <LineMark x="month" y="revenue" />
+      </>,
+      '__plot',
+    );
+    expect(spec.scales[0]).toEqual({ type: 'band', name: '__x' });
+    expect(spec.marks).toHaveLength(2);
   });
 });

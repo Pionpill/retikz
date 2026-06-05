@@ -1,7 +1,7 @@
 import type { FC, ReactNode } from 'react';
 import { Layout, type LayoutProps } from '@retikz/react';
 import { type ExternalDatasets, type ExternalRow, type LowerPlotsOptions, type PlotSpec, PlotSpecSchema, lowerPlots } from '@retikz/plot';
-import { buildPlotSpec } from './components';
+import { type DslScaleX, buildPlotSpec } from './components';
 
 /** <Plot> 两条入口共享的展示 props + lowerPlots 选项 */
 type PlotCommonProps = Pick<LayoutProps, 'width' | 'height' | 'className' | 'style' | 'renderer'> & LowerPlotsOptions;
@@ -21,10 +21,12 @@ export type PlotDslProps = PlotCommonProps & {
   spec?: never;
   /** 裸数据行数组；内部包成单数据集注入，不进 IR */
   data: Array<ExternalRow>;
-  /** mark / guide 子组件（<LineMark> / <PointMark> / <Axis>） */
+  /** mark / guide 子组件（<LineMark> / <PointMark> / <BarMark> / <Axis>） */
   children: ReactNode;
   /** 总开关：什么都不出（无轴无网格、plot area = 整图），只绘图 = alpha.1 行为；忽略任何 <Axis> */
   bare?: boolean;
+  /** 连续 x scale 类型（缺省 linear；含 <BarMark> 时强制 band，忽略此项） */
+  scaleX?: DslScaleX;
 };
 
 /** <Plot> props：spec 入口与组合 DSL 入口二选一（按 spec/children 分流） */
@@ -47,7 +49,7 @@ export const Plot: FC<PlotProps> = props => {
     spec = props.spec;
     datasets = props.data;
   } else {
-    spec = buildPlotSpec(props.children, DSL_DATA_REF, { bare: props.bare });
+    spec = buildPlotSpec(props.children, DSL_DATA_REF, { bare: props.bare, scaleX: props.scaleX });
     datasets = { [DSL_DATA_REF]: props.data };
   }
   // 入口校验：非法 spec（缺判别字段等）抛清晰 ZodError，而非落到 core 内部崩

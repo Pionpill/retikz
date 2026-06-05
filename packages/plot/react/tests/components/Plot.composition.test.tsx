@@ -1,7 +1,7 @@
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 import type { PlotSpec } from '@retikz/plot';
-import { LineMark, Plot, PointMark } from '../../src';
+import { BarMark, LineMark, Plot, PointMark } from '../../src';
 
 const rows = [
   { month: 0, revenue: 10 },
@@ -100,5 +100,45 @@ describe('<Plot data>{marks} 组合 DSL（ADR-08）', () => {
     expect(geometry(viaBare)).toEqual(geometry(viaSpec));
     // bare 不出轴文字
     expect(viaBare).not.toContain('<text');
+  });
+
+  // ADR-07：<BarMark> / scaleX
+  it('barmark_renders_rect：<BarMark> 渲出矩形', () => {
+    const svg = renderToStaticMarkup(
+      <Plot data={rows} width={480} height={300}>
+        <BarMark x="month" y="revenue" />
+      </Plot>,
+    );
+    expect(svg).toMatch(/<rect/);
+  });
+
+  it('stacked_bar_renders：分组数据堆叠柱端到端', () => {
+    const sales = [
+      { month: 'Jan', product: 'A', revenue: 3 },
+      { month: 'Jan', product: 'B', revenue: 5 },
+      { month: 'Feb', product: 'A', revenue: 2 },
+      { month: 'Feb', product: 'B', revenue: 4 },
+    ];
+    const svg = renderToStaticMarkup(
+      <Plot data={sales} width={480} height={300}>
+        <BarMark x="month" y="revenue" series="product" stack />
+      </Plot>,
+    );
+    expect(svg).toMatch(/<rect/);
+  });
+
+  it('scalex_time_renders：scaleX time 折线端到端', () => {
+    const trend = [
+      { date: '2024-01-01', v: 1 },
+      { date: '2024-06-01', v: 3 },
+      { date: '2024-12-01', v: 2 },
+    ];
+    const svg = renderToStaticMarkup(
+      <Plot data={trend} width={480} height={300} scaleX="time">
+        <LineMark x="date" y="v" order="date" />
+      </Plot>,
+    );
+    expect(svg).toContain('<path');
+    expect(svg).toContain('<text'); // 时间轴刻度标签
   });
 });
