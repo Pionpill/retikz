@@ -70,6 +70,14 @@ export type ShapeDefinitionInput<TParams extends IRJsonObject> = {
     round: (n: number) => number,
     params: TParams,
   ) => Iterable<ScenePrimitive>;
+  /**
+   * node scale 作用于 params 的方式（可选）。
+   * @description 给定原始 params 与水平 / 垂直缩放因子 `sx` / `sy`，返回缩放后的 params。
+   *   缺省时编译器沿用默认行为——深度缩放 params 里所有数值叶子（uniform 几何均值因子）。
+   *   适用于 params 含「非长度」语义字段（如角度）的形状：sector / arc 只缩半径、不缩角度，
+   *   通过本 hook 把 startAngle / endAngle 排除在缩放外。不缩放任何 params 的形状不必实现。
+   */
+  scaleParams?: (params: TParams, sx: number, sy: number) => TParams;
 };
 
 /**

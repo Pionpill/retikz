@@ -411,11 +411,16 @@ export const layoutNode = (
   const sx = node.xScale ?? node.scale ?? 1;
   const sy = node.yScale ?? node.scale ?? 1;
   const fontScale = Math.min(sx, sy);
-  // shape params 是形状内在长度（半径 / 内外径 等），随 node scale 协同缩放：用 uniform 因子（sx·sy 的
-  // 几何均值；均匀缩放时即 scale）乘所有 JSON 数值叶子，保持参数化形状与文本 / 边框同步放大。
+  // shape params 是形状内在长度（半径 / 内外径 等），随 node scale 协同缩放。
+  // shapeDef.scaleParams 给定时由形状自定缩放语义（如 sector / arc 只缩半径、不缩角度）；
+  // 缺省时沿用默认——用 uniform 因子（sx·sy 的几何均值；均匀缩放时即 scale）乘所有 JSON 数值叶子。
   const shapeScale = Math.sqrt(sx * sy);
-  const shapeParams: IRJsonObject =
-    shapeScale === 1 ? parsedShapeParams : scaleJsonNumbers(parsedShapeParams, shapeScale);
+  const noScale = sx === 1 && sy === 1;
+  const shapeParams: IRJsonObject = noScale
+    ? parsedShapeParams
+    : shapeDef.scaleParams
+      ? shapeDef.scaleParams(parsedShapeParams, sx, sy)
+      : scaleJsonNumbers(parsedShapeParams, shapeScale);
 
   const baseFontSize = node.font?.size ?? DEFAULT_FONT_SIZE;
   const fontSize = baseFontSize * fontScale;
