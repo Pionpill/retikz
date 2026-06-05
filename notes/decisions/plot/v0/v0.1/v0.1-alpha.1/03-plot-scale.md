@@ -48,3 +48,5 @@ alpha.3 多 scale 类型后，lowering 可据 ADR-02 `DataModel` 的字段 `type
 ---
 
 > **实现指针**：level `red`（动 `plot/src/ir/**`）、additive 非 breaking。真源以代码为准——`PlotScale` / `LinearScaleSchema` / `ScaleSchema` / `Scale`（`plot/src/ir/scale.ts`，复用 core `ValueOf`）。测试在 `packages/plot/plot/tests/ir/scale.schema.test.ts`。完整施工契约（Schema 改动表 / 文件 scope / 测试象限 / 依赖现有元素）见本文件 git 历史。
+
+> 🔖 封板压缩 commit `9115e6b4`；压缩前完整施工蓝图 = `git show 9115e6b4^:notes/decisions/plot/v0/v0.1/v0.1-alpha.1/03-plot-scale.md`。

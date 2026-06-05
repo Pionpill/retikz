@@ -50,3 +50,5 @@
 > - 真源以代码为准：`Axis` / `AxisProps`（`react/src/components/guides.tsx`）、`collectGuides` / `DEFAULT_GUIDES` / bare 装配（`react/src/components/buildPlotSpec.ts`）、`bare` + 透传（`react/src/Plot.tsx`）、导出（`react/src/components/index.ts` / `react/src/index.ts`）；vanilla `renderPlot` 无改动（已支持任意 spec）。
 > - 测试见 `react/tests/components/`（默认全套 / 显式所得 / `grid` prop / bare 空 guides / 字段对齐 / 产物过 schema / 端到端渲出轴线 + 刻度文字 + y 网格 / bare 等价无 guides 几何）。
 > - 完整原文（buildPlotSpec 草案 / DSL 表面示例 / 待决策点 / 测试象限 / 文件 scope）见本文件 git 历史。
+
+> 🔖 封板压缩 commit `7acbf962`；压缩前完整施工蓝图 = `git show 7acbf962^:notes/decisions/plot/v0/v0.1/v0.1-alpha.2/05-guide-bindings-dsl.md`。

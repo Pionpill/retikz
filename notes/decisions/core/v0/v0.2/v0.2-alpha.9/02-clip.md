@@ -42,3 +42,5 @@ core 产 renderer-agnostic 的 `ClipResource`（`{ kind:'clip', id, region }`，
 ---
 
 > **实现指针**：level `red`（动 `primitive/scene.ts` 的 `SceneResource` clip 分支 + `clipRef` + `ir/scope.ts` clip 字段 + `compile/**` scope.clip → clipRef + 资源收集 + react adapter 物化），向后兼容纯叠加、零破坏。真源以代码为准——`ClipResource` / `ClipRegion` / `clipRef`（`core/src/primitive/clip.ts`、`core/src/primitive/scene.ts`）、`ScopeSchema.clip`（`core/src/ir/scope.ts`）、scope.clip 编译 + 资源去重（`core/src/compile/clip.ts`）、`<clipPath>` 物化（`react/src/render/clipDefs.tsx`，引用 `renderPrim.tsx` / `svgToReact.ts`）。测试在 `core/tests/ir/clip.schema.test.ts`、`core/tests/compile/clip*.test.ts`、`react/tests/render/clipDefs*.test.tsx`。DSL 表面见文档站 clip 概念页。完整原文（选项 A/B/C 详情 / 评审 P1/P2 坑位 / Schema 改动表 / 文件 scope / 测试象限）见本文件 git 历史。
+
+> 🔖 封板压缩 commit `133ad7c1`；压缩前完整施工蓝图 = `git show 133ad7c1^:notes/decisions/core/v0/v0.2/v0.2-alpha.9/02-clip.md`。

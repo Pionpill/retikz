@@ -52,3 +52,5 @@ import { drawScene, renderToCanvas } from '@retikz/render/canvas';
 ---
 
 > **实现指针**：level `red`（包结构 + 公开 API 路径语义变更）、非 breaking（`@retikz/svg` / `@retikz/canvas` 从未发布过——npm 仅到 0.2.0-beta.2，故合并不影响任何已发布消费者）。物理上 `git mv` 原 svg / canvas 的 `src` → `render/src/{svg,canvas}`、`tests` → `render/tests/`（flat），render 走 vite 多入口 + `preserveModules` 产 `dist/{es,lib}/{svg,canvas}/...`，tsconfig 开 `lib: ESNext+DOM`；react / vanilla 的 import 全改走 `@retikz/render/{svg,canvas}`、`package.json` 依赖合成一条；原「canvas 跨包守卫」重写成 render **包内双向边界守卫**（`render/tests/degrade.test.ts`）。真源以代码为准——`packages/core/render/package.json`（子路径 exports + publishConfig）+ `render/vite.config.ts`（多入口）。
+
+> 🔖 封板压缩 commit `05ed13c2`；压缩前完整施工蓝图 = `git show 05ed13c2^:notes/decisions/core/v0/v0.3/v0.3-alpha.1/05-renderer-repackage.md`。

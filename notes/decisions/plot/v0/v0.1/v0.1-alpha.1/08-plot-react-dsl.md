@@ -50,3 +50,5 @@ ADR-07 的 `<Plot spec={…} data={…}/>` 要求用户手写整份 PlotSpec 对
 ---
 
 > **实现指针**：level `red`（公开 API 加 DSL 组件，动 `react/src/index.ts`）、无 IR schema 改动（`buildPlotSpec` 产出现有 `PlotSpecSchema` 实例）。真源以代码为准——`buildPlotSpec`（纯装配 + `collectMarks`）、`LineMark` / `PointMark` 配置组件均在 `react/src/components/`；`<Plot>` 薄/组合分流在 `react/src/Plot.tsx`（`PlotProps` / `PlotSpecProps` / `PlotDslProps`）。约束「Sugar = builder、不在 render 栈、无 hooks」（core 抽象分层）。测试在 `packages/plot/react/tests/components/{buildPlotSpec,Plot.composition}.test.tsx`（等价性 + 渲染）。完整施工契约（文件 scope / 测试象限 / 依赖现有元素）见本文件 git 历史。
+
+> 🔖 封板压缩 commit `9115e6b4`；压缩前完整施工蓝图 = `git show 9115e6b4^:notes/decisions/plot/v0/v0.1/v0.1-alpha.1/08-plot-react-dsl.md`。

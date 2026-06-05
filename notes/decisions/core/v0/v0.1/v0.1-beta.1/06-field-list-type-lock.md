@@ -32,3 +32,5 @@
 ---
 
 > **实现指针**：level `yellow`、非 breaking（仅内部实现 + 类型层）。真源以代码为准——`AssertEqual`（`core/src/types.ts`，internal）、共用 `NODE_FIELDS` 与 `ARROW_END_SPEC_KEY_FIELDS`（`react/src/kernel/_fields.ts`），由 `react/src/kernel/{builder,unbuilder}.ts` 与 marker 收集（`render/src/svg/builders/arrowCollect.ts`）遍历消费。类型互锁靠 `tsc`（删 / 加字段触发报错），hash / round-trip 守门见 `react/tests/kernel/`。完整原文（idiom 代码 / 三应用细节 / 文件 scope / 测试象限）见本文件 git 历史。
+
+> 🔖 封板压缩 commit `ea674f3f`；压缩前完整施工蓝图 = `git show ea674f3f^:notes/decisions/core/v0/v0.1/v0.1-beta.1/06-field-list-type-lock.md`。

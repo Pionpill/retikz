@@ -31,3 +31,5 @@
 ---
 
 > **实现指针**：level `green`、理论 breaking（删 3 个 type export，实际零消费方、零影响）。真源以代码为准——`CenteredShape` / `localToWorld` / `worldToLocal`（`core/src/geometry/_transform.ts`，不进 barrel），四 shape 文件（`core/src/geometry/{rect,circle,ellipse,diamond}.ts`）import 共享版。验证靠既有 `geometry/{rect,circle,ellipse,diamond}.test.ts` 守门（抽函数行为完全等价）。完整原文（示例代码 / 文件 scope）见本文件 git 历史。
+
+> 🔖 封板压缩 commit `ea674f3f`；压缩前完整施工蓝图 = `git show ea674f3f^:notes/decisions/core/v0/v0.1/v0.1-beta.1/03-geometry-shared-transform-dead-anchor-cleanup.md`。

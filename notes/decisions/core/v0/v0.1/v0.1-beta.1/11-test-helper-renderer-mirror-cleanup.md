@@ -35,3 +35,5 @@
 ---
 
 > **实现指针**：level `green`、非 breaking（仅 core 测试断言形态变化，74 处不增不减 case、零生产代码改动）。真源以代码为准——core 测试改为断言 `PathCommand` / `Transform`（`core/src/primitive/{path,group}.ts`）结构，工厂 helper `core/tests/helpers/path-command-factory.ts`（只产结构化数据），镜像 helper `path-d.ts` / `transform.ts` 已删除；迁出的字符串契约由 `react/tests/render/path-d-builder.test.tsx`（真实 `buildPathD`）守门。完整原文（74 处分布表 / 分批 commit 计划）见本文件 git 历史。
+
+> 🔖 封板压缩 commit `ea674f3f`；压缩前完整施工蓝图 = `git show ea674f3f^:notes/decisions/core/v0/v0.1/v0.1-beta.1/11-test-helper-renderer-mirror-cleanup.md`。

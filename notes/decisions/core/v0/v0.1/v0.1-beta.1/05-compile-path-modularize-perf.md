@@ -34,3 +34,5 @@ THICKNESS 互锁（字面即决策）：`as const satisfies Record<NonNullable<I
 ---
 
 > **实现指针**：level `red`（动整个 path 编译器组织 + algorithm + 类型层），非 breaking（零行为 / 零 IR / 零公开 API 变化）。真源以代码为准——拆出的 `core/src/compile/path/` 子目录（`index.ts` 主循环入口 + `relative` / `shrink` / `split` / `label` / `anchor` 子文件），`findPrev` 单调指针在 `path/index.ts`，`THICKNESS_TO_WIDTH` 互锁基准 `IRPath['thickness']`（`core/src/ir/path/path.ts`）。e2e snapshot + algorithm 等价性 + 类型互锁测试见 `core/tests/compile/`。完整原文（8 职责分解 / findPrev 代码 / 测试象限 / 重构 commit 顺序）见本文件 git 历史。
+
+> 🔖 封板压缩 commit `ea674f3f`；压缩前完整施工蓝图 = `git show ea674f3f^:notes/decisions/core/v0/v0.1/v0.1-beta.1/05-compile-path-modularize-perf.md`。

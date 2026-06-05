@@ -59,3 +59,5 @@ kind 字面量限定词在前（`'polar-translate'` / `'at-translate'` / `'offse
 ---
 
 > **实现指针**：level `red`（动 IR schema + compile + 包 index 公开导出）、additive 非 breaking（v0.1 代码 0 改动可跑）。真源以代码为准——`ScopeSchema` / `IRScope`（`core/src/ir/scope.ts`）、`TransformSchema`（`core/src/ir/transform.ts`，6 变体）、递归 `ChildSchema`（`core/src/ir/scene.ts`）、Pass 1 累积 + GroupPrim emit（`core/src/compile/{compile,scope}.ts`，`lowerScopeTransforms` 复用 `compile/position.ts` 的 `resolvePosition` 把 6 变体展平为 Scene 3 变体）、`<Scope>` kernel（`react/src/kernel/Scope.tsx` + builder / unbuilder 双向）；用户侧示例见文档站 Scope 组件页。测试在 `core/tests/{ir/scope.schema,compile/scope,compile/scope-transform-lowering}.test.ts` 与 `react/tests/kernel/`。完整施工契约（Schema 改动表 / 文件 scope / 测试象限 / DSL 表面）见本文件 git 历史。
+
+> 🔖 封板压缩 commit `da448234`；压缩前完整施工蓝图 = `git show da448234^:notes/decisions/core/v0/v0.2/v0.2-alpha.1/01-scope-ir-and-compile.md`。

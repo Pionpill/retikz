@@ -36,3 +36,5 @@
 ---
 
 > **实现指针**：level `red`（改 `@retikz/react` 公开组件名 + props 类型名，影响所有 docs demo；运行时管线不变）。本 ADR 落地后顶层容器又经后续改名为 `<Layout>`，当前真源以代码为准——`react/src/kernel/Layout.tsx`（组件 + props 类型）、`react/src/kernel/index.ts` / `react/src/index.ts`（public export）、`react/src/kernel/_displayNames.ts` / `builder.ts`（display-name 判断）。测试在 `react/tests/kernel/`。完整原文（实现契约 / Schema 改动表 / 测试象限）见本文件 git 历史。
+
+> 🔖 封板压缩 commit `f3282d91`；压缩前完整施工蓝图 = `git show f3282d91^:notes/decisions/core/v0/v0.1/v0.1-beta.2/02-tikz-to-tikz-component.md`。

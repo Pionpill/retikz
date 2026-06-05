@@ -55,3 +55,5 @@
 ---
 
 > **实现指针**：level `red`（动 `core/src/ir/**` + `compile/**` + `geometry/**`）、additive 零破坏（新字段 optional，整圆 / 整椭圆输出不变）。真源以代码为准——`CirclePathStepSchema` / `EllipsePathStepSchema`（`core/src/ir/path/step.ts`）、按角度与 closed 分流（`core/src/compile/path/index.ts`，`emitEllipseArc` 推广到 start..end 部分 sweep）、部分 outline / bbox（`core/src/geometry/{circle,ellipse}.ts`）、两 step 变体 props（`react/src/kernel/Step.tsx` + `builder.ts`）。测试在 `core/tests/compile/partial-circle-ellipse.test.ts` + `core/tests/geometry/`。完整原文（Schema 改动表 / pen 语义全表 / 测试象限）见本文件 git 历史。
+
+> 🔖 封板压缩 commit `b99e7294`；压缩前完整施工蓝图 = `git show b99e7294^:notes/decisions/core/v0/v0.2/v0.2-alpha.5/02-partial-circle-ellipse.md`。

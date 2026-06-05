@@ -40,3 +40,5 @@
 ---
 
 > **实现指针**：level `yellow`（叠加 IR 字段 + compile，复用既有 bend→cubic / `GroupPrim` / `segment.ts`，不动注册面 / primitive 契约根本），纯叠加字段、零破坏。真源以代码为准——`BendStepSchema` out/in/looseness（`core/src/ir/path/step.ts`）、`PathSchema` rotate/scale/marks（`core/src/ir/path/path.ts`）、out/in→cubic + self-loop / path transform 包 GroupPrim / marks 调 segment.ts 产 marker（`core/src/compile/path/`）、变换机器（`core/src/primitive/group.ts` `applyTransformChain`）、采样（`core/src/geometry/segment.ts`）。测试在 `core/tests/compile/{path-outin-loop,path-transform,path-marks}.test.ts` 与 `core/tests/ir/path/curve-transform-marking.schema.test.ts`。完整施工契约（Schema 改动表 / 文件 scope / 测试象限 / 待决策点）见本文件 git 历史。
+
+> 🔖 封板压缩 commit `7141a9b0`；压缩前完整施工蓝图 = `git show 7141a9b0^:notes/decisions/core/v0/v0.2/v0.2-alpha.8/03-curve-transform-marking.md`。

@@ -32,3 +32,5 @@
 ---
 
 > **实现指针**：level `yellow`、非 breaking（仅类型严谨度收敛，零行为 / 零公开 API 变化，cast 是编译期）。真源以代码为准——6 个 `buildXxxFromProps` typed helper（`react/src/kernel/builder.ts`），同步审计的 `react/src/kernel/unbuilder.ts`。守门靠既有 builder / unbuilder / Draw 测试 + ADR-04 round-trip + `tsc --noEmit`。完整原文（cast 收敛示例 / 文件 scope / 测试象限）见本文件 git 历史。
+
+> 🔖 封板压缩 commit `ea674f3f`；压缩前完整施工蓝图 = `git show ea674f3f^:notes/decisions/core/v0/v0.1/v0.1-beta.1/07-builder-cast-narrow.md`。

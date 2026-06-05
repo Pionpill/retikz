@@ -46,3 +46,5 @@
 ---
 
 > **实现指针**：level `red`（动 `core/src/compile/node.ts` 的 `emitNodePrimitives`），非 breaking（无 schema / IR / 公开类型变化，纯 emit 输出结构调整——带文本 Node 多包一层 `GroupPrim`）。真源以代码为准——`emitNodePrimitives` 末段 `needsGroup` 判据（`core/src/compile/node.ts`）；构造无 transform 的 `GroupPrim`（`core/src/primitive`，`transforms` optional 已支持）；react `transform-builder` 的 `buildTransform` 对 undefined / 空数组回 undefined（已支持）。测试在 `core/tests/compile/node-group-wrap.test.ts`（带文本单 group 无 transform / 纯几何平铺 / 带旋转有 rotate transform / 多行单 group / circle shape / 纯几何带样式仍平铺 / 空串仍包 / label 在同 group / 与 zIndex 交互整 group 排序），既有 `node-label.test.ts`（`findLabel` 递归进 group）零改动通过，带文本 Node 快照随之刷新。完整原文（选项详情 / 决策细节 / DSL 与 HTML 对比 / 测试象限 9 case / 文件 scope）见本文件 git 历史。
+
+> 🔖 封板压缩 commit `a21a9d6b`；压缩前完整施工蓝图 = `git show a21a9d6b^:notes/decisions/core/v0/v0.2/v0.2-alpha.4/03-text-node-group-wrap.md`。

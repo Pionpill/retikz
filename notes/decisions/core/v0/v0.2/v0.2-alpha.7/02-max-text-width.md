@@ -46,3 +46,5 @@
 ---
 
 > **实现指针**：level `yellow`（动 IR node 加一字段 + compile 折行器，不动 primitive 契约 / index 公开面 / render）、additive 非 breaking（未给时行为不变）。真源以代码为准——`NodeSchema.maxTextWidth`（`core/src/ir/node.ts`）、贪心断行器并入多行布局（`core/src/compile/node.ts`，断行逻辑随 node 布局，无独立 text-wrap 文件）。测试在 `core/tests/compile/node-text-wrap.test.ts`。完整施工契约（Schema 表 / 文件 scope / 测试象限 / DSL 表面 / 待决策点）见本文件 git 历史。
+
+> 🔖 封板压缩 commit `d0ae9bf2`；压缩前完整施工蓝图 = `git show d0ae9bf2^:notes/decisions/core/v0/v0.2/v0.2-alpha.7/02-max-text-width.md`。

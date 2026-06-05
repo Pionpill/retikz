@@ -43,3 +43,5 @@
 ---
 
 > **实现指针**：level `red`（动 `react/src/index.ts` 公开主名）、向后兼容 additive（`TikZ` deprecated alias，渲染行为零变化）。真源以代码为准——`Layout`/`LayoutProps` + `TikZ`/`TikZProps` alias + `isProductionEnv` 守卫（`react/src/kernel/Layout.tsx`，原 `TikZ.tsx`）、`react/src/{kernel/index,index}.ts` 导出、AST 白名单 `COMPONENT_REGISTRY`（`apps/docs/src/lib/jsx-to-ir/parser.ts`）、system prompt 双语列举 + `to` 对象形态（`apps/docs/src/layout/ai-chat/context.ts`）。测试在 `react/tests/kernel/`（Layout-public-api / tikz-alias）与 `apps/docs/tests/`。完整施工契约（codemod 范围 / 计数口径 / 测试象限）见本文件 git 历史。
+
+> 🔖 封板压缩 commit `e6db894b`；压缩前完整施工蓝图 = `git show e6db894b^:notes/decisions/core/v0/v0.2/v0.2-alpha.6/03-tikz-to-layout-rename.md`。

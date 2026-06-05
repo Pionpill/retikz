@@ -50,3 +50,5 @@ export type MarkType = ValueOf<typeof PlotMark>;
 ---
 
 > **实现指针**：level `red`（动 `plot/src/ir/**`）、additive 非 breaking。真源以代码为准——`ChannelSchema`（field/value refine 互斥）/ `EncodingSchema`（`plot/src/ir/encoding.ts`，复用 ADR-02 `ScalarValueSchema`）、`PlotMark` / `PointMarkSchema` / `LineMarkSchema` / `MarkSchema` + `Channel` / `Encoding` / `Mark` 类型（`plot/src/ir/mark.ts`，复用 core `ValueOf`）。测试在 `packages/plot/plot/tests/ir/{encoding,mark}.schema.test.ts`。完整施工契约（Schema 改动表 / 文件 scope / 测试象限 / 依赖现有元素）见本文件 git 历史。
+
+> 🔖 封板压缩 commit `9115e6b4`；压缩前完整施工蓝图 = `git show 9115e6b4^:notes/decisions/plot/v0/v0.1/v0.1-alpha.1/05-plot-encoding-mark.md`。

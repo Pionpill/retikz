@@ -42,3 +42,5 @@
 > - 真源以代码为准：`resolveLinearScale` / `scaleTicks` / `TickSet` / `DEFAULT_TICK_COUNT`（`plot/src/lower/scale.ts`，基于 `d3-scale` + `d3-array`）；d3 是 lowering 内部依赖、不进 IR / 不进包 barrel。`d3-scale` / `d3-array` 版本在 `pnpm-workspace.yaml` catalog。
 > - 测试见 `plot/tests/lower/scale.test.ts`（映射与 alpha.1 等价、nice 刻度、去尾零标签、tickCount 密度、single-datum 中点、空集 extent、退化/非有限 domain 锁定）与 `plot/tests/lower/lowerPlots.test.ts`（守 alpha.1 投影逐字不变）。
 > - 完整原文（d3 子包选择 / 测试象限 / 文件 scope）见本文件 git 历史。
+
+> 🔖 封板压缩 commit `7acbf962`；压缩前完整施工蓝图 = `git show 7acbf962^:notes/decisions/plot/v0/v0.1/v0.1-alpha.2/02-d3-scale.md`。

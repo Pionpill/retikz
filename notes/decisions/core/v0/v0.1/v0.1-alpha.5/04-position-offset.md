@@ -45,3 +45,5 @@
 ---
 
 > **实现指针**：level `red`、additive。真源以代码为准——`OffsetPositionSchema`/`IROffsetPosition`（`core/src/ir/position/offset-position.ts`）、union 扩入 `core/src/ir/{node,coordinate}.ts` + `core/src/ir/path/target.ts`、`resolvePosition` 分支（`core/src/compile/position.ts`）、target 解析复用（`core/src/compile/path.ts`）。测试在 `core/tests/compile/`。完整原文（of 三态 DSL 示例 / 测试象限 22 case）见本文件 git 历史。
+
+> 🔖 封板压缩 commit `8a8f2f5a`；压缩前完整施工蓝图 = `git show 8a8f2f5a^:notes/decisions/core/v0/v0.1/v0.1-alpha.5/04-position-offset.md`。

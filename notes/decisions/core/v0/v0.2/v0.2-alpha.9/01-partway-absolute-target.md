@@ -50,3 +50,5 @@ export type IRBetweenPosition = { between: [IRAbsoluteTarget, IRAbsoluteTarget];
 ---
 
 > **实现指针**：level `red`（动 `ir/position/**` 新 schema + `ir/node.ts` / `ir/coordinate.ts` / `ir/path/target.ts` union 加分支 + `compile/**` resolve + `index.ts` 导出），向后兼容纯叠加 union 分支、零破坏。真源以代码为准——`IRAbsoluteTarget` / `IRBetweenPosition` / `AbsoluteTargetSchema` / `BetweenPositionSchema`（`core/src/ir/position/between-position.ts`）、between resolve + lerp（`core/src/compile/position.ts`，NodeTarget 端点经 `core/src/compile/path/anchor.ts`）。测试在 `core/tests/ir/between-position.schema.test.ts`、`core/tests/compile/partway*.test.ts`。DSL 表面见文档站 positioning 概念页。完整原文（选项 A/B/C 详情 / 评审 P1 坑位 / Schema 改动表 / 文件 scope / 测试象限）见本文件 git 历史。
+
+> 🔖 封板压缩 commit `133ad7c1`；压缩前完整施工蓝图 = `git show 133ad7c1^:notes/decisions/core/v0/v0.2/v0.2-alpha.9/01-partway-absolute-target.md`。

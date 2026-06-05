@@ -45,3 +45,5 @@
 ---
 
 > **实现指针**：level `red`（动 `ir/paint.ts` shape 开放 + 新 `patterns/` 注册面 + `primitive/paint.ts` `SceneResource.tile` + `compile/**` registry + CompileOptions + `react/render` 物化 + 公开导出），向后兼容非 breaking（`pattern.shape` 从 3 枚举扩为 string，旧字面量仍合法；内置 3 行为零回归）。真源以代码为准——`PatternDefinition` / `PatternEmitContext` + `BUILTIN_PATTERNS`（`core/src/patterns/{types,index}.ts`）、`pattern.shape` 开放 + 名类型（`core/src/ir/paint.ts`）、`ResolvedPatternTile` + `SceneResource.tile`（`core/src/primitive/paint.ts`）、`createPaintRegistry` 查表 + emit 产 tile（`core/src/compile/paint.ts`）、`CompileOptions.patterns` + 合并 + warn code（`core/src/compile/compile.ts`）、物化（`react/src/render/paintDefs.tsx`）、`<Layout patterns>`（`react/src/kernel/Layout.tsx`）、公开导出（core+react `index.ts`）。测试在 `core/tests/patterns/`。完整施工契约（Schema 改动表 / 文件 scope / 测试象限 / 待决策点）见本文件 git 历史。
+
+> 🔖 封板压缩 commit `7141a9b0`；压缩前完整施工蓝图 = `git show 7141a9b0^:notes/decisions/core/v0/v0.2/v0.2-alpha.8/04-pattern-definition.md`。

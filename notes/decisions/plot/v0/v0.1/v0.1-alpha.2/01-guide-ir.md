@@ -72,3 +72,5 @@ export const GuideDimension = { X: 'x', Y: 'y' } as const; // 定位维度（非
 > - 真源以代码为准：`AxisGuideSchema` / `GuideSchema` / `PlotGuide` / `GuideDimension`（`plot/src/ir/guide.ts`）、`PlotSpecSchema.guides` 槽位（`plot/src/ir/plot.ts`）、包导出（`plot/src/ir/index.ts`）。
 > - 测试见 `plot/tests/ir/guide.schema.test.ts` 与 `plot/tests/ir/plot-spec.schema.test.ts`（合法/缺字段/非法 dimension/tickCount/grid 拒绝、guides JSON round-trip、与 marks 共存）。
 > - 完整原文（Schema 改动表 / 文件 scope / 测试象限 / DSL 表面）见本文件 git 历史。
+
+> 🔖 封板压缩 commit `7acbf962`；压缩前完整施工蓝图 = `git show 7acbf962^:notes/decisions/plot/v0/v0.1/v0.1-alpha.2/01-guide-ir.md`。

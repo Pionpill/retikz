@@ -48,3 +48,5 @@
 ---
 
 > **实现指针**：level `yellow`（仅动 `react/src/kernel/**`：`Layout.tsx` 加样式 props + 按需包合成 `<Scope>`、`_fields.ts` 共享 `ScopeStyleProps`、`Scope.tsx` 复用该类型、`builder.ts` 的 `wrapRootScope` 合成函数；不动 core IR / compile，复用既有 `IRScope` 与 cascade），`LayoutProps` 新增**可选** props 纯增量、非破坏。真源以代码为准——`Layout.tsx` / `Scope.tsx` / `_fields.ts` / `builder.ts`（`packages/core/react/src/kernel/`）。测试在 `react/tests/kernel/layout-scope-style.test.tsx`。DSL 表面 + "全图默认样式"用法见文档站 layout/overview 组件页。完整原文（选项 A/B/C 详情 / DSL 等价示例 / 待决策点 / 文件 scope（含 ComponentPreview 偏离白名单）/ 测试象限）见本文件 git 历史。
+
+> 🔖 封板压缩 commit `b1bf10a1`；压缩前完整施工蓝图 = `git show b1bf10a1^:notes/decisions/core/v0/v0.2/v0.2-beta.2/01-layout-scope-style.md`。

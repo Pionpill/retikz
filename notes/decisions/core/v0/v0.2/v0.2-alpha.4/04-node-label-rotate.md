@@ -47,3 +47,5 @@
 ---
 
 > **实现指针**：level `red`（动 `core/src/ir/node.ts` 的 `NodeLabelSchema` + `core/src/compile/node.ts`），**非 schema breaking 但改输出**——rotated Node（`rotate !== 0`）上 label 位置从「双重旋转」修正为「单次旋转」，既有 rotated-Node + label 快照会变（变更日志显式声明 latent bug 修复），不旋转 Node 零变化。真源以代码为准——`NodeLabelSchema.rotate`（`z.union([z.enum(['none','radial','tangent']), z.number()]).optional()`）/ `keepUpright`（`core/src/ir/node.ts`）、`labelCenter` 改用 axis-aligned layout 调两分支 + `resolveLabelRotateDeg` + emit 包 rotate GroupPrim（`core/src/compile/node.ts`，`anchorOf` / `angleBoundaryOf` 本身不改）；React `label` 整体透传零改动。测试在 `core/tests/compile/node-label-rotate.test.ts`（缺省 / none 不包 group / 数字绕自身中心 / radial≈0 / tangent≈90 / 数字角度分支无双重旋转 / keepUpright 翻转 / schema 拒非法 rotate 与非 boolean keepUpright / 不旋转位置锁定 / rotated 无双重旋转核心不变量 / node+label 角度叠加 / 嵌在文本 Node 外层 g 内），既有 `node-label.test.ts` 不旋转用例零改动通过。完整原文（选项代码 / 决策细节 / DSL 示例 / 测试象限 9+ case / 文件 scope / 依赖元素）见本文件 git 历史。
+
+> 🔖 封板压缩 commit `a21a9d6b`；压缩前完整施工蓝图 = `git show a21a9d6b^:notes/decisions/core/v0/v0.2/v0.2-alpha.4/04-node-label-rotate.md`。

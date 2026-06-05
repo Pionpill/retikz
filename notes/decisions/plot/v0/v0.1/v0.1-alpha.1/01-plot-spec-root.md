@@ -59,3 +59,5 @@ export type PlotNodeType = ValueOf<typeof PlotComposite>;
 ---
 
 > **实现指针**：level `red`（动 `plot/src/ir/plot.ts` + 首次公开 `plot/src/index.ts`）、additive 非 breaking。真源以代码为准——`PLOT_NAMESPACE` / `PlotComposite` / `PlotSpecSchema` / `PlotSpec`（`plot/src/ir/plot.ts`，extend core `CompositeBaseSchema`，复用 `JsonObjectSchema` / `ValueOf`），barrel 在 `plot/src/ir/index.ts` + `plot/src/index.ts`。用户侧示例见文档站 plot 分组。测试在 `packages/plot/plot/tests/ir/plot-spec.schema.test.ts`。完整施工契约（Schema 改动表 / 文件 scope / 测试象限 / 依赖现有元素）见本文件 git 历史。
+
+> 🔖 封板压缩 commit `9115e6b4`；压缩前完整施工蓝图 = `git show 9115e6b4^:notes/decisions/plot/v0/v0.1/v0.1-alpha.1/01-plot-spec-root.md`。

@@ -34,3 +34,5 @@
 ---
 
 > **实现指针**：level `red`（动 `compileToScene` 公开 API：新增 `CompileWarning` type export + `CompileOptions.onWarn` 字段），非 breaking（superset 扩张 + 默认行为等价）。用户用法见文档站「参考 / 渲染 / 编译选项」。真源以代码为准——`CompileWarning` / `CompileOptions.onWarn` / 默认 warn dispatcher（`core/src/compile/compile.ts`，经 `core/src/index.ts` 导出），silent fail 点加 onWarn 调用在 `core/src/compile/path/` 与 `position`。测试见 `core/tests/compile/`（happy / 边界 dev-vs-prod / 多 warning 顺序）。完整原文（完整 code 列表 / DSL 示例 / 文件 scope）见本文件 git 历史。
+
+> 🔖 封板压缩 commit `ea674f3f`；压缩前完整施工蓝图 = `git show ea674f3f^:notes/decisions/core/v0/v0.1/v0.1-beta.1/08-compile-on-warn-collector.md`。

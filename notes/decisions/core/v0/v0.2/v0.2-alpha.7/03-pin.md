@@ -52,3 +52,5 @@ pin?: boolean | { stroke?: string; strokeWidth?: number; dashPattern?: Array<num
 ---
 
 > **实现指针**：level `yellow`（动 IR node label schema + compile label emit 产引线，不动 primitive 契约 / index 公开面）、additive 非 breaking（`pin` optional）。真源以代码为准——`NodeLabelSchema.pin`（`core/src/ir/node.ts`）、label emit 产引线 `PathPrim` + 包 `GroupPrim`、label / pin 计入 bbox（`labelExtentPoints`）（`core/src/compile/node.ts`，复用 alpha.6 `boundaryPointOf`）。测试在 `core/tests/compile/node-pin.test.ts`。完整施工契约（Schema 表 / 文件 scope / 测试象限 / DSL 表面 / 待决策点）见本文件 git 历史。
+
+> 🔖 封板压缩 commit `d0ae9bf2`；压缩前完整施工蓝图 = `git show d0ae9bf2^:notes/decisions/core/v0/v0.2/v0.2-alpha.7/03-pin.md`。

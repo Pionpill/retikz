@@ -43,3 +43,5 @@
 ---
 
 > **实现指针**：level `red`（动 compile，无 schema 改动——`scope.id` 字段 schema 在 ADR-01；synthetic layout 是 compile 内部数据、不动公开 API）、非 breaking。真源以代码为准——`computeScopeBoundingBox` / `registerScopeAsLayout`（`core/src/compile/scope.ts`，构造方式参考 `coordinateAsLayout`）、Pass 1 scope 子树结束时注册（`core/src/compile/compile.ts`）；synthetic layout 复用 `NodeLayout` 类型（`core/src/compile/node.ts`）+ `rect.anchor()` / `boundaryPoint()`（`core/src/geometry/rect.ts`）；path / position 引用 scope.id 走与普通 rectangle node 同一路径（`compile/path/*`、`resolvePosition` 不改）。测试在 `core/tests/compile/scope-bbox.test.ts`。完整施工契约（5 项决策细节 / 文件 scope / 测试象限 / DSL 表面）见本文件 git 历史。
+
+> 🔖 封板压缩 commit `da448234`；压缩前完整施工蓝图 = `git show da448234^:notes/decisions/core/v0/v0.2/v0.2-alpha.1/03-scope-id-bounding-box.md`。

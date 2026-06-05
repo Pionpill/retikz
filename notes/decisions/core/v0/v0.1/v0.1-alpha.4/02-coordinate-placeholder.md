@@ -38,3 +38,5 @@
 ---
 
 > **实现指针**：level `red`（动 `IRChild` union + compile）、addition-only 不影响现有功能。真源以代码为准——`core/src/ir/coordinate.ts`、Pass 1 coordinate 分支（`core/src/compile/compile.ts`）、`react/src/kernel/Coordinate.tsx`、builder/unbuilder coordinate 分支；测试在 `core/tests/`。完整原文（背景 / 选项 / nodeIndex layout 代码 / 测试清单）见本文件 git 历史。
+
+> 🔖 封板压缩 commit `70d471b5`；压缩前完整施工蓝图 = `git show 70d471b5^:notes/decisions/core/v0/v0.1/v0.1-alpha.4/02-coordinate-placeholder.md`。

@@ -30,3 +30,5 @@
 ---
 
 > **实现指针**：level `green`、非 breaking（纯补测 + 个别边界行为微调）。真源以代码为准——边界行为落在 viewBox 计算（`core/src/compile/compile.ts`，`BBOX_EXTREME` 类 warning）、`core/src/compile/text-metrics.ts`、`render/src/svg/builders/`（path-d / transform throw message）、`render` 的 marker 收集（`useId` 派生前缀）。测试见 `core/tests/`（`parsers/parseWay-shape-errors`、`compile/text-metrics-extremes`）与 `react/tests/`（`render/path-d-builder-errors`、`kernel/Layout-multi-instance`、`render/browser-measurer-cache`）。完整原文（6 类缺测表 / 测试象限）见本文件 git 历史。
+
+> 🔖 封板压缩 commit `ea674f3f`；压缩前完整施工蓝图 = `git show ea674f3f^:notes/decisions/core/v0/v0.1/v0.1-beta.1/09-boundary-error-tests.md`。

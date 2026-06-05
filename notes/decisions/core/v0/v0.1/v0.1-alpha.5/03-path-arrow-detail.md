@@ -40,3 +40,5 @@
 ---
 
 > **实现指针**：level `red`、⚠️ BREAKING（`arrowShape` IR 写法不再合法，alpha 期直接断）。真源以代码为准——`ArrowDetailSchema`/`IRArrowDetail`（`core/src/ir/path/arrow.ts`，复用 `ARROW_SHAPES`）、`PathSchema.arrowDetail`（`core/src/ir/path/path.ts`）、resolve（`core/src/compile/path.ts`）、`react/src/render/arrowMarkers.tsx`（接收 color/fill/opacity/scale/length/width/lineWidth）、`renderPrim.tsx`（marker id 纳入 detail hash 避免 defs 复用错配）。测试在 `core/tests/` 与 `react/tests/render/`。完整原文（字段全表 / DSL 示例 / 测试象限）见本文件 git 历史。
+
+> 🔖 封板压缩 commit `8a8f2f5a`；压缩前完整施工蓝图 = `git show 8a8f2f5a^:notes/decisions/core/v0/v0.1/v0.1-alpha.5/03-path-arrow-detail.md`。

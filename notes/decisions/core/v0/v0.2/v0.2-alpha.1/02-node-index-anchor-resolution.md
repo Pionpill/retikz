@@ -40,3 +40,5 @@
 ---
 
 > **实现指针**：level `red`（动 compile 核心数据结构 + `CompileWarning.code`）、非 breaking（默认行为等价 v0.1；`CompileWarning.code` 是开放 union 加 `'DUPLICATE_NODE_ID'` 向后兼容）。真源以代码为准——`NameStack`（`core/src/compile/name-stack.ts`，pushFrame / popFrame / register / lookup / phase）、`resolveAnchor` + WeakMap cache（`core/src/compile/anchor-cache.ts`）、`compileToScene` 把 `nodeIndex: Map` 换为 `nameStack: NameStack` + duplicate warn（`core/src/compile/compile.ts`）、`layoutNode` / `resolvePosition` / `compile/path/*` 签名换 nameStack；anchor 分发到 `core/src/geometry/{rect,circle,ellipse,diamond}.ts`（不改 geometry 实现）。测试在 `core/tests/compile/{name-stack,anchor-cache,scope-anchor,scope-namespace,scope}.test.ts`。完整施工契约（13 项决策细节 / 文件 scope / 测试象限 / DSL 表面）见本文件 git 历史。
+
+> 🔖 封板压缩 commit `da448234`；压缩前完整施工蓝图 = `git show da448234^:notes/decisions/core/v0/v0.2/v0.2-alpha.1/02-node-index-anchor-resolution.md`。

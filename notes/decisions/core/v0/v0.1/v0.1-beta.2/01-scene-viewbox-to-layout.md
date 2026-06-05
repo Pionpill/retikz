@@ -43,3 +43,5 @@
 ---
 
 > **实现指针**：level `red`（改 core 公开 type / Scene 字段 / helper export，同步 react adapter 与 docs；运行时行为等价）。真源以代码为准——`Layout`（`core/src/primitive/layout.ts`）、`Scene.layout`（`core/src/primitive/scene.ts`）、`computeLayout`（`core/src/compile/layout.ts`）、public export（`core/src/index.ts`）；react 侧 `react/src/render/viewBox.ts` 的 `formatViewBox` 仅改参数类型。测试在 `core/tests/compile/`（`layout.test.ts` / `layout-public-api.test.ts`）。完整原文（实现契约 / Schema 改动表 / 测试象限）见本文件 git 历史。
+
+> 🔖 封板压缩 commit `f3282d91`；压缩前完整施工蓝图 = `git show f3282d91^:notes/decisions/core/v0/v0.1/v0.1-beta.2/01-scene-viewbox-to-layout.md`。

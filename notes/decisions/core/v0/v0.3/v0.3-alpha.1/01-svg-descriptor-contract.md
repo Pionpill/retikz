@@ -55,3 +55,5 @@
 ---
 
 > **实现指针**：level `red`（新建包公开 API 表面；同时动 react render / kernel）、非 breaking（react 用户 API 不变，svg 包纯新增；React `Layout` 新增可选 `idPrefix?` additive）。真源以代码为准——`SvgNode` / `SvgAttrs`（`render/src/svg/types.ts`）、`buildSvgDocument` / `renderToSvgString` / arrow 收集 + dedup + hash（`render/src/svg/`）、`path-d-builder` / `transform-builder` / `viewBox`（已下沉 `render/src/svg/`）；react 侧 `svgToReact`（`react/src/render/svgToReact.ts`，kebab→camelCase 映射）+ `Layout` 的 `idPrefix`（`react/src/kernel/Layout.tsx`）。`csstype` 走 catalog（纯类型）。用户侧示例见文档站。测试在 `render/tests/`（build / serialize / document）+ react `tests/`（字符串↔React parity 守 ADR 核心风险）。完整施工契约（Schema 定位 / 文件 scope / 测试象限 10 case / 依赖现有元素）见本文件 git 历史。
+
+> 🔖 封板压缩 commit `05ed13c2`；压缩前完整施工蓝图 = `git show 05ed13c2^:notes/decisions/core/v0/v0.3/v0.3-alpha.1/01-svg-descriptor-contract.md`。

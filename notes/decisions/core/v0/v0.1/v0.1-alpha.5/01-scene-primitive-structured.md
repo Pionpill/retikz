@@ -48,3 +48,5 @@
 ---
 
 > **实现指针**：level `red`、⚠️ BREAKING（消费 Scene primitive 的 adapter 作者需同步；React/IR/LLM 端零感知、文档不改）。真源以代码为准——`PathCommand`/`PathPrim`（`core/src/primitive/path.ts`）、`Transform`/`GroupPrim`（`core/src/primitive/group.ts`）、`core/src/compile/{path,node}.ts`、`react/src/render/{path-d-builder,transform-builder,renderPrim}`；`arcSvgFlags` 已从 `core/geometry/arc.ts` 移入 react path-d-builder。测试在 `core/tests/` 与 `react/tests/render/`。完整原文（类型全字段 / 转换矩阵 / 测试象限）见本文件 git 历史。
+
+> 🔖 封板压缩 commit `8a8f2f5a`；压缩前完整施工蓝图 = `git show 8a8f2f5a^:notes/decisions/core/v0/v0.1/v0.1-alpha.5/01-scene-primitive-structured.md`。

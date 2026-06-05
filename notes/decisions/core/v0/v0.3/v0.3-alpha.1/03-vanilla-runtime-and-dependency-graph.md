@@ -70,3 +70,5 @@ vanilla 是无框架用户的**唯一 runtime 入口**。`renderToSvgString` 薄
 ---
 
 > **实现指针**：level `red`（新建包公开 API 表面）、非 breaking（纯新增包；svg / canvas / react 用户无感；react 依赖声明不变——「react 直接依赖 render」正式确认）。vanilla **明确不依赖 react**、tsconfig 开 `lib: ESNext+DOM`。落地实现把整条 SVG 路径连行为测试一并交付（超出原「先骨架」计划）；缺省 `idPrefix = 'r'`（svg `buildSvgDocument` 的 `idPrefix` 必填，故注入确定性常量，多实例同页须经 `options.idPrefix` 显式区分）；`svgNodeToDom` 不公开导出（YAGNI），另抽 `applyAttrs`（root 原地复用与物化共用）。真源以代码为准——`renderToSvgString`（`vanilla/src/renderToSvgString.ts`，薄包）、`mountSvg` / `view`（`vanilla/src/mountSvg.ts`）、`svgNodeToDom` / `applyAttrs`（`vanilla/src/svgNodeToDom.ts`）、`toScene`（`vanilla/src/toScene.ts`，收 `ir` 时 `compileToScene(ir, { measureText? })` 缺省回退 `fallbackMeasurer`）；类型在 `vanilla/src/types.ts`。测试在 `vanilla/tests/`（deps-guard 架构守卫 / render-string / mount-svg，node + jsdom 双环境，node 天然验证 SSR 导入安全）。完整施工契约（文件 scope / 测试象限 11 case / 依赖现有元素）+ 实现偏离记录见本文件 git 历史。
+
+> 🔖 封板压缩 commit `05ed13c2`；压缩前完整施工蓝图 = `git show 05ed13c2^:notes/decisions/core/v0/v0.3/v0.3-alpha.1/03-vanilla-runtime-and-dependency-graph.md`。

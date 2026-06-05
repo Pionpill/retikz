@@ -42,3 +42,5 @@ ADR-01 首批只做 gradient。pattern（斜线 / 网点 / 网格）与 image（
 ---
 
 > **实现指针**：level `red`（动 `ir/paint.ts` schema）+ `yellow`（react render），取最高 `red`；additive 非 breaking（`PaintSpec` 加 union 分支），compile 零改动（registry 已 spec 无关）。真源以代码为准——`PaintSpecSchema` 的 pattern / image 分支（`core/src/ir/paint.ts`）、物化（`react/src/render/paintDefs.tsx` 加 pattern / image case）。测试在 `core/tests/ir/paint.test.ts`（schema）与 `react/tests/render/paintDefs.test.tsx`（物化）。完整施工契约（Schema 表 / 文件 scope / 测试象限）见本文件 git 历史。
+
+> 🔖 封板压缩 commit `d0ae9bf2`；压缩前完整施工蓝图 = `git show d0ae9bf2^:notes/decisions/core/v0/v0.2/v0.2-alpha.7/04-pattern-image-deferred.md`。

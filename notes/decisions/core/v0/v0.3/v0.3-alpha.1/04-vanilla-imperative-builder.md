@@ -43,3 +43,5 @@ ADR-03 后 `@retikz/vanilla` 只能吃 IR / Scene：无框架用户要么手写 
 ---
 
 > **实现指针**：level `red`（扩 vanilla 公开 API 表面）、非 breaking（纯新增）。不动 core / render / react 源码（仅引用 core 的 IR 类型 / `parseWay` / `compileToScene` / schema），无新增依赖。用户侧签名集 + 示例见文档站。真源以代码为准——`figure` 重载 + `Figure` 装配（`vanilla/src/builder/figure.ts` + `vanilla/src/figure.ts`，`Figure` 含 `.ir` / `.mount` / `.toSvgString` / `.toCanvas` + fluent 方法）、`node` / `draw` / `coordinate` / `scope`（`vanilla/src/builder/*.ts`）、各 `*Config` / `Way` 类型派生自 core IR（`vanilla/src/builder/types.ts` + `vanilla/src/types.ts`）；`mountSvg` / `renderToSvgString` 入参扩成 `Figure | IR | Scene`（经内部 `isFigure` brand 判别，纯内部不导出）。`draw` way 走 core `parseWay`（不自写）。测试在 `vanilla/tests/`（builder-* 覆盖字段映射 / 重载区分 / way 全集 ≡ parseWay / hyperscript ≡ fluent / width·height 输出 / call-site options 优先 / 自定义 shape 透传 / 非法 config schema 报错）。完整施工契约（文件 scope / 测试象限 13 case / 依赖现有元素）+ 实现偏离记录见本文件 git 历史。
+
+> 🔖 封板压缩 commit `05ed13c2`；压缩前完整施工蓝图 = `git show 05ed13c2^:notes/decisions/core/v0/v0.3/v0.3-alpha.1/04-vanilla-imperative-builder.md`。

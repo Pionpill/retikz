@@ -31,3 +31,5 @@
 ---
 
 > **实现指针**：level `red`、⚠️ **BREAKING**（公开 schema 导出名 `NodeTextSchema` / `IRNodeText` → `TextBlockSchema` / `IRTextBlock`，下游需改 import；`_builder` 改名 / `ctx → context` 对外零影响）。changelog 需带迁移指引。真源以代码为准——`TextBlockSchema` / `IRTextBlock`（`core/src/ir/text.ts`，经 `core/src/index.ts` 导出，`NodeSchema.text` 内部引用同步改）、`react/src/kernel/{builder,unbuilder}.ts`、`renderPrim` 的 `context` 参数（render adapter）。守门靠既有测试全过 + `import { TextBlockSchema } from '@retikz/core'` 可用 / 旧名不再 export。完整原文（schema 改动表 / 文件 scope）见本文件 git 历史。
+
+> 🔖 封板压缩 commit `ea674f3f`；压缩前完整施工蓝图 = `git show ea674f3f^:notes/decisions/core/v0/v0.1/v0.1-beta.1/10-rename-cleanup.md`。

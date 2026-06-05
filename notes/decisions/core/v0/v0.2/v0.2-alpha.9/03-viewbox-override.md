@@ -40,3 +40,5 @@ override 落点是 **Scene IR 顶层 `viewBox` 字段**（评审 P2 已拍），
 ---
 
 > **实现指针**：level `yellow`（动 `ir/scene.ts` 顶层加 `viewBox?` 字段 + `compile/compile.ts` override 分支 + `react/kernel/Layout.tsx` 透传；不动 primitive 契约 / render `viewBox`），向后兼容纯叠加字段、零破坏（未给时全自动不变）。真源以代码为准——`ViewBoxSchema` / `Scene.viewBox`（`core/src/ir/scene.ts`，形态 `{ x, y, width, height }`）、`viewBoxToLayout` + override 分支（`core/src/compile/compile.ts`）、`<Layout viewBox>` 透传（`react/src/kernel/Layout.tsx`）。测试在 `core/tests/compile/viewbox-override*.test.ts`。DSL 表面见文档站 layout 组件页。完整原文（选项 A/B 详情 / Schema 改动表 / 文件 scope / 测试象限）见本文件 git 历史。
+
+> 🔖 封板压缩 commit `133ad7c1`；压缩前完整施工蓝图 = `git show 133ad7c1^:notes/decisions/core/v0/v0.2/v0.2-alpha.9/03-viewbox-override.md`。

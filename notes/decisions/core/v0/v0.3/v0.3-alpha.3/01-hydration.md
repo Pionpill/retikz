@@ -55,3 +55,5 @@
 > - 用户 API / 交互 demo 见文档站「参考 / 渲染器 / 水合」页 + Path 组件页 API 表 `id` 行（react 事件 props `onClick`… / vanilla `hydrate` / `mountCanvas` / `<Layout handlers>` 两套写法）。
 > - 真源以代码为准：`IRPath.id`（`core/src/ir/path/path.ts`）、`ScenePrimitive.id`（`core/src/primitive/*`）、`RetikzEvent` / `hitTest` / `createHydrationController`（`render/src/{hydration,canvas}`）、`hydrate` / `mountCanvas`（`vanilla/src`）；测试在四包 `tests/`（scene-id stamp、path-id round-trip、hitTest 逆 z-order / stroke-only、enter/leave 合成、collectHydrationHandlers、renderer-parity、ssr-then-hydrate）。
 > - 完整施工契约（Schema 改动表 / 文件 scope / 测试象限 16 case / 依赖现有元素）：`git show 9f795047:notes/decisions/core/v0/v0.3/v0.3-alpha.3/01-hydration.md`。
+
+> 🔖 封板压缩 commit `a5a1bd80`；压缩前完整施工蓝图 = `git show a5a1bd80^:notes/decisions/core/v0/v0.3/v0.3-alpha.3/01-hydration.md`。

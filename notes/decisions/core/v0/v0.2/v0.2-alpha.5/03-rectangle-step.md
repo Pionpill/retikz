@@ -33,3 +33,5 @@
 ---
 
 > **实现指针**：level `red`（动 `core/src/ir/**` 加 step + `compile/**` + `geometry/**`）、additive 零破坏（纯新增 step kind，不动既有）。真源以代码为准——`RectangleStepSchema` / `IRRectangleStep`（`core/src/ir/path/step.ts`，进 `StepSchema` discriminatedUnion）、rectangle 分支（`core/src/compile/path/index.ts`）、`outline(from, to, roundedCorners?)`（`core/src/geometry/rect.ts`）、`<Rectangle>` props + `readPathChildren` 分支（`react/src/kernel/Step.tsx` + `builder.ts`）。测试在 `core/tests/compile/rectangle-step.test.ts`。完整原文（Schema 改动表 / 派发 + pen 状态全规格 / 测试象限）见本文件 git 历史。
+
+> 🔖 封板压缩 commit `b99e7294`；压缩前完整施工蓝图 = `git show b99e7294^:notes/decisions/core/v0/v0.2/v0.2-alpha.5/03-rectangle-step.md`。

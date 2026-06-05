@@ -42,3 +42,5 @@
 ---
 
 > **实现指针**：level `red`（动 `ir/path/step.ts` 新 step kind + 新 `ir/json.ts` + 新 `pathGenerators/` 注册面 + `compile/**` 解析 + 公开导出），向后兼容非 breaking（纯叠加新 step kind + 新 CompileOptions，core 不内置任何曲线）。真源以代码为准——`PathGeneratorDefinition` / `PathGeneratorContext` + `definePathGenerator`（`core/src/pathGenerators/{types,define}.ts`）、`GeneratorStepSchema`（`core/src/ir/path/step.ts`）、`JsonObjectSchema` / `IRJsonObject`（`core/src/ir/json.ts`）、`CompileOptions.pathGenerators` + generator 解析（`core/src/compile/compile.ts`、`core/src/compile/path/`）、target resolve 复用（`core/src/compile/path/anchor.ts`）、公开导出（`core/src/index.ts`）。测试在 `core/tests/compile/path-generator{,.adversarial}.test.ts`。完整施工契约（Schema 改动表 / 文件 scope / 测试象限 / 待决策点）见本文件 git 历史。
+
+> 🔖 封板压缩 commit `7141a9b0`；压缩前完整施工蓝图 = `git show 7141a9b0^:notes/decisions/core/v0/v0.2/v0.2-alpha.8/02-path-generator-definition.md`。

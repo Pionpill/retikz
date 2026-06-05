@@ -46,3 +46,5 @@
 ---
 
 > **实现指针**：level `red`（`ShapeDefinition` 是 alpha.3 公开扩展面，加方法即契约改动）、向后兼容（第三方现有 shape 不实现仍合法、仅不支持 `{side,t}`）。真源以代码为准——`ShapeDefinition.edgePoint?`（`core/src/shapes/types.ts`）、内置 4 实现（`core/src/shapes/{rectangle,circle,ellipse,diamond}.ts`）、`EDGE_ENDS` + 弧角/斜边纯函数（`core/src/geometry/_edge.ts` 及各 `geometry/*.ts`）、`resolveEdgePoint` + 缓存（`core/src/compile/anchor-cache.ts`）。测试在 `core/tests/{geometry,compile,shapes}/`。完整施工契约（角度表推导 / diamond 折线 / 测试象限）见本文件 git 历史。
+
+> 🔖 封板压缩 commit `e6db894b`；压缩前完整施工蓝图 = `git show e6db894b^:notes/decisions/core/v0/v0.2/v0.2-alpha.6/02-side-t-edge-point.md`。

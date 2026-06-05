@@ -41,3 +41,5 @@ export type CoordinateType = ValueOf<typeof PlotCoordinate>;
 ---
 
 > **实现指针**：level `red`（动 `plot/src/ir/**`）、additive 非 breaking。真源以代码为准——`PlotCoordinate` / `Cartesian2DSchema` / `CoordinateSchema` / `Coordinate`（`plot/src/ir/coordinate.ts`，复用 core `ValueOf`）；x/y 是字符串、语义指向 `scales[].name` 但 schema 不 import scale、不校验存在性。测试在 `packages/plot/plot/tests/ir/coordinate.schema.test.ts`。完整施工契约（Schema 改动表 / 文件 scope / 测试象限 / 依赖现有元素）见本文件 git 历史。
+
+> 🔖 封板压缩 commit `9115e6b4`；压缩前完整施工蓝图 = `git show 9115e6b4^:notes/decisions/plot/v0/v0.1/v0.1-alpha.1/04-plot-coordinate.md`。

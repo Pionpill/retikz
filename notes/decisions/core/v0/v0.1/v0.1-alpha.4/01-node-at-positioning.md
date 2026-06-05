@@ -40,3 +40,5 @@
 ---
 
 > **实现指针**：level `red`（动 IR position union + compile）、additive 非 breaking。真源以代码为准——`IRAtPosition`（`core/src/ir/position/at-position.ts`）、`resolvePosition`（`core/src/compile/position.ts`）、`CompileOptions.nodeDistance`、`<Layout nodeDistance>`；测试在 `core/tests/`。完整原文（背景示例 / 选项详情 / 测试清单）见本文件 git 历史。
+
+> 🔖 封板压缩 commit `70d471b5`；压缩前完整施工蓝图 = `git show 70d471b5^:notes/decisions/core/v0/v0.1/v0.1-alpha.4/01-node-at-positioning.md`。

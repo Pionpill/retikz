@@ -45,3 +45,5 @@
 ---
 
 > **实现指针**：level `red`（动 `ir/**` step schema + `compile/**` label 回退链）、additive 零破坏（三字段加在末尾、全 optional，不给时回退 currentColor）。真源以代码为准 —— `StepLabelSchema` 加 `textColor`/`opacity`/`font`（`core/src/ir/path/step.ts`，8 个含 label 的 step variant 自动获得）、fill/font 回退链 + 消费 scope labelDefault（`core/src/compile/path/label.ts`）；测试在 `core/tests/ir/step-label.schema.test.ts` 与 `core/tests/compile/path-label-style.test.ts`。完整原文（Schema 改动表 / 文件 scope / 测试象限 / DSL 表面）见本文件 git 历史。
+
+> 🔖 封板压缩 commit `5d1ed4ca`；压缩前完整施工蓝图 = `git show 5d1ed4ca^:notes/decisions/core/v0/v0.2/v0.2-alpha.2/02-step-label-style.md`。

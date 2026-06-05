@@ -32,3 +32,5 @@
 ---
 
 > **实现指针**：level `yellow`、非 breaking（新增 ~20 个 named type export 是 superset 扩张，运行时零变化）。真源以代码为准——`StepProps` 系列（`react/src/kernel/Step.tsx`）、`PathCommand` 系列（`core/src/primitive/path.ts`）、`Transform` 系列（`core/src/primitive/group.ts`）、`TextLine`（`core/src/primitive/text.ts`），均经各自 `index.ts` 导出。type-level smoke 测试见 `react/tests/kernel/StepProps-named-types.test.ts` 与 `core/tests/primitive/{path-command,transform}-named-types.test.ts`。完整原文（示例代码 / 文件 scope / 测试象限）见本文件 git 历史。
+
+> 🔖 封板压缩 commit `ea674f3f`；压缩前完整施工蓝图 = `git show ea674f3f^:notes/decisions/core/v0/v0.1/v0.1-beta.1/02-public-union-named-types-jsdoc.md`。

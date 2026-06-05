@@ -65,3 +65,5 @@ type SceneResource = { kind: 'paint'; id: string; spec: IRPaintSpec };
 ---
 
 > **实现指针**：level `red`（动 IR fill union + primitive 契约 + compile 资源收集 + core/react 公开导出）、additive 非 breaking（`fill` 类型扩张，`string` 仍合法；消费 Scene 的 adapter 需处理 `PaintValue`，本仓 react 同步改）。真源以代码为准——`PaintSpecSchema` / `GradientStopSchema` / `IRPaintSpec`（`core/src/ir/paint.ts`）、`PaintValue` / `SceneResource`（`core/src/primitive/paint.ts`，经 `primitive/scene.ts` re-export）、资源收集 / 去重 / 派 id（`core/src/compile/paint.ts` + `compile/{node,path,scope}.ts` 接入）、adapter 物化（`react/src/render/paintDefs.tsx` + `renderPrim.tsx` 按 `PaintValue` 分派）。测试在 `core/tests/{ir,compile}/paint.test.ts` 与 `react/tests/render/paintDefs.test.tsx`。完整施工契约（Schema 改动表 / 文件 scope / 测试象限 / DSL 表面）见本文件 git 历史。
+
+> 🔖 封板压缩 commit `d0ae9bf2`；压缩前完整施工蓝图 = `git show d0ae9bf2^:notes/decisions/core/v0/v0.2/v0.2-alpha.7/01-paint-basics.md`。

@@ -29,3 +29,5 @@ unbuilder round-trip 测试覆盖到 alpha.3 时代字段，但 alpha.4 / alpha.
 ---
 
 > **实现指针**：level `green`、非 breaking（仅测试 + 必要时修 unbuilder，零公开 API / 运行时变化）。真源以代码为准——round-trip 用例在 `react/tests/kernel/unbuilder.test.tsx`（测对象 `convertIRToReactNode` / `buildIR`，`react/src/kernel/{unbuilder,builder}.ts`）。完整原文（5 组用例形态 / 测试象限）见本文件 git 历史。
+
+> 🔖 封板压缩 commit `ea674f3f`；压缩前完整施工蓝图 = `git show ea674f3f^:notes/decisions/core/v0/v0.1/v0.1-beta.1/04-unbuilder-round-trip-alpha5-coverage.md`。

@@ -32,3 +32,5 @@
 ---
 
 > **实现指针**：level `green`、非 breaking（仅 `.describe()` / JSDoc 文本，零行为变化；`.describe()` 变化会影响 zod JSON Schema 导出，下游对中性表述更友好，不视为破坏）。改动落 `core/src` 的 `primitive/` / `compile/` / `ir/` / `geometry/` 中带 SVG 措辞的 `.describe()` 与 JSDoc。真源以代码为准。验证手段：既有测试全过 + `tsc --noEmit` / `eslint` 全过。完整原文（替换原则表 / 文件 scope）见本文件 git 历史。
+
+> 🔖 封板压缩 commit `ea674f3f`；压缩前完整施工蓝图 = `git show ea674f3f^:notes/decisions/core/v0/v0.1/v0.1-beta.1/01-core-comments-renderer-neutral.md`。

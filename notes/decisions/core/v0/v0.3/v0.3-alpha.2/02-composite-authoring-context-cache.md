@@ -60,3 +60,5 @@ YAGNI——示例 fixture 与早期 plot type 用纯函数足够；过早加 ctx
 ---
 
 > **实现指针**：三项均未实现、未排期，本 ADR 只记录设计方向与触发条件。各自开工时按 `_template.md` 补施工契约。预判 level：延后项 1 = yellow（动 `react/src/kernel/**` + builder）；延后项 2 = red（动 `core/src/compile/**` 的 `expand` 签名）；延后项 3 = red（动 `core/src/compile/lowerComposites.ts`）。基线见 [ADR-01](./01-tier2-support.md) 已交付的 core 管线。
+
+> 🔖 封板压缩 commit `febe281d`；压缩前完整施工蓝图 = `git show febe281d^:notes/decisions/core/v0/v0.3/v0.3-alpha.2/02-composite-authoring-context-cache.md`。

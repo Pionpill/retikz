@@ -41,3 +41,5 @@
 ---
 
 > **实现指针**：level `red`（公开 IR 字段 / React prop / Scene primitive 字段 rename + 值类型 string → `Array<number>`；渲染结果不变，SVG adapter 内部负责 join）。真源以代码为准——`IRPath.dashPattern`（`core/src/ir/path/path.ts`）、`PathPrim` / `RectPrim` / `EllipsePrim` 的 `dashPattern`（`core/src/primitive/{path,rect,ellipse}.ts`）、React prop（`react/src/kernel/Path.tsx` / `react/src/sugar/Draw.tsx`）、SVG join（`react/src/render/renderPrim.tsx`）。测试在 `core/tests/` 与 `react/tests/`。完整原文（实现契约 / Schema 改动表 / 测试象限 10 case）见本文件 git 历史。
+
+> 🔖 封板压缩 commit `f3282d91`；压缩前完整施工蓝图 = `git show f3282d91^:notes/decisions/core/v0/v0.1/v0.1-beta.2/05-path-dash-pattern-naming.md`。

@@ -47,3 +47,5 @@
 ---
 
 > **实现指针**：level `red`（动 IR target schema + compile + parsers + core/react 公开导出）、⚠️ BREAKING（core `TargetSchema` 不再接受字符串节点引用；React JSX / Draw way 字符串写法不变——eager 解析，直接手写 IR 改对象，pre-rc 允许）。真源以代码为准——`AnchorRefSchema`/`NodeTargetSchema`/`IRNodeTarget`/`IRAnchorRef`（`core/src/ir/path/target.ts`）、`parseNodeTarget`（`core/src/parsers/parseNodeTarget.ts`，原 `compile/parseTarget.ts` 已删）、对象唯一路径（`core/src/compile/path/anchor.ts` 的 `refPointOfTarget`/`clipForTarget`）、`parseTargetSugar`/`parseWay` eager 归一、core+react `index.ts` 导出。测试在 `core/tests/{ir/path,parsers,compile/path}/` 与 `react/tests/kernel/`。完整施工契约（Schema 表 / 文件 scope / 测试象限 / dotted-id 规则）见本文件 git 历史。
+
+> 🔖 封板压缩 commit `e6db894b`；压缩前完整施工蓝图 = `git show e6db894b^:notes/decisions/core/v0/v0.2/v0.2-alpha.6/01-structured-target-anchor.md`。

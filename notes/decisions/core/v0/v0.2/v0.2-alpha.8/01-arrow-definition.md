@@ -43,3 +43,5 @@
 ---
 
 > **实现指针**：level `red`（动 `ir/path/arrow.ts` shape 开放 + 新 `arrows/` 注册面 + `primitive/marker.ts` + `compile/**` 查表 + `react/render` 物化 + 公开导出）、向后兼容非 breaking（`arrowDetail.shape` 从 7 枚举扩为 string，旧字面量仍合法；内置 7 行为零回归）。真源以代码为准——`ArrowDefinition` / `ArrowEmitContext`（`core/src/arrows/types.ts`）、`BUILTIN_ARROWS`（`core/src/arrows/index.ts`）、`MarkerPrimitive` 窄子集（`core/src/primitive/marker.ts`）、`ArrowEndSpec` 升级（`core/src/primitive/path.ts`）、`CompileOptions.arrows` + emit 调用（`core/src/compile/compile.ts`、`core/src/compile/path/{arrow-geometry,shrink}.ts`）、物化（`react/src/render/arrowMarkers.tsx`）、`<Layout arrows>`（`react/src/kernel/Layout.tsx`）。测试在 `core/tests/arrows/`、`react/tests/render/arrowMarkers*`。完整施工契约（Schema 改动表 / 文件 scope / 测试象限 / DSL 表面）见本文件 git 历史。
+
+> 🔖 封板压缩 commit `7141a9b0`；压缩前完整施工蓝图 = `git show 7141a9b0^:notes/decisions/core/v0/v0.2/v0.2-alpha.8/01-arrow-definition.md`。

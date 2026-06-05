@@ -48,3 +48,5 @@ Node / Path / Scope schema 加可选 `zIndex`（`z.number().int().finite().optio
 ---
 
 > **实现指针**：level `red`（动 `core/src/ir/{node,path/path,scope}.ts` schema + `core/src/compile/compile.ts` 排序 + react kernel 字段表 / props 互锁），非 breaking（新字段全 optional，未用时输出恒等）。真源以代码为准——`zIndex` 字段（`core/src/ir/node.ts` / `core/src/ir/path/path.ts` / `core/src/ir/scope.ts`，scope 同步手写 `IRScope` + 两 Default `.omit(zIndex)`）、`stableSortByZIndex` / `zIndexOf` Map（`core/src/compile/compile.ts`）、react `_fields.ts` 三表 + `Node/Path/Scope.tsx` props + `unbuilder.ts` path 分支手补。测试在 `core/tests/compile/z-index.test.ts`（升序 / 负值前置 / 同值稳定 / 全缺省恒等 / scope 整体排序 / scope 内部独立 / transformed scope path 顶层排 / schema 守卫拒 nodeDefault.zIndex / 非整数 / 非有限）+ react round-trip。完整原文（选项代码 / 决策细节 / DSL 示例 / 测试象限 9 case / 文件 scope）见本文件 git 历史。
+
+> 🔖 封板压缩 commit `a21a9d6b`；压缩前完整施工蓝图 = `git show a21a9d6b^:notes/decisions/core/v0/v0.2/v0.2-alpha.4/02-explicit-zindex.md`。
