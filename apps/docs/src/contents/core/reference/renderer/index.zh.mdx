@@ -1,0 +1,33 @@
+---
+title: 渲染器
+description: 把渲染目标无关的 Scene 落到具体后端——SVG 矢量 DOM、Canvas 像素位图,以及静态出图后再绑事件的水合。
+---
+
+> 这里是参考层,不是组件文档;写图请从 [组件](/core/components/layout) 开始。
+
+这一组讲 retikz 怎么把图真正画到屏幕上。你写的图会先被编译成一份**与渲染器无关的 Scene**,再交给某个后端落地:**SVG** 产出矢量 DOM,每个图元都是页面上能被 CSS 命中的真实元素;**Canvas** 把同一份 Scene 画成像素位图,适合图元很多或高频重绘的场景。两个后端渲染同一份 Scene、视觉一致,选哪个由元素数量和交互需求决定,随时可换。**水合**是两个后端共用的机制:先静态出图,客户端再按 id 把事件 handler 绑回图元。
+
+## 职责一览
+
+| 主题 | 职责 | 何时查阅 |
+| --- | --- | --- |
+| SVG | Scene → 矢量 DOM,或 SSR / 构建期的字符串输出 | 默认选它:要清晰矢量、CSS 命中、无障碍 |
+| Canvas | Scene → 像素位图,即时模式绘制 + 命中查询 | 图元成百上千、高频重绘、性能优先 |
+| 水合 | 静态出图后按 id 把事件 handler 绑回图元(两后端共用) | 给图加点击 / 悬停等交互 |
+
+## 章节内容
+
+<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+  <LinkedCard href="/core/reference/renderer/svg">
+    <span className="font-semibold">SVG</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">默认渲染器:矢量 DOM 与字符串 / SSR 输出</span>
+  </LinkedCard>
+  <LinkedCard href="/core/reference/renderer/canvas">
+    <span className="font-semibold">Canvas</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">像素位图后端与坐标命中查询</span>
+  </LinkedCard>
+  <LinkedCard href="/core/reference/renderer/hydration">
+    <span className="font-semibold">水合</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">静态出图后按 id 绑定事件 handler</span>
+  </LinkedCard>
+</div>

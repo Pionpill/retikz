@@ -91,7 +91,6 @@ export const coreSection: Array<Section> = [
           { id: 'composite', label: 'core.refComposite' },
         ],
       },
-      { id: 'hydration', label: 'core.refHydration' },
       {
         id: 'schema',
         label: 'core.refSchema',
@@ -100,6 +99,15 @@ export const coreSection: Array<Section> = [
           { id: 'entity',    label: 'core.refEntity' },
           { id: 'path',      label: 'core.refPathSchema' },
           { id: 'placement', label: 'core.refPlacement' },
+        ],
+      },
+      {
+        id: 'renderer',
+        label: 'core.refRenderer',
+        children: [
+          { id: 'svg', label: 'core.refRendererSvg' },
+          { id: 'canvas', label: 'core.refRendererCanvas' },
+          { id: 'hydration', label: 'core.refHydration' },
         ],
       },
       {

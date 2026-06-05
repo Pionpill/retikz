@@ -1,0 +1,59 @@
+---
+title: Canvas
+description: Paints the same Scene as a raster bitmap — immediate-mode drawing + coordinate hit-testing; beats SVG when primitives are many or repaints are frequent.
+---
+
+> This is the reference layer, not component docs; to draw, start from [Components](/core/components/layout).
+
+The Canvas backend paints the figure as a raster bitmap rather than a DOM. It renders the same Scene as SVG and looks identical; the difference is that the whole figure is one canvas instead of an element tree. With no per-primitive DOM nodes, it stays steadier than SVG when you have hundreds of primitives or need frequent repaints / animation. The trade-off is losing CSS hit-testing and accessibility — both of which retikz makes up for with coordinate hit-testing and the same hydration semantics.
+
+## How to use it
+
+**React** — pass `renderer="canvas"` to `<Layout>` explicitly:
+
+```tsx
+import { Layout, Node } from '@retikz/react';
+
+<Layout renderer="canvas">
+  <Node id="a">hello</Node>
+</Layout>
+```
+
+**Vanilla (browser)** — `mountCanvas` mounts the figure as a `<canvas>`; its view adds canvas-side hydration and coordinate mapping on top of what `mountSvg` returns:
+
+```ts
+import { mountCanvas } from '@retikz/vanilla';
+
+const view = mountCanvas(container, ir);
+// view.root is the <canvas>; view.update(next) repaints; view.dispose() unmounts
+```
+
+The input matches SVG — a `Scene`, `IR`, or `Figure`; `devicePixelRatio` defaults to `globalThis.devicePixelRatio` (falling back to 1), so high-DPI screens stay crisp automatically.
+
+## Adding interaction to a Canvas figure
+
+A canvas has no DOM primitives, so locating one relies on **coordinate hit-testing**: the pointer's client pixels are mapped back into Scene coordinates, then geometry hit-testing yields a primitive `id`. That locating is wrapped inside `view.hydrate`, and the code is identical to SVG:
+
+```ts
+const view = mountCanvas(container, ir);
+const handle = view.hydrate({
+  handlers: { box: { click: event => toggle('box') } },
+});
+// handle.dispose() unbinds
+```
+
+The same `handlers` table behaves identically under SVG and Canvas — see [Hydration](/core/reference/renderer/hydration).
+
+<ComponentAlert title="Low-level drawing / hit-testing (for custom integrations)" description="@retikz/render/canvas exposes renderToCanvas(canvas, scene) (paints straight into an HTMLCanvasElement), drawScene (paints into a 2D context), and hitTest(scene, point) (coordinate → primitive id). Reach for this when managing the canvas, offscreen rendering, or hit-testing yourself; ordinary usage only needs mountCanvas above." />
+
+## Canvas or SVG
+
+| | Canvas | SVG |
+| --- | --- | --- |
+| Output | Raster bitmap | Vector DOM nodes |
+| Many primitives | Immediate mode stays steady | Slows as nodes pile up |
+| Scaling | Bound by resolution | Crisp at any zoom |
+| CSS / selectors | One opaque canvas | Every primitive hit-testable |
+| Default | Explicit `renderer="canvas"` | Yes |
+
+Use Canvas for hundreds of primitives or frequent repaints / animation; use the default [SVG](/core/reference/renderer/svg) for a modest number of primitives, crisp vectors, or CSS interaction. Both render the same Scene and share the same hydration code — switch any time.

@@ -72,6 +72,9 @@
     "refPathGenerator": "Path Generators",
     "refComposite": "Tier 2 Composites",
     "refComposites": "Composite",
+    "refRenderer": "Renderer",
+    "refRendererSvg": "SVG",
+    "refRendererCanvas": "Canvas",
     "refHydration": "Hydration"
   },
   "plot": {

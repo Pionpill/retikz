@@ -1,0 +1,33 @@
+---
+title: Renderer
+description: Lands the renderer-agnostic Scene on a concrete backend — SVG vector DOM, Canvas raster bitmap, and hydration that binds events after a static render.
+---
+
+> This is the reference layer, not component docs; to draw, start from [Components](/core/components/layout).
+
+This group covers how retikz actually paints a figure to the screen. Your figure is first compiled into a **renderer-agnostic Scene**, then handed to a backend: **SVG** emits a vector DOM where every primitive is a real, CSS-targetable element; **Canvas** paints the same Scene as a raster bitmap, suited to many primitives or frequent repaints. Both backends render the same Scene and look identical — pick one by element count and interaction needs, and switch any time. **Hydration** is the mechanism both backends share: render statically first, then bind event handlers back to primitives by id on the client.
+
+## Responsibilities
+
+| Topic | Responsibility | Reach for it when |
+| --- | --- | --- |
+| SVG | Scene → vector DOM, or an SSR / build-time string | The default: you want crisp vectors, CSS hit-testing, accessibility |
+| Canvas | Scene → raster bitmap, immediate-mode drawing + hit-testing | Hundreds of primitives, frequent repaints, performance first |
+| Hydration | Bind event handlers back to primitives by id after a static render (shared by both backends) | Adding click / hover interaction to a figure |
+
+## In this section
+
+<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+  <LinkedCard href="/core/reference/renderer/svg">
+    <span className="font-semibold">SVG</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">The default renderer: vector DOM and string / SSR output</span>
+  </LinkedCard>
+  <LinkedCard href="/core/reference/renderer/canvas">
+    <span className="font-semibold">Canvas</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">Raster bitmap backend with coordinate hit-testing</span>
+  </LinkedCard>
+  <LinkedCard href="/core/reference/renderer/hydration">
+    <span className="font-semibold">Hydration</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">Bind event handlers by id after a static render</span>
+  </LinkedCard>
+</div>
