@@ -28,9 +28,16 @@ describe('buildIR', () => {
     expect(ir.children[0]).toMatchObject({ type: 'node', text: ['Line 1', 'Line 2'] });
   });
 
-  it('children 直接传字符串数组同样产出多行', () => {
+  it('children 字符串数组按相邻 inline 拼成一行（对齐 React）', () => {
     const ir = buildIR(
       <Node id="A" position={[0, 0]}>{['L1', 'L2', 'L3']}</Node>,
+    );
+    expect(ir.children[0]).toMatchObject({ type: 'node', text: 'L1L2L3' });
+  });
+
+  it("children 数组带 '\\n' 元素时拆成多行", () => {
+    const ir = buildIR(
+      <Node id="A" position={[0, 0]}>{['L1\n', 'L2\n', 'L3']}</Node>,
     );
     expect(ir.children[0]).toMatchObject({ type: 'node', text: ['L1', 'L2', 'L3'] });
   });
@@ -85,6 +92,47 @@ describe('buildIR', () => {
     expect(ir.children[0]).toMatchObject({
       type: 'node',
       text: ['before', 'middle1', { text: 'red', fill: 'red' }, 'middle2', 'after'],
+    });
+  });
+
+  it('number 子节点当文本，与相邻字符串拼成一行', () => {
+    const ir = buildIR(<Node id="A" position={[0, 0]}>计数：{0}</Node>);
+    expect(ir.children[0]).toMatchObject({ type: 'node', text: '计数：0' });
+  });
+
+  it('非零 number 子节点拼接', () => {
+    const ir = buildIR(<Node id="A" position={[0, 0]}>计数：{5}</Node>);
+    expect(ir.children[0]).toMatchObject({ type: 'node', text: '计数：5' });
+  });
+
+  it('纯 number 子节点 → 单行字符串', () => {
+    const ir = buildIR(<Node id="A" position={[0, 0]}>{42}</Node>);
+    expect(ir.children[0]).toMatchObject({ type: 'node', text: '42' });
+  });
+
+  it('相邻 inline（字符串 + number 交替）全拼成一行', () => {
+    const ir = buildIR(
+      <Node id="A" position={[0, 0]}>a{1}b{2}</Node>,
+    );
+    expect(ir.children[0]).toMatchObject({ type: 'node', text: 'a1b2' });
+  });
+
+  it("inline number 拼接，'\\n' 仍分行", () => {
+    const ir = buildIR(
+      <Node id="A" position={[0, 0]}>第一行{1}{'\n'}第二行{2}</Node>,
+    );
+    expect(ir.children[0]).toMatchObject({ type: 'node', text: ['第一行1', '第二行2'] });
+  });
+
+  it('<Text>{n}</Text> 的 number children 当文本', () => {
+    const ir = buildIR(
+      <Node id="A" position={[0, 0]}>
+        <Text fill="red">{7}</Text>
+      </Node>,
+    );
+    expect(ir.children[0]).toMatchObject({
+      type: 'node',
+      text: [{ text: '7', fill: 'red' }],
     });
   });
 

@@ -4,8 +4,8 @@ import { TIKZ_TEXT } from './_displayNames';
 
 /** <Text> 组件的 props——Node 多行文本里给某一行带覆盖样式 */
 export type TextProps = {
-  /** 行内容（必须是字符串） */
-  children: string;
+  /** 行内容（字符串或数字；数字按文本渲染） */
+  children: string | number;
   /** 行级覆盖颜色；不填走 Node 块级默认 */
   fill?: string;
   /** 行级透明度 0~1；不填走 Node 块级默认 */

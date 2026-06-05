@@ -53,20 +53,23 @@ const getDisplayName = (el: ReactElement): string | undefined => {
 
 /**
  * 把 <Text> 元素的 props + children 串解析为 IRLineSpec 对象形式
- * @description children 必须是 string；非字符串 children 静默跳过此 <Text> 元素
+ * @description children 接受 string / number（number 当文本，对齐 React 渲染）；其它类型静默跳过此 <Text> 元素
  */
 const textElementToLineSpec = (el: ReactElement): IRLineSpec | undefined => {
   const props = el.props as TextProps;
-  if (typeof props.children !== 'string') return undefined;
+  if (typeof props.children !== 'string' && typeof props.children !== 'number') {
+    return undefined;
+  }
+  const text = String(props.children);
   if (
     props.fill === undefined &&
     props.opacity === undefined &&
     props.font === undefined
   ) {
-    return props.children;
+    return text;
   }
   return {
-    text: props.children,
+    text,
     fill: props.fill,
     opacity: props.opacity,
     font: props.font,
@@ -74,14 +77,37 @@ const textElementToLineSpec = (el: ReactElement): IRLineSpec | undefined => {
 };
 
 /**
- * 递归收集 Node children 中的行
- * @description 字符串按 `'\n'` 拆行 / 数组逐项递归 / <Text> 元素 → 对象 LineSpec / 其它类型忽略
+ * 收集 Node children 中的行（当前行缓冲模型，对齐 React 文本渲染）
+ * @description 顺序遍历，维护一个当前行文本缓冲：字符串首段 append、每遇 `'\n'` flush 成一行并起新行；
+ *   number 当文本 append（与相邻 inline 同一行拼接，不另起行）；boolean / null / undefined 跳过（React 渲染为空）；
+ *   `<Text>` 元素先 flush 缓冲再独立成一行（保留 styled-line 行为）；数组沿用同一缓冲递归（相邻 inline 跨数组项也拼接）；
+ *   其它类型跳过；遍历结束 flush 残余缓冲
  */
 const collectChildLines = (children: unknown): Array<IRLineSpec> => {
   const out: Array<IRLineSpec> = [];
+  let buffer = '';
+  let bufferActive = false;
+  const flush = (): void => {
+    if (bufferActive) out.push(buffer);
+    buffer = '';
+    bufferActive = false;
+  };
+  const append = (chunk: string): void => {
+    buffer += chunk;
+    bufferActive = true;
+  };
   const visit = (node: unknown): void => {
     if (typeof node === 'string') {
-      for (const part of node.split('\n')) out.push(part);
+      const parts = node.split('\n');
+      append(parts[0]);
+      for (let i = 1; i < parts.length; i += 1) {
+        flush();
+        append(parts[i]);
+      }
+      return;
+    }
+    if (typeof node === 'number') {
+      append(String(node));
       return;
     }
     if (Array.isArray(node)) {
@@ -90,10 +116,14 @@ const collectChildLines = (children: unknown): Array<IRLineSpec> => {
     }
     if (isValidElement(node) && getDisplayName(node) === TIKZ_TEXT) {
       const spec = textElementToLineSpec(node);
-      if (spec !== undefined) out.push(spec);
+      if (spec !== undefined) {
+        flush();
+        out.push(spec);
+      }
     }
   };
   visit(children);
+  flush();
   return out;
 };
 
