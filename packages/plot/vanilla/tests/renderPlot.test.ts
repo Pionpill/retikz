@@ -8,7 +8,7 @@ import { renderPlot } from '../src';
 const spec: PlotSpec = {
   namespace: 'plot',
   type: 'plot',
-  data: { ref: 'sales' },
+  data: { reference: 'sales' },
   scales: [
     { type: 'linear', name: 'x' },
     { type: 'linear', name: 'y' },
@@ -71,7 +71,7 @@ describe('renderPlot 薄包装（SSR SVG 串）', () => {
     const barSpec: PlotSpec = {
       namespace: 'plot',
       type: 'plot',
-      data: { ref: 'sales' },
+      data: { reference: 'sales' },
       scales: [
         { type: 'band', name: 'x' },
         { type: 'linear', name: 'y' },

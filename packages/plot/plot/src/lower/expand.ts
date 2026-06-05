@@ -56,11 +56,11 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
     throw new Error(`lowerPlots: height must be a positive finite number, got ${height}`);
   }
 
-  if (!(node.data.ref in datasets)) {
-    throw new Error(`lowerPlots: dataset "${node.data.ref}" not found in provided datasets`);
+  if (!(node.data.reference in datasets)) {
+    throw new Error(`lowerPlots: dataset "${node.data.reference}" not found in provided datasets`);
   }
   // 取数后先过 transform 管线（sort / stack…）：域推断与 mark 下沉都用变换后的行
-  const rows = applyTransforms(datasets[node.data.ref], node.transform);
+  const rows = applyTransforms(datasets[node.data.reference], node.transform);
 
   const coordinate = node.coordinate;
   const scaleByName = new Map(node.scales.map(scale => [scale.name, scale] as const));

@@ -8,7 +8,7 @@ import { Plot } from '../src';
 const spec: PlotSpec = {
   namespace: 'plot',
   type: 'plot',
-  data: { ref: 'sales' },
+  data: { reference: 'sales' },
   scales: [
     { type: 'linear', name: 'x' },
     { type: 'linear', name: 'y' },

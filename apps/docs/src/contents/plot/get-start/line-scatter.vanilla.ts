@@ -7,7 +7,7 @@ import { sales } from './line-scatter.data';
 const spec: PlotSpec = {
   namespace: 'plot',
   type: 'plot',
-  data: { ref: 'sales' },
+  data: { reference: 'sales' },
   scales: [
     { type: 'linear', name: 'xMonth' },
     { type: 'linear', name: 'yRevenue' },

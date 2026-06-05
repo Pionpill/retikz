@@ -121,7 +121,7 @@ const guidedSpec = (guides: Array<unknown>): PlotSpec =>
   PlotSpecSchema.parse({
     namespace: 'plot',
     type: 'plot',
-    data: { ref: 'sales' },
+    data: { reference: 'sales' },
     scales: [
       { type: 'linear', name: 'xMonth' },
       { type: 'linear', name: 'yRevenue' },
@@ -165,7 +165,7 @@ describe('lowerPlots guide orchestration (ADR-04)', () => {
     const spec = PlotSpecSchema.parse({
       namespace: 'plot',
       type: 'plot',
-      data: { ref: 'sales' },
+      data: { reference: 'sales' },
       scales: [
         { type: 'linear', name: 'xMonth', range: [100, 200] },
         { type: 'linear', name: 'yRevenue', range: [200, 0] },

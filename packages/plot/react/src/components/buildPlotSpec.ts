@@ -131,7 +131,7 @@ const buildXScale = (hasBar: boolean, scaleX: DslScaleX | undefined): Scale => {
  * 把 mark / guide 子组件装配成规范化 PlotSpec
  * @description 纯函数：从 children 收集 mark + guide + transform；按 mark 推断 scale 类型（<BarMark>→band x、color→ordinal）、
  *   装配 stack transform，自动建 cartesian2D 绑定（用户不写）。guide 规则：bare → 无；无 <Axis> → 默认全套；写了 <Axis> → 显式所得。
- *   产出须等价于手写 PlotSpec（仿 core Sugar = Kernel 等价性）。data 不进 IR，仅存 ref
+ *   产出须等价于手写 PlotSpec（仿 core Sugar = Kernel 等价性）。data 不进 IR，仅存 reference
  */
 export const buildPlotSpec = (children: ReactNode, dataRef: string, options: BuildPlotSpecOptions = {}): PlotSpec => {
   const collected: Collected = { marks: [], guides: [], transforms: [], colored: false, hasBar: false };
@@ -142,7 +142,7 @@ export const buildPlotSpec = (children: ReactNode, dataRef: string, options: Bui
   return {
     namespace: PLOT_NAMESPACE,
     type: PlotComposite.Plot,
-    data: { ref: dataRef },
+    data: { reference: dataRef },
     ...(collected.transforms.length > 0 ? { transform: collected.transforms } : {}),
     scales,
     coordinate: { type: PlotCoordinate.Cartesian2D, x: AUTO_X, y: AUTO_Y },

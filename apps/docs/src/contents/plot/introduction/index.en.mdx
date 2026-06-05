@@ -16,7 +16,7 @@ plot is essentially **core + graphic grammar**. Core provides the renderable nod
 | Part | In the implementation | Role |
 | --- | --- | --- |
 | **Graphic grammar** | `marks`, `encoding`, `scales`, `coordinate`, `guides`; in React, `<LineMark>` / `<PointMark>` / `<Axis>` | The drawing idea: declare which field maps to which visual channel, then let scales, coordinates, and guides place it on the canvas |
-| **data** | `data.ref` + optional `model` point to an external dataset; lowering resolves each row into `x` / `y` data channels | Holds real values and field declarations; values stay outside IR, field paths enter channels through `field`, and constants enter through `value` |
+| **data** | `data.reference` + optional `model` point to an external dataset; lowering resolves each row into `x` / `y` data channels | Holds real values and field declarations; values stay outside IR, field paths enter channels through `field`, and constants enter through `value` |
 | **`@retikz/plot`** | `PlotSpecSchema`, `buildPlotSpec`, `lowerPlots`, `renderPlot`, `<Plot>` | The logic wrapper: validates PlotSpec, fills default linear scale / cartesian2D / Axis, computes domains / ticks / projectors, and lowers the result to core IR |
 
 ## Plot IR at the Center

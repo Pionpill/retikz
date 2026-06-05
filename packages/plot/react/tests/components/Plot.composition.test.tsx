@@ -44,7 +44,7 @@ describe('<Plot data>{marks} 组合 DSL（ADR-08）', () => {
     const equivalentSpec: PlotSpec = {
       namespace: 'plot',
       type: 'plot',
-      data: { ref: '__plot' },
+      data: { reference: '__plot' },
       scales: [
         { type: 'linear', name: '__x' },
         { type: 'linear', name: '__y' },
@@ -85,7 +85,7 @@ describe('<Plot data>{marks} 组合 DSL（ADR-08）', () => {
     const bareSpec: PlotSpec = {
       namespace: 'plot',
       type: 'plot',
-      data: { ref: '__plot' },
+      data: { reference: '__plot' },
       scales: [
         { type: 'linear', name: '__x' },
         { type: 'linear', name: '__y' },

@@ -39,7 +39,7 @@ export const DataModelSchema = z
 
 export const DataRefSchema = z
   .object({
-    ref: z
+    reference: z
       .string()
       .min(1)
       .describe(
@@ -71,6 +71,6 @@ export type ScalarValue = z.infer<typeof ScalarValueSchema>;
 export type ExternalRow = Record<string, unknown>;
 /**
  * 外部数据集表（不进 IR）
- * @description 数据集名 → 行数组；data.ref 按名查此表
+ * @description 数据集名 → 行数组；data.reference 按名查此表
  */
 export type ExternalDatasets = Record<string, Array<ExternalRow>>;

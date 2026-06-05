@@ -4,12 +4,12 @@ import { DataModelSchema, DataRefSchema, ScalarValueSchema } from '../../src/ir/
 describe('DataRefSchema / DataModelSchema / ScalarValueSchema (ADR-02)', () => {
   // Happy path
   it('dataref_ref_only_valid', () => {
-    expect(DataRefSchema.parse({ ref: 'sales' })).toEqual({ ref: 'sales' });
+    expect(DataRefSchema.parse({ reference: 'sales' })).toEqual({ reference: 'sales' });
   });
 
   it('dataref_with_model_valid', () => {
     const spec = {
-      ref: 'sales',
+      reference: 'sales',
       model: [
         { name: 'month', type: 'quantitative' },
         { name: 'user.age', type: 'quantitative' },
@@ -28,7 +28,7 @@ describe('DataRefSchema / DataModelSchema / ScalarValueSchema (ADR-02)', () => {
 
   // 边界
   it('dataref_empty_ref_rejected', () => {
-    expect(() => DataRefSchema.parse({ ref: '' })).toThrow();
+    expect(() => DataRefSchema.parse({ reference: '' })).toThrow();
   });
 
   it('datamodel_empty_array_valid', () => {
@@ -41,12 +41,12 @@ describe('DataRefSchema / DataModelSchema / ScalarValueSchema (ADR-02)', () => {
   });
 
   it('dataref_inline_values_rejected', () => {
-    // 旧内联形态、无 ref —— 数据不进 IR
+    // 旧内联形态、无 reference —— 数据不进 IR
     expect(() => DataRefSchema.parse({ values: [{ x: 1 }] })).toThrow();
   });
 
   it('fielddef_unknown_type_rejected', () => {
-    expect(() => DataRefSchema.parse({ ref: 'd', model: [{ name: 'g', type: 'geojson' }] })).toThrow();
+    expect(() => DataRefSchema.parse({ reference: 'd', model: [{ name: 'g', type: 'geojson' }] })).toThrow();
   });
 
   it('scalar_value_nested_object_rejected', () => {

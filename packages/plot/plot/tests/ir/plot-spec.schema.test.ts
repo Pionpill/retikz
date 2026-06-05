@@ -4,7 +4,7 @@ import { PlotSpecSchema } from '../../src/ir/plot';
 const baseLine = {
   namespace: 'plot',
   type: 'plot',
-  data: { ref: 'sales' },
+  data: { reference: 'sales' },
   scales: [
     { type: 'linear', name: 'xMonth' },
     { type: 'linear', name: 'yRevenue', nice: true },
@@ -28,7 +28,7 @@ describe('PlotSpecSchema (ADR-01)', () => {
     const spec = {
       namespace: 'plot',
       type: 'plot',
-      data: { ref: 'd' },
+      data: { reference: 'd' },
       scales: [{ type: 'linear', name: 'xs' }],
       coordinate: { type: 'cartesian2D', x: 'xs', y: 'xs' },
       marks: [{ type: 'point', encoding: { x: { field: 'x' } } }],
@@ -67,7 +67,7 @@ describe('PlotSpecSchema (ADR-01)', () => {
   });
 
   it('plot_data_inline_values_rejected', () => {
-    // 数据不进 IR：data 槽位无 ref（旧内联形态）被拒
+    // 数据不进 IR：data 槽位无 reference（旧内联形态）被拒
     expect(() => PlotSpecSchema.parse({ ...baseLine, data: { values: [{ x: 1 }] } })).toThrow();
   });
 

@@ -10,7 +10,7 @@ describe('buildPlotSpec 装配（ADR-08 / ADR-05）', () => {
     const expected: PlotSpec = {
       namespace: 'plot',
       type: 'plot',
-      data: { ref: '__plot' },
+      data: { reference: '__plot' },
       scales: [
         { type: 'linear', name: '__x' },
         { type: 'linear', name: '__y' },
@@ -151,7 +151,7 @@ describe('buildPlotSpec ADR-07（BarMark / color / series / stack / scaleX）', 
     const expected: PlotSpec = {
       namespace: 'plot',
       type: 'plot',
-      data: { ref: '__plot' },
+      data: { reference: '__plot' },
       scales: [
         { type: 'band', name: '__x' },
         { type: 'linear', name: '__y' },

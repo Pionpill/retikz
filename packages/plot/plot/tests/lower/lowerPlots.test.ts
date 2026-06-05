@@ -14,7 +14,7 @@ const SALES = [
 const lineSpec: PlotSpec = PlotSpecSchema.parse({
   namespace: 'plot',
   type: 'plot',
-  data: { ref: 'sales' },
+  data: { reference:'sales' },
   scales: [
     { type: 'linear', name: 'xMonth' },
     { type: 'linear', name: 'yRevenue' },
@@ -27,7 +27,7 @@ const pointSpec = (): PlotSpec =>
   PlotSpecSchema.parse({
     namespace: 'plot',
     type: 'plot',
-    data: { ref: 'sales' },
+    data: { reference:'sales' },
     scales: [
       { type: 'linear', name: 'xMonth' },
       { type: 'linear', name: 'yRevenue' },
@@ -146,7 +146,7 @@ describe('lowerPlots (ADR-06)', () => {
     const spec = PlotSpecSchema.parse({
       namespace: 'plot',
       type: 'plot',
-      data: { ref: 'sales' },
+      data: { reference:'sales' },
       scales: [
         { type: 'linear', name: 'xMonth', domain: [0, 10], range: [0, 100] },
         { type: 'linear', name: 'yRevenue', domain: [0, 100], range: [100, 0] },
@@ -175,7 +175,7 @@ describe('lowerPlots (ADR-06)', () => {
   const guidedLineSpec: PlotSpec = PlotSpecSchema.parse({
     namespace: 'plot',
     type: 'plot',
-    data: { ref: 'sales' },
+    data: { reference:'sales' },
     scales: [
       { type: 'linear', name: 'xMonth' },
       { type: 'linear', name: 'yRevenue' },
@@ -213,7 +213,7 @@ describe('lowerPlots (ADR-06)', () => {
     const spec = PlotSpecSchema.parse({
       namespace: 'plot',
       type: 'plot',
-      data: { ref: 'sales' },
+      data: { reference:'sales' },
       scales: [
         { type: 'linear', name: 'xMonth', domain: [0, 10], range: [0, 100] },
         { type: 'linear', name: 'yRevenue', domain: [0, 100], range: [100, 0] },
@@ -232,7 +232,7 @@ const barSpec = (): PlotSpec =>
   PlotSpecSchema.parse({
     namespace: 'plot',
     type: 'plot',
-    data: { ref: 'sales' },
+    data: { reference:'sales' },
     scales: [
       { type: 'band', name: 'xMonth' },
       { type: 'linear', name: 'yRevenue' },
@@ -303,7 +303,7 @@ describe('lowerPlots interval/bar (ADR-02)', () => {
     const spec = PlotSpecSchema.parse({
       namespace: 'plot',
       type: 'plot',
-      data: { ref: 'sales' },
+      data: { reference:'sales' },
       scales: [
         { type: 'band', name: 'xMonth' },
         { type: 'linear', name: 'yRevenue' },
@@ -333,7 +333,7 @@ describe('lowerPlots color (ADR-04)', () => {
     PlotSpecSchema.parse({
       namespace: 'plot',
       type: 'plot',
-      data: { ref: 'c' },
+      data: { reference:'c' },
       scales,
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
       marks: [{ type: 'point', encoding: { x: { field: 'gdp' }, y: { field: 'life' }, color: { field: 'continent', scale: 'col' } } }],
@@ -379,7 +379,7 @@ describe('lowerPlots color (ADR-04)', () => {
     const spec = PlotSpecSchema.parse({
       namespace: 'plot',
       type: 'plot',
-      data: { ref: 'c' },
+      data: { reference:'c' },
       scales: [
         { type: 'linear', name: 'x' },
         { type: 'linear', name: 'y' },
@@ -396,7 +396,7 @@ describe('lowerPlots color (ADR-04)', () => {
     const spec = PlotSpecSchema.parse({
       namespace: 'plot',
       type: 'plot',
-      data: { ref: 'c' },
+      data: { reference:'c' },
       scales: [
         { type: 'linear', name: 'x' },
         { type: 'linear', name: 'y' },
@@ -431,7 +431,7 @@ describe('lowerPlots color (ADR-04)', () => {
     const spec = PlotSpecSchema.parse({
       namespace: 'plot',
       type: 'plot',
-      data: { ref: 'c' },
+      data: { reference:'c' },
       scales: [
         { type: 'linear', name: 'x' },
         { type: 'linear', name: 'y' },
@@ -446,7 +446,7 @@ describe('lowerPlots color (ADR-04)', () => {
     const spec = PlotSpecSchema.parse({
       namespace: 'plot',
       type: 'plot',
-      data: { ref: 'c' },
+      data: { reference:'c' },
       scales: [
         { type: 'band', name: 'x' },
         { type: 'linear', name: 'y' },
@@ -481,7 +481,7 @@ describe('lowerPlots relation (ADR-05)', () => {
     const spec = PlotSpecSchema.parse({
       namespace: 'plot',
       type: 'plot',
-      data: { ref: 's' },
+      data: { reference:'s' },
       scales: [
         { type: 'band', name: 'x' },
         { type: 'linear', name: 'y' },
@@ -510,7 +510,7 @@ describe('lowerPlots relation (ADR-05)', () => {
     const spec = PlotSpecSchema.parse({
       namespace: 'plot',
       type: 'plot',
-      data: { ref: 's' },
+      data: { reference:'s' },
       transform: [{ kind: 'stack', x: 'month', y: 'revenue', groupBy: 'product' }],
       scales: [
         { type: 'band', name: 'x' },
@@ -536,7 +536,7 @@ describe('lowerPlots relation (ADR-05)', () => {
     const spec = PlotSpecSchema.parse({
       namespace: 'plot',
       type: 'plot',
-      data: { ref: 's' },
+      data: { reference:'s' },
       scales: [
         { type: 'band', name: 'x' },
         { type: 'linear', name: 'y' },
@@ -557,7 +557,7 @@ describe('lowerPlots relation (ADR-05)', () => {
     const spec = PlotSpecSchema.parse({
       namespace: 'plot',
       type: 'plot',
-      data: { ref: 't' },
+      data: { reference:'t' },
       scales: [
         { type: 'linear', name: 'x' },
         { type: 'linear', name: 'y' },
@@ -579,7 +579,7 @@ describe('lowerPlots relation (ADR-05)', () => {
     const spec = PlotSpecSchema.parse({
       namespace: 'plot',
       type: 'plot',
-      data: { ref: 's' },
+      data: { reference:'s' },
       scales: [
         { type: 'band', name: 'x' },
         { type: 'linear', name: 'y' },
@@ -595,7 +595,7 @@ describe('lowerPlots relation (ADR-05)', () => {
     const spec = PlotSpecSchema.parse({
       namespace: 'plot',
       type: 'plot',
-      data: { ref: 's' },
+      data: { reference:'s' },
       transform: [{ kind: 'stack', x: 'month', y: 'revenue', groupBy: 'product' }],
       scales: [
         { type: 'band', name: 'x' },

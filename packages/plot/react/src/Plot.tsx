@@ -10,7 +10,7 @@ type PlotCommonProps = Pick<LayoutProps, 'width' | 'height' | 'className' | 'sty
 export type PlotSpecProps = PlotCommonProps & {
   /** 已构造好的 Plot IR 根节点（手写 / 生成） */
   spec: PlotSpec;
-  /** 外部数据集表（data.ref 按名查）；数据不进 IR，编译期经 lowerPlots 注入 */
+  /** 外部数据集表（data.reference 按名查）；数据不进 IR，编译期经 lowerPlots 注入 */
   data: ExternalDatasets;
   children?: never;
   bare?: never;
