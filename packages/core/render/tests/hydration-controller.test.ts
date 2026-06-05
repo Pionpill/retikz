@@ -65,26 +65,54 @@ describe('Hydration 控制器', () => {
     controller.dispose();
   });
 
-  it('enter-leave-synthesis：pointerenter/leave 经 over/out + relatedTarget 合成，跨子元素只触发一次', () => {
+  it('enter-leave-synthesis：pointerEnter/Leave 经 pointermove + 命中 id 状态机合成，跨 id 触发一次、同 id 内不重复', () => {
     const { root, nodeA, childA1, childA2, nodeB } = setupRoot();
-    const onEnter = vi.fn();
-    const onLeave = vi.fn();
-    const handlers: HydrationHandlers = { a: { pointerEnter: onEnter, pointerLeave: onLeave } };
+    const onEnterA = vi.fn();
+    const onLeaveA = vi.fn();
+    const onEnterB = vi.fn();
+    const handlers: HydrationHandlers = {
+      a: { pointerEnter: onEnterA, pointerLeave: onLeaveA },
+      b: { pointerEnter: onEnterB },
+    };
     const controller = createHydrationController(root, handlers, locateSvg);
 
-    // 从外部进入图元 a 的子节点 → enter 一次
-    dispatch(childA1, 'pointerover', null);
-    // 在图元 a 内部 childA1 → childA2 移动（relatedTarget 仍在 a 内）→ 不再触发 enter / leave
-    dispatch(childA2, 'pointerover', childA1);
-    dispatch(childA1, 'pointerout', childA2);
-    expect(onEnter).toHaveBeenCalledTimes(1);
-    expect(onLeave).toHaveBeenCalledTimes(0);
+    // 进入图元 a 的子节点 → a 的 enter 一次
+    dispatch(childA1, 'pointermove');
+    expect(onEnterA).toHaveBeenCalledTimes(1);
+    expect(onLeaveA).toHaveBeenCalledTimes(0);
 
-    // 真正离开 a（移到另一图元 b）→ leave 一次
-    dispatch(childA2, 'pointerout', nodeB);
-    expect(onLeave).toHaveBeenCalledTimes(1);
+    // 在图元 a 内部 childA1 → childA2 移动（命中 id 仍是 a）→ 不重复触发 enter / leave
+    dispatch(childA2, 'pointermove');
+    expect(onEnterA).toHaveBeenCalledTimes(1);
+    expect(onLeaveA).toHaveBeenCalledTimes(0);
+
+    // 跨 id 移动到图元 b → a 的 leave 一次、b 的 enter 一次
+    dispatch(nodeB, 'pointermove');
+    expect(onLeaveA).toHaveBeenCalledTimes(1);
+    expect(onEnterB).toHaveBeenCalledTimes(1);
 
     void nodeA;
+    controller.dispose();
+  });
+
+  it('leave-whole-figure：pointerleave 离开整图 → lastHitId 的 leave 触发并清空命中态', () => {
+    const { root, childA1 } = setupRoot();
+    const onLeaveA = vi.fn();
+    const handlers: HydrationHandlers = { a: { pointerLeave: onLeaveA } };
+    const controller = createHydrationController(root, handlers, locateSvg);
+
+    // 先进入图元 a 建立命中态
+    dispatch(childA1, 'pointermove');
+    expect(onLeaveA).toHaveBeenCalledTimes(0);
+
+    // 离开整图（root pointerleave，不冒泡）→ a 的 leave 一次
+    root.dispatchEvent(new MouseEvent('pointerleave', { bubbles: false, relatedTarget: null }));
+    expect(onLeaveA).toHaveBeenCalledTimes(1);
+
+    // 命中态已清空：再 pointerleave 不重复触发
+    root.dispatchEvent(new MouseEvent('pointerleave', { bubbles: false, relatedTarget: null }));
+    expect(onLeaveA).toHaveBeenCalledTimes(1);
+
     controller.dispose();
   });
 

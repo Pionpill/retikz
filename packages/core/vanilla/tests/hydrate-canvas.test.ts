@@ -275,6 +275,44 @@ describe('@retikz/vanilla mountCanvas 水合（坐标映射 + hitTest）', () =>
     container.remove();
   });
 
+  it('enter-on-pointermove：pointermove 进入 canvas 图元 → pointerEnter 触发一次（双模等价、不依赖 relatedTarget）', () => {
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const view = mountCanvas(container, boxIr, { width: CSS_WIDTH, height: CSS_HEIGHT });
+    const onEnter = vi.fn();
+    view.hydrate({ handlers: { box: { pointerEnter: onEnter } } });
+
+    // canvas 是单 <canvas>、图元间移动不产生 over/out；新机制经 pointermove + 命中 id 状态机合成。
+    // 先在 letterbox 黑边（Scene 外、命中 null），再移到图元中心 → 跨 id（null→box）触发 enter 一次。
+    view.root.dispatchEvent(new MouseEvent('pointermove', { bubbles: true, clientX: RECT_LEFT + 10, clientY: RECT_TOP + 50 }));
+    expect(onEnter).not.toHaveBeenCalled();
+    const center = sceneToClient(50, 50);
+    view.root.dispatchEvent(new MouseEvent('pointermove', { bubbles: true, clientX: center.clientX, clientY: center.clientY }));
+    expect(onEnter).toHaveBeenCalledTimes(1);
+
+    // 图元内部继续 move（命中仍是 box）→ 不重复触发
+    view.root.dispatchEvent(new MouseEvent('pointermove', { bubbles: true, clientX: center.clientX + 1, clientY: center.clientY + 1 }));
+    expect(onEnter).toHaveBeenCalledTimes(1);
+
+    container.remove();
+  });
+
+  it('enter-leave-on-pointermove：跨图元（box → 黑边）→ box 的 leave 触发一次', () => {
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const view = mountCanvas(container, boxIr, { width: CSS_WIDTH, height: CSS_HEIGHT });
+    const onLeave = vi.fn();
+    view.hydrate({ handlers: { box: { pointerLeave: onLeave } } });
+
+    const center = sceneToClient(50, 50);
+    view.root.dispatchEvent(new MouseEvent('pointermove', { bubbles: true, clientX: center.clientX, clientY: center.clientY }));
+    // 移到 letterbox 黑边（命中 null）→ box 的 leave 一次
+    view.root.dispatchEvent(new MouseEvent('pointermove', { bubbles: true, clientX: RECT_LEFT + 10, clientY: RECT_TOP + 50 }));
+    expect(onLeave).toHaveBeenCalledTimes(1);
+
+    container.remove();
+  });
+
   it('dispose-detaches：view.hydrate 的 dispose 后点击不再触发', () => {
     const container = document.createElement('div');
     document.body.appendChild(container);

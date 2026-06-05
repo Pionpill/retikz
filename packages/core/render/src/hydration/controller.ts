@@ -30,21 +30,19 @@ const invoke = (
   if (handler !== undefined) handler(event);
 };
 
-/** 用给定 target 定位 id：locate 仅读 event.target，故包一层覆写 target 的代理事件供 relatedTarget 定位 */
-const locateTarget = (locate: Locate, event: Event, target: EventTarget | null): string | null => {
-  if (target === null) return null;
-  const proxy = new Proxy(event, {
-    get: (base, key) => (key === 'target' ? target : Reflect.get(base, key)),
-  });
-  return locate(proxy);
-};
+/** 判断 root 是否为可挂 pointerleave/pointerout 的 EventTarget（dispatcher 只需 addEventListener，故恒成立） */
+const hasContains = (target: EventTarget): target is Node =>
+  typeof (target as Partial<Node>).contains === 'function';
 
 /**
  * 创建水合控制器：在 root 上挂根级委托，把命中图元 id 的事件分发给 handlers
- * @description renderer 无关上层。对每个用到的 EventName 在 root 注册一个 EVENT_DOM_TYPE 监听器，事件到来时
- *   经 locate 定位到图元 id，查 handlers 触发对应 handler；pointerEnter / pointerLeave 不直接监听、由
- *   pointerover / out + relatedTarget 在根层合成（跨子元素移动只在真正进 / 出图元时各触发一次）。
- *   返回 { dispose } 解绑全部 listener。
+ * @description renderer 无关上层。直接委托的事件（click / rightClick / pointerMove 等）对每个用到的 EventName 在
+ *   root 注册一个 EVENT_DOM_TYPE 监听器，事件到来时经 locate 定位到图元 id、查 handlers 触发。
+ *   pointerEnter / pointerLeave 不直接监听、由 pointermove + 「上一帧命中 id」状态机合成（renderer 无关、经
+ *   同一 locate）：仅当 handlers 含任一 enter/leave 时才在 root 挂 pointermove；每次 move 算 currentId = locate(event)，
+ *   与 lastHitId 不同则先 fire 旧 id 的 leave、再 fire 新 id 的 enter，更新 lastHitId。离开整图（root pointerleave，
+ *   或 pointerout 且 relatedTarget 在 root 外）→ fire lastHitId 的 leave 并清空。SVG（closest）与 Canvas
+ *   （hitTest 坐标命中）共用此实现 → 双模等价。返回 { dispose } 解绑全部 listener。
  */
 export const createHydrationController = (
   root: EventTarget,
@@ -59,31 +57,44 @@ export const createHydrationController = (
     teardowns.push(() => root.removeEventListener(domType, listener));
   };
 
-  // 直接委托的事件（enter/leave 除外）：locate(event) → 查 handler → 调用。
+  // 直接委托的事件（enter/leave 除外，它们走 pointermove 合成）：locate(event) → 查 handler → 调用。
   for (const name of used) {
     if (name === HYDRATION_EVENTS.pointerEnter || name === HYDRATION_EVENTS.pointerLeave) continue;
     listen(EVENT_DOM_TYPE[name], event => invoke(handlers, locate(event), name, event));
   }
 
-  // pointerEnter 合成：pointerover 时进入图元 id 与（relatedTarget 解析的）来源 id 不同 → 触发一次。
-  if (used.has(HYDRATION_EVENTS.pointerEnter)) {
-    listen(EVENT_DOM_TYPE[HYDRATION_EVENTS.pointerEnter], event => {
-      const entered = locate(event);
-      const from = locateTarget(locate, event, (event as MouseEvent).relatedTarget);
-      if (entered !== null && entered !== from) {
-        invoke(handlers, entered, HYDRATION_EVENTS.pointerEnter, event);
-      }
-    });
-  }
+  // enter/leave 合成：仅当注册表里有 enter 或 leave handler 时，才挂 pointermove + 离开整图监听。
+  const hasEnter = used.has(HYDRATION_EVENTS.pointerEnter);
+  const hasLeave = used.has(HYDRATION_EVENTS.pointerLeave);
+  if (hasEnter || hasLeave) {
+    let lastHitId: string | null = null;
 
-  // pointerLeave 合成：pointerout 时离开图元 id 与（relatedTarget 解析的）去向 id 不同 → 触发一次。
-  if (used.has(HYDRATION_EVENTS.pointerLeave)) {
-    listen(EVENT_DOM_TYPE[HYDRATION_EVENTS.pointerLeave], event => {
-      const left = locate(event);
-      const to = locateTarget(locate, event, (event as MouseEvent).relatedTarget);
-      if (left !== null && left !== to) {
-        invoke(handlers, left, HYDRATION_EVENTS.pointerLeave, event);
-      }
+    // pointermove：算当前命中 id；与上次不同 → 旧 id fire leave、新 id fire enter，各一次。
+    listen('pointermove', event => {
+      const currentId = locate(event);
+      if (currentId === lastHitId) return;
+      if (lastHitId !== null) invoke(handlers, lastHitId, HYDRATION_EVENTS.pointerLeave, event);
+      if (currentId !== null) invoke(handlers, currentId, HYDRATION_EVENTS.pointerEnter, event);
+      lastHitId = currentId;
+    });
+
+    // 离开整图：清空命中态、把 lastHitId 的 leave 补一次。
+    const leaveWhole = (event: Event): void => {
+      if (lastHitId === null) return;
+      invoke(handlers, lastHitId, HYDRATION_EVENTS.pointerLeave, event);
+      lastHitId = null;
+    };
+    // pointerleave 不冒泡、只在指针真正离开 root 时触发——最干净的「离开整图」信号。
+    listen('pointerleave', leaveWhole);
+    // 退化兜底：某些环境 pointerleave 缺失，用 pointerout 且 relatedTarget 落在 root 外判定离开整图。
+    listen('pointerout', event => {
+      const related = (event as MouseEvent).relatedTarget;
+      const stillInside =
+        related !== null &&
+        related instanceof Node &&
+        hasContains(root) &&
+        (root === related || root.contains(related));
+      if (!stillInside) leaveWhole(event);
     });
   }
 

@@ -18,9 +18,9 @@ export const HYDRATION_EVENTS = {
   pointerUp: 'pointerUp',
   /** 指针移动 */
   pointerMove: 'pointerMove',
-  /** 指针进入图元（由 pointerover/out 合成，跨子元素不重复） */
+  /** 指针进入图元（由 pointermove + 命中 id 状态机合成，跨子元素不重复） */
   pointerEnter: 'pointerEnter',
-  /** 指针离开图元（由 pointerover/out 合成） */
+  /** 指针离开图元（由 pointermove + 命中 id 状态机合成） */
   pointerLeave: 'pointerLeave',
   /** 滚轮 */
   wheel: 'wheel',
@@ -31,18 +31,17 @@ export type EventName = ValueOf<typeof HYDRATION_EVENTS>;
 
 /**
  * EventName → 真实 DOM 事件类型（根级 addEventListener 用）
- * @description enter/leave 不直接监听、由 pointerover/out 合成；doubleClick→dblclick、rightClick→contextmenu。
- *   enter/leave 映射到 over/out，由控制器合成层据 relatedTarget 决定是否真正触发。
+ * @description doubleClick→dblclick、rightClick→contextmenu。pointerEnter / pointerLeave 不在表内、不直接
+ *   addEventListener——它们由控制器经 pointermove + 「上一帧命中 id」状态机合成（renderer 无关，经 locate），
+ *   故类型用 Exclude 把这两个排除掉。
  */
-export const EVENT_DOM_TYPE: Record<EventName, string> = {
+export const EVENT_DOM_TYPE: Record<Exclude<EventName, 'pointerEnter' | 'pointerLeave'>, string> = {
   click: 'click',
   doubleClick: 'dblclick',
   rightClick: 'contextmenu',
   pointerDown: 'pointerdown',
   pointerUp: 'pointerup',
   pointerMove: 'pointermove',
-  pointerEnter: 'pointerover',
-  pointerLeave: 'pointerout',
   wheel: 'wheel',
 };
 
