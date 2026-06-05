@@ -42,4 +42,19 @@ describe('MarkSchema (ADR-05)', () => {
     expect(MarkSchema.parse(line)).toEqual(line);
     expect(MarkSchema.parse(point)).toEqual(point);
   });
+
+  // ADR-02：interval(bar)
+  it('mark_interval_valid', () => {
+    const m = { type: 'interval', encoding: { x: { field: 'month' }, y: { field: 'revenue' } } };
+    expect(MarkSchema.parse(m)).toEqual(m);
+  });
+
+  it('mark_interval_with_id_valid', () => {
+    const m = { type: 'interval', id: 'bars', encoding: { x: { field: 'm' }, y: { field: 'r' } } };
+    expect(MarkSchema.parse(m)).toEqual(m);
+  });
+
+  it('mark_interval_missing_encoding_rejected', () => {
+    expect(() => MarkSchema.parse({ type: 'interval' })).toThrow();
+  });
 });

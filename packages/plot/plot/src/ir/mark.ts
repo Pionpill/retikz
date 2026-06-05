@@ -11,6 +11,8 @@ export const PlotMark = {
   Point: 'point',
   /** 折线：按顺序连点成路径 */
   Line: 'line',
+  /** 区间：从 baseline 到 value 的矩形（柱状图 / 甘特） */
+  Interval: 'interval',
 } as const;
 
 /** mark 类型 */
@@ -42,9 +44,19 @@ export const LineMarkSchema = z
   })
   .describe('Line mark: connects records in order');
 
-export const MarkSchema = z
-  .discriminatedUnion('type', [PointMarkSchema, LineMarkSchema])
-  .describe('Mark union; extensible to interval(bar) / area / sector / rule / text in later alphas');
+export const IntervalMarkSchema = z
+  .object({ type: z.literal(PlotMark.Interval).describe('Discriminator: a rectangular interval from a baseline to the value (bar)'), ...markBase })
+  .describe('Interval mark: bar from baseline (0) to the value; width taken from the band scale');
 
-/** mark（alpha.1 仅 point / line） */
+export const MarkSchema = z
+  .discriminatedUnion('type', [PointMarkSchema, LineMarkSchema, IntervalMarkSchema])
+  .describe('Mark union; extensible to area / sector / rule / text in later alphas');
+
+/** point mark */
+export type PointMark = z.infer<typeof PointMarkSchema>;
+/** line mark */
+export type LineMark = z.infer<typeof LineMarkSchema>;
+/** interval(bar) mark */
+export type IntervalMark = z.infer<typeof IntervalMarkSchema>;
+/** mark（point / line / interval） */
 export type Mark = z.infer<typeof MarkSchema>;

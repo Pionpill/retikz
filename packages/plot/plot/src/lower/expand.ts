@@ -83,6 +83,8 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
         out.push(channelValue(channel, row));
       }
     }
+    // 柱从 baseline 0 起：把 0 纳入 y 域，保证连续 y 域容得下 baseline（即便所有值同号）
+    if (axis === 'y' && node.marks.some(mark => mark.type === 'interval')) out.push(0);
     return out;
   };
 

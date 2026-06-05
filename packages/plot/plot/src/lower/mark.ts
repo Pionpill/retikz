@@ -1,12 +1,14 @@
 import type { IRChild, IRNode, IRScope, IRStep } from '@retikz/core';
 import type { ExternalRow, Mark } from '../ir';
-import { compareByPath } from './field';
+import { channelValue, compareByPath } from './field';
 import type { Projector } from './project';
 
 /** 散点 glyph 默认直径（user units，已补偿 circle 外接） */
 const POINT_SIZE = 10;
 /** 折线默认描边宽度（user units） */
 const LINE_STROKE_WIDTH = 2;
+/** 柱默认 baseline（值域基准；alpha.3 固定 0，可配置留后续） */
+const BAR_BASELINE = 0;
 
 /**
  * 把一个 mark + 数据行下沉成一个图层 Scope
@@ -32,6 +34,33 @@ export const lowerMark = (mark: Mark, rows: Array<ExternalRow>, project: Project
       // 样式上提：padding 0（否则默认 padding(8) 撑大盒子、minimumSize 失效）；
       // ÷√2 补偿 circle 外接（直径 = 盒边 × √2），使 POINT_SIZE 即真实直径
       nodeDefault: { shape: 'circle', padding: 0, minimumSize: POINT_SIZE / Math.SQRT2, fill: 'currentColor' },
+      children: nodes,
+    };
+    return layer;
+  }
+
+  if (mark.type === 'interval') {
+    const bandwidth = project.xScale.bandwidth;
+    const yBase = project.yScale.coordinate(BAR_BASELINE);
+    if (!Number.isFinite(yBase)) return null;
+    const nodes: Array<IRNode> = [];
+    for (const row of rows) {
+      const xCenter = project.xScale.coordinate(channelValue(mark.encoding.x, row));
+      const yValue = project.yScale.coordinate(channelValue(mark.encoding.y, row));
+      if (!Number.isFinite(xCenter) || !Number.isFinite(yValue)) continue;
+      // 柱 = 中心在 [xCenter, (yBase+yValue)/2]、宽 bandwidth、高 |yBase−yValue| 的 rectangle Node
+      nodes.push({
+        type: 'node',
+        position: [xCenter, (yBase + yValue) / 2],
+        minimumWidth: bandwidth,
+        minimumHeight: Math.abs(yBase - yValue),
+      });
+    }
+    if (nodes.length === 0) return null;
+    const layer: IRScope = {
+      type: 'scope',
+      // padding 0 + 无描边，让 minimumWidth/Height 即真实柱尺寸；fill 用 currentColor（color 编码见 ADR-04）
+      nodeDefault: { shape: 'rectangle', padding: 0, strokeWidth: 0, fill: 'currentColor' },
       children: nodes,
     };
     return layer;

@@ -225,3 +225,98 @@ describe('lowerPlots (ADR-06)', () => {
     expect((layer.children[0] as IRNode).position).toEqual([50, 50]);
   });
 });
+
+// ADR-02：interval(bar) mark
+const barSpec = (): PlotSpec =>
+  PlotSpecSchema.parse({
+    namespace: 'plot',
+    type: 'plot',
+    data: { ref: 'sales' },
+    scales: [
+      { type: 'band', name: 'xMonth' },
+      { type: 'linear', name: 'yRevenue' },
+    ],
+    coordinate: { type: 'cartesian2D', x: 'xMonth', y: 'yRevenue' },
+    marks: [{ type: 'interval', encoding: { x: { field: 'month' }, y: { field: 'revenue' } } }],
+  });
+
+describe('lowerPlots interval/bar (ADR-02)', () => {
+  it('bar_layer_rectangle_nodes', () => {
+    const layer = firstLayer(barSpec(), { sales: SALES }, opts);
+    expect(layer.children).toHaveLength(3);
+    expect(layer.nodeDefault?.shape).toBe('rectangle');
+    expect(layer.nodeDefault?.padding).toBe(0);
+    expect(layer.nodeDefault?.strokeWidth).toBe(0);
+    expect(layer.nodeDefault?.fill).toBe('currentColor');
+    // 每个 node 裸（只有 type/position/minimumWidth/minimumHeight，无 shape）
+    expect(layer.children.every(c => (c as IRNode).shape === undefined)).toBe(true);
+  });
+
+  it('bar_width_is_bandwidth_equal', () => {
+    const widths = (firstLayer(barSpec(), { sales: SALES }, opts).children as Array<IRNode>).map(n => n.minimumWidth as number);
+    expect(widths.every(w => w > 0)).toBe(true);
+    expect(widths[0]).toBeCloseTo(widths[1], 6);
+    expect(widths[1]).toBeCloseTo(widths[2], 6);
+  });
+
+  it('bar_height_reflects_value', () => {
+    const heights = (firstLayer(barSpec(), { sales: SALES }, opts).children as Array<IRNode>).map(n => n.minimumHeight as number);
+    // revenue 10/14/9 → 第二根最高、第三根最矮
+    expect(heights[1]).toBeGreaterThan(heights[0]);
+    expect(heights[2]).toBeLessThan(heights[0]);
+  });
+
+  it('bar_sits_on_baseline', () => {
+    // 无 guides → plot area 满，baseline y(0)=300：正值柱底 center + height/2 ≈ 300
+    for (const node of firstLayer(barSpec(), { sales: SALES }, opts).children as Array<IRNode>) {
+      const cy = (node.position as [number, number])[1];
+      expect(cy + (node.minimumHeight as number) / 2).toBeCloseTo(300, 6);
+    }
+  });
+
+  it('bar_centers_ascending_evenly', () => {
+    const xs = (firstLayer(barSpec(), { sales: SALES }, opts).children as Array<IRNode>).map(n => (n.position as [number, number])[0]);
+    expect(xs[0]).toBeLessThan(xs[1]);
+    expect(xs[1]).toBeLessThan(xs[2]);
+    expect(xs[1] - xs[0]).toBeCloseTo(xs[2] - xs[1], 6);
+  });
+
+  it('bar_missing_value_skipped', () => {
+    const rows = [
+      { month: 0, revenue: 10 },
+      { month: 1, revenue: 'oops' },
+      { month: 2, revenue: 9 },
+    ];
+    expect(firstLayer(barSpec(), { sales: rows }, opts).children).toHaveLength(2);
+  });
+
+  it('bar_compiles_to_scene', () => {
+    const scene = compileToScene(
+      { version: 1, type: 'scene', children: [barSpec()] },
+      { composites: lowerPlots({ sales: SALES }, opts) },
+    );
+    expect(scene.primitives.length).toBeGreaterThan(0);
+  });
+
+  it('bar_coexists_with_point', () => {
+    const spec = PlotSpecSchema.parse({
+      namespace: 'plot',
+      type: 'plot',
+      data: { ref: 'sales' },
+      scales: [
+        { type: 'band', name: 'xMonth' },
+        { type: 'linear', name: 'yRevenue' },
+      ],
+      coordinate: { type: 'cartesian2D', x: 'xMonth', y: 'yRevenue' },
+      marks: [
+        { type: 'interval', encoding: { x: { field: 'month' }, y: { field: 'revenue' } } },
+        { type: 'point', encoding: { x: { field: 'month' }, y: { field: 'revenue' } } },
+      ],
+    });
+    // 无 guides：两 mark → 两层 mark scope
+    const outer = expandOf(spec, { sales: SALES }, opts);
+    expect(outer.children).toHaveLength(2);
+    expect((outer.children[0] as IRScope).nodeDefault?.shape).toBe('rectangle'); // interval 层
+    expect((outer.children[1] as IRScope).nodeDefault?.shape).toBe('circle'); // point 层
+  });
+});
