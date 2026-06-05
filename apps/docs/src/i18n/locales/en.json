@@ -71,7 +71,8 @@
     "refCustomPattern": "Custom Patterns",
     "refPathGenerator": "Path Generators",
     "refComposite": "Tier 2 Composites",
-    "refComposites": "Composite"
+    "refComposites": "Composite",
+    "refHydration": "Hydration"
   },
   "plot": {
     "label": "Plot",

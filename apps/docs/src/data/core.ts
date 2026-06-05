@@ -91,6 +91,7 @@ export const coreSection: Array<Section> = [
           { id: 'composite', label: 'core.refComposite' },
         ],
       },
+      { id: 'hydration', label: 'core.refHydration' },
       {
         id: 'schema',
         label: 'core.refSchema',
