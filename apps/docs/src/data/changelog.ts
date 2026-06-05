@@ -526,6 +526,30 @@ export const changelog: Array<Release> = [
         ],
         subVersions: [
           {
+            version: 'alpha.2',
+            date: '2026-06-05',
+            summary: {
+              zh: 'guide：由 scale + 坐标系派生坐标轴 / 刻度 / 网格并 lower 进 core；scale 改用 d3-scale（scaleLinear + ticks/tickFormat）；引入绘图区 margin 布局，mark 改投影到 plot area。仍限 cartesian2D。',
+              en: 'guide: derive axes / ticks / grid from scale + coordinate and lower into core; scales move to d3-scale (scaleLinear + ticks/tickFormat); a plot-area margin layout lands and marks now project into the plot area. Still cartesian2D only.',
+            },
+            items: [
+              {
+                label: { zh: 'guide IR + lowering', en: 'guide IR + lowering' },
+                content: {
+                  zh: '新增 `GuideSchema`（Axis + grid 子属性，绑 coordinate scope、预留 `plot.xAxis` / `plot.yAxis` anchor）；guide lowering 把轴 / 刻度 / 网格展开成 core `Path` / `Node`(text)。',
+                  en: 'New `GuideSchema` (Axis + grid sub-fields, bound to the coordinate scope, reserving `plot.xAxis` / `plot.yAxis` anchors); guide lowering expands axes / ticks / grid into core `Path` / `Node`(text).',
+                },
+              },
+              {
+                label: { zh: 'd3-scale + 绘图区布局', en: 'd3-scale + plot-area layout' },
+                content: {
+                  zh: 'scale 回溯自写 linear、改用 `d3-scale` 的 `scaleLinear`（ticks / tickFormat / nice）；`width×height` 改为整图尺寸，由外向内挤出 axis 区，mark 投影到缩进的 plot area。',
+                  en: 'scales drop the hand-rolled linear for `d3-scale`’s `scaleLinear` (ticks / tickFormat / nice); `width×height` becomes the whole-figure size, the axis band is carved from the outside in, and marks project into the inset plot area.',
+                },
+              },
+            ],
+          },
+          {
             version: 'alpha.1',
             date: '2026-06-05',
             summary: {
@@ -569,6 +593,23 @@ export const changelog: Array<Release> = [
         ],
         subVersions: [
           {
+            version: 'alpha.2',
+            date: '2026-06-05',
+            summary: {
+              zh: '新增 `<Axis>` 子组件（`dimension` / `tickCount` / `tickLabels` / `grid`），默认自动出 x/y 轴、`bare` 关；组合 DSL 目录 `dsl/` 更名 `components/`。',
+              en: 'New `<Axis>` child component (`dimension` / `tickCount` / `tickLabels` / `grid`), with x/y axes auto-emitted by default and a `bare` switch; the composition DSL folder `dsl/` is renamed `components/`.',
+            },
+            items: [
+              {
+                label: { zh: '<Axis> 子组件', en: '`<Axis>` child component' },
+                content: {
+                  zh: '声明式坐标轴 + 网格：`<Plot>` 默认按 scale 自动出 x/y 轴，`<Axis>` 可覆盖刻度数 / 标签 / 网格；`bare` 一键去除所有 guide。',
+                  en: 'Declarative axes + grid: `<Plot>` auto-emits x/y axes from the scales by default; `<Axis>` overrides tick count / labels / grid; `bare` strips all guides in one switch.',
+                },
+              },
+            ],
+          },
+          {
             version: 'alpha.1',
             date: '2026-06-05',
             summary: {
@@ -604,6 +645,23 @@ export const changelog: Array<Release> = [
           },
         ],
         subVersions: [
+          {
+            version: 'alpha.2',
+            date: '2026-06-05',
+            summary: {
+              zh: '随 plot guide lockstep：`renderPlot` 的 SSR 产物自动带上坐标轴 / 刻度 / 网格与绘图区布局（共用同一份下沉逻辑，无新 API）。',
+              en: 'Lockstep with plot guide: `renderPlot` SSR output now carries axes / ticks / grid and the plot-area layout automatically (shares the same lowering, no new API).',
+            },
+            items: [
+              {
+                label: { zh: 'SSR 带轴出图', en: 'SSR output with axes' },
+                content: {
+                  zh: '服务端 / 构建期出的 SVG 字符串与 react 面视觉一致——guide 与绘图区布局由共享的 lowerPlots 产出，vanilla 侧零额外代码。',
+                  en: 'Server / build-time SVG strings now match the React surface visually — guides and plot-area layout come from the shared lowerPlots, with zero extra code on the vanilla side.',
+                },
+              },
+            ],
+          },
           {
             version: 'alpha.1',
             date: '2026-06-05',

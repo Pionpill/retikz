@@ -16,7 +16,7 @@
   "repository": {
     "type": "git",
     "url": "git+https://github.com/Pionpill/retikz.git",
-    "directory": "packages/react"
+    "directory": "packages/core/react"
   },
   "bugs": {
     "url": "https://github.com/Pionpill/retikz/issues"
