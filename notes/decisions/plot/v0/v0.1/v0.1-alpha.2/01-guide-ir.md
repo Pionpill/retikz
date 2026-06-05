@@ -29,14 +29,14 @@ import type { ValueOf } from '@retikz/core';
 export const PlotGuide = { Axis: 'axis' } as const;
 export type GuideType = ValueOf<typeof PlotGuide>;
 
-/** guide 装饰的坐标轴维度（暴露给用户；裸 'x' / 'y' 同样可用） */
+/** guide 绑定的坐标系定位维度（暴露给用户；裸 'x' / 'y' 同样可用；非固定屏幕方向，polar 等扩展 radius/angle） */
 export const GuideDimension = { X: 'x', Y: 'y' } as const;
 export type GuideDimensionType = ValueOf<typeof GuideDimension>;
 
 export const AxisGuideSchema = z
   .object({
     type: z.literal(PlotGuide.Axis).describe('Discriminator: a coordinate axis (axis line + ticks + tick labels, with optional aligned grid lines)'),
-    dimension: z.nativeEnum(GuideDimension).describe('Which coordinate axis this guide decorates: x (horizontal) or y (vertical)'),
+    dimension: z.nativeEnum(GuideDimension).describe("Which positional dimension of the bound coordinate system this axis visualizes — not a fixed screen orientation. cartesian2D: 'x' (horizontal) / 'y' (vertical); other coordinate systems extend the set (e.g. polar: radius / angle)"),
     id: z
       .string()
       .min(1)
@@ -149,6 +149,8 @@ GuideSchema.parse({ type: 'axis', dimension: 'y', tickCount: 5, grid: true, tick
 - **guide → core IR 的 lowering** → [ADR-04](./04-guide-lowering.md)。
 - **`<Axis>` 子组件（含 `grid` prop）、默认自动出、`bare`** → [ADR-05](./05-guide-bindings-dsl.md)。
 - **轴标题、轴线/刻度可见性细分开关、legend、reference line、富排版** → 后续。
+- **同维度多轴（dual-axis / 上下双轴）+ `placement`（top/bottom/left/right）+ 副轴 `scale?` 绑定** → 后续；当前每维一轴（lowering `assertUniqueAxisDimension` 拒重复），多轴是非破坏加可选字段 + 放宽该断言。
+- **polar 等坐标系的定位维度（radius / angle）** → alpha.4；`GuideDimension` 加成员即可，属非破坏扩展。
 - **装饰性网格底纹（core pattern）、数据空间区域强调（reference-area 原语）** → 后续（非 guide，见「网格归属」§3）。
 - **`guide.coordinate` 引用 + coordinate 具名/多实例（facet）、guide 的 anchor/scope 解析** → alpha.5 / facet milestone。
 

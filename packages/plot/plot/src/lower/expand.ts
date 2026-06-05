@@ -10,7 +10,10 @@ import { type TickSet, resolveLinearScale, scaleTicks } from './scale';
 /** 空刻度集（某维度无 axis 时给 GuideContext 的占位；实际不会被该维度的 guide 触达） */
 const EMPTY_TICKS: TickSet = { values: [], labels: [] };
 
-/** 一根维度只能一根轴：重复同 dimension 的 axis → 刻度数不确定，抛清晰错误 */
+/**
+ * 一根定位维度只画一根轴：重复同 dimension 的 axis → 刻度数不确定，抛清晰错误。
+ * @description 多轴（dual-axis / 上下双轴，靠 placement 区分、副轴可绑不同 scale）是后续非破坏放宽，目前不支持。
+ */
 const assertUniqueAxisDimension = (guides: Array<Guide>): void => {
   const seen = new Set<string>();
   for (const guide of guides) {

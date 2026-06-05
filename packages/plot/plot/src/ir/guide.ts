@@ -14,13 +14,14 @@ export const PlotGuide = {
 export type GuideType = ValueOf<typeof PlotGuide>;
 
 /**
- * guide 装饰的坐标轴维度关键字（暴露给用户；裸字面量 `'x'` / `'y'` 同样可用）
- * @description x = 水平轴、y = 垂直轴；guide 经此关联坐标系的某根轴
+ * guide 绑定的坐标系定位维度关键字（暴露给用户；裸字面量 `'x'` / `'y'` 同样可用）
+ * @description 指这根轴可视化坐标系的哪个定位维度，不是固定的屏幕「水平/垂直」方向。
+ *   cartesian2D 的定位维度是 x / y；其它坐标系按自身定位维度扩展成员（如 polar 的 radius / angle），属非破坏新增。
  */
 export const GuideDimension = {
-  /** 水平轴 */
+  /** cartesian2D 水平定位维度 */
   X: 'x',
-  /** 垂直轴 */
+  /** cartesian2D 垂直定位维度 */
   Y: 'y',
 } as const;
 
@@ -34,7 +35,9 @@ export const AxisGuideSchema = z
       .describe('Discriminator: a coordinate axis (axis line + ticks + tick labels, with optional aligned grid lines)'),
     dimension: z
       .nativeEnum(GuideDimension)
-      .describe('Which coordinate axis this guide decorates: x (horizontal) or y (vertical)'),
+      .describe(
+        "Which positional dimension of the bound coordinate system this axis visualizes — not a fixed screen orientation. cartesian2D dimensions are 'x' (horizontal) / 'y' (vertical); other coordinate systems extend the set with their own (e.g. polar: radius / angle).",
+      ),
     id: z
       .string()
       .min(1)
