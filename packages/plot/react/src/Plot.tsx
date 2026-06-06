@@ -43,7 +43,7 @@ const DSL_DATA_REF = '__plot';
  *   两路都把 spec 包成 scene、经 lowerPlots 注入数据后交 <Layout>；data 不进 IR
  */
 export const Plot: FC<PlotProps> = props => {
-  const { width, height, className, style, renderer, fontSize, margin } = props;
+  const { width, height, className, style, renderer, fontSize, margin, provenance, datumProvenance, datumIdField } = props;
 
   let spec: PlotSpec;
   let datasets: ExternalDatasets;
@@ -60,7 +60,7 @@ export const Plot: FC<PlotProps> = props => {
   return (
     <Layout
       ir={{ version: 1, type: 'scene', children: [validated] }}
-      composites={lowerPlots(datasets, { width, height, fontSize, margin })}
+      composites={lowerPlots(datasets, { width, height, fontSize, margin, provenance, datumProvenance, datumIdField })}
       width={width}
       height={height}
       className={className}

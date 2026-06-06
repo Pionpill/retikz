@@ -1,11 +1,12 @@
 import { type CompositeDefinition, type IRChild, type IRScope, defineComposite } from '@retikz/core';
 import type { ZodType } from 'zod';
-import { type Channel, type ExternalDatasets, type Guide, type Mark, type OrdinalScale, PlotCoordinate, PlotMark, PlotScale, type PlotSpec, PlotSpecSchema, type Scale } from '../ir';
+import { type Channel, type ExternalDatasets, type ExternalRow, type Guide, type Mark, type OrdinalScale, PlotCoordinate, PlotMark, PlotScale, type PlotSpec, PlotSpecSchema, type Scale } from '../ir';
 import { channelValue, resolveFieldPath } from './field';
 import { type GuideContext, lowerGuide } from './guide';
 import { DEFAULT_FONT_SIZE, type Margins, type Rect, computePlotArea, computePolarFrame } from './layout';
 import { type ColorOf, lowerMark } from './mark';
 import { type CoordinateFrame, createCartesianFrame, createPolarFrame } from './project';
+import { type ProvenanceContext, rootMeta, tagSourceIndex } from './provenance';
 import { type TickSet, resolveOrdinalScale, resolvePositionScale } from './scale';
 import { applyTransforms } from './transform';
 
@@ -50,7 +51,7 @@ const assertUniqueAxisDimension = (guides: Array<Guide>, coordinateType: string)
 const DEFAULT_WIDTH = 480;
 const DEFAULT_HEIGHT = 300;
 
-/** lowerPlots 运行时选项：整图尺寸 + label 字号 + margin（均不进 IR） */
+/** lowerPlots 运行时选项：整图尺寸 + label 字号 + margin + provenance 开关（均不进 IR） */
 export type LowerPlotsOptions = {
   /** 整图宽（user units），默认 480 */
   width?: number;
@@ -60,32 +61,51 @@ export type LowerPlotsOptions = {
   fontSize?: number;
   /** 逐边覆盖自动估算的 margin */
   margin?: Partial<Margins>;
+  /** 总开关：开启才写 layer/series meta + 合成 `<plotId>.` 内部 id；关（默认 false）→ 逐字节等价 alpha.4 */
+  provenance?: boolean;
+  /** 每个 datum Node 写 per-datum 来源 meta（hit-test；O(rows) 增量，蕴含需 provenance 开），默认 false */
+  datumProvenance?: boolean;
+  /** 数据属性名：把该字段值绑成 `<plotId>.datum.<值>` 的 Node.id（opt-in 可连接；缺字段 / 重复值 fail loud） */
+  datumIdField?: string;
+};
+
+/** resolveFrame 产物：mark / guide 共用的投影帧 + 已下沉的网格 / 轴层（z-order 由 expand 编排） */
+export type ResolvedFrame = {
+  /** mark 与 guide 共用的坐标投影帧（cartesian / polar） */
+  frame: CoordinateFrame;
+  /** 网格层（垫底；grid:true 的 guide 产出） */
+  gridLayers: Array<IRScope>;
+  /** 轴层（压顶；每根 axis guide 产出） */
+  axisLayers: Array<IRScope>;
+};
+
+/** resolveFrame 入参：投影 + guide 下沉所需的全部上下文（pure，无副作用，ADR-02 locator 复用同一投影） */
+export type ResolveFrameParams = {
+  /** plot IR 根节点（取 coordinate / guides） */
+  node: PlotSpec;
+  /** transform 后的数据行（域推断、guide 刻度同源） */
+  rows: Array<ExternalRow>;
+  /** 整图宽（user units） */
+  width: number;
+  /** 整图高（user units） */
+  height: number;
+  /** label 字号 */
+  fontSize: number;
+  /** 逐边覆盖自动估算的 margin */
+  margin?: Partial<Margins>;
+  /** provenance 上下文（开 → guide 层带 `<plotId>.` id + 来源 meta；undefined → alpha.2 行为） */
+  provenance?: ProvenanceContext;
 };
 
 /**
- * 把一个 Plot IR 根节点 + 外部数据下沉成一个 core Scope
- * @description 编排：校验 ref/scale → 收集轴值 → 建归一化 scale → 建投影器 → 各 mark 下沉 → 包 localNamespace Scope（root id → Scope.id，plot-design §8.1）
+ * 按坐标系解析出 mark / guide 共用的投影帧 + 下沉 guide 层
+ * @description cartesian：x/y 角色绑 x/y scale、走 plotArea + 直线轴；polar：angle/radius 角色、走 polar layout + 弧 / 辐条轴。
+ *   抽成纯函数使 mark 下沉与 ADR-02 locator 共用同一投影（杜绝两套投影漂移）；产物与内联版等价。
  */
-const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPlotsOptions): IRChild => {
-  const width = options.width ?? DEFAULT_WIDTH;
-  const height = options.height ?? DEFAULT_HEIGHT;
-  // 绘图区尺寸是 scale range / 投影的单一来源；非有限或非正数会一路污染出 cx="NaN" 等坏坐标——入口抛清晰错误
-  if (!Number.isFinite(width) || width <= 0) {
-    throw new Error(`lowerPlots: width must be a positive finite number, got ${width}`);
-  }
-  if (!Number.isFinite(height) || height <= 0) {
-    throw new Error(`lowerPlots: height must be a positive finite number, got ${height}`);
-  }
-
-  if (!(node.data.reference in datasets)) {
-    throw new Error(`lowerPlots: dataset "${node.data.reference}" not found in provided datasets`);
-  }
-  // 取数后先过 transform 管线（sort / stack…）：域推断与 mark 下沉都用变换后的行
-  const rows = applyTransforms(datasets[node.data.reference], node.transform);
-
+export const resolveFrame = (params: ResolveFrameParams): ResolvedFrame => {
+  const { node, rows, width, height, fontSize, margin, provenance } = params;
   const coordinate = node.coordinate;
   const scaleByName = new Map(node.scales.map(scale => [scale.name, scale] as const));
-  const fontSize = options.fontSize ?? DEFAULT_FONT_SIZE;
 
   // 收集某角色（位置 scale 名 + 通道角色）下所有 mark 的通道原始值（不预过滤）：
   //   连续 scale 内部过滤为有限数求 extent、分类 scale 按数据序去重推断 domain。
@@ -170,7 +190,7 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
       width,
       height,
       { hasAngularAxis: !!(angularAxis && angularAxis.tickLabels !== false), angularLabels: angularTicks?.labels ?? [] },
-      { fontSize, margin: options.margin },
+      { fontSize, margin },
     );
     const innerRadiusUnits = coordinate.innerRadius * layout.outerRadius;
     // 径向 range = [innerRadius, outerRadius] user units（依赖最终 outerRadius，故在 layout 之后建）
@@ -202,7 +222,7 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
       radialTicks: radialTicks ?? EMPTY_TICKS,
     };
     for (const guide of guides) {
-      const lowered = lowerGuide(guide, guideContext);
+      const lowered = lowerGuide(guide, guideContext, provenance);
       if (lowered.gridLayer) gridLayers.push(lowered.gridLayer);
       if (lowered.axisLayer) axisLayers.push(lowered.axisLayer);
     }
@@ -226,7 +246,7 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
       width,
       height,
       { hasXAxis: !!xAxis, hasYAxis: !!yAxis, xLabels: xTicks?.labels ?? [], yLabels: yTicks?.labels ?? [] },
-      { fontSize, margin: options.margin },
+      { fontSize, margin },
     );
 
     // range 收敛到 plot area（y 屏幕向下，故倒置）；显式 range 的 scale 不覆盖——尊重用户手设
@@ -256,15 +276,20 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
       yTicks: yTicks ?? EMPTY_TICKS,
       fontSize,
     };
-    const lowered = guides.map(guide => lowerGuide(guide, guideContext));
+    const lowered = guides.map(guide => lowerGuide(guide, guideContext, provenance));
     for (const layer of lowered) {
       if (layer.gridLayer) gridLayers.push(layer.gridLayer);
       if (layer.axisLayer) axisLayers.push(layer.axisLayer);
     }
   }
 
-  // 解析某 mark 的 color 编码 → 行→颜色串：常量 value 直用；字段过 ordinal scale（显式引用或自动合成默认配色）
-  const resolveColor = (mark: Mark): ColorOf | undefined => {
+  return { frame, gridLayers, axisLayers };
+};
+
+/** 解析某 mark 的 color 编码 → 行→颜色串：常量 value 直用；字段过 ordinal scale（显式引用或自动合成默认配色） */
+const makeColorResolver = (node: PlotSpec, rows: Array<ExternalRow>): ((mark: Mark) => ColorOf | undefined) => {
+  const scaleByName = new Map(node.scales.map(scale => [scale.name, scale] as const));
+  return (mark: Mark): ColorOf | undefined => {
     const channel = mark.encoding.color;
     if (!channel) return undefined;
     if (channel.value !== undefined) {
@@ -291,18 +316,67 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
       return typeof value === 'string' || typeof value === 'number' ? ordinal(value) : undefined;
     };
   };
+};
+
+/**
+ * 把一个 Plot IR 根节点 + 外部数据下沉成一个 core Scope
+ * @description 编排：校验 ref/scale → 收集轴值 → 建归一化 scale → 建投影器（resolveFrame）→ 各 mark 下沉 → 包 localNamespace Scope。
+ *   root id → Scope.id（plot-design §8.1）；provenance 开 → 外层 Scope + 各层 / datum 带来源 meta + `<plotId>.` 内部 id。
+ */
+const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPlotsOptions): IRChild => {
+  const width = options.width ?? DEFAULT_WIDTH;
+  const height = options.height ?? DEFAULT_HEIGHT;
+  // 绘图区尺寸是 scale range / 投影的单一来源；非有限或非正数会一路污染出 cx="NaN" 等坏坐标——入口抛清晰错误
+  if (!Number.isFinite(width) || width <= 0) {
+    throw new Error(`lowerPlots: width must be a positive finite number, got ${width}`);
+  }
+  if (!Number.isFinite(height) || height <= 0) {
+    throw new Error(`lowerPlots: height must be a positive finite number, got ${height}`);
+  }
+
+  if (!(node.data.reference in datasets)) {
+    throw new Error(`lowerPlots: dataset "${node.data.reference}" not found in provided datasets`);
+  }
+
+  // provenance 总开关：开 → 构造贯穿上下文（datumProvenance 蕴含需 provenance 开）；关 → undefined（产物逐字节等价 alpha.4）
+  const provenance: ProvenanceContext | undefined = options.provenance
+    ? {
+        plotId: node.id,
+        dataReference: node.data.reference,
+        datumProvenance: options.datumProvenance ?? false,
+        datumIdField: options.datumIdField,
+      }
+    : undefined;
+
+  // 取数：provenance 开时先打源序标记（symbol 键，跨 transform 存活，供 sourceIndex 回指），再过 transform 管线
+  const ingested = provenance ? tagSourceIndex(datasets[node.data.reference]) : datasets[node.data.reference];
+  const rows = applyTransforms(ingested, node.transform);
+
+  const { frame, gridLayers, axisLayers } = resolveFrame({
+    node,
+    rows,
+    width,
+    height,
+    fontSize: options.fontSize ?? DEFAULT_FONT_SIZE,
+    margin: options.margin,
+    provenance,
+  });
+
+  const resolveColor = makeColorResolver(node, rows);
 
   // 每个 mark 下沉成一个图层 Scope（样式上提到 nodeDefault/pathDefault）；空图层（无可绘制点）丢弃
+  // provenance 开 → 传 markProvenance（plotId / markIndex / datum 开关），各层 / datum 绑 id + 来源 meta
   const markLayers: Array<IRChild> = node.marks
-    .map(mark => lowerMark(mark, rows, frame, resolveColor(mark)))
+    .map((mark, markIndex) => lowerMark(mark, rows, frame, resolveColor(mark), provenance ? { context: provenance, markIndex } : undefined))
     .filter((layer): layer is IRChild => layer !== null);
 
   // z-order：所有网格层 → marks → 所有轴层（网格垫底、坐标轴压顶不被数据盖）
   const children: Array<IRChild> = [...gridLayers, ...markLayers, ...axisLayers];
 
-  return node.id
+  const base: IRScope = node.id
     ? { type: 'scope', id: node.id, localNamespace: true, children }
     : { type: 'scope', localNamespace: true, children };
+  return provenance ? { ...base, meta: rootMeta(provenance.dataReference) } : base;
 };
 
 /**
