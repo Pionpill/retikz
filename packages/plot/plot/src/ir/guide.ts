@@ -23,6 +23,10 @@ export const GuideDimension = {
   X: 'x',
   /** cartesian2D 垂直定位维度 */
   Y: 'y',
+  /** polar 角向定位维度（绕圆周；亦可由别名 x 复用） */
+  Angle: 'angle',
+  /** polar 径向定位维度（沿辐条；亦可由别名 y 复用） */
+  Radius: 'radius',
 } as const;
 
 /** guide 维度 */
