@@ -417,3 +417,59 @@ describe('ADR-02 locator — 交互', () => {
     }
   });
 });
+
+// =====================================================================
+// Bug Hunter 回归（stage 3 对抗提升为正式测试）
+// =====================================================================
+describe('ADR-02 locator — Bug Hunter 回归', () => {
+  it('locator_matches_lowering_under_transform', () => {
+    // 关键对抗：locator 必须与 lowering 用「同一份 transform 后行」。带 descending sort 时，
+    //   locator.datum(i) 须对齐 lowering 渲染序第 i 个 Node（而非原始数据序），且 meta.sourceIndex 正确回指。
+    const spec = PlotSpecSchema.parse({
+      namespace: 'plot',
+      type: 'plot',
+      id: 'sales',
+      data: { reference: 'sales' },
+      transform: [{ kind: 'sort', field: 'revenue', order: 'descending' }],
+      scales: [
+        { type: 'band', name: 'xMonth' },
+        { type: 'linear', name: 'yRevenue' },
+      ],
+      coordinate: { type: 'cartesian2D', x: 'xMonth', y: 'yRevenue' },
+      marks: [{ type: 'interval', encoding: { x: { field: 'month' }, y: { field: 'revenue' } } }],
+    });
+    const datasets = { sales: SALES };
+    const options: LowerPlotsOptions = { ...opts, provenance: true, datumProvenance: true };
+    const nodes = datumNodes(firstLayer(spec, datasets, options));
+    const locator = createPlotLocator(spec, datasets, options);
+    // 渲染序：revenue 降序 → [14(month1),10(month0),9(month2)] = source 行 [1,0,2]
+    expect(nodes).toHaveLength(3);
+    for (let index = 0; index < nodes.length; index++) {
+      const anchor = locator.datum(index);
+      expect(anchor).not.toBeNull();
+      // 位置与 lowering 渲染序逐点一致（locator 复用同一 transform 后行 + frame）
+      expect(anchor!.position).toEqual(nodes[index].position);
+      // meta 渲染序与 lowering Node.meta 一致
+      const nodeMeta = nodes[index].meta as { transformedIndex: number; sourceIndex?: number };
+      const anchorMeta = anchor!.meta as { transformedIndex: number; sourceIndex?: number };
+      expect(anchorMeta.transformedIndex).toBe(index);
+      expect(anchorMeta.sourceIndex).toBe(nodeMeta.sourceIndex);
+    }
+    // sourceIndex 反映降序后回指原始行：[1,0,2]
+    expect(nodes.map(n => (n.meta as { sourceIndex?: number }).sourceIndex)).toEqual([1, 0, 2]);
+  });
+
+  it('locator_does_not_mutate_input_datasets', () => {
+    // locator 为合成 meta 需 tagSourceIndex，但必须打在克隆行、不污染调用方原始数据。
+    const rows = [
+      { month: 0, revenue: 10 },
+      { month: 1, revenue: 14 },
+    ];
+    const locator = createPlotLocator(barSpec({ id: 'sales' }), { sales: rows }, { ...opts, datumProvenance: true });
+    locator.datum(0);
+    locator.series('x'); // 触发各路径
+    for (const row of rows) {
+      expect(Object.getOwnPropertySymbols(row)).not.toContain(SOURCE_INDEX);
+    }
+  });
+});
