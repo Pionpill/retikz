@@ -90,6 +90,7 @@
     "grammarCoordinate": "坐标系",
     "grammarMark": "图元",
     "grammarGuide": "引导",
+    "grammarProvenance": "来源与锚点",
     "components": "绘图",
     "compPlot": "图表容器",
     "compMark": "图元",

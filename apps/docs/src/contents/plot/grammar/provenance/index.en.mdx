@@ -1,0 +1,136 @@
+---
+title: Provenance & Anchors
+description: Once a plot is lowered to pure geometry, its origin (which row, which series, which layer) is gone. Turn on provenance to stamp every element with a traceable source tag and to mint connectable anchors for the low-cardinality structure.
+---
+
+Before rendering, `<Plot>` "lowers" the high-level chart into low-level pure-geometry nodes — a bar ends up as just a rectangle, and the renderer has no idea which data row it came from or which series it belongs to. Most of the time that is fine. But when you want to trace an element back to its original datum (future interaction hit-testing, or wiring an annotation line from outside the chart to a specific point), you need that origin **preserved** during lowering.
+
+retikz does this through two complementary channels, both off by default and zero-overhead:
+
+- **`id` (connectable handle)** — gives a lowered element a stable name so it can be connected by a path and addressed by a locator. It costs namespace, so per-datum ids at high cardinality are opt-in.
+- **`meta` (provenance tag)** — an opaque blob carried into the Scene alongside the element; the renderer ignores it entirely, and the interaction layer / tooling reads it on demand. Zero namespace cost.
+
+Both channels are enabled through options on `lowerPlots` / `<Plot>`.
+
+## Turning on provenance
+
+All options live on `lowerPlots(datasets, options)`; when you use the `<Plot>` component, the same-named props forward straight through.
+
+```tsx
+import { Layout } from '@retikz/react';
+import { lowerPlots } from '@retikz/plot';
+
+const datasets = { sales: [{ q: 'Q1', v: 120 }, { q: 'Q2', v: 90 }] };
+
+<Layout
+  compileOptions={{
+    composites: lowerPlots(datasets, {
+      provenance: true,        // master switch: write layer / series meta + synthesize <plotId>. internal ids
+      datumProvenance: true,   // also write per-datum meta on each datum Node
+      datumIdField: 'q',       // bind the q field value as a connectable <plotId>.datum.<q> id
+    }),
+  }}
+>
+  {/* <Plot> spec … */}
+</Layout>
+```
+
+| Option | Type | Default | Description |
+| --- | --- | --- | --- |
+| `provenance` | `boolean?` | `false` | Master switch. Off → lowering output is **byte-identical** to having it off (zero overhead). On → writes per-layer / per-series meta and synthesizes `<plotId>.` ids for internal elements |
+| `datumProvenance` | `boolean?` | `false` | Writes per-datum meta on each datum Node (`O(rows)` size). Enabling it **also enables** `provenance` |
+| `datumIdField` | `string?` | omitted | A data field name: binds that field's value as a `<plotId>.datum.<value>` Node id so a single datum becomes connectable. A missing field or a duplicate value **throws a clear error** (never silently swallowed). Setting it also enables `provenance` |
+
+You can set `datumProvenance` or `datumIdField` alone without `provenance` — both imply it.
+
+<ComponentAlert title="Zero overhead by default" description="With none of the three options set, lowering output is exactly as before — no extra meta or id keys, and the render output is unchanged. Provenance is pay-as-you-go." />
+
+## id: the connectable handle
+
+An id is the key to the low-level "connect" mechanism — a named element can be referenced by a path step and located by address through a locator. The naming scheme per level:
+
+| Element | Synthesized id |
+| --- | --- |
+| The whole plot (root) | the `id` you pass to `<Plot>` (this id **always** applies; it does not need provenance) |
+| Each mark layer | user-given `mark.id` → `<plotId>.<markId>`; otherwise `<plotId>.mark.<index>` |
+| Each series (line / area only) | `<plotId>.series.<series value>` |
+| A single datum (needs `datumIdField`) | `<plotId>.datum.<field value>` |
+
+One important boundary: the plot root is a **local namespace**. That means internal ids like `<plotId>.mark.0` and `.series.north` **do not escape the plot** — they are visible only inside it, for plot-local connections and locator addressing.
+
+- **External composition** goes only through the plot's **root id**: an outside annotation / connector attaches to the whole chart, not to one of its sub-elements.
+- **Connecting directly to a sub-element from outside** (e.g. wiring to `sales.series.north` from the outside) needs an "export anchor" mechanism, which is a later v0.5 cross-composition capability and is not supported today.
+
+## meta: the provenance tag
+
+meta is origin information carried into the Scene alongside an element. The renderer never reads it, it does not enter the DOM, and it has no effect on layout or bounding box. Its consumers are the interaction layer and tooling — for example, hitting an element in the future and reading its meta to recover "this is row 5 of `sales`, an interval mark".
+
+What gets written per level when `provenance` is on:
+
+- **root**: `{ source: 'plot', dataReference }`
+- **mark layer**: `{ source: 'plot', layer: 'mark', mark, markIndex }`
+- **series (line / area)**: written on each series Path, with an extra `series`
+- **datum** (with `datumProvenance`, point / interval / sector only): see below
+
+### Per-datum meta and index semantics
+
+Each datum's meta looks like:
+
+```ts
+{
+  source: 'plot',
+  dataReference: 'sales',
+  mark: 'interval',
+  markIndex: 0,
+  transformedIndex: 3,   // position in render order
+  sourceIndex: 5,        // back-reference to the original dataset row (best-effort)
+  series: 'north',       // if the mark binds a series
+}
+```
+
+Two indices to keep apart, because transforms (sort, stack) run before lowering and can reorder rows:
+
+| Field | Meaning |
+| --- | --- |
+| `transformedIndex` | position **after** transforms, equal to actual render order. **Always present** |
+| `sourceIndex` | back-reference to the row in the **original dataset**. Best-effort — sort merely reorders and can keep the original order, but a transform that derives new rows (such as stack) may not map back to a single source row, in which case it is omitted rather than faked |
+
+Series id and meta only have a structural home on line / area (each series is one Path); point / interval / sector have no series substructure, so their series value is carried in the per-datum meta.
+
+## locator: computing a logical address back to a position
+
+Source information alone isn't enough — you often need the reverse: given a logical address ("the 3rd datum", "the north series"), compute where it sits on the canvas. `createPlotLocator` does this forward resolution, and **without** pre-registering every datum as a named node, so even tens of thousands of scatter points won't bloat the IR.
+
+```ts
+import { createPlotLocator } from '@retikz/plot';
+
+const spec = buildPlotSpec(/* … */);
+const datasets = { sales: [{ q: 'Q1', v: 120 }, { q: 'Q2', v: 90 }] };
+
+// Build it with the exact same spec + data + options as lowerPlots (so the projection matches)
+const locator = createPlotLocator(spec, datasets, { width: 480, height: 300 });
+
+locator.datum(1);
+// → { position: [x, y], meta: { source: 'plot', mark: 'interval', markIndex: 0, transformedIndex: 1, … } }
+
+locator.series('north');
+// → { position: <centroid of all rendered points in the series>, meta: { …, series: 'north' } }
+
+locator.resolve('sales.datum.0');   // dotted-path string resolution
+locator.datum(999);                 // out of range → null
+```
+
+All three methods return `{ position, meta, id? }` or `null`:
+
+| Method | What it does |
+| --- | --- |
+| `datum(transformedIndex)` | resolves a single datum's anchor by render-order index, `O(1)` |
+| `series(value)` | resolves a series' area anchor (the centroid of all its rendered members) |
+| `resolve(address)` | resolves a `<plotId>.datum.<i>` / `<plotId>.series.<value>` dotted path; no match → `null` |
+
+Two key guarantees:
+
+- `datum(i).position` **equals** the position of the node that lowering actually placed for row `i` — both share the same anchor computation, so they never drift.
+- **Unrendered datums return `null`**: rows whose projection is invalid or that lowering skipped also return `null` from the locator, consistent with "not rendered means not hittable".
+
+`meta` is always synthesized on demand — even without `datumProvenance`, the locator hands back an isomorphic meta, so you get provenance at zero IR cost. `id` is only filled in when the element actually has a named id (a `datumIdField` hit).

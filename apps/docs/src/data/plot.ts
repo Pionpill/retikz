@@ -42,6 +42,7 @@ export const plotSection: Array<Section> = [
       { id: 'coordinate', label: 'plot.grammarCoordinate' },
       { id: 'mark', label: 'plot.grammarMark' },
       { id: 'guide', label: 'plot.grammarGuide' },
+      { id: 'provenance', label: 'plot.grammarProvenance' },
     ],
   },
   {
