@@ -87,6 +87,7 @@ export const AreaMarkSchema = z.object({
 - **area / line series + polar → 按系列拆子 Path**（沿用 alpha.3 多系列 line）。
 - **closed 在 cartesian → 允许**（闭合多边形），不特判。
 - **数值字段 `.finite()`**（继承 ADR-01 B-1 教训）：`baseline` 等 IR 数值字段加 `.finite()`，防 Infinity 破坏 JSON round-trip。
+- **closed area 语义（实现期澄清）**：area 恒为「上沿 + baseline 回边 + cycle」可填充区域；`closed` 只让上沿走弦（不影响回边）。polar area baseline=0 的回边落圆心 = 填充雷达（从圆心填到外沿），是预期语义。Bug Hunter 提的「baseline=0 时回边 N 个圆心重合点」属 **benign 冗余**（契约未破、core 接受、渲染正确），归 backlog（后续可 dedupe 退化点），不在 alpha.4 改。
 
 ## DSL 表面
 
