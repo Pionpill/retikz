@@ -58,11 +58,19 @@ For each shape's parameters, anchors, and examples, see its shape page:
 
 By default, edges clip against the node's visual shape boundary. When you want edges to meet a different shape without changing the node's real footprint, set `boundary` to pick an independent "connection surface". The common case is concave shapes like stars and polygons — you keep the spiky look but want edges to arrive evenly as if meeting a circle, instead of diving into the notches.
 
-`boundary` takes the same forms as `shape`:
+`boundary` takes the same forms as `shape`. The four parameter-free values below are the common ones; any registered shape can also be borrowed:
 
-- `'shape'` (default) — the connection surface is the visual shape itself.
-- `'circle'` — a true circle whose radius is the larger half-axis of the node's bounding box; edges meet it evenly all around.
-- Any registered shape name (`'rectangle'` / `'ellipse'` / `'polygon'`…) or `{ type, params }` — borrows that shape's boundary over the node's bounding box.
+| Value | Connection surface | Effect |
+| --- | --- | --- |
+| `'shape'` (default) | The visual shape itself | Edges clip to the real outline — stars / polygons land on tips or dive into notches |
+| `'circle'` | A true circle, radius = the node's larger bounding-box half-axis | Edges meet it evenly all around, unaffected by notches / rotation |
+| `'rectangle'` | The bounding box (AABB) | Edges clip to the horizontal / vertical box sides |
+| `'ellipse'` | An ellipse matching the AABB aspect ratio | Edges clip to the ellipse, stretched with the aspect ratio |
+| Registered shape name / `{ type, params }` | Borrows that shape's boundary over the node's bounding box | Borrowing parametric shapes (`polygon` / `star`…) needs explicit params; auto-fitting size to the AABB is out of scope |
+
+The same five-point star set to four surfaces, each with one edge clipping in — `shape` dives into the lower notch, while `circle` / `rectangle` / `ellipse` stop at the circumscribing circle / rectangle / ellipse:
+
+<ComponentPreview name="node-boundary-surfaces" size="md" />
 
 The connection surface **never changes the node footprint**: bounding box, visual shape, and layout position stay the same — it only changes where edges clip and how compass anchors resolve. Shape-specific anchors (such as a star's `tip-0`) and edge proportional points always resolve against the visual shape, regardless of `boundary`.
 
