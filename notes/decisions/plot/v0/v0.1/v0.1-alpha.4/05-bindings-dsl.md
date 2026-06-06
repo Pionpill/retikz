@@ -49,12 +49,12 @@ roadmap P2-1 决定：alpha.4 的 ADR-01~04 是 core-internal（IR + lowering，
 3. **coordinate 决定几何，组件不冗余**：`<BarMark>` 不分 cartesian/polar 两个组件——coordinate 切换即变几何（守 (i)，用户心智简单）。
 4. **文档同改动集**：用户可见改动与文档一体呈现（AGENTS.md 硬规则）。
 
-## 待决策点 🔻
+## 待决策点 🔻（已冻结 2026-06-06，按人工 ack）
 
-- **coordinate prop 形态**：`coordinate="polar"` 字符串简写 vs `coordinate={{ type:'polar', innerRadius:0.3 }}` 对象 vs `<Plot.Polar>` 子组件。倾向**字符串简写 + 可选对象**（简单默认 + 可配）。
-- **vanilla builder 深度**：是否给 vanilla 命令式 builder（与 react `buildPlotSpec` 对等）vs 仅「写 PlotSpec + renderPlot」。倾向**后者起步**（vanilla 已能表达，builder 留需求驱动）；文档明确 vanilla 路径。
-- **SectorMark 累积暴露（已倾向）**：DSL 无 `transform` prop，故 `<SectorMark angle="value">` **内建自动累积**（与 `<BarMark stack>` 自动装配 stack transform 的既有约定一致）；primitive PlotSpec 仍走显式 transform（ADR-02）。即「DSL sugar 自动、primitive 显式」分层。
-- **demo 取舍**：5 类 demo 全做 vs 优先径向柱/饼图/雷达三旗舰。倾向**全做但旗舰优先**，时间紧则环图/极坐标折线并入概念页。
+- **coordinate prop → 字符串简写 `"polar"` + 可选对象** `coordinate={{ type:'polar', innerRadius, startAngle, endAngle }}`：简单默认 + 可配；缺省 cartesian（向后兼容）。
+- **vanilla → 起步走「写 PlotSpec + renderPlot」**（不另造命令式 builder，vanilla 已能表达 polar，builder 留需求驱动）；文档双视图给 react JSX + vanilla PlotSpec 写法。
+- **SectorMark 累积 → DSL 内建自动**（同 `<BarMark stack>` 自动装配约定）；primitive 仍显式 transform。
+- **demo → 全做、旗舰（径向柱/饼图/雷达）优先**；时间紧则环图/极坐标折线并入概念页。
 
 ## DSL 表面
 
