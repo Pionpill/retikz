@@ -185,9 +185,9 @@ const polarScatter: PlotSpec = {
 | `ir/coordinate.ts` | 加 | `Polar2DSchema.type` | `z.literal(PlotCoordinate.Polar2D)` | — | 判别字段：2D 极坐标 |
 | `ir/coordinate.ts` | 加 | `Polar2DSchema.angle` | `z.string().min(1)` | — | 驱动 angle 角色的 scale 名 |
 | `ir/coordinate.ts` | 加 | `Polar2DSchema.radius` | `z.string().min(1)` | — | 驱动 radius 角色的 scale 名 |
-| `ir/coordinate.ts` | 加 | `Polar2DSchema.startAngle` | `z.number()` | `0` | 角向起始角（度，0°=+x） |
-| `ir/coordinate.ts` | 加 | `Polar2DSchema.endAngle` | `z.number()` | `360` | 角向终止角（度，缺省整圆） |
-| `ir/coordinate.ts` | 加 | `Polar2DSchema.innerRadius` | `z.number().min(0).lt(1)` | `0` | 环图内半径（占外半径比例，0=实心） |
+| `ir/coordinate.ts` | 加 | `Polar2DSchema.startAngle` | `z.number().finite()` | `0` | 角向起始角（度，0°=+x） |
+| `ir/coordinate.ts` | 加 | `Polar2DSchema.endAngle` | `z.number().finite()` | `360` | 角向终止角（度，缺省整圆） |
+| `ir/coordinate.ts` | 加 | `Polar2DSchema.innerRadius` | `z.number().finite().min(0).lt(1)` | `0` | 环图内半径（占外半径比例，0=实心） |
 | `ir/coordinate.ts` | 改 | `CoordinateSchema` | union 加 `Polar2DSchema` | — | 坐标系 union 扩成 cartesian2D \| polar2D |
 | `ir/encoding.ts` | 加 | `EncodingSchema.angle` | `ChannelSchema.optional()` | — | angle 位置通道（polar）；缺省回退 x |
 | `ir/encoding.ts` | 加 | `EncodingSchema.radius` | `ChannelSchema.optional()` | — | radius 位置通道（polar）；缺省回退 y |

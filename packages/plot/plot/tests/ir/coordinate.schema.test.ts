@@ -86,6 +86,16 @@ describe('CoordinateSchema polar2D (ADR-01)', () => {
     expect(() => CoordinateSchema.parse({ type: 'polar2D', angle: '', radius: 'r' })).toThrow();
   });
 
+  // 错误路径：非有限角度破坏 JSON 可序列化（Infinity → JSON null），必须拒（Bug Hunter B-1）
+  it('polar2d_startAngle_infinity_rejected', () => {
+    expect(() => CoordinateSchema.parse({ type: 'polar2D', angle: 'a', radius: 'r', startAngle: Infinity })).toThrow();
+    expect(() => CoordinateSchema.parse({ type: 'polar2D', angle: 'a', radius: 'r', startAngle: -Infinity })).toThrow();
+  });
+
+  it('polar2d_endAngle_infinity_rejected', () => {
+    expect(() => CoordinateSchema.parse({ type: 'polar2D', angle: 'a', radius: 'r', endAngle: Infinity })).toThrow();
+  });
+
   // round-trip：IR 必须 100% JSON 可序列化
   it('polar2d_json_round_trip', () => {
     const ir = CoordinateSchema.parse({ type: 'polar2D', angle: 'a', radius: 'r', startAngle: -90, endAngle: 270, innerRadius: 0.25 });

@@ -30,11 +30,13 @@ export const Polar2DSchema = z
     radius: z.string().min(1).describe('Scale name driving the radius role; its range is set to [innerRadius, outerRadius] units at lowering'),
     startAngle: z
       .number()
+      .finite()
       .default(0)
       .describe('Angular range start in degrees; 0 = +x (3 o\'clock), sweeping toward +y under screen y-down, matching core polar'),
-    endAngle: z.number().default(360).describe('Angular range end in degrees; defaults to a full 360-degree circle'),
+    endAngle: z.number().finite().default(360).describe('Angular range end in degrees; defaults to a full 360-degree circle'),
     innerRadius: z
       .number()
+      .finite()
       .min(0)
       .lt(1)
       .default(0)
