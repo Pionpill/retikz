@@ -1,5 +1,5 @@
 import { type IRChild, type IRNode, type IRNodeDefault, type IRScope, type IRStep } from '@retikz/core';
-import { type ExternalRow, type Mark, PlotCoordinate } from '../ir';
+import { type ExternalRow, type IntervalMark, type Mark, PlotCoordinate, PlotMark } from '../ir';
 import { channelValue, compareByPath, isFiniteNumber, resolveFieldPath } from './field';
 import { type CartesianFrame, type CoordinateFrame, type PolarFrame, type PolarVertex, densifyPolarSegments, toPolarVertex } from './project';
 import { inferCategoryDomain } from './scale';
@@ -49,18 +49,11 @@ const pointStyle = (fill: string): IRNodeDefault => ({
 });
 
 /**
- * 按坐标系角色解析一行的位置通道值 → [primaryValue, secondaryValue]（坐标系无关）
- * @description cartesian2D：primary=x、secondary=y；polar2D：primary←angle??x、secondary←radius??y。
- *   投影交给 frame.project，mark 不感知 cartesian / polar 差异。笛卡尔下的 angle/radius 误用已在 expand 拦截。
+ * 取一行的位置通道值 → [xValue, yValue]（坐标系无关；投影交给 frame.project，frame 把 x/y 重解释为对应角色）
+ * @description x/y 是唯一位置通道（坐标系决定其含义）；sector 无位置通道（角度来自累积界、半径常量）→ 不走此路径。
  */
-const resolveRolePosition = (mark: Mark, row: ExternalRow, frame: CoordinateFrame): [unknown, unknown] => {
-  if (frame.type === PlotCoordinate.Polar2D) {
-    const primary = channelValue(mark.encoding.angle ?? mark.encoding.x, row);
-    const secondary = channelValue(mark.encoding.radius ?? mark.encoding.y, row);
-    return [primary, secondary];
-  }
-  return [channelValue(mark.encoding.x, row), channelValue(mark.encoding.y, row)];
-};
+const resolveRolePosition = (mark: Mark, row: ExternalRow): [unknown, unknown] =>
+  mark.type === PlotMark.Sector ? [undefined, undefined] : [channelValue(mark.encoding.x, row), channelValue(mark.encoding.y, row)];
 
 /** 柱 node 样式（rectangle + padding0 + 无描边，使 minimumWidth/Height 即真实柱尺寸） */
 const barStyle = (fill: string): IRNodeDefault => ({ shape: 'rectangle', padding: 0, strokeWidth: 0, fill });
@@ -69,7 +62,7 @@ const barStyle = (fill: string): IRNodeDefault => ({ shape: 'rectangle', padding
 const lowerPoint = (mark: Mark, rows: Array<ExternalRow>, frame: CoordinateFrame, colorOf?: ColorOf): IRChild | null => {
   const placed: Array<{ color: string | undefined; node: IRNode }> = [];
   for (const row of rows) {
-    const [primaryValue, secondaryValue] = resolveRolePosition(mark, row, frame);
+    const [primaryValue, secondaryValue] = resolveRolePosition(mark, row);
     const point = frame.project(primaryValue, secondaryValue);
     if (!point) continue;
     placed.push({ color: colorOf?.(row), node: { type: 'node', position: point } });
@@ -85,7 +78,7 @@ const barLayer = (placed: Array<{ color: string | undefined; node: IRNode }>, co
   colorOf ? colorGroupedScope(placed, barStyle) : { type: 'scope', nodeDefault: barStyle(DEFAULT_FILL), children: placed.map(p => p.node) };
 
 /** 普通柱：x band 中心、宽 bandwidth、baseline→value */
-const lowerPlainBars = (mark: Mark, rows: Array<ExternalRow>, frame: CartesianFrame, colorOf: ColorOf | undefined, bandwidth: number): IRChild | null => {
+const lowerPlainBars = (mark: IntervalMark, rows: Array<ExternalRow>, frame: CartesianFrame, colorOf: ColorOf | undefined, bandwidth: number): IRChild | null => {
   const yBase = frame.secondary.coordinate(BAR_BASELINE);
   if (!Number.isFinite(yBase)) return null;
   const placed: Array<{ color: string | undefined; node: IRNode }> = [];
@@ -309,7 +302,7 @@ const buildOutlinePoints = (mark: Mark, ordered: Array<ExternalRow>, frame: Coor
   if (frame.type === PlotCoordinate.Polar2D && frame.continuousAngle && !closed) {
     const vertices = ordered
       .map(row => {
-        const [primaryValue, secondaryValue] = resolveRolePosition(mark, row, frame);
+        const [primaryValue, secondaryValue] = resolveRolePosition(mark, row);
         return toPolarVertex(frame, primaryValue, secondaryValue);
       })
       .filter((vertex): vertex is PolarVertex => vertex !== null);
@@ -317,7 +310,7 @@ const buildOutlinePoints = (mark: Mark, ordered: Array<ExternalRow>, frame: Coor
   }
   return ordered
     .map(row => {
-      const [primaryValue, secondaryValue] = resolveRolePosition(mark, row, frame);
+      const [primaryValue, secondaryValue] = resolveRolePosition(mark, row);
       return frame.project(primaryValue, secondaryValue);
     })
     .filter((point): point is [number, number] => point !== null);
@@ -358,7 +351,7 @@ const lowerLine = (mark: Mark, rows: Array<ExternalRow>, frame: CoordinateFrame,
 const buildBaselinePoints = (mark: Mark, ordered: Array<ExternalRow>, frame: CoordinateFrame, baseline: number): Array<[number, number]> => {
   const points: Array<[number, number]> = [];
   for (const row of ordered) {
-    const [primaryValue] = resolveRolePosition(mark, row, frame);
+    const [primaryValue] = resolveRolePosition(mark, row);
     const point = frame.project(primaryValue, baseline);
     if (point) points.push(point);
   }

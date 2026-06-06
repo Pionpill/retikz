@@ -1,6 +1,6 @@
 import { type CompositeDefinition, type IRChild, type IRScope, defineComposite } from '@retikz/core';
 import type { ZodType } from 'zod';
-import { type Channel, type ExternalDatasets, type Guide, type Mark, type OrdinalScale, PlotCoordinate, PlotScale, type PlotSpec, PlotSpecSchema, type Scale } from '../ir';
+import { type Channel, type ExternalDatasets, type Guide, type Mark, type OrdinalScale, PlotCoordinate, PlotMark, PlotScale, type PlotSpec, PlotSpecSchema, type Scale } from '../ir';
 import { channelValue, resolveFieldPath } from './field';
 import { type GuideContext, lowerGuide } from './guide';
 import { DEFAULT_FONT_SIZE, type Margins, type Rect, computePlotArea, computePolarFrame } from './layout';
@@ -23,6 +23,13 @@ const axisRole = (dimension: string, coordinateType: string): string => {
   }
   return dimension;
 };
+
+/**
+ * 取 mark 的 x / y 位置通道；sector 无位置通道（角度来自累积界、半径常量）→ undefined
+ * @description schema 已保证位置 mark 必填 x/y、sector 用样式-only 编码，故此处仅按 type 区分取值。
+ */
+const xChannelOf = (mark: Mark): Channel | undefined => (mark.type === PlotMark.Sector ? undefined : mark.encoding.x);
+const yChannelOf = (mark: Mark): Channel | undefined => (mark.type === PlotMark.Sector ? undefined : mark.encoding.y);
 
 /**
  * 一根定位角色只画一根轴：重复同角色的 axis（含 hybrid 别名 x≡angle / y≡radius）→ 抛清晰错误。
@@ -143,9 +150,9 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
     // 笛卡尔下出现 angle/radius 通道才是误用；polar 下复用 x/y 合法。此处构造极坐标帧。
     const angleScaleDef = requireScaleDef('angle', coordinate.angle);
     const radiusScaleDef = requireScaleDef('radius', coordinate.radius);
-    // 角向值 ← angle ?? x；径向值 ← radius ?? y（默认复用 x/y，正中 (i) 投影整形）
-    const angleValues = collectValues(mark => mark.encoding.angle ?? mark.encoding.x, false, false, true);
-    const radiusValues = collectValues(mark => mark.encoding.radius ?? mark.encoding.y, true, true);
+    // 角向值 ← x、径向值 ← y（坐标系把 x/y 重解释为 angle/radius，正中 (i) 投影整形）
+    const angleValues = collectValues(xChannelOf, false, false, true);
+    const radiusValues = collectValues(yChannelOf, true, true);
 
     // guide 维度角色化：angle / x → angular（primary）、radius / y → radial（secondary）；一维一轴
     const guides = node.guides ?? [];
@@ -200,16 +207,11 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
       if (lowered.axisLayer) axisLayers.push(lowered.axisLayer);
     }
   } else {
-    // cartesian2D：x/y 角色绑 x/y scale。出现 angle/radius 通道 → reject（误用，多半写错坐标系）
-    for (const mark of node.marks) {
-      if (mark.encoding.angle !== undefined || mark.encoding.radius !== undefined) {
-        throw new Error('lowerPlots: angle / radius channels are only valid under the polar2D coordinate system, not cartesian2D');
-      }
-    }
+    // cartesian2D：x/y 角色绑 x/y scale
     const xScaleDef = requireScaleDef('x', coordinate.x);
     const yScaleDef = requireScaleDef('y', coordinate.y);
-    const xScale = resolvePositionScale(xScaleDef, collectValues(mark => mark.encoding.x, false, false), [0, width]);
-    const yScale = resolvePositionScale(yScaleDef, collectValues(mark => mark.encoding.y, true, true), [height, 0]);
+    const xScale = resolvePositionScale(xScaleDef, collectValues(xChannelOf, false, false), [0, width]);
+    const yScale = resolvePositionScale(yScaleDef, collectValues(yChannelOf, true, true), [height, 0]);
 
     // 哪些维度有坐标轴（决定 margin / 是否算 ticks）；alpha.2 guide 仅 axis 类型，按 dimension 取
     const guides = node.guides ?? [];

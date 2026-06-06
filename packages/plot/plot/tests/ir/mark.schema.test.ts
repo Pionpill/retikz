@@ -20,8 +20,8 @@ describe('MarkSchema (ADR-05)', () => {
   });
 
   it('mark_id_optional_valid', () => {
-    const withId = { type: 'point', id: 'p', encoding: { x: { field: 'x' } } };
-    const noId = { type: 'point', encoding: { x: { field: 'x' } } };
+    const withId = { type: 'point', id: 'p', encoding: { x: { field: 'x' }, y: { field: 'y' } } };
+    const noId = { type: 'point', encoding: { x: { field: 'x' }, y: { field: 'y' } } };
     expect(MarkSchema.parse(withId)).toEqual(withId);
     expect(MarkSchema.parse(noId)).toEqual(noId);
   });

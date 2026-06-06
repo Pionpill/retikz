@@ -95,12 +95,10 @@ const colorChannel = (color: string | undefined, series: string | undefined): { 
   return field ? { color: { field, scale: AUTO_COLOR } } : undefined;
 };
 
-/** 把 x/y/angle/radius 角色字段装成位置 encoding：显式 angle/radius 优先，否则只出 x/y（polar 下 lowering 自动 angle←x、radius←y） */
-const positionEncoding = (x: string, y: string, angle: string | undefined, radius: string | undefined): Pick<Encoding, 'x' | 'y' | 'angle' | 'radius'> => ({
+/** 把 x/y 字段装成位置 encoding（x/y 是唯一位置通道；polar 下坐标系把 x→angle、y→radius 重解释） */
+const positionEncoding = (x: string, y: string): Pick<Encoding, 'x' | 'y'> => ({
   x: { field: x },
   y: { field: y },
-  ...(angle !== undefined ? { angle: { field: angle } } : {}),
-  ...(radius !== undefined ? { radius: { field: radius } } : {}),
 });
 
 /** 递归收集 mark / guide / transform：认 mark/guide 组件，穿透 Fragment，忽略其它节点 */
@@ -112,7 +110,7 @@ const collectInto = (children: ReactNode, into: Collected): void => {
       return;
     }
     if (child.type === LineMark) {
-      const { x, y, angle, radius, order, series, color, closed, id } = child.props as LineMarkProps;
+      const { x, y, order, series, color, closed, id } = child.props as LineMarkProps;
       const colorEnc = colorChannel(color, series);
       into.marks.push({
         type: PlotMark.Line,
@@ -120,17 +118,17 @@ const collectInto = (children: ReactNode, into: Collected): void => {
         ...(order !== undefined ? { order } : {}),
         ...(series !== undefined ? { series } : {}),
         ...(closed ? { closed: true } : {}),
-        encoding: { ...positionEncoding(x, y, angle, radius), ...colorEnc },
+        encoding: { ...positionEncoding(x, y), ...colorEnc },
       });
       if (colorEnc) into.colored = true;
       if (closed) into.hasClosedLine = true;
     } else if (child.type === PointMark) {
-      const { x, y, angle, radius, color, id } = child.props as PointMarkProps;
+      const { x, y, color, id } = child.props as PointMarkProps;
       const colorEnc = colorChannel(color, undefined);
       into.marks.push({
         type: PlotMark.Point,
         ...(id !== undefined ? { id } : {}),
-        encoding: { ...positionEncoding(x, y, angle, radius), ...colorEnc },
+        encoding: { ...positionEncoding(x, y), ...colorEnc },
       });
       if (colorEnc) into.colored = true;
     } else if (child.type === BarMark) {
@@ -171,7 +169,7 @@ const collectInto = (children: ReactNode, into: Collected): void => {
       into.hasSector = true;
       if (colorEnc) into.colored = true;
     } else if (child.type === AreaMark) {
-      const { x, y, angle, radius, order, series, baseline, closed, color, id } = child.props as AreaMarkProps;
+      const { x, y, order, series, baseline, closed, color, id } = child.props as AreaMarkProps;
       const colorEnc = colorChannel(color, series);
       into.marks.push({
         type: PlotMark.Area,
@@ -180,7 +178,7 @@ const collectInto = (children: ReactNode, into: Collected): void => {
         ...(series !== undefined ? { series } : {}),
         ...(baseline !== undefined ? { baseline } : {}),
         ...(closed ? { closed: true } : {}),
-        encoding: { ...positionEncoding(x, y, angle, radius), ...colorEnc },
+        encoding: { ...positionEncoding(x, y), ...colorEnc },
       });
       if (colorEnc) into.colored = true;
       if (closed) into.hasClosedLine = true;

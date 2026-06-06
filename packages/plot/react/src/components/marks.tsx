@@ -2,14 +2,10 @@ import type { FC } from 'react';
 
 /** <LineMark> props：折线图层，按 order（缺省按数据顺序）连点 */
 export type LineMarkProps = {
-  /** 绑 x 位置通道的字段路径（polar 下作角向值；亦可用 angle 显式覆盖） */
+  /** 绑 x 位置通道的字段路径（polar 下坐标系重解释为角向值） */
   x: string;
-  /** 绑 y 位置通道的字段路径（polar 下作径向值；亦可用 radius 显式覆盖） */
+  /** 绑 y 位置通道的字段路径（polar 下坐标系重解释为径向值） */
   y: string;
-  /** polar 下显式绑角向通道的字段路径；缺省复用 x */
-  angle?: string;
-  /** polar 下显式绑径向通道的字段路径；缺省复用 y */
-  radius?: string;
   /** 驱动连接顺序的字段；缺省按数据数组顺序 */
   order?: string;
   /** 系列字段：按其拆成多条折线（多系列）；缺省单线 */
@@ -24,14 +20,10 @@ export type LineMarkProps = {
 
 /** <PointMark> props：散点图层，每行一个 glyph */
 export type PointMarkProps = {
-  /** 绑 x 位置通道的字段路径（polar 下作角向值；亦可用 angle 显式覆盖） */
+  /** 绑 x 位置通道的字段路径（polar 下坐标系重解释为角向值） */
   x: string;
-  /** 绑 y 位置通道的字段路径（polar 下作径向值；亦可用 radius 显式覆盖） */
+  /** 绑 y 位置通道的字段路径（polar 下坐标系重解释为径向值） */
   y: string;
-  /** polar 下显式绑角向通道的字段路径；缺省复用 x */
-  angle?: string;
-  /** polar 下显式绑径向通道的字段路径；缺省复用 y */
-  radius?: string;
   /** 颜色字段（→ color 通道 + 自动 ordinal 色 scale） */
   color?: string;
   /** 可选 mark 句柄（预留 scope/anchor，解析留 alpha.5） */
@@ -68,14 +60,10 @@ export type SectorMarkProps = {
 
 /** <AreaMark> props：面积图层（上沿折线 ↔ baseline 围成可填充区域；polar 下闭合成填充雷达） */
 export type AreaMarkProps = {
-  /** 绑 x 位置通道的字段路径（polar 下作角向值；亦可用 angle 显式覆盖） */
+  /** 绑 x 位置通道的字段路径（polar 下坐标系重解释为角向值） */
   x: string;
-  /** 绑 y 位置通道的字段路径（polar 下作径向值；亦可用 radius 显式覆盖） */
+  /** 绑 y 位置通道的字段路径（polar 下坐标系重解释为径向值） */
   y: string;
-  /** polar 下显式绑角向通道的字段路径；缺省复用 x */
-  angle?: string;
-  /** polar 下显式绑径向通道的字段路径；缺省复用 y */
-  radius?: string;
   /** 上沿连接顺序的字段；缺省按数据数组顺序 */
   order?: string;
   /** 系列字段：拆成多块面积（多系列）；缺省单块 */

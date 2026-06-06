@@ -322,14 +322,6 @@ describe('buildPlotSpec ADR-05（polar coordinate / sector / area / closed / ang
     expect(spec.marks[0]).toEqual({ type: 'area', baseline: 2, closed: true, encoding: { x: { field: 't' }, y: { field: 'v' } } });
   });
 
-  it('explicit_angle_radius_channels：mark 显式 angle / radius → encoding 出对应通道', () => {
-    const spec = buildPlotSpec(<PointMark x="px" y="py" angle="a" radius="r" />, '__plot', { coordinate: 'polar' });
-    expect(spec.marks[0]).toEqual({
-      type: 'point',
-      encoding: { x: { field: 'px' }, y: { field: 'py' }, angle: { field: 'a' }, radius: { field: 'r' } },
-    });
-  });
-
   it('polar_explicit_axis：写 <Axis dimension="angle"/> → guides 含该轴', () => {
     const spec = buildPlotSpec(
       <>

@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import type { ValueOf } from '@retikz/core';
-import { EncodingSchema } from './encoding';
+import { EncodingSchema, StyleEncodingSchema } from './encoding';
 
 /**
  * mark 类型关键字（暴露给用户；成员值即 IR 判别串，裸字面量 `'point'` 同样可用）
@@ -36,18 +36,20 @@ export const PlotArrangement = {
 /** 多系列柱组合方式 */
 export type ArrangementType = ValueOf<typeof PlotArrangement>;
 
-/** 各 mark 变体共享的基础字段（可选 id 句柄 + 必填 encoding） */
+/** 各 mark 变体共享的基础字段（可选 id 句柄）；encoding 各 mark 自带（位置 mark 用 EncodingSchema、sector 用 StyleEncodingSchema） */
 const markBase = {
   id: z
     .string()
     .min(1)
     .optional()
     .describe('Optional mark handle; reserved scope/anchor target (resolution deferred to alpha.5)'),
-  encoding: EncodingSchema,
 };
 
+/** 位置 mark（point / line / interval / area）的 encoding：x / y 必填 + 样式 */
+const positionalEncoding = { encoding: EncodingSchema };
+
 export const PointMarkSchema = z
-  .object({ type: z.literal(PlotMark.Point).describe('Discriminator: one glyph per record'), ...markBase })
+  .object({ type: z.literal(PlotMark.Point).describe('Discriminator: one glyph per record'), ...markBase, ...positionalEncoding })
   .describe('Point mark: scatter / dot');
 
 export const LineMarkSchema = z
@@ -68,6 +70,7 @@ export const LineMarkSchema = z
       .optional()
       .describe('Connect the last point back to the first, closing the line into a polygon; under polar this yields a radar outline. Default false'),
     ...markBase,
+    ...positionalEncoding,
   })
   .describe('Line mark: connects records in order');
 
@@ -94,6 +97,7 @@ export const IntervalMarkSchema = z
       .optional()
       .describe('Upper-bound field for stacked bars (matches the stack transform endField; default "y1"). Only read when arrangement = stack'),
     ...markBase,
+    ...positionalEncoding,
   })
   .describe('Interval mark: bar from baseline (0) to the value; width taken from the band scale');
 
@@ -111,8 +115,9 @@ export const SectorMarkSchema = z
       .optional()
       .describe('Cumulative upper-bound field driving the end angle (matches the stack transform endField; default "y1")'),
     ...markBase,
+    encoding: StyleEncodingSchema,
   })
-  .describe('Sector mark: pie / donut slice; reads cumulative bounds (from a stack transform) as angles, radius spans the full coordinate ring');
+  .describe('Sector mark: pie / donut slice; reads cumulative bounds (from a stack transform) as angles, radius spans the full coordinate ring. Uses style-only encoding (no x / y) since position comes from the cumulative fields');
 
 export const AreaMarkSchema = z
   .object({
@@ -137,6 +142,7 @@ export const AreaMarkSchema = z
       .optional()
       .describe('Connect the last point back to the first, closing the outline into a polygon; under polar this yields a filled radar. Default false'),
     ...markBase,
+    ...positionalEncoding,
   })
   .describe('Area mark: fillable region between the value outline and a baseline (area chart / filled radar)');
 

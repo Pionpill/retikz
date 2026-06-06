@@ -97,20 +97,17 @@ describe('lowerPlots polar 投影几何 (ADR-01)', () => {
     expect(quarter[1]).toBeGreaterThan(center[1]); // 屏幕下方（y 更大）
   });
 
-  // 交互：通道角色解析（x/y 复用 == 显式 angle/radius）
-  it('polar_xy_channels_reuse_equals_explicit_angle_radius', () => {
+  // 交互：polar 下 x/y 被坐标系重解释为 angle/radius（x/y 是唯一位置通道）
+  it('polar_xy_channels_projected_via_coordinate', () => {
     const rows = [
       { theta: 45, value: 7 },
       { theta: 200, value: 3 },
     ];
-    const reuse = polarPointSpec({ x: { field: 'theta' }, y: { field: 'value' } });
-    const explicit = polarPointSpec({ angle: { field: 'theta' }, radius: { field: 'value' } });
-    const reusePositions = positionsOf(firstLayer(reuse, { d: rows }, opts));
-    const explicitPositions = positionsOf(firstLayer(explicit, { d: rows }, opts));
-    expect(reusePositions).toHaveLength(explicitPositions.length);
-    for (let i = 0; i < reusePositions.length; i++) {
-      expect(reusePositions[i][0]).toBeCloseTo(explicitPositions[i][0], 6);
-      expect(reusePositions[i][1]).toBeCloseTo(explicitPositions[i][1], 6);
+    const positions = positionsOf(firstLayer(polarPointSpec({ x: { field: 'theta' }, y: { field: 'value' } }), { d: rows }, opts));
+    expect(positions).toHaveLength(2);
+    for (const [px, py] of positions) {
+      expect(Number.isFinite(px)).toBe(true);
+      expect(Number.isFinite(py)).toBe(true);
     }
   });
 
@@ -264,22 +261,6 @@ describe('lowerPlots polar 投影几何 (ADR-01)', () => {
   });
 
   // 错误路径
-  it('cartesian_with_angle_channel_throws', () => {
-    // 已冻结决策：cartesian2D 下出现 angle/radius 通道 → lowering reject
-    const spec = PlotSpecSchema.parse({
-      namespace: 'plot',
-      type: 'plot',
-      data: { reference: 'd' },
-      scales: [
-        { type: 'linear', name: 'x' },
-        { type: 'linear', name: 'y' },
-      ],
-      coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-      marks: [{ type: 'point', encoding: { angle: { field: 'theta' }, y: { field: 'value' } } }],
-    });
-    expect(() => expandOf(spec, { d: [{ theta: 0, value: 1 }] }, opts)).toThrow();
-  });
-
   it('polar_angle_references_unknown_scale_throws', () => {
     const spec = PlotSpecSchema.parse({
       namespace: 'plot',
@@ -309,6 +290,36 @@ describe('lowerPlots polar 投影几何 (ADR-01)', () => {
       marks: [{ type: 'point', encoding: { x: { field: 'cat' }, y: { field: 'value' } } }],
     });
     expect(() => expandOf(spec, { d: [{ cat: 'A', value: 1 }] }, opts)).toThrow(/ordinal/);
+  });
+
+  // 位置通道完整性现由 schema 强制（x/y 必填、无 angle/radius）：缺 x 或 y 在 parse 期即被拒，约束 LLM 生成
+  it('encoding_missing_y_rejected_at_parse', () => {
+    expect(() =>
+      PlotSpecSchema.parse({
+        namespace: 'plot',
+        type: 'plot',
+        data: { reference: 'd' },
+        scales: [
+          { type: 'linear', name: 'a' },
+          { type: 'linear', name: 'r' },
+        ],
+        coordinate: { type: 'polar2D', angle: 'a', radius: 'r' },
+        marks: [{ type: 'point', encoding: { x: { field: 'theta' } } }],
+      }),
+    ).toThrow();
+  });
+
+  it('encoding_missing_x_rejected_at_parse', () => {
+    expect(() =>
+      PlotSpecSchema.parse({
+        namespace: 'plot',
+        type: 'plot',
+        data: { reference: 'd' },
+        scales: [{ type: 'linear', name: 'x' }],
+        coordinate: { type: 'cartesian2D', x: 'x', y: 'x' },
+        marks: [{ type: 'point', encoding: { y: { field: 'value' } } }],
+      }),
+    ).toThrow();
   });
 });
 

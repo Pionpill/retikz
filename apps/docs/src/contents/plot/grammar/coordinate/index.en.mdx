@@ -25,7 +25,7 @@ In cartesian, x is horizontal and y is vertical. Under polar these channels **ch
 | `x` | horizontal position | angular (the angle around the center) |
 | `y` | vertical position | radial (distance from the center) |
 
-So you keep writing `x` / `y` for polar charts; the coordinate system decides whether they become an angle or a radius. When you want to be explicit, marks also accept dedicated `angle` / `radius` fields that override `x` / `y` (see each mark's page).
+So you keep writing `x` / `y` for polar charts; the coordinate system decides whether they become an angle or a radius. There are only ever `x` / `y` — never separate angle/radius channels — so the same spec stays portable across coordinate systems and there is no wrong channel to pick for a given coordinate.
 
 ## Polar options
 
