@@ -1,24 +1,33 @@
 ---
 title: Circle / Ellipse
-description: Sugar forms for circles and ellipses, with support for box-based fitting and box adjustments.
+description: Two ways to make a circle or ellipse — draw an outline with sugar, or give a node a circular / elliptical boundary.
 ---
 
-`<Circle>` and `<Ellipse>` are sugar forms that expand common geometry into `<Path>`. They fit cases where you know the center and radius, only have a box, or want to pad a circle or ellipse in or out from that box.
+To make a circle or ellipse, retikz gives you two forms:
+
+- **Draw an outline** — the sugar components `<Circle>` / `<Ellipse>` draw a circle / ellipse line at a position, expanding to an underlying `<Path>`.
+- **A node with that boundary** — `<Node shape="circle">` gives a node bounded by a circle / ellipse: it can hold text, be referenced by `<Path>` / `<Draw>` through its id, and have connection endpoints snap to its edge.
+
+In short: reach for `<Circle>` / `<Ellipse>` when you just need a circle / ellipse line, and for `<Node shape>` when you need a circular / elliptical node that is connectable and labelable.
 
 ## Usage
 
 ```tsx
-import { Circle, Ellipse } from '@retikz/react';
+import { Circle, Ellipse, Node } from '@retikz/react';
 ```
 
 ```tsx
+{/* Draw an outline */}
 <Circle center={[0, 0]} radius={32} fill="none" />
 <Ellipse center={[0, 0]} radiusX={48} radiusY={28} fill="none" />
+
+{/* A node with a circular boundary */}
+<Node shape="circle">label</Node>
 ```
 
 ## Examples
 
-### Circle
+### As a shape: Circle / Ellipse
 
 The common form is `center + radius`. If you already have a rectangular area, you can also use `corner1 + corner2`, `box`, or `boundingBox`.
 
@@ -35,8 +44,6 @@ The common form is `center + radius`. If you already have a rectangular area, yo
 
 <ComponentPreview name="circle-basic" size="sm" />
 
-### Ellipse
-
 Ellipse works like Circle, but the radius is split into `radiusX` and `radiusY`. It also supports `corner1 + corner2`, `box`, and `boundingBox`.
 
 | Form | Best for |
@@ -49,6 +56,14 @@ Ellipse works like Circle, but the radius is split into `radiusX` and `radiusY`.
 | + angles + `closed="sector"` | Draw a partial ellipse whose arc ends connect to the center |
 
 <ComponentPreview name="ellipse-basic" size="sm" />
+
+### As a node shape: shape="circle" / "ellipse"
+
+When you need a circular / elliptical node rather than a line (to hold text, to be referenced by a connection), set `shape` on `<Node>`. The boundary circumscribes "text + padding": `circle` takes the circle that fits the text, `ellipse` takes the circumscribed ellipse (each axis × √2). These two shapes take **no extra parameters**.
+
+<ComponentPreview name="node-circle-ellipse" size="sm" />
+
+Connection endpoints snap to the circle / ellipse edge, and the node's 9 standard anchors (`north` / `center` …) still apply. For the full `<Node>` props (`position` / `fill` / `padding` / `label` …) see [Node](/core/components/node/overview).
 
 ## How it works
 
@@ -83,9 +98,11 @@ When angles are present, `closed` decides how the arc ends are connected:
 
 ### They are still Path
 
-Every circle or ellipse expands to an equivalent `<Path>` / `<Step>` sequence. That means they can use `stroke`, `fill`, `arrow`, and `zIndex` like any other path.
+Every circle or ellipse expands to an equivalent `<Path>` / `<Step>` sequence. That means they can use `stroke`, `fill`, `arrow`, and `zIndex` like any other path. `<Node shape>` is a different route: it is not a Path but a node with a boundary, and that boundary is circumscribed from the text content.
 
 ## API Reference
+
+### As a shape: Circle / Ellipse
 
 | Component | Combination | Meaning |
 | --- | --- | --- |
@@ -104,7 +121,17 @@ Every circle or ellipse expands to an equivalent `<Path>` / `<Step>` sequence. T
 | | + `inset?` / `outset?` | Shrink or expand the box before fitting |
 | | + angles + `closed?` | Partial ellipse: `chord` / `sector` / `open` |
 
+### As a node shape
+
+| `shape` | Boundary | Parameters |
+| --- | --- | --- |
+| `"circle"` | Circle circumscribing the text (= equal-axis `ellipse` preset) | None |
+| `"ellipse"` | Circumscribed ellipse, each axis × √2 | None |
+
+> For the full `<Node>` props (position / styling / labels) see [Node](/core/components/node/overview); for parameterized shapes (sector / star) see their own pages.
+
 ## Related
 
+- [Node](/core/components/node/overview): full props when a shape is used as a node boundary
 - [Arc / Sector](../arc-sector): angle-based shapes
-- [Shapes](/core/components/shapes/circle-ellipse): Shapes overview
+- [Shapes](/core/components/shapes): Shapes overview

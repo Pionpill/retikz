@@ -1,0 +1,84 @@
+---
+title: Polygon
+description: Two ways to make a regular polygon — draw an outline with RegularPolygon, or give a node a polygon / diamond boundary.
+---
+
+A regular polygon (equal sides and angles) has two forms:
+
+- **Draw an outline** — the sugar component `<RegularPolygon>` draws an equal-sided polygon at a position, expanding to an underlying `<Path>`.
+- **A node with that boundary** — `<Node shape={{ type:'polygon', params:{ sides } }}>` gives a node bounded by a regular polygon: it holds text and is referenceable by a connection. `diamond` is the preset for `polygon{ sides:4, rotate:45 }`.
+
+In short: reach for `<RegularPolygon>` when you just need a polygon outline, and for `<Node shape>` when you need a connectable, labelable polygon node.
+
+## Usage
+
+```tsx
+import { RegularPolygon, Node } from '@retikz/react';
+```
+
+```tsx
+{/* Draw an outline */}
+<RegularPolygon center={[0, 0]} radius={36} sides={6} />
+
+{/* A regular-polygon node */}
+<Node shape={{ type: 'polygon', params: { sides: 6 } }}>label</Node>
+```
+
+## Examples
+
+### As a shape: RegularPolygon
+
+`<RegularPolygon>` uses either a circumradius or a side length. `sides` must be at least `3`, and `rotate` changes the overall orientation.
+
+| Form | Best for |
+| --- | --- |
+| `{ center, radius, sides }` | Known circumradius |
+| `{ center, sideLength, sides }` | Known side length |
+
+<ComponentPreview name="regular-polygon-basic" size="xs" />
+
+### As a node shape: shape="polygon" / "diamond"
+
+When you need a polygon **node** (to hold text, to be referenced by a connection) rather than a line, set `shape={{ type:'polygon', params:{ sides, rotate? } }}` on `<Node>`. The boundary takes the regular polygon that circumscribes "text + padding", sized by the text. `diamond` is the 4-side, 45°-rotated preset, writable as the bare string `shape="diamond"`.
+
+<ComponentPreview name="node-polygon" size="sm" />
+
+Connection endpoints snap to the polygon edge, and the node's 9 standard anchors (`north` / `center` …) still apply. For the full `<Node>` props see [Node](/core/components/node/overview).
+
+## How it works
+
+> Optional for everyday use; revisit this section when a point form throws an error or the rotation direction looks surprising.
+
+### RegularPolygon computes vertices first
+
+`<RegularPolygon>` computes all vertices from the center, radius or side length, then expands to a closed Path. `rotate` changes the starting vertex angle; it is not an SVG transform.
+
+### diamond is a preset of polygon
+
+`<Node shape="diamond">` normalizes at compile time to `polygon{ sides:4, rotate:45 }` — a square box rotated 45°. For a non-square text box it stays a square (rather than a stretched rhombus); the bare string `"diamond"` and the explicit `{ type:'polygon', params:{ sides:4, rotate:45 } }` are equivalent.
+
+## API Reference
+
+### As a shape: RegularPolygon
+
+| Component | Combination | Meaning |
+| --- | --- | --- |
+| `<RegularPolygon>` | `center` + `radius` + `sides` | Polygon from circumradius and side count |
+| | `center` + `sideLength` + `sides` | Polygon from side length and side count |
+| | + `rotate?` | Overall start angle |
+
+### As a node shape
+
+| `shape` | Boundary | Parameters |
+| --- | --- | --- |
+| `{ type: 'polygon', params }` | Regular polygon circumscribing the text | `sides` (≥3) / `rotate?` |
+| `"diamond"` | = `polygon{ sides:4, rotate:45 }` preset | None |
+
+> For the full `<Node>` props see [Node](/core/components/node/overview).
+
+## Related
+
+- [Node](/core/components/node/overview): full props for a polygon node
+- [Rectangle](../rectangle): rectangles and rounded rectangles
+- [Star](../star): alternating inner / outer radius stars
+- [Shapes](/core/components/shapes): Shapes overview

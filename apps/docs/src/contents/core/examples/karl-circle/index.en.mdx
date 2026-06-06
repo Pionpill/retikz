@@ -7,7 +7,7 @@ description: Academic illustration example — sin / cos / tan geometry for a 30
 
 This is the final figure from the [TikZ tutorial](https://tikz.dev/tutorial) — "Karl teaching his daughter trigonometry": a unit circle plus the sin / cos / tan geometry around a 30° angle.
 
-The page breaks it into 7 accumulative steps. From a single naked circle each step adds one visible element and one retikz capability — by the end you have the full figure and have also seen the three most beginner-friendly v0.2 sugars: [Circle](/core/components/shapes/circle-ellipse) / [Grid](/core/components/shapes/grid) / [Sector](/core/components/shapes/circle-ellipse). They shorten the hand-written Path / Step pieces, while [Draw](/core/components/draw/overview) / [Coordinate](/core/components/node/coordinate) / [Node](/core/components/node/overview) keep building the full figure, plus polar positions, multi-Draw coordination, and multi-line / multi-color Node text.
+The page breaks it into 7 accumulative steps. From a single naked circle each step adds one visible element and one retikz capability — by the end you have the full figure and have also seen the three most beginner-friendly v0.2 sugars: [Circle](/core/components/shapes/circle-ellipse) / [Grid](/core/components/helpers/grid) / [Sector](/core/components/shapes/circle-ellipse). They shorten the hand-written Path / Step pieces, while [Draw](/core/components/draw/overview) / [Coordinate](/core/components/node/coordinate) / [Node](/core/components/node/overview) keep building the full figure, plus polar positions, multi-Draw coordination, and multi-line / multi-color Node text.
 
 <ComponentPreview name="karl-circle-07-info" size="lg" />
 
@@ -68,7 +68,7 @@ x and y axes use [Draw](/core/components/draw/overview) with `arrow="->"` to get
 
 ### Step 3 — Grid + ticks
 
-The background grid now uses [Grid](/core/components/shapes/grid) sugar, which expands to many lines for you. Ticks are also array-driven: a short segment plus a transparent [Node](/core/components/node/overview) per tick; the label sits **slightly offset** from its tick (x-axis labels nudged 10px left, y-axis labels 10px down) so they don't clash with the circle or axis lines, and the step reads like “give me a grid— instead of “assemble 10 lines.— 
+The background grid now uses [Grid](/core/components/helpers/grid) sugar, which expands to many lines for you. Ticks are also array-driven: a short segment plus a transparent [Node](/core/components/node/overview) per tick; the label sits **slightly offset** from its tick (x-axis labels nudged 10px left, y-axis labels 10px down) so they don't clash with the circle or axis lines, and the step reads like “give me a grid— instead of “assemble 10 lines.— 
 retikz coordinates are SVG pixels with y pointing downward — so "1 unit up" is written as `[0, -100]` (this example uses 100px = unit-circle radius as the length basis). The top-level `<Layout>` has no picture-level scale or y-flip, so math coordinates from the TikZ tutorial need their y manually negated.
 
 <ComponentPreview name="karl-circle-03-ticks" diffFrom="karl-circle-02-axes" size="lg" />
@@ -111,7 +111,7 @@ Finally, a colored info card on the right. The [Node](/core/components/node/over
 | --- | --- | --- |
 | [Circle](/core/components/shapes/circle-ellipse) | Unit circle | [1](#step-1--unit-circle), [3](#step-3--grid--ticks), [4](#step-4--30-wedge--α-label) |
 | [Sector](/core/components/shapes/circle-ellipse) | 30° wedge | [4](#step-4--30-wedge--α-label), [5](#step-5--sin-α-red-line--cos-α-dodgerblue-line), [6](#step-6--tan-α-darkorange-line--auxiliary-ray) |
-| [Grid](/core/components/shapes/grid) | Background grid | [3](#step-3--grid--ticks) |
+| [Grid](/core/components/helpers/grid) | Background grid | [3](#step-3--grid--ticks) |
 | [Draw](/core/components/draw/overview) | Axes + tick marks + sin/cos/tan colored lines + auxiliary ray | [2](#step-2--axes--endpoint-labels--named-anchors), [3](#step-3--grid--ticks), [5](#step-5--sin-α-red-line--cos-α-dodgerblue-line), [6](#step-6--tan-α-darkorange-line--auxiliary-ray) |
 | [Node](/core/components/node/overview) | Axis-end labels + tick text + α label + right info box | [2](#step-2--axes--endpoint-labels--named-anchors), [3](#step-3--grid--ticks), [4](#step-4--30-wedge--α-label), [7](#step-7--right-hand-multi-color-info-box) |
 | [Coordinate](/core/components/node/coordinate) | Named x/y axis endpoints + tan intersection `t` | [2](#step-2--axes--endpoint-labels--named-anchors), [6](#step-6--tan-α-darkorange-line--auxiliary-ray) |

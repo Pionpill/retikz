@@ -1,24 +1,33 @@
 ---
 title: Circle / Ellipse
-description: 圆和椭圆的语法糖写法，适合处理半径、直径、包围盒和范围收缩输入。
+description: 圆和椭圆的两种造法——用 Sugar 画一条轮廓，或让节点带上圆 / 椭圆边界。
 ---
 
-`<Circle>` 和 `<Ellipse>` 都是把常见几何写法展开成 `<Path>` 的语法糖。它们适合那些“我知道中心和半径”“我只有一个包围盒”“我想在一块矩形区域里塞一个圆或椭圆”的场景。
+想要一个圆或椭圆，retikz 有两种造法：
+
+- **画一条轮廓**——Sugar 组件 `<Circle>` / `<Ellipse>` 在指定位置画一条圆 / 椭圆线，展开成底层 `<Path>`。
+- **一个带边界的节点**——`<Node shape="circle">` 让节点以圆 / 椭圆为边界，能装文字、能被 `<Path>` / `<Draw>` 用 id 引用、连线端点自动贴边。
+
+简单说：只画一条圆 / 椭圆线，用 `<Circle>` / `<Ellipse>`；要一个圆形 / 椭圆形、可连接可标注的节点，用 `<Node shape>`。
 
 ## 用法
 
 ```tsx
-import { Circle, Ellipse } from '@retikz/react';
+import { Circle, Ellipse, Node } from '@retikz/react';
 ```
 
 ```tsx
+{/* 画一条轮廓 */}
 <Circle center={[0, 0]} radius={32} fill="none" />
 <Ellipse center={[0, 0]} radiusX={48} radiusY={28} fill="none" />
+
+{/* 一个带圆形边界的节点 */}
+<Node shape="circle">label</Node>
 ```
 
-## 示例
+## 例子
 
-### Circle
+### 作为图形：Circle / Ellipse
 
 最常见的是 `center + radius`。如果手上是一个矩形范围，也可以直接用 `corner1 + corner2`、`box` 或 `boundingBox`。
 
@@ -35,8 +44,6 @@ import { Circle, Ellipse } from '@retikz/react';
 
 <ComponentPreview name="circle-basic" size="sm" />
 
-### Ellipse
-
 椭圆和圆很像，只是半径拆成了 `radiusX` 和 `radiusY`。它也支持 `corner1 + corner2`、`box` 和 `boundingBox`。
 
 | 写法 | 适合 |
@@ -49,6 +56,14 @@ import { Circle, Ellipse } from '@retikz/react';
 | + angles + `closed="sector"` | 画连回中心的部分椭圆 |
 
 <ComponentPreview name="ellipse-basic" size="sm" />
+
+### 作为节点形状：shape="circle" / "ellipse"
+
+当你要的不是一条线、而是一个圆形 / 椭圆形的节点时（装文字、被连线引用），给 `<Node>` 设 `shape`。边界自动外接「文字 + padding」：`circle` 取能容纳文字的外接圆，`ellipse` 取外接椭圆（各轴 × √2）。这两个形状**不需要额外参数**。
+
+<ComponentPreview name="node-circle-ellipse" size="sm" />
+
+连线端点会自动贴到圆 / 椭圆的边上，节点的 9 个标准 anchor（`north` / `center` …）照常可用。完整的 `<Node>` 属性（`position` / `fill` / `padding` / `label` …）见 [Node](/core/components/node/overview)。
 
 ## 技术原理
 
@@ -83,9 +98,11 @@ import { Circle, Ellipse } from '@retikz/react';
 
 ### 它们最后还是 Path
 
-`<Circle>` 和 `<Ellipse>` 最后都会展开成等价的 `<Path>` / `<Step>` 序列。这意味着它们可以直接用 `stroke`、`fill`、`arrow`、`zIndex` 这类 Path 风格属性。
+`<Circle>` 和 `<Ellipse>` 最后都会展开成等价的 `<Path>` / `<Step>` 序列。这意味着它们可以直接用 `stroke`、`fill`、`arrow`、`zIndex` 这类 Path 风格属性。而 `<Node shape>` 是另一条路：它不是 Path，而是一个有边界的节点，边界由文字内容外接得到。
 
 ## API 参考
+
+### 作为图形：Circle / Ellipse
 
 | 组件 | 组合 | 含义 |
 | --- | --- | --- |
@@ -104,7 +121,17 @@ import { Circle, Ellipse } from '@retikz/react';
 | | + `inset?` / `outset?` | 收缩或扩展 box 范围后再计算 |
 | | + angles + `closed?` | 部分椭圆：`chord` / `sector` / `open` |
 
+### 作为节点形状
+
+| `shape` | 边界 | 参数 |
+| --- | --- | --- |
+| `"circle"` | 能容纳文字的外接圆（= `ellipse` 等轴预设） | 无 |
+| `"ellipse"` | 外接椭圆，各轴 × √2 | 无 |
+
+> `<Node>` 的完整属性（位置 / 样式 / 标签等）见 [Node](/core/components/node/overview)；其它带参形状（扇形 / 星形）见各自页面。
+
 ## 相关
 
+- [Node](/core/components/node/overview)：把形状用作节点边界时的完整属性
 - [Arc / Sector](../arc-sector)：再看角度和空心扇形
 - [Shapes](/core/components/shapes)：形状分组入口

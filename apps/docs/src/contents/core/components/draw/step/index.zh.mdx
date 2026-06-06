@@ -106,7 +106,7 @@ import { Path, Step } from '@retikz/react';
 
 ### 矩形（rectangle）
 
-`kind="rectangle"` 用 `from` 和 `to` 作为两个对角点画一个轴对齐矩形；可选 `roundedCorners` 做圆角。它不像 `line` 那样依赖当前游标，所以更接近 TikZ 的 `(a) rectangle (b)`。日常画矩形更推荐用 [Shapes](/core/components/shapes/circle-ellipse) 里的 `<Rectangle>` sugar，写底层 IR 或需要和其它 step 混排时再直接用这个 kind。
+`kind="rectangle"` 用 `from` 和 `to` 作为两个对角点画一个轴对齐矩形；可选 `roundedCorners` 做圆角。它不像 `line` 那样依赖当前游标，所以更接近 TikZ 的 `(a) rectangle (b)`。日常画矩形更推荐用 [Rectangle](/core/components/shapes/rectangle) sugar，写底层 IR 或需要和其它 step 混排时再直接用这个 kind。
 
 <ComponentPreview name="step-rectangle" size="sm" />
 

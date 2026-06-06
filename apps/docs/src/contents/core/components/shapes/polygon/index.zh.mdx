@@ -1,0 +1,84 @@
+---
+title: Polygon
+description: 正多边形的两种造法——用 RegularPolygon 画一个轮廓，或让节点带上正多边形 / 菱形边界。
+---
+
+正多边形（等边等角）有两种造法：
+
+- **画一条轮廓**——Sugar 组件 `<RegularPolygon>` 在指定位置画一个等边多边形，展开成底层 `<Path>`。
+- **一个带边界的节点**——`<Node shape={{ type:'polygon', params:{ sides } }}>` 让节点以正多边形为边界：能装文字、能被连线引用。`diamond` 就是 `polygon{ sides:4, rotate:45 }` 的预设。
+
+简单说：只画一个多边形框，用 `<RegularPolygon>`；要一个可连接、可标注的多边形节点，用 `<Node shape>`。
+
+## 用法
+
+```tsx
+import { RegularPolygon, Node } from '@retikz/react';
+```
+
+```tsx
+{/* 画一条轮廓 */}
+<RegularPolygon center={[0, 0]} radius={36} sides={6} />
+
+{/* 一个正多边形节点 */}
+<Node shape={{ type: 'polygon', params: { sides: 6 } }}>label</Node>
+```
+
+## 例子
+
+### 作为图形：RegularPolygon
+
+`<RegularPolygon>` 用外接半径或边长确定大小。`sides` 至少为 `3`，`rotate` 可以调整整体朝向。
+
+| 写法 | 适合 |
+| --- | --- |
+| `{ center, radius, sides }` | 已知外接半径 |
+| `{ center, sideLength, sides }` | 已知边长 |
+
+<ComponentPreview name="regular-polygon-basic" size="xs" />
+
+### 作为节点形状：shape="polygon" / "diamond"
+
+当你要的是一个多边形**节点**（装文字、被连线引用）而不是一条线时，给 `<Node>` 设 `shape={{ type:'polygon', params:{ sides, rotate? } }}`。边界取能容纳「文字 + padding」的正多边形外接圆，尺寸由文字驱动。`diamond` 是 4 边、旋转 45° 的预设，可直接写裸字符串 `shape="diamond"`。
+
+<ComponentPreview name="node-polygon" size="sm" />
+
+连线端点贴多边形边，节点的 9 个标准 anchor（`north` / `center` …）照常可用。完整的 `<Node>` 属性见 [Node](/core/components/node/overview)。
+
+## 技术原理
+
+> 日常使用可以跳过本节；只有在点位报错或旋转方向不符合预期时再回来读。
+
+### 正多边形先计算顶点
+
+`<RegularPolygon>` 会先根据中心、半径或边长计算所有顶点，然后展开成一条闭合 Path。`rotate` 改的是第一个顶点的起始角度，而不是 SVG transform。
+
+### diamond 是 polygon 的预设
+
+`<Node shape="diamond">` 在编译期规范化为 `polygon{ sides:4, rotate:45 }`——一个旋转 45° 的正方形外接框。它对非正方形文字框是正方形（而非拉伸菱形）；裸字符串 `"diamond"` 和带参 `{ type:'polygon', params:{ sides:4, rotate:45 } }` 等价。
+
+## API 参考
+
+### 作为图形：RegularPolygon
+
+| 组件 | 组合 | 含义 |
+| --- | --- | --- |
+| `<RegularPolygon>` | `center` + `radius` + `sides` | 通过外接半径和边数确定正多边形 |
+| | `center` + `sideLength` + `sides` | 通过边长和边数确定正多边形 |
+| | + `rotate?` | 整体起始角 |
+
+### 作为节点形状
+
+| `shape` | 边界 | 参数 |
+| --- | --- | --- |
+| `{ type: 'polygon', params }` | 能容纳文字的正多边形外接圆 | `sides`（≥3） / `rotate?` |
+| `"diamond"` | = `polygon{ sides:4, rotate:45 }` 预设 | 无 |
+
+> `<Node>` 的完整属性见 [Node](/core/components/node/overview)。
+
+## 相关
+
+- [Node](/core/components/node/overview)：多边形节点的完整属性
+- [Rectangle](../rectangle)：矩形与圆角矩形
+- [Star](../star)：内外半径交替的星形
+- [Shapes](/core/components/shapes)：形状分组入口

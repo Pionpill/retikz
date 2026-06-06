@@ -1,0 +1,23 @@
+---
+title: Helpers
+description: Supporting elements drawn around the main figure — background grids, reference lines, and other fields of regular lines.
+---
+
+This group holds elements used for **auxiliary drawing**: they are not the focus of a figure but sit behind the main content to help you position and reference it, such as a full background grid or a set of evenly spaced reference lines.
+
+How they differ from [Shapes](/core/components/shapes): a shape is a single closed geometry (one circle, one sector) that can act as a node and be connected; a helper is a **field of lines** that works as a backdrop and takes no part in connections. They still expand to `<Path>` underneath and share the same stroke / dash / layering props.
+
+## Responsibilities
+
+| Component | Type | Responsibility | Use it when |
+| --- | --- | --- | --- |
+| Grid | Sugar | Background grids, reference lines, major lines, and borders | You want graph paper, a background grid, or a set of regular reference lines |
+
+## In this section
+
+<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+  <LinkedCard href="/core/components/helpers/grid">
+    <span className="font-semibold">Grid</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">Background grids, reference lines, borders, and major lines</span>
+  </LinkedCard>
+</div>

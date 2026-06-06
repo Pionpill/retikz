@@ -1,0 +1,86 @@
+---
+title: Rectangle
+description: Two ways to make a rectangle — draw an outline with Rectangle, or give a node a rectangular boundary (the node default).
+---
+
+The rectangle is the most common shape in retikz, with two forms:
+
+- **Draw an outline** — the sugar component `<Rectangle>` draws a rectangle at a position, expanding to an underlying `<Path>`.
+- **A node with that boundary** — `<Node>` is **a rectangle by default**: the boundary wraps "text + padding", holds text, and is referenceable by a connection. Almost every flowchart node is this form.
+
+In short: reach for `<Rectangle>` when you just need a rectangular outline, and for `<Node>` when you need a rectangular node (to hold text, to connect).
+
+## Usage
+
+```tsx
+import { Rectangle, Node } from '@retikz/react';
+```
+
+```tsx
+{/* Draw an outline */}
+<Rectangle corner1={[-40, -20]} corner2={[40, 20]} roundedCorners={6} />
+
+{/* A rectangular node (the default shape) */}
+<Node>label</Node>
+```
+
+## Examples
+
+### As a shape: Rectangle
+
+`<Rectangle>` can use two corners, or derive the corners from a center and size. Use `roundedCorners` for rounded rectangles.
+
+| Form | Best for |
+| --- | --- |
+| `{ corner1, corner2 }` | Known opposite corners |
+| `{ center, width, height }` | Known center and size |
+| `{ center, side }` | Square |
+| `{ corner1, width, height }` | Expand from one corner |
+
+<ComponentPreview name="rectangle-basic" size="sm" />
+
+### As a node shape: default rectangle / rounded
+
+A `<Node>` without a `shape` is a rectangle: the boundary wraps "text + padding" and is sized by the text content. Round the corners with the top-level `roundedCorners`, or with `shape={{ type:'rectangle', params:{ roundedCorners } }}` (params win when both are present).
+
+<ComponentPreview name="node-rectangle" size="sm" />
+
+Connection endpoints snap to the rectangle edge, and the node's 9 standard anchors (`north` / `center` …) still apply. For the full `<Node>` props see [Node](/core/components/node/overview).
+
+## How it works
+
+> Optional for everyday use; revisit this section when a point form throws an error.
+
+### Rectangle can pass through points
+
+The `corner1 + corner2` form can pass points to the underlying Path, so it can reference node ids. Forms that require React-side size calculation, such as `center + width + height`, only accept literal `[x, y]` coordinates.
+
+### Shape and node are two routes
+
+`<Rectangle>` expands to a closed `<Path>` and is pure graphics; `<Node>` (the default rectangle) is a node with a boundary circumscribed from the text box that connections can snap to. For a rectangle that both holds text and connects, use `<Node>` rather than `<Rectangle>`.
+
+## API Reference
+
+### As a shape: Rectangle
+
+| Component | Combination | Meaning |
+| --- | --- | --- |
+| `<Rectangle>` | `corner1` + `corner2` | Rectangle from two opposite corners |
+| | `center` + `width` + `height` | Rectangle from center and size |
+| | `center` + `side` | Square from center and side |
+| | `corner1` + `width` + `height` | Rectangle from one corner and size |
+| | + `roundedCorners?` | Rounded rectangle (clamped to half the smaller side) |
+
+### As a node shape
+
+| `shape` | Boundary | Parameters |
+| --- | --- | --- |
+| omitted / `"rectangle"` | Inner box wrapping "text + padding" | `roundedCorners?` (corner radius) |
+
+> For the full `<Node>` props (position / styling / labels / size constraints) see [Node](/core/components/node/overview).
+
+## Related
+
+- [Node](/core/components/node/overview): full props for a rectangular node
+- [Polygon](../polygon): regular polygons and diamond
+- [Shapes](/core/components/shapes): Shapes overview

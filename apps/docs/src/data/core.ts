@@ -54,9 +54,16 @@ export const coreSection: Array<Section> = [
         children: [
           { id: 'circle-ellipse', label: 'core.shapesCircleEllipse' },
           { id: 'arc-sector', label: 'core.shapesArcSector' },
-          { id: 'rectangle-polygon', label: 'core.shapesRectanglePolygon' },
+          { id: 'rectangle', label: 'core.shapesRectangle' },
+          { id: 'polygon', label: 'core.shapesPolygon' },
           { id: 'star', label: 'core.shapesStar' },
-          { id: 'grid', label: 'core.shapesGrid' },
+        ],
+      },
+      {
+        id: 'helpers',
+        label: 'core.helpers',
+        children: [
+          { id: 'grid', label: 'core.helpersGrid' },
         ],
       },
     ],
