@@ -56,13 +56,14 @@ radial axis（radius 维）:
 3. **frame 单点拥有杜绝伪并行**：guide 不自算圆心 / 半径，全取 ADR-01 frame——04 与 02/03 真并行（评审 P1-1）。
 4. **复用 core Path arc**：同心环 / 弧轴用 core 既有 `arc` step，不在 plot 造曲线机制。
 
-## 待决策点 🔻
+## 待决策点 🔻（已冻结 2026-06-06，按人工 ack）
 
-- **radial axis 基准角**：径向轴辐条画在哪个角度（默认 `startAngle`，倾向）vs 可配 `at` 角度 / 12 点钟。
-- **angular axis 轴线形态**：外圆弧（倾向）vs 无轴线只刻度 vs 最内圈。
-- **角向标签防重叠**：密集类别标签是否抽稀 / 旋转。倾向 alpha.4 直接全摆（防重叠留后续）。
-- **grid 默认**：沿用 alpha.2 `grid` 子属性布尔（倾向）；polar grid 是「同心环 + 辐条」一并出，还是分 radius-grid / angle-grid 各自 `grid`。倾向跟随各自维度 axis 的 `grid`。
-- **维度命名暴露**：polar 用户写 `dimension:'angle'` 直观 vs 沿用 `'x'`。两者都接受（hybrid），文档以 angle/radius 为主示例。
+- **radial axis 基准角 → 默认 `startAngle`**（辐条画在角向起始角），不做可配 `at`（留后续）。
+- **angular axis 轴线形态 → 外圆弧**（[startAngle,endAngle] 弧）。
+- **角向标签防重叠 → 全摆**（不抽稀 / 不旋转，防重叠留后续）。
+- **grid → 跟随各自维度 axis 的 `grid` 布尔**：radius axis `grid:true` → 同心环、angle axis `grid:true` → 角向辐条；沿用 alpha.2 `grid` 子属性。
+- **维度命名 → angle/radius 与 x/y 都接受**（hybrid，polar 下 x→angular、y→radial），文档以 angle/radius 为主示例。
+- **角向标签留白**：归 ADR-01 `computePolarFrame`（评审 P1）；若 ADR-01 未实际预留致标签溢出，实现期最小补进 `computePolarFrame`（ADR-01 scope）并记录，不在 guide 里回写 layout。
 
 ## DSL 表面
 
