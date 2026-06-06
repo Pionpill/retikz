@@ -257,7 +257,7 @@ Line 2`}</Node>
 
 #### 尺寸约束 + 缩放
 
-- `cornerRadius`——圆角半径。所有形状都支持圆角，写在形状 params 里：`shape={{ type:'polygon', params:{ sides:6, cornerRadius:8 } }}`、`star` / `sector` / `rectangle` 同理。顶层 `cornerRadius` 是迁移期写法，只对默认 `rectangle` 生效，两者并存时 params 优先
+- `cornerRadius`——圆角半径。`rectangle` / `polygon` / `star` / `sector` 支持圆角（`ellipse` 等不支持），写在形状 params 里：`shape={{ type:'polygon', params:{ sides:6, cornerRadius:8 } }}`、`star` / `sector` / `rectangle` 同理。顶层 `cornerRadius` 是迁移期写法，只对默认 `rectangle` 生效，两者并存时 params 优先
 - `minimumWidth` / `minimumHeight` / `minimumSize`——撑开 bbox（不缩水 text 自然宽度）
 - `scale` / `xScale` / `yScale`——均匀 / 分轴缩放，影响 bbox + 字号 + padding + 路径附着点
 

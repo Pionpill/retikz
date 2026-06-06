@@ -257,7 +257,7 @@ A stop's `opacity` gives a "solid → transparent" fade; `color` set to `current
 
 #### Size constraints + scale
 
-- `cornerRadius` — corner radius. Every shape supports rounding via its params: `shape={{ type:'polygon', params:{ sides:6, cornerRadius:8 } }}`, and likewise for `star` / `sector` / `rectangle`. The top-level `cornerRadius` is a migration-period form that only affects the default `rectangle` (params wins when both are set)
+- `cornerRadius` — corner radius. `rectangle` / `polygon` / `star` / `sector` support rounding (`ellipse` and the like do not) via their params: `shape={{ type:'polygon', params:{ sides:6, cornerRadius:8 } }}`, and likewise for `star` / `sector` / `rectangle`. The top-level `cornerRadius` is a migration-period form that only affects the default `rectangle` (params wins when both are set)
 - `minimumWidth` / `minimumHeight` / `minimumSize` — floor the bbox without shrinking natural text width
 - `scale` / `xScale` / `yScale` — uniform / per-axis scale; affects bbox, font size, padding, and path attachment
 
