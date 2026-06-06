@@ -9,6 +9,7 @@ export const NODE_FIELDS = [
   'shape',
   'boundary',
   'meta',
+  'animations',
   'rotate',
   'align',
   'lineHeight',
@@ -55,6 +56,7 @@ void _assertNodeFieldsCheck;
 export const PATH_FIELDS = [
   'id',
   'meta',
+  'animations',
   'color',
   'stroke',
   'strokeWidth',
@@ -106,6 +108,7 @@ export const SCOPE_FIELDS = [
   'zIndex',
   'clip',
   'meta',
+  'animations',
 ] as const satisfies ReadonlyArray<keyof IRScope>;
 
 type _ScopeFieldsCheck = AssertEqual<

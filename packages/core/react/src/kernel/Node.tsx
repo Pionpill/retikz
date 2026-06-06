@@ -25,6 +25,8 @@ export type NodeProps = HydrationEventProps & {
   boundary?: IRBoundary;
   /** provenance 元数据：原样透传进本节点 emit 的 Scene 图元，renderer 忽略、不参与布局；典型由 Tier 2 lowering 注入（标记来自哪个 datum / series / layer）。须为 JSON 可序列化对象 */
   meta?: IRNode['meta'];
+  /** 时间轴动画 tracks（raw track；fadeIn / scaleIn 等 sugar 动词为后续）：每条 track 动一个 renderer 无关 property，base = 动画终态；透传进 Scene 图元，renderer 播放或降级到静态。不参与布局 */
+  animations?: IRNode['animations'];
   /**
    * 节点中心位置
    * @description 五种形态：笛卡尔 `[x, y]` / 极坐标 `{ angle, radius, origin? }` / 相对定位 `{ direction, of, distance? }`（TikZ `[<direction>=<distance> of <id>]` 同义）/ 偏移定位 `{ of, offset }`（TikZ `calc` 同义）/ 比例 partway `{ between: [A, B], t }`（A、B 连线上 t 处，TikZ `($(A)!t!(B)$)` 同义）；非笛卡尔形态在编译时解析

@@ -9,6 +9,8 @@ export type PathProps = HydrationEventProps & {
   id?: IRPath['id'];
   /** provenance 元数据：原样透传进本路径 emit 的 Scene 图元，renderer 忽略、不参与布局；典型由 Tier 2 lowering 注入（标记来自哪个 datum / series / layer）。须为 JSON 可序列化对象 */
   meta?: IRPath['meta'];
+  /** 时间轴动画 tracks（raw track；drawOn 等 sugar 动词为后续）：透传进 emit 的 Scene 图元，renderer 播放或降级到静态。不参与布局 */
+  animations?: IRPath['animations'];
   /** 主色（TikZ `color=`）；stroke / 箭头 / step label 未单设则随它（跟主色不跟 stroke） */
   color?: IRPath['color'];
   /** 描边色，省略时用 currentColor */

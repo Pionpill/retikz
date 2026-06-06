@@ -33,6 +33,8 @@ export type ScopeProps = ScopeStyleProps & HydrationEventProps & {
   clip?: IRScope['clip'];
   /** provenance 元数据：原样透传进本 scope emit 的 GroupPrim，renderer 忽略、不参与布局、不下传子元素；典型由 Tier 2 lowering 注入（标记 series / layer 层）。须为 JSON 可序列化对象 */
   meta?: IRScope['meta'];
+  /** 时间轴动画 tracks（作用于 scope group；raw track）：透传进 emit 的 GroupPrim，renderer 播放或降级到静态。不参与布局、不下传子元素 */
+  animations?: IRScope['animations'];
   /** scope 子节点：嵌套 Node / Path / Coordinate / Scope */
   children?: ReactNode;
 };
