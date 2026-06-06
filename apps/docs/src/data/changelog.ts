@@ -526,6 +526,44 @@ export const changelog: Array<Release> = [
         ],
         subVersions: [
           {
+            version: 'alpha.4',
+            date: '2026-06-06',
+            summary: {
+              zh: 'polar 坐标系端到端：coordinate 抽象通用化 + polar2D 投影、interval→sector（径向柱/玫瑰）与 sector mark（饼图/环图）、连续 mark（area 新建 + closed 雷达）、径向/角向 guide。落定 §8.3 (i) 投影整形。',
+              en: 'Polar coordinate system end-to-end: a generalized coordinate abstraction + polar2D projection, interval→sector (radial bars / rose) and a sector mark (pie / donut), continuous marks (new area + closed radar), and radial / angular guides. Lands the §8.3 (i) projection-reshaping decision.',
+            },
+            items: [
+              {
+                label: { zh: 'coordinate 抽象 + polar2D 投影', en: 'coordinate abstraction + polar2D projection' },
+                content: {
+                  zh: '`CoordinateSchema` 加 `polar2D`（angle/radius scale 绑定 + startAngle/endAngle/innerRadius）;lowering 把投影抽象成可替换的 `CoordinateFrame`。位置通道只有 `x` / `y`（必填，无单独 angle/radius 通道），坐标系把它们重解释为对应角色（polar：x→角度、y→半径）——同一份 spec 改 coordinate 即跨坐标系，且 x/y 必填能在 schema 层约束 LLM 生成。',
+                  en: '`CoordinateSchema` adds `polar2D` (angle/radius scale bindings + startAngle/endAngle/innerRadius); lowering abstracts projection into a swappable `CoordinateFrame`. Positional channels are just `x` / `y` (both required, no separate angle/radius channels); the coordinate system reinterprets them per role (polar: x→angle, y→radius) — the same spec switches coordinate systems by changing only `coordinate`, and required x/y constrains LLM generation at the schema layer.',
+                },
+              },
+              {
+                label: { zh: 'sector 几何（径向柱 + 饼/环）', en: 'sector geometry (radial bars + pie/donut)' },
+                content: {
+                  zh: 'interval 在 polar 下下沉成 core 参数化 `sector` Node（径向柱/玫瑰，半径编码值）;新增 sector mark（饼图/环图，角度编码累积值），累积角复用泛化后的 stack transform（单链累积）——守 transform 先于 mark 的分层。',
+                  en: 'interval lowers to core parametric `sector` nodes under polar (radial bars / rose, radius encodes value); a new sector mark (pie / donut, angle encodes cumulative value) reuses a generalized stack transform for the cumulative angle, keeping transforms ahead of marks.',
+                },
+              },
+              {
+                label: { zh: '连续 mark：area + 雷达', en: 'continuous marks: area + radar' },
+                content: {
+                  zh: '新增 area mark（线↔baseline 区域，cartesian + polar）;line/area 加 `closed`（首尾相连），polar + closed 即雷达;polar 连续角轴段内采样，使数据空间直边弯成屏幕弧。',
+                  en: 'New area mark (region between line and baseline, cartesian + polar); line/area gain `closed`, so polar + closed is a radar; continuous polar segments are sampled so data-space straight edges bend into screen arcs.',
+                },
+              },
+              {
+                label: { zh: 'polar guide：径向/角向轴 + 网格', en: 'polar guide: radial/angular axes + grid' },
+                content: {
+                  zh: 'guide 维度补 angle/radius（与 x/y hybrid）;polar 下角向轴=外圆弧 + 绕圈刻度、径向轴=辐条刻度、网格=同心环 + 角向辐条，全部下沉 core `Path`(arc) + `Node`。',
+                  en: 'guide dimensions add angle/radius (hybrid with x/y); under polar the angular axis is an outer arc with circumferential ticks, the radial axis is a spoke, and the grid is concentric rings + angular spokes — all lowered to core `Path`(arc) + `Node`.',
+                },
+              },
+            ],
+          },
+          {
             version: 'alpha.3',
             date: '2026-06-06',
             summary: {
@@ -638,6 +676,30 @@ export const changelog: Array<Release> = [
         ],
         subVersions: [
           {
+            version: 'alpha.4',
+            date: '2026-06-06',
+            summary: {
+              zh: 'polar authoring 面：`<Plot coordinate="polar">`（或对象配 innerRadius/startAngle/endAngle）、新增 `<SectorMark>`（饼/环，自动累积）/ `<AreaMark>`、`<LineMark closed>`（雷达）、`<Axis dimension="angle"/"radius">`;全用扁平 prop。',
+              en: 'Polar authoring surface: `<Plot coordinate="polar">` (or an object with innerRadius/startAngle/endAngle), new `<SectorMark>` (pie/donut, auto-accumulate) / `<AreaMark>`, `<LineMark closed>` (radar), and `<Axis dimension="angle"/"radius">` — all via flat props.',
+            },
+            items: [
+              {
+                label: { zh: '<Plot coordinate> + 新 mark 组件', en: '`<Plot coordinate>` + new mark components' },
+                content: {
+                  zh: '`<Plot coordinate="polar">` 一键切极坐标（缺省 cartesian 不变）;`<SectorMark angle color>` 写饼/环（DSL 自动装配累积 transform）、`<AreaMark>` 写面积、`<LineMark closed>` 写雷达，`buildPlotSpec` 据 mark 推断角向/径向 scale。',
+                  en: '`<Plot coordinate="polar">` switches to polar in one prop (cartesian unchanged by default); `<SectorMark angle color>` draws pie/donut (the DSL auto-wires the cumulative transform), `<AreaMark>` draws areas, `<LineMark closed>` draws radar, and `buildPlotSpec` infers angular/radial scales from the marks.',
+                },
+              },
+              {
+                label: { zh: '<Axis dimension=angle/radius>', en: '`<Axis dimension=angle/radius>`' },
+                content: {
+                  zh: '`<Axis>` 的 `dimension` 扩到 `angle` / `radius`（polar 下 x/y 亦自动映射），声明角向轴 / 径向轴 + 网格。',
+                  en: '`<Axis>`’s `dimension` extends to `angle` / `radius` (x/y also map automatically under polar) to declare angular / radial axes + grid.',
+                },
+              },
+            ],
+          },
+          {
             version: 'alpha.3',
             date: '2026-06-06',
             summary: {
@@ -714,6 +776,23 @@ export const changelog: Array<Release> = [
           },
         ],
         subVersions: [
+          {
+            version: 'alpha.4',
+            date: '2026-06-06',
+            summary: {
+              zh: '随 plot polar lockstep：`renderPlot` SSR 自动支持极坐标——径向柱 / 饼图 / 环图 / 雷达 / 极坐标折线与径向/角向轴网格（共用同一份 lowerPlots，无新 API）。',
+              en: 'Lockstep with plot polar: `renderPlot` SSR now supports polar automatically — radial bars / pie / donut / radar / polar lines and radial/angular axes + grid (shared lowerPlots, no new API).',
+            },
+            items: [
+              {
+                label: { zh: 'SSR 覆盖 polar', en: 'SSR covers polar' },
+                content: {
+                  zh: '服务端 / 构建期出的 SVG 字符串覆盖全部 polar mark 与 guide（扇形 arc / 同心环），与 react 面视觉一致，vanilla 侧零额外代码。',
+                  en: 'Server / build-time SVG strings cover all polar marks and guides (sector arcs / concentric rings), visually matching the React surface with zero extra code on the vanilla side.',
+                },
+              },
+            ],
+          },
           {
             version: 'alpha.3',
             date: '2026-06-06',
