@@ -3,6 +3,7 @@ import type { IRChild, IRNode, IRPath, IRScope } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 import { type PlotSpec, PlotSpecSchema } from '../../src/ir';
 import { type LowerPlotsOptions, lowerPlots } from '../../src/lower/expand';
+import { SOURCE_INDEX } from '../../src/lower/provenance';
 
 /**
  * ADR-01：scope-aware id 绑定 + meta 透传。
@@ -482,5 +483,55 @@ describe('ADR-01 id/meta — 交互', () => {
     expect((axisMeta!.meta as { dimension?: string }).dimension).toBe('x');
     // guide.id='xaxis' → 加前缀 'sales.xaxis'
     expect(axisMeta!.id).toBe('sales.xaxis');
+  });
+});
+
+// =====================================================================
+// Bug Hunter 回归（stage 3 对抗提升为正式测试）
+// =====================================================================
+describe('ADR-01 id/meta — Bug Hunter 回归', () => {
+  it('middle_skipped_row_index_integrity', () => {
+    // 中间行被跳过（非有限投影）时，存活 datum 的 transformedIndex / sourceIndex 必须反映「原始行位置」，
+    // 而非压缩后的 placed 数组位置（经典 off-by-one 陷阱）。row1 的 y=NaN → 跳过，存活 row0/row2 应得 index 0/2。
+    const rows = [
+      { month: 0, revenue: 10 },
+      { month: 1, revenue: Number.NaN }, // 跳过
+      { month: 2, revenue: 9 },
+    ];
+    const layer = firstLayer(pointSpec({ id: 'sales' }), { sales: rows }, { ...opts, provenance: true, datumProvenance: true });
+    const nodes = layer.children as Array<IRNode>;
+    expect(nodes).toHaveLength(2); // 中间行被跳过
+    const idx = nodes.map(n => n.meta as { transformedIndex: number; sourceIndex?: number });
+    expect(idx.map(m => m.transformedIndex)).toEqual([0, 2]); // 不压缩成 [0,1]
+    expect(idx.map(m => m.sourceIndex)).toEqual([0, 2]);
+  });
+
+  it('datum_provenance_implies_provenance', () => {
+    // datumProvenance / datumIdField 任一开即蕴含 provenance：不显式传 provenance:true 也应写 per-datum meta / 绑 datum id，
+    // 不能静默无效（修复：原实现仅 options.provenance truthy 才启用，致 datumProvenance 单开被吞）。
+    const rows = [
+      { month: 0, revenue: 10, q: 'Q1' },
+      { month: 1, revenue: 14, q: 'Q2' },
+    ];
+    // 只开 datumProvenance（不传 provenance）→ datum Node 仍带 meta
+    const layerMeta = firstLayer(barSpec({ id: 'sales' }), { sales: rows }, { ...opts, datumProvenance: true });
+    const metaNodes = (layerMeta.children as Array<IRNode>).filter(n => n.meta !== undefined);
+    expect(metaNodes).toHaveLength(2);
+    // 只设 datumIdField（不传 provenance）→ datum Node 仍绑 id
+    const layerId = firstLayer(barSpec({ id: 'sales' }), { sales: rows }, { ...opts, datumIdField: 'q' });
+    const ids = (layerId.children as Array<IRNode>).map(n => n.id);
+    expect(ids).toEqual(['sales.datum.Q1', 'sales.datum.Q2']);
+  });
+
+  it('provenance_does_not_mutate_input', () => {
+    // SOURCE_INDEX 标记必须打在克隆行上，绝不污染调用方原始数据对象。
+    const rows = [
+      { month: 0, revenue: 10 },
+      { month: 1, revenue: 14 },
+    ];
+    expandOf(barSpec({ id: 'sales' }), { sales: rows }, { ...opts, provenance: true, datumProvenance: true });
+    for (const row of rows) {
+      expect(Object.getOwnPropertySymbols(row)).not.toContain(SOURCE_INDEX);
+    }
   });
 });

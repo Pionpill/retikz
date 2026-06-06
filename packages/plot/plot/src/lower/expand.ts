@@ -338,8 +338,10 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
     throw new Error(`lowerPlots: dataset "${node.data.reference}" not found in provided datasets`);
   }
 
-  // provenance 总开关：开 → 构造贯穿上下文（datumProvenance 蕴含需 provenance 开）；关 → undefined（产物逐字节等价 alpha.4）
-  const provenance: ProvenanceContext | undefined = options.provenance
+  // provenance 总开关：provenance / datumProvenance / datumIdField 任一开即启用（后两者蕴含 provenance）；
+  // 全关 → undefined（产物逐字节等价 alpha.4）
+  const provenanceEnabled = options.provenance === true || options.datumProvenance === true || options.datumIdField !== undefined;
+  const provenance: ProvenanceContext | undefined = provenanceEnabled
     ? {
         plotId: node.id,
         dataReference: node.data.reference,
