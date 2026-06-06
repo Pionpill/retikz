@@ -1,7 +1,7 @@
 import { type IRChild, type IRNode, type IRNodeDefault, type IRScope, type IRStep } from '@retikz/core';
 import { type ExternalRow, type Mark, PlotCoordinate } from '../ir';
 import { channelValue, compareByPath, isFiniteNumber, resolveFieldPath } from './field';
-import type { CartesianFrame, CoordinateFrame, PolarFrame } from './project';
+import { type CartesianFrame, type CoordinateFrame, type PolarFrame, type PolarVertex, densifyPolarSegments, toPolarVertex } from './project';
 import { inferCategoryDomain } from './scale';
 
 /** 散点 glyph 默认直径（user units，已补偿 circle 外接） */
@@ -282,40 +282,126 @@ const lowerInterval = (mark: Mark, rows: Array<ExternalRow>, frame: CartesianFra
   return lowerPlainBars(mark, rows, frame, colorOf, bandwidth);
 };
 
-/** 把一组数据行连成一条折线的 steps（按 order / 数据序）；<2 点返回 null（cartesian-only） */
-const buildLineSteps = (mark: Mark, rows: Array<ExternalRow>, frame: CartesianFrame): Array<IRStep> | null => {
-  const ordered = mark.type === 'line' && mark.order ? [...rows].sort((a, b) => compareByPath(a, b, mark.order as string)) : rows;
-  const points = ordered
-    .map(row => frame.project(channelValue(mark.encoding.x, row), channelValue(mark.encoding.y, row)))
-    .filter((point): point is [number, number] => point !== null);
+/** area mark 的默认 baseline（回边贴的值；cartesian = y 基线、polar = 径向内界方向） */
+const AREA_BASELINE = 0;
+
+/** 把若干屏幕点连成 move + line steps（按需尾部加 cycle 闭合）；点数 < 2 返回 null */
+const pointsToSteps = (points: ReadonlyArray<[number, number]>, closed: boolean): Array<IRStep> | null => {
   if (points.length < 2) return null;
-  return [
+  const steps: Array<IRStep> = [
     { type: 'step', kind: 'move', to: points[0] },
     ...points.slice(1).map((point): IRStep => ({ type: 'step', kind: 'line', to: point })),
   ];
+  if (closed) steps.push({ type: 'step', kind: 'cycle' });
+  return steps;
 };
 
-/** 折线：单线（常量 color → stroke）或多系列（series 拆多线、各取系列色）（cartesian-only） */
-const lowerLine = (mark: Mark, rows: Array<ExternalRow>, frame: CartesianFrame, colorOf?: ColorOf): IRChild | null => {
+/** 按 order / 数据序排好一组行（line / area 共用连接顺序） */
+const orderRows = (rows: Array<ExternalRow>, order: string | undefined): Array<ExternalRow> =>
+  order ? [...rows].sort((a, b) => compareByPath(a, b, order)) : rows;
+
+/**
+ * 把一组有序行投影成上沿屏幕点（坐标系无关）
+ * @description cartesian / polar 分类角轴 / closed 走弦（顶点直连）；polar 连续角轴段内采样弯弧。
+ *   返回的点已滤除非有限投影（守 frame.project null 语义）。
+ */
+const buildOutlinePoints = (mark: Mark, ordered: Array<ExternalRow>, frame: CoordinateFrame, closed: boolean): Array<[number, number]> => {
+  if (frame.type === PlotCoordinate.Polar2D && frame.continuousAngle && !closed) {
+    const vertices = ordered
+      .map(row => {
+        const [primaryValue, secondaryValue] = resolveRolePosition(mark, row, frame);
+        return toPolarVertex(frame, primaryValue, secondaryValue);
+      })
+      .filter((vertex): vertex is PolarVertex => vertex !== null);
+    return densifyPolarSegments(frame, vertices);
+  }
+  return ordered
+    .map(row => {
+      const [primaryValue, secondaryValue] = resolveRolePosition(mark, row, frame);
+      return frame.project(primaryValue, secondaryValue);
+    })
+    .filter((point): point is [number, number] => point !== null);
+};
+
+/** 把一组行连成一条折线的 steps（上沿投影 + 可选闭合）；<2 点返回 null */
+const buildLineSteps = (mark: Mark, rows: Array<ExternalRow>, frame: CoordinateFrame, closed: boolean): Array<IRStep> | null =>
+  pointsToSteps(buildOutlinePoints(mark, orderRows(rows, mark.type === 'line' || mark.type === 'area' ? mark.order : undefined), frame, closed), closed);
+
+/** 折线：单线（常量 color → stroke）或多系列（series 拆多线、各取系列色）（坐标系无关） */
+const lowerLine = (mark: Mark, rows: Array<ExternalRow>, frame: CoordinateFrame, colorOf?: ColorOf): IRChild | null => {
   if (mark.type !== 'line') return null;
+  const closed = mark.closed ?? false;
   if (mark.series) {
     const seriesField = mark.series;
     const seriesValues = inferCategoryDomain(rows.map(row => resolveFieldPath(row, seriesField)));
     const paths: Array<IRChild> = [];
     for (const series of seriesValues) {
       const seriesRows = rows.filter(row => resolveFieldPath(row, seriesField) === series);
-      const steps = buildLineSteps(mark, seriesRows, frame);
+      const steps = buildLineSteps(mark, seriesRows, frame, closed);
       if (!steps) continue;
       const stroke = colorOf?.(seriesRows[0]) ?? DEFAULT_FILL;
       paths.push({ type: 'path', stroke, children: steps });
     }
     return paths.length === 0 ? null : { type: 'scope', pathDefault: { strokeWidth: LINE_STROKE_WIDTH }, children: paths };
   }
-  const steps = buildLineSteps(mark, rows, frame);
+  const steps = buildLineSteps(mark, rows, frame, closed);
   if (!steps) return null;
   const colorValue = mark.encoding.color?.value;
   const stroke = colorValue !== undefined ? String(colorValue) : DEFAULT_FILL;
   return { type: 'scope', pathDefault: { stroke, strokeWidth: LINE_STROKE_WIDTH }, children: [{ type: 'path', children: steps }] };
+};
+
+/**
+ * 把一组有序行投影成 baseline 回边屏幕点（沿同 primary 序，secondary 固定为 baseline，逆序）
+ * @description cartesian：primary=x 不变、secondary=baseline；polar：θ 不变、r=radius(baseline)。逆序使其与上沿首尾相接成闭环。
+ */
+const buildBaselinePoints = (mark: Mark, ordered: Array<ExternalRow>, frame: CoordinateFrame, baseline: number): Array<[number, number]> => {
+  const points: Array<[number, number]> = [];
+  for (const row of ordered) {
+    const [primaryValue] = resolveRolePosition(mark, row, frame);
+    const point = frame.project(primaryValue, baseline);
+    if (point) points.push(point);
+  }
+  return points.reverse();
+};
+
+/** 把一个 area 的上沿 + baseline 回边连成可填充 Path 的 steps；上沿 < 2 点返回 null */
+const buildAreaSteps = (mark: Mark, rows: Array<ExternalRow>, frame: CoordinateFrame, baseline: number): Array<IRStep> | null => {
+  const ordered = orderRows(rows, mark.type === 'area' ? mark.order : undefined);
+  const closed = mark.type === 'area' ? (mark.closed ?? false) : false;
+  const top = buildOutlinePoints(mark, ordered, frame, closed);
+  if (top.length < 2) return null;
+  const bottom = buildBaselinePoints(mark, ordered, frame, baseline);
+  const outline = [...top, ...bottom];
+  return [
+    { type: 'step', kind: 'move', to: outline[0] },
+    ...outline.slice(1).map((point): IRStep => ({ type: 'step', kind: 'line', to: point })),
+    { type: 'step', kind: 'cycle' },
+  ];
+};
+
+/** 面积：上沿折线 + baseline 回边闭合的可填充 Path（坐标系无关）；单系列或多系列（series 拆多面、各取系列色） */
+const lowerArea = (mark: Mark, rows: Array<ExternalRow>, frame: CoordinateFrame, colorOf?: ColorOf): IRChild | null => {
+  if (mark.type !== 'area') return null;
+  const baseline = mark.baseline ?? AREA_BASELINE;
+  if (mark.series) {
+    const seriesField = mark.series;
+    const seriesValues = inferCategoryDomain(rows.map(row => resolveFieldPath(row, seriesField)));
+    const paths: Array<IRChild> = [];
+    for (const series of seriesValues) {
+      const seriesRows = rows.filter(row => resolveFieldPath(row, seriesField) === series);
+      const steps = buildAreaSteps(mark, seriesRows, frame, baseline);
+      if (!steps) continue;
+      const fill = colorOf?.(seriesRows[0]) ?? DEFAULT_FILL;
+      paths.push({ type: 'path', fill, children: steps });
+    }
+    return paths.length === 0 ? null : { type: 'scope', children: paths };
+  }
+  const steps = buildAreaSteps(mark, rows, frame, baseline);
+  if (!steps) return null;
+  const colorValue = mark.encoding.color?.value;
+  const fill = colorValue !== undefined ? String(colorValue) : DEFAULT_FILL;
+  return { type: 'scope', pathDefault: { fill }, children: [{ type: 'path', children: steps }] };
 };
 
 /**
@@ -325,19 +411,19 @@ const lowerLine = (mark: Mark, rows: Array<ExternalRow>, frame: CartesianFrame, 
  *   color 编码时按颜色分子 Scope；series 把记录拆成多系列（多线 / 分组 / 堆叠柱）。无可绘制图元返回 null。
  */
 export const lowerMark = (mark: Mark, rows: Array<ExternalRow>, frame: CoordinateFrame, colorOf?: ColorOf): IRChild | null => {
-  // point 坐标系无关，经 frame.project 投影
+  // point / line / area 坐标系无关，经 frame.project（polar 连续角轴段内采样）投影
   if (mark.type === 'point') return lowerPoint(mark, rows, frame, colorOf);
-  // polar：interval → sector（径向柱/玫瑰）、sector mark（饼图/环图）；line 弯弧留 ADR-03
+  if (mark.type === 'line') return lowerLine(mark, rows, frame, colorOf);
+  if (mark.type === 'area') return lowerArea(mark, rows, frame, colorOf);
+  // polar：interval → sector（径向柱/玫瑰）、sector mark（饼图/环图）
   if (frame.type === PlotCoordinate.Polar2D) {
     if (mark.type === 'interval') return lowerIntervalPolar(mark, rows, frame, colorOf);
-    if (mark.type === 'sector') return lowerSector(mark, rows, frame, colorOf);
-    throw new Error(`lowerPlots: mark "${mark.type}" is not yet supported under the polar2D coordinate system`);
+    return lowerSector(mark, rows, frame, colorOf);
   }
   // sector mark 仅 polar；cartesian 下无意义
   if (mark.type === 'sector') {
     throw new Error('lowerPlots: sector mark is only valid under the polar2D coordinate system');
   }
-  // interval / line 笛卡尔几何
-  if (mark.type === 'interval') return lowerInterval(mark, rows, frame, colorOf);
-  return lowerLine(mark, rows, frame, colorOf);
+  // interval 笛卡尔几何
+  return lowerInterval(mark, rows, frame, colorOf);
 };

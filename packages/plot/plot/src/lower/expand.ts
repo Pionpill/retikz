@@ -102,8 +102,14 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
         out.push(channelValue(channel, row));
       }
     }
-    // 柱从 baseline 0 起：把 0 纳入域，保证连续域容得下 baseline（即便所有值同号）
-    if (includeBaseline && node.marks.some(mark => mark.type === 'interval')) out.push(0);
+    // 柱 / 面积从 baseline 起：把 baseline 纳入域，保证连续域容得下 baseline（即便所有值同号）
+    if (includeBaseline) {
+      if (node.marks.some(mark => mark.type === 'interval')) out.push(0);
+      // area 的回边贴 baseline（默认 0），把各 area 的 baseline 纳入值域，使 baseline 投影落在 range 内
+      for (const mark of node.marks) {
+        if (mark.type === 'area') out.push(mark.baseline ?? 0);
+      }
+    }
     return out;
   };
 
@@ -139,6 +145,8 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
       outerRadius: layout.outerRadius,
       startAngle: coordinate.startAngle,
       endAngle: coordinate.endAngle,
+      // 连续角轴（linear / time）才段内采样弯弧；分类（band / point）类别间无中间值，走弦
+      continuousAngle: angleScaleDef.type === PlotScale.Linear || angleScaleDef.type === PlotScale.Time,
       primary: angleScale,
       secondary: radiusScale,
     });
