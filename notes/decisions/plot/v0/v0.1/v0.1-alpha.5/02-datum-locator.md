@@ -1,6 +1,6 @@
 # ADR-02：datum locator 命中预演——逻辑地址 → 位置/元素的确定性正向解析纯函数，不逐点预注册
 
-- 状态：Proposed
+- 状态：Accepted
 - 决策日期：2026-06-07
 - 关联：[plot v0.1-alpha.5 roadmap](./roadmap.md) · [plot-design.md §7 anchor / §8.1 id 绑定与可连接性（locator 段）](../../../../../architecture/plot-design.md) · 依赖：[ADR-01 scope-aware id 绑定 + meta 透传](./01-scope-id-meta.md)
 
@@ -23,7 +23,7 @@
 type ResolvedAnchor = {
   /** 该 datum / series 的锚点屏幕位置（user units，与 lowering 摆放一致）*/
   position: [number, number];
-  /** 来源 meta（与 ADR-01 per-datum meta 同构：dataReference / mark / markIndex / transformedIndex / sourceIndex? / series?；即便 lowering 没开 datumProvenance 也按需合成）*/
+  /** 来源 meta：datum() 与 ADR-01 per-datum meta 同构（dataReference / mark / markIndex / transformedIndex / sourceIndex? / series?，即便 lowering 没开 datumProvenance 也按需合成）；series() 是 centroid、无单行索引，meta = {source,dataReference,mark,markIndex,series} */
   meta: IRJsonObject;
   /** 若 ADR-01 给该元素绑了具名 id（mark/series 句柄、或 datumIdField 命中），回填；否则省略 */
   id?: string;
@@ -77,6 +77,10 @@ locator 是**纯函数、不进 IR、不注册任何 core 元素**，不预建 N
 2. **共享 `datumAnchor` 杜绝漂移**——locator 与 lowering 同源，「命中预演 ↔ 实际渲染一致」从设计上成立、非靠测试碰运气。
 3. **正向边界清晰、不越 v0.3**——只给「地址 → 位置」，反向 hit-test / 事件回调留交互层；v0.1 收口不引入 runtime 依赖。
 4. **纯函数易测易组合**——无副作用，v0.3 交互层与跨域组合（v0.5 连 `<plotId>.series.<v>`）都能直接复用。
+
+## 实现期偏离（2026-06-07，Contract Auditor 对账后记）
+
+- **`datumAnchor` 落在 `src/lower/anchor.ts`（非 `mark.ts`）**：原文件 scope 写从 `mark.ts` 抽 `datumAnchor`。实际抽进独立 `anchor.ts`，由 `mark.ts` 与 `locate.ts` 共同 import——避免 `mark.ts → locate.ts → expand.ts → mark.ts` 循环依赖，且单一真源效果不变（point / interval-cartesian 与 lowering 逐点一致由二者同调 `datumAnchor` 保证）。
 
 ## 待决策点 🔻
 

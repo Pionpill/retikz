@@ -55,6 +55,7 @@ An id is the key to the low-level "connect" mechanism — a named element can be
 | Each mark layer | user-given `mark.id` → `<plotId>.<markId>`; otherwise `<plotId>.mark.<index>` |
 | Each series (line / area only) | `<plotId>.series.<series value>` |
 | A single datum (needs `datumIdField`) | `<plotId>.datum.<field value>` |
+| Axis / grid layer | user `guide.id` (axis layer only) → `<plotId>.<guideId>`; otherwise `<plotId>.<axis\|grid>.<dimension>` |
 
 One important boundary: the plot root is a **local namespace**. That means internal ids like `<plotId>.mark.0` and `.series.north` **do not escape the plot** — they are visible only inside it, for plot-local connections and locator addressing.
 
@@ -70,6 +71,7 @@ What gets written per level when `provenance` is on:
 - **root**: `{ source: 'plot', dataReference }`
 - **mark layer**: `{ source: 'plot', layer: 'mark', mark, markIndex }`
 - **series (line / area)**: written on each series Path, with an extra `series`
+- **axis / grid layer**: `{ source: 'plot', layer: 'axis' | 'grid', dimension }`
 - **datum** (with `datumProvenance`, point / interval / sector only): see below
 
 ### Per-datum meta and index semantics

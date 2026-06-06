@@ -1,6 +1,6 @@
 # ADR-01：scope-aware id 绑定 + meta 透传——下沉元素绑 `<plotId>.` 命名 id + 写来源 meta，让 plot 不再是丢了来源的几何黑盒
 
-- 状态：Proposed
+- 状态：Accepted
 - 决策日期：2026-06-07
 - 关联：[plot v0.1-alpha.5 roadmap](./roadmap.md) · [plot-design.md §7 anchor / §8.1 id 绑定与可连接性](../../../../../architecture/plot-design.md) · **core 依赖**：[core v0.3-alpha.4 ADR-08 meta provenance](../../../../core/v0/v0.3/v0.3-alpha.4/08-meta-provenance.md)（已回灌 next-plot）· **预留来源**：[plot v0.1-alpha.1 ADR-01 根节点](../v0.1-alpha.1/01-plot-spec-root.md)（`id` / `meta` 字段位埋点）
 
@@ -37,7 +37,7 @@ root scope 是 `localNamespace`（alpha.1 就位）。core 语义（[scope.ts](.
 | **mark 层** | 每 mark 一个图层 `Scope` | 用户给 `mark.id` → `<plotId>.<markId>`；缺省合成 `<plotId>.mark.<markIndex>` | `{ source:'plot', layer:'mark', mark:<type>, markIndex }` |
 | **series（仅 line/area）** | 每条 series 一条 `Path`（现状结构）| `<plotId>.series.<seriesValueSlug>` | `{ …, series:<value> }`（写在 `Path.meta`）|
 | **datum**（opt-in）| 可见 mark 的 `Node`（point / interval / sector）| `<plotId>.datum.<idFieldValue>`（配 `datumIdField` 时）| 见下「datum 来源标识」（per-datum，`provenance` 开时）|
-| **guide 层** | 轴 / 网格 `Scope`（`guide.id` 已绑）| `guide.id` 加 `<plotId>.` 前缀 | `{ source:'plot', layer:'axis'\|'grid', dimension }` |
+| **guide 层** | 轴 / 网格 `Scope`（`guide.id` 已绑）| 用户 `guide.id`（仅 **axis** 层）→ `<plotId>.<guideId>`；缺省 / **grid** 层 → `<plotId>.<axis\|grid>.<dimension>`（grid 恒用结构 id，避免与 axis 的用户句柄撞） | `{ source:'plot', layer:'axis'\|'grid', dimension }` |
 
 **series 只在 line/area 有结构落点（P1 评审修正）**：现 lowering 对 point/interval/sector **按 color 分子 Scope（样式分层），不按 `mark.series` 分**（[mark.ts colorGroupedScope](../../../../../packages/plot/plot/src/lower/mark.ts)）；只有 line/area 多系列才是「每 series 一条 Path」（[mark.ts](../../../../../packages/plot/plot/src/lower/mark.ts)）。故 v0.1：
 
@@ -73,8 +73,8 @@ meta = {
 
 ### `<plotId>.` 前缀来源
 
-- root `node.id` **在** → 作 plotId：内部 id 带 `<plotId>.` 前缀、meta 带 `plotId`，路径稳定可寻址（plot-local）。
-- root `node.id` **缺** → 内部元素匿名（无合成 id），meta（若开）省 `plotId`；locator 按结构索引（markIndex / 行序）寻址，不依赖具名 id。
+- root `node.id` **在** → 作 plotId：内部 id 带 `<plotId>.` 前缀，路径稳定可寻址（plot-local）。**meta 不含 `plotId` key**——前缀已在 id 上、`dataReference` 标数据集，meta 无需再冗余 plotId。
+- root `node.id` **缺** → 内部元素匿名（无合成 id）；meta（若开）照常写、不含 plotId（与有 id 时一致）；locator 按结构索引（markIndex / 行序）寻址，不依赖具名 id。
 
 ```ts
 // lowering 产物示意（root.id='sales'，bar mark[0]，provenance + datumProvenance 开）
@@ -102,6 +102,12 @@ meta = {
 2. **守 §8.1 基数红线 + 默认零回归**——provenance 总开关默认关 ⇒ 默认产物逐字节等价 alpha.4；datum 级 id / meta 各自 opt-in，不给「默认万级注册 / 默认 O(rows) meta」留口子。
 3. **frame 单一真源**——locator 与 lowering 共用投影，命中预演的「位置一致」断言才有意义；抽取是 ADR-02 的前置。
 4. **纯消费 core 能力**——meta 走 ADR-08 既有通道、id 走既有 `Scope.id`/`Node.id`，plot 不反向改 core（守 AGENTS.md 子组边界）。
+
+## 实现期偏离（2026-06-07，Contract Auditor 对账后记）
+
+- **`sourceIndex` 经 symbol tag、`transform.ts` 未改**：原文件 scope 列 `transform.ts`「按需」改。实际用 `provenance.ts` 的 `SOURCE_INDEX` symbol 在 ingest 打标（object spread 跨 stack、sort 保 identity 自动存活），`transform.ts` 无需改动。
+- **provenance 启用判定收口在 expand**：`provenance / datumProvenance / datumIdField` 任一开即启用（后两者蕴含 provenance），统一在 `expandPlot` 判定。
+- **guide id 默认形 + axis-only 用户句柄**：见上表 guide 行（用户 `guide.id` 仅挂 axis 层、grid 恒结构 id）。
 
 ## 待决策点 🔻
 
@@ -144,7 +150,7 @@ prim?.meta;   // → { source:'plot', mark:'interval', markIndex:0, datum:0 }
 - root / mark / series scope 的 id 命名与 `<plotId>.` 前缀
 - layer / series meta 内容；per-datum meta 开关行为
 - datumIdField 绑 `Node.id`；缺省不绑（产物等价 alpha.4）
-- 无 root id 时退回匿名 + meta 省 plotId
+- 无 root id 时退回匿名（无合成 id）；meta 一律不含 plotId key
 - cartesian / polar 双系下 id / meta 一致
 - core ADR-08 通道连通：含 meta 的 lowering 产物经 `compileToScene` → Scene 图元带 meta
 
@@ -214,7 +220,7 @@ prim?.meta;   // → { source:'plot', mark:'interval', markIndex:0, datum:0 }
 **边界（≥ 2）**：
 
 - `provenance_off_byte_identical`：默认（`provenance` 关）→ lowering 产物**逐字节等价 alpha.4**（无任何 meta / 合成 id key）
-- `no_root_id_anonymous`：`provenance:true` 但 root 无 id → 内部 scope 匿名（无合成 id）、meta 省 plotId、locator 按结构索引仍可寻址
+- `no_root_id_anonymous`：`provenance:true` 但 root 无 id → 内部 scope 匿名（无合成 id）、meta 不含 plotId key、locator 按结构索引仍可寻址
 - `series_value_slug`：series 值非串 / 含 `.` → id 路径确定性 slug；slug 冲突 → fail loud
 - `transformed_vs_source_index`：spec 带 sort transform → datum meta 的 `transformedIndex`=渲染序、`sourceIndex`=原 dataset 行序，二者不同且都正确
 
