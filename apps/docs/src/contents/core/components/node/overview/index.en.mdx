@@ -25,61 +25,6 @@ import { Node } from '@retikz/react';
 
 Choose the form by the role in the diagram: flowchart nodes usually use the default rectangle + `padding`; plain text labels use `stroke="none"` / `fill="none"`; button-like nodes add `roundedCorners` + `minimumWidth`; annotation cards fit multi-line `text` + `align="left"`; and if you only need a reference point with no visible shape, use [Coordinate](/core/components/node/coordinate) instead.
 
-### Shape polymorphism
-
-Shapes have two faces in retikz — drawn as a Path with sugar, or used as a Node boundary; see [Shapes](/core/components/shapes) for the full definition. This section covers the Node-shape side.
-
-`shape` picks the visual shape in two forms:
-
-- **Bare string** (parameterless shapes): `'rectangle'` (default) / `'circle'` / `'ellipse'` / `'diamond'` / `'polygon'` / `'sector'` / `'arc'` / `'star'`, or a custom name registered via `<Layout shapes>` / `CompileOptions.shapes`.
-- **`{ type, params }` object** (parametric shapes): when a shape needs extra geometry (sides / inner & outer radii / start & end angles…), pick it with `type` and pass the params.
-
-Either way, the node works as an attachable target — connecting lines clip to that shape's boundary automatically.
-
-Shapes split into two families by where their size comes from: **text-container shapes** (rectangle / circle / ellipse / polygon / diamond) wrap "text + padding" and are sized by the text; **params-driven geometric shapes** (sector / arc / star) are sized by radii / angles, independent of the text, and work as attachable graphic glyphs.
-
-<ComponentPreview name="node-shapes" size="md" />
-
-<ComponentPreview name="node-shape-params" size="md" />
-
-For each shape's parameters, anchors, and examples, see its shape page:
-
-| shape | form | docs |
-| --- | --- | --- |
-| rectangle | default / `'rectangle'` | [Rectangle](/core/components/shapes/rectangle) |
-| circle / ellipse | `'circle'` / `'ellipse'` | [Circle / Ellipse](/core/components/shapes/circle-ellipse) |
-| sector / arc | `{ type:'sector' \| 'arc', params }` | [Arc / Sector](/core/components/shapes/arc-sector) |
-| polygon / diamond | `{ type:'polygon', params }` / `'diamond'` | [Polygon](/core/components/shapes/polygon) |
-| star | `{ type:'star', params }` | [Star](/core/components/shapes/star) |
-
-`shape` also accepts registered names beyond the built-ins (hexagon / cylinder / cloud…) — any string passes schema validation, the definition is injected via `CompileOptions.shapes` / `<Layout shapes>`, and unregistered names throw at compile time. Parametric registered shapes pass their params through `{ type, params }`. See [Custom Shapes](/core/reference/extending/shape-registry).
-
-### Connection surface (boundary)
-
-By default, edges clip against the node's visual shape boundary. When you want edges to meet a different shape without changing the node's real footprint, set `boundary` to pick an independent "connection surface". The common case is concave shapes like stars and polygons — you keep the spiky look but want edges to arrive evenly as if meeting a circle, instead of diving into the notches.
-
-`boundary` takes the same forms as `shape`. The four parameter-free values below are the common ones; any registered shape can also be borrowed:
-
-| Value | Connection surface | Effect |
-| --- | --- | --- |
-| `'shape'` (default) | The visual shape itself | Edges clip to the real outline — stars / polygons land on tips or dive into notches |
-| `'circle'` | A true circle, radius = the node's larger bounding-box half-axis | Edges meet it evenly all around, unaffected by notches / rotation |
-| `'rectangle'` | The bounding box (AABB) | Edges clip to the horizontal / vertical box sides |
-| `'ellipse'` | An ellipse matching the AABB aspect ratio | Edges clip to the ellipse, stretched with the aspect ratio |
-| Registered shape name / `{ type, params }` | Borrows that shape's boundary over the node's bounding box | Borrowing parametric shapes (`polygon` / `star`…) needs explicit params; auto-fitting size to the AABB is out of scope |
-
-The same five-point star set to four surfaces, each with one edge clipping in from the lower-left at 45° — `shape` lands on the real star outline (innermost), `rectangle` reaches the bounding-box corner (outermost), and `circle` / `ellipse` sit in between (close together for a near-square node). A diagonal is needed to tell them apart: on a vertical / horizontal axis an inscribed ellipse always meets the rectangle at the same point and the circle takes the larger half-axis, so the three coincide there:
-
-<ComponentPreview name="node-boundary-surfaces" size="md" />
-
-The connection surface **never changes the node footprint**: bounding box, visual shape, and layout position stay the same — it only changes where edges clip and how compass anchors resolve. Shape-specific anchors (such as a star's `tip-0`) and edge proportional points always resolve against the visual shape, regardless of `boundary`.
-
-In the example below the five-point star has `boundary="circle"`: the solid edge clips to the circumscribing circle by default, while the dashed edge with `boundary="shape"` on its endpoint clips to the real tip instead.
-
-<ComponentPreview name="node-boundary" size="sm" />
-
-To override a target node's `boundary` for a single edge, set `boundary` on the path endpoint object — it affects only that one endpoint and takes the same values as the node's `boundary`. See the endpoint `boundary` notes on [Path](/core/components/draw/path).
-
 ### Positioning
 
 #### Relative positioning
@@ -135,6 +80,61 @@ Since v0.2, `position` also accepts **`{ between, t }`**: place the node at a pr
 `distance` controls how far the label is pushed outward from the node border, still in retikz user units. It defaults to `12`; for example, `position: 'above', distance: 20` places the label further above the node's top border.
 
 <ComponentPreview name="node-label-distance" size="xs" />
+
+### Shape polymorphism
+
+Shapes have two faces in retikz — drawn as a Path with sugar, or used as a Node boundary; see [Shapes](/core/components/shapes) for the full definition. This section covers the Node-shape side.
+
+`shape` picks the visual shape in two forms:
+
+- **Bare string** (parameterless shapes): `'rectangle'` (default) / `'circle'` / `'ellipse'` / `'diamond'` / `'polygon'` / `'sector'` / `'arc'` / `'star'`, or a custom name registered via `<Layout shapes>` / `CompileOptions.shapes`.
+- **`{ type, params }` object** (parametric shapes): when a shape needs extra geometry (sides / inner & outer radii / start & end angles…), pick it with `type` and pass the params.
+
+Either way, the node works as an attachable target — connecting lines clip to that shape's boundary automatically.
+
+Shapes split into two families by where their size comes from: **text-container shapes** (rectangle / circle / ellipse / polygon / diamond) wrap "text + padding" and are sized by the text; **params-driven geometric shapes** (sector / arc / star) are sized by radii / angles, independent of the text, and work as attachable graphic glyphs.
+
+<ComponentPreview name="node-shapes" size="md" />
+
+<ComponentPreview name="node-shape-params" size="md" />
+
+For each shape's parameters, anchors, and examples, see its shape page:
+
+| shape | form | docs |
+| --- | --- | --- |
+| rectangle | default / `'rectangle'` | [Rectangle](/core/components/shapes/rectangle) |
+| circle / ellipse | `'circle'` / `'ellipse'` | [Circle / Ellipse](/core/components/shapes/circle-ellipse) |
+| sector / arc | `{ type:'sector' \| 'arc', params }` | [Arc / Sector](/core/components/shapes/arc-sector) |
+| polygon / diamond | `{ type:'polygon', params }` / `'diamond'` | [Polygon](/core/components/shapes/polygon) |
+| star | `{ type:'star', params }` | [Star](/core/components/shapes/star) |
+
+`shape` also accepts registered names beyond the built-ins (hexagon / cylinder / cloud…) — any string passes schema validation, the definition is injected via `CompileOptions.shapes` / `<Layout shapes>`, and unregistered names throw at compile time. Parametric registered shapes pass their params through `{ type, params }`. See [Custom Shapes](/core/reference/extending/shape-registry).
+
+### Connection surface (boundary)
+
+By default, edges clip against the node's visual shape boundary. When you want edges to meet a different shape without changing the node's real footprint, set `boundary` to pick an independent "connection surface". The common case is concave shapes like stars and polygons — you keep the spiky look but want edges to arrive evenly as if meeting a circle, instead of diving into the notches.
+
+`boundary` takes the same forms as `shape`. The four parameter-free values below are the common ones; any registered shape can also be borrowed:
+
+| Value | Connection surface | Effect |
+| --- | --- | --- |
+| `'shape'` (default) | The visual shape itself | Edges clip to the real outline — stars / polygons land on tips or dive into notches |
+| `'circle'` | A true circle, radius = the node's larger bounding-box half-axis | Edges meet it evenly all around, unaffected by notches / rotation |
+| `'rectangle'` | The bounding box (AABB) | Edges clip to the horizontal / vertical box sides |
+| `'ellipse'` | An ellipse matching the AABB aspect ratio | Edges clip to the ellipse, stretched with the aspect ratio |
+| Registered shape name / `{ type, params }` | Borrows that shape's boundary over the node's bounding box | Borrowing parametric shapes (`polygon` / `star`…) needs explicit params; auto-fitting size to the AABB is out of scope |
+
+The same five-point star set to four surfaces, each with one edge clipping in from the lower-left at 45° — `shape` lands on the real star outline (innermost), `rectangle` reaches the bounding-box corner (outermost), and `circle` / `ellipse` sit in between (close together for a near-square node). A diagonal is needed to tell them apart: on a vertical / horizontal axis an inscribed ellipse always meets the rectangle at the same point and the circle takes the larger half-axis, so the three coincide there:
+
+<ComponentPreview name="node-boundary-surfaces" size="sm" />
+
+The connection surface **never changes the node footprint**: bounding box, visual shape, and layout position stay the same — it only changes where edges clip and how compass anchors resolve. Shape-specific anchors (such as a star's `tip-0`) and edge proportional points always resolve against the visual shape, regardless of `boundary`.
+
+In the example below the five-point star has `boundary="circle"`: the solid edge clips to the circumscribing circle by default, while the dashed edge with `boundary="shape"` on its endpoint clips to the real tip instead.
+
+<ComponentPreview name="node-boundary" size="sm" />
+
+To override a target node's `boundary` for a single edge, set `boundary` on the path endpoint object — it affects only that one endpoint and takes the same values as the node's `boundary`. See the endpoint `boundary` notes on [Path](/core/components/draw/path).
 
 ### Styling
 
