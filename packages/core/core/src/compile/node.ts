@@ -209,6 +209,8 @@ export type NodeLayout = {
   labels?: Array<NodeLabelLayout>;
   /** 节点默认连接面（来自 IR `node.boundary`；undefined = 'shape'）；path 端点 boundary 可覆盖 */
   boundary?: IRBoundary;
+  /** provenance 元数据（来自 IR `node.meta`）；emit 时原样 stamp 到 node 的 top-level 图元，renderer 忽略 */
+  meta?: IRJsonObject;
   /** 构建本 layout 的 shape 注册表引用——借用连接面（borrowed boundary）查表用 */
   shapes: Record<string, ShapeDefinition>;
 };
@@ -640,6 +642,7 @@ export const layoutNode = (
     opacity: node.opacity,
     labels,
     boundary: node.boundary,
+    meta: node.meta,
     shapes,
   };
 };
@@ -808,11 +811,16 @@ export const emitNodePrimitives = (
     if (layout.id !== undefined) {
       for (const prim of shapePrims) prim.id = layout.id;
     }
+    // meta provenance 与 id 同款：原样复制到每个平铺 shape 图元（label / pin 不 stamp）
+    if (layout.meta !== undefined) {
+      for (const prim of shapePrims) prim.meta = layout.meta;
+    }
     return inner;
   }
   // 带文本 / rotate Node：user id 落到单层 GroupPrim（top-level emit 图元），子图元不重复 stamp。
   const group: GroupPrim = { type: 'group', children: inner };
   if (layout.id !== undefined) group.id = layout.id;
+  if (layout.meta !== undefined) group.meta = layout.meta;
   if (layout.rotateDeg !== 0) {
     group.transforms = [
       {

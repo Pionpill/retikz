@@ -1,3 +1,4 @@
+import type { IRJsonObject } from '../ir/json';
 import type { PaintValue } from './paint';
 
 /** 矩形原语 */
@@ -6,6 +7,8 @@ export type RectPrim = {
   type: 'rect';
   /** 稳定挂点 id：compile 从 IR 元素 user id stamp，供 renderer emit data-retikz-id / canvas hit-test */
   id?: string;
+  /** provenance 元数据：compile 从 IR 元素（node / path / scope）的 `meta` 原样 stamp，renderer 忽略（不进 DOM），交互层 / 工具链从 Scene 读 */
+  meta?: IRJsonObject;
   /** 左上角横坐标 */
   x: number;
   /** 左上角纵坐标 */

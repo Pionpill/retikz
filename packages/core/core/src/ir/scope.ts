@@ -3,6 +3,7 @@ import { ClipSpecSchema, type IRClipSpec } from './clip';
 import type { IRComposite } from './composite';
 import type { IRCoordinate } from './coordinate';
 import { FontSchema } from './font';
+import { type IRJsonObject, JsonObjectSchema } from './json';
 import { type IRPaintSpec, PaintSpecSchema } from './paint';
 import { type IRNode, NodeSchema } from './node';
 import { type IRPath, PathSchema } from './path';
@@ -26,6 +27,7 @@ export const NodeDefaultSchema = NodeSchema.omit({
   text: true,
   label: true,
   zIndex: true,
+  meta: true,
 }).strict();
 
 /**
@@ -38,6 +40,7 @@ export const PathDefaultSchema = PathSchema.omit({
   arrow: true,
   arrowDetail: true,
   zIndex: true,
+  meta: true,
 }).strict();
 
 /**
@@ -111,6 +114,7 @@ export type IRScope = {
   resetStyle?: boolean | Array<StyleChannel>;
   zIndex?: number;
   clip?: IRClipSpec;
+  meta?: IRJsonObject;
   children: Array<IRNode | IRPath | IRCoordinate | IRScope | IRComposite>;
 };
 
@@ -226,6 +230,9 @@ export const ScopeSchema = z
       ),
     clip: ClipSpecSchema.optional().describe(
       'Clip region (rect / circle / ellipse / polygon, in scope-local coords); when set, all children of this scope are clipped to it. Compiled into a renderer-agnostic ClipResource referenced via the group clipRef.',
+    ),
+    meta: JsonObjectSchema.optional().describe(
+      'Opaque provenance metadata carried by this element (e.g. a Tier 2 lowering tagging which datum / series / layer it came from). Provenance passthrough: preserved verbatim into the Scene primitive(s) this element emits, ignored by renderers, and never interpreted by the compiler — it does not affect layout, connection, style, or bounding box. Must be a JSON object (fully serializable). Not inherited across scopes; not part of the every-X style defaults.',
     ),
     children: z
       .array(

@@ -1,3 +1,4 @@
+import type { IRJsonObject } from '../ir/json';
 import type { ScenePrimitive } from './scene';
 
 /** Translate transform：沿 x / y 平移（user units） */
@@ -47,6 +48,8 @@ export type GroupPrim = {
   type: 'group';
   /** 稳定挂点 id：compile 从 IR 元素 user id stamp，供 renderer emit data-retikz-id / canvas hit-test */
   id?: string;
+  /** provenance 元数据：compile 从 IR 元素（node / path / scope）的 `meta` 原样 stamp，renderer 忽略（不进 DOM），交互层 / 工具链从 Scene 读 */
+  meta?: IRJsonObject;
   /** 结构化变换序列，按数组顺序应用；undefined / 空数组表示无变换 */
   transforms?: Array<Transform>;
   /**

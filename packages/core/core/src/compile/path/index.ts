@@ -985,6 +985,8 @@ export const emitPathPrimitive = (
       // 水合挂点：rotate / scale 包裹时 user id 落到最外层 GroupPrim（唯一 top-level emit 图元），
       // 内层主体 primitive 不再 stamp。无 user id 时保持 undefined。
       if (path.id !== undefined) group.id = path.id;
+      // meta provenance 与 id 同款落点：落最外层 GroupPrim，内层不重复
+      if (path.meta !== undefined) group.meta = path.meta;
       // layout 据变换后 bbox：把当前 points 经同一变换链投影后回收（应用顺序与 GroupPrim 渲染一致）
       const transformedPoints = points.map(p => applyTransformChain(p, transforms));
       // scale × 坐标可能把 finite 输入放大溢出成 Infinity；非 finite 会污染 layout（round-trip 失真）
@@ -999,5 +1001,7 @@ export const emitPathPrimitive = (
   // 水合挂点：无 rotate / scale 包裹时把 user id stamp 到 path 主体 primitive（PathPrim，或多 sub-path
   // 箭头时的 GroupPrim）；label / mark primitive 不重复 stamp。无 user id 时保持 undefined。
   if (path.id !== undefined) primitive.id = path.id;
+  // meta provenance 与 id 同款落点：落 path 主体 primitive，label / mark 不重复
+  if (path.meta !== undefined) primitive.meta = path.meta;
   return { primitives: bodyPrims, points };
 };
