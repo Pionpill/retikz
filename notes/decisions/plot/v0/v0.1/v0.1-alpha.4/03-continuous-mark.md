@@ -79,13 +79,14 @@ export const AreaMarkSchema = z.object({
 3. **`closed` 是雷达的最小增量**：一个布尔 + 尾部闭合 step，复用既有投影；不为雷达另立 mark。
 4. **area 复用 line 投影**：area = 上沿（line）+ baseline 回边，最大化复用、cartesian/polar 同构。
 
-## 待决策点 🔻
+## 待决策点 🔻（已冻结 2026-06-06，按人工 ack）
 
-- **弦 vs 弧（已定）**：分类角轴（band/point）与 `closed` 雷达走弦（不采样）；仅**连续角轴**（linear/time）采样、且在 **scale 后角度空间**插值（非原始数据空间）。剩余开放：**采样密度**——固定 N（如每段 16 点，倾向）vs 按角度跨度自适应（角差大才密采）vs 暴露 `samples` prop。
-- **雷达 = closed line vs closed area**：填充雷达走「closed line + fill」（轮廓+填充一体）vs area baseline=圆心。倾向 **closed line + 可选 fill** 为主、area-to-center 作等价路径（ADR-02 roadmap 待决策点 radar 填充已提）。
-- **area baseline 形态**：常量 baseline（倾向，default 0）vs 双线 area（line↔line，band）。双线留后续。
-- **area / line series + polar**：多系列雷达（多边形叠放）几何按系列拆子 Path（沿用 alpha.3 多系列 line）。
-- **closed 在 cartesian 的语义**：cartesian + closed = 闭合多边形（合法但少用）→ 允许、不特判。
+- **弦 vs 弧 + 采样密度**：分类角轴（band/point）与 `closed` 雷达走弦（不采样）；仅**连续角轴**（linear/time）在 **scale 后角度空间**插值采样（非原始数据空间）。采样密度 → **固定 N**（每段定额采样，实现期取常量如 16），不暴露 `samples` prop、不做自适应（留后续）。
+- **雷达填充 → closed line + 可选 fill**（轮廓+填充一体）为主；area-to-center 作等价路径，不强制。
+- **area baseline → 常量 baseline**（默认 0），不做双线 area（line↔line band 留后续）。
+- **area / line series + polar → 按系列拆子 Path**（沿用 alpha.3 多系列 line）。
+- **closed 在 cartesian → 允许**（闭合多边形），不特判。
+- **数值字段 `.finite()`**（继承 ADR-01 B-1 教训）：`baseline` 等 IR 数值字段加 `.finite()`，防 Infinity 破坏 JSON round-trip。
 
 ## DSL 表面
 
@@ -149,7 +150,7 @@ line/area cartesian 投影回归、polar 段内采样（弧点落在圆上）、
 | `ir/mark.ts` | 加 | `AreaMarkSchema.type` | `z.literal(PlotMark.Area)` | — | 判别字段：线↔baseline 区域 |
 | `ir/mark.ts` | 加 | `AreaMarkSchema.order` | `z.string().min(1).optional()` | 数据序 | 连接顺序字段 |
 | `ir/mark.ts` | 加 | `AreaMarkSchema.series` | `z.string().min(1).optional()` | — | 多系列拆分字段 |
-| `ir/mark.ts` | 加 | `AreaMarkSchema.baseline` | `z.number().optional()` | `0` | 区域填充到的基线值 |
+| `ir/mark.ts` | 加 | `AreaMarkSchema.baseline` | `z.number().finite().optional()` | `0` | 区域填充到的基线值（.finite 防 Infinity，ADR-01 B-1 教训） |
 | `ir/mark.ts` | 加 | `AreaMarkSchema.closed` | `z.boolean().optional()` | `false` | 首尾相连（填充雷达） |
 | `ir/mark.ts` | 加 | `LineMarkSchema.closed` | `z.boolean().optional()` | `false` | 首尾相连（polar = 雷达多边形） |
 | `ir/mark.ts` | 改 | `MarkSchema` | union 加 `AreaMarkSchema` | — | mark union 扩 area |
