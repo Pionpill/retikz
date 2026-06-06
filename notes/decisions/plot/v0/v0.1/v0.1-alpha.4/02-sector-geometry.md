@@ -86,13 +86,13 @@ export const SectorMarkSchema = z.object({
 3. **累积守 transform 分层**：与 stack 同构、复用同一 op，杜绝 mark 内建 transform 的重复与破裂。
 4. **interval 与 sector 分工清晰**：半径编码值（玫瑰）vs 角度编码值（饼图）是两种语义，各归 interval / sector，不靠魔法参数混用。
 
-## 待决策点 🔻
+## 待决策点 🔻（已冻结 2026-06-06，按人工 ack）
 
-- **累积复用 stack vs 新增 cumulate transform**：倾向**泛化 stack**（x/groupBy 可选）——少一个 op、与堆叠柱同源。备选：新增 `cumulate` / `normalize` 变体（语义更直白，但与 stack 概念重叠）。若泛化 stack 让 describe 含混，则改新增。
-- **sector mark 角界字段命名**：复用 `y0`/`y1`（与堆叠 interval 一致，倾向）vs 专用 `startAngle`/`endAngle` 字段名（语义清晰但与 coordinate 的 startAngle/endAngle 同名易混）。
-- **sector mark 是否自动跑累积**：要求用户显式加 transform（与堆叠 interval 一致，倾向——分层显式、可组合）vs sector mark 缺省字段时自动累积 encoding.angle（省事但藏了 transform）。
-- **value 跨 baseline（负值径向柱）**：sector `outerRadius>innerRadius` 是 core 硬约束；负值 / 反向时 swap（倾向）或 reject。
-- **环图内半径来源**：用 ADR-01 `coordinate.innerRadius`（倾向，单一来源）vs sector mark 自带 innerRadius 覆盖。
+- **累积 → 泛化 alpha.3 `stack`**（`x`/`groupBy` 转可选，缺省单链累积），不新增 cumulate op：少一个 op、与堆叠柱同源。
+- **sector 角界字段命名 → 复用 `y0`/`y1`**（与堆叠 interval 同构、单一约定），不另起 startAngle/endAngle 字段名（避免与 coordinate 的同名混淆）。
+- **sector 累积触发 → primitive 显式 transform**（与堆叠 interval 一致、分层显式可组合）；DSL `<SectorMark>` 自动装配（ADR-05 已定，sugar 层）。
+- **value 跨 baseline（负值径向柱）→ swap**（保证 `outerRadius>innerRadius` 满足 core 硬约束），不 reject。
+- **环图内半径来源 → `coordinate.innerRadius`**（单一来源），sector mark 不自带 innerRadius 覆盖。
 
 ## DSL 表面
 
