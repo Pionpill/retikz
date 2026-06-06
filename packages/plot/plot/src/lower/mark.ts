@@ -1,7 +1,7 @@
-import type { IRChild, IRNode, IRNodeDefault, IRScope, IRStep } from '@retikz/core';
-import type { ExternalRow, Mark } from '../ir';
+import { type IRChild, type IRNode, type IRNodeDefault, type IRScope, type IRStep } from '@retikz/core';
+import { type ExternalRow, type Mark, PlotCoordinate } from '../ir';
 import { channelValue, compareByPath, isFiniteNumber, resolveFieldPath } from './field';
-import type { Projector } from './project';
+import type { CartesianFrame, CoordinateFrame } from './project';
 import { inferCategoryDomain } from './scale';
 
 /** 散点 glyph 默认直径（user units，已补偿 circle 外接） */
@@ -48,14 +48,29 @@ const pointStyle = (fill: string): IRNodeDefault => ({
   fill,
 });
 
+/**
+ * 按坐标系角色解析一行的位置通道值 → [primaryValue, secondaryValue]（坐标系无关）
+ * @description cartesian2D：primary=x、secondary=y；polar2D：primary←angle??x、secondary←radius??y。
+ *   投影交给 frame.project，mark 不感知 cartesian / polar 差异。笛卡尔下的 angle/radius 误用已在 expand 拦截。
+ */
+const resolveRolePosition = (mark: Mark, row: ExternalRow, frame: CoordinateFrame): [unknown, unknown] => {
+  if (frame.type === PlotCoordinate.Polar2D) {
+    const primary = channelValue(mark.encoding.angle ?? mark.encoding.x, row);
+    const secondary = channelValue(mark.encoding.radius ?? mark.encoding.y, row);
+    return [primary, secondary];
+  }
+  return [channelValue(mark.encoding.x, row), channelValue(mark.encoding.y, row)];
+};
+
 /** 柱 node 样式（rectangle + padding0 + 无描边，使 minimumWidth/Height 即真实柱尺寸） */
 const barStyle = (fill: string): IRNodeDefault => ({ shape: 'rectangle', padding: 0, strokeWidth: 0, fill });
 
-/** 散点：每行一个 circle Node */
-const lowerPoint = (mark: Mark, rows: Array<ExternalRow>, project: Projector, colorOf?: ColorOf): IRChild | null => {
+/** 散点：每行一个 circle Node（坐标系无关，经 frame.project 投影） */
+const lowerPoint = (mark: Mark, rows: Array<ExternalRow>, frame: CoordinateFrame, colorOf?: ColorOf): IRChild | null => {
   const placed: Array<{ color: string | undefined; node: IRNode }> = [];
   for (const row of rows) {
-    const point = project(mark, row);
+    const [primaryValue, secondaryValue] = resolveRolePosition(mark, row, frame);
+    const point = frame.project(primaryValue, secondaryValue);
     if (!point) continue;
     placed.push({ color: colorOf?.(row), node: { type: 'node', position: point } });
   }
@@ -70,13 +85,13 @@ const barLayer = (placed: Array<{ color: string | undefined; node: IRNode }>, co
   colorOf ? colorGroupedScope(placed, barStyle) : { type: 'scope', nodeDefault: barStyle(DEFAULT_FILL), children: placed.map(p => p.node) };
 
 /** 普通柱：x band 中心、宽 bandwidth、baseline→value */
-const lowerPlainBars = (mark: Mark, rows: Array<ExternalRow>, project: Projector, colorOf: ColorOf | undefined, bandwidth: number): IRChild | null => {
-  const yBase = project.yScale.coordinate(BAR_BASELINE);
+const lowerPlainBars = (mark: Mark, rows: Array<ExternalRow>, frame: CartesianFrame, colorOf: ColorOf | undefined, bandwidth: number): IRChild | null => {
+  const yBase = frame.secondary.coordinate(BAR_BASELINE);
   if (!Number.isFinite(yBase)) return null;
   const placed: Array<{ color: string | undefined; node: IRNode }> = [];
   for (const row of rows) {
-    const xCenter = project.xScale.coordinate(channelValue(mark.encoding.x, row));
-    const yValue = project.yScale.coordinate(channelValue(mark.encoding.y, row));
+    const xCenter = frame.primary.coordinate(channelValue(mark.encoding.x, row));
+    const yValue = frame.secondary.coordinate(channelValue(mark.encoding.y, row));
     if (!Number.isFinite(xCenter) || !Number.isFinite(yValue)) continue;
     placed.push({
       color: colorOf?.(row),
@@ -87,10 +102,10 @@ const lowerPlainBars = (mark: Mark, rows: Array<ExternalRow>, project: Projector
 };
 
 /** 分组柱（dodge）：band 内按系列切等分子带，系列 i 占第 i 子带 */
-const lowerDodgedBars = (mark: Mark, rows: Array<ExternalRow>, project: Projector, colorOf: ColorOf | undefined, bandwidth: number): IRChild | null => {
+const lowerDodgedBars = (mark: Mark, rows: Array<ExternalRow>, frame: CartesianFrame, colorOf: ColorOf | undefined, bandwidth: number): IRChild | null => {
   if (mark.type !== 'interval' || !mark.series) return null;
   const seriesField = mark.series;
-  const yBase = project.yScale.coordinate(BAR_BASELINE);
+  const yBase = frame.secondary.coordinate(BAR_BASELINE);
   if (!Number.isFinite(yBase)) return null;
   const seriesValues = inferCategoryDomain(rows.map(row => resolveFieldPath(row, seriesField)));
   const seriesRank = new Map(seriesValues.map((series, index) => [series, index] as const));
@@ -98,8 +113,8 @@ const lowerDodgedBars = (mark: Mark, rows: Array<ExternalRow>, project: Projecto
   const subWidth = bandwidth / subCount;
   const placed: Array<{ color: string | undefined; node: IRNode }> = [];
   for (const row of rows) {
-    const xCenter = project.xScale.coordinate(channelValue(mark.encoding.x, row));
-    const yValue = project.yScale.coordinate(channelValue(mark.encoding.y, row));
+    const xCenter = frame.primary.coordinate(channelValue(mark.encoding.x, row));
+    const yValue = frame.secondary.coordinate(channelValue(mark.encoding.y, row));
     if (!Number.isFinite(xCenter) || !Number.isFinite(yValue)) continue;
     const series = resolveFieldPath(row, seriesField);
     const index = (typeof series === 'string' || typeof series === 'number' ? seriesRank.get(series) : undefined) ?? 0;
@@ -113,7 +128,7 @@ const lowerDodgedBars = (mark: Mark, rows: Array<ExternalRow>, project: Projecto
 };
 
 /** 堆叠柱：读 stack transform 派生的 y0 / y1，柱从 y0 画到 y1（缺字段抛清晰错误） */
-const lowerStackedBars = (mark: Mark, rows: Array<ExternalRow>, project: Projector, colorOf: ColorOf | undefined, bandwidth: number): IRChild | null => {
+const lowerStackedBars = (mark: Mark, rows: Array<ExternalRow>, frame: CartesianFrame, colorOf: ColorOf | undefined, bandwidth: number): IRChild | null => {
   if (mark.type !== 'interval') return null;
   const y0Field = mark.y0Field ?? 'y0';
   const y1Field = mark.y1Field ?? 'y1';
@@ -124,9 +139,9 @@ const lowerStackedBars = (mark: Mark, rows: Array<ExternalRow>, project: Project
     if (!isFiniteNumber(v0) || !isFiniteNumber(v1)) {
       throw new Error(`lowerPlots: stacked interval requires numeric ${y0Field} / ${y1Field} fields (run the stack transform first)`);
     }
-    const xCenter = project.xScale.coordinate(channelValue(mark.encoding.x, row));
-    const top = project.yScale.coordinate(v1);
-    const bottom = project.yScale.coordinate(v0);
+    const xCenter = frame.primary.coordinate(channelValue(mark.encoding.x, row));
+    const top = frame.secondary.coordinate(v1);
+    const bottom = frame.secondary.coordinate(v0);
     if (!Number.isFinite(xCenter) || !Number.isFinite(top) || !Number.isFinite(bottom)) continue;
     placed.push({
       color: colorOf?.(row),
@@ -136,19 +151,21 @@ const lowerStackedBars = (mark: Mark, rows: Array<ExternalRow>, project: Project
   return placed.length === 0 ? null : barLayer(placed, colorOf);
 };
 
-/** 区间柱：按 arrangement / series 分派普通 / dodge / stack 三种几何 */
-const lowerInterval = (mark: Mark, rows: Array<ExternalRow>, project: Projector, colorOf?: ColorOf): IRChild | null => {
+/** 区间柱：按 arrangement / series 分派普通 / dodge / stack 三种几何（cartesian-only） */
+const lowerInterval = (mark: Mark, rows: Array<ExternalRow>, frame: CartesianFrame, colorOf?: ColorOf): IRChild | null => {
   if (mark.type !== 'interval') return null;
-  const bandwidth = project.xScale.bandwidth;
-  if (mark.arrangement === 'stack') return lowerStackedBars(mark, rows, project, colorOf, bandwidth);
-  if (mark.series) return lowerDodgedBars(mark, rows, project, colorOf, bandwidth);
-  return lowerPlainBars(mark, rows, project, colorOf, bandwidth);
+  const bandwidth = frame.primary.bandwidth;
+  if (mark.arrangement === 'stack') return lowerStackedBars(mark, rows, frame, colorOf, bandwidth);
+  if (mark.series) return lowerDodgedBars(mark, rows, frame, colorOf, bandwidth);
+  return lowerPlainBars(mark, rows, frame, colorOf, bandwidth);
 };
 
-/** 把一组数据行连成一条折线的 steps（按 order / 数据序）；<2 点返回 null */
-const buildLineSteps = (mark: Mark, rows: Array<ExternalRow>, project: Projector): Array<IRStep> | null => {
+/** 把一组数据行连成一条折线的 steps（按 order / 数据序）；<2 点返回 null（cartesian-only） */
+const buildLineSteps = (mark: Mark, rows: Array<ExternalRow>, frame: CartesianFrame): Array<IRStep> | null => {
   const ordered = mark.type === 'line' && mark.order ? [...rows].sort((a, b) => compareByPath(a, b, mark.order as string)) : rows;
-  const points = ordered.map(row => project(mark, row)).filter((point): point is [number, number] => point !== null);
+  const points = ordered
+    .map(row => frame.project(channelValue(mark.encoding.x, row), channelValue(mark.encoding.y, row)))
+    .filter((point): point is [number, number] => point !== null);
   if (points.length < 2) return null;
   return [
     { type: 'step', kind: 'move', to: points[0] },
@@ -156,8 +173,8 @@ const buildLineSteps = (mark: Mark, rows: Array<ExternalRow>, project: Projector
   ];
 };
 
-/** 折线：单线（常量 color → stroke）或多系列（series 拆多线、各取系列色） */
-const lowerLine = (mark: Mark, rows: Array<ExternalRow>, project: Projector, colorOf?: ColorOf): IRChild | null => {
+/** 折线：单线（常量 color → stroke）或多系列（series 拆多线、各取系列色）（cartesian-only） */
+const lowerLine = (mark: Mark, rows: Array<ExternalRow>, frame: CartesianFrame, colorOf?: ColorOf): IRChild | null => {
   if (mark.type !== 'line') return null;
   if (mark.series) {
     const seriesField = mark.series;
@@ -165,14 +182,14 @@ const lowerLine = (mark: Mark, rows: Array<ExternalRow>, project: Projector, col
     const paths: Array<IRChild> = [];
     for (const series of seriesValues) {
       const seriesRows = rows.filter(row => resolveFieldPath(row, seriesField) === series);
-      const steps = buildLineSteps(mark, seriesRows, project);
+      const steps = buildLineSteps(mark, seriesRows, frame);
       if (!steps) continue;
       const stroke = colorOf?.(seriesRows[0]) ?? DEFAULT_FILL;
       paths.push({ type: 'path', stroke, children: steps });
     }
     return paths.length === 0 ? null : { type: 'scope', pathDefault: { strokeWidth: LINE_STROKE_WIDTH }, children: paths };
   }
-  const steps = buildLineSteps(mark, rows, project);
+  const steps = buildLineSteps(mark, rows, frame);
   if (!steps) return null;
   const colorValue = mark.encoding.color?.value;
   const stroke = colorValue !== undefined ? String(colorValue) : DEFAULT_FILL;
@@ -185,8 +202,13 @@ const lowerLine = (mark: Mark, rows: Array<ExternalRow>, project: Projector, col
  *   一个 mark 会展成 N 个图元（N = 数据点数），任何能提到图层的东西——样式、默认值、共享上下文——都别逐元素重复写。
  *   color 编码时按颜色分子 Scope；series 把记录拆成多系列（多线 / 分组 / 堆叠柱）。无可绘制图元返回 null。
  */
-export const lowerMark = (mark: Mark, rows: Array<ExternalRow>, project: Projector, colorOf?: ColorOf): IRChild | null => {
-  if (mark.type === 'point') return lowerPoint(mark, rows, project, colorOf);
-  if (mark.type === 'interval') return lowerInterval(mark, rows, project, colorOf);
-  return lowerLine(mark, rows, project, colorOf);
+export const lowerMark = (mark: Mark, rows: Array<ExternalRow>, frame: CoordinateFrame, colorOf?: ColorOf): IRChild | null => {
+  // point 坐标系无关，经 frame.project 投影
+  if (mark.type === 'point') return lowerPoint(mark, rows, frame, colorOf);
+  // interval / line 暂仅笛卡尔（polar sector / 弯弧路径在 ADR-02 / ADR-03）
+  if (frame.type !== PlotCoordinate.Cartesian2D) {
+    throw new Error(`lowerPlots: mark "${mark.type}" is not yet supported under the polar2D coordinate system (only point is)`);
+  }
+  if (mark.type === 'interval') return lowerInterval(mark, rows, frame, colorOf);
+  return lowerLine(mark, rows, frame, colorOf);
 };

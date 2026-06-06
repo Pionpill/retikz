@@ -1,10 +1,11 @@
 import { type CompositeDefinition, type IRChild, type IRScope, defineComposite } from '@retikz/core';
-import { type ExternalDatasets, type Guide, type Mark, type OrdinalScale, PlotScale, type PlotSpec, PlotSpecSchema } from '../ir';
+import type { ZodType } from 'zod';
+import { type Channel, type ExternalDatasets, type Guide, type Mark, type OrdinalScale, PlotCoordinate, PlotScale, type PlotSpec, PlotSpecSchema, type Scale } from '../ir';
 import { channelValue, resolveFieldPath } from './field';
 import { type GuideContext, lowerGuide } from './guide';
-import { DEFAULT_FONT_SIZE, type Margins, type Rect, computePlotArea } from './layout';
+import { DEFAULT_FONT_SIZE, type Margins, type Rect, computePlotArea, computePolarFrame } from './layout';
 import { type ColorOf, lowerMark } from './mark';
-import { createCartesianProjector } from './project';
+import { type CoordinateFrame, createCartesianFrame, createPolarFrame } from './project';
 import { type TickSet, resolveOrdinalScale, resolvePositionScale } from './scale';
 import { applyTransforms } from './transform';
 
@@ -64,21 +65,20 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
 
   const coordinate = node.coordinate;
   const scaleByName = new Map(node.scales.map(scale => [scale.name, scale] as const));
-  const xScaleDef = scaleByName.get(coordinate.x);
-  const yScaleDef = scaleByName.get(coordinate.y);
-  if (!xScaleDef) {
-    throw new Error(`lowerPlots: coordinate.x references unknown scale "${coordinate.x}"`);
-  }
-  if (!yScaleDef) {
-    throw new Error(`lowerPlots: coordinate.y references unknown scale "${coordinate.y}"`);
-  }
+  const fontSize = options.fontSize ?? DEFAULT_FONT_SIZE;
 
-  // 收集某维所有 mark 的通道原始值（不预过滤）：连续 scale 内部过滤为有限数求 extent、分类 scale 按数据序去重推断 domain
-  const axisValues = (axis: 'x' | 'y'): Array<unknown> => {
+  // 收集某角色（位置 scale 名 + 通道角色）下所有 mark 的通道原始值（不预过滤）：
+  //   连续 scale 内部过滤为有限数求 extent、分类 scale 按数据序去重推断 domain。
+  // role 决定从哪个通道取值：cartesian 用 x/y；polar 用 angle??x / radius??y（mark 不写死笛卡尔）。
+  const collectValues = (
+    pick: (mark: Mark) => Channel | undefined,
+    includeBaseline: boolean,
+    stackAxis: boolean,
+  ): Array<unknown> => {
     const out: Array<unknown> = [];
     for (const mark of node.marks) {
       // 堆叠柱的 y 域取累积上 / 下界（来自 stack transform），而非每段原值
-      if (axis === 'y' && mark.type === 'interval' && mark.arrangement === 'stack') {
+      if (stackAxis && mark.type === 'interval' && mark.arrangement === 'stack') {
         const y0Field = mark.y0Field ?? 'y0';
         const y1Field = mark.y1Field ?? 'y1';
         for (const row of rows) {
@@ -86,56 +86,113 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
         }
         continue;
       }
-      const channel = mark.encoding[axis];
-      if (!channel) continue;
+      const channel = pick(mark);
+      if (channel === undefined) continue;
       for (const row of rows) {
         out.push(channelValue(channel, row));
       }
     }
-    // 柱从 baseline 0 起：把 0 纳入 y 域，保证连续 y 域容得下 baseline（即便所有值同号）
-    if (axis === 'y' && node.marks.some(mark => mark.type === 'interval')) out.push(0);
+    // 柱从 baseline 0 起：把 0 纳入域，保证连续域容得下 baseline（即便所有值同号）
+    if (includeBaseline && node.marks.some(mark => mark.type === 'interval')) out.push(0);
     return out;
   };
 
-  // 先按 domain 建 scale（range 暂用整图，后续按 plot area 改）；ticks 只依赖 domain + count，与 range 无关
-  const xScale = resolvePositionScale(xScaleDef, axisValues('x'), [0, width]);
-  const yScale = resolvePositionScale(yScaleDef, axisValues('y'), [height, 0]);
-
-  // 哪些维度有坐标轴（决定 margin / 是否算 ticks）；alpha.2 guide 仅 axis 类型，按 dimension 取
-  const guides = node.guides ?? [];
-  assertUniqueAxisDimension(guides);
-  const xAxis = guides.find(guide => guide.dimension === 'x');
-  const yAxis = guides.find(guide => guide.dimension === 'y');
-  const xTicks: TickSet | undefined = xAxis ? xScale.ticks(xAxis.tickCount) : undefined;
-  const yTicks: TickSet | undefined = yAxis ? yScale.ticks(yAxis.tickCount) : undefined;
-
-  // 由整图尺寸 + axis 占位缩出 plot area（无 axis → margin 全 0 → plot area = 整图，向后兼容）
-  const fontSize = options.fontSize ?? DEFAULT_FONT_SIZE;
-  const { plotArea } = computePlotArea(
-    width,
-    height,
-    { hasXAxis: !!xAxis, hasYAxis: !!yAxis, xLabels: xTicks?.labels ?? [], yLabels: yTicks?.labels ?? [] },
-    { fontSize, margin: options.margin },
-  );
-
-  // range 收敛到 plot area（y 屏幕向下，故倒置）；显式 range 的 scale 不覆盖——尊重用户手设
-  // 仅连续 scale 可带显式 range（band / point 的 range 始终派生）
-  const xHasExplicitRange = xScaleDef.type === PlotScale.Linear && xScaleDef.range !== undefined;
-  const yHasExplicitRange = yScaleDef.type === PlotScale.Linear && yScaleDef.range !== undefined;
-  if (!xHasExplicitRange) xScale.setRange([plotArea.x, plotArea.x + plotArea.width]);
-  if (!yHasExplicitRange) yScale.setRange([plotArea.y + plotArea.height, plotArea.y]);
-  const project = createCartesianProjector(xScale, yScale);
-
-  // guide 的轴线/网格框取 scale 的实际 range（而非 margin 算的 plotArea）：无显式 range 时两者相同，
-  // 有显式 range 时轴线/网格随实际绘制区走，与刻度/mark 严格对齐（不因显式 range 而错位）
-  const [xRangeStart, xRangeEnd] = xScale.range();
-  const [yRangeStart, yRangeEnd] = yScale.range();
-  const guideFrame: Rect = {
-    x: Math.min(xRangeStart, xRangeEnd),
-    y: Math.min(yRangeStart, yRangeEnd),
-    width: Math.abs(xRangeEnd - xRangeStart),
-    height: Math.abs(yRangeEnd - yRangeStart),
+  // 解析某角色绑定的 scale 定义；缺失抛清晰错误（沿用 coordinate.x/coordinate.angle 文案）
+  const requireScaleDef = (channel: 'x' | 'y' | 'angle' | 'radius', scaleName: string): Scale => {
+    const def = scaleByName.get(scaleName);
+    if (!def) throw new Error(`lowerPlots: coordinate.${channel} references unknown scale "${scaleName}"`);
+    return def;
   };
+
+  // 按坐标系解析出 CoordinateFrame（一次性、mark / guide 共用）+ guide 层。
+  // cartesian：x/y 角色绑 x/y scale、走 plotArea + axis guide；polar：angle/radius 角色、走 polar layout（ADR-01 不画 guide）。
+  let frame: CoordinateFrame;
+  const gridLayers: Array<IRScope> = [];
+  const axisLayers: Array<IRScope> = [];
+
+  if (coordinate.type === PlotCoordinate.Polar2D) {
+    // 笛卡尔下出现 angle/radius 通道才是误用；polar 下复用 x/y 合法。此处构造极坐标帧。
+    const angleScaleDef = requireScaleDef('angle', coordinate.angle);
+    const radiusScaleDef = requireScaleDef('radius', coordinate.radius);
+    // 角向值 ← angle ?? x；径向值 ← radius ?? y（默认复用 x/y，正中 (i) 投影整形）
+    const angleValues = collectValues(mark => mark.encoding.angle ?? mark.encoding.x, false, false);
+    const radiusValues = collectValues(mark => mark.encoding.radius ?? mark.encoding.y, true, true);
+    // polar layout：圆心 + outerRadius（ADR-01 不画角向轴 → 无标签留白）
+    const layout = computePolarFrame(width, height, { hasAngularAxis: false, angularLabels: [] }, { fontSize, margin: options.margin });
+    const innerRadiusUnits = coordinate.innerRadius * layout.outerRadius;
+    // 角向 range = [startAngle, endAngle] 度；径向 range = [innerRadius, outerRadius] user units
+    const angleScale = resolvePositionScale(angleScaleDef, angleValues, [coordinate.startAngle, coordinate.endAngle]);
+    const radiusScale = resolvePositionScale(radiusScaleDef, radiusValues, [innerRadiusUnits, layout.outerRadius]);
+    frame = createPolarFrame({
+      center: layout.center,
+      innerRadius: innerRadiusUnits,
+      outerRadius: layout.outerRadius,
+      startAngle: coordinate.startAngle,
+      endAngle: coordinate.endAngle,
+      primary: angleScale,
+      secondary: radiusScale,
+    });
+  } else {
+    // cartesian2D：x/y 角色绑 x/y scale。出现 angle/radius 通道 → reject（误用，多半写错坐标系）
+    for (const mark of node.marks) {
+      if (mark.encoding.angle !== undefined || mark.encoding.radius !== undefined) {
+        throw new Error('lowerPlots: angle / radius channels are only valid under the polar2D coordinate system, not cartesian2D');
+      }
+    }
+    const xScaleDef = requireScaleDef('x', coordinate.x);
+    const yScaleDef = requireScaleDef('y', coordinate.y);
+    const xScale = resolvePositionScale(xScaleDef, collectValues(mark => mark.encoding.x, false, false), [0, width]);
+    const yScale = resolvePositionScale(yScaleDef, collectValues(mark => mark.encoding.y, true, true), [height, 0]);
+
+    // 哪些维度有坐标轴（决定 margin / 是否算 ticks）；alpha.2 guide 仅 axis 类型，按 dimension 取
+    const guides = node.guides ?? [];
+    assertUniqueAxisDimension(guides);
+    const xAxis = guides.find(guide => guide.dimension === 'x');
+    const yAxis = guides.find(guide => guide.dimension === 'y');
+    const xTicks: TickSet | undefined = xAxis ? xScale.ticks(xAxis.tickCount) : undefined;
+    const yTicks: TickSet | undefined = yAxis ? yScale.ticks(yAxis.tickCount) : undefined;
+
+    // 由整图尺寸 + axis 占位缩出 plot area（无 axis → margin 全 0 → plot area = 整图，向后兼容）
+    const { plotArea } = computePlotArea(
+      width,
+      height,
+      { hasXAxis: !!xAxis, hasYAxis: !!yAxis, xLabels: xTicks?.labels ?? [], yLabels: yTicks?.labels ?? [] },
+      { fontSize, margin: options.margin },
+    );
+
+    // range 收敛到 plot area（y 屏幕向下，故倒置）；显式 range 的 scale 不覆盖——尊重用户手设
+    // 仅连续 scale 可带显式 range（band / point 的 range 始终派生）
+    const xHasExplicitRange = xScaleDef.type === PlotScale.Linear && xScaleDef.range !== undefined;
+    const yHasExplicitRange = yScaleDef.type === PlotScale.Linear && yScaleDef.range !== undefined;
+    if (!xHasExplicitRange) xScale.setRange([plotArea.x, plotArea.x + plotArea.width]);
+    if (!yHasExplicitRange) yScale.setRange([plotArea.y + plotArea.height, plotArea.y]);
+    frame = createCartesianFrame(xScale, yScale);
+
+    // guide 的轴线/网格框取 scale 的实际 range（而非 margin 算的 plotArea）：无显式 range 时两者相同，
+    // 有显式 range 时轴线/网格随实际绘制区走，与刻度/mark 严格对齐（不因显式 range 而错位）
+    const [xRangeStart, xRangeEnd] = xScale.range();
+    const [yRangeStart, yRangeEnd] = yScale.range();
+    const guideFrame: Rect = {
+      x: Math.min(xRangeStart, xRangeEnd),
+      y: Math.min(yRangeStart, yRangeEnd),
+      width: Math.abs(xRangeEnd - xRangeStart),
+      height: Math.abs(yRangeEnd - yRangeStart),
+    };
+
+    const guideContext: GuideContext = {
+      plotArea: guideFrame,
+      projectX: xScale,
+      projectY: yScale,
+      xTicks: xTicks ?? EMPTY_TICKS,
+      yTicks: yTicks ?? EMPTY_TICKS,
+      fontSize,
+    };
+    const lowered = guides.map(guide => lowerGuide(guide, guideContext));
+    for (const layer of lowered) {
+      if (layer.gridLayer) gridLayers.push(layer.gridLayer);
+      if (layer.axisLayer) axisLayers.push(layer.axisLayer);
+    }
+  }
 
   // 解析某 mark 的 color 编码 → 行→颜色串：常量 value 直用；字段过 ordinal scale（显式引用或自动合成默认配色）
   const resolveColor = (mark: Mark): ColorOf | undefined => {
@@ -168,21 +225,8 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
 
   // 每个 mark 下沉成一个图层 Scope（样式上提到 nodeDefault/pathDefault）；空图层（无可绘制点）丢弃
   const markLayers: Array<IRChild> = node.marks
-    .map(mark => lowerMark(mark, rows, project, resolveColor(mark)))
+    .map(mark => lowerMark(mark, rows, frame, resolveColor(mark)))
     .filter((layer): layer is IRChild => layer !== null);
-
-  // guide 下沉：每个 axis → 网格层（垫底）+ 轴层（压顶），刻度与 mark 共用同一投影器（严格对齐）
-  const guideContext: GuideContext = {
-    plotArea: guideFrame,
-    projectX: xScale,
-    projectY: yScale,
-    xTicks: xTicks ?? EMPTY_TICKS,
-    yTicks: yTicks ?? EMPTY_TICKS,
-    fontSize,
-  };
-  const lowered = guides.map(guide => lowerGuide(guide, guideContext));
-  const gridLayers = lowered.map(layer => layer.gridLayer).filter((layer): layer is IRScope => layer !== null);
-  const axisLayers = lowered.map(layer => layer.axisLayer).filter((layer): layer is IRScope => layer !== null);
 
   // z-order：所有网格层 → marks → 所有轴层（网格垫底、坐标轴压顶不被数据盖）
   const children: Array<IRChild> = [...gridLayers, ...markLayers, ...axisLayers];
@@ -201,7 +245,10 @@ export const lowerPlots = (
   options: LowerPlotsOptions = {},
 ): Array<CompositeDefinition> => [
   defineComposite({
-    schema: PlotSpecSchema,
+    // coordinate 的 startAngle/endAngle/innerRadius 带 .default()，使 schema 的 _input ≠ _output（默认值前后差），
+    // 与 core `CompositeDefinition.schema: ZodType<T>`（要求 input=output=T）的不变性冲突；expand 只消费 _output（= PlotSpec），
+    // 故按输出类型收窄 schema（运行时 parse 仍正常填默认，纯类型层修不变性）。
+    schema: PlotSpecSchema as ZodType<PlotSpec>,
     expand: (node: PlotSpec) => expandPlot(node, datasets, options),
   }),
 ];

@@ -102,3 +102,61 @@ export const computePlotArea = (
   }
   return { margins, plotArea };
 };
+
+/** computePolarFrame 输入：哪个维度有角向轴 + 角向刻度标签（估算外圈标签留白用） */
+export type PolarFrameInput = {
+  /** 是否有角向坐标轴（决定是否为外圈角向标签预留留白） */
+  hasAngularAxis: boolean;
+  /** 角向刻度标签（估算最宽标签、为外圈留白） */
+  angularLabels: ReadonlyArray<string>;
+};
+
+/** computePolarFrame 结果：圆心（屏幕坐标）+ 外半径（user units，整圆 bbox 内接） */
+export type PolarLayout = {
+  /** 圆心（plot area 中心，屏幕坐标） */
+  center: [number, number];
+  /** 外半径（user units，可用外半径，已减角向标签留白） */
+  outerRadius: number;
+};
+
+/**
+ * 由整图尺寸估算极坐标布局：圆心 = plot area 中心、外半径 = 可用尺寸减角向标签留白
+ * @description ADR-01 用整圆 bbox 定 center / outerRadius（partial-arc 紧包围留后续）。
+ *   有角向轴时为外圈刻度标签预留一圈留白（按最宽标签估），让标签不溢出画布；ADR-04 只消费本 frame、不回写 layout。
+ *   margin 之大 → 外半径 ≤ 0 → 抛清晰错误，不静默出退化坏图。
+ */
+export const computePolarFrame = (
+  width: number,
+  height: number,
+  input: PolarFrameInput,
+  options: PlotAreaOptions = {},
+): PolarLayout => {
+  const fontSize = options.fontSize ?? DEFAULT_FONT_SIZE;
+  // 角向标签贴外圈一圈，最坏在左右两侧吃掉一个最宽标签宽 + 一个字高（顶/底），故四向各按需预留
+  const labelReserve = input.hasAngularAxis
+    ? Math.max(maxLabelWidth(input.angularLabels, fontSize), fontSize) + AXIS_TICK_LENGTH + AXIS_LABEL_GAP
+    : 0;
+  const explicit: Partial<Margins> = options.margin ?? {};
+  const margins: Margins = {
+    top: explicit.top ?? labelReserve,
+    right: explicit.right ?? labelReserve,
+    bottom: explicit.bottom ?? labelReserve,
+    left: explicit.left ?? labelReserve,
+  };
+  for (const side of ['top', 'right', 'bottom', 'left'] as const) {
+    const value = margins[side];
+    if (!Number.isFinite(value) || value < 0) {
+      throw new Error(`lowerPlots: margin.${side} must be a non-negative finite number, got ${value}`);
+    }
+  }
+  const availableWidth = width - margins.left - margins.right;
+  const availableHeight = height - margins.top - margins.bottom;
+  const outerRadius = Math.min(availableWidth, availableHeight) / 2;
+  if (outerRadius <= 0) {
+    throw new Error(`lowerPlots: polar label reserve / margins exceed the ${width}×${height} canvas, leaving no radius`);
+  }
+  return {
+    center: [margins.left + availableWidth / 2, margins.top + availableHeight / 2],
+    outerRadius,
+  };
+};
