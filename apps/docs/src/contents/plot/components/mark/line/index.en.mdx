@@ -1,0 +1,62 @@
+---
+title: LineMark
+description: Draw line charts with <LineMark>: connect points in order, support multiple series; add closed under polar for a radar.
+---
+
+`<LineMark>` connects data points into a line in order. `x` / `y` bind the position fields, `order` decides the connection order (defaults to data array order). Set `series` to split into multiple lines, set `closed` to join ends — under polar that's a radar.
+
+## Usage
+
+```tsx
+import { Plot, LineMark } from '@retikz/plot-react';
+```
+
+```tsx
+<Plot data={revenue}>
+  <LineMark x="month" y="revenue" order="month" />
+</Plot>
+```
+
+Set `order` explicitly — otherwise the line follows data row order and jumps around when that order changes.
+
+## Examples
+
+### Basic line
+
+The simplest single line: `x` / `y` bind fields, `order` sets the connection order.
+
+<ComponentPreview name="line-basic" sourceFiles={['line-basic.data.ts']} />
+
+### Multiple series
+
+Set `series` to a field and the data splits into one line per distinct value, each picking up its own color.
+
+<ComponentPreview name="line-series" sourceFiles={['line-series.data.ts']} />
+
+<p className="text-sm text-muted-foreground">Two lines split by city, colored automatically.</p>
+
+### Radar
+
+`<Plot coordinate="polar2D">` with `<LineMark closed />`: the last point connects back to the first into a wireframe polygon, dimensions spread evenly along the angular axis and values map to the radius — a wireframe radar. For a filled radar use [`<AreaMark closed />`](/plot/components/mark/area).
+
+<ComponentPreview name="line-radar" sourceFiles={['line-radar.data.ts']} />
+
+<p className="text-sm text-muted-foreground">closed joins the ends; under polar that's a wireframe radar.</p>
+
+## API
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `x` | `string` | — | Field path for the x channel (angular under polar) |
+| `y` | `string` | — | Field path for the y channel (radial under polar) |
+| `order` | `string?` | data order | Field driving the connection order |
+| `series` | `string?` | — | Series field: split into multiple lines; omit for a single line |
+| `closed` | `boolean?` | `false` | Connect the last point back to the first into a polygon (a radar outline under polar) |
+| `color` | `string?` | `series` | Color field (auto ordinal color scale); falls back to `series` |
+| `id` | `string?` | — | Optional handle (reserved, not yet resolved) |
+
+## Related
+
+- [PointMark](/plot/components/mark/point) — overlay markers on each observation
+- [AreaMark](/plot/components/mark/area) — filled lines / filled radar
+- [Coordinates](/plot/grammar/coordinate) — the polar switch and channel roles

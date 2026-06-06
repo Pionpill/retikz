@@ -1,0 +1,55 @@
+---
+title: 面积
+description: 用 <AreaMark> 画面积图：上沿折线与 baseline 围成填充区域；在 polar 下 baseline 取 0 即填充雷达。
+---
+
+`<AreaMark>` 在折线的基础上多了一条回边：上沿是 `x` / `y` 连成的折线，下沿贴附 `baseline`（缺省 `0`），两者围成一块可填充的区域（始终经回边闭合）。切到 polar 坐标系、`baseline` 取 `0` 时，回边收到圆心，区域便从圆心填到外沿——填充版雷达。
+
+## 用法
+
+```tsx
+import { Plot, AreaMark } from '@retikz/plot-react';
+```
+
+```tsx
+<Plot data={activity}>
+  <AreaMark x="day" y="users" order="day" />
+</Plot>
+```
+
+`x` / `y` 绑位置字段，`order` 决定上沿的连接顺序。默认下沿是 `0`，需要别的基线时给 `baseline`。
+
+## 例子
+
+### 基础面积
+
+上沿折线与基线 `0` 围成填充区域，适合强调累计量或趋势的“体量”。
+
+<ComponentPreview name="area-basic" sourceFiles={['area-basic.data.ts']} />
+
+### 填充雷达
+
+`<Plot coordinate="polar2D">` 下的 `<AreaMark closed />`：各维度沿角向均布、值映射到半径连成上沿，回边贴 `baseline`；`baseline` 缺省 `0` 时回边收到圆心，区域从圆心填到外沿即填充雷达。`closed` 让上沿走弦（连续角轴下不采样弯弧、保持直边轮廓）。想要纯线框轮廓用 [`<LineMark closed />`](/plot/components/mark/line)，给它叠 `fill` 也能得到填充雷达。
+
+<ComponentPreview name="area-radar" sourceFiles={['area-radar.data.ts']} />
+
+<p className="text-sm text-muted-foreground">baseline 取 0 时回边收到圆心，从圆心填到外沿即填充雷达。</p>
+
+## API
+
+| 属性 | 类型 | 默认值 | 描述 |
+| --- | --- | --- | --- |
+| `x` | `string` | — | 绑 x 通道的字段路径（polar 下作角向） |
+| `y` | `string` | — | 绑 y 通道的字段路径（polar 下作径向） |
+| `order` | `string?` | 数据顺序 | 驱动上沿连接顺序的字段 |
+| `baseline` | `number?` | `0` | 回边贴附的基线值 |
+| `closed` | `boolean?` | `false` | 上沿走弦、连续角轴下不采样弯弧（直边轮廓）；面积始终由 baseline 回边闭合填充 |
+| `series` | `string?` | — | 系列字段：拆成多块面积；缺省单块 |
+| `color` | `string?` | `series` | 颜色字段（自动 ordinal 色 scale）；缺省取 `series` |
+| `id` | `string?` | — | 可选句柄（预留，暂不解析） |
+
+## 相关
+
+- [折线](/plot/components/mark/line) —— `<LineMark closed />` 是线框雷达
+- [坐标系](/plot/grammar/coordinate) —— polar 开关与角色映射
+- [扇形](/plot/components/mark/sector) —— 饼图 / 环图

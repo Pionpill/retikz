@@ -57,4 +57,22 @@ describe('ChannelSchema / EncodingSchema (ADR-05)', () => {
   it('color_channel_both_field_value_rejected', () => {
     expect(() => ChannelSchema.parse({ field: 'c', value: '#000', scale: 'col' })).toThrow();
   });
+
+  // x / y 必填（无 angle/radius：x/y 是唯一位置通道，坐标系重解释——polar 下 x→angle、y→radius）
+  it('encoding_missing_x_rejected', () => {
+    expect(() => EncodingSchema.parse({ y: { field: 'value' } })).toThrow();
+  });
+
+  it('encoding_missing_y_rejected', () => {
+    expect(() => EncodingSchema.parse({ x: { field: 'theta' } })).toThrow();
+  });
+
+  it('encoding_empty_rejected', () => {
+    expect(() => EncodingSchema.parse({})).toThrow();
+  });
+
+  it('encoding_json_round_trip', () => {
+    const e = EncodingSchema.parse({ x: { field: 'theta' }, y: { field: 'value' }, color: { field: 'g', scale: 'col' } });
+    expect(EncodingSchema.parse(JSON.parse(JSON.stringify(e)))).toEqual(e);
+  });
 });

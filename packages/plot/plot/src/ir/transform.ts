@@ -29,9 +29,17 @@ export const SortTransformSchema = z
 export const StackTransformSchema = z
   .object({
     kind: z.literal(PlotTransform.Stack).describe('Discriminator: cumulative stacking within each x group'),
-    x: z.string().min(1).describe('Grouping key field: rows sharing this value stack together (the categorical axis field)'),
+    x: z
+      .string()
+      .min(1)
+      .optional()
+      .describe('Grouping key field: rows sharing this value stack together (the categorical axis field); omit to accumulate all rows into a single cumulative chain (e.g. pie wedges)'),
     y: z.string().min(1).describe('Numeric value field that is accumulated within each x group'),
-    groupBy: z.string().min(1).describe('Series field: ordering of series within each stack (one stacked segment per distinct value)'),
+    groupBy: z
+      .string()
+      .min(1)
+      .optional()
+      .describe('Series field ordering segments within each stack (one segment per distinct value); omit to accumulate in data row order'),
     startField: z.string().min(1).optional().describe('Output field for the lower bound of each segment; default "y0"'),
     endField: z.string().min(1).optional().describe('Output field for the upper bound of each segment; default "y1"'),
   })

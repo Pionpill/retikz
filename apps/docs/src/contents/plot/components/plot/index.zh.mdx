@@ -1,0 +1,72 @@
+---
+title: 图表容器
+description: <Plot> 是图表容器：接收裸数据与尺寸，装配 mark / guide 子组件，并通过 coordinate 选择平面或极坐标系。
+---
+
+`<Plot>` 是所有图表的根容器。它接收 `data`（裸数据行数组）和显示尺寸，把内部的 `<LineMark>` / `<BarMark>` / `<SectorMark>` / `<Axis>` 等子组件装配成一张图。`coordinate` 选坐标系：缺省平面直角，`"polar2D"` 切极坐标。数据不进 IR，只在编译期注入。
+
+## 用法
+
+```tsx
+import { Plot, BarMark } from '@retikz/plot-react';
+```
+
+```tsx
+<Plot data={revenue} width={360} height={220}>
+  <BarMark x="quarter" y="value" />
+</Plot>
+```
+
+`width × height` 是含坐标轴与刻度标签的外框。子组件只声明字段映射，不写像素坐标。
+
+## 例子
+
+### 坐标系切换
+
+`coordinate` 是图表级开关——同一份 `children`，缺省是 cartesian，加 `"polar2D"` 即极坐标。mark 不分两套，坐标系决定几何。
+
+<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+  <ComponentPreview name="plot-cartesian" sourceFiles={['plot-cartesian.data.ts']} size="sm" />
+  <ComponentPreview name="plot-polar" sourceFiles={['plot-cartesian.data.ts']} size="sm" />
+</div>
+
+<p className="text-sm text-muted-foreground">左：缺省 cartesian；右：仅加 <code>coordinate="polar2D"</code>。</p>
+
+`coordinate` 支持字符串简写和对象两种形态：
+
+```tsx
+<Plot coordinate="polar2D">                                    {/* 全用默认值 */}
+<Plot coordinate={{ type: 'polar2D', innerRadius: 0.5 }}>      {/* 挖中心成环图 */}
+```
+
+polar 对象的 `innerRadius` / `startAngle` / `endAngle` 见 [坐标系](/plot/grammar/coordinate)。
+
+## 入口形态
+
+`<Plot>` 有两条入口，按是否传 `spec` 分流：
+
+| 入口 | 必填 | 适用 |
+| --- | --- | --- |
+| 组合 DSL | `data`（裸数组）+ `children` | 手写 JSX 声明 mark / guide（最常用） |
+| spec 入口 | `spec`（已构造 PlotSpec）+ `data`（数据集表） | 持久化 / AI 生成的完整 spec 直喂 |
+
+## API
+
+| 属性 | 类型 | 默认值 | 描述 |
+| --- | --- | --- | --- |
+| `data` | `Array<Row>` | — | 裸数据行数组（组合 DSL 入口）；数据不进 IR |
+| `children` | `ReactNode` | — | mark / guide 子组件（组合 DSL 入口） |
+| `coordinate` | `'polar' \| { type: 'polar2D'; innerRadius?; startAngle?; endAngle? }` | cartesian | 坐标系：缺省平面直角；`"polar2D"` 简写或 polar 对象 |
+| `scaleX` | `'linear' \| 'time' \| 'point'` | `'linear'` | 连续 x scale 类型；含 `<BarMark>` 时强制 band，polar 下忽略 |
+| `bare` | `boolean?` | `false` | 只绘图、不出任何轴 / 网格；忽略 `<Axis>` |
+| `width` | `number` | — | 外框宽度（含轴与标签） |
+| `height` | `number` | — | 外框高度（含轴与标签） |
+| `fontSize` | `number?` | — | 刻度标签字号 |
+| `margin` | `{ top?; right?; bottom?; left? }` | — | 覆盖四周留白 |
+| `spec` | `PlotSpec` | — | spec 入口：已构造好的 Plot IR 根（与 `children` 二选一） |
+
+## 相关
+
+- [坐标系](/plot/grammar/coordinate) —— polar 开关与角色映射
+- [图元](/plot/components/mark) —— 折线 / 散点 / 柱 / 扇形 / 面积
+- [坐标轴](/plot/components/axis) —— 刻度、标签、网格、polar 维度

@@ -51,6 +51,6 @@ plot 拆成三包，是为了让「图表语义」和「框架入口」分开：
 
 ## 当前能力
 
-<ComponentAlert title="v0.1 alpha.2" description="当前 plot 支持 linear scale、cartesian2D 坐标系、LineMark / PointMark、Axis 坐标轴，以及默认 y 方向网格。<Plot> 无显式 Axis 时会自动给出 x/y 轴和 y 网格；bare 会回到无轴纯绘图；fontSize 与 margin 用来调刻度标签字号和边距。bar、polar、legend、tooltip 与事件交互还在后续版本。" />
+<ComponentAlert title="v0.1 alpha.4" description="当前 plot 支持 linear / band / point / time / ordinal(颜色) scale，cartesian2D 与 polar2D 两套坐标系，PointMark / LineMark / BarMark / SectorMark / AreaMark（含 dodge / stack 多系列与 closed 雷达），Axis 坐标轴（x / y / angle / radius）+ 网格，以及 sort / stack transform——React 与 Vanilla 两套包都覆盖。位置通道只有 x / y、由坐标系重解释；legend、tooltip 与事件交互仍在后续版本。" />
 
 如果你是第一次使用 plot，先从快速开始走一遍本地数据的折线 + 散点图，再回来看这里的 IR / 数据 / lowering 分工会更顺。

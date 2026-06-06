@@ -121,7 +121,7 @@
 
 ### 测试象限
 
-每条 ADR **至少 9 个 case**，按四象限分布：
+每条 ADR **至少 9 个 case**，按四象限分布（**plot alpha milestone 放宽**：按复杂度适量、覆盖真实有意义的 accept/reject 与几何断言即可，不硬凑 9——见该 milestone roadmap 的「测试 case 规则」）：
 
 **Happy path（≥ 3）**：
 

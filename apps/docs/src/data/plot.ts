@@ -1,6 +1,6 @@
 import type { Section } from './interface';
 
-/** plot module 的 sections + pages 树（顺序：简介 / 快速开始 / 封装组件 / 基础组件 / 图形语法 / 参考） */
+/** plot module 的 sections + pages 树（顺序：简介 / 快速开始 / 图表 / 绘图 / 图形语法 / 参考） */
 export const plotSection: Array<Section> = [
   {
     pages: [
@@ -26,6 +26,8 @@ export const plotSection: Array<Section> = [
           { id: 'line', label: 'plot.compLineMark' },
           { id: 'point', label: 'plot.compPointMark' },
           { id: 'bar', label: 'plot.compBarMark' },
+          { id: 'sector', label: 'plot.compSectorMark' },
+          { id: 'area', label: 'plot.compAreaMark' },
         ],
       },
       { id: 'axis', label: 'plot.compAxis' },

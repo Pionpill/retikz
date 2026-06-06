@@ -1,6 +1,6 @@
 {
   "name": "@retikz/plot-vanilla",
-  "version": "0.1.0-alpha.3",
+  "version": "0.1.0-alpha.4",
   "description": "Framework-free bindings for @retikz/plot: renderPlot(spec, data) → SVG string (SSR) lowering to @retikz/core.",
   "type": "module",
   "author": "Pionpill",

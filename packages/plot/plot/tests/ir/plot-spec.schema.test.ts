@@ -31,7 +31,7 @@ describe('PlotSpecSchema (ADR-01)', () => {
       data: { reference: 'd' },
       scales: [{ type: 'linear', name: 'xs' }],
       coordinate: { type: 'cartesian2D', x: 'xs', y: 'xs' },
-      marks: [{ type: 'point', encoding: { x: { field: 'x' } } }],
+      marks: [{ type: 'point', encoding: { x: { field: 'x' }, y: { field: 'y' } } }],
     };
     expect(PlotSpecSchema.parse(spec)).toEqual(spec);
   });

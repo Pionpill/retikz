@@ -1,0 +1,79 @@
+---
+title: Coordinates
+description: The coordinate system decides how marks land on the canvas. The default is cartesian; switch to polar and the same spec becomes a pie, radar, or radial bar chart.
+---
+
+The coordinate system is the final step `<Plot>` takes to map data values to canvas pixels. The default is cartesian: x goes right, y goes up. Change `coordinate` to `"polar2D"` and the same data with the same marks wraps around a center — bars become radial bars, lines become radar outlines, sectors form a pie.
+
+## One spec, two coordinate systems
+
+The two charts below use the **same monthly temperature data and the same `<BarMark>`**; the only difference is `coordinate="polar2D"` on the second. The coordinate system is a chart-level switch, not a mark-level one — you don't swap components or change field bindings.
+
+<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+  <ComponentPreview name="coordinate-cartesian" sourceFiles={['coordinate-cartesian.data.ts']} size="sm" />
+  <ComponentPreview name="coordinate-polar-bar" sourceFiles={['coordinate-cartesian.data.ts']} size="sm" />
+</div>
+
+<p className="text-sm text-muted-foreground">Left: default cartesian bars; right: same chart with only <code>coordinate="polar2D"</code> added.</p>
+
+## What x / y mean under polar
+
+In cartesian, x is horizontal and y is vertical. Under polar these channels **change geometric meaning** while the binding stays the same:
+
+| Channel | cartesian | polar |
+| --- | --- | --- |
+| `x` | horizontal position | angular (the angle around the center) |
+| `y` | vertical position | radial (distance from the center) |
+
+So you keep writing `x` / `y` for polar charts; the coordinate system decides whether they become an angle or a radius. There are only ever `x` / `y` — never separate angle/radius channels — so the same spec stays portable across coordinate systems and there is no wrong channel to pick for a given coordinate.
+
+## Polar options
+
+`coordinate="polar2D"` is shorthand for a polar config with all defaults. To adjust the angular range or carve out a center hole, pass the object form:
+
+```tsx
+<Plot coordinate={{ type: 'polar2D', innerRadius: 0.5, startAngle: 0, endAngle: 360 }}>
+```
+
+| Field | Type | Default | Description |
+| --- | --- | --- | --- |
+| `innerRadius` | `number?` | `0` | Inner radius as a fraction `0..1` of the outer radius; `0` is a solid pie, `> 0` carves a center hole into a donut |
+| `startAngle` | `number?` | `0` | Starting angle (degrees) |
+| `endAngle` | `number?` | `360` | Ending angle (degrees); together with `startAngle` decides a full ring or a partial sector |
+
+## What polar can draw
+
+The same polar coordinate system pairs with different marks to cover the common round charts.
+
+### Radial bars
+
+`<BarMark>` becomes a radial bar under polar: the angular axis is the category (auto band), the radial axis is the value. Just switch the coordinate — no new component.
+
+<ComponentPreview name="coordinate-polar-bar" sourceFiles={['coordinate-cartesian.data.ts']} />
+
+### Pie and donut
+
+`<SectorMark>` accumulates the `angle` value field into per-sector angular bounds. Add `innerRadius` to turn a pie into a donut.
+
+<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+  <ComponentPreview name="coordinate-pie" sourceFiles={['coordinate-pie.data.ts']} size="sm" />
+  <ComponentPreview name="coordinate-donut" sourceFiles={['coordinate-pie.data.ts']} size="sm" />
+</div>
+
+<p className="text-sm text-muted-foreground">Left: pie; right: same data with <code>innerRadius: 0.55</code> as a donut.</p>
+
+### Radar
+
+`<LineMark closed />` connects the last point back to the first, closing into a polygon outline — under polar that is a radar chart. Dimensions spread evenly along the angular axis, values map to the radius.
+
+<ComponentPreview name="coordinate-radar" sourceFiles={['coordinate-radar.data.ts']} />
+
+### Polar line
+
+An open `<LineMark>` under polar is a polar line plot: `x` as the angle, `y` as the radius, connected in `order`. Good for wind direction and cyclic data.
+
+<ComponentPreview name="coordinate-polar-line" sourceFiles={['coordinate-polar-line.data.ts']} />
+
+<Comparison target="tikz" title="TikZ comparison">
+In TikZ, polar plots rely on PGFPlots' `polaraxis` environment (`\begin{polaraxis} ... \end{polaraxis}`); retikz folds it into a single `coordinate` switch on `<Plot>`, so marks aren't split into cartesian and polar variants.
+</Comparison>

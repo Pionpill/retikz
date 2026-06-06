@@ -1,0 +1,72 @@
+---
+title: Plot
+description: <Plot> is the chart container: it takes raw data and a size, assembles mark / guide children, and picks a cartesian or polar coordinate system via coordinate.
+---
+
+`<Plot>` is the root container for every chart. It takes `data` (an array of raw rows) and a display size, and assembles its `<LineMark>` / `<BarMark>` / `<SectorMark>` / `<Axis>` children into a chart. `coordinate` picks the coordinate system: cartesian by default, `"polar2D"` for polar. Data never enters the IR; it's injected at compile time.
+
+## Usage
+
+```tsx
+import { Plot, BarMark } from '@retikz/plot-react';
+```
+
+```tsx
+<Plot data={revenue} width={360} height={220}>
+  <BarMark x="quarter" y="value" />
+</Plot>
+```
+
+`width × height` is the outer box including axes and tick labels. Children only declare field mappings, never pixel coordinates.
+
+## Examples
+
+### Switching coordinate systems
+
+`coordinate` is a chart-level switch — for the same `children`, the default is cartesian and adding `"polar2D"` makes it polar. Marks aren't split into two variants; the coordinate system decides the geometry.
+
+<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+  <ComponentPreview name="plot-cartesian" sourceFiles={['plot-cartesian.data.ts']} size="sm" />
+  <ComponentPreview name="plot-polar" sourceFiles={['plot-cartesian.data.ts']} size="sm" />
+</div>
+
+<p className="text-sm text-muted-foreground">Left: default cartesian; right: only <code>coordinate="polar2D"</code> added.</p>
+
+`coordinate` accepts a string shorthand or an object:
+
+```tsx
+<Plot coordinate="polar2D">                                    {/* all defaults */}
+<Plot coordinate={{ type: 'polar2D', innerRadius: 0.5 }}>      {/* carve the center into a donut */}
+```
+
+See [Coordinates](/plot/grammar/coordinate) for the polar object's `innerRadius` / `startAngle` / `endAngle`.
+
+## Entry forms
+
+`<Plot>` has two entries, dispatched by whether `spec` is passed:
+
+| Entry | Required | Use |
+| --- | --- | --- |
+| Composition DSL | `data` (raw array) + `children` | Declare marks / guides in JSX (the common case) |
+| Spec entry | `spec` (built PlotSpec) + `data` (dataset table) | Feed a persisted / AI-generated spec directly |
+
+## API
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `data` | `Array<Row>` | — | Raw data rows (composition DSL entry); data never enters the IR |
+| `children` | `ReactNode` | — | Mark / guide children (composition DSL entry) |
+| `coordinate` | `'polar' \| { type: 'polar2D'; innerRadius?; startAngle?; endAngle? }` | cartesian | Coordinate system: cartesian by default; `"polar2D"` shorthand or a polar object |
+| `scaleX` | `'linear' \| 'time' \| 'point'` | `'linear'` | Continuous x scale type; forced to band with `<BarMark>`, ignored under polar |
+| `bare` | `boolean?` | `false` | Draw only the data, no axes / grid; ignores `<Axis>` |
+| `width` | `number` | — | Outer width (including axes and labels) |
+| `height` | `number` | — | Outer height (including axes and labels) |
+| `fontSize` | `number?` | — | Tick label font size |
+| `margin` | `{ top?; right?; bottom?; left? }` | — | Override the surrounding padding |
+| `spec` | `PlotSpec` | — | Spec entry: a prebuilt Plot IR root (mutually exclusive with `children`) |
+
+## Related
+
+- [Coordinates](/plot/grammar/coordinate) — the polar switch and channel roles
+- [Marks](/plot/components/mark) — line / point / bar / sector / area
+- [Axis](/plot/components/axis) — ticks, labels, grid, polar dimensions

@@ -1,0 +1,79 @@
+---
+title: 坐标系
+description: 坐标系决定 mark 怎么落到画布上。默认是平面直角（cartesian），改成极坐标（polar）后同一份 spec 就变成饼图、雷达、径向柱。
+---
+
+坐标系是 `<Plot>` 把数据值放到画布像素的最后一步。缺省是平面直角坐标系（cartesian）：x 向右、y 向上。把 `coordinate` 改成 `"polar2D"`，同一份数据、同一批 mark 就绕中心铺开——柱变成径向柱、折线变成雷达、扇形拼成饼图。
+
+## 一份 spec，两种坐标系
+
+下面两张图喂的是**同一份月度温度数据、同一个 `<BarMark>`**，唯一区别是第二张多了 `coordinate="polar2D"`。坐标系是图表级开关，不是 mark 级——你不用换组件，也不用改字段绑定。
+
+<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+  <ComponentPreview name="coordinate-cartesian" sourceFiles={['coordinate-cartesian.data.ts']} size="sm" />
+  <ComponentPreview name="coordinate-polar-bar" sourceFiles={['coordinate-cartesian.data.ts']} size="sm" />
+</div>
+
+<p className="text-sm text-muted-foreground">左：缺省 cartesian 普通柱；右：仅加 <code>coordinate="polar2D"</code> 即成径向柱。</p>
+
+## x / y 在 polar 下的角色
+
+cartesian 下 x 是水平、y 是垂直。切到 polar 后这对通道**换了几何含义**，但绑定写法不变：
+
+| 通道 | cartesian | polar |
+| --- | --- | --- |
+| `x` | 水平位置 | 角向（绕圈的角度） |
+| `y` | 垂直位置 | 径向（离中心的距离） |
+
+所以画极坐标图时你照常写 `x` / `y`，由坐标系决定它们落成角度还是半径。位置通道永远只有 `x` / `y`，没有单独的 angle/radius 通道——这样同一份 spec 能在不同坐标系间复用，也不存在「为某坐标系选错通道」的可能。
+
+## polar 配置项
+
+`coordinate="polar2D"` 是简写，等价于一个全用默认值的 polar 配置。要调角度区间或挖中心空洞时，传对象形态：
+
+```tsx
+<Plot coordinate={{ type: 'polar2D', innerRadius: 0.5, startAngle: 0, endAngle: 360 }}>
+```
+
+| 字段 | 类型 | 默认 | 说明 |
+| --- | --- | --- | --- |
+| `innerRadius` | `number?` | `0` | 内半径占外半径的比例 `0..1`；`0` 是实心饼，`> 0` 挖出中心空洞成环图 |
+| `startAngle` | `number?` | `0` | 角向起始角（度） |
+| `endAngle` | `number?` | `360` | 角向终止角（度）；与 `startAngle` 一起决定铺满整圈还是半圈扇形 |
+
+## polar 能画什么
+
+同一个 polar 坐标系搭不同 mark，覆盖常见的环形图表。
+
+### 径向柱
+
+`<BarMark>` 在 polar 下自动成径向柱：角向是类别（自动 band），径向是值。换坐标系即可，无需新组件。
+
+<ComponentPreview name="coordinate-polar-bar" sourceFiles={['coordinate-cartesian.data.ts']} />
+
+### 饼图与环图
+
+`<SectorMark>` 按 `angle` 值字段自动累积成扇区角界。加 `innerRadius` 就从饼图变环图。
+
+<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+  <ComponentPreview name="coordinate-pie" sourceFiles={['coordinate-pie.data.ts']} size="sm" />
+  <ComponentPreview name="coordinate-donut" sourceFiles={['coordinate-pie.data.ts']} size="sm" />
+</div>
+
+<p className="text-sm text-muted-foreground">左：饼图；右：同数据加 <code>innerRadius: 0.55</code> 成环图。</p>
+
+### 雷达
+
+`<LineMark closed />` 把末点回连首点，闭合成多边形轮廓——在 polar 下就是雷达图。各维度沿角向均布，值映射到半径。
+
+<ComponentPreview name="coordinate-radar" sourceFiles={['coordinate-radar.data.ts']} />
+
+### 极坐标折线
+
+不闭合的 `<LineMark>` 在 polar 下就是极坐标折线：`x` 当角向、`y` 当径向，按 `order` 连点。适合风向、周期类数据。
+
+<ComponentPreview name="coordinate-polar-line" sourceFiles={['coordinate-polar-line.data.ts']} />
+
+<Comparison target="tikz" title="TikZ 对照">
+TikZ 里极坐标靠 PGFPlots 的 `polaraxis` 环境（`\begin{polaraxis} ... \end{polaraxis}`）切换；retikz 把它收成 `<Plot>` 的一个 `coordinate` 开关，mark 不分平面 / 极坐标两套。
+</Comparison>
