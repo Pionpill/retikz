@@ -7,7 +7,7 @@ import { type PathVisualProps, pickPathVisual, requireXY } from './_shared';
 /** `<Rectangle>` 形态：四选一定两对角 */
 export type RectangleProps = PathVisualProps & {
   /** 四角同圆角半径；缺省直角 */
-  roundedCorners?: number;
+  cornerRadius?: number;
 } & (
     | { corner1: IRTarget; corner2: IRTarget }
     | { center: [number, number]; width: number; height: number }
@@ -49,7 +49,7 @@ export const Rectangle: FC<RectangleProps> = props => {
   return (
     <Path {...pickPathVisual(props)}>
       <Step kind="move" to={from} />
-      <Step kind="rectangle" from={from} to={to} roundedCorners={props.roundedCorners} />
+      <Step kind="rectangle" from={from} to={to} cornerRadius={props.cornerRadius} />
     </Path>
   );
 };

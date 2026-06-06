@@ -1,20 +1,28 @@
 import { z } from 'zod';
-import { localToWorld, worldToLocal } from '../geometry/_transform';
+import { localToWorld } from '../geometry/_transform';
 import type { Position } from '../geometry/point';
 import { rect as rectOps } from '../geometry/rect';
 import type { Rect } from '../geometry/rect';
-import type { PathCommand, ScenePrimitive } from '../primitive';
+import {
+  type ContourSegment,
+  boundaryFromContour,
+  contourCommands,
+} from '../geometry/roundedContour';
+import type { ScenePrimitive } from '../primitive';
+import { contourToPathCommands, verticesToSegments } from './_contour';
 import { asRectAnchor } from './_shared';
 import { defineShape } from './define';
 
 /**
  * polygon shape 的 per-instance params 类型
- * @description 由 paramsSchema z.infer 派生（单一来源 zod）；sides = 边数（≥3），rotate = 起始顶点自旋角（度，可选）。
+ * @description 由 paramsSchema z.infer 派生（单一来源 zod）；sides = 边数（≥3），rotate = 起始顶点自旋角（度，可选），
+ *   cornerRadius = 顶点倒角半径（user units，可选，逐角夹紧）。
  *   diamond 收敛为此 shape 的 `{ sides: 4, rotate: 45 }` preset 别名。
  */
 type PolygonParams = {
   sides: number;
   rotate?: number;
+  cornerRadius?: number;
 };
 
 const DEG_TO_RAD = Math.PI / 180;
@@ -69,45 +77,14 @@ const polygonVertices = (rect: Rect, radius: number, params: PolygonParams): Arr
   });
 
 /**
- * 从中心向 toward 射线与正多边形某条边的最近正向交点（局部系求解后投回世界）
- * @description 局部顶点环在外接圆半径 radius 上；对每条相邻顶点边 [v_i, v_{i+1}] 求 ray(o,dir)∩segment，
- *   取最小正参数命中点。中心在凸多边形内部，正向射线必命中唯一边；无命中（toward≡中心）回退中心。
- */
-const polygonBoundaryLocal = (radius: number, params: PolygonParams, toward: Position): Position => {
-  const dl = Math.hypot(toward[0], toward[1]);
-  if (dl < 1e-12) return [0, 0];
-  const ux = toward[0] / dl;
-  const uy = toward[1] / dl;
-  const angles = vertexAngles(params);
-  const verts: Array<Position> = angles.map(deg => {
-    const a = deg * DEG_TO_RAD;
-    return [radius * Math.cos(a), radius * Math.sin(a)];
-  });
-  let best = Infinity;
-  for (let i = 0; i < verts.length; i++) {
-    const a = verts[i];
-    const b = verts[(i + 1) % verts.length];
-    const ex = b[0] - a[0];
-    const ey = b[1] - a[1];
-    // 解 o(0,0) + s·u = a + t·e（s≥0, t∈[0,1]）；det = u × (-e)
-    const det = ux * -ey - -ex * uy;
-    if (Math.abs(det) < 1e-12) continue;
-    const s = (a[0] * -ey - -ex * a[1]) / det;
-    const t = (ux * a[1] - a[0] * uy) / det;
-    if (s <= 1e-9 || s >= best) continue;
-    if (t >= -1e-9 && t <= 1 + 1e-9) best = s;
-  }
-  if (!Number.isFinite(best)) return [0, 0];
-  return [best * ux, best * uy];
-};
-
-/**
- * polygon 注册项：正多边形（sides 顶点均布外接圆，rotate 定起始角）
+ * polygon 注册项：正多边形（sides 顶点均布外接圆，rotate 定起始角，cornerRadius 顶点倒角）
  * @description 文本容器形状——circumscribe 从内框 `innerHalfWidth/Height` 推能容纳内框的外接圆、再取其 AABB 半轴，
- *   尺寸仍由内框 + minimumSize 驱动（区别于 sector / star 的 params-半径驱动）。emit 出 `sides` 个顶点连成的闭合
- *   path；boundaryPoint = 中心向 toward 射线 ∩ 多边形边；命名 anchor 走外接 AABB 的 9 名 rect anchor（多边形关于
- *   中心对称，AABB 中心 = 形心 = node position，无需 circumscribeOffset）；self-rotate（params.rotate）与
- *   Node.rotate 叠加。scaleParams：sides 是计数、rotate 是角度，均不随 scale 缩。
+ *   尺寸仍由内框 + minimumSize 驱动（区别于 sector / star 的 params-半径驱动）。emit / boundaryPoint 把顶点环构造成
+ *   `sides` 条折线段，委托 rounded-contour 模块：cornerRadius 省略 / 0 出原尖角轮廓、>0 在每个顶点插逐角夹紧的
+ *   fillet 弧。emit 收轴对齐 rect（旋转由外层 group 施加）、boundaryPoint 收带 rotate 的 rect 且 rayOrigin = 几何中心
+ *   （多边形关于中心对称，AABB 中心 = 形心 = node position）。命名 anchor 走外接 AABB 的 9 名 rect anchor（不随
+ *   cornerRadius 移）；self-rotate（params.rotate）与 Node.rotate 叠加。scaleParams：cornerRadius 是长度随 scale
+ *   缩（几何均值因子），sides 计数 / rotate 角度不缩。
  *   diamond ≡ `{ type: 'polygon', params: { sides: 4, rotate: 45 } }`，由 compile 规范化。
  */
 export const polygon = defineShape({
@@ -122,6 +99,14 @@ export const polygon = defineShape({
       .finite()
       .optional()
       .describe('Shape self-rotation in degrees (vertex start direction); default 0. Composes with Node.rotate.'),
+    cornerRadius: z
+      .number()
+      .finite()
+      .nonnegative()
+      .optional()
+      .describe(
+        'Corner radius in user units; 0 / omitted = sharp corners. Clamped per corner to the largest non-self-intersecting fillet.',
+      ),
   }),
   circumscribe: (hw, hh, params: PolygonParams) => {
     const radius = circumradiusFor(hw, hh, params);
@@ -132,9 +117,12 @@ export const polygon = defineShape({
   },
   boundaryPoint: (rect: Rect, toward: Position, params: PolygonParams): Position => {
     const radius = circumradiusFromRect(rect, params);
-    const localToward = worldToLocal(rect, toward);
-    const hit = polygonBoundaryLocal(radius, params, localToward);
-    return localToWorld(rect, hit);
+    // 带 rotate 的 rect 下取世界系顶点环；rayOrigin = 几何中心（= rect 中心 = node position）
+    const verts = polygonVertices(rect, radius, params);
+    const segments: Array<ContourSegment> = verticesToSegments(verts);
+    const center: Position = [rect.x, rect.y];
+    const hit = boundaryFromContour(segments, params.cornerRadius, center, toward);
+    return hit ?? center;
   },
   anchor: (rect: Rect, name: string, params: PolygonParams): Position | undefined => {
     void params;
@@ -143,15 +131,10 @@ export const polygon = defineShape({
   },
   *emit (rect: Rect, style, round, params: PolygonParams): Iterable<ScenePrimitive> {
     const radius = circumradiusFromRect(rect, params);
+    // emit 收轴对齐 rect（rotate=0）；顶点世界坐标 → 折线段 → rounded-contour 命令 → path
     const verts = polygonVertices(rect, radius, params);
-    const commands: Array<PathCommand> = [];
-    verts.forEach((v, i) => {
-      commands.push({
-        kind: i === 0 ? 'move' : 'line',
-        to: [round(v[0]), round(v[1])],
-      });
-    });
-    commands.push({ kind: 'close' });
+    const segments: Array<ContourSegment> = verticesToSegments(verts);
+    const commands = contourToPathCommands(contourCommands(segments, params.cornerRadius), round);
     yield {
       type: 'path',
       commands,
@@ -164,6 +147,9 @@ export const polygon = defineShape({
       opacity: style.opacity,
     };
   },
-  // sides 是计数、rotate 是角度——都不随 scale 缩（否则默认深缩会把 sides 缩坏）；返回原 params 不变。
-  scaleParams: (params: PolygonParams): PolygonParams => params,
+  // sides 计数 / rotate 角度不缩（默认深缩会缩坏 sides）；cornerRadius 是长度，随 node scale 用几何均值因子缩。
+  scaleParams: (params: PolygonParams, sx: number, sy: number): PolygonParams =>
+    params.cornerRadius === undefined
+      ? params
+      : { ...params, cornerRadius: params.cornerRadius * Math.sqrt(sx * sy) },
 });

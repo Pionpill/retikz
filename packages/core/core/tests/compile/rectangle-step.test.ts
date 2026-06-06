@@ -45,14 +45,14 @@ describe('rectangle step：直角', () => {
     );
   });
 
-  it('roundedCorners=0 等价直角', () => {
+  it('cornerRadius=0 等价直角', () => {
     const sharp = path(
       { type: 'step', kind: 'move', to: [0, 0] },
       { type: 'step', kind: 'rectangle', from: [0, 0], to: [10, 6] },
     );
     const zero = path(
       { type: 'step', kind: 'move', to: [0, 0] },
-      { type: 'step', kind: 'rectangle', from: [0, 0], to: [10, 6], roundedCorners: 0 },
+      { type: 'step', kind: 'rectangle', from: [0, 0], to: [10, 6], cornerRadius: 0 },
     );
     expect(findPathPrim(compileToScene(zero, silent).primitives).commands).toEqual(
       findPathPrim(compileToScene(sharp, silent).primitives).commands,
@@ -61,10 +61,10 @@ describe('rectangle step：直角', () => {
 });
 
 describe('rectangle step：圆角', () => {
-  it('roundedCorners=2 → 起点 (x0+r,y0)，4 line + 4 quarter-arc + close', () => {
+  it('cornerRadius=2 → 起点 (x0+r,y0)，4 line + 4 quarter-arc + close', () => {
     const ir = path(
       { type: 'step', kind: 'move', to: [0, 0] },
-      { type: 'step', kind: 'rectangle', from: [0, 0], to: [10, 6], roundedCorners: 2 },
+      { type: 'step', kind: 'rectangle', from: [0, 0], to: [10, 6], cornerRadius: 2 },
     );
     expect(findPathPrim(compileToScene(ir, silent).primitives).commands).toEqual([
       move([2, 0]),
@@ -80,15 +80,15 @@ describe('rectangle step：圆角', () => {
     ]);
   });
 
-  it('roundedCorners 超过边长一半 → clamp 到 min(w,h)/2', () => {
+  it('cornerRadius 超过边长一半 → clamp 到 min(w,h)/2', () => {
     // w=10 h=6 → 半=min(5,3)=3；r=100 应 clamp 到 3
     const clamped = path(
       { type: 'step', kind: 'move', to: [0, 0] },
-      { type: 'step', kind: 'rectangle', from: [0, 0], to: [10, 6], roundedCorners: 100 },
+      { type: 'step', kind: 'rectangle', from: [0, 0], to: [10, 6], cornerRadius: 100 },
     );
     const r3 = path(
       { type: 'step', kind: 'move', to: [0, 0] },
-      { type: 'step', kind: 'rectangle', from: [0, 0], to: [10, 6], roundedCorners: 3 },
+      { type: 'step', kind: 'rectangle', from: [0, 0], to: [10, 6], cornerRadius: 3 },
     );
     expect(findPathPrim(compileToScene(clamped, silent).primitives).commands).toEqual(
       findPathPrim(compileToScene(r3, silent).primitives).commands,

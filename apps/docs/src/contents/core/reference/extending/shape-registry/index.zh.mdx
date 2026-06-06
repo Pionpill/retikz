@@ -303,7 +303,7 @@ const scene = compileToScene(ir, { shapes: { hexagon: createPolygonShape(6) } })
 - `boundaryPoint` 要处理 `toward` 刚好等于中心点的情况；常见做法是选一个固定默认方向。
 - `boundaryPoint` 和 `anchor` 如果涉及旋转，先用 `worldToLocal` 进入形状自己的局部坐标，算完后再用 `localToWorld` 返回世界坐标。
 - `anchor` 只处理自己认识的名字；未知名返回 `undefined`，让编译层抛统一错误。
-- `emit` 里用传入的 `round` 处理坐标与尺寸，并尽量透传相关样式字段：`fillOpacity` / `strokeOpacity` / `dashPattern` / `opacity` / `roundedCorners`。
+- `emit` 里用传入的 `round` 处理坐标与尺寸，并尽量透传相关样式字段：`fillOpacity` / `strokeOpacity` / `dashPattern` / `opacity` / `cornerRadius`。
 - 形状参数含角度或计数（如扇形角度、多边形 `sides`、星形 `points`）时实现 `scaleParams`，只缩长度量；否则默认缩放会把角度和计数一起缩坏。
 - 几何参考点偏离外接框中心的形状（如以圆心定位的扇形）实现 `circumscribeOffset`，让 bbox 精确罩住形状、position 仍落在语义参考点上。
 

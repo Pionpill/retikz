@@ -59,14 +59,20 @@ import { Node } from '@retikz/react';
 
 <ComponentPreview name="node-polygon" size="sm" />
 
+Give `params.cornerRadius` a positive number to round every vertex; omitting it or `0` keeps sharp corners. The rounding is connection-aware: connection endpoints land on the fillet arc rather than the sharp corner that has been rounded away.
+
+<ComponentPreview name="node-polygon-corner-radius" size="sm" />
+
 Connection endpoints snap to the polygon edge, and the node's 9 standard anchors (`north` / `center` …) still apply. For the full `<Node>` props see [Node](/core/components/node/overview).
 
 ### API Reference
 
 | `shape` | Boundary | Parameters |
 | --- | --- | --- |
-| `{ type: 'polygon', params }` | Regular polygon circumscribing the text | `sides` (≥3) / `rotate?` |
+| `{ type: 'polygon', params }` | Regular polygon circumscribing the text | `sides` (≥3) / `rotate?` / `cornerRadius?` |
 | `"diamond"` | = `polygon{ sides:4, rotate:45 }` preset | None |
+
+`cornerRadius` (user units) rounds every vertex; omitted / `0` = sharp corners, clamped per corner to the largest non-self-intersecting radius.
 
 ## How it works
 

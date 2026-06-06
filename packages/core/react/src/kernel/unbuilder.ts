@@ -106,7 +106,7 @@ const stepToElement = (step: IRStep, key: number): ReactNode => {
       kind: 'rectangle',
       from: step.from,
       to: step.to,
-      ...(step.roundedCorners !== undefined && { roundedCorners: step.roundedCorners }),
+      ...(step.cornerRadius !== undefined && { cornerRadius: step.cornerRadius }),
     });
   }
   if (step.kind === 'move') {

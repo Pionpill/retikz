@@ -7,3 +7,4 @@ export * from './polar';
 export * from './bend';
 export * from './arc';
 export * from './segment';
+export * from './roundedContour';

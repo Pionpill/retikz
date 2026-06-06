@@ -106,7 +106,7 @@ You can also write the sugar strings `'+dx,dy'` / `'++dx,dy'` (e.g. `<Step to="+
 
 ### Rectangle
 
-`kind="rectangle"` uses `from` and `to` as opposite corners of an axis-aligned rectangle; optional `roundedCorners` rounds the corners. Unlike `line`, it does not depend on the current cursor, which keeps it close to TikZ `(a) rectangle (b)`. For everyday rectangles prefer the `<Rectangle>` sugar in [Rectangle](/core/components/shapes/rectangle); use this low-level kind when authoring IR-like step sequences or mixing it with other step kinds.
+`kind="rectangle"` uses `from` and `to` as opposite corners of an axis-aligned rectangle; optional `cornerRadius` rounds the corners. Unlike `line`, it does not depend on the current cursor, which keeps it close to TikZ `(a) rectangle (b)`. For everyday rectangles prefer the `<Rectangle>` sugar in [Rectangle](/core/components/shapes/rectangle); use this low-level kind when authoring IR-like step sequences or mixing it with other step kinds.
 
 <ComponentPreview name="step-rectangle" size="sm" />
 
@@ -254,7 +254,7 @@ Full ellipses also place labels by angle parameter; this is not equal spacing by
 | `radius` | `number` | — | Required for `kind="arc"` / `'circlePath'`: radius of the circle / arc |
 | `radiusX` | `number` | — | Required for `kind="ellipsePath"`: x-axis radius |
 | `radiusY` | `number` | — | Required for `kind="ellipsePath"`: y-axis radius |
-| `roundedCorners` | `number` | — | Optional for `kind="rectangle"`: corner radius |
+| `cornerRadius` | `number` | — | Optional for `kind="rectangle"`: corner radius |
 | `label` | `IRStepLabel` | — | Edge label (works on every kind except `'move'` / `'cycle'`): `{ text, position?, side?, textColor?, opacity?, font? }`; equivalent sugar form `<Step><EdgeLabel>…</EdgeLabel></Step>`, prop wins on conflict |
 
 ### Eleven kinds

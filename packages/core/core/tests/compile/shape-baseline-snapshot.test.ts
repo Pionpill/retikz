@@ -21,7 +21,7 @@ const richIR: IR = {
       position: [0, 0],
       text: 'Rect',
       rotate: 30,
-      roundedCorners: 3,
+      cornerRadius: 3,
       outerSep: 5,
       fill: 'lightblue',
       stroke: 'navy',

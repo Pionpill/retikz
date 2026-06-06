@@ -1,21 +1,29 @@
 import { z } from 'zod';
-import { localToWorld, worldToLocal } from '../geometry/_transform';
+import { localToWorld } from '../geometry/_transform';
 import type { Position } from '../geometry/point';
 import type { Rect } from '../geometry/rect';
-import type { PathCommand, ScenePrimitive } from '../primitive';
+import {
+  type ContourSegment,
+  boundaryFromContour,
+  contourCommands,
+} from '../geometry/roundedContour';
+import type { ScenePrimitive } from '../primitive';
+import { contourToPathCommands } from './_contour';
 import { defineShape } from './define';
 import { type SectorGeometry, sectorGeometry, sectorPolarPoint } from './_shared';
 
 /**
  * sector shape 的 per-instance params 类型
- * @description 由 paramsSchema z.infer 派生（单一来源 zod）；内外半径 + 起止角。
- *   innerRadius=0 退化为实心扇片（pie slice）；outerRadius 必须 > innerRadius。
+ * @description 由 paramsSchema z.infer 派生（单一来源 zod）；内外半径 + 起止角 + 可选倒角半径。
+ *   innerRadius=0 退化为实心扇片（pie slice）；outerRadius 必须 > innerRadius；
+ *   cornerRadius 给四个接缝（环楔的 4 个 line-arc / pie 的 apex line-line + 2 line-arc）逐角夹紧倒角。
  */
 type SectorParams = {
   innerRadius: number;
   outerRadius: number;
   startAngle: number;
   endAngle: number;
+  cornerRadius?: number;
 };
 
 /** sector 局部 AABB 系点（圆心为原点偏移后）→ 世界系（含 rect 旋转 / 平移） */
@@ -26,6 +34,42 @@ const toWorld = (rect: Rect, geo: SectorGeometry, localFromApex: Position): Posi
     localFromApex[1] + geo.apexOffset[1],
   ];
   return localToWorld(rect, fromAabbCenter);
+};
+
+/**
+ * 构造 sector 闭合轮廓的有序段序列（line + arc），段序与现状 emit 完全一致
+ * @description 环楔（innerRadius>0）4 段闭环：radial Line(inner-start→outer-start) → outer Arc(start→end, CW)
+ *   → radial Line(outer-end→inner-end) → inner Arc(end→start, CCW)。pie（innerRadius=0）3 段闭环：
+ *   radial Line(apex→outer-start) → outer Arc(start→end, CW) → radial Line(outer-end→apex)，apex 处为 line-line 接缝。
+ *   Arc 圆心 = apex 世界坐标、半径 = inner/outer radius、起止角与现状 emit 同（度，CW 即 counterClockwise=false）。
+ *   emit / boundaryPoint 共用此真源；emit 收轴对齐 rect、boundaryPoint 收带 rotate 的 rect，rect 不同自然投不同世界系。
+ */
+const sectorSegments = (rect: Rect, geo: SectorGeometry, params: SectorParams): Array<ContourSegment> => {
+  const { innerRadius, outerRadius } = params;
+  const { start, end } = geo.range;
+  const apex = toWorld(rect, geo, [0, 0]);
+  // arc 角度走「圆心局部极角」约定；rect 旋转（弧度）下世界系极角整体加 rotate（度），与端点 toWorld 自洽。
+  //   emit 收 rect.rotate=0（外层 group 施旋转）→ 偏移 0、角度逐字同现状；boundaryPoint 收带 rotate 的 rect。
+  const rotateDeg = ((rect.rotate ?? 0) * 180) / Math.PI;
+  const sa = start + rotateDeg;
+  const ea = end + rotateDeg;
+  const outerStart = toWorld(rect, geo, sectorPolarPoint(outerRadius, start));
+  if (innerRadius > 0) {
+    const innerStart = toWorld(rect, geo, sectorPolarPoint(innerRadius, start));
+    const innerEnd = toWorld(rect, geo, sectorPolarPoint(innerRadius, end));
+    return [
+      { kind: 'line', from: innerStart, to: outerStart },
+      { kind: 'arc', center: apex, radius: outerRadius, startAngle: sa, endAngle: ea },
+      { kind: 'line', from: toWorld(rect, geo, sectorPolarPoint(outerRadius, end)), to: innerEnd },
+      { kind: 'arc', center: apex, radius: innerRadius, startAngle: ea, endAngle: sa, counterClockwise: true },
+    ];
+  }
+  // pie：apex → outer-start（径向）→ 外弧 → outer-end → apex（径向），apex 处 line-line 接缝
+  return [
+    { kind: 'line', from: apex, to: outerStart },
+    { kind: 'arc', center: apex, radius: outerRadius, startAngle: sa, endAngle: ea },
+    { kind: 'line', from: toWorld(rect, geo, sectorPolarPoint(outerRadius, end)), to: apex },
+  ];
 };
 
 /**
@@ -55,6 +99,14 @@ export const sector = defineShape({
       .number()
       .finite()
       .describe('End angle in degrees; swept counterclockwise in screen space from startAngle.'),
+    cornerRadius: z
+      .number()
+      .finite()
+      .nonnegative()
+      .optional()
+      .describe(
+        'Corner radius in user units; 0 / omitted = sharp corners. Clamped per corner to the largest non-self-intersecting fillet.',
+      ),
   })
     .refine(p => p.outerRadius > p.innerRadius, {
       message: 'outerRadius must be greater than innerRadius',
@@ -67,9 +119,10 @@ export const sector = defineShape({
   },
   boundaryPoint: (rect: Rect, toward: Position, params: SectorParams): Position => {
     const geo = sectorGeometry(params);
-    // 从质心向 toward 射线，求与外弧 / 内弧 / 两径向边轮廓的最近交点
+    // rayOrigin = 质心（非圆心）：sector 圆心在轮廓边角上，质心才落在环楔内、向外射线必穿轮廓一次。
     const centroidWorld = localToWorld(rect, geo.centroidOffset);
-    const hit = sectorBoundaryHit(rect, geo, params, centroidWorld, toward);
+    const segments = sectorSegments(rect, geo, params);
+    const hit = boundaryFromContour(segments, params.cornerRadius, centroidWorld, toward);
     return hit ?? centroidWorld;
   },
   anchor: (rect: Rect, name: string, params: SectorParams): Position | undefined => {
@@ -96,51 +149,9 @@ export const sector = defineShape({
   },
   *emit (rect: Rect, style, round, params: SectorParams): Iterable<ScenePrimitive> {
     const geo = sectorGeometry(params);
-    const { innerRadius, outerRadius } = params;
-    const { start, end } = geo.range;
-    // 圆心世界坐标（emit 收轴对齐 rect，rotate 由外层 group 施加）
-    const apex = toWorld(rect, geo, [0, 0]);
-    const outerStart = toWorld(rect, geo, sectorPolarPoint(outerRadius, start));
-    const outerCenter: Position = apex;
-
-    const commands: Array<PathCommand> = [];
-    const rp = (p: Position): [number, number] => [round(p[0]), round(p[1])];
-    if (innerRadius > 0) {
-      const innerStart = toWorld(rect, geo, sectorPolarPoint(innerRadius, start));
-      // 内弧起点 → 外弧起点（径向边）→ 外弧 → 外弧终点 → 内弧终点（径向边）→ 内弧回起点
-      commands.push({ kind: 'move', to: rp(innerStart) });
-      commands.push({ kind: 'line', to: rp(outerStart) });
-      commands.push({
-        kind: 'arc',
-        center: rp(outerCenter),
-        radius: round(outerRadius),
-        startAngle: start,
-        endAngle: end,
-      });
-      const innerEnd = toWorld(rect, geo, sectorPolarPoint(innerRadius, end));
-      commands.push({ kind: 'line', to: rp(innerEnd) });
-      commands.push({
-        kind: 'arc',
-        center: rp(outerCenter),
-        radius: round(innerRadius),
-        startAngle: end,
-        endAngle: start,
-        counterClockwise: true,
-      });
-      commands.push({ kind: 'close' });
-    } else {
-      // pie slice：圆心 → 外弧起点 → 外弧 → 回圆心
-      commands.push({ kind: 'move', to: rp(apex) });
-      commands.push({ kind: 'line', to: rp(outerStart) });
-      commands.push({
-        kind: 'arc',
-        center: rp(outerCenter),
-        radius: round(outerRadius),
-        startAngle: start,
-        endAngle: end,
-      });
-      commands.push({ kind: 'close' });
-    }
+    // 轮廓段（emit 收轴对齐 rect，rotate 由外层 group 施加）→ rounded-contour 命令 → path
+    const segments = sectorSegments(rect, geo, params);
+    const commands = contourToPathCommands(contourCommands(segments, params.cornerRadius), round);
 
     yield {
       type: 'path',
@@ -154,94 +165,15 @@ export const sector = defineShape({
       opacity: style.opacity,
     };
   },
+  // 半径 / cornerRadius 是长度，随几何均值因子缩；角度是方向，不缩。
   scaleParams: (params: SectorParams, sx: number, sy: number): SectorParams => {
     const factor = Math.sqrt(sx * sy);
     return {
       ...params,
       innerRadius: params.innerRadius * factor,
       outerRadius: params.outerRadius * factor,
+      ...(params.cornerRadius === undefined ? {} : { cornerRadius: params.cornerRadius * factor }),
     };
   },
 });
 
-/**
- * 从 origin 沿 toward 方向射线，求与 sector 轮廓（外弧 / 内弧 / 两径向边）的最近正向交点
- * @description 轮廓在「圆心局部系」求解：把 origin / toward 反投到局部、对四段分别求 ray∩段、取最小正 t；
- *   命中后投回世界系。无命中返回 undefined（调用方兜底质心）。
- */
-const sectorBoundaryHit = (
-  rect: Rect,
-  geo: SectorGeometry,
-  params: SectorParams,
-  origin: Position,
-  toward: Position,
-): Position | undefined => {
-  // 局部系：以圆心为原点。先把 origin / toward 转到「相对圆心」局部坐标。
-  const { worldToLocalFromApex } = makeApexFrame(rect, geo);
-  const o = worldToLocalFromApex(origin);
-  const t = worldToLocalFromApex(toward);
-  const dir: Position = [t[0] - o[0], t[1] - o[1]];
-  const dl = Math.hypot(dir[0], dir[1]);
-  if (dl < 1e-12) return undefined;
-  const ux = dir[0] / dl;
-  const uy = dir[1] / dl;
-  const { innerRadius, outerRadius } = params;
-  const { start, end } = geo.range;
-
-  let best = Infinity;
-  // 与圆（半径 R）相交：|o + s·u|² = R²
-  const rayCircle = (R: number): Array<number> => {
-    const b = 2 * (o[0] * ux + o[1] * uy);
-    const c = o[0] * o[0] + o[1] * o[1] - R * R;
-    const disc = b * b - 4 * c;
-    if (disc < 0) return [];
-    const sq = Math.sqrt(disc);
-    return [(-b - sq) / 2, (-b + sq) / 2];
-  };
-  const angleInRange = (px: number, py: number): boolean => {
-    const a0 = (Math.atan2(py, px) * 180) / Math.PI;
-    // 把 atan2 角（[-180,180]）一次性抬到 ≥ start 的最小同余值（O(1)，巨型 start 下不退化 / 不死循环）
-    const a = a0 + 360 * Math.max(0, Math.ceil((start - a0) / 360));
-    return a <= end + 1e-9;
-  };
-  for (const R of innerRadius > 0 ? [innerRadius, outerRadius] : [outerRadius]) {
-    for (const s of rayCircle(R)) {
-      if (s <= 1e-9 || s >= best) continue;
-      const px = o[0] + s * ux;
-      const py = o[1] + s * uy;
-      if (angleInRange(px, py)) best = s;
-    }
-  }
-  // 与两径向边（角度 start / end，半径 q∈[inner,outer]）相交：o + s·u = q·(ex,ey)
-  //   线性方程组 [ux, -ex; uy, -ey]·[s; q] = [-ox; -oy]，Cramer 求 s / q
-  for (const ang of [start, end]) {
-    const rad = (ang * Math.PI) / 180;
-    const ex = Math.cos(rad);
-    const ey = Math.sin(rad);
-    const det = ux * -ey - -ex * uy; // ex·uy - ux·ey
-    if (Math.abs(det) < 1e-12) continue;
-    const s = (-o[0] * -ey - -ex * -o[1]) / det; // (-ox·-ey) - (-ex·-oy)
-    const q = (ux * -o[1] - -o[0] * uy) / det;
-    if (s <= 1e-9 || s >= best) continue;
-    if (q >= innerRadius - 1e-9 && q <= outerRadius + 1e-9) best = s;
-  }
-  if (!Number.isFinite(best)) return undefined;
-  const localHit: Position = [o[0] + best * ux, o[1] + best * uy];
-  return localFromApexToWorld(rect, geo, localHit);
-};
-
-/** 圆心局部系 ↔ 世界系互转闭包（apexOffset 把「相对圆心」对齐到「相对 AABB 中心」） */
-const makeApexFrame = (
-  rect: Rect,
-  geo: SectorGeometry,
-): { worldToLocalFromApex: (w: Position) => Position } => ({
-  worldToLocalFromApex: (w: Position): Position => {
-    // 世界 → 相对 AABB 中心局部（逆 rect 变换）→ 减 apexOffset 得「相对圆心」
-    const fromCenter = worldToLocal(rect, w);
-    return [fromCenter[0] - geo.apexOffset[0], fromCenter[1] - geo.apexOffset[1]];
-  },
-});
-
-/** 相对圆心局部点 → 世界（先 +apexOffset 到相对 AABB 中心，再 localToWorld） */
-const localFromApexToWorld = (rect: Rect, geo: SectorGeometry, p: Position): Position =>
-  localToWorld(rect, [p[0] + geo.apexOffset[0], p[1] + geo.apexOffset[1]]);

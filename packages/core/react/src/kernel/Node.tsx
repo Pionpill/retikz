@@ -76,8 +76,8 @@ export type NodeProps = HydrationEventProps & {
   dotted?: boolean;
   /** 显式 dash pattern（如 [4, 2]）；优先级最高 */
   dashArray?: IRNode['dashArray'];
-  /** 圆角半径（user units）；只对 `rectangle` shape 生效 */
-  roundedCorners?: number;
+  /** 圆角半径（user units）；只对 `rectangle` shape 生效。建议用形状 params 形式 `shape={{ type: 'rectangle', params: { cornerRadius } }}` */
+  cornerRadius?: number;
   /** 最小 border 宽度（user units）；不足时撑开 bbox */
   minimumWidth?: number;
   /** 最小 border 高度（user units） */

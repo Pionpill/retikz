@@ -16,7 +16,7 @@ export type ShapeStyle = {
   strokeOpacity?: number;
   strokeWidth?: number;
   dashPattern?: Array<number>;
-  roundedCorners?: number;
+  cornerRadius?: number;
   opacity?: number;
 };
 

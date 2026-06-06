@@ -101,7 +101,7 @@ The pattern here — multiple [Draw](/core/components/draw/overview)s coordinati
 
 Finally, a colored info card on the right. The [Node](/core/components/node/overview) `text` prop takes an array of lines — **each entry can be a string or `{ text, fill }`**, the latter switching color for that line. Visual grouping comes from alternating "colored formula line + default-color caption line"; we don't insert empty `''` separators because they inflate `textHeight` (counted as a full lineHeight) while empty `tspan` `dy` advance is inconsistent across browsers, leaving a visible empty strip below the text.
 
-`shape="rectangle"` + `roundedCorners` + `align="left"` packs the lines into a left-aligned rounded card; `stroke="#d4d4d4"` + `dashed` add a light-gray dashed border (no fill, visible in both light and dark themes). Note: in-line span coloring (multiple colors within a single line) is not supported yet — only whole-line color switches. See Limitations.
+`shape="rectangle"` + `cornerRadius` + `align="left"` packs the lines into a left-aligned rounded card; `stroke="#d4d4d4"` + `dashed` add a light-gray dashed border (no fill, visible in both light and dark themes). Note: in-line span coloring (multiple colors within a single line) is not supported yet — only whole-line color switches. See Limitations.
 
 <ComponentPreview name="karl-circle-07-info" diffFrom="karl-circle-06-tan" size="lg" />
 

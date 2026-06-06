@@ -314,7 +314,7 @@ const readPathChildren = (children: ReactNode): Array<IRStep> => {
         from: parseTargetSugar(p.from),
         to: parseTargetSugar(p.to),
       };
-      if (p.roundedCorners !== undefined) step.roundedCorners = p.roundedCorners;
+      if (p.cornerRadius !== undefined) step.cornerRadius = p.cornerRadius;
       out.push(step);
       return;
     }

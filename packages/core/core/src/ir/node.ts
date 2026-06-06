@@ -215,11 +215,13 @@ export const NodeSchema = z
       .min(1)
       .optional()
       .describe('Explicit stroke dash pattern lengths in user units (e.g. [4, 2]); overrides `dashed` / `dotted`.'),
-    roundedCorners: z
+    cornerRadius: z
       .number()
       .nonnegative()
       .optional()
-      .describe('Corner radius in user units; only effective on `rectangle` shape.'),
+      .describe(
+        'Migration-period top-level corner radius in user units; only effective on `rectangle` shape. Prefer the shape params form `{ type: "rectangle", params: { cornerRadius } }`.',
+      ),
     minimumWidth: z
       .number()
       .nonnegative()

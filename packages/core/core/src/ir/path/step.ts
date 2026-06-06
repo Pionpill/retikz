@@ -303,7 +303,7 @@ export const RectangleStepSchema = z
       .describe('Axis-aligned rectangle between two opposite corners (TikZ `(a) rectangle (b)`); compiled to path commands (4 lines + close, or rounded corners via quarter arcs). Self-contained: corners come from from/to, not the cursor.'),
     from: TargetSchema.describe('One corner of the rectangle'),
     to: TargetSchema.describe('The opposite corner; order is irrelevant (compile normalizes to min/max)'),
-    roundedCorners: z
+    cornerRadius: z
       .number()
       .nonnegative()
       .optional()

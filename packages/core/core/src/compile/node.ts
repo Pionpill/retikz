@@ -197,7 +197,7 @@ export type NodeLayout = {
   /** 描边 dash pattern，已把 dashed/dotted 预设解析为具体 pattern */
   dashPattern?: Array<number>;
   /** rectangle 圆角半径（非 rect shape 无效） */
-  roundedCorners?: number;
+  cornerRadius?: number;
   /** 文字颜色，emit 时 'currentColor' 兜底 */
   textColor?: string;
   /** 整节点透明度 0~1（同时挂 shape 与 text primitive） */
@@ -455,6 +455,16 @@ export const layoutNode = (
   JsonObjectSchema.parse(rawShapeParams);
   const parsedShapeParams: IRJsonObject = shapeDef.paramsSchema.parse(rawShapeParams);
 
+  // 顶层 Node.cornerRadius 是 rectangle-only 迁移语义：仅对默认 / rectangle 形状、且 params 未显式给
+  // cornerRadius 时合进 params，使 emit 与 boundary（都读 params.cornerRadius）一致；params 显式给则优先。
+  // 其余形状（polygon / star / sector）只认自身 params，不受顶层影响，避免 boundary 圆而 emit 不圆。
+  const mergedShapeParams: IRJsonObject =
+    shapeName === 'rectangle' &&
+    node.cornerRadius !== undefined &&
+    !('cornerRadius' in parsedShapeParams)
+      ? { ...parsedShapeParams, cornerRadius: node.cornerRadius }
+      : parsedShapeParams;
+
   // 缩放：xScale/yScale 优先于 scale 别名，默认 1；乘进所有尺寸让 path 贴缩放后边界。
   // 字号取 min(sx,sy) 保 glyph 形状，避免非均匀缩放下文字被拉变形。
   const sx = node.xScale ?? node.scale ?? 1;
@@ -466,10 +476,10 @@ export const layoutNode = (
   const shapeScale = Math.sqrt(sx * sy);
   const noScale = sx === 1 && sy === 1;
   const shapeParams: IRJsonObject = noScale
-    ? parsedShapeParams
+    ? mergedShapeParams
     : shapeDef.scaleParams
-      ? shapeDef.scaleParams(parsedShapeParams, sx, sy)
-      : scaleJsonNumbers(parsedShapeParams, shapeScale);
+      ? shapeDef.scaleParams(mergedShapeParams, sx, sy)
+      : scaleJsonNumbers(mergedShapeParams, shapeScale);
 
   const baseFontSize = node.font?.size ?? DEFAULT_FONT_SIZE;
   const fontSize = baseFontSize * fontScale;
@@ -625,7 +635,7 @@ export const layoutNode = (
     strokeOpacity: node.drawOpacity,
     strokeWidth: node.strokeWidth,
     dashPattern: resolveDashArray(node.dashArray, node.dashed, node.dotted),
-    roundedCorners: node.roundedCorners,
+    cornerRadius: node.cornerRadius,
     textColor: node.textColor,
     opacity: node.opacity,
     labels,
@@ -642,7 +652,7 @@ const toShapeStyle = (layout: NodeLayout, resolveFill: PaintResolver): ShapeStyl
   strokeOpacity: layout.strokeOpacity,
   strokeWidth: layout.strokeWidth,
   dashPattern: layout.dashPattern,
-  roundedCorners: layout.roundedCorners,
+  cornerRadius: layout.cornerRadius,
   opacity: layout.opacity,
 });
 
