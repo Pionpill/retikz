@@ -301,11 +301,12 @@ Only meaningful when `kind="step"`. Given cursor `(px, py)` and target `(tx, ty)
 
 The geometric meaning of t per step kind is in the "[Geometric meaning of t per step kind](#geometric-meaning-of-t-per-step-kind)" table above. In short: line uses normalized arc length; fold splits the t interval evenly by polyline leg count (the corner is always at t=0.5); curve / cubic / bend use the Bezier parameter t (**not** arc length — t=0.5 is usually not the visual midpoint); arc uses angle parametrization; circlePath / ellipsePath traverse the full curve starting at angle 0 (+x), CCW.
 
-### Seven forms of `to`
+### Forms of `to`
 
 | Form | Example | Behavior |
 | --- | --- | --- |
 | Node id | `'a'` | Auto-attaches to Node border (see [Anchors](/core/concepts/anchors)) |
+| Node + connection surface | `{ id: 'a', boundary: 'circle' }` | Per-edge override of the target node's [connection surface](/core/components/draw/path) (clip shape); never changes the node footprint |
 | Cartesian | `[60, 0]` | Literal `[x, y]` |
 | Polar | `{ origin: 'a', angle: 30, radius: 50 }` | Polar (see [Positioning](/core/concepts/positioning)) |
 | Offset | `{ of: 'a', offset: [10, 5] }` | Base + `(dx, dy)`; `of` accepts node id, Cartesian literal, or PolarPosition |

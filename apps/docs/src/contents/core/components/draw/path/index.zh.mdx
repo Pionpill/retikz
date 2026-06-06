@@ -62,6 +62,19 @@ import { Path, Step } from '@retikz/react';
 
 `arrow` 控制方向（`'->'` / `'<-'` / `'<->'` / `'none'`），`arrowDetail` 一个对象统管全部视觉规格（shape / scale / length / width / color / fill / opacity / lineWidth）+ 可选 `start` / `end` 起末分别配置。详细规则、7 种内置 shape、起末 merge、颜色 / 缩放 / 半透明配置以及完整 API 参考见 **[Arrow](/core/components/draw/arrow)** 专页。
 
+### 端点连接面（boundary）
+
+端点引用节点时（`{ id }` 对象形态，或 way 里的 id），可加 `boundary` 字段，**只对这一个端点**覆盖目标节点的 [`connectAs`](/core/components/node/overview)（连接面）。取值与 `connectAs` 同形：`'shape'`（视觉形状自身）/ `'circle'`（真圆）/ 任意注册 shape 名 / `{ type, params }`。
+
+```tsx
+<Path arrow="->">
+  <Step kind="move" to="a" />
+  <Step kind="line" to={{ id: 'star', boundary: 'shape' }} />
+</Path>
+```
+
+`boundary` 只在"连接面有意义"的地方生效：端点自动贴边（未显式给 `anchor`）以及该端点的 compass / 角度锚点。在没有方向引用的场合——`between` 端点、`offset` 的 `of`、节点中心——它是 no-op。节点默认连接面写在 [`<Node connectAs>`](/core/components/node/overview)，`boundary` 是单边覆盖。
+
 ### 样式
 
 `stroke` / `strokeWidth` / `dashPattern` 与 `<Draw>` 完全一致：

@@ -600,6 +600,33 @@ describe('buildIR', () => {
     });
   });
 
+  describe('<Node connectAs> 连接面透传', () => {
+    it('<Node connectAs="circle"> 透传到 IR node.connectAs', () => {
+      const ir = buildIR(<Node id="A" position={[0, 0]} connectAs="circle" />);
+      expect(ir.children[0]).toMatchObject({ type: 'node', connectAs: 'circle' });
+    });
+
+    it('<Node connectAs="shape"> 透传到 IR node.connectAs', () => {
+      const ir = buildIR(<Node id="A" position={[0, 0]} connectAs="shape" />);
+      expect(ir.children[0]).toMatchObject({ type: 'node', connectAs: 'shape' });
+    });
+
+    it('<Node connectAs={{ type, params }}> 对象形态透传到 IR', () => {
+      const ir = buildIR(
+        <Node id="A" position={[0, 0]} connectAs={{ type: 'ellipse', params: { circumscribe: 'equal' } }} />,
+      );
+      expect(ir.children[0]).toMatchObject({
+        type: 'node',
+        connectAs: { type: 'ellipse', params: { circumscribe: 'equal' } },
+      });
+    });
+
+    it('<Node> 省略 connectAs 时 IR node 不含该字段', () => {
+      const ir = buildIR(<Node id="A" position={[0, 0]} />);
+      expect(ir.children[0]).not.toHaveProperty('connectAs');
+    });
+  });
+
   describe('React.Fragment 透明展开', () => {
     it('Fragment 直接子元素被展开为 Layout 子级', () => {
       const ir = buildIR(

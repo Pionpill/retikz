@@ -7,6 +7,7 @@ import type { AssertEqual, IRNode, IRPath, IRScope } from '@retikz/core';
 export const NODE_FIELDS = [
   'id',
   'shape',
+  'connectAs',
   'rotate',
   'align',
   'lineHeight',
