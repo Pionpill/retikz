@@ -54,13 +54,15 @@ alpha.4 的核心不是「再加一个坐标系」那么简单——是**逼出 
 
 | ADR | 主题 | Level | 依赖 | 状态 |
 |---|---|---|---|---|
-| 01 | coordinate 抽象通用化 + polar2D 投影（coordinate IR 升多成员 union；projector / scale·range 去 cartesian 写死；**定完整 `ResolvedCoordinateFrame` 契约：圆心 / 半径 range / 角度 range / clip / frame，供 02·03·04 共用**；极坐标投影几何） | red | 前置无 | Proposed |
-| 02 | sector 几何（polar interval→sector 径向柱 / 玫瑰 + sector mark 饼图 / 环图；**累积角走 transform 派生 start/end 角界、sector mark 只读派生字段**，不在 mark 内建 transform；下沉 core `sector` Node） | red | ADR-01（+ transform 泛化） | Proposed |
-| 03 | 连续 mark（area mark 新建：线↔baseline 区域，cartesian + polar；line / area polar 投影直边采样弯弧 → Path；**line / area 支持 `closed`：polar + closed = 雷达 / 填充雷达**） | red | ADR-01 | Proposed |
-| 04 | polar guide（angular axis 刻度绕圆周 + radial axis 刻度沿辐条 + polar grid 同心环 / 辐条；**只做 guide 几何、消费 ADR-01 的 `ResolvedCoordinateFrame`**，不定 layout） | red | ADR-01 | Proposed |
-| 05 | 三包 DSL + 文档露出（`coordinate="polar"`、新 mark / guide 表面；react + vanilla 两套 + docs demo；端到端 polar 验收） | red | ADR-01~04 | Proposed |
+| 01 | coordinate 抽象通用化 + polar2D 投影（coordinate IR 升多成员 union；projector / scale·range 去 cartesian 写死；**定完整 `ResolvedCoordinateFrame` 契约：圆心 / 半径 range / 角度 range / clip / frame，供 02·03·04 共用**；极坐标投影几何） | red | 前置无 | Accepted |
+| 02 | sector 几何（polar interval→sector 径向柱 / 玫瑰 + sector mark 饼图 / 环图；**累积角走 transform 派生 start/end 角界、sector mark 只读派生字段**，不在 mark 内建 transform；下沉 core `sector` Node） | red | ADR-01（+ transform 泛化） | Accepted |
+| 03 | 连续 mark（area mark 新建：线↔baseline 区域，cartesian + polar；line / area polar 投影直边采样弯弧 → Path；**line / area 支持 `closed`：polar + closed = 雷达 / 填充雷达**） | red | ADR-01 | Accepted |
+| 04 | polar guide（angular axis 刻度绕圆周 + radial axis 刻度沿辐条 + polar grid 同心环 / 辐条；**只做 guide 几何、消费 ADR-01 的 `ResolvedCoordinateFrame`**，不定 layout） | red | ADR-01 | Accepted |
+| 05 | 三包 DSL + 文档露出（`coordinate="polar"`、新 mark / guide 表面；react + vanilla 两套 + docs demo；端到端 polar 验收） | red | ADR-01~04 | Accepted |
 
 > 起草阶段全部 `Proposed`；逐条实现 + 自测（对抗 Bug Hunter）+ 文档 + 审计后改 `Accepted`，落在 `next-plot`。
+>
+> ✅ **2026-06-06 alpha.4 封口**：ADR-01~05 全部 `Accepted`；绿灯关（`@retikz/plot` / `plot-react` / `plot-vanilla` 三包 tsc + 390 测试 + eslint）全过；changelog（polar，三包）已入库。暂不发版。
 
 ## 待 ADR-01 拍板的头号设计决策
 
