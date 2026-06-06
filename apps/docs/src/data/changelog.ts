@@ -526,6 +526,30 @@ export const changelog: Array<Release> = [
         ],
         subVersions: [
           {
+            version: 'alpha.5',
+            date: '2026-06-07',
+            summary: {
+              zh: 'v0.1 收尾：scope-aware id 绑定 + meta 来源透传（接通 alpha.1 预留、消费 core meta），datum locator 命中预演。默认零开销（provenance 总开关默认关 → 逐字节等价 alpha.4）。',
+              en: 'v0.1 wrap-up: scope-aware id binding + meta provenance passthrough (activates the alpha.1 reservations, consumes core meta) and a datum-locator hit-test preview. Zero overhead by default (the provenance switch is off → byte-identical to alpha.4).',
+            },
+            items: [
+              {
+                label: { zh: 'scope-aware id 绑定 + meta 透传', en: 'scope-aware id binding + meta passthrough' },
+                content: {
+                  zh: '`lowerPlots` 加 `provenance` / `datumProvenance` / `datumIdField` 三个运行时选项（不进 IR）。开启后：mark 层 → `Scope.id`、line/area 每条 series → `Path.id`、datum（opt-in）→ `Node.id`（缺字段 / 重复值 fail-loud），内部 id 带 `<plotId>.` 前缀（plot-local，localNamespace 不上浮）;各级写来源 `meta`（layer/series/datum，datum meta 带 `dataReference` + `transformedIndex`（渲染序）/ `sourceIndex`（回原始行）），消费 core 的 `Scope`/`Node`/`Path` meta，compile 原样带进 Scene 供交互命中。默认关 → 产物逐字节等价 alpha.4，且 meta 渲染中立。',
+                  en: '`lowerPlots` gains three runtime options (not in IR): `provenance` / `datumProvenance` / `datumIdField`. When on: the mark layer → `Scope.id`, each line/area series → `Path.id`, opt-in datums → `Node.id` (missing field / duplicate value fail loud), with internal ids prefixed `<plotId>.` (plot-local; localNamespace keeps them in); each level carries provenance `meta` (datum meta includes `dataReference` + `transformedIndex` (render order) / `sourceIndex` (back to the source row)), consuming core’s `Scope`/`Node`/`Path` meta which compile stamps into the Scene for hit-testing. Off by default → output is byte-identical to alpha.4 and meta is render-neutral.',
+                },
+              },
+              {
+                label: { zh: 'datum locator 命中预演', en: 'datum-locator hit-test preview' },
+                content: {
+                  zh: '新增 `createPlotLocator(spec, datasets, options?)` → `{ datum(i), series(value), resolve(address) }`，把逻辑地址（`<plotId>.datum.<i>` / `.series.<v>`）确定性解析成 `{ position, meta, id? }`。复用与 lowering 同一份投影帧 + 共享 `datumAnchor` 几何（与渲染逐点一致、杜绝漂移），按需 O(1) 算位置、**不逐点预注册**（高基数散点不撑爆 nodeIndex）;未渲染 datum → null。只做正向解析，反向 hit-test / 事件回调留 v0.3 交互。',
+                  en: 'New `createPlotLocator(spec, datasets, options?)` → `{ datum(i), series(value), resolve(address) }` deterministically resolves a logical address (`<plotId>.datum.<i>` / `.series.<v>`) to `{ position, meta, id? }`. It reuses lowering’s projection frame + a shared `datumAnchor` geometry (point-for-point consistent with rendering, no drift), computes positions on demand in O(1) **without per-point registration** (high-cardinality scatter won’t bloat the nodeIndex); unrendered datums → null. Forward resolution only — reverse hit-test / event callbacks stay in v0.3 interaction.',
+                },
+              },
+            ],
+          },
+          {
             version: 'alpha.4',
             date: '2026-06-06',
             summary: {
@@ -676,6 +700,23 @@ export const changelog: Array<Release> = [
         ],
         subVersions: [
           {
+            version: 'alpha.5',
+            date: '2026-06-07',
+            summary: {
+              zh: '随 plot lockstep：`<Plot>` 转发 `provenance` / `datumProvenance` / `datumIdField` 选项到 `lowerPlots`（原先静默丢弃），让 React 侧也能开启 scope-aware id / meta 与 datum 命中预演。',
+              en: 'Lockstep with plot: `<Plot>` now forwards the `provenance` / `datumProvenance` / `datumIdField` options to `lowerPlots` (previously dropped), enabling scope-aware id / meta and datum hit-test preview from the React side too.',
+            },
+            items: [
+              {
+                label: { zh: '<Plot> 转发 provenance 选项', en: '`<Plot>` forwards provenance options' },
+                content: {
+                  zh: '`PlotCommonProps` 早已 `extends LowerPlotsOptions`，但 `Plot.tsx` 此前仅转发 `width/height/fontSize/margin`——新增三个 provenance 选项会被静默吞掉。修复后三选项一并透传，React 与 spec 两条入口行为一致。',
+                  en: '`PlotCommonProps` already `extends LowerPlotsOptions`, but `Plot.tsx` previously forwarded only `width/height/fontSize/margin`, silently dropping the three new provenance options. Now all three pass through, keeping the React and spec entries consistent.',
+                },
+              },
+            ],
+          },
+          {
             version: 'alpha.4',
             date: '2026-06-06',
             summary: {
@@ -776,6 +817,23 @@ export const changelog: Array<Release> = [
           },
         ],
         subVersions: [
+          {
+            version: 'alpha.5',
+            date: '2026-06-07',
+            summary: {
+              zh: '随 plot lockstep：`renderPlot` 自动透传 `provenance` / `datumProvenance` / `datumIdField`（入口已整体转发 options，无新 API）——SSR 产物可带 scope-aware id / meta。',
+              en: 'Lockstep with plot: `renderPlot` forwards `provenance` / `datumProvenance` / `datumIdField` automatically (the entry already spreads full options, no new API) — SSR output can carry scope-aware id / meta.',
+            },
+            items: [
+              {
+                label: { zh: 'SSR 透传 provenance 选项', en: 'SSR forwards provenance options' },
+                content: {
+                  zh: '`renderPlot` 入口本就整体展开 `LowerPlotsOptions` 给 `lowerPlots`，故 alpha.5 新增的三个 provenance 选项无需改代码即自动生效;SSR 字符串产物可携带 `<plotId>.` id 与来源 meta。',
+                  en: 'The `renderPlot` entry already spreads `LowerPlotsOptions` into `lowerPlots`, so the three new alpha.5 provenance options take effect with no code change; the SSR string output can carry `<plotId>.` ids and provenance meta.',
+                },
+              },
+            ],
+          },
           {
             version: 'alpha.4',
             date: '2026-06-06',
