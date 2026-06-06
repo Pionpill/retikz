@@ -102,7 +102,7 @@ const Demo: FC = () => (
       shape="rectangle"
       stroke="lightgray"
       dashed
-      roundedCorners={6}
+      cornerRadius={6}
       innerXSep={10}
       innerYSep={4}
       align="left"

@@ -102,7 +102,7 @@ tan 线从 (1, 0) 垂直到 (1, tan30°)。原图用 TikZ 的 named path + inter
 
 最后加一个图右侧的彩色说明框。[Node](/core/components/node/overview) 的 `text` prop 接字符串数组，**每行可以是 string 或 `{ text, fill }`**——后者让该行单独换色。视觉分组靠「彩色公式行 + 默认色注释行」的交替表达，不再额外加空行间隔（空 `''` 行会让 textHeight 把 lineHeight 算进盒高、但 SVG 渲染上空 tspan 的 dy 在浏览器间不稳，外框会撑出明显的下边空白）。
 
-`shape="rectangle"` + `roundedCorners` + `align="left"` 把它装成一个左对齐的圆角卡片，`stroke="#d4d4d4"` + `dashed` 加一圈浅灰虚线外框（无填充，主题切换都看得见）。注意行内片段着色（同一行里某几个词换色）目前不支持，只能整行换色——见「已知限制」。
+`shape="rectangle"` + `cornerRadius` + `align="left"` 把它装成一个左对齐的圆角卡片，`stroke="#d4d4d4"` + `dashed` 加一圈浅灰虚线外框（无填充，主题切换都看得见）。注意行内片段着色（同一行里某几个词换色）目前不支持，只能整行换色——见「已知限制」。
 
 <ComponentPreview name="karl-circle-07-info" diffFrom="karl-circle-06-tan" size="lg" />
 

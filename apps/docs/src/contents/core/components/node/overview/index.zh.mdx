@@ -23,7 +23,7 @@ import { Node } from '@retikz/react';
 
 <ComponentPreview name="node-basic" size="xs" />
 
-先按图元角色选择写法：流程图节点通常用默认 rectangle + `padding`；纯文字标签用 `stroke="none"` / `fill="none"`；按钮感节点加 `roundedCorners` + `minimumWidth`；说明框适合多行 `text` + `align="left"`；如果只需要一个可被引用的点，而不需要可见形状，用 [Coordinate](/core/components/node/coordinate) 更合适。
+先按图元角色选择写法：流程图节点通常用默认 rectangle + `padding`；纯文字标签用 `stroke="none"` / `fill="none"`；按钮感节点加 `cornerRadius` + `minimumWidth`；说明框适合多行 `text` + `align="left"`；如果只需要一个可被引用的点，而不需要可见形状，用 [Coordinate](/core/components/node/coordinate) 更合适。
 
 ### 定位
 
@@ -257,7 +257,7 @@ Line 2`}</Node>
 
 #### 尺寸约束 + 缩放
 
-- `roundedCorners`——圆角（仅 `rectangle` 形状生效）；也可写成 `shape={{ type:'rectangle', params:{ roundedCorners } }}`，顶层 `roundedCorners` 仍兼容，两者并存时 params 优先
+- `cornerRadius`——圆角半径。所有形状都支持圆角，写在形状 params 里：`shape={{ type:'polygon', params:{ sides:6, cornerRadius:8 } }}`、`star` / `sector` / `rectangle` 同理。顶层 `cornerRadius` 是迁移期写法，只对默认 `rectangle` 生效，两者并存时 params 优先
 - `minimumWidth` / `minimumHeight` / `minimumSize`——撑开 bbox（不缩水 text 自然宽度）
 - `scale` / `xScale` / `yScale`——均匀 / 分轴缩放，影响 bbox + 字号 + padding + 路径附着点
 
@@ -323,7 +323,7 @@ Line 2`}</Node>
 | `dashed` | `boolean` | — | 虚线预设（`[4, 2]`） |
 | `dotted` | `boolean` | — | 点线预设（`[1, 2]`） |
 | `dashArray` | `Array<number>` | — | 显式 dash/gap 长度序列；优先级最高 |
-| `roundedCorners` | `number` | — | 圆角半径；仅 `rectangle` 生效；亦可走 `shape={{ type:'rectangle', params:{ roundedCorners } }}`（params 优先） |
+| `cornerRadius` | `number` | — | 迁移期顶层圆角半径；仅默认 `rectangle` 生效。各形状的圆角写在 params 里：`shape={{ type, params:{ ..., cornerRadius } }}`（params 优先） |
 | `minimumWidth` / `minimumHeight` | `number` | — | 撑开最小 bbox 宽高 |
 | `minimumSize` | `number` | — | 对称最小尺寸别名；轴特化字段优先 |
 | `scale` | `number` | `1` | 均匀缩放（含字号、padding、路径附着点） |

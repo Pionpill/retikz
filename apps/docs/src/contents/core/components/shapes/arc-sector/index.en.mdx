@@ -129,6 +129,10 @@ import { Node } from '@retikz/react';
 
 <ComponentPreview name="node-arc-sector" size="md" />
 
+Give the sector's `params.cornerRadius` a positive number to round the wedge's four corners (where the two radial edges meet the inner / outer arcs); omitting it or `0` keeps sharp corners. The rounding is connection-aware: an endpoint aimed at the outer arc lands on the rounded contour.
+
+<ComponentPreview name="node-sector-corner-radius" size="md" />
+
 Besides the node's 9 standard anchors (`north` / `center` …), these shapes provide geometry-named anchors for precise connections via `{ id, anchor }`:
 
 - **sector**: `outer-arc-mid` / `inner-arc-mid` / `apex` / `centroid` / `start-edge-mid` / `end-edge-mid`
@@ -140,8 +144,10 @@ For the full `<Node>` props see [Node](/core/components/node/overview).
 
 | `shape` | params | Boundary / use |
 | --- | --- | --- |
-| `{ type: 'sector', params }` | `innerRadius` / `outerRadius` / `startAngle` / `endAngle` | Ring wedge (connectable; `innerRadius:0` is a solid slice) |
+| `{ type: 'sector', params }` | `innerRadius` / `outerRadius` / `startAngle` / `endAngle` / `cornerRadius?` | Ring wedge (connectable; `innerRadius:0` is a solid slice) |
 | `{ type: 'arc', params }` | `radius` / `startAngle` / `endAngle` / `close?` | Arc glyph (connectable) |
+
+The sector's `cornerRadius` (user units) rounds the four wedge corners; omitted / `0` = sharp corners, clamped per corner. Named anchors such as `apex` / `*-arc-mid` do not move with it.
 
 ## How it works
 

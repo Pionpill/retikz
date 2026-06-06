@@ -34,7 +34,7 @@ const subroutine: ShapeDefinition = defineShape({
       height: round(rect.height),
       fill: style.fill ?? 'transparent',
       fillOpacity: style.fillOpacity,
-      cornerRadius: style.roundedCorners,
+      cornerRadius: style.cornerRadius,
       ...sharedStrokeStyle,
     };
     yield {

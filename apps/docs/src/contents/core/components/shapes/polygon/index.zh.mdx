@@ -59,14 +59,20 @@ import { Node } from '@retikz/react';
 
 <ComponentPreview name="node-polygon" size="sm" />
 
+给 `params.cornerRadius` 一个正数就能把每个顶点磨成圆角，省略或 `0` 是直角。倒角是连接感知的：连线端点会落在圆角弧上，而不是已经被磨掉的尖角。
+
+<ComponentPreview name="node-polygon-corner-radius" size="sm" />
+
 连线端点贴多边形边，节点的 9 个标准 anchor（`north` / `center` …）照常可用。完整的 `<Node>` 属性见 [Node](/core/components/node/overview)。
 
 ### API 参考
 
 | `shape` | 边界 | 参数 |
 | --- | --- | --- |
-| `{ type: 'polygon', params }` | 能容纳文字的正多边形外接圆 | `sides`（≥3） / `rotate?` |
+| `{ type: 'polygon', params }` | 能容纳文字的正多边形外接圆 | `sides`（≥3） / `rotate?` / `cornerRadius?` |
 | `"diamond"` | = `polygon{ sides:4, rotate:45 }` 预设 | 无 |
+
+`cornerRadius`（用户单位）给每个顶点倒角，省略 / `0` = 直角，逐角夹紧到不自交的最大半径。
 
 ## 技术原理
 

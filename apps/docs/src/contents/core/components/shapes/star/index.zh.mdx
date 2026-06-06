@@ -63,13 +63,19 @@ import { Node } from '@retikz/react';
 
 <ComponentPreview name="node-star" size="sm" />
 
-除节点的 9 个标准 anchor（`north` / `center` …）外，星形还提供按几何命名的 anchor，可用 `{ id, anchor }` 精确连线：`tip-N`（第 N 个尖角）/ `notch-N`（第 N 个凹角）/ `center`。完整的 `<Node>` 属性见 [Node](/core/components/node/overview)。
+给 `params.cornerRadius` 一个正数会同时磨圆外凸尖角（tip）和内凹槽（notch），省略 / `0` 是硬角。倒角是连接感知的：朝某个尖角方向的连线端点会落在圆角弧上，而不是已被磨掉的尖角。
+
+<ComponentPreview name="node-star-corner-radius" size="sm" />
+
+除节点的 9 个标准 anchor（`north` / `center` …）外，星形还提供按几何命名的 anchor，可用 `{ id, anchor }` 精确连线：`tip-N`（第 N 个尖角）/ `notch-N`（第 N 个凹角）/ `center`。这些命名锚点固定在原始尖角 / 凹角的逻辑位置，不随 `cornerRadius` 内移。完整的 `<Node>` 属性见 [Node](/core/components/node/overview)。
 
 ### API 参考
 
 | `shape` | params | 边界 / 用途 |
 | --- | --- | --- |
-| `{ type: 'star', params }` | `points` / `innerRadius` / `outerRadius` / `rotate?` | 可连接的星形 glyph |
+| `{ type: 'star', params }` | `points` / `innerRadius` / `outerRadius` / `rotate?` / `cornerRadius?` | 可连接的星形 glyph |
+
+`cornerRadius`（用户单位）同时给尖角与凹角倒角，省略 / `0` = 硬角，逐角夹紧。
 
 ## 技术原理
 

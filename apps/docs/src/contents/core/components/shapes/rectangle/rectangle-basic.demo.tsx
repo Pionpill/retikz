@@ -6,7 +6,7 @@ const Demo: FC = () => (
     {/* 直角矩形（两对角） */}
     <Rectangle corner1={[10, 20]} corner2={[130, 110]} strokeWidth={2} />
     {/* 圆角矩形（中心 + 宽高） */}
-    <Rectangle center={[230, 65]} width={120} height={90} roundedCorners={16} fill="lightgray" strokeWidth={2} />
+    <Rectangle center={[230, 65]} width={120} height={90} cornerRadius={16} fill="lightgray" strokeWidth={2} />
   </Layout>
 );
 

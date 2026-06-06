@@ -23,7 +23,7 @@ import { Node } from '@retikz/react';
 
 <ComponentPreview name="node-basic" size="xs" />
 
-Choose the form by the role in the diagram: flowchart nodes usually use the default rectangle + `padding`; plain text labels use `stroke="none"` / `fill="none"`; button-like nodes add `roundedCorners` + `minimumWidth`; annotation cards fit multi-line `text` + `align="left"`; and if you only need a reference point with no visible shape, use [Coordinate](/core/components/node/coordinate) instead.
+Choose the form by the role in the diagram: flowchart nodes usually use the default rectangle + `padding`; plain text labels use `stroke="none"` / `fill="none"`; button-like nodes add `cornerRadius` + `minimumWidth`; annotation cards fit multi-line `text` + `align="left"`; and if you only need a reference point with no visible shape, use [Coordinate](/core/components/node/coordinate) instead.
 
 ### Positioning
 
@@ -257,7 +257,7 @@ A stop's `opacity` gives a "solid → transparent" fade; `color` set to `current
 
 #### Size constraints + scale
 
-- `roundedCorners` — corner radius (only on `rectangle` shape); can also be written as `shape={{ type:'rectangle', params:{ roundedCorners } }}`, with the top-level `roundedCorners` still supported (params wins when both are set)
+- `cornerRadius` — corner radius. Every shape supports rounding via its params: `shape={{ type:'polygon', params:{ sides:6, cornerRadius:8 } }}`, and likewise for `star` / `sector` / `rectangle`. The top-level `cornerRadius` is a migration-period form that only affects the default `rectangle` (params wins when both are set)
 - `minimumWidth` / `minimumHeight` / `minimumSize` — floor the bbox without shrinking natural text width
 - `scale` / `xScale` / `yScale` — uniform / per-axis scale; affects bbox, font size, padding, and path attachment
 
@@ -323,7 +323,7 @@ By default stacking = declaration order (SVG only honors paint order). `zIndex` 
 | `dashed` | `boolean` | ? | Dashed border preset (`[4, 2]`) |
 | `dotted` | `boolean` | ? | Dotted border preset (`[1, 2]`) |
 | `dashArray` | `Array<number>` | ? | Explicit dash/gap lengths; highest priority |
-| `roundedCorners` | `number` | — | Corner radius (only on `rectangle` shape); also settable via `shape={{ type:'rectangle', params:{ roundedCorners } }}` (params wins) |
+| `cornerRadius` | `number` | — | Migration-period top-level corner radius; only affects the default `rectangle`. Per-shape rounding goes in params: `shape={{ type, params:{ ..., cornerRadius } }}` (params wins) |
 | `minimumWidth` / `minimumHeight` | `number` | — | Floors the bbox dimensions |
 | `minimumSize` | `number` | — | Symmetric minimum-size alias; axis-specific fields take precedence |
 | `scale` | `number` | `1` | Uniform scale (includes font, padding, path attachment) |

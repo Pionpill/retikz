@@ -63,13 +63,19 @@ import { Node } from '@retikz/react';
 
 <ComponentPreview name="node-star" size="sm" />
 
-Besides the node's 9 standard anchors (`north` / `center` …), the star provides geometry-named anchors for precise connections via `{ id, anchor }`: `tip-N` (the Nth point) / `notch-N` (the Nth notch) / `center`. For the full `<Node>` props see [Node](/core/components/node/overview).
+Give `params.cornerRadius` a positive number to round both the outer tips and the inner notches at once; omitting it or `0` keeps sharp corners. The rounding is connection-aware: an endpoint aimed at a tip lands on the fillet arc rather than the sharp point that has been rounded away.
+
+<ComponentPreview name="node-star-corner-radius" size="sm" />
+
+Besides the node's 9 standard anchors (`north` / `center` …), the star provides geometry-named anchors for precise connections via `{ id, anchor }`: `tip-N` (the Nth point) / `notch-N` (the Nth notch) / `center`. These named anchors stay at the original tip / notch logical positions and do not move inward with `cornerRadius`. For the full `<Node>` props see [Node](/core/components/node/overview).
 
 ### API Reference
 
 | `shape` | params | Boundary / use |
 | --- | --- | --- |
-| `{ type: 'star', params }` | `points` / `innerRadius` / `outerRadius` / `rotate?` | Connectable star glyph |
+| `{ type: 'star', params }` | `points` / `innerRadius` / `outerRadius` / `rotate?` / `cornerRadius?` | Connectable star glyph |
+
+`cornerRadius` (user units) rounds both tips and notches; omitted / `0` = sharp corners, clamped per corner.
 
 ## How it works
 

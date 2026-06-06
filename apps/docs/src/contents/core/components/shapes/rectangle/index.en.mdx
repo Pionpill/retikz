@@ -16,12 +16,12 @@ import { Rectangle } from '@retikz/react';
 ```
 
 ```tsx
-<Rectangle corner1={[-40, -20]} corner2={[40, 20]} roundedCorners={6} />
+<Rectangle corner1={[-40, -20]} corner2={[40, 20]} cornerRadius={6} />
 ```
 
 ### Examples
 
-`<Rectangle>` can use two corners, or derive the corners from a center and size. Use `roundedCorners` for rounded rectangles.
+`<Rectangle>` can use two corners, or derive the corners from a center and size. Use `cornerRadius` for rounded rectangles.
 
 | Form | Best for |
 | --- | --- |
@@ -40,7 +40,7 @@ import { Rectangle } from '@retikz/react';
 | | `center` + `width` + `height` | Rectangle from center and size |
 | | `center` + `side` | Square from center and side |
 | | `corner1` + `width` + `height` | Rectangle from one corner and size |
-| | + `roundedCorners?` | Rounded rectangle (clamped to half the smaller side) |
+| | + `cornerRadius?` | Rounded rectangle (clamped to half the smaller side) |
 
 ## As a node shape
 
@@ -54,12 +54,12 @@ import { Node } from '@retikz/react';
 
 ```tsx
 <Node>label</Node>
-<Node shape={{ type: 'rectangle', params: { roundedCorners: 10 } }}>rounded</Node>
+<Node shape={{ type: 'rectangle', params: { cornerRadius: 10 } }}>rounded</Node>
 ```
 
 ### Examples
 
-Round the corners with the top-level `roundedCorners`, or with `shape={{ type:'rectangle', params:{ roundedCorners } }}` (params win when both are present).
+Round the corners with the top-level `cornerRadius`, or with `shape={{ type:'rectangle', params:{ cornerRadius } }}` (params win when both are present). The rounding is connection-aware: connection endpoints land on the fillet arc rather than the sharp corner that has been rounded away.
 
 <ComponentPreview name="node-rectangle" size="sm" />
 
@@ -69,7 +69,7 @@ Connection endpoints snap to the rectangle edge, and the node's 9 standard ancho
 
 | `shape` | Boundary | Parameters |
 | --- | --- | --- |
-| omitted / `"rectangle"` | Inner box wrapping "text + padding" | `roundedCorners?` (corner radius) |
+| omitted / `"rectangle"` | Inner box wrapping "text + padding" | `cornerRadius?` (corner radius) |
 
 ## How it works
 

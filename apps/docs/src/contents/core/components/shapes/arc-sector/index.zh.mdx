@@ -129,6 +129,10 @@ import { Node } from '@retikz/react';
 
 <ComponentPreview name="node-arc-sector" size="md" />
 
+给 sector 的 `params.cornerRadius` 一个正数，会把环楔四个拐角（两条直边与内外弧的接缝）磨成圆角，省略 / `0` 是硬角。倒角是连接感知的：朝外弧方向的连线端点会落在圆角后的轮廓上。
+
+<ComponentPreview name="node-sector-corner-radius" size="md" />
+
 除节点的 9 个标准 anchor（`north` / `center` …）外，这两个形状还提供按几何命名的 anchor，可用 `{ id, anchor }` 精确连线：
 
 - **sector**：`outer-arc-mid` / `inner-arc-mid` / `apex` / `centroid` / `start-edge-mid` / `end-edge-mid`
@@ -140,8 +144,10 @@ import { Node } from '@retikz/react';
 
 | `shape` | params | 边界 / 用途 |
 | --- | --- | --- |
-| `{ type: 'sector', params }` | `innerRadius` / `outerRadius` / `startAngle` / `endAngle` | 环楔（可连接，`innerRadius:0` 为实心扇片） |
+| `{ type: 'sector', params }` | `innerRadius` / `outerRadius` / `startAngle` / `endAngle` / `cornerRadius?` | 环楔（可连接，`innerRadius:0` 为实心扇片） |
 | `{ type: 'arc', params }` | `radius` / `startAngle` / `endAngle` / `close?` | 弧形 glyph（可连接） |
+
+sector 的 `cornerRadius`（用户单位）给环楔四角倒角，省略 / `0` = 硬角，逐角夹紧；`apex` / `*-arc-mid` 等命名锚点不随它移动。
 
 ## 技术原理
 

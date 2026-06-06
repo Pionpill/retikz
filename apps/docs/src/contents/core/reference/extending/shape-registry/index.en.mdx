@@ -303,7 +303,7 @@ When writing a third-party shape, check these points first:
 - `boundaryPoint` handles the case where `toward` is exactly the center; choosing a fixed default direction is common.
 - `boundaryPoint` and `anchor` use `worldToLocal` before local geometry when rotation is involved, then `localToWorld` when returning world coordinates.
 - `anchor` only handles names it owns; unknown names return `undefined` so the compiler can throw the standard error.
-- `emit` uses the provided `round` for coordinates and dimensions, and forwards relevant style fields where possible: `fillOpacity` / `strokeOpacity` / `dashPattern` / `opacity` / `roundedCorners`.
+- `emit` uses the provided `round` for coordinates and dimensions, and forwards relevant style fields where possible: `fillOpacity` / `strokeOpacity` / `dashPattern` / `opacity` / `cornerRadius`.
 - Implement `scaleParams` when params carry angles or counts (a sector's angles, a polygon's `sides`, a star's `points`); scale only length quantities, otherwise the default scaling corrupts angles and counts.
 - Implement `circumscribeOffset` for shapes whose geometric reference point differs from the bounding-box center (e.g. a sector positioned by its center), so the bbox tightly contains the shape while `position` stays on the semantic point.
 

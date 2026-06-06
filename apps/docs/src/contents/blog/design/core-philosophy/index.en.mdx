@@ -62,7 +62,7 @@ The bottom layer is **Step**: 12 `kind`s cover the full set of path actions:
 | `arc` | `startAngle`, `endAngle`, `radius` or `radiusX`/`radiusY`, `center?` | Circular / elliptical arc (cursor as center by default, or explicit `center`) |
 | `circlePath` | `radius`, `startAngle?`, `endAngle?`, `closed?` | Full circle or partial arc (chord / sector / open) |
 | `ellipsePath` | `radiusX`, `radiusY`, `startAngle?`, `endAngle?`, `closed?` | Full ellipse or partial arc |
-| `rectangle` | `from`, `to`, `roundedCorners?` | Axis-aligned rectangle (two corners, self-contained) |
+| `rectangle` | `from`, `to`, `cornerRadius?` | Axis-aligned rectangle (two corners, self-contained) |
 | `generator` | `name`, `to?`, `params` | Delegates to a registered path generator (parabola / sin…; none built into core) |
 
 These 12 are the result of repeated trimming — TikZ has dozens of native path actions, and most can be expressed by composing these 12. More `kind`s push up LLM learning cost and adapter implementation cost; fewer and the sugar layer can't paper over the gap.
