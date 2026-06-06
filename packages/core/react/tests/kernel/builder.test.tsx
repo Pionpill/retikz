@@ -520,6 +520,11 @@ describe('buildIR', () => {
       expect(ir.children[0]).toMatchObject({ type: 'node', color: 'blue' });
     });
 
+    it('<Node cornerRadius> 顶层圆角透传到 IR node.cornerRadius', () => {
+      const ir = buildIR(<Node id="A" position={[0, 0]} cornerRadius={8}>A</Node>);
+      expect(ir.children[0]).toMatchObject({ type: 'node', cornerRadius: 8 });
+    });
+
     it('<Path color> 主色透传到 IR（alpha.2）', () => {
       const ir = buildIR(
         <Path color="crimson">

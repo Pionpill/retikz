@@ -173,7 +173,7 @@ export type RectangleStepProps = {
   /** 对角（顺序无关） */
   to: DslTarget;
   /** 四角同圆角半径；缺省直角，compile clamp 到边长一半 */
-  roundedCorners?: number;
+  cornerRadius?: number;
 };
 
 /**

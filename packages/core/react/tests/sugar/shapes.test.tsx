@@ -260,6 +260,17 @@ describe('Rectangle equivalence', () => {
       ir(<Rectangle corner1={[0, 0]} corner2={[10, 6]} />).children,
     );
   });
+
+  it('cornerRadius passes through to rectangle step', () => {
+    expect(ir(<Rectangle corner1={[0, 0]} corner2={[10, 6]} cornerRadius={6} />).children).toEqual(
+      ir(
+        <Path>
+          <Step kind="move" to={[0, 0]} />
+          <Step kind="rectangle" from={[0, 0]} to={[10, 6]} cornerRadius={6} />
+        </Path>,
+      ).children,
+    );
+  });
 });
 
 describe('Grid equivalence', () => {

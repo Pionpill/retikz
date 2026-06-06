@@ -21,7 +21,7 @@ export const NODE_FIELDS = [
   'dashed',
   'dotted',
   'dashArray',
-  'roundedCorners',
+  'cornerRadius',
   'minimumWidth',
   'minimumHeight',
   'minimumSize',
