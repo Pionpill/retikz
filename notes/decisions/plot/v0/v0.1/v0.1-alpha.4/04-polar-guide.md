@@ -3,7 +3,7 @@
 > 在 ADR-01 的 `CoordinateFrame` 之上落极坐标 guide：angular axis（刻度绕圆周）、radial axis（刻度沿辐条）、polar grid（同心环 + 角向辐条）。**只做 guide 几何、消费 ADR-01 的 frame，不定 layout。** 下沉 core `Path`（弧 / 直段）+ `Node`（标签）。
 > schema 改动极小（仅 GuideDimension 加成员）；字段名 AI 提案，待人工 review。
 
-- 状态：Proposed
+- 状态：Accepted
 - 决策日期：2026-06-06
 - 关联：[plot v0.1-alpha.4 roadmap](./roadmap.md) · [ADR-01](./01-coordinate-polar.md) · [plot-design.md §3.9 guide / §8.3 投影分层](../../../../../architecture/plot-design.md) · [core-design.md](../../../../../architecture/core-design.md)
 

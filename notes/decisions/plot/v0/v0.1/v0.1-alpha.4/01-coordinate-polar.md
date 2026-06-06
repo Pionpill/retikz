@@ -3,7 +3,7 @@
 > 本 milestone 的唯一真叶子：把 alpha.1~alpha.3 写死的 cartesian 投影抽象成「坐标系可插拔的中间层」，并补 polar2D 投影几何 + 完整 `ResolvedCoordinateFrame` 契约（供 ADR-02/03/04 共用）。
 > 实现契约段的 schema 字段名 / 默认值为 **AI 提案、待人工 review 拍板**（develop-design：人工是设计阶段最终决策者）。
 
-- 状态：Proposed
+- 状态：Accepted
 - 决策日期：2026-06-06
 - 关联：[plot v0.1-alpha.4 roadmap](./roadmap.md) · [plot v0.1 roadmap](../roadmap.md) · [plot-design.md §3.5 coordinate / §3.6 encoding / §8.3 投影分层](../../../../../architecture/plot-design.md) · [core-design.md](../../../../../architecture/core-design.md)
 

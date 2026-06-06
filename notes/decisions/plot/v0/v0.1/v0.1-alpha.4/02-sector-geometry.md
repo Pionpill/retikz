@@ -3,7 +3,7 @@
 > 在 ADR-01 的 `CoordinateFrame` 之上落「区间 / 扇形」家族：interval 在 polar 下成 sector（径向柱 / 玫瑰），新增 sector mark（饼图 / 环图）。两者都下沉 core 参数化可连接 `sector` Node。**累积角是 transform 阶段职责**，不进 mark。
 > schema 字段名 / 默认值 AI 提案，待人工 review 拍板。
 
-- 状态：Proposed
+- 状态：Accepted
 - 决策日期：2026-06-06
 - 关联：[plot v0.1-alpha.4 roadmap](./roadmap.md) · [ADR-01](./01-coordinate-polar.md) · [plot-design.md §3.3 transform / §3.7 mark / §8.3 投影分层](../../../../../architecture/plot-design.md) · [core-design.md](../../../../../architecture/core-design.md)
 

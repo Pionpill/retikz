@@ -3,7 +3,7 @@
 > 在 ADR-01 的 `CoordinateFrame` 之上落「连续」家族：新建 area mark（线↔baseline 区域，cartesian + polar），line / area 在 polar 投影成弯弧 Path，加 `closed`（首尾相连）支撑雷达 / 填充雷达。下沉 core `Path`。
 > schema 字段名 / 默认值 AI 提案，待人工 review 拍板。
 
-- 状态：Proposed
+- 状态：Accepted
 - 决策日期：2026-06-06
 - 关联：[plot v0.1-alpha.4 roadmap](./roadmap.md) · [ADR-01](./01-coordinate-polar.md) · [plot-design.md §3.7 mark / §8.3 投影分层](../../../../../architecture/plot-design.md) · [core-design.md](../../../../../architecture/core-design.md)
 

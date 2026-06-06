@@ -3,7 +3,7 @@
 > alpha.4 的 ADR-01~04 落了 `@retikz/plot` 核心内部能力（polar IR + lowering）。本 ADR 把整套 polar 能力露到用户面：`@retikz/plot-react`（`coordinate="polar2D"` + 新 mark/guide 组件 + `closed` props）、`@retikz/plot-vanilla`（PlotSpec authoring + builder 对等）、`apps/docs`（polar 概念页 + 组件 API + demo），并端到端验收径向柱 / 饼图 / 环图 / 雷达 / 极坐标折线。
 > **无 IR schema 改动**（消费 ADR-01~04）。
 
-- 状态：Proposed
+- 状态：Accepted
 - 决策日期：2026-06-06
 - 关联：[plot v0.1-alpha.4 roadmap](./roadmap.md) · [ADR-01](./01-coordinate-polar.md) · [ADR-02](./02-sector-geometry.md) · [ADR-03](./03-continuous-mark.md) · [ADR-04](./04-polar-guide.md) · [plot-design.md §5 Preset/Primitive API / §6 包结构](../../../../../architecture/plot-design.md)
 
