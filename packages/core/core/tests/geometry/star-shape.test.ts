@@ -3,19 +3,15 @@
  * @description 覆盖：
  *   - paramsSchema 校验（points 整数 ≥3、内外半径 finite positive、outerRadius>innerRadius、strictObject 拒多余/缺字段）；
  *   - 几何契约：2×points 顶点外径尖角 / 内径凹角交替均布、emit 闭合 path、tip-N / notch-N / center anchor、
- *     rotate:0 第一尖角在 polar 0°(+x)、points:3 最小三角星、innerRadius→outerRadius 近正多边形、rotate 360° 等价；
+ *     rotate:0 第一尖角朝上（−y）、points:3 最小三角星、innerRadius→outerRadius 近正多边形、rotate 360° 等价；
  *   - 错误：points<3 / outerRadius≤innerRadius / 缺字段 paramsSchema reject；
  *   - 交互：self-rotate（params.rotate）+ Node.rotate 叠加、× scale 尺寸协同、Path 连接 tip-0；
  *   - round-trip（nested params IR）+ zod 错误两类；
  *   - scaleParams：node scale 只缩 inner/outerRadius、不缩 points / rotate。
  *
- *   角度约定（与 polar.ts / geometry 一致，SVG y-down）：顶点 k 角 = (rotate ?? 0) + k·(180/points)，
+ *   角度约定（与 polar.ts / geometry 一致，SVG y-down）：顶点 k 角 = (rotate ?? 0) + k·(180/points) − 90，
  *   point = [cx + r·cosθ, cy + r·sinθ]，偶 k 取 outerRadius（尖角 tip）、奇 k 取 innerRadius（凹角 notch），
- *   0°=+x(east)，90°=+y(屏幕下方)。
- *
- *   注：star.ts 的几何四函数（starGeometry 真值）此刻仍是占位 stub（实现 Agent 填真实数学）——
- *   依赖 circumscribe / emit / boundaryPoint / anchor 真实几何的 case 此刻 fail，预期。
- *   paramsSchema / round-trip / zod 错误 / scaleParams 类 case 此刻应通过。
+ *   0°=+x(east)，90°=+y(屏幕下方)。−90 基准使默认（rotate:0）第一尖角朝上（−y / 屏幕上方）。
  */
 import { describe, expect, it } from 'vitest';
 import { compileToScene } from '../../src/compile/compile';
@@ -96,8 +92,8 @@ describe('star — happy path 几何', () => {
   });
 
   it('star_anchors：tip-0 / notch-0 / center 坐标符几何', () => {
-    // points:5 star，圆心局部原点。AABB：x∈[-40,40]（顶点 0=(40,0)、顶点 5=(-40,0)…），
-    // 精确 AABB 中心 = 原点（对称）。rect 取 AABB（中心 (0,0)、半轴由 circumscribe 派生）。
+    // points:5 star，圆心局部原点。默认 −90 基准 → tip-0 朝上：顶点 0 角 = 0·36 − 90 = −90°，
+    // 点 = (40cos(−90), 40sin(−90)) = (0, −40)（屏幕上方）。AABB 中心 = 原点（对称）。
     // 这里直接用 star.anchor 验三个特征点（rect 用以中心为原点的对称 AABB）。
     const params = { points: 5, innerRadius: 16, outerRadius: 40 };
     const { halfWidth, halfHeight } = star.circumscribe(0, 0, params);
@@ -107,27 +103,27 @@ describe('star — happy path 几何', () => {
     expect(center).toBeDefined();
     expect(center![0]).toBeCloseTo(0, 6);
     expect(center![1]).toBeCloseTo(0, 6);
-    // tip-0 = 顶点 0（尖角）= outerRadius 在 0° = (40, 0)
+    // tip-0 = 顶点 0（尖角）= outerRadius 在 −90° = (0, −40)（朝上）
     const tip0 = star.anchor(rect, 'tip-0', params);
     expect(tip0).toBeDefined();
-    expect(tip0![0]).toBeCloseTo(40, 4);
-    expect(tip0![1]).toBeCloseTo(0, 4);
-    // notch-0 = 顶点 1（凹角）= innerRadius 在 36° = (16cos36, 16sin36)
+    expect(tip0![0]).toBeCloseTo(0, 4);
+    expect(tip0![1]).toBeCloseTo(-40, 4);
+    // notch-0 = 顶点 1（凹角）= innerRadius 在 (36 − 90)=−54° = (16cos(−54), 16sin(−54)) = (16sin36, −16cos36)
     const notch0 = star.anchor(rect, 'notch-0', params);
     expect(notch0).toBeDefined();
-    expect(notch0![0]).toBeCloseTo(16 * Math.cos((36 * Math.PI) / 180), 4);
-    expect(notch0![1]).toBeCloseTo(16 * Math.sin((36 * Math.PI) / 180), 4);
+    expect(notch0![0]).toBeCloseTo(16 * Math.sin((36 * Math.PI) / 180), 4);
+    expect(notch0![1]).toBeCloseTo(-16 * Math.cos((36 * Math.PI) / 180), 4);
   });
 
-  it('star_default_first_tip_at_zero：rotate:0 → 第一尖角（tip-0）在 polar 0°(+x)', () => {
+  it('star_default_first_tip_up：rotate:0 → 第一尖角（tip-0）朝上（−y / 屏幕上方）', () => {
     const params = { points: 6, innerRadius: 20, outerRadius: 50 };
     const { halfWidth, halfHeight } = star.circumscribe(0, 0, params);
     const rect = { x: 0, y: 0, width: 2 * halfWidth, height: 2 * halfHeight, rotate: 0 };
     const tip0 = star.anchor(rect, 'tip-0', params);
     expect(tip0).toBeDefined();
-    // 第一尖角方向角 = 0°（+x），半径 = outerRadius = 50
+    // 默认基准 −90 → 第一尖角方向角 = −90°（屏幕上方），归一化 = 270°；半径 = outerRadius = 50
     const angle = (Math.atan2(tip0![1], tip0![0]) * 180) / Math.PI;
-    expect(((angle % 360) + 360) % 360).toBeCloseTo(0, 4);
+    expect(((angle % 360) + 360) % 360).toBeCloseTo(270, 4);
     expect(Math.hypot(tip0![0], tip0![1])).toBeCloseTo(50, 4);
   });
 });
@@ -217,7 +213,7 @@ describe('star — 交互（self-rotate / scale / Path 连接）', () => {
   it('star_self_rotate_plus_node_rotate：params.rotate:18 + Node rotate:12 → 顶点叠加旋转', () => {
     // self-rotate 进 emit 顶点角度；Node.rotate 走外层 GroupPrim 的 rotate transform。
     // 验证：① 外层 group 带 rotate 12° transform；② emit 顶点（轴对齐空间、未含 group rotate）
-    //   已含 self-rotate 18°——首尖角 tip-0 相对中心方向角应 ≈ 18°。
+    //   已含 self-rotate 18°——首尖角 tip-0 相对中心方向角 = 18 − 90 = −72°（归一化 288°）。
     const compiled = compileToScene(
       scene([starNode({ points: 5, innerRadius: 16, outerRadius: 40, rotate: 18 }, { rotate: 12 })]),
       { precision: 6 },
@@ -231,9 +227,9 @@ describe('star — 交互（self-rotate / scale / Path 连接）', () => {
     expect(verts.length).toBe(10);
     const mx = verts.reduce((s, v) => s + v[0], 0) / verts.length;
     const my = verts.reduce((s, v) => s + v[1], 0) / verts.length;
-    // 顶点 0 是首尖角（外径），方向角应 = self-rotate 18°（mod 360）
+    // 顶点 0 是首尖角（外径），方向角 = self-rotate 18 − 90 = −72°（归一化 288°）
     const angle0 = (Math.atan2(verts[0][1] - my, verts[0][0] - mx) * 180) / Math.PI;
-    expect(((angle0 % 360) + 360) % 360).toBeCloseTo(18, 3);
+    expect(((angle0 % 360) + 360) % 360).toBeCloseTo(288, 3);
   });
 
   it('star_with_scale：node scale=2 → scaleParams 把 inner/outerRadius×2、points/rotate 不变', () => {
@@ -250,7 +246,7 @@ describe('star — 交互（self-rotate / scale / Path 连接）', () => {
   });
 
   it('star_path_connect_tip：<Path from={{id:"star", anchor:"tip-0"}}> → 命中第一尖角', () => {
-    // points:5 star 中心在原点、tip-0 = outerRadius 在 0° = (40, 0)。
+    // points:5 star 中心在原点、默认 −90 基准 → tip-0 = outerRadius 在 −90° = (0, −40)。
     // 'tip-0' 是 star 自定 anchor，AnchorRefSchema 已放宽接受任意命名 anchor，可直接用对象形态。
     const connectPath: IR['children'][number] = {
       type: 'path',
@@ -268,8 +264,8 @@ describe('star — 交互（self-rotate / scale / Path 连接）', () => {
     expect(connector).toBeDefined();
     const move = connector!.commands[0];
     if (move.kind === 'move') {
-      expect(move.to[0]).toBeCloseTo(40, 2);
-      expect(move.to[1]).toBeCloseTo(0, 2);
+      expect(move.to[0]).toBeCloseTo(0, 2);
+      expect(move.to[1]).toBeCloseTo(-40, 2);
     }
   });
 });

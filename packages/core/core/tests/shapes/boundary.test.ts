@@ -244,21 +244,16 @@ describe('端到端：path clip 透传 boundary ?? node.boundary', () => {
   // 改从 [0,0] 方向出发，让 toward 从 star 中心看去往 [200,0]（即 east 方向 0°）——
   // star 在 0° 方向是尖角（outerRadius=30）；circle 也是半径30（max(30,30)=30）→ 数值相同！
   //
-  // 因此改用 toward 朝 36° 方向（凹角）：path 从 [200, 145] 出发连向 star[0,0]。
-  // toward = [0,0] - [200,145] 方向 = 约 215.9°（star 视角）... 实际 toward 参数是 step.from → step.to 方向。
+  // 默认 −90 基准下：tip-k 角 = −90 + k·72（即 270/342/54/126/198°），notch-k 角 = −54 + k·72
+  //   （即 306/18/90/162/234°）。选 18° 方向（notch-1）取凹角边界。
   //
-  // 更直接：让 path 从 star 指向 [100, 73]（tan⁻¹(73/100)≈36.1°，正好是 star 凹角方向）：
-  //   move to: { id: 'star' }（从 star 出发），line to: [100, 73]。
-  // 但这样取的是 star 端，toward = [100,73] 方向——
-  // 凹角方向 star 边界约 r≈10；circle（r=30）边界≈30 → 两端点显著不同。
-  //
-  // 实际测试：path move from [100, 73], line to star，此时 clipForTarget 用 toward=（star中心 - [100,73]）
-  // 即 toward ≈ [-100, -73]，对应 star 中心朝 [100,73] 方向 = arctan(73/100)≈36.1°（凹角），
-  // star 边界 ≈ innerRadius=10，circle 边界 = 30，差异显著（20 单位）。
+  // 让 boundaryPoint 取 18° 方向：path 从 star 中心朝 [100, 100·tan18°≈32.49] 出发，
+  //   toward 方向 = arctan(32.49/100) ≈ 18°，正好命中 notch-1（凹角），
+  //   star 边界 ≈ innerRadius=10，circle 边界 = 30，差异显著（20 单位）。
 
   it('(a) node 无 boundary → 端点贴真实星形边界（凹角方向，约 innerRadius=10）', () => {
-    // start=[100,73]: toward=arctan(73/100)≈36.1°，star 凹角，边界约 r=10
-    const pointA = lineEndpointWithNode(undefined, {}, [100, 73]);
+    // start=[100, 32.49]: toward≈18°，star 凹角（notch-1），边界约 r=10
+    const pointA = lineEndpointWithNode(undefined, {}, [100, 100 * Math.tan((18 * Math.PI) / 180)]);
     // 星形边界点离中心 [0,0] 的距离应约等于 10（innerRadius）
     const distA = Math.sqrt(pointA[0] ** 2 + pointA[1] ** 2);
     expect(distA).toBeCloseTo(10, 0);
@@ -272,16 +267,18 @@ describe('端到端：path clip 透传 boundary ?? node.boundary', () => {
   });
 
   it('(a) != (b)：star 形边界与圆形边界不同（凹角方向显著差异）', () => {
-    const pointA = lineEndpointWithNode(undefined, {}, [100, 73]);
-    const pointB = lineEndpointWithNode('circle', {}, [100, 73]);
+    const notchStart: [number, number] = [100, 100 * Math.tan((18 * Math.PI) / 180)];
+    const pointA = lineEndpointWithNode(undefined, {}, notchStart);
+    const pointB = lineEndpointWithNode('circle', {}, notchStart);
     // innerRadius=10 vs circle r=30，差距 20，必然不等
     expect(pointA).not.toEqual(pointB);
   });
 
   it('(c) node boundary="circle" 且 端点 boundary="shape" → 又贴真实星形边界，≈ (a)', () => {
     // 端点 boundary:'shape' 覆盖 node boundary:'circle'，回退到视觉形状（star 凹角 ≈ 10）
-    const pointC = lineEndpointWithNode('circle', { boundary: 'shape' }, [100, 73]);
-    const pointA = lineEndpointWithNode(undefined, {}, [100, 73]);
+    const notchStart: [number, number] = [100, 100 * Math.tan((18 * Math.PI) / 180)];
+    const pointC = lineEndpointWithNode('circle', { boundary: 'shape' }, notchStart);
+    const pointA = lineEndpointWithNode(undefined, {}, notchStart);
     expect(pointC[0]).toBeCloseTo(pointA[0], 4);
     expect(pointC[1]).toBeCloseTo(pointA[1], 4);
   });

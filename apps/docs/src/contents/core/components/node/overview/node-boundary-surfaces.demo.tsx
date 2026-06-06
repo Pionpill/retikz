@@ -19,7 +19,7 @@ const Demo: FC = () => (
           <Node
             id={`star-${boundary}`}
             position={[x, -5]}
-            shape={{ type: 'star', params: { points: 5, innerRadius: 14, outerRadius: 36, rotate: -90 } }}
+            shape={{ type: 'star', params: { points: 5, innerRadius: 14, outerRadius: 36 } }}
             boundary={boundary}
             fill="gold"
           />

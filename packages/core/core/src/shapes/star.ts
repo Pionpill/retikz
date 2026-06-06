@@ -23,8 +23,9 @@ const DEG_TO_RAD = Math.PI / 180;
 /**
  * star 派生几何（circumscribe / boundaryPoint / anchor / emit 单一真源）
  * @description `2×points` 个顶点的局部坐标（绕中心、外径尖角与内径凹角交替均布、按 rotate 定起始），
- *   外加由顶点 min/max 算出的精确 AABB 半轴。顶点 k（k=0..2·points−1）角 = rotate + k·(180/points)，
- *   偶 k 取 outerRadius（尖角 tip）、奇 k 取 innerRadius（凹角 notch）；中心局部原点恒为 [0,0]
+ *   外加由顶点 min/max 算出的精确 AABB 半轴。顶点 k（k=0..2·points−1）角 = rotate + k·(180/points) − 90，
+ *   偶 k 取 outerRadius（尖角 tip）、奇 k 取 innerRadius（凹角 notch）；默认（rotate:0）第一尖角朝上（−y）。
+ *   中心局部原点恒为 [0,0]
  *   （星形关于中心对称，AABB 中心 = 星形中心 = node position，无 circumscribeOffset）。
  */
 type StarGeometry = {
@@ -36,9 +37,9 @@ type StarGeometry = {
 
 /**
  * 计算 star 单一真源几何
- * @description 局部系以中心为原点：顶点 k 角 = (rotate ?? 0) + k·(180/points)，半径偶 outer / 奇 inner，
- *   point = [r·cosθ, r·sinθ]（0°=+x，90°=+y screen y-down）。AABB 半轴 = 各顶点 |x| / |y| 的最大值
- *   （对称 → 中心即原点）。
+ * @description 局部系以中心为原点：顶点 k 角 = (rotate ?? 0) + k·(180/points) − 90，半径偶 outer / 奇 inner，
+ *   point = [r·cosθ, r·sinθ]（0°=+x，90°=+y screen y-down）。−90 基准使默认第一尖角朝上（−y）。
+ *   AABB 半轴 = 各顶点 |x| / |y| 的最大值（对称 → 中心即原点）。
  */
 const starGeometry = (params: StarParams): StarGeometry => {
   const { points, innerRadius, outerRadius } = params;
@@ -49,7 +50,7 @@ const starGeometry = (params: StarParams): StarGeometry => {
   let maxAbsX = 0;
   let maxAbsY = 0;
   for (let k = 0; k < 2 * points; k++) {
-    const angle = (rotate + k * step) * DEG_TO_RAD;
+    const angle = (rotate + k * step - 90) * DEG_TO_RAD;
     const radius = k % 2 === 0 ? outerRadius : innerRadius;
     const x = radius * Math.cos(angle);
     const y = radius * Math.sin(angle);
@@ -98,7 +99,7 @@ export const star = defineShape({
         .number()
         .finite()
         .optional()
-        .describe('Shape self-rotation in degrees; default 0 (first tip at polar 0deg=+x). Composes with Node.rotate.'),
+        .describe('Shape self-rotation in degrees; default 0 = first tip points up (screen -y / top); positive rotates clockwise (screen). Composes with Node.rotate.'),
     })
     .refine(p => p.outerRadius > p.innerRadius, {
       message: 'outerRadius must be greater than innerRadius',
