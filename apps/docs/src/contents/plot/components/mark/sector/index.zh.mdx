@@ -1,0 +1,61 @@
+---
+title: 扇形
+description: 用 <SectorMark> 画饼图与环图：在 polar 坐标系下按 angle 值字段自动累积成扇区。
+---
+
+`<SectorMark>` 把每行数据画成一个扇区，扇区的角度大小来自 `angle` 绑定的值字段。它只在 polar 坐标系下有意义，所以 `<Plot>` 要写 `coordinate="polar"`。各扇区的起止角由 `<Plot>` **自动累积**——你只给值，不用自己算角度。
+
+## 用法
+
+```tsx
+import { Plot, SectorMark } from '@retikz/plot-react';
+```
+
+```tsx
+<Plot data={share} coordinate="polar">
+  <SectorMark angle="value" color="label" />
+</Plot>
+```
+
+`angle` 绑值字段（决定扇区多大），`color` 绑分类字段（决定每块的颜色）。`coordinate="polar"` 必写——cartesian 下没有“扇区”的几何含义。
+
+## 例子
+
+### 饼图
+
+最朴素的用法：`angle` 给值字段、`color` 给分类。各扇区按数据顺序首尾相接铺满整圈。
+
+<ComponentPreview name="sector-pie" sourceFiles={['sector-pie.data.ts']} />
+
+### 环图
+
+环图就是中间挖空的饼图。空洞由 `<Plot>` 的 polar 配置 `innerRadius`（外半径占比 `0..1`）控制，不是 `<SectorMark>` 的属性——因为它是坐标系几何，对所有扇区一致。
+
+<ComponentPreview name="sector-donut" sourceFiles={['sector-pie.data.ts']} />
+
+<p className="text-sm text-muted-foreground">同一份数据加 <code>coordinate={{ type: 'polar', innerRadius: 0.6 }}</code> 即成环图。</p>
+
+## 技术原理
+
+> 上手阶段可跳过本节；想理解扇区角度怎么来的时再回来读。
+
+`<SectorMark>` 内建**自动累积**：你给的 `angle` 是每行的“份额值”，但扇区需要的是 `[起角, 止角]` 一对边界。`<Plot>` 在装配时自动加一道累积（与 `<BarMark stack>` 自动装配堆叠是同一套约定），把份额值前缀求和成连续的角界，再交给扇区几何。所以 DSL 层只暴露一个 `angle` 值字段，不需要你写 transform，也不用预先算好角度。
+
+给 `series` 时，累积按系列排序分段；不给则按数据数组顺序。
+
+## API
+
+| 属性 | 类型 | 默认值 | 描述 |
+| --- | --- | --- | --- |
+| `angle` | `string` | — | 角向值字段路径；自动累积成各扇区的起止角 |
+| `color` | `string?` | `angle` 字段 | 颜色字段（自动 ordinal 色 scale）；省略时按 `angle` 字段本身分类上色 |
+| `series` | `string?` | — | 系列字段：累积时按其排序分段；省略时按数据顺序 |
+| `id` | `string?` | — | 可选句柄（预留，暂不解析） |
+
+<ComponentAlert title="必须在 polar 下使用" description="<SectorMark> 只有在 <Plot coordinate=\"polar\"> 时才有几何含义；cartesian 下没有扇区。" />
+
+## 相关
+
+- [坐标系](/plot/grammar/coordinate) —— polar 开关与 innerRadius / 角度区间
+- [柱](/plot/components/mark/bar) —— polar 下的径向柱是另一种环形图
+- [面积](/plot/components/mark/area) —— 闭合折线 / 填充雷达

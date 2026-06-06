@@ -1,0 +1,53 @@
+---
+title: 坐标轴
+description: 用 <Axis> 定制刻度、标签和网格；dimension 选择装饰哪个维度——cartesian 的 x / y 或 polar 的 angle / radius。
+---
+
+`<Axis>` 声明一条坐标轴。`dimension` 选它装饰哪个维度：cartesian 下是 `x`（水平）/ `y`（垂直），polar 下是 `angle`（角向）/ `radius`（径向）。网格走 `grid` 布尔属性，不是单独的组件。
+
+不写任何 `<Axis>` 时 `<Plot>` 会补默认轴；一旦显式列了 `<Axis>`，就只画你列出的那些。
+
+## 用法
+
+```tsx
+import { Plot, Axis } from '@retikz/plot-react';
+```
+
+```tsx
+<Plot data={revenue}>
+  <LineMark x="month" y="revenue" order="month" />
+  <Axis dimension="x" />
+  <Axis dimension="y" grid tickCount={5} />
+</Plot>
+```
+
+## 例子
+
+### cartesian 轴
+
+显式列 x / y 轴，y 轴加网格、指定目标刻度数。
+
+<ComponentPreview name="axis-cartesian" sourceFiles={['axis-cartesian.data.ts']} />
+
+### polar 轴
+
+polar 下用 `dimension="angle"`（角向刻度标签）和 `dimension="radius"`（径向刻度 + 同心环网格）。雷达 / 极坐标图常两条一起用。
+
+<ComponentPreview name="axis-polar" sourceFiles={['axis-polar.data.ts']} />
+
+<p className="text-sm text-muted-foreground">angle 轴标维度名，radius 轴加 grid 画同心环。</p>
+
+## API
+
+| 属性 | 类型 | 默认值 | 描述 |
+| --- | --- | --- | --- |
+| `dimension` | `'x' \| 'y' \| 'angle' \| 'radius'` | — | 装饰哪个维度：cartesian 的 x / y，polar 的 angle / radius |
+| `tickCount` | `number?` | 默认刻度数 | 目标刻度数；网格线复用同刻度 |
+| `tickLabels` | `boolean?` | `true` | 是否出刻度标签 |
+| `grid` | `boolean?` | `false` | 是否画对齐本轴刻度的网格线（polar radius 即同心环） |
+| `id` | `string?` | — | 可选句柄（预留，暂不解析） |
+
+## 相关
+
+- [坐标系](/plot/grammar/coordinate) —— polar 开关与角色映射
+- [图表容器](/plot/components/plot) —— `bare` 关掉所有轴

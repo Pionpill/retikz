@@ -1,0 +1,64 @@
+---
+title: 折线
+description: 用 <LineMark> 画折线图：按 order 连点，支持多系列；polar 下加 closed 即雷达。
+---
+
+`<LineMark>` 把数据点按顺序连成一条折线。`x` / `y` 绑位置字段，`order` 决定连线顺序（缺省按数据数组顺序）。给 `series` 拆成多条线，给 `closed` 首尾相接闭合——在 polar 下就是雷达。
+
+## 用法
+
+```tsx
+import { Plot, LineMark } from '@retikz/plot-react';
+```
+
+```tsx
+<Plot data={revenue}>
+  <LineMark x="month" y="revenue" order="month" />
+</Plot>
+```
+
+`order` 推荐显式写——否则折线按数据行顺序连，数据顺序一变折线就乱跳。
+
+## 例子
+
+### 基础折线
+
+最朴素的单线：`x` / `y` 绑字段、`order` 指定连线顺序。
+
+<ComponentPreview name="line-basic" sourceFiles={['line-basic.data.ts']} />
+
+### 多系列
+
+给 `series` 一个字段，数据按它拆成多条线，每条自动取一种颜色。
+
+<ComponentPreview name="line-series" sourceFiles={['line-series.data.ts']} />
+
+<p className="text-sm text-muted-foreground">按城市拆两条线，系列自动着色。</p>
+
+### 雷达
+
+`<Plot coordinate="polar">` 加 `<LineMark closed />`：末点回连首点闭合成线框多边形，各维度沿角向均布、值映射到半径——线框版雷达。想要带填充的雷达用 [`<AreaMark closed />`](/plot/components/mark/area)。
+
+<ComponentPreview name="line-radar" sourceFiles={['line-radar.data.ts']} />
+
+<p className="text-sm text-muted-foreground">closed 让首尾相接；polar 下即线框雷达。</p>
+
+## API
+
+| 属性 | 类型 | 默认值 | 描述 |
+| --- | --- | --- | --- |
+| `x` | `string` | — | 绑 x 通道的字段路径（polar 下作角向） |
+| `y` | `string` | — | 绑 y 通道的字段路径（polar 下作径向） |
+| `angle` | `string?` | `x` | polar 下显式绑角向字段；缺省复用 `x` |
+| `radius` | `string?` | `y` | polar 下显式绑径向字段；缺省复用 `y` |
+| `order` | `string?` | 数据顺序 | 驱动连接顺序的字段 |
+| `series` | `string?` | — | 系列字段：拆成多条折线；缺省单线 |
+| `closed` | `boolean?` | `false` | 末点回连首点闭合成多边形（polar 下即雷达轮廓） |
+| `color` | `string?` | `series` | 颜色字段（自动 ordinal 色 scale）；缺省取 `series` |
+| `id` | `string?` | — | 可选句柄（预留，暂不解析） |
+
+## 相关
+
+- [散点](/plot/components/mark/point) —— 叠在折线上标出每个观测点
+- [面积](/plot/components/mark/area) —— 带填充的折线 / 填充雷达
+- [坐标系](/plot/grammar/coordinate) —— polar 开关与角色映射

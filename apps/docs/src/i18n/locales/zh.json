@@ -95,6 +95,8 @@
     "compLineMark": "折线",
     "compPointMark": "散点",
     "compBarMark": "柱",
+    "compSectorMark": "扇形",
+    "compAreaMark": "面积",
     "compAxis": "坐标轴",
     "examples": "图表",
     "exampleLineScatter": "折线与散点",

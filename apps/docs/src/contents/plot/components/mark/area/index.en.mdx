@@ -1,0 +1,57 @@
+---
+title: AreaMark
+description: Draw area charts with <AreaMark>: a top line and a baseline enclose a filled region; add closed under polar for a filled radar.
+---
+
+`<AreaMark>` adds a return edge to a line: the top edge is the line connecting `x` / `y`, the bottom edge sticks to `baseline` (default `0`), and the two enclose a fillable region. Switch to a polar coordinate system and add `closed`, and the region closes into a polygon — a filled radar.
+
+## Usage
+
+```tsx
+import { Plot, AreaMark } from '@retikz/plot-react';
+```
+
+```tsx
+<Plot data={activity}>
+  <AreaMark x="day" y="users" order="day" />
+</Plot>
+```
+
+`x` / `y` bind the position fields, `order` decides the top edge's connection order. The bottom defaults to `0`; set `baseline` for a different floor.
+
+## Examples
+
+### Basic area
+
+The top line and a baseline of `0` enclose a filled region — good for emphasizing the "volume" of a cumulative quantity or trend.
+
+<ComponentPreview name="area-basic" sourceFiles={['area-basic.data.ts']} />
+
+### Filled radar
+
+`<Plot coordinate="polar">` with `<AreaMark closed />`: the last point connects back to the first into a filled polygon — a filled counterpart to the `<LineMark closed />` wireframe radar. Dimensions spread evenly along the angular axis, values map to the radius.
+
+<ComponentPreview name="area-radar" sourceFiles={['area-radar.data.ts']} />
+
+<p className="text-sm text-muted-foreground">closed joins ends into a polygon; under polar that's a filled radar.</p>
+
+## API
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `x` | `string` | — | Field path for the x channel (angular under polar) |
+| `y` | `string` | — | Field path for the y channel (radial under polar) |
+| `angle` | `string?` | `x` | Explicit angular field under polar; defaults to `x` |
+| `radius` | `string?` | `y` | Explicit radial field under polar; defaults to `y` |
+| `order` | `string?` | data order | Field driving the top edge's connection order |
+| `baseline` | `number?` | `0` | Baseline value the return edge sticks to |
+| `closed` | `boolean?` | `false` | Connect the last point back to the first into a polygon (a filled radar under polar) |
+| `series` | `string?` | — | Series field: split into multiple areas; omit for a single area |
+| `color` | `string?` | `series` | Color field (auto ordinal color scale); falls back to `series` |
+| `id` | `string?` | — | Optional handle (reserved, not yet resolved) |
+
+## Related
+
+- [LineMark](/plot/components/mark/line) — `<LineMark closed />` is a wireframe radar
+- [Coordinates](/plot/grammar/coordinate) — the polar switch and channel roles
+- [SectorMark](/plot/components/mark/sector) — pie / donut charts
