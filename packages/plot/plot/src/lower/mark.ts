@@ -257,6 +257,10 @@ const lowerSector = (mark: Mark, rows: Array<ExternalRow>, frame: PolarFrame, co
     if (!isFiniteNumber(v0) || !isFiniteNumber(v1)) {
       throw new Error(`lowerPlots: sector mark requires numeric ${startField} / ${endField} cumulative bounds (run the stack transform first)`);
     }
+    // 累积界倒退（段值为负）→ 角度跨 0、扇片比例失真且数据被静默歪曲；饼/环扇片不能为负，fail loud
+    if (v1 < v0) {
+      throw new Error(`lowerPlots: sector mark requires non-negative values (cumulative bound ${endField}=${v1} < ${startField}=${v0}); pie / donut slices cannot be negative`);
+    }
     const startAngle = frame.primary.coordinate(v0);
     const endAngle = frame.primary.coordinate(v1);
     if (!Number.isFinite(startAngle) || !Number.isFinite(endAngle)) continue;

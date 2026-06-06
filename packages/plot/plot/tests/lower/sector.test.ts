@@ -263,4 +263,21 @@ describe('lowerPlots sector mark pie / donut (ADR-02)', () => {
     });
     expect(() => expandOf(spec, { share: SHARE })).toThrow();
   });
+
+  // 错误路径：负值饼图 → 累积界倒退、扇片比例失真，必须 fail loud（Bug Hunter W-1）
+  it('pie_negative_value_throws', () => {
+    const spec = PlotSpecSchema.parse({
+      namespace: 'plot',
+      type: 'plot',
+      data: { reference: 'share' },
+      transform: [{ kind: 'stack', y: 'value' }],
+      coordinate: { type: 'polar2D', angle: 'a', radius: 'r' },
+      scales: [
+        { type: 'linear', name: 'a' },
+        { type: 'linear', name: 'r' },
+      ],
+      marks: [{ type: 'sector', encoding: { color: { field: 'label' } } }],
+    });
+    expect(() => expandOf(spec, { share: [{ label: 'A', value: 3 }, { label: 'B', value: -5 }, { label: 'C', value: 2 }] })).toThrow(/non-negative/);
+  });
 });
