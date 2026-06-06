@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { type PlotSpec, PlotSpecSchema } from '@retikz/plot';
 import { buildPlotSpec } from '../../src/components/buildPlotSpec';
 import { Axis } from '../../src/components/guides';
-import { BarMark, LineMark, PointMark } from '../../src/components/marks';
+import { AreaMark, BarMark, LineMark, PointMark, SectorMark } from '../../src/components/marks';
 
 describe('buildPlotSpec 装配（ADR-08 / ADR-05）', () => {
   it('单 line：装配出等价手写 PlotSpec（含默认 guides）', () => {
@@ -219,5 +219,162 @@ describe('buildPlotSpec ADR-07（BarMark / color / series / stack / scaleX）', 
     );
     expect(spec.scales[0]).toEqual({ type: 'band', name: '__x' });
     expect(spec.marks).toHaveLength(2);
+  });
+});
+
+describe('buildPlotSpec ADR-05（polar coordinate / sector / area / closed / angle·radius）', () => {
+  it('radial_bar_equivalence：coordinate="polar" + <BarMark> → polar2D + band 角向 + interval mark', () => {
+    const spec = buildPlotSpec(<BarMark x="month" y="amount" color="month" />, '__plot', { coordinate: 'polar' });
+    const expected: PlotSpec = {
+      namespace: 'plot',
+      type: 'plot',
+      data: { reference: '__plot' },
+      scales: [
+        { type: 'band', name: '__angle' },
+        { type: 'linear', name: '__radius' },
+        { type: 'ordinal', name: '__color' },
+      ],
+      coordinate: { type: 'polar2D', angle: '__angle', radius: '__radius', startAngle: 0, endAngle: 360, innerRadius: 0 },
+      marks: [{ type: 'interval', encoding: { x: { field: 'month' }, y: { field: 'amount' }, color: { field: 'month', scale: '__color' } } }],
+      guides: [],
+    };
+    expect(spec).toEqual(expected);
+  });
+
+  it('pie_equivalence：coordinate="polar" + <SectorMark> → polar2D + linear 角向 + stack transform + sector mark', () => {
+    const spec = buildPlotSpec(<SectorMark angle="value" color="label" />, '__plot', { coordinate: 'polar' });
+    const expected: PlotSpec = {
+      namespace: 'plot',
+      type: 'plot',
+      data: { reference: '__plot' },
+      transform: [{ kind: 'stack', y: 'value' }],
+      scales: [
+        { type: 'linear', name: '__angle' },
+        { type: 'linear', name: '__radius' },
+        { type: 'ordinal', name: '__color' },
+      ],
+      coordinate: { type: 'polar2D', angle: '__angle', radius: '__radius', startAngle: 0, endAngle: 360, innerRadius: 0 },
+      marks: [{ type: 'sector', encoding: { color: { field: 'label', scale: '__color' } } }],
+      guides: [],
+    };
+    expect(spec).toEqual(expected);
+  });
+
+  it('pie_color_defaults_to_angle_field：未给 color → 按 angle 值字段分类上色', () => {
+    const spec = buildPlotSpec(<SectorMark angle="value" />, '__plot', { coordinate: 'polar' });
+    expect(spec.marks[0]).toEqual({ type: 'sector', encoding: { color: { field: 'value', scale: '__color' } } });
+    expect(spec.transform).toEqual([{ kind: 'stack', y: 'value' }]);
+  });
+
+  it('sector_series_orders_stack：<SectorMark series> → stack transform 带 groupBy', () => {
+    const spec = buildPlotSpec(<SectorMark angle="value" series="label" />, '__plot', { coordinate: 'polar' });
+    expect(spec.transform).toEqual([{ kind: 'stack', y: 'value', groupBy: 'label' }]);
+    expect(spec.marks[0]).toEqual({ type: 'sector', encoding: { color: { field: 'label', scale: '__color' } } });
+  });
+
+  it('donut_inner_radius：coordinate 对象 innerRadius → 进 IR', () => {
+    const spec = buildPlotSpec(<SectorMark angle="value" color="label" />, '__plot', {
+      coordinate: { type: 'polar', innerRadius: 0.5 },
+    });
+    expect(spec.coordinate).toEqual({
+      type: 'polar2D',
+      angle: '__angle',
+      radius: '__radius',
+      startAngle: 0,
+      endAngle: 360,
+      innerRadius: 0.5,
+    });
+  });
+
+  it('polar_angle_range_object：startAngle / endAngle 进 IR（半圆等）', () => {
+    const spec = buildPlotSpec(<SectorMark angle="value" />, '__plot', {
+      coordinate: { type: 'polar', startAngle: -90, endAngle: 90 },
+    });
+    expect(spec.coordinate).toMatchObject({ type: 'polar2D', startAngle: -90, endAngle: 90, innerRadius: 0 });
+  });
+
+  it('radar_equivalence：<LineMark closed> + polar → closed line + point 角向', () => {
+    const spec = buildPlotSpec(<LineMark x="dim" y="value" closed />, '__plot', { coordinate: 'polar' });
+    const expected: PlotSpec = {
+      namespace: 'plot',
+      type: 'plot',
+      data: { reference: '__plot' },
+      scales: [
+        { type: 'point', name: '__angle' },
+        { type: 'linear', name: '__radius' },
+      ],
+      coordinate: { type: 'polar2D', angle: '__angle', radius: '__radius', startAngle: 0, endAngle: 360, innerRadius: 0 },
+      marks: [{ type: 'line', closed: true, encoding: { x: { field: 'dim' }, y: { field: 'value' } } }],
+      guides: [],
+    };
+    expect(spec).toEqual(expected);
+  });
+
+  it('polar_line_equivalence：<LineMark> + polar（不闭合）→ linear 角向', () => {
+    const spec = buildPlotSpec(<LineMark x="theta" y="r" order="theta" />, '__plot', { coordinate: 'polar' });
+    expect(spec.scales[0]).toEqual({ type: 'linear', name: '__angle' });
+    expect(spec.marks[0]).toEqual({ type: 'line', order: 'theta', encoding: { x: { field: 'theta' }, y: { field: 'r' } } });
+    expect(spec.coordinate).toMatchObject({ type: 'polar2D', angle: '__angle', radius: '__radius' });
+  });
+
+  it('area_mark_equivalence：<AreaMark> → area mark IR（baseline / closed 落位）', () => {
+    const spec = buildPlotSpec(<AreaMark x="t" y="v" baseline={2} closed />, '__plot', { coordinate: 'polar' });
+    expect(spec.marks[0]).toEqual({ type: 'area', baseline: 2, closed: true, encoding: { x: { field: 't' }, y: { field: 'v' } } });
+  });
+
+  it('explicit_angle_radius_channels：mark 显式 angle / radius → encoding 出对应通道', () => {
+    const spec = buildPlotSpec(<PointMark x="px" y="py" angle="a" radius="r" />, '__plot', { coordinate: 'polar' });
+    expect(spec.marks[0]).toEqual({
+      type: 'point',
+      encoding: { x: { field: 'px' }, y: { field: 'py' }, angle: { field: 'a' }, radius: { field: 'r' } },
+    });
+  });
+
+  it('polar_explicit_axis：写 <Axis dimension="angle"/> → guides 含该轴', () => {
+    const spec = buildPlotSpec(
+      <>
+        <SectorMark angle="value" />
+        <Axis dimension="angle" />
+      </>,
+      '__plot',
+      { coordinate: 'polar' },
+    );
+    expect(spec.guides).toEqual([{ type: 'axis', dimension: 'angle' }]);
+  });
+
+  it('polar_radius_axis_grid：<Axis dimension="radius" grid/> 落位', () => {
+    const spec = buildPlotSpec(
+      <>
+        <LineMark x="dim" y="value" closed />
+        <Axis dimension="angle" />
+        <Axis dimension="radius" grid />
+      </>,
+      '__plot',
+      { coordinate: 'polar' },
+    );
+    expect(spec.guides).toEqual([
+      { type: 'axis', dimension: 'angle' },
+      { type: 'axis', dimension: 'radius', grid: true },
+    ]);
+  });
+
+  it('polar_default_no_guides：polar 缺省不画轴（与 cartesian 默认全套相对）', () => {
+    const spec = buildPlotSpec(<SectorMark angle="value" />, '__plot', { coordinate: 'polar' });
+    expect(spec.guides).toEqual([]);
+  });
+
+  it('cartesian_regression_no_coordinate：不传 coordinate → cartesian（向后兼容）', () => {
+    const spec = buildPlotSpec(<BarMark x="month" y="revenue" />, '__plot');
+    expect(spec.coordinate).toEqual({ type: 'cartesian2D', x: '__x', y: '__y' });
+    expect(spec.scales[0]).toEqual({ type: 'band', name: '__x' });
+  });
+
+  it('all_polar_products_pass_schema：polar 装配产物全过 PlotSpecSchema', () => {
+    expect(() => PlotSpecSchema.parse(buildPlotSpec(<SectorMark angle="v" color="l" />, '__plot', { coordinate: 'polar' }))).not.toThrow();
+    expect(() => PlotSpecSchema.parse(buildPlotSpec(<BarMark x="m" y="a" color="m" />, '__plot', { coordinate: 'polar' }))).not.toThrow();
+    expect(() => PlotSpecSchema.parse(buildPlotSpec(<LineMark x="d" y="v" closed />, '__plot', { coordinate: 'polar' }))).not.toThrow();
+    expect(() =>
+      PlotSpecSchema.parse(buildPlotSpec(<AreaMark x="t" y="v" closed />, '__plot', { coordinate: { type: 'polar', innerRadius: 0.3 } })),
+    ).not.toThrow();
   });
 });
