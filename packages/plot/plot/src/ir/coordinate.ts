@@ -8,6 +8,8 @@ import type { ValueOf } from '@retikz/core';
 export const PlotCoordinate = {
   /** 2D 笛卡尔空间（x 水平 / y 垂直） */
   Cartesian2D: 'cartesian2D',
+  /** 2D 极坐标空间（angle 角向 / radius 径向；默认 x→angle、y→radius） */
+  Polar2D: 'polar2D',
 } as const;
 
 /** 坐标系类型 */
@@ -21,9 +23,28 @@ export const Cartesian2DSchema = z
   })
   .describe('2D cartesian coordinate system; owns the positional scale bindings for x and y');
 
-export const CoordinateSchema = z
-  .discriminatedUnion('type', [Cartesian2DSchema])
-  .describe('Coordinate-system union; extensible to polar2D / linear1D in later alphas');
+export const Polar2DSchema = z
+  .object({
+    type: z.literal(PlotCoordinate.Polar2D).describe('Discriminator: 2D polar space, angle around the center / radius outward'),
+    angle: z.string().min(1).describe('Scale name driving the angle role; its range is set to [startAngle, endAngle] degrees at lowering'),
+    radius: z.string().min(1).describe('Scale name driving the radius role; its range is set to [innerRadius, outerRadius] units at lowering'),
+    startAngle: z
+      .number()
+      .default(0)
+      .describe('Angular range start in degrees; 0 = +x (3 o\'clock), sweeping toward +y under screen y-down, matching core polar'),
+    endAngle: z.number().default(360).describe('Angular range end in degrees; defaults to a full 360-degree circle'),
+    innerRadius: z
+      .number()
+      .min(0)
+      .lt(1)
+      .default(0)
+      .describe('Donut hole radius as a fraction of the outer radius, 0..1 exclusive; 0 = solid disk (no hole)'),
+  })
+  .describe('2D polar coordinate system; owns the angle / radius scale bindings and the angular sweep / inner-radius geometry');
 
-/** 坐标系（alpha.1 仅 cartesian2D） */
+export const CoordinateSchema = z
+  .discriminatedUnion('type', [Cartesian2DSchema, Polar2DSchema])
+  .describe('Coordinate-system union: cartesian2D | polar2D; extensible to linear1D / ternary in later alphas');
+
+/** 坐标系（cartesian2D | polar2D） */
 export type Coordinate = z.infer<typeof CoordinateSchema>;

@@ -28,6 +28,8 @@ export const EncodingSchema = z
   .object({
     x: ChannelSchema.optional().describe('x position channel'),
     y: ChannelSchema.optional().describe('y position channel'),
+    angle: ChannelSchema.optional().describe('Explicit angle position channel (polar coordinate systems); falls back to the x channel when omitted'),
+    radius: ChannelSchema.optional().describe('Explicit radius position channel (polar coordinate systems); falls back to the y channel when omitted'),
     color: ChannelSchema.optional().describe(
       'Color channel (non-positional): maps a field through an ordinal / color scale to the mark fill / stroke',
     ),

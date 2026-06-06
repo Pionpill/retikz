@@ -57,4 +57,35 @@ describe('ChannelSchema / EncodingSchema (ADR-05)', () => {
   it('color_channel_both_field_value_rejected', () => {
     expect(() => ChannelSchema.parse({ field: 'c', value: '#000', scale: 'col' })).toThrow();
   });
+
+  // ADR-01：polar angle / radius 位置通道
+  it('encoding_angle_radius_channels_valid', () => {
+    const e = { angle: { field: 'theta' }, radius: { field: 'value' } };
+    expect(EncodingSchema.parse(e)).toEqual(e);
+  });
+
+  it('encoding_angle_value_constant_valid', () => {
+    const e = { angle: { value: 0 }, radius: { field: 'value' } };
+    expect(EncodingSchema.parse(e)).toEqual(e);
+  });
+
+  it('encoding_angle_radius_channels_optional', () => {
+    // 缺省 angle/radius → 仍合法（回退 x/y 是 lowering 行为，schema 层只要求可选）
+    const e = { x: { field: 'theta' }, y: { field: 'value' } };
+    expect(EncodingSchema.parse(e)).toEqual(e);
+  });
+
+  it('encoding_angle_field_value_mutually_exclusive_rejected', () => {
+    // angle 复用 ChannelSchema → field/value 互斥仍生效
+    expect(() => EncodingSchema.parse({ angle: { field: 'theta', value: 0 }, radius: { field: 'v' } })).toThrow();
+  });
+
+  it('encoding_radius_neither_field_nor_value_rejected', () => {
+    expect(() => EncodingSchema.parse({ angle: { field: 'theta' }, radius: {} })).toThrow();
+  });
+
+  it('encoding_angle_radius_json_round_trip', () => {
+    const e = EncodingSchema.parse({ angle: { field: 'theta' }, radius: { field: 'value' }, color: { field: 'g', scale: 'col' } });
+    expect(EncodingSchema.parse(JSON.parse(JSON.stringify(e)))).toEqual(e);
+  });
 });
