@@ -9,7 +9,7 @@ const Demo: FC = () => (
     data={traffic}
     width={320}
     height={320}
-    coordinate={{ type: 'polar', innerRadius: 0.6 }}
+    coordinate={{ type: 'polar2D', innerRadius: 0.6 }}
     style={{ maxWidth: '100%', height: 'auto' }}
   >
     <SectorMark angle="value" color="source" />

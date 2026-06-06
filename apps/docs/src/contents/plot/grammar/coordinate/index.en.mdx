@@ -3,18 +3,18 @@ title: Coordinates
 description: The coordinate system decides how marks land on the canvas. The default is cartesian; switch to polar and the same spec becomes a pie, radar, or radial bar chart.
 ---
 
-The coordinate system is the final step `<Plot>` takes to map data values to canvas pixels. The default is cartesian: x goes right, y goes up. Change `coordinate` to `"polar"` and the same data with the same marks wraps around a center — bars become radial bars, lines become radar outlines, sectors form a pie.
+The coordinate system is the final step `<Plot>` takes to map data values to canvas pixels. The default is cartesian: x goes right, y goes up. Change `coordinate` to `"polar2D"` and the same data with the same marks wraps around a center — bars become radial bars, lines become radar outlines, sectors form a pie.
 
 ## One spec, two coordinate systems
 
-The two charts below use the **same monthly temperature data and the same `<BarMark>`**; the only difference is `coordinate="polar"` on the second. The coordinate system is a chart-level switch, not a mark-level one — you don't swap components or change field bindings.
+The two charts below use the **same monthly temperature data and the same `<BarMark>`**; the only difference is `coordinate="polar2D"` on the second. The coordinate system is a chart-level switch, not a mark-level one — you don't swap components or change field bindings.
 
 <div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
   <ComponentPreview name="coordinate-cartesian" sourceFiles={['coordinate-cartesian.data.ts']} size="sm" />
   <ComponentPreview name="coordinate-polar-bar" sourceFiles={['coordinate-cartesian.data.ts']} size="sm" />
 </div>
 
-<p className="text-sm text-muted-foreground">Left: default cartesian bars; right: same chart with only <code>coordinate="polar"</code> added.</p>
+<p className="text-sm text-muted-foreground">Left: default cartesian bars; right: same chart with only <code>coordinate="polar2D"</code> added.</p>
 
 ## What x / y mean under polar
 
@@ -29,10 +29,10 @@ So you keep writing `x` / `y` for polar charts; the coordinate system decides wh
 
 ## Polar options
 
-`coordinate="polar"` is shorthand for a polar config with all defaults. To adjust the angular range or carve out a center hole, pass the object form:
+`coordinate="polar2D"` is shorthand for a polar config with all defaults. To adjust the angular range or carve out a center hole, pass the object form:
 
 ```tsx
-<Plot coordinate={{ type: 'polar', innerRadius: 0.5, startAngle: 0, endAngle: 360 }}>
+<Plot coordinate={{ type: 'polar2D', innerRadius: 0.5, startAngle: 0, endAngle: 360 }}>
 ```
 
 | Field | Type | Default | Description |

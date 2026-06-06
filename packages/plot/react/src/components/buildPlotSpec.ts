@@ -42,14 +42,15 @@ const AUTO_COLOR = '__color';
 export type DslScaleX = 'linear' | 'time' | 'point';
 
 /**
- * <Plot coordinate> 入口形态：字符串简写 `"polar"` 或对象配置；缺省 cartesian
- * @description 对象形态对应 polar2D 的角向区间 + 环图内半径几何（startAngle / endAngle 度、innerRadius 0..1 外半径占比）
+ * <Plot coordinate> 入口形态：字符串简写 `"polar2D"` 或对象配置；缺省 cartesian2D
+ * @description 简写 / 判别串与 IR 一致（`polar2D` / `cartesian2D`，含维度，为将来 1D / 3D 等留命名空间）；
+ *   对象形态对应 polar2D 的角向区间 + 环图内半径几何（startAngle / endAngle 度、innerRadius 0..1 外半径占比）
  */
 export type CoordinateInput =
-  | 'polar'
+  | 'polar2D'
   | {
-      /** 坐标系判别串（目前仅 polar 可显式指定，cartesian 为缺省态不必写） */
-      type: 'polar';
+      /** 坐标系判别串（与 IR 一致；目前仅 polar2D 可显式指定，cartesian2D 为缺省态不必写） */
+      type: 'polar2D';
       /** 环图内半径（外半径占比 0..1）；0 = 实心饼 */
       innerRadius?: number;
       /** 角向起始角（度） */
@@ -64,7 +65,7 @@ export type BuildPlotSpecOptions = {
   bare?: boolean;
   /** 连续 x scale 类型（缺省 linear；含 <BarMark> 时强制 band，忽略此项；polar 下忽略） */
   scaleX?: DslScaleX;
-  /** 坐标系选择（缺省 cartesian）；"polar" 或 polar 对象配置 */
+  /** 坐标系选择（缺省 cartesian2D）；"polar2D" 或 polar2D 对象配置 */
   coordinate?: CoordinateInput;
 };
 
@@ -224,7 +225,7 @@ const POLAR_DEFAULT_INNER_RADIUS = 0;
 type PolarConfig = { innerRadius: number; startAngle: number; endAngle: number };
 const toPolarConfig = (coordinate: CoordinateInput | undefined): PolarConfig | undefined => {
   if (coordinate === undefined) return undefined;
-  if (coordinate === 'polar') {
+  if (coordinate === 'polar2D') {
     return { innerRadius: POLAR_DEFAULT_INNER_RADIUS, startAngle: POLAR_DEFAULT_START_ANGLE, endAngle: POLAR_DEFAULT_END_ANGLE };
   }
   return {

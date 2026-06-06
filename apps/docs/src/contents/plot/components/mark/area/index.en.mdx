@@ -29,7 +29,7 @@ The top line and a baseline of `0` enclose a filled region — good for emphasiz
 
 ### Filled radar
 
-`<Plot coordinate="polar">` with `<AreaMark closed />`: dimensions spread evenly along the angular axis and values map to the radius to form the top edge; the return edge sticks to `baseline`. With the default `baseline` of `0` the return edge collapses to the center, so the area fills from the center out to the outline — a filled radar. `closed` makes the top edge walk chords (no arc sampling on a continuous angular axis, a straight outline). For a plain wireframe outline use [`<LineMark closed />`](/plot/components/mark/line); add `fill` to it for a filled radar too.
+`<Plot coordinate="polar2D">` with `<AreaMark closed />`: dimensions spread evenly along the angular axis and values map to the radius to form the top edge; the return edge sticks to `baseline`. With the default `baseline` of `0` the return edge collapses to the center, so the area fills from the center out to the outline — a filled radar. `closed` makes the top edge walk chords (no arc sampling on a continuous angular axis, a straight outline). For a plain wireframe outline use [`<LineMark closed />`](/plot/components/mark/line); add `fill` to it for a filled radar too.
 
 <ComponentPreview name="area-radar" sourceFiles={['area-radar.data.ts']} />
 

@@ -27,7 +27,7 @@ export type PlotDslProps = PlotCommonProps & {
   bare?: boolean;
   /** 连续 x scale 类型（缺省 linear；含 <BarMark> 时强制 band，忽略此项；polar 下忽略） */
   scaleX?: DslScaleX;
-  /** 坐标系：缺省 cartesian；"polar" 简写或 polar 对象配置（innerRadius / startAngle / endAngle） */
+  /** 坐标系：缺省 cartesian2D；"polar2D" 简写或 polar2D 对象配置（innerRadius / startAngle / endAngle） */
   coordinate?: CoordinateInput;
 };
 

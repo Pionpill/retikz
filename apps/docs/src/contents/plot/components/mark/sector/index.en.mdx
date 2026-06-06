@@ -3,7 +3,7 @@ title: SectorMark
 description: Draw pie and donut charts with <SectorMark>: under a polar coordinate system, the angle value field is accumulated into sectors automatically.
 ---
 
-`<SectorMark>` draws one sector per data row, with each sector's angular size coming from the value field bound to `angle`. It only makes sense under a polar coordinate system, so `<Plot>` must have `coordinate="polar"`. The start and end angles of each sector are **accumulated automatically** by `<Plot>` — you give values, not angles.
+`<SectorMark>` draws one sector per data row, with each sector's angular size coming from the value field bound to `angle`. It only makes sense under a polar coordinate system, so `<Plot>` must have `coordinate="polar2D"`. The start and end angles of each sector are **accumulated automatically** by `<Plot>` — you give values, not angles.
 
 ## Usage
 
@@ -12,12 +12,12 @@ import { Plot, SectorMark } from '@retikz/plot-react';
 ```
 
 ```tsx
-<Plot data={share} coordinate="polar">
+<Plot data={share} coordinate="polar2D">
   <SectorMark angle="value" color="label" />
 </Plot>
 ```
 
-`angle` binds the value field (how big each sector is); `color` binds the categorical field (the color of each slice). `coordinate="polar"` is required — there's no "sector" geometry under cartesian.
+`angle` binds the value field (how big each sector is); `color` binds the categorical field (the color of each slice). `coordinate="polar2D"` is required — there's no "sector" geometry under cartesian.
 
 ## Examples
 
@@ -33,7 +33,7 @@ A donut is a pie with the center carved out. The hole is controlled by `<Plot>`'
 
 <ComponentPreview name="sector-donut" sourceFiles={['sector-pie.data.ts']} />
 
-<p className="text-sm text-muted-foreground">Same data with <code>coordinate={{ type: 'polar', innerRadius: 0.6 }}</code> becomes a donut.</p>
+<p className="text-sm text-muted-foreground">Same data with <code>coordinate={{ type: 'polar2D', innerRadius: 0.6 }}</code> becomes a donut.</p>
 
 ## How it works
 

@@ -679,15 +679,15 @@ export const changelog: Array<Release> = [
             version: 'alpha.4',
             date: '2026-06-06',
             summary: {
-              zh: 'polar authoring 面：`<Plot coordinate="polar">`（或对象配 innerRadius/startAngle/endAngle）、新增 `<SectorMark>`（饼/环，自动累积）/ `<AreaMark>`、`<LineMark closed>`（雷达）、`<Axis dimension="angle"/"radius">`;全用扁平 prop。',
-              en: 'Polar authoring surface: `<Plot coordinate="polar">` (or an object with innerRadius/startAngle/endAngle), new `<SectorMark>` (pie/donut, auto-accumulate) / `<AreaMark>`, `<LineMark closed>` (radar), and `<Axis dimension="angle"/"radius">` — all via flat props.',
+              zh: 'polar authoring 面：`<Plot coordinate="polar2D">`（或对象配 innerRadius/startAngle/endAngle）、新增 `<SectorMark>`（饼/环，自动累积）/ `<AreaMark>`、`<LineMark closed>`（雷达）、`<Axis dimension="angle"/"radius">`;全用扁平 prop。',
+              en: 'Polar authoring surface: `<Plot coordinate="polar2D">` (or an object with innerRadius/startAngle/endAngle), new `<SectorMark>` (pie/donut, auto-accumulate) / `<AreaMark>`, `<LineMark closed>` (radar), and `<Axis dimension="angle"/"radius">` — all via flat props.',
             },
             items: [
               {
                 label: { zh: '<Plot coordinate> + 新 mark 组件', en: '`<Plot coordinate>` + new mark components' },
                 content: {
-                  zh: '`<Plot coordinate="polar">` 一键切极坐标（缺省 cartesian 不变）;`<SectorMark angle color>` 写饼/环（DSL 自动装配累积 transform）、`<AreaMark>` 写面积、`<LineMark closed>` 写雷达，`buildPlotSpec` 据 mark 推断角向/径向 scale。',
-                  en: '`<Plot coordinate="polar">` switches to polar in one prop (cartesian unchanged by default); `<SectorMark angle color>` draws pie/donut (the DSL auto-wires the cumulative transform), `<AreaMark>` draws areas, `<LineMark closed>` draws radar, and `buildPlotSpec` infers angular/radial scales from the marks.',
+                  zh: '`<Plot coordinate="polar2D">` 一键切极坐标（缺省 cartesian 不变）;`<SectorMark angle color>` 写饼/环（DSL 自动装配累积 transform）、`<AreaMark>` 写面积、`<LineMark closed>` 写雷达，`buildPlotSpec` 据 mark 推断角向/径向 scale。',
+                  en: '`<Plot coordinate="polar2D">` switches to polar in one prop (cartesian unchanged by default); `<SectorMark angle color>` draws pie/donut (the DSL auto-wires the cumulative transform), `<AreaMark>` draws areas, `<LineMark closed>` draws radar, and `buildPlotSpec` infers angular/radial scales from the marks.',
                 },
               },
               {

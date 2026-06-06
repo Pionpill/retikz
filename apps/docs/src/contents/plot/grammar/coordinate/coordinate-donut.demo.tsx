@@ -9,7 +9,7 @@ const Demo: FC = () => (
     data={share}
     width={320}
     height={320}
-    coordinate={{ type: 'polar', innerRadius: 0.55 }}
+    coordinate={{ type: 'polar2D', innerRadius: 0.55 }}
     style={{ maxWidth: '100%', height: 'auto' }}
   >
     <SectorMark angle="value" color="label" />

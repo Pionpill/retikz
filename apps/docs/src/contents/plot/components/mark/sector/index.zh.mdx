@@ -3,7 +3,7 @@ title: 扇形
 description: 用 <SectorMark> 画饼图与环图：在 polar 坐标系下按 angle 值字段自动累积成扇区。
 ---
 
-`<SectorMark>` 把每行数据画成一个扇区，扇区的角度大小来自 `angle` 绑定的值字段。它只在 polar 坐标系下有意义，所以 `<Plot>` 要写 `coordinate="polar"`。各扇区的起止角由 `<Plot>` **自动累积**——你只给值，不用自己算角度。
+`<SectorMark>` 把每行数据画成一个扇区，扇区的角度大小来自 `angle` 绑定的值字段。它只在 polar 坐标系下有意义，所以 `<Plot>` 要写 `coordinate="polar2D"`。各扇区的起止角由 `<Plot>` **自动累积**——你只给值，不用自己算角度。
 
 ## 用法
 
@@ -12,12 +12,12 @@ import { Plot, SectorMark } from '@retikz/plot-react';
 ```
 
 ```tsx
-<Plot data={share} coordinate="polar">
+<Plot data={share} coordinate="polar2D">
   <SectorMark angle="value" color="label" />
 </Plot>
 ```
 
-`angle` 绑值字段（决定扇区多大），`color` 绑分类字段（决定每块的颜色）。`coordinate="polar"` 必写——cartesian 下没有“扇区”的几何含义。
+`angle` 绑值字段（决定扇区多大），`color` 绑分类字段（决定每块的颜色）。`coordinate="polar2D"` 必写——cartesian 下没有“扇区”的几何含义。
 
 ## 例子
 
@@ -33,7 +33,7 @@ import { Plot, SectorMark } from '@retikz/plot-react';
 
 <ComponentPreview name="sector-donut" sourceFiles={['sector-pie.data.ts']} />
 
-<p className="text-sm text-muted-foreground">同一份数据加 <code>coordinate={{ type: 'polar', innerRadius: 0.6 }}</code> 即成环图。</p>
+<p className="text-sm text-muted-foreground">同一份数据加 <code>coordinate={{ type: 'polar2D', innerRadius: 0.6 }}</code> 即成环图。</p>
 
 ## 技术原理
 

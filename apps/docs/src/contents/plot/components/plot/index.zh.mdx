@@ -3,7 +3,7 @@ title: 图表容器
 description: <Plot> 是图表容器：接收裸数据与尺寸，装配 mark / guide 子组件，并通过 coordinate 选择平面或极坐标系。
 ---
 
-`<Plot>` 是所有图表的根容器。它接收 `data`（裸数据行数组）和显示尺寸，把内部的 `<LineMark>` / `<BarMark>` / `<SectorMark>` / `<Axis>` 等子组件装配成一张图。`coordinate` 选坐标系：缺省平面直角，`"polar"` 切极坐标。数据不进 IR，只在编译期注入。
+`<Plot>` 是所有图表的根容器。它接收 `data`（裸数据行数组）和显示尺寸，把内部的 `<LineMark>` / `<BarMark>` / `<SectorMark>` / `<Axis>` 等子组件装配成一张图。`coordinate` 选坐标系：缺省平面直角，`"polar2D"` 切极坐标。数据不进 IR，只在编译期注入。
 
 ## 用法
 
@@ -23,20 +23,20 @@ import { Plot, BarMark } from '@retikz/plot-react';
 
 ### 坐标系切换
 
-`coordinate` 是图表级开关——同一份 `children`，缺省是 cartesian，加 `"polar"` 即极坐标。mark 不分两套，坐标系决定几何。
+`coordinate` 是图表级开关——同一份 `children`，缺省是 cartesian，加 `"polar2D"` 即极坐标。mark 不分两套，坐标系决定几何。
 
 <div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
   <ComponentPreview name="plot-cartesian" sourceFiles={['plot-cartesian.data.ts']} size="sm" />
   <ComponentPreview name="plot-polar" sourceFiles={['plot-cartesian.data.ts']} size="sm" />
 </div>
 
-<p className="text-sm text-muted-foreground">左：缺省 cartesian；右：仅加 <code>coordinate="polar"</code>。</p>
+<p className="text-sm text-muted-foreground">左：缺省 cartesian；右：仅加 <code>coordinate="polar2D"</code>。</p>
 
 `coordinate` 支持字符串简写和对象两种形态：
 
 ```tsx
-<Plot coordinate="polar">                                    {/* 全用默认值 */}
-<Plot coordinate={{ type: 'polar', innerRadius: 0.5 }}>      {/* 挖中心成环图 */}
+<Plot coordinate="polar2D">                                    {/* 全用默认值 */}
+<Plot coordinate={{ type: 'polar2D', innerRadius: 0.5 }}>      {/* 挖中心成环图 */}
 ```
 
 polar 对象的 `innerRadius` / `startAngle` / `endAngle` 见 [坐标系](/plot/grammar/coordinate)。
@@ -56,7 +56,7 @@ polar 对象的 `innerRadius` / `startAngle` / `endAngle` 见 [坐标系](/plot/
 | --- | --- | --- | --- |
 | `data` | `Array<Row>` | — | 裸数据行数组（组合 DSL 入口）；数据不进 IR |
 | `children` | `ReactNode` | — | mark / guide 子组件（组合 DSL 入口） |
-| `coordinate` | `'polar' \| { type: 'polar'; innerRadius?; startAngle?; endAngle? }` | cartesian | 坐标系：缺省平面直角；`"polar"` 简写或 polar 对象 |
+| `coordinate` | `'polar' \| { type: 'polar2D'; innerRadius?; startAngle?; endAngle? }` | cartesian | 坐标系：缺省平面直角；`"polar2D"` 简写或 polar 对象 |
 | `scaleX` | `'linear' \| 'time' \| 'point'` | `'linear'` | 连续 x scale 类型；含 `<BarMark>` 时强制 band，polar 下忽略 |
 | `bare` | `boolean?` | `false` | 只绘图、不出任何轴 / 网格；忽略 `<Axis>` |
 | `width` | `number` | — | 外框宽度（含轴与标签） |
