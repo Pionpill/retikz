@@ -93,6 +93,7 @@ export const SectorMarkSchema = z.object({
 - **sector 累积触发 → primitive 显式 transform**（与堆叠 interval 一致、分层显式可组合）；DSL `<SectorMark>` 自动装配（ADR-05 已定，sugar 层）。
 - **value 跨 baseline（负值径向柱）→ swap**（保证 `outerRadius>innerRadius` 满足 core 硬约束），不 reject。
 - **环图内半径来源 → `coordinate.innerRadius`**（单一来源），sector mark 不自带 innerRadius 覆盖。
+- **sector mark 负值 → reject**（实现期补，Bug Hunter W-1）：累积界倒退（段值 v1<v0，即原始 value 为负）时 `lowerSector` 抛清晰错误——饼/环扇片不能为负，避免累积界跨 0 导致扇片比例静默失真（破坏 AI 一等公民契约的"静默错误结果"）。负值径向柱（interval）走 swap、与此不同（interval 是 baseline→value 区间，负值有几何意义）。
 
 ## DSL 表面
 
