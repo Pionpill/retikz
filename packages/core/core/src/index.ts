@@ -34,6 +34,7 @@ export {
   StepSchema,
   NodeSchema,
   NodeLabelSchema,
+  ShapeRefSchema,
   CoordinateSchema,
   FontSchema,
   TextBlockSchema,
@@ -87,6 +88,7 @@ export type {
   IRStep,
   IRNode,
   IRNodeLabel,
+  IRShapeRef,
   IRCoordinate,
   IRFont,
   IRLineSpec,
@@ -216,8 +218,8 @@ export type {
 export { point, rect, circle, ellipse, diamond, RECT_ANCHORS, polar } from './geometry';
 
 // Shapes (Shape Registry 扩展面：第三方 shape 注入 + 内置注册项 + 作者所需 helper)
-export type { ShapeDefinition, ShapeStyle } from './shapes';
-export { BUILTIN_SHAPES, worldToLocal, localToWorld } from './shapes';
+export type { ShapeDefinition, ShapeDefinitionInput, ShapeStyle } from './shapes';
+export { BUILTIN_SHAPES, defineShape, worldToLocal, localToWorld } from './shapes';
 
 // Arrows (Arrow Registry 扩展面：第三方 arrow 注入 + 内置注册项)
 export type { ArrowDefinition, ArrowEmitContext } from './arrows';

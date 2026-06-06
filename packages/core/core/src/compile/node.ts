@@ -1,6 +1,7 @@
 import type { Position } from '../geometry/point';
 import type { Rect, RectAnchor } from '../geometry/rect';
-import type { AtDirection, IRLabelDefault, IRLineSpec, IRNode, IRNodeLabel, IRPaintSpec } from '../ir';
+import type { AtDirection, IRJsonObject, IRLabelDefault, IRLineSpec, IRNode, IRNodeLabel, IRPaintSpec, IRShapeRef, JsonValue } from '../ir';
+import { JsonObjectSchema } from '../ir';
 import type { PaintResolver } from './paint';
 import type { GroupPrim, ScenePrimitive, TextLine, Transform } from '../primitive';
 import { BUILTIN_SHAPES } from '../shapes';
@@ -12,6 +13,40 @@ import type { FontSpec, TextMeasurer } from './text-metrics';
 
 const DEFAULT_FONT_SIZE = 14;
 const DEFAULT_PADDING = 8;
+/** 无参 / 合成 layout 的 shape params 兜底（避免每次调用重建空对象） */
+const EMPTY_SHAPE_PARAMS: IRJsonObject = {};
+
+/**
+ * 规范化 `Node.shape` 为 `{ type, params }`
+ * @description 裸 string → `{ type, params: {} }`；`{ type, params? }` → params 缺省补 `{}`；
+ *   缺省（undefined）→ `{ type: 'rectangle', params: {} }`。`'circle'`（裸 string）消解为
+ *   `{ type: 'ellipse', params: { circumscribe: 'equal' } }`——circle 无独立几何，是 ellipse 等轴 preset 别名。
+ *   `'diamond'`（裸 string）消解为 `{ type: 'polygon', params: { sides: 4, rotate: 45 } }`——diamond 无独立几何，
+ *   是 polygon 4 边形（自旋 45°）preset 别名。仅做形态归一，不查表 / 不校验。
+ */
+const normalizeShape = (shape: IRNode['shape']): { type: string; params: IRJsonObject } => {
+  if (shape === undefined) return { type: 'rectangle', params: {} };
+  if (shape === 'circle') return { type: 'ellipse', params: { circumscribe: 'equal' } };
+  if (shape === 'diamond') return { type: 'polygon', params: { sides: 4, rotate: 45 } };
+  if (typeof shape === 'string') return { type: shape, params: {} };
+  const ref: IRShapeRef = shape;
+  return { type: ref.type, params: ref.params ?? {} };
+};
+
+/**
+ * 递归把 JSON 值里所有数值叶子乘以 factor（数组 / 对象深入，string / boolean / null 原样）
+ * @description 用于 shape params 随 node scale 协同缩放；输入已是 JSON-safe（双护栏过），输出仍 JSON-safe。
+ */
+const scaleJsonNumbers = <T extends JsonValue>(value: T, factor: number): T => {
+  if (typeof value === 'number') return (value * factor) as T;
+  if (Array.isArray(value)) return value.map(v => scaleJsonNumbers(v, factor)) as T;
+  if (value !== null && typeof value === 'object') {
+    const out: Record<string, JsonValue> = {};
+    for (const [k, v] of Object.entries(value)) out[k] = scaleJsonNumbers(v, factor);
+    return out as T;
+  }
+  return value;
+};
 const DEFAULT_LINE_HEIGHT_FACTOR = 1.2;
 const DEG_TO_RAD = Math.PI / 180;
 
@@ -112,6 +147,12 @@ export type NodeLayout = {
   /** 已解析的 shape 定义；circumscribe / boundaryPoint / anchor / emit 多点复用，取代旧 switch */
   shapeDef: ShapeDefinition;
   /**
+   * 已校验的 per-instance shape 参数（经 `paramsSchema.parse` + `JsonObjectSchema.parse` 双护栏）
+   * @description 透传给 `shapeDef` 的 circumscribe / boundaryPoint / anchor / edgePoint / emit；
+   *   无参形状（内置 4 个）解析为 `{}`。省略时各调用点以空对象兜底（合成 layout 如 coordinate / scope.id）。
+   */
+  shapeParams?: IRJsonObject;
+  /**
    * 节点视觉边界框（所有 shape 共享语义）
    * @description rectangle: rect 本身；circle: width=height=2×radius；ellipse: 2×rx,2×ry；diamond: 2×halfA,2×halfB。x,y 是几何中心，rotate 弧度
    */
@@ -200,7 +241,11 @@ const inflateRect = (r: Rect, m: number): Rect =>
  * @description 走 shapeDef.boundaryPoint；margin > 0 时先膨胀外接 Rect，让 path 在 border 外停 margin
  */
 export const boundaryPointOf = (layout: NodeLayout, toward: Position): Position =>
-  layout.shapeDef.boundaryPoint(inflateRect(layout.rect, layout.margin), toward);
+  layout.shapeDef.boundaryPoint(
+    inflateRect(layout.rect, layout.margin),
+    toward,
+    layout.shapeParams ?? EMPTY_SHAPE_PARAMS,
+  );
 
 /**
  * 取节点 shape 命名 anchor（center / north / east / north-east 等）
@@ -208,7 +253,7 @@ export const boundaryPointOf = (layout: NodeLayout, toward: Position): Position 
  *   shapeDef.anchor 不认识的名字返回 undefined，此处抛 Unknown anchor（列出 shape 名）
  */
 export const anchorOf = (layout: NodeLayout, name: string): Position => {
-  const p = layout.shapeDef.anchor(layout.rect, name);
+  const p = layout.shapeDef.anchor(layout.rect, name, layout.shapeParams ?? EMPTY_SHAPE_PARAMS);
   if (p === undefined) {
     throw new Error(`Unknown anchor '${name}' for shape '${layout.shapeName}'`);
   }
@@ -324,7 +369,7 @@ export const angleBoundaryOf = (layout: NodeLayout, angleDeg: number): Position 
     layout.rect.y + lx * sinR + ly * cosR,
   ];
   // 数字角度 generic：任何实现了 boundaryPoint 的 shape 自动获得 `.30` 角度锚点
-  return layout.shapeDef.boundaryPoint(layout.rect, toward);
+  return layout.shapeDef.boundaryPoint(layout.rect, toward, layout.shapeParams ?? EMPTY_SHAPE_PARAMS);
 };
 
 /**
@@ -344,8 +389,8 @@ export const layoutNode = (
   shapes: Record<string, ShapeDefinition> = BUILTIN_SHAPES,
   resolveBetweenGlobal?: ResolveBetweenGlobal,
 ): NodeLayout => {
-  // shape 解析（入口 fail-fast）：node.shape ?? 'rectangle' 查有效表；未注册名抛错列出可用名
-  const shapeName = node.shape ?? 'rectangle';
+  // shape 解析（入口 fail-fast）：裸 string → { type, params:{} }，对象原样；按 type 查表，未注册抛错列出可用名
+  const { type: shapeName, params: rawShapeParams } = normalizeShape(node.shape);
   // own-property 校验：既得到 `ShapeDefinition | undefined` 类型（让未注册分支成立），又避开
   // `'toString'` 等原型链 key 被 Record 索引误命中（开放字符串 shape 名的边界安全）
   const shapeDef = Object.prototype.hasOwnProperty.call(shapes, shapeName)
@@ -356,12 +401,28 @@ export const layoutNode = (
       `Unknown shape '${shapeName}'; registered shapes: ${Object.keys(shapes).sort().join(', ')}`,
     );
   }
+  // 双护栏（抄 path generator）：① paramsSchema.parse 校验形状字段；② JsonObjectSchema.parse 守 JSON-safe。
+  // JSON-safe 这道跑在**原始 params** 上——宽松 schema（如 `z.object({}).passthrough()`）会在 parse 时
+  // 静默剥掉 `undefined` 值的键，若只校验其输出就漏过非 JSON 输入；校验原始入参才能稳拦 function / undefined。
+  // 字段形态仍以 paramsSchema 输出为准，透传给 circumscribe / boundaryPoint / anchor / emit。
+  JsonObjectSchema.parse(rawShapeParams);
+  const parsedShapeParams: IRJsonObject = shapeDef.paramsSchema.parse(rawShapeParams);
 
   // 缩放：xScale/yScale 优先于 scale 别名，默认 1；乘进所有尺寸让 path 贴缩放后边界。
   // 字号取 min(sx,sy) 保 glyph 形状，避免非均匀缩放下文字被拉变形。
   const sx = node.xScale ?? node.scale ?? 1;
   const sy = node.yScale ?? node.scale ?? 1;
   const fontScale = Math.min(sx, sy);
+  // shape params 是形状内在长度（半径 / 内外径 等），随 node scale 协同缩放。
+  // shapeDef.scaleParams 给定时由形状自定缩放语义（如 sector / arc 只缩半径、不缩角度）；
+  // 缺省时沿用默认——用 uniform 因子（sx·sy 的几何均值；均匀缩放时即 scale）乘所有 JSON 数值叶子。
+  const shapeScale = Math.sqrt(sx * sy);
+  const noScale = sx === 1 && sy === 1;
+  const shapeParams: IRJsonObject = noScale
+    ? parsedShapeParams
+    : shapeDef.scaleParams
+      ? shapeDef.scaleParams(parsedShapeParams, sx, sy)
+      : scaleJsonNumbers(parsedShapeParams, shapeScale);
 
   const baseFontSize = node.font?.size ?? DEFAULT_FONT_SIZE;
   const fontSize = baseFontSize * fontScale;
@@ -435,6 +496,7 @@ export const layoutNode = (
   const { halfWidth: boundsHalfW, halfHeight: boundsHalfH } = shapeDef.circumscribe(
     innerHalfW,
     innerHalfH,
+    shapeParams,
   );
 
   const rotateDeg = node.rotate ?? 0;
@@ -444,6 +506,11 @@ export const layoutNode = (
       `Cannot resolve position for node ${node.id ?? '(unnamed)'}; polar.origin / at.of / between endpoint may reference an undefined node`,
     );
   }
+  // shape 可声明 AABB 中心相对 position 的偏移（如 sector：position=圆心 apex，AABB 中心偏在一侧）；
+  // rect 中心 = position + 偏移，使 bbox 罩住完整形状、anchor 以 AABB 中心 rect 计算时 apex 落回 position。
+  const aabbOffset = shapeDef.circumscribeOffset?.(shapeParams);
+  const rectCenterX = center[0] + (aabbOffset?.[0] ?? 0);
+  const rectCenterY = center[1] + (aabbOffset?.[1] ?? 0);
   // 标准化 label：单对象 → 单元素数组；继承 Node 的 font/textColor
   const rawLabels: Array<IRNodeLabel> | undefined =
     node.label === undefined
@@ -484,10 +551,11 @@ export const layoutNode = (
     id: node.id,
     shapeName,
     shapeDef,
+    shapeParams,
     rect: {
-      // x, y 是几何中心
-      x: center[0],
-      y: center[1],
+      // x, y 是外接 AABB 几何中心（= position + shape circumscribeOffset）
+      x: rectCenterX,
+      y: rectCenterY,
       width: 2 * boundsHalfW,
       height: 2 * boundsHalfH,
       // IR 用度数，geometry 用弧度
@@ -578,7 +646,12 @@ export const emitNodePrimitives = (
   // shape 主体：emit 收**轴对齐 rect（rotate=0）**，rotate 由末端外层 GroupPrim 统一施加
   const axisAlignedRect: Rect = { ...layout.rect, rotate: 0 };
   const shapePrims: Array<ScenePrimitive> = [
-    ...layout.shapeDef.emit(axisAlignedRect, toShapeStyle(layout, resolveFill), round),
+    ...layout.shapeDef.emit(
+      axisAlignedRect,
+      toShapeStyle(layout, resolveFill),
+      round,
+      layout.shapeParams ?? EMPTY_SHAPE_PARAMS,
+    ),
   ];
   const inner: Array<ScenePrimitive> = [...shapePrims];
   if (layout.lines) {

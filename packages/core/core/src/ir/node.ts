@@ -3,11 +3,12 @@ import type { ValueOf } from '../types';
 import { FontSchema } from './font';
 import { PaintSpecSchema } from './paint';
 import { AT_DIRECTIONS, AtPositionSchema, BetweenPositionSchema, OffsetPositionSchema, PolarPositionSchema, PositionSchema } from './position';
+import { ShapeRefSchema } from './shape';
 import { TextBlockSchema } from './text';
 
 /**
  * 节点形状常量（用 const + ValueOf 派生，不用 TS enum）
- * @description rectangle 默认；circle/ellipse/diamond 几何语义：node 视觉边界包"text 矩形 + padding"；rectangle: 视觉=text；circle: r=√(innerHalfW²+innerHalfH²)；ellipse: rx=innerHalfW×√2,ry=innerHalfH×√2；diamond: halfA=2×innerHalfW,halfB=2×innerHalfH
+ * @description rectangle 默认；几何语义：node 视觉边界包"text 矩形 + padding"；rectangle: 视觉=text；ellipse: rx=innerHalfW×√2,ry=innerHalfH×√2。circle 是 ellipse 等轴 preset 别名（`{ type:'ellipse', params:{ circumscribe:'equal' } }`，两轴 = 内框对角线半长 √(innerHalfW²+innerHalfH²)）；diamond 是 polygon 4 边形 45° preset 别名（`{ type:'polygon', params:{ sides:4, rotate:45 } }`）——circle / diamond 均保留为合法 shape 名向后兼容，编译期分别消解为 ellipse / polygon，不进 shape 注册表
  */
 export const NODE_SHAPES = {
   rectangle: 'rectangle',
@@ -119,11 +120,10 @@ export const NodeSchema = z
         'Optional unique id; required if any path needs to reference this node by string',
       ),
     shape: z
-      .string()
-      .min(1)
+      .union([z.string().min(1), ShapeRefSchema])
       .optional()
       .describe(
-        'Node visual shape name; built-in `rectangle` / `circle` / `ellipse` / `diamond`, or an extension shape registered via `CompileOptions.shapes`. Any non-empty string passes schema validation; unregistered names are rejected at compile time. Defaults to `rectangle`. The boundary fully contains text + padding (circumscribed for circle / ellipse / diamond).',
+        'Node visual shape: a bare name string (parameterless, e.g. "rectangle") or `{ type, params }` carrying a JSON params object (e.g. `{ type:"sector", params:{ innerRadius, outerRadius, startAngle, endAngle } }`). Built-in or registered via CompileOptions.shapes; unregistered type rejected at compile time. Defaults to "rectangle".',
       ),
     position: z
       .union([

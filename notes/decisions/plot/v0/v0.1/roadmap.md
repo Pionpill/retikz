@@ -29,7 +29,7 @@ v0.1 是 `@retikz/plot` 的**基础纵向闭环**：对 ≥1 个 mark 跑通全 
 | v0.1-alpha.1 | IR 骨架 + 最薄纵向闭环 | 新建包 `packages/plot/plot` 脚手架；`ir` / `schema` 最小骨架（**已预留 anchor / scope-aware 字段**）；单 mark（line 或 point）；`linear` scale；`cartesian` coordinate；最小 `lowering` → core IR。产出：无轴的散点 / 折线，验证管线 + lowering 打通 | `v0.1-alpha.1/` |
 | v0.1-alpha.2 | guide：x/y 轴 + grid | `guide` 模块；scale → 坐标轴 / 刻度 / 网格派生；axis / grid 的 lowering | `v0.1-alpha.2/` |
 | v0.1-alpha.3 | 横向补 mark + band scale | `scale` 补 band / time / ordinal·color；`mark` 补 point / interval(bar)；`relation` order / group / stack；`transform` 最小集（sort / groupBy / stack） | `v0.1-alpha.3/` |
-| v0.1-alpha.4 | polar 坐标系 + 径向 / 角向 guide | `coordinate` 抽象通用化（逼出非笛卡尔、避免写死）；polar2D 投影几何；radial / angular axis；**拍板 mark 几何 × coordinate 的实现路线**（通用投影 vs 逐坐标系分支，见 [plot-design §8.3](../../../../architecture/plot-design.md)） | `v0.1-alpha.4/` |
+| v0.1-alpha.4 | polar 坐标系 + 径向 / 角向 guide | `coordinate` 抽象通用化（逼出非笛卡尔、避免写死）；polar2D 投影几何；radial / angular axis；**mark 几何 × coordinate 走 (i) 投影整形**（已定，见 [plot-design §8.3](../../../../architecture/plot-design.md)）——区间 mark（bar）经 coordinate 映射成 core 参数化可连接 Node（`sector` / `rectangle`，core v0.3-alpha.4 已就绪），连续 mark（line / area）投影成 Path | `v0.1-alpha.4/` |
 | v0.1-alpha.5 | scope-aware 落地 + anchor 预演 + 收尾 | 接通 alpha.1 预留的 anchor / scope，加 datum locator 命中预演；端到端验收折线 / 柱状（cartesian + polar 双系） | `v0.1-alpha.5/` |
 
 > beta / rc 收尾节点（类型 / 注释 / 测试收口、文档站、发布候选）待 alpha 收敛后参照 core v0.1 节奏再排，本表暂不预定。

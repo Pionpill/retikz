@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
+import { z } from 'zod';
 import { compileToScene } from '../../src/compile/compile';
 import type { CompileWarning } from '../../src/compile/compile';
-import { BUILTIN_SHAPES, localToWorld, worldToLocal } from '../../src/shapes';
+import { BUILTIN_SHAPES, defineShape, localToWorld, worldToLocal } from '../../src/shapes';
 import type { ShapeDefinition } from '../../src/shapes';
 import { NodeSchema } from '../../src/ir';
 import type { IR } from '../../src/ir';
@@ -15,44 +16,48 @@ const findByType = <T extends ScenePrimitive['type']>(
   flattenPrims(prims).find((p): p is Extract<ScenePrimitive, { type: T }> => p.type === type);
 
 /** 径向自定义 shape（外接圆 + 投影 boundaryPoint + 仅 center anchor + ellipse emit） */
-const radialShape = (): ShapeDefinition => ({
-  circumscribe: (hw, hh) => {
-    const r = Math.hypot(hw, hh);
-    return { halfWidth: r, halfHeight: r };
-  },
-  boundaryPoint: (rect, toward) => {
-    const [lx, ly] = worldToLocal(rect, toward);
-    const len = Math.hypot(lx, ly) || 1;
-    const r = rect.width / 2;
-    return localToWorld(rect, [(lx / len) * r, (ly / len) * r]);
-  },
-  anchor: (rect, name) => (name === 'center' ? [rect.x, rect.y] : undefined),
-  *emit (rect, style): Iterable<ScenePrimitive> {
-    yield {
-      type: 'ellipse',
-      cx: rect.x,
-      cy: rect.y,
-      rx: rect.width / 2,
-      ry: rect.height / 2,
-      fill: style.fill ?? 'transparent',
-      stroke: style.stroke ?? 'currentColor',
-      strokeWidth: style.strokeWidth ?? 1,
-    };
-  },
-});
+const radialShape = (): ShapeDefinition =>
+  defineShape({
+    paramsSchema: z.strictObject({}),
+    circumscribe: (hw, hh) => {
+      const r = Math.hypot(hw, hh);
+      return { halfWidth: r, halfHeight: r };
+    },
+    boundaryPoint: (rect, toward) => {
+      const [lx, ly] = worldToLocal(rect, toward);
+      const len = Math.hypot(lx, ly) || 1;
+      const r = rect.width / 2;
+      return localToWorld(rect, [(lx / len) * r, (ly / len) * r]);
+    },
+    anchor: (rect, name) => (name === 'center' ? [rect.x, rect.y] : undefined),
+    *emit (rect, style): Iterable<ScenePrimitive> {
+      yield {
+        type: 'ellipse',
+        cx: rect.x,
+        cy: rect.y,
+        rx: rect.width / 2,
+        ry: rect.height / 2,
+        fill: style.fill ?? 'transparent',
+        stroke: style.stroke ?? 'currentColor',
+        strokeWidth: style.strokeWidth ?? 1,
+      };
+    },
+  });
 
 /** 多 primitive shape：body rect + 左右各一根 pin 短线（验证 emit Iterable 的 factory 价值） */
-const chipShape = (): ShapeDefinition => ({
-  circumscribe: (hw, hh) => ({ halfWidth: hw, halfHeight: hh }),
-  boundaryPoint: BUILTIN_SHAPES.rectangle.boundaryPoint,
-  anchor: BUILTIN_SHAPES.rectangle.anchor,
-  *emit (rect): Iterable<ScenePrimitive> {
-    const hw = rect.width / 2;
-    yield { type: 'rect', x: rect.x - hw, y: rect.y - rect.height / 2, width: rect.width, height: rect.height, stroke: 'currentColor', strokeWidth: 1 };
-    yield { type: 'path', commands: [{ kind: 'move', to: [rect.x - hw - 4, rect.y] }, { kind: 'line', to: [rect.x - hw, rect.y] }], stroke: 'currentColor', strokeWidth: 1 };
-    yield { type: 'path', commands: [{ kind: 'move', to: [rect.x + hw, rect.y] }, { kind: 'line', to: [rect.x + hw + 4, rect.y] }], stroke: 'currentColor', strokeWidth: 1 };
-  },
-});
+const chipShape = (): ShapeDefinition =>
+  defineShape({
+    paramsSchema: z.strictObject({}),
+    circumscribe: (hw, hh) => ({ halfWidth: hw, halfHeight: hh }),
+    boundaryPoint: BUILTIN_SHAPES.rectangle.boundaryPoint,
+    anchor: BUILTIN_SHAPES.rectangle.anchor,
+    *emit (rect): Iterable<ScenePrimitive> {
+      const hw = rect.width / 2;
+      yield { type: 'rect', x: rect.x - hw, y: rect.y - rect.height / 2, width: rect.width, height: rect.height, stroke: 'currentColor', strokeWidth: 1 };
+      yield { type: 'path', commands: [{ kind: 'move', to: [rect.x - hw - 4, rect.y] }, { kind: 'line', to: [rect.x - hw, rect.y] }], stroke: 'currentColor', strokeWidth: 1 };
+      yield { type: 'path', commands: [{ kind: 'move', to: [rect.x + hw, rect.y] }, { kind: 'line', to: [rect.x + hw + 4, rect.y] }], stroke: 'currentColor', strokeWidth: 1 };
+    },
+  });
 
 describe('Shape registry — injection (happy path)', () => {
   it('inject_custom_shape_compiles: shapes:{hexagon} + node.shape=hexagon → emits custom prim', () => {
@@ -128,7 +133,9 @@ describe('Shape registry — error path', () => {
   it('unknown_shape_throws_with_list: unregistered shape → throw with sorted available names', () => {
     const ir: IR = { version: 1, type: 'scene', children: [{ type: 'node', id: 'A', shape: 'cloud', position: [0, 0] }] };
     expect(() => compileToScene(ir)).toThrow(/Unknown shape 'cloud'/);
-    expect(() => compileToScene(ir)).toThrow(/circle, diamond, ellipse, rectangle/);
+    // circle 已收为 ellipse 等轴 preset，不在注册表（裸 'circle' 由 normalizeShape 先消解为 ellipse，不走查表）
+    // 注册表含 polygon（ADR-04）：排序后落在 ellipse 与 rectangle 之间
+    expect(() => compileToScene(ir)).toThrow(/ellipse, polygon, rectangle/);
   });
 
   it('unknown_shape_string_in_schema_passes_validation: schema accepts any non-empty string', () => {

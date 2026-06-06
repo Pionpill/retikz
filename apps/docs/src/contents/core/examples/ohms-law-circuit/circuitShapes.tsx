@@ -7,10 +7,12 @@ import {
   type Rect,
   type ScenePrimitive,
   type ShapeDefinition,
+  defineShape,
   localToWorld,
   worldToLocal,
 } from '@retikz/core';
 import { Node } from '@retikz/react';
+import { z } from 'zod';
 import type { FC } from 'react';
 
 /** 元件可选标签（透传给内部 Node 的 label，TikZ `[label=above:foo]` 同义） */
@@ -80,7 +82,8 @@ const horizontalBoundaryPoint = (rect: Rect, toward: Position): Position => {
  * @description 板的长短表极性：阳极板长 = 阴极板的两倍；两板同等细描边（与参考符号表一致，不再额外标 +/-）；
  *   整体相对竖式旋转 90°，落在水平的底部支路上
  */
-const circuitBattery: ShapeDefinition = {
+const circuitBattery: ShapeDefinition = defineShape({
+  paramsSchema: z.strictObject({}),
   circumscribe: (innerHalfWidth, innerHalfHeight) => ({
     halfWidth: Math.max(innerHalfWidth, 8 + BATTERY_LEAD),
     halfHeight: Math.max(innerHalfHeight, 28),
@@ -141,10 +144,11 @@ const circuitBattery: ShapeDefinition = {
       ...shared,
     };
   },
-};
+});
 
 /** 开关（断开态）：左右各一段引线 + 两个触点 + 从左触点上翘的拉杆 */
-const circuitSwitch: ShapeDefinition = {
+const circuitSwitch: ShapeDefinition = defineShape({
+  paramsSchema: z.strictObject({}),
   circumscribe: (innerHalfWidth, innerHalfHeight) => ({
     halfWidth: Math.max(innerHalfWidth, 22 + SWITCH_LEAD),
     halfHeight: Math.max(innerHalfHeight, 26),
@@ -191,10 +195,11 @@ const circuitSwitch: ShapeDefinition = {
       ...shared,
     };
   },
-};
+});
 
 /** 定值电阻（IEC / 英式）：一个矩形框 + 左右两段引线 */
-const circuitResistor: ShapeDefinition = {
+const circuitResistor: ShapeDefinition = defineShape({
+  paramsSchema: z.strictObject({}),
   circumscribe: (innerHalfWidth, innerHalfHeight) => ({
     halfWidth: Math.max(innerHalfWidth, 52 + RESISTOR_LEAD),
     halfHeight: Math.max(innerHalfHeight, 24),
@@ -243,10 +248,11 @@ const circuitResistor: ShapeDefinition = {
       opacity: style.opacity,
     };
   },
-};
+});
 
 /** 滑动变阻器（IEC variable resistor）：与定值电阻完全一致的矩形框 + 左右引线，额外多一条斜穿箭头表"可调" */
-const circuitRheostat: ShapeDefinition = {
+const circuitRheostat: ShapeDefinition = defineShape({
+  paramsSchema: z.strictObject({}),
   circumscribe: (innerHalfWidth, innerHalfHeight) => ({
     halfWidth: Math.max(innerHalfWidth, 52 + RESISTOR_LEAD),
     halfHeight: Math.max(innerHalfHeight, 24),
@@ -322,7 +328,7 @@ const circuitRheostat: ShapeDefinition = {
       opacity: style.opacity,
     };
   },
-};
+});
 
 /**
  * 把一个形状 emit 出的所有子原语收进单个 group primitive
@@ -330,8 +336,8 @@ const circuitRheostat: ShapeDefinition = {
  */
 const withGroup = (shape: ShapeDefinition): ShapeDefinition => ({
   ...shape,
-  emit: (rect, style, round) => {
-    const group: ScenePrimitive = { type: 'group', children: [...shape.emit(rect, style, round)] };
+  emit: (rect, style, round, params) => {
+    const group: ScenePrimitive = { type: 'group', children: [...shape.emit(rect, style, round, params)] };
     return [group];
   },
 });

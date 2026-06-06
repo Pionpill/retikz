@@ -442,7 +442,7 @@ core 的「连接」本质是 id 驱动的：`Path` 的 step target 用 `{ id, a
 - **后端无感**：renderer 后端只见 lowered 后含具体数字的 core IR，碰不到 plot 原始数据；数据访问全发生在 `expand` 期。
 - **数据模型**：`data.model`（可选，在 IR）给了则校验 encoding 字段引用 + 推 scale 类型；缺省则 `expand` 从 `datasets` 推断。
 
-### 8.3 mark 几何 × coordinate：正交配置与投影分层（alpha.4 / ADR-06 待决策）
+### 8.3 mark 几何 × coordinate：正交配置与投影分层（决策已定：(i) 投影整形 + core 参数化 shape 下沉）
 
 plot 的本质 = 在一个**正交配置空间** `coordinate × mark × scale × encoding` 里，由 lowering 把每个组合投影 / 下沉成 core 几何。其中最吃设计的是 **mark 几何 = f(mark 类型, coordinate)**：同一 mark 在不同坐标系产出不同几何。
 
@@ -459,10 +459,10 @@ polar       圆点 @ (r,θ)     扇形（环楔）
 
 但 bar 类几何无法完全坐标无关，故有**两条实现路线，互斥，需在 polar 落地时拍板**：
 
-- **(i) mark 坐标无关 + coordinate 投影整形**：mark 在归一化空间出形（bar 出单位矩形），coordinate 投影其边——极坐标下直边**采样弯成弧** → 自然成扇形。**加新坐标系 O(1)**（所有 mark 自动适配），近 ggplot `coord_*`。代价：投影须把直边采样成弧，不能只投影角点。
+- **(i) mark 坐标无关 + coordinate 投影整形**：mark 在归一化空间出形（bar 出单位矩形），coordinate 把归一化区间 / 边投影成坐标系几何。**加新坐标系 O(1)**（所有 mark 自动适配），近 ggplot `coord_*`。落地分两条：**区间 / 离散 mark**（bar / point）经 coordinate 把归一化区间映射成**参数化 shape 参数**，下沉成 **core 参数化可连接 Node**（bar→`sector`、point→`circle`、cartesian 下 bar→`rectangle`；core v0.3-alpha.4 已补齐 `sector` / `arc` 参数化 shape）——精确几何 + 可连接（anchor）+ 省 IR，优于纯采样 Path；**连续 mark**（line / area）跨多数据点、无参数化形态，仍由 coordinate 逐点投影成 **Path**（直边采样弯成弧），连接靠 datum 锚点。
 - **(ii) mark 自带每坐标系几何分支**：bar 内写死「笛卡尔→矩形、极坐标→扇形」。直白，但**等于把 N×M 矩阵塞进逻辑**，加新坐标系 = O(N_marks)，近 Vega 分立的 `rect` / `arc` mark。
 
-**决策推迟到 alpha.4**（polar 落地）：alpha.1 只有笛卡尔，(i)/(ii) 无从分辨；polar 一来立刻见真章。因此 **alpha.1 的 lowering 不得把笛卡尔假设写死进 mark**（如直接用矩形角点），以免堵死 (i) 路线——保持坐标系投影是一个可替换的中间层。详见 [plot v0.1 roadmap](../decisions/plot/v0/v0.1/roadmap.md) alpha.4。
+**决策已定为 (i)**（2026-06-06）：core v0.3-alpha.4 补齐参数化可连接 `sector` / `arc` shape 后，(i) 不再受限于「采样弯曲 Path」——区间 mark 下沉成参数化可连接 Node（见上），连续 mark 仍走投影点 Path。alpha.1~alpha.3 的 lowering 已遵守「不把笛卡尔假设写死进 mark」（保持坐标系投影是可替换中间层），(i) 在 alpha.4 polar 落地。详见 [plot v0.1 roadmap](../decisions/plot/v0/v0.1/roadmap.md) alpha.4。
 
 例子：
 

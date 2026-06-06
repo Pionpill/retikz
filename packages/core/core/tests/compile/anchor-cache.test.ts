@@ -4,9 +4,10 @@
  *   不同 layout 各自一份缓存；同 layout 多次 lookup 结果一致；数字角度 + 负号 / 小数支持
  */
 import { describe, expect, it } from 'vitest';
+import { z } from 'zod';
 import { resolveAnchor, resolveEdgePoint } from '../../src/compile/anchor-cache';
 import type { NodeLayout } from '../../src/compile/node';
-import { BUILTIN_SHAPES } from '../../src/shapes';
+import { BUILTIN_SHAPES, defineShape } from '../../src/shapes';
 import type { ShapeDefinition } from '../../src/shapes';
 import type { BuiltinShapeName } from '../../src/ir';
 
@@ -18,18 +19,33 @@ const makeLayout = (
   cx = 0,
   cy = 0,
   rotate = 0,
-): NodeLayout => ({
-  shapeName: shape,
-  shapeDef: BUILTIN_SHAPES[shape],
-  rect: { x: cx, y: cy, width, height, rotate },
-  rotateDeg: (rotate * 180) / Math.PI,
-  margin: 0,
-  textWidth: 0,
-  textHeight: 0,
-  align: 'middle',
-  lineHeight: 0,
-  fontSize: 0,
-});
+): NodeLayout => {
+  // circle / diamond 无独立 shapeDef（收为 preset）：circle → ellipse 等轴、diamond → polygon 4/45。
+  const def =
+    shape === 'circle'
+      ? BUILTIN_SHAPES.ellipse
+      : shape === 'diamond'
+        ? BUILTIN_SHAPES.polygon
+        : BUILTIN_SHAPES[shape];
+  return {
+    shapeName: shape,
+    shapeDef: def,
+    shapeParams:
+      shape === 'circle'
+        ? { circumscribe: 'equal' }
+        : shape === 'diamond'
+          ? { sides: 4, rotate: 45 }
+          : undefined,
+    rect: { x: cx, y: cy, width, height, rotate },
+    rotateDeg: (rotate * 180) / Math.PI,
+    margin: 0,
+    textWidth: 0,
+    textHeight: 0,
+    align: 'middle',
+    lineHeight: 0,
+    fontSize: 0,
+  };
+};
 
 describe('resolveAnchor cache 命中返回同一引用', () => {
   it('anchor_cache_hit_returns_same_reference：keyword 第二次 lookup 返回 === 引用', () => {
@@ -120,10 +136,10 @@ describe('resolveAnchor 各 shape 分发正确', () => {
     expect(east[1]).toBeCloseTo(0, 5);
   });
 
-  it('diamond layout 调 anchor 关键字返回顶点', () => {
+  it('diamond (= polygon 4/45) layout 调 anchor 关键字返回外接 AABB 边点', () => {
     const layout = makeLayout('diamond', 40, 30, 0, 0);
     const north = resolveAnchor(layout, 'north');
-    // diamond north 在 y = -halfB
+    // polygon 命名 anchor 走外接 AABB：north = AABB 上边中点 (0, -height/2) = (0, -15)
     expect(north[0]).toBeCloseTo(0, 5);
     expect(north[1]).toBeCloseTo(-15, 5);
   });
@@ -169,12 +185,13 @@ describe('resolveEdgePoint 边上比例点（ADR-02）', () => {
   });
 
   it('不支持 edgePoint 的自定义 shape → 抛明确错', () => {
-    const noEdge: ShapeDefinition = {
+    const noEdge: ShapeDefinition = defineShape({
+      paramsSchema: z.strictObject({}),
       circumscribe: (hw, hh) => ({ halfWidth: hw, halfHeight: hh }),
       boundaryPoint: r => [r.x, r.y],
       anchor: (r, name) => (name === 'center' ? [r.x, r.y] : undefined),
       *emit() {},
-    };
+    });
     const layout: NodeLayout = {
       shapeName: 'custom',
       shapeDef: noEdge,

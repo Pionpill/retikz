@@ -1,8 +1,10 @@
-import { type PathCommand, type Position, type ShapeDefinition, localToWorld, worldToLocal } from '@retikz/core';
+import { type PathCommand, type Position, type ShapeDefinition, defineShape, localToWorld, worldToLocal } from '@retikz/core';
 import { Draw, Layout, Node } from '@retikz/react';
+import { z } from 'zod';
 import type { FC } from 'react';
 
-const diode: ShapeDefinition = {
+const diode: ShapeDefinition = defineShape({
+  paramsSchema: z.strictObject({}),
   circumscribe: (innerHalfWidth, innerHalfHeight) => ({
     halfWidth: Math.max(innerHalfWidth, 42),
     halfHeight: Math.max(innerHalfHeight, 22),
@@ -77,7 +79,7 @@ const diode: ShapeDefinition = {
       ...sharedStyle,
     };
   },
-};
+});
 
 const Demo: FC = () => (
   <Layout width={420} height={190} shapes={{ diode }}>
