@@ -64,7 +64,7 @@ import { Path, Step } from '@retikz/react';
 
 ### Endpoint connection surface (boundary)
 
-When an endpoint references a node (the `{ id }` object form, or an id inside a way), you can add a `boundary` field to override the target node's [`connectAs`](/core/components/node/overview) (connection surface) **for that endpoint only**. It takes the same forms as `connectAs`: `'shape'` (the visual shape itself) / `'circle'` (a true circle) / any registered shape name / `{ type, params }`.
+When an endpoint references a node (the `{ id }` object form, or an id inside a way), you can add a `boundary` field to override the target node's [`boundary`](/core/components/node/overview) (connection surface) **for that endpoint only**. It takes the same forms as the node's `boundary`: `'shape'` (the visual shape itself) / `'circle'` (a true circle) / any registered shape name / `{ type, params }`.
 
 ```tsx
 <Path arrow="->">
@@ -73,7 +73,11 @@ When an endpoint references a node (the `{ id }` object form, or an id inside a 
 </Path>
 ```
 
-`boundary` only applies where a connection surface is meaningful: endpoint auto-clip (no explicit `anchor`) and that endpoint's compass / angle anchor. In direction-less reference contexts — `between` endpoints, an `offset` `of`, a node center — it is a no-op. A node's default connection surface lives on [`<Node connectAs>`](/core/components/node/overview); `boundary` is the per-edge override.
+`boundary` only applies where a connection surface is meaningful: endpoint auto-clip (no explicit `anchor`) and that endpoint's compass / angle anchor. In direction-less reference contexts — `between` endpoints, an `offset` `of`, a node center — it is a no-op. A node's default connection surface lives on [`<Node boundary>`](/core/components/node/overview); the endpoint `boundary` is the per-edge override.
+
+Below, two edges target the same five-pointed star (no node `boundary` set) and each picks its connection surface at the endpoint: the solid edge clips to the real tips by default, the dashed edge uses `boundary="circle"` to clip to the circumscribed circle — the surface is decided per edge.
+
+<ComponentPreview name="path-boundary" size="sm" />
 
 ### Styling
 

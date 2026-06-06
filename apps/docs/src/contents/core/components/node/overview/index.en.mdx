@@ -54,23 +54,23 @@ For each shape's parameters, anchors, and examples, see its shape page:
 
 `shape` also accepts registered names beyond the built-ins (hexagon / cylinder / cloud…) — any string passes schema validation, the definition is injected via `CompileOptions.shapes` / `<Layout shapes>`, and unregistered names throw at compile time. Parametric registered shapes pass their params through `{ type, params }`. See [Custom Shapes](/core/reference/extending/shape-registry).
 
-### Connection surface (connectAs)
+### Connection surface (boundary)
 
-By default, edges clip against the node's visual shape boundary. When you want edges to meet a different shape without changing the node's real footprint, set `connectAs` to pick an independent "connection surface". The common case is concave shapes like stars and polygons — you keep the spiky look but want edges to arrive evenly as if meeting a circle, instead of diving into the notches.
+By default, edges clip against the node's visual shape boundary. When you want edges to meet a different shape without changing the node's real footprint, set `boundary` to pick an independent "connection surface". The common case is concave shapes like stars and polygons — you keep the spiky look but want edges to arrive evenly as if meeting a circle, instead of diving into the notches.
 
-`connectAs` takes the same forms as `shape`:
+`boundary` takes the same forms as `shape`:
 
 - `'shape'` (default) — the connection surface is the visual shape itself.
 - `'circle'` — a true circle whose radius is the larger half-axis of the node's bounding box; edges meet it evenly all around.
 - Any registered shape name (`'rectangle'` / `'ellipse'` / `'polygon'`…) or `{ type, params }` — borrows that shape's boundary over the node's bounding box.
 
-The connection surface **never changes the node footprint**: bounding box, visual shape, and layout position stay the same — it only changes where edges clip and how compass anchors resolve. Shape-specific anchors (such as a star's `tip-0`) and edge proportional points always resolve against the visual shape, regardless of `connectAs`.
+The connection surface **never changes the node footprint**: bounding box, visual shape, and layout position stay the same — it only changes where edges clip and how compass anchors resolve. Shape-specific anchors (such as a star's `tip-0`) and edge proportional points always resolve against the visual shape, regardless of `boundary`.
 
-In the example below the five-point star has `connectAs="circle"`: the solid edge clips to the circumscribing circle by default, while the dashed edge with `boundary="shape"` on its endpoint clips to the real tip instead.
+In the example below the five-point star has `boundary="circle"`: the solid edge clips to the circumscribing circle by default, while the dashed edge with `boundary="shape"` on its endpoint clips to the real tip instead.
 
-<ComponentPreview name="node-connect-as" size="sm" />
+<ComponentPreview name="node-boundary" size="sm" />
 
-To override a target node's `connectAs` for a single edge, set `boundary` on the path endpoint object — it affects only that one endpoint and takes the same values as `connectAs`. See the endpoint `boundary` notes on [Path](/core/components/draw/path).
+To override a target node's `boundary` for a single edge, set `boundary` on the path endpoint object — it affects only that one endpoint and takes the same values as the node's `boundary`. See the endpoint `boundary` notes on [Path](/core/components/draw/path).
 
 ### Positioning
 
@@ -291,7 +291,7 @@ By default stacking = declaration order (SVG only honors paint order). `zIndex` 
 | --- | --- | --- | --- |
 | `id` | `string` | — | Unique identifier; referenced by `<Path>` / `<Draw>` |
 | `shape` | `'rectangle' \| 'circle' \| 'ellipse' \| 'diamond' \| 'polygon' \| 'sector' \| 'arc' \| 'star' \| string`<br />`\| { type, params }` | `'rectangle'` | Node shape: bare string (parameterless / registered name) or `{ type, params }` (parametric shape); built-ins above, or registered via `<Layout shapes>` / `CompileOptions.shapes` |
-| `connectAs` | `'shape' \| 'circle' \| string \| { type, params }` | `'shape'` | Connection surface: how edges meet this node and how compass anchors resolve, independent of the visual `shape`; `'shape'` = the visual shape itself, `'circle'` = a true circle (radius = larger AABB half-axis), other values borrow that shape's boundary. Never changes the node footprint; shape-specific anchors and edge proportional points still use the visual shape. Overridable per edge via the endpoint `boundary` field |
+| `boundary` | `'shape' \| 'circle' \| string \| { type, params }` | `'shape'` | Connection surface: how edges meet this node and how compass anchors resolve, independent of the visual `shape`; `'shape'` = the visual shape itself, `'circle'` = a true circle (radius = larger AABB half-axis), other values borrow that shape's boundary. Never changes the node footprint; shape-specific anchors and edge proportional points still use the visual shape. Overridable per edge via the endpoint `boundary` field |
 | `position` | `[x, y] \| PolarPosition \| { direction, of, distance? } \| { of, offset } \| { between, t }` | — | Node center: Cartesian / polar / relative / offset / proportional placement; `of` accepts node id, Cartesian literal, or PolarPosition |
 | `children` / `text` | `string \| Array<string>` | — | Visible label; string = one line, array = one element per line; `text` wins over `children` |
 | `align` | `'left' \| 'center' \| 'right'` | `'center'` | Horizontal alignment of lines within the multi-line text block |

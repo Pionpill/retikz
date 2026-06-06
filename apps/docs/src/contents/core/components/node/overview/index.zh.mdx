@@ -54,23 +54,23 @@ import { Node } from '@retikz/react';
 
 `shape` 还接受内置之外的注册名（hexagon / cylinder / cloud…）——任意字符串通过 schema 校验，定义经 `CompileOptions.shapes` / `<Layout shapes>` 注入，未注册名编译期报错。带参注册形状用 `{ type, params }` 把参数传进去。见 [自定义形状](/core/reference/extending/shape-registry)。
 
-### 连接面 connectAs
+### 连接面 boundary
 
-默认情况下，连线贴的就是节点视觉形状的边界。当你想让边按另一种形状贴边、却不改节点真实占位时，用 `connectAs` 指定一个独立的"连接面"。常见场景是星形 / 多边形这类带凹角的形状——你想保留尖角的视觉，但希望连线像贴圆一样均匀汇入，而不是钻进凹槽。
+默认情况下，连线贴的就是节点视觉形状的边界。当你想让边按另一种形状贴边、却不改节点真实占位时，用 `boundary` 指定一个独立的"连接面"。常见场景是星形 / 多边形这类带凹角的形状——你想保留尖角的视觉，但希望连线像贴圆一样均匀汇入，而不是钻进凹槽。
 
-`connectAs` 取值与 `shape` 同形：
+`boundary` 取值与 `shape` 同形：
 
 - `'shape'`（默认）——连接面就是视觉形状本身。
 - `'circle'`——真圆，半径取节点外接盒的较长半轴；连线均匀贴一圈。
 - 任意已注册 shape 名（`'rectangle'` / `'ellipse'` / `'polygon'`…）或 `{ type, params }`——借用该形状的边界套在节点外接盒上。
 
-连接面**不改节点占位**：节点的包围盒、视觉形状、布局位置都不变，只改"边在哪贴、compass 锚点怎么解析"。形状专属锚点（如星形的 `tip-0`）和边上比例点始终走视觉形状，不受 `connectAs` 影响。
+连接面**不改节点占位**：节点的包围盒、视觉形状、布局位置都不变，只改"边在哪贴、compass 锚点怎么解析"。形状专属锚点（如星形的 `tip-0`）和边上比例点始终走视觉形状，不受 `boundary` 影响。
 
-下例五角星 `connectAs="circle"`：默认实线连到外接圆上；端点写 `boundary="shape"` 的虚线则改贴真实尖端。
+下例五角星 `boundary="circle"`：默认实线连到外接圆上；端点写 `boundary="shape"` 的虚线则改贴真实尖端。
 
-<ComponentPreview name="node-connect-as" size="sm" />
+<ComponentPreview name="node-boundary" size="sm" />
 
-单条边想覆盖目标节点的 `connectAs` 时，在 path 端点对象写 `boundary`——只影响这一个端点，取值同 `connectAs`。详见 [Path](/core/components/draw/path) 的端点 `boundary` 说明。
+单条边想覆盖目标节点的 `boundary` 时，在 path 端点对象写 `boundary`——只影响这一个端点，取值同节点 `boundary`。详见 [Path](/core/components/draw/path) 的端点 `boundary` 说明。
 
 ### 定位
 
@@ -291,7 +291,7 @@ Line 2`}</Node>
 | --- | --- | --- | --- |
 | `id` | `string` | — | 唯一标识；被 `<Path>` / `<Draw>` 用来引用 |
 | `shape` | `'rectangle' \| 'circle' \| 'ellipse' \| 'diamond' \| 'polygon' \| 'sector' \| 'arc' \| 'star' \| string`<br />`\| { type, params }` | `'rectangle'` | 节点形状：裸字符串（无参形状 / 注册名）或 `{ type, params }`（带参形状）；内置见上，或经 `<Layout shapes>` / `CompileOptions.shapes` 注册 |
-| `connectAs` | `'shape' \| 'circle' \| string \| { type, params }` | `'shape'` | 连接面：边在此节点如何贴边、compass 锚点如何解析，独立于视觉 `shape`；`'shape'` = 视觉形状自身，`'circle'` = 真圆（半径 = 外接盒较长半轴），其它走借用的 shape 边界。不改节点占位；形状专属锚点与边上比例点仍走视觉形状。单条边可用端点 `boundary` 覆盖 |
+| `boundary` | `'shape' \| 'circle' \| string \| { type, params }` | `'shape'` | 连接面：边在此节点如何贴边、compass 锚点如何解析，独立于视觉 `shape`；`'shape'` = 视觉形状自身，`'circle'` = 真圆（半径 = 外接盒较长半轴），其它走借用的 shape 边界。不改节点占位；形状专属锚点与边上比例点仍走视觉形状。单条边可用端点 `boundary` 覆盖 |
 | `position` | `[x, y] \| PolarPosition \| { direction, of, distance? } \| { of, offset } \| { between, t }` | — | 节点中心位置：笛卡尔 / 极坐标 / 相对定位 / 偏移定位 / 比例定位；`of` 三态：节点 id、笛卡尔、PolarPosition |
 | `children` / `text` | `string \| Array<string>` | — | 节点内可见文字；字符串单行 / 数组多行；`text` 优先于 `children` |
 | `align` | `'left' \| 'center' \| 'right'` | `'center'` | 多行文本块内各行水平对齐方式 |

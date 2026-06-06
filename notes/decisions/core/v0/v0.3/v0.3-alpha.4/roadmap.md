@@ -18,7 +18,7 @@
 | [03](./03-arc-sector.md) | arc/sector（新增） | arc（弧）+ sector（环楔）shape；参数 `innerRadius` / `outerRadius` / `startAngle` / `endAngle`；`boundaryPoint`（质心向外求交）/ `anchor`（内外弧中点·径向边）；plot polar 扇形的下沉目标 | ADR-01 | Proposed |
 | [04](./04-rectangle-polygon.md) | rectangle/polygon | rectangle 参数化（`roundedCorners` 从顶层迁入 params）；regular polygon（`sides` / `rotate`）；`diamond` 收为 `{type:'polygon', sides:4, rotate:45}` preset 别名 | ADR-01 | Proposed |
 | [05](./05-star.md) | star（新增） | star shape；参数 `points` / `innerRadius` / `outerRadius` / `rotate`；`boundaryPoint` / `anchor` 据星形几何 | ADR-01 | Proposed |
-| [06](./06-connection-surface.md) | 连接面解耦（新增） | 连接面独立于视觉 `shape`：`Node.connectAs`（默认）+ edge 端点 `boundary`（覆盖）；取值 = 保留字 `'shape'` / `'circle'` ∪ 借用已注册 shape（含 `{type,params}`）；core 借内置 `rectangle` / `ellipse` def 喂 AABB、layout-neutral；默认 `'shape'` 逐字段等价现状 | ADR-01（借 ADR-02 rect/ellipse） | Proposed |
+| [06](./06-connection-surface.md) | 连接面解耦（新增） | 连接面独立于视觉 `shape`：`Node.boundary`（默认）+ edge 端点 `boundary`（覆盖）；取值 = 保留字 `'shape'` / `'circle'` ∪ 借用已注册 shape（含 `{type,params}`）；core 借内置 `rectangle` / `ellipse` def 喂 AABB、layout-neutral；默认 `'shape'` 逐字段等价现状 | ADR-01（借 ADR-02 rect/ellipse） | Proposed |
 
 ## 实现顺序
 
@@ -33,7 +33,7 @@
 
 - **01 是唯一前置**：它定 `ShapeDefinition<TParams>` 接口、`Node.shape` schema、编译期 parse 桥接。02-05 都按这套接口实现各自形状的 `paramsSchema` + 几何，彼此无依赖、可并发。
 - 01 自身闭环靠「现有 4 形状迁到新接口、行为等价回归」验证，不依赖任何后续形状 ADR。
-- **06 正交于 02-05**：连接面是独立轴（`Node.connectAs` + edge `boundary`），机制只依赖 01 的擦除注册表 + `circumscribe` AABB 契约；其 `rectangle` / `ellipse` 借用依赖 02 的 def 就绪。默认 `'shape'` 逐字段等价现状，不阻塞其它形状 ADR。
+- **06 正交于 02-05**：连接面是独立轴（`Node.boundary` + edge `boundary`），机制只依赖 01 的擦除注册表 + `circumscribe` AABB 契约；其 `rectangle` / `ellipse` 借用依赖 02 的 def 就绪。默认 `'shape'` 逐字段等价现状，不阻塞其它形状 ADR。
 
 ## 执行模式
 
