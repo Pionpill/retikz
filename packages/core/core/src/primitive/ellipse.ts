@@ -2,12 +2,15 @@
  * 椭圆原语（cx/cy 圆心，rx/ry 半径）
  * @description 圆形（rx=ry）复用同一 prim 单 case 处理；rotate 度数绕中心，非零时由 renderer 在 emit 阶段应用旋转变换
  */
+import type { IRJsonObject } from '../ir/json';
 import type { PaintValue } from './paint';
 
 export type EllipsePrim = {
   type: 'ellipse';
   /** 稳定挂点 id：compile 从 IR 元素 user id stamp，供 renderer emit data-retikz-id / canvas hit-test */
   id?: string;
+  /** provenance 元数据：compile 从 IR 元素（node / path / scope）的 `meta` 原样 stamp，renderer 忽略（不进 DOM），交互层 / 工具链从 Scene 读 */
+  meta?: IRJsonObject;
   cx: number;
   cy: number;
   rx: number;

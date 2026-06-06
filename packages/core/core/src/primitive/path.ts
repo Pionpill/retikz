@@ -1,4 +1,5 @@
 import type { ArrowShapeName } from '../ir/path/arrow';
+import type { IRJsonObject } from '../ir/json';
 import type { MarkerPrimitive } from './marker';
 import type { PaintValue } from './paint';
 
@@ -127,6 +128,8 @@ export type PathPrim = {
   type: 'path';
   /** 稳定挂点 id：compile 从 IR 元素 user id stamp，供 renderer emit data-retikz-id / canvas hit-test */
   id?: string;
+  /** provenance 元数据：compile 从 IR 元素（node / path / scope）的 `meta` 原样 stamp，renderer 忽略（不进 DOM），交互层 / 工具链从 Scene 读 */
+  meta?: IRJsonObject;
   /** 结构化路径命令序列，按数组顺序绘制 */
   commands: Array<PathCommand>;
   /** 填充：纯色 / 资源表 paint server（gradient）/ contextStroke；不填表示不填充 */

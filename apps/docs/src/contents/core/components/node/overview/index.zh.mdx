@@ -298,6 +298,7 @@ Line 2`}</Node>
 | 属性 | 类型 | 默认值 | 描述 |
 | --- | --- | --- | --- |
 | `id` | `string` | — | 唯一标识；被 `<Path>` / `<Draw>` 用来引用 |
+| `meta` | `Record<string, JSON 值>` | — | provenance 元数据：原样透传进本节点 emit 的 Scene 图元，renderer 忽略、不参与布局 / 连接 / 样式；典型由 plot 等高层 lowering 注入（标记来自哪个 datum / series / layer），供交互层命中图元后反查来源。须为 JSON 可序列化对象 |
 | `shape` | `'rectangle' \| 'circle' \| 'ellipse' \| 'diamond' \| 'polygon' \| 'sector' \| 'arc' \| 'star' \| string`<br />`\| { type, params }` | `'rectangle'` | 节点形状：裸字符串（无参形状 / 注册名）或 `{ type, params }`（带参形状）；内置见上，或经 `<Layout shapes>` / `CompileOptions.shapes` 注册 |
 | `boundary` | `'shape' \| 'circle' \| string \| { type, params }` | `'shape'` | 连接面：边在此节点如何贴边、compass 锚点如何解析，独立于视觉 `shape`；`'shape'` = 视觉形状自身，`'circle'` = 真圆（半径 = 外接盒较长半轴），其它走借用的 shape 边界。不改节点占位；形状专属锚点与边上比例点仍走视觉形状。单条边可用端点 `boundary` 覆盖 |
 | `position` | `[x, y] \| PolarPosition \| { direction, of, distance? } \| { of, offset } \| { between, t }` | — | 节点中心位置：笛卡尔 / 极坐标 / 相对定位 / 偏移定位 / 比例定位；`of` 三态：节点 id、笛卡尔、PolarPosition |

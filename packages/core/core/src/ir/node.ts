@@ -2,6 +2,7 @@ import { z } from 'zod';
 import type { ValueOf } from '../types';
 import { BoundarySchema } from './boundary';
 import { FontSchema } from './font';
+import { JsonObjectSchema } from './json';
 import { PaintSpecSchema } from './paint';
 import { AT_DIRECTIONS, AtPositionSchema, BetweenPositionSchema, OffsetPositionSchema, PolarPositionSchema, PositionSchema } from './position';
 import { ShapeRefSchema } from './shape';
@@ -128,6 +129,9 @@ export const NodeSchema = z
       ),
     boundary: BoundarySchema.optional().describe(
       'Default connection surface for edges meeting this node (see BoundarySchema). Defaults to "shape" (use the visual shape). Per-edge overridable via the edge endpoint `boundary` field.',
+    ),
+    meta: JsonObjectSchema.optional().describe(
+      'Opaque provenance metadata carried by this element (e.g. a Tier 2 lowering tagging which datum / series / layer it came from). Provenance passthrough: preserved verbatim into the Scene primitive(s) this element emits, ignored by renderers, and never interpreted by the compiler — it does not affect layout, connection, style, or bounding box. Must be a JSON object (fully serializable). Not inherited across scopes; not part of the every-X style defaults.',
     ),
     position: z
       .union([

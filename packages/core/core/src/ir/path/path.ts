@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { JsonObjectSchema } from '../json';
 import { PaintSpecSchema } from '../paint';
 import { ArrowDetailSchema, ArrowEndDetailSchema } from './arrow';
 import { StepSchema } from './step';
@@ -62,6 +63,9 @@ export const PathSchema = z
       .describe(
         'Optional stable id; required if another path needs to reference this path by string, and used as the hydration hook so client-side event handlers can be bound to the primitives this path emits.',
       ),
+    meta: JsonObjectSchema.optional().describe(
+      'Opaque provenance metadata carried by this element (e.g. a Tier 2 lowering tagging which datum / series / layer it came from). Provenance passthrough: preserved verbatim into the Scene primitive(s) this element emits, ignored by renderers, and never interpreted by the compiler — it does not affect layout, connection, style, or bounding box. Must be a JSON object (fully serializable). Not inherited across scopes; not part of the every-X style defaults.',
+    ),
     color: z
       .string()
       .optional()

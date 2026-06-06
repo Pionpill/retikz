@@ -152,6 +152,7 @@ Besides the symmetric `bendDirection` + `bendAngle`, `<Step kind="bend">` accept
 | Prop | Type | Default | Description |
 | --- | --- | --- | --- |
 | `id` | `string` | — | Optional stable id: lets other elements anchor to the path and serves as the attach point for [hydration](/core/reference/hydration) event binding (a path needs an `id` before you can bind `onClick` and friends) |
+| `meta` | `Record<string, JSON value>` | — | Provenance metadata, passed through verbatim onto the Scene primitives this path emits; ignored by renderers and never part of layout / style. Typically injected by a higher-level lowering (e.g. plot) to tag which datum / series / layer it came from, so an interaction layer can trace a hit primitive back to its source. Must be a JSON-serializable object |
 | `color` | `string` | — | Master color (TikZ `color=`); `stroke` / arrow / step label default to it unless individually set (follows the master color, not `stroke`) |
 | `stroke` | `string` | `currentColor` | Stroke color |
 | `strokeWidth` | `number` | `1` | Stroke width |

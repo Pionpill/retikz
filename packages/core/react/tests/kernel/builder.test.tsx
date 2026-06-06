@@ -21,6 +21,24 @@ describe('buildIR', () => {
     expect(ir.children).toEqual([expect.objectContaining({ type: 'node', id: 'A', text: 'Hi' })]);
   });
 
+  it('meta prop 透传进 Node / Path / Scope 的 IR', () => {
+    const ir = buildIR(
+      <Fragment>
+        <Node id="A" position={[0, 0]} meta={{ source: 'plot', datum: 1 }} />
+        <Path id="p" meta={{ source: 'plot', series: 'trend' }}>
+          <Step kind="move" to={[0, 0]} />
+          <Step kind="line" to={[10, 0]} />
+        </Path>
+        <Scope meta={{ source: 'plot', layer: 'marks' }}>
+          <Node id="B" position={[5, 5]} />
+        </Scope>
+      </Fragment>,
+    );
+    expect(ir.children[0]).toMatchObject({ type: 'node', id: 'A', meta: { source: 'plot', datum: 1 } });
+    expect(ir.children[1]).toMatchObject({ type: 'path', id: 'p', meta: { source: 'plot', series: 'trend' } });
+    expect(ir.children[2]).toMatchObject({ type: 'scope', meta: { source: 'plot', layer: 'marks' } });
+  });
+
   it("children 字符串带 '\\n' 自动拆成多行数组", () => {
     const ir = buildIR(
       <Node id="A" position={[0, 0]}>{'Line 1\nLine 2'}</Node>,

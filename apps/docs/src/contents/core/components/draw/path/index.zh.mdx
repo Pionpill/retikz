@@ -152,6 +152,7 @@ import { Path, Step } from '@retikz/react';
 | 属性 | 类型 | 默认值 | 描述 |
 | --- | --- | --- | --- |
 | `id` | `string` | — | 可选稳定 id：供其它元素 anchor 引用，也是[水合](/core/reference/hydration)事件绑定的挂点（带 `id` 才能给 path 绑 `onClick` 等 handler） |
+| `meta` | `Record<string, JSON 值>` | — | provenance 元数据：原样透传进本路径 emit 的 Scene 图元，renderer 忽略、不参与布局 / 样式；典型由 plot 等高层 lowering 注入（标记来自哪个 datum / series / layer），供交互层命中后反查来源。须为 JSON 可序列化对象 |
 | `color` | `string` | — | 主色（TikZ `color=`）；`stroke` / 箭头 / step label 未单设则随它（跟主色不跟 `stroke`） |
 | `stroke` | `string` | `currentColor` | 描边色 |
 | `strokeWidth` | `number` | `1` | 描边宽度 |
