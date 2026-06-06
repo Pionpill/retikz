@@ -15,6 +15,8 @@ export const PlotMark = {
   Interval: 'interval',
   /** 扇形：内外半径 + 累积角界围成的环楔（饼图 / 环图） */
   Sector: 'sector',
+  /** 面积：上沿折线 ↔ baseline 围成的可填充区域（面积图 / 填充雷达） */
+  Area: 'area',
 } as const;
 
 /** mark 类型 */
@@ -61,6 +63,10 @@ export const LineMarkSchema = z
       .min(1)
       .optional()
       .describe('Series field: split records into one line per distinct value (multi-series); each series gets its own color via the color scale'),
+    closed: z
+      .boolean()
+      .optional()
+      .describe('Connect the last point back to the first, closing the line into a polygon; under polar this yields a radar outline. Default false'),
     ...markBase,
   })
   .describe('Line mark: connects records in order');
@@ -108,9 +114,35 @@ export const SectorMarkSchema = z
   })
   .describe('Sector mark: pie / donut slice; reads cumulative bounds (from a stack transform) as angles, radius spans the full coordinate ring');
 
+export const AreaMarkSchema = z
+  .object({
+    type: z.literal(PlotMark.Area).describe('Discriminator: a fillable region between an upper outline and a baseline'),
+    order: z
+      .string()
+      .min(1)
+      .optional()
+      .describe('Data field driving connection order of the upper outline; omit for data array order'),
+    series: z
+      .string()
+      .min(1)
+      .optional()
+      .describe('Series field: split records into one area per distinct value (multi-series); each series gets its own fill via the color scale'),
+    baseline: z
+      .number()
+      .finite()
+      .optional()
+      .describe('Baseline value the area fills down to (the return edge runs along it); default 0. Finite-only to keep the IR JSON round-trippable'),
+    closed: z
+      .boolean()
+      .optional()
+      .describe('Connect the last point back to the first, closing the outline into a polygon; under polar this yields a filled radar. Default false'),
+    ...markBase,
+  })
+  .describe('Area mark: fillable region between the value outline and a baseline (area chart / filled radar)');
+
 export const MarkSchema = z
-  .discriminatedUnion('type', [PointMarkSchema, LineMarkSchema, IntervalMarkSchema, SectorMarkSchema])
-  .describe('Mark union; extensible to area / rule / text in later alphas');
+  .discriminatedUnion('type', [PointMarkSchema, LineMarkSchema, IntervalMarkSchema, SectorMarkSchema, AreaMarkSchema])
+  .describe('Mark union; extensible to rule / text in later alphas');
 
 /** point mark */
 export type PointMark = z.infer<typeof PointMarkSchema>;
@@ -120,5 +152,7 @@ export type LineMark = z.infer<typeof LineMarkSchema>;
 export type IntervalMark = z.infer<typeof IntervalMarkSchema>;
 /** sector(pie / donut) mark */
 export type SectorMark = z.infer<typeof SectorMarkSchema>;
-/** mark（point / line / interval / sector） */
+/** area(面积图 / 填充雷达) mark */
+export type AreaMark = z.infer<typeof AreaMarkSchema>;
+/** mark（point / line / interval / sector / area） */
 export type Mark = z.infer<typeof MarkSchema>;

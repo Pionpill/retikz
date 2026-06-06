@@ -125,4 +125,88 @@ describe('MarkSchema (ADR-05)', () => {
   it('mark_sector_empty_start_field_rejected', () => {
     expect(() => MarkSchema.parse({ type: 'sector', startField: '', encoding: { color: { field: 'label' } } })).toThrow();
   });
+
+  // ADR-03：area mark
+  it('mark_area_minimal_valid', () => {
+    // baseline / closed 省略：schema 不写入默认值，仅解析通过
+    const m = { type: 'area', encoding: { x: { field: 'date' }, y: { field: 'val' } } };
+    const parsed = MarkSchema.parse(m);
+    expect(parsed).toEqual(m);
+    expect(parsed).not.toHaveProperty('baseline');
+    expect(parsed).not.toHaveProperty('closed');
+  });
+
+  it('mark_area_explicit_baseline_closed_valid', () => {
+    const m = { type: 'area', order: 'date', baseline: 5, closed: true, encoding: { x: { field: 'date' }, y: { field: 'val' } } };
+    expect(MarkSchema.parse(m)).toEqual(m);
+  });
+
+  it('mark_area_baseline_zero_valid', () => {
+    const m = { type: 'area', baseline: 0, encoding: { x: { field: 'date' }, y: { field: 'val' } } };
+    expect(MarkSchema.parse(m)).toEqual(m);
+  });
+
+  it('mark_area_series_valid', () => {
+    const m = { type: 'area', series: 'city', order: 't', encoding: { x: { field: 't' }, y: { field: 'v' } } };
+    expect(MarkSchema.parse(m)).toEqual(m);
+  });
+
+  it('mark_area_with_id_valid', () => {
+    const m = { type: 'area', id: 'band', encoding: { x: { field: 'x' }, y: { field: 'y' } } };
+    expect(MarkSchema.parse(m)).toEqual(m);
+  });
+
+  // 错误路径：baseline 必须有限（.finite 防 Infinity 破坏 JSON round-trip）
+  it('mark_area_baseline_infinity_rejected', () => {
+    expect(() => MarkSchema.parse({ type: 'area', baseline: Number.POSITIVE_INFINITY, encoding: { x: { field: 'x' }, y: { field: 'y' } } })).toThrow();
+  });
+
+  it('mark_area_baseline_nan_rejected', () => {
+    expect(() => MarkSchema.parse({ type: 'area', baseline: Number.NaN, encoding: { x: { field: 'x' }, y: { field: 'y' } } })).toThrow();
+  });
+
+  it('mark_area_missing_encoding_rejected', () => {
+    expect(() => MarkSchema.parse({ type: 'area' })).toThrow();
+  });
+
+  it('mark_area_typo_type_rejected', () => {
+    expect(() => MarkSchema.parse({ type: 'aria', encoding: { x: { field: 'x' }, y: { field: 'y' } } })).toThrow();
+  });
+
+  it('mark_area_empty_order_rejected', () => {
+    expect(() => MarkSchema.parse({ type: 'area', order: '', encoding: { x: { field: 'x' }, y: { field: 'y' } } })).toThrow();
+  });
+
+  // union 判别到 area 分支（保留 area 专属 baseline，不与别的成员混淆）
+  it('mark_area_union_discriminates', () => {
+    const parsed = MarkSchema.parse({ type: 'area', baseline: 2, encoding: { x: { field: 'x' }, y: { field: 'y' } } });
+    expect(parsed.type).toBe('area');
+    expect((parsed as { baseline?: number }).baseline).toBe(2);
+  });
+
+  it('mark_area_json_round_trip', () => {
+    const m = { type: 'area', order: 'date', series: 'city', baseline: 0, closed: false, encoding: { x: { field: 'date' }, y: { field: 'val' } } };
+    expect(MarkSchema.parse(JSON.parse(JSON.stringify(m)))).toEqual(m);
+  });
+
+  // ADR-03：line 加 closed（雷达多边形）
+  it('mark_line_closed_valid', () => {
+    const m = { type: 'line', closed: true, encoding: { x: { field: 'dim' }, y: { field: 'value' } } };
+    expect(MarkSchema.parse(m)).toEqual(m);
+  });
+
+  it('mark_line_closed_omitted_valid', () => {
+    const m = { type: 'line', encoding: { x: { field: 'x' }, y: { field: 'y' } } };
+    const parsed = MarkSchema.parse(m);
+    expect(parsed).not.toHaveProperty('closed');
+  });
+
+  it('mark_line_closed_bad_type_rejected', () => {
+    expect(() => MarkSchema.parse({ type: 'line', closed: 'yes', encoding: { x: { field: 'x' }, y: { field: 'y' } } })).toThrow();
+  });
+
+  it('mark_line_closed_json_round_trip', () => {
+    const m = { type: 'line', order: 'dim', closed: true, encoding: { x: { field: 'dim' }, y: { field: 'value' } } };
+    expect(MarkSchema.parse(JSON.parse(JSON.stringify(m)))).toEqual(m);
+  });
 });
