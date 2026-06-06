@@ -44,12 +44,16 @@ const allKinds = (layer: IRScope): Array<IRStep['kind']> => pathsOf(layer).flatM
 const stepTo = (step: IRStep): [number, number] => (step as { to: [number, number] }).to;
 
 /**
- * 外层 plot scope 子层粗分类：mark 层是 nodeDefault 带 shape 的图层；guide 层（grid/axis）是 pathDefault stroke 的图层。
- * z-order = [...gridLayers, ...markLayers, ...axisLayers]，故用 mark 层下标切分前后段。
+ * 外层 plot scope 子层粗分类：mark 层 = point/sector 的 nodeDefault.shape 层，或 line/area 的 pathDefault.strokeWidth 层
+ * （guide 层的 pathDefault 只有 stroke / drawOpacity，无 strokeWidth）。z-order = [...gridLayers, ...markLayers, ...axisLayers]。
  */
 const layersOf = (outer: IRScope): { children: Array<IRChild>; markIndex: number } => {
   const children = outer.children;
-  const markIndex = children.findIndex(child => isScope(child) && (child).nodeDefault?.shape !== undefined);
+  const markIndex = children.findIndex(
+    child =>
+      isScope(child) &&
+      (child.nodeDefault?.shape !== undefined || child.pathDefault?.strokeWidth !== undefined),
+  );
   return { children, markIndex };
 };
 

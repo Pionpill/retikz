@@ -133,13 +133,30 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
     // 角向值 ← angle ?? x；径向值 ← radius ?? y（默认复用 x/y，正中 (i) 投影整形）
     const angleValues = collectValues(mark => mark.encoding.angle ?? mark.encoding.x, false, false, true);
     const radiusValues = collectValues(mark => mark.encoding.radius ?? mark.encoding.y, true, true);
-    // polar layout：圆心 + outerRadius（ADR-01 不画角向轴 → 无标签留白）
-    const layout = computePolarFrame(width, height, { hasAngularAxis: false, angularLabels: [] }, { fontSize, margin: options.margin });
-    const innerRadiusUnits = coordinate.innerRadius * layout.outerRadius;
-    // 角向 range = [startAngle, endAngle] 度；径向 range = [innerRadius, outerRadius] user units
+
+    // guide 维度角色化：angle / x → angular（primary）、radius / y → radial（secondary）；一维一轴
+    const guides = node.guides ?? [];
+    assertUniqueAxisDimension(guides);
+    const angularAxis = guides.find(guide => guide.dimension === 'angle' || guide.dimension === 'x');
+    const radialAxis = guides.find(guide => guide.dimension === 'radius' || guide.dimension === 'y');
+
+    // 角向 scale 的 range = [startAngle, endAngle]，与 outerRadius 无关 → 可先建以取角向标签，供 layout 留白估算。
+    // band / point 角向刻度即类别（域驱动、不依赖最终半径），故此处取的标签即最终标签。
     const angleScale = resolvePositionScale(angleScaleDef, angleValues, [coordinate.startAngle, coordinate.endAngle]);
+    const angularTicks: TickSet | undefined = angularAxis ? angleScale.ticks(angularAxis.tickCount) : undefined;
+
+    // polar layout：圆心 + outerRadius；有角向轴时为外圈标签预留留白（ADR-01 computePolarFrame，评审 P1）
+    const layout = computePolarFrame(
+      width,
+      height,
+      { hasAngularAxis: !!(angularAxis && angularAxis.tickLabels !== false), angularLabels: angularTicks?.labels ?? [] },
+      { fontSize, margin: options.margin },
+    );
+    const innerRadiusUnits = coordinate.innerRadius * layout.outerRadius;
+    // 径向 range = [innerRadius, outerRadius] user units（依赖最终 outerRadius，故在 layout 之后建）
     const radiusScale = resolvePositionScale(radiusScaleDef, radiusValues, [innerRadiusUnits, layout.outerRadius]);
-    frame = createPolarFrame({
+    const radialTicks: TickSet | undefined = radialAxis ? radiusScale.ticks(radialAxis.tickCount) : undefined;
+    const polarFrame = createPolarFrame({
       center: layout.center,
       innerRadius: innerRadiusUnits,
       outerRadius: layout.outerRadius,
@@ -150,6 +167,25 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
       primary: angleScale,
       secondary: radiusScale,
     });
+    frame = polarFrame;
+
+    // guide 下沉：angular（外圆弧 + 圆周刻度 / 标签 + 角向辐条 grid）/ radial（辐条轴 + 同心环 grid），与 mark 同帧
+    const guideContext: GuideContext = {
+      plotArea: { x: 0, y: 0, width, height },
+      projectX: angleScale,
+      projectY: radiusScale,
+      xTicks: angularTicks ?? EMPTY_TICKS,
+      yTicks: radialTicks ?? EMPTY_TICKS,
+      fontSize,
+      frame: polarFrame,
+      angularTicks: angularTicks ?? EMPTY_TICKS,
+      radialTicks: radialTicks ?? EMPTY_TICKS,
+    };
+    for (const guide of guides) {
+      const lowered = lowerGuide(guide, guideContext);
+      if (lowered.gridLayer) gridLayers.push(lowered.gridLayer);
+      if (lowered.axisLayer) axisLayers.push(lowered.axisLayer);
+    }
   } else {
     // cartesian2D：x/y 角色绑 x/y scale。出现 angle/radius 通道 → reject（误用，多半写错坐标系）
     for (const mark of node.marks) {
