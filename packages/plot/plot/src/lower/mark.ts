@@ -1,7 +1,7 @@
 import { type IRChild, type IRNode, type IRNodeDefault, type IRScope, type IRStep } from '@retikz/core';
 import { type ExternalRow, type Mark, PlotCoordinate } from '../ir';
 import { channelValue, compareByPath, isFiniteNumber, resolveFieldPath } from './field';
-import type { CartesianFrame, CoordinateFrame } from './project';
+import type { CartesianFrame, CoordinateFrame, PolarFrame } from './project';
 import { inferCategoryDomain } from './scale';
 
 /** 散点 glyph 默认直径（user units，已补偿 circle 外接） */
@@ -151,6 +151,124 @@ const lowerStackedBars = (mark: Mark, rows: Array<ExternalRow>, frame: Cartesian
   return placed.length === 0 ? null : barLayer(placed, colorOf);
 };
 
+/** sector node 样式（sector shape 自带几何，padding0 + 无描边，纯填充环楔） */
+const sectorStyle = (fill: string): IRNodeDefault => ({ padding: 0, strokeWidth: 0, fill });
+
+/** sector node 的 shape params（满足 core 硬约束 outerRadius>innerRadius：内外半径 swap 取 min/max） */
+type SectorGeometry = { innerRadius: number; outerRadius: number; startAngle: number; endAngle: number };
+
+/** 用一对半径 + 一对角度建 sector Node（半径 swap 保 outerRadius>innerRadius；position = 圆心） */
+const sectorNode = (center: [number, number], geometry: SectorGeometry): IRNode => ({
+  type: 'node',
+  position: center,
+  shape: {
+    type: 'sector',
+    params: {
+      innerRadius: Math.min(geometry.innerRadius, geometry.outerRadius),
+      outerRadius: Math.max(geometry.innerRadius, geometry.outerRadius),
+      startAngle: geometry.startAngle,
+      endAngle: geometry.endAngle,
+    },
+  },
+});
+
+/** 把一组「已就位 sector node + 其颜色」收成图层（有 color 分子 Scope、无则单层 nodeDefault） */
+const sectorLayer = (placed: Array<{ color: string | undefined; node: IRNode }>, colorOf?: ColorOf): IRScope =>
+  colorOf ? colorGroupedScope(placed, sectorStyle) : { type: 'scope', nodeDefault: sectorStyle(DEFAULT_FILL), children: placed.map(p => p.node) };
+
+/**
+ * interval 在 polar 下 → sector（径向柱 / 玫瑰）
+ * @description 角度 = primary(angle band) 的类别角带 [center−bw/2, center+bw/2]；
+ *   半径 = secondary(radius) 从 baseline(0) 到 value（编码值）。stack（径向堆叠）读 y0/y1 作内外半径；
+ *   dodge（band 内多系列）把角带切等分子角带。负值/反向由 sectorNode swap 保 outerRadius>innerRadius。
+ */
+const lowerIntervalPolar = (mark: Mark, rows: Array<ExternalRow>, frame: PolarFrame, colorOf?: ColorOf): IRChild | null => {
+  if (mark.type !== 'interval') return null;
+  const bandwidth = frame.primary.bandwidth;
+  const stacked = mark.arrangement === 'stack';
+  const seriesField = !stacked ? mark.series : undefined;
+  const seriesValues = seriesField ? inferCategoryDomain(rows.map(row => resolveFieldPath(row, seriesField))) : [];
+  const seriesRank = new Map(seriesValues.map((series, index) => [series, index] as const));
+  const subCount = seriesValues.length || 1;
+  const subWidth = bandwidth / subCount;
+
+  const innerBaseline = frame.secondary.coordinate(BAR_BASELINE);
+  if (!Number.isFinite(innerBaseline)) return null;
+
+  const placed: Array<{ color: string | undefined; node: IRNode }> = [];
+  for (const row of rows) {
+    const center = frame.primary.coordinate(channelValue(mark.encoding.x, row));
+    if (!Number.isFinite(center)) continue;
+
+    // 角带：dodge → 子角带；否则整角带
+    let startAngle: number;
+    let endAngle: number;
+    if (seriesField) {
+      const series = resolveFieldPath(row, seriesField);
+      const index = (typeof series === 'string' || typeof series === 'number' ? seriesRank.get(series) : undefined) ?? 0;
+      const subStart = center - bandwidth / 2 + index * subWidth;
+      startAngle = subStart;
+      endAngle = subStart + subWidth;
+    } else {
+      startAngle = center - bandwidth / 2;
+      endAngle = center + bandwidth / 2;
+    }
+
+    // 半径：stack 读 y0/y1（径向堆叠）；否则 baseline → value
+    let innerRadius: number;
+    let outerRadius: number;
+    if (stacked) {
+      const y0Field = mark.y0Field ?? 'y0';
+      const y1Field = mark.y1Field ?? 'y1';
+      const v0 = resolveFieldPath(row, y0Field);
+      const v1 = resolveFieldPath(row, y1Field);
+      if (!isFiniteNumber(v0) || !isFiniteNumber(v1)) {
+        throw new Error(`lowerPlots: stacked interval requires numeric ${y0Field} / ${y1Field} fields (run the stack transform first)`);
+      }
+      innerRadius = frame.secondary.coordinate(v0);
+      outerRadius = frame.secondary.coordinate(v1);
+    } else {
+      innerRadius = innerBaseline;
+      outerRadius = frame.secondary.coordinate(channelValue(mark.encoding.y, row));
+    }
+    if (!Number.isFinite(innerRadius) || !Number.isFinite(outerRadius)) continue;
+    // 退化（高 0：outer==inner）跳过，避免 core sector 的 outerRadius>innerRadius 约束被违反
+    if (Math.max(innerRadius, outerRadius) - Math.min(innerRadius, outerRadius) < 1e-9) continue;
+
+    placed.push({ color: colorOf?.(row), node: sectorNode(frame.center, { innerRadius, outerRadius, startAngle, endAngle }) });
+  }
+  return placed.length === 0 ? null : sectorLayer(placed, colorOf);
+};
+
+/**
+ * sector mark（饼图 / 环图）：读 transform 派生的累积角界，半径常量满铺
+ * @description 角度 = primary(angle linear, domain [0,total] → range [startAngle,endAngle]) 投影累积界 startField/endField；
+ *   半径常量铺满 [frame.innerRadius, frame.outerRadius]（环图内半径来自 coordinate.innerRadius）。
+ *   缺累积界字段（未跑 stack transform）→ 抛清晰错误（与堆叠 interval 同）。
+ */
+const lowerSector = (mark: Mark, rows: Array<ExternalRow>, frame: PolarFrame, colorOf?: ColorOf): IRChild | null => {
+  if (mark.type !== 'sector') return null;
+  const startField = mark.startField ?? 'y0';
+  const endField = mark.endField ?? 'y1';
+  const placed: Array<{ color: string | undefined; node: IRNode }> = [];
+  for (const row of rows) {
+    const v0 = resolveFieldPath(row, startField);
+    const v1 = resolveFieldPath(row, endField);
+    if (!isFiniteNumber(v0) || !isFiniteNumber(v1)) {
+      throw new Error(`lowerPlots: sector mark requires numeric ${startField} / ${endField} cumulative bounds (run the stack transform first)`);
+    }
+    const startAngle = frame.primary.coordinate(v0);
+    const endAngle = frame.primary.coordinate(v1);
+    if (!Number.isFinite(startAngle) || !Number.isFinite(endAngle)) continue;
+    if (Math.abs(endAngle - startAngle) < 1e-9) continue;
+    placed.push({
+      color: colorOf?.(row),
+      node: sectorNode(frame.center, { innerRadius: frame.innerRadius, outerRadius: frame.outerRadius, startAngle, endAngle }),
+    });
+  }
+  return placed.length === 0 ? null : sectorLayer(placed, colorOf);
+};
+
 /** 区间柱：按 arrangement / series 分派普通 / dodge / stack 三种几何（cartesian-only） */
 const lowerInterval = (mark: Mark, rows: Array<ExternalRow>, frame: CartesianFrame, colorOf?: ColorOf): IRChild | null => {
   if (mark.type !== 'interval') return null;
@@ -205,10 +323,17 @@ const lowerLine = (mark: Mark, rows: Array<ExternalRow>, frame: CartesianFrame, 
 export const lowerMark = (mark: Mark, rows: Array<ExternalRow>, frame: CoordinateFrame, colorOf?: ColorOf): IRChild | null => {
   // point 坐标系无关，经 frame.project 投影
   if (mark.type === 'point') return lowerPoint(mark, rows, frame, colorOf);
-  // interval / line 暂仅笛卡尔（polar sector / 弯弧路径在 ADR-02 / ADR-03）
-  if (frame.type !== PlotCoordinate.Cartesian2D) {
-    throw new Error(`lowerPlots: mark "${mark.type}" is not yet supported under the polar2D coordinate system (only point is)`);
+  // polar：interval → sector（径向柱/玫瑰）、sector mark（饼图/环图）；line 弯弧留 ADR-03
+  if (frame.type === PlotCoordinate.Polar2D) {
+    if (mark.type === 'interval') return lowerIntervalPolar(mark, rows, frame, colorOf);
+    if (mark.type === 'sector') return lowerSector(mark, rows, frame, colorOf);
+    throw new Error(`lowerPlots: mark "${mark.type}" is not yet supported under the polar2D coordinate system`);
   }
+  // sector mark 仅 polar；cartesian 下无意义
+  if (mark.type === 'sector') {
+    throw new Error('lowerPlots: sector mark is only valid under the polar2D coordinate system');
+  }
+  // interval / line 笛卡尔几何
   if (mark.type === 'interval') return lowerInterval(mark, rows, frame, colorOf);
   return lowerLine(mark, rows, frame, colorOf);
 };

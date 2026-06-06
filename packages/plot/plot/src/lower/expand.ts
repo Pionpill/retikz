@@ -74,6 +74,7 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
     pick: (mark: Mark) => Channel | undefined,
     includeBaseline: boolean,
     stackAxis: boolean,
+    sectorAngle = false,
   ): Array<unknown> => {
     const out: Array<unknown> = [];
     for (const mark of node.marks) {
@@ -83,6 +84,15 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
         const y1Field = mark.y1Field ?? 'y1';
         for (const row of rows) {
           out.push(resolveFieldPath(row, y0Field), resolveFieldPath(row, y1Field));
+        }
+        continue;
+      }
+      // sector mark 的角向域取累积界（来自 stack transform）：[0, total] → [startAngle, endAngle]
+      if (sectorAngle && mark.type === 'sector') {
+        const startField = mark.startField ?? 'y0';
+        const endField = mark.endField ?? 'y1';
+        for (const row of rows) {
+          out.push(resolveFieldPath(row, startField), resolveFieldPath(row, endField));
         }
         continue;
       }
@@ -115,7 +125,7 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
     const angleScaleDef = requireScaleDef('angle', coordinate.angle);
     const radiusScaleDef = requireScaleDef('radius', coordinate.radius);
     // 角向值 ← angle ?? x；径向值 ← radius ?? y（默认复用 x/y，正中 (i) 投影整形）
-    const angleValues = collectValues(mark => mark.encoding.angle ?? mark.encoding.x, false, false);
+    const angleValues = collectValues(mark => mark.encoding.angle ?? mark.encoding.x, false, false, true);
     const radiusValues = collectValues(mark => mark.encoding.radius ?? mark.encoding.y, true, true);
     // polar layout：圆心 + outerRadius（ADR-01 不画角向轴 → 无标签留白）
     const layout = computePolarFrame(width, height, { hasAngularAxis: false, angularLabels: [] }, { fontSize, margin: options.margin });
