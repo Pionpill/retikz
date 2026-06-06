@@ -325,6 +325,26 @@ describe('lowerPlots polar guide — 错误路径 (ADR-04)', () => {
     });
     expect(() => expandOf(spec, { d: ROWS }, opts)).toThrow(/duplicate axis/);
   });
+
+  // hybrid 别名：x 与 angle 都映射到角向角色 → 应按角色判重抛错（Bug Hunter ADR-04 W）
+  it('duplicate_angular_role_x_and_angle_throws', () => {
+    const spec = PlotSpecSchema.parse({
+      namespace: 'plot',
+      type: 'plot',
+      data: { reference: 'd' },
+      scales: [
+        { type: 'band', name: 'a' },
+        { type: 'linear', name: 'r', domain: [0, 10] },
+      ],
+      coordinate: { type: 'polar2D', angle: 'a', radius: 'r' },
+      marks: [{ type: 'line', closed: true, encoding: { x: { field: 'cat' }, y: { field: 'value' } } }],
+      guides: [
+        { type: 'axis', dimension: 'x' },
+        { type: 'axis', dimension: 'angle' },
+      ],
+    });
+    expect(() => expandOf(spec, { d: ROWS }, opts)).toThrow(/angular/);
+  });
 });
 
 describe('lowerPlots cartesian guide 回归 (ADR-04)', () => {

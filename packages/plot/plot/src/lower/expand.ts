@@ -13,16 +13,29 @@ import { applyTransforms } from './transform';
 const EMPTY_TICKS: TickSet = { values: [], labels: [] };
 
 /**
- * 一根定位维度只画一根轴：重复同 dimension 的 axis → 刻度数不确定，抛清晰错误。
+ * guide 维度 → 定位角色：polar 下 x / angle 都归 angular、y / radius 都归 radial（hybrid 别名）；cartesian 下原样。
+ * @description 唯一性检查须按角色（而非裸 dimension 串）判，否则 `dimension:'x'` 与 `'angle'` 会被当成两根轴静默叠画。
+ */
+const axisRole = (dimension: string, coordinateType: string): string => {
+  if (coordinateType === PlotCoordinate.Polar2D) {
+    if (dimension === 'angle' || dimension === 'x') return 'angular';
+    if (dimension === 'radius' || dimension === 'y') return 'radial';
+  }
+  return dimension;
+};
+
+/**
+ * 一根定位角色只画一根轴：重复同角色的 axis（含 hybrid 别名 x≡angle / y≡radius）→ 抛清晰错误。
  * @description 多轴（dual-axis / 上下双轴，靠 placement 区分、副轴可绑不同 scale）是后续非破坏放宽，目前不支持。
  */
-const assertUniqueAxisDimension = (guides: Array<Guide>): void => {
+const assertUniqueAxisDimension = (guides: Array<Guide>, coordinateType: string): void => {
   const seen = new Set<string>();
   for (const guide of guides) {
-    if (seen.has(guide.dimension)) {
-      throw new Error(`lowerPlots: duplicate axis for dimension "${guide.dimension}"; one axis per dimension`);
+    const role = axisRole(guide.dimension, coordinateType);
+    if (seen.has(role)) {
+      throw new Error(`lowerPlots: duplicate axis for "${role}" role (dimension "${guide.dimension}"); one axis per positional role`);
     }
-    seen.add(guide.dimension);
+    seen.add(role);
   }
 };
 
@@ -136,7 +149,7 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
 
     // guide 维度角色化：angle / x → angular（primary）、radius / y → radial（secondary）；一维一轴
     const guides = node.guides ?? [];
-    assertUniqueAxisDimension(guides);
+    assertUniqueAxisDimension(guides, coordinate.type);
     const angularAxis = guides.find(guide => guide.dimension === 'angle' || guide.dimension === 'x');
     const radialAxis = guides.find(guide => guide.dimension === 'radius' || guide.dimension === 'y');
 
@@ -200,7 +213,7 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
 
     // 哪些维度有坐标轴（决定 margin / 是否算 ticks）；alpha.2 guide 仅 axis 类型，按 dimension 取
     const guides = node.guides ?? [];
-    assertUniqueAxisDimension(guides);
+    assertUniqueAxisDimension(guides, coordinate.type);
     const xAxis = guides.find(guide => guide.dimension === 'x');
     const yAxis = guides.find(guide => guide.dimension === 'y');
     const xTicks: TickSet | undefined = xAxis ? xScale.ticks(xAxis.tickCount) : undefined;
