@@ -1,6 +1,6 @@
 # ADR-07：统一圆角——`cornerRadius` 经 rounded-contour 模块给 rectangle/polygon/star/sector 倒角（emit + 连接均感知）
 
-- 状态：Proposed
+- 状态：Accepted
 - 决策日期：2026-06-06
 - 关联：[v0.3-alpha.4 roadmap](./roadmap.md) · **前置**：[ADR-01 shape 参数化泛化](./01-shape-params-generalization.md)（params 机制 + `ShapeDefinition` 四函数）· [ADR-04 rectangle/polygon](./04-rectangle-polygon.md)（rectangle `roundedCorners` 入 params、polygon 几何）· [ADR-05 star](./05-star.md) · [ADR-03 arc/sector](./03-arc-sector.md) · [ADR-06 连接面](./06-connection-surface.md)（`boundaryPoint` 即连接面，倒角需让它感知）
 

@@ -1,6 +1,6 @@
 # ADR-06：连接面与视觉形状解耦——`boundary`（node 默认）+ edge `boundary`（单边覆盖），复用 shape 注册表借边界
 
-- 状态：Proposed
+- 状态：Accepted
 - 决策日期：2026-06-06
 - 关联：[v0.3-alpha.4 roadmap](./roadmap.md) · **前置**：[ADR-01 shape 参数化泛化](./01-shape-params-generalization.md)（`circumscribe` 精确 AABB 契约 + 擦除注册表）· **借用的内置形状**：[ADR-02 circle/ellipse](./02-circle-ellipse.md)（`rectangle` / `ellipse` def 被连接面复用）· 参照：[core-design.md §7 AI 友好](../../../../architecture/core-design.md)
 

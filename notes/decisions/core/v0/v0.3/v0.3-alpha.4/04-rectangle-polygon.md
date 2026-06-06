@@ -1,6 +1,6 @@
 # ADR-04：rectangle/polygon——rectangle 参数化（roundedCorners 入 params）+ regular polygon，diamond 收为 polygon 别名
 
-- 状态：Proposed
+- 状态：Accepted
 - 决策日期：2026-06-06
 - 关联：[v0.3-alpha.4 roadmap](./roadmap.md) · 依赖：[ADR-01 shape 参数化机制](./01-shape-params-generalization.md)（nested params + defineShape + 双护栏） · 文档页：`apps/docs/src/contents/core/components/shapes/rectangle-polygon/`
 

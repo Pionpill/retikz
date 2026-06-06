@@ -1,6 +1,6 @@
 # ADR-08：IR `meta` provenance 透传——Node / Scope / Path 携带来源元数据，compile 原样 stamp 进 Scene，renderer 忽略
 
-- 状态：Proposed
+- 状态：Accepted
 - 决策日期：2026-06-07
 - 关联：[v0.3-alpha.4 roadmap](./roadmap.md) · **机制先例**：[v0.3-alpha.3 ADR-01 水合](../v0.3-alpha.3/01-hydration.md)（`ScenePrimitive.id?` + compile 把 user id stamp 进 emit 图元）· **下游动机**：`@retikz/plot`（root/series/mark 下沉 Scope、datum 下沉 Node，需把数据来源带进 Scene 供交互命中）· **roadmap 伏笔**：[v0.3 总计划 §AI 增量渲染预留](../roadmap.md)（「IR / lowering 应鼓励稳定 id、layer、`meta` 来源信息」）· 参照：[core-design.md §4.4 IR 100% JSON 可序列化 / §7 AI 友好](../../../../architecture/core-design.md)
 

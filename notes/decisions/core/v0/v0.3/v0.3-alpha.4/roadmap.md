@@ -3,6 +3,8 @@
 > milestone 执行路线。长期决策放同目录 `NN-*.md` ADR；本文件可更新。
 > 关联：[`v0.3 roadmap`](../roadmap.md) · [`v0 roadmap`](../../roadmap.md) · [`core-design.md §7 AI 友好`](../../../../architecture/core-design.md) · 范式参照：[`v0.3-alpha.2 ADR-01 Tier 2 支撑`](../v0.3-alpha.2/01-tier2-support.md)（passthrough + 注册表）· 下游动机：[`plot v0.1-alpha.4`](../../../../plot/v0/v0.1/roadmap.md)（polar 扇形需可连接 sector）
 
+> **2026-06-07 封板**：ADR-01~08 全部 Accepted；绿灯关全过（core 1870 / react 341 / render 87 / vanilla 56 测试，4 包 `tsc --noEmit` + `pnpm lint` 全绿），changelog 入库，随 `v0.3.0-alpha.4` 发布。后续含 ADR-06 连接面、ADR-07 统一圆角 `cornerRadius`（rename `roundedCorners`）、ADR-08 `meta` provenance（原计划 01~05 之外的收尾增补）。
+
 ## 目标
 
 把 `Node.shape` 从**只认「name + 经 Rect 派生尺寸」**升级为**可注册的「type + 自定义参数」模型**，让任意形状（含数据驱动的扇形）携带自己的几何参数、并成为**一等可连接图元**（`boundaryPoint` / `anchor` 拿得到 shape 专属参数）。在新机制上参数化全部内置形状，并补齐 arc/sector、regular polygon、star。
@@ -13,14 +15,14 @@
 
 | ADR | 主题 | 内容 | 依赖 | 状态 |
 |---|---|---|---|---|
-| [01](./01-shape-params-generalization.md) | 架构扩展：shape 参数化机制 | `Node.shape: string \| {type, ...params}`（passthrough）；泛型 `ShapeDefinition<TParams>`（`paramsSchema` + 计算函数收 `params`）；编译期 `paramsSchema.parse` 桥接；顶层参数迁移规则；现有 4 形状迁到新接口、行为等价回归 | 前置无 | Proposed |
-| [02](./02-circle-ellipse.md) | circle/ellipse | ellipse 参数化（`circumscribe: 'proportional' \| 'equal'`）；`circle` 收为 `{type:'ellipse', circumscribe:'equal'}` preset 别名，几何单一实现 | ADR-01 | Proposed |
-| [03](./03-arc-sector.md) | arc/sector（新增） | arc（弧）+ sector（环楔）shape；参数 `innerRadius` / `outerRadius` / `startAngle` / `endAngle`；`boundaryPoint`（质心向外求交）/ `anchor`（内外弧中点·径向边）；plot polar 扇形的下沉目标 | ADR-01 | Proposed |
-| [04](./04-rectangle-polygon.md) | rectangle/polygon | rectangle 参数化（`roundedCorners` 从顶层迁入 params）；regular polygon（`sides` / `rotate`）；`diamond` 收为 `{type:'polygon', sides:4, rotate:45}` preset 别名 | ADR-01 | Proposed |
-| [05](./05-star.md) | star（新增） | star shape；参数 `points` / `innerRadius` / `outerRadius` / `rotate`；`boundaryPoint` / `anchor` 据星形几何 | ADR-01 | Proposed |
-| [06](./06-connection-surface.md) | 连接面解耦（新增） | 连接面独立于视觉 `shape`：`Node.boundary`（默认）+ edge 端点 `boundary`（覆盖）；取值 = 保留字 `'shape'` / `'circle'` ∪ 借用已注册 shape（含 `{type,params}`）；core 借内置 `rectangle` / `ellipse` def 喂 AABB、layout-neutral；默认 `'shape'` 逐字段等价现状 | ADR-01（借 ADR-02 rect/ellipse） | Proposed |
-| [07](./07-corner-rounding.md) | 统一圆角（新增） | `cornerRadius` 统一命名（rename `roundedCorners`）；新建 rounded-contour 模块（轮廓=line/arc 段 → fillet → emit + ray∩轮廓 boundary）；rectangle/polygon/star/sector 全覆盖，连接感知倒角；rectangle emit 保 RectPrim；r=0 等价现状 | ADR-01/03/04/05（各形状几何就绪）+ ADR-06（boundaryPoint=连接面） | Proposed |
-| [08](./08-meta-provenance.md) | IR `meta` provenance 透传（新增） | Node / Scope / Path 加可选 `meta`（复用 `JsonObjectSchema`）；compile 沿 alpha.3 `id`-stamp 同款通路把 `meta` 原样 stamp 进 emit 图元（`ScenePrimitive` 加 `meta?`）；renderer 忽略、layout-neutral；不进 every-X 默认 / 不跨 scope 继承；Coordinate 不加（产 0 图元）。plot lowering 据此把 datum/series/layer 来源带进 Scene 供交互命中 | [alpha.3 水合 ADR-01](../v0.3-alpha.3/01-hydration.md)（`id`-stamp 机制先例）；正交于 01-07 | Proposed |
+| [01](./01-shape-params-generalization.md) | 架构扩展：shape 参数化机制 | `Node.shape: string \| {type, ...params}`（passthrough）；泛型 `ShapeDefinition<TParams>`（`paramsSchema` + 计算函数收 `params`）；编译期 `paramsSchema.parse` 桥接；顶层参数迁移规则；现有 4 形状迁到新接口、行为等价回归 | 前置无 | Accepted |
+| [02](./02-circle-ellipse.md) | circle/ellipse | ellipse 参数化（`circumscribe: 'proportional' \| 'equal'`）；`circle` 收为 `{type:'ellipse', circumscribe:'equal'}` preset 别名，几何单一实现 | ADR-01 | Accepted |
+| [03](./03-arc-sector.md) | arc/sector（新增） | arc（弧）+ sector（环楔）shape；参数 `innerRadius` / `outerRadius` / `startAngle` / `endAngle`；`boundaryPoint`（质心向外求交）/ `anchor`（内外弧中点·径向边）；plot polar 扇形的下沉目标 | ADR-01 | Accepted |
+| [04](./04-rectangle-polygon.md) | rectangle/polygon | rectangle 参数化（`roundedCorners` 从顶层迁入 params）；regular polygon（`sides` / `rotate`）；`diamond` 收为 `{type:'polygon', sides:4, rotate:45}` preset 别名 | ADR-01 | Accepted |
+| [05](./05-star.md) | star（新增） | star shape；参数 `points` / `innerRadius` / `outerRadius` / `rotate`；`boundaryPoint` / `anchor` 据星形几何 | ADR-01 | Accepted |
+| [06](./06-connection-surface.md) | 连接面解耦（新增） | 连接面独立于视觉 `shape`：`Node.boundary`（默认）+ edge 端点 `boundary`（覆盖）；取值 = 保留字 `'shape'` / `'circle'` ∪ 借用已注册 shape（含 `{type,params}`）；core 借内置 `rectangle` / `ellipse` def 喂 AABB、layout-neutral；默认 `'shape'` 逐字段等价现状 | ADR-01（借 ADR-02 rect/ellipse） | Accepted |
+| [07](./07-corner-rounding.md) | 统一圆角（新增） | `cornerRadius` 统一命名（rename `roundedCorners`）；新建 rounded-contour 模块（轮廓=line/arc 段 → fillet → emit + ray∩轮廓 boundary）；rectangle/polygon/star/sector 全覆盖，连接感知倒角；rectangle emit 保 RectPrim；r=0 等价现状 | ADR-01/03/04/05（各形状几何就绪）+ ADR-06（boundaryPoint=连接面） | Accepted |
+| [08](./08-meta-provenance.md) | IR `meta` provenance 透传（新增） | Node / Scope / Path 加可选 `meta`（复用 `JsonObjectSchema`）；compile 沿 alpha.3 `id`-stamp 同款通路把 `meta` 原样 stamp 进 emit 图元（`ScenePrimitive` 加 `meta?`）；renderer 忽略、layout-neutral；不进 every-X 默认 / 不跨 scope 继承；Coordinate 不加（产 0 图元）。plot lowering 据此把 datum/series/layer 来源带进 Scene 供交互命中 | [alpha.3 水合 ADR-01](../v0.3-alpha.3/01-hydration.md)（`id`-stamp 机制先例）；正交于 01-07 | Accepted |
 
 ## 实现顺序
 

@@ -43,6 +43,23 @@ export const changelog: Array<Release> = [
         ],
         subVersions: [
           {
+            version: 'alpha.4',
+            date: '2026-06-07',
+            summary: {
+              zh: '无源码改动：新形状（polygon / star / arc / sector）与圆角经 compile emit 出既有 `PathPrim` / `RectPrim` / `EllipsePrim`，renderer 消费同一 Scene 不变；`meta` 被忽略（不进 DOM）。补 meta 对照测试，随四包 version lockstep 对齐。',
+              en: 'No source change: new shapes (polygon / star / arc / sector) and corner rounding emit existing `PathPrim` / `RectPrim` / `EllipsePrim` at compile time, so renderers consume the same Scene unchanged; `meta` is ignored (never reaches the DOM). A meta parity test is added, aligned under the four-package version lockstep.',
+            },
+            items: [
+              {
+                label: { zh: 'meta 忽略对照测试', en: 'meta-ignored parity test' },
+                content: {
+                  zh: '含 `meta` 的 Scene 经 SVG renderer 产出与无 `meta` 版逐字节一致——renderer 只读已知字段，`meta` 既不进 attrs 也不进 DOM。',
+                  en: 'A Scene carrying `meta` renders byte-for-byte identically to one without it through the SVG renderer — renderers read only known fields, so `meta` reaches neither attrs nor the DOM.',
+                },
+              },
+            ],
+          },
+          {
             version: 'alpha.3',
             date: '2026-06-05',
             summary: {
@@ -155,6 +172,23 @@ export const changelog: Array<Release> = [
         ],
         subVersions: [
           {
+            version: 'alpha.4',
+            date: '2026-06-07',
+            summary: {
+              zh: '无源码改动：`node` / `draw` / `scope` 的 config 是 `Omit<IR…>` 派生，core 新增的 shape `{ type, params }` / `boundary` / `cornerRadius` / `meta` 字段经类型自动透传；随四包 version lockstep 对齐。',
+              en: 'No source change: the `node` / `draw` / `scope` configs derive from `Omit<IR…>`, so core\'s new shape `{ type, params }` / `boundary` / `cornerRadius` / `meta` fields pass through automatically by type; aligned under the four-package version lockstep.',
+            },
+            items: [
+              {
+                label: { zh: '字段自动透传', en: 'Fields auto-passthrough' },
+                content: {
+                  zh: '命令式 builder 的 config 类型直接派生自 IR schema，core 形状泛化 / boundary / cornerRadius / meta 无需 vanilla 改一行代码即可用。',
+                  en: 'The imperative builder\'s config types derive straight from the IR schema, so core\'s shape generalization / boundary / cornerRadius / meta work with zero vanilla code changes.',
+                },
+              },
+            ],
+          },
+          {
             version: 'alpha.3',
             date: '2026-06-05',
             summary: {
@@ -245,6 +279,30 @@ export const changelog: Array<Release> = [
           },
         ],
         subVersions: [
+          {
+            version: 'alpha.4',
+            date: '2026-06-07',
+            summary: {
+              zh: 'Kernel `<Node>` 跟进 core shape 泛化：`shape` 接受 `{ type, params }`、新增 `boundary` / `cornerRadius`（rename）/ `meta` props；均经 builder 字段表透传，vanilla 经 `Omit<IR>` config 自动同步。',
+              en: 'Kernel `<Node>` follows the core shape generalization: `shape` accepts `{ type, params }`, plus new `boundary` / `cornerRadius` (renamed) / `meta` props; all forwarded via the builder field table, vanilla auto-synced through its `Omit<IR>` config.',
+            },
+            items: [
+              {
+                label: { zh: '形状 props 泛化 + boundary', en: 'Shape props generalization + boundary' },
+                content: {
+                  zh: '`<Node shape>` 接受 `{ type, params }`（如 `{ type:\'sector\', params:{ innerRadius, outerRadius, startAngle, endAngle } }`）；`diamond` / `circle` 别名保留；新增 `boundary` prop（连接面，端点亦可覆盖）。',
+                  en: '`<Node shape>` accepts `{ type, params }` (e.g. `{ type:\'sector\', params:{ innerRadius, outerRadius, startAngle, endAngle } }`); `diamond` / `circle` aliases kept; new `boundary` prop (connection surface, also overridable per edge endpoint).',
+                },
+              },
+              {
+                label: { zh: 'cornerRadius rename + meta prop', en: 'cornerRadius rename + meta prop' },
+                content: {
+                  zh: '`roundedCorners` prop rename 为 `cornerRadius`（**breaking**）；`<Node>` / `<Path>` / `<Scope>` 新增 `meta` prop（provenance 透传，不上 React render 栈，经 pickDefined 自动转发进 IR）。',
+                  en: '`roundedCorners` prop renamed to `cornerRadius` (**breaking**); `<Node>` / `<Path>` / `<Scope>` gain a `meta` prop (provenance passthrough, off the React render stack, auto-forwarded into the IR via pickDefined).',
+                },
+              },
+            ],
+          },
           {
             version: 'alpha.3',
             date: '2026-06-05',
@@ -344,6 +402,51 @@ export const changelog: Array<Release> = [
         ],
         subVersions: [
           {
+            version: 'alpha.4',
+            date: '2026-06-07',
+            summary: {
+              zh: 'shape 参数化泛化：`Node.shape` 升为 `string | { type, params }` 可注册扩展；内置形状参数化 + 新增 regular polygon / star / arc / sector；连接面 `boundary` 与视觉形状解耦；统一圆角 `cornerRadius`（rename `roundedCorners`）；新增 `meta` provenance 透传。',
+              en: 'Shape parameterization: `Node.shape` becomes `string | { type, params }` (registrable); built-in shapes parameterized + new polygon / star / arc / sector; connection surface `boundary` decoupled from the visual shape; unified `cornerRadius` (was `roundedCorners`); new `meta` provenance passthrough.',
+            },
+            items: [
+              {
+                label: { zh: '形状参数化机制', en: 'Shape parameterization mechanism' },
+                content: {
+                  zh: '`Node.shape` 从「name + Rect 派生尺寸」升为「`{ type, params }` + 可注册 `ShapeDefinition`」：params 进 IR、JSON 可序列化、编译期 `paramsSchema.parse` 双护栏校验；裸字符串（无参形状）向后兼容，自定义形状经 `CompileOptions.shapes` 注册。',
+                  en: '`Node.shape` upgrades from "name + Rect-derived size" to "`{ type, params }` + a registrable `ShapeDefinition`": params live in the IR, are JSON-serializable, and pass a compile-time `paramsSchema.parse` double guard; bare strings (parameterless shapes) stay backward-compatible, custom shapes register via `CompileOptions.shapes`.',
+                },
+              },
+              {
+                label: { zh: '内置形状参数化 + 新形状', en: 'Built-in shapes parameterized + new shapes' },
+                content: {
+                  zh: 'circle / ellipse 收敛为单一椭圆实现（`circumscribe`）；新增 regular polygon（`sides` / `rotate`，`diamond` ≡ polygon{4,45} 别名）、star（`points` / 内外半径）、arc / sector（环楔，`innerRadius` / `outerRadius` / 起止角，一等可连接，plot polar 扇形的下沉目标）。',
+                  en: 'circle / ellipse collapse into one ellipse implementation (`circumscribe`); new regular polygon (`sides` / `rotate`, `diamond` ≡ polygon{4,45}), star (`points` / inner-outer radius), and arc / sector (annular wedge, `innerRadius` / `outerRadius` / start-end angle, first-class connectable, the lowering target for plot polar wedges).',
+                },
+              },
+              {
+                label: { zh: '连接面 boundary', en: 'Connection surface boundary' },
+                content: {
+                  zh: '新增 `Node.boundary` + 端点 `boundary`：连接面独立于视觉 `shape`——`shape`（默认）/ `circle`（真圆）/ 借用任意已注册 shape 边界；layout-neutral，让五角星等也能「按圆 / 矩形」连接，形状专属锚点仍走视觉形状。',
+                  en: 'New `Node.boundary` + per-edge `boundary`: the connection surface is independent of the visual `shape` — `shape` (default) / `circle` (true circle) / borrow any registered shape boundary; layout-neutral, so a star can connect "as a circle / rectangle" while shape-specific anchors still use the visual shape.',
+                },
+              },
+              {
+                label: { zh: '统一圆角 cornerRadius（breaking rename）', en: 'Unified cornerRadius (breaking rename)' },
+                content: {
+                  zh: '新建 rounded-contour 几何模块（轮廓 line/arc 段 → fillet → emit + ray∩轮廓 boundary），rectangle / polygon / star / sector 统一支持 `cornerRadius`、连接感知倒角。**Breaking**：`roundedCorners` 全部 rename 为 `cornerRadius`（IR 字段 + path step 字段）。',
+                  en: 'A new rounded-contour geometry module (contour line/arc segments → fillet → emit + ray∩contour boundary); rectangle / polygon / star / sector all support `cornerRadius` with connection-aware rounding. **Breaking**: `roundedCorners` is renamed to `cornerRadius` everywhere (IR field + path step field).',
+                },
+              },
+              {
+                label: { zh: 'meta provenance 透传', en: 'meta provenance passthrough' },
+                content: {
+                  zh: 'Node / Scope / Path 新增可选 `meta`（JSON 对象）：compile 沿 `id`-stamp 同款通路原样透传进 emit 图元（`ScenePrimitive.meta`），renderer 忽略、不参与布局 / 连接 / 样式；供 Tier 2（plot）把 datum / series / layer 来源带进 Scene 供交互命中。',
+                  en: 'Node / Scope / Path gain an optional `meta` (JSON object): compile stamps it verbatim onto emitted primitives (`ScenePrimitive.meta`) via the same path as `id`; renderers ignore it and it never affects layout / connection / style — letting Tier 2 (plot) carry datum / series / layer provenance into the Scene for interaction hit-testing.',
+                },
+              },
+            ],
+          },
+          {
             version: 'alpha.3',
             date: '2026-06-05',
             summary: {
@@ -434,6 +537,23 @@ export const changelog: Array<Release> = [
           },
         ],
         subVersions: [
+          {
+            version: 'alpha.4',
+            date: '2026-06-07',
+            summary: {
+              zh: '形状文档：shapes 分组补 circle-ellipse / arc-sector / rectangle-polygon / star 页与造法；Node 页补 shape 多态、连接面 `boundary`、`cornerRadius`、`meta` API 行（双语）。',
+              en: 'Shape docs: the shapes group adds circle-ellipse / arc-sector / rectangle-polygon / star pages; the Node page documents shape polymorphism, connection-surface `boundary`, `cornerRadius`, and the `meta` API row (bilingual).',
+            },
+            items: [
+              {
+                label: { zh: '形状页 + Node 深度章节', en: 'Shape pages + Node deep sections' },
+                content: {
+                  zh: '新增 / 完善各内置形状页（参数表 + ComponentPreview）；Node 概览页加「shape 多态」「连接面 boundary」章节、圆角措辞改准（rectangle / polygon / star / sector）、三组件页（Node / Path / Scope）API 表补 `meta` 行。',
+                  en: 'New / expanded built-in shape pages (param tables + ComponentPreview); the Node overview gains "shape polymorphism" and "connection surface boundary" sections, the corner-rounding wording is corrected (rectangle / polygon / star / sector), and the Node / Path / Scope pages add a `meta` API row.',
+                },
+              },
+            ],
+          },
           {
             version: 'alpha.3',
             date: '2026-06-05',

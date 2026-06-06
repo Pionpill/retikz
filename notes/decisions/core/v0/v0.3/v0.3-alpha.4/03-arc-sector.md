@@ -1,6 +1,6 @@
 # ADR-03：arc/sector——弧与环楔 shape（内外半径 + 起止角），plot polar 扇形的下沉目标
 
-- 状态：Proposed
+- 状态：Accepted
 - 决策日期：2026-06-06
 - 关联：[v0.3-alpha.4 roadmap](./roadmap.md) · 依赖：[ADR-01 shape 参数化机制](./01-shape-params-generalization.md)（nested params + defineShape + 双护栏 + circumscribe 返回精确 AABB） · 下游：[plot v0.1-alpha.4](../../../../plot/v0/v0.1/roadmap.md)（polar bar→sector）· 文档页：`apps/docs/src/contents/core/components/shapes/arc-sector/`
 
