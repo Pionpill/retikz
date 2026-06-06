@@ -268,5 +268,6 @@ export const registerScopeAsLayout = (
     align: 'middle',
     lineHeight: 0,
     fontSize: 0,
+    shapes: BUILTIN_SHAPES,
   };
 };

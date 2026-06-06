@@ -44,6 +44,7 @@ const makeLayout = (
     align: 'middle',
     lineHeight: 0,
     fontSize: 0,
+    shapes: BUILTIN_SHAPES,
   };
 };
 
@@ -203,6 +204,7 @@ describe('resolveEdgePoint 边上比例点（ADR-02）', () => {
       align: 'middle',
       lineHeight: 0,
       fontSize: 0,
+      shapes: BUILTIN_SHAPES,
     };
     expect(() => resolveEdgePoint(layout, 'north', 0.5)).toThrow(/does not support side anchors/);
   });
@@ -210,5 +212,39 @@ describe('resolveEdgePoint 边上比例点（ADR-02）', () => {
   it('零尺寸 Coordinate → { side, t } 报错（决策细节 #10）', () => {
     const layout = makeLayout('rectangle', 0, 0, 5, 5);
     expect(() => resolveEdgePoint(layout, 'north', 0.5)).toThrow(/zero-size Coordinate/);
+  });
+});
+
+describe('resolveAnchor boundary no cross-pollination', () => {
+  it('same layout + name under different boundaries resolves independently', () => {
+    // star 节点：points=5，innerRadius=10，outerRadius=30；rect 由 AABB 撑开（outerRadius×2=60）
+    const starLayout: NodeLayout = {
+      shapeName: 'star',
+      shapeDef: BUILTIN_SHAPES.star,
+      shapeParams: { points: 5, innerRadius: 10, outerRadius: 30 },
+      rect: { x: 0, y: 0, width: 60, height: 60, rotate: 0 },
+      rotateDeg: 0,
+      margin: 0,
+      textWidth: 0,
+      textHeight: 0,
+      align: 'middle',
+      lineHeight: 0,
+      fontSize: 0,
+      shapes: BUILTIN_SHAPES,
+    };
+
+    // '36' 是数字角度字符串 → 走 angleBoundaryOf → boundaryPoint，受 boundary 影响
+    // 5 角星 outerRadius=30，外径尖角在 0°/72°/144°... 凹角在 36°/108°...
+    // 36° 方向：星形轮廓落在内径（innerRadius=10）附近；圆落在半径 30 的圆周
+    // → 两者数值必然不同，正确体现 boundary 差异
+    const asShape = resolveAnchor(starLayout, '36', 'shape');   // 36° 走真实星形轮廓
+    const asCircle = resolveAnchor(starLayout, '36', 'circle'); // 36° 走真圆
+
+    // 星形 36° 轮廓距离中心远小于真圆（凹角 vs 圆周），两者不等
+    expect(asShape).not.toEqual(asCircle);
+
+    // 各自缓存命中：第二次 lookup 返回严格相等（===）引用
+    expect(resolveAnchor(starLayout, '36', 'shape')).toBe(asShape);
+    expect(resolveAnchor(starLayout, '36', 'circle')).toBe(asCircle);
   });
 });

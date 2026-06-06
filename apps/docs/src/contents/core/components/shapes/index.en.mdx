@@ -1,21 +1,31 @@
 ---
 title: Shapes
-description: Short JSX forms for common drawing intent, still expanding to Kernel components underneath.
+description: retikz's geometric shapes — both the official sugar for drawing a Path and the boundary shapes a Node supports by default.
 ---
 
-This page groups the shorthand forms that let you write common drawing intent in a shorter way: draw a circle in one line, draw a grid in one line, or describe a connection with an array. In the React package they still expand to Kernel / Sugar combinations such as `<Path>`, `<Step>`, and `<Draw>`.
+Shapes (circle, ellipse, arc, sector, rectangle, polygon, star) are a family of geometric primitives in retikz, with **two faces**:
 
-`<Draw>` also belongs to this family of shortcut forms, but it is common enough to live in its own [Draw](/core/components/draw/overview) group, so we do not repeat it here.
+- **As a Path shape (sugar)** — components like `<Circle>` and `<Sector>` are the official set of shape shortcuts; they draw a shape line at a position and expand to an underlying `<Path>`. They save you from hand-writing Path / Step for common shapes.
+- **As a Node shape** — `<Node shape="circle">` bounds a node by that shape: it holds text, is referenceable by `<Path>` / `<Draw>` through its id, and snaps connection endpoints to its edge.
+
+Each shape page documents both faces as two self-contained halves: "As a Path shape" first, then "As a Node shape". In short: reach for sugar to draw a shape line, and for `<Node shape>` to get a connectable, labelable shape node.
+
+**Both sides are open to extension:**
+
+- For Node shapes beyond the built-ins (hexagon / cloud…) — register them with the [shape-registry](/core/reference/extending/shape-registry); the built-in circle / sector / star are its official implementations.
+- For path curve steps beyond the built-ins (parabola / sin-cos…) — use the [path-generator](/core/reference/extending/path-generator).
 
 ## What it contains
 
-| Page | Type | Responsibility | Use it when |
-| --- | --- | --- | --- |
-| Circle / Ellipse | Shapes | Circles, ellipses, half circles, and segments | You know a center, radius, diameter, or bounding box |
-| Arc / Sector | Shapes | Arcs, sectors, and donut sectors | You want angle marks, sector highlights, or ring fragments |
-| Rectangle / Polygon | Shapes | Rectangles, rounded rectangles, and regular polygons | You want boxes or equal-sided polygons without hand-writing vertices |
-| Star | Shapes | Alternating inner / outer radius stars | You want rating stars, emphasis marks, or decorative multi-point shapes |
-| Grid | Shapes | Grids, guide lines, borders, and major lines | You want a background grid or a set of regular reference lines |
+| Shape | As a Path (sugar) | As a Node shape |
+| --- | --- | --- |
+| Circle / Ellipse | `<Circle>` · `<Ellipse>` | `shape="circle"` · `"ellipse"` |
+| Arc / Sector | `<Arc>` · `<Sector>` | `shape="sector"` · `"arc"` (params) |
+| Rectangle | `<Rectangle>` | default / `shape="rectangle"` |
+| Polygon | `<RegularPolygon>` | `shape="polygon"` · `"diamond"` |
+| Star | `<Star>` | `shape="star"` (params) |
+
+> Background grids and reference lines — **a field of regular lines** rather than a single closed shape — are not in this group; see `<Grid>` under [Helpers](/core/components/helpers).
 
 ## Entry points
 
@@ -28,16 +38,16 @@ This page groups the shorthand forms that let you write common drawing intent in
     <span className="font-semibold">Arc / Sector</span>
     <span className="mt-1 text-center text-sm text-muted-foreground">Arcs, sectors, and donut sectors</span>
   </LinkedCard>
-  <LinkedCard href="/core/components/shapes/rectangle-polygon">
-    <span className="font-semibold">Rectangle / Polygon</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">Rectangles, rounded rectangles, and regular polygons</span>
+  <LinkedCard href="/core/components/shapes/rectangle">
+    <span className="font-semibold">Rectangle</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">Rectangles and rounded rectangles (node default)</span>
+  </LinkedCard>
+  <LinkedCard href="/core/components/shapes/polygon">
+    <span className="font-semibold">Polygon</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">Regular polygons and diamond</span>
   </LinkedCard>
   <LinkedCard href="/core/components/shapes/star">
     <span className="font-semibold">Star</span>
     <span className="mt-1 text-center text-sm text-muted-foreground">Alternating inner / outer radius stars</span>
-  </LinkedCard>
-  <LinkedCard href="/core/components/shapes/grid">
-    <span className="font-semibold">Grid</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">Background grids, reference lines, borders, and major lines</span>
   </LinkedCard>
 </div>

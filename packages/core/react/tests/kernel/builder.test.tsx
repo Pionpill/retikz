@@ -600,6 +600,33 @@ describe('buildIR', () => {
     });
   });
 
+  describe('<Node boundary> 连接面透传', () => {
+    it('<Node boundary="circle"> 透传到 IR node.boundary', () => {
+      const ir = buildIR(<Node id="A" position={[0, 0]} boundary="circle" />);
+      expect(ir.children[0]).toMatchObject({ type: 'node', boundary: 'circle' });
+    });
+
+    it('<Node boundary="shape"> 透传到 IR node.boundary', () => {
+      const ir = buildIR(<Node id="A" position={[0, 0]} boundary="shape" />);
+      expect(ir.children[0]).toMatchObject({ type: 'node', boundary: 'shape' });
+    });
+
+    it('<Node boundary={{ type, params }}> 对象形态透传到 IR', () => {
+      const ir = buildIR(
+        <Node id="A" position={[0, 0]} boundary={{ type: 'ellipse', params: { circumscribe: 'equal' } }} />,
+      );
+      expect(ir.children[0]).toMatchObject({
+        type: 'node',
+        boundary: { type: 'ellipse', params: { circumscribe: 'equal' } },
+      });
+    });
+
+    it('<Node> 省略 boundary 时 IR node 不含该字段', () => {
+      const ir = buildIR(<Node id="A" position={[0, 0]} />);
+      expect(ir.children[0]).not.toHaveProperty('boundary');
+    });
+  });
+
   describe('React.Fragment 透明展开', () => {
     it('Fragment 直接子元素被展开为 Layout 子级', () => {
       const ir = buildIR(

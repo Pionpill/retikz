@@ -1,11 +1,15 @@
 ---
 title: Circle / Ellipse
-description: Sugar forms for circles and ellipses, with support for box-based fitting and box adjustments.
+description: Circles and ellipses — draw a Path with sugar, or use them as a node's circular / elliptical boundary.
 ---
 
-`<Circle>` and `<Ellipse>` are sugar forms that expand common geometry into `<Path>`. They fit cases where you know the center and radius, only have a box, or want to pad a circle or ellipse in or out from that box.
+Circles and ellipses are retikz geometric shapes with two faces: draw an outline with `<Circle>` / `<Ellipse>` (sugar), or bound a node with `shape="circle"` / `"ellipse"`. See [Shapes](/core/components/shapes) for the full definition. Reach for sugar to draw a line, and for `<Node shape>` to get a connectable, labelable node.
 
-## Usage
+## As a Path shape (sugar)
+
+`<Circle>` / `<Ellipse>` draw a circle / ellipse outline at a position, expanding to an underlying `<Path>`. They fit cases where you know the center and radius, or only have a box.
+
+### Usage
 
 ```tsx
 import { Circle, Ellipse } from '@retikz/react';
@@ -16,9 +20,7 @@ import { Circle, Ellipse } from '@retikz/react';
 <Ellipse center={[0, 0]} radiusX={48} radiusY={28} fill="none" />
 ```
 
-## Examples
-
-### Circle
+### Examples
 
 The common form is `center + radius`. If you already have a rectangular area, you can also use `corner1 + corner2`, `box`, or `boundingBox`.
 
@@ -35,8 +37,6 @@ The common form is `center + radius`. If you already have a rectangular area, yo
 
 <ComponentPreview name="circle-basic" size="sm" />
 
-### Ellipse
-
 Ellipse works like Circle, but the radius is split into `radiusX` and `radiusY`. It also supports `corner1 + corner2`, `box`, and `boundingBox`.
 
 | Form | Best for |
@@ -50,42 +50,7 @@ Ellipse works like Circle, but the radius is split into `radiusX` and `radiusY`.
 
 <ComponentPreview name="ellipse-basic" size="sm" />
 
-## How it works
-
-> Optional for everyday use; revisit this section when a point form throws an error, or when you want to mix these shapes with `<Path>`.
-
-### Some forms pass points through, others compute first
-
-Some forms pass the point directly to the underlying Path. They can use node ids, polar points, or plain `[x, y]` coordinates:
-
-```tsx
-<Circle center="A" radius={24} />
-<Ellipse corner1="A" corner2="B" />
-```
-
-Other forms must compute a midpoint, size, or bounding box in React first. These forms only accept literal `[x, y]` coordinates:
-
-```tsx
-<Circle from={[-40, 0]} to={[40, 0]} />
-```
-
-Passing a node id to a computed form throws an error instead of guessing a result.
-
-### Partial shapes have three closing modes
-
-When angles are present, `closed` decides how the arc ends are connected:
-
-| Value | Effect |
-| --- | --- |
-| `chord` | Default, draw a straight chord between the arc ends |
-| `sector` | Draw from the arc end to the center, then back to the arc start |
-| `open` | Draw only the arc |
-
-### They are still Path
-
-Every circle or ellipse expands to an equivalent `<Path>` / `<Step>` sequence. That means they can use `stroke`, `fill`, `arrow`, and `zIndex` like any other path.
-
-## API Reference
+### API Reference
 
 | Component | Combination | Meaning |
 | --- | --- | --- |
@@ -104,7 +69,73 @@ Every circle or ellipse expands to an equivalent `<Path>` / `<Step>` sequence. T
 | | + `inset?` / `outset?` | Shrink or expand the box before fitting |
 | | + angles + `closed?` | Partial ellipse: `chord` / `sector` / `open` |
 
+## As a node shape
+
+When you need a circular / elliptical node rather than a line (to hold text, to be referenced by a connection), set `shape` on `<Node>`.
+
+### Usage
+
+```tsx
+import { Node } from '@retikz/react';
+```
+
+```tsx
+<Node shape="circle">label</Node>
+<Node shape="ellipse">label</Node>
+```
+
+### Examples
+
+The boundary circumscribes "text + padding": `circle` takes the circle that fits the text, `ellipse` takes the circumscribed ellipse (each axis × √2). These two shapes take **no extra parameters**.
+
+<ComponentPreview name="node-circle-ellipse" size="sm" />
+
+Connection endpoints snap to the circle / ellipse edge, and the node's 9 standard anchors (`north` / `center` …) still apply. For the full `<Node>` props (`position` / `fill` / `padding` / `label` …) see [Node](/core/components/node/overview).
+
+### API Reference
+
+| `shape` | Boundary | Parameters |
+| --- | --- | --- |
+| `"circle"` | Circle circumscribing the text (= equal-axis `ellipse` preset) | None |
+| `"ellipse"` | Circumscribed ellipse, each axis × √2 | None |
+
+## How it works
+
+> Optional for everyday use; revisit when a point form throws an error, or when you want to understand the difference between sugar and Node.
+
+### Some forms pass points through, others compute first (sugar)
+
+Some `<Circle>` / `<Ellipse>` forms pass the point directly to the underlying Path, so they accept node ids, polar points, or plain `[x, y]` coordinates:
+
+```tsx
+<Circle center="A" radius={24} />
+<Ellipse corner1="A" corner2="B" />
+```
+
+Other forms must compute a midpoint, size, or bounding box in React first. These forms only accept literal `[x, y]` coordinates:
+
+```tsx
+<Circle from={[-40, 0]} to={[40, 0]} />
+```
+
+Passing a node id to a computed form throws an error instead of guessing a result.
+
+### Partial shapes have three closing modes (sugar)
+
+When angles are present, `closed` decides how the arc ends are connected:
+
+| Value | Effect |
+| --- | --- |
+| `chord` | Default, draw a straight chord between the arc ends |
+| `sector` | Draw from the arc end to the center, then back to the arc start |
+| `open` | Draw only the arc |
+
+### Sugar and Node are two routes
+
+`<Circle>` / `<Ellipse>` expand to an equivalent `<Path>` / `<Step>` sequence — pure graphics that can use `stroke`, `fill`, `arrow`, and `zIndex` like any path. `<Node shape>` is not a Path but a node with a boundary circumscribed from the text content that connections can snap to. For a circle that both holds text and connects, use `<Node>` rather than `<Circle>`.
+
 ## Related
 
+- [Node](/core/components/node/overview): full props when a shape is used as a node boundary
 - [Arc / Sector](../arc-sector): angle-based shapes
-- [Shapes](/core/components/shapes/circle-ellipse): Shapes overview
+- [Shapes](/core/components/shapes): Shapes overview and full definition

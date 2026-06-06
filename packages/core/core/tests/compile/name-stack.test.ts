@@ -19,6 +19,7 @@ const makeLayout = (id: string, x = 0, y = 0): NodeLayout => ({
   align: 'middle',
   lineHeight: 0,
   fontSize: 0,
+  shapes: BUILTIN_SHAPES,
 });
 
 describe('NameStack 基本 register / lookup', () => {

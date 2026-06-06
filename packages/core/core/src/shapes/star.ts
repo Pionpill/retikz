@@ -1,10 +1,9 @@
 import { z } from 'zod';
 import { localToWorld, worldToLocal } from '../geometry/_transform';
 import type { Position } from '../geometry/point';
-import { type Rect, rect as rectGeometry } from '../geometry/rect';
+import type { Rect } from '../geometry/rect';
 import type { PathCommand, ScenePrimitive } from '../primitive';
 import { defineShape } from './define';
-import { asRectAnchor } from './_shared';
 
 /**
  * star shape 的 per-instance params 类型
@@ -147,9 +146,6 @@ export const star = defineShape({
       if (index >= geo.vertices.length) return undefined;
       return toWorld(rect, geo.vertices[index]);
     }
-    // 内置 9 名 rect anchor（north / south-east 等）走外接 AABB（rect 已是 AABB 中心 + 半轴）。
-    const rectName = asRectAnchor(name);
-    if (rectName) return rectGeometry.anchor(rect, rectName);
     return undefined;
   },
   *emit (rect: Rect, style, round, params: StarParams): Iterable<ScenePrimitive> {

@@ -2,6 +2,7 @@ import type { FC, ReactNode } from 'react';
 import type {
   IRAtPosition,
   IRBetweenPosition,
+  IRBoundary,
   IRFont,
   IRLineSpec,
   IRNode,
@@ -20,6 +21,8 @@ export type NodeProps = HydrationEventProps & {
   id?: string;
   /** 节点形状：rectangle（默认）/ circle / ellipse / diamond */
   shape?: IRNode['shape'];
+  /** 连接面：边与本节点相交时使用的边界形状（TikZ `connect as`）；默认 'shape'（沿用视觉形状）；'circle' = 真圆；其它已注册 shape 名或 `{ type, params }` = 借用该 shape 边界 */
+  boundary?: IRBoundary;
   /**
    * 节点中心位置
    * @description 五种形态：笛卡尔 `[x, y]` / 极坐标 `{ angle, radius, origin? }` / 相对定位 `{ direction, of, distance? }`（TikZ `[<direction>=<distance> of <id>]` 同义）/ 偏移定位 `{ of, offset }`（TikZ `calc` 同义）/ 比例 partway `{ between: [A, B], t }`（A、B 连线上 t 处，TikZ `($(A)!t!(B)$)` 同义）；非笛卡尔形态在编译时解析

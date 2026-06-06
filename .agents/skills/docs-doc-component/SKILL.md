@@ -38,6 +38,26 @@ frontmatter `title` + `description` 始终在；H1 由 DocPage 渲染，正文**
 
 中文段标题用「技术原理」、英文段标题用「How it works」；双语层级、子节数对齐。
 
+## 形状页（双 API 页型）
+
+`components/shapes/**` 下的形状页是上面 6 段结构的**例外**：同一个几何形状同时有两种用法——**Sugar 组件**（画一条 `<Path>`，如 `<Circle>`）和 **Node 形状**（节点边界，如 `shape="circle"`）。这类页改用**两大块自包含**结构，每块各写自己的用法 / 例子 / API，让"画图形"和"建节点"两类读者各自一口气读完、不来回跳：
+
+| 段 | 必需 | 内容 |
+| --- | --- | --- |
+| 导言 | ✅ | 一句话点出该形状的**双重身份** + 一句决策（要画线 → Sugar；要可连节点 → Node），并链到 [形状组落地页](/core/components/shapes) 看完整定义——**不在每页重写定义** |
+| `## 作为 Path 图形（Sugar）` | ✅ | 该 Sugar 组件的完整文档：`### 用法`（import + 骨架）/ `### 例子`（demo + 写法表）/ `### API 参考`（组合表） |
+| `## 作为 Node 形状` | ✅ | 该 shape 的完整文档：`### 用法` / `### 例子`（含 params / 几何 anchor）/ `### API 参考`（shape 值 / params / 边界表） |
+| `## 技术原理 / How it works` | 可选 | **共享底层机制**（Sugar→Path、Node→边界外接、角度坐标系等）；子节用一句标注适用 Path / Node / 两者 |
+| `## 相关 / Related` | ✅ | 链接 Node、相邻形状页、形状组、扩展 Reference |
+
+要点：
+
+- **两套用法 / 例子 / API 是有意为之**——形状页同时服务两类读者，不要为了凑 6 段把它们揉成「作为图形 / 作为节点形状」交错子节
+- **定义单一来源**：形状的权威定义（双重身份 + 可扩展性）写在**形状组落地页**（`shapes/index`），各形状页导言只一句话 + 链接，不复制
+- 无参的 Node 形状（circle / ellipse / rectangle）Node 块较短（无 params 表）；带参的（sector / arc / star / polygon）多一块 **params 表 + 几何 anchor 列表**
+- `## 技术原理` 仍是可选 deepdive，按 6 段规则用 blockquote 写导读；不要每个块各写一个技术原理，统一收在共享段
+- 其它（双语、写作风格、Comparison、自绘图示、宽度、ComponentPreview 用法）一律继承 [docs-doc-principle](../docs-doc-principle/SKILL.md)
+
 ## Usage 写法
 
 shadcn 同款，import 与最小骨架分两个代码块（**只显示代码，不放 ComponentPreview**）：

@@ -62,6 +62,23 @@ import { Path, Step } from '@retikz/react';
 
 `arrow` picks direction (`'->'` / `'<-'` / `'<->'` / `'none'`); `arrowDetail` is a single object covering every visual spec (shape / scale / length / width / color / fill / opacity / lineWidth) plus optional `start` / `end` sub-objects for per-end overrides. The full reference — seven built-in shapes, per-end merge semantics, color / sizing / opacity, and the complete API table — lives on the **[Arrow](/core/components/draw/arrow)** page.
 
+### Endpoint connection surface (boundary)
+
+When an endpoint references a node (the `{ id }` object form, or an id inside a way), you can add a `boundary` field to override the target node's [`boundary`](/core/components/node/overview) (connection surface) **for that endpoint only**. It takes the same forms as the node's `boundary`: `'shape'` (the visual shape itself) / `'circle'` (a true circle) / any registered shape name / `{ type, params }`.
+
+```tsx
+<Path arrow="->">
+  <Step kind="move" to="a" />
+  <Step kind="line" to={{ id: 'star', boundary: 'shape' }} />
+</Path>
+```
+
+`boundary` only applies where a connection surface is meaningful: endpoint auto-clip (no explicit `anchor`) and that endpoint's compass / angle anchor. In direction-less reference contexts — `between` endpoints, an `offset` `of`, a node center — it is a no-op. A node's default connection surface lives on [`<Node boundary>`](/core/components/node/overview); the endpoint `boundary` is the per-edge override.
+
+Below, two edges target the same five-pointed star (no node `boundary` set) and each picks its connection surface at the endpoint: the solid edge clips to the real tips by default, the dashed edge uses `boundary="circle"` to clip to the circumscribed circle — the surface is decided per edge.
+
+<ComponentPreview name="path-boundary" size="sm" />
+
 ### Styling
 
 `stroke` / `strokeWidth` / `dashPattern` match `<Draw>`:

@@ -26,6 +26,7 @@ const makeStack = (entries: Array<[string, [number, number]]>): NameStack => {
       align: 'middle',
       lineHeight: 0,
       fontSize: 0,
+      shapes: BUILTIN_SHAPES,
     };
     stack.register(id, layout);
   }

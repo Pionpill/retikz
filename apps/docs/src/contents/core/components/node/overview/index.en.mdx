@@ -27,6 +27,8 @@ Choose the form by the role in the diagram: flowchart nodes usually use the defa
 
 ### Shape polymorphism
 
+Shapes have two faces in retikz — drawn as a Path with sugar, or used as a Node boundary; see [Shapes](/core/components/shapes) for the full definition. This section covers the Node-shape side.
+
 `shape` picks the visual shape in two forms:
 
 - **Bare string** (parameterless shapes): `'rectangle'` (default) / `'circle'` / `'ellipse'` / `'diamond'` / `'polygon'` / `'sector'` / `'arc'` / `'star'`, or a custom name registered via `<Layout shapes>` / `CompileOptions.shapes`.
@@ -34,35 +36,49 @@ Choose the form by the role in the diagram: flowchart nodes usually use the defa
 
 Either way, the node works as an attachable target — connecting lines clip to that shape's boundary automatically.
 
-Shapes split into two families by where their size comes from:
-
-**Text-container shapes** — the boundary wraps "text rectangle + padding"; size is driven by the text content. Good for flowchart nodes, labels, badges.
-
-| shape | form | boundary |
-| --- | --- | --- |
-| rectangle | `'rectangle'` | boundary = inner rect |
-| circle | `'circle'` | circumscribed circle (= ellipse `equal` preset) |
-| ellipse | `'ellipse'` | circumscribed ellipse, each axis × √2 |
-| polygon | `{ type:'polygon', params:{ sides, rotate? }}` | regular polygon circumscribing the inner box |
-| diamond | `'diamond'` | = `polygon{ sides:4, rotate:45 }` (square rotated 45°) |
+Shapes split into two families by where their size comes from: **text-container shapes** (rectangle / circle / ellipse / polygon / diamond) wrap "text + padding" and are sized by the text; **params-driven geometric shapes** (sector / arc / star) are sized by radii / angles, independent of the text, and work as attachable graphic glyphs.
 
 <ComponentPreview name="node-shapes" size="md" />
 
-> `circle` is the `equal` preset of `ellipse`, and `diamond` is the 4-side / 45° preset of `polygon` — both bare strings still work and are normalized to the equivalent parametric shape at compile time.
-
-**Params-driven geometric shapes** — size comes from the radii / angles in `params` and does **not** depend on the text box; use them as attachable graphic glyphs / marks.
-
-| shape | params | notes |
-| --- | --- | --- |
-| sector | `{ innerRadius, outerRadius, startAngle, endAngle }` | annular wedge; `innerRadius:0` = solid pie slice |
-| arc | `{ radius, startAngle, endAngle, close? }` | single-radius arc; `close:true` closes into a segment |
-| star | `{ points, innerRadius, outerRadius, rotate? }` | star with alternating inner / outer radii |
-
 <ComponentPreview name="node-shape-params" size="md" />
 
-Beyond the 9 built-in rect anchors (`north` / `center`…), these shapes expose geometry-named anchors so you can attach precisely via `{ id, anchor }`: sector has `outer-arc-mid` / `inner-arc-mid` / `apex` / `centroid` / `start-edge-mid` / `end-edge-mid`, star has `tip-N` (Nth tip) / `notch-N` (Nth notch) / `center`, and arc has `arc-mid` / `start` / `end` / `center`.
+For each shape's parameters, anchors, and examples, see its shape page:
+
+| shape | form | docs |
+| --- | --- | --- |
+| rectangle | default / `'rectangle'` | [Rectangle](/core/components/shapes/rectangle) |
+| circle / ellipse | `'circle'` / `'ellipse'` | [Circle / Ellipse](/core/components/shapes/circle-ellipse) |
+| sector / arc | `{ type:'sector' \| 'arc', params }` | [Arc / Sector](/core/components/shapes/arc-sector) |
+| polygon / diamond | `{ type:'polygon', params }` / `'diamond'` | [Polygon](/core/components/shapes/polygon) |
+| star | `{ type:'star', params }` | [Star](/core/components/shapes/star) |
 
 `shape` also accepts registered names beyond the built-ins (hexagon / cylinder / cloud…) — any string passes schema validation, the definition is injected via `CompileOptions.shapes` / `<Layout shapes>`, and unregistered names throw at compile time. Parametric registered shapes pass their params through `{ type, params }`. See [Custom Shapes](/core/reference/extending/shape-registry).
+
+### Connection surface (boundary)
+
+By default, edges clip against the node's visual shape boundary. When you want edges to meet a different shape without changing the node's real footprint, set `boundary` to pick an independent "connection surface". The common case is concave shapes like stars and polygons — you keep the spiky look but want edges to arrive evenly as if meeting a circle, instead of diving into the notches.
+
+`boundary` takes the same forms as `shape`. The four parameter-free values below are the common ones; any registered shape can also be borrowed:
+
+| Value | Connection surface | Effect |
+| --- | --- | --- |
+| `'shape'` (default) | The visual shape itself | Edges clip to the real outline — stars / polygons land on tips or dive into notches |
+| `'circle'` | A true circle, radius = the node's larger bounding-box half-axis | Edges meet it evenly all around, unaffected by notches / rotation |
+| `'rectangle'` | The bounding box (AABB) | Edges clip to the horizontal / vertical box sides |
+| `'ellipse'` | An ellipse matching the AABB aspect ratio | Edges clip to the ellipse, stretched with the aspect ratio |
+| Registered shape name / `{ type, params }` | Borrows that shape's boundary over the node's bounding box | Borrowing parametric shapes (`polygon` / `star`…) needs explicit params; auto-fitting size to the AABB is out of scope |
+
+The same five-point star set to four surfaces, each with one edge clipping in from the lower-left at 45° — `shape` lands on the real star outline (innermost), `rectangle` reaches the bounding-box corner (outermost), and `circle` / `ellipse` sit in between (close together for a near-square node). A diagonal is needed to tell them apart: on a vertical / horizontal axis an inscribed ellipse always meets the rectangle at the same point and the circle takes the larger half-axis, so the three coincide there:
+
+<ComponentPreview name="node-boundary-surfaces" size="md" />
+
+The connection surface **never changes the node footprint**: bounding box, visual shape, and layout position stay the same — it only changes where edges clip and how compass anchors resolve. Shape-specific anchors (such as a star's `tip-0`) and edge proportional points always resolve against the visual shape, regardless of `boundary`.
+
+In the example below the five-point star has `boundary="circle"`: the solid edge clips to the circumscribing circle by default, while the dashed edge with `boundary="shape"` on its endpoint clips to the real tip instead.
+
+<ComponentPreview name="node-boundary" size="sm" />
+
+To override a target node's `boundary` for a single edge, set `boundary` on the path endpoint object — it affects only that one endpoint and takes the same values as the node's `boundary`. See the endpoint `boundary` notes on [Path](/core/components/draw/path).
 
 ### Positioning
 
@@ -283,6 +299,7 @@ By default stacking = declaration order (SVG only honors paint order). `zIndex` 
 | --- | --- | --- | --- |
 | `id` | `string` | — | Unique identifier; referenced by `<Path>` / `<Draw>` |
 | `shape` | `'rectangle' \| 'circle' \| 'ellipse' \| 'diamond' \| 'polygon' \| 'sector' \| 'arc' \| 'star' \| string`<br />`\| { type, params }` | `'rectangle'` | Node shape: bare string (parameterless / registered name) or `{ type, params }` (parametric shape); built-ins above, or registered via `<Layout shapes>` / `CompileOptions.shapes` |
+| `boundary` | `'shape' \| 'circle' \| string \| { type, params }` | `'shape'` | Connection surface: how edges meet this node and how compass anchors resolve, independent of the visual `shape`; `'shape'` = the visual shape itself, `'circle'` = a true circle (radius = larger AABB half-axis), other values borrow that shape's boundary. Never changes the node footprint; shape-specific anchors and edge proportional points still use the visual shape. Overridable per edge via the endpoint `boundary` field |
 | `position` | `[x, y] \| PolarPosition \| { direction, of, distance? } \| { of, offset } \| { between, t }` | — | Node center: Cartesian / polar / relative / offset / proportional placement; `of` accepts node id, Cartesian literal, or PolarPosition |
 | `children` / `text` | `string \| Array<string>` | — | Visible label; string = one line, array = one element per line; `text` wins over `children` |
 | `align` | `'left' \| 'center' \| 'right'` | `'center'` | Horizontal alignment of lines within the multi-line text block |

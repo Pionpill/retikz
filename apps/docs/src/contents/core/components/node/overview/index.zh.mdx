@@ -27,6 +27,8 @@ import { Node } from '@retikz/react';
 
 ### shape 多态
 
+形状在 retikz 有两副面孔——既能用 Sugar 画一条 Path，也能作为 Node 边界，完整定义见 [形状](/core/components/shapes)。本节只讲它作为节点形状的用法。
+
 `shape` 控制节点形状，两种写法：
 
 - **裸字符串**（无参形状）：`'rectangle'`（默认）/ `'circle'` / `'ellipse'` / `'diamond'` / `'polygon'` / `'sector'` / `'arc'` / `'star'`，或经 `<Layout shapes>` / `CompileOptions.shapes` 注册的自定义名。
@@ -34,35 +36,49 @@ import { Node } from '@retikz/react';
 
 不论哪种写法，节点都被 path / draw 当作有边界的图元，连线端点自动贴对应形状的边。
 
-按"尺寸从哪来"分两类：
-
-**文本容器形状**——边界包住"text 矩形 + padding"，尺寸由文字内容驱动。适合流程图节点、标签、徽章。
-
-| shape | 写法 | 边界 |
-| --- | --- | --- |
-| rectangle | `'rectangle'` | 边界 = 内框 |
-| circle | `'circle'` | 外接圆（= ellipse 等轴预设） |
-| ellipse | `'ellipse'` | 外接椭圆，各轴 × √2 |
-| polygon | `{ type:'polygon', params:{ sides, rotate? }}` | 能容纳内框的正多边形外接圆 |
-| diamond | `'diamond'` | = `polygon{ sides:4, rotate:45 }`（正方形旋转 45°） |
+按"尺寸从哪来"分两类：**文本容器形状**（rectangle / circle / ellipse / polygon / diamond）边界包住「文字 + padding」、尺寸由文字驱动；**params 驱动的几何形状**（sector / arc / star）尺寸由半径 / 角度定、不依赖文字，可当作可连接的图形 glyph。
 
 <ComponentPreview name="node-shapes" size="md" />
 
-> `circle` 是 `ellipse` 的等轴预设，`diamond` 是 `polygon` 的 4 边 45° 预设——两个裸字符串都仍可写，编译期规范化为对应带参形状。
-
-**params 驱动的几何形状**——尺寸由 `params` 里的半径 / 角度定，**不依赖文字内框**，可当作可连接的图形 glyph / 标记用。
-
-| shape | params | 说明 |
-| --- | --- | --- |
-| sector | `{ innerRadius, outerRadius, startAngle, endAngle }` | 环楔；`innerRadius:0` 为实心扇片 |
-| arc | `{ radius, startAngle, endAngle, close? }` | 单半径弧；`close:true` 闭合成弓形 |
-| star | `{ points, innerRadius, outerRadius, rotate? }` | 内外半径交替的星形 |
-
 <ComponentPreview name="node-shape-params" size="md" />
 
-这些形状除了 9 个内置 rect anchor（`north` / `center`…）外还提供按几何命名的 anchor，可用 `{ id, anchor }` 精确连线：sector 有 `outer-arc-mid` / `inner-arc-mid` / `apex` / `centroid` / `start-edge-mid` / `end-edge-mid`，star 有 `tip-N`（第 N 尖角）/ `notch-N`（第 N 凹角）/ `center`，arc 有 `arc-mid` / `start` / `end` / `center`。
+每种形状的参数、anchor 和示例见对应形状页：
+
+| shape | 写法 | 文档 |
+| --- | --- | --- |
+| rectangle | 默认 / `'rectangle'` | [Rectangle](/core/components/shapes/rectangle) |
+| circle / ellipse | `'circle'` / `'ellipse'` | [Circle / Ellipse](/core/components/shapes/circle-ellipse) |
+| sector / arc | `{ type:'sector' \| 'arc', params }` | [Arc / Sector](/core/components/shapes/arc-sector) |
+| polygon / diamond | `{ type:'polygon', params }` / `'diamond'` | [Polygon](/core/components/shapes/polygon) |
+| star | `{ type:'star', params }` | [Star](/core/components/shapes/star) |
 
 `shape` 还接受内置之外的注册名（hexagon / cylinder / cloud…）——任意字符串通过 schema 校验，定义经 `CompileOptions.shapes` / `<Layout shapes>` 注入，未注册名编译期报错。带参注册形状用 `{ type, params }` 把参数传进去。见 [自定义形状](/core/reference/extending/shape-registry)。
+
+### 连接面 boundary
+
+默认情况下，连线贴的就是节点视觉形状的边界。当你想让边按另一种形状贴边、却不改节点真实占位时，用 `boundary` 指定一个独立的"连接面"。常见场景是星形 / 多边形这类带凹角的形状——你想保留尖角的视觉，但希望连线像贴圆一样均匀汇入，而不是钻进凹槽。
+
+`boundary` 取值与 `shape` 同形。常用是前四个免参取值，另可借任意已注册形状：
+
+| 取值 | 连接面 | 效果 |
+| --- | --- | --- |
+| `'shape'`（默认） | 视觉形状自身 | 边贴真实轮廓——星形 / 多边形会落在尖端或钻进凹边 |
+| `'circle'` | 真圆，半径 = 节点外接盒较长半轴 | 边均匀贴一整圈，不受凹角 / 旋转影响 |
+| `'rectangle'` | 外接矩形（AABB） | 边贴水平 / 垂直盒边 |
+| `'ellipse'` | 按 AABB 宽高比的椭圆 | 边贴椭圆，随宽高比拉伸 |
+| 注册 shape 名 / `{ type, params }` | 借该形状的边界套在节点外接盒上 | 借 `polygon` / `star` 等带参形状需自给 params；按 AABB 自动适配尺寸不在范围内 |
+
+同一五角星分设四种连接面，各引一条边从左下 45° 斜贴上来——`shape` 落在星形真实轮廓（最内）、`rectangle` 顶到外接盒角（最外）、`circle` / `ellipse` 居中（近正方节点下两者接近）。斜向才看得出区别：竖直 / 水平轴向上椭圆与矩形必然同点、圆又取较长半轴，三者会重合：
+
+<ComponentPreview name="node-boundary-surfaces" size="md" />
+
+连接面**不改节点占位**：节点的包围盒、视觉形状、布局位置都不变，只改"边在哪贴、compass 锚点怎么解析"。形状专属锚点（如星形的 `tip-0`）和边上比例点始终走视觉形状，不受 `boundary` 影响。
+
+下例五角星 `boundary="circle"`：默认实线连到外接圆上；端点写 `boundary="shape"` 的虚线则改贴真实尖端。
+
+<ComponentPreview name="node-boundary" size="sm" />
+
+单条边想覆盖目标节点的 `boundary` 时，在 path 端点对象写 `boundary`——只影响这一个端点，取值同节点 `boundary`。详见 [Path](/core/components/draw/path) 的端点 `boundary` 说明。
 
 ### 定位
 
@@ -283,6 +299,7 @@ Line 2`}</Node>
 | --- | --- | --- | --- |
 | `id` | `string` | — | 唯一标识；被 `<Path>` / `<Draw>` 用来引用 |
 | `shape` | `'rectangle' \| 'circle' \| 'ellipse' \| 'diamond' \| 'polygon' \| 'sector' \| 'arc' \| 'star' \| string`<br />`\| { type, params }` | `'rectangle'` | 节点形状：裸字符串（无参形状 / 注册名）或 `{ type, params }`（带参形状）；内置见上，或经 `<Layout shapes>` / `CompileOptions.shapes` 注册 |
+| `boundary` | `'shape' \| 'circle' \| string \| { type, params }` | `'shape'` | 连接面：边在此节点如何贴边、compass 锚点如何解析，独立于视觉 `shape`；`'shape'` = 视觉形状自身，`'circle'` = 真圆（半径 = 外接盒较长半轴），其它走借用的 shape 边界。不改节点占位；形状专属锚点与边上比例点仍走视觉形状。单条边可用端点 `boundary` 覆盖 |
 | `position` | `[x, y] \| PolarPosition \| { direction, of, distance? } \| { of, offset } \| { between, t }` | — | 节点中心位置：笛卡尔 / 极坐标 / 相对定位 / 偏移定位 / 比例定位；`of` 三态：节点 id、笛卡尔、PolarPosition |
 | `children` / `text` | `string \| Array<string>` | — | 节点内可见文字；字符串单行 / 数组多行；`text` 优先于 `children` |
 | `align` | `'left' \| 'center' \| 'right'` | `'center'` | 多行文本块内各行水平对齐方式 |

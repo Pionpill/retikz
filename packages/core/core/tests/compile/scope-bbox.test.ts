@@ -45,6 +45,7 @@ const layoutAt = (cx: number, cy: number, w: number, h: number): NodeLayout => (
   align: 'middle',
   lineHeight: 0,
   fontSize: 0,
+  shapes: BUILTIN_SHAPES,
 });
 
 describe('computeScopeBoundingBox / registerScopeAsLayout 单元测试', () => {

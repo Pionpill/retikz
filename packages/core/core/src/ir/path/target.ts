@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { BoundarySchema } from '../boundary';
 import { BetweenPositionSchema, OffsetPositionSchema, PolarPositionSchema, PositionSchema } from '../position';
 
 export const AnchorRefSchema = z
@@ -33,6 +34,9 @@ export const NodeTargetSchema = z
       .tuple([z.number().finite(), z.number().finite()])
       .optional()
       .describe('Optional world-space 2D offset added after the anchor/edge point is resolved'),
+    boundary: BoundarySchema.optional().describe(
+      'Per-edge override of the target node connection surface for THIS endpoint only; omitted = the node\'s `boundary` (default "shape"). Effective only where a connection surface is meaningful: path-endpoint auto-clip (no explicit anchor) and this endpoint\'s compass / angle anchor. In toward-less reference contexts (between endpoints, offset `of`, node center) it is a no-op.',
+    ),
   })
   .describe('Reference to a Node/Coordinate by id, with optional anchor and world-space offset');
 

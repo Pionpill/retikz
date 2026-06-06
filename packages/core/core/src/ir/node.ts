@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import type { ValueOf } from '../types';
+import { BoundarySchema } from './boundary';
 import { FontSchema } from './font';
 import { PaintSpecSchema } from './paint';
 import { AT_DIRECTIONS, AtPositionSchema, BetweenPositionSchema, OffsetPositionSchema, PolarPositionSchema, PositionSchema } from './position';
@@ -125,6 +126,9 @@ export const NodeSchema = z
       .describe(
         'Node visual shape: a bare name string (parameterless, e.g. "rectangle") or `{ type, params }` carrying a JSON params object (e.g. `{ type:"sector", params:{ innerRadius, outerRadius, startAngle, endAngle } }`). Built-in or registered via CompileOptions.shapes; unregistered type rejected at compile time. Defaults to "rectangle".',
       ),
+    boundary: BoundarySchema.optional().describe(
+      'Default connection surface for edges meeting this node (see BoundarySchema). Defaults to "shape" (use the visual shape). Per-edge overridable via the edge endpoint `boundary` field.',
+    ),
     position: z
       .union([
         PositionSchema,
