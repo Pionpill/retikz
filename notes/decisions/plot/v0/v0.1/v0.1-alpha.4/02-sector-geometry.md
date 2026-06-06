@@ -7,6 +7,8 @@
 - 决策日期：2026-06-06
 - 关联：[plot v0.1-alpha.4 roadmap](./roadmap.md) · [ADR-01](./01-coordinate-polar.md) · [plot-design.md §3.3 transform / §3.7 mark / §8.3 投影分层](../../../../../architecture/plot-design.md) · [core-design.md](../../../../../architecture/core-design.md)
 
+> **实现期修订（review pass，2026-06-06）**：随 ADR-01 把位置通道收成 x/y 必填（删 angle/radius），**`SectorMark` 用样式-only 编码 `StyleEncodingSchema`**（只 color，无 x/y——角度来自累积界 startField/endField、半径常量满铺）；其余位置 mark 用 x/y 必填的 `EncodingSchema`。负值累积界 → reject（fail loud，已在「待决策点」与代码落地）。下文 schema 草案 / 示例以此为准。
+
 ## 背景
 
 ADR-01 把投影抽象成 `CoordinateFrame`、补了 polar 投影与极坐标散点。接下来最吃几何的是**区间类 mark**：cartesian 下 interval 是矩形（alpha.3 已实现），polar 下同一 interval 应成**扇形**（环楔）——这正是 §8.3 (i)「同一 mark 不同坐标系不同几何」的核心样例。

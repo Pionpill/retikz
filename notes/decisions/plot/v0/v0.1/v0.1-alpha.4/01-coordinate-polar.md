@@ -7,6 +7,8 @@
 - 决策日期：2026-06-06
 - 关联：[plot v0.1-alpha.4 roadmap](./roadmap.md) · [plot v0.1 roadmap](../roadmap.md) · [plot-design.md §3.5 coordinate / §3.6 encoding / §8.3 投影分层](../../../../../architecture/plot-design.md) · [core-design.md](../../../../../architecture/core-design.md)
 
+> **实现期修订（review pass，2026-06-06，以本节为准）**：原「hybrid 位置通道（默认 x/y + 可选 angle/radius）」**已废**——改为 **位置通道仅 `x` / `y`、且必填**，无 angle/radius 通道；坐标系把 x/y 重解释为 angle/radius（纯 ggplot 模型）。理由：双形态对 LLM 有歧义，且 zod `refine` 不进 JSON Schema、约束不了 constrained-decoding 生成；x/y 必填则**形状层**即可结构性约束生成。连带变更：encoding 拆 `PositionEncodingSchema`(x/y 必填) + `StyleEncodingSchema`(color)，**sector 用样式-only 编码**（无 x/y）；删除 `assertEncodingChannels` 跨字段校验（schema 已结构性强制，无需运行时校验）；运行时类型 `CoordinateFrame`（非 `ResolvedCoordinateFrame`），`PolarFrame` 另含 `continuousAngle` / `projectPolar`（ADR-03 段内采样用）。**下文 §1、待决策点、schema 表中凡涉及 angle/radius 通道 / x+angle 优先级 / hybrid 的部分，一律以本修订为准。** DSL 简写见 ADR-05（`coordinate="polar2D"`）。
+
 ## 背景
 
 alpha.1~alpha.3 打通了 cartesian2D 的纵向闭环，但**坐标系是写死的**：`coordinate` IR 的 union 只有一个成员（`Cartesian2DSchema`），lowering 的投影 / range / layout / guide 几何全部假设笛卡尔——
@@ -22,18 +24,18 @@ retikz 已在 §8.3 拍定走 **(i) 投影整形**（mark 坐标系无关、coor
 
 本 ADR 的可见产出是**极坐标散点**（point mark 经重投影自动适配 polar），验证 frame + 投影打通；interval→sector（ADR-02）、line/area（ADR-03）、polar guide（ADR-04）在帧契约之上各自落地。
 
-## 决策：位置通道按坐标系角色解析（hybrid）+ 一次性解析出 `CoordinateFrame`，polar 投影复用 PositionScale 机制
+## 决策：位置通道仅 x/y（坐标系重解释）+ 一次性解析出 `CoordinateFrame`，polar 投影复用 PositionScale 机制
 
 三块组成：
 
-### 1. 位置通道：hybrid（默认复用 x/y + 可选显式 angle/radius）
+### 1. 位置通道：仅 `x` / `y`（必填），坐标系重解释
 
-位置通道按坐标系「角色」解析：`x` / `y` 是通用别名，角色名通道（`angle` / `radius`）是可选显式覆盖。coordinate 声明它的两个位置角色 + 各角色绑定的 scale 名。
+位置通道**只有 `x` / `y`、两者必填**（无 angle/radius 通道）。坐标系声明两个位置角色 + 各角色绑定的 scale 名，并把 x/y 重解释为对应角色：
 
-- `cartesian2D` 角色 = (horizontal, vertical)，绑定 `x` / `y` scale；
-- `polar2D` 角色 = (angle, radius)，绑定 `angle` / `radius` scale；约定 **x→angle, y→radius**（对齐 ggplot `coord_polar` 默认：自变量轴绕圈、值轴往外）。
+- `cartesian2D` 角色 = (horizontal, vertical)：x→水平、y→垂直；
+- `polar2D` 角色 = (angle, radius)：**x→angle、y→radius**（对齐 ggplot `coord_polar` 默认：自变量轴绕圈、值轴往外）。
 
-解析规则：`primary(angle) ← encoding.angle ?? encoding.x`、`secondary(radius) ← encoding.radius ?? encoding.y`。**默认复用 x/y**：一份 cartesian 折线 / 散点 spec 只改 `coordinate` 就渲成极坐标版（零改 encoding，正中 §8.3 (i)）；**需要可读性**时显式写 `angle` / `radius`（饼图作者按角度思考）。scale 绑定仍挂 coordinate（与 cartesian `coordinate.x/y` 命名 scale 一致），encoding 只给字段 / 常量。
+解析规则：`primary ← encoding.x`、`secondary ← encoding.y`，投影由 coordinate（frame）做。一份 cartesian 折线 / 散点 spec **只改 `coordinate` 就渲成极坐标版**（零改 encoding，正中 §8.3 (i)，纯 ggplot 模型）。`encoding` 拆 `PositionEncodingSchema`(x/y 必填) + `StyleEncodingSchema`(color)；**x/y 必填**使 JSON Schema 在 constrained-decoding 下结构性约束 LLM 生成。scale 绑定仍挂 coordinate（与 `coordinate.x/y` 命名 scale 一致），encoding 只给字段 / 常量。
 
 ### 2. polar2D 投影复用 PositionScale，无需新机制
 
@@ -94,24 +96,25 @@ export const Polar2DSchema = z.object({
 });
 // CoordinateSchema = z.discriminatedUnion('type', [Cartesian2DSchema, Polar2DSchema])
 
-// ir/encoding.ts —— 加两个可选角色通道
-//   angle: ChannelSchema.optional()   // explicit angle channel (polar); falls back to x when omitted
-//   radius: ChannelSchema.optional()  // explicit radius channel (polar); falls back to y when omitted
+// ir/encoding.ts —— 位置/样式拆分；位置通道仅 x/y 必填（无 angle/radius）
+//   PositionEncodingSchema = { x: ChannelSchema, y: ChannelSchema }   // 必填，坐标系重解释为 angle/radius
+//   StyleEncodingSchema    = { color: ChannelSchema.optional() }       // 非位置通道
+//   EncodingSchema = PositionEncodingSchema.merge(StyleEncodingSchema) // 位置 mark 用；sector 用 StyleEncodingSchema
 ```
 
 理由：
 
 1. **(i) 投影整形的地基**：把投影做成可替换中间层，mark 取点坐标系无关，加坐标系 O(1)——这是 retikz 选 (i) 而非 Vega 式分立 mark 的全部价值，地基没切干净后面全废。
 2. **polar 零新机制**：角 / 径复用 `PositionScale`（range = 角度区间 / 半径区间），band/linear/time 全自动适配，投影只多一步三角变换；不引入平行的 scale / tick / range 体系，IR 与 lowering 复杂度可控。
-3. **hybrid 通道最贴 AI 与跨坐标系复用**：x/y 是 LLM 训练亲和的默认（cartesian spec 改 coordinate 即跨系），angle/radius 是显式可读覆盖；两者等价、裸字面量优先（§AI 友好性）。
+3. **位置通道仅 x/y 必填最利 AI 与跨坐标系复用**：单一形态无歧义、x/y 必填进 JSON Schema 约束生成（refine 不进 JSON Schema、约束不了），cartesian spec 改 coordinate 即跨系（纯 ggplot），无「选错通道」之虞。
 4. **帧契约单点拥有**：02/03/04 共用同一 `CoordinateFrame`，杜绝各造临时投影框架的伪并行（评审 P1-1）。
 
 ## 待决策点 🔻（已冻结 2026-06-06，按人工 ack）
 
 下列均已拍板，进实现按此执行，不再悬置：
 
-- **x 与 angle 同时设的优先级 → 角色名通道优先 + 忽略别名**（dev 模式可 warn）：宽容、不打断生成。
-- **cartesian2D 下出现 angle/radius 通道 → reject**（lowering 抛清晰错误）：catch 误用（angle 在笛卡尔无意义，多半写错坐标系）。
+> （原「x 与 angle 同设优先级」「cartesian 下 angle/radius reject」两条已随 angle/radius 通道移除而作废——见顶部实现期修订；位置通道仅 x/y、无歧义可言。）
+
 - **theta 翻转 / 方向 → 不做**：写死 x→angle、沿用 core `0°=+x` 约定；翻转 / 换向留后续非破坏放宽。
 - **默认朝向 → `startAngle` 默认 0**（+x / 3 点钟）：与 core sector 约定一致、少惊喜；「起始 12 点钟」靠用户设 `startAngle: -90` 或后续 sugar。
 - **innerRadius 语义 → IR 存 fraction `[0,1)`、frame 转 user units**（`frame.innerRadius = ir.innerRadius × outerRadius`），径向 scale range = `[frame.innerRadius, outerRadius]`，schema `z.number().min(0).lt(1)`。
@@ -135,12 +138,10 @@ const polarScatter: PlotSpec = {
   ],
   marks: [{ type: 'point', encoding: { x: { field: 'theta' }, y: { field: 'value' } } }],
 };
-
-// 等价的显式角色写法（可读性优先时）：
-//   marks: [{ type: 'point', encoding: { angle: { field: 'theta' }, radius: { field: 'value' } } }]
+// 位置通道仅 x/y：polar 下 x→angle、y→radius 由坐标系重解释，spec 不写 angle/radius
 ```
 
-`@retikz/plot-react` / `@retikz/plot-vanilla` 的 `coordinate="polar"` 表面 → **ADR-05**（见「不在本 ADR 范围」）。
+`@retikz/plot-react` / `@retikz/plot-vanilla` 的 `coordinate="polar2D"` 表面 → **ADR-05**（见「不在本 ADR 范围」）。
 
 ## 测试设计
 
@@ -189,10 +190,11 @@ const polarScatter: PlotSpec = {
 | `ir/coordinate.ts` | 加 | `Polar2DSchema.endAngle` | `z.number().finite()` | `360` | 角向终止角（度，缺省整圆） |
 | `ir/coordinate.ts` | 加 | `Polar2DSchema.innerRadius` | `z.number().finite().min(0).lt(1)` | `0` | 环图内半径（占外半径比例，0=实心） |
 | `ir/coordinate.ts` | 改 | `CoordinateSchema` | union 加 `Polar2DSchema` | — | 坐标系 union 扩成 cartesian2D \| polar2D |
-| `ir/encoding.ts` | 加 | `EncodingSchema.angle` | `ChannelSchema.optional()` | — | angle 位置通道（polar）；缺省回退 x |
-| `ir/encoding.ts` | 加 | `EncodingSchema.radius` | `ChannelSchema.optional()` | — | radius 位置通道（polar）；缺省回退 y |
+| `ir/encoding.ts` | 改 | `PositionEncodingSchema` | `{ x: ChannelSchema, y: ChannelSchema }` | — | 位置通道 x/y **必填**（无 angle/radius；坐标系重解释） |
+| `ir/encoding.ts` | 加 | `StyleEncodingSchema` | `{ color: ChannelSchema.optional() }` | — | 非位置样式通道（后续补 opacity/size/shape） |
+| `ir/encoding.ts` | 改 | `EncodingSchema` | `PositionEncodingSchema.merge(StyleEncodingSchema)` | — | 位置 mark 用；sector 用 `StyleEncodingSchema`（无 x/y） |
 
-> 待决策点冻结后可能微调：`innerRadius` 若改 user units 则去掉 `.lt(1)`；笛卡尔下 angle/radius 若选 reject 则在 lowering 加守卫（非 schema 字段改动）。
+> 实现期修订（见顶部）：原计划的 `EncodingSchema.angle/radius` 可选通道**已取消**——位置通道仅 x/y 必填，sector 用样式-only 编码。无 `assertEncodingChannels` 跨字段校验（schema 结构性强制）。最终以代码为准。
 
 ### 文件 scope
 
