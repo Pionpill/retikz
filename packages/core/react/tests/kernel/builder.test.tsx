@@ -600,30 +600,30 @@ describe('buildIR', () => {
     });
   });
 
-  describe('<Node connectAs> 连接面透传', () => {
-    it('<Node connectAs="circle"> 透传到 IR node.connectAs', () => {
-      const ir = buildIR(<Node id="A" position={[0, 0]} connectAs="circle" />);
-      expect(ir.children[0]).toMatchObject({ type: 'node', connectAs: 'circle' });
+  describe('<Node boundary> 连接面透传', () => {
+    it('<Node boundary="circle"> 透传到 IR node.boundary', () => {
+      const ir = buildIR(<Node id="A" position={[0, 0]} boundary="circle" />);
+      expect(ir.children[0]).toMatchObject({ type: 'node', boundary: 'circle' });
     });
 
-    it('<Node connectAs="shape"> 透传到 IR node.connectAs', () => {
-      const ir = buildIR(<Node id="A" position={[0, 0]} connectAs="shape" />);
-      expect(ir.children[0]).toMatchObject({ type: 'node', connectAs: 'shape' });
+    it('<Node boundary="shape"> 透传到 IR node.boundary', () => {
+      const ir = buildIR(<Node id="A" position={[0, 0]} boundary="shape" />);
+      expect(ir.children[0]).toMatchObject({ type: 'node', boundary: 'shape' });
     });
 
-    it('<Node connectAs={{ type, params }}> 对象形态透传到 IR', () => {
+    it('<Node boundary={{ type, params }}> 对象形态透传到 IR', () => {
       const ir = buildIR(
-        <Node id="A" position={[0, 0]} connectAs={{ type: 'ellipse', params: { circumscribe: 'equal' } }} />,
+        <Node id="A" position={[0, 0]} boundary={{ type: 'ellipse', params: { circumscribe: 'equal' } }} />,
       );
       expect(ir.children[0]).toMatchObject({
         type: 'node',
-        connectAs: { type: 'ellipse', params: { circumscribe: 'equal' } },
+        boundary: { type: 'ellipse', params: { circumscribe: 'equal' } },
       });
     });
 
-    it('<Node> 省略 connectAs 时 IR node 不含该字段', () => {
+    it('<Node> 省略 boundary 时 IR node 不含该字段', () => {
       const ir = buildIR(<Node id="A" position={[0, 0]} />);
-      expect(ir.children[0]).not.toHaveProperty('connectAs');
+      expect(ir.children[0]).not.toHaveProperty('boundary');
     });
   });
 

@@ -1,5 +1,5 @@
 import type { IRBetweenPosition, IRNodeTarget, IRPosition, IRTarget } from '../../ir';
-import type { IRConnectSurface } from '../../ir';
+import type { IRBoundary } from '../../ir';
 import type { Transform } from '../../primitive';
 import { lerpPoint } from '../../geometry/_edge';
 import { resolveAnchor, resolveEdgePoint } from '../anchor-cache';
@@ -17,14 +17,14 @@ const isNodeTarget = (t: IRTarget): t is IRNodeTarget =>
 const isBetween = (t: IRTarget): t is IRBetweenPosition =>
   typeof t === 'object' && !Array.isArray(t) && 'between' in t;
 
-/** 解析 NodeTarget 的 anchor（非 undefined）到世界坐标：命名 / 角度走 resolveAnchor（可选连接面），`{ side, t }` 恒走视觉形状（不传 surface） */
+/** 解析 NodeTarget 的 anchor（非 undefined）到世界坐标：命名 / 角度走 resolveAnchor（可选连接面），`{ side, t }` 恒走视觉形状（不传 boundary） */
 const resolveAnchorRef = (
   node: NodeLayout,
   anchor: NonNullable<IRNodeTarget['anchor']>,
-  surface: IRConnectSurface | undefined,
+  boundary: IRBoundary | undefined,
 ): IRPosition => {
-  if (typeof anchor === 'number') return resolveAnchor(node, String(anchor), surface);
-  if (typeof anchor === 'string') return resolveAnchor(node, anchor, surface);
+  if (typeof anchor === 'number') return resolveAnchor(node, String(anchor), boundary);
+  if (typeof anchor === 'string') return resolveAnchor(node, anchor, boundary);
   return resolveEdgePoint(node, anchor.side, anchor.t);
 };
 
@@ -51,7 +51,7 @@ export const refPointOfTarget = (
     const base =
       target.anchor === undefined
         ? ([node.rect.x, node.rect.y] as IRPosition)
-        : resolveAnchorRef(node, target.anchor, target.boundary ?? node.connectAs);
+        : resolveAnchorRef(node, target.anchor, target.boundary ?? node.boundary);
     return addOffset(base, target.offset);
   }
   // between 比例点：两端点各 resolve 成世界坐标后 lerp（端点可嵌套 between，递归）；
@@ -99,11 +99,11 @@ export const clipForTarget = (
   if (isNodeTarget(target)) {
     const node = nameStack.lookup(target.id);
     if (!node) return null;
-    const surface = target.boundary ?? node.connectAs;
+    const boundary = target.boundary ?? node.boundary;
     const base =
       target.anchor === undefined
-        ? boundaryPointOf(node, toward, surface)
-        : resolveAnchorRef(node, target.anchor, surface);
+        ? boundaryPointOf(node, toward, boundary)
+        : resolveAnchorRef(node, target.anchor, boundary);
     return addOffset(base, target.offset);
   }
   // between 比例点是固定点（非节点边界），直接走 refPointOfTarget（不随 toward 变）

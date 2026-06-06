@@ -215,8 +215,8 @@ describe('resolveEdgePoint 边上比例点（ADR-02）', () => {
   });
 });
 
-describe('resolveAnchor surface no cross-pollination', () => {
-  it('same layout + name under different surfaces resolves independently', () => {
+describe('resolveAnchor boundary no cross-pollination', () => {
+  it('same layout + name under different boundaries resolves independently', () => {
     // star 节点：points=5，innerRadius=10，outerRadius=30；rect 由 AABB 撑开（outerRadius×2=60）
     const starLayout: NodeLayout = {
       shapeName: 'star',
@@ -233,10 +233,10 @@ describe('resolveAnchor surface no cross-pollination', () => {
       shapes: BUILTIN_SHAPES,
     };
 
-    // '36' 是数字角度字符串 → 走 angleBoundaryOf → boundaryPoint，受 surface 影响
+    // '36' 是数字角度字符串 → 走 angleBoundaryOf → boundaryPoint，受 boundary 影响
     // 5 角星 outerRadius=30，外径尖角在 0°/72°/144°... 凹角在 36°/108°...
     // 36° 方向：星形轮廓落在内径（innerRadius=10）附近；圆落在半径 30 的圆周
-    // → 两者数值必然不同，正确体现 surface 差异
+    // → 两者数值必然不同，正确体现 boundary 差异
     const asShape = resolveAnchor(starLayout, '36', 'shape');   // 36° 走真实星形轮廓
     const asCircle = resolveAnchor(starLayout, '36', 'circle'); // 36° 走真圆
 

@@ -136,10 +136,10 @@ export {
   NODE_SHAPES,
   NODE_TEXT_ALIGNS,
   PATTERN_SHAPES,
-  ConnectSurface,
-  ConnectSurfaceSchema,
+  Boundary,
+  BoundarySchema,
 } from './ir';
-export type { ConnectSurfaceKeyword, IRConnectSurface } from './ir';
+export type { BoundaryKeyword, IRBoundary } from './ir';
 
 // Primitive (Scene 数据模型)
 export type {

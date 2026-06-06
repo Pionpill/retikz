@@ -1,5 +1,5 @@
 import type { Rect } from '../geometry/rect';
-import type { IRConnectSurface } from '../ir';
+import type { IRBoundary } from '../ir';
 import type { IRJsonObject } from '../ir/json';
 import type { ShapeDefinition } from '../shapes';
 import { ellipse, rectangle } from '../shapes';
@@ -22,27 +22,27 @@ const squareToMax = (rect: Rect): Rect => {
  *   保留字 'rectangle' / 'ellipse' → 对应内置 def + 视觉 AABB；其余 → registry 查表。
  *   保留字优先于 registry 同名 shape。
  */
-export const resolveConnectSurface = (
-  surface: IRConnectSurface | undefined,
+export const resolveBoundary = (
+  boundary: IRBoundary | undefined,
   visualDef: ShapeDefinition,
   visualRect: Rect,
   visualParams: IRJsonObject,
   registry: Record<string, ShapeDefinition>,
 ): { def: ShapeDefinition; rect: Rect; params: IRJsonObject } => {
-  if (surface === undefined || surface === SELF) {
+  if (boundary === undefined || boundary === SELF) {
     return { def: visualDef, rect: visualRect, params: visualParams };
   }
-  if (surface === CIRCLE) {
+  if (boundary === CIRCLE) {
     return { def: ellipse, rect: squareToMax(visualRect), params: {} };
   }
-  if (surface === 'rectangle') {
+  if (boundary === 'rectangle') {
     return { def: rectangle, rect: visualRect, params: {} };
   }
-  if (surface === 'ellipse') {
+  if (boundary === 'ellipse') {
     return { def: ellipse, rect: visualRect, params: {} };
   }
-  const type = typeof surface === 'string' ? surface : surface.type;
-  const rawParams = typeof surface === 'string' ? {} : (surface.params ?? {});
+  const type = typeof boundary === 'string' ? boundary : boundary.type;
+  const rawParams = typeof boundary === 'string' ? {} : (boundary.params ?? {});
   const def = Object.prototype.hasOwnProperty.call(registry, type) ? registry[type] : undefined;
   if (!def) {
     throw new Error(
@@ -54,8 +54,8 @@ export const resolveConnectSurface = (
 };
 
 /** 连接面的稳定字符串判别（anchor cache key 用） */
-export const surfaceKey = (surface: IRConnectSurface | undefined): string => {
-  if (surface === undefined) return SELF;
-  if (typeof surface === 'string') return surface;
-  return `${surface.type}:${JSON.stringify(surface.params ?? {})}`;
+export const boundaryKey = (boundary: IRBoundary | undefined): string => {
+  if (boundary === undefined) return SELF;
+  if (typeof boundary === 'string') return boundary;
+  return `${boundary.type}:${JSON.stringify(boundary.params ?? {})}`;
 };

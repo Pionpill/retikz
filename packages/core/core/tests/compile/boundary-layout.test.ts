@@ -9,8 +9,8 @@ const measureText = (): { width: number; height: number; ascent: number } => ({
   ascent: 8,
 });
 
-describe('NodeLayout connectAs / shapes', () => {
-  it('未指定 connectAs 时 layout.connectAs 为 undefined，shapes 指向传入注册表', () => {
+describe('NodeLayout boundary / shapes', () => {
+  it('未指定 boundary 时 layout.boundary 为 undefined，shapes 指向传入注册表', () => {
     const nameStack = new NameStack();
     const layout = layoutNode(
       { type: 'node', id: 'a', shape: 'rectangle', position: [0, 0] },
@@ -21,14 +21,14 @@ describe('NodeLayout connectAs / shapes', () => {
       undefined,
       BUILTIN_SHAPES,
     );
-    expect(layout.connectAs).toBeUndefined();
+    expect(layout.boundary).toBeUndefined();
     expect(layout.shapes).toBe(BUILTIN_SHAPES);
   });
 
-  it('IR node.connectAs = "circle" 时 layout.connectAs 携带该值', () => {
+  it('IR node.boundary = "circle" 时 layout.boundary 携带该值', () => {
     const nameStack = new NameStack();
     const layout = layoutNode(
-      { type: 'node', id: 'a', shape: 'rectangle', connectAs: 'circle', position: [0, 0] },
+      { type: 'node', id: 'a', shape: 'rectangle', boundary: 'circle', position: [0, 0] },
       measureText,
       nameStack,
       undefined,
@@ -36,7 +36,7 @@ describe('NodeLayout connectAs / shapes', () => {
       undefined,
       BUILTIN_SHAPES,
     );
-    expect(layout.connectAs).toBe('circle');
+    expect(layout.boundary).toBe('circle');
     expect(layout.shapes).toBe(BUILTIN_SHAPES);
   });
 

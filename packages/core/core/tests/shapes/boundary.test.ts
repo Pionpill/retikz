@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { ConnectSurface, ConnectSurfaceSchema } from '../../src/ir/connectSurface';
+import { Boundary, BoundarySchema } from '../../src/ir/boundary';
 import * as core from '../../src/index';
 import { NodeSchema } from '../../src/ir/node';
 import { NodeTargetSchema } from '../../src/ir/path/target';
@@ -11,35 +11,35 @@ import { compileToScene } from '../../src/compile/compile';
 import type { IR, IRNodeTarget } from '../../src/ir';
 import type { PathPrim, ScenePrimitive } from '../../src/primitive';
 
-describe('ConnectSurfaceSchema', () => {
+describe('BoundarySchema', () => {
   it('parses reserved keywords and registered names', () => {
-    expect(ConnectSurfaceSchema.parse('shape')).toBe('shape');
-    expect(ConnectSurfaceSchema.parse('circle')).toBe('circle');
-    expect(ConnectSurfaceSchema.parse('rectangle')).toBe('rectangle');
+    expect(BoundarySchema.parse('shape')).toBe('shape');
+    expect(BoundarySchema.parse('circle')).toBe('circle');
+    expect(BoundarySchema.parse('rectangle')).toBe('rectangle');
   });
   it('parses nested {type, params}', () => {
-    expect(ConnectSurfaceSchema.parse({ type: 'star', params: { points: 5 } })).toEqual({
+    expect(BoundarySchema.parse({ type: 'star', params: { points: 5 } })).toEqual({
       type: 'star',
       params: { points: 5 },
     });
   });
   it('rejects empty string', () => {
-    expect(() => ConnectSurfaceSchema.parse('')).toThrow();
+    expect(() => BoundarySchema.parse('')).toThrow();
   });
   it('exposes reserved-keyword constant', () => {
-    expect(ConnectSurface.Self).toBe('shape');
-    expect(ConnectSurface.Circle).toBe('circle');
+    expect(Boundary.Self).toBe('shape');
+    expect(Boundary.Circle).toBe('circle');
   });
 });
 
-describe('connectAs / boundary IR fields', () => {
-  it('NodeSchema accepts connectAs', () => {
-    const n = NodeSchema.parse({ type: 'node', id: 'a', shape: 'rectangle', position: [0, 0], connectAs: 'circle' });
-    expect(n.connectAs).toBe('circle');
+describe('boundary IR fields', () => {
+  it('NodeSchema accepts boundary', () => {
+    const n = NodeSchema.parse({ type: 'node', id: 'a', shape: 'rectangle', position: [0, 0], boundary: 'circle' });
+    expect(n.boundary).toBe('circle');
   });
-  it('NodeSchema connectAs optional', () => {
+  it('NodeSchema boundary optional', () => {
     const n = NodeSchema.parse({ type: 'node', id: 'a', position: [0, 0] });
-    expect(n.connectAs).toBeUndefined();
+    expect(n.boundary).toBeUndefined();
   });
   it('NodeTargetSchema accepts boundary', () => {
     const t = NodeTargetSchema.parse({ id: 'a', boundary: 'shape' });
@@ -53,8 +53,8 @@ const measureText = (): { width: number; height: number; ascent: number } => ({
   ascent: 0,
 });
 
-describe('surface-aware boundary/compass', () => {
-  it("boundaryPointOf 'rectangle' surface hits AABB edge, 'shape' hits star outline", () => {
+describe('boundary-aware boundary/compass', () => {
+  it("boundaryPointOf 'rectangle' boundary hits AABB edge, 'shape' hits star outline", () => {
     const nameStack = new NameStack();
     const starLayout = layoutNode(
       {
@@ -124,7 +124,7 @@ describe('surface-aware boundary/compass', () => {
     expect(Array.isArray(point)).toBe(true);
   });
 
-  it("anchorOf sector 专属 anchor 'apex' 仍返回形状自身值，不受 surface 影响", () => {
+  it("anchorOf sector 专属 anchor 'apex' 仍返回形状自身值，不受 boundary 影响", () => {
     const nameStack = new NameStack();
     const sectorLayout = layoutNode(
       {
@@ -144,7 +144,7 @@ describe('surface-aware boundary/compass', () => {
     expect(() => anchorOf(sectorLayout, 'apex')).not.toThrow();
     expect(() => anchorOf(sectorLayout, 'apex', 'shape')).not.toThrow();
     expect(() => anchorOf(sectorLayout, 'apex', 'rectangle')).not.toThrow();
-    // 不同 surface 对专属 anchor 结果相同（恒走视觉形状）
+    // 不同 boundary 对专属 anchor 结果相同（恒走视觉形状）
     expect(anchorOf(sectorLayout, 'apex', 'shape')).toEqual(anchorOf(sectorLayout, 'apex', 'rectangle'));
   });
 
@@ -178,7 +178,7 @@ describe('star.anchor no longer handles compass directly', () => {
   });
 });
 
-// ─── 端到端集成：path clip 透传 boundary ?? connectAs ───────────────────────
+// ─── 端到端集成：path clip 透传 boundary ?? node.boundary ───────────────────────
 
 /**
  * 找"连接线"那条 PathPrim（IRPath step 编译产物）：区分于节点 emit 的形状路径。
@@ -190,23 +190,23 @@ const findConnectionPath = (prims: Array<ScenePrimitive>): PathPrim | undefined 
 
 /**
  * 构造 IR（star 节点 + path），编译后取连接线在 star 那端的实际端点。
- * @param nodeConnectAs star 节点的 connectAs（undefined = 无）
+ * @param nodeBoundary star 节点的 boundary（undefined = 无）
  * @param targetOverride 追加到 { id: 'star' } 的额外字段（如 boundary）
  * @param start path 的 move 起点（决定 toward 方向）
  */
 const lineEndpointWithNode = (
-  nodeConnectAs: string | undefined,
+  nodeBoundary: string | undefined,
   targetOverride: Partial<IRNodeTarget>,
   start: [number, number] = [200, 0],
 ): [number, number] => {
   const target: IRNodeTarget = { id: 'star', ...targetOverride };
-  const nodeIr: IR['children'][number] = nodeConnectAs
+  const nodeIr: IR['children'][number] = nodeBoundary
     ? {
         type: 'node',
         id: 'star',
         shape: { type: 'star', params: { points: 5, innerRadius: 10, outerRadius: 30 } },
         position: [0, 0],
-        connectAs: nodeConnectAs,
+        boundary: nodeBoundary,
       }
     : {
         type: 'node',
@@ -238,7 +238,7 @@ const lineEndpointWithNode = (
   throw new Error('no line command found');
 };
 
-describe('端到端：path clip 透传 boundary ?? connectAs', () => {
+describe('端到端：path clip 透传 boundary ?? node.boundary', () => {
   // 方向选取：[200, 0] → star 中心 [0, 0]，即 toward = [0,0]（path 从 [200,0] 连到 star）
   // star 有 5 个尖角，0° 是第一个尖角（outerRadius=30）；
   // 改从 [0,0] 方向出发，让 toward 从 star 中心看去往 [200,0]（即 east 方向 0°）——
@@ -256,7 +256,7 @@ describe('端到端：path clip 透传 boundary ?? connectAs', () => {
   // 即 toward ≈ [-100, -73]，对应 star 中心朝 [100,73] 方向 = arctan(73/100)≈36.1°（凹角），
   // star 边界 ≈ innerRadius=10，circle 边界 = 30，差异显著（20 单位）。
 
-  it('(a) node 无 connectAs → 端点贴真实星形边界（凹角方向，约 innerRadius=10）', () => {
+  it('(a) node 无 boundary → 端点贴真实星形边界（凹角方向，约 innerRadius=10）', () => {
     // start=[100,73]: toward=arctan(73/100)≈36.1°，star 凹角，边界约 r=10
     const pointA = lineEndpointWithNode(undefined, {}, [100, 73]);
     // 星形边界点离中心 [0,0] 的距离应约等于 10（innerRadius）
@@ -264,7 +264,7 @@ describe('端到端：path clip 透传 boundary ?? connectAs', () => {
     expect(distA).toBeCloseTo(10, 0);
   });
 
-  it('(b) node connectAs="circle" → 端点贴真圆边界（半径=30=outerRadius）', () => {
+  it('(b) node boundary="circle" → 端点贴真圆边界（半径=30=outerRadius）', () => {
     // circle 连接面：r = max(halfWidth, halfHeight) = max(30, 30) = 30
     const pointB = lineEndpointWithNode('circle', {});
     const distB = Math.sqrt(pointB[0] ** 2 + pointB[1] ** 2);
@@ -278,8 +278,8 @@ describe('端到端：path clip 透传 boundary ?? connectAs', () => {
     expect(pointA).not.toEqual(pointB);
   });
 
-  it('(c) node connectAs="circle" 且 boundary="shape" → 又贴真实星形边界，≈ (a)', () => {
-    // boundary:'shape' 覆盖 connectAs:'circle'，回退到视觉形状（star 凹角 ≈ 10）
+  it('(c) node boundary="circle" 且 端点 boundary="shape" → 又贴真实星形边界，≈ (a)', () => {
+    // 端点 boundary:'shape' 覆盖 node boundary:'circle'，回退到视觉形状（star 凹角 ≈ 10）
     const pointC = lineEndpointWithNode('circle', { boundary: 'shape' }, [100, 73]);
     const pointA = lineEndpointWithNode(undefined, {}, [100, 73]);
     expect(pointC[0]).toBeCloseTo(pointA[0], 4);
@@ -290,15 +290,15 @@ describe('端到端：path clip 透传 boundary ?? connectAs', () => {
 // ─── 导出断言 + 补充象限 ──────────────────────────────────────────────────────
 
 describe('public export + remaining quadrants', () => {
-  it('ConnectSurface / ConnectSurfaceSchema exported from package root', () => {
-    expect(core.ConnectSurface.Self).toBe('shape');
-    expect(core.ConnectSurface.Circle).toBe('circle');
-    expect(core.ConnectSurfaceSchema).toBeDefined();
-    // ConnectSurfaceKeyword / IRConnectSurface 是类型，仅编译时可见，此处不再 runtime 断言
+  it('Boundary / BoundarySchema exported from package root', () => {
+    expect(core.Boundary.Self).toBe('shape');
+    expect(core.Boundary.Circle).toBe('circle');
+    expect(core.BoundarySchema).toBeDefined();
+    // BoundaryKeyword / IRBoundary 是类型，仅编译时可见，此处不再 runtime 断言
   });
 
-  it('connect_as_unregistered_throws: connectAs 指向未注册 shape 且有 path 连到该节点时编译抛错', () => {
-    // resolveConnectSurface 在 clipForTarget → boundaryPointOf 里被调用（有 path 才触发）
+  it('boundary_unregistered_throws: boundary 指向未注册 shape 且有 path 连到该节点时编译抛错', () => {
+    // resolveBoundary 在 clipForTarget → boundaryPointOf 里被调用（有 path 才触发）
     const ir: core.IR = {
       version: 1,
       type: 'scene',
@@ -309,7 +309,7 @@ describe('public export + remaining quadrants', () => {
           shape: 'rectangle',
           position: [0, 0],
           // 'nope' 既非保留字（shape/circle/rectangle/ellipse），又非内置 registry shape
-          connectAs: 'nope',
+          boundary: 'nope',
         },
         {
           type: 'path',
@@ -323,9 +323,9 @@ describe('public export + remaining quadrants', () => {
     expect(() => core.compileToScene(ir)).toThrow(/Unknown connection surface 'nope'/);
   });
 
-  it('specific_anchor_ignores_surface: tip-0 是星形专属 anchor，connectAs 不影响其解析结果', () => {
-    // 两个 IR：connectAs='shape'（默认）和 connectAs='circle'，anchor='tip-0' 均指向同一尖角
-    const makeIr = (connectAs: string): core.IR => ({
+  it('specific_anchor_ignores_boundary: tip-0 是星形专属 anchor，boundary 不影响其解析结果', () => {
+    // 两个 IR：boundary='shape'（默认）和 boundary='circle'，anchor='tip-0' 均指向同一尖角
+    const makeIr = (boundary: string): core.IR => ({
       version: 1,
       type: 'scene',
       children: [
@@ -334,7 +334,7 @@ describe('public export + remaining quadrants', () => {
           id: 'star',
           shape: { type: 'star', params: { points: 5, innerRadius: 10, outerRadius: 30 } },
           position: [0, 0],
-          connectAs,
+          boundary,
         },
         {
           type: 'path',
@@ -358,13 +358,13 @@ describe('public export + remaining quadrants', () => {
     };
     const epShape = endpointOf(sceneShape.primitives);
     const epCircle = endpointOf(sceneCircle.primitives);
-    // tip-0 是专属命名 anchor，connectAs 改变不影响结果
+    // tip-0 是专属命名 anchor，boundary 改变不影响结果
     expect(epShape[0]).toBeCloseTo(epCircle[0], 4);
     expect(epShape[1]).toBeCloseTo(epCircle[1], 4);
   });
 
-  it('layout_neutral: connectAs 改变不影响 scene.layout（节点布局边界）', () => {
-    const makeIr = (connectAs: string | undefined): core.IR => ({
+  it('layout_neutral: boundary 改变不影响 scene.layout（节点布局边界）', () => {
+    const makeIr = (boundary: string | undefined): core.IR => ({
       version: 1,
       type: 'scene',
       children: [
@@ -373,19 +373,19 @@ describe('public export + remaining quadrants', () => {
           id: 'star',
           shape: { type: 'star', params: { points: 5, innerRadius: 10, outerRadius: 30 } },
           position: [0, 0],
-          ...(connectAs !== undefined ? { connectAs } : {}),
+          ...(boundary !== undefined ? { boundary } : {}),
         },
       ],
     });
     const layoutDefault = core.compileToScene(makeIr(undefined)).layout;
     const layoutShape = core.compileToScene(makeIr('shape')).layout;
     const layoutCircle = core.compileToScene(makeIr('circle')).layout;
-    // layout 由视觉 shape 决定，connectAs 只影响连接面路由，与 layout 无关
+    // layout 由视觉 shape 决定，boundary 只影响连接面路由，与 layout 无关
     expect(layoutShape).toEqual(layoutDefault);
     expect(layoutCircle).toEqual(layoutDefault);
   });
 
-  it('roundtrip_self_describing: 含 connectAs/boundary 的 IR JSON 序列化后再 schema parse 等价', () => {
+  it('roundtrip_self_describing: 含 node.boundary / 端点 boundary 的 IR JSON 序列化后再 schema parse 等价', () => {
     const ir: core.IR = {
       version: 1,
       type: 'scene',
@@ -395,7 +395,7 @@ describe('public export + remaining quadrants', () => {
           id: 'star',
           shape: { type: 'star', params: { points: 5, innerRadius: 10, outerRadius: 30 } },
           position: [0, 0],
-          connectAs: 'circle',
+          boundary: 'circle',
         },
         {
           type: 'path',
@@ -407,9 +407,9 @@ describe('public export + remaining quadrants', () => {
       ],
     };
     const roundtripped = core.SceneSchema.parse(JSON.parse(JSON.stringify(ir)));
-    // 节点 connectAs 字段正确保留
+    // 节点 boundary 字段正确保留
     const node = roundtripped.children.find(c => c.type === 'node') as core.IRNode;
-    expect(node.connectAs).toBe('circle');
+    expect(node.boundary).toBe('circle');
     // path 端点 boundary 字段正确保留
     const path = roundtripped.children.find(c => c.type === 'path') as core.IRPath;
     const lineStep = path.children.find(s => s.kind === 'line');
@@ -435,7 +435,7 @@ describe('public export + remaining quadrants', () => {
               kind: 'line',
               to: {
                 between: [
-                  // between 的子端点是 NodeTarget，带 boundary 字段（boundary 在 between 路径不触发 resolveConnectSurface）
+                  // between 的子端点是 NodeTarget，带 boundary 字段（boundary 在 between 路径不触发 resolveBoundary）
                   { id: 'A', boundary: 'circle' },
                   { id: 'B' },
                 ],
