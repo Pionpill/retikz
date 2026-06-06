@@ -44,74 +44,11 @@ export const polygon = defineShape({
 
 理由：单一 polygon 几何覆盖 diamond；roundedCorners 归位；与 circle→ellipse、preset 别名一致。
 
-## DSL 表面（react + vanilla）
-
-```tsx
-<Node shape={{ type: 'rectangle', params: { roundedCorners: 6 } }} />
-<Node shape={{ type: 'polygon', params: { sides: 6 } }} />   {/* 正六边形 */}
-<Node shape="diamond" />                                     {/* ≡ polygon 4/45，向后兼容 */}
-```
-
-```ts
-node('r', { shape: { type: 'rectangle', params: { roundedCorners: 6 } } });
-node('hex', { shape: { type: 'polygon', params: { sides: 6 } } });
-node('d', { shape: 'diamond' });
-```
-
 ## 不在本 ADR 范围
 
 - ShapeDefinition 接口（[ADR-01](./01-shape-params-generalization.md)）。
 - 顶层 `roundedCorners` 最终删除（迁移期并存；删除待兼容窗口）。
 - 非正多边形 / 任意点列 polygon（仅 regular polygon）。
 
----
-
-## 实现契约（必填）🔻
-
-### Level
-`red`（动 `src/shapes/**` + `src/ir/node.ts` roundedCorners 迁移 + `src/compile/node.ts` diamond 规范化）。
-
-### Schema 改动
-| 文件 | 操作 | 字段名 | 类型 | 默认值 | describe 中文摘要 |
-|---|---|---|---|---|---|
-| `src/shapes/rectangle.ts` | 加 paramsSchema | `params.roundedCorners` | `z.number().finite().nonnegative().optional()` | — | 矩形圆角半径（从 Node 顶层迁入） |
-| `src/shapes/polygon.ts` | 新建 paramsSchema | `params.sides`/`params.rotate` | `z.strictObject({ sides: z.number().int().min(3), rotate: z.number().finite().optional() })` | `rotate=0` | 正多边形边数与自旋 |
-| `src/ir/node.ts` | 标记迁移 | `roundedCorners`（顶层） | 兼容保留、标 deprecated | — | 迁移期顶层并存，params 优先 |
-
-### 文件 scope
-- `src/shapes/rectangle.ts`（修改：defineShape + paramsSchema + roundedCorners）
-- `src/shapes/polygon.ts`（新建）
-- `src/shapes/diamond.ts`（删除：收为 polygon preset）
-- `src/shapes/_shared.ts`（扩：正多边形顶点 / boundaryPoint helper，如需）
-- `src/shapes/index.ts`（注册调整）
-- `src/compile/node.ts`（修改：`'diamond'` → polygon 规范化 + roundedCorners 顶层↔params 优先级）
-- `apps/docs/src/contents/core/components/shapes/rectangle-polygon/`（文档 + demo 已存在，校对）
-- `tests/geometry/rect.test.ts`（扩）+ `tests/geometry/polygon.test.ts`（新建）+ `tests/compile/node-shape.test.ts`（diamond 规范化 / roundedCorners 迁移）
-
-### 测试象限
-
-**Happy path（≥ 3）**：
-- `polygon_vertices_on_circumcircle`：`sides:6` → 6 顶点均布外接圆、闭合 path
-- `polygon_emit_closed`：emit 产闭合多边形
-- `diamond_normalizes_to_polygon`：`shape:'diamond'` → `{type:'polygon', params:{sides:4, rotate:45}}`，emit / anchor 与旧 diamond 逐字段等价
-- `rectangle_rounded_from_params`：`{type:'rectangle', params:{roundedCorners:6}}` → 圆角矩形
-
-**边界（≥ 2）**：
-- `polygon_sides_3_minimum`：`sides:3` → 三角形
-- `polygon_large_sides_near_circle`：`sides:64` → 近圆轮廓
-- `rectangle_rounded_toplevel_compat`：顶层 `roundedCorners` 迁移期仍生效（无 params 时）
-
-**错误路径（≥ 2）**：
-- `polygon_sides_lt_3_rejected`：`sides:2` → paramsSchema reject
-- `polygon_rotate_non_finite_rejected`：`rotate: NaN` → reject
-- `rectangle_extra_params_rejected`：`{type:'rectangle', params:{foo:1}}` → strictObject reject
-
-**交互（≥ 2）**：
-- `polygon_self_rotate_plus_node_rotate`：`params.rotate:30` + Node `rotate:15` → 顶点叠加旋转 45°
-- `rectangle_params_over_toplevel`：params.roundedCorners 与顶层并存 → params 优先
-- `diamond_anchor_matches_legacy`：diamond（规范化）命名 anchor 与旧 diamond 一致
-
-### 依赖的现有元素
-- [ADR-01](./01-shape-params-generalization.md) `defineShape` / nested params—— **依赖**。
-- 现有 `rectangle` / `diamond` 几何（`src/shapes/`）—— **修改 / 收敛**。
-- `Node.roundedCorners` 顶层字段（`src/ir/node.ts`）—— **迁移**：入 rectangle params，顶层兼容期保留、params 优先。
+> 实现指针：最终 schema / 类型 / 行为以代码为准；完整施工契约（Level / Schema 改动 / 文件 scope / 测试象限 / 依赖现有元素）+ DSL 示例 + 影响清单见本文件封板前全文。
+> 🔖 本文件压缩前完整施工蓝图 = `git show 62562f1d:notes/decisions/core/v0/v0.3/v0.3-alpha.4/04-rectangle-polygon.md`（封板全文）。
