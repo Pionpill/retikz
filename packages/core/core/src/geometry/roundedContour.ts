@@ -331,17 +331,19 @@ const solveFillet = (segA: ContourSegment, segB: ContourSegment, r: number): Fil
     if (!best) return undefined;
 
     // fillet 弧从 tInPt 扫到 tOutPt，方向与轮廓绕向一致：凸角同绕向、凹角反向。
+    // atan2 只给 [-180, 180] 主值；跨 ±180° 时需按扫描方向对齐成小弧，避免 SVG/Canvas 走远端大弧。
     const startAngle = Math.atan2(best.tInPt[1] - best.center[1], best.tInPt[0] - best.center[0]) * RAD_TO_DEG;
     const endAngle = Math.atan2(best.tOutPt[1] - best.center[1], best.tOutPt[0] - best.center[0]) * RAD_TO_DEG;
     // turnSign>0（叉积正，y-down 下为顺时针转弯凸角）→ CW（counterClockwise=false）；凹角反向。
     const counterClockwise = turnSign < 0;
+    const adjusted = alignSweep(startAngle, endAngle, counterClockwise);
     return {
       tangentInPoint: best.tInPt,
       tangentOutPoint: best.tOutPt,
       center: best.center,
       radius,
-      startAngle,
-      endAngle,
+      startAngle: adjusted.start,
+      endAngle: adjusted.end,
       counterClockwise,
       clampedToZero: false,
     };

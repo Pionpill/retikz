@@ -51,6 +51,18 @@ describe('polygon cornerRadius — emit', () => {
     expect(kinds.filter(k => k === 'arc').length).toBe(6); // 每个顶点一段 fillet 弧
     expect(kinds.filter(k => k === 'line').length).toBe(6); // 每条边一段缩短直线
   });
+
+  it('polygon_cornerRadius_emit_wrap_arc_short：跨 ±180° 的 fillet 仍输出短弧', () => {
+    const rect = squareRect();
+    const prims = [...polygon.emit(rect, {}, round2, { sides: 6, cornerRadius: 8 })];
+    const path = prims[0];
+    if (path.type !== 'path') throw new Error('expected path');
+    const arcs = path.commands.filter((cmd): cmd is Extract<(typeof path.commands)[number], { kind: 'arc' }> => cmd.kind === 'arc');
+    expect(arcs.length).toBe(6);
+    for (const arc of arcs) {
+      expect(Math.abs(arc.endAngle - arc.startAngle)).toBeLessThanOrEqual(180);
+    }
+  });
 });
 
 describe('polygon cornerRadius — boundary aware', () => {
