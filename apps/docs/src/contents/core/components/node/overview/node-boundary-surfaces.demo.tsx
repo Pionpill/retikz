@@ -6,23 +6,24 @@ const surfaces = ['shape', 'circle', 'rectangle', 'ellipse'] as const;
 
 /**
  * boundary 取值对照
- * @description 同一五角星，分别设 boundary='shape' / 'circle' / 'rectangle' / 'ellipse'；每个下方一条边贴上来。
- *   'shape' 钻进星形下缘的凹边，其余三个停在外接盒/圆/椭圆上。视觉形状与占位都不变，只连接面不同。
+ * @description 同一五角星分设四种连接面，各由一条从左下 45° 斜进的边贴上来。
+ *   用斜边才拉得开差异：'shape' 落星形真实轮廓，'rectangle' 顶到外接盒角最远、'circle' 收成最圆、'ellipse' 居中。
+ *   竖直 / 水平轴向上三者会重合（内接椭圆在轴上必与矩形边同点、圆又取较长半轴），故刻意用斜边对照。
  */
 const Demo: FC = () => (
-  <Layout width={560} height={210}>
+  <Layout width={600} height={200}>
     {surfaces.map((boundary, index) => {
       const x = -210 + index * 140;
       return (
         <Fragment key={boundary}>
           <Node
             id={`star-${boundary}`}
-            position={[x, -20]}
-            shape={{ type: 'star', params: { points: 5, innerRadius: 14, outerRadius: 36 } }}
+            position={[x, -5]}
+            shape={{ type: 'star', params: { points: 5, innerRadius: 14, outerRadius: 36, rotate: -90 } }}
             boundary={boundary}
             fill="gold"
           />
-          <Node id={`src-${boundary}`} position={[x, 84]}>
+          <Node id={`src-${boundary}`} position={[x - 70, 65]}>
             {boundary}
           </Node>
           <Draw way={[`src-${boundary}`, `star-${boundary}`]} arrow="->" />

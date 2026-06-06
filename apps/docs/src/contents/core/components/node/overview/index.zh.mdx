@@ -68,7 +68,7 @@ import { Node } from '@retikz/react';
 | `'ellipse'` | 按 AABB 宽高比的椭圆 | 边贴椭圆，随宽高比拉伸 |
 | 注册 shape 名 / `{ type, params }` | 借该形状的边界套在节点外接盒上 | 借 `polygon` / `star` 等带参形状需自给 params；按 AABB 自动适配尺寸不在范围内 |
 
-同一五角星分设四种连接面，各引一条边贴上来——`shape` 钻进下缘凹边，`circle` / `rectangle` / `ellipse` 分别停在外接圆 / 矩形 / 椭圆上：
+同一五角星分设四种连接面，各引一条边从左下 45° 斜贴上来——`shape` 落在星形真实轮廓（最内）、`rectangle` 顶到外接盒角（最外）、`circle` / `ellipse` 居中（近正方节点下两者接近）。斜向才看得出区别：竖直 / 水平轴向上椭圆与矩形必然同点、圆又取较长半轴，三者会重合：
 
 <ComponentPreview name="node-boundary-surfaces" size="md" />
 

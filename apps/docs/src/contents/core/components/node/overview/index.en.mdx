@@ -68,7 +68,7 @@ By default, edges clip against the node's visual shape boundary. When you want e
 | `'ellipse'` | An ellipse matching the AABB aspect ratio | Edges clip to the ellipse, stretched with the aspect ratio |
 | Registered shape name / `{ type, params }` | Borrows that shape's boundary over the node's bounding box | Borrowing parametric shapes (`polygon` / `star`…) needs explicit params; auto-fitting size to the AABB is out of scope |
 
-The same five-point star set to four surfaces, each with one edge clipping in — `shape` dives into the lower notch, while `circle` / `rectangle` / `ellipse` stop at the circumscribing circle / rectangle / ellipse:
+The same five-point star set to four surfaces, each with one edge clipping in from the lower-left at 45° — `shape` lands on the real star outline (innermost), `rectangle` reaches the bounding-box corner (outermost), and `circle` / `ellipse` sit in between (close together for a near-square node). A diagonal is needed to tell them apart: on a vertical / horizontal axis an inscribed ellipse always meets the rectangle at the same point and the circle takes the larger half-axis, so the three coincide there:
 
 <ComponentPreview name="node-boundary-surfaces" size="md" />
 
