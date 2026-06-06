@@ -1,5 +1,6 @@
 import { type IRChild, type IRNode, type IRNodeDefault, type IRScope, type IRStep } from '@retikz/core';
 import { type ExternalRow, type IntervalMark, type Mark, PlotCoordinate, PlotMark } from '../ir';
+import { datumAnchor } from './anchor';
 import { channelValue, compareByPath, isFiniteNumber, resolveFieldPath } from './field';
 import { type CartesianFrame, type CoordinateFrame, type PolarFrame, type PolarVertex, densifyPolarSegments, toPolarVertex } from './project';
 import {
@@ -154,8 +155,8 @@ const lowerPoint = (mark: Mark, rows: Array<ExternalRow>, frame: CoordinateFrame
   const placed: Array<{ color: string | undefined; node: IRNode }> = [];
   for (let transformedIndex = 0; transformedIndex < rows.length; transformedIndex++) {
     const row = rows[transformedIndex];
-    const [primaryValue, secondaryValue] = resolveRolePosition(mark, row);
-    const point = frame.project(primaryValue, secondaryValue);
+    // 锚点与 locator 共享同一 datumAnchor（point → frame.project），杜绝两套投影漂移
+    const point = datumAnchor(mark, row, frame);
     if (!point) continue;
     const node = decorateDatum({ type: 'node', position: point }, row, transformedIndex, mark.type, markProvenance, undefined, registerDatumId);
     placed.push({ color: colorOf?.(row), node });
@@ -180,10 +181,11 @@ const lowerPlainBars = (mark: IntervalMark, rows: Array<ExternalRow>, frame: Car
   const placed: Array<{ color: string | undefined; node: IRNode }> = [];
   for (let transformedIndex = 0; transformedIndex < rows.length; transformedIndex++) {
     const row = rows[transformedIndex];
-    const xCenter = frame.primary.coordinate(channelValue(mark.encoding.x, row));
+    // 柱心位置走 datumAnchor（与 locator 同源）；高度仍按 yBase→yValue（与锚点同守卫，anchor 非 null ⇒ 二者有限）
+    const position = datumAnchor(mark, row, frame);
+    if (!position) continue;
     const yValue = frame.secondary.coordinate(channelValue(mark.encoding.y, row));
-    if (!Number.isFinite(xCenter) || !Number.isFinite(yValue)) continue;
-    const base: IRNode = { type: 'node', position: [xCenter, (yBase + yValue) / 2], minimumWidth: bandwidth, minimumHeight: Math.abs(yBase - yValue) };
+    const base: IRNode = { type: 'node', position, minimumWidth: bandwidth, minimumHeight: Math.abs(yBase - yValue) };
     const node = decorateDatum(base, row, transformedIndex, mark.type, markProvenance, undefined, registerDatumId);
     placed.push({ color: colorOf?.(row), node });
   }
