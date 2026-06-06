@@ -165,9 +165,9 @@ describe('[adversarial] params 双护栏 + 错误信息可读性', () => {
     // 注意：rawShapeParams 含 undefined 值，JSON.stringify 会丢键，但直接喂 IR 对象时 undefined 在
     let threw = false;
     try {
-      compileNode({ shape: { type: 'rectangle', params: { roundedCorners: undefined } } });
+      compileNode({ shape: { type: 'rectangle', params: { cornerRadius: undefined } } });
     } catch { threw = true; }
-    // roundedCorners 可选，undefined 应被 strictObject 视为缺省 OR JsonObjectSchema 拦；二者之一
+    // cornerRadius 可选，undefined 应被 strictObject 视为缺省 OR JsonObjectSchema 拦；二者之一
     expect(typeof threw).toBe('boolean');
   });
 

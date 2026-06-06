@@ -155,11 +155,11 @@ describe('Node 描边样式 (alpha.2)', () => {
 });
 
 describe('Node 尺寸约束 (alpha.2)', () => {
-  it('roundedCorners → RectPrim.cornerRadius', () => {
+  it('cornerRadius → RectPrim.cornerRadius', () => {
     const ir: IR = {
       version: 1,
       type: 'scene',
-      children: [{ type: 'node', position: [0, 0], roundedCorners: 8 }],
+      children: [{ type: 'node', position: [0, 0], cornerRadius: 8 }],
     };
     expect(findRect(ir)?.cornerRadius).toBe(8);
   });

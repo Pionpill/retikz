@@ -661,7 +661,7 @@ export const emitPathPrimitive = (
         return null;
       }
       let rectStart: IRPosition | null = null;
-      for (const op of rectOutline(fromPt, toPt, step.roundedCorners)) {
+      for (const op of rectOutline(fromPt, toPt, step.cornerRadius)) {
         if (op.kind === 'move') {
           // 闭合形状必须起新子路径（不用 startSegment——pen 恰在起点时它会跳过 move，
           // 导致 close 闭回上一个 subPathStart 而非矩形自身起点）

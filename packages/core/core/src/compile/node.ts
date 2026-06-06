@@ -197,7 +197,7 @@ export type NodeLayout = {
   /** 描边 dash pattern，已把 dashed/dotted 预设解析为具体 pattern */
   dashPattern?: Array<number>;
   /** rectangle 圆角半径（非 rect shape 无效） */
-  roundedCorners?: number;
+  cornerRadius?: number;
   /** 文字颜色，emit 时 'currentColor' 兜底 */
   textColor?: string;
   /** 整节点透明度 0~1（同时挂 shape 与 text primitive） */
@@ -625,7 +625,7 @@ export const layoutNode = (
     strokeOpacity: node.drawOpacity,
     strokeWidth: node.strokeWidth,
     dashPattern: resolveDashArray(node.dashArray, node.dashed, node.dotted),
-    roundedCorners: node.roundedCorners,
+    cornerRadius: node.cornerRadius,
     textColor: node.textColor,
     opacity: node.opacity,
     labels,
@@ -642,7 +642,7 @@ const toShapeStyle = (layout: NodeLayout, resolveFill: PaintResolver): ShapeStyl
   strokeOpacity: layout.strokeOpacity,
   strokeWidth: layout.strokeWidth,
   dashPattern: layout.dashPattern,
-  roundedCorners: layout.roundedCorners,
+  cornerRadius: layout.cornerRadius,
   opacity: layout.opacity,
 });
 
