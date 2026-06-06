@@ -34,6 +34,19 @@ v0.1 是 `@retikz/plot` 的**基础纵向闭环**：对 ≥1 个 mark 跑通全 
 
 > beta / rc 收尾节点（类型 / 注释 / 测试收口、文档站、发布候选）待 alpha 收敛后参照 core v0.1 节奏再排，本表暂不预定。
 
+## 后续打磨 backlog（alpha.5 后排期）
+
+> **边界**：alpha.1~alpha.5 只打通**纵向闭环的基础能力**（8 段管线 × cartesian / polar，端到端出图），**不追求细节完备**。下列**横向打磨**项一律**推迟到 alpha.5 结束后再统一排期**（按用户价值排序，可成后续 alpha 或新 minor），不塞进 alpha.1~5、不重开已完成里程碑。
+> 本段是**活清单**：新提的打磨需求往这里加；各 alpha ADR「不在本 ADR 范围」段的推迟项亦归此处一并待排。
+
+- **样式通道（补进 `StyleEncodingSchema`）**：encoding 已拆出 `PositionEncodingSchema`（x/y，必填）+ `StyleEncodingSchema`（当前仅 color）；后续在 `StyleEncodingSchema` 补 **透明度（fill / stroke opacity）/ size / shape** 等非位置通道，mark 据此着色 / 缩放 / 改形
+- **mark 视觉细节**：描边细节；数据标签（datum label）/ text mark
+- **sector 间隔**（见 alpha.4 [ADR-02](./v0.1-alpha.4/02-sector-geometry.md) 讨论）：`padAngle`(+ `padRadius`) 角向间隔——放 sector / interval mark 层（rose 复用 band `paddingInner`），含小扇形 clamp；per-datum explode / pull 单片高亮（用户「内部小圆位移圆心」想法的归宿）
+- **单系列 line / area 的 color field 静默丢弃**（cross-review P2）：`expand.ts` 的 `resolveColor` 支持字段编码，但 `lowerLine` / `lowerArea` 单系列路径只读常量 `encoding.color.value`，`color={field}` 无 series 时被静默忽略、回退 `currentColor`，而 React props / 文档把 `color` 写成「颜色字段」。排期时定向：① 文档明确 color field 仅在 series 拆分时生效；② color field 隐式触发 series 分组（GoG 语义）；③ 单系列取首行颜色。与 legend / 样式通道相关，建议合并排。落点 `src/lower/mark.ts`（单系列 stroke / fill 解析）+ `expand.ts` resolveColor
+- **cartesian 不校验 guide dimension**（cross-review P2）：`<Axis dimension="angle" />` / `"radius"` 在 cartesian 下不被拒绝——`lowerCartesianGuide` 凡非 `x` 一律当 y 轴，无独立 y 轴时渲出一条空刻度杂散轴线。应在 expand 阶段按 coordinate 校验 guide dimension（cartesian 只许 x/y），抛清晰错误。落点 `src/lower/expand.ts`（`assertUniqueAxisDimension` 附近）/ `guide.ts`
+- **introduction 页 stale**（cross-review P3）：`plot/introduction` zh/en「当前能力」`ComponentAlert` 仍写 v0.1 alpha.2、只 line·point·cartesian、bar·polar「后续版本」；alpha.4 已落 bar / polar / sector / area。收尾时同步 zh + en 到当前能力
+- *（后续追加……）*
+
 ## 依赖 core
 
 - core IR / Scene / `compileToScene`；
