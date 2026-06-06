@@ -52,6 +52,7 @@ const zeroSizeRectAt = (id: string, [cx, cy]: IRPosition): NodeLayout => ({
   align: 'middle',
   lineHeight: 0,
   fontSize: 0,
+  shapes: BUILTIN_SHAPES,
 });
 
 /**

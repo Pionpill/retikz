@@ -1,15 +1,17 @@
 import type { Position } from '../geometry/point';
 import type { Rect, RectAnchor } from '../geometry/rect';
-import type { AtDirection, IRJsonObject, IRLabelDefault, IRLineSpec, IRNode, IRNodeLabel, IRPaintSpec, IRShapeRef, JsonValue } from '../ir';
+import type { AtDirection, IRConnectSurface, IRJsonObject, IRLabelDefault, IRLineSpec, IRNode, IRNodeLabel, IRPaintSpec, IRShapeRef, JsonValue } from '../ir';
 import { JsonObjectSchema } from '../ir';
 import type { PaintResolver } from './paint';
 import type { GroupPrim, ScenePrimitive, TextLine, Transform } from '../primitive';
 import { BUILTIN_SHAPES } from '../shapes';
 import type { ShapeDefinition, ShapeStyle } from '../shapes';
+import { asRectAnchor } from '../shapes/_shared';
 import type { NameStack } from './name-stack';
 import { type ResolveBetweenGlobal, resolvePosition } from './position';
 import { toAlphabeticBaselineY } from './text-baseline';
 import type { FontSpec, TextMeasurer } from './text-metrics';
+import { resolveConnectSurface } from './connectSurface';
 
 const DEFAULT_FONT_SIZE = 14;
 const DEFAULT_PADDING = 8;
@@ -205,6 +207,10 @@ export type NodeLayout = {
    * @description IR 层 `Node.label` 标准化：position 默认 'above'、distance 默认 DEFAULT_LABEL_DISTANCE、font 从 Node 继承
    */
   labels?: Array<NodeLabelLayout>;
+  /** 节点默认连接面（来自 IR `node.connectAs`；undefined = 'shape'）；path 端点 boundary 可覆盖 */
+  connectAs?: IRConnectSurface;
+  /** 构建本 layout 的 shape 注册表引用——借用连接面（borrowed surface）查表用 */
+  shapes: Record<string, ShapeDefinition>;
 };
 
 /** 节点附属标签 layout（layoutNode 已合并默认值与样式继承） */
@@ -238,21 +244,51 @@ const inflateRect = (r: Rect, m: number): Rect =>
 
 /**
  * 取节点 shape 在 toward 方向的附着点（path 端点贴边用）
- * @description 走 shapeDef.boundaryPoint；margin > 0 时先膨胀外接 Rect，让 path 在 border 外停 margin
+ * @description 走连接面（surface）对应的 def.boundaryPoint；margin > 0 时先膨胀外接 Rect，让 path 在 border 外停 margin。
+ *   surface 缺省 = 'shape'（视觉形状自身），与改前行为一致。
  */
-export const boundaryPointOf = (layout: NodeLayout, toward: Position): Position =>
-  layout.shapeDef.boundaryPoint(
-    inflateRect(layout.rect, layout.margin),
-    toward,
+export const boundaryPointOf = (
+  layout: NodeLayout,
+  toward: Position,
+  surface: IRConnectSurface | undefined = 'shape',
+): Position => {
+  const { def, rect, params } = resolveConnectSurface(
+    surface,
+    layout.shapeDef,
+    layout.rect,
     layout.shapeParams ?? EMPTY_SHAPE_PARAMS,
+    layout.shapes,
   );
+  return def.boundaryPoint(inflateRect(rect, layout.margin), toward, params);
+};
 
 /**
  * 取节点 shape 命名 anchor（center / north / east / north-east 等）
  * @description 不应用 margin——TikZ 语义中 explicit anchor 取视觉边界点不涉及 outer sep；用于 `'A.north'` 落点。
- *   shapeDef.anchor 不认识的名字返回 undefined，此处抛 Unknown anchor（列出 shape 名）
+ *   compass（9 个 rect 方位名）走连接面 AABB：'shape' 时归一为 'rectangle'（矩形 AABB），其余按 surface 解析。
+ *   形状专属命名 anchor（tip-N / apex 等非 compass 名）恒走视觉形状自身，surface 不影响。
+ *   surface 缺省 = 'shape'，与改前 compass 走 AABB 行为一致（原 shapeDef.anchor 内部也走 rect AABB）。
  */
-export const anchorOf = (layout: NodeLayout, name: string): Position => {
+export const anchorOf = (
+  layout: NodeLayout,
+  name: string,
+  surface: IRConnectSurface | undefined = 'shape',
+): Position => {
+  if (asRectAnchor(name) !== undefined) {
+    // compass 方位名：'shape' 归一为 'rectangle'（走 AABB 矩形），其余按 surface
+    const compassSurface = surface === 'shape' ? 'rectangle' : surface;
+    const { def, rect, params } = resolveConnectSurface(
+      compassSurface,
+      layout.shapeDef,
+      layout.rect,
+      layout.shapeParams ?? EMPTY_SHAPE_PARAMS,
+      layout.shapes,
+    );
+    const p = def.anchor(rect, name, params);
+    if (p === undefined) throw new Error(`Unknown anchor '${name}' for shape '${layout.shapeName}'`);
+    return p;
+  }
+  // 形状专属命名 anchor（tip-N / outer-arc-mid / apex 等）：恒走视觉形状，surface 不影响
   const p = layout.shapeDef.anchor(layout.rect, name, layout.shapeParams ?? EMPTY_SHAPE_PARAMS);
   if (p === undefined) {
     throw new Error(`Unknown anchor '${name}' for shape '${layout.shapeName}'`);
@@ -354,9 +390,14 @@ const resolveLabelRotateDeg = (
 
 /**
  * 取节点 shape 在指定角度方向的边界点
- * @description 角度是节点**局部坐标系**下的极角（度数：0°=局部 +x，90°=局部 +y）。layout.rect.rotate 把局部基绕中心旋转，得到世界系下的视觉方向；shape boundaryPoint 内部用 rotate-aware 投影，所以这里把局部 (cos, sin) 经 rect.rotate 旋转后加到中心当作世界系 toward 传入。不应用 margin（同 anchorOf）；用于 `'A.30'` 落点
+ * @description 角度是节点**局部坐标系**下的极角（度数：0°=局部 +x，90°=局部 +y）。layout.rect.rotate 把局部基绕中心旋转，得到世界系下的视觉方向；shape boundaryPoint 内部用 rotate-aware 投影，所以这里把局部 (cos, sin) 经 rect.rotate 旋转后加到中心当作世界系 toward 传入。不应用 margin（同 anchorOf）；用于 `'A.30'` 落点。
+ *   surface 缺省 = 'shape'（视觉形状自身），与改前行为一致。
  */
-export const angleBoundaryOf = (layout: NodeLayout, angleDeg: number): Position => {
+export const angleBoundaryOf = (
+  layout: NodeLayout,
+  angleDeg: number,
+  surface: IRConnectSurface | undefined = 'shape',
+): Position => {
   const rad = (angleDeg * Math.PI) / 180;
   const lx = Math.cos(rad);
   const ly = Math.sin(rad);
@@ -368,8 +409,14 @@ export const angleBoundaryOf = (layout: NodeLayout, angleDeg: number): Position 
     layout.rect.x + lx * cosR - ly * sinR,
     layout.rect.y + lx * sinR + ly * cosR,
   ];
-  // 数字角度 generic：任何实现了 boundaryPoint 的 shape 自动获得 `.30` 角度锚点
-  return layout.shapeDef.boundaryPoint(layout.rect, toward, layout.shapeParams ?? EMPTY_SHAPE_PARAMS);
+  const { def, rect, params } = resolveConnectSurface(
+    surface,
+    layout.shapeDef,
+    layout.rect,
+    layout.shapeParams ?? EMPTY_SHAPE_PARAMS,
+    layout.shapes,
+  );
+  return def.boundaryPoint(rect, toward, params);
 };
 
 /**
@@ -582,6 +629,8 @@ export const layoutNode = (
     textColor: node.textColor,
     opacity: node.opacity,
     labels,
+    connectAs: node.connectAs,
+    shapes,
   };
 };
 

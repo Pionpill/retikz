@@ -136,7 +136,10 @@ export {
   NODE_SHAPES,
   NODE_TEXT_ALIGNS,
   PATTERN_SHAPES,
+  ConnectSurface,
+  ConnectSurfaceSchema,
 } from './ir';
+export type { ConnectSurfaceKeyword, IRConnectSurface } from './ir';
 
 // Primitive (Scene 数据模型)
 export type {

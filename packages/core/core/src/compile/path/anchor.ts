@@ -1,4 +1,5 @@
 import type { IRBetweenPosition, IRNodeTarget, IRPosition, IRTarget } from '../../ir';
+import type { IRConnectSurface } from '../../ir';
 import type { Transform } from '../../primitive';
 import { lerpPoint } from '../../geometry/_edge';
 import { resolveAnchor, resolveEdgePoint } from '../anchor-cache';
@@ -16,10 +17,14 @@ const isNodeTarget = (t: IRTarget): t is IRNodeTarget =>
 const isBetween = (t: IRTarget): t is IRBetweenPosition =>
   typeof t === 'object' && !Array.isArray(t) && 'between' in t;
 
-/** 解析 NodeTarget 的 anchor（非 undefined）到世界坐标：命名 / 角度走 resolveAnchor，`{ side, t }` 走 resolveEdgePoint */
-const resolveAnchorRef = (node: NodeLayout, anchor: NonNullable<IRNodeTarget['anchor']>): IRPosition => {
-  if (typeof anchor === 'number') return resolveAnchor(node, String(anchor));
-  if (typeof anchor === 'string') return resolveAnchor(node, anchor);
+/** 解析 NodeTarget 的 anchor（非 undefined）到世界坐标：命名 / 角度走 resolveAnchor（可选连接面），`{ side, t }` 恒走视觉形状（不传 surface） */
+const resolveAnchorRef = (
+  node: NodeLayout,
+  anchor: NonNullable<IRNodeTarget['anchor']>,
+  surface: IRConnectSurface | undefined,
+): IRPosition => {
+  if (typeof anchor === 'number') return resolveAnchor(node, String(anchor), surface);
+  if (typeof anchor === 'string') return resolveAnchor(node, anchor, surface);
   return resolveEdgePoint(node, anchor.side, anchor.t);
 };
 
@@ -39,14 +44,14 @@ export const refPointOfTarget = (
   nameStack: NameStack,
   scopeChain: ReadonlyArray<Transform> = [],
 ): IRPosition | null => {
-  // 对象形态 NodeTarget：{ id, anchor?, offset? }（refPoint 用——anchor 缺省取中心）
+  // 对象形态 NodeTarget：{ id, anchor?, offset? }（refPoint 用——anchor 缺省取中心，中心不受 boundary 影响）
   if (isNodeTarget(target)) {
     const node = nameStack.lookup(target.id);
     if (!node) return null;
     const base =
       target.anchor === undefined
         ? ([node.rect.x, node.rect.y] as IRPosition)
-        : resolveAnchorRef(node, target.anchor);
+        : resolveAnchorRef(node, target.anchor, target.boundary ?? node.connectAs);
     return addOffset(base, target.offset);
   }
   // between 比例点：两端点各 resolve 成世界坐标后 lerp（端点可嵌套 between，递归）；
@@ -90,14 +95,15 @@ export const clipForTarget = (
   nameStack: NameStack,
   scopeChain: ReadonlyArray<Transform> = [],
 ): IRPosition | null => {
-  // 对象形态 NodeTarget：{ id, anchor?, offset? }（clip 用——anchor 缺省按 shape 边界贴 toward）
+  // 对象形态 NodeTarget：{ id, anchor?, offset? }（clip 用——anchor 缺省按连接面边界贴 toward）
   if (isNodeTarget(target)) {
     const node = nameStack.lookup(target.id);
     if (!node) return null;
+    const surface = target.boundary ?? node.connectAs;
     const base =
       target.anchor === undefined
-        ? boundaryPointOf(node, toward)
-        : resolveAnchorRef(node, target.anchor);
+        ? boundaryPointOf(node, toward, surface)
+        : resolveAnchorRef(node, target.anchor, surface);
     return addOffset(base, target.offset);
   }
   // between 比例点是固定点（非节点边界），直接走 refPointOfTarget（不随 toward 变）

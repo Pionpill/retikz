@@ -6,6 +6,7 @@ export * from './clip';
 export * from './text';
 export * from './path';
 export * from './shape';
+export * from './connectSurface';
 export * from './node';
 export * from './coordinate';
 export * from './transform';
