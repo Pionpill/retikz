@@ -98,7 +98,7 @@ cp notes/decisions/core/_template.md notes/decisions/core/v<MAJOR>/v<MAJOR>.<MIN
 | Level | `red` \| `yellow` \| `green`（判级表见 [`flow-alpha`](../flow-alpha/SKILL.md) "自动判级"） |
 | Schema 改动 | 表格：文件 / 操作 / 字段名 / 类型 / 默认值 / describe；无改动写"无" |
 | 文件 scope | 白名单：本 ADR 实现允许触碰的所有文件；偏离需新开 ADR 或加条 |
-| 测试象限 | 4 类各达下限：happy ≥ 3 / 边界 ≥ 2 / 错误路径 ≥ 2 / 交互 ≥ 2，**至少 9 case** |
+| 测试象限 | 4 类各达下限：happy ≥ 3 / 边界 ≥ 2 / 错误路径 ≥ 2 / 交互 ≥ 2，**至少 9 case**（**plot alpha milestone 例外**：按复杂度适量、覆盖真实有意义的 accept/reject 与几何断言即可，不硬凑 9——见该 plot milestone roadmap 的「测试 case 规则」） |
 | 依赖现有元素 | 本 ADR 引用 / 扩展的现有 IR / API / 工具，每条注明用途（仅引用 / 扩展 / 修改） |
 
 ## 流程
@@ -110,7 +110,7 @@ cp notes/decisions/core/_template.md notes/decisions/core/v<MAJOR>/v<MAJOR>.<MIN
 5. AI 校验完整性：
    - schema 字段表每行四列填全
    - 文件 scope 至少包含 IR 文件 + 测试文件
-   - 测试象限四类各达下限（≥ 3 / ≥ 2 / ≥ 2 / ≥ 2 = 9 起步）
+   - 测试象限四类各达下限（≥ 3 / ≥ 2 / ≥ 2 / ≥ 2 = 9 起步）；**plot alpha milestone 放宽为按复杂度适量、不硬凑 9（见该 milestone roadmap）**
    - 校验失败 → 报告人工补充
 6. **人工 commit ADR**（emoji `:pencil:` 或 `:sparkles:`）—— 状态仍 Proposed，直到 develop-wrapup 阶段才翻 Accepted
 
