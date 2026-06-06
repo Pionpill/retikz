@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { AnimationTrackSchema } from './animation';
 import { CompositeNodeSchema, type IRComposite } from './composite';
 import { CoordinateSchema, type IRCoordinate } from './coordinate';
 import { type IRNode, NodeSchema } from './node';
@@ -70,6 +71,12 @@ export const SceneSchema = z
     viewBox: ViewBoxSchema.optional().describe(
       'Optional explicit viewBox; when set, Scene.layout uses it (ignoring padding) instead of the auto-computed bounding box. Omitted = automatic AABB + padding.',
     ),
+    animations: z
+      .array(AnimationTrackSchema)
+      .optional()
+      .describe(
+        'Scene-root (camera) timeline animation tracks; the `viewBox` property animates the framing (zoom / pan). Carried verbatim into the compiled Scene; renderers play them or render the static layout with a diagnosable warning when unable. The static `layout` is always the settled (rest) framing — camera animation never affects it.',
+      ),
   })
   .describe(
     'Top-level retikz IR scene — the canonical, JSON-serializable representation of a drawing',

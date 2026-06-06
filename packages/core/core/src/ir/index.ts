@@ -1,6 +1,7 @@
 export * from './position';
 export * from './font';
 export * from './json';
+export * from './animation';
 export * from './paint';
 export * from './clip';
 export * from './text';

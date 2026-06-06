@@ -1,6 +1,6 @@
 import type { Position } from '../geometry/point';
 import type { Rect, RectAnchor } from '../geometry/rect';
-import type { AtDirection, IRBoundary, IRJsonObject, IRLabelDefault, IRLineSpec, IRNode, IRNodeLabel, IRPaintSpec, IRShapeRef, JsonValue } from '../ir';
+import type { AtDirection, IRAnimationTrack, IRBoundary, IRJsonObject, IRLabelDefault, IRLineSpec, IRNode, IRNodeLabel, IRPaintSpec, IRShapeRef, JsonValue } from '../ir';
 import { JsonObjectSchema } from '../ir';
 import type { PaintResolver } from './paint';
 import type { GroupPrim, ScenePrimitive, TextLine, Transform } from '../primitive';
@@ -211,6 +211,8 @@ export type NodeLayout = {
   boundary?: IRBoundary;
   /** provenance 元数据（来自 IR `node.meta`）；emit 时原样 stamp 到 node 的 top-level 图元，renderer 忽略 */
   meta?: IRJsonObject;
+  /** 时间轴动画 tracks（来自 IR `node.animations`）；emit 时原样 stamp 到 node 的 top-level 图元，renderer 播放 / 降级 */
+  animations?: Array<IRAnimationTrack>;
   /** 构建本 layout 的 shape 注册表引用——借用连接面（borrowed boundary）查表用 */
   shapes: Record<string, ShapeDefinition>;
 };
@@ -643,6 +645,7 @@ export const layoutNode = (
     labels,
     boundary: node.boundary,
     meta: node.meta,
+    animations: node.animations,
     shapes,
   };
 };
@@ -815,12 +818,17 @@ export const emitNodePrimitives = (
     if (layout.meta !== undefined) {
       for (const prim of shapePrims) prim.meta = layout.meta;
     }
+    // animations 与 meta 同款：原样复制到每个平铺 shape 图元（transform/opacity 复制后视觉等价于动 group）
+    if (layout.animations !== undefined) {
+      for (const prim of shapePrims) prim.animations = layout.animations;
+    }
     return inner;
   }
   // 带文本 / rotate Node：user id 落到单层 GroupPrim（top-level emit 图元），子图元不重复 stamp。
   const group: GroupPrim = { type: 'group', children: inner };
   if (layout.id !== undefined) group.id = layout.id;
   if (layout.meta !== undefined) group.meta = layout.meta;
+  if (layout.animations !== undefined) group.animations = layout.animations;
   if (layout.rotateDeg !== 0) {
     group.transforms = [
       {

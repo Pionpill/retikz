@@ -1,3 +1,4 @@
+import type { IRAnimationTrack } from '../ir/animation';
 import type { IRJsonObject } from '../ir/json';
 
 /** 行级字段（每行可独立指定），未填走块级 TextPrim 默认 */
@@ -28,6 +29,8 @@ export type TextPrim = {
   id?: string;
   /** provenance 元数据：compile 从 IR 元素（node / path / scope）的 `meta` 原样 stamp，renderer 忽略（不进 DOM），交互层 / 工具链从 Scene 读 */
   meta?: IRJsonObject;
+  /** 时间轴动画 tracks：compile 从 IR 元素的 animations 原样 stamp；renderer 能播则播、不能则渲染 settled 静态态并 warn（不丢图） */
+  animations?: Array<IRAnimationTrack>;
   /** 锚点横坐标（具体含义由 align 决定） */
   x: number;
   /** 锚点纵坐标（具体含义由 baseline 决定） */

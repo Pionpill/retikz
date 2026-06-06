@@ -138,8 +138,26 @@ export {
   PATTERN_SHAPES,
   Boundary,
   BoundarySchema,
+  AnimationProperty,
+  AnimationEasing,
+  AnimationDirection,
+  AnimationFill,
+  AnimationTrackSchema,
+  KeyframeSchema,
+  TriggerSchema,
+  EasingSchema,
 } from './ir';
 export type { BoundaryKeyword, IRBoundary } from './ir';
+export type {
+  BuiltinAnimationProperty,
+  AnimationPropertyRef,
+  AnimationEasingName,
+  AnimationDirectionName,
+  AnimationFillName,
+  IRAnimationTrack,
+  IRKeyframe,
+  IRAnimationTrigger,
+} from './ir';
 
 // Primitive (Scene 数据模型)
 export type {
