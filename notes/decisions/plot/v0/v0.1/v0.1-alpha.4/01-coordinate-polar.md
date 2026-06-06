@@ -106,15 +106,17 @@ export const Polar2DSchema = z.object({
 3. **hybrid 通道最贴 AI 与跨坐标系复用**：x/y 是 LLM 训练亲和的默认（cartesian spec 改 coordinate 即跨系），angle/radius 是显式可读覆盖；两者等价、裸字面量优先（§AI 友好性）。
 4. **帧契约单点拥有**：02/03/04 共用同一 `CoordinateFrame`，杜绝各造临时投影框架的伪并行（评审 P1-1）。
 
-## 待决策点 🔻
+## 待决策点 🔻（已冻结 2026-06-06，按人工 ack）
 
-- **x 与 angle 同时设的优先级**：角色名通道优先 + 忽略别名（倾向，dev 模式可 warn）vs 直接 reject 防误用。倾向「优先 + warn」——宽容、不打断生成。
-- **cartesian2D 下出现 angle/radius 通道**：静默忽略 vs schema/ lowering reject。倾向 **reject**（catch 误用：angle 在笛卡尔无意义，多半是写错坐标系）。
-- **theta 翻转 / 方向**：是否给 polar2D 加 `direction: 'clockwise' | 'counterclockwise'` / `theta: 'x' | 'y'`。倾向 alpha.4 **写死 x→angle、沿用 core 0°=+x 约定**，翻转 / 换向留后续非破坏放宽。
-- **默认朝向**：`startAngle` 默认 0（+x，3 点钟方向）vs 0=12 点钟（饼图习惯）。倾向 **沿用 core 0°=+x**（lowering 与 core sector 约定一致、少惊喜），「起始 12 点钟」靠用户设 `startAngle: -90` 或留后续 sugar。
-- **innerRadius 语义（已定）**：**IR 存 fraction [0,1)**（环图内半径占外半径比例，与算出的 outerRadius 解耦、可移植）；**frame 转 user units**（`frame.innerRadius = ir.innerRadius × outerRadius`），径向 scale range = `[frame.innerRadius, outerRadius]`。schema 用 `z.number().min(0).lt(1)`。
-- **`CoordinateFrame` 方法 / 命名**：`primary` / `secondary` 统一角色 vs 保留 `xScale` / `yScale` + `angleScale` / `radiusScale` 分支命名。倾向 primary/secondary（统一角色、mark 少分支），但具体方法签名（是否提供 `projectRow` helper、`bandwidth` 在 polar 的暴露形态）实现期定。
-- **partial-arc 紧包围盒**：startAngle/endAngle 非整圆时，layout 是否按实际扇形求紧 bbox。倾向 **out of scope**（ADR-01 用整圆 bbox 定 center/outerRadius，紧包围留后续）。
+下列均已拍板，进实现按此执行，不再悬置：
+
+- **x 与 angle 同时设的优先级 → 角色名通道优先 + 忽略别名**（dev 模式可 warn）：宽容、不打断生成。
+- **cartesian2D 下出现 angle/radius 通道 → reject**（lowering 抛清晰错误）：catch 误用（angle 在笛卡尔无意义，多半写错坐标系）。
+- **theta 翻转 / 方向 → 不做**：写死 x→angle、沿用 core `0°=+x` 约定；翻转 / 换向留后续非破坏放宽。
+- **默认朝向 → `startAngle` 默认 0**（+x / 3 点钟）：与 core sector 约定一致、少惊喜；「起始 12 点钟」靠用户设 `startAngle: -90` 或后续 sugar。
+- **innerRadius 语义 → IR 存 fraction `[0,1)`、frame 转 user units**（`frame.innerRadius = ir.innerRadius × outerRadius`），径向 scale range = `[frame.innerRadius, outerRadius]`，schema `z.number().min(0).lt(1)`。
+- **`CoordinateFrame` 命名 → `primary` / `secondary` 统一角色**（mark 少分支）；方法签名（`projectRow` helper、polar 下 `bandwidth` 暴露形态）实现期定，不改字段语义。
+- **partial-arc 紧包围盒 → out of scope**：ADR-01 用整圆 bbox 定 center / outerRadius，紧包围留后续。
 
 ## DSL 表面
 
