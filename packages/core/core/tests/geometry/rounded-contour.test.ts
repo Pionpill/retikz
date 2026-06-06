@@ -120,6 +120,27 @@ describe('filletContour 逐角夹紧（窄角 / 短边）', () => {
       if (!f.clampedToZero) expect(f.radius).toBeLessThanOrEqual(2 + 1e-6);
     }
   });
+
+  it('超大 r 取最大可行半径（非折半）：20x20 正方请求 100 → r≈10', () => {
+    // 20×20 正方形（半边 10），正方角最大可行 fillet = min(w/2,h/2) = 10，与 render clamp 对齐。
+    // 折半策略会从 100 折到 6.25（100→50→25→12.5→6.25 首个 ≤10 合法），与渲染不一致。
+    const square = squareSegments(); // [-10,-10]..[10,10]
+    const fillets = filletContour(square, 100);
+    expect(fillets.length).toBe(4);
+    for (const f of fillets) {
+      expect(f.clampedToZero).toBe(false);
+      expect(f.radius).toBeCloseTo(10, 3);
+    }
+  });
+
+  it('合法 r 不被二分缩：20x20 请求 8 → 用原值 8', () => {
+    const square = squareSegments();
+    const fillets = filletContour(square, 8);
+    for (const f of fillets) {
+      expect(f.clampedToZero).toBe(false);
+      expect(f.radius).toBeCloseTo(8);
+    }
+  });
 });
 
 describe('filletContour line-arc：直边↔圆弧接缝', () => {

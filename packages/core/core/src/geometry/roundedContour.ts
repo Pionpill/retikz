@@ -347,15 +347,25 @@ const solveFillet = (segA: ContourSegment, segB: ContourSegment, r: number): Fil
     };
   };
 
-  // 逐角夹紧：从请求 r 起，attempt 只返回切点落在段内（≤半段）的合法 fillet；
-  //   无合法解（窄角 / 短边）则折半缩 r 重试，直至成功或 r→0（本角不倒）。
-  let radius = r;
-  for (let iter = 0; iter < 60; iter++) {
-    const sol = attempt(radius);
-    if (sol) return sol;
-    radius *= 0.5;
-    if (radius <= EPSILON) break;
+  // 逐角夹紧：attempt 只返回切点落在段内（≤半段）的合法 fillet。请求 r 直接合法则原值采用；
+  //   否则在 [0, r] 二分搜索最大可行半径——取最大可行 fillet（而非折半到首个合法值），
+  //   使边界几何与渲染 clamp 对齐（正方角下 = min(w/2,h/2)）。仍无解则本角不倒。
+  const direct = attempt(r);
+  if (direct) return direct;
+  let lo = 0;
+  let hi = r;
+  let bestSolution: FilletSolution | undefined;
+  for (let iter = 0; iter < 48; iter++) {
+    const mid = (lo + hi) / 2;
+    const sol = attempt(mid);
+    if (sol) {
+      bestSolution = sol;
+      lo = mid;
+    } else {
+      hi = mid;
+    }
   }
+  if (bestSolution) return bestSolution;
   // 夹紧到 0：本角不倒
   return {
     tangentInPoint: corner,
