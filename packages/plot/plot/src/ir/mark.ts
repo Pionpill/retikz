@@ -13,6 +13,8 @@ export const PlotMark = {
   Line: 'line',
   /** 区间：从 baseline 到 value 的矩形（柱状图 / 甘特） */
   Interval: 'interval',
+  /** 扇形：内外半径 + 累积角界围成的环楔（饼图 / 环图） */
+  Sector: 'sector',
 } as const;
 
 /** mark 类型 */
@@ -89,9 +91,26 @@ export const IntervalMarkSchema = z
   })
   .describe('Interval mark: bar from baseline (0) to the value; width taken from the band scale');
 
+export const SectorMarkSchema = z
+  .object({
+    type: z.literal(PlotMark.Sector).describe('Discriminator: an annular wedge from cumulative angular bounds (pie / donut)'),
+    startField: z
+      .string()
+      .min(1)
+      .optional()
+      .describe('Cumulative lower-bound field driving the start angle (matches the stack transform startField; default "y0")'),
+    endField: z
+      .string()
+      .min(1)
+      .optional()
+      .describe('Cumulative upper-bound field driving the end angle (matches the stack transform endField; default "y1")'),
+    ...markBase,
+  })
+  .describe('Sector mark: pie / donut slice; reads cumulative bounds (from a stack transform) as angles, radius spans the full coordinate ring');
+
 export const MarkSchema = z
-  .discriminatedUnion('type', [PointMarkSchema, LineMarkSchema, IntervalMarkSchema])
-  .describe('Mark union; extensible to area / sector / rule / text in later alphas');
+  .discriminatedUnion('type', [PointMarkSchema, LineMarkSchema, IntervalMarkSchema, SectorMarkSchema])
+  .describe('Mark union; extensible to area / rule / text in later alphas');
 
 /** point mark */
 export type PointMark = z.infer<typeof PointMarkSchema>;
@@ -99,5 +118,7 @@ export type PointMark = z.infer<typeof PointMarkSchema>;
 export type LineMark = z.infer<typeof LineMarkSchema>;
 /** interval(bar) mark */
 export type IntervalMark = z.infer<typeof IntervalMarkSchema>;
-/** mark（point / line / interval） */
+/** sector(pie / donut) mark */
+export type SectorMark = z.infer<typeof SectorMarkSchema>;
+/** mark（point / line / interval / sector） */
 export type Mark = z.infer<typeof MarkSchema>;

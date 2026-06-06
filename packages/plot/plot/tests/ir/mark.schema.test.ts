@@ -77,4 +77,52 @@ describe('MarkSchema (ADR-05)', () => {
     const m = { type: 'line', series: 'city', order: 't', encoding: { x: { field: 't' }, y: { field: 'v' } } };
     expect(MarkSchema.parse(m)).toEqual(m);
   });
+
+  // ADR-02：sector(pie / donut) mark
+  it('mark_sector_valid', () => {
+    const m = { type: 'sector', encoding: { color: { field: 'label' } } };
+    expect(MarkSchema.parse(m)).toEqual(m);
+  });
+
+  it('mark_sector_omits_fields_uses_defaults', () => {
+    // startField / endField 可选：缺省语义 y0 / y1（schema 不写入默认值，仅解析通过）
+    const m = { type: 'sector', encoding: { color: { field: 'label' } } };
+    const parsed = MarkSchema.parse(m);
+    expect(parsed).not.toHaveProperty('startField');
+    expect(parsed).not.toHaveProperty('endField');
+  });
+
+  it('mark_sector_custom_bound_fields_valid', () => {
+    const m = { type: 'sector', startField: 'lo', endField: 'hi', encoding: { color: { field: 'label' } } };
+    expect(MarkSchema.parse(m)).toEqual(m);
+  });
+
+  it('mark_sector_with_id_valid', () => {
+    const m = { type: 'sector', id: 'pie', encoding: { color: { field: 'label' } } };
+    expect(MarkSchema.parse(m)).toEqual(m);
+  });
+
+  it('mark_sector_union_discriminates', () => {
+    // discriminated union 按 type 判别到 sector 分支（保留 startField，不与 interval 字段混淆）
+    const parsed = MarkSchema.parse({ type: 'sector', startField: 'lo', encoding: { color: { value: '#333' } } });
+    expect(parsed.type).toBe('sector');
+    expect((parsed as { startField?: string }).startField).toBe('lo');
+  });
+
+  it('mark_sector_json_round_trip', () => {
+    const m = { type: 'sector', startField: 'y0', endField: 'y1', encoding: { color: { field: 'label' } } };
+    expect(MarkSchema.parse(JSON.parse(JSON.stringify(m)))).toEqual(m);
+  });
+
+  it('mark_sector_missing_encoding_rejected', () => {
+    expect(() => MarkSchema.parse({ type: 'sector' })).toThrow();
+  });
+
+  it('mark_sector_typo_type_rejected', () => {
+    expect(() => MarkSchema.parse({ type: 'sektor', encoding: { color: { field: 'label' } } })).toThrow();
+  });
+
+  it('mark_sector_empty_start_field_rejected', () => {
+    expect(() => MarkSchema.parse({ type: 'sector', startField: '', encoding: { color: { field: 'label' } } })).toThrow();
+  });
 });
