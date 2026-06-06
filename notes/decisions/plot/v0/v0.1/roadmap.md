@@ -44,7 +44,6 @@ v0.1 是 `@retikz/plot` 的**基础纵向闭环**：对 ≥1 个 mark 跑通全 
 - **sector 间隔**（见 alpha.4 [ADR-02](./v0.1-alpha.4/02-sector-geometry.md) 讨论）：`padAngle`(+ `padRadius`) 角向间隔——放 sector / interval mark 层（rose 复用 band `paddingInner`），含小扇形 clamp；per-datum explode / pull 单片高亮（用户「内部小圆位移圆心」想法的归宿）
 - **单系列 line / area 的 color field 静默丢弃**（cross-review P2）：`expand.ts` 的 `resolveColor` 支持字段编码，但 `lowerLine` / `lowerArea` 单系列路径只读常量 `encoding.color.value`，`color={field}` 无 series 时被静默忽略、回退 `currentColor`，而 React props / 文档把 `color` 写成「颜色字段」。排期时定向：① 文档明确 color field 仅在 series 拆分时生效；② color field 隐式触发 series 分组（GoG 语义）；③ 单系列取首行颜色。与 legend / 样式通道相关，建议合并排。落点 `src/lower/mark.ts`（单系列 stroke / fill 解析）+ `expand.ts` resolveColor
 - **cartesian 不校验 guide dimension**（cross-review P2）：`<Axis dimension="angle" />` / `"radius"` 在 cartesian 下不被拒绝——`lowerCartesianGuide` 凡非 `x` 一律当 y 轴，无独立 y 轴时渲出一条空刻度杂散轴线。应在 expand 阶段按 coordinate 校验 guide dimension（cartesian 只许 x/y），抛清晰错误。落点 `src/lower/expand.ts`（`assertUniqueAxisDimension` 附近）/ `guide.ts`
-- **introduction 页 stale**（cross-review P3）：`plot/introduction` zh/en「当前能力」`ComponentAlert` 仍写 v0.1 alpha.2、只 line·point·cartesian、bar·polar「后续版本」；alpha.4 已落 bar / polar / sector / area。收尾时同步 zh + en 到当前能力
 - *（后续追加……）*
 
 ## 依赖 core
