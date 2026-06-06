@@ -1,24 +1,29 @@
 ---
 title: Shapes
-description: 同一个几何形状的两种造法——用 Sugar 画一条轮廓，或让节点带上这个形状的边界。
+description: retikz 的几何形状——既是画一条 Path 的官方 Sugar，也是 Node 默认支持的边界形状。
 ---
 
-这一组是常见的几何形状：圆、椭圆、弧、扇形、矩形、多边形、星形。retikz 里每种形状都有**两种造法**，每页把它们并列：
+形状（圆、椭圆、弧、扇形、矩形、多边形、星形）是 retikz 的一类几何原语，有**两副面孔**：
 
-- **画一条轮廓**——用 Sugar 组件（`<Circle>` / `<Sector>` …）在指定位置画一条形状线，它会展开成底层 `<Path>`。纯图形，不参与连线。
-- **一个带边界的节点**——用 `<Node shape="circle">`，得到一个以该形状为边界的节点：能装文字、能被 `<Path>` / `<Draw>` 用 id 引用、连线端点自动贴形状的边。
+- **作为 Path 图形（Sugar）**——`<Circle>` `<Sector>` 这类组件是官方提供的一组形状快捷写法，在指定位置画一条形状线、展开成底层 `<Path>`。它们让你不必为常见图形手写 Path / Step。
+- **作为 Node 形状**——`<Node shape="circle">` 让节点以该形状为边界：能装文字、能被 `<Path>` / `<Draw>` 用 id 引用、连线端点自动贴边。
 
-简单说：只要一条形状线，用 Sugar；要一个可连接、可标注的形状图元，用 Node 形状。
+每个形状页把这两副面孔分两大块写全：先「作为 Path 图形」，再「作为 Node 形状」。简单说：要画一条形状线，用 Sugar；要一个可连接、可标注的形状节点，用 `<Node shape>`。
+
+**两侧都对扩展开放**：
+
+- 想要内置之外的 **Node 形状**（hexagon / cloud…）——注册到 [shape-registry](/core/reference/extending/shape-registry)；内置的 circle / sector / star 等就是它的官方实现。
+- 想画内置之外的**路径曲线 step**（parabola / sin-cos…）——走 [path-generator](/core/reference/extending/path-generator)。
 
 ## 组成
 
-| 形状 | 画一条轮廓（Sugar） | 带边界的节点（Node 形状） |
+| 形状 | 作为 Path（Sugar） | 作为 Node 形状 |
 | --- | --- | --- |
 | Circle / Ellipse | `<Circle>` · `<Ellipse>` | `shape="circle"` · `"ellipse"` |
-| Arc / Sector | `<Arc>` · `<Sector>` | `shape="arc"` · `"sector"` |
+| Arc / Sector | `<Arc>` · `<Sector>` | `shape="sector"` · `"arc"`（带 params） |
 | Rectangle | `<Rectangle>` | 默认 / `shape="rectangle"` |
 | Polygon | `<RegularPolygon>` | `shape="polygon"` · `"diamond"` |
-| Star | `<Star>` | `shape="star"` |
+| Star | `<Star>` | `shape="star"`（带 params） |
 
 > 背景网格、参考线这类**一片规则线条**（而非单个闭合形状）不在这一组——见 [辅助](/core/components/helpers) 里的 `<Grid>`。
 

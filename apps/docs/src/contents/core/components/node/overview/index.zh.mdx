@@ -27,6 +27,8 @@ import { Node } from '@retikz/react';
 
 ### shape 多态
 
+形状在 retikz 有两副面孔——既能用 Sugar 画一条 Path，也能作为 Node 边界，完整定义见 [形状](/core/components/shapes)。本节只讲它作为节点形状的用法。
+
 `shape` 控制节点形状，两种写法：
 
 - **裸字符串**（无参形状）：`'rectangle'`（默认）/ `'circle'` / `'ellipse'` / `'diamond'` / `'polygon'` / `'sector'` / `'arc'` / `'star'`，或经 `<Layout shapes>` / `CompileOptions.shapes` 注册的自定义名。

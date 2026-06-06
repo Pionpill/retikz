@@ -1,32 +1,25 @@
 ---
 title: Star
-description: Two ways to make a star — draw an outline with Star, or give a node a star boundary.
+description: Stars — draw a Path with sugar, or use them as a node's star boundary.
 ---
 
-A star alternates points between an outer and an inner radius, and retikz gives you two forms:
+A star alternates points between an outer and an inner radius, with two faces: draw an outline with `<Star>` (sugar), or bound a node with `shape={{ type:'star', params }}`. See [Shapes](/core/components/shapes) for the full definition. Reach for sugar to draw a star outline, and for `<Node shape>` to get a connectable star element.
 
-- **Draw an outline** — the sugar component `<Star>` draws a star at a position, expanding to an underlying `<Path>`.
-- **A node with that boundary** — `<Node shape={{ type:'star', params }}>` gives a node bounded by a star, referenceable by a connection and usable as a rating / emphasis glyph.
+## As a Path shape (sugar)
 
-In short: reach for `<Star>` when you just need a star outline, and for `<Node shape>` when you need a connectable star element.
+`<Star>` alternates points on an outer and inner radius, connects them into a closed path, and expands to an underlying `<Path>`. Useful for rating stars, emphasis marks, and decorative multi-point shapes.
 
-## Usage
+### Usage
 
 ```tsx
-import { Star, Node } from '@retikz/react';
+import { Star } from '@retikz/react';
 ```
 
 ```tsx
-{/* Draw an outline */}
 <Star center={[0, 0]} outerRadius={36} innerRadius={16} points={5} />
-
-{/* A node with a star boundary */}
-<Node shape={{ type: 'star', params: { points: 5, innerRadius: 16, outerRadius: 40 } }} />
 ```
 
-## Examples
-
-### As a shape: Star
+### Examples
 
 `points` is the number of star points. Give `innerRadius` directly, or use `innerRatio` to derive it from the outer radius.
 
@@ -37,29 +30,7 @@ import { Star, Node } from '@retikz/react';
 
 <ComponentPreview name="star-basic" size="sm" />
 
-### As a node shape: shape="star"
-
-When you need a star **node** (referenceable by a connection, usable as an icon glyph) rather than a line, set `shape={{ type:'star', params }}` on `<Node>`. It is sized by the radius parameters, **independent of any text content**.
-
-| shape | params | Notes |
-| --- | --- | --- |
-| star | `{ points, innerRadius, outerRadius, rotate? }` | Star with alternating inner / outer radii |
-
-<ComponentPreview name="node-star" size="sm" />
-
-Besides the node's 9 standard anchors (`north` / `center` …), the star provides geometry-named anchors for precise connections via `{ id, anchor }`: `tip-N` (the Nth point) / `notch-N` (the Nth notch) / `center`. For the full `<Node>` props see [Node](/core/components/node/overview).
-
-## How it works
-
-> Optional for everyday use; revisit this section when the orientation or inner-radius ratio looks surprising.
-
-`<Star>` computes `points * 2` vertices: outer vertices land on `outerRadius`, and inner vertices land on `innerRadius`. The default `innerRatio` is `0.5`, so the inner radius is half of the outer radius.
-
-`rotate` changes the starting angle of the first outer vertex. By default, one outer point faces upward; in screen coordinates, positive angles rotate clockwise. `<Node shape="star">` shares the same geometry as `<Star>`; the only difference is that the former is a node with a boundary that connections can snap to.
-
-## API Reference
-
-### As a shape: Star
+### API Reference
 
 | Prop | Type | Default | Description |
 | --- | --- | --- | --- |
@@ -70,16 +41,46 @@ Besides the node's 9 standard anchors (`north` / `center` …), the star provide
 | `points` | `number` | — | Number of star points |
 | `rotate` | `number` | `-90` | Starting angle |
 
-### As a node shape
+## As a node shape
+
+When you need a star **node** (referenceable by a connection, usable as an icon glyph) rather than a line, set `shape={{ type:'star', params }}` on `<Node>`. It is sized by the radius parameters, **independent of any text content**.
+
+### Usage
+
+```tsx
+import { Node } from '@retikz/react';
+```
+
+```tsx
+<Node shape={{ type: 'star', params: { points: 5, innerRadius: 16, outerRadius: 40 } }} />
+```
+
+### Examples
+
+| shape | params | Notes |
+| --- | --- | --- |
+| star | `{ points, innerRadius, outerRadius, rotate? }` | Star with alternating inner / outer radii |
+
+<ComponentPreview name="node-star" size="sm" />
+
+Besides the node's 9 standard anchors (`north` / `center` …), the star provides geometry-named anchors for precise connections via `{ id, anchor }`: `tip-N` (the Nth point) / `notch-N` (the Nth notch) / `center`. For the full `<Node>` props see [Node](/core/components/node/overview).
+
+### API Reference
 
 | `shape` | params | Boundary / use |
 | --- | --- | --- |
 | `{ type: 'star', params }` | `points` / `innerRadius` / `outerRadius` / `rotate?` | Connectable star glyph |
 
-> For the full `<Node>` props see [Node](/core/components/node/overview).
+## How it works
+
+> Optional for everyday use; revisit when the orientation or inner-radius ratio looks surprising.
+
+`<Star>` computes `points * 2` vertices: outer vertices land on `outerRadius`, and inner vertices land on `innerRadius`. The default `innerRatio` is `0.5`, so the inner radius is half of the outer radius. `rotate` changes the starting angle of the first outer vertex; by default one outer point faces upward, and in screen coordinates positive angles rotate clockwise.
+
+`<Node shape="star">` shares the same geometry as `<Star>`; the only difference is that the former is a node with a boundary that connections can snap to.
 
 ## Related
 
 - [Node](/core/components/node/overview): full props when a shape is used as a node boundary
 - [Polygon](../polygon): equal-sided regular polygons
-- [Shapes](/core/components/shapes): Shapes overview
+- [Shapes](/core/components/shapes): Shapes overview and full definition

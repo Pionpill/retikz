@@ -1,33 +1,26 @@
 ---
 title: Circle / Ellipse
-description: 圆和椭圆的两种造法——用 Sugar 画一条轮廓，或让节点带上圆 / 椭圆边界。
+description: 圆和椭圆——既能画一条 Path（Sugar），也能作为节点的圆 / 椭圆边界。
 ---
 
-想要一个圆或椭圆，retikz 有两种造法：
+圆和椭圆是 retikz 的几何形状，有两副面孔：用 `<Circle>` / `<Ellipse>` 画一条轮廓线（Sugar），或用 `shape="circle"` / `"ellipse"` 让节点带上圆 / 椭圆边界。完整定义见 [形状](/core/components/shapes)。要画一条线，用 Sugar；要一个可连接、可标注的节点，用 `<Node shape>`。
 
-- **画一条轮廓**——Sugar 组件 `<Circle>` / `<Ellipse>` 在指定位置画一条圆 / 椭圆线，展开成底层 `<Path>`。
-- **一个带边界的节点**——`<Node shape="circle">` 让节点以圆 / 椭圆为边界，能装文字、能被 `<Path>` / `<Draw>` 用 id 引用、连线端点自动贴边。
+## 作为 Path 图形（Sugar）
 
-简单说：只画一条圆 / 椭圆线，用 `<Circle>` / `<Ellipse>`；要一个圆形 / 椭圆形、可连接可标注的节点，用 `<Node shape>`。
+`<Circle>` / `<Ellipse>` 在指定位置画一条圆 / 椭圆轮廓，展开成底层 `<Path>`。适合「我知道中心和半径」「我只有一个包围盒」这类场景。
 
-## 用法
+### 用法
 
 ```tsx
-import { Circle, Ellipse, Node } from '@retikz/react';
+import { Circle, Ellipse } from '@retikz/react';
 ```
 
 ```tsx
-{/* 画一条轮廓 */}
 <Circle center={[0, 0]} radius={32} fill="none" />
 <Ellipse center={[0, 0]} radiusX={48} radiusY={28} fill="none" />
-
-{/* 一个带圆形边界的节点 */}
-<Node shape="circle">label</Node>
 ```
 
-## 例子
-
-### 作为图形：Circle / Ellipse
+### 例子
 
 最常见的是 `center + radius`。如果手上是一个矩形范围，也可以直接用 `corner1 + corner2`、`box` 或 `boundingBox`。
 
@@ -57,52 +50,7 @@ import { Circle, Ellipse, Node } from '@retikz/react';
 
 <ComponentPreview name="ellipse-basic" size="sm" />
 
-### 作为节点形状：shape="circle" / "ellipse"
-
-当你要的不是一条线、而是一个圆形 / 椭圆形的节点时（装文字、被连线引用），给 `<Node>` 设 `shape`。边界自动外接「文字 + padding」：`circle` 取能容纳文字的外接圆，`ellipse` 取外接椭圆（各轴 × √2）。这两个形状**不需要额外参数**。
-
-<ComponentPreview name="node-circle-ellipse" size="sm" />
-
-连线端点会自动贴到圆 / 椭圆的边上，节点的 9 个标准 anchor（`north` / `center` …）照常可用。完整的 `<Node>` 属性（`position` / `fill` / `padding` / `label` …）见 [Node](/core/components/node/overview)。
-
-## 技术原理
-
-> 日常使用可以跳过本节；只有在点位报错，或者想把它们和 `<Path>` 混用时再回来读。
-
-### 有些写法直接透传点，有些写法要先计算
-
-有些写法是直接把点交给底层 `Path`。它们可以用节点 id、极坐标点或普通 `[x, y]` 坐标：
-
-```tsx
-<Circle center="A" radius={24} />
-<Ellipse corner1="A" corner2="B" />
-```
-
-另外一些写法要先在 React 里算出圆心、尺寸或边界，所以只接受字面量 `[x, y]` 坐标：
-
-```tsx
-<Circle from={[-40, 0]} to={[40, 0]} />
-```
-
-把节点 id 传给这类需要先计算的写法时，组件会直接报错，不会替你猜结果。
-
-### 部分圆有三种闭合方式
-
-带角度时，`closed` 决定弧线两端怎么收口：
-
-| 值 | 效果 |
-| --- | --- |
-| `chord` | 默认值，直接连接两个弧端点 |
-| `sector` | 从弧终点连到中心，再回到弧起点 |
-| `open` | 只画弧线，不闭合 |
-
-### 它们最后还是 Path
-
-`<Circle>` 和 `<Ellipse>` 最后都会展开成等价的 `<Path>` / `<Step>` 序列。这意味着它们可以直接用 `stroke`、`fill`、`arrow`、`zIndex` 这类 Path 风格属性。而 `<Node shape>` 是另一条路：它不是 Path，而是一个有边界的节点，边界由文字内容外接得到。
-
-## API 参考
-
-### 作为图形：Circle / Ellipse
+### API 参考
 
 | 组件 | 组合 | 含义 |
 | --- | --- | --- |
@@ -121,17 +69,73 @@ import { Circle, Ellipse, Node } from '@retikz/react';
 | | + `inset?` / `outset?` | 收缩或扩展 box 范围后再计算 |
 | | + angles + `closed?` | 部分椭圆：`chord` / `sector` / `open` |
 
-### 作为节点形状
+## 作为 Node 形状
+
+当你要的不是一条线、而是一个圆形 / 椭圆形的节点时（装文字、被连线引用），给 `<Node>` 设 `shape`。
+
+### 用法
+
+```tsx
+import { Node } from '@retikz/react';
+```
+
+```tsx
+<Node shape="circle">label</Node>
+<Node shape="ellipse">label</Node>
+```
+
+### 例子
+
+边界自动外接「文字 + padding」：`circle` 取能容纳文字的外接圆，`ellipse` 取外接椭圆（各轴 × √2）。这两个形状**不需要额外参数**。
+
+<ComponentPreview name="node-circle-ellipse" size="sm" />
+
+连线端点会自动贴到圆 / 椭圆的边上，节点的 9 个标准 anchor（`north` / `center` …）照常可用。完整的 `<Node>` 属性（`position` / `fill` / `padding` / `label` …）见 [Node](/core/components/node/overview)。
+
+### API 参考
 
 | `shape` | 边界 | 参数 |
 | --- | --- | --- |
 | `"circle"` | 能容纳文字的外接圆（= `ellipse` 等轴预设） | 无 |
 | `"ellipse"` | 外接椭圆，各轴 × √2 | 无 |
 
-> `<Node>` 的完整属性（位置 / 样式 / 标签等）见 [Node](/core/components/node/overview)；其它带参形状（扇形 / 星形）见各自页面。
+## 技术原理
+
+> 日常使用可以跳过本节；只有在点位报错，或者想理解 Sugar 与 Node 的区别时再回来读。
+
+### 有些写法直接透传点，有些写法要先计算（Sugar）
+
+`<Circle>` / `<Ellipse>` 的一些写法直接把点交给底层 `Path`，可以用节点 id、极坐标点或普通 `[x, y]` 坐标：
+
+```tsx
+<Circle center="A" radius={24} />
+<Ellipse corner1="A" corner2="B" />
+```
+
+另外一些写法要先在 React 里算出圆心、尺寸或边界，所以只接受字面量 `[x, y]` 坐标：
+
+```tsx
+<Circle from={[-40, 0]} to={[40, 0]} />
+```
+
+把节点 id 传给这类需要先计算的写法时，组件会直接报错，不会替你猜结果。
+
+### 部分圆有三种闭合方式（Sugar）
+
+带角度时，`closed` 决定弧线两端怎么收口：
+
+| 值 | 效果 |
+| --- | --- |
+| `chord` | 默认值，直接连接两个弧端点 |
+| `sector` | 从弧终点连到中心，再回到弧起点 |
+| `open` | 只画弧线，不闭合 |
+
+### Sugar 和 Node 是两条路
+
+`<Circle>` / `<Ellipse>` 展开成等价的 `<Path>` / `<Step>` 序列，是纯图形，可直接用 `stroke`、`fill`、`arrow`、`zIndex` 等 Path 属性。`<Node shape>` 则不是 Path，而是一个有边界的节点，边界由文字内容外接得到、可被连线贴边。要一个能装文字又能连线的圆，用 `<Node>` 而不是 `<Circle>`。
 
 ## 相关
 
 - [Node](/core/components/node/overview)：把形状用作节点边界时的完整属性
 - [Arc / Sector](../arc-sector)：再看角度和空心扇形
-- [Shapes](/core/components/shapes)：形状分组入口
+- [Shapes](/core/components/shapes)：形状分组入口与完整定义

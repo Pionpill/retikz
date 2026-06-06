@@ -1,31 +1,24 @@
 ---
 title: Arc / Sector
-description: Two ways to make an arc or sector — draw an angle span with sugar, or give a node a sector / arc boundary.
+description: Arcs and sectors — draw a Path with sugar, or use them as a node's sector / arc boundary.
 ---
 
-Arcs and sectors are both angle-based, and retikz gives you two forms:
+Arcs and sectors are both angle-based, with two faces: draw an angle span with `<Arc>` / `<Sector>` (sugar), or bound a node with `shape={{ type:'sector', params }}`. See [Shapes](/core/components/shapes) for the full definition. Reach for sugar to draw an arc / sector line, and for `<Node shape>` to get a connectable sector / arc element.
 
-- **Draw an outline** — the sugar components `<Arc>` (open arc) / `<Sector>` (closed wedge) draw an angle span at a position, expanding to an underlying `<Path>`.
-- **A node with that boundary** — `<Node shape={{ type:'sector', params }}>` gives a node bounded by a sector / arc: it can hold content, be referenced by a connection, and snap endpoints to geometric anchors.
+## As a Path shape (sugar)
 
-In short: reach for `<Arc>` / `<Sector>` when you just need an arc / sector line, and for `<Node shape>` when you need a connectable sector / arc element.
+`<Arc>` (open arc) / `<Sector>` (closed wedge) draw an angle span at a position, expanding to an underlying `<Path>`. Useful for angle markers, ring fragments, and highlighted sectors.
 
-## Usage
+### Usage
 
 ```tsx
-import { Arc, Sector, Node } from '@retikz/react';
+import { Arc, Sector } from '@retikz/react';
 ```
 
 ```tsx
-{/* Draw an outline */}
 <Arc center={[0, 0]} radius={40} startAngle={0} endAngle={90} />
 <Sector center={[0, 0]} radius={40} startAngle={0} endAngle={90} fill="darkorange" />
-
-{/* A node with a sector boundary */}
-<Node shape={{ type: 'sector', params: { innerRadius: 0, outerRadius: 40, startAngle: 0, endAngle: 90 } }} />
 ```
-
-## Examples
 
 ### Arc
 
@@ -89,39 +82,7 @@ A filled sector's center is the cursor, so `center` can take a node id (or polar
 
 <ComponentPreview name="sector-transform" size="sm" />
 
-### As a node shape: shape="sector" / "arc"
-
-When you need a sector / arc **node** (referenceable by a connection, usable as an icon glyph) rather than a line, set `shape={{ type, params }}` on `<Node>`. These shapes are sized by the radii / angles in `params`, **independent of any text content**.
-
-| shape | params | Notes |
-| --- | --- | --- |
-| sector | `{ innerRadius, outerRadius, startAngle, endAngle }` | Ring wedge; `innerRadius:0` is a solid pie slice |
-| arc | `{ radius, startAngle, endAngle, close? }` | Single-radius arc; `close:true` closes it into a segment |
-
-<ComponentPreview name="node-arc-sector" size="md" />
-
-Besides the node's 9 standard anchors (`north` / `center` …), these shapes provide geometry-named anchors for precise connections via `{ id, anchor }`:
-
-- **sector**: `outer-arc-mid` / `inner-arc-mid` / `apex` / `centroid` / `start-edge-mid` / `end-edge-mid`
-- **arc**: `arc-mid` / `start` / `end` / `center`
-
-For the full `<Node>` props see [Node](/core/components/node/overview).
-
-## How it works
-
-> Optional for everyday use; revisit this section when angle direction or closing behavior looks surprising.
-
-### Angles follow screen coordinates
-
-The docs examples use screen coordinates: x points right and y points down. So `0` degrees points right, `90` points down, and `-90` points up.
-
-### Arc and Sector close differently
-
-`<Arc>` is open by default, so it does not create a fillable region on its own; `<Sector>` closes a region and can be filled directly. For a chord-closed or sector-closed partial circle, pass `<Arc close="chord" | "sector">`, or use the angle + `closed` forms on [Circle and Ellipse](../circle-ellipse) (all three share the same underlying path). `<Node shape="sector">` is a different route: it is not a Path but a node with a sector boundary that connections can snap to.
-
-## API Reference
-
-### As a shape: Arc / Sector
+### API Reference
 
 | Component | Combination | Meaning |
 | --- | --- | --- |
@@ -144,17 +105,58 @@ Shared props (forwarded to the underlying `<Path>`):
 | `marks` | `{ pos, mark }[]` | Arc / Sector | Mid-path direction markers along the path |
 | visual | `stroke` / `strokeWidth` / `dashPattern` / `arrow` / `fill` / `opacity` … | Arc / Sector | Forwards the full `<Path>` visual prop set |
 
-### As a node shape
+## As a node shape
+
+When you need a sector / arc **node** (referenceable by a connection, usable as an icon glyph) rather than a line, set `shape={{ type, params }}` on `<Node>`. These shapes are sized by the radii / angles in `params`, **independent of any text content**.
+
+### Usage
+
+```tsx
+import { Node } from '@retikz/react';
+```
+
+```tsx
+<Node shape={{ type: 'sector', params: { innerRadius: 0, outerRadius: 40, startAngle: 0, endAngle: 90 } }} />
+<Node shape={{ type: 'arc', params: { radius: 40, startAngle: 0, endAngle: 90 } }} />
+```
+
+### Examples
+
+| shape | params | Notes |
+| --- | --- | --- |
+| sector | `{ innerRadius, outerRadius, startAngle, endAngle }` | Ring wedge; `innerRadius:0` is a solid pie slice |
+| arc | `{ radius, startAngle, endAngle, close? }` | Single-radius arc; `close:true` closes into a segment |
+
+<ComponentPreview name="node-arc-sector" size="md" />
+
+Besides the node's 9 standard anchors (`north` / `center` …), these shapes provide geometry-named anchors for precise connections via `{ id, anchor }`:
+
+- **sector**: `outer-arc-mid` / `inner-arc-mid` / `apex` / `centroid` / `start-edge-mid` / `end-edge-mid`
+- **arc**: `arc-mid` / `start` / `end` / `center`
+
+For the full `<Node>` props see [Node](/core/components/node/overview).
+
+### API Reference
 
 | `shape` | params | Boundary / use |
 | --- | --- | --- |
 | `{ type: 'sector', params }` | `innerRadius` / `outerRadius` / `startAngle` / `endAngle` | Ring wedge (connectable; `innerRadius:0` is a solid slice) |
 | `{ type: 'arc', params }` | `radius` / `startAngle` / `endAngle` / `close?` | Arc glyph (connectable) |
 
-> For the full `<Node>` props see [Node](/core/components/node/overview).
+## How it works
+
+> Optional for everyday use; revisit when angle direction or closing behavior looks surprising.
+
+### Angles follow screen coordinates (both)
+
+The docs examples use screen coordinates: x points right and y points down. So `0` degrees points right, `90` points down, and `-90` points up. Both the sugar and the Node shape use this convention.
+
+### Arc and Sector close differently
+
+`<Arc>` is open by default, so it does not create a fillable region on its own; `<Sector>` closes a region and can be filled directly. For a chord-closed or sector-closed partial circle, pass `<Arc close="chord" | "sector">`, or use the angle + `closed` forms on [Circle / Ellipse](../circle-ellipse) (all three share the same underlying path). `<Node shape="sector">` is a different route: it is not a Path but a node with a sector boundary that connections can snap to.
 
 ## Related
 
 - [Node](/core/components/node/overview): full props when a shape is used as a node boundary
 - [Circle / Ellipse](../circle-ellipse): half circles, segments, and partial ellipses
-- [Shapes](/core/components/shapes): Shapes overview
+- [Shapes](/core/components/shapes): Shapes overview and full definition

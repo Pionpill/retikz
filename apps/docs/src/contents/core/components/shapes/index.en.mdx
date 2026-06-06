@@ -1,24 +1,29 @@
 ---
 title: Shapes
-description: Two ways to make the same geometric shape — draw an outline with sugar, or give a node that shape's boundary.
+description: retikz's geometric shapes — both the official sugar for drawing a Path and the boundary shapes a Node supports by default.
 ---
 
-This group covers the common geometric shapes: circle, ellipse, arc, sector, rectangle, polygon, and star. In retikz each shape has **two forms**, and every page puts them side by side:
+Shapes (circle, ellipse, arc, sector, rectangle, polygon, star) are a family of geometric primitives in retikz, with **two faces**:
 
-- **Draw an outline** — use a sugar component (`<Circle>` / `<Sector>` …) to draw a shape line at a position; it expands to an underlying `<Path>`. Pure graphics, not part of any connection.
-- **A node with that boundary** — use `<Node shape="circle">` to get a node bounded by that shape: it can hold text, be referenced by `<Path>` / `<Draw>` through its id, and have connection endpoints snap to its edge.
+- **As a Path shape (sugar)** — components like `<Circle>` and `<Sector>` are the official set of shape shortcuts; they draw a shape line at a position and expand to an underlying `<Path>`. They save you from hand-writing Path / Step for common shapes.
+- **As a Node shape** — `<Node shape="circle">` bounds a node by that shape: it holds text, is referenceable by `<Path>` / `<Draw>` through its id, and snaps connection endpoints to its edge.
 
-In short: reach for sugar when you just need a shape line, and for a node shape when you need a connectable, labelable shape element.
+Each shape page documents both faces as two self-contained halves: "As a Path shape" first, then "As a Node shape". In short: reach for sugar to draw a shape line, and for `<Node shape>` to get a connectable, labelable shape node.
+
+**Both sides are open to extension:**
+
+- For Node shapes beyond the built-ins (hexagon / cloud…) — register them with the [shape-registry](/core/reference/extending/shape-registry); the built-in circle / sector / star are its official implementations.
+- For path curve steps beyond the built-ins (parabola / sin-cos…) — use the [path-generator](/core/reference/extending/path-generator).
 
 ## What it contains
 
-| Shape | Outline (sugar) | Node boundary (Node shape) |
+| Shape | As a Path (sugar) | As a Node shape |
 | --- | --- | --- |
 | Circle / Ellipse | `<Circle>` · `<Ellipse>` | `shape="circle"` · `"ellipse"` |
-| Arc / Sector | `<Arc>` · `<Sector>` | `shape="arc"` · `"sector"` |
+| Arc / Sector | `<Arc>` · `<Sector>` | `shape="sector"` · `"arc"` (params) |
 | Rectangle | `<Rectangle>` | default / `shape="rectangle"` |
 | Polygon | `<RegularPolygon>` | `shape="polygon"` · `"diamond"` |
-| Star | `<Star>` | `shape="star"` |
+| Star | `<Star>` | `shape="star"` (params) |
 
 > Background grids and reference lines — **a field of regular lines** rather than a single closed shape — are not in this group; see `<Grid>` under [Helpers](/core/components/helpers).
 
