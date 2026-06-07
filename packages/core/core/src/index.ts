@@ -147,6 +147,7 @@ export {
   KeyframeSchema,
   TriggerSchema,
   EasingSchema,
+  OriginSchema,
 } from './ir';
 export type { BoundaryKeyword, IRBoundary } from './ir';
 export type {
@@ -159,6 +160,7 @@ export type {
   IRAnimationTrack,
   IRKeyframe,
   IRAnimationTrigger,
+  IRAnimationOrigin,
 } from './ir';
 
 // Primitive (Scene 数据模型)

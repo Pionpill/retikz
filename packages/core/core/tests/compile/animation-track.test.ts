@@ -29,6 +29,8 @@ const allOfType = (prims: ReadonlyArray<ScenePrimitive>, type: ScenePrimitive['t
 const FADE: IRAnimationTrack = { property: 'opacity', keyframes: [{ at: 0, value: 0 }, { at: 1, value: 1 }], duration: 400, trigger: 'load' };
 const SPIN: IRAnimationTrack = { property: 'rotate', keyframes: [{ at: 0, value: 0 }, { at: 1, value: 360 }], duration: 1000, iterations: 'infinite', easing: 'linear' };
 const CAMERA: IRAnimationTrack = { property: 'viewBox', keyframes: [{ at: 0, value: [0, 0, 100, 100] }, { at: 1, value: [10, 10, 50, 50] }], duration: 500, easing: 'ease-in-out' };
+/** 柱子从基线长出：scaleY 0→1，支点底边中点 */
+const GROW_UP: IRAnimationTrack = { property: 'scaleY', keyframes: [{ at: 0, value: 0 }, { at: 1, value: 1 }], duration: 500, origin: 'south', easing: 'ease-out' };
 
 describe('Happy path：三载体 + scene 根 stamp + 自定义透传', () => {
   it('node track → 平铺 shape 图元带 animations', () => {
@@ -75,6 +77,27 @@ describe('Happy path：三载体 + scene 根 stamp + 自定义透传', () => {
     expect(AnimationTrackSchema.safeParse(objectValued).success).toBe(true);
     const prims = compileToScene(scene([{ type: 'node', id: 'a', position: [0, 0], animations: [custom, objectValued] }]), silent).primitives;
     for (const rect of allOfType(prims, 'rect')) expect(rect.animations).toEqual([custom, objectValued]);
+  });
+});
+
+describe('非均匀缩放 scaleX / scaleY + origin 支点', () => {
+  it('scaleY + origin:"south" track → 图元原样透传（含 origin）', () => {
+    const prims = compileToScene(scene([{ type: 'node', id: 'bar', position: [0, 0], animations: [GROW_UP] }]), silent).primitives;
+    const rects = allOfType(prims, 'rect');
+    expect(rects.length).toBeGreaterThanOrEqual(1);
+    for (const rect of rects) expect(rect.animations).toEqual([GROW_UP]);
+  });
+
+  it('scaleX / scaleY value 须 number；origin 接受命名 anchor 或 [x,y]，拒非法', () => {
+    expect(AnimationTrackSchema.safeParse({ property: 'scaleX', keyframes: [{ at: 0, value: 0 }, { at: 1, value: 1 }], duration: 1 }).success).toBe(true);
+    expect(AnimationTrackSchema.safeParse({ property: 'scaleY', keyframes: [{ at: 0, value: 'x' }], duration: 1 }).success).toBe(false);
+    expect(AnimationTrackSchema.safeParse({ ...GROW_UP, origin: [2, 3] }).success).toBe(true);
+    expect(AnimationTrackSchema.safeParse({ ...GROW_UP, origin: '' }).success).toBe(false);
+    expect(AnimationTrackSchema.safeParse({ ...GROW_UP, origin: [1, 2, 3] }).success).toBe(false);
+  });
+
+  it('origin 在非 transform 通道上合法（语义由 renderer 忽略，schema 不拒）', () => {
+    expect(AnimationTrackSchema.safeParse({ ...FADE, origin: 'center' }).success).toBe(true);
   });
 });
 
@@ -165,7 +188,7 @@ describe('交互', () => {
   it('round-trip：含三载体 + scene 根 animations 的 IR → JSON → parse → 等价', () => {
     const ir = scene(
       [
-        { type: 'node', id: 'a', position: [0, 0], animations: [FADE] },
+        { type: 'node', id: 'a', position: [0, 0], animations: [FADE, GROW_UP] },
         { type: 'path', id: 'p', animations: [{ property: 'pathDraw', keyframes: [{ at: 0, value: 0 }, { at: 1, value: 1 }], duration: 600 }], children: [{ type: 'step', kind: 'move', to: [0, 0] }, { type: 'step', kind: 'line', to: [10, 0] }] },
         { type: 'scope', animations: [SPIN], children: [{ type: 'node', id: 'b', position: [5, 5] }] },
       ],

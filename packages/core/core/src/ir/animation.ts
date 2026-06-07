@@ -5,7 +5,9 @@ import { JsonValueSchema } from './json';
 /**
  * 可动画属性通道（renderer 无关；DrawWay 风格 const + 派生类型，裸字面量 'opacity' 仍第一形态）
  * @description `viewBox` 仅在 scene 根合法（镜头），元素级 viewBox track 由 compile / render 拒；
- *   `pathDraw` 是 0..1 路径画出进度。各后端按通道翻译：SVG WAAPI/CSS、Canvas rAF 几何 lerp。
+ *   `pathDraw` 是 0..1 路径画出进度；`scaleX` / `scaleY` 是非均匀缩放（柱状图从基线长出等），`scale` 是均匀缩放；
+ *   transform 通道（scale / scaleX / scaleY / rotate）的支点见 track 级 `origin`，缺省几何中心。
+ *   各后端按通道翻译：SVG WAAPI/CSS、Canvas rAF 几何 lerp。
  */
 export const AnimationProperty = {
   Opacity: 'opacity',
@@ -16,6 +18,8 @@ export const AnimationProperty = {
   TranslateY: 'translateY',
   Rotate: 'rotate',
   Scale: 'scale',
+  ScaleX: 'scaleX',
+  ScaleY: 'scaleY',
   PathDraw: 'pathDraw',
   ViewBox: 'viewBox',
 } as const;
@@ -101,13 +105,29 @@ export const TriggerSchema = z
     'When playback starts: "load" (on render, SSR-friendly) / "visible" (runtime IntersectionObserver) / "manual" (runtime API) / { onEvent } (bridge to hydration; only the event name is stored, never a callback). Defaults to "load".',
   );
 
+export const OriginSchema = z
+  .union([
+    z
+      .string()
+      .min(1)
+      .describe(
+        'Named transform pivot reusing the node anchor vocabulary (center / north / south / east / west / north-east / ... / south-west), resolved against the element boundary by the renderer.',
+      ),
+    z
+      .tuple([z.number().finite(), z.number().finite()])
+      .describe('Explicit pivot in the element local coordinate space [x, y].'),
+  ])
+  .describe(
+    'Transform pivot for scale / scaleX / scaleY / rotate channels: a named anchor or an explicit local-space point. Ignored by non-transform channels. Defaults to the element geometric center.',
+  );
+
 export const AnimationTrackSchema = z
   .object({
     property: z
       .string()
       .min(1)
       .describe(
-        'Renderer-agnostic animated channel. Built-in: opacity / fill / stroke / strokeWidth / translateX / translateY / rotate / scale / pathDraw (0..1 reveal) / viewBox (scene-root camera only). Any other string is a custom channel that passes through to a renderer-registered interpolator. `viewBox` is valid only at the scene root (enforced at compile).',
+        'Renderer-agnostic animated channel. Built-in: opacity / fill / stroke / strokeWidth / translateX / translateY / rotate / scale (uniform) / scaleX / scaleY (non-uniform) / pathDraw (0..1 reveal) / viewBox (scene-root camera only). Any other string is a custom channel that passes through to a renderer-registered interpolator. `viewBox` is valid only at the scene root (enforced at compile).',
       ),
     keyframes: z
       .array(KeyframeSchema)
@@ -147,6 +167,9 @@ export const AnimationTrackSchema = z
         'Value held outside the active interval (WAAPI / CSS fill-mode). Defaults to "forwards" so the element settles at its base (end) state, matching the static-settled invariant.',
       ),
     trigger: TriggerSchema.optional().describe('Playback trigger; defaults to "load".'),
+    origin: OriginSchema.optional().describe(
+      'Transform pivot for scale / scaleX / scaleY / rotate channels; ignored by other channels. Defaults to the element geometric center.',
+    ),
   })
   // 内置 property 的 keyframe value 类型校验；自定义 property（非内置名）value 宽松（任意 JSON），交 renderer 注册的插值器
   .superRefine((track, ctx) => {
@@ -157,6 +180,8 @@ export const AnimationTrackSchema = z
       AnimationProperty.TranslateY,
       AnimationProperty.Rotate,
       AnimationProperty.Scale,
+      AnimationProperty.ScaleX,
+      AnimationProperty.ScaleY,
       AnimationProperty.PathDraw,
     ]);
     track.keyframes.forEach((frame, index) => {
@@ -185,5 +210,7 @@ export const AnimationTrackSchema = z
 export type IRAnimationTrack = z.infer<typeof AnimationTrackSchema>;
 /** 单个动画关键帧 */
 export type IRKeyframe = z.infer<typeof KeyframeSchema>;
+/** transform 支点（命名 anchor ∪ 局部坐标点；scale / scaleX / scaleY / rotate 用，缺省几何中心） */
+export type IRAnimationOrigin = z.infer<typeof OriginSchema>;
 /** 动画播放触发器（load / visible / manual / { onEvent }） */
 export type IRAnimationTrigger = z.infer<typeof TriggerSchema>;
