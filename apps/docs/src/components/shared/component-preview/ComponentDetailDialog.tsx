@@ -1,5 +1,5 @@
 import { X } from 'lucide-react';
-import { type FC, type ReactNode } from 'react';
+import { type FC, Fragment, type ReactNode, type Ref, useRef, useState } from 'react';
 
 import { Dialog, DialogClose, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable';
@@ -8,7 +8,17 @@ import { cn } from '@/lib/utils';
 import { HighlightedCode } from '../highlight-code';
 import type { ComponentRenderSource } from './ComponentRender';
 import { CopyButton, RendererModeButton, SourceViewBar, ToolbarIconButton } from './_parts';
-import { type AlignKey, type RendererMode, alignClass, filterDiffByMode } from './_shared';
+import {
+  type AlignKey,
+  type PreviewAction,
+  type PreviewActionContext,
+  type PreviewOverlay,
+  type RendererMode,
+  alignClass,
+  filterDiffByMode,
+} from './_shared';
+import { ANIM_PAUSE_ID, buildAnimationActions } from './animationActions';
+import { PreviewActionBar } from './PreviewActionBar';
 import { DemoRenderer } from './DemoRenderer';
 import { useSourceViews } from './useSourceViews';
 import { usePanZoom } from './usePanZoom';
@@ -28,6 +38,12 @@ export type ComponentDetailDialogProps = {
   toggleRendererMode: () => void;
   /** 交互式 demo：真渲染 `<Component/>`，隐藏 svg/canvas 切换 */
   interactive?: boolean;
+  /** demo 含动画：装配内置动画工具（重播 / 播放暂停 / 停止） */
+  animated?: boolean;
+  /** 自定义动作按钮 */
+  actions?: Array<PreviewAction>;
+  /** 渲染区内常驻浮层 */
+  overlays?: Array<PreviewOverlay>;
   /** 当前 React 源码文件序号，与卡片内源码面板共享 */
   sourceFileIndex: number;
   /** 切换 React 源码文件时同步回卡片层 */
@@ -48,10 +64,14 @@ const DOT_PATTERN_STYLE: React.CSSProperties = {
 type DialogDemoPaneProps = {
   align: AlignKey;
   children: ReactNode;
+  /** 渲染区 DOM ref（供动画工具 getAnimations） */
+  paneRef?: Ref<HTMLDivElement>;
+  /** 左上角动作栏（重播 / 播放暂停 / 停止 …），渲染在 relative 容器内 */
+  actionBar?: ReactNode;
 };
 
 const DialogDemoPane: FC<DialogDemoPaneProps> = props => {
-  const { align, children } = props;
+  const { align, children, paneRef, actionBar } = props;
   const { isDragging, transformStyle, beginDrag } = usePanZoom();
   const dragCursor = isDragging ? 'cursor-grabbing' : 'cursor-grab';
   return (
@@ -65,7 +85,9 @@ const DialogDemoPane: FC<DialogDemoPaneProps> = props => {
       onMouseDown={beginDrag(true)}
       onTouchStart={beginDrag(true)}
     >
+      {actionBar}
       <div
+        ref={paneRef}
         className={cn(
           'flex items-center justify-center [&>canvas]:max-h-full [&>canvas]:max-w-full [&>svg]:max-h-full [&>svg]:max-w-full',
           !isDragging && 'transition-transform duration-150',
@@ -84,11 +106,37 @@ const DialogDemoPane: FC<DialogDemoPaneProps> = props => {
  *   仅一个视图存在时不出 React/IR toggle；两视图都缺（如 hideCode demo）时退化为单 panel 仅渲染区
  */
 export const ComponentDetailDialog: FC<ComponentDetailDialogProps> = props => {
-  const { open, onOpenChange, name, Component, source, align, rendererMode, toggleRendererMode, interactive, sourceFileIndex, onSourceFileIndexChange } = props;
+  const { open, onOpenChange, name, Component, source, align, rendererMode, toggleRendererMode, interactive, animated = false, actions, overlays, sourceFileIndex, onSourceFileIndexChange } = props;
   // 视图 / 文件 / 复制走共享 hook（与卡片同源推导）；view 状态本 Dialog 独立、fileIndex 经 prop 与卡片共享
   const { views, view, setView, files, activeFileIndex, activeFile, render: activeRender, copied, handleCopy } =
     useSourceViews(source, sourceFileIndex);
   const hasCode = views.length > 0;
+
+  // 动作 / 浮层（Dialog 独立的 replay nonce / toolState / renderPane ref）
+  const [replayNonce, setReplayNonce] = useState(0);
+  const [toolState, setToolState] = useState<Record<string, boolean>>({});
+  const paneRef = useRef<HTMLDivElement>(null);
+  const actionCtx: PreviewActionContext = {
+    replay: () => setReplayNonce(n => n + 1),
+    rendererMode,
+    get renderPane() {
+      return paneRef.current;
+    },
+    active: id => toolState[id] ?? false,
+    setActive: (id, on) => setToolState(prev => ({ ...prev, [id]: on ?? !prev[id] })),
+  };
+  const allActions: Array<PreviewAction> = [
+    ...(animated ? buildAnimationActions(toolState[ANIM_PAUSE_ID] ?? false) : []),
+    ...(actions ?? []),
+  ];
+  const actionBar = <PreviewActionBar actions={allActions} ctx={actionCtx} alwaysVisible />;
+  const overlayNodes = (overlays ?? []).map(o => <Fragment key={o.id}>{o.render(actionCtx)}</Fragment>);
+  // 渲染内容包 keyed Fragment：重播时重挂
+  const demoContent = (
+    <Fragment key={replayNonce}>
+      {activeRender ? activeRender(rendererMode) : <DemoRenderer Component={Component} rendererMode={rendererMode} interactive={interactive} />}
+    </Fragment>
+  );
 
   const activeCode = activeFile?.code ?? '';
   const activeLang = activeFile?.lang ?? 'tsx';
@@ -119,12 +167,8 @@ export const ComponentDetailDialog: FC<ComponentDetailDialogProps> = props => {
         {hasCode ? (
           <ResizablePanelGroup direction="horizontal" className="min-h-0 flex-1">
             <ResizablePanel defaultSize={60} minSize={30} maxSize={85}>
-              <DialogDemoPane align={align}>
-                {activeRender ? (
-                  activeRender(rendererMode)
-                ) : (
-                  <DemoRenderer Component={Component} rendererMode={rendererMode} interactive={interactive} />
-                )}
+              <DialogDemoPane align={align} paneRef={paneRef} actionBar={<>{actionBar}{overlayNodes}</>}>
+                {demoContent}
               </DialogDemoPane>
             </ResizablePanel>
             <ResizableHandle withHandle />
@@ -157,8 +201,8 @@ export const ComponentDetailDialog: FC<ComponentDetailDialogProps> = props => {
           </ResizablePanelGroup>
         ) : (
           <div className="min-h-0 flex-1">
-            <DialogDemoPane align={align}>
-              <DemoRenderer Component={Component} rendererMode={rendererMode} />
+            <DialogDemoPane align={align} paneRef={paneRef} actionBar={<>{actionBar}{overlayNodes}</>}>
+              {demoContent}
             </DialogDemoPane>
           </div>
         )}

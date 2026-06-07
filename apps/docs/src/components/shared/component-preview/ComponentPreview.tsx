@@ -14,6 +14,8 @@ import {
   type AlignKey,
   type ComponentRenderSource,
   type ComponentSourceFile,
+  type PreviewAction,
+  type PreviewOverlay,
   type RendererMode,
   type SizeKey,
   type SourceLang,
@@ -150,6 +152,18 @@ const buildPreviewIR = (Component: FC): PreviewIR => {
 /** IR 是否含 Tier 2 composite（带 namespace）顶层节点——含则无法仅凭 IR 独立渲染（外部数据不在 IR 内），IR 视图复用 React 渲染 */
 const irHasComposite = (ir: IR): boolean => ir.children.some(child => 'namespace' in child);
 
+/** 节点（含 scope 递归子树）是否带 animations */
+const nodeHasAnimations = (node: unknown): boolean => {
+  if (typeof node !== 'object' || node === null) return false;
+  const record = node as { animations?: unknown; children?: unknown };
+  if (Array.isArray(record.animations) && record.animations.length > 0) return true;
+  return Array.isArray(record.children) && record.children.some(nodeHasAnimations);
+};
+
+/** IR 是否含任意动画（scene 根镜头或任意元素）——据此自动给预览卡装配动画工具（重播 / 播放暂停 / 停止） */
+const irHasAnimations = (ir: IR): boolean =>
+  (Array.isArray(ir.animations) && ir.animations.length > 0) || ir.children.some(nodeHasAnimations);
+
 /** 由文件名后缀推语法高亮语言 */
 const langOfFilename = (filename: string): SourceLang =>
   filename.endsWith('.json') ? 'json' : filename.endsWith('.tsx') ? 'tsx' : 'ts';
@@ -193,6 +207,15 @@ export type ComponentPreviewProps = {
    *   并跳过 IR / Vanilla 视图（异步数据无法静态求值），代码面板只保留 React 源码（+ `sourceFiles`）
    */
   interactive?: boolean;
+  /**
+   * 强制显 / 隐内置动画工具（重播 / 播放暂停 / 停止）；省略时按 IR 是否含 animations 自动判定
+   * @description interactive / hideCode demo 无法静态求 IR、自动判定不到，需要工具时显式传 `replayable`
+   */
+  replayable?: boolean;
+  /** 自定义动作按钮（渲染在渲染区左上角动作栏，追加在内置工具后） */
+  actions?: Array<PreviewAction>;
+  /** 渲染区内常驻浮层（如未来的 FPS 监视器面板） */
+  overlays?: Array<PreviewOverlay>;
 };
 
 /**
@@ -200,7 +223,7 @@ export type ComponentPreviewProps = {
  * @description 只负责 demo 文件 glob 加载 + IR 派生 + "Demo not found" 兜底；卡片 / pan&zoom / 代码面板 / 放大 dialog 全部走 `ComponentRender` 核心
  */
 export const ComponentPreview: FC<ComponentPreviewProps> = props => {
-  const { name, align = 'center', size = 'md', componentClassName, hideCode = false, sourceFiles, diffFrom, interactive = false } =
+  const { name, align = 'center', size = 'md', componentClassName, hideCode = false, sourceFiles, diffFrom, interactive = false, replayable, actions, overlays } =
     props;
   const loc = useDocLocation();
   const { i18n } = useTranslation();
@@ -343,6 +366,9 @@ export const ComponentPreview: FC<ComponentPreviewProps> = props => {
           : {}),
       };
 
+  // 含动画 → 自动装配内置动画工具（重播 / 播放暂停 / 停止）；replayable 显式覆盖（interactive / hideCode 无 IR 时用）
+  const animated = replayable ?? (previewIr !== null && irHasAnimations(previewIr.ir));
+
   return (
     <ComponentRender
       name={name}
@@ -352,6 +378,9 @@ export const ComponentPreview: FC<ComponentPreviewProps> = props => {
       size={size}
       componentClassName={componentClassName}
       interactive={interactive}
+      animated={animated}
+      actions={actions}
+      overlays={overlays}
     />
   );
 };

@@ -1,5 +1,5 @@
 import { Ban, BotMessageSquare, ChevronsDownUp, ChevronsUpDown, Diff, Minus, Plus, X } from 'lucide-react';
-import { type FC, useRef, useState } from 'react';
+import { type FC, Fragment, type ReactNode, useRef, useState } from 'react';
 
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
@@ -14,6 +14,9 @@ import {
   type AlignKey,
   type ComponentRenderSource,
   type DiffMode,
+  type PreviewAction,
+  type PreviewActionContext,
+  type PreviewOverlay,
   type RendererMode,
   type SizeKey,
   type UnifiedDiff,
@@ -21,6 +24,8 @@ import {
   filterDiffByMode,
   sizeClass,
 } from './_shared';
+import { ANIM_PAUSE_ID, buildAnimationActions } from './animationActions';
+import { PreviewActionBar } from './PreviewActionBar';
 import { ComponentDetailDialog } from './ComponentDetailDialog';
 import { DemoRenderer } from './DemoRenderer';
 import { PanZoomToolbar } from './PanZoomToolbar';
@@ -81,6 +86,12 @@ export type ComponentRenderProps = {
   showAskAi?: boolean;
   /** 交互式 demo（含 hooks / 异步）：真渲染 `<Component/>`，隐藏 svg/canvas 切换；IR / Vanilla 视图由调用方置空后自动消失 */
   interactive?: boolean;
+  /** demo 含动画：自动装配内置动画工具（重播 / 播放暂停 / 停止）到左上角动作栏 */
+  animated?: boolean;
+  /** 自定义动作按钮（追加在内置工具之后，渲染在左上角动作栏） */
+  actions?: Array<PreviewAction>;
+  /** 渲染区内常驻浮层（如未来的 FPS 监视器面板） */
+  overlays?: Array<PreviewOverlay>;
 };
 
 /**
@@ -88,7 +99,7 @@ export type ComponentRenderProps = {
  * @description 不接触 demo 文件加载、AST 解析或 IR 派生——那些由调用方（`ComponentPreview` 走 glob、`RetikzPreview` 走 source string）准备好后喂进来
  */
 export const ComponentRender: FC<ComponentRenderProps> = props => {
-  const { name, Component, source, align = 'center', size = 'md', componentClassName, showAskAi = true, interactive } =
+  const { name, Component, source, align = 'center', size = 'md', componentClassName, showAskAi = true, interactive, animated = false, actions, overlays } =
     props;
   // 局部状态用 `boolean | undefined`：undefined 跟随全局默认；用户单卡操作过一次后本地选择胜出
   const [localIsCodeVisible, setLocalIsCodeVisible] = useState<boolean | undefined>(undefined);
@@ -111,6 +122,10 @@ export const ComponentRender: FC<ComponentRenderProps> = props => {
   // 工具条 pinned：移动端没 hover，靠 tap preview 区域 toggle
   const [toolbarPinned, setToolbarPinned] = useState(false);
   const [isMaximized, setIsMaximized] = useState(false);
+  // 重播：bump nonce → keyed Fragment 重挂渲染子树（CSS @keyframes / canvas rAF / WAAPI 重置）
+  const [replayNonce, setReplayNonce] = useState(0);
+  // per-card 工具开关态（播放暂停、未来性能监视器等 toggle 类工具）
+  const [toolState, setToolState] = useState<Record<string, boolean>>({});
   const { transform, isDragging, panBy, zoomBy, resetTransform, isTransformed, transformStyle, beginDrag } =
     usePanZoom();
   // outer card ref：Ask AI 时反查最近前置 heading 拼 prompt 用
@@ -240,6 +255,21 @@ export const ComponentRender: FC<ComponentRenderProps> = props => {
 
   const cardDragCursor = dragEnabled ? (isDragging ? 'cursor-grabbing' : 'cursor-grab') : '';
 
+  // 动作 / 浮层共享上下文：每次渲染重建（active 读当前 toolState、renderPane 用 getter 取最新 ref）
+  const actionCtx: PreviewActionContext = {
+    replay: () => setReplayNonce(n => n + 1),
+    rendererMode,
+    get renderPane() {
+      return renderPaneRef.current;
+    },
+    active: id => toolState[id] ?? false,
+    setActive: (id, on) => setToolState(prev => ({ ...prev, [id]: on ?? !prev[id] })),
+  };
+  // 有效动作 = 内置工具（含动画时的重播/播放暂停/停止）∪ 自定义 actions
+  const builtinActions = animated ? buildAnimationActions(toolState[ANIM_PAUSE_ID] ?? false) : [];
+  const allActions: Array<PreviewAction> = [...builtinActions, ...(actions ?? [])];
+  const overlayNodes: Array<ReactNode> = (overlays ?? []).map(o => <Fragment key={o.id}>{o.render(actionCtx)}</Fragment>);
+
   return (
     <div ref={containerRef} className="my-6 overflow-hidden rounded-xl border">
       <div
@@ -265,12 +295,16 @@ export const ComponentRender: FC<ComponentRenderProps> = props => {
           )}
           style={{ transform: transformStyle }}
         >
-          {activeRender ? (
-            activeRender(rendererMode)
-          ) : (
-            <DemoRenderer Component={Component} rendererMode={rendererMode} interactive={interactive} />
-          )}
+          <Fragment key={replayNonce}>
+            {activeRender ? (
+              activeRender(rendererMode)
+            ) : (
+              <DemoRenderer Component={Component} rendererMode={rendererMode} interactive={interactive} />
+            )}
+          </Fragment>
         </div>
+        <PreviewActionBar actions={allActions} ctx={actionCtx} pinned={toolbarPinned} />
+        {overlayNodes}
         <PanZoomToolbar
           transform={transform}
           isTransformed={isTransformed}
@@ -418,6 +452,9 @@ export const ComponentRender: FC<ComponentRenderProps> = props => {
         rendererMode={rendererMode}
         toggleRendererMode={toggleRendererMode}
         interactive={interactive}
+        animated={animated}
+        actions={actions}
+        overlays={overlays}
         sourceFileIndex={activeFileIndex}
         onSourceFileIndexChange={setSourceFileIndex}
       />
