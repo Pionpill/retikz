@@ -11,7 +11,7 @@ import {
   scaleUtc,
 } from 'd3-scale';
 import { schemeCategory10 } from 'd3-scale-chromatic';
-import { type BandScale, type FieldType, type OrdinalScale, PlotFieldType, PlotScale, type PointScale, type ScalarValue, type Scale, type ScaleType, type TimeScale } from '../ir';
+import { type BandScale, type FieldDef, type FieldType, type OrdinalScale, PlotFieldType, PlotScale, type PointScale, type ScalarValue, type Scale, type ScaleType, type TimeScale } from '../ir';
 import { isFiniteNumber } from './field';
 import { isIsoDateString } from './infer';
 
@@ -98,6 +98,28 @@ export const inferCategoryDomain = (values: Array<unknown>): Array<string | numb
     }
   }
   return out;
+};
+
+/** FieldDef.order 的取值类型（单一真源派生自 schema，避免手写第二份） */
+export type CategoryOrder = NonNullable<FieldDef['order']>;
+
+/**
+ * 按 order 计算有序的分类域：在 inferCategoryDomain 去重保序基础上再排
+ * @description order='data'/undefined → 现状出现序去重；'ascending'/'descending' → 全数值按数值比、否则统一 String localeCompare（descending 反序）；
+ *   Array → 以数组为类别序，数据出现但不在数组里的去重类别按出现序追加末尾（数组里有、数据无的值保留作空类别）。
+ */
+export const orderedCategoryDomain = (values: Array<unknown>, order: CategoryOrder | undefined): Array<string | number> => {
+  const deduped = inferCategoryDomain(values);
+  if (order === undefined || order === 'data') return deduped;
+  if (order === 'ascending' || order === 'descending') {
+    const allNumber = deduped.every(value => typeof value === 'number');
+    const sorted = [...deduped].sort((a, b) => (allNumber ? (a as number) - (b as number) : String(a).localeCompare(String(b))));
+    return order === 'descending' ? sorted.reverse() : sorted;
+  }
+  // Array：数组序优先；数据出现但不在数组里的类别按出现序追加末尾
+  const inArray = new Set<string | number>(order);
+  const appended = deduped.filter(value => !inArray.has(value));
+  return [...order, ...appended];
 };
 
 /** 建分类 band scale（d3 scaleBand）；domain 缺省按数据序去重推断 */

@@ -1,13 +1,13 @@
 import { type CompositeDefinition, type IRChild, type IRScope, defineComposite } from '@retikz/core';
 import type { ZodType } from 'zod';
-import { type Channel, type ExternalDatasets, type ExternalRow, type FieldType, type Guide, type Mark, type OrdinalScale, PlotCoordinate, PlotMark, PlotScale, type PlotSpec, PlotSpecSchema, type Scale } from '../ir';
+import { type Channel, type ExternalDatasets, type ExternalRow, type FieldType, type Guide, type Mark, type OrdinalScale, PlotCoordinate, PlotFieldType, PlotMark, PlotScale, type PlotSpec, PlotSpecSchema, type Scale } from '../ir';
 import { channelValue, resolveFieldPath } from './field';
 import { type GuideContext, lowerGuide } from './guide';
 import { DEFAULT_FONT_SIZE, type Margins, type Rect, computePlotArea, computePolarFrame } from './layout';
 import { type ColorOf, lowerMark } from './mark';
 import { type CoordinateFrame, createCartesianFrame, createPolarFrame } from './project';
 import { type DatumIdRegistrar, type ProvenanceContext, createDatumIdRegistrar, rootMeta, tagSourceIndex } from './provenance';
-import { type TickSet, assertScaleFieldCompatible, deriveScale, resolveOrdinalScale, resolvePositionScale } from './scale';
+import { type CategoryOrder, type TickSet, assertScaleFieldCompatible, deriveScale, orderedCategoryDomain, resolveOrdinalScale, resolvePositionScale } from './scale';
 import { collectFormatFields, normalizeRows, validateBoundData } from './coerce';
 import { applyTransforms } from './transform';
 import { type ResolveField, applyFieldResolver } from './resolve';
@@ -176,23 +176,64 @@ export const resolveFrame = (params: ResolveFrameParams): ResolvedFrame => {
     return types;
   };
 
+  // 字段名 → order（来自 data.model，与 fieldTypes 同源）；缺 model / 未声明 order → 无条目
+  const fieldOrders = new Map<string, CategoryOrder>();
+  for (const field of node.data.model ?? []) {
+    if (field.order !== undefined) fieldOrders.set(field.name, field.order);
+  }
+
+  /**
+   * 解析某 role 的有效 order（解析 + 三道判定的两道：非分类 throw / 冲突 throw）
+   * @description 收集该 role 各绑定字段的非默认 order（!=='data'）：非分类字段配 order → throw；
+   *   ≥2 个不同非默认 order → throw；恰好 1 个 → 返回它；0 个 → undefined（保持现状出现序）。
+   */
+  const resolveRoleOrder = (role: string, pick: (mark: Mark) => Channel | undefined): CategoryOrder | undefined => {
+    const found: Array<CategoryOrder> = [];
+    for (const mark of node.marks) {
+      const channel = pick(mark);
+      if (channel?.field === undefined) continue;
+      const order = fieldOrders.get(channel.field);
+      if (order === undefined || order === 'data') continue;
+      const type = fieldTypes.get(channel.field);
+      if (type !== undefined && type !== PlotFieldType.Categorical) {
+        throw new Error(`lowerPlots: field "${channel.field}" has order but its type is ${type}, not categorical; order only applies to categorical fields`);
+      }
+      found.push(order);
+    }
+    if (found.length === 0) return undefined;
+    const distinct = [...new Set(found.map(order => JSON.stringify(order)))];
+    if (distinct.length > 1) {
+      throw new Error(`lowerPlots: coordinate.${role} binds fields with conflicting orders; give the scale an explicit domain`);
+    }
+    return found[0];
+  };
+
   // 解析角色 scale（ADR-03）：显式绑定 → 查表（未声明仍抛，typo 守卫）+ 对该 role **全部**字段做兼容校验；
   //   省略 → 按字段类型派生（要求该 role 字段类型一致，混类型 fail-loud）。兼容校验只对「声明 model 的类型」生效。
-  const resolveScaleForRole = (role: 'x' | 'y' | 'angle' | 'radius', scaleName: string | undefined, pick: (mark: Mark) => Channel | undefined): Scale => {
+  const resolveScaleForRole = (role: 'x' | 'y' | 'angle' | 'radius', scaleName: string | undefined, pick: (mark: Mark) => Channel | undefined, values: Array<unknown>): Scale => {
     const types = roleFieldTypes(pick);
+    // 解析该 role 有效 order（含「非分类配 order」「冲突 order」两道 fail-loud），无论 scale 显式与否都先校验
+    const order = resolveRoleOrder(role, pick);
+    let def: Scale;
     if (scaleName !== undefined) {
-      const def = scaleByName.get(scaleName);
-      if (!def) throw new Error(`lowerPlots: coordinate.${role} references unknown scale "${scaleName}"`);
+      const found = scaleByName.get(scaleName);
+      if (!found) throw new Error(`lowerPlots: coordinate.${role} references unknown scale "${scaleName}"`);
       if (node.data.model !== undefined) {
-        for (const type of types) assertScaleFieldCompatible(role, def.type, type, scaleName);
+        for (const type of types) assertScaleFieldCompatible(role, found.type, type, scaleName);
       }
-      return def;
+      def = found;
+    } else {
+      const distinct = [...new Set(types)];
+      if (distinct.length > 1) {
+        throw new Error(`lowerPlots: coordinate.${role} omitted but its bound fields have mixed types [${distinct.join(', ')}]; declare an explicit scale`);
+      }
+      def = deriveScale(distinct[0], `__${role}`);
     }
-    const distinct = [...new Set(types)];
-    if (distinct.length > 1) {
-      throw new Error(`lowerPlots: coordinate.${role} omitted but its bound fields have mixed types [${distinct.join(', ')}]; declare an explicit scale`);
+    // order 注入：仅当字段有非默认 order 且该 scale 是 band/point 且 domain 未显式给（显式 domain 优先、压过 order）
+    if (order !== undefined && (def.type === PlotScale.Band || def.type === PlotScale.Point) && def.domain === undefined) {
+      return { ...def, domain: orderedCategoryDomain(values, order) };
     }
-    return deriveScale(distinct[0], `__${role}`);
+    return def;
   };
 
   // 按坐标系解析出 CoordinateFrame（一次性、mark / guide 共用）+ guide 层。
@@ -202,12 +243,12 @@ export const resolveFrame = (params: ResolveFrameParams): ResolvedFrame => {
   const axisLayers: Array<IRScope> = [];
 
   if (coordinate.type === PlotCoordinate.Polar2D) {
-    // 笛卡尔下出现 angle/radius 通道才是误用；polar 下复用 x/y 合法。此处构造极坐标帧。
-    const angleScaleDef = resolveScaleForRole('angle', coordinate.angle, xChannelOf);
-    const radiusScaleDef = resolveScaleForRole('radius', coordinate.radius, yChannelOf);
     // 角向值 ← x、径向值 ← y（坐标系把 x/y 重解释为 angle/radius，正中 (i) 投影整形）
     const angleValues = collectValues(xChannelOf, false, false, true);
     const radiusValues = collectValues(yChannelOf, true, true);
+    // 笛卡尔下出现 angle/radius 通道才是误用；polar 下复用 x/y 合法。此处构造极坐标帧。
+    const angleScaleDef = resolveScaleForRole('angle', coordinate.angle, xChannelOf, angleValues);
+    const radiusScaleDef = resolveScaleForRole('radius', coordinate.radius, yChannelOf, radiusValues);
 
     // guide 维度角色化：angle / x → angular（primary）、radius / y → radial（secondary）；一维一轴
     const guides = node.guides ?? [];
@@ -263,10 +304,12 @@ export const resolveFrame = (params: ResolveFrameParams): ResolvedFrame => {
     }
   } else {
     // cartesian2D：x/y 角色绑 x/y scale
-    const xScaleDef = resolveScaleForRole('x', coordinate.x, xChannelOf);
-    const yScaleDef = resolveScaleForRole('y', coordinate.y, yChannelOf);
-    const xScale = resolvePositionScale(xScaleDef, collectValues(xChannelOf, false, false), [0, width]);
-    const yScale = resolvePositionScale(yScaleDef, collectValues(yChannelOf, true, true), [height, 0]);
+    const xValues = collectValues(xChannelOf, false, false);
+    const yValues = collectValues(yChannelOf, true, true);
+    const xScaleDef = resolveScaleForRole('x', coordinate.x, xChannelOf, xValues);
+    const yScaleDef = resolveScaleForRole('y', coordinate.y, yChannelOf, yValues);
+    const xScale = resolvePositionScale(xScaleDef, xValues, [0, width]);
+    const yScale = resolvePositionScale(yScaleDef, yValues, [height, 0]);
 
     // 哪些维度有坐标轴（决定 margin / 是否算 ticks）；alpha.2 guide 仅 axis 类型，按 dimension 取
     const guides = node.guides ?? [];
@@ -324,6 +367,11 @@ export const resolveFrame = (params: ResolveFrameParams): ResolvedFrame => {
 /** 解析某 mark 的 color 编码 → 行→颜色串：常量 value 直用；字段过 ordinal scale（显式引用或自动合成默认配色） */
 const makeColorResolver = (node: PlotSpec, rows: Array<ExternalRow>): ((mark: Mark) => ColorOf | undefined) => {
   const scaleByName = new Map(node.scales.map(scale => [scale.name, scale] as const));
+  // 字段名 → order（与位置通道同源 data.model）：颜色 ordinal 域按字段 order 排，保证位置 / 颜色同序
+  const fieldOrders = new Map<string, CategoryOrder>();
+  for (const field of node.data.model ?? []) {
+    if (field.order !== undefined) fieldOrders.set(field.name, field.order);
+  }
   return (mark: Mark): ColorOf | undefined => {
     const channel = mark.encoding.color;
     if (!channel) return undefined;
@@ -342,10 +390,13 @@ const makeColorResolver = (node: PlotSpec, rows: Array<ExternalRow>): ((mark: Ma
       }
       ordinalDef = def;
     }
-    const ordinal = resolveOrdinalScale(
-      ordinalDef,
-      rows.map(row => resolveFieldPath(row, field)),
-    );
+    const colorValues = rows.map(row => resolveFieldPath(row, field));
+    // 字段有非默认 order 且 ordinal 域未显式给 → 按 order 排 ordinal 域（位置 / 颜色同序）
+    const order = fieldOrders.get(field);
+    if (order !== undefined && order !== 'data' && ordinalDef?.domain === undefined) {
+      ordinalDef = { ...(ordinalDef ?? { type: PlotScale.Ordinal, name: `__color_${field}` }), domain: orderedCategoryDomain(colorValues, order) };
+    }
+    const ordinal = resolveOrdinalScale(ordinalDef, colorValues);
     return row => {
       const value = resolveFieldPath(row, field);
       return typeof value === 'string' || typeof value === 'number' ? ordinal(value) : undefined;
