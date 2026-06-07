@@ -473,3 +473,196 @@ describe('ADR-02 locator — Bug Hunter 回归', () => {
     }
   });
 });
+
+// =====================================================================
+// 跨评审回归（BLOCKER #1/#2/#3 + WARNING #4 的正式回归网）
+// =====================================================================
+describe('ADR-02 locator — anchor parity & fail-loud (cross-review)', () => {
+  // dodge：2 系列分组柱（band-x，series 切等分子带）
+  const dodgeSpec = (): PlotSpec =>
+    PlotSpecSchema.parse({
+      namespace: 'plot',
+      type: 'plot',
+      id: 'dodge',
+      data: { reference: 'd' },
+      scales: [
+        { type: 'band', name: 'x' },
+        { type: 'linear', name: 'y' },
+      ],
+      coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
+      marks: [{ type: 'interval', series: 'g', encoding: { x: { field: 'cat' }, y: { field: 'v' } } }],
+    });
+  const DODGE_ROWS = [
+    { cat: 'A', g: 'p', v: 3 },
+    { cat: 'A', g: 'q', v: 5 },
+    { cat: 'B', g: 'p', v: 7 },
+    { cat: 'B', g: 'q', v: 2 },
+  ];
+
+  // stack：带 stack transform 的堆叠柱（派生 y0/y1）
+  const stackSpec = (): PlotSpec =>
+    PlotSpecSchema.parse({
+      namespace: 'plot',
+      type: 'plot',
+      id: 'stk',
+      data: { reference: 'd' },
+      transform: [{ kind: 'stack', x: 'cat', y: 'v', groupBy: 'g' }],
+      scales: [
+        { type: 'band', name: 'x' },
+        { type: 'linear', name: 'y' },
+      ],
+      coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
+      marks: [{ type: 'interval', series: 'g', arrangement: 'stack', encoding: { x: { field: 'cat' }, y: { field: 'v' } } }],
+    });
+  const STACK_ROWS = [
+    { cat: 'A', g: 'p', v: 3 },
+    { cat: 'A', g: 'q', v: 5 },
+    { cat: 'B', g: 'p', v: 7 },
+    { cat: 'B', g: 'q', v: 2 },
+  ];
+
+  // polar dodge：极坐标 2 系列 interval（径向柱 / 玫瑰，子角带）
+  const polarDodgeSpec = (): PlotSpec =>
+    PlotSpecSchema.parse({
+      namespace: 'plot',
+      type: 'plot',
+      id: 'rose',
+      data: { reference: 'd' },
+      scales: [
+        { type: 'band', name: 'a' },
+        { type: 'linear', name: 'r', domain: [0, 10] },
+      ],
+      coordinate: { type: 'polar2D', angle: 'a', radius: 'r' },
+      marks: [{ type: 'interval', series: 'g', encoding: { x: { field: 'cat' }, y: { field: 'v' } } }],
+    });
+  const POLAR_DODGE_ROWS = [
+    { cat: 'A', g: 'p', v: 4 },
+    { cat: 'A', g: 'q', v: 6 },
+    { cat: 'B', g: 'p', v: 7 },
+    { cat: 'B', g: 'q', v: 2 },
+  ];
+
+  it('anchor_parity_cartesian_dodge', () => {
+    // dodge 柱：每个已渲染行 locator.datum(i).position 与 lowered Node.position 逐点相等。
+    //   修 #1 前 barCenterAnchor 只匹配 plain → 子带柱漂移；修后共享 intervalRect。
+    const spec = dodgeSpec();
+    const datasets: Datasets = { d: DODGE_ROWS };
+    const locator = createPlotLocator(spec, datasets, opts);
+    const nodes = datumNodes(firstLayer(spec, datasets, opts));
+    expect(nodes).toHaveLength(DODGE_ROWS.length);
+    for (let index = 0; index < nodes.length; index++) {
+      const anchor = locator.datum(index);
+      expect(anchor).not.toBeNull();
+      expect(anchor!.position).toEqual(nodes[index].position);
+    }
+  });
+
+  it('anchor_parity_cartesian_stack', () => {
+    // stack 柱：每行 locator.datum(i).position === lowered Node.position（y0/y1 中点）。
+    const spec = stackSpec();
+    const datasets: Datasets = { d: STACK_ROWS };
+    const locator = createPlotLocator(spec, datasets, opts);
+    const nodes = datumNodes(firstLayer(spec, datasets, opts));
+    expect(nodes).toHaveLength(STACK_ROWS.length);
+    for (let index = 0; index < nodes.length; index++) {
+      const anchor = locator.datum(index);
+      expect(anchor).not.toBeNull();
+      expect(anchor!.position).toEqual(nodes[index].position);
+    }
+  });
+
+  it('anchor_parity_polar_dodge', () => {
+    // polar 2 系列 interval：locator datum centroid 落在 lowered 扇区内 + 等于该扇区 params 的 wedgeCentroid。
+    const spec = polarDodgeSpec();
+    const datasets: Datasets = { d: POLAR_DODGE_ROWS };
+    const locator = createPlotLocator(spec, datasets, squareOpts);
+    const nodes = datumNodes(firstLayer(spec, datasets, squareOpts));
+    expect(nodes.length).toBeGreaterThan(0);
+    const center: [number, number] = [200, 200];
+    for (let index = 0; index < nodes.length; index++) {
+      const params = sectorParams(nodes[index]);
+      const anchor = locator.datum(index);
+      expect(anchor).not.toBeNull();
+      const [ax, ay] = anchor!.position;
+      // 落在 lowered 扇区内（径向）
+      const r = Math.hypot(ax - center[0], ay - center[1]);
+      expect(r).toBeGreaterThanOrEqual(params.innerRadius - 1e-6);
+      expect(r).toBeLessThanOrEqual(params.outerRadius + 1e-6);
+      // 等于该扇区 params 的 wedgeCentroid（mid-angle / mid-radius）
+      const midAngle = ((params.startAngle + params.endAngle) / 2) * (Math.PI / 180);
+      const midRadius = (params.innerRadius + params.outerRadius) / 2;
+      expect(ax).toBeCloseTo(center[0] + midRadius * Math.cos(midAngle), 4);
+      expect(ay).toBeCloseTo(center[1] + midRadius * Math.sin(midAngle), 4);
+    }
+  });
+
+  it('datum_id_cross_mark_throws', () => {
+    // point + bar 两 datum-bearing mark 同 datumIdField 同数据 → 跨 mark 撞同 id（每个 mark 各渲染一遍同值）
+    //   → lowering 抛 + createPlotLocator 抛（plot 级共享 registrar，#2/#3 parity）。
+    const rows = [
+      { month: 0, revenue: 10, q: 'Q1' },
+      { month: 1, revenue: 14, q: 'Q2' },
+    ];
+    const spec = PlotSpecSchema.parse({
+      namespace: 'plot',
+      type: 'plot',
+      id: 'multi',
+      data: { reference: 'd' },
+      scales: [
+        { type: 'linear', name: 'x' },
+        { type: 'linear', name: 'y' },
+      ],
+      coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
+      marks: [
+        { type: 'point', encoding: { x: { field: 'month' }, y: { field: 'revenue' } } },
+        { type: 'interval', encoding: { x: { field: 'month' }, y: { field: 'revenue' } } },
+      ],
+    });
+    const options: LowerPlotsOptions = { ...opts, datumIdField: 'q' };
+    expect(() => expandOf(spec, { d: rows }, options)).toThrow();
+    expect(() => createPlotLocator(spec, { d: rows }, options)).toThrow();
+  });
+
+  it('locator_datum_id_fail_loud', () => {
+    // datumIdField 指向某行缺字段 → createPlotLocator 抛（与 lowering fail-loud parity，#3）。
+    const rows = [
+      { month: 0, revenue: 10, q: 'Q1' },
+      { month: 1, revenue: 14 }, // 缺 q
+      { month: 2, revenue: 9, q: 'Q3' },
+    ];
+    const options: LowerPlotsOptions = { ...opts, datumIdField: 'q' };
+    expect(() => expandOf(barSpec({ id: 'sales' }), { sales: rows }, options)).toThrow();
+    expect(() => createPlotLocator(barSpec({ id: 'sales' }), { sales: rows }, options)).toThrow();
+  });
+
+  it('resolve_series_numeric', () => {
+    // 数值 series 值经 resolve('plotId.series.<n>')（字符串 token）可达——宽松字符串比对（#4）。
+    const TREND = [
+      { t: 0, v: 4, g: 5 },
+      { t: 1, v: 8, g: 5 },
+      { t: 0, v: 2, g: 6 },
+      { t: 1, v: 6, g: 6 },
+    ];
+    const spec = PlotSpecSchema.parse({
+      namespace: 'plot',
+      type: 'plot',
+      id: 'p',
+      data: { reference: 't' },
+      scales: [
+        { type: 'linear', name: 'x' },
+        { type: 'linear', name: 'y' },
+      ],
+      coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
+      marks: [{ type: 'line', series: 'g', encoding: { x: { field: 't' }, y: { field: 'v' } } }],
+    });
+    const locator = createPlotLocator(spec, { t: TREND }, opts);
+    const viaAddress = locator.resolve('p.series.5');
+    expect(viaAddress).not.toBeNull();
+    expect(Number.isFinite(viaAddress!.position[0])).toBe(true);
+    expect(Number.isFinite(viaAddress!.position[1])).toBe(true);
+    // 位置与结构 series(5)（数值）一致——宽松字符串比对让 '5' token 命中数值 5
+    const structural = locator.series(5);
+    expect(structural).not.toBeNull();
+    expect(viaAddress!.position).toEqual(structural!.position);
+  });
+});

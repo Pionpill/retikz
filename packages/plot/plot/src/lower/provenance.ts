@@ -1,5 +1,6 @@
 import type { IRJsonObject, JsonValue } from '@retikz/core';
 import type { ExternalRow } from '../ir';
+import { resolveFieldPath } from './field';
 
 /**
  * 行级源序标记：ingest 时给每行打 `row[SOURCE_INDEX]=i`，跨 transform（object spread / sort）存活
@@ -106,6 +107,37 @@ export const datumMeta = (
 export const markLayerId = (plotId: string | undefined, markId: string | undefined, markIndex: number): string | undefined => {
   if (plotId === undefined) return undefined;
   return markId !== undefined ? `${plotId}.${markId}` : `${plotId}.mark.${markIndex}`;
+};
+
+/**
+ * datum id 登记器：行 → `<plotId>.datum.<slug>`，跨所有 datum-bearing mark 共享一份 seen
+ * @description 同一 plot 命名空间下两 mark 都绑 datum id 时（point + bar），共用 register 才能跨 mark 查重。
+ *   缺字段 / 不同原值 slug 撞同串 / 同值重复 → 抛清晰错误（fail loud，保 anchor 稳定唯一）。
+ */
+export type DatumIdRegistrar = (row: ExternalRow) => string;
+
+/**
+ * 建一个 plot 级 datum id 登记器（datumIdField + plotId 在时由调用方构造一次、线穿全 mark）
+ * @description seen 在闭包内跨 mark 累积——任意两个 node（含跨 mark）撞同 id 即 fail loud。
+ */
+export const createDatumIdRegistrar = (datumIdField: string, plotId: string): DatumIdRegistrar => {
+  const seenIds = new Map<string, unknown>();
+  return (row: ExternalRow): string => {
+    const raw = resolveFieldPath(row, datumIdField);
+    if (raw === undefined) {
+      throw new Error(`lowerPlots: datumIdField "${datumIdField}" missing on a row; every row must carry the id field (cannot synthesize a stable anchor)`);
+    }
+    const id = `${plotId}.datum.${slug(raw)}`;
+    const prior = seenIds.get(id);
+    if (prior !== undefined && prior !== raw) {
+      throw new Error(`lowerPlots: datumIdField "${datumIdField}" values "${String(prior)}" and "${String(raw)}" collide to the same datum id "${id}"; anchors must be unique`);
+    }
+    if (seenIds.has(id)) {
+      throw new Error(`lowerPlots: duplicate datumIdField "${datumIdField}" value "${String(raw)}" → duplicate datum id "${id}"; anchors must be unique`);
+    }
+    seenIds.set(id, raw);
+    return id;
+  };
 };
 
 /** guide scope.id：用户给 guide.id → `<plotId>.<guideId>`；缺省 → `<plotId>.<axis|grid>.<dimension>`（plotId 缺 → undefined） */

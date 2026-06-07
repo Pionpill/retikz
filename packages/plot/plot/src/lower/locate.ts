@@ -1,10 +1,10 @@
 import type { IRJsonObject } from '@retikz/core';
 import { type ExternalDatasets, type ExternalRow, type Mark, type PlotSpec } from '../ir';
-import { datumAnchor } from './anchor';
+import { type IntervalContext, buildIntervalContext, datumAnchor } from './anchor';
 import { DEFAULT_FONT_SIZE } from './layout';
 import { type LowerPlotsOptions, resolveFrame } from './expand';
 import type { CoordinateFrame } from './project';
-import { type ProvenanceContext, datumMeta, readSourceIndex, slug, tagSourceIndex } from './provenance';
+import { type ProvenanceContext, createDatumIdRegistrar, datumMeta, readSourceIndex, tagSourceIndex } from './provenance';
 import { applyTransforms } from './transform';
 import { resolveFieldPath } from './field';
 
@@ -52,10 +52,14 @@ export type PlotLocator = {
 const seriesFieldOf = (mark: Mark): string | undefined =>
   mark.type === 'line' || mark.type === 'interval' || mark.type === 'area' ? mark.series : undefined;
 
+/** datum-bearing mark（展成独立可见 Node 的 mark）：point / interval / sector */
+const isDatumBearing = (mark: Mark): boolean => mark.type === 'point' || mark.type === 'interval' || mark.type === 'sector';
+
 /**
  * 用与 lowerPlots 同一份 spec + datasets + options 建 locator（复用 ADR-01 resolveFrame，投影单一真源）
  * @description 行构造与 expandPlot 一致：先 tagSourceIndex（克隆、不污染入参）供 sourceIndex 回指，再 applyTransforms；
  *   frame 走同一 resolveFrame。locator 纯函数：不产 IR、不注册 core 元素、不改 spec / datasets。
+ *   datumIdField 设时在构建期跑 plot 级 registrar（与 lowering 同序、同查重）→ 同 spec+options 下 locator-build 抛 iff lowering 抛（#3）。
  */
 export const createPlotLocator = (spec: PlotSpec, datasets: ExternalDatasets, options: LowerPlotsOptions = {}): PlotLocator => {
   const width = options.width ?? DEFAULT_WIDTH;
@@ -95,16 +99,42 @@ export const createPlotLocator = (spec: PlotSpec, datasets: ExternalDatasets, op
     datumIdField: options.datumIdField,
   };
 
+  // 每 mark 的 IntervalContext 一次性建（interval mark 锚点需要；其余 mark undefined）——与 lowering 同源（#1）。
+  const intervalContexts = new Map<number, IntervalContext>();
+  const intervalContextOf = (markIndex: number, mark: Mark): IntervalContext | undefined => {
+    if (mark.type !== 'interval') return undefined;
+    const cached = intervalContexts.get(markIndex);
+    if (cached) return cached;
+    const ctx = buildIntervalContext(mark, frame, rows);
+    intervalContexts.set(markIndex, ctx);
+    return ctx;
+  };
+
   const markOf = (markIndex: number): Mark | undefined => spec.marks[markIndex];
   const defaultMarkIndex = 0;
 
-  /** 合成某行的 datum id（datumIdField 设 + plotId 在 + 字段命中）→ `<plotId>.datum.<slug>`；否则 undefined */
-  const datumIdOf = (row: ExternalRow): string | undefined => {
-    if (options.datumIdField === undefined || spec.id === undefined) return undefined;
-    const raw = resolveFieldPath(row, options.datumIdField);
-    if (raw === undefined) return undefined;
-    return `${spec.id}.datum.${slug(raw)}`;
-  };
+  // #3：datumIdField 设时构建期跑 plot 级 registrar（与 lowering 同序：mark 序 × transformedIndex 序、
+  //   行「已渲染」iff datumAnchor 非 null）。缺字段 / 重复 / slug 冲突 → 与 lowering 同样 fail loud；
+  //   校验通过的 id 存表供 datumIdOf 查（locator-build 抛 iff lowering 抛）。
+  const validatedDatumIds = new Map<number, Map<number, string>>();
+  if (options.datumIdField !== undefined && spec.id !== undefined) {
+    const register = createDatumIdRegistrar(options.datumIdField, spec.id);
+    spec.marks.forEach((mark, markIndex) => {
+      if (!isDatumBearing(mark)) return;
+      const ctx = intervalContextOf(markIndex, mark);
+      const idsForMark = new Map<number, string>();
+      for (let transformedIndex = 0; transformedIndex < rows.length; transformedIndex++) {
+        const row = rows[transformedIndex];
+        if (!datumAnchor(mark, row, frame, ctx)) continue; // 未渲染行不绑 id（与 lowering 一致）
+        idsForMark.set(transformedIndex, register(row));
+      }
+      validatedDatumIds.set(markIndex, idsForMark);
+    });
+  }
+
+  /** 查某 (markIndex, transformedIndex) 已校验的 datum id（datumIdField 未设 / 未绑 → undefined） */
+  const datumIdOf = (markIndex: number, transformedIndex: number): string | undefined =>
+    validatedDatumIds.get(markIndex)?.get(transformedIndex);
 
   /** 算某 (markIndex, transformedIndex) 的锚点（越界 / 未渲染 → null） */
   const anchorAt = (markIndex: number, transformedIndex: number): { position: [number, number]; row: ExternalRow; mark: Mark } | null => {
@@ -112,7 +142,7 @@ export const createPlotLocator = (spec: PlotSpec, datasets: ExternalDatasets, op
     if (!mark) return null;
     if (!Number.isInteger(transformedIndex) || transformedIndex < 0 || transformedIndex >= rows.length) return null;
     const row = rows[transformedIndex];
-    const position = datumAnchor(mark, row, frame);
+    const position = datumAnchor(mark, row, frame, intervalContextOf(markIndex, mark));
     if (!position) return null;
     return { position, row, mark };
   };
@@ -124,7 +154,7 @@ export const createPlotLocator = (spec: PlotSpec, datasets: ExternalDatasets, op
     const seriesField = seriesFieldOf(hit.mark);
     const seriesValue = seriesField ? resolveFieldPath(hit.row, seriesField) : undefined;
     const meta = datumMeta(metaContext, hit.mark.type, markIndex, transformedIndex, readSourceIndex(hit.row), seriesValue);
-    const id = datumIdOf(hit.row);
+    const id = datumIdOf(markIndex, transformedIndex);
     return id !== undefined ? { position: hit.position, meta, id } : { position: hit.position, meta };
   };
 
@@ -134,12 +164,15 @@ export const createPlotLocator = (spec: PlotSpec, datasets: ExternalDatasets, op
     if (!mark) return null;
     const seriesField = seriesFieldOf(mark);
     if (seriesField === undefined) return null;
+    const ctx = intervalContextOf(markIndex, mark);
     let sumX = 0;
     let sumY = 0;
     let count = 0;
     for (const row of rows) {
-      if (resolveFieldPath(row, seriesField) !== value) continue;
-      const position = datumAnchor(mark, row, frame);
+      // 系列值匹配：先精确相等，再宽松字符串比对（resolve 的 '5' 字符串 token 匹配数值 5；#4）
+      const fieldValue = resolveFieldPath(row, seriesField);
+      if (fieldValue !== value && String(fieldValue) !== String(value)) continue;
+      const position = datumAnchor(mark, row, frame, ctx);
       if (!position) continue;
       sumX += position[0];
       sumY += position[1];

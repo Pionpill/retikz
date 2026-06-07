@@ -1,9 +1,10 @@
 import { type IRChild, type IRNode, type IRNodeDefault, type IRScope, type IRStep } from '@retikz/core';
-import { type ExternalRow, type IntervalMark, type Mark, PlotCoordinate, PlotMark } from '../ir';
-import { datumAnchor } from './anchor';
+import { type ExternalRow, type IntervalMark, type Mark, PlotCoordinate } from '../ir';
+import { type Wedge, buildIntervalContext, datumAnchor, intervalRect, intervalWedge, sectorWedge } from './anchor';
 import { channelValue, compareByPath, isFiniteNumber, resolveFieldPath } from './field';
 import { type CartesianFrame, type CoordinateFrame, type PolarFrame, type PolarVertex, densifyPolarSegments, toPolarVertex } from './project';
 import {
+  type DatumIdRegistrar,
   type ProvenanceContext,
   datumMeta,
   markLayerId,
@@ -18,8 +19,6 @@ import { inferCategoryDomain } from './scale';
 const POINT_SIZE = 10;
 /** 折线默认描边宽度（user units） */
 const LINE_STROKE_WIDTH = 2;
-/** 柱默认 baseline（值域基准；alpha.3 固定 0，可配置留后续） */
-const BAR_BASELINE = 0;
 /** 无 color 编码时的回退填充 */
 const DEFAULT_FILL = 'currentColor';
 
@@ -35,6 +34,8 @@ export type MarkProvenance = {
   context: ProvenanceContext;
   /** 本 mark 在 spec.marks 的序号（写进 layer / datum meta 的 markIndex） */
   markIndex: number;
+  /** plot 级 datum id 登记器（datumIdField + plotId 在时由 expand 建一份、线穿全 mark；否则 undefined） */
+  registerDatumId?: DatumIdRegistrar;
 };
 
 /**
@@ -74,7 +75,7 @@ const pointStyle = (fill: string): IRNodeDefault => ({
  * @description x/y 是唯一位置通道（坐标系决定其含义）；sector 无位置通道（角度来自累积界、半径常量）→ 不走此路径。
  */
 const resolveRolePosition = (mark: Mark, row: ExternalRow): [unknown, unknown] =>
-  mark.type === PlotMark.Sector ? [undefined, undefined] : [channelValue(mark.encoding.x, row), channelValue(mark.encoding.y, row)];
+  mark.type === 'sector' ? [undefined, undefined] : [channelValue(mark.encoding.x, row), channelValue(mark.encoding.y, row)];
 
 /** 柱 node 样式（rectangle + padding0 + 无描边，使 minimumWidth/Height 即真实柱尺寸） */
 const barStyle = (fill: string): IRNodeDefault => ({ shape: 'rectangle', padding: 0, strokeWidth: 0, fill });
@@ -82,8 +83,7 @@ const barStyle = (fill: string): IRNodeDefault => ({ shape: 'rectangle', padding
 /**
  * datum node 装饰器：provenance 开时给 node 挂 per-datum meta（datumProvenance）+ datum id（datumIdField）
  * @description 关 provenance / 无 markProvenance → 原样返回（保默认逐字节等价）。透传 transformedIndex（迭代序）、
- *   读 SOURCE_INDEX 标记得 sourceIndex（best-effort）；datumIdField 缺字段 / slug 冲突由 expand 侧聚合后 fail loud，
- *   此处只负责合成 id 串并记账（id 写入与冲突检测交给传入的 registerDatumId 回调）。
+ *   读 SOURCE_INDEX 标记得 sourceIndex（best-effort）；datum id 写入与冲突检测交给 plot 级 registerDatumId（跨 mark 共享 seen）。
  */
 const decorateDatum = (
   node: IRNode,
@@ -92,10 +92,9 @@ const decorateDatum = (
   markType: string,
   markProvenance: MarkProvenance | undefined,
   seriesValue: unknown,
-  registerDatumId: ((row: ExternalRow) => string | undefined) | undefined,
 ): IRNode => {
   if (!markProvenance) return node;
-  const { context, markIndex } = markProvenance;
+  const { context, markIndex, registerDatumId } = markProvenance;
   const decorated: IRNode = { ...node };
   if (context.datumProvenance) {
     decorated.meta = datumMeta(context, markType, markIndex, transformedIndex, readSourceIndex(row), seriesValue);
@@ -120,45 +119,15 @@ const attachMarkLayer = (layer: IRScope, mark: Mark, markProvenance: MarkProvena
   };
 };
 
-/**
- * 构造 datum id 登记器：datumIdField 设 + provenance 开 + plotId 在 → 返回「行 → `<plotId>.datum.<slug>`」
- * @description 缺字段 / 同一 mark 内 id 重复（含不同原值 slug 撞同串）→ 抛清晰错误（fail loud，保 anchor 稳定）。
- *   provenance 关 / 无 datumIdField / 无 plotId → 返回 undefined（不绑 id）。
- */
-const makeDatumIdRegistrar = (markProvenance: MarkProvenance | undefined): ((row: ExternalRow) => string | undefined) | undefined => {
-  if (!markProvenance) return undefined;
-  const { context } = markProvenance;
-  const { datumIdField, plotId } = context;
-  if (datumIdField === undefined || plotId === undefined) return undefined;
-  const seenIds = new Map<string, unknown>();
-  return (row: ExternalRow): string => {
-    const raw = resolveFieldPath(row, datumIdField);
-    if (raw === undefined) {
-      throw new Error(`lowerPlots: datumIdField "${datumIdField}" missing on a row; every row must carry the id field (cannot synthesize a stable anchor)`);
-    }
-    const id = `${plotId}.datum.${slug(raw)}`;
-    const prior = seenIds.get(id);
-    if (prior !== undefined && prior !== raw) {
-      throw new Error(`lowerPlots: datumIdField "${datumIdField}" values "${String(prior)}" and "${String(raw)}" collide to the same datum id "${id}"; anchors must be unique`);
-    }
-    if (seenIds.has(id)) {
-      throw new Error(`lowerPlots: duplicate datumIdField "${datumIdField}" value "${String(raw)}" → duplicate datum id "${id}"; anchors must be unique`);
-    }
-    seenIds.set(id, raw);
-    return id;
-  };
-};
-
 /** 散点：每行一个 circle Node（坐标系无关，经 frame.project 投影） */
 const lowerPoint = (mark: Mark, rows: Array<ExternalRow>, frame: CoordinateFrame, colorOf: ColorOf | undefined, markProvenance: MarkProvenance | undefined): IRChild | null => {
-  const registerDatumId = makeDatumIdRegistrar(markProvenance);
   const placed: Array<{ color: string | undefined; node: IRNode }> = [];
   for (let transformedIndex = 0; transformedIndex < rows.length; transformedIndex++) {
     const row = rows[transformedIndex];
     // 锚点与 locator 共享同一 datumAnchor（point → frame.project），杜绝两套投影漂移
     const point = datumAnchor(mark, row, frame);
     if (!point) continue;
-    const node = decorateDatum({ type: 'node', position: point }, row, transformedIndex, mark.type, markProvenance, undefined, registerDatumId);
+    const node = decorateDatum({ type: 'node', position: point }, row, transformedIndex, mark.type, markProvenance, undefined);
     placed.push({ color: colorOf?.(row), node });
   }
   if (placed.length === 0) return null;
@@ -173,74 +142,32 @@ const lowerPoint = (mark: Mark, rows: Array<ExternalRow>, frame: CoordinateFrame
 const barLayer = (placed: Array<{ color: string | undefined; node: IRNode }>, colorOf?: ColorOf): IRScope =>
   colorOf ? colorGroupedScope(placed, barStyle) : { type: 'scope', nodeDefault: barStyle(DEFAULT_FILL), children: placed.map(p => p.node) };
 
-/** 普通柱：x band 中心、宽 bandwidth、baseline→value */
-const lowerPlainBars = (mark: IntervalMark, rows: Array<ExternalRow>, frame: CartesianFrame, colorOf: ColorOf | undefined, bandwidth: number, markProvenance: MarkProvenance | undefined): IRScope | null => {
-  const yBase = frame.secondary.coordinate(BAR_BASELINE);
-  if (!Number.isFinite(yBase)) return null;
-  const registerDatumId = makeDatumIdRegistrar(markProvenance);
+/**
+ * 笛卡尔区间柱：plain / dodge / stack 统一一条摆放路径（intervalRect 单一真源；locator 同源 datumAnchor）
+ * @description ctx 一次性建（buildIntervalContext），逐行调 intervalRect 取 position + width + height。
+ *   stacked 缺 y0/y1 在此显式 fail loud（保留旧行为）——intervalRect 对缺字段返回 null，故必须在调用前校验。
+ *   series 值（dodge / stack 都可带）写进 datum meta 的 series。
+ */
+const lowerInterval = (mark: IntervalMark, rows: Array<ExternalRow>, frame: CartesianFrame, colorOf: ColorOf | undefined, markProvenance: MarkProvenance | undefined): IRScope | null => {
+  const ctx = buildIntervalContext(mark, frame, rows);
   const placed: Array<{ color: string | undefined; node: IRNode }> = [];
   for (let transformedIndex = 0; transformedIndex < rows.length; transformedIndex++) {
     const row = rows[transformedIndex];
-    // 柱心位置走 datumAnchor（与 locator 同源）；高度仍按 yBase→yValue（与锚点同守卫，anchor 非 null ⇒ 二者有限）
-    const position = datumAnchor(mark, row, frame);
-    if (!position) continue;
-    const yValue = frame.secondary.coordinate(channelValue(mark.encoding.y, row));
-    const base: IRNode = { type: 'node', position, minimumWidth: bandwidth, minimumHeight: Math.abs(yBase - yValue) };
-    const node = decorateDatum(base, row, transformedIndex, mark.type, markProvenance, undefined, registerDatumId);
-    placed.push({ color: colorOf?.(row), node });
-  }
-  return placed.length === 0 ? null : barLayer(placed, colorOf);
-};
-
-/** 分组柱（dodge）：band 内按系列切等分子带，系列 i 占第 i 子带 */
-const lowerDodgedBars = (mark: Mark, rows: Array<ExternalRow>, frame: CartesianFrame, colorOf: ColorOf | undefined, bandwidth: number, markProvenance: MarkProvenance | undefined): IRScope | null => {
-  if (mark.type !== 'interval' || !mark.series) return null;
-  const seriesField = mark.series;
-  const yBase = frame.secondary.coordinate(BAR_BASELINE);
-  if (!Number.isFinite(yBase)) return null;
-  const seriesValues = inferCategoryDomain(rows.map(row => resolveFieldPath(row, seriesField)));
-  const seriesRank = new Map(seriesValues.map((series, index) => [series, index] as const));
-  const subCount = seriesValues.length || 1;
-  const subWidth = bandwidth / subCount;
-  const registerDatumId = makeDatumIdRegistrar(markProvenance);
-  const placed: Array<{ color: string | undefined; node: IRNode }> = [];
-  for (let transformedIndex = 0; transformedIndex < rows.length; transformedIndex++) {
-    const row = rows[transformedIndex];
-    const xCenter = frame.primary.coordinate(channelValue(mark.encoding.x, row));
-    const yValue = frame.secondary.coordinate(channelValue(mark.encoding.y, row));
-    if (!Number.isFinite(xCenter) || !Number.isFinite(yValue)) continue;
-    const series = resolveFieldPath(row, seriesField);
-    const index = (typeof series === 'string' || typeof series === 'number' ? seriesRank.get(series) : undefined) ?? 0;
-    const subCenter = xCenter - bandwidth / 2 + (index + 0.5) * subWidth;
-    const base: IRNode = { type: 'node', position: [subCenter, (yBase + yValue) / 2], minimumWidth: subWidth, minimumHeight: Math.abs(yBase - yValue) };
-    const node = decorateDatum(base, row, transformedIndex, mark.type, markProvenance, series, registerDatumId);
-    placed.push({ color: colorOf?.(row), node });
-  }
-  return placed.length === 0 ? null : barLayer(placed, colorOf);
-};
-
-/** 堆叠柱：读 stack transform 派生的 y0 / y1，柱从 y0 画到 y1（缺字段抛清晰错误） */
-const lowerStackedBars = (mark: Mark, rows: Array<ExternalRow>, frame: CartesianFrame, colorOf: ColorOf | undefined, bandwidth: number, markProvenance: MarkProvenance | undefined): IRScope | null => {
-  if (mark.type !== 'interval') return null;
-  const y0Field = mark.y0Field ?? 'y0';
-  const y1Field = mark.y1Field ?? 'y1';
-  const seriesField = mark.series;
-  const registerDatumId = makeDatumIdRegistrar(markProvenance);
-  const placed: Array<{ color: string | undefined; node: IRNode }> = [];
-  for (let transformedIndex = 0; transformedIndex < rows.length; transformedIndex++) {
-    const row = rows[transformedIndex];
-    const v0 = resolveFieldPath(row, y0Field);
-    const v1 = resolveFieldPath(row, y1Field);
-    if (!isFiniteNumber(v0) || !isFiniteNumber(v1)) {
-      throw new Error(`lowerPlots: stacked interval requires numeric ${y0Field} / ${y1Field} fields (run the stack transform first)`);
+    // 堆叠柱缺 y0/y1 fail loud（intervalRect 对缺字段静默 null，故在此显式校验保留旧行为）
+    if (ctx.stacked) {
+      const y0Field = mark.y0Field ?? 'y0';
+      const y1Field = mark.y1Field ?? 'y1';
+      const v0 = resolveFieldPath(row, y0Field);
+      const v1 = resolveFieldPath(row, y1Field);
+      if (!isFiniteNumber(v0) || !isFiniteNumber(v1)) {
+        throw new Error(`lowerPlots: stacked interval requires numeric ${y0Field} / ${y1Field} fields (run the stack transform first)`);
+      }
     }
-    const xCenter = frame.primary.coordinate(channelValue(mark.encoding.x, row));
-    const top = frame.secondary.coordinate(v1);
-    const bottom = frame.secondary.coordinate(v0);
-    if (!Number.isFinite(xCenter) || !Number.isFinite(top) || !Number.isFinite(bottom)) continue;
-    const base: IRNode = { type: 'node', position: [xCenter, (top + bottom) / 2], minimumWidth: bandwidth, minimumHeight: Math.abs(top - bottom) };
-    const seriesValue = seriesField ? resolveFieldPath(row, seriesField) : undefined;
-    const node = decorateDatum(base, row, transformedIndex, mark.type, markProvenance, seriesValue, registerDatumId);
+    const rect = intervalRect(mark, row, frame, ctx);
+    if (!rect) continue;
+    const base: IRNode = { type: 'node', position: rect.position, minimumWidth: rect.width, minimumHeight: rect.height };
+    const seriesValue = mark.series ? resolveFieldPath(row, mark.series) : undefined;
+    const node = decorateDatum(base, row, transformedIndex, mark.type, markProvenance, seriesValue);
     placed.push({ color: colorOf?.(row), node });
   }
   return placed.length === 0 ? null : barLayer(placed, colorOf);
@@ -249,20 +176,17 @@ const lowerStackedBars = (mark: Mark, rows: Array<ExternalRow>, frame: Cartesian
 /** sector node 样式（sector shape 自带几何，padding0 + 无描边，纯填充环楔） */
 const sectorStyle = (fill: string): IRNodeDefault => ({ padding: 0, strokeWidth: 0, fill });
 
-/** sector node 的 shape params（满足 core 硬约束 outerRadius>innerRadius：内外半径 swap 取 min/max） */
-type SectorGeometry = { innerRadius: number; outerRadius: number; startAngle: number; endAngle: number };
-
-/** 用一对半径 + 一对角度建 sector Node（半径 swap 保 outerRadius>innerRadius；position = 圆心） */
-const sectorNode = (center: [number, number], geometry: SectorGeometry): IRNode => ({
+/** 用环楔几何建 sector Node（半径 swap 保 outerRadius>innerRadius；position = 圆心） */
+const sectorNode = (wedge: Wedge): IRNode => ({
   type: 'node',
-  position: center,
+  position: wedge.center,
   shape: {
     type: 'sector',
     params: {
-      innerRadius: Math.min(geometry.innerRadius, geometry.outerRadius),
-      outerRadius: Math.max(geometry.innerRadius, geometry.outerRadius),
-      startAngle: geometry.startAngle,
-      endAngle: geometry.endAngle,
+      innerRadius: Math.min(wedge.innerRadius, wedge.outerRadius),
+      outerRadius: Math.max(wedge.innerRadius, wedge.outerRadius),
+      startAngle: wedge.startAngle,
+      endAngle: wedge.endAngle,
     },
   },
 });
@@ -272,51 +196,16 @@ const sectorLayer = (placed: Array<{ color: string | undefined; node: IRNode }>,
   colorOf ? colorGroupedScope(placed, sectorStyle) : { type: 'scope', nodeDefault: sectorStyle(DEFAULT_FILL), children: placed.map(p => p.node) };
 
 /**
- * interval 在 polar 下 → sector（径向柱 / 玫瑰）
- * @description 角度 = primary(angle band) 的类别角带 [center−bw/2, center+bw/2]；
- *   半径 = secondary(radius) 从 baseline(0) 到 value（编码值）。stack（径向堆叠）读 y0/y1 作内外半径；
- *   dodge（band 内多系列）把角带切等分子角带。负值/反向由 sectorNode swap 保 outerRadius>innerRadius。
+ * interval 在 polar 下 → sector（径向柱 / 玫瑰）；intervalWedge 单一真源（locator 同源 datumAnchor）
+ * @description ctx 一次性建，逐行调 intervalWedge 取环楔几何，再 sectorNode 建 Node。
+ *   stacked 缺 y0/y1 在此显式 fail loud（intervalWedge 对缺字段返回 null，故调用前校验保留旧行为）。
  */
-const lowerIntervalPolar = (mark: Mark, rows: Array<ExternalRow>, frame: PolarFrame, colorOf: ColorOf | undefined, markProvenance: MarkProvenance | undefined): IRScope | null => {
-  if (mark.type !== 'interval') return null;
-  const bandwidth = frame.primary.bandwidth;
-  const stacked = mark.arrangement === 'stack';
-  const seriesField = !stacked ? mark.series : undefined;
-  const seriesValues = seriesField ? inferCategoryDomain(rows.map(row => resolveFieldPath(row, seriesField))) : [];
-  const seriesRank = new Map(seriesValues.map((series, index) => [series, index] as const));
-  const subCount = seriesValues.length || 1;
-  const subWidth = bandwidth / subCount;
-
-  const innerBaseline = frame.secondary.coordinate(BAR_BASELINE);
-  if (!Number.isFinite(innerBaseline)) return null;
-
-  const registerDatumId = makeDatumIdRegistrar(markProvenance);
+const lowerIntervalPolar = (mark: IntervalMark, rows: Array<ExternalRow>, frame: PolarFrame, colorOf: ColorOf | undefined, markProvenance: MarkProvenance | undefined): IRScope | null => {
+  const ctx = buildIntervalContext(mark, frame, rows);
   const placed: Array<{ color: string | undefined; node: IRNode }> = [];
   for (let transformedIndex = 0; transformedIndex < rows.length; transformedIndex++) {
     const row = rows[transformedIndex];
-    const center = frame.primary.coordinate(channelValue(mark.encoding.x, row));
-    if (!Number.isFinite(center)) continue;
-
-    // 角带：dodge → 子角带；否则整角带
-    let startAngle: number;
-    let endAngle: number;
-    let seriesValue: unknown;
-    if (seriesField) {
-      const series = resolveFieldPath(row, seriesField);
-      seriesValue = series;
-      const index = (typeof series === 'string' || typeof series === 'number' ? seriesRank.get(series) : undefined) ?? 0;
-      const subStart = center - bandwidth / 2 + index * subWidth;
-      startAngle = subStart;
-      endAngle = subStart + subWidth;
-    } else {
-      startAngle = center - bandwidth / 2;
-      endAngle = center + bandwidth / 2;
-    }
-
-    // 半径：stack 读 y0/y1（径向堆叠）；否则 baseline → value
-    let innerRadius: number;
-    let outerRadius: number;
-    if (stacked) {
+    if (ctx.stacked) {
       const y0Field = mark.y0Field ?? 'y0';
       const y1Field = mark.y1Field ?? 'y1';
       const v0 = resolveFieldPath(row, y0Field);
@@ -324,34 +213,25 @@ const lowerIntervalPolar = (mark: Mark, rows: Array<ExternalRow>, frame: PolarFr
       if (!isFiniteNumber(v0) || !isFiniteNumber(v1)) {
         throw new Error(`lowerPlots: stacked interval requires numeric ${y0Field} / ${y1Field} fields (run the stack transform first)`);
       }
-      innerRadius = frame.secondary.coordinate(v0);
-      outerRadius = frame.secondary.coordinate(v1);
-    } else {
-      innerRadius = innerBaseline;
-      outerRadius = frame.secondary.coordinate(channelValue(mark.encoding.y, row));
     }
-    if (!Number.isFinite(innerRadius) || !Number.isFinite(outerRadius)) continue;
-    // 退化（高 0：outer==inner）跳过，避免 core sector 的 outerRadius>innerRadius 约束被违反
-    if (Math.max(innerRadius, outerRadius) - Math.min(innerRadius, outerRadius) < 1e-9) continue;
-
-    const base = sectorNode(frame.center, { innerRadius, outerRadius, startAngle, endAngle });
-    const node = decorateDatum(base, row, transformedIndex, mark.type, markProvenance, seriesValue, registerDatumId);
+    const wedge = intervalWedge(mark, row, frame, ctx);
+    if (!wedge) continue;
+    const seriesValue = ctx.seriesField ? resolveFieldPath(row, ctx.seriesField) : undefined;
+    const node = decorateDatum(sectorNode(wedge), row, transformedIndex, mark.type, markProvenance, seriesValue);
     placed.push({ color: colorOf?.(row), node });
   }
   return placed.length === 0 ? null : sectorLayer(placed, colorOf);
 };
 
 /**
- * sector mark（饼图 / 环图）：读 transform 派生的累积角界，半径常量满铺
- * @description 角度 = primary(angle linear, domain [0,total] → range [startAngle,endAngle]) 投影累积界 startField/endField；
- *   半径常量铺满 [frame.innerRadius, frame.outerRadius]（环图内半径来自 coordinate.innerRadius）。
- *   缺累积界字段（未跑 stack transform）→ 抛清晰错误（与堆叠 interval 同）。
+ * sector mark（饼图 / 环图）：读 transform 派生的累积角界，半径常量满铺（sectorWedge 单一真源）
+ * @description 缺累积界字段（未跑 stack transform）或累积界倒退（段值为负）→ 抛清晰错误（fail loud，与堆叠 interval 同）。
+ *   sectorWedge 对缺字段 / 倒退返回 null，故在此显式校验保留旧行为。
  */
 const lowerSector = (mark: Mark, rows: Array<ExternalRow>, frame: PolarFrame, colorOf: ColorOf | undefined, markProvenance: MarkProvenance | undefined): IRScope | null => {
   if (mark.type !== 'sector') return null;
   const startField = mark.startField ?? 'y0';
   const endField = mark.endField ?? 'y1';
-  const registerDatumId = makeDatumIdRegistrar(markProvenance);
   const placed: Array<{ color: string | undefined; node: IRNode }> = [];
   for (let transformedIndex = 0; transformedIndex < rows.length; transformedIndex++) {
     const row = rows[transformedIndex];
@@ -364,24 +244,12 @@ const lowerSector = (mark: Mark, rows: Array<ExternalRow>, frame: PolarFrame, co
     if (v1 < v0) {
       throw new Error(`lowerPlots: sector mark requires non-negative values (cumulative bound ${endField}=${v1} < ${startField}=${v0}); pie / donut slices cannot be negative`);
     }
-    const startAngle = frame.primary.coordinate(v0);
-    const endAngle = frame.primary.coordinate(v1);
-    if (!Number.isFinite(startAngle) || !Number.isFinite(endAngle)) continue;
-    if (Math.abs(endAngle - startAngle) < 1e-9) continue;
-    const base = sectorNode(frame.center, { innerRadius: frame.innerRadius, outerRadius: frame.outerRadius, startAngle, endAngle });
-    const node = decorateDatum(base, row, transformedIndex, mark.type, markProvenance, undefined, registerDatumId);
+    const wedge = sectorWedge(mark, row, frame);
+    if (!wedge) continue;
+    const node = decorateDatum(sectorNode(wedge), row, transformedIndex, mark.type, markProvenance, undefined);
     placed.push({ color: colorOf?.(row), node });
   }
   return placed.length === 0 ? null : sectorLayer(placed, colorOf);
-};
-
-/** 区间柱：按 arrangement / series 分派普通 / dodge / stack 三种几何（cartesian-only） */
-const lowerInterval = (mark: Mark, rows: Array<ExternalRow>, frame: CartesianFrame, colorOf: ColorOf | undefined, markProvenance: MarkProvenance | undefined): IRScope | null => {
-  if (mark.type !== 'interval') return null;
-  const bandwidth = frame.primary.bandwidth;
-  if (mark.arrangement === 'stack') return lowerStackedBars(mark, rows, frame, colorOf, bandwidth, markProvenance);
-  if (mark.series) return lowerDodgedBars(mark, rows, frame, colorOf, bandwidth, markProvenance);
-  return lowerPlainBars(mark, rows, frame, colorOf, bandwidth, markProvenance);
 };
 
 /** area mark 的默认 baseline（回边贴的值；cartesian = y 基线、polar = 径向内界方向） */
@@ -548,6 +416,7 @@ const lowerArea = (mark: Mark, rows: Array<ExternalRow>, frame: CoordinateFrame,
  *   一个 mark 会展成 N 个图元（N = 数据点数），任何能提到图层的东西——样式、默认值、共享上下文——都别逐元素重复写。
  *   color 编码时按颜色分子 Scope；series 把记录拆成多系列（多线 / 分组 / 堆叠柱）。无可绘制图元返回 null。
  *   markProvenance 给定（provenance 开）→ 给图层 / series Path / datum Node 绑 id + 来源 meta；否则产物逐字节等价 alpha.4。
+ *   datum id 走 markProvenance.registerDatumId（plot 级共享 seen、跨 mark 查重）。
  */
 export const lowerMark = (mark: Mark, rows: Array<ExternalRow>, frame: CoordinateFrame, colorOf?: ColorOf, markProvenance?: MarkProvenance): IRChild | null => {
   // point / line / area 坐标系无关，经 frame.project（polar 连续角轴段内采样）投影
