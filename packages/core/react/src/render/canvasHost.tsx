@@ -1,8 +1,10 @@
 import { type CSSProperties, type FC, useEffect, useReducer, useRef } from 'react';
 import type { Scene } from '@retikz/core';
 import { hitTest, renderToCanvas } from '@retikz/render/canvas';
+import type { AnimationPropertyRegistry, EasingRegistry } from '@retikz/render/canvas';
 import type { HydrationHandlers } from '@retikz/render/hydration';
 import { createHydrationController } from '@retikz/render/hydration';
+import { createClock, prefersReducedMotion, sceneAnimationDurationMs, sceneHasAnimations, sceneHasAutoplayTrigger } from '@retikz/render/animation';
 
 /** 按 href 缓存的图片加载态（image paint server 用；跨 CanvasHost 实例共享去重） */
 type ImageEntry = { img: HTMLImageElement; loaded: boolean; failed: boolean; waiters: Set<() => void> };
@@ -55,6 +57,12 @@ export type CanvasHostProps = {
   className?: string;
   /** 透传样式 */
   style?: CSSProperties;
+  /** 是否播放动画（缺省 true）；false 或 prefers-reduced-motion → 只画 base 静态、不起 rAF */
+  animate?: boolean;
+  /** 自定义 easing 注册表（透传 drawScene） */
+  easings?: EasingRegistry;
+  /** 自定义 property 插值器注册表（透传 drawScene） */
+  animationProperties?: AnimationPropertyRegistry;
 };
 
 const devicePixelRatio = (): number => {
@@ -102,7 +110,8 @@ const clientToScene = (
 
 /** React canvas 宿主：管理 `<canvas>` 与全量重绘 effect */
 export const CanvasHost: FC<CanvasHostProps> = props => {
-  const { scene, handlers, width, height, className, style } = props;
+  const { scene, handlers, width, height, className, style, animate: animateProp, easings, animationProperties } = props;
+  const animate = animateProp !== false;
   const ref = useRef<HTMLCanvasElement>(null);
   // image 加载完 / 主题切换都触发重绘（renderToCanvas 重读 getComputedStyle 的 color → currentColor）
   const [renderTick, bumpRender] = useReducer((n: number) => n + 1, 0);
@@ -133,12 +142,23 @@ export const CanvasHost: FC<CanvasHostProps> = props => {
     const bitmapHeight = hasNominalSize ? height : scene.layout.height;
     canvas.width = Math.max(1, Math.round(bitmapWidth * ratio));
     canvas.height = Math.max(1, Math.round(bitmapHeight * ratio));
-    renderToCanvas(canvas, scene, {
+    const baseOptions = {
       devicePixelRatio: ratio,
       defaultFontFamily: canvasFontFamily(canvas),
-      getImage: href => loadImage(href, bumpRender),
+      getImage: (href: string) => loadImage(href, bumpRender),
+      easings,
+      animationProperties,
+    };
+    // base 静态先画一帧；含动画且未降级 → 起 rAF 共享时钟逐帧重绘（auto track 自动播；manual/onEvent/visible 渲染 base）
+    renderToCanvas(canvas, scene, baseOptions);
+    if (!animate || prefersReducedMotion() || !sceneHasAnimations(scene)) return undefined;
+    const clock = createClock({
+      durationMs: sceneAnimationDurationMs(scene),
+      onFrame: time => renderToCanvas(canvas, scene, { ...baseOptions, time }),
     });
-  }, [className, height, renderTick, scene, style, width]);
+    if (sceneHasAutoplayTrigger(scene)) clock.play();
+    return () => clock.dispose();
+  }, [animate, animationProperties, className, easings, height, renderTick, scene, style, width]);
 
   // 水合：把 handler 注册表经 createHydrationController + (hitTest + 逆 meet-fit 坐标映射) 绑到 <canvas>。
   // locate(event) = client 坐标 → clientToScene 逆 meet-fit 成 Scene 点 → hitTest 返回命中图元 id。

@@ -233,6 +233,7 @@ export const Layout: FC<LayoutProps> = props => {
         height={height}
         className={className}
         style={style}
+        animate={animate}
       />
     );
   }

@@ -5,7 +5,7 @@
  *   自定义通道 → 注册表 interpolate + applyCanvas，未注册 warn+skip。viewBox 是 scene 根镜头、不在元素级。
  */
 import { AnimationProperty, type PathCommand, type ScenePrimitive } from '@retikz/core';
-import { classifyProperty, primHasStroke, resolveTransformOrigin } from '../animation/channels';
+import { classifyProperty, isAutoplayTrigger, primHasStroke, resolveTransformOrigin } from '../animation/channels';
 import { evaluateTrack } from '../animation/evaluate';
 import type { EasingRegistry } from '../animation/types';
 import type { AnimationPropertyRegistry } from '../animation/registry';
@@ -77,6 +77,8 @@ export const applyPrimAnimations = (
 ): ScenePrimitive => {
   const overrides: Record<string, unknown> = {};
   for (const track of prim.animations ?? []) {
+    // 按 trigger 过滤：rAF 共享时钟只施加 auto（load/缺省）track；manual / onEvent / visible 不自动播（渲染 base）
+    if (!isAutoplayTrigger(track)) continue;
     const cls = classifyProperty(track.property);
     if (cls === 'custom') {
       const def = context.animationProperties?.[track.property];

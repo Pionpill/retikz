@@ -16,7 +16,9 @@ export {
   createClock,
   prefersReducedMotion,
   sceneHasAnimations,
+  sceneHasAutoplayTrigger,
   sceneAnimationDurationMs,
   bindWaapiDescriptors,
 } from './runtime';
+export { isAutoplayTrigger } from './channels';
 export type { AnimationControls, ClockOptions } from './runtime';

@@ -6,6 +6,7 @@
  *   （SSR / 老浏览器）优雅退化。
  */
 import type { IRAnimationTrack, Scene, ScenePrimitive } from '@retikz/core';
+import { isAutoplayTrigger } from './channels';
 import type { WaapiDescriptor } from '../svg/animation/waapi';
 
 /** 可能缺席的运行时全局（SSR / 老浏览器）：lib.dom 把它们类型成必有，这里显式放宽成可选以正确降级 */
@@ -129,6 +130,17 @@ const primsHaveAnimations = (prims: ReadonlyArray<ScenePrimitive>): boolean =>
 /** scene 是否含任意动画（元素级或 scene 根镜头） */
 export const sceneHasAnimations = (scene: Scene): boolean =>
   (scene.animations?.length ?? 0) > 0 || primsHaveAnimations(scene.primitives);
+
+/** 递归判断 prim 树是否有自动播放（load/缺省）track */
+const primsHaveAutoplay = (prims: ReadonlyArray<ScenePrimitive>): boolean =>
+  prims.some(p => (p.animations ?? []).some(isAutoplayTrigger) || (p.type === 'group' && primsHaveAutoplay(p.children)));
+
+/**
+ * scene 是否含「自动播放」(load/缺省) track（元素级或根镜头）
+ * @description Canvas runtime 据此决定是否自动 `clock.play()`；全为 visible/manual/onEvent → 不自动起钟。
+ */
+export const sceneHasAutoplayTrigger = (scene: Scene): boolean =>
+  (scene.animations ?? []).some(isAutoplayTrigger) || primsHaveAutoplay(scene.primitives);
 
 /** 一条 track 的活动结束时刻（毫秒）；iterations infinite → Infinity */
 const trackEndMs = (track: IRAnimationTrack): number => {

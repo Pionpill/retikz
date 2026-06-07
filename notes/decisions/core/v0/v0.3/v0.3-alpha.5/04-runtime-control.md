@@ -23,12 +23,14 @@ ADR-02/03 让 SVG/Canvas **有能力**播放（给数据 / 给时刻就能出帧
 
 ### trigger 落地（SVG WAAPI + Canvas 通用）
 
-| trigger | runtime 行为 |
-|---|---|
-| `load` | 挂载即播（SVG=CSS 自播；Canvas=rAF 立即起） |
-| `visible` | `IntersectionObserver` 进视口才播（复用水合的根级观察） |
-| `manual` | 不自动播；返回控制句柄 `{ play, pause, seek(t), cancel }`（WAAPI-like；Canvas 端控制 rAF 时钟） |
-| `{ onEvent }` | 桥水合：按事件名（如 `'click'`）经 alpha.3 的事件委托绑定，命中即播 |
+| trigger | SVG runtime 行为 | Canvas runtime 行为（本批） |
+|---|---|---|
+| `load` | 挂载即播（CSS 自播） | rAF 立即起、逐帧施加 |
+| `visible` | `IntersectionObserver` 进视口才播（WAAPI） | **本批不 per-track 接 IO**：auto 时钟不施加该 track，渲染 base（后续补 canvas 视口接线） |
+| `manual` | 不自动播；WAAPI 句柄 `{ play, pause, seek }` | **本批 auto 时钟不施加该 track**（渲染 base）；scene 级 `view.animation` 句柄控制 auto track 的时钟（per-track manual canvas 后续） |
+| `{ onEvent }` | 桥水合：事件名经 alpha.3 委托绑定，命中即播（WAAPI） | **本批不施加**（渲染 base，后续补 canvas 事件接线） |
+
+**Canvas trigger 关键约束（本批）**：Canvas 是 scene 级共享 rAF 时钟、逐帧重绘整个 scene；要避免「同元素的 manual track 随 load track 一起跑」，Canvas 渲染层（`applyPrimAnimations`）**按 `isAutoplayTrigger` 过滤——只施加 `load`/缺省 track**，`visible`/`manual`/`{onEvent}` 一律渲染 base。它们的 per-track canvas 触发（需 per-track 子时钟 / 视口·事件接线）列为后续。SVG 端因有逐元素 DOM，trigger 全支持（不受此约束）。
 
 回调函数（onComplete 等）始终在 runtime 注册、**不进 IR**（与水合同源）。
 
@@ -41,13 +43,14 @@ ADR-02/03 让 SVG/Canvas **有能力**播放（给数据 / 给时刻就能出帧
 
 ### 静态截帧 `{ at: t }`（SSR 封面 / 导出 / Node）
 
-- `renderToSvgString(ir, { at: t })`：用 `evaluateTrack`（ADR-03 共享引擎）算每条 track 在 t 的值，**作为静态属性写进 SVG**（无 CSS/WAAPI，纯静态一帧），供 SSR 封面 / 无 JS 环境。
+- `renderToSvgString(ir, { at: t })`：用 `evaluateTrack`（ADR-03 共享引擎）算每条 track 在 t 的值，**作为静态属性写进 SVG**（无 CSS/WAAPI，纯静态一帧），供 SSR 封面 / 无 JS 环境。**（本批未实装，见「实现说明」后续；Canvas 截帧已可用）**
 - Canvas：`drawScene(ctx, scene, { time: t })` 本就是单帧（ADR-03）= 截帧。
 - 截帧与「连续播放」共用 `evaluateTrack`，同 t 同帧。
 
 ### React 集成
 
-- `<Layout>` 渲染含 animations 的 IR 时按 trigger 自动播（svg / canvas 双模）；`manual` 经 ref 暴露控制句柄；`animate={false}` prop 走静态。handler / 控制不进 IR。
+- `<Layout>` 渲染含 animations 的 IR 时按 trigger 自动播：**svg 双模 / canvas 双模均已接**（svg 走内联 CSS + WAAPI 桥；canvas `CanvasHost` 起 rAF 共享时钟，同 vanilla `mountCanvas`，遵守上面的 Canvas trigger 约束——只 auto track 逐帧、其余渲染 base）；`animate={false}` prop 与 `prefers-reduced-motion` 走静态。`<Layout animations>` 注入 scene 根镜头（cameraTo）。handler / 控制不进 IR。
+- **后续（react）**：`manual` 的 per-element `ref` 控制句柄（react 侧目前不暴露 manual 句柄，svg manual 仅经全局 `view.animation` 概念在 vanilla 暴露）；canvas 的 per-track visible/manual/onEvent 触发。
 
 理由：
 
@@ -59,8 +62,9 @@ ADR-02/03 让 SVG/Canvas **有能力**播放（给数据 / 给时刻就能出帧
 
 - **runtime 基建落 `@retikz/render/animation`（非 vanilla-local clock.ts）**：`createClock` / `prefersReducedMotion` / `bindWaapiDescriptors` / `sceneHasAnimations` / `sceneAnimationDurationMs` 放共享子路径，vanilla + react 共用一份——优于 ADR 草案里 vanilla 私有 clock.ts（否则 react 要再抄一遍）。clock onFrame 由各 adapter 注入（Canvas 调 `renderToCanvas({time})`）。
 - **vanilla 已落地**：`mountCanvas`（含动画 → 起 rAF 共享时钟，load/visible 自动播、全 manual 不自动播、`view.animation` 句柄 play/pause/seek）；`mountSvg`（`{animate}` 透传 + 交互 track WAAPI 桥 + `view.animation`）；`renderToSvgString`（`{animate}` 透传）；`{animate:false}` / reduced-motion → 静态。
-- **react 已落地**：`<Layout animate>` prop（false → 静态）；SVG 模式 load track 内联 CSS 自播（`buildSvgDocument` 默认开）、交互 track WAAPI 桥（`useSvgRootBinding` effect）。
-- **后续（未在本批）**：① **SVG 静态截帧 `{at:t}`**（Canvas 截帧已由 `drawScene(…,{time:t})` 提供；SVG 需把某时刻值写成静态属性的 freeze 通路，留后续）；② **react canvas rAF 播放**（`CanvasHost` 接共享时钟）；③ **react manual `ref` 控制句柄**与 react 侧 `prefers-reduced-motion` 接线。这些不阻塞 SVG（react/vanilla）与 Canvas（vanilla）的完整播放。
+- **react 已落地**：`<Layout animate>` prop（false → 静态）；SVG 模式 load track 内联 CSS 自播（`buildSvgDocument` 默认开）+ 交互 track WAAPI 桥（`useSvgRootBinding` effect）；**canvas 模式 `CanvasHost` 起 rAF 共享时钟**（同 vanilla `mountCanvas`，`prefers-reduced-motion` / `animate={false}` 降级）；`<Layout animations>` prop 注入根镜头。
+- **Canvas trigger 过滤（评审 P1 修复）**：`applyPrimAnimations` 按 `isAutoplayTrigger` 只施加 `load`/缺省 track，避免同元素 manual/onEvent/visible 随 auto 时钟泄漏自动跑（vanilla + react canvas 共享此修复）。
+- **后续（未在本批）**：① **SVG 静态截帧 `{at:t}`**（Canvas 截帧已由 `drawScene(…,{time:t})` 提供；SVG 需把某时刻值写成静态属性的 freeze 通路）；② **canvas 的 per-track visible/manual/onEvent 触发**（需 per-track 子时钟 / 视口·事件接线）；③ **react manual per-element `ref` 控制句柄** + react 侧自定义 easings/animationProperties prop（SVG/canvas 两模目前都未在 `<Layout>` 暴露自定义注册表，一致缺口）。
 
 ## 不在本 ADR 范围
 
@@ -81,16 +85,22 @@ ADR-02/03 让 SVG/Canvas **有能力**播放（给数据 / 给时刻就能出帧
 
 ### 改动
 
+> 实装与草案的差异：rAF 时钟 / reducedMotion / WAAPI 桥 / trigger 判定**落共享 `@retikz/render/animation/runtime.ts`**（非 vanilla 私有 clock.ts / reducedMotion.ts），vanilla + react 共用一份。
+
 | 文件 | 操作 | 内容 |
 |---|---|---|
-| `packages/core/vanilla/src/animation/clock.ts` | 新建 | rAF 时钟循环（start/stop/seek/pause），调 `drawScene({time})`；scene 级共享时钟 |
-| `packages/core/vanilla/src/mountCanvas.ts` | 修改 | 检测 animations → 起 clock；trigger（load/visible/manual/onEvent）落地；返回控制句柄 |
-| `packages/core/vanilla/src/mountSvg.ts` | 修改 | 交互 track 读 WAAPI 描述调 `element.animate` + trigger 绑定；load 由 CSS 自播 |
-| `packages/core/vanilla/src/renderToSvgString.ts` | 修改 | 加 `{ at?: t }`（静态截帧，import `evaluateTrack` 自 `@retikz/render/animation`，ADR-03 建）+ `{ animate?: false }` 透传 ADR-02 |
-| `packages/core/vanilla/src/reducedMotion.ts` | 新建 | `matchMedia('(prefers-reduced-motion: reduce)')` 判定 → 静态关口 |
-| `packages/core/react/src/kernel/Layout.tsx` | 修改 | 双模按 trigger 自动播 + `animate` prop + `manual` 控制句柄（ref） |
-| `packages/core/{vanilla,react}/src/index.ts` | 修改 | 导出播放控制 API / 句柄类型 |
-| `packages/core/vanilla/tests/animation.test.ts` + `packages/core/react/tests/animation.test.tsx` | 新建 | 见测试象限 |
+| `packages/core/render/src/animation/runtime.ts` | 新建 | `createClock`（rAF 共享时钟）/ `prefersReducedMotion` / `bindWaapiDescriptors`（WAAPI 桥）/ `sceneHasAnimations` / `sceneHasAutoplayTrigger` / `sceneAnimationDurationMs`；vanilla + react 共用 |
+| `packages/core/render/src/animation/channels.ts` | 修改 | 加 `isAutoplayTrigger`（Canvas trigger 过滤判定） |
+| `packages/core/render/src/canvas/animate.ts` | 修改 | `applyPrimAnimations` 按 `isAutoplayTrigger` 过滤（只施加 auto track，修 P1 manual 泄漏） |
+| `packages/core/vanilla/src/mountCanvas.ts` | 修改 | 检测 animations → 起 clock；`sceneHasAutoplayTrigger` 决定自动播；返回 `view.animation` 句柄 |
+| `packages/core/vanilla/src/mountSvg.ts` | 修改 | `{animate}` 透传 + 交互 track WAAPI 桥（`bindWaapiDescriptors`）；load 由 CSS 自播 |
+| `packages/core/vanilla/src/renderToSvgString.ts` | 修改 | `{ animate?: false }` 透传 ADR-02（SVG `{at:t}` 截帧后续） |
+| `packages/core/vanilla/src/{types,index}.ts` | 修改 | `animate` 选项 + `AnimationControls` 句柄类型导出 |
+| `packages/core/react/src/kernel/Layout.tsx` | 修改 | `animate` prop + `animations` prop（根镜头）；svg 交互 WAAPI 桥 effect；canvas 模式传 `animate` 给 `CanvasHost` |
+| `packages/core/react/src/render/canvasHost.tsx` | 修改 | 起 rAF 共享时钟（同 mountCanvas）；`animate` / reduced-motion 降级 |
+| `packages/core/react/src/render/svgToReact.ts` | 修改 | `class`→`className` 映射（动画 class） |
+| `packages/core/render/src/animation/index.ts` | 修改 | barrel 导出 runtime + `isAutoplayTrigger` |
+| `packages/core/vanilla/tests/animation.test.ts` + `packages/core/react/tests/animation.test.tsx` + `packages/core/render/tests/canvas-animation.test.ts` | 新建/扩 | 见测试象限（含 mixed-trigger 过滤、react canvas rAF） |
 
 ### 测试象限
 

@@ -9,15 +9,29 @@ import { Layout, Node } from '../src';
  * ADR-04 runtime（react，jsdom）：SVG load track → 内联 <style> 自播；交互 track → WAAPI 桥；animate={false} 静态。
  */
 let animateSpy: ReturnType<typeof vi.fn>;
+let rafSpy: ReturnType<typeof vi.fn>;
+
+const createRecordingContext = (): CanvasRenderingContext2D => {
+  const target: Record<string | symbol, unknown> = { canvas: null, fillStyle: '#000', strokeStyle: '#000', lineWidth: 1, lineDashOffset: 0 };
+  return new Proxy(target, {
+    get: (t, p) => (p in t ? t[p] : () => undefined),
+    set: (t, p, v) => ((t[p] = v), true),
+  }) as unknown as CanvasRenderingContext2D;
+};
 
 beforeEach(() => {
   (globalThis as unknown as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
   animateSpy = vi.fn(() => ({ play: vi.fn(), pause: vi.fn(), cancel: vi.fn(), currentTime: 0, playState: 'idle' }));
   (Element.prototype as unknown as { animate: unknown }).animate = animateSpy;
+  vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockImplementation(() => createRecordingContext());
+  rafSpy = vi.fn(() => 1);
+  vi.stubGlobal('requestAnimationFrame', rafSpy);
+  vi.stubGlobal('cancelAnimationFrame', vi.fn());
 });
 
 afterEach(() => {
   vi.restoreAllMocks();
+  vi.unstubAllGlobals();
 });
 
 const FADE: Array<IRAnimationTrack> = [{ property: 'opacity', keyframes: [{ at: 0, value: 0 }, { at: 1, value: 1 }], duration: 400 }];
@@ -59,5 +73,25 @@ describe('react SVG 动画', () => {
       </Layout>,
     );
     expect(animateSpy).toHaveBeenCalled();
+  });
+});
+
+describe('react canvas 动画', () => {
+  it('renderer="canvas" + load track → 起 rAF 时钟', async () => {
+    await mount(
+      <Layout renderer="canvas" width={100} height={100}>
+        <Node id="a" position={[0, 0]} fill="red" minimumSize={2} animations={FADE} />
+      </Layout>,
+    );
+    expect(rafSpy).toHaveBeenCalled();
+  });
+
+  it('renderer="canvas" + animate={false} → 不起 rAF（静态）', async () => {
+    await mount(
+      <Layout renderer="canvas" width={100} height={100} animate={false}>
+        <Node id="a" position={[0, 0]} fill="red" minimumSize={2} animations={FADE} />
+      </Layout>,
+    );
+    expect(rafSpy).not.toHaveBeenCalled();
   });
 });

@@ -81,6 +81,25 @@ describe('边界', () => {
   });
 });
 
+describe('trigger 过滤（auto 时钟只施加 load/缺省 track）', () => {
+  it('混合 load + manual：load translateX 应用、manual translateY 不应用', () => {
+    const load: IRAnimationTrack = { property: 'translateX', keyframes: [{ at: 0, value: 0 }, { at: 1, value: 100 }], duration: 400 };
+    const manual: IRAnimationTrack = { property: 'translateY', keyframes: [{ at: 0, value: 0 }, { at: 1, value: 100 }], duration: 400, trigger: 'manual' };
+    const ctx = createCtx();
+    drawScene(ctx, scene([rect({ animations: [load, manual] })]), { time: 200 });
+    expect(argsOf(ctx, 'translate')).toContainEqual([50, 0]); // load 生效
+    expect(argsOf(ctx, 'translate')).not.toContainEqual([0, 50]); // manual 不自动跑
+  });
+
+  it('onEvent / visible track 同样不被 auto 时钟施加', () => {
+    const onEvent: IRAnimationTrack = { property: 'translateX', keyframes: [{ at: 0, value: 0 }, { at: 1, value: 100 }], duration: 400, trigger: { onEvent: 'click' } };
+    const visible: IRAnimationTrack = { property: 'translateY', keyframes: [{ at: 0, value: 0 }, { at: 1, value: 100 }], duration: 400, trigger: 'visible' };
+    const ctx = createCtx();
+    drawScene(ctx, scene([rect({ animations: [onEvent, visible] })]), { time: 200 });
+    expect(argsOf(ctx, 'translate')).toHaveLength(0);
+  });
+});
+
 describe('降级', () => {
   it('未注册自定义 property → warn + skip', () => {
     const warn = vi.fn();

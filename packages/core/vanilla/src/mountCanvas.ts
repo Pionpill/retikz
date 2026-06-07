@@ -1,19 +1,10 @@
-import type { IRAnimationTrack, Scene, ScenePrimitive } from '@retikz/core';
+import type { Scene } from '@retikz/core';
 import { hitTest, renderToCanvas } from '@retikz/render/canvas';
 import { createHydrationController } from '@retikz/render/hydration';
-import { type AnimationControls, createClock, prefersReducedMotion, sceneAnimationDurationMs, sceneHasAnimations } from '@retikz/render/animation';
+import { type AnimationControls, createClock, prefersReducedMotion, sceneAnimationDurationMs, sceneHasAnimations, sceneHasAutoplayTrigger } from '@retikz/render/animation';
 import { isFigure } from './builder/isFigure';
 import { toScene } from './toScene';
 import type { CanvasView, HydrateOptions, MountCanvasOptions, RenderInput, ScenePoint } from './types';
-
-/** scene 是否有「自动播放」的 track（load / 缺省 / visible）；全 manual / onEvent → 不自动起时钟 */
-const hasAutoplayTrigger = (scene: Scene): boolean => {
-  const auto = (track: IRAnimationTrack): boolean =>
-    track.trigger === undefined || track.trigger === 'load' || track.trigger === 'visible';
-  const walk = (prims: ReadonlyArray<ScenePrimitive>): boolean =>
-    prims.some(p => (p.animations ?? []).some(auto) || (p.type === 'group' && walk(p.children)));
-  return (scene.animations ?? []).some(auto) || walk(scene.primitives);
-};
 
 /** 设备像素比：取有限正数、否则回退 1（镜像 react CanvasHost） */
 const resolveDevicePixelRatio = (override: number | undefined): number => {
@@ -79,7 +70,7 @@ export const mountCanvas = (
             animationProperties: options.animationProperties,
           }),
       });
-      if (hasAutoplayTrigger(scene)) clock.play();
+      if (sceneHasAutoplayTrigger(scene)) clock.play();
     }
   };
 

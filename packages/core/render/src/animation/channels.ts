@@ -2,7 +2,7 @@
  * renderer 无关的动画通道工具：property 分类、transform 支点解析、描边判定
  * @description SVG（svg/animation）与 Canvas（canvas/drawScene）共用，避免两端通道语义漂移。
  */
-import { AnimationProperty, type IRAnimationOrigin, type ScenePrimitive } from '@retikz/core';
+import { AnimationProperty, type IRAnimationOrigin, type IRAnimationTrack, type ScenePrimitive } from '@retikz/core';
 
 /** transform 类通道（落 transform，需支点 origin） */
 const TRANSFORM_PROPERTIES = new Set<string>([
@@ -84,3 +84,12 @@ export const resolveTransformOrigin = (
 /** prim 是否带描边（pathDraw 揭示需描边） */
 export const primHasStroke = (prim: ScenePrimitive): boolean =>
   'stroke' in prim && prim.stroke !== undefined && prim.stroke !== 'none';
+
+/**
+ * track 是否「自动播放」触发器（`load` / 缺省）
+ * @description Canvas 后端按 trigger 过滤：rAF 共享时钟只施加 auto track；`visible` / `manual` / `{onEvent}`
+ *   不被自动播（否则同元素的 manual track 会随 load track 一起跑，违 trigger 语义）。SVG 后端按元素 DOM
+ *   逐 track 接 WAAPI / IO，不走本判定。Canvas 的 per-track visible/manual/onEvent 触发为后续。
+ */
+export const isAutoplayTrigger = (track: IRAnimationTrack): boolean =>
+  track.trigger === undefined || track.trigger === 'load';
