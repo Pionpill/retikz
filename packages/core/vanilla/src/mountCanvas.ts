@@ -1,6 +1,12 @@
 import type { Scene } from '@retikz/core';
 import { hitTest, renderToCanvas } from '@retikz/render/canvas';
-import { createHydrationController } from '@retikz/render/hydration';
+import {
+  type BuildContext,
+  createClockAnimationControls,
+  createHydrationController,
+  geometryOf,
+  metaOf,
+} from '@retikz/render/hydration';
 import { type AnimationControls, createClock, prefersReducedMotion, sceneAnimationDurationMs, sceneHasAnimations, sceneHasAutoplayTrigger } from '@retikz/render/animation';
 import { isFigure } from './builder/isFigure';
 import { toScene } from './toScene';
@@ -108,13 +114,30 @@ export const mountCanvas = (
    */
   const hydrate = (hydrateOptions: HydrateOptions): { dispose: () => void } => {
     const context2d = canvas.getContext('2d') ?? undefined;
-    const controller = createHydrationController(canvas, hydrateOptions.handlers, event => {
+    const locate = (event: Event): string | null => {
       const scenePoint = clientToScene((event as MouseEvent).clientX, (event as MouseEvent).clientY);
       // hitTest 把点测点表达在 Scene user units / 各图元局部帧、自管 group transform 栈；live canvas context
       // 经 renderToCanvas 后残留 meet-fit transform，须先归一到 identity 再点测，否则路径被二次缩放偏移。
       context2d?.setTransform(1, 0, 0, 1, 0, 0);
       return hitTest(currentScene, scenePoint, { context2d });
-    });
+    };
+    // canvas 富 ctx：无逐元素 DOM（element=null），point 经 clientToScene 逆 meet-fit，动画 coarse（scene 级单时钟）。
+    // 读 live currentScene / clock，update 后自动反映新图。
+    const buildContext: BuildContext = (event, id) => {
+      const mouse = event as MouseEvent;
+      return {
+        id,
+        meta: metaOf(currentScene, id),
+        renderer: 'canvas',
+        element: null,
+        root: canvas,
+        point: typeof mouse.clientX === 'number' ? clientToScene(mouse.clientX, mouse.clientY) : null,
+        geometry: geometryOf(currentScene, id),
+        animation: createClockAnimationControls(clock),
+        scene: currentScene,
+      };
+    };
+    const controller = createHydrationController(canvas, hydrateOptions.handlers, locate, buildContext);
     return { dispose: controller.dispose };
   };
 

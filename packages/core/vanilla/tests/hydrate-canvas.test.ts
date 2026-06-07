@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { IR } from '@retikz/core';
-import { mountCanvas } from '../src';
+import { type HydrationContext, mountCanvas } from '../src';
 
 /**
  * @retikz/vanilla mountCanvas 的 canvas 水合（client 坐标 → 逆 meet-fit → hitTest 命中 → handler）
@@ -257,6 +257,32 @@ describe('@retikz/vanilla mountCanvas 水合（坐标映射 + hitTest）', () =>
     const { clientX, clientY } = sceneToClient(50, 50);
     view.root.dispatchEvent(new MouseEvent('click', { bubbles: true, clientX, clientY }));
     expect(onClick).toHaveBeenCalledTimes(1);
+
+    container.remove();
+  });
+
+  it('hydrate-ctx：canvas handler 收 (event, ctx)——element=null、renderer=canvas，id/meta/geometry 仍对', () => {
+    const metaBoxIr: IR = {
+      version: 1,
+      type: 'scene',
+      children: [
+        { type: 'node', id: 'box', position: [SCENE_SIZE / 2, SCENE_SIZE / 2], shape: 'rectangle', minimumWidth: SCENE_SIZE, minimumHeight: SCENE_SIZE, fill: '#0a0', meta: { series: 'sales', i: 3 } },
+      ],
+    };
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const view = mountCanvas(container, metaBoxIr, { width: CSS_WIDTH, height: CSS_HEIGHT });
+    let ctx: HydrationContext | undefined;
+    view.hydrate({ handlers: { box: { click: (_event, received) => { ctx = received; } } } });
+
+    const { clientX, clientY } = sceneToClient(50, 50);
+    view.root.dispatchEvent(new MouseEvent('click', { bubbles: true, clientX, clientY }));
+    expect(ctx?.id).toBe('box');
+    expect(ctx?.renderer).toBe('canvas');
+    expect(ctx?.element).toBeNull();
+    expect(ctx?.meta).toEqual({ series: 'sales', i: 3 });
+    expect(ctx?.geometry?.bbox.width).toBeGreaterThan(0);
+    expect(ctx?.point?.x).toBeCloseTo(50, 5);
 
     container.remove();
   });

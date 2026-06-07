@@ -10,6 +10,15 @@ export { renderToSvgString } from './renderToSvgString';
 export { mountSvg } from './mountSvg';
 export { hydrate } from './hydrate';
 export { mountCanvas } from './mountCanvas';
+// 透传 render 层水合 runtime 类型，方便 vanilla 用户单包 import（事件名 / 注册表 / handler ctx 类型）
+export type {
+  RetikzEventName,
+  HydrationHandlers,
+  HydrationHandler,
+  HydrationContext,
+  HydrationAnimationControls,
+  HydrationGeometry,
+} from '@retikz/render/hydration';
 // 具名动画 preset（产 AnimationTrack 的纯工厂，re-export 自 core；配 IR / builder 的 animations）
 export {
   fadeIn,
