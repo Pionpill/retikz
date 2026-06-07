@@ -11,7 +11,7 @@ import {
   scaleUtc,
 } from 'd3-scale';
 import { schemeCategory10 } from 'd3-scale-chromatic';
-import { type BandScale, type OrdinalScale, PlotScale, type PointScale, type ScalarValue, type Scale, type TimeScale } from '../ir';
+import { type BandScale, type FieldType, type OrdinalScale, PlotFieldType, PlotScale, type PointScale, type ScalarValue, type Scale, type ScaleType, type TimeScale } from '../ir';
 import { isFiniteNumber } from './field';
 import { isIsoDateString } from './infer';
 
@@ -263,6 +263,42 @@ export const timePositionScale = (scale: ScaleTime<number, number>): PositionSca
     scale.range([range[0], range[1]]);
   },
 });
+
+/**
+ * 按字段类型派生默认位置 scale 定义（type-driven 选型）
+ * @description quantitative→linear、temporal→time、nominal/ordinal→band、proportion→linear domain [0,1]；
+ *   undefined（无字段绑定，如全常量通道）→ linear 兜底。仅在 coordinate 省略 scale 绑定时调用。
+ */
+export const deriveScale = (fieldType: FieldType | undefined, name: string): Scale => {
+  switch (fieldType) {
+    case PlotFieldType.Temporal:
+      return { type: PlotScale.Time, name };
+    case PlotFieldType.Nominal:
+    case PlotFieldType.Ordinal:
+      return { type: PlotScale.Band, name };
+    case PlotFieldType.Proportion:
+      return { type: PlotScale.Linear, name, domain: [0, 1] };
+    default:
+      return { type: PlotScale.Linear, name };
+  }
+};
+
+/**
+ * 类型 ↔ scale 兼容校验（fail-loud，不强转）
+ * @description 仅拒明确错配：连续 scale（linear/time）配分类字段（nominal/ordinal）、分类 scale（band/point）配 temporal。
+ *   quantitative / proportion 灵活（可作连续亦可作分类带），不拦。
+ */
+export const assertScaleFieldCompatible = (role: string, scaleType: ScaleType, fieldType: FieldType, scaleName: string): void => {
+  const continuous = scaleType === PlotScale.Linear || scaleType === PlotScale.Time;
+  const categorical = scaleType === PlotScale.Band || scaleType === PlotScale.Point;
+  const fieldCategorical = fieldType === PlotFieldType.Nominal || fieldType === PlotFieldType.Ordinal;
+  if (continuous && fieldCategorical) {
+    throw new Error(`lowerPlots: coordinate.${role} scale "${scaleName}" (${scaleType}) incompatible with ${fieldType} field; use band/point`);
+  }
+  if (categorical && fieldType === PlotFieldType.Temporal) {
+    throw new Error(`lowerPlots: coordinate.${role} scale "${scaleName}" (${scaleType}) incompatible with temporal field; use time`);
+  }
+};
 
 /**
  * 按 scale 定义建对应 PositionScale

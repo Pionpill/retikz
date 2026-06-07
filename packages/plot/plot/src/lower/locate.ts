@@ -1,12 +1,14 @@
 import type { IRJsonObject } from '@retikz/core';
 import { type ExternalDatasets, type ExternalRow, type Mark, type PlotSpec } from '../ir';
 import { type IntervalContext, buildIntervalContext, datumAnchor } from './anchor';
+import { normalizeRows } from './coerce';
 import { DEFAULT_FONT_SIZE } from './layout';
 import { type LowerPlotsOptions, resolveFrame } from './expand';
 import type { CoordinateFrame } from './project';
 import { type ProvenanceContext, createDatumIdRegistrar, datumMeta, readSourceIndex, tagSourceIndex } from './provenance';
 import { applyTransforms } from './transform';
 import { resolveFieldPath } from './field';
+import { collectUserSourceFields, resolveFieldTypes } from './validate';
 
 /** 默认整图尺寸（与 expand.ts 对齐，保 locator 投影与 lowering 一致） */
 const DEFAULT_WIDTH = 480;
@@ -77,13 +79,19 @@ export const createPlotLocator = (spec: PlotSpec, datasets: ExternalDatasets, op
     return empty;
   }
 
-  // 与 expandPlot 同序：tagSourceIndex（clone，不动入参）→ applyTransforms。locator 总要 sourceIndex 供 meta 合成。
-  const rows = applyTransforms(tagSourceIndex(dataset), spec.transform);
+  // 与 expandPlot 同序：tagSourceIndex（clone，不动入参）→ 解析类型 → 归一化（仅 model 在时）→ applyTransforms。
+  // 必须与 lowering 完全同序，否则 locator 落点与实际渲染漂移（coercion / fieldMap 改名后尤甚）。
+  const ingested = tagSourceIndex(dataset);
+  const fieldTypes = resolveFieldTypes(spec.data.model, ingested, collectUserSourceFields(spec));
+  const fieldMap = options.fieldMaps?.[spec.data.reference];
+  const normalized = spec.data.model !== undefined ? normalizeRows(ingested, fieldTypes, fieldMap) : ingested;
+  const rows = applyTransforms(normalized, spec.transform);
 
   // frame 复用 resolveFrame：投影几何与 provenance 无关（provenance 只影响 guide 层 id/meta），故传 undefined。
   const { frame }: { frame: CoordinateFrame } = resolveFrame({
     node: spec,
     rows,
+    fieldTypes,
     width,
     height,
     fontSize: options.fontSize ?? DEFAULT_FONT_SIZE,

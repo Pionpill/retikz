@@ -1,5 +1,4 @@
 import { compileToScene } from '@retikz/core';
-import type { IRScope } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 import { PlotFieldType, type PlotSpec, PlotSpecSchema } from '../../src/ir';
 import { lowerPlots } from '../../src/lower/expand';
@@ -64,8 +63,7 @@ describe('type-driven scale 集成（ADR-03）', () => {
     const scene = compile(spec({}, [{ name: 'a', type: 'temporal' }, { name: 'b', type: 'quantitative' }]), {
       d: [{ a: '2024-01-01', b: 10 }, { a: '2024-02-01', b: 14 }],
     });
-    const root = scene.children[0] as IRScope;
-    expect(root.children.length).toBeGreaterThan(0);
+    expect(scene.primitives.length).toBeGreaterThan(0);
   });
 
   it('derive_nominal_band', () => {

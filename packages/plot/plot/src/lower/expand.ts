@@ -1,13 +1,13 @@
 import { type CompositeDefinition, type IRChild, type IRScope, defineComposite } from '@retikz/core';
 import type { ZodType } from 'zod';
-import { type Channel, type ExternalDatasets, type ExternalRow, type Guide, type Mark, type OrdinalScale, PlotCoordinate, PlotMark, PlotScale, type PlotSpec, PlotSpecSchema, type Scale } from '../ir';
+import { type Channel, type ExternalDatasets, type ExternalRow, type FieldType, type Guide, type Mark, type OrdinalScale, PlotCoordinate, PlotMark, PlotScale, type PlotSpec, PlotSpecSchema, type Scale } from '../ir';
 import { channelValue, resolveFieldPath } from './field';
 import { type GuideContext, lowerGuide } from './guide';
 import { DEFAULT_FONT_SIZE, type Margins, type Rect, computePlotArea, computePolarFrame } from './layout';
 import { type ColorOf, lowerMark } from './mark';
 import { type CoordinateFrame, createCartesianFrame, createPolarFrame } from './project';
 import { type DatumIdRegistrar, type ProvenanceContext, createDatumIdRegistrar, rootMeta, tagSourceIndex } from './provenance';
-import { type TickSet, resolveOrdinalScale, resolvePositionScale } from './scale';
+import { type TickSet, assertScaleFieldCompatible, deriveScale, resolveOrdinalScale, resolvePositionScale } from './scale';
 import { normalizeRows, validateBoundData } from './coerce';
 import { applyTransforms } from './transform';
 import { collectUserSourceFields, resolveFieldTypes } from './validate';
@@ -91,6 +91,8 @@ export type ResolveFrameParams = {
   node: PlotSpec;
   /** transform 后的数据行（域推断、guide 刻度同源） */
   rows: Array<ExternalRow>;
+  /** 用户源字段 → FieldType（ADR-01 解析）；供 type-driven scale 派生与兼容校验（ADR-03） */
+  fieldTypes: Map<string, FieldType>;
   /** 整图宽（user units） */
   width: number;
   /** 整图高（user units） */
@@ -109,7 +111,7 @@ export type ResolveFrameParams = {
  *   抽成纯函数使 mark 下沉与 ADR-02 locator 共用同一投影（杜绝两套投影漂移）；产物与内联版等价。
  */
 export const resolveFrame = (params: ResolveFrameParams): ResolvedFrame => {
-  const { node, rows, width, height, fontSize, margin, provenance } = params;
+  const { node, rows, fieldTypes, width, height, fontSize, margin, provenance } = params;
   const coordinate = node.coordinate;
   const scaleByName = new Map(node.scales.map(scale => [scale.name, scale] as const));
 
@@ -159,11 +161,26 @@ export const resolveFrame = (params: ResolveFrameParams): ResolvedFrame => {
     return out;
   };
 
-  // 解析某角色绑定的 scale 定义；缺失抛清晰错误（沿用 coordinate.x/coordinate.angle 文案）
-  const requireScaleDef = (channel: 'x' | 'y' | 'angle' | 'radius', scaleName: string): Scale => {
-    const def = scaleByName.get(scaleName);
-    if (!def) throw new Error(`lowerPlots: coordinate.${channel} references unknown scale "${scaleName}"`);
-    return def;
+  // 某角色绑定字段的类型（取首个该角色绑了 field 的 mark），供省略 scale 时派生 / 显式 scale 兼容校验
+  const roleFieldType = (pick: (mark: Mark) => Channel | undefined): FieldType | undefined => {
+    for (const mark of node.marks) {
+      const channel = pick(mark);
+      if (channel?.field !== undefined) return fieldTypes.get(channel.field);
+    }
+    return undefined;
+  };
+
+  // 解析角色 scale（ADR-03）：显式绑定 → 查表（未声明仍抛，typo 守卫）+ 类型兼容校验；省略 → 按字段类型派生。
+  const resolveScaleForRole = (role: 'x' | 'y' | 'angle' | 'radius', scaleName: string | undefined, pick: (mark: Mark) => Channel | undefined): Scale => {
+    const fieldType = roleFieldType(pick);
+    if (scaleName !== undefined) {
+      const def = scaleByName.get(scaleName);
+      if (!def) throw new Error(`lowerPlots: coordinate.${role} references unknown scale "${scaleName}"`);
+      // 兼容校验只对「用户声明的类型」fail-loud；缺省推断是 best-effort 猜测，不据此报错（避免边缘数据误判 nominal 误伤）
+      if (fieldType !== undefined && node.data.model !== undefined) assertScaleFieldCompatible(role, def.type, fieldType, scaleName);
+      return def;
+    }
+    return deriveScale(fieldType, `__${role}`);
   };
 
   // 按坐标系解析出 CoordinateFrame（一次性、mark / guide 共用）+ guide 层。
@@ -174,8 +191,8 @@ export const resolveFrame = (params: ResolveFrameParams): ResolvedFrame => {
 
   if (coordinate.type === PlotCoordinate.Polar2D) {
     // 笛卡尔下出现 angle/radius 通道才是误用；polar 下复用 x/y 合法。此处构造极坐标帧。
-    const angleScaleDef = requireScaleDef('angle', coordinate.angle);
-    const radiusScaleDef = requireScaleDef('radius', coordinate.radius);
+    const angleScaleDef = resolveScaleForRole('angle', coordinate.angle, xChannelOf);
+    const radiusScaleDef = resolveScaleForRole('radius', coordinate.radius, yChannelOf);
     // 角向值 ← x、径向值 ← y（坐标系把 x/y 重解释为 angle/radius，正中 (i) 投影整形）
     const angleValues = collectValues(xChannelOf, false, false, true);
     const radiusValues = collectValues(yChannelOf, true, true);
@@ -234,8 +251,8 @@ export const resolveFrame = (params: ResolveFrameParams): ResolvedFrame => {
     }
   } else {
     // cartesian2D：x/y 角色绑 x/y scale
-    const xScaleDef = requireScaleDef('x', coordinate.x);
-    const yScaleDef = requireScaleDef('y', coordinate.y);
+    const xScaleDef = resolveScaleForRole('x', coordinate.x, xChannelOf);
+    const yScaleDef = resolveScaleForRole('y', coordinate.y, yChannelOf);
     const xScale = resolvePositionScale(xScaleDef, collectValues(xChannelOf, false, false), [0, width]);
     const yScale = resolvePositionScale(yScaleDef, collectValues(yChannelOf, true, true), [height, 0]);
 
@@ -395,6 +412,7 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
   const { frame, gridLayers, axisLayers } = resolveFrame({
     node,
     rows,
+    fieldTypes,
     width,
     height,
     fontSize: options.fontSize ?? DEFAULT_FONT_SIZE,

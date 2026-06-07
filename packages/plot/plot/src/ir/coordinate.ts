@@ -18,16 +18,16 @@ export type CoordinateType = ValueOf<typeof PlotCoordinate>;
 export const Cartesian2DSchema = z
   .object({
     type: z.literal(PlotCoordinate.Cartesian2D).describe('Discriminator: 2D cartesian space, x horizontal / y vertical'),
-    x: z.string().min(1).describe('Scale name driving the x (horizontal) position channel'),
-    y: z.string().min(1).describe('Scale name driving the y (vertical) position channel'),
+    x: z.string().min(1).optional().describe('Scale name for the x (horizontal) channel; omit to derive a default scale from the bound field type'),
+    y: z.string().min(1).optional().describe('Scale name for the y (vertical) channel; omit to derive a default scale from the bound field type'),
   })
   .describe('2D cartesian coordinate system; owns the positional scale bindings for x and y');
 
 export const Polar2DSchema = z
   .object({
     type: z.literal(PlotCoordinate.Polar2D).describe('Discriminator: 2D polar space, angle around the center / radius outward'),
-    angle: z.string().min(1).describe('Scale name driving the angle role; its range is set to [startAngle, endAngle] degrees at lowering'),
-    radius: z.string().min(1).describe('Scale name driving the radius role; its range is set to [innerRadius, outerRadius] units at lowering'),
+    angle: z.string().min(1).optional().describe('Scale name for the angle role; omit to derive from the bound field type. Its range is set to [startAngle, endAngle] degrees at lowering'),
+    radius: z.string().min(1).optional().describe('Scale name for the radius role; omit to derive from the bound field type. Its range is set to [innerRadius, outerRadius] units at lowering'),
     startAngle: z
       .number()
       .finite()

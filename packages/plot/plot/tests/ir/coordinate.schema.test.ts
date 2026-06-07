@@ -13,18 +13,22 @@ describe('CoordinateSchema (ADR-04)', () => {
     expect(() => CoordinateSchema.parse({ type: 'cartesian2D', x: '', y: 'ys' })).toThrow();
   });
 
-  // 错误路径
-  it('coordinate_missing_x_rejected', () => {
-    expect(() => CoordinateSchema.parse({ type: 'cartesian2D', y: 'ys' })).toThrow();
+  // ADR-03：x/y 绑定改为可选（缺省按字段类型派生），故「省略」由 reject 变为 accept
+  it('coordinate_missing_x_accepted_derives', () => {
+    expect(() => CoordinateSchema.parse({ type: 'cartesian2D', y: 'ys' })).not.toThrow();
   });
 
-  it('coordinate_missing_y_rejected', () => {
-    expect(() => CoordinateSchema.parse({ type: 'cartesian2D', x: 'xs' })).toThrow();
+  it('coordinate_missing_y_accepted_derives', () => {
+    expect(() => CoordinateSchema.parse({ type: 'cartesian2D', x: 'xs' })).not.toThrow();
   });
 
-  it('coordinate_cartesian_wrong_shape_rejected', () => {
-    // 原 cartesian 词汇 x/y 不被 polar2D 接受（成员判别）
-    expect(() => CoordinateSchema.parse({ type: 'polar2D', x: 'xs', y: 'ys' })).toThrow();
+  it('coordinate_both_omitted_accepted_derives', () => {
+    expect(() => CoordinateSchema.parse({ type: 'cartesian2D' })).not.toThrow();
+  });
+
+  it('coordinate_polar_ignores_cartesian_keys', () => {
+    // polar2D 不识别 x/y（被 zod 剥离），angle/radius 可省 → 解析成 polar2D
+    expect(CoordinateSchema.parse({ type: 'polar2D', x: 'xs', y: 'ys' }).type).toBe('polar2D');
   });
 
   // 交互：schema 层不做跨字段引用校验（引用完整性归 lowering）
@@ -74,12 +78,13 @@ describe('CoordinateSchema polar2D (ADR-01)', () => {
   });
 
   // 错误路径
-  it('polar2d_missing_angle_rejected', () => {
-    expect(() => CoordinateSchema.parse({ type: 'polar2D', radius: 'r' })).toThrow();
+  it('polar2d_missing_angle_accepted_derives', () => {
+    // ADR-03：angle/radius 绑定可省（派生）
+    expect(() => CoordinateSchema.parse({ type: 'polar2D', radius: 'r' })).not.toThrow();
   });
 
-  it('polar2d_missing_radius_rejected', () => {
-    expect(() => CoordinateSchema.parse({ type: 'polar2D', angle: 'a' })).toThrow();
+  it('polar2d_missing_radius_accepted_derives', () => {
+    expect(() => CoordinateSchema.parse({ type: 'polar2D', angle: 'a' })).not.toThrow();
   });
 
   it('polar2d_empty_angle_rejected', () => {
