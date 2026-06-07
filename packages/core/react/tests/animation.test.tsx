@@ -3,7 +3,8 @@ import { createRoot } from 'react-dom/client';
 import { act } from 'react-dom/test-utils';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { IRAnimationTrack } from '@retikz/core';
-import { Layout, Node } from '../src';
+import { Layout, Node, cameraTo, fadeIn, spin } from '../src';
+import { convertReactNodeToIR } from '../src';
 
 /**
  * ADR-04 runtime（react，jsdom）：SVG load track → 内联 <style> 自播；交互 track → WAAPI 桥；animate={false} 静态。
@@ -73,6 +74,26 @@ describe('react SVG 动画', () => {
       </Layout>,
     );
     expect(animateSpy).toHaveBeenCalled();
+  });
+});
+
+describe('preset 集成', () => {
+  it('<Node animations={[fadeIn()]}> → 节点 IR 带等价 opacity track', () => {
+    const ir = convertReactNodeToIR(<Node id="a" position={[0, 0]} animations={[fadeIn()]} />);
+    const node = ir.children[0] as { animations?: Array<IRAnimationTrack> };
+    expect(node.animations).toEqual([fadeIn()]);
+  });
+
+  it('<Layout animations={[cameraTo(...)]}> → SVG 输出含镜头 @keyframes', async () => {
+    const c = await mount(
+      <Layout width={100} height={100} animations={[cameraTo({ from: [0, 0, 100, 100], to: [25, 25, 50, 50] })]}>
+        <Node id="a" position={[0, 0]} fill="red" minimumSize={2} animations={[spin()]} />
+      </Layout>,
+    );
+    const style = c.querySelector('style');
+    expect(style).not.toBeNull();
+    expect(style!.textContent).toContain('@keyframes');
+    expect(style!.textContent).toContain('translate('); // 镜头 group transform
   });
 });
 

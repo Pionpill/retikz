@@ -1,6 +1,6 @@
 # ADR-05：具名动画 sugar——`fadeIn` / `spin` / `growUp` … preset 工厂（产 `AnimationTrack`，Sugar=Kernel 等价）
 
-- 状态：Proposed
+- 状态：Accepted（preset + 等价测试已实装；`apps/docs` 动画页待补，见文末「文档」）
 - 决策日期：2026-06-07
 - 关联：[v0.3-alpha.5 roadmap](./roadmap.md)（§动画配方表是本 ADR 的规格单一真源）· **前置**：[ADR-01 IR 契约](./01-timeline-animation-ir.md)（`AnimationTrack` 原语 + settled 不变量）· [ADR-02 SVG](./02-svg-playback.md) / [ADR-03 Canvas](./03-canvas-playback.md) / [ADR-04 runtime](./04-runtime-control.md)（播放，已 Accepted）· **规则**：[AGENTS.md §抽象分层](../../../../../AGENTS.md)（Sugar=Kernel 等价性硬规则）
 

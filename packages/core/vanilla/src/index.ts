@@ -10,6 +10,32 @@ export { renderToSvgString } from './renderToSvgString';
 export { mountSvg } from './mountSvg';
 export { hydrate } from './hydrate';
 export { mountCanvas } from './mountCanvas';
+// 具名动画 preset（产 AnimationTrack 的纯工厂，re-export 自 core；配 IR / builder 的 animations）
+export {
+  fadeIn,
+  drawOn,
+  scaleIn,
+  grow,
+  growUp,
+  slideIn,
+  colorShift,
+  cameraTo,
+  pulse,
+  spin,
+  loop,
+  stagger,
+} from '@retikz/core';
+export type {
+  AnimationPresetOptions,
+  ScaleInOptions,
+  GrowUpOptions,
+  SlideInOptions,
+  ColorShiftOptions,
+  CameraToOptions,
+  PulseOptions,
+  SpinOptions,
+  LoopOptions,
+} from '@retikz/core';
 export { figure } from './builder/figure';
 export { node } from './builder/node';
 export { draw } from './builder/draw';

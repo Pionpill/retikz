@@ -94,6 +94,33 @@ export type {
   IRJsonObject,
 } from '@retikz/core';
 
+// 具名动画 preset（产 AnimationTrack 的纯工厂，re-export 自 core；配 <Node/Layout animations>）
+export {
+  fadeIn,
+  drawOn,
+  scaleIn,
+  grow,
+  growUp,
+  slideIn,
+  colorShift,
+  cameraTo,
+  pulse,
+  spin,
+  loop,
+  stagger,
+} from '@retikz/core';
+export type {
+  AnimationPresetOptions,
+  ScaleInOptions,
+  GrowUpOptions,
+  SlideInOptions,
+  ColorShiftOptions,
+  CameraToOptions,
+  PulseOptions,
+  SpinOptions,
+  LoopOptions,
+} from '@retikz/core';
+
 // React 节点 ↔ IR 桥接：buildIR 内部名保留，对外以 convertReactNodeToIR 暴露（命名 pattern 给后续多框架 adapter 留位）
 export { buildIR as convertReactNodeToIR } from './kernel/builder';
 // IR JSON → Kernel element 树（带 key、不裹 TikZ/Fragment 外壳）；Sugar 不可逆——只产 <Node/>/<Path/>/<Step/> 三件套

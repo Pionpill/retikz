@@ -58,11 +58,11 @@
 | `slideIn` | `translateX`\|`translateY`: `[{0, offset},{1,0}]` | duration 400, ease-out | axis(x), offset(-20), duration, delay, easing |
 | `colorShift` | `fill`\|`stroke`: `[{0, fromColor},{1, toColor}]` | duration 400, ease-in-out | channel(fill), fromColor(base), toColor*, duration, easing |
 | `cameraTo` | (scene 根) `viewBox`: `[{0, from},{1, to}]` | duration 800, ease-in-out | from(当前 layout), to*, duration, easing |
-| `pulse` | `scale`: `[{0,1},{0.5, peak},{1,1}]`, `iterations:'infinite'`, `direction:'alternate'` | duration 1000, ease-in-out | peak(1.1), duration, iterations, origin |
+| `pulse` | `scale`: `[{0,1},{0.5, peak},{1,1}]`, `iterations:'infinite'` | duration 1000, ease-in-out | peak(1.1), duration, iterations, origin |
 | `spin` | `rotate`: `[{0,0},{1,360}]`, `iterations:'infinite'`, `easing:'linear'` | duration 1000 | duration, iterations, direction, origin |
 | `loop` | 包装任意上表 track：补 `iterations:'infinite'`（+按需 `direction:'alternate'`） | 继承被包 track | 被包 track + iterations, direction |
 
-> `*` = 必填无默认（`cameraTo.to` / `colorShift.toColor`）。`from`/`offset`/`peak` 等是「起点偏移」，intro 系列**起点偏移、终点=base**（`scaleIn.from<1→1`、`slideIn.offset→0`）。`pulse`/`spin` 用 `alternate` / 整圈回原点，故无须末帧=base。
+> `*` = 必填无默认（`cameraTo.from`+`to` / `colorShift.from`+`to`——纯工厂取不到当前 layout / base 色，两端均须显式）。`from`/`offset`/`peak` 等是「起点偏移」，intro 系列**起点偏移、终点=base**（`scaleIn.from<1→1`、`slideIn.offset→0`）。`pulse` 对称关键帧（1→peak→1）、`spin` 整圈回原点，故无须末帧=base。
 >
 > **具体例子**见 [ADR-01 §本批形态](./01-timeline-animation-ir.md)（fadeIn+scaleIn 组合 / spin / growUp / cameraTo 的完整 IR JSON）。
 
@@ -81,7 +81,7 @@
 | [03](./03-canvas-playback.md) | Canvas 动画播放（render/canvas） | `drawScene(…,{time})` 逐帧 + 共享 `evaluateTrack` 插值引擎（含 pathDraw 部分路径、oklch 真 lerp）；**自定义 property 的 JS 插值器注册表**（`RenderOptions.animationProperties`，兑现 ADR-01 口） | Accepted |
 | [04](./04-runtime-control.md) | runtime 播放控制（vanilla / react） | rAF 时钟（共享时钟）+ `trigger` 落地（IntersectionObserver / API / 事件桥水合）；`{animate:false}` + `prefers-reduced-motion`；静态截帧 `{at:t}`（复用 `evaluateTrack`） | Accepted（SVG `{at:t}` / react canvas rAF / manual 句柄留后续，见 ADR） |
 
-| [05](./05-animation-presets.md) | 具名动画 sugar（core preset + react/vanilla re-export） | 11 个 preset 工厂（`fadeIn` / `drawOn` / `scaleIn` / `grow` / `growUp` / `slideIn` / `colorShift` / `cameraTo` / `pulse` / `spin` / `loop`）+ `stagger` helper，产 `AnimationTrack`、按配方表实装；`<Layout animations>` prop（cameraTo 镜头）；Sugar=Kernel 等价测试 | Proposed |
+| [05](./05-animation-presets.md) | 具名动画 sugar（core preset + react/vanilla re-export） | 11 个 preset 工厂（`fadeIn` / `drawOn` / `scaleIn` / `grow` / `growUp` / `slideIn` / `colorShift` / `cameraTo` / `pulse` / `spin` / `loop`）+ `stagger` helper，产 `AnimationTrack`、按配方表实装；`<Layout animations>` prop（cameraTo 镜头）；Sugar=Kernel 等价测试 | Accepted（docs 页待补） |
 
 > along-path / clip / morph 各自后续 ADR，本里程碑随阶段补。
 

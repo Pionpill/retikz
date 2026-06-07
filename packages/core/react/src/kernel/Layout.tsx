@@ -14,6 +14,7 @@ import {
   type ArrowDefinition,
   type CompositeDefinition,
   type IR,
+  type IRAnimationTrack,
   type IRViewBox,
   type PathGeneratorDefinition,
   type PatternDefinition,
@@ -90,6 +91,12 @@ export type LayoutProps = ScopeStyleProps & {
    *   `animate={false}` 走 settled 静态（ADR-01「三事一路」）。
    */
   animate?: boolean;
+  /**
+   * scene 根（镜头）时间轴动画 tracks（`viewBox` property）；注入构造出的 IR 根 `animations`
+   * @description 配 `cameraTo()` preset：`<Layout animations={[cameraTo({ from, to })]}>`。元素级动画走各元素
+   *   的 `animations` prop（非此 prop）。与直接传 `ir` prop 并用时，本 prop 追加到该 IR 根。
+   */
+  animations?: Array<IRAnimationTrack>;
   /**
    * SVG `<defs>` 资源 id 前缀，覆盖默认的 `useId()` 派生值
    * @description marker / paint / clip 的 id 与 `url(#...)` 引用共用此前缀确保多实例不撞。缺省回退剥冒号的
@@ -174,7 +181,7 @@ const useSvgRootBinding = (
  *   `@retikz/render/svg`，react 只做 `SvgNode→ReactElement` 薄映射 + `useId` 绑定。
  */
 export const Layout: FC<LayoutProps> = props => {
-  const { ir: irFromProp, children, width, height, viewBox, className, style, renderer: rendererProp, animate: animateProp, idPrefix, nodeDistance, shapes, arrows, patterns, pathGenerators, composites, handlers } = props;
+  const { ir: irFromProp, children, width, height, viewBox, className, style, renderer: rendererProp, animate: animateProp, animations: rootAnimations, idPrefix, nodeDistance, shapes, arrows, patterns, pathGenerators, composites, handlers } = props;
   const animate = animateProp !== false;
   const { color, stroke, fill, strokeWidth, opacity, fillOpacity, drawOpacity, nodeDefault, pathDefault, labelDefault, arrowDefault } = props;
   // 渲染目标：显式 prop > 祖先 RendererModeProvider 注入的 context > 默认 svg（hook 必须无条件调用）
@@ -194,8 +201,10 @@ export const Layout: FC<LayoutProps> = props => {
   const ir = useMemo(() => {
     const base = irFromProp ?? buildIR(wrapRootScope(children, { color, stroke, fill, strokeWidth, opacity, fillOpacity, drawOpacity, nodeDefault, pathDefault, labelDefault, arrowDefault }));
     // viewBox prop 注入 IR 根（显式 > IR 内置）；prop 缺省时保留 base 自带的 viewBox
-    return viewBox !== undefined ? { ...base, viewBox } : base;
-  }, [irFromProp, children, viewBox, color, stroke, fill, strokeWidth, opacity, fillOpacity, drawOpacity, nodeDefault, pathDefault, labelDefault, arrowDefault]);
+    const withViewBox = viewBox !== undefined ? { ...base, viewBox } : base;
+    // animations prop 注入 IR 根（镜头，cameraTo）；缺省保留 base 自带
+    return rootAnimations !== undefined ? { ...withViewBox, animations: rootAnimations } : withViewBox;
+  }, [irFromProp, children, viewBox, rootAnimations, color, stroke, fill, strokeWidth, opacity, fillOpacity, drawOpacity, nodeDefault, pathDefault, labelDefault, arrowDefault]);
   const defaultFontFamily = styleFontFamily(style);
   const measureText = useMemo(
     () => withDefaultFontFamily(browserMeasurer, defaultFontFamily),
