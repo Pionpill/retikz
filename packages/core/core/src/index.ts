@@ -242,6 +242,9 @@ export {
   pulse,
   spin,
   loop,
+  flash,
+  blink,
+  wiggle,
   stagger,
 } from './presets';
 export type {
@@ -254,6 +257,9 @@ export type {
   PulseOptions,
   SpinOptions,
   LoopOptions,
+  FlashOptions,
+  BlinkOptions,
+  WiggleOptions,
 } from './presets';
 
 // Geometry

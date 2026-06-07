@@ -26,6 +26,9 @@ import { Layout, Node, fadeIn, scaleIn } from '@retikz/react';
 | `growUp` | intro | scaleY | grow from baseline (bars) |
 | `slideIn` | intro | translateX/Y | slide in from an offset |
 | `colorShift` | emphasis | fill / stroke | color transition (oklch lerp) |
+| `flash` | emphasis | opacity | flash once (2× by default) |
+| `blink` | emphasis | opacity | continuous blink (infinite) |
+| `wiggle` | emphasis | rotate | rock left/right (3× by default) |
 | `pulse` | loop | scale | pulsing scale (infinite) |
 | `spin` | loop | rotate | steady rotation (infinite, loader) |
 | `loop` | loop | any | turn any track into an infinite loop |
@@ -65,6 +68,18 @@ Plays once on load. Each demo below replays when you open this page / switch tab
 <ComponentPreview name="color-shift" size="xs" />
 
 `colorShift`: transitions `fill` / `stroke` in **oklch** space (perceptually even, no muddy band). Both endpoints are explicit. It targets the **shape's own fill / stroke** — use it on plain shapes or paths; a node with a text label already paints its shape and won't follow.
+
+<ComponentPreview name="flash" size="xs" />
+
+`flash`: `opacity` 1→dim→1 flashed twice by default (`iterations` adjustable, `dim` defaults to 0); the last frame returns to base so degradation shows the full figure.
+
+<ComponentPreview name="blink" size="xs" />
+
+`blink`: the infinite version of `flash` (`opacity` blinking continuously); `iterations` defaults to `'infinite'`.
+
+<ComponentPreview name="wiggle" size="xs" />
+
+`wiggle`: `rotate` 0→+a→−a→+a→0 rocking emphasis (`angle` defaults to 5°, `iterations` to 3, around the geometric center).
 
 <ComponentPreview name="pulse" size="xs" />
 

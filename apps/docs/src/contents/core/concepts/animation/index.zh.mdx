@@ -26,6 +26,9 @@ import { Layout, Node, fadeIn, scaleIn } from '@retikz/react';
 | `growUp` | 入场 | scaleY | 从基线长出（柱状图） |
 | `slideIn` | 入场 | translateX/Y | 从偏移滑入 |
 | `colorShift` | 强调 | fill / stroke | 颜色过渡（oklch 插值） |
+| `flash` | 强调 | opacity | 闪一下（默认 2 次） |
+| `blink` | 强调 | opacity | 持续闪烁（无限） |
+| `wiggle` | 强调 | rotate | 左右抖动（默认 3 次） |
 | `pulse` | 循环 | scale | 脉冲缩放（无限） |
 | `spin` | 循环 | rotate | 匀速旋转（无限，loader） |
 | `loop` | 循环 | 任意 | 把任意 track 变成无限循环 |
@@ -65,6 +68,18 @@ import { Layout, Node, fadeIn, scaleIn } from '@retikz/react';
 <ComponentPreview name="color-shift" size="xs" />
 
 `colorShift`：`fill` / `stroke` 在 **oklch** 空间过渡（感知均匀、无灰带）。起止色都要显式给。作用于**形状自身的填充 / 描边**，用在纯形状或路径上；带文字 label 的节点其形状已自带 fill，不随之变。
+
+<ComponentPreview name="flash" size="xs" />
+
+`flash`：`opacity` 1→dim→1 闪一下，默认闪 2 次（`iterations` 可调、`dim` 默认 0）；末帧回 base、降级见完整图。
+
+<ComponentPreview name="blink" size="xs" />
+
+`blink`：无限版 `flash`（`opacity` 持续闪烁）；`iterations` 默认 `'infinite'`。
+
+<ComponentPreview name="wiggle" size="xs" />
+
+`wiggle`：`rotate` 0→+a→−a→+a→0 左右抖动强调（`angle` 默认 5°、`iterations` 默认 3、绕几何中心）。
 
 <ComponentPreview name="pulse" size="xs" />
 

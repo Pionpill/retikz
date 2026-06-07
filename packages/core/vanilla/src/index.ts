@@ -32,6 +32,9 @@ export {
   pulse,
   spin,
   loop,
+  flash,
+  blink,
+  wiggle,
   stagger,
 } from '@retikz/core';
 export type {
@@ -44,6 +47,9 @@ export type {
   PulseOptions,
   SpinOptions,
   LoopOptions,
+  FlashOptions,
+  BlinkOptions,
+  WiggleOptions,
 } from '@retikz/core';
 export { figure } from './builder/figure';
 export { node } from './builder/node';

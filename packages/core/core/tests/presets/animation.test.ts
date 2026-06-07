@@ -4,10 +4,12 @@
 import { describe, expect, it } from 'vitest';
 import {
   AnimationTrackSchema,
+  blink,
   cameraTo,
   colorShift,
   drawOn,
   fadeIn,
+  flash,
   grow,
   growUp,
   loop,
@@ -16,6 +18,7 @@ import {
   slideIn,
   spin,
   stagger,
+  wiggle,
 } from '../../src';
 
 describe('Sugar=Kernel 等价（默认参数）', () => {
@@ -38,8 +41,22 @@ describe('Sugar=Kernel 等价（默认参数）', () => {
     expect(spin()).toEqual({ property: 'rotate', keyframes: [{ at: 0, value: 0 }, { at: 1, value: 360 }], iterations: 'infinite', duration: 1000, easing: 'linear' });
   });
 
+  it('flash / blink / wiggle（强调系列，末帧 = base）', () => {
+    expect(flash()).toEqual({ property: 'opacity', keyframes: [{ at: 0, value: 1 }, { at: 0.5, value: 0 }, { at: 1, value: 1 }], iterations: 2, duration: 300, easing: 'ease-in-out' });
+    expect(blink()).toEqual({ property: 'opacity', keyframes: [{ at: 0, value: 1 }, { at: 0.5, value: 0 }, { at: 1, value: 1 }], iterations: 'infinite', duration: 800, easing: 'ease-in-out' });
+    expect(wiggle()).toEqual({ property: 'rotate', keyframes: [{ at: 0, value: 0 }, { at: 0.25, value: 5 }, { at: 0.5, value: -5 }, { at: 0.75, value: 5 }, { at: 1, value: 0 }], iterations: 3, duration: 400, easing: 'ease-in-out' });
+  });
+
+  it('flash / blink / wiggle opts 覆盖（dim / angle / iterations / origin）', () => {
+    expect(flash({ dim: 0.3, iterations: 4 }).keyframes[1]).toEqual({ at: 0.5, value: 0.3 });
+    expect(flash({ iterations: 4 }).iterations).toBe(4);
+    expect(blink({ iterations: 5 }).iterations).toBe(5);
+    expect(wiggle({ angle: 10 }).keyframes[1]).toEqual({ at: 0.25, value: 10 });
+    expect(wiggle({ origin: 'south' }).origin).toBe('south');
+  });
+
   it('每个 preset 产出都通过 AnimationTrackSchema（合法 IR）', () => {
-    for (const track of [fadeIn(), drawOn(), scaleIn(), grow(), growUp(), slideIn(), colorShift({ from: '#000', to: '#fff' }), cameraTo({ from: [0, 0, 1, 1], to: [0, 0, 2, 2] }), pulse(), spin()]) {
+    for (const track of [fadeIn(), drawOn(), scaleIn(), grow(), growUp(), slideIn(), colorShift({ from: '#000', to: '#fff' }), cameraTo({ from: [0, 0, 1, 1], to: [0, 0, 2, 2] }), pulse(), spin(), flash(), blink(), wiggle()]) {
       expect(AnimationTrackSchema.safeParse(track).success).toBe(true);
     }
   });

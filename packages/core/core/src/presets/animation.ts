@@ -184,6 +184,66 @@ export const loop = (track: IRAnimationTrack, opts: LoopOptions = {}): IRAnimati
   ...(opts.direction !== undefined ? { direction: opts.direction } : {}),
 });
 
+/** `flash` 选项：谷值不透明度 + 闪烁次数 */
+export type FlashOptions = AnimationPresetOptions & {
+  /** 闪烁谷值不透明度；缺省 0 */
+  dim?: number;
+  /** 闪烁次数；缺省 2 */
+  iterations?: IRAnimationTrack['iterations'];
+};
+
+/** 闪一下强调：`opacity` 1→dim→1，默认闪 2 次（末帧 = base = 完整可见） */
+export const flash = (opts: FlashOptions = {}): IRAnimationTrack => ({
+  property: AnimationProperty.Opacity,
+  keyframes: [{ at: 0, value: 1 }, { at: 0.5, value: opts.dim ?? 0 }, { at: 1, value: 1 }],
+  iterations: opts.iterations ?? 2,
+  ...applyBase({ duration: 300, easing: 'ease-in-out' }, opts),
+});
+
+/** `blink` 选项：谷值不透明度 + 闪烁次数（缺省无限） */
+export type BlinkOptions = AnimationPresetOptions & {
+  /** 闪烁谷值不透明度；缺省 0 */
+  dim?: number;
+  /** 闪烁次数；缺省 'infinite' */
+  iterations?: IRAnimationTrack['iterations'];
+};
+
+/** 持续闪烁：`opacity` 1→dim→1 无限循环（blink = 无限版 flash） */
+export const blink = (opts: BlinkOptions = {}): IRAnimationTrack => ({
+  property: AnimationProperty.Opacity,
+  keyframes: [{ at: 0, value: 1 }, { at: 0.5, value: opts.dim ?? 0 }, { at: 1, value: 1 }],
+  iterations: opts.iterations ?? 'infinite',
+  ...applyBase({ duration: 800, easing: 'ease-in-out' }, opts),
+});
+
+/** `wiggle` 选项：抖动幅度（度）+ 支点 + 抖动次数 */
+export type WiggleOptions = AnimationPresetOptions & {
+  /** 抖动幅度（度）；缺省 5 */
+  angle?: number;
+  /** 旋转支点（缺省几何中心） */
+  origin?: IRAnimationOrigin;
+  /** 抖动次数；缺省 3 */
+  iterations?: IRAnimationTrack['iterations'];
+};
+
+/** 抖动强调：`rotate` 0→+a→−a→+a→0 来回摆（末帧 = base 不旋转） */
+export const wiggle = (opts: WiggleOptions = {}): IRAnimationTrack => {
+  const angle = opts.angle ?? 5;
+  return {
+    property: AnimationProperty.Rotate,
+    keyframes: [
+      { at: 0, value: 0 },
+      { at: 0.25, value: angle },
+      { at: 0.5, value: -angle },
+      { at: 0.75, value: angle },
+      { at: 1, value: 0 },
+    ],
+    iterations: opts.iterations ?? 3,
+    ...(opts.origin !== undefined ? { origin: opts.origin } : {}),
+    ...applyBase({ duration: 400, easing: 'ease-in-out' }, opts),
+  };
+};
+
 /**
  * 错峰：给一组 track 依次叠加 delay（`startMs + i*stepMs`），实现「N 元素依次入场」
  * @description 覆盖各 track 原有 delay（错峰编排以本 helper 为准）。
