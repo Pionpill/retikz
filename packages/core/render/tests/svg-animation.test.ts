@@ -109,6 +109,50 @@ describe('Happy：load CSS + 交互 WAAPI + camera', () => {
   });
 });
 
+describe('静态截帧 {at:t}（烘焙 evaluateTrack 求值，不 emit 动画）', () => {
+  const LINEAR_FADE: IRAnimationTrack = { property: 'opacity', keyframes: [{ at: 0, value: 0 }, { at: 1, value: 1 }], duration: 400, easing: 'linear', trigger: 'load' };
+  const LINEAR_GROW: IRAnimationTrack = { property: 'scaleY', keyframes: [{ at: 0, value: 0 }, { at: 1, value: 1 }], duration: 400, easing: 'linear', origin: 'south' };
+
+  it('opacity 线性 at=200/400 → rect.opacity=0.5，且无 <style> / 无 data-retikz-anim', () => {
+    const out = buildSvgFragment(scene([rect({ animations: [LINEAR_FADE] })]), { idPrefix: 't', at: 200 });
+    const r = findTag(out, 'rect')!;
+    expect(r.attrs.opacity).toBe(0.5);
+    expect(findTag(out, 'style')).toBeUndefined();
+    expect(JSON.stringify(out)).not.toContain('data-retikz-anim');
+  });
+
+  it('at ≥ duration → settled（opacity = base 1）', () => {
+    const out = buildSvgFragment(scene([rect({ animations: [LINEAR_FADE] })]), { idPrefix: 't', at: 999 });
+    expect(findTag(out, 'rect')!.attrs.opacity).toBe(1);
+  });
+
+  it('transform 通道（scaleY 线性 + origin south）at=200 → wrapper <g> 静态 transform + transform-origin', () => {
+    const out = buildSvgFragment(scene([rect({ animations: [LINEAR_GROW] })]), { idPrefix: 't', at: 200 });
+    const g = findTag(out, 'g')!;
+    expect(g.style?.transform).toBe('scale(1, 0.5)');
+    expect(g.style?.['transform-origin']).toBe('5px 10px'); // rect 10×10 south = (5,10)
+    expect(findTag([g], 'rect')).toBeDefined();
+  });
+
+  it('pathDraw 线性 at=200 → stroke-dashoffset 静态属性（1−value）+ pathLength', () => {
+    const path: PathPrim = { type: 'path', commands: [{ kind: 'move', to: [0, 0] }, { kind: 'line', to: [10, 0] }], stroke: '#000' };
+    const draw: IRAnimationTrack = { property: 'pathDraw', keyframes: [{ at: 0, value: 0 }, { at: 1, value: 1 }], duration: 400, easing: 'linear' };
+    const out = buildSvgFragment(scene([{ ...path, animations: [draw] }]), { idPrefix: 't', at: 200 });
+    const p = findTag(out, 'path')!;
+    expect(p.attrs.pathLength).toBe(1);
+    expect(p.attrs['stroke-dasharray']).toBe(1);
+    expect(p.attrs['stroke-dashoffset']).toBe(0.5);
+  });
+
+  it('camera（scene viewBox 线性）at=200 → 外层 <g> 静态 transform 取景', () => {
+    const camera: IRAnimationTrack = { property: 'viewBox', keyframes: [{ at: 0, value: [0, 0, 100, 100] }, { at: 1, value: [0, 0, 50, 50] }], duration: 400, easing: 'linear' };
+    const out = buildSvgFragment(scene([rect()], [camera]), { idPrefix: 't', at: 200 });
+    const g = findTag(out, 'g')!;
+    expect(typeof g.style?.transform).toBe('string');
+    expect(g.style?.transform).toContain('scale(');
+  });
+});
+
 describe('边界', () => {
   it('{animate:false} → 无 <style>、无 data-retikz-anim，输出 = 静态 base', () => {
     const animated = renderToSvgString(scene([rect({ animations: [FADE, GROW_UP] })]), { idPrefix: 't', animate: false });

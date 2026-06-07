@@ -69,7 +69,8 @@ export type SvgPresentationAttrs = {
   'fill-rule'?: 'nonzero' | 'evenodd';
   'stroke-opacity'?: number | string;
   'stroke-width'?: number | string;
-  'stroke-dasharray'?: string;
+  'stroke-dasharray'?: number | string;
+  'stroke-dashoffset'?: number | string;
   'stroke-linecap'?: 'butt' | 'round' | 'square';
   'stroke-linejoin'?: 'miter' | 'round' | 'bevel';
   'font-size'?: number | string;

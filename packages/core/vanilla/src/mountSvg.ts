@@ -45,7 +45,7 @@ export const mountSvg = (container: Element, input: RenderInput, options: MountO
     }
     const scene: Scene = toScene(next, options);
     currentScene = scene;
-    const doc = buildSvgDocument(scene, { idPrefix, animate, easings: options.easings });
+    const doc = buildSvgDocument(scene, { idPrefix, animate, at: options.at, easings: options.easings });
     // 清空 root（子节点 + 自身 attrs），再写新 doc → root 元素复用、引用不失效
     while (root.firstChild) root.removeChild(root.firstChild);
     for (const attr of [...root.attributes]) root.removeAttribute(attr.name);

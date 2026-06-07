@@ -65,6 +65,8 @@ export type CanvasHostProps = {
   style?: CSSProperties;
   /** 是否播放动画（缺省 true）；false 或 prefers-reduced-motion → 只画 base 静态、不起 rAF */
   animate?: boolean;
+  /** 静态截帧时刻（毫秒）；给定时按该时刻画一帧、不起 rAF（定格），覆盖 animate */
+  at?: number;
   /** 自定义 easing 注册表（透传 drawScene） */
   easings?: EasingRegistry;
   /** 自定义 property 插值器注册表（透传 drawScene） */
@@ -116,7 +118,7 @@ const clientToScene = (
 
 /** React canvas 宿主：管理 `<canvas>` 与全量重绘 effect */
 export const CanvasHost: FC<CanvasHostProps> = props => {
-  const { scene, handlers, width, height, className, style, animate: animateProp, easings, animationProperties } = props;
+  const { scene, handlers, width, height, className, style, animate: animateProp, at, easings, animationProperties } = props;
   const animate = animateProp !== false;
   const ref = useRef<HTMLCanvasElement>(null);
   // rAF 时钟句柄：render effect 写、hydration effect 的 context.animation（coarse）读 live，update 后自动跟随
@@ -157,6 +159,12 @@ export const CanvasHost: FC<CanvasHostProps> = props => {
       easings,
       animationProperties,
     };
+    // 截帧（at 给定）：按该时刻画一帧、不起 rAF（定格）
+    if (at !== undefined) {
+      renderToCanvas(canvas, scene, { ...baseOptions, time: at });
+      clockRef.current = null;
+      return undefined;
+    }
     // base 静态先画一帧；含动画且未降级 → 起 rAF 共享时钟逐帧重绘（auto track 自动播；manual/onEvent/visible 渲染 base）
     renderToCanvas(canvas, scene, baseOptions);
     if (!animate || prefersReducedMotion() || !sceneHasAnimations(scene)) {
@@ -173,7 +181,7 @@ export const CanvasHost: FC<CanvasHostProps> = props => {
       clock.dispose();
       clockRef.current = null;
     };
-  }, [animate, animationProperties, className, easings, height, renderTick, scene, style, width]);
+  }, [animate, at, animationProperties, className, easings, height, renderTick, scene, style, width]);
 
   // 水合：把 handler 注册表经 createHydrationController + (hitTest + 逆 meet-fit 坐标映射) 绑到 <canvas>。
   // locate(event) = client 坐标 → clientToScene 逆 meet-fit 成 Scene 点 → hitTest 返回命中图元 id。

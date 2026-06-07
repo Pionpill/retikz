@@ -3,9 +3,11 @@
  * @description `trigger:'load'` 的 track 编进 CSS（SSR 零 JS 自播）；交互 track 出 WAAPI 描述挂 data 属性。
  *   transform 通道各包一层 `<g>`（避免同元素多个 transform 动画在 CSS 上冲突，且天然支持支点 transform-origin）。
  */
-import type { IRAnimationTrack, Scene, ScenePrimitive } from '@retikz/core';
-import type { SvgAttrs, SvgNode } from '../types';
+import { AnimationProperty, type IRAnimationTrack, type Scene, type ScenePrimitive } from '@retikz/core';
+import type { SvgAttrs, SvgNode, SvgStyle } from '../types';
 import type { EasingRegistry } from '../../animation/types';
+import { resolveTransformOrigin } from '../../animation/channels';
+import { evaluateTrack } from '../../animation/evaluate';
 import { type WaapiDescriptor, buildWaapiDescriptor } from './waapi';
 import {
   type ExpandedTrack,
@@ -13,6 +15,8 @@ import {
   easingToCss,
   expandTrack,
   iterationsToCss,
+  primHasStroke,
+  transformValue,
 } from './shared';
 
 /** load 触发（缺省即 load）→ 走 CSS 自播；其余 → WAAPI 描述 */
@@ -80,6 +84,11 @@ export type SvgAnimationOptions = {
   easings?: EasingRegistry;
   /** 降级诊断告警；缺省 console.warn */
   onWarn?: (message: string) => void;
+  /**
+   * 静态截帧时刻（毫秒）；给定时收集器不 emit `@keyframes` / WAAPI，而是把各 track 在该时刻的求值结果
+   * **烘焙成静态属性 / transform**（定格一帧）。SSR 海报帧 / 缩略图 / 截图用。复用 `evaluateTrack` 引擎。
+   */
+  snapshotAt?: number;
 };
 
 /** per-document 动画收集器 */
@@ -192,6 +201,88 @@ export const createSvgAnimationCollector = (options: SvgAnimationOptions): SvgAn
 
   const styleNode = (): SvgNode | undefined =>
     rules.length > 0 ? { tag: 'style', attrs: {}, children: [rules.join('')] } : undefined;
+
+  // ── 静态截帧模式（snapshotAt）：烘焙各 track 在该时刻的值为静态属性 / transform，不 emit 动画 ──
+  const snapshotAt = options.snapshotAt;
+
+  /** transform 通道单值 + 支点 → CSS transform inline style（与动画路径同口径：transform-box:view-box） */
+  const snapshotTransformStyle = (track: IRAnimationTrack, value: number, prim: ScenePrimitive): SvgStyle => {
+    const origin = resolveTransformOrigin(prim, track.origin);
+    const style: SvgStyle = { transform: transformValue(track.property, value), 'transform-box': 'view-box' };
+    if (origin) style['transform-origin'] = `${origin[0]}px ${origin[1]}px`;
+    return style;
+  };
+
+  const decorateSnapshot = (node: SvgNode, prim: ScenePrimitive): SvgNode => {
+    const tracks = prim.animations;
+    if (snapshotAt === undefined || !tracks || tracks.length === 0) return node;
+    let current = node;
+
+    // 1) 元素级通道（css 直属 + pathDraw）→ 静态属性
+    const staticAttrs: SvgAttrs = {};
+    for (const track of tracks) {
+      const cls = classifyProperty(track.property);
+      if (cls === 'transform' || cls === 'viewBox') continue;
+      if (cls === 'custom') {
+        onWarn(`SVG snapshot: custom property "${track.property}" has no built-in mapping; rendering base.`);
+        continue;
+      }
+      if (cls === 'pathDraw' && !primHasStroke(prim)) {
+        onWarn('SVG snapshot: pathDraw requires a stroked element; rendering base.');
+        continue;
+      }
+      const result = evaluateTrack(track, snapshotAt, { easings: options.easings });
+      if (!result) continue; // 该时刻 track 不活动 → 用 base
+      if (cls === 'css') {
+        if (track.property === AnimationProperty.Opacity) staticAttrs.opacity = Number(result.value);
+        else if (track.property === AnimationProperty.Fill) staticAttrs.fill = String(result.value);
+        else if (track.property === AnimationProperty.Stroke) staticAttrs.stroke = String(result.value);
+        else if (track.property === AnimationProperty.StrokeWidth) staticAttrs['stroke-width'] = Number(result.value);
+      } else {
+        // pathDraw：value 0..1 → stroke-dashoffset 1−value（pathLength=1 归一化）
+        staticAttrs.pathLength = 1;
+        staticAttrs['stroke-dasharray'] = 1;
+        staticAttrs['stroke-dashoffset'] = 1 - Number(result.value);
+      }
+    }
+    if (Object.keys(staticAttrs).length > 0) current = addAttrs(current, staticAttrs);
+
+    // 2) transform 通道：各包一层带静态 transform 的 `<g>`
+    for (const track of tracks) {
+      if (classifyProperty(track.property) !== 'transform') continue;
+      const result = evaluateTrack(track, snapshotAt, { easings: options.easings });
+      if (!result) continue;
+      current = { tag: 'g', attrs: {}, style: snapshotTransformStyle(track, Number(result.value), prim), children: [current] };
+    }
+    return current;
+  };
+
+  const wrapCameraSnapshot = (children: Array<SvgNode>, scene: Scene): Array<SvgNode> => {
+    const tracks = scene.animations;
+    if (snapshotAt === undefined || !tracks || tracks.length === 0) return children;
+    let current = children;
+    for (const track of tracks) {
+      if (track.property !== 'viewBox') continue;
+      const result = evaluateTrack(track, snapshotAt, { easings: options.easings });
+      if (!result) continue;
+      const [vx, vy, vw, vh] = result.value as Array<number>;
+      const sx = scene.layout.width / vw;
+      const sy = scene.layout.height / vh;
+      const tx = scene.layout.x - sx * vx;
+      const ty = scene.layout.y - sy * vy;
+      const style: SvgStyle = {
+        transform: `translate(${tx}px, ${ty}px) scale(${sx}, ${sy})`,
+        'transform-box': 'view-box',
+        'transform-origin': '0px 0px',
+      };
+      current = [{ tag: 'g', attrs: {}, style, children: current }];
+    }
+    return current;
+  };
+
+  if (snapshotAt !== undefined) {
+    return { decorate: decorateSnapshot, wrapCamera: wrapCameraSnapshot, styleNode: () => undefined };
+  }
 
   return { decorate, wrapCamera, styleNode };
 };

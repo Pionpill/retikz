@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { IR } from '@retikz/core';
-import { mountCanvas, mountSvg } from '../src';
+import { mountCanvas, mountSvg, renderToSvgString } from '../src';
 
 /**
  * ADR-04 runtime 播放控制（jsdom）：mountSvg load→CSS 自播 / 交互→WAAPI 桥；mountCanvas rAF 时钟 + trigger；
@@ -70,6 +70,22 @@ describe('mountSvg 动画', () => {
     vi.stubGlobal('matchMedia', vi.fn(() => ({ matches: true })));
     const view = mountSvg(document.createElement('div'), loadIr);
     expect(view.root.querySelector('style')).toBeNull();
+  });
+});
+
+describe('SVG 静态截帧 {at:t}', () => {
+  it('renderToSvgString({at}) → 烘焙静态 opacity、无 @keyframes（SSR 海报帧）', () => {
+    const settled = renderToSvgString(loadIr, { at: 999 });
+    expect(settled).not.toContain('@keyframes');
+    expect(settled).toContain('opacity="1"'); // 末态 = base
+    const start = renderToSvgString(loadIr, { at: 0 });
+    expect(start).toContain('opacity="0"'); // 起点帧
+  });
+
+  it('mountSvg({at}) → 定格帧、无 <style>', () => {
+    const view = mountSvg(document.createElement('div'), loadIr, { at: 0 });
+    expect(view.root.querySelector('style')).toBeNull();
+    expect(view.root.querySelector('[data-retikz-id="a"]')?.getAttribute('opacity')).toBe('0');
   });
 });
 

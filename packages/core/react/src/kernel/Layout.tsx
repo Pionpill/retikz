@@ -100,6 +100,11 @@ export type LayoutProps = ScopeStyleProps & {
    */
   animate?: boolean;
   /**
+   * 静态截帧时刻（毫秒）；给定时渲染「定格在该时刻」的静态图（不播放、不 emit 动画）
+   * @description SVG：各 track 在该时刻的值烘焙成静态属性 / transform；Canvas：按该时刻画一帧、不起 rAF。覆盖 `animate`。
+   */
+  at?: number;
+  /**
    * scene 根（镜头）时间轴动画 tracks（`viewBox` property）；注入构造出的 IR 根 `animations`
    * @description 配 `cameraTo()` preset：`<Layout animations={[cameraTo({ from, to })]}>`。元素级动画走各元素
    *   的 `animations` prop（非此 prop）。与直接传 `ir` prop 并用时，本 prop 追加到该 IR 根。
@@ -211,7 +216,7 @@ const useSvgRootBinding = (
  *   `@retikz/render/svg`，react 只做 `SvgNode→ReactElement` 薄映射 + `useId` 绑定。
  */
 export const Layout: FC<LayoutProps> = props => {
-  const { ir: irFromProp, children, width, height, viewBox, className, style, renderer: rendererProp, animate: animateProp, animations: rootAnimations, easings, animationProperties, idPrefix, nodeDistance, shapes, arrows, patterns, pathGenerators, composites, handlers } = props;
+  const { ir: irFromProp, children, width, height, viewBox, className, style, renderer: rendererProp, animate: animateProp, at, animations: rootAnimations, easings, animationProperties, idPrefix, nodeDistance, shapes, arrows, patterns, pathGenerators, composites, handlers } = props;
   const animate = animateProp !== false;
   const { color, stroke, fill, strokeWidth, opacity, fillOpacity, drawOpacity, nodeDefault, pathDefault, labelDefault, arrowDefault } = props;
   // 渲染目标：显式 prop > 祖先 RendererModeProvider 注入的 context > 默认 svg（hook 必须无条件调用）
@@ -249,8 +254,8 @@ export const Layout: FC<LayoutProps> = props => {
   const rawId = useId();
   const resolvedIdPrefix = idPrefix ?? rawId.replace(/[^a-zA-Z0-9]/g, '');
   const doc = useMemo(
-    () => (renderer === 'canvas' ? null : buildSvgDocument(scene, { idPrefix: resolvedIdPrefix, animate, easings })),
-    [renderer, scene, resolvedIdPrefix, animate, easings],
+    () => (renderer === 'canvas' ? null : buildSvgDocument(scene, { idPrefix: resolvedIdPrefix, animate, at, easings })),
+    [renderer, scene, resolvedIdPrefix, animate, at, easings],
   );
 
   // 水合 handler 注册表：JSX 模式从 children 同源收集，`ir` prop 模式用 `handlers` prop（无 children 可收集）
@@ -273,6 +278,7 @@ export const Layout: FC<LayoutProps> = props => {
         className={className}
         style={style}
         animate={animate}
+        at={at}
         easings={easings}
         animationProperties={animationProperties}
       />
