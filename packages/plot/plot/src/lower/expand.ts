@@ -8,7 +8,7 @@ import { type ColorOf, lowerMark } from './mark';
 import { type CoordinateFrame, createCartesianFrame, createPolarFrame } from './project';
 import { type DatumIdRegistrar, type ProvenanceContext, createDatumIdRegistrar, rootMeta, tagSourceIndex } from './provenance';
 import { type CategoryOrder, type TickSet, assertScaleFieldCompatible, deriveScale, orderedCategoryDomain, resolveOrdinalScale, resolvePositionScale } from './scale';
-import { collectFormatFields, normalizeRows, validateBoundData } from './coerce';
+import { assertAllValuesValid, collectFormatFields, normalizeRows, validateBoundData } from './coerce';
 import { applyTransforms } from './transform';
 import { type ResolveField, applyFieldResolver } from './resolve';
 import { collectUserSourceFields, resolveFieldTypes } from './validate';
@@ -74,6 +74,11 @@ export type LowerPlotsOptions = {
   fieldMaps?: Record<string, Record<string, string>>;
   /** 抽样校验绑定数据（字段缺失 / 不可强制 → fail-loud）；默认关、不 warn */
   validateData?: boolean | { sampleRows?: number };
+  /**
+   * 非法 / 缺失值策略（运行时、不进 IR）：`'skip'`（默认）归一化写 NaN/undefined 哨兵、不删行，
+   * 下游 mark 自跳非法几何；`'error'` 在 transform 之前对 spec 参与字段全量校验，遇任一非法 / 缺失即 fail-loud。
+   */
+  invalid?: 'skip' | 'error';
   /** 程序化字段解析逃生舱（运行时函数，不进 IR）：按字段名覆盖类型 + 自定义值解析；返回 undefined → 回退 model/推断 + 内置 coerce（ADR-04） */
   resolveField?: ResolveField;
 };
@@ -427,9 +432,10 @@ export const validateFieldMaps = (spec: PlotSpec, datasets: ExternalDatasets, fi
 };
 
 /**
- * 共享的「绑定准备」：fieldMaps 校验 + 用户源字段类型解析 + ingest 归一化（仅 model 在时）
+ * 共享的「绑定准备」：fieldMaps 校验 + 用户源字段类型解析 + ingest 恒归一化
  * @description expandPlot 与 createPlotLocator 共用同一入口，保证两者校验 / 归一化 / 类型解析完全同序（评审 P2 parity）。
  *   入参 ingested 由调用方按各自需要先行 tagSourceIndex；本函数不碰 transform（调用方各自 applyTransforms）。
+ *   恒归一化（ADR-08）：无论有无 model / resolver，总按解析出的 fieldTypes 跑 normalizeRows，下游统一读 canonical。
  */
 export const prepareRows = (
   spec: PlotSpec,
@@ -445,7 +451,7 @@ export const prepareRows = (
   // 声明式 format（ADR-06）：format 蕴含 type 覆盖推断 + 冲突 fail-loud + 收集 format parser；置于 resolveField 之前，使 resolveField 仍胜出
   const { fieldTypes: formatTypes, parsers: formatParsers } = collectFormatFields(spec.data.model, baseTypes, userSourceFields);
   // resolveField 叠加：类型覆盖 + 收集 per-field parser（ADR-04）；优先级 resolveField.type > format 蕴含 / 显式 type
-  const { fieldTypes, parsers: resolverParsers, resolverHit } = applyFieldResolver(
+  const { fieldTypes, parsers: resolverParsers } = applyFieldResolver(
     formatTypes,
     userSourceFields,
     spec.data.model,
@@ -455,8 +461,9 @@ export const prepareRows = (
   );
   // 合并 parser 槽：format parser 垫底，resolveField.parse 命中同字段时覆盖（优先级 resolveField > format）
   const parsers = new Map([...formatParsers, ...resolverParsers]);
-  // 归一化门控：model 在 或 resolver 命中即进 canonical（ADR-04 放宽「仅 model 在时」）；format 必在 model 内，门控自然放行
-  const normalized = spec.data.model !== undefined || resolverHit ? normalizeRows(ingested, fieldTypes, fieldMap, parsers) : ingested;
+  // 恒归一化（ADR-08 去门控）：无论有无 model / resolver 命中，总按解析出的 fieldTypes 跑 normalizeRows
+  //   →下游统一读 canonical、无第二处 coerce。干净数据产物与旧门控路径逐字段等价。
+  const normalized = normalizeRows(ingested, fieldTypes, fieldMap, parsers);
   return { fieldTypes, normalized };
 };
 
@@ -495,12 +502,17 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
   // 取数：provenance 开时先打源序标记（symbol 键，跨 transform 存活，供 sourceIndex 回指），再过 transform 管线
   const ingested = provenance ? tagSourceIndex(datasets[node.data.reference]) : datasets[node.data.reference];
 
-  // ADR-01/02：fieldMaps 校验 + 用户源字段类型解析（strict）+ ingest 归一化（仅 model 在时）。与 locator 共用 prepareRows 保 parity。
-  // 类型 Map 是 type-driven scale（ADR-03）/ coercion 的单一真源；归一化置于 transform 前。无 model → 原始行（向后兼容）。
+  // ADR-01/02/08：fieldMaps 校验 + 用户源字段类型解析（strict）+ ingest 恒归一化。与 locator 共用 prepareRows 保 parity。
+  // 类型 Map 是 type-driven scale（ADR-03）/ coercion 的单一真源；归一化置于 transform 前、无论有无 model 都跑（恒 canonical）。
   const { fieldTypes, normalized } = prepareRows(node, datasets, options, ingested);
   if (options.validateData) {
     const sampleRows = typeof options.validateData === 'object' ? options.validateData.sampleRows ?? 100 : 100;
     validateBoundData(normalized, fieldTypes, sampleRows);
+  }
+  // invalid:'error'（ADR-08）：transform 之前对 spec 参与字段（= fieldTypes 键）全量校验，遇任一非法 / 缺失 fail-loud；
+  //   置于 transform 前 → 错误定位到原始源字段、不被 transform 改写干扰。默认 'skip' 不校验（哨兵留给下游跳）。
+  if (options.invalid === 'error') {
+    assertAllValuesValid(normalized, fieldTypes);
   }
 
   const rows = applyTransforms(normalized, node.transform);

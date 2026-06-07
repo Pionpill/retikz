@@ -5,9 +5,14 @@ import { toTimestamp } from './scale';
 /** 严格数字串：trimmed 十进制 / 科学计数；拒空串、Infinity、NaN、hex、带单位串 */
 const NUMERIC_RE = /^[+-]?(\d+\.?\d*|\.\d+)([eE][+-]?\d+)?$/;
 
-/** 数值强制：number 原样（非有限 → NaN）；严格数字串 → number；其余 → NaN（下游按非有限跳过） */
+/** 数值强制：number 原样（非有限 → NaN）；safe-integer bigint → number；严格数字串 → number；其余 → NaN（下游按非有限跳过） */
 const coerceNumber = (value: unknown): number => {
   if (typeof value === 'number') return Number.isFinite(value) ? value : NaN;
+  // bigint（DB int64 / JSON reviver）：仅 safe-integer 区间转 number；超出转 number 会静默丢精度，按非法值处理
+  if (typeof value === 'bigint') {
+    const numeric = Number(value);
+    return Number.isSafeInteger(numeric) ? numeric : NaN;
+  }
   if (typeof value === 'string') {
     const trimmed = value.trim();
     return NUMERIC_RE.test(trimmed) ? Number(trimmed) : NaN;
@@ -188,23 +193,50 @@ export const normalizeRows = (
     return canonical;
   });
 
+/** 某原始值对其字段类型是否「缺失」（null / undefined）——与「非法」（存在但不可强制）区分计数 */
+const isMissingRaw = (raw: unknown): boolean => raw === undefined || raw === null;
+
 /**
  * 抽样校验绑定数据：每个用户源字段在样本里至少有一个可强制值，否则 fail-loud
  * @description validateData 开启时调用——把「字段缺失 / fieldMap 错 → 静默空图」变成「明确报错」。默认关、不 warn。
+ *   报错带字段级 invalid / missing 计数（`field "x": 3/100 invalid, 2/100 missing`），把「为什么空图」变明确诊断。
  */
 export const validateBoundData = (rows: Array<ExternalRow>, fieldTypes: Map<string, FieldType>, sampleRows: number): void => {
   const limit = Math.min(rows.length, sampleRows);
   if (limit === 0) return;
   for (const [logical, type] of fieldTypes) {
     let valid = false;
+    let invalidCount = 0;
+    let missingCount = 0;
     for (let index = 0; index < limit; index++) {
-      if (isCoercedValid(coerceValue(resolveFieldPath(rows[index], logical), type), type)) {
+      const raw = resolveFieldPath(rows[index], logical);
+      if (isCoercedValid(coerceValue(raw, type), type)) {
         valid = true;
         break;
       }
+      if (isMissingRaw(raw)) missingCount += 1;
+      else invalidCount += 1;
     }
     if (!valid) {
-      throw new Error(`lowerPlots: field "${logical}" has no valid values in the sampled data (check fieldMaps / dataset)`);
+      throw new Error(
+        `lowerPlots: field "${logical}" has no valid values in the sampled data: ${invalidCount}/${limit} invalid, ${missingCount}/${limit} missing (check fieldMaps / dataset)`,
+      );
+    }
+  }
+};
+
+/**
+ * 全量严格校验（invalid:'error'）：对 canonical 行的给定字段集逐行校验，遇任一非法 / 缺失即 fail-loud（含字段名 + 值）
+ * @description 比抽样 validateBoundData 更严——不抽样、任一坏值即抛。读 normalized canonical 值（已过 parser / coerce），
+ *   故 resolveField.parse 返非法、bigint 失精等与 skip 同口径判定。置于 transform 之前调用，错误定位到原始源字段。
+ */
+export const assertAllValuesValid = (normalized: Array<ExternalRow>, fieldTypes: Map<string, FieldType>): void => {
+  for (const [logical, type] of fieldTypes) {
+    for (let index = 0; index < normalized.length; index++) {
+      const value = normalized[index][logical];
+      if (isCoercedValid(value, type)) continue;
+      const shown = isMissingRaw(value) || (typeof value === 'number' && Number.isNaN(value)) ? 'missing or invalid' : `invalid value ${JSON.stringify(value)}`;
+      throw new Error(`lowerPlots: field "${logical}" has ${shown} at row ${index} (invalid:'error')`);
     }
   }
 };

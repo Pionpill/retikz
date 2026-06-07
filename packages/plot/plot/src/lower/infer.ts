@@ -20,6 +20,7 @@ export const isIsoDateString = (value: string): boolean => ISO_DATE_RE.test(valu
 /** 单个标量值 → 测量类型；非标量 / null 返回 undefined（跳过） */
 const classify = (value: unknown): FieldType | undefined => {
   if (value instanceof Date) return PlotFieldType.Temporal;
+  if (typeof value === 'bigint') return PlotFieldType.Continuous;
   if (typeof value === 'number') return Number.isFinite(value) ? PlotFieldType.Continuous : undefined;
   if (typeof value === 'string') return isIsoDateString(value) ? PlotFieldType.Temporal : PlotFieldType.Categorical;
   if (typeof value === 'boolean') return PlotFieldType.Categorical;
