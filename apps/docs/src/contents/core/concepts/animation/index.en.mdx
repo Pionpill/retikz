@@ -64,7 +64,7 @@ Plays once on load. Each demo below replays when you open this page / switch tab
 
 <ComponentPreview name="color-shift" size="xs" />
 
-`colorShift`: transitions `fill` / `stroke` in **oklch** space (perceptually even, no muddy band). Both endpoints are explicit.
+`colorShift`: transitions `fill` / `stroke` in **oklch** space (perceptually even, no muddy band). Both endpoints are explicit. It targets the **shape's own fill / stroke** — use it on plain shapes or paths; a node with a text label already paints its shape and won't follow.
 
 <ComponentPreview name="pulse" size="xs" />
 

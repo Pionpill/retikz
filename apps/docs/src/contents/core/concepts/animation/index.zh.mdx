@@ -64,7 +64,7 @@ import { Layout, Node, fadeIn, scaleIn } from '@retikz/react';
 
 <ComponentPreview name="color-shift" size="xs" />
 
-`colorShift`：`fill` / `stroke` 在 **oklch** 空间过渡（感知均匀、无灰带）。起止色都要显式给。
+`colorShift`：`fill` / `stroke` 在 **oklch** 空间过渡（感知均匀、无灰带）。起止色都要显式给。作用于**形状自身的填充 / 描边**，用在纯形状或路径上；带文字 label 的节点其形状已自带 fill，不随之变。
 
 <ComponentPreview name="pulse" size="xs" />
 
