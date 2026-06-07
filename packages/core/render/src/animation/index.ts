@@ -12,3 +12,11 @@ export type { EvaluateTrackOptions } from './evaluate';
 export { classifyProperty, primHasStroke, resolveTransformOrigin } from './channels';
 export type { PropertyClass } from './channels';
 export type { AnimationPropertyDefinition, AnimationPropertyRegistry } from './registry';
+export {
+  createClock,
+  prefersReducedMotion,
+  sceneHasAnimations,
+  sceneAnimationDurationMs,
+  bindWaapiDescriptors,
+} from './runtime';
+export type { AnimationControls, ClockOptions } from './runtime';

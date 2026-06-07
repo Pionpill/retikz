@@ -1,9 +1,19 @@
-import type { Scene } from '@retikz/core';
+import type { IRAnimationTrack, Scene, ScenePrimitive } from '@retikz/core';
 import { hitTest, renderToCanvas } from '@retikz/render/canvas';
 import { createHydrationController } from '@retikz/render/hydration';
+import { type AnimationControls, createClock, prefersReducedMotion, sceneAnimationDurationMs, sceneHasAnimations } from '@retikz/render/animation';
 import { isFigure } from './builder/isFigure';
 import { toScene } from './toScene';
 import type { CanvasView, HydrateOptions, MountCanvasOptions, RenderInput, ScenePoint } from './types';
+
+/** scene 是否有「自动播放」的 track（load / 缺省 / visible）；全 manual / onEvent → 不自动起时钟 */
+const hasAutoplayTrigger = (scene: Scene): boolean => {
+  const auto = (track: IRAnimationTrack): boolean =>
+    track.trigger === undefined || track.trigger === 'load' || track.trigger === 'visible';
+  const walk = (prims: ReadonlyArray<ScenePrimitive>): boolean =>
+    prims.some(p => (p.animations ?? []).some(auto) || (p.type === 'group' && walk(p.children)));
+  return (scene.animations ?? []).some(auto) || walk(scene.primitives);
+};
 
 /** 设备像素比：取有限正数、否则回退 1（镜像 react CanvasHost） */
 const resolveDevicePixelRatio = (override: number | undefined): number => {
@@ -30,6 +40,9 @@ export const mountCanvas = (
 
   const canvas = document.createElement('canvas');
   const ratio = resolveDevicePixelRatio(options.devicePixelRatio);
+  // 动画总关：{animate:false} 或 prefers-reduced-motion → 不起 rAF、只画 base 静态
+  const animate = options.animate !== false && !prefersReducedMotion();
+  let clock: AnimationControls | undefined;
 
   let currentScene: Scene;
 
@@ -51,7 +64,23 @@ export const mountCanvas = (
     if (options.width !== undefined) canvas.style.width = `${options.width}px`;
     if (options.height !== undefined) canvas.style.height = `${options.height}px`;
     canvas.style.objectFit = 'contain';
+    // base 静态先画一帧；含动画且未降级时起 rAF 时钟逐帧重绘（共享时钟，per-track delay 在 evaluateTrack 内偏移）
     renderToCanvas(canvas, scene, { devicePixelRatio: ratio });
+    clock?.dispose();
+    clock = undefined;
+    if (animate && sceneHasAnimations(scene)) {
+      clock = createClock({
+        durationMs: sceneAnimationDurationMs(scene),
+        onFrame: time =>
+          renderToCanvas(canvas, currentScene, {
+            devicePixelRatio: ratio,
+            time,
+            easings: options.easings,
+            animationProperties: options.animationProperties,
+          }),
+      });
+      if (hasAutoplayTrigger(scene)) clock.play();
+    }
   };
 
   const initialScene = isFigure(input) ? input.ir : input;
@@ -107,9 +136,13 @@ export const mountCanvas = (
     dispose() {
       if (disposed) return;
       disposed = true;
+      clock?.dispose();
       canvas.remove();
     },
     hydrate,
     clientToScene,
+    get animation() {
+      return clock;
+    },
   };
 };

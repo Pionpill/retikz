@@ -20,6 +20,10 @@ const injectSize = (svg: string, width?: number, height?: number): string => {
  */
 export const renderToSvgString = (input: RenderInput, options: RenderToStringOptions = {}): string => {
   if (isFigure(input)) return input.toSvgString(options);
-  const svg = buildSvgString(toScene(input, options), { idPrefix: options.idPrefix ?? DEFAULT_ID_PREFIX });
+  const svg = buildSvgString(toScene(input, options), {
+    idPrefix: options.idPrefix ?? DEFAULT_ID_PREFIX,
+    animate: options.animate,
+    easings: options.easings,
+  });
   return injectSize(svg, options.width, options.height);
 };

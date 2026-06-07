@@ -37,4 +37,5 @@ export type {
   HydrateOptions,
   HydrationHandle,
   ScenePoint,
+  AnimationControls,
 } from './types';

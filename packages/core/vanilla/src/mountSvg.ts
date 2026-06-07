@@ -1,4 +1,6 @@
+import type { Scene } from '@retikz/core';
 import { buildSvgDocument } from '@retikz/render/svg';
+import { type AnimationControls, bindWaapiDescriptors, prefersReducedMotion, sceneHasAnimations } from '@retikz/render/animation';
 import { isFigure } from './builder/isFigure';
 import { applyAttrs, svgNodeToDom } from './svgNodeToDom';
 import { toScene } from './toScene';
@@ -22,12 +24,16 @@ export const mountSvg = (container: Element, input: RenderInput, options: MountO
   }
   const idPrefix = options.idPrefix ?? DEFAULT_ID_PREFIX;
   const root = document.createElementNS(SVG_NS, 'svg');
+  // 动画总关：{animate:false} 或 prefers-reduced-motion → 渲染 base 静态（不 emit CSS/WAAPI）
+  const animate = options.animate !== false && !prefersReducedMotion();
+  let animationControls: AnimationControls | undefined;
 
   const renderInto = (next: RenderInput): void => {
     if (isFigure(next)) {
       throw new Error('mountSvg: view.update does not accept a Figure; pass figure.ir instead.');
     }
-    const doc = buildSvgDocument(toScene(next, options), { idPrefix });
+    const scene: Scene = toScene(next, options);
+    const doc = buildSvgDocument(scene, { idPrefix, animate, easings: options.easings });
     // 清空 root（子节点 + 自身 attrs），再写新 doc → root 元素复用、引用不失效
     while (root.firstChild) root.removeChild(root.firstChild);
     for (const attr of [...root.attributes]) root.removeAttribute(attr.name);
@@ -37,6 +43,9 @@ export const mountSvg = (container: Element, input: RenderInput, options: MountO
     for (const child of doc.children ?? []) {
       root.appendChild(typeof child === 'string' ? document.createTextNode(child) : svgNodeToDom(child));
     }
+    // load track 已由 CSS 自播；交互 track（visible / manual / onEvent）经 WAAPI 桥按 trigger 接驱动
+    animationControls?.dispose();
+    animationControls = animate && sceneHasAnimations(scene) ? bindWaapiDescriptors(root) : undefined;
   };
 
   renderInto(input);
@@ -52,7 +61,11 @@ export const mountSvg = (container: Element, input: RenderInput, options: MountO
     dispose() {
       if (disposed) return;
       disposed = true;
+      animationControls?.dispose();
       root.remove();
+    },
+    get animation() {
+      return animationControls;
     },
   };
 };

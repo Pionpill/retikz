@@ -24,6 +24,7 @@ import {
 import type { HydrationHandlers } from '@retikz/render/hydration';
 import { createHydrationController, locateSvg } from '@retikz/render/hydration';
 import { buildSvgDocument } from '@retikz/render/svg';
+import { bindWaapiDescriptors, sceneHasAnimations } from '@retikz/render/animation';
 import { buildIR, pickScopeStyle, wrapRootScope } from './builder';
 import { collectHydrationHandlers } from './collectHydrationHandlers';
 import { useRendererMode } from './rendererContext';
@@ -84,6 +85,12 @@ export type LayoutProps = ScopeStyleProps & {
   /** 渲染目标；缺省为 SVG，设为 canvas 时用同一份 Scene 绘制到 `<canvas>` */
   renderer?: 'svg' | 'canvas';
   /**
+   * 是否播放动画（缺省 true）；`false` → 渲染 base 静态图（不 emit CSS/WAAPI）
+   * @description SVG 模式：`load` track 经内联 `<style>` CSS 自播、交互 track 经 WAAPI 桥按 trigger 驱动；
+   *   `animate={false}` 走 settled 静态（ADR-01「三事一路」）。
+   */
+  animate?: boolean;
+  /**
    * SVG `<defs>` 资源 id 前缀，覆盖默认的 `useId()` 派生值
    * @description marker / paint / clip 的 id 与 `url(#...)` 引用共用此前缀确保多实例不撞。缺省回退剥冒号的
    *   `useId()`（纯 React 用户无感）。SSR→客户端水合需 id 逐字一致时：服务端 `renderToSvgString(scene,
@@ -134,8 +141,10 @@ export type LayoutProps = ScopeStyleProps & {
  *   绑到 svg root DOM（由 callback ref 在挂载后写入）；canvas 模式的绑定在 `CanvasHost` 内（hitTest 定位）、
  *   此处不接管。`locateSvg` 走 `event.target.closest('[data-retikz-id]')` 反查图元 id。卸载 / 依赖变化时 dispose、重建。
  */
-const useSvgHydration = (
+const useSvgRootBinding = (
   handlers: HydrationHandlers,
+  scene: ReturnType<typeof compileToScene>,
+  hasAnimations: boolean,
 ): ((element: SVGSVGElement | null) => void) => {
   const rootRef = useRef<SVGSVGElement | null>(null);
   const setRoot = useCallback((element: SVGSVGElement | null) => {
@@ -147,6 +156,13 @@ const useSvgHydration = (
     const controller = createHydrationController(root, handlers, locateSvg);
     return () => controller.dispose();
   }, [handlers]);
+  // 交互 track（visible / manual / onEvent）经 WAAPI 桥按 trigger 驱动；load track 已由内联 CSS 自播
+  useEffect(() => {
+    const root = rootRef.current;
+    if (root === null || !hasAnimations) return undefined;
+    const controls = bindWaapiDescriptors(root);
+    return () => controls.dispose();
+  }, [hasAnimations, scene]);
   return setRoot;
 };
 
@@ -158,7 +174,8 @@ const useSvgHydration = (
  *   `@retikz/render/svg`，react 只做 `SvgNode→ReactElement` 薄映射 + `useId` 绑定。
  */
 export const Layout: FC<LayoutProps> = props => {
-  const { ir: irFromProp, children, width, height, viewBox, className, style, renderer: rendererProp, idPrefix, nodeDistance, shapes, arrows, patterns, pathGenerators, composites, handlers } = props;
+  const { ir: irFromProp, children, width, height, viewBox, className, style, renderer: rendererProp, animate: animateProp, idPrefix, nodeDistance, shapes, arrows, patterns, pathGenerators, composites, handlers } = props;
+  const animate = animateProp !== false;
   const { color, stroke, fill, strokeWidth, opacity, fillOpacity, drawOpacity, nodeDefault, pathDefault, labelDefault, arrowDefault } = props;
   // 渲染目标：显式 prop > 祖先 RendererModeProvider 注入的 context > 默认 svg（hook 必须无条件调用）
   const contextRenderer = useRendererMode();
@@ -193,8 +210,8 @@ export const Layout: FC<LayoutProps> = props => {
   const rawId = useId();
   const resolvedIdPrefix = idPrefix ?? rawId.replace(/[^a-zA-Z0-9]/g, '');
   const doc = useMemo(
-    () => (renderer === 'canvas' ? null : buildSvgDocument(scene, { idPrefix: resolvedIdPrefix })),
-    [renderer, scene, resolvedIdPrefix],
+    () => (renderer === 'canvas' ? null : buildSvgDocument(scene, { idPrefix: resolvedIdPrefix, animate })),
+    [renderer, scene, resolvedIdPrefix, animate],
   );
 
   // 水合 handler 注册表：JSX 模式从 children 同源收集，`ir` prop 模式用 `handlers` prop（无 children 可收集）
@@ -203,8 +220,9 @@ export const Layout: FC<LayoutProps> = props => {
     [irFromProp, handlers, children],
   );
 
-  // svg root 的 callback ref——水合控制器（createHydrationController + locateSvg）绑定的 figure root
-  const setSvgRoot = useSvgHydration(resolvedHandlers);
+  // svg root 的 callback ref——水合控制器（createHydrationController + locateSvg）+ 交互动画 WAAPI 桥绑定的 figure root
+  const hasAnimations = renderer !== 'canvas' && animate && sceneHasAnimations(scene);
+  const setRoot = useSvgRootBinding(resolvedHandlers, scene, hasAnimations);
 
   if (renderer === 'canvas') {
     return (
@@ -223,5 +241,5 @@ export const Layout: FC<LayoutProps> = props => {
   const svgEl = svgToReact(doc as NonNullable<typeof doc>) as ReactElement;
 
   // svg 元素级附加（width / height / className / 框架 style）由 react 层补：非 svg 包职责
-  return cloneElement(svgEl, { width, height, className, style, ref: setSvgRoot });
+  return cloneElement(svgEl, { width, height, className, style, ref: setRoot });
 };

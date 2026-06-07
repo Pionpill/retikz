@@ -1,6 +1,6 @@
 # ADR-04：runtime 播放控制——rAF 时钟 + `trigger` 落地 + `{animate:false}`/reduced-motion + 静态截帧 `{at:t}`
 
-- 状态：Proposed
+- 状态：Accepted
 - 决策日期：2026-06-07
 - 关联：[v0.3-alpha.5 roadmap](./roadmap.md) · **前置**：[ADR-02 SVG 播放](./02-svg-playback.md)（CSS 自播 + WAAPI 描述）· [ADR-03 Canvas 播放](./03-canvas-playback.md)（`drawScene({time})` + `evaluateTrack`）· **复用**：[v0.3-alpha.3 水合](../v0.3-alpha.3/01-hydration.md)（rAF / 事件绑定 / DOM 挂载 runtime 基建——动画播放与水合同源、共用）
 
@@ -54,6 +54,13 @@ ADR-02/03 让 SVG/Canvas **有能力**播放（给数据 / 给时刻就能出帧
 1. **副作用归 runtime**——render 保持纯（drawScene 单帧 / svg 出描述），时钟与环境判断在 runtime，职责清。
 2. **复用水合基建**——rAF / IntersectionObserver / 事件委托 / DOM 挂载 alpha.3 已有，动画播放与水合同源，不另起一套。
 3. **三事一路落地**——`{animate:false}` / reduced-motion / 截帧共用 settled 路径与 `evaluateTrack`，与 ADR-01 一致。
+
+## 实现说明（本批落地 / 与 ADR 草案的偏差 / 后续）
+
+- **runtime 基建落 `@retikz/render/animation`（非 vanilla-local clock.ts）**：`createClock` / `prefersReducedMotion` / `bindWaapiDescriptors` / `sceneHasAnimations` / `sceneAnimationDurationMs` 放共享子路径，vanilla + react 共用一份——优于 ADR 草案里 vanilla 私有 clock.ts（否则 react 要再抄一遍）。clock onFrame 由各 adapter 注入（Canvas 调 `renderToCanvas({time})`）。
+- **vanilla 已落地**：`mountCanvas`（含动画 → 起 rAF 共享时钟，load/visible 自动播、全 manual 不自动播、`view.animation` 句柄 play/pause/seek）；`mountSvg`（`{animate}` 透传 + 交互 track WAAPI 桥 + `view.animation`）；`renderToSvgString`（`{animate}` 透传）；`{animate:false}` / reduced-motion → 静态。
+- **react 已落地**：`<Layout animate>` prop（false → 静态）；SVG 模式 load track 内联 CSS 自播（`buildSvgDocument` 默认开）、交互 track WAAPI 桥（`useSvgRootBinding` effect）。
+- **后续（未在本批）**：① **SVG 静态截帧 `{at:t}`**（Canvas 截帧已由 `drawScene(…,{time:t})` 提供；SVG 需把某时刻值写成静态属性的 freeze 通路，留后续）；② **react canvas rAF 播放**（`CanvasHost` 接共享时钟）；③ **react manual `ref` 控制句柄**与 react 侧 `prefers-reduced-motion` 接线。这些不阻塞 SVG（react/vanilla）与 Canvas（vanilla）的完整播放。
 
 ## 不在本 ADR 范围
 

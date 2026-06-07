@@ -1,6 +1,9 @@
 import type { CompileOptions, IR, Scene } from '@retikz/core';
 import type { HydrationHandlers } from '@retikz/render/hydration';
+import type { AnimationControls, AnimationPropertyRegistry, EasingRegistry } from '@retikz/render/animation';
 import type { Figure } from './figure';
+
+export type { AnimationControls } from '@retikz/render/animation';
 
 /** mountSvg / renderToSvgString 的入参：已编译 `Scene`、待编译 `IR`，或命令式 builder 的 `Figure` */
 export type RenderInput = Scene | IR | Figure;
@@ -16,6 +19,13 @@ export type CommonOptions = {
   idPrefix?: string;
   width?: number;
   height?: number;
+  /**
+   * 是否播放动画（缺省 true）；`false` → 渲染 base 静态图（不 emit CSS/WAAPI、Canvas 不起 rAF）
+   * @description runtime 据 `{animate:false}` 或 `prefers-reduced-motion` 走静态路径（ADR-01「三事一路」）。
+   */
+  animate?: boolean;
+  /** 自定义 easing 注册表（透传 renderer / runtime） */
+  easings?: EasingRegistry;
 } & CompileOptions;
 
 export type RenderToStringOptions = CommonOptions;
@@ -29,6 +39,8 @@ export type VanillaView = {
   update: (next: RenderInput) => void;
   /** 卸载：移除 `root`、置 view 失效（再调 `update` 抛、`dispose` noop） */
   dispose: () => void;
+  /** 动画播放控制句柄（scene 含动画且未降级时存在）：play / pause / seek；manual trigger 经此驱动 */
+  animation?: AnimationControls;
 };
 
 /** `hydrate` / `view.hydrate` 返回的解绑句柄 */
@@ -71,10 +83,14 @@ export type CanvasView = {
    *   交给 `hitTest` 自然判为无命中（无需在此截断），故无 `null` 返回。
    */
   clientToScene: (clientX: number, clientY: number) => ScenePoint;
+  /** 动画播放控制句柄（scene 含动画且未降级时存在）：rAF 时钟的 play / pause / seek */
+  animation?: AnimationControls;
 };
 
 /** `mountCanvas` 选项：继承 SSR / compile 公共项，外加 canvas 显示 / dpr 透传 */
 export type MountCanvasOptions = CommonOptions & {
   /** 设备像素比；缺省读 `globalThis.devicePixelRatio`、再回退 1（镜像 react CanvasHost） */
   devicePixelRatio?: number;
+  /** 自定义 property 插值器注册表（透传 drawScene；自定义动画通道用） */
+  animationProperties?: AnimationPropertyRegistry;
 };
