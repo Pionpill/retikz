@@ -57,7 +57,7 @@ const blur: AnimationPropertyDefinition = {
 | `interpolate` | `(from, to, t) => value` | 相邻关键帧值在段进度 `t∈[0,1]` 的插值（喂给求值引擎） |
 | `applyCanvas` | `(ctx, prim, value) => void` | 把当下值落到 Canvas 2D context（在该图元的 `save/restore` 作用域内调用） |
 
-<ComponentAlert type="warn" title="自定义属性通道当前仅 Canvas" description="自定义 property 的通用插值靠 JS（applyCanvas），落在 Canvas 后端。SVG 没有内置映射，遇到未识别的 property 会告警并跳过该 track（渲染 base 静止态）。要用自定义属性通道请走 renderer=\"canvas\"。" />
+<ComponentAlert type="warn" title="自定义属性通道当前仅 Canvas" description="自定义 property 的通用插值靠 JS（applyCanvas），落在 Canvas 后端。SVG 没有内置映射，遇到未识别的 property 会告警并跳过该 track（渲染 base 静止态）。要用自定义属性通道请走 canvas 渲染器。" />
 
 ## 后端支持一览
 

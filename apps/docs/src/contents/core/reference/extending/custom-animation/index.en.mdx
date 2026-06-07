@@ -57,7 +57,7 @@ const blur: AnimationPropertyDefinition = {
 | `interpolate` | `(from, to, t) => value` | interpolates adjacent keyframe values at segment progress `t∈[0,1]` (fed to the evaluation engine) |
 | `applyCanvas` | `(ctx, prim, value) => void` | applies the current value to the Canvas 2D context (called within the primitive's `save/restore` scope) |
 
-<ComponentAlert type="warn" title="Custom property channels are Canvas-only for now" description="Generic interpolation of a custom property runs in JS (applyCanvas), which lives in the Canvas backend. SVG has no built-in mapping, so an unrecognized property warns and skips that track (rendering the resting state). Use renderer=\"canvas\" for custom property channels." />
+<ComponentAlert type="warn" title="Custom property channels are Canvas-only for now" description="Generic interpolation of a custom property runs in JS (applyCanvas), which lives in the Canvas backend. SVG has no built-in mapping, so an unrecognized property warns and skips that track (rendering the resting state). Use the canvas renderer for custom property channels." />
 
 ## Backend support
 
