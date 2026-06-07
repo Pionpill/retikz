@@ -43,6 +43,51 @@ export const changelog: Array<Release> = [
         ],
         subVersions: [
           {
+            version: 'alpha.5',
+            date: '2026-06-07',
+            summary: {
+              zh: '时间轴动画播放：SVG（load→CSS `@keyframes` 零 JS 自播 / 交互→WAAPI）+ Canvas（`drawScene({time})` 逐帧）+ 共享 `evaluateTrack` 求值引擎 + rAF runtime；水合 handler 升 `(event, context)` 富上下文；静态截帧 `snapshotAt` + canvas per-id 虚拟时钟。',
+              en: 'Timeline animation playback: SVG (load→CSS `@keyframes` zero-JS autoplay / interactive→WAAPI) + Canvas (`drawScene({time})` per-frame) + a shared `evaluateTrack` engine + an rAF runtime; the hydration handler upgrades to `(event, context)` rich context; static snapshot `snapshotAt` + a canvas per-id virtual clock.',
+            },
+            items: [
+              {
+                label: { zh: 'SVG 播放（`@retikz/render/svg`）', en: 'SVG playback (`@retikz/render/svg`)' },
+                content: {
+                  zh: '`trigger:\'load\'`→内联 `<style>` CSS `@keyframes`（SSR 零 JS 自播），交互→WAAPI 描述（`bindWaapiDescriptors` 按 trigger 应用）；transform 通道各包一层 `<g>` + `transform-origin` 支点，pathDraw→`stroke-dashoffset`，camera→group transform，fill / stroke 在 oklch 预采样；`{ animate:false }` 降级 + `RenderOptions.easings` 自定义缓动。',
+                  en: '`trigger:\'load\'`→inline `<style>` CSS `@keyframes` (SSR zero-JS autoplay), interactive→WAAPI descriptors (`bindWaapiDescriptors` applies by trigger); transform channels each wrap a `<g>` + a `transform-origin` pivot, pathDraw→`stroke-dashoffset`, camera→group transform, fill / stroke presampled in oklch; `{ animate:false }` degradation + `RenderOptions.easings` custom easings.',
+                },
+              },
+              {
+                label: { zh: 'Canvas 播放 + 共享求值引擎', en: 'Canvas playback + shared evaluation engine' },
+                content: {
+                  zh: '`@retikz/render/canvas` 的 `drawScene(…, { time })` 逐帧绘制；新增 renderer 无关 `evaluateTrack`（delay / iteration / direction / fill / cubic-bezier 缓动 / 数值·oklch·viewBox 分量插值），SVG 静态截帧、Canvas 逐帧、WAAPI JS fallback 三处复用；`RenderOptions.animationProperties` 自定义 property 的 JS 插值器注册表。',
+                  en: '`@retikz/render/canvas` `drawScene(…, { time })` draws per frame; a new renderer-agnostic `evaluateTrack` (delay / iteration / direction / fill / cubic-bezier easing / numeric·oklch·viewBox component interpolation) is shared by SVG snapshots, Canvas frames, and the WAAPI JS fallback; `RenderOptions.animationProperties` registers JS interpolators for custom properties.',
+                },
+              },
+              {
+                label: { zh: '共享 rAF runtime（`@retikz/render/animation`）', en: 'shared rAF runtime (`@retikz/render/animation`)' },
+                content: {
+                  zh: '`createClock`（rAF 共享时钟，有限时长到点停末帧 settled、缺 rAF 优雅退化）、`prefersReducedMotion`、scene 含动画 / 总时长 / autoplay 探测、`bindWaapiDescriptors`（visible→IntersectionObserver / manual→句柄 / `{onEvent}`→事件桥）；纯 runtime，与 evaluate / oklch 纯数学分离。',
+                  en: '`createClock` (a shared rAF clock that stops at the settled last frame for finite durations and degrades gracefully without rAF), `prefersReducedMotion`, scene has-animation / total-duration / autoplay probes, and `bindWaapiDescriptors` (visible→IntersectionObserver / manual→handle / `{onEvent}`→event bridge); pure runtime, separate from the evaluate / oklch math.',
+                },
+              },
+              {
+                label: { zh: '水合 runtime 上下文（`@retikz/render/hydration`）', en: 'hydration runtime context (`@retikz/render/hydration`)' },
+                content: {
+                  zh: 'handler 升 `(event, context)`：`context` 携命中语义元素的 `id` / `meta`(provenance) / 几何（同 id 全部图元并集 bbox）/ DOM `element` / scene `point` / 动画控制 / `scene`；SVG per-id 经 `getAnimations()` + wrapper 上的 `data-retikz-animation-owner` 双查，renderer 无关（canvas `element=null`）；additive，旧式 `(event) =>` 照常。',
+                  en: 'The handler upgrades to `(event, context)`: `context` carries the hit semantic element\'s `id` / `meta` (provenance) / geometry (union bbox of all same-id primitives) / DOM `element` / scene `point` / animation controls / `scene`; SVG per-id queries `getAnimations()` plus `data-retikz-animation-owner` on wrappers, renderer-agnostic (canvas `element=null`); additive, old `(event) =>` still works.',
+                },
+              },
+              {
+                label: { zh: '静态截帧 `snapshotAt` + canvas per-id', en: 'static snapshot `snapshotAt` + canvas per-id' },
+                content: {
+                  zh: '`buildSvgDocument({ snapshotAt })` 把各 track 在该时刻的值烘焙成静态属性 / transform（复用 `evaluateTrack`，SSR 海报帧 / 缩略图）；canvas 新增 `IdClockRegistry` + `drawScene` 的 `resolvePrimAnimation`，在单 rAF 共享时钟上给每个 id 叠独立虚拟时钟（offset / pause / active / stop），实现 per-id restart / play / pause / seek。',
+                  en: '`buildSvgDocument({ snapshotAt })` bakes each track\'s value at that instant into static attributes / transforms (reusing `evaluateTrack`, for SSR poster frames / thumbnails); canvas gains an `IdClockRegistry` + `drawScene`\'s `resolvePrimAnimation`, layering an independent virtual clock (offset / pause / active / stop) per id on the single shared rAF clock for per-id restart / play / pause / seek.',
+                },
+              },
+            ],
+          },
+          {
             version: 'alpha.4',
             date: '2026-06-07',
             summary: {
@@ -172,6 +217,44 @@ export const changelog: Array<Release> = [
         ],
         subVersions: [
           {
+            version: 'alpha.5',
+            date: '2026-06-07',
+            summary: {
+              zh: '无框架动画播放：`mountSvg`（CSS 自播 + WAAPI 桥）/ `mountCanvas`（rAF 时钟逐帧），`view.animation` 命令式句柄；水合升 `(event, context)` 富上下文 + `view.hydrate` / standalone `hydrate`；静态截帧 `snapshotAt`；canvas per-id 虚拟时钟。',
+              en: 'Framework-free animation playback: `mountSvg` (CSS autoplay + WAAPI bridge) / `mountCanvas` (rAF per-frame clock), an imperative `view.animation` handle; hydration upgrades to `(event, context)` rich context via `view.hydrate` / standalone `hydrate`; static snapshot `snapshotAt`; a canvas per-id virtual clock.',
+            },
+            items: [
+              {
+                label: { zh: 'mountSvg / mountCanvas 播放', en: 'mountSvg / mountCanvas playback' },
+                content: {
+                  zh: 'mountSvg：load track 经内联 CSS 自播、交互 track 经 WAAPI 桥按 trigger 驱动；mountCanvas：`createClock` rAF 逐帧（autoplay 自动播）；二者 `{ animate:false }` + `prefers-reduced-motion` 走 base 静态；返回 view 暴露 `animation` 句柄（`play` / `pause` / `seek`）。',
+                  en: 'mountSvg: load tracks autoplay via inline CSS, interactive tracks driven by trigger through the WAAPI bridge; mountCanvas: a `createClock` rAF loop per frame (autoplay auto-plays); both render the base static figure under `{ animate:false }` + `prefers-reduced-motion`; the returned view exposes an `animation` handle (`play` / `pause` / `seek`).',
+                },
+              },
+              {
+                label: { zh: '水合富上下文', en: 'rich hydration context' },
+                content: {
+                  zh: '`view.hydrate` 与 standalone `hydrate(root, { handlers, scene?, renderer? })`：传 `scene` → 富 context（meta / 几何 / 动画控制），否则最小 context（id / element / root / point）；handler 升 `(event, context)`，canvas 经 per-id 虚拟时钟控制命中元素动画。',
+                  en: '`view.hydrate` and standalone `hydrate(root, { handlers, scene?, renderer? })`: passing `scene` → a rich context (meta / geometry / animation controls), otherwise a minimal context (id / element / root / point); the handler upgrades to `(event, context)`, and canvas controls the hit element\'s animation via a per-id virtual clock.',
+                },
+              },
+              {
+                label: { zh: '静态截帧 `snapshotAt`', en: 'static snapshot `snapshotAt`' },
+                content: {
+                  zh: '`renderToSvgString(ir, { snapshotAt })` / `mountSvg(…, { snapshotAt })` 渲染定格在该时刻的一帧（SSR 海报帧 / 缩略图），复用 SVG 烘焙路径、覆盖 `animate`。',
+                  en: '`renderToSvgString(ir, { snapshotAt })` / `mountSvg(…, { snapshotAt })` render a single frame frozen at that instant (SSR poster frames / thumbnails), reusing the SVG baking path and overriding `animate`.',
+                },
+              },
+              {
+                label: { zh: 're-export preset + 类型', en: 're-exported presets + types' },
+                content: {
+                  zh: '从 `@retikz/vanilla` 单包 re-export 14 个 preset 工厂（含 `flash` / `blink` / `wiggle`）+ `stagger`，以及 `HydrationContext` / `AnimationControls` 等水合 / 动画类型。',
+                  en: '`@retikz/vanilla` re-exports the 14 preset factories (incl. `flash` / `blink` / `wiggle`) + `stagger`, plus hydration / animation types like `HydrationContext` / `AnimationControls`.',
+                },
+              },
+            ],
+          },
+          {
             version: 'alpha.4',
             date: '2026-06-07',
             summary: {
@@ -279,6 +362,44 @@ export const changelog: Array<Release> = [
           },
         ],
         subVersions: [
+          {
+            version: 'alpha.5',
+            date: '2026-06-07',
+            summary: {
+              zh: '`<Layout>` 接通动画：`animate` / `animations`(镜头) / `easings` / `animationProperties` / `snapshotAt` / `animationRef` props；Kernel 事件 handler 升 `(event, context)` 富上下文；canvasHost rAF 时钟 + per-id；re-export 14 个 preset 与动画扩展类型。',
+              en: '`<Layout>` wires up animation: `animate` / `animations` (camera) / `easings` / `animationProperties` / `snapshotAt` / `animationRef` props; Kernel event handlers upgrade to `(event, context)` rich context; canvasHost rAF clock + per-id; re-exports the 14 presets and animation extension types.',
+            },
+            items: [
+              {
+                label: { zh: '`<Layout>` 动画 props', en: '`<Layout>` animation props' },
+                content: {
+                  zh: '`animate`（false → 渲染 base 静态）、`animations`（scene 根镜头 tracks，配 `cameraTo()`）、`easings` / `animationProperties`（自定义缓动 / 属性通道注入）、`snapshotAt`（定格某时刻一帧、不播放）、`animationRef`（命令式 `AnimationControls` 句柄出口：`play` / `pause` / `seek`，与 vanilla `view.animation` 对等）。',
+                  en: '`animate` (false → render the base static figure), `animations` (scene-root camera tracks, paired with `cameraTo()`), `easings` / `animationProperties` (inject custom easings / property channels), `snapshotAt` (freeze one frame at a time, no playback), and `animationRef` (an imperative `AnimationControls` out-port: `play` / `pause` / `seek`, the peer of vanilla `view.animation`).',
+                },
+              },
+              {
+                label: { zh: '水合 handler `(event, context)`', en: 'hydration handler `(event, context)`' },
+                content: {
+                  zh: 'Kernel `<Node>` / `<Path>` / `<Scope>` 的 `on<Event>` props 升级第二参 `context`（id / meta / 几何 / DOM element / 动画控制）；svg 绑定与 canvasHost 各经 `createContextBuilder` 注入 renderer 专有片段；只用 `event` 的旧式 handler 照常工作（additive）。',
+                  en: 'The `on<Event>` props on Kernel `<Node>` / `<Path>` / `<Scope>` gain a second `context` arg (id / meta / geometry / DOM element / animation controls); the svg binding and canvasHost each inject their renderer-specific pieces via `createContextBuilder`; old handlers using only `event` keep working (additive).',
+                },
+              },
+              {
+                label: { zh: 'canvasHost rAF + per-id', en: 'canvasHost rAF + per-id' },
+                content: {
+                  zh: 'render effect 起 `createClock` rAF 逐帧重绘（autoplay track 自动播），`snapshotAt` 给定时画单帧不起 rAF；`context.animation` 经 `IdClockRegistry` + `resolvePrimAnimation` 折算各 id 有效时刻，per-id 控制命中元素的动画。',
+                  en: 'The render effect starts a `createClock` rAF loop redrawing per frame (autoplay tracks auto-play); when `snapshotAt` is given it draws a single frame without rAF; `context.animation` resolves each id\'s effective time via `IdClockRegistry` + `resolvePrimAnimation`, controlling the hit element\'s animation per-id.',
+                },
+              },
+              {
+                label: { zh: 're-export preset + 扩展类型', en: 're-exported presets + extension types' },
+                content: {
+                  zh: '从 `@retikz/react` 单包 re-export 14 个 preset 工厂（含 `flash` / `blink` / `wiggle`）+ `stagger`，以及 `AnimationControls` / `EasingRegistry` / `AnimationPropertyRegistry` / `HydrationContext` 等类型，免跨包 import。',
+                  en: '`@retikz/react` re-exports the 14 preset factories (incl. `flash` / `blink` / `wiggle`) + `stagger`, plus `AnimationControls` / `EasingRegistry` / `AnimationPropertyRegistry` / `HydrationContext` types, avoiding cross-package imports.',
+                },
+              },
+            ],
+          },
           {
             version: 'alpha.4',
             date: '2026-06-07',
@@ -401,6 +522,44 @@ export const changelog: Array<Release> = [
           },
         ],
         subVersions: [
+          {
+            version: 'alpha.5',
+            date: '2026-06-07',
+            summary: {
+              zh: '时间轴动画进 IR：声明式 `AnimationTrack`（关键帧 + 时长 / 缓动 / 触发器 timing）+ 元素与 scene 根 `animations?`，编译沿 id-stamp 通路透传进 Scene；14 个具名 preset 工厂。纯数据、可序列化、settled 降级、AI 友好。',
+              en: 'Timeline animation enters the IR: a declarative `AnimationTrack` (keyframes + duration / easing / trigger timing) plus element and scene-root `animations?`, stamped into the Scene along the id-stamp path; 14 named preset factories. Pure data, serializable, settled degradation, AI-friendly.',
+            },
+            items: [
+              {
+                label: { zh: '`AnimationTrack` IR 契约', en: '`AnimationTrack` IR contract' },
+                content: {
+                  zh: '`keyframes`（归一化 `at` + JsonValue 值）+ `duration` / `delay` / `easing`（具名 ∪ cubic-bezier ∪ 注册名）/ `iterations` / `direction` / `fill` / `trigger` / `origin`；`AnimationProperty` 开放可扩展（opacity / fill / stroke / strokeWidth / translateX·Y / scale·X·Y / rotate / pathDraw / viewBox + 自定义串）；scaleX / scaleY 非均匀 + track 级 `origin` 支点。',
+                  en: '`keyframes` (normalized `at` + JsonValue) plus `duration` / `delay` / `easing` (named ∪ cubic-bezier ∪ registered name) / `iterations` / `direction` / `fill` / `trigger` / `origin`; `AnimationProperty` is open/extensible (opacity / fill / stroke / strokeWidth / translateX·Y / scale·X·Y / rotate / pathDraw / viewBox + custom strings); non-uniform scaleX / scaleY + a track-level `origin` pivot.',
+                },
+              },
+              {
+                label: { zh: '元素 + scene 根 `animations?`', en: 'element + scene-root `animations?`' },
+                content: {
+                  zh: '`<Node>` / `<Path>` / `<Scope>` 带元素级 tracks，scene 根带 `viewBox` 镜头 tracks；compile 沿 meta / id-stamp 同款通路透传进 `ScenePrimitive.animations` / `Scene.animations`，并做 viewBox⇔根 校验；全部 additive、可选，省略时 IR / Scene 逐字段等价现状。',
+                  en: '`<Node>` / `<Path>` / `<Scope>` carry element-level tracks; the scene root carries `viewBox` camera tracks; compile stamps them into `ScenePrimitive.animations` / `Scene.animations` along the same meta / id-stamp path, with a viewBox⇔root check; all additive and optional, byte-equivalent to today when omitted.',
+                },
+              },
+              {
+                label: { zh: 'settled-终态不变量 + 降级契约', en: 'settled-state invariant + degradation contract' },
+                content: {
+                  zh: '末帧（`at:1`）= 元素 base ⇒「忽略动画」见完整最终图；layout / viewBox 按静止态算（compile 不解释 tracks）；renderer 不支持 / `prefers-reduced-motion` / `{ animate:false }` 三事一路走 settled，warn 不丢图。',
+                  en: 'The last keyframe (`at:1`) equals the element base, so "ignore animation" shows the complete final figure; layout / viewBox are computed from the resting state (compile never interprets tracks); unsupported renderer / `prefers-reduced-motion` / `{ animate:false }` all converge to settled, warning without dropping the figure.',
+                },
+              },
+              {
+                label: { zh: '14 个具名 preset 工厂', en: '14 named preset factories' },
+                content: {
+                  zh: '`fadeIn` / `drawOn` / `scaleIn` / `grow` / `growUp` / `slideIn` / `colorShift` / `cameraTo` / `pulse` / `spin` / `loop` / `flash` / `blink` / `wiggle` + `stagger` helper；纯函数产 `AnimationTrack`，输出逐字段等于手写 track（Sugar=Kernel 等价），播放 / 降级全走 renderer 既有通路。',
+                  en: '`fadeIn` / `drawOn` / `scaleIn` / `grow` / `growUp` / `slideIn` / `colorShift` / `cameraTo` / `pulse` / `spin` / `loop` / `flash` / `blink` / `wiggle` + a `stagger` helper; pure functions producing an `AnimationTrack` field-for-field identical to a hand-written one (Sugar=Kernel), with playback / degradation via the renderers\' existing paths.',
+                },
+              },
+            ],
+          },
           {
             version: 'alpha.4',
             date: '2026-06-07',
