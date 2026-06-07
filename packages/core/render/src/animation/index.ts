@@ -7,3 +7,8 @@
 
 export { lerpColorOklch, sampleColorOklch } from './oklch';
 export type { CubicBezier, EasingFn, EasingRegistry } from './types';
+export { evaluateTrack } from './evaluate';
+export type { EvaluateTrackOptions } from './evaluate';
+export { classifyProperty, primHasStroke, resolveTransformOrigin } from './channels';
+export type { PropertyClass } from './channels';
+export type { AnimationPropertyDefinition, AnimationPropertyRegistry } from './registry';

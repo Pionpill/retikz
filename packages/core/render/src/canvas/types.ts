@@ -1,5 +1,8 @@
+import type { AnimationPropertyRegistry } from '../animation/registry';
+import type { EasingRegistry } from '../animation/types';
+
 /** Canvas renderer 暂不支持能力的降级类别 */
-export type UnsupportedCanvasFeature = 'paint' | 'clip';
+export type UnsupportedCanvasFeature = 'paint' | 'clip' | 'animation';
 
 /** Canvas renderer 降级告警 */
 export type CanvasWarning = {
@@ -43,6 +46,16 @@ export type DrawOptions = {
    *   opacity 按 best-effort 忽略（渐变退化为纯色，与历史一致）。
    */
   resolveCssColor?: (color: string) => string;
+  /**
+   * 动画时刻（毫秒，绝对时间轴）
+   * @description 给定时 drawScene 绘制该时刻的一帧（对每个 prim 的 animations 逐 track `evaluateTrack` 求值后应用）；
+   *   缺省（undefined）→ 渲染 base 静态图（与现状逐调用一致）。连续播放由 runtime（ADR-04）的 rAF 循环推进 time。
+   */
+  time?: number;
+  /** 自定义 property 插值器注册表（内置通道内建处理；未注册的自定义 property → warn + skip） */
+  animationProperties?: AnimationPropertyRegistry;
+  /** 自定义 easing 注册表（名 → cubic-bezier 四元组 / 函数） */
+  easings?: EasingRegistry;
 };
 
 /** HTMLCanvasElement 渲染选项 */

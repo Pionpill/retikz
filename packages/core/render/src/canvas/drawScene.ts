@@ -13,6 +13,8 @@ import type {
 } from '@retikz/core';
 import type { CanvasWarning, DrawOptions, UnsupportedCanvasFeature } from './types';
 import { DEG_TO_RAD, applyClip, applyTransform, buildPath, roundedRectPath } from './pathGeometry';
+import { applyPrimAnimations } from './animate';
+import { applySceneCamera } from './camera';
 
 const warnUnsupported = (
   options: DrawOptions,
@@ -634,6 +636,14 @@ const drawPrim = (
   resources: ResourceMap,
 ): void => {
   ctx.save();
+  // 动画：给定 time 时把该 prim 的 tracks 应用到 ctx（transform / dash）并取覆盖后的 prim（opacity / 色 / 线宽）
+  if (options.time !== undefined && p.animations !== undefined && p.animations.length > 0) {
+    p = applyPrimAnimations(ctx, p, options.time, {
+      easings: options.easings,
+      animationProperties: options.animationProperties,
+      warn: message => warnUnsupported(options, 'animation', message),
+    });
+  }
   switch (p.type) {
     case 'rect':
       withOpacity(ctx, p.opacity, () => {
@@ -717,5 +727,12 @@ export const drawScene = (
   options: DrawOptions = {},
 ): void => {
   const resources: ResourceMap = new Map((scene.resources ?? []).map(r => [r.id, r]));
+  // 镜头：给定 time 且 scene 根有 viewBox track 时，先叠一层取景变换（包住全部 prim）
+  const hasCamera = options.time !== undefined && (scene.animations ?? []).some(t => t.property === 'viewBox');
+  if (hasCamera) {
+    ctx.save();
+    applySceneCamera(ctx, scene, options.time as number, options.easings);
+  }
   for (const primitive of scene.primitives) drawPrim(ctx, primitive, options, resources);
+  if (hasCamera) ctx.restore();
 };

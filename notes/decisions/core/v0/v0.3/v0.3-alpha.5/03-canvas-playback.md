@@ -1,6 +1,6 @@
 # ADR-03：Canvas 动画播放——`drawScene(ctx, scene, { time })` 逐帧求值 + 共享插值引擎 + 自定义 property 插值器注册表
 
-- 状态：Proposed
+- 状态：Accepted
 - 决策日期：2026-06-07
 - 关联：[v0.3-alpha.5 roadmap](./roadmap.md) · **前置**：[ADR-01 IR 契约](./01-timeline-animation-ir.md)（Scene 带 tracks + settled 不变量 + 降级契约 + 自定义动画扩展口）· **姊妹**：[ADR-02 SVG 播放](./02-svg-playback.md)（同一份 tracks 的 SVG 后端实现，本 ADR 是 Canvas 后端）· **机制先例**：[v0.3-alpha.1 ADR-02 Canvas renderer](../v0.3-alpha.1/02-canvas-renderer-and-react-canvas-mode.md)（`drawScene` / `renderToCanvas`、meet-fit 坐标映射）
 
