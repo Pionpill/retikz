@@ -630,7 +630,9 @@ intent
 
 `@retikz/plot` 有自身独立的版本演进，**不与 core 版本号对齐**；它只消费 core 能力、不反向依赖，因此每个里程碑由「所需 core 能力是否就绪」gating。模块名见 §11，首批细节见 §12。
 
-主线：纵向闭环 → 横向铺 mark → 动态 → AI 渐进 → 组合。
+> ⚠️ **版本主题真源以 [plot v0 roadmap](../decisions/plot/v0/roadmap.md) 为准**：路线已重组——**v0.1 承载整套图形语法（GoG 8 组件）**，分阶段一（alpha.1–5 基础架构，已完成）+ 阶段二（alpha.6–14 完善语法：Data → Aesthetics+Scales → Coordinates/Geometry → Statistics → Facets → Theme）；交互 / 动画 / AI 渐进 / 性能等**能力轴**留 v0.1 之后的 minor。下文 §13.1~§13.6 是早期里程碑设计草案，**版本编号已过时**（原按 v0.1–v0.5 多 minor 设想），保留作各组件的**设计参考**；实际 alpha 序列见 [v0.1/roadmap](../decisions/plot/v0/v0.1/roadmap.md)。
+
+主线（阶段一）：纵向闭环 → 横向铺 mark → 动态 → AI 渐进 → 组合。
 
 > **贯穿原则**：v0.1 的 IR 与 lowering 必须预留两样东西，即便功能要到后面才露出——
 >
