@@ -29,7 +29,7 @@ SVG 后端的特殊性：它有**两套互斥的播放载体**——**CSS `@keyf
 | `opacity` | `opacity` |
 | `fill` / `stroke` | `fill` / `stroke`（颜色，见下 oklch） |
 | `strokeWidth` | `stroke-width` |
-| `translateX` / `translateY` / `rotate` / `scale` | `transform`（合成；绕元素几何中心，与 GroupPrim transform 同支点约定） |
+| `translateX` / `translateY` / `rotate` / `scale` / `scaleX` / `scaleY` | `transform`（合成；支点取 track `origin`——命名 anchor 折算成元素 boundary 上的点 / `[x,y]` 直用，缺省几何中心；映射成 `transform-box` + `transform-origin` 或绕支点的 translate-scale-translate 复合） |
 | `pathDraw`（0..1） | `pathLength=1` + `stroke-dasharray` + `stroke-dashoffset`（1→0 画出）；仅对有描边的 path/shape 有效，无描边 → warn+skip |
 | `viewBox`（scene 根·镜头） | **包一层 `<g transform>` 动 transform**（不动 `<svg viewBox>` 属性——CSS/WAAPI 都能动 transform、动不了 viewBox 属性）：每关键帧的 `[x,y,w,h]` 相对静态 `layout` 折算成 `scale + translate`，动这个合成 transform |
 

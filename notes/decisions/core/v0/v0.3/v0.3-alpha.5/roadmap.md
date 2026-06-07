@@ -25,12 +25,13 @@
 |---|---|---|---|---|
 | `fadeIn` / `fadeOut`† | 入场/退场 | `opacity` | ★★★★★ | ✅ 就绪 |
 | `drawOn` | 入场 | `pathDraw`（0..1 进度） | ★★★★★ | ✅ 就绪 |
-| `scaleIn` / `grow` | 入场 | `scale` | ★★★★ | ✅ 就绪 |
+| `scaleIn` / `grow` | 入场 | `scale`（均匀） | ★★★★ | ✅ 就绪 |
+| `growUp` / 柱子从基线长出 | 入场 | `scaleX` / `scaleY`（非均匀）+ `origin` 支点 | ★★★★ | ✅ 就绪 |
 | `slideIn` | 入场 | `translateX` / `translateY` | ★★★★ | ✅ 就绪 |
 | `cameraTo` / zoom·pan | 镜头 | `viewBox`（scene 根级） | ★★★★ | ✅ 就绪 |
-| `pulse` | 循环 | `scale` / `opacity` + `repeat` | ★★★ | ✅ 就绪 |
-| `spin` | 循环 | `rotate` + `repeat` | ★★★ | ✅ 就绪 |
-| `loop`（通用循环包装） | 循环 | 任意 + `repeat:'infinite'` + `direction` | ★★★ | ✅ 就绪 |
+| `pulse` | 循环 | `scale` / `opacity` + `iterations` | ★★★ | ✅ 就绪 |
+| `spin` | 循环 | `rotate` + `iterations` | ★★★ | ✅ 就绪 |
+| `loop`（通用循环包装） | 循环 | 任意 + `iterations:'infinite'` + `direction` | ★★★ | ✅ 就绪 |
 | `colorShift`（描边/填充变色）| 强调 | `fill` / `stroke`（oklch 插值） | ★★★ | ✅ 就绪 |
 | `wipeIn` / reveal | 入场 | clip 动画（需 clip 关键帧） | ★★ | ⬜ 未实现（本批） |
 | `flash` / `blink` | 强调 | `opacity` + repeat（预设） | ★★ | ⬜ 未实现（预设留 sugar） |
