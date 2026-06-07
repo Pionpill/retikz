@@ -3,6 +3,8 @@ import { describe, expect, it } from 'vitest';
 import { PlotFieldType, type PlotSpec, PlotSpecSchema } from '../../src/ir';
 import { coerceValue, normalizeRows } from '../../src/lower/coerce';
 import { type LowerPlotsOptions, lowerPlots } from '../../src/lower/expand';
+import { resolveFieldPath } from '../../src/lower/field';
+import { createPlotLocator } from '../../src/lower/locate';
 import { readSourceIndex, tagSourceIndex } from '../../src/lower/provenance';
 import { applyTransforms } from '../../src/lower/transform';
 
@@ -88,6 +90,13 @@ describe('normalizeRows — ingest 归一化（ADR-02）', () => {
     expect(out[0].revenue).toBe(42);
   });
 
+  it('nested_logical_path_coerces', () => {
+    // 评审 P1：点路径逻辑名归一化写扁平 key，下游 resolveFieldPath exact-first 命中 coerced 值（不再读回原始嵌套字符串）
+    const out = normalizeRows([{ user: { age: '42' } }], new Map([['user.age', PlotFieldType.Quantitative]]));
+    expect(out[0]['user.age']).toBe(42);
+    expect(resolveFieldPath(out[0], 'user.age')).toBe(42);
+  });
+
   it('preserves_source_index', () => {
     const tagged = tagSourceIndex([{ revenue: '5' }, { revenue: '7' }]);
     const out = normalizeRows(tagged, new Map([['revenue', PlotFieldType.Quantitative]]));
@@ -140,5 +149,16 @@ describe('validateData（ADR-02）', () => {
 
   it('on_throws_when_field_absent', () => {
     expect(() => compile(specWithModel(), { d: [{ wrong: 1 }] }, { validateData: true })).toThrow(/no valid values/i);
+  });
+});
+
+describe('locator fieldMaps parity（评审 P2）', () => {
+  it('locator_build_throws_like_render', () => {
+    // 同 spec+options：render 抛 unknown logical field → locator build 也抛（不再静默返回结果）
+    expect(() => createPlotLocator(specWithModel(), { d: [{ month: '2024-01-01', revenue: 1 }] }, { fieldMaps: { d: { nope: 'x' } } })).toThrow(/unknown logical field/i);
+  });
+
+  it('locator_build_throws_fieldmap_without_model', () => {
+    expect(() => createPlotLocator(specNoModel(), { d: [{ a: 1, b: 2 }] }, { fieldMaps: { d: { a: 'x' } } })).toThrow(/requires data\.model/i);
   });
 });

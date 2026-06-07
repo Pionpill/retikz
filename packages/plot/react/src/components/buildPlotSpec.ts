@@ -2,6 +2,7 @@ import { Children, Fragment, type ReactNode, isValidElement } from 'react';
 import {
   type ArrangementType,
   type Coordinate,
+  type DataModel,
   type Encoding,
   type Guide,
   type Mark,
@@ -67,6 +68,8 @@ export type BuildPlotSpecOptions = {
   scaleX?: DslScaleX;
   /** 坐标系选择（缺省 cartesian2D）；"polar2D" 或 polar2D 对象配置 */
   coordinate?: CoordinateInput;
+  /** 数据模型（字段类型）：声明则进 data.model，并改由 type-driven 派生位置 scale（省略 AUTO 绑定，scaleX 让位给 model） */
+  model?: DataModel;
 };
 
 /** 无任何 <Axis> 子组件时填充的默认 guide：x 轴 + y 轴（y 带网格，横线读数值、不过密） */
@@ -249,21 +252,19 @@ export const buildPlotSpec = (children: ReactNode, dataRef: string, options: Bui
 
   const polar = toPolarConfig(options.coordinate);
 
+  // 有 model → 位置 scale 交给 expand 的 type-driven 派生：省略 AUTO 绑定 + 不预生成位置 scale（scaleX 让位给 model）。
+  // 无 model → 沿用原 AUTO 绑定 + 推断（向后兼容，存量 DSL 无 model 走此路）。
+  const hasModel = options.model !== undefined;
   let coordinate: Coordinate;
   let scales: Array<Scale>;
   if (polar) {
-    coordinate = {
-      type: PlotCoordinate.Polar2D,
-      angle: AUTO_ANGLE,
-      radius: AUTO_RADIUS,
-      startAngle: polar.startAngle,
-      endAngle: polar.endAngle,
-      innerRadius: polar.innerRadius,
-    };
-    scales = [buildAngleScale(collected), { type: PlotScale.Linear, name: AUTO_RADIUS }];
+    coordinate = hasModel
+      ? { type: PlotCoordinate.Polar2D, startAngle: polar.startAngle, endAngle: polar.endAngle, innerRadius: polar.innerRadius }
+      : { type: PlotCoordinate.Polar2D, angle: AUTO_ANGLE, radius: AUTO_RADIUS, startAngle: polar.startAngle, endAngle: polar.endAngle, innerRadius: polar.innerRadius };
+    scales = hasModel ? [] : [buildAngleScale(collected), { type: PlotScale.Linear, name: AUTO_RADIUS }];
   } else {
-    coordinate = { type: PlotCoordinate.Cartesian2D, x: AUTO_X, y: AUTO_Y };
-    scales = [buildCartesianXScale(collected.hasBar, options.scaleX), { type: PlotScale.Linear, name: AUTO_Y }];
+    coordinate = hasModel ? { type: PlotCoordinate.Cartesian2D } : { type: PlotCoordinate.Cartesian2D, x: AUTO_X, y: AUTO_Y };
+    scales = hasModel ? [] : [buildCartesianXScale(collected.hasBar, options.scaleX), { type: PlotScale.Linear, name: AUTO_Y }];
   }
   if (collected.colored) scales.push({ type: PlotScale.Ordinal, name: AUTO_COLOR });
 
@@ -274,7 +275,7 @@ export const buildPlotSpec = (children: ReactNode, dataRef: string, options: Bui
   return {
     namespace: PLOT_NAMESPACE,
     type: PlotComposite.Plot,
-    data: { reference: dataRef },
+    data: options.model ? { reference: dataRef, model: options.model } : { reference: dataRef },
     ...(collected.transforms.length > 0 ? { transform: collected.transforms } : {}),
     scales,
     coordinate,

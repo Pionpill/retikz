@@ -92,6 +92,38 @@ describe('type-driven scale 集成（ADR-03）', () => {
     ).toThrow(/incompatible/i);
   });
 
+  it('multi_mark_explicit_checks_all_field_types', () => {
+    // 两 mark 共用 x：a=quantitative、c=nominal，显式 linear + model → 第二个字段 nominal 触发兼容报错（评审 P1）
+    const s = PlotSpecSchema.parse({
+      namespace: 'plot',
+      type: 'plot',
+      data: { reference: 'd', model: [{ name: 'a', type: 'quantitative' }, { name: 'b', type: 'quantitative' }, { name: 'c', type: 'nominal' }] },
+      scales: [{ type: 'linear', name: 'xs' }, { type: 'linear', name: 'ys' }],
+      coordinate: { type: 'cartesian2D', x: 'xs', y: 'ys' },
+      marks: [
+        { type: 'point', encoding: { x: { field: 'a' }, y: { field: 'b' } } },
+        { type: 'point', encoding: { x: { field: 'c' }, y: { field: 'b' } } },
+      ],
+    });
+    expect(() => compile(s, { d: [{ a: 1, b: 2, c: 'x' }] })).toThrow(/incompatible/i);
+  });
+
+  it('derive_mixed_role_types_throws', () => {
+    // 省略 x scale，两 mark 的 x 字段类型不一（quantitative + nominal）→ 无从派生单一 scale，fail-loud
+    const s = PlotSpecSchema.parse({
+      namespace: 'plot',
+      type: 'plot',
+      data: { reference: 'd', model: [{ name: 'a', type: 'quantitative' }, { name: 'b', type: 'quantitative' }, { name: 'c', type: 'nominal' }] },
+      scales: [],
+      coordinate: { type: 'cartesian2D' },
+      marks: [
+        { type: 'point', encoding: { x: { field: 'a' }, y: { field: 'b' } } },
+        { type: 'point', encoding: { x: { field: 'c' }, y: { field: 'b' } } },
+      ],
+    });
+    expect(() => compile(s, { d: [{ a: 1, b: 2, c: 'x' }] })).toThrow(/mixed types/i);
+  });
+
   it('undeclared_binding_name_still_throws', () => {
     // 提供了绑定名但未声明该 scale → 仍抛（typo 守卫，不静默派生）
     expect(() =>

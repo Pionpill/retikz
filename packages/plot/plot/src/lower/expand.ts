@@ -161,26 +161,35 @@ export const resolveFrame = (params: ResolveFrameParams): ResolvedFrame => {
     return out;
   };
 
-  // 某角色绑定字段的类型（取首个该角色绑了 field 的 mark），供省略 scale 时派生 / 显式 scale 兼容校验
-  const roleFieldType = (pick: (mark: Mark) => Channel | undefined): FieldType | undefined => {
+  // 某角色（跨所有 mark）绑定字段的全部类型——多 mark 共用一角色时须校验 / 派生全部，不能只看首个
+  const roleFieldTypes = (pick: (mark: Mark) => Channel | undefined): Array<FieldType> => {
+    const types: Array<FieldType> = [];
     for (const mark of node.marks) {
       const channel = pick(mark);
-      if (channel?.field !== undefined) return fieldTypes.get(channel.field);
+      if (channel?.field === undefined) continue;
+      const type = fieldTypes.get(channel.field);
+      if (type !== undefined) types.push(type);
     }
-    return undefined;
+    return types;
   };
 
-  // 解析角色 scale（ADR-03）：显式绑定 → 查表（未声明仍抛，typo 守卫）+ 类型兼容校验；省略 → 按字段类型派生。
+  // 解析角色 scale（ADR-03）：显式绑定 → 查表（未声明仍抛，typo 守卫）+ 对该 role **全部**字段做兼容校验；
+  //   省略 → 按字段类型派生（要求该 role 字段类型一致，混类型 fail-loud）。兼容校验只对「声明 model 的类型」生效。
   const resolveScaleForRole = (role: 'x' | 'y' | 'angle' | 'radius', scaleName: string | undefined, pick: (mark: Mark) => Channel | undefined): Scale => {
-    const fieldType = roleFieldType(pick);
+    const types = roleFieldTypes(pick);
     if (scaleName !== undefined) {
       const def = scaleByName.get(scaleName);
       if (!def) throw new Error(`lowerPlots: coordinate.${role} references unknown scale "${scaleName}"`);
-      // 兼容校验只对「用户声明的类型」fail-loud；缺省推断是 best-effort 猜测，不据此报错（避免边缘数据误判 nominal 误伤）
-      if (fieldType !== undefined && node.data.model !== undefined) assertScaleFieldCompatible(role, def.type, fieldType, scaleName);
+      if (node.data.model !== undefined) {
+        for (const type of types) assertScaleFieldCompatible(role, def.type, type, scaleName);
+      }
       return def;
     }
-    return deriveScale(fieldType, `__${role}`);
+    const distinct = [...new Set(types)];
+    if (distinct.length > 1) {
+      throw new Error(`lowerPlots: coordinate.${role} omitted but its bound fields have mixed types [${distinct.join(', ')}]; declare an explicit scale`);
+    }
+    return deriveScale(distinct[0], `__${role}`);
   };
 
   // 按坐标系解析出 CoordinateFrame（一次性、mark / guide 共用）+ guide 层。
@@ -342,6 +351,46 @@ const makeColorResolver = (node: PlotSpec, rows: Array<ExternalRow>): ((mark: Ma
 };
 
 /**
+ * 校验 fieldMaps（fail-loud）：ref∈datasets；本 plot 的 map 需 model + 逻辑名∈model
+ * @description 抽出供 expandPlot 与 createPlotLocator 共用，保证「render 抛错 ⟺ locator 抛错」的 parity（评审 P2）
+ */
+export const validateFieldMaps = (spec: PlotSpec, datasets: ExternalDatasets, fieldMaps: LowerPlotsOptions['fieldMaps']): void => {
+  if (fieldMaps === undefined) return;
+  for (const ref of Object.keys(fieldMaps)) {
+    if (!(ref in datasets)) throw new Error(`lowerPlots: fieldMaps references unknown dataset "${ref}"`);
+  }
+  if (!(spec.data.reference in fieldMaps)) return;
+  const fieldMap = fieldMaps[spec.data.reference];
+  if (spec.data.model === undefined) {
+    throw new Error(`lowerPlots: fieldMaps for "${spec.data.reference}" requires data.model (no logical field contract without a model)`);
+  }
+  const declared = new Set(spec.data.model.map(field => field.name));
+  for (const logical of Object.keys(fieldMap)) {
+    if (!declared.has(logical)) {
+      throw new Error(`lowerPlots: fieldMaps["${spec.data.reference}"] maps unknown logical field "${logical}" (not in data.model)`);
+    }
+  }
+};
+
+/**
+ * 共享的「绑定准备」：fieldMaps 校验 + 用户源字段类型解析 + ingest 归一化（仅 model 在时）
+ * @description expandPlot 与 createPlotLocator 共用同一入口，保证两者校验 / 归一化 / 类型解析完全同序（评审 P2 parity）。
+ *   入参 ingested 由调用方按各自需要先行 tagSourceIndex；本函数不碰 transform（调用方各自 applyTransforms）。
+ */
+export const prepareRows = (
+  spec: PlotSpec,
+  datasets: ExternalDatasets,
+  options: LowerPlotsOptions,
+  ingested: Array<ExternalRow>,
+): { fieldTypes: Map<string, FieldType>; normalized: Array<ExternalRow> } => {
+  validateFieldMaps(spec, datasets, options.fieldMaps);
+  const fieldTypes = resolveFieldTypes(spec.data.model, ingested, collectUserSourceFields(spec));
+  const fieldMap = options.fieldMaps?.[spec.data.reference];
+  const normalized = spec.data.model !== undefined ? normalizeRows(ingested, fieldTypes, fieldMap) : ingested;
+  return { fieldTypes, normalized };
+};
+
+/**
  * 把一个 Plot IR 根节点 + 外部数据下沉成一个 core Scope
  * @description 编排：校验 ref/scale → 收集轴值 → 建归一化 scale → 建投影器（resolveFrame）→ 各 mark 下沉 → 包 localNamespace Scope。
  *   root id → Scope.id（plot-design §8.1）；provenance 开 → 外层 Scope + 各层 / datum 带来源 meta + `<plotId>.` 内部 id。
@@ -376,32 +425,9 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
   // 取数：provenance 开时先打源序标记（symbol 键，跨 transform 存活，供 sourceIndex 回指），再过 transform 管线
   const ingested = provenance ? tagSourceIndex(datasets[node.data.reference]) : datasets[node.data.reference];
 
-  // ADR-01：解析用户源字段类型 + strict 校验（有 model → 引用必须声明，缺失/重复 fail-loud；无 model → 全推断）。
-  // 产出的类型 Map 是 type-driven scale（ADR-03）/ coercion（ADR-02）的单一类型真源。
-  const fieldTypes = resolveFieldTypes(node.data.model, ingested, collectUserSourceFields(node));
-
-  // ADR-02：fieldMaps 校验（ref∈datasets；本 plot 的 map 需 model + 逻辑名∈model）
-  if (options.fieldMaps !== undefined) {
-    for (const ref of Object.keys(options.fieldMaps)) {
-      if (!(ref in datasets)) throw new Error(`lowerPlots: fieldMaps references unknown dataset "${ref}"`);
-    }
-  }
-  const fieldMap = options.fieldMaps?.[node.data.reference];
-  if (fieldMap !== undefined) {
-    if (node.data.model === undefined) {
-      throw new Error(`lowerPlots: fieldMaps for "${node.data.reference}" requires data.model (no logical field contract without a model)`);
-    }
-    const declared = new Set(node.data.model.map(field => field.name));
-    for (const logical of Object.keys(fieldMap)) {
-      if (!declared.has(logical)) {
-        throw new Error(`lowerPlots: fieldMaps["${node.data.reference}"] maps unknown logical field "${logical}" (not in data.model)`);
-      }
-    }
-  }
-
-  // ADR-02：ingest 归一化（仅 model 在时——fieldMap 解析 + 按类型 coerce → canonical 行，置于 transform 前）；
-  // 无 model → 保持原始行（向后兼容，未声明类型契约不归一化）。validateData 开 → 抽样 fail-loud。
-  const normalized = node.data.model !== undefined ? normalizeRows(ingested, fieldTypes, fieldMap) : ingested;
+  // ADR-01/02：fieldMaps 校验 + 用户源字段类型解析（strict）+ ingest 归一化（仅 model 在时）。与 locator 共用 prepareRows 保 parity。
+  // 类型 Map 是 type-driven scale（ADR-03）/ coercion 的单一真源；归一化置于 transform 前。无 model → 原始行（向后兼容）。
+  const { fieldTypes, normalized } = prepareRows(node, datasets, options, ingested);
   if (options.validateData) {
     const sampleRows = typeof options.validateData === 'object' ? options.validateData.sampleRows ?? 100 : 100;
     validateBoundData(normalized, fieldTypes, sampleRows);

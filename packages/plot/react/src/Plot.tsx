@@ -56,9 +56,9 @@ export const Plot: FC<PlotProps> = props => {
     spec = props.spec;
     datasets = props.data;
   } else {
-    const built = buildPlotSpec(props.children, DSL_DATA_REF, { bare: props.bare, scaleX: props.scaleX, coordinate: props.coordinate });
-    // DSL 入口：model prop 注入构造 spec 的 data.model；扁平 fieldMap 映射到固定数据集名（用户不写内部 ref）
-    spec = props.model ? { ...built, data: { ...built.data, model: props.model } } : built;
+    // DSL 入口：model 经 buildPlotSpec 注入 data.model **并改走 type-driven 派生**（省略 AUTO 位置 scale 绑定，
+    // 否则 model 的 temporal/nominal 不会派生 time/band、甚至被当显式 linear 校验）。扁平 fieldMap 映射到固定数据集名。
+    spec = buildPlotSpec(props.children, DSL_DATA_REF, { bare: props.bare, scaleX: props.scaleX, coordinate: props.coordinate, model: props.model });
     datasets = { [DSL_DATA_REF]: props.data };
     if (props.fieldMap) effectiveFieldMaps = { [DSL_DATA_REF]: props.fieldMap };
   }
