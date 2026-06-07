@@ -42,6 +42,30 @@
 > † `fadeOut` 等退场只在「元素消失」时有意义，依赖数据过渡（enter/update/exit），归 runtime + Tier 2；core 本批只做不依赖消失语义的 intro/loop/camera。
 > **「✅ 就绪」= core 的 `AnimationTrack` 通道本批可表达该动画**（手写 raw track / IR / AI 可直接产出）；其 **sugar 动词别名**（`fadeIn` 等命名，react + 共享 parser）与 **renderer 播放**（SVG WAAPI/CSS、Canvas rAF）是本里程碑后续阶段，不在「只 core」本批。
 
+## 动画配方（raw `AnimationTrack` 模板）
+
+> 把上表 ✅ 动画落成**确切的 raw track 模板**——core IR 本批已就绪，下面这些**今天即可手写 / AI / Tier 2 直接产出**（零新代码）。同时这是日后 **sugar 动词的规格底稿**：`fadeIn(opts)` 等只是按下表填模板 + 套默认（产出的 IR 必须**逐字段等于**手写下表，配 Sugar=Kernel 等价测试）。`opts` 默认值即「默认 timing」列；可调项即「参数」列。
+>
+> **末帧约定（settled 不变量）**：intro 系列末帧（`at:1`）= 元素 base ⇒ 降级见完整图；loop 系列无终态（base = track 外静止值）。挂点：元素动画进 `node/path/scope.animations[]`，`cameraTo` 进 `scene.animations[]`（根级）。多动画 = 同元素挂多 track（如 fadeIn + scaleIn 组合）。
+
+| 动画 | track 核心字段（property + keyframes） | 默认 timing | 参数（默认） |
+|---|---|---|---|
+| `fadeIn` | `opacity`: `[{0,0},{1,1}]` | duration 400, ease-out | duration, delay, easing |
+| `drawOn` | `pathDraw`: `[{0,0},{1,1}]` | duration 600, ease-in-out | duration, delay, easing |
+| `scaleIn` | `scale`: `[{0, from},{1,1}]` + `origin` | duration 400, ease-out | from(0.8), duration, delay, easing, origin('center') |
+| `grow` | = `scaleIn` 的 `from:0` 别名 | 同 scaleIn | 同 scaleIn（from 锁 0） |
+| `growUp` | `scaleY`: `[{0,0},{1,1}]` + `origin:'south'` | duration 500, ease-out | duration, delay, easing, origin('south') |
+| `slideIn` | `translateX`\|`translateY`: `[{0, offset},{1,0}]` | duration 400, ease-out | axis(x), offset(-20), duration, delay, easing |
+| `colorShift` | `fill`\|`stroke`: `[{0, fromColor},{1, toColor}]` | duration 400, ease-in-out | channel(fill), fromColor(base), toColor*, duration, easing |
+| `cameraTo` | (scene 根) `viewBox`: `[{0, from},{1, to}]` | duration 800, ease-in-out | from(当前 layout), to*, duration, easing |
+| `pulse` | `scale`: `[{0,1},{0.5, peak},{1,1}]`, `iterations:'infinite'`, `direction:'alternate'` | duration 1000, ease-in-out | peak(1.1), duration, iterations, origin |
+| `spin` | `rotate`: `[{0,0},{1,360}]`, `iterations:'infinite'`, `easing:'linear'` | duration 1000 | duration, iterations, direction, origin |
+| `loop` | 包装任意上表 track：补 `iterations:'infinite'`（+按需 `direction:'alternate'`） | 继承被包 track | 被包 track + iterations, direction |
+
+> `*` = 必填无默认（`cameraTo.to` / `colorShift.toColor`）。`from`/`offset`/`peak` 等是「起点偏移」，intro 系列**起点偏移、终点=base**（`scaleIn.from<1→1`、`slideIn.offset→0`）。`pulse`/`spin` 用 `alternate` / 整圈回原点，故无须末帧=base。
+>
+> **具体例子**见 [ADR-01 §本批形态](./01-timeline-animation-ir.md)（fadeIn+scaleIn 组合 / spin / growUp / cameraTo 的完整 IR JSON）。
+
 ## 本批（core only）范围
 
 **做**：`AnimationTrack` IR schema（renderer 无关 property —— 内置集 + **开放字符串可扩展**；easing 具名 ∪ bezier ∪ 自定义名；property↔value zod 校验 + viewBox⇔根 compile 校验）+ 元素 `animations?`（Node / Path / Scope）+ scene 根 `animations?`（镜头）+ 编译期沿 id/meta-stamp 同款通路透传进 `ScenePrimitive.animations?` / `Scene.animations?` + 静止-终态语义（layout / viewBox 按静止态算，compile 不解释 tracks）。**留自定义动画扩展口**：property/easing 开放、自定义 value 宽松透传，render-side 插值器注册接口形状在 ADR 写明、留后续落地。
