@@ -20,3 +20,7 @@ export * from './serialize';
 export { buildPathD } from './path-d-builder';
 export { buildTransform } from './transform-builder';
 export { formatViewBox } from './viewBox';
+
+// ============ 动画播放（SVG 后端）：CSS @keyframes + WAAPI 描述类型 ============
+export * from './animation';
+export type { CubicBezier, EasingFn, EasingRegistry } from '../animation/types';

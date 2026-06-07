@@ -17,6 +17,8 @@ export type BuildContext = {
   paintRefUrl?: (id: string) => string;
   /** clip 资源 id → `url(#...)` 引用（GroupPrim.clipRef 物化用）；缺省 `url(#id)` */
   clipRefUrl?: (id: string) => string;
+  /** 动画装饰回调（document builder 在动画启用时注入）：给带 `animations` 的 prim 挂 CSS / WAAPI；缺省不装饰 */
+  decorate?: (node: SvgNode, prim: ScenePrimitive) => SvgNode;
 };
 
 /** Scene baseline 名 → SVG dominantBaseline 枚举（top/middle/bottom 对应三种边界基线） */
@@ -84,7 +86,7 @@ const withStyle = (node: SvgNode, style: SvgStyle | undefined): SvgNode =>
  * @description 不读 IR，只读 Scene。属性名一律 SVG 真名（呈现属性 kebab、结构属性规范拼写）；含 `var()` 的
  *   颜色值落 `style`、其余落 `attrs`。group 递归并跳过 undefined 子槽位（防御非法 Scene）。
  */
-export const buildPrim = (p: ScenePrimitive, context: BuildContext = {}): SvgNode => {
+const buildPrimRaw = (p: ScenePrimitive, context: BuildContext): SvgNode => {
   const paintRefUrl = context.paintRefUrl ?? ((id: string) => `url(#${id})`);
   switch (p.type) {
     case 'rect': {
@@ -236,4 +238,14 @@ export const buildPrim = (p: ScenePrimitive, context: BuildContext = {}): SvgNod
       };
     }
   }
+};
+
+/**
+ * Scene primitive → `SvgNode`（含动画装饰）
+ * @description 先建静态 base 节点（buildPrimRaw），再经 context.decorate 挂动画（CSS class / WAAPI data /
+ *   transform wrapper `<g>`）；无 decorate（动画关闭或无 animations）时原样返回 base。
+ */
+export const buildPrim = (p: ScenePrimitive, context: BuildContext = {}): SvgNode => {
+  const node = buildPrimRaw(p, context);
+  return context.decorate ? context.decorate(node, p) : node;
 };

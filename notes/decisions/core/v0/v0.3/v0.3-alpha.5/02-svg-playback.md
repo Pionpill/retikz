@@ -1,6 +1,6 @@
 # ADR-02：SVG 动画播放——`trigger:'load'` 出纯 CSS `@keyframes`（SSR 零 JS 自播）+ 交互触发出 WAAPI 描述（runtime 应用）
 
-- 状态：Proposed
+- 状态：Accepted
 - 决策日期：2026-06-07
 - 关联：[v0.3-alpha.5 roadmap](./roadmap.md) · **前置**：[ADR-01 时间轴动画 IR 契约](./01-timeline-animation-ir.md)（Scene 带 tracks + 静止-终态不变量 + 降级契约——本 ADR 在 SVG 后端兑现该契约）· **机制先例**：[v0.3-alpha.1 ADR-01 SVG descriptor](../v0.3-alpha.1/01-svg-descriptor-contract.md)（`SvgNode` descriptor + `buildSvgDocument` / `renderToSvgString`）· [v0.3-alpha.3 水合](../v0.3-alpha.3/01-hydration.md)（runtime DOM 挂载 + 事件基建，WAAPI 触发复用）
 
