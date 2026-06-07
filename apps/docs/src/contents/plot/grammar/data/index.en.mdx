@@ -70,6 +70,31 @@ The chart below declares no scale config at all: `month` is temporal → time ax
 
 When you do declare a scale, the explicit one **always wins** over derivation. If an explicit scale clearly conflicts with the field type (a `categorical` field on a linear axis, a `temporal` field on a band), retikz **throws a clear error** rather than drawing something meaningless.
 
+## Category order: `order`
+
+A `categorical` field orders its categories by **data appearance** by default (axes and legends follow that order). To control it — sizes should read `S → M → L → XL`, not whatever order they happen to appear in the data — give the field an `order`:
+
+```tsx
+<Plot data={rows} model={[
+  { name: 'size',  type: 'categorical', order: ['S', 'M', 'L', 'XL'] }, // explicit order
+  { name: 'grade', type: 'categorical', order: 'ascending' },           // sorted ascending
+  { name: 'city',  type: 'categorical' },                               // default: appearance order
+]}>{/* … */}</Plot>
+```
+
+| `order` | Effect |
+| --- | --- |
+| omitted / `'data'` | data appearance order (default) |
+| `'ascending'` / `'descending'` | sort the categories: numeric when all numbers, else as strings |
+| `Array` (e.g. `['S','M','L']`) | the array is the order; categories present in the data but absent from the array are appended at the end |
+
+Rules:
+
+- **It lives on the field, so position and color share the order**: when the same field drives both the x-axis (band) and color (ordinal), both use the same category order.
+- **Only valid on `categorical`**: an `order` on a `continuous` / `temporal` field **throws** (order is meaningless for continuous values / time).
+- **An explicit scale `domain` wins**: if the scale declares its own `domain`, that takes precedence and `order` is ignored.
+- A **non-default** `order` (a sort or an explicit array) marks the field as ordered — retikz's three field types have no dedicated "ordered category" type; orderedness is expressed through this parameter.
+
 ## Swapping data sources: one chart, three ways to bind
 
 Because data stays out of the config, one `<Plot>` config can run against different sources — as long as a model is declared (the model is the "portable" switch):

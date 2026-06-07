@@ -70,6 +70,31 @@ description: 给 <Plot> 一份数据行 + 一份「数据模型」（字段名 +
 
 需要覆盖时，显式声明的比例尺**永远优先**于自动派生。若显式比例尺与字段类型明显冲突（如把 `categorical` 字段配到线性轴、把 `temporal` 配到分类带），retikz 会**报清晰错误**而不是画出无意义的图。
 
+## 分类顺序：`order`
+
+`categorical` 字段默认按**数据出现顺序**排类别（轴、图例都跟着这个序）。想控制顺序——比如尺码该按 `S → M → L → XL`，而不是数据里碰巧出现的次序——给字段一个 `order`：
+
+```tsx
+<Plot data={rows} model={[
+  { name: 'size',  type: 'categorical', order: ['S', 'M', 'L', 'XL'] }, // 显式顺序
+  { name: 'grade', type: 'categorical', order: 'ascending' },           // 升序排序
+  { name: 'city',  type: 'categorical' },                               // 默认：按出现序
+]}>{/* … */}</Plot>
+```
+
+| `order` | 效果 |
+| --- | --- |
+| 不写 / `'data'` | 按数据出现序（默认） |
+| `'ascending'` / `'descending'` | 对类别排序：全数值按数值比，否则按字符串 |
+| `Array`（如 `['S','M','L']`） | 以数组为顺序；数据里有、数组没有的类别追加到末尾 |
+
+规则：
+
+- **挂在字段上，位置与颜色同序**：同一字段既作 x 轴（band）又作颜色（ordinal）时，两处类别顺序一致。
+- **只对 categorical 有效**：给 `continuous` / `temporal` 字段写 `order` 会**报错**（顺序对连续值 / 时间没有意义）。
+- **显式比例尺 domain 优先**：若比例尺自己写了 `domain`，以它为准，`order` 被忽略。
+- 写了**非默认** `order`（排序或显式数组）就表示「这个分类有序」——retikz 三类字段里没有「有序类别」专门类型，有序性靠这个参数表达。
+
 ## 换数据源：同一张图，三种对接方式
 
 因为数据不进配置，同一份 `<Plot>` 配置能换着数据源用。前提是声明了 model（model 就是「可移植」的开关）：
