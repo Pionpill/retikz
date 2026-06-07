@@ -8,7 +8,7 @@ import { type ColorOf, lowerMark } from './mark';
 import { type CoordinateFrame, createCartesianFrame, createPolarFrame } from './project';
 import { type DatumIdRegistrar, type ProvenanceContext, createDatumIdRegistrar, rootMeta, tagSourceIndex } from './provenance';
 import { type TickSet, assertScaleFieldCompatible, deriveScale, resolveOrdinalScale, resolvePositionScale } from './scale';
-import { normalizeRows, validateBoundData } from './coerce';
+import { collectFormatFields, normalizeRows, validateBoundData } from './coerce';
 import { applyTransforms } from './transform';
 import { type ResolveField, applyFieldResolver } from './resolve';
 import { collectUserSourceFields, resolveFieldTypes } from './validate';
@@ -391,16 +391,20 @@ export const prepareRows = (
   // strict + 声明/推断（ADR-01/05）；strict 在 applyFieldResolver 之前先校验，resolver 不绕过（ADR-04）
   const baseTypes = resolveFieldTypes(spec.data.model, ingested, userSourceFields);
   const fieldMap = options.fieldMaps?.[spec.data.reference];
-  // resolveField 叠加：类型覆盖 + 收集 per-field parser（ADR-04）
-  const { fieldTypes, parsers, resolverHit } = applyFieldResolver(
-    baseTypes,
+  // 声明式 format（ADR-06）：format 蕴含 type 覆盖推断 + 冲突 fail-loud + 收集 format parser；置于 resolveField 之前，使 resolveField 仍胜出
+  const { fieldTypes: formatTypes, parsers: formatParsers } = collectFormatFields(spec.data.model, baseTypes, userSourceFields);
+  // resolveField 叠加：类型覆盖 + 收集 per-field parser（ADR-04）；优先级 resolveField.type > format 蕴含 / 显式 type
+  const { fieldTypes, parsers: resolverParsers, resolverHit } = applyFieldResolver(
+    formatTypes,
     userSourceFields,
     spec.data.model,
     spec.data.reference,
     fieldMap,
     options.resolveField,
   );
-  // 归一化门控：model 在 或 resolver 命中即进 canonical（ADR-04 放宽「仅 model 在时」）
+  // 合并 parser 槽：format parser 垫底，resolveField.parse 命中同字段时覆盖（优先级 resolveField > format）
+  const parsers = new Map([...formatParsers, ...resolverParsers]);
+  // 归一化门控：model 在 或 resolver 命中即进 canonical（ADR-04 放宽「仅 model 在时」）；format 必在 model 内，门控自然放行
   const normalized = spec.data.model !== undefined || resolverHit ? normalizeRows(ingested, fieldTypes, fieldMap, parsers) : ingested;
   return { fieldTypes, normalized };
 };
