@@ -55,6 +55,14 @@
 | [01](./01-data-model.md) | 数据模型类型层（字段类型集补全 + 缺省推断 + encoding 字段引用 / 自洽校验） | red | — | Proposed |
 | [02](./02-data-portability.md) | 数据模型可移植契约（逻辑字段 + 绑定期 `fieldMaps` 映射 + 按 PlotFieldType 值强制；解决换源三需求） | red | ADR-01 | Proposed |
 | [03](./03-type-driven-scale.md) | type-driven scale 默认选型 + guide 格式化（按字段类型派生 scale，channel 可省 scale 声明；类型↔scale fail-loud） | red | ADR-01 | Proposed |
+| [04](./04-field-resolver.md) | `resolveField` 可插拔字段解析（运行时函数覆盖类型 + 自定义 parse，不进 IR） | red | ADR-01/02 | Proposed（已实现） |
+| [05](./05-optional-field-type.md) | `FieldDef.type` 可选（部分声明 model，name-only 字段推断） | red | ADR-01 | Proposed（已实现） |
+| [06](./06-declarative-format.md) | 声明式 `FieldDef.format` 解析词表（可序列化，`resolveField` 退为逃生舱） | red | ADR-02/04 | Proposed |
+| [07](./07-category-order.md) | `FieldDef.order` 分类顺序 + 有序性参数（不复活 ordinal 类型） | red | ADR-01/03 | Proposed |
+| [08](./08-data-robustness.md) | 数据健壮性（恒归一化消两模式割裂 + `invalid` 策略 + bigint ingest） | red | ADR-02/04 | Proposed |
+
+> **两轮**：第一轮 ADR-01~03（数据模型 + 可移植契约 + type-driven scale，已实现）；第二轮 ADR-04~08（数据层精化：解析逃生舱 + type 可选 + 声明式 format + 分类顺序 + 健壮性）。
+> ⚠️ **字段类型已简化**（commit `30f2cce1`）：`continuous / categorical / temporal` 三类——删 `proportion`、合并 `nominal/ordinal → categorical`。下方第一轮决策里的 `proportion` / `nominal` / `ordinal` 表述**以此为准已被取代**（ADR-05 改 type 可选、ADR-07 用 `order` 参数补回有序性）；本段待整段重写，当前以各 ADR 定稿 + 该简化为准。
 
 ## 头号设计决策（待多 LLM 评审 / 人工拍板）
 
@@ -68,6 +76,15 @@
 - **coercion**：ingest 一次性归一化成 canonical rows（transform 前）；quantitative 收严格数字串（拒空串/Infinity/NaN/hex/带单位）；proportion 越界原样；扩展 `toTimestamp` 收 Date + 严格 ISO。（ADR-02）
 - **数据一致性校验**：`validateData?: boolean | { sampleRows?: number }`，默认关、开启抽样 fail-loud、**不 warn**。（ADR-02）
 - **type-driven scale**：显式 scale 永远优先，缺省按 FieldType 派生（quantitative→linear、temporal→time、nominal/ordinal→band(位置)/ordinal(色)、proportion→linear[0,1]）；类型↔scale 不兼容 **fail-loud 不强转**；guide 按类型选 tick formatter。（ADR-03）
+
+### 第二轮决策（ADR-04~08，数据层精化）
+
+- **字段类型 3 类**：`continuous / categorical / temporal`；删 `proportion`（并入 continuous）、合并 `nominal/ordinal → categorical`。有序性不靠类型、靠 `FieldDef.order` 参数（ADR-07）。（commit `30f2cce1` + ADR-07）
+- **`FieldDef.type` 可选**：声明 name 即进 strict 契约，type 缺省按数据推断；strict 按 name 守、不被削弱。优先级 `resolveField.type > model.type > infer`。（ADR-05）
+- **`resolveField` 逃生舱**：运行时函数 `(field, ctx) => { type?, parse? }`，不进 IR；不绕过 strict；parse-only 须有类型来源；render/locator 经 `prepareRows` 同源。（ADR-04）
+- **声明式 `format` 词表**：`FieldDef.format`（closed 枚举，进 IR、可序列化）覆盖常见非默认格式；优先级 `resolveField.parse > format > 内置`；完整 date pattern 串留 phase 2。（ADR-06）
+- **`FieldDef.order`**：`'data' | 'ascending' | 'descending' | Array`；非默认即有序；挂 FieldDef 故位置(band)与颜色(ordinal)同序；scale 级显式 domain 留后续。（ADR-07）
+- **数据健壮性**：恒归一化（去「仅 model/resolver 命中」门控，下游单一 canonical 路径）；`LowerPlotsOptions.invalid: 'skip'|'error'` + validateData 字段级 invalid/missing 报告；bigint 进 ingest（转 number）但不进 IR 标量。（ADR-08）
 
 ## 贯穿原则落点
 
