@@ -3,7 +3,7 @@ import type { ValueOf } from '@retikz/core';
 
 /**
  * 字段类型关键字（暴露给用户；成员值即字段类型串，裸字面量 `'quantitative'` 同样可用）
- * @description grammar-of-graphics 标准字段类型；驱动 lowering 的默认 scale 选择。alpha.1 仅消费 quantitative（linear scale）
+ * @description grammar-of-graphics 标准字段类型；驱动 lowering 的缺省推断、type-driven scale 选型与 guide 格式化
  */
 export const PlotFieldType = {
   /** 定量：连续可度量、间距有意义的数值（销量 / 温度 / 价格），默认 linear scale */
@@ -14,6 +14,8 @@ export const PlotFieldType = {
   Ordinal: 'ordinal',
   /** 时间：日期 / 时间戳，走 time scale */
   Temporal: 'temporal',
+  /** 归一比例：[0,1] 区间的占比（pie value / ternary 分量），走 linear scale（domain 默认 [0,1]） */
+  Proportion: 'proportion',
 } as const;
 
 /** 字段测量类型 */
@@ -27,7 +29,7 @@ export const FieldDefSchema = z
       .describe('Field name as referenced by encoding channels (a path accessor like "a.b.c")'),
     type: z
       .nativeEnum(PlotFieldType)
-      .describe('Field measurement type; drives default scale selection at lowering (alpha.1 consumes quantitative)'),
+      .describe('Field measurement type; drives default type inference, type-driven scale selection and guide formatting at lowering'),
   })
   .describe('One field declaration: a field name plus its measurement type');
 

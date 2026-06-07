@@ -9,6 +9,7 @@ import { type CoordinateFrame, createCartesianFrame, createPolarFrame } from './
 import { type DatumIdRegistrar, type ProvenanceContext, createDatumIdRegistrar, rootMeta, tagSourceIndex } from './provenance';
 import { type TickSet, resolveOrdinalScale, resolvePositionScale } from './scale';
 import { applyTransforms } from './transform';
+import { collectUserSourceFields, resolveFieldTypes } from './validate';
 
 /** 空刻度集（某维度无 axis 时给 GuideContext 的占位；实际不会被该维度的 guide 触达） */
 const EMPTY_TICKS: TickSet = { values: [], labels: [] };
@@ -352,6 +353,11 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
 
   // 取数：provenance 开时先打源序标记（symbol 键，跨 transform 存活，供 sourceIndex 回指），再过 transform 管线
   const ingested = provenance ? tagSourceIndex(datasets[node.data.reference]) : datasets[node.data.reference];
+
+  // ADR-01：解析用户源字段类型 + strict 校验（有 model → 引用必须声明，缺失/重复 fail-loud；无 model → 全推断）。
+  // 产出的类型 Map 是 type-driven scale（ADR-03）/ coercion（ADR-02）的单一类型真源；本轮先跑校验副作用。
+  resolveFieldTypes(node.data.model, ingested, collectUserSourceFields(node));
+
   const rows = applyTransforms(ingested, node.transform);
 
   const { frame, gridLayers, axisLayers } = resolveFrame({

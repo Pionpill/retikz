@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { type PlotSpec, PlotFieldType, PlotSpecSchema } from '../../src/ir';
+import { PlotFieldType, type PlotSpec, PlotSpecSchema } from '../../src/ir';
 import { inferFieldType, isIsoDateString } from '../../src/lower/infer';
 import { collectUserSourceFields, resolveFieldTypes } from '../../src/lower/validate';
 
