@@ -2,8 +2,14 @@ import { type CSSProperties, type FC, useEffect, useReducer, useRef } from 'reac
 import type { Scene } from '@retikz/core';
 import { hitTest, renderToCanvas } from '@retikz/render/canvas';
 import type { AnimationPropertyRegistry, EasingRegistry } from '@retikz/render/canvas';
-import type { HydrationHandlers } from '@retikz/render/hydration';
-import { createHydrationController } from '@retikz/render/hydration';
+import type { BuildContext, HydrationHandlers } from '@retikz/render/hydration';
+import {
+  createClockAnimationControls,
+  createHydrationController,
+  geometryOf,
+  metaOf,
+} from '@retikz/render/hydration';
+import type { AnimationControls } from '@retikz/render/animation';
 import { createClock, prefersReducedMotion, sceneAnimationDurationMs, sceneHasAnimations, sceneHasAutoplayTrigger } from '@retikz/render/animation';
 
 /** 按 href 缓存的图片加载态（image paint server 用；跨 CanvasHost 实例共享去重） */
@@ -113,6 +119,8 @@ export const CanvasHost: FC<CanvasHostProps> = props => {
   const { scene, handlers, width, height, className, style, animate: animateProp, easings, animationProperties } = props;
   const animate = animateProp !== false;
   const ref = useRef<HTMLCanvasElement>(null);
+  // rAF 时钟句柄：render effect 写、hydration effect 的 ctx.animation（coarse）读 live，update 后自动跟随
+  const clockRef = useRef<AnimationControls | null>(null);
   // image 加载完 / 主题切换都触发重绘（renderToCanvas 重读 getComputedStyle 的 color → currentColor）
   const [renderTick, bumpRender] = useReducer((n: number) => n + 1, 0);
 
@@ -151,13 +159,20 @@ export const CanvasHost: FC<CanvasHostProps> = props => {
     };
     // base 静态先画一帧；含动画且未降级 → 起 rAF 共享时钟逐帧重绘（auto track 自动播；manual/onEvent/visible 渲染 base）
     renderToCanvas(canvas, scene, baseOptions);
-    if (!animate || prefersReducedMotion() || !sceneHasAnimations(scene)) return undefined;
+    if (!animate || prefersReducedMotion() || !sceneHasAnimations(scene)) {
+      clockRef.current = null;
+      return undefined;
+    }
     const clock = createClock({
       durationMs: sceneAnimationDurationMs(scene),
       onFrame: time => renderToCanvas(canvas, scene, { ...baseOptions, time }),
     });
+    clockRef.current = clock;
     if (sceneHasAutoplayTrigger(scene)) clock.play();
-    return () => clock.dispose();
+    return () => {
+      clock.dispose();
+      clockRef.current = null;
+    };
   }, [animate, animationProperties, className, easings, height, renderTick, scene, style, width]);
 
   // 水合：把 handler 注册表经 createHydrationController + (hitTest + 逆 meet-fit 坐标映射) 绑到 <canvas>。
@@ -168,12 +183,28 @@ export const CanvasHost: FC<CanvasHostProps> = props => {
     const canvas = ref.current;
     if (!canvas) return undefined;
     const context2d = canvas.getContext('2d') ?? undefined;
-    const controller = createHydrationController(canvas, handlers ?? {}, event => {
+    const locate = (event: Event): string | null => {
       const mouse = event as MouseEvent;
       const point = clientToScene(canvas, scene, mouse.clientX, mouse.clientY);
       context2d?.setTransform(1, 0, 0, 1, 0, 0);
       return hitTest(scene, point, { context2d });
-    });
+    };
+    // canvas 富 ctx：无逐元素 DOM（element=null），point 逆 meet-fit，动画 coarse（scene 级单时钟，读 clockRef live）。
+    const buildContext: BuildContext = (event, id) => {
+      const mouse = event as MouseEvent;
+      return {
+        id,
+        meta: metaOf(scene, id),
+        renderer: 'canvas',
+        element: null,
+        root: canvas,
+        point: typeof mouse.clientX === 'number' ? clientToScene(canvas, scene, mouse.clientX, mouse.clientY) : null,
+        geometry: geometryOf(scene, id),
+        animation: createClockAnimationControls(clockRef.current ?? undefined),
+        scene,
+      };
+    };
+    const controller = createHydrationController(canvas, handlers ?? {}, locate, buildContext);
     return () => controller.dispose();
   }, [handlers, scene]);
 

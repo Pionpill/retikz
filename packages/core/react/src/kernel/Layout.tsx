@@ -23,7 +23,14 @@ import {
   compileToScene,
 } from '@retikz/core';
 import type { HydrationHandlers } from '@retikz/render/hydration';
-import { createHydrationController, locateSvg } from '@retikz/render/hydration';
+import {
+  createContextBuilder,
+  createHydrationController,
+  createSvgAnimationControls,
+  locateSvg,
+  resolvePointViaLayout,
+  resolveSvgElement,
+} from '@retikz/render/hydration';
 import { buildSvgDocument } from '@retikz/render/svg';
 import { bindWaapiDescriptors, sceneHasAnimations } from '@retikz/render/animation';
 import type { AnimationPropertyRegistry, EasingRegistry } from '@retikz/render/animation';
@@ -173,9 +180,19 @@ const useSvgRootBinding = (
   useEffect(() => {
     const root = rootRef.current;
     if (root === null) return undefined;
-    const controller = createHydrationController(root, handlers, locateSvg);
+    // svg 富 ctx：meta / geometry 经 Scene 按 id 聚合；element 经 closest；point 逆 meet-fit；
+    // 动画控制经 data-retikz-id / data-retikz-animation-owner 双查 getAnimations per-id。scene 变 → effect 重跑、重建。
+    const buildContext = createContextBuilder({
+      renderer: 'svg',
+      root,
+      scene,
+      resolveElement: resolveSvgElement,
+      resolvePoint: resolvePointViaLayout(root, scene.layout),
+      makeAnimation: id => createSvgAnimationControls(root, id),
+    });
+    const controller = createHydrationController(root, handlers, locateSvg, buildContext);
     return () => controller.dispose();
-  }, [handlers]);
+  }, [handlers, scene]);
   // 交互 track（visible / manual / onEvent）经 WAAPI 桥按 trigger 驱动；load track 已由内联 CSS 自播
   useEffect(() => {
     const root = rootRef.current;
