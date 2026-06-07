@@ -20,8 +20,7 @@ const Demo: FC = () => {
         meta={{ label: '小球' }}
         animations={[{ ...pulse({ peak: 1.4, duration: 500 }), trigger: 'manual', iterations: 1 }]}
         onClick={(event, ctx) => {
-          const label = (ctx.meta as { label?: string } | undefined)?.label ?? ctx.id;
-          setLast(label);
+          setLast(String(ctx.meta?.label ?? ctx.id));
           ctx.animation.restart();
         }}
       >
