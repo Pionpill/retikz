@@ -56,7 +56,7 @@ export const AnimationDirection = { Normal:'normal', Reverse:'reverse', Alternat
 export const AnimationFill = { None:'none', Forwards:'forwards', Backwards:'backwards', Both:'both' } as const;
 
 // EasingSchema = z.union([ z.string().min(1), z.tuple([num,num,num,num]) ])  // 具名/自定义名 ∪ cubic-bezier
-// KeyframeSchema = { at: 0..1, value: number | string | number[], easing? }
+// KeyframeSchema = { at: 0..1, value: JsonValue, easing? }   // value 基础类型 = 任意 JSON（兑现自定义通道）；内置 property 由下方 superRefine 收窄
 // TriggerSchema = z.union([ z.enum(['load','visible','manual']), z.object({ onEvent: z.string().min(1) }) ])
 //   load=渲染即播(SSR 友好) / visible=runtime IntersectionObserver / manual=runtime API / {onEvent}=桥水合；回调函数绝不进 IR
 // AnimationTrackSchema = {
@@ -73,7 +73,7 @@ export const AnimationFill = { None:'none', Forwards:'forwards', Backwards:'back
 // + .superRefine 校验 property↔value 类型（仅**内置** property）：
 //     viewBox → value 必须 number[] 且 length 4；fill/stroke → string；
 //     其余内置数值通道（opacity/scale/rotate/translateX|Y/strokeWidth/pathDraw）→ finite number；
-//     **自定义 property（非内置名）→ value 任意 JSON（number|string|number[]），由 renderer 注册的插值器校验**。
+//     **自定义 property（非内置名）→ value 任意 JSON（含对象 / 嵌套，base = JsonValueSchema），由 renderer 注册的插值器解释**。
 // IRAnimationTrack = z.infer<typeof AnimationTrackSchema>
 ```
 
