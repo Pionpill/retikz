@@ -1,6 +1,6 @@
 {
   "name": "@retikz/plot-react",
-  "version": "0.1.0-alpha.4",
+  "version": "0.1.0-alpha.5",
   "description": "React bindings for @retikz/plot: <Plot> (thin spec wrapper + composition DSL) lowering to @retikz/core via @retikz/react.",
   "type": "module",
   "author": "Pionpill",

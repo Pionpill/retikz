@@ -4,7 +4,7 @@ import { type ExternalDatasets, type ExternalRow, type LowerPlotsOptions, type P
 import { type CoordinateInput, type DslScaleX, buildPlotSpec } from './components';
 
 /** <Plot> 两条入口共享的展示 props + lowerPlots 选项 */
-type PlotCommonProps = Pick<LayoutProps, 'width' | 'height' | 'className' | 'style' | 'renderer'> & LowerPlotsOptions;
+export type PlotCommonProps = Pick<LayoutProps, 'width' | 'height' | 'className' | 'style' | 'renderer'> & LowerPlotsOptions;
 
 /** spec 入口（薄包装）：给已构造好的完整 PlotSpec + 数据集表 */
 export type PlotSpecProps = PlotCommonProps & {
@@ -43,7 +43,7 @@ const DSL_DATA_REF = '__plot';
  *   两路都把 spec 包成 scene、经 lowerPlots 注入数据后交 <Layout>；data 不进 IR
  */
 export const Plot: FC<PlotProps> = props => {
-  const { width, height, className, style, renderer, fontSize, margin } = props;
+  const { width, height, className, style, renderer, fontSize, margin, provenance, datumProvenance, datumIdField } = props;
 
   let spec: PlotSpec;
   let datasets: ExternalDatasets;
@@ -60,7 +60,7 @@ export const Plot: FC<PlotProps> = props => {
   return (
     <Layout
       ir={{ version: 1, type: 'scene', children: [validated] }}
-      composites={lowerPlots(datasets, { width, height, fontSize, margin })}
+      composites={lowerPlots(datasets, { width, height, fontSize, margin, provenance, datumProvenance, datumIdField })}
       width={width}
       height={height}
       className={className}

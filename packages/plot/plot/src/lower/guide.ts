@@ -2,6 +2,7 @@ import type { IRNode, IRPath, IRScope, IRStep } from '@retikz/core';
 import type { AxisGuide } from '../ir';
 import { AXIS_LABEL_GAP, AXIS_TICK_LENGTH, type Rect, estimateLabelWidth } from './layout';
 import type { PolarFrame } from './project';
+import { type ProvenanceContext, guideLayerId, guideLayerMeta } from './provenance';
 import type { PositionScale, TickSet } from './scale';
 
 /**
@@ -58,8 +59,25 @@ const segmentsToPath = (segments: Array<Segment>): IRPath | null => {
 /** 某 dimension 是否为 primary 角色（cartesian x / polar angle）；否则 secondary（y / radius） */
 const isPrimaryDimension = (dimension: string): boolean => dimension === 'x' || dimension === 'angle';
 
+/**
+ * 轴 / 网格 scope 的 id + meta props（provenance 开时合成 `<plotId>.` 前缀 id + layer 来源 meta）
+ * @description provenance 关（context undefined）→ 沿用 alpha.2 行为：仅在用户给 guide.id 时绑裸 id、无 meta。
+ *   开 → id 走 `<plotId>.<guideId|axis|grid.dim>`（plotId 缺则匿名）、meta 写 {source,layer,dimension}。
+ */
+const guideScopeProps = (
+  guide: AxisGuide,
+  layer: 'axis' | 'grid',
+  context: ProvenanceContext | undefined,
+): { id?: string; meta?: ReturnType<typeof guideLayerMeta> } => {
+  if (!context) return layer === 'axis' && guide.id ? { id: guide.id } : {};
+  // 用户句柄 guide.id 只挂轴层（一个 guide 一个外部句柄）；网格层走结构 id，避免轴 / 网格 id 撞名
+  const guideId = layer === 'axis' ? guide.id : undefined;
+  const id = guideLayerId(context.plotId, guideId, layer, guide.dimension);
+  return { ...(id !== undefined ? { id } : {}), meta: guideLayerMeta(layer, guide.dimension) };
+};
+
 /** cartesian guide：直线轴 + 竖 / 横刻度 + grid 跨绘图区直线（alpha.2 几何，逐字保持） */
-const lowerCartesianGuide = (guide: AxisGuide, ctx: GuideContext): LoweredGuide => {
+const lowerCartesianGuide = (guide: AxisGuide, ctx: GuideContext, context: ProvenanceContext | undefined): LoweredGuide => {
   const { plotArea, fontSize } = ctx;
   const left = plotArea.x;
   const right = plotArea.x + plotArea.width;
@@ -92,7 +110,7 @@ const lowerCartesianGuide = (guide: AxisGuide, ctx: GuideContext): LoweredGuide 
   const axisLayer: IRScope | null = linePath
     ? {
         type: 'scope',
-        ...(guide.id ? { id: guide.id } : {}),
+        ...guideScopeProps(guide, 'axis', context),
         pathDefault: { stroke: 'currentColor' },
         nodeDefault: { font: { size: fontSize }, stroke: 'none', fill: 'none', padding: 0 },
         children: [linePath, ...labels],
@@ -110,6 +128,7 @@ const lowerCartesianGuide = (guide: AxisGuide, ctx: GuideContext): LoweredGuide 
     if (gridPath) {
       gridLayer = {
         type: 'scope',
+        ...guideScopeProps(guide, 'grid', context),
         pathDefault: { stroke: 'currentColor', drawOpacity: 0.15 },
         children: [gridPath],
       };
@@ -149,7 +168,7 @@ const arcPath = (frame: PolarFrame, radius: number): IRPath => {
  * @description 轴线 = arc step（半径 outerRadius）；刻度 = 圆周点向外 AXIS_TICK_LENGTH 短线；
  *   标签 = center + (outerRadius+gap)·(cosθ,sinθ) 处 Node text。grid:true → 每刻度一条圆心→外圆辐条。
  */
-const lowerAngularAxis = (guide: AxisGuide, ctx: GuideContext, frame: PolarFrame): LoweredGuide => {
+const lowerAngularAxis = (guide: AxisGuide, ctx: GuideContext, frame: PolarFrame, context: ProvenanceContext | undefined): LoweredGuide => {
   const { fontSize } = ctx;
   const ticks = ctx.angularTicks ?? { values: [], labels: [] };
   const scale = frame.primary;
@@ -174,7 +193,7 @@ const lowerAngularAxis = (guide: AxisGuide, ctx: GuideContext, frame: PolarFrame
 
   const axisLayer: IRScope = {
     type: 'scope',
-    ...(guide.id ? { id: guide.id } : {}),
+    ...guideScopeProps(guide, 'axis', context),
     pathDefault: { stroke: 'currentColor' },
     nodeDefault: { font: { size: fontSize }, stroke: 'none', fill: 'none', padding: 0 },
     children: [...axisChildren, ...labels],
@@ -191,6 +210,7 @@ const lowerAngularAxis = (guide: AxisGuide, ctx: GuideContext, frame: PolarFrame
     if (gridPath) {
       gridLayer = {
         type: 'scope',
+        ...guideScopeProps(guide, 'grid', context),
         pathDefault: { stroke: 'currentColor', drawOpacity: 0.15 },
         children: [gridPath],
       };
@@ -205,7 +225,7 @@ const lowerAngularAxis = (guide: AxisGuide, ctx: GuideContext, frame: PolarFrame
  * @description 轴线 = center→外圆 直段（基准角 = startAngle）；刻度 = 辐条上每径向刻度短切向横线；
  *   标签 = 刻度点旁 Node text。grid:true → 每径向刻度一个同心圆环（arc step）。
  */
-const lowerRadialAxis = (guide: AxisGuide, ctx: GuideContext, frame: PolarFrame): LoweredGuide => {
+const lowerRadialAxis = (guide: AxisGuide, ctx: GuideContext, frame: PolarFrame, context: ProvenanceContext | undefined): LoweredGuide => {
   const { fontSize } = ctx;
   const ticks = ctx.radialTicks ?? { values: [], labels: [] };
   const scale = frame.secondary;
@@ -244,7 +264,7 @@ const lowerRadialAxis = (guide: AxisGuide, ctx: GuideContext, frame: PolarFrame)
   const axisLayer: IRScope | null = linePath
     ? {
         type: 'scope',
-        ...(guide.id ? { id: guide.id } : {}),
+        ...guideScopeProps(guide, 'axis', context),
         pathDefault: { stroke: 'currentColor' },
         nodeDefault: { font: { size: fontSize }, stroke: 'none', fill: 'none', padding: 0 },
         children: [linePath, ...labels],
@@ -261,6 +281,7 @@ const lowerRadialAxis = (guide: AxisGuide, ctx: GuideContext, frame: PolarFrame)
     if (rings.length > 0) {
       gridLayer = {
         type: 'scope',
+        ...guideScopeProps(guide, 'grid', context),
         pathDefault: { stroke: 'currentColor', drawOpacity: 0.15 },
         children: rings,
       };
@@ -276,11 +297,11 @@ const lowerRadialAxis = (guide: AxisGuide, ctx: GuideContext, frame: PolarFrame)
  *   或 radial（辐条轴 + 同心环 grid）；否则走 cartesian 直线轴 / 网格（alpha.2 几何，产物不变）。
  *   下沉目标统一是 core Node（标签）+ Path（直段 / arc step）。id → 轴层 scope.id（anchor 预留）。
  */
-export const lowerGuide = (guide: AxisGuide, ctx: GuideContext): LoweredGuide => {
+export const lowerGuide = (guide: AxisGuide, ctx: GuideContext, context?: ProvenanceContext): LoweredGuide => {
   if (ctx.frame) {
     return isPrimaryDimension(guide.dimension)
-      ? lowerAngularAxis(guide, ctx, ctx.frame)
-      : lowerRadialAxis(guide, ctx, ctx.frame);
+      ? lowerAngularAxis(guide, ctx, ctx.frame, context)
+      : lowerRadialAxis(guide, ctx, ctx.frame, context);
   }
-  return lowerCartesianGuide(guide, ctx);
+  return lowerCartesianGuide(guide, ctx, context);
 };
