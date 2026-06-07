@@ -38,7 +38,21 @@ Field types (three measurement kinds):
 
 **Declaring a model = strict mode**: every data field referenced by a mark / transform must be listed in the model; a misspelled field name **fails immediately** (instead of drawing an empty chart). **No model**: retikz infers types by sampling the data (number → continuous, ISO date string / `Date` → temporal, other strings → categorical), which is handy for quick drafts.
 
-<ComponentAlert title="Inference is best-effort; the model is the contract" description="Without a model, types are guessed from samples: time is only recognized in strict ISO form (YYYY-MM-DD or an ISO datetime with a timezone) — '2024/01/01' and bare numeric strings are not treated as time (they fall back to categorical). Declare a model when you want precision, validation, or for an LLM to understand the fields without seeing the data." />
+**`type` is optional — partial models**: a field's type can be omitted, leaving just `{ name }`. The field still joins strict mode + the portable binding contract (by name), but its **type is left to inference**. Good for "most fields are obvious, only a few need pinning" — give `type` only to the numeric enums or odd date formats that need correcting, leave the rest bare:
+
+```tsx
+<Plot data={sales} model={[
+  { name: 'createdAt',  type: 'temporal' },    // special format, pinned
+  { name: 'statusCode', type: 'categorical' }, // numeric enum, pinned
+  { name: 'revenue' },                          // name only → inferred continuous
+]}>
+  {/* … */}
+</Plot>
+```
+
+Fields with `type` omitted need the data at lowering to determine their type — to keep a spec fully self-describing without the data (LLM-friendly / fully portable), fill `type` in.
+
+<ComponentAlert title="Inference is best-effort; the model is the contract" description="Without a model (or with a field's type omitted), types are guessed from samples: time is only recognized in strict ISO form (YYYY-MM-DD or an ISO datetime with a timezone) — '2024/01/01' and bare numeric strings are not treated as time (they fall back to categorical). Declare a model and fill in type when you want precision, validation, or for an LLM to understand the fields without seeing the data." />
 
 ## Type-driven scales
 
