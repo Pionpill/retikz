@@ -1,0 +1,95 @@
+---
+title: Data
+description: Give <Plot> a set of rows plus a "data model" (field names + types) and it picks the right scales and formats the axes for you. The same chart can also swap data sources — same names just work, different names take a mapping, different storage formats convert automatically.
+---
+
+A chart has two halves: **config** (what to draw — marks / coordinate / scales) and **data** (which values). retikz keeps them apart — the data does **not** enter the chart config (the IR); it's supplied separately at compile time. That lets one config be reused across different datasets.
+
+The simplest form: hand a row array to `<Plot data>` and have marks reference columns by field name.
+
+```tsx
+<Plot data={rows}>
+  <LineMark x="month" y="revenue" order="month" />
+</Plot>
+```
+
+A field name is a **path**, so nested data (MongoDB documents, JSON from an API) works directly: `x="user.address.city"` drills to the leaf. The leaf must be a scalar (string / number / boolean / time) — not an object or array.
+
+## Data model: declaring field types
+
+With data alone, retikz can't tell whether `month` is a time or a plain string, or whether `revenue` is continuous or categorical. Give it a **model** (field names + types) and it knows everything — how to pick scales, format axes, and validate — all driven by type.
+
+```tsx
+<Plot data={sales} model={[
+  { name: 'month',   type: 'temporal' },
+  { name: 'revenue', type: 'continuous' },
+]}>
+  <LineMark x="month" y="revenue" order="month" />
+</Plot>
+```
+
+Field types (three measurement kinds):
+
+| Type | Meaning | Examples |
+| --- | --- | --- |
+| `continuous` | continuous measurable number | sales, price, temperature, share |
+| `categorical` | discrete category | country, color name, rating |
+| `temporal` | date / time | dates, timestamps |
+
+**Declaring a model = strict mode**: every data field referenced by a mark / transform must be listed in the model; a misspelled field name **fails immediately** (instead of drawing an empty chart). **No model**: retikz infers types by sampling the data (number → continuous, ISO date string / `Date` → temporal, other strings → categorical), which is handy for quick drafts.
+
+<ComponentAlert title="Inference is best-effort; the model is the contract" description="Without a model, types are guessed from samples: time is only recognized in strict ISO form (YYYY-MM-DD or an ISO datetime with a timezone) — '2024/01/01' and bare numeric strings are not treated as time (they fall back to categorical). Declare a model when you want precision, validation, or for an LLM to understand the fields without seeing the data." />
+
+## Type-driven scales
+
+With a model declared, positional channels (x / y) **no longer need an explicit scale** — retikz picks one from the field type:
+
+| Field type | Scale derived for a positional channel |
+| --- | --- |
+| `continuous` | linear |
+| `temporal` | time (a time axis with date ticks) |
+| `categorical` | band |
+
+The chart below declares no scale config at all: `month` is temporal → time axis, `revenue` is continuous → linear axis.
+
+<ComponentPreview name="data-model" sourceFiles={['data-model.data.ts']} />
+
+When you do declare a scale, the explicit one **always wins** over derivation. If an explicit scale clearly conflicts with the field type (a `categorical` field on a linear axis, a `temporal` field on a band), retikz **throws a clear error** rather than drawing something meaningless.
+
+## Swapping data sources: one chart, three ways to bind
+
+Because data stays out of the config, one `<Plot>` config can run against different sources — as long as a model is declared (the model is the "portable" switch):
+
+1. **Same names, same types** — just swap `data`; matching field names / types re-render straight away.
+2. **Different names** — supply a `fieldMap` (logical name → the actual path in the data); the config is untouched:
+
+   ```tsx
+   // the data calls them period / amount, the config still says month / revenue
+   <Plot data={rows} model={[{ name: 'month', type: 'temporal' }, { name: 'revenue', type: 'continuous' }]}
+         fieldMap={{ month: 'period', revenue: 'amount' }}>
+     <LineMark x="month" y="revenue" order="month" />
+   </Plot>
+   ```
+
+3. **Different storage formats, same type** — converted automatically. A single `temporal` field reads correctly whether the data stores it as a `Date`, an ISO string, or an epoch number; a `continuous` field accepts a number or a well-formed numeric string (`"120"`). No extra config.
+
+`fieldMap` only renames (it doesn't transform values — computation belongs to transforms); it must be used with a model — without one there are no "logical fields" to map.
+
+## When the data is imperfect
+
+Document / heterogeneous data often has missing fields or mixed types across rows. retikz's policy is **skip, never fabricate, never silently draw wrong**:
+
+| Situation | Behavior |
+| --- | --- |
+| A row is missing the field | that datum is skipped (normal for heterogeneous data, no error) |
+| The leaf is an object / array (non-scalar) | that datum is skipped (objects never enter the chart) |
+| Same type, different storage format | converted automatically (see "Swapping data sources" #3) |
+| The path passes through an array (needs unwinding) | not auto-unwound yet — flatten in the data layer first |
+
+The default "skip" can leave you staring at a blank chart. Turn on `validateData` to have retikz sample-check the binding and **throw on problems**, turning "why is it empty" into a clear message:
+
+```tsx
+<Plot data={rows} model={[...]} validateData>
+  {/* missing field / nothing convertible → compile-time error instead of a blank chart */}
+</Plot>
+```

@@ -16,7 +16,7 @@ const specWithModel = (): PlotSpec =>
   PlotSpecSchema.parse({
     namespace: 'plot',
     type: 'plot',
-    data: { reference: 'd', model: [{ name: 'month', type: 'temporal' }, { name: 'revenue', type: 'quantitative' }] },
+    data: { reference: 'd', model: [{ name: 'month', type: 'temporal' }, { name: 'revenue', type: 'continuous' }] },
     scales: [{ type: 'time', name: 'x' }, { type: 'linear', name: 'y' }],
     coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
     marks: [{ type: 'line', encoding: { x: { field: 'month' }, y: { field: 'revenue' } } }],
@@ -33,22 +33,22 @@ const specNoModel = (): PlotSpec =>
   });
 
 describe('coerceValue — 按 PlotFieldType 值强制（ADR-02）', () => {
-  it('quantitative_number_and_strict_string', () => {
-    expect(coerceValue(120, PlotFieldType.Quantitative)).toBe(120);
-    expect(coerceValue('120', PlotFieldType.Quantitative)).toBe(120);
-    expect(coerceValue(' 1.5e3 ', PlotFieldType.Quantitative)).toBe(1500);
+  it('continuous_number_and_strict_string', () => {
+    expect(coerceValue(120, PlotFieldType.Continuous)).toBe(120);
+    expect(coerceValue('120', PlotFieldType.Continuous)).toBe(120);
+    expect(coerceValue(' 1.5e3 ', PlotFieldType.Continuous)).toBe(1500);
   });
 
-  it('quantitative_rejects_dirty_strings', () => {
+  it('continuous_rejects_dirty_strings', () => {
     for (const bad of ['', '12px', '0xFF', 'Infinity', 'NaN', 'abc']) {
-      expect(Number.isNaN(coerceValue(bad, PlotFieldType.Quantitative) as number)).toBe(true);
+      expect(Number.isNaN(coerceValue(bad, PlotFieldType.Continuous) as number)).toBe(true);
     }
-    expect(Number.isNaN(coerceValue({}, PlotFieldType.Quantitative) as number)).toBe(true);
+    expect(Number.isNaN(coerceValue({}, PlotFieldType.Continuous) as number)).toBe(true);
   });
 
-  it('proportion_out_of_range_kept', () => {
-    expect(coerceValue(1.5, PlotFieldType.Proportion)).toBe(1.5);
-    expect(coerceValue('-0.2', PlotFieldType.Proportion)).toBe(-0.2);
+  it('continuous_keeps_negative_and_above_one', () => {
+    expect(coerceValue(1.5, PlotFieldType.Continuous)).toBe(1.5);
+    expect(coerceValue('-0.2', PlotFieldType.Continuous)).toBe(-0.2);
   });
 
   it('temporal_accepts_date_iso_epoch', () => {
@@ -63,15 +63,15 @@ describe('coerceValue — 按 PlotFieldType 值强制（ADR-02）', () => {
     expect(Number.isNaN(coerceValue('abc', PlotFieldType.Temporal) as number)).toBe(true);
   });
 
-  it('nominal_keeps_string_or_number', () => {
-    expect(coerceValue('north', PlotFieldType.Nominal)).toBe('north');
-    expect(coerceValue(3, PlotFieldType.Nominal)).toBe(3);
-    expect(coerceValue({}, PlotFieldType.Nominal)).toBeUndefined();
+  it('categorical_keeps_string_or_number', () => {
+    expect(coerceValue('north', PlotFieldType.Categorical)).toBe('north');
+    expect(coerceValue(3, PlotFieldType.Categorical)).toBe(3);
+    expect(coerceValue({}, PlotFieldType.Categorical)).toBeUndefined();
   });
 });
 
 describe('normalizeRows — ingest 归一化（ADR-02）', () => {
-  const fieldTypes = new Map([['month', PlotFieldType.Temporal], ['revenue', PlotFieldType.Quantitative]]);
+  const fieldTypes = new Map([['month', PlotFieldType.Temporal], ['revenue', PlotFieldType.Continuous]]);
 
   it('identity_coerces_in_place', () => {
     const out = normalizeRows([{ month: '2024-01-01', revenue: '120' }], fieldTypes);
@@ -86,20 +86,20 @@ describe('normalizeRows — ingest 归一化（ADR-02）', () => {
   });
 
   it('nested_physical_path_via_fieldmap', () => {
-    const out = normalizeRows([{ pricing: { amount: 42 } }], new Map([['revenue', PlotFieldType.Quantitative]]), { revenue: 'pricing.amount' });
+    const out = normalizeRows([{ pricing: { amount: 42 } }], new Map([['revenue', PlotFieldType.Continuous]]), { revenue: 'pricing.amount' });
     expect(out[0].revenue).toBe(42);
   });
 
   it('nested_logical_path_coerces', () => {
     // 评审 P1：点路径逻辑名归一化写扁平 key，下游 resolveFieldPath exact-first 命中 coerced 值（不再读回原始嵌套字符串）
-    const out = normalizeRows([{ user: { age: '42' } }], new Map([['user.age', PlotFieldType.Quantitative]]));
+    const out = normalizeRows([{ user: { age: '42' } }], new Map([['user.age', PlotFieldType.Continuous]]));
     expect(out[0]['user.age']).toBe(42);
     expect(resolveFieldPath(out[0], 'user.age')).toBe(42);
   });
 
   it('preserves_source_index', () => {
     const tagged = tagSourceIndex([{ revenue: '5' }, { revenue: '7' }]);
-    const out = normalizeRows(tagged, new Map([['revenue', PlotFieldType.Quantitative]]));
+    const out = normalizeRows(tagged, new Map([['revenue', PlotFieldType.Continuous]]));
     expect(readSourceIndex(out[1])).toBe(1);
     expect(out[1].revenue).toBe(7);
   });
@@ -110,7 +110,7 @@ describe('coerce-before-transform（评审 P1 关键回归）', () => {
     // 数字串先归一化成数值，再 stack 累加 → 得 8 而非 0
     const normalized = normalizeRows(
       [{ m: 'Q1', v: '3' }, { m: 'Q1', v: '5' }],
-      new Map([['v', PlotFieldType.Quantitative]]),
+      new Map([['v', PlotFieldType.Continuous]]),
     );
     const stacked = applyTransforms(normalized, [{ kind: 'stack', x: 'm', y: 'v' }]);
     expect(stacked[1]).toMatchObject({ y0: 3, y1: 8 });

@@ -1,0 +1,95 @@
+---
+title: 数据
+description: 给 <Plot> 一份数据行 + 一份「数据模型」（字段名 + 类型），它就能自动选好比例尺、格式化坐标轴；同一张图还能换数据源——同名直接换、不同名给映射、不同存储格式自动转换。
+---
+
+一张图分两半：**配置**（画什么——mark / 坐标系 / 比例尺）和**数据**（画哪些值）。retikz 把两者分开——数据**不进**图的配置（IR），编译时单独传入。这让同一份配置能复用到不同数据上。
+
+最简单的用法：把数据行数组交给 `<Plot data>`，mark 用字段名引用列。
+
+```tsx
+<Plot data={rows}>
+  <LineMark x="month" y="revenue" order="month" />
+</Plot>
+```
+
+字段名是**路径**，所以嵌套数据（如 MongoDB 文档 / 接口返回的 JSON）也能直接用：`x="user.address.city"` 会逐级取到叶子值。叶子必须是标量（字符串 / 数字 / 布尔 / 时间），不能是对象或数组。
+
+## 数据模型：声明字段类型
+
+光有数据，retikz 不知道 `month` 是时间还是普通字符串、`revenue` 是连续数值还是分类。给一份 **model**（字段名 + 类型），它就全知道了——比例尺怎么选、坐标轴怎么格式化、校验怎么做，都由类型驱动。
+
+```tsx
+<Plot data={sales} model={[
+  { name: 'month',   type: 'temporal' },
+  { name: 'revenue', type: 'continuous' },
+]}>
+  <LineMark x="month" y="revenue" order="month" />
+</Plot>
+```
+
+字段类型（三类测量种类）：
+
+| 类型 | 含义 | 例子 |
+| --- | --- | --- |
+| `continuous` | 连续可度量数值 | 销量、价格、温度、占比 |
+| `categorical` | 离散类别 | 国家、颜色名、评级 |
+| `temporal` | 日期 / 时间 | 日期、时间戳 |
+
+**声明 model = 严格模式**：mark / transform 引用的每个数据字段都必须在 model 里列出，拼错字段名会**立刻报错**（而不是画出一张空图）。**不声明 model**：retikz 从数据抽样推断类型（数值→continuous、ISO 日期串 / `Date`→temporal、其余字符串→categorical），适合快速试画。
+
+<ComponentAlert title="推断是尽力而为，model 才是契约" description="不声明 model 时类型靠抽样猜测：时间只认严格 ISO 格式（YYYY-MM-DD 或带时区的 ISO datetime），'2024/01/01'、裸数字串不会被当成时间（按 categorical 处理）。要精确、要校验、要让 LLM 不看数据就懂字段，就声明 model。" />
+
+## 类型驱动的比例尺
+
+声明了 model，位置通道（x / y）**不必再手写比例尺**——retikz 按字段类型自动选：
+
+| 字段类型 | 自动选用的位置比例尺 |
+| --- | --- |
+| `continuous` | linear（线性） |
+| `temporal` | time（时间轴，自动日期刻度） |
+| `categorical` | band（分类带） |
+
+下面这张图没有写任何比例尺配置：`month` 是 temporal → 自动时间轴、`revenue` 是 continuous → 自动线性轴。
+
+<ComponentPreview name="data-model" sourceFiles={['data-model.data.ts']} />
+
+需要覆盖时，显式声明的比例尺**永远优先**于自动派生。若显式比例尺与字段类型明显冲突（如把 `categorical` 字段配到线性轴、把 `temporal` 配到分类带），retikz 会**报清晰错误**而不是画出无意义的图。
+
+## 换数据源：同一张图，三种对接方式
+
+因为数据不进配置，同一份 `<Plot>` 配置能换着数据源用。前提是声明了 model（model 就是「可移植」的开关）：
+
+1. **同名同类型** —— 直接换 `data`，字段名 / 类型一致即可重新出图。
+2. **字段名不同** —— 给 `fieldMap`（逻辑名 → 数据里的实际路径），配置不动：
+
+   ```tsx
+   // 数据里叫 period / amount，配置里仍用 month / revenue
+   <Plot data={rows} model={[{ name: 'month', type: 'temporal' }, { name: 'revenue', type: 'continuous' }]}
+         fieldMap={{ month: 'period', revenue: 'amount' }}>
+     <LineMark x="month" y="revenue" order="month" />
+   </Plot>
+   ```
+
+3. **存储格式不同但类型相同** —— 自动转换。同一个 `temporal` 字段，数据里是 `Date` 对象、ISO 字符串还是毫秒时间戳，都能正确读；`continuous` 字段是数字还是规范的数字串（`"120"`）也都认。无需任何额外配置。
+
+`fieldMap` 只做改名（值不变换，计算交给 transform）；它必须配合 model 使用——没有 model 就没有「逻辑字段」可映射。
+
+## 数据有问题时
+
+文档型 / 异构数据常有缺字段、类型不一的行。retikz 的处理是**跳过、不伪造、不静默画错**：
+
+| 情形 | 行为 |
+| --- | --- |
+| 某行缺这个字段 | 跳过该数据点（异构数据常态，不报错） |
+| 叶子是对象 / 数组（非标量） | 跳过该数据点（绝不把对象塞进图） |
+| 同类型不同存储格式 | 自动转换（见上「换数据源」第 3 条） |
+| 路径中途是数组（需展开） | 暂不支持自动展开，请先在数据层 flatten |
+
+默认「跳过」可能让你对着一张空图摸不着头脑。打开 `validateData` 让 retikz 抽样校验、**有问题直接报错**，把「为什么图是空的」变成明确提示：
+
+```tsx
+<Plot data={rows} model={[...]} validateData>
+  {/* 字段缺失 / 全部无法转换 → 编译期报错，而非空图 */}
+</Plot>
+```

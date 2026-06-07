@@ -25,24 +25,24 @@ const coerceCategory = (value: unknown): string | number | undefined => {
 
 /**
  * 按 PlotFieldType 把原始 JS 值强制成规范值（同类型容多种 JS 表示）
- * @description quantitative/proportion → number（proportion 不 clamp、越界原样）；temporal → epoch ms（Date/数值/严格 ISO）；
- *   nominal/ordinal → string|number 分类键。非法 → NaN（数值）/ undefined（分类），下游按非有限 / undefined 跳过。
+ * @description continuous → number（越界原样、不 clamp）；temporal → epoch ms（Date/数值/严格 ISO）；
+ *   categorical → string|number 分类键。非法 → NaN（数值）/ undefined（分类），下游按非有限 / undefined 跳过。
  */
 export const coerceValue = (value: unknown, type: FieldType): string | number | undefined => {
   if (type === PlotFieldType.Temporal) {
     const stamp = toTimestamp(value);
     return stamp === null ? NaN : stamp;
   }
-  if (type === PlotFieldType.Nominal || type === PlotFieldType.Ordinal) {
+  if (type === PlotFieldType.Categorical) {
     return coerceCategory(value);
   }
-  // quantitative / proportion
+  // continuous
   return coerceNumber(value);
 };
 
 /** 某规范值对其类型是否有效（数值类要有限、分类类非 undefined/null） */
 const isCoercedValid = (value: unknown, type: FieldType): boolean => {
-  if (type === PlotFieldType.Nominal || type === PlotFieldType.Ordinal) return value !== undefined && value !== null;
+  if (type === PlotFieldType.Categorical) return value !== undefined && value !== null;
   return typeof value === 'number' && Number.isFinite(value);
 };
 

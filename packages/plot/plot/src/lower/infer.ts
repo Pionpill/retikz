@@ -20,16 +20,15 @@ export const isIsoDateString = (value: string): boolean => ISO_DATE_RE.test(valu
 /** 单个标量值 → 测量类型；非标量 / null 返回 undefined（跳过） */
 const classify = (value: unknown): FieldType | undefined => {
   if (value instanceof Date) return PlotFieldType.Temporal;
-  if (typeof value === 'number') return Number.isFinite(value) ? PlotFieldType.Quantitative : undefined;
-  if (typeof value === 'string') return isIsoDateString(value) ? PlotFieldType.Temporal : PlotFieldType.Nominal;
-  if (typeof value === 'boolean') return PlotFieldType.Nominal;
+  if (typeof value === 'number') return Number.isFinite(value) ? PlotFieldType.Continuous : undefined;
+  if (typeof value === 'string') return isIsoDateString(value) ? PlotFieldType.Temporal : PlotFieldType.Categorical;
+  if (typeof value === 'boolean') return PlotFieldType.Categorical;
   return undefined;
 };
 
 /**
  * 从绑定数据推断某字段的测量类型（仅无 model 时用）
- * @description 双阈值抽样（≤1000 行 / ≤100 标量）：全 temporal→temporal、全有限数→quantitative、其余/混合/空→nominal。
- *   proportion / ordinal 不自动推断（语义意图，须显式 model）。
+ * @description 双阈值抽样（≤1000 行 / ≤100 标量）：全 temporal→temporal、全有限数→continuous、其余/混合/空→categorical。
  */
 export const inferFieldType = (rows: Array<ExternalRow>, path: string): FieldType => {
   const sample: Array<FieldType> = [];
@@ -41,8 +40,8 @@ export const inferFieldType = (rows: Array<ExternalRow>, path: string): FieldTyp
     if (type === undefined) continue;
     sample.push(type);
   }
-  if (sample.length === 0) return PlotFieldType.Nominal;
+  if (sample.length === 0) return PlotFieldType.Categorical;
   if (sample.every(type => type === PlotFieldType.Temporal)) return PlotFieldType.Temporal;
-  if (sample.every(type => type === PlotFieldType.Quantitative)) return PlotFieldType.Quantitative;
-  return PlotFieldType.Nominal;
+  if (sample.every(type => type === PlotFieldType.Continuous)) return PlotFieldType.Continuous;
+  return PlotFieldType.Categorical;
 };

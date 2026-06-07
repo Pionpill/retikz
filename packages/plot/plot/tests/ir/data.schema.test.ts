@@ -11,9 +11,9 @@ describe('DataRefSchema / DataModelSchema / ScalarValueSchema (ADR-02)', () => {
     const spec = {
       reference: 'sales',
       model: [
-        { name: 'month', type: 'quantitative' },
-        { name: 'user.age', type: 'quantitative' },
-        { name: 'region', type: 'nominal' },
+        { name: 'month', type: 'continuous' },
+        { name: 'user.age', type: 'continuous' },
+        { name: 'region', type: 'categorical' },
       ],
     };
     expect(DataRefSchema.parse(spec)).toEqual(spec);

@@ -266,18 +266,15 @@ export const timePositionScale = (scale: ScaleTime<number, number>): PositionSca
 
 /**
  * 按字段类型派生默认位置 scale 定义（type-driven 选型）
- * @description quantitative→linear、temporal→time、nominal/ordinal→band、proportion→linear domain [0,1]；
+ * @description continuous→linear、temporal→time、categorical→band；
  *   undefined（无字段绑定，如全常量通道）→ linear 兜底。仅在 coordinate 省略 scale 绑定时调用。
  */
 export const deriveScale = (fieldType: FieldType | undefined, name: string): Scale => {
   switch (fieldType) {
     case PlotFieldType.Temporal:
       return { type: PlotScale.Time, name };
-    case PlotFieldType.Nominal:
-    case PlotFieldType.Ordinal:
+    case PlotFieldType.Categorical:
       return { type: PlotScale.Band, name };
-    case PlotFieldType.Proportion:
-      return { type: PlotScale.Linear, name, domain: [0, 1] };
     default:
       return { type: PlotScale.Linear, name };
   }
@@ -285,13 +282,13 @@ export const deriveScale = (fieldType: FieldType | undefined, name: string): Sca
 
 /**
  * 类型 ↔ scale 兼容校验（fail-loud，不强转）
- * @description 仅拒明确错配：连续 scale（linear/time）配分类字段（nominal/ordinal）、分类 scale（band/point）配 temporal。
- *   quantitative / proportion 灵活（可作连续亦可作分类带），不拦。
+ * @description 仅拒明确错配：连续 scale（linear/time）配分类字段（categorical）、分类 scale（band/point）配 temporal。
+ *   continuous 灵活（可作连续亦可作分类带），不拦。
  */
 export const assertScaleFieldCompatible = (role: string, scaleType: ScaleType, fieldType: FieldType, scaleName: string): void => {
   const continuous = scaleType === PlotScale.Linear || scaleType === PlotScale.Time;
   const categorical = scaleType === PlotScale.Band || scaleType === PlotScale.Point;
-  const fieldCategorical = fieldType === PlotFieldType.Nominal || fieldType === PlotFieldType.Ordinal;
+  const fieldCategorical = fieldType === PlotFieldType.Categorical;
   if (continuous && fieldCategorical) {
     throw new Error(`lowerPlots: coordinate.${role} scale "${scaleName}" (${scaleType}) incompatible with ${fieldType} field; use band/point`);
   }

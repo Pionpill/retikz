@@ -2,20 +2,16 @@ import { z } from 'zod';
 import type { ValueOf } from '@retikz/core';
 
 /**
- * 字段类型关键字（暴露给用户；成员值即字段类型串，裸字面量 `'quantitative'` 同样可用）
- * @description grammar-of-graphics 标准字段类型；驱动 lowering 的缺省推断、type-driven scale 选型与 guide 格式化
+ * 字段类型关键字（暴露给用户；成员值即字段类型串，裸字面量 `'continuous'` 同样可用）
+ * @description 字段测量种类；驱动 lowering 的缺省推断、type-driven scale 选型与 guide 格式化
  */
 export const PlotFieldType = {
-  /** 定量：连续可度量、间距有意义的数值（销量 / 温度 / 价格），默认 linear scale */
-  Quantitative: 'quantitative',
-  /** 名义：无序分类标签（国家 / 颜色名），只判等无大小 */
-  Nominal: 'nominal',
-  /** 有序分类：有序但间距无意义的类别（低 / 中 / 高、评级），保序离散映射 */
-  Ordinal: 'ordinal',
+  /** 连续：可度量、间距有意义的数值（销量 / 温度 / 价格 / 占比），默认 linear scale */
+  Continuous: 'continuous',
+  /** 分类：离散类别标签（国家 / 颜色名 / 评级），只判等不取间距，默认 band scale */
+  Categorical: 'categorical',
   /** 时间：日期 / 时间戳，走 time scale */
   Temporal: 'temporal',
-  /** 归一比例：[0,1] 区间的占比（pie value / ternary 分量），走 linear scale（domain 默认 [0,1]） */
-  Proportion: 'proportion',
 } as const;
 
 /** 字段测量类型 */
