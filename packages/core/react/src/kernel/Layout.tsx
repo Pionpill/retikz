@@ -26,6 +26,7 @@ import type { HydrationHandlers } from '@retikz/render/hydration';
 import { createHydrationController, locateSvg } from '@retikz/render/hydration';
 import { buildSvgDocument } from '@retikz/render/svg';
 import { bindWaapiDescriptors, sceneHasAnimations } from '@retikz/render/animation';
+import type { AnimationPropertyRegistry, EasingRegistry } from '@retikz/render/animation';
 import { buildIR, pickScopeStyle, wrapRootScope } from './builder';
 import { collectHydrationHandlers } from './collectHydrationHandlers';
 import { useRendererMode } from './rendererContext';
@@ -97,6 +98,18 @@ export type LayoutProps = ScopeStyleProps & {
    *   的 `animations` prop（非此 prop）。与直接传 `ir` prop 并用时，本 prop 追加到该 IR 根。
    */
   animations?: Array<IRAnimationTrack>;
+  /**
+   * 自定义缓动注册表（兑现动画扩展口）：名 → cubic-bezier 四元组 / 缓动函数
+   * @description preset / track 的 `easing` 写注册名（如 `fadeIn({ easing: 'spring' })`）即生效。cubic-bezier
+   *   形式 SVG（CSS）+ Canvas 都支持；函数形式仅 Canvas（SVG 退 linear 并告警）。
+   */
+  easings?: EasingRegistry;
+  /**
+   * 自定义动画属性通道插值器（兑现动画扩展口）：通道名 → { interpolate, applyCanvas }
+   * @description 让 `property` 用内置之外的名字（如 `blur`）。**当前仅 Canvas 生效**（`renderer="canvas"`）；
+   *   SVG 无内置映射 → 告警并跳过该 track（渲染 base）。
+   */
+  animationProperties?: AnimationPropertyRegistry;
   /**
    * SVG `<defs>` 资源 id 前缀，覆盖默认的 `useId()` 派生值
    * @description marker / paint / clip 的 id 与 `url(#...)` 引用共用此前缀确保多实例不撞。缺省回退剥冒号的
@@ -181,7 +194,7 @@ const useSvgRootBinding = (
  *   `@retikz/render/svg`，react 只做 `SvgNode→ReactElement` 薄映射 + `useId` 绑定。
  */
 export const Layout: FC<LayoutProps> = props => {
-  const { ir: irFromProp, children, width, height, viewBox, className, style, renderer: rendererProp, animate: animateProp, animations: rootAnimations, idPrefix, nodeDistance, shapes, arrows, patterns, pathGenerators, composites, handlers } = props;
+  const { ir: irFromProp, children, width, height, viewBox, className, style, renderer: rendererProp, animate: animateProp, animations: rootAnimations, easings, animationProperties, idPrefix, nodeDistance, shapes, arrows, patterns, pathGenerators, composites, handlers } = props;
   const animate = animateProp !== false;
   const { color, stroke, fill, strokeWidth, opacity, fillOpacity, drawOpacity, nodeDefault, pathDefault, labelDefault, arrowDefault } = props;
   // 渲染目标：显式 prop > 祖先 RendererModeProvider 注入的 context > 默认 svg（hook 必须无条件调用）
@@ -219,8 +232,8 @@ export const Layout: FC<LayoutProps> = props => {
   const rawId = useId();
   const resolvedIdPrefix = idPrefix ?? rawId.replace(/[^a-zA-Z0-9]/g, '');
   const doc = useMemo(
-    () => (renderer === 'canvas' ? null : buildSvgDocument(scene, { idPrefix: resolvedIdPrefix, animate })),
-    [renderer, scene, resolvedIdPrefix, animate],
+    () => (renderer === 'canvas' ? null : buildSvgDocument(scene, { idPrefix: resolvedIdPrefix, animate, easings })),
+    [renderer, scene, resolvedIdPrefix, animate, easings],
   );
 
   // 水合 handler 注册表：JSX 模式从 children 同源收集，`ir` prop 模式用 `handlers` prop（无 children 可收集）
@@ -243,6 +256,8 @@ export const Layout: FC<LayoutProps> = props => {
         className={className}
         style={style}
         animate={animate}
+        easings={easings}
+        animationProperties={animationProperties}
       />
     );
   }

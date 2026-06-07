@@ -1,0 +1,70 @@
+---
+title: 自定义动画
+description: 动画的缓动曲线与属性通道都开放——注册自定义 easing（spring 等）与自定义属性通道（blur 等），内置之外按需扩展。
+---
+
+[动画](/core/concepts/animation) 的 `easing` 与 `property` 都是**开放字符串**：内置之外，可注册自己的缓动曲线和属性通道。两个注入面对应 `<Layout>` 的两个 prop，与 [形状](/core/reference/extending/shape-registry) / [箭头](/core/reference/extending/custom-arrow) 等扩展同一套思路——IR / preset 里只写名字，定义在 `<Layout>` 注入。
+
+## 自定义缓动（`easings`）
+
+`<Layout easings={{ 名字: 曲线 }}>` 注册缓动；preset 或 track 的 `easing` 写该名字即生效：
+
+<ComponentPreview name="custom-easing" size="xs" />
+
+```tsx
+<Layout easings={{ spring: [0.34, 1.56, 0.64, 1] }}>
+  <Node animations={[scaleIn({ from: 0.4, easing: 'spring' })]}>spring</Node>
+</Layout>
+```
+
+注册值两种形态：
+
+| 形态 | 类型 | 后端支持 |
+| --- | --- | --- |
+| cubic-bezier 四元组 | `[x1, y1, x2, y2]` | SVG（进 CSS `cubic-bezier()`）+ Canvas |
+| 缓动函数 | `(t: number) => number` | **仅 Canvas**；SVG 进不了 CSS → 退 `linear` 并告警 |
+
+`y` 可超出 `[0, 1]`（如 `1.56`）做回弹 / 越界效果。未注册的 easing 名 → 告警 + 退 `linear`。
+
+## 自定义属性通道（`animationProperties`）
+
+`property` 也开放：注册一个通道名 + 它的插值器与应用方式，就能动内置之外的属性（如 `blur` 滤镜）。
+
+```tsx
+import type { AnimationPropertyDefinition } from '@retikz/render/canvas';
+
+const blur: AnimationPropertyDefinition = {
+  // 两关键帧值 + 段进度 → 当下值
+  interpolate: (from, to, t) => (from as number) + ((to as number) - (from as number)) * t,
+  // 把当下值应用到 Canvas context（绘制该图元前调用）
+  applyCanvas: (ctx, _prim, value) => {
+    ctx.filter = `blur(${value as number}px)`;
+  },
+};
+
+<Layout renderer="canvas" animationProperties={{ blur }}>
+  <Node
+    fill="#3b82f6"
+    animations={[{ property: 'blur', keyframes: [{ at: 0, value: 8 }, { at: 1, value: 0 }], duration: 500 }]}
+  />
+</Layout>
+```
+
+`AnimationPropertyDefinition`：
+
+| 字段 | 类型 | 描述 |
+| --- | --- | --- |
+| `interpolate` | `(from, to, t) => value` | 相邻关键帧值在段进度 `t∈[0,1]` 的插值（喂给求值引擎） |
+| `applyCanvas` | `(ctx, prim, value) => void` | 把当下值落到 Canvas 2D context（在该图元的 `save/restore` 作用域内调用） |
+
+<ComponentAlert type="warn" title="自定义属性通道当前仅 Canvas" description="自定义 property 的通用插值靠 JS（applyCanvas），落在 Canvas 后端。SVG 没有内置映射，遇到未识别的 property 会告警并跳过该 track（渲染 base 静止态）。要用自定义属性通道请走 renderer=\"canvas\"。" />
+
+## 后端支持一览
+
+| 扩展 | SVG | Canvas |
+| --- | --- | --- |
+| 自定义 easing（cubic-bezier） | ✅ | ✅ |
+| 自定义 easing（函数） | ⚠️ 退 linear + 告警 | ✅ |
+| 自定义属性通道 | ⚠️ 告警 + 跳过 | ✅ |
+
+未注册的自定义 easing / property 一律**可诊断降级**：告警 + 该 track 退回 base 静止态，绝不丢图。
