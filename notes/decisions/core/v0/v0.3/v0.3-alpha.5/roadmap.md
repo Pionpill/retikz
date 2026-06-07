@@ -81,7 +81,8 @@
 | [03](./03-canvas-playback.md) | Canvas 动画播放（render/canvas） | `drawScene(…,{time})` 逐帧 + 共享 `evaluateTrack` 插值引擎（含 pathDraw 部分路径、oklch 真 lerp）；**自定义 property 的 JS 插值器注册表**（`RenderOptions.animationProperties`，兑现 ADR-01 口） | Accepted |
 | [04](./04-runtime-control.md) | runtime 播放控制（vanilla / react） | rAF 时钟（共享时钟）+ `trigger` 落地（IntersectionObserver / API / 事件桥水合）；`{animate:false}` + `prefers-reduced-motion`；静态截帧 `{at:t}`（复用 `evaluateTrack`） | Accepted（SVG `{at:t}` / react canvas rAF / manual 句柄留后续，见 ADR） |
 
-| [05](./05-animation-presets.md) | 具名动画 sugar（core preset + react/vanilla re-export） | 11 个 preset 工厂（`fadeIn` / `drawOn` / `scaleIn` / `grow` / `growUp` / `slideIn` / `colorShift` / `cameraTo` / `pulse` / `spin` / `loop`）+ `stagger` helper，产 `AnimationTrack`、按配方表实装；`<Layout animations>` prop（cameraTo 镜头）；Sugar=Kernel 等价测试 | Accepted（docs 页待补） |
+| [05](./05-animation-presets.md) | 具名动画 sugar（core preset + react/vanilla re-export） | 11 个 preset 工厂（`fadeIn` / `drawOn` / `scaleIn` / `grow` / `growUp` / `slideIn` / `colorShift` / `cameraTo` / `pulse` / `spin` / `loop`）+ `stagger` helper，产 `AnimationTrack`、按配方表实装；`<Layout animations>` prop（cameraTo 镜头）；Sugar=Kernel 等价测试 | Accepted |
+| [06](./06-hydration-context.md) | 水合 handler runtime 上下文（render/vanilla/react） | handler 升 `(event, ctx)`：ctx 带 id / meta(provenance) / 几何 / DOM element / scenePoint / 动画控制 / scene（LangChain config 式单 runtime，只增不破）；回调读 meta + 命令式触发动画；renderer 无关（canvas element=null、动画 per-id 降级） | Proposed |
 
 > along-path / clip / morph 各自后续 ADR，本里程碑随阶段补。
 
