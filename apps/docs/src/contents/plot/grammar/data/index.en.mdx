@@ -52,7 +52,7 @@ Field types (three measurement kinds):
 
 Fields with `type` omitted need the data at lowering to determine their type — to keep a spec fully self-describing without the data (LLM-friendly / fully portable), fill `type` in.
 
-<ComponentAlert title="Inference is best-effort; the model is the contract" description="Without a model (or with a field's type omitted), types are guessed from samples: time is only recognized in strict ISO form (YYYY-MM-DD or an ISO datetime with a timezone) — '2024/01/01' and bare numeric strings are not treated as time (they fall back to categorical). Declare a model and fill in type when you want precision, validation, or for an LLM to understand the fields without seeing the data." />
+<ComponentAlert title="Inference is best-effort; the model is the contract" description="Without a model (or with a field's type omitted), types are guessed from samples: time is only recognized in unambiguous ISO form (YYYY-MM-DD, an ISO datetime with a timezone, including the space-separated SQL form like '2024-01-01 12:00:00Z') — '2024/01/01', timezone-less times, and bare numeric strings are not treated as time (they fall back to categorical). Declare a model and fill in type when you want precision, validation, or for an LLM to understand the fields without seeing the data." />
 
 ## Type-driven scales
 

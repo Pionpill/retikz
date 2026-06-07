@@ -228,7 +228,7 @@ export const pointPositionScale = (scale: ScalePoint<string | number>): Position
   },
 });
 
-/** 字段值 → epoch ms（Date 实例 / 数值原样 / 严格 ISO 字符串走 Date.parse；其余 → null） */
+/** 字段值 → epoch ms（Date 实例 / 数值原样 / ISO 字符串走 Date.parse；其余 → null） */
 export const toTimestamp = (value: unknown): number | null => {
   if (value instanceof Date) {
     const stamp = value.getTime();
@@ -236,9 +236,10 @@ export const toTimestamp = (value: unknown): number | null => {
   }
   if (typeof value === 'number') return Number.isFinite(value) ? value : null;
   if (typeof value === 'string') {
-    // 严格 ISO guard（与 ADR-01 推断同一套）：拒 YYYY/MM/DD、无时区 datetime、裸数字串，避免误解析
+    // ISO guard（与推断同一套）：拒 YYYY/MM/DD、无时区 datetime、裸数字串，避免误解析
     if (!isIsoDateString(value)) return null;
-    const parsed = Date.parse(value);
+    // 空格分隔（SQL 时间戳）归一化成 T：ECMAScript 只保证 T 分隔的跨引擎一致解析
+    const parsed = Date.parse(value.replace(' ', 'T'));
     return Number.isNaN(parsed) ? null : parsed;
   }
   return null;

@@ -8,12 +8,13 @@ const MAX_SAMPLE_VALUES = 100;
 
 /** 严格 ISO 日期：YYYY-MM-DD */
 const ISO_DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
-/** 严格 ISO 日期时间：带 Z 或 ±HH:MM 时区（拒无时区的模糊本地时间） */
-const ISO_DATETIME_RE = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2}(\.\d+)?)?(Z|[+-]\d{2}:\d{2})$/;
+/** ISO 日期时间：分隔符 T 或单空格（SQL 时间戳），带 Z 或 ±HH:MM 时区（拒无时区的模糊本地时间） */
+const ISO_DATETIME_RE = /^\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}(:\d{2}(\.\d+)?)?(Z|[+-]\d{2}:\d{2})$/;
 
 /**
- * 严格 ISO 时间字符串判定（推断与 temporal coercion 共用同一 guard）
- * @description 只接受 `YYYY-MM-DD` 或带时区的 ISO datetime；拒 `YYYY/MM/DD`、无时区 datetime、裸数字串，避免把数值误判时间
+ * ISO 时间字符串判定（推断与 temporal coercion 共用同一 guard）
+ * @description 接受 `YYYY-MM-DD`、或带时区的 ISO datetime（分隔符 T 或单空格，后者即 SQL 时间戳）；
+ *   拒 `YYYY/MM/DD`、无时区 datetime、裸 / 紧凑数字串，避免把歧义值误判时间
  */
 export const isIsoDateString = (value: string): boolean => ISO_DATE_RE.test(value) || ISO_DATETIME_RE.test(value);
 

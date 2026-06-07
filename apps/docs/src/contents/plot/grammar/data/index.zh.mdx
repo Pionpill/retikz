@@ -52,7 +52,7 @@ description: 给 <Plot> 一份数据行 + 一份「数据模型」（字段名 +
 
 省略 `type` 的字段需到 lowering 时看数据才能定类型——要让 spec 不看数据就完全自描述（LLM 友好 / 完全可移植），还是把 `type` 填全。
 
-<ComponentAlert title="推断是尽力而为，model 才是契约" description="不声明 model（或字段省略 type）时类型靠抽样猜测：时间只认严格 ISO 格式（YYYY-MM-DD 或带时区的 ISO datetime），'2024/01/01'、裸数字串不会被当成时间（按 categorical 处理）。要精确、要校验、要让 LLM 不看数据就懂字段，就声明 model 并填上 type。" />
+<ComponentAlert title="推断是尽力而为，model 才是契约" description="不声明 model（或字段省略 type）时类型靠抽样猜测：时间只认无歧义的 ISO 格式（YYYY-MM-DD、带时区的 ISO datetime，含空格分隔的 SQL 时间戳如 '2024-01-01 12:00:00Z'），'2024/01/01'、无时区时间、裸数字串不会被当成时间（按 categorical 处理）。要精确、要校验、要让 LLM 不看数据就懂字段，就声明 model 并填上 type。" />
 
 ## 类型驱动的比例尺
 
