@@ -28,7 +28,7 @@ export type CommonOptions = {
    * 静态截帧时刻（毫秒）；给定时渲染「定格在该时刻」的静态图（不播放、不 emit 动画），SSR 海报帧 / 缩略图用
    * @description SVG 后端把各 track 在该时刻的值烘焙成静态属性 / transform（复用 `evaluateTrack`）；覆盖 `animate`。
    */
-  at?: number;
+  snapshotAt?: number;
   /** 自定义 easing 注册表（透传 renderer / runtime） */
   easings?: EasingRegistry;
 } & CompileOptions;

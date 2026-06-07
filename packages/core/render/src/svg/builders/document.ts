@@ -30,7 +30,7 @@ export type BuildDocumentOptions = {
    * 静态截帧时刻（毫秒）；给定时不 emit 动画，而是把各 track 在该时刻的值**烘焙成静态属性 / transform**（定格一帧）
    * @description SSR 海报帧 / 缩略图 / 截图用。覆盖 `animate`（截帧本就是静态产物，复用 `evaluateTrack` 求值）。
    */
-  at?: number;
+  snapshotAt?: number;
 };
 
 /** 按 idPrefix 派生确定性的资源 id / 引用回调，并组装 builder context */
@@ -96,14 +96,14 @@ export const buildSvgFragment = (
   options: BuildDocumentOptions,
 ): Array<SvgNode> => {
   const { context } = makeContext(options.idPrefix);
-  // 截帧（at 给定）→ 烘焙静态帧的收集器；否则按 animate 决定动画收集器 / 无（base）
+  // 截帧（snapshotAt 给定）→ 烘焙静态帧的收集器；否则按 animate 决定动画收集器 / 无（base）
   const collector =
-    options.at !== undefined
+    options.snapshotAt !== undefined
       ? createSvgAnimationCollector({
           idPrefix: options.idPrefix,
           easings: options.easings,
           onWarn: options.onAnimationWarn,
-          snapshotAt: options.at,
+          snapshotAt: options.snapshotAt,
         })
       : options.animate === false
         ? undefined

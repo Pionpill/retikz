@@ -23,7 +23,7 @@ export const renderToSvgString = (input: RenderInput, options: RenderToStringOpt
   const svg = buildSvgString(toScene(input, options), {
     idPrefix: options.idPrefix ?? DEFAULT_ID_PREFIX,
     animate: options.animate,
-    at: options.at,
+    snapshotAt: options.snapshotAt,
     easings: options.easings,
   });
   return injectSize(svg, options.width, options.height);

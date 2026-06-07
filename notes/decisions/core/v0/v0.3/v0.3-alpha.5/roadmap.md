@@ -90,7 +90,7 @@
 
 > 状态记于 2026-06-07：ADR-01～06 全 Accepted 且已实装（IR → SVG/Canvas/runtime 播放 → presets → 水合 context → 文档），核心闭环。各 ADR 标注的「里程碑尾巴」与强调预设**已全部补齐**；下表只剩需另起 ADR / 明确不进 core 的项。
 
-**已补（原尾巴，2026-06-07）**：SVG `{at:t}` 静态截帧（`<Layout at>` / `renderToSvgString({at})` / canvas 单帧）· canvas per-id 动画控制（虚拟时钟登记表 `IdClockRegistry` + `resolvePrimAnimation`）· react 命令式动画句柄（`<Layout animationRef>`）· 强调预设 `flash` / `blink` / `wiggle`。
+**已补（原尾巴，2026-06-07）**：SVG 静态截帧 `snapshotAt`（`<Layout snapshotAt>` / `renderToSvgString({snapshotAt})` / canvas 单帧）· canvas per-id 动画控制（虚拟时钟登记表 `IdClockRegistry` + `resolvePrimAnimation`）· react 命令式动画句柄（`<Layout animationRef>`）· 强调预设 `flash` / `blink` / `wiggle`。
 
 | 项 | 类型 | 出处 | 说明 |
 |---|---|---|---|

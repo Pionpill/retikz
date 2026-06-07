@@ -133,19 +133,19 @@ SVG controls the WAAPI handle for interactive (`manual` / `visible` / `onEvent`)
 
 Backend capability: **SVG** supports every trigger; **Canvas** autoplays `load` animations at this stage (`visible` / `manual` / `onEvent` render the resting state, to be completed later).
 
-## Static snapshot (`at`)
+## Static snapshot (`snapshotAt`)
 
-Pass `<Layout at={ms}>` (or `renderToSvgString(ir, { at })` / `mountSvg(…, { at })`) to render **a single frame frozen at that time**: no playback, no emitted animation — each track's value at that instant is baked into static attributes / transforms. Use it for SSR poster frames, thumbnails, social-card previews.
+Pass `<Layout snapshotAt={ms}>` (or `renderToSvgString(ir, { snapshotAt })` / `mountSvg(…, { snapshotAt })`) to render **a single frame frozen at that time**: no playback, no emitted animation — each track's value at that instant is baked into static attributes / transforms. Use it for SSR poster frames, thumbnails, social-card previews.
 
 <ComponentPreview name="snapshot" size="xs" />
 
 ```tsx
 // grow (0→1, 300ms) frozen at 150ms ≈ half size
-<Layout at={150}>
-  <Node animations={[grow({ duration: 300 })]}>at=150</Node>
+<Layout snapshotAt={150}>
+  <Node animations={[grow({ duration: 300 })]}>150ms</Node>
 </Layout>
 ```
 
-`at ≥ duration` → the settled state (= the full base figure); `at` overrides `animate`. SVG reuses the same `evaluateTrack` engine, so a snapshot matches the same instant during playback frame-for-frame; Canvas paints one frame at that time without starting a rAF loop.
+`snapshotAt ≥ duration` → the settled state (= the full base figure); `snapshotAt` overrides `animate`. SVG reuses the same `evaluateTrack` engine, so a snapshot matches the same instant during playback frame-for-frame; Canvas paints one frame at that time without starting a rAF loop.
 
 <ComponentAlert type="tip" title="Want the IR?" description="Switch any demo's code panel to the IR / Vanilla tab to see the preset expanded into a raw AnimationTrack (property + keyframes + timing) — the preset is just a shorthand, fully equivalent." />

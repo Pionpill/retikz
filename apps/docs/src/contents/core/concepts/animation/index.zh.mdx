@@ -133,19 +133,19 @@ SVG 控制交互（`manual` / `visible` / `onEvent`）track 的 WAAPI 句柄、C
 
 各后端能力：**SVG** 支持全部 trigger；**Canvas** 本阶段自动播放 `load` 动画（`visible` / `manual` / `onEvent` 渲染静止态，后续补齐）。
 
-## 静态截帧（`at`）
+## 静态截帧（`snapshotAt`）
 
-给 `<Layout at={毫秒}>`（或 `renderToSvgString(ir, { at })` / `mountSvg(…, { at })`）→ 渲染**定格在该时刻的一帧**：不播放、不 emit 动画，把每条 track 在该时刻的值烘焙成静态属性 / transform。用于 SSR 海报帧、缩略图、社交卡片预览。
+给 `<Layout snapshotAt={毫秒}>`（或 `renderToSvgString(ir, { snapshotAt })` / `mountSvg(…, { snapshotAt })`）→ 渲染**定格在该时刻的一帧**：不播放、不 emit 动画，把每条 track 在该时刻的值烘焙成静态属性 / transform。用于 SSR 海报帧、缩略图、社交卡片预览。
 
 <ComponentPreview name="snapshot" size="xs" />
 
 ```tsx
 // grow（0→1，300ms）定格在 150ms ≈ 半大
-<Layout at={150}>
-  <Node animations={[grow({ duration: 300 })]}>at=150</Node>
+<Layout snapshotAt={150}>
+  <Node animations={[grow({ duration: 300 })]}>150ms</Node>
 </Layout>
 ```
 
-`at ≥ 时长` → settled 终态（= base 完整图）；`at` 覆盖 `animate`。SVG 复用同一套 `evaluateTrack` 求值引擎，故截帧与播放中的同一时刻逐帧一致；Canvas 按该时刻画一帧、不起 rAF。
+`snapshotAt ≥ 时长` → settled 终态（= base 完整图）；`snapshotAt` 覆盖 `animate`。SVG 复用同一套 `evaluateTrack` 求值引擎，故截帧与播放中的同一时刻逐帧一致；Canvas 按该时刻画一帧、不起 rAF。
 
 <ComponentAlert type="tip" title="想看 IR？" description="上面每个 demo 的代码面板切到 IR / Vanilla Tab，能看到 preset 展开成的原始 AnimationTrack（property + keyframes + timing）——preset 只是它的便捷写法，二者完全等价。" />

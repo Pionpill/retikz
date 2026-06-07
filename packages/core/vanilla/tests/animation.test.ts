@@ -75,15 +75,15 @@ describe('mountSvg 动画', () => {
 
 describe('SVG 静态截帧 {at:t}', () => {
   it('renderToSvgString({at}) → 烘焙静态 opacity、无 @keyframes（SSR 海报帧）', () => {
-    const settled = renderToSvgString(loadIr, { at: 999 });
+    const settled = renderToSvgString(loadIr, { snapshotAt: 999 });
     expect(settled).not.toContain('@keyframes');
     expect(settled).toContain('opacity="1"'); // 末态 = base
-    const start = renderToSvgString(loadIr, { at: 0 });
+    const start = renderToSvgString(loadIr, { snapshotAt: 0 });
     expect(start).toContain('opacity="0"'); // 起点帧
   });
 
   it('mountSvg({at}) → 定格帧、无 <style>', () => {
-    const view = mountSvg(document.createElement('div'), loadIr, { at: 0 });
+    const view = mountSvg(document.createElement('div'), loadIr, { snapshotAt: 0 });
     expect(view.root.querySelector('style')).toBeNull();
     expect(view.root.querySelector('[data-retikz-id="a"]')?.getAttribute('opacity')).toBe('0');
   });
