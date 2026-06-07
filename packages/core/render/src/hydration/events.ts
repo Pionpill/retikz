@@ -1,4 +1,5 @@
 import type { ValueOf } from '@retikz/core';
+import type { HydrationContext } from './context';
 
 /**
  * 水合事件名（面向用户的语义名，全程无缩写）
@@ -48,8 +49,15 @@ export const EVENT_DOM_TYPE: Record<
   wheel: 'wheel',
 };
 
+/**
+ * 水合 handler：原生事件 + renderer 无关 runtime 上下文
+ * @description `ctx` 携带命中语义元素的 id / meta(provenance) / 几何 / DOM element / scene 指针坐标 / 动画控制 /
+ *   scene。第二参 additive——现有 `(event) => …` handler 忽略 `ctx` 照常工作（零破坏）。
+ */
+export type HydrationHandler = (event: Event, ctx: HydrationContext) => void;
+
 /** 单个图元 id 的事件 → handler 映射 */
-export type ElementHandlers = Partial<Record<RetikzEventName, (event: Event) => void>>;
+export type ElementHandlers = Partial<Record<RetikzEventName, HydrationHandler>>;
 
 /** 水合 handler 注册表：id → 事件名 → handler */
 export type HydrationHandlers = Record<string, ElementHandlers>;

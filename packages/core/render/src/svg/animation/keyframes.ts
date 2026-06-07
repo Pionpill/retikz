@@ -99,8 +99,13 @@ export const createSvgAnimationCollector = (options: SvgAnimationOptions): SvgAn
   let seq = 0;
   const nextName = (kind: 'k' | 'c'): string => `retikz-${options.idPrefix}-${kind}${seq++}`;
 
-  /** 处理 transform 通道：每条 track 包一层 `<g>`（load→CSS class、交互→WAAPI data） */
-  const wrapTransform = (current: SvgNode, expanded: ExpandedTrack, track: IRAnimationTrack): SvgNode => {
+  /**
+   * 处理 transform 通道：每条 track 包一层 `<g>`（load→CSS class、交互→WAAPI data）
+   * @description wrapper `<g>` 没有 `data-retikz-id`，给它打 `data-retikz-animation-owner=<被包元素 id>`（id 存在时），
+   *   让 `ctx.animation` per-id 控制经此双查到承载真动画的 wrapper（否则带 transform 的节点 restart 失效）。
+   */
+  const wrapTransform = (current: SvgNode, expanded: ExpandedTrack, track: IRAnimationTrack, ownerId: string | undefined): SvgNode => {
+    const owner: SvgAttrs = ownerId !== undefined ? { 'data-retikz-animation-owner': ownerId } : {};
     if (isLoadTrigger(track)) {
       const kf = nextName('k');
       rules.push(buildKeyframesRule(kf, expanded));
@@ -109,10 +114,10 @@ export const createSvgAnimationCollector = (options: SvgAnimationOptions): SvgAn
         ? `transform-box:view-box;transform-origin:${expanded.transformOrigin};`
         : '';
       rules.push(`.${cls}{${originRule}animation:${kf} ${shorthandTiming(track, options.easings, onWarn)}}`);
-      return { tag: 'g', attrs: { class: cls }, children: [current] };
+      return { tag: 'g', attrs: { class: cls, ...owner }, children: [current] };
     }
     const descriptor = buildWaapiDescriptor(expanded, track, options.easings, onWarn);
-    return { tag: 'g', attrs: { 'data-retikz-anim': JSON.stringify([descriptor]) }, children: [current] };
+    return { tag: 'g', attrs: { 'data-retikz-anim': JSON.stringify([descriptor]), ...owner }, children: [current] };
   };
 
   const decorate = (node: SvgNode, prim: ScenePrimitive): SvgNode => {
@@ -157,7 +162,7 @@ export const createSvgAnimationCollector = (options: SvgAnimationOptions): SvgAn
         onWarn(`SVG animation: skipped track on "${track.property}" (${expanded.skip}); rendering base.`);
         continue;
       }
-      current = wrapTransform(current, expanded, track);
+      current = wrapTransform(current, expanded, track, prim.id);
     }
     return current;
   };

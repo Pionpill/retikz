@@ -60,6 +60,18 @@ describe('Happy：load CSS + 交互 WAAPI + camera', () => {
     expect(css).toContain('transform-box:view-box');
   });
 
+  it('transform wrapper 带 id 的元素 → wrapper <g> 打 data-retikz-animation-owner（供 ctx.animation per-id 双查）', () => {
+    const out = buildSvgFragment(scene([rect({ id: 'n', animations: [GROW_UP] })]), { idPrefix: 't' });
+    const g = findTag(out, 'g')!;
+    expect(g.attrs['data-retikz-animation-owner']).toBe('n');
+  });
+
+  it('无 id 的元素 transform 动画 → wrapper 不打 owner 属性', () => {
+    const out = buildSvgFragment(scene([rect({ animations: [GROW_UP] })]), { idPrefix: 't' });
+    const g = findTag(out, 'g')!;
+    expect(g.attrs['data-retikz-animation-owner']).toBeUndefined();
+  });
+
   it('strokeWidth + pathDraw 映射：pathLength/dasharray setup + stroke-dashoffset keyframes', () => {
     const path: PathPrim = { type: 'path', commands: [{ kind: 'move', to: [0, 0] }, { kind: 'line', to: [10, 0] }], stroke: '#000' };
     const draw: IRAnimationTrack = { property: 'pathDraw', keyframes: [{ at: 0, value: 0 }, { at: 1, value: 1 }], duration: 600 };
