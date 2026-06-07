@@ -121,6 +121,10 @@ const LAYOUT_OWN_PROPS = new Set([
   'arrows',
   'patterns',
   'pathGenerators',
+  'animate',
+  'animations',
+  'easings',
+  'animationProperties',
 ]);
 
 /** buildPreviewIR 产物：派生的 IR + 根 `<Layout>` 的尺寸（供 IR 视图真渲染时对齐 demo 尺寸） */
@@ -143,7 +147,11 @@ const buildPreviewIR = (Component: FC): PreviewIR => {
   const base = props.ir ?? convertReactNodeToIR(childNode);
   const isLayout = rootElement?.type === Layout;
   const viewBox = isLayout ? rootElement.props.viewBox : undefined;
-  const ir = viewBox !== undefined ? { ...base, viewBox } : base;
+  // 根 animations（镜头 cameraTo）注入 IR 根，与 <Layout animations> 一致；否则 IR / Vanilla 视图丢镜头 track
+  const rootAnimations = isLayout ? (props.animations as IR['animations'] | undefined) : undefined;
+  let ir = base;
+  if (viewBox !== undefined) ir = { ...ir, viewBox };
+  if (rootAnimations !== undefined) ir = { ...ir, animations: rootAnimations };
   const width = isLayout ? (props.width as number | string | undefined) : undefined;
   const height = isLayout ? (props.height as number | string | undefined) : undefined;
   return { ir, width, height };
