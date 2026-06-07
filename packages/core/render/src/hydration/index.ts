@@ -19,11 +19,13 @@ export type {
   HydrationGeometry,
   BuildContext,
   ContextSources,
+  CanvasIdControlsDeps,
 } from './context';
 export {
   createContextBuilder,
   createSvgAnimationControls,
   createClockAnimationControls,
+  createCanvasIdAnimationControls,
   noopAnimationControls,
   resolvePointViaLayout,
   resolveSvgPointViaCtm,

@@ -283,6 +283,11 @@ describe('@retikz/vanilla mountCanvas 水合（坐标映射 + hitTest）', () =>
     expect(context?.meta).toEqual({ series: 'sales', i: 3 });
     expect(context?.geometry?.bbox.width).toBeGreaterThan(0);
     expect(context?.point?.x).toBeCloseTo(50, 5);
+    // per-id 动画控制可调用、不抛（registry-backed，作用于命中元素）
+    expect(typeof context?.animation.restart).toBe('function');
+    expect(() => context?.animation.restart()).not.toThrow();
+    expect(() => context?.animation.pause()).not.toThrow();
+    expect(() => context?.animation.stop()).not.toThrow();
 
     container.remove();
   });

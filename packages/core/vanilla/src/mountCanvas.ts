@@ -1,13 +1,13 @@
 import type { Scene } from '@retikz/core';
-import { hitTest, renderToCanvas } from '@retikz/render/canvas';
+import { type PrimAnimationResolution, hitTest, renderToCanvas } from '@retikz/render/canvas';
 import {
   type BuildContext,
-  createClockAnimationControls,
+  createCanvasIdAnimationControls,
   createHydrationController,
   geometryOf,
   metaOf,
 } from '@retikz/render/hydration';
-import { type AnimationControls, createClock, prefersReducedMotion, sceneAnimationDurationMs, sceneHasAnimations, sceneHasAutoplayTrigger } from '@retikz/render/animation';
+import { type AnimationControls, type IdClockRegistry, createClock, createIdClockRegistry, prefersReducedMotion, sceneAnimationDurationMs, sceneHasAnimations, sceneHasAutoplayTrigger } from '@retikz/render/animation';
 import { isFigure } from './builder/isFigure';
 import { toScene } from './toScene';
 import type { CanvasView, HydrateOptions, MountCanvasOptions, RenderInput, ScenePoint } from './types';
@@ -40,8 +40,28 @@ export const mountCanvas = (
   // 动画总关：{animate:false} 或 prefers-reduced-motion → 不起 rAF、只画 base 静态
   const animate = options.animate !== false && !prefersReducedMotion();
   let clock: AnimationControls | undefined;
+  // per-id 虚拟时钟登记表：ctx.animation 的 per-id 控制经它给各 id 叠加独立 offset / pause / active / stop
+  const registry: IdClockRegistry = createIdClockRegistry();
 
   let currentScene: Scene;
+
+  /** 把全局帧时刻折算成单个 prim 的动画解析（per-id）：stop→渲染 base；否则按有效时刻 + 是否含非自动播 track */
+  const resolvePrim = (id: string | undefined, globalTime: number): PrimAnimationResolution =>
+    id !== undefined && registry.isStopped(id)
+      ? { mode: 'skip' }
+      : { mode: 'at', time: registry.timeFor(id, globalTime), includeNonAutoplay: registry.isActive(id) };
+
+  /** 按当前时钟时刻 + per-id 登记表立即重绘一帧（per-id pause / stop 即时反映） */
+  const renderFrame = (): void => {
+    const time = clock?.time ?? 0;
+    renderToCanvas(canvas, currentScene, {
+      devicePixelRatio: ratio,
+      time,
+      easings: options.easings,
+      animationProperties: options.animationProperties,
+      resolvePrimAnimation: id => resolvePrim(id, time),
+    });
+  };
 
   const renderInto = (next: RenderInput): void => {
     if (isFigure(next)) {
@@ -74,6 +94,7 @@ export const mountCanvas = (
             time,
             easings: options.easings,
             animationProperties: options.animationProperties,
+            resolvePrimAnimation: id => resolvePrim(id, time),
           }),
       });
       if (sceneHasAutoplayTrigger(scene)) clock.play();
@@ -133,7 +154,14 @@ export const mountCanvas = (
         root: canvas,
         point: typeof mouse.clientX === 'number' ? clientToScene(mouse.clientX, mouse.clientY) : null,
         geometry: geometryOf(currentScene, id),
-        animation: createClockAnimationControls(clock),
+        // per-id 控制（缺省作用于命中元素）：读 live clock / registry，play/restart/seek 后确保时钟在跑并重绘
+        animation: createCanvasIdAnimationControls({
+          registry,
+          clockTime: () => clock?.time ?? 0,
+          ensurePlaying: () => clock?.play(),
+          renderFrame,
+          defaultId: id,
+        }),
         scene: currentScene,
       };
     };

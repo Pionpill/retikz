@@ -16,6 +16,8 @@ export type AnimateContext = {
   easings?: EasingRegistry;
   animationProperties?: AnimationPropertyRegistry;
   warn: (message: string) => void;
+  /** 是否施加非自动播（manual / visible / onEvent）track（per-id 激活时为 true；缺省仅自动播） */
+  includeNonAutoplay?: boolean;
 };
 
 const dist = (a: [number, number], b: [number, number]): number => Math.hypot(a[0] - b[0], a[1] - b[1]);
@@ -77,8 +79,8 @@ export const applyPrimAnimations = (
 ): ScenePrimitive => {
   const overrides: Record<string, unknown> = {};
   for (const track of prim.animations ?? []) {
-    // 按 trigger 过滤：rAF 共享时钟只施加 auto（load/缺省）track；manual / onEvent / visible 不自动播（渲染 base）
-    if (!isAutoplayTrigger(track)) continue;
+    // 按 trigger 过滤：默认只施加 auto（load/缺省）track；manual / onEvent / visible 仅在该 id 被 per-id 激活时播
+    if (!isAutoplayTrigger(track) && !context.includeNonAutoplay) continue;
     const cls = classifyProperty(track.property);
     if (cls === 'custom') {
       const def = context.animationProperties?.[track.property];

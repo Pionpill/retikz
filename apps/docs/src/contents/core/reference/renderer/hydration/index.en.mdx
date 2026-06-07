@@ -151,6 +151,6 @@ The same `handlers` table behaves identically under `renderer="svg"` and `render
 | `renderer="svg"` | Walk up from the event target to the nearest ancestor with `data-retikz-id` |
 | `renderer="canvas"` | Map the pointer coordinate through a hit query to an element id |
 
-The context `id` / `meta` / `geometry` / `point` agree across both backends; two differences: Canvas has no per-element DOM, so `context.element` is always `null` (use `root` + `point`); `context.animation` is precise per-id control on SVG but currently scene-level coarse on Canvas (`play` / `pause` / `restart` act on the whole-figure clock — per-id is future work).
+The context `id` / `meta` / `geometry` / `point` agree across both backends; `context.animation` is also **precise per-id control** on both (defaults to the hit element, pass an id to target another): SVG drives that element's WAAPI / CSS animations via `getAnimations()`, Canvas uses a per-id virtual clock (layering an independent offset / pause / active state per id on top of the single shared rAF clock). The only difference: Canvas has no per-element DOM, so `context.element` is always `null` (use `root` + `point`).
 
 <ComponentAlert type="warn" title="The context menu is not suppressed for you" description="onRightClick / rightClick leaves the browser context menu in place by default; to take it over, call event.preventDefault() inside the handler." />

@@ -151,6 +151,6 @@ import { Layout, Node, pulse } from '@retikz/react';
 | `renderer="svg"` | 事件目标向上找最近带 `data-retikz-id` 的祖先 |
 | `renderer="canvas"` | 指针坐标经命中查询定位到图元 id |
 
-context 的 `id` / `meta` / `geometry` / `point` 在两后端一致；两处差异：Canvas 无逐元素 DOM，故 `context.element` 恒为 `null`（用 `root` + `point`）；`context.animation` 在 SVG 上是 per-id 精确控制，在 Canvas 上当前是 scene 级粗粒度（`play` / `pause` / `restart` 作用于整图时钟，per-id 为后续）。
+context 的 `id` / `meta` / `geometry` / `point` 在两后端一致；`context.animation` 也两后端都是 **per-id 精确控制**（缺省作用于命中元素、传 id 控别的）：SVG 经 `getAnimations()` 控该元素的 WAAPI / CSS 动画，Canvas 经 per-id 虚拟时钟（在单 rAF 共享时钟上给每个 id 叠加独立 offset / 暂停 / 激活态）。唯一差异：Canvas 无逐元素 DOM，故 `context.element` 恒为 `null`（用 `root` + `point`）。
 
 <ComponentAlert type="warn" title="右键菜单不会自动抑制" description="onRightClick / rightClick 默认保留浏览器的右键菜单；想接管要在 handler 里自行 event.preventDefault()。" />

@@ -7,6 +7,7 @@
  *   Scene-派生字段（meta / geometry / scene）在无 scene 时缺省、animation 在无 runtime 时 no-op。
  */
 import type { IRJsonObject, Layout, Scene, ScenePrimitive } from '@retikz/core';
+import type { IdClockRegistry } from '../animation/idClock';
 
 /**
  * handler 内的动画控制（缺省作用于命中元素，传 id 控别的元素）
@@ -299,13 +300,12 @@ export const createSvgAnimationControls = (root: Element, defaultId: string): Hy
   };
 };
 
-/** scene 级时钟句柄（rAF 共享时钟，per-id 当前忽略，coarse） */
+/** scene 级时钟句柄（rAF 共享时钟） */
 type ClockHandle = { play: () => void; pause: () => void; seek: (timeMs: number) => void } | undefined;
 
 /**
  * Canvas coarse 动画控制：作用于 scene 级单 rAF 时钟（id 参数忽略）
- * @description Canvas 无逐元素 DOM、per-id 控制为后续；本批 restart 走 `seek(0)+play`、stop 走 `pause`。
- *   无时钟（无动画 / 降级）→ no-op。
+ * @description per-id 控制不可用（无登记表）时的降级；restart 走 `seek(0)+play`、stop 走 `pause`。无时钟 → no-op。
  */
 export const createClockAnimationControls = (clock: ClockHandle): HydrationAnimationControls => {
   if (!clock) return noopAnimationControls;
@@ -318,6 +318,55 @@ export const createClockAnimationControls = (clock: ClockHandle): HydrationAnima
     },
     stop: () => clock.pause(),
     seek: timeMs => clock.seek(timeMs),
+  };
+};
+
+/** createCanvasIdAnimationControls 的 runtime 依赖（registry + 时钟 + 重绘） */
+export type CanvasIdControlsDeps = {
+  /** 按 id 的虚拟时钟登记表 */
+  registry: IdClockRegistry;
+  /** 当前全局时钟时刻（毫秒）；缺时钟时返回 0 */
+  clockTime: () => number;
+  /** 确保 rAF 时钟在跑（play / restart / seek 后调用，使有效时刻推进） */
+  ensurePlaying: () => void;
+  /** 立即按当前状态重绘一帧（pause / stop 即时反映；时钟在跑时可省，但调用幂等无害） */
+  renderFrame: () => void;
+  /** 命中元素 id（`id` 省略时默认作用于它） */
+  defaultId: string;
+};
+
+/**
+ * Canvas per-id 动画控制：在 scene 级单 rAF 时钟之上经 IdClockRegistry 给每个 id 叠加独立虚拟时钟
+ * @description `ctx.animation.restart(id)` 等只影响该 id（缺省命中元素）：登记表记 offset / pause / active / stop，
+ *   `drawScene` 经 `resolvePrimAnimation` 折算各 id 有效时刻。play / restart / seek 后确保时钟在跑；每次操作后重绘一帧。
+ */
+export const createCanvasIdAnimationControls = (deps: CanvasIdControlsDeps): HydrationAnimationControls => {
+  const { registry, clockTime, ensurePlaying, renderFrame, defaultId } = deps;
+  const target = (id: string | undefined): string => id ?? defaultId;
+  return {
+    play: id => {
+      registry.play(target(id), clockTime());
+      ensurePlaying();
+      renderFrame();
+    },
+    pause: id => {
+      registry.pause(target(id), clockTime());
+      renderFrame();
+    },
+    restart: id => {
+      registry.restart(target(id), clockTime());
+      ensurePlaying();
+      renderFrame();
+    },
+    stop: id => {
+      registry.stop(target(id));
+      renderFrame();
+    },
+    seek: (timeMs, id) => {
+      registry.seek(target(id), timeMs, clockTime());
+      ensurePlaying();
+      renderFrame();
+    },
   };
 };
 

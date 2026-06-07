@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import type { IRAnimationTrack, PathPrim, RectPrim, Scene, ScenePrimitive } from '@retikz/core';
 import { drawScene } from '../src/canvas';
+import { createIdClockRegistry } from '../src/animation';
 import type { AnimationPropertyDefinition } from '../src/animation/registry';
 
 /**
@@ -124,5 +125,47 @@ describe('交互', () => {
     drawScene(ctx, scene([rect()], [camera]), { time: 400 });
     expect(argsOf(ctx, 'scale')).toContainEqual([2, 2]);
     expect(argsOf(ctx, 'translate')).toContainEqual([-50, -50]);
+  });
+});
+
+describe('per-id 虚拟时钟（registry + resolvePrimAnimation）', () => {
+  it('resolvePrimAnimation skip → 跳过全部 track（渲染 base，无 translate）', () => {
+    const t: IRAnimationTrack = { property: 'translateX', keyframes: [{ at: 0, value: 0 }, { at: 1, value: 100 }], duration: 400 };
+    const ctx = createCtx();
+    drawScene(ctx, scene([rect({ id: 'a', animations: [t] })]), { time: 200, resolvePrimAnimation: () => ({ mode: 'skip' }) });
+    expect(argsOf(ctx, 'translate')).not.toContainEqual([50, 0]);
+  });
+
+  it('manual track：includeNonAutoplay=false 不施加；=true 施加', () => {
+    const t: IRAnimationTrack = { property: 'translateX', keyframes: [{ at: 0, value: 0 }, { at: 1, value: 100 }], duration: 400, trigger: 'manual' };
+    const off = createCtx();
+    drawScene(off, scene([rect({ id: 'a', animations: [t] })]), { time: 200, resolvePrimAnimation: () => ({ mode: 'at', time: 200, includeNonAutoplay: false }) });
+    expect(argsOf(off, 'translate')).not.toContainEqual([50, 0]);
+    const on = createCtx();
+    drawScene(on, scene([rect({ id: 'a', animations: [t] })]), { time: 200, resolvePrimAnimation: () => ({ mode: 'at', time: 200, includeNonAutoplay: true }) });
+    expect(argsOf(on, 'translate')).toContainEqual([50, 0]);
+  });
+
+  it('registry：restart 归零、pause 定格、play 续播、stop 标记', () => {
+    const reg = createIdClockRegistry();
+    reg.restart('a', 1000);
+    expect(reg.timeFor('a', 1000)).toBe(0);
+    expect(reg.timeFor('a', 1200)).toBe(200);
+    reg.pause('a', 1200);
+    expect(reg.timeFor('a', 9999)).toBe(200);
+    reg.play('a', 1300);
+    expect(reg.timeFor('a', 1300)).toBe(200);
+    reg.stop('a');
+    expect(reg.isStopped('a')).toBe(true);
+  });
+
+  it('registry isActive：默认 false，play 后 true，stop 后 false；无 entry 用 globalTime', () => {
+    const reg = createIdClockRegistry();
+    expect(reg.isActive('a')).toBe(false);
+    expect(reg.timeFor('b', 500)).toBe(500); // 无 entry → globalTime
+    reg.play('a', 0);
+    expect(reg.isActive('a')).toBe(true);
+    reg.stop('a');
+    expect(reg.isActive('a')).toBe(false);
   });
 });

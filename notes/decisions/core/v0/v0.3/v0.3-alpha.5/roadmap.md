@@ -34,8 +34,8 @@
 | `loop`（通用循环包装） | 循环 | 任意 + `iterations:'infinite'` + `direction` | ★★★ | ✅ 就绪 |
 | `colorShift`（描边/填充变色）| 强调 | `fill` / `stroke`（oklch 插值） | ★★★ | ✅ 就绪 |
 | `wipeIn` / reveal | 入场 | clip 动画（需 clip 关键帧） | ★★ | ⬜ 未实现（本批） |
-| `flash` / `blink` | 强调 | `opacity` + repeat（预设） | ★★ | ⬜ 未实现（预设留 sugar） |
-| `wiggle` | 强调 | `rotate` / `translate` 抖动预设 | ★★ | ⬜ 未实现（预设留 sugar） |
+| `flash` / `blink` | 强调 | `opacity` + repeat（预设） | ★★ | ✅ preset（flash 闪 N 次 / blink 无限） |
+| `wiggle` | 强调 | `rotate` 抖动预设 | ★★ | ✅ preset |
 | `moveAlong`（沿路径运动） | 运动 | along-path 派生位置（需路径采样几何） | ★★★★ | ⬜ 未实现（几何待 ADR） |
 | `morph`（数据过渡/形变） | 数据 | `pathMorph`（重采样插值） | ★★★★★ | ⛔ 不进 core（runtime + Tier 2） |
 
@@ -79,23 +79,21 @@
 | [01](./01-timeline-animation-ir.md) | 时间轴动画 IR 契约（core） | `AnimationTrack` schema（keyframes 归一化时间 + duration/delay/easing/iterations/direction/fill/trigger）；renderer 无关 `AnimationProperty`（开放可扩展）；元素 + scene 根 `animations?`；静止-终态不变量 + 降级契约（能力声明 + warn + settled）；编译期透传进 Scene（沿 meta/id-stamp 通路）+ viewBox⇔根 校验 | Accepted |
 | [02](./02-svg-playback.md) | SVG 动画播放（render/svg） | 按 `trigger` 分流：`load`→纯 CSS `@keyframes`（SSR 零 JS 自播）、交互→WAAPI 描述（runtime 应用）；property→SVG 映射；camera 用 group transform；oklch CSS 预采样；`{animate:false}` 降级；`RenderOptions.easings` 自定义 | Accepted |
 | [03](./03-canvas-playback.md) | Canvas 动画播放（render/canvas） | `drawScene(…,{time})` 逐帧 + 共享 `evaluateTrack` 插值引擎（含 pathDraw 部分路径、oklch 真 lerp）；**自定义 property 的 JS 插值器注册表**（`RenderOptions.animationProperties`，兑现 ADR-01 口） | Accepted |
-| [04](./04-runtime-control.md) | runtime 播放控制（vanilla / react） | rAF 时钟（共享时钟）+ `trigger` 落地（IntersectionObserver / API / 事件桥水合）；`{animate:false}` + `prefers-reduced-motion`；静态截帧 `{at:t}`（复用 `evaluateTrack`） | Accepted（react canvas rAF 已补；SVG `{at:t}` / 命令式动画句柄留后续，见 ADR + 下「后续待办」） |
+| [04](./04-runtime-control.md) | runtime 播放控制（vanilla / react） | rAF 时钟（共享时钟）+ `trigger` 落地（IntersectionObserver / API / 事件桥水合）；`{animate:false}` + `prefers-reduced-motion`；静态截帧 `{at:t}`（复用 `evaluateTrack`） | Accepted（react canvas rAF / SVG `{at:t}` / 命令式动画句柄 `<Layout animationRef>` 均已补） |
 
 | [05](./05-animation-presets.md) | 具名动画 sugar（core preset + react/vanilla re-export） | 11 个 preset 工厂（`fadeIn` / `drawOn` / `scaleIn` / `grow` / `growUp` / `slideIn` / `colorShift` / `cameraTo` / `pulse` / `spin` / `loop`）+ `stagger` helper，产 `AnimationTrack`、按配方表实装；`<Layout animations>` prop（cameraTo 镜头）；Sugar=Kernel 等价测试 | Accepted |
-| [06](./06-hydration-context.md) | 水合 handler runtime 上下文（render/vanilla/react） | handler 升 `(event, ctx)`：ctx 带 id / meta(provenance) / 几何 / DOM element / scenePoint / 动画控制 / scene（LangChain config 式单 runtime，只增不破）；回调读 meta + 命令式触发动画；renderer 无关（canvas element=null、动画 per-id 降级） | Accepted（canvas per-id 动画留后续，见 ADR） |
+| [06](./06-hydration-context.md) | 水合 handler runtime 上下文（render/vanilla/react） | handler 升 `(event, ctx)`：ctx 带 id / meta(provenance) / 几何 / DOM element / scenePoint / 动画控制 / scene（LangChain config 式单 runtime，只增不破）；回调读 meta + 命令式触发动画；renderer 无关（canvas element=null；动画 per-id 双后端均已补：svg getAnimations、canvas 虚拟时钟登记表） | Accepted |
 
 > along-path / clip / morph 各自后续 ADR，本里程碑随阶段补。
 
-## 后续待办（核心交付已闭环，以下为各 ADR 标注的尾巴 + 后续 ADR）
+## 后续待办（核心交付已闭环；里程碑尾巴 + 预设已补，余为后续 ADR / 不进 core）
 
-> 状态记于 2026-06-07：ADR-01～06 全 Accepted 且已实装（IR → SVG/Canvas/runtime 播放 → presets → 水合 context → 文档），核心闭环。以下均为**显式留后续**，非缺口。
+> 状态记于 2026-06-07：ADR-01～06 全 Accepted 且已实装（IR → SVG/Canvas/runtime 播放 → presets → 水合 context → 文档），核心闭环。各 ADR 标注的「里程碑尾巴」与强调预设**已全部补齐**；下表只剩需另起 ADR / 明确不进 core 的项。
+
+**已补（原尾巴，2026-06-07）**：SVG `{at:t}` 静态截帧（`<Layout at>` / `renderToSvgString({at})` / canvas 单帧）· canvas per-id 动画控制（虚拟时钟登记表 `IdClockRegistry` + `resolvePrimAnimation`）· react 命令式动画句柄（`<Layout animationRef>`）· 强调预设 `flash` / `blink` / `wiggle`。
 
 | 项 | 类型 | 出处 | 说明 |
 |---|---|---|---|
-| SVG `{at:t}` 静态截帧 | 里程碑尾巴 | ADR-04 | `evaluateTrack` 引擎已就绪（canvas 在用），`buildSvgDocument` 接 `{at}` 入参渲染「定格某帧」的静态 SVG（SSR / 截图 / 缩略图）；性价比最高的尾巴 |
-| canvas per-id 动画控制 | 里程碑尾巴 | ADR-06 | 单 rAF 共享时钟拆 per-track 子时钟；`ctx.animation` 在 canvas 现为 scene 级 coarse（`play`/`pause`/`restart` 作用整图），svg 已 per-id |
-| react 命令式动画句柄 | 里程碑尾巴 | ADR-04 | `useImperativeHandle` 暴露 `play`/`pause`/`seek` 给组件外（vanilla 已有 `view.animation`、双后端已有 handler 内 `ctx.animation`） |
-| `flash` / `blink`、`wiggle` | 预设 sugar | 动画清单 | 纯 preset 工厂（repeat / 抖动），零新核心，按 ADR-05 配方表即可加 |
 | `wipeIn` / reveal | 后续 ADR | 动画清单 | clip 关键帧动画（需 clip 通道动画化） |
 | `moveAlong` / along-path | 后续 ADR | 动画清单 | 沿路径运动，需路径采样几何 |
 | `morph`（数据过渡 / 形变） | 不进 core | 动画清单 | Tier 2 / runtime（`pathMorph` 重采样在 plot 包） |

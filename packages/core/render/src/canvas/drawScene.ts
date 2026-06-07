@@ -636,13 +636,19 @@ const drawPrim = (
   resources: ResourceMap,
 ): void => {
   ctx.save();
-  // 动画：给定 time 时把该 prim 的 tracks 应用到 ctx（transform / dash）并取覆盖后的 prim（opacity / 色 / 线宽）
-  if (options.time !== undefined && p.animations !== undefined && p.animations.length > 0) {
-    p = applyPrimAnimations(ctx, p, options.time, {
-      easings: options.easings,
-      animationProperties: options.animationProperties,
-      warn: message => warnUnsupported(options, 'animation', message),
-    });
+  // 动画：把该 prim 的 tracks 在「有效时刻」应用到 ctx（transform / dash）并取覆盖后的 prim（opacity / 色 / 线宽）。
+  // per-id 虚拟时钟经 resolvePrimAnimation 折算各 id 的有效时刻 / 模式（skip=渲染 base）；缺省退回全局 time + 仅自动播。
+  if (p.animations !== undefined && p.animations.length > 0) {
+    const resolution = options.resolvePrimAnimation?.(p.id);
+    const primTime = resolution?.mode === 'at' ? resolution.time : options.time;
+    if (resolution?.mode !== 'skip' && primTime !== undefined) {
+      p = applyPrimAnimations(ctx, p, primTime, {
+        easings: options.easings,
+        animationProperties: options.animationProperties,
+        warn: message => warnUnsupported(options, 'animation', message),
+        includeNonAutoplay: resolution?.mode === 'at' ? resolution.includeNonAutoplay : false,
+      });
+    }
   }
   switch (p.type) {
     case 'rect':
