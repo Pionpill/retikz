@@ -1,6 +1,6 @@
 # ADR-01：时间轴动画 IR 契约——`AnimationTrack` 声明式进 IR，沿 meta/id-stamp 通路透传进 Scene，renderer 播放、可降级
 
-- 状态：Proposed
+- 状态：Accepted
 - 决策日期：2026-06-07
 - 关联：[v0.3-alpha.5 roadmap](./roadmap.md) · **范式先例**：[v0.3-alpha.4 ADR-08 meta](../v0.3-alpha.4/08-meta-provenance.md)（「IR 元素携带可选数组 → compile 沿 id-stamp 同款落点透传进 `ScenePrimitive`」完全同构）· [v0.3-alpha.3 水合](../v0.3-alpha.3/01-hydration.md)（runtime rAF / 事件基建，播放控制复用）· 参照：[core-design.md §4.4 JSON 可序列化 / §7 AI 友好](../../../../architecture/core-design.md)
 

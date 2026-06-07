@@ -51,7 +51,7 @@
 
 | ADR | 主题 | 内容 | 状态 |
 |---|---|---|---|
-| [01](./01-timeline-animation-ir.md) | 时间轴动画 IR 契约（core） | `AnimationTrack` schema（keyframes 归一化时间 + duration/delay/easing/repeat/direction/fill/trigger）；renderer 无关 `AnimationProperty` 枚举；元素 + scene 根 `animations?`；静止-终态不变量 + 降级契约（能力声明 + warn + settled）；编译期透传进 Scene（沿 meta/id-stamp 通路）；`stagger` group 糖 | Proposed |
+| [01](./01-timeline-animation-ir.md) | 时间轴动画 IR 契约（core） | `AnimationTrack` schema（keyframes 归一化时间 + duration/delay/easing/repeat/direction/fill/trigger）；renderer 无关 `AnimationProperty` 枚举；元素 + scene 根 `animations?`；静止-终态不变量 + 降级契约（能力声明 + warn + settled）；编译期透传进 Scene（沿 meta/id-stamp 通路）；`stagger` group 糖 | Accepted |
 
 > renderer 播放、sugar 动词、along-path / clip / morph 各自后续 ADR（render 包侧 / react 侧 / 几何侧），本里程碑随阶段补。
 
