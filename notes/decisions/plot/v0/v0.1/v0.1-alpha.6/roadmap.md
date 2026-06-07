@@ -60,6 +60,7 @@
 | [06](./06-declarative-format.md) | 声明式 `FieldDef.format` 解析词表（可序列化，`resolveField` 退为逃生舱） | red | ADR-02/04 | Proposed（已实现） |
 | [07](./07-category-order.md) | `FieldDef.order` 分类顺序 + 有序性参数（不复活 ordinal 类型） | red | ADR-01/03 | Proposed（已实现） |
 | [08](./08-data-robustness.md) | 数据健壮性（恒归一化消两模式割裂 + `invalid` 策略 + bigint ingest） | red | ADR-02/04 | Proposed（已实现） |
+| [09](./09-iso-recognizer.md) | 扩宽 temporal 推断识别器（认空格分隔带时区 ISO / SQL 时间戳，仍拒歧义；不引全局推断配置） | 黄 | ADR-01 | Proposed（已实现） |
 
 > **两轮**：第一轮 ADR-01~03（数据模型 + 可移植契约 + type-driven scale，已实现）；第二轮 ADR-04~08（数据层精化：解析逃生舱 + type 可选 + 声明式 format + 分类顺序 + 健壮性）。
 > ⚠️ **字段类型已简化**（commit `30f2cce1`）：`continuous / categorical / temporal` 三类——删 `proportion`、合并 `nominal/ordinal → categorical`。下方第一轮决策里的 `proportion` / `nominal` / `ordinal` 表述**以此为准已被取代**（ADR-05 改 type 可选、ADR-07 用 `order` 参数补回有序性）；本段待整段重写，当前以各 ADR 定稿 + 该简化为准。
