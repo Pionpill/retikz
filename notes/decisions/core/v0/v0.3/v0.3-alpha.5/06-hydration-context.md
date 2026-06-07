@@ -1,6 +1,6 @@
 # ADR-06：水合 handler runtime 上下文——`(event, ctx)` 富上下文（meta / 几何 / DOM / 动画控制），renderer 无关
 
-- 状态：Proposed
+- 状态：Accepted
 - 决策日期：2026-06-07
 - 关联：[v0.3-alpha.5 roadmap](./roadmap.md) · **前置 / 复用**：[v0.3-alpha.3 水合](../v0.3-alpha.3/01-hydration.md)（handler 注册表 + 根级委托 + locate（svg closest / canvas hitTest），本 ADR 升级其 handler 签名与上下文）· [v0.3-alpha.4 ADR-08 meta](../v0.3-alpha.4/08-meta-provenance.md)（provenance 透传——本 ADR 是它的主要消费方）· [ADR-01 动画 IR](./01-timeline-animation-ir.md) / [ADR-04 runtime 播放](./04-runtime-control.md)（动画控制从 handler 触发的目标）
 
