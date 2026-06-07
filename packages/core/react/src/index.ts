@@ -9,8 +9,15 @@
 
 export { Layout, Node, Path, Step, Text, Coordinate, Scope, RendererModeProvider, useRendererMode, collectHydrationHandlers } from './kernel';
 export type { RendererMode, HydrationEventProps } from './kernel';
-// 透传 render 层水合 runtime 类型，方便 react 用户单包 import（事件名 / 注册表类型）
-export type { RetikzEventName, HydrationHandlers } from '@retikz/render/hydration';
+// 透传 render 层水合 runtime 类型，方便 react 用户单包 import（事件名 / 注册表 / handler context 类型）
+export type {
+  RetikzEventName,
+  HydrationHandlers,
+  HydrationHandler,
+  HydrationContext,
+  HydrationAnimationControls,
+  HydrationGeometry,
+} from '@retikz/render/hydration';
 export type {
   LayoutProps,
   NodeProps,
@@ -93,6 +100,48 @@ export type {
   PathGeneratorContext,
   IRJsonObject,
 } from '@retikz/core';
+
+// 具名动画 preset（产 AnimationTrack 的纯工厂，re-export 自 core；配 <Node/Layout animations>）
+export {
+  fadeIn,
+  drawOn,
+  scaleIn,
+  grow,
+  growUp,
+  slideIn,
+  colorShift,
+  cameraTo,
+  pulse,
+  spin,
+  loop,
+  flash,
+  blink,
+  wiggle,
+  stagger,
+} from '@retikz/core';
+export type {
+  AnimationPresetOptions,
+  ScaleInOptions,
+  GrowUpOptions,
+  SlideInOptions,
+  ColorShiftOptions,
+  CameraToOptions,
+  PulseOptions,
+  SpinOptions,
+  LoopOptions,
+  FlashOptions,
+  BlinkOptions,
+  WiggleOptions,
+} from '@retikz/core';
+// 动画扩展类型（构造 <Layout easings / animationProperties> 用，re-export 自 render）
+export type {
+  AnimationPropertyDefinition,
+  AnimationPropertyRegistry,
+  AnimationControls,
+  CubicBezier,
+  EasingFn,
+  EasingRegistry,
+} from '@retikz/render/animation';
 
 // React 节点 ↔ IR 桥接：buildIR 内部名保留，对外以 convertReactNodeToIR 暴露（命名 pattern 给后续多框架 adapter 留位）
 export { buildIR as convertReactNodeToIR } from './kernel/builder';

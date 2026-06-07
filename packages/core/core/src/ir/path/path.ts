@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { AnimationTrackSchema } from '../animation';
 import { JsonObjectSchema } from '../json';
 import { PaintSpecSchema } from '../paint';
 import { ArrowDetailSchema, ArrowEndDetailSchema } from './arrow';
@@ -66,6 +67,12 @@ export const PathSchema = z
     meta: JsonObjectSchema.optional().describe(
       'Opaque provenance metadata carried by this element (e.g. a Tier 2 lowering tagging which datum / series / layer it came from). Provenance passthrough: preserved verbatim into the Scene primitive(s) this element emits, ignored by renderers, and never interpreted by the compiler — it does not affect layout, connection, style, or bounding box. Must be a JSON object (fully serializable). Not inherited across scopes; not part of the every-X style defaults.',
     ),
+    animations: z
+      .array(AnimationTrackSchema)
+      .optional()
+      .describe(
+        'Declarative timeline animation tracks for this path (drawOn / fadeIn / …). Each track animates one renderer-agnostic property over normalized time; the base value is the settled (animation-end) state. Carried verbatim into the emitted Scene primitive; renderers play them or render the static settled state with a diagnosable warning when unable. Does not affect layout / bounding box. Not inherited across scopes; not part of the every-X style defaults.',
+      ),
     color: z
       .string()
       .optional()

@@ -8,6 +8,7 @@ import type { SvgNode, SvgStyle } from '@retikz/render/svg';
  *   属性 kebab→camelCase 的消费者（字符串 / Vanilla / Vue / Svelte 逐字用 SVG 真名）。
  */
 const ATTR_KEBAB_TO_CAMEL: Record<string, string> = {
+  class: 'className',
   'fill-opacity': 'fillOpacity',
   'fill-rule': 'fillRule',
   'stroke-opacity': 'strokeOpacity',

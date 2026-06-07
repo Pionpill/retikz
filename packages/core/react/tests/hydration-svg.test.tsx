@@ -2,7 +2,7 @@
 import { createRoot } from 'react-dom/client';
 import { act } from 'react-dom/test-utils';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { Layout, Node } from '../src';
+import { type HydrationContext, Layout, Node } from '../src';
 
 /**
  * ADR-01 水合：SVG 模式事件绑定（端到端）
@@ -42,6 +42,36 @@ describe('SVG 水合', () => {
     });
 
     expect(onClick).toHaveBeenCalledTimes(1);
+
+    root.unmount();
+    container.remove();
+  });
+
+  it('onClick 收到 (event, context)：context 带 id / meta / geometry / renderer / element', async () => {
+    let context: HydrationContext | undefined;
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const root = createRoot(container);
+
+    await act(() => {
+      root.render(
+        <Layout renderer="svg" width={200} height={200}>
+          <Node id="a" position={[0, 0]} fill="red" minimumSize={2} meta={{ series: 'sales', i: 3 }} onClick={(_event, received) => { context = received; }} />
+        </Layout>,
+      );
+    });
+
+    const target = container.querySelector('[data-retikz-id="a"]');
+    await act(() => {
+      target!.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    });
+
+    expect(context?.id).toBe('a');
+    expect(context?.renderer).toBe('svg');
+    expect(context?.meta).toEqual({ series: 'sales', i: 3 });
+    expect(context?.element).not.toBeNull();
+    expect(context?.geometry?.bbox.width).toBeGreaterThan(0);
+    expect(typeof context?.animation.restart).toBe('function');
 
     root.unmount();
     container.remove();

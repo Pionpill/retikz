@@ -1,8 +1,10 @@
 import {
   type CSSProperties,
   type FC,
+  type MutableRefObject,
   type ReactElement,
   type ReactNode,
+  type Ref,
   cloneElement,
   useCallback,
   useEffect,
@@ -14,6 +16,7 @@ import {
   type ArrowDefinition,
   type CompositeDefinition,
   type IR,
+  type IRAnimationTrack,
   type IRViewBox,
   type PathGeneratorDefinition,
   type PatternDefinition,
@@ -22,8 +25,17 @@ import {
   compileToScene,
 } from '@retikz/core';
 import type { HydrationHandlers } from '@retikz/render/hydration';
-import { createHydrationController, locateSvg } from '@retikz/render/hydration';
+import {
+  createContextBuilder,
+  createHydrationController,
+  createSvgAnimationControls,
+  locateSvg,
+  resolvePointViaLayout,
+  resolveSvgElement,
+} from '@retikz/render/hydration';
 import { buildSvgDocument } from '@retikz/render/svg';
+import { bindWaapiDescriptors, sceneHasAnimations } from '@retikz/render/animation';
+import type { AnimationControls, AnimationPropertyRegistry, EasingRegistry } from '@retikz/render/animation';
 import { buildIR, pickScopeStyle, wrapRootScope } from './builder';
 import { collectHydrationHandlers } from './collectHydrationHandlers';
 import { useRendererMode } from './rendererContext';
@@ -47,6 +59,12 @@ const withDefaultFontFamily = (
       ...font,
       family: typeof font.family === 'string' && font.family.trim().length > 0 ? font.family : defaultFontFamily,
     });
+};
+
+/** 写入 ref（兼容 callback ref 与 RefObject）；value 为 null 表示清空 */
+const assignRef = <T,>(ref: Ref<T> | undefined, value: T): void => {
+  if (typeof ref === 'function') ref(value);
+  else if (ref) (ref as MutableRefObject<T>).current = value;
 };
 
 /**
@@ -83,6 +101,41 @@ export type LayoutProps = ScopeStyleProps & {
   style?: CSSProperties;
   /** 渲染目标；缺省为 SVG，设为 canvas 时用同一份 Scene 绘制到 `<canvas>` */
   renderer?: 'svg' | 'canvas';
+  /**
+   * 是否播放动画（缺省 true）；`false` → 渲染 base 静态图（不 emit CSS/WAAPI）
+   * @description SVG 模式：`load` track 经内联 `<style>` CSS 自播、交互 track 经 WAAPI 桥按 trigger 驱动；
+   *   `animate={false}` 走 settled 静态（ADR-01「三事一路」）。
+   */
+  animate?: boolean;
+  /**
+   * 静态截帧时刻（毫秒）；给定时渲染「定格在该时刻」的静态图（不播放、不 emit 动画）
+   * @description SVG：各 track 在该时刻的值烘焙成静态属性 / transform；Canvas：按该时刻画一帧、不起 rAF。覆盖 `animate`。
+   */
+  snapshotAt?: number;
+  /**
+   * 命令式动画句柄出口：传一个 ref，挂载后写入 `AnimationControls`（`play` / `pause` / `seek`）
+   * @description 与 vanilla `view.animation` 对等——SVG 控制交互（`manual` / `visible` / `{onEvent}`）track 的 WAAPI
+   *   句柄；Canvas 控制 rAF 时钟。无动画 / 降级时为 `null`。供组件外命令式控制（按钮播放 / 暂停 / 跳帧）。
+   */
+  animationRef?: Ref<AnimationControls | null>;
+  /**
+   * scene 根（镜头）时间轴动画 tracks（`viewBox` property）；注入构造出的 IR 根 `animations`
+   * @description 配 `cameraTo()` preset：`<Layout animations={[cameraTo({ from, to })]}>`。元素级动画走各元素
+   *   的 `animations` prop（非此 prop）。与直接传 `ir` prop 并用时，本 prop 追加到该 IR 根。
+   */
+  animations?: Array<IRAnimationTrack>;
+  /**
+   * 自定义缓动注册表（兑现动画扩展口）：名 → cubic-bezier 四元组 / 缓动函数
+   * @description preset / track 的 `easing` 写注册名（如 `fadeIn({ easing: 'spring' })`）即生效。cubic-bezier
+   *   形式 SVG（CSS）+ Canvas 都支持；函数形式仅 Canvas（SVG 退 linear 并告警）。
+   */
+  easings?: EasingRegistry;
+  /**
+   * 自定义动画属性通道插值器（兑现动画扩展口）：通道名 → { interpolate, applyCanvas }
+   * @description 让 `property` 用内置之外的名字（如 `blur`）。**当前仅 Canvas 生效**（`renderer="canvas"`）；
+   *   SVG 无内置映射 → 告警并跳过该 track（渲染 base）。
+   */
+  animationProperties?: AnimationPropertyRegistry;
   /**
    * SVG `<defs>` 资源 id 前缀，覆盖默认的 `useId()` 派生值
    * @description marker / paint / clip 的 id 与 `url(#...)` 引用共用此前缀确保多实例不撞。缺省回退剥冒号的
@@ -134,8 +187,11 @@ export type LayoutProps = ScopeStyleProps & {
  *   绑到 svg root DOM（由 callback ref 在挂载后写入）；canvas 模式的绑定在 `CanvasHost` 内（hitTest 定位）、
  *   此处不接管。`locateSvg` 走 `event.target.closest('[data-retikz-id]')` 反查图元 id。卸载 / 依赖变化时 dispose、重建。
  */
-const useSvgHydration = (
+const useSvgRootBinding = (
   handlers: HydrationHandlers,
+  scene: ReturnType<typeof compileToScene>,
+  hasAnimations: boolean,
+  publishAnimation: (controls: AnimationControls | null) => void,
 ): ((element: SVGSVGElement | null) => void) => {
   const rootRef = useRef<SVGSVGElement | null>(null);
   const setRoot = useCallback((element: SVGSVGElement | null) => {
@@ -144,9 +200,30 @@ const useSvgHydration = (
   useEffect(() => {
     const root = rootRef.current;
     if (root === null) return undefined;
-    const controller = createHydrationController(root, handlers, locateSvg);
+    // svg 富 context：meta / geometry 经 Scene 按 id 聚合；element 经 closest；point 逆 meet-fit；
+    // 动画控制经 data-retikz-id / data-retikz-animation-owner 双查 getAnimations per-id。scene 变 → effect 重跑、重建。
+    const buildContext = createContextBuilder({
+      renderer: 'svg',
+      root,
+      scene,
+      resolveElement: resolveSvgElement,
+      resolvePoint: resolvePointViaLayout(root, scene.layout),
+      makeAnimation: id => createSvgAnimationControls(root, id),
+    });
+    const controller = createHydrationController(root, handlers, locateSvg, buildContext);
     return () => controller.dispose();
-  }, [handlers]);
+  }, [handlers, scene]);
+  // 交互 track（visible / manual / onEvent）经 WAAPI 桥按 trigger 驱动；load track 已由内联 CSS 自播
+  useEffect(() => {
+    const root = rootRef.current;
+    if (root === null || !hasAnimations) return undefined;
+    const controls = bindWaapiDescriptors(root);
+    publishAnimation(controls); // 命令式句柄出口（manual/visible/onEvent 的 WAAPI 控制）
+    return () => {
+      controls.dispose();
+      publishAnimation(null);
+    };
+  }, [hasAnimations, scene, publishAnimation]);
   return setRoot;
 };
 
@@ -158,7 +235,8 @@ const useSvgHydration = (
  *   `@retikz/render/svg`，react 只做 `SvgNode→ReactElement` 薄映射 + `useId` 绑定。
  */
 export const Layout: FC<LayoutProps> = props => {
-  const { ir: irFromProp, children, width, height, viewBox, className, style, renderer: rendererProp, idPrefix, nodeDistance, shapes, arrows, patterns, pathGenerators, composites, handlers } = props;
+  const { ir: irFromProp, children, width, height, viewBox, className, style, renderer: rendererProp, animate: animateProp, snapshotAt, animationRef, animations: rootAnimations, easings, animationProperties, idPrefix, nodeDistance, shapes, arrows, patterns, pathGenerators, composites, handlers } = props;
+  const animate = animateProp !== false;
   const { color, stroke, fill, strokeWidth, opacity, fillOpacity, drawOpacity, nodeDefault, pathDefault, labelDefault, arrowDefault } = props;
   // 渲染目标：显式 prop > 祖先 RendererModeProvider 注入的 context > 默认 svg（hook 必须无条件调用）
   const contextRenderer = useRendererMode();
@@ -177,8 +255,10 @@ export const Layout: FC<LayoutProps> = props => {
   const ir = useMemo(() => {
     const base = irFromProp ?? buildIR(wrapRootScope(children, { color, stroke, fill, strokeWidth, opacity, fillOpacity, drawOpacity, nodeDefault, pathDefault, labelDefault, arrowDefault }));
     // viewBox prop 注入 IR 根（显式 > IR 内置）；prop 缺省时保留 base 自带的 viewBox
-    return viewBox !== undefined ? { ...base, viewBox } : base;
-  }, [irFromProp, children, viewBox, color, stroke, fill, strokeWidth, opacity, fillOpacity, drawOpacity, nodeDefault, pathDefault, labelDefault, arrowDefault]);
+    const withViewBox = viewBox !== undefined ? { ...base, viewBox } : base;
+    // animations prop 注入 IR 根（镜头，cameraTo）；缺省保留 base 自带
+    return rootAnimations !== undefined ? { ...withViewBox, animations: rootAnimations } : withViewBox;
+  }, [irFromProp, children, viewBox, rootAnimations, color, stroke, fill, strokeWidth, opacity, fillOpacity, drawOpacity, nodeDefault, pathDefault, labelDefault, arrowDefault]);
   const defaultFontFamily = styleFontFamily(style);
   const measureText = useMemo(
     () => withDefaultFontFamily(browserMeasurer, defaultFontFamily),
@@ -193,8 +273,8 @@ export const Layout: FC<LayoutProps> = props => {
   const rawId = useId();
   const resolvedIdPrefix = idPrefix ?? rawId.replace(/[^a-zA-Z0-9]/g, '');
   const doc = useMemo(
-    () => (renderer === 'canvas' ? null : buildSvgDocument(scene, { idPrefix: resolvedIdPrefix })),
-    [renderer, scene, resolvedIdPrefix],
+    () => (renderer === 'canvas' ? null : buildSvgDocument(scene, { idPrefix: resolvedIdPrefix, animate, snapshotAt, easings })),
+    [renderer, scene, resolvedIdPrefix, animate, snapshotAt, easings],
   );
 
   // 水合 handler 注册表：JSX 模式从 children 同源收集，`ir` prop 模式用 `handlers` prop（无 children 可收集）
@@ -203,8 +283,11 @@ export const Layout: FC<LayoutProps> = props => {
     [irFromProp, handlers, children],
   );
 
-  // svg root 的 callback ref——水合控制器（createHydrationController + locateSvg）绑定的 figure root
-  const setSvgRoot = useSvgHydration(resolvedHandlers);
+  // svg root 的 callback ref——水合控制器（createHydrationController + locateSvg）+ 交互动画 WAAPI 桥绑定的 figure root
+  const hasAnimations = renderer !== 'canvas' && animate && sceneHasAnimations(scene);
+  // 命令式动画句柄出口（与 vanilla view.animation 对等）；svg 走 WAAPI 句柄、canvas 走 CanvasHost 的 rAF 时钟
+  const publishAnimation = useCallback((controls: AnimationControls | null) => assignRef(animationRef, controls), [animationRef]);
+  const setRoot = useSvgRootBinding(resolvedHandlers, scene, hasAnimations, publishAnimation);
 
   if (renderer === 'canvas') {
     return (
@@ -215,6 +298,11 @@ export const Layout: FC<LayoutProps> = props => {
         height={height}
         className={className}
         style={style}
+        animate={animate}
+        snapshotAt={snapshotAt}
+        animationRef={animationRef}
+        easings={easings}
+        animationProperties={animationProperties}
       />
     );
   }
@@ -223,5 +311,5 @@ export const Layout: FC<LayoutProps> = props => {
   const svgEl = svgToReact(doc as NonNullable<typeof doc>) as ReactElement;
 
   // svg 元素级附加（width / height / className / 框架 style）由 react 层补：非 svg 包职责
-  return cloneElement(svgEl, { width, height, className, style, ref: setSvgRoot });
+  return cloneElement(svgEl, { width, height, className, style, ref: setRoot });
 };

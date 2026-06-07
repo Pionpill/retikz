@@ -138,8 +138,30 @@ export {
   PATTERN_SHAPES,
   Boundary,
   BoundarySchema,
+  AnimationProperty,
+  AnimationEasing,
+  AnimationDirection,
+  AnimationFill,
+  AnimationTrigger,
+  AnimationTrackSchema,
+  KeyframeSchema,
+  TriggerSchema,
+  EasingSchema,
+  OriginSchema,
 } from './ir';
 export type { BoundaryKeyword, IRBoundary } from './ir';
+export type {
+  BuiltinAnimationProperty,
+  AnimationPropertyRef,
+  AnimationEasingName,
+  AnimationDirectionName,
+  AnimationFillName,
+  AnimationTriggerName,
+  IRAnimationTrack,
+  IRKeyframe,
+  IRAnimationTrigger,
+  IRAnimationOrigin,
+} from './ir';
 
 // Primitive (Scene 数据模型)
 export type {
@@ -206,6 +228,39 @@ export type {
   WayLabelOp,
 } from './parsers';
 export { parseWay, DrawWay, parseTargetSugar, parseNodeTarget } from './parsers';
+
+// Presets（具名动画 sugar：产 AnimationTrack 的纯工厂）
+export {
+  fadeIn,
+  drawOn,
+  scaleIn,
+  grow,
+  growUp,
+  slideIn,
+  colorShift,
+  cameraTo,
+  pulse,
+  spin,
+  loop,
+  flash,
+  blink,
+  wiggle,
+  stagger,
+} from './presets';
+export type {
+  AnimationPresetOptions,
+  ScaleInOptions,
+  GrowUpOptions,
+  SlideInOptions,
+  ColorShiftOptions,
+  CameraToOptions,
+  PulseOptions,
+  SpinOptions,
+  LoopOptions,
+  FlashOptions,
+  BlinkOptions,
+  WiggleOptions,
+} from './presets';
 
 // Geometry
 // RECT_ANCHORS（const 集合，值）与 RectAnchor（派生 type）配对，名字不撞

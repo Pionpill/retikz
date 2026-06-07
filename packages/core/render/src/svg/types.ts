@@ -8,6 +8,10 @@ import type { PropertiesHyphen, SvgPropertiesHyphen } from 'csstype';
 export type SvgStructuralAttrs = {
   /** 元素 id（marker / clipPath / paint server 等被 `url(#id)` 引用） */
   id?: string;
+  /** CSS class（动画播放：load track 的 `@keyframes` 经 class 挂到元素） */
+  class?: string;
+  /** 归一化弧长（pathDraw 动画：`pathLength=1` 让 stroke-dasharray/offset 按 0..1 揭示） */
+  pathLength?: number | string;
   // —— 基本几何 ——
   x?: number | string;
   y?: number | string;
@@ -65,7 +69,8 @@ export type SvgPresentationAttrs = {
   'fill-rule'?: 'nonzero' | 'evenodd';
   'stroke-opacity'?: number | string;
   'stroke-width'?: number | string;
-  'stroke-dasharray'?: string;
+  'stroke-dasharray'?: number | string;
+  'stroke-dashoffset'?: number | string;
   'stroke-linecap'?: 'butt' | 'round' | 'square';
   'stroke-linejoin'?: 'miter' | 'round' | 'bevel';
   'font-size'?: number | string;
@@ -95,6 +100,7 @@ export type SvgStyle = PropertiesHyphen & Partial<SvgPropertiesHyphen>;
 export type SvgTag =
   | 'svg'
   | 'defs'
+  | 'style'
   | 'g'
   | 'rect'
   | 'ellipse'

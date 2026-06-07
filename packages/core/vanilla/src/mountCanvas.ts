@@ -1,6 +1,13 @@
 import type { Scene } from '@retikz/core';
-import { hitTest, renderToCanvas } from '@retikz/render/canvas';
-import { createHydrationController } from '@retikz/render/hydration';
+import { type PrimAnimationResolution, hitTest, renderToCanvas } from '@retikz/render/canvas';
+import {
+  type BuildContext,
+  createCanvasIdAnimationControls,
+  createHydrationController,
+  geometryOf,
+  metaOf,
+} from '@retikz/render/hydration';
+import { type AnimationControls, type IdClockRegistry, createClock, createIdClockRegistry, prefersReducedMotion, sceneAnimationDurationMs, sceneHasAnimations, sceneHasAutoplayTrigger } from '@retikz/render/animation';
 import { isFigure } from './builder/isFigure';
 import { toScene } from './toScene';
 import type { CanvasView, HydrateOptions, MountCanvasOptions, RenderInput, ScenePoint } from './types';
@@ -30,8 +37,31 @@ export const mountCanvas = (
 
   const canvas = document.createElement('canvas');
   const ratio = resolveDevicePixelRatio(options.devicePixelRatio);
+  // 动画总关：{animate:false} 或 prefers-reduced-motion → 不起 rAF、只画 base 静态
+  const animate = options.animate !== false && !prefersReducedMotion();
+  let clock: AnimationControls | undefined;
+  // per-id 虚拟时钟登记表：ctx.animation 的 per-id 控制经它给各 id 叠加独立 offset / pause / active / stop
+  const registry: IdClockRegistry = createIdClockRegistry();
 
   let currentScene: Scene;
+
+  /** 把全局帧时刻折算成单个 prim 的动画解析（per-id）：stop→渲染 base；否则按有效时刻 + 是否含非自动播 track */
+  const resolvePrim = (id: string | undefined, globalTime: number): PrimAnimationResolution =>
+    id !== undefined && registry.isStopped(id)
+      ? { mode: 'skip' }
+      : { mode: 'at', time: registry.timeFor(id, globalTime), includeNonAutoplay: registry.isActive(id) };
+
+  /** 按当前时钟时刻 + per-id 登记表立即重绘一帧（per-id pause / stop 即时反映） */
+  const renderFrame = (): void => {
+    const time = clock?.time ?? 0;
+    renderToCanvas(canvas, currentScene, {
+      devicePixelRatio: ratio,
+      time,
+      easings: options.easings,
+      animationProperties: options.animationProperties,
+      resolvePrimAnimation: id => resolvePrim(id, time),
+    });
+  };
 
   const renderInto = (next: RenderInput): void => {
     if (isFigure(next)) {
@@ -51,7 +81,24 @@ export const mountCanvas = (
     if (options.width !== undefined) canvas.style.width = `${options.width}px`;
     if (options.height !== undefined) canvas.style.height = `${options.height}px`;
     canvas.style.objectFit = 'contain';
+    // base 静态先画一帧；含动画且未降级时起 rAF 时钟逐帧重绘（共享时钟，per-track delay 在 evaluateTrack 内偏移）
     renderToCanvas(canvas, scene, { devicePixelRatio: ratio });
+    clock?.dispose();
+    clock = undefined;
+    if (animate && sceneHasAnimations(scene)) {
+      clock = createClock({
+        durationMs: sceneAnimationDurationMs(scene),
+        onFrame: time =>
+          renderToCanvas(canvas, currentScene, {
+            devicePixelRatio: ratio,
+            time,
+            easings: options.easings,
+            animationProperties: options.animationProperties,
+            resolvePrimAnimation: id => resolvePrim(id, time),
+          }),
+      });
+      if (sceneHasAutoplayTrigger(scene)) clock.play();
+    }
   };
 
   const initialScene = isFigure(input) ? input.ir : input;
@@ -88,13 +135,37 @@ export const mountCanvas = (
    */
   const hydrate = (hydrateOptions: HydrateOptions): { dispose: () => void } => {
     const context2d = canvas.getContext('2d') ?? undefined;
-    const controller = createHydrationController(canvas, hydrateOptions.handlers, event => {
+    const locate = (event: Event): string | null => {
       const scenePoint = clientToScene((event as MouseEvent).clientX, (event as MouseEvent).clientY);
       // hitTest 把点测点表达在 Scene user units / 各图元局部帧、自管 group transform 栈；live canvas context
       // 经 renderToCanvas 后残留 meet-fit transform，须先归一到 identity 再点测，否则路径被二次缩放偏移。
       context2d?.setTransform(1, 0, 0, 1, 0, 0);
       return hitTest(currentScene, scenePoint, { context2d });
-    });
+    };
+    // canvas 富 context：无逐元素 DOM（element=null），point 经 clientToScene 逆 meet-fit，动画 coarse（scene 级单时钟）。
+    // 读 live currentScene / clock，update 后自动反映新图。
+    const buildContext: BuildContext = (event, id) => {
+      const mouse = event as MouseEvent;
+      return {
+        id,
+        meta: metaOf(currentScene, id),
+        renderer: 'canvas',
+        element: null,
+        root: canvas,
+        point: typeof mouse.clientX === 'number' ? clientToScene(mouse.clientX, mouse.clientY) : null,
+        geometry: geometryOf(currentScene, id),
+        // per-id 控制（缺省作用于命中元素）：读 live clock / registry，play/restart/seek 后确保时钟在跑并重绘
+        animation: createCanvasIdAnimationControls({
+          registry,
+          clockTime: () => clock?.time ?? 0,
+          ensurePlaying: () => clock?.play(),
+          renderFrame,
+          defaultId: id,
+        }),
+        scene: currentScene,
+      };
+    };
+    const controller = createHydrationController(canvas, hydrateOptions.handlers, locate, buildContext);
     return { dispose: controller.dispose };
   };
 
@@ -107,9 +178,13 @@ export const mountCanvas = (
     dispose() {
       if (disposed) return;
       disposed = true;
+      clock?.dispose();
       canvas.remove();
     },
     hydrate,
     clientToScene,
+    get animation() {
+      return clock;
+    },
   };
 };

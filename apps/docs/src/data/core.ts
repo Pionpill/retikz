@@ -14,6 +14,7 @@ export const coreSection: Array<Section> = [
       { id: 'positioning', label: 'core.positioning' },
       { id: 'anchors', label: 'core.anchors' },
       { id: 'layers', label: 'core.layers' },
+      { id: 'animation', label: 'core.animation' },
     ],
   },
   {
@@ -89,6 +90,7 @@ export const coreSection: Array<Section> = [
           { id: 'custom-arrow', label: 'core.refCustomArrow' },
           { id: 'custom-pattern', label: 'core.refCustomPattern' },
           { id: 'path-generator', label: 'core.refPathGenerator' },
+          { id: 'custom-animation', label: 'core.refCustomAnimation' },
         ],
       },
       {

@@ -1,6 +1,6 @@
 {
   "name": "@retikz/render",
-  "version": "0.3.0-alpha.4",
+  "version": "0.3.0-alpha.6",
   "description": "retikz renderers: Scene → SVG (descriptor / string) and Canvas 2D. Subpath exports per backend (./svg, ./canvas).",
   "type": "module",
   "author": "Pionpill",
@@ -35,6 +35,10 @@
     "./hydration": {
       "types": "./src/hydration/index.ts",
       "default": "./src/hydration/index.ts"
+    },
+    "./animation": {
+      "types": "./src/animation/index.ts",
+      "default": "./src/animation/index.ts"
     }
   },
   "publishConfig": {
@@ -56,6 +60,12 @@
         "import": "./dist/es/hydration/index.js",
         "require": "./dist/lib/hydration/index.cjs",
         "default": "./dist/es/hydration/index.js"
+      },
+      "./animation": {
+        "types": "./dist/lib/animation/index.d.ts",
+        "import": "./dist/es/animation/index.js",
+        "require": "./dist/lib/animation/index.cjs",
+        "default": "./dist/es/animation/index.js"
       }
     }
   },

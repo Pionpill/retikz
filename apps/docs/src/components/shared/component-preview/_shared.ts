@@ -20,6 +20,45 @@ export const availableSourceViews = (source: ComponentRenderSource): Array<Sourc
 /** demo 渲染目标：SVG DOM 或 Canvas 2D */
 export type RendererMode = 'svg' | 'canvas';
 
+/**
+ * 预览卡的动作 / 浮层共享上下文：工具从中按需取能力
+ * @description 设计成「只增不破」——未来加字段（如 subscribeFrame / metrics 供性能监视器）不影响已有 action / overlay。
+ */
+export type PreviewActionContext = {
+  /** 重挂渲染子树（重播：CSS @keyframes / Canvas rAF / WAAPI 全部从头） */
+  replay: () => void;
+  /** 当前渲染目标 */
+  rendererMode: RendererMode;
+  /** 渲染区 DOM（拿 svg / canvas、`getAnimations({subtree})` 等） */
+  renderPane: HTMLElement | null;
+  /** 读 per-card 工具开关态（toggle 类工具，如播放/暂停、性能监视器） */
+  active: (id: string) => boolean;
+  /** 写 / 翻转 per-card 工具开关态（`on` 省略 = 翻转） */
+  setActive: (id: string, on?: boolean) => void;
+};
+
+/** 渲染区左上角的工具按钮（重播 / 播放暂停 / 停止 / 未来性能监视器开关 …） */
+export type PreviewAction = {
+  /** 稳定 id（兼作 toolState key） */
+  id: string;
+  /** 图标元素 */
+  icon: ReactNode;
+  /** aria-label + title */
+  label: string;
+  /** 受控按下态（toggle 类工具高亮）；one-shot 工具省略 */
+  active?: boolean;
+  /** 点击：从 ctx 取能力执行 */
+  onClick: (ctx: PreviewActionContext) => void;
+};
+
+/** 渲染区内的常驻浮层（角标 / 面板，如 FPS 监视器）；与 action 分离，按需渲染自身 UI */
+export type PreviewOverlay = {
+  /** 稳定 id */
+  id: string;
+  /** 渲染浮层节点（自管定位 / 显隐，可读 ctx 的开关态） */
+  render: (ctx: PreviewActionContext) => ReactNode;
+};
+
 export const alignClass = {
   center: 'items-center',
   start: 'items-start',

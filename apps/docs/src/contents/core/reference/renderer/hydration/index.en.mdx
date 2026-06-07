@@ -13,7 +13,7 @@ The two-step split exists because an event handler is a function and cannot be s
 
 ## React: event props on components
 
-Add `on<Event>` props to `<Node>` / `<Path>` / `<Scope>` — as long as the element has an `id`. The handler signature is uniformly `(event) => void`, receiving a native DOM `Event`.
+Add `on<Event>` props to `<Node>` / `<Path>` / `<Scope>` — as long as the element has an `id`. The handler signature is `(event, context) => void`: the first arg is the native DOM `Event`, the second `context` is a renderer-agnostic runtime context (see [below](#the-handler-context)). The old `event => …` form that only uses `event` keeps working.
 
 <ComponentPreview name="hydration-click" size="md" interactive />
 
@@ -90,6 +90,58 @@ const handle = view.hydrate({
 
 `handlers` is a `{ [id]: { eventName: handler } }` table; event names are `click` / `doubleClick` / `rightClick` / `pointerDown` / `pointerUp` / `pointerMove` / `pointerEnter` / `pointerLeave` / `wheel` (a one-to-one match with React's `on<Event>`, with the `on` prefix dropped and the first letter lowercased).
 
+After SSR, bind via the standalone `hydrate(root, options)` entry (the container already holds the SSR-injected `<svg>` string). To give context its meta / geometry / animation controls, pass `scene` (or `toScene(ir)`) in too; otherwise you get only the minimal context (below):
+
+```ts
+import { hydrate, mountSvg } from '@retikz/vanilla';
+
+// the view from mountSvg / mountCanvas carries view.hydrate; context uses this view's Scene automatically
+mountSvg(container, ir).hydrate({ handlers: { box: { click: (event, context) => context.animation.restart() } } });
+
+// standalone hydration after SSR: pass scene for a rich context (meta / geometry / animation)
+hydrate(root, { handlers, scene });
+```
+
+## The handler context
+
+The handler's second arg `context` fills in "the semantic element that was hit" as a renderer-agnostic object — the same shape whether SVG or Canvas. It represents the **semantic element aggregated by `id`** (the several primitives of one multi-shape Node share an id and count as "one element"), not a single underlying primitive.
+
+| Field | Meaning |
+| --- | --- |
+| `id` | The hit semantic element's id |
+| `meta` | The element's provenance (from `<Node meta={…}>` — datum / series / layer); `undefined` if none |
+| `renderer` | `'svg'` \| `'canvas'` |
+| `element` | The hit DOM element: SVG = the `data-retikz-id` primitive clicked; Canvas = `null` (no per-element DOM) |
+| `root` | The figure root (`<svg>` or `<canvas>`) |
+| `point` | The pointer position in scene user units (inverse meet-fit); `null` for non-pointer events |
+| `geometry` | Union bounding box `bbox` + `center` of all primitives sharing this id (scene user units); `undefined` without a scene |
+| `animation` | Animation controls: `play` / `pause` / `restart` / `stop` / `seek` (default target is the hit element; pass an id to control another) |
+| `scene` | The current Scene (escape hatch); `undefined` when standalone `hydrate` got no scene |
+
+**Triggering animation from a callback**: give an element a `trigger: 'manual'` animation (no autoplay, waits for a command), then call `context.animation.restart()` inside the handler to replay it on click:
+
+<ComponentPreview name="hydration-context" size="md" interactive />
+
+```tsx
+import { Layout, Node, pulse } from '@retikz/react';
+
+<Layout>
+  <Node
+    id="ball"
+    meta={{ label: 'ball' }}
+    animations={[{ ...pulse({ peak: 1.4 }), trigger: 'manual', iterations: 1 }]}
+    onClick={(event, context) => {
+      console.log(context.meta);     // { label: 'ball' }
+      context.animation.restart();   // replay this node's animation on click
+    }}
+  >
+    click me
+  </Node>
+</Layout>
+```
+
+<ComponentAlert title="context is always passed" description="Incomplete information shows up only as missing fields (meta / geometry / scene may be undefined, animation is a no-op without a scene), never as a missing context. Handlers that only use event can ignore it entirely." />
+
 ## Same behavior in both modes
 
 The same `handlers` table behaves identically under `renderer="svg"` and `renderer="canvas"` — they share one registry and one dispatch path, differing only in how an element is located: SVG looks up the nearest ancestor carrying `data-retikz-id`, Canvas returns an element id from a geometric hit query. Switching renderer requires no handler changes.
@@ -98,5 +150,7 @@ The same `handlers` table behaves identically under `renderer="svg"` and `render
 | --- | --- |
 | `renderer="svg"` | Walk up from the event target to the nearest ancestor with `data-retikz-id` |
 | `renderer="canvas"` | Map the pointer coordinate through a hit query to an element id |
+
+The context `id` / `meta` / `geometry` / `point` agree across both backends; `context.animation` is also **precise per-id control** on both (defaults to the hit element, pass an id to target another): SVG drives that element's WAAPI / CSS animations via `getAnimations()`, Canvas uses a per-id virtual clock (layering an independent offset / pause / active state per id on top of the single shared rAF clock). The only difference: Canvas has no per-element DOM, so `context.element` is always `null` (use `root` + `point`).
 
 <ComponentAlert type="warn" title="The context menu is not suppressed for you" description="onRightClick / rightClick leaves the browser context menu in place by default; to take it over, call event.preventDefault() inside the handler." />

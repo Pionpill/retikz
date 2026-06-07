@@ -11,7 +11,10 @@ type ElementWithChildrenProps = {
 const applyRendererMode = (node: ReactNode, rendererMode: RendererMode): ReactNode => {
   if (!isValidElement<ElementWithChildrenProps>(node)) return node;
   if (node.type === Layout) {
-    return cloneElement(node as ReactElement<Partial<LayoutProps>>, { renderer: rendererMode });
+    const layoutNode = node as ReactElement<Partial<LayoutProps>>;
+    // 尊重 demo 显式写的 renderer（如 canvas-only 自定义属性通道 demo）；未写时才跟随预览工具栏
+    if (layoutNode.props.renderer !== undefined) return layoutNode;
+    return cloneElement(layoutNode, { renderer: rendererMode });
   }
   if (node.props.children === undefined) return node;
   return cloneElement(

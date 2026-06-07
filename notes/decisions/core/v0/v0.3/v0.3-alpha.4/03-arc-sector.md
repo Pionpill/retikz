@@ -1,6 +1,6 @@
 # ADR-03：arc/sector——弧与环楔 shape（内外半径 + 起止角），plot polar 扇形的下沉目标
 
-- 状态：Proposed
+- 状态：Accepted
 - 决策日期：2026-06-06
 - 关联：[v0.3-alpha.4 roadmap](./roadmap.md) · 依赖：[ADR-01 shape 参数化机制](./01-shape-params-generalization.md)（nested params + defineShape + 双护栏 + circumscribe 返回精确 AABB） · 下游：[plot v0.1-alpha.4](../../../../plot/v0/v0.1/roadmap.md)（polar bar→sector）· 文档页：`apps/docs/src/contents/core/components/shapes/arc-sector/`
 
@@ -53,71 +53,11 @@ export const arc = defineShape({
 
 理由：单一 `sectorGeometry` 保证四函数坐标一致（评审 P2-1：避免裁剪 / bbox / 贴边不一致）；position=AABB 中心对齐现有 bbox，plot lowering 与 core 不互猜（plot 给 sector 的 position 就是其 AABB 中心）。
 
-## DSL 表面（react + vanilla）
-
-```tsx
-<Node shape={{ type: 'sector', params: { innerRadius: 20, outerRadius: 60, startAngle: 0, endAngle: 90 } }} />
-<Node shape={{ type: 'arc', params: { radius: 50, startAngle: 30, endAngle: 150 } }} />
-<Path from={{ id: 'wedge', anchor: 'outer-arc-mid' }} to={[120, -20]} />   {/* 扇形可连接 */}
-```
-
-```ts
-node('wedge', { shape: { type: 'sector', params: { innerRadius: 20, outerRadius: 60, startAngle: 0, endAngle: 90 } }, position: [0, 0] });
-node('a', { shape: { type: 'arc', params: { radius: 50, startAngle: 30, endAngle: 150 } } });
-```
-
 ## 不在本 ADR 范围
 
 - ShapeDefinition 接口（[ADR-01](./01-shape-params-generalization.md)）。
 - plot 侧 polar coordinate / bar→sector lowering（plot v0.1-alpha.4）；本 ADR 只给 core shape。
 - 圆心偏移形状的相对定位深度适配——position=AABB 中心 + circumscribe 精确 AABB 已满足现有 bbox / 裁剪 / 连接。
 
----
-
-## 实现契约（必填）🔻
-
-### Level
-`red`（动 `src/shapes/**`，可能 `src/compile/**` 若 emit 需新增 ScenePrimitive；倾向复用 core path 弧能力，不新增 primitive）。
-
-### Schema 改动
-| 文件 | 操作 | 字段名 | 类型 | 默认值 | describe 中文摘要 |
-|---|---|---|---|---|---|
-| `src/shapes/sector.ts` | 新建 paramsSchema | `innerRadius`/`outerRadius`/`startAngle`/`endAngle` | `z.strictObject({...})` 全 finite number | — | 环楔内外半径与起止角（polar 约定） |
-| `src/shapes/arc.ts` | 新建 paramsSchema | `radius`/`startAngle`/`endAngle`/`close` | `z.strictObject({...})`，close `z.boolean().optional()` | `close=false` | 弧半径、起止角、是否闭合 |
-
-### 文件 scope
-- `src/shapes/sector.ts` / `src/shapes/arc.ts`（新建）
-- `src/shapes/_shared.ts`（扩：`sectorGeometry` + 极坐标 anchor helper）
-- `src/shapes/index.ts`（注册）
-- `packages/core/render/**`（若 emit 用现有 path 弧则零改动；如需新 prim 则补 svg/canvas，实现时确认）
-- `apps/docs/src/contents/core/components/shapes/arc-sector/`（文档 + demo 已存在，校对）
-- `tests/geometry/sector.test.ts` / `tests/geometry/arc.test.ts`（新建）
-
-### 测试象限
-
-**Happy path（≥ 3）**：
-- `sector_emit_outline`：emit 产「外弧 + 两径向边 + 内弧」闭合 path（innerRadius>0）
-- `sector_anchors_correct`：`outer-arc-mid` / `inner-arc-mid` / `apex`（圆心）/ `centroid` 坐标符几何
-- `sector_pie_slice`：`innerRadius=0` → 扇片（径向边交于圆心、无内弧）
-- `arc_open_stroke`：arc `close:false` → 开放描边弧；`close:true` → 闭合弓形
-
-**边界（≥ 2）**：
-- `sector_aabb_includes_axis_extrema`：弧跨 90°（如 start=45,end=135）→ circumscribe AABB 含 +y 方向 `outerRadius` 极值点（不止四角）
-- `sector_near_full_circle`：end−start 接近 360° → AABB 近 `2·outerRadius` 方框
-- `sector_end_before_start`：`endAngle<startAngle` → 按约定（取模 / 反向）产合法环楔
-
-**错误路径（≥ 2）**：
-- `sector_outer_le_inner_rejected`：`outerRadius ≤ innerRadius` → paramsSchema reject
-- `sector_non_finite_angle_rejected`：`startAngle: Infinity` → reject
-- `sector_missing_field_rejected`：缺 `outerRadius` → strictObject reject
-
-**交互（≥ 2）**：
-- `sector_with_rotate`：Node `rotate` × sector → AABB / anchor 经 rotate 正确（rotate 施于 AABB 中心）
-- `sector_path_connect_outer_arc`：`<Path from={{id:'w', anchor:'outer-arc-mid'}}>` → 命中外弧中点
-- `sector_position_is_aabb_center`：sector 的 viewBox / scope.id bbox 与其 `layout.rect` 四角一致（position=AABB 中心，验证 `compile.ts:487` 路径不裁弧）
-
-### 依赖的现有元素
-- [ADR-01](./01-shape-params-generalization.md) `defineShape` / nested params / 双护栏 / circumscribe 精确 AABB 契约—— **依赖**。
-- core path 弧能力（`src/ir/path/**`，现有 arc 段）—— **复用**：emit 弧段。
-- 现有 polar 约定（`src/ir/position/polar-position.ts`，0°=+x / 90°=+y screen-down）—— **复用**：角度语义一致。
-- bbox 累积（`src/compile/compile.ts:487-493`）—— **依赖**：position=AABB 中心 + circumscribe 精确 AABB 的约束来源。
+> 实现指针：最终 schema / 类型 / 行为以代码为准；完整施工契约（Level / Schema 改动 / 文件 scope / 测试象限 / 依赖现有元素）+ DSL 示例 + 影响清单见本文件封板前全文。
+> 🔖 本文件压缩前完整施工蓝图 = `git show 62562f1d:notes/decisions/core/v0/v0.3/v0.3-alpha.4/03-arc-sector.md`（封板全文）。

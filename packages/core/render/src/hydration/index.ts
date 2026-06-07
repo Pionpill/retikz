@@ -6,9 +6,30 @@ export {
 export type {
   RetikzEventName,
   ElementHandlers,
+  HydrationHandler,
   HydrationHandlers,
   Locate,
 } from './events';
 export type { HydrationController } from './controller';
 export { createHydrationController } from './controller';
 export { locateSvg } from './locateSvg';
+export type {
+  HydrationContext,
+  HydrationAnimationControls,
+  HydrationGeometry,
+  BuildContext,
+  ContextSources,
+  CanvasIdControlsDeps,
+} from './context';
+export {
+  createContextBuilder,
+  createSvgAnimationControls,
+  createClockAnimationControls,
+  createCanvasIdAnimationControls,
+  noopAnimationControls,
+  resolvePointViaLayout,
+  resolveSvgPointViaCtm,
+  resolveSvgElement,
+  metaOf,
+  geometryOf,
+} from './context';

@@ -1,8 +1,15 @@
-import { type CSSProperties, type FC, useEffect, useReducer, useRef } from 'react';
+import { type CSSProperties, type FC, type MutableRefObject, type Ref, useEffect, useReducer, useRef } from 'react';
 import type { Scene } from '@retikz/core';
-import { hitTest, renderToCanvas } from '@retikz/render/canvas';
-import type { HydrationHandlers } from '@retikz/render/hydration';
-import { createHydrationController } from '@retikz/render/hydration';
+import { type PrimAnimationResolution, hitTest, renderToCanvas } from '@retikz/render/canvas';
+import type { AnimationPropertyRegistry, EasingRegistry } from '@retikz/render/canvas';
+import type { BuildContext, HydrationHandlers } from '@retikz/render/hydration';
+import {
+  createCanvasIdAnimationControls,
+  createHydrationController,
+  geometryOf,
+  metaOf,
+} from '@retikz/render/hydration';
+import { type AnimationControls, type IdClockRegistry, createClock, createIdClockRegistry, prefersReducedMotion, sceneAnimationDurationMs, sceneHasAnimations, sceneHasAutoplayTrigger } from '@retikz/render/animation';
 
 /** 按 href 缓存的图片加载态（image paint server 用；跨 CanvasHost 实例共享去重） */
 type ImageEntry = { img: HTMLImageElement; loaded: boolean; failed: boolean; waiters: Set<() => void> };
@@ -55,6 +62,22 @@ export type CanvasHostProps = {
   className?: string;
   /** 透传样式 */
   style?: CSSProperties;
+  /** 是否播放动画（缺省 true）；false 或 prefers-reduced-motion → 只画 base 静态、不起 rAF */
+  animate?: boolean;
+  /** 静态截帧时刻（毫秒）；给定时按该时刻画一帧、不起 rAF（定格），覆盖 animate */
+  snapshotAt?: number;
+  /** 命令式动画句柄出口：写入 rAF 时钟 AnimationControls（无动画 / 截帧 / 降级时为 null） */
+  animationRef?: Ref<AnimationControls | null>;
+  /** 自定义 easing 注册表（透传 drawScene） */
+  easings?: EasingRegistry;
+  /** 自定义 property 插值器注册表（透传 drawScene） */
+  animationProperties?: AnimationPropertyRegistry;
+};
+
+/** 写入 ref（兼容 callback ref 与 RefObject）；value 为 null 表示清空 */
+const assignRef = <T,>(ref: Ref<T> | undefined, value: T): void => {
+  if (typeof ref === 'function') ref(value);
+  else if (ref) (ref as MutableRefObject<T>).current = value;
 };
 
 const devicePixelRatio = (): number => {
@@ -102,8 +125,16 @@ const clientToScene = (
 
 /** React canvas 宿主：管理 `<canvas>` 与全量重绘 effect */
 export const CanvasHost: FC<CanvasHostProps> = props => {
-  const { scene, handlers, width, height, className, style } = props;
+  const { scene, handlers, width, height, className, style, animate: animateProp, snapshotAt, animationRef, easings, animationProperties } = props;
+  const animate = animateProp !== false;
   const ref = useRef<HTMLCanvasElement>(null);
+  // rAF 时钟句柄：render effect 写、hydration effect 的 context.animation 读 live，update 后自动跟随
+  const clockRef = useRef<AnimationControls | null>(null);
+  // per-id 虚拟时钟登记表（懒建一次，跨 render 稳定）；ctx.animation 的 per-id 控制经它折算各 id 有效时刻
+  const registryRef = useRef<IdClockRegistry | null>(null);
+  if (registryRef.current === null) registryRef.current = createIdClockRegistry();
+  // 立即重绘一帧的闭包（render effect 按当前 canvas/scene/baseOptions 设置）；ctx.animation 的 pause/stop 即时反映
+  const renderFrameRef = useRef<(() => void) | null>(null);
   // image 加载完 / 主题切换都触发重绘（renderToCanvas 重读 getComputedStyle 的 color → currentColor）
   const [renderTick, bumpRender] = useReducer((n: number) => n + 1, 0);
 
@@ -133,12 +164,52 @@ export const CanvasHost: FC<CanvasHostProps> = props => {
     const bitmapHeight = hasNominalSize ? height : scene.layout.height;
     canvas.width = Math.max(1, Math.round(bitmapWidth * ratio));
     canvas.height = Math.max(1, Math.round(bitmapHeight * ratio));
-    renderToCanvas(canvas, scene, {
+    const baseOptions = {
       devicePixelRatio: ratio,
       defaultFontFamily: canvasFontFamily(canvas),
-      getImage: href => loadImage(href, bumpRender),
+      getImage: (href: string) => loadImage(href, bumpRender),
+      easings,
+      animationProperties,
+    };
+    const registry = registryRef.current as IdClockRegistry;
+    // per-id 解析：stop→渲染 base；否则按该 id 有效时刻 + 是否含非自动播 track
+    const resolvePrim = (id: string | undefined, globalTime: number): PrimAnimationResolution =>
+      id !== undefined && registry.isStopped(id)
+        ? { mode: 'skip' }
+        : { mode: 'at', time: registry.timeFor(id, globalTime), includeNonAutoplay: registry.isActive(id) };
+    // 截帧（snapshotAt 给定）：按该时刻画一帧、不起 rAF（定格）
+    if (snapshotAt !== undefined) {
+      renderToCanvas(canvas, scene, { ...baseOptions, time: snapshotAt });
+      clockRef.current = null;
+      renderFrameRef.current = null;
+      assignRef(animationRef, null);
+      return undefined;
+    }
+    // 按当前时钟时刻 + per-id 登记表立即重绘一帧（ctx.animation 的 pause/stop 即时反映）
+    renderFrameRef.current = () => {
+      const time = clockRef.current?.time ?? 0;
+      renderToCanvas(canvas, scene, { ...baseOptions, time, resolvePrimAnimation: id => resolvePrim(id, time) });
+    };
+    // base 静态先画一帧；含动画且未降级 → 起 rAF 共享时钟逐帧重绘（auto track 自动播；manual/onEvent/visible 默认渲染 base）
+    renderToCanvas(canvas, scene, baseOptions);
+    if (!animate || prefersReducedMotion() || !sceneHasAnimations(scene)) {
+      clockRef.current = null;
+      assignRef(animationRef, null);
+      return undefined;
+    }
+    const clock = createClock({
+      durationMs: sceneAnimationDurationMs(scene),
+      onFrame: time => renderToCanvas(canvas, scene, { ...baseOptions, time, resolvePrimAnimation: id => resolvePrim(id, time) }),
     });
-  }, [className, height, renderTick, scene, style, width]);
+    clockRef.current = clock;
+    assignRef(animationRef, clock); // 命令式句柄出口
+    if (sceneHasAutoplayTrigger(scene)) clock.play();
+    return () => {
+      clock.dispose();
+      clockRef.current = null;
+      assignRef(animationRef, null);
+    };
+  }, [animate, snapshotAt, animationRef, animationProperties, className, easings, height, renderTick, scene, style, width]);
 
   // 水合：把 handler 注册表经 createHydrationController + (hitTest + 逆 meet-fit 坐标映射) 绑到 <canvas>。
   // locate(event) = client 坐标 → clientToScene 逆 meet-fit 成 Scene 点 → hitTest 返回命中图元 id。
@@ -148,12 +219,34 @@ export const CanvasHost: FC<CanvasHostProps> = props => {
     const canvas = ref.current;
     if (!canvas) return undefined;
     const context2d = canvas.getContext('2d') ?? undefined;
-    const controller = createHydrationController(canvas, handlers ?? {}, event => {
+    const locate = (event: Event): string | null => {
       const mouse = event as MouseEvent;
       const point = clientToScene(canvas, scene, mouse.clientX, mouse.clientY);
       context2d?.setTransform(1, 0, 0, 1, 0, 0);
       return hitTest(scene, point, { context2d });
-    });
+    };
+    // canvas 富 context：无逐元素 DOM（element=null），point 逆 meet-fit，动画 per-id（registry 折算各 id 有效时刻，读 live）。
+    const buildContext: BuildContext = (event, id) => {
+      const mouse = event as MouseEvent;
+      return {
+        id,
+        meta: metaOf(scene, id),
+        renderer: 'canvas',
+        element: null,
+        root: canvas,
+        point: typeof mouse.clientX === 'number' ? clientToScene(canvas, scene, mouse.clientX, mouse.clientY) : null,
+        geometry: geometryOf(scene, id),
+        animation: createCanvasIdAnimationControls({
+          registry: registryRef.current as IdClockRegistry,
+          clockTime: () => clockRef.current?.time ?? 0,
+          ensurePlaying: () => clockRef.current?.play(),
+          renderFrame: () => renderFrameRef.current?.(),
+          defaultId: id,
+        }),
+        scene,
+      };
+    };
+    const controller = createHydrationController(canvas, handlers ?? {}, locate, buildContext);
     return () => controller.dispose();
   }, [handlers, scene]);
 

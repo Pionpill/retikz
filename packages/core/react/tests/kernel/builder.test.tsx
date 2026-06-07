@@ -39,6 +39,25 @@ describe('buildIR', () => {
     expect(ir.children[2]).toMatchObject({ type: 'scope', meta: { source: 'plot', layer: 'marks' } });
   });
 
+  it('animations prop（raw track）透传进 Node / Path / Scope 的 IR', () => {
+    const fade = { property: 'opacity', keyframes: [{ at: 0, value: 0 }, { at: 1, value: 1 }], duration: 400 };
+    const ir = buildIR(
+      <Fragment>
+        <Node id="A" position={[0, 0]} animations={[fade]} />
+        <Path id="p" animations={[fade]}>
+          <Step kind="move" to={[0, 0]} />
+          <Step kind="line" to={[10, 0]} />
+        </Path>
+        <Scope animations={[fade]}>
+          <Node id="B" position={[5, 5]} />
+        </Scope>
+      </Fragment>,
+    );
+    expect(ir.children[0]).toMatchObject({ type: 'node', id: 'A', animations: [fade] });
+    expect(ir.children[1]).toMatchObject({ type: 'path', id: 'p', animations: [fade] });
+    expect(ir.children[2]).toMatchObject({ type: 'scope', animations: [fade] });
+  });
+
   it("children 字符串带 '\\n' 自动拆成多行数组", () => {
     const ir = buildIR(
       <Node id="A" position={[0, 0]}>{'Line 1\nLine 2'}</Node>,

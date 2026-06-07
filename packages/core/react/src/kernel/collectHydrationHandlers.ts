@@ -5,7 +5,7 @@ import {
   type ReactNode,
   isValidElement,
 } from 'react';
-import type { ElementHandlers, HydrationHandlers } from '@retikz/render/hydration';
+import type { ElementHandlers, HydrationHandler, HydrationHandlers } from '@retikz/render/hydration';
 import { EVENT_PROP_TO_NAME, type HydrationEventPropName } from './eventProps';
 
 /** 取 React 元素 type 上的 displayName；type 为字符串时直接返回（与 builder 同源识别 Kernel/Sugar 组件） */
@@ -21,7 +21,7 @@ const readElementHandlers = (props: Record<string, unknown>): ElementHandlers =>
   for (const propName of Object.keys(EVENT_PROP_TO_NAME) as Array<HydrationEventPropName>) {
     const handler = props[propName];
     if (typeof handler === 'function') {
-      handlers[EVENT_PROP_TO_NAME[propName]] = handler as (event: Event) => void;
+      handlers[EVENT_PROP_TO_NAME[propName]] = handler as HydrationHandler;
     }
   }
   return handlers;

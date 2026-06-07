@@ -1,5 +1,8 @@
+import type { AnimationPropertyRegistry } from '../animation/registry';
+import type { EasingRegistry } from '../animation/types';
+
 /** Canvas renderer 暂不支持能力的降级类别 */
-export type UnsupportedCanvasFeature = 'paint' | 'clip';
+export type UnsupportedCanvasFeature = 'paint' | 'clip' | 'animation';
 
 /** Canvas renderer 降级告警 */
 export type CanvasWarning = {
@@ -8,6 +11,15 @@ export type CanvasWarning = {
   /** 面向开发者的诊断信息 */
   message: string;
 };
+
+/**
+ * 单个 prim 的动画解析结果（per-id 虚拟时钟产出）
+ * @description `skip` 渲染 base 静止态（跳过全部 track）；`at` 按 `time` 求值，`includeNonAutoplay` 控制是否
+ *   施加 manual / visible / onEvent 等非自动播 track（被 per-id play / restart 激活时为 true）。
+ */
+export type PrimAnimationResolution =
+  | { mode: 'skip' }
+  | { mode: 'at'; time: number; includeNonAutoplay: boolean };
 
 /** Canvas Scene 绘制选项 */
 export type DrawOptions = {
@@ -43,6 +55,23 @@ export type DrawOptions = {
    *   opacity 按 best-effort 忽略（渐变退化为纯色，与历史一致）。
    */
   resolveCssColor?: (color: string) => string;
+  /**
+   * 动画时刻（毫秒，绝对时间轴）
+   * @description 给定时 drawScene 绘制该时刻的一帧（对每个 prim 的 animations 逐 track `evaluateTrack` 求值后应用）；
+   *   缺省（undefined）→ 渲染 base 静态图（与现状逐调用一致）。连续播放由 runtime（ADR-04）的 rAF 循环推进 time。
+   */
+  time?: number;
+  /**
+   * 按 id 解析单个 prim 的动画时刻 / 模式（per-id 虚拟时钟用；缺省 → 全部用 `time` + 仅自动播 track）
+   * @description Canvas per-id 控制（`ctx.animation.restart(id)` 等）经此把全局帧时刻折算成各 id 的有效时刻：
+   *   `skip` → 渲染 base（跳过全部 track）；`at` → 按 `time` 播，`includeNonAutoplay` 决定是否含 manual / visible /
+   *   onEvent track。无此项时退回 `options.time` + 仅自动播（与单时钟整图播放一致）。
+   */
+  resolvePrimAnimation?: (id: string | undefined) => PrimAnimationResolution;
+  /** 自定义 property 插值器注册表（内置通道内建处理；未注册的自定义 property → warn + skip） */
+  animationProperties?: AnimationPropertyRegistry;
+  /** 自定义 easing 注册表（名 → cubic-bezier 四元组 / 函数） */
+  easings?: EasingRegistry;
 };
 
 /** HTMLCanvasElement 渲染选项 */

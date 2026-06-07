@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { AnimationTrackSchema, type IRAnimationTrack } from './animation';
 import { ClipSpecSchema, type IRClipSpec } from './clip';
 import type { IRComposite } from './composite';
 import type { IRCoordinate } from './coordinate';
@@ -28,6 +29,7 @@ export const NodeDefaultSchema = NodeSchema.omit({
   label: true,
   zIndex: true,
   meta: true,
+  animations: true,
 }).strict();
 
 /**
@@ -41,6 +43,7 @@ export const PathDefaultSchema = PathSchema.omit({
   arrowDetail: true,
   zIndex: true,
   meta: true,
+  animations: true,
 }).strict();
 
 /**
@@ -115,6 +118,7 @@ export type IRScope = {
   zIndex?: number;
   clip?: IRClipSpec;
   meta?: IRJsonObject;
+  animations?: Array<IRAnimationTrack>;
   children: Array<IRNode | IRPath | IRCoordinate | IRScope | IRComposite>;
 };
 
@@ -234,6 +238,12 @@ export const ScopeSchema = z
     meta: JsonObjectSchema.optional().describe(
       'Opaque provenance metadata carried by this element (e.g. a Tier 2 lowering tagging which datum / series / layer it came from). Provenance passthrough: preserved verbatim into the Scene primitive(s) this element emits, ignored by renderers, and never interpreted by the compiler — it does not affect layout, connection, style, or bounding box. Must be a JSON object (fully serializable). Not inherited across scopes; not part of the every-X style defaults.',
     ),
+    animations: z
+      .array(AnimationTrackSchema)
+      .optional()
+      .describe(
+        'Declarative timeline animation tracks for this scope as a whole (applied to its group). Each track animates one renderer-agnostic property over normalized time; the base value is the settled (animation-end) state. Carried verbatim into the emitted group primitive; renderers play them or render the static settled state with a diagnosable warning when unable. Does not affect layout / bounding box; not propagated to child elements; not part of the every-X style defaults.',
+      ),
     children: z
       .array(
         z.lazy(() => {

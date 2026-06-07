@@ -1,11 +1,13 @@
 import type { ArrowEndSpec, Scene, ScenePrimitive } from '@retikz/core';
 import type { SvgNode } from '../types';
+import type { EasingRegistry } from '../../animation/types';
 import { formatViewBox } from '../viewBox';
 import { type BuildContext, buildPrim } from './prim';
 import { buildPaintDef } from './paintDefs';
 import { buildClipDef } from './clipDefs';
 import { buildArrowMarker } from './arrowMarkers';
 import { collectArrowSpecs, hashKey, stableSpecKey } from './arrowCollect';
+import { createSvgAnimationCollector } from '../animation/keyframes';
 
 /** `buildSvgDocument` / `buildSvgFragment` 选项 */
 export type BuildDocumentOptions = {
@@ -15,6 +17,20 @@ export type BuildDocumentOptions = {
    *   caller 注入（React 用剥冒号的 `useId()`；SSR / Vanilla 显式给）。
    */
   idPrefix: string;
+  /**
+   * 是否产出动画（缺省 true）；`false` → 不 emit `<style>` / WAAPI 描述，渲染 base 静态图（settled 不变量）
+   * @description runtime 据 `{animate:false}` / `prefers-reduced-motion` 走静态路径时传 false。
+   */
+  animate?: boolean;
+  /** 自定义 easing 注册表（名 → cubic-bezier 四元组进 CSS / 函数仅 JS） */
+  easings?: EasingRegistry;
+  /** 动画降级诊断告警（pathDraw 无描边 / 自定义 property 无映射 / 自定义 easing 未注册）；缺省 console.warn */
+  onAnimationWarn?: (message: string) => void;
+  /**
+   * 静态截帧时刻（毫秒）；给定时不 emit 动画，而是把各 track 在该时刻的值**烘焙成静态属性 / transform**（定格一帧）
+   * @description SSR 海报帧 / 缩略图 / 截图用。覆盖 `animate`（截帧本就是静态产物，复用 `evaluateTrack` 求值）。
+   */
+  snapshotAt?: number;
 };
 
 /** 按 idPrefix 派生确定性的资源 id / 引用回调，并组装 builder context */
@@ -80,11 +96,34 @@ export const buildSvgFragment = (
   options: BuildDocumentOptions,
 ): Array<SvgNode> => {
   const { context } = makeContext(options.idPrefix);
+  // 截帧（snapshotAt 给定）→ 烘焙静态帧的收集器；否则按 animate 决定动画收集器 / 无（base）
+  const collector =
+    options.snapshotAt !== undefined
+      ? createSvgAnimationCollector({
+          idPrefix: options.idPrefix,
+          easings: options.easings,
+          onWarn: options.onAnimationWarn,
+          snapshotAt: options.snapshotAt,
+        })
+      : options.animate === false
+        ? undefined
+        : createSvgAnimationCollector({
+            idPrefix: options.idPrefix,
+            easings: options.easings,
+            onWarn: options.onAnimationWarn,
+          });
+  if (collector) context.decorate = collector.decorate;
   const defs = buildDefs(scene, options.idPrefix);
-  const prims = scene.primitives
+  let prims = scene.primitives
     .filter((p): p is ScenePrimitive => Boolean(p))
     .map(p => buildPrim(p, context));
-  return defs ? [defs, ...prims] : prims;
+  if (collector) prims = collector.wrapCamera(prims, scene);
+  const style = collector?.styleNode();
+  // 顺序：<style>（动画）→ <defs>（资源）→ primitives
+  const head: Array<SvgNode> = [];
+  if (style) head.push(style);
+  if (defs) head.push(defs);
+  return [...head, ...prims];
 };
 
 /**

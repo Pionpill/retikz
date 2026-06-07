@@ -1,6 +1,6 @@
 {
   "name": "@retikz/vanilla",
-  "version": "0.3.0-alpha.4",
+  "version": "0.3.0-alpha.6",
   "description": "Framework-free runtime for retikz: mount Scene/IR to SVG DOM, or render to SVG string for SSR.",
   "type": "module",
   "author": "Pionpill",

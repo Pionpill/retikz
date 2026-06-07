@@ -1,5 +1,5 @@
 import { rect as rectOps } from '../geometry/rect';
-import type { IR, IRChild, IRPath, IRPosition, IRScope } from '../ir';
+import type { IR, IRAnimationTrack, IRChild, IRPath, IRPosition, IRScope } from '../ir';
 import type { GroupPrim, Scene, ScenePrimitive, Transform } from '../primitive';
 import { BUILTIN_SHAPES } from '../shapes';
 import type { ShapeDefinition } from '../shapes';
@@ -97,6 +97,7 @@ export type CompileWarning = {
     | 'ARROW_OVERRIDES_BUILTIN'
     | 'PATTERN_OVERRIDES_BUILTIN'
     | 'COMPOSITE_NOT_REGISTERED'
+    | 'ANIMATION_INVALID_PROPERTY'
     | (string & {});
   /** 人类可读消息（英文） */
   message: string;
@@ -232,6 +233,36 @@ const assertFiniteLayout = (layout: {
 const defaultWarnDispatcher = (warning: CompileWarning): void => {
   if (typeof process !== 'undefined' && process.env.NODE_ENV === 'production') return;
   console.warn(`[retikz] ${warning.code} at ${warning.path}: ${warning.message}`);
+};
+
+/**
+ * 校验 animation tracks 的 viewBox⇔根 约束（schema 上下文无关、分不清元素 vs 根，故在此 compile 层做）
+ * @description `viewBox`（镜头）只在 scene 根合法、元素级非法；scene 根只接受 `viewBox`。违例 track → `warn(ANIMATION_INVALID_PROPERTY)` + drop（不丢图、不影响其余 track）。全空返回 undefined（不 stamp 空数组）。
+ */
+const filterAnimations = (
+  tracks: ReadonlyArray<IRAnimationTrack> | undefined,
+  context: 'element' | 'root',
+  onWarn: (warning: CompileWarning) => void,
+  irPath: string,
+): Array<IRAnimationTrack> | undefined => {
+  if (tracks === undefined) return undefined;
+  const kept = tracks.filter((track, index) => {
+    const isViewBox = track.property === 'viewBox';
+    const valid = context === 'root' ? isViewBox : !isViewBox;
+    if (!valid) {
+      onWarn({
+        code: 'ANIMATION_INVALID_PROPERTY',
+        message:
+          context === 'root'
+            ? `Scene-root animation must use the "viewBox" property (camera); got "${track.property}". Track dropped.`
+            : `Animation property "viewBox" is camera-only (scene root), not valid on an element. Track dropped.`,
+        path: `${irPath}.animations[${index}]`,
+      });
+      return false;
+    }
+    return true;
+  });
+  return kept.length > 0 ? kept : undefined;
 };
 
 /**
@@ -492,7 +523,7 @@ export const compileToScene = (ir: IR, options: CompileOptions = {}): Scene => {
       if (child.type === 'node') {
         const effectiveNode = resolveNodeStyle(child, styleStack);
         const layout = layoutNode(
-          effectiveNode,
+          { ...effectiveNode, animations: filterAnimations(effectiveNode.animations, 'element', onWarn, `${locatorPrefix}children[${i}].node`) },
           measureText,
           nameStack,
           nodeDistance,
@@ -621,6 +652,9 @@ export const compileToScene = (ir: IR, options: CompileOptions = {}): Scene => {
         if (child.id !== undefined) group.id = child.id;
         // meta provenance 与 id 同款：stamp 到 scope GroupPrim（不下传子元素；不进 prune 保留条件）
         if (child.meta !== undefined) group.meta = child.meta;
+        // animations 与 meta 同款：stamp 到 scope GroupPrim（不下传子元素）；先过 viewBox⇔根 校验
+        const scopeAnimations = filterAnimations(child.animations, 'element', onWarn, `${locatorPrefix}children[${i}].scope`);
+        if (scopeAnimations !== undefined) group.animations = scopeAnimations;
         if (hasOwnTransforms) group.transforms = [...ownTransforms];
         // scope.clip → 去重派 clip 资源 id 挂 group.clipRef；裁剪区裁该 group 内全部子原语
         if (child.clip !== undefined) group.clipRef = clip.resolve(child.clip);
@@ -633,8 +667,9 @@ export const compileToScene = (ir: IR, options: CompileOptions = {}): Scene => {
         // 原位回填）保住与同层 node 的声明序；chain 非空时维持 hoist 到顶层 primitives，避免被 scope.transform 二次 apply。
         // `chain` 同时记录 path 所属 scope 累积 transform，让 step.to 内的 polar/at/offset 字面量
         // 按"当前 scope 局部度量 + 末端 apply chain"投影回全局
+        const effectivePath = resolveEffectivePath(child, styleStack);
         const pending: PendingPath = {
-          path: resolveEffectivePath(child, styleStack),
+          path: { ...effectivePath, animations: filterAnimations(effectivePath.animations, 'element', onWarn, `${locatorPrefix}children[${i}].path`) },
           irPath: `${locatorPrefix}children[${i}].path`,
           scopeChain: chain,
           zIndex: child.zIndex,
@@ -669,6 +704,8 @@ export const compileToScene = (ir: IR, options: CompileOptions = {}): Scene => {
 
   // paint（gradient / pattern / image）+ clip 资源同表（kind 判别，id 命名空间各自不撞）
   const resources = [...paint.resources(), ...clip.resources()];
+  // scene 根（镜头）动画：过 viewBox⇔根 校验（只算一次，避免重复 warn）
+  const rootAnimations = filterAnimations(loweredIr.animations, 'root', onWarn, 'scene');
   return {
     // sealSink 后对顶层按 zIndex 稳定排序（占位已回填）
     primitives: stableSortByZIndex(sealSink(primitives)),
@@ -676,5 +713,7 @@ export const compileToScene = (ir: IR, options: CompileOptions = {}): Scene => {
     layout: loweredIr.viewBox !== undefined ? viewBoxToLayout(loweredIr.viewBox, round) : assertFiniteLayout(computeLayout(allPoints, layoutPadding, round)),
     // 渲染无关资源（paint / clip）；无则省略，保 Scene 输出纯净
     ...(resources.length > 0 ? { resources } : {}),
+    // scene 根（镜头）动画 tracks（viewBox property）；无则省略
+    ...(rootAnimations !== undefined ? { animations: rootAnimations } : {}),
   };
 };

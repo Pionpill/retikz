@@ -5,6 +5,7 @@ import type { RectPrim } from './rect';
 import type { TextPrim } from './text';
 import type { Layout } from './layout';
 import type { SceneResource } from './paint';
+import type { IRAnimationTrack } from '../ir/animation';
 
 export type { PaintValue, SceneResource, PaintResource, ResolvedPatternTile } from './paint';
 export type { ClipShape, ClipResource } from './clip';
@@ -23,4 +24,6 @@ export type Scene = {
   layout: Layout;
   /** 渲染无关资源表（paint server 等）；adapter 物化（SVG → `<defs>`）。无资源时省略 */
   resources?: Array<SceneResource>;
+  /** scene 根（镜头）时间轴动画 tracks（viewBox property）：compile 从 IR 根 animations 原样透传；renderer 能播则播、不能则用静态 layout 并 warn。无则省略 */
+  animations?: Array<IRAnimationTrack>;
 };
