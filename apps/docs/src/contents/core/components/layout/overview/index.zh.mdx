@@ -107,6 +107,13 @@ import { Layout, RendererModeProvider } from '@retikz/react';
 | `renderer` | `'svg' \| 'canvas'` | `'svg'` | 渲染后端；缺省时回退最近 `RendererModeProvider` 的 context 值（prop > context > svg） |
 | `color` / `stroke` / `fill` / `strokeWidth` / `opacity` / `fillOpacity` / `drawOpacity` | 同 [`<Scope>`](/core/components/layout/scope) | — | 全图级联 graphic state；设值则把 children 包进隐式根 `<Scope>` |
 | `nodeDefault` / `pathDefault` / `labelDefault` / `arrowDefault` | 同 [`<Scope>`](/core/components/layout/scope) | — | 全图 every-X 默认样式（四通道）；同上挂隐式根 scope |
+| `animate` | `boolean` | `true` | 是否播放动画；`false` 渲染 base 静态图（不 emit CSS/WAAPI、canvas 不起 rAF）。见 [动画](/core/concepts/animation) |
+| `at` | `number` | — | 静态截帧时刻（毫秒）：定格在该时刻的一帧、不播放，覆盖 `animate`；SSR 海报帧 / 缩略图 |
+| `animations` | `Array<AnimationTrack>` | — | scene 根（镜头）动画 tracks（`viewBox` 通道），配 [`cameraTo()`](/core/concepts/animation) |
+| `animationRef` | `Ref<AnimationControls \| null>` | — | 命令式动画句柄出口：挂载后写入 `play` / `pause` / `seek`（svg=WAAPI、canvas=rAF 时钟），无动画为 `null` |
+| `easings` | `EasingRegistry` | — | 自定义缓动注册表（名 → cubic-bezier 四元组 / 函数）。见 [自定义动画](/core/reference/extending/custom-animation) |
+| `animationProperties` | `AnimationPropertyRegistry` | — | 自定义动画属性通道插值器（如 `blur`）；当前仅 Canvas。见 [自定义动画](/core/reference/extending/custom-animation) |
+| `handlers` | `HydrationHandlers` | — | `ir` 模式按 id 提供的水合 handler 注册表（JSX 模式用组件 `on<Event>` props）。见 [水合](/core/reference/renderer/hydration) |
 
 ### 直接喂 IR
 
