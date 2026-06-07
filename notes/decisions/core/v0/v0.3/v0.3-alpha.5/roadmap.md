@@ -77,9 +77,9 @@
 | ADR | 主题 | 内容 | 状态 |
 |---|---|---|---|
 | [01](./01-timeline-animation-ir.md) | 时间轴动画 IR 契约（core） | `AnimationTrack` schema（keyframes 归一化时间 + duration/delay/easing/iterations/direction/fill/trigger）；renderer 无关 `AnimationProperty`（开放可扩展）；元素 + scene 根 `animations?`；静止-终态不变量 + 降级契约（能力声明 + warn + settled）；编译期透传进 Scene（沿 meta/id-stamp 通路）+ viewBox⇔根 校验 | Accepted |
-| [02](./02-svg-playback.md) | SVG 动画播放（render/svg） | 按 `trigger` 分流：`load`→纯 CSS `@keyframes`（SSR 零 JS 自播）、交互→WAAPI 描述（runtime 应用）；property→SVG 映射；camera 用 group transform；oklch CSS 预采样；`{animate:false}` 降级；`RenderOptions.easings` 自定义 | Proposed |
-| [03](./03-canvas-playback.md) | Canvas 动画播放（render/canvas） | `drawScene(…,{time})` 逐帧 + 共享 `evaluateTrack` 插值引擎（含 pathDraw 部分路径、oklch 真 lerp）；**自定义 property 的 JS 插值器注册表**（`RenderOptions.animationProperties`，兑现 ADR-01 口） | Proposed |
-| [04](./04-runtime-control.md) | runtime 播放控制（vanilla / react） | rAF 时钟（共享时钟）+ `trigger` 落地（IntersectionObserver / API / 事件桥水合）；`{animate:false}` + `prefers-reduced-motion`；静态截帧 `{at:t}`（复用 `evaluateTrack`） | Proposed |
+| [02](./02-svg-playback.md) | SVG 动画播放（render/svg） | 按 `trigger` 分流：`load`→纯 CSS `@keyframes`（SSR 零 JS 自播）、交互→WAAPI 描述（runtime 应用）；property→SVG 映射；camera 用 group transform；oklch CSS 预采样；`{animate:false}` 降级；`RenderOptions.easings` 自定义 | Accepted |
+| [03](./03-canvas-playback.md) | Canvas 动画播放（render/canvas） | `drawScene(…,{time})` 逐帧 + 共享 `evaluateTrack` 插值引擎（含 pathDraw 部分路径、oklch 真 lerp）；**自定义 property 的 JS 插值器注册表**（`RenderOptions.animationProperties`，兑现 ADR-01 口） | Accepted |
+| [04](./04-runtime-control.md) | runtime 播放控制（vanilla / react） | rAF 时钟（共享时钟）+ `trigger` 落地（IntersectionObserver / API / 事件桥水合）；`{animate:false}` + `prefers-reduced-motion`；静态截帧 `{at:t}`（复用 `evaluateTrack`） | Accepted（SVG `{at:t}` / react canvas rAF / manual 句柄留后续，见 ADR） |
 
 > sugar 动词（`fadeIn` / `drawOn` …，react + 共享 parser）、along-path / clip / morph 各自后续 ADR，本里程碑随阶段补。
 
