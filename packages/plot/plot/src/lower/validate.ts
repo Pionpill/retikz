@@ -52,19 +52,21 @@ export const resolveFieldTypes = (
 ): Map<string, FieldType> => {
   const map = new Map<string, FieldType>();
   if (model !== undefined) {
-    const declared = new Map<string, FieldType>();
+    // strict 按 name；type 可省（ADR-05）：声明 name 即进契约，type 缺省的字段按数据推断
+    const declaredNames = new Set<string>();
+    const declaredTypes = new Map<string, FieldType>();
     for (const field of model) {
-      if (declared.has(field.name)) {
+      if (declaredNames.has(field.name)) {
         throw new Error(`lowerPlots: duplicate field "${field.name}" in data.model`);
       }
-      declared.set(field.name, field.type);
+      declaredNames.add(field.name);
+      if (field.type !== undefined) declaredTypes.set(field.name, field.type);
     }
     for (const field of userSourceFields) {
-      const type = declared.get(field);
-      if (type === undefined) {
+      if (!declaredNames.has(field)) {
         throw new Error(`lowerPlots: unknown field "${field}" (data.model is declared; all referenced source fields must be listed)`);
       }
-      map.set(field, type);
+      map.set(field, declaredTypes.get(field) ?? inferFieldType(rows, field));
     }
   } else {
     for (const field of userSourceFields) {
