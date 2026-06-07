@@ -130,6 +130,8 @@ All three methods return `{ position, meta, id? }` or `null`:
 | `series(value)` | resolves a series' area anchor (the centroid of all its rendered members) |
 | `resolve(address)` | resolves a `<plotId>.datum.<i>` / `<plotId>.series.<value>` dotted path; no match → `null` |
 
+`resolve`'s address is an **index / value address** — `datum.<transformedIndex>` (render-order index) and `series.<value>` — **not** the named `id` bound to a node (that `<plotId>.datum.<slug>` handle is for core connection, returned in `ResolvedAnchor.id`; the slug is irreversible and isn't used for resolve). Series values are string-normalized, so a numeric series (`series.5`) is addressable too; but a series whose **value contains `.`** can't be addressed via resolve (the address splits on `.`) — use `series(value)` directly for those. `series()` works for any mark with a series field (line / area / interval) — the "series structural host is line/area only" note above is about *where lowering hangs the id/meta*, and does not restrict `series()` from computing a centroid.
+
 Two key guarantees:
 
 - `datum(i).position` **equals** the position of the node that lowering actually placed for row `i` — both share the same anchor computation, so they never drift.

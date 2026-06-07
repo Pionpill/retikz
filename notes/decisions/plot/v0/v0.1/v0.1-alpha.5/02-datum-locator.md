@@ -81,6 +81,8 @@ locator 是**纯函数、不进 IR、不注册任何 core 元素**，不预建 N
 ## 实现期偏离（2026-06-07，Contract Auditor 对账后记）
 
 - **`datumAnchor` 落在 `src/lower/anchor.ts`（非 `mark.ts`）**：原文件 scope 写从 `mark.ts` 抽 `datumAnchor`。实际抽进独立 `anchor.ts`，由 `mark.ts` 与 `locate.ts` 共同 import——避免 `mark.ts → locate.ts → expand.ts → mark.ts` 循环依赖，且单一真源效果不变（point / interval-cartesian 与 lowering 逐点一致由二者同调 `datumAnchor` 保证）。
+- **placement 全量收成单一真源（cross-review 修复）**：初版只有 plain bar / point / sector 走 `datumAnchor`，**dodge / stack / polar-dodge interval 的摆放仍内联在 `mark.ts`** → locator 重算时漂移。已抽出 `buildIntervalContext` + `intervalRect`（cartesian 三变体）+ `intervalWedge`（polar 三变体）+ `sectorWedge`，`mark.ts` 所有 interval 路径与 locator **共用这同一套**，`mark.ts` 内不再留任何 inline 摆放数学。补 dodge/stack/polar-dodge 的 anchor↔lowering parity 测试。
+- **locator datum-id fail-loud 与 lowering 对齐（cross-review 修复）**：`createPlotLocator` 构造时用与 lowering 同一 plot 级注册器对所有 datum mark × 已渲染行跑校验，缺字段 / 重复 → 与 `lowerPlots` 同样**抛错**（`resolve()` 仍对坏地址返回 null、不抛）。`resolve` 地址语义明确为「索引/值地址」（`datum.<transformedIndex>` / `series.<value>`），非绑定的 `Node.id`；series 值匹配加 `String()` 兜底（数值可寻址，含 `.` 的值不可经 resolve 寻址）。
 
 ## 待决策点 🔻
 

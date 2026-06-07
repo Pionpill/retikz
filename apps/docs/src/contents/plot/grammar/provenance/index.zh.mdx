@@ -130,6 +130,8 @@ locator.datum(999);                 // 越界 → null
 | `series(value)` | 按 series 值解析其区域锚点（所有已渲染成员的质心） |
 | `resolve(address)` | 解析 `<plotId>.datum.<i>` / `<plotId>.series.<值>` 点路径串；不匹配 → `null` |
 
+`resolve` 的地址是**索引 / 值地址**——`datum.<transformedIndex>`（渲染序号）和 `series.<值>`，**不是**绑定在节点上的 `id`（那个 `<plotId>.datum.<slug>` 句柄是给 core 连接用的，在 `ResolvedAnchor.id` 里返回，slug 不可逆、不拿来 resolve）。series 值会做字符串归一，所以数值 series（`series.5`）也能寻址；但**值里含 `.`** 的 series 无法经 resolve 寻址（地址按 `.` 切分），这类请直接用 `series(value)`。`series()` 对任何带 series 字段的 mark（line / area / interval）都可用——上面「series 结构落点只在 line/area」说的是 *lowering 里 id/meta 的宿主*，不限制 `series()` 求质心。
+
 两条关键保证：
 
 - `datum(i).position` **等于** lowering 实际摆放第 `i` 行那个节点的位置——两者共用同一份锚点计算，不会漂移。

@@ -108,6 +108,7 @@ meta = {
 - **`sourceIndex` 经 symbol tag、`transform.ts` 未改**：原文件 scope 列 `transform.ts`「按需」改。实际用 `provenance.ts` 的 `SOURCE_INDEX` symbol 在 ingest 打标（object spread 跨 stack、sort 保 identity 自动存活），`transform.ts` 无需改动。
 - **provenance 启用判定收口在 expand**：`provenance / datumProvenance / datumIdField` 任一开即启用（后两者蕴含 provenance），统一在 `expandPlot` 判定。
 - **guide id 默认形 + axis-only 用户句柄**：见上表 guide 行（用户 `guide.id` 仅挂 axis 层、grid 恒结构 id）。
+- **datum-id 注册器提升到 plot 级（cross-review 修复）**：原实现每 mark 各自建注册器，同图多个 datum-bearing mark（如 point + bar）+ 同 `datumIdField` 会各自生成 `<plotId>.datum.<值>` → 同命名空间撞 id。改为 **plot 级共享注册器**（`expandPlot` 建一次、贯穿所有 mark），跨 mark 重复 id 同样 **fail loud**（与单 mark 内重复一致）——一个 plot 内多 datum mark 想绑 id 须用不同字段/值消歧。
 
 ## 待决策点 🔻
 
