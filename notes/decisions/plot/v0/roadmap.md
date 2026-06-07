@@ -1,6 +1,6 @@
 # plot v0 Roadmap
 
-> 更新于 2026-06-02。本文件只记录 `@retikz/plot` 的总体路线，不承载 alpha 级任务清单。
+> 更新于 2026-06-07。本文件只记录 `@retikz/plot` 的总体路线，不承载 alpha 级任务清单。
 > 具体执行计划放在同目录 `v0.*/roadmap.md`，设计决策放在 `notes/decisions/plot/`，里程碑详情以 [`plot-design.md §13`](../../../architecture/plot-design.md) 为准。
 
 ## 定位
@@ -52,3 +52,19 @@ plot 聚焦坐标语法本身：transform / encoding / scale / coordinate / mark
 - ternary / 更多专门坐标系与 sankey / alluvial 完整支持；
 - 大数据专用 lowering / 采样 / Canvas / WebGL 热路径（先保证语法正确，性能后续优化）；
 - 完整 facet 之外的复杂多图编排。
+
+## 后续处理：架构权衡处置（backlog）
+
+> 来源：[`plot-design.md §15~§16`](../../../architecture/plot-design.md)（与 ggplot/Vega/Highcharts 对比 + 6 条固有软肋复盘，2026-06-07）。
+> 这些是「做完功能也甩不掉」的**架构性**软肋，非功能缺口。处置已定向，落地排进后续版本（多数 v0.2 / v0.3 性能与交互阶段）。每条的关键约束以 plot-design §16.2 为准。
+
+| # | 软肋 | 处置方向 | 落地节点 |
+| --- | --- | --- | --- |
+| 1 | 散点/柱每行下沉成一个 `IRNode` → O(N) 物化、大数据天花板 | 配置化：**不需连接时不物化 N 个 Node，下沉成一个稠密 primitive**（`{type:'points', positions, style}` / 多段 Path）。**「可连接」与「物化成独立 Node」绑同一开关**，不是只摘 id。需先补 core 一个 Tier 1 稠密原语 | v0.2/v0.3 性能阶段；core 原语走 `next-core` |
+| 2 | JSON IR 无 typed-array / 无 in-spec 函数 | typed-array 收益**跟随 #1**（稠密 primitive 扁平数组）；in-spec 函数**永不做**，扩展点在创作层（组件 / 新 mark 包） | 随 #1；函数扩展不排期 |
+| 3 | 批量急切编译、无响应式/增量 | 后续性能阶段处理。守住「纯函数 + 稳定 identity」（alpha.5 `transformedIndex`/`sourceIndex`/id 即 diff key，勿破坏）。**展示类交互用 locator+overlay 不重 lower**，仅数据过滤型交互需重 lower | v0.3 交互阶段 |
+| 4 | 像素尺寸 lower 期钉死、响应式 resize = 重 lower | viewBox 等比缩放兜底（免费）+ 必要时 debounce 重 lower（要 reflow 时）；API 讲清两种语义 | v0.2/v0.3 |
+| 5 | 纯函数 lowering 无文字度量 → tick/legend 排版上限 | 最终形态 = `measureText` 作**编译期 option/capability 注入**（不进 IR，不破坏 JSON 原则）；勿走两遍渲染回灌、勿长期停在估算 | guide 增强阶段（v0.2+） |
+| 6 | Tier1/Tier2 门控、表达力受 Kernel 词汇量限 | **不处理——设计原则**。守纪律：缺能力下沉补 core，不在 plot 绕开自造 | 持续 |
+
+**定位边界（自觉取舍，非缺陷）**：#1~#5 落实后，定位内架构风险基本覆盖；**仍逆风的唯一组合是「大数据 + 重度数据过滤型交互」同时要**（百万点 + 60fps brush/zoom-filter）——这不是 retikz/plot 的定位（publication/图解层，非大数据强交互 dashboard）。明确划为「不支持/逆风」，不作「待修」。详见 [plot-design §16.3](../../../architecture/plot-design.md)。
