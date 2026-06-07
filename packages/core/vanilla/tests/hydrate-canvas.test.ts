@@ -261,7 +261,7 @@ describe('@retikz/vanilla mountCanvas 水合（坐标映射 + hitTest）', () =>
     container.remove();
   });
 
-  it('hydrate-ctx：canvas handler 收 (event, ctx)——element=null、renderer=canvas，id/meta/geometry 仍对', () => {
+  it('hydrate-context：canvas handler 收 (event, context)——element=null、renderer=canvas，id/meta/geometry 仍对', () => {
     const metaBoxIr: IR = {
       version: 1,
       type: 'scene',
@@ -272,17 +272,17 @@ describe('@retikz/vanilla mountCanvas 水合（坐标映射 + hitTest）', () =>
     const container = document.createElement('div');
     document.body.appendChild(container);
     const view = mountCanvas(container, metaBoxIr, { width: CSS_WIDTH, height: CSS_HEIGHT });
-    let ctx: HydrationContext | undefined;
-    view.hydrate({ handlers: { box: { click: (_event, received) => { ctx = received; } } } });
+    let context: HydrationContext | undefined;
+    view.hydrate({ handlers: { box: { click: (_event, received) => { context = received; } } } });
 
     const { clientX, clientY } = sceneToClient(50, 50);
     view.root.dispatchEvent(new MouseEvent('click', { bubbles: true, clientX, clientY }));
-    expect(ctx?.id).toBe('box');
-    expect(ctx?.renderer).toBe('canvas');
-    expect(ctx?.element).toBeNull();
-    expect(ctx?.meta).toEqual({ series: 'sales', i: 3 });
-    expect(ctx?.geometry?.bbox.width).toBeGreaterThan(0);
-    expect(ctx?.point?.x).toBeCloseTo(50, 5);
+    expect(context?.id).toBe('box');
+    expect(context?.renderer).toBe('canvas');
+    expect(context?.element).toBeNull();
+    expect(context?.meta).toEqual({ series: 'sales', i: 3 });
+    expect(context?.geometry?.bbox.width).toBeGreaterThan(0);
+    expect(context?.point?.x).toBeCloseTo(50, 5);
 
     container.remove();
   });

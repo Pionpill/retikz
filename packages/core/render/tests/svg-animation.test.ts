@@ -60,7 +60,7 @@ describe('Happy：load CSS + 交互 WAAPI + camera', () => {
     expect(css).toContain('transform-box:view-box');
   });
 
-  it('transform wrapper 带 id 的元素 → wrapper <g> 打 data-retikz-animation-owner（供 ctx.animation per-id 双查）', () => {
+  it('transform wrapper 带 id 的元素 → wrapper <g> 打 data-retikz-animation-owner（供 context.animation per-id 双查）', () => {
     const out = buildSvgFragment(scene([rect({ id: 'n', animations: [GROW_UP] })]), { idPrefix: 't' });
     const g = findTag(out, 'g')!;
     expect(g.attrs['data-retikz-animation-owner']).toBe('n');

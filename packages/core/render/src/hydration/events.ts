@@ -51,10 +51,10 @@ export const EVENT_DOM_TYPE: Record<
 
 /**
  * 水合 handler：原生事件 + renderer 无关 runtime 上下文
- * @description `ctx` 携带命中语义元素的 id / meta(provenance) / 几何 / DOM element / scene 指针坐标 / 动画控制 /
- *   scene。第二参 additive——现有 `(event) => …` handler 忽略 `ctx` 照常工作（零破坏）。
+ * @description `context` 携带命中语义元素的 id / meta(provenance) / 几何 / DOM element / scene 指针坐标 / 动画控制 /
+ *   scene。第二参 additive——现有 `(event) => …` handler 忽略 `context` 照常工作（零破坏）。
  */
-export type HydrationHandler = (event: Event, ctx: HydrationContext) => void;
+export type HydrationHandler = (event: Event, context: HydrationContext) => void;
 
 /** 单个图元 id 的事件 → handler 映射 */
 export type ElementHandlers = Partial<Record<RetikzEventName, HydrationHandler>>;

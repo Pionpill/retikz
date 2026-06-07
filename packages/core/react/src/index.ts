@@ -9,7 +9,7 @@
 
 export { Layout, Node, Path, Step, Text, Coordinate, Scope, RendererModeProvider, useRendererMode, collectHydrationHandlers } from './kernel';
 export type { RendererMode, HydrationEventProps } from './kernel';
-// 透传 render 层水合 runtime 类型，方便 react 用户单包 import（事件名 / 注册表 / handler ctx 类型）
+// 透传 render 层水合 runtime 类型，方便 react 用户单包 import（事件名 / 注册表 / handler context 类型）
 export type {
   RetikzEventName,
   HydrationHandlers,

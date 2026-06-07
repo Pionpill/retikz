@@ -47,8 +47,8 @@ describe('SVG 水合', () => {
     container.remove();
   });
 
-  it('onClick 收到 (event, ctx)：ctx 带 id / meta / geometry / renderer / element', async () => {
-    let ctx: HydrationContext | undefined;
+  it('onClick 收到 (event, context)：context 带 id / meta / geometry / renderer / element', async () => {
+    let context: HydrationContext | undefined;
     const container = document.createElement('div');
     document.body.appendChild(container);
     const root = createRoot(container);
@@ -56,7 +56,7 @@ describe('SVG 水合', () => {
     await act(() => {
       root.render(
         <Layout renderer="svg" width={200} height={200}>
-          <Node id="a" position={[0, 0]} fill="red" minimumSize={2} meta={{ series: 'sales', i: 3 }} onClick={(_event, received) => { ctx = received; }} />
+          <Node id="a" position={[0, 0]} fill="red" minimumSize={2} meta={{ series: 'sales', i: 3 }} onClick={(_event, received) => { context = received; }} />
         </Layout>,
       );
     });
@@ -66,12 +66,12 @@ describe('SVG 水合', () => {
       target!.dispatchEvent(new MouseEvent('click', { bubbles: true }));
     });
 
-    expect(ctx?.id).toBe('a');
-    expect(ctx?.renderer).toBe('svg');
-    expect(ctx?.meta).toEqual({ series: 'sales', i: 3 });
-    expect(ctx?.element).not.toBeNull();
-    expect(ctx?.geometry?.bbox.width).toBeGreaterThan(0);
-    expect(typeof ctx?.animation.restart).toBe('function');
+    expect(context?.id).toBe('a');
+    expect(context?.renderer).toBe('svg');
+    expect(context?.meta).toEqual({ series: 'sales', i: 3 });
+    expect(context?.element).not.toBeNull();
+    expect(context?.geometry?.bbox.width).toBeGreaterThan(0);
+    expect(typeof context?.animation.restart).toBe('function');
 
     root.unmount();
     container.remove();

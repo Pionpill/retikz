@@ -14,9 +14,9 @@ import {
 } from '../src/hydration';
 
 /**
- * ADR-06 水合 runtime 上下文：按 id 聚合的语义元素 ctx + per-id owner 动画控制
+ * ADR-06 水合 runtime 上下文：按 id 聚合的语义元素 context + per-id owner 动画控制
  * @description 覆盖 meta/几何按 id 聚合（多平铺 shape 并集、group transform）、buildContext 经控制器注入
- *   `(event, ctx)`、SVG 动画 owner 双查（data-retikz-id + data-retikz-animation-owner）、最小 ctx 降级。
+ *   `(event, context)`、SVG 动画 owner 双查（data-retikz-id + data-retikz-animation-owner）、最小 context 降级。
  */
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
@@ -95,7 +95,7 @@ describe('geometryOf（同 id 全部图元并集 bbox）', () => {
   });
 });
 
-describe('createContextBuilder 经控制器注入 (event, ctx)', () => {
+describe('createContextBuilder 经控制器注入 (event, context)', () => {
   it('svg 点击 → handler 收到 id / meta / geometry / element / point / renderer', () => {
     const { root, element } = setupRoot();
     const scene: Scene = {
@@ -111,7 +111,7 @@ describe('createContextBuilder 经控制器注入 (event, ctx)', () => {
       makeAnimation: id => createSvgAnimationControls(root, id),
     });
     let received: HydrationContext | undefined;
-    const handlers: HydrationHandlers = { m: { click: (_event, ctx) => { received = ctx; } } };
+    const handlers: HydrationHandlers = { m: { click: (_event, context) => { received = context; } } };
     const controller = createHydrationController(root, handlers, locateSvg, buildContext);
 
     const event = new Event('click', { bubbles: true });
@@ -127,7 +127,7 @@ describe('createContextBuilder 经控制器注入 (event, ctx)', () => {
     controller.dispose();
   });
 
-  it('命中无 meta 的图元 → ctx.meta undefined、不抛', () => {
+  it('命中无 meta 的图元 → context.meta undefined、不抛', () => {
     const { root, element } = setupRoot();
     const scene: Scene = {
       layout: { x: 0, y: 0, width: 100, height: 100 },
@@ -142,7 +142,7 @@ describe('createContextBuilder 经控制器注入 (event, ctx)', () => {
       makeAnimation: id => createSvgAnimationControls(root, id),
     });
     let received: HydrationContext | undefined;
-    const handlers: HydrationHandlers = { m: { click: (_event, ctx) => { received = ctx; } } };
+    const handlers: HydrationHandlers = { m: { click: (_event, context) => { received = context; } } };
     const controller = createHydrationController(root, handlers, locateSvg, buildContext);
 
     const event = new Event('click', { bubbles: true });
@@ -199,11 +199,11 @@ describe('SVG 动画 owner 双查（per-id 控制）', () => {
   });
 });
 
-describe('最小 ctx 降级（控制器无 buildContext）', () => {
-  it('handler 仍收到 ctx：id + renderer + root，element null、animation no-op、不抛', () => {
+describe('最小 context 降级（控制器无 buildContext）', () => {
+  it('handler 仍收到 context：id + renderer + root，element null、animation no-op、不抛', () => {
     const { root, element } = setupRoot();
     let received: HydrationContext | undefined;
-    const handlers: HydrationHandlers = { m: { click: (_event, ctx) => { received = ctx; } } };
+    const handlers: HydrationHandlers = { m: { click: (_event, context) => { received = context; } } };
     const controller = createHydrationController(root, handlers, locateSvg);
 
     const event = new Event('click', { bubbles: true });

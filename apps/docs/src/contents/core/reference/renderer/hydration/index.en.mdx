@@ -13,7 +13,7 @@ The two-step split exists because an event handler is a function and cannot be s
 
 ## React: event props on components
 
-Add `on<Event>` props to `<Node>` / `<Path>` / `<Scope>` — as long as the element has an `id`. The handler signature is `(event, ctx) => void`: the first arg is the native DOM `Event`, the second `ctx` is a renderer-agnostic runtime context (see [below](#handler-context-ctx)). The old `event => …` form that only uses `event` keeps working.
+Add `on<Event>` props to `<Node>` / `<Path>` / `<Scope>` — as long as the element has an `id`. The handler signature is `(event, context) => void`: the first arg is the native DOM `Event`, the second `context` is a renderer-agnostic runtime context (see [below](#the-handler-context)). The old `event => …` form that only uses `event` keeps working.
 
 <ComponentPreview name="hydration-click" size="md" interactive />
 
@@ -90,21 +90,21 @@ const handle = view.hydrate({
 
 `handlers` is a `{ [id]: { eventName: handler } }` table; event names are `click` / `doubleClick` / `rightClick` / `pointerDown` / `pointerUp` / `pointerMove` / `pointerEnter` / `pointerLeave` / `wheel` (a one-to-one match with React's `on<Event>`, with the `on` prefix dropped and the first letter lowercased).
 
-After SSR, bind via the standalone `hydrate(root, options)` entry (the container already holds the SSR-injected `<svg>` string). To give ctx its meta / geometry / animation controls, pass `scene` (or `toScene(ir)`) in too; otherwise you get only the minimal ctx (below):
+After SSR, bind via the standalone `hydrate(root, options)` entry (the container already holds the SSR-injected `<svg>` string). To give context its meta / geometry / animation controls, pass `scene` (or `toScene(ir)`) in too; otherwise you get only the minimal context (below):
 
 ```ts
 import { hydrate, mountSvg } from '@retikz/vanilla';
 
-// the view from mountSvg / mountCanvas carries view.hydrate; ctx uses this view's Scene automatically
-mountSvg(container, ir).hydrate({ handlers: { box: { click: (event, ctx) => ctx.animation.restart() } } });
+// the view from mountSvg / mountCanvas carries view.hydrate; context uses this view's Scene automatically
+mountSvg(container, ir).hydrate({ handlers: { box: { click: (event, context) => context.animation.restart() } } });
 
-// standalone hydration after SSR: pass scene for a rich ctx (meta / geometry / animation)
+// standalone hydration after SSR: pass scene for a rich context (meta / geometry / animation)
 hydrate(root, { handlers, scene });
 ```
 
-## Handler context (ctx)
+## The handler context
 
-The handler's second arg `ctx` fills in "the semantic element that was hit" as a renderer-agnostic object — the same shape whether SVG or Canvas. It represents the **semantic element aggregated by `id`** (the several primitives of one multi-shape Node share an id and count as "one element"), not a single underlying primitive.
+The handler's second arg `context` fills in "the semantic element that was hit" as a renderer-agnostic object — the same shape whether SVG or Canvas. It represents the **semantic element aggregated by `id`** (the several primitives of one multi-shape Node share an id and count as "one element"), not a single underlying primitive.
 
 | Field | Meaning |
 | --- | --- |
@@ -118,7 +118,7 @@ The handler's second arg `ctx` fills in "the semantic element that was hit" as a
 | `animation` | Animation controls: `play` / `pause` / `restart` / `stop` / `seek` (default target is the hit element; pass an id to control another) |
 | `scene` | The current Scene (escape hatch); `undefined` when standalone `hydrate` got no scene |
 
-**Triggering animation from a callback**: give an element a `trigger: 'manual'` animation (no autoplay, waits for a command), then call `ctx.animation.restart()` inside the handler to replay it on click:
+**Triggering animation from a callback**: give an element a `trigger: 'manual'` animation (no autoplay, waits for a command), then call `context.animation.restart()` inside the handler to replay it on click:
 
 <ComponentPreview name="hydration-context" size="md" interactive />
 
@@ -130,9 +130,9 @@ import { Layout, Node, pulse } from '@retikz/react';
     id="ball"
     meta={{ label: 'ball' }}
     animations={[{ ...pulse({ peak: 1.4 }), trigger: 'manual', iterations: 1 }]}
-    onClick={(event, ctx) => {
-      console.log(ctx.meta);     // { label: 'ball' }
-      ctx.animation.restart();   // replay this node's animation on click
+    onClick={(event, context) => {
+      console.log(context.meta);     // { label: 'ball' }
+      context.animation.restart();   // replay this node's animation on click
     }}
   >
     click me
@@ -140,7 +140,7 @@ import { Layout, Node, pulse } from '@retikz/react';
 </Layout>
 ```
 
-<ComponentAlert title="ctx is always passed" description="Incomplete information shows up only as missing fields (meta / geometry / scene may be undefined, animation is a no-op without a scene), never as a missing ctx. Handlers that only use event can ignore it entirely." />
+<ComponentAlert title="context is always passed" description="Incomplete information shows up only as missing fields (meta / geometry / scene may be undefined, animation is a no-op without a scene), never as a missing context. Handlers that only use event can ignore it entirely." />
 
 ## Same behavior in both modes
 
@@ -151,6 +151,6 @@ The same `handlers` table behaves identically under `renderer="svg"` and `render
 | `renderer="svg"` | Walk up from the event target to the nearest ancestor with `data-retikz-id` |
 | `renderer="canvas"` | Map the pointer coordinate through a hit query to an element id |
 
-The ctx `id` / `meta` / `geometry` / `point` agree across both backends; two differences: Canvas has no per-element DOM, so `ctx.element` is always `null` (use `root` + `point`); `ctx.animation` is precise per-id control on SVG but currently scene-level coarse on Canvas (`play` / `pause` / `restart` act on the whole-figure clock — per-id is future work).
+The context `id` / `meta` / `geometry` / `point` agree across both backends; two differences: Canvas has no per-element DOM, so `context.element` is always `null` (use `root` + `point`); `context.animation` is precise per-id control on SVG but currently scene-level coarse on Canvas (`play` / `pause` / `restart` act on the whole-figure clock — per-id is future work).
 
 <ComponentAlert type="warn" title="The context menu is not suppressed for you" description="onRightClick / rightClick leaves the browser context menu in place by default; to take it over, call event.preventDefault() inside the handler." />

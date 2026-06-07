@@ -119,7 +119,7 @@ export const CanvasHost: FC<CanvasHostProps> = props => {
   const { scene, handlers, width, height, className, style, animate: animateProp, easings, animationProperties } = props;
   const animate = animateProp !== false;
   const ref = useRef<HTMLCanvasElement>(null);
-  // rAF 时钟句柄：render effect 写、hydration effect 的 ctx.animation（coarse）读 live，update 后自动跟随
+  // rAF 时钟句柄：render effect 写、hydration effect 的 context.animation（coarse）读 live，update 后自动跟随
   const clockRef = useRef<AnimationControls | null>(null);
   // image 加载完 / 主题切换都触发重绘（renderToCanvas 重读 getComputedStyle 的 color → currentColor）
   const [renderTick, bumpRender] = useReducer((n: number) => n + 1, 0);
@@ -189,7 +189,7 @@ export const CanvasHost: FC<CanvasHostProps> = props => {
       context2d?.setTransform(1, 0, 0, 1, 0, 0);
       return hitTest(scene, point, { context2d });
     };
-    // canvas 富 ctx：无逐元素 DOM（element=null），point 逆 meet-fit，动画 coarse（scene 级单时钟，读 clockRef live）。
+    // canvas 富 context：无逐元素 DOM（element=null），point 逆 meet-fit，动画 coarse（scene 级单时钟，读 clockRef live）。
     const buildContext: BuildContext = (event, id) => {
       const mouse = event as MouseEvent;
       return {

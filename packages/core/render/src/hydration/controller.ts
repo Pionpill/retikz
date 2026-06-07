@@ -20,7 +20,7 @@ const collectUsedEvents = (handlers: HydrationHandlers): Set<RetikzEventName> =>
   return used;
 };
 
-/** 命中 id 但调用方未提供 buildContext 时的最小 ctx（renderer 兜底 svg；animation no-op） */
+/** 命中 id 但调用方未提供 buildContext 时的最小 context（renderer 兜底 svg；animation no-op） */
 const minimalContext = (root: EventTarget, id: string): HydrationContext => ({
   id,
   renderer: 'svg',
@@ -30,7 +30,7 @@ const minimalContext = (root: EventTarget, id: string): HydrationContext => ({
   animation: noopAnimationControls,
 });
 
-/** 查某 id 的某事件 handler 并以 `(event, ctx)` 调用（缺 handler 静默；ctx 恒构造） */
+/** 查某 id 的某事件 handler 并以 `(event, context)` 调用（缺 handler 静默；context 恒构造） */
 const invoke = (
   handlers: HydrationHandlers,
   id: string | null,
@@ -42,8 +42,8 @@ const invoke = (
   if (id === null || !Object.hasOwn(handlers, id)) return;
   const handler: ElementHandlers[RetikzEventName] = handlers[id][name];
   if (handler === undefined) return;
-  const ctx = buildContext ? buildContext(event, id) : minimalContext(root, id);
-  handler(event, ctx);
+  const context = buildContext ? buildContext(event, id) : minimalContext(root, id);
+  handler(event, context);
 };
 
 /** 判断 root 是否为可挂 pointerleave/pointerout 的 EventTarget（dispatcher 只需 addEventListener，故恒成立） */
@@ -60,9 +60,9 @@ const hasContains = (target: EventTarget): target is Node =>
  *   或 pointerout 且 relatedTarget 在 root 外）→ fire lastHitId 的 leave 并清空。SVG（closest）与 Canvas
  *   （hitTest 坐标命中）共用此实现 → 双模等价。返回 { dispose } 解绑全部 listener。
  *
- *   命中 id 后恒以 `handler(event, buildContext(event, id))` 调用——`ctx` 永远传入（绝不 undefined）。
- *   `buildContext` 由各 runtime（vanilla / react）提供，携 Scene / renderer / 动画句柄构造富 ctx；省略时退回
- *   最小 ctx（id + root，meta / geometry / scene 缺省、animation no-op），现有 `(event) => …` handler 忽略 ctx 照常。
+ *   命中 id 后恒以 `handler(event, buildContext(event, id))` 调用——`context` 永远传入（绝不 undefined）。
+ *   `buildContext` 由各 runtime（vanilla / react）提供，携 Scene / renderer / 动画句柄构造富 context；省略时退回
+ *   最小 context（id + root，meta / geometry / scene 缺省、animation no-op），现有 `(event) => …` handler 忽略 context 照常。
  */
 export const createHydrationController = (
   root: EventTarget,

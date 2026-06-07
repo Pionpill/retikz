@@ -18,7 +18,7 @@ const idIr: IR = {
   ],
 };
 
-/** 带 meta provenance 的 Node IR（验 ctx.meta / ctx.geometry） */
+/** 带 meta provenance 的 Node IR（验 context.meta / context.geometry） */
 const metaIr: IR = {
   version: 1,
   type: 'scene',
@@ -71,26 +71,26 @@ describe('@retikz/vanilla hydrate（SVG 水合）', () => {
     container.remove();
   });
 
-  it('view.hydrate-ctx：handler 收到 (event, ctx) 富上下文（id / meta / geometry / element）', () => {
+  it('view.hydrate-context：handler 收到 (event, context) 富上下文（id / meta / geometry / element）', () => {
     const container = document.createElement('div');
     document.body.appendChild(container);
     const view = mountSvg(container, metaIr);
-    let ctx: HydrationContext | undefined;
-    view.hydrate({ handlers: { a: { click: (_event, received) => { ctx = received; } } } });
+    let context: HydrationContext | undefined;
+    view.hydrate({ handlers: { a: { click: (_event, received) => { context = received; } } } });
 
     const target = findById(view.root, 'a');
     target!.dispatchEvent(new MouseEvent('click', { bubbles: true }));
-    expect(ctx?.id).toBe('a');
-    expect(ctx?.renderer).toBe('svg');
-    expect(ctx?.meta).toEqual({ series: 'sales', i: 3 });
-    expect(ctx?.element).not.toBeNull();
-    expect(ctx?.geometry?.bbox.width).toBeGreaterThan(0);
-    expect(typeof ctx?.animation.restart).toBe('function');
+    expect(context?.id).toBe('a');
+    expect(context?.renderer).toBe('svg');
+    expect(context?.meta).toEqual({ series: 'sales', i: 3 });
+    expect(context?.element).not.toBeNull();
+    expect(context?.geometry?.bbox.width).toBeGreaterThan(0);
+    expect(typeof context?.animation.restart).toBe('function');
 
     container.remove();
   });
 
-  it('standalone-hydrate-scene：传 scene → 富 ctx；不传 → 最小 ctx（meta/geometry undefined、animation no-op、不抛）', () => {
+  it('standalone-hydrate-scene：传 scene → 富 context；不传 → 最小 context（meta/geometry undefined、animation no-op、不抛）', () => {
     const svg = renderToSvgString(metaIr);
     const richContainer = document.createElement('div');
     document.body.appendChild(richContainer);

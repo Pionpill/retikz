@@ -1,8 +1,8 @@
 /**
- * 水合 runtime 上下文：renderer 无关的 `(event, ctx)` 第二参构造
+ * 水合 runtime 上下文：renderer 无关的 `(event, context)` 第二参构造
  * @description handler 命中 id 后拿到的「按 id 聚合的语义元素」上下文——id / meta(provenance) / 几何（同 id
  *   全部图元并集 bbox）/ DOM element / scene 指针坐标 / 动画控制 / scene。compile 会把同一 user id stamp 到多个
- *   平铺 shape 图元，故 ctx 表达的是「用户交互的那个语义元素」（由 id 标识），不是单个 primitive。各 runtime
+ *   平铺 shape 图元，故 context 表达的是「用户交互的那个语义元素」（由 id 标识），不是单个 primitive。各 runtime
  *   （vanilla / react）经 `createContextBuilder` 注入 renderer 专有片段（element 定位 / 指针逆映射 / 动画句柄），
  *   Scene-派生字段（meta / geometry / scene）在无 scene 时缺省、animation 在无 runtime 时 no-op。
  */
@@ -36,8 +36,8 @@ export type HydrationGeometry = {
 
 /**
  * 水合 handler 第二参：renderer 无关的 runtime 上下文
- * @description ctx 永远传入（绝不 undefined）；信息不全表现为字段缺省（`meta` / `geometry` / `scene` 可选、
- *   `animation` 各方法可 no-op）而非「无 ctx」。抄 LangChain config——以后加字段不动 handler 签名。
+ * @description context 永远传入（绝不 undefined）；信息不全表现为字段缺省（`meta` / `geometry` / `scene` 可选、
+ *   `animation` 各方法可 no-op）而非「无 context」。抄 LangChain config——以后加字段不动 handler 签名。
  */
 export type HydrationContext = {
   /** 命中的语义元素 id（user id）；同 id 的多个平铺图元聚合视为「一个元素」 */
@@ -343,7 +343,7 @@ export const resolvePointViaLayout =
   };
 
 /**
- * 经 svg `getScreenCTM` 把指针映射到 viewBox(user) 坐标（无需 scene；standalone 最小 ctx 用）
+ * 经 svg `getScreenCTM` 把指针映射到 viewBox(user) 坐标（无需 scene；standalone 最小 context 用）
  * @description scene 缺省时无 layout 可逆 meet-fit，改用浏览器原生 CTM（同时含 camera `<g>` 之外的根映射）。
  *   缺 `getScreenCTM` / `createSVGPoint`（jsdom / 非 svg）或非指针事件 → null。
  */
@@ -376,7 +376,7 @@ export type ContextSources = {
   renderer: 'svg' | 'canvas';
   /** figure 根（svg root / canvas） */
   root: Element;
-  /** 当前 Scene；缺省 → meta / geometry / scene 字段缺省、animation no-op（standalone 最小 ctx） */
+  /** 当前 Scene；缺省 → meta / geometry / scene 字段缺省、animation no-op（standalone 最小 context） */
   scene?: Scene;
   /** 命中 DOM 元素定位（svg = closest；canvas = () => null） */
   resolveElement: (event: Event, id: string) => Element | null;
@@ -389,7 +389,7 @@ export type ContextSources = {
 /**
  * 组装 `buildContext`：命中 id → 完整 `HydrationContext`
  * @description renderer 无关骨架——meta / geometry 经 scene 按 id 聚合查询；element / point / animation 由 `sources`
- *   注入的 renderer 专有片段提供。无 scene → meta / geometry / scene 缺省。ctx 永远完整对象（绝不 undefined）。
+ *   注入的 renderer 专有片段提供。无 scene → meta / geometry / scene 缺省。context 永远完整对象（绝不 undefined）。
  */
 export const createContextBuilder = (sources: ContextSources): BuildContext => {
   const { renderer, root, scene, resolveElement, resolvePoint, makeAnimation } = sources;

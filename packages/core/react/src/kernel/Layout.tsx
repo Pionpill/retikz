@@ -180,7 +180,7 @@ const useSvgRootBinding = (
   useEffect(() => {
     const root = rootRef.current;
     if (root === null) return undefined;
-    // svg 富 ctx：meta / geometry 经 Scene 按 id 聚合；element 经 closest；point 逆 meet-fit；
+    // svg 富 context：meta / geometry 经 Scene 按 id 聚合；element 经 closest；point 逆 meet-fit；
     // 动画控制经 data-retikz-id / data-retikz-animation-owner 双查 getAnimations per-id。scene 变 → effect 重跑、重建。
     const buildContext = createContextBuilder({
       renderer: 'svg',

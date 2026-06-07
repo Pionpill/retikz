@@ -102,7 +102,7 @@ export const createSvgAnimationCollector = (options: SvgAnimationOptions): SvgAn
   /**
    * 处理 transform 通道：每条 track 包一层 `<g>`（load→CSS class、交互→WAAPI data）
    * @description wrapper `<g>` 没有 `data-retikz-id`，给它打 `data-retikz-animation-owner=<被包元素 id>`（id 存在时），
-   *   让 `ctx.animation` per-id 控制经此双查到承载真动画的 wrapper（否则带 transform 的节点 restart 失效）。
+   *   让 `context.animation` per-id 控制经此双查到承载真动画的 wrapper（否则带 transform 的节点 restart 失效）。
    */
   const wrapTransform = (current: SvgNode, expanded: ExpandedTrack, track: IRAnimationTrack, ownerId: string | undefined): SvgNode => {
     const owner: SvgAttrs = ownerId !== undefined ? { 'data-retikz-animation-owner': ownerId } : {};

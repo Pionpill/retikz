@@ -64,7 +64,7 @@ export const mountSvg = (container: Element, input: RenderInput, options: MountO
   container.appendChild(root);
 
   /**
-   * 把 handler 绑到本 view 的 `<svg>`，handler 收 `(event, ctx)` 富上下文
+   * 把 handler 绑到本 view 的 `<svg>`，handler 收 `(event, context)` 富上下文
    * @description `buildContext` 读 live `currentScene`（`update` 后自动反映新图）：meta / geometry 经 Scene 按 id
    *   聚合查询，element 经 `closest('[data-retikz-id]')`，point 逆 meet-fit，动画控制经 `data-retikz-id` /
    *   `data-retikz-animation-owner` 双查 `getAnimations()` per-id 控制。

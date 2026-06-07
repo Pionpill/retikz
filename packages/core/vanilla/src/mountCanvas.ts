@@ -121,7 +121,7 @@ export const mountCanvas = (
       context2d?.setTransform(1, 0, 0, 1, 0, 0);
       return hitTest(currentScene, scenePoint, { context2d });
     };
-    // canvas 富 ctx：无逐元素 DOM（element=null），point 经 clientToScene 逆 meet-fit，动画 coarse（scene 级单时钟）。
+    // canvas 富 context：无逐元素 DOM（element=null），point 经 clientToScene 逆 meet-fit，动画 coarse（scene 级单时钟）。
     // 读 live currentScene / clock，update 后自动反映新图。
     const buildContext: BuildContext = (event, id) => {
       const mouse = event as MouseEvent;
