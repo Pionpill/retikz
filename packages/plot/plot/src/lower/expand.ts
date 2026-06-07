@@ -8,6 +8,7 @@ import { type ColorOf, lowerMark } from './mark';
 import { type CoordinateFrame, createCartesianFrame, createPolarFrame } from './project';
 import { type DatumIdRegistrar, type ProvenanceContext, createDatumIdRegistrar, rootMeta, tagSourceIndex } from './provenance';
 import { type TickSet, resolveOrdinalScale, resolvePositionScale } from './scale';
+import { normalizeRows, validateBoundData } from './coerce';
 import { applyTransforms } from './transform';
 import { collectUserSourceFields, resolveFieldTypes } from './validate';
 
@@ -68,6 +69,10 @@ export type LowerPlotsOptions = {
   datumProvenance?: boolean;
   /** 数据属性名：把该字段值绑成 `<plotId>.datum.<值>` 的 Node.id（opt-in 可连接；缺字段 / 重复值 fail loud） */
   datumIdField?: string;
+  /** 逻辑字段 → 物理数据路径映射（按数据集 reference 键，不进 IR）；需 data.model；缺省恒等 */
+  fieldMaps?: Record<string, Record<string, string>>;
+  /** 抽样校验绑定数据（字段缺失 / 不可强制 → fail-loud）；默认关、不 warn */
+  validateData?: boolean | { sampleRows?: number };
 };
 
 /** resolveFrame 产物：mark / guide 共用的投影帧 + 已下沉的网格 / 轴层（z-order 由 expand 编排） */
@@ -355,10 +360,37 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
   const ingested = provenance ? tagSourceIndex(datasets[node.data.reference]) : datasets[node.data.reference];
 
   // ADR-01：解析用户源字段类型 + strict 校验（有 model → 引用必须声明，缺失/重复 fail-loud；无 model → 全推断）。
-  // 产出的类型 Map 是 type-driven scale（ADR-03）/ coercion（ADR-02）的单一类型真源；本轮先跑校验副作用。
-  resolveFieldTypes(node.data.model, ingested, collectUserSourceFields(node));
+  // 产出的类型 Map 是 type-driven scale（ADR-03）/ coercion（ADR-02）的单一类型真源。
+  const fieldTypes = resolveFieldTypes(node.data.model, ingested, collectUserSourceFields(node));
 
-  const rows = applyTransforms(ingested, node.transform);
+  // ADR-02：fieldMaps 校验（ref∈datasets；本 plot 的 map 需 model + 逻辑名∈model）
+  if (options.fieldMaps !== undefined) {
+    for (const ref of Object.keys(options.fieldMaps)) {
+      if (!(ref in datasets)) throw new Error(`lowerPlots: fieldMaps references unknown dataset "${ref}"`);
+    }
+  }
+  const fieldMap = options.fieldMaps?.[node.data.reference];
+  if (fieldMap !== undefined) {
+    if (node.data.model === undefined) {
+      throw new Error(`lowerPlots: fieldMaps for "${node.data.reference}" requires data.model (no logical field contract without a model)`);
+    }
+    const declared = new Set(node.data.model.map(field => field.name));
+    for (const logical of Object.keys(fieldMap)) {
+      if (!declared.has(logical)) {
+        throw new Error(`lowerPlots: fieldMaps["${node.data.reference}"] maps unknown logical field "${logical}" (not in data.model)`);
+      }
+    }
+  }
+
+  // ADR-02：ingest 归一化（仅 model 在时——fieldMap 解析 + 按类型 coerce → canonical 行，置于 transform 前）；
+  // 无 model → 保持原始行（向后兼容，未声明类型契约不归一化）。validateData 开 → 抽样 fail-loud。
+  const normalized = node.data.model !== undefined ? normalizeRows(ingested, fieldTypes, fieldMap) : ingested;
+  if (options.validateData) {
+    const sampleRows = typeof options.validateData === 'object' ? options.validateData.sampleRows ?? 100 : 100;
+    validateBoundData(normalized, fieldTypes, sampleRows);
+  }
+
+  const rows = applyTransforms(normalized, node.transform);
 
   const { frame, gridLayers, axisLayers } = resolveFrame({
     node,

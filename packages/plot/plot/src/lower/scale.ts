@@ -13,6 +13,7 @@ import {
 import { schemeCategory10 } from 'd3-scale-chromatic';
 import { type BandScale, type OrdinalScale, PlotScale, type PointScale, type ScalarValue, type Scale, type TimeScale } from '../ir';
 import { isFiniteNumber } from './field';
+import { isIsoDateString } from './infer';
 
 /** 默认目标刻度数（d3 ticks 的提示值，非硬约束——实际数量按 nice 区间取整定） */
 export const DEFAULT_TICK_COUNT = 5;
@@ -205,10 +206,16 @@ export const pointPositionScale = (scale: ScalePoint<string | number>): Position
   },
 });
 
-/** 字段值 → epoch ms（数值原样；ISO / 可解析字符串走 Date.parse；其余 → null） */
+/** 字段值 → epoch ms（Date 实例 / 数值原样 / 严格 ISO 字符串走 Date.parse；其余 → null） */
 export const toTimestamp = (value: unknown): number | null => {
+  if (value instanceof Date) {
+    const stamp = value.getTime();
+    return Number.isNaN(stamp) ? null : stamp;
+  }
   if (typeof value === 'number') return Number.isFinite(value) ? value : null;
   if (typeof value === 'string') {
+    // 严格 ISO guard（与 ADR-01 推断同一套）：拒 YYYY/MM/DD、无时区 datetime、裸数字串，避免误解析
+    if (!isIsoDateString(value)) return null;
     const parsed = Date.parse(value);
     return Number.isNaN(parsed) ? null : parsed;
   }
