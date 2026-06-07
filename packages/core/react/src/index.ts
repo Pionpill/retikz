@@ -120,6 +120,14 @@ export type {
   SpinOptions,
   LoopOptions,
 } from '@retikz/core';
+// 动画扩展类型（构造 <Layout easings / animationProperties> 用，re-export 自 render）
+export type {
+  AnimationPropertyDefinition,
+  AnimationPropertyRegistry,
+  CubicBezier,
+  EasingFn,
+  EasingRegistry,
+} from '@retikz/render/animation';
 
 // React 节点 ↔ IR 桥接：buildIR 内部名保留，对外以 convertReactNodeToIR 暴露（命名 pattern 给后续多框架 adapter 留位）
 export { buildIR as convertReactNodeToIR } from './kernel/builder';

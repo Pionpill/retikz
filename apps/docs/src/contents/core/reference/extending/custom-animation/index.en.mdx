@@ -28,27 +28,9 @@ Two registered-value forms:
 
 ## Custom property channel (`animationProperties`)
 
-`property` is open too: register a channel name plus its interpolator and how to apply it, and you can animate properties beyond the built-ins (e.g. a `blur` filter).
+`property` is open too: register a channel name plus its interpolator and how to apply it, and you can animate properties beyond the built-ins (e.g. a `blur` filter). Below registers `blur` and runs a focus-in entrance (click ↺ at the top-left to replay):
 
-```tsx
-import type { AnimationPropertyDefinition } from '@retikz/render/canvas';
-
-const blur: AnimationPropertyDefinition = {
-  // two keyframe values + segment progress → current value
-  interpolate: (from, to, t) => (from as number) + ((to as number) - (from as number)) * t,
-  // apply the current value to the Canvas context (called before drawing the primitive)
-  applyCanvas: (ctx, _prim, value) => {
-    ctx.filter = `blur(${value as number}px)`;
-  },
-};
-
-<Layout renderer="canvas" animationProperties={{ blur }}>
-  <Node
-    fill="#3b82f6"
-    animations={[{ property: 'blur', keyframes: [{ at: 0, value: 8 }, { at: 1, value: 0 }], duration: 500 }]}
-  />
-</Layout>
-```
+<ComponentPreview name="custom-property" interactive replayable size="xs" />
 
 `AnimationPropertyDefinition`:
 
