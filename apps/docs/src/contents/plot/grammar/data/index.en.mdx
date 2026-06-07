@@ -89,6 +89,29 @@ Because data stays out of the config, one `<Plot>` config can run against differ
 
 `fieldMap` only renames (it doesn't transform values — computation belongs to transforms); it must be used with a model — without one there are no "logical fields" to map.
 
+## Custom parsing: `resolveField`
+
+The built-in parsing understands `Date` / epoch-ms / strict ISO strings, plus numbers and well-formed numeric strings. For **odd formats** (`'2024/01/01'`, epoch seconds, `'2024Q1'`) or to **force a field to a type** (a numeric enum as `categorical`), pass `resolveField` a function — it **does not enter the IR** (a runtime option, alongside `fieldMap`) and returns, per field name, a "type override + optional custom parser":
+
+```tsx
+<Plot data={rows} model={[{ name: 'createdAt', type: 'temporal' }]}
+  resolveField={(field) => {
+    // custom date format: give type and parser together
+    if (field === 'createdAt') return { type: 'temporal', parse: raw => Date.parse(String(raw).replaceAll('/', '-')) };
+    if (field === 'statusCode') return { type: 'categorical' }; // numeric enum as a category (value kept)
+    return undefined;                                            // everything else: model/inference + built-in parsing
+  }}>
+  {/* … */}
+</Plot>
+```
+
+Rules:
+
+- Returning `{ type }` overrides the field's type (higher priority than the model and inference); returning `{ parse }` uses a custom parser to turn the raw value into a canonical one (`temporal`/`continuous` return a number, `categorical` a string/number), and returning `undefined` skips that value.
+- With **only `parse` and no `type`**, the type comes from the model declaration — so a bare `parse` **requires a model** (without one the type source is unclear, and it errors).
+- `resolveField` **does not bypass strict mode**: with a model declared, referencing an unlisted field still errors — it only overrides type/parsing, it cannot turn a misspelled field into a valid one.
+- Being a function, it is not serializable, so `resolveField` is the escape hatch for hand-written code; for a fully portable / LLM-friendly spec, prefer the model's declarative `type`.
+
 ## When the data is imperfect
 
 Document / heterogeneous data often has missing fields or mixed types across rows. retikz's policy is **skip, never fabricate, never silently draw wrong**:

@@ -89,6 +89,29 @@ description: 给 <Plot> 一份数据行 + 一份「数据模型」（字段名 +
 
 `fieldMap` 只做改名（值不变换，计算交给 transform）；它必须配合 model 使用——没有 model 就没有「逻辑字段」可映射。
 
+## 自定义解析：`resolveField`
+
+内置解析认得 `Date` / 毫秒时间戳 / 严格 ISO 串、数字与规范数字串。碰上**奇葩格式**（`'2024/01/01'`、epoch 秒、`'2024Q1'`）或想**强制某字段当某类型**（数值枚举当 `categorical`）时，给 `resolveField` 一个函数——它**不进 IR**（是运行时选项，和 `fieldMap` 同层），按字段名返回「类型覆盖 + 可选自定义解析器」：
+
+```tsx
+<Plot data={rows} model={[{ name: 'createdAt', type: 'temporal' }]}
+  resolveField={(field) => {
+    // 自定义日期格式：类型 + 解析一起给
+    if (field === 'createdAt') return { type: 'temporal', parse: raw => Date.parse(String(raw).replaceAll('/', '-')) };
+    if (field === 'statusCode') return { type: 'categorical' }; // 数值枚举当类别（值原样）
+    return undefined;                                            // 其余走 model/推断 + 内置解析
+  }}>
+  {/* … */}
+</Plot>
+```
+
+规则：
+
+- 返回 `{ type }` 覆盖该字段类型（优先级高于 model 与推断）；返回 `{ parse }` 用自定义解析器把原始值转成规范值（`temporal`/`continuous` 返数字、`categorical` 返字符串/数字），返 `undefined` 跳过该值。
+- **只给 `parse` 不给 `type`** 时，类型沿用 model 声明——所以 `parse` 单独出现**必须有 model**（无 model 时类型来源不清，会报错）。
+- `resolveField` **不绕过 strict**：声明了 model，引用未列出的字段照样报错——它只覆盖类型/解析，不能把拼错字段洗成合法字段。
+- 因为是函数、不可序列化，`resolveField` 适合手写代码的逃生舱；要 spec 完全可移植 / LLM 友好，优先用 model 的声明式 `type`。
+
 ## 数据有问题时
 
 文档型 / 异构数据常有缺字段、类型不一的行。retikz 的处理是**跳过、不伪造、不静默画错**：
