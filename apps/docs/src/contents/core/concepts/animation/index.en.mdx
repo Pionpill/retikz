@@ -1,0 +1,108 @@
+---
+title: Animation
+description: Keyframe nodes, paths, and the camera over time with named presets — intro, emphasis, loop, camera, and stagger — written declaratively and degrading gracefully.
+---
+
+Animation transitions a static figure **from one look to another over time**: fade in, draw a line, scale up, spin, shift color, pan the camera. You don't hand-write keyframes — call a **preset factory** (`fadeIn()` / `spin()` …) to get an animation descriptor and attach it to an element's `animations` array.
+
+```tsx
+import { Layout, Node, fadeIn, scaleIn } from '@retikz/react';
+
+<Node animations={[fadeIn(), scaleIn()]}>hi</Node>
+```
+
+`animations` attaches to `<Node>` / `<Path>` / `<Scope>` (element animation) and `<Layout>` (camera). An element can carry several; they don't interfere.
+
+<ComponentAlert title="Last frame = resting state, so it degrades" description="An intro animation's final frame is the element's normal look (fadeIn's last frame = fully opaque). So environments without animation support, users who prefer reduced motion, or animate={false} simply render that resting state — you see the complete final figure, not the possibly-transparent starting point." />
+
+## All animations
+
+| Animation | Family | Channel | What it does |
+| --- | --- | --- | --- |
+| `fadeIn` | intro | opacity | fade in (0→1) |
+| `drawOn` | intro | pathDraw | stroke draws along the path |
+| `scaleIn` | intro | scale | pop in from slightly small (0.8→1) |
+| `grow` | intro | scale | grow from nothing (0→1) |
+| `growUp` | intro | scaleY | grow from baseline (bars) |
+| `slideIn` | intro | translateX/Y | slide in from an offset |
+| `colorShift` | emphasis | fill / stroke | color transition (oklch lerp) |
+| `pulse` | loop | scale | pulsing scale (infinite) |
+| `spin` | loop | rotate | steady rotation (infinite, loader) |
+| `loop` | loop | any | turn any track into an infinite loop |
+| `cameraTo` | camera | viewBox | pan / zoom the camera (on `<Layout>`) |
+| `stagger` | choreography | — | add increasing delay across a group |
+
+Every preset accepts the common options `{ duration, delay, easing, trigger }`; some add their own (`scaleIn.from` / `slideIn.axis,offset` / `growUp.origin` / `pulse.peak` …).
+
+## Intro
+
+Plays once on load. Each demo below replays when you open this page / switch tabs.
+
+<ComponentPreview name="fade-in" size="xs" />
+
+`fadeIn`: opacity 0→1, the most common entrance.
+
+<ComponentPreview name="scale-in" size="xs" />
+
+`scaleIn`: pops from 0.8 to 1 (`from` is adjustable); `grow` is the `from: 0` alias, growing from nothing.
+
+<ComponentPreview name="grow" size="xs" />
+
+<ComponentPreview name="grow-up" size="sm" />
+
+`growUp`: `scaleY` 0→1 with the pivot at the **bottom edge** (`origin: 'south'`) — bars growing from the baseline.
+
+<ComponentPreview name="slide-in" size="xs" />
+
+`slideIn`: slides back to place from an offset (`axis` picks x/y, `offset` is the starting shift).
+
+<ComponentPreview name="draw-on" size="sm" />
+
+`drawOn`: the stroke draws progressively along the path (`pathDraw` 0→1); only for stroked `<Path>` / shapes.
+
+## Emphasis & loop
+
+<ComponentPreview name="color-shift" size="xs" />
+
+`colorShift`: transitions `fill` / `stroke` in **oklch** space (perceptually even, no muddy band). Both endpoints are explicit.
+
+<ComponentPreview name="pulse" size="xs" />
+
+`pulse`: 1→peak→1 infinite pulse (`peak` defaults to 1.1).
+
+<ComponentPreview name="spin" size="xs" />
+
+`spin`: rotate 0→360, infinite and linear, around the geometric center — a typical loader.
+
+<ComponentPreview name="loop" size="sm" />
+
+`loop(track, { direction })`: wraps any one-shot track into an infinite loop; with `direction: 'alternate'` it plays back and forth.
+
+## Camera
+
+<ComponentPreview name="camera-to" size="md" />
+
+`cameraTo({ from, to })`: animates the scene's viewbox `[x, y, w, h]` for pan / zoom. Attach it to `<Layout animations>` (the camera belongs to the scene root, not an element); both endpoints are explicit.
+
+## Choreography
+
+<ComponentPreview name="stagger" size="sm" />
+
+`stagger(tracks, step)`: adds increasing `delay` across a group (0, step, 2×step…) for a one-by-one entrance.
+
+## Triggers & degradation
+
+**When it plays** is set by `trigger`, defaulting to `load` (plays on render):
+
+| trigger | Behavior | Backend support |
+| --- | --- | --- |
+| `load` (default) | plays on render | SVG (inline CSS, zero-JS SSR) / Canvas (starts rAF) |
+| `visible` | plays when in viewport | SVG (IntersectionObserver); Canvas renders resting state for now |
+| `manual` | no autoplay, driven by a runtime handle | SVG; Canvas renders resting state for now |
+| `{ onEvent: 'click' }` | plays when the event fires | SVG; Canvas renders resting state for now |
+
+**When it doesn't play** (all three converge to the resting state, see the note above): you pass `animate={false}`, the user's system prefers reduced motion (`prefers-reduced-motion`), or the backend can't animate. Degradation never throws and never drops the figure — it renders the complete resting figure and emits a diagnosable warning.
+
+Backend capability: **SVG** supports every trigger; **Canvas** autoplays `load` animations at this stage (`visible` / `manual` / `onEvent` render the resting state, to be completed later).
+
+<ComponentAlert type="tip" title="Want the IR?" description="Switch any demo's code panel to the IR / Vanilla tab to see the preset expanded into a raw AnimationTrack (property + keyframes + timing) — the preset is just a shorthand, fully equivalent." />

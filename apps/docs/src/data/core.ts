@@ -14,6 +14,7 @@ export const coreSection: Array<Section> = [
       { id: 'positioning', label: 'core.positioning' },
       { id: 'anchors', label: 'core.anchors' },
       { id: 'layers', label: 'core.layers' },
+      { id: 'animation', label: 'core.animation' },
     ],
   },
   {
