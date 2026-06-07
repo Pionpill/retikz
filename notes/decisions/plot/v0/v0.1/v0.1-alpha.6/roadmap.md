@@ -57,9 +57,9 @@
 | [03](./03-type-driven-scale.md) | type-driven scale 默认选型 + guide 格式化（按字段类型派生 scale，channel 可省 scale 声明；类型↔scale fail-loud） | red | ADR-01 | Proposed |
 | [04](./04-field-resolver.md) | `resolveField` 可插拔字段解析（运行时函数覆盖类型 + 自定义 parse，不进 IR） | red | ADR-01/02 | Proposed（已实现） |
 | [05](./05-optional-field-type.md) | `FieldDef.type` 可选（部分声明 model，name-only 字段推断） | red | ADR-01 | Proposed（已实现） |
-| [06](./06-declarative-format.md) | 声明式 `FieldDef.format` 解析词表（可序列化，`resolveField` 退为逃生舱） | red | ADR-02/04 | Proposed |
-| [07](./07-category-order.md) | `FieldDef.order` 分类顺序 + 有序性参数（不复活 ordinal 类型） | red | ADR-01/03 | Proposed |
-| [08](./08-data-robustness.md) | 数据健壮性（恒归一化消两模式割裂 + `invalid` 策略 + bigint ingest） | red | ADR-02/04 | Proposed |
+| [06](./06-declarative-format.md) | 声明式 `FieldDef.format` 解析词表（可序列化，`resolveField` 退为逃生舱） | red | ADR-02/04 | Proposed（已实现） |
+| [07](./07-category-order.md) | `FieldDef.order` 分类顺序 + 有序性参数（不复活 ordinal 类型） | red | ADR-01/03 | Proposed（已实现） |
+| [08](./08-data-robustness.md) | 数据健壮性（恒归一化消两模式割裂 + `invalid` 策略 + bigint ingest） | red | ADR-02/04 | Proposed（已实现） |
 
 > **两轮**：第一轮 ADR-01~03（数据模型 + 可移植契约 + type-driven scale，已实现）；第二轮 ADR-04~08（数据层精化：解析逃生舱 + type 可选 + 声明式 format + 分类顺序 + 健壮性）。
 > ⚠️ **字段类型已简化**（commit `30f2cce1`）：`continuous / categorical / temporal` 三类——删 `proportion`、合并 `nominal/ordinal → categorical`。下方第一轮决策里的 `proportion` / `nominal` / `ordinal` 表述**以此为准已被取代**（ADR-05 改 type 可选、ADR-07 用 `order` 参数补回有序性）；本段待整段重写，当前以各 ADR 定稿 + 该简化为准。
