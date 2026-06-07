@@ -40,7 +40,7 @@ describe('buildIR', () => {
   });
 
   it('animations prop（raw track）透传进 Node / Path / Scope 的 IR', () => {
-    const fade = { property: 'opacity', keyframes: [{ at: 0, value: 0 }, { at: 1, value: 1 }], duration: 400 } as const;
+    const fade = { property: 'opacity', keyframes: [{ at: 0, value: 0 }, { at: 1, value: 1 }], duration: 400 };
     const ir = buildIR(
       <Fragment>
         <Node id="A" position={[0, 0]} animations={[fade]} />

@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import type { ValueOf } from '../types';
+import { JsonValueSchema } from './json';
 
 /**
  * 可动画属性通道（renderer 无关；DrawWay 风格 const + 派生类型，裸字面量 'opacity' 仍第一形态）
@@ -72,20 +73,23 @@ export const KeyframeSchema = z
       .describe(
         'Normalized keyframe time in [0, 1] (WAAPI offset, decoupled from duration). Keyframes within a track must be sorted ascending by `at`.',
       ),
-    value: z
-      .union([z.number().finite(), z.string(), z.array(z.number().finite())])
-      .describe(
-        'Keyframe value, interpreted per the track `property`: a finite number (opacity / scale / rotate / translateX|Y / strokeWidth / pathDraw 0..1), a color string (fill / stroke, interpolated in oklch), or a 4-number array [x, y, w, h] (viewBox).',
-      ),
+    value: JsonValueSchema.describe(
+      'Keyframe value (any JSON value). For built-in properties it is narrowed by the track-level refinement: a finite number (opacity / scale / rotate / translateX|Y / strokeWidth / pathDraw 0..1), a color string (fill / stroke, interpolated in oklch), or a 4-number array [x, y, w, h] (viewBox). Custom (non-built-in) properties accept any JSON value, interpreted by a renderer-registered interpolator.',
+    ),
     easing: EasingSchema.optional().describe(
       'Per-segment easing from this keyframe to the next; overrides the track-level easing.',
     ),
   })
   .describe('A single animation keyframe: a value at a normalized time, with optional per-segment easing.');
 
+/** 播放触发器关键字（runtime 落地；DrawWay 风格 const + 派生类型，与其它 Animation 枚举单一真源一致） */
+export const AnimationTrigger = { Load: 'load', Visible: 'visible', Manual: 'manual' } as const;
+/** 触发器关键字联合（不含 { onEvent } 对象形态） */
+export type AnimationTriggerName = ValueOf<typeof AnimationTrigger>;
+
 export const TriggerSchema = z
   .union([
-    z.enum(['load', 'visible', 'manual']),
+    z.nativeEnum(AnimationTrigger),
     z.object({
       onEvent: z
         .string()
@@ -112,7 +116,7 @@ export const AnimationTrackSchema = z
         message: 'keyframes must be sorted ascending by `at`',
       })
       .describe(
-        'Ordered keyframes (at least one), sorted ascending by `at` within [0, 1]. The element base value is the settled (animation-end) state; keyframes describe the time-varying deviation layered on top.',
+        'Ordered keyframes (at least one), sorted ascending by `at` within [0, 1]. Each keyframe gives the absolute display value at that time (NOT a delta on top of the base). By convention the final keyframe equals the element base (settled) state, so ignoring the animation renders the complete base figure.',
       ),
     duration: z
       .number()
@@ -177,7 +181,7 @@ export const AnimationTrackSchema = z
     'A declarative timeline animation track on a single renderer-agnostic property: keyframes over normalized time plus WAAPI-style timing options. The `property` is open (built-in channels or a custom name resolved by a renderer-registered interpolator). Fully JSON-serializable (no functions); playback control and callbacks live in the runtime, not the IR. Renderers that cannot animate render the static settled state and emit a diagnosable warning.',
   );
 
-/** 时间轴动画 track（renderer 无关、JSON 可序列化、无函数；元素 base = 动画终态，track 是其上的时变偏移） */
+/** 时间轴动画 track（renderer 无关、JSON 可序列化、无函数；keyframe 给绝对展示值、末帧 = 元素 base 终态） */
 export type IRAnimationTrack = z.infer<typeof AnimationTrackSchema>;
 /** 单个动画关键帧 */
 export type IRKeyframe = z.infer<typeof KeyframeSchema>;

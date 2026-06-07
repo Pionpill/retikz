@@ -68,10 +68,13 @@ describe('Happy path：三载体 + scene 根 stamp + 自定义透传', () => {
     expect(built.animations).toEqual([CAMERA]);
   });
 
-  it('自定义 property（blur）+ 任意 value → 通过并原样透传（扩展口）', () => {
+  it('自定义 property（blur）+ 任意 value（含对象）→ 通过并原样透传（扩展口）', () => {
     const custom: IRAnimationTrack = { property: 'blur', keyframes: [{ at: 0, value: 4 }, { at: 1, value: 0 }], duration: 300 };
-    const prims = compileToScene(scene([{ type: 'node', id: 'a', position: [0, 0], animations: [custom] }]), silent).primitives;
-    for (const rect of allOfType(prims, 'rect')) expect(rect.animations).toEqual([custom]);
+    // 自定义通道允许任意 JSON value（含嵌套对象），供 renderer 注册插值器解释
+    const objectValued: IRAnimationTrack = { property: 'gradientStop', keyframes: [{ at: 0, value: { offset: 0, color: 'red' } }, { at: 1, value: { offset: 1, color: 'blue' } }], duration: 300 };
+    expect(AnimationTrackSchema.safeParse(objectValued).success).toBe(true);
+    const prims = compileToScene(scene([{ type: 'node', id: 'a', position: [0, 0], animations: [custom, objectValued] }]), silent).primitives;
+    for (const rect of allOfType(prims, 'rect')) expect(rect.animations).toEqual([custom, objectValued]);
   });
 });
 
