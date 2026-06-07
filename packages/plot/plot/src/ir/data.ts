@@ -17,6 +17,29 @@ export const PlotFieldType = {
 /** 字段测量类型 */
 export type FieldType = ValueOf<typeof PlotFieldType>;
 
+/**
+ * 字段值解析格式关键字（暴露给用户；成员值即格式串，裸字面量 `'percent'` 同样可用）
+ * @description 声明式（进 IR、可序列化）的内置解析覆盖；每个格式唯一绑定一个 type（temporal / continuous），
+ *   省略 type 时由格式蕴含 type；解析优先级 resolveField.parse > FieldDef.format > 内置默认 coerce
+ */
+export const PlotFieldFormat = {
+  /** temporal：严格 ISO（默认，等价不写 format） */
+  Iso: 'iso',
+  /** temporal：数值 / 数值串按 epoch 秒 → 毫秒（*1000） */
+  EpochSeconds: 'epochSeconds',
+  /** temporal：数值 / 数值串按 epoch 毫秒 */
+  EpochMillis: 'epochMillis',
+  /** temporal：严格 YYYY/MM/DD 斜杠日期，按 UTC 零点转 epoch ms（不收 D/M/Y、M/D/Y 等地区歧义布局） */
+  SlashDate: 'slashDate',
+  /** continuous：宽松数字串（容前后空白 / 千分位逗号），默认仅严格数字串 */
+  NumberString: 'numberString',
+  /** continuous：百分比串 '50%' → 0.5 */
+  Percent: 'percent',
+} as const;
+
+/** 字段值解析格式 */
+export type FieldFormat = ValueOf<typeof PlotFieldFormat>;
+
 export const FieldDefSchema = z
   .object({
     name: z
@@ -27,8 +50,12 @@ export const FieldDefSchema = z
       .nativeEnum(PlotFieldType)
       .optional()
       .describe('Field measurement type; omit to infer from the bound dataset at lowering. When given, drives type-driven scale selection and guide formatting without seeing the data'),
+    format: z
+      .nativeEnum(PlotFieldFormat)
+      .optional()
+      .describe('Declarative built-in value-parsing format; each format binds to one measurement type and must be compatible with type (it also implies type when type is omitted). Omit for the built-in default coercion'),
   })
-  .describe('One field declaration: a field name, optionally its measurement type (inferred from data when omitted)');
+  .describe('One field declaration: a field name, optionally its measurement type (inferred from data when omitted) and a declarative value-parsing format');
 
 export const DataModelSchema = z
   .array(FieldDefSchema)
