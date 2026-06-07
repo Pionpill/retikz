@@ -46,21 +46,31 @@ const isCoercedValid = (value: unknown, type: FieldType): boolean => {
   return typeof value === 'number' && Number.isFinite(value);
 };
 
+/** 运行时 canonical 值（≠ IR 的 ScalarValue：不含 boolean / null）；coerceValue 与自定义 parse 的输出域 */
+export type ParsedFieldValue = string | number | undefined;
+
+/** 收窄自定义 parse 的返回：string / number 留，其余（boolean / null / 对象 / undefined）→ undefined（跳过） */
+const asParsedValue = (value: ParsedFieldValue): ParsedFieldValue => (typeof value === 'string' || typeof value === 'number' ? value : undefined);
+
 /**
- * ingest 归一化：把每行的用户源字段「(fieldMap) 解析物理路径 → 按 FieldType coerce」写成 canonical 行
+ * ingest 归一化：把每行的用户源字段「(fieldMap) 解析物理路径 → 按 FieldType coerce（或自定义 parse 覆盖）」写成 canonical 行
  * @description 逻辑名为扁平键、值已强制；保留原始字段（供 datumIdField 等）与 `SOURCE_INDEX`（spread 转移）。
- *   全下游（transform / scale / mark / locator）统一读 canonical（按逻辑名），无第二处 coerce。仅 model 在时调用。
+ *   全下游（transform / scale / mark / locator）统一读 canonical（按逻辑名），无第二处 coerce。
+ *   model 或 resolveField 命中时调用；某字段有 parser（ADR-04）则用 parser，否则按类型内置 coerce。
  */
 export const normalizeRows = (
   rows: Array<ExternalRow>,
   fieldTypes: Map<string, FieldType>,
   fieldMap?: Record<string, string>,
+  parsers?: Map<string, (raw: unknown) => ParsedFieldValue>,
 ): Array<ExternalRow> =>
   rows.map(row => {
     const canonical: ExternalRow = { ...row };
     for (const [logical, type] of fieldTypes) {
       const physical = fieldMap?.[logical] ?? logical;
-      canonical[logical] = coerceValue(resolveFieldPath(row, physical), type);
+      const raw = resolveFieldPath(row, physical);
+      const parse = parsers?.get(logical);
+      canonical[logical] = parse ? asParsedValue(parse(raw)) : coerceValue(raw, type);
     }
     return canonical;
   });

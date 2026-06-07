@@ -10,6 +10,7 @@ import { type DatumIdRegistrar, type ProvenanceContext, createDatumIdRegistrar, 
 import { type TickSet, assertScaleFieldCompatible, deriveScale, resolveOrdinalScale, resolvePositionScale } from './scale';
 import { normalizeRows, validateBoundData } from './coerce';
 import { applyTransforms } from './transform';
+import { type ResolveField, applyFieldResolver } from './resolve';
 import { collectUserSourceFields, resolveFieldTypes } from './validate';
 
 /** 空刻度集（某维度无 axis 时给 GuideContext 的占位；实际不会被该维度的 guide 触达） */
@@ -73,6 +74,8 @@ export type LowerPlotsOptions = {
   fieldMaps?: Record<string, Record<string, string>>;
   /** 抽样校验绑定数据（字段缺失 / 不可强制 → fail-loud）；默认关、不 warn */
   validateData?: boolean | { sampleRows?: number };
+  /** 程序化字段解析逃生舱（运行时函数，不进 IR）：按字段名覆盖类型 + 自定义值解析；返回 undefined → 回退 model/推断 + 内置 coerce（ADR-04） */
+  resolveField?: ResolveField;
 };
 
 /** resolveFrame 产物：mark / guide 共用的投影帧 + 已下沉的网格 / 轴层（z-order 由 expand 编排） */
@@ -384,9 +387,21 @@ export const prepareRows = (
   ingested: Array<ExternalRow>,
 ): { fieldTypes: Map<string, FieldType>; normalized: Array<ExternalRow> } => {
   validateFieldMaps(spec, datasets, options.fieldMaps);
-  const fieldTypes = resolveFieldTypes(spec.data.model, ingested, collectUserSourceFields(spec));
+  const userSourceFields = collectUserSourceFields(spec);
+  // strict + 声明/推断（ADR-01/05）；strict 在 applyFieldResolver 之前先校验，resolver 不绕过（ADR-04）
+  const baseTypes = resolveFieldTypes(spec.data.model, ingested, userSourceFields);
   const fieldMap = options.fieldMaps?.[spec.data.reference];
-  const normalized = spec.data.model !== undefined ? normalizeRows(ingested, fieldTypes, fieldMap) : ingested;
+  // resolveField 叠加：类型覆盖 + 收集 per-field parser（ADR-04）
+  const { fieldTypes, parsers, resolverHit } = applyFieldResolver(
+    baseTypes,
+    userSourceFields,
+    spec.data.model,
+    spec.data.reference,
+    fieldMap,
+    options.resolveField,
+  );
+  // 归一化门控：model 在 或 resolver 命中即进 canonical（ADR-04 放宽「仅 model 在时」）
+  const normalized = spec.data.model !== undefined || resolverHit ? normalizeRows(ingested, fieldTypes, fieldMap, parsers) : ingested;
   return { fieldTypes, normalized };
 };
 
