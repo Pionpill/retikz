@@ -73,44 +73,6 @@ ADR-02/03 让 SVG/Canvas **有能力**播放（给数据 / 给时刻就能出帧
 - **数据过渡 / morph**（`view.update(nextIr,{transition})` 的 diff + morph）：runtime + Tier 2，[v0.3 roadmap §动画 B](../roadmap.md)。
 - **完整 timeline / sequence DSL**：本 ADR 只共享时钟 + per-track delay。
 
----
 
-## 实现契约（必填）🔻
-
-### Level
-
-`red`
-
-判级：动 `packages/core/vanilla/src/index.ts` + `packages/core/react/src/index.ts`（runtime 播放 API / props）→ red。
-
-### 改动
-
-> 实装与草案的差异：rAF 时钟 / reducedMotion / WAAPI 桥 / trigger 判定**落共享 `@retikz/render/animation/runtime.ts`**（非 vanilla 私有 clock.ts / reducedMotion.ts），vanilla + react 共用一份。
-
-| 文件 | 操作 | 内容 |
-|---|---|---|
-| `packages/core/render/src/animation/runtime.ts` | 新建 | `createClock`（rAF 共享时钟）/ `prefersReducedMotion` / `bindWaapiDescriptors`（WAAPI 桥）/ `sceneHasAnimations` / `sceneHasAutoplayTrigger` / `sceneAnimationDurationMs`；vanilla + react 共用 |
-| `packages/core/render/src/animation/channels.ts` | 修改 | 加 `isAutoplayTrigger`（Canvas trigger 过滤判定） |
-| `packages/core/render/src/canvas/animate.ts` | 修改 | `applyPrimAnimations` 按 `isAutoplayTrigger` 过滤（只施加 auto track，修 P1 manual 泄漏） |
-| `packages/core/vanilla/src/mountCanvas.ts` | 修改 | 检测 animations → 起 clock；`sceneHasAutoplayTrigger` 决定自动播；返回 `view.animation` 句柄 |
-| `packages/core/vanilla/src/mountSvg.ts` | 修改 | `{animate}` 透传 + 交互 track WAAPI 桥（`bindWaapiDescriptors`）；load 由 CSS 自播 |
-| `packages/core/vanilla/src/renderToSvgString.ts` | 修改 | `{ animate?: false }` 透传 ADR-02（SVG `{at:t}` 截帧后续） |
-| `packages/core/vanilla/src/{types,index}.ts` | 修改 | `animate` 选项 + `AnimationControls` 句柄类型导出 |
-| `packages/core/react/src/kernel/Layout.tsx` | 修改 | `animate` prop + `animations` prop（根镜头）；svg 交互 WAAPI 桥 effect；canvas 模式传 `animate` 给 `CanvasHost` |
-| `packages/core/react/src/render/canvasHost.tsx` | 修改 | 起 rAF 共享时钟（同 mountCanvas）；`animate` / reduced-motion 降级 |
-| `packages/core/react/src/render/svgToReact.ts` | 修改 | `class`→`className` 映射（动画 class） |
-| `packages/core/render/src/animation/index.ts` | 修改 | barrel 导出 runtime + `isAutoplayTrigger` |
-| `packages/core/vanilla/tests/animation.test.ts` + `packages/core/react/tests/animation.test.tsx` + `packages/core/render/tests/canvas-animation.test.ts` | 新建/扩 | 见测试象限（含 mixed-trigger 过滤、react canvas rAF） |
-
-### 测试象限
-
-**Happy（≥3）**：mountCanvas 含 animations → rAF 起、`drawScene` 收递增 time（fake timer + spy）；`load` 立即播、`visible` 进视口才播（mock IntersectionObserver）；`manual` 返回 `{play/pause/seek}` 句柄、seek(t) 出对应帧。
-**边界（≥2）**：无 animations → 不起 rAF（零开销，回归现状）；全 track 有限时长跑完 → 停循环 + 末帧 settled。
-**降级（≥2）**：`{animate:false}` → 不起 rAF / SVG 无 CSS、输出 = 静态 base；mock `prefers-reduced-motion: reduce` → 同静态路径。
-**交互（≥2）**：`{at:t}` 截帧 SVG 静态属性 = Canvas `drawScene({time:t})` 同 t 视觉一致（共享 `evaluateTrack`）；`onEvent` track 经水合事件委托触发播放；react `<Layout animate={false}>` 走静态。
-
-### 依赖的现有元素
-
-- ADR-02 WAAPI 描述 + `{animate:false}` 入参；ADR-03 `drawScene({time})` + `evaluateTrack` —— **驱动**。
-- alpha.3 水合：rAF / IntersectionObserver / 事件委托 / `mountSvg` / `mountCanvas` / hydrate —— **复用**：动画播放与水合同源、共用基建。
-- alpha.1 `renderToSvgString` / `renderToCanvas` —— **扩展**：加 `{at}` / `{animate}`。
+> 实现指针：最终 schema / 类型 / 行为以代码为准；完整施工契约（Level / 改动 / 测试象限 / 依赖现有元素）见本文件封板前全文。
+> 🔖 本文件压缩前完整施工蓝图 = `git show 08deaa80:notes/decisions/core/v0/v0.3/v0.3-alpha.5/04-runtime-control.md`（封板全文）。

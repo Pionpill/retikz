@@ -148,43 +148,6 @@ hydrate(root, { handlers, scene: toScene(ir) });
 - **新事件类型**：沿用 alpha.3 的 `RetikzEvent` 集，不在此扩。
 - **handler 返回值语义**（如返回 false 阻止默认）：暂不引入，handler 仍 `void`；要 preventDefault 用 `event`。
 
----
 
-## 实现契约（必填）🔻
-
-### Level
-
-`red`
-
-判级：动 `@retikz/render/hydration` 公开契约（handler 签名 + 新 `HydrationContext` 类型 + `createHydrationController` 入参）+ `@retikz/vanilla` / `@retikz/react` 的 handler 类型与接线 → red。
-
-### 改动
-
-| 文件 | 操作 | 内容 |
-|---|---|---|
-| `packages/core/render/src/hydration/events.ts` | 修改 | `ElementHandlers` 的 handler 类型 `(event, context) => void`；新增 `HydrationContext` / `HydrationAnimationControls` 类型 |
-| `packages/core/render/src/hydration/controller.ts` | 修改 | `createHydrationController` 加可选 `buildContext`；`invoke` / 调用处 `handler(event, context)` |
-| `packages/core/render/src/hydration/context.ts` | 新建 | **`id → Array<prim>` 索引**（同 id 聚合）+ 并集 `geometryOf(prims)` + meta 取首个 + `buildHydrationContext` 工厂骨架（renderer 无关：meta / geometry / scene 查询） |
-| `packages/core/render/src/hydration/index.ts` | 修改 | 导出 `HydrationContext` / `HydrationAnimationControls` / 工厂 |
-| `packages/core/render/src/svg/animation/keyframes.ts` | 修改 | **transform / 交互 wrapper `<g>` 打 `data-retikz-animation-owner="<id>"`**（被包元素有 id 时）——供 context.animation per-id 双查（评审 P1-1） |
-| `packages/core/vanilla/src/mountSvg.ts` / `mountCanvas.ts` | 修改 | `hydrate()` 构造富 `buildContext`（svg：DOM 元素 + per-id owner 双查 `getAnimations` 动画控制；canvas：null element + clientToScene + coarse 动画） |
-| `packages/core/vanilla/src/hydrate.ts` | 修改 | 入参扩 `{ handlers, scene?, renderer? }`：传 scene → 富 context；否则最小 context（评审 P2） |
-| `packages/core/react/src/kernel/Layout.tsx`（svg 绑定）/ `render/canvasHost.tsx` | 修改 | 构造 `buildContext` 注入 `createHydrationController` |
-| `packages/core/react/src/kernel/eventProps.ts` / `collectHydrationHandlers.ts` | 修改 | handler 类型同步 `(event, context)`（onClick 等 prop 类型） |
-| 各包 `tests/` | 新建 / 扩 | 见测试象限 |
-
-### 测试象限
-
-**Happy（≥3）**：svg 点击带 id+meta 的图元 → handler 收到 `context.id` / `context.meta` / `context.element` / `context.geometry`；canvas 同点击 → `context.element===null` 但 `context.id`/`meta`/`geometry` 仍对；`context.animation.restart()` 在 svg 真重播。
-**owner per-id 动画（评审 P1-1，≥2）**：带 **transform / manual** 动画的节点（动画在无 id 的 wrapper `<g>` 上）→ `context.animation.restart()` 经 `data-retikz-animation-owner` 命中 wrapper 的 animation 并重播（spy wrapper getAnimations / cancel+play）；纯 opacity（元素本身）动画同样命中。
-**多图元聚合（评审 P1-2，≥2）**：多图元 Node（同 id 多个平铺 shape）→ `context.geometry.bbox` = 全部图元并集；svg 与 canvas 命中同一 Node 时 `context.geometry` / `context.meta` 一致（不取错单 prim）。
-**边界（≥2）**：旧式 `(event) => …` handler 仍工作（忽略 context）；命中无 meta 的图元 → `context.meta === undefined`、不报错。
-**standalone hydrate（评审 P2，≥2）**：`hydrate(root,{handlers})` 不传 scene → 最小 context（`meta`/`geometry`/`scene` undefined、`animation` no-op、不抛）；传 `scene` → 富 context（meta/geometry 到位）。
-**降级（≥2）**：canvas `context.animation.play()` per-id 走 coarse / 文档约定（不抛）；`point` 在两后端都是 scene user units（逆 meet-fit 一致）。
-
-### 依赖的现有元素
-
-- alpha.3 `createHydrationController` / `locate`（svg closest / canvas hitTest）/ 根级委托 —— **升级**：调用处加 context。
-- ADR-08 `ScenePrimitive.meta` + alpha.3 `id` stamp —— **消费**：context 从 Scene 按 id 取 meta / 几何。
-- ADR-04 runtime 动画（`bindWaapiDescriptors` 的 WAAPI 句柄 / clock）—— **复用 / 细化**：context.animation 的 svg per-id 走 getAnimations，canvas 走 clock（coarse）。
-- vanilla `clientToScene` / `mountCanvas` hitTest —— **复用**：context.point / canvas 命中。
+> 实现指针：最终 schema / 类型 / 行为以代码为准；完整施工契约（Level / 改动 / 测试象限 / 依赖现有元素）见本文件封板前全文。
+> 🔖 本文件压缩前完整施工蓝图 = `git show 08deaa80:notes/decisions/core/v0/v0.3/v0.3-alpha.5/06-hydration-context.md`（封板全文）。

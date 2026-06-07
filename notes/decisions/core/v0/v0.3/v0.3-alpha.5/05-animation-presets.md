@@ -92,43 +92,6 @@ stagger(tracks: Array<IRAnimationTrack>, stepMs: number, startMs = 0): Array<IRA
 - **renderer 播放 / 降级**：已由 ADR-02/03/04 提供，本 ADR 不碰。
 - **ADR-04 后续项**（SVG `{at:t}` 截帧、react canvas rAF、manual `ref` 句柄）：与本 ADR 正交。
 
----
 
-## 实现契约（必填）🔻
-
-### Level
-
-`yellow`
-
-判级：**纯新增**——core 加 preset 模块 + 导出、react/vanilla re-export、`<Layout>` 加可选 `animations` prop。无破坏性改动、无 IR schema 变更（只构造既有 `AnimationTrack`）→ yellow（additive public API）。
-
-### 改动
-
-| 文件 | 操作 | 内容 |
-|---|---|---|
-| `packages/core/core/src/presets/animation.ts` | 新建 | 11 preset 工厂 + `stagger` + options 类型；纯函数、产 `IRAnimationTrack` |
-| `packages/core/core/src/presets/index.ts` | 新建 | barrel |
-| `packages/core/core/src/index.ts` | 修改 | 导出 preset 函数 + options 类型 |
-| `packages/core/react/src/index.ts` | 修改 | `export { fadeIn, ... } from '@retikz/core'` re-export |
-| `packages/core/react/src/kernel/Layout.tsx` | 修改 | `LayoutProps.animations?`（注入 IR 根 animations，供 cameraTo） |
-| `packages/core/vanilla/src/index.ts` | 修改 | re-export preset；（可选）`figure().animations()` |
-| `packages/core/core/tests/presets/animation.test.ts` | 新建 | 见测试象限 |
-| `apps/docs/...` | 新增 | 动画 mdx 页（preset API 表 + `<ComponentPreview>` demo）——见下「文档」 |
-
-### 测试象限
-
-**等价性（每 preset ≥1，硬规则）**：`fadeIn()` / `drawOn()` / `scaleIn()` / `grow()` / `growUp()` / `slideIn()` / `colorShift()` / `cameraTo()` / `pulse()` / `spin()` / `loop()` 各 `toEqual` 对应手写 track（默认参数下）。
-**opts 覆盖（≥3）**：`fadeIn({duration,delay,easing,trigger})` 透传；`scaleIn({from,origin})`；`slideIn({axis:'y',offset})`。
-**必填 / 错误（≥2）**：`colorShift({})` 缺 `to` → throw；`cameraTo({to})` 缺 `from` → throw。
-**组合 / 编排（≥2）**：`loop(spin())` 叠 iterations:'infinite'；`stagger([fadeIn(),fadeIn()], 100)` → delay 0 / 100。
-**集成（≥2）**：`buildIR(<Node animations={[fadeIn()]}/>)` 节点带等价 track（react 路径）；`<Layout animations={[cameraTo(...)]}>` → IR 根 `animations`。
-
-### 依赖的现有元素
-
-- ADR-01 `AnimationTrack` / `AnimationProperty` / `AnimationEasing` / `IRAnimationTrack`（`@retikz/core`）—— **构造目标**：preset 产出它。
-- roadmap §动画配方表 —— **规格源**：默认值 / keyframes 照表实装。
-- ADR-02/03/04 播放通路 —— **消费方**：preset 产出的 track 由它们播，本 ADR 不改。
-
-### 文档（用户可见，必须同改）
-
-preset 是新用户 API：`apps/docs` 加动画页（双语 zh/en）——preset 列表 API 表（签名 + 默认 + 可调项）+ `<ComponentPreview>` 实跑 demo（fadeIn / growUp 柱状入场 / spin loader / cameraTo），按 docs-doc-principle + docs-doc-component SKILL。`<Layout animations>` / `<Node animations>` 新 prop 也在对应组件页补行。**文档与实现同一改动集**（AGENTS.md 硬规则）。
+> 实现指针：最终 schema / 类型 / 行为以代码为准；完整施工契约（Level / 改动 / 测试象限 / 依赖现有元素）见本文件封板前全文。
+> 🔖 本文件压缩前完整施工蓝图 = `git show 08deaa80:notes/decisions/core/v0/v0.3/v0.3-alpha.5/05-animation-presets.md`（封板全文）。

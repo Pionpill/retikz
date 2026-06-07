@@ -65,42 +65,6 @@ SVG 后端的特殊性：它有**两套互斥的播放载体**——**CSS `@keyf
 - **sugar 动词**（`fadeIn` / `drawOn` …）：`@retikz/react` + 共享 parser，后续 ADR。
 - **多 track 共享时钟编排的 runtime 实现**：本 ADR 只保证 CSS/WAAPI 各 track 用同一 t0（load 时刻）+ per-track delay；跨元素显式 sequence 由 runtime（ADR-04）。
 
----
 
-## 实现契约（必填）🔻
-
-### Level
-
-`red`
-
-判级：动 render package public API（`@retikz/render` **无根入口**——经 `src/svg/index.ts` 子路径导出 + `package.json` 新增 `./animation` 子路径）+ `src/svg/**` / 新建 `src/animation/**` → red。
-
-### 改动
-
-| 文件 | 操作 | 内容 |
-|---|---|---|
-| `src/svg/animation/keyframes.ts` | 新建 | track → CSS `@keyframes` + `animation` shorthand 生成；oklch 预采样；property→CSS/SVG 映射；camera viewBox→group transform 折算 |
-| `src/svg/animation/waapi.ts` | 新建 | 交互 track → WAAPI descriptor（`{ keyframes, timing, trigger }`，runtime 消费的纯数据） |
-| `src/svg/builders/document.ts` | 修改 | `buildSvgDocument` / `buildSvgFragment` 收 `{ animate?: boolean }`；收集 load-track emit `<style>`、交互 track 挂 descriptor；`animate:false` 跳过 |
-| `src/svg/builders/prim.ts` | 修改 | 元素 `prim.animations` → 挂 CSS class / animation 属性 或 WAAPI descriptor data |
-| `src/svg/serialize/toString.ts` | 修改 | `renderToSvgString` 透传 `{ animate }`；`<style>` 进字符串 |
-| `src/svg/types.ts` | 修改 | `SvgNode` 加可选 animation descriptor 承载（WAAPI 数据 / CSS class 名） |
-| `src/animation/oklch.ts` | 新建 | oklch↔rgb + lerp + sRGB 采样（CSS 预采样用；ADR-03 Canvas 真 lerp 复用） |
-| `src/animation/index.ts` | 新建 | `@retikz/render/animation` 子路径 barrel（本 ADR 先出 oklch；ADR-03 加 `evaluateTrack` / registry） |
-| `package.json` | 修改 | `exports` 加 `./animation` 子路径（指 `src/animation/index.ts`），与 `./svg` / `./canvas` / `./hydration` 并列 |
-| `src/svg/index.ts` | 修改 | 经 `./svg` 子路径导出 SVG 动画相关类型 + `RenderOptions.easings`（**render 无根 index.ts，不存在 `src/index.ts`**） |
-| `packages/core/render/tests/svg-animation.test.ts` | 新建 | 见测试象限 |
-
-### 测试象限
-
-**Happy（≥3）**：load track → `<style>` 含对应 `@keyframes` + 元素挂 `animation:`；opacity/transform/strokeWidth/pathDraw 各自映射正确；交互 track → 元素带 WAAPI descriptor、`<style>` 不含它；camera（Scene.animations）→ 包 `<g transform>` 动画。
-**边界（≥2）**：`{animate:false}` → 无 `<style>`、无 descriptor、输出 = 静态 base（与 ADR-01 settled 逐字节一致）；省略 animations → 输出等价现状；混合 load+交互 track 同元素各走各载体。
-**错误/降级（≥2）**：`pathDraw` 挂无描边元素 → warn + skip（静态）；自定义 property 无映射 → warn + skip；自定义 easing 未注册 → warn + linear。
-**交互（≥2）**：oklch 颜色 track CSS 预采样产 N 中间帧、端点色正确；`id` + `animations` 共存（`data-retikz-id` 与 animation 不冲突）；同 IR `renderToSvgString` 两次输出稳定一致（keyframes 命名确定性，水合前置）。
-
-### 依赖的现有元素
-
-- ADR-01 的 `ScenePrimitive.animations` / `Scene.animations` + settled 不变量 —— **消费**：本 ADR 读 tracks 出 CSS/WAAPI。
-- `buildSvgDocument` / `buildSvgFragment` / `renderToSvgString` / `SvgNode`（alpha.1 ADR-01）—— **扩展**：加 `{animate}` 入参 + animation descriptor。
-- `data-retikz-id` emit（alpha.3 水合）—— **并存**：animation 与水合挂点同元素不冲突。
-- oklch 颜色工具（若 core/render 已有；无则本 ADR 补最小 oklch lerp + sRGB 采样）—— **复用/补**。
+> 实现指针：最终 schema / 类型 / 行为以代码为准；完整施工契约（Level / 改动 / 测试象限 / 依赖现有元素）见本文件封板前全文。
+> 🔖 本文件压缩前完整施工蓝图 = `git show 08deaa80:notes/decisions/core/v0/v0.3/v0.3-alpha.5/02-svg-playback.md`（封板全文）。
