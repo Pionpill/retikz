@@ -25,14 +25,15 @@ export const FieldDefSchema = z
       .describe('Field name as referenced by encoding channels (a path accessor like "a.b.c")'),
     type: z
       .nativeEnum(PlotFieldType)
-      .describe('Field measurement type; drives default type inference, type-driven scale selection and guide formatting at lowering'),
+      .optional()
+      .describe('Field measurement type; omit to infer from the bound dataset at lowering. When given, drives type-driven scale selection and guide formatting without seeing the data'),
   })
-  .describe('One field declaration: a field name plus its measurement type');
+  .describe('One field declaration: a field name, optionally its measurement type (inferred from data when omitted)');
 
 export const DataModelSchema = z
   .array(FieldDefSchema)
   .describe(
-    'Optional declaration of the external data fields and their types; enables encoding validation and scale-type inference without seeing the data. Omit to infer from the bound dataset at lowering.',
+    'Optional declaration of the external data fields. Listing a field name enables strict reference checking and portable field binding; a given field type also validates and selects scales without seeing the data, while fields with the type omitted are inferred from the bound dataset at lowering. Omit the whole model to infer everything.',
   );
 
 export const DataRefSchema = z

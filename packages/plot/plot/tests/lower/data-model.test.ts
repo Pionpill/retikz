@@ -164,3 +164,58 @@ describe('resolveFieldTypes — 类型解析 + strict 校验（ADR-01）', () =>
     expect(() => resolveFieldTypes(undefined, rows, new Set(['anything', 'whatever']))).not.toThrow();
   });
 });
+
+describe('resolveFieldTypes — 部分声明 model（type 可选，ADR-05）', () => {
+  const rows = [{ month: '2024-01-01', revenue: 10, cat: 'A' }];
+
+  it('partial_model_infers_untyped', () => {
+    // month 显式 temporal、revenue 仅 name → 推断 continuous
+    const map = resolveFieldTypes([{ name: 'month', type: 'temporal' }, { name: 'revenue' }], rows, new Set(['month', 'revenue']));
+    expect(map.get('month')).toBe(PlotFieldType.Temporal);
+    expect(map.get('revenue')).toBe(PlotFieldType.Continuous);
+  });
+
+  it('typed_field_uses_declaration_in_partial_model', () => {
+    // 部分 model 里带 type 的字段用声明（不被数据推断盖）：revenue 数值但声明 categorical
+    const map = resolveFieldTypes(
+      [{ name: 'revenue', type: 'categorical' }, { name: 'month' }],
+      [{ revenue: 5, month: '2024-01-01' }],
+      new Set(['revenue', 'month']),
+    );
+    expect(map.get('revenue')).toBe(PlotFieldType.Categorical);
+    expect(map.get('month')).toBe(PlotFieldType.Temporal);
+  });
+
+  it('name_only_satisfies_strict', () => {
+    // 字段仅给 name → 满足 strict、不抛，类型推断
+    expect(() => resolveFieldTypes([{ name: 'revenue' }], [{ revenue: 5 }], new Set(['revenue']))).not.toThrow();
+    const map = resolveFieldTypes([{ name: 'revenue' }], [{ revenue: 5 }], new Set(['revenue']));
+    expect(map.get('revenue')).toBe(PlotFieldType.Continuous);
+  });
+
+  it('all_name_only_equals_infer', () => {
+    // 全 name-only model → 类型结果与无 model 推断一致
+    const partial = resolveFieldTypes([{ name: 'month' }, { name: 'revenue' }, { name: 'cat' }], rows, new Set(['month', 'revenue', 'cat']));
+    const inferred = resolveFieldTypes(undefined, rows, new Set(['month', 'revenue', 'cat']));
+    expect(partial).toEqual(inferred);
+  });
+
+  it('name_only_empty_data_falls_categorical', () => {
+    // name-only 字段数据空 → 推断默认 categorical
+    const map = resolveFieldTypes([{ name: 'x' }], [], new Set(['x']));
+    expect(map.get('x')).toBe(PlotFieldType.Categorical);
+  });
+
+  // 错误路径：type 可选不削弱 strict
+  it('name_only_does_not_weaken_strict', () => {
+    // model 仅含 name-only 字段，但引用了未列字段 → 仍抛 unknown
+    expect(() => resolveFieldTypes([{ name: 'month' }], rows, new Set(['quater']))).toThrow(/unknown field/i);
+  });
+
+  it('duplicate_name_throws_regardless_of_type', () => {
+    // 重名（一条带 type、一条 name-only）→ 抛 duplicate
+    expect(() =>
+      resolveFieldTypes([{ name: 'month', type: 'temporal' }, { name: 'month' }], rows, new Set(['month'])),
+    ).toThrow(/duplicate field/i);
+  });
+});

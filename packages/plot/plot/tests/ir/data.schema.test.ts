@@ -49,6 +49,16 @@ describe('DataRefSchema / DataModelSchema / ScalarValueSchema (ADR-02)', () => {
     expect(() => DataRefSchema.parse({ reference: 'd', model: [{ name: 'g', type: 'geojson' }] })).toThrow();
   });
 
+  it('fielddef_name_only_valid', () => {
+    // ADR-05：type 可选，仅给 name 合法（lowering 时推断类型）
+    const spec = { reference: 'd', model: [{ name: 'month', type: 'temporal' }, { name: 'revenue' }] };
+    expect(DataRefSchema.parse(spec)).toEqual(spec);
+  });
+
+  it('datamodel_name_only_field_parses', () => {
+    expect(DataModelSchema.parse([{ name: 'revenue' }])).toEqual([{ name: 'revenue' }]);
+  });
+
   it('scalar_value_nested_object_rejected', () => {
     expect(() => ScalarValueSchema.parse({ a: 1 })).toThrow();
   });
