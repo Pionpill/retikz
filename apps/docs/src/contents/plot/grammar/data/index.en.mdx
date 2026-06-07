@@ -179,12 +179,23 @@ Document / heterogeneous data often has missing fields or mixed types across row
 | A row is missing the field | that datum is skipped (normal for heterogeneous data, no error) |
 | The leaf is an object / array (non-scalar) | that datum is skipped (objects never enter the chart) |
 | Same type, different storage format | converted automatically (see "Swapping data sources" #3) |
+| The field is a `bigint` (e.g. a database int64) | converted to a number automatically (safe integers only; out-of-range is treated as invalid) |
 | The path passes through an array (needs unwinding) | not auto-unwound yet — flatten in the data layer first |
 
-The default "skip" can leave you staring at a blank chart. Turn on `validateData` to have retikz sample-check the binding and **throw on problems**, turning "why is it empty" into a clear message:
+The default "skip" can leave you staring at a blank chart. Turn on `validateData` to have retikz **sample-check** the binding and throw on problems, pointing at **which field and how many invalid / missing** (e.g. `field "x": 3/100 invalid`), turning "why is it empty" into a clear message:
 
 ```tsx
 <Plot data={rows} model={[...]} validateData>
   {/* missing field / nothing convertible → compile-time error instead of a blank chart */}
 </Plot>
 ```
+
+For a stricter **full** check, pass `invalid="error"` — any invalid value (a missing field, an unconvertible value, an out-of-range bigint) in a field the chart actually uses throws immediately and names the field, rather than sampling:
+
+```tsx
+<Plot data={rows} model={[...]} invalid="error">
+  {/* any participating field with an invalid value → error that names the field */}
+</Plot>
+```
+
+`invalid` defaults to `'skip'` (the table's "skip" behavior): invalid points are dropped but the **whole row is kept**, still participating in stacking / sorting transforms; `'error'` only checks the fields the chart references, leaving other dirty columns alone.
