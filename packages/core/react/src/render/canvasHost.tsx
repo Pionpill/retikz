@@ -1,4 +1,4 @@
-import { type CSSProperties, type FC, useEffect, useReducer, useRef } from 'react';
+import { type CSSProperties, type FC, type MutableRefObject, type Ref, useEffect, useReducer, useRef } from 'react';
 import type { Scene } from '@retikz/core';
 import { hitTest, renderToCanvas } from '@retikz/render/canvas';
 import type { AnimationPropertyRegistry, EasingRegistry } from '@retikz/render/canvas';
@@ -67,10 +67,18 @@ export type CanvasHostProps = {
   animate?: boolean;
   /** 静态截帧时刻（毫秒）；给定时按该时刻画一帧、不起 rAF（定格），覆盖 animate */
   at?: number;
+  /** 命令式动画句柄出口：写入 rAF 时钟 AnimationControls（无动画 / 截帧 / 降级时为 null） */
+  animationRef?: Ref<AnimationControls | null>;
   /** 自定义 easing 注册表（透传 drawScene） */
   easings?: EasingRegistry;
   /** 自定义 property 插值器注册表（透传 drawScene） */
   animationProperties?: AnimationPropertyRegistry;
+};
+
+/** 写入 ref（兼容 callback ref 与 RefObject）；value 为 null 表示清空 */
+const assignRef = <T,>(ref: Ref<T> | undefined, value: T): void => {
+  if (typeof ref === 'function') ref(value);
+  else if (ref) (ref as MutableRefObject<T>).current = value;
 };
 
 const devicePixelRatio = (): number => {
@@ -118,7 +126,7 @@ const clientToScene = (
 
 /** React canvas 宿主：管理 `<canvas>` 与全量重绘 effect */
 export const CanvasHost: FC<CanvasHostProps> = props => {
-  const { scene, handlers, width, height, className, style, animate: animateProp, at, easings, animationProperties } = props;
+  const { scene, handlers, width, height, className, style, animate: animateProp, at, animationRef, easings, animationProperties } = props;
   const animate = animateProp !== false;
   const ref = useRef<HTMLCanvasElement>(null);
   // rAF 时钟句柄：render effect 写、hydration effect 的 context.animation（coarse）读 live，update 后自动跟随
@@ -163,12 +171,14 @@ export const CanvasHost: FC<CanvasHostProps> = props => {
     if (at !== undefined) {
       renderToCanvas(canvas, scene, { ...baseOptions, time: at });
       clockRef.current = null;
+      assignRef(animationRef, null);
       return undefined;
     }
     // base 静态先画一帧；含动画且未降级 → 起 rAF 共享时钟逐帧重绘（auto track 自动播；manual/onEvent/visible 渲染 base）
     renderToCanvas(canvas, scene, baseOptions);
     if (!animate || prefersReducedMotion() || !sceneHasAnimations(scene)) {
       clockRef.current = null;
+      assignRef(animationRef, null);
       return undefined;
     }
     const clock = createClock({
@@ -176,12 +186,14 @@ export const CanvasHost: FC<CanvasHostProps> = props => {
       onFrame: time => renderToCanvas(canvas, scene, { ...baseOptions, time }),
     });
     clockRef.current = clock;
+    assignRef(animationRef, clock); // 命令式句柄出口
     if (sceneHasAutoplayTrigger(scene)) clock.play();
     return () => {
       clock.dispose();
       clockRef.current = null;
+      assignRef(animationRef, null);
     };
-  }, [animate, at, animationProperties, className, easings, height, renderTick, scene, style, width]);
+  }, [animate, at, animationRef, animationProperties, className, easings, height, renderTick, scene, style, width]);
 
   // 水合：把 handler 注册表经 createHydrationController + (hitTest + 逆 meet-fit 坐标映射) 绑到 <canvas>。
   // locate(event) = client 坐标 → clientToScene 逆 meet-fit 成 Scene 点 → hitTest 返回命中图元 id。

@@ -137,6 +137,7 @@ export type {
 export type {
   AnimationPropertyDefinition,
   AnimationPropertyRegistry,
+  AnimationControls,
   CubicBezier,
   EasingFn,
   EasingRegistry,

@@ -1,8 +1,10 @@
 import {
   type CSSProperties,
   type FC,
+  type MutableRefObject,
   type ReactElement,
   type ReactNode,
+  type Ref,
   cloneElement,
   useCallback,
   useEffect,
@@ -33,7 +35,7 @@ import {
 } from '@retikz/render/hydration';
 import { buildSvgDocument } from '@retikz/render/svg';
 import { bindWaapiDescriptors, sceneHasAnimations } from '@retikz/render/animation';
-import type { AnimationPropertyRegistry, EasingRegistry } from '@retikz/render/animation';
+import type { AnimationControls, AnimationPropertyRegistry, EasingRegistry } from '@retikz/render/animation';
 import { buildIR, pickScopeStyle, wrapRootScope } from './builder';
 import { collectHydrationHandlers } from './collectHydrationHandlers';
 import { useRendererMode } from './rendererContext';
@@ -57,6 +59,12 @@ const withDefaultFontFamily = (
       ...font,
       family: typeof font.family === 'string' && font.family.trim().length > 0 ? font.family : defaultFontFamily,
     });
+};
+
+/** 写入 ref（兼容 callback ref 与 RefObject）；value 为 null 表示清空 */
+const assignRef = <T,>(ref: Ref<T> | undefined, value: T): void => {
+  if (typeof ref === 'function') ref(value);
+  else if (ref) (ref as MutableRefObject<T>).current = value;
 };
 
 /**
@@ -104,6 +112,12 @@ export type LayoutProps = ScopeStyleProps & {
    * @description SVG：各 track 在该时刻的值烘焙成静态属性 / transform；Canvas：按该时刻画一帧、不起 rAF。覆盖 `animate`。
    */
   at?: number;
+  /**
+   * 命令式动画句柄出口：传一个 ref，挂载后写入 `AnimationControls`（`play` / `pause` / `seek`）
+   * @description 与 vanilla `view.animation` 对等——SVG 控制交互（`manual` / `visible` / `{onEvent}`）track 的 WAAPI
+   *   句柄；Canvas 控制 rAF 时钟。无动画 / 降级时为 `null`。供组件外命令式控制（按钮播放 / 暂停 / 跳帧）。
+   */
+  animationRef?: Ref<AnimationControls | null>;
   /**
    * scene 根（镜头）时间轴动画 tracks（`viewBox` property）；注入构造出的 IR 根 `animations`
    * @description 配 `cameraTo()` preset：`<Layout animations={[cameraTo({ from, to })]}>`。元素级动画走各元素
@@ -177,6 +191,7 @@ const useSvgRootBinding = (
   handlers: HydrationHandlers,
   scene: ReturnType<typeof compileToScene>,
   hasAnimations: boolean,
+  publishAnimation: (controls: AnimationControls | null) => void,
 ): ((element: SVGSVGElement | null) => void) => {
   const rootRef = useRef<SVGSVGElement | null>(null);
   const setRoot = useCallback((element: SVGSVGElement | null) => {
@@ -203,8 +218,12 @@ const useSvgRootBinding = (
     const root = rootRef.current;
     if (root === null || !hasAnimations) return undefined;
     const controls = bindWaapiDescriptors(root);
-    return () => controls.dispose();
-  }, [hasAnimations, scene]);
+    publishAnimation(controls); // 命令式句柄出口（manual/visible/onEvent 的 WAAPI 控制）
+    return () => {
+      controls.dispose();
+      publishAnimation(null);
+    };
+  }, [hasAnimations, scene, publishAnimation]);
   return setRoot;
 };
 
@@ -216,7 +235,7 @@ const useSvgRootBinding = (
  *   `@retikz/render/svg`，react 只做 `SvgNode→ReactElement` 薄映射 + `useId` 绑定。
  */
 export const Layout: FC<LayoutProps> = props => {
-  const { ir: irFromProp, children, width, height, viewBox, className, style, renderer: rendererProp, animate: animateProp, at, animations: rootAnimations, easings, animationProperties, idPrefix, nodeDistance, shapes, arrows, patterns, pathGenerators, composites, handlers } = props;
+  const { ir: irFromProp, children, width, height, viewBox, className, style, renderer: rendererProp, animate: animateProp, at, animationRef, animations: rootAnimations, easings, animationProperties, idPrefix, nodeDistance, shapes, arrows, patterns, pathGenerators, composites, handlers } = props;
   const animate = animateProp !== false;
   const { color, stroke, fill, strokeWidth, opacity, fillOpacity, drawOpacity, nodeDefault, pathDefault, labelDefault, arrowDefault } = props;
   // 渲染目标：显式 prop > 祖先 RendererModeProvider 注入的 context > 默认 svg（hook 必须无条件调用）
@@ -266,7 +285,9 @@ export const Layout: FC<LayoutProps> = props => {
 
   // svg root 的 callback ref——水合控制器（createHydrationController + locateSvg）+ 交互动画 WAAPI 桥绑定的 figure root
   const hasAnimations = renderer !== 'canvas' && animate && sceneHasAnimations(scene);
-  const setRoot = useSvgRootBinding(resolvedHandlers, scene, hasAnimations);
+  // 命令式动画句柄出口（与 vanilla view.animation 对等）；svg 走 WAAPI 句柄、canvas 走 CanvasHost 的 rAF 时钟
+  const publishAnimation = useCallback((controls: AnimationControls | null) => assignRef(animationRef, controls), [animationRef]);
+  const setRoot = useSvgRootBinding(resolvedHandlers, scene, hasAnimations, publishAnimation);
 
   if (renderer === 'canvas') {
     return (
@@ -279,6 +300,7 @@ export const Layout: FC<LayoutProps> = props => {
         style={style}
         animate={animate}
         at={at}
+        animationRef={animationRef}
         easings={easings}
         animationProperties={animationProperties}
       />

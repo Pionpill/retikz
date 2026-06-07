@@ -1,8 +1,10 @@
 // @vitest-environment jsdom
+import { createRef } from 'react';
 import { createRoot } from 'react-dom/client';
 import { act } from 'react-dom/test-utils';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { IRAnimationTrack } from '@retikz/core';
+import type { AnimationControls } from '../src';
 import { Layout, Node, cameraTo, fadeIn, spin } from '../src';
 import { convertReactNodeToIR } from '../src';
 
@@ -94,6 +96,42 @@ describe('preset 集成', () => {
     expect(style).not.toBeNull();
     expect(style!.textContent).toContain('@keyframes');
     expect(style!.textContent).toContain('translate('); // 镜头 group transform
+  });
+});
+
+describe('命令式动画句柄（animationRef）', () => {
+  it('svg 交互 track → animationRef.current 是 AnimationControls（play/pause/seek）', async () => {
+    const ref = createRef<AnimationControls | null>();
+    await mount(
+      <Layout width={100} height={100} animationRef={ref}>
+        <Node id="a" position={[0, 0]} stroke="#000" minimumSize={2} animations={MANUAL} />
+      </Layout>,
+    );
+    expect(ref.current).not.toBeNull();
+    expect(typeof ref.current?.play).toBe('function');
+    expect(typeof ref.current?.pause).toBe('function');
+    expect(typeof ref.current?.seek).toBe('function');
+  });
+
+  it('canvas load track → animationRef.current 是 rAF 时钟句柄', async () => {
+    const ref = createRef<AnimationControls | null>();
+    await mount(
+      <Layout renderer="canvas" width={100} height={100} animationRef={ref}>
+        <Node id="a" position={[0, 0]} fill="red" minimumSize={2} animations={FADE} />
+      </Layout>,
+    );
+    expect(ref.current).not.toBeNull();
+    expect(typeof ref.current?.play).toBe('function');
+  });
+
+  it('无动画 scene → animationRef.current 保持 null', async () => {
+    const ref = createRef<AnimationControls | null>();
+    await mount(
+      <Layout width={100} height={100} animationRef={ref}>
+        <Node id="a" position={[0, 0]} fill="red" minimumSize={2} />
+      </Layout>,
+    );
+    expect(ref.current).toBeNull();
   });
 });
 

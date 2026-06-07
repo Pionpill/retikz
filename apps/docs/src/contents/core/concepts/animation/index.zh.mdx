@@ -116,6 +116,19 @@ import { Layout, Node, fadeIn, scaleIn } from '@retikz/react';
 | `manual` | 不自动播，由运行时句柄控制 | SVG；Canvas 暂渲染静止态 |
 | `{ onEvent: 'click' }` | 命中事件才播 | SVG；Canvas 暂渲染静止态 |
 
+**命令式控制**：给 `<Layout animationRef={ref}>` 传一个 ref，挂载后拿到 `AnimationControls`（`play` / `pause` / `seek`），即可在组件外用自己的按钮控制（配 `trigger: 'manual'` 最常见）：
+
+```tsx
+const ref = useRef<AnimationControls | null>(null);
+
+<Layout animationRef={ref}>
+  <Node animations={[{ ...spin(), trigger: 'manual' }]} />
+</Layout>
+<button onClick={() => ref.current?.play()}>播放</button>
+```
+
+SVG 控制交互（`manual` / `visible` / `onEvent`）track 的 WAAPI 句柄、Canvas 控制 rAF 时钟；与 vanilla 的 `view.animation` 对等。无动画 / 降级时 `ref.current` 为 `null`。（在 handler 内则用水合的 [`context.animation`](/core/reference/renderer/hydration#handler-的-context)。）
+
 **何时不播**（三者殊途同归到静止态，见上方提示）：传 `animate={false}`、用户系统开了「减少动态效果」（`prefers-reduced-motion`）、或后端不支持动画。降级时**不报错、不丢图**，渲染完整静止图并给一条可诊断告警。
 
 各后端能力：**SVG** 支持全部 trigger；**Canvas** 本阶段自动播放 `load` 动画（`visible` / `manual` / `onEvent` 渲染静止态，后续补齐）。
