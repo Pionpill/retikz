@@ -86,15 +86,15 @@
   - **默认 axes 合并规则**（决策 ⑦）——改 `buildPlotSpec.ts:293`（当前「有任何 guide 即不加默认 axes」），改成按 guide `type` 分别判断：显式 Axis 才覆盖默认 Axis、Legend 不抑制默认 Axis
   - 新增 `<Legend>` 组件 / vanilla spec 表面
 
-## ADR 清单（拟定，待起草）
+## ADR 清单
 
-> 本轮 ADR 尚未起草——按惯例临近开发先调研同类库 + 外部评审、人工签字后再写 ADR 草案（Proposed）。下表为**拟定拆分**，编号 / 主题在起草期可微调。
+> 3 ADR 已起草为 **Proposed**（并入多 LLM 评审 P1/P2）；外部再评审 + 人工签字后逐条进实现（沿用 alpha.6/7）。决策点 ①~⑩ 的「倾向」已写进各 ADR「决策」段、真正悬置项留各 ADR「待决策点 🔻」待签。
 
-| ADR | 主题 | Level（预估） | 依赖 | 状态 |
+| ADR | 主题 | Level | 依赖 | 状态 |
 |---|---|---|---|---|
-| 01 | 连续色阶 sequential / diverging（continuous/temporal color → 色带；内置 scheme 词表 + 可选 range；line/area 连续 color 仍 fail-loud、无 path gradient；React type-driven 派生入口；了结 alpha.7 color fail-loud） | red | — | 待起草 |
-| 02 | 离散化 scale quantize / threshold / quantile（连续 domain → 离散 color 档；复用 01 scheme/range schema；threshold 断点强校验；quantile 数据分位） | red | ADR-01 | 待起草 |
-| 03 | legend guide（GuideSchema 升 union；target = channel + 可选 scale；resolver 暴露可复用 descriptor；估算布局 + 占位；显式 Legend 不抑制默认 axes；标签复用 axis formatter） | red | ADR-01/02 + alpha.7 非位置 scale | 待起草 |
+| [01](./01-continuous-color-scale.md) | 连续色阶 sequential / diverging（continuous/temporal color → 色带；scheme 词表 + 可选 range；line/area 连续 color 仍 fail-loud、无 path gradient；React type-driven 派生入口；了结 alpha.7 color fail-loud） | red | — | Proposed |
+| [02](./02-discretization-scale.md) | 离散化 scale quantize / threshold / quantile（连续 domain → 离散 color 档；复用 01 scheme/range schema；threshold 断点强校验；quantile 数据分位） | red | ADR-01 | Proposed |
+| [03](./03-legend-guide.md) | legend guide（GuideSchema 升 union；target = channel + 可选 scale；resolver 暴露可复用 descriptor；估算布局 + 占位；显式 Legend 不抑制默认 axes；标签复用 axis formatter） | red | ADR-01/02 + alpha.7 非位置 scale | Proposed |
 
 ## 贯穿原则落点
 
