@@ -388,7 +388,6 @@ const rectNode = (x: number, y: number, width: number, height: number): IRNode =
   minimumWidth: width,
   minimumHeight: height,
   padding: 0,
-  strokeWidth: 0,
 });
 
 /**
@@ -459,8 +458,9 @@ export const lowerLegend = (input: LegendInput): IRScope => {
   return {
     type: 'scope',
     ...(input.id !== undefined ? { id: input.id } : {}),
-    // 标签字号；不写 nodeDefault.shape（每个 swatch / glyph Node 自带 shape，避免整层被当成 mark 层）
-    nodeDefault: { font: { size: fontSize }, padding: 0 },
+    // 标签字号 + 默认无描边（swatch / ramp / glyph / 标签都不要描边边框）；不写 nodeDefault.shape（每个 swatch / glyph Node 自带 shape，避免整层被当成 mark 层）。
+    // 用 strokeWidth: 0 而非 stroke: 'none'——后者是 axis 层的判别特征，会让 legend 层被误判为 axis。
+    nodeDefault: { font: { size: fontSize }, padding: 0, strokeWidth: 0 },
     children,
   };
 };
