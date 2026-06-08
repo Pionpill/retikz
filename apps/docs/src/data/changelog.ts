@@ -805,6 +805,58 @@ export const changelog: Array<Release> = [
         ],
         subVersions: [
           {
+            version: 'alpha.6',
+            date: '2026-06-08',
+            summary: {
+              zh: '阶段二开篇·数据模型：把 `data.model` 升级成承重的字段语义类型层（`continuous / categorical / temporal`），驱动 type-driven scale 默认选型；补可移植数据契约（fieldMaps + 按类型 coercion）、`resolveField` 运行时逃生舱、声明式 `format` / `order`、`invalid` 策略与扩宽的 temporal 推断。',
+              en: 'Stage 2 opener · data model: `data.model` becomes a load-bearing field-semantic-type layer (`continuous / categorical / temporal`) that drives type-driven default scale selection; adds a portable data contract (fieldMaps + by-type coercion), a `resolveField` runtime escape hatch, declarative `format` / `order`, an `invalid` policy, and a widened temporal inference.',
+            },
+            items: [
+              {
+                label: { zh: '字段语义类型层（3 类）+ 缺省推断', en: 'Field-semantic-type layer (3 types) + default inference' },
+                content: {
+                  zh: '`data.model` 升级成承重的字段语义类型层，字段类型集定为 `continuous / categorical / temporal`（`PlotFieldType`）;`FieldDef.type` 可选（部分声明 model，缺省字段从数据推断）;无 model 时全字段缺省推断（严格 ISO temporal guard + 抽样双阈值 ≤1000 行/≤100 标量）;encoding `field` 引用与自洽校验 fail-loud。优先级 `resolveField.type > model.type > infer`。',
+                  en: '`data.model` becomes a load-bearing field-semantic-type layer with the type set fixed to `continuous / categorical / temporal` (`PlotFieldType`); `FieldDef.type` is optional (partial model declaration, unspecified fields inferred from data); with no model, all fields are inferred (strict ISO temporal guard + dual sampling thresholds ≤1000 rows / ≤100 scalars); encoding `field` references and self-consistency are validated fail-loud. Precedence `resolveField.type > model.type > infer`.',
+                },
+              },
+              {
+                label: { zh: 'type-driven scale 默认选型 + guide 格式化', en: 'type-driven scale selection + guide formatting' },
+                content: {
+                  zh: 'channel 未显式声明 scale 时按字段类型派生默认 scale（continuous→linear、temporal→time、categorical→band[位置]/ordinal[色]）;显式 scale 永远优先;类型↔scale 不兼容 **fail-loud 不强转**;guide 按类型选 tick formatter（时间轴日期 / 分类 tick）。最小 spec 可省 scale 声明。',
+                  en: 'When a channel omits its scale, a default is derived from the field type (continuous→linear, temporal→time, categorical→band[position]/ordinal[color]); an explicit scale always wins; an incompatible type↔scale pairing **fails loud rather than coercing**; guides pick a tick formatter by type (date axes / categorical ticks). A minimal spec can drop scale declarations.',
+                },
+              },
+              {
+                label: { zh: '可移植数据契约：fieldMaps + 按类型 coercion', en: 'Portable data contract: fieldMaps + by-type coercion' },
+                content: {
+                  zh: 'spec 绑定逻辑字段（名 + 类型），数据源经适配层接入：同名同类型直接换源、不同名经 `LowerPlotsOptions.fieldMaps`（逻辑名→物理路径，按 dataset reference 键，不进 IR）映射、不同 JS 类型但同 `PlotFieldType` 经按类型值强制。ingest 一次性归一化成 canonical rows（transform 前）;`validateData?: boolean | { sampleRows? }` 抽样 fail-loud（默认关、不 warn）。fieldMaps 需 model。',
+                  en: 'The spec binds logical fields (name + type) and data sources plug in via an adapter layer: same-name-same-type swaps directly, different names map through `LowerPlotsOptions.fieldMaps` (logical-name→physical-path, keyed by dataset reference, never in the IR), and different JS types but the same `PlotFieldType` go through by-type coercion. Ingest normalizes once into canonical rows (before transforms); `validateData?: boolean | { sampleRows? }` samples fail-loud (off by default, never warns). fieldMaps requires a model.',
+                },
+              },
+              {
+                label: { zh: 'resolveField 运行时逃生舱', en: 'resolveField runtime escape hatch' },
+                content: {
+                  zh: '`LowerPlotsOptions.resolveField`：`(field, ctx) => { type?, parse? }` 程序化字段解析（按字段名覆盖类型 + 自定义值解析），运行时函数、**不进 IR**、不绕过 strict、parse-only 须有类型来源;render 与 locator 经 `prepareRows` 同源，杜绝两套解析漂移。返回 undefined → 回退 model/推断 + 内置 coerce。',
+                  en: '`LowerPlotsOptions.resolveField`: `(field, ctx) => { type?, parse? }` programmatic field resolution (per-name type override + custom value parsing), a runtime function that **stays out of the IR**, never bypasses strict, and requires a type source if parse-only; render and locator share one source via `prepareRows`, avoiding dual-parse drift. Returning undefined falls back to model/inference + built-in coercion.',
+                },
+              },
+              {
+                label: { zh: '声明式 FieldDef.format + FieldDef.order', en: 'declarative FieldDef.format + FieldDef.order' },
+                content: {
+                  zh: '`FieldDef.format`：closed 枚举词表（进 IR、可序列化），覆盖常见非默认格式，优先级 `resolveField.parse > format > 内置`（完整 date pattern 串留后续）;`FieldDef.order`：`\'data\' | \'ascending\' | \'descending\' | Array`，非默认即有序;挂 FieldDef 故位置(band) 与颜色(ordinal) 同序，不复活 ordinal 类型。',
+                  en: '`FieldDef.format`: a closed-enum vocabulary (in the IR, serializable) covering common non-default formats, precedence `resolveField.parse > format > built-in` (full date-pattern strings deferred); `FieldDef.order`: `\'data\' | \'ascending\' | \'descending\' | Array`, non-default means ordered; hung on the FieldDef so position (band) and color (ordinal) share one order, without reviving an ordinal type.',
+                },
+              },
+              {
+                label: { zh: '数据健壮性 + ISO 识别扩宽', en: 'data robustness + widened ISO recognition' },
+                content: {
+                  zh: '恒归一化（去「仅 model/resolver 命中」门控，下游单一 canonical 路径）;`LowerPlotsOptions.invalid: \'skip\' | \'error\'`——`skip`（默认）写 NaN/undefined 哨兵不删行、mark 自跳非法几何，`error` 在 transform 前全量校验遇非法即 fail-loud;`validateData` 出字段级 invalid/missing 报告;bigint 进 ingest（转 number，safe-integer 边界校验）但不进 IR 标量;temporal 推断扩认空格分隔带时区 ISO（SQL 时间戳），仍拒歧义格式。',
+                  en: 'Always-normalize (drops the "only when model/resolver hits" gate, so downstream has a single canonical path); `LowerPlotsOptions.invalid: \'skip\' | \'error\'` — `skip` (default) writes NaN/undefined sentinels without dropping rows and marks skip invalid geometry, `error` validates all participating fields before transforms and fails loud on any invalid; `validateData` emits per-field invalid/missing counts; bigint enters ingest (cast to number with safe-integer bounds) but never the IR scalar; temporal inference additionally accepts space-separated timezone ISO (SQL timestamps) while still rejecting ambiguous formats.',
+                },
+              },
+            ],
+          },
+          {
             version: 'alpha.5',
             date: '2026-06-07',
             summary: {
@@ -979,6 +1031,30 @@ export const changelog: Array<Release> = [
         ],
         subVersions: [
           {
+            version: 'alpha.6',
+            date: '2026-06-08',
+            summary: {
+              zh: '随 plot lockstep 接入数据模型：`<Plot>` 转发 `fieldMaps` / `resolveField` / `validateData` / `invalid` 到 `lowerPlots`;DSL 入口加 `model`（声明字段语义类型，改走 type-driven 派生）与扁平 `fieldMap`（映射到 DSL 数据集名）。',
+              en: 'Lockstep with plot, wiring in the data model: `<Plot>` forwards `fieldMaps` / `resolveField` / `validateData` / `invalid` to `lowerPlots`; the DSL entry gains `model` (declare field-semantic types, switching to type-driven derivation) and a flat `fieldMap` (mapped onto the DSL dataset name).',
+            },
+            items: [
+              {
+                label: { zh: '<Plot> 转发数据模型选项', en: '`<Plot>` forwards data-model options' },
+                content: {
+                  zh: '`PlotCommonProps` 早已 `extends LowerPlotsOptions`;`Plot.tsx` 解构补 `fieldMaps` / `validateData` / `resolveField` / `invalid` 并一并透传 `lowerPlots`，spec 与 DSL 两条入口行为一致。',
+                  en: '`PlotCommonProps` already `extends LowerPlotsOptions`; `Plot.tsx` now destructures and forwards `fieldMaps` / `validateData` / `resolveField` / `invalid` into `lowerPlots`, keeping the spec and DSL entries consistent.',
+                },
+              },
+              {
+                label: { zh: 'DSL model + fieldMap', en: 'DSL model + fieldMap' },
+                content: {
+                  zh: 'DSL 入口可写 `model`（经 `buildPlotSpec` 注入 `data.model` 并改走 type-driven 派生，省略 AUTO 位置 scale 绑定，否则 temporal/categorical 不会派生 time/band）;扁平 `fieldMap` 映射到固定 DSL 数据集名 → `effectiveFieldMaps`，免在组合写法里手拼 dataset 键。',
+                  en: 'The DSL entry accepts `model` (injected as `data.model` via `buildPlotSpec` and routed through type-driven derivation, dropping the AUTO positional-scale binding so temporal/categorical actually derive time/band); a flat `fieldMap` is mapped onto the fixed DSL dataset name → `effectiveFieldMaps`, so the composition form needn’t hand-assemble dataset keys.',
+                },
+              },
+            ],
+          },
+          {
             version: 'alpha.5',
             date: '2026-06-07',
             summary: {
@@ -1096,6 +1172,23 @@ export const changelog: Array<Release> = [
           },
         ],
         subVersions: [
+          {
+            version: 'alpha.6',
+            date: '2026-06-08',
+            summary: {
+              zh: '随 plot 数据模型 lockstep：`renderPlot` 入口本就整体展开 `LowerPlotsOptions`，故 alpha.6 新增的数据模型选项（`fieldMaps` / `resolveField` / `validateData` / `invalid`）无需改代码自动生效——SSR 产物可消费可移植契约与缺省类型推断，无新 API。',
+              en: 'Lockstep with plot’s data model: the `renderPlot` entry already spreads `LowerPlotsOptions`, so alpha.6’s new data-model options (`fieldMaps` / `resolveField` / `validateData` / `invalid`) take effect with no code change — SSR output benefits from the portable contract and default type inference, no new API.',
+            },
+            items: [
+              {
+                label: { zh: 'SSR 透传数据模型选项', en: 'SSR forwards data-model options' },
+                content: {
+                  zh: '`renderPlot` 把整份 `LowerPlotsOptions` 展开给 `lowerPlots`，alpha.6 新增的 `fieldMaps`（换源映射）/ `resolveField`（运行时解析逃生舱）/ `validateData`（抽样校验）/ `invalid`（非法值策略）全部零代码自动生效;服务端 / 构建期出的 SVG 字符串行为与 react 面一致。',
+                  en: 'The `renderPlot` entry spreads the whole `LowerPlotsOptions` into `lowerPlots`, so alpha.6’s `fieldMaps` (source remapping) / `resolveField` (runtime resolution escape hatch) / `validateData` (sampled validation) / `invalid` (invalid-value policy) all work with zero code; server / build-time SVG strings behave identically to the React surface.',
+                },
+              },
+            ],
+          },
           {
             version: 'alpha.5',
             date: '2026-06-07',
