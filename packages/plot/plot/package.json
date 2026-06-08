@@ -1,6 +1,6 @@
 {
   "name": "@retikz/plot",
-  "version": "0.1.0-alpha.6",
+  "version": "0.1.0-alpha.7",
   "description": "retikz plot (Tier 2): JSON-serializable grammar-of-graphics Plot IR that lowers to @retikz/core.",
   "type": "module",
   "author": "Pionpill",
