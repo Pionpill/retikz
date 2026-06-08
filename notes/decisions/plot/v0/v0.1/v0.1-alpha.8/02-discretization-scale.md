@@ -1,6 +1,6 @@
 # ADR-02：离散化 scale——quantize / threshold / quantile（连续 domain → 离散 color 档）
 
-- 状态：Proposed
+- 状态：Accepted
 - 决策日期：2026-06-08
 - 关联：[plot v0.1-alpha.8 roadmap](./roadmap.md) · [plot v0 roadmap 阶段二](../../roadmap.md) · [plot-design §3.4 Scale](../../../../../architecture/plot-design.md) · 依赖：[ADR-01 连续色阶](./01-continuous-color-scale.md)（复用 scheme/range schema）· 下游：[ADR-03 legend](./03-legend-guide.md)（分箱 swatch）
 
@@ -65,6 +65,12 @@ export const PlotScale = {
 1. **补全 GoG 离散化三件套**：quantize/threshold/quantile 覆盖「等宽 / 业务断点 / 抗偏斜」三类真实需求，d3 现成。
 2. **颜色复用 ADR-01**：不另造配色词表——同一 `PlotColorScheme` + range，离散色 = 连续 scheme 的采样。这是 dep ADR-01 的实质（修评审 P2 的依赖含糊）。
 3. **fail-loud 契约清晰**：threshold 断点升序 + 色数匹配强校验、quantile 不接受显式数值 domain，避免静默截断 / 语义冲突。
+
+**实现校准（2026-06-08，与实现/测试对齐）**：
+
+- **quantile 显式 domain = schema strip（非硬抛）**：决策⑤原写「给显式 domain → fail-loud」，落地为 `QuantileColorScaleSchema` 不定义 `domain` 字段、由 `z.object` 默认 strip（与全仓 scale schema 均裸 `z.object` 风格一致，不给 quantile 单独 `.strict()`）。效果是显式 domain 被静默剥离、lowering 不读、分位纯由数据定——目的达成（用户 domain 不生效），但形式是 strip 而非抛错。
+- **count×range 一致性也 fail-loud**：除 threshold 的 `range.length === breakpoints.length + 1`，quantize/quantile 在 **`count` 显式且 ≠ `range.length`** 时也 fail-loud（与 threshold 对称，修 adversarial WARNING；只给 range 省 count 仍宽容，档数 = range.length）。
+- **数值字段 `.finite()`**：`breakpoints` / quantize `domain`（及 ADR-01 sequential/diverging `domain`）的数值改 `z.number().finite()`，parse 期拒 `Infinity`/`-Infinity`（修 adversarial BLOCKING：裸 `z.number()` 放过 Infinity，既过 schema 又破坏 JSON round-trip）。
 
 ## 待决策点 🔻
 
