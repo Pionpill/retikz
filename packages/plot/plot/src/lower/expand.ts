@@ -1,6 +1,6 @@
 import { type CompositeDefinition, type IRChild, type IRScope, defineComposite } from '@retikz/core';
 import type { ZodType } from 'zod';
-import { type Channel, type ExternalDatasets, type ExternalRow, type FieldType, type Guide, type Mark, type OrdinalScale, PlotCoordinate, PlotFieldType, PlotMark, PlotScale, type PlotSpec, PlotSpecSchema, type Scale } from '../ir';
+import { type AxisGuide, type Channel, type ExternalDatasets, type ExternalRow, type FieldType, type Guide, type Mark, type OrdinalScale, PlotCoordinate, PlotFieldType, PlotGuide, PlotMark, PlotScale, type PlotSpec, PlotSpecSchema, type Scale } from '../ir';
 import { channelValue, isFiniteNumber, resolveFieldPath } from './field';
 import { type GuideContext, lowerGuide } from './guide';
 import { DEFAULT_FONT_SIZE, type Margins, type Rect, computePlotArea, computePolarFrame } from './layout';
@@ -40,7 +40,7 @@ const yChannelOf = (mark: Mark): Channel | undefined => (mark.type === PlotMark.
  * 一根定位角色只画一根轴：重复同角色的 axis（含 hybrid 别名 x≡angle / y≡radius）→ 抛清晰错误。
  * @description 多轴（dual-axis / 上下双轴，靠 placement 区分、副轴可绑不同 scale）是后续非破坏放宽，目前不支持。
  */
-const assertUniqueAxisDimension = (guides: Array<Guide>, coordinateType: string): void => {
+const assertUniqueAxisDimension = (guides: Array<AxisGuide>, coordinateType: string): void => {
   const seen = new Set<string>();
   for (const guide of guides) {
     const role = axisRole(guide.dimension, coordinateType);
@@ -50,6 +50,9 @@ const assertUniqueAxisDimension = (guides: Array<Guide>, coordinateType: string)
     seen.add(role);
   }
 };
+
+/** guide 谓词：按 type 判别串收窄成 axis 子集（legend 单独走 lowerLegend） */
+const isAxisGuide = (guide: Guide): guide is AxisGuide => guide.type === PlotGuide.Axis;
 
 /** 默认整图尺寸（user units）；尺寸是渲染选项、不进 IR */
 const DEFAULT_WIDTH = 480;
@@ -260,9 +263,10 @@ export const resolveFrame = (params: ResolveFrameParams): ResolvedFrame => {
 
     // guide 维度角色化：angle / x → angular（primary）、radius / y → radial（secondary）；一维一轴
     const guides = node.guides ?? [];
-    assertUniqueAxisDimension(guides, coordinate.type);
-    const angularAxis = guides.find(guide => guide.dimension === 'angle' || guide.dimension === 'x');
-    const radialAxis = guides.find(guide => guide.dimension === 'radius' || guide.dimension === 'y');
+    const axisGuides = guides.filter(isAxisGuide);
+    assertUniqueAxisDimension(axisGuides, coordinate.type);
+    const angularAxis = axisGuides.find(guide => guide.dimension === 'angle' || guide.dimension === 'x');
+    const radialAxis = axisGuides.find(guide => guide.dimension === 'radius' || guide.dimension === 'y');
 
     // 角向 scale 的 range = [startAngle, endAngle]，与 outerRadius 无关 → 可先建以取角向标签，供 layout 留白估算。
     // band / point 角向刻度即类别（域驱动、不依赖最终半径），故此处取的标签即最终标签。
@@ -310,7 +314,7 @@ export const resolveFrame = (params: ResolveFrameParams): ResolvedFrame => {
       angularTicks: angularTicks ?? EMPTY_TICKS,
       radialTicks: radialTicks ?? EMPTY_TICKS,
     };
-    for (const guide of guides) {
+    for (const guide of axisGuides) {
       const lowered = lowerGuide(guide, guideContext, provenance);
       if (lowered.gridLayer) gridLayers.push(lowered.gridLayer);
       if (lowered.axisLayer) axisLayers.push(lowered.axisLayer);
@@ -326,11 +330,12 @@ export const resolveFrame = (params: ResolveFrameParams): ResolvedFrame => {
     const xScale = resolvePositionScale(xScaleDef, xValues, [0, width]);
     const yScale = resolvePositionScale(yScaleDef, yValues, [height, 0]);
 
-    // 哪些维度有坐标轴（决定 margin / 是否算 ticks）；alpha.2 guide 仅 axis 类型，按 dimension 取
+    // 哪些维度有坐标轴（决定 margin / 是否算 ticks）；按 type 收窄出 axis 子集，legend 单独走 lowerLegend
     const guides = node.guides ?? [];
-    assertUniqueAxisDimension(guides, coordinate.type);
-    const xAxis = guides.find(guide => guide.dimension === 'x');
-    const yAxis = guides.find(guide => guide.dimension === 'y');
+    const axisGuides = guides.filter(isAxisGuide);
+    assertUniqueAxisDimension(axisGuides, coordinate.type);
+    const xAxis = axisGuides.find(guide => guide.dimension === 'x');
+    const yAxis = axisGuides.find(guide => guide.dimension === 'y');
     const xTicks: TickSet | undefined = xAxis ? xScale.ticks(xAxis.tickCount) : undefined;
     const yTicks: TickSet | undefined = yAxis ? yScale.ticks(yAxis.tickCount) : undefined;
 
@@ -371,7 +376,7 @@ export const resolveFrame = (params: ResolveFrameParams): ResolvedFrame => {
       yTicks: yTicks ?? EMPTY_TICKS,
       fontSize,
     };
-    const lowered = guides.map(guide => lowerGuide(guide, guideContext, provenance));
+    const lowered = axisGuides.map(guide => lowerGuide(guide, guideContext, provenance));
     for (const layer of lowered) {
       if (layer.gridLayer) gridLayers.push(layer.gridLayer);
       if (layer.axisLayer) axisLayers.push(layer.axisLayer);
