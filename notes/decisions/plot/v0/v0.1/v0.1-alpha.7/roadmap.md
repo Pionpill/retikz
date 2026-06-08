@@ -1,11 +1,13 @@
-# plot v0.1-alpha.7 实施待办：Aesthetics 上 + Scales 家族（阶段二 R2 · size 通道 + color 真通道/series + 连续 scale）
+# plot v0.1-alpha.7 实施待办：Aesthetics 全部视觉通道 + 连续 Scales 家族（阶段二 R2 · size/opacity/shape 通道 + color 真通道/series + 连续 scale）
 
 > milestone 执行路线。长期决策放同目录 `NN-*.md` ADR；本文件可更新。
 > 关联：[`plot v0.1 roadmap`](../roadmap.md) · [`plot v0 roadmap`](../../roadmap.md)（阶段二 alpha.7）· [`plot-design §3.3 Aesthetics / §3.4 Scale / §3.9 Guide`](../../../../../architecture/plot-design.md) · [`_template.md`](../../../_template.md) · 上个 milestone：[`v0.1-alpha.6`](../v0.1-alpha.6/roadmap.md)
 
 ## 目标
 
-**阶段二第二轮**（GoG「**Aesthetics**」上半 +「**Scales 家族**」）：在 alpha.6 把 `data.model` 升级成承重类型层之后，本轮**补第一个非位置视觉通道 `size`、把 `color` 收口成名副其实的真 scale 通道、并把连续 scale 家族补到 log / pow / sqrt**。同时把 alpha.1~6 只服务位置/颜色的「通道 → scale」处理**抽象成通用机制**，让 alpha.8 的 opacity / shape 通道能直接复用。
+**阶段二第二轮**（GoG「**Aesthetics**」+「**Scales 家族**」）：在 alpha.6 把 `data.model` 升级成承重类型层之后，本轮**补齐全部非位置视觉通道（`size` / `opacity` / `shape`）、把 `color` 收口成名副其实的真 scale 通道、并把连续 scale 家族补到 log / pow / sqrt**。同时把 alpha.1~6 只服务位置/颜色的「通道 → scale」处理**抽象成通用机制**，opacity / shape 直接复用该 resolver。
+
+> **范围调整（2026-06-08）**：原 alpha.7 只做 `size`，opacity / shape 留 alpha.8。因 alpha.7 体量偏小、且 opacity / shape 与 size 同属「非位置通道」并复用同一 resolver，决定**把 opacity / shape 前移并入本轮**（[部分前移决策](#opacity--shape-前移alpha8-部分并入)），alpha.7 成为完整的「Aesthetics + 连续 Scales」里程碑。alpha.8 收缩为「gradient / 离散化 scale + legend」。
 
 现状（alpha.1~6，见 [上轮调研](../v0.1-alpha.6/roadmap.md) + 代码核验）：
 
@@ -39,11 +41,19 @@
 
   边界：retikz **不走 ggplot「所有离散 aesthetic 自动分组」**——`series` 仍是一等显式分组语义，color 只是 path mark 的兜底拆分来源。隐式拆产出的 IR **必须等价于显式写 series**（保 alpha.5 datum locator parity，配等价性测试）。
 
+## opacity / shape 前移（alpha.8 部分并入）
+
+> 2026-06-08 范围调整：把原 alpha.8 的 opacity / shape 通道前移并入 alpha.7（gradient / 离散化 scale / legend 仍留 alpha.8）。下面两项为**新增设计决策（拟定，待外部评审）**，与上面四项已签字决策一同进 ADR-04 / ADR-05。
+
+- **⑤ opacity 作用域 = 仅 PointMark**（与 size 一致的 S1 风格，进 PointMark 专属 encoding，不进全局 StyleEncoding）：continuous 字段经 **linear scale** 映射到 `[minOpacity, 1]`（默认 range，避免低值全透明不可见）；常量 `value` ∈ `[0, 1]`；负值 / 越界 fail-loud。落到 core node 的不透明度字段（实现期确认 core 支持，不足走 next-core）。bar/area/line/sector 的 opacity 顺延（与 size 同口径）。
+- **⑥ shape 作用域 = 仅 PointMark**（glyph 形状本就只对散点有意义）：**categorical** 字段经 ordinal 式映射到一组 glyph（默认 shape 调色板 circle / square / triangle / diamond / cross… 循环），落到 core node 的 `shape`；常量 `value` = shape 名。连续 / 时间字段 fail-loud（形状是分类编码）。显式 shape scale + 自定义 glyph 集顺延。
+
 ## 不在 alpha.7（顺延）
 
-- **opacity / shape 通道 + legend** → alpha.8（复用本轮 ADR-01 的通道→scale 抽象）
-- **离散化 scale**（quantize / threshold / quantile）+ **连续 color 色阶**（sequential / diverging）→ alpha.8
+- **legend** guide（由非位置 scale 派生 + 布局）→ alpha.8（依赖本轮的全部非位置 scale 就位）
+- **离散化 scale**（quantize / threshold / quantile）+ **连续 color 色阶 gradient**（sequential / diverging）→ alpha.8
 - **categorical → 离散 size 档**（D1：本轮只做 continuous→size）→ 顺延 / 需求驱动
+- **opacity 作用于 bar/area/line/sector** + **shape 自定义 glyph 集 / 显式 shape scale** → 顺延（⑤⑥ 仅 PointMark）
 - **symlog**（log 跨零/负值兜底）+ **L2 显式正 baseline 的 log 柱/面积** → 需求驱动
 - **line strokeWidth / bar width / area 的 size 语义** → 顺延（① S1 范围外）
 - **自定义通道注册表（`ChannelDefinition` 对外开放）** → 另立里程碑（plot-design §11「先内置，后开放自定义」）；本轮通道集为内置 curated，ADR-02 的 resolver 仅留注册表接缝，用户要任意视觉控制走 Kernel（`<Node>` / `<Path>`）
@@ -64,10 +74,12 @@
 ```
 01 连续 scale 家族 log/pow/sqrt (结构叶子：新 scale 类型 + L1 限制；size 的 sqrt 真源)
  └─ 02 通道→scale 通用抽象 + size 通道 (dep 01 的 sqrt：提炼 resolver + size 派生到 sqrt)
-     └─ 03 color 真通道收口 + series 一等化 (dep 02 的 resolver：color 迁入 + B/C 规则)
+     ├─ 03 color 真通道收口 + series 一等化 (dep 02 的 resolver：color 迁入 + B/C 规则)
+     ├─ 04 opacity 通道 (dep 02 的 resolver：⑤ continuous → linear [minOpacity,1])
+     └─ 05 shape 通道 (dep 02 的 resolver：⑥ categorical → glyph 集 → core node shape)
 ```
 
-> 线性递进：02 依赖 01 的 sqrt scale，03 依赖 02 的通道→scale resolver。01 定稿后 02 / 03 的设计可并行起草，但实现按链序落地（评审采纳的依赖重排，消除 size 内部 sqrt 与公开 Sqrt 的重复）。
+> 01 → 02 是地基（sqrt scale + 通用 resolver）；03 / 04 / 05 都只依赖 02 的 resolver，彼此独立、可并行起草与实现。01/02/03 已实现（见状态），04/05 为本次范围调整新增。
 
 > **测试 case 规则**（沿用 alpha milestone 放宽）：按复杂度适量，覆盖真实有意义的 accept/reject 与行为断言（size 半径几何、边界退化、color×series 拆分等价性、log+bar fail-loud），不硬凑每 ADR ≥ 9。
 
@@ -79,9 +91,11 @@
 
 | ADR | 主题 | Level | 依赖 | 状态 |
 |---|---|---|---|---|
-| [01](./01-continuous-scale-family.md) | 连续 scale 家族 log / pow / sqrt（L1：仅 point/line，bar/area fail-loud；公开 scale 家族**不含** size/radius type） | red | — | Proposed |
-| [02](./02-channel-scale-resolver-size.md) | 通道→scale 通用抽象 + size 通道（仅 PointMark，radius scale，③边界契约；size 默认派生到 01 的 sqrt；不进全局 StyleEncoding、`value` 限 number） | red | ADR-01 | Proposed |
-| [03](./03-color-series.md) | color 真通道收口 + series 一等化（④B/C 规则 + categorical fail-loud + continuous/temporal color fail-loud + 修单系列静默丢弃 + 隐式拆等价性） | red | ADR-02 | Proposed |
+| [01](./01-continuous-scale-family.md) | 连续 scale 家族 log / pow / sqrt（L1：仅 point/line，bar/area fail-loud；公开 scale 家族**不含** size/radius type） | red | — | Proposed（已实现） |
+| [02](./02-channel-scale-resolver-size.md) | 通道→scale 通用抽象 + size 通道（仅 PointMark，radius scale，③边界契约；size 默认派生到 01 的 sqrt；不进全局 StyleEncoding、`value` 限 number） | red | ADR-01 | Proposed（已实现） |
+| [03](./03-color-series.md) | color 真通道收口 + series 一等化（④B/C 规则 + categorical fail-loud + continuous/temporal color fail-loud + 修单系列静默丢弃 + 隐式拆等价性） | red | ADR-02 | Proposed（已实现） |
+| [04](./04-opacity-channel.md) | opacity 通道（仅 PointMark，⑤：continuous → linear [minOpacity,1]、常量 ∈ [0,1]、越界 fail-loud；落 core node 不透明度） | red | ADR-02 | Proposed |
+| [05](./05-shape-channel.md) | shape 通道（仅 PointMark，⑥：categorical → glyph 集（默认 shape 调色板）→ core node shape；连续/时间 fail-loud） | red | ADR-02 | Proposed |
 
 ## 贯穿原则落点
 
