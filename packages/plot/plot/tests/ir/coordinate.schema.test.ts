@@ -107,3 +107,79 @@ describe('CoordinateSchema polar2D (ADR-01)', () => {
     expect(CoordinateSchema.parse(JSON.parse(JSON.stringify(ir)))).toEqual(ir);
   });
 });
+
+describe('CoordinateSchema 一维坐标系族 cartesian1D / polar1D (alpha.9 ADR-02)', () => {
+  // Happy path：cartesian1D
+  it('cartesian1d_minimal_valid', () => {
+    const c = { type: 'cartesian1D', x: 'xs' };
+    expect(CoordinateSchema.parse(c)).toEqual(c);
+  });
+
+  it('cartesian1d_bare_type_valid_derives', () => {
+    // x 可省（派生）、orientation 可省（lowering 默认 horizontal，schema 不填默认）
+    expect(CoordinateSchema.parse({ type: 'cartesian1D' })).toEqual({ type: 'cartesian1D' });
+  });
+
+  it('cartesian1d_vertical_orientation_valid', () => {
+    const c = { type: 'cartesian1D', x: 'xs', orientation: 'vertical' };
+    expect(CoordinateSchema.parse(c)).toEqual(c);
+  });
+
+  it('cartesian1d_bad_orientation_rejected', () => {
+    expect(() => CoordinateSchema.parse({ type: 'cartesian1D', orientation: 'diagonal' })).toThrow();
+  });
+
+  // Happy path：polar1D
+  it('polar1d_minimal_valid', () => {
+    const c = { type: 'polar1D', angle: 'a' };
+    expect(CoordinateSchema.parse(c)).toEqual(c);
+  });
+
+  it('polar1d_explicit_fields_valid', () => {
+    const c = { type: 'polar1D', angle: 'a', radius: 0.5, startAngle: 180, endAngle: 360 };
+    expect(CoordinateSchema.parse(c)).toEqual(c);
+  });
+
+  // 边界：radius 占比 0<r≤1
+  it('polar1d_radius_one_valid', () => {
+    expect(CoordinateSchema.parse({ type: 'polar1D', angle: 'a', radius: 1 })).toEqual({ type: 'polar1D', angle: 'a', radius: 1 });
+  });
+
+  it('polar1d_radius_zero_rejected', () => {
+    expect(() => CoordinateSchema.parse({ type: 'polar1D', angle: 'a', radius: 0 })).toThrow();
+  });
+
+  it('polar1d_radius_above_one_rejected', () => {
+    expect(() => CoordinateSchema.parse({ type: 'polar1D', angle: 'a', radius: 1.5 })).toThrow();
+  });
+
+  // 错误路径：非有限角度破坏 JSON 可序列化
+  it('polar1d_startAngle_infinity_rejected', () => {
+    expect(() => CoordinateSchema.parse({ type: 'polar1D', angle: 'a', startAngle: Infinity })).toThrow();
+  });
+
+  it('polar1d_radius_infinity_rejected', () => {
+    expect(() => CoordinateSchema.parse({ type: 'polar1D', angle: 'a', radius: Infinity })).toThrow();
+  });
+
+  it('polar1d_empty_angle_rejected', () => {
+    expect(() => CoordinateSchema.parse({ type: 'polar1D', angle: '' })).toThrow();
+  });
+
+  // 回归：扩 union 后 cartesian2D / polar2D 仍接受
+  it('two_d_coordinates_still_accepted_regression', () => {
+    expect(CoordinateSchema.parse({ type: 'cartesian2D', x: 'x', y: 'y' }).type).toBe('cartesian2D');
+    expect(CoordinateSchema.parse({ type: 'polar2D', angle: 'a', radius: 'r' }).type).toBe('polar2D');
+  });
+
+  // round-trip
+  it('cartesian1d_json_round_trip', () => {
+    const ir = CoordinateSchema.parse({ type: 'cartesian1D', x: 'xs', orientation: 'vertical' });
+    expect(CoordinateSchema.parse(JSON.parse(JSON.stringify(ir)))).toEqual(ir);
+  });
+
+  it('polar1d_json_round_trip', () => {
+    const ir = CoordinateSchema.parse({ type: 'polar1D', angle: 'a', radius: 0.8, startAngle: 90, endAngle: 270 });
+    expect(CoordinateSchema.parse(JSON.parse(JSON.stringify(ir)))).toEqual(ir);
+  });
+});
