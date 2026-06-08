@@ -8,6 +8,8 @@ import { type CoordinateType, PlotCoordinate } from '../ir';
 export const VALID_GUIDE_DIMENSIONS: Record<CoordinateType, ReadonlyArray<string>> = {
   [PlotCoordinate.Cartesian2D]: ['x', 'y'],
   [PlotCoordinate.Polar2D]: ['angle', 'radius', 'x', 'y'],
+  [PlotCoordinate.Cartesian1D]: ['x'],
+  [PlotCoordinate.Polar1D]: ['angle', 'x'],
 };
 
 /**
@@ -18,4 +20,6 @@ export const VALID_GUIDE_DIMENSIONS: Record<CoordinateType, ReadonlyArray<string
 export const REQUIRED_POSITION_CHANNELS: Record<CoordinateType, ReadonlyArray<'x' | 'y' | 'a' | 'b' | 'c'>> = {
   [PlotCoordinate.Cartesian2D]: ['x', 'y'],
   [PlotCoordinate.Polar2D]: ['x', 'y'],
+  [PlotCoordinate.Cartesian1D]: ['x'],
+  [PlotCoordinate.Polar1D]: ['x'],
 };

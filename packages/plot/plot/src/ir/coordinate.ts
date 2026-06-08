@@ -3,17 +3,35 @@ import type { ValueOf } from '@retikz/core';
 
 /**
  * 坐标系类型关键字（暴露给用户；成员值即 IR 判别串，裸字面量 `'cartesian2D'` 同样可用）
- * @description discriminated union 判别字段，成员里写 z.literal(PlotCoordinate.x)（不用 nativeEnum）；后续加 polar2D / linear1D…
+ * @description discriminated union 判别字段，成员里写 z.literal(PlotCoordinate.x)（不用 nativeEnum）；命名按空间几何 + 维度。
  */
 export const PlotCoordinate = {
   /** 2D 笛卡尔空间（x 水平 / y 垂直） */
   Cartesian2D: 'cartesian2D',
   /** 2D 极坐标空间（angle 角向 / radius 径向；默认 x→angle、y→radius） */
   Polar2D: 'polar2D',
+  /** 1D 笛卡尔直线（单维落一条轴线，另一屏幕维塌缩到固定基线；rug / timeline） */
+  Cartesian1D: 'cartesian1D',
+  /** 1D 极坐标圆周（单角向维落固定半径圆周；周期 / 循环数据） */
+  Polar1D: 'polar1D',
 } as const;
 
 /** 坐标系类型 */
 export type CoordinateType = ValueOf<typeof PlotCoordinate>;
+
+/**
+ * cartesian1D 轴向关键字（暴露给用户；裸字面量 `'horizontal'` 同样可用）
+ * @description 决定一维直线沿哪个屏幕轴铺：horizontal 沿 x（基线在底）、vertical 沿 y（基线在左）；省略默认 horizontal（lowering 给）
+ */
+export const Cartesian1DOrientation = {
+  /** 水平：数据沿 x 轴线，塌缩维基线在底边 */
+  Horizontal: 'horizontal',
+  /** 垂直：数据沿 y 轴线，塌缩维基线在左边 */
+  Vertical: 'vertical',
+} as const;
+
+/** cartesian1D 轴向 */
+export type Cartesian1DOrientationType = ValueOf<typeof Cartesian1DOrientation>;
 
 export const Cartesian2DSchema = z
   .object({
@@ -44,9 +62,44 @@ export const Polar2DSchema = z
   })
   .describe('2D polar coordinate system; owns the angle / radius scale bindings and the angular sweep / inner-radius geometry');
 
-export const CoordinateSchema = z
-  .discriminatedUnion('type', [Cartesian2DSchema, Polar2DSchema])
-  .describe('Coordinate-system union: cartesian2D | polar2D; extensible to linear1D / ternary in later alphas');
+export const Cartesian1DSchema = z
+  .object({
+    type: z.literal(PlotCoordinate.Cartesian1D).describe('Discriminator: 1D cartesian line; one position dimension, the other screen axis collapses to a fixed baseline'),
+    x: z.string().min(1).optional().describe('Scale name for the single position dimension; omit to derive a default scale from the bound field type. Scale-agnostic — supports linear / log / sqrt / time / band'),
+    orientation: z
+      .nativeEnum(Cartesian1DOrientation)
+      .optional()
+      .describe('Axis orientation — horizontal lays the line along x (baseline at the bottom edge), vertical along y (baseline at the left edge); omit = horizontal (default applied during lowering)'),
+  })
+  .describe('1D cartesian coordinate system: a single position dimension on a straight line (rug / timeline / 1D strip); the collapsed screen axis is pinned to a fixed baseline');
 
-/** 坐标系（cartesian2D | polar2D） */
+export const Polar1DSchema = z
+  .object({
+    type: z.literal(PlotCoordinate.Polar1D).describe('Discriminator: 1D polar circle; one angular position dimension on a fixed-radius circle (cyclic / periodic data)'),
+    angle: z.string().min(1).optional().describe('Scale name for the single angular dimension; omit to derive from the bound field type. Its range is set to [startAngle, endAngle] degrees at lowering. Reuses the polar x→angle alias'),
+    radius: z
+      .number()
+      .finite()
+      .gt(0)
+      .max(1)
+      .optional()
+      .describe('Circle radius as a fraction of the available radius, 0 < r ≤ 1; omit = 1 (outer circle, default applied during lowering)'),
+    startAngle: z
+      .number()
+      .finite()
+      .optional()
+      .describe("Angular range start in degrees; omit = 0 (default applied during lowering). 0 = +x (3 o'clock), sweeping toward +y under screen y-down, matching core polar"),
+    endAngle: z.number().finite().optional().describe('Angular range end in degrees; omit = 360 (full circle, default applied during lowering)'),
+  })
+  .describe('1D polar coordinate system: a single angular dimension mapped onto a fixed-radius circle (clock face / weekday wheel / periodic rug); reuses the polar angular projection');
+
+export const CoordinateSchema = z
+  .discriminatedUnion('type', [Cartesian2DSchema, Polar2DSchema, Cartesian1DSchema, Polar1DSchema])
+  .describe('Coordinate-system union: cartesian2D | polar2D | cartesian1D | polar1D; extensible to ternary2D in later alphas');
+
+/** 坐标系（cartesian2D | polar2D | cartesian1D | polar1D） */
 export type Coordinate = z.infer<typeof CoordinateSchema>;
+/** 一维直线坐标系（cartesian1D） */
+export type Cartesian1DCoordinate = z.infer<typeof Cartesian1DSchema>;
+/** 一维圆周坐标系（polar1D） */
+export type Polar1DCoordinate = z.infer<typeof Polar1DSchema>;

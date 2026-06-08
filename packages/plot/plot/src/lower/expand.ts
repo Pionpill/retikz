@@ -1,12 +1,12 @@
 import { type CompositeDefinition, type IRChild, type IRScope, defineComposite } from '@retikz/core';
 import type { ZodType } from 'zod';
-import { type AxisGuide, type Channel, type ColorScheme, type CoordinateType, type ExternalDatasets, type ExternalRow, type FieldType, type Guide, type LegendChannelType, type LegendGuide, type Mark, type OrdinalScale, PlotCoordinate, PlotFieldType, PlotGuide, PlotMark, PlotScale, type PlotSpec, PlotSpecSchema, type Scale, type ScaleType } from '../ir';
+import { type AxisGuide, Cartesian1DOrientation, type Channel, type ColorScheme, type CoordinateType, type ExternalDatasets, type ExternalRow, type FieldType, type Guide, type LegendChannelType, type LegendGuide, type Mark, type OrdinalScale, PlotCoordinate, PlotFieldType, PlotGuide, PlotMark, PlotScale, type PlotSpec, PlotSpecSchema, type Scale, type ScaleType } from '../ir';
 import { channelValue, isFiniteNumber, resolveFieldPath } from './field';
 import { type GuideContext, type LegendEntry, type LegendInput, lowerGuide, lowerLegend } from './guide';
 import { DEFAULT_FONT_SIZE, type LegendReserve, type Margins, type Rect, computePlotArea, computePolarFrame } from './layout';
 import { type ColorOf, lowerMark } from './mark';
 import { type ChannelResolution, type ScaleDescriptor, makeOpacityResolver, makeShapeResolver, makeSizeResolver } from './channel';
-import { type CoordinateFrame, createCartesianFrame, createPolarFrame } from './project';
+import { type CoordinateFrame, createCartesian1DFrame, createCartesianFrame, createPolar1DFrame, createPolarFrame } from './project';
 import { REQUIRED_POSITION_CHANNELS, VALID_GUIDE_DIMENSIONS } from './coordinate-meta';
 import { type DatumIdRegistrar, type ProvenanceContext, createDatumIdRegistrar, rootMeta, tagSourceIndex } from './provenance';
 import { type CategoryOrder, type ColorScaleEvaluator, DEFAULT_TICK_COUNT, type TickSet, assertBaselineScaleCompatible, assertScaleFieldCompatible, deriveScale, inferCategoryDomain, orderedCategoryDomain, resolveDivergingColorScale, resolveLinearScale, resolveOrdinalScale, resolvePositionScale, resolveQuantileColorScale, resolveQuantizeColorScale, resolveSequentialColorScale, resolveSqrtScale, resolveThresholdColorScale, sampleSchemeColors, scaleTicks, toTimestamp } from './scale';
@@ -23,7 +23,7 @@ const EMPTY_TICKS: TickSet = { values: [], labels: [] };
  * @description 唯一性检查须按角色（而非裸 dimension 串）判，否则 `dimension:'x'` 与 `'angle'` 会被当成两根轴静默叠画。
  */
 const axisRole = (dimension: string, coordinateType: string): string => {
-  if (coordinateType === PlotCoordinate.Polar2D) {
+  if (coordinateType === PlotCoordinate.Polar2D || coordinateType === PlotCoordinate.Polar1D) {
     if (dimension === 'angle' || dimension === 'x') return 'angular';
     if (dimension === 'radius' || dimension === 'y') return 'radial';
   }
@@ -360,6 +360,114 @@ export const resolveFrame = (params: ResolveFrameParams): ResolvedFrame => {
       frame: polarFrame,
       angularTicks: angularTicks ?? EMPTY_TICKS,
       radialTicks: radialTicks ?? EMPTY_TICKS,
+    };
+    for (const guide of axisGuides) {
+      const lowered = lowerGuide(guide, guideContext, provenance);
+      if (lowered.gridLayer) gridLayers.push(lowered.gridLayer);
+      if (lowered.axisLayer) axisLayers.push(lowered.axisLayer);
+    }
+  } else if (coordinate.type === PlotCoordinate.Cartesian1D) {
+    // cartesian1D：单维（x 角色）落直线，塌缩维取固定基线（horizontal=底、vertical=左）
+    const orientation = coordinate.orientation ?? Cartesian1DOrientation.Horizontal;
+    const horizontal = orientation === Cartesian1DOrientation.Horizontal;
+    const values = collectValues(xChannelOf, false, false);
+    const scaleDef = resolveScaleForRole('x', coordinate.x, xChannelOf, values);
+
+    const guides = node.guides ?? [];
+    const axisGuides = guides.filter(isAxisGuide);
+    assertUniqueAxisDimension(axisGuides, coordinate.type);
+    const axis = axisGuides.find(guide => guide.dimension === 'x');
+
+    // provisional range（满画布）求刻度 → 估 plotArea → setRange 收敛到绘图区
+    const provisional: [number, number] = horizontal ? [0, width] : [height, 0];
+    const scale = resolvePositionScale(scaleDef, values, provisional);
+    const ticks: TickSet | undefined = axis ? scale.ticks(axis.tickCount) : undefined;
+    const computed = computePlotArea(
+      width,
+      height,
+      {
+        hasXAxis: horizontal ? !!axis : false,
+        hasYAxis: horizontal ? false : !!axis,
+        xLabels: horizontal ? ticks?.labels ?? [] : [],
+        yLabels: horizontal ? [] : ticks?.labels ?? [],
+        legendReserve,
+      },
+      { fontSize, margin },
+    );
+    plotArea = computed.plotArea;
+    if (horizontal) scale.setRange([plotArea.x, plotArea.x + plotArea.width]);
+    else scale.setRange([plotArea.y + plotArea.height, plotArea.y]);
+    // 塌缩维基线：水平贴底边、垂直贴左边（rug 沿轴边缘惯例）
+    const baseline = horizontal ? plotArea.y + plotArea.height : plotArea.x;
+    frame = createCartesian1DFrame(scale, orientation, baseline);
+
+    // guide：单维直线轴（axisOrientation 覆盖屏幕方向；scale 同时放 projectX/projectY，未用侧忽略）
+    const guideContext: GuideContext = {
+      plotArea,
+      projectX: scale,
+      projectY: scale,
+      xTicks: horizontal ? ticks ?? EMPTY_TICKS : EMPTY_TICKS,
+      yTicks: horizontal ? EMPTY_TICKS : ticks ?? EMPTY_TICKS,
+      fontSize,
+      axisOrientation: horizontal ? 'horizontal' : 'vertical',
+    };
+    for (const guide of axisGuides) {
+      const lowered = lowerGuide(guide, guideContext, provenance);
+      if (lowered.gridLayer) gridLayers.push(lowered.gridLayer);
+      if (lowered.axisLayer) axisLayers.push(lowered.axisLayer);
+    }
+  } else if (coordinate.type === PlotCoordinate.Polar1D) {
+    // polar1D：单角向（angle 角色，x 别名）落固定半径圆周，复用 alpha.4 角向投影 + 角向轴
+    const radiusFraction = coordinate.radius ?? 1;
+    const startAngle = coordinate.startAngle ?? 0;
+    const endAngle = coordinate.endAngle ?? 360;
+    const angleValues = collectValues(xChannelOf, false, false);
+    const angleScaleDef = resolveScaleForRole('angle', coordinate.angle, xChannelOf, angleValues);
+
+    const guides = node.guides ?? [];
+    const axisGuides = guides.filter(isAxisGuide);
+    assertUniqueAxisDimension(axisGuides, coordinate.type);
+    const angularAxis = axisGuides.find(guide => guide.dimension === 'angle' || guide.dimension === 'x');
+
+    // 角向 scale range = [startAngle, endAngle]，与最终半径无关 → 先建取角向标签供 layout 留白
+    const angleScale = resolvePositionScale(angleScaleDef, angleValues, [startAngle, endAngle]);
+    const angularTicks: TickSet | undefined = angularAxis ? angleScale.ticks(angularAxis.tickCount) : undefined;
+    const layout = computePolarFrame(
+      width,
+      height,
+      { hasAngularAxis: !!(angularAxis && angularAxis.tickLabels !== false), angularLabels: angularTicks?.labels ?? [] },
+      { fontSize, margin },
+    );
+    const radius = radiusFraction * layout.outerRadius;
+    const continuousAngle =
+      angleScaleDef.type === PlotScale.Linear ||
+      angleScaleDef.type === PlotScale.Time ||
+      angleScaleDef.type === PlotScale.Log ||
+      angleScaleDef.type === PlotScale.Pow ||
+      angleScaleDef.type === PlotScale.Sqrt;
+    frame = createPolar1DFrame({ center: layout.center, radius, startAngle, endAngle, continuousAngle, primary: angleScale });
+
+    // guide：构造 PolarFrame（outerRadius=radius、innerRadius=0）复用 alpha.4 角向轴；secondary 角向轴不用、占位
+    const guidePolarFrame = createPolarFrame({
+      center: layout.center,
+      innerRadius: 0,
+      outerRadius: radius,
+      startAngle,
+      endAngle,
+      continuousAngle,
+      primary: angleScale,
+      secondary: angleScale,
+    });
+    const guideContext: GuideContext = {
+      plotArea: { x: 0, y: 0, width, height },
+      projectX: angleScale,
+      projectY: angleScale,
+      xTicks: angularTicks ?? EMPTY_TICKS,
+      yTicks: EMPTY_TICKS,
+      fontSize,
+      frame: guidePolarFrame,
+      angularTicks: angularTicks ?? EMPTY_TICKS,
+      radialTicks: EMPTY_TICKS,
     };
     for (const guide of axisGuides) {
       const lowered = lowerGuide(guide, guideContext, provenance);

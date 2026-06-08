@@ -1,4 +1,4 @@
-import { PlotCoordinate } from '../ir';
+import { Cartesian1DOrientation, type Cartesian1DOrientationType, PlotCoordinate } from '../ir';
 import { isFiniteNumber } from './field';
 import type { PositionScale } from './scale';
 
@@ -19,7 +19,7 @@ export type DimensionRole = 'x' | 'y' | 'angle' | 'radius' | 'a' | 'b' | 'c';
  *   2 通道的 `project(primary, secondary)` 保留为便捷别名（cartesian/polar 内部 + line/area 复用，零行为改变）。
  *   非有限值返回 null（跳过该点）。
  */
-export type CoordinateFrame = CartesianFrame | PolarFrame;
+export type CoordinateFrame = CartesianFrame | PolarFrame | Cartesian1DFrame | Polar1DFrame;
 
 /** 笛卡尔帧：primary = x（水平）、secondary = y（垂直），投影直接取两条 scale 的 coordinate */
 export type CartesianFrame = {
@@ -139,6 +139,112 @@ export const createPolarFrame = (input: PolarFrameSpec): PolarFrame => {
     project,
     projectRoles: values => project(values[0], values[1]),
     projectPolar,
+  };
+};
+
+/** 一维笛卡尔帧（直线）：单一位置 scale 落一条轴线，塌缩的第二屏幕维取固定基线 */
+export type Cartesian1DFrame = {
+  /** 判别字段：1D 笛卡尔直线 */
+  type: typeof PlotCoordinate.Cartesian1D;
+  /** 位置角色序（[x]，单通道） */
+  roles: ReadonlyArray<DimensionRole>;
+  /** 轴向（horizontal 沿 x、vertical 沿 y） */
+  orientation: Cartesian1DOrientationType;
+  /** 塌缩维固定基线（horizontal=底边屏幕 y、vertical=左边屏幕 x） */
+  baseline: number;
+  /** 单一位置 scale */
+  primary: PositionScale;
+  /** 投影别名（2 入参形态，secondary 忽略）：等价 projectRoles([primaryValue]) */
+  project: (primaryValue: unknown, secondaryValue: unknown) => [number, number] | null;
+  /** N 通道投影：roles 长度 1，传 [value] → horizontal [scale(v), baseline] / vertical [baseline, scale(v)]；非有限 → null */
+  projectRoles: (values: ReadonlyArray<unknown>) => [number, number] | null;
+};
+
+/** 一维极坐标帧（圆周）：单一角向 scale 落固定半径圆周（半径常量、角度编码值） */
+export type Polar1DFrame = {
+  /** 判别字段：1D 极坐标圆周 */
+  type: typeof PlotCoordinate.Polar1D;
+  /** 位置角色序（[angle]，单通道；x→angle 别名取值） */
+  roles: ReadonlyArray<DimensionRole>;
+  /** 圆心（屏幕坐标） */
+  center: [number, number];
+  /** 固定圆周半径（user units，= radius 占比 × outerRadius） */
+  radius: number;
+  /** 角向起始角（度，角向 range 起） */
+  startAngle: number;
+  /** 角向终止角（度，角向 range 止） */
+  endAngle: number;
+  /** 角向 scale 是否连续（linear / time）；连续才在段内插值采样 */
+  continuousAngle: boolean;
+  /** angle 位置 scale（range = [startAngle, endAngle] 度） */
+  primary: PositionScale;
+  /** 把已映射的极坐标对 (θ 度, r user units) 换算成屏幕点（非有限 → null） */
+  projectPolar: (thetaDeg: number, radius: number) => [number, number] | null;
+  /** 投影别名（2 入参形态，secondary 忽略）：等价 projectRoles([angleValue]) */
+  project: (primaryValue: unknown, secondaryValue: unknown) => [number, number] | null;
+  /** N 通道投影：roles 长度 1，传 [angleValue] → projectPolar(angleScale(angleValue), radius)；非有限 → null */
+  projectRoles: (values: ReadonlyArray<unknown>) => [number, number] | null;
+};
+
+/** 建一维笛卡尔帧：单 scale + 轴向 + 塌缩维基线（horizontal → [scale(v), baseline]、vertical → [baseline, scale(v)]） */
+export const createCartesian1DFrame = (scale: PositionScale, orientation: Cartesian1DOrientationType, baseline: number): Cartesian1DFrame => {
+  const projectRoles = (values: ReadonlyArray<unknown>): [number, number] | null => {
+    const position = scale.coordinate(values[0]);
+    if (!Number.isFinite(position)) return null;
+    // horizontal：数据沿 x、塌缩 y=baseline（底边）；vertical：数据沿 y、塌缩 x=baseline（左边）
+    return orientation === Cartesian1DOrientation.Horizontal ? [position, baseline] : [baseline, position];
+  };
+  return {
+    type: PlotCoordinate.Cartesian1D,
+    roles: ['x'],
+    orientation,
+    baseline,
+    primary: scale,
+    project: primaryValue => projectRoles([primaryValue]),
+    projectRoles,
+  };
+};
+
+/** 建一维极坐标帧的参数（圆心 + 固定半径 + 角向区间 + angle scale） */
+export type Polar1DFrameSpec = {
+  /** 圆心（屏幕坐标） */
+  center: [number, number];
+  /** 固定圆周半径（user units） */
+  radius: number;
+  /** 角向起始角（度） */
+  startAngle: number;
+  /** 角向终止角（度） */
+  endAngle: number;
+  /** 角向 scale 是否连续 */
+  continuousAngle: boolean;
+  /** angle 位置 scale */
+  primary: PositionScale;
+};
+
+/** 建一维极坐标帧：角向投影固定在半径 radius 的圆周（复用极坐标→笛卡尔换算） */
+export const createPolar1DFrame = (input: Polar1DFrameSpec): Polar1DFrame => {
+  const [cx, cy] = input.center;
+  const projectPolar = (thetaDeg: number, radius: number): [number, number] | null => {
+    if (!Number.isFinite(thetaDeg) || !Number.isFinite(radius)) return null;
+    const radians = thetaDeg * DEG_TO_RAD;
+    return [cx + radius * Math.cos(radians), cy + radius * Math.sin(radians)];
+  };
+  const projectRoles = (values: ReadonlyArray<unknown>): [number, number] | null => {
+    const theta = input.primary.coordinate(values[0]);
+    return projectPolar(theta, input.radius);
+  };
+  return {
+    type: PlotCoordinate.Polar1D,
+    roles: ['angle'],
+    center: input.center,
+    radius: input.radius,
+    startAngle: input.startAngle,
+    endAngle: input.endAngle,
+    continuousAngle: input.continuousAngle,
+    primary: input.primary,
+    projectPolar,
+    project: primaryValue => projectRoles([primaryValue]),
+    projectRoles,
   };
 };
 

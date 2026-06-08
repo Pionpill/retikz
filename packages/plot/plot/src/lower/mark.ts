@@ -484,6 +484,10 @@ export const lowerMark = (mark: Mark, rows: Array<ExternalRow>, frame: Coordinat
   const { colorOf } = channels;
   // point / line / area 坐标系无关，经 frame.project（polar 连续角轴段内采样）投影
   if (mark.type === 'point') return lowerPoint(mark, rows, frame, channels, markProvenance);
+  // 一维坐标系（cartesian1D / polar1D）本轮仅 point；line / area / interval / sector 无对应一维几何 → fail-loud（ADR-02 支持矩阵）
+  if (frame.type === PlotCoordinate.Cartesian1D || frame.type === PlotCoordinate.Polar1D) {
+    throw new Error(`lowerPlots: ${mark.type} mark is not supported under the ${frame.type} coordinate system (1D coordinates support point marks only this round)`);
+  }
   if (mark.type === 'line') {
     const layer = lowerLine(mark, rows, frame, colorOf, markProvenance);
     return layer === null ? null : attachMarkLayer(layer as IRScope, mark, markProvenance);

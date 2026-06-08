@@ -24,7 +24,12 @@ export type GuideContext = {
   yTicks: TickSet;
   /** label 字号（与 ADR-03 估算同源） */
   fontSize: number;
-  /** polar 坐标帧（仅 polar2D 时给）：存在即按维度角色走 angular / radial 几何 */
+  /**
+   * 直线轴向覆盖（仅 cartesian1D 给）：horizontal → 沿 x 轴线（用 projectX/xTicks），vertical → 沿 y 轴线（用 projectY/yTicks）。
+   * @description cartesian1D 单维角色恒为 x，但轴可竖排；给此值时 lowerCartesianGuide 按它选屏幕方向，而非按 dimension。
+   */
+  axisOrientation?: 'horizontal' | 'vertical';
+  /** polar 坐标帧（仅 polar2D / polar1D 时给）：存在即按维度角色走 angular / radial 几何 */
   frame?: PolarFrame;
   /** angular 维刻度集（polar；angle / x 维 axis 与同维 grid 复用） */
   angularTicks?: TickSet;
@@ -85,7 +90,8 @@ const lowerCartesianGuide = (guide: AxisGuide, ctx: GuideContext, context: Prove
   const bottom = plotArea.y + plotArea.height;
   const showLabels = guide.tickLabels !== false;
 
-  const isX = guide.dimension === 'x';
+  // cartesian1D 给 axisOrientation 覆盖（单维角色恒 x，但轴可竖排）；cartesian2D 按 dimension 判
+  const isX = ctx.axisOrientation !== undefined ? ctx.axisOrientation === 'horizontal' : guide.dimension === 'x';
   const ticks = isX ? ctx.xTicks : ctx.yTicks;
   const project = isX ? ctx.projectX : ctx.projectY;
 

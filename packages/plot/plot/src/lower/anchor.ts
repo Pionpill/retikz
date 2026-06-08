@@ -204,8 +204,12 @@ export const datumAnchor = (mark: Mark, row: ExternalRow, frame: CoordinateFrame
       const wedge = intervalWedge(mark, row, frame, ctx);
       return wedge ? wedgeCentroid(wedge) : null;
     }
-    const rect = intervalRect(mark, row, frame, ctx);
-    return rect ? rect.position : null;
+    if (frame.type === PlotCoordinate.Cartesian2D) {
+      const rect = intervalRect(mark, row, frame, ctx);
+      return rect ? rect.position : null;
+    }
+    // interval 在 1D / ternary 无几何意义（lowerMark 已 fail-loud）；锚点同样无对应
+    return null;
   }
   // point / line / area：按 frame.roles 序投影该行顶点（坐标系无关，1 / 2 / 3 通道统一走 projectRoles）
   return frame.projectRoles(roleValues(mark, row, frame));
