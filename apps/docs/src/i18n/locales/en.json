@@ -102,6 +102,7 @@
     "compSectorMark": "SectorMark",
     "compAreaMark": "AreaMark",
     "compAxis": "Axis",
+    "compLegend": "Legend",
     "examples": "Charts",
     "exampleLineScatter": "Line & Scatter",
     "reference": "Reference",
