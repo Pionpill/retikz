@@ -1,12 +1,13 @@
 import { type CompositeDefinition, type IRChild, type IRScope, defineComposite } from '@retikz/core';
 import type { ZodType } from 'zod';
-import { type AxisGuide, type Channel, type ColorScheme, type ExternalDatasets, type ExternalRow, type FieldType, type Guide, type LegendChannelType, type LegendGuide, type Mark, type OrdinalScale, PlotCoordinate, PlotFieldType, PlotGuide, PlotMark, PlotScale, type PlotSpec, PlotSpecSchema, type Scale, type ScaleType } from '../ir';
+import { type AxisGuide, type Channel, type ColorScheme, type CoordinateType, type ExternalDatasets, type ExternalRow, type FieldType, type Guide, type LegendChannelType, type LegendGuide, type Mark, type OrdinalScale, PlotCoordinate, PlotFieldType, PlotGuide, PlotMark, PlotScale, type PlotSpec, PlotSpecSchema, type Scale, type ScaleType } from '../ir';
 import { channelValue, isFiniteNumber, resolveFieldPath } from './field';
 import { type GuideContext, type LegendEntry, type LegendInput, lowerGuide, lowerLegend } from './guide';
 import { DEFAULT_FONT_SIZE, type LegendReserve, type Margins, type Rect, computePlotArea, computePolarFrame } from './layout';
 import { type ColorOf, lowerMark } from './mark';
 import { type ChannelResolution, type ScaleDescriptor, makeOpacityResolver, makeShapeResolver, makeSizeResolver } from './channel';
 import { type CoordinateFrame, createCartesianFrame, createPolarFrame } from './project';
+import { REQUIRED_POSITION_CHANNELS, VALID_GUIDE_DIMENSIONS } from './coordinate-meta';
 import { type DatumIdRegistrar, type ProvenanceContext, createDatumIdRegistrar, rootMeta, tagSourceIndex } from './provenance';
 import { type CategoryOrder, type ColorScaleEvaluator, DEFAULT_TICK_COUNT, type TickSet, assertBaselineScaleCompatible, assertScaleFieldCompatible, deriveScale, inferCategoryDomain, orderedCategoryDomain, resolveDivergingColorScale, resolveLinearScale, resolveOrdinalScale, resolvePositionScale, resolveQuantileColorScale, resolveQuantizeColorScale, resolveSequentialColorScale, resolveSqrtScale, resolveThresholdColorScale, sampleSchemeColors, scaleTicks, toTimestamp } from './scale';
 import { assertAllValuesValid, collectFormatFields, normalizeRows, validateBoundData } from './coerce';
@@ -54,6 +55,41 @@ const assertUniqueAxisDimension = (guides: Array<AxisGuide>, coordinateType: str
 /** guide 谓词：按 type 判别串收窄成 axis / legend 子集 */
 const isAxisGuide = (guide: Guide): guide is AxisGuide => guide.type === PlotGuide.Axis;
 const isLegendGuide = (guide: Guide): guide is LegendGuide => guide.type === PlotGuide.Legend;
+
+/**
+ * 按坐标系合法集校验每根 axis guide 的 dimension（ADR-01，修 cross-review P2）
+ * @description 非法 dimension（如 cartesian 下 'angle'）从「静默丢弃 / 渲杂散轴线」改 fail-loud，给清晰错误。
+ */
+const assertValidGuideDimensions = (coordinateType: CoordinateType, axisGuides: Array<AxisGuide>): void => {
+  const valid = VALID_GUIDE_DIMENSIONS[coordinateType];
+  for (const guide of axisGuides) {
+    if (!valid.includes(guide.dimension)) {
+      throw new Error(
+        `lowerPlots: ${coordinateType} coordinate system does not support axis dimension "${guide.dimension}" (valid dimensions: ${valid.join(', ')})`,
+      );
+    }
+  }
+};
+
+/**
+ * 按坐标系必填角色集校验每个位置 mark 的 encoding（ADR-01；x/y 转可选后必填性下放此处）
+ * @description sector 无位置通道（角度来自累积界）→ 跳过；其余 mark 缺任一必填角色通道 → fail-loud。
+ */
+const assertRequiredPositionChannels = (coordinateType: CoordinateType, marks: ReadonlyArray<Mark>): void => {
+  const required = REQUIRED_POSITION_CHANNELS[coordinateType];
+  for (const mark of marks) {
+    if (mark.type === PlotMark.Sector) continue;
+    // 读可选位置通道（x/y/a/b/c）；encoding 是 zod object，按名读为 Channel | undefined（纯 JSON 字段，非 any 逃逸）
+    const encoding = mark.encoding as Record<string, Channel | undefined>;
+    for (const channel of required) {
+      if (encoding[channel] === undefined) {
+        throw new Error(
+          `lowerPlots: ${coordinateType} coordinate system requires the "${channel}" position channel on ${mark.type} marks, but it is missing`,
+        );
+      }
+    }
+  }
+};
 
 /** 默认整图尺寸（user units）；尺寸是渲染选项、不进 IR */
 const DEFAULT_WIDTH = 480;
@@ -129,6 +165,10 @@ export const resolveFrame = (params: ResolveFrameParams): ResolvedFrame => {
   const { node, rows, fieldTypes, width, height, fontSize, margin, provenance } = params;
   const coordinate = node.coordinate;
   const scaleByName = new Map(node.scales.map(scale => [scale.name, scale] as const));
+
+  // ADR-01 校验（建 frame 前）：guide 维度按坐标系合法集校验 + mark 必填位置角色校验，均 fail-loud。
+  assertValidGuideDimensions(coordinate.type, (node.guides ?? []).filter(isAxisGuide));
+  assertRequiredPositionChannels(coordinate.type, node.marks);
 
   // 收集某角色（位置 scale 名 + 通道角色）下所有 mark 的通道原始值（不预过滤）：
   //   连续 scale 内部过滤为有限数求 extent、分类 scale 按数据序去重推断 domain。

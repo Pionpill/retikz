@@ -1,7 +1,33 @@
-import { type ExternalRow, type IntervalMark, type Mark, PlotCoordinate, PlotMark } from '../ir';
+import { type Channel, type ExternalRow, type IntervalMark, type Mark, PlotCoordinate, PlotMark } from '../ir';
 import { channelValue, isFiniteNumber, resolveFieldPath } from './field';
-import type { CartesianFrame, CoordinateFrame, PolarFrame } from './project';
+import type { CartesianFrame, CoordinateFrame, DimensionRole, PolarFrame } from './project';
 import { inferCategoryDomain } from './scale';
+
+/**
+ * 取某 mark 在某位置角色下的 encoding 通道（投影时按 frame.roles 序逐角色取值）
+ * @description polar 的 angle/radius 复用 x/y 别名（encoding 只有 x/y）；ternary 的 a/b/c 各自取（ADR-03 加 PointEncoding 通道）。
+ *   sector 无位置通道（角度来自累积界）→ undefined。
+ */
+export const channelForRole = (mark: Mark, role: DimensionRole): Channel | undefined => {
+  if (mark.type === PlotMark.Sector) return undefined;
+  switch (role) {
+    case 'x':
+    case 'angle':
+      return mark.encoding.x;
+    case 'y':
+    case 'radius':
+      return mark.encoding.y;
+    case 'a':
+    case 'b':
+    case 'c':
+      // ternary a/b/c 通道由 ADR-03 加入 PointEncoding；在此前的坐标系不产生这些角色
+      return 'a' in mark.encoding ? (mark.encoding as Record<'a' | 'b' | 'c', Channel | undefined>)[role] : undefined;
+  }
+};
+
+/** 按 frame.roles 序取某 mark 某行的位置值数组（喂 frame.projectRoles；坐标系无关） */
+export const roleValues = (mark: Mark, row: ExternalRow, frame: CoordinateFrame): Array<unknown> =>
+  frame.roles.map(role => channelValue(channelForRole(mark, role), row));
 
 /** 柱默认 baseline（与 mark.ts 的 BAR_BASELINE 一致；锚点 / 摆放共享单一真源需对齐） */
 const BAR_BASELINE = 0;
@@ -181,8 +207,6 @@ export const datumAnchor = (mark: Mark, row: ExternalRow, frame: CoordinateFrame
     const rect = intervalRect(mark, row, frame, ctx);
     return rect ? rect.position : null;
   }
-  // point / line / area：投影该行顶点（坐标系无关）
-  const x = channelValue(mark.encoding.x, row);
-  const y = channelValue(mark.encoding.y, row);
-  return frame.project(x, y);
+  // point / line / area：按 frame.roles 序投影该行顶点（坐标系无关，1 / 2 / 3 通道统一走 projectRoles）
+  return frame.projectRoles(roleValues(mark, row, frame));
 };

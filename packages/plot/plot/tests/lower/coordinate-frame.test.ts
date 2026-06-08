@@ -136,21 +136,21 @@ describe('guide 维度校验 fail-loud (ADR-01, 修 cross-review P2)', () => {
     expect(() => expandOf(spec, { d: [{ a: 1, b: 2 }] }, opts)).toThrow(/cartesian2D|angle|not support|dimension/i);
   });
 
-  // 错误路径：polar 下 dimension 'b'（ternary 维度）非法 → fail-loud
-  it('polar_b_dimension_throws', () => {
+  // 错误路径：cartesian 下 dimension 'radius'（polar 维度）非法 → fail-loud
+  it('cartesian_radius_dimension_throws', () => {
     const spec = PlotSpecSchema.parse({
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'd' },
       scales: [
-        { type: 'linear', name: 'a' },
-        { type: 'linear', name: 'r' },
+        { type: 'linear', name: 'x' },
+        { type: 'linear', name: 'y' },
       ],
-      coordinate: { type: 'polar2D', angle: 'a', radius: 'r' },
-      marks: [{ type: 'point', encoding: { x: { field: 'theta' }, y: { field: 'value' } } }],
-      guides: [{ type: 'axis', dimension: 'b' }],
+      coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
+      marks: [{ type: 'point', encoding: { x: { field: 'a' }, y: { field: 'b' } } }],
+      guides: [{ type: 'axis', dimension: 'radius' }],
     });
-    expect(() => expandOf(spec, { d: [{ theta: 0, value: 1 }] }, opts)).toThrow(/polar2D|not support|dimension|b/i);
+    expect(() => expandOf(spec, { d: [{ a: 1, b: 2 }] }, opts)).toThrow(/cartesian2D|not support|dimension|radius/i);
   });
 
   // 边界：polar 下 x / y 别名 + angle / radius 都合法（alpha.4 别名保留，勿删）

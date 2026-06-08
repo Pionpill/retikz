@@ -6,10 +6,18 @@ import type { PositionScale } from './scale';
 export const RETIKZ_POLAR_SEGMENT_SAMPLES = 16;
 
 /**
+ * 坐标系位置角色：mark 按 frame.roles 序从 encoding 取对应通道值喂 projectRoles
+ * @description cartesian=[x,y]、polar=[angle,radius]、cartesian1D=[x]、polar1D=[angle]、ternary=[a,b,c]。
+ *   值对齐 IR GuideDimension 字面量，但位置角色是 frame 内部类型、guide dimension 是 IR 字段（各自管类型）。
+ */
+export type DimensionRole = 'x' | 'y' | 'angle' | 'radius' | 'a' | 'b' | 'c';
+
+/**
  * 解析后的坐标帧：lowering 算一次，mark / guide 共用同一帧（不各造临时投影框架）
  * @description grammar of graphics 的 coordinate 层：scale 把值归一化后，frame 负责归一化→2D 点。
- *   `primary` / `secondary` 是坐标系无关的两条位置 scale（cartesian = x/y、polar = angle/radius）；
- *   `project(primaryValue, secondaryValue)` 把一对原始值投影成屏幕坐标 [x, y]（非有限值返回 null，跳过该点）。
+ *   N 通道泛化（alpha.9 ADR-01）：`roles` 是该坐标系的位置角色序、`projectRoles(values)` 按 roles 序传值投影；
+ *   2 通道的 `project(primary, secondary)` 保留为便捷别名（cartesian/polar 内部 + line/area 复用，零行为改变）。
+ *   非有限值返回 null（跳过该点）。
  */
 export type CoordinateFrame = CartesianFrame | PolarFrame;
 
@@ -17,18 +25,24 @@ export type CoordinateFrame = CartesianFrame | PolarFrame;
 export type CartesianFrame = {
   /** 判别字段：2D 笛卡尔 */
   type: typeof PlotCoordinate.Cartesian2D;
+  /** 位置角色序（[x, y]）；mark 按此序取 encoding 通道值 */
+  roles: ReadonlyArray<DimensionRole>;
   /** x（水平）位置 scale */
   primary: PositionScale;
   /** y（垂直）位置 scale */
   secondary: PositionScale;
   /** 投影：[primary.coordinate(x), secondary.coordinate(y)]；任一非有限 → null */
   project: (primaryValue: unknown, secondaryValue: unknown) => [number, number] | null;
+  /** N 通道投影：按 roles 序传值（[x, y]），内部委托 project；任一非有限 → null */
+  projectRoles: (values: ReadonlyArray<unknown>) => [number, number] | null;
 };
 
 /** 极坐标帧：primary = angle（度，range = [startAngle, endAngle]）、secondary = radius（user units，range = [innerRadius, outerRadius]） */
 export type PolarFrame = {
   /** 判别字段：2D 极坐标 */
   type: typeof PlotCoordinate.Polar2D;
+  /** 位置角色序（[angle, radius]）；mark 按此序取 encoding 通道值（x→angle、y→radius 别名） */
+  roles: ReadonlyArray<DimensionRole>;
   /** 圆心（屏幕坐标） */
   center: [number, number];
   /** 内半径（user units，环图内半径，0 = 实心） */
@@ -47,6 +61,8 @@ export type PolarFrame = {
   secondary: PositionScale;
   /** 投影：θ=primary.coordinate(angle)°、r=secondary.coordinate(radius)，[cx + r·cosθ, cy + r·sinθ]；任一非有限 → null */
   project: (primaryValue: unknown, secondaryValue: unknown) => [number, number] | null;
+  /** N 通道投影：按 roles 序传值（[angle, radius]），内部委托 project；任一非有限 → null */
+  projectRoles: (values: ReadonlyArray<unknown>) => [number, number] | null;
   /** 把已映射的极坐标对 (θ 度, r user units) 换算成屏幕点（段内采样反投影用；非有限 → null） */
   projectPolar: (thetaDeg: number, radius: number) => [number, number] | null;
 };
@@ -55,17 +71,22 @@ export type PolarFrame = {
 const DEG_TO_RAD = Math.PI / 180;
 
 /** 建笛卡尔帧：primary/secondary 直接投影成 [x, y]（与早期 createCartesianProjector 行为等价） */
-export const createCartesianFrame = (primary: PositionScale, secondary: PositionScale): CartesianFrame => ({
-  type: PlotCoordinate.Cartesian2D,
-  primary,
-  secondary,
-  project: (primaryValue, secondaryValue) => {
+export const createCartesianFrame = (primary: PositionScale, secondary: PositionScale): CartesianFrame => {
+  const project = (primaryValue: unknown, secondaryValue: unknown): [number, number] | null => {
     const x = primary.coordinate(primaryValue);
     const y = secondary.coordinate(secondaryValue);
     if (!Number.isFinite(x) || !Number.isFinite(y)) return null;
     return [x, y];
-  },
-});
+  };
+  return {
+    type: PlotCoordinate.Cartesian2D,
+    roles: ['x', 'y'],
+    primary,
+    secondary,
+    project,
+    projectRoles: values => project(values[0], values[1]),
+  };
+};
 
 /** 建极坐标帧的参数（圆心 + 内外半径 + 角向区间，均来自 layout / coordinate IR） */
 export type PolarFrameSpec = {
@@ -99,8 +120,14 @@ export const createPolarFrame = (input: PolarFrameSpec): PolarFrame => {
     const radians = thetaDeg * DEG_TO_RAD;
     return [cx + radius * Math.cos(radians), cy + radius * Math.sin(radians)];
   };
+  const project = (angleValue: unknown, radiusValue: unknown): [number, number] | null => {
+    const theta = input.primary.coordinate(angleValue);
+    const radius = input.secondary.coordinate(radiusValue);
+    return projectPolar(theta, radius);
+  };
   return {
     type: PlotCoordinate.Polar2D,
+    roles: ['angle', 'radius'],
     center: input.center,
     innerRadius: input.innerRadius,
     outerRadius: input.outerRadius,
@@ -109,11 +136,8 @@ export const createPolarFrame = (input: PolarFrameSpec): PolarFrame => {
     continuousAngle: input.continuousAngle,
     primary: input.primary,
     secondary: input.secondary,
-    project: (angleValue, radiusValue) => {
-      const theta = input.primary.coordinate(angleValue);
-      const radius = input.secondary.coordinate(radiusValue);
-      return projectPolar(theta, radius);
-    },
+    project,
+    projectRoles: values => project(values[0], values[1]),
     projectPolar,
   };
 };

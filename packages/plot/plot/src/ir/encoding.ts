@@ -26,15 +26,15 @@ export const ChannelSchema = z
 
 export const PositionEncodingSchema = z
   .object({
-    x: ChannelSchema.describe(
-      'Primary position channel (required); the coordinate system maps it to its first role — cartesian2D horizontal, polar2D angle. Its scale comes from the coordinate system',
+    x: ChannelSchema.optional().describe(
+      'Primary position role channel; optional at the schema level — whether it is required is decided per coordinate system (cartesian2D / polar2D need x, cartesian1D needs its single dimension), validated fail-loud during lowering. The coordinate maps it to its first role — cartesian2D horizontal, polar2D angle. Its scale comes from the coordinate system',
     ),
-    y: ChannelSchema.describe(
-      'Secondary position channel (required); the coordinate system maps it to its second role — cartesian2D vertical, polar2D radius. Its scale comes from the coordinate system',
+    y: ChannelSchema.optional().describe(
+      'Secondary position role channel; optional at the schema level — required by cartesian2D / polar2D, omitted by 1D coordinates, validated during lowering. The coordinate maps it to its second role — cartesian2D vertical, polar2D radius. Its scale comes from the coordinate system',
     ),
   })
   .describe(
-    'Positional channel bindings (x / y, both required); the coordinate system maps them to its roles — cartesian2D x→horizontal / y→vertical, polar2D x→angle / y→radius',
+    'Positional channel bindings (x / y); both optional at the schema level — the coordinate system decides which position roles are required and validates fail-loud during lowering (cartesian2D / polar2D need x+y, cartesian1D needs one dimension, ternary2D needs a/b/c). cartesian2D maps x→horizontal / y→vertical, polar2D maps x→angle / y→radius',
   );
 
 export const StyleEncodingSchema = z
