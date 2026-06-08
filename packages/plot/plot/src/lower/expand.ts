@@ -5,7 +5,7 @@ import { channelValue, resolveFieldPath } from './field';
 import { type GuideContext, lowerGuide } from './guide';
 import { DEFAULT_FONT_SIZE, type Margins, type Rect, computePlotArea, computePolarFrame } from './layout';
 import { type ColorOf, lowerMark } from './mark';
-import { makeOpacityResolver, makeSizeResolver } from './channel';
+import { makeOpacityResolver, makeShapeResolver, makeSizeResolver } from './channel';
 import { type CoordinateFrame, createCartesianFrame, createPolarFrame } from './project';
 import { type DatumIdRegistrar, type ProvenanceContext, createDatumIdRegistrar, rootMeta, tagSourceIndex } from './provenance';
 import { type CategoryOrder, type TickSet, assertBaselineScaleCompatible, assertScaleFieldCompatible, deriveScale, orderedCategoryDomain, resolveOrdinalScale, resolvePositionScale } from './scale';
@@ -549,6 +549,7 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
   const resolveColor = makeColorResolver(node, rows, fieldTypes);
   const resolveSize = makeSizeResolver(node, rows);
   const resolveOpacity = makeOpacityResolver(node, rows, fieldTypes);
+  const resolveShape = makeShapeResolver(node, rows, fieldTypes);
 
   // plot 级 datum id 登记器：datumIdField + plotId 在时建一份，线穿全 mark——跨 mark 共享 seen，
   // 两 datum-bearing mark（point + bar）撞同 `<plotId>.datum.<value>` 即 fail loud（#2）。
@@ -561,7 +562,7 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
   // provenance 开 → 传 markProvenance（plotId / markIndex / datum 开关 + 共享 registerDatumId），各层 / datum 绑 id + 来源 meta
   const markLayers: Array<IRChild> = node.marks
     .map((mark, markIndex) =>
-      lowerMark(mark, rows, frame, { colorOf: resolveColor(mark), sizeOf: resolveSize(mark), opacityOf: resolveOpacity(mark) }, provenance ? { context: provenance, markIndex, registerDatumId } : undefined),
+      lowerMark(mark, rows, frame, { colorOf: resolveColor(mark), sizeOf: resolveSize(mark), opacityOf: resolveOpacity(mark), shapeOf: resolveShape(mark) }, provenance ? { context: provenance, markIndex, registerDatumId } : undefined),
     )
     .filter((layer): layer is IRChild => layer !== null);
 

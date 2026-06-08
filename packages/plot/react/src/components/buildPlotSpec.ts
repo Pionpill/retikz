@@ -132,7 +132,7 @@ const collectInto = (children: ReactNode, into: Collected): void => {
       if (colorEnc) into.colored = true;
       if (closed) into.hasClosedLine = true;
     } else if (child.type === PointMark) {
-      const { x, y, color, size, opacity, id } = child.props as PointMarkProps;
+      const { x, y, color, size, opacity, shape, id } = child.props as PointMarkProps;
       const colorEnc = colorChannel(color, undefined);
       into.marks.push({
         type: PlotMark.Point,
@@ -142,6 +142,7 @@ const collectInto = (children: ReactNode, into: Collected): void => {
           ...colorEnc,
           ...(size !== undefined ? { size: { field: size } } : {}),
           ...(opacity !== undefined ? { opacity: { field: opacity } } : {}),
+          ...(shape !== undefined ? { shape: { field: shape } } : {}),
         },
       });
       if (colorEnc) into.colored = true;

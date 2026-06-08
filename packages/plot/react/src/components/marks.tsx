@@ -30,6 +30,8 @@ export type PointMarkProps = {
   size?: string;
   /** 不透明度字段（连续）：→ opacity 通道，经 clamp linear scale 映射到 [minOpacity, 1]；时间/分类字段报错 */
   opacity?: string;
+  /** 形状字段（分类）：→ shape 通道，按类别映射到 glyph 调色板（circle/rectangle/diamond）；连续/时间字段报错 */
+  shape?: string;
   /** 可选 mark 句柄（预留 scope/anchor，解析留 alpha.5） */
   id?: string;
 };

@@ -51,6 +51,14 @@ Give `opacity` a continuous field and the opacity maps linearly to `[min, 1]` (t
 
 <p className="text-sm text-muted-foreground">Opacity encodes the pop field.</p>
 
+### Shape
+
+Give `shape` a categorical field and each category gets a glyph (default palette circle / rectangle / diamond, cycled). Use shape to tell categories apart in black-and-white print, or when color is already taken.
+
+<ComponentPreview name="point-shape" sourceFiles={['point-scatter.data.ts']} />
+
+<p className="text-sm text-muted-foreground">One glyph per region.</p>
+
 ## API
 
 | Prop | Type | Default | Description |
@@ -59,6 +67,7 @@ Give `opacity` a continuous field and the opacity maps linearly to `[min, 1]` (t
 | `y` | `string` | — | Field path bound to the y channel (radial under polar) |
 | `size` | `string?` | — | Numeric field: mapped to dot radius via a square-root scale (area-perceptual); negative values error |
 | `opacity` | `string?` | — | Continuous field: mapped to opacity via a clamped linear scale to `[min, 1]`; temporal / categorical fields error |
+| `shape` | `string?` | — | Categorical field: mapped to a glyph palette (circle / rectangle / diamond, cycled); continuous / temporal fields error |
 | `color` | `string?` | — | Color field (categorical, auto ordinal color scale); colors per datum. Continuous / temporal fields error |
 | `id` | `string?` | — | Optional handle (reserved, not yet resolved) |
 

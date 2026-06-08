@@ -13,15 +13,15 @@ import {
   seriesPathMeta,
   slug,
 } from './provenance';
-import { type OpacityOf, type SizeOf } from './channel';
+import { type OpacityOf, type ShapeOf, type SizeOf } from './channel';
 import { inferCategoryDomain } from './scale';
 
 /**
  * 一个 mark 下沉时消费的通道解析器集合
- * @description color 适用所有 mark；size / opacity 仅 PointMark（per-datum node 属性）。
+ * @description color 适用所有 mark；size / opacity / shape 仅 PointMark（per-datum node 属性）。
  *   由 expand 据各通道 resolver 构造、整包传入，避免逐个位置参数（易错序）。
  */
-export type MarkChannels = { colorOf?: ColorOf; sizeOf?: SizeOf; opacityOf?: OpacityOf };
+export type MarkChannels = { colorOf?: ColorOf; sizeOf?: SizeOf; opacityOf?: OpacityOf; shapeOf?: ShapeOf };
 
 /** 散点 glyph 默认直径（user units，已补偿 circle 外接） */
 const POINT_SIZE = 10;
@@ -129,21 +129,23 @@ const attachMarkLayer = (layer: IRScope, mark: Mark, markProvenance: MarkProvena
 
 /** 散点：每行一个 circle Node（坐标系无关，经 frame.project 投影） */
 const lowerPoint = (mark: Mark, rows: Array<ExternalRow>, frame: CoordinateFrame, channels: MarkChannels, markProvenance: MarkProvenance | undefined): IRChild | null => {
-  const { colorOf, sizeOf, opacityOf } = channels;
+  const { colorOf, sizeOf, opacityOf, shapeOf } = channels;
   const placed: Array<{ color: string | undefined; node: IRNode }> = [];
   for (let transformedIndex = 0; transformedIndex < rows.length; transformedIndex++) {
     const row = rows[transformedIndex];
     // 锚点与 locator 共享同一 datumAnchor（point → frame.project），杜绝两套投影漂移
     const point = datumAnchor(mark, row, frame);
     if (!point) continue;
-    // size / opacity 通道：per-datum 落到 node 自身（覆盖子 Scope nodeDefault 的默认值）。
+    // size / opacity / shape 通道：per-datum 落到 node 自身（覆盖子 Scope nodeDefault 的默认值）。
     //   size：半径（px）→ core circle 的 minimumSize（×√2 补 circle 外接，与 pointStyle 同换算；√2 是 core 换算细节、不外泄 IR 用户）。
-    //   opacity：直接写 core node 整节点不透明度。
+    //   opacity：直接写 core node 整节点不透明度。shape：直接写 core node shape 名（覆盖默认 circle）。
     const base: IRNode = { type: 'node', position: point };
     const radius = sizeOf?.(row);
     if (radius !== undefined) base.minimumSize = radius * Math.SQRT2;
     const opacity = opacityOf?.(row);
     if (opacity !== undefined) base.opacity = opacity;
+    const shape = shapeOf?.(row);
+    if (shape !== undefined) base.shape = shape;
     const node = decorateDatum(base, row, transformedIndex, mark.type, markProvenance, undefined);
     placed.push({ color: colorOf?.(row), node });
   }

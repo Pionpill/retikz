@@ -237,4 +237,15 @@ describe('MarkSchema (ADR-05)', () => {
     const parsed = MarkSchema.parse({ type: 'interval', encoding: { x: { field: 'c' }, y: { field: 'v' }, opacity: { field: 'd' } } });
     expect((parsed.encoding as { opacity?: unknown }).opacity).toBeUndefined();
   });
+
+  // alpha.7 ADR-05：shape 通道仅 PointMark
+  it('mark_point_with_shape_valid', () => {
+    const m = { type: 'point', encoding: { x: { field: 'x' }, y: { field: 'y' }, shape: { field: 'cat' } } };
+    expect(MarkSchema.parse(m)).toEqual(m);
+  });
+
+  it('mark_interval_strips_shape', () => {
+    const parsed = MarkSchema.parse({ type: 'interval', encoding: { x: { field: 'c' }, y: { field: 'v' }, shape: { field: 'cat' } } });
+    expect((parsed.encoding as { shape?: unknown }).shape).toBeUndefined();
+  });
 });

@@ -51,6 +51,14 @@ import { Plot, PointMark } from '@retikz/plot-react';
 
 <p className="text-sm text-muted-foreground">不透明度编码 pop 字段。</p>
 
+### 形状
+
+给 `shape` 一个分类字段，每个类别取一种 glyph（默认调色板 circle / rectangle / diamond 循环）。黑白打印或已用掉颜色时，用形状区分类别。
+
+<ComponentPreview name="point-shape" sourceFiles={['point-scatter.data.ts']} />
+
+<p className="text-sm text-muted-foreground">按 region 给每类一种形状。</p>
+
 ## API
 
 | 属性 | 类型 | 默认值 | 描述 |
@@ -59,6 +67,7 @@ import { Plot, PointMark } from '@retikz/plot-react';
 | `y` | `string` | — | 绑 y 通道的字段路径（polar 下作径向） |
 | `size` | `string?` | — | 尺寸字段（数值）：经平方根 scale 映射成点半径（面积感知）；负值会报错 |
 | `opacity` | `string?` | — | 不透明度字段（连续）：经 clamp linear scale 映射到 `[最小值, 1]`；时间 / 分类字段会报错 |
+| `shape` | `string?` | — | 形状字段（分类）：按类别映射到 glyph 调色板（circle / rectangle / diamond 循环）；连续 / 时间字段会报错 |
 | `color` | `string?` | — | 颜色字段（categorical，自动 ordinal 色 scale）；按 datum 着色。连续 / 时间字段会报错 |
 | `id` | `string?` | — | 可选句柄（预留，暂不解析） |
 

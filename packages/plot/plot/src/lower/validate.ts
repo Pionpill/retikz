@@ -24,6 +24,7 @@ export const collectUserSourceFields = (spec: PlotSpec): Set<string> => {
     if (mark.type === PlotMark.Point) {
       addChannelField(fields, mark.encoding.size);
       addChannelField(fields, mark.encoding.opacity);
+      addChannelField(fields, mark.encoding.shape);
     }
     if (mark.type === PlotMark.Line || mark.type === PlotMark.Area) {
       if (mark.order !== undefined) fields.add(mark.order);

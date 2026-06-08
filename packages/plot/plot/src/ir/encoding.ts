@@ -71,10 +71,19 @@ export const OpacityChannelSchema = z
   .refine(c => (c.field === undefined) !== (c.value === undefined), { message: 'opacity channel must set exactly one of `field` or `value`' })
   .describe('Opacity channel (PointMark only): field → glyph opacity via a clamped linear scale; value → a constant opacity that bypasses the scale');
 
+export const ShapeChannelSchema = z
+  .object({
+    field: z.string().min(1).optional().describe('Data path bound to shape; categorical, mapped to a built-in glyph palette'),
+    value: z.string().min(1).optional().describe('Constant glyph shape name — a core / registered node shape (mutually exclusive with field)'),
+  })
+  .refine(c => (c.field === undefined) !== (c.value === undefined), { message: 'shape channel must set exactly one of `field` or `value`' })
+  .describe('Shape channel (PointMark only): field → glyph shape via the built-in shape palette; value → a constant core shape name. No explicit scale ref this round');
+
 export const PointEncodingSchema = EncodingSchema.extend({
   size: SizeChannelSchema.optional().describe('Optional size channel: data-driven glyph radius via a sqrt scale, or a constant radius'),
   opacity: OpacityChannelSchema.optional().describe('Optional opacity channel: data-driven glyph opacity via a clamped linear scale, or a constant opacity'),
-}).describe('PointMark encoding: positional + color + optional size / opacity (PointMark-only channels, not in the shared style encoding)');
+  shape: ShapeChannelSchema.optional().describe('Optional shape channel: categorical field → glyph shape via the built-in palette, or a constant shape name'),
+}).describe('PointMark encoding: positional + color + optional size / opacity / shape (PointMark-only channels, not in the shared style encoding)');
 
 /** 通道绑定：field（数据驱动）/ value（常量）二选一 */
 export type Channel = z.infer<typeof ChannelSchema>;
@@ -88,5 +97,7 @@ export type Encoding = z.infer<typeof EncodingSchema>;
 export type SizeChannel = z.infer<typeof SizeChannelSchema>;
 /** opacity 通道绑定（PointMark 专属；field 过 clamp linear scale / value 常量 0..1） */
 export type OpacityChannel = z.infer<typeof OpacityChannelSchema>;
-/** PointMark 专属通道绑定（位置 + 样式 + 可选 size / opacity） */
+/** shape 通道绑定（PointMark 专属；field 分类映射到 glyph 调色板 / value 常量 shape 名） */
+export type ShapeChannel = z.infer<typeof ShapeChannelSchema>;
+/** PointMark 专属通道绑定（位置 + 样式 + 可选 size / opacity / shape） */
 export type PointEncoding = z.infer<typeof PointEncodingSchema>;

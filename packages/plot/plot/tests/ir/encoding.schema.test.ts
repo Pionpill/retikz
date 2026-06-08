@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { ChannelSchema, EncodingSchema, OpacityChannelSchema, PointEncodingSchema, SizeChannelSchema } from '../../src/ir/encoding';
+import { ChannelSchema, EncodingSchema, OpacityChannelSchema, PointEncodingSchema, ShapeChannelSchema, SizeChannelSchema } from '../../src/ir/encoding';
 
 describe('ChannelSchema / EncodingSchema (ADR-05)', () => {
   // Happy path
@@ -148,5 +148,38 @@ describe('OpacityChannelSchema (alpha.7 ADR-04)', () => {
   it('shared_encoding_strips_opacity', () => {
     const e = EncodingSchema.parse({ x: { field: 'x' }, y: { field: 'y' }, opacity: { field: 'd' } });
     expect((e as { opacity?: unknown }).opacity).toBeUndefined();
+  });
+});
+
+describe('ShapeChannelSchema (alpha.7 ADR-05)', () => {
+  // Happy path
+  it('shape_field_valid', () => {
+    expect(ShapeChannelSchema.parse({ field: 'category' })).toEqual({ field: 'category' });
+  });
+
+  it('shape_value_valid', () => {
+    expect(ShapeChannelSchema.parse({ value: 'diamond' })).toEqual({ value: 'diamond' });
+  });
+
+  it('point_encoding_with_shape_valid', () => {
+    const e = { x: { field: 'x' }, y: { field: 'y' }, shape: { field: 'cat' } };
+    expect(PointEncodingSchema.parse(e)).toEqual(e);
+  });
+
+  // 错误路径
+  it('shape_field_and_value_mutually_exclusive', () => {
+    expect(() => ShapeChannelSchema.parse({ field: 'c', value: 'circle' })).toThrow();
+    expect(() => ShapeChannelSchema.parse({})).toThrow();
+  });
+
+  it('shape_has_no_scale_field', () => {
+    // 本轮 shape 不开放显式 scale 引用：多余的 scale key 被剥离（非 strict）
+    const parsed = ShapeChannelSchema.parse({ field: 'c', scale: 'whatever' });
+    expect((parsed as { scale?: unknown }).scale).toBeUndefined();
+  });
+
+  it('shared_encoding_strips_shape', () => {
+    const e = EncodingSchema.parse({ x: { field: 'x' }, y: { field: 'y' }, shape: { field: 'c' } });
+    expect((e as { shape?: unknown }).shape).toBeUndefined();
   });
 });

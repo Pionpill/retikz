@@ -1,6 +1,6 @@
 import { type ExternalRow, type FieldType, type Mark, PlotFieldType, PlotScale, type PlotSpec, type SqrtScale } from '../ir';
 import { isFiniteNumber, resolveFieldPath } from './field';
-import { resolveLinearScale, resolveSqrtScale } from './scale';
+import { inferCategoryDomain, resolveLinearScale, resolveSqrtScale } from './scale';
 
 /**
  * 通道 → 视觉量 resolver 的接缝（alpha.7）
@@ -88,6 +88,42 @@ export const makeOpacityResolver = (node: PlotSpec, rows: Array<ExternalRow>, fi
     return row => {
       const value = resolveFieldPath(row, field);
       return isFiniteNumber(value) ? scale(value) : undefined;
+    };
+  };
+};
+
+/** shape 通道默认 glyph 调色板（直用 core 内置 shape 名，无 plot-only 别名）；循环复用 */
+export const PLOT_SHAPE_PALETTE = ['circle', 'rectangle', 'diamond'] as const;
+
+/** 行 → glyph shape 名；undefined = 该行无有效 shape。由 makeShapeResolver 据 encoding.shape 构造 */
+export type ShapeOf = (row: ExternalRow) => string | undefined;
+
+/**
+ * 解析某 mark 的 shape 编码 → 行→shape 名
+ * @description 仅 PointMark。常量 value 直用（core / 注册 shape 名）；categorical 字段按出现序映射到
+ *   `PLOT_SHAPE_PALETTE`（循环复用）。非 categorical 字段（continuous / temporal）fail-loud（形状是分类编码）。
+ */
+export const makeShapeResolver = (node: PlotSpec, rows: Array<ExternalRow>, fieldTypes: Map<string, FieldType>): ((mark: Mark) => ShapeOf | undefined) => {
+  return (mark: Mark): ShapeOf | undefined => {
+    if (mark.type !== 'point') return undefined;
+    const channel = mark.encoding.shape;
+    if (!channel) return undefined;
+    if (channel.value !== undefined) {
+      const shape = channel.value;
+      return () => shape;
+    }
+    if (channel.field === undefined) return undefined;
+    const field = channel.field;
+    const fieldType = fieldTypes.get(field);
+    if (fieldType !== undefined && fieldType !== PlotFieldType.Categorical) {
+      throw new Error(`lowerPlots: shape channel field "${field}" is ${fieldType}; shape requires a categorical field`);
+    }
+    const domain = inferCategoryDomain(rows.map(row => resolveFieldPath(row, field)));
+    const shapeByCategory = new Map<string | number, string>();
+    domain.forEach((category, index) => shapeByCategory.set(category, PLOT_SHAPE_PALETTE[index % PLOT_SHAPE_PALETTE.length]));
+    return row => {
+      const value = resolveFieldPath(row, field);
+      return typeof value === 'string' || typeof value === 'number' ? shapeByCategory.get(value) : undefined;
     };
   };
 };
