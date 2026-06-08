@@ -26,6 +26,12 @@ export const PlotScale = {
   Sequential: 'sequential',
   /** 连续发散色阶：有中点的量 domain → 两侧异色色带（中点淡），盈亏 / 偏离均值 */
   Diverging: 'diverging',
+  /** 等宽离散化：连续 domain 等宽切 count 段 → 离散 color 档（choropleth / 均匀分布连续量） */
+  Quantize: 'quantize',
+  /** 阈值离散化：用户自定义断点切档 → 离散 color 档（断点须升序，色数 = 断点数 + 1；业务阈值 / 告警） */
+  Threshold: 'threshold',
+  /** 分位离散化：按数据分位切 count 档（每档样本数约等）→ 离散 color 档（偏斜数据 / 抗离群） */
+  Quantile: 'quantile',
 } as const;
 
 /** scale 类型 */
@@ -281,6 +287,74 @@ export const DivergingColorScaleSchema = z
   })
   .describe('Diverging color scale: a continuous domain with a meaningful midpoint mapped to a two-sided color band (distinct hues either side, pale center); for profit / loss or deviation-from-mean quantities');
 
+export const QuantizeColorScaleSchema = z
+  .object({
+    type: z.literal(PlotScale.Quantize).describe('Discriminator: quantize color scale (a continuous domain cut into equal-width bins, each bin a discrete color)'),
+    name: z.string().min(1).describe('Scale name; referenced by a non-positional color channel scale ref'),
+    domain: z
+      .tuple([z.number(), z.number()])
+      .optional()
+      .describe('[min, max] input extent cut into equal-width bins; omit to infer [min, max] from the bound color field at lowering'),
+    count: z
+      .number()
+      .int()
+      .min(2)
+      .optional()
+      .describe('Number of equal-width bins; omit to default to 5 at lowering. Ignored when range is given (range length is the bin count)'),
+    scheme: z
+      .nativeEnum(PlotColorScheme)
+      .optional()
+      .describe('Named color scheme sampled at count evenly spaced points to produce the discrete bin colors; omit to default to viridis at lowering. Overridden by range when both are given'),
+    range: z
+      .array(z.string())
+      .min(2)
+      .optional()
+      .describe('Explicit discrete bin colors that override scheme; the array length is the bin count'),
+  })
+  .describe('Quantize color scale: a continuous domain cut into equal-width bins, each bin mapped to one discrete color sampled from a scheme or taken from range');
+
+export const ThresholdColorScaleSchema = z
+  .object({
+    type: z.literal(PlotScale.Threshold).describe('Discriminator: threshold color scale (user-defined breakpoints cut the domain into bins, each bin a discrete color)'),
+    name: z.string().min(1).describe('Scale name; referenced by a non-positional color channel scale ref'),
+    breakpoints: z
+      .array(z.number())
+      .min(1)
+      .describe('Strictly ascending breakpoints cutting the value range into breakpoints.length + 1 bins; required (a threshold scale has no default cut points). Ascending order is enforced at lowering'),
+    scheme: z
+      .nativeEnum(PlotColorScheme)
+      .optional()
+      .describe('Named color scheme sampled at breakpoints.length + 1 evenly spaced points to produce the discrete bin colors; omit to default to viridis at lowering. Overridden by range when both are given'),
+    range: z
+      .array(z.string())
+      .min(2)
+      .optional()
+      .describe('Explicit discrete bin colors that override scheme; length must equal breakpoints.length + 1 (enforced at lowering)'),
+  })
+  .describe('Threshold color scale: user-defined ascending breakpoints cut the domain into bins, each bin mapped to one discrete color sampled from a scheme or taken from range');
+
+export const QuantileColorScaleSchema = z
+  .object({
+    type: z.literal(PlotScale.Quantile).describe('Discriminator: quantile color scale (the data is cut at quantiles into bins of roughly equal sample count, each bin a discrete color)'),
+    name: z.string().min(1).describe('Scale name; referenced by a non-positional color channel scale ref'),
+    count: z
+      .number()
+      .int()
+      .min(2)
+      .optional()
+      .describe('Number of quantile bins; omit to default to 5 at lowering. Ignored when range is given (range length is the bin count)'),
+    scheme: z
+      .nativeEnum(PlotColorScheme)
+      .optional()
+      .describe('Named color scheme sampled at count evenly spaced points to produce the discrete bin colors; omit to default to viridis at lowering. Overridden by range when both are given'),
+    range: z
+      .array(z.string())
+      .min(2)
+      .optional()
+      .describe('Explicit discrete bin colors that override scheme; the array length is the bin count'),
+  })
+  .describe('Quantile color scale: the bound data is cut at quantiles into bins of roughly equal sample count, each bin mapped to one discrete color; the quantile boundaries come from the data, so this scale takes no explicit numeric domain');
+
 export const ScaleSchema = z
   .discriminatedUnion('type', [
     LinearScaleSchema,
@@ -293,8 +367,11 @@ export const ScaleSchema = z
     SqrtScaleSchema,
     SequentialColorScaleSchema,
     DivergingColorScaleSchema,
+    QuantizeColorScaleSchema,
+    ThresholdColorScaleSchema,
+    QuantileColorScaleSchema,
   ])
-  .describe('Scale union: linear / band / point / ordinal / time / log / pow / sqrt / sequential / diverging');
+  .describe('Scale union: linear / band / point / ordinal / time / log / pow / sqrt / sequential / diverging / quantize / threshold / quantile');
 
 /** 分类标量：类别取值 */
 export type CategoryValue = z.infer<typeof CategoryValueSchema>;
@@ -318,5 +395,11 @@ export type SqrtScale = z.infer<typeof SqrtScaleSchema>;
 export type SequentialColorScale = z.infer<typeof SequentialColorScaleSchema>;
 /** diverging color scale（连续发散色阶；有中点的量两侧异色） */
 export type DivergingColorScale = z.infer<typeof DivergingColorScaleSchema>;
-/** scale（linear / band / point / ordinal / time / log / pow / sqrt / sequential / diverging） */
+/** quantize color scale（等宽离散化；连续 domain 等宽切档 → 离散色） */
+export type QuantizeColorScale = z.infer<typeof QuantizeColorScaleSchema>;
+/** threshold color scale（阈值离散化；自定义升序断点切档 → 离散色） */
+export type ThresholdColorScale = z.infer<typeof ThresholdColorScaleSchema>;
+/** quantile color scale（分位离散化；按数据分位切档 → 离散色，无显式数值 domain） */
+export type QuantileColorScale = z.infer<typeof QuantileColorScaleSchema>;
+/** scale（linear / band / point / ordinal / time / log / pow / sqrt / sequential / diverging / quantize / threshold / quantile） */
 export type Scale = z.infer<typeof ScaleSchema>;
