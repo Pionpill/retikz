@@ -1,0 +1,59 @@
+---
+title: 散点
+description: 用 <PointMark> 画散点图：每行一个点；size 通道按数值映射半径成气泡图，color 按分类字段着色。
+---
+
+`<PointMark>` 为每行数据画一个点。`x` / `y` 绑位置字段。给 `size` 一个数值字段，点半径按值映射成气泡图；给 `color` 一个分类字段，点按类别着色。
+
+## 用法
+
+```tsx
+import { Plot, PointMark } from '@retikz/plot-react';
+```
+
+```tsx
+<Plot data={cities}>
+  <PointMark x="lng" y="lat" />
+</Plot>
+```
+
+散点常和折线叠加——同一份数据先画 `<LineMark>` 再叠 `<PointMark>` 标出每个观测点。
+
+## 例子
+
+### 基础散点
+
+`x` / `y` 绑字段，每行一个点。
+
+<ComponentPreview name="point-basic" sourceFiles={['point-scatter.data.ts']} />
+
+### 气泡图
+
+给 `size` 一个数值字段，点半径按值映射。半径走平方根 scale，让点的**面积**正比于数据——小值不会缩到看不见、大值也不会过分夸张。
+
+<ComponentPreview name="point-bubble" sourceFiles={['point-scatter.data.ts']} />
+
+<p className="text-sm text-muted-foreground">点的大小编码 pop 字段，面积正比于值。</p>
+
+### 分类着色
+
+给 `color` 一个分类字段，每个点按类别取色（按 datum 着色）。
+
+<ComponentPreview name="point-color" sourceFiles={['point-scatter.data.ts']} />
+
+<p className="text-sm text-muted-foreground">按 region 给每个点上色。</p>
+
+## API
+
+| 属性 | 类型 | 默认值 | 描述 |
+| --- | --- | --- | --- |
+| `x` | `string` | — | 绑 x 通道的字段路径（polar 下作角向） |
+| `y` | `string` | — | 绑 y 通道的字段路径（polar 下作径向） |
+| `size` | `string?` | — | 尺寸字段（数值）：经平方根 scale 映射成点半径（面积感知）；负值会报错 |
+| `color` | `string?` | — | 颜色字段（categorical，自动 ordinal 色 scale）；按 datum 着色。连续 / 时间字段会报错 |
+| `id` | `string?` | — | 可选句柄（预留，暂不解析） |
+
+## 相关
+
+- [折线](/plot/components/mark/line) —— 叠在散点下连成趋势线
+- [比例尺](/plot/grammar/scale) —— size 用的平方根 scale 与连续 scale 家族

@@ -1,4 +1,4 @@
-import { LineMark, PointMark, Plot } from '@retikz/plot-react';
+import { LineMark, Plot, PointMark } from '@retikz/plot-react';
 import type { FC } from 'react';
 
 import { growth } from './scale-continuous.data';

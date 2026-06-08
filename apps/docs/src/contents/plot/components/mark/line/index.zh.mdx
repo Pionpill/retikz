@@ -35,6 +35,14 @@ import { Plot, LineMark } from '@retikz/plot-react';
 
 <p className="text-sm text-muted-foreground">按城市拆两条线，系列自动着色。</p>
 
+#### 按颜色字段隐式拆
+
+不写 `series`、只给 `color` 一个分类字段时，折线也会按该字段拆成多条——等价于显式写 `series`。`color` 字段必须是分类的（连续 / 时间字段会报错）。
+
+<ComponentPreview name="line-color-split" sourceFiles={['line-series.data.ts']} />
+
+<p className="text-sm text-muted-foreground">只给 <code>color="city"</code>、无 <code>series</code>，照样拆两条线。</p>
+
 ### 雷达
 
 `<Plot coordinate="polar2D">` 加 `<LineMark closed />`：末点回连首点闭合成线框多边形，各维度沿角向均布、值映射到半径——线框版雷达。想要带填充的雷达用 [`<AreaMark closed />`](/plot/components/mark/area)。

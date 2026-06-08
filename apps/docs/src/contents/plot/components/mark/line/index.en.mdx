@@ -35,6 +35,14 @@ Set `series` to a field and the data splits into one line per distinct value, ea
 
 <p className="text-sm text-muted-foreground">Two lines split by city, colored automatically.</p>
 
+#### Implicit split by color
+
+With no `series`, giving `color` a categorical field also splits the line into one per value — equivalent to writing `series`. The `color` field must be categorical (continuous / temporal fields error).
+
+<ComponentPreview name="line-color-split" sourceFiles={['line-series.data.ts']} />
+
+<p className="text-sm text-muted-foreground">Just <code>color="city"</code>, no <code>series</code>, still two lines.</p>
+
 ### Radar
 
 `<Plot coordinate="polar2D">` with `<LineMark closed />`: the last point connects back to the first into a wireframe polygon, dimensions spread evenly along the angular axis and values map to the radius — a wireframe radar. For a filled radar use [`<AreaMark closed />`](/plot/components/mark/area).
