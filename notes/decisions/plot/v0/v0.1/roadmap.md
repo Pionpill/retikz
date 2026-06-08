@@ -36,8 +36,8 @@
 
 | Milestone | 组件 / 主题 | 模块 / 产出 | 记录 |
 |---|---|---|---|
-| v0.1-alpha.6 | **Data 数据模型 + Scales 选型** | `data.model` 字段语义类型层（quantitative / temporal / nominal / ordinal / interval / proportion）+ encoding 字段引用校验 + 无 model 时缺省推断；**type-driven scale 默认选型**（类型→scaleType）+ type-driven guide 格式化（时间轴 / ordinal tick）。**结构性地基**，撑住后续 scale / 通道 / guide | 待建 |
-| v0.1-alpha.7 | **Aesthetics 上 + Scales 家族** | 通道×scale 通用抽象（推广出 position）；**size** 通道 + size scale；**color 从分组转真 scale 通道** + **series 一等化**（了结 color→series 重构债、修单系列 color field 静默丢弃）；scale 家族 log / pow / sqrt | 待建 |
+| v0.1-alpha.6 | **Data 数据模型 + Scales 选型** | `data.model` 字段语义类型层（continuous / categorical / temporal）+ encoding 字段引用校验 + 无 model 时缺省推断；**type-driven scale 默认选型**（类型→scaleType）+ type-driven guide 格式化（时间轴 / 分类 tick）。**结构性地基**，撑住后续 scale / 通道 / guide | [`v0.1-alpha.6/`](./v0.1-alpha.6/roadmap.md) |
+| v0.1-alpha.7 | **Aesthetics 上 + Scales 家族** | 通道×scale 通用抽象（推广出 position）；**size** 通道（仅 PointMark，radius scale）+ size scale；**color 从分组转真 scale 通道** + **series 一等化**（了结 color→series 重构债、修单系列 color field 静默丢弃）；scale 家族 log / pow / sqrt（仅 point/line） | [`v0.1-alpha.7/`](./v0.1-alpha.7/roadmap.md)（决策已拍板，ADR 待起草） |
 | v0.1-alpha.8 | **Aesthetics 下 + Legend** | **opacity** 通道 + **shape** 通道（shape scale → glyph）；quantize / threshold scale；**color gradient**（sequential / diverging）；**legend** guide（由非位置 scale 派生 + 布局） | 待建 |
 | v0.1-alpha.9 | **Coordinates 坐标系统** | **linear1D**（单轴；rug / timeline / histogram 底座）+ **ternary2D**（a+b+c=1 投影，消费 alpha.6 proportion）；1D 轴 / 三角轴 guide；cartesian guide dimension 校验（拒非法维度）。**地图坐标不进 plot**（§2 独立 domain）；**3D gating 于 core 三维坐标** | 待建 |
 | v0.1-alpha.10 | **Geometry 基础** | mark 补 **rect**（heatmap 格）+ **rule**（参考 / 阈值线）+ **text**（datum label）+ **ribbon**（sankey / alluvial 流量、跨 scope connector） | 待建 |
