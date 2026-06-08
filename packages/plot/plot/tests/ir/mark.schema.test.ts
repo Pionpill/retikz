@@ -209,4 +209,21 @@ describe('MarkSchema (ADR-05)', () => {
     const m = { type: 'line', order: 'dim', closed: true, encoding: { x: { field: 'dim' }, y: { field: 'value' } } };
     expect(MarkSchema.parse(JSON.parse(JSON.stringify(m)))).toEqual(m);
   });
+
+  // alpha.7 ADR-02：size 通道仅 PointMark
+  it('mark_point_with_size_field_valid', () => {
+    const m = { type: 'point', encoding: { x: { field: 'lng' }, y: { field: 'lat' }, size: { field: 'pop' } } };
+    expect(MarkSchema.parse(m)).toEqual(m);
+  });
+
+  it('mark_point_with_size_value_valid', () => {
+    const m = { type: 'point', encoding: { x: { field: 'x' }, y: { field: 'y' }, size: { value: 6 } } };
+    expect(MarkSchema.parse(m)).toEqual(m);
+  });
+
+  it('mark_interval_strips_size', () => {
+    // size 不在 interval 的 encoding 契约里：非 strict zod 剥离（TS 层禁止作者写入）
+    const parsed = MarkSchema.parse({ type: 'interval', encoding: { x: { field: 'c' }, y: { field: 'v' }, size: { field: 'p' } } });
+    expect((parsed.encoding as { size?: unknown }).size).toBeUndefined();
+  });
 });

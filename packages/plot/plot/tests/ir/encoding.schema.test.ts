@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { ChannelSchema, EncodingSchema } from '../../src/ir/encoding';
+import { ChannelSchema, EncodingSchema, PointEncodingSchema, SizeChannelSchema } from '../../src/ir/encoding';
 
 describe('ChannelSchema / EncodingSchema (ADR-05)', () => {
   // Happy path
@@ -74,5 +74,45 @@ describe('ChannelSchema / EncodingSchema (ADR-05)', () => {
   it('encoding_json_round_trip', () => {
     const e = EncodingSchema.parse({ x: { field: 'theta' }, y: { field: 'value' }, color: { field: 'g', scale: 'col' } });
     expect(EncodingSchema.parse(JSON.parse(JSON.stringify(e)))).toEqual(e);
+  });
+});
+
+describe('SizeChannelSchema / PointEncodingSchema (alpha.7 ADR-02)', () => {
+  // Happy path
+  it('size_field_valid', () => {
+    expect(SizeChannelSchema.parse({ field: 'population' })).toEqual({ field: 'population' });
+  });
+
+  it('size_value_constant_radius_valid', () => {
+    expect(SizeChannelSchema.parse({ value: 8 })).toEqual({ value: 8 });
+  });
+
+  it('size_field_with_scale_valid', () => {
+    expect(SizeChannelSchema.parse({ field: 'p', scale: '__size_p' })).toEqual({ field: 'p', scale: '__size_p' });
+  });
+
+  it('point_encoding_with_size_valid', () => {
+    const e = { x: { field: 'lng' }, y: { field: 'lat' }, size: { field: 'pop' } };
+    expect(PointEncodingSchema.parse(e)).toEqual(e);
+  });
+
+  // 错误路径
+  it('size_field_and_value_mutually_exclusive', () => {
+    expect(() => SizeChannelSchema.parse({ field: 'p', value: 5 })).toThrow();
+    expect(() => SizeChannelSchema.parse({})).toThrow();
+  });
+
+  it('size_value_negative_rejected', () => {
+    expect(() => SizeChannelSchema.parse({ value: -3 })).toThrow();
+  });
+
+  it('size_value_non_number_rejected', () => {
+    expect(() => SizeChannelSchema.parse({ value: 'big' })).toThrow();
+  });
+
+  // size 不进共享 EncodingSchema：非 point mark 的 encoding 会剥离 size（非 strict，类型层由 TS 守）
+  it('shared_encoding_strips_size', () => {
+    const e = EncodingSchema.parse({ x: { field: 'x' }, y: { field: 'y' }, size: { field: 'p' } });
+    expect((e as { size?: unknown }).size).toBeUndefined();
   });
 });

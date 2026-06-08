@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import type { ValueOf } from '@retikz/core';
-import { EncodingSchema, StyleEncodingSchema } from './encoding';
+import { EncodingSchema, PointEncodingSchema, StyleEncodingSchema } from './encoding';
 
 /**
  * mark 类型关键字（暴露给用户；成员值即 IR 判别串，裸字面量 `'point'` 同样可用）
@@ -49,8 +49,8 @@ const markBase = {
 const positionalEncoding = { encoding: EncodingSchema };
 
 export const PointMarkSchema = z
-  .object({ type: z.literal(PlotMark.Point).describe('Discriminator: one glyph per record'), ...markBase, ...positionalEncoding })
-  .describe('Point mark: scatter / dot');
+  .object({ type: z.literal(PlotMark.Point).describe('Discriminator: one glyph per record'), ...markBase, encoding: PointEncodingSchema })
+  .describe('Point mark: scatter / dot; supports an optional size channel (glyph radius)');
 
 export const LineMarkSchema = z
   .object({

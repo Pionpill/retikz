@@ -49,6 +49,23 @@ export const EncodingSchema = PositionEncodingSchema.merge(StyleEncodingSchema).
   'Channel bindings for a mark: positional channels (consumed by the coordinate system) composed with non-positional style channels (fed to mark visuals)',
 );
 
+export const SizeChannelSchema = z
+  .object({
+    field: z
+      .string()
+      .min(1)
+      .optional()
+      .describe('Data path bound to the size channel; resolves to a numeric magnitude mapped through a radius (sqrt) scale'),
+    value: z.number().finite().nonnegative().optional().describe('Constant final radius in px, bypassing the scale entirely (mutually exclusive with field)'),
+    scale: z.string().min(1).optional().describe('Optional sqrt-scale name (only meaningful with field); omitted → a default radius (sqrt) scale is synthesized'),
+  })
+  .refine(c => (c.field === undefined) !== (c.value === undefined), { message: 'size channel must set exactly one of `field` or `value`' })
+  .describe('Size channel (PointMark only): field → glyph radius via a sqrt scale; value → a constant final radius (px) that bypasses the scale');
+
+export const PointEncodingSchema = EncodingSchema.extend({
+  size: SizeChannelSchema.optional().describe('Optional size channel: data-driven glyph radius via a sqrt scale, or a constant radius'),
+}).describe('PointMark encoding: positional + color + optional size (size is PointMark-only, not in the shared style encoding)');
+
 /** 通道绑定：field（数据驱动）/ value（常量）二选一 */
 export type Channel = z.infer<typeof ChannelSchema>;
 /** 位置通道绑定（x / y / angle / radius；按坐标系角色解析） */
@@ -57,3 +74,7 @@ export type PositionEncoding = z.infer<typeof PositionEncodingSchema>;
 export type StyleEncoding = z.infer<typeof StyleEncodingSchema>;
 /** mark 的通道绑定（位置 + 样式复合） */
 export type Encoding = z.infer<typeof EncodingSchema>;
+/** size 通道绑定（PointMark 专属；field 过 sqrt 半径 scale / value 常量半径 px） */
+export type SizeChannel = z.infer<typeof SizeChannelSchema>;
+/** PointMark 专属通道绑定（位置 + 样式 + 可选 size） */
+export type PointEncoding = z.infer<typeof PointEncodingSchema>;

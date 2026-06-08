@@ -13,6 +13,7 @@ import {
   seriesPathMeta,
   slug,
 } from './provenance';
+import { type SizeOf } from './channel';
 import { inferCategoryDomain } from './scale';
 
 /** 散点 glyph 默认直径（user units，已补偿 circle 外接） */
@@ -120,14 +121,18 @@ const attachMarkLayer = (layer: IRScope, mark: Mark, markProvenance: MarkProvena
 };
 
 /** 散点：每行一个 circle Node（坐标系无关，经 frame.project 投影） */
-const lowerPoint = (mark: Mark, rows: Array<ExternalRow>, frame: CoordinateFrame, colorOf: ColorOf | undefined, markProvenance: MarkProvenance | undefined): IRChild | null => {
+const lowerPoint = (mark: Mark, rows: Array<ExternalRow>, frame: CoordinateFrame, colorOf: ColorOf | undefined, sizeOf: SizeOf | undefined, markProvenance: MarkProvenance | undefined): IRChild | null => {
   const placed: Array<{ color: string | undefined; node: IRNode }> = [];
   for (let transformedIndex = 0; transformedIndex < rows.length; transformedIndex++) {
     const row = rows[transformedIndex];
     // 锚点与 locator 共享同一 datumAnchor（point → frame.project），杜绝两套投影漂移
     const point = datumAnchor(mark, row, frame);
     if (!point) continue;
-    const node = decorateDatum({ type: 'node', position: point }, row, transformedIndex, mark.type, markProvenance, undefined);
+    // size 通道：半径（px）→ core circle 的 minimumSize（×√2 补 circle 外接，与 pointStyle 同换算；
+    //   √2 是 core 换算细节、不外泄 IR 用户）。per-datum 落到 node 自身（覆盖子 Scope nodeDefault 的默认尺寸）。
+    const radius = sizeOf?.(row);
+    const base: IRNode = radius !== undefined ? { type: 'node', position: point, minimumSize: radius * Math.SQRT2 } : { type: 'node', position: point };
+    const node = decorateDatum(base, row, transformedIndex, mark.type, markProvenance, undefined);
     placed.push({ color: colorOf?.(row), node });
   }
   if (placed.length === 0) return null;
@@ -418,9 +423,9 @@ const lowerArea = (mark: Mark, rows: Array<ExternalRow>, frame: CoordinateFrame,
  *   markProvenance 给定（provenance 开）→ 给图层 / series Path / datum Node 绑 id + 来源 meta；否则产物逐字节等价 alpha.4。
  *   datum id 走 markProvenance.registerDatumId（plot 级共享 seen、跨 mark 查重）。
  */
-export const lowerMark = (mark: Mark, rows: Array<ExternalRow>, frame: CoordinateFrame, colorOf?: ColorOf, markProvenance?: MarkProvenance): IRChild | null => {
+export const lowerMark = (mark: Mark, rows: Array<ExternalRow>, frame: CoordinateFrame, colorOf?: ColorOf, sizeOf?: SizeOf, markProvenance?: MarkProvenance): IRChild | null => {
   // point / line / area 坐标系无关，经 frame.project（polar 连续角轴段内采样）投影
-  if (mark.type === 'point') return lowerPoint(mark, rows, frame, colorOf, markProvenance);
+  if (mark.type === 'point') return lowerPoint(mark, rows, frame, colorOf, sizeOf, markProvenance);
   if (mark.type === 'line') {
     const layer = lowerLine(mark, rows, frame, colorOf, markProvenance);
     return layer === null ? null : attachMarkLayer(layer as IRScope, mark, markProvenance);

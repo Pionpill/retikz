@@ -54,6 +54,11 @@ describe('buildPlotSpec 装配（ADR-08 / ADR-05）', () => {
     expect(spec.marks).toEqual([{ type: 'point', encoding: { x: { field: 'month' }, y: { field: 'revenue' } } }]);
   });
 
+  it('point size 字段 → size 通道（alpha.7 ADR-02）', () => {
+    const spec = buildPlotSpec(<PointMark x="lng" y="lat" size="pop" />, '__plot');
+    expect(spec.marks[0]).toEqual({ type: 'point', encoding: { x: { field: 'lng' }, y: { field: 'lat' }, size: { field: 'pop' } } });
+  });
+
   it('line + point 叠加：marks 两项、共享 scales/coordinate', () => {
     const spec = buildPlotSpec(
       <>
