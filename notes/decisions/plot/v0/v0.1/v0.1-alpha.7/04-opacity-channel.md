@@ -1,6 +1,6 @@
 # ADR-04：opacity 通道（仅 PointMark）
 
-- 状态：Proposed
+- 状态：Accepted
 - 决策日期：2026-06-08
 - 关联：[plot v0.1-alpha.7 roadmap](./roadmap.md) · [plot-design §3.3 Aesthetics](../../../../../architecture/plot-design.md) · 依赖：[ADR-02 通道→scale resolver](./02-channel-scale-resolver-size.md)（opacity 复用其 resolver + PointEncoding）
 

@@ -65,7 +65,7 @@
 
 ## 执行模式
 
-**单条串行**：每 ADR 走 5 阶段（设计 → 实现 → 自测 → 文档 → 收尾），人工 review 后开下一条。三 ADR 01/02/03 起草为 `Proposed`；设计阶段的四项主决策已拍板（见上）；进实现前按 [`develop-design`](../../../../../../.agents/skills/develop-design/SKILL.md) 跑外部 LLM 评审（沿用 alpha.6）。
+**单条串行**：每 ADR 走 5 阶段（设计 → 实现 → 自测 → 文档 → 收尾），人工 review 后开下一条。5 条 ADR（01~05）均经外部 LLM 评审 + 实现 + 测试 + 文档，**已全部 Accepted**（见下 ADR 清单）。四项主决策（①~④）+ opacity/shape 两项（⑤⑥）均已拍板。外部评审流程见 [`develop-design`](../../../../../../.agents/skills/develop-design/SKILL.md)。
 
 **三表面同步硬约束**（develop-design 要求）：每条 ADR 必须同时写 **IR schema + React JSX props + vanilla/spec 表面** 三处，文档站 demo 在同改动集露出。
 
@@ -91,11 +91,11 @@
 
 | ADR | 主题 | Level | 依赖 | 状态 |
 |---|---|---|---|---|
-| [01](./01-continuous-scale-family.md) | 连续 scale 家族 log / pow / sqrt（L1：仅 point/line，bar/area fail-loud；公开 scale 家族**不含** size/radius type） | red | — | Proposed（已实现） |
-| [02](./02-channel-scale-resolver-size.md) | 通道→scale 通用抽象 + size 通道（仅 PointMark，radius scale，③边界契约；size 默认派生到 01 的 sqrt；不进全局 StyleEncoding、`value` 限 number） | red | ADR-01 | Proposed（已实现） |
-| [03](./03-color-series.md) | color 真通道收口 + series 一等化（④B/C 规则 + categorical fail-loud + continuous/temporal color fail-loud + 修单系列静默丢弃 + 隐式拆等价性） | red | ADR-02 | Proposed（已实现） |
-| [04](./04-opacity-channel.md) | opacity 通道（仅 PointMark，⑤：continuous → linear [minOpacity,1]、常量 ∈ [0,1]、越界 fail-loud；落 core node 不透明度） | red | ADR-02 | Proposed |
-| [05](./05-shape-channel.md) | shape 通道（仅 PointMark，⑥：categorical → glyph 集（默认 shape 调色板）→ core node shape；连续/时间 fail-loud） | red | ADR-02 | Proposed |
+| [01](./01-continuous-scale-family.md) | 连续 scale 家族 log / pow / sqrt（L1：仅 point/line，bar/area fail-loud；公开 scale 家族**不含** size/radius type） | red | — | Accepted |
+| [02](./02-channel-scale-resolver-size.md) | 通道→scale 通用抽象 + size 通道（仅 PointMark，radius scale，③边界契约；size 默认派生到 01 的 sqrt；不进全局 StyleEncoding、`value` 限 number） | red | ADR-01 | Accepted |
+| [03](./03-color-series.md) | color 真通道收口 + series 一等化（④B/C 规则 + categorical fail-loud + continuous/temporal color fail-loud + 修单系列静默丢弃 + 隐式拆等价性） | red | ADR-02 | Accepted |
+| [04](./04-opacity-channel.md) | opacity 通道（仅 PointMark，⑤：continuous → linear [minOpacity,1]、常量 ∈ [0,1]、越界 fail-loud；落 core node 不透明度） | red | ADR-02 | Accepted |
+| [05](./05-shape-channel.md) | shape 通道（仅 PointMark，⑥：categorical → glyph 集（默认 shape 调色板）→ core node shape；连续/时间 fail-loud） | red | ADR-02 | Accepted |
 
 ## 贯穿原则落点
 

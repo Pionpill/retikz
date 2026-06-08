@@ -1,6 +1,6 @@
 # ADR-03：color 真通道收口 + series 一等化（B/C 规则）
 
-- 状态：Proposed
+- 状态：Accepted
 - 决策日期：2026-06-08
 - 关联：[plot v0.1-alpha.7 roadmap](./roadmap.md) · [plot v0 roadmap 阶段二](../../roadmap.md) · [plot-design §3.3 Aesthetics / §3.7 Series](../../../../../architecture/plot-design.md) · 依赖：[ADR-02 通道→scale resolver](./02-channel-scale-resolver-size.md)（color 迁入）· 关联：[alpha.5 ADR-02 datum locator](../v0.1-alpha.5/02-datum-locator.md)（隐式拆等价性）
 

@@ -1,6 +1,6 @@
 # ADR-01：连续 scale 家族——log / pow / sqrt 连续 scale + L1 baseline 限制
 
-- 状态：Proposed
+- 状态：Accepted
 - 决策日期：2026-06-08
 - 关联：[plot v0.1-alpha.7 roadmap](./roadmap.md) · [plot v0 roadmap 阶段二](../../roadmap.md) · [plot-design §3.4 Scale / §3.9 Guide](../../../../../architecture/plot-design.md) · 下游：[ADR-02 通道→scale 抽象 + size](./02-channel-scale-resolver-size.md)（size 派生到本 ADR 的 sqrt）/ [ADR-03 color·series](./03-color-series.md) · 前身：[alpha.2 ADR-02 d3-scale](../v0.1-alpha.2/02-d3-scale.md)
 

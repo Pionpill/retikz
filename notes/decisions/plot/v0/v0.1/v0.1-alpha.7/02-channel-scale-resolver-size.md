@@ -1,6 +1,6 @@
 # ADR-02：通用「通道 → scale」抽象 + size 通道（仅 PointMark，radius scale）
 
-- 状态：Proposed
+- 状态：Accepted
 - 决策日期：2026-06-08
 - 关联：[plot v0.1-alpha.7 roadmap](./roadmap.md) · [plot v0 roadmap 阶段二](../../roadmap.md) · [plot-design §3.3 Aesthetics / §3.4 Scale](../../../../../architecture/plot-design.md) · 依赖：[ADR-01 连续 scale 家族](./01-continuous-scale-family.md)（size 派生到 sqrt）· 下游：[ADR-03 color·series](./03-color-series.md)（color 迁入本 resolver）
 
