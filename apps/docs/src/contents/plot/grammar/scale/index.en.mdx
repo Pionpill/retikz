@@ -1,0 +1,45 @@
+---
+title: Scales
+description: A scale maps a data value to a visual quantity — position, length, radius. Every channel goes through a scale; the type is auto-picked from the field, or set explicitly to linear / log / sqrt and friends.
+---
+
+A scale decides how a data value becomes a visual quantity. Position channels (`x` / `y`) turn into canvas coordinates, the `size` channel turns into a radius — each goes through a scale. `<Plot>` auto-picks a scale from the field type, so common charts need none by hand; reach for `scaleX` / `scaleY` when you want a log or square-root axis.
+
+## Scale types
+
+| Type | For | Notes |
+| --- | --- | --- |
+| `linear` | Continuous numbers | Evenly-spaced linear mapping (default) |
+| `log` | Positive values across magnitudes | Logarithmic; point / line only |
+| `sqrt` | Area-perceptual | Square-root; point / line only (the `size` channel's default) |
+| `pow` | Custom power | Power mapping (needs `exponent`; via a full spec) |
+| `time` | Dates / time | Time axis with human-readable tick boundaries |
+| `band` / `point` | Categories | Equal bands (bars) / evenly-spaced points (categorical lines) |
+| `ordinal` | Category → color | Multi-series coloring |
+
+## Linear vs log
+
+When data spans several orders of magnitude, a linear axis crushes the small values against the bottom. A log axis (`scaleY="log"`) gives every magnitude equal height, so small values stay legible. Both charts use the same yearly user counts.
+
+<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+  <ComponentPreview name="scale-linear" sourceFiles={['scale-continuous.data.ts']} size="sm" />
+  <ComponentPreview name="scale-log" sourceFiles={['scale-continuous.data.ts']} size="sm" />
+</div>
+
+<p className="text-sm text-muted-foreground">Left: default linear, early years hug the floor; right: just add <code>scaleY="log"</code> and the range spreads out.</p>
+
+## Square root
+
+`scaleY="sqrt"` maps by square root, taming the visual exaggeration of large values; it is also the default scale for the `size` channel (point radius), so a dot's **area** stays proportional to the data.
+
+<ComponentPreview name="scale-sqrt" sourceFiles={['scale-continuous.data.ts']} />
+
+## Point / line only
+
+`log` / `pow` / `sqrt` apply only to points and lines. Bars and areas start from a 0 baseline, and 0 is undefined on a log / power axis — pairing a non-linear scale with a bar / area errors out and tells you to use point / line instead.
+
+<ComponentAlert type="warn" title="Domain of non-linear scales" description="log requires all-positive data, sqrt requires non-negative; out-of-range values cannot be projected. An explicit domain with illegal bounds errors at compile time." />
+
+## Setting it explicitly
+
+`scaleX` / `scaleY` on `<Plot>` are shorthands that override the auto-pick. For finer control — log base, power exponent — write the full spec `scales` (see Reference).

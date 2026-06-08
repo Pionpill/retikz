@@ -1,0 +1,45 @@
+---
+title: 比例尺
+description: 比例尺（scale）把数据值映射成视觉量——位置、长度、半径。每个通道都过一个 scale，类型按字段自动选，也可显式指定 linear / log / sqrt 等。
+---
+
+比例尺决定「数据值 → 视觉量」怎么算。位置通道（`x` / `y`）的值要变成画布坐标、`size` 通道的值要变成半径——中间都隔着一个 scale。`<Plot>` 会按字段类型自动选 scale，常见图表不用手写；需要对数轴、平方根轴时再用 `scaleX` / `scaleY` 覆盖。
+
+## scale 类型
+
+| 类型 | 用于 | 说明 |
+| --- | --- | --- |
+| `linear` | 连续数值 | 等距线性映射（默认） |
+| `log` | 跨数量级的正数 | 对数映射；仅 point / line |
+| `sqrt` | 面积感知 | 平方根映射；仅 point / line（`size` 通道默认用它） |
+| `pow` | 自定义幂 | 幂映射（需 `exponent`，写完整 spec 用） |
+| `time` | 日期 / 时间 | 时间轴，刻度落人类可读边界 |
+| `band` / `point` | 分类 | 类别等分（柱）/ 落等距点（分类折线） |
+| `ordinal` | 分类 → 颜色 | 多系列着色 |
+
+## 线性 vs 对数
+
+数据跨多个数量级时，线性轴把小值全压在底部。换成对数轴（`scaleY="log"`），每个数量级占等高，小值也看得清。两张图喂的是同一份逐年用户量。
+
+<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+  <ComponentPreview name="scale-linear" sourceFiles={['scale-continuous.data.ts']} size="sm" />
+  <ComponentPreview name="scale-log" sourceFiles={['scale-continuous.data.ts']} size="sm" />
+</div>
+
+<p className="text-sm text-muted-foreground">左：缺省 linear，前几年贴底；右：仅加 <code>scaleY="log"</code>，跨度铺开。</p>
+
+## 平方根
+
+`scaleY="sqrt"` 按平方根映射，弱化大值的视觉夸张；它也是 `size` 通道（散点半径）的默认 scale，让半径的**面积**正比于数据。
+
+<ComponentPreview name="scale-sqrt" sourceFiles={['scale-continuous.data.ts']} />
+
+## 只作用 point / line
+
+`log` / `pow` / `sqrt` 只能用在散点和折线上。柱状图、面积图从 0 基线起算，而 0 在对数 / 幂轴上没有定义——给柱 / 面积配非线性 scale 会直接报错，提示改用 point / line。
+
+<ComponentAlert type="warn" title="非线性 scale 的取值范围" description="log 要求数据全为正、sqrt 要求非负；越界的值无法投影。显式写了含非法边界的 domain 会在编译期报错。" />
+
+## 显式指定
+
+`scaleX` / `scaleY` 是 `<Plot>` 上的简写，覆盖默认选型。要调对数底、幂指数等更细参数时，写完整 spec 的 `scales`（见 Reference）。
