@@ -292,34 +292,33 @@ describe('lowerPlots polar 投影几何 (ADR-01)', () => {
     expect(() => expandOf(spec, { d: [{ cat: 'A', value: 1 }] }, opts)).toThrow(/ordinal/);
   });
 
-  // 位置通道完整性现由 schema 强制（x/y 必填、无 angle/radius）：缺 x 或 y 在 parse 期即被拒，约束 LLM 生成
-  it('encoding_missing_y_rejected_at_parse', () => {
-    expect(() =>
-      PlotSpecSchema.parse({
-        namespace: 'plot',
-        type: 'plot',
-        data: { reference: 'd' },
-        scales: [
-          { type: 'linear', name: 'a' },
-          { type: 'linear', name: 'r' },
-        ],
-        coordinate: { type: 'polar2D', angle: 'a', radius: 'r' },
-        marks: [{ type: 'point', encoding: { x: { field: 'theta' } } }],
-      }),
-    ).toThrow();
+  // ADR-01（alpha.9）：位置通道完整性从 schema 转 coordinate 级 lowering 校验——
+  // x/y 在 parse 期合法（可选），缺角色在 lowering fail-loud（polar2D / cartesian2D 都需 x+y）。
+  it('polar_encoding_missing_y_fails_loud_at_lowering', () => {
+    const spec = PlotSpecSchema.parse({
+      namespace: 'plot',
+      type: 'plot',
+      data: { reference: 'd' },
+      scales: [
+        { type: 'linear', name: 'a' },
+        { type: 'linear', name: 'r' },
+      ],
+      coordinate: { type: 'polar2D', angle: 'a', radius: 'r' },
+      marks: [{ type: 'point', encoding: { x: { field: 'theta' } } }],
+    });
+    expect(() => expandOf(spec, { d: [{ theta: 0 }] }, opts)).toThrow(/polar2D|requires|y/i);
   });
 
-  it('encoding_missing_x_rejected_at_parse', () => {
-    expect(() =>
-      PlotSpecSchema.parse({
-        namespace: 'plot',
-        type: 'plot',
-        data: { reference: 'd' },
-        scales: [{ type: 'linear', name: 'x' }],
-        coordinate: { type: 'cartesian2D', x: 'x', y: 'x' },
-        marks: [{ type: 'point', encoding: { y: { field: 'value' } } }],
-      }),
-    ).toThrow();
+  it('cartesian_encoding_missing_x_fails_loud_at_lowering', () => {
+    const spec = PlotSpecSchema.parse({
+      namespace: 'plot',
+      type: 'plot',
+      data: { reference: 'd' },
+      scales: [{ type: 'linear', name: 'x' }],
+      coordinate: { type: 'cartesian2D', x: 'x', y: 'x' },
+      marks: [{ type: 'point', encoding: { y: { field: 'value' } } }],
+    });
+    expect(() => expandOf(spec, { d: [{ value: 1 }] }, opts)).toThrow(/cartesian2D|requires|x/i);
   });
 });
 

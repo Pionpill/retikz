@@ -58,17 +58,19 @@ describe('ChannelSchema / EncodingSchema (ADR-05)', () => {
     expect(() => ChannelSchema.parse({ field: 'c', value: '#000', scale: 'col' })).toThrow();
   });
 
-  // x / y 必填（无 angle/radius：x/y 是唯一位置通道，坐标系重解释——polar 下 x→angle、y→radius）
-  it('encoding_missing_x_rejected', () => {
-    expect(() => EncodingSchema.parse({ y: { field: 'value' } })).toThrow();
+  // ADR-01（alpha.9）：x / y 从必填转可选——必填性下放到 coordinate 级校验（cartesian2D 需 x+y、
+  // cartesian1D 仅需单维、ternary2D 需 a/b/c）。schema 层放宽，缺角色由 lowering fail-loud（见 coordinate-frame.test.ts）。
+  it('encoding_missing_x_accepted', () => {
+    expect(EncodingSchema.parse({ y: { field: 'value' } })).toEqual({ y: { field: 'value' } });
   });
 
-  it('encoding_missing_y_rejected', () => {
-    expect(() => EncodingSchema.parse({ x: { field: 'theta' } })).toThrow();
+  it('encoding_missing_y_accepted', () => {
+    expect(EncodingSchema.parse({ x: { field: 'theta' } })).toEqual({ x: { field: 'theta' } });
   });
 
-  it('encoding_empty_rejected', () => {
-    expect(() => EncodingSchema.parse({})).toThrow();
+  it('encoding_empty_accepted', () => {
+    // 位置 encoding 全可选；空 encoding 在 schema 层合法，必填性是 coordinate 级语义
+    expect(EncodingSchema.parse({})).toEqual({});
   });
 
   it('encoding_json_round_trip', () => {
