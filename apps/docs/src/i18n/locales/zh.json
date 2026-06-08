@@ -96,7 +96,6 @@
     "components": "绘图",
     "compPlot": "图表容器",
     "compMark": "图元",
-    "compMarkOverview": "总览",
     "compLineMark": "折线",
     "compPointMark": "散点",
     "compBarMark": "柱",

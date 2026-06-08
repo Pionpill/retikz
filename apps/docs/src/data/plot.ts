@@ -22,7 +22,6 @@ export const plotSection: Array<Section> = [
         id: 'mark',
         label: 'plot.compMark',
         children: [
-          { id: 'overview', label: 'plot.compMarkOverview' },
           { id: 'line', label: 'plot.compLineMark' },
           { id: 'point', label: 'plot.compPointMark' },
           { id: 'bar', label: 'plot.compBarMark' },

@@ -96,7 +96,6 @@
     "components": "Plots",
     "compPlot": "Plot",
     "compMark": "Marks",
-    "compMarkOverview": "Overview",
     "compLineMark": "LineMark",
     "compPointMark": "PointMark",
     "compBarMark": "BarMark",
