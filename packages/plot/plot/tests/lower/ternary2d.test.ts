@@ -106,6 +106,11 @@ describe('ternary2D fail-loud (ADR-03)', () => {
     expect(() => expandOf(ternarySpec(), { d: [{ a: -1, b: 1, c: 1 }] }, opts)).toThrow(/ternary|non-negative|negative/i);
   });
 
+  // 错误路径：各分量有限但和上溢 Infinity → fail-loud（adversarial B1：曾静默投到原点 [0,0]）
+  it('sum_overflow_fails_loud', () => {
+    expect(() => expandOf(ternarySpec(), { d: [{ a: 1e308, b: 1e308, c: 1e308 }] }, opts)).toThrow(/ternary|overflow/i);
+  });
+
   // 错误路径：缺 c 角色 → fail-loud（ADR-01 必填角色校验，ternary 需 a/b/c）
   it('missing_c_channel_fails_loud', () => {
     const spec = PlotSpecSchema.parse({

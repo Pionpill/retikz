@@ -284,6 +284,10 @@ export const createTernary2DFrame = (vertices: TernaryVertices): Ternary2DFrame 
     if (sum <= 0) {
       throw new Error(`lowerPlots: ternary coordinate requires a+b+c > 0 (got a=${a}, b=${b}, c=${c})`);
     }
+    // 各分量有限但和上溢 Infinity（分量数量级过大）→ 归一化系数塌成 0、点静默落原点；fail-loud 不静默出怪图
+    if (!Number.isFinite(sum)) {
+      throw new Error(`lowerPlots: ternary coordinate components overflow when summed (got a=${a}, b=${b}, c=${c}); use proportions or smaller magnitudes`);
+    }
     const na = a / sum;
     const nb = b / sum;
     const nc = c / sum;
