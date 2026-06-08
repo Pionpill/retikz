@@ -214,6 +214,25 @@ describe('离散色 · fail-loud 守卫（alpha.8 ADR-02）', () => {
   });
 });
 
+describe('离散色 · count 与 range 长度冲突 fail-loud（与 threshold 对称，自 adversarial W 提升）', () => {
+  const data = [{ x: 0, y: 0, v: 0 }, { x: 1, y: 1, v: 50 }, { x: 2, y: 2, v: 100 }];
+
+  // 此前 quantize 给 range 时静默吞 count（无校验）；现 count 显式且 ≠ range.length → 抛
+  it('quantize count 5 + range 3 色 抛错', () => {
+    expect(() => firstLayer(pointSpec({ type: 'quantize', domain: [0, 100], count: 5, range: ['#111', '#888', '#eee'] }), { d: data })).toThrow(/range length/);
+  });
+
+  it('quantile count 5 + range 2 色 抛错', () => {
+    expect(() => firstLayer(pointSpec({ type: 'quantile', count: 5, range: ['#111', '#eee'] }), { d: data })).toThrow(/range length/);
+  });
+
+  // 只给 range（count 省略）→ range.length 即档数，不抛（保持原宽容）
+  it('quantize 仅 range（省 count）不抛、档数 = range.length', () => {
+    const fills = nodeFills(firstLayer(pointSpec({ type: 'quantize', domain: [0, 100], range: ['#111', '#888', '#eee'] }), { d: data }));
+    expect(new Set(fills).size).toBe(3);
+  });
+});
+
 describe('离散色 · 回归：每点产 node（alpha.8 ADR-02）', () => {
   // 离散化 color 仍走 per-datum point node（与连续色一致，不产 path）
   it('quantize point mark 每数据点产 node', () => {

@@ -451,3 +451,19 @@ describe('ScaleSchema quantile 分位离散化（alpha.8 ADR-02）', () => {
     if (!r.success) expect(r.error.issues[0]?.path).toContain('count');
   });
 });
+
+describe('离散化 / 连续色阶 · 非有限数值字段被 schema 拒（自 adversarial BLOCKING 提升；守 IR 100% JSON 可序列化）', () => {
+  // Infinity 经 JSON.stringify 变 null、再 parse 失败——非有限数必须在 parse 期 fail-loud，不放进 IR
+  it('threshold breakpoints 含 Infinity 被拒', () => {
+    expect(() => ScaleSchema.parse({ type: 'threshold', name: 'col', breakpoints: [60, Number.POSITIVE_INFINITY], range: ['#111', '#888', '#eee'] })).toThrow();
+  });
+  it('quantize domain 含 Infinity 被拒', () => {
+    expect(() => ScaleSchema.parse({ type: 'quantize', name: 'col', domain: [0, Number.POSITIVE_INFINITY], count: 3 })).toThrow();
+  });
+  it('sequential domain 含 -Infinity 被拒', () => {
+    expect(() => ScaleSchema.parse({ type: 'sequential', name: 'col', domain: [Number.NEGATIVE_INFINITY, 100] })).toThrow();
+  });
+  it('diverging domain 含 Infinity 被拒', () => {
+    expect(() => ScaleSchema.parse({ type: 'diverging', name: 'col', domain: [-100, 0, Number.POSITIVE_INFINITY] })).toThrow();
+  });
+});

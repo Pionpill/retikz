@@ -343,6 +343,9 @@ const discreteBinColors = (range: ReadonlyArray<string> | undefined, scheme: Col
  *   range 显式给颜色数组、否则从 scheme 采 count 档。超出 domain 的值落首 / 末档（d3 clamp 语义）。
  */
 export const resolveQuantizeColorScale = (def: QuantizeColorScale, values: Array<number>): ColorScaleEvaluator => {
+  if (def.range && def.count !== undefined && def.range.length !== def.count) {
+    throw new Error(`lowerPlots: quantize color scale "${def.name}" range length (${def.range.length}) must equal count (${def.count}) when both are given`);
+  }
   const binCount = def.range ? def.range.length : def.count ?? DEFAULT_DISCRETE_BIN_COUNT;
   const colors = discreteBinColors(def.range, def.scheme, binCount);
   const [lo, hi] = def.domain ?? safeExtent(values);
@@ -377,6 +380,9 @@ export const resolveThresholdColorScale = (def: ThresholdColorScale): ColorScale
  *   range 显式给颜色数组、否则从 scheme 采 count 档。
  */
 export const resolveQuantileColorScale = (def: QuantileColorScale, values: Array<number>): ColorScaleEvaluator => {
+  if (def.range && def.count !== undefined && def.range.length !== def.count) {
+    throw new Error(`lowerPlots: quantile color scale "${def.name}" range length (${def.range.length}) must equal count (${def.count}) when both are given`);
+  }
   const binCount = def.range ? def.range.length : def.count ?? DEFAULT_DISCRETE_BIN_COUNT;
   const colors = discreteBinColors(def.range, def.scheme, binCount);
   const scale = scaleQuantile<string>().domain([...values]).range(colors);
