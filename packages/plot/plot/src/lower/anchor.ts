@@ -58,7 +58,7 @@ export type IntervalContext = {
  * @description stacked = arrangement==='stack'；seriesField 仅非堆叠且 mark.series 设时取，dodge 据其切等分子角 / 子带。
  *   seriesRank / subWidth 走 inferCategoryDomain（按数据序去重），与 mark.ts 旧 lowerDodgedBars / lowerIntervalPolar 同算法。
  */
-export const buildIntervalContext = (mark: IntervalMark, frame: CoordinateFrame, rows: Array<ExternalRow>): IntervalContext => {
+export const buildIntervalContext = (mark: IntervalMark, frame: CartesianFrame | PolarFrame, rows: Array<ExternalRow>): IntervalContext => {
   const bandwidth = frame.primary.bandwidth;
   const stacked = mark.arrangement === 'stack';
   const seriesField = !stacked ? mark.series : undefined;

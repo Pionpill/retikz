@@ -19,7 +19,7 @@ export type DimensionRole = 'x' | 'y' | 'angle' | 'radius' | 'a' | 'b' | 'c';
  *   2 通道的 `project(primary, secondary)` 保留为便捷别名（cartesian/polar 内部 + line/area 复用，零行为改变）。
  *   非有限值返回 null（跳过该点）。
  */
-export type CoordinateFrame = CartesianFrame | PolarFrame | Cartesian1DFrame | Polar1DFrame;
+export type CoordinateFrame = CartesianFrame | PolarFrame | Cartesian1DFrame | Polar1DFrame | Ternary2DFrame;
 
 /** 笛卡尔帧：primary = x（水平）、secondary = y（垂直），投影直接取两条 scale 的 coordinate */
 export type CartesianFrame = {
@@ -244,6 +244,56 @@ export const createPolar1DFrame = (input: Polar1DFrameSpec): Polar1DFrame => {
     primary: input.primary,
     projectPolar,
     project: primaryValue => projectRoles([primaryValue]),
+    projectRoles,
+  };
+};
+
+/** 三角顶点序（屏幕坐标）：[Va(a=100%顶点), Vb(b=100%右下), Vc(c=100%左下)] */
+export type TernaryVertices = [[number, number], [number, number], [number, number]];
+
+/** 三元帧（重心坐标）：三连续分量 a/b/c 归一化后按重心坐标投影到等边三角内 */
+export type Ternary2DFrame = {
+  /** 判别字段：2D 三元 */
+  type: typeof PlotCoordinate.Ternary2D;
+  /** 位置角色序（[a, b, c]，3 通道） */
+  roles: ReadonlyArray<DimensionRole>;
+  /** 三角顶点（屏幕坐标）：[Va, Vb, Vc] */
+  vertices: TernaryVertices;
+  /** 投影别名（2 入参形态对三元无意义，恒返回 null）：三元须走 projectRoles */
+  project: (primaryValue: unknown, secondaryValue: unknown) => [number, number] | null;
+  /** N 通道投影：roles 长度 3，传 [a, b, c] → 归一化 + 重心坐标屏幕点；非有限 → null（跳过）、含负 / 和≤0 → throw（fail-loud） */
+  projectRoles: (values: ReadonlyArray<unknown>) => [number, number] | null;
+};
+
+/**
+ * 建三元帧：重心投影 + 自动归一化（容忍任意正三元组）
+ * @description 每行 (a,b,c) 先归一化 s=a+b+c、(a/s,b/s,c/s)，再 na·Va + nb·Vb + nc·Vc 得屏幕点。
+ *   非有限值（缺字段 / NaN）→ null 跳过该点（与其它坐标系一致）；含负分量 / 和≤0 → fail-loud（数据错误、不静默归一）。
+ */
+export const createTernary2DFrame = (vertices: TernaryVertices): Ternary2DFrame => {
+  const [va, vb, vc] = vertices;
+  const projectRoles = (values: ReadonlyArray<unknown>): [number, number] | null => {
+    const a = values[0];
+    const b = values[1];
+    const c = values[2];
+    if (!isFiniteNumber(a) || !isFiniteNumber(b) || !isFiniteNumber(c)) return null;
+    if (a < 0 || b < 0 || c < 0) {
+      throw new Error(`lowerPlots: ternary coordinate requires non-negative components (got a=${a}, b=${b}, c=${c})`);
+    }
+    const sum = a + b + c;
+    if (sum <= 0) {
+      throw new Error(`lowerPlots: ternary coordinate requires a+b+c > 0 (got a=${a}, b=${b}, c=${c})`);
+    }
+    const na = a / sum;
+    const nb = b / sum;
+    const nc = c / sum;
+    return [na * va[0] + nb * vb[0] + nc * vc[0], na * va[1] + nb * vb[1] + nc * vc[1]];
+  };
+  return {
+    type: PlotCoordinate.Ternary2D,
+    roles: ['a', 'b', 'c'],
+    vertices,
+    project: () => null,
     projectRoles,
   };
 };

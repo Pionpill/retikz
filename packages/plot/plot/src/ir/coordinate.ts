@@ -14,6 +14,8 @@ export const PlotCoordinate = {
   Cartesian1D: 'cartesian1D',
   /** 1D 极坐标圆周（单角向维落固定半径圆周；周期 / 循环数据） */
   Polar1D: 'polar1D',
+  /** 2D 三元坐标（a+b+c 归一化的重心坐标，投影到等边三角内；成分 / 配比 / 得票） */
+  Ternary2D: 'ternary2D',
 } as const;
 
 /** 坐标系类型 */
@@ -93,13 +95,24 @@ export const Polar1DSchema = z
   })
   .describe('1D polar coordinate system: a single angular dimension mapped onto a fixed-radius circle (clock face / weekday wheel / periodic rug); reuses the polar angular projection');
 
-export const CoordinateSchema = z
-  .discriminatedUnion('type', [Cartesian2DSchema, Polar2DSchema, Cartesian1DSchema, Polar1DSchema])
-  .describe('Coordinate-system union: cartesian2D | polar2D | cartesian1D | polar1D; extensible to ternary2D in later alphas');
+export const Ternary2DSchema = z
+  .object({
+    type: z.literal(PlotCoordinate.Ternary2D).describe('Discriminator: 2D ternary space; three components a + b + c normalized to barycentric coordinates inside an equilateral triangle'),
+    a: z.string().min(1).optional().describe('Scale name for the a component (top vertex = a 100%); omit to use the raw normalized proportion. Reserved for future per-component scaling — this round normalizes within the coordinate'),
+    b: z.string().min(1).optional().describe('Scale name for the b component (bottom-right vertex = b 100%); omit to use the raw normalized proportion'),
+    c: z.string().min(1).optional().describe('Scale name for the c component (bottom-left vertex = c 100%); omit to use the raw normalized proportion'),
+  })
+  .describe('2D ternary coordinate system: three continuous components projected by barycentric coordinates into an equilateral triangle (composition / mixture / vote share); each row is auto-normalized by a+b+c at lowering');
 
-/** 坐标系（cartesian2D | polar2D | cartesian1D | polar1D） */
+export const CoordinateSchema = z
+  .discriminatedUnion('type', [Cartesian2DSchema, Polar2DSchema, Cartesian1DSchema, Polar1DSchema, Ternary2DSchema])
+  .describe('Coordinate-system union: cartesian2D | polar2D | cartesian1D | polar1D | ternary2D');
+
+/** 坐标系（cartesian2D | polar2D | cartesian1D | polar1D | ternary2D） */
 export type Coordinate = z.infer<typeof CoordinateSchema>;
 /** 一维直线坐标系（cartesian1D） */
 export type Cartesian1DCoordinate = z.infer<typeof Cartesian1DSchema>;
 /** 一维圆周坐标系（polar1D） */
 export type Polar1DCoordinate = z.infer<typeof Polar1DSchema>;
+/** 三元坐标系（ternary2D） */
+export type Ternary2DCoordinate = z.infer<typeof Ternary2DSchema>;

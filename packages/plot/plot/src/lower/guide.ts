@@ -1,7 +1,7 @@
 import type { IRGradientStop, IRNode, IRPath, IRScope, IRStep } from '@retikz/core';
 import type { AxisGuide, LegendChannelType, LegendOrientType, LegendPositionType } from '../ir';
 import { AXIS_LABEL_GAP, AXIS_TICK_LENGTH, type Rect, estimateLabelWidth } from './layout';
-import type { PolarFrame } from './project';
+import type { PolarFrame, TernaryVertices } from './project';
 import { type ProvenanceContext, guideLayerId, guideLayerMeta } from './provenance';
 import type { PositionScale, TickSet } from './scale';
 
@@ -35,6 +35,10 @@ export type GuideContext = {
   angularTicks?: TickSet;
   /** radial 维刻度集（polar；radius / y 维） */
   radialTicks?: TickSet;
+  /** 三角顶点（仅 ternary2D 给）：[Va, Vb, Vc]，存在即走三角轴几何 */
+  ternaryVertices?: TernaryVertices;
+  /** 三角轴共享刻度集（仅 ternary2D；values 为 0..1 占比） */
+  ternaryTicks?: TickSet;
 };
 
 /** lowerGuide 返回：网格层（仅 grid:true 时非空，垫底）+ 轴层（总有，压顶） */
@@ -297,13 +301,106 @@ const lowerRadialAxis = (guide: AxisGuide, ctx: GuideContext, frame: PolarFrame,
   return { gridLayer, axisLayer };
 };
 
+/** 两点线性插值（t∈[0,1]）：三角轴刻度 / 等值线几何 */
+const lerp2 = (from: readonly [number, number], to: readonly [number, number], t: number): [number, number] => [
+  from[0] + (to[0] - from[0]) * t,
+  from[1] + (to[1] - from[1]) * t,
+];
+
+/**
+ * 某 ternary 分量轴的三角角色：顶点 + 该分量 0 边的两端
+ * @description a：顶点 Va、0 边 = Vb–Vc；b：顶点 Vb、0 边 = Va–Vc；c：顶点 Vc、0 边 = Va–Vb。
+ *   刻度沿 baseP→apex 边（= 三角一条边）；等值线（iso）= lerp(baseP,apex,t)–lerp(baseQ,apex,t)，平行 0 边。
+ */
+const ternaryAxisRoles = (
+  dimension: string,
+  vertices: TernaryVertices,
+): { apex: readonly [number, number]; baseP: readonly [number, number]; baseQ: readonly [number, number] } => {
+  const [va, vb, vc] = vertices;
+  if (dimension === 'a') return { apex: va, baseP: vc, baseQ: vb };
+  if (dimension === 'b') return { apex: vb, baseP: va, baseQ: vc };
+  return { apex: vc, baseP: vb, baseQ: va }; // 'c'
+};
+
+/**
+ * ternary 三角轴：沿一条边的刻度轴（0→100%）+ 平行对边的等值网格线
+ * @description 轴线 = baseP→apex 三角边（三条 a/b/c 轴合起来 = 完整三角外框）；刻度沿该边、标签外法向偏移；
+ *   grid:true → 内部刻度处画平行 0 边的等值线（lerp(baseP,apex,t)–lerp(baseQ,apex,t)）。
+ */
+const lowerTernaryGuide = (guide: AxisGuide, ctx: GuideContext, vertices: TernaryVertices, context: ProvenanceContext | undefined): LoweredGuide => {
+  const { fontSize } = ctx;
+  const ticks = ctx.ternaryTicks ?? { values: [], labels: [] };
+  const showLabels = guide.tickLabels !== false;
+  const { apex, baseP, baseQ } = ternaryAxisRoles(guide.dimension, vertices);
+  const [va, vb, vc] = vertices;
+  const centroid: [number, number] = [(va[0] + vb[0] + vc[0]) / 3, (va[1] + vb[1] + vc[1]) / 3];
+
+  // 外法向单位向量（远离重心）：刻度短线 / 标签朝外摆
+  const outwardAt = (point: [number, number]): [number, number] => {
+    const dx = point[0] - centroid[0];
+    const dy = point[1] - centroid[1];
+    const length = Math.hypot(dx, dy) || 1;
+    return [dx / length, dy / length];
+  };
+
+  // ---- 轴层：baseP→apex 边 + 沿边刻度 + 外侧标签 ----
+  const axisLine: Segment = [baseP, apex];
+  const tickSegments: Array<Segment> = [];
+  const labels: Array<IRNode> = [];
+  ticks.values.forEach((value, index) => {
+    const t = Number(value);
+    const point = lerp2(baseP, apex, t);
+    const out = outwardAt(point);
+    tickSegments.push([point, [point[0] + out[0] * AXIS_TICK_LENGTH, point[1] + out[1] * AXIS_TICK_LENGTH]]);
+    if (showLabels) {
+      const offset = AXIS_TICK_LENGTH + AXIS_LABEL_GAP + fontSize / 2;
+      labels.push({ type: 'node', position: [point[0] + out[0] * offset, point[1] + out[1] * offset], text: ticks.labels[index] });
+    }
+  });
+  const linePath = segmentsToPath([axisLine, ...tickSegments]);
+  const axisLayer: IRScope | null = linePath
+    ? {
+        type: 'scope',
+        ...guideScopeProps(guide, 'axis', context),
+        pathDefault: { stroke: 'currentColor' },
+        nodeDefault: { font: { size: fontSize }, stroke: 'none', fill: 'none', padding: 0 },
+        children: [linePath, ...labels],
+      }
+    : null;
+
+  // ---- 网格层（grid:true → 内部刻度处平行 0 边的等值线）----
+  let gridLayer: IRScope | null = null;
+  if (guide.grid) {
+    const isoSegments: Array<Segment> = [];
+    for (const value of ticks.values) {
+      const t = Number(value);
+      if (t <= 0 || t >= 1) continue; // 0（0 边）/ 1（顶点）退化，不画
+      isoSegments.push([lerp2(baseP, apex, t), lerp2(baseQ, apex, t)]);
+    }
+    const gridPath = segmentsToPath(isoSegments);
+    if (gridPath) {
+      gridLayer = {
+        type: 'scope',
+        ...guideScopeProps(guide, 'grid', context),
+        pathDefault: { stroke: 'currentColor', drawOpacity: 0.15 },
+        children: [gridPath],
+      };
+    }
+  }
+
+  return { gridLayer, axisLayer };
+};
+
 /**
  * 把一个 axis guide 下沉成网格层 + 轴层（各自一层 core scope；样式上提到 scope）
- * @description 按坐标帧分支：polar（ctx.frame 存在）按维度角色走 angular（外圆弧 + 圆周刻度 / 标签 + 角向辐条 grid）
- *   或 radial（辐条轴 + 同心环 grid）；否则走 cartesian 直线轴 / 网格（alpha.2 几何，产物不变）。
+ * @description 按坐标帧分支：ternary（ctx.ternaryVertices 存在）走三角轴；polar（ctx.frame 存在）按维度角色走 angular
+ *   （外圆弧 + 圆周刻度 / 标签 + 角向辐条 grid）或 radial（辐条轴 + 同心环 grid）；否则走 cartesian 直线轴 / 网格。
  *   下沉目标统一是 core Node（标签）+ Path（直段 / arc step）。id → 轴层 scope.id（anchor 预留）。
  */
 export const lowerGuide = (guide: AxisGuide, ctx: GuideContext, context?: ProvenanceContext): LoweredGuide => {
+  if (ctx.ternaryVertices) {
+    return lowerTernaryGuide(guide, ctx, ctx.ternaryVertices, context);
+  }
   if (ctx.frame) {
     return isPrimaryDimension(guide.dimension)
       ? lowerAngularAxis(guide, ctx, ctx.frame, context)

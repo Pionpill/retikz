@@ -176,3 +176,65 @@ export const computePolarFrame = (
     outerRadius,
   };
 };
+
+/** computeTernaryFrame 输入：是否有三角轴 + 三角轴刻度标签（估算三边留白用） */
+export type TernaryFrameInput = {
+  /** 是否有三角轴（决定是否为三边刻度标签预留留白） */
+  hasAxis: boolean;
+  /** 三角轴刻度标签（估算最宽标签、为三边留白） */
+  labels: ReadonlyArray<string>;
+};
+
+/** computeTernaryFrame 结果：三角顶点（屏幕坐标）[Va 顶点, Vb 右下, Vc 左下] */
+export type TernaryLayout = {
+  /** 三角顶点：[Va(a=100% 顶), Vb(b=100% 右下), Vc(c=100% 左下)] */
+  vertices: [[number, number], [number, number], [number, number]];
+};
+
+/**
+ * 由整图尺寸估算三元三角布局：朝上等边三角内接于 plot area（减三边标签留白）
+ * @description 顶点朝上、a=顶 / b=右下 / c=左下（python-ternary 惯例）。side = min(可用宽, 可用高·2/√3)、
+ *   三角高 = side·√3/2，水平 / 垂直居中。有三角轴时为三边刻度标签预留一圈留白；ADR-04 只消费、不回写。
+ *   留白过大 → 边长 ≤ 0 → 抛清晰错误，不静默出退化坏图。
+ */
+export const computeTernaryFrame = (
+  width: number,
+  height: number,
+  input: TernaryFrameInput,
+  options: PlotAreaOptions = {},
+): TernaryLayout => {
+  const fontSize = options.fontSize ?? DEFAULT_FONT_SIZE;
+  // 三边刻度标签贴边一圈，按最宽标签估留白；无轴时也留一字高边距，避免顶点贴画布
+  const reserve = input.hasAxis ? maxLabelWidth(input.labels, fontSize) + AXIS_TICK_LENGTH + AXIS_LABEL_GAP + fontSize : fontSize;
+  const explicit: Partial<Margins> = options.margin ?? {};
+  const margins: Margins = {
+    top: explicit.top ?? reserve,
+    right: explicit.right ?? reserve,
+    bottom: explicit.bottom ?? reserve,
+    left: explicit.left ?? reserve,
+  };
+  for (const side of ['top', 'right', 'bottom', 'left'] as const) {
+    const value = margins[side];
+    if (!Number.isFinite(value) || value < 0) {
+      throw new Error(`lowerPlots: margin.${side} must be a non-negative finite number, got ${value}`);
+    }
+  }
+  const availableWidth = width - margins.left - margins.right;
+  const availableHeight = height - margins.top - margins.bottom;
+  // 朝上等边三角内接：边长受可用宽与可用高（高 = 边·√3/2）双约束
+  const side = Math.min(availableWidth, (availableHeight * 2) / Math.sqrt(3));
+  if (side <= 0) {
+    throw new Error(`lowerPlots: ternary label reserve / margins exceed the ${width}×${height} canvas, leaving no triangle`);
+  }
+  const triangleHeight = (side * Math.sqrt(3)) / 2;
+  const centerX = margins.left + availableWidth / 2;
+  const top = margins.top + (availableHeight - triangleHeight) / 2;
+  const baseY = top + triangleHeight;
+  return {
+    vertices: [
+      [centerX, top], // Va：顶点（a=100%）
+      [centerX + side / 2, baseY], // Vb：右下（b=100%）
+      [centerX - side / 2, baseY], // Vc：左下（c=100%）
+    ],
+  };
+};

@@ -488,6 +488,10 @@ export const lowerMark = (mark: Mark, rows: Array<ExternalRow>, frame: Coordinat
   if (frame.type === PlotCoordinate.Cartesian1D || frame.type === PlotCoordinate.Polar1D) {
     throw new Error(`lowerPlots: ${mark.type} mark is not supported under the ${frame.type} coordinate system (1D coordinates support point marks only this round)`);
   }
+  // ternary2D 本轮仅 point；line / area 顺延、interval / sector fail-loud（ADR-03 支持矩阵）
+  if (frame.type === PlotCoordinate.Ternary2D) {
+    throw new Error(`lowerPlots: ${mark.type} mark is not supported under the ternary2D coordinate system (ternary supports point marks only this round)`);
+  }
   if (mark.type === 'line') {
     const layer = lowerLine(mark, rows, frame, colorOf, markProvenance);
     return layer === null ? null : attachMarkLayer(layer as IRScope, mark, markProvenance);

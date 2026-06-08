@@ -1,5 +1,5 @@
 import type { IRJsonObject } from '@retikz/core';
-import { type ExternalDatasets, type ExternalRow, type Mark, type PlotSpec } from '../ir';
+import { type ExternalDatasets, type ExternalRow, type Mark, PlotCoordinate, type PlotSpec } from '../ir';
 import { type IntervalContext, buildIntervalContext, datumAnchor } from './anchor';
 import { DEFAULT_FONT_SIZE } from './layout';
 import { type LowerPlotsOptions, prepareRows, resolveFrame } from './expand';
@@ -107,6 +107,8 @@ export const createPlotLocator = (spec: PlotSpec, datasets: ExternalDatasets, op
   const intervalContexts = new Map<number, IntervalContext>();
   const intervalContextOf = (markIndex: number, mark: Mark): IntervalContext | undefined => {
     if (mark.type !== 'interval') return undefined;
+    // interval 仅在 cartesian2D / polar2D 有几何（1D / ternary 已在 lowering fail-loud）；其它帧无 IntervalContext
+    if (frame.type !== PlotCoordinate.Cartesian2D && frame.type !== PlotCoordinate.Polar2D) return undefined;
     const cached = intervalContexts.get(markIndex);
     if (cached) return cached;
     const ctx = buildIntervalContext(mark, frame, rows);

@@ -79,6 +79,12 @@ export const GuideDimension = {
   Angle: 'angle',
   /** polar 径向定位维度（沿辐条；亦可由别名 y 复用） */
   Radius: 'radius',
+  /** ternary a 分量轴（顶点朝上） */
+  A: 'a',
+  /** ternary b 分量轴（右下顶点） */
+  B: 'b',
+  /** ternary c 分量轴（左下顶点） */
+  C: 'c',
 } as const;
 
 /** guide 维度 */

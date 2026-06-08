@@ -3,10 +3,10 @@ import type { ZodType } from 'zod';
 import { type AxisGuide, Cartesian1DOrientation, type Channel, type ColorScheme, type CoordinateType, type ExternalDatasets, type ExternalRow, type FieldType, type Guide, type LegendChannelType, type LegendGuide, type Mark, type OrdinalScale, PlotCoordinate, PlotFieldType, PlotGuide, PlotMark, PlotScale, type PlotSpec, PlotSpecSchema, type Scale, type ScaleType } from '../ir';
 import { channelValue, isFiniteNumber, resolveFieldPath } from './field';
 import { type GuideContext, type LegendEntry, type LegendInput, lowerGuide, lowerLegend } from './guide';
-import { DEFAULT_FONT_SIZE, type LegendReserve, type Margins, type Rect, computePlotArea, computePolarFrame } from './layout';
+import { DEFAULT_FONT_SIZE, type LegendReserve, type Margins, type Rect, computePlotArea, computePolarFrame, computeTernaryFrame } from './layout';
 import { type ColorOf, lowerMark } from './mark';
 import { type ChannelResolution, type ScaleDescriptor, makeOpacityResolver, makeShapeResolver, makeSizeResolver } from './channel';
-import { type CoordinateFrame, createCartesian1DFrame, createCartesianFrame, createPolar1DFrame, createPolarFrame } from './project';
+import { type CoordinateFrame, createCartesian1DFrame, createCartesianFrame, createPolar1DFrame, createPolarFrame, createTernary2DFrame } from './project';
 import { REQUIRED_POSITION_CHANNELS, VALID_GUIDE_DIMENSIONS } from './coordinate-meta';
 import { type DatumIdRegistrar, type ProvenanceContext, createDatumIdRegistrar, rootMeta, tagSourceIndex } from './provenance';
 import { type CategoryOrder, type ColorScaleEvaluator, DEFAULT_TICK_COUNT, type TickSet, assertBaselineScaleCompatible, assertScaleFieldCompatible, deriveScale, inferCategoryDomain, orderedCategoryDomain, resolveDivergingColorScale, resolveLinearScale, resolveOrdinalScale, resolvePositionScale, resolveQuantileColorScale, resolveQuantizeColorScale, resolveSequentialColorScale, resolveSqrtScale, resolveThresholdColorScale, sampleSchemeColors, scaleTicks, toTimestamp } from './scale';
@@ -17,6 +17,9 @@ import { collectUserSourceFields, resolveFieldTypes } from './validate';
 
 /** 空刻度集（某维度无 axis 时给 GuideContext 的占位；实际不会被该维度的 guide 触达） */
 const EMPTY_TICKS: TickSet = { values: [], labels: [] };
+
+/** 三角轴共享刻度集（占比 0..1，标签为百分数）；三条 a/b/c 轴同域、本轮固定 5 档 */
+const TERNARY_TICKS: TickSet = { values: [0, 0.25, 0.5, 0.75, 1], labels: ['0', '25', '50', '75', '100'] };
 
 /**
  * guide 维度 → 定位角色：polar 下 x / angle 都归 angular、y / radius 都归 radial（hybrid 别名）；cartesian 下原样。
@@ -468,6 +471,33 @@ export const resolveFrame = (params: ResolveFrameParams): ResolvedFrame => {
       frame: guidePolarFrame,
       angularTicks: angularTicks ?? EMPTY_TICKS,
       radialTicks: EMPTY_TICKS,
+    };
+    for (const guide of axisGuides) {
+      const lowered = lowerGuide(guide, guideContext, provenance);
+      if (lowered.gridLayer) gridLayers.push(lowered.gridLayer);
+      if (lowered.axisLayer) axisLayers.push(lowered.axisLayer);
+    }
+  } else if (coordinate.type === PlotCoordinate.Ternary2D) {
+    // ternary2D：三连续分量 a/b/c 在 coordinate 内自动归一化 + 重心投影（无独立位置 scale）
+    const guides = node.guides ?? [];
+    const axisGuides = guides.filter(isAxisGuide);
+    assertUniqueAxisDimension(axisGuides, coordinate.type);
+    const hasAxis = axisGuides.length > 0;
+    const showAnyLabels = axisGuides.some(guide => guide.tickLabels !== false);
+    const layout = computeTernaryFrame(width, height, { hasAxis, labels: hasAxis && showAnyLabels ? TERNARY_TICKS.labels : [] }, { fontSize, margin });
+    frame = createTernary2DFrame(layout.vertices);
+
+    // 三角轴 guide：projectX/Y 用占位 position scale（三角轴几何走 ternaryVertices、不读位置 scale）
+    const placeholderScale = resolvePositionScale({ type: PlotScale.Linear, name: '__ternary', domain: [0, 1] }, [], [0, 1]);
+    const guideContext: GuideContext = {
+      plotArea: { x: 0, y: 0, width, height },
+      projectX: placeholderScale,
+      projectY: placeholderScale,
+      xTicks: EMPTY_TICKS,
+      yTicks: EMPTY_TICKS,
+      fontSize,
+      ternaryVertices: layout.vertices,
+      ternaryTicks: TERNARY_TICKS,
     };
     for (const guide of axisGuides) {
       const lowered = lowerGuide(guide, guideContext, provenance);

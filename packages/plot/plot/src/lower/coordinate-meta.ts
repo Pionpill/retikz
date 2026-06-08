@@ -10,6 +10,7 @@ export const VALID_GUIDE_DIMENSIONS: Record<CoordinateType, ReadonlyArray<string
   [PlotCoordinate.Polar2D]: ['angle', 'radius', 'x', 'y'],
   [PlotCoordinate.Cartesian1D]: ['x'],
   [PlotCoordinate.Polar1D]: ['angle', 'x'],
+  [PlotCoordinate.Ternary2D]: ['a', 'b', 'c'],
 };
 
 /**
@@ -22,4 +23,5 @@ export const REQUIRED_POSITION_CHANNELS: Record<CoordinateType, ReadonlyArray<'x
   [PlotCoordinate.Polar2D]: ['x', 'y'],
   [PlotCoordinate.Cartesian1D]: ['x'],
   [PlotCoordinate.Polar1D]: ['x'],
+  [PlotCoordinate.Ternary2D]: ['a', 'b', 'c'],
 };
