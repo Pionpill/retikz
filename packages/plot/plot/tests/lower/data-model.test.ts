@@ -1,0 +1,221 @@
+import { describe, expect, it } from 'vitest';
+import { PlotFieldType, type PlotSpec, PlotSpecSchema } from '../../src/ir';
+import { inferFieldType, isIsoDateString } from '../../src/lower/infer';
+import { collectUserSourceFields, resolveFieldTypes } from '../../src/lower/validate';
+
+/** 构造最小可解析 PlotSpec（cartesian + 给定 marks / transform / model） */
+const buildSpec = (overrides: Record<string, unknown>): PlotSpec =>
+  PlotSpecSchema.parse({
+    namespace: 'plot',
+    type: 'plot',
+    data: { reference: 'd' },
+    scales: [
+      { type: 'linear', name: 'x' },
+      { type: 'linear', name: 'y' },
+    ],
+    coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
+    marks: [{ type: 'line', encoding: { x: { field: 'month' }, y: { field: 'revenue' } } }],
+    ...overrides,
+  });
+
+const rowsOf = (...values: Array<unknown>): Array<Record<string, unknown>> => values.map(v => ({ f: v }));
+
+describe('inferFieldType — 缺省推断（ADR-01）', () => {
+  // Happy path
+  it('infer_temporal_from_iso', () => {
+    expect(inferFieldType(rowsOf('2024-01-01', '2024-02-01'), 'f')).toBe(PlotFieldType.Temporal);
+    expect(inferFieldType(rowsOf('2024-01-01T08:30:00Z'), 'f')).toBe(PlotFieldType.Temporal);
+  });
+
+  it('infer_temporal_from_date_instance', () => {
+    expect(inferFieldType(rowsOf(new Date('2024-01-01'), new Date('2024-02-01')), 'f')).toBe(PlotFieldType.Temporal);
+  });
+
+  it('infer_continuous_from_number', () => {
+    expect(inferFieldType(rowsOf(1, 2, 3.5), 'f')).toBe(PlotFieldType.Continuous);
+  });
+
+  it('infer_categorical_from_string', () => {
+    expect(inferFieldType(rowsOf('apple', 'banana'), 'f')).toBe(PlotFieldType.Categorical);
+  });
+
+  // 边界
+  it('temporal_guard_rejects_bare_number', () => {
+    // 数值 5 → continuous；数字串 '5' → categorical（绝不误判 temporal）
+    expect(inferFieldType(rowsOf(5, 6), 'f')).toBe(PlotFieldType.Continuous);
+    expect(inferFieldType(rowsOf('5', '6'), 'f')).toBe(PlotFieldType.Categorical);
+    // YYYY/MM/DD 非严格 ISO → categorical
+    expect(inferFieldType(rowsOf('2024/01/01'), 'f')).toBe(PlotFieldType.Categorical);
+    // 无时区 datetime → categorical（拒模糊本地时间）
+    expect(inferFieldType(rowsOf('2024-01-01T08:30:00'), 'f')).toBe(PlotFieldType.Categorical);
+  });
+
+  it('empty_or_all_null_field', () => {
+    expect(inferFieldType(rowsOf(null, undefined), 'f')).toBe(PlotFieldType.Categorical);
+    expect(inferFieldType([], 'f')).toBe(PlotFieldType.Categorical);
+  });
+
+  it('mixed_types_fall_back_categorical', () => {
+    expect(inferFieldType(rowsOf(1, 'two', 3), 'f')).toBe(PlotFieldType.Categorical);
+  });
+
+  it('non_scalar_values_skipped', () => {
+    // 非标量（对象 / 数组）跳过，剩余数值 → continuous
+    expect(inferFieldType(rowsOf({ a: 1 }, 2, 3), 'f')).toBe(PlotFieldType.Continuous);
+  });
+
+  it('sampling_dual_threshold', () => {
+    // 前 1000 行全数值、第 1500 行才出现字符串 → 扫描封顶 1000，仍判 continuous
+    const rows = Array.from({ length: 2000 }, (_, i) => ({ f: i < 1500 ? i : 'late-string' }));
+    expect(inferFieldType(rows, 'f')).toBe(PlotFieldType.Continuous);
+  });
+});
+
+describe('isIsoDateString — 严格 ISO guard（ADR-01）', () => {
+  it('iso_accept_reject', () => {
+    expect(isIsoDateString('2024-01-01')).toBe(true);
+    expect(isIsoDateString('2024-01-01T08:30:00Z')).toBe(true);
+    expect(isIsoDateString('2024-01-01T08:30:00+08:00')).toBe(true);
+    expect(isIsoDateString('2024/01/01')).toBe(false);
+    expect(isIsoDateString('2024-01-01T08:30:00')).toBe(false); // 无时区
+    expect(isIsoDateString('5')).toBe(false);
+    expect(isIsoDateString('hello')).toBe(false);
+  });
+});
+
+describe('collectUserSourceFields — 用户源字段集（ADR-01）', () => {
+  it('collect_encoding_order_series', () => {
+    const spec = buildSpec({
+      marks: [{ type: 'line', order: 'idx', series: 'cat', encoding: { x: { field: 'month' }, y: { field: 'revenue' }, color: { field: 'cat' } } }],
+    });
+    const fields = collectUserSourceFields(spec);
+    expect(fields.has('month')).toBe(true);
+    expect(fields.has('revenue')).toBe(true);
+    expect(fields.has('idx')).toBe(true);
+    expect(fields.has('cat')).toBe(true);
+  });
+
+  it('collect_transform_inputs', () => {
+    const spec = buildSpec({
+      transform: [
+        { kind: 'sort', field: 'month' },
+        { kind: 'stack', x: 'month', y: 'revenue', groupBy: 'product' },
+      ],
+    });
+    const fields = collectUserSourceFields(spec);
+    expect(fields.has('month')).toBe(true);
+    expect(fields.has('revenue')).toBe(true);
+    expect(fields.has('product')).toBe(true);
+  });
+
+  it('derived_fields_not_collected', () => {
+    // stack 输出 startField/endField、interval y0Field/y1Field 是派生字段，不应进用户源集
+    const spec = buildSpec({
+      transform: [{ kind: 'stack', x: 'month', y: 'revenue', startField: 'lo', endField: 'hi' }],
+      marks: [{ type: 'interval', y0Field: 'lo', y1Field: 'hi', encoding: { x: { field: 'month' }, y: { field: 'revenue' } } }],
+    });
+    const fields = collectUserSourceFields(spec);
+    expect(fields.has('lo')).toBe(false);
+    expect(fields.has('hi')).toBe(false);
+  });
+
+  it('constant_value_channel_not_collected', () => {
+    const spec = buildSpec({
+      marks: [{ type: 'line', encoding: { x: { field: 'month' }, y: { field: 'revenue' }, color: { value: 'red' } } }],
+    });
+    expect(collectUserSourceFields(spec).has('red')).toBe(false);
+  });
+});
+
+describe('resolveFieldTypes — 类型解析 + strict 校验（ADR-01）', () => {
+  const rows = [{ month: '2024-01-01', revenue: 10, cat: 'A' }];
+
+  it('model_type_overrides_inference', () => {
+    // model 声明 categorical、数据是数值 → 用声明类型，不推 continuous
+    const map = resolveFieldTypes([{ name: 'revenue', type: 'categorical' }], [{ revenue: 5 }], new Set(['revenue']));
+    expect(map.get('revenue')).toBe(PlotFieldType.Categorical);
+  });
+
+  it('no_model_infers_all', () => {
+    const map = resolveFieldTypes(undefined, rows, new Set(['month', 'revenue', 'cat']));
+    expect(map.get('month')).toBe(PlotFieldType.Temporal);
+    expect(map.get('revenue')).toBe(PlotFieldType.Continuous);
+    expect(map.get('cat')).toBe(PlotFieldType.Categorical);
+  });
+
+  it('resolved_map_covers_all_fields', () => {
+    const map = resolveFieldTypes([{ name: 'month', type: 'temporal' }, { name: 'revenue', type: 'continuous' }], rows, new Set(['month', 'revenue']));
+    expect(map.size).toBe(2);
+  });
+
+  // 错误路径
+  it('strict_unknown_field_throws', () => {
+    expect(() => resolveFieldTypes([{ name: 'month', type: 'temporal' }], rows, new Set(['quater']))).toThrow(/unknown field/i);
+  });
+
+  it('duplicate_field_name_throws', () => {
+    expect(() =>
+      resolveFieldTypes([{ name: 'month', type: 'temporal' }, { name: 'month', type: 'categorical' }], rows, new Set(['month'])),
+    ).toThrow(/duplicate field/i);
+  });
+
+  it('no_model_skips_reference_check', () => {
+    // 无 model：引用任意字段不报错（全推断）
+    expect(() => resolveFieldTypes(undefined, rows, new Set(['anything', 'whatever']))).not.toThrow();
+  });
+});
+
+describe('resolveFieldTypes — 部分声明 model（type 可选，ADR-05）', () => {
+  const rows = [{ month: '2024-01-01', revenue: 10, cat: 'A' }];
+
+  it('partial_model_infers_untyped', () => {
+    // month 显式 temporal、revenue 仅 name → 推断 continuous
+    const map = resolveFieldTypes([{ name: 'month', type: 'temporal' }, { name: 'revenue' }], rows, new Set(['month', 'revenue']));
+    expect(map.get('month')).toBe(PlotFieldType.Temporal);
+    expect(map.get('revenue')).toBe(PlotFieldType.Continuous);
+  });
+
+  it('typed_field_uses_declaration_in_partial_model', () => {
+    // 部分 model 里带 type 的字段用声明（不被数据推断盖）：revenue 数值但声明 categorical
+    const map = resolveFieldTypes(
+      [{ name: 'revenue', type: 'categorical' }, { name: 'month' }],
+      [{ revenue: 5, month: '2024-01-01' }],
+      new Set(['revenue', 'month']),
+    );
+    expect(map.get('revenue')).toBe(PlotFieldType.Categorical);
+    expect(map.get('month')).toBe(PlotFieldType.Temporal);
+  });
+
+  it('name_only_satisfies_strict', () => {
+    // 字段仅给 name → 满足 strict、不抛，类型推断
+    expect(() => resolveFieldTypes([{ name: 'revenue' }], [{ revenue: 5 }], new Set(['revenue']))).not.toThrow();
+    const map = resolveFieldTypes([{ name: 'revenue' }], [{ revenue: 5 }], new Set(['revenue']));
+    expect(map.get('revenue')).toBe(PlotFieldType.Continuous);
+  });
+
+  it('all_name_only_equals_infer', () => {
+    // 全 name-only model → 类型结果与无 model 推断一致
+    const partial = resolveFieldTypes([{ name: 'month' }, { name: 'revenue' }, { name: 'cat' }], rows, new Set(['month', 'revenue', 'cat']));
+    const inferred = resolveFieldTypes(undefined, rows, new Set(['month', 'revenue', 'cat']));
+    expect(partial).toEqual(inferred);
+  });
+
+  it('name_only_empty_data_falls_categorical', () => {
+    // name-only 字段数据空 → 推断默认 categorical
+    const map = resolveFieldTypes([{ name: 'x' }], [], new Set(['x']));
+    expect(map.get('x')).toBe(PlotFieldType.Categorical);
+  });
+
+  // 错误路径：type 可选不削弱 strict
+  it('name_only_does_not_weaken_strict', () => {
+    // model 仅含 name-only 字段，但引用了未列字段 → 仍抛 unknown
+    expect(() => resolveFieldTypes([{ name: 'month' }], rows, new Set(['quater']))).toThrow(/unknown field/i);
+  });
+
+  it('duplicate_name_throws_regardless_of_type', () => {
+    // 重名（一条带 type、一条 name-only）→ 抛 duplicate
+    expect(() =>
+      resolveFieldTypes([{ name: 'month', type: 'temporal' }, { name: 'month' }], rows, new Set(['month'])),
+    ).toThrow(/duplicate field/i);
+  });
+});

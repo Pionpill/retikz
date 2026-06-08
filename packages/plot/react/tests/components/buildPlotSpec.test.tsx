@@ -4,6 +4,30 @@ import { buildPlotSpec } from '../../src/components/buildPlotSpec';
 import { Axis } from '../../src/components/guides';
 import { AreaMark, BarMark, LineMark, PointMark, SectorMark } from '../../src/components/marks';
 
+describe('buildPlotSpec model → type-driven 派生（alpha.6 ADR-03，评审 P1）', () => {
+  it('有 model 时省略 AUTO 位置 scale 绑定（交给 expand 派生）', () => {
+    const spec = buildPlotSpec(<LineMark x="month" y="revenue" />, '__plot', {
+      model: [{ name: 'month', type: 'temporal' }, { name: 'revenue', type: 'continuous' }],
+    });
+    expect(spec.scales).toEqual([]);
+    expect(spec.coordinate).toEqual({ type: 'cartesian2D' });
+    expect(spec.data).toEqual({ reference: '__plot', model: [{ name: 'month', type: 'temporal' }, { name: 'revenue', type: 'continuous' }] });
+  });
+
+  it('无 model 时沿用 AUTO 绑定（向后兼容）', () => {
+    const spec = buildPlotSpec(<LineMark x="month" y="revenue" />, '__plot');
+    expect(spec.coordinate).toEqual({ type: 'cartesian2D', x: '__x', y: '__y' });
+    expect(spec.scales.length).toBeGreaterThan(0);
+  });
+
+  it('有 model（nominal x）端到端 spec 合法', () => {
+    const spec = buildPlotSpec(<LineMark x="cat" y="revenue" />, '__plot', {
+      model: [{ name: 'cat', type: 'categorical' }, { name: 'revenue', type: 'continuous' }],
+    });
+    expect(() => PlotSpecSchema.parse(spec)).not.toThrow();
+  });
+});
+
 describe('buildPlotSpec 装配（ADR-08 / ADR-05）', () => {
   it('单 line：装配出等价手写 PlotSpec（含默认 guides）', () => {
     const spec = buildPlotSpec(<LineMark x="month" y="revenue" order="month" />, '__plot');

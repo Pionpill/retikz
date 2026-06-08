@@ -1,0 +1,201 @@
+---
+title: Data
+description: Give <Plot> a set of rows plus a "data model" (field names + types) and it picks the right scales and formats the axes for you. The same chart can also swap data sources — same names just work, different names take a mapping, different storage formats convert automatically.
+---
+
+A chart has two halves: **config** (what to draw — marks / coordinate / scales) and **data** (which values). retikz keeps them apart — the data does **not** enter the chart config (the IR); it's supplied separately at compile time. That lets one config be reused across different datasets.
+
+The simplest form: hand a row array to `<Plot data>` and have marks reference columns by field name.
+
+```tsx
+<Plot data={rows}>
+  <LineMark x="month" y="revenue" order="month" />
+</Plot>
+```
+
+A field name is a **path**, so nested data (MongoDB documents, JSON from an API) works directly: `x="user.address.city"` drills to the leaf. The leaf must be a scalar (string / number / boolean / time) — not an object or array.
+
+## Data model: declaring field types
+
+With data alone, retikz can't tell whether `month` is a time or a plain string, or whether `revenue` is continuous or categorical. Give it a **model** (field names + types) and it knows everything — how to pick scales, format axes, and validate — all driven by type.
+
+```tsx
+<Plot data={sales} model={[
+  { name: 'month',   type: 'temporal' },
+  { name: 'revenue', type: 'continuous' },
+]}>
+  <LineMark x="month" y="revenue" order="month" />
+</Plot>
+```
+
+Field types (three measurement kinds):
+
+| Type | Meaning | Examples |
+| --- | --- | --- |
+| `continuous` | continuous measurable number | sales, price, temperature, share |
+| `categorical` | discrete category | country, color name, rating |
+| `temporal` | date / time | dates, timestamps |
+
+**Declaring a model = strict mode**: every data field referenced by a mark / transform must be listed in the model; a misspelled field name **fails immediately** (instead of drawing an empty chart). **No model**: retikz infers types by sampling the data (number → continuous, ISO date string / `Date` → temporal, other strings → categorical), which is handy for quick drafts.
+
+**`type` is optional — partial models**: a field's type can be omitted, leaving just `{ name }`. The field still joins strict mode + the portable binding contract (by name), but its **type is left to inference**. Good for "most fields are obvious, only a few need pinning" — give `type` only to the numeric enums or odd date formats that need correcting, leave the rest bare:
+
+```tsx
+<Plot data={sales} model={[
+  { name: 'createdAt',  type: 'temporal' },    // special format, pinned
+  { name: 'statusCode', type: 'categorical' }, // numeric enum, pinned
+  { name: 'revenue' },                          // name only → inferred continuous
+]}>
+  {/* … */}
+</Plot>
+```
+
+Fields with `type` omitted need the data at lowering to determine their type — to keep a spec fully self-describing without the data (LLM-friendly / fully portable), fill `type` in.
+
+<ComponentAlert title="Inference is best-effort; the model is the contract" description="Without a model (or with a field's type omitted), types are guessed from samples: time is only recognized in unambiguous ISO form (YYYY-MM-DD, an ISO datetime with a timezone, including the space-separated SQL form like '2024-01-01 12:00:00Z') — '2024/01/01', timezone-less times, and bare numeric strings are not treated as time (they fall back to categorical). Declare a model and fill in type when you want precision, validation, or for an LLM to understand the fields without seeing the data." />
+
+## Type-driven scales
+
+With a model declared, positional channels (x / y) **no longer need an explicit scale** — retikz picks one from the field type:
+
+| Field type | Scale derived for a positional channel |
+| --- | --- |
+| `continuous` | linear |
+| `temporal` | time (a time axis with date ticks) |
+| `categorical` | band |
+
+The chart below declares no scale config at all: `month` is temporal → time axis, `revenue` is continuous → linear axis.
+
+<ComponentPreview name="data-model" sourceFiles={['data-model.data.ts']} />
+
+When you do declare a scale, the explicit one **always wins** over derivation. If an explicit scale clearly conflicts with the field type (a `categorical` field on a linear axis, a `temporal` field on a band), retikz **throws a clear error** rather than drawing something meaningless.
+
+## Category order: `order`
+
+A `categorical` field orders its categories by **data appearance** by default (axes and legends follow that order). To control it — sizes should read `S → M → L → XL`, not whatever order they happen to appear in the data — give the field an `order`:
+
+```tsx
+<Plot data={rows} model={[
+  { name: 'size',  type: 'categorical', order: ['S', 'M', 'L', 'XL'] }, // explicit order
+  { name: 'grade', type: 'categorical', order: 'ascending' },           // sorted ascending
+  { name: 'city',  type: 'categorical' },                               // default: appearance order
+]}>{/* … */}</Plot>
+```
+
+| `order` | Effect |
+| --- | --- |
+| omitted / `'data'` | data appearance order (default) |
+| `'ascending'` / `'descending'` | sort the categories: numeric when all numbers, else as strings |
+| `Array` (e.g. `['S','M','L']`) | the array is the order; categories present in the data but absent from the array are appended at the end |
+
+Rules:
+
+- **It lives on the field, so position and color share the order**: when the same field drives both the x-axis (band) and color (ordinal), both use the same category order.
+- **Only valid on `categorical`**: an `order` on a `continuous` / `temporal` field **throws** (order is meaningless for continuous values / time).
+- **An explicit scale `domain` wins**: if the scale declares its own `domain`, that takes precedence and `order` is ignored.
+- A **non-default** `order` (a sort or an explicit array) marks the field as ordered — retikz's three field types have no dedicated "ordered category" type; orderedness is expressed through this parameter.
+
+## Swapping data sources: one chart, three ways to bind
+
+Because data stays out of the config, one `<Plot>` config can run against different sources — as long as a model is declared (the model is the "portable" switch):
+
+1. **Same names, same types** — just swap `data`; matching field names / types re-render straight away.
+2. **Different names** — supply a `fieldMap` (logical name → the actual path in the data); the config is untouched:
+
+   ```tsx
+   // the data calls them period / amount, the config still says month / revenue
+   <Plot data={rows} model={[{ name: 'month', type: 'temporal' }, { name: 'revenue', type: 'continuous' }]}
+         fieldMap={{ month: 'period', revenue: 'amount' }}>
+     <LineMark x="month" y="revenue" order="month" />
+   </Plot>
+   ```
+
+3. **Different storage formats, same type** — converted automatically. A single `temporal` field reads correctly whether the data stores it as a `Date`, an ISO string, or an epoch number; a `continuous` field accepts a number or a well-formed numeric string (`"120"`). No extra config.
+
+`fieldMap` only renames (it doesn't transform values — computation belongs to transforms); it must be used with a model — without one there are no "logical fields" to map.
+
+## Declarative formats: `format`
+
+The built-in parsing only accepts fixed shapes (`temporal` takes `Date` / epoch-ms / strict ISO; `continuous` takes numbers / strict numeric strings). For common non-default formats like `'2024/01/01'`, epoch seconds, or `'50%'`, you don't need a function — give the field a declarative `format`, which **enters the IR, is serializable, and an LLM can generate it**:
+
+```tsx
+<Plot data={rows} model={[
+  { name: 'createdAt', type: 'temporal',  format: 'slashDate' },    // '2024/01/01' → time
+  { name: 'ts',        type: 'temporal',  format: 'epochSeconds' }, // 1700000000 → ms
+  { name: 'ratio',     type: 'continuous', format: 'percent' },     // '50%' → 0.5
+]}>{/* … */}</Plot>
+```
+
+Available `format` values (each binds to one type):
+
+| `format` | Type | Parsing |
+| --- | --- | --- |
+| `iso` | temporal | strict ISO (same as omitting) |
+| `epochSeconds` | temporal | epoch seconds → ms |
+| `epochMillis` | temporal | epoch milliseconds |
+| `slashDate` | temporal | strict `YYYY/MM/DD` (at UTC midnight) |
+| `numberString` | continuous | lenient numeric string (allows whitespace / thousands commas) |
+| `percent` | continuous | percent string `'50%'` → 0.5 |
+
+Rules:
+
+- **`format` implies `type`**: with a `format` you can omit `type` — `{ name: 'ratio', format: 'percent' }` is continuous automatically, never inferred as categorical.
+- **Must be compatible with `type`**: if the format's bound type conflicts with the `type` you wrote (e.g. `{ type: 'continuous', format: 'slashDate' }`), retikz **throws a clear error** rather than going silent.
+- `slashDate` accepts only strict `YYYY/MM/DD`; ambiguous layouts like `DD/MM/YYYY` / `MM/DD/YYYY` are not accepted (so the same string can't parse to different dates in different environments).
+- Parsing priority: `resolveField`'s `parse` > declarative `format` > built-in default. Use `format` for common shapes; reserve the `resolveField` below for truly arbitrary logic.
+
+## Custom parsing: `resolveField`
+
+Declarative `format` covers the common shapes; for **arbitrary formats** outside the table (a `'2024Q1'` quarter string, a custom separator) or to **force a field to a type** (a numeric enum as `categorical`), pass `resolveField` a function — it **does not enter the IR** (a runtime option, alongside `fieldMap`) and returns, per field name, a "type override + optional custom parser":
+
+```tsx
+<Plot data={rows} model={[{ name: 'quarter', type: 'temporal' }]}
+  resolveField={(field) => {
+    // a format outside the table: give type and parser together ('2024Q1' → first day of the quarter)
+    if (field === 'quarter') return { type: 'temporal', parse: raw => {
+      const [year, q] = String(raw).split('Q');
+      return Date.UTC(Number(year), (Number(q) - 1) * 3, 1);
+    } };
+    if (field === 'statusCode') return { type: 'categorical' }; // numeric enum as a category (value kept)
+    return undefined;                                            // everything else: model/inference + built-in parsing
+  }}>
+  {/* … */}
+</Plot>
+```
+
+Rules:
+
+- Returning `{ type }` overrides the field's type (higher priority than the model and inference); returning `{ parse }` uses a custom parser to turn the raw value into a canonical one (`temporal`/`continuous` return a number, `categorical` a string/number), and returning `undefined` skips that value.
+- With **only `parse` and no `type`**, the type comes from the model declaration — so a bare `parse` **requires a model** (without one the type source is unclear, and it errors).
+- `resolveField` **does not bypass strict mode**: with a model declared, referencing an unlisted field still errors — it only overrides type/parsing, it cannot turn a misspelled field into a valid one.
+- Being a function, it is not serializable, so `resolveField` is the escape hatch for hand-written code; for a fully portable / LLM-friendly spec, prefer the model's declarative `type` / `format`.
+
+## When the data is imperfect
+
+Document / heterogeneous data often has missing fields or mixed types across rows. retikz's policy is **skip, never fabricate, never silently draw wrong**:
+
+| Situation | Behavior |
+| --- | --- |
+| A row is missing the field | that datum is skipped (normal for heterogeneous data, no error) |
+| The leaf is an object / array (non-scalar) | that datum is skipped (objects never enter the chart) |
+| Same type, different storage format | converted automatically (see "Swapping data sources" #3) |
+| The field is a `bigint` (e.g. a database int64) | converted to a number automatically (safe integers only; out-of-range is treated as invalid) |
+| The path passes through an array (needs unwinding) | not auto-unwound yet — flatten in the data layer first |
+
+The default "skip" can leave you staring at a blank chart. Turn on `validateData` to have retikz **sample-check** the binding and throw on problems, pointing at **which field and how many invalid / missing** (e.g. `field "x": 3/100 invalid`), turning "why is it empty" into a clear message:
+
+```tsx
+<Plot data={rows} model={[...]} validateData>
+  {/* missing field / nothing convertible → compile-time error instead of a blank chart */}
+</Plot>
+```
+
+For a stricter **full** check, pass `invalid="error"` — any invalid value (a missing field, an unconvertible value, an out-of-range bigint) in a field the chart actually uses throws immediately and names the field, rather than sampling:
+
+```tsx
+<Plot data={rows} model={[...]} invalid="error">
+  {/* any participating field with an invalid value → error that names the field */}
+</Plot>
+```
+
+`invalid` defaults to `'skip'` (the table's "skip" behavior): invalid points are dropped but the **whole row is kept**, still participating in stacking / sorting transforms; `'error'` only checks the fields the chart references, leaving other dirty columns alone.

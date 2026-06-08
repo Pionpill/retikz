@@ -2,7 +2,7 @@ import type { IRJsonObject } from '@retikz/core';
 import { type ExternalDatasets, type ExternalRow, type Mark, type PlotSpec } from '../ir';
 import { type IntervalContext, buildIntervalContext, datumAnchor } from './anchor';
 import { DEFAULT_FONT_SIZE } from './layout';
-import { type LowerPlotsOptions, resolveFrame } from './expand';
+import { type LowerPlotsOptions, prepareRows, resolveFrame } from './expand';
 import type { CoordinateFrame } from './project';
 import { type ProvenanceContext, createDatumIdRegistrar, datumMeta, readSourceIndex, tagSourceIndex } from './provenance';
 import { applyTransforms } from './transform';
@@ -77,13 +77,17 @@ export const createPlotLocator = (spec: PlotSpec, datasets: ExternalDatasets, op
     return empty;
   }
 
-  // 与 expandPlot 同序：tagSourceIndex（clone，不动入参）→ applyTransforms。locator 总要 sourceIndex 供 meta 合成。
-  const rows = applyTransforms(tagSourceIndex(dataset), spec.transform);
+  // 与 expandPlot 共用 prepareRows（fieldMaps 校验 + 类型解析 + 归一化），保证 render 抛错 ⟺ locator 抛错（评审 P2 parity）。
+  // tagSourceIndex（clone，不动入参）→ prepareRows → applyTransforms，与 lowering 完全同序，否则 locator 落点漂移。
+  const ingested = tagSourceIndex(dataset);
+  const { fieldTypes, normalized } = prepareRows(spec, datasets, options, ingested);
+  const rows = applyTransforms(normalized, spec.transform);
 
   // frame 复用 resolveFrame：投影几何与 provenance 无关（provenance 只影响 guide 层 id/meta），故传 undefined。
   const { frame }: { frame: CoordinateFrame } = resolveFrame({
     node: spec,
     rows,
+    fieldTypes,
     width,
     height,
     fontSize: options.fontSize ?? DEFAULT_FONT_SIZE,

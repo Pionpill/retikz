@@ -1,14 +1,17 @@
 import { type CompositeDefinition, type IRChild, type IRScope, defineComposite } from '@retikz/core';
 import type { ZodType } from 'zod';
-import { type Channel, type ExternalDatasets, type ExternalRow, type Guide, type Mark, type OrdinalScale, PlotCoordinate, PlotMark, PlotScale, type PlotSpec, PlotSpecSchema, type Scale } from '../ir';
+import { type Channel, type ExternalDatasets, type ExternalRow, type FieldType, type Guide, type Mark, type OrdinalScale, PlotCoordinate, PlotFieldType, PlotMark, PlotScale, type PlotSpec, PlotSpecSchema, type Scale } from '../ir';
 import { channelValue, resolveFieldPath } from './field';
 import { type GuideContext, lowerGuide } from './guide';
 import { DEFAULT_FONT_SIZE, type Margins, type Rect, computePlotArea, computePolarFrame } from './layout';
 import { type ColorOf, lowerMark } from './mark';
 import { type CoordinateFrame, createCartesianFrame, createPolarFrame } from './project';
 import { type DatumIdRegistrar, type ProvenanceContext, createDatumIdRegistrar, rootMeta, tagSourceIndex } from './provenance';
-import { type TickSet, resolveOrdinalScale, resolvePositionScale } from './scale';
+import { type CategoryOrder, type TickSet, assertScaleFieldCompatible, deriveScale, orderedCategoryDomain, resolveOrdinalScale, resolvePositionScale } from './scale';
+import { assertAllValuesValid, collectFormatFields, normalizeRows, validateBoundData } from './coerce';
 import { applyTransforms } from './transform';
+import { type ResolveField, applyFieldResolver } from './resolve';
+import { collectUserSourceFields, resolveFieldTypes } from './validate';
 
 /** 空刻度集（某维度无 axis 时给 GuideContext 的占位；实际不会被该维度的 guide 触达） */
 const EMPTY_TICKS: TickSet = { values: [], labels: [] };
@@ -67,6 +70,17 @@ export type LowerPlotsOptions = {
   datumProvenance?: boolean;
   /** 数据属性名：把该字段值绑成 `<plotId>.datum.<值>` 的 Node.id（opt-in 可连接；缺字段 / 重复值 fail loud） */
   datumIdField?: string;
+  /** 逻辑字段 → 物理数据路径映射（按数据集 reference 键，不进 IR）；需 data.model；缺省恒等 */
+  fieldMaps?: Record<string, Record<string, string>>;
+  /** 抽样校验绑定数据（字段缺失 / 不可强制 → fail-loud）；默认关、不 warn */
+  validateData?: boolean | { sampleRows?: number };
+  /**
+   * 非法 / 缺失值策略（运行时、不进 IR）：`'skip'`（默认）归一化写 NaN/undefined 哨兵、不删行，
+   * 下游 mark 自跳非法几何；`'error'` 在 transform 之前对 spec 参与字段全量校验，遇任一非法 / 缺失即 fail-loud。
+   */
+  invalid?: 'skip' | 'error';
+  /** 程序化字段解析逃生舱（运行时函数，不进 IR）：按字段名覆盖类型 + 自定义值解析；返回 undefined → 回退 model/推断 + 内置 coerce（ADR-04） */
+  resolveField?: ResolveField;
 };
 
 /** resolveFrame 产物：mark / guide 共用的投影帧 + 已下沉的网格 / 轴层（z-order 由 expand 编排） */
@@ -85,6 +99,8 @@ export type ResolveFrameParams = {
   node: PlotSpec;
   /** transform 后的数据行（域推断、guide 刻度同源） */
   rows: Array<ExternalRow>;
+  /** 用户源字段 → FieldType（ADR-01 解析）；供 type-driven scale 派生与兼容校验（ADR-03） */
+  fieldTypes: Map<string, FieldType>;
   /** 整图宽（user units） */
   width: number;
   /** 整图高（user units） */
@@ -103,7 +119,7 @@ export type ResolveFrameParams = {
  *   抽成纯函数使 mark 下沉与 ADR-02 locator 共用同一投影（杜绝两套投影漂移）；产物与内联版等价。
  */
 export const resolveFrame = (params: ResolveFrameParams): ResolvedFrame => {
-  const { node, rows, width, height, fontSize, margin, provenance } = params;
+  const { node, rows, fieldTypes, width, height, fontSize, margin, provenance } = params;
   const coordinate = node.coordinate;
   const scaleByName = new Map(node.scales.map(scale => [scale.name, scale] as const));
 
@@ -153,10 +169,75 @@ export const resolveFrame = (params: ResolveFrameParams): ResolvedFrame => {
     return out;
   };
 
-  // 解析某角色绑定的 scale 定义；缺失抛清晰错误（沿用 coordinate.x/coordinate.angle 文案）
-  const requireScaleDef = (channel: 'x' | 'y' | 'angle' | 'radius', scaleName: string): Scale => {
-    const def = scaleByName.get(scaleName);
-    if (!def) throw new Error(`lowerPlots: coordinate.${channel} references unknown scale "${scaleName}"`);
+  // 某角色（跨所有 mark）绑定字段的全部类型——多 mark 共用一角色时须校验 / 派生全部，不能只看首个
+  const roleFieldTypes = (pick: (mark: Mark) => Channel | undefined): Array<FieldType> => {
+    const types: Array<FieldType> = [];
+    for (const mark of node.marks) {
+      const channel = pick(mark);
+      if (channel?.field === undefined) continue;
+      const type = fieldTypes.get(channel.field);
+      if (type !== undefined) types.push(type);
+    }
+    return types;
+  };
+
+  // 字段名 → order（来自 data.model，与 fieldTypes 同源）；缺 model / 未声明 order → 无条目
+  const fieldOrders = new Map<string, CategoryOrder>();
+  for (const field of node.data.model ?? []) {
+    if (field.order !== undefined) fieldOrders.set(field.name, field.order);
+  }
+
+  /**
+   * 解析某 role 的有效 order（解析 + 三道判定的两道：非分类 throw / 冲突 throw）
+   * @description 收集该 role 各绑定字段的非默认 order（!=='data'）：非分类字段配 order → throw；
+   *   ≥2 个不同非默认 order → throw；恰好 1 个 → 返回它；0 个 → undefined（保持现状出现序）。
+   */
+  const resolveRoleOrder = (role: string, pick: (mark: Mark) => Channel | undefined): CategoryOrder | undefined => {
+    const found: Array<CategoryOrder> = [];
+    for (const mark of node.marks) {
+      const channel = pick(mark);
+      if (channel?.field === undefined) continue;
+      const order = fieldOrders.get(channel.field);
+      if (order === undefined || order === 'data') continue;
+      const type = fieldTypes.get(channel.field);
+      if (type !== undefined && type !== PlotFieldType.Categorical) {
+        throw new Error(`lowerPlots: field "${channel.field}" has order but its type is ${type}, not categorical; order only applies to categorical fields`);
+      }
+      found.push(order);
+    }
+    if (found.length === 0) return undefined;
+    const distinct = [...new Set(found.map(order => JSON.stringify(order)))];
+    if (distinct.length > 1) {
+      throw new Error(`lowerPlots: coordinate.${role} binds fields with conflicting orders; give the scale an explicit domain`);
+    }
+    return found[0];
+  };
+
+  // 解析角色 scale（ADR-03）：显式绑定 → 查表（未声明仍抛，typo 守卫）+ 对该 role **全部**字段做兼容校验；
+  //   省略 → 按字段类型派生（要求该 role 字段类型一致，混类型 fail-loud）。兼容校验只对「声明 model 的类型」生效。
+  const resolveScaleForRole = (role: 'x' | 'y' | 'angle' | 'radius', scaleName: string | undefined, pick: (mark: Mark) => Channel | undefined, values: Array<unknown>): Scale => {
+    const types = roleFieldTypes(pick);
+    // 解析该 role 有效 order（含「非分类配 order」「冲突 order」两道 fail-loud），无论 scale 显式与否都先校验
+    const order = resolveRoleOrder(role, pick);
+    let def: Scale;
+    if (scaleName !== undefined) {
+      const found = scaleByName.get(scaleName);
+      if (!found) throw new Error(`lowerPlots: coordinate.${role} references unknown scale "${scaleName}"`);
+      if (node.data.model !== undefined) {
+        for (const type of types) assertScaleFieldCompatible(role, found.type, type, scaleName);
+      }
+      def = found;
+    } else {
+      const distinct = [...new Set(types)];
+      if (distinct.length > 1) {
+        throw new Error(`lowerPlots: coordinate.${role} omitted but its bound fields have mixed types [${distinct.join(', ')}]; declare an explicit scale`);
+      }
+      def = deriveScale(distinct[0], `__${role}`);
+    }
+    // order 注入：仅当字段有非默认 order 且该 scale 是 band/point 且 domain 未显式给（显式 domain 优先、压过 order）
+    if (order !== undefined && (def.type === PlotScale.Band || def.type === PlotScale.Point) && def.domain === undefined) {
+      return { ...def, domain: orderedCategoryDomain(values, order) };
+    }
     return def;
   };
 
@@ -167,12 +248,12 @@ export const resolveFrame = (params: ResolveFrameParams): ResolvedFrame => {
   const axisLayers: Array<IRScope> = [];
 
   if (coordinate.type === PlotCoordinate.Polar2D) {
-    // 笛卡尔下出现 angle/radius 通道才是误用；polar 下复用 x/y 合法。此处构造极坐标帧。
-    const angleScaleDef = requireScaleDef('angle', coordinate.angle);
-    const radiusScaleDef = requireScaleDef('radius', coordinate.radius);
     // 角向值 ← x、径向值 ← y（坐标系把 x/y 重解释为 angle/radius，正中 (i) 投影整形）
     const angleValues = collectValues(xChannelOf, false, false, true);
     const radiusValues = collectValues(yChannelOf, true, true);
+    // 笛卡尔下出现 angle/radius 通道才是误用；polar 下复用 x/y 合法。此处构造极坐标帧。
+    const angleScaleDef = resolveScaleForRole('angle', coordinate.angle, xChannelOf, angleValues);
+    const radiusScaleDef = resolveScaleForRole('radius', coordinate.radius, yChannelOf, radiusValues);
 
     // guide 维度角色化：angle / x → angular（primary）、radius / y → radial（secondary）；一维一轴
     const guides = node.guides ?? [];
@@ -228,10 +309,12 @@ export const resolveFrame = (params: ResolveFrameParams): ResolvedFrame => {
     }
   } else {
     // cartesian2D：x/y 角色绑 x/y scale
-    const xScaleDef = requireScaleDef('x', coordinate.x);
-    const yScaleDef = requireScaleDef('y', coordinate.y);
-    const xScale = resolvePositionScale(xScaleDef, collectValues(xChannelOf, false, false), [0, width]);
-    const yScale = resolvePositionScale(yScaleDef, collectValues(yChannelOf, true, true), [height, 0]);
+    const xValues = collectValues(xChannelOf, false, false);
+    const yValues = collectValues(yChannelOf, true, true);
+    const xScaleDef = resolveScaleForRole('x', coordinate.x, xChannelOf, xValues);
+    const yScaleDef = resolveScaleForRole('y', coordinate.y, yChannelOf, yValues);
+    const xScale = resolvePositionScale(xScaleDef, xValues, [0, width]);
+    const yScale = resolvePositionScale(yScaleDef, yValues, [height, 0]);
 
     // 哪些维度有坐标轴（决定 margin / 是否算 ticks）；alpha.2 guide 仅 axis 类型，按 dimension 取
     const guides = node.guides ?? [];
@@ -289,6 +372,11 @@ export const resolveFrame = (params: ResolveFrameParams): ResolvedFrame => {
 /** 解析某 mark 的 color 编码 → 行→颜色串：常量 value 直用；字段过 ordinal scale（显式引用或自动合成默认配色） */
 const makeColorResolver = (node: PlotSpec, rows: Array<ExternalRow>): ((mark: Mark) => ColorOf | undefined) => {
   const scaleByName = new Map(node.scales.map(scale => [scale.name, scale] as const));
+  // 字段名 → order（与位置通道同源 data.model）：颜色 ordinal 域按字段 order 排，保证位置 / 颜色同序
+  const fieldOrders = new Map<string, CategoryOrder>();
+  for (const field of node.data.model ?? []) {
+    if (field.order !== undefined) fieldOrders.set(field.name, field.order);
+  }
   return (mark: Mark): ColorOf | undefined => {
     const channel = mark.encoding.color;
     if (!channel) return undefined;
@@ -307,15 +395,76 @@ const makeColorResolver = (node: PlotSpec, rows: Array<ExternalRow>): ((mark: Ma
       }
       ordinalDef = def;
     }
-    const ordinal = resolveOrdinalScale(
-      ordinalDef,
-      rows.map(row => resolveFieldPath(row, field)),
-    );
+    const colorValues = rows.map(row => resolveFieldPath(row, field));
+    // 字段有非默认 order 且 ordinal 域未显式给 → 按 order 排 ordinal 域（位置 / 颜色同序）
+    const order = fieldOrders.get(field);
+    if (order !== undefined && order !== 'data' && ordinalDef?.domain === undefined) {
+      ordinalDef = { ...(ordinalDef ?? { type: PlotScale.Ordinal, name: `__color_${field}` }), domain: orderedCategoryDomain(colorValues, order) };
+    }
+    const ordinal = resolveOrdinalScale(ordinalDef, colorValues);
     return row => {
       const value = resolveFieldPath(row, field);
       return typeof value === 'string' || typeof value === 'number' ? ordinal(value) : undefined;
     };
   };
+};
+
+/**
+ * 校验 fieldMaps（fail-loud）：ref∈datasets；本 plot 的 map 需 model + 逻辑名∈model
+ * @description 抽出供 expandPlot 与 createPlotLocator 共用，保证「render 抛错 ⟺ locator 抛错」的 parity（评审 P2）
+ */
+export const validateFieldMaps = (spec: PlotSpec, datasets: ExternalDatasets, fieldMaps: LowerPlotsOptions['fieldMaps']): void => {
+  if (fieldMaps === undefined) return;
+  for (const ref of Object.keys(fieldMaps)) {
+    if (!(ref in datasets)) throw new Error(`lowerPlots: fieldMaps references unknown dataset "${ref}"`);
+  }
+  if (!(spec.data.reference in fieldMaps)) return;
+  const fieldMap = fieldMaps[spec.data.reference];
+  if (spec.data.model === undefined) {
+    throw new Error(`lowerPlots: fieldMaps for "${spec.data.reference}" requires data.model (no logical field contract without a model)`);
+  }
+  const declared = new Set(spec.data.model.map(field => field.name));
+  for (const logical of Object.keys(fieldMap)) {
+    if (!declared.has(logical)) {
+      throw new Error(`lowerPlots: fieldMaps["${spec.data.reference}"] maps unknown logical field "${logical}" (not in data.model)`);
+    }
+  }
+};
+
+/**
+ * 共享的「绑定准备」：fieldMaps 校验 + 用户源字段类型解析 + ingest 恒归一化
+ * @description expandPlot 与 createPlotLocator 共用同一入口，保证两者校验 / 归一化 / 类型解析完全同序（评审 P2 parity）。
+ *   入参 ingested 由调用方按各自需要先行 tagSourceIndex；本函数不碰 transform（调用方各自 applyTransforms）。
+ *   恒归一化（ADR-08）：无论有无 model / resolver，总按解析出的 fieldTypes 跑 normalizeRows，下游统一读 canonical。
+ */
+export const prepareRows = (
+  spec: PlotSpec,
+  datasets: ExternalDatasets,
+  options: LowerPlotsOptions,
+  ingested: Array<ExternalRow>,
+): { fieldTypes: Map<string, FieldType>; normalized: Array<ExternalRow> } => {
+  validateFieldMaps(spec, datasets, options.fieldMaps);
+  const userSourceFields = collectUserSourceFields(spec);
+  // strict + 声明/推断（ADR-01/05）；strict 在 applyFieldResolver 之前先校验，resolver 不绕过（ADR-04）
+  const baseTypes = resolveFieldTypes(spec.data.model, ingested, userSourceFields);
+  const fieldMap = options.fieldMaps?.[spec.data.reference];
+  // 声明式 format（ADR-06）：format 蕴含 type 覆盖推断 + 冲突 fail-loud + 收集 format parser；置于 resolveField 之前，使 resolveField 仍胜出
+  const { fieldTypes: formatTypes, parsers: formatParsers } = collectFormatFields(spec.data.model, baseTypes, userSourceFields);
+  // resolveField 叠加：类型覆盖 + 收集 per-field parser（ADR-04）；优先级 resolveField.type > format 蕴含 / 显式 type
+  const { fieldTypes, parsers: resolverParsers } = applyFieldResolver(
+    formatTypes,
+    userSourceFields,
+    spec.data.model,
+    spec.data.reference,
+    fieldMap,
+    options.resolveField,
+  );
+  // 合并 parser 槽：format parser 垫底，resolveField.parse 命中同字段时覆盖（优先级 resolveField > format）
+  const parsers = new Map([...formatParsers, ...resolverParsers]);
+  // 恒归一化（ADR-08 去门控）：无论有无 model / resolver 命中，总按解析出的 fieldTypes 跑 normalizeRows
+  //   →下游统一读 canonical、无第二处 coerce。干净数据产物与旧门控路径逐字段等价。
+  const normalized = normalizeRows(ingested, fieldTypes, fieldMap, parsers);
+  return { fieldTypes, normalized };
 };
 
 /**
@@ -352,11 +501,26 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
 
   // 取数：provenance 开时先打源序标记（symbol 键，跨 transform 存活，供 sourceIndex 回指），再过 transform 管线
   const ingested = provenance ? tagSourceIndex(datasets[node.data.reference]) : datasets[node.data.reference];
-  const rows = applyTransforms(ingested, node.transform);
+
+  // ADR-01/02/08：fieldMaps 校验 + 用户源字段类型解析（strict）+ ingest 恒归一化。与 locator 共用 prepareRows 保 parity。
+  // 类型 Map 是 type-driven scale（ADR-03）/ coercion 的单一真源；归一化置于 transform 前、无论有无 model 都跑（恒 canonical）。
+  const { fieldTypes, normalized } = prepareRows(node, datasets, options, ingested);
+  if (options.validateData) {
+    const sampleRows = typeof options.validateData === 'object' ? options.validateData.sampleRows ?? 100 : 100;
+    validateBoundData(normalized, fieldTypes, sampleRows);
+  }
+  // invalid:'error'（ADR-08）：transform 之前对 spec 参与字段（= fieldTypes 键）全量校验，遇任一非法 / 缺失 fail-loud；
+  //   置于 transform 前 → 错误定位到原始源字段、不被 transform 改写干扰。默认 'skip' 不校验（哨兵留给下游跳）。
+  if (options.invalid === 'error') {
+    assertAllValuesValid(normalized, fieldTypes);
+  }
+
+  const rows = applyTransforms(normalized, node.transform);
 
   const { frame, gridLayers, axisLayers } = resolveFrame({
     node,
     rows,
+    fieldTypes,
     width,
     height,
     fontSize: options.fontSize ?? DEFAULT_FONT_SIZE,

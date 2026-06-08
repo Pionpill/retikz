@@ -11,8 +11,9 @@ import {
   scaleUtc,
 } from 'd3-scale';
 import { schemeCategory10 } from 'd3-scale-chromatic';
-import { type BandScale, type OrdinalScale, PlotScale, type PointScale, type ScalarValue, type Scale, type TimeScale } from '../ir';
+import { type BandScale, type FieldDef, type FieldType, type OrdinalScale, PlotFieldType, PlotScale, type PointScale, type ScalarValue, type Scale, type ScaleType, type TimeScale } from '../ir';
 import { isFiniteNumber } from './field';
+import { isIsoDateString } from './infer';
 
 /** 默认目标刻度数（d3 ticks 的提示值，非硬约束——实际数量按 nice 区间取整定） */
 export const DEFAULT_TICK_COUNT = 5;
@@ -97,6 +98,28 @@ export const inferCategoryDomain = (values: Array<unknown>): Array<string | numb
     }
   }
   return out;
+};
+
+/** FieldDef.order 的取值类型（单一真源派生自 schema，避免手写第二份） */
+export type CategoryOrder = NonNullable<FieldDef['order']>;
+
+/**
+ * 按 order 计算有序的分类域：在 inferCategoryDomain 去重保序基础上再排
+ * @description order='data'/undefined → 现状出现序去重；'ascending'/'descending' → 全数值按数值比、否则统一 String localeCompare（descending 反序）；
+ *   Array → 以数组为类别序，数据出现但不在数组里的去重类别按出现序追加末尾（数组里有、数据无的值保留作空类别）。
+ */
+export const orderedCategoryDomain = (values: Array<unknown>, order: CategoryOrder | undefined): Array<string | number> => {
+  const deduped = inferCategoryDomain(values);
+  if (order === undefined || order === 'data') return deduped;
+  if (order === 'ascending' || order === 'descending') {
+    const allNumber = deduped.every(value => typeof value === 'number');
+    const sorted = [...deduped].sort((a, b) => (allNumber ? (a as number) - (b as number) : String(a).localeCompare(String(b))));
+    return order === 'descending' ? sorted.reverse() : sorted;
+  }
+  // Array：数组序优先；数据出现但不在数组里的类别按出现序追加末尾
+  const inArray = new Set<string | number>(order);
+  const appended = deduped.filter(value => !inArray.has(value));
+  return [...order, ...appended];
 };
 
 /** 建分类 band scale（d3 scaleBand）；domain 缺省按数据序去重推断 */
@@ -205,11 +228,18 @@ export const pointPositionScale = (scale: ScalePoint<string | number>): Position
   },
 });
 
-/** 字段值 → epoch ms（数值原样；ISO / 可解析字符串走 Date.parse；其余 → null） */
+/** 字段值 → epoch ms（Date 实例 / 数值原样 / ISO 字符串走 Date.parse；其余 → null） */
 export const toTimestamp = (value: unknown): number | null => {
+  if (value instanceof Date) {
+    const stamp = value.getTime();
+    return Number.isNaN(stamp) ? null : stamp;
+  }
   if (typeof value === 'number') return Number.isFinite(value) ? value : null;
   if (typeof value === 'string') {
-    const parsed = Date.parse(value);
+    // ISO guard（与推断同一套）：拒 YYYY/MM/DD、无时区 datetime、裸数字串，避免误解析
+    if (!isIsoDateString(value)) return null;
+    // 空格分隔（SQL 时间戳）归一化成 T：ECMAScript 只保证 T 分隔的跨引擎一致解析
+    const parsed = Date.parse(value.replace(' ', 'T'));
     return Number.isNaN(parsed) ? null : parsed;
   }
   return null;
@@ -256,6 +286,39 @@ export const timePositionScale = (scale: ScaleTime<number, number>): PositionSca
     scale.range([range[0], range[1]]);
   },
 });
+
+/**
+ * 按字段类型派生默认位置 scale 定义（type-driven 选型）
+ * @description continuous→linear、temporal→time、categorical→band；
+ *   undefined（无字段绑定，如全常量通道）→ linear 兜底。仅在 coordinate 省略 scale 绑定时调用。
+ */
+export const deriveScale = (fieldType: FieldType | undefined, name: string): Scale => {
+  switch (fieldType) {
+    case PlotFieldType.Temporal:
+      return { type: PlotScale.Time, name };
+    case PlotFieldType.Categorical:
+      return { type: PlotScale.Band, name };
+    default:
+      return { type: PlotScale.Linear, name };
+  }
+};
+
+/**
+ * 类型 ↔ scale 兼容校验（fail-loud，不强转）
+ * @description 仅拒明确错配：连续 scale（linear/time）配分类字段（categorical）、分类 scale（band/point）配 temporal。
+ *   continuous 灵活（可作连续亦可作分类带），不拦。
+ */
+export const assertScaleFieldCompatible = (role: string, scaleType: ScaleType, fieldType: FieldType, scaleName: string): void => {
+  const continuous = scaleType === PlotScale.Linear || scaleType === PlotScale.Time;
+  const categorical = scaleType === PlotScale.Band || scaleType === PlotScale.Point;
+  const fieldCategorical = fieldType === PlotFieldType.Categorical;
+  if (continuous && fieldCategorical) {
+    throw new Error(`lowerPlots: coordinate.${role} scale "${scaleName}" (${scaleType}) incompatible with ${fieldType} field; use band/point`);
+  }
+  if (categorical && fieldType === PlotFieldType.Temporal) {
+    throw new Error(`lowerPlots: coordinate.${role} scale "${scaleName}" (${scaleType}) incompatible with temporal field; use time`);
+  }
+};
 
 /**
  * 按 scale 定义建对应 PositionScale
