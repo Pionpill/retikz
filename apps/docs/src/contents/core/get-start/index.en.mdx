@@ -1,21 +1,37 @@
 ---
 title: Get Started
-description: Install retikz and build a minimal example in 3 steps to learn the top-level container, Node, and Draw components.
+description: Install retikz and build a minimal example in 4 steps to learn the top-level container, Node, Draw, animation, and event callbacks.
 ---
 
 ## Installation
 
 The React adapter is `@retikz/react`, with peer dependencies on `react` / `react-dom` (>= 18).
 
+Note: retikz itself is framework-agnostic. You can also use `@retikz/vanilla` or `@retikz/core` / `@retikz/render` to build and render diagrams with plain JavaScript. The prose uses the React API so examples can focus on primitives, paths, and IR; open **View Code** on a demo to switch to the equivalent Vanilla API.
+
 <PackageManagerInstall packages="@retikz/react react react-dom" />
 
 The underlying `@retikz/core` (IR + compiler, zero React / zero DOM) is pulled in transitively — no need to install it directly.
 
+## How to Learn
+
+Start by getting this page working, then read in the order “mental model → component details → complete examples → reference contracts”:
+
+| Section | What to read |
+| --- | --- |
+| Introduction / Get Started | Build the overall picture and see why retikz centers on Node, Path, and IR. |
+| Concepts | Learn positioning, anchors, layers, and animation — the shared rules behind every figure. |
+| Components | Look up `<Layout>`, `<Node>`, `<Draw>`, shapes, and helper components. |
+| Examples | See how a full figure is broken down from a prompt or idea into primitives. |
+| Reference | Use extending, IR schema, renderer, and runtime pages when writing adapters, persistence, or low-level debugging code. |
+
+You can also open the AI panel from the top AI button and ask about the current page, selected code, or an API name. The docs site is fully static and does not provide an LLM service; enter your own API key in the panel, and the site only forwards requests from your browser to the model provider you choose.
+
 ## A Minimal Example
 
-<ComponentPreview name="get-start-final" size="xs" />
+<ComponentPreview name="get-start-step-4" size="xs" interactive replayable />
 
-We'll build this diagram in 3 steps. Click **View Code** under any preview to inspect the source and the corresponding IR JSON.
+We'll build this diagram in 4 steps. Click **View Code** under any preview to inspect the source and the corresponding IR JSON.
 
 ## Step by Step
 
@@ -43,7 +59,15 @@ Add more `<Node>`s to place the entities in the diagram before drawing relations
 
 <ComponentPreview name="get-start-final" size="xs" />
 
-Three nodes joined by two lines — matching the final example at the top.
+Three nodes joined by two lines — the static structure now matches the example at the top.
+
+### 4. Add Animation and a Callback
+
+A figure can also respond to user input. Add `animations` to describe animation tracks, then add an `onClick` callback. The callback's second argument, `context`, carries the current element information and animation controls; calling `context.animation.restart()` replays the animation from the event.
+
+<ComponentPreview name="get-start-step-4" size="xs" interactive replayable />
+
+This animation uses `trigger: 'manual'`, so it does not autoplay. It waits for the click callback, and the callback can update your React state at the same time.
 
 Keep four rules in mind before moving on:
 
@@ -66,6 +90,14 @@ Keep four rules in mind before moving on:
   <LinkedCard href="/core/components/draw/overview">
     <span className="font-semibold">Draw</span>
     <span className="mt-1 text-center text-sm text-muted-foreground">Continue with folds, curves, arrows, fills, and edge labels</span>
+  </LinkedCard>
+  <LinkedCard href="/core/concepts/animation">
+    <span className="font-semibold">Animation</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">Understand tracks, presets, playback controls, and static fallback</span>
+  </LinkedCard>
+  <LinkedCard href="/core/reference/renderer/hydration">
+    <span className="font-semibold">Hydration</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">Learn event callbacks, context, and vanilla binding</span>
   </LinkedCard>
   <LinkedCard href="/core/examples/karl-circle">
     <span className="font-semibold">Karl's Unit Circle</span>
