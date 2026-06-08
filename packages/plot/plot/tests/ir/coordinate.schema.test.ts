@@ -183,3 +183,35 @@ describe('CoordinateSchema 一维坐标系族 cartesian1D / polar1D (alpha.9 ADR
     expect(CoordinateSchema.parse(JSON.parse(JSON.stringify(ir)))).toEqual(ir);
   });
 });
+
+describe('CoordinateSchema ternary2D (alpha.9 ADR-03)', () => {
+  // Happy path
+  it('ternary2d_minimal_valid', () => {
+    expect(CoordinateSchema.parse({ type: 'ternary2D' })).toEqual({ type: 'ternary2D' });
+  });
+
+  it('ternary2d_with_scale_names_valid', () => {
+    const c = { type: 'ternary2D', a: 'as', b: 'bs', c: 'cs' };
+    expect(CoordinateSchema.parse(c)).toEqual(c);
+  });
+
+  // 边界：a/b/c 各自可省（派生 / 归一化）
+  it('ternary2d_partial_scale_names_valid', () => {
+    expect(() => CoordinateSchema.parse({ type: 'ternary2D', a: 'as' })).not.toThrow();
+  });
+
+  it('ternary2d_empty_a_rejected', () => {
+    expect(() => CoordinateSchema.parse({ type: 'ternary2D', a: '' })).toThrow();
+  });
+
+  // 回归 + round-trip
+  it('ternary2d_union_regression', () => {
+    expect(CoordinateSchema.parse({ type: 'cartesian1D' }).type).toBe('cartesian1D');
+    expect(CoordinateSchema.parse({ type: 'ternary2D' }).type).toBe('ternary2D');
+  });
+
+  it('ternary2d_json_round_trip', () => {
+    const ir = CoordinateSchema.parse({ type: 'ternary2D', a: 'as', b: 'bs', c: 'cs' });
+    expect(CoordinateSchema.parse(JSON.parse(JSON.stringify(ir)))).toEqual(ir);
+  });
+});

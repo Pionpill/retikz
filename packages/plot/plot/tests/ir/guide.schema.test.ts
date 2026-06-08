@@ -39,6 +39,13 @@ describe('GuideSchema (ADR-01 alpha.2)', () => {
     expect(() => GuideSchema.parse({ type: 'axis', dimension: 'z' })).toThrow();
   });
 
+  // alpha.9 ADR-03：ternary 三角轴维度 a / b / c
+  it('axis_ternary_abc_dimensions_valid', () => {
+    for (const dimension of ['a', 'b', 'c']) {
+      expect(AxisGuideSchema.parse({ type: 'axis', dimension })).toEqual({ type: 'axis', dimension });
+    }
+  });
+
   it('axis_tickcount_non_positive_rejected', () => {
     expect(() => GuideSchema.parse({ type: 'axis', dimension: 'x', tickCount: 0 })).toThrow();
     expect(() => GuideSchema.parse({ type: 'axis', dimension: 'x', tickCount: -1 })).toThrow();

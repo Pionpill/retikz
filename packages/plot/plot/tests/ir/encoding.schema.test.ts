@@ -77,6 +77,22 @@ describe('ChannelSchema / EncodingSchema (ADR-05)', () => {
     const e = EncodingSchema.parse({ x: { field: 'theta' }, y: { field: 'value' }, color: { field: 'g', scale: 'col' } });
     expect(EncodingSchema.parse(JSON.parse(JSON.stringify(e)))).toEqual(e);
   });
+
+  // alpha.9 ADR-03：ternary 的 a/b/c 位置角色通道（可选；ternary 必填由 lowering 校验）
+  it('encoding_abc_channels_valid', () => {
+    const e = { a: { field: 'sand' }, b: { field: 'silt' }, c: { field: 'clay' } };
+    expect(EncodingSchema.parse(e)).toEqual(e);
+  });
+
+  it('encoding_abc_with_color_valid', () => {
+    const e = { a: { field: 'sand' }, b: { field: 'silt' }, c: { field: 'clay' }, color: { field: 'region', scale: 'col' } };
+    expect(EncodingSchema.parse(e)).toEqual(e);
+  });
+
+  it('encoding_abc_json_round_trip', () => {
+    const e = EncodingSchema.parse({ a: { field: 'sand' }, b: { field: 'silt' }, c: { field: 'clay' } });
+    expect(EncodingSchema.parse(JSON.parse(JSON.stringify(e)))).toEqual(e);
+  });
 });
 
 describe('SizeChannelSchema / PointEncodingSchema (alpha.7 ADR-02)', () => {
