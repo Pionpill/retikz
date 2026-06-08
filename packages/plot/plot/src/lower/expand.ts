@@ -688,6 +688,9 @@ const resolveColorLegend = (
 /** 单个 legend 在其所在边的预留带宽 / 带高（user units）；无文字度量 → 固定估算，溢出可接受（plot-design §13.1） */
 const LEGEND_BAND_EXTENT = 80;
 
+/** legend 与主体绘图区之间的间距（user units）；在预留带内让出，避免图例紧贴内容 */
+const LEGEND_CONTENT_GAP = 24;
+
 /**
  * 据 legend guide 估算各边 legend 预留带宽（同侧多个 legend 累加）
  * @description 喂 computePlotArea 在对应边收窄 plotArea（决策 ⑩）；估算式占位、不测量。
@@ -714,13 +717,14 @@ const reserveLegendBands = (legendGuides: Array<LegendGuide>, width: number, hei
     const plotBottom = plotArea.y + plotArea.height;
     switch (position) {
       case 'left':
-        return { x: 4, y: plotArea.y + offset, width: plotArea.x - 4, height };
+        // 带右沿留 GAP 到 plot 左边（content 从带左起摆，本就远离 plot；右沿额外让 GAP）
+        return { x: 4, y: plotArea.y + offset, width: Math.max(0, plotArea.x - 4 - LEGEND_CONTENT_GAP), height };
       case 'top':
-        return { x: plotArea.x + offset, y: 4, width: LEGEND_BAND_EXTENT, height: plotArea.y };
+        return { x: plotArea.x + offset, y: 4, width: LEGEND_BAND_EXTENT, height: Math.max(0, plotArea.y - 4 - LEGEND_CONTENT_GAP) };
       case 'bottom':
-        return { x: plotArea.x + offset, y: plotBottom + 4, width: LEGEND_BAND_EXTENT, height: height - plotBottom };
+        return { x: plotArea.x + offset, y: plotBottom + LEGEND_CONTENT_GAP, width: LEGEND_BAND_EXTENT, height: Math.max(0, height - plotBottom - LEGEND_CONTENT_GAP) };
       default:
-        return { x: plotRight + 4, y: plotArea.y + offset, width: width - plotRight, height };
+        return { x: plotRight + LEGEND_CONTENT_GAP, y: plotArea.y + offset, width: Math.max(0, width - plotRight - LEGEND_CONTENT_GAP), height };
     }
   });
 };
