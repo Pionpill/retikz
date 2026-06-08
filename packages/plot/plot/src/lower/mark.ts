@@ -13,8 +13,15 @@ import {
   seriesPathMeta,
   slug,
 } from './provenance';
-import { type SizeOf } from './channel';
+import { type OpacityOf, type SizeOf } from './channel';
 import { inferCategoryDomain } from './scale';
+
+/**
+ * 一个 mark 下沉时消费的通道解析器集合
+ * @description color 适用所有 mark；size / opacity 仅 PointMark（per-datum node 属性）。
+ *   由 expand 据各通道 resolver 构造、整包传入，避免逐个位置参数（易错序）。
+ */
+export type MarkChannels = { colorOf?: ColorOf; sizeOf?: SizeOf; opacityOf?: OpacityOf };
 
 /** 散点 glyph 默认直径（user units，已补偿 circle 外接） */
 const POINT_SIZE = 10;
@@ -121,17 +128,22 @@ const attachMarkLayer = (layer: IRScope, mark: Mark, markProvenance: MarkProvena
 };
 
 /** 散点：每行一个 circle Node（坐标系无关，经 frame.project 投影） */
-const lowerPoint = (mark: Mark, rows: Array<ExternalRow>, frame: CoordinateFrame, colorOf: ColorOf | undefined, sizeOf: SizeOf | undefined, markProvenance: MarkProvenance | undefined): IRChild | null => {
+const lowerPoint = (mark: Mark, rows: Array<ExternalRow>, frame: CoordinateFrame, channels: MarkChannels, markProvenance: MarkProvenance | undefined): IRChild | null => {
+  const { colorOf, sizeOf, opacityOf } = channels;
   const placed: Array<{ color: string | undefined; node: IRNode }> = [];
   for (let transformedIndex = 0; transformedIndex < rows.length; transformedIndex++) {
     const row = rows[transformedIndex];
     // 锚点与 locator 共享同一 datumAnchor（point → frame.project），杜绝两套投影漂移
     const point = datumAnchor(mark, row, frame);
     if (!point) continue;
-    // size 通道：半径（px）→ core circle 的 minimumSize（×√2 补 circle 外接，与 pointStyle 同换算；
-    //   √2 是 core 换算细节、不外泄 IR 用户）。per-datum 落到 node 自身（覆盖子 Scope nodeDefault 的默认尺寸）。
+    // size / opacity 通道：per-datum 落到 node 自身（覆盖子 Scope nodeDefault 的默认值）。
+    //   size：半径（px）→ core circle 的 minimumSize（×√2 补 circle 外接，与 pointStyle 同换算；√2 是 core 换算细节、不外泄 IR 用户）。
+    //   opacity：直接写 core node 整节点不透明度。
+    const base: IRNode = { type: 'node', position: point };
     const radius = sizeOf?.(row);
-    const base: IRNode = radius !== undefined ? { type: 'node', position: point, minimumSize: radius * Math.SQRT2 } : { type: 'node', position: point };
+    if (radius !== undefined) base.minimumSize = radius * Math.SQRT2;
+    const opacity = opacityOf?.(row);
+    if (opacity !== undefined) base.opacity = opacity;
     const node = decorateDatum(base, row, transformedIndex, mark.type, markProvenance, undefined);
     placed.push({ color: colorOf?.(row), node });
   }
@@ -466,9 +478,10 @@ const lowerArea = (mark: Mark, rows: Array<ExternalRow>, frame: CoordinateFrame,
  *   markProvenance 给定（provenance 开）→ 给图层 / series Path / datum Node 绑 id + 来源 meta；否则产物逐字节等价 alpha.4。
  *   datum id 走 markProvenance.registerDatumId（plot 级共享 seen、跨 mark 查重）。
  */
-export const lowerMark = (mark: Mark, rows: Array<ExternalRow>, frame: CoordinateFrame, colorOf?: ColorOf, sizeOf?: SizeOf, markProvenance?: MarkProvenance): IRChild | null => {
+export const lowerMark = (mark: Mark, rows: Array<ExternalRow>, frame: CoordinateFrame, channels: MarkChannels = {}, markProvenance?: MarkProvenance): IRChild | null => {
+  const { colorOf } = channels;
   // point / line / area 坐标系无关，经 frame.project（polar 连续角轴段内采样）投影
-  if (mark.type === 'point') return lowerPoint(mark, rows, frame, colorOf, sizeOf, markProvenance);
+  if (mark.type === 'point') return lowerPoint(mark, rows, frame, channels, markProvenance);
   if (mark.type === 'line') {
     const layer = lowerLine(mark, rows, frame, colorOf, markProvenance);
     return layer === null ? null : attachMarkLayer(layer as IRScope, mark, markProvenance);

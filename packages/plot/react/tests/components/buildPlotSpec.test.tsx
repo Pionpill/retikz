@@ -59,6 +59,11 @@ describe('buildPlotSpec 装配（ADR-08 / ADR-05）', () => {
     expect(spec.marks[0]).toEqual({ type: 'point', encoding: { x: { field: 'lng' }, y: { field: 'lat' }, size: { field: 'pop' } } });
   });
 
+  it('point opacity 字段 → opacity 通道（alpha.7 ADR-04）', () => {
+    const spec = buildPlotSpec(<PointMark x="x" y="y" opacity="density" />, '__plot');
+    expect(spec.marks[0]).toEqual({ type: 'point', encoding: { x: { field: 'x' }, y: { field: 'y' }, opacity: { field: 'density' } } });
+  });
+
   it('line + point 叠加：marks 两项、共享 scales/coordinate', () => {
     const spec = buildPlotSpec(
       <>

@@ -20,6 +20,11 @@ export const collectUserSourceFields = (spec: PlotSpec): Set<string> => {
       addChannelField(fields, mark.encoding.y);
     }
     addChannelField(fields, mark.encoding.color);
+    // PointMark 专属非位置通道（size / opacity）的字段也是用户源字段（参与 strict 校验 + 类型推断）
+    if (mark.type === PlotMark.Point) {
+      addChannelField(fields, mark.encoding.size);
+      addChannelField(fields, mark.encoding.opacity);
+    }
     if (mark.type === PlotMark.Line || mark.type === PlotMark.Area) {
       if (mark.order !== undefined) fields.add(mark.order);
     }

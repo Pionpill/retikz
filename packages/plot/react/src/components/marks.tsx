@@ -28,6 +28,8 @@ export type PointMarkProps = {
   color?: string;
   /** 尺寸字段（数值）：→ size 通道，经 sqrt 半径 scale 映射成 glyph 半径（面积感知正确）；负值报错 */
   size?: string;
+  /** 不透明度字段（连续）：→ opacity 通道，经 clamp linear scale 映射到 [minOpacity, 1]；时间/分类字段报错 */
+  opacity?: string;
   /** 可选 mark 句柄（预留 scope/anchor，解析留 alpha.5） */
   id?: string;
 };

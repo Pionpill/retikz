@@ -43,6 +43,14 @@ import { Plot, PointMark } from '@retikz/plot-react';
 
 <p className="text-sm text-muted-foreground">按 region 给每个点上色。</p>
 
+### 透明度
+
+给 `opacity` 一个连续字段，不透明度按值线性映射到 `[最小值, 1]`（最小值有下界，避免全透明看不见）。叠点密集时低值更淡。
+
+<ComponentPreview name="point-opacity" sourceFiles={['point-scatter.data.ts']} />
+
+<p className="text-sm text-muted-foreground">不透明度编码 pop 字段。</p>
+
 ## API
 
 | 属性 | 类型 | 默认值 | 描述 |
@@ -50,6 +58,7 @@ import { Plot, PointMark } from '@retikz/plot-react';
 | `x` | `string` | — | 绑 x 通道的字段路径（polar 下作角向） |
 | `y` | `string` | — | 绑 y 通道的字段路径（polar 下作径向） |
 | `size` | `string?` | — | 尺寸字段（数值）：经平方根 scale 映射成点半径（面积感知）；负值会报错 |
+| `opacity` | `string?` | — | 不透明度字段（连续）：经 clamp linear scale 映射到 `[最小值, 1]`；时间 / 分类字段会报错 |
 | `color` | `string?` | — | 颜色字段（categorical，自动 ordinal 色 scale）；按 datum 着色。连续 / 时间字段会报错 |
 | `id` | `string?` | — | 可选句柄（预留，暂不解析） |
 

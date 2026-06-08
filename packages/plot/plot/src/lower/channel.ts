@@ -1,6 +1,6 @@
-import { type ExternalRow, type Mark, PlotScale, type PlotSpec, type SqrtScale } from '../ir';
+import { type ExternalRow, type FieldType, type Mark, PlotFieldType, PlotScale, type PlotSpec, type SqrtScale } from '../ir';
 import { isFiniteNumber, resolveFieldPath } from './field';
-import { resolveSqrtScale } from './scale';
+import { resolveLinearScale, resolveSqrtScale } from './scale';
 
 /**
  * 通道 → 视觉量 resolver 的接缝（alpha.7）
@@ -52,6 +52,42 @@ export const makeSizeResolver = (node: PlotSpec, rows: Array<ExternalRow>): ((ma
     return row => {
       const value = resolveFieldPath(row, field);
       return isFiniteNumber(value) && value >= 0 ? scale(value) : undefined;
+    };
+  };
+};
+
+/** opacity 通道连续映射的最小不透明度（range 下界，避免最小值全透明不可见）；契约常量，测试 import 断言 */
+export const OPACITY_MIN = 0.2;
+
+/** 行 → 不透明度（0..1）；undefined = 该行无有效 opacity。由 makeOpacityResolver 据 encoding.opacity 构造 */
+export type OpacityOf = (row: ExternalRow) => number | undefined;
+
+/**
+ * 解析某 mark 的 opacity 编码 → 行→不透明度（0..1）
+ * @description 仅 PointMark。常量 value 直用（schema 已限 [0,1]）；continuous 字段过 clamp linear scale 映射到
+ *   [OPACITY_MIN, 1]——任意值（含负/超域）clamp、不 fail-loud（opacity 无面积语义，与 size 负值 fail-loud 不同）。
+ *   非 continuous 字段（temporal / categorical）fail-loud（opacity 是连续编码）。
+ */
+export const makeOpacityResolver = (node: PlotSpec, rows: Array<ExternalRow>, fieldTypes: Map<string, FieldType>): ((mark: Mark) => OpacityOf | undefined) => {
+  return (mark: Mark): OpacityOf | undefined => {
+    if (mark.type !== 'point') return undefined;
+    const channel = mark.encoding.opacity;
+    if (!channel) return undefined;
+    if (channel.value !== undefined) {
+      const opacity = channel.value;
+      return () => opacity;
+    }
+    if (channel.field === undefined) return undefined;
+    const field = channel.field;
+    const fieldType = fieldTypes.get(field);
+    if (fieldType !== undefined && fieldType !== PlotFieldType.Continuous) {
+      throw new Error(`lowerPlots: opacity channel field "${field}" is ${fieldType}; opacity requires a continuous field`);
+    }
+    const numeric = rows.map(row => resolveFieldPath(row, field)).filter(isFiniteNumber);
+    const scale = resolveLinearScale({ range: [OPACITY_MIN, 1], clamp: true }, numeric, [OPACITY_MIN, 1]);
+    return row => {
+      const value = resolveFieldPath(row, field);
+      return isFiniteNumber(value) ? scale(value) : undefined;
     };
   };
 };

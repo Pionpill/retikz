@@ -43,6 +43,14 @@ Give `color` a categorical field and each dot is tinted by category (per-datum c
 
 <p className="text-sm text-muted-foreground">Each dot colored by region.</p>
 
+### Opacity
+
+Give `opacity` a continuous field and the opacity maps linearly to `[min, 1]` (the lower bound keeps small values visible). Useful for fading low-value points in dense overlap.
+
+<ComponentPreview name="point-opacity" sourceFiles={['point-scatter.data.ts']} />
+
+<p className="text-sm text-muted-foreground">Opacity encodes the pop field.</p>
+
 ## API
 
 | Prop | Type | Default | Description |
@@ -50,6 +58,7 @@ Give `color` a categorical field and each dot is tinted by category (per-datum c
 | `x` | `string` | — | Field path bound to the x channel (angular under polar) |
 | `y` | `string` | — | Field path bound to the y channel (radial under polar) |
 | `size` | `string?` | — | Numeric field: mapped to dot radius via a square-root scale (area-perceptual); negative values error |
+| `opacity` | `string?` | — | Continuous field: mapped to opacity via a clamped linear scale to `[min, 1]`; temporal / categorical fields error |
 | `color` | `string?` | — | Color field (categorical, auto ordinal color scale); colors per datum. Continuous / temporal fields error |
 | `id` | `string?` | — | Optional handle (reserved, not yet resolved) |
 

@@ -62,9 +62,19 @@ export const SizeChannelSchema = z
   .refine(c => (c.field === undefined) !== (c.value === undefined), { message: 'size channel must set exactly one of `field` or `value`' })
   .describe('Size channel (PointMark only): field → glyph radius via a sqrt scale; value → a constant final radius (px) that bypasses the scale');
 
+export const OpacityChannelSchema = z
+  .object({
+    field: z.string().min(1).optional().describe('Data path bound to opacity; continuous, mapped through a clamped linear scale to [minOpacity, 1]'),
+    value: z.number().min(0).max(1).optional().describe('Constant opacity 0..1, bypassing the scale (mutually exclusive with field)'),
+    scale: z.string().min(1).optional().describe('Optional linear-scale name (only meaningful with field); omitted → a default opacity scale is synthesized'),
+  })
+  .refine(c => (c.field === undefined) !== (c.value === undefined), { message: 'opacity channel must set exactly one of `field` or `value`' })
+  .describe('Opacity channel (PointMark only): field → glyph opacity via a clamped linear scale; value → a constant opacity that bypasses the scale');
+
 export const PointEncodingSchema = EncodingSchema.extend({
   size: SizeChannelSchema.optional().describe('Optional size channel: data-driven glyph radius via a sqrt scale, or a constant radius'),
-}).describe('PointMark encoding: positional + color + optional size (size is PointMark-only, not in the shared style encoding)');
+  opacity: OpacityChannelSchema.optional().describe('Optional opacity channel: data-driven glyph opacity via a clamped linear scale, or a constant opacity'),
+}).describe('PointMark encoding: positional + color + optional size / opacity (PointMark-only channels, not in the shared style encoding)');
 
 /** 通道绑定：field（数据驱动）/ value（常量）二选一 */
 export type Channel = z.infer<typeof ChannelSchema>;
@@ -76,5 +86,7 @@ export type StyleEncoding = z.infer<typeof StyleEncodingSchema>;
 export type Encoding = z.infer<typeof EncodingSchema>;
 /** size 通道绑定（PointMark 专属；field 过 sqrt 半径 scale / value 常量半径 px） */
 export type SizeChannel = z.infer<typeof SizeChannelSchema>;
-/** PointMark 专属通道绑定（位置 + 样式 + 可选 size） */
+/** opacity 通道绑定（PointMark 专属；field 过 clamp linear scale / value 常量 0..1） */
+export type OpacityChannel = z.infer<typeof OpacityChannelSchema>;
+/** PointMark 专属通道绑定（位置 + 样式 + 可选 size / opacity） */
 export type PointEncoding = z.infer<typeof PointEncodingSchema>;
