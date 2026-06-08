@@ -375,22 +375,32 @@ export type LegendInput = {
   id?: string;
 };
 
-/** 闭合矩形 Path（左上角 + 宽高），swatch 色块 / 形状框 / ramp 条用（core rectangle step 自闭合） */
-const rectPath = (x: number, y: number, width: number, height: number): IRPath => ({
-  type: 'path',
-  children: [{ type: 'step', kind: 'rectangle', from: [x, y], to: [x + width, y + height] }],
+/**
+ * 矩形 swatch / ramp 条 → core Node（shape rectangle）
+ * @description core PathSchema 要求 children ≥ 2 step，单 rectangle step 的 Path 非法；矩形改用 Node
+ *   （与 bar mark 同款：shape rectangle + minimumWidth/Height + fill），符合「一切可见物是 Node」。
+ *   入参沿用左上角 + 宽高语义，内部换算成 Node 中心点（Node.position 是中心）。
+ */
+const rectNode = (x: number, y: number, width: number, height: number): IRNode => ({
+  type: 'node',
+  position: [x + width / 2, y + height / 2],
+  shape: 'rectangle',
+  minimumWidth: width,
+  minimumHeight: height,
+  padding: 0,
+  strokeWidth: 0,
 });
 
 /**
  * 把已解析的 legend 内容下沉成一个 core scope（swatch / ramp + 标签）
- * @description swatch 形态：每条目一个矩形 Path（填 color；shape / opacity 同位作记号）+ 一个标签 Node，纵 / 横堆叠；
- *   ramp 形态：一条矩形 Path 填 core linearGradient paint server（连续真渐变）+ 沿带刻度标签 Node。
+ * @description swatch 形态：每条目一个矩形 swatch Node（shape rectangle，填 color / opacity；size 条目额外一个圆点 Node）+ 一个标签 Node，纵 / 横堆叠；
+ *   ramp 形态：一个矩形 Node 填 core linearGradient paint server（连续真渐变）+ 沿带刻度标签 Node。
  *   条目几何在传入 band 内从左上角起摆，受无文字度量约束（plot-design §13.1）：超 band 溢出可接受、不做测量自适应。
- *   下沉目标统一是 core Node（标签）+ Path（swatch / ramp 矩形），纯 JSON。
+ *   下沉目标统一是 core Node（标签 / swatch / ramp 矩形 / size 圆点），纯 JSON。
  */
 export const lowerLegend = (input: LegendInput): IRScope => {
   const { fontSize, band, orient } = input;
-  const children: Array<IRPath | IRNode> = [];
+  const children: Array<IRNode> = [];
   // 标题占一行（顶部），条目区从标题下方起
   let cursorY = band.y;
   if (input.title !== undefined) {
@@ -399,18 +409,17 @@ export const lowerLegend = (input: LegendInput): IRScope => {
   }
 
   if (input.form === 'ramp' && input.ramp) {
-    // 连续色带：一条矩形填 linearGradient（vertical → 自上而下、horizontal → 自左而右）
+    // 连续色带：一个矩形 Node 填 linearGradient（vertical → 自上而下、horizontal → 自左而右）
     const vertical = orient === 'vertical';
     const rampLength = LEGEND_RAMP_LENGTH;
     const rampThickness = LEGEND_RAMP_THICKNESS;
     const rampX = band.x;
     const rampY = cursorY;
-    const rect = vertical ? rectPath(rampX, rampY, rampThickness, rampLength) : rectPath(rampX, rampY, rampLength, rampThickness);
+    const ramp = vertical ? rectNode(rampX, rampY, rampThickness, rampLength) : rectNode(rampX, rampY, rampLength, rampThickness);
     // 垂直色带：offset 0 在顶（小值上 / 大值下，与轴一致需翻转）；这里 0 在带起点，stops 直接用
     const angle = vertical ? 90 : 0;
-    rect.fill = { type: 'linearGradient', stops: input.ramp.stops, angle };
-    rect.strokeWidth = 0;
-    children.push(rect);
+    ramp.fill = { type: 'linearGradient', stops: input.ramp.stops, angle };
+    children.push(ramp);
     // 沿带刻度标签
     for (const tick of input.ramp.ticks) {
       const position: [number, number] = vertical
@@ -424,8 +433,7 @@ export const lowerLegend = (input: LegendInput): IRScope => {
     let cursorX = band.x;
     let rowY = cursorY;
     for (const entry of input.entries) {
-      const swatch = rectPath(cursorX, rowY, LEGEND_SWATCH_SIZE, LEGEND_SWATCH_SIZE);
-      swatch.strokeWidth = 0;
+      const swatch = rectNode(cursorX, rowY, LEGEND_SWATCH_SIZE, LEGEND_SWATCH_SIZE);
       if (entry.color !== undefined) swatch.fill = entry.color;
       if (entry.opacity !== undefined) {
         swatch.fill = 'currentColor';
@@ -451,9 +459,8 @@ export const lowerLegend = (input: LegendInput): IRScope => {
   return {
     type: 'scope',
     ...(input.id !== undefined ? { id: input.id } : {}),
-    // 标签字号 + swatch 默认填充；不写 stroke:'none'（避免被测试当成轴层）、不写 nodeDefault.shape（避免被当成 mark 层）
+    // 标签字号；不写 nodeDefault.shape（每个 swatch / glyph Node 自带 shape，避免整层被当成 mark 层）
     nodeDefault: { font: { size: fontSize }, padding: 0 },
-    pathDefault: { stroke: 'none' },
     children,
   };
 };

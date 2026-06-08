@@ -1,4 +1,4 @@
-import type { IRChild, IRNode, IRPath, IRScope } from '@retikz/core';
+import { ChildSchema, type IRChild, type IRNode, type IRScope } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 import { type PlotSpec, PlotSpecSchema } from '../../src/ir';
 import { type LowerPlotsOptions, lowerPlots } from '../../src/lower/expand';
@@ -24,7 +24,6 @@ const expandOf = (spec: PlotSpec, datasets: Datasets, options: LowerPlotsOptions
 
 /** 子节点谓词 */
 const isScope = (child: IRChild): child is IRScope => child.type === 'scope';
-const isPath = (child: IRChild): child is IRPath => child.type === 'path';
 const isNode = (child: IRChild): child is IRNode => child.type === 'node';
 
 /** 整棵子树里所有 scope（深度优先；含外层自身的直接 / 间接子层） */
@@ -43,26 +42,20 @@ const allScopes = (root: IRScope): Array<IRScope> => {
 };
 
 /**
- * 启发式辨认 legend 层：legend scope 不是 mark 层（无 nodeDefault.shape / pathDefault.strokeWidth），
- * 也不是 axis / grid 层（带成片刻度文字沿一条轴线）；落在某 position 预留带。
- * 实现期 legend 层建议带稳定标记（如 id 前缀或 meta.role='legend'）——测试先用「含 swatch（小矩形 path）+ 标签 Node」的结构特征找。
+ * 辨认 legend 内的 swatch / glyph Node（色块 / ramp 条 / size 圆点 / shape glyph）与标签 Node。
+ * @description legend 矩形改用 core Node（shape rectangle，修 PathSchema.min(2) 违规），不再是 Path。
+ *   swatch Node 自带 shape 且无 text；label Node 有 text。
  */
-const swatchPathsOf = (scope: IRScope): Array<IRPath> => scope.children.filter(isPath);
-const labelsOf = (scope: IRScope): Array<IRNode> => scope.children.filter(isNode);
+const swatchNodesOf = (scope: IRScope): Array<IRNode> => scope.children.filter(isNode).filter(node => node.text === undefined);
+const labelsOf = (scope: IRScope): Array<IRNode> => scope.children.filter(isNode).filter(node => node.text !== undefined);
 
-/** 找 legend 层：约定 id 以 'legend' 开头（实现期 lowerLegend 给）；退化用结构特征兜底 */
+/** 找 legend 层：约定 id 以 'legend' 开头（lowerLegend 给稳定 id）；退化用结构特征兜底（含 swatch Node + label Node） */
 const findLegendLayer = (outer: IRScope): IRScope | undefined => {
   const scopes = allScopes(outer);
   const byId = scopes.find(scope => typeof scope.id === 'string' && scope.id.startsWith('legend'));
   if (byId) return byId;
-  // 兜底：既非 mark 层（无 shape / strokeWidth）又非纯轴线层（这里弱判：含 path 且含多个标签 Node）
-  return scopes.find(
-    scope =>
-      scope.nodeDefault?.shape === undefined &&
-      scope.pathDefault?.strokeWidth === undefined &&
-      swatchPathsOf(scope).length > 0 &&
-      labelsOf(scope).length > 0,
-  );
+  // 兜底：非 mark 层（无 nodeDefault.shape）且含 swatch Node + 标签 Node
+  return scopes.find(scope => scope.nodeDefault?.shape === undefined && swatchNodesOf(scope).length > 0 && labelsOf(scope).length > 0);
 };
 
 /** mark 层（point/sector 有 nodeDefault.shape；line/area 有 pathDefault.strokeWidth） */
@@ -173,7 +166,7 @@ describe('lowerPlots legend — happy path（ADR-03）', () => {
     const labels = labelsOf(legend as IRScope);
     expect(labels).toHaveLength(3);
     expect(labels.map(n => n.text).sort()).toEqual(['A', 'B', 'C']);
-    expect(swatchPathsOf(legend as IRScope).length).toBeGreaterThanOrEqual(3);
+    expect(swatchNodesOf(legend as IRScope).length).toBeGreaterThanOrEqual(3);
   });
 
   // 连续 ramp：色带 + nice 刻度
@@ -235,7 +228,7 @@ describe('lowerPlots legend — 边界（ADR-03）', () => {
     const legend = findLegendLayer(outer);
     expect(legend).toBeDefined();
     // 分箱 → 多个区间 swatch + 区间标签
-    expect(swatchPathsOf(legend as IRScope).length).toBeGreaterThanOrEqual(1);
+    expect(swatchNodesOf(legend as IRScope).length).toBeGreaterThanOrEqual(1);
     expect(labelsOf(legend as IRScope).length).toBeGreaterThanOrEqual(1);
   });
 
@@ -360,8 +353,10 @@ describe('lowerPlots legend — 交互（ADR-03 修 P1 ⑦ / P2 ⑩ / P1 ⑥）'
 
     const markXMax = (outer: IRScope): number => {
       const mark = findMarkLayer(outer) as IRScope;
-      // point mark 的 Node position x
-      const xs = labelsOf(mark)
+      // point mark 的 Node position x（color 编码时 Node 落在嵌套子 scope，故递归收集所有 Node）
+      const collectNodes = (scope: IRScope): Array<IRNode> =>
+        scope.children.flatMap(child => (isScope(child) ? collectNodes(child) : isNode(child) ? [child] : []));
+      const xs = collectNodes(mark)
         .map(n => n.position)
         .filter((p): p is [number, number] => Array.isArray(p))
         .map(p => p[0]);
@@ -377,9 +372,64 @@ describe('lowerPlots legend — 交互（ADR-03 修 P1 ⑦ / P2 ⑩ / P1 ⑥）'
     const outer = expandOf(sizeLegendSpec(), { d: CONTINUOUS_ROWS });
     const legend = findLegendLayer(outer);
     expect(legend).toBeDefined();
-    // 梯度符号用 path / node 表示；这里弱断言：legend 至少有 swatch 几何与 mark 同帧（结构存在）
-    expect(swatchPathsOf(legend as IRScope).length + labelsOf(legend as IRScope).length).toBeGreaterThan(0);
+    // 梯度符号用 Node 表示；这里弱断言：legend 至少有 swatch 几何与 mark 同帧（结构存在）
+    expect(swatchNodesOf(legend as IRScope).length + labelsOf(legend as IRScope).length).toBeGreaterThan(0);
     // mark 层存在（resolver 同时驱动实绘 size 与 legend descriptor）
     expect(findMarkLayer(outer)).toBeDefined();
+  });
+});
+
+/** quantile 分箱 color legend spec（ChildSchema 回归复用） */
+const quantileColorLegendSpec = (): PlotSpec =>
+  PlotSpecSchema.parse({
+    namespace: 'plot',
+    type: 'plot',
+    data: {
+      reference: 'd',
+      model: [
+        { name: 'lon', type: 'continuous' },
+        { name: 'lat', type: 'continuous' },
+        { name: 'density', type: 'continuous' },
+      ],
+    },
+    scales: [
+      { type: 'linear', name: 'x' },
+      { type: 'linear', name: 'y' },
+      { type: 'quantile', name: 'densColor' },
+    ],
+    coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
+    marks: [{ type: 'point', encoding: { x: { field: 'lon' }, y: { field: 'lat' }, color: { field: 'density', scale: 'densColor' } } }],
+    guides: [{ type: 'legend', channel: 'color', scale: 'densColor' }],
+  });
+
+describe('lowerPlots legend — core schema 合法性回归（修 PathSchema.min(2) 违规）', () => {
+  // legend 下沉产物（整个 legend scope）必须通过 core ChildSchema 校验——
+  //   早期 swatch 用单 step rectangle Path 违反 PathSchema.children.min(2)，schema 校验会拒绝。
+  //   改用 core Node（shape rectangle）后，整个 legend scope 应 100% 合法可序列化。
+  const assertLegendSchemaValid = (outer: IRScope): void => {
+    const legend = findLegendLayer(outer);
+    expect(legend).toBeDefined();
+    const result = ChildSchema.safeParse(legend);
+    expect(result.success).toBe(true);
+  };
+
+  it('ordinal_swatch_legend_passes_child_schema', () => {
+    assertLegendSchemaValid(expandOf(ordinalColorLegendSpec(), { d: ORDINAL_ROWS }));
+  });
+
+  it('single_category_swatch_legend_passes_child_schema', () => {
+    assertLegendSchemaValid(expandOf(ordinalColorLegendSpec(), { d: SINGLE_CATEGORY_ROWS }));
+  });
+
+  it('sequential_ramp_legend_passes_child_schema', () => {
+    assertLegendSchemaValid(expandOf(sequentialColorLegendSpec(), { d: CONTINUOUS_ROWS }));
+  });
+
+  it('quantile_binned_legend_passes_child_schema', () => {
+    assertLegendSchemaValid(expandOf(quantileColorLegendSpec(), { d: QUANTILE_ROWS }));
+  });
+
+  it('size_graduated_legend_passes_child_schema', () => {
+    assertLegendSchemaValid(expandOf(sizeLegendSpec(), { d: CONTINUOUS_ROWS }));
   });
 });
