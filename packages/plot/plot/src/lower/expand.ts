@@ -3,7 +3,7 @@ import type { ZodType } from 'zod';
 import { type AxisGuide, type Channel, type ColorScheme, type ExternalDatasets, type ExternalRow, type FieldType, type Guide, type LegendChannelType, type LegendGuide, type Mark, type OrdinalScale, PlotCoordinate, PlotFieldType, PlotGuide, PlotMark, PlotScale, type PlotSpec, PlotSpecSchema, type Scale } from '../ir';
 import { channelValue, isFiniteNumber, resolveFieldPath } from './field';
 import { type GuideContext, type LegendEntry, type LegendInput, lowerGuide, lowerLegend } from './guide';
-import { DEFAULT_FONT_SIZE, type Margins, type Rect, computePlotArea, computePolarFrame } from './layout';
+import { DEFAULT_FONT_SIZE, type LegendReserve, type Margins, type Rect, computePlotArea, computePolarFrame } from './layout';
 import { type ColorOf, lowerMark } from './mark';
 import { type ChannelResolution, type ScaleDescriptor, makeOpacityResolver, makeShapeResolver, makeSizeResolver } from './channel';
 import { type CoordinateFrame, createCartesianFrame, createPolarFrame } from './project';
@@ -96,6 +96,8 @@ export type ResolvedFrame = {
   gridLayers: Array<IRScope>;
   /** 轴层（压顶；每根 axis guide 产出） */
   axisLayers: Array<IRScope>;
+  /** 绘图区矩形（已扣 axis margin + legend 预留带）；legend band 据此摆进预留 gutter（ADR-03 占位） */
+  plotArea: Rect;
 };
 
 /** resolveFrame 入参：投影 + guide 下沉所需的全部上下文（pure，无副作用，ADR-02 locator 复用同一投影） */
@@ -251,6 +253,10 @@ export const resolveFrame = (params: ResolveFrameParams): ResolvedFrame => {
   let frame: CoordinateFrame;
   const gridLayers: Array<IRScope> = [];
   const axisLayers: Array<IRScope> = [];
+  // legend 预留：按 position 在对应边让出带宽，plotArea 据此收窄（决策 ⑩）
+  const legendReserve = legendReserveOf((node.guides ?? []).filter(isLegendGuide));
+  // 默认 plotArea = 全画布（polar 用整圆 bbox、不走 plotArea 收窄，legend 占位退化为不收窄）
+  let plotArea: Rect = { x: 0, y: 0, width, height };
 
   if (coordinate.type === PlotCoordinate.Polar2D) {
     // 角向值 ← x、径向值 ← y（坐标系把 x/y 重解释为 angle/radius，正中 (i) 投影整形）
@@ -340,13 +346,14 @@ export const resolveFrame = (params: ResolveFrameParams): ResolvedFrame => {
     const xTicks: TickSet | undefined = xAxis ? xScale.ticks(xAxis.tickCount) : undefined;
     const yTicks: TickSet | undefined = yAxis ? yScale.ticks(yAxis.tickCount) : undefined;
 
-    // 由整图尺寸 + axis 占位缩出 plot area（无 axis → margin 全 0 → plot area = 整图，向后兼容）
-    const { plotArea } = computePlotArea(
+    // 由整图尺寸 + axis 占位 + legend 预留缩出 plot area（无 axis 且无 legend → margin 全 0 → plot area = 整图，向后兼容）
+    const computed = computePlotArea(
       width,
       height,
-      { hasXAxis: !!xAxis, hasYAxis: !!yAxis, xLabels: xTicks?.labels ?? [], yLabels: yTicks?.labels ?? [] },
+      { hasXAxis: !!xAxis, hasYAxis: !!yAxis, xLabels: xTicks?.labels ?? [], yLabels: yTicks?.labels ?? [], legendReserve },
       { fontSize, margin },
     );
+    plotArea = computed.plotArea;
 
     // range 收敛到 plot area（y 屏幕向下，故倒置）；显式 range 的 scale 不覆盖——尊重用户手设
     // 仅连续 scale 可带显式 range（band / point 的 range 始终派生；time 的 range 仍派生）
@@ -384,7 +391,7 @@ export const resolveFrame = (params: ResolveFrameParams): ResolvedFrame => {
     }
   }
 
-  return { frame, gridLayers, axisLayers };
+  return { frame, gridLayers, axisLayers, plotArea };
 };
 
 /** 解析某 mark 的 color 编码 → 行→颜色串：常量 value 直用；字段过 ordinal scale（显式引用或自动合成默认配色） */
@@ -664,30 +671,42 @@ const resolveColorLegend = (
   return { ...baseInput, form: 'swatch', title, entries };
 };
 
-/** 默认 legend 带宽（user units）：左右带宽 / 上下带高的粗估，Step 4 据内容细化 */
-const DEFAULT_LEGEND_BAND_EXTENT = 80;
+/** 单个 legend 在其所在边的预留带宽 / 带高（user units）；无文字度量 → 固定估算，溢出可接受（plot-design §13.1） */
+const LEGEND_BAND_EXTENT = 80;
 
 /**
- * 为每个 legend 计算预留带矩形（同侧按声明序堆叠，跨 position 各占各边）
- * @description Step 3 naive 版：右 / 左带贴边，上 / 下带贴边；同侧多 legend 纵向 / 横向偏移堆叠。
- *   plotArea 收窄（占位）在 Step 4 接 layout，此处仅给 legend 内容一个落点带。
+ * 据 legend guide 估算各边 legend 预留带宽（同侧多个 legend 累加）
+ * @description 喂 computePlotArea 在对应边收窄 plotArea（决策 ⑩）；估算式占位、不测量。
  */
-const reserveLegendBands = (legendGuides: Array<LegendGuide>, width: number, height: number): Array<Rect> => {
-  const perSideCount = new Map<string, number>();
+const legendReserveOf = (legendGuides: Array<LegendGuide>): LegendReserve => {
+  const reserve: { right: number; left: number; top: number; bottom: number } = { right: 0, left: 0, top: 0, bottom: 0 };
+  for (const guide of legendGuides) {
+    reserve[guide.position ?? 'right'] += LEGEND_BAND_EXTENT;
+  }
+  return reserve;
+};
+
+/**
+ * 为每个 legend 计算预留带矩形（落在 plotArea 旁的预留 gutter 内；同侧按声明序堆叠）
+ * @description gutter 由 computePlotArea 在对应边按 legendReserveOf 让出；此处把每个 legend 摆进其所在边的带。
+ */
+const reserveLegendBands = (legendGuides: Array<LegendGuide>, width: number, height: number, plotArea: Rect): Array<Rect> => {
+  const perSideOffset = new Map<string, number>();
   return legendGuides.map((guide): Rect => {
     const position = guide.position ?? 'right';
-    const indexOnSide = perSideCount.get(position) ?? 0;
-    perSideCount.set(position, indexOnSide + 1);
-    const extent = DEFAULT_LEGEND_BAND_EXTENT;
+    const offset = perSideOffset.get(position) ?? 0;
+    perSideOffset.set(position, offset + LEGEND_BAND_EXTENT);
+    const plotRight = plotArea.x + plotArea.width;
+    const plotBottom = plotArea.y + plotArea.height;
     switch (position) {
       case 'left':
-        return { x: 4, y: 10 + indexOnSide * extent, width: extent, height };
+        return { x: 4, y: plotArea.y + offset, width: plotArea.x - 4, height };
       case 'top':
-        return { x: 10 + indexOnSide * extent, y: 4, width: extent, height: extent };
+        return { x: plotArea.x + offset, y: 4, width: LEGEND_BAND_EXTENT, height: plotArea.y };
       case 'bottom':
-        return { x: 10 + indexOnSide * extent, y: height - extent, width: extent, height: extent };
+        return { x: plotArea.x + offset, y: plotBottom + 4, width: LEGEND_BAND_EXTENT, height: height - plotBottom };
       default:
-        return { x: width - extent, y: 10 + indexOnSide * extent, width: extent, height };
+        return { x: plotRight + 4, y: plotArea.y + offset, width: width - plotRight, height };
     }
   });
 };
@@ -861,7 +880,7 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
 
   const rows = applyTransforms(normalized, node.transform);
 
-  const { frame, gridLayers, axisLayers } = resolveFrame({
+  const { frame, gridLayers, axisLayers, plotArea } = resolveFrame({
     node,
     rows,
     fieldTypes,
@@ -898,7 +917,7 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
   const legendLayers: Array<IRScope> = [];
   if (legendGuides.length > 0) {
     const channelDescriptors = collectChannelDescriptors(node, resolveSize, resolveOpacity, resolveShape);
-    const bands = reserveLegendBands(legendGuides, width, height);
+    const bands = reserveLegendBands(legendGuides, width, height, plotArea);
     legendLayers.push(...buildLegendLayers(node, rows, fieldTypes, channelDescriptors, legendGuides, options.fontSize ?? DEFAULT_FONT_SIZE, bands));
   }
 
