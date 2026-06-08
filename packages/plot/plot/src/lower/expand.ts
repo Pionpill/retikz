@@ -597,7 +597,7 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
   });
 
   const resolveColor = makeColorResolver(node, rows, fieldTypes);
-  const resolveSize = makeSizeResolver(node, rows);
+  const resolveSize = makeSizeResolver(node, rows, fieldTypes);
   const resolveOpacity = makeOpacityResolver(node, rows, fieldTypes);
   const resolveShape = makeShapeResolver(node, rows, fieldTypes);
 
@@ -612,7 +612,7 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
   // provenance 开 → 传 markProvenance（plotId / markIndex / datum 开关 + 共享 registerDatumId），各层 / datum 绑 id + 来源 meta
   const markLayers: Array<IRChild> = node.marks
     .map((mark, markIndex) =>
-      lowerMark(mark, rows, frame, { colorOf: resolveColor(mark), sizeOf: resolveSize(mark), opacityOf: resolveOpacity(mark), shapeOf: resolveShape(mark) }, provenance ? { context: provenance, markIndex, registerDatumId } : undefined),
+      lowerMark(mark, rows, frame, { colorOf: resolveColor(mark), sizeOf: resolveSize(mark)?.of, opacityOf: resolveOpacity(mark)?.of, shapeOf: resolveShape(mark)?.of }, provenance ? { context: provenance, markIndex, registerDatumId } : undefined),
     )
     .filter((layer): layer is IRChild => layer !== null);
 
