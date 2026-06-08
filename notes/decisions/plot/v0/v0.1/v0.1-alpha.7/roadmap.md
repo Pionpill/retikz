@@ -46,6 +46,7 @@
 - **categorical → 离散 size 档**（D1：本轮只做 continuous→size）→ 顺延 / 需求驱动
 - **symlog**（log 跨零/负值兜底）+ **L2 显式正 baseline 的 log 柱/面积** → 需求驱动
 - **line strokeWidth / bar width / area 的 size 语义** → 顺延（① S1 范围外）
+- **自定义通道注册表（`ChannelDefinition` 对外开放）** → 另立里程碑（plot-design §11「先内置，后开放自定义」）；本轮通道集为内置 curated，ADR-02 的 resolver 仅留注册表接缝，用户要任意视觉控制走 Kernel（`<Node>` / `<Path>`）
 - 更多 mark / 坐标系 / transform → alpha.9+
 
 ## core 依赖
@@ -78,9 +79,9 @@
 
 | ADR | 主题 | Level | 依赖 | 状态 |
 |---|---|---|---|---|
-| 01 | 连续 scale 家族 log / pow / sqrt（L1：仅 point/line，bar/area fail-loud；公开 scale 家族**不含** size/radius type） | red | — | 待起草 |
-| 02 | 通道→scale 通用抽象 + size 通道（仅 PointMark，radius scale，③边界契约；size 默认派生到 01 的 sqrt；不进全局 StyleEncoding、`value` 限 number） | red | ADR-01 | 待起草 |
-| 03 | color 真通道收口 + series 一等化（④B/C 规则 + categorical fail-loud + continuous/temporal color fail-loud + 修单系列静默丢弃 + 隐式拆等价性） | red | ADR-02 | 待起草 |
+| [01](./01-continuous-scale-family.md) | 连续 scale 家族 log / pow / sqrt（L1：仅 point/line，bar/area fail-loud；公开 scale 家族**不含** size/radius type） | red | — | Proposed |
+| [02](./02-channel-scale-resolver-size.md) | 通道→scale 通用抽象 + size 通道（仅 PointMark，radius scale，③边界契约；size 默认派生到 01 的 sqrt；不进全局 StyleEncoding、`value` 限 number） | red | ADR-01 | Proposed |
+| [03](./03-color-series.md) | color 真通道收口 + series 一等化（④B/C 规则 + categorical fail-loud + continuous/temporal color fail-loud + 修单系列静默丢弃 + 隐式拆等价性） | red | ADR-02 | Proposed |
 
 ## 贯穿原则落点
 
