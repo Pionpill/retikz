@@ -1,6 +1,6 @@
 # ADR-06：声明式 `FieldDef.format`——可序列化的字段值解析词表，让 `resolveField` 退为纯逃生舱
 
-- 状态：Proposed
+- 状态：Accepted
 - 决策日期：2026-06-07
 - 关联：[plot v0.1-alpha.6 roadmap](./roadmap.md) · 本里程碑 [ADR-02 可移植契约](./02-data-portability.md)（coercion）/ [ADR-04 resolveField](./04-field-resolver.md)（函数逃生舱）/ [ADR-05 type 可选](./05-optional-field-type.md) · [plot-design.md §3.1 数据模型](../../../../../architecture/plot-design.md) · [core-design.md §7 AI 友好](../../../../../architecture/core-design.md)
 

@@ -1,6 +1,6 @@
 # ADR-07：`FieldDef.order`——分类轴顺序 + 有序性参数（不复活 ordinal 类型，有序由参数判定）
 
-- 状态：Proposed
+- 状态：Accepted
 - 决策日期：2026-06-07
 - 关联：[plot v0.1-alpha.6 roadmap](./roadmap.md) · 本里程碑 [ADR-01 数据模型](./01-data-model.md) / [ADR-03 type-driven scale](./03-type-driven-scale.md) · 前序：字段类型简化为 3 类（合并掉 ordinal，commit `30f2cce1`）· [plot-design.md §3.1 数据模型 / §3.5 scale](../../../../../architecture/plot-design.md)
 

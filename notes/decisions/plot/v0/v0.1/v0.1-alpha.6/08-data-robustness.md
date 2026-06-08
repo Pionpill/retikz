@@ -1,6 +1,6 @@
 # ADR-08：数据健壮性——统一归一化（消两模式割裂）+ 非法/缺失值策略 + bigint ingest
 
-- 状态：Proposed
+- 状态：Accepted
 - 决策日期：2026-06-07
 - 关联：[plot v0.1-alpha.6 roadmap](./roadmap.md) · 本里程碑 [ADR-01 数据模型](./01-data-model.md) / [ADR-02 可移植契约](./02-data-portability.md)（coercion / validateData）/ [ADR-04 resolveField](./04-field-resolver.md) · [core-design.md §4.4 IR 可序列化](../../../../../architecture/core-design.md)
 

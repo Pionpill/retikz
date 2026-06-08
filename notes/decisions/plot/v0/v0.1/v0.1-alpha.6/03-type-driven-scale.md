@@ -1,6 +1,6 @@
 # ADR-03：type-driven scale 默认选型 + guide 格式化
 
-- 状态：Proposed
+- 状态：Accepted
 - 决策日期：2026-06-07
 - 关联：[plot v0.1-alpha.6 待办](./roadmap.md) · [plot v0 roadmap 阶段二](../../roadmap.md) · [plot-design §3.4 Scale / §3.5 Coordinate / §3.9 Guide](../../../../../architecture/plot-design.md) · 依赖：[ADR-01 数据模型类型层](./01-data-model.md) · 关联：[ADR-02 可移植契约](./02-data-portability.md)
 

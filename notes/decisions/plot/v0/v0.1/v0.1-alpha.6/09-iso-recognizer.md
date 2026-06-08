@@ -1,6 +1,6 @@
 # ADR-09：扩宽 temporal 推断识别器——认空格分隔的带时区 ISO datetime（SQL 时间戳），归一化空格→T
 
-- 状态：Proposed
+- 状态：Accepted
 - 决策日期：2026-06-07
 - 关联：[plot v0.1-alpha.6 roadmap](./roadmap.md) · 本里程碑 [ADR-01 数据模型](./01-data-model.md)（temporal 推断严格 ISO 的原始决策）/ [ADR-06 声明式 format](./06-declarative-format.md)（歧义格式走声明）· [core-design.md §7 AI 友好](../../../../../architecture/core-design.md)
 

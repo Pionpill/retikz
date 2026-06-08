@@ -52,31 +52,31 @@
 
 | ADR | 主题 | Level | 依赖 | 状态 |
 |---|---|---|---|---|
-| [01](./01-data-model.md) | 数据模型类型层（字段类型集补全 + 缺省推断 + encoding 字段引用 / 自洽校验） | red | — | Proposed |
-| [02](./02-data-portability.md) | 数据模型可移植契约（逻辑字段 + 绑定期 `fieldMaps` 映射 + 按 PlotFieldType 值强制；解决换源三需求） | red | ADR-01 | Proposed |
-| [03](./03-type-driven-scale.md) | type-driven scale 默认选型 + guide 格式化（按字段类型派生 scale，channel 可省 scale 声明；类型↔scale fail-loud） | red | ADR-01 | Proposed |
-| [04](./04-field-resolver.md) | `resolveField` 可插拔字段解析（运行时函数覆盖类型 + 自定义 parse，不进 IR） | red | ADR-01/02 | Proposed（已实现） |
-| [05](./05-optional-field-type.md) | `FieldDef.type` 可选（部分声明 model，name-only 字段推断） | red | ADR-01 | Proposed（已实现） |
-| [06](./06-declarative-format.md) | 声明式 `FieldDef.format` 解析词表（可序列化，`resolveField` 退为逃生舱） | red | ADR-02/04 | Proposed（已实现） |
-| [07](./07-category-order.md) | `FieldDef.order` 分类顺序 + 有序性参数（不复活 ordinal 类型） | red | ADR-01/03 | Proposed（已实现） |
-| [08](./08-data-robustness.md) | 数据健壮性（恒归一化消两模式割裂 + `invalid` 策略 + bigint ingest） | red | ADR-02/04 | Proposed（已实现） |
-| [09](./09-iso-recognizer.md) | 扩宽 temporal 推断识别器（认空格分隔带时区 ISO / SQL 时间戳，仍拒歧义；不引全局推断配置） | 黄 | ADR-01 | Proposed（已实现） |
+| [01](./01-data-model.md) | 数据模型类型层（字段类型集补全 + 缺省推断 + encoding 字段引用 / 自洽校验） | red | — | Accepted |
+| [02](./02-data-portability.md) | 数据模型可移植契约（逻辑字段 + 绑定期 `fieldMaps` 映射 + 按 PlotFieldType 值强制；解决换源三需求） | red | ADR-01 | Accepted |
+| [03](./03-type-driven-scale.md) | type-driven scale 默认选型 + guide 格式化（按字段类型派生 scale，channel 可省 scale 声明；类型↔scale fail-loud） | red | ADR-01 | Accepted |
+| [04](./04-field-resolver.md) | `resolveField` 可插拔字段解析（运行时函数覆盖类型 + 自定义 parse，不进 IR） | red | ADR-01/02 | Accepted |
+| [05](./05-optional-field-type.md) | `FieldDef.type` 可选（部分声明 model，name-only 字段推断） | red | ADR-01 | Accepted |
+| [06](./06-declarative-format.md) | 声明式 `FieldDef.format` 解析词表（可序列化，`resolveField` 退为逃生舱） | red | ADR-02/04 | Accepted |
+| [07](./07-category-order.md) | `FieldDef.order` 分类顺序 + 有序性参数（不复活 ordinal 类型） | red | ADR-01/03 | Accepted |
+| [08](./08-data-robustness.md) | 数据健壮性（恒归一化消两模式割裂 + `invalid` 策略 + bigint ingest） | red | ADR-02/04 | Accepted |
+| [09](./09-iso-recognizer.md) | 扩宽 temporal 推断识别器（认空格分隔带时区 ISO / SQL 时间戳，仍拒歧义；不引全局推断配置） | 黄 | ADR-01 | Accepted |
 
 > **两轮**：第一轮 ADR-01~03（数据模型 + 可移植契约 + type-driven scale，已实现）；第二轮 ADR-04~08（数据层精化：解析逃生舱 + type 可选 + 声明式 format + 分类顺序 + 健壮性）。
-> ⚠️ **字段类型已简化**（commit `30f2cce1`）：`continuous / categorical / temporal` 三类——删 `proportion`、合并 `nominal/ordinal → categorical`。下方第一轮决策里的 `proportion` / `nominal` / `ordinal` 表述**以此为准已被取代**（ADR-05 改 type 可选、ADR-07 用 `order` 参数补回有序性）；本段待整段重写，当前以各 ADR 定稿 + 该简化为准。
+> ⚠️ **字段类型最终为 3 类**（commit `30f2cce1`）：`continuous / categorical / temporal`——第一轮原拟的 `proportion` 并入 `continuous`、`nominal/ordinal` 合并为 `categorical`；有序性改由 `FieldDef.order` 参数补回（ADR-07）、`FieldDef.type` 改可选（ADR-05）。下方第一轮决策已按此校准（措辞统一到 3 类词表）。
 
-## 头号设计决策（待多 LLM 评审 / 人工拍板）
+## 头号设计决策（已拍板）
 
-> 多 LLM 评审（含第二轮决策建议）已于 2026-06-07 **全部拍板，并入各 ADR「决策」段**，无悬置项：
+> 多 LLM 评审（含第二轮决策建议）已于 2026-06-07 **全部拍板，并入各 ADR「决策」段**，无悬置项。以下第一轮决策措辞已与最终 3 类字段类型对齐：
 
-- **`interval` 不作 FieldType**：区间是双字段/双通道语义，本轮只加 `proportion`，区间留 alpha.9+（xStart/xEnd）。（ADR-01）
-- **model strict / infer 二选一**：声明 model = strict（用户源字段必须列出）；无 model = 全推断；无混合。（ADR-01）
+- **`interval` 不作 FieldType**：区间是双字段/双通道语义，不进字段类型集，留 alpha.9+（xStart/xEnd）。（ADR-01）
+- **model strict / infer 二选一**：声明 model = strict（用户源字段必须列出）；无 model = 全推断；无混合。（字段 `type` 后由 ADR-05 放宽为可选，name 集仍 strict。）（ADR-01）
 - **用户源字段集**：encoding `field` + mark `order`/`series` + transform 输入（`Sort.field`/`Stack.x/y/groupBy`）；排除派生输出（`startField`/`endField`、`y0Field`/`y1Field`）。（ADR-01）
-- **temporal 推断**：`Date` 实例 + 严格 ISO（`YYYY-MM-DD` / 带 Z·offset datetime），拒 `YYYY/MM/DD`·`'5'`·模糊 datetime；抽样双阈值（≤1000 行/≤100 标量）；nominal vs ordinal 一律 nominal。（ADR-01）
+- **temporal 推断**：`Date` 实例 + 严格 ISO（`YYYY-MM-DD` / 带 Z·offset datetime），拒 `YYYY/MM/DD`·`'5'`·模糊 datetime；抽样双阈值（≤1000 行/≤100 标量）；其余标量/字符串归 categorical（有序性走 ADR-07 `order`，不靠类型）。（ADR-01）
 - **fieldMaps**：放 `LowerPlotsOptions.fieldMaps`（不进 datasets）；**需 model**；值只允许路径串（无函数/展开/计算）；逻辑名∈model、ref∈datasets，否则 fail-loud。（ADR-02）
-- **coercion**：ingest 一次性归一化成 canonical rows（transform 前）；quantitative 收严格数字串（拒空串/Infinity/NaN/hex/带单位）；proportion 越界原样；扩展 `toTimestamp` 收 Date + 严格 ISO。（ADR-02）
+- **coercion**：ingest 一次性归一化成 canonical rows（transform 前）；continuous 收严格数字串（拒空串/Infinity/NaN/hex/带单位）；扩展 `toTimestamp` 收 Date + 严格 ISO。（ADR-02）
 - **数据一致性校验**：`validateData?: boolean | { sampleRows?: number }`，默认关、开启抽样 fail-loud、**不 warn**。（ADR-02）
-- **type-driven scale**：显式 scale 永远优先，缺省按 FieldType 派生（quantitative→linear、temporal→time、nominal/ordinal→band(位置)/ordinal(色)、proportion→linear[0,1]）；类型↔scale 不兼容 **fail-loud 不强转**；guide 按类型选 tick formatter。（ADR-03）
+- **type-driven scale**：显式 scale 永远优先，缺省按 FieldType 派生（continuous→linear、temporal→time、categorical→band(位置)/ordinal(色)）；类型↔scale 不兼容 **fail-loud 不强转**；guide 按类型选 tick formatter。（ADR-03）
 
 ### 第二轮决策（ADR-04~08，数据层精化）
 

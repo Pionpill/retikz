@@ -1,6 +1,6 @@
 # ADR-05：`FieldDef.type` 改可选——部分声明 model，name-only 字段自动推断（解耦「字段存在」与「测量类型」）
 
-- 状态：Proposed
+- 状态：Accepted
 - 决策日期：2026-06-07
 - 关联：[plot v0.1-alpha.6 roadmap](./roadmap.md) · 本里程碑 [ADR-01 数据模型](./01-data-model.md)（strict / infer 二选一，本 ADR 放宽成部分声明）· [ADR-04 resolveField](./04-field-resolver.md)（优先级链衔接）· [plot-design.md §3.1 数据模型](../../../../../architecture/plot-design.md)
 

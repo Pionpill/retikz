@@ -1,6 +1,6 @@
 # ADR-02：数据模型作为可移植契约——逻辑字段 + 绑定期 fieldMaps 映射 + 按 PlotFieldType 值强制
 
-- 状态：Proposed
+- 状态：Accepted
 - 决策日期：2026-06-07
 - 关联：[plot v0.1-alpha.6 待办](./roadmap.md) · [plot v0 roadmap 阶段二](../../roadmap.md) · [plot-design §3.1 Data / §8.2 数据绑定](../../../../../architecture/plot-design.md) · 依赖：[ADR-01 数据模型类型层](./01-data-model.md) · 前身：[alpha.1 ADR-02 DataRef/DataModel](../v0.1-alpha.1/02-plot-data.md)
 

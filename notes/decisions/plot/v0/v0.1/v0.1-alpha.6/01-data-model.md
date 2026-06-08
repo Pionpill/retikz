@@ -1,6 +1,6 @@
 # ADR-01：数据模型类型层——字段类型集补全 + 缺省推断 + encoding 字段引用/类型校验
 
-- 状态：Proposed
+- 状态：Accepted
 - 决策日期：2026-06-07
 - 关联：[plot v0.1-alpha.6 待办](./roadmap.md) · [plot v0 roadmap 阶段二](../../roadmap.md) · [plot-design §3.1 Data / §3.2 Dimension / §3.6 Encoding](../../../../../architecture/plot-design.md) · 前身：[alpha.1 ADR-02 DataRef/DataModel](../v0.1-alpha.1/02-plot-data.md) · 下游：ADR-02（数据模型可移植契约）/ ADR-03（type-driven scale）
 
