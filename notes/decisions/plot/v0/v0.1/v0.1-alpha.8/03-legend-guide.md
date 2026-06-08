@@ -1,6 +1,6 @@
 # ADR-03：legend guide——非位置 scale 的图例（swatch / 色带 ramp / 分箱）+ 估算布局占位
 
-- 状态：Proposed
+- 状态：Accepted
 - 决策日期：2026-06-08
 - 关联：[plot v0.1-alpha.8 roadmap](./roadmap.md) · [plot v0 roadmap 阶段二](../../roadmap.md) · [plot-design §3.9 Guide / §13.1 结构上限](../../../../../architecture/plot-design.md) · 依赖：[ADR-01 连续色阶](./01-continuous-color-scale.md) / [ADR-02 离散化 scale](./02-discretization-scale.md) + [alpha.7 size/opacity/shape](../v0.1-alpha.7/roadmap.md) · 关联：[alpha.2 axis guide](../v0.1-alpha.2/roadmap.md)（GuideSchema 升 union）
 
@@ -75,6 +75,13 @@ export type ScaleDescriptor = {
 2. **descriptor 是 legend 的地基**：size/opacity/shape 默认 scale 在 resolver 内合成，不暴露 descriptor legend 就是空中楼阁——这是 P1 的实质修复，反向规整 alpha.7 resolver 产物。
 3. **Legend 不杀 axes**：把「有 guide 即清默认」改成 by-type，是 `<Legend>` 可用的前提，否则一加图例坐标轴就没了。
 4. **诚实的结构上限**：估算非测量，承认 plot-design §13.1 的 JSON IR 无 text metrics 上限，不假装做自适应。
+
+**实现校准（2026-06-08，与实现/测试对齐）**：
+
+- **legend 矩形 = core Node（shape rectangle），非 Path**：swatch / ramp / 分箱色块下沉成 `{ type:'node', shape:'rectangle', minimumWidth/Height, fill }`，**与 bar mark 同款**（`lower/mark.ts` barStyle）。原本曾用单 step rectangle Path，但违反 core `PathSchema.children.min(2)`（self-contained rectangle step 仍受 min(2) 约束）——产出 core 非法 IR（adversarial 第一关 BLOCKING 抓出）。改 Node 既合 core schema 又符「一切可见物是 Node」理念，无需改 core。配 `ChildSchema` 合法性回归测试守约束。连续 ramp 用 core `linearGradient` paint server（Node.fill 接 PaintSpec，核验 core 支持）。
+- **默认 axes 合并语义校准（决策 ⑦）**：实际落地为 **「显式 `Axis` 抑制默认 axes（保留既有 `dsl_explicit_axis_only` 行为不变）；`Legend` 不抑制默认 axes」**。决策 ⑦ 原文「显式 x 轴 → y 默认仍补」的 per-dimension 细化**未采纳**——既有 React 行为是「任一显式 Axis 即不补默认」，本轮只修 P1 真 bug（Legend 杀 axes），不改无关的既有 axis 行为。per-dimension 默认轴补齐留作未来增强（需同改 `dsl_explicit_axis_only` 期望）。
+- **标题 Node**：决策 ⑨「省略 title → 用绑定字段名」**未物化成自动可见标题**——仅用户显式 `title` 时渲染标题 Node，省略时无标题。后续可补「字段名缺省标题」。
+- **WARNING（backlog）**：`legend.scale` 指向「存在但类型不符」的 scale（如 color legend 指向位置 linear scale）时不做类型守卫、静默落 ordinal 退化（不崩、产合法 swatch），与决策 ⑥「fail-loud」略松。adversarial 第一关 WARNING，登记 backlog（补 legend.scale 类型一致性校验）。
 
 ## 待决策点 🔻
 
