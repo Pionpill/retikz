@@ -805,6 +805,44 @@ export const changelog: Array<Release> = [
         ],
         subVersions: [
           {
+            version: 'alpha.7',
+            date: '2026-06-08',
+            summary: {
+              zh: '阶段二·Aesthetics 全部视觉通道 + 连续 scale 家族：补 log / pow / sqrt 连续 scale（L1：仅 point/line，bar/area fail-loud）;把「通道→scale」抽象成通用 resolver，落地 `size` / `opacity` / `shape` 三个仅 PointMark 的非位置通道;`color` 收口为真 scale 通道 + `series` 一等化。',
+              en: 'Stage 2 · all aesthetic visual channels + the continuous scale family: adds log / pow / sqrt continuous scales (L1: point/line only, bar/area fails loud); abstracts channel→scale into a reusable resolver and lands `size` / `opacity` / `shape` as PointMark-only non-position channels; closes `color` into a real scale channel + first-classes `series`.',
+            },
+            items: [
+              {
+                label: { zh: '连续 scale 家族 log / pow / sqrt', en: 'continuous scale family log / pow / sqrt' },
+                content: {
+                  zh: '`PlotScale` 新增 log / pow / sqrt 三个连续变体（公开 scale 家族，**不**新增 size/radius scale type）;L1 规则——仅作用 point / line，`interval`(bar) / area + 非线性连续 scale **fail-loud**（其 `baseline=0` 是结构语义，与对数 / 幂轴里「从 0 起的柱 / 面积」冲突）。size 通道所需的 sqrt 即源于此，统一真源不另造内部 sqrt。',
+                  en: '`PlotScale` adds log / pow / sqrt continuous variants (a public scale family, **no** new size/radius scale type); the L1 rule — point / line only, with `interval`(bar) / area + a nonlinear continuous scale **failing loud** (their `baseline=0` is structural and clashes with a bar / area starting from 0 on a log / power axis). The sqrt the size channel needs comes from here — one source of truth, no separate internal sqrt.',
+                },
+              },
+              {
+                label: { zh: '通道→scale 通用 resolver + size 通道', en: 'channel→scale resolver + size channel' },
+                content: {
+                  zh: '把位置通道那套「按名绑定 + type-driven 派生 + fail-loud 兼容校验」提炼成可复用的通道→scale resolver;`size` 作为首个新消费者落地——**仅 PointMark**，语义是 **radius scale**（面积感知正确），默认派生到 sqrt 连续 scale，core 换算（`minimumSize` / `sqrt2`）细节不外泄。domain 契约：默认 `[0, maxPositive]`、无正值→所有点最小半径、单一正值→映射 range 上界、负值 / 显式负 domain **fail-loud**（通道级校验，不改全局 continuous 语义）。',
+                  en: 'Distills the position channels’ pattern (bind by name + type-driven derivation + fail-loud compatibility checks) into a reusable channel→scale resolver; `size` lands as its first new consumer — **PointMark only**, semantically a **radius scale** (area-aware), derived by default to the sqrt continuous scale, with core conversion (`minimumSize` / `sqrt2`) kept internal. Domain contract: default `[0, maxPositive]`, no positive value → all points at minimum radius, a single positive value → mapped to the range top, negatives / explicit negative domains **fail loud** (channel-level check, leaving global continuous semantics untouched).',
+                },
+              },
+              {
+                label: { zh: 'color 真通道收口 + series 一等化', en: 'color real-channel closure + first-class series' },
+                content: {
+                  zh: '`makeColorResolver` 补字段类型校验（categorical→ordinal 色;continuous / temporal `color.field` → **fail-loud**，连续色阶留 alpha.8）;B/C 收口规则——point / bar / sector 按 datum 着色，line / area 按 series 着色;line / area 无显式 `series` 且有 categorical `color.field` → **隐式按 color 拆 series**（修单系列 `color.field` 静默丢弃），隐式拆产出的 IR 等价显式 `series`（守 alpha.5 datum locator parity）;显式 `series` 优先、color 不反向覆盖。',
+                  en: '`makeColorResolver` gains field-type checks (categorical→ordinal color; continuous / temporal `color.field` → **fails loud**, continuous color ramps deferred to alpha.8); the B/C closure rules — point / bar / sector color by datum, line / area color by series; a line / area with no explicit `series` but a categorical `color.field` → **implicitly splits series by color** (fixing the silently-dropped single-series `color.field`), with the implicit split’s IR equal to writing `series` explicitly (preserving alpha.5 datum-locator parity); an explicit `series` wins and color never overrides it.',
+                },
+              },
+              {
+                label: { zh: 'opacity / shape 通道（仅 PointMark）', en: 'opacity / shape channels (PointMark only)' },
+                content: {
+                  zh: '复用通道→scale resolver 再落两个非位置通道:`opacity`——continuous 字段经 clamp linear 映射到 `[minOpacity, 1]`（默认 range 避免低值全透明），常量 `value` ∈ `[0, 1]`，时间 / 分类字段或越界 **fail-loud**;`shape`——categorical 字段经 ordinal 式映射到 glyph 调色板（circle / rectangle / diamond… 循环），常量 `value` = glyph 名，连续 / 时间字段 **fail-loud**。两者均落到 core node 对应字段。',
+                  en: 'Reuses the channel→scale resolver for two more non-position channels: `opacity` — a continuous field mapped through a clamped linear scale into `[minOpacity, 1]` (default range avoids invisibly-faint low values), constant `value` ∈ `[0, 1]`, with temporal / categorical fields or out-of-range **failing loud**; `shape` — a categorical field mapped ordinal-style onto a glyph palette (circle / rectangle / diamond… cycling), constant `value` = glyph name, continuous / temporal fields **failing loud**. Both land on the corresponding core node fields.',
+                },
+              },
+            ],
+          },
+          {
             version: 'alpha.6',
             date: '2026-06-08',
             summary: {
@@ -1031,6 +1069,30 @@ export const changelog: Array<Release> = [
         ],
         subVersions: [
           {
+            version: 'alpha.7',
+            date: '2026-06-08',
+            summary: {
+              zh: '随 plot lockstep 露出 Aesthetics 表面：`DslScaleX` / `DslScaleY` 补 `log` / `sqrt`，`<PointMark>` 加 `size` / `opacity` / `shape` 字段 props，color × series 按 B/C 规则收口。',
+              en: 'Lockstep with plot, exposing the aesthetics surface: `DslScaleX` / `DslScaleY` add `log` / `sqrt`, `<PointMark>` gains `size` / `opacity` / `shape` field props, and color × series is closed per the B/C rules.',
+            },
+            items: [
+              {
+                label: { zh: 'DSL scale 家族 log / sqrt', en: 'DSL scale family log / sqrt' },
+                content: {
+                  zh: '`DslScaleX` = `\'linear\' | \'time\' | \'point\' | \'log\' | \'sqrt\'`、`DslScaleY` = `\'linear\' | \'log\' | \'sqrt\'`;`<Plot scaleX="log">` / `scaleY="sqrt"` 一键非线性轴（`buildPlotSpec` 装配成 `PlotScale.Log` / `Sqrt`），bar + 非线性 scale 顺延 core 的 fail-loud 规则。',
+                  en: '`DslScaleX` = `\'linear\' | \'time\' | \'point\' | \'log\' | \'sqrt\'`, `DslScaleY` = `\'linear\' | \'log\' | \'sqrt\'`; `<Plot scaleX="log">` / `scaleY="sqrt"` gives a nonlinear axis in one prop (`buildPlotSpec` assembles `PlotScale.Log` / `Sqrt`), with bar + nonlinear scale inheriting core’s fail-loud rule.',
+                },
+              },
+              {
+                label: { zh: '<PointMark> 视觉通道 props', en: '`<PointMark>` visual-channel props' },
+                content: {
+                  zh: '`<PointMark size opacity shape>` 三个字段 prop 映射到 size（sqrt 半径 scale，面积感知）/ opacity（clamp linear `[minOpacity, 1]`）/ shape（categorical → glyph circle / rectangle / diamond） 通道;`color` / `series` 按 B/C 规则收口——line / area 无显式 `series` 时按 categorical `color` 隐式拆 series（修单系列静默丢弃），等价显式写 `series`。',
+                  en: '`<PointMark size opacity shape>` maps three field props to the size (sqrt radius scale, area-aware) / opacity (clamped linear `[minOpacity, 1]`) / shape (categorical → glyph circle / rectangle / diamond) channels; `color` / `series` close per the B/C rules — a line / area with no explicit `series` implicitly splits series by a categorical `color` (fixing the silent single-series drop), equivalent to writing `series` explicitly.',
+                },
+              },
+            ],
+          },
+          {
             version: 'alpha.6',
             date: '2026-06-08',
             summary: {
@@ -1172,6 +1234,23 @@ export const changelog: Array<Release> = [
           },
         ],
         subVersions: [
+          {
+            version: 'alpha.7',
+            date: '2026-06-08',
+            summary: {
+              zh: '随 plot Aesthetics lockstep：`renderPlot` 经共享 lowering 自动覆盖 `size` / `opacity` / `shape` 通道与 log / pow / sqrt scale 的 SSR 产物，无新 API。',
+              en: 'Lockstep with plot’s aesthetics: `renderPlot` automatically covers the `size` / `opacity` / `shape` channels and log / pow / sqrt scales in its SSR output via the shared lowering, no new API.',
+            },
+            items: [
+              {
+                label: { zh: 'SSR 覆盖新通道 / scale', en: 'SSR covers new channels / scales' },
+                content: {
+                  zh: '服务端 / 构建期出的 SVG 字符串自动带上 size 半径 / opacity 不透明度 / shape glyph 与非线性轴——下沉逻辑与 react 面共享同一份 `lowerPlots`，vanilla 侧零额外代码。',
+                  en: 'Server / build-time SVG strings automatically carry size radii / opacity / shape glyphs and nonlinear axes — the lowering shares the same `lowerPlots` as the React surface, with zero extra code on the vanilla side.',
+                },
+              },
+            ],
+          },
           {
             version: 'alpha.6',
             date: '2026-06-08',
