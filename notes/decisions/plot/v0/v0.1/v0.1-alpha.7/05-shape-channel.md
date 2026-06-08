@@ -15,19 +15,19 @@ core node 内置 4 形状：`rectangle` / `circle` / `ellipse` / `diamond`（`ci
 `PointEncodingSchema` 追加 `shape` channel。映射性质与 `color` 一致（分类 → 离散输出），但输出是 **core node shape 名**而非颜色。
 
 ```ts
-// ir/encoding.ts —— shape channel（value = shape 名）
+// ir/encoding.ts —— shape channel（value = core shape 名；本轮不开放显式 scale 引用）
 export const ShapeChannelSchema = z.object({
-  field: z.string().min(1).optional().describe('Data path bound to shape; categorical, mapped through an ordinal-style scale to a glyph set'),
-  value: z.string().min(1).optional().describe('Constant glyph shape name (mutually exclusive with field)'),
-  scale: z.string().min(1).optional().describe('Optional ordinal-scale name (only with field); omitted → a default shape palette is synthesized'),
+  field: z.string().min(1).optional().describe('Data path bound to shape; categorical, mapped to a built-in glyph palette'),
+  value: z.string().min(1).optional().describe('Constant glyph shape name — a core / registered node shape (mutually exclusive with field)'),
 }).refine(c => (c.field === undefined) !== (c.value === undefined), { message: 'shape channel must set exactly one of field / value' })
-  .describe('Shape channel (PointMark only): field → glyph shape via an ordinal-style scale; value → a constant shape name');
+  .describe('Shape channel (PointMark only): field → glyph shape via the built-in shape palette; value → a constant core shape name');
 // PointEncodingSchema 扩成 { ...Encoding, size?, opacity?, shape? }
 ```
 
-- **field（categorical）**：经 resolver 合成 ordinal 式映射，domain = 分类去重，range = **默认 shape 调色板** `PLOT_SHAPE_PALETTE`（循环复用）。continuous / temporal fail-loud（形状是分类编码，连续→形状无意义）。
-- **value**：常量 shape 名（限内置 4 名 + 注册扩展名）。
-- **默认调色板**：`['circle', 'square', 'diamond']`——`square` 映射到 core `rectangle`（等边 minimumSize 即方形），其余直用内置名。3 形状够分辨；更多 glyph（triangle / cross / star，需 polygon params 或 shape 注册表）顺延。
+- **不开放 `shape.scale`（拍死，评审 P1）**：本轮 shape channel **无 `scale` 字段**。理由：现有 `resolveOrdinalScale` 默认 range 是**颜色**，shape 引用一个无 range 的 ordinal scale 会把颜色串写进 `node.shape`（坏）；显式自定义 shape range 留后续，需另立「range 必须全是可 lower 的 shape 名」的契约。本轮只走自动调色板。
+- **field（categorical）**：domain = 分类去重，按出现序映射到**默认 shape 调色板** `PLOT_SHAPE_PALETTE`（循环复用）。continuous / temporal fail-loud（形状是分类编码，连续→形状无意义）。
+- **默认调色板（拍死，评审 P1）**：`['circle', 'rectangle', 'diamond']`——**直用 core 内置 shape 名，无 plot-only 别名**（不引入 `square` 这种 core 不认识、compile 不消解的别名）；文档可把 `rectangle` glyph 口语称「方块 / square」，但 IR / value 一律用 `rectangle`。3 形状够分辨；更多 glyph（triangle / cross / star，需 polygon params 或 shape 注册表）顺延。
+- **value**：常量 shape 名 = **core 内置或注册扩展 shape 名**（开放字符串，与 core `NodeShape` 一致）；非法名留 core 渲染期处理。不接受 plot-only 别名。
 - **lowering**：per-datum 写 core node `shape`；与 size / opacity 同理，per-datum 落到每个 node（覆盖 `colorGroupedScope` / pointStyle 的默认 `shape: 'circle'`）。
 
 理由：
@@ -38,10 +38,8 @@ export const ShapeChannelSchema = z.object({
 
 ## 待决策点 🔻
 
-- **默认调色板成员**：`['circle', 'square', 'diamond']`（`square`→`rectangle`）。倾向此三，triangle（polygon sides:3）/ cross / star 待后续（需 polygon params 或 shape 注册表）。
-- **`square` → `rectangle` 的方形保证**：散点 node 用 `minimumSize` 等边外接，rectangle + 等边 minimumSize 即方形；实现期确认无需额外 params。
 - **React `shape` prop 形态**：`shape?: string`（字段）；常量形状（`shape={'diamond'}`）暂不进 DSL（IR 仍支持 `value`）。倾向只收字段。
-- **value 校验**：常量 shape 名是否限内置 4 名 → 倾向**不限**（接受注册扩展 shape 名，与 core `NodeShape` 开放字符串一致），非法名留 core 渲染期处理。
+- **size × shape 的尺寸语义（评审 P2）**：本轮 size 写 core node `minimumSize`，**与 shape 无关**——即「同一 size 值 → 同一 `minimumSize` 字段值」，**不保证** circle / rectangle / diamond 三种 glyph 的外接半径 / 感知面积相等（diamond 的外接框对角更长，视觉略大）。per-shape 面积归一化（按 shape 调 minimumSize 让感知面积一致）顺延，需 shape-specific 换算 + 测试。本轮明确**只保证写同一尺寸字段**。
 
 ## DSL 表面
 
@@ -98,6 +96,7 @@ export const ShapeChannelSchema = z.object({
 - `packages/plot/plot/src/lower/channel.ts`（改：shape resolver + `PLOT_SHAPE_PALETTE`）
 - `packages/plot/plot/src/lower/mark.ts`（改：lowerPoint per-node shape）
 - `packages/plot/plot/tests/ir/encoding.schema.test.ts`（改）
+- `packages/plot/plot/tests/ir/mark.schema.test.ts`（改：非 point mark 写 shape 被剥离，对齐 size）
 - `packages/plot/plot/tests/lower/shape-channel.test.ts`（新建）
 - `packages/plot/react/src/components/marks.tsx`（改：`PointMarkProps.shape?`）
 - `packages/plot/react/src/components/buildPlotSpec.ts`（改：point 装 shape encoding）
@@ -118,6 +117,7 @@ export const ShapeChannelSchema = z.object({
 - `continuous shape fail-loud`：数值字段绑 shape → 抛错
 - `temporal shape fail-loud`：时间字段绑 shape → 抛错
 - `field 与 value 互斥`：两者都给 → 拒绝
+- `shape 在非 point mark`：line/area/bar encoding 写 shape → schema 剥离（非 strict，TS 层禁止；断言 parsed.encoding 无 shape）
 
 **交互**：
 - `shape + color + size 共存`：三通道独立生效，shape/size/opacity per-node、color 按色分组

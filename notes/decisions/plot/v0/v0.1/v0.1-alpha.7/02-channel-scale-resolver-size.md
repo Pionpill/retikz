@@ -8,7 +8,7 @@
 
 alpha.7 要补第一个非位置视觉通道 `size`，但当前结构有两处障碍：
 
-1. **通道 → scale 处理未抽象**：位置通道（x/y）那套「按名绑定 scale + 无声明时按字段类型派生 + 类型↔scale 兼容 fail-loud」散落在 `lower/expand.ts` / `lower/scale.ts`；color 通道在 `makeColorResolver`（`expand.ts:372`）里**另写一套且恒走 ordinal**。再加 size 若各写各的，alpha.8 的 opacity/shape 还要再抄一遍。
+1. **通道 → scale 处理未抽象**：位置通道（x/y）那套「按名绑定 scale + 无声明时按字段类型派生 + 类型↔scale 兼容 fail-loud」散落在 `lower/expand.ts` / `lower/scale.ts`；color 通道在 `makeColorResolver`（`expand.ts:372`）里**另写一套且恒走 ordinal**。再加 size 若各写各的，opacity / shape（ADR-04/05）还要再抄一遍。
 2. **encoding 被所有 mark 共享**：`EncodingSchema = PositionEncoding.merge(StyleEncoding)`（`ir/encoding.ts:48`）被 point/line/interval/area **共用**，sector 直接用 `StyleEncodingSchema`（`ir/mark.ts:118`）。若把 `size` 加进全局 `StyleEncodingSchema`，会泄漏到 line/area/bar/sector——这些 mark 的「尺寸」语义各不相同（strokeWidth / 柱宽 / 扇形…），变成「schema 合法但语义不明」。且 `ChannelSchema.value` 是 `string | number | boolean | null`（`ir/data.ts:84`），size 常量会允许非数值。
 
 size 的感知语义（已拍板 ①③）：**仅作用 PointMark**，是 **radius scale**——半径 ∝ √值（面积 ∝ 值，感知正确）；默认 domain `[0, maxPositive]`；core 换算细节（当前 `pointStyle` 的 `minimumSize: POINT_SIZE / Math.SQRT2`，`lower/mark.ts:69`）**不外泄给 IR 用户**。
@@ -17,7 +17,7 @@ size 的感知语义（已拍板 ①③）：**仅作用 PointMark**，是 **rad
 
 ## 决策：抽出可复用「通道 → scale」resolver；size 仅加在 PointMark 专属 encoding，语义为 radius scale、默认派生到 sqrt
 
-**(1) 通道 → scale 通用 resolver**：把「channel（field/value/scale）+ 字段类型 + scale 注册表」解析成「行 → 标量输出」映射器的逻辑，提炼成 `lower/channel.ts` 的纯函数，参数化「该通道接受的 scale 族 + 默认派生规则」。位置通道、color（[ADR-03](./03-color-series.md)）、size 共用之；alpha.8 opacity/shape 直接复用。
+**(1) 通道 → scale 通用 resolver**：把「channel（field/value/scale）+ 字段类型 + scale 注册表」解析成「行 → 标量输出」映射器的逻辑，提炼成 `lower/channel.ts` 的纯函数，参数化「该通道接受的 scale 族 + 默认派生规则」。位置通道、color（[ADR-03](./03-color-series.md)）、size 共用之；opacity / shape（[ADR-04](./04-opacity-channel.md) / [ADR-05](./05-shape-channel.md)）直接复用。
 
 **(2) size 通道仅进 PointMark**：不动全局 `StyleEncodingSchema`；给 PointMark 一份**专属 encoding** = `EncodingSchema` 扩 `size`。size channel 的 `value` 限 **number**（不复用宽松 `ScalarValueSchema`）。
 
@@ -45,7 +45,7 @@ export const PointEncodingSchema = EncodingSchema.extend({
 
 理由：
 
-1. **抽象先于第二通道**：size 是第二个非位置通道，此刻提炼 resolver 成本最低、收益覆盖 color + alpha.8 全部通道。
+1. **抽象先于第二通道**：size 是第二个非位置通道，此刻提炼 resolver 成本最低、收益覆盖 color + opacity / shape 全部通道。
 2. **size 不污染其它 mark**：PointMark 专属 encoding 把「size 只对散点有意义」编码进类型，line/area/bar/sector 写 size 直接 schema 拒绝。
 3. **面积正确 + 真源复用**：radius 走 ADR-01 的 sqrt，感知正确且与显式 sqrt 轴同一实现。
 
@@ -100,7 +100,7 @@ renderPlot(
 
 - **size 作用于 line(strokeWidth) / bar(width) / area / sector**（① S1 范围外）→ 顺延。
 - **categorical → 离散 size 档**（D1）→ 顺延 / 需求驱动；本轮仅 continuous→size。
-- **opacity / shape 通道**（复用本 resolver）→ alpha.8。
+- **opacity / shape 通道**（复用本 resolver）→ 同属 alpha.7，见 [ADR-04](./04-opacity-channel.md) / [ADR-05](./05-shape-channel.md)（2026-06-08 从 alpha.8 前移）。
 - **常量半径的 React `size={number}` 表面** → 后续（IR 已支持 `size.value`）。
 - **自定义通道注册表（`ChannelDefinition` 对外开放）** → 另立里程碑（plot-design §11「先内置，后开放自定义」）；本轮 resolver 仅留接缝，用户要任意视觉控制走 Kernel（`<Node>` / `<Path>`）。
 

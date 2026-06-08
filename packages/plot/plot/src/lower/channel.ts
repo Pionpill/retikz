@@ -5,7 +5,7 @@ import { resolveSqrtScale } from './scale';
 /**
  * 通道 → 视觉量 resolver 的接缝（alpha.7）
  * @description 把「channel（field/value/scale）→ 行→视觉量」的解析收成可复用形态：size 是首个新消费者，
- *   color（ADR-03）后续迁入，alpha.8 opacity / shape 复用。将来 ChannelDefinition 注册表即在此参数化。
+ *   color（ADR-03）后续迁入，opacity / shape（ADR-04 / ADR-05）复用。将来 ChannelDefinition 注册表即在此参数化。
  */
 
 /** size 通道最小 / 最大半径（px，user units；对齐散点默认直径 10 量级）；core 换算细节，不外泄 IR */

@@ -27,7 +27,7 @@ export const OpacityChannelSchema = z.object({
 
 - **field（continuous）**：经 ADR-02 resolver 合成 `linear` scale，domain = 数据 extent，range `[OPACITY_MIN, 1]`（默认下界，避免最小值全透明不可见）。continuous only——categorical opacity 无意义、顺延；temporal fail-loud。
 - **value**：常量 ∈ `[0,1]`，绕过 scale。
-- **越界**：字段值经 scale clamp 到 range；`value` 由 schema 限 `[0,1]`。
+- **取值范围（拍死，评审 P1）**：opacity field 是**连续强度通道**，合成的 linear scale **开 `clamp`**——任意字段值（含负数 / 显式 domain 外的值）都 **clamp 到 `[OPACITY_MIN, 1]`，不 fail-loud**。这与 size 的「负值 fail-loud」**有意不同**：size 有面积语义、负半径无意义；opacity 无此约束，负强度 clamp 到最淡即可。唯一的硬边界是 `value` 常量由 schema 限 `[0,1]`；temporal 字段仍 fail-loud（opacity 是连续编码）。
 - **lowering**：per-datum 写 core node 的不透明度字段；与 size 同理，per-datum 值**落到每个 node**（覆盖 `colorGroupedScope` 子 Scope nodeDefault）。
 
 理由：
@@ -39,7 +39,7 @@ export const OpacityChannelSchema = z.object({
 ## 待决策点 🔻
 
 - **落 `opacity` 还是 `fillOpacity`**：散点 glyph 当前只有 fill（无 stroke），两者等效。倾向 **`opacity`（整节点）**——语义直白「整个点的不透明度」，未来 glyph 加描边时一并淡化。
-- **`OPACITY_MIN` 默认**：暂定 `0.2`（最小值仍可见）。倾向此值，实现期可调（非契约）。
+- **`OPACITY_MIN`**：定为**实现契约常量**——`lower/channel.ts` `export const OPACITY_MIN = 0.2`，测试 **import 该常量**断言、不硬写数值（评审 P2，便于日后调值不破测试）。
 - **React `opacity` prop 形态**：`opacity?: string`（字段）；常量不透明度（`opacity={number}`）属样式、暂不进 DSL（IR 仍支持 `value`）。倾向只收字段。
 
 ## DSL 表面
@@ -58,7 +58,7 @@ export const OpacityChannelSchema = z.object({
 
 ## 测试设计
 
-`packages/plot/plot/tests/lower/opacity-channel.test.ts` + `tests/ir/encoding.schema.test.ts` 覆盖：linear 映射到 [min,1]、常量 value、越界拒绝、temporal fail-loud、size+opacity 共存、schema accept/reject。具体见「测试象限」。
+`packages/plot/plot/tests/lower/opacity-channel.test.ts` + `tests/ir/encoding.schema.test.ts` 覆盖：linear 映射到 [min,1]、常量 value、`value` 越界 schema 拒绝、`field` 越界 clamp 不报错、temporal fail-loud、size+opacity 共存、schema accept/reject。具体见「测试象限」。
 
 ## 影响
 
@@ -97,6 +97,7 @@ export const OpacityChannelSchema = z.object({
 - `packages/plot/plot/src/lower/channel.ts`（改：opacity resolver）
 - `packages/plot/plot/src/lower/mark.ts`（改：lowerPoint per-node opacity）
 - `packages/plot/plot/tests/ir/encoding.schema.test.ts`（改）
+- `packages/plot/plot/tests/ir/mark.schema.test.ts`（改：非 point mark 写 opacity 被剥离，对齐 size）
 - `packages/plot/plot/tests/lower/opacity-channel.test.ts`（新建）
 - `packages/plot/react/src/components/marks.tsx`（改：`PointMarkProps.opacity?`）
 - `packages/plot/react/src/components/buildPlotSpec.ts`（改：point 装 opacity encoding）
@@ -114,12 +115,15 @@ export const OpacityChannelSchema = z.object({
 - `空数据`：0 行 → 不崩
 
 **错误路径**：
-- `value 越界`：`opacity:{value:1.5}` / `-0.1` → schema 拒绝
+- `value 越界`：`opacity:{value:1.5}` / `-0.1` → schema 拒绝（唯一硬边界）
+- `field 越界 clamp 不报错`：opacity 字段含负数 / 超域值 → clamp 到 `[OPACITY_MIN,1]`，**不抛**（与 size 负值 fail-loud 对照）
 - `temporal opacity fail-loud`：时间字段绑 opacity → 抛错
 - `field 与 value 互斥`：两者都给 → 拒绝
+- `opacity 在非 point mark`：line/area/bar encoding 写 opacity → schema 剥离（非 strict，TS 层禁止；对齐 size，断言 parsed.encoding 无 opacity）
 
 **交互**：
 - `opacity per-node 落点`：opacity + color → 不透明度落 per-node、颜色仍按色分组
+- `OPACITY_MIN 用 import 常量断言`：测试 import `OPACITY_MIN`，不硬写 0.2
 
 ### 依赖的现有元素
 
