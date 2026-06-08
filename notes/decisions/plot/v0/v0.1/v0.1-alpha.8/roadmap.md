@@ -92,7 +92,7 @@
 
 | ADR | 主题 | Level | 依赖 | 状态 |
 |---|---|---|---|---|
-| [01](./01-continuous-color-scale.md) | 连续色阶 sequential / diverging（continuous/temporal color → 色带；scheme 词表 + 可选 range；line/area 连续 color 仍 fail-loud、无 path gradient；React type-driven 派生入口；了结 alpha.7 color fail-loud） | red | — | Proposed |
+| [01](./01-continuous-color-scale.md) | 连续色阶 sequential / diverging（continuous/temporal color → 色带；scheme 词表 + 可选 range；line/area 连续 color 仍 fail-loud、无 path gradient；React type-driven 派生入口；了结 alpha.7 color fail-loud） | red | — | Accepted |
 | [02](./02-discretization-scale.md) | 离散化 scale quantize / threshold / quantile（连续 domain → 离散 color 档；复用 01 scheme/range schema；threshold 断点强校验；quantile 数据分位） | red | ADR-01 | Proposed |
 | [03](./03-legend-guide.md) | legend guide（GuideSchema 升 union；target = channel + 可选 scale；resolver 暴露可复用 descriptor；估算布局 + 占位；显式 Legend 不抑制默认 axes；标签复用 axis formatter） | red | ADR-01/02 + alpha.7 非位置 scale | Proposed |
 

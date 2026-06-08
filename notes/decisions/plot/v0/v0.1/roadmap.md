@@ -64,6 +64,7 @@
 - **sector 间隔**（见 alpha.4 [ADR-02](./v0.1-alpha.4/02-sector-geometry.md) 讨论）— *【alpha.12】*：`padAngle`(+ `padRadius`) 角向间隔——放 sector / interval mark 层（rose 复用 band `paddingInner`），含小扇形 clamp；per-datum explode / pull 单片高亮（用户「内部小圆位移圆心」想法的归宿）
 - **时间判断的可配边界（决策已定，2026-06-07）** — *【部分落地：[alpha.6 ADR-09](./v0.1-alpha.6/09-iso-recognizer.md)】*：temporal「是不是时间」分两层——**解析**（已知是时间怎么转）已可配：声明式 `format`（进 IR，[alpha.6 ADR-06](./v0.1-alpha.6/06-declarative-format.md)）+ `resolveField`（运行时逃生舱，[ADR-04](./v0.1-alpha.6/04-field-resolver.md)）；**推断**（没声明时从数据猜）保持严格、只认无歧义 ISO（ADR-09 已补认空格分隔带时区 SQL 时间戳）。**不做"全局推断配置开关"**——只能是运行时选项、破坏 spec 自描述，且想自动认的格式（slashDate / epoch）恰是歧义格式（D/M/Y 坑）；按字段定制走 `resolveField`，歧义格式永远走声明
 - **数据加载器（CSV / URL / JSON）定位** — *【v0.1 之后·便利轴，不进 plot 核心】*：取数 / 解析是 I/O，与图形语法正交，**不进 `@retikz/plot` 核心 lowering**——会让 lowering 变异步（破坏 SSR / locator parity / 确定性）并撞「数据不进 IR」边界。归宿是**适配层语法糖**（`@retikz/plot-react` 的 `useRemoteData` hook 等）**或独立小包**（`@retikz/plot-data`），排在图形语法完整之后。当前官方模式已是「app 层取数 → `.data.ts` hook 消费 → `<Plot data>` 收行」（见 docs-doc-principle）
+- **连续色阶 `range` 非法颜色串静默变黑**（alpha.8 ADR-01 adversarial W1）— *【需求驱动 / 颜色校验里程碑】*：`SequentialColorScale` / `DivergingColorScale` 的 `range` 端点给非法颜色串（`'notacolor'` / 拼错色名 / 带空格）时，d3 `scaleLinear` 静默当黑色、不 fail-loud——LLM 打错色名得到全黑图无报错。正确修需引入颜色解析器（破坏 `@retikz/plot` 仅 zod + d3 的依赖白名单）或维护易腐的 CSS 色名表，故未在 ADR-01 内做。落点 `lower/scale.ts` 的 `resolveSequentialColorScale` / `resolveDivergingColorScale`，与 ADR-01 的 domain 有限性 fail-loud 同口径
 - *（后续追加……）*
 
 ## 依赖 core

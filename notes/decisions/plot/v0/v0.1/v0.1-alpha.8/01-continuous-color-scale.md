@@ -1,6 +1,6 @@
 # ADR-01：连续色阶——sequential / diverging color scale + 配色方案词表
 
-- 状态：Proposed
+- 状态：Accepted
 - 决策日期：2026-06-08
 - 关联：[plot v0.1-alpha.8 roadmap](./roadmap.md) · [plot v0 roadmap 阶段二](../../roadmap.md) · [plot-design §3.4 Scale / §3.6 Encoding](../../../../../architecture/plot-design.md) · 依赖出口：[alpha.7 ADR-03 color·series](../v0.1-alpha.7/03-color-series.md)（continuous/temporal color 本轮兑现）· 下游：[ADR-02 离散化 scale](./02-discretization-scale.md)（复用本 ADR 的 scheme/range schema）/ [ADR-03 legend](./03-legend-guide.md)
 
