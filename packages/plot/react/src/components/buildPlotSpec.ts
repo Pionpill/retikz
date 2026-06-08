@@ -19,7 +19,7 @@ import {
   type Scale,
   type Transform,
 } from '@retikz/plot';
-import { Axis, type AxisProps } from './guides';
+import { Axis, type AxisProps, Legend, type LegendProps } from './guides';
 import {
   AreaMark,
   type AreaMarkProps,
@@ -217,6 +217,18 @@ const collectInto = (children: ReactNode, into: Collected): void => {
         ...(tickLabels !== undefined ? { tickLabels } : {}),
         ...(grid !== undefined ? { grid } : {}),
       });
+    } else if (child.type === Legend) {
+      const { channel, scale, title, position, orient, tickCount, tickLabels } = child.props as LegendProps;
+      into.guides.push({
+        type: PlotGuide.Legend,
+        channel,
+        ...(scale !== undefined ? { scale } : {}),
+        ...(title !== undefined ? { title } : {}),
+        ...(position !== undefined ? { position } : {}),
+        ...(orient !== undefined ? { orient } : {}),
+        ...(tickCount !== undefined ? { tickCount } : {}),
+        ...(tickLabels !== undefined ? { tickLabels } : {}),
+      });
     }
   });
 };
@@ -318,7 +330,12 @@ export const buildPlotSpec = (children: ReactNode, dataRef: string, options: Bui
 
   // polar 默认不画 guide（轴需用户显式声明）；cartesian 沿用默认全套
   const defaultGuides: ReadonlyArray<Guide> = polar ? [] : DEFAULT_GUIDES;
-  const guides: Array<Guide> = options.bare ? [] : collected.guides.length > 0 ? collected.guides : [...defaultGuides];
+  // 默认 axes 合并按 guide type 分判（ADR-03 决策 ⑦，修 P1）：
+  //   显式 <Axis> 抑制默认 axes（用户接管坐标轴）；<Legend> 不抑制默认 axes（图例与默认轴共存）。
+  //   即：仅当用户未声明任何显式 Axis 时才补默认 axes，无论是否有 Legend。收集到的 Legend 始终保留。
+  const explicitAxes = collected.guides.filter(guide => guide.type === PlotGuide.Axis);
+  const legends = collected.guides.filter(guide => guide.type === PlotGuide.Legend);
+  const guides: Array<Guide> = options.bare ? [] : [...(explicitAxes.length > 0 ? explicitAxes : defaultGuides), ...legends];
 
   return {
     namespace: PLOT_NAMESPACE,
