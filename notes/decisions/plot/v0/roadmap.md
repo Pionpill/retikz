@@ -40,7 +40,7 @@
 | **Geometry** 几何对象 | mark | point/line/area/bar/sector ✓ | **rect / rule / text / ribbon / boxplot** |
 | **Statistics** 统计变换 | transform | sort/groupBy/stack ✓ | **bin / aggregate / density / smooth / quartile** |
 | **Scales** 标度 | scale | linear/band/time/ordinal ✓ | **log/pow/sqrt/quantize/threshold/color gradient + type-driven 选型**（横切 Data/Aesthetics 两轮，非独立 alpha） |
-| **Coordinates** 坐标系统 | coordinate | cartesian2D / polar2D ✓ | **linear1D / ternary2D**（**地图坐标 = 独立 domain 包，[§2](../../../architecture/plot-design.md) 明确不进 plot**） |
+| **Coordinates** 坐标系统 | coordinate | cartesian2D / polar2D ✓ | **cartesian1D / polar1D / ternary2D**（**地图坐标 = 独立 domain 包，[§2](../../../architecture/plot-design.md) 明确不进 plot**） |
 | **Facets** 分面 | facet（复用 core `Scope`） | — | **全新：分面小多图** |
 | **Theme** 主题样式 | theme | — | **全新：标题 / 字体 / 背景 / 网格 / 图例外观 / 调色板** |
 
