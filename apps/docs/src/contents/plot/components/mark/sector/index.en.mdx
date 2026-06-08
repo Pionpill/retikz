@@ -1,6 +1,6 @@
 ---
 title: SectorMark
-description: Draw pie and donut charts with <SectorMark>: under a polar coordinate system, the angle value field is accumulated into sectors automatically.
+description: 'Draw pie and donut charts with <SectorMark> — under a polar coordinate system, the angle value field is accumulated into sectors automatically.'
 ---
 
 `<SectorMark>` draws one sector per data row, with each sector's angular size coming from the value field bound to `angle`. It only makes sense under a polar coordinate system, so `<Plot>` must have `coordinate="polar2D"`. The start and end angles of each sector are **accumulated automatically** by `<Plot>` — you give values, not angles.
@@ -52,7 +52,7 @@ When `series` is set, accumulation segments by series order; otherwise it follow
 | `series` | `string?` | — | Series field: segments accumulation by its order; defaults to data order |
 | `id` | `string?` | — | Optional handle (reserved, not yet resolved) |
 
-<ComponentAlert title="Polar only" description="<SectorMark> only has geometric meaning under <Plot coordinate=\"polar\">; there are no sectors under cartesian." />
+<ComponentAlert title="Polar only" description="<SectorMark> only has geometric meaning under <Plot coordinate='polar2D'>; there are no sectors under cartesian." />
 
 ## Related
 
