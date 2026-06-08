@@ -52,7 +52,7 @@ Set `series` to a field and the data splits into one line per distinct value, ea
 | `order` | `string?` | data order | Field driving the connection order |
 | `series` | `string?` | — | Series field: split into multiple lines; omit for a single line |
 | `closed` | `boolean?` | `false` | Connect the last point back to the first into a polygon (a radar outline under polar) |
-| `color` | `string?` | `series` | Color field (auto ordinal color scale); falls back to `series` |
+| `color` | `string?` | `series` | Color field (categorical, auto ordinal color scale); with no explicit `series` it implicitly splits into one line per category; falls back to `series`. Continuous / temporal fields error (sequential color scales come later) |
 | `id` | `string?` | — | Optional handle (reserved, not yet resolved) |
 
 ## Related

@@ -342,15 +342,56 @@ const buildSeriesPaths = (
 /** path child 的可变形态（series 下沉时按需补 id / meta） */
 type IRPathChild = { type: 'path'; id?: string; meta?: ReturnType<typeof seriesPathMeta>; children: Array<IRStep>; stroke?: string; fill?: string };
 
+/**
+ * 显式 series + color 字段并存时，校验 color 在每个 series 组内恒定（B/C：否则 fail-loud）
+ * @description path mark 一条 series = 一条 path 一种颜色；同 series 内 color 字段多值无法表达 → 报错，
+ *   提示按 color 拆系列或保持 color 在 series 内恒定。color 字段 = series 字段时天然恒定，调用方已先排除。
+ */
+const assertColorConstantWithinSeries = (rows: Array<ExternalRow>, seriesField: string, colorField: string): void => {
+  const colorsBySeries = new Map<unknown, Set<unknown>>();
+  for (const row of rows) {
+    const seriesValue = resolveFieldPath(row, seriesField);
+    const colorValue = resolveFieldPath(row, colorField);
+    const set = colorsBySeries.get(seriesValue) ?? new Set<unknown>();
+    set.add(colorValue);
+    colorsBySeries.set(seriesValue, set);
+  }
+  for (const [seriesValue, colors] of colorsBySeries) {
+    if (colors.size > 1) {
+      throw new Error(
+        `lowerPlots: color field "${colorField}" is not constant within series "${String(seriesValue)}"; color must be constant per series, or split by color instead of setting series`,
+      );
+    }
+  }
+};
+
+/**
+ * path mark（line / area）的有效 series 字段（B/C 规则）
+ * @description 显式 mark.series 优先；无显式 series 但有 categorical color 字段 → 隐式按 color 拆系列
+ *   （continuous / temporal color 已在 makeColorResolver fail-loud，故到此处的 color 字段必为分类）。
+ *   显式 series 与 color 字段并存且 color 在 series 内不恒定 → fail-loud。
+ */
+const pathSeriesField = (mark: Mark, rows: Array<ExternalRow>): string | undefined => {
+  if (mark.type !== 'line' && mark.type !== 'area') return undefined;
+  const colorField = mark.encoding.color?.field;
+  if (mark.series) {
+    if (colorField && colorField !== mark.series) assertColorConstantWithinSeries(rows, mark.series, colorField);
+    return mark.series;
+  }
+  return colorField;
+};
+
 /** 折线：单线（常量 color → stroke）或多系列（series 拆多线、各取系列色）（坐标系无关） */
 const lowerLine = (mark: Mark, rows: Array<ExternalRow>, frame: CoordinateFrame, colorOf: ColorOf | undefined, markProvenance: MarkProvenance | undefined): IRChild | null => {
   if (mark.type !== 'line') return null;
   const closed = mark.closed ?? false;
-  if (mark.series) {
+  // B/C：显式 series 优先；无 series 但有 categorical color 字段 → 隐式按 color 拆系列（产物等价显式 series）
+  const seriesField = pathSeriesField(mark, rows);
+  if (seriesField) {
     const paths = buildSeriesPaths(
       mark,
       rows,
-      mark.series,
+      seriesField,
       seriesRows => buildLineSteps(mark, seriesRows, frame, closed),
       seriesRows => ({ stroke: colorOf?.(seriesRows[0]) ?? DEFAULT_FILL }),
       markProvenance,
@@ -397,11 +438,13 @@ const buildAreaSteps = (mark: Mark, rows: Array<ExternalRow>, frame: CoordinateF
 const lowerArea = (mark: Mark, rows: Array<ExternalRow>, frame: CoordinateFrame, colorOf: ColorOf | undefined, markProvenance: MarkProvenance | undefined): IRChild | null => {
   if (mark.type !== 'area') return null;
   const baseline = mark.baseline ?? AREA_BASELINE;
-  if (mark.series) {
+  // B/C：显式 series 优先；无 series 但有 categorical color 字段 → 隐式按 color 拆系列（产物等价显式 series）
+  const seriesField = pathSeriesField(mark, rows);
+  if (seriesField) {
     const paths = buildSeriesPaths(
       mark,
       rows,
-      mark.series,
+      seriesField,
       seriesRows => buildAreaSteps(mark, seriesRows, frame, baseline),
       seriesRows => ({ fill: colorOf?.(seriesRows[0]) ?? DEFAULT_FILL }),
       markProvenance,

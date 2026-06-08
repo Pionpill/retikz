@@ -10,7 +10,7 @@ export type LineMarkProps = {
   order?: string;
   /** 系列字段：按其拆成多条折线（多系列）；缺省单线 */
   series?: string;
-  /** 颜色字段（→ color 通道 + 自动 ordinal 色 scale）；缺省取 series */
+  /** 颜色字段（categorical，自动 ordinal 色 scale）：无显式 series 时按此字段隐式拆多条线；缺省取 series。连续 / 时间字段报错 */
   color?: string;
   /** 末点回连首点闭合成多边形（polar 下即雷达轮廓）；缺省 false */
   closed?: boolean;
@@ -74,7 +74,7 @@ export type AreaMarkProps = {
   baseline?: number;
   /** 末点回连首点闭合成多边形（polar 下即填充雷达）；缺省 false */
   closed?: boolean;
-  /** 颜色字段（→ color 通道 + 自动 ordinal 色 scale）；缺省取 series */
+  /** 颜色字段（categorical，自动 ordinal 色 scale）：无显式 series 时按此字段隐式拆多个面；缺省取 series。连续 / 时间字段报错 */
   color?: string;
   /** 可选 mark 句柄（预留 scope/anchor，解析留 alpha.5） */
   id?: string;

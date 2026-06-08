@@ -45,7 +45,7 @@ The top line and a baseline of `0` enclose a filled region — good for emphasiz
 | `baseline` | `number?` | `0` | Baseline value the return edge sticks to |
 | `closed` | `boolean?` | `false` | Top edge walks chords, no arc sampling on a continuous angular axis (straight outline); the area is always closed and filled by the baseline return edge |
 | `series` | `string?` | — | Series field: split into multiple areas; omit for a single area |
-| `color` | `string?` | `series` | Color field (auto ordinal color scale); falls back to `series` |
+| `color` | `string?` | `series` | Color field (categorical, auto ordinal color scale); with no explicit `series` it implicitly splits into one area per category; falls back to `series`. Continuous / temporal fields error (sequential color scales come later) |
 | `id` | `string?` | — | Optional handle (reserved, not yet resolved) |
 
 ## Related

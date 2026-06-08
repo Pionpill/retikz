@@ -382,7 +382,7 @@ export const resolveFrame = (params: ResolveFrameParams): ResolvedFrame => {
 };
 
 /** 解析某 mark 的 color 编码 → 行→颜色串：常量 value 直用；字段过 ordinal scale（显式引用或自动合成默认配色） */
-const makeColorResolver = (node: PlotSpec, rows: Array<ExternalRow>): ((mark: Mark) => ColorOf | undefined) => {
+const makeColorResolver = (node: PlotSpec, rows: Array<ExternalRow>, fieldTypes: Map<string, FieldType>): ((mark: Mark) => ColorOf | undefined) => {
   const scaleByName = new Map(node.scales.map(scale => [scale.name, scale] as const));
   // 字段名 → order（与位置通道同源 data.model）：颜色 ordinal 域按字段 order 排，保证位置 / 颜色同序
   const fieldOrders = new Map<string, CategoryOrder>();
@@ -398,6 +398,12 @@ const makeColorResolver = (node: PlotSpec, rows: Array<ExternalRow>): ((mark: Ma
     }
     if (channel.field === undefined) return undefined;
     const field = channel.field;
+    // 字段类型兼容校验（收口「真通道」）：continuous / temporal color 需连续色阶（sequential / diverging，alpha.8）→ fail-loud；
+    //   不静默当 ordinal 调色。categorical（或类型未知）走 ordinal。
+    const colorFieldType = fieldTypes.get(field);
+    if (colorFieldType === PlotFieldType.Continuous || colorFieldType === PlotFieldType.Temporal) {
+      throw new Error(`lowerPlots: color channel field "${field}" is ${colorFieldType}; continuous/temporal color requires a sequential/diverging color scale (alpha.8). Use a categorical field or a constant color`);
+    }
     let ordinalDef: OrdinalScale | undefined;
     if (channel.scale !== undefined) {
       const def = scaleByName.get(channel.scale);
@@ -540,7 +546,7 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
     provenance,
   });
 
-  const resolveColor = makeColorResolver(node, rows);
+  const resolveColor = makeColorResolver(node, rows, fieldTypes);
   const resolveSize = makeSizeResolver(node, rows);
 
   // plot 级 datum id 登记器：datumIdField + plotId 在时建一份，线穿全 mark——跨 mark 共享 seen，

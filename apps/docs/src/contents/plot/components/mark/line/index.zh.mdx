@@ -52,7 +52,7 @@ import { Plot, LineMark } from '@retikz/plot-react';
 | `order` | `string?` | 数据顺序 | 驱动连接顺序的字段 |
 | `series` | `string?` | — | 系列字段：拆成多条折线；缺省单线 |
 | `closed` | `boolean?` | `false` | 末点回连首点闭合成多边形（polar 下即雷达轮廓） |
-| `color` | `string?` | `series` | 颜色字段（自动 ordinal 色 scale）；缺省取 `series` |
+| `color` | `string?` | `series` | 颜色字段（categorical，自动 ordinal 色 scale）；无显式 `series` 时按此字段隐式拆系列；缺省取 `series`。连续 / 时间字段会报错（连续色阶待后续） |
 | `id` | `string?` | — | 可选句柄（预留，暂不解析） |
 
 ## 相关
