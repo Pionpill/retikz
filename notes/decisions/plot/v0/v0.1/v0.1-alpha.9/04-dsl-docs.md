@@ -1,6 +1,6 @@
 # ADR-04：三包 DSL + 文档露出（cartesian1D / polar1D / ternary2D 表面 + 端到端验收）
 
-- 状态：Proposed
+- 状态：Accepted
 - 决策日期：2026-06-08
 - 关联：[plot v0.1-alpha.9 roadmap](./roadmap.md) · [plot-design §3.5 CoordinateSystem](../../../../../architecture/plot-design.md) · 依赖：[ADR-01 frame 角色泛化](./01-coordinate-frame-roles.md) / [ADR-02 cartesian1D](./02-cartesian1d.md) / [ADR-03 ternary2D](./03-ternary2d.md)（IR + lowering 全就位）· 前身：[alpha.4 ADR-05 bindings-dsl](../v0.1-alpha.4/05-bindings-dsl.md)
 

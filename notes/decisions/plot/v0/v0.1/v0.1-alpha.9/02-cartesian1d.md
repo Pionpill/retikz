@@ -1,6 +1,6 @@
 # ADR-02：一维坐标系族——cartesian1D（直线）+ polar1D（圆周）+ 1D 轴 guide
 
-- 状态：Proposed
+- 状态：Accepted
 - 决策日期：2026-06-08
 - 关联：[plot v0.1-alpha.9 roadmap](./roadmap.md) · [plot-design §3.5 CoordinateSystem](../../../../../architecture/plot-design.md) · 依赖：[ADR-01 frame 角色泛化](./01-coordinate-frame-roles.md)（projectRoles + 必填角色校验 + 维度校验）· 复用：[alpha.4 polar 投影 / 角向 guide](../v0.1-alpha.4/01-coordinate-polar.md)
 

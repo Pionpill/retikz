@@ -1,6 +1,6 @@
 # ADR-01：coordinate frame N 通道泛化 + 位置 encoding 角色化 + 每坐标系维度契约 + guide 维度校验
 
-- 状态：Proposed
+- 状态：Accepted
 - 决策日期：2026-06-08
 - 关联：[plot v0.1-alpha.9 roadmap](./roadmap.md) · [plot v0 roadmap 阶段二](../../roadmap.md) · [plot-design §3.5 CoordinateSystem / §8.3 投影分层 / §3.6 Encoding](../../../../../architecture/plot-design.md) · 前身：[alpha.4 ADR-01 coordinate 抽象](../v0.1-alpha.4/01-coordinate-polar.md)（polar 逼出 frame）· 下游：[ADR-02 cartesian1D](./02-cartesian1d.md) / [ADR-03 ternary2D](./03-ternary2d.md)
 

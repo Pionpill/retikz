@@ -1,6 +1,6 @@
 # ADR-03：ternary2D 坐标系 + a/b/c 位置角色通道 + 三角轴 guide
 
-- 状态：Proposed
+- 状态：Accepted
 - 决策日期：2026-06-08
 - 关联：[plot v0.1-alpha.9 roadmap](./roadmap.md) · [plot-design §3.5 CoordinateSystem / §3.6 Encoding](../../../../../architecture/plot-design.md) · 依赖：[ADR-01 frame 角色泛化](./01-coordinate-frame-roles.md)（projectRoles + 位置 encoding 角色化 + 维度校验）
 
@@ -16,7 +16,7 @@
 
 ## 决策：`PlotCoordinate` 加 `ternary2D`，位置 encoding 加 a/b/c 角色通道，重心投影 + 自动归一化，配三角轴 guide；mark 以 point 为主
 
-新增 `ternary2D` 坐标系（roles=[a,b,c]）；[ADR-01](./01-coordinate-frame-roles.md) 已把 x/y 转可选，本 ADR 给 `PositionEncodingSchema` 加 **a/b/c** 三个可选角色通道（ternary 专属）。投影：每行 (a,b,c) 先**自动归一化** `s=a+b+c`、`(a/s, b/s, c/s)`，再重心坐标 → 等边三角内屏幕点。`s ≤ 0` 或含负值 → fail-loud（决策 ③：容忍任意正三元组、自动归一，非法 fail-loud）。
+新增 `ternary2D` 坐标系（roles=[a,b,c]）；[ADR-01](./01-coordinate-frame-roles.md) 已把 x/y 转可选，本 ADR 给 `PositionEncodingSchema` 加 **a/b/c** 三个可选角色通道（ternary 专属）。投影：每行 (a,b,c) 先**自动归一化** `s=a+b+c`、`(a/s, b/s, c/s)`，再重心坐标 → 等边三角内屏幕点。`s ≤ 0`、含负值、或**各分量有限但相加上溢 `Infinity`**（分量数量级过大、归一化系数塌成 0 会静默落原点）→ fail-loud（决策 ③：容忍任意正三元组、自动归一，非法 fail-loud；非有限单分量仍按缺失值跳过）。
 
 ```ts
 // ir/coordinate.ts —— PlotCoordinate.Ternary2D = 'ternary2D'
@@ -40,10 +40,10 @@
 ## 待决策点 🔻
 
 - **三角朝向**：哪个顶点对应 a/b/c、顶点朝上（▲）还是朝下（▽）？倾向**顶点朝上、a=顶点 / b=右下 / c=左下**（python-ternary / 多数惯例），写进 frame 几何常量。
-- **归一化越界措辞**：`s≤0` / 含负 → fail-loud 错误文案。倾向 `ternary coordinate requires a+b+c > 0 with non-negative components (got a=…, b=…, c=…)`。
+- **归一化越界措辞**：`s≤0` / 含负 / 和上溢 `Infinity` → fail-loud 错误文案。落地：含负 → `ternary coordinate requires non-negative components (got …)`；`s≤0` → `requires a+b+c > 0 (got …)`；上溢 → `components overflow when summed (got …); use proportions or smaller magnitudes`。
 - **三角轴刻度方向 / 标签**：每条边刻度 0→100 朝哪、标签贴边还是贴顶点？倾向**沿边等距 + 顶点旁标注分量名**（取绑定字段名）。
 - **line/area 是否本轮**：ternary + line（三角内折线，如演化轨迹）做不做？倾向**顺延**（point 覆盖散点主用例）。
-- **a/b/c scale 语义**：三角色 scale 是否需独立 scale（各 [0,1]）还是共用归一化？倾向**coordinate 内归一、不暴露三条独立 scale**（domain 固定 [0,1] 占比），scale 名字段预留但本轮可省。
+- **a/b/c scale 语义**：三角色 scale 是否需独立 scale（各 [0,1]）还是共用归一化？落地：**coordinate 内归一、不消费独立 scale**（domain 固定 [0,1] 占比）；`Ternary2DSchema` 已预留 `a?/b?/c?` scale 名字段（结构对齐 cartesian/polar 的位置 scale 绑定、为将来 per-component scale 留口），但本轮 lowering 不读取它们。
 
 ## DSL 表面
 
