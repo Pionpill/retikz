@@ -224,6 +224,29 @@ describe('连续色 · temporal sequential（alpha.8 ADR-01）', () => {
   });
 });
 
+describe('连续色 · 非有限 domain 端点 fail-loud（ADR-01 越界一致性，自 adversarial B1 提升）', () => {
+  const infinitySpec = (colorScale: Record<string, unknown>): PlotSpec =>
+    PlotSpecSchema.parse({
+      namespace: 'plot',
+      type: 'plot',
+      data: { reference: 'd' },
+      scales: [{ type: 'linear', name: 'x' }, { type: 'linear', name: 'y' }, { ...colorScale, name: 'col' }],
+      coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
+      marks: [{ type: 'point', encoding: { x: { field: 'x' }, y: { field: 'y' }, color: { field: 'v', scale: 'col' } } }],
+    });
+  const data = [{ x: 0, y: 0, v: 1 }, { x: 1, y: 1, v: 1e9 }, { x: 2, y: 2, v: 1e18 }];
+
+  // 此前 [0, Infinity] 会让 span=Infinity、每点 t=0，所有点静默压成端点色（信息全丢、不报错）
+  it('sequential domain 含 Infinity 抛错而非静默塌成单色', () => {
+    expect(() => expandOf(infinitySpec({ type: 'sequential', domain: [0, Number.POSITIVE_INFINITY] }), { d: data })).toThrow(/finite/);
+  });
+
+  // 此前 [-100,0,Infinity] 校验过、正侧 t=0.5，不同量级值压成中点色
+  it('diverging domain 含 Infinity 抛错而非静默压成中点色', () => {
+    expect(() => expandOf(infinitySpec({ type: 'diverging', domain: [-100, 0, Number.POSITIVE_INFINITY] }), { d: data })).toThrow(/finite/);
+  });
+});
+
 describe('连续色 · 回归：categorical 仍走 ordinal（alpha.8 ADR-01）', () => {
   // 交互：categorical color 字段仍可正常着色（连续色阶不影响分类路径）
   it('categorical 字段不受连续色阶影响', () => {

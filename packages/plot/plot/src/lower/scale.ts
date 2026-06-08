@@ -248,6 +248,9 @@ export type ColorScaleEvaluator = (value: number) => string;
  */
 export const resolveSequentialColorScale = (def: SequentialColorScale, values: Array<number>): ColorScaleEvaluator => {
   const [lo, hi] = def.domain ?? safeExtent(values);
+  if (def.domain && !(isFiniteNumber(def.domain[0]) && isFiniteNumber(def.domain[1]))) {
+    throw new Error(`lowerPlots: sequential color scale "${def.name}" domain endpoints must be finite numbers (got [${def.domain[0]}, ${def.domain[1]}])`);
+  }
   if (def.domain && def.domain[0] >= def.domain[1]) {
     throw new Error(`lowerPlots: sequential color scale "${def.name}" domain must satisfy min < max (got [${def.domain[0]}, ${def.domain[1]}])`);
   }
@@ -279,6 +282,9 @@ export const resolveDivergingColorScale = (def: DivergingColorScale, values: Arr
   let high: number;
   if (def.domain) {
     [low, mid, high] = def.domain;
+    if (!(isFiniteNumber(low) && isFiniteNumber(mid) && isFiniteNumber(high))) {
+      throw new Error(`lowerPlots: diverging color scale "${def.name}" domain endpoints must be finite numbers (got [${low}, ${mid}, ${high}])`);
+    }
     if (!(low < mid && mid < high)) {
       throw new Error(`lowerPlots: diverging color scale "${def.name}" domain must satisfy low < mid < high (got [${low}, ${mid}, ${high}])`);
     }
