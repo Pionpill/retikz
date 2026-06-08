@@ -15,7 +15,9 @@ A scale decides how a data value becomes a visual quantity. Position channels (`
 | `pow` | Custom power | Power mapping (needs `exponent`; via a full spec) |
 | `time` | Dates / time | Time axis with human-readable tick boundaries |
 | `band` / `point` | Categories | Equal bands (bars) / evenly-spaced points (categorical lines) |
-| `ordinal` | Category → color | Multi-series coloring |
+| `ordinal` | Category → color | One discrete color per category (multi-series coloring) |
+| `sequential` | Continuous value → color | One-directional color band (low→high), for continuous / temporal fields |
+| `diverging` | Quantity with a midpoint → color | Two-sided hues, pale center; profit/loss or deviation-from-mean |
 
 ## Linear vs log
 
@@ -39,6 +41,22 @@ When data spans several orders of magnitude, a linear axis crushes the small val
 `log` / `pow` / `sqrt` apply only to points and lines. Bars and areas start from a 0 baseline, and 0 is undefined on a log / power axis — pairing a non-linear scale with a bar / area errors out and tells you to use point / line instead.
 
 <ComponentAlert type="warn" title="Domain of non-linear scales" description="log requires all-positive data, sqrt requires non-negative; out-of-range values cannot be projected. An explicit domain with illegal bounds errors at compile time." />
+
+## Color scales
+
+The scales above map values to **position / length / radius**; color is a different kind of output. Position scales are consumed by the `x` / `y` channels, color scales by the `color` channel — the two never interfere.
+
+| Type | For | Output |
+| --- | --- | --- |
+| `ordinal` | Categorical field | One discrete color per category (multi-series, categorical coloring) |
+| `sequential` | Continuous / temporal field | A one-directional band: low→high along one gradient (the workhorse for continuous color) |
+| `diverging` | Quantity with a meaningful midpoint | Two-sided hues, pale center: profit/loss, deviation from mean |
+
+Sequential and diverging color comes from a **named scheme** — a preset set of color band names that is serializable and AI-generatable. Sequential schemes include `viridis` (default), `blues`, `greens`, `magma`; diverging schemes include `rdbu` (default), `brbg`, `spectral`. Use `range` to override a scheme with custom endpoint colors.
+
+Bind `color` to a continuous numeric field and `<Plot>` derives a sequential scale (viridis by default); a categorical field gets an ordinal scale. Continuous color encoding works only on per-datum marks (point / bar / sector); a line or area colors the whole path at once, so its color is not constant along the path and binding a continuous `color` errors.
+
+<ComponentAlert title="Continuous color needs a declared field type" description="In React a continuous color field must be declared as continuous via model to derive a sequential scale; without it color is treated as categorical and a continuous field errors. Diverging and custom schemes are configured through the full spec scales for now." />
 
 ## Setting it explicitly
 

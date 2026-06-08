@@ -48,7 +48,7 @@ When `series` is set, accumulation segments by series order; otherwise it follow
 | Prop | Type | Default | Description |
 | --- | --- | --- | --- |
 | `angle` | `string` | — | Angular value field path; accumulated into each sector's start/end angle |
-| `color` | `string?` | `angle` field | Color field (auto ordinal color scale); defaults to coloring by the `angle` field itself |
+| `color` | `string?` | `angle` field | Color field, colored per datum: categorical → ordinal; continuous / temporal needs a `model` declaration → auto sequential color scale (viridis). Defaults to coloring by the `angle` field |
 | `series` | `string?` | — | Series field: segments accumulation by its order; defaults to data order |
 | `id` | `string?` | — | Optional handle (reserved, not yet resolved) |
 

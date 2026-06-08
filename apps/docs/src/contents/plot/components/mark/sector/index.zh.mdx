@@ -48,7 +48,7 @@ import { Plot, SectorMark } from '@retikz/plot-react';
 | 属性 | 类型 | 默认值 | 描述 |
 | --- | --- | --- | --- |
 | `angle` | `string` | — | 角向值字段路径；自动累积成各扇区的起止角 |
-| `color` | `string?` | `angle` 字段 | 颜色字段（自动 ordinal 色 scale）；省略时按 `angle` 字段本身分类上色 |
+| `color` | `string?` | `angle` 字段 | 颜色字段，按 datum 着色：分类字段 → ordinal；连续 / 时间字段需 `model` 声明 → 自动 sequential 色阶（viridis）。省略时按 `angle` 字段上色 |
 | `series` | `string?` | — | 系列字段：累积时按其排序分段；省略时按数据顺序 |
 | `id` | `string?` | — | 可选句柄（预留，暂不解析） |
 

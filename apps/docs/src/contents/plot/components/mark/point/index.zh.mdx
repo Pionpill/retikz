@@ -43,6 +43,16 @@ import { Plot, PointMark } from '@retikz/plot-react';
 
 <p className="text-sm text-muted-foreground">按 region 给每个点上色。</p>
 
+### 连续着色
+
+给 `color` 一个连续数值字段，点按值取色——自动套上 sequential 色阶（默认 viridis），小值到大值连成一道色带。和分类着色一样按 datum 着色。
+
+连续字段要靠 `model` 声明字段类型；不声明时 `color` 一律当分类处理，连续字段会报错——要么用 `model` 声明该字段为 `continuous`，要么换一个分类字段。
+
+<ComponentPreview name="point-color-continuous" sourceFiles={['point-scatter.data.ts']} />
+
+<p className="text-sm text-muted-foreground">按 pop 连续值取色，自动 viridis 色带。</p>
+
 ### 透明度
 
 给 `opacity` 一个连续字段，不透明度按值线性映射到 `[最小值, 1]`（最小值有下界，避免全透明看不见）。叠点密集时低值更淡。
@@ -68,7 +78,7 @@ import { Plot, PointMark } from '@retikz/plot-react';
 | `size` | `string?` | — | 尺寸字段（数值）：经平方根 scale 映射成点半径（面积感知）；负值会报错 |
 | `opacity` | `string?` | — | 不透明度字段（连续）：经 clamp linear scale 映射到 `[最小值, 1]`；时间 / 分类字段会报错 |
 | `shape` | `string?` | — | 形状字段（分类）：按类别映射到 glyph 调色板（circle / rectangle / diamond 循环）；连续 / 时间字段会报错 |
-| `color` | `string?` | — | 颜色字段（categorical，自动 ordinal 色 scale）；按 datum 着色。连续 / 时间字段会报错 |
+| `color` | `string?` | — | 颜色字段，按 datum 着色：分类字段 → 自动 ordinal 色 scale；连续 / 时间字段需 `model` 声明 → 自动 sequential 色阶（viridis） |
 | `id` | `string?` | — | 可选句柄（预留，暂不解析） |
 
 ## 相关
