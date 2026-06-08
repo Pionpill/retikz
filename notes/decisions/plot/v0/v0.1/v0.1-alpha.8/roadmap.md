@@ -88,7 +88,7 @@
 
 ## ADR 清单
 
-> 3 ADR 已起草为 **Proposed**（并入多 LLM 评审 P1/P2）；外部再评审 + 人工签字后逐条进实现（沿用 alpha.6/7）。决策点 ①~⑩ 的「倾向」已写进各 ADR「决策」段、真正悬置项留各 ADR「待决策点 🔻」待签。
+> 3 ADR **全部实现 + Accepted**（2026-06-08）。每条走完 flow-alpha 五阶段（spec → 实现 → adversarial 自测 → 文档 → 收尾），两道对抗关（Bug Hunter + Contract Auditor）发现的 BLOCKING / WARNING 已全修 + 回归测试。决策点 ①~⑩ 已落实，实现期偏差记入各 ADR「实现校准」段。changelog / 发版交 next 分支。验证：plot / react / vanilla 三关全绿。
 
 | ADR | 主题 | Level | 依赖 | 状态 |
 |---|---|---|---|---|
