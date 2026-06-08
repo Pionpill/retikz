@@ -156,6 +156,71 @@ const sizeLegendSpec = (legend: Record<string, unknown> = {}): PlotSpec =>
     guides: [{ type: 'legend', channel: 'size', ...legend }],
   });
 
+/** shape 散点 + shape legend（categorical → glyph 调色板） */
+const shapeLegendSpec = (): PlotSpec =>
+  PlotSpecSchema.parse({
+    namespace: 'plot',
+    type: 'plot',
+    data: { reference: 'd' },
+    scales: [
+      { type: 'linear', name: 'x' },
+      { type: 'linear', name: 'y' },
+    ],
+    coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
+    marks: [{ type: 'point', encoding: { x: { field: 'lon' }, y: { field: 'lat' }, shape: { field: 'kind' } } }],
+    guides: [{ type: 'legend', channel: 'shape' }],
+  });
+
+/** sector（饼）+ ordinal color + color legend */
+const SECTOR_SHARE = [
+  { label: 'A', value: 3 },
+  { label: 'B', value: 5 },
+  { label: 'C', value: 2 },
+];
+const sectorColorLegendSpec = (): PlotSpec =>
+  PlotSpecSchema.parse({
+    namespace: 'plot',
+    type: 'plot',
+    data: { reference: 'd' },
+    transform: [{ kind: 'stack', y: 'value' }],
+    coordinate: { type: 'polar2D', angle: 'a', radius: 'r' },
+    scales: [
+      { type: 'linear', name: 'a' },
+      { type: 'linear', name: 'r' },
+      { type: 'ordinal', name: 'sliceColor' },
+    ],
+    marks: [{ type: 'sector', encoding: { color: { field: 'label', scale: 'sliceColor' } } }],
+    guides: [{ type: 'legend', channel: 'color', scale: 'sliceColor' }],
+  });
+
+describe('lowerPlots legend — review 修复回归（sector color / shape glyph / scale 类型）', () => {
+  // P1-1：sector（饼/环）的 color 编码同样要喂 color legend——此前 resolveColorLegend 跳过 sector
+  it('sector_color_legend_one_swatch_per_slice', () => {
+    const outer = expandOf(sectorColorLegendSpec(), { d: SECTOR_SHARE });
+    const legend = findLegendLayer(outer);
+    expect(legend).toBeDefined();
+    // 3 个 label（A/B/C）→ 3 个 swatch + 3 个标签
+    expect(swatchNodesOf(legend as IRScope).length).toBe(3);
+    expect(labelsOf(legend as IRScope).length).toBe(3);
+  });
+
+  // P1-2：shape legend 的 swatch 应是编码的 glyph 形状，而非清一色矩形
+  it('shape_legend_swatches_use_encoded_glyphs_not_rectangles', () => {
+    const outer = expandOf(shapeLegendSpec(), { d: ORDINAL_ROWS });
+    const legend = findLegendLayer(outer);
+    expect(legend).toBeDefined();
+    const shapes = swatchNodesOf(legend as IRScope).map(node => node.shape);
+    // 3 类 → 3 个 glyph swatch；调色板 circle/rectangle/diamond，至少含一个非 rectangle（证实用了编码形状）
+    expect(shapes.length).toBe(3);
+    expect(shapes.some(shape => shape !== 'rectangle')).toBe(true);
+  });
+
+  // P2：color legend 绑到位置 linear scale（非颜色 scale）→ fail-loud，而非落空 ordinal 出空图例
+  it('color_legend_bound_to_non_color_scale_fail_loud', () => {
+    expect(() => expandOf(ordinalColorLegendSpec({ scale: 'x' }), { d: ORDINAL_ROWS })).toThrow(/not a color scale/);
+  });
+});
+
 describe('lowerPlots legend — happy path（ADR-03）', () => {
   // 离散 swatch：每类一块 + 标签
   it('ordinal_color_legend_one_swatch_per_category', () => {

@@ -1,6 +1,6 @@
 import { type CompositeDefinition, type IRChild, type IRScope, defineComposite } from '@retikz/core';
 import type { ZodType } from 'zod';
-import { type AxisGuide, type Channel, type ColorScheme, type ExternalDatasets, type ExternalRow, type FieldType, type Guide, type LegendChannelType, type LegendGuide, type Mark, type OrdinalScale, PlotCoordinate, PlotFieldType, PlotGuide, PlotMark, PlotScale, type PlotSpec, PlotSpecSchema, type Scale } from '../ir';
+import { type AxisGuide, type Channel, type ColorScheme, type ExternalDatasets, type ExternalRow, type FieldType, type Guide, type LegendChannelType, type LegendGuide, type Mark, type OrdinalScale, PlotCoordinate, PlotFieldType, PlotGuide, PlotMark, PlotScale, type PlotSpec, PlotSpecSchema, type Scale, type ScaleType } from '../ir';
 import { channelValue, isFiniteNumber, resolveFieldPath } from './field';
 import { type GuideContext, type LegendEntry, type LegendInput, lowerGuide, lowerLegend } from './guide';
 import { DEFAULT_FONT_SIZE, type LegendReserve, type Margins, type Rect, computePlotArea, computePolarFrame } from './layout';
@@ -579,6 +579,9 @@ type LegendBaseInput = {
   id: string;
 };
 
+/** 可作 color 通道的 scale 类型集（位置 scale 不在内）；color legend 绑定外的类型 fail-loud */
+const COLOR_SCALE_TYPES = new Set<ScaleType>([PlotScale.Ordinal, PlotScale.Sequential, PlotScale.Diverging, PlotScale.Quantize, PlotScale.Threshold, PlotScale.Quantile]);
+
 /**
  * color legend 解析：定位 color scale（消歧 + fail-loud）→ 按 scale 类型选 swatch / ramp / 分箱
  * @description ordinal → 逐类别色块 swatch；sequential/diverging → core linearGradient 连续色带 ramp + nice 刻度；
@@ -593,10 +596,11 @@ const resolveColorLegend = (
   baseInput: LegendBaseInput,
   showLabels: boolean,
 ): LegendInput => {
-  // 收集被 color 通道引用的 scale 名 + 字段（具名 color scale 已物化进 scales）
+  // 收集被 color 通道引用的 scale 名 + 字段（具名 color scale 已物化进 scales）。
+  //   point / bar / sector 都按 datum 着色（ADR-01 B/C），sector（饼 / 环）的 color.field 同样要喂 legend——
+  //   scale + field 守卫已兜底无 color 编码的 mark，无需按 mark 类型排除。
   const colorBindings: Array<{ scaleName: string; field: string }> = [];
   for (const mark of node.marks) {
-    if (mark.type === PlotMark.Sector) continue;
     const channel = mark.encoding.color;
     if (channel?.scale !== undefined && channel.field !== undefined) {
       colorBindings.push({ scaleName: channel.scale, field: channel.field });
@@ -620,6 +624,13 @@ const resolveColorLegend = (
   }
   const def = scaleByName.get(scaleName);
   if (!def) throw new Error(`lowerPlots: legend references unknown scale "${scaleName}"`);
+  // color legend 只能绑颜色 scale；指向位置 scale（linear/band/point/time/log/pow/sqrt）→ fail-loud，
+  //   否则会落空 ordinal 分支出空 / 误导图例（如显式写 scale: 'x'）。
+  if (!COLOR_SCALE_TYPES.has(def.type)) {
+    throw new Error(
+      `lowerPlots: legend channel "color" is bound to scale "${scaleName}" of type "${def.type}", which is not a color scale (expected one of ordinal / sequential / diverging / quantize / threshold / quantile)`,
+    );
+  }
   const field = colorBindings.find(binding => binding.scaleName === scaleName)?.field;
   // 标题只在用户显式给时渲染（field 名仅作占位 fallback 的语义来源，不自动生成标题 Node，避免与条目标签混淆）
   const title = guide.title;

@@ -432,16 +432,22 @@ export const lowerLegend = (input: LegendInput): IRScope => {
     let cursorX = band.x;
     let rowY = cursorY;
     for (const entry of input.entries) {
-      const swatch = rectNode(cursorX, rowY, LEGEND_SWATCH_SIZE, LEGEND_SWATCH_SIZE);
-      if (entry.color !== undefined) swatch.fill = entry.color;
-      if (entry.opacity !== undefined) {
-        swatch.fill = 'currentColor';
-        swatch.fillOpacity = entry.opacity;
-      }
-      children.push(swatch);
-      // size 梯度符号：在格内画一个代表半径的圆点 Node（覆盖 swatch 框，给出比例感）
-      if (entry.radius !== undefined) {
-        children.push({ type: 'node', position: [cursorX + LEGEND_SWATCH_SIZE / 2, rowY + LEGEND_SWATCH_SIZE / 2], shape: 'circle', minimumSize: entry.radius * Math.SQRT2, fill: 'currentColor' });
+      if (entry.shape !== undefined) {
+        // shape 图例：swatch 本身就是编码的 glyph（circle / rectangle / diamond…），不画矩形框
+        children.push({ type: 'node', position: [cursorX + LEGEND_SWATCH_SIZE / 2, rowY + LEGEND_SWATCH_SIZE / 2], shape: entry.shape, minimumSize: LEGEND_SWATCH_SIZE, fill: entry.color ?? 'currentColor' });
+      } else {
+        // color / 分箱 / opacity / size：矩形色块（size 再叠圆点）
+        const swatch = rectNode(cursorX, rowY, LEGEND_SWATCH_SIZE, LEGEND_SWATCH_SIZE);
+        if (entry.color !== undefined) swatch.fill = entry.color;
+        if (entry.opacity !== undefined) {
+          swatch.fill = 'currentColor';
+          swatch.fillOpacity = entry.opacity;
+        }
+        children.push(swatch);
+        // size 梯度符号：在格内画一个代表半径的圆点 Node（覆盖 swatch 框，给出比例感）
+        if (entry.radius !== undefined) {
+          children.push({ type: 'node', position: [cursorX + LEGEND_SWATCH_SIZE / 2, rowY + LEGEND_SWATCH_SIZE / 2], shape: 'circle', minimumSize: entry.radius * Math.SQRT2, fill: 'currentColor' });
+        }
       }
       // 标签：swatch 右侧
       const labelX = cursorX + LEGEND_SWATCH_SIZE + LEGEND_LABEL_GAP + estimateLabelWidth(entry.label, fontSize) / 2;

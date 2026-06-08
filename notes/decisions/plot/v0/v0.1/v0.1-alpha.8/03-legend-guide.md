@@ -81,7 +81,10 @@ export type ScaleDescriptor = {
 - **legend 矩形 = core Node（shape rectangle），非 Path**：swatch / ramp / 分箱色块下沉成 `{ type:'node', shape:'rectangle', minimumWidth/Height, fill }`，**与 bar mark 同款**（`lower/mark.ts` barStyle）。原本曾用单 step rectangle Path，但违反 core `PathSchema.children.min(2)`（self-contained rectangle step 仍受 min(2) 约束）——产出 core 非法 IR（adversarial 第一关 BLOCKING 抓出）。改 Node 既合 core schema 又符「一切可见物是 Node」理念，无需改 core。配 `ChildSchema` 合法性回归测试守约束。连续 ramp 用 core `linearGradient` paint server（Node.fill 接 PaintSpec，核验 core 支持）。
 - **默认 axes 合并语义校准（决策 ⑦）**：实际落地为 **「显式 `Axis` 抑制默认 axes（保留既有 `dsl_explicit_axis_only` 行为不变）；`Legend` 不抑制默认 axes」**。决策 ⑦ 原文「显式 x 轴 → y 默认仍补」的 per-dimension 细化**未采纳**——既有 React 行为是「任一显式 Axis 即不补默认」，本轮只修 P1 真 bug（Legend 杀 axes），不改无关的既有 axis 行为。per-dimension 默认轴补齐留作未来增强（需同改 `dsl_explicit_axis_only` 期望）。
 - **标题 Node**：决策 ⑨「省略 title → 用绑定字段名」**未物化成自动可见标题**——仅用户显式 `title` 时渲染标题 Node，省略时无标题。后续可补「字段名缺省标题」。
-- **WARNING（backlog）**：`legend.scale` 指向「存在但类型不符」的 scale（如 color legend 指向位置 linear scale）时不做类型守卫、静默落 ordinal 退化（不崩、产合法 swatch），与决策 ⑥「fail-loud」略松。adversarial 第一关 WARNING，登记 backlog（补 legend.scale 类型一致性校验）。
+- **多 LLM review 后续修（Accepted 后）**：三处 review findings 已修 + 回归测试：
+  - **P1 sector color legend**：`resolveColorLegend` 此前跳过 `PlotMark.Sector`，致饼/环图 `<Legend channel="color">` 抛「无绑定 color scale」或出空图例。sector 的 `color.field` 同 point/bar 按 datum 着色（ADR-01 B/C），已纳入 color 绑定收集。
+  - **P1 shape glyph**：shape legend 条目带 `entry.shape` 但 `lowerLegend` 此前只画矩形 swatch、不应用形状，致 `<Legend channel="shape">` 渲成清一色矩形。已让 shape 条目的 swatch 画成编码的 glyph（circle/rectangle/diamond）。
+  - **P2 legend.scale 类型守卫**：`legend.scale` 此前只校验存在、不校验是 color scale，`scale: 'x'`（位置 linear）会落空 ordinal 出空图例。已加 `COLOR_SCALE_TYPES` 守卫——color legend 绑非颜色 scale（位置 linear/band/point/time/log/pow/sqrt）即 fail-loud（了结原 adversarial 第一关 legend.scale WARNING，不再 backlog）。
 - **占位落地为固定带宽**：决策 ⑩ 写「`estimateLabelWidth` + swatch 尺寸估」，实际 `legendReserveOf` 用固定 `LEGEND_BAND_EXTENT` 在对应边预留，不按标签长度估——长标签可能溢出（plot-design §13.1 允许）。后续可按标签宽细化。
 - **ramp 刻度域取配置 domain（contract-audit W2 修）**：连续 ramp 的取色 / 刻度域显式 `domain` 优先（sequential `[min,max]`、diverging `[low,high]`），与实绘取色同基准；缺省回退数据 extent。早期曾固定取数据 extent，致显式 domain 时图例刻度与颜色错位，已修 + 回归测试。
 
