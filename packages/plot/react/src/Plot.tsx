@@ -1,7 +1,7 @@
 import type { FC, ReactNode } from 'react';
 import { Layout, type LayoutProps } from '@retikz/react';
 import { type DataModel, type ExternalDatasets, type ExternalRow, type LowerPlotsOptions, type PlotSpec, PlotSpecSchema, lowerPlots } from '@retikz/plot';
-import { type CoordinateInput, type DslScaleX, buildPlotSpec } from './components';
+import { type CoordinateInput, type DslScaleX, type DslScaleY, buildPlotSpec } from './components';
 
 /** <Plot> 两条入口共享的展示 props + lowerPlots 选项 */
 export type PlotCommonProps = Pick<LayoutProps, 'width' | 'height' | 'className' | 'style' | 'renderer'> & LowerPlotsOptions;
@@ -31,6 +31,8 @@ export type PlotDslProps = PlotCommonProps & {
   bare?: boolean;
   /** 连续 x scale 类型（缺省 linear；含 <BarMark> 时强制 band，忽略此项；polar 下忽略） */
   scaleX?: DslScaleX;
+  /** 连续 y（值轴）scale 类型（缺省 linear；polar 下忽略）；log / sqrt 仅 point/line（柱/面积 fail-loud） */
+  scaleY?: DslScaleY;
   /** 坐标系：缺省 cartesian2D；"polar2D" 简写或 polar2D 对象配置（innerRadius / startAngle / endAngle） */
   coordinate?: CoordinateInput;
 };
@@ -58,7 +60,7 @@ export const Plot: FC<PlotProps> = props => {
   } else {
     // DSL 入口：model 经 buildPlotSpec 注入 data.model **并改走 type-driven 派生**（省略 AUTO 位置 scale 绑定，
     // 否则 model 的 temporal/nominal 不会派生 time/band、甚至被当显式 linear 校验）。扁平 fieldMap 映射到固定数据集名。
-    spec = buildPlotSpec(props.children, DSL_DATA_REF, { bare: props.bare, scaleX: props.scaleX, coordinate: props.coordinate, model: props.model });
+    spec = buildPlotSpec(props.children, DSL_DATA_REF, { bare: props.bare, scaleX: props.scaleX, scaleY: props.scaleY, coordinate: props.coordinate, model: props.model });
     datasets = { [DSL_DATA_REF]: props.data };
     if (props.fieldMap) effectiveFieldMaps = { [DSL_DATA_REF]: props.fieldMap };
   }

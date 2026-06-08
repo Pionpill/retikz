@@ -7,7 +7,7 @@ import { DEFAULT_FONT_SIZE, type Margins, type Rect, computePlotArea, computePol
 import { type ColorOf, lowerMark } from './mark';
 import { type CoordinateFrame, createCartesianFrame, createPolarFrame } from './project';
 import { type DatumIdRegistrar, type ProvenanceContext, createDatumIdRegistrar, rootMeta, tagSourceIndex } from './provenance';
-import { type CategoryOrder, type TickSet, assertScaleFieldCompatible, deriveScale, orderedCategoryDomain, resolveOrdinalScale, resolvePositionScale } from './scale';
+import { type CategoryOrder, type TickSet, assertBaselineScaleCompatible, assertScaleFieldCompatible, deriveScale, orderedCategoryDomain, resolveOrdinalScale, resolvePositionScale } from './scale';
 import { assertAllValuesValid, collectFormatFields, normalizeRows, validateBoundData } from './coerce';
 import { applyTransforms } from './transform';
 import { type ResolveField, applyFieldResolver } from './resolve';
@@ -254,6 +254,8 @@ export const resolveFrame = (params: ResolveFrameParams): ResolvedFrame => {
     // 笛卡尔下出现 angle/radius 通道才是误用；polar 下复用 x/y 合法。此处构造极坐标帧。
     const angleScaleDef = resolveScaleForRole('angle', coordinate.angle, xChannelOf, angleValues);
     const radiusScaleDef = resolveScaleForRole('radius', coordinate.radius, yChannelOf, radiusValues);
+    // L1：radius 是 polar 的值轴；非线性连续 scale + interval/area（baseline 0）→ fail-loud
+    assertBaselineScaleCompatible(radiusScaleDef.type, node.marks);
 
     // guide 维度角色化：angle / x → angular（primary）、radius / y → radial（secondary）；一维一轴
     const guides = node.guides ?? [];
@@ -283,8 +285,13 @@ export const resolveFrame = (params: ResolveFrameParams): ResolvedFrame => {
       outerRadius: layout.outerRadius,
       startAngle: coordinate.startAngle,
       endAngle: coordinate.endAngle,
-      // 连续角轴（linear / time）才段内采样弯弧；分类（band / point）类别间无中间值，走弦
-      continuousAngle: angleScaleDef.type === PlotScale.Linear || angleScaleDef.type === PlotScale.Time,
+      // 连续角轴（linear / time / log / pow / sqrt）才段内采样弯弧；分类（band / point）类别间无中间值，走弦
+      continuousAngle:
+        angleScaleDef.type === PlotScale.Linear ||
+        angleScaleDef.type === PlotScale.Time ||
+        angleScaleDef.type === PlotScale.Log ||
+        angleScaleDef.type === PlotScale.Pow ||
+        angleScaleDef.type === PlotScale.Sqrt,
       primary: angleScale,
       secondary: radiusScale,
     });
@@ -313,6 +320,8 @@ export const resolveFrame = (params: ResolveFrameParams): ResolvedFrame => {
     const yValues = collectValues(yChannelOf, true, true);
     const xScaleDef = resolveScaleForRole('x', coordinate.x, xChannelOf, xValues);
     const yScaleDef = resolveScaleForRole('y', coordinate.y, yChannelOf, yValues);
+    // L1：y 是 cartesian 的值轴；非线性连续 scale + interval/area（baseline 0）→ fail-loud
+    assertBaselineScaleCompatible(yScaleDef.type, node.marks);
     const xScale = resolvePositionScale(xScaleDef, xValues, [0, width]);
     const yScale = resolvePositionScale(yScaleDef, yValues, [height, 0]);
 
@@ -333,9 +342,11 @@ export const resolveFrame = (params: ResolveFrameParams): ResolvedFrame => {
     );
 
     // range 收敛到 plot area（y 屏幕向下，故倒置）；显式 range 的 scale 不覆盖——尊重用户手设
-    // 仅连续 scale 可带显式 range（band / point 的 range 始终派生）
-    const xHasExplicitRange = xScaleDef.type === PlotScale.Linear && xScaleDef.range !== undefined;
-    const yHasExplicitRange = yScaleDef.type === PlotScale.Linear && yScaleDef.range !== undefined;
+    // 仅连续 scale 可带显式 range（band / point 的 range 始终派生；time 的 range 仍派生）
+    const hasExplicitContinuousRange = (def: Scale): boolean =>
+      (def.type === PlotScale.Linear || def.type === PlotScale.Log || def.type === PlotScale.Pow || def.type === PlotScale.Sqrt) && def.range !== undefined;
+    const xHasExplicitRange = hasExplicitContinuousRange(xScaleDef);
+    const yHasExplicitRange = hasExplicitContinuousRange(yScaleDef);
     if (!xHasExplicitRange) xScale.setRange([plotArea.x, plotArea.x + plotArea.width]);
     if (!yHasExplicitRange) yScale.setRange([plotArea.y + plotArea.height, plotArea.y]);
     frame = createCartesianFrame(xScale, yScale);

@@ -16,6 +16,12 @@ export const PlotScale = {
   Ordinal: 'ordinal',
   /** 时间：连续时间映射（epoch 毫秒），刻度落人类可读时间边界（UTC） */
   Time: 'time',
+  /** 对数：连续对数映射；domain / value 必须全正（0 与负值不可绘，lowering 跳过 / 拒绝） */
+  Log: 'log',
+  /** 幂：连续幂映射 y = m·x^exponent + b */
+  Pow: 'pow',
+  /** 平方根：pow exponent 0.5 的常用别名（面积感知正确；size 通道默认派生到此）；domain / value 必须 ≥ 0 */
+  Sqrt: 'sqrt',
 } as const;
 
 /** scale 类型 */
@@ -123,9 +129,62 @@ export const TimeScaleSchema = z
   })
   .describe('Time scale: continuous mapping from time instants (epoch ms) to range; ticks land on human-readable time boundaries');
 
+export const LogScaleSchema = z
+  .object({
+    type: z.literal(PlotScale.Log).describe('Discriminator: continuous logarithmic scale (domain must be strictly positive)'),
+    name: z.string().min(1).describe('Scale name; referenced by coordinate.x / coordinate.y'),
+    domain: z
+      .tuple([z.number(), z.number()])
+      .optional()
+      .describe('[min, max] input extent, both strictly > 0; omit to infer from the positive field values at lowering. Non-positive bounds are rejected at lowering'),
+    range: z
+      .tuple([z.number(), z.number()])
+      .optional()
+      .describe('[start, end] output extent in plot-area units; omit to derive from the coordinate extent at lowering'),
+    base: z.number().gt(1).optional().describe('Logarithm base; default 10'),
+    nice: z.boolean().optional().describe('Round the domain outward to nice powers of the base; default false'),
+    clamp: z.boolean().optional().describe('Clamp out-of-domain inputs to the range ends; default false'),
+  })
+  .describe('Log scale: continuous logarithmic mapping; valid only on point / line marks (interval / area baseline includes 0)');
+
+export const PowScaleSchema = z
+  .object({
+    type: z.literal(PlotScale.Pow).describe('Discriminator: continuous power scale'),
+    name: z.string().min(1).describe('Scale name; referenced by coordinate.x / coordinate.y'),
+    domain: z
+      .tuple([z.number(), z.number()])
+      .optional()
+      .describe('[min, max] input extent; omit to infer from the field values at lowering. A non-integer exponent requires a non-negative domain (rejected at lowering otherwise)'),
+    range: z
+      .tuple([z.number(), z.number()])
+      .optional()
+      .describe('[start, end] output extent in plot-area units; omit to derive from the coordinate extent at lowering'),
+    exponent: z.number().optional().describe('Power exponent; default 2'),
+    nice: z.boolean().optional().describe('Round the domain to nice numbers; default false'),
+    clamp: z.boolean().optional().describe('Clamp out-of-domain inputs to the range ends; default false'),
+  })
+  .describe('Pow scale: continuous power mapping y = m·x^exponent + b; valid only on point / line marks');
+
+export const SqrtScaleSchema = z
+  .object({
+    type: z.literal(PlotScale.Sqrt).describe('Discriminator: continuous square-root scale (pow with exponent 0.5; area-perceptual)'),
+    name: z.string().min(1).describe('Scale name; referenced by coordinate.x / coordinate.y or a size channel'),
+    domain: z
+      .tuple([z.number(), z.number()])
+      .optional()
+      .describe('[min, max] input extent, both ≥ 0; omit to infer from the field values at lowering. Negative bounds are rejected at lowering'),
+    range: z
+      .tuple([z.number(), z.number()])
+      .optional()
+      .describe('[start, end] output extent in plot-area units (or px radius for a size channel); omit to derive at lowering'),
+    nice: z.boolean().optional().describe('Round the domain to nice numbers; default false'),
+    clamp: z.boolean().optional().describe('Clamp out-of-domain inputs to the range ends; default false'),
+  })
+  .describe('Sqrt scale: continuous square-root mapping (area-perceptual); valid only on point / line marks; also the default derivation target for the size channel');
+
 export const ScaleSchema = z
-  .discriminatedUnion('type', [LinearScaleSchema, BandScaleSchema, PointScaleSchema, OrdinalScaleSchema, TimeScaleSchema])
-  .describe('Scale union: linear / band / point / ordinal / time');
+  .discriminatedUnion('type', [LinearScaleSchema, BandScaleSchema, PointScaleSchema, OrdinalScaleSchema, TimeScaleSchema, LogScaleSchema, PowScaleSchema, SqrtScaleSchema])
+  .describe('Scale union: linear / band / point / ordinal / time / log / pow / sqrt');
 
 /** 分类标量：类别取值 */
 export type CategoryValue = z.infer<typeof CategoryValueSchema>;
@@ -139,5 +198,11 @@ export type PointScale = z.infer<typeof PointScaleSchema>;
 export type OrdinalScale = z.infer<typeof OrdinalScaleSchema>;
 /** time scale（连续时间，epoch ms） */
 export type TimeScale = z.infer<typeof TimeScaleSchema>;
-/** scale（linear / band / point / ordinal / time） */
+/** log scale（连续对数，domain 全正） */
+export type LogScale = z.infer<typeof LogScaleSchema>;
+/** pow scale（连续幂） */
+export type PowScale = z.infer<typeof PowScaleSchema>;
+/** sqrt scale（连续平方根，面积感知；size 通道默认派生目标） */
+export type SqrtScale = z.infer<typeof SqrtScaleSchema>;
+/** scale（linear / band / point / ordinal / time / log / pow / sqrt） */
 export type Scale = z.infer<typeof ScaleSchema>;

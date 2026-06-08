@@ -1,17 +1,20 @@
 import { extent } from 'd3-array';
 import {
   type ScaleBand,
+  type ScaleContinuousNumeric,
   type ScaleLinear,
   type ScalePoint,
   type ScaleTime,
   scaleBand,
   scaleLinear,
+  scaleLog,
   scaleOrdinal,
   scalePoint,
+  scalePow,
   scaleUtc,
 } from 'd3-scale';
 import { schemeCategory10 } from 'd3-scale-chromatic';
-import { type BandScale, type FieldDef, type FieldType, type OrdinalScale, PlotFieldType, PlotScale, type PointScale, type ScalarValue, type Scale, type ScaleType, type TimeScale } from '../ir';
+import { type BandScale, type FieldDef, type FieldType, type LogScale, type OrdinalScale, PlotFieldType, PlotScale, type PointScale, type PowScale, type ScalarValue, type Scale, type ScaleType, type SqrtScale, type TimeScale } from '../ir';
 import { isFiniteNumber } from './field';
 import { isIsoDateString } from './infer';
 
@@ -77,7 +80,7 @@ export const resolveLinearScale = (
  * @description 刻度值 / 标签只依赖 domain + count（与 range 无关）——故可在 range 定下来前先算，供布局估算 margin（ADR-03）。
  *   axis 与同维 grid 复用同一 TickSet（同源）。
  */
-export const scaleTicks = (scale: ScaleLinear<number, number>, count: number = DEFAULT_TICK_COUNT): TickSet => {
+export const scaleTicks = (scale: ScaleContinuousNumeric<number, number>, count: number = DEFAULT_TICK_COUNT): TickSet => {
   const values = scale.ticks(count);
   const format = scale.tickFormat(count);
   return { values, labels: values.map(format) };
@@ -288,6 +291,101 @@ export const timePositionScale = (scale: ScaleTime<number, number>): PositionSca
 });
 
 /**
+ * 建对数 scale（d3 scaleLog，全正 domain）
+ * @description 显式 domain 含 0 / 负值 → fail-loud；缺省从正值 extent 推断（空集回退 [1, 10]）。
+ *   非正数据值不在此拦截——由 continuousPositionScale 的 isValidInput 跳过（NaN），与连续 scale 跳过非有限值同理。
+ */
+export const resolveLogScale = (
+  def: LogScale,
+  values: Array<number>,
+  fallbackRange: readonly [number, number],
+): ScaleContinuousNumeric<number, number> => {
+  if (def.domain && (def.domain[0] <= 0 || def.domain[1] <= 0)) {
+    throw new Error(`lowerPlots: log scale "${def.name}" domain must be strictly positive (got [${def.domain[0]}, ${def.domain[1]}])`);
+  }
+  const positives = values.filter(value => value > 0);
+  const [lo, hi] = extent(positives);
+  const scale = scaleLog()
+    .base(def.base ?? 10)
+    .domain([...(def.domain ?? (lo === undefined ? [1, 10] : [lo, hi]))])
+    .range([...(def.range ?? fallbackRange)]);
+  if (def.nice) scale.nice();
+  if (def.clamp) scale.clamp(true);
+  return scale;
+};
+
+/**
+ * 建幂 scale（d3 scalePow）
+ * @description 非整数 exponent + 显式 domain 含负值 → fail-loud（避免 d3 sign-preserving 反直觉）；
+ *   整数 exponent 允许负 domain。exponent 缺省 2。
+ */
+export const resolvePowScale = (
+  def: PowScale,
+  values: Array<number>,
+  fallbackRange: readonly [number, number],
+): ScaleContinuousNumeric<number, number> => {
+  const exponent = def.exponent ?? 2;
+  if (def.domain && !Number.isInteger(exponent) && (def.domain[0] < 0 || def.domain[1] < 0)) {
+    throw new Error(`lowerPlots: pow scale "${def.name}" with non-integer exponent ${exponent} requires a non-negative domain (got [${def.domain[0]}, ${def.domain[1]}])`);
+  }
+  const scale = scalePow()
+    .exponent(exponent)
+    .domain([...(def.domain ?? safeExtent(values))])
+    .range([...(def.range ?? fallbackRange)]);
+  if (def.nice) scale.nice();
+  if (def.clamp) scale.clamp(true);
+  return scale;
+};
+
+/**
+ * 建平方根 scale（d3 scalePow exponent 0.5；面积感知）
+ * @description 显式 domain 含负值 → fail-loud；缺省从非负值 extent 推断。负数据值由 isValidInput 跳过。
+ */
+export const resolveSqrtScale = (
+  def: SqrtScale,
+  values: Array<number>,
+  fallbackRange: readonly [number, number],
+): ScaleContinuousNumeric<number, number> => {
+  if (def.domain && (def.domain[0] < 0 || def.domain[1] < 0)) {
+    throw new Error(`lowerPlots: sqrt scale "${def.name}" domain must be non-negative (got [${def.domain[0]}, ${def.domain[1]}])`);
+  }
+  const scale = scalePow()
+    .exponent(0.5)
+    .domain([...(def.domain ?? safeExtent(values.filter(value => value >= 0)))])
+    .range([...(def.range ?? fallbackRange)]);
+  if (def.nice) scale.nice();
+  if (def.clamp) scale.clamp(true);
+  return scale;
+};
+
+/**
+ * 连续数值 scale → PositionScale（linear / log / pow / sqrt 共用）
+ * @description bandwidth=0；isValidInput 拦不可绘的值（log ≤ 0、sqrt / 非整数幂 < 0）→ NaN 跳过；
+ *   投影结果非有限（log(0)=-∞）也归 NaN，与连续 scale 跳过非有限值一致。
+ */
+export const continuousPositionScale = (
+  scale: ScaleContinuousNumeric<number, number>,
+  isValidInput: (value: unknown) => boolean = isFiniteNumber,
+): PositionScale => ({
+  coordinate: value => {
+    if (!isValidInput(value)) return NaN;
+    const coordinate = scale(value as number);
+    return Number.isFinite(coordinate) ? coordinate : NaN;
+  },
+  get bandwidth() {
+    return 0;
+  },
+  ticks: count => scaleTicks(scale, count),
+  range: () => {
+    const [start, end] = scale.range();
+    return [start, end];
+  },
+  setRange: range => {
+    scale.range([range[0], range[1]]);
+  },
+});
+
+/**
  * 按字段类型派生默认位置 scale 定义（type-driven 选型）
  * @description continuous→linear、temporal→time、categorical→band；
  *   undefined（无字段绑定，如全常量通道）→ linear 兜底。仅在 coordinate 省略 scale 绑定时调用。
@@ -309,7 +407,12 @@ export const deriveScale = (fieldType: FieldType | undefined, name: string): Sca
  *   continuous 灵活（可作连续亦可作分类带），不拦。
  */
 export const assertScaleFieldCompatible = (role: string, scaleType: ScaleType, fieldType: FieldType, scaleName: string): void => {
-  const continuous = scaleType === PlotScale.Linear || scaleType === PlotScale.Time;
+  const continuous =
+    scaleType === PlotScale.Linear ||
+    scaleType === PlotScale.Time ||
+    scaleType === PlotScale.Log ||
+    scaleType === PlotScale.Pow ||
+    scaleType === PlotScale.Sqrt;
   const categorical = scaleType === PlotScale.Band || scaleType === PlotScale.Point;
   const fieldCategorical = fieldType === PlotFieldType.Categorical;
   if (continuous && fieldCategorical) {
@@ -317,6 +420,21 @@ export const assertScaleFieldCompatible = (role: string, scaleType: ScaleType, f
   }
   if (categorical && fieldType === PlotFieldType.Temporal) {
     throw new Error(`lowerPlots: coordinate.${role} scale "${scaleName}" (${scaleType}) incompatible with temporal field; use time`);
+  }
+};
+
+/**
+ * L1 守卫：非线性连续 scale（log / pow / sqrt）不能作 interval / area 的值轴
+ * @description 柱 / 面积的 baseline 含 0，与对数 / 幂的结构冲突（log(0)=-∞）。命中即 fail-loud，
+ *   提示改用 point / line（或将来的显式正 baseline 支持）。仅查值轴（cartesian=y、polar=radius）。
+ */
+export const assertBaselineScaleCompatible = (valueScaleType: ScaleType, marks: ReadonlyArray<{ type: string }>): void => {
+  const nonlinear = valueScaleType === PlotScale.Log || valueScaleType === PlotScale.Pow || valueScaleType === PlotScale.Sqrt;
+  if (!nonlinear) return;
+  if (marks.some(mark => mark.type === 'interval' || mark.type === 'area')) {
+    throw new Error(
+      'nonlinear continuous scale (log/pow/sqrt) cannot be used with interval/area because their baseline includes 0; use point/line or wait for explicit positive baseline support',
+    );
   }
 };
 
@@ -338,6 +456,15 @@ export const resolvePositionScale = (
       return linearPositionScale(resolveLinearScale(def, values.filter(isFiniteNumber), fallbackRange));
     case PlotScale.Time:
       return timePositionScale(resolveTimeScale(def, values, fallbackRange));
+    case PlotScale.Log:
+      return continuousPositionScale(resolveLogScale(def, values.filter(isFiniteNumber), fallbackRange), value => isFiniteNumber(value) && value > 0);
+    case PlotScale.Sqrt:
+      return continuousPositionScale(resolveSqrtScale(def, values.filter(isFiniteNumber), fallbackRange), value => isFiniteNumber(value) && value >= 0);
+    case PlotScale.Pow: {
+      const integerExponent = Number.isInteger(def.exponent ?? 2);
+      const isValidInput = integerExponent ? isFiniteNumber : (value: unknown) => isFiniteNumber(value) && value >= 0;
+      return continuousPositionScale(resolvePowScale(def, values.filter(isFiniteNumber), fallbackRange), isValidInput);
+    }
     case PlotScale.Ordinal:
       throw new Error(`resolvePositionScale: ordinal scale "${def.name}" cannot drive a positional (x/y) channel`);
   }

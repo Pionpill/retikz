@@ -4,4 +4,4 @@ export type { BarMarkProps, LineMarkProps, PointMarkProps, SectorMarkProps, Area
 export { Axis } from './guides';
 export type { AxisProps } from './guides';
 export { buildPlotSpec } from './buildPlotSpec';
-export type { BuildPlotSpecOptions, DslScaleX, CoordinateInput } from './buildPlotSpec';
+export type { BuildPlotSpecOptions, DslScaleX, DslScaleY, CoordinateInput } from './buildPlotSpec';

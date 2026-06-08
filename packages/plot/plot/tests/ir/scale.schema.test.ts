@@ -37,7 +37,44 @@ describe('ScaleSchema (ADR-03)', () => {
   });
 
   it('scale_unknown_type_rejected', () => {
-    expect(() => ScaleSchema.parse({ type: 'log', name: 'x' })).toThrow();
+    expect(() => ScaleSchema.parse({ type: 'bogus', name: 'x' })).toThrow();
+  });
+});
+
+describe('ScaleSchema log / pow / sqrt (alpha.7 ADR-01)', () => {
+  // Happy path
+  it('log_schema_valid', () => {
+    const s = { type: 'log', name: 'y', base: 10, nice: true };
+    expect(ScaleSchema.parse(s)).toEqual(s);
+  });
+
+  it('log_omits_optionals_valid', () => {
+    expect(ScaleSchema.parse({ type: 'log', name: 'y' })).toEqual({ type: 'log', name: 'y' });
+  });
+
+  it('pow_schema_valid', () => {
+    const s = { type: 'pow', name: 'y', exponent: 2, domain: [0, 100] };
+    expect(ScaleSchema.parse(s)).toEqual(s);
+  });
+
+  it('sqrt_schema_valid', () => {
+    const s = { type: 'sqrt', name: 'r', domain: [0, 50], range: [0, 20] };
+    expect(ScaleSchema.parse(s)).toEqual(s);
+  });
+
+  // 边界 / 错误路径（注：domain 正性是 lowering 校验，schema 仅校验结构）
+  it('log_base_must_be_gt_one', () => {
+    expect(() => ScaleSchema.parse({ type: 'log', name: 'y', base: 1 })).toThrow();
+    expect(() => ScaleSchema.parse({ type: 'log', name: 'y', base: 0 })).toThrow();
+  });
+
+  it('log_domain_negative_accepted_by_schema_rejected_at_lowering', () => {
+    // schema 只校验结构（两元数值元组）；正性留 lowering fail-loud
+    expect(ScaleSchema.parse({ type: 'log', name: 'y', domain: [-1, 10] })).toEqual({ type: 'log', name: 'y', domain: [-1, 10] });
+  });
+
+  it('pow_exponent_non_number_rejected', () => {
+    expect(() => ScaleSchema.parse({ type: 'pow', name: 'y', exponent: 'two' })).toThrow();
   });
 });
 

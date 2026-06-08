@@ -57,7 +57,8 @@ polar 对象的 `innerRadius` / `startAngle` / `endAngle` 见 [坐标系](/plot/
 | `data` | `Array<Row>` | — | 裸数据行数组（组合 DSL 入口）；数据不进 IR |
 | `children` | `ReactNode` | — | mark / guide 子组件（组合 DSL 入口） |
 | `coordinate` | `'polar' \| { type: 'polar2D'; innerRadius?; startAngle?; endAngle? }` | cartesian | 坐标系：缺省平面直角；`"polar2D"` 简写或 polar 对象 |
-| `scaleX` | `'linear' \| 'time' \| 'point'` | `'linear'` | 连续 x scale 类型；含 `<BarMark>` 时强制 band，polar 下忽略 |
+| `scaleX` | `'linear' \| 'time' \| 'point' \| 'log' \| 'sqrt'` | `'linear'` | 连续 x scale 类型；含 `<BarMark>` 时强制 band，polar 下忽略。`log` / `sqrt` 仅 point / line（柱 / 面积 baseline 含 0，与之冲突会报错） |
+| `scaleY` | `'linear' \| 'log' \| 'sqrt'` | `'linear'` | 连续 y（值轴）scale 类型；polar 下忽略。`log` / `sqrt` 仅 point / line（柱 / 面积会报错）。`log` 要求数据为正、`sqrt` 要求非负 |
 | `bare` | `boolean?` | `false` | 只绘图、不出任何轴 / 网格；忽略 `<Axis>` |
 | `width` | `number` | — | 外框宽度（含轴与标签） |
 | `height` | `number` | — | 外框高度（含轴与标签） |

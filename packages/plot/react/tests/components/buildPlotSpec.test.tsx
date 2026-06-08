@@ -221,6 +221,18 @@ describe('buildPlotSpec ADR-07（BarMark / color / series / stack / scaleX）', 
     expect(spec.scales[0]).toEqual({ type: 'time', name: '__x' });
   });
 
+  it('scalex_log_sqrt', () => {
+    expect(buildPlotSpec(<LineMark x="d" y="v" />, '__plot', { scaleX: 'log' }).scales[0]).toEqual({ type: 'log', name: '__x' });
+    expect(buildPlotSpec(<LineMark x="d" y="v" />, '__plot', { scaleX: 'sqrt' }).scales[0]).toEqual({ type: 'sqrt', name: '__x' });
+  });
+
+  it('scaley_log_sqrt_on_value_axis', () => {
+    // scaleY 作用于值轴（__y，scales[1]）；缺省 linear
+    expect(buildPlotSpec(<LineMark x="d" y="v" />, '__plot').scales[1]).toEqual({ type: 'linear', name: '__y' });
+    expect(buildPlotSpec(<LineMark x="d" y="v" />, '__plot', { scaleY: 'log' }).scales[1]).toEqual({ type: 'log', name: '__y' });
+    expect(buildPlotSpec(<PointMark x="d" y="v" />, '__plot', { scaleY: 'sqrt' }).scales[1]).toEqual({ type: 'sqrt', name: '__y' });
+  });
+
   it('line_series_color_eq_series', () => {
     const spec = buildPlotSpec(<LineMark x="t" y="v" series="city" order="t" />, '__plot');
     expect(spec.marks[0]).toMatchObject({ type: 'line', series: 'city', order: 't' });

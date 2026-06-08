@@ -39,8 +39,11 @@ const AUTO_ANGLE = '__angle';
 const AUTO_RADIUS = '__radius';
 const AUTO_COLOR = '__color';
 
-/** <Plot scaleX> 可选的连续 x scale 类型（柱状自动 band，故此处不含 band） */
-export type DslScaleX = 'linear' | 'time' | 'point';
+/** <Plot scaleX> 可选的连续 x scale 类型（柱状自动 band，故此处不含 band）；log / sqrt 仅 point/line（lowering L1 守卫） */
+export type DslScaleX = 'linear' | 'time' | 'point' | 'log' | 'sqrt';
+
+/** <Plot scaleY> 可选的连续 y（值轴）scale 类型；log / sqrt 仅 point/line（柱/面积 baseline 0 与之冲突，lowering fail-loud） */
+export type DslScaleY = 'linear' | 'log' | 'sqrt';
 
 /**
  * <Plot coordinate> 入口形态：字符串简写 `"polar2D"` 或对象配置；缺省 cartesian2D
@@ -66,9 +69,11 @@ export type BuildPlotSpecOptions = {
   bare?: boolean;
   /** 连续 x scale 类型（缺省 linear；含 <BarMark> 时强制 band，忽略此项；polar 下忽略） */
   scaleX?: DslScaleX;
+  /** 连续 y（值轴）scale 类型（缺省 linear；polar 下忽略）；log / sqrt 仅 point/line（柱/面积 fail-loud） */
+  scaleY?: DslScaleY;
   /** 坐标系选择（缺省 cartesian2D）；"polar2D" 或 polar2D 对象配置 */
   coordinate?: CoordinateInput;
-  /** 数据模型（字段类型）：声明则进 data.model，并改由 type-driven 派生位置 scale（省略 AUTO 绑定，scaleX 让位给 model） */
+  /** 数据模型（字段类型）：声明则进 data.model，并改由 type-driven 派生位置 scale（省略 AUTO 绑定，scaleX / scaleY 让位给 model） */
   model?: DataModel;
 };
 
@@ -205,7 +210,16 @@ const buildCartesianXScale = (hasBar: boolean, scaleX: DslScaleX | undefined): S
   if (hasBar) return { type: PlotScale.Band, name: AUTO_X };
   if (scaleX === 'time') return { type: PlotScale.Time, name: AUTO_X };
   if (scaleX === 'point') return { type: PlotScale.Point, name: AUTO_X };
+  if (scaleX === 'log') return { type: PlotScale.Log, name: AUTO_X };
+  if (scaleX === 'sqrt') return { type: PlotScale.Sqrt, name: AUTO_X };
   return { type: PlotScale.Linear, name: AUTO_X };
+};
+
+/** cartesian y（值轴）scale 类型：按 scaleY（缺省 linear）；log / sqrt 由 lowering L1 守住仅 point/line */
+const buildCartesianYScale = (scaleY: DslScaleY | undefined): Scale => {
+  if (scaleY === 'log') return { type: PlotScale.Log, name: AUTO_Y };
+  if (scaleY === 'sqrt') return { type: PlotScale.Sqrt, name: AUTO_Y };
+  return { type: PlotScale.Linear, name: AUTO_Y };
 };
 
 /**
@@ -264,7 +278,7 @@ export const buildPlotSpec = (children: ReactNode, dataRef: string, options: Bui
     scales = hasModel ? [] : [buildAngleScale(collected), { type: PlotScale.Linear, name: AUTO_RADIUS }];
   } else {
     coordinate = hasModel ? { type: PlotCoordinate.Cartesian2D } : { type: PlotCoordinate.Cartesian2D, x: AUTO_X, y: AUTO_Y };
-    scales = hasModel ? [] : [buildCartesianXScale(collected.hasBar, options.scaleX), { type: PlotScale.Linear, name: AUTO_Y }];
+    scales = hasModel ? [] : [buildCartesianXScale(collected.hasBar, options.scaleX), buildCartesianYScale(options.scaleY)];
   }
   if (collected.colored) scales.push({ type: PlotScale.Ordinal, name: AUTO_COLOR });
 

@@ -57,7 +57,8 @@ See [Coordinates](/plot/grammar/coordinate) for the polar object's `innerRadius`
 | `data` | `Array<Row>` | — | Raw data rows (composition DSL entry); data never enters the IR |
 | `children` | `ReactNode` | — | Mark / guide children (composition DSL entry) |
 | `coordinate` | `'polar' \| { type: 'polar2D'; innerRadius?; startAngle?; endAngle? }` | cartesian | Coordinate system: cartesian by default; `"polar2D"` shorthand or a polar object |
-| `scaleX` | `'linear' \| 'time' \| 'point'` | `'linear'` | Continuous x scale type; forced to band with `<BarMark>`, ignored under polar |
+| `scaleX` | `'linear' \| 'time' \| 'point' \| 'log' \| 'sqrt'` | `'linear'` | Continuous x scale type; forced to band with `<BarMark>`, ignored under polar. `log` / `sqrt` are point / line only (interval / area baselines include 0 and will error) |
+| `scaleY` | `'linear' \| 'log' \| 'sqrt'` | `'linear'` | Continuous y (value-axis) scale type; ignored under polar. `log` / `sqrt` are point / line only (interval / area will error). `log` requires positive data, `sqrt` requires non-negative |
 | `bare` | `boolean?` | `false` | Draw only the data, no axes / grid; ignores `<Axis>` |
 | `width` | `number` | — | Outer width (including axes and labels) |
 | `height` | `number` | — | Outer height (including axes and labels) |
