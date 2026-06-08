@@ -148,3 +148,115 @@ describe('ScaleSchema time (ADR-06)', () => {
     expect(() => ScaleSchema.parse({ type: 'time', name: 'x', domain: ['2024', '2025'] })).toThrow();
   });
 });
+
+describe('ScaleSchema sequential 连续顺序色阶（alpha.8 ADR-01）', () => {
+  // Happy path
+  it('省略可选字段合法', () => {
+    expect(ScaleSchema.parse({ type: 'sequential', name: 'col' })).toEqual({ type: 'sequential', name: 'col' });
+  });
+
+  it('全字段合法（domain + scheme + nice + clamp）', () => {
+    const s = { type: 'sequential', name: 'col', domain: [0, 100], scheme: 'viridis', nice: true, clamp: true };
+    expect(ScaleSchema.parse(s)).toEqual(s);
+  });
+
+  it('range 端点颜色合法', () => {
+    const s = { type: 'sequential', name: 'col', range: ['#fff', '#000'] };
+    expect(ScaleSchema.parse(s)).toEqual(s);
+  });
+
+  // schema 不写 default：scheme 省略后 parse 结果不含 scheme（default 留给 lowering）
+  it('scheme 省略时 parse 不注入默认值', () => {
+    expect(ScaleSchema.parse({ type: 'sequential', name: 'col' })).not.toHaveProperty('scheme');
+  });
+
+  // 边界：schema 只校结构，domain 乱序（min > max）在结构上仍合法（正性 / 序由 lowering fail-loud）
+  it('domain 乱序在 schema 层仍合法（序校验留 lowering）', () => {
+    const s = { type: 'sequential', name: 'col', domain: [100, 0] };
+    expect(ScaleSchema.parse(s)).toEqual(s);
+  });
+
+  // 错误路径
+  it('缺 name 被拒', () => {
+    expect(() => ScaleSchema.parse({ type: 'sequential' })).toThrow();
+  });
+
+  it('空 name 被拒', () => {
+    expect(() => ScaleSchema.parse({ type: 'sequential', name: '' })).toThrow();
+  });
+
+  it('domain 必须两元组（非三元 / 非单元）', () => {
+    expect(() => ScaleSchema.parse({ type: 'sequential', name: 'col', domain: [0] })).toThrow();
+    expect(() => ScaleSchema.parse({ type: 'sequential', name: 'col', domain: [0, 1, 2] })).toThrow();
+  });
+
+  it('未知 scheme 被拒', () => {
+    expect(() => ScaleSchema.parse({ type: 'sequential', name: 'col', scheme: 'bogus' })).toThrow();
+  });
+
+  it('range 非字符串被拒', () => {
+    expect(() => ScaleSchema.parse({ type: 'sequential', name: 'col', range: [0, 1] })).toThrow();
+  });
+
+  it('range 必须两元组', () => {
+    expect(() => ScaleSchema.parse({ type: 'sequential', name: 'col', range: ['#fff'] })).toThrow();
+  });
+
+  // JSON round-trip
+  it('JSON round-trip 不丢字段', () => {
+    const s = { type: 'sequential', name: 'col', domain: [0, 50], scheme: 'blues', range: ['#eee', '#111'], nice: true, clamp: false };
+    expect(ScaleSchema.parse(JSON.parse(JSON.stringify(s)))).toEqual(s);
+  });
+});
+
+describe('ScaleSchema diverging 连续发散色阶（alpha.8 ADR-01）', () => {
+  // Happy path
+  it('省略可选字段合法', () => {
+    expect(ScaleSchema.parse({ type: 'diverging', name: 'col' })).toEqual({ type: 'diverging', name: 'col' });
+  });
+
+  it('全字段合法（三元 domain + scheme + nice + clamp）', () => {
+    const s = { type: 'diverging', name: 'col', domain: [-100, 0, 100], scheme: 'rdbu', nice: true, clamp: true };
+    expect(ScaleSchema.parse(s)).toEqual(s);
+  });
+
+  it('range 三端点颜色合法', () => {
+    const s = { type: 'diverging', name: 'col', range: ['#f00', '#eee', '#00f'] };
+    expect(ScaleSchema.parse(s)).toEqual(s);
+  });
+
+  // schema 不写 default：scheme 省略后 parse 结果不含 scheme（default 留给 lowering）
+  it('scheme 省略时 parse 不注入默认值', () => {
+    expect(ScaleSchema.parse({ type: 'diverging', name: 'col' })).not.toHaveProperty('scheme');
+  });
+
+  // 边界：domain 乱序结构上合法（low<mid<high 序校验留 lowering）
+  it('domain 乱序在 schema 层仍合法（序校验留 lowering）', () => {
+    const s = { type: 'diverging', name: 'col', domain: [100, 0, -100] };
+    expect(ScaleSchema.parse(s)).toEqual(s);
+  });
+
+  // 错误路径
+  it('缺 name 被拒', () => {
+    expect(() => ScaleSchema.parse({ type: 'diverging' })).toThrow();
+  });
+
+  it('domain 必须三元组（两元不够）', () => {
+    expect(() => ScaleSchema.parse({ type: 'diverging', name: 'col', domain: [0, 100] })).toThrow();
+    expect(() => ScaleSchema.parse({ type: 'diverging', name: 'col', domain: [0, 50, 100, 150] })).toThrow();
+  });
+
+  it('range 必须三元组', () => {
+    expect(() => ScaleSchema.parse({ type: 'diverging', name: 'col', range: ['#f00', '#00f'] })).toThrow();
+  });
+
+  it('未知 scheme 被拒', () => {
+    expect(() => ScaleSchema.parse({ type: 'diverging', name: 'col', scheme: 'nope' })).toThrow();
+  });
+
+  // JSON round-trip
+  it('JSON round-trip 不丢字段', () => {
+    const s = { type: 'diverging', name: 'col', domain: [-1, 0, 1], scheme: 'rdylbu', range: ['#a00', '#fff', '#00a'], nice: false, clamp: true };
+    expect(ScaleSchema.parse(JSON.parse(JSON.stringify(s)))).toEqual(s);
+  });
+});
