@@ -699,26 +699,27 @@ intent
 
 ## 15. 与主流图形语法对比
 
-> 记于 2026-06-07（v0.1 alpha.1~5 收尾复盘）。本节只比**整体设计立场**，不比具体功能（scale 类型、通道广度、legend、facet 等功能缺口是开发阶段问题，见各版本 roadmap）。
+> 记于 2026-06-07（v0.1 alpha.1~5 收尾复盘）；2026-06-08 补入 Observable Plot 行（retikz 最近的同类）。本节只比**整体设计立场**，不比具体功能（scale 类型、通道广度、legend、facet 等功能缺口是开发阶段问题，见各版本 roadmap）。
 
-四者的设计立场：
+五者的设计立场：
 
 | 库 | 范式本质 |
 | --- | --- |
 | **ggplot2** | Wilkinson 分层语法的 R 实现，统计图形优先；底层绑 grid grob 树 |
 | **Vega / Vega-Lite** | 声明式 JSON 语法 + 编译管线(VL→Vega) + 响应式 dataflow + 视图组合代数 + 交互语法(selection)；底层私有 scenegraph |
+| **Observable Plot** | D3 团队的 mark-based 图形语法，智能默认极强、mark/transform/facet 丰富；但 options 含函数 → 不可序列化、SVG 单后端、故意不做极坐标；retikz 最近的同类（JS 里比 Vega-Lite 轻的 GoG） |
 | **Highcharts** | **不是**图形语法——图表类型目录(`chart.type` 选型 + 深层 options)，series 为中心的配置库；直接生成 SVG |
 | **retikz/plot** | 声明式 JSON 语法 + 编译管线，但**下沉目标是一套用户可见、可手写、可组合的通用绘图语法(Tier 1 Kernel)**，而非私有 scenegraph（即 §8 lowering） |
 
 核心维度：
 
-| 维度 | ggplot2 | Vega-Lite | Highcharts | retikz/plot |
-| --- | --- | --- | --- | --- |
-| 真·图形语法 | ✅ | ✅ + 组合代数 | ❌ 配置目录 | ✅ |
-| 最低层 | grid grob（私有） | scenegraph（私有） | SVG DOM | **Tier 1 通用图元（公开/可手写/可组合）** |
-| 序列化/声明 | ❌ R 对象+闭包 | ✅ JSON | △ JS config 带函数 | ✅ JSON（§3.1 数据不进 IR） |
-| 渲染后端中立 | ❌ grid | ✅ SVG/Canvas | ❌ SVG | ✅ SVG/Canvas/SSR（后端只懂图元、chart 语义透明） |
-| 图元可被连接/嵌入更大图解 | ❌ 终端产物 | ❌ | ❌ | ✅ **每个柱/点是可连接 Node**（§7 / §8.1） |
+| 维度 | ggplot2 | Vega-Lite | Observable Plot | Highcharts | retikz/plot |
+| --- | --- | --- | --- | --- | --- |
+| 真·图形语法 | ✅ | ✅ + 组合代数 | ✅ | ❌ 配置目录 | ✅ |
+| 最低层 | grid grob（私有） | scenegraph（私有） | SVG DOM（D3） | SVG DOM | **Tier 1 通用图元（公开/可手写/可组合）** |
+| 序列化/声明 | ❌ R 对象+闭包 | ✅ JSON | ❌ JS options 带函数/accessor | △ JS config 带函数 | ✅ JSON（§3.1 数据不进 IR） |
+| 渲染后端中立 | ❌ grid | ✅ SVG/Canvas | ❌ 仅 SVG | ❌ SVG | ✅ SVG/Canvas/SSR（后端只懂图元、chart 语义透明） |
+| 图元可被连接/嵌入更大图解 | ❌ 终端产物 | ❌ | ❌ 终端 SVG | ❌ | ✅ **每个柱/点是可连接 Node**（§7 / §8.1） |
 
 管线分段高度同源（retikz 多出末段 `scope → lowering`，即 Tier 2 落回 Tier 1，§4 / §8）：
 
@@ -726,7 +727,7 @@ intent
 - Vega：`data → transform → scale → mark → encode → signal/交互`
 - retikz：`transform → encoding → scale → coordinate → mark → guide → scope → lowering`
 
-**结论**：语法分解（管线分段、scale/coord/mark 正交）与 ggplot/Vega 一脉，没另起炉灶。真正的差异化赌注是**下沉到一套通用、可组合、后端中立的绘图语法**（类比 PGFPlots 之于 TikZ）——让「图表是可被连接、可嵌入更大图解的一等图元」，这是 ggplot/Vega/Highcharts 结构上做不到的。代价见 §16。
+**结论**：语法分解（管线分段、scale/coord/mark 正交）与 ggplot/Vega 一脉，没另起炉灶。真正的差异化赌注是**下沉到一套通用、可组合、后端中立的绘图语法**（类比 PGFPlots 之于 TikZ）——让「图表是可被连接、可嵌入更大图解的一等图元」，这是 ggplot/Vega/Observable Plot/Highcharts 结构上做不到的。代价见 §16。
 
 ## 16. 架构权衡：固有软肋与处置
 
