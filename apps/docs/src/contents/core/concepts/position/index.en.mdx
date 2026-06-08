@@ -9,10 +9,10 @@ retikz uses a unified set of position expressions for entity placement and path 
 | --- | --- | --- | --- |
 | Cartesian | `[x, y]` | Direct canvas coordinate | Node position, path target |
 | Polar | `{ origin?, angle, radius }` | Derive a position from a pole, angle, and radius | Node position, path target |
-| Node id | `'node-id'` | Reference a named Node or Coordinate; paths auto-attach to the boundary | **Path target only** (`Step.to` / way item) |
+| Node reference | `'node-id'` / `{ id, anchor?, offset? }` | Reference a named Node or Coordinate; paths auto-attach to the boundary. The string form is React DSL shorthand | **Path target only** (`Step.to` / way item) |
 | Relative placement | `{ direction, of, distance? }` | Place around another Node / Coordinate by direction and distance | Node position, Coordinate position |
 | Offset placement | `{ of, offset }` | Apply a 2D offset from a node, coordinate, or polar base | Node position, Coordinate position, path target |
-| Proportional placement | `{ between: [A, B], t }` | Take a proportional point along A → B | Node position, Coordinate position, path target |
+| Proportional placement | `{ between: [A, B], t }` | Take a proportional point along A → B; node endpoints use `{ id: 'a' }` | Node position, Coordinate position, path target |
 | Relative target | `{ relative }` / `{ relativeAccumulate }` or `'+x,y'` / `'++x,y'` | Offset from the previous segment endpoint | **Path target only** |
 
 > Coordinate system: x grows right, y grows down (matches SVG / Canvas; opposite of math textbooks). Units are user units, not pixels — final physical size depends on `<Layout>`'s `width` / `height` and the compiled layout bounds.
@@ -47,9 +47,9 @@ Six nodes around `O` at radius 80, every 60° from 0 to 300 — the canonical ra
 
 `origin` can be **nested** — e.g. `{ origin: { origin: 'a', angle: 0, radius: 30 }, angle: 90, radius: 20 }` means "30 right of a, then 20 up". Chained polar is handy for radial / local offsets.
 
-## Node id reference (path target)
+## Node id reference
 
-`<Step>` / `<Draw>` targets also accept a **string** — referencing a node id inside the same `<Layout>`:
+`<Step>` / `<Draw>` targets also accept a **string** to reference a node id inside the same `<Layout>`. This is React DSL shorthand; use the object form `{ id, anchor?, offset?, boundary? }` when you need an anchor, offset, or connection-surface override:
 
 <ComponentPreview name="positioning-id-ref" size="xs" />
 
@@ -66,6 +66,8 @@ Relative placement uses `{ direction, of, distance? }` to say "place this entity
 <Node id="b" position={{ direction: 'right', of: 'a', distance: 80 }}>B</Node>
 ```
 
+<ComponentPreview name="positioning-relative" size="md" />
+
 `direction` accepts 8 visual directions: `above` / `below` / `left` / `right` / `above-left` / `above-right` / `below-left` / `below-right`. When `distance` is omitted, retikz uses `<Layout nodeDistance>`, then falls back to the default.
 
 ## Offset Placement
@@ -77,19 +79,23 @@ Offset placement uses `{ of, offset }`: resolve a base point first, then add `[d
 <Node id="note" position={{ of: 'a', offset: [40, -24] }}>note</Node>
 ```
 
+<ComponentPreview name="positioning-offset" size="sm" />
+
 It is more flexible than directional placement. When you want "40 units right and 24 units up from A" rather than one of the 8 named directions, offset placement is the direct form.
 
-## Proportional Placement `{ between, t }`
+## Proportional Placement
 
 Proportional placement takes a point along A → B: `t = 0` is A, `t = 1` is B, and `t = 0.5` is the midpoint. Use it for mid-line labels, helper points between two nodes, or a path step that should land at a proportional point.
 
 ```tsx
 <Node id="a" position={[0, 0]}>A</Node>
 <Node id="b" position={[120, 0]}>B</Node>
-<Coordinate id="mid" position={{ between: ['a', 'b'], t: 0.5 }} />
+<Coordinate id="mid" position={{ between: [{ id: 'a' }, { id: 'b' }], t: 0.5 }} />
 ```
 
-The two `between` endpoints are self-contained absolute targets: Cartesian, polar, node / Coordinate references, offset placement, or nested `{ between, t }`. They do not accept path-relative targets (`relative` / `relativeAccumulate`) because proportional placement must resolve independently.
+<ComponentPreview name="positioning-between" size="xs" />
+
+The two `between` endpoints are self-contained absolute targets: Cartesian, polar, node / Coordinate reference objects (`{ id: 'a' }`), offset placement, or nested `{ between, t }`. They do not accept path-relative targets (`relative` / `relativeAccumulate`) because proportional placement must resolve independently.
 
 ## Path-Relative Targets
 
@@ -98,6 +104,8 @@ Paths also support relative targets that are only valid in `<Step>.to` / `<Draw>
 ```tsx
 <Draw way={[[0, 0], { relativeAccumulate: [40, 0] }, { relativeAccumulate: [0, 30] }]} />
 ```
+
+<ComponentPreview name="positioning-path-relative" size="sm" />
 
 These forms are path targets only; they are not valid for `<Node>.position` / `<Coordinate>.position`. For entity placement, use Cartesian, polar, relative placement, offset placement, or proportional placement.
 
