@@ -57,7 +57,7 @@ import { Plot, PointMark, Legend } from '@retikz/plot-react';
 | --- | --- | --- | --- |
 | `channel` | `'color' \| 'size' \| 'opacity' \| 'shape'` | — | Which non-positional channel the legend explains; form follows the bound scale type |
 | `scale` | `string?` | — | Disambiguating scale name when one channel is driven by several scales; omit = the channel's only scale |
-| `title` | `string?` | bound field name | Legend title; falls back to the bound field name |
+| `title` | `string?` | none | Legend title (rendered above the entries); omit for no title |
 | `position` | `'right' \| 'left' \| 'top' \| 'bottom'` | `'right'` | Which edge the legend sits on (a band is reserved there) |
 | `orient` | `'vertical' \| 'horizontal'` | by `position` | Item layout direction; left/right default to vertical, top/bottom to horizontal |
 | `tickCount` | `number?` | default tick count | Tick-count hint for continuous ramps; ignored for discrete legends |

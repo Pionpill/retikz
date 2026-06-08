@@ -402,6 +402,31 @@ const quantileColorLegendSpec = (): PlotSpec =>
     guides: [{ type: 'legend', channel: 'color', scale: 'densColor' }],
   });
 
+describe('lowerPlots legend — ramp 刻度域取配置 domain（修 contract-audit W2）', () => {
+  // 数据 temperature 仅 [5,30]，显式 domain [0,100]；ramp 刻度应落 domain（取色基准同源），非数据 extent
+  const explicitDomainRampSpec = (): PlotSpec =>
+    PlotSpecSchema.parse({
+      namespace: 'plot',
+      type: 'plot',
+      data: { reference: 'd', model: [{ name: 'lon', type: 'continuous' }, { name: 'lat', type: 'continuous' }, { name: 'temperature', type: 'continuous' }] },
+      scales: [{ type: 'linear', name: 'x' }, { type: 'linear', name: 'y' }, { type: 'sequential', name: 'tempColor', domain: [0, 100] }],
+      coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
+      marks: [{ type: 'point', encoding: { x: { field: 'lon' }, y: { field: 'lat' }, color: { field: 'temperature', scale: 'tempColor' } } }],
+      guides: [{ type: 'legend', channel: 'color', scale: 'tempColor', tickCount: 4 }],
+    });
+
+  it('explicit_domain_ramp_ticks_follow_domain_not_data_extent', () => {
+    const outer = expandOf(explicitDomainRampSpec(), { d: CONTINUOUS_ROWS });
+    const legend = findLegendLayer(outer);
+    const labelNumbers = labelsOf(legend as IRScope)
+      .map(node => (typeof node.text === 'string' ? node.text : ''))
+      .map(text => Number(text.replace(/[^0-9.-]/g, '')))
+      .filter(value => Number.isFinite(value));
+    // 数据 extent 上界仅 30；domain 上界 100 → 应出现 > 30 的刻度（证实刻度跟 domain 而非数据）
+    expect(Math.max(...labelNumbers)).toBeGreaterThan(30);
+  });
+});
+
 describe('lowerPlots legend — core schema 合法性回归（修 PathSchema.min(2) 违规）', () => {
   // legend 下沉产物（整个 legend scope）必须通过 core ChildSchema 校验——
   //   早期 swatch 用单 step rectangle Path 违反 PathSchema.children.min(2)，schema 校验会拒绝。

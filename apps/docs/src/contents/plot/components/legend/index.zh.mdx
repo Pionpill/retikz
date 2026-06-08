@@ -57,7 +57,7 @@ import { Plot, PointMark, Legend } from '@retikz/plot-react';
 | --- | --- | --- | --- |
 | `channel` | `'color' \| 'size' \| 'opacity' \| 'shape'` | — | 图例解释哪个非位置通道；形态据绑定 scale 类型自动选 |
 | `scale` | `string?` | — | 消歧 scale name：同通道被多个 scale 驱动时指定；省略 = 该通道唯一 scale |
-| `title` | `string?` | 绑定字段名 | 图例标题；省略时用绑定字段名 |
+| `title` | `string?` | 无 | 图例标题（渲染在条目上方）；省略则不画标题 |
 | `position` | `'right' \| 'left' \| 'top' \| 'bottom'` | `'right'` | 图例所在边（在该边预留带宽放图例） |
 | `orient` | `'vertical' \| 'horizontal'` | 按 `position` | 条目排布方向；左右默认 vertical、上下默认 horizontal |
 | `tickCount` | `number?` | 默认刻度数 | 连续色带刻度数提示；离散图例忽略 |

@@ -146,7 +146,7 @@ export const LegendGuideSchema = z
     title: z
       .string()
       .optional()
-      .describe('Legend title; omit to fall back to the bound field name'),
+      .describe('Legend title rendered above the entries; omit for no title (automatic field-name title is not yet rendered)'),
     position: z
       .nativeEnum(LegendPosition)
       .optional()

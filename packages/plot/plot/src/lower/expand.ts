@@ -630,7 +630,10 @@ const resolveColorLegend = (
     const toNumber = colorFieldType === PlotFieldType.Temporal ? toTimestamp : (value: unknown): number | null => (isFiniteNumber(value) ? value : null);
     const numericValues = field !== undefined ? rows.map(row => toNumber(resolveFieldPath(row, field))).filter((value): value is number => value !== null) : [];
     const evaluate: ColorScaleEvaluator = def.type === PlotScale.Sequential ? resolveSequentialColorScale(def, numericValues) : resolveDivergingColorScale(def, numericValues);
-    const [lo, hi] = numericValues.length === 0 ? [0, 1] : [Math.min(...numericValues), Math.max(...numericValues)];
+    // ramp 取色 / 刻度域：显式 domain 优先（与实绘取色同基准，避免图例刻度落数据 extent 而颜色按 domain 归一导致错位）；
+    //   sequential domain = [min, max]、diverging domain = [low, mid, high] 取 [low, high]；缺省回退数据 extent。
+    const dataExtent: [number, number] = numericValues.length === 0 ? [0, 1] : [Math.min(...numericValues), Math.max(...numericValues)];
+    const [lo, hi] = def.domain ? [def.domain[0], def.domain[def.domain.length - 1]] : dataExtent;
     // ramp 渐变 stop（沿带等距采样色）+ nice 刻度标签
     const STOP_COUNT = 8;
     const stops = Array.from({ length: STOP_COUNT }, (_unused, index) => {

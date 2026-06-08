@@ -80,8 +80,8 @@ Each bin's color reuses the named schemes above — N discrete colors are sample
 A few constraints to keep in mind:
 
 - **threshold breakpoints must be strictly ascending**; bin count = breakpoints + 1, so a `range` must have length `breakpoints.length + 1` (e.g. `[60, 80]` pairs with 3 colors).
-- **`count` defaults to 5** for quantize / quantile; when a `range` is given the bin count is the range length and `count` is ignored.
-- **quantile takes no explicit numeric domain** — the bin boundaries come from the data, so passing a domain errors.
+- **`count` defaults to 5** for quantize / quantile; giving only a `range` (omitting `count`) makes the bin count the range length; giving both `count` and `range` with mismatched lengths errors.
+- **quantile reads no explicit numeric domain** — the bin boundaries come purely from the data, so a `domain`, if written, is silently ignored (no error).
 - Like continuous color, discretized color works **only on per-datum marks** (point / bar / sector); a line or area colors the whole path at once, so binding a discretization color errors.
 
 <ComponentAlert title="No automatic React entry for discretization scales" description="This round quantize / threshold / quantile are not auto-derived from a field type — they are explicit advanced usage, configured through the full spec scales (<Plot spec={...} />) or written directly in vanilla IR. React auto-derivation does continuous sequential only for now." />
