@@ -8,7 +8,7 @@ import { type ColorOf, lowerMark } from './mark';
 import { makeOpacityResolver, makeShapeResolver, makeSizeResolver } from './channel';
 import { type CoordinateFrame, createCartesianFrame, createPolarFrame } from './project';
 import { type DatumIdRegistrar, type ProvenanceContext, createDatumIdRegistrar, rootMeta, tagSourceIndex } from './provenance';
-import { type CategoryOrder, type TickSet, assertBaselineScaleCompatible, assertScaleFieldCompatible, deriveScale, orderedCategoryDomain, resolveDivergingColorScale, resolveOrdinalScale, resolvePositionScale, resolveSequentialColorScale, toTimestamp } from './scale';
+import { type CategoryOrder, type ColorScaleEvaluator, type TickSet, assertBaselineScaleCompatible, assertScaleFieldCompatible, deriveScale, orderedCategoryDomain, resolveDivergingColorScale, resolveOrdinalScale, resolvePositionScale, resolveQuantileColorScale, resolveQuantizeColorScale, resolveSequentialColorScale, resolveThresholdColorScale, toTimestamp } from './scale';
 import { assertAllValuesValid, collectFormatFields, normalizeRows, validateBoundData } from './coerce';
 import { applyTransforms } from './transform';
 import { type ResolveField, applyFieldResolver } from './resolve';
@@ -399,9 +399,9 @@ const makeColorResolver = (node: PlotSpec, rows: Array<ExternalRow>, fieldTypes:
     if (channel.field === undefined) return undefined;
     const field = channel.field;
     const colorFieldType = fieldTypes.get(field);
-    // 连续 / temporal color（alpha.8）：经 sequential / diverging 连续色阶 per-datum 取色。
-    //   连续色仅 point / bar(interval) / sector 成立（按 datum 取色）；line / area 是 path 级整体图元，
-    //   一条线沿程渐变不做 → fail-loud（守 mark 边界，承 alpha.7 ADR-03）。
+    // 连续 / temporal color（alpha.8）：经 sequential / diverging 连续色阶或 quantize / threshold / quantile 离散化色阶 per-datum 取色。
+    //   按 datum 取色仅 point / bar(interval) / sector 成立；line / area 是 path 级整体图元，
+    //   一条线沿程渐变 / 分箱不做 → fail-loud（守 mark 边界，承 alpha.7 ADR-03）。
     if (colorFieldType === PlotFieldType.Continuous || colorFieldType === PlotFieldType.Temporal) {
       if (mark.type === PlotMark.Line || mark.type === PlotMark.Area) {
         throw new Error(
@@ -409,12 +409,14 @@ const makeColorResolver = (node: PlotSpec, rows: Array<ExternalRow>, fieldTypes:
         );
       }
       if (channel.scale === undefined) {
-        throw new Error(`lowerPlots: continuous/temporal color field "${field}" requires an explicit sequential/diverging color scale reference`);
+        throw new Error(`lowerPlots: continuous/temporal color field "${field}" requires an explicit sequential/diverging/quantize/threshold/quantile color scale reference`);
       }
       const def = scaleByName.get(channel.scale);
       if (!def) throw new Error(`lowerPlots: color channel references unknown scale "${channel.scale}"`);
-      if (def.type !== PlotScale.Sequential && def.type !== PlotScale.Diverging) {
-        throw new Error(`lowerPlots: continuous/temporal color field "${field}" requires a sequential/diverging color scale, but "${channel.scale}" is ${def.type}`);
+      const isContinuousColorScale = def.type === PlotScale.Sequential || def.type === PlotScale.Diverging;
+      const isDiscretizedColorScale = def.type === PlotScale.Quantize || def.type === PlotScale.Threshold || def.type === PlotScale.Quantile;
+      if (!isContinuousColorScale && !isDiscretizedColorScale) {
+        throw new Error(`lowerPlots: continuous/temporal color field "${field}" requires a sequential/diverging/quantize/threshold/quantile color scale, but "${channel.scale}" is ${def.type}`);
       }
       // temporal + diverging 无意义（时间无自然中点）→ fail-loud；temporal + sequential 合法（时间戳当连续量）
       if (colorFieldType === PlotFieldType.Temporal && def.type === PlotScale.Diverging) {
@@ -423,7 +425,24 @@ const makeColorResolver = (node: PlotSpec, rows: Array<ExternalRow>, fieldTypes:
       // 取连续数值：temporal 字段过 toTimestamp 转 epoch ms（时间戳当连续量），其余直取有限数
       const toNumber = colorFieldType === PlotFieldType.Temporal ? toTimestamp : (value: unknown): number | null => (isFiniteNumber(value) ? value : null);
       const numericValues = rows.map(row => toNumber(resolveFieldPath(row, field))).filter((value): value is number => value !== null);
-      const evaluate = def.type === PlotScale.Sequential ? resolveSequentialColorScale(def, numericValues) : resolveDivergingColorScale(def, numericValues);
+      let evaluate: ColorScaleEvaluator;
+      switch (def.type) {
+        case PlotScale.Sequential:
+          evaluate = resolveSequentialColorScale(def, numericValues);
+          break;
+        case PlotScale.Diverging:
+          evaluate = resolveDivergingColorScale(def, numericValues);
+          break;
+        case PlotScale.Quantize:
+          evaluate = resolveQuantizeColorScale(def, numericValues);
+          break;
+        case PlotScale.Threshold:
+          evaluate = resolveThresholdColorScale(def);
+          break;
+        default:
+          evaluate = resolveQuantileColorScale(def, numericValues);
+          break;
+      }
       return row => {
         const numeric = toNumber(resolveFieldPath(row, field));
         return numeric === null ? undefined : evaluate(numeric);

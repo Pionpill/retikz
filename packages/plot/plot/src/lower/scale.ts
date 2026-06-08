@@ -11,6 +11,9 @@ import {
   scaleOrdinal,
   scalePoint,
   scalePow,
+  scaleQuantile,
+  scaleQuantize,
+  scaleThreshold,
   scaleUtc,
 } from 'd3-scale';
 import {
@@ -37,7 +40,7 @@ import {
   interpolateViridis,
   schemeCategory10,
 } from 'd3-scale-chromatic';
-import { type BandScale, type ColorScheme, type DivergingColorScale, type FieldDef, type FieldType, type LogScale, type OrdinalScale, PlotColorScheme, PlotFieldType, PlotScale, type PointScale, type PowScale, type ScalarValue, type Scale, type ScaleType, type SequentialColorScale, type SqrtScale, type TimeScale } from '../ir';
+import { type BandScale, type ColorScheme, type DivergingColorScale, type FieldDef, type FieldType, type LogScale, type OrdinalScale, PlotColorScheme, PlotFieldType, PlotScale, type PointScale, type PowScale, type QuantileColorScale, type QuantizeColorScale, type ScalarValue, type Scale, type ScaleType, type SequentialColorScale, type SqrtScale, type ThresholdColorScale, type TimeScale } from '../ir';
 import { isFiniteNumber } from './field';
 import { isIsoDateString } from './infer';
 
@@ -237,6 +240,20 @@ const toHexColor = (color: string): string => {
   return `#${channel(match[1])}${channel(match[2])}${channel(match[3])}`;
 };
 
+/** 离散化色阶缺省配色（与 sequential 同——感知均匀、色盲友好） */
+const DEFAULT_DISCRETE_SCHEME = PlotColorScheme.Viridis;
+
+/**
+ * 从命名 scheme 等距采样 count 个离散色（[0,1] 上均匀取点喂 interpolator，归一化为 hex）
+ * @description 离散化 scale（quantize / threshold / quantile）的档色单一来源：count 档 → count 个色。
+ *   count==1 取 scheme 中点（0.5）；count≥2 端点含 0 与 1（首末档取 scheme 两端）。与 sequential 连续采样同源 interpolator。
+ */
+export const sampleSchemeColors = (scheme: ColorScheme | undefined, count: number): Array<string> => {
+  const interpolator = SCHEME_INTERPOLATORS[scheme ?? DEFAULT_DISCRETE_SCHEME];
+  if (count <= 1) return [toHexColor(interpolator(0.5))];
+  return Array.from({ length: count }, (_unused, index) => toHexColor(interpolator(index / (count - 1))));
+};
+
 /** 行→连续色：数值（含时间戳）→ 颜色串；非有限值 → undefined（调用方回退默认色） */
 export type ColorScaleEvaluator = (value: number) => string;
 
@@ -311,6 +328,59 @@ export const resolveDivergingColorScale = (def: DivergingColorScale, values: Arr
     else t = high === mid ? 1 : 0.5 + (0.5 * (value - mid)) / (high - mid);
     return toHexColor(interpolator(t));
   };
+};
+
+/** 默认离散化档数（choropleth 社区惯例 4–7 档） */
+const DEFAULT_DISCRETE_BIN_COUNT = 5;
+
+/** 离散化档色：range 显式给则直用、否则从 scheme 采 binCount 档（range 长度即档数） */
+const discreteBinColors = (range: ReadonlyArray<string> | undefined, scheme: ColorScheme | undefined, binCount: number): Array<string> =>
+  range ? [...range] : sampleSchemeColors(scheme, binCount);
+
+/**
+ * quantize 颜色 scale 求值：连续 domain [min, max] 等宽切 count 段 → 离散色档（d3 scaleQuantize）
+ * @description domain 缺省从数据 [min, max] 推断；count 缺省 5（range 给定时档数 = range.length，覆盖 count）。
+ *   range 显式给颜色数组、否则从 scheme 采 count 档。超出 domain 的值落首 / 末档（d3 clamp 语义）。
+ */
+export const resolveQuantizeColorScale = (def: QuantizeColorScale, values: Array<number>): ColorScaleEvaluator => {
+  const binCount = def.range ? def.range.length : def.count ?? DEFAULT_DISCRETE_BIN_COUNT;
+  const colors = discreteBinColors(def.range, def.scheme, binCount);
+  const [lo, hi] = def.domain ?? safeExtent(values);
+  const scale = scaleQuantize<string>().domain([lo, hi]).range(colors);
+  return value => scale(value);
+};
+
+/**
+ * threshold 颜色 scale 求值：用户自定义升序断点切档 → 离散色档（d3 scaleThreshold）
+ * @description breakpoints 须严格升序（违反 fail-loud）；档数 = breakpoints.length + 1。
+ *   range 显式给时长度须 = breakpoints.length + 1（违反 fail-loud）、否则从 scheme 采 breakpoints.length + 1 档。
+ *   < 首断点落第 0 档、≥ 末断点落末档（d3 默认语义）。
+ */
+export const resolveThresholdColorScale = (def: ThresholdColorScale): ColorScaleEvaluator => {
+  for (let index = 1; index < def.breakpoints.length; index++) {
+    if (!(def.breakpoints[index - 1] < def.breakpoints[index])) {
+      throw new Error(`lowerPlots: threshold color scale "${def.name}" breakpoints must be strictly ascending (got [${def.breakpoints.join(', ')}])`);
+    }
+  }
+  const binCount = def.breakpoints.length + 1;
+  if (def.range && def.range.length !== binCount) {
+    throw new Error(`lowerPlots: threshold color scale "${def.name}" range length (${def.range.length}) must equal breakpoints.length + 1 (${binCount})`);
+  }
+  const colors = discreteBinColors(def.range, def.scheme, binCount);
+  const scale = scaleThreshold<number, string>().domain([...def.breakpoints]).range(colors);
+  return value => scale(value);
+};
+
+/**
+ * quantile 颜色 scale 求值：按绑定数据分位切 count 档（每档样本数约等）→ 离散色档（d3 scaleQuantile）
+ * @description count 缺省 5（range 给定时档数 = range.length，覆盖 count）；分位边界纯由数据定（schema 已 strip 显式 domain，此处不读）。
+ *   range 显式给颜色数组、否则从 scheme 采 count 档。
+ */
+export const resolveQuantileColorScale = (def: QuantileColorScale, values: Array<number>): ColorScaleEvaluator => {
+  const binCount = def.range ? def.range.length : def.count ?? DEFAULT_DISCRETE_BIN_COUNT;
+  const colors = discreteBinColors(def.range, def.scheme, binCount);
+  const scale = scaleQuantile<string>().domain([...values]).range(colors);
+  return value => scale(value);
 };
 
 /** 分类 scale 的刻度 = 每类别一刻度（值 = 类别、标签 = 类别串） */
@@ -613,6 +683,9 @@ export const resolvePositionScale = (
       throw new Error(`resolvePositionScale: ordinal scale "${def.name}" cannot drive a positional (x/y) channel`);
     case PlotScale.Sequential:
     case PlotScale.Diverging:
+    case PlotScale.Quantize:
+    case PlotScale.Threshold:
+    case PlotScale.Quantile:
       throw new Error(`resolvePositionScale: ${def.type} color scale "${def.name}" cannot drive a positional (x/y) channel; color scales bind the color channel only`);
   }
 };

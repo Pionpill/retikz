@@ -99,7 +99,7 @@ describe('离散色 · quantize 等宽切档求值（alpha.8 ADR-02）', () => {
   it('quantize scheme blues 产稳定 hex 且档间互异', () => {
     const data = [{ x: 0, y: 0, v: 0 }, { x: 1, y: 1, v: 50 }, { x: 2, y: 2, v: 100 }];
     const fills = nodeFills(firstLayer(pointSpec({ type: 'quantize', domain: [0, 100], count: 3, scheme: 'blues' }), { d: data }));
-    expect(fills.every(f => typeof f === 'string' && /^#?[0-9a-fA-F]/.test(f ?? ''))).toBe(true);
+    expect(fills.every(f => typeof f === 'string' && /^#?[0-9a-fA-F]/.test(f))).toBe(true);
     expect(new Set(fills).size).toBe(3);
   });
 });
