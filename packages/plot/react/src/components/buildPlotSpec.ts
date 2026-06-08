@@ -47,14 +47,17 @@ export type DslScaleX = 'linear' | 'time' | 'point' | 'log' | 'sqrt';
 export type DslScaleY = 'linear' | 'log' | 'sqrt';
 
 /**
- * <Plot coordinate> 入口形态：字符串简写 `"polar2D"` 或对象配置；缺省 cartesian2D
- * @description 简写 / 判别串与 IR 一致（`polar2D` / `cartesian2D`，含维度，为将来 1D / 3D 等留命名空间）；
- *   对象形态对应 polar2D 的角向区间 + 环图内半径几何（startAngle / endAngle 度、innerRadius 0..1 外半径占比）
+ * <Plot coordinate> 入口形态：字符串简写或对象配置；缺省 cartesian2D
+ * @description 简写 / 判别串与 IR 一致（含维度命名）：polar2D / cartesian1D / polar1D / ternary2D；cartesian2D 为缺省态不必写。
+ *   对象形态承载各坐标系几何：polar2D 角向区间 + 环图内半径、cartesian1D 轴向、polar1D 半径占比 + 角向区间、ternary2D 无额外配置。
  */
 export type CoordinateInput =
   | 'polar2D'
+  | 'cartesian1D'
+  | 'polar1D'
+  | 'ternary2D'
   | {
-      /** 坐标系判别串（与 IR 一致；目前仅 polar2D 可显式指定，cartesian2D 为缺省态不必写） */
+      /** 2D 极坐标 */
       type: 'polar2D';
       /** 环图内半径（外半径占比 0..1）；0 = 实心饼 */
       innerRadius?: number;
@@ -62,6 +65,26 @@ export type CoordinateInput =
       startAngle?: number;
       /** 角向终止角（度） */
       endAngle?: number;
+    }
+  | {
+      /** 1D 笛卡尔直线 */
+      type: 'cartesian1D';
+      /** 轴向（horizontal 沿 x、vertical 沿 y）；缺省 horizontal */
+      orientation?: 'horizontal' | 'vertical';
+    }
+  | {
+      /** 1D 极坐标圆周 */
+      type: 'polar1D';
+      /** 圆周半径占可用半径比（0<r≤1）；缺省 1（外圆） */
+      radius?: number;
+      /** 角向起始角（度）；缺省 0 */
+      startAngle?: number;
+      /** 角向终止角（度）；缺省 360 */
+      endAngle?: number;
+    }
+  | {
+      /** 2D 三元（重心坐标） */
+      type: 'ternary2D';
     };
 
 /** buildPlotSpec 选项：bare 开关 + 连续 x scale 类型 + 坐标系选择 */
@@ -142,13 +165,18 @@ const collectInto = (children: ReactNode, into: Collected): void => {
       recordColor(into, colorEnc);
       if (closed) into.hasClosedLine = true;
     } else if (child.type === PointMark) {
-      const { x, y, color, size, opacity, shape, id } = child.props as PointMarkProps;
+      const { x, y, a, b, c, color, size, opacity, shape, id } = child.props as PointMarkProps;
       const colorEnc = colorChannel(color, undefined);
+      // 位置通道按坐标系角色：cartesian1D-2D / polar 用 x/y、ternary 用 a/b/c；缺角色由 lowering 按坐标系校验
       into.marks.push({
         type: PlotMark.Point,
         ...(id !== undefined ? { id } : {}),
         encoding: {
-          ...positionEncoding(x, y),
+          ...(x !== undefined ? { x: { field: x } } : {}),
+          ...(y !== undefined ? { y: { field: y } } : {}),
+          ...(a !== undefined ? { a: { field: a } } : {}),
+          ...(b !== undefined ? { b: { field: b } } : {}),
+          ...(c !== undefined ? { c: { field: c } } : {}),
           ...colorEnc,
           ...(size !== undefined ? { size: { field: size } } : {}),
           ...(opacity !== undefined ? { opacity: { field: opacity } } : {}),
@@ -284,18 +312,24 @@ const POLAR_DEFAULT_START_ANGLE = 0;
 const POLAR_DEFAULT_END_ANGLE = 360;
 const POLAR_DEFAULT_INNER_RADIUS = 0;
 
-/** 归一化 coordinate 选项为 polar 配置（undefined = cartesian），缺省字段填 schema 默认值 */
+/** coordinate 入口判别串（缺省 cartesian2D）；字符串简写与对象 .type 统一取值 */
+const coordinateTypeOf = (input: CoordinateInput | undefined): 'cartesian2D' | 'polar2D' | 'cartesian1D' | 'polar1D' | 'ternary2D' =>
+  input === undefined ? 'cartesian2D' : typeof input === 'string' ? input : input.type;
+
+/** 归一化 polar2D coordinate 选项为配置（非 polar2D 返回 undefined），缺省字段填 schema 默认值 */
 type PolarConfig = { innerRadius: number; startAngle: number; endAngle: number };
 const toPolarConfig = (coordinate: CoordinateInput | undefined): PolarConfig | undefined => {
-  if (coordinate === undefined) return undefined;
   if (coordinate === 'polar2D') {
     return { innerRadius: POLAR_DEFAULT_INNER_RADIUS, startAngle: POLAR_DEFAULT_START_ANGLE, endAngle: POLAR_DEFAULT_END_ANGLE };
   }
-  return {
-    innerRadius: coordinate.innerRadius ?? POLAR_DEFAULT_INNER_RADIUS,
-    startAngle: coordinate.startAngle ?? POLAR_DEFAULT_START_ANGLE,
-    endAngle: coordinate.endAngle ?? POLAR_DEFAULT_END_ANGLE,
-  };
+  if (typeof coordinate === 'object' && coordinate.type === 'polar2D') {
+    return {
+      innerRadius: coordinate.innerRadius ?? POLAR_DEFAULT_INNER_RADIUS,
+      startAngle: coordinate.startAngle ?? POLAR_DEFAULT_START_ANGLE,
+      endAngle: coordinate.endAngle ?? POLAR_DEFAULT_END_ANGLE,
+    };
+  }
+  return undefined;
 };
 
 /**
@@ -310,26 +344,48 @@ export const buildPlotSpec = (children: ReactNode, dataRef: string, options: Bui
   const collected: Collected = { marks: [], guides: [], transforms: [], colored: false, colorFields: [], hasBar: false, hasSector: false, hasClosedLine: false };
   collectInto(children, collected);
 
-  const polar = toPolarConfig(options.coordinate);
+  const coordKind = coordinateTypeOf(options.coordinate);
 
   // 有 model → 位置 scale 交给 expand 的 type-driven 派生：省略 AUTO 绑定 + 不预生成位置 scale（scaleX 让位给 model）。
   // 无 model → 沿用原 AUTO 绑定 + 推断（向后兼容，存量 DSL 无 model 走此路）。
   const hasModel = options.model !== undefined;
   let coordinate: Coordinate;
   let scales: Array<Scale>;
-  if (polar) {
+  if (coordKind === 'polar2D') {
+    const polar = toPolarConfig(options.coordinate) as PolarConfig;
     coordinate = hasModel
       ? { type: PlotCoordinate.Polar2D, startAngle: polar.startAngle, endAngle: polar.endAngle, innerRadius: polar.innerRadius }
       : { type: PlotCoordinate.Polar2D, angle: AUTO_ANGLE, radius: AUTO_RADIUS, startAngle: polar.startAngle, endAngle: polar.endAngle, innerRadius: polar.innerRadius };
     scales = hasModel ? [] : [buildAngleScale(collected), { type: PlotScale.Linear, name: AUTO_RADIUS }];
+  } else if (coordKind === 'cartesian1D') {
+    // 单维直线：orientation 取对象配置；单一位置 scale 复用 scaleX 推断（rug 默认 linear、timeline 可 time）
+    const orientation = typeof options.coordinate === 'object' && options.coordinate.type === 'cartesian1D' ? options.coordinate.orientation : undefined;
+    coordinate = hasModel
+      ? { type: PlotCoordinate.Cartesian1D, ...(orientation !== undefined ? { orientation } : {}) }
+      : { type: PlotCoordinate.Cartesian1D, x: AUTO_X, ...(orientation !== undefined ? { orientation } : {}) };
+    scales = hasModel ? [] : [buildCartesianXScale(false, options.scaleX)];
+  } else if (coordKind === 'polar1D') {
+    // 单角向圆周：半径占比 + 角向区间取对象配置；角向 scale 默认 linear（无 model；周期连续量）
+    const cfg = typeof options.coordinate === 'object' && options.coordinate.type === 'polar1D' ? options.coordinate : undefined;
+    const geom = {
+      ...(cfg?.radius !== undefined ? { radius: cfg.radius } : {}),
+      ...(cfg?.startAngle !== undefined ? { startAngle: cfg.startAngle } : {}),
+      ...(cfg?.endAngle !== undefined ? { endAngle: cfg.endAngle } : {}),
+    };
+    coordinate = hasModel ? { type: PlotCoordinate.Polar1D, ...geom } : { type: PlotCoordinate.Polar1D, angle: AUTO_ANGLE, ...geom };
+    scales = hasModel ? [] : [{ type: PlotScale.Linear, name: AUTO_ANGLE }];
+  } else if (coordKind === 'ternary2D') {
+    // 三元：coordinate 内自动归一化，无独立位置 scale
+    coordinate = { type: PlotCoordinate.Ternary2D };
+    scales = [];
   } else {
     coordinate = hasModel ? { type: PlotCoordinate.Cartesian2D } : { type: PlotCoordinate.Cartesian2D, x: AUTO_X, y: AUTO_Y };
     scales = hasModel ? [] : [buildCartesianXScale(collected.hasBar, options.scaleX), buildCartesianYScale(options.scaleY)];
   }
   if (collected.colored) scales.push(buildColorScale(collected.colorFields, options.model));
 
-  // polar 默认不画 guide（轴需用户显式声明）；cartesian 沿用默认全套
-  const defaultGuides: ReadonlyArray<Guide> = polar ? [] : DEFAULT_GUIDES;
+  // 仅 cartesian2D 自动补全 x/y 默认轴；其它坐标系（polar / 1D / ternary）的专门轴需用户显式声明
+  const defaultGuides: ReadonlyArray<Guide> = coordKind === 'cartesian2D' ? DEFAULT_GUIDES : [];
   // 默认 axes 合并按 guide type 分判（ADR-03 决策 ⑦，修 P1）：
   //   显式 <Axis> 抑制默认 axes（用户接管坐标轴）；<Legend> 不抑制默认 axes（图例与默认轴共存）。
   //   即：仅当用户未声明任何显式 Axis 时才补默认 axes，无论是否有 Legend。收集到的 Legend 始终保留。
