@@ -4,13 +4,13 @@ export type ModuleEntry = {
   id: string;
   /** 模块名 i18n key */
   label: I18nKey;
-  /** 该模块对应 npm 包的版本徽章（如 `v0.3 alpha`）；只有发独立包的模块（core / plot）才有，blog / about 无 */
+  /** 该模块对应 npm 包的版本徽章（如 `v0.3 beta`）；只有发独立包的模块（core / plot）才有，blog / about 无 */
   version?: string;
 };
 
 /** 文档站当前可切换的子包列表（后续按模块新增条目） */
 export const modules: Array<ModuleEntry> = [
-  { id: 'core', label: 'core.label', version: 'v0.3 alpha' },
+  { id: 'core', label: 'core.label', version: 'v0.3 beta' },
   { id: 'plot', label: 'plot.label', version: 'v0.1 alpha' },
   { id: 'blog', label: 'blog.label' },
   { id: 'about', label: 'about.label' },
