@@ -35,6 +35,14 @@ The top line and a baseline of `0` enclose a filled region — good for emphasiz
 
 <p className="text-sm text-muted-foreground">With baseline 0 the return edge collapses to the center; the area fills outward into a filled radar.</p>
 
+### Multiple series (split by color)
+
+Set `series` to a field and the data splits into multiple areas. With no `series`, giving `color` a categorical field also splits — equivalent to writing `series`; the `color` field must be categorical (continuous / temporal fields error).
+
+<ComponentPreview name="area-color-split" sourceFiles={['area-color-split.data.ts']} />
+
+<p className="text-sm text-muted-foreground">Just <code>color="site"</code>, no <code>series</code>, splits into two areas by site.</p>
+
 ## API
 
 | Prop | Type | Default | Description |

@@ -35,6 +35,14 @@ import { Plot, AreaMark } from '@retikz/plot-react';
 
 <p className="text-sm text-muted-foreground">baseline 取 0 时回边收到圆心，从圆心填到外沿即填充雷达。</p>
 
+### 多系列（按颜色拆）
+
+给 `series` 一个字段，数据按它拆成多块面积。不写 `series`、只给 `color` 一个分类字段时同样会拆——等价于显式写 `series`；`color` 字段须是分类的（连续 / 时间字段会报错）。
+
+<ComponentPreview name="area-color-split" sourceFiles={['area-color-split.data.ts']} />
+
+<p className="text-sm text-muted-foreground">只给 <code>color="site"</code>、无 <code>series</code>，按站点拆两块面积。</p>
+
 ## API
 
 | 属性 | 类型 | 默认值 | 描述 |
