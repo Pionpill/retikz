@@ -1,14 +1,14 @@
 import { type CompositeDefinition, type IRChild, type IRScope, defineComposite } from '@retikz/core';
 import type { ZodType } from 'zod';
 import { type Channel, type ExternalDatasets, type ExternalRow, type FieldType, type Guide, type Mark, type OrdinalScale, PlotCoordinate, PlotFieldType, PlotMark, PlotScale, type PlotSpec, PlotSpecSchema, type Scale } from '../ir';
-import { channelValue, resolveFieldPath } from './field';
+import { channelValue, isFiniteNumber, resolveFieldPath } from './field';
 import { type GuideContext, lowerGuide } from './guide';
 import { DEFAULT_FONT_SIZE, type Margins, type Rect, computePlotArea, computePolarFrame } from './layout';
 import { type ColorOf, lowerMark } from './mark';
 import { makeOpacityResolver, makeShapeResolver, makeSizeResolver } from './channel';
 import { type CoordinateFrame, createCartesianFrame, createPolarFrame } from './project';
 import { type DatumIdRegistrar, type ProvenanceContext, createDatumIdRegistrar, rootMeta, tagSourceIndex } from './provenance';
-import { type CategoryOrder, type TickSet, assertBaselineScaleCompatible, assertScaleFieldCompatible, deriveScale, orderedCategoryDomain, resolveOrdinalScale, resolvePositionScale } from './scale';
+import { type CategoryOrder, type TickSet, assertBaselineScaleCompatible, assertScaleFieldCompatible, deriveScale, orderedCategoryDomain, resolveDivergingColorScale, resolveOrdinalScale, resolvePositionScale, resolveSequentialColorScale, toTimestamp } from './scale';
 import { assertAllValuesValid, collectFormatFields, normalizeRows, validateBoundData } from './coerce';
 import { applyTransforms } from './transform';
 import { type ResolveField, applyFieldResolver } from './resolve';
@@ -398,12 +398,38 @@ const makeColorResolver = (node: PlotSpec, rows: Array<ExternalRow>, fieldTypes:
     }
     if (channel.field === undefined) return undefined;
     const field = channel.field;
-    // 字段类型兼容校验（收口「真通道」）：continuous / temporal color 需连续色阶（sequential / diverging，alpha.8）→ fail-loud；
-    //   不静默当 ordinal 调色。categorical（或类型未知）走 ordinal。
     const colorFieldType = fieldTypes.get(field);
+    // 连续 / temporal color（alpha.8）：经 sequential / diverging 连续色阶 per-datum 取色。
+    //   连续色仅 point / bar(interval) / sector 成立（按 datum 取色）；line / area 是 path 级整体图元，
+    //   一条线沿程渐变不做 → fail-loud（守 mark 边界，承 alpha.7 ADR-03）。
     if (colorFieldType === PlotFieldType.Continuous || colorFieldType === PlotFieldType.Temporal) {
-      throw new Error(`lowerPlots: color channel field "${field}" is ${colorFieldType}; continuous/temporal color requires a sequential/diverging color scale (alpha.8). Use a categorical field or a constant color`);
+      if (mark.type === PlotMark.Line || mark.type === PlotMark.Area) {
+        throw new Error(
+          `lowerPlots: continuous/temporal color field "${field}" is not supported on ${mark.type} marks (path-level glyph colored per series); continuous color applies to point / bar / sector only`,
+        );
+      }
+      if (channel.scale === undefined) {
+        throw new Error(`lowerPlots: continuous/temporal color field "${field}" requires an explicit sequential/diverging color scale reference`);
+      }
+      const def = scaleByName.get(channel.scale);
+      if (!def) throw new Error(`lowerPlots: color channel references unknown scale "${channel.scale}"`);
+      if (def.type !== PlotScale.Sequential && def.type !== PlotScale.Diverging) {
+        throw new Error(`lowerPlots: continuous/temporal color field "${field}" requires a sequential/diverging color scale, but "${channel.scale}" is ${def.type}`);
+      }
+      // temporal + diverging 无意义（时间无自然中点）→ fail-loud；temporal + sequential 合法（时间戳当连续量）
+      if (colorFieldType === PlotFieldType.Temporal && def.type === PlotScale.Diverging) {
+        throw new Error(`lowerPlots: temporal color field "${field}" cannot use a diverging color scale (no meaningful midpoint for time); use a sequential color scale`);
+      }
+      // 取连续数值：temporal 字段过 toTimestamp 转 epoch ms（时间戳当连续量），其余直取有限数
+      const toNumber = colorFieldType === PlotFieldType.Temporal ? toTimestamp : (value: unknown): number | null => (isFiniteNumber(value) ? value : null);
+      const numericValues = rows.map(row => toNumber(resolveFieldPath(row, field))).filter((value): value is number => value !== null);
+      const evaluate = def.type === PlotScale.Sequential ? resolveSequentialColorScale(def, numericValues) : resolveDivergingColorScale(def, numericValues);
+      return row => {
+        const numeric = toNumber(resolveFieldPath(row, field));
+        return numeric === null ? undefined : evaluate(numeric);
+      };
     }
+    // categorical（或类型未知）走 ordinal 离散调色
     let ordinalDef: OrdinalScale | undefined;
     if (channel.scale !== undefined) {
       const def = scaleByName.get(channel.scale);

@@ -13,8 +13,31 @@ import {
   scalePow,
   scaleUtc,
 } from 'd3-scale';
-import { schemeCategory10 } from 'd3-scale-chromatic';
-import { type BandScale, type FieldDef, type FieldType, type LogScale, type OrdinalScale, PlotFieldType, PlotScale, type PointScale, type PowScale, type ScalarValue, type Scale, type ScaleType, type SqrtScale, type TimeScale } from '../ir';
+import {
+  interpolateBlues,
+  interpolateBrBG,
+  interpolateCividis,
+  interpolateGreens,
+  interpolateGreys,
+  interpolateInferno,
+  interpolateMagma,
+  interpolateOranges,
+  interpolatePRGn,
+  interpolatePiYG,
+  interpolatePlasma,
+  interpolatePuOr,
+  interpolatePurples,
+  interpolateRdBu,
+  interpolateRdGy,
+  interpolateRdYlBu,
+  interpolateRdYlGn,
+  interpolateReds,
+  interpolateSpectral,
+  interpolateTurbo,
+  interpolateViridis,
+  schemeCategory10,
+} from 'd3-scale-chromatic';
+import { type BandScale, type ColorScheme, type DivergingColorScale, type FieldDef, type FieldType, type LogScale, type OrdinalScale, PlotColorScheme, PlotFieldType, PlotScale, type PointScale, type PowScale, type ScalarValue, type Scale, type ScaleType, type SequentialColorScale, type SqrtScale, type TimeScale } from '../ir';
 import { isFiniteNumber } from './field';
 import { isIsoDateString } from './infer';
 
@@ -167,6 +190,121 @@ export const resolveOrdinalScale = (
   const range = def?.range ?? [...schemeCategory10];
   const scale = scaleOrdinal<string | number, string>().domain(domain).range(range);
   return value => scale(value);
+};
+
+/** 配色方案名 → d3-scale-chromatic interpolator（t∈[0,1] → 颜色串）；命名 scheme 进 IR、求值期映射到函数（函数不进 IR） */
+const SCHEME_INTERPOLATORS: Record<ColorScheme, (t: number) => string> = {
+  [PlotColorScheme.Blues]: interpolateBlues,
+  [PlotColorScheme.Greens]: interpolateGreens,
+  [PlotColorScheme.Greys]: interpolateGreys,
+  [PlotColorScheme.Oranges]: interpolateOranges,
+  [PlotColorScheme.Purples]: interpolatePurples,
+  [PlotColorScheme.Reds]: interpolateReds,
+  [PlotColorScheme.Viridis]: interpolateViridis,
+  [PlotColorScheme.Magma]: interpolateMagma,
+  [PlotColorScheme.Inferno]: interpolateInferno,
+  [PlotColorScheme.Plasma]: interpolatePlasma,
+  [PlotColorScheme.Cividis]: interpolateCividis,
+  [PlotColorScheme.Turbo]: interpolateTurbo,
+  [PlotColorScheme.BrBG]: interpolateBrBG,
+  [PlotColorScheme.PRGn]: interpolatePRGn,
+  [PlotColorScheme.PiYG]: interpolatePiYG,
+  [PlotColorScheme.PuOr]: interpolatePuOr,
+  [PlotColorScheme.RdBu]: interpolateRdBu,
+  [PlotColorScheme.RdGy]: interpolateRdGy,
+  [PlotColorScheme.RdYlBu]: interpolateRdYlBu,
+  [PlotColorScheme.RdYlGn]: interpolateRdYlGn,
+  [PlotColorScheme.Spectral]: interpolateSpectral,
+};
+
+/** sequential 缺省配色（感知均匀、色盲友好） */
+const DEFAULT_SEQUENTIAL_SCHEME = PlotColorScheme.Viridis;
+/** diverging 缺省配色（两侧红蓝、中点淡） */
+const DEFAULT_DIVERGING_SCHEME = PlotColorScheme.RdBu;
+
+/**
+ * d3 颜色串（`rgb(r, g, b)` / `#rgb` / `#rrggbb`）归一化为 6 位十六进制
+ * @description interpolator 与 scaleLinear 颜色插值产物形态不一（hex 或 rgb()）；统一成 hex 使产物稳定、可序列化进 core fill / stroke。
+ *   解析不出 r/g/b 三元（命名色 / 已是其它格式）→ 原样返回。
+ */
+const toHexColor = (color: string): string => {
+  const match = /^rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)/.exec(color);
+  if (!match) return color;
+  const channel = (text: string): string =>
+    Math.max(0, Math.min(255, Math.round(Number(text))))
+      .toString(16)
+      .padStart(2, '0');
+  return `#${channel(match[1])}${channel(match[2])}${channel(match[3])}`;
+};
+
+/** 行→连续色：数值（含时间戳）→ 颜色串；非有限值 → undefined（调用方回退默认色） */
+export type ColorScaleEvaluator = (value: number) => string;
+
+/**
+ * sequential 颜色 scale 求值：单调量 domain [min, max] → 单方向色带
+ * @description domain 缺省从数据 [min, max] 推断；显式 domain 须 min < max（违反 fail-loud）。
+ *   range 给定（两端颜色）→ 经 scaleLinear 颜色插值覆盖 scheme；否则用命名 scheme interpolator（缺省 viridis）。
+ *   单值数据（min == max 推断）退化为常量取色（端点），不崩。
+ */
+export const resolveSequentialColorScale = (def: SequentialColorScale, values: Array<number>): ColorScaleEvaluator => {
+  const [lo, hi] = def.domain ?? safeExtent(values);
+  if (def.domain && def.domain[0] >= def.domain[1]) {
+    throw new Error(`lowerPlots: sequential color scale "${def.name}" domain must satisfy min < max (got [${def.domain[0]}, ${def.domain[1]}])`);
+  }
+  if (def.range) {
+    const scale = scaleLinear<string, string>()
+      .domain([lo, hi])
+      .range([def.range[0], def.range[1]])
+      .clamp(true);
+    return value => toHexColor(scale(value));
+  }
+  const interpolator = SCHEME_INTERPOLATORS[def.scheme ?? DEFAULT_SEQUENTIAL_SCHEME];
+  // 退化 domain（min == max）→ position 恒 0.5；正常 domain 线性归一化到 [0, 1] 再喂 interpolator
+  const span = hi - lo;
+  return value => {
+    const t = span === 0 ? 0.5 : Math.max(0, Math.min(1, (value - lo) / span));
+    return toHexColor(interpolator(t));
+  };
+};
+
+/**
+ * diverging 颜色 scale 求值：有中点的量 domain [low, mid, high] → 两侧异色色带（中点淡）
+ * @description domain 缺省从数据 [min, (min+max)/2, max] 推断；显式 domain 须 low < mid < high（违反 fail-loud）。
+ *   range 给定（三端点）→ 经三段 scaleLinear 颜色插值覆盖 scheme；否则用命名 diverging scheme（缺省 rdbu），
+ *   把 [low, mid, high] 映射到 interpolator 的 [0, 0.5, 1]。
+ */
+export const resolveDivergingColorScale = (def: DivergingColorScale, values: Array<number>): ColorScaleEvaluator => {
+  let low: number;
+  let mid: number;
+  let high: number;
+  if (def.domain) {
+    [low, mid, high] = def.domain;
+    if (!(low < mid && mid < high)) {
+      throw new Error(`lowerPlots: diverging color scale "${def.name}" domain must satisfy low < mid < high (got [${low}, ${mid}, ${high}])`);
+    }
+  } else {
+    const [lo, hi] = safeExtent(values);
+    low = lo;
+    high = hi;
+    mid = (lo + hi) / 2;
+  }
+  if (def.range) {
+    const scale = scaleLinear<string, string>()
+      .domain([low, mid, high])
+      .range([def.range[0], def.range[1], def.range[2]])
+      .clamp(true);
+    return value => toHexColor(scale(value));
+  }
+  const interpolator = SCHEME_INTERPOLATORS[def.scheme ?? DEFAULT_DIVERGING_SCHEME];
+  // [low, mid, high] → interpolator 的 [0, 0.5, 1]：两段线性，退化段（low==mid 等）由分支守住不除零
+  return value => {
+    let t: number;
+    if (value <= low) t = 0;
+    else if (value >= high) t = 1;
+    else if (value <= mid) t = mid === low ? 0 : (0.5 * (value - low)) / (mid - low);
+    else t = high === mid ? 1 : 0.5 + (0.5 * (value - mid)) / (high - mid);
+    return toHexColor(interpolator(t));
+  };
 };
 
 /** 分类 scale 的刻度 = 每类别一刻度（值 = 类别、标签 = 类别串） */
@@ -467,5 +605,8 @@ export const resolvePositionScale = (
     }
     case PlotScale.Ordinal:
       throw new Error(`resolvePositionScale: ordinal scale "${def.name}" cannot drive a positional (x/y) channel`);
+    case PlotScale.Sequential:
+    case PlotScale.Diverging:
+      throw new Error(`resolvePositionScale: ${def.type} color scale "${def.name}" cannot drive a positional (x/y) channel; color scales bind the color channel only`);
   }
 };
