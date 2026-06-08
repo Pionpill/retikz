@@ -1,6 +1,6 @@
 ---
 title: Path Generators
-description: The generator step lets external packages register custom curves (parabola / sin-cos / quadratic…). core ships no curves — only an IR-level injection surface: JSON-only params, top-level targetParams resolution, generate returns low-level PathCommands.
+description: "The generator step lets external packages register custom curves (parabola / sin-cos / quadratic…). core ships no curves — only an IR-level injection surface: JSON-only params, top-level targetParams resolution, generate returns low-level PathCommands."
 ---
 
 A step's built-in kinds are a fixed set of 12 (move / line / fold / cycle / curve / cubic / bend / arc / circlePath / ellipsePath / rectangle / generator). Among them, **`generator`** is the open injection point: "curve steps" like parabola, sin-cos, or quadratic curves are registered by **external packages** — **core ships no concrete curve**.
