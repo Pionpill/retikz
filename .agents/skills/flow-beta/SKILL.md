@@ -122,12 +122,7 @@ beta 阶段最大风险是**重构引入回归 + breaking 改名漏改调用方*
 
 ### 推荐 LLM 组合
 
-| 评估者 | 推荐 LLM | 备选 |
-|---|---|---|
-| 等价性审计 | Claude Opus（独立 session）| GPT-5 / Gemini 2.x |
-| 收益审计 | ChatGPT（OpenAI o3 / GPT-5）| Claude Opus / Gemini 2.x |
-
-跨 vendor 优先。两个评估者**同 vendor 不同 model 退而求其次**，**完全同 model 同 session 不算多 LLM 评估**。
+至少两路独立评估：一路等价性审计，一路收益审计。优先跨模型 / 跨供应商 / 跨线程；同供应商不同模型可退而求其次；完全同模型同上下文不算多 LLM 评估。记录实际使用的通道与模型，不在 skill 里写死模型名。
 
 ### 主 AI 调度
 
@@ -166,9 +161,9 @@ beta 阶段最大风险是**重构引入回归 + breaking 改名漏改调用方*
 
 beta 阶段三个角色对应的 LLM 分工：
 
-- **实现 Agent**：默认 Claude Opus（主 AI）——按 TODO 改代码
-- **等价性审计 LLM**：跨 vendor（用户提供）——审计 diff 是否有未声明回归 + breaking 改动迁移是否完整
-- **收益审计 LLM**：跨 vendor 第二家（用户提供）——审计改动是否真更好
+- **实现任务**：主 AI 或独立执行通道——按 TODO 改代码
+- **等价性审计 LLM**：独立通道——审计 diff 是否有未声明回归 + breaking 改动迁移是否完整
+- **收益审计 LLM**：第二个独立通道——审计改动是否真更好
 
 主 AI 不主动调外部 vendor。用户介入手动同步——主 AI 负责打包 prompt + 合并意见。
 

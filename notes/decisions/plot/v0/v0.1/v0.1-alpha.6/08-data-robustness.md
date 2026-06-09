@@ -55,11 +55,6 @@
 - **`invalid` 检查范围 = spec 参与的用户源字段**（cross-review #5）：`collectUserSourceFields(spec)`，不全表扫。
 - **`'skip'` 不删行、写哨兵**（cross-review #5）：归一化阶段对非法值写 NaN/undefined、保留整行供 transform（stack/sort）；下游 mark 跳非法几何。`'error'` 在 `validateBoundData`（transform 前）全量校验参与字段。
 
-## 待决策点 🔻
-
-- **`invalid` 粒度**：先全局（`LowerPlotsOptions.invalid`）够否？per-field / per-mark 覆盖留后续？倾向先全局。
-- **`'zero' / 'impute'` 策略**：continuous 非法值填 0 / 插值是否本 ADR 收？倾向**不收**（属统计语义，留 transform 家族），先 `skip | error` 两档。
-- **恒归一化的等价性**：无 model 路径恒归一化后，需测「干净数据产物与现状逐字节等价」，确认不引回归。
 
 ## 影响
 
@@ -75,55 +70,5 @@
 - **per-field / per-mark invalid 覆盖**——先全局。
 - **`bigint` 进 IR 标量**——破 JSON 可序列化，永不收；只 ingest 转 number。
 
----
-
-## 实现契约（必填）🔻
-
-### Level
-
-`red`——动 `lower/{expand,coerce,infer}.ts`（归一化 / coercion 链）+ 公开 API（`LowerPlotsOptions.invalid` + 三包透传）。**无 IR schema 改动。**
-
-### Schema 改动
-
-无 IR schema 改动。`invalid` 是 `LowerPlotsOptions` 运行时字段；bigint 仅 ingest 阶段处理，不进 zod IR。
-
-### 文件 scope
-
-- `packages/plot/plot/src/lower/expand.ts`（修改：prepareRows 去归一化门控；`LowerPlotsOptions.invalid`；`validateBoundData` 调用传策略）
-- `packages/plot/plot/src/lower/coerce.ts`（修改：`coerceNumber` 认 bigint；`validateBoundData` 出字段级 invalid/missing 计数；`invalid:'error'` 全量校验）
-- `packages/plot/plot/src/lower/infer.ts`（修改：`classify` 认 bigint → continuous）
-- `packages/plot/react/src/Plot.tsx`（修改：`invalid` 透传，vanilla 自动）
-- `packages/plot/plot/tests/lower/data-robustness.test.ts`（新建）
-- `apps/docs/src/contents/plot/grammar/data/index.{zh,en}.mdx`（修改：invalid 策略 + bigint 段）
-
-### 测试象限
-
-**Happy path**：
-- `bigint_ingested_as_continuous`：`{ x: 42n }` 无 model → 推断 continuous、归一化成 42
-- `invalid_skip_default`：脏值默认跳过该点、不抛
-- `invalid_error_throws`：`invalid:'error'` 遇非法值全量 fail-loud
-
-**边界**：
-- `no_model_normalize_equivalent`：无 model 干净数据，恒归一化后产物与现状逐字节等价（防回归）
-- `safe_integer_bigint_accepted`：`9007199254740991n`（= MAX_SAFE_INTEGER）→ 接受、转 number
-- `unsafe_bigint_treated_invalid`：超 `Number.MAX_SAFE_INTEGER` 的 BigInt（仍 finite 但丢精度）→ 按 `invalid` 策略当非法值（默认 skip；cross-review #4）
-- `invalid_skip_keeps_row_for_transform`：某字段非法被 skip，但该行仍参与 `stack`/`sort`（不删行，cross-review #5）
-
-**错误路径**：
-- `validatedata_reports_field_counts`：`validateData` 报错含字段级 `invalid/missing` 计数
-- `invalid_error_message_locates_field`：`invalid:'error'` 报错指明字段 + 值
-- `unsafe_bigint_error_throws`：`invalid:'error'` + 超 safe 区间 BigInt → fail-loud（cross-review #4）
-- `invalid_error_scope_is_participating_fields`：`invalid:'error'` 只对 spec 参与字段报错，未引用的脏字段不触发（cross-review #5）
-
-**交互**：
-- `bigint_with_model_continuous`：model 声明 continuous + bigint 数据 → coerce 成 number
-- `invalid_with_resolveField`：`resolveField.parse` 返非法 → 按 `invalid` 策略处理（skip/error 一致）
-- `normalize_always_runs_with_inference`：无 model + 纯推断 → canonical 行已 coerce（time 字段成 epoch ms）
-
-### 依赖的现有元素
-
-- `prepareRows`（`lower/expand.ts`）—— 修改：去归一化门控
-- `coerceNumber` / `normalizeRows` / `validateBoundData`（`lower/coerce.ts`）—— 修改：bigint + 字段级报告 + invalid 策略
-- `classify`（`lower/infer.ts`）—— 修改：bigint → continuous
-- `LowerPlotsOptions`（`lower/expand.ts`）—— 扩展：`invalid`
-- ADR-04 resolveField parser 槽 —— 协同：parse 输出同样过 invalid 策略
+> **实现指针**：最终 schema / 类型 / 行为以代码为准；落地集中在 `packages/plot/plot/src/lower/{expand,coerce,infer}.ts` 与 React `invalid` options 透传，测试见 `packages/plot/plot/tests/lower/data-robustness.test.ts`。完整施工契约见压缩前蓝图。
+> 🔖 本文件压缩前完整施工蓝图 = `git show 8ce95238:notes/decisions/plot/v0/v0.1/v0.1-alpha.6/08-data-robustness.md`（封板全文）。

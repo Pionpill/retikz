@@ -1,7 +1,6 @@
 # ADR-03：连续 mark（area 新建 + line/area polar 投影 + closed 雷达）
 
 > 在 ADR-01 的 `CoordinateFrame` 之上落「连续」家族：新建 area mark（线↔baseline 区域，cartesian + polar），line / area 在 polar 投影成弯弧 Path，加 `closed`（首尾相连）支撑雷达 / 填充雷达。下沉 core `Path`。
-> schema 字段名 / 默认值 AI 提案，待人工 review 拍板。
 
 - 状态：Accepted
 - 决策日期：2026-06-06

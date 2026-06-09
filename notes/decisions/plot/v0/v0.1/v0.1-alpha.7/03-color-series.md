@@ -51,10 +51,6 @@ if (mark.series && colorField && !colorConstantWithinSeries(...)) throw new Erro
 2. **真通道名副其实**：连续/temporal color fail-loud，杜绝数值字段被错当分类调色；连续色阶按计划留 alpha.8。
 3. **locator 安全**：隐式拆等价显式 series，alpha.5 接通的 datum 定位不被新行为破坏。
 
-## 待决策点 🔻
-
-- **fail-loud 错误信息措辞**：连续 color → `continuous/temporal color field requires a sequential/diverging color scale (alpha.8); use a categorical field or a constant color`；series 内 color 不恒定 → `color must be constant within each series "<field>"; split by color instead of setting series`。倾向如上，可实现期微调。
-- **React `color?` 文档同步**：`marks.tsx` 现写「缺省取 series」——line/area 的 `color` 文档改为「categorical 字段：有 series 按 series 上色；无 series 则按该字段隐式拆系列」。point/bar/sector 文档为「按 datum 上色」。属用户可见，确认。
 
 ## DSL 表面
 
@@ -82,7 +78,7 @@ if (mark.series && colorField && !colorConstantWithinSeries(...)) throw new Erro
 
 ## 测试设计
 
-`packages/plot/plot/tests/lower/color-series.test.ts` 覆盖：类型兼容校验、B/C 各 mark 着色、隐式拆等价性、冲突 fail-loud。具体见下「测试象限」。
+`packages/plot/plot/tests/lower/color-series.test.ts` 覆盖：类型兼容校验、B/C 各 mark 着色、隐式拆等价性、冲突 fail-loud。落地测试见实现指针。
 
 ## 影响
 
@@ -99,54 +95,5 @@ if (mark.series && colorField && !colorConstantWithinSeries(...)) throw new Erro
 - **point/bar/sector 的隐式 series** → 不做（它们按 datum 着色，无 path 整体性问题）。
 - **size 通道** → [ADR-02](./02-channel-scale-resolver-size.md)。
 
----
-
-## 实现契约（必填）🔻
-
-### Level
-
-`red`——动 `lower/**`（下沉行为契约）+ react 文档表面。无 IR schema 字段改动。
-
-### Schema 改动
-
-无 IR schema 字段增删。本 ADR 改 **lowering 行为契约**（color 类型校验、color×series 解析规则），最终行为以代码 + 测试为准。
-
-### 文件 scope
-
-- `packages/plot/plot/src/lower/expand.ts`（改：`makeColorResolver` 类型校验 + 迁通用 resolver）
-- `packages/plot/plot/src/lower/mark.ts`（改：line/area series 来源解析 + 冲突校验 + 修单系列 color 丢弃）
-- `packages/plot/plot/src/lower/channel.ts`（消费 [ADR-02](./02-channel-scale-resolver-size.md) 的通用 resolver）
-- `packages/plot/plot/tests/lower/color-series.test.ts`（新建，含等价性断言）
-- `packages/plot/react/src/components/marks.tsx`（改：`color?` 文档文案）
-- `packages/plot/react/tests/components/buildPlotSpec.test.tsx`（改：单系列 color 隐式拆 / point per-datum）
-- `apps/docs/src/contents/**`（折线/面积/散点页 color 语义 + 隐式拆系列概念）
-
-### 测试象限
-
-**Happy path**：
-- `多系列 line 显式`：`series=region` + 每系列恒定 color → 每 region 一条着色线
-- `point per-datum color`：散点 categorical color → 各点按类别色（不拆系列）
-- `bar per-datum color`：柱 categorical color → 按类别色
-
-**边界**：
-- `单 category color`：color 字段只有一个类别 → 一条线 / 一色
-- `空数据`：0 行 + color → 不崩
-
-**错误路径**：
-- `continuous color fail-loud`：数值字段绑 color → 抛连续色阶错误
-- `temporal color fail-loud`：时间字段绑 color → 同上
-- `series 内 color 不恒定`：显式 series + 同系列内 color 字段多值 → fail-loud
-
-**交互**：
-- `隐式拆等价显式`：`buildIR(<LineMark color=region/>)` `.toEqual` `buildIR(<LineMark series=region color=region/>)`（locator parity）
-- `隐式拆 + size`：散点不拆（point per-datum）；line 隐式拆 + 其它通道共存正确
-- `隐式拆 + stack`：area 隐式拆系列 + stack transform 协同（y0/y1 与系列对齐）
-
-### 依赖的现有元素
-
-- `makeColorResolver`（`lower/expand.ts:372`）—— 修改（加类型校验、迁通用 resolver）
-- `buildSeriesPaths` / line·area 着色（`lower/mark.ts:300` / `:344` / `:355` / `:395`）—— 修改（series 来源 + 冲突校验 + 修丢弃）
-- 通用通道→scale resolver（[ADR-02](./02-channel-scale-resolver-size.md) `lower/channel.ts`）—— 消费
-- 字段类型推断（`lower/infer.ts`）—— 引用（判 categorical vs continuous/temporal）
-- `OrdinalScale` / `resolveOrdinalScale`（`ir/scale.ts` / `lower/scale.ts`）—— 引用
-- datum locator 等价性（[alpha.5 ADR-02](../v0.1-alpha.5/02-datum-locator.md)）—— 守约束（隐式拆 IR 等价显式 series）
+> **实现指针**：最终 schema / 类型 / 行为以代码为准；落地集中在 `packages/plot/plot/src/lower/{expand,mark,channel}.ts` 与 React mark 构造，测试见 `packages/plot/plot/tests/lower/color-series.test.ts` 和 `packages/plot/react/tests/components/buildPlotSpec.test.tsx`。完整施工契约见压缩前蓝图。
+> 🔖 本文件压缩前完整施工蓝图 = `git show 8ce95238:notes/decisions/plot/v0/v0.1/v0.1-alpha.7/03-color-series.md`（封板全文）。

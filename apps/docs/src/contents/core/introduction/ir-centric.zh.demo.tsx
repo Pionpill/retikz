@@ -4,10 +4,10 @@ import type { FC } from 'react';
 /**
  * 简介页"IR 居中"插图
  * @description 4 路输入 → IR ↔ Scene → 4 路输出（hourglass / 漏斗双扇）；节点全 stroke="none" 当文字锚点，Draw 仍按 bbox 自动贴边；"持久化 / 编辑" 与 IR 间双向箭头表示 IR 是可读写持久层。
- *   已落地的部分用默认色（currentColor），规划中 / 未实现的（Text DSL、React 以外的 adapter）用灰色弱化。
+ *   已落地的部分用默认色（currentColor），规划中 / 未支持的能力用灰色弱化，并在图内给出图例。
  */
 const Demo: FC = () => (
-  <Layout width={640} height={210} style={{ maxWidth: '100%', height: 'auto' }}>
+  <Layout width={640} height={230} style={{ maxWidth: '100%', height: 'auto' }}>
     <Node id="sugar" position={[-160, -54]} stroke="none">
       Sugar JSX
     </Node>
@@ -31,10 +31,10 @@ const Demo: FC = () => (
     <Node id="react" position={[200, -54]} stroke="none">
       React + SVG
     </Node>
-    <Node id="svg" position={[200, -18]} stroke="none" textColor="gray">
+    <Node id="svg" position={[200, -18]} stroke="none">
       pure SVG 字符串
     </Node>
-    <Node id="canvas" position={[200, 18]} stroke="none" textColor="gray">
+    <Node id="canvas" position={[200, 18]} stroke="none">
       Canvas
     </Node>
     <Node id="raster" position={[350, 18]} stroke="none" textColor="gray">
@@ -47,6 +47,9 @@ const Demo: FC = () => (
     <Node id="persist" position={[-40, 80]} stroke="none">
       持久化 / 编辑
     </Node>
+    <Node id="legend" position={[60, 104]} stroke="none" textColor="gray" font={{ size: 12 }}>
+      灰色 = 计划中未支持
+    </Node>
 
     <Draw way={['sugar', 'ir']} arrow="->" />
     <Draw way={['kernel', 'ir']} arrow="->" />
@@ -56,8 +59,8 @@ const Demo: FC = () => (
     <Draw way={['ir', 'scene']} arrow="->" />
 
     <Draw way={['scene', 'react']} arrow="->" />
-    <Draw way={['scene', 'svg']} arrow="->" stroke="gray" />
-    <Draw way={['scene', 'canvas']} arrow="->" stroke="gray" />
+    <Draw way={['scene', 'svg']} arrow="->" />
+    <Draw way={['scene', 'canvas']} arrow="->" />
     <Draw way={['canvas', 'raster']} arrow="->" stroke="gray" />
     <Draw way={['scene', 'native']} arrow="->" stroke="gray" />
 

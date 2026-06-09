@@ -1,0 +1,60 @@
+{
+  "version": 1,
+  "type": "scene",
+  "children": [
+    {
+      "type": "node",
+      "id": "a",
+      "position": [0, 0],
+      "animations": [
+        {
+          "property": "scale",
+          "keyframes": [
+            { "at": 0, "value": 1 },
+            { "at": 0.5, "value": 1.25 },
+            { "at": 1, "value": 1 }
+          ],
+          "iterations": 1,
+          "duration": 420,
+          "easing": "ease-in-out",
+          "trigger": "manual"
+        }
+      ],
+      "text": "A"
+    },
+    {
+      "type": "node",
+      "id": "b",
+      "position": [100, 0],
+      "text": "B"
+    },
+    {
+      "type": "node",
+      "id": "c",
+      "position": [200, 0],
+      "text": "C"
+    },
+    {
+      "type": "path",
+      "children": [
+        { "type": "step", "kind": "move", "to": { "id": "a" } },
+        { "type": "step", "kind": "line", "to": { "id": "b" } }
+      ]
+    },
+    {
+      "type": "path",
+      "children": [
+        { "type": "step", "kind": "move", "to": { "id": "b" } },
+        { "type": "step", "kind": "line", "to": { "id": "c" } }
+      ]
+    },
+    {
+      "type": "node",
+      "id": "hint",
+      "position": [100, 45],
+      "stroke": "none",
+      "textColor": "gray",
+      "text": "clicks: 0"
+    }
+  ]
+}

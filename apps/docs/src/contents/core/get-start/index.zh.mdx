@@ -1,21 +1,37 @@
 ---
 title: 快速开始
-description: 安装 retikz，并通过 3 步搭建一个最小例子，认识顶层容器、Node 与 Draw 三个核心组件。
+description: 安装 retikz，并通过 4 步搭建一个最小例子，认识顶层容器、Node、Draw、动画与事件回调。
 ---
 
 ## 安装
 
 retikz 的 React 适配器是 `@retikz/react`，peer 依赖 `react` / `react-dom`（>= 18）。
 
+备注：retikz 本身与框架解耦，也可以用 `@retikz/vanilla` 或 `@retikz/core` / `@retikz/render` 通过纯 JS 组织和渲染图形。文档正文统一使用 React API，是为了聚焦图元、路径和 IR 能力；点开 demo 的 **View Code** 后，可以切换到 Vanilla API 查看等价写法。
+
 <PackageManagerInstall packages="@retikz/react react react-dom" />
 
 底层 `@retikz/core`（IR + 编译器，零 React / 零 DOM）会作为 `@retikz/react` 的依赖自动装上，无需单独安装。
 
+## 如何学习
+
+建议先把这页跑通，再按“心智模型 → 组件细节 → 完整示例 → 参考契约”的顺序读：
+
+| 分组 | 读什么 |
+| --- | --- |
+| 简介 / 快速开始 | 建立整体印象，知道 retikz 为什么以 Node、Path、IR 为中心。 |
+| 概念 | 学定位、锚点、分层和动画；这些是所有图形复用的基础规则。 |
+| 组件 | 查 `<Layout>`、`<Node>`、`<Draw>`、形状和辅助组件的写法。 |
+| 示例 | 看完整图形如何从 prompt / 想法一步步拆成图元。 |
+| 参考 | 查扩展点、IR schema、renderer、runtime；写 adapter、持久化或调试底层行为时再深入。 |
+
+如果你想边读边问，可以点顶部的 AI 按钮打开 AI 面板，把当前页、选中的代码或 API 名称作为上下文提问。文档站是纯静态站点，不提供 LLM 服务；你需要在面板里填自己的 API Key，站点只在浏览器里把请求转发给你选择的模型供应商。
+
 ## 一个最小例子
 
-<ComponentPreview name="get-start-final" size="xs" />
+<ComponentPreview name="get-start-step-4" size="xs" interactive replayable />
 
-下面 3 步把这张图搭起来——每一步都点开 **View Code** 可以看到源码与对应的 IR JSON。
+下面 4 步把这张图搭起来——每一步都点开 **View Code** 可以看到源码与对应的 IR JSON。
 
 ## 一步步搭建
 
@@ -43,7 +59,15 @@ retikz 的 React 适配器是 `@retikz/react`，peer 依赖 `react` / `react-dom
 
 <ComponentPreview name="get-start-final" size="xs" />
 
-3 个节点用 2 条线串起，与最上方的最终效果完全一致。
+3 个节点用 2 条线串起，静态结构已经与最上方的例子一致。
+
+### 4. 添加动画与回调函数
+
+图形也可以响应用户操作。给节点加 `animations` 描述动画轨道，再加 `onClick` 回调；回调第二个参数 `context` 会带上当前图元的信息和动画控制器，调用 `context.animation.restart()` 就能从事件里重播动画。
+
+<ComponentPreview name="get-start-step-4" size="xs" interactive replayable />
+
+这里的动画设置为 `trigger: 'manual'`，所以它不会自动播放，而是等点击节点时由回调触发；回调里也可以同步更新你的 React 状态。
 
 到这里先记住 4 个规则：
 
@@ -66,6 +90,14 @@ retikz 的 React 适配器是 `@retikz/react`，peer 依赖 `react` / `react-dom
   <LinkedCard href="/core/components/draw/overview">
     <span className="font-semibold">Draw</span>
     <span className="mt-1 text-center text-sm text-muted-foreground">继续学习折线、曲线、箭头、填充和边标注</span>
+  </LinkedCard>
+  <LinkedCard href="/core/concepts/animation">
+    <span className="font-semibold">动画</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">理解动画轨道、preset、播放控制和静态降级</span>
+  </LinkedCard>
+  <LinkedCard href="/core/reference/renderer/hydration">
+    <span className="font-semibold">水合</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">了解事件回调、context 和 vanilla 绑定方式</span>
   </LinkedCard>
   <LinkedCard href="/core/examples/karl-circle">
     <span className="font-semibold">Karl 单位圆</span>

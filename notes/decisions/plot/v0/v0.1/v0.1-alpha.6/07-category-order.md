@@ -62,11 +62,6 @@ DSL：
 - **多字段同 role 冲突 order → fail-loud**：见上「order 如何落到 scale」。
 - **显式 scale domain 压过 order**：见上。
 
-## 待决策点 🔻
-
-- **`Array` 漏项策略**：数据里有、order 数组没有的类别 → **追加末尾**（推荐，不丢数据）/ 丢弃 / fail-loud？倾向追加末尾 + 可选 warn。
-- **混合类型排序**：`'ascending'` 下类别同时有 string 和 number → 比较规则（全数值才数值比，否则统一 `String()` locale 比）。倾向后者兜底。
-- **null / 缺失类别位置**：排序时 null 类别（若存在）排首还是尾。倾向尾。
 
 ## 影响
 
@@ -82,55 +77,5 @@ DSL：
 - **顺序色板 / 有序图例**（sequential palette、ordered legend 渲染）——order 给了「有序」信号，但消费它的视觉能力属 alpha.7+ 通道/图例工作。
 - **`sortBy` 按另一字段聚合排序**（Vega-Lite `sort:{field,op}`）——需聚合，依赖 transform 家族，留后续。
 
----
-
-## 实现契约（必填）🔻
-
-### Level
-
-`red`——动 `packages/plot/plot/src/ir/data.ts`（IR schema）+ `lower/scale.ts` / `expand.ts`（域解析）。
-
-### Schema 改动
-
-| 文件 | 操作 | 字段名 | 类型 | 默认值 | describe 中文摘要 |
-|---|---|---|---|---|---|
-| `packages/plot/plot/src/ir/data.ts` | 加 | `FieldDefSchema.order` | `z.union([z.enum(['data','ascending','descending']), z.array(z.union([z.string(),z.number()])).min(1)]).optional()` | `—`（默认 `'data'` 出现序、无序） | 分类字段类别顺序：出现序 / 升降序 / 显式列表；非默认即视为有序 |
-
-### 文件 scope
-
-- `packages/plot/plot/src/ir/data.ts`（修改：`FieldDefSchema.order`）
-- `packages/plot/plot/src/lower/scale.ts`（新增：`orderedCategoryDomain(values, order)` helper；不改 `resolvePositionScale` 签名）
-- `packages/plot/plot/src/lower/expand.ts`（修改：`resolveScaleForRole` 解析 field→order → 注入 `def.domain` + 三道判定；`makeColorResolver` 同源取 order；field→order 与 fieldTypes 同源透传）
-- `packages/plot/plot/tests/lower/category-order.test.ts`（新建）
-- `apps/docs/src/contents/plot/grammar/data/index.{zh,en}.mdx`（修改：分类顺序段）
-
-### 测试象限
-
-**Happy path**：
-- `explicit_array_order`：`order:['S','M','L']` → band 域按数组序
-- `ascending_sorts_numeric`：数值类别 `order:'ascending'` → 按数值升序
-- `default_data_order_preserved`：不写 order / `'data'` → 出现序（与现状逐字等价）
-
-**边界**：
-- `array_missing_value_appended`：数据有、order 数组无的类别 → 追加末尾、不丢
-- `ascending_mixed_falls_back_string`：类别混 string+number → 统一字符串比，不崩
-- `single_category_order`：单一类别 + order → 正常
-
-**错误路径**：
-- `empty_array_order_rejected`：`order:[]` schema 拒（`.min(1)`）
-- `order_on_continuous_throws`：`order` 配 `continuous` 字段 → lowering fail-loud（cross-review #3）
-- `conflicting_order_same_role_throws`：同 role 两字段给不同非默认 order → fail-loud（cross-review #2）
-
-**交互**：
-- `order_applies_to_position_and_color`：同一有序字段既作 x(band) 又作 color(ordinal) → 两处类别序一致
-- `order_with_type_driven_scale`：`{categorical, order}` + 省略 scale → 派生 band 且域按 order
-- `explicit_domain_overrides_order`：scale 显式 `domain` + 字段 `order` 同在 → 用显式 domain（order 被忽略，cross-review #2）
-- `order_json_roundtrip`：含 order 的 model `JSON.parse(JSON.stringify())` 后 schema parse 等价
-
-### 依赖的现有元素
-
-- `FieldDefSchema`（`ir/data.ts`）—— 扩展：加 `order`
-- `inferCategoryDomain`（`lower/scale.ts`）—— 复用：`orderedCategoryDomain` 在其去重基础上排序
-- `resolveScaleForRole` / `roleFieldTypes`（`lower/expand.ts`）—— 修改/复用：order 解析与「混类型 fail-loud」同层，注入 `def.domain`
-- `resolveFieldTypes`（`lower/validate.ts`）/ `prepareRows`（`lower/expand.ts`）—— 引用：field→order 与 field→type 同源透传
-- ADR-03 type-driven scale —— 协同：categorical 派生 band 时应用 order
+> **实现指针**：最终 schema / 类型 / 行为以代码为准；落地集中在 `packages/plot/plot/src/ir/data.ts` 与 `packages/plot/plot/src/lower/{scale,expand}.ts`，测试见 `packages/plot/plot/tests/lower/category-order.test.ts`。完整施工契约见压缩前蓝图。
+> 🔖 本文件压缩前完整施工蓝图 = `git show 8ce95238:notes/decisions/plot/v0/v0.1/v0.1-alpha.6/07-category-order.md`（封板全文）。

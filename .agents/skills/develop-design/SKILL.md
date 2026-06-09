@@ -9,14 +9,14 @@ alpha 功能开发的入口。产出**一份 ADR**——下游所有阶段（imp
 
 ## 设计原则（一等优先级）
 
-retikz 的根本设计原则——**AI 一等公民、IR 是为 AI 设计的**（[`notes/architecture/DESIGN.md`](../../../notes/architecture/DESIGN.md) §1.2 / §7）。本阶段 ADR 的所有选项分析、字段命名、默认值决策都必须先过 AI 友好性这一关：
+retikz 的根本设计原则——**AI 一等公民、IR 是为 AI 设计的**（[`notes/architecture/core-design.md`](../../../notes/architecture/core-design.md) §7）。本阶段 ADR 的所有选项分析、字段命名、默认值决策都必须先过 AI 友好性这一关：
 
 - 新加字段是否 100% JSON 可序列化？（不能是函数 / class / ReactNode / Symbol / Map / Set）
 - 字段名是否沿用 TikZ 词汇 + 不缩写？（保留 LLM 训练数据亲和力）
 - discriminated union 是否用清晰 `type` 字段？
 - schema 是否 LLM 直生成 / 编辑友好？（避免顺序敏感的隐式数组、polymorphic 同字段两种类型、magic literal）
 
-任何设计选项削弱 AI 友好性 → 否决，无论其他维度收益多大。详 DESIGN.md §1.2「判定原则」。
+任何设计选项削弱 AI 友好性 → 否决，无论其他维度收益多大。详 `core-design.md` 的 AI 友好原则。
 
 ### 适配器对等：react / vanilla 两套 authoring surface
 
@@ -82,7 +82,7 @@ cp notes/decisions/core/_template.md notes/decisions/core/v<MAJOR>/v<MAJOR>.<MIN
 **叙述部分**：
 
 - 标题（`# ADR-NN：<一句话>`）
-- 状态 / 决策日期 / 关联（v0 roadmap / tikz-gap-analysis / DESIGN.md）
+- 状态 / 决策日期 / 关联（v0 roadmap / tikz-gap-analysis / core-design.md）
 - 背景（现状 + 痛点 + TikZ 等价）
 - 决策（定稿方案：schema 草案 + DSL 表面 + 理由；只写最终采纳的做法，不列被否决的中间方案）
 - 待决策点（方案内部的小决策，越细越好）
@@ -112,9 +112,9 @@ cp notes/decisions/core/_template.md notes/decisions/core/v<MAJOR>/v<MAJOR>.<MIN
    - 文件 scope 至少包含 IR 文件 + 测试文件
    - 测试象限四类各达下限（≥ 3 / ≥ 2 / ≥ 2 / ≥ 2 = 9 起步）；**plot alpha milestone 放宽为按复杂度适量、不硬凑 9（见该 milestone roadmap）**
    - 校验失败 → 报告人工补充
-6. **人工 commit ADR**（emoji `:pencil:` 或 `:sparkles:`）—— 状态仍 Proposed，直到 develop-wrapup 阶段才翻 Accepted
+6. **人工确认 ADR 可进入实现**；若需要提交，按根 AGENTS.md 由用户当次授权后再 commit。状态仍 Proposed，直到 develop-wrapup 阶段才翻 Accepted
 
-完成本阶段的标志：`notes/decisions/core/v<MAJOR>/v<MAJOR>.<MINOR>/v<MAJOR>.<MINOR>-<channel>.<N>/<NNNN>-*.md` 已 commit、实现契约段 4 件齐、多 LLM 评估意见已合并、人工说"可以进实现"。
+完成本阶段的标志：`notes/decisions/core/v<MAJOR>/v<MAJOR>.<MINOR>/v<MAJOR>.<MINOR>-<channel>.<N>/<NNNN>-*.md` 已写好、实现契约段 4 件齐、多 LLM 评估意见已合并、人工说"可以进实现"。是否已 commit 取决于用户当次授权。
 
 ## 多 LLM 设计评估
 
@@ -128,11 +128,7 @@ cp notes/decisions/core/_template.md notes/decisions/core/v<MAJOR>/v<MAJOR>.<MIN
 
 ### 推荐组合
 
-| 起草者 | 评估者 1 | 评估者 2（可选） |
-|---|---|---|
-| Claude（默认）| ChatGPT（OpenAI o3 / GPT-5 系列） | Gemini（2.x / 后续）|
-
-至少跑评估者 1。评估者 2 视改动影响面（红色改动建议加，绿色可省）。
+至少使用 1 个与起草上下文独立的评估视角；红色改动建议再加第 2 个。优先跨模型 / 跨供应商 / 跨线程；如果只能用同一模型，也要新开上下文并如实标注局限。不要在 skill 里写死模型名。
 
 ### 评估 prompt 角度（强制错开）
 
@@ -140,7 +136,7 @@ cp notes/decisions/core/_template.md notes/decisions/core/v<MAJOR>/v<MAJOR>.<MIN
 
 | LLM 角色 | prompt 角度 | 关注 |
 |---|---|---|
-| 起草者（Claude） | **建设视角**——把 ADR 写完整 | 选项完备性、决策理由、DSL 表面 |
+| 起草者 | **建设视角**——把 ADR 写完整 | 选项完备性、决策理由、DSL 表面 |
 | 评估者 1 | **挑刺视角**——"这份 ADR 哪些地方会让用户 / LLM 误用？"| schema 命名歧义 / 默认值反直觉 / 测试象限漏 case / TikZ 习惯偏离 |
 | 评估者 2 | **替代方案视角**——"如果不这么做，还有哪些更简单 / 更通用的方式？" | 字段是否过度设计、能否合并到已有 schema、是否该推迟到下版 |
 
@@ -183,5 +179,5 @@ cp notes/decisions/core/_template.md notes/decisions/core/v<MAJOR>/v<MAJOR>.<MIN
 
 - ADR 文件存在、状态 Proposed
 - 实现契约段四件齐（Level + Schema 改动 + 文件 scope + 测试象限）
-- 已 commit
+- 已写好；如已获授权则已 commit
 - 人工显式说"开始实现"或调用 develop-implement

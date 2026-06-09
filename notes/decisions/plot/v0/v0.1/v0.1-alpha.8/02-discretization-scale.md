@@ -72,13 +72,6 @@ export const PlotScale = {
 - **count×range 一致性也 fail-loud**：除 threshold 的 `range.length === breakpoints.length + 1`，quantize/quantile 在 **`count` 显式且 ≠ `range.length`** 时也 fail-loud（与 threshold 对称，修 adversarial WARNING；只给 range 省 count 仍宽容，档数 = range.length）。
 - **数值字段 `.finite()`**：`breakpoints` / quantize `domain`（及 ADR-01 sequential/diverging `domain`）的数值改 `z.number().finite()`，parse 期拒 `Infinity`/`-Infinity`（修 adversarial BLOCKING：裸 `z.number()` 放过 Infinity，既过 schema 又破坏 JSON round-trip）。
 
-## 待决策点 🔻
-
-- **threshold range 长度校验位置**：`range.length === breakpoints.length + 1` 在 schema refine 还是 lowering？倾向 **lowering 校验**（`range` / `breakpoints` 可分别省略——省 range 用 scheme 采样 `breakpoints.length+1` 档；只有都显式时才在 lowering 比对长度），schema 只管单字段合法性。
-- **quantize / quantile 默认 count**：默认 `5`（choropleth 社区惯例 4–7 档）。倾向 5。
-- **超出 domain 的值**：quantize 经 d3 落到首/末档（clamp 语义）；threshold < 最小断点落第 0 档、≥ 最大断点落末档。倾向沿 d3 默认（不额外报错）。
-- **离散化 scale 作用 mark 边界**：与 ADR-01 一致——per-datum 离散色仅 **point / bar / sector**；line/area + 离散化 color.field → fail-loud（同 path 整体着色边界）。倾向一致。
-- **NaN / 缺失值落档**：连续字段缺失行经 alpha.6 `invalid` 策略处理（skip/error）；进到离散化的都是有效数。倾向复用既有 invalid 链、不在离散化 scale 内特判。
 
 ## DSL 表面
 
@@ -97,7 +90,7 @@ export const PlotScale = {
 
 ## 测试设计
 
-`packages/plot/plot/tests/lower/discretization-scale.test.ts`（新建）+ `tests/ir/scale.schema.test.ts`（扩）覆盖：三类切档求值、scheme 采样档色、range 覆盖、threshold 断点校验、quantile 分位、边界落档、fail-loud。具体见「测试象限」。
+`packages/plot/plot/tests/lower/discretization-scale.test.ts`（新建）+ `tests/ir/scale.schema.test.ts`（扩）覆盖：三类切档求值、scheme 采样档色、range 覆盖、threshold 断点校验、quantile 分位、边界落档、fail-loud。落地测试见实现指针。
 
 ## 影响
 
@@ -114,68 +107,5 @@ export const PlotScale = {
 - **React 离散化 scale 显式表面 / `<ColorScale>` DSL** → 顺延。
 - **legend 分箱 swatch 渲染** → [ADR-03](./03-legend-guide.md)。
 
----
-
-## 实现契约（必填）🔻
-
-### Level
-
-`red`——动 `ir/scale.ts`（IR 契约）+ `lower/**`。
-
-### Schema 改动
-
-| 文件 | 操作 | 字段名 | 类型 | 默认值 | describe 中文摘要 |
-|---|---|---|---|---|---|
-| `ir/scale.ts` | 加 | `PlotScale.Quantize` | `'quantize'` | — | 等宽离散化判别串 |
-| `ir/scale.ts` | 加 | `PlotScale.Threshold` | `'threshold'` | — | 阈值离散化判别串 |
-| `ir/scale.ts` | 加 | `PlotScale.Quantile` | `'quantile'` | — | 分位离散化判别串 |
-| `ir/scale.ts` | 加 | `QuantizeColorScaleSchema` | `z.object` | — | type/name/domain?/count?/scheme?/range? |
-| `ir/scale.ts` | 加 | `QuantizeColorScaleSchema.count` | `z.number().int().min(2)` | `5` | 等宽档数 |
-| `ir/scale.ts` | 加 | `ThresholdColorScaleSchema` | `z.object` | — | type/name/breakpoints(必填升序)/scheme?/range? |
-| `ir/scale.ts` | 加 | `ThresholdColorScaleSchema.breakpoints` | `z.array(z.number()).min(1)` | — | 严格升序断点（必填） |
-| `ir/scale.ts` | 加 | `QuantileColorScaleSchema` | `z.object` | — | type/name/count?/scheme?/range?（无数值 domain） |
-| `ir/scale.ts` | 加 | `QuantileColorScaleSchema.count` | `z.number().int().min(2)` | `5` | 分位档数 |
-| `ir/scale.ts` | 改 | `ScaleSchema` | `z.discriminatedUnion` | — | union 追加 Quantize/Threshold/Quantile |
-| `ir/scale.ts` | 加 | `QuantizeColorScale`/`ThresholdColorScale`/`QuantileColorScale` | `z.infer` | — | 派生类型 |
-
-> threshold `breakpoints` 严格升序（违反 fail-loud）；`range`（若显式）长度 = `breakpoints.length + 1`（lowering 校验）。quantile 不接受显式数值 domain（给即 fail-loud）。
-
-### 文件 scope
-
-- `packages/plot/plot/src/ir/scale.ts`（改）
-- `packages/plot/plot/src/lower/scale.ts`（改：三类求值 + scheme→离散色采样，与 ADR-01 共用采样工具）
-- `packages/plot/plot/src/lower/expand.ts`（改：color resolver 认离散化 scale）
-- `packages/plot/plot/tests/ir/scale.schema.test.ts`（改）
-- `packages/plot/plot/tests/lower/discretization-scale.test.ts`（新建）
-- `apps/docs/src/contents/**`（scale 页 + choropleth demo）
-
-### 测试象限
-
-**Happy path**：
-- `quantize 5 档`：domain [0,100] count 5 → 值 0–20 第 0 档、80–100 末档，色取 scheme 采样
-- `threshold 断点`：breakpoints [60,80] + 3 色 → 50→色0、70→色1、90→色2
-- `quantile 分位`：偏斜数据 count 4 → 每档样本数约等
-
-**边界**：
-- `quantize domain 推断`：省略 domain → 从数据 [min,max] 切
-- `单断点 threshold`：breakpoints [50] + 2 色 → 二分
-
-**错误路径**：
-- `threshold 断点乱序`：[80,60] → fail-loud
-- `threshold range 长度不匹配`：breakpoints [60,80] + 2 色 → fail-loud（须 3 色）
-- `quantile 显式 domain`：给 domain → fail-loud（分位由数据定）
-- `line + 离散化 color fail-loud`：LineMark + quantize color → 抛（仅 point/bar/sector）
-
-**交互**：
-- `scheme 采样与 ADR-01 一致`：quantize scheme 'blues' 采 5 档 = sequential 'blues' 在 [0,1] 等距 5 点（共用采样工具锚点）
-- `离散化 + legend`：离散化 scale 被 [ADR-03](./03-legend-guide.md) 分箱 swatch 消费（跨 ADR 锚点）
-- `range 覆盖 scheme`：同给 range + scheme → 取 range
-
-### 依赖的现有元素
-
-- `PlotScale` / `ScaleSchema`（`ir/scale.ts`）—— 扩展
-- `PlotColorScheme` / scheme 采样工具（[ADR-01](./01-continuous-color-scale.md) `ir/scale.ts` / `lower/scale.ts`）—— 复用（离散色 = 连续 scheme 采样）
-- `makeColorResolver`（`lower/expand.ts`）—— 修改（认离散化 scale）
-- line/area within-series 校验（`lower/mark.ts`）—— 复用（离散化 color 命中 fail-loud）
-- d3 `scaleQuantize` / `scaleThreshold` / `scaleQuantile`（`d3-scale`，已是 plot 依赖）—— 引用
-- alpha.6 `invalid` 缺失值策略（`lower/coerce.ts` / `validate.ts`）—— 引用（NaN 落档前已处理）
+> **实现指针**：最终 schema / 类型 / 行为以代码为准；落地集中在 `packages/plot/plot/src/ir/scale.ts` 与 `packages/plot/plot/src/lower/{scale,expand}.ts`，测试见 `packages/plot/plot/tests/{ir/scale.schema,lower/discretization-scale}.test.ts`。完整施工契约见压缩前蓝图。
+> 🔖 本文件压缩前完整施工蓝图 = `git show 8ce95238:notes/decisions/plot/v0/v0.1/v0.1-alpha.8/02-discretization-scale.md`（封板全文）。

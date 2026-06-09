@@ -4,10 +4,10 @@ import type { FC } from 'react';
 /**
  * "IR at the Center" diagram for the introduction page
  * @description 4 inputs → IR ↔ Scene → 4 outputs (hourglass); nodes use stroke="none" as text anchors with Draw still snapping to bbox; bidirectional arrow between IR and "persistence / edit" marks IR as a read/write durable layer.
- *   Shipped parts use the default color (currentColor); planned / unimplemented ones (Text DSL, adapters other than React) are dimmed to gray.
+ *   Shipped parts use the default color (currentColor); planned / unsupported capabilities are dimmed to gray and explained by an in-diagram legend.
  */
 const Demo: FC = () => (
-  <Layout width={640} height={210} style={{ maxWidth: '100%', height: 'auto' }}>
+  <Layout width={640} height={230} style={{ maxWidth: '100%', height: 'auto' }}>
     <Node id="sugar" position={[-160, -54]} stroke="none">
       Sugar JSX
     </Node>
@@ -31,10 +31,10 @@ const Demo: FC = () => (
     <Node id="react" position={[200, -54]} stroke="none">
       React + SVG
     </Node>
-    <Node id="svg" position={[200, -18]} stroke="none" textColor="gray">
+    <Node id="svg" position={[200, -18]} stroke="none">
       pure SVG string
     </Node>
-    <Node id="canvas" position={[200, 18]} stroke="none" textColor="gray">
+    <Node id="canvas" position={[200, 18]} stroke="none">
       Canvas
     </Node>
     <Node id="raster" position={[350, 18]} stroke="none" textColor="gray">
@@ -47,6 +47,9 @@ const Demo: FC = () => (
     <Node id="persist" position={[-40, 80]} stroke="none">
       persistence / edit
     </Node>
+    <Node id="legend" position={[60, 104]} stroke="none" textColor="gray" font={{ size: 12 }}>
+      gray = planned, not shipped yet
+    </Node>
 
     <Draw way={['sugar', 'ir']} arrow="->" />
     <Draw way={['kernel', 'ir']} arrow="->" />
@@ -56,8 +59,8 @@ const Demo: FC = () => (
     <Draw way={['ir', 'scene']} arrow="->" />
 
     <Draw way={['scene', 'react']} arrow="->" />
-    <Draw way={['scene', 'svg']} arrow="->" stroke="gray" />
-    <Draw way={['scene', 'canvas']} arrow="->" stroke="gray" />
+    <Draw way={['scene', 'svg']} arrow="->" />
+    <Draw way={['scene', 'canvas']} arrow="->" />
     <Draw way={['canvas', 'raster']} arrow="->" stroke="gray" />
     <Draw way={['scene', 'native']} arrow="->" stroke="gray" />
 

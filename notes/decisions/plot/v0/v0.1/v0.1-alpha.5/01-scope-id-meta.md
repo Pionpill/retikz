@@ -110,13 +110,6 @@ meta = {
 - **guide id 默认形 + axis-only 用户句柄**：见上表 guide 行（用户 `guide.id` 仅挂 axis 层、grid 恒结构 id）。
 - **datum-id 注册器提升到 plot 级（cross-review 修复）**：原实现每 mark 各自建注册器，同图多个 datum-bearing mark（如 point + bar）+ 同 `datumIdField` 会各自生成 `<plotId>.datum.<值>` → 同命名空间撞 id。改为 **plot 级共享注册器**（`expandPlot` 建一次、贯穿所有 mark），跨 mark 重复 id 同样 **fail loud**（与单 mark 内重复一致）——一个 plot 内多 datum mark 想绑 id 须用不同字段/值消歧。
 
-## 待决策点 🔻
-
-- **mark 层 id 命名**：用户给 `mark.id='trend'` 时，layer scope.id 用 `<plotId>.trend`（直接挂用户句柄，倾向）还是 `<plotId>.mark.trend`（统一加 `mark.` 段）？倾向前者（用户句柄优先、更短，对齐 §8.1「用户 id 优先」）；缺省合成统一 `<plotId>.mark.<index>`。
-- **series 值非字符串 / 含 `.` 的 id 安全**：`<plotId>.series.<value>` 当 value 含 `.` 或非串时路径歧义——倾向对 value 做确定性 slug（非串 `String()`、`.`→`_`），slug 冲突时 fail loud（与 datumIdField 重复同策，保 anchor 稳定）。细节实现期定。
-- **datumIdField 作用域**：`LowerPlotsOptions.datumIdField` 是全局一个字段名（倾向，最简、对齐 §8.1「lowering option」），还是按 mark 配？倾向全局；按 mark 需求出现再非破坏扩展。
-- **`sourceIndex` 追踪深度（P1 评审遗留）**：sort 重排可保原序、stack 派生新行可能断链——是「best-effort（断链则省 `sourceIndex`，倾向）」还是「强制全链路追踪源行（每个 transform 都透传 sourceIndex / 多源行给数组）」？倾向 best-effort（v0.1 收尾不重写 transform 管线），强链路追踪归 backlog。
-- **guide meta `dimension` 取值**：polar 下用 `'angle'`/`'radius'` 还是归一化角色 `'angular'`/`'radial'`？倾向沿用 guide IR 的 `dimension` 原值（与轴定义一致、不引入第三套词）。
 
 ## DSL 表面
 
@@ -178,70 +171,5 @@ prim?.meta;   // → { source:'plot', mark:'interval', markIndex:0, datum:0 }
 - **`sourceIndex` 全链路强追踪**：跨所有 transform（含派生行）精确回指源行——backlog；v0.1 best-effort。
 - **legend / 跨域组合 UI**：v0.5。
 
----
-
-## 实现契约（必填）🔻
-
-### Level
-
-`red`——动 `packages/plot/plot/src/lower/**`（下沉到 core IR 的契约边界：产物新增 id / meta）。无 plot IR schema 改动，但 lowering 产物契约变化按 plot `_template.md` 判级归 red。
-
-### Schema 改动
-
-| 文件 | 操作 | 字段名 | 类型 | 默认值 | describe 中文摘要 |
-|---|---|---|---|---|---|
-| `packages/plot/plot/src/lower/expand.ts` | 加 option（**非 IR**，TS 类型）| `LowerPlotsOptions.provenance` | `boolean`（可选）| `false` | 总开关：开启才写 layer/series meta + 合成 `<plotId>.` 内部 id；关 → 逐字节等价 alpha.4 |
-| `packages/plot/plot/src/lower/expand.ts` | 加 option（**非 IR**，TS 类型）| `LowerPlotsOptions.datumProvenance` | `boolean`（可选）| `false` | 每个 datum Node 写 per-datum meta（hit-test 来源；蕴含需 provenance 开）|
-| `packages/plot/plot/src/lower/expand.ts` | 加 option（**非 IR**，TS 类型）| `LowerPlotsOptions.datumIdField` | `string`（可选）| 省略 | 数据属性名：把该字段值绑成 `<plotId>.datum.<值>` 的 `Node.id`（opt-in 可连接；缺字段/重复值 fail loud）|
-
-> **plot IR schema 无改动**（root `id` / `meta`、`mark.id` alpha.1 已在；本 ADR 接通它们的 lowering 语义，不改字段）。上表两项是 `lowerPlots` 运行时选项、不进 IR。
-
-### 文件 scope
-
-- `packages/plot/plot/src/lower/expand.ts`（修改：抽 `resolveFrame`；root/mark 绑 id + 写 meta；扩 `LowerPlotsOptions` 三 option；plotId 前缀 + provenance 开关逻辑；datumIdField fail-loud）
-- `packages/plot/plot/src/lower/mark.ts`（修改：lowerMark 接 provenance 上下文——plotId / markIndex / datum 开关；**line/area 每条 series Path 绑 id+meta**；point/interval/sector 仅 layer 级 + per-datum node 写 id+meta；datum meta 带 dataReference/transformedIndex/sourceIndex/series）
-- `packages/plot/plot/src/lower/guide.ts`（修改：轴 / 网格 scope 加 `<plotId>.` 前缀 + layer meta）
-- `packages/plot/plot/src/lower/transform.ts`（按需：threads sourceIndex best-effort——sort 保原序透传，派生行断链则省）
-- `packages/plot/plot/src/lower/index.ts`（按需：导出 `resolveFrame` 供 ADR-02）
-- `packages/plot/react/src/Plot.tsx`（修改：`PlotCommonProps` → lowerPlots 转发新增 `provenance` / `datumProvenance` / `datumIdField`）
-- `packages/plot/vanilla/src/<入口>.ts`（修改：vanilla 渲染入口对等转发三 option）
-- `packages/plot/plot/tests/lower/scope-id-meta.test.ts`（新建）
-- `packages/plot/react/tests/<plot-options>.test.ts`（新建 / 修改：断言三 option 透传到 lowerPlots，不被丢弃）
-- `apps/docs/src/contents/plot/<provenance / anchor 概念页>.mdx` + 同级 `.demo.tsx`（新建 / 修改：anchor + lowerPlots options + index 语义说明）
-
-### 测试象限
-
-**Happy path（≥ 3）**：
-
-- `root_id_to_scope_id`：`<Plot id="sales">` + `provenance:true` → 外层 scope.id='sales' + localNamespace + meta `{source:'plot',dataReference:'sales'}`
-- `mark_layer_id_meta`：bar mark[0] → 图层 scope.id='sales.mark.0'、meta `{layer:'mark',mark:'interval',markIndex:0}`
-- `line_series_path_id_meta`：line 多系列 → 每条 series **Path** 带 id='sales.series.<value>' + `Path.meta` 带 series（验证 series 落在 Path、非子 scope）
-- `datum_provenance_on`：`datumProvenance:true` → 每个 datum Node 带 meta `{dataReference,mark,markIndex,transformedIndex,sourceIndex,series?}`
-
-**边界（≥ 2）**：
-
-- `provenance_off_byte_identical`：默认（`provenance` 关）→ lowering 产物**逐字节等价 alpha.4**（无任何 meta / 合成 id key）
-- `no_root_id_anonymous`：`provenance:true` 但 root 无 id → 内部 scope 匿名（无合成 id）、meta 不含 plotId key、locator 按结构索引仍可寻址
-- `series_value_slug`：series 值非串 / 含 `.` → id 路径确定性 slug；slug 冲突 → fail loud
-- `transformed_vs_source_index`：spec 带 sort transform → datum meta 的 `transformedIndex`=渲染序、`sourceIndex`=原 dataset 行序，二者不同且都正确
-
-**错误路径（≥ 2）**：
-
-- `datum_id_field_missing`：`datumIdField` 指向某行不存在的字段 → **抛清晰错误**（fail loud）
-- `duplicate_datum_id`：`datumIdField` 值在两行重复 → **抛清晰错误**（不 last-wins，保 anchor 稳定）
-
-**交互（≥ 2）**：
-
-- `polar_id_meta_parity`：polar 下 sector / 径向柱层 id / meta 与 cartesian 同构
-- `compile_meta_reaches_scene`：含 meta 的 lowering 产物 → `compileToScene` → Scene 图元带同款 meta（验证 ADR-08 通道连通）；renderer 输出与无 meta 版几何/字节中立
-- `react_options_forwarded`：`<Plot>` 经 `@retikz/plot-react` 传 `provenance`/`datumProvenance`/`datumIdField` → 实际到达 `lowerPlots`（不被静默丢弃；回归 P1 评审）
-- `id_meta_coexist`：root+mark id 与 meta 共存、互不影响；compile 后图元同时带 id（data-retikz-id）与 meta
-
-### 依赖的现有元素
-
-- `Scope.meta` / `Node.meta` / `Path.meta`（`packages/core/core/src/ir/{scope,node,path/path}.ts`，[core ADR-08](../../../../core/v0/v0.3/v0.3-alpha.4/08-meta-provenance.md)）—— **消费**：写下沉元素来源（Path.meta 给 line/area series）；compile 自动 stamp 进 Scene。
-- `Scope.id` + `localNamespace`、`Node.id`、`Path.id`（`packages/core/core/src/ir/{scope,node,path/path}.ts`）—— **消费**：id 绑定句柄；root scope 已 localNamespace（内部 id 不上浮）。
-- `expandPlot` / `LowerPlotsOptions`（`packages/plot/plot/src/lower/expand.ts`）—— **修改**：抽 `resolveFrame`、绑 id/meta、扩三 option、provenance 开关 + datumIdField fail-loud。
-- `lowerMark` 及 `barLayer` / `sectorLayer` / `colorGroupedScope` / line·area 的 series Path 构造 / 各 `placed` node 构造（`packages/plot/plot/src/lower/mark.ts`）—— **修改**：接 provenance 上下文；line/area series Path 绑 id+meta；point/interval/sector datum node 写 id+meta。
-- `lowerGuide`（`packages/plot/plot/src/lower/guide.ts`，已绑 `guide.id`）—— **修改**：加前缀 + layer meta。
-- `PlotCommonProps`（`packages/plot/react/src/Plot.tsx`，`extends LowerPlotsOptions` 但仅转发 width/height/fontSize/margin）—— **修改**：转发新增三 option；`@retikz/plot-vanilla` 入口对等。
+> **实现指针**：最终 schema / 类型 / 行为以代码为准；落地集中在 `packages/plot/plot/src/lower/{expand,mark,guide}.ts`、plot React/vanilla options 透传与 provenance 测试，测试见 `packages/plot/plot/tests/lower/scope-id-meta.test.ts`。完整施工契约见压缩前蓝图。
+> 🔖 本文件压缩前完整施工蓝图 = `git show 8ce95238:notes/decisions/plot/v0/v0.1/v0.1-alpha.5/01-scope-id-meta.md`（封板全文）。

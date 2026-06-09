@@ -56,10 +56,6 @@ export type LowerPlotsOptions = {
 - **`parse` 单独出现需类型来源**：`{ parse }` 无 `type` 的合理语义是「类型沿用 model、只换解析」。**无 model 时类型来源不清**（自定义日期 parse 成 epoch number 会被误当 continuous）→ 要求：`{ parse }` 单独出现必须有 model 声明该字段；否则必须同时给 `type`，违反 fail-loud。
 - **覆盖后的类型贯穿下游**：`resolveField.type` 盖类型后，`assertScaleFieldCompatible` 等用的是**覆盖后**的类型（实现时注意取值时序，别拿 model 旧类型校验）。
 
-## 待决策点 🔻
-
-- **`parse` 输出形状校验**：`validateData` 开启时，是否**硬断言** parse 输出与最终 type 同形（temporal/continuous 必 number），把「形状不符 → 下游静默跳过」升级成报错？倾向：是（与 validateData 的 fail-loud 语义一致），默认关时仍走静默跳过守卫。
-- **resolver 命中但字段无 mark 引用**：resolver 为某未被任何通道引用的字段返回结果 → 无副作用忽略即可（不报错）。确认无歧义。
 
 ## DSL 表面
 
@@ -81,7 +77,7 @@ export type LowerPlotsOptions = {
 
 ## 测试设计
 
-`packages/plot/plot/tests/lower/field-resolver.test.ts` 覆盖类型覆盖、自定义 parse、门控、strict 守恒、locator 同源、与 fieldMaps 交叉。具体见「实现契约 § 测试象限」。
+`packages/plot/plot/tests/lower/field-resolver.test.ts` 覆盖类型覆盖、自定义 parse、门控、strict 守恒、locator 同源、与 fieldMaps 交叉。落地测试见实现指针。
 
 ## 影响
 
@@ -98,59 +94,5 @@ export type LowerPlotsOptions = {
 - **值重映射 / 标签化**（`0→'低'`）——显示格式化 / guide label 概念，与值强制无关，另议。
 - **`bigint` 作为一等标量进 `ScalarValueSchema`**——本 ADR 仅让用户经 `parse` 自行收口 bigint；是否把 bigint 纳入内置 `coerceNumber` / 标量 schema 另议。
 
----
-
-## 实现契约（必填）🔻
-
-### Level
-
-`red`——动 lowering 契约边界（`lower/{expand,coerce,locate}.ts`）+ 改三包公开 API（`LowerPlotsOptions` / `<Plot>` prop / `renderPlot` 选项 / `src/index.ts` 导出新类型）。**注意：red 来自 lowering 契约 + 公开 API，而非 IR schema——本 ADR 无 IR schema 改动。**
-
-### Schema 改动
-
-无 IR schema 改动。`resolveField` / `FieldResolution` / `ParsedFieldValue` 是运行时 TypeScript 类型（`LowerPlotsOptions` 上），不是 zod IR schema。
-
-### 文件 scope
-
-- `packages/plot/plot/src/lower/expand.ts`（修改：`LowerPlotsOptions` 加 `resolveField`；`resolveFieldTypes` 接 resolver 优先级 + strict 守恒 + 把 `parse` 收进字段→parser 映射；normalize 门控放宽）
-- `packages/plot/plot/src/lower/coerce.ts`（修改：`normalizeRows` 接受 per-field parser 覆盖 `coerceValue`；`ParsedFieldValue` / `FieldResolution` 类型定义落点，或新建 `lower/resolve.ts`）
-- `packages/plot/plot/src/lower/locate.ts`（修改：`createPlotLocator` 同源透传 `resolveField`）
-- `packages/plot/plot/src/lower/infer.ts`（按需：resolver 与推断的交接）
-- `packages/plot/plot/src/index.ts`（修改：导出 `FieldResolution` / `ParsedFieldValue`）
-- `packages/plot/react/src/components/Plot.tsx`（修改：`<Plot resolveField>` prop 透传，不进 spec）
-- `packages/plot/vanilla/src/renderPlot.ts`（修改：`renderPlot` options 透传）
-- `packages/plot/plot/tests/lower/field-resolver.test.ts`（新建）
-- `packages/plot/react/tests/components/*.test.tsx` / `packages/plot/vanilla/tests/renderPlot.test.ts`（按需：透传断言）
-- `apps/docs/src/contents/plot/grammar/data/index.{zh,en}.mdx`（修改：resolveField 段）
-- `apps/docs/src/contents/plot/grammar/data/*.demo.tsx`（按需新建 demo）
-
-### 测试象限
-
-**Happy path**：
-- `custom_date_parse`：`resolveField` 返 `{ type:'temporal', parse }` 解析 `'2024/01/01'` → 正确 epoch ms、点正常下沉
-- `numeric_enum_categorical_no_model`：无 model，`resolveField` 返 `{ type:'categorical' }` → 数值 `0/1/2` 当类别（band），不被推成 continuous
-- `parse_only_with_model`：model 声明 temporal，`resolveField` 返 `{ parse }`（无 type）→ 类型沿用 model、解析走自定义
-
-**边界**：
-- `parse_returns_undefined_skips`：parse 返 `undefined` → 该值跳过、不报错
-- `parse_returns_boolean_or_null_invalid`：parse 返 `true` / `null` → 视为非法（非 `ParsedFieldValue`）跳过
-- `resolver_returns_undefined_falls_back`：resolver 全返 `undefined` → 行为与无 resolver 逐字等价
-
-**错误路径**：
-- `parse_only_without_model_throws`：无 model 且 `{ parse }` 无 `type` → fail-loud
-- `resolver_does_not_bypass_strict`：有 model，mark 引用未声明字段，resolver 即便返该字段类型 → 仍按 strict 抛 unknown field
-- `parse_shape_mismatch_under_validatedata`（若拍板硬断言）：type temporal 但 parse 返 string + `validateData` → 报错
-
-**交互**：
-- `resolver_with_fieldmaps`：`resolveField` + `fieldMaps` 同设 → context.physicalPath 反映 fieldMap 后路径、解析正确
-- `render_locator_parity`：同 spec+options，render 与 `createPlotLocator` 用同一 `resolveField` → 命中坐标与下沉点一致
-- `resolved_type_feeds_compat`：`resolveField.type` 盖 model 类型后，`assertScaleFieldCompatible` 用覆盖后的类型校验
-
-### 依赖的现有元素
-
-- `resolveFieldTypes` / `inferFieldType`（`packages/plot/plot/src/lower/{expand,infer}.ts`）—— 扩展：接 resolver 优先级、守 strict
-- `coerceValue` / `normalizeRows`（`packages/plot/plot/src/lower/coerce.ts`）—— 修改：门控放宽 + per-field parser 覆盖
-- `createPlotLocator`（`packages/plot/plot/src/lower/locate.ts`）—— 修改：同源透传
-- `LowerPlotsOptions`（`packages/plot/plot/src/lower/expand.ts`）—— 扩展：加 `resolveField`
-- `FieldType` / `ScalarValue`（`packages/plot/plot/src/ir/data.ts`）—— 引用：`ParsedFieldValue` 显式收窄、不复用 `ScalarValue`
-- `<Plot>`（`@retikz/plot-react`）/ `renderPlot`（`@retikz/plot-vanilla`）—— 修改：运行时选项透传，不进 spec
+> **实现指针**：最终 schema / 类型 / 行为以代码为准；落地集中在 `packages/plot/plot/src/lower/{expand,coerce,locate,infer}.ts`、plot public export 与 React/vanilla options 透传，测试见 `packages/plot/plot/tests/lower/field-resolver.test.ts`。完整施工契约见压缩前蓝图。
+> 🔖 本文件压缩前完整施工蓝图 = `git show 8ce95238:notes/decisions/plot/v0/v0.1/v0.1-alpha.6/04-field-resolver.md`（封板全文）。

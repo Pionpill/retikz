@@ -79,15 +79,6 @@ export type FieldType = ValueOf<typeof PlotFieldType>;
 5. **fail-loud**：声明 model 却引用不存在字段是 spec bug，早炸早好（对齐 alpha.5 `datumIdField` 风格）。
 6. **temporal 用正则 guard 而非裸 `Date.parse`**：`Date.parse('5')` 在多数引擎返回有效值，会把数值误判时间——必须收窄（也与 ADR-02 temporal coercion 的 guard 保持一致）。
 
-## 待决策点 🔻
-
-> 原待决策点已于 2026-06-07 多 LLM 评审**全部拍板、并入决策**，无悬置项：
->
-> - `interval` **不作 FieldType**（区间是双字段/双通道语义 → 见「不在范围」，alpha.9+ 用 xStart/xEnd）；
-> - temporal 推断 = `Date` 实例 + 严格 ISO（`YYYY-MM-DD` / 带 Z·offset datetime），拒 `YYYY/MM/DD`·`'5'`·模糊 datetime（决策 (3)）；
-> - 声明 temporal 但值不可解析：**ADR-01 不报错**，交 ADR-02 coercion 跳过、`validateData` 诊断；
-> - 抽样 = 双阈值（≤1000 行 / ≤100 标量，决策 (3)）；
-> - nominal vs ordinal：一律 nominal，ordinal 必显式（决策 (3)）。
 
 ## DSL 表面
 
@@ -141,68 +132,5 @@ vanilla builder 对等（同一 IR）：`plot(spec, datasets)`，`spec.data = { 
 - **新 scale 类型**（log/pow/quantize/gradient）→ alpha.7-8。
 - **值级校验**（声明 temporal 但值不可解析）→ 暂不做（沿用跳过语义，见待决策点）。
 
----
-
-## 实现契约（必填）🔻
-
-> 以下为 **AI 起草的施工蓝图提案**，待人工 review + 多 LLM 评审后定稿。字段名 / 文件 scope / 测试 case 人工拍板。
-
-### Level
-
-`red`——动 `packages/plot/plot/src/ir/data.ts`（IR 契约边界）。
-
-### Schema 改动
-
-| 文件 | 操作 | 字段名 | 类型 | 默认值 | describe 中文摘要 |
-|---|---|---|---|---|---|
-| `plot/src/ir/data.ts` | 加 | `PlotFieldType.Proportion` | `'proportion'`（as const 成员） | — | 归一比例 [0,1]（pie value / ternary 分量），默认 linear domain [0,1] |
-
-`FieldType` 派生类型随之多一个联合分支（`z.infer` 自动）。无其他 schema 字段增删。
-
-### 文件 scope
-
-- `packages/plot/plot/src/ir/data.ts`（改：加 `Proportion` + describe）
-- `packages/plot/plot/src/lower/infer.ts`（新建：`inferFieldType`）
-- `packages/plot/plot/src/lower/validate.ts`（新建：`collectUserSourceFields`（扫 encoding `field` + mark `order` / `series` + transform 输入 `Sort.field` / `Stack.x/y/groupBy`，排除派生）+ `resolveFieldTypes` + strict 引用 / 自洽校验）
-- `packages/plot/plot/src/lower/expand.ts`（改：ingest 期收集用户源字段 → `resolveFieldTypes`，产出类型 `Map` 备 ADR-02/03 用 + 跑 strict 校验）
-- `packages/plot/plot/src/lower/index.ts`（改：barrel 导出，按需）
-- `packages/plot/plot/tests/lower/data-model.test.ts`（新建）
-
-偏离白名单需加条目或开新 ADR。
-
-### 测试象限
-
-**Happy path**：
-
-- `infer_temporal_from_iso`：无 model、字段值 `'2024-01-01'` → 推 temporal
-- `infer_quantitative_from_number`：数值字段 → quantitative
-- `infer_nominal_from_string`：非日期字符串 → nominal
-- `model_type_overrides_inference`：model 声明 ordinal、数据是数值 → 用 ordinal（不推 quantitative）
-
-**边界**：
-
-- `proportion_only_via_model`：数值字段，model 声明 proportion → proportion；无 model 同数据 → quantitative（不自动 proportion）
-- `temporal_guard_rejects_bare_number`：字段值 `5` / `'5'` → quantitative / nominal，**不**误判 temporal
-- `empty_or_all_null_field`：字段全 null → nominal（兜底）
-
-**错误路径**：
-
-- `strict_unknown_field_throws`：声明 model，encoding 引用未列出字段（`quater`）→ throw `unknown field`
-- `strict_order_series_field_validated`：声明 model，mark `order` / `series` 引用未列出字段 → throw（用户源字段含 order/series）
-- `strict_transform_input_validated`：声明 model，`Stack.y` / `Sort.field` 引用未列出字段 → throw（transform 输入属用户源字段）
-- `duplicate_field_name_throws`：model 两条同名 → throw `duplicate field`
-
-**交互**：
-
-- `no_model_skips_reference_check`：无 model 时引用任意字段不报错（全推断，校验跳过）
-- `derived_fields_not_validated`：声明 model 但不含 `y0`/`y1`，stack interval `y0Field`/`y1Field`、sector `startField`/`endField`、`Stack.startField`/`endField` → **不**报错（派生/输出字段不参与 strict）
-- `sampling_dual_threshold`：超大数据集仅按双阈值抽样推断（不全扫）
-- `resolved_map_feeds_consumer`：解析出的 `Map<logicalField, FieldType>` 对多 mark / 多通道（含 order/series）字段齐全（供 ADR-02/03 消费的契约）
-
-### 依赖的现有元素
-
-- `PlotFieldType` / `DataModelSchema` / `DataRefSchema` / `ExternalRow`（`plot/src/ir/data.ts`）—— 扩展（加 Proportion）+ 引用
-- `resolveFieldPath`（`plot/src/lower/field.ts`）—— 引用：抽样取字段值 + 校验路径可解析
-- mark schema（`order` / `series` / `*Field`）+ transform schema（`Sort.field` / `Stack.x/y/groupBy` / `startField` / `endField`，`plot/src/ir/mark.ts` / `transform.ts`）—— 引用：`collectUserSourceFields` 据此分类用户源 vs 派生字段
-- `expand.ts` 的 ingest 流程（`plot/src/lower/expand.ts`）—— 修改：插入解析 + 校验步
-- 无 core 依赖
+> **实现指针**：最终 schema / 类型 / 行为以代码为准；落地集中在 `packages/plot/plot/src/ir/data.ts` 与 `packages/plot/plot/src/lower/{infer,validate,expand}.ts`，测试见 `packages/plot/plot/tests/lower/data-model.test.ts`。完整施工契约见压缩前蓝图。
+> 🔖 本文件压缩前完整施工蓝图 = `git show 8ce95238:notes/decisions/plot/v0/v0.1/v0.1-alpha.6/01-data-model.md`（封板全文）。

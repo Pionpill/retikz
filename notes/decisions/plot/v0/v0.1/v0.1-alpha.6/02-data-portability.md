@@ -79,15 +79,6 @@ retikz「数据不进 IR、外部数据是任意可嵌套 JS」（plot-design §
 
 要点：**非标量叶子与数组路径都收敛到「跳过 + 不伪造」**，配合可选 `validateData` 让「为什么图是空的」可诊断——这是文档型数据的主要错误处理保证。
 
-## 待决策点 🔻
-
-> 原待决策点已于 2026-06-07 多 LLM 评审**全部拍板、并入决策**，无悬置项：
->
-> - `fieldMaps` 落点 = **`LowerPlotsOptions.fieldMaps`**（datasets 保持纯数据，映射是绑定期适配层）；
-> - quantitative 数字串：**收但严格**（trimmed 十进制/科学计数；拒空串·Infinity·NaN·hex·带单位，决策 (3)）；
-> - proportion 越界：**原样保留**（不 clamp 不跳过；clamp 交 ADR-03 scale option）；
-> - 数据一致性校验：**默认关**，`validateData?: boolean | { sampleRows?: number }`，开启后抽样 **fail-loud**（**不做 warn**——库里 warn 不确定、不好测）；
-> - fieldMaps 未知逻辑名 / 未知 ref / 无 model：**fail-loud**（决策 (2)）。
 
 ## DSL 表面
 
@@ -122,7 +113,7 @@ React / vanilla 具体 API（评审 P1，当前 `Plot.tsx` 只显式转发列举
 - fieldMaps fail-loud（未知逻辑名）
 - 非法值跳过（不报错）
 
-具体见「实现契约 § 测试象限」。
+落地测试见实现指针。
 
 ## 影响
 
@@ -139,70 +130,5 @@ React / vanilla 具体 API（评审 P1，当前 `Plot.tsx` 只显式转发列举
 - **远程 / 流式数据源、大数据采样** → 后续。
 - **运行时响应式换源（不重 lower）** → v0.1 之后交互/性能轴。
 
----
-
-## 实现契约（必填）🔻
-
-> AI 起草的施工蓝图提案，待人工 review + 多 LLM 评审定稿。
-
-### Level
-
-`red`——动 `packages/plot/plot/src/index.ts` 导出面（`LowerPlotsOptions` 扩字段）+ lowering 取值契约。
-
-### Schema 改动
-
-无 IR schema 改动。`fieldMaps` 是 `LowerPlotsOptions` 的 TS 字段（绑定期、不进 IR）：
-
-| 文件 | 操作 | 名称 | 类型 | 默认 | 说明 |
-|---|---|---|---|---|---|
-| `plot/src/lower/expand.ts` | 加 | `LowerPlotsOptions.fieldMaps` | `Record<string, Record<string,string>>?` | 省略=全恒等 | 数据集 reference → (逻辑字段名 → 物理数据路径)；需 model |
-| `plot/src/lower/expand.ts` | 加 | `LowerPlotsOptions.validateData` | `boolean \| { sampleRows?: number }?` | `false` | 开启后抽样校验绑定数据（字段缺失 / 非标量 / 类型不符）→ fail-loud；默认关、**不 warn** |
-
-### 文件 scope
-
-- `packages/plot/plot/src/lower/coerce.ts`（新建：按 PlotFieldType 值强制）
-- `packages/plot/plot/src/lower/expand.ts`（改：ingest 归一化（fieldMap + coerce → canonical rows，置于 transform 前）；`LowerPlotsOptions` 加 `fieldMaps` / `validateData`；fieldMaps 校验（逻辑名∈model、ref∈datasets、无 model 报错）；归一化保留 `SOURCE_INDEX`）
-- `packages/plot/plot/src/lower/scale.ts`（改：扩展 `toTimestamp` 收 `Date` + 严格 ISO guard）
-- `packages/plot/plot/src/lower/field.ts`（按需：逻辑名→物理路径解析 helper）
-- `packages/plot/plot/src/index.ts`（改：`LowerPlotsOptions` / `FieldMaps` 类型重导出，按需）
-- `packages/plot/react/src/Plot.tsx`（改：解构 + 转发 `fieldMaps`）+ `packages/plot/react/src/components/*`（DSL 入口加 `model` / `fieldMap` props，注入构造的 spec）
-- `packages/plot/vanilla/src/*`（改：builder 透传 `fieldMaps`）
-- `packages/plot/plot/tests/lower/data-portability.test.ts`（新建）
-
-> 归一化置于 transform 前，故 transform / anchor / mark / locator **无需逐处改取值逻辑**——它们读的 row 已是 canonical。只需确认这些阶段消费的是归一化后的行集（expand 内串接点）。
-
-### 测试象限
-
-**Happy path**：
-
-- `identity_swap_same_schema`：同名同类型新数据 → 正常出图（需求 1）
-- `fieldmap_renames_resolve`：fieldMaps `{quarter:'period'}` → 取 `period` 值（需求 2）
-- `coerce_temporal_variants`：同字段 Date / ISO串 / epoch 数 三源 → 同结果（需求 3）
-
-**边界**：
-
-- `coerce_numeric_string_strict`：quantitative `'120'` → 120；`''` / `'12px'` / `'0xFF'` / `'Infinity'` → 跳过
-- `proportion_out_of_range_kept`：proportion `1.5` → 原样 1.5（不 clamp 不跳过）
-- `missing_fieldmap_is_identity`：无 fieldMaps → 逻辑名当物理名（恒等，回归现有行为）
-- `validate_data_off_by_default`：默认不校验绑定数据；开 `validateData` 后字段缺失比例过高 → fail-loud
-
-**错误路径**：
-
-- `fieldmap_unknown_logical_throws`：fieldMaps 写了 model 没有的逻辑名 → throw
-- `fieldmap_without_model_throws`：传 fieldMaps 但未声明 model → throw（fieldMaps 需 model，评审 P1）
-- `invalid_value_skipped_not_thrown`：值无法强制（temporal 字段是 `'abc'`）→ 跳过该 datum，不报错
-
-**交互**：
-
-- `fieldmap_plus_coercion`：改名 + 异表示叠加（period 是 Date）→ 正确（需求 2+3 正交）
-- `coerce_before_transform_stack`：quantitative 字段是数字串 `'5'`、interval stack → 归一化在 transform 前 coerce，stack 累加得 5 而非 0（评审 P1 的关键回归）
-- `normalization_preserves_provenance`：归一化后 `SOURCE_INDEX` 仍能回指原始行（与 alpha.5 provenance 协同）
-
-### 依赖的现有元素
-
-- `toTimestamp`（`plot/src/lower/scale.ts`）—— **修改**：加 `Date` 分支 + 严格 ISO guard（现不收 Date、裸 Date.parse 过宽）
-- `resolveFieldPath`（`plot/src/lower/field.ts`）—— 引用：物理路径取值（归一化期）
-- `PlotFieldType` + ADR-01 `resolveFieldTypes`（产出的类型 `Map`）—— 引用：按 resolved 类型选 coercion（强依赖 ADR-01）
-- `SOURCE_INDEX` / provenance 标记（`plot/src/lower/provenance.ts`，alpha.5）—— 引用：归一化须转移到 canonical row
-- `LowerPlotsOptions`（`plot/src/lower/expand.ts`）—— 扩展：加 `fieldMaps`
-- 无 core 依赖
+> **实现指针**：最终 schema / 类型 / 行为以代码为准；落地集中在 `packages/plot/plot/src/lower/{coerce,expand,scale,field}.ts`、plot React/vanilla 入口透传与 public export，测试见 `packages/plot/plot/tests/lower/data-portability.test.ts`。完整施工契约见压缩前蓝图。
+> 🔖 本文件压缩前完整施工蓝图 = `git show 8ce95238:notes/decisions/plot/v0/v0.1/v0.1-alpha.6/02-data-portability.md`（封板全文）。

@@ -68,11 +68,6 @@ DSL：
 - **`slashDate` 只收严格 `YYYY/MM/DD`**：按 **UTC 零点**转 epoch ms。`DD/MM/YYYY`、`MM/DD/YYYY` 地区歧义布局**不收**——留 phase 2 完整 pattern 串（`'%d/%m/%Y'`）显式指定，避免「同一 `01/02/2024` 在不同环境解析成不同日期」的隐式歧义。（cross-review #6）
 - **`format` 蕴含 `type`、冲突 fail-loud**：见上「决策」段；不存在「写了 format 却被推断成 categorical」的失效路径。（cross-review #1）
 
-## 待决策点 🔻
-
-- **词表初始集**：上表 6 项是否够？是否首发就加 `'comma'`（千分位）/ `'boolean'`？倾向：先 6 项，按真实需求增。
-- **自定义 pattern 串**：`format: 'date:%Y/%m/%d'` 这类完整 pattern 是否本 ADR 收？倾向**不收**（引 d3-time-format、catalog、解析复杂），留 phase 2 ADR；本 ADR 只 closed 词表。
-- **format 与无 model**：`format` 只能在 model 里写（它挂 FieldDef）；无 model 时要自定义格式只能走 `resolveField`。确认无歧义。
 
 ## 影响
 
@@ -88,56 +83,5 @@ DSL：
 - **resolveField 函数逃生舱**——已是 ADR-04，本 ADR 只把它降为「词表外」兜底。
 - **数字 locale / 千分位完整支持**——先 `numberString` 宽松版，完整 locale 留后续。
 
----
-
-## 实现契约（必填）🔻
-
-### Level
-
-`red`——动 `packages/plot/plot/src/ir/data.ts`（IR schema）+ `lower/{coerce,expand,validate}.ts`（解析链）。
-
-### Schema 改动
-
-| 文件 | 操作 | 字段名 | 类型 | 默认值 | describe 中文摘要 |
-|---|---|---|---|---|---|
-| `packages/plot/plot/src/ir/data.ts` | 加 | `FieldDefSchema.format` | `z.nativeEnum(PlotFieldFormat).optional()` | `—`（默认内置 coerce） | 声明式值解析格式；须与 type 兼容，省略走内置默认 |
-| `packages/plot/plot/src/ir/data.ts` | 加常量 | `PlotFieldFormat` | `as const` 词表 | — | iso/epochSeconds/epochMillis/slashDate/numberString/percent |
-
-### 文件 scope
-
-- `packages/plot/plot/src/ir/data.ts`（修改：`PlotFieldFormat` + `FieldDefSchema.format`）
-- `packages/plot/plot/src/lower/coerce.ts`（修改：`formatParser(type, format)` 内置 parser 工厂；normalizeRows 复用 ADR-04 parser 槽）
-- `packages/plot/plot/src/lower/validate.ts` 或 `resolve.ts`（修改：收集 format→parser + type 兼容校验 fail-loud；与 resolveField 合并优先级）
-- `packages/plot/plot/src/lower/expand.ts`（按需：prepareRows 接 format parser 槽）
-- `packages/plot/plot/src/index.ts`（导出 `PlotFieldFormat` / `FieldFormat`）
-- `packages/plot/plot/tests/lower/field-format.test.ts`（新建）
-- `apps/docs/src/contents/plot/grammar/data/index.{zh,en}.mdx`（修改：声明式 format 段）
-
-### 测试象限
-
-**Happy path**：
-- `slashdate_parses_utc`：`{type:'temporal',format:'slashDate'}` 解析 `'2024/01/01'` → `Date.UTC(2024,0,1)` epoch ms（UTC 零点）
-- `epoch_seconds_scaled`：`{type:'temporal',format:'epochSeconds'}` `1700000000` → ms（*1000）
-- `percent_parses`：`{type:'continuous',format:'percent'}` `'50%'` → 0.5
-
-**边界**：
-- `format_omitted_equals_builtin`：不写 format → 与现状内置 coerce 逐字等价
-- `numberstring_lenient`：`'1,500'` / `' 12 '` → 1500 / 12（宽松数字串）
-- `format_implies_type_when_omitted`：`{name:'ratio',format:'percent'}`（无 type）→ 字段判为 continuous、`'50%'`→0.5，不被推断成 categorical（cross-review #1）
-- `slashdate_rejects_ambiguous_layout`：`'13/01/2024'`（非 YYYY/MM/DD）→ NaN→跳过（不猜 D/M/Y，cross-review #6）
-
-**错误路径**：
-- `format_type_mismatch_throws`：`{type:'continuous',format:'epochSeconds'}` → lowering fail-loud（format 蕴含 temporal 与显式 continuous 冲突）
-- `unknown_format_rejected`：schema 拒未知 format 字面量
-
-**交互**：
-- `resolveField_parse_overrides_format`：同字段既有 `format` 又有 `resolveField.parse` → 用 parse（优先级 resolveField > format）
-- `format_with_fieldmaps`：`format` + `fieldMaps` → 物理路径取值后按 format 解析
-- `format_json_roundtrip`：含 format 的 model `JSON.parse(JSON.stringify())` 后 schema parse 等价
-
-### 依赖的现有元素
-
-- `FieldDefSchema`（`ir/data.ts`）—— 扩展：加 `format`
-- `coerceValue` / `normalizeRows`（`lower/coerce.ts`）—— 扩展：format parser 工厂 + per-field parser 槽
-- ADR-04 `resolveField` / `applyFieldResolver`（`lower/resolve.ts`）—— 协同：优先级 resolveField.parse > format > 内置；同一 parser 槽
-- `ValueOf`（`@retikz/core`）—— 引用：派生 `FieldFormat`
+> **实现指针**：最终 schema / 类型 / 行为以代码为准；落地集中在 `packages/plot/plot/src/ir/data.ts` 与 `packages/plot/plot/src/lower/{coerce,validate,expand}.ts`，测试见 `packages/plot/plot/tests/lower/field-format.test.ts`。完整施工契约见压缩前蓝图。
+> 🔖 本文件压缩前完整施工蓝图 = `git show 8ce95238:notes/decisions/plot/v0/v0.1/v0.1-alpha.6/06-declarative-format.md`（封板全文）。
