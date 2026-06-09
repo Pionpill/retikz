@@ -5,26 +5,26 @@ import type { ValueOf } from '../../types';
  * 箭头形状常量（用 const 而非 TS enum 避免 reverse-mapping 和字面量不互通）
  * @description normal 实心三角；open 空心三角（UML 泛化/继承）；stealth 尖锐倒钩（默认）；openStealth 空心倒钩；diamond 实心菱形（UML 组合）；openDiamond 空心菱形（聚合）；circle 实心圆点；openCircle 空心圆点
  */
-export const ARROW_SHAPES = {
-  normal: 'normal',
-  open: 'open',
-  stealth: 'stealth',
-  openStealth: 'openStealth',
-  diamond: 'diamond',
-  openDiamond: 'openDiamond',
-  circle: 'circle',
-  openCircle: 'openCircle',
+export const ArrowShape = {
+  Normal: 'normal',
+  Open: 'open',
+  Stealth: 'stealth',
+  OpenStealth: 'openStealth',
+  Diamond: 'diamond',
+  OpenDiamond: 'openDiamond',
+  Circle: 'circle',
+  OpenCircle: 'openCircle',
 } as const;
 
 /** 箭头形状字面量类型 */
-export type ArrowShape = ValueOf<typeof ARROW_SHAPES>;
+export type ArrowShapeValue = ValueOf<typeof ArrowShape>;
 
 /**
  * 内置 8 箭头名联合
  * @description `BUILTIN_ARROWS` 的 Record key（保穷尽性约束，不随 `ArrowShapeName` 开放而退化为 `string`）；
  *   等价于历史 `ArrowShape`，独立命名对齐 `node.ts` 的 `BuiltinShapeName` 范式
  */
-export type BuiltinArrowName = ValueOf<typeof ARROW_SHAPES>;
+export type BuiltinArrowName = ArrowShapeValue;
 
 /**
  * 箭头形状名：开放字符串
@@ -34,13 +34,13 @@ export type BuiltinArrowName = ValueOf<typeof ARROW_SHAPES>;
 export type ArrowShapeName = BuiltinArrowName | (string & {});
 
 /** 箭头默认形状 */
-export const DEFAULT_ARROW_SHAPE = ARROW_SHAPES.stealth;
+export const DEFAULT_ARROW_SHAPE = ArrowShape.Stealth;
 
 /**
  * 空心 shape 集合（fill 字段在这些 shape 上 silent no-op）
  * @description compile 与 render 都引用此表判定 fill 是否丢弃；空心 shape 用 color 主导描边、lineWidth 控描边粗
  */
-export const HOLLOW_ARROW_SHAPES = new Set<ArrowShape>(['open', 'openStealth', 'openDiamond', 'openCircle']);
+export const HOLLOW_ARROW_SHAPES = new Set<ArrowShapeValue>([ArrowShape.Open, ArrowShape.OpenStealth, ArrowShape.OpenDiamond, ArrowShape.OpenCircle]);
 
 /** 箭头默认尺寸（length / width 的 fallback） */
 export const ARROW_MARKER_DEFAULT_SIZE = 6;

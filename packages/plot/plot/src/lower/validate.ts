@@ -1,4 +1,4 @@
-import { type Channel, type DataModel, type ExternalRow, type FieldType, PlotMark, type PlotSpec, PlotTransform } from '../ir';
+import { type Channel, type DataModel, type ExternalRow, type PlotFieldTypeValue, PlotMark, type PlotSpec, PlotTransform } from '../ir';
 import { inferFieldType } from './infer';
 
 /** 把一个通道的 field 路径（若有）加入集合（常量 value 通道无 field，跳过） */
@@ -47,7 +47,7 @@ export const collectUserSourceFields = (spec: PlotSpec): Set<string> => {
 };
 
 /**
- * 把用户源字段解析成「逻辑字段名 → FieldType」的单一映射（供 type-driven scale / coercion 消费）
+ * 把用户源字段解析成「逻辑字段名 → PlotFieldTypeValue」的单一映射（供 type-driven scale / coercion 消费）
  * @description 有 model = strict：每个用户源字段必须在 model 声明（否则 fail-loud），model 无重复字段名；
  *   无 model = 全推断（`inferFieldType` 抽样）。二选一，无混合。
  */
@@ -55,12 +55,12 @@ export const resolveFieldTypes = (
   model: DataModel | undefined,
   rows: Array<ExternalRow>,
   userSourceFields: Set<string>,
-): Map<string, FieldType> => {
-  const map = new Map<string, FieldType>();
+): Map<string, PlotFieldTypeValue> => {
+  const map = new Map<string, PlotFieldTypeValue>();
   if (model !== undefined) {
     // strict 按 name；type 可省（ADR-05）：声明 name 即进契约，type 缺省的字段按数据推断
     const declaredNames = new Set<string>();
-    const declaredTypes = new Map<string, FieldType>();
+    const declaredTypes = new Map<string, PlotFieldTypeValue>();
     for (const field of model) {
       if (declaredNames.has(field.name)) {
         throw new Error(`lowerPlots: duplicate field "${field.name}" in data.model`);

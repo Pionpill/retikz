@@ -20,7 +20,7 @@ export const PlotMark = {
 } as const;
 
 /** mark 类型 */
-export type MarkType = ValueOf<typeof PlotMark>;
+export type PlotMarkValue = ValueOf<typeof PlotMark>;
 
 /**
  * 多系列柱的组合方式关键字（暴露给用户；裸 `'dodge'` / `'stack'` 同样可用）
@@ -34,7 +34,7 @@ export const PlotArrangement = {
 } as const;
 
 /** 多系列柱组合方式 */
-export type ArrangementType = ValueOf<typeof PlotArrangement>;
+export type PlotArrangementValue = ValueOf<typeof PlotArrangement>;
 
 /** 各 mark 变体共享的基础字段（可选 id 句柄）；encoding 各 mark 自带（位置 mark 用 EncodingSchema、sector 用 StyleEncodingSchema） */
 const markBase = {

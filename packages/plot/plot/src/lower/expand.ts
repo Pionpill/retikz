@@ -1,6 +1,6 @@
 import { type CompositeDefinition, type IRChild, type IRScope, defineComposite } from '@retikz/core';
 import type { ZodType } from 'zod';
-import { type AxisGuide, type Channel, type ColorScheme, type ExternalDatasets, type ExternalRow, type FieldType, type Guide, type LegendChannelType, type LegendGuide, type Mark, type OrdinalScale, PlotCoordinate, PlotFieldType, PlotGuide, PlotMark, PlotScale, type PlotSpec, PlotSpecSchema, type Scale, type ScaleType } from '../ir';
+import { type AxisGuide, type Channel, type ExternalDatasets, type ExternalRow, type Guide, type LegendChannelValue, type LegendGuide, type Mark, type OrdinalScale, type PlotColorSchemeValue, PlotCoordinate, PlotFieldType, type PlotFieldTypeValue, PlotGuide, PlotMark, PlotScale, type PlotScaleValue, type PlotSpec, PlotSpecSchema, type Scale } from '../ir';
 import { channelValue, isFiniteNumber, resolveFieldPath } from './field';
 import { type GuideContext, type LegendEntry, type LegendInput, lowerGuide, lowerLegend } from './guide';
 import { DEFAULT_FONT_SIZE, type LegendReserve, type Margins, type Rect, computePlotArea, computePolarFrame } from './layout';
@@ -106,8 +106,8 @@ export type ResolveFrameParams = {
   node: PlotSpec;
   /** transform 后的数据行（域推断、guide 刻度同源） */
   rows: Array<ExternalRow>;
-  /** 用户源字段 → FieldType（ADR-01 解析）；供 type-driven scale 派生与兼容校验（ADR-03） */
-  fieldTypes: Map<string, FieldType>;
+  /** 用户源字段 → PlotFieldTypeValue（ADR-01 解析）；供 type-driven scale 派生与兼容校验（ADR-03） */
+  fieldTypes: Map<string, PlotFieldTypeValue>;
   /** 整图宽（user units） */
   width: number;
   /** 整图高（user units） */
@@ -177,8 +177,8 @@ export const resolveFrame = (params: ResolveFrameParams): ResolvedFrame => {
   };
 
   // 某角色（跨所有 mark）绑定字段的全部类型——多 mark 共用一角色时须校验 / 派生全部，不能只看首个
-  const roleFieldTypes = (pick: (mark: Mark) => Channel | undefined): Array<FieldType> => {
-    const types: Array<FieldType> = [];
+  const roleFieldTypes = (pick: (mark: Mark) => Channel | undefined): Array<PlotFieldTypeValue> => {
+    const types: Array<PlotFieldTypeValue> = [];
     for (const mark of node.marks) {
       const channel = pick(mark);
       if (channel?.field === undefined) continue;
@@ -395,7 +395,7 @@ export const resolveFrame = (params: ResolveFrameParams): ResolvedFrame => {
 };
 
 /** 解析某 mark 的 color 编码 → 行→颜色串：常量 value 直用；字段过 ordinal scale（显式引用或自动合成默认配色） */
-const makeColorResolver = (node: PlotSpec, rows: Array<ExternalRow>, fieldTypes: Map<string, FieldType>): ((mark: Mark) => ColorOf | undefined) => {
+const makeColorResolver = (node: PlotSpec, rows: Array<ExternalRow>, fieldTypes: Map<string, PlotFieldTypeValue>): ((mark: Mark) => ColorOf | undefined) => {
   const scaleByName = new Map(node.scales.map(scale => [scale.name, scale] as const));
   // 字段名 → order（与位置通道同源 data.model）：颜色 ordinal 域按字段 order 排，保证位置 / 颜色同序
   const fieldOrders = new Map<string, CategoryOrder>();
@@ -495,8 +495,8 @@ const collectChannelDescriptors = (
   resolveSize: (mark: Mark) => ChannelResolution<number> | undefined,
   resolveOpacity: (mark: Mark) => ChannelResolution<number> | undefined,
   resolveShape: (mark: Mark) => ChannelResolution<string> | undefined,
-): Map<LegendChannelType, ScaleDescriptor> => {
-  const out = new Map<LegendChannelType, ScaleDescriptor>();
+): Map<LegendChannelValue, ScaleDescriptor> => {
+  const out = new Map<LegendChannelValue, ScaleDescriptor>();
   const register = (descriptor: ScaleDescriptor | undefined): void => {
     if (descriptor && !out.has(descriptor.channel)) out.set(descriptor.channel, descriptor);
   };
@@ -539,7 +539,7 @@ const quantileAt = (sortedAscending: ReadonlyArray<number>, p: number): number =
  *   edges 是档间内部边界（长度 = binCount - 1）；colors 是各档色（range 显式则用、否则从 scheme 采）。
  */
 const discretizedBins = (
-  def: { type: string; range?: ReadonlyArray<string>; scheme?: ColorScheme; count?: number; breakpoints?: ReadonlyArray<number>; domain?: readonly [number, number] },
+  def: { type: string; range?: ReadonlyArray<string>; scheme?: PlotColorSchemeValue; count?: number; breakpoints?: ReadonlyArray<number>; domain?: readonly [number, number] },
   values: ReadonlyArray<number>,
 ): { colors: Array<string>; edges: Array<number> } => {
   if (def.type === PlotScale.Threshold && def.breakpoints) {
@@ -571,7 +571,7 @@ const resolveSqrtForLegend = (domain: readonly [number, number], range: readonly
 
 /** legend baseInput 形状（lowerLegend 入参里与求值无关的固定部分） */
 type LegendBaseInput = {
-  channel: LegendChannelType;
+  channel: LegendChannelValue;
   position: 'right' | 'left' | 'top' | 'bottom';
   orient: 'vertical' | 'horizontal';
   fontSize: number;
@@ -580,7 +580,7 @@ type LegendBaseInput = {
 };
 
 /** 可作 color 通道的 scale 类型集（位置 scale 不在内）；color legend 绑定外的类型 fail-loud */
-const COLOR_SCALE_TYPES = new Set<ScaleType>([PlotScale.Ordinal, PlotScale.Sequential, PlotScale.Diverging, PlotScale.Quantize, PlotScale.Threshold, PlotScale.Quantile]);
+const COLOR_SCALE_TYPES = new Set<PlotScaleValue>([PlotScale.Ordinal, PlotScale.Sequential, PlotScale.Diverging, PlotScale.Quantize, PlotScale.Threshold, PlotScale.Quantile]);
 
 /**
  * color legend 解析：定位 color scale（消歧 + fail-loud）→ 按 scale 类型选 swatch / ramp / 分箱
@@ -590,7 +590,7 @@ const COLOR_SCALE_TYPES = new Set<ScaleType>([PlotScale.Ordinal, PlotScale.Seque
 const resolveColorLegend = (
   node: PlotSpec,
   rows: Array<ExternalRow>,
-  fieldTypes: Map<string, FieldType>,
+  fieldTypes: Map<string, PlotFieldTypeValue>,
   scaleByName: Map<string, Scale>,
   guide: LegendGuide,
   baseInput: LegendBaseInput,
@@ -738,8 +738,8 @@ const reserveLegendBands = (legendGuides: Array<LegendGuide>, width: number, hei
 const buildLegendLayers = (
   node: PlotSpec,
   rows: Array<ExternalRow>,
-  fieldTypes: Map<string, FieldType>,
-  channelDescriptors: Map<LegendChannelType, ScaleDescriptor>,
+  fieldTypes: Map<string, PlotFieldTypeValue>,
+  channelDescriptors: Map<LegendChannelValue, ScaleDescriptor>,
   legendGuides: Array<LegendGuide>,
   fontSize: number,
   bands: Array<Rect>,
@@ -823,7 +823,7 @@ export const prepareRows = (
   datasets: ExternalDatasets,
   options: LowerPlotsOptions,
   ingested: Array<ExternalRow>,
-): { fieldTypes: Map<string, FieldType>; normalized: Array<ExternalRow> } => {
+): { fieldTypes: Map<string, PlotFieldTypeValue>; normalized: Array<ExternalRow> } => {
   validateFieldMaps(spec, datasets, options.fieldMaps);
   const userSourceFields = collectUserSourceFields(spec);
   // strict + 声明/推断（ADR-01/05）；strict 在 applyFieldResolver 之前先校验，resolver 不绕过（ADR-04）

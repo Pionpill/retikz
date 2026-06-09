@@ -21,4 +21,4 @@ export const Boundary = {
 } as const;
 
 /** 连接面保留关键字联合（'shape' | 'circle'；其余取值为借用的 shape 引用） */
-export type BoundaryKeyword = ValueOf<typeof Boundary>;
+export type BoundaryValue = ValueOf<typeof Boundary>;

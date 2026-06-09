@@ -13,7 +13,7 @@ export const PlotTransform = {
 } as const;
 
 /** transform 类型 */
-export type TransformType = ValueOf<typeof PlotTransform>;
+export type PlotTransformValue = ValueOf<typeof PlotTransform>;
 
 export const SortTransformSchema = z
   .object({

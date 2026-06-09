@@ -18,7 +18,7 @@ const spec = (coordinate: Record<string, unknown>, model: Array<{ name: string; 
     marks: [{ type: 'point', encoding: { x: { field: 'a' }, y: { field: 'b' } } }],
   });
 
-describe('deriveScale — 按 FieldType 派生默认 scale', () => {
+describe('deriveScale — 按 PlotFieldTypeValue 派生默认 scale', () => {
   it('continuous_to_linear', () => {
     expect(deriveScale(PlotFieldType.Continuous, 'x').type).toBe('linear');
   });

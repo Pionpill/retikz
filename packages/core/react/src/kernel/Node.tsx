@@ -9,7 +9,7 @@ import type {
   IRNodeLabel,
   IROffsetPosition,
   IRPosition,
-  NodeTextAlign,
+  NodeTextAlignValue,
   PolarPosition,
 } from '@retikz/core';
 import { TIKZ_NODE } from './_displayNames';
@@ -45,7 +45,7 @@ export type NodeProps = HydrationEventProps & {
    */
   text?: string | Array<IRLineSpec>;
   /** 多行文本对齐：left / center（默认）/ right；只影响多行块内各行的水平对齐 */
-  align?: NodeTextAlign;
+  align?: NodeTextAlignValue;
   /** 行高（user units）；不填走 `font.size × 1.2` 默认 */
   lineHeight?: number;
   /** 折行阈值（user units）：超过才折行、短文本盒收缩（非固定段落宽）；西文按词、CJK 按字。不填 = 不自动折行 */

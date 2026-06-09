@@ -1,13 +1,15 @@
 ---
 title: 锚点
-description: 节点的 9 个标准方位 anchor + Web 别名 + 对象形态 Target（命名 / 角度 / 边上比例点 / offset）+ 字符串 shorthand。
+description: 节点 anchor 支持 CompassAnchor 与 WebAnchor，并可通过对象形态 Target 或字符串 shorthand 引用命名 / 角度 / 边上比例点 / offset。
 ---
 
-每个 `<Node>` 在几何上有 9 个标准方位锚点。Path / Draw 引用节点时既能让 retikz 自动选边界点（最常见），也能用对象形态 `{ id, anchor?, offset? }` 锁死具体位置（写 JSX 时可用 `'A.north'` / `'A.top-left'` / `'A.30'` 字符串简写）。v0.2 起，带 `id` 的 `<Scope>` 也会注册一个矩形边界，可用同样的 anchor 语法引用整组图元。
+锚点用来描述“连接线或参考点应该落在节点的哪个位置”：例如从节点右侧出线、贴到顶部边界，或把某个标注对齐到节点中心。每个 `<Node>` 在几何上都有一组可命名的锚点；方位命名分两层：`CompassAnchor` 是 canonical 名称，沿用 TikZ 风格；`WebAnchor` 是面向 Web / CSS 心智的输入别名，编译时会归一到对应的 `CompassAnchor`。
 
-## 9 个标准方位 anchor
+Path / Draw 引用节点时既能让 retikz 自动选边界点（最常见），也能用对象形态 `{ id, anchor?, offset? }` 锁死具体位置（写 JSX 时可用 `'A.north'` / `'A.top-left'` / `'A.30'` 字符串简写）。带 `id` 的 `<Scope>` 也会注册一个矩形边界，可用同样的 anchor 语法引用整组图元。
 
-| 名 | 位置 |
+## 方位锚点
+
+| CompassAnchor | 位置 |
 | --- | --- |
 | `center` | 节点几何中心 |
 | `north` / `south` / `east` / `west` | 上 / 下 / 右 / 左 4 个方位的边界点 |
@@ -30,9 +32,9 @@ description: 节点的 9 个标准方位 anchor + Web 别名 + 对象形态 Targ
 
 </Comparison>
 
-也可以用更贴近 Web / CSS 方向词的别名。别名在解析时会归一到上面的 canonical anchor：
+也可以用更贴近 Web / CSS 方向词的 `WebAnchor`。无论写在对象形式 `{ id, anchor: 'top-left' }`，还是字符串 shorthand `'A.top-left'`，都会归一到上面的 canonical anchor：
 
-| Web alias | 等价 anchor |
+| WebAnchor | 等价 CompassAnchor |
 | --- | --- |
 | `top` / `bottom` / `right` / `left` | `north` / `south` / `east` / `west` |
 | `top-right` / `top-left` | `north-east` / `north-west` |

@@ -88,7 +88,7 @@ export const FoldStepVia = {
   VerticalThenHorizontal: '|-',
 } as const;
 
-export type IRFoldStepVia = ValueOf<typeof FoldStepVia>;
+export type FoldStepViaValue = ValueOf<typeof FoldStepVia>;
 
 export const FoldStepSchema = z
   .object({

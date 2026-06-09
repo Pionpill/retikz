@@ -1,5 +1,5 @@
 import { FoldStepVia } from '../../ir';
-import type { IRBetweenPosition, IRFoldStepVia, IRNodeTarget, IRPosition, IRTarget } from '../../ir';
+import type { FoldStepViaValue, IRBetweenPosition, IRNodeTarget, IRPosition, IRTarget } from '../../ir';
 import type { IRBoundary } from '../../ir';
 import type { Transform } from '../../primitive';
 import { lerpPoint } from '../../geometry/_edge';
@@ -83,7 +83,7 @@ export const refPointOfTarget = (
 export const cornerOf = (
   prev: IRPosition,
   curr: IRPosition,
-  via: IRFoldStepVia,
+  via: FoldStepViaValue,
 ): IRPosition =>
   via === FoldStepVia.HorizontalThenVertical ? [curr[0], prev[1]] : [prev[0], curr[1]];
 

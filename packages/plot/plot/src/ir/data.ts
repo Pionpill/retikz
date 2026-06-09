@@ -15,7 +15,7 @@ export const PlotFieldType = {
 } as const;
 
 /** 字段测量类型 */
-export type FieldType = ValueOf<typeof PlotFieldType>;
+export type PlotFieldTypeValue = ValueOf<typeof PlotFieldType>;
 
 /**
  * 字段值解析格式关键字（暴露给用户；成员值即格式串，裸字面量 `'percent'` 同样可用）
@@ -38,7 +38,7 @@ export const PlotFieldFormat = {
 } as const;
 
 /** 字段值解析格式 */
-export type FieldFormat = ValueOf<typeof PlotFieldFormat>;
+export type PlotFieldFormatValue = ValueOf<typeof PlotFieldFormat>;
 
 export const FieldDefSchema = z
   .object({

@@ -1,4 +1,4 @@
-import { type ExternalRow, type FieldType, type LegendChannelType, type Mark, PlotFieldType, PlotScale, type PlotSpec, type ScalarValue, type ScaleType, type SqrtScale } from '../ir';
+import { type ExternalRow, type LegendChannelValue, type Mark, PlotFieldType, type PlotFieldTypeValue, PlotScale, type PlotScaleValue, type PlotSpec, type ScalarValue, type SqrtScale } from '../ir';
 import { isFiniteNumber, resolveFieldPath } from './field';
 import { inferCategoryDomain, resolveLinearScale, resolveSqrtScale } from './scale';
 
@@ -15,9 +15,9 @@ import { inferCategoryDomain, resolveLinearScale, resolveSqrtScale } from './sca
  */
 export type ScaleDescriptor = {
   /** 描述的非位置通道（color / size / opacity / shape） */
-  channel: LegendChannelType;
+  channel: LegendChannelValue;
   /** 绑定 scale 的类型（决定 legend 形态：ordinal→swatch、sequential→ramp、quantize→分箱…） */
-  scaleType: ScaleType;
+  scaleType: PlotScaleValue;
   /** 域：连续 = [min, max]、分类 = 类别序、离散化 = 边界 / 类别 */
   domain: ReadonlyArray<ScalarValue>;
   /** 值域：色串 / 半径 / 不透明度 / shape 名（与 domain 同序或连续端点） */
@@ -25,7 +25,7 @@ export type ScaleDescriptor = {
   /** 绑定字段名（legend 标题缺省 + 标签 formatter 选型用）；常量通道无字段 */
   field?: string;
   /** 绑定字段类型（标签 formatter 选型：数字 / 时间 / 分类，决策 ⑨）；常量 / 类型未知时省略 */
-  fieldType?: FieldType;
+  fieldType?: PlotFieldTypeValue;
 };
 
 /** 单通道解析结果：逐行视觉量函数 + 供 legend 的可复用 descriptor（字段编码才有 descriptor；常量编码无） */
@@ -49,7 +49,7 @@ export type SizeOf = (row: ExternalRow) => number | undefined;
  *   （显式 sqrt scale 引用或自动合成），domain 默认 [0, maxPositive]、range [SIZE_MIN_RADIUS, SIZE_MAX_RADIUS]。
  *   边界（ADR-02 ③）：无正值 → 全 SIZE_MIN_RADIUS；单正值 → range 上界；负值 fail-loud。
  */
-export const makeSizeResolver = (node: PlotSpec, rows: Array<ExternalRow>, fieldTypes: Map<string, FieldType>): ((mark: Mark) => ChannelResolution<number> | undefined) => {
+export const makeSizeResolver = (node: PlotSpec, rows: Array<ExternalRow>, fieldTypes: Map<string, PlotFieldTypeValue>): ((mark: Mark) => ChannelResolution<number> | undefined) => {
   const scaleByName = new Map(node.scales.map(scale => [scale.name, scale] as const));
   return (mark: Mark): ChannelResolution<number> | undefined => {
     if (mark.type !== 'point') return undefined;
@@ -107,7 +107,7 @@ export type OpacityOf = (row: ExternalRow) => number | undefined;
  *   [OPACITY_MIN, 1]——任意值（含负/超域）clamp、不 fail-loud（opacity 无面积语义，与 size 负值 fail-loud 不同）。
  *   非 continuous 字段（temporal / categorical）fail-loud（opacity 是连续编码）。
  */
-export const makeOpacityResolver = (node: PlotSpec, rows: Array<ExternalRow>, fieldTypes: Map<string, FieldType>): ((mark: Mark) => ChannelResolution<number> | undefined) => {
+export const makeOpacityResolver = (node: PlotSpec, rows: Array<ExternalRow>, fieldTypes: Map<string, PlotFieldTypeValue>): ((mark: Mark) => ChannelResolution<number> | undefined) => {
   return (mark: Mark): ChannelResolution<number> | undefined => {
     if (mark.type !== 'point') return undefined;
     const channel = mark.encoding.opacity;
@@ -147,7 +147,7 @@ export type ShapeOf = (row: ExternalRow) => string | undefined;
  * @description 仅 PointMark。常量 value 直用（core / 注册 shape 名）；categorical 字段按出现序映射到
  *   `PLOT_SHAPE_PALETTE`（循环复用）。非 categorical 字段（continuous / temporal）fail-loud（形状是分类编码）。
  */
-export const makeShapeResolver = (node: PlotSpec, rows: Array<ExternalRow>, fieldTypes: Map<string, FieldType>): ((mark: Mark) => ChannelResolution<string> | undefined) => {
+export const makeShapeResolver = (node: PlotSpec, rows: Array<ExternalRow>, fieldTypes: Map<string, PlotFieldTypeValue>): ((mark: Mark) => ChannelResolution<string> | undefined) => {
   return (mark: Mark): ChannelResolution<string> | undefined => {
     if (mark.type !== 'point') return undefined;
     const channel = mark.encoding.shape;

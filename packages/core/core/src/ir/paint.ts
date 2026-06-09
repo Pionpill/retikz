@@ -6,17 +6,18 @@ import type { ValueOf } from '../types';
  * @description 内置 3 motif：`lines`（横向阴影线）/ `dots`（波点）/ `grid`（横竖网格）。
  *   各 motif 的 tile 几何由 `BUILTIN_PATTERNS` 的 `PatternDefinition.emit` 在 compile 期产出。
  */
-export const PATTERN_SHAPES = {
-  lines: 'lines',
-  dots: 'dots',
-  grid: 'grid',
+export const PatternShape = {
+  Lines: 'lines',
+  Dots: 'dots',
+  Grid: 'grid',
 } as const;
 
 /**
  * 内置 3 pattern motif 名联合
  * @description `BUILTIN_PATTERNS` 的 Record key（保穷尽性约束，不随 `PatternShapeName` 开放而退化为 `string`）
  */
-export type BuiltinPatternName = ValueOf<typeof PATTERN_SHAPES>;
+export type PatternShapeValue = ValueOf<typeof PatternShape>;
+export type BuiltinPatternName = PatternShapeValue;
 
 /**
  * pattern motif 名：开放字符串

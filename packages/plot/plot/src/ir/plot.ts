@@ -20,7 +20,7 @@ export const PlotComposite = {
 } as const;
 
 /** plot composite 类型 */
-export type PlotNodeType = ValueOf<typeof PlotComposite>;
+export type PlotCompositeValue = ValueOf<typeof PlotComposite>;
 
 export const PlotSpecSchema = CompositeBaseSchema.extend({
   namespace: z

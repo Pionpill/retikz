@@ -1,7 +1,7 @@
 import type { Position } from '../geometry/point';
 import type { CompassAnchorValue } from '../geometry/anchor';
 import type { Rect } from '../geometry/rect';
-import type { AtDirection, IRAnimationTrack, IRBoundary, IRJsonObject, IRLabelDefault, IRLineSpec, IRNode, IRNodeLabel, IRPaintSpec, IRShapeRef, JsonValue } from '../ir';
+import type { AtDirectionValue, IRAnimationTrack, IRBoundary, IRJsonObject, IRLabelDefault, IRLineSpec, IRNode, IRNodeLabel, IRPaintSpec, IRShapeRef, JsonValue } from '../ir';
 import { JsonObjectSchema } from '../ir';
 import type { PaintResolver } from './paint';
 import type { GroupPrim, ScenePrimitive, TextLine, Transform } from '../primitive';
@@ -222,7 +222,7 @@ export type NodeLayout = {
 export type NodeLabelLayout = {
   text: string;
   /** 8 方向枚举或数字角度 */
-  position: AtDirection | number;
+  position: AtDirectionValue | number;
   /** 已应用默认值 */
   distance: number;
   textColor?: string;
@@ -304,7 +304,7 @@ export const anchorOf = (
 
 /** 8 方向 label position → (anchorName, 单位向量)；above 视觉上方即 y 减小 */
 const LABEL_DIRECTION_MAP: Record<
-  AtDirection,
+  AtDirectionValue,
   { anchor: CompassAnchorValue; vec: [number, number] }
 > = {
   above: { anchor: 'north', vec: [0, -1] },

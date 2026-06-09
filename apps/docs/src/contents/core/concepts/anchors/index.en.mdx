@@ -1,13 +1,15 @@
 ---
 title: Anchors
-description: 9 standard compass anchors per node + Web aliases + object-form Target (named / angle / edge proportional / offset) + string shorthand.
+description: Node anchors support CompassAnchor and WebAnchor inputs, with object-form Target or string shorthand for named / angle / edge proportional / offset references.
 ---
 
-Every `<Node>` has 9 standard compass anchors. Paths can either let retikz auto-pick the border point (the common case), or lock onto a specific position with the object form `{ id, anchor?, offset? }` (in JSX you may use the `'A.north'` / `'A.top-left'` / `'A.30'` string shorthand). Since v0.2, a `<Scope>` with an `id` also registers a rectangular boundary, so the same anchor syntax can target a whole group.
+Anchors describe where a connection line or reference point should land on a node: for example, leaving from the right side, attaching to the top border, or aligning a label to the node center. Every `<Node>` has a set of named anchors. Directional names have two layers: `CompassAnchor` is the canonical TikZ-style vocabulary; `WebAnchor` is the Web / CSS-friendly input alias set, normalized to the matching `CompassAnchor` during compilation.
 
-## The 9 Compass Anchors
+Paths can either let retikz auto-pick the border point (the common case), or lock onto a specific position with the object form `{ id, anchor?, offset? }` (in JSX you may use the `'A.north'` / `'A.top-left'` / `'A.30'` string shorthand). A `<Scope>` with an `id` also registers a rectangular boundary, so the same anchor syntax can target a whole group.
 
-| Name | Position |
+## Direction Anchors
+
+| CompassAnchor | Position |
 | --- | --- |
 | `center` | Geometric center |
 | `north` / `south` / `east` / `west` | The 4 cardinal border points |
@@ -30,9 +32,9 @@ Custom shapes define their anchor behavior through `ShapeDefinition`. Supporting
 
 </Comparison>
 
-You may also use Web / CSS-style direction aliases. Aliases normalize to the canonical anchor names above:
+You may also use the Web / CSS-style `WebAnchor` aliases. Whether written as the object form `{ id, anchor: 'top-left' }` or the string shorthand `'A.top-left'`, they normalize to the canonical anchor names above:
 
-| Web alias | Equivalent anchor |
+| WebAnchor | Equivalent CompassAnchor |
 | --- | --- |
 | `top` / `bottom` / `right` / `left` | `north` / `south` / `east` / `west` |
 | `top-right` / `top-left` | `north-east` / `north-west` |

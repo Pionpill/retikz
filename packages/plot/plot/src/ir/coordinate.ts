@@ -13,7 +13,7 @@ export const PlotCoordinate = {
 } as const;
 
 /** 坐标系类型 */
-export type CoordinateType = ValueOf<typeof PlotCoordinate>;
+export type PlotCoordinateValue = ValueOf<typeof PlotCoordinate>;
 
 export const Cartesian2DSchema = z
   .object({

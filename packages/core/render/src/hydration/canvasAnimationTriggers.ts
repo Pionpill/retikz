@@ -1,11 +1,11 @@
 import type { Scene, ScenePrimitive } from '@retikz/core';
-import type { HydrationHandlers, RetikzEventName } from './events';
+import type { HydrationHandlers, RetikzEventValue } from './events';
 import { RetikzEvent } from './events';
 import { geometryOf } from './context';
 
 const EVENT_NAMES = new Set<string>(Object.values(RetikzEvent));
 
-const isRetikzEventName = (event: string): event is RetikzEventName => EVENT_NAMES.has(event);
+const isRetikzEventName = (event: string): event is RetikzEventValue => EVENT_NAMES.has(event);
 
 const walkPrimitives = (primitives: ReadonlyArray<ScenePrimitive>, visit: (primitive: ScenePrimitive) => void): void => {
   for (const primitive of primitives) {
@@ -15,15 +15,15 @@ const walkPrimitives = (primitives: ReadonlyArray<ScenePrimitive>, visit: (primi
 };
 
 /** Scene 中含 canvas `{ onEvent }` trigger 的 id → 事件名集合 */
-export const collectCanvasAnimationEventTriggers = (scene: Scene): Map<string, Set<RetikzEventName>> => {
-  const triggers = new Map<string, Set<RetikzEventName>>();
+export const collectCanvasAnimationEventTriggers = (scene: Scene): Map<string, Set<RetikzEventValue>> => {
+  const triggers = new Map<string, Set<RetikzEventValue>>();
   walkPrimitives(scene.primitives, primitive => {
     if (primitive.id === undefined || primitive.animations === undefined) return;
     for (const track of primitive.animations) {
       const trigger = track.trigger;
       if (typeof trigger !== 'object') continue;
       if (!isRetikzEventName(trigger.onEvent)) continue;
-      const set = triggers.get(primitive.id) ?? new Set<RetikzEventName>();
+      const set = triggers.get(primitive.id) ?? new Set<RetikzEventValue>();
       set.add(trigger.onEvent);
       triggers.set(primitive.id, set);
     }

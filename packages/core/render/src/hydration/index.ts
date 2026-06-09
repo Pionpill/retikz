@@ -4,7 +4,7 @@ export {
   EVENT_DOM_TYPE,
 } from './events';
 export type {
-  RetikzEventName,
+  RetikzEventValue,
   ElementHandlers,
   HydrationHandler,
   HydrationHandlers,
