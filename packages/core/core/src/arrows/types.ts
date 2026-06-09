@@ -33,6 +33,8 @@ export type ArrowDefinition = {
   hollow?: boolean;
   /** 线接触点静态 base（决定 path shrink + marker refX）；空心 def 由 framework 再减 lineWidth/2 */
   lineContactX: number;
+  /** 外轮廓补偿量（marker 局部坐标）；缺省时空心箭头用 lineWidth/2，实心箭头用 0 */
+  outerInset?: number;
   /** 尖端 x（shrink 用）；缺省 = baseSize */
   tipX?: number;
   /** 默认箭头长度（length fallback）；缺省 6 */

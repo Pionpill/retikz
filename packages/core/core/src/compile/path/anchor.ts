@@ -13,6 +13,9 @@ import { applyTransformChain } from '../scope';
 const isNodeTarget = (t: IRTarget): t is IRNodeTarget =>
   typeof t === 'object' && !Array.isArray(t) && 'id' in t;
 
+export const isAutoBoundaryTarget = (target: IRTarget): boolean =>
+  isNodeTarget(target) && target.anchor === undefined && target.offset === undefined;
+
 /** target 是否 between 比例点（`{ between, t }`）；独有 `between` 字段 */
 const isBetween = (t: IRTarget): t is IRBetweenPosition =>
   typeof t === 'object' && !Array.isArray(t) && 'between' in t;

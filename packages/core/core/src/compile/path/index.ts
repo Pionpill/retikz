@@ -37,7 +37,7 @@ import type { AssertEqual } from '../../types';
 import type { PathGeneratorDefinition } from '../../pathGenerators';
 import type { NameStack } from '../name-stack';
 import { type TextMeasurer, fallbackMeasurer } from '../text-metrics';
-import { clipForTarget, cornerOf, refPointOfTarget, samePoint } from './anchor';
+import { clipForTarget, cornerOf, isAutoBoundaryTarget, refPointOfTarget, samePoint } from './anchor';
 import { emitLabelPrimitive, tForLabelPosition } from './label';
 import { normalizeRelativeTargets } from './relative';
 import { applyTransformChain } from '../scope';
@@ -375,14 +375,25 @@ export const emitPathPrimitive = (
 
   const roundPoint = (p: IRPosition): IRPosition => [round(p[0]), round(p[1])];
 
-  const emitMove = (p: IRPosition) => {
+  const endpointSource = {
+    firstAutoBoundary: false,
+    lastAutoBoundary: false,
+  };
+  const noteEndpointSource = (sourceAutoBoundary: boolean): void => {
+    if (commands.length === 0) endpointSource.firstAutoBoundary = sourceAutoBoundary;
+    endpointSource.lastAutoBoundary = sourceAutoBoundary;
+  };
+
+  const emitMove = (p: IRPosition, sourceAutoBoundary = false) => {
+    noteEndpointSource(sourceAutoBoundary);
     const rp = roundPoint(p);
     commands.push({ kind: 'move', to: [rp[0], rp[1]] });
     points.push(p);
     subPathStart = p;
     lastEnd = p;
   };
-  const emitLine = (p: IRPosition) => {
+  const emitLine = (p: IRPosition, sourceAutoBoundary = false) => {
+    noteEndpointSource(sourceAutoBoundary);
     const rp = roundPoint(p);
     commands.push({ kind: 'line', to: [rp[0], rp[1]] });
     points.push(p);
@@ -392,7 +403,8 @@ export const emitPathPrimitive = (
     commands.push({ kind: 'close' });
     lastEnd = subPathStart;
   };
-  const emitQuad = (control: IRPosition, p: IRPosition) => {
+  const emitQuad = (control: IRPosition, p: IRPosition, sourceAutoBoundary = false) => {
+    noteEndpointSource(sourceAutoBoundary);
     const rc = roundPoint(control);
     const rp = roundPoint(p);
     commands.push({
@@ -405,7 +417,13 @@ export const emitPathPrimitive = (
     points.push(p);
     lastEnd = p;
   };
-  const emitCubic = (c1: IRPosition, c2: IRPosition, p: IRPosition) => {
+  const emitCubic = (
+    c1: IRPosition,
+    c2: IRPosition,
+    p: IRPosition,
+    sourceAutoBoundary = false,
+  ) => {
+    noteEndpointSource(sourceAutoBoundary);
     const rc1 = roundPoint(c1);
     const rc2 = roundPoint(c2);
     const rp = roundPoint(p);
@@ -427,6 +445,7 @@ export const emitPathPrimitive = (
     startAngle: number,
     endAngle: number,
   ) => {
+    noteEndpointSource(false);
     const rc = roundPoint(center);
     commands.push({
       kind: 'arc',
@@ -446,6 +465,7 @@ export const emitPathPrimitive = (
     startAngle: number,
     endAngle: number,
   ) => {
+    noteEndpointSource(false);
     const rc = roundPoint(center);
     commands.push({
       kind: 'ellipseArc',
@@ -464,9 +484,9 @@ export const emitPathPrimitive = (
     lastEnd = endPt;
   };
   /** 段起点：与 lastEnd 相同则复用 cursor（省 move），否则发 move */
-  const startSegment = (p: IRPosition) => {
+  const startSegment = (p: IRPosition, sourceAutoBoundary = false) => {
     if (samePoint(p, lastEnd)) return;
-    emitMove(p);
+    emitMove(p, sourceAutoBoundary);
   };
 
   /** 部分圆/椭圆的闭合模式：'open' 直接返回；'sector' 连回中心；缺省 / 误给 'closed' 回退 'chord' */
@@ -632,8 +652,8 @@ export const emitPathPrimitive = (
         continue;
       }
       // 否则段独立：重新 move 起点再 line 到终点（不再用 close，避免回到错误的 subPathStart）
-      startSegment(fromClip);
-      emitLine(toClip);
+      startSegment(fromClip, isAutoBoundaryTarget(prev.step.to));
+      emitLine(toClip, isAutoBoundaryTarget(moveTo));
       continue;
     }
 
@@ -855,8 +875,8 @@ export const emitPathPrimitive = (
       const fromClip = usedOverride ?? clipForTarget(prev.step.to, currAnchor, nameStack, scopeChain);
       const toClip = clipForTarget(step.to, prev.anchor, nameStack, scopeChain);
       if (!fromClip || !toClip) return null;
-      startSegment(fromClip);
-      emitLine(toClip);
+      startSegment(fromClip, usedOverride === null && isAutoBoundaryTarget(prev.step.to));
+      emitLine(toClip, isAutoBoundaryTarget(step.to));
       collectLabel(step, t => lineSegmentSample(fromClip, toClip, t));
       continue;
     }
@@ -865,8 +885,8 @@ export const emitPathPrimitive = (
       const fromClip = usedOverride ?? clipForTarget(prev.step.to, step.control, nameStack, scopeChain);
       const toClip = clipForTarget(step.to, step.control, nameStack, scopeChain);
       if (!fromClip || !toClip) return null;
-      startSegment(fromClip);
-      emitQuad(step.control, toClip);
+      startSegment(fromClip, usedOverride === null && isAutoBoundaryTarget(prev.step.to));
+      emitQuad(step.control, toClip, isAutoBoundaryTarget(step.to));
       collectLabel(step, t => quadSegmentSample(fromClip, step.control, toClip, t));
       continue;
     }
@@ -874,8 +894,8 @@ export const emitPathPrimitive = (
       const fromClip = usedOverride ?? clipForTarget(prev.step.to, step.control1, nameStack, scopeChain);
       const toClip = clipForTarget(step.to, step.control2, nameStack, scopeChain);
       if (!fromClip || !toClip) return null;
-      startSegment(fromClip);
-      emitCubic(step.control1, step.control2, toClip);
+      startSegment(fromClip, usedOverride === null && isAutoBoundaryTarget(prev.step.to));
+      emitCubic(step.control1, step.control2, toClip, isAutoBoundaryTarget(step.to));
       collectLabel(step, t =>
         cubicSegmentSample(fromClip, step.control1, step.control2, toClip, t),
       );
@@ -907,8 +927,8 @@ export const emitPathPrimitive = (
       const fromClip = usedOverride ?? clipForTarget(prev.step.to, c1, nameStack, scopeChain);
       const toClip = clipForTarget(step.to, c2, nameStack, scopeChain);
       if (!fromClip || !toClip) return null;
-      startSegment(fromClip);
-      emitCubic(c1, c2, toClip);
+      startSegment(fromClip, usedOverride === null && isAutoBoundaryTarget(prev.step.to));
+      emitCubic(c1, c2, toClip, isAutoBoundaryTarget(step.to));
       collectLabel(step, t => cubicSegmentSample(fromClip, c1, c2, toClip, t));
       continue;
     }
@@ -918,9 +938,9 @@ export const emitPathPrimitive = (
     const fromClip = usedOverride ?? clipForTarget(prev.step.to, corner, nameStack, scopeChain);
     const toClip = clipForTarget(step.to, corner, nameStack, scopeChain);
     if (!fromClip || !toClip) return null;
-    startSegment(fromClip);
+    startSegment(fromClip, usedOverride === null && isAutoBoundaryTarget(prev.step.to));
     emitLine(corner);
-    emitLine(toClip);
+    emitLine(toClip, isAutoBoundaryTarget(step.to));
     collectLabel(step, t => foldSegmentSample(fromClip, corner, toClip, t));
   }
 
@@ -965,7 +985,12 @@ export const emitPathPrimitive = (
 
   // shrink 在 compile 算（端点收缩与 emit 落点无关）：按 shape + 视觉输入把首/末段端点向内缩短，
   // 让 line 端点接在 hollow arrow 尾部外缘、不贯穿 back outline；shrink=0 的实心 shape 跳过
-  applyArrowShrinks(commands, arrows.shrinkStart, arrows.shrinkEnd, strokeWidth, round);
+  const shrinkStart =
+    arrows.shrinkStart +
+    (endpointSource.firstAutoBoundary ? arrows.boundaryOuterInsetStart : 0);
+  const shrinkEnd =
+    arrows.shrinkEnd + (endpointSource.lastAutoBoundary ? arrows.boundaryOuterInsetEnd : 0);
+  applyArrowShrinks(commands, shrinkStart, shrinkEnd, strokeWidth, round);
 
   // 只在端点有箭头时塞 key——避免给无箭头 path 注入 `arrowStart: undefined` / `arrowEnd: undefined`（保 Scene 输出纯净）
   const endpointSpecs: { arrowStart?: typeof arrows.arrowStart; arrowEnd?: typeof arrows.arrowEnd } = {};

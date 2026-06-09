@@ -478,4 +478,98 @@ describe('compile arrowDetail：shrink（hollow shape）按 length / scale / lin
     if (last.kind !== 'line') throw new Error('expected last to be line');
     expect(last.to[0]).toBe(94.15);
   });
+
+  it('coordinate endpoint does not apply node-boundary outer inset', () => {
+    const ir: IR = {
+      version: 1,
+      type: 'scene',
+      children: [
+        {
+          type: 'path',
+          arrow: '->',
+          arrowDetail: { shape: 'open' },
+          children: [
+            { type: 'step', kind: 'move', to: [0, 0] },
+            { type: 'step', kind: 'line', to: [100, 0] },
+          ],
+        },
+      ],
+    };
+    const path = findPathPrim(compileToScene(ir).primitives);
+    const last = path.commands[path.commands.length - 1];
+    if (last.kind !== 'line') throw new Error('expected last to be line');
+    expect(last.to[0]).toBe(94.75);
+  });
+
+  it('auto node-boundary endpoint applies hollow outer inset fallback', () => {
+    const ir: IR = {
+      version: 1,
+      type: 'scene',
+      children: [
+        { type: 'node', id: 'a', position: [0, 0], minimumWidth: 20, minimumHeight: 20 },
+        { type: 'node', id: 'b', position: [100, 0], minimumWidth: 20, minimumHeight: 20 },
+        {
+          type: 'path',
+          arrow: '->',
+          arrowDetail: { shape: 'open' },
+          children: [
+            { type: 'step', kind: 'move', to: { id: 'a' } },
+            { type: 'step', kind: 'line', to: { id: 'b' } },
+          ],
+        },
+      ],
+    };
+    const path = findPathPrim(compileToScene(ir).primitives);
+    const first = path.commands[0];
+    const last = path.commands[path.commands.length - 1];
+    if (first.kind !== 'move') throw new Error('expected first to be move');
+    if (last.kind !== 'line') throw new Error('expected last to be line');
+    expect(first.to[0]).toBe(10);
+    expect(last.to[0]).toBeCloseTo(84.3);
+  });
+
+  it('custom outerInset overrides hollow fallback on auto node-boundary endpoints', () => {
+    const ir: IR = {
+      version: 1,
+      type: 'scene',
+      children: [
+        { type: 'node', id: 'a', position: [0, 0], minimumWidth: 20, minimumHeight: 20 },
+        { type: 'node', id: 'b', position: [100, 0], minimumWidth: 20, minimumHeight: 20 },
+        {
+          type: 'path',
+          arrow: '->',
+          arrowDetail: { shape: 'customOpen' },
+          children: [
+            { type: 'step', kind: 'move', to: { id: 'a' } },
+            { type: 'step', kind: 'line', to: { id: 'b' } },
+          ],
+        },
+      ],
+    };
+    const path = findPathPrim(
+      compileToScene(ir, {
+        arrows: {
+          customOpen: {
+            hollow: true,
+            lineContactX: 1,
+            tipX: 9,
+            outerInset: 2,
+            emit: ctx => [
+              {
+                type: 'path',
+                commands: [
+                  { kind: 'move', to: [1, 1] },
+                  { kind: 'line', to: [9, 5] },
+                ],
+                strokeWidth: ctx.lineWidth,
+              },
+            ],
+          },
+        },
+      }).primitives,
+    );
+    const last = path.commands[path.commands.length - 1];
+    if (last.kind !== 'line') throw new Error('expected last to be line');
+    expect(last.to[0]).toBeCloseTo(83.55);
+  });
 });

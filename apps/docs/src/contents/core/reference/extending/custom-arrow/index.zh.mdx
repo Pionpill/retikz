@@ -26,6 +26,7 @@ description: arrow shape 是开放字符串；内置 8 种之外，用 ArrowDefi
 | `hollow` | `boolean` | `false` | 空心：框架丢 `fill`、`color` 主导描边、启用 `lineWidth` |
 | `defaultLength` | `number` | `6` | 默认尖长（`length` 缺省值，user units） |
 | `defaultWidth` | `number` | `6` | 默认尖宽（`width` 缺省值，user units） |
+| `outerInset` | `number` | 空心箭头 `lineWidth/2`，实心箭头 `0` | 自动连接到 Node 边界时的外轮廓补偿量（局部坐标）；自定义空心箭头可以显式传入，让端点更精确地避开外描边 |
 
 `length` / `width` / `scale` / `opacity` 这些视觉字段由框架统一处理（`markerWidth = (length ?? defaultLength) × scale`）；`hollow` / `lineWidth` / 具体几何交给 `def`。
 

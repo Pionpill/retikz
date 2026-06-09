@@ -26,6 +26,7 @@ An `ArrowDefinition` is a plain object (not part of the IR, no serialization nee
 | `hollow` | `boolean` | `false` | Hollow: the framework drops `fill`, lets `color` drive the stroke, and enables `lineWidth` |
 | `defaultLength` | `number` | `6` | Default tip length (fallback for `length`, user units) |
 | `defaultWidth` | `number` | `6` | Default tip width (fallback for `width`, user units) |
+| `outerInset` | `number` | hollow `lineWidth/2`, solid `0` | Extra outer-edge inset for endpoints auto-clipped to a Node boundary. Custom hollow arrows can set it explicitly when `lineWidth/2` is not precise enough |
 
 Visual fields `length` / `width` / `scale` / `opacity` are handled uniformly by the framework (`markerWidth = (length ?? defaultLength) × scale`); `hollow` / `lineWidth` / the actual geometry are left to the `def`.
 

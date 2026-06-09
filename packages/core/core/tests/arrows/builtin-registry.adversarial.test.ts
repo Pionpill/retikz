@@ -104,6 +104,15 @@ describe('ADV — def 几何 finite 守卫', () => {
     expect(() => compileArrow({ shape: 'z' }, { z: def })).toThrow(/non-finite tipX/i);
   });
 
+  it('outerInset_NaN: def.outerInset=NaN throws non-finite outerInset', () => {
+    const def: ArrowDefinition = {
+      lineContactX: 0,
+      outerInset: NaN,
+      emit: () => [{ type: 'path', commands: [{ kind: 'move', to: [0, 0] }] }],
+    };
+    expect(() => compileArrow({ shape: 'z' }, { z: def })).toThrow(/non-finite outerInset/i);
+  });
+
   it('lineWidth_huge：hollow def + 极大 lineWidth（有限）→ 端点仍 finite（不抛，TikZ 同不 clamp）', () => {
     const def: ArrowDefinition = {
       hollow: true,
