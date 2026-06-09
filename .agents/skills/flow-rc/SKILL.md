@@ -118,6 +118,7 @@ pnpm test
 文档改动：
 
 ```bash
+pnpm --filter @retikz/docs exec tsc --noEmit
 pnpm --filter @retikz/docs build
 ```
 

@@ -8,7 +8,7 @@
  *   node grab-svg.mjs --url <文章 URL> --out <输出目录> --demos <name1,name2,...>
  *
  * 例：
- *   node .agents/skills/docs-blog-conventor/grab-svg.mjs \
+ *   node .agents/skills/docs-blog-converter/grab-svg.mjs \
  *     --url http://localhost:5174/blog/journey/origin \
  *     --out .markdown/origin \
  *     --demos unit-circle,ir-centric,roadmap
