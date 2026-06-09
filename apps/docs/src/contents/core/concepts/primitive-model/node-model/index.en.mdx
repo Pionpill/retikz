@@ -11,6 +11,10 @@ Node is the most common named primitive in retikz. Think of it as a box model th
 
 The figure overlays one Node with `shape="ellipse"` and `boundary="circle"`. In real output you usually only see the orange shape; the inner frame, bounding box, boundary, and anchors are geometry used by compile-time layout and connection logic.
 
+Note: in most cases, `boundary` follows `shape`; retikz also lets you separate them. The figure uses `shape="ellipse"` + `boundary="circle"` to make the two layers visible, so the blue boundary and the orange shape are drawn apart.
+
+The bounding box only encloses the rendered shape. It does not include `margin`; margin is extra clearance for connections, moving path endpoints farther away from the boundary.
+
 ## From Inside Out
 
 | Layer | Defined by | Affects |
@@ -18,7 +22,7 @@ The figure overlays one Node with `shape="ellipse"` and `boundary="circle"`. In 
 | Content box | `text` / children / font | Base text measurement |
 | Inner frame | Text measurement + `innerXSep` / `innerYSep` + minimum size | Base half-axes passed to the shape |
 | Shape | `shape.circumscribe` and `shape.emit` | The visible outline |
-| Bounding box | Shape enclosing the inner frame | Base for viewBox, layout footprint, and hit bounds |
+| Bounding box | Shape enclosing the inner frame, excluding `margin` | Base for viewBox, layout footprint, and hit bounds |
 | Boundary | `boundary`, following shape by default | Where automatic connections attach |
 | Anchor | compass / angle / shape-specific / edge point | Precise points other primitives can reference |
 
