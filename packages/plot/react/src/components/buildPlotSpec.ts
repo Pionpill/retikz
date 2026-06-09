@@ -85,6 +85,16 @@ export type CoordinateInput =
   | {
       /** 2D 三元（重心坐标） */
       type: 'ternary2D';
+    }
+  | {
+      /** 自定义坐标系（实验性）：投影由 <Plot coordinates={{ [name]: factory }}> 提供，IR 只存 name + roles + 数值参数 */
+      type: 'custom';
+      /** 工厂名（对应 <Plot coordinates> 表的键） */
+      name: string;
+      /** 该坐标系消费的位置角色序（mark 的 x / y / a / b / c 通道） */
+      roles: Array<'x' | 'y' | 'a' | 'b' | 'c'>;
+      /** 透传给工厂的数值参数（如 archHeight）；JSON 安全 */
+      params?: Record<string, number>;
     };
 
 /** buildPlotSpec 选项：bare 开关 + 连续 x scale 类型 + 坐标系选择 */
@@ -313,7 +323,7 @@ const POLAR_DEFAULT_END_ANGLE = 360;
 const POLAR_DEFAULT_INNER_RADIUS = 0;
 
 /** coordinate 入口判别串（缺省 cartesian2D）；字符串简写与对象 .type 统一取值 */
-const coordinateTypeOf = (input: CoordinateInput | undefined): 'cartesian2D' | 'polar2D' | 'cartesian1D' | 'polar1D' | 'ternary2D' =>
+const coordinateTypeOf = (input: CoordinateInput | undefined): 'cartesian2D' | 'polar2D' | 'cartesian1D' | 'polar1D' | 'ternary2D' | 'custom' =>
   input === undefined ? 'cartesian2D' : typeof input === 'string' ? input : input.type;
 
 /** 归一化 polar2D coordinate 选项为配置（非 polar2D 返回 undefined），缺省字段填 schema 默认值 */
@@ -377,6 +387,12 @@ export const buildPlotSpec = (children: ReactNode, dataRef: string, options: Bui
   } else if (coordKind === 'ternary2D') {
     // 三元：coordinate 内自动归一化，无独立位置 scale
     coordinate = { type: PlotCoordinate.Ternary2D };
+    scales = [];
+  } else if (coordKind === 'custom') {
+    // 自定义坐标系：IR 只存 name + roles + 数值参数；投影工厂经 <Plot coordinates> 单独传（运行时函数、不进 IR）。
+    // coordKind 'custom' 必来自对象形态（无字符串简写），故 options.coordinate 是 custom 对象。
+    const custom = options.coordinate as Extract<CoordinateInput, { type: 'custom' }>;
+    coordinate = { type: PlotCoordinate.Custom, name: custom.name, roles: custom.roles, ...(custom.params !== undefined ? { params: custom.params } : {}) };
     scales = [];
   } else {
     coordinate = hasModel ? { type: PlotCoordinate.Cartesian2D } : { type: PlotCoordinate.Cartesian2D, x: AUTO_X, y: AUTO_Y };

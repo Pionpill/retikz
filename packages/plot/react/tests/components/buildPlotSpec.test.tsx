@@ -539,3 +539,28 @@ describe('buildPlotSpec 坐标系族 cartesian1D / polar1D / ternary2D（alpha.9
     expect(() => PlotSpecSchema.parse(buildPlotSpec(<PointMark a="x" b="y" c="z" />, '__plot', { coordinate: 'ternary2D' }))).not.toThrow();
   });
 });
+
+describe('buildPlotSpec 自定义坐标系 custom（实验性，alpha.9 设计探讨）', () => {
+  it('custom_coordinate_input：对象形态 → IR {type:custom, name, roles, params}', () => {
+    const spec = buildPlotSpec(<PointMark x="hx" y="vy" />, '__plot', {
+      coordinate: { type: 'custom', name: 'bridge', roles: ['x', 'y'], params: { archHeight: 70 } },
+    });
+    expect(spec.coordinate).toEqual({ type: 'custom', name: 'bridge', roles: ['x', 'y'], params: { archHeight: 70 } });
+    expect(spec.scales).toEqual([]); // 自定义坐标系自建几何，无 AUTO 位置 scale
+    expect(spec.guides).toEqual([]); // 非 cartesian2D，无默认轴
+  });
+
+  it('custom_coordinate_no_params：params 可省', () => {
+    const spec = buildPlotSpec(<PointMark x="v" />, '__plot', { coordinate: { type: 'custom', name: 'sine', roles: ['x'] } });
+    expect(spec.coordinate).toEqual({ type: 'custom', name: 'sine', roles: ['x'] });
+    expect(() => PlotSpecSchema.parse(spec)).not.toThrow();
+  });
+
+  it('custom_coordinate_pass_schema：装配产物过 PlotSpecSchema', () => {
+    const spec = buildPlotSpec(<PointMark a="sa" b="si" c="cl" />, '__plot', {
+      coordinate: { type: 'custom', name: 'tri', roles: ['a', 'b', 'c'] },
+    });
+    expect(() => PlotSpecSchema.parse(spec)).not.toThrow();
+    expect(spec.marks[0]).toEqual({ type: 'point', encoding: { a: { field: 'sa' }, b: { field: 'si' }, c: { field: 'cl' } } });
+  });
+});
