@@ -66,7 +66,7 @@ Vue / Svelte / Solid / Native adapter 仍属于后续或社区扩展面；但 IR
    按需深入：节点布局 / 路径步进 / 位置解析三个独立文件。[`text-metrics.ts`](https://github.com/Pionpill/retikz/blob/main/packages/core/src/compile/text-metrics.ts) 提供 fallback 度量，adapter 可注入更准的版本。
 
 8. **[`parsers/`](https://github.com/Pionpill/retikz/tree/main/packages/core/src/parsers) ——Sugar 入口（可选）**<br />
-   [`parseWay`](https://github.com/Pionpill/retikz/blob/main/packages/core/src/parsers/parseWay.ts) / [`parseTargetSugar`](https://github.com/Pionpill/retikz/blob/main/packages/core/src/parsers/parseTargetSugar.ts)：把 `<Draw way={[...]}>` 这种 Sugar 形态翻译为 IR。`@retikz/react` 在 Sugar 组件内部调用它们。
+   [`parseWay`](https://github.com/Pionpill/retikz/blob/main/packages/core/core/src/parsers/way.ts) / [`parseTargetSugar`](https://github.com/Pionpill/retikz/blob/main/packages/core/core/src/parsers/target-sugar.ts)：把 `<Draw way={[...]}>` 这种 Sugar 形态翻译为 IR。`@retikz/react` 在 Sugar 组件内部调用它们。
 
 9. **注册扩展面（可选）**<br />
    [`shapes/`](https://github.com/Pionpill/retikz/tree/main/packages/core/src/shapes) / [`arrows/`](https://github.com/Pionpill/retikz/tree/main/packages/core/src/arrows) / [`patterns/`](https://github.com/Pionpill/retikz/tree/main/packages/core/src/patterns) / [`pathGenerators/`](https://github.com/Pionpill/retikz/tree/main/packages/core/src/pathGenerators)：第三方包扩展能力时优先看这里，而不是改 core 内置枚举。
@@ -115,7 +115,7 @@ Vue / Svelte / Solid / Native adapter 仍属于后续或社区扩展面；但 IR
    基于 canvas `measureText` 提供 `TextMeasurer`，通过 `CompileOptions.measureText` 注入到 `compileToScene`。SSR 无 document 时自动回退到 core 的 `fallbackMeasurer`。
 
 7. **[`sugar/Draw.tsx`](https://github.com/Pionpill/retikz/blob/main/packages/react/src/sugar/Draw.tsx) ——Sugar 展开**<br />
-   `<Draw way={[...]}>` 在组件内部调 [`parseWay`](https://github.com/Pionpill/retikz/blob/main/packages/core/src/parsers/parseWay.ts)（来自 core）拿到 step 数组，再渲染 Kernel `<Path><Step/></Path>`。Sugar 不引入新能力，全部展开为 Kernel。
+   `<Draw way={[...]}>` 在组件内部调 [`parseWay`](https://github.com/Pionpill/retikz/blob/main/packages/core/core/src/parsers/way.ts)（来自 core）拿到 step 数组，再渲染 Kernel `<Path><Step/></Path>`。Sugar 不引入新能力，全部展开为 Kernel。
 
 8. **[`sugar/`](https://github.com/Pionpill/retikz/tree/main/packages/react/src/sugar) 的形状组件（可选）**<br />
    `<Circle>` / `<Ellipse>` / `<Arc>` / `<Sector>` / `<Rectangle>` / `<Grid>` / `<RegularPolygon>` / `<Star>` 也是 Sugar：它们把常见几何形写法展开为等价 `<Path>`。

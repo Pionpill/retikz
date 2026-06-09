@@ -66,7 +66,7 @@ Walk inward from both ends: input contract (IR) first, then output contract (Sce
    Drill in as needed: node layout / path stepping / position resolution. [`text-metrics.ts`](https://github.com/Pionpill/retikz/blob/main/packages/core/src/compile/text-metrics.ts) ships a fallback measurer; adapters can inject a more accurate one.
 
 8. **[`parsers/`](https://github.com/Pionpill/retikz/tree/main/packages/core/src/parsers) — Sugar entry (optional)**<br />
-   [`parseWay`](https://github.com/Pionpill/retikz/blob/main/packages/core/src/parsers/parseWay.ts) / [`parseTargetSugar`](https://github.com/Pionpill/retikz/blob/main/packages/core/src/parsers/parseTargetSugar.ts) translate `<Draw way={[...]}>` and similar Sugar forms into IR. `@retikz/react` calls them inside its Sugar components.
+   [`parseWay`](https://github.com/Pionpill/retikz/blob/main/packages/core/core/src/parsers/way.ts) / [`parseTargetSugar`](https://github.com/Pionpill/retikz/blob/main/packages/core/core/src/parsers/target-sugar.ts) translate `<Draw way={[...]}>` and similar Sugar forms into IR. `@retikz/react` calls them inside its Sugar components.
 
 9. **Registry extension surfaces (optional)**<br />
    [`shapes/`](https://github.com/Pionpill/retikz/tree/main/packages/core/src/shapes) / [`arrows/`](https://github.com/Pionpill/retikz/tree/main/packages/core/src/arrows) / [`patterns/`](https://github.com/Pionpill/retikz/tree/main/packages/core/src/patterns) / [`pathGenerators/`](https://github.com/Pionpill/retikz/tree/main/packages/core/src/pathGenerators): third-party packages should extend here instead of modifying core enums.
@@ -115,7 +115,7 @@ Keep these constraints in mind when reading core; they explain why some implemen
    A canvas-`measureText`-based `TextMeasurer`, injected into `compileToScene` via `CompileOptions.measureText`. When there's no document (SSR), it falls back to core's `fallbackMeasurer` automatically.
 
 7. **[`sugar/Draw.tsx`](https://github.com/Pionpill/retikz/blob/main/packages/react/src/sugar/Draw.tsx) — Sugar expansion**<br />
-   `<Draw way={[...]}>` internally calls [`parseWay`](https://github.com/Pionpill/retikz/blob/main/packages/core/src/parsers/parseWay.ts) (from core) to obtain a step array, then renders Kernel `<Path><Step/></Path>`. Sugar introduces no new capabilities; everything expands to Kernel.
+   `<Draw way={[...]}>` internally calls [`parseWay`](https://github.com/Pionpill/retikz/blob/main/packages/core/core/src/parsers/way.ts) (from core) to obtain a step array, then renders Kernel `<Path><Step/></Path>`. Sugar introduces no new capabilities; everything expands to Kernel.
 
 8. **Shape components in [`sugar/`](https://github.com/Pionpill/retikz/tree/main/packages/react/src/sugar) (optional)**<br />
    `<Circle>` / `<Ellipse>` / `<Arc>` / `<Sector>` / `<Rectangle>` / `<Grid>` / `<RegularPolygon>` / `<Star>` are Sugar too: they expand common geometry idioms into equivalent `<Path>` declarations.

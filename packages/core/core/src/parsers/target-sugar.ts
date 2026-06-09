@@ -1,5 +1,5 @@
 import type { IRTarget } from '../ir';
-import { parseNodeTarget } from './parseNodeTarget';
+import { parseNodeTarget } from './node-target';
 
 /** TikZ 风格相对偏移字面量正则：捕获 `+` / `++` 前缀 + dx / dy 数值 */
 const RELATIVE_OFFSET_RE = /^(\+{1,2})\s*(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)$/;
