@@ -2,7 +2,6 @@ import path from 'path';
 import { defineConfig } from 'vitest/config';
 import react from '@vitejs/plugin-react';
 import dts from 'vite-plugin-dts';
-import tsconfigPaths from 'vite-tsconfig-paths';
 
 import pkg from './package.json' with { type: 'json' };
 
@@ -26,8 +25,10 @@ export default defineConfig({
       outDir: ['dist/lib', 'dist/es'],
       exclude: ['tests/**'],
     }),
-    tsconfigPaths(),
   ],
+  resolve: {
+    tsconfigPaths: true,
+  },
   build: {
     outDir: 'dist',
     minify: false,

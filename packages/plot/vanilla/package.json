@@ -1,7 +1,7 @@
 {
   "name": "@retikz/plot-vanilla",
   "version": "0.1.0-alpha.8",
-  "description": "Framework-free bindings for @retikz/plot: renderPlot(spec, data) → SVG string (SSR) lowering to @retikz/core.",
+  "description": "Framework-free bindings for @retikz/plot: renderPlot(spec, data) to SVG string (SSR) lowering to @retikz/core.",
   "type": "module",
   "author": "Pionpill",
   "homepage": "https://pionpill.github.io/retikz/",
@@ -68,7 +68,6 @@
     "typescript": "catalog:",
     "vite": "catalog:",
     "vite-plugin-dts": "catalog:",
-    "vite-tsconfig-paths": "catalog:",
     "vitest": "catalog:",
     "zod": "catalog:"
   }
