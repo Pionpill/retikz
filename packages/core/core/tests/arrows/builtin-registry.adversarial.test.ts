@@ -360,8 +360,8 @@ describe('ADV — 极端几何 / 功能交叉', () => {
 // 攻击面 6：Scene round-trip / contextStroke 链路
 // ───────────────────────────────────────────────────────────────────────────
 describe('ADV — Scene round-trip / contextStroke', () => {
-  it('scene_roundtrip_builtin_7：每个内置 7 compile 产物 JSON round-trip 等价', () => {
-    const shapes = ['normal', 'open', 'stealth', 'diamond', 'openDiamond', 'circle', 'openCircle'];
+  it('scene_roundtrip_builtin_8：每个内置 8 compile 产物 JSON round-trip 等价', () => {
+    const shapes = ['normal', 'open', 'stealth', 'openStealth', 'diamond', 'openDiamond', 'circle', 'openCircle'];
     for (const shape of shapes) {
       const scene = compileToScene(horizontalPathIR('<->', { shape }));
       expect(JSON.parse(JSON.stringify(scene))).toEqual(scene);

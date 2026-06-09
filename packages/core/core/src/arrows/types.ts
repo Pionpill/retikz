@@ -20,10 +20,10 @@ export type ArrowEmitContext = {
 /**
  * 一个 arrow 的可注册定义：几何尺寸 + emit
  * @description plain object（factory 友好），含函数、**不进 IR**，走 `CompileOptions.arrows` 运行时注入。
- *   内置 7 箭头也是注册项（无内置特权，对齐 `ShapeDefinition` / `BUILTIN_SHAPES`）。
+ *   内置 8 箭头也是注册项（无内置特权，对齐 `ShapeDefinition` / `BUILTIN_SHAPES`）。
  *
  *   `lineContactX` 存**静态 base**（不含 lineWidth 调整）：实心 normal/diamond/circle = 0、stealth = 3、
- *   open/openDiamond base = 1、openCircle base = 0.75。framework 对 `hollow: true` 的 def 统一减
+ *   open/openDiamond base = 1、openStealth base = 3、openCircle base = 0.75。framework 对 `hollow: true` 的 def 统一减
  *   `lineWidth/2` 得到实际 refX / shrink 接触点（这条调整由编译器 / adapter 落，def 只声明静态 base）。
  */
 export type ArrowDefinition = {

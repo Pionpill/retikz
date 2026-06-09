@@ -154,7 +154,7 @@ export type EmitPathWarnHook = {
   /** fill 解析器（PaintSpec → resourceRef + 登记资源）；缺省时纯色透传、PaintSpec 退化为无填充 */
   resolveFill?: PaintResolver;
   /**
-   * 有效 arrow 表（内置 7 + 注入）；缺省 = 仅内置 7
+   * 有效 arrow 表（内置 8 + 注入）；缺省 = 仅内置 8
    * @description compileToScene 合并 `{ ...BUILTIN_ARROWS, ...options.arrows }` 传入；
    *   endpointArrows 据此查表算 shrink / 调 def.emit；未注册名编译期 throw
    */

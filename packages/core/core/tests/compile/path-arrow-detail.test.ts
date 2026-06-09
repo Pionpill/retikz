@@ -344,7 +344,7 @@ describe('compile arrowDetail：空心 shape silent fill ignore', () => {
     expect(markerPaint(path.arrowEnd)).toBe('blue');
   });
 
-  it.each(['open', 'openDiamond', 'openCircle'] as const)(
+  it.each(['open', 'openStealth', 'openDiamond', 'openCircle'] as const)(
     "空心 shape %s 上 fill 全部丢弃（red 不进 marker）",
     shape => {
       const ir: IR = {

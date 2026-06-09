@@ -3,12 +3,13 @@ import type { ValueOf } from '../../types';
 
 /**
  * 箭头形状常量（用 const 而非 TS enum 避免 reverse-mapping 和字面量不互通）
- * @description normal 实心三角；open 空心三角（UML 泛化/继承）；stealth 尖锐倒钩（默认）；diamond 实心菱形（UML 组合）；openDiamond 空心菱形（聚合）；circle 实心圆点；openCircle 空心圆点
+ * @description normal 实心三角；open 空心三角（UML 泛化/继承）；stealth 尖锐倒钩（默认）；openStealth 空心倒钩；diamond 实心菱形（UML 组合）；openDiamond 空心菱形（聚合）；circle 实心圆点；openCircle 空心圆点
  */
 export const ARROW_SHAPES = {
   normal: 'normal',
   open: 'open',
   stealth: 'stealth',
+  openStealth: 'openStealth',
   diamond: 'diamond',
   openDiamond: 'openDiamond',
   circle: 'circle',
@@ -19,7 +20,7 @@ export const ARROW_SHAPES = {
 export type ArrowShape = ValueOf<typeof ARROW_SHAPES>;
 
 /**
- * 内置 7 箭头名联合
+ * 内置 8 箭头名联合
  * @description `BUILTIN_ARROWS` 的 Record key（保穷尽性约束，不随 `ArrowShapeName` 开放而退化为 `string`）；
  *   等价于历史 `ArrowShape`，独立命名对齐 `node.ts` 的 `BuiltinShapeName` 范式
  */
@@ -28,7 +29,7 @@ export type BuiltinArrowName = ValueOf<typeof ARROW_SHAPES>;
 /**
  * 箭头形状名：开放字符串
  * @description 内置 `BuiltinArrowName`，或经 `CompileOptions.arrows` 注册的扩展箭头名；
- *   `& {}` 让 IDE 仍对内置 7 名自动补全，同时接受任意非空字符串（对齐 `node.ts` 的 `NodeShape`）
+ *   `& {}` 让 IDE 仍对内置 8 名自动补全，同时接受任意非空字符串（对齐 `node.ts` 的 `NodeShape`）
  */
 export type ArrowShapeName = BuiltinArrowName | (string & {});
 
@@ -39,7 +40,7 @@ export const DEFAULT_ARROW_SHAPE = ARROW_SHAPES.stealth;
  * 空心 shape 集合（fill 字段在这些 shape 上 silent no-op）
  * @description compile 与 render 都引用此表判定 fill 是否丢弃；空心 shape 用 color 主导描边、lineWidth 控描边粗
  */
-export const HOLLOW_ARROW_SHAPES = new Set<ArrowShape>(['open', 'openDiamond', 'openCircle']);
+export const HOLLOW_ARROW_SHAPES = new Set<ArrowShape>(['open', 'openStealth', 'openDiamond', 'openCircle']);
 
 /** 箭头默认尺寸（length / width 的 fallback） */
 export const ARROW_MARKER_DEFAULT_SIZE = 6;
@@ -58,7 +59,7 @@ export const ArrowEndDetailSchema = z
       .min(1)
       .optional()
       .describe(
-        'Registered arrow name: built-in 7 (`normal` / `open` / `stealth` / `diamond` / `openDiamond` / `circle` / `openCircle`) or an extension arrow registered via `CompileOptions.arrows`. Any non-empty string passes schema validation; unregistered names are rejected at compile time (throw). Defaults to `stealth`.',
+        'Registered arrow name: built-in 8 (`normal` / `open` / `stealth` / `openStealth` / `diamond` / `openDiamond` / `circle` / `openCircle`) or an extension arrow registered via `CompileOptions.arrows`. Any non-empty string passes schema validation; unregistered names are rejected at compile time (throw). Defaults to `stealth`.',
       ),
     scale: z
       .number()
@@ -94,7 +95,7 @@ export const ArrowEndDetailSchema = z
       .string()
       .optional()
       .describe(
-        'Fill color override (effective only on solid shapes). Hollow shapes (`open` / `openDiamond` / `openCircle`) silently ignore this field — `color` drives the stroke.',
+        'Fill color override (effective only on solid shapes). Hollow shapes (`open` / `openStealth` / `openDiamond` / `openCircle`) silently ignore this field — `color` drives the stroke.',
       ),
     opacity: z
       .number()

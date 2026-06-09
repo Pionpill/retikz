@@ -466,7 +466,7 @@ describe("compile path: arrow 箭头", () => {
   });
 
   it("arrowDetail.shape 透传到 PathPrim 作为 arrowEnd / arrowStart 的 shape", () => {
-    for (const shape of ['normal', 'open', 'stealth', 'diamond', 'circle'] as const) {
+    for (const shape of ['normal', 'open', 'stealth', 'openStealth', 'diamond', 'circle'] as const) {
       const ir: IR = {
         version: 1,
         type: 'scene',

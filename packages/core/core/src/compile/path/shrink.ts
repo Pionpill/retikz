@@ -12,7 +12,7 @@ import type { ArrowEndSpec, MarkerFill, MarkerPrimitive, PathCommand } from '../
 import { validateMarkerPrimitives } from '../marker-prim';
 import { shiftToward } from './anchor';
 
-/** 有效 arrow 表：内置 7 + 注入（同名注入覆盖内置） */
+/** 有效 arrow 表：内置 8 + 注入（同名注入覆盖内置） */
 export type EffectiveArrows = Record<string, ArrowDefinition>;
 
 /** 默认 baseSize（marker 局部基准边长，viewBox `0 0 baseSize baseSize`） */

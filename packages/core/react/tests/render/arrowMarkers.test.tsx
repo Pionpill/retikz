@@ -9,7 +9,7 @@ type AnyEl = ReactElement<Record<string, unknown> & { children?: unknown }>;
  * ArrowMarker 物化测试（emit-in-compile 契约）
  * @description ArrowMarker 不再 switch shape / 算几何——只**物化**已解析的 `ArrowEndSpec`：
  *   wrapper 参数（viewBox `0 0 baseSize baseSize` / refX / refY=baseSize/2 / markerWidth / markerHeight）来自
- *   spec，内部元素来自 `spec.marker`（`MarkerPrimitive[]`，core 已产）。内置 7 的 d-string 回归改成：给定
+ *   spec，内部元素来自 `spec.marker`（`MarkerPrimitive[]`，core 已产）。内置 8 的 d-string 回归改成：给定
  *   resolved marker 几何 → 物化的 path d 等价旧值。
  *   ArrowMarker 是 FC——直接调函数拿 ReactElement 检查。
  */
@@ -129,11 +129,11 @@ describe('ArrowMarker: marker 几何物化（spec.marker → SVG 元素）', () 
 });
 
 /**
- * 内置 7 marker 的 d-string 回归（golden master）
+ * 内置 8 marker 的 d-string 回归（golden master）
  * @description 给定 resolved marker 几何（compile 产物的 commands / ellipse 参数）→ 物化的 path d / ellipse
  *   参数等价旧 switch。几何已在 compile，react 只翻成 SVG。
  */
-describe('ArrowMarker: 内置 7 resolved 几何物化回归（golden master）', () => {
+describe('ArrowMarker: 内置 8 resolved 几何物化回归（golden master）', () => {
   const pathMarker = (commands: Array<MarkerPathCommand>): ArrowEndSpec =>
     spec({ marker: [{ type: 'path', commands }] });
 
@@ -177,6 +177,17 @@ describe('ArrowMarker: 内置 7 resolved 几何物化回归（golden master）',
       { kind: 'close' },
     ])));
     expect((inner[0].props as Record<string, unknown>).d).toBe('M 1 1 L 9 5 L 1 9 Z');
+  });
+
+  it('openStealth: 空心 V 形倒钩 d="M 1 1 L 9 5 L 1 9 L 3 5 Z"', () => {
+    const inner = innerEls(render(pathMarker([
+      { kind: 'move', to: [1, 1] },
+      { kind: 'line', to: [9, 5] },
+      { kind: 'line', to: [1, 9] },
+      { kind: 'line', to: [3, 5] },
+      { kind: 'close' },
+    ])));
+    expect((inner[0].props as Record<string, unknown>).d).toBe('M 1 1 L 9 5 L 1 9 L 3 5 Z');
   });
 
   it('openDiamond: 空心菱形 d="M 1 5 L 5 1 L 9 5 L 5 9 Z"', () => {
