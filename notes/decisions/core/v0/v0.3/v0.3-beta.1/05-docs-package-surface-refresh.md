@@ -1,6 +1,6 @@
 # ADR-05：文档与包描述当前能力面刷新——清掉「只提供 React adapter」「v0.1 core」「仅 SVG」等陈旧表述
 
-- 状态：Proposed
+- 状态：Accepted
 - 决策日期：2026-06-09
 - 关联：[`v0.3-beta.1 roadmap`](./roadmap.md) TODO-5 · **联动**：[本批 ADR-01](./01-stealth-hollow-arrow-parity.md)（schema `.describe()` 内置箭头清单也属当前能力面）
 

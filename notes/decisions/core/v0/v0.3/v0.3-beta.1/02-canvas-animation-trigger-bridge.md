@@ -1,6 +1,6 @@
 # ADR-02：Canvas 动画触发桥——复用 per-id 虚拟时钟，补 onEvent / visible 接线与隔离测试
 
-- 状态：Proposed
+- 状态：Accepted
 - 决策日期：2026-06-09
 - 关联：[`v0.3-beta.1 roadmap`](./roadmap.md) TODO-2 · **直接前置（还账）**：[v0.3-alpha.5 ADR-04 runtime 播放控制](../v0.3-alpha.5/04-runtime-control.md) `§实现说明 → 后续（未在本批）` ②③——本 ADR 就是兑现那两条 · **机制基座**：[v0.3-alpha.5 ADR-03 Canvas 播放](../v0.3-alpha.5/03-canvas-playback.md)（`drawScene(ctx, scene, { time })` 单帧求值 + 共享 `evaluateTrack`）· [v0.3-alpha.3 水合](../v0.3-alpha.3/01-hydration.md)（rAF / IntersectionObserver / 事件委托 / DOM 挂载 runtime 基建）· [v0.3-alpha.1 ADR-02 Canvas renderer](../v0.3-alpha.1/02-canvas-renderer-and-react-canvas-mode.md)（meet-fit 坐标映射矩阵）
 

@@ -1,6 +1,6 @@
 # ADR-01：`openStealth` 空心箭头——补齐默认箭头的实心/空心对称 + SVG/Canvas marker parity
 
-- 状态：Proposed
+- 状态：Accepted
 - 决策日期：2026-06-09
 - 关联：[`v0.3-beta.1 roadmap`](./roadmap.md) TODO-1 · **几何契约前置**：[v0.2-alpha.8 ADR-01 arrow 定义](../../v0.2/v0.2-alpha.8/01-arrow-definition.md)（`ArrowDefinition` / `BUILTIN_ARROWS` / `hollow` + `lineContactX` 静态 base 范式）· [v0.1-alpha.5 ADR-03 arrow detail](../../v0.1/v0.1-alpha.5/03-path-arrow-detail.md)（`fill` 在空心 shape 上 silent no-op）
 

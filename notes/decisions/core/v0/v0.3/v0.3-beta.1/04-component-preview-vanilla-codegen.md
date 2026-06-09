@@ -1,6 +1,6 @@
 # ADR-04：ComponentPreview vanilla 代码视图补齐——`stepsToWay` 逆映射对齐 `parseWay` 正向语法（零漂移），way 表达不了的走 IR fallback
 
-- 状态：Proposed
+- 状态：Accepted
 - 决策日期：2026-06-09
 - 关联：[`v0.3-beta.1 roadmap`](./roadmap.md) TODO-4 · **正向语法真源**：`packages/core/core/src/parsers/parseWay.ts`（`WayArcOp` / `WayCircleOp` / `WayEllipseOp` 等十二形态）· `packages/core/vanilla/src/builder/draw.ts`（`draw(way)` 内部就是 `parseWay`，与 React `<Draw way>` 同一全集）
 

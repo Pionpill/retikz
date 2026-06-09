@@ -1,6 +1,6 @@
 # ADR-06：Vite tsconfig paths 原生化与依赖清理——先确认 Vite 8 原生选项可用，再统一替换 7 处 `vite-tsconfig-paths`
 
-- 状态：Proposed
+- 状态：Accepted
 - 决策日期：2026-06-09
 - 关联：[`v0.3-beta.1 roadmap`](./roadmap.md) TODO-6
 

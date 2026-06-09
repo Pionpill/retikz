@@ -1,6 +1,6 @@
 # ADR-03：可选 Node Canvas 服务端导出入口——薄复用 `drawScene` + conditional exports 隔离 + optional peer 依赖
 
-- 状态：Proposed
+- 状态：Accepted
 - 决策日期：2026-06-09
 - 关联：[`v0.3-beta.1 roadmap`](./roadmap.md) TODO-3 · **复用机制**：[v0.3-alpha.1 ADR-02 Canvas renderer](../v0.3-alpha.1/02-canvas-renderer-and-react-canvas-mode.md)（`drawScene(ctx, scene)` / `renderToCanvas`、meet-fit 映射）· [v0.3-alpha.5 ADR-03 Canvas 播放](../v0.3-alpha.5/03-canvas-playback.md)（`drawScene(ctx, scene, { time })` 单帧 = 截帧）
 
