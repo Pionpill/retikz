@@ -1,11 +1,11 @@
 ---
-title: Tier 2 节点
+title: 复合
 description: composite 让 domain 包注册高层节点（axis / bars / tree…）——namespace + type 判别、完整 zod schema、compile 期 lowering 展开成 Tier 1。core 不内置任何 composite，只提供注册面与展开管线。
 ---
 
 retikz 的 IR 子节点分两层：**Tier 1**（`node` / `path` / `coordinate` / `scope`，core 内置、**无 namespace**）与 **Tier 2 composite**（domain 包的高层节点，**必有 `namespace`**，如 `plot` 的 `axis`）。判别只看**有无 `namespace`**：有 → tier2、无 → tier1。
 
-Tier 2 节点像 `Node` 一样有自己**完整的 zod schema**（字段一等、每字段带说明），在 compile 第一步经注册的展开函数下沉成 Tier 1，之后布局 / anchor / zIndex / renderer 全自动复用。core 不内置任何 composite，也不懂任何 chart / domain 语义。
+复合像 `Node` 一样有自己**完整的 zod schema**（字段一等、每字段带说明），在 compile 第一步经注册的展开函数下沉成 Tier 1，之后布局 / anchor / zIndex / renderer 全自动复用。core 不内置任何 composite，也不懂任何 chart / domain 语义。
 
 ## 注册一个 composite
 

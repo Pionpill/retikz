@@ -12,10 +12,26 @@ export const coreSection: Array<Section> = [
     label: 'core.concepts',
     pages: [
       {
+        id: 'design',
+        label: 'core.design',
+        children: [
+          { id: 'layers', label: 'core.layers' },
+          { id: 'composite', label: 'core.refComposite' },
+        ],
+      },
+      {
+        id: 'basic-concepts',
+        label: 'core.basicConcepts',
+        children: [
+          { id: 'coordinate-system', label: 'core.coordinateSystem' },
+          { id: 'position', label: 'core.positioning' },
+        ],
+      },
+      {
         id: 'primitive-model',
         label: 'core.primitiveModel',
         children: [
-          { id: 'layers', label: 'core.layers' },
+          { id: 'node-model', label: 'core.nodeModel' },
           { id: 'animation', label: 'core.animation' },
         ],
       },
@@ -23,7 +39,6 @@ export const coreSection: Array<Section> = [
         id: 'primitive-relations',
         label: 'core.primitiveRelations',
         children: [
-          { id: 'position', label: 'core.positioning' },
           { id: 'anchors', label: 'core.anchors' },
         ],
       },
@@ -109,7 +124,6 @@ export const coreSection: Array<Section> = [
         id: 'composites',
         label: 'core.refComposites',
         children: [
-          { id: 'composite', label: 'core.refComposite' },
           { id: 'plot', label: 'core.refPlot' },
         ],
       },

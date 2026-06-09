@@ -1,0 +1,26 @@
+---
+title: Basic Concepts
+description: Start with retikz's foundational design: coordinates define the drawing context, and positioning normalizes different forms into points.
+---
+
+Basic Concepts is the first group under Concepts. It answers "where is a point, and how does retikz interpret that statement?" Read this before moving into the primitive model and primitive relations; for the DSL, IR, Scene, and renderer split, see Design Philosophy.
+
+## What each page covers
+
+| Page | Topic | Reach for it when |
+| --- | --- | --- |
+| Coordinate System | Cartesian as the first-class form, polar coordinates, user units, viewBox, and render size | You want to know where `[x, y]` lands, or how other coordinate forms eventually become Cartesian points |
+| Positioning | Cartesian, polar, relative placement, offsets, proportional points, and path-relative targets | You want to place nodes / helper points or send a path to a target |
+
+## In this section
+
+<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+  <LinkedCard href="/core/concepts/basic-concepts/coordinate-system">
+    <span className="font-semibold">Coordinate System</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">Understand user units, screen-coordinate direction, polar coordinates, and viewBox</span>
+  </LinkedCard>
+  <LinkedCard href="/core/concepts/basic-concepts/position">
+    <span className="font-semibold">Positioning</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">Use one position vocabulary for nodes, helper points, and path targets</span>
+  </LinkedCard>
+</div>

@@ -1,24 +1,19 @@
 ---
 title: Primitive Relations
-description: Understand retikz through relationships between primitives: positioning, references, connections, and how lines land on node boundaries or anchors.
+description: Understand retikz through connection relationships between primitives: node boundaries, anchors, and how lines land on them.
 ---
 
-Primitive relations answer "how do these objects find one another?" If you are drawing flowcharts, concept maps, relationship lines, or small auto-layouts, read Positioning first, then Anchors.
+Primitive relations answer "how do connection lines land on primitives?" Once you know where a point or node is placed, anchors decide which side a line leaves from, where it lands, and how much space it keeps.
 
 ## What each page covers
 
 | Page | Topic | Reach for it when |
 | --- | --- | --- |
-| Positioning | Cartesian, polar, relative placement, offsets, proportional points, and path-relative targets | You want to place nodes / helper points or send a path to a target |
 | Anchors | Node boundaries, auto-attach, explicit anchors, edge-proportional points, and margin | You want to control which side a connection leaves from, where it lands, or how much space it keeps |
 
 ## In this section
 
 <div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
-  <LinkedCard href="/core/concepts/primitive-relations/position">
-    <span className="font-semibold">Positioning</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">Use one position vocabulary for nodes, helper points, and path targets</span>
-  </LinkedCard>
   <LinkedCard href="/core/concepts/primitive-relations/anchors">
     <span className="font-semibold">Anchors</span>
     <span className="mt-1 text-center text-sm text-muted-foreground">Control how connections attach to node boundaries, sides, and anchors</span>

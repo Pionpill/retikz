@@ -58,7 +58,7 @@ These raw literals follow TikZ path syntax: `(A) -| (B)` / `(A) |- (B)`. `'-|'` 
 | Node id | `'a'` | Reference a Node in the same diagram; endpoint auto-attaches to border |
 | Explicit anchor | `{ id: 'a', anchor: 'north' }` or `'a.north'` | Lock to a named anchor / angle / edge proportional point; object form is the IR contract |
 | Cartesian | `[120, 0]` | Literal coordinate |
-| Polar | `{ origin: 'a', angle: 60, radius: 80 }` | Polar coordinate; see [Positioning](/core/concepts/primitive-relations/position) |
+| Polar | `{ origin: 'a', angle: 60, radius: 80 }` | Polar coordinate; see [Positioning](/core/concepts/basic-concepts/position) |
 | Offset placement | `{ of: 'a', offset: [10, 5] }` | Base + `(dx, dy)`, same offset form as `<Node position>` |
 | Proportional placement | `{ between: ['a', 'b'], t: 0.5 }` | Proportional point along A → B |
 | Relative | `{ position: [10, 0], type: DrawWay.Relative }` or `'+10,0'` | Offset from the previous step endpoint without updating prevEnd |

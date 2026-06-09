@@ -1,0 +1,26 @@
+---
+title: Design Philosophy
+description: Understand why retikz splits authoring, declaration, compilation, and rendering into stable boundaries.
+---
+
+Design Philosophy explains the product-level tradeoff behind retikz: authors write DSL, the system preserves portable IR, and compilation produces Scene for renderers. Read this after you can already draw basic figures, especially when deciding whether a capability belongs in Kernel, Sugar, IR, Scene, or a renderer.
+
+## What each page covers
+
+| Page | Topic | Reach for it when |
+| --- | --- | --- |
+| Layers | The relationship between DSL, IR, Scene, and renderers | You want to know how JSX becomes SVG / Canvas, or where Kernel and Sugar split |
+| Tier 2 Composites | How domain packages register high-level nodes above core and lower them at compile time | You want to understand why composite and plot capabilities do not live directly inside core |
+
+## In this section
+
+<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+  <LinkedCard href="/core/concepts/design/layers">
+    <span className="font-semibold">Layers</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">Understand the boundary between DSL, IR, Scene, and renderers</span>
+  </LinkedCard>
+  <LinkedCard href="/core/concepts/design/composite">
+    <span className="font-semibold">Tier 2 Composites</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">Understand composite registration, discrimination, and lowering</span>
+  </LinkedCard>
+</div>
