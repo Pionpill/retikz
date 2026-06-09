@@ -152,6 +152,42 @@ describe('ternary2D fail-loud (ADR-03)', () => {
   });
 });
 
+describe('ternary2D 数据契约 — a/b/c 进数据契约 (P1)', () => {
+  // a/b/c 现作为用户源字段：data.model strict 下漏声明 b/c → fail-loud（曾绕过契约）
+  it('model_omitting_component_fails_loud', () => {
+    const spec = PlotSpecSchema.parse({
+      namespace: 'plot',
+      type: 'plot',
+      data: { reference: 'd', model: [{ name: 'sand', type: 'continuous' }] },
+      scales: [],
+      coordinate: { type: 'ternary2D' },
+      marks: [{ type: 'point', encoding: { a: { field: 'sand' }, b: { field: 'silt' }, c: { field: 'clay' } } }],
+    });
+    expect(() => expandOf(spec, { d: [{ sand: 1, silt: 1, clay: 1 }] }, opts)).toThrow(/unknown field|silt|clay/i);
+  });
+
+  // a/b/c 现过 normalizeRows：字符串数值（model 声明 continuous）被强制为数 → 正常投影，不再静默跳过
+  it('string_numeric_components_coerced_not_skipped', () => {
+    const spec = PlotSpecSchema.parse({
+      namespace: 'plot',
+      type: 'plot',
+      data: {
+        reference: 'd',
+        model: [
+          { name: 'a', type: 'continuous' },
+          { name: 'b', type: 'continuous' },
+          { name: 'c', type: 'continuous' },
+        ],
+      },
+      scales: [],
+      coordinate: { type: 'ternary2D' },
+      marks: [{ type: 'point', encoding: { a: { field: 'a' }, b: { field: 'b' }, c: { field: 'c' } } }],
+    });
+    const layer = firstLayer(spec, { d: [{ a: '1', b: '1', c: '1' }] }, opts);
+    expect(positionsOf(layer)).toHaveLength(1);
+  });
+});
+
 describe('ternary2D guide + color (ADR-03)', () => {
   // 交互：三角轴 guide（a/b/c 三条边）下沉
   it('triangle_axis_guides_lower', () => {

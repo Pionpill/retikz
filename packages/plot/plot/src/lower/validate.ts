@@ -8,9 +8,9 @@ const addChannelField = (fields: Set<string>, channel: Channel | undefined): voi
 
 /**
  * 收集 plot spec 里所有「用户源字段」（引用外部数据集的逻辑字段）
- * @description 含 encoding `x`/`y`/`color` 的 field + mark `order`/`series` + transform 输入（`Sort.field` / `Stack.x`/`y`/`groupBy`）；
+ * @description 含 encoding `x`/`y`/`a`/`b`/`c`/`color` 的 field + mark `order`/`series` + transform 输入（`Sort.field` / `Stack.x`/`y`/`groupBy`）；
  *   **排除**常量 `value` 通道与派生/输出字段（`Stack.startField`/`endField`、mark `y0Field`/`y1Field`、sector `startField`/`endField`）。
- *   仅这些字段参与 model strict 校验与类型解析。
+ *   仅这些字段参与 model strict 校验与类型解析。位置角色按坐标系不同取 x/y（1D-2D）或 a/b/c（ternary）。
  */
 export const collectUserSourceFields = (spec: PlotSpec): Set<string> => {
   const fields = new Set<string>();
@@ -18,6 +18,10 @@ export const collectUserSourceFields = (spec: PlotSpec): Set<string> => {
     if (mark.type !== PlotMark.Sector) {
       addChannelField(fields, mark.encoding.x);
       addChannelField(fields, mark.encoding.y);
+      // ternary a/b/c 位置角色通道同样是用户源字段：须进 model strict 校验 + 归一化 coerce（不漏过数据契约）
+      addChannelField(fields, mark.encoding.a);
+      addChannelField(fields, mark.encoding.b);
+      addChannelField(fields, mark.encoding.c);
     }
     addChannelField(fields, mark.encoding.color);
     // PointMark 专属非位置通道（size / opacity）的字段也是用户源字段（参与 strict 校验 + 类型推断）
