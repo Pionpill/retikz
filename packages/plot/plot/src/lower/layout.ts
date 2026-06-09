@@ -38,7 +38,19 @@ export type Margins = {
  */
 export const estimateLabelWidth = (text: string, fontSize: number): number => text.length * fontSize * CHAR_WIDTH_FACTOR;
 
-/** computePlotArea 输入：哪些维度有 axis + 其刻度标签（估算占位用） */
+/** 四边 legend 预留带宽（user units）：legend 占某边时该边在 axis margin 之外再让出的带宽 */
+export type LegendReserve = {
+  /** 右侧预留带宽 */
+  right?: number;
+  /** 左侧预留带宽 */
+  left?: number;
+  /** 顶部预留带高 */
+  top?: number;
+  /** 底部预留带高 */
+  bottom?: number;
+};
+
+/** computePlotArea 输入：哪些维度有 axis + 其刻度标签（估算占位用）+ legend 各边预留 */
 export type PlotAreaInput = {
   /** x 维度是否有坐标轴（决定是否留 bottom margin） */
   hasXAxis: boolean;
@@ -48,6 +60,8 @@ export type PlotAreaInput = {
   xLabels: ReadonlyArray<string>;
   /** y 轴刻度标签（估算最宽 label 定 left margin） */
   yLabels: ReadonlyArray<string>;
+  /** legend 各边预留带宽（在 axis margin 之外叠加；缺省无 legend 占位）（ADR-03 决策 ⑩） */
+  legendReserve?: LegendReserve;
 };
 
 /** computePlotArea 选项：字号 + 用户覆盖 margin */
@@ -75,11 +89,13 @@ export const computePlotArea = (
   options: PlotAreaOptions = {},
 ): { plotArea: Rect; margins: Margins } => {
   const fontSize = options.fontSize ?? DEFAULT_FONT_SIZE;
+  const reserve = input.legendReserve ?? {};
+  // legend 预留叠加在 axis margin 之外：legend 占某边 → 该边 margin += 预留带宽，plotArea 在该边收窄
   const auto: Margins = {
-    top: input.hasYAxis ? fontSize * 0.5 : 0,
-    right: input.hasXAxis ? maxLabelWidth(input.xLabels.slice(-1), fontSize) * 0.5 : 0,
-    bottom: input.hasXAxis ? AXIS_TICK_LENGTH + AXIS_LABEL_GAP + fontSize : 0,
-    left: input.hasYAxis ? AXIS_TICK_LENGTH + AXIS_LABEL_GAP + maxLabelWidth(input.yLabels, fontSize) : 0,
+    top: (input.hasYAxis ? fontSize * 0.5 : 0) + (reserve.top ?? 0),
+    right: (input.hasXAxis ? maxLabelWidth(input.xLabels.slice(-1), fontSize) * 0.5 : 0) + (reserve.right ?? 0),
+    bottom: (input.hasXAxis ? AXIS_TICK_LENGTH + AXIS_LABEL_GAP + fontSize : 0) + (reserve.bottom ?? 0),
+    left: (input.hasYAxis ? AXIS_TICK_LENGTH + AXIS_LABEL_GAP + maxLabelWidth(input.yLabels, fontSize) : 0) + (reserve.left ?? 0),
   };
   const margins: Margins = { ...auto, ...options.margin };
   // 用户 margin 可能传入 NaN / 负值——会一路污染出坏坐标，逐边校验有限非负（与 width/height 入口校验同思路）

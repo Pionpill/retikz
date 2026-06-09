@@ -43,6 +43,16 @@ Give `color` a categorical field and each dot is tinted by category (per-datum c
 
 <p className="text-sm text-muted-foreground">Each dot colored by region.</p>
 
+### Continuous color
+
+Give `color` a continuous numeric field and dots take their color by value — a sequential color scale (viridis by default) maps low to high along one color band. Coloring is still per datum, as with categorical color.
+
+A continuous field needs a `model` to declare its type; without one, `color` is treated as categorical and a continuous field errors — either declare the field as `continuous` in `model`, or use a categorical field instead.
+
+<ComponentPreview name="point-color-continuous" sourceFiles={['point-scatter.data.ts']} />
+
+<p className="text-sm text-muted-foreground">Color by the continuous pop value, auto viridis ramp.</p>
+
 ### Opacity
 
 Give `opacity` a continuous field and the opacity maps linearly to `[min, 1]` (the lower bound keeps small values visible). Useful for fading low-value points in dense overlap.
@@ -68,7 +78,7 @@ Give `shape` a categorical field and each category gets a glyph (default palette
 | `size` | `string?` | — | Numeric field: mapped to dot radius via a square-root scale (area-perceptual); negative values error |
 | `opacity` | `string?` | — | Continuous field: mapped to opacity via a clamped linear scale to `[min, 1]`; temporal / categorical fields error |
 | `shape` | `string?` | — | Categorical field: mapped to a glyph palette (circle / rectangle / diamond, cycled); continuous / temporal fields error |
-| `color` | `string?` | — | Color field (categorical, auto ordinal color scale); colors per datum. Continuous / temporal fields error |
+| `color` | `string?` | — | Color field, colored per datum: categorical → auto ordinal color scale; continuous / temporal needs a `model` declaration → auto sequential color scale (viridis) |
 | `id` | `string?` | — | Optional handle (reserved, not yet resolved) |
 
 ## Related

@@ -1,5 +1,5 @@
-import type { IRNode, IRPath, IRScope, IRStep } from '@retikz/core';
-import type { AxisGuide } from '../ir';
+import type { IRGradientStop, IRNode, IRPath, IRScope, IRStep } from '@retikz/core';
+import type { AxisGuide, LegendChannelType, LegendOrientType, LegendPositionType } from '../ir';
 import { AXIS_LABEL_GAP, AXIS_TICK_LENGTH, type Rect, estimateLabelWidth } from './layout';
 import type { PolarFrame } from './project';
 import { type ProvenanceContext, guideLayerId, guideLayerMeta } from './provenance';
@@ -304,4 +304,169 @@ export const lowerGuide = (guide: AxisGuide, ctx: GuideContext, context?: Proven
       : lowerRadialAxis(guide, ctx, ctx.frame, context);
   }
   return lowerCartesianGuide(guide, ctx, context);
+};
+
+// ── legend（ADR-03）─────────────────────────────────────────────────────
+
+/** legend swatch 边长（user units）；离散色块 / 形状框 / size 符号格的基准格尺寸 */
+export const LEGEND_SWATCH_SIZE = 14;
+/** legend swatch 到标签的水平间距（user units） */
+export const LEGEND_LABEL_GAP = 6;
+/** legend 条目间的行 / 列距（user units） */
+export const LEGEND_ENTRY_GAP = 6;
+/** legend 标题到首条目的间距（user units） */
+export const LEGEND_TITLE_GAP = 6;
+/** 连续色带 ramp 的长边长度（user units） */
+export const LEGEND_RAMP_LENGTH = 100;
+/** 连续色带 ramp 的短边宽度（user units） */
+export const LEGEND_RAMP_THICKNESS = 12;
+
+/**
+ * 一个离散 legend 条目：swatch 视觉量 + 标签
+ * @description color = 色块填充；shape = glyph 名（形状 swatch）；radius = size 梯度符号半径；opacity = 透明度块。
+ *   一个条目按 channel 取其中一种视觉量；label 是已格式化的文本（formatter 在 expand 侧据 fieldType 选定）。
+ */
+export type LegendEntry = {
+  /** 条目标签（类别串 / 代表值 / 区间） */
+  label: string;
+  /** 色块填充色（color / 分箱 swatch） */
+  color?: string;
+  /** glyph 形状名（shape swatch） */
+  shape?: string;
+  /** size 梯度符号半径（px） */
+  radius?: number;
+  /** 透明度（opacity 块；0..1） */
+  opacity?: number;
+};
+
+/** 连续色带 ramp：渐变 stop（offset 0..1 + 色）+ 沿带刻度（offset 0..1 + 标签） */
+export type LegendRamp = {
+  /** 渐变 stop（喂 core linearGradient paint server） */
+  stops: Array<IRGradientStop>;
+  /** 沿带刻度标签（offset 0..1） */
+  ticks: Array<{ offset: number; label: string }>;
+};
+
+/**
+ * lowerLegend 入参：已解析的 legend 内容（形态 + 条目 / ramp + 摆放）
+ * @description 形态选择（swatch / ramp）与颜色 / 代表值由 expand 据 descriptor + scale 求好后传入；
+ *   本函数只管几何摆放与 core 节点产出（关注点分离：求值在 expand、绘制在 guide）。
+ */
+export type LegendInput = {
+  /** 形态：swatch（离散 / 分箱 / size / opacity）或 ramp（连续色带） */
+  form: 'swatch' | 'ramp';
+  /** 绑定通道（决定 swatch 视觉量取色 / 形状 / 半径 / 透明度） */
+  channel: LegendChannelType;
+  /** 标题（缺省 = 绑定字段名；undefined → 不画标题） */
+  title?: string;
+  /** 离散条目（form==='swatch'） */
+  entries: Array<LegendEntry>;
+  /** 连续色带（form==='ramp'） */
+  ramp?: LegendRamp;
+  /** 摆放位置（预留带所在边） */
+  position: LegendPositionType;
+  /** 条目排布方向 */
+  orient: LegendOrientType;
+  /** label 字号 */
+  fontSize: number;
+  /** 预留带矩形（plotArea 旁的 legend 带；条目从带左上角起摆） */
+  band: Rect;
+  /** legend scope id（稳定，'legend' 前缀；anchor / 识别用） */
+  id?: string;
+};
+
+/**
+ * 矩形 swatch / ramp 条 → core Node（shape rectangle）
+ * @description core PathSchema 要求 children ≥ 2 step，单 rectangle step 的 Path 非法；矩形改用 Node
+ *   （与 bar mark 同款：shape rectangle + minimumWidth/Height + fill），符合「一切可见物是 Node」。
+ *   入参沿用左上角 + 宽高语义，内部换算成 Node 中心点（Node.position 是中心）。
+ */
+const rectNode = (x: number, y: number, width: number, height: number): IRNode => ({
+  type: 'node',
+  position: [x + width / 2, y + height / 2],
+  shape: 'rectangle',
+  minimumWidth: width,
+  minimumHeight: height,
+  padding: 0,
+});
+
+/**
+ * 把已解析的 legend 内容下沉成一个 core scope（swatch / ramp + 标签）
+ * @description swatch 形态：每条目一个矩形 swatch Node（shape rectangle，填 color / opacity；size 条目额外一个圆点 Node）+ 一个标签 Node，纵 / 横堆叠；
+ *   ramp 形态：一个矩形 Node 填 core linearGradient paint server（连续真渐变）+ 沿带刻度标签 Node。
+ *   条目几何在传入 band 内从左上角起摆，受无文字度量约束（plot-design §13.1）：超 band 溢出可接受、不做测量自适应。
+ *   下沉目标统一是 core Node（标签 / swatch / ramp 矩形 / size 圆点），纯 JSON。
+ */
+export const lowerLegend = (input: LegendInput): IRScope => {
+  const { fontSize, band, orient } = input;
+  const children: Array<IRNode> = [];
+  // 标题占一行（顶部），条目区从标题下方起
+  let cursorY = band.y;
+  if (input.title !== undefined) {
+    children.push({ type: 'node', position: [band.x + estimateLabelWidth(input.title, fontSize) / 2, cursorY + fontSize / 2], text: input.title });
+    cursorY += fontSize + LEGEND_TITLE_GAP;
+  }
+
+  if (input.form === 'ramp' && input.ramp) {
+    // 连续色带：一个矩形 Node 填 linearGradient（vertical → 自上而下、horizontal → 自左而右）
+    const vertical = orient === 'vertical';
+    const rampLength = LEGEND_RAMP_LENGTH;
+    const rampThickness = LEGEND_RAMP_THICKNESS;
+    const rampX = band.x;
+    const rampY = cursorY;
+    const ramp = vertical ? rectNode(rampX, rampY, rampThickness, rampLength) : rectNode(rampX, rampY, rampLength, rampThickness);
+    // 垂直色带：offset 0 在顶（小值上 / 大值下，与轴一致需翻转）；这里 0 在带起点，stops 直接用
+    const angle = vertical ? 90 : 0;
+    ramp.fill = { type: 'linearGradient', stops: input.ramp.stops, angle };
+    children.push(ramp);
+    // 沿带刻度标签
+    for (const tick of input.ramp.ticks) {
+      const position: [number, number] = vertical
+        ? [rampX + rampThickness + LEGEND_LABEL_GAP + estimateLabelWidth(tick.label, fontSize) / 2, rampY + tick.offset * rampLength]
+        : [rampX + tick.offset * rampLength, rampY + rampThickness + LEGEND_LABEL_GAP + fontSize / 2];
+      children.push({ type: 'node', position, text: tick.label });
+    }
+  } else {
+    // 离散 swatch：逐条目堆叠（vertical 自上而下、horizontal 自左而右）
+    const vertical = orient === 'vertical';
+    let cursorX = band.x;
+    let rowY = cursorY;
+    for (const entry of input.entries) {
+      if (entry.shape !== undefined) {
+        // shape 图例：swatch 本身就是编码的 glyph（circle / rectangle / diamond…），不画矩形框
+        children.push({ type: 'node', position: [cursorX + LEGEND_SWATCH_SIZE / 2, rowY + LEGEND_SWATCH_SIZE / 2], shape: entry.shape, minimumSize: LEGEND_SWATCH_SIZE, fill: entry.color ?? 'currentColor' });
+      } else {
+        // color / 分箱 / opacity / size：矩形色块（size 再叠圆点）
+        const swatch = rectNode(cursorX, rowY, LEGEND_SWATCH_SIZE, LEGEND_SWATCH_SIZE);
+        if (entry.color !== undefined) swatch.fill = entry.color;
+        if (entry.opacity !== undefined) {
+          swatch.fill = 'currentColor';
+          swatch.fillOpacity = entry.opacity;
+        }
+        children.push(swatch);
+        // size 梯度符号：在格内画一个代表半径的圆点 Node（覆盖 swatch 框，给出比例感）
+        if (entry.radius !== undefined) {
+          children.push({ type: 'node', position: [cursorX + LEGEND_SWATCH_SIZE / 2, rowY + LEGEND_SWATCH_SIZE / 2], shape: 'circle', minimumSize: entry.radius * Math.SQRT2, fill: 'currentColor' });
+        }
+      }
+      // 标签：swatch 右侧
+      const labelX = cursorX + LEGEND_SWATCH_SIZE + LEGEND_LABEL_GAP + estimateLabelWidth(entry.label, fontSize) / 2;
+      const labelY = rowY + LEGEND_SWATCH_SIZE / 2;
+      children.push({ type: 'node', position: [labelX, labelY], text: entry.label });
+      if (vertical) {
+        rowY += LEGEND_SWATCH_SIZE + LEGEND_ENTRY_GAP;
+      } else {
+        cursorX = labelX + estimateLabelWidth(entry.label, fontSize) / 2 + LEGEND_ENTRY_GAP;
+      }
+    }
+  }
+
+  return {
+    type: 'scope',
+    ...(input.id !== undefined ? { id: input.id } : {}),
+    // 标签字号 + 默认无描边（swatch / ramp / glyph / 标签都不要描边边框）；不写 nodeDefault.shape（每个 swatch / glyph Node 自带 shape，避免整层被当成 mark 层）。
+    // 用 strokeWidth: 0 而非 stroke: 'none'——后者是 axis 层的判别特征，会让 legend 层被误判为 axis。
+    nodeDefault: { font: { size: fontSize }, padding: 0, strokeWidth: 0 },
+    children,
+  };
 };

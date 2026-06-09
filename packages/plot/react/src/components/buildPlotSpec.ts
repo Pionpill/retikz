@@ -10,6 +10,7 @@ import {
   PlotArrangement,
   PlotComposite,
   PlotCoordinate,
+  PlotFieldType,
   PlotGuide,
   PlotMark,
   PlotScale,
@@ -18,7 +19,7 @@ import {
   type Scale,
   type Transform,
 } from '@retikz/plot';
-import { Axis, type AxisProps } from './guides';
+import { Axis, type AxisProps, Legend, type LegendProps } from './guides';
 import {
   AreaMark,
   type AreaMarkProps,
@@ -88,8 +89,10 @@ type Collected = {
   marks: Array<Mark>;
   guides: Array<Guide>;
   transforms: Array<Transform>;
-  /** 是否有 mark 用了颜色（→ 需自动 ordinal 色 scale） */
+  /** 是否有 mark 用了颜色（→ 需自动色 scale） */
   colored: boolean;
+  /** 用到的 color 字段名集合（→ 配 model 时按字段类型派生 sequential / ordinal） */
+  colorFields: Array<string>;
   /** 是否有 <BarMark>（→ 角向轴强制 band scale） */
   hasBar: boolean;
   /** 是否有 <SectorMark>（→ 角向 linear scale） */
@@ -102,6 +105,13 @@ type Collected = {
 const colorChannel = (color: string | undefined, series: string | undefined): { color: { field: string; scale: string } } | undefined => {
   const field = color ?? series;
   return field ? { color: { field, scale: AUTO_COLOR } } : undefined;
+};
+
+/** 记录某 mark 的 color 编码：置 colored 并收集 color 字段名（供 model 派生 sequential / ordinal） */
+const recordColor = (into: Collected, colorEnc: { color: { field: string; scale: string } } | undefined): void => {
+  if (!colorEnc) return;
+  into.colored = true;
+  into.colorFields.push(colorEnc.color.field);
 };
 
 /** 把 x/y 字段装成位置 encoding（x/y 是唯一位置通道；polar 下坐标系把 x→angle、y→radius 重解释） */
@@ -129,7 +139,7 @@ const collectInto = (children: ReactNode, into: Collected): void => {
         ...(closed ? { closed: true } : {}),
         encoding: { ...positionEncoding(x, y), ...colorEnc },
       });
-      if (colorEnc) into.colored = true;
+      recordColor(into, colorEnc);
       if (closed) into.hasClosedLine = true;
     } else if (child.type === PointMark) {
       const { x, y, color, size, opacity, shape, id } = child.props as PointMarkProps;
@@ -145,7 +155,7 @@ const collectInto = (children: ReactNode, into: Collected): void => {
           ...(shape !== undefined ? { shape: { field: shape } } : {}),
         },
       });
-      if (colorEnc) into.colored = true;
+      recordColor(into, colorEnc);
     } else if (child.type === BarMark) {
       const { x, y, color, series, stack, id } = child.props as BarMarkProps;
       const colorEnc = colorChannel(color, series);
@@ -165,7 +175,7 @@ const collectInto = (children: ReactNode, into: Collected): void => {
         encoding: { x: { field: x }, y: { field: y }, ...colorEnc },
       });
       into.hasBar = true;
-      if (colorEnc) into.colored = true;
+      recordColor(into, colorEnc);
     } else if (child.type === SectorMark) {
       const { angle, color, series, id } = child.props as SectorMarkProps;
       // 内建自动累积：装单链 stack transform（无分组 x，按 series 排序或数据序）；sector mark 读 y0/y1 为角界
@@ -182,7 +192,7 @@ const collectInto = (children: ReactNode, into: Collected): void => {
         encoding: { ...colorEnc },
       });
       into.hasSector = true;
-      if (colorEnc) into.colored = true;
+      recordColor(into, colorEnc);
     } else if (child.type === AreaMark) {
       const { x, y, order, series, baseline, closed, color, id } = child.props as AreaMarkProps;
       const colorEnc = colorChannel(color, series);
@@ -195,7 +205,7 @@ const collectInto = (children: ReactNode, into: Collected): void => {
         ...(closed ? { closed: true } : {}),
         encoding: { ...positionEncoding(x, y), ...colorEnc },
       });
-      if (colorEnc) into.colored = true;
+      recordColor(into, colorEnc);
       if (closed) into.hasClosedLine = true;
     } else if (child.type === Axis) {
       const { dimension, tickCount, tickLabels, grid, id } = child.props as AxisProps;
@@ -207,8 +217,38 @@ const collectInto = (children: ReactNode, into: Collected): void => {
         ...(tickLabels !== undefined ? { tickLabels } : {}),
         ...(grid !== undefined ? { grid } : {}),
       });
+    } else if (child.type === Legend) {
+      const { channel, scale, title, position, orient, tickCount, tickLabels } = child.props as LegendProps;
+      into.guides.push({
+        type: PlotGuide.Legend,
+        channel,
+        ...(scale !== undefined ? { scale } : {}),
+        ...(title !== undefined ? { title } : {}),
+        ...(position !== undefined ? { position } : {}),
+        ...(orient !== undefined ? { orient } : {}),
+        ...(tickCount !== undefined ? { tickCount } : {}),
+        ...(tickLabels !== undefined ? { tickLabels } : {}),
+      });
     }
   });
+};
+
+/**
+ * 自动 color scale：按 color 字段类型派生（仅 model 已知时）——continuous / temporal → sequential、
+ * categorical / 未知 → ordinal（向后兼容存量分类用例）。
+ * @description 无 model 时一律 ordinal（运行时按推断当分类调色；连续字段会在 lowering fail-loud，提示声明 model 或显式色阶）。
+ *   显式 scheme / diverging / midpoint 经 vanilla IR 全量可用，React 自动表面仅派生默认 sequential。
+ */
+const buildColorScale = (colorFields: Array<string>, model: DataModel | undefined): Scale => {
+  if (model !== undefined) {
+    const typeByField = new Map(model.map(field => [field.name, field.type] as const));
+    const anyContinuous = colorFields.some(field => {
+      const type = typeByField.get(field);
+      return type === PlotFieldType.Continuous || type === PlotFieldType.Temporal;
+    });
+    if (anyContinuous) return { type: PlotScale.Sequential, name: AUTO_COLOR };
+  }
+  return { type: PlotScale.Ordinal, name: AUTO_COLOR };
 };
 
 /** cartesian x scale 类型：含 <BarMark> → band；否则按 scaleX（缺省 linear） */
@@ -267,7 +307,7 @@ const toPolarConfig = (coordinate: CoordinateInput | undefined): PolarConfig | u
  *   产出须等价于手写 PlotSpec（仿 core Sugar = Kernel 等价性）。data 不进 IR，仅存 reference
  */
 export const buildPlotSpec = (children: ReactNode, dataRef: string, options: BuildPlotSpecOptions = {}): PlotSpec => {
-  const collected: Collected = { marks: [], guides: [], transforms: [], colored: false, hasBar: false, hasSector: false, hasClosedLine: false };
+  const collected: Collected = { marks: [], guides: [], transforms: [], colored: false, colorFields: [], hasBar: false, hasSector: false, hasClosedLine: false };
   collectInto(children, collected);
 
   const polar = toPolarConfig(options.coordinate);
@@ -286,11 +326,16 @@ export const buildPlotSpec = (children: ReactNode, dataRef: string, options: Bui
     coordinate = hasModel ? { type: PlotCoordinate.Cartesian2D } : { type: PlotCoordinate.Cartesian2D, x: AUTO_X, y: AUTO_Y };
     scales = hasModel ? [] : [buildCartesianXScale(collected.hasBar, options.scaleX), buildCartesianYScale(options.scaleY)];
   }
-  if (collected.colored) scales.push({ type: PlotScale.Ordinal, name: AUTO_COLOR });
+  if (collected.colored) scales.push(buildColorScale(collected.colorFields, options.model));
 
   // polar 默认不画 guide（轴需用户显式声明）；cartesian 沿用默认全套
   const defaultGuides: ReadonlyArray<Guide> = polar ? [] : DEFAULT_GUIDES;
-  const guides: Array<Guide> = options.bare ? [] : collected.guides.length > 0 ? collected.guides : [...defaultGuides];
+  // 默认 axes 合并按 guide type 分判（ADR-03 决策 ⑦，修 P1）：
+  //   显式 <Axis> 抑制默认 axes（用户接管坐标轴）；<Legend> 不抑制默认 axes（图例与默认轴共存）。
+  //   即：仅当用户未声明任何显式 Axis 时才补默认 axes，无论是否有 Legend。收集到的 Legend 始终保留。
+  const explicitAxes = collected.guides.filter(guide => guide.type === PlotGuide.Axis);
+  const legends = collected.guides.filter(guide => guide.type === PlotGuide.Legend);
+  const guides: Array<Guide> = options.bare ? [] : [...(explicitAxes.length > 0 ? explicitAxes : defaultGuides), ...legends];
 
   return {
     namespace: PLOT_NAMESPACE,

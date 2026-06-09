@@ -37,7 +37,7 @@ Turn on `<Plot coordinate="polar2D">` and the same `<BarMark>` becomes a radial 
 | `y` | `string` | Field path for the y channel (numeric, drives bar height) |
 | `series` | `string?` | Series field: split into multiple series; omit for single series |
 | `stack` | `boolean?` | Stack the series; omit for side-by-side (dodge) |
-| `color` | `string?` | Color field; falls back to `series` |
+| `color` | `string?` | Color field; falls back to `series`. Categorical → ordinal; continuous / temporal needs a `model` declaration → auto sequential color scale (viridis), colored per datum |
 | `id` | `string?` | Optional handle (reserved, not yet resolved) |
 
 <ComponentAlert title="Color follows series by default" description="When series is set but color is not, the color field defaults to series — one color per series. Set color explicitly only when you want to paint by a different field." />

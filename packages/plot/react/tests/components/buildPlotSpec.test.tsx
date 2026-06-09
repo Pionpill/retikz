@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { type PlotSpec, PlotSpecSchema } from '@retikz/plot';
 import { buildPlotSpec } from '../../src/components/buildPlotSpec';
-import { Axis } from '../../src/components/guides';
+import { Axis, Legend } from '../../src/components/guides';
 import { AreaMark, BarMark, LineMark, PointMark, SectorMark } from '../../src/components/marks';
 
 describe('buildPlotSpec model → type-driven 派生（alpha.6 ADR-03，评审 P1）', () => {
@@ -181,6 +181,74 @@ describe('buildPlotSpec 装配（ADR-08 / ADR-05）', () => {
       '__plot',
     );
     expect(() => PlotSpecSchema.parse(spec)).toThrow();
+  });
+});
+
+// ADR-03：Legend 装配（不吞默认 axes / 收集 / 字段落位）
+describe('buildPlotSpec legend 装配（ADR-03 alpha.8）', () => {
+  it('legend_does_not_suppress_default_axes：只声明 <Legend> → 默认 x/y 轴仍在 + legend', () => {
+    const spec = buildPlotSpec(
+      <>
+        <PointMark x="lon" y="lat" color="kind" />
+        <Legend channel="color" />
+      </>,
+      '__plot',
+    );
+    expect(spec.guides).toEqual([
+      { type: 'axis', dimension: 'x' },
+      { type: 'axis', dimension: 'y', grid: true },
+      { type: 'legend', channel: 'color' },
+    ]);
+  });
+
+  it('explicit_axis_and_legend_coexist：显式 <Axis> + <Legend> → 该轴覆盖默认、legend 保留', () => {
+    const spec = buildPlotSpec(
+      <>
+        <PointMark x="lon" y="lat" color="kind" />
+        <Axis dimension="x" grid />
+        <Legend channel="color" position="bottom" />
+      </>,
+      '__plot',
+    );
+    expect(spec.guides).toEqual([
+      { type: 'axis', dimension: 'x', grid: true },
+      { type: 'legend', channel: 'color', position: 'bottom' },
+    ]);
+  });
+
+  it('legend_fields：<Legend> 字段逐一落位', () => {
+    const spec = buildPlotSpec(
+      <>
+        <PointMark x="lon" y="lat" size="pop" />
+        <Legend channel="size" scale="__size" title="Population" position="left" orient="vertical" tickCount={4} tickLabels={false} />
+      </>,
+      '__plot',
+    );
+    const legend = (spec.guides ?? []).find(guide => guide.type === 'legend');
+    expect(legend).toEqual({ type: 'legend', channel: 'size', scale: '__size', title: 'Population', position: 'left', orient: 'vertical', tickCount: 4, tickLabels: false });
+  });
+
+  it('legend_bare_suppressed：bare → guides 为空（含 legend）', () => {
+    const spec = buildPlotSpec(
+      <>
+        <PointMark x="lon" y="lat" color="kind" />
+        <Legend channel="color" />
+      </>,
+      '__plot',
+      { bare: true },
+    );
+    expect(spec.guides).toEqual([]);
+  });
+
+  it('legend_built_pass_schema：legend 装配产物过 PlotSpecSchema', () => {
+    const spec = buildPlotSpec(
+      <>
+        <PointMark x="lon" y="lat" color="kind" />
+        <Legend channel="color" />
+      </>,
+      '__plot',
+    );
+    expect(() => PlotSpecSchema.parse(spec)).not.toThrow();
   });
 });
 

@@ -102,6 +102,7 @@
     "compSectorMark": "扇形",
     "compAreaMark": "面积",
     "compAxis": "坐标轴",
+    "compLegend": "图例",
     "examples": "图表",
     "exampleLineScatter": "折线与散点",
     "reference": "参考",

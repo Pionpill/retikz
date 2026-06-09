@@ -1,0 +1,70 @@
+---
+title: Legend
+description: "Visualize non-positional channels (color / size / opacity / shape) as a legend with <Legend>; channel picks which channel, form follows the scale type."
+---
+
+`<Legend>` is the visual counterpart of a scale. An axis (`<Axis>`) explains the two positional channels x / y; a legend explains the rest — the non-positional channels `color`, `size`, `opacity`, and `shape`. Both are chart guides, side by side.
+
+`channel` picks which channel the legend explains. You don't pick its form — it follows the type of the scale bound to that channel: categorical color → one swatch per category; continuous color → a smooth ramp + ticks; binned color → one block per bin + range labels; size → a few representative circles (graduated symbols).
+
+For a legend to explain a channel, that channel must first have a data-driven scale. So bind a field to the channel on `<PointMark>` (`color="region"` / `size="pop"`), then add `<Legend channel="..." />`. Continuous fields (continuous color ramps, size gradients) also need `model` to declare the field type, otherwise they are treated as categorical.
+
+Adding `<Legend>` does **not** remove the default x / y axes — legend and axes coexist. Only writing an explicit `<Axis>` overrides a default axis.
+
+## Usage
+
+```tsx
+import { Plot, PointMark, Legend } from '@retikz/plot-react';
+```
+
+```tsx
+<Plot data={cities}>
+  <PointMark x="lng" y="lat" color="region" size="pop" />
+  <Legend channel="color" />
+  <Legend channel="size" position="bottom" />
+</Plot>
+```
+
+## Examples
+
+### Categorical color swatches
+
+`color` bound to a categorical field → an ordinal color scale, one swatch per category. Note the default x / y axes are still there.
+
+<ComponentPreview name="legend-color-swatch" sourceFiles={['legend.data.ts']} />
+
+<p className="text-sm text-muted-foreground">One swatch per region; the legend sits in the reserved band on the right, default axes kept.</p>
+
+### Continuous color ramp
+
+`color` bound to a continuous numeric field (declared `continuous` via `model`) → a sequential color scale, drawn as a smooth ramp + ticks. `tickCount` hints the tick count.
+
+<ComponentPreview name="legend-color-ramp" sourceFiles={['legend.data.ts']} />
+
+<p className="text-sm text-muted-foreground">Continuous values form a smooth ramp with a few tick values beside it.</p>
+
+### Size graduated symbols
+
+`size` bound to a continuous field → radius via a square-root scale; the legend draws a few representative sizes as circles + values (graduated symbols). `position="bottom"` puts the legend at the bottom.
+
+<ComponentPreview name="legend-size" sourceFiles={['legend.data.ts']} />
+
+<p className="text-sm text-muted-foreground">A few representative sizes map size to value; the legend sits at the bottom.</p>
+
+## API
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `channel` | `'color' \| 'size' \| 'opacity' \| 'shape'` | — | Which non-positional channel the legend explains; form follows the bound scale type |
+| `scale` | `string?` | — | Disambiguating scale name when one channel is driven by several scales; omit = the channel's only scale |
+| `title` | `string?` | none | Legend title (rendered above the entries); omit for no title |
+| `position` | `'right' \| 'left' \| 'top' \| 'bottom'` | `'right'` | Which edge the legend sits on (a band is reserved there) |
+| `orient` | `'vertical' \| 'horizontal'` | by `position` | Item layout direction; left/right default to vertical, top/bottom to horizontal |
+| `tickCount` | `number?` | default tick count | Tick-count hint for continuous ramps; ignored for discrete legends |
+| `tickLabels` | `boolean?` | `true` | Whether to render swatch / tick labels |
+
+## Related
+
+- [Axis](/plot/components/axis) — the guide for the x / y positional channels
+- [Scale](/plot/grammar/scale) — the legend form follows the channel's scale type
+- [Point](/plot/components/mark/point) — binding the color / size / shape channels

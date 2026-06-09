@@ -1,14 +1,14 @@
 import { type CompositeDefinition, type IRChild, type IRScope, defineComposite } from '@retikz/core';
 import type { ZodType } from 'zod';
-import { type Channel, type ExternalDatasets, type ExternalRow, type FieldType, type Guide, type Mark, type OrdinalScale, PlotCoordinate, PlotFieldType, PlotMark, PlotScale, type PlotSpec, PlotSpecSchema, type Scale } from '../ir';
-import { channelValue, resolveFieldPath } from './field';
-import { type GuideContext, lowerGuide } from './guide';
-import { DEFAULT_FONT_SIZE, type Margins, type Rect, computePlotArea, computePolarFrame } from './layout';
+import { type AxisGuide, type Channel, type ColorScheme, type ExternalDatasets, type ExternalRow, type FieldType, type Guide, type LegendChannelType, type LegendGuide, type Mark, type OrdinalScale, PlotCoordinate, PlotFieldType, PlotGuide, PlotMark, PlotScale, type PlotSpec, PlotSpecSchema, type Scale, type ScaleType } from '../ir';
+import { channelValue, isFiniteNumber, resolveFieldPath } from './field';
+import { type GuideContext, type LegendEntry, type LegendInput, lowerGuide, lowerLegend } from './guide';
+import { DEFAULT_FONT_SIZE, type LegendReserve, type Margins, type Rect, computePlotArea, computePolarFrame } from './layout';
 import { type ColorOf, lowerMark } from './mark';
-import { makeOpacityResolver, makeShapeResolver, makeSizeResolver } from './channel';
+import { type ChannelResolution, type ScaleDescriptor, makeOpacityResolver, makeShapeResolver, makeSizeResolver } from './channel';
 import { type CoordinateFrame, createCartesianFrame, createPolarFrame } from './project';
 import { type DatumIdRegistrar, type ProvenanceContext, createDatumIdRegistrar, rootMeta, tagSourceIndex } from './provenance';
-import { type CategoryOrder, type TickSet, assertBaselineScaleCompatible, assertScaleFieldCompatible, deriveScale, orderedCategoryDomain, resolveOrdinalScale, resolvePositionScale } from './scale';
+import { type CategoryOrder, type ColorScaleEvaluator, DEFAULT_TICK_COUNT, type TickSet, assertBaselineScaleCompatible, assertScaleFieldCompatible, deriveScale, inferCategoryDomain, orderedCategoryDomain, resolveDivergingColorScale, resolveLinearScale, resolveOrdinalScale, resolvePositionScale, resolveQuantileColorScale, resolveQuantizeColorScale, resolveSequentialColorScale, resolveSqrtScale, resolveThresholdColorScale, sampleSchemeColors, scaleTicks, toTimestamp } from './scale';
 import { assertAllValuesValid, collectFormatFields, normalizeRows, validateBoundData } from './coerce';
 import { applyTransforms } from './transform';
 import { type ResolveField, applyFieldResolver } from './resolve';
@@ -40,7 +40,7 @@ const yChannelOf = (mark: Mark): Channel | undefined => (mark.type === PlotMark.
  * 一根定位角色只画一根轴：重复同角色的 axis（含 hybrid 别名 x≡angle / y≡radius）→ 抛清晰错误。
  * @description 多轴（dual-axis / 上下双轴，靠 placement 区分、副轴可绑不同 scale）是后续非破坏放宽，目前不支持。
  */
-const assertUniqueAxisDimension = (guides: Array<Guide>, coordinateType: string): void => {
+const assertUniqueAxisDimension = (guides: Array<AxisGuide>, coordinateType: string): void => {
   const seen = new Set<string>();
   for (const guide of guides) {
     const role = axisRole(guide.dimension, coordinateType);
@@ -50,6 +50,10 @@ const assertUniqueAxisDimension = (guides: Array<Guide>, coordinateType: string)
     seen.add(role);
   }
 };
+
+/** guide 谓词：按 type 判别串收窄成 axis / legend 子集 */
+const isAxisGuide = (guide: Guide): guide is AxisGuide => guide.type === PlotGuide.Axis;
+const isLegendGuide = (guide: Guide): guide is LegendGuide => guide.type === PlotGuide.Legend;
 
 /** 默认整图尺寸（user units）；尺寸是渲染选项、不进 IR */
 const DEFAULT_WIDTH = 480;
@@ -92,6 +96,8 @@ export type ResolvedFrame = {
   gridLayers: Array<IRScope>;
   /** 轴层（压顶；每根 axis guide 产出） */
   axisLayers: Array<IRScope>;
+  /** 绘图区矩形（已扣 axis margin + legend 预留带）；legend band 据此摆进预留 gutter（ADR-03 占位） */
+  plotArea: Rect;
 };
 
 /** resolveFrame 入参：投影 + guide 下沉所需的全部上下文（pure，无副作用，ADR-02 locator 复用同一投影） */
@@ -247,6 +253,10 @@ export const resolveFrame = (params: ResolveFrameParams): ResolvedFrame => {
   let frame: CoordinateFrame;
   const gridLayers: Array<IRScope> = [];
   const axisLayers: Array<IRScope> = [];
+  // legend 预留：按 position 在对应边让出带宽，plotArea 据此收窄（决策 ⑩）
+  const legendReserve = legendReserveOf((node.guides ?? []).filter(isLegendGuide));
+  // 默认 plotArea = 全画布（polar 用整圆 bbox、不走 plotArea 收窄，legend 占位退化为不收窄）
+  let plotArea: Rect = { x: 0, y: 0, width, height };
 
   if (coordinate.type === PlotCoordinate.Polar2D) {
     // 角向值 ← x、径向值 ← y（坐标系把 x/y 重解释为 angle/radius，正中 (i) 投影整形）
@@ -260,9 +270,10 @@ export const resolveFrame = (params: ResolveFrameParams): ResolvedFrame => {
 
     // guide 维度角色化：angle / x → angular（primary）、radius / y → radial（secondary）；一维一轴
     const guides = node.guides ?? [];
-    assertUniqueAxisDimension(guides, coordinate.type);
-    const angularAxis = guides.find(guide => guide.dimension === 'angle' || guide.dimension === 'x');
-    const radialAxis = guides.find(guide => guide.dimension === 'radius' || guide.dimension === 'y');
+    const axisGuides = guides.filter(isAxisGuide);
+    assertUniqueAxisDimension(axisGuides, coordinate.type);
+    const angularAxis = axisGuides.find(guide => guide.dimension === 'angle' || guide.dimension === 'x');
+    const radialAxis = axisGuides.find(guide => guide.dimension === 'radius' || guide.dimension === 'y');
 
     // 角向 scale 的 range = [startAngle, endAngle]，与 outerRadius 无关 → 可先建以取角向标签，供 layout 留白估算。
     // band / point 角向刻度即类别（域驱动、不依赖最终半径），故此处取的标签即最终标签。
@@ -310,7 +321,7 @@ export const resolveFrame = (params: ResolveFrameParams): ResolvedFrame => {
       angularTicks: angularTicks ?? EMPTY_TICKS,
       radialTicks: radialTicks ?? EMPTY_TICKS,
     };
-    for (const guide of guides) {
+    for (const guide of axisGuides) {
       const lowered = lowerGuide(guide, guideContext, provenance);
       if (lowered.gridLayer) gridLayers.push(lowered.gridLayer);
       if (lowered.axisLayer) axisLayers.push(lowered.axisLayer);
@@ -326,21 +337,23 @@ export const resolveFrame = (params: ResolveFrameParams): ResolvedFrame => {
     const xScale = resolvePositionScale(xScaleDef, xValues, [0, width]);
     const yScale = resolvePositionScale(yScaleDef, yValues, [height, 0]);
 
-    // 哪些维度有坐标轴（决定 margin / 是否算 ticks）；alpha.2 guide 仅 axis 类型，按 dimension 取
+    // 哪些维度有坐标轴（决定 margin / 是否算 ticks）；按 type 收窄出 axis 子集，legend 单独走 lowerLegend
     const guides = node.guides ?? [];
-    assertUniqueAxisDimension(guides, coordinate.type);
-    const xAxis = guides.find(guide => guide.dimension === 'x');
-    const yAxis = guides.find(guide => guide.dimension === 'y');
+    const axisGuides = guides.filter(isAxisGuide);
+    assertUniqueAxisDimension(axisGuides, coordinate.type);
+    const xAxis = axisGuides.find(guide => guide.dimension === 'x');
+    const yAxis = axisGuides.find(guide => guide.dimension === 'y');
     const xTicks: TickSet | undefined = xAxis ? xScale.ticks(xAxis.tickCount) : undefined;
     const yTicks: TickSet | undefined = yAxis ? yScale.ticks(yAxis.tickCount) : undefined;
 
-    // 由整图尺寸 + axis 占位缩出 plot area（无 axis → margin 全 0 → plot area = 整图，向后兼容）
-    const { plotArea } = computePlotArea(
+    // 由整图尺寸 + axis 占位 + legend 预留缩出 plot area（无 axis 且无 legend → margin 全 0 → plot area = 整图，向后兼容）
+    const computed = computePlotArea(
       width,
       height,
-      { hasXAxis: !!xAxis, hasYAxis: !!yAxis, xLabels: xTicks?.labels ?? [], yLabels: yTicks?.labels ?? [] },
+      { hasXAxis: !!xAxis, hasYAxis: !!yAxis, xLabels: xTicks?.labels ?? [], yLabels: yTicks?.labels ?? [], legendReserve },
       { fontSize, margin },
     );
+    plotArea = computed.plotArea;
 
     // range 收敛到 plot area（y 屏幕向下，故倒置）；显式 range 的 scale 不覆盖——尊重用户手设
     // 仅连续 scale 可带显式 range（band / point 的 range 始终派生；time 的 range 仍派生）
@@ -371,14 +384,14 @@ export const resolveFrame = (params: ResolveFrameParams): ResolvedFrame => {
       yTicks: yTicks ?? EMPTY_TICKS,
       fontSize,
     };
-    const lowered = guides.map(guide => lowerGuide(guide, guideContext, provenance));
+    const lowered = axisGuides.map(guide => lowerGuide(guide, guideContext, provenance));
     for (const layer of lowered) {
       if (layer.gridLayer) gridLayers.push(layer.gridLayer);
       if (layer.axisLayer) axisLayers.push(layer.axisLayer);
     }
   }
 
-  return { frame, gridLayers, axisLayers };
+  return { frame, gridLayers, axisLayers, plotArea };
 };
 
 /** 解析某 mark 的 color 编码 → 行→颜色串：常量 value 直用；字段过 ordinal scale（显式引用或自动合成默认配色） */
@@ -398,12 +411,57 @@ const makeColorResolver = (node: PlotSpec, rows: Array<ExternalRow>, fieldTypes:
     }
     if (channel.field === undefined) return undefined;
     const field = channel.field;
-    // 字段类型兼容校验（收口「真通道」）：continuous / temporal color 需连续色阶（sequential / diverging，alpha.8）→ fail-loud；
-    //   不静默当 ordinal 调色。categorical（或类型未知）走 ordinal。
     const colorFieldType = fieldTypes.get(field);
+    // 连续 / temporal color（alpha.8）：经 sequential / diverging 连续色阶或 quantize / threshold / quantile 离散化色阶 per-datum 取色。
+    //   按 datum 取色仅 point / bar(interval) / sector 成立；line / area 是 path 级整体图元，
+    //   一条线沿程渐变 / 分箱不做 → fail-loud（守 mark 边界，承 alpha.7 ADR-03）。
     if (colorFieldType === PlotFieldType.Continuous || colorFieldType === PlotFieldType.Temporal) {
-      throw new Error(`lowerPlots: color channel field "${field}" is ${colorFieldType}; continuous/temporal color requires a sequential/diverging color scale (alpha.8). Use a categorical field or a constant color`);
+      if (mark.type === PlotMark.Line || mark.type === PlotMark.Area) {
+        throw new Error(
+          `lowerPlots: continuous/temporal color field "${field}" is not supported on ${mark.type} marks (path-level glyph colored per series); continuous color applies to point / bar / sector only`,
+        );
+      }
+      if (channel.scale === undefined) {
+        throw new Error(`lowerPlots: continuous/temporal color field "${field}" requires an explicit sequential/diverging/quantize/threshold/quantile color scale reference`);
+      }
+      const def = scaleByName.get(channel.scale);
+      if (!def) throw new Error(`lowerPlots: color channel references unknown scale "${channel.scale}"`);
+      const isContinuousColorScale = def.type === PlotScale.Sequential || def.type === PlotScale.Diverging;
+      const isDiscretizedColorScale = def.type === PlotScale.Quantize || def.type === PlotScale.Threshold || def.type === PlotScale.Quantile;
+      if (!isContinuousColorScale && !isDiscretizedColorScale) {
+        throw new Error(`lowerPlots: continuous/temporal color field "${field}" requires a sequential/diverging/quantize/threshold/quantile color scale, but "${channel.scale}" is ${def.type}`);
+      }
+      // temporal + diverging 无意义（时间无自然中点）→ fail-loud；temporal + sequential 合法（时间戳当连续量）
+      if (colorFieldType === PlotFieldType.Temporal && def.type === PlotScale.Diverging) {
+        throw new Error(`lowerPlots: temporal color field "${field}" cannot use a diverging color scale (no meaningful midpoint for time); use a sequential color scale`);
+      }
+      // 取连续数值：temporal 字段过 toTimestamp 转 epoch ms（时间戳当连续量），其余直取有限数
+      const toNumber = colorFieldType === PlotFieldType.Temporal ? toTimestamp : (value: unknown): number | null => (isFiniteNumber(value) ? value : null);
+      const numericValues = rows.map(row => toNumber(resolveFieldPath(row, field))).filter((value): value is number => value !== null);
+      let evaluate: ColorScaleEvaluator;
+      switch (def.type) {
+        case PlotScale.Sequential:
+          evaluate = resolveSequentialColorScale(def, numericValues);
+          break;
+        case PlotScale.Diverging:
+          evaluate = resolveDivergingColorScale(def, numericValues);
+          break;
+        case PlotScale.Quantize:
+          evaluate = resolveQuantizeColorScale(def, numericValues);
+          break;
+        case PlotScale.Threshold:
+          evaluate = resolveThresholdColorScale(def);
+          break;
+        default:
+          evaluate = resolveQuantileColorScale(def, numericValues);
+          break;
+      }
+      return row => {
+        const numeric = toNumber(resolveFieldPath(row, field));
+        return numeric === null ? undefined : evaluate(numeric);
+      };
     }
+    // categorical（或类型未知）走 ordinal 离散调色
     let ordinalDef: OrdinalScale | undefined;
     if (channel.scale !== undefined) {
       const def = scaleByName.get(channel.scale);
@@ -425,6 +483,311 @@ const makeColorResolver = (node: PlotSpec, rows: Array<ExternalRow>, fieldTypes:
       return typeof value === 'string' || typeof value === 'number' ? ordinal(value) : undefined;
     };
   };
+};
+
+/**
+ * 收集所有 mark 在某非位置通道上的字段 descriptor（size / opacity / shape）
+ * @description resolver 双产出的 descriptor 注册到 channel → descriptor 表；同通道多 mark 取首个有 descriptor 的
+ *   （legend 据 scale name 消歧留待多 scale 场景，alpha.8 这三通道用合成默认 scale，不暴露具名）。
+ */
+const collectChannelDescriptors = (
+  node: PlotSpec,
+  resolveSize: (mark: Mark) => ChannelResolution<number> | undefined,
+  resolveOpacity: (mark: Mark) => ChannelResolution<number> | undefined,
+  resolveShape: (mark: Mark) => ChannelResolution<string> | undefined,
+): Map<LegendChannelType, ScaleDescriptor> => {
+  const out = new Map<LegendChannelType, ScaleDescriptor>();
+  const register = (descriptor: ScaleDescriptor | undefined): void => {
+    if (descriptor && !out.has(descriptor.channel)) out.set(descriptor.channel, descriptor);
+  };
+  for (const mark of node.marks) {
+    register(resolveSize(mark)?.descriptor);
+    register(resolveOpacity(mark)?.descriptor);
+    register(resolveShape(mark)?.descriptor);
+  }
+  return out;
+};
+
+/** 数值刻度 nice 化 + 格式化：复用 axis 的 scaleTicks 链（决策 ⑨），domain → {value, offset 0..1, label} */
+const niceNumericTicks = (domain: readonly [number, number], count: number): Array<{ value: number; offset: number; label: string }> => {
+  const [lo, hi] = domain;
+  const scale = resolveLinearScale({ domain: [lo, hi] }, [], [0, 1]);
+  const { values, labels } = scaleTicks(scale, count);
+  const span = hi - lo;
+  return values.map((value, index) => ({
+    value: typeof value === 'number' ? value : Number(value),
+    offset: span === 0 ? 0.5 : ((typeof value === 'number' ? value : Number(value)) - lo) / span,
+    label: labels[index],
+  }));
+};
+
+/** p 分位（线性插值法）：sortedAscending 已升序，p∈[0,1] */
+const quantileAt = (sortedAscending: ReadonlyArray<number>, p: number): number => {
+  if (sortedAscending.length === 0) return 0;
+  if (sortedAscending.length === 1) return sortedAscending[0];
+  const position = p * (sortedAscending.length - 1);
+  const lowerIndex = Math.floor(position);
+  const fraction = position - lowerIndex;
+  const lower = sortedAscending[lowerIndex];
+  const upper = sortedAscending[Math.min(lowerIndex + 1, sortedAscending.length - 1)];
+  return lower + (upper - lower) * fraction;
+};
+
+/**
+ * 离散化色阶 → 档色 + 内部边界（legend 分箱用）
+ * @description quantize：domain 等宽切；threshold：用户断点；quantile：数据分位。
+ *   edges 是档间内部边界（长度 = binCount - 1）；colors 是各档色（range 显式则用、否则从 scheme 采）。
+ */
+const discretizedBins = (
+  def: { type: string; range?: ReadonlyArray<string>; scheme?: ColorScheme; count?: number; breakpoints?: ReadonlyArray<number>; domain?: readonly [number, number] },
+  values: ReadonlyArray<number>,
+): { colors: Array<string>; edges: Array<number> } => {
+  if (def.type === PlotScale.Threshold && def.breakpoints) {
+    const edges = [...def.breakpoints];
+    const binCount = edges.length + 1;
+    const colors = def.range ? [...def.range] : sampleSchemeColors(def.scheme, binCount);
+    return { colors, edges };
+  }
+  const sorted = [...values].sort((a, b) => a - b);
+  const binCount = def.range ? def.range.length : def.count ?? 5;
+  if (def.type === PlotScale.Quantile) {
+    const edges = Array.from({ length: Math.max(0, binCount - 1) }, (_unused, index) => quantileAt(sorted, (index + 1) / binCount));
+    const colors = def.range ? [...def.range] : sampleSchemeColors(def.scheme, binCount);
+    return { colors, edges };
+  }
+  // quantize：domain 等宽切
+  const lo = def.domain ? def.domain[0] : sorted.length > 0 ? sorted[0] : 0;
+  const hi = def.domain ? def.domain[1] : sorted.length > 0 ? sorted[sorted.length - 1] : 1;
+  const edges = Array.from({ length: Math.max(0, binCount - 1) }, (_unused, index) => lo + ((index + 1) * (hi - lo)) / binCount);
+  const colors = def.range ? [...def.range] : sampleSchemeColors(def.scheme, binCount);
+  return { colors, edges };
+};
+
+/** legend 专用 sqrt 半径映射：domain [lo, hi]（sqrt 感知）→ range [rMin, rMax]，与 mark size resolver 同核 */
+const resolveSqrtForLegend = (domain: readonly [number, number], range: readonly [number, number]): ((value: number) => number) => {
+  const scale = resolveSqrtScale({ type: PlotScale.Sqrt, name: '__legend_size', domain: [Math.max(0, domain[0]), domain[1]], range: [range[0], range[1]] }, [], range);
+  return value => scale(value);
+};
+
+/** legend baseInput 形状（lowerLegend 入参里与求值无关的固定部分） */
+type LegendBaseInput = {
+  channel: LegendChannelType;
+  position: 'right' | 'left' | 'top' | 'bottom';
+  orient: 'vertical' | 'horizontal';
+  fontSize: number;
+  band: Rect;
+  id: string;
+};
+
+/** 可作 color 通道的 scale 类型集（位置 scale 不在内）；color legend 绑定外的类型 fail-loud */
+const COLOR_SCALE_TYPES = new Set<ScaleType>([PlotScale.Ordinal, PlotScale.Sequential, PlotScale.Diverging, PlotScale.Quantize, PlotScale.Threshold, PlotScale.Quantile]);
+
+/**
+ * color legend 解析：定位 color scale（消歧 + fail-loud）→ 按 scale 类型选 swatch / ramp / 分箱
+ * @description ordinal → 逐类别色块 swatch；sequential/diverging → core linearGradient 连续色带 ramp + nice 刻度；
+ *   quantize/threshold/quantile → 每档区间 swatch（区间标签闭开口契约）。多个 color scale 未消歧 / scale 不存在 → fail-loud。
+ */
+const resolveColorLegend = (
+  node: PlotSpec,
+  rows: Array<ExternalRow>,
+  fieldTypes: Map<string, FieldType>,
+  scaleByName: Map<string, Scale>,
+  guide: LegendGuide,
+  baseInput: LegendBaseInput,
+  showLabels: boolean,
+): LegendInput => {
+  // 收集被 color 通道引用的 scale 名 + 字段（具名 color scale 已物化进 scales）。
+  //   point / bar / sector 都按 datum 着色（ADR-01 B/C），sector（饼 / 环）的 color.field 同样要喂 legend——
+  //   scale + field 守卫已兜底无 color 编码的 mark，无需按 mark 类型排除。
+  const colorBindings: Array<{ scaleName: string; field: string }> = [];
+  for (const mark of node.marks) {
+    const channel = mark.encoding.color;
+    if (channel?.scale !== undefined && channel.field !== undefined) {
+      colorBindings.push({ scaleName: channel.scale, field: channel.field });
+    }
+  }
+  let scaleName: string;
+  if (guide.scale !== undefined) {
+    if (!scaleByName.has(guide.scale)) {
+      throw new Error(`lowerPlots: legend references unknown scale "${guide.scale}"`);
+    }
+    scaleName = guide.scale;
+  } else {
+    const distinct = [...new Set(colorBindings.map(binding => binding.scaleName))];
+    if (distinct.length === 0) {
+      throw new Error('lowerPlots: legend channel "color" has no bound color scale; bind a color encoding with a scale or give the legend an explicit scale');
+    }
+    if (distinct.length > 1) {
+      throw new Error(`lowerPlots: legend channel "color" is driven by multiple color scales [${distinct.join(', ')}]; specify which via the legend "scale" field`);
+    }
+    scaleName = distinct[0];
+  }
+  const def = scaleByName.get(scaleName);
+  if (!def) throw new Error(`lowerPlots: legend references unknown scale "${scaleName}"`);
+  // color legend 只能绑颜色 scale；指向位置 scale（linear/band/point/time/log/pow/sqrt）→ fail-loud，
+  //   否则会落空 ordinal 分支出空 / 误导图例（如显式写 scale: 'x'）。
+  if (!COLOR_SCALE_TYPES.has(def.type)) {
+    throw new Error(
+      `lowerPlots: legend channel "color" is bound to scale "${scaleName}" of type "${def.type}", which is not a color scale (expected one of ordinal / sequential / diverging / quantize / threshold / quantile)`,
+    );
+  }
+  const field = colorBindings.find(binding => binding.scaleName === scaleName)?.field;
+  // 标题只在用户显式给时渲染（field 名仅作占位 fallback 的语义来源，不自动生成标题 Node，避免与条目标签混淆）
+  const title = guide.title;
+  const colorFieldType = field !== undefined ? fieldTypes.get(field) : undefined;
+
+  // 连续色带 ramp：sequential / diverging → core linearGradient + nice 刻度
+  if (def.type === PlotScale.Sequential || def.type === PlotScale.Diverging) {
+    const toNumber = colorFieldType === PlotFieldType.Temporal ? toTimestamp : (value: unknown): number | null => (isFiniteNumber(value) ? value : null);
+    const numericValues = field !== undefined ? rows.map(row => toNumber(resolveFieldPath(row, field))).filter((value): value is number => value !== null) : [];
+    const evaluate: ColorScaleEvaluator = def.type === PlotScale.Sequential ? resolveSequentialColorScale(def, numericValues) : resolveDivergingColorScale(def, numericValues);
+    // ramp 取色 / 刻度域：显式 domain 优先（与实绘取色同基准，避免图例刻度落数据 extent 而颜色按 domain 归一导致错位）；
+    //   sequential domain = [min, max]、diverging domain = [low, mid, high] 取 [low, high]；缺省回退数据 extent。
+    const dataExtent: [number, number] = numericValues.length === 0 ? [0, 1] : [Math.min(...numericValues), Math.max(...numericValues)];
+    const [lo, hi] = def.domain ? [def.domain[0], def.domain[def.domain.length - 1]] : dataExtent;
+    // ramp 渐变 stop（沿带等距采样色）+ nice 刻度标签
+    const STOP_COUNT = 8;
+    const stops = Array.from({ length: STOP_COUNT }, (_unused, index) => {
+      const t = index / (STOP_COUNT - 1);
+      return { offset: t, color: evaluate(lo + (hi - lo) * t) };
+    });
+    const ticks = showLabels ? niceNumericTicks([lo, hi], guide.tickCount ?? DEFAULT_TICK_COUNT).map(tick => ({ offset: tick.offset, label: tick.label })) : [];
+    return { ...baseInput, form: 'ramp', title, entries: [], ramp: { stops, ticks } };
+  }
+
+  // 分箱 swatch：quantize / threshold / quantile → 每档色块 + 区间标签（闭开口：[a, b)，末档闭）
+  if (def.type === PlotScale.Quantize || def.type === PlotScale.Threshold || def.type === PlotScale.Quantile) {
+    const numericValues = field !== undefined ? rows.map(row => resolveFieldPath(row, field)).filter(isFiniteNumber) : [];
+    const { colors, edges } = discretizedBins(def, numericValues);
+    const formatNumber = resolveLinearScale({ domain: edges.length > 0 ? [edges[0], edges[edges.length - 1]] : [0, 1] }, [], [0, 1]).tickFormat();
+    const entries: Array<LegendEntry> = colors.map((color, index): LegendEntry => {
+      // 区间标签：首档 < e0、末档 ≥ e_last、中间 [e_{i-1}, e_i)
+      const lower = index === 0 ? undefined : edges[index - 1];
+      const upper = index < edges.length ? edges[index] : undefined;
+      const label = !showLabels
+        ? ''
+        : lower === undefined && upper !== undefined
+          ? `< ${formatNumber(upper)}`
+          : lower !== undefined && upper === undefined
+            ? `≥ ${formatNumber(lower)}`
+            : `${formatNumber(lower as number)}–${formatNumber(upper as number)}`;
+      return { label, color };
+    });
+    return { ...baseInput, form: 'swatch', title, entries };
+  }
+
+  // ordinal 离散 swatch：每类别一色块 + 类别标签
+  const colorValues = field !== undefined ? rows.map(row => resolveFieldPath(row, field)) : [];
+  const ordinalDef = def.type === PlotScale.Ordinal ? def : undefined;
+  const domain = ordinalDef?.domain ?? inferCategoryDomain(colorValues);
+  const ordinal = resolveOrdinalScale(ordinalDef, colorValues);
+  const entries: Array<LegendEntry> = domain.map((category): LegendEntry => ({ label: showLabels ? String(category) : '', color: ordinal(category) }));
+  return { ...baseInput, form: 'swatch', title, entries };
+};
+
+/** 单个 legend 在其所在边的预留带宽 / 带高（user units）；无文字度量 → 固定估算，溢出可接受（plot-design §13.1） */
+const LEGEND_BAND_EXTENT = 80;
+
+/** legend 与主体绘图区之间的间距（user units）；在预留带内让出，避免图例紧贴内容 */
+const LEGEND_CONTENT_GAP = 24;
+
+/**
+ * 据 legend guide 估算各边 legend 预留带宽（同侧多个 legend 累加）
+ * @description 喂 computePlotArea 在对应边收窄 plotArea（决策 ⑩）；估算式占位、不测量。
+ */
+const legendReserveOf = (legendGuides: Array<LegendGuide>): LegendReserve => {
+  const reserve: { right: number; left: number; top: number; bottom: number } = { right: 0, left: 0, top: 0, bottom: 0 };
+  for (const guide of legendGuides) {
+    reserve[guide.position ?? 'right'] += LEGEND_BAND_EXTENT;
+  }
+  return reserve;
+};
+
+/**
+ * 为每个 legend 计算预留带矩形（落在 plotArea 旁的预留 gutter 内；同侧按声明序堆叠）
+ * @description gutter 由 computePlotArea 在对应边按 legendReserveOf 让出；此处把每个 legend 摆进其所在边的带。
+ */
+const reserveLegendBands = (legendGuides: Array<LegendGuide>, width: number, height: number, plotArea: Rect): Array<Rect> => {
+  const perSideOffset = new Map<string, number>();
+  return legendGuides.map((guide): Rect => {
+    const position = guide.position ?? 'right';
+    const offset = perSideOffset.get(position) ?? 0;
+    perSideOffset.set(position, offset + LEGEND_BAND_EXTENT);
+    const plotRight = plotArea.x + plotArea.width;
+    const plotBottom = plotArea.y + plotArea.height;
+    switch (position) {
+      case 'left':
+        // 带右沿留 GAP 到 plot 左边（content 从带左起摆，本就远离 plot；右沿额外让 GAP）
+        return { x: 4, y: plotArea.y + offset, width: Math.max(0, plotArea.x - 4 - LEGEND_CONTENT_GAP), height };
+      case 'top':
+        return { x: plotArea.x + offset, y: 4, width: LEGEND_BAND_EXTENT, height: Math.max(0, plotArea.y - 4 - LEGEND_CONTENT_GAP) };
+      case 'bottom':
+        return { x: plotArea.x + offset, y: plotBottom + LEGEND_CONTENT_GAP, width: LEGEND_BAND_EXTENT, height: Math.max(0, height - plotBottom - LEGEND_CONTENT_GAP) };
+      default:
+        return { x: plotRight + LEGEND_CONTENT_GAP, y: plotArea.y + offset, width: Math.max(0, width - plotRight - LEGEND_CONTENT_GAP), height };
+    }
+  });
+};
+
+/**
+ * 解析所有 legend guide → core legend scope（据通道 + 绑定 scale 类型选 swatch / ramp / 分箱 / 梯度符号）
+ * @description color descriptor 从 PlotSpec.scales 具名 color scale 取（多于一个且未消歧 → fail-loud）；
+ *   size / opacity / shape 从 resolver descriptor 注册表取。形态由 scale 类型决定，标签复用 axis formatter 链（决策 ⑨）。
+ *   每个 legend 下沉成稳定 'legend' 前缀 id 的独立 scope，落在传入的预留带内。
+ */
+const buildLegendLayers = (
+  node: PlotSpec,
+  rows: Array<ExternalRow>,
+  fieldTypes: Map<string, FieldType>,
+  channelDescriptors: Map<LegendChannelType, ScaleDescriptor>,
+  legendGuides: Array<LegendGuide>,
+  fontSize: number,
+  bands: Array<Rect>,
+): Array<IRScope> => {
+  const scaleByName = new Map(node.scales.map(scale => [scale.name, scale] as const));
+  return legendGuides.map((guide, legendIndex): IRScope => {
+    const band = bands[legendIndex] ?? { x: 0, y: 0, width: 0, height: 0 };
+    const orient = guide.orient ?? (guide.position === 'top' || guide.position === 'bottom' ? 'horizontal' : 'vertical');
+    const id = legendGuides.length > 1 ? `legend.${guide.channel}.${legendIndex}` : `legend.${guide.channel}`;
+    const baseInput: LegendBaseInput = { channel: guide.channel, position: guide.position ?? 'right', orient, fontSize, band, id };
+    const showLabels = guide.tickLabels !== false;
+
+    if (guide.channel === 'color') {
+      const input = resolveColorLegend(node, rows, fieldTypes, scaleByName, guide, baseInput, showLabels);
+      return lowerLegend(input);
+    }
+    // size / opacity / shape：从 resolver descriptor 取
+    const descriptor = channelDescriptors.get(guide.channel);
+    if (!descriptor) {
+      throw new Error(`lowerPlots: legend channel "${guide.channel}" has no bound scale (no mark encodes ${guide.channel} by field); cannot derive a legend`);
+    }
+    // 标题只在用户显式给时渲染（见 resolveColorLegend 同注）
+    const title = guide.title;
+    if (guide.channel === 'shape') {
+      const entries: Array<LegendEntry> = descriptor.domain.map((category, index) => ({ label: showLabels ? String(category) : '', shape: String(descriptor.range[index]), color: 'currentColor' }));
+      return lowerLegend({ ...baseInput, form: 'swatch', title, entries });
+    }
+    if (guide.channel === 'size') {
+      const [lo, hi] = [Number(descriptor.domain[0]), Number(descriptor.domain[descriptor.domain.length - 1])];
+      const ticks = niceNumericTicks([lo, hi], guide.tickCount ?? 3).filter(tick => tick.value > 0);
+      const reps = ticks.length > 0 ? ticks : [{ value: hi, offset: 1, label: String(hi) }];
+      // 半径据 descriptor range（与 mark 实绘同源）线性插值（sqrt domain→radius）
+      const [rMin, rMax] = [Number(descriptor.range[0]), Number(descriptor.range[descriptor.range.length - 1])];
+      const radiusScale = resolveSqrtForLegend([lo, hi], [rMin, rMax]);
+      const entries: Array<LegendEntry> = reps.map(tick => ({ label: showLabels ? tick.label : '', radius: radiusScale(tick.value) }));
+      return lowerLegend({ ...baseInput, form: 'swatch', title, entries });
+    }
+    // opacity：梯度透明度块（nice 几档 + 透明度）
+    const [lo, hi] = [Number(descriptor.domain[0]), Number(descriptor.domain[descriptor.domain.length - 1])];
+    const ticks = niceNumericTicks([lo, hi], guide.tickCount ?? 3);
+    const [oMin, oMax] = [Number(descriptor.range[0]), Number(descriptor.range[descriptor.range.length - 1])];
+    const span = hi - lo;
+    const entries: Array<LegendEntry> = ticks.map(tick => {
+      const t = span === 0 ? 1 : (tick.value - lo) / span;
+      return { label: showLabels ? tick.label : '', opacity: oMin + (oMax - oMin) * Math.max(0, Math.min(1, t)) };
+    });
+    return lowerLegend({ ...baseInput, form: 'swatch', title, entries });
+  });
 };
 
 /**
@@ -535,7 +898,7 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
 
   const rows = applyTransforms(normalized, node.transform);
 
-  const { frame, gridLayers, axisLayers } = resolveFrame({
+  const { frame, gridLayers, axisLayers, plotArea } = resolveFrame({
     node,
     rows,
     fieldTypes,
@@ -547,7 +910,7 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
   });
 
   const resolveColor = makeColorResolver(node, rows, fieldTypes);
-  const resolveSize = makeSizeResolver(node, rows);
+  const resolveSize = makeSizeResolver(node, rows, fieldTypes);
   const resolveOpacity = makeOpacityResolver(node, rows, fieldTypes);
   const resolveShape = makeShapeResolver(node, rows, fieldTypes);
 
@@ -562,12 +925,22 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
   // provenance 开 → 传 markProvenance（plotId / markIndex / datum 开关 + 共享 registerDatumId），各层 / datum 绑 id + 来源 meta
   const markLayers: Array<IRChild> = node.marks
     .map((mark, markIndex) =>
-      lowerMark(mark, rows, frame, { colorOf: resolveColor(mark), sizeOf: resolveSize(mark), opacityOf: resolveOpacity(mark), shapeOf: resolveShape(mark) }, provenance ? { context: provenance, markIndex, registerDatumId } : undefined),
+      lowerMark(mark, rows, frame, { colorOf: resolveColor(mark), sizeOf: resolveSize(mark)?.of, opacityOf: resolveOpacity(mark)?.of, shapeOf: resolveShape(mark)?.of }, provenance ? { context: provenance, markIndex, registerDatumId } : undefined),
     )
     .filter((layer): layer is IRChild => layer !== null);
 
-  // z-order：所有网格层 → marks → 所有轴层（网格垫底、坐标轴压顶不被数据盖）
-  const children: Array<IRChild> = [...gridLayers, ...markLayers, ...axisLayers];
+  // legend（ADR-03）：收 legend guide → 据通道 + scale 类型选形态下沉成独立 scope，落 position 预留带。
+  // 占位（band 计算 / plotArea 收窄）见 reserveLegendBands；fail-loud（多 scale 未消歧 / scale 不存在）在 buildLegendLayers 内。
+  const legendGuides = (node.guides ?? []).filter(isLegendGuide);
+  const legendLayers: Array<IRScope> = [];
+  if (legendGuides.length > 0) {
+    const channelDescriptors = collectChannelDescriptors(node, resolveSize, resolveOpacity, resolveShape);
+    const bands = reserveLegendBands(legendGuides, width, height, plotArea);
+    legendLayers.push(...buildLegendLayers(node, rows, fieldTypes, channelDescriptors, legendGuides, options.fontSize ?? DEFAULT_FONT_SIZE, bands));
+  }
+
+  // z-order：所有网格层 → marks → 所有轴层 → legend（网格垫底、坐标轴压顶不被数据盖、legend 在预留带最上）
+  const children: Array<IRChild> = [...gridLayers, ...markLayers, ...axisLayers, ...legendLayers];
 
   const base: IRScope = node.id
     ? { type: 'scope', id: node.id, localNamespace: true, children }

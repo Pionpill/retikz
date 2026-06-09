@@ -30,6 +30,7 @@ export const plotSection: Array<Section> = [
         ],
       },
       { id: 'axis', label: 'plot.compAxis' },
+      { id: 'legend', label: 'plot.compLegend' },
     ],
   },
   {
