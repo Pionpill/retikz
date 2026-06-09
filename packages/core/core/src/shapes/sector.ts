@@ -6,7 +6,7 @@ import {
   type ContourSegment,
   boundaryFromContour,
   contourCommands,
-} from '../geometry/roundedContour';
+} from '../geometry/contour';
 import type { ScenePrimitive } from '../primitive';
 import { contourToPathCommands } from './_contour';
 import { defineShape } from './define';
@@ -176,4 +176,3 @@ export const sector = defineShape({
     };
   },
 });
-

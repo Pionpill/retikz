@@ -3,7 +3,7 @@ import { localToWorld } from '../geometry/_transform';
 import type { Position } from '../geometry/point';
 import { rect as rectOps } from '../geometry/rect';
 import type { Rect } from '../geometry/rect';
-import { type ContourSegment, boundaryFromContour } from '../geometry/roundedContour';
+import { type ContourSegment, boundaryFromContour } from '../geometry/contour';
 import type { ScenePrimitive } from '../primitive';
 import { verticesToSegments } from './_contour';
 import { asCompassAnchor } from './_shared';

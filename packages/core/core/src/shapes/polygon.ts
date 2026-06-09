@@ -7,7 +7,7 @@ import {
   type ContourSegment,
   boundaryFromContour,
   contourCommands,
-} from '../geometry/roundedContour';
+} from '../geometry/contour';
 import type { ScenePrimitive } from '../primitive';
 import { contourToPathCommands, verticesToSegments } from './_contour';
 import { asCompassAnchor } from './_shared';

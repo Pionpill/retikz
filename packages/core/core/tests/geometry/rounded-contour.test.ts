@@ -5,7 +5,7 @@ import {
   boundaryFromContour,
   contourCommands,
   filletContour,
-} from '../../src/geometry/roundedContour';
+} from '../../src/geometry/contour';
 
 /*
  * 角度约定（与 geometry/arc、ir/path arc 一致，SVG y-down）：

@@ -137,7 +137,7 @@ Refs: module=core; packages=@retikz/react,@retikz/render; version=v0.3; adr=core
 ## 代码风格
 
 - TypeScript ESM；命名：组件 PascalCase、hook `useXxx`、其余 camelCase
-- 目录 kebab-case；文件：React 组件 PascalCase，其余 camelCase；目录通常有只 re-export 的 `index.ts`
+- 组件 / 类文件可用 PascalCase；其他文件和文件夹统一 kebab-case（短横线），目录通常有只 re-export 的 `index.ts`
 - 数组类型写 `Array<T>`，不用 `T[]`
 - 函数优先箭头形式，例外是确实需要 hoisting / class 方法
 - enum 用 const object enum：`as const` 对象 + `ValueOf` 派生类型；value object 用单数 PascalCase，例如 `export const CompassAnchor = {...} as const`，成员 key 用大驼峰；派生类型加 `Value` 后缀避免 ESLint `no-redeclare`，例如 `export type CompassAnchorValue = ValueOf<typeof CompassAnchor>`；判别 union 成员用 `z.literal(X.Member)`

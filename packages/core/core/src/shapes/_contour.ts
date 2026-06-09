@@ -1,5 +1,5 @@
 import type { Position } from '../geometry/point';
-import type { ContourCommand, LineSegment } from '../geometry/roundedContour';
+import type { ContourCommand, LineSegment } from '../geometry/contour';
 import type { PathCommand } from '../primitive';
 
 /**
