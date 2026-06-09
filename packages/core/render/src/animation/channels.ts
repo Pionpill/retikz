@@ -89,7 +89,7 @@ export const primHasStroke = (prim: ScenePrimitive): boolean =>
  * track 是否「自动播放」触发器（`load` / 缺省）
  * @description Canvas 后端按 trigger 过滤：rAF 共享时钟只施加 auto track；`visible` / `manual` / `{onEvent}`
  *   不被自动播（否则同元素的 manual track 会随 load track 一起跑，违 trigger 语义）。SVG 后端按元素 DOM
- *   逐 track 接 WAAPI / IO，不走本判定。Canvas 的 per-track visible/manual/onEvent 触发为后续。
+ *   逐 track 接 WAAPI / IO，不走本判定。Canvas 的 visible/manual/onEvent 通过 per-id 虚拟时钟激活。
  */
 export const isAutoplayTrigger = (track: IRAnimationTrack): boolean =>
   track.trigger === undefined || track.trigger === 'load';

@@ -217,6 +217,7 @@ beforeEach(() => {
 
 afterEach(() => {
   vi.restoreAllMocks();
+  vi.unstubAllGlobals();
 });
 
 /** 含一个填满整个 Scene 的矩形 Node（id="box"）的 IR */
@@ -356,6 +357,46 @@ describe('@retikz/vanilla mountCanvas 水合（坐标映射 + hitTest）', () =>
     view.root.dispatchEvent(new MouseEvent('click', { bubbles: true, clientX, clientY }));
     expect(onClick).not.toHaveBeenCalled();
 
+    container.remove();
+  });
+
+  it('on-event-animation：无用户 handler 时，{onEvent:click} track 命中后也会激活 canvas per-id 时钟', () => {
+    const rafSpy = vi.fn(() => 1);
+    vi.stubGlobal('requestAnimationFrame', rafSpy);
+    vi.stubGlobal('cancelAnimationFrame', vi.fn());
+    const ir: IR = {
+      version: 1,
+      type: 'scene',
+      children: [
+        {
+          type: 'node',
+          id: 'box',
+          position: [SCENE_SIZE / 2, SCENE_SIZE / 2],
+          shape: 'rectangle',
+          minimumWidth: SCENE_SIZE,
+          minimumHeight: SCENE_SIZE,
+          fill: '#0a0',
+          animations: [
+            {
+              property: 'opacity',
+              keyframes: [{ at: 0, value: 0 }, { at: 1, value: 1 }],
+              duration: 300,
+              trigger: { onEvent: 'click' },
+            },
+          ],
+        },
+      ],
+    };
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const view = mountCanvas(container, ir, { width: CSS_WIDTH, height: CSS_HEIGHT });
+    view.hydrate({ handlers: {} });
+    expect(rafSpy).not.toHaveBeenCalled();
+
+    const { clientX, clientY } = sceneToClient(50, 50);
+    view.root.dispatchEvent(new MouseEvent('click', { bubbles: true, clientX, clientY }));
+
+    expect(rafSpy).toHaveBeenCalled();
     container.remove();
   });
 });

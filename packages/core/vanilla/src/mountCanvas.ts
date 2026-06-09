@@ -2,10 +2,13 @@ import type { Scene } from '@retikz/core';
 import { type PrimAnimationResolution, hitTest, renderToCanvas } from '@retikz/render/canvas';
 import {
   type BuildContext,
+  collectCanvasVisibleAnimationIds,
   createCanvasIdAnimationControls,
   createHydrationController,
   geometryOf,
+  isCanvasAnimationIdVisible,
   metaOf,
+  withCanvasAnimationEventHandlers,
 } from '@retikz/render/hydration';
 import { type AnimationControls, type IdClockRegistry, createClock, createIdClockRegistry, prefersReducedMotion, sceneAnimationDurationMs, sceneHasAnimations, sceneHasAutoplayTrigger } from '@retikz/render/animation';
 import { isFigure } from './builder/isFigure';
@@ -42,6 +45,8 @@ export const mountCanvas = (
   let clock: AnimationControls | undefined;
   // per-id 虚拟时钟登记表：ctx.animation 的 per-id 控制经它给各 id 叠加独立 offset / pause / active / stop
   const registry: IdClockRegistry = createIdClockRegistry();
+  let visibleActivated = new Set<string>();
+  let visibleTeardown: (() => void) | undefined;
 
   let currentScene: Scene;
 
@@ -61,6 +66,45 @@ export const mountCanvas = (
       animationProperties: options.animationProperties,
       resolvePrimAnimation: id => resolvePrim(id, time),
     });
+  };
+
+  const ensureClockPlaying = (): void => {
+    clock?.play();
+  };
+
+  /** Canvas visible trigger：按 canvas client rect 与 id 聚合 bbox 相交激活一次 */
+  const activateVisibleTracks = (): void => {
+    const ids = collectCanvasVisibleAnimationIds(currentScene);
+    if (ids.size === 0) return;
+    let changed = false;
+    for (const id of ids) {
+      if (visibleActivated.has(id)) continue;
+      if (!isCanvasAnimationIdVisible(canvas, currentScene, id)) continue;
+      registry.restart(id, clock?.time ?? 0);
+      visibleActivated.add(id);
+      changed = true;
+    }
+    if (!changed) return;
+    ensureClockPlaying();
+    renderFrame();
+  };
+
+  const resetVisibleBridge = (): void => {
+    visibleActivated = new Set<string>();
+    visibleTeardown?.();
+    visibleTeardown = undefined;
+    if (!animate || !sceneHasAnimations(currentScene)) return;
+    const ids = collectCanvasVisibleAnimationIds(currentScene);
+    if (ids.size === 0 || typeof window === 'undefined') return;
+    const schedule = (): void => activateVisibleTracks();
+    window.addEventListener('scroll', schedule, true);
+    window.addEventListener('resize', schedule);
+    const raf = window.requestAnimationFrame(schedule);
+    visibleTeardown = () => {
+      window.removeEventListener('scroll', schedule, true);
+      window.removeEventListener('resize', schedule);
+      window.cancelAnimationFrame(raf);
+    };
   };
 
   const renderInto = (next: RenderInput): void => {
@@ -99,6 +143,7 @@ export const mountCanvas = (
       });
       if (sceneHasAutoplayTrigger(scene)) clock.play();
     }
+    resetVisibleBridge();
   };
 
   const initialScene = isFigure(input) ? input.ir : input;
@@ -165,7 +210,12 @@ export const mountCanvas = (
         scene: currentScene,
       };
     };
-    const controller = createHydrationController(canvas, hydrateOptions.handlers, locate, buildContext);
+    const controller = createHydrationController(
+      canvas,
+      withCanvasAnimationEventHandlers(currentScene, hydrateOptions.handlers),
+      locate,
+      buildContext,
+    );
     return { dispose: controller.dispose };
   };
 
@@ -178,6 +228,7 @@ export const mountCanvas = (
     dispose() {
       if (disposed) return;
       disposed = true;
+      visibleTeardown?.();
       clock?.dispose();
       canvas.remove();
     },

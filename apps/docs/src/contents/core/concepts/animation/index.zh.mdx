@@ -112,9 +112,9 @@ import { Layout, Node, fadeIn, scaleIn } from '@retikz/react';
 | trigger | 行为 | 后端支持 |
 | --- | --- | --- |
 | `load`（默认） | 渲染即播 | SVG（内联 CSS 自播，SSR 零 JS）/ Canvas（起 rAF） |
-| `visible` | 进视口才播 | SVG（IntersectionObserver）；Canvas 暂渲染静止态 |
-| `manual` | 不自动播，由运行时句柄控制 | SVG；Canvas 暂渲染静止态 |
-| `{ onEvent: 'click' }` | 命中事件才播 | SVG；Canvas 暂渲染静止态 |
+| `visible` | 进视口才播 | SVG（IntersectionObserver）；Canvas（按 id 的 bbox 与视口相交判定） |
+| `manual` | 不自动播，由运行时句柄控制 | SVG / Canvas |
+| `{ onEvent: 'click' }` | 命中事件才播 | SVG / Canvas（水合命中后激活） |
 
 **命令式控制**：给 `<Layout animationRef={ref}>` 传一个 ref，挂载后拿到 `AnimationControls`（`play` / `pause` / `seek`），即可在组件外用自己的按钮控制（配 `trigger: 'manual'` 最常见）：
 
@@ -127,11 +127,11 @@ const ref = useRef<AnimationControls | null>(null);
 <button onClick={() => ref.current?.play()}>播放</button>
 ```
 
-SVG 控制交互（`manual` / `visible` / `onEvent`）track 的 WAAPI 句柄、Canvas 控制 rAF 时钟；与 vanilla 的 `view.animation` 对等。无动画 / 降级时 `ref.current` 为 `null`。（在 handler 内则用水合的 [`context.animation`](/core/reference/renderer/hydration#handler-的-context)。）
+`animationRef` / vanilla `view.animation` 是 scene 级时钟句柄：SVG 控制整图交互动画的 WAAPI 句柄，Canvas 控制共享 rAF 时钟。handler 内要控制命中的具体图元时，用水合的 [`context.animation`](/core/reference/renderer/hydration#handler-的-context)，两后端都是 per-id 控制。
 
 **何时不播**（三者殊途同归到静止态，见上方提示）：传 `animate={false}`、用户系统开了「减少动态效果」（`prefers-reduced-motion`）、或后端不支持动画。降级时**不报错、不丢图**，渲染完整静止图并给一条可诊断告警。
 
-各后端能力：**SVG** 支持全部 trigger；**Canvas** 本阶段自动播放 `load` 动画（`visible` / `manual` / `onEvent` 渲染静止态，后续补齐）。
+各后端能力：**SVG** 支持全部 trigger；**Canvas** 也支持 `load` / `manual` / `visible` / `{ onEvent }`，实现机制是单个 rAF 时钟 + per-id 虚拟时钟。Canvas 不支持逐 track 独立时间线；同一 id 下多条非自动播 track 会一起跟随该 id 的本地时钟。
 
 ## 静态截帧（`snapshotAt`）
 

@@ -33,3 +33,9 @@ export {
   metaOf,
   geometryOf,
 } from './context';
+export {
+  collectCanvasAnimationEventTriggers,
+  collectCanvasVisibleAnimationIds,
+  isCanvasAnimationIdVisible,
+  withCanvasAnimationEventHandlers,
+} from './canvasAnimationTriggers';
