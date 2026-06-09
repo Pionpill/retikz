@@ -1,7 +1,8 @@
 import { z } from 'zod';
 import type { CompositeDefinition } from '../composites';
 import type { IR, IRChild } from '../ir';
-import type { CompileWarning } from './compile';
+import { CompileWarningCode } from './constant';
+import type { CompileWarning } from './constant';
 
 /** composite 嵌套展开的默认最大深度（防环 / 防失控递归）；可经 CompileOptions.maxCompositeDepth 覆盖 */
 export const DEFAULT_MAX_COMPOSITE_DEPTH = 32;
@@ -62,7 +63,7 @@ export const lowerComposites = (
       const definition = registry.get(key);
       if (!definition) {
         onWarn({
-          code: 'COMPOSITE_NOT_REGISTERED',
+          code: CompileWarningCode.CompositeNotRegistered,
           message: `No composite registered for '${key}'; the node is skipped.`,
           path,
         });

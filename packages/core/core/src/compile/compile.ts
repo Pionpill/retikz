@@ -9,13 +9,17 @@ import { BUILTIN_PATTERNS } from '../patterns';
 import type { PatternDefinition } from '../patterns';
 import type { PathGeneratorDefinition } from '../pathGenerators';
 import type { CompositeDefinition } from '../composites';
-import { lowerComposites } from './lowerComposites';
+import {
+  type CompileWarning,
+  CompileWarningCode,
+  formatCompileWarning,
+} from './constant';
+import { lowerComposites } from './composite';
 import { type DuplicateRegisterInfo, NameStack } from './name-stack';
 import { type NodeLayout, emitNodePrimitives, labelExtentPoints, layoutNode } from './node';
 import { createPaintRegistry } from './paint';
 import { createClipRegistry } from './clip';
-import { emitPathPrimitive } from './path/index';
-import { refPointOfTarget } from './path/anchor';
+import { emitPathPrimitive, refPointOfTarget } from './path';
 import { resolvePosition } from './position';
 import { DEFAULT_PRECISION, makeRound } from './precision';
 import {
@@ -34,6 +38,9 @@ import {
 } from './style';
 import { type TextMeasurer, fallbackMeasurer } from './text-metrics';
 import { computeLayout } from './layout';
+
+export type { CompileWarning } from './constant';
+export { CompileWarningCode } from './constant';
 
 /**
  * 构造一个落在指定全局点的 0×0 rectangle NodeLayout
@@ -75,34 +82,6 @@ const scopePlaceholderLayout = (
   const globalOrigin: IRPosition =
     chain.length === 0 ? [0, 0] : applyTransformChain([0, 0], chain);
   return zeroSizeRectAt(id, globalOrigin);
-};
-
-/** 编译期警告：path / position 解析失败时通过 `CompileOptions.onWarn` 发出，不影响编译产物 */
-export type CompileWarning = {
-  /**
-   * 警告类型代码（机器可读）
-   * @description 用户可按 code 分支处理；未来 alpha 加新 code 不破坏调用方
-   */
-  code:
-    | 'UNRESOLVED_NODE_REFERENCE'
-    | 'PATH_TOO_SHORT'
-    | 'ANCHOR_RESOLUTION_FAILED'
-    | 'OFFSET_BASE_UNRESOLVED'
-    | 'POLAR_ORIGIN_UNRESOLVED'
-    | 'AT_TARGET_UNRESOLVED'
-    | 'RELATIVE_INITIAL_NO_PREV_END'
-    | 'BBOX_EXTREME_INPUT'
-    | 'DUPLICATE_NODE_ID'
-    | 'SHAPE_OVERRIDES_BUILTIN'
-    | 'ARROW_OVERRIDES_BUILTIN'
-    | 'PATTERN_OVERRIDES_BUILTIN'
-    | 'COMPOSITE_NOT_REGISTERED'
-    | 'ANIMATION_INVALID_PROPERTY'
-    | (string & {});
-  /** 人类可读消息（英文） */
-  message: string;
-  /** IR locator 路径（jq-like，如 `'children[3].path.children[1].to'`） */
-  path: string;
 };
 
 /** compileToScene 的可选参数 */
@@ -232,7 +211,7 @@ const assertFiniteLayout = (layout: {
  */
 const defaultWarnDispatcher = (warning: CompileWarning): void => {
   if (typeof process !== 'undefined' && process.env.NODE_ENV === 'production') return;
-  console.warn(`[retikz] ${warning.code} at ${warning.path}: ${warning.message}`);
+  console.warn(formatCompileWarning(warning));
 };
 
 /**
@@ -251,7 +230,7 @@ const filterAnimations = (
     const valid = context === 'root' ? isViewBox : !isViewBox;
     if (!valid) {
       onWarn({
-        code: 'ANIMATION_INVALID_PROPERTY',
+        code: CompileWarningCode.AnimationInvalidProperty,
         message:
           context === 'root'
             ? `Scene-root animation must use the "viewBox" property (camera); got "${track.property}". Track dropped.`
@@ -325,11 +304,11 @@ const scopeTransformWarnCode = (
 ): CompileWarning['code'] => {
   // 取首个 translate 变体的 kind 决定 warn code（多个都失败时只报第一种成因）
   for (const t of scope.transforms ?? []) {
-    if (t.kind === 'offset-translate') return 'OFFSET_BASE_UNRESOLVED';
-    if (t.kind === 'at-translate') return 'AT_TARGET_UNRESOLVED';
-    if (t.kind === 'polar-translate') return 'POLAR_ORIGIN_UNRESOLVED';
+    if (t.kind === 'offset-translate') return CompileWarningCode.OffsetBaseUnresolved;
+    if (t.kind === 'at-translate') return CompileWarningCode.AtTargetUnresolved;
+    if (t.kind === 'polar-translate') return CompileWarningCode.PolarOriginUnresolved;
   }
-  return 'UNRESOLVED_NODE_REFERENCE';
+  return CompileWarningCode.UnresolvedNodeReference;
 };
 
 /** 把 DuplicateRegisterInfo 翻成 CompileWarning（含可读 message + 双 IR locator） */
@@ -341,7 +320,7 @@ const formatDuplicateWarning = (info: DuplicateRegisterInfo): CompileWarning => 
   const firstLoc = info.firstIrPath ?? '(unknown earlier location)';
   const secondLoc = info.secondIrPath ?? '(unknown current location)';
   return {
-    code: 'DUPLICATE_NODE_ID',
+    code: CompileWarningCode.DuplicateNodeId,
     message: `Duplicate id '${info.id}' registered in the same namespace frame (${frameNote}); first defined at ${firstLoc}, redefined at ${secondLoc}. The later definition overrides the earlier one (last-wins).`,
     path: secondLoc,
   };
@@ -372,7 +351,7 @@ export const compileToScene = (ir: IR, options: CompileOptions = {}): Scene => {
     for (const name of Object.keys(options.shapes)) {
       if (Object.prototype.hasOwnProperty.call(BUILTIN_SHAPES, name)) {
         onWarn({
-          code: 'SHAPE_OVERRIDES_BUILTIN',
+          code: CompileWarningCode.ShapeOverridesBuiltin,
           message: `Injected shape '${name}' overrides the built-in shape of the same name.`,
           path: `options.shapes.${name}`,
         });
@@ -393,7 +372,7 @@ export const compileToScene = (ir: IR, options: CompileOptions = {}): Scene => {
     for (const name of Object.keys(options.arrows)) {
       if (Object.prototype.hasOwnProperty.call(BUILTIN_ARROWS, name)) {
         onWarn({
-          code: 'ARROW_OVERRIDES_BUILTIN',
+          code: CompileWarningCode.ArrowOverridesBuiltin,
           message: `Injected arrow '${name}' overrides the built-in arrow of the same name.`,
           path: `options.arrows.${name}`,
         });
@@ -409,7 +388,7 @@ export const compileToScene = (ir: IR, options: CompileOptions = {}): Scene => {
     for (const name of Object.keys(options.patterns)) {
       if (Object.prototype.hasOwnProperty.call(BUILTIN_PATTERNS, name)) {
         onWarn({
-          code: 'PATTERN_OVERRIDES_BUILTIN',
+          code: CompileWarningCode.PatternOverridesBuiltin,
           message: `Injected pattern '${name}' overrides the built-in pattern of the same name.`,
           path: `options.patterns.${name}`,
         });
@@ -556,7 +535,7 @@ export const compileToScene = (ir: IR, options: CompileOptions = {}): Scene => {
         const localCenter = resolvePosition(child.position, nameStack, nodeDistance, chain, refPointOfTarget);
         if (!localCenter) {
           onWarn({
-            code: 'POLAR_ORIGIN_UNRESOLVED',
+            code: CompileWarningCode.PolarOriginUnresolved,
             message: `Cannot resolve position for coordinate '${child.id}'; polar.origin or at.of may reference an undefined node`,
             path: `${locatorPrefix}children[${i}].coordinate.position`,
           });

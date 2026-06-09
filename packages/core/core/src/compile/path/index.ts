@@ -35,6 +35,8 @@ import type {
 } from '../../primitive';
 import type { AssertEqual } from '../../types';
 import type { PathGeneratorDefinition } from '../../pathGenerators';
+import { CompileWarningCode } from '../constant';
+import type { CompileWarning } from '../constant';
 import type { NameStack } from '../name-stack';
 import { type TextMeasurer, fallbackMeasurer } from '../text-metrics';
 import { clipForTarget, cornerOf, isAutoBoundaryTarget, refPointOfTarget, samePoint } from './anchor';
@@ -138,11 +140,7 @@ void _assertThicknessCheck;
 /** emitPathPrimitive 可选 warn 钩子 */
 export type EmitPathWarnHook = {
   /** 警告收集器（由 compileToScene 传入） */
-  onWarn?: (warning: {
-    code: string;
-    message: string;
-    path: string;
-  }) => void;
+  onWarn?: (warning: CompileWarning) => void;
   /** 当前 path 在 IR 中的 locator 前缀（如 `'children[3].path'`） */
   irPath?: string;
   /**
@@ -266,7 +264,7 @@ export const emitPathPrimitive = (
   const soloSelfContained = steps.length === 1 && steps[0].kind === 'rectangle';
   if (steps.length < 2 && !soloSelfContained) {
     warn(
-      'PATH_TOO_SHORT',
+      CompileWarningCode.PathTooShort,
       `Path requires at least 2 steps (got ${steps.length}); the entire path is skipped`,
       'children',
     );
@@ -330,7 +328,7 @@ export const emitPathPrimitive = (
     const toId = nodeRefId(s.to);
     if (!ref && toId !== undefined) {
       warn(
-        'UNRESOLVED_NODE_REFERENCE',
+        CompileWarningCode.UnresolvedNodeReference,
         `Step.to references undefined node id '${toId}'; the entire path is skipped`,
         `children[${idx}].to`,
       );
@@ -666,14 +664,14 @@ export const emitPathPrimitive = (
         const rectToId = nodeRefId(step.to);
         if (!fromPt && fromId !== undefined) {
           warn(
-            'UNRESOLVED_NODE_REFERENCE',
+            CompileWarningCode.UnresolvedNodeReference,
             `Rectangle from references undefined node id '${fromId}'; the entire path is skipped`,
             `children[${i}].from`,
           );
         }
         if (!toPt && rectToId !== undefined) {
           warn(
-            'UNRESOLVED_NODE_REFERENCE',
+            CompileWarningCode.UnresolvedNodeReference,
             `Rectangle to references undefined node id '${rectToId}'; the entire path is skipped`,
             `children[${i}].to`,
           );
@@ -719,7 +717,7 @@ export const emitPathPrimitive = (
           const centerId = nodeRefId(step.center);
           if (centerId !== undefined) {
             warn(
-              'UNRESOLVED_NODE_REFERENCE',
+              CompileWarningCode.UnresolvedNodeReference,
               `Arc step center references undefined node id '${centerId}'; the entire path is skipped`,
               `children[${i}].center`,
             );
@@ -764,7 +762,7 @@ export const emitPathPrimitive = (
 
       // 既无 radius 也无 radiusX/radiusY：malformed arc
       warn(
-        'ARC_MISSING_RADIUS',
+        CompileWarningCode.ArcMissingRadius,
         'Arc step requires radius (circular) or both radiusX and radiusY (elliptical); the entire path is skipped',
         `children[${i}]`,
       );
@@ -801,7 +799,7 @@ export const emitPathPrimitive = (
       // 整圆（无角度）：全 sweep，画完回 center（原行为）
       if (step.startAngle !== undefined || step.endAngle !== undefined) {
         warn(
-          'PARTIAL_ARC_NEEDS_BOTH_ANGLES',
+          CompileWarningCode.PartialArcNeedsBothAngles,
           'circlePath needs both startAngle and endAngle for a partial circle; treated as a full circle',
           `children[${i}]`,
         );
@@ -847,7 +845,7 @@ export const emitPathPrimitive = (
       // 整椭圆（无角度）：原行为
       if (step.startAngle !== undefined || step.endAngle !== undefined) {
         warn(
-          'PARTIAL_ARC_NEEDS_BOTH_ANGLES',
+          CompileWarningCode.PartialArcNeedsBothAngles,
           'ellipsePath needs both startAngle and endAngle for a partial ellipse; treated as a full ellipse',
           `children[${i}]`,
         );
@@ -1034,3 +1032,5 @@ export const emitPathPrimitive = (
   if (path.animations !== undefined) primitive.animations = path.animations;
   return { primitives: bodyPrims, points };
 };
+
+export { refPointOfTarget } from './anchor';

@@ -1,4 +1,5 @@
-import type { IRBetweenPosition, IRNodeTarget, IRPosition, IRTarget } from '../../ir';
+import { FoldStepVia } from '../../ir';
+import type { IRBetweenPosition, IRFoldStepVia, IRNodeTarget, IRPosition, IRTarget } from '../../ir';
 import type { IRBoundary } from '../../ir';
 import type { Transform } from '../../primitive';
 import { lerpPoint } from '../../geometry/_edge';
@@ -82,9 +83,9 @@ export const refPointOfTarget = (
 export const cornerOf = (
   prev: IRPosition,
   curr: IRPosition,
-  via: '-|' | '|-',
+  via: IRFoldStepVia,
 ): IRPosition =>
-  via === '-|' ? [curr[0], prev[1]] : [prev[0], curr[1]];
+  via === FoldStepVia.HorizontalThenVertical ? [curr[0], prev[1]] : [prev[0], curr[1]];
 
 /**
  * 在 toward 方向算 step.to 的实际绘制端点
