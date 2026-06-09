@@ -3,7 +3,7 @@ title: Custom Animation
 description: Both the easing curve and the property channel of animations are open — register custom easings (spring, …) and custom property channels (blur, …) beyond the built-ins.
 ---
 
-An [animation](/core/concepts/animation)'s `easing` and `property` are both **open strings**: beyond the built-ins you can register your own easing curves and property channels. The two injection points are two `<Layout>` props — the same idea as the [shape](/core/reference/extending/shape-registry) / [arrow](/core/reference/extending/custom-arrow) extensions: the IR / preset only carries a name, the definition is injected at `<Layout>`.
+An [animation](/core/concepts/primitive-model/animation)'s `easing` and `property` are both **open strings**: beyond the built-ins you can register your own easing curves and property channels. The two injection points are two `<Layout>` props — the same idea as the [shape](/core/reference/extending/shape-registry) / [arrow](/core/reference/extending/custom-arrow) extensions: the IR / preset only carries a name, the definition is injected at `<Layout>`.
 
 ## Custom easing (`easings`)
 

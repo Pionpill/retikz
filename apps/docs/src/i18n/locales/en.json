@@ -50,6 +50,8 @@
     "shapesStar": "Star",
     "helpers": "Helpers",
     "helpersGrid": "Grid",
+    "primitiveModel": "Primitive Model",
+    "primitiveRelations": "Primitive Relations",
     "positioning": "Positioning",
     "anchors": "Anchors",
     "layers": "Layers",

@@ -3,7 +3,7 @@ title: 自定义动画
 description: 动画的缓动曲线与属性通道都开放——注册自定义 easing（spring 等）与自定义属性通道（blur 等），内置之外按需扩展。
 ---
 
-[动画](/core/concepts/animation) 的 `easing` 与 `property` 都是**开放字符串**：内置之外，可注册自己的缓动曲线和属性通道。两个注入面对应 `<Layout>` 的两个 prop，与 [形状](/core/reference/extending/shape-registry) / [箭头](/core/reference/extending/custom-arrow) 等扩展同一套思路——IR / preset 里只写名字，定义在 `<Layout>` 注入。
+[动画](/core/concepts/primitive-model/animation) 的 `easing` 与 `property` 都是**开放字符串**：内置之外，可注册自己的缓动曲线和属性通道。两个注入面对应 `<Layout>` 的两个 prop，与 [形状](/core/reference/extending/shape-registry) / [箭头](/core/reference/extending/custom-arrow) 等扩展同一套思路——IR / preset 里只写名字，定义在 `<Layout>` 注入。
 
 ## 自定义缓动（`easings`）
 

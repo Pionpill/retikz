@@ -11,10 +11,22 @@ export const coreSection: Array<Section> = [
     id: 'concepts',
     label: 'core.concepts',
     pages: [
-      { id: 'position', label: 'core.positioning' },
-      { id: 'anchors', label: 'core.anchors' },
-      { id: 'layers', label: 'core.layers' },
-      { id: 'animation', label: 'core.animation' },
+      {
+        id: 'primitive-model',
+        label: 'core.primitiveModel',
+        children: [
+          { id: 'layers', label: 'core.layers' },
+          { id: 'animation', label: 'core.animation' },
+        ],
+      },
+      {
+        id: 'primitive-relations',
+        label: 'core.primitiveRelations',
+        children: [
+          { id: 'position', label: 'core.positioning' },
+          { id: 'anchors', label: 'core.anchors' },
+        ],
+      },
     ],
   },
   {

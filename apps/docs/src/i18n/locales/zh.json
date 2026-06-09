@@ -50,6 +50,8 @@
     "shapesStar": "Star",
     "helpers": "辅助",
     "helpersGrid": "Grid",
+    "primitiveModel": "图元模型",
+    "primitiveRelations": "图元关系",
     "positioning": "定位",
     "anchors": "锚点",
     "layers": "分层",
