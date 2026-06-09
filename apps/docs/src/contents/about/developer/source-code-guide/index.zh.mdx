@@ -1,18 +1,20 @@
 ---
 title: 源码指南
-description: 'retikz 源码导览——`@retikz/core` 与 `@retikz/react` 两个官方包的模块职责、依赖关系、推荐阅读顺序，配套 GitHub 链接直跳源文件。'
+description: 'retikz 源码导览：core / render / React / vanilla 四个官方包的职责、依赖关系与推荐阅读顺序，并配套 GitHub 链接直跳源文件。'
 ---
 
 适合想读懂 retikz 实现、贡献代码、或为新框架写 adapter 的人。
 
-retikz 的官方仓库目前发两个包：
+retikz 的官方仓库当前发布四个 core 相关包：
 
 | 包 | 角色 | 当前状态 |
 | --- | --- | --- |
-| [`@retikz/core`](https://github.com/Pionpill/retikz/tree/main/packages/core) | IR + Scene 编译器；零 React / 零 DOM | 官方维护 |
-| [`@retikz/react`](https://github.com/Pionpill/retikz/tree/main/packages/react) | React adapter——JSX 组件 + SVG renderer | 官方维护 |
+| [`@retikz/core`](https://github.com/Pionpill/retikz/tree/main/packages/core/core) | IR schema、几何工具、parser 与 Scene 编译器；零 React、零 DOM | 官方维护 |
+| [`@retikz/render`](https://github.com/Pionpill/retikz/tree/main/packages/core/render) | renderer-neutral 的 Scene 输出层：SVG descriptor / string、Canvas 2D、水合 helper 与动画 runtime 工具 | 官方维护 |
+| [`@retikz/react`](https://github.com/Pionpill/retikz/tree/main/packages/core/react) | React adapter：JSX 组件编译成 IR，再通过 SVG 或 Canvas 渲染 | 官方维护 |
+| [`@retikz/vanilla`](https://github.com/Pionpill/retikz/tree/main/packages/core/vanilla) | 无框架 runtime：builder 函数、SVG / Canvas mount、水合、动画控制与 SVG string 输出 | 官方维护 |
 
-**目前官方只提供 React adapter**——Vue / Svelte / Solid / Canvas / SSR / Native 等其它适配交由社区或后续推进；但 IR 是 universal 的，写一个新 adapter 的成本主要在 render 与 measurer 层，IR 与编译器整套复用。
+Vue / Svelte / Solid / Native adapter 仍属于后续或社区扩展面；但 IR 仍然是 universal 的，新框架 adapter 可以复用 `@retikz/core` 与 `@retikz/render` 的大部分 renderer 能力，只需要补自己的组件桥接层与必要的文字度量。
 
 数据流向：
 
@@ -20,7 +22,7 @@ retikz 的官方仓库目前发两个包：
 
 虚线箭头表示 `geometry/*` 被 `compile` 调用——是工具依赖，不是独立的数据通道。
 
-下文先讲 core 包（数据 + 编译器层），再讲 react 包（adapter 层）。
+下文先讲 `@retikz/core`（数据 + 编译器层），再讲 `@retikz/render`（输出后端）、`@retikz/react`（组件 adapter）和 `@retikz/vanilla`（无框架 runtime）。
 
 ## @retikz/core
 

@@ -9,7 +9,7 @@ The About section is the meta-layer around the docs: how versions are scheduled,
 
 | Page | Content |
 | --- | --- |
-| [Source Code Guide](/about/developer/source-code-guide) | core / react source layout, extension surfaces, and reading order |
+| [Source Code Guide](/about/developer/source-code-guide) | core / render / react / vanilla source layout, extension surfaces, and reading order |
 | [AI-assisted development](/about/developer/ai-assisted-development) | Human / AI responsibility across alpha, beta, and rc |
 | [Changelog](/about/releases/changelog) | Per-version release notes |
 | [Versioning](/about/releases/versioning) | SemVer + pre-release channels + per-channel dev model + deprecation |
@@ -19,11 +19,13 @@ The About section is the meta-layer around the docs: how versions are scheduled,
 
 | Package | Version | Notes |
 | --- | --- | --- |
-| `@retikz/core` | `0.2.0-rc.1` | IR + scene compiler, zero React / zero DOM |
-| `@retikz/react` | `0.2.0-rc.1` | React adapter + SVG renderer |
+| `@retikz/core` | `0.3.0-beta.1` | IR schemas, geometry, parsers, and Scene compiler; zero React / zero DOM |
+| `@retikz/render` | `0.3.0-beta.1` | SVG descriptors/strings, Canvas 2D, hydration helpers, and animation runtime utilities |
+| `@retikz/react` | `0.3.0-beta.1` | React adapter with SVG / Canvas renderers |
+| `@retikz/vanilla` | `0.3.0-beta.1` | Framework-free builder, SVG / Canvas mounting, hydration, animation controls, and SVG string output |
 
-`0.2.0-rc.1` means v0.2 is in release-candidate validation: public APIs are frozen, and only compatible bug fixes, docs completion, installation acceptance, and release-note cleanup should land. `0.1.0` remains the previous stable line; `0.2.0` joins the stable / latest cadence only after the final cut. See [Versioning](/about/releases/versioning).
+`0.3.0-beta.1` is the v0.3 pre-rc hardening window: the main renderer, hydration, Canvas, vanilla, and animation capabilities have landed, while the current work focuses on parity fixes, docs/package surface cleanup, optional export entries, and engineering cleanup before rc. See [Versioning](/about/releases/versioning).
 
 ## Feedback
 
-retikz is in the v0.2 rc phase. Feedback should focus on installation issues, missing docs, unreproducible examples, real-project integration issues, and bugs that can be fixed without breaking public APIs.
+retikz is in the v0.3 beta phase. Feedback should focus on SVG / Canvas parity, hydration and animation behavior, docs accuracy, installation issues, unreproducible examples, and real-project integration bugs before the rc freeze.

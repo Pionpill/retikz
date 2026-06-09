@@ -1,7 +1,7 @@
 {
   "name": "@retikz/react",
   "version": "0.3.0-beta.1",
-  "description": "React adapter for retikz: Kernel/Sugar JSX components and SVG renderer.",
+  "description": "React adapter for retikz: Kernel/Sugar JSX components with SVG and Canvas renderers.",
   "type": "module",
   "author": "Pionpill",
   "homepage": "https://pionpill.github.io/retikz/",

@@ -1,7 +1,7 @@
 {
   "name": "@retikz/vanilla",
   "version": "0.3.0-beta.1",
-  "description": "Framework-free runtime for retikz: mount Scene/IR to SVG DOM, or render to SVG string for SSR.",
+  "description": "Framework-free retikz runtime: mount SVG/Canvas, hydrate interactions, control animations, or render SVG strings for SSR.",
   "type": "module",
   "author": "Pionpill",
   "homepage": "https://pionpill.github.io/retikz/",

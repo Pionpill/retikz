@@ -1,38 +1,37 @@
 ---
 title: 路线图
-description: retikz 的当前与近未来版本路线：v0.2 rc 验收、v0.3 renderer/runtime 拆分、v0.4 增量渲染候选、v1+ 领域包。
+description: retikz 的当前与近未来版本路线：v0.3 beta 加固、v0.3 rc 验收、v0.4 增量渲染候选、v1+ 领域包。
 ---
 
 路线图是**目标**而非承诺——会随社区反馈与维护者带宽调整。具体发布按版本号在[更新日志](/about/releases/changelog)里出现。
 
 ## 当前
 
-**v0.2.0-rc.1** — 发布候选验收中。
+**v0.3.0-beta.1** — rc 前 beta 加固中。
 
 | 项目 | 状态 |
 | --- | --- |
-| v0.2 核心能力 | ✅ 已完工 |
-| 公开 API | ✅ 已冻结 |
-| 安装 / 文档 / 发布说明 | ⏳ rc 验收中 |
+| renderer/runtime 拆分 | ✅ 已完工 |
+| 公开 API | ⏳ beta 复核中 |
+| parity / 文档 / 打包 | ⏳ beta 加固中 |
 
-## 短期：v0.2.0 stable
+## 短期：v0.3.0 rc
 
-把 rc 验收收尾成稳定版。
+把 beta 线收口成发布候选。
 
 | 目标 | 内容 |
 | --- | --- |
-| API 冻结 | 不再新增组件、prop、IR 字段或公开导出 |
+| API 冻结 | 进入 rc 后不再新增组件、prop、IR 字段或公开导出 |
 | 安装验收 | npm 包、类型导出、示例与文档链接都能正常工作 |
 | 发布说明 | changelog、版本说明与迁移提示保持一致 |
 
-## 中期：v0.3 renderer / runtime
+## 当前 v0.3 形态
 
-把 Scene 的输出与运行时拆成更清楚的层次。
+Scene 的输出与运行时已经拆成更清楚的 Tier 1 包。
 
 | 目标 | 内容 |
 | --- | --- |
-| `@retikz/svg` | Scene / resources → SVG |
-| `@retikz/canvas` | Scene → Canvas 2D |
+| `@retikz/render` | SVG 字符串渲染、Canvas 2D 绘制、水合 helper、动画 runtime、可选 Node 图片导出 |
 | `@retikz/vanilla` | 无框架挂载与 SSR 入口 |
 | `@retikz/react` | `renderer="svg"` / `renderer="canvas"` 的统一入口 |
 | 水合 | 稳定 id + 事件绑定语义 |

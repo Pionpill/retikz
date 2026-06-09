@@ -1,18 +1,20 @@
 ---
 title: Source Code Guide
-description: A tour of the retikz source — module responsibilities, dependencies, and reading order across `@retikz/core` and `@retikz/react`, with GitHub links to jump straight to each file.
+description: A tour of the retikz source -- module responsibilities, dependencies, and reading order across core, render, React, and vanilla packages, with GitHub links to jump straight to each file.
 ---
 
 For readers who want to understand how retikz works, contribute code, or write an adapter for a new framework.
 
-The official repo currently ships two packages:
+The official repo currently ships four core packages:
 
 | Package | Role | Status |
 | --- | --- | --- |
-| [`@retikz/core`](https://github.com/Pionpill/retikz/tree/main/packages/core) | IR + Scene compiler; zero React, zero DOM | Officially maintained |
-| [`@retikz/react`](https://github.com/Pionpill/retikz/tree/main/packages/react) | React adapter — JSX components + SVG renderer | Officially maintained |
+| [`@retikz/core`](https://github.com/Pionpill/retikz/tree/main/packages/core/core) | IR schemas, geometry, parsers, and the Scene compiler; zero React, zero DOM | Officially maintained |
+| [`@retikz/render`](https://github.com/Pionpill/retikz/tree/main/packages/core/render) | Renderer-neutral Scene output adapters: SVG descriptors/strings, Canvas 2D, hydration helpers, and animation runtime utilities | Officially maintained |
+| [`@retikz/react`](https://github.com/Pionpill/retikz/tree/main/packages/core/react) | React adapter: JSX components that compile to IR, then render through SVG or Canvas | Officially maintained |
+| [`@retikz/vanilla`](https://github.com/Pionpill/retikz/tree/main/packages/core/vanilla) | Framework-free runtime: builder functions, SVG/Canvas mounting, hydration, animation controls, and SVG string output | Officially maintained |
 
-**Only the React adapter is officially provided today.** Vue / Svelte / Solid / Canvas / SSR / Native adapters are left to the community or future work — but the IR is universal: a new adapter only needs its own render layer and text measurer; the IR and the compiler are reused as-is.
+Vue / Svelte / Solid / Native adapters are still future or community surfaces, but the IR remains universal: a new framework adapter can reuse `@retikz/core` and most renderer work from `@retikz/render`, then supply its own component bridge and text measurer where needed.
 
 Data flow:
 
@@ -20,7 +22,7 @@ Data flow:
 
 The dashed arrow indicates `geometry/*` is called by `compile` — a tool dependency, not a separate data channel.
 
-Below: `@retikz/core` first (data + compiler), then `@retikz/react` (adapter).
+Below: `@retikz/core` first (data + compiler), then `@retikz/render` (output backends), `@retikz/react` (component adapter), and `@retikz/vanilla` (framework-free runtime).
 
 ## @retikz/core
 
