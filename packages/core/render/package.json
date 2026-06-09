@@ -1,7 +1,7 @@
 {
   "name": "@retikz/render",
   "version": "0.3.0-beta.1",
-  "description": "retikz renderers: Scene → SVG (descriptor / string) and Canvas 2D. Subpath exports per backend (./svg, ./canvas).",
+  "description": "retikz renderers: Scene to SVG (descriptor / string) and Canvas 2D. Subpath exports per backend (./svg, ./canvas).",
   "type": "module",
   "author": "Pionpill",
   "homepage": "https://pionpill.github.io/retikz/",
@@ -32,6 +32,10 @@
       "types": "./src/canvas/index.ts",
       "default": "./src/canvas/index.ts"
     },
+    "./canvas-node": {
+      "types": "./src/canvas-node/index.ts",
+      "default": "./src/canvas-node/index.ts"
+    },
     "./hydration": {
       "types": "./src/hydration/index.ts",
       "default": "./src/hydration/index.ts"
@@ -54,6 +58,12 @@
         "import": "./dist/es/canvas/index.js",
         "require": "./dist/lib/canvas/index.cjs",
         "default": "./dist/es/canvas/index.js"
+      },
+      "./canvas-node": {
+        "types": "./dist/lib/canvas-node/index.d.ts",
+        "import": "./dist/es/canvas-node/index.js",
+        "require": "./dist/lib/canvas-node/index.cjs",
+        "default": "./dist/es/canvas-node/index.js"
       },
       "./hydration": {
         "types": "./dist/lib/hydration/index.d.ts",
@@ -86,12 +96,19 @@
     "@retikz/core": "workspace:*",
     "csstype": "catalog:"
   },
+  "peerDependencies": {
+    "@napi-rs/canvas": "catalog:"
+  },
+  "peerDependenciesMeta": {
+    "@napi-rs/canvas": {
+      "optional": true
+    }
+  },
   "devDependencies": {
     "@types/node": "catalog:",
     "typescript": "catalog:",
     "vite": "catalog:",
     "vite-plugin-dts": "catalog:",
-    "vite-tsconfig-paths": "catalog:",
     "vitest": "catalog:",
     "zod": "catalog:"
   }
