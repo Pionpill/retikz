@@ -16,6 +16,8 @@ export const PlotCoordinate = {
   Polar1D: 'polar1D',
   /** 2D 三元坐标（a+b+c 归一化的重心坐标，投影到等边三角内；成分 / 配比 / 得票） */
   Ternary2D: 'ternary2D',
+  /** 自定义坐标系：投影函数由运行时工厂提供（不进 JSON IR），IR 只留 name + roles + 数值参数引用 */
+  Custom: 'custom',
 } as const;
 
 /** 坐标系类型 */
@@ -101,11 +103,26 @@ export const Ternary2DSchema = z
   })
   .describe('2D ternary coordinate system: three continuous components (bound via the mark a / b / c channels) projected by barycentric coordinates into an equilateral triangle (composition / mixture / vote share); each row is auto-normalized by a+b+c at lowering. No geometry options this round (per-component scales not yet supported)');
 
-export const CoordinateSchema = z
-  .discriminatedUnion('type', [Cartesian2DSchema, Polar2DSchema, Cartesian1DSchema, Polar1DSchema, Ternary2DSchema])
-  .describe('Coordinate-system union: cartesian2D | polar2D | cartesian1D | polar1D | ternary2D');
+export const CustomCoordinateSchema = z
+  .object({
+    type: z.literal(PlotCoordinate.Custom).describe('Discriminator: a user-defined coordinate system; its projection is supplied at lowering via the runtime customCoordinates factory map, kept out of the JSON IR'),
+    name: z.string().min(1).describe('Custom coordinate name; resolved against the runtime factory map (lowerPlots options.coordinates / <Plot coordinates>). An unknown name fails loud at lowering'),
+    roles: z
+      .array(z.enum(['x', 'y', 'a', 'b', 'c']))
+      .min(1)
+      .describe('Position roles this coordinate consumes — which mark channels (x / y / a / b / c) it projects, in order; drives required-channel and guide-dimension validation'),
+    params: z
+      .record(z.number().finite())
+      .optional()
+      .describe('JSON numeric parameters passed verbatim to the factory (e.g. archHeight); the projection function lives in the runtime factory, not here, keeping the IR serializable'),
+  })
+  .describe('Custom coordinate system: a JSON-safe reference (name + roles + numeric params) into a runtime-supplied projection factory; lets users plug in arbitrary coordinate geometry without bloating the coordinate enum or breaking IR serializability');
 
-/** 坐标系（cartesian2D | polar2D | cartesian1D | polar1D | ternary2D） */
+export const CoordinateSchema = z
+  .discriminatedUnion('type', [Cartesian2DSchema, Polar2DSchema, Cartesian1DSchema, Polar1DSchema, Ternary2DSchema, CustomCoordinateSchema])
+  .describe('Coordinate-system union: cartesian2D | polar2D | cartesian1D | polar1D | ternary2D | custom (runtime-supplied projection)');
+
+/** 坐标系（cartesian2D | polar2D | cartesian1D | polar1D | ternary2D | custom） */
 export type Coordinate = z.infer<typeof CoordinateSchema>;
 /** 一维直线坐标系（cartesian1D） */
 export type Cartesian1DCoordinate = z.infer<typeof Cartesian1DSchema>;
@@ -113,3 +130,5 @@ export type Cartesian1DCoordinate = z.infer<typeof Cartesian1DSchema>;
 export type Polar1DCoordinate = z.infer<typeof Polar1DSchema>;
 /** 三元坐标系（ternary2D） */
 export type Ternary2DCoordinate = z.infer<typeof Ternary2DSchema>;
+/** 自定义坐标系（custom；投影由运行时工厂提供） */
+export type CustomCoordinate = z.infer<typeof CustomCoordinateSchema>;

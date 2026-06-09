@@ -1,7 +1,7 @@
 import type { IRGradientStop, IRNode, IRPath, IRScope, IRStep } from '@retikz/core';
 import type { AxisGuide, LegendChannelType, LegendOrientType, LegendPositionType } from '../ir';
 import { AXIS_LABEL_GAP, AXIS_TICK_LENGTH, type Rect, estimateLabelWidth } from './layout';
-import type { PolarFrame, TernaryVertices } from './project';
+import type { CustomFrame, DimensionRole, PolarFrame, TernaryVertices } from './project';
 import { type ProvenanceContext, guideLayerId, guideLayerMeta } from './provenance';
 import type { PositionScale, TickSet } from './scale';
 
@@ -389,6 +389,88 @@ const lowerTernaryGuide = (guide: AxisGuide, ctx: GuideContext, vertices: Ternar
   }
 
   return { gridLayer, axisLayer };
+};
+
+/** 把一串屏幕点连成一条折线 Path（move + line steps）；点数 < 2 返回 null */
+const polylinePath = (points: ReadonlyArray<readonly [number, number]>): IRPath | null => {
+  if (points.length < 2) return null;
+  const steps: Array<IRStep> = [
+    { type: 'step', kind: 'move', to: [points[0][0], points[0][1]] },
+    ...points.slice(1).map((point): IRStep => ({ type: 'step', kind: 'line', to: [point[0], point[1]] })),
+  ];
+  return { type: 'path', children: steps };
+};
+
+/** 自定义坐标系轴线密采样点数（沿投影曲线取样连成轴线） */
+const CUSTOM_AXIS_SAMPLES = 40;
+
+/**
+ * 自定义坐标系的曲线轴（通用 path-aware 轴）：沿 projectRoles 投影密采样画轴线 + 在 scale 刻度处放刻度 / 标签
+ * @description 取该维度的位置 scale 刻度、其余角色锚在各自 scale 首刻度（≈ domain 起点），按 frame.roles 序喂 projectRoles
+ *   得轴线（任意曲线）与刻度点；刻度短线 / 标签沿局部切向的法线摆。frame 无 roleScales[dimension] → 不画（返回空）。
+ *   通用性即「轴 = 参数路径」：直线 / 拱 / 圆 / 螺旋同一套画法。无网格（自定义网格几何因投影而异，留后续）。
+ */
+export const lowerCustomAxis = (frame: CustomFrame, guide: AxisGuide, fontSize: number, context: ProvenanceContext | undefined): LoweredGuide => {
+  const scale = frame.roleScales?.[guide.dimension];
+  if (!scale) return { gridLayer: null, axisLayer: null };
+  const ticks = scale.ticks(guide.tickCount);
+  const numericTicks = ticks.values.map((value, index) => ({ value: Number(value), label: ticks.labels[index] })).filter(tick => Number.isFinite(tick.value));
+  if (numericTicks.length === 0) return { gridLayer: null, axisLayer: null };
+  const showLabels = guide.tickLabels !== false;
+
+  // 其它角色锚在各自 scale 首刻度（≈ domain 起点）；按 frame.roles 序拼 values 喂 projectRoles
+  const anchorFor = (role: DimensionRole): unknown => {
+    const roleScale = frame.roleScales?.[role];
+    return roleScale ? roleScale.ticks().values[0] : 0;
+  };
+  const projectAt = (value: number): [number, number] | null => frame.projectRoles(frame.roles.map(role => (role === guide.dimension ? value : anchorFor(role))));
+
+  const lo = numericTicks[0].value;
+  const hi = numericTicks[numericTicks.length - 1].value;
+  const span = hi - lo;
+
+  // 轴线：在维度范围内密采样连折线（任意投影曲线）
+  const linePoints: Array<[number, number]> = [];
+  for (let i = 0; i <= CUSTOM_AXIS_SAMPLES; i += 1) {
+    const point = projectAt(lo + (span * i) / CUSTOM_AXIS_SAMPLES);
+    if (point) linePoints.push(point);
+  }
+  const axisLinePath = polylinePath(linePoints);
+
+  // 刻度 + 标签：沿局部切向（邻近采样差分）的法线摆
+  const epsilon = span === 0 ? 1 : span * 1e-3;
+  const tickSegments: Array<Segment> = [];
+  const labels: Array<IRNode> = [];
+  for (const tick of numericTicks) {
+    const point = projectAt(tick.value);
+    if (!point) continue;
+    const before = projectAt(tick.value - epsilon) ?? point;
+    const after = projectAt(tick.value + epsilon) ?? point;
+    const tangentX = after[0] - before[0];
+    const tangentY = after[1] - before[1];
+    const length = Math.hypot(tangentX, tangentY) || 1;
+    const normal: [number, number] = [-tangentY / length, tangentX / length];
+    tickSegments.push([point, [point[0] + normal[0] * AXIS_TICK_LENGTH, point[1] + normal[1] * AXIS_TICK_LENGTH]]);
+    if (showLabels) {
+      const offset = AXIS_TICK_LENGTH + AXIS_LABEL_GAP + fontSize / 2;
+      labels.push({ type: 'node', position: [point[0] + normal[0] * offset, point[1] + normal[1] * offset], text: tick.label });
+    }
+  }
+
+  const lineChildren: Array<IRPath> = [];
+  if (axisLinePath) lineChildren.push(axisLinePath);
+  const tickPath = segmentsToPath(tickSegments);
+  if (tickPath) lineChildren.push(tickPath);
+  if (lineChildren.length === 0) return { gridLayer: null, axisLayer: null };
+
+  const axisLayer: IRScope = {
+    type: 'scope',
+    ...guideScopeProps(guide, 'axis', context),
+    pathDefault: { stroke: 'currentColor' },
+    nodeDefault: { font: { size: fontSize }, stroke: 'none', fill: 'none', padding: 0 },
+    children: [...lineChildren, ...labels],
+  };
+  return { gridLayer: null, axisLayer };
 };
 
 /**

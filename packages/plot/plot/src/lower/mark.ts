@@ -492,6 +492,10 @@ export const lowerMark = (mark: Mark, rows: Array<ExternalRow>, frame: Coordinat
   if (frame.type === PlotCoordinate.Ternary2D) {
     throw new Error(`lowerPlots: ${mark.type} mark is not supported under the ternary2D coordinate system (ternary supports point marks only this round)`);
   }
+  // 自定义坐标系（custom）本轮仅支持 point（投影任意、line/area/interval/sector 几何未定）→ fail-loud
+  if (frame.type === PlotCoordinate.Custom) {
+    throw new Error(`lowerPlots: ${mark.type} mark is not supported under a custom coordinate system (custom coordinates support point marks only this round)`);
+  }
   if (mark.type === 'line') {
     const layer = lowerLine(mark, rows, frame, colorOf, markProvenance);
     return layer === null ? null : attachMarkLayer(layer as IRScope, mark, markProvenance);

@@ -93,6 +93,7 @@ export const createPlotLocator = (spec: PlotSpec, datasets: ExternalDatasets, op
     fontSize: options.fontSize ?? DEFAULT_FONT_SIZE,
     margin: options.margin,
     provenance: undefined,
+    coordinates: options.coordinates,
   });
 
   // 合成 meta 用的上下文（locator 始终按需合成同构 meta，与 lowering 是否开 datumProvenance 无关）

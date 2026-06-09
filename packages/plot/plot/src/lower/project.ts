@@ -1,5 +1,6 @@
 import { Cartesian1DOrientation, type Cartesian1DOrientationType, PlotCoordinate } from '../ir';
 import { isFiniteNumber } from './field';
+import type { Rect } from './layout';
 import type { PositionScale } from './scale';
 
 /** polar 段内采样：相邻顶点间在 [θ, r] 空间插入的固定中间点数（每段定额，连续角轴弯弧） */
@@ -19,7 +20,7 @@ export type DimensionRole = 'x' | 'y' | 'angle' | 'radius' | 'a' | 'b' | 'c';
  *   2 通道的 `project(primary, secondary)` 保留为便捷别名（cartesian/polar 内部 + line/area 复用，零行为改变）。
  *   非有限值返回 null（跳过该点）。
  */
-export type CoordinateFrame = CartesianFrame | PolarFrame | Cartesian1DFrame | Polar1DFrame | Ternary2DFrame;
+export type CoordinateFrame = CartesianFrame | PolarFrame | Cartesian1DFrame | Polar1DFrame | Ternary2DFrame | CustomFrame;
 
 /** 笛卡尔帧：primary = x（水平）、secondary = y（垂直），投影直接取两条 scale 的 coordinate */
 export type CartesianFrame = {
@@ -301,6 +302,69 @@ export const createTernary2DFrame = (vertices: TernaryVertices): Ternary2DFrame 
     projectRoles,
   };
 };
+
+// ── 自定义坐标系（实验性；alpha.9 设计探讨产物）──────────────────────────────────────────
+// 证明并落地：`projectRoles` 足以表达任意坐标系几何，无需「轴」抽象。投影函数（不可序列化）由运行时工厂
+// 提供、不进 IR；IR 只留 `{type:'custom', name, roles, params}` 的 JSON 引用（见 ir/coordinate.ts）。
+// 这是「一个通用扩展点」而非给枚举塞 exotic 成员——用户自定义曲线一维 / 拱形 x 轴等都走这条。
+
+/** 自定义坐标帧：投影完全由工厂给出的 projectRoles 决定（任意几何） */
+export type CustomFrame = {
+  /** 判别字段：自定义（运行时工厂产出，非内建坐标系） */
+  type: 'custom';
+  /** 位置角色序（工厂消费哪些 mark 通道，按序喂 projectRoles） */
+  roles: ReadonlyArray<DimensionRole>;
+  /** 投影别名：自定义须走 projectRoles（2 入参形态对任意角色数无意义），恒 null */
+  project: (primaryValue: unknown, secondaryValue: unknown) => [number, number] | null;
+  /** N 通道投影：按 roles 序传值 → 屏幕点；非有限 → null（跳过） */
+  projectRoles: (values: ReadonlyArray<unknown>) => [number, number] | null;
+  /**
+   * 各角色的位置 scale（工厂可选回传）：供 guide 画轴用——取该角色刻度、其余角色锚在各自 domain 起点，
+   * 沿 projectRoles 密采样得曲线轴线 + 刻度点。不回传 → 该坐标系不画轴。
+   */
+  roleScales?: Partial<Record<DimensionRole, PositionScale>>;
+};
+
+/**
+ * 建自定义坐标帧：把工厂给的 roles + projectRoles 包成 CoordinateFrame（point mark 经此投影）
+ * @description 可选传 roleScales（各角色位置 scale）让 guide 画曲线轴；省略则该自定义坐标系无轴。
+ */
+export const createCustomFrame = (
+  roles: ReadonlyArray<DimensionRole>,
+  projectRoles: (values: ReadonlyArray<unknown>) => [number, number] | null,
+  roleScales?: Partial<Record<DimensionRole, PositionScale>>,
+): CustomFrame => ({
+  type: 'custom',
+  roles,
+  project: () => null,
+  projectRoles,
+  ...(roleScales !== undefined ? { roleScales } : {}),
+});
+
+/**
+ * 自定义坐标系工厂的上下文：画布尺寸 + 数值参数 + 角色序 + 按角色建线性位置 scale 的工具
+ * @description 工厂据此组装任意投影几何（曲线、拱、螺旋…）。`linearScaleFor(role, range)` 按该角色绑定字段的
+ *   数据 extent 建一条线性 scale 映到给定屏幕 range，供工厂拼装；要更复杂 scale 工厂可自行处理。
+ */
+export type CustomCoordinateContext = {
+  /** 整图宽（user units） */
+  width: number;
+  /** 整图高（user units） */
+  height: number;
+  /** 绘图区矩形（本轮自定义坐标系给整画布、不自动收窄） */
+  plotArea: Rect;
+  /** label 字号 */
+  fontSize: number;
+  /** IR 传入的数值参数（如 archHeight），JSON 安全；键可缺省（工厂自带默认值），故值可能 undefined */
+  params: Record<string, number | undefined>;
+  /** 该坐标系消费的位置角色序（= IR coordinate.roles） */
+  roles: ReadonlyArray<DimensionRole>;
+  /** 按角色建线性位置 scale（数据 extent → 给定屏幕 range），供工厂拼装投影 */
+  linearScaleFor: (role: DimensionRole, range: [number, number]) => PositionScale;
+};
+
+/** 自定义坐标系工厂：上下文 → CoordinateFrame（通常 createCustomFrame(roles, projectRoles)） */
+export type CustomCoordinateFactory = (context: CustomCoordinateContext) => CoordinateFrame;
 
 /** 一行的极坐标映射结果：θ（度）+ r（user units），均经 scale 映射后；任一非有限 → null（跳过该顶点） */
 export type PolarVertex = { theta: number; radius: number };
