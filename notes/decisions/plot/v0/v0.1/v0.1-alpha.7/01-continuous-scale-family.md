@@ -51,11 +51,6 @@ export const PlotScale = {
 2. **L1 最薄且 fail-loud**：bar/area 的 baseline 0 是结构语义，不是改个数能绕过；与其默默产 NaN/-∞，不如清晰报错，后续真有 log 柱需求再做 L2（显式正 baseline）。
 3. **沿 LinearScale 风格 + d3-scale**：复用已有 scale lowering 路径（alpha.2 起 d3-scale），新增成本集中在 schema + 选型分支。
 
-## 待决策点 🔻
-
-- **pow 默认 exponent**：取 `2`（裸 `'pow'` 即「超线性」直觉）。倾向 2；若认为裸 pow 该等价 linear（d3 默认 exponent 1）则改 1——但那样裸 `'pow'` 无意义，故定 2。
-- **React `scaleX` / `scaleY` 暴露范围**：本轮 `scaleX` 与**新增 `scaleY`** 字符串各加 `'log' | 'sqrt'`（语义无歧义、用默认 base/exponent）。**log 的主用场是值轴（y）**，故必须有 `scaleY`（评审 P1：原 ADR 只有 `scaleX`，无法表达 log y）。**`'pow'`（需 exponent）+ log 自定义 base / pow 自定义 exponent 暂不进 React**——待 `<Scale>` DSL 落地（当前 `buildPlotSpec` 自动合成 scale、无 `<Scale>` 组件）。IR + vanilla 三表面全支持。
-- **L1 守卫触发面**：以「mark 使用的位置 scale 类型」为准——任一 `interval` / `area` mark 的 x 或 y 绑定到 log/pow/sqrt scale 即 fail-loud。倾向放 `lower/expand.ts` 解析位置 scale 处（baseline 注入前）。
 
 ## DSL 表面
 
@@ -95,7 +90,7 @@ renderPlot(
 - domain 边界（log 含 0 / 负值拒绝、正值域推断、nice；sqrt/pow 负值规则）
 - 与 guide / size（ADR-02）的交互
 
-具体见下「实现契约 § 测试象限」。
+落地测试见实现指针。
 
 ## 影响
 
@@ -113,72 +108,5 @@ renderPlot(
 - **React `<Scale>` 组件 / pow 自定义 exponent 的 React 表面** → 后续。
 - **polar radius 用 log** → 需求驱动（本轮 L1 守卫覆盖 cartesian；polar 径向暂不特别支持非线性）。
 
----
-
-## 实现契约（必填）🔻
-
-> 下游 implement / test / document 阶段硬契约。偏离需回本 ADR 加条目或开新 ADR。
-
-### Level
-
-`red`——动 `packages/plot/plot/src/ir/scale.ts`（IR 契约）+ `lower/**` + react 表面。
-
-### Schema 改动
-
-| 文件 | 操作 | 字段名 | 类型 | 默认值 | describe 中文摘要 |
-|---|---|---|---|---|---|
-| `ir/scale.ts` | 加 | `PlotScale.Log` | `'log'` | — | 对数 scale 判别串 |
-| `ir/scale.ts` | 加 | `PlotScale.Pow` | `'pow'` | — | 幂 scale 判别串 |
-| `ir/scale.ts` | 加 | `PlotScale.Sqrt` | `'sqrt'` | — | 平方根 scale 判别串 |
-| `ir/scale.ts` | 加 | `LogScaleSchema` | `z.object` | — | log scale：type/name/domain?/range?/base?/nice?/clamp? |
-| `ir/scale.ts` | 加 | `LogScaleSchema.base` | `z.number().positive()` | `10` | 对数底 |
-| `ir/scale.ts` | 加 | `PowScaleSchema` | `z.object` | — | pow scale：type/name/domain?/range?/exponent?/nice?/clamp? |
-| `ir/scale.ts` | 加 | `PowScaleSchema.exponent` | `z.number()` | `2` | 幂指数 |
-| `ir/scale.ts` | 加 | `SqrtScaleSchema` | `z.object` | — | sqrt scale：type/name/domain?/range?/nice?/clamp? |
-| `ir/scale.ts` | 改 | `ScaleSchema` | `z.discriminatedUnion` | — | union 追加 Log/Pow/Sqrt |
-| `ir/scale.ts` | 加 | `LogScale`/`PowScale`/`SqrtScale` | `z.infer` | — | 三个派生类型 |
-
-> `domain` refine：log 两端均 > 0；sqrt 两端均 ≥ 0；pow 非整数 exponent 时两端均 ≥ 0（整数 exponent 不限）。违反即 fail-loud。
-
-### 文件 scope
-
-- `packages/plot/plot/src/ir/scale.ts`（改）
-- `packages/plot/plot/src/lower/scale.ts`（改：log/pow/sqrt 求值 + tick）
-- `packages/plot/plot/src/lower/expand.ts`（改：L1 守卫——interval/area + 非线性连续 scale fail-loud）
-- `packages/plot/plot/tests/ir/scale.schema.test.ts`（改：log/pow/sqrt schema accept/reject + domain refine）
-- `packages/plot/plot/tests/lower/scale-family.test.ts`（新建：求值 / tick / L1 守卫）
-- `packages/plot/react/src/components/buildPlotSpec.ts`（改：`DslScaleX` + 新增 `DslScaleY`，各加 `'log' | 'sqrt'`）
-- `packages/plot/react/src/Plot.tsx`（改：`PlotDslProps` 加 `scaleY?`）
-- `packages/plot/react/tests/components/buildPlotSpec.test.tsx`（改：scaleX/scaleY log/sqrt）
-- `apps/docs/src/contents/**`（scale 概念页 + 示例 mdx/demo）
-
-### 测试象限
-
-**Happy path**：
-- `log scale on y`：log y + line mark + 正值数据 → 节点按 log 投影、tick 落 10 的幂
-- `sqrt scale on x`：sqrt x + point mark → 按 √ 投影
-- `pow scale exponent 2`：pow + 显式 exponent → 按幂投影
-
-**边界**：
-- `log 正值域推断`：全正数据省略 domain → 推断 [minPositive, max]，不含 0
-- `nice rounding`：log + nice → domain 取整到底的幂
-
-**错误路径**：
-- `log + bar fail-loud`：interval mark + log y → 抛 `nonlinear continuous scale (log/pow/sqrt) cannot be used with interval/area because their baseline includes 0; use point/line or wait for explicit positive baseline support`
-- `sqrt + area fail-loud`：area mark + sqrt y → 同上错误信息
-- `log domain 含 0 / 负值`：显式 domain `[0, 100]` 或 `[-10, -1]` 的 log scale → 拒绝（log 必须全正）
-- `sqrt 负值拒绝`：sqrt domain `[-1, 9]` 或数据含负值 → fail-loud（sqrt 必须 ≥ 0）
-- `pow 非整数 exponent + 负 domain`：exponent 0.5 + domain 含负 → fail-loud（整数 exponent 则允许）
-
-**交互**：
-- `log y + grid guide`：log y + 网格 → 网格线落 log tick 位
-- `sqrt 复用于 size`：同一 sqrt 概念被 size 通道（ADR-02）消费 → 半径 √ 映射一致（跨 ADR 锚点）
-
-### 依赖的现有元素
-
-- `PlotScale` / `ScaleSchema` / `LinearScaleSchema`（`ir/scale.ts`）—— 扩展（加成员、沿风格）
-- `deriveScale` / 位置 scale 求值（`lower/scale.ts`）—— 修改（加 log/pow/sqrt 分支）
-- d3-scale（`scaleLog` / `scalePow` / `scaleSqrt`，已是 plot 依赖）—— 引用
-- baseline 注入 / 位置 scale 解析（`lower/expand.ts`）—— 修改（加 L1 守卫）
-- `DslScaleX`（`react/.../buildPlotSpec.ts:43`）—— 扩展（加 `'log' | 'sqrt'`）+ 新增 `DslScaleY`
-- `PlotDslProps`（`react/.../Plot.tsx:20`）—— 扩展（加 `scaleY?`，与 `scaleX` 对称）
+> **实现指针**：最终 schema / 类型 / 行为以代码为准；落地集中在 `packages/plot/plot/src/ir/scale.ts`、`packages/plot/plot/src/lower/{scale,expand}.ts` 与 React `scaleX/scaleY` DSL，测试见 `packages/plot/plot/tests/{ir/scale.schema,lower/scale-family}.test.ts` 和 `packages/plot/react/tests/components/buildPlotSpec.test.tsx`。完整施工契约见压缩前蓝图。
+> 🔖 本文件压缩前完整施工蓝图 = `git show 8ce95238:notes/decisions/plot/v0/v0.1/v0.1-alpha.7/01-continuous-scale-family.md`（封板全文）。

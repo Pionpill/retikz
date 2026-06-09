@@ -64,13 +64,6 @@ export const PlotScale = {
 3. **拆两成员**：sequential / diverging 语义不同（单调 vs 有中点），分开判别比「一个 type + midpoint 开关」对 LLM 与 `.describe` 都更清晰；diverging 复用 sequential 的 interpolator 机制、只是三段 domain。
 4. **守 mark 边界**：line/area 连续色 fail-loud，不偷偷做半成品 path gradient。
 
-## 待决策点 🔻
-
-- **scheme 词表成员集**：sequential 取 `Blues/Greens/Greys/Oranges/Purples/Reds/Viridis/Magma/Inferno/Plasma/Cividis/Turbo`，diverging 取 `BrBG/PRGn/PiYG/PuOr/RdBu/RdGy/RdYlBu/RdYlGn/Spectral`。倾向如上（覆盖 d3 常用集）；最终成员可实现期增删，**但一旦定下进 IR 即契约**。命名用 PascalCase 常量 + 小写判别串（`Viridis: 'viridis'`、`RdBu: 'rdbu'`）。
-- **默认 scheme**：sequential 默认 `'viridis'`（感知均匀、色盲友好、社区共识），diverging 默认 `'rdbu'`。倾向如上。
-- **temporal 连续色**：时间字段经 sequential（时间戳当连续量）→ 时间渐变色。倾向支持（与连续同路径，domain 取时间戳区间）；diverging 对 temporal 无意义、temporal + diverging fail-loud。
-- **`scheme` 与 `range` 并存**：倾向 `range` 优先（显式颜色覆盖命名 scheme），二者都给不报错、取 range。
-- **React 显式 diverging 入口**：本轮 React 只自动派生 sequential，diverging / 自定义 scheme 暂只经 vanilla IR。倾向如此（避免在 `<Plot>` 上堆 color-scale props，等 `<ColorScale>` DSL 统一做）；若评审认为 diverging 太常用需提前，再加 `<Plot colorScheme=…>` 最小入口。
 
 ## DSL 表面
 
@@ -98,7 +91,7 @@ renderPlot(
 
 ## 测试设计
 
-`packages/plot/plot/tests/lower/continuous-color.test.ts`（新建）+ `tests/ir/scale.schema.test.ts`（扩）覆盖：sequential / diverging 求值、端点 / 中点映射、scheme 取色、range 覆盖、domain 推断、line/area 连续色 fail-loud、React type-driven 派生。具体见「测试象限」。
+`packages/plot/plot/tests/lower/continuous-color.test.ts`（新建）+ `tests/ir/scale.schema.test.ts`（扩）覆盖：sequential / diverging 求值、端点 / 中点映射、scheme 取色、range 覆盖、domain 推断、line/area 连续色 fail-loud、React type-driven 派生。落地测试见实现指针。
 
 ## 影响
 
@@ -116,69 +109,5 @@ renderPlot(
 - **React 显式 `<ColorScale>` DSL / diverging React 入口** → 顺延。
 - **多 hue 自定义插值 / 自定义 interpolator 函数** → 不做（IR 须可序列化，只命名 scheme + range 端点）。
 
----
-
-## 实现契约（必填）🔻
-
-### Level
-
-`red`——动 `ir/scale.ts`（IR 契约）+ `lower/**` + react 表面。
-
-### Schema 改动
-
-| 文件 | 操作 | 字段名 | 类型 | 默认值 | describe 中文摘要 |
-|---|---|---|---|---|---|
-| `ir/scale.ts` | 加 | `PlotScale.Sequential` | `'sequential'` | — | 连续顺序色阶判别串 |
-| `ir/scale.ts` | 加 | `PlotScale.Diverging` | `'diverging'` | — | 连续发散色阶判别串 |
-| `ir/scale.ts` | 加 | `PlotColorScheme` | `as const 对象` | — | 命名配色方案词表（sequential + diverging 子集） |
-| `ir/scale.ts` | 加 | `SequentialColorScaleSchema` | `z.object` | — | type/name/domain?[num,num]/scheme?/range?[str,str]/nice?/clamp? |
-| `ir/scale.ts` | 加 | `SequentialColorScaleSchema.scheme` | `z.nativeEnum(PlotColorScheme)` | `'viridis'` | 配色方案名 |
-| `ir/scale.ts` | 加 | `DivergingColorScaleSchema` | `z.object` | — | type/name/domain?[num,num,num]/scheme?/range?[str,str,str]/nice?/clamp? |
-| `ir/scale.ts` | 加 | `DivergingColorScaleSchema.scheme` | `z.nativeEnum(PlotColorScheme)` | `'rdbu'` | 配色方案名 |
-| `ir/scale.ts` | 改 | `ScaleSchema` | `z.discriminatedUnion` | — | union 追加 Sequential/Diverging |
-| `ir/scale.ts` | 加 | `ColorScheme`/`SequentialColorScale`/`DivergingColorScale` | `z.infer` / `ValueOf` | — | 派生类型 |
-
-> diverging `domain` 三元组须 `low < mid < high`（违反 fail-loud）；sequential `domain` 须 `min < max`。temporal + diverging → fail-loud。`range` 给定时覆盖 `scheme`。
-
-### 文件 scope
-
-- `packages/plot/plot/src/ir/scale.ts`（改）
-- `packages/plot/plot/src/lower/scale.ts`（改：sequential/diverging 求值 + scheme 取色）
-- `packages/plot/plot/src/lower/expand.ts`（改：`makeColorResolver` 接连续色阶，去 continuous/temporal fail-loud；line/area 经既有 within-series 校验仍 fail-loud）
-- `packages/plot/plot/tests/ir/scale.schema.test.ts`（改）
-- `packages/plot/plot/tests/lower/continuous-color.test.ts`（新建）
-- `packages/plot/react/src/components/buildPlotSpec.ts`（改：color scale 从固定 ordinal → 按字段类型派生 sequential/ordinal）
-- `packages/plot/react/tests/components/buildPlotSpec.test.tsx`（改：连续 color 派生 sequential）
-- `apps/docs/src/contents/**`（scale 页 + 散点/柱/扇形连续色 demo）
-
-### 测试象限
-
-**Happy path**：
-- `sequential continuous`：数值字段 + point → 各点按 viridis 取色，端点对色带两端
-- `diverging midpoint`：domain `[-100,0,100]` → 0 处取中点淡色、两端异色
-- `scheme 取色`：指定 `scheme: 'blues'` → 按对应 interpolator
-
-**边界**：
-- `domain 推断`：省略 domain → 从数据取 [min,max]（diverging 取 [min,mid,max]）
-- `单值数据`：所有值相等 → 不崩（退化取色，端点）
-
-**错误路径**：
-- `line + 连续 color fail-loud`：LineMark + 数值 color 字段 → 抛（连续色仅 point/bar/sector）
-- `area + 连续 color fail-loud`：同上
-- `diverging domain 乱序`：`[100, 0, -100]` → schema/ lowering 拒绝
-- `temporal + diverging fail-loud`：时间字段 + diverging → 抛
-
-**交互**：
-- `react type-driven 派生`：`<PointMark color={continuousField}/>` + model → 自动 sequential（非 ordinal）
-- `range 覆盖 scheme`：同给 range + scheme → 取 range
-- `连续色 + legend`：连续色 scale 被 [ADR-03](./03-legend-guide.md) legend ramp 消费（跨 ADR 锚点）
-
-### 依赖的现有元素
-
-- `PlotScale` / `ScaleSchema` / `LinearScaleSchema`（`ir/scale.ts`）—— 扩展
-- `makeColorResolver`（`lower/expand.ts`）—— 修改（接连续色阶，去 continuous/temporal fail-loud）
-- line/area within-series color 校验（`lower/mark.ts`，alpha.7 ADR-03 落地）—— 复用（连续 color 自然命中 fail-loud）
-- `OrdinalScale` 求值（`lower/scale.ts`）—— 引用（categorical 仍走 ordinal）
-- d3 `scaleSequential` / `scaleDiverging` + `d3-scale-chromatic`（已是 plot 依赖）—— 引用
-- `buildPlotSpec.ts:102/289`（react color 绑定 + ordinal push）—— 修改（type-driven 派生）
-- 字段类型推断（`lower/infer.ts`）—— 引用（判 continuous/temporal vs categorical）
+> **实现指针**：最终 schema / 类型 / 行为以代码为准；落地集中在 `packages/plot/plot/src/ir/scale.ts`、`packages/plot/plot/src/lower/{scale,expand}.ts` 与 `packages/plot/react/src/components/buildPlotSpec.ts`，测试见 `packages/plot/plot/tests/{ir/scale.schema,lower/continuous-color}.test.ts` 和 `packages/plot/react/tests/components/buildPlotSpec.test.tsx`。完整施工契约见压缩前蓝图。
+> 🔖 本文件压缩前完整施工蓝图 = `git show 8ce95238:notes/decisions/plot/v0/v0.1/v0.1-alpha.8/01-continuous-color-scale.md`（封板全文）。

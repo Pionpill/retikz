@@ -55,11 +55,6 @@ export const PointEncodingSchema = EncodingSchema.extend({
 
 注册表对外开放时沿用 core 的**「配置 / 数据 / 函数」三分**（plot-design §6）——自定义通道定义**带函数、经 `CompileOptions` / `lowerPlots` options 运行时注入、不进 JSON IR**（IR 按通道名引用，函数定义运行时给），与 core 自定义 `shape`（IR 写名、几何函数注入）同构。硬约束：任何非位置通道终须 lower 到 core 已有视觉属性（fill / stroke / strokeWidth / opacity / shape 参数…），不能凭空发明 core 不识别的视觉效果（那要先补 core）。**现在就要任意视觉控制**的用户掉到 **Kernel**（`<Node>` / `<Path>`，直接写 core IR）——retikz 版的「Vega-Lite → Vega」逃生舱。本轮**只留接缝、不开放注册**。
 
-## 待决策点 🔻
-
-- **React `size` prop 形态**：本轮 `PointMarkProps.size?: string`（字段路径）。常量半径（`size={number}`）属样式，暂不进 DSL（IR 仍支持 `size.value`）。倾向只收字段。
-- **range px 常量取值**：`SIZE_MIN_RADIUS` / `SIZE_MAX_RADIUS` 暂定 `2` / `20`（user units，对齐 `POINT_SIZE=10` 量级）。倾向此值，可在实现期微调（非契约）。
-- **size 与 series 的关系**：PointMark 无 series（point 已按 datum 着色/定尺寸），size 纯 per-datum，不与 series 交互。无悬念。
 
 ## DSL 表面
 
@@ -86,7 +81,7 @@ renderPlot(
 
 ## 测试设计
 
-`packages/plot/plot/tests/lower/size-channel.test.ts` + `lower/channel-resolver.test.ts` + `tests/ir/encoding.schema.test.ts` 覆盖：通道 resolver 抽象、size 半径几何、③ 边界退化、schema 拒绝（size 在非 point / value 非数值或负）、与 color 交互。具体见下「测试象限」。
+`packages/plot/plot/tests/lower/size-channel.test.ts` + `lower/channel-resolver.test.ts` + `tests/ir/encoding.schema.test.ts` 覆盖：通道 resolver 抽象、size 半径几何、③ 边界退化、schema 拒绝（size 在非 point / value 非数值或负）、与 color 交互。落地测试见实现指针。
 
 ## 影响
 
@@ -104,68 +99,5 @@ renderPlot(
 - **常量半径的 React `size={number}` 表面** → 后续（IR 已支持 `size.value`）。
 - **自定义通道注册表（`ChannelDefinition` 对外开放）** → 另立里程碑（plot-design §11「先内置，后开放自定义」）；本轮 resolver 仅留接缝，用户要任意视觉控制走 Kernel（`<Node>` / `<Path>`）。
 
----
-
-## 实现契约（必填）🔻
-
-### Level
-
-`red`——动 `ir/encoding.ts` / `ir/mark.ts`（IR 契约）+ `lower/**` + react 表面。
-
-### Schema 改动
-
-| 文件 | 操作 | 字段名 | 类型 | 默认值 | describe 中文摘要 |
-|---|---|---|---|---|---|
-| `ir/encoding.ts` | 加 | `SizeChannelSchema` | `z.object`（field?/value?/scale?）| — | size 通道：数值字段经 sqrt 半径 scale → glyph 半径 |
-| `ir/encoding.ts` | 加 | `SizeChannelSchema.value` | `z.number().finite().nonnegative().optional()` | — | 常量最终半径 px（绕过 scale；与 field 互斥）|
-| `ir/encoding.ts` | 加 | `PointEncodingSchema` | `EncodingSchema.extend({size})` | — | PointMark 专属：位置 + color + 可选 size |
-| `ir/mark.ts` | 改 | `PointMarkSchema.encoding` | `PointEncodingSchema` | — | point 用专属 encoding（含 size）|
-| `ir/encoding.ts` | 加 | `SizeChannel` / `PointEncoding` | `z.infer` | — | 派生类型 |
-
-> 其余 mark（line/interval/sector/area）encoding **不动**——size 不进全局 `StyleEncodingSchema`。
-
-### 文件 scope
-
-- `packages/plot/plot/src/ir/encoding.ts`（改）
-- `packages/plot/plot/src/ir/mark.ts`（改：仅 PointMark）
-- `packages/plot/plot/src/lower/channel.ts`（新建：通用通道→scale resolver）
-- `packages/plot/plot/src/lower/mark.ts`（改：lowerPoint size + per-node 半径）
-- `packages/plot/plot/src/lower/scale.ts`（改：size 默认 sqrt scale 合成 + ③ 边界）
-- `packages/plot/plot/tests/ir/encoding.schema.test.ts`（改：SizeChannel accept/reject）
-- `packages/plot/plot/tests/ir/mark.schema.test.ts`（改：PointMark 含 size、其它 mark 拒 size）
-- `packages/plot/plot/tests/lower/size-channel.test.ts` / `lower/channel-resolver.test.ts`（新建）
-- `packages/plot/react/src/components/marks.tsx`（改：`PointMarkProps.size?`）
-- `packages/plot/react/src/components/buildPlotSpec.ts`（改：point 装 size encoding）
-- `apps/docs/src/contents/**`（散点页 bubble demo + API）
-
-### 测试象限
-
-**Happy path**：
-- `size field → radii`：size 绑数值字段 → 各点半径按 √(value) 比例
-- `bubble + color`：size + color 同点 → 半径与颜色独立生效
-- `default sqrt 合成`：省略 scale → 自动 sqrt radius scale，domain [0,max]
-- `size.value 常量半径`：`size: { value: 8 }` → 所有点固定 8px，绕过 scale
-
-**边界**：
-- `无正值 → 最小半径`：全 0 或空正值（且无负值）→ 所有点 `SIZE_MIN_RADIUS`，不报错
-- `单正值 → range 上界`：仅一个正值 → 该点最大半径
-- `空数据`：0 行 → 不崩、无 node
-
-**错误路径**：
-- `负值 fail-loud`：size 字段含负值 → 抛错（通道级，非 coerce）
-- `显式负 domain 拒绝`：size scale domain 含负数 → 拒绝
-- `size 在非 point mark`：line/area/bar encoding 写 size → schema 拒绝
-- `size.value 非数值 / 负`：`size: { value: 'big' }` 或 `{ value: -3 }` → schema 拒绝
-
-**交互**：
-- `size + sqrt 轴`：size 复用 ADR-01 sqrt 实现 → 半径映射与显式 sqrt 一致
-- `size 打破 colorGroupedScope`：size + color 多点 → 半径落 per-node、颜色仍按色分组（IR 体积/结构断言）
-
-### 依赖的现有元素
-
-- `EncodingSchema` / `StyleEncodingSchema` / `ChannelSchema`（`ir/encoding.ts`）—— 扩展（PointMark 专属 encoding；不动全局 Style）
-- `PointMarkSchema`（`ir/mark.ts:51`）—— 修改 encoding
-- `PlotScale.Sqrt` / `SqrtScaleSchema`（[ADR-01](./01-continuous-scale-family.md)）—— 消费（size 派生目标）
-- `lowerPoint` / `pointStyle` / `colorGroupedScope`（`lower/mark.ts`）—— 修改（per-node 半径 + core 换算）
-- core circle node 尺寸字段（`minimumSize`，core IR）—— 消费（lowering 目标，不改 core）
-- `makeColorResolver`（`lower/expand.ts:372`）—— 迁移到通用 resolver（与 [ADR-03](./03-color-series.md) 协同）
+> **实现指针**：最终 schema / 类型 / 行为以代码为准；落地集中在 `packages/plot/plot/src/ir/{encoding,mark}.ts`、`packages/plot/plot/src/lower/{channel,mark,scale}.ts` 与 `packages/plot/react/src/components/marks.tsx`，测试见 `packages/plot/plot/tests/{ir/encoding.schema,ir/mark.schema,lower/size-channel,lower/channel-resolver}.test.ts`。完整施工契约见压缩前蓝图。
+> 🔖 本文件压缩前完整施工蓝图 = `git show 8ce95238:notes/decisions/plot/v0/v0.1/v0.1-alpha.7/02-channel-scale-resolver-size.md`（封板全文）。

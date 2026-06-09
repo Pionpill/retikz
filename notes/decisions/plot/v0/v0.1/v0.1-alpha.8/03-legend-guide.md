@@ -88,13 +88,6 @@ export type ScaleDescriptor = {
 - **占位落地为固定带宽**：决策 ⑩ 写「`estimateLabelWidth` + swatch 尺寸估」，实际 `legendReserveOf` 用固定 `LEGEND_BAND_EXTENT` 在对应边预留，不按标签长度估——长标签可能溢出（plot-design §13.1 允许）。后续可按标签宽细化。
 - **ramp 刻度域取配置 domain（contract-audit W2 修）**：连续 ramp 的取色 / 刻度域显式 `domain` 优先（sequential `[min,max]`、diverging `[low,high]`），与实绘取色同基准；缺省回退数据 extent。早期曾固定取数据 extent，致显式 domain 时图例刻度与颜色错位，已修 + 回归测试。
 
-## 待决策点 🔻
-
-- **legend 显式 vs 自动派生**：本轮 legend **显式声明出**（`<Legend channel="color" />`，与 axis 一致）。自动派生（声明非位置通道即自动出 legend）留 alpha.14 theme 的 auto-guide。倾向显式（避免 lowering 隐式塞 guide 破坏 IR 自描述）。
-- **size legend 代表值选取**：梯度符号取几个代表大小（如 domain 的 min/median/max 或 nice 3–4 档）？倾向 **nice 3 档**（min/mid/max 的 nice 值），与 axis tick 的 nice 同源。
-- **连续 color ramp 实现**：色带用 core 渐变 paint server（`linearGradient`，core 已有）还是切 N 段纯色块近似？倾向 **core linearGradient**（平滑、真连续）——**须实现期核验 core paint server 用在 legend 矩形上的可用性**（roadmap core 依赖已标），不足走 next-core。
-- **多 legend 排布**：多个 `<Legend>`（如 color + size 各一）同 position 时纵向堆叠？倾向同侧按声明序堆叠，跨 position 各占各边。
-- **position 占位与 polar**：polar plot（默认无 axes）加 legend → 仅预留 legend 带、不受 axis 占位影响。倾向直接复用同一 `computePlotArea` 占位逻辑。
 
 ## DSL 表面
 
@@ -114,7 +107,7 @@ export type ScaleDescriptor = {
 
 ## 测试设计
 
-`packages/plot/plot/tests/lower/legend.test.ts`（新建）+ `tests/ir/guide.schema.test.ts`（扩）+ `react/tests/components/buildPlotSpec.test.tsx`（扩）覆盖：union 判别、各通道各 scale 形态派生、descriptor 产出、默认 axes 共存、占位、标签 formatter、多 legend、fail-loud。具体见「测试象限」。
+`packages/plot/plot/tests/lower/legend.test.ts`（新建）+ `tests/ir/guide.schema.test.ts`（扩）+ `react/tests/components/buildPlotSpec.test.tsx`（扩）覆盖：union 判别、各通道各 scale 形态派生、descriptor 产出、默认 axes 共存、占位、标签 formatter、多 legend、fail-loud。落地测试见实现指针。
 
 ## 影响
 
@@ -132,74 +125,5 @@ export type ScaleDescriptor = {
 - **reference line / band 等其它 guide** → 后续（本轮只 axis + legend）。
 - **legend 内排序 / 自定义 swatch 模板** → 顺延。
 
----
-
-## 实现契约（必填）🔻
-
-### Level
-
-`red`——动 `ir/guide.ts`（IR 契约，union 升级）+ `lower/**` + react 表面。
-
-### Schema 改动
-
-| 文件 | 操作 | 字段名 | 类型 | 默认值 | describe 中文摘要 |
-|---|---|---|---|---|---|
-| `ir/guide.ts` | 加 | `PlotGuide.Legend` | `'legend'` | — | 图例 guide 判别串 |
-| `ir/guide.ts` | 加 | `LegendChannel` | `as const 对象` | — | 图例可视化的非位置通道词表（color/size/opacity/shape） |
-| `ir/guide.ts` | 加 | `LegendGuideSchema` | `z.object` | — | type/channel/scale?/title?/position?/orient?/tickCount?/tickLabels? |
-| `ir/guide.ts` | 加 | `LegendGuideSchema.channel` | `z.nativeEnum(LegendChannel)` | — | 绑定的非位置通道 |
-| `ir/guide.ts` | 加 | `LegendGuideSchema.scale` | `z.string().min(1).optional()` | — | 消歧 scale name（同通道多 scale 时） |
-| `ir/guide.ts` | 加 | `LegendGuideSchema.position` | `z.enum([...])` | `'right'` | 图例位置（right/left/top/bottom） |
-| `ir/guide.ts` | 改 | `GuideSchema` | `z.discriminatedUnion('type', [...])` | — | axis + legend（非破坏升 union） |
-| `ir/guide.ts` | 加 | `LegendGuide`/`LegendChannelType` | `z.infer` / `ValueOf` | — | 派生类型 |
-
-> `position` enum 用 `as const` 对象 + `z.nativeEnum` 沿 DrawWay 风格。`scale` 省略且该通道有多于一个 scale → lowering fail-loud。
-
-### 文件 scope
-
-- `packages/plot/plot/src/ir/guide.ts`（改：union 升级 + LegendGuideSchema）
-- `packages/plot/plot/src/lower/channel.ts`（改：resolver 双产出 ScaleDescriptor）
-- `packages/plot/plot/src/lower/guide.ts`（改：加 `lowerLegend` → swatch/ramp/分箱 scope）
-- `packages/plot/plot/src/lower/layout.ts`（改：`computePlotArea` 加 legend 占位；`PlotAreaInput` 加 legend 带宽输入）
-- `packages/plot/plot/src/lower/expand.ts`（改：legend source 注册 + 占位输入串联 + scale 消歧 fail-loud）
-- `packages/plot/plot/tests/ir/guide.schema.test.ts`（改/新建：union + legend schema）
-- `packages/plot/plot/tests/lower/legend.test.ts`（新建）
-- `packages/plot/react/src/components/buildPlotSpec.ts`（改：默认 axes by-type 合并 `:293`；收集 `<Legend>`）
-- `packages/plot/react/src/components/marks.tsx` 或新 `Legend.tsx`（新增 `<Legend>` 组件）
-- `packages/plot/react/src/components/index.ts`（导出 Legend）
-- `packages/plot/react/tests/components/buildPlotSpec.test.tsx`（改：Legend 不吞 axes + 收集）
-- `apps/docs/src/contents/**`（legend 概念页 + 各形态 demo）
-
-### 测试象限
-
-**Happy path**：
-- `ordinal legend swatch`：分类 color → 每类一 swatch + 标签
-- `sequential ramp`：连续 color → 色带 ramp + nice 刻度
-- `size 梯度符号`：size 通道 → 3 档代表圈 + 值
-
-**边界**：
-- `单类别 legend`：color 一个类别 → 一 swatch
-- `quantile 分箱标签`：quantile scale → 每档区间标签（闭开口契约）
-- `空 domain`：0 行 → legend 不崩（空或退化）
-
-**错误路径**：
-- `多 scale 未消歧`：两个 color scale + `<Legend channel="color">` 无 scale → fail-loud（提示加 scale）
-- `legend 绑无效通道 scale`：channel 指向不存在的 scale name → fail-loud
-
-**交互**：
-- `Legend 不吞默认 axes`（修 P1 ⑦）：`<PointMark/>` + `<Legend/>`（无显式 Axis）→ 默认 x/y 轴**仍在** + legend
-- `显式 Axis + Legend 共存`：显式一条 Axis + Legend → 该 Axis 覆盖默认、另一维默认补、legend 在
-- `legend 占位`（P2 ⑩）：position='right' → plotArea 右侧收窄、legend 落预留带（非 overlay / 出界）
-- `descriptor 复用`（P1 ⑥）：size resolver 产 descriptor `domain=[0,max] range=[2,20]` → legend 梯度符号读同一 descriptor（resolver 与 legend 一致）
-
-### 依赖的现有元素
-
-- `GuideSchema` / `AxisGuideSchema` / `PlotGuide` / `GuideDimension`（`ir/guide.ts`）—— 扩展（升 union）
-- `makeSizeResolver` / `makeOpacityResolver` / `makeShapeResolver` + `SIZE_MIN/MAX_RADIUS` / `OPACITY_MIN` / `PLOT_SHAPE_PALETTE`（`lower/channel.ts`）—— 修改（加 descriptor 产出）
-- `computePlotArea` / `estimateLabelWidth` / `Margins` / `PlotAreaInput` / `Rect`（`lower/layout.ts`）—— 修改（legend 占位）+ 复用（标签宽估算）
-- `lowerGuide` / `GuideContext` / `LoweredGuide`（`lower/guide.ts`）—— 扩展（加 lowerLegend）
-- axis tick formatter（`lower/guide.ts` / `lower/scale.ts` tick 链）—— 复用（legend 标签 formatter，决策 ⑨）
-- color scale descriptor（[ADR-01](./01-continuous-color-scale.md) / [ADR-02](./02-discretization-scale.md) 的 sequential/diverging/离散化）—— 消费（ramp / 分箱形态）
-- core `linearGradient` paint server（`packages/core/core/src/ir/...`）—— 可能消费（连续 ramp；实现期核验，不足走 next-core）
-- `buildPlotSpec` guide 收集 + 默认 axes（`buildPlotSpec.ts:113`/`:293`）—— 修改（收 Legend + by-type 合并）
-- `DEFAULT_GUIDES`（`buildPlotSpec.ts`）—— 引用（by-type 补齐基准）
+> **实现指针**：最终 schema / 类型 / 行为以代码为准；落地集中在 `packages/plot/plot/src/ir/guide.ts`、`packages/plot/plot/src/lower/{channel,guide,layout,expand}.ts` 与 `packages/plot/react/src/components/`，测试见 `packages/plot/plot/tests/{ir/guide.schema,lower/legend}.test.ts` 和 `packages/plot/react/tests/components/buildPlotSpec.test.tsx`。完整施工契约见压缩前蓝图。
+> 🔖 本文件压缩前完整施工蓝图 = `git show 8ce95238:notes/decisions/plot/v0/v0.1/v0.1-alpha.8/03-legend-guide.md`（封板全文）。

@@ -84,12 +84,6 @@ locator 是**纯函数、不进 IR、不注册任何 core 元素**，不预建 N
 - **placement 全量收成单一真源（cross-review 修复）**：初版只有 plain bar / point / sector 走 `datumAnchor`，**dodge / stack / polar-dodge interval 的摆放仍内联在 `mark.ts`** → locator 重算时漂移。已抽出 `buildIntervalContext` + `intervalRect`（cartesian 三变体）+ `intervalWedge`（polar 三变体）+ `sectorWedge`，`mark.ts` 所有 interval 路径与 locator **共用这同一套**，`mark.ts` 内不再留任何 inline 摆放数学。补 dodge/stack/polar-dodge 的 anchor↔lowering parity 测试。
 - **locator datum-id fail-loud 与 lowering 对齐（cross-review 修复）**：`createPlotLocator` 构造时用与 lowering 同一 plot 级注册器对所有 datum mark × 已渲染行跑校验，缺字段 / 重复 → 与 `lowerPlots` 同样**抛错**（`resolve()` 仍对坏地址返回 null、不抛）。`resolve` 地址语义明确为「索引/值地址」（`datum.<transformedIndex>` / `series.<value>`），非绑定的 `Node.id`；series 值匹配加 `String()` 兜底（数值可寻址，含 `.` 的值不可经 resolve 寻址）。
 
-## 待决策点 🔻
-
-- **datumAnchor 共享 vs 独立重算 + parity 测试**：倾向**共享纯函数**（mark.ts 与 locate.ts 同调，从设计杜绝漂移）；备选「locator 独立重算 + 测试断言等价」实现轻但留漂移口子。倾向前者。
-- **interval / sector 的 datum 锚点取哪个点**：point = glyph 中心；interval = 柱的 Node.position（柱中心，倾向）还是顶部中点（更适合挂标签）？sector = Node.position（圆心）还是扇片 centroid（更适合命中，倾向 centroid）？倾向「能命中该图元的代表点」，与 mark 几何对应，实现期按 mark 类型定并测。
-- **line / area 的 datum 解析**：line / area 下沉成单 Path、datum 非独立 Node。`datum(i)` 对 line/area 返回**折线顶点投影位置**（倾向，几何上就是该行的点）还是 null（「该 mark 无逐 datum 元素」）？倾向返回顶点位置（正向解析仍有意义），但 `id` 必为空（无具名 Node 可连）。
-- **address 串的 plotId 缺省**：root 无 id 时 `resolve('<plotId>.datum.3')` 怎么写？倾向支持无前缀形式 `'datum.3'` / 结构化 `datum(3)`；点路径形式仅在有 plotId 时可用。
 
 ## DSL 表面
 
@@ -136,59 +130,5 @@ locator.datum(999);                       // → null（越界）
 - **line / area 的顶点级具名锚点**：本 ADR `datum(i)` 给 line/area 顶点位置但不绑具名 id；逐顶点可连接锚点留后续。
 - **series bbox / 外接锚点**：本 ADR series 锚点取 centroid；bbox 留后续。
 
----
-
-## 实现契约（必填）🔻
-
-### Level
-
-`red`——新增 `packages/plot/plot/src/index.ts` 导出（public surface）+ 动 `src/lower/**`（locator + 共享几何抽取）。
-
-### Schema 改动
-
-无 IR schema 改动（locator 是 API + 派生类型，不进 IR）。新增导出类型 `ResolvedAnchor` / `PlotLocator` 与函数 `createPlotLocator`（`z.infer` 不适用，手写 TS 类型 + 中文 JSDoc）。
-
-### 文件 scope
-
-- `packages/plot/plot/src/lower/locate.ts`（新建：`createPlotLocator` + 类型）
-- `packages/plot/plot/src/lower/mark.ts`（修改：抽 `datumAnchor` 共享几何）
-- `packages/plot/plot/src/lower/expand.ts`（按需：导出 / 复用 `resolveFrame`、`datumAnchor`）
-- `packages/plot/plot/src/lower/index.ts`（修改：导出 locator）
-- `packages/plot/plot/src/index.ts`（修改：re-export public locator API）
-- `packages/plot/plot/tests/lower/locate.test.ts`（新建）
-- `apps/docs/src/contents/plot/<provenance / anchor 页>.mdx`（修改：locator 用法段 + demo）
-
-### 测试象限
-
-**Happy path（≥ 3）**：
-
-- `datum_position_matches_lowering_point`：point mark，`locator.datum(i).position` === lowering 第 i 行 Node.position（cartesian）
-- `datum_position_matches_lowering_interval`：interval mark 同上（柱锚点）
-- `datum_meta_synthesized`：lowering 未开 `datumProvenance`，`locator.datum(i).meta` 仍给同构 `{dataReference,mark,markIndex,transformedIndex,sourceIndex?,…}`
-- `resolve_path_series`：`resolve('<plotId>.series.<v>')` → 该 series 已渲染成员 centroid 锚点
-
-**边界（≥ 2）**：
-
-- `datum_out_of_range`：`datum(负 / ≥ rowCount)` → null
-- `unrendered_datum_null`：某行投影无效 / 零尺寸被 lowering 跳过 → `datum(该行)` 返回 null（与渲染一致，不返回幽灵位置）；该行不计入 `series` centroid
-- `series_not_found`：`series(不存在值 / 全被跳过)` → null
-- `no_plot_id_structural`：root 无 id → `datum(i)` 仍解析（结构寻址）、点路径形式按待决策处理
-
-**错误路径（≥ 2）**：
-
-- `invalid_address`：`resolve('garbage')` / 非法段 → null（不抛）
-- `locator_pure_no_ir_mutation`：建 locator + 多次解析不改 spec / 不产 IR / 不注册 core 元素（断言无副作用）
-
-**交互（≥ 2）**：
-
-- `polar_datum_parity`：polar 下 sector / 径向柱 `datum(i).position` 与 lowering 一致（与 cartesian 同保证）
-- `id_backfill_on_datumIdField`：开 `datumIdField` 后 `datum(i).id` === lowering 给该 Node 绑的 `<plotId>.datum.<值>`
-- `shared_anchor_no_drift`：同一 (mark,row,frame) 下 `datumAnchor` 被 mark.ts 与 locate.ts 调用结果一致（共享几何单一真源）
-
-### 依赖的现有元素
-
-- `resolveFrame`（[ADR-01](./01-scope-id-meta.md) 从 `expand.ts` 抽出）—— **消费**：locator 与 lowering 共用投影帧。
-- `datumAnchor`（本 ADR 从 `mark.ts` 抽出的逐行锚点计算）—— **新建 + 共享**：mark 下沉与 locator 同调，杜绝位置漂移。
-- `lowerMark` / `barLayer` / `sectorLayer` 及各 `placed` node 构造（`packages/plot/plot/src/lower/mark.ts`）—— **修改**：改调共享 `datumAnchor`。
-- `IRJsonObject`（`packages/core/core/src/ir/json.ts`）—— **复用**：`ResolvedAnchor.meta` 类型（与 ADR-01 / core ADR-08 同源）。
-- `PlotSpec` / `ExternalDatasets` / `LowerPlotsOptions`（`packages/plot/plot/src/ir`、`src/lower/expand.ts`）—— **引用**：locator 入参类型。
+> **实现指针**：最终 schema / 类型 / 行为以代码为准；落地集中在 `packages/plot/plot/src/lower/{locate,mark,expand,index}.ts` 与 `packages/plot/plot/src/index.ts` public export，测试见 `packages/plot/plot/tests/lower/locate.test.ts`。完整施工契约见压缩前蓝图。
+> 🔖 本文件压缩前完整施工蓝图 = `git show 8ce95238:notes/decisions/plot/v0/v0.1/v0.1-alpha.5/02-datum-locator.md`（封板全文）。

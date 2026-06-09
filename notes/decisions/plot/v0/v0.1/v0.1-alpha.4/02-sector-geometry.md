@@ -1,7 +1,6 @@
 # ADR-02：sector 几何（polar interval→径向柱/玫瑰 + sector mark 饼图/环图）
 
 > 在 ADR-01 的 `CoordinateFrame` 之上落「区间 / 扇形」家族：interval 在 polar 下成 sector（径向柱 / 玫瑰），新增 sector mark（饼图 / 环图）。两者都下沉 core 参数化可连接 `sector` Node。**累积角是 transform 阶段职责**，不进 mark。
-> schema 字段名 / 默认值 AI 提案，待人工 review 拍板。
 
 - 状态：Accepted
 - 决策日期：2026-06-06

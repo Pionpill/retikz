@@ -48,10 +48,6 @@ for (const field of userSourceFields) {
 - **削弱「model 不看数据就能校验 / 派生」**：带 `type` 的字段仍 data-free；**name-only 字段需 lowering 时拿数据推断**。`DataModelSchema` 的 describe（"...scale-type inference without seeing the data"）改成「仅对显式 `type` 的字段成立；name-only 字段在 lowering 时按数据推断」。
 - **削弱 LLM / spec 自描述**：name-only 字段的类型不在 spec 里、依赖运行时数据。要让 LLM 不看数据就全懂、spec 完全可移植，仍应填全 `type`——本特性是 **opt-in 的部分类型化**，不鼓励都省。
 
-## 待决策点 🔻
-
-- **空 model 数组 `[]` 的语义**：`model: []`（声明了但空）算 strict（任何引用字段都 unknown→抛）还是等价无 model？倾向：算 strict（声明即契约，空契约 + 有引用 = fail-loud），与「声明 model = strict」一致。
-- **`DataModelSchema` describe 改写范围**：仅补「type 可省 → 推断」一句，还是连「可移植性是否要求 type」一并澄清（fieldMaps 移植只需 name，不需 type）。
 
 ## DSL 表面
 
@@ -69,7 +65,7 @@ for (const field of userSourceFields) {
 
 ## 测试设计
 
-`packages/plot/plot/tests/lower/data-model.test.ts`（扩展现有 `resolveFieldTypes` 段）+ `packages/plot/plot/tests/ir/data.schema.test.ts`（`type` 可省 accept）。具体见「实现契约 § 测试象限」。
+`packages/plot/plot/tests/lower/data-model.test.ts`（扩展现有 `resolveFieldTypes` 段）+ `packages/plot/plot/tests/ir/data.schema.test.ts`（`type` 可省 accept）。落地测试见实现指针。
 
 ## 影响
 
@@ -86,53 +82,5 @@ for (const field of userSourceFields) {
 - **「可移植性是否必须有 type」的强约束改动**——本 ADR 只让 type 可省；fieldMaps 移植本就只需 name，不在此扩。
 - **推断质量提升**（更聪明的类型嗅探）——沿用 ADR-01 的抽样推断，不在本 ADR 动。
 
----
-
-## 实现契约（必填）🔻
-
-### Level
-
-`red`——动 `packages/plot/plot/src/ir/data.ts`（IR schema：`FieldDefSchema.type` 可选）+ `lower/validate.ts`（`resolveFieldTypes` 契约）。
-
-### Schema 改动
-
-| 文件 | 操作 | 字段名 | 类型 | 默认值 | describe 中文摘要 |
-|---|---|---|---|---|---|
-| `packages/plot/plot/src/ir/data.ts` | 改 | `FieldDefSchema.type` | `z.nativeEnum(PlotFieldType).optional()` | `—`（省略→推断） | 字段测量类型；省略则 lowering 时从绑定数据推断 |
-| `packages/plot/plot/src/ir/data.ts` | 改 describe | `DataModelSchema` | （描述改写，非字段改） | — | 「不看数据校验」仅对显式 type 字段成立；name-only 字段 lowering 时推断 |
-
-### 文件 scope
-
-- `packages/plot/plot/src/ir/data.ts`（修改：`FieldDefSchema.type` 加 `.optional()` + describe）
-- `packages/plot/plot/src/lower/validate.ts`（修改：`resolveFieldTypes` model 分支按 name strict + 类型声明优先否则推断）
-- `packages/plot/plot/tests/lower/data-model.test.ts`（扩展：部分声明用例）
-- `packages/plot/plot/tests/ir/data.schema.test.ts`（扩展：`type` 可省 accept）
-- `apps/docs/src/contents/plot/grammar/data/index.{zh,en}.mdx`（修改：部分声明段 + 「不看数据」措辞修正）
-
-### 测试象限
-
-**Happy path**：
-- `partial_model_infers_untyped`：model 含 name-only 字段 + typed 字段 → name-only 推断、typed 用声明
-- `typed_field_stays_data_free`：全 typed model → 不依赖数据（与现状逐字等价）
-- `name_only_satisfies_strict`：被引用字段在 model 仅给 name → 满足 strict、不抛 unknown
-
-**边界**：
-- `all_name_only_equals_infer_plus_strict`：全 name-only model → 类型结果与无 model 推断一致，但 strict 仍生效
-- `name_only_empty_data_falls_categorical`：name-only 字段数据空 / 全 null → 推断默认 categorical
-
-**错误路径**：
-- `referenced_field_absent_from_model_throws`：引用字段连 name 都没列 → strict 抛 unknown（type 可选不削弱 strict）
-- `duplicate_name_throws_regardless_of_type`：重名（一条有 type 一条 name-only）→ 抛 duplicate
-
-**交互**：
-- `resolvefield_overrides_name_only`：name-only 字段 + `resolveField` 返 `{ type }` → resolver 赢（`context.declaredType===undefined`），不跑推断
-- `name_only_feeds_type_driven_scale`：name-only 字段推断出类型后 → ADR-03 type-driven scale 正常派生
-- `name_only_with_fieldmaps`：name-only + `fieldMaps` → 用物理路径数据推断该字段
-
-### 依赖的现有元素
-
-- `FieldDefSchema` / `DataModelSchema`（`packages/plot/plot/src/ir/data.ts`）—— 修改：`type` 可选 + describe
-- `resolveFieldTypes`（`packages/plot/plot/src/lower/validate.ts`）—— 修改：按 name strict + 类型声明优先否则推断
-- `inferFieldType`（`packages/plot/plot/src/lower/infer.ts`）—— 引用：对 name-only 字段调用
-- 本里程碑 ADR-01（data-model）—— strict / infer 语义被本 ADR 放宽成部分声明
-- 本里程碑 ADR-04（resolveField）—— 优先级链 `resolveField.type > model.type > infer` 衔接
+> **实现指针**：最终 schema / 类型 / 行为以代码为准；落地集中在 `packages/plot/plot/src/ir/data.ts` 与 `packages/plot/plot/src/lower/validate.ts`，测试见 `packages/plot/plot/tests/lower/data-model.test.ts` 和 `packages/plot/plot/tests/ir/data.schema.test.ts`。完整施工契约见压缩前蓝图。
+> 🔖 本文件压缩前完整施工蓝图 = `git show 8ce95238:notes/decisions/plot/v0/v0.1/v0.1-alpha.6/05-optional-field-type.md`（封板全文）。
