@@ -1,7 +1,7 @@
 /**
  * parseNodeTarget 单元测试（ADR-01）
  * @description 字符串 shorthand → NodeTarget 对象（单一真源，React DSL 层用）：
- *   node（无 .）/ 命名 anchor / 角度 anchor；未知 anchor 抛错；含 . 的 id 走对象（dotted-id 限制）
+ *   node（无 .）/ 命名 anchor / Web alias / 角度 anchor；未知 anchor 抛错；含 . 的 id 走对象（dotted-id 限制）
  */
 import { describe, expect, it } from 'vitest';
 import { parseNodeTarget } from '../../src/parsers/parseNodeTarget';
@@ -18,7 +18,7 @@ describe('parseNodeTarget node 模式（无 .）', () => {
 });
 
 describe('parseNodeTarget 命名 anchor 模式（id.<name>）', () => {
-  it('9 个 RECT_ANCHORS 全识别 → { id, anchor }', () => {
+  it('9 个标准方位 anchor 全识别 → { id, anchor }', () => {
     for (const name of [
       'center',
       'north',
@@ -36,6 +36,12 @@ describe('parseNodeTarget 命名 anchor 模式（id.<name>）', () => {
 
   it('含连字符的 id 也行', () => {
     expect(parseNodeTarget('my-node.east')).toEqual({ id: 'my-node', anchor: 'east' });
+  });
+
+  it('Web 风格 anchor alias 归一到 canonical anchor', () => {
+    expect(parseNodeTarget('A.top')).toEqual({ id: 'A', anchor: 'north' });
+    expect(parseNodeTarget('A.top-left')).toEqual({ id: 'A', anchor: 'north-west' });
+    expect(parseNodeTarget('A.bottom-right')).toEqual({ id: 'A', anchor: 'south-east' });
   });
 
   it('未知 anchor 名抛错', () => {

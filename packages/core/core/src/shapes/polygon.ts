@@ -10,7 +10,7 @@ import {
 } from '../geometry/roundedContour';
 import type { ScenePrimitive } from '../primitive';
 import { contourToPathCommands, verticesToSegments } from './_contour';
-import { asRectAnchor } from './_shared';
+import { asCompassAnchor } from './_shared';
 import { defineShape } from './define';
 
 /**
@@ -126,7 +126,7 @@ export const polygon = defineShape({
   },
   anchor: (rect: Rect, name: string, params: PolygonParams): Position | undefined => {
     void params;
-    const a = asRectAnchor(name);
+    const a = asCompassAnchor(name);
     return a ? rectOps.anchor(rect, a) : undefined;
   },
   *emit (rect: Rect, style, round, params: PolygonParams): Iterable<ScenePrimitive> {

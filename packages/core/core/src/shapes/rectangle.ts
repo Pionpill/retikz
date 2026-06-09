@@ -6,7 +6,7 @@ import type { Rect } from '../geometry/rect';
 import { type ContourSegment, boundaryFromContour } from '../geometry/roundedContour';
 import type { ScenePrimitive } from '../primitive';
 import { verticesToSegments } from './_contour';
-import { asRectAnchor } from './_shared';
+import { asCompassAnchor } from './_shared';
 import { defineShape } from './define';
 
 /**
@@ -58,7 +58,7 @@ export const rectangle = defineShape({
     return hit ?? center;
   },
   anchor: (r, name) => {
-    const a = asRectAnchor(name);
+    const a = asCompassAnchor(name);
     return a ? rectOps.anchor(r, a) : undefined;
   },
   edgePoint: (r, side, t) => rectOps.edgePoint(r, side, t),

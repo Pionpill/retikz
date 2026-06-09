@@ -262,18 +262,29 @@ export type {
   WiggleOptions,
 } from './presets';
 
-// Geometry
-// RECT_ANCHORS（const 集合，值）与 RectAnchor（派生 type）配对，名字不撞
 export type {
   Position,
+  CompassAnchorValue,
+  AnchorInput,
+  WebAnchorValue,
   Rect,
-  RectAnchor,
   Circle,
   Ellipse,
   Diamond,
   PolarPosition,
 } from './geometry';
-export { point, rect, circle, ellipse, diamond, RECT_ANCHORS, polar } from './geometry';
+export {
+  point,
+  CompassAnchor,
+  WebAnchor,
+  isCompassAnchorInput,
+  normalizeCompassAnchor,
+  rect,
+  circle,
+  ellipse,
+  diamond,
+  polar,
+} from './geometry';
 
 // Shapes (Shape Registry 扩展面：第三方 shape 注入 + 内置注册项 + 作者所需 helper)
 export type { ShapeDefinition, ShapeDefinitionInput, ShapeStyle } from './shapes';

@@ -1,7 +1,7 @@
 import { localToWorld, worldToLocal } from './_transform';
 import { type Side, edgeAngleDeg } from './_edge';
+import type { CompassAnchorValue } from './anchor';
 import type { Position } from './point';
-import type { RectAnchor } from './rect';
 
 const DEG_TO_RAD = Math.PI / 180;
 
@@ -26,8 +26,8 @@ export const circle = {
     const [lx, ly] = worldToLocal(c, p);
     return lx * lx + ly * ly <= c.radius * c.radius;
   },
-  /** 9 个标准 anchor 之一的世界坐标 */
-  anchor: (c: Circle, name: RectAnchor): Position => {
+  /** 9 个标准方位 anchor 之一的世界坐标 */
+  anchor: (c: Circle, name: CompassAnchorValue): Position => {
     const r = c.radius;
     let lx = 0;
     let ly = 0;

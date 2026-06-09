@@ -34,7 +34,7 @@ describe('BUILTIN_SHAPES.circumscribe matches legacy layoutNode switch', () => {
   });
 });
 
-describe('BUILTIN_SHAPES.anchor returns the 9 RECT_ANCHORS, undefined otherwise', () => {
+describe('BUILTIN_SHAPES.anchor returns the 9 compass anchors, undefined otherwise', () => {
   const rect: Rect = { x: 0, y: 0, width: 20, height: 10, rotate: 0 };
   it('rectangle named anchors', () => {
     expect(BUILTIN_SHAPES.rectangle.anchor(rect, 'center', NO_PARAMS)).toEqual([0, 0]);

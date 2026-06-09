@@ -1,12 +1,13 @@
 import type { Position } from '../geometry/point';
-import type { Rect, RectAnchor } from '../geometry/rect';
+import type { CompassAnchorValue } from '../geometry/anchor';
+import type { Rect } from '../geometry/rect';
 import type { AtDirection, IRAnimationTrack, IRBoundary, IRJsonObject, IRLabelDefault, IRLineSpec, IRNode, IRNodeLabel, IRPaintSpec, IRShapeRef, JsonValue } from '../ir';
 import { JsonObjectSchema } from '../ir';
 import type { PaintResolver } from './paint';
 import type { GroupPrim, ScenePrimitive, TextLine, Transform } from '../primitive';
 import { BUILTIN_SHAPES } from '../shapes';
 import type { ShapeDefinition, ShapeStyle } from '../shapes';
-import { asRectAnchor } from '../shapes/_shared';
+import { asCompassAnchor } from '../shapes/_shared';
 import type { NameStack } from './name-stack';
 import { type ResolveBetweenGlobal, resolvePosition } from './position';
 import { toAlphabeticBaselineY } from './text-baseline';
@@ -278,7 +279,8 @@ export const anchorOf = (
   name: string,
   boundary: IRBoundary | undefined = 'shape',
 ): Position => {
-  if (asRectAnchor(name) !== undefined) {
+  const compassAnchor = asCompassAnchor(name);
+  if (compassAnchor !== undefined) {
     // compass 方位名：'shape' 归一为 'rectangle'（走 AABB 矩形），其余按 boundary
     const compassBoundary = boundary === 'shape' ? 'rectangle' : boundary;
     const { def, rect, params } = resolveBoundary(
@@ -288,7 +290,7 @@ export const anchorOf = (
       layout.shapeParams ?? EMPTY_SHAPE_PARAMS,
       layout.shapes,
     );
-    const p = def.anchor(rect, name, params);
+    const p = def.anchor(rect, compassAnchor, params);
     if (p === undefined) throw new Error(`Unknown anchor '${name}' for shape '${layout.shapeName}'`);
     return p;
   }
@@ -303,7 +305,7 @@ export const anchorOf = (
 /** 8 方向 label position → (anchorName, 单位向量)；above 视觉上方即 y 减小 */
 const LABEL_DIRECTION_MAP: Record<
   AtDirection,
-  { anchor: RectAnchor; vec: [number, number] }
+  { anchor: CompassAnchorValue; vec: [number, number] }
 > = {
   above: { anchor: 'north', vec: [0, -1] },
   below: { anchor: 'south', vec: [0, 1] },

@@ -1,7 +1,7 @@
 import { localToWorld, worldToLocal } from './_transform';
 import { type Side, edgeAngleDeg } from './_edge';
+import type { CompassAnchorValue } from './anchor';
 import type { Position } from './point';
-import type { RectAnchor } from './rect';
 
 const DEG_TO_RAD = Math.PI / 180;
 
@@ -32,7 +32,7 @@ export const ellipse = {
  * 9 个 anchor 的世界坐标
  * @description 对角（NE/NW/SE/SW）取参数曲线 t=π/4 处 (rx/√2, ry/√2)，与 TikZ 椭圆 anchor 参数等分约定一致
  */
-  anchor: (e: Ellipse, name: RectAnchor): Position => {
+  anchor: (e: Ellipse, name: CompassAnchorValue): Position => {
     let lx = 0;
     let ly = 0;
     switch (name) {

@@ -1,4 +1,5 @@
 export * from './point';
+export * from './anchor';
 export * from './rect';
 export * from './circle';
 export * from './ellipse';

@@ -1,5 +1,5 @@
+import type { CompassAnchorValue } from './anchor';
 import type { Position } from './point';
-import type { RectAnchor } from './rect';
 
 /** 边上比例点 `{ side, t }` 的四个 side（north/south/east/west） */
 export type Side = 'north' | 'south' | 'east' | 'west';
@@ -14,7 +14,7 @@ export const EDGE_ENDS = {
   south: ['south-west', 'south-east'],
   east: ['north-east', 'south-east'],
   west: ['north-west', 'south-west'],
-} as const satisfies Record<Side, readonly [RectAnchor, RectAnchor]>;
+} as const satisfies Record<Side, readonly [CompassAnchorValue, CompassAnchorValue]>;
 
 /** 线性插值 a + (b − a)·t */
 export const lerpPoint = (a: Position, b: Position, t: number): Position => [

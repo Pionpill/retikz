@@ -1,21 +1,28 @@
 import { describe, expect, it } from 'vitest';
-import { RECT_ANCHORS, type Rect, rect } from '../../src/geometry/rect';
+import { CompassAnchor, WebAnchor, normalizeCompassAnchor } from '../../src/geometry/anchor';
+import { type Rect, rect } from '../../src/geometry/rect';
 
 const r10x6: Rect = { x: 0, y: 0, width: 10, height: 6 };
 
-describe('RECT_ANCHORS 常量值', () => {
+describe('CompassAnchor 常量值', () => {
   it('9 个 anchor 名与 TikZ 命名一致', () => {
-    expect(RECT_ANCHORS).toEqual({
-      CENTER: 'center',
-      NORTH: 'north',
-      SOUTH: 'south',
-      EAST: 'east',
-      WEST: 'west',
-      NORTH_EAST: 'north-east',
-      NORTH_WEST: 'north-west',
-      SOUTH_EAST: 'south-east',
-      SOUTH_WEST: 'south-west',
+    expect(CompassAnchor).toEqual({
+      Center: 'center',
+      North: 'north',
+      South: 'south',
+      East: 'east',
+      West: 'west',
+      NorthEast: 'north-east',
+      NorthWest: 'north-west',
+      SouthEast: 'south-east',
+      SouthWest: 'south-west',
     });
+  });
+
+  it('Web anchor alias 归一到 TikZ canonical anchor', () => {
+    expect(normalizeCompassAnchor(WebAnchor.Top)).toBe(CompassAnchor.North);
+    expect(normalizeCompassAnchor(WebAnchor.TopLeft)).toBe(CompassAnchor.NorthWest);
+    expect(normalizeCompassAnchor(WebAnchor.BottomRight)).toBe(CompassAnchor.SouthEast);
   });
 });
 
@@ -89,8 +96,8 @@ describe('rect.anchor 9 个标准锚点', () => {
     expect(rect.anchor(r10x6, 'south-west')).toEqual([-5, 3]);
   });
 
-  it('用 RECT_ANCHORS 常量取值与字面量一致', () => {
-    expect(rect.anchor(r10x6, RECT_ANCHORS.NORTH_EAST)).toEqual(
+  it('用 CompassAnchor 常量取值与字面量一致', () => {
+    expect(rect.anchor(r10x6, CompassAnchor.NorthEast)).toEqual(
       rect.anchor(r10x6, 'north-east'),
     );
   });
