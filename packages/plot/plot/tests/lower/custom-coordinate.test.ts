@@ -3,7 +3,7 @@ import { compileToScene } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 import { type PlotSpec, PlotSpecSchema } from '../../src/ir';
 import { type LowerPlotsOptions, lowerPlots } from '../../src/lower/expand';
-import { type CustomCoordinateFactory, createCustomFrame } from '../../src/lower/project';
+import { type AxisFrame, type CustomCoordinateFactory, type CustomFrame, type DimensionRole, createCustomFrame } from '../../src/lower/project';
 
 /**
  * 自定义坐标系（custom coordinate，实验性）lowering 测试。
@@ -44,7 +44,7 @@ const sineCoordinate: CustomCoordinateFactory = context => {
 };
 
 const ARCH_HEIGHT = 70;
-/** 示例工厂：二维桥坐标系——x 沿拱、y 竖直偏移（加性可分离） */
+/** 示例工厂：二维桥坐标系——x 沿拱、y 竖直偏移（加性可分离）；回传解析 frameAlong 让曲线轴精确 */
 const bridgeCoordinate: CustomCoordinateFactory = context => {
   const xScale = context.linearScaleFor('x', [0, context.width]);
   const yScale = context.linearScaleFor('y', [context.height - 40, 40]);
@@ -56,8 +56,19 @@ const bridgeCoordinate: CustomCoordinateFactory = context => {
     const t = screenX / context.width;
     return [screenX, yOffset - archHeight * (1 - (2 * t - 1) ** 2)];
   };
-  // 回传 roleScales → guide 可画曲线轴
-  return createCustomFrame(['x', 'y'], projectRoles, { x: xScale, y: yScale });
+  // 解析切向：线性 scale 斜率为常量；∂γ/∂x 沿拱（dY/dx = 4·archHeight·u·xSlope/width，u=2sx/width−1）、∂γ/∂y 竖直
+  const xSlope = xScale.coordinate(1) - xScale.coordinate(0);
+  const ySlope = yScale.coordinate(1) - yScale.coordinate(0);
+  const frameAlong = (role: DimensionRole, values: ReadonlyArray<unknown>): AxisFrame | null => {
+    const origin = projectRoles(values);
+    if (!origin) return null;
+    if (role === 'y') return { origin, tangent: [0, ySlope] };
+    const screenX = xScale.coordinate(values[0]);
+    const u = (2 * screenX) / context.width - 1;
+    return { origin, tangent: [xSlope, (4 * archHeight * u * xSlope) / context.width] };
+  };
+  // options 对象（ADR-05 定稿）：roleScales → guide 画曲线轴；frameAlong → 轴切向精确
+  return createCustomFrame(['x', 'y'], projectRoles, { roleScales: { x: xScale, y: yScale }, frameAlong });
 };
 
 const sineSpec = (): PlotSpec =>
@@ -212,5 +223,189 @@ describe('custom coordinate — 契约 / fail-loud', () => {
     });
     const layer = firstLayer(spec, { d: [{ v: 1, g: 'X' }, { v: 9, g: 'Y' }] }, opts({ sine: sineCoordinate }));
     expect(layer.children).toHaveLength(2);
+  });
+});
+
+// ── ADR-05：frameAlong 单 role 轴标架契约 ───────────────────────────────────────────────
+// 坐标系可选报某角色轴曲线在某点的局部标架（origin + 切向，屏幕空间）；曲线轴优先吃它、缺则数值差分回落。
+// 法向 = 切向逆时针转 90°，由 guide 导出。维度无关：轴曲线永远 1D、永远有切向法向（2D custom 的单 role 轴亦然）。
+
+/** 线性对角坐标系（projectRoles=[10x,10x]）：解析切向为常量 [10,10]，frame 级断言用（不依赖 context） */
+const DIAGONAL_K = 10;
+const diagonalFrame = (): CustomFrame => {
+  const project = (values: ReadonlyArray<unknown>): [number, number] | null => {
+    const x = Number(values[0]);
+    return Number.isFinite(x) ? [x * DIAGONAL_K, x * DIAGONAL_K] : null;
+  };
+  const frameAlong = (_role: DimensionRole, values: ReadonlyArray<unknown>): AxisFrame | null => {
+    const origin = project(values);
+    return origin ? { origin, tangent: [DIAGONAL_K, DIAGONAL_K] } : null;
+  };
+  return createCustomFrame(['x'], project, { frameAlong });
+};
+
+/** 一维正弦坐标系 + roleScales；frameAlong 回传常量切向 [1,0]（法向恒 [0,1]，刻度短线竖直，证明被消费） */
+const sineFramedTangentX: CustomCoordinateFactory = context => {
+  const scale = context.linearScaleFor('x', [0, context.width]);
+  const projectRoles = (values: ReadonlyArray<unknown>): [number, number] | null => {
+    const sx = scale.coordinate(values[0]);
+    if (!Number.isFinite(sx)) return null;
+    return [sx, MID_Y - AMPLITUDE * Math.sin((sx / context.width) * 2 * Math.PI * CYCLES)];
+  };
+  const frameAlong = (_role: DimensionRole, values: ReadonlyArray<unknown>): AxisFrame | null => {
+    const origin = projectRoles(values);
+    return origin ? { origin, tangent: [1, 0] } : null;
+  };
+  return createCustomFrame(['x'], projectRoles, { roleScales: { x: scale }, frameAlong });
+};
+
+/** 同上但不回传 frameAlong → 曲线轴走数值差分回落 */
+const sineNumeric: CustomCoordinateFactory = context => {
+  const scale = context.linearScaleFor('x', [0, context.width]);
+  const projectRoles = (values: ReadonlyArray<unknown>): [number, number] | null => {
+    const sx = scale.coordinate(values[0]);
+    if (!Number.isFinite(sx)) return null;
+    return [sx, MID_Y - AMPLITUDE * Math.sin((sx / context.width) * 2 * Math.PI * CYCLES)];
+  };
+  return createCustomFrame(['x'], projectRoles, { roleScales: { x: scale } });
+};
+
+/** 退化坐标系：frameAlong 回传零切向 [0,0]，验证法向导出 guard 不产生 NaN */
+const degenerateFramed: CustomCoordinateFactory = context => {
+  const scale = context.linearScaleFor('x', [0, context.width]);
+  const projectRoles = (values: ReadonlyArray<unknown>): [number, number] | null => {
+    const sx = scale.coordinate(values[0]);
+    return Number.isFinite(sx) ? [sx, MID_Y] : null;
+  };
+  const frameAlong = (_role: DimensionRole, values: ReadonlyArray<unknown>): AxisFrame | null => {
+    const origin = projectRoles(values);
+    return origin ? { origin, tangent: [0, 0] } : null;
+  };
+  return createCustomFrame(['x'], projectRoles, { roleScales: { x: scale }, frameAlong });
+};
+
+const sineAxisSpec = (): PlotSpec =>
+  PlotSpecSchema.parse({
+    namespace: 'plot',
+    type: 'plot',
+    data: { reference: 'd' },
+    scales: [],
+    coordinate: { type: 'custom', name: 'sine', roles: ['x'] },
+    marks: [{ type: 'point', encoding: { x: { field: 'v' } } }],
+    guides: [{ type: 'axis', dimension: 'x' }],
+  });
+
+// 轴层 = root 下含 path 子节点的 scope（point mark 层只有 node、被过滤掉）
+type StepLike = { kind?: string; to?: [number, number] };
+type PathLike = { type?: string; children?: Array<StepLike> };
+type LayerLike = { type?: string; children?: Array<{ type?: string }> };
+const axisLayersOf = (root: IRScope): Array<IRScope> =>
+  (root.children as ReadonlyArray<unknown> as Array<LayerLike>).filter(child => child.type === 'scope' && (child.children ?? []).some(grandchild => grandchild.type === 'path')) as unknown as Array<IRScope>;
+const pathsOf = (layer: IRScope): Array<PathLike> => (layer.children as Array<PathLike>).filter(child => child.type === 'path');
+const moveCount = (path: PathLike): number => (path.children ?? []).filter(step => step.kind === 'move').length;
+/** 轴线 polyline（恰 1 个 move 的 path）的步数 */
+const polylineStepsOf = (layer: IRScope): number => pathsOf(layer).find(path => moveCount(path) === 1)?.children?.length ?? 0;
+/** 刻度短线（> 1 个 move 的 path）各段向量 [Δx, Δy] */
+const tickSegmentsOf = (layer: IRScope): Array<[number, number]> => {
+  const steps = pathsOf(layer).find(path => moveCount(path) > 1)?.children ?? [];
+  const segments: Array<[number, number]> = [];
+  for (let i = 0; i + 1 < steps.length; i += 2) {
+    const from = steps[i].to;
+    const to = steps[i + 1].to;
+    if (from && to) segments.push([to[0] - from[0], to[1] - from[1]]);
+  }
+  return segments;
+};
+const labelNodesOf = (layer: IRScope): Array<IRNode> => (layer.children as Array<IRNode>).filter(child => (child as { type?: string }).type === 'node');
+
+describe('custom coordinate — frameAlong 局部标架契约（ADR-05）', () => {
+  it('framealong_origin_matches_project_roles', () => {
+    // frameAlong(role,p).origin 与 projectRoles(p) 逐分量近似相等；projectRoles 为 null 时同返 null（非引用相等）
+    const frame = diagonalFrame();
+    for (const x of [0, 1, 3.5, 7]) {
+      const local = frame.frameAlong!('x', [x]);
+      const projected = frame.projectRoles([x]);
+      expect(local).not.toBeNull();
+      expect(projected).not.toBeNull();
+      expect(local!.origin[0]).toBeCloseTo(projected![0], 6);
+      expect(local!.origin[1]).toBeCloseTo(projected![1], 6);
+    }
+    expect(frame.projectRoles(['oops'])).toBeNull();
+    expect(frame.frameAlong!('x', ['oops'])).toBeNull();
+  });
+
+  it('framealong_tangent_along_axis_curve', () => {
+    // 解析切向方向 ≈ 中心差分方向（归一化后 dot ≈ 1）
+    const frame = diagonalFrame();
+    const h = 1e-4;
+    const before = frame.projectRoles([4 - h])!;
+    const after = frame.projectRoles([4 + h])!;
+    const numeric: [number, number] = [after[0] - before[0], after[1] - before[1]];
+    const analytic = frame.frameAlong!('x', [4])!.tangent;
+    const unit = (vector: [number, number]): [number, number] => {
+      const length = Math.hypot(vector[0], vector[1]);
+      return [vector[0] / length, vector[1] / length];
+    };
+    const a = unit(numeric);
+    const b = unit(analytic);
+    expect(a[0] * b[0] + a[1] * b[1]).toBeCloseTo(1, 6);
+  });
+
+  it('curved_axis_consumes_framealong_tangent', () => {
+    // frameAlong 回传常量切向 [1,0] → 法向恒 [0,1] → 所有刻度短线竖直（Δx≈0）；数值差分在正弦上做不到
+    const rows = Array.from({ length: 13 }, (_unused, i) => ({ v: i }));
+    const root = expandOf(sineAxisSpec(), { d: rows }, opts({ sine: sineFramedTangentX }));
+    const axisLayer = axisLayersOf(root)[0];
+    const segments = tickSegmentsOf(axisLayer);
+    expect(segments.length).toBeGreaterThan(0);
+    for (const [dx] of segments) expect(Math.abs(dx)).toBeLessThan(1e-6);
+  });
+
+  it('framealong_absent_falls_back_to_numeric_sampling', () => {
+    // 不回传 frameAlong → 仍画弯曲轴线（polyline ≥ 4 步）；法向随正弦斜率变化、刻度短线非全竖直
+    const rows = Array.from({ length: 13 }, (_unused, i) => ({ v: i }));
+    const root = expandOf(sineAxisSpec(), { d: rows }, opts({ sine: sineNumeric }));
+    const axisLayer = axisLayersOf(root)[0];
+    expect(polylineStepsOf(axisLayer)).toBeGreaterThanOrEqual(4);
+    const segments = tickSegmentsOf(axisLayer);
+    expect(segments.some(([dx]) => Math.abs(dx) > 1e-6)).toBe(true);
+  });
+
+  it('degenerate_tangent_guarded_no_nan', () => {
+    // 零切向 [0,0] → 法向导出有 guard，标签位置仍有限（不出 NaN）
+    const rows = Array.from({ length: 5 }, (_unused, i) => ({ v: i }));
+    const root = expandOf(sineAxisSpec(), { d: rows }, opts({ sine: degenerateFramed }));
+    const labels = labelNodesOf(axisLayersOf(root)[0]);
+    expect(labels.length).toBeGreaterThan(0);
+    for (const node of labels) {
+      const position = node.position as [number, number];
+      expect(Number.isFinite(position[0])).toBe(true);
+      expect(Number.isFinite(position[1])).toBe(true);
+    }
+  });
+
+  it('curved_axis_normal_uses_axis_tangent_even_when_custom_roles_are_2d', () => {
+    // 2D custom（roles=['x','y']）的 x 轴仍是 1D 曲线：画成弯曲轴线 + 标签沿轴法向偏移、位置有限
+    const spec = PlotSpecSchema.parse({
+      namespace: 'plot',
+      type: 'plot',
+      data: { reference: 'd' },
+      scales: [],
+      coordinate: { type: 'custom', name: 'bridge', roles: ['x', 'y'], params: { archHeight: ARCH_HEIGHT } },
+      marks: [{ type: 'point', encoding: { x: { field: 'x' }, y: { field: 'y' } } }],
+      guides: [{ type: 'axis', dimension: 'x' }],
+    });
+    const rows: Array<Record<string, number>> = [];
+    for (const x of [0, 5, 10]) for (const y of [0, 10]) rows.push({ x, y });
+    const root = expandOf(spec, { d: rows }, opts({ bridge: bridgeCoordinate }));
+    const axisLayer = axisLayersOf(root)[0];
+    expect(polylineStepsOf(axisLayer)).toBeGreaterThanOrEqual(4);
+    const labels = labelNodesOf(axisLayer);
+    expect(labels.length).toBeGreaterThan(0);
+    for (const node of labels) {
+      const position = node.position as [number, number];
+      expect(Number.isFinite(position[0])).toBe(true);
+      expect(Number.isFinite(position[1])).toBe(true);
+    }
   });
 });
