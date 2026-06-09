@@ -20,7 +20,7 @@ const bridge: CustomCoordinateFactory = context => {
     const t = screenX / context.width;
     return [screenX, screenY - archHeight * (1 - (2 * t - 1) ** 2)];
   };
-  return createCustomFrame(['x', 'y'], projectRoles, { x: xScale, y: yScale });
+  return createCustomFrame(['x', 'y'], projectRoles, { roleScales: { x: xScale, y: yScale } });
 };
 
 /** 规则 (x,y) 网格喂「桥」坐标系：x 轴被拱起、y 仍竖直 */

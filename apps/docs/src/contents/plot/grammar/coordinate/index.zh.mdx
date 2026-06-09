@@ -131,8 +131,8 @@ const bridge: CustomCoordinateFactory = ctx => {
     const t = sx / ctx.width;
     return [sx, yScale.coordinate(y) - archHeight * (1 - (2 * t - 1) ** 2)];
   };
-  // 第三个参数 roleScales：让 guide 沿投影画曲线轴（x 轴随拱弯、y 轴竖直），省略则不画轴
-  return createCustomFrame(['x', 'y'], projectRoles, { x: xScale, y: yScale });
+  // 第三个参数 options：roleScales 让 guide 沿投影画曲线轴（x 轴随拱弯、y 轴竖直）；可选 frameAlong 给精确轴切向，省略则数值采样估算
+  return createCustomFrame(['x', 'y'], projectRoles, { roleScales: { x: xScale, y: yScale } });
 };
 
 // coordinate 引用工厂名，coordinates 传函数（与 data 一样属运行时、不进 IR）
@@ -143,11 +143,11 @@ const bridge: CustomCoordinateFactory = ctx => {
 </Plot>
 ```
 
-坐标轴是通用的——回传 `roleScales` 后，`<Axis dimension="x" />` 会沿投影**密采样画出弯曲的 x 轴**（这里随拱起伏），刻度自动落在 scale 刻度处；同一套画法对任意曲线 / 圆 / 螺旋都成立。
+坐标轴是通用的——回传 `roleScales` 后，`<Axis dimension="x" />` 会沿投影**密采样画出弯曲的 x 轴**（这里随拱起伏），刻度自动落在 scale 刻度处；同一套画法对任意曲线 / 圆 / 螺旋都成立。工厂还可选回传 `frameAlong`——报某角色轴曲线在某点的原点 + 切向，刻度 / 标签据此**精确**摆放；不回传则沿投影数值采样估算切向。
 
 <ComponentPreview name="coordinate-custom-bridge" sourceFiles={['coordinate-custom-bridge.data.ts']} hideCode />
 
-<ComponentAlert type="warn" title="实验性，本轮仅 point" description="自定义坐标系是设计探讨产物：当前只支持 PointMark，曲线轴已可画（工厂回传 roleScales）但暂无网格。工厂签名 / 参数等 API 尚未定稿，正式化前会走 ADR。" />
+<ComponentAlert type="warn" title="进阶扩展，本轮仅 point" description="自定义坐标系当前只支持 PointMark；曲线轴可画（工厂回传 roleScales、可选 frameAlong 给精确切向）但暂无网格。三维坐标系、多 plot 组合、沿法向偏移留作后续。" />
 
 <Comparison target="tikz" title="TikZ 对照">
 TikZ 里极坐标靠 PGFPlots 的 `polaraxis` 环境（`\begin{polaraxis} ... \end{polaraxis}`）切换；retikz 把它收成 `<Plot>` 的一个 `coordinate` 开关，mark 不分平面 / 极坐标两套。

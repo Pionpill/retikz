@@ -14,6 +14,19 @@ export const RETIKZ_POLAR_SEGMENT_SAMPLES = 16;
 export type DimensionRole = 'x' | 'y' | 'angle' | 'radius' | 'a' | 'b' | 'c';
 
 /**
+ * 某角色轴曲线在某参数点的局部标架（alpha.9 ADR-05）：原点 + 切向，均在屏幕空间
+ * @description 固定其余角色、只让某 role 变化得到一条 1D 轴曲线 γ_role(t)；`tangent` = ∂γ/∂role（原始幅值，
+ *   消费方需方向时自行归一化）。法向 = 切向逆时针转 90°，由 guide 导出（不入此类型）。
+ *   无论坐标系总共几个 role，轴曲线永远 1D、永远有切向法向——这是曲线轴刻度 / 标签所需。
+ */
+export type AxisFrame = {
+  /** 该点屏幕坐标（= projectRoles(values)，分量数值相等） */
+  origin: [number, number];
+  /** 沿该角色轴曲线的切向 ∂γ/∂role（屏幕空间，原始幅值） */
+  tangent: [number, number];
+};
+
+/**
  * 解析后的坐标帧：lowering 算一次，mark / guide 共用同一帧（不各造临时投影框架）
  * @description grammar of graphics 的 coordinate 层：scale 把值归一化后，frame 负责归一化→2D 点。
  *   N 通道泛化（alpha.9 ADR-01）：`roles` 是该坐标系的位置角色序、`projectRoles(values)` 按 roles 序传值投影；
@@ -323,22 +336,36 @@ export type CustomFrame = {
    * 沿 projectRoles 密采样得曲线轴线 + 刻度点。不回传 → 该坐标系不画轴。
    */
   roleScales?: Partial<Record<DimensionRole, PositionScale>>;
+  /**
+   * 某角色轴曲线在某点的局部标架（工厂可选回传，alpha.9 ADR-05）：origin + 切向 ∂γ/∂role。
+   * 曲线轴优先用它取精确切向；不回传 → guide 对 projectRoles 数值差分回落（现状行为）。
+   */
+  frameAlong?: (role: DimensionRole, values: ReadonlyArray<unknown>) => AxisFrame | null;
+};
+
+/** createCustomFrame 选项（alpha.9 ADR-05）：roleScales 让 guide 画曲线轴、frameAlong 给精确切向；均可选 */
+export type CreateCustomFrameOptions = {
+  /** 各角色位置 scale；供 guide 画轴。省略 → 该坐标系无轴 */
+  roleScales?: Partial<Record<DimensionRole, PositionScale>>;
+  /** 某角色轴曲线局部标架；曲线轴优先用其切向，省略 → guide 数值差分回落 */
+  frameAlong?: (role: DimensionRole, values: ReadonlyArray<unknown>) => AxisFrame | null;
 };
 
 /**
  * 建自定义坐标帧：把工厂给的 roles + projectRoles 包成 CoordinateFrame（point mark 经此投影）
- * @description 可选传 roleScales（各角色位置 scale）让 guide 画曲线轴；省略则该自定义坐标系无轴。
+ * @description 第三参 options（alpha.9 ADR-05）：roleScales 让 guide 画曲线轴、frameAlong 给精确轴切向；均可选。
  */
 export const createCustomFrame = (
   roles: ReadonlyArray<DimensionRole>,
   projectRoles: (values: ReadonlyArray<unknown>) => [number, number] | null,
-  roleScales?: Partial<Record<DimensionRole, PositionScale>>,
+  options?: CreateCustomFrameOptions,
 ): CustomFrame => ({
   type: 'custom',
   roles,
   project: () => null,
   projectRoles,
-  ...(roleScales !== undefined ? { roleScales } : {}),
+  ...(options?.roleScales !== undefined ? { roleScales: options.roleScales } : {}),
+  ...(options?.frameAlong !== undefined ? { frameAlong: options.frameAlong } : {}),
 });
 
 /**

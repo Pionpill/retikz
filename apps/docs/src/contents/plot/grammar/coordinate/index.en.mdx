@@ -131,8 +131,8 @@ const bridge: CustomCoordinateFactory = ctx => {
     const t = sx / ctx.width;
     return [sx, yScale.coordinate(y) - archHeight * (1 - (2 * t - 1) ** 2)];
   };
-  // third arg roleScales: lets the guide draw curved axes along the projection (x arches, y vertical); omit it for no axes
-  return createCustomFrame(['x', 'y'], projectRoles, { x: xScale, y: yScale });
+  // third arg options: roleScales lets the guide draw curved axes along the projection (x arches, y vertical); optional frameAlong gives exact axis tangents, otherwise sampled
+  return createCustomFrame(['x', 'y'], projectRoles, { roleScales: { x: xScale, y: yScale } });
 };
 
 // coordinate references the factory by name; coordinates passes the function (runtime, like data — not in the IR)
@@ -143,11 +143,11 @@ const bridge: CustomCoordinateFactory = ctx => {
 </Plot>
 ```
 
-Axes are generic — once the factory returns `roleScales`, `<Axis dimension="x" />` **samples the projection densely to draw a curved x-axis** (arching here), with ticks landing at the scale's tick positions; the same routine works for any curve / circle / spiral.
+Axes are generic — once the factory returns `roleScales`, `<Axis dimension="x" />` **samples the projection densely to draw a curved x-axis** (arching here), with ticks landing at the scale's tick positions; the same routine works for any curve / circle / spiral. The factory may also return `frameAlong` — reporting the origin + tangent of a role's axis curve at a point — so ticks / labels are placed from the **exact** tangent; without it the tangent is estimated by sampling the projection.
 
 <ComponentPreview name="coordinate-custom-bridge" sourceFiles={['coordinate-custom-bridge.data.ts']} hideCode />
 
-<ComponentAlert type="warn" title="Experimental, point-only this round" description="Custom coordinates are a design-exploration result: only PointMark is supported; curved axes work (when the factory returns roleScales) but there is no grid yet. The factory signature and params API are not finalized and will go through an ADR before becoming official." />
+<ComponentAlert type="warn" title="Advanced extension, point-only this round" description="Custom coordinates support PointMark only; curved axes work (the factory returns roleScales, optionally frameAlong for exact tangents) but there is no grid yet. 3D coordinates, multi-plot composition, and offset-along-normal are left for later." />
 
 <Comparison target="tikz" title="TikZ comparison">
 In TikZ, polar plots rely on PGFPlots' `polaraxis` environment (`\begin{polaraxis} ... \end{polaraxis}`); retikz folds it into a single `coordinate` switch on `<Plot>`, so marks aren't split into cartesian and polar variants.

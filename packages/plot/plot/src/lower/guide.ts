@@ -437,19 +437,29 @@ export const lowerCustomAxis = (frame: CustomFrame, guide: AxisGuide, fontSize: 
   }
   const axisLinePath = polylinePath(linePoints);
 
-  // 刻度 + 标签：沿局部切向（邻近采样差分）的法线摆
+  // 刻度 + 标签：沿局部切向的法线摆。切向优先取工厂回传的解析 frameAlong（ADR-05），缺则邻近采样数值差分回落
   const epsilon = span === 0 ? 1 : span * 1e-3;
+  const valuesAt = (value: number): Array<unknown> => frame.roles.map(role => (role === guide.dimension ? value : anchorFor(role)));
+  // 该刻度点的 [屏幕点, 切向]：有 frameAlong 用解析切向，否则中心差分；非有限 → null
+  const pointAndTangent = (value: number): [[number, number], [number, number]] | null => {
+    if (frame.frameAlong) {
+      const local = frame.frameAlong(guide.dimension, valuesAt(value));
+      return local ? [local.origin, local.tangent] : null;
+    }
+    const point = projectAt(value);
+    if (!point) return null;
+    const before = projectAt(value - epsilon) ?? point;
+    const after = projectAt(value + epsilon) ?? point;
+    return [point, [after[0] - before[0], after[1] - before[1]]];
+  };
   const tickSegments: Array<Segment> = [];
   const labels: Array<IRNode> = [];
   for (const tick of numericTicks) {
-    const point = projectAt(tick.value);
-    if (!point) continue;
-    const before = projectAt(tick.value - epsilon) ?? point;
-    const after = projectAt(tick.value + epsilon) ?? point;
-    const tangentX = after[0] - before[0];
-    const tangentY = after[1] - before[1];
-    const length = Math.hypot(tangentX, tangentY) || 1;
-    const normal: [number, number] = [-tangentY / length, tangentX / length];
+    const resolved = pointAndTangent(tick.value);
+    if (!resolved) continue;
+    const [point, tangent] = resolved;
+    const length = Math.hypot(tangent[0], tangent[1]) || 1;
+    const normal: [number, number] = [-tangent[1] / length, tangent[0] / length];
     tickSegments.push([point, [point[0] + normal[0] * AXIS_TICK_LENGTH, point[1] + normal[1] * AXIS_TICK_LENGTH]]);
     if (showLabels) {
       const offset = AXIS_TICK_LENGTH + AXIS_LABEL_GAP + fontSize / 2;
