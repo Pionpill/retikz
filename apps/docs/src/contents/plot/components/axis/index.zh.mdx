@@ -3,7 +3,7 @@ title: 坐标轴
 description: 用 <Axis> 定制刻度、标签和网格；dimension 选择装饰哪个维度——cartesian 的 x / y 或 polar 的 angle / radius。
 ---
 
-`<Axis>` 声明一条坐标轴。`dimension` 选它装饰哪个维度：cartesian 下是 `x`（水平）/ `y`（垂直），polar 下是 `angle`（角向）/ `radius`（径向）。网格走 `grid` 布尔属性，不是单独的组件。
+`<Axis>` 声明一条坐标轴。`dimension` 选它装饰哪个维度：cartesian 下是 `x`（水平）/ `y`（垂直），polar 下是 `angle`（角向）/ `radius`（径向），ternary 下是 `a` / `b` / `c`（三角三边）。维度须匹配当前坐标系，给错会报错（不静默画空轴）。网格走 `grid` 布尔属性，不是单独的组件。
 
 不写任何 `<Axis>` 时 `<Plot>` 会补默认轴；一旦显式列了 `<Axis>`，就只画你列出的那些。
 
@@ -41,7 +41,7 @@ polar 下用 `dimension="angle"`（角向刻度标签）和 `dimension="radius"`
 
 | 属性 | 类型 | 默认值 | 描述 |
 | --- | --- | --- | --- |
-| `dimension` | `'x' \| 'y' \| 'angle' \| 'radius'` | — | 装饰哪个维度：cartesian 的 x / y，polar 的 angle / radius |
+| `dimension` | `'x' \| 'y' \| 'angle' \| 'radius' \| 'a' \| 'b' \| 'c'` | — | 装饰哪个维度：cartesian 的 x / y，polar 的 angle / radius，ternary 的 a / b / c（三角三边）；须匹配坐标系合法集、否则报错 |
 | `tickCount` | `number?` | 默认刻度数 | 目标刻度数；网格线复用同刻度 |
 | `tickLabels` | `boolean?` | `true` | 是否出刻度标签 |
 | `grid` | `boolean?` | `false` | 是否画对齐本轴刻度的网格线（polar radius 即同心环） |

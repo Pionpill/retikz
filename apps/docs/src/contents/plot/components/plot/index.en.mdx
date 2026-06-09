@@ -3,7 +3,7 @@ title: Plot
 description: "<Plot> is the chart container: it takes raw data and a size, assembles mark / guide children, and picks a cartesian or polar coordinate system via coordinate."
 ---
 
-`<Plot>` is the root container for every chart. It takes `data` (an array of raw rows) and a display size, and assembles its `<LineMark>` / `<BarMark>` / `<SectorMark>` / `<Axis>` children into a chart. `coordinate` picks the coordinate system: cartesian by default, `"polar2D"` for polar. Data never enters the IR; it's injected at compile time.
+`<Plot>` is the root container for every chart. It takes `data` (an array of raw rows) and a display size, and assembles its `<LineMark>` / `<BarMark>` / `<SectorMark>` / `<Axis>` children into a chart. `coordinate` picks the coordinate system: cartesian2D by default, plus polar (`"polar2D"`), 1D (`"cartesian1D"` / `"polar1D"`), and ternary (`"ternary2D"`). Data never enters the IR; it's injected at compile time.
 
 ## Usage
 
@@ -32,14 +32,17 @@ import { Plot, BarMark } from '@retikz/plot-react';
 
 <p className="text-sm text-muted-foreground">Left: default cartesian; right: only <code>coordinate="polar2D"</code> added.</p>
 
-`coordinate` accepts a string shorthand or an object:
+`coordinate` accepts a string shorthand or an object, covering the coordinate family:
 
 ```tsx
-<Plot coordinate="polar2D">                                    {/* all defaults */}
+<Plot coordinate="polar2D">                                    {/* polar (pie / radar / radial bars) */}
 <Plot coordinate={{ type: 'polar2D', innerRadius: 0.5 }}>      {/* carve the center into a donut */}
+<Plot coordinate="cartesian1D">                                {/* 1D line (rug / timeline) */}
+<Plot coordinate="polar1D">                                    {/* 1D circle (cyclic data) */}
+<Plot coordinate="ternary2D">                                  {/* ternary (barycentric) */}
 ```
 
-See [Coordinates](/plot/grammar/coordinate) for the polar object's `innerRadius` / `startAngle` / `endAngle`.
+See [Coordinates](/plot/grammar/coordinate) for each system's geometry options (polar's `innerRadius` / `startAngle` / `endAngle`, cartesian1D's `orientation`, polar1D's `radius`, …) and which marks / channels apply.
 
 ## Entry forms
 
@@ -56,7 +59,7 @@ See [Coordinates](/plot/grammar/coordinate) for the polar object's `innerRadius`
 | --- | --- | --- | --- |
 | `data` | `Array<Row>` | — | Raw data rows (composition DSL entry); data never enters the IR |
 | `children` | `ReactNode` | — | Mark / guide children (composition DSL entry) |
-| `coordinate` | `'polar' \| { type: 'polar2D'; innerRadius?; startAngle?; endAngle? }` | cartesian | Coordinate system: cartesian by default; `"polar2D"` shorthand or a polar object |
+| `coordinate` | see [Coordinates](/plot/grammar/coordinate) | cartesian2D | Coordinate system: `"polar2D"` / `"cartesian1D"` / `"polar1D"` / `"ternary2D"` shorthand or the matching object; cartesian2D by default |
 | `scaleX` | `'linear' \| 'time' \| 'point' \| 'log' \| 'sqrt'` | `'linear'` | Continuous x scale type; forced to band with `<BarMark>`, ignored under polar. `log` / `sqrt` are point / line only (interval / area baselines include 0 and will error) |
 | `scaleY` | `'linear' \| 'log' \| 'sqrt'` | `'linear'` | Continuous y (value-axis) scale type; ignored under polar. `log` / `sqrt` are point / line only (interval / area will error). `log` requires positive data, `sqrt` requires non-negative |
 | `bare` | `boolean?` | `false` | Draw only the data, no axes / grid; ignores `<Axis>` |
