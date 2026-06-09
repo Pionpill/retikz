@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import type { IR } from '@retikz/core';
+import { type IR, parseWay } from '@retikz/core';
 
 import { irToVanillaCode } from '../src/components/shared/component-preview/irToVanillaCode';
 
@@ -91,11 +91,19 @@ describe('irToVanillaCode', () => {
           children: [
             { type: 'step', kind: 'move', to: [0, 0] },
             { type: 'step', kind: 'arc', startAngle: 0, endAngle: 90, radius: 10 },
+            { type: 'step', kind: 'circlePath', radius: 8 },
+            { type: 'step', kind: 'ellipsePath', radiusX: 12, radiusY: 6 },
           ],
         },
       ]),
     );
-    expect(code).toContain('/* unsupported step: arc */');
+    expect(code).toContain('{ arc: { startAngle: 0, endAngle: 90, radius: 10 } }');
+    expect(code).toContain('{ circle: { radius: 8 } }');
+    expect(code).toContain('{ ellipse: { radiusX: 12, radiusY: 6 } }');
+    expect(parseWay([[0, 0], { arc: { startAngle: 0, endAngle: 90, radius: 10 } }])).toEqual([
+      { type: 'step', kind: 'move', to: [0, 0] },
+      { type: 'step', kind: 'arc', startAngle: 0, endAngle: 90, radius: 10 },
+    ]);
   });
 
   it('scope-codegen：嵌套 scope + transforms', () => {
@@ -142,5 +150,54 @@ describe('irToVanillaCode', () => {
   it('empty-scene：空 children + 无 config → figure()，不抛', () => {
     expect(() => irToVanillaCode(ir([]))).not.toThrow();
     expect(irToVanillaCode(ir([]))).toContain('const fig = figure();');
+  });
+});
+
+describe('irToVanillaCode fallback', () => {
+  it('rectangle/generator stay runnable as raw IR child', () => {
+    const code = irToVanillaCode(
+      ir([
+        {
+          type: 'path',
+          stroke: '#333',
+          children: [{ type: 'step', kind: 'rectangle', from: [0, 0], to: [20, 10], cornerRadius: 2 }],
+        },
+      ]),
+    );
+    expect(code).toContain('raw IR child');
+    expect(code).toContain("type: 'path'");
+    expect(code).toContain("kind: 'rectangle'");
+    expect(code).not.toContain('draw(');
+    expect(code.split('\n')[0]).not.toContain('draw');
+  });
+
+  it('explicit center arc and partial circle are not faked as way', () => {
+    const centeredArc = irToVanillaCode(
+      ir([
+        {
+          type: 'path',
+          children: [
+            { type: 'step', kind: 'move', to: [0, 0] },
+            { type: 'step', kind: 'arc', startAngle: 0, endAngle: 90, radius: 10, center: [5, 5] },
+          ],
+        },
+      ]),
+    );
+    const partialCircle = irToVanillaCode(
+      ir([
+        {
+          type: 'path',
+          children: [
+            { type: 'step', kind: 'move', to: [0, 0] },
+            { type: 'step', kind: 'circlePath', radius: 10, startAngle: 0, endAngle: 180, closed: 'open' },
+          ],
+        },
+      ]),
+    );
+
+    expect(centeredArc).toContain('raw IR child');
+    expect(partialCircle).toContain('raw IR child');
+    expect(centeredArc).not.toContain('{ arc:');
+    expect(partialCircle).not.toContain('{ circle:');
   });
 });
