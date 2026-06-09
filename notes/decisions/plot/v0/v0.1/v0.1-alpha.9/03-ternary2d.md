@@ -20,7 +20,7 @@
 
 ```ts
 // ir/coordinate.ts —— PlotCoordinate.Ternary2D = 'ternary2D'
-// Ternary2DSchema: type / a? / b? / c?（三角色 scale 名，省略派生）
+// Ternary2DSchema: 仅 type（本轮无几何配置；分量绑定走 mark 的 a/b/c 通道、coordinate 内归一化）
 // CoordinateSchema union 追加；合法 guide dimension 集（ADR-01 契约）：ternary2D = { a, b, c }
 
 // ir/encoding.ts —— PositionEncodingSchema 加（承 ADR-01 x/y 已可选）
@@ -43,7 +43,7 @@
 - **归一化越界措辞**：`s≤0` / 含负 / 和上溢 `Infinity` → fail-loud 错误文案。落地：含负 → `ternary coordinate requires non-negative components (got …)`；`s≤0` → `requires a+b+c > 0 (got …)`；上溢 → `components overflow when summed (got …); use proportions or smaller magnitudes`。
 - **三角轴刻度方向 / 标签**：每条边刻度 0→100 朝哪、标签贴边还是贴顶点？倾向**沿边等距 + 顶点旁标注分量名**（取绑定字段名）。
 - **line/area 是否本轮**：ternary + line（三角内折线，如演化轨迹）做不做？倾向**顺延**（point 覆盖散点主用例）。
-- **a/b/c scale 语义**：三角色 scale 是否需独立 scale（各 [0,1]）还是共用归一化？落地：**coordinate 内归一、不消费独立 scale**（domain 固定 [0,1] 占比）；`Ternary2DSchema` 已预留 `a?/b?/c?` scale 名字段（结构对齐 cartesian/polar 的位置 scale 绑定、为将来 per-component scale 留口），但本轮 lowering 不读取它们。
+- **a/b/c scale 语义**：三角色 scale 是否需独立 scale（各 [0,1]）还是共用归一化？落地：**coordinate 内归一、不消费独立 scale**（domain 固定 [0,1] 占比）。`Ternary2DSchema` **本轮不暴露** `a/b/c` scale 名字段——评审指出「字段进 IR/LLM 契约却无运行效果、接受未知 scale 名静默无效」有害，故移除（多余 key 被 zod 剥离，同 polar2D 剥 x/y）；待真做 per-component scale 时再加。**注意**：位置分量绑定走 mark 的 `a/b/c` encoding 通道（保留），并入 ADR-01 数据契约（model strict / 归一化 coerce，修评审 P1）。
 
 ## DSL 表面
 
@@ -93,7 +93,7 @@
 | 文件 | 操作 | 字段名 | 类型 | 默认值 | describe 中文摘要 |
 |---|---|---|---|---|---|
 | `ir/coordinate.ts` | 加 | `PlotCoordinate.Ternary2D` | `'ternary2D'` | — | 三元坐标系判别串 |
-| `ir/coordinate.ts` | 加 | `Ternary2DSchema` | `z.object` | — | type / a? / b? / c?（三角色 scale 名） |
+| `ir/coordinate.ts` | 加 | `Ternary2DSchema` | `z.object` | — | 仅 type（本轮无几何配置字段；多余 a/b/c key 被 zod 剥离，同 polar2D 剥 x/y） |
 | `ir/coordinate.ts` | 改 | `CoordinateSchema` | `z.discriminatedUnion` | — | union 追加 Ternary2D |
 | `ir/coordinate.ts` | 加 | `Ternary2DCoordinate` | `z.infer` | — | 派生类型 |
 | `ir/encoding.ts` | 加 | `PositionEncodingSchema.a` | `ChannelSchema.optional()` | — | ternary a 角色通道 |

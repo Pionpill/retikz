@@ -190,18 +190,10 @@ describe('CoordinateSchema ternary2D (alpha.9 ADR-03)', () => {
     expect(CoordinateSchema.parse({ type: 'ternary2D' })).toEqual({ type: 'ternary2D' });
   });
 
-  it('ternary2d_with_scale_names_valid', () => {
-    const c = { type: 'ternary2D', a: 'as', b: 'bs', c: 'cs' };
-    expect(CoordinateSchema.parse(c)).toEqual(c);
-  });
-
-  // 边界：a/b/c 各自可省（派生 / 归一化）
-  it('ternary2d_partial_scale_names_valid', () => {
-    expect(() => CoordinateSchema.parse({ type: 'ternary2D', a: 'as' })).not.toThrow();
-  });
-
-  it('ternary2d_empty_a_rejected', () => {
-    expect(() => CoordinateSchema.parse({ type: 'ternary2D', a: '' })).toThrow();
+  // ternary2D 本轮无几何配置字段：分量绑定走 mark 的 a/b/c 通道，coordinate 内自动归一化。
+  // 多余的 a/b/c key（per-component scale 未来才做）被 zod 剥离（同 polar2D 剥离 cartesian x/y）。
+  it('ternary2d_strips_unsupported_scale_keys', () => {
+    expect(CoordinateSchema.parse({ type: 'ternary2D', a: 'as', b: 'bs', c: 'cs' })).toEqual({ type: 'ternary2D' });
   });
 
   // 回归 + round-trip

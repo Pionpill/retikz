@@ -98,11 +98,8 @@ export const Polar1DSchema = z
 export const Ternary2DSchema = z
   .object({
     type: z.literal(PlotCoordinate.Ternary2D).describe('Discriminator: 2D ternary space; three components a + b + c normalized to barycentric coordinates inside an equilateral triangle'),
-    a: z.string().min(1).optional().describe('Scale name for the a component (top vertex = a 100%); omit to use the raw normalized proportion. Reserved for future per-component scaling — this round normalizes within the coordinate'),
-    b: z.string().min(1).optional().describe('Scale name for the b component (bottom-right vertex = b 100%); omit to use the raw normalized proportion'),
-    c: z.string().min(1).optional().describe('Scale name for the c component (bottom-left vertex = c 100%); omit to use the raw normalized proportion'),
   })
-  .describe('2D ternary coordinate system: three continuous components projected by barycentric coordinates into an equilateral triangle (composition / mixture / vote share); each row is auto-normalized by a+b+c at lowering');
+  .describe('2D ternary coordinate system: three continuous components (bound via the mark a / b / c channels) projected by barycentric coordinates into an equilateral triangle (composition / mixture / vote share); each row is auto-normalized by a+b+c at lowering. No geometry options this round (per-component scales not yet supported)');
 
 export const CoordinateSchema = z
   .discriminatedUnion('type', [Cartesian2DSchema, Polar2DSchema, Cartesian1DSchema, Polar1DSchema, Ternary2DSchema])
