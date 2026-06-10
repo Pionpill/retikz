@@ -1,15 +1,33 @@
 ---
 title: 复合
-description: composite 让 domain 包注册高层节点（axis / bars / tree…）——namespace + type 判别、完整 zod schema、compile 期 lowering 展开成 Tier 1。core 不内置任何 composite，只提供注册面与展开管线。
+description: composite 让 domain 包注册高层节点（plot / tree…）——namespace + type 判别、完整 zod schema、compile 期 lowering 展开成 Tier 1。core 不内置任何 composite，只提供注册面与展开管线。
 ---
 
-retikz 的 IR 子节点分两层：**Tier 1**（`node` / `path` / `coordinate` / `scope`，core 内置、**无 namespace**）与 **Tier 2 composite**（domain 包的高层节点，**必有 `namespace`**，如 `plot` 的 `axis`）。判别只看**有无 `namespace`**：有 → tier2、无 → tier1。
+retikz 的 IR 子节点分两层：**Tier 1**（`node` / `path` / `coordinate` / `scope`，core 内置、**无 namespace**）与 **Tier 2 composite**（domain 包的高层节点，**必有 `namespace`**，如 `@retikz/plot` 的 `plot`——一整张 grammar-of-graphics 统计图 spec）。判别只看**有无 `namespace`**：有 → tier2、无 → tier1。
 
 复合像 `Node` 一样有自己**完整的 zod schema**（字段一等、每字段带说明），在 compile 第一步经注册的展开函数下沉成 Tier 1，之后布局 / anchor / zIndex / renderer 全自动复用。core 不内置任何 composite，也不懂任何 chart / domain 语义。
 
+<ComponentAlert type="tip" title="先画图的人可以先跳过" description="本页讲 Tier 2 扩展机制——domain 包如何注册高层节点、在 compile 期下沉成 Tier 1。只想用现成组件画图的读者可以先跳过，等需要自定义高层节点、或想懂 @retikz/plot 怎么接入时再回来。" />
+
+## composite 的意义
+
+composite 是「带语义的高层 IR 节点」。相比直接手写一堆 Tier 1 `node` / `path`，它的价值在于：
+
+- **语义自描述，AI 友好**：composite 经 zod schema 表达领域含义——一个流程图节点、一根柱、一棵树——而不是「20 个矩形 + 19 条线」。LLM 生成 / 人读 IR 时面对的是 `{ type: 'pipeline', stages: [...] }` 这样的**意图**，而非展开后的几何噪声。
+- **高层抽象，屏蔽底层**：用户与 LLM 只关心领域字段（数据、步骤、刻度），不关心坐标 / 连线 / 裁剪怎么算；底层 `expand` 实现可随时优化重构，只要 schema 契约不变，调用方 IR 不动。
+- **体积小，运行时展开**：composite 节点本身只存领域参数（下例的 pipeline 就是 `{ stages, arrows }` 两个短数组），序列化体积极小；真正的几何（框 / 连线 / 箭头 / 标签 / 边界裁剪）在 compile 期由 `expand` 现场生成。而这张图画的，正是 composite 自己经历的展开链路——`Tier 2 DSL → composite IR → core IR → graph`，其中 `lower` 这一步（composite IR → core IR）正是本页主题：
+
+<ComponentPreview name="composite-pipeline" size="xs" hideCode />
+
+还有几条同等重要的优势：
+
+- **可序列化 / 可持久化**：composite 是 100% JSON，能存库、走网络、被 AI 生成、入版本库、做 diff。且高层**意图保留在 IR 里**（不像 Sugar 在框架构建期就被展平抹掉），所以「把这个图的数据换掉」是改 composite 节点的一个字段，而非改 100 个矩形。
+- **一处展开，全后端共享**：lowering 在 core compile 期，svg / canvas / vanilla / SSR / 动画 / hit-test 自动复用同一份展开，domain 包只实现一次 `expand`，无需为每个 renderer 重写。
+- **强类型 + 校验 + 默认值**：schema 是单一真源，`expand` 收到强类型节点；非法字段在展开前 fail-loud 报清晰错误，缺省字段自动填默认。
+
 ## 注册一个 composite
 
-`defineComposite({ schema, expand })`：`schema` 继承 `CompositeBaseSchema`（定义必填的 `namespace` / `type`）再加领域字段；`expand` 收 schema 校验后的强类型节点、产 Tier 1。注册经 `CompileOptions.composites`（React 里 `<Layout composites={[...]}>`），节点经 IR 直传（`<Layout ir>`）：
+`defineComposite({ schema, expand })`：`schema` 继承 `CompositeBaseSchema`（定义必填的 `namespace` / `type`）再加领域字段；`expand` 收 schema 校验后的强类型节点、产 Tier 1。注册经 `CompileOptions.composites`（React 里 `<Layout composites={[...]}>`），节点经 IR 直传（`<Layout ir>`）。下例 `barChart` 据 `data` 数组展开成 N 根柱 + 基线：**节点数量由 `data.length` 决定、柱高经 `value/max` 缩放**——无法 1:1 反推、含算法，这正是该用 composite 而非 Sugar 的场景（见下方对照表）：
 
 <ComponentPreview name="composite-basic" size="sm" />
 
@@ -22,9 +40,10 @@ retikz 的 IR 子节点分两层：**Tier 1**（`node` / `path` / `coordinate` /
 
 ## 展开（lowering）
 
-`compileToScene` 第一步遍历 IR，遇 tier2 节点（`namespace` 存在）查 `${namespace}.${type}` 注册表 → `schema.parse(node)`（精确校验 + 强类型 + 默认值填充）→ `expand` → 替换；展开产物可含 composite，递归到全 Tier 1（fixpoint）。
+这一步正是上方 pipeline 图里 `composite IR → core IR` 的 `lower`——`compileToScene` 第一步遍历 IR，遇 tier2 节点（`namespace` 存在）查 `${namespace}.${type}` 注册表 → `schema.parse(node)`（精确校验 + 强类型 + 默认值填充）→ `expand` → 替换；展开产物可含 composite，递归到全 Tier 1（fixpoint）。
 
-- **未注册** `namespace/type` → 警告（`COMPOSITE_NOT_REGISTERED`）并**跳过该节点**、渲染其余——不中断整图。
+- **未注册** `namespace/type` → 警告（`COMPOSITE_NOT_REGISTERED`）并**跳过该节点**、渲染其余——不中断整图（高层节点缺包时优雅降级优于整图崩）。
+- **重复注册**同一 `namespace.type` → 注册期 **throw**（`composites` 以数组注入、无法天然去重，撞 key 视为调用方错误）。
 - **嵌套深度**默认 32 层，可经 `CompileOptions.maxCompositeDepth` 调整；环 / 超深度报错（防死循环）。
 - 展开产物带 `id` 时，其它元素可照常 anchor 引用（展开在 anchor 解析之前）。
 
@@ -40,6 +59,23 @@ retikz 的 IR 子节点分两层：**Tier 1**（`node` / `path` / `coordinate` /
 
 <Comparison target="tikz" title="Tier 2 与 PGFPlots">
 
-PGFPlots 之于 TikZ ≈ Tier 2 之于 retikz Tier 1：图表（axis / plot）是 TikZ 之上的独立层，展开成底层 node / path。retikz 把这层落成 IR 级 composite + lowering：`@retikz/plot` 作为独立包注册 `plot.axis` 等节点与展开逻辑，core 不认识任何 chart 类型。
+PGFPlots 之于 TikZ ≈ Tier 2 之于 retikz Tier 1：图表（PGFPlots 的 `axis` 环境）是 TikZ 之上的独立层，展开成底层 node / path。retikz 把这层落成 IR 级 composite + lowering：`@retikz/plot` 作为独立包注册顶层 `plot`（grammar-of-graphics spec，注册键 `plot.plot`）节点与展开逻辑——axis / legend 是这张 plot spec 内部的 guide，而非独立 composite——core 不认识任何 chart 类型。
 
 </Comparison>
+
+## 延伸阅读
+
+<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+  <LinkedCard href="/core/concepts/design/layers">
+    <span className="font-semibold">分层</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">DSL / IR / Scene 三层模型，composite 在架构里的位置</span>
+  </LinkedCard>
+  <LinkedCard href="/core/reference/extending">
+    <span className="font-semibold">扩展</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">composite 与 shape / arrow / pattern / generator 同属可注册扩展面</span>
+  </LinkedCard>
+  <LinkedCard href="/plot/introduction">
+    <span className="font-semibold">@retikz/plot</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">首个 composite 消费者：grammar-of-graphics 统计图</span>
+  </LinkedCard>
+</div>
