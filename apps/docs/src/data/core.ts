@@ -20,7 +20,7 @@ export const coreSection: Array<Section> = [
         ],
       },
       {
-        id: 'basic-concepts',
+        id: 'basic',
         label: 'core.basicConcepts',
         children: [
           { id: 'coordinate-system', label: 'core.coordinateSystem' },
@@ -29,7 +29,7 @@ export const coreSection: Array<Section> = [
         ],
       },
       {
-        id: 'core-concepts',
+        id: 'core',
         label: 'core.coreConcepts',
         children: [
           { id: 'primitive-model', label: 'core.primitiveModel' },

@@ -15,7 +15,7 @@ retikz uses a unified set of position expressions for entity placement and path 
 | Proportional placement | `{ between: [A, B], t }` | Take a proportional point along A → B; node endpoints use `{ id: 'a' }` | Node position, Coordinate position, path target |
 | Relative target | `{ relative }` / `{ relativeAccumulate }` or `'+x,y'` / `'++x,y'` | Offset from the previous segment endpoint | **Path target only** |
 
-> [Coordinate system](/core/concepts/basic-concepts/coordinate-system): x grows right, y grows down (matches SVG / Canvas; opposite of math textbooks). Units are user units, not pixels — final physical size depends on `<Layout>`'s `width` / `height` and the compiled layout bounds.
+> [Coordinate system](/core/concepts/basic/coordinate-system): x grows right, y grows down (matches SVG / Canvas; opposite of math textbooks). Units are user units, not pixels — final physical size depends on `<Layout>`'s `width` / `height` and the compiled layout bounds.
 
 ## Cartesian
 
@@ -53,7 +53,7 @@ Six nodes around `O` at radius 80, every 60° from 0 to 300 — the canonical ra
 
 <ComponentPreview name="positioning-id-ref" size="xs" />
 
-The actual line endpoints are computed by retikz automatically — see [Primitive Relations](/core/concepts/core-concepts/primitive-relations).
+The actual line endpoints are computed by retikz automatically — see [Primitive Relations](/core/concepts/core/primitive-relations).
 
 `<Node>` / `<Coordinate>` do not accept a bare node id as `position`, because "place this entity at another entity's center" is rarely the useful default. Use `{ direction, of, distance? }` for relational placement, or `{ of, offset }` for arbitrary 2D offsets. Both keep layout intent in the document instead of baking every coordinate up front.
 
@@ -126,11 +126,11 @@ String references, `origin: 'node-id'`, `of: 'node-id'`, and ids inside `between
 ## Further reading
 
 <div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
-  <LinkedCard href="/core/concepts/basic-concepts/coordinate-system">
+  <LinkedCard href="/core/concepts/basic/coordinate-system">
     <span className="font-semibold">Coordinate System</span>
     <span className="mt-1 text-center text-sm text-muted-foreground">the coordinate model behind every position form: user units, x-right / y-down, viewBox mapping</span>
   </LinkedCard>
-  <LinkedCard href="/core/concepts/core-concepts/primitive-relations">
+  <LinkedCard href="/core/concepts/core/primitive-relations">
     <span className="font-semibold">Primitive Relations</span>
     <span className="mt-1 text-center text-sm text-muted-foreground">anchors, boundaries, and edge-proportional points — how a path auto-attaches when resolving a target</span>
   </LinkedCard>
