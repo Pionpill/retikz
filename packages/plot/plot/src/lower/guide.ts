@@ -417,7 +417,7 @@ export const lowerLegend = (input: LegendInput): IRScope => {
     const ramp = vertical ? rectNode(rampX, rampY, rampThickness, rampLength) : rectNode(rampX, rampY, rampLength, rampThickness);
     // 垂直色带：offset 0 在顶（小值上 / 大值下，与轴一致需翻转）；这里 0 在带起点，stops 直接用
     const angle = vertical ? 90 : 0;
-    ramp.fill = { type: 'linearGradient', stops: input.ramp.stops, angle };
+    ramp.fill = { kind: 'linearGradient', stops: input.ramp.stops, angle };
     children.push(ramp);
     // 沿带刻度标签
     for (const tick of input.ramp.ticks) {

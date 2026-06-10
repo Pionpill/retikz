@@ -236,8 +236,8 @@ A stop's `opacity` gives a "solid → transparent" fade; `color` set to `current
 
 `fill` also accepts **pattern** and **image**:
 
-- Pattern: `{ type:'pattern', shape:'lines'|'dots'|'grid', color?, background?, size?, lineWidth?, rotation? }` — `color` defaults to `currentColor`, `size` is the tile period, `rotation` rotates the whole pattern
-- Image: `{ type:'image', href, fit? }` — `href` is a URL (incl. data URI), `fit`: `cover` (default) / `contain` / `fill`
+- Pattern: `{ kind:'pattern', shape:'lines'|'dots'|'grid', color?, background?, size?, lineWidth?, rotation? }` — `color` defaults to `currentColor`, `size` is the tile period, `rotation` rotates the whole pattern
+- Image: `{ kind:'image', href, fit? }` — `href` is a URL (incl. data URI), `fit`: `cover` (default) / `contain` / `fill`
 
 <ComponentPreview name="node-pattern-image" size="sm" />
 
