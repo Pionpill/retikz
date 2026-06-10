@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { computeLayout } from '../../src/compile/layout';
-import { makeRound } from '../../src/compile/precision';
+import { createRound } from '../../src/compile/precision';
 
-const round2 = makeRound(2);
+const round2 = createRound(2);
 const noRound = (n: number) => n;
 
 describe('computeLayout', () => {

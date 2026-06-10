@@ -21,7 +21,7 @@ import { createPaintRegistry } from './paint';
 import { createClipRegistry } from './clip';
 import { emitPathPrimitive, refPointOfTarget } from './path';
 import { resolvePosition } from './position';
-import { DEFAULT_PRECISION, makeRound } from './precision';
+import { DEFAULT_PRECISION, createRound } from './precision';
 import {
   applyTransformChain,
   computeScopeBoundingBox,
@@ -31,7 +31,7 @@ import {
 } from './scope';
 import {
   type StyleFrame,
-  buildStyleFrame,
+  createStyleFrame,
   resolveEffectivePath,
   resolveLabelDefault,
   resolveNodeStyle,
@@ -342,7 +342,7 @@ const formatDuplicateWarning = (info: DuplicateRegisterInfo): CompileWarning => 
 export const compileToScene = (ir: IR, options: CompileOptions = {}): Scene => {
   const measureText = options.measureText ?? fallbackMeasurer;
   const layoutPadding = options.padding ?? 10;
-  const round = makeRound(options.precision ?? DEFAULT_PRECISION);
+  const round = createRound(options.precision ?? DEFAULT_PRECISION);
   const nodeDistance = options.nodeDistance;
   const onWarn = options.onWarn ?? defaultWarnDispatcher;
 
@@ -604,7 +604,7 @@ export const compileToScene = (ir: IR, options: CompileOptions = {}): Scene => {
             `${locatorPrefix}children[${i}].scope.`,
             innerLayouts,
             innerPaths,
-            [...styleStack, buildStyleFrame(child)],
+            [...styleStack, createStyleFrame(child)],
           );
           // 子树 register 完毕，先用真 bbox 覆盖 placeholder（仍在本 scope frame 上下文），再 resolve 本 scope 内 paths
           if (child.id) {

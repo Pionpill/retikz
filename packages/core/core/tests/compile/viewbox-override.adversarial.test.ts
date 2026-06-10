@@ -7,7 +7,7 @@
  */
 import { describe, expect, it } from 'vitest';
 import { compileToScene } from '../../src/compile/compile';
-import { makeRound } from '../../src/compile/precision';
+import { createRound } from '../../src/compile/precision';
 import type { IR, IRChild } from '../../src';
 
 /** 尺寸固定、与文字度量无关的稳定内容节点（circle + minimumSize） */
@@ -156,7 +156,7 @@ describe('round 不得把合法 viewBox 弄成非 finite / 退化（守卫盲区
   it('需进位的小数 + precision 0：四字段被正确取整', () => {
     const ir = sceneWithViewBox([circleNode('o', [0, 0])], { x: -12.7, y: 3.4, width: 100.6, height: 50.5 });
     const layout = compileToScene(ir, { precision: 0 }).layout;
-    const r = makeRound(0);
+    const r = createRound(0);
     expect(layout).toEqual({ x: r(-12.7), y: r(3.4), width: r(100.6), height: r(50.5) });
   });
 });

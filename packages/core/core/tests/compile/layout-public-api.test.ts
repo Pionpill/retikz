@@ -5,11 +5,11 @@ import {
   type Scene,
   computeLayout,
 } from '../../src';
-import { makeRound } from '../../src/compile/precision';
+import { createRound } from '../../src/compile/precision';
 
 describe('Layout public API', () => {
   it('exports Layout and computeLayout from package entry', () => {
-    const layout = computeLayout([[0, 0], [10, 20]], 5, makeRound(2));
+    const layout = computeLayout([[0, 0], [10, 20]], 5, createRound(2));
     const _assertLayout: AssertEqual<Scene['layout'], Layout> = true;
     void _assertLayout;
 
