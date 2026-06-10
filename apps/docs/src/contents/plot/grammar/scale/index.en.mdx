@@ -5,6 +5,18 @@ description: A scale maps a data value to a visual quantity — position, length
 
 A scale decides how a data value becomes a visual quantity. Position channels (`x` / `y`) turn into canvas coordinates, the `size` channel turns into a radius — each goes through a scale. `<Plot>` auto-picks a scale from the field type, so common charts need none by hand; reach for `scaleX` / `scaleY` when you want a log or square-root axis.
 
+## Derived from the field type
+
+Once a field's measurement type is declared, the default scale for a positional channel (x / y) follows directly from it:
+
+| Field type | Positional default scale |
+| --- | --- |
+| `continuous` | `linear` |
+| `temporal` | `time` |
+| `categorical` | `band` |
+
+An explicit `scaleX` / `scaleY` always wins; if it clearly conflicts with the field type (a `categorical` field on a linear axis, a `temporal` field on a band) retikz throws a clear error rather than drawing something meaningless. See [Data Model](/plot/data/model) for how to declare field types.
+
 ## Scale types
 
 | Type | For | Notes |
