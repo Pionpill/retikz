@@ -154,7 +154,7 @@ export type MarkerGroupPrim = {
  * @description renderer-agnostic：core 只产此结构（局部 baseSize 坐标系），react adapter 把它嵌进
  *   `<marker>`。相对 `ScenePrimitive` 的收窄——禁 `TextPrim`、禁 `arrowStart`/`arrowEnd`、禁外部
  *   `resourceRef`、禁 `clip`；`fill` 限 `MarkerFill`。这条收窄兜住"marker 内递归引用 marker / clip /
- *   文本布局"的复杂度（见 ADR-01 选项 C 的反例）。
+ *   文本布局"的复杂度。
  */
 export type MarkerPrimitive =
   | MarkerPathPrim

@@ -172,7 +172,7 @@ export const inverseTransformChain = (
  *   scale 乘进 rect.width / height / margin——这样 path 端点的 boundary clip 取的是与 SVG `<g>`
  *   实际渲染一致的视觉尺寸 / 朝向，跨 / 入 / 出 rotate / scale scope 的 path 都贴节点视觉边界。
  *   非均匀 scale 与 rotate 在 chain 中混合时，按"累加 rotate + 分量相乘 scale"近似（uniform scale 精确，
- *   anisotropic + rotate 的剪切耦合不展开——alpha 阶段限制）。
+ *   anisotropic + rotate 的剪切耦合不展开——当前投影模型限制）。
  */
 export const projectLayoutToGlobal = (
   layout: NodeLayout,

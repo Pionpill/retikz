@@ -482,7 +482,7 @@ export const compileToScene = (ir: IR, options: CompileOptions = {}): Scene => {
 
   /**
    * 递归处理一组 IR child，把 node / coordinate 发到 sink、把本层 path 收集到 pathsAccumulator、scope 下沉为 GroupPrim
-   * @description **不**在内部 resolve pathsAccumulator——调用方负责在合适时机（scope 入口：bbox replaceLayout 之后 / popFrame 之前；顶层：所有处理结束后）调用 resolvePendingPaths。这样 scope.id 的 placeholder→real bbox 替换在本层 path 端点 lookup 之前完成，避免 "scope 内 path 自引用本 scope.id 拿到 placeholder" 的 latent bug，同时保留 ADR-02 的 "本层 path 在本层 frame 还在栈顶时 resolve" inside-out lookup 语义。
+   * @description **不**在内部 resolve pathsAccumulator——调用方负责在合适时机（scope 入口：bbox replaceLayout 之后 / popFrame 之前；顶层：所有处理结束后）调用 resolvePendingPaths。这样 scope.id 的 placeholder→real bbox 替换在本层 path 端点 lookup 之前完成，避免 "scope 内 path 自引用本 scope.id 拿到 placeholder" 的 latent bug，同时保留"本层 path 在本层 frame 还在栈顶时 resolve"的 inside-out lookup 语义。
    * @param children 当前层级的 IR child 数组
    * @param chain 从根到当前层级累积的 Cartesian-only transform 链
    * @param sink 当前层级 Scene primitive 落点（顶层 = primitives，scope 内 = GroupPrim.children）

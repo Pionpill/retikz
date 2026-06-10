@@ -37,14 +37,14 @@ const DIRECTION_VECTOR: Record<AtDirectionValue, [number, number]> = {
  * @description
  *   - **返回值语义**：当 `scopeChain` 非空时，返回**当前 scope 局部坐标系**下的笛卡尔位置；
  *     调用方负责走 `applyTransformChain(local, scopeChain)` 投回全局。当 `scopeChain` 为空时
- *     等价于 v0.1 行为（全局坐标）。
+ *     直接按全局坐标返回。
  *   - **referent 处理**：node id lookup 拿到的 layout.rect 已是全局坐标；本函数内部用
  *     `inverseTransformChain` 把全局 referent 反向投影到当前 scope 局部坐标系作为"在当前
  *     scope 局部的固定点"基准。relative 部分（polar 的 angle/radius、at 的 direction/distance、
  *     offset 的 dx/dy）在当前 scope 局部度量后加到 referent 局部坐标上。
  *   - **嵌套**：PolarPosition.origin / OffsetPosition.of 是嵌套 polar 时，递归调用传同样
  *     scopeChain——整条嵌套链都在当前 scope 局部度量。
- *   - **笛卡尔字面量**：`Position` 形态直接返回（v0.1 行为延续：scope 内笛卡尔字面量在
+ *   - **笛卡尔字面量**：`Position` 形态直接返回（scope 内笛卡尔字面量在
  *     当前 scope 局部度量；调用方走 applyTransformChain 投全局）。
  *   - 极坐标 origin / 偏移定位 of 均可递归引用节点 id 或字面坐标；relative `AtPosition` of
  *     必须引用已定义节点/coordinate；解析失败返回 null。

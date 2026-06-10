@@ -96,7 +96,7 @@ export type StyleChannel = 'node' | 'path' | 'label' | 'arrow';
 /**
  * Scope IR 类型——手写而非 z.infer 派生
  * @description ChildSchema 通过 z.lazy 延迟回灌，z.infer 推断 children 元素时拿不到精确的 IRNode | IRPath | IRCoordinate | IRScope union；手写让 children 类型显式表达递归 union。
- *   alpha.2 起 Scope 兼作样式默认值挂点：级联 graphic state（color + 跨类共享分项）+ 四通道 every-X 默认 + resetStyle 继承屏障。
+ *   Scope 兼作样式默认值挂点：级联 graphic state（color + 跨类共享分项）+ 四通道 every-X 默认 + resetStyle 继承屏障。
  */
 export type IRScope = {
   type: 'scope';
@@ -139,7 +139,7 @@ export const __registerChildSchema = (schema: z.ZodTypeAny): void => {
  * Scope schema：容器 + 局部 transform + 样式默认挂点
  * @description 直接 `z.object` 让 ChildSchema discriminatedUnion 能识别 `type` 鉴别字段；
  * children 字段内部用 z.lazy 引用 ChildSchema 实现递归，避免直接 `z.lazy(() => z.object(...))` 让外层 union 拒识 type。
- * alpha.2 加：① 级联 graphic state（color + stroke / fill / strokeWidth / opacity / fillOpacity / drawOpacity）；
+ * 支持：① 级联 graphic state（color + stroke / fill / strokeWidth / opacity / fillOpacity / drawOpacity）；
  * ② 四通道 every-X 默认（nodeDefault / pathDefault / labelDefault / arrowDefault）；③ resetStyle 继承屏障。
  */
 export const ScopeSchema = z

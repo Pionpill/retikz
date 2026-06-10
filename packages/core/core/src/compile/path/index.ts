@@ -117,7 +117,7 @@ const assertValidGeneratedCommand = (name: string, cmd: unknown): void => {
 /**
  * 语义 stroke 档位 → 数值（user units）
  * @description 对齐 TikZ 比例（thin=0.4pt→1=默认 strokeWidth）：ultraThin 0.25、veryThin 0.5、thin 1、semithick 1.5、thick 2、veryThick 3、ultraThick 4。显式 strokeWidth 覆盖 thickness。
- * `as const satisfies` + `AssertEqual` 双约束：加 IRPath['thickness'] 档位时漏写 TS 报错（字段表互锁，同 ADR-06 主题）
+ * `as const satisfies` + `AssertEqual` 双约束：加 IRPath['thickness'] 档位时漏写 TS 报错（字段表互锁）
  */
 const THICKNESS_TO_WIDTH = {
   ultraThin: 0.25,
@@ -146,7 +146,7 @@ export type EmitPathWarnHook = {
   /**
    * 该 path 所属 scope 的累积 Cartesian-only transform 链
    * @description step.to 内的 polar/at/offset 字面量按"当前 scope 局部度量 + 末端 apply chain"
-   *   投影回全局；顶层 path / 无 scope chain 时为 `[]`（恒等，等价 v0.1 行为）
+   *   投影回全局；顶层 path / 无 scope chain 时为 `[]`（恒等，全局坐标）
    */
   scopeChain?: ReadonlyArray<Transform>;
   /** fill 解析器（PaintSpec → resourceRef + 登记资源）；缺省时纯色透传、PaintSpec 退化为无填充 */

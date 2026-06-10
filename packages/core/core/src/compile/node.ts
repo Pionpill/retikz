@@ -430,7 +430,7 @@ export const angleBoundaryOf = (
  * @description 文本度量 + padding 推内框半轴；按 shape 算外接边界（circle 取半对角线、ellipse ×√2、diamond ×2）；解析 position 为几何中心；rotate 度数转弧度。
  *   `scopeChain` 非空时 `resolvePosition` 返回**当前 scope 局部坐标**（relative position 在当前
  *   scope 局部度量），调用方负责后续 `projectLayoutToGlobal` / `applyTransformChain` 投回全局；
- *   笛卡尔字面量 `Position` 已在 scope 局部度量，行为延续 v0.1。
+ *   笛卡尔字面量 `Position` 已在 scope 局部度量，保持局部坐标语义。
  */
 export const layoutNode = (
   node: IRNode,

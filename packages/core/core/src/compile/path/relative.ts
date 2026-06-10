@@ -12,7 +12,7 @@ import { refPointOfTarget } from './anchor';
  *   先反向投影 prevEnd 到 scope 局部 + 加 (dx, dy) 得局部 tuple，写回 step.to。下游
  *   `refPointOfTarget` / `clipForTarget` 把 tuple 视作 scope 局部字面量，统一 `applyTransformChain` 投回全局——
  *   relative 分支只负责"折算到局部"，不能在此处提前投影到全局，否则与下游 chain apply 形成 double-apply。
- *   `scopeChain=[]` 时 inverse 恒等，等价 v0.1 行为。
+ *   `scopeChain=[]` 时 inverse 恒等，保持全局坐标语义。
  */
 export const normalizeRelativeTargets = (
   steps: ReadonlyArray<IRStep>,

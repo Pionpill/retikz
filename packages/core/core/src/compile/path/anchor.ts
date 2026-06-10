@@ -41,7 +41,7 @@ const addOffset = (base: IRPosition, offset: IRNodeTarget['offset']): IRPosition
  * @description 三态：`'A'`(auto) 节点中心；`'A.<anchor>'`/`'A.<deg>'` 显式锚点 refPoint=endpoint 位置不随邻居变。直接坐标/极坐标解析为笛卡尔。
  *   string id lookup 拿到的 layout 已是全局坐标——不走 scopeChain 投影；Position / Polar /
  *   At / Offset 字面量经 `resolvePosition(..., scopeChain)` 拿到当前 scope 局部坐标后
- *   `applyTransformChain` 投回全局。`scopeChain=[]` 等价 v0.1（恒等）。
+ *   `applyTransformChain` 投回全局。`scopeChain=[]` 时按恒等变换处理。
  */
 export const refPointOfTarget = (
   target: IRTarget,
