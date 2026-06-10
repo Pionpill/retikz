@@ -1,4 +1,4 @@
-import type { Position } from './point';
+import { type Position, point as pointOps } from './point';
 
 /*
  * 段几何采样工具：给边标注（step.label）算位置 / 切线。
@@ -26,12 +26,6 @@ export type SegmentSample = {
   tangent: Position;
 };
 
-const normalize = (v: Position): Position => {
-  const len = Math.hypot(v[0], v[1]);
-  if (len === 0) return [1, 0];
-  return [v[0] / len, v[1] / len];
-};
-
 const sampleEllipseArc = (
   center: Position,
   rx: number,
@@ -47,7 +41,7 @@ const sampleEllipseArc = (
   const sweepSign = endAngleDeg >= startAngleDeg ? 1 : -1;
   return {
     point: [center[0] + rx * cos, center[1] + ry * sin],
-    tangent: normalize([-rx * sin * sweepSign, ry * cos * sweepSign]),
+    tangent: pointOps.normalize([-rx * sin * sweepSign, ry * cos * sweepSign]),
   };
 };
 
@@ -58,7 +52,7 @@ export const lineSegmentSample = (
   t: number,
 ): SegmentSample => ({
   point: [from[0] + (to[0] - from[0]) * t, from[1] + (to[1] - from[1]) * t],
-  tangent: normalize([to[0] - from[0], to[1] - from[1]]),
+  tangent: pointOps.normalize([to[0] - from[0], to[1] - from[1]]),
 });
 
 /**
@@ -78,7 +72,7 @@ export const quadSegmentSample = (
   ];
   const tx = 2 * u * (control[0] - from[0]) + 2 * t * (to[0] - control[0]);
   const ty = 2 * u * (control[1] - from[1]) + 2 * t * (to[1] - control[1]);
-  return { point, tangent: normalize([tx, ty]) };
+  return { point, tangent: pointOps.normalize([tx, ty]) };
 };
 
 /**
@@ -111,7 +105,7 @@ export const cubicSegmentSample = (
     3 * u * u * (c1[1] - from[1]) +
     6 * u * t * (c2[1] - c1[1]) +
     3 * t * t * (to[1] - c2[1]);
-  return { point, tangent: normalize([tx, ty]) };
+  return { point, tangent: pointOps.normalize([tx, ty]) };
 };
 
 /**

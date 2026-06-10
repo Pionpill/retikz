@@ -1,5 +1,5 @@
 import { arcAngleInRange, arcEndPoint, rayArc } from './arc';
-import type { Position } from './point';
+import { type Position, point } from './point';
 
 /*
  * 圆角轮廓模块：把「闭合有序段序列」(Line / Arc) 的每个接缝（角）替换为与两侧段相切、半径 r 的
@@ -60,16 +60,6 @@ export type ContourCommand =
     }
   | { kind: 'close' };
 
-/** 向量长度 */
-const length = (v: Position): number => Math.hypot(v[0], v[1]);
-
-/** 归一化（零向量回退 [1, 0]） */
-const normalize = (v: Position): Position => {
-  const len = length(v);
-  if (len < EPSILON) return [1, 0];
-  return [v[0] / len, v[1] / len];
-};
-
 /** 二维叉积 a × b */
 const cross = (a: Position, b: Position): number => a[0] * b[1] - a[1] * b[0];
 
@@ -87,11 +77,11 @@ const segmentEnd = (seg: ContourSegment): Position =>
  *   arc 切线垂直于半径，方向随 counterClockwise 翻转（CW: (-sinθ, cosθ)，CCW: (sinθ, -cosθ)）。
  */
 const tangentAt = (seg: ContourSegment, atStart: boolean): Position => {
-  if (seg.kind === 'line') return normalize([seg.to[0] - seg.from[0], seg.to[1] - seg.from[1]]);
+  if (seg.kind === 'line') return point.normalize([seg.to[0] - seg.from[0], seg.to[1] - seg.from[1]]);
   const angleDeg = atStart ? seg.startAngle : seg.endAngle;
   const rad = angleDeg * DEG_TO_RAD;
   const sign = seg.counterClockwise ? -1 : 1;
-  return normalize([-Math.sin(rad) * sign, Math.cos(rad) * sign]);
+  return point.normalize([-Math.sin(rad) * sign, Math.cos(rad) * sign]);
 };
 
 /** arc 段的角跨度（带符号：CW 为正递增、CCW 为负），单位度 */
@@ -544,7 +534,7 @@ export const boundaryFromContour = (
   fillets: Array<FilletSolution> = filletContour(segments, cornerRadius),
 ): Position | undefined => {
   const dirRaw: Position = [toward[0] - rayOrigin[0], toward[1] - rayOrigin[1]];
-  const dl = length(dirRaw);
+  const dl = point.length(dirRaw);
   if (dl < 1e-12) return undefined;
   const dir: Position = [dirRaw[0] / dl, dirRaw[1] / dl];
 

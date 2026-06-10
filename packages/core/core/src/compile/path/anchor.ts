@@ -3,6 +3,7 @@ import type { FoldStepViaValue, IRBetweenPosition, IRNodeTarget, IRPosition, IRT
 import type { IRBoundary } from '../../ir';
 import type { Transform } from '../../primitive';
 import { lerpPoint } from '../../geometry/edge';
+import { point } from '../../geometry/point';
 import { resolveAnchor, resolveEdgePoint } from '../anchor-cache';
 import type { NameStack } from '../name-stack';
 import { boundaryPointOf } from '../node';
@@ -125,13 +126,8 @@ export const clipForTarget = (
 
 /** 两个 IRPosition 两分量精确相等（未 round） */
 export const samePoint = (a: IRPosition | null, b: IRPosition | null): boolean =>
-  !!a && !!b && a[0] === b[0] && a[1] === b[1];
+  !!a && !!b && point.equal(a, b);
 
 /** 把 p 朝 target 方向移动 dist */
-export const shiftToward = (p: IRPosition, target: IRPosition, dist: number): IRPosition => {
-  const dx = target[0] - p[0];
-  const dy = target[1] - p[1];
-  const len = Math.sqrt(dx * dx + dy * dy);
-  if (len === 0 || dist === 0) return p;
-  return [p[0] + (dx / len) * dist, p[1] + (dy / len) * dist];
-};
+export const shiftToward = (p: IRPosition, target: IRPosition, dist: number): IRPosition =>
+  point.shiftToward(p, target, dist);
