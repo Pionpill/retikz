@@ -32,6 +32,7 @@ import {
   TIKZ_SCOPE,
   TIKZ_STEP,
   TIKZ_TEXT,
+  getDisplayName,
 } from './_displayNames';
 import {
   NODE_FIELDS,
@@ -41,13 +42,6 @@ import {
   type ScopeStyleProps,
   pickDefined,
 } from './_fields';
-
-/** 取 React 元素 type 上的 displayName；type 为字符串时直接返回，用于识别 Kernel/Sugar 组件 */
-const getDisplayName = (el: ReactElement): string | undefined => {
-  const t = el.type as { displayName?: string } | string;
-  if (typeof t === 'string') return t;
-  return t.displayName;
-};
 
 // NODE_FIELDS / PATH_FIELDS / pickDefined 抽到 _fields.ts 与 unbuilder 共享
 
