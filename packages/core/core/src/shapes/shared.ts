@@ -1,14 +1,5 @@
 import { arcBoundingPoints, arcEndPoint } from '../geometry/arc';
-import { normalizeCompassAnchor } from '../geometry/anchor';
-import type { CompassAnchorValue } from '../geometry/anchor';
 import type { Position } from '../geometry/point';
-
-/**
- * 把任意字符串收窄为标准方位 anchor，否则 undefined。
- * @description TikZ canonical 名与 Web alias 都会归一到 CompassAnchor；不在集合内返回 undefined，由 `anchorOf` 抛 Unknown anchor。
- */
-export const asCompassAnchor = (name: string): CompassAnchorValue | undefined =>
-  normalizeCompassAnchor(name);
 
 const DEG_TO_RAD = Math.PI / 180;
 

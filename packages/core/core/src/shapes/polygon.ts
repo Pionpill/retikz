@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { localToWorld } from '../geometry/transform';
 import type { Position } from '../geometry/point';
+import { normalizeCompassAnchor } from '../geometry/anchor';
 import { rect as rectOps } from '../geometry/rect';
 import type { Rect } from '../geometry/rect';
 import {
@@ -10,7 +11,6 @@ import {
 } from '../geometry/contour';
 import type { ScenePrimitive } from '../primitive';
 import { contourToPathCommands, verticesToSegments } from './contour';
-import { asCompassAnchor } from './shared';
 import { defineShape } from './define';
 
 /**
@@ -139,7 +139,7 @@ export const polygon = defineShape({
   },
   anchor: (rect: Rect, name: string, params: PolygonParams): Position | undefined => {
     void params;
-    const a = asCompassAnchor(name);
+    const a = normalizeCompassAnchor(name);
     return a ? rectOps.anchor(rect, a) : undefined;
   },
   *emit (rect: Rect, style, round, params: PolygonParams): Iterable<ScenePrimitive> {

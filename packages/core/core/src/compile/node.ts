@@ -1,5 +1,6 @@
 import type { Position } from '../geometry/point';
 import { arcEndPoint } from '../geometry/arc';
+import { normalizeCompassAnchor } from '../geometry/anchor';
 import type { Rect } from '../geometry/rect';
 import type { AtDirectionValue, IRAnimationTrack, IRBoundary, IRJsonObject, IRLabelDefault, IRLineSpec, IRNode, IRNodeLabel, IRPaintSpec, IRShapeRef, JsonValue } from '../ir';
 import { JsonObjectSchema } from '../ir';
@@ -7,7 +8,6 @@ import type { PaintResolver } from './paint';
 import type { GroupPrim, ScenePrimitive, TextLine, Transform } from '../primitive';
 import { BUILTIN_SHAPES } from '../shapes';
 import type { ShapeDefinition, ShapeStyle } from '../shapes';
-import { asCompassAnchor } from '../shapes/shared';
 import type { NameStack } from './name-stack';
 import { DirectionVectorByAtDirection, LabelAnchorByAtDirection } from './direction';
 import { type ResolveBetweenGlobal, resolvePosition } from './position';
@@ -280,7 +280,7 @@ export const anchorOf = (
   name: string,
   boundary: IRBoundary | undefined = 'shape',
 ): Position => {
-  const compassAnchor = asCompassAnchor(name);
+  const compassAnchor = normalizeCompassAnchor(name);
   if (compassAnchor !== undefined) {
     // compass 方位名：'shape' 归一为 'rectangle'（走 AABB 矩形），其余按 boundary
     const compassBoundary = boundary === 'shape' ? 'rectangle' : boundary;

@@ -279,7 +279,6 @@ export {
   point,
   CompassAnchor,
   WebAnchor,
-  isCompassAnchorInput,
   normalizeCompassAnchor,
   rect,
   circle,
