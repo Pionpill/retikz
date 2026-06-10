@@ -1,9 +1,9 @@
 ---
-title: Anchors
-description: Node anchors support CompassAnchor and WebAnchor inputs, with object-form Target or string shorthand for named / angle / edge proportional / offset references.
+title: Primitive Relations
+description: Describe stable relationships between primitives through anchors, boundaries, edge-proportional points, and margin.
 ---
 
-Anchors describe where a connection line or reference point should land on a node: for example, leaving from the right side, attaching to the top border, or aligning a label to the node center. Every `<Node>` has a set of named anchors. Directional names have two layers: `CompassAnchor` is the canonical TikZ-style vocabulary; `WebAnchor` is the Web / CSS-friendly input alias set, normalized to the matching `CompassAnchor` during compilation.
+Primitive relations describe where a connection line or reference point should land on a node: for example, leaving from the right side, attaching to the top border, or aligning a label to the node center. Every `<Node>` has a set of named anchors. Directional names have two layers: `CompassAnchor` is the canonical TikZ-style vocabulary; `WebAnchor` is the Web / CSS-friendly input alias set, normalized to the matching `CompassAnchor` during compilation.
 
 Paths can either let retikz auto-pick the border point (the common case), or lock onto a specific position with the object form `{ id, anchor?, offset? }` (in JSX you may use the `'A.north'` / `'A.top-left'` / `'A.30'` string shorthand). A `<Scope>` with an `id` also registers a rectangular boundary, so the same anchor syntax can target a whole group.
 
