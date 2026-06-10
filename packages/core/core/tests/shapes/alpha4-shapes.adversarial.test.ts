@@ -266,13 +266,13 @@ describe('[adversarial] scaleParams：角度/计数不该被缩', () => {
 // ════════════════ 攻击面 7：AnchorRefSchema 放宽副作用 ════════════════
 
 describe('[adversarial] anchor 放宽：未知 anchor 错误清晰度', () => {
-  const pathTo = (anchor: unknown, id: string): IR['children'][number] => ({
+  const pathTo = (anchor: string, id: string): IR['children'][number] => ({
     type: 'path',
     children: [
       { type: 'step', kind: 'move', to: [100, 100] },
       { type: 'step', kind: 'line', to: { id, anchor } },
     ],
-  } as IR['children'][number]);
+  });
 
   it('[adversarial] sector 给不认识的 anchor "tip-0"（star 专属）→ 错误应指明 shape+anchor', () => {
     let msg = '';

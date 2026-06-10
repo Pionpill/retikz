@@ -1,16 +1,16 @@
 ---
 title: Step
-description: Path 的子节点——一个 step = 一个动作（move / line / step 折角 / cycle 闭合 / curve / cubic / bend 曲线 / arc 弧段 / circlePath / ellipsePath / rectangle）；`to` 支持节点 id / 笛卡尔 / 极坐标 / 偏移定位 / 比例定位 / 相对偏移；只能作为 `<Path>` 的直接 children。
+description: Path 的子节点——一个 step = 一个动作（move / line / fold 折角 / cycle 闭合 / curve / cubic / bend 曲线 / arc 弧段 / circlePath / ellipsePath / rectangle）；`to` 支持节点 id / 笛卡尔 / 极坐标 / 偏移定位 / 比例定位 / 相对偏移；只能作为 `<Path>` 的直接 children。
 ---
 
-`<Step>` 描述路径上的一个动作：`move` 抬笔到目标点，`line` 落笔从游标画直线，`step` 经一个直角拐点折到目标点，`cycle` 闭合回 path 起点，`curve` / `cubic` / `bend` 画各类曲线，`arc` / `circlePath` / `ellipsePath` 以游标为圆心画弧段 / 整圆 / 整椭圆，`rectangle` 用两对角画矩形。它**只能**作为 `<Path>` 的直接 children；放在其它地方会被忽略。
+`<Step>` 描述路径上的一个动作：`move` 抬笔到目标点，`line` 落笔从游标画直线，`fold` 经一个直角拐点折到目标点，`cycle` 闭合回 path 起点，`curve` / `cubic` / `bend` 画各类曲线，`arc` / `circlePath` / `ellipsePath` 以游标为圆心画弧段 / 整圆 / 整椭圆，`rectangle` 用两对角画矩形。它**只能**作为 `<Path>` 的直接 children；放在其它地方会被忽略。
 
 先用这张表定位 `kind`：
 
 | kind | 需要 `to` | 画线 | 推进游标 | 支持 label |
 | --- | --- | --- | --- | --- |
 | `move` | 是 | 否 | 是 | 否 |
-| `line` / `step` / `curve` / `cubic` / `bend` | 是 | 是 | 是 | 是 |
+| `line` / `fold` / `curve` / `cubic` / `bend` | 是 | 是 | 是 | 是 |
 | `cycle` | 否 | 是 | 回到子路径起点 | 否 |
 | `arc` | 否 | 是 | 到弧段终点 | 是 |
 | `circlePath` / `ellipsePath` | 否 | 是 | 回到圆心 / 椭圆中心 | 是 |
@@ -156,7 +156,7 @@ t 是沿整段的归一化参数，不同 kind 有不同参数化方式：
 | Step kind | 参数化方式 | t=0.25 | t=0.5 | t=0.75 |
 | --- | --- | --- | --- | --- |
 | `'line'` | 归一化弧长 | 1/4 处 | 中点 | 3/4 处 |
-| `'step'`（fold N=2） | 每段占 `1/N` t 区间——拐角恒在 `t = j/N`，**与段长无关** | 段 1 中点 | **拐角** | 段 2 中点 |
+| `'fold'`（N=2） | 每段占 `1/N` t 区间——拐角恒在 `t = j/N`，**与段长无关** | 段 1 中点 | **拐角** | 段 2 中点 |
 | `'curve'` / `'cubic'` | Bezier 参数 t（**非弧长**） | Bezier t=0.25 位置 | Bezier t=0.5 位置（通常**非视觉中点**） | Bezier t=0.75 位置 |
 | `'bend'` | 内部 lower 成 cubic 后 Bezier t | 同 cubic | 同 cubic | 同 cubic |
 | `'arc'` | t 线性映射 `startAngle..endAngle`（度） | 起末角度 1/4 处 | 起末中点角度 | 起末角度 3/4 处 |
@@ -240,7 +240,7 @@ t 是沿整段的归一化参数，不同 kind 有不同参数化方式：
 
 | 属性 | 类型 | 默认值 | 描述 |
 | --- | --- | --- | --- |
-| `kind` | `'move' \| 'line' \| 'step' \| 'cycle' \| 'curve' \| 'cubic' \| 'bend' \| 'arc' \| 'circlePath' \| 'ellipsePath' \| 'rectangle'` | `'line'` | 见下方"十一种取值"表；IR 另有 `generator`，无 React `<Step>` DSL |
+| `kind` | `'move' \| 'line' \| 'fold' \| 'cycle' \| 'curve' \| 'cubic' \| 'bend' \| 'arc' \| 'circlePath' \| 'ellipsePath' \| 'rectangle'` | `'line'` | 见下方"十一种取值"表；IR 另有 `generator`，无 React `<Step>` DSL |
 | `via` | `'-\|' \| '\|-'` | — | 仅 `kind="fold"` 必填：`-\|` 先水平后垂直；`\|-` 先垂直后水平 |
 | `from` | `IRTarget` | — | 仅 `kind="rectangle"` 必填：矩形一个角点 |
 | `to` | `IRTarget` | — | `kind="cycle"` / `'arc'` / `'circlePath'` / `'ellipsePath'` 时不需要；`kind="rectangle"` 与其它会推进游标的 kind 必填——目标点：节点 id、笛卡尔 `[x, y]`、极坐标对象、偏移定位对象 `{ of, offset }`、比例定位 `{ between, t }`、相对偏移对象 `{ relative }` / `{ relativeAccumulate }`，或 sugar 字符串 `'+dx,dy'` / `'++dx,dy'` |
@@ -263,7 +263,7 @@ t 是沿整段的归一化参数，不同 kind 有不同参数化方式：
 | --- | --- | --- |
 | `'move'` | 移动游标，**不画线** | path "M" |
 | `'line'` | 从当前游标画直线到目标点 | path "L" |
-| `'step'` | 经一个直角拐点折到目标点 | 两段 path "L" |
+| `'fold'` | 经一个直角拐点折到目标点 | 两段 path "L" |
 | `'cycle'` | 闭合回最近一次 move 起点（无 `to`） | path "Z" |
 | `'curve'` | 二次贝塞尔（一个控制点） | path "Q" |
 | `'cubic'` | 三次贝塞尔（两个控制点） | path "C" |
@@ -275,7 +275,7 @@ t 是沿整段的归一化参数，不同 kind 有不同参数化方式：
 
 IR schema 还包含 `generator` step，用于外部路径生成器注册面；它没有对应的 React `<Step kind="generator">` DSL，通常通过 IR 直传或上层包生成。
 
-`<Path>` 第一个 step 必须是 `move`——如果你写 `'line'` / `'step'` / `'cycle'`，编译器会自动改成 `move`（cycle 无 `to`，回退到原点 `[0, 0]`）。
+`<Path>` 第一个 step 必须是 `move`——如果你写 `'line'` / `'fold'` / `'cycle'`，编译器会自动改成 `move`（cycle 无 `to`，回退到原点 `[0, 0]`）。
 
 ### via 的两种取值
 

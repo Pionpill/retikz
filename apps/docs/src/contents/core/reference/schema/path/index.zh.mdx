@@ -63,7 +63,7 @@ description: 笔画外壳、step 动作序列与 step 目标点
 
 <ZodSchema name="FoldStepSchema" description="折角动作：按 `-|` 或 `|-` 经一个直角中间点连接目标。" descriptions={{
   type: '判别字段，标记本节点为 path step',
-  kind: '动作种类：`step`（折角段，从光标到目标点经一个直角中间点）',
+  kind: '动作种类：`fold`（折角段，从光标到目标点经一个直角中间点）',
   via: '折角方向：`-|` 先横后竖；`|-` 先竖后横',
   to: '折线段的目标点',
   label: '边标注：附在本段上的文字标签（按 position 落在对应支段）',
@@ -125,7 +125,7 @@ description: 笔画外壳、step 动作序列与 step 目标点
   kind: '动作种类：`arc` —— 圆弧（radius）或椭圆弧（radiusX/radiusY），绕圆心扫角；笔停在弧端点而非圆心',
   startAngle: '弧起始角（°），0=+x、90=+y（屏幕向下）',
   endAngle: '弧终止角（°）；扫向由 startAngle 与 endAngle 大小关系隐式决定',
-  radius: '正圆弧半径（用户单位）；与 radiusX/radiusY 二选一（约束在 sugar/compile）',
+  radius: '正圆弧半径（用户单位）；与 radiusX/radiusY 二选一',
   radiusX: '椭圆弧 x 半轴；需与 radiusY 同给',
   radiusY: '椭圆弧 y 半轴；需与 radiusX 同给',
   center: '显式圆心；缺省取光标（上一 step anchor）',
@@ -142,7 +142,7 @@ description: 笔画外壳、step 动作序列与 step 目标点
   radius: '圆半径（用户单位）',
   startAngle: '部分圆起始角（°）；与 endAngle 同给才生效',
   endAngle: '部分圆终止角（°）',
-  closed: '闭合模式：整圆 closed；部分圆 chord（弦，默认）/ open（纯弧）',
+  closed: '闭合模式：整圆只允许 closed；部分圆允许 chord（弦，默认）/ open（纯弧）/ sector（扇形）',
   label: '边标注：附在本段上的文字标签',
 }} />
 
@@ -157,7 +157,7 @@ description: 笔画外壳、step 动作序列与 step 目标点
   radiusY: 'y 轴半径（半长轴或半短轴）',
   startAngle: '部分椭圆起始角（°）；与 endAngle 同给才生效',
   endAngle: '部分椭圆终止角（°）',
-  closed: '闭合模式：整椭圆 closed；部分 chord（默认）/ open',
+  closed: '闭合模式：整椭圆只允许 closed；部分椭圆允许 chord（默认）/ open / sector',
   label: '边标注：附在本段上的文字标签',
 }} />
 

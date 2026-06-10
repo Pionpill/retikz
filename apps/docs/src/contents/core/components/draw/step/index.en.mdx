@@ -1,16 +1,16 @@
 ---
 title: Step
-description: Path's child node — one step = one action (move / line / step fold / cycle close / curve / cubic / bend / arc / circlePath / ellipsePath / rectangle); `to` accepts node id / Cartesian / polar / offset / proportional placement / relative offsets; only valid as a direct child of `<Path>`.
+description: Path's child node — one step = one action (move / line / fold / cycle close / curve / cubic / bend / arc / circlePath / ellipsePath / rectangle); `to` accepts node id / Cartesian / polar / offset / proportional placement / relative offsets; only valid as a direct child of `<Path>`.
 ---
 
-`<Step>` describes a single path action: `move` lifts the pen, `line` draws a straight line, `step` folds through a single right-angle corner, `cycle` closes the path, `curve` / `cubic` / `bend` draw curves of various shapes, `arc` / `circlePath` / `ellipsePath` use the cursor as the center to draw an arc / full circle / full ellipse, and `rectangle` draws an axis-aligned rectangle from two opposite corners. It is **only** valid as a direct child of `<Path>`; placed elsewhere it is silently ignored.
+`<Step>` describes a single path action: `move` lifts the pen, `line` draws a straight line, `fold` folds through a single right-angle corner, `cycle` closes the path, `curve` / `cubic` / `bend` draw curves of various shapes, `arc` / `circlePath` / `ellipsePath` use the cursor as the center to draw an arc / full circle / full ellipse, and `rectangle` draws an axis-aligned rectangle from two opposite corners. It is **only** valid as a direct child of `<Path>`; placed elsewhere it is silently ignored.
 
 Use this table to pick a `kind` first:
 
 | kind | Needs `to` | Draws | Advances cursor | Supports label |
 | --- | --- | --- | --- | --- |
 | `move` | Yes | No | Yes | No |
-| `line` / `step` / `curve` / `cubic` / `bend` | Yes | Yes | Yes | Yes |
+| `line` / `fold` / `curve` / `cubic` / `bend` | Yes | Yes | Yes | Yes |
 | `cycle` | No | Yes | Back to subpath start | No |
 | `arc` | No | Yes | To arc endpoint | Yes |
 | `circlePath` / `ellipsePath` | No | Yes | Back to circle / ellipse center | Yes |
@@ -156,7 +156,7 @@ t is normalized along the whole segment; each kind has its own parametrization:
 | Step kind | Parametrization | t=0.25 | t=0.5 | t=0.75 |
 | --- | --- | --- | --- | --- |
 | `'line'` | Normalized arc length | 1/4 in | Midpoint | 3/4 in |
-| `'step'` (fold N=2) | Each leg gets `1/N` of t — the corner is always at `t = j/N`, **independent of leg length** | Leg-1 midpoint | **Corner** | Leg-2 midpoint |
+| `'fold'` (N=2) | Each leg gets `1/N` of t — the corner is always at `t = j/N`, **independent of leg length** | Leg-1 midpoint | **Corner** | Leg-2 midpoint |
 | `'curve'` / `'cubic'` | Bezier parameter t (**not arc length**) | Bezier t=0.25 | Bezier t=0.5 (usually **not** the visual midpoint) | Bezier t=0.75 |
 | `'bend'` | Lowered to cubic, then Bezier t | Same as cubic | Same as cubic | Same as cubic |
 | `'arc'` | t maps linearly across `startAngle..endAngle` (degrees) | Quarter of the angle sweep | Mid angle | Three-quarters of the sweep |
@@ -240,7 +240,7 @@ Full ellipses also place labels by angle parameter; this is not equal spacing by
 
 | Prop | Type | Default | Description |
 | --- | --- | --- | --- |
-| `kind` | `'move' \| 'line' \| 'step' \| 'cycle' \| 'curve' \| 'cubic' \| 'bend' \| 'arc' \| 'circlePath' \| 'ellipsePath' \| 'rectangle'` | `'line'` | See the "Eleven kinds" table below; IR also has `generator`, without React `<Step>` DSL |
+| `kind` | `'move' \| 'line' \| 'fold' \| 'cycle' \| 'curve' \| 'cubic' \| 'bend' \| 'arc' \| 'circlePath' \| 'ellipsePath' \| 'rectangle'` | `'line'` | See the "Eleven kinds" table below; IR also has `generator`, without React `<Step>` DSL |
 | `via` | `'-\|' \| '\|-'` | — | Required for `kind="fold"`: `-\|` horizontal-then-vertical; `\|-` vertical-then-horizontal |
 | `from` | `IRTarget` | — | Required only for `kind="rectangle"`: one rectangle corner |
 | `to` | `IRTarget` | — | Not used for `kind="cycle"` / `'arc'` / `'circlePath'` / `'ellipsePath'`; required for `kind="rectangle"` and other cursor-advancing kinds. Target: node id, Cartesian `[x, y]`, polar object, offset object `{ of, offset }`, proportional placement `{ between, t }`, relative-offset object `{ relative }` / `{ relativeAccumulate }`, or sugar string `'+dx,dy'` / `'++dx,dy'` |
@@ -263,7 +263,7 @@ Full ellipses also place labels by angle parameter; this is not equal spacing by
 | --- | --- | --- |
 | `'move'` | Move cursor, **no draw** | path "M" |
 | `'line'` | Straight line from cursor to target | path "L" |
-| `'step'` | Right-angle fold through one corner | two path "L" segments |
+| `'fold'` | Right-angle fold through one corner | two path "L" segments |
 | `'cycle'` | Close back to most recent `move` (no `to`) | path "Z" |
 | `'curve'` | Quadratic Bezier (one control point) | path "Q" |
 | `'cubic'` | Cubic Bezier (two control points) | path "C" |
@@ -275,7 +275,7 @@ Full ellipses also place labels by angle parameter; this is not equal spacing by
 
 The IR schema also contains a `generator` step for external path-generator registries. It has no corresponding React `<Step kind="generator">` DSL and is usually supplied through direct IR or a higher-level package.
 
-The first step of a `<Path>` must be `move` — if you write `'line'` / `'step'` / `'cycle'`, the compiler coerces it to `move` (cycle has no `to`, so it falls back to origin `[0, 0]`).
+The first step of a `<Path>` must be `move` — if you write `'line'` / `'fold'` / `'cycle'`, the compiler coerces it to `move` (cycle has no `to`, so it falls back to origin `[0, 0]`).
 
 ### Two via values
 
