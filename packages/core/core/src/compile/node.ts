@@ -24,13 +24,13 @@ const EMPTY_SHAPE_PARAMS: IRJsonObject = {};
  * @description 裸 string → `{ type, params: {} }`；`{ type, params? }` → params 缺省补 `{}`；
  *   缺省（undefined）→ `{ type: 'rectangle', params: {} }`。`'circle'`（裸 string）消解为
  *   `{ type: 'ellipse', params: { circumscribe: 'equal' } }`——circle 无独立几何，是 ellipse 等轴 preset 别名。
- *   `'diamond'`（裸 string）消解为 `{ type: 'polygon', params: { sides: 4, rotate: 45 } }`——diamond 无独立几何，
- *   是 polygon 4 边形（自旋 45°）preset 别名。仅做形态归一，不查表 / 不校验。
+ *   `'diamond'`（裸 string）消解为 `{ type: 'polygon', params: { sides: 4, rotate: 0 } }`——diamond 无独立几何，
+ *   是 polygon 4 边形 preset 别名。仅做形态归一，不查表 / 不校验。
  */
 const normalizeShape = (shape: IRNode['shape']): { type: string; params: IRJsonObject } => {
   if (shape === undefined) return { type: 'rectangle', params: {} };
   if (shape === 'circle') return { type: 'ellipse', params: { circumscribe: 'equal' } };
-  if (shape === 'diamond') return { type: 'polygon', params: { sides: 4, rotate: 45 } };
+  if (shape === 'diamond') return { type: 'polygon', params: { sides: 4, rotate: 0 } };
   if (typeof shape === 'string') return { type: shape, params: {} };
   const ref: IRShapeRef = shape;
   return { type: ref.type, params: ref.params ?? {} };
@@ -522,7 +522,7 @@ export const layoutNode = (
       // 行级 font 与块级合并：行级优先，没有走块级（透传 undefined）
       const lineFont = isObj ? spec.font : undefined;
       const font: FontSpec = {
-        size: lineFont?.size ?? fontSize,
+        size: lineFont?.size !== undefined ? lineFont.size * fontScale : fontSize,
         family: lineFont?.family ?? fontFamily,
         weight: lineFont?.weight ?? fontWeight,
         style: lineFont?.style ?? fontStyle,
@@ -537,7 +537,7 @@ export const layoutNode = (
         if (isObj) {
           if (spec.fill !== undefined) out.fill = spec.fill;
           if (spec.opacity !== undefined) out.opacity = spec.opacity;
-          if (lineFont?.size !== undefined) out.fontSize = lineFont.size;
+          if (lineFont?.size !== undefined) out.fontSize = lineFont.size * fontScale;
           if (lineFont?.family !== undefined) out.fontFamily = lineFont.family;
           if (lineFont?.weight !== undefined) out.fontWeight = lineFont.weight;
           if (lineFont?.style !== undefined) out.fontStyle = lineFont.style;
@@ -791,7 +791,7 @@ export const emitNodePrimitives = (
         lineHeight: labLineHeight,
         fill: lab.textColor ?? 'currentColor',
         opacity: lab.opacity ?? layout.opacity,
-        measuredWidth: 0,
+        measuredWidth: round(lab.measuredWidth),
         measuredHeight: round(lab.fontSize),
       };
       const deg = resolveLabelRotateDeg(lab, lx, ly, cx, cy);

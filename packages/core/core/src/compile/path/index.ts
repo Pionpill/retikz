@@ -514,8 +514,12 @@ export const emitPathPrimitive = (
 
     const step = steps[i];
 
-    // move 自身不绘制；其 to 仅供下个绘制段的 findPrev 引用
-    if (step.kind === 'move') continue;
+    // move 自身不绘制；其 to 仅供下个绘制段的 findPrev 引用。
+    // 显式 move 开启新游标，必须切断 arc/circle/ellipse/rectangle/generator 留给下一绘制段的 penOverride。
+    if (step.kind === 'move') {
+      penOverride = null;
+      continue;
+    }
 
     if (step.kind === 'generator') {
       const generators = warnHook.effectivePathGenerators ?? {};
@@ -634,14 +638,17 @@ export const emitPathPrimitive = (
     }
 
     if (step.kind === 'cycle') {
+      const usedOverride = penOverride;
+      penOverride = null;
       const moveTo = lastMoveTo;
       const prev = findPrev();
-      if (!moveTo || !prev) continue; // 没 move/prev cycle 无意义
+      if (!moveTo || (!prev && !usedOverride)) continue; // 没 move/cursor cycle 无意义
       const moveAnchor = refPointOfTarget(moveTo, nameStack, scopeChain);
       if (!moveAnchor) return null;
 
-      const fromClip = clipForTarget(prev.step.to, moveAnchor, nameStack, scopeChain);
-      const toClip = clipForTarget(moveTo, prev.anchor, nameStack, scopeChain);
+      const fromClip =
+        usedOverride ?? (prev ? clipForTarget(prev.step.to, moveAnchor, nameStack, scopeChain) : null);
+      const toClip = clipForTarget(moveTo, fromClip ?? prev?.anchor ?? moveAnchor, nameStack, scopeChain);
       if (!fromClip || !toClip) return null;
 
       // 起点 == lastEnd 且终点 == subPathStart → close 收尾最干净
@@ -650,7 +657,7 @@ export const emitPathPrimitive = (
         continue;
       }
       // 否则段独立：重新 move 起点再 line 到终点（不再用 close，避免回到错误的 subPathStart）
-      startSegment(fromClip, isAutoBoundaryTarget(prev.step.to));
+      startSegment(fromClip, usedOverride === null && prev !== null && isAutoBoundaryTarget(prev.step.to));
       emitLine(toClip, isAutoBoundaryTarget(moveTo));
       continue;
     }

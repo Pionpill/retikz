@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { BUILTIN_SHAPES, defineShape, localToWorld, worldToLocal } from '../../src/shapes';
 import type { ShapeDefinition, ShapeStyle } from '../../src/shapes';
 import type { Rect } from '../../src/geometry/rect';
-import type { ScenePrimitive } from '../../src/primitive';
+import type { PathCommand, ScenePrimitive } from '../../src/primitive';
 
 const SQRT2 = Math.SQRT2;
 const id = (n: number): number => n;
@@ -11,8 +11,8 @@ const id = (n: number): number => n;
 const NO_PARAMS = {} as const;
 /** circle 已收为 ellipse 等轴 preset（无独立注册项）；其几何由 ellipse + 此 params 等价提供 */
 const EQUAL_PARAMS = { circumscribe: 'equal' } as const;
-/** diamond 已收为 polygon 4 边形 45° preset（无独立注册项）；其几何由 polygon + 此 params 等价提供 */
-const DIAMOND_PARAMS = { sides: 4, rotate: 45 } as const;
+/** diamond 已收为 polygon 4 边形 preset（无独立注册项）；其几何由 polygon + 此 params 等价提供 */
+const DIAMOND_PARAMS = { sides: 4, rotate: 0 } as const;
 
 describe('BUILTIN_SHAPES.circumscribe matches legacy layoutNode switch', () => {
   it('rectangle is identity', () => {
@@ -25,12 +25,11 @@ describe('BUILTIN_SHAPES.circumscribe matches legacy layoutNode switch', () => {
   it('ellipse = inner × √2', () => {
     expect(BUILTIN_SHAPES.ellipse.circumscribe(10, 6, NO_PARAMS)).toEqual({ halfWidth: 10 * SQRT2, halfHeight: 6 * SQRT2 });
   });
-  it('diamond (= polygon 4/45) 外接 AABB：正方形外接圆 → 轴对齐 AABB 半轴', () => {
-    // polygon{4,45} 是含内框的最小正方形（轴对齐）：外接圆 R = max(hw,hh)/cos45·cos45 = max(hw,hh)，
-    // 顶点在 ±45° 上 → AABB 半轴 = R·cos45 = max(hw,hh)；两轴相等（正方形）。
+  it('diamond (= polygon 4/0) 外接 AABB：顶点在坐标轴上，AABB 半轴相等', () => {
+    // polygon{4,0} 是视觉菱形：外接圆 R = (hw + hh)，顶点在东西南北方向。
     const r = BUILTIN_SHAPES.polygon.circumscribe(10, 6, DIAMOND_PARAMS);
-    expect(r.halfWidth).toBeCloseTo(10, 6);
-    expect(r.halfHeight).toBeCloseTo(10, 6);
+    expect(r.halfWidth).toBeCloseTo(16, 6);
+    expect(r.halfHeight).toBeCloseTo(16, 6);
   });
 });
 
@@ -72,11 +71,22 @@ describe('emit runs in axis-aligned space and returns Iterable<ScenePrimitive>',
     expect(prims[0].type).toBe('ellipse');
     if (prims[0].type === 'ellipse') expect(prims[0].rx).toBe(prims[0].ry);
   });
-  it('diamond (= polygon 4/45) → PathPrim with 4 vertices + close', () => {
+  it('diamond (= polygon 4/0) → PathPrim with 4 vertices + close', () => {
     const prims = [...BUILTIN_SHAPES.polygon.emit(rect, style, id, DIAMOND_PARAMS)];
     expect(prims[0].type).toBe('path');
     if (prims[0].type === 'path') {
       expect(prims[0].commands.map(c => c.kind)).toEqual(['move', 'line', 'line', 'line', 'close']);
+      const points = prims[0].commands
+        .filter((c): c is Extract<PathCommand, { to: [number, number] }> => 'to' in c)
+        .map(c => c.to);
+      expect(points[0][0]).toBeCloseTo(10, 6);
+      expect(points[0][1]).toBeCloseTo(0, 6);
+      expect(points[1][0]).toBeCloseTo(0, 6);
+      expect(points[1][1]).toBeCloseTo(10, 6);
+      expect(points[2][0]).toBeCloseTo(-10, 6);
+      expect(points[2][1]).toBeCloseTo(0, 6);
+      expect(points[3][0]).toBeCloseTo(0, 6);
+      expect(points[3][1]).toBeCloseTo(-10, 6);
     }
   });
 });

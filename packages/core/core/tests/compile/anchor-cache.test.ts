@@ -20,7 +20,7 @@ const makeLayout = (
   cy = 0,
   rotate = 0,
 ): NodeLayout => {
-  // circle / diamond 无独立 shapeDef（收为 preset）：circle → ellipse 等轴、diamond → polygon 4/45。
+  // circle / diamond 无独立 shapeDef（收为 preset）：circle → ellipse 等轴、diamond → polygon 4/0。
   const def =
     shape === 'circle'
       ? BUILTIN_SHAPES.ellipse
@@ -34,7 +34,7 @@ const makeLayout = (
       shape === 'circle'
         ? { circumscribe: 'equal' }
         : shape === 'diamond'
-          ? { sides: 4, rotate: 45 }
+          ? { sides: 4, rotate: 0 }
           : undefined,
     rect: { x: cx, y: cy, width, height, rotate },
     rotateDeg: (rotate * 180) / Math.PI,
@@ -137,7 +137,7 @@ describe('resolveAnchor 各 shape 分发正确', () => {
     expect(east[1]).toBeCloseTo(0, 5);
   });
 
-  it('diamond (= polygon 4/45) layout 调 anchor 关键字返回外接 AABB 边点', () => {
+  it('diamond (= polygon 4/0) layout 调 anchor 关键字返回外接 AABB 边点', () => {
     const layout = makeLayout('diamond', 40, 30, 0, 0);
     const north = resolveAnchor(layout, 'north');
     // polygon 命名 anchor 走外接 AABB：north = AABB 上边中点 (0, -height/2) = (0, -15)

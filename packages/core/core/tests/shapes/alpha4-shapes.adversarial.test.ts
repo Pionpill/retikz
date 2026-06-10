@@ -346,7 +346,7 @@ describe('[adversarial] boundaryPoint / AABB 数值稳定', () => {
 // ════════════════ 攻击面 10：收敛别名 × 交叉 ════════════════
 
 describe('[adversarial] 别名 × anchor / scale 交叉', () => {
-  it('[adversarial] diamond（→polygon 4/45）的 anchor "north" 应与 rect anchor 一致、不抛', () => {
+  it('[adversarial] diamond（→polygon 4/0）的 anchor "north" 应与 rect anchor 一致、不抛', () => {
     expect(() => compileToScene(scene([
       { type: 'node', id: 'd', position: [0, 0], text: 'X', shape: 'diamond' },
       { type: 'path', children: [{ type: 'step', kind: 'move', to: [100, 0] }, { type: 'step', kind: 'line', to: { id: 'd', anchor: 'north' } }] },

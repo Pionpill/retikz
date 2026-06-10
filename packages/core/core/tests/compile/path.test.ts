@@ -285,6 +285,55 @@ describe("compile path: 'cycle' 闭合", () => {
     expect(commands.some(c => c.kind === 'close')).toBe(false);
     expect(commands.filter(c => c.kind === 'move')).toHaveLength(3);
   });
+
+  it('arc 后显式 move 会切断 arc 留下的 penOverride，新 line 从 move.to 开始', () => {
+    const ir: IR = {
+      version: 1,
+      type: 'scene',
+      children: [
+        {
+          type: 'path',
+          children: [
+            { type: 'step', kind: 'move', to: [0, 0] },
+            { type: 'step', kind: 'arc', startAngle: 0, endAngle: 90, radius: 10 },
+            { type: 'step', kind: 'move', to: [20, 20] },
+            { type: 'step', kind: 'line', to: [30, 20] },
+          ],
+        },
+      ],
+    };
+    expect(findPathPrim(compileToScene(ir).primitives).commands).toEqual([
+      move([10, 0]),
+      arc([0, 0], 10, 0, 90),
+      move([20, 20]),
+      line([30, 20]),
+    ]);
+  });
+
+  it('arc 后 cycle 从 arc 终点闭合，不回退到上一条 to-bearing step', () => {
+    const ir: IR = {
+      version: 1,
+      type: 'scene',
+      children: [
+        {
+          type: 'path',
+          children: [
+            { type: 'step', kind: 'move', to: [0, 0] },
+            { type: 'step', kind: 'line', to: [20, 0] },
+            { type: 'step', kind: 'arc', startAngle: 0, endAngle: 90, radius: 10 },
+            { type: 'step', kind: 'cycle' },
+          ],
+        },
+      ],
+    };
+    expect(findPathPrim(compileToScene(ir).primitives).commands).toEqual([
+      move([0, 0]),
+      line([20, 0]),
+      move([30, 0]),
+      arc([20, 0], 10, 0, 90),
+      line([0, 0]),
+    ]);
+  });
 });
 
 describe('compile path: fill / fillRule', () => {
