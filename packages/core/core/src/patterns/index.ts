@@ -40,35 +40,42 @@ const withBackground = (
 export const BUILTIN_PATTERNS: Record<BuiltinPatternName, PatternDefinition> = {
   lines: {
     defaultSize: DEFAULT_PATTERN_SIZE,
-    emit: (ctx): Array<MarkerPrimitive> =>
-      withBackground(ctx, [
+    // 横线描在 tile 中线 y=size/2 而非边缘 y=0：边缘描边有一半落在 tile 外被 <pattern> /
+    // canvas tile 裁掉，渲染出半宽线；居中后整条线宽落在 tile 内，平铺周期仍是 size、无缝衔接。
+    emit: (ctx): Array<MarkerPrimitive> => {
+      const half = ctx.round(ctx.size / 2);
+      return withBackground(ctx, [
         {
           type: 'path',
           commands: [
-            { kind: 'move', to: [0, 0] },
-            { kind: 'line', to: [ctx.size, 0] },
+            { kind: 'move', to: [0, half] },
+            { kind: 'line', to: [ctx.size, half] },
           ],
           stroke: ctx.color,
           strokeWidth: ctx.lineWidth ?? DEFAULT_STROKE_WIDTH,
         },
-      ]),
+      ]);
+    },
   },
   grid: {
     defaultSize: DEFAULT_PATTERN_SIZE,
-    emit: (ctx): Array<MarkerPrimitive> =>
-      withBackground(ctx, [
+    // 横竖线均描在 tile 中线（同 lines：避免边缘描边被 tile 裁成半宽）
+    emit: (ctx): Array<MarkerPrimitive> => {
+      const half = ctx.round(ctx.size / 2);
+      return withBackground(ctx, [
         {
           type: 'path',
           commands: [
-            { kind: 'move', to: [0, 0] },
-            { kind: 'line', to: [ctx.size, 0] },
-            { kind: 'move', to: [0, 0] },
-            { kind: 'line', to: [0, ctx.size] },
+            { kind: 'move', to: [0, half] },
+            { kind: 'line', to: [ctx.size, half] },
+            { kind: 'move', to: [half, 0] },
+            { kind: 'line', to: [half, ctx.size] },
           ],
           stroke: ctx.color,
           strokeWidth: ctx.lineWidth ?? DEFAULT_STROKE_WIDTH,
         },
-      ]),
+      ]);
+    },
   },
   dots: {
     defaultSize: DEFAULT_PATTERN_SIZE,

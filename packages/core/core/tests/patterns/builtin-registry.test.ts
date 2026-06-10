@@ -99,15 +99,15 @@ const multiPrimPattern = (): PatternDefinition => definePattern({
 
 describe('Pattern registry — happy path', () => {
   it('builtin_3_via_registry：内置 lines/dots/grid 经 compileToScene → tile motif 等价旧 switch（golden）', () => {
-    // lines：一个 path 横线 d "M0,0 L8,0"（size 缺省 8）
+    // lines：一个 path 横线居中 d "M0,4 L8,4"（size 缺省 8，中线 y=size/2=4，避免边缘半宽裁切）
     const linesTile = tileOf({ kind: 'pattern', shape: 'lines' });
     const linesPath = firstMotifPath(linesTile);
-    expect(linesPath && pathD(linesPath)).toBe('M0,0 L8,0');
+    expect(linesPath && pathD(linesPath)).toBe('M0,4 L8,4');
 
-    // grid：一个 path 横竖 d "M0,0 L8,0 M0,0 L0,8"
+    // grid：一个 path 横竖居中 d "M0,4 L8,4 M4,0 L4,8"（横竖线均落在 tile 中线）
     const gridTile = tileOf({ kind: 'pattern', shape: 'grid' });
     const gridPath = firstMotifPath(gridTile);
-    expect(gridPath && pathD(gridPath)).toBe('M0,0 L8,0 M0,0 L0,8');
+    expect(gridPath && pathD(gridPath)).toBe('M0,4 L8,4 M4,0 L4,8');
 
     // dots：一个 ellipse（圆），cx=cy=4（size/2）、rx=ry=8/5=1.6（缺省半径 size/5）
     const dotsTile = tileOf({ kind: 'pattern', shape: 'dots' });
@@ -155,9 +155,9 @@ describe('Pattern registry — boundary', () => {
     expect(tile?.size).toBe(12);
     expect(tile?.background).toBe('#eee');
     expect(tile?.rotation).toBe(45);
-    // size override 影响 motif 几何（横线到 x=12）
+    // size override 影响 motif 几何（横线到 x=12，中线 y=size/2=6）
     const mp = firstMotifPath(tile);
-    expect(mp && pathD(mp)).toBe('M0,0 L12,0');
+    expect(mp && pathD(mp)).toBe('M0,6 L12,6');
   });
 
   it('pattern_coexist_gradient：同场景 pattern + gradient → resources 不撞、id 各异', () => {
