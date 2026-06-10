@@ -12,13 +12,12 @@ import {
   resolveSvgElement,
 } from '@retikz/render/hydration';
 import { isFigure } from './builder/isFigure';
+import { DEFAULT_ID_PREFIX } from './constants';
 import { applyAttrs, svgNodeToDom } from './svgNodeToDom';
 import { toScene } from './toScene';
 import type { HydrateOptions, HydrationHandle, MountOptions, RenderInput, VanillaView } from './types';
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
-/** 默认资源 id 前缀（确定性）；多实例同页须经 `options.idPrefix` 显式区分 */
-const DEFAULT_ID_PREFIX = 'r';
 
 /**
  * 把 IR / Scene / Figure 挂成真实 SVG DOM（无框架浏览器 runtime）

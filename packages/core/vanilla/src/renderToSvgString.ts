@@ -1,10 +1,8 @@
 import { renderToSvgString as buildSvgString } from '@retikz/render/svg';
 import { isFigure } from './builder/isFigure';
+import { DEFAULT_ID_PREFIX } from './constants';
 import { toScene } from './toScene';
 import type { RenderInput, RenderToStringOptions } from './types';
-
-/** 默认资源 id 前缀（确定性）；多实例同页须经 `options.idPrefix` 显式区分 */
-const DEFAULT_ID_PREFIX = 'r';
 
 /** 把 `width`/`height` 注入到开头的 `<svg` 标签（@retikz/render/svg 只产 viewBox） */
 const injectSize = (svg: string, width?: number, height?: number): string => {
