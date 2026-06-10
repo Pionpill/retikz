@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { FontSchema } from '../font';
 import { JsonObjectSchema } from '../json';
 import { PositionSchema } from '../position';
+import type { ValueOf } from '../../types';
 import { TargetSchema } from './target';
 
 /**
@@ -82,6 +83,13 @@ export const LineStepSchema = z
   })
   .describe('Line action: straight-line segment from cursor to target');
 
+export const FoldStepVia = {
+  HorizontalThenVertical: '-|',
+  VerticalThenHorizontal: '|-',
+} as const;
+
+export type FoldStepViaValue = ValueOf<typeof FoldStepVia>;
+
 export const FoldStepSchema = z
   .object({
     type: z.literal('step').describe('Discriminator marking this as a path step node'),
@@ -91,7 +99,7 @@ export const FoldStepSchema = z
         'Folded right-angle segment from cursor to target through one intermediate point (TikZ `-|` / `|-`)',
       ),
     via: z
-      .enum(['-|', '|-'])
+      .nativeEnum(FoldStepVia)
       .describe(
         'Folding direction: `-|` first horizontal then vertical; `|-` first vertical then horizontal',
       ),

@@ -9,7 +9,7 @@ export {
   PolarPositionSchema,
   AtPositionSchema,
   OffsetPositionSchema,
-  AT_DIRECTIONS,
+  AtDirection,
   TargetSchema,
   AnchorRefSchema,
   NodeTargetSchema,
@@ -63,7 +63,7 @@ export type {
   IRPosition,
   IRAtPosition,
   IROffsetPosition,
-  AtDirection,
+  AtDirectionValue,
   IRTarget,
   IRAnchorRef,
   IRNodeTarget,
@@ -110,14 +110,16 @@ export type {
   IRScaleTransform,
   IRChild,
   IR,
-  ArrowShape,
+  ArrowShapeValue,
   BuiltinArrowName,
   ArrowShapeName,
   IRArrowDetail,
   IRArrowEndDetail,
   NodeShape,
   BuiltinShapeName,
-  NodeTextAlign,
+  BuiltinShapeValue,
+  NodeTextAlignValue,
+  PatternShapeValue,
   PatternShapeName,
   BuiltinPatternName,
   IRPaintSpec,
@@ -128,14 +130,14 @@ export type {
   IRViewBox,
 } from './ir';
 export {
-  ARROW_SHAPES,
+  ArrowShape,
   DEFAULT_ARROW_SHAPE,
   HOLLOW_ARROW_SHAPES,
   ARROW_MARKER_DEFAULT_SIZE,
   ARROW_MARKER_HOLLOW_DEFAULT_LINE_WIDTH,
-  NODE_SHAPES,
-  NODE_TEXT_ALIGNS,
-  PATTERN_SHAPES,
+  BuiltinShape,
+  NodeTextAlign,
+  PatternShape,
   Boundary,
   BoundarySchema,
   AnimationProperty,
@@ -149,14 +151,14 @@ export {
   EasingSchema,
   OriginSchema,
 } from './ir';
-export type { BoundaryKeyword, IRBoundary } from './ir';
+export type { BoundaryValue, IRBoundary } from './ir';
 export type {
   BuiltinAnimationProperty,
   AnimationPropertyRef,
-  AnimationEasingName,
-  AnimationDirectionName,
-  AnimationFillName,
-  AnimationTriggerName,
+  AnimationEasingValue,
+  AnimationDirectionValue,
+  AnimationFillValue,
+  AnimationTriggerValue,
   IRAnimationTrack,
   IRKeyframe,
   IRAnimationTrigger,
@@ -262,18 +264,29 @@ export type {
   WiggleOptions,
 } from './presets';
 
-// Geometry
-// RECT_ANCHORS（const 集合，值）与 RectAnchor（派生 type）配对，名字不撞
 export type {
   Position,
+  CompassAnchorValue,
+  AnchorInput,
+  WebAnchorValue,
   Rect,
-  RectAnchor,
   Circle,
   Ellipse,
   Diamond,
   PolarPosition,
 } from './geometry';
-export { point, rect, circle, ellipse, diamond, RECT_ANCHORS, polar } from './geometry';
+export {
+  point,
+  CompassAnchor,
+  WebAnchor,
+  isCompassAnchorInput,
+  normalizeCompassAnchor,
+  rect,
+  circle,
+  ellipse,
+  diamond,
+  polar,
+} from './geometry';
 
 // Shapes (Shape Registry 扩展面：第三方 shape 注入 + 内置注册项 + 作者所需 helper)
 export type { ShapeDefinition, ShapeDefinitionInput, ShapeStyle } from './shapes';

@@ -1,3 +1,3 @@
-export * from './parseWay';
-export * from './parseTargetSugar';
-export * from './parseNodeTarget';
+export * from './way';
+export * from './target-sugar';
+export * from './node-target';

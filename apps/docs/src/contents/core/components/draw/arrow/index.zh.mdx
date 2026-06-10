@@ -31,7 +31,7 @@ description: Path / Draw 的箭头详解。`arrow` 控制方向、`arrowDetail` 
 | 实心 | 空心 | 典型用途 |
 | --- | --- | --- |
 | `'normal'` 实心三角 | `'open'` 空心三角 | 基础三角 / UML 泛化 |
-| `'stealth'` 倒钩三角 | - | 默认箭头、现代流程图 |
+| `'stealth'` 倒钩三角 | `'openStealth'` 空心倒钩 | 默认箭头、现代流程图 |
 | `'diamond'` 实心菱形 | `'openDiamond'` 空心菱形 | UML 组合 / 聚合 |
 | `'circle'` 实心圆点 | `'openCircle'` 空心圆点 | 连接点 / 空心端点 |
 
@@ -55,7 +55,7 @@ description: Path / Draw 的箭头详解。`arrow` 控制方向、`arrowDetail` 
 
 <ComponentPreview name="arrow-color" size="xs" />
 
-> **空心形状会静默忽略 `fill`**：`shape ∈ { open / openDiamond / openCircle }` 时，`fill` 字段被静默丢弃——空心形状由 `color`（描边色） + `lineWidth`（描边粗细）共同决定视觉，写 `fill='red'` 不会渲染红色填充。
+> **空心形状会静默忽略 `fill`**：`shape ∈ { open / openStealth / openDiamond / openCircle }` 时，`fill` 字段被静默丢弃——空心形状由 `color`（描边色） + `lineWidth`（描边粗细）共同决定视觉，写 `fill='red'` 不会渲染红色填充。
 
 #### 缩放：scale / length / width
 
@@ -86,7 +86,7 @@ description: Path / Draw 的箭头详解。`arrow` 控制方向、`arrowDetail` 
 
 | 字段 | 类型 | 默认值 | 描述 |
 | --- | --- | --- | --- |
-| `shape` | `'normal' \| 'open' \| 'stealth' \| 'diamond' \| 'openDiamond' \| 'circle' \| 'openCircle' \| string` | `'stealth'` | 箭头形状；内置 7 种或经 `<Layout arrows>` / `CompileOptions.arrows` 注册的自定义箭头名 |
+| `shape` | `'normal' \| 'open' \| 'stealth' \| 'openStealth' \| 'diamond' \| 'openDiamond' \| 'circle' \| 'openCircle' \| string` | `'stealth'` | 箭头形状；内置 8 种或经 `<Layout arrows>` / `CompileOptions.arrows` 注册的自定义箭头名 |
 | `scale` | `number > 0` | `1` | 等比缩放因子；乘到 `length` / `width` 之后（`length=10, scale=1.5` → 实际 15） |
 | `length` | `number ≥ 0` | `6` | 尖长（用户单位，沿路径方向） |
 | `width` | `number ≥ 0` | `6` | 尖宽（用户单位，垂直路径方向） |

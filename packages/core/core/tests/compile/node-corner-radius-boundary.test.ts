@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { boundaryPointOf, layoutNode } from '../../src/compile/node';
 import { NameStack } from '../../src/compile/name-stack';
 import type { IRNode } from '../../src/ir/node';
-import { type ContourSegment, filletContour } from '../../src/geometry/roundedContour';
+import { type ContourSegment, filletContour } from '../../src/geometry/contour';
 import { BUILTIN_SHAPES } from '../../src/shapes';
 
 const measureText = (): { width: number; height: number; ascent: number } => ({

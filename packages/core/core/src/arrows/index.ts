@@ -1,9 +1,9 @@
 /**
  * Arrow Registry 扩展面
- * @description 内置 7 arrow 的注册项 + 第三方 arrow 作者所需的类型。
- *   `BUILTIN_ARROWS` 的 Record key 用 `BuiltinArrowName`（7 名穷尽），不用开放的 `ArrowShapeName`。
+ * @description 内置 8 arrow 的注册项 + 第三方 arrow 作者所需的类型。
+ *   `BUILTIN_ARROWS` 的 Record key 用 `BuiltinArrowName`（8 名穷尽），不用开放的 `ArrowShapeName`。
  *
- *   内置 7 的 `emit` 在局部 baseSize=10 坐标系产 `MarkerPrimitive` 几何（renderer-agnostic）；
+ *   内置 8 的 `emit` 在局部 baseSize=10 坐标系产 `MarkerPrimitive` 几何（renderer-agnostic）；
  *   几何字段（baseSize / lineContactX / tipX / defaultLength / defaultWidth / hollow）按几何契约声明。
  */
 import type { MarkerPrimitive } from '../primitive/marker';
@@ -42,9 +42,10 @@ const hollowPath = (
 });
 
 /**
- * 内置 7 arrow 注册项；与 `CompileOptions.arrows` 合并时被同名注入覆盖
+ * 内置 8 arrow 注册项；与 `CompileOptions.arrows` 合并时被同名注入覆盖
  * @description 几何字段（lineContactX 静态 base / tipX / hollow）：
  *   实心 normal/diamond/circle lineContactX=0；stealth=3；open/openDiamond base=1 + tipX=9 + hollow；
+ *   openStealth base=3 + tipX=9 + hollow；
  *   openCircle base=0.75 + hollow。baseSize / defaultLength / defaultWidth 走类型缺省（10 / 6 / 6）。
  *   framework 对 hollow def 统一把 lineContactX 减 lineWidth/2 得实际 refX / shrink 接触点。
  *   emit 几何在局部 baseSize=10 坐标系（renderer-agnostic）。
@@ -63,6 +64,12 @@ export const BUILTIN_ARROWS: Record<BuiltinArrowName, ArrowDefinition> = {
   stealth: {
     lineContactX: 3,
     emit: ctx => [filledPath(ctx, [[0, 0], [10, 5], [0, 10], [3, 5]])],
+  },
+  openStealth: {
+    hollow: true,
+    lineContactX: 3,
+    tipX: 9,
+    emit: ctx => [hollowPath(ctx, [[1, 1], [9, 5], [1, 9], [3, 5]], 'miter')],
   },
   diamond: {
     lineContactX: 0,

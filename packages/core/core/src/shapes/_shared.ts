@@ -1,16 +1,14 @@
 import { arcBoundingPoints, arcEndPoint } from '../geometry/arc';
+import { normalizeCompassAnchor } from '../geometry/anchor';
+import type { CompassAnchorValue } from '../geometry/anchor';
 import type { Position } from '../geometry/point';
-import { RECT_ANCHORS, type RectAnchor } from '../geometry/rect';
-
-/** RECT_ANCHORS 的 9 个合法 anchor 名集合（成员校验用） */
-const RECT_ANCHOR_SET = new Set<string>(Object.values(RECT_ANCHORS));
 
 /**
- * 把任意字符串收窄为合法 RectAnchor，否则 undefined
- * @description 内置 4 shape 的 anchor 只认这 9 名；不在集合内返回 undefined，由 `anchorOf` 抛 Unknown anchor
+ * 把任意字符串收窄为标准方位 anchor，否则 undefined。
+ * @description TikZ canonical 名与 Web alias 都会归一到 CompassAnchor；不在集合内返回 undefined，由 `anchorOf` 抛 Unknown anchor。
  */
-export const asRectAnchor = (name: string): RectAnchor | undefined =>
-  RECT_ANCHOR_SET.has(name) ? (name as RectAnchor) : undefined;
+export const asCompassAnchor = (name: string): CompassAnchorValue | undefined =>
+  normalizeCompassAnchor(name);
 
 const DEG_TO_RAD = Math.PI / 180;
 

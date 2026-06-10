@@ -1,5 +1,5 @@
 import type { IRGradientStop, IRNode, IRPath, IRScope, IRStep } from '@retikz/core';
-import type { AxisGuide, LegendChannelType, LegendOrientType, LegendPositionType } from '../ir';
+import type { AxisGuide, LegendChannelValue, LegendOrientValue, LegendPositionValue } from '../ir';
 import { AXIS_LABEL_GAP, AXIS_TICK_LENGTH, type Rect, estimateLabelWidth } from './layout';
 import type { CustomFrame, DimensionRole, PolarFrame, TernaryVertices } from './project';
 import { type ProvenanceContext, guideLayerId, guideLayerMeta } from './provenance';
@@ -551,7 +551,7 @@ export type LegendInput = {
   /** 形态：swatch（离散 / 分箱 / size / opacity）或 ramp（连续色带） */
   form: 'swatch' | 'ramp';
   /** 绑定通道（决定 swatch 视觉量取色 / 形状 / 半径 / 透明度） */
-  channel: LegendChannelType;
+  channel: LegendChannelValue;
   /** 标题（缺省 = 绑定字段名；undefined → 不画标题） */
   title?: string;
   /** 离散条目（form==='swatch'） */
@@ -559,9 +559,9 @@ export type LegendInput = {
   /** 连续色带（form==='ramp'） */
   ramp?: LegendRamp;
   /** 摆放位置（预留带所在边） */
-  position: LegendPositionType;
+  position: LegendPositionValue;
   /** 条目排布方向 */
-  orient: LegendOrientType;
+  orient: LegendOrientValue;
   /** label 字号 */
   fontSize: number;
   /** 预留带矩形（plotArea 旁的 legend 带；条目从带左上角起摆） */

@@ -1,6 +1,5 @@
 import { Children, Fragment, type ReactNode, isValidElement } from 'react';
 import {
-  type ArrangementType,
   type Coordinate,
   type DataModel,
   type Encoding,
@@ -8,6 +7,7 @@ import {
   type Mark,
   PLOT_NAMESPACE,
   PlotArrangement,
+  type PlotArrangementValue,
   PlotComposite,
   PlotCoordinate,
   PlotFieldType,
@@ -198,7 +198,7 @@ const collectInto = (children: ReactNode, into: Collected): void => {
       const { x, y, color, series, stack, id } = child.props as BarMarkProps;
       const colorEnc = colorChannel(color, series);
       // series + stack → 堆叠（装配 stack transform，x/y/groupBy 与 mark 对齐）；series 无 stack → dodge
-      let arrangement: ArrangementType | undefined;
+      let arrangement: PlotArrangementValue | undefined;
       if (series !== undefined && stack) {
         arrangement = PlotArrangement.Stack;
         into.transforms.push({ kind: PlotTransform.Stack, x, y, groupBy: series });

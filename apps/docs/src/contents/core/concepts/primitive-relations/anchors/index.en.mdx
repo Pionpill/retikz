@@ -1,13 +1,15 @@
 ---
 title: Anchors
-description: 9 named anchors per node + object-form Target (named / angle / edge proportional / offset) + string shorthand.
+description: Node anchors support CompassAnchor and WebAnchor inputs, with object-form Target or string shorthand for named / angle / edge proportional / offset references.
 ---
 
-Every `<Node>` has 9 named anchors. Paths can either let retikz auto-pick the border point (the common case), or lock onto a specific position with the object form `{ id, anchor?, offset? }` (in JSX you may use the `'A.north'` / `'A.30'` string shorthand). Since v0.2, a `<Scope>` with an `id` also registers a rectangular boundary, so the same anchor syntax can target a whole group.
+Anchors describe where a connection line or reference point should land on a node: for example, leaving from the right side, attaching to the top border, or aligning a label to the node center. Every `<Node>` has a set of named anchors. Directional names have two layers: `CompassAnchor` is the canonical TikZ-style vocabulary; `WebAnchor` is the Web / CSS-friendly input alias set, normalized to the matching `CompassAnchor` during compilation.
 
-## The 9 anchors
+Paths can either let retikz auto-pick the border point (the common case), or lock onto a specific position with the object form `{ id, anchor?, offset? }` (in JSX you may use the `'A.north'` / `'A.top-left'` / `'A.30'` string shorthand). A `<Scope>` with an `id` also registers a rectangular boundary, so the same anchor syntax can target a whole group.
 
-| Name | Position |
+## Direction Anchors
+
+| CompassAnchor | Position |
 | --- | --- |
 | `center` | Geometric center |
 | `north` / `south` / `east` / `west` | The 4 cardinal border points |
@@ -22,13 +24,21 @@ The four built-in [`shape`](/core/components/node) types share this naming (each
 
 When a node has `rotate`, all 9 anchors rotate with it.
 
-Custom shapes define their anchor behavior through `ShapeDefinition`. Supporting these 9 geometric anchors is recommended so the shape can substitute for built-ins; if a registered shape does not support a requested anchor, compilation reports the corresponding error. See [shape registry](/core/reference/extending/shape-registry).
+Custom shapes define their anchor behavior through `ShapeDefinition`. Supporting these 9 standard compass anchors is recommended so the shape can substitute for built-ins; if a registered shape does not support a requested anchor, compilation reports the corresponding error. See [shape registry](/core/reference/extending/shape-registry).
 
 <Comparison target="tikz" title="Anchor Names">
 
 `center` / `north` / `south` / `east` / `west` / `north-east` / `north-west` / `south-east` / `south-west` reuse TikZ's common anchor vocabulary, which makes LaTeX-style node relationships easy to translate into JSX.
 
 </Comparison>
+
+You may also use the Web / CSS-style `WebAnchor` aliases. Whether written as the object form `{ id, anchor: 'top-left' }` or the string shorthand `'A.top-left'`, they normalize to the canonical anchor names above:
+
+| WebAnchor | Equivalent CompassAnchor |
+| --- | --- |
+| `top` / `bottom` / `right` / `left` | `north` / `south` / `east` / `west` |
+| `top-right` / `top-left` | `north-east` / `north-west` |
+| `bottom-right` / `bottom-left` | `south-east` / `south-west` |
 
 ## Auto border attachment
 
@@ -49,7 +59,7 @@ Don't want auto-selection, need a specific position? A path target uses the **ob
 | anchor form | Meaning |
 | --- | --- |
 | anchor omitted | `{ id: 'A' }`: auto-attach to border (same as plain id, **most common**) |
-| named anchor | `{ id: 'A', anchor: 'north' }`: one of the 9 named anchors |
+| named anchor | `{ id: 'A', anchor: 'north' }` / `{ id: 'A', anchor: 'top' }`: a standard compass anchor or Web alias |
 | angle anchor | `{ id: 'A', anchor: 30 }`: visual border point at the given degree |
 | edge proportional | `{ id: 'A', anchor: { side: 'north', t: 0.25 } }`: see "Edge proportional points" below |
 | anchor + offset | `{ id: 'A', anchor: 'west', offset: [-4, 0] }`: resolve the anchor / edge point, then add a world-space `[dx, dy]` (not rotated by the node's `rotate`) |
@@ -66,11 +76,12 @@ In JSX / Draw way you may use a string shorthand; the React layer eager-parses i
 | --- | --- |
 | `'A'` | `{ id: 'A' }` |
 | `'A.north'` | `{ id: 'A', anchor: 'north' }` |
+| `'A.top-left'` | `{ id: 'A', anchor: 'north-west' }` |
 | `'A.30'` | `{ id: 'A', anchor: 30 }` |
 
 > **dotted-id limitation**: the string shorthand splits on the **first `.`**, so an **id containing `.` cannot use the shorthand** — write the object form `{ id: 'a.b', anchor: 'north' }`. The `{ side, t }` edge proportional point is **object-form only**.
 >
-> **Supported anchor names**: the 9 geometric anchors above. Text-baseline anchors such as `'text'` / `'base'` / `'mid'` are not part of the public API yet.
+> **Supported anchor names**: the 9 standard compass anchors above, plus Web aliases such as `top` / `top-left`. Text-baseline anchors such as `'text'` / `'base'` / `'mid'` are not part of the public API yet.
 
 ## Edge proportional points `{ side, t }`
 

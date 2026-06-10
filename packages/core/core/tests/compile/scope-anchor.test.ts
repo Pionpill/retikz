@@ -26,6 +26,24 @@ const lineTo = (prim: ScenePrimitive | undefined): [number, number] | undefined 
 };
 
 describe('跨 scope anchor keyword', () => {
+  it('scope_anchor_web_alias：对象形态 top-left 与 north-west 等价', () => {
+    const endFor = (anchor: string): [number, number] | undefined => {
+      const ir = scene([
+        { type: 'node', id: 'A', position: [0, 0], text: 'A' },
+        {
+          type: 'path',
+          children: [
+            { type: 'step', kind: 'move', to: [40, 40] },
+            { type: 'step', kind: 'line', to: { id: 'A', anchor } },
+          ],
+        },
+      ]);
+      return lineTo(topPath(compileToScene(ir).primitives));
+    };
+
+    expect(endFor('top-left')).toEqual(endFor('north-west'));
+  });
+
   it('scope_anchor_north_cross：scope translate(100,0) + path A.north 投影到全局 (100, A.north.y)', () => {
     const ir = scene([
       { type: 'node', id: 'ext', position: [0, 0], text: 'E' },
@@ -372,7 +390,7 @@ describe('跨 scope anchor 错误路径', () => {
     expect(warnings.some(w => w.code === 'UNRESOLVED_NODE_REFERENCE')).toBe(true);
   });
 
-  it('scope_anchor_invalid_anchor_name：path 引用合法 id 但 anchor 名不在 RECT_ANCHORS → compile 抛 Unknown anchor', () => {
+  it('scope_anchor_invalid_anchor_name：path 引用合法 id 但 anchor 名不在标准方位 anchor → compile 抛 Unknown anchor', () => {
     const ir = scene([
       {
         type: 'scope',

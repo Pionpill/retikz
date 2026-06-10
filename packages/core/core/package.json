@@ -1,7 +1,7 @@
 {
   "name": "@retikz/core",
   "version": "0.3.0-beta.1",
-  "description": "retikz v0.1 core: framework-agnostic IR, scene compiler, and pure parsers.",
+  "description": "retikz core: framework-agnostic IR, scene compiler, schemas, geometry, and parsers.",
   "type": "module",
   "author": "Pionpill",
   "homepage": "https://pionpill.github.io/retikz/",
@@ -63,7 +63,6 @@
     "typescript": "catalog:",
     "vite": "catalog:",
     "vite-plugin-dts": "catalog:",
-    "vite-tsconfig-paths": "catalog:",
     "vitest": "catalog:"
   }
 }

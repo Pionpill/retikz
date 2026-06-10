@@ -466,7 +466,7 @@ export const changelog: Array<Release> = [
               {
                 label: { zh: '`<Layout composites>` 透传', en: '`<Layout composites>` passthrough' },
                 content: {
-                  zh: '`Layout` 加 `composites?: Array<CompositeDefinition>`，与现有 `shapes` / `arrows` / `patterns` / `pathGenerators` 同构透传到 `compileToScene`，无其它逻辑；Tier 2 节点本版经 `ir` prop 直喂进入，JSX authoring 通道见后续 ADR。',
+                  zh: '`Layout` 加 `composites?: Array<CompositeDefinition>`，与现有 `shapes` / `arrows` / `patterns` / `pathGenerators` 同构透传到 `compileToScene`，无其它逻辑；复合节点本版经 `ir` prop 直喂进入，JSX authoring 通道见后续 ADR。',
                   en: '`Layout` gains `composites?: Array<CompositeDefinition>`, forwarded to `compileToScene` isomorphically with the existing `shapes` / `arrows` / `patterns` / `pathGenerators`, with no other logic; tier2 nodes enter via the `ir` prop this version, with a JSX authoring channel deferred to a later ADR.',
                 },
               },
@@ -633,7 +633,7 @@ export const changelog: Array<Release> = [
             version: 'alpha.2',
             date: '2026-06-02',
             summary: {
-              zh: 'Tier 2 支撑：可注册的 composite 展开管线——domain 包（plot 等）注册「领域节点 schema + expand」，compileToScene 第一步据注册表把 Tier 2 节点下沉成 Tier 1 Kernel；core 仍零 chart 语义。',
+              zh: 'Tier 2 支撑：可注册的 composite 展开管线——domain 包（plot 等）注册「领域节点 schema + expand」，compileToScene 第一步据注册表把复合节点下沉成 Tier 1 Kernel；core 仍零 chart 语义。',
               en: 'Tier 2 support: a registrable composite lowering pipeline — domain packages (plot, etc.) register a "domain-node schema + expand"; compileToScene lowers Tier 2 nodes to Tier 1 Kernel as its first step, while core keeps zero chart semantics.',
             },
             items: [
@@ -683,14 +683,14 @@ export const changelog: Array<Release> = [
         pkg: 'docs',
         version: 'v0.3',
         description: {
-          zh: 'v0.3 文档：introduction 补「包关系」一节 + retikz 自绘依赖图；reference 新增「复合 / Composite」分组，收录 Tier 2 节点（composite）的注册与展开管线。',
+          zh: 'v0.3 文档：introduction 补「包关系」一节 + retikz 自绘依赖图；reference 新增「复合 / Composite」分组，收录复合（composite）的注册与展开管线。',
           en: 'v0.3 docs: the introduction gains a "package relationships" section + a retikz-drawn dependency diagram; reference adds a "Composite" group covering Tier 2 node registration and the lowering pipeline.',
         },
         highlights: [
           {
             label: { zh: '复合 / Composite 分组', en: 'Composite group' },
             content: {
-              zh: 'reference 下 extending 之后、schema 之前新增「复合 / Composite」分组，落地页 + Tier 2 节点页（defineComposite / namespace·type 判别 / lowering 管线）[复合](/core/reference/composites)',
+              zh: 'reference 下 extending 之后、schema 之前新增「复合 / Composite」分组，落地页 + 复合页（defineComposite / namespace·type 判别 / lowering 管线）[复合](/core/reference/composites)',
               en: 'A "Composite" group between extending and schema under reference — a landing page + a Tier 2 nodes page (defineComposite / namespace·type discrimination / lowering pipeline) [Composite](/core/reference/composites)',
             },
           },
@@ -741,15 +741,15 @@ export const changelog: Array<Release> = [
             version: 'alpha.2',
             date: '2026-06-02',
             summary: {
-              zh: '新增「复合 / Composite」分组（reference，extending 后 schema 前）：Tier 2 节点的注册（defineComposite）/ 判别 / lowering 文档。',
+              zh: '新增「复合 / Composite」分组（reference，extending 后 schema 前）：复合的注册（defineComposite）/ 判别 / lowering 文档。',
               en: 'A new "Composite" group (reference, between extending and schema): docs on Tier 2 node registration (defineComposite) / discrimination / lowering.',
             },
             items: [
               {
-                label: { zh: '复合分组 + Tier 2 节点页', en: 'Composite group + Tier 2 nodes page' },
+                label: { zh: '复合分组 + 复合页', en: 'Composite group + Tier 2 nodes page' },
                 content: {
-                  zh: '[复合](/core/reference/composites) 分组落地页 + [Tier 2 节点](/core/reference/composites/composite) 详细页（`defineComposite({ schema, expand })`、有无 namespace 判别、`lowerComposites` 展开、未注册 warn+skip）；三处协同（contents + data + i18n）同步。',
-                  en: 'A [Composite](/core/reference/composites) landing page + a [Tier 2 nodes](/core/reference/composites/composite) page (`defineComposite({ schema, expand })`, namespace-presence discrimination, `lowerComposites` expansion, unregistered warn+skip); three-place sync (contents + data + i18n).',
+                  zh: '[复合](/core/reference/composites) 分组落地页 + [复合](/core/concepts/design/composite) 详细页（`defineComposite({ schema, expand })`、有无 namespace 判别、`lowerComposites` 展开、未注册 warn+skip）；三处协同（contents + data + i18n）同步。',
+                  en: 'A [Composite](/core/reference/composites) landing page + a [Tier 2 nodes](/core/concepts/design/composite) page (`defineComposite({ schema, expand })`, namespace-presence discrimination, `lowerComposites` expansion, unregistered warn+skip); three-place sync (contents + data + i18n).',
                 },
               },
             ],

@@ -486,6 +486,57 @@ describe('drawScene 箭头 marker', () => {
     expect(markerStroke.lineJoin).toBe('miter');
   });
 
+  it('arrow-open-stealth-renders-hollow：openStealth 空心倒钩按凹口几何描边、不填充', () => {
+    const context = createSpyCanvasContext();
+    const openStealthSpec = {
+      shape: 'openStealth' as const,
+      baseSize: 10,
+      refX: 2.25,
+      markerWidth: 6,
+      markerHeight: 6,
+      marker: [
+        {
+          type: 'path' as const,
+          commands: [
+            { kind: 'move' as const, to: [1, 1] as [number, number] },
+            { kind: 'line' as const, to: [9, 5] as [number, number] },
+            { kind: 'line' as const, to: [1, 9] as [number, number] },
+            { kind: 'line' as const, to: [3, 5] as [number, number] },
+            { kind: 'close' as const },
+          ],
+          stroke: 'context-stroke',
+          strokeWidth: 1.5,
+          strokeLinejoin: 'miter' as const,
+        },
+      ],
+    };
+    const arrowScene: Scene = {
+      layout: { x: 0, y: 0, width: 80, height: 40 },
+      primitives: [
+        {
+          type: 'path',
+          commands: [
+            { kind: 'move', to: [0, 0] },
+            { kind: 'line', to: [40, 0] },
+          ],
+          stroke: '#2255aa',
+          strokeWidth: 1,
+          arrowEnd: openStealthSpec,
+        },
+      ],
+    };
+
+    drawScene(context as unknown as CanvasRenderingContext2D, arrowScene);
+
+    expect(context.calls.some(c => c.name === 'translate' && c.args[0] === -2.25 && c.args[1] === -5)).toBe(true);
+    expect(context.calls.some(c => c.name === 'lineTo' && c.args[0] === 3 && c.args[1] === 5)).toBe(true);
+    const strokeCalls = context.calls.filter(c => c.name === 'stroke');
+    const markerStroke = strokeCalls[strokeCalls.length - 1];
+    expect(markerStroke.strokeStyle).toBe('#2255aa');
+    expect(markerStroke.lineJoin).toBe('miter');
+    expect(context.calls.filter(c => c.name === 'fill')).toHaveLength(0);
+  });
+
   it('arrow-no-marker-warning：渲染箭头不再发 marker 降级告警', () => {
     const context = createSpyCanvasContext();
     const warnings: Array<string> = [];

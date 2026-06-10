@@ -1,4 +1,5 @@
 export * from './point';
+export * from './anchor';
 export * from './rect';
 export * from './circle';
 export * from './ellipse';
@@ -7,4 +8,4 @@ export * from './polar';
 export * from './bend';
 export * from './arc';
 export * from './segment';
-export * from './roundedContour';
+export * from './contour';

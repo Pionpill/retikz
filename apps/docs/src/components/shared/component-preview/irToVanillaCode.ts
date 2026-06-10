@@ -1,4 +1,16 @@
-import type { IR, IRChild, IRCoordinate, IRNode, IRPath, IRScope, IRStep } from '@retikz/core';
+import type {
+  IR,
+  IRArcStep,
+  IRBendStep,
+  IRChild,
+  IRCirclePathStep,
+  IRCoordinate,
+  IREllipsePathStep,
+  IRNode,
+  IRPath,
+  IRScope,
+  IRStep,
+} from '@retikz/core';
 
 /**
  * 从 IR 生成等价的 `@retikz/vanilla` 命令式 builder 代码（纯字符串，供 ComponentPreview 的 vanilla 代码视图展示）
@@ -93,11 +105,22 @@ const stepsToWay = (steps: ReadonlyArray<IRStep>, ctx: Ctx, indent: number): Arr
           frags.push({ text: `{ bend: ${formatString(step.bendDirection)}${angle} }` });
           frags.push({ text: formatValue(step.to, indent) });
         } else {
-          frags.push({ text: '/* unsupported step: bend (out/in angle) */', comment: true });
+          frags.push({ text: '/* not vanilla way sugar: bend with out/in angles */', comment: true });
         }
         break;
+      case 'arc':
+        frags.push({
+          text: `{ arc: { startAngle: ${step.startAngle}, endAngle: ${step.endAngle}, radius: ${step.radius} } }`,
+        });
+        break;
+      case 'circlePath':
+        frags.push({ text: `{ circle: { radius: ${step.radius} } }` });
+        break;
+      case 'ellipsePath':
+        frags.push({ text: `{ ellipse: { radiusX: ${step.radiusX}, radiusY: ${step.radiusY} } }` });
+        break;
       default:
-        frags.push({ text: `/* unsupported step: ${step.kind} */`, comment: true });
+        frags.push({ text: `/* not vanilla way sugar: ${step.kind} */`, comment: true });
     }
   }
   return frags;
@@ -130,7 +153,48 @@ const coordinateCode = (coord: IRCoordinate, indent: number, ctx: Ctx): string =
   return `coordinate(${formatString(coord.id)}, ${formatObject(config, indent)})`;
 };
 
+const isWayArcStep = (step: IRArcStep): boolean =>
+  step.radius !== undefined && step.radiusX === undefined && step.radiusY === undefined && step.center === undefined;
+
+const isWayCirclePathStep = (step: IRCirclePathStep): boolean =>
+  step.startAngle === undefined && step.endAngle === undefined && step.closed === undefined;
+
+const isWayEllipsePathStep = (step: IREllipsePathStep): boolean =>
+  step.startAngle === undefined && step.endAngle === undefined && step.closed === undefined;
+
+const isWayBendStep = (step: IRBendStep): boolean =>
+  step.bendDirection !== undefined && step.outAngle === undefined && step.inAngle === undefined && step.looseness === undefined;
+
+const isWayRepresentableStep = (step: IRStep): boolean => {
+  switch (step.kind) {
+    case 'move':
+    case 'line':
+    case 'step':
+    case 'cycle':
+    case 'curve':
+    case 'cubic':
+      return true;
+    case 'bend':
+      return isWayBendStep(step);
+    case 'arc':
+      return isWayArcStep(step);
+    case 'circlePath':
+      return isWayCirclePathStep(step);
+    case 'ellipsePath':
+      return isWayEllipsePathStep(step);
+    case 'rectangle':
+    case 'generator':
+      return false;
+  }
+};
+
+const rawIrChildCode = (child: IRChild, indent: number, reason: string): string =>
+  `/* ${reason}; raw IR child, switch to IR view for structure. */ ${formatObject(child, indent)}`;
+
 const drawCode = (path: IRPath, indent: number, ctx: Ctx): string => {
+  if (!path.children.every(isWayRepresentableStep)) {
+    return rawIrChildCode(path, indent, 'not vanilla way sugar');
+  }
   ctx.used.add('draw');
   const config = stripKeys(path, ['type', 'children']);
   const wayStr = formatWay(stepsToWay(path.children, ctx, indent + 1), indent);

@@ -198,7 +198,7 @@ describe('adv 3: scale × length / width 关系（compile 已乘进 markerWidth 
 });
 
 describe('adv 4: 空心 shape silent fill no-op（4 子象限：实/空 × 有/无 fill）', () => {
-  it.each(['open', 'openDiamond', 'openCircle'] as const)(
+  it.each(['open', 'openStealth', 'openDiamond', 'openCircle'] as const)(
     "空心 %s + fill='red' → fill 不进 marker（fill 被丢）",
     shape => {
       const ir: IR = {

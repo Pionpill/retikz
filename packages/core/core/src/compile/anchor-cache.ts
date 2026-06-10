@@ -1,7 +1,7 @@
 /**
  * Anchor 解析统一入口 + per-layout WeakMap 缓存
  * @description
- *   `'A.<keyword>'`（north / east / north-east 等 9 个 RectAnchor）与 `'A.<deg>'`（'30' / '-45' / '180.5' 等数字角度）
+ *   `'A.<keyword>'`（north / east / north-east / top-left 等标准方位 anchor）与 `'A.<deg>'`（'30' / '-45' / '180.5' 等数字角度）
  *   两类 anchor 解析在 path / position 多处会反复触发同一 (layout, name) 组合。本模块把对各 shape 的
  *   `anchor()` / 数字角度 `boundaryPoint(toward=旋转后单位向量)` 调用统一收编到 `resolveAnchor(layout, name, boundary?)`，
  *   并按 `WeakMap<NodeLayout, Map<string, IRPosition>>` 缓存结果——
@@ -27,7 +27,7 @@ const ANGLE_RE = /^-?\d+(\.\d+)?$/;
 
 /**
  * 把 anchorName 解析到对应 shape 的 anchor / boundaryPoint 上
- * @description 数字字符串走 angleBoundaryOf；其余按 RectAnchor 走 anchorOf；boundary 透传给两者
+ * @description 数字字符串走 angleBoundaryOf；其余按标准方位 / shape-specific anchor 走 anchorOf；boundary 透传给两者
  */
 const computeAnchor = (
   layout: NodeLayout,
@@ -39,7 +39,7 @@ const computeAnchor = (
     return positionToIR(angleBoundaryOf(layout, angle, boundary));
   }
   // anchorOf 走 layout.shapeDef.anchor(rect, name)；shape 不认识的名字返回 undefined → anchorOf 抛 Unknown anchor。
-  // 调用方（parseNodeRef）通常已先按 RECT_ANCHORS 校验内置 anchor 名合法性
+  // 调用方（parseNodeRef）通常已先按标准方位 anchor 集合校验内置 anchor 名合法性
   return positionToIR(anchorOf(layout, anchorName, boundary));
 };
 
@@ -48,7 +48,7 @@ const positionToIR = (p: Position): IRPosition => [p[0], p[1]];
 
 /**
  * 取节点 anchor 的全局坐标，带 per-layout 缓存
- * @description name 接受 RectAnchor 关键字（如 `'north'` / `'south-west'`）或数字角度字符串（如 `'30'` / `'-45'`）；
+ * @description name 接受方位 anchor 关键字（如 `'north'` / `'south-west'` / `'top-left'`）或数字角度字符串（如 `'30'` / `'-45'`）；
  *   boundary 指定连接面（默认 `'shape'`，即节点自身视觉轮廓）；不同 boundary 产生独立缓存条目，互不串扰；
  *   同一 (layout, name, boundary) 组合第二次起返回首调用结果的**同一引用**——上游可用 `===` 判定 cache 命中
  * @param layout 已 Pass 1 完成的 NodeLayout（rect 已是全局坐标）

@@ -12,7 +12,7 @@ import type { ArrowEndSpec, MarkerFill, MarkerPrimitive, PathCommand } from '../
 import { validateMarkerPrimitives } from '../marker-prim';
 import { shiftToward } from './anchor';
 
-/** 有效 arrow 表：内置 7 + 注入（同名注入覆盖内置） */
+/** 有效 arrow 表：内置 8 + 注入（同名注入覆盖内置） */
 export type EffectiveArrows = Record<string, ArrowDefinition>;
 
 /** 默认 baseSize（marker 局部基准边长，viewBox `0 0 baseSize baseSize`） */
@@ -98,6 +98,11 @@ const assertFiniteGeometry = (shape: string, def: ArrowDefinition): void => {
       `Arrow '${shape}' has a non-finite tipX (${String(def.tipX)}); it must be a finite number.`,
     );
   }
+  if (def.outerInset !== undefined && !Number.isFinite(def.outerInset)) {
+    throw new Error(
+      `Arrow '${shape}' has a non-finite outerInset (${String(def.outerInset)}); it must be a finite number.`,
+    );
+  }
 };
 
 /**
@@ -138,6 +143,8 @@ type ResolvedArrowGeometry = {
   resolvedLength: number;
   /** 已解析尖宽 = (width ?? defaultWidth) × scale */
   resolvedWidth: number;
+  /** Extra inset for node-boundary endpoints, in pre-stroke user units. */
+  boundaryOuterInset: number;
 };
 
 /** 据 def + 视觉输入解析端点几何（baseSize / tipX / contactX / resolved length·width） */
@@ -154,6 +161,8 @@ const resolveGeometry = (
   const scale = visual.scale ?? 1;
   const resolvedLength = (visual.length ?? def.defaultLength ?? ARROW_MARKER_DEFAULT_SIZE) * scale;
   const resolvedWidth = (visual.width ?? def.defaultWidth ?? ARROW_MARKER_DEFAULT_SIZE) * scale;
+  const rawOuterInset = def.outerInset ?? (def.hollow ? lineWidth / 2 : 0);
+  const boundaryOuterInset = (rawOuterInset * resolvedLength) / baseSize;
   // length / width 与 scale 各自 finite，但乘积可能溢出成 Infinity（如 1e308 × 10）；非 finite 会污染 marker
   // 尺寸 + path shrink + layout，故在此抛清晰错（含 shape 名），不放任非 finite 流入 Scene
   if (!Number.isFinite(resolvedLength) || !Number.isFinite(resolvedWidth)) {
@@ -161,7 +170,12 @@ const resolveGeometry = (
       `Arrow '${visual.shape}' resolved length/width is non-finite (length × scale overflowed); use smaller length / scale values.`,
     );
   }
-  return { def, baseSize, tipX, contactX, lineWidth, resolvedLength, resolvedWidth };
+  if (!Number.isFinite(boundaryOuterInset)) {
+    throw new Error(
+      `Arrow '${visual.shape}' resolved outerInset is non-finite; use smaller outerInset / length / scale values.`,
+    );
+  }
+  return { def, baseSize, tipX, contactX, lineWidth, resolvedLength, resolvedWidth, boundaryOuterInset };
 };
 
 /**
@@ -229,8 +243,17 @@ export const endpointArrows = (
   arrowEnd?: ArrowEndSpec;
   shrinkStart: number;
   shrinkEnd: number;
+  boundaryOuterInsetStart: number;
+  boundaryOuterInsetEnd: number;
 } => {
-  if (!arrow || arrow === 'none') return { shrinkStart: 0, shrinkEnd: 0 };
+  if (!arrow || arrow === 'none') {
+    return {
+      shrinkStart: 0,
+      shrinkEnd: 0,
+      boundaryOuterInsetStart: 0,
+      boundaryOuterInsetEnd: 0,
+    };
+  }
   const top: IRArrowDetail = detail ?? {};
   const wantStart = arrow === '<-' || arrow === '<->';
   const wantEnd = arrow === '->' || arrow === '<->';
@@ -239,18 +262,27 @@ export const endpointArrows = (
     arrowEnd?: ArrowEndSpec;
     shrinkStart: number;
     shrinkEnd: number;
-  } = { shrinkStart: 0, shrinkEnd: 0 };
+    boundaryOuterInsetStart: number;
+    boundaryOuterInsetEnd: number;
+  } = {
+    shrinkStart: 0,
+    shrinkEnd: 0,
+    boundaryOuterInsetStart: 0,
+    boundaryOuterInsetEnd: 0,
+  };
   if (wantStart) {
     const visual = resolveArrowVisual(top, top.start, effective);
     const geometry = resolveGeometry(visual, effective);
     result.arrowStart = materializeArrowEndSpec(visual, geometry, round);
     result.shrinkStart = computeShrink(geometry);
+    result.boundaryOuterInsetStart = geometry.boundaryOuterInset;
   }
   if (wantEnd) {
     const visual = resolveArrowVisual(top, top.end, effective);
     const geometry = resolveGeometry(visual, effective);
     result.arrowEnd = materializeArrowEndSpec(visual, geometry, round);
     result.shrinkEnd = computeShrink(geometry);
+    result.boundaryOuterInsetEnd = geometry.boundaryOuterInset;
   }
   return result;
 };

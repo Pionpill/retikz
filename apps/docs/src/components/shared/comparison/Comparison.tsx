@@ -7,14 +7,14 @@ import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, Di
 import { cn } from '@/lib/utils';
 import { useComparisonStore } from '@/store/useComparisonStore';
 
-import { type ComparisonTarget, ComparisonTargetLabelKeys, isComparisonTarget } from './targets';
+import { ComparisonTargetLabelKeys, type ComparisonTargetValue, isComparisonTarget } from './targets';
 
 /** 可选对照块 props。 */
 export type ComparisonProps = {
   /** 顶部显示的可选图标。 */
   icon?: ReactNode;
   /** 对照对象。 */
-  target: ComparisonTarget;
+  target: ComparisonTargetValue;
   /** 对照块标题。 */
   title: string;
   /** 对照内容。 */

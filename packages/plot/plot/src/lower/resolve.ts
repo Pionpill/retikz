@@ -1,4 +1,4 @@
-import type { DataModel, FieldType } from '../ir';
+import type { DataModel, PlotFieldTypeValue } from '../ir';
 import type { ParsedFieldValue } from './coerce';
 
 export type { ParsedFieldValue } from './coerce';
@@ -10,7 +10,7 @@ export type { ParsedFieldValue } from './coerce';
  */
 export type FieldResolution = {
   /** 覆盖最终字段类型；省略则用 model 声明 / 自动推断 */
-  type?: FieldType;
+  type?: PlotFieldTypeValue;
   /** 覆盖内置 coercion：原始值 → canonical 值；返回 undefined 跳过该值 */
   parse?: (raw: unknown) => ParsedFieldValue;
 };
@@ -22,7 +22,7 @@ export type FieldResolution = {
  */
 export type ResolveField = (
   field: string,
-  context: { dataReference: string; physicalPath: string; declaredType?: FieldType },
+  context: { dataReference: string; physicalPath: string; declaredType?: PlotFieldTypeValue },
 ) => FieldResolution | undefined;
 
 /**
@@ -31,13 +31,13 @@ export type ResolveField = (
  *   parse 无 type 且 model 未声明该字段类型 → fail-loud（类型来源不清，自定义值会被误判）。
  */
 export const applyFieldResolver = (
-  baseTypes: Map<string, FieldType>,
+  baseTypes: Map<string, PlotFieldTypeValue>,
   userSourceFields: Set<string>,
   model: DataModel | undefined,
   dataReference: string,
   fieldMap: Record<string, string> | undefined,
   resolveField: ResolveField | undefined,
-): { fieldTypes: Map<string, FieldType>; parsers: Map<string, (raw: unknown) => ParsedFieldValue>; resolverHit: boolean } => {
+): { fieldTypes: Map<string, PlotFieldTypeValue>; parsers: Map<string, (raw: unknown) => ParsedFieldValue>; resolverHit: boolean } => {
   const parsers = new Map<string, (raw: unknown) => ParsedFieldValue>();
   if (resolveField === undefined) return { fieldTypes: baseTypes, parsers, resolverHit: false };
   const declaredType = new Map((model ?? []).flatMap(field => (field.type !== undefined ? [[field.name, field.type] as const] : [])));

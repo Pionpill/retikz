@@ -1,7 +1,6 @@
 import path from 'path';
 import { defineConfig } from 'vitest/config';
 import dts from 'vite-plugin-dts';
-import tsconfigPaths from 'vite-tsconfig-paths';
 
 import pkg from './package.json' with { type: 'json' };
 
@@ -9,7 +8,7 @@ import pkg from './package.json' with { type: 'json' };
  * dependencies 全视为 external，避免把 @retikz/core / csstype 打进库产物
  * （同时支持 'foo' 和 'foo/sub' 子路径）。
  */
-const runtimeDeps = [...Object.keys(pkg.dependencies)];
+const runtimeDeps = [...Object.keys(pkg.dependencies), ...Object.keys(pkg.peerDependencies)];
 const external = (id: string) => runtimeDeps.some(p => id === p || id.startsWith(`${p}/`));
 
 export default defineConfig({
@@ -20,14 +19,16 @@ export default defineConfig({
       outDir: ['dist/lib', 'dist/es'],
       exclude: ['tests/**'],
     }),
-    tsconfigPaths(),
   ],
+  resolve: {
+    tsconfigPaths: true,
+  },
   build: {
     outDir: 'dist',
     minify: false,
     lib: {
       // 每个子路径一个入口（@retikz/render/svg、@retikz/render/canvas、@retikz/render/hydration、@retikz/render/animation）
-      entry: ['src/svg/index.ts', 'src/canvas/index.ts', 'src/hydration/index.ts', 'src/animation/index.ts'],
+      entry: ['src/svg/index.ts', 'src/canvas/index.ts', 'src/canvas-node/index.ts', 'src/hydration/index.ts', 'src/animation/index.ts'],
       name: 'retikz-render',
       fileName: '[name]',
       formats: ['es', 'cjs'],

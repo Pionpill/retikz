@@ -31,7 +31,7 @@ With `arrowDetail` omitted, the arrow defaults to a stealth tip inheriting the p
 | Solid | Hollow | Typical use |
 | --- | --- | --- |
 | `'normal'` filled triangle | `'open'` hollow triangle | Basic triangle / UML generalization |
-| `'stealth'` sharp barb | - | Default arrow, modern flow charts |
+| `'stealth'` sharp barb | `'openStealth'` hollow sharp barb | Default arrow, modern flow charts |
 | `'diamond'` filled diamond | `'openDiamond'` hollow diamond | UML composition / aggregation |
 | `'circle'` filled dot | `'openCircle'` hollow dot | Connection dot / open endpoint |
 
@@ -55,7 +55,7 @@ With `arrowDetail` omitted, the arrow defaults to a stealth tip inheriting the p
 
 <ComponentPreview name="arrow-color" size="xs" />
 
-> **Hollow shapes silently ignore `fill`**: when `shape ∈ { open / openDiamond / openCircle }`, the `fill` field is silently dropped. Hollow shapes are driven entirely by `color` (stroke) + `lineWidth` (stroke width); writing `fill='red'` will not render a red fill.
+> **Hollow shapes silently ignore `fill`**: when `shape ∈ { open / openStealth / openDiamond / openCircle }`, the `fill` field is silently dropped. Hollow shapes are driven entirely by `color` (stroke) + `lineWidth` (stroke width); writing `fill='red'` will not render a red fill.
 
 #### Sizing: scale / length / width
 
@@ -86,7 +86,7 @@ With `arrowDetail` omitted, the arrow defaults to a stealth tip inheriting the p
 
 | Field | Type | Default | Description |
 | --- | --- | --- | --- |
-| `shape` | `'normal' \| 'open' \| 'stealth' \| 'diamond' \| 'openDiamond' \| 'circle' \| 'openCircle' \| string` | `'stealth'` | Arrow tip shape; one of the 7 built-ins or a custom arrow name registered via `<Layout arrows>` / `CompileOptions.arrows` |
+| `shape` | `'normal' \| 'open' \| 'stealth' \| 'openStealth' \| 'diamond' \| 'openDiamond' \| 'circle' \| 'openCircle' \| string` | `'stealth'` | Arrow tip shape; one of the 8 built-ins or a custom arrow name registered via `<Layout arrows>` / `CompileOptions.arrows` |
 | `scale` | `number > 0` | `1` | Uniform scale factor; multiplied **after** `length` / `width` (`length=10, scale=1.5` → effective 15) |
 | `length` | `number ≥ 0` | `6` | Arrow length along the path direction (user units) |
 | `width` | `number ≥ 0` | `6` | Arrow width perpendicular to the path (user units) |

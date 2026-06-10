@@ -1,4 +1,4 @@
-import { type DataModel, type ExternalRow, type FieldFormat, type FieldType, PlotFieldFormat, PlotFieldType } from '../ir';
+import { type DataModel, type ExternalRow, PlotFieldFormat, type PlotFieldFormatValue, PlotFieldType, type PlotFieldTypeValue } from '../ir';
 import { resolveFieldPath } from './field';
 import { toTimestamp } from './scale';
 
@@ -33,7 +33,7 @@ const coerceCategory = (value: unknown): string | number | undefined => {
  * @description continuous → number（越界原样、不 clamp）；temporal → epoch ms（Date/数值/严格 ISO）；
  *   categorical → string|number 分类键。非法 → NaN（数值）/ undefined（分类），下游按非有限 / undefined 跳过。
  */
-export const coerceValue = (value: unknown, type: FieldType): string | number | undefined => {
+export const coerceValue = (value: unknown, type: PlotFieldTypeValue): string | number | undefined => {
   if (type === PlotFieldType.Temporal) {
     const stamp = toTimestamp(value);
     return stamp === null ? NaN : stamp;
@@ -46,7 +46,7 @@ export const coerceValue = (value: unknown, type: FieldType): string | number | 
 };
 
 /** 某规范值对其类型是否有效（数值类要有限、分类类非 undefined/null） */
-const isCoercedValid = (value: unknown, type: FieldType): boolean => {
+const isCoercedValid = (value: unknown, type: PlotFieldTypeValue): boolean => {
   if (type === PlotFieldType.Categorical) return value !== undefined && value !== null;
   return typeof value === 'number' && Number.isFinite(value);
 };
@@ -58,7 +58,7 @@ export type ParsedFieldValue = string | number | undefined;
 const asParsedValue = (value: ParsedFieldValue): ParsedFieldValue => (typeof value === 'string' || typeof value === 'number' ? value : undefined);
 
 /** 每个声明式 format 唯一蕴含的字段测量类型（temporal / continuous）；用于省略 type 时的覆盖与冲突校验 */
-const FORMAT_IMPLIED_TYPE: Record<FieldFormat, FieldType> = {
+const FORMAT_IMPLIED_TYPE: Record<PlotFieldFormatValue, PlotFieldTypeValue> = {
   [PlotFieldFormat.Iso]: PlotFieldType.Temporal,
   [PlotFieldFormat.EpochSeconds]: PlotFieldType.Temporal,
   [PlotFieldFormat.EpochMillis]: PlotFieldType.Temporal,
@@ -68,7 +68,7 @@ const FORMAT_IMPLIED_TYPE: Record<FieldFormat, FieldType> = {
 };
 
 /** format → 它蕴含的字段测量类型（每个 format 唯一绑定一个 type） */
-export const formatImpliedType = (format: FieldFormat): FieldType => FORMAT_IMPLIED_TYPE[format];
+export const formatImpliedType = (format: PlotFieldFormatValue): PlotFieldTypeValue => FORMAT_IMPLIED_TYPE[format];
 
 /** 严格 YYYY/MM/DD 斜杠日期（四位年 / 两位月 / 两位日，分隔符必须 `/`；不收 D/M/Y、M/D/Y 等地区歧义布局） */
 const SLASH_DATE_RE = /^(\d{4})\/(\d{2})\/(\d{2})$/;
@@ -123,7 +123,7 @@ const parsePercent = (raw: unknown): number => {
  * @description 进 normalizeRows 的 per-field parser 槽（与 ADR-04 resolveField.parse 同槽，优先级 resolveField > format）。
  *   iso 等价内置 temporal 默认（走 toTimestamp）；返回 NaN → 下游按非有限跳过。type 仅 iso 路径需要（沿用内置 coerce）。
  */
-export const formatParser = (type: FieldType, format: FieldFormat): ((raw: unknown) => ParsedFieldValue) => {
+export const formatParser = (type: PlotFieldTypeValue, format: PlotFieldFormatValue): ((raw: unknown) => ParsedFieldValue) => {
   switch (format) {
     case PlotFieldFormat.Iso:
       return raw => coerceValue(raw, type);
@@ -148,9 +148,9 @@ export const formatParser = (type: FieldType, format: FieldFormat): ((raw: unkno
  */
 export const collectFormatFields = (
   model: DataModel | undefined,
-  baseTypes: Map<string, FieldType>,
+  baseTypes: Map<string, PlotFieldTypeValue>,
   userSourceFields: Set<string>,
-): { fieldTypes: Map<string, FieldType>; parsers: Map<string, (raw: unknown) => ParsedFieldValue> } => {
+): { fieldTypes: Map<string, PlotFieldTypeValue>; parsers: Map<string, (raw: unknown) => ParsedFieldValue> } => {
   const fieldTypes = new Map(baseTypes);
   const parsers = new Map<string, (raw: unknown) => ParsedFieldValue>();
   if (model === undefined) return { fieldTypes, parsers };
@@ -171,14 +171,14 @@ export const collectFormatFields = (
 };
 
 /**
- * ingest 归一化：把每行的用户源字段「(fieldMap) 解析物理路径 → 按 FieldType coerce（或自定义 parse 覆盖）」写成 canonical 行
+ * ingest 归一化：把每行的用户源字段「(fieldMap) 解析物理路径 → 按 PlotFieldTypeValue coerce（或自定义 parse 覆盖）」写成 canonical 行
  * @description 逻辑名为扁平键、值已强制；保留原始字段（供 datumIdField 等）与 `SOURCE_INDEX`（spread 转移）。
  *   全下游（transform / scale / mark / locator）统一读 canonical（按逻辑名），无第二处 coerce。
  *   model 或 resolveField 命中时调用；某字段有 parser（ADR-04）则用 parser，否则按类型内置 coerce。
  */
 export const normalizeRows = (
   rows: Array<ExternalRow>,
-  fieldTypes: Map<string, FieldType>,
+  fieldTypes: Map<string, PlotFieldTypeValue>,
   fieldMap?: Record<string, string>,
   parsers?: Map<string, (raw: unknown) => ParsedFieldValue>,
 ): Array<ExternalRow> =>
@@ -201,7 +201,7 @@ const isMissingRaw = (raw: unknown): boolean => raw === undefined || raw === nul
  * @description validateData 开启时调用——把「字段缺失 / fieldMap 错 → 静默空图」变成「明确报错」。默认关、不 warn。
  *   报错带字段级 invalid / missing 计数（`field "x": 3/100 invalid, 2/100 missing`），把「为什么空图」变明确诊断。
  */
-export const validateBoundData = (rows: Array<ExternalRow>, fieldTypes: Map<string, FieldType>, sampleRows: number): void => {
+export const validateBoundData = (rows: Array<ExternalRow>, fieldTypes: Map<string, PlotFieldTypeValue>, sampleRows: number): void => {
   const limit = Math.min(rows.length, sampleRows);
   if (limit === 0) return;
   for (const [logical, type] of fieldTypes) {
@@ -230,7 +230,7 @@ export const validateBoundData = (rows: Array<ExternalRow>, fieldTypes: Map<stri
  * @description 比抽样 validateBoundData 更严——不抽样、任一坏值即抛。读 normalized canonical 值（已过 parser / coerce），
  *   故 resolveField.parse 返非法、bigint 失精等与 skip 同口径判定。置于 transform 之前调用，错误定位到原始源字段。
  */
-export const assertAllValuesValid = (normalized: Array<ExternalRow>, fieldTypes: Map<string, FieldType>): void => {
+export const assertAllValuesValid = (normalized: Array<ExternalRow>, fieldTypes: Map<string, PlotFieldTypeValue>): void => {
   for (const [logical, type] of fieldTypes) {
     for (let index = 0; index < normalized.length; index++) {
       const value = normalized[index][logical];

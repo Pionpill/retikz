@@ -32,7 +32,7 @@ export type PathProps = HydrationEventProps & {
   arrow?: IRPath['arrow'];
   /**
    * 箭头详细配置
-   * @description 顶层默认 + 可选 `start` / `end` 子对象逐字段 merge override；视觉字段含 `shape` / `scale` / `length` / `width` / `color` / `fill` / `opacity` / `lineWidth`。空心 shape（open / openDiamond / openCircle）上 `fill` silent no-op
+   * @description 顶层默认 + 可选 `start` / `end` 子对象逐字段 merge override；视觉字段含 `shape` / `scale` / `length` / `width` / `color` / `fill` / `opacity` / `lineWidth`。空心 shape（open / openStealth / openDiamond / openCircle）上 `fill` silent no-op
    */
   arrowDetail?: IRPath['arrowDetail'];
   /** 闭合区域填充色，CSS 颜色字符串；省略 = 不填充（仅描边）。配合 cycle step 画填充形状 */

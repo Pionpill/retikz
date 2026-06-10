@@ -46,6 +46,30 @@ The same `handlers` table behaves identically under SVG and Canvas — see [Hydr
 
 <ComponentAlert title="Low-level drawing / hit-testing (for custom integrations)" description="@retikz/render/canvas exposes renderToCanvas(canvas, scene) (paints straight into an HTMLCanvasElement), drawScene (paints into a 2D context), and hitTest(scene, point) (coordinate → primitive id). Reach for this when managing the canvas, offscreen rendering, or hit-testing yourself; ordinary usage only needs mountCanvas above." />
 
+## Node image export
+
+Use the dedicated `@retikz/render/canvas-node` entry when a server process or CLI needs to emit PNG / JPEG / WebP directly. It keeps the native canvas package out of browser bundles; install the optional peer in the consuming app before calling it:
+
+```bash
+pnpm add @napi-rs/canvas
+```
+
+```ts
+import { compileToScene } from '@retikz/core';
+import { renderSceneToImage } from '@retikz/render/canvas-node';
+
+const scene = compileToScene(ir);
+const png = await renderSceneToImage(scene, {
+  width: 960,
+  height: 540,
+  devicePixelRatio: 2,
+  format: 'png',
+  background: '#fff',
+});
+```
+
+`renderSceneToImage` consumes a compiled `Scene` and reuses `drawScene`, so gradients, patterns, clips, markers, and animation snapshots stay aligned with browser Canvas. `width` / `height` are CSS-sized dimensions; the encoded bitmap is multiplied by `devicePixelRatio`.
+
 ## Canvas or SVG
 
 | | Canvas | SVG |

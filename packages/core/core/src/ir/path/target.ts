@@ -8,7 +8,7 @@ export const AnchorRefSchema = z
       .string()
       .min(1)
       .describe(
-        'Named anchor: one of the 9 built-in rect anchors (center / north / ... / south-west) or any anchor name interpreted by the referenced shape (e.g. sector apex / outer-arc-mid). Unrecognized names throw at compile time.',
+        'Named anchor: one of the 9 standard compass anchors (center / north / ... / south-west), a Web alias (top / top-left / ...), or any anchor name interpreted by the referenced shape (e.g. sector apex / outer-arc-mid). Unrecognized names throw at compile time.',
       ),
     z.number().finite().describe('Angle anchor in degrees (boundary point in that direction)'),
     z

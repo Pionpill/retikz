@@ -4,10 +4,13 @@ import { type PrimAnimationResolution, hitTest, renderToCanvas } from '@retikz/r
 import type { AnimationPropertyRegistry, EasingRegistry } from '@retikz/render/canvas';
 import type { BuildContext, HydrationHandlers } from '@retikz/render/hydration';
 import {
+  collectCanvasVisibleAnimationIds,
   createCanvasIdAnimationControls,
   createHydrationController,
   geometryOf,
+  isCanvasAnimationIdVisible,
   metaOf,
+  withCanvasAnimationEventHandlers,
 } from '@retikz/render/hydration';
 import { type AnimationControls, type IdClockRegistry, createClock, createIdClockRegistry, prefersReducedMotion, sceneAnimationDurationMs, sceneHasAnimations, sceneHasAutoplayTrigger } from '@retikz/render/animation';
 
@@ -211,6 +214,36 @@ export const CanvasHost: FC<CanvasHostProps> = props => {
     };
   }, [animate, snapshotAt, animationRef, animationProperties, className, easings, height, renderTick, scene, style, width]);
 
+  useEffect(() => {
+    const canvas = ref.current;
+    if (!canvas || !animate || prefersReducedMotion() || !sceneHasAnimations(scene)) return undefined;
+    const ids = collectCanvasVisibleAnimationIds(scene);
+    if (ids.size === 0 || typeof window === 'undefined') return undefined;
+    const activated = new Set<string>();
+    const registry = registryRef.current as IdClockRegistry;
+    const activateVisibleTracks = (): void => {
+      let changed = false;
+      for (const id of ids) {
+        if (activated.has(id)) continue;
+        if (!isCanvasAnimationIdVisible(canvas, scene, id)) continue;
+        registry.restart(id, clockRef.current?.time ?? 0);
+        activated.add(id);
+        changed = true;
+      }
+      if (!changed) return;
+      clockRef.current?.play();
+      renderFrameRef.current?.();
+    };
+    window.addEventListener('scroll', activateVisibleTracks, true);
+    window.addEventListener('resize', activateVisibleTracks);
+    const raf = window.requestAnimationFrame(activateVisibleTracks);
+    return () => {
+      window.removeEventListener('scroll', activateVisibleTracks, true);
+      window.removeEventListener('resize', activateVisibleTracks);
+      window.cancelAnimationFrame(raf);
+    };
+  }, [animate, scene]);
+
   // 水合：把 handler 注册表经 createHydrationController + (hitTest + 逆 meet-fit 坐标映射) 绑到 <canvas>。
   // locate(event) = client 坐标 → clientToScene 逆 meet-fit 成 Scene 点 → hitTest 返回命中图元 id。
   // context2d 用 canvas 自身 2D context；renderToCanvas 后残留 meet-fit transform，须先 setTransform 归一为
@@ -246,7 +279,12 @@ export const CanvasHost: FC<CanvasHostProps> = props => {
         scene,
       };
     };
-    const controller = createHydrationController(canvas, handlers ?? {}, locate, buildContext);
+    const controller = createHydrationController(
+      canvas,
+      withCanvasAnimationEventHandlers(scene, handlers),
+      locate,
+      buildContext,
+    );
     return () => controller.dispose();
   }, [handlers, scene]);
 

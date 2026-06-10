@@ -150,6 +150,7 @@ beta 阶段最大风险是**重构引入回归 + breaking 改名漏改调用方*
 | roadmap checkbox 勾选 | **做**——按 plan TODO 编号勾 |
 | roadmap TODO 删除 / 标完成 | **做**——`notes/decisions/core/v<MAJOR>/v<MAJOR>.<MINOR>/v<MAJOR>.<MINOR>-beta.<N>/roadmap.md` 该条标 ✅ + commit hash |
 | 人工授权 commit | **必走**——commit 必须显式 ack |
+| 批量实现 commit 粒度 | **允许分批**——多 ADR / 多 TODO 批量实现时，可按 ADR、TODO 或 review 友好的逻辑块分批 commit，避免把多块独立改动压成一个提交 |
 
 **与 alpha-wrapup 的硬差异**：
 

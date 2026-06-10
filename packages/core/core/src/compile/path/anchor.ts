@@ -1,4 +1,5 @@
-import type { IRBetweenPosition, IRNodeTarget, IRPosition, IRTarget } from '../../ir';
+import { FoldStepVia } from '../../ir';
+import type { FoldStepViaValue, IRBetweenPosition, IRNodeTarget, IRPosition, IRTarget } from '../../ir';
 import type { IRBoundary } from '../../ir';
 import type { Transform } from '../../primitive';
 import { lerpPoint } from '../../geometry/_edge';
@@ -12,6 +13,9 @@ import { applyTransformChain } from '../scope';
 /** target 是否对象形态 NodeTarget（`{ id, anchor?, offset? }`）；与 Position(array) / Polar / Offset(of) / Relative 区分（独有 `id`） */
 const isNodeTarget = (t: IRTarget): t is IRNodeTarget =>
   typeof t === 'object' && !Array.isArray(t) && 'id' in t;
+
+export const isAutoBoundaryTarget = (target: IRTarget): boolean =>
+  isNodeTarget(target) && target.anchor === undefined && target.offset === undefined;
 
 /** target 是否 between 比例点（`{ between, t }`）；独有 `between` 字段 */
 const isBetween = (t: IRTarget): t is IRBetweenPosition =>
@@ -79,9 +83,9 @@ export const refPointOfTarget = (
 export const cornerOf = (
   prev: IRPosition,
   curr: IRPosition,
-  via: '-|' | '|-',
+  via: FoldStepViaValue,
 ): IRPosition =>
-  via === '-|' ? [curr[0], prev[1]] : [prev[0], curr[1]];
+  via === FoldStepVia.HorizontalThenVertical ? [curr[0], prev[1]] : [prev[0], curr[1]];
 
 /**
  * 在 toward 方向算 step.to 的实际绘制端点

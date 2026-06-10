@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { AT_DIRECTIONS } from './position/at-position';
+import { AtDirection } from './position/at-position';
 import { PolarPositionSchema } from './position/polar-position';
 import { PositionSchema } from './position/position';
 
@@ -51,7 +51,7 @@ const AtTranslateSchema = z
       .literal('at-translate')
       .describe('Discriminator: direction-relative translate; mirrors AtPosition.'),
     direction: z
-      .nativeEnum(AT_DIRECTIONS)
+      .nativeEnum(AtDirection)
       .describe('Direction enum (8 values, shared with AtPosition.direction).'),
     of: z
       .string()

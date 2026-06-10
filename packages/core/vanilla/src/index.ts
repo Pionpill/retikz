@@ -12,7 +12,7 @@ export { hydrate } from './hydrate';
 export { mountCanvas } from './mountCanvas';
 // 透传 render 层水合 runtime 类型，方便 vanilla 用户单包 import（事件名 / 注册表 / handler context 类型）
 export type {
-  RetikzEventName,
+  RetikzEventValue,
   HydrationHandlers,
   HydrationHandler,
   HydrationContext,

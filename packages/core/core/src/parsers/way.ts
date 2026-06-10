@@ -14,7 +14,7 @@ import type {
   IRStepLabel,
   IRTarget,
 } from '../ir';
-import { parseTargetSugar } from './parseTargetSugar';
+import { parseTargetSugar } from './target-sugar';
 
 /**
  * Sugar 层 way 数组的关键字常量

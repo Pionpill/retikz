@@ -4,7 +4,7 @@ export {
   EVENT_DOM_TYPE,
 } from './events';
 export type {
-  RetikzEventName,
+  RetikzEventValue,
   ElementHandlers,
   HydrationHandler,
   HydrationHandlers,
@@ -33,3 +33,9 @@ export {
   metaOf,
   geometryOf,
 } from './context';
+export {
+  collectCanvasAnimationEventTriggers,
+  collectCanvasVisibleAnimationIds,
+  isCanvasAnimationIdVisible,
+  withCanvasAnimationEventHandlers,
+} from './canvasAnimationTriggers';

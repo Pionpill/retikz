@@ -305,10 +305,10 @@ The geometric meaning of t per step kind is in the "[Geometric meaning of t per 
 
 | Form | Example | Behavior |
 | --- | --- | --- |
-| Node id | `'a'` | Auto-attaches to Node border (see [Anchors](/core/concepts/anchors)) |
+| Node id | `'a'` | Auto-attaches to Node border (see [Anchors](/core/concepts/primitive-relations/anchors)) |
 | Node + connection surface | `{ id: 'a', boundary: 'circle' }` | Per-edge override of the target node's [connection surface](/core/components/draw/path) (clip shape); never changes the node footprint |
 | Cartesian | `[60, 0]` | Literal `[x, y]` |
-| Polar | `{ origin: 'a', angle: 30, radius: 50 }` | Polar (see [Positioning](/core/concepts/position)) |
+| Polar | `{ origin: 'a', angle: 30, radius: 50 }` | Polar (see [Positioning](/core/concepts/basic-concepts/position)) |
 | Offset | `{ of: 'a', offset: [10, 5] }` | Base + `(dx, dy)`; `of` accepts node id, Cartesian literal, or PolarPosition |
 | Proportional placement | `{ between: ['a', 'b'], t: 0.5 }` | Proportional point along A → B; endpoints must be independently resolvable absolute targets |
 | Relative (relative) | `{ relative: [10, 0] }` or `'+10,0'` | Previous step's endpoint + `[dx, dy]`; does **not** update prevEnd |

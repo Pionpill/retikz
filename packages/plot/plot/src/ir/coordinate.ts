@@ -21,7 +21,7 @@ export const PlotCoordinate = {
 } as const;
 
 /** 坐标系类型 */
-export type CoordinateType = ValueOf<typeof PlotCoordinate>;
+export type PlotCoordinateValue = ValueOf<typeof PlotCoordinate>;
 
 /**
  * cartesian1D 轴向关键字（暴露给用户；裸字面量 `'horizontal'` 同样可用）

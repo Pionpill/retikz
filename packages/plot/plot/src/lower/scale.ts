@@ -40,7 +40,7 @@ import {
   interpolateViridis,
   schemeCategory10,
 } from 'd3-scale-chromatic';
-import { type BandScale, type ColorScheme, type DivergingColorScale, type FieldDef, type FieldType, type LogScale, type OrdinalScale, PlotColorScheme, PlotFieldType, PlotScale, type PointScale, type PowScale, type QuantileColorScale, type QuantizeColorScale, type ScalarValue, type Scale, type ScaleType, type SequentialColorScale, type SqrtScale, type ThresholdColorScale, type TimeScale } from '../ir';
+import { type BandScale, type DivergingColorScale, type FieldDef, type LogScale, type OrdinalScale, PlotColorScheme, type PlotColorSchemeValue, PlotFieldType, type PlotFieldTypeValue, PlotScale, type PlotScaleValue, type PointScale, type PowScale, type QuantileColorScale, type QuantizeColorScale, type ScalarValue, type Scale, type SequentialColorScale, type SqrtScale, type ThresholdColorScale, type TimeScale } from '../ir';
 import { isFiniteNumber } from './field';
 import { isIsoDateString } from './infer';
 
@@ -196,7 +196,7 @@ export const resolveOrdinalScale = (
 };
 
 /** 配色方案名 → d3-scale-chromatic interpolator（t∈[0,1] → 颜色串）；命名 scheme 进 IR、求值期映射到函数（函数不进 IR） */
-const SCHEME_INTERPOLATORS: Record<ColorScheme, (t: number) => string> = {
+const SCHEME_INTERPOLATORS: Record<PlotColorSchemeValue, (t: number) => string> = {
   [PlotColorScheme.Blues]: interpolateBlues,
   [PlotColorScheme.Greens]: interpolateGreens,
   [PlotColorScheme.Greys]: interpolateGreys,
@@ -248,7 +248,7 @@ const DEFAULT_DISCRETE_SCHEME = PlotColorScheme.Viridis;
  * @description 离散化 scale（quantize / threshold / quantile）的档色单一来源：count 档 → count 个色。
  *   count==1 取 scheme 中点（0.5）；count≥2 端点含 0 与 1（首末档取 scheme 两端）。与 sequential 连续采样同源 interpolator。
  */
-export const sampleSchemeColors = (scheme: ColorScheme | undefined, count: number): Array<string> => {
+export const sampleSchemeColors = (scheme: PlotColorSchemeValue | undefined, count: number): Array<string> => {
   const interpolator = SCHEME_INTERPOLATORS[scheme ?? DEFAULT_DISCRETE_SCHEME];
   if (count <= 1) return [toHexColor(interpolator(0.5))];
   return Array.from({ length: count }, (_unused, index) => toHexColor(interpolator(index / (count - 1))));
@@ -334,7 +334,7 @@ export const resolveDivergingColorScale = (def: DivergingColorScale, values: Arr
 const DEFAULT_DISCRETE_BIN_COUNT = 5;
 
 /** 离散化档色：range 显式给则直用、否则从 scheme 采 binCount 档（range 长度即档数） */
-const discreteBinColors = (range: ReadonlyArray<string> | undefined, scheme: ColorScheme | undefined, binCount: number): Array<string> =>
+const discreteBinColors = (range: ReadonlyArray<string> | undefined, scheme: PlotColorSchemeValue | undefined, binCount: number): Array<string> =>
   range ? [...range] : sampleSchemeColors(scheme, binCount);
 
 /**
@@ -610,7 +610,7 @@ export const continuousPositionScale = (
  * @description continuous→linear、temporal→time、categorical→band；
  *   undefined（无字段绑定，如全常量通道）→ linear 兜底。仅在 coordinate 省略 scale 绑定时调用。
  */
-export const deriveScale = (fieldType: FieldType | undefined, name: string): Scale => {
+export const deriveScale = (fieldType: PlotFieldTypeValue | undefined, name: string): Scale => {
   switch (fieldType) {
     case PlotFieldType.Temporal:
       return { type: PlotScale.Time, name };
@@ -626,7 +626,7 @@ export const deriveScale = (fieldType: FieldType | undefined, name: string): Sca
  * @description 仅拒明确错配：连续 scale（linear/time）配分类字段（categorical）、分类 scale（band/point）配 temporal。
  *   continuous 灵活（可作连续亦可作分类带），不拦。
  */
-export const assertScaleFieldCompatible = (role: string, scaleType: ScaleType, fieldType: FieldType, scaleName: string): void => {
+export const assertScaleFieldCompatible = (role: string, scaleType: PlotScaleValue, fieldType: PlotFieldTypeValue, scaleName: string): void => {
   const continuous =
     scaleType === PlotScale.Linear ||
     scaleType === PlotScale.Time ||
@@ -648,7 +648,7 @@ export const assertScaleFieldCompatible = (role: string, scaleType: ScaleType, f
  * @description 柱 / 面积的 baseline 含 0，与对数 / 幂的结构冲突（log(0)=-∞）。命中即 fail-loud，
  *   提示改用 point / line（或将来的显式正 baseline 支持）。仅查值轴（cartesian=y、polar=radius）。
  */
-export const assertBaselineScaleCompatible = (valueScaleType: ScaleType, marks: ReadonlyArray<{ type: string }>): void => {
+export const assertBaselineScaleCompatible = (valueScaleType: PlotScaleValue, marks: ReadonlyArray<{ type: string }>): void => {
   const nonlinear = valueScaleType === PlotScale.Log || valueScaleType === PlotScale.Pow || valueScaleType === PlotScale.Sqrt;
   if (!nonlinear) return;
   if (marks.some(mark => mark.type === 'interval' || mark.type === 'area')) {

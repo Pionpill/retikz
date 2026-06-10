@@ -46,6 +46,30 @@ const handle = view.hydrate({
 
 <ComponentAlert title="底层绘制 / 命中(自定义集成用)" description="@retikz/render/canvas 暴露 renderToCanvas(canvas, scene)（直接画进 HTMLCanvasElement）、drawScene（往 2D context 画）、hitTest(scene, point)（坐标 → 图元 id）。自己管理画布 / 离屏渲染 / 命中逻辑时用这层;普通用法用上面的 mountCanvas 即可。" />
 
+## Node 图片导出
+
+服务端或 CLI 里要直接生成 PNG / JPEG / WebP 时,使用独立入口 `@retikz/render/canvas-node`。它不会把 native canvas 打进浏览器包;调用前需要在应用侧安装可选 peer:
+
+```bash
+pnpm add @napi-rs/canvas
+```
+
+```ts
+import { compileToScene } from '@retikz/core';
+import { renderSceneToImage } from '@retikz/render/canvas-node';
+
+const scene = compileToScene(ir);
+const png = await renderSceneToImage(scene, {
+  width: 960,
+  height: 540,
+  devicePixelRatio: 2,
+  format: 'png',
+  background: '#fff',
+});
+```
+
+`renderSceneToImage` 消费已编译的 `Scene`,与浏览器 Canvas 一样走 `drawScene`,所以渐变、图案、裁剪、marker、动画截帧等语义保持一致。`width` / `height` 是 CSS 尺寸,实际位图尺寸为它们乘以 `devicePixelRatio`。
+
 ## Canvas 还是 SVG
 
 | | Canvas | SVG |

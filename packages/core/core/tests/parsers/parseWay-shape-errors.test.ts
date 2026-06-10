@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { ArcStepSchema, CirclePathStepSchema, EllipsePathStepSchema } from '../../src/ir';
-import { parseWay } from '../../src/parsers/parseWay';
+import { parseWay } from '../../src/parsers/way';
 
 describe('parseWay 形状算子边界', () => {
   it('正常路径：target → arc 算子（以前 target 为圆心，不消耗下一项）', () => {

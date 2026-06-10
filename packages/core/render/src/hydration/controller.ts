@@ -1,4 +1,4 @@
-import type { ElementHandlers, HydrationHandlers, Locate, RetikzEventName } from './events';
+import type { ElementHandlers, HydrationHandlers, Locate, RetikzEventValue } from './events';
 import { EVENT_DOM_TYPE, RetikzEvent } from './events';
 import type { BuildContext, HydrationContext } from './context';
 import { noopAnimationControls } from './context';
@@ -9,11 +9,11 @@ export type HydrationController = {
   dispose: () => void;
 };
 
-/** 收集 handlers 注册表中实际用到的 RetikzEventName 集合（决定要在 root 上挂哪些 DOM listener） */
-const collectUsedEvents = (handlers: HydrationHandlers): Set<RetikzEventName> => {
-  const used = new Set<RetikzEventName>();
+/** 收集 handlers 注册表中实际用到的 RetikzEventValue 集合（决定要在 root 上挂哪些 DOM listener） */
+const collectUsedEvents = (handlers: HydrationHandlers): Set<RetikzEventValue> => {
+  const used = new Set<RetikzEventValue>();
   for (const id of Object.keys(handlers)) {
-    for (const name of Object.keys(handlers[id]) as Array<RetikzEventName>) {
+    for (const name of Object.keys(handlers[id]) as Array<RetikzEventValue>) {
       if (handlers[id][name] !== undefined) used.add(name);
     }
   }
@@ -34,13 +34,13 @@ const minimalContext = (root: EventTarget, id: string): HydrationContext => ({
 const invoke = (
   handlers: HydrationHandlers,
   id: string | null,
-  name: RetikzEventName,
+  name: RetikzEventValue,
   event: Event,
   root: EventTarget,
   buildContext: BuildContext | undefined,
 ): void => {
   if (id === null || !Object.hasOwn(handlers, id)) return;
-  const handler: ElementHandlers[RetikzEventName] = handlers[id][name];
+  const handler: ElementHandlers[RetikzEventValue] = handlers[id][name];
   if (handler === undefined) return;
   const context = buildContext ? buildContext(event, id) : minimalContext(root, id);
   handler(event, context);
@@ -52,7 +52,7 @@ const hasContains = (target: EventTarget): target is Node =>
 
 /**
  * 创建水合控制器：在 root 上挂根级委托，把命中图元 id 的事件分发给 handlers
- * @description renderer 无关上层。直接委托的事件（click / rightClick / pointerMove 等）对每个用到的 RetikzEventName 在
+ * @description renderer 无关上层。直接委托的事件（click / rightClick / pointerMove 等）对每个用到的 RetikzEventValue 在
  *   root 注册一个 EVENT_DOM_TYPE 监听器，事件到来时经 locate 定位到图元 id、查 handlers 触发。
  *   pointerEnter / pointerLeave 不直接监听、由 pointermove + 「上一帧命中 id」状态机合成（renderer 无关、经
  *   同一 locate）：仅当 handlers 含任一 enter/leave 时才在 root 挂 pointermove；每次 move 算 currentId = locate(event)，

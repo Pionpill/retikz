@@ -1,7 +1,7 @@
 import { localToWorld, worldToLocal } from './_transform';
 import { type Side, polylineViaVertex } from './_edge';
+import type { CompassAnchorValue } from './anchor';
 import type { Position } from './point';
-import type { RectAnchor } from './rect';
 
 /** 每条 side 的过顶点折线三 anchor：[邻边中点, cardinal 顶点, 邻边中点]（方向 north/south=西→东、east/west=北→南） */
 const DIAMOND_EDGE = {
@@ -9,7 +9,7 @@ const DIAMOND_EDGE = {
   south: ['south-west', 'south', 'south-east'],
   east: ['north-east', 'east', 'south-east'],
   west: ['north-west', 'west', 'south-west'],
-} as const satisfies Record<Side, readonly [RectAnchor, RectAnchor, RectAnchor]>;
+} as const satisfies Record<Side, readonly [CompassAnchorValue, CompassAnchorValue, CompassAnchorValue]>;
 
 /** 菱形：中心 + halfA/halfB 半轴长 + 可选旋转；顶点在 (±halfA,0) 与 (0,±halfB) */
 export type Diamond = {
@@ -33,7 +33,7 @@ export const diamond = {
     return Math.abs(lx) / d.halfA + Math.abs(ly) / d.halfB <= 1 + 1e-9;
   },
   /** 9 个 anchor：N/S/E/W=顶点，NE/NW/SE/SW=边中点，center=中心 */
-  anchor: (d: Diamond, name: RectAnchor): Position => {
+  anchor: (d: Diamond, name: CompassAnchorValue): Position => {
     let lx = 0;
     let ly = 0;
     switch (name) {

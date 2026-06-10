@@ -107,7 +107,7 @@ export type PathCommand =
  *   markerHeight>`，不再 switch、不调 emit、不需要 arrows 注册表。纯 JSON 数据（无函数）。
  */
 export type ArrowEndSpec = {
-  /** 形状名：内置 7 或经 `CompileOptions.arrows` 注册的扩展名；标识 / 调试用，已解析后渲染不依赖（保留） */
+  /** 形状名：内置 8 或经 `CompileOptions.arrows` 注册的扩展名；标识 / 调试用，已解析后渲染不依赖（保留） */
   shape: ArrowShapeName;
   /** marker viewBox 边长（`def.baseSize ?? 10`）；adapter 据此推 viewBox `0 0 baseSize baseSize` 与 refY = baseSize/2 */
   baseSize: number;

@@ -249,7 +249,7 @@ description: 笔画外壳、step 动作序列与 step 目标点
 `Path.arrowDetail` 字段的 schema —— 顶层 8 视觉字段（与 `ArrowEndDetail` 共享）+ 可选 `start` / `end` 子对象。`start` / `end` 与顶层默认逐字段 merge：缺省字段继承顶层、已填字段 override。
 
 <ZodSchema name="ArrowDetailSchema" description="路径级箭头视觉配置：顶层默认加可选起末端覆盖。" descriptions={{
-  shape: '箭头形状：normal / open / stealth / diamond / openDiamond / circle / openCircle，默认 stealth',
+  shape: '箭头形状：normal / open / stealth / openStealth / diamond / openDiamond / circle / openCircle，默认 stealth',
   scale: '等比缩放因子（默认 1），乘到 length / width 之后',
   length: '尖长（user units，沿 path 方向），默认 6',
   width: '尖宽（user units，垂直 path 方向），默认 6',

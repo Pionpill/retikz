@@ -5,24 +5,24 @@ import type { ValueOf } from '../../types';
  * 节点相对方向 8 方向常量（视觉语义）
  * @description above/below=y 减/增（视觉上/下）；left/right=x 减/增；4 对角分量 1/√2 让对角距离与 distance 等长。与 TikZ positioning 的 `above of` 等对齐（TikZ y 向上 retikz y 向下，但视觉语义一致）
  */
-export const AT_DIRECTIONS = {
-  above: 'above',
-  below: 'below',
-  left: 'left',
-  right: 'right',
-  'above-left': 'above-left',
-  'above-right': 'above-right',
-  'below-left': 'below-left',
-  'below-right': 'below-right',
+export const AtDirection = {
+  Above: 'above',
+  Below: 'below',
+  Left: 'left',
+  Right: 'right',
+  AboveLeft: 'above-left',
+  AboveRight: 'above-right',
+  BelowLeft: 'below-left',
+  BelowRight: 'below-right',
 } as const;
 
 /** at 方向字面量类型 */
-export type AtDirection = ValueOf<typeof AT_DIRECTIONS>;
+export type AtDirectionValue = ValueOf<typeof AtDirection>;
 
 export const AtPositionSchema = z
   .object({
     direction: z
-      .nativeEnum(AT_DIRECTIONS)
+      .nativeEnum(AtDirection)
       .describe(
         'Direction from the referenced node toward this node, in visual convention (above = visually upward, screen y-).',
       ),

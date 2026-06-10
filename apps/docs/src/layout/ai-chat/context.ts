@@ -110,7 +110,7 @@ Coordinate = {
 
 需要 polar 坐标 / 多段 path / Node 锚点 / Draw way DSL / EdgeLabel / 弧 / 扇形等更深字段时，下面页面给出权威字段表（用 markdown 链接引用即可，path 以 / 开头）：
 
-- 定位：\`/core/concepts/position\` · \`/core/reference/schema/placement\`
+- 定位：\`/core/concepts/basic-concepts/position\` · \`/core/reference/schema/placement\`
 - IR：\`/core/reference/schema/scene\` · \`.../entity\` · \`.../path\`
 - 组件：\`/core/components/{tikz,node/overview,draw/overview,draw/way,draw/path,draw/step,draw/arrow}\`
 - 形状 sugar：\`/core/components/shapes/circle-ellipse\`
@@ -216,7 +216,7 @@ Coordinate = {
 
 For polar coordinates / multi-segment paths / Node anchors / Draw way DSL / EdgeLabel / arcs / wedges — these pages have authoritative field tables (reference by site-relative path starting with /):
 
-- Positioning: \`/core/concepts/position\` · \`/core/reference/schema/placement\`
+- Positioning: \`/core/concepts/basic-concepts/position\` · \`/core/reference/schema/placement\`
 - IR: \`/core/reference/schema/scene\` · \`.../entity\` · \`.../path\`
 - Components: \`/core/components/{tikz,node/overview,draw/overview,draw/way,draw/path,draw/step,draw/arrow}\`
 - Shape sugar: \`/core/components/shapes/circle-ellipse\`

@@ -27,7 +27,7 @@ retikz's long-term plan is a layered matrix of "low-level primitives + high-leve
 | `@retikz/flow` | DAG-style high-level components (flowchart / UML)<br />+ layout algorithms (dagre / elkjs) | Planned |
 | `@retikz/plot` | Data-driven chart capabilities | Planned |
 
-Between core and the host framework sits a framework-adapter layer that translates IR into framework-specific elements. `@retikz/react` is the only one published so far; `@retikz/vue` / `@retikz/canvas` / `@retikz/ssr` are on the roadmap. flow / plot won't kick off until core 1.0 stabilizes, and may ship as sub-packages or spin off as independent projects.
+At the v0.1 starting point, the layer above core exposed only a framework adapter that translated IR into framework-specific elements: `@retikz/react` shipped first, while Canvas / SSR and framework-free entry points were still on the roadmap. By v0.3, rendering has converged into `@retikz/render`, with `@retikz/vanilla` added for framework-free mounting and SSR; domain packages such as flow / plot continue to evolve separately.
 
 The benefit of layering: one set of primitive vocabulary and IR at the base, every adapter and AI integration inheriting it for free; domain packages can evolve independently without slowing the core.
 
@@ -151,7 +151,7 @@ Per the current roadmap, here's roughly how v0.1 onward is paced:
 
 <ComponentPreview name="roadmap" hideCode />
 
-Each version has its own theme—v0.2 adds Scope and Shape Registry, v0.3 brings advanced positioning, v0.4 introduces TikZ libraries and decorations, and canvas rendering arrives before v1.0; the plot domain package kicks off after v1.x. AI compatibility is solidified at every step.
+Each version has its own theme—v0.2 adds Scope and Shape Registry, v0.3 advances renderer/runtime, Canvas, and animation runtime work, v0.4 can evaluate incremental rendering, Progressive IR, and more complex decorations, and domain packages continue after that. AI compatibility is solidified at every step.
 
 The nearest step is the Shape Registry in v0.2—opening node shapes from a closed enum to third-party injection. It's the prerequisite for domain packages like flow / UML / circuit diagrams.
 

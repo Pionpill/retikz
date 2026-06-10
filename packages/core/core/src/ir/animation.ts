@@ -24,7 +24,8 @@ export const AnimationProperty = {
   ViewBox: 'viewBox',
 } as const;
 /** 内置可动画属性通道名联合 */
-export type BuiltinAnimationProperty = ValueOf<typeof AnimationProperty>;
+export type AnimationPropertyValue = ValueOf<typeof AnimationProperty>;
+export type BuiltinAnimationProperty = AnimationPropertyValue;
 /** 属性名：内置 ∪ 任意自定义字符串（`& {}` 保内置自动补全，同 NodeShape 范式）；自定义通道由后续 renderer 注册的插值器解释 */
 export type AnimationPropertyRef = BuiltinAnimationProperty | (string & {});
 
@@ -37,7 +38,7 @@ export const AnimationEasing = {
   EaseInOut: 'ease-in-out',
 } as const;
 /** 缓动预设名联合 */
-export type AnimationEasingName = ValueOf<typeof AnimationEasing>;
+export type AnimationEasingValue = ValueOf<typeof AnimationEasing>;
 
 /** 每次迭代的播放方向（抄 WAAPI / CSS animation-direction） */
 export const AnimationDirection = {
@@ -47,7 +48,7 @@ export const AnimationDirection = {
   AlternateReverse: 'alternate-reverse',
 } as const;
 /** 播放方向名联合 */
-export type AnimationDirectionName = ValueOf<typeof AnimationDirection>;
+export type AnimationDirectionValue = ValueOf<typeof AnimationDirection>;
 
 /** 活动区间外取值（抄 WAAPI / CSS animation-fill-mode） */
 export const AnimationFill = {
@@ -57,7 +58,7 @@ export const AnimationFill = {
   Both: 'both',
 } as const;
 /** 填充模式名联合 */
-export type AnimationFillName = ValueOf<typeof AnimationFill>;
+export type AnimationFillValue = ValueOf<typeof AnimationFill>;
 
 export const EasingSchema = z
   .union([
@@ -89,7 +90,7 @@ export const KeyframeSchema = z
 /** 播放触发器关键字（runtime 落地；DrawWay 风格 const + 派生类型，与其它 Animation 枚举单一真源一致） */
 export const AnimationTrigger = { Load: 'load', Visible: 'visible', Manual: 'manual' } as const;
 /** 触发器关键字联合（不含 { onEvent } 对象形态） */
-export type AnimationTriggerName = ValueOf<typeof AnimationTrigger>;
+export type AnimationTriggerValue = ValueOf<typeof AnimationTrigger>;
 
 export const TriggerSchema = z
   .union([

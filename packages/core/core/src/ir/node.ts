@@ -5,7 +5,7 @@ import { BoundarySchema } from './boundary';
 import { FontSchema } from './font';
 import { JsonObjectSchema } from './json';
 import { PaintSpecSchema } from './paint';
-import { AT_DIRECTIONS, AtPositionSchema, BetweenPositionSchema, OffsetPositionSchema, PolarPositionSchema, PositionSchema } from './position';
+import { AtDirection, AtPositionSchema, BetweenPositionSchema, OffsetPositionSchema, PolarPositionSchema, PositionSchema } from './position';
 import { ShapeRefSchema } from './shape';
 import { TextBlockSchema } from './text';
 
@@ -13,18 +13,19 @@ import { TextBlockSchema } from './text';
  * 节点形状常量（用 const + ValueOf 派生，不用 TS enum）
  * @description rectangle 默认；几何语义：node 视觉边界包"text 矩形 + padding"；rectangle: 视觉=text；ellipse: rx=innerHalfW×√2,ry=innerHalfH×√2。circle 是 ellipse 等轴 preset 别名（`{ type:'ellipse', params:{ circumscribe:'equal' } }`，两轴 = 内框对角线半长 √(innerHalfW²+innerHalfH²)）；diamond 是 polygon 4 边形 45° preset 别名（`{ type:'polygon', params:{ sides:4, rotate:45 } }`）——circle / diamond 均保留为合法 shape 名向后兼容，编译期分别消解为 ellipse / polygon，不进 shape 注册表
  */
-export const NODE_SHAPES = {
-  rectangle: 'rectangle',
-  circle: 'circle',
-  ellipse: 'ellipse',
-  diamond: 'diamond',
+export const BuiltinShape = {
+  Rectangle: 'rectangle',
+  Circle: 'circle',
+  Ellipse: 'ellipse',
+  Diamond: 'diamond',
 } as const;
 
 /**
  * 内置 4 shape 名联合
  * @description `BUILTIN_SHAPES` 的 Record key（保穷尽性约束，不随 `NodeShape` 开放而退化为 `string`）
  */
-export type BuiltinShapeName = ValueOf<typeof NODE_SHAPES>;
+export type BuiltinShapeValue = ValueOf<typeof BuiltinShape>;
+export type BuiltinShapeName = BuiltinShapeValue;
 
 /**
  * 节点形状名：开放字符串
@@ -34,13 +35,13 @@ export type BuiltinShapeName = ValueOf<typeof NODE_SHAPES>;
 export type NodeShape = BuiltinShapeName | (string & {});
 
 /** 节点文本对齐（TikZ `align=` 同义） */
-export const NODE_TEXT_ALIGNS = {
-  left: 'left',
-  center: 'center',
-  right: 'right',
+export const NodeTextAlign = {
+  Left: 'left',
+  Center: 'center',
+  Right: 'right',
 } as const;
 
-export type NodeTextAlign = ValueOf<typeof NODE_TEXT_ALIGNS>;
+export type NodeTextAlignValue = ValueOf<typeof NodeTextAlign>;
 
 /**
  * 节点附属标签 label（TikZ `[label=above:foo]` 同义）
@@ -52,7 +53,7 @@ export const NodeLabelSchema = z
       .string()
       .describe('Label text content; rendered as a single line.'),
     position: z
-      .union([z.nativeEnum(AT_DIRECTIONS), z.number()])
+      .union([z.nativeEnum(AtDirection), z.number()])
       .optional()
       .describe(
         'Placement around the node border: 8-direction enum (above / right / above-left / ...) or numeric angle in degrees (`label=30:foo` for radial placement). Default `above`. Numeric uses the polar convention (0° = +x, 90° = +y, screen-down).',
@@ -159,7 +160,7 @@ export const NodeSchema = z
       ),
     text: TextBlockSchema.optional(),
     align: z
-      .nativeEnum(NODE_TEXT_ALIGNS)
+      .nativeEnum(NodeTextAlign)
       .optional()
       .describe(
         'Multi-line text alignment within the text block; `left` / `center` / `right`. Defaults to `center` (matches TikZ).',

@@ -13,7 +13,7 @@ export const PlotGuide = {
 } as const;
 
 /** guide 类型 */
-export type GuideType = ValueOf<typeof PlotGuide>;
+export type PlotGuideValue = ValueOf<typeof PlotGuide>;
 
 /**
  * 图例可视化的非位置通道关键字（暴露给用户；成员值即判别串，裸字面量 `'color'` 同样可用）
@@ -31,7 +31,7 @@ export const LegendChannel = {
 } as const;
 
 /** 图例绑定的非位置通道 */
-export type LegendChannelType = ValueOf<typeof LegendChannel>;
+export type LegendChannelValue = ValueOf<typeof LegendChannel>;
 
 /**
  * 图例摆放位置关键字（暴露给用户；裸字面量 `'right'` 同样可用）
@@ -49,7 +49,7 @@ export const LegendPosition = {
 } as const;
 
 /** 图例位置 */
-export type LegendPositionType = ValueOf<typeof LegendPosition>;
+export type LegendPositionValue = ValueOf<typeof LegendPosition>;
 
 /**
  * 图例条目排布方向关键字（暴露给用户；裸字面量 `'vertical'` 同样可用）
@@ -63,7 +63,7 @@ export const LegendOrient = {
 } as const;
 
 /** 图例排布方向 */
-export type LegendOrientType = ValueOf<typeof LegendOrient>;
+export type LegendOrientValue = ValueOf<typeof LegendOrient>;
 
 /**
  * guide 绑定的坐标系定位维度关键字（暴露给用户；裸字面量 `'x'` / `'y'` 同样可用）
@@ -88,7 +88,7 @@ export const GuideDimension = {
 } as const;
 
 /** guide 维度 */
-export type GuideDimensionType = ValueOf<typeof GuideDimension>;
+export type GuideDimensionValue = ValueOf<typeof GuideDimension>;
 
 export const AxisGuideSchema = z
   .object({

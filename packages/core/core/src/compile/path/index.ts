@@ -35,9 +35,11 @@ import type {
 } from '../../primitive';
 import type { AssertEqual } from '../../types';
 import type { PathGeneratorDefinition } from '../../pathGenerators';
+import { CompileWarningCode } from '../constant';
+import type { CompileWarning } from '../constant';
 import type { NameStack } from '../name-stack';
 import { type TextMeasurer, fallbackMeasurer } from '../text-metrics';
-import { clipForTarget, cornerOf, refPointOfTarget, samePoint } from './anchor';
+import { clipForTarget, cornerOf, isAutoBoundaryTarget, refPointOfTarget, samePoint } from './anchor';
 import { emitLabelPrimitive, tForLabelPosition } from './label';
 import { normalizeRelativeTargets } from './relative';
 import { applyTransformChain } from '../scope';
@@ -138,11 +140,7 @@ void _assertThicknessCheck;
 /** emitPathPrimitive 可选 warn 钩子 */
 export type EmitPathWarnHook = {
   /** 警告收集器（由 compileToScene 传入） */
-  onWarn?: (warning: {
-    code: string;
-    message: string;
-    path: string;
-  }) => void;
+  onWarn?: (warning: CompileWarning) => void;
   /** 当前 path 在 IR 中的 locator 前缀（如 `'children[3].path'`） */
   irPath?: string;
   /**
@@ -154,7 +152,7 @@ export type EmitPathWarnHook = {
   /** fill 解析器（PaintSpec → resourceRef + 登记资源）；缺省时纯色透传、PaintSpec 退化为无填充 */
   resolveFill?: PaintResolver;
   /**
-   * 有效 arrow 表（内置 7 + 注入）；缺省 = 仅内置 7
+   * 有效 arrow 表（内置 8 + 注入）；缺省 = 仅内置 8
    * @description compileToScene 合并 `{ ...BUILTIN_ARROWS, ...options.arrows }` 传入；
    *   endpointArrows 据此查表算 shrink / 调 def.emit；未注册名编译期 throw
    */
@@ -266,7 +264,7 @@ export const emitPathPrimitive = (
   const soloSelfContained = steps.length === 1 && steps[0].kind === 'rectangle';
   if (steps.length < 2 && !soloSelfContained) {
     warn(
-      'PATH_TOO_SHORT',
+      CompileWarningCode.PathTooShort,
       `Path requires at least 2 steps (got ${steps.length}); the entire path is skipped`,
       'children',
     );
@@ -330,7 +328,7 @@ export const emitPathPrimitive = (
     const toId = nodeRefId(s.to);
     if (!ref && toId !== undefined) {
       warn(
-        'UNRESOLVED_NODE_REFERENCE',
+        CompileWarningCode.UnresolvedNodeReference,
         `Step.to references undefined node id '${toId}'; the entire path is skipped`,
         `children[${idx}].to`,
       );
@@ -375,14 +373,25 @@ export const emitPathPrimitive = (
 
   const roundPoint = (p: IRPosition): IRPosition => [round(p[0]), round(p[1])];
 
-  const emitMove = (p: IRPosition) => {
+  const endpointSource = {
+    firstAutoBoundary: false,
+    lastAutoBoundary: false,
+  };
+  const noteEndpointSource = (sourceAutoBoundary: boolean): void => {
+    if (commands.length === 0) endpointSource.firstAutoBoundary = sourceAutoBoundary;
+    endpointSource.lastAutoBoundary = sourceAutoBoundary;
+  };
+
+  const emitMove = (p: IRPosition, sourceAutoBoundary = false) => {
+    noteEndpointSource(sourceAutoBoundary);
     const rp = roundPoint(p);
     commands.push({ kind: 'move', to: [rp[0], rp[1]] });
     points.push(p);
     subPathStart = p;
     lastEnd = p;
   };
-  const emitLine = (p: IRPosition) => {
+  const emitLine = (p: IRPosition, sourceAutoBoundary = false) => {
+    noteEndpointSource(sourceAutoBoundary);
     const rp = roundPoint(p);
     commands.push({ kind: 'line', to: [rp[0], rp[1]] });
     points.push(p);
@@ -392,7 +401,8 @@ export const emitPathPrimitive = (
     commands.push({ kind: 'close' });
     lastEnd = subPathStart;
   };
-  const emitQuad = (control: IRPosition, p: IRPosition) => {
+  const emitQuad = (control: IRPosition, p: IRPosition, sourceAutoBoundary = false) => {
+    noteEndpointSource(sourceAutoBoundary);
     const rc = roundPoint(control);
     const rp = roundPoint(p);
     commands.push({
@@ -405,7 +415,13 @@ export const emitPathPrimitive = (
     points.push(p);
     lastEnd = p;
   };
-  const emitCubic = (c1: IRPosition, c2: IRPosition, p: IRPosition) => {
+  const emitCubic = (
+    c1: IRPosition,
+    c2: IRPosition,
+    p: IRPosition,
+    sourceAutoBoundary = false,
+  ) => {
+    noteEndpointSource(sourceAutoBoundary);
     const rc1 = roundPoint(c1);
     const rc2 = roundPoint(c2);
     const rp = roundPoint(p);
@@ -427,6 +443,7 @@ export const emitPathPrimitive = (
     startAngle: number,
     endAngle: number,
   ) => {
+    noteEndpointSource(false);
     const rc = roundPoint(center);
     commands.push({
       kind: 'arc',
@@ -446,6 +463,7 @@ export const emitPathPrimitive = (
     startAngle: number,
     endAngle: number,
   ) => {
+    noteEndpointSource(false);
     const rc = roundPoint(center);
     commands.push({
       kind: 'ellipseArc',
@@ -464,9 +482,9 @@ export const emitPathPrimitive = (
     lastEnd = endPt;
   };
   /** 段起点：与 lastEnd 相同则复用 cursor（省 move），否则发 move */
-  const startSegment = (p: IRPosition) => {
+  const startSegment = (p: IRPosition, sourceAutoBoundary = false) => {
     if (samePoint(p, lastEnd)) return;
-    emitMove(p);
+    emitMove(p, sourceAutoBoundary);
   };
 
   /** 部分圆/椭圆的闭合模式：'open' 直接返回；'sector' 连回中心；缺省 / 误给 'closed' 回退 'chord' */
@@ -632,8 +650,8 @@ export const emitPathPrimitive = (
         continue;
       }
       // 否则段独立：重新 move 起点再 line 到终点（不再用 close，避免回到错误的 subPathStart）
-      startSegment(fromClip);
-      emitLine(toClip);
+      startSegment(fromClip, isAutoBoundaryTarget(prev.step.to));
+      emitLine(toClip, isAutoBoundaryTarget(moveTo));
       continue;
     }
 
@@ -646,14 +664,14 @@ export const emitPathPrimitive = (
         const rectToId = nodeRefId(step.to);
         if (!fromPt && fromId !== undefined) {
           warn(
-            'UNRESOLVED_NODE_REFERENCE',
+            CompileWarningCode.UnresolvedNodeReference,
             `Rectangle from references undefined node id '${fromId}'; the entire path is skipped`,
             `children[${i}].from`,
           );
         }
         if (!toPt && rectToId !== undefined) {
           warn(
-            'UNRESOLVED_NODE_REFERENCE',
+            CompileWarningCode.UnresolvedNodeReference,
             `Rectangle to references undefined node id '${rectToId}'; the entire path is skipped`,
             `children[${i}].to`,
           );
@@ -699,7 +717,7 @@ export const emitPathPrimitive = (
           const centerId = nodeRefId(step.center);
           if (centerId !== undefined) {
             warn(
-              'UNRESOLVED_NODE_REFERENCE',
+              CompileWarningCode.UnresolvedNodeReference,
               `Arc step center references undefined node id '${centerId}'; the entire path is skipped`,
               `children[${i}].center`,
             );
@@ -744,7 +762,7 @@ export const emitPathPrimitive = (
 
       // 既无 radius 也无 radiusX/radiusY：malformed arc
       warn(
-        'ARC_MISSING_RADIUS',
+        CompileWarningCode.ArcMissingRadius,
         'Arc step requires radius (circular) or both radiusX and radiusY (elliptical); the entire path is skipped',
         `children[${i}]`,
       );
@@ -781,7 +799,7 @@ export const emitPathPrimitive = (
       // 整圆（无角度）：全 sweep，画完回 center（原行为）
       if (step.startAngle !== undefined || step.endAngle !== undefined) {
         warn(
-          'PARTIAL_ARC_NEEDS_BOTH_ANGLES',
+          CompileWarningCode.PartialArcNeedsBothAngles,
           'circlePath needs both startAngle and endAngle for a partial circle; treated as a full circle',
           `children[${i}]`,
         );
@@ -827,7 +845,7 @@ export const emitPathPrimitive = (
       // 整椭圆（无角度）：原行为
       if (step.startAngle !== undefined || step.endAngle !== undefined) {
         warn(
-          'PARTIAL_ARC_NEEDS_BOTH_ANGLES',
+          CompileWarningCode.PartialArcNeedsBothAngles,
           'ellipsePath needs both startAngle and endAngle for a partial ellipse; treated as a full ellipse',
           `children[${i}]`,
         );
@@ -855,8 +873,8 @@ export const emitPathPrimitive = (
       const fromClip = usedOverride ?? clipForTarget(prev.step.to, currAnchor, nameStack, scopeChain);
       const toClip = clipForTarget(step.to, prev.anchor, nameStack, scopeChain);
       if (!fromClip || !toClip) return null;
-      startSegment(fromClip);
-      emitLine(toClip);
+      startSegment(fromClip, usedOverride === null && isAutoBoundaryTarget(prev.step.to));
+      emitLine(toClip, isAutoBoundaryTarget(step.to));
       collectLabel(step, t => lineSegmentSample(fromClip, toClip, t));
       continue;
     }
@@ -865,8 +883,8 @@ export const emitPathPrimitive = (
       const fromClip = usedOverride ?? clipForTarget(prev.step.to, step.control, nameStack, scopeChain);
       const toClip = clipForTarget(step.to, step.control, nameStack, scopeChain);
       if (!fromClip || !toClip) return null;
-      startSegment(fromClip);
-      emitQuad(step.control, toClip);
+      startSegment(fromClip, usedOverride === null && isAutoBoundaryTarget(prev.step.to));
+      emitQuad(step.control, toClip, isAutoBoundaryTarget(step.to));
       collectLabel(step, t => quadSegmentSample(fromClip, step.control, toClip, t));
       continue;
     }
@@ -874,8 +892,8 @@ export const emitPathPrimitive = (
       const fromClip = usedOverride ?? clipForTarget(prev.step.to, step.control1, nameStack, scopeChain);
       const toClip = clipForTarget(step.to, step.control2, nameStack, scopeChain);
       if (!fromClip || !toClip) return null;
-      startSegment(fromClip);
-      emitCubic(step.control1, step.control2, toClip);
+      startSegment(fromClip, usedOverride === null && isAutoBoundaryTarget(prev.step.to));
+      emitCubic(step.control1, step.control2, toClip, isAutoBoundaryTarget(step.to));
       collectLabel(step, t =>
         cubicSegmentSample(fromClip, step.control1, step.control2, toClip, t),
       );
@@ -907,8 +925,8 @@ export const emitPathPrimitive = (
       const fromClip = usedOverride ?? clipForTarget(prev.step.to, c1, nameStack, scopeChain);
       const toClip = clipForTarget(step.to, c2, nameStack, scopeChain);
       if (!fromClip || !toClip) return null;
-      startSegment(fromClip);
-      emitCubic(c1, c2, toClip);
+      startSegment(fromClip, usedOverride === null && isAutoBoundaryTarget(prev.step.to));
+      emitCubic(c1, c2, toClip, isAutoBoundaryTarget(step.to));
       collectLabel(step, t => cubicSegmentSample(fromClip, c1, c2, toClip, t));
       continue;
     }
@@ -918,9 +936,9 @@ export const emitPathPrimitive = (
     const fromClip = usedOverride ?? clipForTarget(prev.step.to, corner, nameStack, scopeChain);
     const toClip = clipForTarget(step.to, corner, nameStack, scopeChain);
     if (!fromClip || !toClip) return null;
-    startSegment(fromClip);
+    startSegment(fromClip, usedOverride === null && isAutoBoundaryTarget(prev.step.to));
     emitLine(corner);
-    emitLine(toClip);
+    emitLine(toClip, isAutoBoundaryTarget(step.to));
     collectLabel(step, t => foldSegmentSample(fromClip, corner, toClip, t));
   }
 
@@ -965,7 +983,12 @@ export const emitPathPrimitive = (
 
   // shrink 在 compile 算（端点收缩与 emit 落点无关）：按 shape + 视觉输入把首/末段端点向内缩短，
   // 让 line 端点接在 hollow arrow 尾部外缘、不贯穿 back outline；shrink=0 的实心 shape 跳过
-  applyArrowShrinks(commands, arrows.shrinkStart, arrows.shrinkEnd, strokeWidth, round);
+  const shrinkStart =
+    arrows.shrinkStart +
+    (endpointSource.firstAutoBoundary ? arrows.boundaryOuterInsetStart : 0);
+  const shrinkEnd =
+    arrows.shrinkEnd + (endpointSource.lastAutoBoundary ? arrows.boundaryOuterInsetEnd : 0);
+  applyArrowShrinks(commands, shrinkStart, shrinkEnd, strokeWidth, round);
 
   // 只在端点有箭头时塞 key——避免给无箭头 path 注入 `arrowStart: undefined` / `arrowEnd: undefined`（保 Scene 输出纯净）
   const endpointSpecs: { arrowStart?: typeof arrows.arrowStart; arrowEnd?: typeof arrows.arrowEnd } = {};
@@ -1009,3 +1032,5 @@ export const emitPathPrimitive = (
   if (path.animations !== undefined) primitive.animations = path.animations;
   return { primitives: bodyPrims, points };
 };
+
+export { refPointOfTarget } from './anchor';

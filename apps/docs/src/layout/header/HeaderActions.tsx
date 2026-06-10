@@ -3,7 +3,7 @@ import { type FC } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { GitHubIcon } from '@/components/icons';
-import { COMPARISON_TARGETS, ComparisonTargetLabelKeys } from '@/components/shared/comparison';
+import { ComparisonTargetLabelKeys, ComparisonTargetList } from '@/components/shared/comparison';
 import { Shortcut } from '@/components/shared/shortcut';
 import { buttonVariants } from '@/components/ui/button';
 import {
@@ -198,7 +198,7 @@ export const HeaderActions: FC = () => {
               <DropdownMenuSub>
                 <DropdownMenuSubTrigger inset>{t('comparison.groupLabel')}</DropdownMenuSubTrigger>
                 <DropdownMenuSubContent className="w-44">
-                  {COMPARISON_TARGETS.map(target => (
+                  {ComparisonTargetList.map(target => (
                     <DropdownMenuCheckboxItem
                       key={target}
                       checked={comparisonTargets[target]}

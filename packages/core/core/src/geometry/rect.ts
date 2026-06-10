@@ -1,5 +1,6 @@
 import { localToWorld, worldToLocal } from './_transform';
 import { EDGE_ENDS, type Side, lerpPoint } from './_edge';
+import type { CompassAnchorValue } from './anchor';
 import type { Position } from './point';
 
 /** 轴对齐矩形：几何中心 + 宽高 + 可选绕中心旋转 */
@@ -12,22 +13,6 @@ export type Rect = {
   rotate?: number;
 };
 
-/** 矩形 9 个标准 anchor 名常量（与 RectAnchor 配对，用 RECT_ANCHORS.NORTH 避免拼错） */
-export const RECT_ANCHORS = {
-  CENTER: 'center',
-  NORTH: 'north',
-  SOUTH: 'south',
-  EAST: 'east',
-  WEST: 'west',
-  NORTH_EAST: 'north-east',
-  NORTH_WEST: 'north-west',
-  SOUTH_EAST: 'south-east',
-  SOUTH_WEST: 'south-west',
-} as const;
-
-/** 矩形 anchor 名（与 TikZ 命名一致） */
-export type RectAnchor = (typeof RECT_ANCHORS)[keyof typeof RECT_ANCHORS];
-
 export const rect = {
   /** 几何中心 */
   center: (r: Rect): Position => [r.x, r.y],
@@ -38,8 +23,8 @@ export const rect = {
     const halfH = r.height / 2;
     return lx >= -halfW && lx <= halfW && ly >= -halfH && ly <= halfH;
   },
-  /** 9 个 anchor 之一的世界坐标（含旋转），TikZ 命名 */
-  anchor: (r: Rect, name: RectAnchor): Position => {
+  /** 9 个标准方位 anchor 之一的世界坐标（含旋转），TikZ 命名 */
+  anchor: (r: Rect, name: CompassAnchorValue): Position => {
     const halfW = r.width / 2;
     const halfH = r.height / 2;
     let lx = 0;

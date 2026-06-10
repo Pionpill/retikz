@@ -19,7 +19,7 @@ import { flattenPrims } from '../helpers/flatten';
 /**
  * Arrow Registry（ADR-01）core 侧测试（emit-in-compile 契约）
  * @description 断言落点全在 compile 输出（`PathPrim.arrowEnd` 已解析 marker 描述）：
- *   - marker 几何（`arrowEnd.marker: MarkerPrimitive[]`，def.emit 产物）内置 7 零回归 golden
+ *   - marker 几何（`arrowEnd.marker: MarkerPrimitive[]`，def.emit 产物）内置 8 零回归 golden
  *   - wrapper 参数（baseSize / refX / markerWidth / markerHeight）
  *   - 端点 shrink 坐标（shrink 在 compile，与 emit 落点无关）
  *   - renderer-agnostic（Scene 无 SVG `<marker>` 元素；ArrowEndSpec.marker 纯 JSON 数据）
@@ -127,7 +127,7 @@ const customArrow = (): ArrowDefinition => ({
 });
 
 describe('Arrow registry — happy path', () => {
-  it('builtin_7_via_registry：内置 7 经 compileToScene 末端坐标 shrink 后逐一等价旧行为', () => {
+  it('builtin_8_via_registry：内置 8 经 compileToScene 末端坐标 shrink 后逐一等价旧行为', () => {
     // stealth shrink 4.2 × strokeWidth 1 → 末端 [100,0] 朝 [0,0] 缩到 [95.8, 0]
     const stealth = firstPath(compileToScene(horizontalPathIR('->', { shape: 'stealth' })).primitives);
     expect(stealth && endpointTo(stealth)).toEqual([95.8, 0]);
@@ -137,9 +137,12 @@ describe('Arrow registry — happy path', () => {
     // open shrink 5.25 → [94.75, 0]
     const open = firstPath(compileToScene(horizontalPathIR('->', { shape: 'open' })).primitives);
     expect(open && endpointTo(open)).toEqual([94.75, 0]);
+    // openStealth: tipX 9, contactX 3 - 0.75 → shrink 4.05 → [95.95, 0]
+    const openStealth = firstPath(compileToScene(horizontalPathIR('->', { shape: 'openStealth' })).primitives);
+    expect(openStealth && endpointTo(openStealth)).toEqual([95.95, 0]);
   });
 
-  it('builtin_marker_geometry_golden：内置 7 marker 几何零回归（compile 输出 ArrowEndSpec.marker）', () => {
+  it('builtin_marker_geometry_golden：内置 8 marker 几何零回归（compile 输出 ArrowEndSpec.marker）', () => {
     // 实心三角 normal：一个 path，commands 等价 d "M0,0 L10,5 L0,10 Z"
     const normal = endSpecOf('->', { shape: 'normal' });
     const normalPath = firstMarkerPath(normal?.marker ?? []);
@@ -149,6 +152,12 @@ describe('Arrow registry — happy path', () => {
     const stealth = endSpecOf('->', { shape: 'stealth' });
     const stealthPath = firstMarkerPath(stealth?.marker ?? []);
     expect(stealthPath && pathD(stealthPath)).toBe('M0,0 L10,5 L0,10 L3,5 Z');
+
+    // 空心 V 形 openStealth：一个 path，d "M1,1 L9,5 L1,9 L3,5 Z"
+    const openStealth = endSpecOf('->', { shape: 'openStealth' });
+    const openStealthPath = firstMarkerPath(openStealth?.marker ?? []);
+    expect(openStealthPath && pathD(openStealthPath)).toBe('M1,1 L9,5 L1,9 L3,5 Z');
+    expect(openStealthPath?.strokeLinejoin).toBe('miter');
 
     // 实心菱形 diamond：一个 path，d "M0,5 L5,0 L10,5 L5,10 Z"
     const diamond = endSpecOf('->', { shape: 'diamond' });
@@ -189,6 +198,8 @@ describe('Arrow registry — happy path', () => {
     // 空心 open / openDiamond：refX = back centerline 1 - lineWidth/2（默认 1.5）= 0.25
     expect(endSpecOf('->', { shape: 'open' })?.refX).toBe(0.25);
     expect(endSpecOf('->', { shape: 'openDiamond' })?.refX).toBe(0.25);
+    // openStealth：refX = 凹口接触点 3 - lineWidth/2（默认 1.5）= 2.25
+    expect(endSpecOf('->', { shape: 'openStealth' })?.refX).toBe(2.25);
     // openCircle：圆外缘左 x 0.75 - lineWidth/2 = 0
     expect(endSpecOf('->', { shape: 'openCircle' })?.refX).toBe(0);
   });
@@ -236,7 +247,7 @@ describe('Arrow registry — boundary', () => {
   });
 
   it('hollow_linewidth：空心箭头 color 主导描边进 marker、fill 被丢', () => {
-    const spec = endSpecOf('->', { shape: 'open', fill: 'red', color: 'blue' });
+    const spec = endSpecOf('->', { shape: 'openStealth', fill: 'red', color: 'blue' });
     // 空心：color 主导（blue 进 marker stroke）；fill='red' 被丢
     expect(markerPaint(spec)).toBe('blue');
     expect(markerPaint(spec)).not.toBe('red');
@@ -285,9 +296,9 @@ describe('Arrow registry — error path', () => {
   it('unregistered_shape_throws：未注册 shape 名 → 编译期 throw（带可用名列表）', () => {
     const ir = horizontalPathIR('->', { shape: 'nope' });
     expect(() => compileToScene(ir)).toThrow(/Unknown arrow shape 'nope'/);
-    // 可用名排序列表（内置 7 字母序）
+    // 可用名排序列表（内置 8 字母序）
     expect(() => compileToScene(ir)).toThrow(
-      /circle, diamond, normal, open, openCircle, openDiamond, stealth/,
+      /circle, diamond, normal, open, openCircle, openDiamond, openStealth, stealth/,
     );
   });
 
@@ -451,13 +462,13 @@ describe('Arrow registry — JSON round-trip / zod parse', () => {
 });
 
 describe('Arrow registry — BUILTIN_ARROWS 注册表结构', () => {
-  it('内置 7 注册键穷尽（normal/open/stealth/diamond/openDiamond/circle/openCircle）', () => {
+  it('内置 8 注册键穷尽（normal/open/stealth/openStealth/diamond/openDiamond/circle/openCircle）', () => {
     expect(Object.keys(BUILTIN_ARROWS).sort()).toEqual(
-      ['circle', 'diamond', 'normal', 'open', 'openCircle', 'openDiamond', 'stealth'],
+      ['circle', 'diamond', 'normal', 'open', 'openCircle', 'openDiamond', 'openStealth', 'stealth'],
     );
   });
 
-  it('内置 7 几何字段对齐 ADR 几何契约（lineContactX 静态 base / tipX / hollow）', () => {
+  it('内置 8 几何字段对齐 ADR 几何契约（lineContactX 静态 base / tipX / hollow）', () => {
     // 实心 lineContactX base：normal/diamond/circle = 0, stealth = 3
     expect(BUILTIN_ARROWS.normal.lineContactX).toBe(0);
     expect(BUILTIN_ARROWS.diamond.lineContactX).toBe(0);
@@ -469,6 +480,9 @@ describe('Arrow registry — BUILTIN_ARROWS 注册表结构', () => {
     expect(BUILTIN_ARROWS.open.hollow).toBe(true);
     expect(BUILTIN_ARROWS.openDiamond.lineContactX).toBe(1);
     expect(BUILTIN_ARROWS.openDiamond.tipX).toBe(9);
+    expect(BUILTIN_ARROWS.openStealth.lineContactX).toBe(3);
+    expect(BUILTIN_ARROWS.openStealth.tipX).toBe(9);
+    expect(BUILTIN_ARROWS.openStealth.hollow).toBe(true);
     expect(BUILTIN_ARROWS.openCircle.lineContactX).toBe(0.75);
     expect(BUILTIN_ARROWS.openCircle.hollow).toBe(true);
   });

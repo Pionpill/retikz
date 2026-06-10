@@ -35,7 +35,7 @@ export const PlotScale = {
 } as const;
 
 /** scale 类型 */
-export type ScaleType = ValueOf<typeof PlotScale>;
+export type PlotScaleValue = ValueOf<typeof PlotScale>;
 
 /**
  * 命名配色方案词表（暴露给用户；成员值即 IR 判别串，裸字面量 `'viridis'` 同样可用）
@@ -88,7 +88,7 @@ export const PlotColorScheme = {
 } as const;
 
 /** 配色方案名 */
-export type ColorScheme = ValueOf<typeof PlotColorScheme>;
+export type PlotColorSchemeValue = ValueOf<typeof PlotColorScheme>;
 
 /** 分类标量：类别取值（字符串或数值；不含 boolean / null） */
 export const CategoryValueSchema = z
