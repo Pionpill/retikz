@@ -69,3 +69,8 @@ pnpm --filter <pkg> exec tsc --noEmit
 
 - changelog 全量措辞与历史段落清理：后续人工统一优化。
 - v0.4 功能候选：Progressive / WebGL / 更完整数据过渡 morph 等不进入本 beta.1。
+
+### 已知限制（登记待后续修）
+
+- **transformed scope 内 path 逃逸 clip / animations**：带 `transforms` 的 scope，其 path 子节点端点在编译期已解析成全局坐标，若放进该 scope 的 GroupPrim 会被 group transform 二次 apply，故当前 hoist 到顶层 `primitives`。代价：这些 path 不受 scope.clip 裁剪、不挂 scope.animations（node 子节点正常）。已在 `ScopeSchema.clip` / `.animations` 的 describe 注明。根因是 path 走全局坐标编译；彻底解法是让 path 支持 scope 局部坐标系编译后自然回到单一 group 内，归入后续 path-compile 重构，不在 beta.1 动行为。
+- **五类扩展 registry 的重名 / 缺失策略不完全一致**：composite（Array 注入）重名 throw、未注册 warn + skip；shape / arrow / pattern（Record 注入）同名覆盖 warn + last-wins、未注册 throw；path-generator 未注册 throw。差异源于数据结构（Array 可重复 vs Record 天然去重）与语义分层（"定位 / 布局类"缺失 fail-fast，"高层 composite"缺失优雅降级以保住其余产物）。属有意设计，已在 `lowerComposites` 与 compile 注册段 JSDoc 写明理由，本 beta.1 不强行统一。

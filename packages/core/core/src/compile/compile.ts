@@ -352,6 +352,9 @@ export const compileToScene = (ir: IR, options: CompileOptions = {}): Scene => {
     maxDepth: options.maxCompositeDepth,
   });
 
+  // shape / arrow / pattern 三表策略一致：Record 注入（key 天然去重）→ 同名覆盖内置 warn + last-wins、
+  // 未注册名 throw（定位 / 布局类基元缺失无法继续）。与 composite（Array 注入、重名 throw、缺失 warn+skip）
+  // 的策略差异是有意的，理由见 lowerComposites JSDoc。
   // 有效 shape 表：内置 + 注入（同名注入覆盖内置）；覆盖内置经 onWarn 发 SHAPE_OVERRIDES_BUILTIN
   const effectiveShapes: Record<string, ShapeDefinition> = options.shapes
     ? { ...BUILTIN_SHAPES, ...options.shapes }
@@ -543,11 +546,9 @@ export const compileToScene = (ir: IR, options: CompileOptions = {}): Scene => {
       } else if (child.type === 'coordinate') {
         const localCenter = resolvePosition(child.position, nameStack, nodeDistance, chain, refPointOfTarget);
         if (!localCenter) {
-          onWarn({
-            code: CompileWarningCode.PolarOriginUnresolved,
-            message: `Cannot resolve position for coordinate '${child.id}'; polar.origin or at.of may reference an undefined node`,
-            path: `${locatorPrefix}children[${i}].coordinate.position`,
-          });
+          // coordinate 与 node 同属"定义位置"的实体：位置不可解析时 fail-fast throw（下游引用会级联失败），
+          // 不像 path / scope.transform 那类"引用方"走 warn + 降级。此处只 throw、不再额外 onWarn——
+          // warn 后立即 throw 会让 onWarn 收集器记录一条永不产出 Scene 的死告警。
           throw new Error(
             `Cannot resolve position for coordinate ${child.id}; polar.origin or at.of may reference an undefined node`,
           );
