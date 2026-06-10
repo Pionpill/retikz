@@ -29,6 +29,8 @@ contents/core/components/node/
 - H1 由 DocPage 用 i18n label 渲染；frontmatter `description` 渲染在 H1 下当导言
 - URL `/<module>/<section>/<group>`（3 段），路由已支持
 
+分组节点是**会被继续嵌套的路由前缀**，`id` 优先用单个英文单词，不要连字符（`basics` 而非 `basic-concepts`、`model` 而非 `core-concepts`）；连字符只留给一个词说不清的叶子页。详见 [`docs-doc-principle`](../docs-doc-principle/SKILL.md) 的「路由 id 命名」。
+
 > 新行为：分组不再「重定向到首个子项」。principle 里若还写着「分组没有 mdx / 重定向」以本 skill 为准。
 
 ## 定位：家族视角，不复述子页

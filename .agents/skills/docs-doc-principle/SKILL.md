@@ -47,6 +47,15 @@ apps/docs/src/
 
 路由：`/:moduleId/:sectionId/:pageId(/:subPageId)?`。URL 段 == 目录段 == 数据节点 `id`，三处必须严格一致。
 
+## 路由 id 命名
+
+路由段（= 目录段 = 数据节点 `id`）**优先用单个英文单词**，让 URL 短、语义直白：`design` / `layers` / `composite` / `schema` / `runtime`。
+
+- **带 children 的分组 / section 节点尽量不要用 `-` 连字符**——它们是会被继续嵌套的路由前缀，连字符让 URL 越拼越碎、越长。现有 `basic-concepts` / `core-concepts` 就是反例，应收敛成一个词（如 `basics` / `model`）。
+- 只有**叶子页**（没有子路由）在一个词说不清时才允许连字符：`get-start` / `karl-circle` / `ohms-law-circuit` 可接受。
+- 单词要能反推内容，不为了凑单词造生僻缩写；拿不准时用更通用的上位词而不是堆词。
+- 已上线路由改名是 3 处联动（`data` + `contents` 目录 + 全仓站内 link）的破坏性变更，单独评估，别夹带进无关改动。
+
 ## 加叶子页面：完整步骤
 
 以加 `core/profile/get-start` 为例（已有 `core` module 与 `profile` section）：
@@ -332,6 +341,7 @@ GitHub URL 是这条规则的**例外**——它指向项目自家 repo，对用
 - **只加一边 i18n** —— `en` 由 `I18nResources = typeof zh` 类型反向约束，少一个 key 就编译失败
 - **`label` 写成 `'core/getStart'` 或 `'getStart'`** —— 必须是 `'<ns>.<key>'` 完整路径，`I18nKey` 类型会卡你
 - **改 `id` 不改目录** —— `id` 决定 URL 段、决定 mdx 加载路径、决定 sidebar 的 key，三者强耦合
+- **分组 / section id 用连字符** —— 带 children 的路由前缀优先单个英文单词（`basics` 而非 `basic-concepts`）；连字符只留给一个词说不清的叶子页
 - **写成连续的大段文字** —— 优先表格 / 示例 / 代码块；段落超过 3 行就拆
 - **写防御性 / 攻击性内容** —— "竞品做不到 / 我们更好"等段落直接删，正向表述自身能力即可
 - **普通用法页大段讲 IR 结构 / 字段** —— IR 是后端 / AI 用的隐藏层，正文说 DSL 即可；要看 IR 的用户点 `<ComponentPreview>` 的 IR tab
