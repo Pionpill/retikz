@@ -1,0 +1,65 @@
+---
+title: 动画
+description: 给节点 / 路径 / 镜头按时间打关键帧——入场、强调、循环、镜头与错峰，声明式书写、能优雅降级；末帧即静止态，preset 与底层 AnimationTrack 等价。
+---
+
+动画让固定图元**按时间从一个样子过渡到另一个样子**：淡入、画线、放大、旋转、变色、镜头推拉。你不用手写关键帧——调一个 **preset 工厂**（`fadeIn()` / `spin()` …）得到一条动画描述，挂到元素的 `animations` 数组即可。
+
+```tsx
+import { Layout, Node, fadeIn, scaleIn } from '@retikz/react';
+
+<Node animations={[fadeIn(), scaleIn()]}>hi</Node>
+```
+
+`animations` 可挂在 `<Node>` / `<Path>` / `<Scope>`（元素动画）与 `<Layout>`（镜头）。一个元素能挂多条，互不干扰。每个 preset 都接受公共项 `{ duration, delay, easing, trigger }`，部分另有专有项（`scaleIn.from` / `slideIn.axis,offset` / `growUp.origin` / `pulse.peak` …）。
+
+<ComponentAlert title="末帧 = 静止态，所以能降级" description="入场类动画的最后一帧就是元素本来的样子（fadeIn 的末帧 = 不透明）。于是不支持动画的环境、用户开了「减少动态效果」、或你传 animate={false} 时，直接渲染这个静止态——看到的是完整最终图，不是动画起点那个可能全透明的样子。" />
+
+## 全部动画一览
+
+| 动画 | 家族 | 底层通道 | 说明 |
+| --- | --- | --- | --- |
+| `fadeIn` | 入场 | opacity | 渐入（0→1） |
+| `drawOn` | 入场 | pathDraw | 描边沿路径画出 |
+| `scaleIn` | 入场 | scale | 从略小弹入（0.8→1） |
+| `grow` | 入场 | scale | 从无到有放大（0→1） |
+| `growUp` | 入场 | scaleY | 从基线长出（柱状图） |
+| `slideIn` | 入场 | translateX/Y | 从偏移滑入 |
+| `colorShift` | 强调 | fill / stroke | 颜色过渡（oklch 插值） |
+| `flash` | 强调 | opacity | 闪一下（默认 2 次） |
+| `blink` | 强调 | opacity | 持续闪烁（无限） |
+| `wiggle` | 强调 | rotate | 左右抖动（默认 3 次） |
+| `pulse` | 循环 | scale | 脉冲缩放（无限） |
+| `spin` | 循环 | rotate | 匀速旋转（无限，loader） |
+| `loop` | 循环 | 任意 | 把任意 track 变成无限循环 |
+| `cameraTo` | 镜头 | viewBox | 镜头推拉 / 平移（挂 `<Layout>`） |
+| `stagger` | 编排 | — | 给一组动画依次叠加延迟 |
+
+逐个 preset 的可运行 demo 按家族分在下面四页：[入场](/core/components/animation/entrance)、[强调与循环](/core/components/animation/emphasis)、[镜头与编排](/core/components/animation/camera)、[触发与控制](/core/components/animation/control)。
+
+## preset 与 AnimationTrack
+
+preset 只是底层 `AnimationTrack`（property + keyframes + timing）的便捷写法，二者**完全等价**：`fadeIn()` 展开出来就是一条 `opacity` 从 0 到 1 的 track，`spin()` 就是一条 `rotate` 0→360 的无限 track。preset 不引入任何 track 表达不了的能力，只是把常用关键帧组合命名好、给个工厂函数。
+
+在 [入场](/core/components/animation/entrance) / [强调与循环](/core/components/animation/emphasis) 任意 demo 的代码面板切到 IR / Vanilla Tab，就能看到 preset 展开后的原始 track——这也是动画在持久化 / AI 生成时落到 IR 里的真实形态。
+
+## 章节内容
+
+<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+  <LinkedCard href="/core/components/animation/entrance">
+    <span className="font-semibold">入场</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">fadeIn / scaleIn / grow / growUp / slideIn / drawOn</span>
+  </LinkedCard>
+  <LinkedCard href="/core/components/animation/emphasis">
+    <span className="font-semibold">强调与循环</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">colorShift / flash / blink / wiggle 与 pulse / spin / loop</span>
+  </LinkedCard>
+  <LinkedCard href="/core/components/animation/camera">
+    <span className="font-semibold">镜头与编排</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">cameraTo 镜头推拉与 stagger 错峰入场</span>
+  </LinkedCard>
+  <LinkedCard href="/core/components/animation/control">
+    <span className="font-semibold">触发与控制</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">trigger、命令式句柄、降级与静态截帧</span>
+  </LinkedCard>
+</div>

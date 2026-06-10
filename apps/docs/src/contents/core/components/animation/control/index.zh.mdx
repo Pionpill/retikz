@@ -1,0 +1,53 @@
+---
+title: 触发与控制
+description: trigger 决定何时播（load / visible / manual / onEvent），animationRef 提供命令式 play / pause / seek 句柄，降级到静止末帧，snapshotAt 烘焙某时刻的静态帧。
+---
+
+挂好动画后，**何时播、怎么播、不播时怎么办**由这一页的几个机制决定。preset 与公共项见 [总览](/core/components/animation)。
+
+## 触发
+
+**何时播**由 `trigger` 决定，默认 `load`（渲染即播）：
+
+| trigger | 行为 | 后端支持 |
+| --- | --- | --- |
+| `load`（默认） | 渲染即播 | SVG（内联 CSS 自播，SSR 零 JS）/ Canvas（起 rAF） |
+| `visible` | 进视口才播 | SVG（IntersectionObserver）；Canvas（按 id 的 bbox 与视口相交判定） |
+| `manual` | 不自动播，由运行时句柄控制 | SVG / Canvas |
+| `{ onEvent: 'click' }` | 命中事件才播 | SVG / Canvas（水合命中后激活） |
+
+## 命令式控制
+
+给 `<Layout animationRef={ref}>` 传一个 ref，挂载后拿到 `AnimationControls`（`play` / `pause` / `seek`），即可在组件外用自己的按钮控制（配 `trigger: 'manual'` 最常见）：
+
+```tsx
+const ref = useRef<AnimationControls | null>(null);
+
+<Layout animationRef={ref}>
+  <Node animations={[{ ...spin(), trigger: 'manual' }]} />
+</Layout>
+<button onClick={() => ref.current?.play()}>播放</button>
+```
+
+`animationRef` / vanilla `view.animation` 是 scene 级时钟句柄：SVG 控制整图交互动画的 WAAPI 句柄，Canvas 控制共享 rAF 时钟。handler 内要控制命中的具体图元时，用水合的 [`context.animation`](/core/reference/renderer/hydration#handler-的-context)，两后端都是 per-id 控制。
+
+## 降级
+
+**何时不播**（三者殊途同归到静止态，见 [总览](/core/components/animation) 的提示）：传 `animate={false}`、用户系统开了「减少动态效果」（`prefers-reduced-motion`）、或后端不支持动画。降级时**不报错、不丢图**，渲染完整静止图并给一条可诊断告警。
+
+各后端能力：**SVG** 支持全部 trigger；**Canvas** 也支持 `load` / `manual` / `visible` / `{ onEvent }`，实现机制是单个 rAF 时钟 + per-id 虚拟时钟。Canvas 不支持逐 track 独立时间线；同一 id 下多条非自动播 track 会一起跟随该 id 的本地时钟。
+
+## 静态截帧（`snapshotAt`）
+
+给 `<Layout snapshotAt={毫秒}>`（或 `renderToSvgString(ir, { snapshotAt })` / `mountSvg(…, { snapshotAt })`）→ 渲染**定格在该时刻的一帧**：不播放、不 emit 动画，把每条 track 在该时刻的值烘焙成静态属性 / transform。用于 SSR 海报帧、缩略图、社交卡片预览。
+
+<ComponentPreview name="snapshot" size="xs" />
+
+```tsx
+// grow（0→1，300ms）定格在 150ms ≈ 半大
+<Layout snapshotAt={150}>
+  <Node animations={[grow({ duration: 300 })]}>150ms</Node>
+</Layout>
+```
+
+`snapshotAt ≥ 时长` → settled 终态（= base 完整图）；`snapshotAt` 覆盖 `animate`。SVG 复用同一套 `evaluateTrack` 求值引擎，故截帧与播放中的同一时刻逐帧一致；Canvas 按该时刻画一帧、不起 rAF。

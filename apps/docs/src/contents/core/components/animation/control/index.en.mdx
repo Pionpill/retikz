@@ -1,0 +1,53 @@
+---
+title: Triggers & Control
+description: trigger sets when it plays (load / visible / manual / onEvent), animationRef gives an imperative play / pause / seek handle, degradation falls back to the resting frame, and snapshotAt bakes a static frame at a given time.
+---
+
+Once an animation is attached, **when it plays, how it plays, and what happens when it doesn't** are decided by the mechanisms on this page. For presets and common options, see the [Overview](/core/components/animation).
+
+## Triggers
+
+**When it plays** is set by `trigger`, defaulting to `load` (plays on render):
+
+| trigger | Behavior | Backend support |
+| --- | --- | --- |
+| `load` (default) | plays on render | SVG (inline CSS, zero-JS SSR) / Canvas (starts rAF) |
+| `visible` | plays when in viewport | SVG (IntersectionObserver); Canvas (id bbox intersecting the viewport) |
+| `manual` | no autoplay, driven by a runtime handle | SVG / Canvas |
+| `{ onEvent: 'click' }` | plays when the event fires | SVG / Canvas (hydration hit activates the id) |
+
+## Imperative control
+
+Pass a ref to `<Layout animationRef={ref}>` and after mount you get `AnimationControls` (`play` / `pause` / `seek`) to drive playback from your own buttons outside the component (most useful with `trigger: 'manual'`):
+
+```tsx
+const ref = useRef<AnimationControls | null>(null);
+
+<Layout animationRef={ref}>
+  <Node animations={[{ ...spin(), trigger: 'manual' }]} />
+</Layout>
+<button onClick={() => ref.current?.play()}>Play</button>
+```
+
+`animationRef` / vanilla `view.animation` is the scene-level clock handle: SVG controls the diagram's interactive WAAPI handle, while Canvas controls the shared rAF clock. Inside a handler, use hydration's [`context.animation`](/core/reference/renderer/hydration#the-handler-context) to control the hit id; both backends expose per-id controls there.
+
+## Degradation
+
+**When it doesn't play** (all three converge to the resting state, see the note in the [Overview](/core/components/animation)): you pass `animate={false}`, the user's system prefers reduced motion (`prefers-reduced-motion`), or the backend can't animate. Degradation never throws and never drops the figure — it renders the complete resting figure and emits a diagnosable warning.
+
+Backend capability: **SVG** supports every trigger; **Canvas** supports `load` / `manual` / `visible` / `{ onEvent }` through a shared rAF clock plus per-id virtual clocks. Canvas does not expose independent per-track timelines; multiple non-autoplay tracks on the same id follow that id's local clock together.
+
+## Static snapshot (`snapshotAt`)
+
+Pass `<Layout snapshotAt={ms}>` (or `renderToSvgString(ir, { snapshotAt })` / `mountSvg(…, { snapshotAt })`) to render **a single frame frozen at that time**: no playback, no emitted animation — each track's value at that instant is baked into static attributes / transforms. Use it for SSR poster frames, thumbnails, social-card previews.
+
+<ComponentPreview name="snapshot" size="xs" />
+
+```tsx
+// grow (0→1, 300ms) frozen at 150ms ≈ half size
+<Layout snapshotAt={150}>
+  <Node animations={[grow({ duration: 300 })]}>150ms</Node>
+</Layout>
+```
+
+`snapshotAt ≥ duration` → the settled state (= the full base figure); `snapshotAt` overrides `animate`. SVG reuses the same `evaluateTrack` engine, so a snapshot matches the same instant during playback frame-for-frame; Canvas paints one frame at that time without starting a rAF loop.

@@ -1,0 +1,100 @@
+---
+title: Emphasis & Loop
+description: Emphasis animations draw attention (colorShift / flash / blink / wiggle); loop animations play continuously (pulse / spin / loop), and the AnimationTrack JSON they expand into.
+---
+
+Emphasis animations **draw attention** — shift color, flash, rock; loop animations **play continuously** — pulse, spin, or wrap any track into an infinite loop. They are element animations attached to a `<Node>` / `<Path>` / `<Scope>`'s `animations`; for the common options and the full preset table, see the [Animation overview](/core/components/animation).
+
+## How it works: iterations and multi-keyframe
+
+Like the [intro presets](/core/components/animation/entrance#how-it-works-a-preset-expands-into-an-animationtrack), these expand into an `AnimationTrack` (full fields on the Intro page). Two things set this family apart:
+
+- **Multi-keyframe round trips**: emphasis often uses three frames `0 → 0.5 → 1` (e.g. `flash`'s `1 → dim → 1`, `wiggle`'s `0 → +a → −a → +a → 0`), with the last frame back at base, so one pass leaves the element unchanged.
+- **`iterations` repeats**: `flash` repeats twice by default, `wiggle` three times; `blink` / `pulse` / `spin` use `iterations: 'infinite'` to run forever. `loop` is a wrapper that puts `iterations: 'infinite'` (plus `direction`) onto **another** track.
+
+Each section below gives the demo, its expanded track, and its specific options.
+
+## colorShift
+
+<ComponentPreview name="color-shift" size="xs" />
+
+Transitions `fill` / `stroke` in **oklch** space (perceptually even, no muddy band). It targets the **shape's own fill / stroke** — use it on plain shapes or paths; a node with a text label already paints its shape and won't follow.
+
+```json
+{ "property": "fill", "keyframes": [{ "at": 0, "value": "gray" }, { "at": 1, "value": "tomato" }], "duration": 400, "easing": "ease-in-out" }
+```
+
+Specific options: `from` / `to` (start / end color, **both required** — a pure factory can't read the base color), `channel` (`'fill'` / `'stroke'`, defaults to `'fill'`).
+
+## flash
+
+<ComponentPreview name="flash" size="xs" />
+
+`opacity` 1→dim→1 flashed once, twice by default; the last frame returns to base so degradation shows the full figure.
+
+```json
+{ "property": "opacity", "keyframes": [{ "at": 0, "value": 1 }, { "at": 0.5, "value": 0 }, { "at": 1, "value": 1 }], "iterations": 2, "duration": 300, "easing": "ease-in-out" }
+```
+
+Specific options: `dim` (trough opacity, defaults to `0`), `iterations` (flash count, defaults to `2`).
+
+## blink
+
+<ComponentPreview name="blink" size="xs" />
+
+The infinite version of `flash` (`opacity` blinking continuously).
+
+```json
+{ "property": "opacity", "keyframes": [{ "at": 0, "value": 1 }, { "at": 0.5, "value": 0 }, { "at": 1, "value": 1 }], "iterations": "infinite", "duration": 800, "easing": "ease-in-out" }
+```
+
+Specific options: `dim` (trough opacity, defaults to `0`), `iterations` (defaults to `'infinite'`).
+
+## wiggle
+
+<ComponentPreview name="wiggle" size="xs" />
+
+`rotate` 0→+a→−a→+a→0 rocking emphasis, around the geometric center.
+
+```json
+{ "property": "rotate", "keyframes": [{ "at": 0, "value": 0 }, { "at": 0.25, "value": 5 }, { "at": 0.5, "value": -5 }, { "at": 0.75, "value": 5 }, { "at": 1, "value": 0 }], "iterations": 3, "duration": 400, "easing": "ease-in-out" }
+```
+
+Specific options: `angle` (rock amplitude in degrees, defaults to `5`), `iterations` (defaults to `3`), `origin` (rotation pivot, defaults to the geometric center).
+
+## pulse
+
+<ComponentPreview name="pulse" size="xs" />
+
+`scale` 1→peak→1 infinite pulse (emphasis / heartbeat).
+
+```json
+{ "property": "scale", "keyframes": [{ "at": 0, "value": 1 }, { "at": 0.5, "value": 1.1 }, { "at": 1, "value": 1 }], "iterations": "infinite", "duration": 1000, "easing": "ease-in-out" }
+```
+
+Specific options: `peak` (peak scale, defaults to `1.1`), `origin` (scale pivot, defaults to the geometric center).
+
+## spin
+
+<ComponentPreview name="spin" size="xs" />
+
+`rotate` 0→360, infinite and linear, around the geometric center — a typical loader.
+
+```json
+{ "property": "rotate", "keyframes": [{ "at": 0, "value": 0 }, { "at": 1, "value": 360 }], "iterations": "infinite", "duration": 1000, "easing": "linear" }
+```
+
+Specific options: `origin` (rotation pivot, defaults to the geometric center).
+
+## loop
+
+<ComponentPreview name="loop" size="sm" />
+
+`loop(track, { direction })`: wraps any one-shot track into an infinite loop; with `direction: 'alternate'` it plays back and forth. It produces no new track — it layers `iterations` / `direction` onto the track you pass in:
+
+```json
+// loop(fadeIn()) — layers an infinite loop onto fadeIn's track
+{ "property": "opacity", "keyframes": [{ "at": 0, "value": 0 }, { "at": 1, "value": 1 }], "duration": 400, "easing": "ease-out", "iterations": "infinite" }
+```
+
+Specific options: `iterations` (defaults to `'infinite'`), `direction` (e.g. `'alternate'`, play back and forth).

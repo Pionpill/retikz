@@ -1,0 +1,18 @@
+---
+title: Camera & Stagger
+description: cameraTo animates the scene viewbox for pan / zoom (on <Layout>); stagger adds increasing delay across a group for a one-by-one entrance.
+---
+
+Camera and stagger are the two animations that act **on the whole, not on a single element's look**: `cameraTo` animates the scene's viewbox, while `stagger` adjusts the start times of a group of animations. For the common options and the full preset table, see the [Overview](/core/components/animation).
+
+## Camera
+
+<ComponentPreview name="camera-to" size="md" />
+
+`cameraTo({ from, to })`: animates the scene's viewbox `[x, y, w, h]` for pan / zoom. Attach it to `<Layout animations>` (the camera belongs to the scene root, not an element); both endpoints are explicit.
+
+## Stagger
+
+<ComponentPreview name="stagger" size="sm" />
+
+`stagger(tracks, step)`: adds increasing `delay` across a group (0, step, 2×step…) for a one-by-one entrance. It choreographs the start times of the element animations ([Intro](/core/components/animation/entrance) / [Emphasis & Loop](/core/components/animation/emphasis)); it doesn't change any single animation's shape.
