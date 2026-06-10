@@ -1,6 +1,7 @@
-import type { AtDirectionValue, IRAtPosition, IRBetweenPosition, IROffsetPosition, IRPosition, PolarPosition } from '../ir';
+import type { IRAtPosition, IRBetweenPosition, IROffsetPosition, IRPosition, PolarPosition } from '../ir';
 import { arcEndPoint } from '../geometry/arc';
 import type { Transform } from '../primitive';
+import { DirectionVectorByAtDirection } from './direction';
 import type { NameStack } from './name-stack';
 import { inverseTransformChain } from './scope';
 
@@ -17,21 +18,6 @@ export type ResolveBetweenGlobal = (
 
 /** 默认相对定位距离（CompileOptions.nodeDistance 未配时使用） */
 const DEFAULT_NODE_DISTANCE = 1;
-
-/**
- * 8 方向 → 屏幕坐标系（y 向下）单位向量
- * @description above=视觉上方 (y 减小)；4 对角分量 1/√2 保证斜向与水平/垂直距离等长（对角点落在半径=distance 圆周上）
- */
-const DIRECTION_VECTOR: Record<AtDirectionValue, [number, number]> = {
-  above: [0, -1],
-  below: [0, 1],
-  left: [-1, 0],
-  right: [1, 0],
-  'above-left': [-Math.SQRT1_2, -Math.SQRT1_2],
-  'above-right': [Math.SQRT1_2, -Math.SQRT1_2],
-  'below-left': [-Math.SQRT1_2, Math.SQRT1_2],
-  'below-right': [Math.SQRT1_2, Math.SQRT1_2],
-};
 
 /**
  * IR 各种位置形态（笛卡尔/极坐标/相对定位/偏移定位/节点 id）→ 笛卡尔位置
@@ -75,7 +61,7 @@ export const resolvePosition = (
     const refLocal =
       scopeChain.length === 0 ? refGlobal : inverseTransformChain(refGlobal, scopeChain);
     const distance = pos.distance ?? nodeDistance;
-    const [dx, dy] = DIRECTION_VECTOR[pos.direction];
+    const [dx, dy] = DirectionVectorByAtDirection[pos.direction];
     return [refLocal[0] + dx * distance, refLocal[1] + dy * distance];
   }
   if ('offset' in pos) {

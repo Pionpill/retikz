@@ -1,5 +1,4 @@
 import type { Position } from '../geometry/point';
-import type { CompassAnchorValue } from '../geometry/anchor';
 import { arcEndPoint } from '../geometry/arc';
 import type { Rect } from '../geometry/rect';
 import type { AtDirectionValue, IRAnimationTrack, IRBoundary, IRJsonObject, IRLabelDefault, IRLineSpec, IRNode, IRNodeLabel, IRPaintSpec, IRShapeRef, JsonValue } from '../ir';
@@ -10,6 +9,7 @@ import { BUILTIN_SHAPES } from '../shapes';
 import type { ShapeDefinition, ShapeStyle } from '../shapes';
 import { asCompassAnchor } from '../shapes/shared';
 import type { NameStack } from './name-stack';
+import { DirectionVectorByAtDirection, LabelAnchorByAtDirection } from './direction';
 import { type ResolveBetweenGlobal, resolvePosition } from './position';
 import { toAlphabeticBaselineY } from './text-baseline';
 import type { FontSpec, TextMeasurer } from './text-metrics';
@@ -303,21 +303,6 @@ export const anchorOf = (
   return p;
 };
 
-/** 8 方向 label position → (anchorName, 单位向量)；above 视觉上方即 y 减小 */
-const LABEL_DIRECTION_MAP: Record<
-  AtDirectionValue,
-  { anchor: CompassAnchorValue; vec: [number, number] }
-> = {
-  above: { anchor: 'north', vec: [0, -1] },
-  below: { anchor: 'south', vec: [0, 1] },
-  left: { anchor: 'west', vec: [-1, 0] },
-  right: { anchor: 'east', vec: [1, 0] },
-  'above-left': { anchor: 'north-west', vec: [-Math.SQRT1_2, -Math.SQRT1_2] },
-  'above-right': { anchor: 'north-east', vec: [Math.SQRT1_2, -Math.SQRT1_2] },
-  'below-left': { anchor: 'south-west', vec: [-Math.SQRT1_2, Math.SQRT1_2] },
-  'below-right': { anchor: 'south-east', vec: [Math.SQRT1_2, Math.SQRT1_2] },
-};
-
 /**
  * 算 label 中心点（节点局部坐标系，未旋转）
  * @description 8 方向：节点对应 anchor 出发按单位向量 × distance 外推；数字角度：先取 angleBoundary 边界点再沿 (cos,sin) × distance 外推。
@@ -331,8 +316,7 @@ const labelBorderPoint = (layout: NodeLayout, label: NodeLabelLayout): Position 
   if (typeof label.position === 'number') {
     return angleBoundaryOf(aaLayout, label.position);
   }
-  const { anchor } = LABEL_DIRECTION_MAP[label.position];
-  return anchorOf(aaLayout, anchor);
+  return anchorOf(aaLayout, LabelAnchorByAtDirection[label.position]);
 };
 
 const labelCenter = (layout: NodeLayout, label: NodeLabelLayout): Position => {
@@ -340,7 +324,7 @@ const labelCenter = (layout: NodeLayout, label: NodeLabelLayout): Position => {
   if (typeof label.position === 'number') {
     return arcEndPoint([bx, by], label.distance, label.position);
   }
-  const { vec } = LABEL_DIRECTION_MAP[label.position];
+  const vec = DirectionVectorByAtDirection[label.position];
   return [bx + vec[0] * label.distance, by + vec[1] * label.distance];
 };
 
