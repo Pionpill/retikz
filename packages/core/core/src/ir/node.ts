@@ -154,6 +154,7 @@ export const NodeSchema = z
       ),
     rotate: z
       .number()
+      .finite()
       .optional()
       .describe(
         'Rotation in degrees around the node center; positive = clockwise (matches TikZ rotate=...)',
@@ -212,6 +213,8 @@ export const NodeSchema = z
       .describe('Stroke opacity 0..1 (TikZ `draw opacity`); affects only the border.'),
     strokeWidth: z
       .number()
+      .finite()
+      .nonnegative()
       .optional()
       .describe('Border width in user units; defaults to 1 when omitted'),
     dashed: z

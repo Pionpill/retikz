@@ -184,6 +184,8 @@ export const ScopeSchema = z
       .describe('Cascading default fill (CSS color or PaintSpec: gradient / pattern / image) for inner nodes and paths.'),
     strokeWidth: z
       .number()
+      .finite()
+      .nonnegative()
       .optional()
       .describe('Cascading default stroke width (user units) for inner nodes and paths.'),
     opacity: z
