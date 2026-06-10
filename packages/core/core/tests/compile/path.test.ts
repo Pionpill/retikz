@@ -864,7 +864,8 @@ describe("compile path: 'bend'", () => {
         },
       ],
     };
-    const offset = (12 * Math.tan((15 * Math.PI) / 180) * 4) / 3;
+    // offset =（chord/2）× tan(15°) × 4/3（apexOffset 为圆弧 sagitta，chord=12 → 6）
+    const offset = (6 * Math.tan((15 * Math.PI) / 180) * 4) / 3;
     const r = (n: number) => Math.round(n * 100) / 100;
     expect(findPathPrim(compileToScene(ir).primitives).commands).toEqual([
       move([0, 0]),
