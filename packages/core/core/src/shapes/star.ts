@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { localToWorld } from '../geometry/_transform';
+import { localToWorld } from '../geometry/transform';
 import type { Position } from '../geometry/point';
 import type { Rect } from '../geometry/rect';
 import {
@@ -8,7 +8,7 @@ import {
   contourCommands,
 } from '../geometry/contour';
 import type { ScenePrimitive } from '../primitive';
-import { contourToPathCommands, verticesToSegments } from './_contour';
+import { contourToPathCommands, verticesToSegments } from './contour';
 import { defineShape } from './define';
 
 /**

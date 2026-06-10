@@ -31,4 +31,4 @@ export type { ShapeDefinition, ShapeDefinitionInput, ShapeStyle } from './types'
 // 第三方 shape 作者所需 helper / 类型（提升为公开 API）
 export type { Rect } from '../geometry/rect';
 export type { Position } from '../geometry/point';
-export { worldToLocal, localToWorld } from '../geometry/_transform';
+export { worldToLocal, localToWorld } from '../geometry/transform';

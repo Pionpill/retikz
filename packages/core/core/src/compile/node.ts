@@ -7,7 +7,7 @@ import type { PaintResolver } from './paint';
 import type { GroupPrim, ScenePrimitive, TextLine, Transform } from '../primitive';
 import { BUILTIN_SHAPES } from '../shapes';
 import type { ShapeDefinition, ShapeStyle } from '../shapes';
-import { asCompassAnchor } from '../shapes/_shared';
+import { asCompassAnchor } from '../shapes/shared';
 import type { NameStack } from './name-stack';
 import { type ResolveBetweenGlobal, resolvePosition } from './position';
 import { toAlphabeticBaselineY } from './text-baseline';

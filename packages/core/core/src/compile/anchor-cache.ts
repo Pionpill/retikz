@@ -9,7 +9,7 @@
  *   compile 结束 layout 引用释放，WeakMap entry 随 GC 一并回收。
  */
 
-import type { Side } from '../geometry/_edge';
+import type { Side } from '../geometry/edge';
 import type { Position } from '../geometry/point';
 import type { IRBoundary, IRPosition } from '../ir';
 import { anchorOf, angleBoundaryOf } from './node';

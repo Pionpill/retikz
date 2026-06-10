@@ -1,5 +1,5 @@
-import { localToWorld, worldToLocal } from './_transform';
-import { type Side, polylineViaVertex } from './_edge';
+import { type Side, polylineViaVertex } from './edge';
+import { localToWorld, worldToLocal } from './transform';
 import type { CompassAnchorValue } from './anchor';
 import type { Position } from './point';
 

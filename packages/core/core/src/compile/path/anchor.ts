@@ -2,7 +2,7 @@ import { FoldStepVia } from '../../ir';
 import type { FoldStepViaValue, IRBetweenPosition, IRNodeTarget, IRPosition, IRTarget } from '../../ir';
 import type { IRBoundary } from '../../ir';
 import type { Transform } from '../../primitive';
-import { lerpPoint } from '../../geometry/_edge';
+import { lerpPoint } from '../../geometry/edge';
 import { resolveAnchor, resolveEdgePoint } from '../anchor-cache';
 import type { NameStack } from '../name-stack';
 import { boundaryPointOf } from '../node';

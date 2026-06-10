@@ -2,7 +2,7 @@ import { z } from 'zod';
 import type { ScenePrimitive } from '../primitive';
 import { type Ellipse, ellipse as ellipseOps } from '../geometry/ellipse';
 import type { Rect } from '../geometry/rect';
-import { asCompassAnchor } from './_shared';
+import { asCompassAnchor } from './shared';
 import { defineShape } from './define';
 
 /** 外接框 Rect → Ellipse（rx/ry = 半宽/半高） */

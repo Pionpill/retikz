@@ -1,11 +1,11 @@
 import { z } from 'zod';
 import { arcBoundingPoints, arcEndPoint } from '../geometry/arc';
-import { localToWorld } from '../geometry/_transform';
+import { localToWorld } from '../geometry/transform';
 import type { Position } from '../geometry/point';
 import type { Rect } from '../geometry/rect';
 import type { PathCommand, ScenePrimitive } from '../primitive';
 import { defineShape } from './define';
-import { normalizeAngularRange } from './_shared';
+import { normalizeAngularRange } from './shared';
 
 /**
  * arc shape 的 per-instance params 类型

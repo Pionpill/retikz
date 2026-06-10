@@ -8,14 +8,14 @@ import { rect } from '../../src/geometry/rect';
 import { circle } from '../../src/geometry/circle';
 import { ellipse } from '../../src/geometry/ellipse';
 import { diamond } from '../../src/geometry/diamond';
-import { EDGE_ENDS, edgeAngleDeg, lerpPoint } from '../../src/geometry/_edge';
+import { EDGE_ENDS, edgeAngleDeg, lerpPoint } from '../../src/geometry/edge';
 
 const near = (p: readonly [number, number], x: number, y: number, d = 6): void => {
   expect(p[0]).toBeCloseTo(x, d);
   expect(p[1]).toBeCloseTo(y, d);
 };
 
-describe('_edge 共享方向约定', () => {
+describe('edge 共享方向约定', () => {
   it('EDGE_ENDS：north/south 西→东，east/west 北→南', () => {
     expect(EDGE_ENDS.north).toEqual(['north-west', 'north-east']);
     expect(EDGE_ENDS.south).toEqual(['south-west', 'south-east']);

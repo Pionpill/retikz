@@ -1,5 +1,5 @@
-import { localToWorld, worldToLocal } from './_transform';
-import { type Side, edgeAngleDeg } from './_edge';
+import { type Side, edgeAngleDeg } from './edge';
+import { localToWorld, worldToLocal } from './transform';
 import type { CompassAnchorValue } from './anchor';
 import type { Position } from './point';
 
