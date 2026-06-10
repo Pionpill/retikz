@@ -247,7 +247,7 @@ describe('viewBox 与 clip / paint 资源正交共存', () => {
           position: [0, 0],
           minimumSize: 40,
           fill: {
-            type: 'linearGradient',
+            kind: 'linearGradient',
             stops: [
               { offset: 0, color: '#2563eb' },
               { offset: 1, color: '#f59e0b' },

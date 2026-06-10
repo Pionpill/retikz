@@ -100,7 +100,7 @@ describe('buildPaintDef —— 错误路径兜底', () => {
     const resource: PaintResource = {
       kind: 'paint',
       id: 'p1',
-      spec: { type: 'pattern', shape: 'dots' },
+      spec: { kind: 'pattern', shape: 'dots' },
     };
     expect(() => buildPaintDef(resource, 'rid')).not.toThrow();
     const node = buildPaintDef(resource, 'rid');

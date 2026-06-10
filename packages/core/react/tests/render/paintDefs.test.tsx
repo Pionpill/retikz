@@ -50,7 +50,7 @@ describe('PaintDefs — 渐变物化', () => {
         kind: 'paint',
         id: 'paint-1',
         spec: {
-          type: 'linearGradient',
+          kind: 'linearGradient',
           angle: 90,
           stops: [
             { offset: 0, color: '#4f8' },
@@ -80,7 +80,7 @@ describe('PaintDefs — 渐变物化', () => {
         kind: 'paint',
         id: 'paint-1',
         spec: {
-          type: 'radialGradient',
+          kind: 'radialGradient',
           stops: [
             { offset: 0, color: 'white' },
             { offset: 1, color: 'navy' },
@@ -100,7 +100,7 @@ describe('PaintDefs — 渐变物化', () => {
       {
         kind: 'paint',
         id: 'paint-1',
-        spec: { type: 'pattern', shape: 'lines', size: 6, rotation: 45 },
+        spec: { kind: 'pattern', shape: 'lines', size: 6, rotation: 45 },
         tile: {
           size: 6,
           rotation: 45,
@@ -135,7 +135,7 @@ describe('PaintDefs — 渐变物化', () => {
       {
         kind: 'paint',
         id: 'paint-1',
-        spec: { type: 'pattern', shape: 'dots', background: '#eee' },
+        spec: { kind: 'pattern', shape: 'dots', background: '#eee' },
         tile: {
           size: 8,
           background: '#eee',
@@ -152,7 +152,7 @@ describe('PaintDefs — 渐变物化', () => {
 
   it('image：<pattern> 套 <image>，fit cover → slice', () => {
     const [p] = childrenOf([
-      { kind: 'paint', id: 'paint-1', spec: { type: 'image', href: 'a.png' } },
+      { kind: 'paint', id: 'paint-1', spec: { kind: 'image', href: 'a.png' } },
     ]);
     expect(p.type).toBe('pattern');
     const img = (p.props.children as Array<AnyEl>)[0];

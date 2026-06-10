@@ -53,7 +53,7 @@ const buildPatternTile = (tile: ResolvedPatternTile, id: string): SvgNode => ({
  */
 export const buildPaintDef = (resource: PaintResource, id: string): SvgNode => {
   const spec: IRPaintSpec = resource.spec;
-  switch (spec.type) {
+  switch (spec.kind) {
     case 'linearGradient': {
       const gradientLine = angleToLine(spec.angle);
       return {

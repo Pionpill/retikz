@@ -17,7 +17,7 @@ const Demo: FC = () => (
       minimumWidth={100}
       minimumHeight={100}
       stroke="gray"
-      fill={{ type: 'image', href: "https://picsum.photos/seed/retikz/320/200", fit: 'cover' }}
+      fill={{ kind: 'image', href: "https://picsum.photos/seed/retikz/320/200", fit: 'cover' }}
     />
     <Node
       id="contain"
@@ -26,7 +26,7 @@ const Demo: FC = () => (
       minimumWidth={100}
       minimumHeight={100}
       stroke="gray"
-      fill={{ type: 'image', href: "https://picsum.photos/seed/retikz/320/200", fit: 'contain' }}
+      fill={{ kind: 'image', href: "https://picsum.photos/seed/retikz/320/200", fit: 'contain' }}
     />
     <Node
       id="fill"
@@ -35,7 +35,7 @@ const Demo: FC = () => (
       minimumWidth={100}
       minimumHeight={100}
       stroke="gray"
-      fill={{ type: 'image', href: "https://picsum.photos/seed/retikz/320/200", fit: 'fill' }}
+      fill={{ kind: 'image', href: "https://picsum.photos/seed/retikz/320/200", fit: 'fill' }}
     />
     <Node id="cap-cover" position={[-150, 60]} stroke="none">
       fit: cover

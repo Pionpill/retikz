@@ -5,7 +5,7 @@ description: pattern.shape is an open string; beyond the built-in lines / dots /
 
 In a `fill` `PaintSpec`, `pattern.shape` is an **open string**: beyond the three built-in motifs (`lines` hatching / `dots` / `grid`), you can register your own pattern. The registry mirrors the [shape registry](/core/reference/extending/shape-registry) / [custom arrows](/core/reference/extending/custom-arrow) — the 3 built-ins are themselves registry entries, with no special privilege.
 
-Registration goes through `CompileOptions.patterns` (in React, `<Layout patterns={...}>`): the IR's `fill={{ type:'pattern', shape:'...' }}` still only stores a string name; the motif geometry is injected here. Unregistered names throw at compile time (with the list of available names); overriding a built-in emits a `PATTERN_OVERRIDES_BUILTIN` warning.
+Registration goes through `CompileOptions.patterns` (in React, `<Layout patterns={...}>`): the IR's `fill={{ kind:'pattern', shape:'...' }}` still only stores a string name; the motif geometry is injected here. Unregistered names throw at compile time (with the list of available names); overriding a built-in emits a `PATTERN_OVERRIDES_BUILTIN` warning.
 
 ## Registering a motif
 

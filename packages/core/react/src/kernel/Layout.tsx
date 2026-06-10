@@ -162,7 +162,7 @@ export type LayoutProps = ScopeStyleProps & {
   arrows?: Record<string, ArrowDefinition>;
   /**
    * 运行时注入的第三方 / 自定义 pattern motif（透传给 `compileToScene` 的 `CompileOptions.patterns`）
-   * @description IR 里 `fill={{ type: 'pattern', shape: '...' }}` 仍只写字符串名；motif 定义在此注入。
+   * @description IR 里 `fill={{ kind: 'pattern', shape: '...' }}` 仍只写字符串名；motif 定义在此注入。
    *   emit-in-compile：compile 调 `def.emit` 产 motif 几何进 `SceneResource.tile`，react adapter 只物化、
    *   不需 patterns 表。同名覆盖内置时编译期发 `PATTERN_OVERRIDES_BUILTIN`；未注册名编译期 throw
    */

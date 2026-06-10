@@ -905,10 +905,10 @@ describe('convertIRToReactNode', () => {
   describe('能力补全阶段（alpha.7–9）新增形态 round-trip', () => {
     it('round-trips Node fill PaintSpec：linearGradient / radialGradient / pattern / image', () => {
       const fills = [
-        { type: 'linearGradient' as const, angle: 90, stops: [{ offset: 0, color: '#000' }, { offset: 1, color: '#fff' }] },
-        { type: 'radialGradient' as const, stops: [{ offset: 0, color: '#fff' }, { offset: 1, color: '#d33' }] },
-        { type: 'pattern' as const, shape: 'lines', color: '#08f', size: 8, rotation: 45 },
-        { type: 'image' as const, href: 'a.png', fit: 'cover' as const },
+        { kind: 'linearGradient' as const, angle: 90, stops: [{ offset: 0, color: '#000' }, { offset: 1, color: '#fff' }] },
+        { kind: 'radialGradient' as const, stops: [{ offset: 0, color: '#fff' }, { offset: 1, color: '#d33' }] },
+        { kind: 'pattern' as const, shape: 'lines', color: '#08f', size: 8, rotation: 45 },
+        { kind: 'image' as const, href: 'a.png', fit: 'cover' as const },
       ];
       for (const fill of fills) {
         const ir: IR = {

@@ -78,7 +78,7 @@ type BBox = { x: number; y: number; w: number; h: number };
 /** Scene 资源按 id 索引（fill resourceRef 查表） */
 type ResourceMap = ReadonlyMap<string, SceneResource>;
 
-type GradientSpec = Extract<IRPaintSpec, { type: 'linearGradient' | 'radialGradient' }>;
+type GradientSpec = Extract<IRPaintSpec, { kind: 'linearGradient' | 'radialGradient' }>;
 
 /**
  * 把 hex / rgb(a) 颜色乘上 alpha 转成 rgba 串；无法正则解析则返回 undefined
@@ -136,7 +136,7 @@ const buildGradient = (
   options: DrawOptions,
 ): CanvasGradient => {
   let gradient: CanvasGradient;
-  if (spec.type === 'linearGradient') {
+  if (spec.kind === 'linearGradient') {
     const rad = (spec.angle ?? 0) * DEG_TO_RAD;
     const dx = Math.cos(rad);
     const dy = Math.sin(rad);
@@ -175,10 +175,10 @@ const resolveFillStyle = (
   const resource = resources.get(fill.id);
   if (resource !== undefined && resource.kind === 'paint') {
     const spec = resource.spec;
-    if (spec.type === 'linearGradient' || spec.type === 'radialGradient') {
+    if (spec.kind === 'linearGradient' || spec.kind === 'radialGradient') {
       return buildGradient(ctx, spec, bbox, options);
     }
-    if (spec.type === 'pattern' && resource.tile !== undefined) {
+    if (spec.kind === 'pattern' && resource.tile !== undefined) {
       const pattern = buildPattern(ctx, resource.tile, options);
       if (pattern !== undefined) return pattern;
     }
@@ -187,7 +187,7 @@ const resolveFillStyle = (
   return undefined;
 };
 
-type ImageSpec = Extract<IRPaintSpec, { type: 'image' }>;
+type ImageSpec = Extract<IRPaintSpec, { kind: 'image' }>;
 
 /** 取图片源的固有尺寸（HTMLImageElement 用 naturalWidth，其余回退 width/height） */
 const imageNaturalSize = (img: CanvasImageSource): { w: number; h: number } => {
@@ -242,7 +242,7 @@ const fillCurrentPath = (
 ): void => {
   if (fill !== undefined && typeof fill !== 'string' && fill.kind === 'resourceRef') {
     const resource = resources.get(fill.id);
-    if (resource !== undefined && resource.kind === 'paint' && resource.spec.type === 'image') {
+    if (resource !== undefined && resource.kind === 'paint' && resource.spec.kind === 'image') {
       fillImage(ctx, resource.spec, bbox, fillOpacity, options);
       return;
     }

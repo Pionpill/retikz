@@ -16,7 +16,7 @@ const Demo: FC = () => (
       minimumHeight={80}
       stroke="none"
       fill={{
-        type: 'linearGradient',
+        kind: 'linearGradient',
         angle: 90,
         stops: [
           { offset: 0, color: 'dodgerblue' },
@@ -31,7 +31,7 @@ const Demo: FC = () => (
       minimumSize={90}
       stroke="none"
       fill={{
-        type: 'radialGradient',
+        kind: 'radialGradient',
         stops: [
           { offset: 0, color: 'white' },
           { offset: 1, color: 'red' },

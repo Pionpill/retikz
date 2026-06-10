@@ -224,8 +224,8 @@ Most nodes only need `padding={N}`. Use `innerXSep` / `innerYSep` when horizonta
 
 Besides a plain color string, `fill` accepts a **PaintSpec object** — linear / radial gradient, pattern, or image. Identical PaintSpecs are deduplicated at compile time into a Scene resource table and rendered as a paint server inside SVG `<defs>`. `<Path fill>` supports it too.
 
-- Linear: `{ type: 'linearGradient', angle?, stops }` — `angle` in degrees (0 = left→right, 90 = top→bottom)
-- Radial: `{ type: 'radialGradient', center?, radius?, stops }` — `center` / `radius` in 0..1 relative units
+- Linear: `{ kind: 'linearGradient', angle?, stops }` — `angle` in degrees (0 = left→right, 90 = top→bottom)
+- Radial: `{ kind: 'radialGradient', center?, radius?, stops }` — `center` / `radius` in 0..1 relative units
 - `stops`: array of `{ offset (0..1), color, opacity? }`, at least 2; `color` may be `currentColor`
 
 <ComponentPreview name="node-paint" size="sm" />

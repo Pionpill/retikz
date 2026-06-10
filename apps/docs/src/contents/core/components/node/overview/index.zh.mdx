@@ -224,8 +224,8 @@ Line 2`}</Node>
 
 `fill` 除纯色字符串外还接 **PaintSpec 对象**——线性 / 径向渐变、图案 pattern、图片 image。编译期相同 PaintSpec 去重、收进 Scene 资源表，渲染为 SVG `<defs>` 里的 paint server。`<Path fill>` 同样支持。
 
-- 线性：`{ type: 'linearGradient', angle?, stops }`——`angle` 度数（0 = 左→右，90 = 上→下）
-- 径向：`{ type: 'radialGradient', center?, radius?, stops }`——`center` / `radius` 用 0..1 相对值
+- 线性：`{ kind: 'linearGradient', angle?, stops }`——`angle` 度数（0 = 左→右，90 = 上→下）
+- 径向：`{ kind: 'radialGradient', center?, radius?, stops }`——`center` / `radius` 用 0..1 相对值
 - `stops`：`{ offset (0..1), color, opacity? }` 数组，至少 2 个；`color` 可用 `currentColor`
 
 <ComponentPreview name="node-paint" size="sm" />

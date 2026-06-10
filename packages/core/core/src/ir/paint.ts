@@ -44,10 +44,10 @@ export const GradientStopSchema = z
  *   linear 方向用 `angle`（度，polar 约定：0°=+x，90°=+y 屏幕下）；radial 的 `center` / `radius` 用 objectBoundingBox（0..1，随形状缩放）。
  */
 export const PaintSpecSchema = z
-  .discriminatedUnion('type', [
+  .discriminatedUnion('kind', [
     z
       .object({
-        type: z.literal('linearGradient'),
+        kind: z.literal('linearGradient'),
         stops: z.array(GradientStopSchema).min(2).describe('Gradient stops, at least 2'),
         angle: z
           .number()
@@ -58,7 +58,7 @@ export const PaintSpecSchema = z
       .describe('Linear gradient paint server'),
     z
       .object({
-        type: z.literal('radialGradient'),
+        kind: z.literal('radialGradient'),
         stops: z.array(GradientStopSchema).min(2).describe('Gradient stops, at least 2'),
         center: z
           .tuple([z.number().finite(), z.number().finite()])
@@ -74,7 +74,7 @@ export const PaintSpecSchema = z
       .describe('Radial gradient paint server'),
     z
       .object({
-        type: z.literal('pattern'),
+        kind: z.literal('pattern'),
         shape: z
           .string()
           .min(1)
@@ -104,7 +104,7 @@ export const PaintSpecSchema = z
       .describe('Pattern paint server (hatching / dots / grid)'),
     z
       .object({
-        type: z.literal('image'),
+        kind: z.literal('image'),
         href: z.string().min(1).describe('Image URL (http(s) or data URI)'),
         fit: z
           .enum(['fill', 'contain', 'cover'])

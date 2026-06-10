@@ -27,7 +27,7 @@ describe('ClipDefs 对抗：非 clip / 空 / 混合资源', () => {
         kind: 'paint',
         id: 'paint-1',
         spec: {
-          type: 'linearGradient',
+          kind: 'linearGradient',
           stops: [
             { offset: 0, color: '#000' },
             { offset: 1, color: '#fff' },
@@ -48,7 +48,7 @@ describe('ClipDefs 对抗：非 clip / 空 / 混合资源', () => {
       {
         kind: 'paint',
         id: 'paint-1',
-        spec: { type: 'linearGradient', stops: [{ offset: 0, color: '#000' }, { offset: 1, color: '#fff' }] },
+        spec: { kind: 'linearGradient', stops: [{ offset: 0, color: '#000' }, { offset: 1, color: '#fff' }] },
       } as unknown as SceneResource,
       clipResource('clip-2', { kind: 'circle', cx: 0, cy: 0, r: 5 }),
     ]);

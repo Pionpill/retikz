@@ -66,7 +66,7 @@ describe('canvas 降级与边界规格', () => {
           kind: 'paint',
           id: 'paint-1',
           spec: {
-            type: 'image',
+            kind: 'image',
             href: 'https://example.com/x.png',
           },
         },
