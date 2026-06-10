@@ -6,16 +6,14 @@
 import { AnimationProperty, type IRAnimationTrack, type Scene, type ScenePrimitive } from '@retikz/core';
 import type { SvgAttrs, SvgNode, SvgStyle } from '../types';
 import type { EasingRegistry } from '../../animation/types';
-import { resolveTransformOrigin } from '../../animation/channels';
+import { classifyProperty, primHasStroke, resolveTransformOrigin } from '../../animation/channels';
 import { evaluateTrack } from '../../animation/evaluate';
 import { type WaapiDescriptor, buildWaapiDescriptor } from './waapi';
 import {
   type ExpandedTrack,
-  classifyProperty,
   easingToCss,
   expandTrack,
   iterationsToCss,
-  primHasStroke,
   transformValue,
 } from './shared';
 
