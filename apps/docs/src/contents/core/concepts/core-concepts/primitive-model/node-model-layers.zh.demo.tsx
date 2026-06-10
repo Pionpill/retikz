@@ -26,36 +26,36 @@ const Demo: FC = () => (
       内容
     </Node>
 
-    <Node id="anchor-n" position={[0, -BOUNDARY_RADIUS]} shape="circle" padding={0} minimumSize={4} fill="darkviolet" stroke="none" />
-    <Node id="anchor-e" position={[BOUNDARY_RADIUS, 0]} shape="circle" padding={0} minimumSize={4} fill="darkviolet" stroke="none" />
-    <Node id="anchor-s" position={[0, BOUNDARY_RADIUS]} shape="circle" padding={0} minimumSize={4} fill="darkviolet" stroke="none" />
-    <Node id="anchor-w" position={[-BOUNDARY_RADIUS, 0]} shape="circle" padding={0} minimumSize={4} fill="darkviolet" stroke="none" />
+    <Node id="anchor-n" position={[0, -BOUNDARY_RADIUS]} shape="circle" padding={0} minimumSize={4} fill="dodgerblue" stroke="none" />
+    <Node id="anchor-e" position={[BOUNDARY_RADIUS, 0]} shape="circle" padding={0} minimumSize={4} fill="dodgerblue" stroke="none" />
+    <Node id="anchor-s" position={[0, BOUNDARY_RADIUS]} shape="circle" padding={0} minimumSize={4} fill="dodgerblue" stroke="none" />
+    <Node id="anchor-w" position={[-BOUNDARY_RADIUS, 0]} shape="circle" padding={0} minimumSize={4} fill="dodgerblue" stroke="none" />
 
-    <Node id="content-label" position={[-178, 44]} stroke="none" textColor="gray">
+    <Node id="content-label" position={[-178, 4]} stroke="none" textColor="gray">
       内容盒
     </Node>
-    <Node id="padding-label" position={[-178, -64]} stroke="none">
+    <Node id="padding-label" position={[-178, -64]} stroke="none" textColor="gray">
       padding
     </Node>
     <Node id="shape-label" position={[178, -54]} stroke="none" textColor="darkorange">
       shape
     </Node>
-    <Node id="bbox-label" position={[178, 2]} stroke="none" textColor="gray">
+    <Node id="bbox-label" position={[-178, 44]} stroke="none" textColor="gray">
       外接框
     </Node>
     <Node id="boundary-label" position={[178, 58]} stroke="none" textColor="dodgerblue">
       boundary
     </Node>
-    <Node id="anchor-label" position={[-178, 4]} stroke="none" textColor="darkviolet">
+    <Node id="anchor-label" position={[178, 2]} stroke="none" textColor="dodgerblue">
       anchors
     </Node>
 
     <Draw way={['content-label', 'content']} stroke="gray" arrow="->" />
-    <Draw way={['padding-label', [-INNER_WIDTH / 2, -INNER_HEIGHT / 2]]} stroke="currentColor" arrow="->" />
+    <Draw way={['padding-label', [-INNER_WIDTH / 2, -INNER_HEIGHT / 2]]} stroke="gray" arrow="->" />
     <Draw way={['shape-label', SHAPE_TARGET]} stroke="darkorange" arrow="->" />
-    <Draw way={['bbox-label', [BBOX_WIDTH / 2, BBOX_HEIGHT / 2]]} stroke="gray" arrow="->" />
+    <Draw way={['bbox-label', [-BBOX_WIDTH / 2, BBOX_HEIGHT / 2]]} stroke="gray" arrow="->" />
     <Draw way={['boundary-label', [BOUNDARY_RADIUS * 0.68, BOUNDARY_RADIUS * 0.73]]} stroke="dodgerblue" arrow="->" />
-    <Draw way={['anchor-label', 'anchor-w']} stroke="darkviolet" arrow="->" />
+    <Draw way={['anchor-label', 'anchor-e']} stroke="dodgerblue" arrow="->" />
   </Layout>
 );
 
