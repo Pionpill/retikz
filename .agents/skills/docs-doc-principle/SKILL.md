@@ -20,7 +20,8 @@ retikz 文档站，1 个页面 = **3 处同步改动**：内容（`contents/`）
 | 组件页 | `contents/<module>/components/**` | [`docs-doc-component`](../docs-doc-component/SKILL.md) |
 | 示例页 | `contents/<module>/examples/**` | [`docs-doc-example`](../docs-doc-example/SKILL.md) |
 | 分组落地页 | 带 children 的分组节点（`components/node`、`reference/schema` 等） | [`docs-doc-group`](../docs-doc-group/SKILL.md) |
-| 概念页 / 入口页 | `contents/<module>/concepts/**` / `introduction` / `get-start` | 本 skill 的「入口页 / 概念页例外」节 |
+| 概念页 | `contents/<module>/concepts/**` 叶子页 | [`docs-doc-concept`](../docs-doc-concept/SKILL.md) |
+| 入口页 | `introduction` / `get-start` | 本 skill 的「入口页例外」节 |
 | Reference 词典页 | `contents/<module>/reference/**` | 本 skill 的「Reference 词典页」节 |
 | 博客文章 | `contents/blog/**` | [`docs-doc-blog`](../docs-doc-blog/SKILL.md)（差异较大，blog skill 独立成体；通用规则仍继承本 skill） |
 | 文档评审 | 任意文档初稿 / 改稿 / demo 补充后 | [`docs-doc-review`](../docs-doc-review/SKILL.md) |
@@ -141,6 +142,15 @@ GitHub URL 是这条规则的**例外**——它指向项目自家 repo，对用
 - 迁移/对照不改变正文主线，不在正文里写"对应 TikZ ..."这类散落句子
 - 只有页面主题本身就是 TikZ 迁移指南时，正文才可以直接讨论 TikZ
 
+## 图文结合，多配图
+
+**优先图文结合、提高配图密度**——能用图说清的就配图，别堆纯文字。文档站既是教材也是 retikz 的活体演示,图多 = 演示多,默认姿势是「一段讲解配一张图」而非「整页文字偶尔插图」:
+
+- 组件页：每个能力点 / 关键 prop 尽量配一个 `<ComponentPreview>` demo，而不是只用文字 + API 表描述
+- 概念 / 设计页：每个模型 / 流程 / 关系尽量配一张叙述图（详见 [`docs-doc-concept`](../docs-doc-concept/SKILL.md)）
+- 示例页：本就是累加式 demo，天然图文结合
+- 判断信号：一屏滚下去只有文字没有图，多半是漏画了
+
 ## 图示一律 retikz 自绘
 
 文档里的**所有可视化示例都用 retikz 自身绘制**——同级 `<name>.demo.tsx` + `<ComponentPreview name="..." />`。
@@ -195,10 +205,10 @@ GitHub URL 是这条规则的**例外**——它指向项目自家 repo，对用
 
 页面同时承担教程 + 字典时，先保证教程主线在 10 分钟内；额外查阅放 Reference / API / 子页。
 
-## 入口页 / 概念页例外
+## 入口页例外
 
 - **入口页**（`introduction`、`get-start`）有自己的章节布局（介绍 / 安装 / 步骤……），不强制走组件页的 5 段结构
-- **概念页**（`concepts/*`）按概念走子节，配 `<ComponentPreview hideCode>` 当叙述插图
+- **概念页**（`concepts/**` 叶子页）走 [`docs-doc-concept`](../docs-doc-concept/SKILL.md)：一概念一 H2、图文结合、按模块语境解释内部模型（不强行套 core 的 IR/Scene）、保持当前版本、延伸阅读 LinkedCard
 
 ## Reference 词典页 (`<ZodSchema>`)
 
