@@ -1,6 +1,6 @@
 /**
  * `lowerScopeTransforms` 单元测试
- * @description 直接驱动 IR 层 4 种 translate 变体下沉为 Scene Cartesian translate；
+ * @description 直接驱动 IR 层 5 种 translate 变体下沉为 Scene Cartesian translate；
  *   referent 未解析返回 null（compile.ts 上游负责发 warn）；rotate/scale 透传
  */
 import { describe, expect, it } from 'vitest';
@@ -48,7 +48,7 @@ const layoutForProjection = (): NodeLayout => ({
   shapes: BUILTIN_SHAPES,
 });
 
-describe('lowerScopeTransforms 4 translate 变体', () => {
+describe('lowerScopeTransforms 5 translate 变体', () => {
   it('translate 直接透传', () => {
     const out = lowerScopeTransforms(
       [{ kind: 'translate', x: 5, y: 3 }],
@@ -157,6 +157,29 @@ describe('lowerScopeTransforms 4 translate 变体', () => {
     );
     expect(out![0]).toEqual({ kind: 'translate', x: 100, y: 100 });
   });
+
+  it('between-translate 解析两端点比例点', () => {
+    const idx = makeStack([
+      ['A', [0, 0]],
+      ['B', [100, 40]],
+    ]);
+    const out = lowerScopeTransforms(
+      [{ kind: 'between-translate', between: [{ id: 'A' }, { id: 'B' }], t: 0.25 }],
+      idx,
+      undefined,
+      between => {
+        const [a, b] = between.between;
+        const aLayout = 'id' in a ? idx.lookup(a.id) : null;
+        const bLayout = 'id' in b ? idx.lookup(b.id) : null;
+        if (!aLayout || !bLayout) return null;
+        return [
+          aLayout.rect.x + (bLayout.rect.x - aLayout.rect.x) * between.t,
+          aLayout.rect.y + (bLayout.rect.y - aLayout.rect.y) * between.t,
+        ];
+      },
+    );
+    expect(out![0]).toEqual({ kind: 'translate', x: 25, y: 10 });
+  });
 });
 
 describe('lowerScopeTransforms 失败情形', () => {
@@ -181,6 +204,18 @@ describe('lowerScopeTransforms 失败情形', () => {
     const out = lowerScopeTransforms(
       [{ kind: 'polar-translate', origin: 'B', angle: 0, radius: 10 }],
       new NameStack(),
+    );
+    expect(out).toBeNull();
+  });
+
+  it('between-translate 未提供解析器返回 null', () => {
+    const idx = makeStack([
+      ['A', [0, 0]],
+      ['B', [100, 40]],
+    ]);
+    const out = lowerScopeTransforms(
+      [{ kind: 'between-translate', between: [{ id: 'A' }, { id: 'B' }], t: 0.5 }],
+      idx,
     );
     expect(out).toBeNull();
   });
@@ -254,7 +289,7 @@ describe('lowerScopeTransforms rotate / scale 透传', () => {
 });
 
 describe('lowerScopeTransforms 链复合', () => {
-  it('混合 4 种 translate 变体 + rotate + scale 全部成功 lower', () => {
+  it('混合 5 种 translate 变体 + rotate + scale 全部成功 lower', () => {
     const idx = makeStack([
       ['A', [10, 0]],
       ['B', [0, 0]],
@@ -264,17 +299,28 @@ describe('lowerScopeTransforms 链复合', () => {
       { kind: 'polar-translate', angle: 0, radius: 10 },
       { kind: 'at-translate', direction: 'right', of: 'A', distance: 4 },
       { kind: 'offset-translate', of: 'B', offset: [1, 2] },
+      { kind: 'between-translate', between: [{ id: 'A' }, { id: 'B' }], t: 0.5 },
       { kind: 'rotate', degrees: 30 },
       { kind: 'scale', x: 2 },
     ];
-    const out = lowerScopeTransforms(transforms, idx);
+    const out = lowerScopeTransforms(transforms, idx, undefined, between => {
+      const [a, b] = between.between;
+      const aLayout = 'id' in a ? idx.lookup(a.id) : null;
+      const bLayout = 'id' in b ? idx.lookup(b.id) : null;
+      if (!aLayout || !bLayout) return null;
+      return [
+        aLayout.rect.x + (bLayout.rect.x - aLayout.rect.x) * between.t,
+        aLayout.rect.y + (bLayout.rect.y - aLayout.rect.y) * between.t,
+      ];
+    });
     expect(out).not.toBeNull();
-    expect(out!).toHaveLength(6);
+    expect(out!).toHaveLength(7);
     expect(out![0]).toEqual({ kind: 'translate', x: 5, y: 5 });
     expect((out![1] as { x: number; y: number }).x).toBeCloseTo(10, 6);
     expect(out![2]).toEqual({ kind: 'translate', x: 14, y: 0 });
     expect(out![3]).toEqual({ kind: 'translate', x: 1, y: 2 });
-    expect(out![4]).toEqual({ kind: 'rotate', degrees: 30 });
-    expect(out![5]).toEqual({ kind: 'scale', x: 2 });
+    expect(out![4]).toEqual({ kind: 'translate', x: 5, y: 0 });
+    expect(out![5]).toEqual({ kind: 'rotate', degrees: 30 });
+    expect(out![6]).toEqual({ kind: 'scale', x: 2 });
   });
 });

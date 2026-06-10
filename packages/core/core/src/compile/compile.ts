@@ -315,6 +315,7 @@ const scopeTransformWarnCode = (
     if (t.kind === 'offset-translate') return CompileWarningCode.OffsetBaseUnresolved;
     if (t.kind === 'at-translate') return CompileWarningCode.AtTargetUnresolved;
     if (t.kind === 'polar-translate') return CompileWarningCode.PolarOriginUnresolved;
+    if (t.kind === 'between-translate') return CompileWarningCode.UnresolvedNodeReference;
   }
   return CompileWarningCode.UnresolvedNodeReference;
 };
@@ -336,7 +337,7 @@ const formatDuplicateWarning = (info: DuplicateRegisterInfo): CompileWarning => 
 
 /**
  * IR → Scene 纯函数转换，所有 adapter 共享
- * @description Pass 1 递归处理 node / coordinate / scope，把 scope 树下沉为嵌套 GroupPrim；scope.transforms 中的 4 种 translate 变体按 lowerScopeTransforms 展平为 Cartesian transform；node 在 Scene primitive 树里是局部坐标 + GroupPrim transform 链、在 NameStack 中存全局坐标供其他节点 / path 引用。NameStack 用栈式 frame 管理命名空间：默认全局扁平、`<Scope localNamespace>` 推入子 frame；scope.id 始终在父 frame 注册（外部句柄）；id lookup 从栈顶向栈底 inside-out 搜索；同 frame 重复 id 触发 DUPLICATE_NODE_ID warn + 后定义覆盖前定义。Pass 2 解析 path 端点写 d 字符串，path primitive 发到 Pass 1 记录的对应容器；末端按 precision 折算 layout
+ * @description Pass 1 递归处理 node / coordinate / scope，把 scope 树下沉为嵌套 GroupPrim；scope.transforms 中的 5 种 translate 变体按 lowerScopeTransforms 展平为 Cartesian transform；node 在 Scene primitive 树里是局部坐标 + GroupPrim transform 链、在 NameStack 中存全局坐标供其他节点 / path 引用。NameStack 用栈式 frame 管理命名空间：默认全局扁平、`<Scope localNamespace>` 推入子 frame；scope.id 始终在父 frame 注册（外部句柄）；id lookup 从栈顶向栈底 inside-out 搜索；同 frame 重复 id 触发 DUPLICATE_NODE_ID warn + 后定义覆盖前定义。Pass 2 解析 path 端点写 d 字符串，path primitive 发到 Pass 1 记录的对应容器；末端按 precision 折算 layout
  */
 export const compileToScene = (ir: IR, options: CompileOptions = {}): Scene => {
   const measureText = options.measureText ?? fallbackMeasurer;
@@ -562,11 +563,11 @@ export const compileToScene = (ir: IR, options: CompileOptions = {}): Scene => {
         layoutsAccumulator.push(coordLayout);
       } else if (child.type === 'scope') {
         const rawTransforms = child.transforms ?? [];
-        const loweredOwn = lowerScopeTransforms(rawTransforms, nameStack, nodeDistance);
+        const loweredOwn = lowerScopeTransforms(rawTransforms, nameStack, nodeDistance, refPointOfTarget);
         if (loweredOwn === null) {
           onWarn({
             code: scopeTransformWarnCode(child),
-            message: `Cannot resolve one of scope.transforms; referent (at.of / offset.of / polar.origin) is undefined or defined later in the IR`,
+            message: `Cannot resolve one of scope.transforms; referent (at.of / offset.of / polar.origin / between endpoints) is undefined or defined later in the IR`,
             path: `${locatorPrefix}children[${i}].scope.transforms`,
           });
           // 失败时退化为不应用 transform，继续处理子树以收集尽可能多的产物

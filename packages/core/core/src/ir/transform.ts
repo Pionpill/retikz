@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { AtDirection } from './position/at-position';
+import { AbsoluteTargetSchema } from './position/between-position';
 import { PolarPositionSchema } from './position/polar-position';
 import { PositionSchema } from './position/position';
 
@@ -92,6 +93,24 @@ const OffsetTranslateSchema = z
     'Offset translate transform; mirrors OffsetPosition. Lowered to Cartesian translate at compile time via resolvePosition.',
   );
 
+const BetweenTranslateSchema = z
+  .object({
+    kind: z
+      .literal('between-translate')
+      .describe('Discriminator: proportional translate between two endpoints; mirrors BetweenPosition.'),
+    between: z
+      .tuple([AbsoluteTargetSchema, AbsoluteTargetSchema])
+      .describe('Two endpoints (AbsoluteTarget each; path-relative excluded), same as BetweenPosition.between.'),
+    t: z
+      .number()
+      .min(0)
+      .max(1)
+      .describe('Proportion along A→B, 0..1 (0 = A, 1 = B); same as BetweenPosition.t.'),
+  })
+  .describe(
+    'Proportional translate transform; mirrors BetweenPosition. Lowered to Cartesian translate at compile time via resolvePosition.',
+  );
+
 const RotateSchema = z
   .object({
     kind: z
@@ -145,14 +164,15 @@ export const TransformSchema = z
     PolarTranslateSchema,
     AtTranslateSchema,
     OffsetTranslateSchema,
+    BetweenTranslateSchema,
     RotateSchema,
     ScaleSchema,
   ])
   .describe(
-    'IR-level transform; 6 variants. The 4 translate variants (translate / polar-translate / at-translate / offset-translate) mirror the Node.position union one-for-one; rotate and scale match the Scene `Transform` shape. At compile time the 4 translate variants are lowered to Cartesian translate via resolvePosition before being pushed onto the cumulative chain emitted to Scene `GroupPrim` (which stays at 3 variants).',
+    'IR-level transform; 7 variants. The 5 translate variants (translate / polar-translate / at-translate / offset-translate / between-translate) mirror the Node.position union one-for-one; rotate and scale match the Scene `Transform` shape. At compile time the 5 translate variants are lowered to Cartesian translate via resolvePosition before being pushed onto the cumulative chain emitted to Scene `GroupPrim` (which stays at 3 variants).',
   );
 
-/** IR 层 transform 类型——6 变体 discriminated union（4 translate + rotate + scale） */
+/** IR 层 transform 类型——7 变体 discriminated union（5 translate + rotate + scale） */
 export type IRTransform = z.infer<typeof TransformSchema>;
 /** 笛卡尔 translate 子分支 */
 export type IRTranslateTransform = z.infer<typeof TranslateSchema>;
@@ -162,6 +182,8 @@ export type IRPolarTranslateTransform = z.infer<typeof PolarTranslateSchema>;
 export type IRAtTranslateTransform = z.infer<typeof AtTranslateSchema>;
 /** 偏移 translate 子分支 */
 export type IROffsetTranslateTransform = z.infer<typeof OffsetTranslateSchema>;
+/** 两端点比例 translate 子分支 */
+export type IRBetweenTranslateTransform = z.infer<typeof BetweenTranslateSchema>;
 /** 旋转子分支 */
 export type IRRotateTransform = z.infer<typeof RotateSchema>;
 /** 缩放子分支 */

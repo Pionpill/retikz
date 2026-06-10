@@ -164,7 +164,7 @@ export const ScopeSchema = z
       .array(TransformSchema)
       .optional()
       .describe(
-        'Local transforms applied to all scope children; array order = application order (first element applied innermost, matching Scene `GroupPrim.transforms` / SVG transform list). Supports 6 variants; the 4 translate variants are lowered to Cartesian translate at compile time.',
+        'Local transforms applied to all scope children; array order = application order (first element applied innermost, matching Scene `GroupPrim.transforms` / SVG transform list). Supports 7 variants; the 5 translate variants are lowered to Cartesian translate at compile time.',
       ),
     color: z
       .string()

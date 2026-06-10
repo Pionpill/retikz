@@ -1,6 +1,7 @@
 import { type Rect, rect as rectOps } from '../geometry/rect';
 import type {
   IRAtPosition,
+  IRBetweenPosition,
   IROffsetPosition,
   IRPosition,
   IRTransform,
@@ -11,11 +12,11 @@ import { BUILTIN_SHAPES } from '../shapes';
 import type { ShapeDefinition } from '../shapes';
 import type { NameStack } from './name-stack';
 import type { NodeLayout } from './node';
-import { resolvePosition } from './position';
+import { type ResolveBetweenGlobal, resolvePosition } from './position';
 
 /**
- * 把 IR 6 变体 transforms 展平为 Scene 3 变体（Cartesian translate / rotate / scale）
- * @description 4 个 translate 变体（translate / polar-translate / at-translate / offset-translate）
+ * 把 IR 7 变体 transforms 展平为 Scene 3 变体（Cartesian translate / rotate / scale）
+ * @description 5 个 translate 变体（translate / polar-translate / at-translate / offset-translate / between-translate）
  *   各自构造对应 Position 字面量并调用 `resolvePosition` 拿到 Cartesian (x, y)，再写成 Cartesian translate；
  *   rotate / scale 直接透传。referent 未解析时返回 null（上游负责发 warn / throw）
  */
@@ -23,6 +24,7 @@ export const lowerScopeTransforms = (
   transforms: ReadonlyArray<IRTransform>,
   nameStack: NameStack,
   nodeDistance?: number,
+  resolveBetweenGlobal?: ResolveBetweenGlobal,
 ): Array<Transform> | null => {
   const out: Array<Transform> = [];
   for (const t of transforms) {
@@ -52,6 +54,13 @@ export const lowerScopeTransforms = (
           offset: t.offset ?? [0, 0],
         };
         const resolved = resolvePosition(off, nameStack, nodeDistance);
+        if (!resolved) return null;
+        out.push({ kind: 'translate', x: resolved[0], y: resolved[1] });
+        break;
+      }
+      case 'between-translate': {
+        const between: IRBetweenPosition = { between: t.between, t: t.t };
+        const resolved = resolvePosition(between, nameStack, nodeDistance, [], resolveBetweenGlobal);
         if (!resolved) return null;
         out.push({ kind: 'translate', x: resolved[0], y: resolved[1] });
         break;

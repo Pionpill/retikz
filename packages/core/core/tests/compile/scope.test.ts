@@ -1,6 +1,6 @@
 /**
  * compile + scope 集成测试
- * @description 只覆盖 scope.transforms 4 个 translate 变体 lower + 累积 chain、嵌套 scope、prune、跨 scope path 引用、scope.transforms 失败时的 warn
+ * @description 只覆盖 scope.transforms 5 个 translate 变体 lower + 累积 chain、嵌套 scope、prune、跨 scope path 引用、scope.transforms 失败时的 warn
  */
 import { describe, expect, it } from 'vitest';
 import { compileToScene } from '../../src/compile/compile';
@@ -168,6 +168,24 @@ describe('scope.transforms lower 后生成 GroupPrim 的 Cartesian transforms �
       ts => ts[0]?.kind === 'translate',
     );
     expect(group?.transforms?.[0]).toEqual({ kind: 'translate', x: 100, y: 100 });
+  });
+
+  it('between-translate(A, B, 0.5) → translate 到两端点中点', () => {
+    const ir = scene([
+      { type: 'node', id: 'A', position: [0, 0], text: 'A' },
+      { type: 'node', id: 'B', position: [100, 40], text: 'B' },
+      {
+        type: 'scope',
+        transforms: [{ kind: 'between-translate', between: [{ id: 'A' }, { id: 'B' }], t: 0.5 }],
+        children: [{ type: 'node', id: 'inside', position: [0, 0], text: 'I' }],
+      },
+    ]);
+    const compiled = compileToScene(ir);
+    const group = findScopeStyleGroup(
+      compiled.primitives,
+      ts => ts[0]?.kind === 'translate' && ts[0].x === 50,
+    );
+    expect(group?.transforms?.[0]).toEqual({ kind: 'translate', x: 50, y: 20 });
   });
 
   it('scope rotate 透传到 GroupPrim.transforms', () => {
