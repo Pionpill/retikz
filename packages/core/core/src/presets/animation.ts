@@ -104,8 +104,8 @@ export type ColorShiftOptions = AnimationPresetOptions & {
 /** 变色：`fill|stroke` from→to（oklch 插值，由 renderer 端处理） */
 export const colorShift = (opts: ColorShiftOptions): IRAnimationTrack => {
   // 运行时守 JS 调用方漏传（类型已要求必填，故读为可空视图以做防御校验）
-  const { from, to } = opts as { from?: string; to?: string };
-  if (from === undefined || to === undefined) {
+  const { from, to } = opts as { from?: string | null; to?: string | null };
+  if (from == null || to == null) {
     throw new Error('colorShift: `from` and `to` colors are required.');
   }
   return {
@@ -126,8 +126,8 @@ export type CameraToOptions = AnimationPresetOptions & {
 /** 镜头：scene 根 `viewBox` from→to（挂 `<Layout animations>` / IR 根 `animations`） */
 export const cameraTo = (opts: CameraToOptions): IRAnimationTrack => {
   // 运行时守 JS 调用方漏传（类型已要求必填，故读为可空视图以做防御校验）
-  const { from, to } = opts as { from?: [number, number, number, number]; to?: [number, number, number, number] };
-  if (from === undefined || to === undefined) {
+  const { from, to } = opts as { from?: [number, number, number, number] | null; to?: [number, number, number, number] | null };
+  if (from == null || to == null) {
     throw new Error('cameraTo: `from` and `to` viewBox [x, y, w, h] are required.');
   }
   return {
