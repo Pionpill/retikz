@@ -88,7 +88,7 @@ export type { IRNodeTarget, IRAnchorRef } from '@retikz/core';
 
 // 扩展面：自定义箭头 / pattern motif / 路径生成器注册——react 用户单包 import 即可定义并注入
 // <Layout arrows / patterns / pathGenerators>
-export { definePathGenerator } from '@retikz/core';
+export { defineArrow, definePattern, definePathGenerator } from '@retikz/core';
 export type {
   ArrowDefinition,
   ArrowEmitContext,

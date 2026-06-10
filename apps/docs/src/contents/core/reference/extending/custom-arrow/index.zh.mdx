@@ -1,6 +1,6 @@
 ---
 title: 自定义箭头
-description: arrow shape 是开放字符串；内置 8 种之外，用 ArrowDefinition 注册任意箭头——emit 在局部坐标产 MarkerPrimitive 几何，颜色经 contextStroke 跟随 path 描边。
+description: arrow shape 是开放字符串；内置 8 种之外，用 defineArrow / ArrowDefinition 注册任意箭头——emit 在局部坐标产 MarkerPrimitive 几何，颜色经 contextStroke 跟随 path 描边。
 ---
 
 `arrowDetail.shape` 是**开放字符串**：内置 8 种（`normal` / `open` / `stealth` / `openStealth` / `diamond` / `openDiamond` / `circle` / `openCircle`）之外，可以注册自己的箭头。注册面对齐 [shape 注册面](/core/reference/extending/shape-registry)——内置 8 种本身也是注册项，没有特权。
@@ -15,7 +15,7 @@ description: arrow shape 是开放字符串；内置 8 种之外，用 ArrowDefi
 
 如果你只是想先做一个能用的箭头，最少实现 `lineContactX` 和 `emit` 就够了；`baseSize`、`tipX`、`hollow`、`defaultLength`、`defaultWidth` 都是在调视觉手感。
 
-`ArrowDefinition` 是个普通对象（不进 IR、不需序列化，可由工厂函数返回）：
+`ArrowDefinition` 是个普通对象（不进 IR、不需序列化，可由工厂函数返回）；推荐在定义点用 `defineArrow({...})` 包一层，让自定义箭头与 shape / pattern / path generator 的扩展写法保持一致：
 
 | 字段 | 类型 | 默认值 | 描述 |
 | --- | --- | --- | --- |

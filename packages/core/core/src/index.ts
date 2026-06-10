@@ -294,11 +294,11 @@ export { BUILTIN_SHAPES, defineShape, worldToLocal, localToWorld } from './shape
 
 // Arrows (Arrow Registry 扩展面：第三方 arrow 注入 + 内置注册项)
 export type { ArrowDefinition, ArrowEmitContext } from './arrows';
-export { BUILTIN_ARROWS } from './arrows';
+export { BUILTIN_ARROWS, defineArrow } from './arrows';
 
 // Patterns (Pattern Registry 扩展面：第三方 pattern motif 注入 + 内置注册项)
 export type { PatternDefinition, PatternEmitContext } from './patterns';
-export { BUILTIN_PATTERNS } from './patterns';
+export { BUILTIN_PATTERNS, definePattern } from './patterns';
 
 // Path Generators (Path Generator Registry 扩展面：第三方曲线生成器注入；core 无内置)
 export type { PathGeneratorDefinition, PathGeneratorContext } from './path-generators';

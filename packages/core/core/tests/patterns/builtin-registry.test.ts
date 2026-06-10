@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { compileToScene } from '../../src/compile/compile';
 import type { CompileOptions, CompileWarning } from '../../src/compile/compile';
-import { BUILTIN_PATTERNS } from '../../src/patterns';
+import { BUILTIN_PATTERNS, definePattern } from '../../src/patterns';
 import type { PatternDefinition, PatternEmitContext } from '../../src/patterns';
 import { PaintSpecSchema } from '../../src/ir';
 import type { IR, IRPaintSpec } from '../../src/ir';
@@ -65,7 +65,7 @@ const pathD = (prim: MarkerPathPrim): string =>
     .join(' ');
 
 /** 自定义 pattern：单 path motif（斜十字横段），size 默认 10 */
-const customPattern = (): PatternDefinition => ({
+const customPattern = (): PatternDefinition => definePattern({
   defaultSize: 10,
   emit: ({ size, color, lineWidth }): Array<MarkerPrimitive> => [
     {
@@ -81,7 +81,7 @@ const customPattern = (): PatternDefinition => ({
 });
 
 /** 多 primitive 自定义 pattern：背景 rect + 两 motif 元素 */
-const multiPrimPattern = (): PatternDefinition => ({
+const multiPrimPattern = (): PatternDefinition => definePattern({
   defaultSize: 12,
   emit: ({ size, color, background }): Array<MarkerPrimitive> => [
     ...(background ? ([{ type: 'rect', x: 0, y: 0, width: size, height: size, fill: background }] as Array<MarkerPrimitive>) : []),

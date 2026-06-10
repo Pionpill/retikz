@@ -84,3 +84,4 @@ export const BUILTIN_PATTERNS: Record<BuiltinPatternName, PatternDefinition> = {
 };
 
 export type { PatternDefinition, PatternEmitContext } from './types';
+export { definePattern } from './define';

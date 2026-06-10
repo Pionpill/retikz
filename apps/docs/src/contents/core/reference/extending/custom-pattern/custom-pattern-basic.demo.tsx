@@ -1,12 +1,11 @@
-import type { PatternDefinition } from '@retikz/react';
-import { Layout, Node } from '@retikz/react';
+import { Layout, Node, definePattern } from '@retikz/react';
 import type { FC } from 'react';
 
 /**
  * 自定义 pattern motif：十字（cross）图案，与内置 lines / dots / grid 不同。
  * emit 在局部 tile 坐标系（0..size）产 MarkerPrimitive；color / lineWidth 来自 ctx（size 来自 spec.size ?? defaultSize）。
  */
-const cross: PatternDefinition = {
+const cross = definePattern({
   defaultSize: 12,
   emit: ({ size, color, lineWidth }) => {
     const lw = lineWidth ?? 1.5;
@@ -16,7 +15,7 @@ const cross: PatternDefinition = {
       { type: 'path', commands: [{ kind: 'move', to: [2, c] }, { kind: 'line', to: [size - 2, c] }], stroke: color, strokeWidth: lw },
     ];
   },
-};
+});
 
 const Demo: FC = () => (
   <Layout width={200} height={120} patterns={{ cross }}>

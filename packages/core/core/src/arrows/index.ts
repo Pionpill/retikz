@@ -112,3 +112,4 @@ export const BUILTIN_ARROWS: Record<BuiltinArrowName, ArrowDefinition> = {
 };
 
 export type { ArrowDefinition, ArrowEmitContext } from './types';
+export { defineArrow } from './define';
