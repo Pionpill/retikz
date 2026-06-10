@@ -56,7 +56,7 @@ describe('irToVanillaCode', () => {
           type: 'path',
           children: [
             { type: 'step', kind: 'move', to: [0, 0] },
-            { type: 'step', kind: 'step', via: '-|', to: [40, 0] },
+            { type: 'step', kind: 'fold', via: '-|', to: [40, 0] },
             { type: 'step', kind: 'cycle' },
           ],
         },
