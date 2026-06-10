@@ -15,7 +15,7 @@ retikz uses a unified set of position expressions for entity placement and path 
 | Proportional placement | `{ between: [A, B], t }` | Take a proportional point along A → B; node endpoints use `{ id: 'a' }` | Node position, Coordinate position, path target |
 | Relative target | `{ relative }` / `{ relativeAccumulate }` or `'+x,y'` / `'++x,y'` | Offset from the previous segment endpoint | **Path target only** |
 
-> Coordinate system: x grows right, y grows down (matches SVG / Canvas; opposite of math textbooks). Units are user units, not pixels — final physical size depends on `<Layout>`'s `width` / `height` and the compiled layout bounds.
+> [Coordinate system](/core/concepts/basic-concepts/coordinate-system): x grows right, y grows down (matches SVG / Canvas; opposite of math textbooks). Units are user units, not pixels — final physical size depends on `<Layout>`'s `width` / `height` and the compiled layout bounds.
 
 ## Cartesian
 
@@ -122,3 +122,20 @@ String references, `origin: 'node-id'`, `of: 'node-id'`, and ids inside `between
 <Node id="a" position={{ origin: 'b', angle: 0, radius: 50 }}>A</Node>
 <Node id="b" position={[0, 0]}>B</Node>
 ```
+
+## Further reading
+
+<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+  <LinkedCard href="/core/concepts/basic-concepts/coordinate-system">
+    <span className="font-semibold">Coordinate System</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">the coordinate model behind every position form: user units, x-right / y-down, viewBox mapping</span>
+  </LinkedCard>
+  <LinkedCard href="/core/concepts/core-concepts/primitive-relations">
+    <span className="font-semibold">Primitive Relations</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">anchors, boundaries, and edge-proportional points — how a path auto-attaches when resolving a target</span>
+  </LinkedCard>
+  <LinkedCard href="/core/reference/schema/placement">
+    <span className="font-semibold">Placement</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">schema field reference and type definitions for each position form</span>
+  </LinkedCard>
+</div>
