@@ -176,10 +176,14 @@ describe('parseWay', () => {
       ]);
     });
 
-    it('首项是 DrawWay.Cycle 时降级为 move 到 [0, 0]（容错）', () => {
-      const steps = parseWay([DrawWay.Cycle, 'B']);
-      expect(steps[0]).toEqual({ type: 'step', kind: 'move', to: [0, 0] });
-      expect(steps[1]).toEqual({ type: 'step', kind: 'line', to: { id: 'B' } });
+    it('首项是 DrawWay.Cycle 时直接抛错', () => {
+      expect(() => parseWay([DrawWay.Cycle, 'B'])).toThrow(/way\[0\] must be a target/);
+    });
+
+    it('首项是任意非 label 算子时也直接抛错', () => {
+      expect(() => parseWay(['-|', 'B'])).toThrow(/way\[0\] must be a target/);
+      expect(() => parseWay([{ curve: [1, 2] }, 'B'])).toThrow(/way\[0\] must be a target/);
+      expect(() => parseWay([{ circle: { radius: 5 } }, 'B'])).toThrow(/way\[0\] must be a target/);
     });
 
     it("裸字符串 'cycle' 不触发闭合——视作普通节点 id（与 DrawWay.Cycle 字面值刻意不同）", () => {
@@ -409,6 +413,14 @@ describe('parseWay', () => {
         { type: 'step', kind: 'line', to: { relative:[1, 0] } },
         { type: 'step', kind: 'line', to: { relativeAccumulate:[2, 3] } },
       ]);
+    });
+
+    it('WayRelativeItem.type 拼写错误时直接抛错', () => {
+      const way = [
+        'A',
+        { position: [1, 0], type: 'retikz-keyword_relatvie' },
+      ] as unknown as Parameters<typeof parseWay>[0];
+      expect(() => parseWay(way)).toThrow(/WayRelativeItem\.type/);
     });
 
     it('首项是 WayRelativeItem 时 move 的 to 也走 desugar', () => {

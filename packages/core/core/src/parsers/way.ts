@@ -48,6 +48,11 @@ export type WayRelativeItem = {
   type: typeof DrawWay.Relative | typeof DrawWay.Accumulate;
 };
 
+type WayRelativeInput = {
+  position: [number, number];
+  type: unknown;
+};
+
 /** 二次贝塞尔算子（infix）：把"上一项→下一项"段改成 curve step，curve 字段携控制点 */
 export type WayCurveOp = { curve: IRControlPoint };
 
@@ -110,7 +115,7 @@ const isWayVia = (item: WayItem): item is WayVia =>
 const isPlainObject = (item: unknown): item is Record<string, unknown> =>
   typeof item === 'object' && item !== null && !Array.isArray(item);
 
-const isWayRelativeItem = (item: WayItem): item is WayRelativeItem =>
+const isWayRelativeItem = (item: unknown): item is WayRelativeInput =>
   isPlainObject(item) && 'position' in item && 'type' in item;
 
 const isWayCurveOp = (item: WayItem): item is WayCurveOp =>
@@ -158,9 +163,16 @@ const normalizeLabel = (l: WayLabel): IRStepLabel =>
 /** sugar `{position,type}` → IR `{relative}|{relativeAccumulate}`；其它形态原样返回 */
 const desugarRelativeItem = (item: WayItem): WayItem => {
   if (!isWayRelativeItem(item)) return item;
-  return item.type === DrawWay.Accumulate
-    ? { relativeAccumulate: item.position }
-    : { relative: item.position };
+  const candidate = item as WayRelativeInput;
+  if (candidate.type === DrawWay.Accumulate) {
+    return { relativeAccumulate: candidate.position };
+  }
+  if (candidate.type === DrawWay.Relative) {
+    return { relative: candidate.position };
+  }
+  throw new Error(
+    `parseWay: WayRelativeItem.type must be DrawWay.Relative or DrawWay.Accumulate`,
+  );
 };
 
 /** WayItem 归约为"目标点"，算子/关键字返回 null */
@@ -193,7 +205,12 @@ export const parseWay = (way: WayDSL): Array<IRStep> => {
     );
   }
   const rawMove = targetOf(way[0]);
-  const moveTarget: IRTarget = rawMove === null ? [0, 0] : parseTargetSugar(rawMove);
+  if (rawMove === null) {
+    throw new Error(
+      `parseWay: way[0] must be a target (move start), got operator`,
+    );
+  }
+  const moveTarget: IRTarget = parseTargetSugar(rawMove);
   const moveStep: IRMoveStep = { type: 'step', kind: 'move', to: moveTarget };
   out.push(moveStep);
   for (let i = 1; i < way.length; i++) {
