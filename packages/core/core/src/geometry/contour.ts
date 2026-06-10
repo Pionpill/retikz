@@ -1,4 +1,4 @@
-import { arcAngleInRange, rayArc } from './arc';
+import { arcAngleInRange, arcEndPoint, rayArc } from './arc';
 import type { Position } from './point';
 
 /*
@@ -73,19 +73,13 @@ const normalize = (v: Position): Position => {
 /** 二维叉积 a × b */
 const cross = (a: Position, b: Position): number => a[0] * b[1] - a[1] * b[0];
 
-/** 点 + 角度（度）→ 圆周点 */
-const arcPoint = (center: Position, radius: number, angleDeg: number): Position => {
-  const rad = angleDeg * DEG_TO_RAD;
-  return [center[0] + Math.cos(rad) * radius, center[1] + Math.sin(rad) * radius];
-};
-
 /** 段起点 */
 const segmentStart = (seg: ContourSegment): Position =>
-  seg.kind === 'line' ? seg.from : arcPoint(seg.center, seg.radius, seg.startAngle);
+  seg.kind === 'line' ? seg.from : arcEndPoint(seg.center, seg.radius, seg.startAngle);
 
 /** 段终点 */
 const segmentEnd = (seg: ContourSegment): Position =>
-  seg.kind === 'line' ? seg.to : arcPoint(seg.center, seg.radius, seg.endAngle);
+  seg.kind === 'line' ? seg.to : arcEndPoint(seg.center, seg.radius, seg.endAngle);
 
 /**
  * 段在某端的「行进切线」单位向量

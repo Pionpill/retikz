@@ -1,5 +1,6 @@
 import type { Position } from '../geometry/point';
 import type { CompassAnchorValue } from '../geometry/anchor';
+import { arcEndPoint } from '../geometry/arc';
 import type { Rect } from '../geometry/rect';
 import type { AtDirectionValue, IRAnimationTrack, IRBoundary, IRJsonObject, IRLabelDefault, IRLineSpec, IRNode, IRNodeLabel, IRPaintSpec, IRShapeRef, JsonValue } from '../ir';
 import { JsonObjectSchema } from '../ir';
@@ -337,8 +338,7 @@ const labelBorderPoint = (layout: NodeLayout, label: NodeLabelLayout): Position 
 const labelCenter = (layout: NodeLayout, label: NodeLabelLayout): Position => {
   const [bx, by] = labelBorderPoint(layout, label);
   if (typeof label.position === 'number') {
-    const rad = (label.position * Math.PI) / 180;
-    return [bx + Math.cos(rad) * label.distance, by + Math.sin(rad) * label.distance];
+    return arcEndPoint([bx, by], label.distance, label.position);
   }
   const { vec } = LABEL_DIRECTION_MAP[label.position];
   return [bx + vec[0] * label.distance, by + vec[1] * label.distance];

@@ -1,4 +1,5 @@
 import type { AtDirectionValue, IRAtPosition, IRBetweenPosition, IROffsetPosition, IRPosition, PolarPosition } from '../ir';
+import { arcEndPoint } from '../geometry/arc';
 import type { Transform } from '../primitive';
 import type { NameStack } from './name-stack';
 import { inverseTransformChain } from './scope';
@@ -101,9 +102,5 @@ export const resolvePosition = (
     if (!resolved) return null;
     origin = resolved;
   }
-  const rad = (pos.angle * Math.PI) / 180;
-  return [
-    origin[0] + Math.cos(rad) * pos.radius,
-    origin[1] + Math.sin(rad) * pos.radius,
-  ];
+  return arcEndPoint(origin, pos.radius, pos.angle);
 };
