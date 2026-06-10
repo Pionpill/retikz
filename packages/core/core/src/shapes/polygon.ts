@@ -26,6 +26,7 @@ type PolygonParams = {
 };
 
 const DEG_TO_RAD = Math.PI / 180;
+const MAX_POLYGON_SIDES = 1024;
 
 /** 顶点角集合（度）：第 k 个顶点角 = rotate + k·(360/sides) */
 const vertexAngles = (params: PolygonParams): Array<number> => {
@@ -37,8 +38,14 @@ const vertexAngles = (params: PolygonParams): Array<number> => {
 };
 
 /** 顶点角的 |cos| 最大值（恒 >0，sides≥3 时至少一个顶点不在 ±y 轴上）；用于由 AABB 半宽反推外接半径 */
-const maxAbsCos = (params: PolygonParams): number =>
-  Math.max(...vertexAngles(params).map(a => Math.abs(Math.cos(a * DEG_TO_RAD))));
+const maxAbsCos = (params: PolygonParams): number => {
+  let max = 0;
+  for (const angle of vertexAngles(params)) {
+    const value = Math.abs(Math.cos(angle * DEG_TO_RAD));
+    if (value > max) max = value;
+  }
+  return max;
+};
 
 /**
  * 能容纳内框（半轴 hw/hh）的正 sides 边形外接圆半径
@@ -93,7 +100,8 @@ export const polygon = defineShape({
       .number()
       .int()
       .min(3)
-      .describe('Number of sides of the regular polygon (>= 3).'),
+      .max(MAX_POLYGON_SIDES)
+      .describe(`Number of sides of the regular polygon (3..${MAX_POLYGON_SIDES}).`),
     rotate: z
       .number()
       .finite()
@@ -111,8 +119,13 @@ export const polygon = defineShape({
   circumscribe: (hw, hh, params: PolygonParams) => {
     const radius = circumradiusFor(hw, hh, params);
     const angles = vertexAngles(params);
-    const halfWidth = Math.max(...angles.map(a => Math.abs(radius * Math.cos(a * DEG_TO_RAD))));
-    const halfHeight = Math.max(...angles.map(a => Math.abs(radius * Math.sin(a * DEG_TO_RAD))));
+    let halfWidth = 0;
+    let halfHeight = 0;
+    for (const angle of angles) {
+      const rad = angle * DEG_TO_RAD;
+      halfWidth = Math.max(halfWidth, Math.abs(radius * Math.cos(rad)));
+      halfHeight = Math.max(halfHeight, Math.abs(radius * Math.sin(rad)));
+    }
     return { halfWidth, halfHeight };
   },
   boundaryPoint: (rect: Rect, toward: Position, params: PolygonParams): Position => {

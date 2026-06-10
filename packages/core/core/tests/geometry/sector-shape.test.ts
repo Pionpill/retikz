@@ -49,6 +49,12 @@ const wedgeNode = (
   ...extra,
 });
 
+const rectForSector = (params: { innerRadius: number; outerRadius: number; startAngle: number; endAngle: number }) => {
+  const { halfWidth, halfHeight } = sector.circumscribe(0, 0, params);
+  const offset = sector.circumscribeOffset!(params);
+  return { x: offset[0], y: offset[1], width: halfWidth * 2, height: halfHeight * 2, rotate: 0 };
+};
+
 // ─────────────────────────── Happy path（≥3）───────────────────────────
 
 describe('sector — happy path 几何', () => {
@@ -105,6 +111,30 @@ describe('sector — happy path 几何', () => {
 // ─────────────────────────── 边界（≥2）───────────────────────────
 
 describe('sector — 边界 AABB / 角度', () => {
+  it('环形扇区 innerRadius > 0 时 AABB 不包含 apex', () => {
+    const params = { innerRadius: 8, outerRadius: 10, startAngle: 0, endAngle: 30 };
+    const { halfWidth, halfHeight } = sector.circumscribe(0, 0, params);
+    expect(halfWidth).toBeLessThan(2);
+    expect(halfHeight).toBeCloseTo(2.5, 6);
+  });
+
+  it('环形扇区 boundary 射线从填充环楔内出发而不是从内孔出发', () => {
+    const params = { innerRadius: 8, outerRadius: 10, startAngle: 0, endAngle: 350 };
+    const rect = rectForSector(params);
+    const apex = sector.anchor(rect, 'apex', params);
+    expect(apex).toBeDefined();
+
+    const midRad = ((params.startAngle + params.endAngle) / 2) * (Math.PI / 180);
+    const toward: [number, number] = [
+      apex![0] + Math.cos(midRad) * 20,
+      apex![1] + Math.sin(midRad) * 20,
+    ];
+    const hit = sector.boundaryPoint(rect, toward, params);
+    const distance = Math.hypot(hit[0] - apex![0], hit[1] - apex![1]);
+    expect(distance).toBeGreaterThan(9.5);
+    expect(distance).toBeLessThanOrEqual(10 + 1e-6);
+  });
+
   it('sector_aabb_includes_axis_extrema：弧跨 90°（45→135）→ AABB 含 +y 方向 outerRadius 极值点', () => {
     // 圆心(0,0)；外弧端点 (60cos45,60sin45)=(42.43,42.43)、(60cos135,60sin135)=(-42.43,42.43)；
     // 弧跨过 90° → +y 极值点 (0, 60)。内弧端点半径 20 同样落在 y 正区。apex (0,0)。
@@ -112,7 +142,7 @@ describe('sector — 边界 AABB / 角度', () => {
     const params = { innerRadius: 20, outerRadius: 60, startAngle: 45, endAngle: 135 };
     const { halfWidth, halfHeight } = sector.circumscribe(0, 0, params);
     expect(halfWidth).toBeCloseTo(60 * Math.SQRT1_2, 4); // 30√2 ≈ 42.426
-    expect(halfHeight).toBeCloseTo(30, 4); // (0 .. 60) 跨度 60 → 半轴 30
+    expect(halfHeight).toBeCloseTo((60 - 20 * Math.SQRT1_2) / 2, 4);
   });
 
   it('sector_near_full_circle：end−start 接近 360° → AABB 近 2·outerRadius 方框', () => {
@@ -220,7 +250,7 @@ describe('sector — 交互（rotate / Path 连接 / position）', () => {
       scene([wedgeNode({ innerRadius: 20, outerRadius: 60, startAngle: 45, endAngle: 135 })]),
     );
     // bbox 高度 = 弧顶极值跨度 60（不被裁成端点跨度 2·30=60... 端点 y=60sin45≈42.43，弧顶 60）。
-    expect(compiled.layout.height - 2 * PAD).toBeCloseTo(60, 1);
+    expect(compiled.layout.height - 2 * PAD).toBeCloseTo(60 - 20 * Math.SQRT1_2, 1);
     // bbox 宽度 = 2×30√2（两侧端点 ±60cos45）含两侧端点
     expect(compiled.layout.width - 2 * PAD).toBeCloseTo(2 * 60 * Math.SQRT1_2, 1);
   });

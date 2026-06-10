@@ -119,11 +119,11 @@ export const sector = defineShape({
   },
   boundaryPoint: (rect: Rect, toward: Position, params: SectorParams): Position => {
     const geo = sectorGeometry(params);
-    // rayOrigin = 质心（非圆心）：sector 圆心在轮廓边角上，质心才落在环楔内、向外射线必穿轮廓一次。
-    const centroidWorld = localToWorld(rect, geo.centroidOffset);
+    // rayOrigin 必须落在填充区域内；环形扇区的质心可能落入内孔。
+    const originWorld = localToWorld(rect, geo.boundaryOriginOffset);
     const segments = sectorSegments(rect, geo, params);
-    const hit = boundaryFromContour(segments, params.cornerRadius, centroidWorld, toward);
-    return hit ?? centroidWorld;
+    const hit = boundaryFromContour(segments, params.cornerRadius, originWorld, toward);
+    return hit ?? originWorld;
   },
   anchor: (rect: Rect, name: string, params: SectorParams): Position | undefined => {
     const geo = sectorGeometry(params);

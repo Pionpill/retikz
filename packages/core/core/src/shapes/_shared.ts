@@ -48,8 +48,10 @@ export type SectorGeometry = {
   aabbHalfAxes: { halfWidth: number; halfHeight: number };
   /** 圆心(apex)相对 AABB 中心的偏移（apex 常在 AABB 内角，非 AABB 中心） */
   apexOffset: Position;
-  /** 质心(centroid)相对 AABB 中心的偏移（落在环楔内，作 boundaryPoint 向外射线起点） */
+  /** 质心(centroid)相对 AABB 中心的偏移；大角度环形扇区的质心可能落入内孔。 */
   centroidOffset: Position;
+  /** boundaryPoint 射线起点偏移；环形扇区使用填充环楔内的点，而不是质心。 */
+  boundaryOriginOffset: Position;
 };
 
 /** sector params 的最小结构（与 sector.ts 的 SectorParams 同形，避免循环 import 类型） */
@@ -71,7 +73,7 @@ export const sectorGeometry = (params: SectorGeometryInput): SectorGeometry => {
   const range = normalizeAngularRange(params.startAngle, params.endAngle);
   const apex: Position = [0, 0];
 
-  const candidates: Array<Position> = [apex];
+  const candidates: Array<Position> = innerRadius === 0 ? [apex] : [];
   candidates.push(...arcBoundingPoints(apex, outerRadius, range.start, range.end));
   if (innerRadius > 0) {
     candidates.push(...arcBoundingPoints(apex, innerRadius, range.start, range.end));
@@ -117,12 +119,22 @@ export const sectorGeometry = (params: SectorGeometryInput): SectorGeometry => {
     centroidLocal[0] - aabbCenter[0],
     centroidLocal[1] - aabbCenter[1],
   ];
+  const boundaryOriginRadius = innerRadius > 0 ? (innerRadius + outerRadius) / 2 : centroidRadius;
+  const boundaryOriginLocal: Position = [
+    Math.cos(midRad) * boundaryOriginRadius,
+    Math.sin(midRad) * boundaryOriginRadius,
+  ];
+  const boundaryOriginOffset: Position = [
+    boundaryOriginLocal[0] - aabbCenter[0],
+    boundaryOriginLocal[1] - aabbCenter[1],
+  ];
 
   return {
     range,
     aabbHalfAxes: { halfWidth, halfHeight },
     apexOffset,
     centroidOffset,
+    boundaryOriginOffset,
   };
 };
 

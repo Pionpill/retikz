@@ -185,8 +185,8 @@ export const projectLayoutToGlobal = (
     x: gx,
     y: gy,
     rotate: (layout.rect.rotate ?? 0) + rotateAccumRad,
-    width: layout.rect.width * scaleX,
-    height: layout.rect.height * scaleY,
+    width: layout.rect.width * Math.abs(scaleX),
+    height: layout.rect.height * Math.abs(scaleY),
   };
   const marginScale = Math.max(Math.abs(scaleX), Math.abs(scaleY));
   return { ...layout, rect: globalRect, margin: layout.margin * marginScale };

@@ -34,6 +34,11 @@ describe('polygon cornerRadius — paramsSchema', () => {
     expect(() => polygon.paramsSchema.parse({ sides: 6, cornerRadius: Infinity })).toThrow();
     expect(() => polygon.paramsSchema.parse({ sides: 6, cornerRadius: NaN })).toThrow();
   });
+
+  it('sides 有有限上限', () => {
+    expect(polygon.paramsSchema.parse({ sides: 1024 })).toEqual({ sides: 1024 });
+    expect(() => polygon.paramsSchema.parse({ sides: 1025 })).toThrow();
+  });
 });
 
 describe('polygon cornerRadius — emit', () => {

@@ -7,7 +7,7 @@ import { describe, expect, it } from 'vitest';
 import type { IRTransform } from '../../src/ir';
 import { NameStack } from '../../src/compile/name-stack';
 import { type NodeLayout } from '../../src/compile/node';
-import { lowerScopeTransforms } from '../../src/compile/scope';
+import { lowerScopeTransforms, projectLayoutToGlobal } from '../../src/compile/scope';
 import { BUILTIN_SHAPES } from '../../src/shapes';
 
 /** 把 id → 中心 entries 灌进新建的 NameStack，便于 lower 单测验证 referent lookup */
@@ -32,6 +32,21 @@ const makeStack = (entries: Array<[string, [number, number]]>): NameStack => {
   }
   return stack;
 };
+
+const layoutForProjection = (): NodeLayout => ({
+  id: 'A',
+  shapeName: 'rectangle',
+  shapeDef: BUILTIN_SHAPES.rectangle,
+  rect: { x: 10, y: 20, width: 30, height: 40, rotate: 0 },
+  rotateDeg: 0,
+  margin: 2,
+  textWidth: 30,
+  textHeight: 40,
+  align: 'middle',
+  lineHeight: 0,
+  fontSize: 0,
+  shapes: BUILTIN_SHAPES,
+});
 
 describe('lowerScopeTransforms 4 translate 变体', () => {
   it('translate 直接透传', () => {
@@ -214,6 +229,18 @@ describe('lowerScopeTransforms rotate / scale 透传', () => {
       new NameStack(),
     );
     expect(out![0]).toEqual({ kind: 'scale', x: 2 });
+  });
+
+  it('projectLayoutToGlobal 在负 scale 下保持 rect 尺寸为正数', () => {
+    const layout = projectLayoutToGlobal(
+      layoutForProjection(),
+      [{ kind: 'scale', x: -2, y: 3 }],
+    );
+    expect(layout.rect.x).toBeCloseTo(-20, 6);
+    expect(layout.rect.y).toBeCloseTo(60, 6);
+    expect(layout.rect.width).toBe(60);
+    expect(layout.rect.height).toBe(120);
+    expect(layout.margin).toBe(6);
   });
 });
 
