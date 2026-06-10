@@ -10,7 +10,7 @@ import {
   contourCommands,
 } from '../geometry/contour';
 import type { ScenePrimitive } from '../primitive';
-import { contourToPathCommands, verticesToSegments } from './contour';
+import { contourToPathCommands, contourToPathPrimitive, verticesToSegments } from './contour';
 import { defineShape } from './define';
 
 /**
@@ -148,17 +148,7 @@ export const polygon = defineShape({
     const verts = polygonVertices(rect, radius, params);
     const segments: Array<ContourSegment> = verticesToSegments(verts);
     const commands = contourToPathCommands(contourCommands(segments, params.cornerRadius), round);
-    yield {
-      type: 'path',
-      commands,
-      fill: style.fill ?? 'transparent',
-      fillOpacity: style.fillOpacity,
-      stroke: style.stroke ?? 'currentColor',
-      strokeOpacity: style.strokeOpacity,
-      strokeWidth: style.strokeWidth ?? 1,
-      dashPattern: style.dashPattern,
-      opacity: style.opacity,
-    };
+    yield contourToPathPrimitive(commands, style);
   },
   // sides 计数 / rotate 角度不缩（默认深缩会缩坏 sides）；cornerRadius 是长度，随 node scale 用几何均值因子缩。
   scaleParams: (params: PolygonParams, sx: number, sy: number): PolygonParams =>

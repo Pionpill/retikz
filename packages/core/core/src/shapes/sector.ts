@@ -10,7 +10,7 @@ import {
   filletContour,
 } from '../geometry/contour';
 import type { ScenePrimitive } from '../primitive';
-import { contourToPathCommands } from './contour';
+import { contourToPathCommands, contourToPathPrimitive } from './contour';
 import { defineShape } from './define';
 import { type SectorGeometry, sectorGeometry, sectorPolarPoint } from './shared';
 
@@ -176,18 +176,7 @@ export const sector = defineShape({
     // 轮廓段（emit 收轴对齐 rect，rotate 由外层 group 施加）→ rounded-contour 命令 → path
     const { segments, fillets } = createSectorContour(rect, params);
     const commands = contourToPathCommands(contourCommands(segments, params.cornerRadius, fillets), round);
-
-    yield {
-      type: 'path',
-      commands,
-      fill: style.fill ?? 'transparent',
-      fillOpacity: style.fillOpacity,
-      stroke: style.stroke ?? 'currentColor',
-      strokeOpacity: style.strokeOpacity,
-      strokeWidth: style.strokeWidth ?? 1,
-      dashPattern: style.dashPattern,
-      opacity: style.opacity,
-    };
+    yield contourToPathPrimitive(commands, style);
   },
   // 半径 / cornerRadius 是长度，随几何均值因子缩；角度是方向，不缩。
   scaleParams: (params: SectorParams, sx: number, sy: number): SectorParams => {
