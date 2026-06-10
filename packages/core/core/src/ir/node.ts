@@ -220,12 +220,12 @@ export const NodeSchema = z
     dashed: z
       .boolean()
       .optional()
-      .describe('Border style preset: dashed line (TikZ `dashed`); compiled to a default dash pattern. `dashArray` takes precedence.'),
+      .describe('Border style preset: dashed line (TikZ `dashed`); compiled to a default dash pattern. `dashPattern` takes precedence.'),
     dotted: z
       .boolean()
       .optional()
-      .describe('Border style preset: dotted line (TikZ `dotted`); compiled to a default dot pattern. `dashArray` and `dashed` take precedence.'),
-    dashArray: z
+      .describe('Border style preset: dotted line (TikZ `dotted`); compiled to a default dot pattern. `dashPattern` and `dashed` take precedence.'),
+    dashPattern: z
       .array(z.number().finite().nonnegative())
       .min(1)
       .optional()
@@ -330,6 +330,7 @@ export const NodeSchema = z
         'Explicit stacking order among sibling IR children. Higher draws on top. Omitted = 0 = source order. Sorting is stable: same zIndex keeps source order. Scoped per group (a node inside a scope only restacks within that scope).',
       ),
   })
+  .strict()
   .describe(
     'Node primitive: a positioned, optionally textual shape (rectangle / circle / ellipse / diamond)',
   );

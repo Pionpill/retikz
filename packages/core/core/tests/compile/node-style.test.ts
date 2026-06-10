@@ -125,7 +125,7 @@ describe('Node 描边样式 (alpha.2)', () => {
     expect(findRect(ir)?.dashPattern).toEqual([1, 2]);
   });
 
-  it('dashArray 显式值优先于 dashed / dotted', () => {
+  it('dashPattern 显式值优先于 dashed / dotted', () => {
     const ir: IR = {
       version: 1,
       type: 'scene',
@@ -135,7 +135,7 @@ describe('Node 描边样式 (alpha.2)', () => {
           position: [0, 0],
           dashed: true,
           dotted: true,
-          dashArray: [8, 3, 2, 3],
+          dashPattern: [8, 3, 2, 3],
         },
       ],
     };

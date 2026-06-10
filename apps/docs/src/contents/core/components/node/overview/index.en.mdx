@@ -251,7 +251,7 @@ A stop's `opacity` gives a "solid → transparent" fade; `color` set to `current
 
 #### Border style
 
-`dashed` / `dotted` are presets; `dashArray` is an explicit dash/gap length sequence (priority: `dashArray` > `dashed` > `dotted`):
+`dashed` / `dotted` are presets; `dashPattern` is an explicit dash/gap length sequence (priority: `dashPattern` > `dashed` > `dotted`):
 
 <ComponentPreview name="node-stroke-style" size="xs" />
 
@@ -323,7 +323,7 @@ By default stacking = declaration order (SVG only honors paint order). `zIndex` 
 | `drawOpacity` | `number` | — | Stroke-only opacity 0..1 |
 | `dashed` | `boolean` | ? | Dashed border preset (`[4, 2]`) |
 | `dotted` | `boolean` | ? | Dotted border preset (`[1, 2]`) |
-| `dashArray` | `Array<number>` | ? | Explicit dash/gap lengths; highest priority |
+| `dashPattern` | `Array<number>` | ? | Explicit dash/gap lengths; highest priority |
 | `cornerRadius` | `number` | — | Migration-period top-level corner radius; only affects the default `rectangle`. Per-shape rounding goes in params: `shape={{ type, params:{ ..., cornerRadius } }}` (params wins) |
 | `minimumWidth` / `minimumHeight` | `number` | — | Floors the bbox dimensions |
 | `minimumSize` | `number` | — | Symmetric minimum-size alias; axis-specific fields take precedence |

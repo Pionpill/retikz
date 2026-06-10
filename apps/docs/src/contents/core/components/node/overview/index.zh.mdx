@@ -251,7 +251,7 @@ Line 2`}</Node>
 
 #### 描边样式
 
-`dashed` / `dotted` 是预设；`dashArray` 是显式 dash/gap 长度序列（优先级：`dashArray` > `dashed` > `dotted`）：
+`dashed` / `dotted` 是预设；`dashPattern` 是显式 dash/gap 长度序列（优先级：`dashPattern` > `dashed` > `dotted`）：
 
 <ComponentPreview name="node-stroke-style" size="xs" />
 
@@ -323,7 +323,7 @@ Line 2`}</Node>
 | `drawOpacity` | `number` | — | 仅描边透明 0~1 |
 | `dashed` | `boolean` | — | 虚线预设（`[4, 2]`） |
 | `dotted` | `boolean` | — | 点线预设（`[1, 2]`） |
-| `dashArray` | `Array<number>` | — | 显式 dash/gap 长度序列；优先级最高 |
+| `dashPattern` | `Array<number>` | — | 显式 dash/gap 长度序列；优先级最高 |
 | `cornerRadius` | `number` | — | 迁移期顶层圆角半径；仅默认 `rectangle` 生效。各形状的圆角写在 params 里：`shape={{ type, params:{ ..., cornerRadius } }}`（params 优先） |
 | `minimumWidth` / `minimumHeight` | `number` | — | 撑开最小 bbox 宽高 |
 | `minimumSize` | `number` | — | 对称最小尺寸别名；轴特化字段优先 |

@@ -124,13 +124,13 @@ const DASHED_PATTERN: Array<number> = [4, 2];
 /** dotted 预设：1 px 圆点 + 2 px 间隙 */
 const DOTTED_PATTERN: Array<number> = [1, 2];
 
-/** dashed / dotted / dashArray 优先级：dashArray > dashed > dotted */
-const resolveDashArray = (
-  dashArray: Array<number> | undefined,
+/** dashed / dotted / dashPattern 优先级：dashPattern > dashed > dotted */
+const resolveDashPattern = (
+  dashPattern: Array<number> | undefined,
   dashed: boolean | undefined,
   dotted: boolean | undefined,
 ): Array<number> | undefined => {
-  if (dashArray !== undefined) return dashArray;
+  if (dashPattern !== undefined) return dashPattern;
   if (dashed) return DASHED_PATTERN;
   if (dotted) return DOTTED_PATTERN;
   return undefined;
@@ -640,7 +640,7 @@ export const layoutNode = (
     stroke: node.stroke,
     strokeOpacity: node.drawOpacity,
     strokeWidth: node.strokeWidth,
-    dashPattern: resolveDashArray(node.dashArray, node.dashed, node.dotted),
+    dashPattern: resolveDashPattern(node.dashPattern, node.dashed, node.dotted),
     cornerRadius: node.cornerRadius,
     textColor: node.textColor,
     opacity: node.opacity,
