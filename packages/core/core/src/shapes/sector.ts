@@ -98,7 +98,7 @@ export const sector = defineShape({
     endAngle: z
       .number()
       .finite()
-      .describe('End angle in degrees; swept counterclockwise in screen space from startAngle.'),
+      .describe('End angle in degrees; swept clockwise in screen space from startAngle.'),
     cornerRadius: z
       .number()
       .finite()
