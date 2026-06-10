@@ -159,7 +159,9 @@ export const NodeSchema = z
       .describe(
         'Rotation in degrees around the node center; positive = clockwise (matches TikZ rotate=...)',
       ),
-    text: TextBlockSchema.optional(),
+    text: TextBlockSchema.optional().describe(
+      'Optional node text content; accepts a string, an array of lines, or styled text line objects. When omitted the node emits only its shape primitive; when present it participates in text measurement, node box sizing, and TextPrim emission.',
+    ),
     align: z
       .nativeEnum(NodeTextAlign)
       .optional()
