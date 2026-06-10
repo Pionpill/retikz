@@ -8,6 +8,7 @@ import type {
 } from '../ir';
 import type { Transform } from '../primitive';
 import { BUILTIN_SHAPES } from '../shapes';
+import type { ShapeDefinition } from '../shapes';
 import type { NameStack } from './name-stack';
 import type { NodeLayout } from './node';
 import { resolvePosition } from './position';
@@ -189,7 +190,12 @@ export const projectLayoutToGlobal = (
     height: layout.rect.height * Math.abs(scaleY),
   };
   const marginScale = Math.max(Math.abs(scaleX), Math.abs(scaleY));
-  return { ...layout, rect: globalRect, margin: layout.margin * marginScale };
+  return {
+    ...layout,
+    rect: globalRect,
+    rotateDeg: layout.rotateDeg + rotateAccumRad * (180 / Math.PI),
+    margin: layout.margin * marginScale,
+  };
 };
 
 /** scope bbox 计算结果：bbox 几何中心 + 尺寸（width/height ≥ 0；空 scope 退化为 0×0 占位时仍合法） */
@@ -253,13 +259,14 @@ export const registerScopeAsLayout = (
   id: string,
   bbox: ScopeBoundingBox | null,
   fallbackOrigin: IRPosition,
+  shapes: Record<string, ShapeDefinition> = BUILTIN_SHAPES,
 ): NodeLayout => {
   const box: ScopeBoundingBox =
     bbox ?? { x: fallbackOrigin[0], y: fallbackOrigin[1], width: 0, height: 0 };
   return {
     id,
     shapeName: 'rectangle',
-    shapeDef: BUILTIN_SHAPES.rectangle,
+    shapeDef: shapes.rectangle,
     rect: { x: box.x, y: box.y, width: box.width, height: box.height, rotate: 0 },
     rotateDeg: 0,
     margin: 0,
@@ -268,6 +275,6 @@ export const registerScopeAsLayout = (
     align: 'middle',
     lineHeight: 0,
     fontSize: 0,
-    shapes: BUILTIN_SHAPES,
+    shapes,
   };
 };

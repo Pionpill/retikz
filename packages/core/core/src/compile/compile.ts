@@ -47,10 +47,14 @@ export { CompileWarningCode } from './constant';
  * @description coordinate / scope.id 入场临时占位等"无形状只有位置"句柄共享此结构，
  *   让后续 path target / `at.of` / `offset.of` / `polar.origin` 引用时 boundaryPoint 命中中心。
  */
-const zeroSizeRectAt = (id: string, [cx, cy]: IRPosition): NodeLayout => ({
+const zeroSizeRectAt = (
+  id: string,
+  [cx, cy]: IRPosition,
+  shapes: Record<string, ShapeDefinition>,
+): NodeLayout => ({
   id,
   shapeName: 'rectangle',
-  shapeDef: BUILTIN_SHAPES.rectangle,
+  shapeDef: shapes.rectangle,
   rect: { x: cx, y: cy, width: 0, height: 0, rotate: 0 },
   rotateDeg: 0,
   margin: 0,
@@ -59,15 +63,18 @@ const zeroSizeRectAt = (id: string, [cx, cy]: IRPosition): NodeLayout => ({
   align: 'middle',
   lineHeight: 0,
   fontSize: 0,
-  shapes: BUILTIN_SHAPES,
+  shapes,
 });
 
 /**
  * 把 coordinate 注册成 0×0 NodeLayout
  * @description 让后续 path target / `at.of` 引用时 boundaryPoint 命中中心，符合"占位无形状边界"语义
  */
-const coordinateAsLayout = (id: string, center: IRPosition): NodeLayout =>
-  zeroSizeRectAt(id, center);
+const coordinateAsLayout = (
+  id: string,
+  center: IRPosition,
+  shapes: Record<string, ShapeDefinition>,
+): NodeLayout => zeroSizeRectAt(id, center, shapes);
 
 /**
  * scope.id 入场时的临时占位 NodeLayout
@@ -78,10 +85,11 @@ const coordinateAsLayout = (id: string, center: IRPosition): NodeLayout =>
 const scopePlaceholderLayout = (
   id: string,
   chain: ReadonlyArray<Transform>,
+  shapes: Record<string, ShapeDefinition>,
 ): NodeLayout => {
   const globalOrigin: IRPosition =
     chain.length === 0 ? [0, 0] : applyTransformChain([0, 0], chain);
-  return zeroSizeRectAt(id, globalOrigin);
+  return zeroSizeRectAt(id, globalOrigin, shapes);
 };
 
 /** compileToScene 的可选参数 */
@@ -544,7 +552,7 @@ export const compileToScene = (ir: IR, options: CompileOptions = {}): Scene => {
           );
         }
         const globalCenter = chain.length === 0 ? localCenter : applyTransformChain(localCenter, chain);
-        const coordLayout = coordinateAsLayout(child.id, globalCenter);
+        const coordLayout = coordinateAsLayout(child.id, globalCenter, effectiveShapes);
         nameStack.register(
           child.id,
           coordLayout,
@@ -569,10 +577,12 @@ export const compileToScene = (ir: IR, options: CompileOptions = {}): Scene => {
         // 此 register 是 register（走 duplicate 检测——与 node.id / coordinate.id / 兄弟 scope.id 冲突触发 warn）；
         // 后面子树完成后用 replaceLayout 覆盖 bbox 不再触发 warn（同一 scope.id 的 placeholder→real 接力不算冲突）
         const parentFrameDepth = nameStack.depth - 1;
+        let placeholderLayout: NodeLayout | undefined;
         if (child.id) {
+          placeholderLayout = scopePlaceholderLayout(child.id, innerChain, effectiveShapes);
           nameStack.register(
             child.id,
-            scopePlaceholderLayout(child.id, innerChain),
+            placeholderLayout,
             `${locatorPrefix}children[${i}].scope.id`,
           );
         }
@@ -600,9 +610,9 @@ export const compileToScene = (ir: IR, options: CompileOptions = {}): Scene => {
             const bbox = computeScopeBoundingBox(innerLayouts);
             const fallbackOrigin: IRPosition =
               innerChain.length === 0 ? [0, 0] : applyTransformChain([0, 0], innerChain);
-            const bboxLayout = registerScopeAsLayout(child.id, bbox, fallbackOrigin);
+            const bboxLayout = registerScopeAsLayout(child.id, bbox, fallbackOrigin, effectiveShapes);
             // 用 replaceLayout 覆盖不触发 duplicate warn（placeholder → real bbox 是预期升级）
-            nameStack.replaceLayout(child.id, bboxLayout, parentFrameDepth);
+            nameStack.replaceLayout(child.id, bboxLayout, parentFrameDepth, placeholderLayout);
             // 嵌套 scope.id：把本层 synthetic bbox layout 合并进外层 layoutsAccumulator，
             // 让外层 scope.id 的 bbox 包含本层 bbox（外层 bbox 透传包内层 bbox 区域）
             layoutsAccumulator.push(bboxLayout);

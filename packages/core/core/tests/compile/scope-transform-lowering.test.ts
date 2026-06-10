@@ -242,6 +242,15 @@ describe('lowerScopeTransforms rotate / scale 透传', () => {
     expect(layout.rect.height).toBe(120);
     expect(layout.margin).toBe(6);
   });
+
+  it('projectLayoutToGlobal 应同步 rect.rotate 与 rotateDeg', () => {
+    const layout = projectLayoutToGlobal(
+      layoutForProjection(),
+      [{ kind: 'rotate', degrees: 45 }],
+    );
+    expect(layout.rect.rotate).toBeCloseTo(Math.PI / 4, 6);
+    expect(layout.rotateDeg).toBeCloseTo(45, 6);
+  });
 });
 
 describe('lowerScopeTransforms 链复合', () => {

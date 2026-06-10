@@ -705,6 +705,8 @@ export const labelExtentPoints = (layout: NodeLayout): Array<Position> => {
   return pts;
 };
 
+const cloneScenePrimitive = <T extends ScenePrimitive>(primitive: T): T => ({ ...primitive });
+
 export const emitNodePrimitives = (
   layout: NodeLayout,
   round: (n: number) => number,
@@ -719,7 +721,7 @@ export const emitNodePrimitives = (
       round,
       layout.shapeParams ?? EMPTY_SHAPE_PARAMS,
     ),
-  ];
+  ].map(cloneScenePrimitive);
   const inner: Array<ScenePrimitive> = [...shapePrims];
   if (layout.lines) {
     // align=start: x=中心-块半宽; align=end: x=中心+块半宽; align=middle: x=中心

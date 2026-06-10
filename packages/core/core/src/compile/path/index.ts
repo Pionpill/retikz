@@ -713,7 +713,14 @@ export const emitPathPrimitive = (
 
     // 其他 step 都需 prev（找 cursor 起点/圆心）；currAnchor 仅有 to 的 step 才需
     const prev = findPrev();
-    if (!prev) return null;
+    if (!prev) {
+      warn(
+        CompileWarningCode.PathTooShort,
+        `Step '${step.kind}' requires a previous position; the entire path is skipped`,
+        `children[${i}]`,
+      );
+      return null;
+    }
 
     if (step.kind === 'arc') {
       // 圆心：显式 center 优先，否则游标（上一 step anchor，向后兼容）

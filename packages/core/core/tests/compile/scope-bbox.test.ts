@@ -494,6 +494,32 @@ describe('scope.id bbox 错误路径', () => {
     expect(dups.length).toBeGreaterThanOrEqual(1);
   });
 
+  it('scope_id 被子节点同名覆盖后不应被 bbox 回填反向覆盖', () => {
+    const ir = scene([
+      {
+        type: 'scope',
+        id: 'foo',
+        children: [
+          { type: 'node', id: 'foo', position: [0, 0], text: 'N' },
+          { type: 'coordinate', id: 'far', position: [200, 0] },
+        ],
+      },
+      {
+        type: 'path',
+        children: [
+          { type: 'step', kind: 'move', to: [0, 100] },
+          { type: 'step', kind: 'line', to: { id: 'foo' } },
+        ],
+      },
+    ]);
+    const warnings: Array<CompileWarning> = [];
+    const compiled = compileToScene(ir, { onWarn: w => warnings.push(w) });
+    const end = lineTo(topPath(compiled.primitives));
+    expect(warnings.filter(w => w.code === 'DUPLICATE_NODE_ID')).toHaveLength(1);
+    expect(end).toBeDefined();
+    expect(Math.abs(end![0])).toBeLessThan(30);
+  });
+
   it('scope_id_collision_with_scope_siblings：两个兄弟 scope 都用 id="g" → DUPLICATE_NODE_ID warn', () => {
     const ir = scene([
       { type: 'scope', id: 'g', children: [{ type: 'node', id: 'a', position: [0, 0], text: 'a' }] },
