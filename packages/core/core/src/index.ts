@@ -301,8 +301,8 @@ export type { PatternDefinition, PatternEmitContext } from './patterns';
 export { BUILTIN_PATTERNS } from './patterns';
 
 // Path Generators (Path Generator Registry 扩展面：第三方曲线生成器注入；core 无内置)
-export type { PathGeneratorDefinition, PathGeneratorContext } from './pathGenerators';
-export { definePathGenerator } from './pathGenerators';
+export type { PathGeneratorDefinition, PathGeneratorContext } from './path-generators';
+export { definePathGenerator } from './path-generators';
 
 // Composites (Tier 2 注册面：domain 节点 schema + 展开逻辑；core 无内置)
 export type { CompositeDefinition } from './composites';

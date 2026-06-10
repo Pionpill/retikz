@@ -34,7 +34,7 @@ import type {
   Transform,
 } from '../../primitive';
 import type { AssertEqual } from '../../types';
-import type { PathGeneratorDefinition } from '../../pathGenerators';
+import type { PathGeneratorDefinition } from '../../path-generators';
 import { CompileWarningCode } from '../constant';
 import type { CompileWarning } from '../constant';
 import type { NameStack } from '../name-stack';

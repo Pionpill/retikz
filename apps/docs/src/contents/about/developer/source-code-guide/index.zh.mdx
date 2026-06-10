@@ -37,7 +37,7 @@ Vue / Svelte / Solid / Native adapter 仍属于后续或社区扩展面；但 IR
 | [`primitive/`](https://github.com/Pionpill/retikz/tree/main/packages/core/src/primitive) | Scene 数据模型——渲染目标无关的图元、资源表、marker 与 clip |
 | [`compile/`](https://github.com/Pionpill/retikz/tree/main/packages/core/src/compile) | IR → Scene 编译器——节点布局、路径解析、样式级联、资源收集、layout 计算 |
 | [`parsers/`](https://github.com/Pionpill/retikz/tree/main/packages/core/src/parsers) | DSL → IR 解析器——目前覆盖 Sugar `way` 数组与 target 字符串 |
-| [`shapes/`](https://github.com/Pionpill/retikz/tree/main/packages/core/src/shapes) / [`arrows/`](https://github.com/Pionpill/retikz/tree/main/packages/core/src/arrows) / [`patterns/`](https://github.com/Pionpill/retikz/tree/main/packages/core/src/patterns) / [`pathGenerators/`](https://github.com/Pionpill/retikz/tree/main/packages/core/src/pathGenerators) | v0.2 扩展面——自定义形状、箭头、图案 motif 与路径生成器 |
+| [`shapes/`](https://github.com/Pionpill/retikz/tree/main/packages/core/src/shapes) / [`arrows/`](https://github.com/Pionpill/retikz/tree/main/packages/core/src/arrows) / [`patterns/`](https://github.com/Pionpill/retikz/tree/main/packages/core/src/patterns) / [`path-generators/`](https://github.com/Pionpill/retikz/tree/main/packages/core/src/path-generators) | v0.2 扩展面——自定义形状、箭头、图案 motif 与路径生成器 |
 | [`index.ts`](https://github.com/Pionpill/retikz/blob/main/packages/core/src/index.ts) | 公开 API surface——所有 adapter 只能 import 这一个文件 |
 
 ### 推荐阅读顺序
@@ -69,7 +69,7 @@ Vue / Svelte / Solid / Native adapter 仍属于后续或社区扩展面；但 IR
    [`parseWay`](https://github.com/Pionpill/retikz/blob/main/packages/core/core/src/parsers/way.ts) / [`parseTargetSugar`](https://github.com/Pionpill/retikz/blob/main/packages/core/core/src/parsers/target-sugar.ts)：把 `<Draw way={[...]}>` 这种 Sugar 形态翻译为 IR。`@retikz/react` 在 Sugar 组件内部调用它们。
 
 9. **注册扩展面（可选）**<br />
-   [`shapes/`](https://github.com/Pionpill/retikz/tree/main/packages/core/src/shapes) / [`arrows/`](https://github.com/Pionpill/retikz/tree/main/packages/core/src/arrows) / [`patterns/`](https://github.com/Pionpill/retikz/tree/main/packages/core/src/patterns) / [`pathGenerators/`](https://github.com/Pionpill/retikz/tree/main/packages/core/src/pathGenerators)：第三方包扩展能力时优先看这里，而不是改 core 内置枚举。
+   [`shapes/`](https://github.com/Pionpill/retikz/tree/main/packages/core/src/shapes) / [`arrows/`](https://github.com/Pionpill/retikz/tree/main/packages/core/src/arrows) / [`patterns/`](https://github.com/Pionpill/retikz/tree/main/packages/core/src/patterns) / [`path-generators/`](https://github.com/Pionpill/retikz/tree/main/packages/core/src/path-generators)：第三方包扩展能力时优先看这里，而不是改 core 内置枚举。
 
 ### 阅读约束
 

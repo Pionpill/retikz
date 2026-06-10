@@ -7,7 +7,7 @@ import { BUILTIN_ARROWS } from '../arrows';
 import type { ArrowDefinition } from '../arrows';
 import { BUILTIN_PATTERNS } from '../patterns';
 import type { PatternDefinition } from '../patterns';
-import type { PathGeneratorDefinition } from '../pathGenerators';
+import type { PathGeneratorDefinition } from '../path-generators';
 import type { CompositeDefinition } from '../composites';
 import {
   type CompileWarning,
