@@ -47,6 +47,8 @@ Sugar 不引入新能力。能用 `<Draw>` 画出来的图，也能用 `<Path>` 
 </Path>
 ```
 
+`<Scope>` 也属于 Kernel：它在 IR 中保留分组语义，编译到 Scene 时下沉为 `group`，并承载局部 transform、clip、样式默认值、动画和 `zIndex` 等组级行为。
+
 ## 编译链路
 
 ```tsx
@@ -67,8 +69,6 @@ Sugar 不引入新能力。能用 `<Draw>` 画出来的图，也能用 `<Path>` 
 - **fit bounds**：合并所有图元的包围盒，加 padding 并按精度 round，得到 viewBox。
 
 如果 IR 里有 Tier 2 的 composite 节点（如 plot 的高层组件），编译会先把它们下沉成 Kernel，再走上面这条链路；细节见[复合](/core/concepts/design/composite)。
-
-`<Scope>` 也属于 Kernel：它在 IR 中保留分组语义，编译到 Scene 时下沉为 `group`，并承载局部 transform、clip、样式默认值、动画和 `zIndex` 等组级行为。
 
 ## 选择建议
 

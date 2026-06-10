@@ -47,6 +47,8 @@ Sugar adds no new capability. Anything drawn with `<Draw>` can also be written m
 </Path>
 ```
 
+`<Scope>` is Kernel too: it preserves grouping semantics in IR, lowers to a Scene `group`, and carries group-level behavior such as local transforms, clipping, style defaults, animation, and `zIndex`.
+
 ## Compile Chain
 
 ```tsx
@@ -67,8 +69,6 @@ The adapter collects this JSX into IR. `@retikz/core` resolves positions, comput
 - **fit bounds**: union every primitive's bounding box, add padding, round to precision, and produce the viewBox.
 
 If the IR contains Tier 2 composite nodes (such as plot's higher-level components), the compiler lowers them to Kernel first, then runs the chain above; see [Tier 2 composites](/core/concepts/design/composite) for details.
-
-`<Scope>` is Kernel too: it preserves grouping semantics in IR, lowers to a Scene `group`, and carries group-level behavior such as local transforms, clipping, style defaults, animation, and `zIndex`.
 
 ## Choosing a Layer
 
