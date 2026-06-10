@@ -248,7 +248,7 @@ export const parseWay = (way: WayDSL): Array<IRStep> => {
       }
       const fold: IRFoldStep = {
         type: 'step',
-        kind: 'step',
+        kind: 'fold',
         via: item,
         to: parseTargetSugar(desugarRelativeItem(next)),
       };

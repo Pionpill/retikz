@@ -15,12 +15,12 @@ const Demo: FC = () => (
     {/* via='-|'：先水平再垂直，落到 B */}
     <Path stroke="currentColor">
       <Step kind="move" to="a" />
-      <Step kind="step" via="-|" to="b" />
+      <Step kind="fold" via="-|" to="b" />
     </Path>
     {/* via='|-'：先垂直再水平，落到 C */}
     <Path stroke="currentColor">
       <Step kind="move" to="a" />
-      <Step kind="step" via="|-" to="c" />
+      <Step kind="fold" via="|-" to="c" />
     </Path>
   </Layout>
 );

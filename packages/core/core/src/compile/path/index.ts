@@ -945,7 +945,7 @@ export const emitPathPrimitive = (
       continue;
     }
 
-    // step.kind === 'step' (fold)
+    // fold：经一个直角中间点拆成两段 line
     const corner = cornerOf(prev.anchor, currAnchor, step.via);
     const fromClip = usedOverride ?? clipForTarget(prev.step.to, corner, nameStack, scopeChain);
     const toClip = clipForTarget(step.to, corner, nameStack, scopeChain);

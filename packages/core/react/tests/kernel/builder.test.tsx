@@ -430,7 +430,7 @@ describe('buildIR', () => {
       const ir = buildIR(
         <Path>
           <Step kind="move" to={[0, 0]} />
-          <Step kind="step" via="-|" to={[10, 5]} label={{ text: 'f' }} />
+          <Step kind="fold" via="-|" to={[10, 5]} label={{ text: 'f' }} />
           <Step kind="curve" control={[5, -10]} to={[20, 0]} label={{ text: 'q' }} />
           <Step kind="cubic" control1={[24, -8]} control2={[26, -8]} to={[30, 0]} label={{ text: 'c' }} />
           <Step kind="bend" bendDirection="left" to={[40, 0]} label={{ text: 'b' }} />
@@ -633,7 +633,7 @@ describe('buildIR', () => {
       const fromKernel = buildIR(
         <Path>
           <Step kind="move" to="A" />
-          <Step kind="step" via="-|" to="B" label={{ text: 'fold' }} />
+          <Step kind="fold" via="-|" to="B" label={{ text: 'fold' }} />
           <Step kind="curve" to="C" control={[5, 8]} label={{ text: 'q', side: 'below' }} />
           <Step kind="arc" startAngle={0} endAngle={90} radius={4} label={{ text: 'a' }} />
         </Path>,

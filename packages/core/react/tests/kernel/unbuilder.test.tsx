@@ -132,7 +132,7 @@ describe('convertIRToReactNode', () => {
           type: 'path',
           children: [
             { type: 'step', kind: 'move', to: [0, 0] },
-            { type: 'step', kind: 'step', via: '-|', to: [10, 5] },
+            { type: 'step', kind: 'fold', via: '-|', to: [10, 5] },
           ],
         },
       ],
@@ -390,7 +390,7 @@ describe('convertIRToReactNode', () => {
             children: [
               { type: 'step', kind: 'move', to: [0, 0] },
               { type: 'step', kind: 'line', to: [10, 0], label: { text: 'L' } },
-              { type: 'step', kind: 'step', via: '-|', to: [20, 5], label: { text: 'F' } },
+              { type: 'step', kind: 'fold', via: '-|', to: [20, 5], label: { text: 'F' } },
               { type: 'step', kind: 'curve', control: [25, -5], to: [30, 0], label: { text: 'Q' } },
               {
                 type: 'step',

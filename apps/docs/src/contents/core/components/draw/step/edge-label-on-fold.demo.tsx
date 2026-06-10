@@ -14,7 +14,7 @@ const Demo: FC = () => (
     <Path stroke="currentColor" arrow="->">
       <Step kind="move" to="a" />
       <Step
-        kind="step"
+        kind="fold"
         via="-|"
         to="b"
         label={{ text: "'-|' t=0.5 (corner)", position: 0.5 }}
@@ -23,7 +23,7 @@ const Demo: FC = () => (
     <Path stroke="currentColor" arrow="->" dashPattern={[3, 3]}>
       <Step kind="move" to="a" />
       <Step
-        kind="step"
+        kind="fold"
         via="|-"
         to="b"
         label={{ text: "'|-' t=0.5 (corner)", position: 0.5, side: 'below' }}

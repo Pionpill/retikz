@@ -43,7 +43,7 @@ describe("compile path: 'step' 折角", () => {
           type: 'path',
           children: [
             { type: 'step', kind: 'move', to: [0, 0] },
-            { type: 'step', kind: 'step', via: '-|', to: [10, 5] },
+            { type: 'step', kind: 'fold', via: '-|', to: [10, 5] },
           ],
         },
       ],
@@ -76,7 +76,7 @@ describe("compile path: 'step' 折角", () => {
           type: 'path',
           children: [
             { type: 'step', kind: 'move', to: [0, 0] },
-            { type: 'step', kind: 'step', via: '|-', to: [10, 5] },
+            { type: 'step', kind: 'fold', via: '|-', to: [10, 5] },
           ],
         },
       ],
@@ -111,7 +111,7 @@ describe("compile path: 'step' 折角", () => {
           type: 'path',
           children: [
             { type: 'step', kind: 'move', to: [0, 0] },
-            { type: 'step', kind: 'step', via: '-|', to: [40, 30] },
+            { type: 'step', kind: 'fold', via: '-|', to: [40, 30] },
           ],
         },
       ],
@@ -139,7 +139,7 @@ describe("compile path: 'step' 折角", () => {
           type: 'path',
           children: [
             { type: 'step', kind: 'move', to: { id: 'A' } },
-            { type: 'step', kind: 'step', via: '-|', to: { id: 'B' } },
+            { type: 'step', kind: 'fold', via: '-|', to: { id: 'B' } },
           ],
         },
       ],
@@ -165,7 +165,7 @@ describe("compile path: 'step' 折角", () => {
           type: 'path',
           children: [
             { type: 'step', kind: 'move', to: { id: 'A' } },
-            { type: 'step', kind: 'step', via: '-|', to: { id: 'B' } },
+            { type: 'step', kind: 'fold', via: '-|', to: { id: 'B' } },
           ],
         },
       ],
@@ -188,7 +188,7 @@ describe("compile path: 'step' 折角", () => {
           type: 'path',
           children: [
             { type: 'step', kind: 'move', to: { id: 'A' } },
-            { type: 'step', kind: 'step', via: '|-', to: { id: 'B' } },
+            { type: 'step', kind: 'fold', via: '|-', to: { id: 'B' } },
           ],
         },
       ],
@@ -698,7 +698,7 @@ describe('compile path: 多节点连线段独立 clip（bugfix tikz-from-ir.demo
           children: [
             { type: 'step', kind: 'move', to: [0, 0] },
             { type: 'step', kind: 'line', to: [10, 0] },
-            { type: 'step', kind: 'step', via: '-|', to: [20, 5] },
+            { type: 'step', kind: 'fold', via: '-|', to: [20, 5] },
           ],
         },
       ],

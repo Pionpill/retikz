@@ -119,21 +119,21 @@ describe('parseWay', () => {
     it("'-|' 在两个 target 之间产出 step 折角", () => {
       expect(parseWay(['A', '-|', 'B'])).toEqual([
         { type: 'step', kind: 'move', to: { id: 'A' } },
-        { type: 'step', kind: 'step', via: '-|', to: { id: 'B' } },
+        { type: 'step', kind: 'fold', via: '-|', to: { id: 'B' } },
       ]);
     });
 
     it("'|-' 同理，目标可以是任意 IRTarget 形态", () => {
       expect(parseWay(['A', '|-', [10, 5]])).toEqual([
         { type: 'step', kind: 'move', to: { id: 'A' } },
-        { type: 'step', kind: 'step', via: '|-', to: [10, 5] },
+        { type: 'step', kind: 'fold', via: '|-', to: [10, 5] },
       ]);
     });
 
     it('混合 line + 折角算子 + line：折角与邻居 line 互不干扰', () => {
       expect(parseWay(['A', '-|', 'B', [10, 0]])).toEqual([
         { type: 'step', kind: 'move', to: { id: 'A' } },
-        { type: 'step', kind: 'step', via: '-|', to: { id: 'B' } },
+        { type: 'step', kind: 'fold', via: '-|', to: { id: 'B' } },
         { type: 'step', kind: 'line', to: [10, 0] },
       ]);
     });
@@ -170,7 +170,7 @@ describe('parseWay', () => {
     it('cycle 可与 fold 算子混用', () => {
       expect(parseWay(['A', '-|', 'B', 'C', DrawWay.Cycle])).toEqual([
         { type: 'step', kind: 'move', to: { id: 'A' } },
-        { type: 'step', kind: 'step', via: '-|', to: { id: 'B' } },
+        { type: 'step', kind: 'fold', via: '-|', to: { id: 'B' } },
         { type: 'step', kind: 'line', to: { id: 'C' } },
         { type: 'step', kind: 'cycle' },
       ]);
@@ -383,7 +383,7 @@ describe('parseWay', () => {
     it("'+1,0' 与折角算子混用：折角算子的 next target 也走 sugar", () => {
       expect(parseWay(['A', '-|', '+5,3'])).toEqual([
         { type: 'step', kind: 'move', to: { id: 'A' } },
-        { type: 'step', kind: 'step', via: '-|', to: { relative:[5, 3] } },
+        { type: 'step', kind: 'fold', via: '-|', to: { relative:[5, 3] } },
       ]);
     });
 
@@ -437,7 +437,7 @@ describe('parseWay', () => {
         parseWay(['A', '-|', { position: [5, 3], type: DrawWay.Accumulate }]),
       ).toEqual([
         { type: 'step', kind: 'move', to: { id: 'A' } },
-        { type: 'step', kind: 'step', via: '-|', to: { relativeAccumulate:[5, 3] } },
+        { type: 'step', kind: 'fold', via: '-|', to: { relativeAccumulate:[5, 3] } },
       ]);
     });
 
@@ -507,7 +507,7 @@ describe('parseWay', () => {
         { type: 'step', kind: 'move', to: { id: 'A' } },
         {
           type: 'step',
-          kind: 'step',
+          kind: 'fold',
           via: '-|',
           to: { id: 'B' },
           label: { text: 'f' },

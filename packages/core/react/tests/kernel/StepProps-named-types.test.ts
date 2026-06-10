@@ -18,7 +18,7 @@ describe('StepProps named types', () => {
   it('每个 named type 的 kind 字面量与命名对照一致', () => {
     expectTypeOf<MoveStepProps['kind']>().toEqualTypeOf<'move'>();
     expectTypeOf<LineStepProps['kind']>().toEqualTypeOf<'line' | undefined>();
-    expectTypeOf<FoldStepProps['kind']>().toEqualTypeOf<'step'>();
+    expectTypeOf<FoldStepProps['kind']>().toEqualTypeOf<'fold'>();
     expectTypeOf<CycleStepProps['kind']>().toEqualTypeOf<'cycle'>();
     expectTypeOf<CurveStepProps['kind']>().toEqualTypeOf<'curve'>();
     expectTypeOf<CubicStepProps['kind']>().toEqualTypeOf<'cubic'>();

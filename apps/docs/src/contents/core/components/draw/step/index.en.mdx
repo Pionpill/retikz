@@ -41,7 +41,7 @@ The path below draws A→B with one `move` + `line`, then lifts the pen with ano
 
 ### Folded (step)
 
-`kind="step"` inserts a single right-angle corner between cursor and target. A flow-chart staple:
+`kind="fold"` inserts a single right-angle corner between cursor and target. A flow-chart staple:
 
 <ComponentPreview name="step-fold" size="sm" />
 
@@ -223,7 +223,7 @@ Full ellipses also place labels by angle parameter; this is not equal spacing by
 
 | retikz | TikZ mapping |
 | --- | --- |
-| `kind="step"` + `via="-\|"` / `"\|-"` | `(A) -\| (B)` / `(A) \|- (B)` |
+| `kind="fold"` + `via="-\|"` / `"\|-"` | `(A) -\| (B)` / `(A) \|- (B)` |
 | `kind="cycle"` | `cycle` |
 | `kind="curve"` | `.. controls (B) ..` |
 | `kind="cubic"` | `.. controls (B) and (C) ..` |
@@ -241,7 +241,7 @@ Full ellipses also place labels by angle parameter; this is not equal spacing by
 | Prop | Type | Default | Description |
 | --- | --- | --- | --- |
 | `kind` | `'move' \| 'line' \| 'step' \| 'cycle' \| 'curve' \| 'cubic' \| 'bend' \| 'arc' \| 'circlePath' \| 'ellipsePath' \| 'rectangle'` | `'line'` | See the "Eleven kinds" table below; IR also has `generator`, without React `<Step>` DSL |
-| `via` | `'-\|' \| '\|-'` | — | Required for `kind="step"`: `-\|` horizontal-then-vertical; `\|-` vertical-then-horizontal |
+| `via` | `'-\|' \| '\|-'` | — | Required for `kind="fold"`: `-\|` horizontal-then-vertical; `\|-` vertical-then-horizontal |
 | `from` | `IRTarget` | — | Required only for `kind="rectangle"`: one rectangle corner |
 | `to` | `IRTarget` | — | Not used for `kind="cycle"` / `'arc'` / `'circlePath'` / `'ellipsePath'`; required for `kind="rectangle"` and other cursor-advancing kinds. Target: node id, Cartesian `[x, y]`, polar object, offset object `{ of, offset }`, proportional placement `{ between, t }`, relative-offset object `{ relative }` / `{ relativeAccumulate }`, or sugar string `'+dx,dy'` / `'++dx,dy'` |
 | `control` | `[number, number]` | — | Required for `kind="curve"`: single control point of the quadratic Bezier |
@@ -279,7 +279,7 @@ The first step of a `<Path>` must be `move` — if you write `'line'` / `'step'`
 
 ### Two via values
 
-Only meaningful when `kind="step"`. Given cursor `(px, py)` and target `(tx, ty)`:
+Only meaningful when `kind="fold"`. Given cursor `(px, py)` and target `(tx, ty)`:
 
 | via | Corner | Path |
 | --- | --- | --- |

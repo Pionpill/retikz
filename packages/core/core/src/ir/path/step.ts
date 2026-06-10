@@ -94,7 +94,7 @@ export const FoldStepSchema = z
   .object({
     type: z.literal('step').describe('Discriminator marking this as a path step node'),
     kind: z
-      .literal('step')
+      .literal('fold')
       .describe(
         'Folded right-angle segment from cursor to target through one intermediate point (TikZ `-|` / `|-`)',
       ),

@@ -208,11 +208,11 @@ const readPathChildren = (children: ReactNode): Array<IRStep> => {
     }
     const label =
       kind === 'move' ? undefined : resolveStepLabel(props as LabelableStepProps);
-    if (kind === 'step') {
-      const p = props as Extract<StepProps, { kind: 'step' }>;
-      const step: Extract<IRStep, { kind: 'step' }> = {
+    if (kind === 'fold') {
+      const p = props as Extract<StepProps, { kind: 'fold' }>;
+      const step: Extract<IRStep, { kind: 'fold' }> = {
         type: 'step',
-        kind: 'step',
+        kind: 'fold',
         via: p.via,
         to: parseTargetSugar(p.to),
       };
