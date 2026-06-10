@@ -102,7 +102,7 @@ const arcSpan = (seg: ArcSegment): number => seg.endAngle - seg.startAngle;
  * @description tangentInPoint = 前段被裁短到此点（前段新终点）；tangentOutPoint = 后段从此点起（后段新起点）；
  *   filletArc 描述连接两切点的圆弧。clampedToZero=true 表示该角夹紧后 r→0，不倒角（保持尖角）。
  */
-type FilletSolution = {
+export type FilletSolution = {
   /** 前段切点（前段新终点） */
   tangentInPoint: Position;
   /** 后段切点（后段新起点） */
@@ -451,10 +451,10 @@ export const filletContour = (
 export const contourCommands = (
   segments: Array<ContourSegment>,
   cornerRadius?: number,
+  fillets: Array<FilletSolution> = filletContour(segments, cornerRadius),
 ): Array<ContourCommand> => {
   const n = segments.length;
   if (n === 0) return [];
-  const fillets = filletContour(segments, cornerRadius);
 
   // passthrough：原尖角轮廓
   if (fillets.length === 0) {
@@ -541,6 +541,7 @@ export const boundaryFromContour = (
   cornerRadius: number | undefined,
   rayOrigin: Position,
   toward: Position,
+  fillets: Array<FilletSolution> = filletContour(segments, cornerRadius),
 ): Position | undefined => {
   const dirRaw: Position = [toward[0] - rayOrigin[0], toward[1] - rayOrigin[1]];
   const dl = length(dirRaw);
@@ -548,7 +549,6 @@ export const boundaryFromContour = (
   const dir: Position = [dirRaw[0] / dl, dirRaw[1] / dl];
 
   const n = segments.length;
-  const fillets = filletContour(segments, cornerRadius);
   let best = Infinity;
 
   const considerLine = (a: Position, b: Position): void => {
