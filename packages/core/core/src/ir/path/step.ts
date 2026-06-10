@@ -94,7 +94,7 @@ export const FoldStepSchema = z
   .object({
     type: z.literal('step').describe('Discriminator marking this as a path step node'),
     kind: z
-      .literal('step')
+      .literal('fold')
       .describe(
         'Folded right-angle segment from cursor to target through one intermediate point (TikZ `-|` / `|-`)',
       ),
@@ -213,7 +213,60 @@ export const BendStepSchema = z
   })
   .describe('Bend action: shorthand for an arc-like cubic; control points computed at compile time');
 
-export const ArcStepSchema = z
+const refineArcStep = (
+  step: { radius?: number; radiusX?: number; radiusY?: number },
+  ctx: z.RefinementCtx,
+): void => {
+  const hasRadius = step.radius !== undefined;
+  const hasRadiusX = step.radiusX !== undefined;
+  const hasRadiusY = step.radiusY !== undefined;
+  if (hasRadius && (hasRadiusX || hasRadiusY)) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ['radius'],
+      message: 'Arc step must use either radius or radiusX/radiusY, not both',
+    });
+  }
+  if (!hasRadius && !(hasRadiusX && hasRadiusY)) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ['radius'],
+      message: 'Arc step requires radius or both radiusX and radiusY',
+    });
+  }
+  if (hasRadiusX !== hasRadiusY) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: hasRadiusX ? ['radiusY'] : ['radiusX'],
+      message: 'Arc step requires radiusX and radiusY together',
+    });
+  }
+};
+
+const refinePartialAngles = (
+  step: { startAngle?: number; endAngle?: number; closed?: 'closed' | 'chord' | 'open' | 'sector' },
+  ctx: z.RefinementCtx,
+  kind: 'circlePath' | 'ellipsePath',
+): void => {
+  const hasStart = step.startAngle !== undefined;
+  const hasEnd = step.endAngle !== undefined;
+  if (hasStart !== hasEnd) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: hasStart ? ['endAngle'] : ['startAngle'],
+      message: `${kind} requires startAngle and endAngle together`,
+    });
+  }
+  if (step.closed === 'closed' && (hasStart || hasEnd)) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ['closed'],
+      message: `${kind} closed:'closed' is only valid without angles`,
+    });
+  }
+};
+
+const ArcStepBaseSchema = z
   .object({
     type: z.literal('step').describe('Discriminator marking this as a path step node'),
     kind: z
@@ -221,22 +274,27 @@ export const ArcStepSchema = z
       .describe('Arc segment sweeping startAngle → endAngle around a center. Circular (radius) or elliptical (radiusX/radiusY). Center defaults to the cursor but can be set explicitly. Pen ends at the arc endpoint, not the center (TikZ `arc[start angle=…, end angle=…, radius=…]`).'),
     startAngle: z
       .number()
+      .finite()
       .describe('Arc start angle in degrees, measured from +x axis. 0° = +x, 90° = +y = screen-down (visual clockwise under screen y-down); matches polar / Node label angle convention.'),
     endAngle: z
       .number()
+      .finite()
       .describe('Arc end angle in degrees; sweep direction inferred from startAngle vs endAngle'),
     radius: z
       .number()
+      .finite()
       .positive()
       .optional()
-      .describe('Circular arc radius in user units. Give EITHER radius (circular) OR both radiusX and radiusY (elliptical), never both — enforced by the sugar/compile layer, not schema.'),
+      .describe('Circular arc radius in user units. Give either radius (circular) or both radiusX and radiusY (elliptical), never both.'),
     radiusX: z
       .number()
+      .finite()
       .positive()
       .optional()
       .describe('Elliptical arc x-axis radius; requires radiusX and radiusY together (mutually exclusive with radius).'),
     radiusY: z
       .number()
+      .finite()
       .positive()
       .optional()
       .describe('Elliptical arc y-axis radius; requires radiusX and radiusY together (mutually exclusive with radius).'),
@@ -247,7 +305,9 @@ export const ArcStepSchema = z
   })
   .describe('Arc action: circular (radius) or elliptical (radiusX/radiusY) arc around a center (cursor by default, or explicit). Pen is left at the arc endpoint.');
 
-export const CirclePathStepSchema = z
+export const ArcStepSchema = ArcStepBaseSchema.superRefine(refineArcStep);
+
+const CirclePathStepBaseSchema = z
   .object({
     type: z.literal('step').describe('Discriminator marking this as a path step node'),
     kind: z
@@ -255,14 +315,17 @@ export const CirclePathStepSchema = z
       .describe('Circle centered at the cursor. Without angles: a full circle (TikZ `circle[radius=…]`), pen returns to center. With startAngle + endAngle: a partial arc closed per `closed` (half circle / segment).'),
     radius: z
       .number()
+      .finite()
       .positive()
       .describe('Circle radius in user units'),
     startAngle: z
       .number()
+      .finite()
       .optional()
-      .describe('Partial-circle start angle in degrees (same convention as arc: 0°=+x, 90°=+y screen-down). Give both startAngle and endAngle for a partial circle, or neither for a full circle (enforced by the sugar/compile layer, not schema).'),
+      .describe('Partial-circle start angle in degrees (same convention as arc: 0°=+x, 90°=+y screen-down). Give both startAngle and endAngle for a partial circle, or neither for a full circle.'),
     endAngle: z
       .number()
+      .finite()
       .optional()
       .describe('Partial-circle end angle in degrees; sweep direction inferred from startAngle vs endAngle.'),
     closed: z
@@ -273,7 +336,11 @@ export const CirclePathStepSchema = z
   })
   .describe('CirclePath action: full circle (no angles, pen returns to center) or partial arc (with angles, closed per chord/open).');
 
-export const EllipsePathStepSchema = z
+export const CirclePathStepSchema = CirclePathStepBaseSchema.superRefine((step, ctx) =>
+  refinePartialAngles(step, ctx, 'circlePath'),
+);
+
+const EllipsePathStepBaseSchema = z
   .object({
     type: z.literal('step').describe('Discriminator marking this as a path step node'),
     kind: z
@@ -281,18 +348,22 @@ export const EllipsePathStepSchema = z
       .describe('Ellipse centered at the cursor. Without angles: a full ellipse (TikZ `ellipse[x radius=…, y radius=…]`), pen returns to center. With startAngle + endAngle: a partial elliptical arc closed per `closed`.'),
     radiusX: z
       .number()
+      .finite()
       .positive()
       .describe('Ellipse x-axis radius (semi-major or semi-minor on x)'),
     radiusY: z
       .number()
+      .finite()
       .positive()
       .describe('Ellipse y-axis radius (semi-major or semi-minor on y)'),
     startAngle: z
       .number()
+      .finite()
       .optional()
       .describe('Partial-ellipse start angle in degrees (parametric, same convention as arc). Give both startAngle and endAngle for a partial ellipse, or neither for a full ellipse.'),
     endAngle: z
       .number()
+      .finite()
       .optional()
       .describe('Partial-ellipse end angle in degrees.'),
     closed: z
@@ -302,6 +373,10 @@ export const EllipsePathStepSchema = z
     label: StepLabelSchema.optional().describe('Edge label attached to this ellipse'),
   })
   .describe('EllipsePath action: full ellipse (no angles, pen returns to center) or partial elliptical arc (with angles, closed per chord/open).');
+
+export const EllipsePathStepSchema = EllipsePathStepBaseSchema.superRefine((step, ctx) =>
+  refinePartialAngles(step, ctx, 'ellipsePath'),
+);
 
 export const RectangleStepSchema = z
   .object({
@@ -356,12 +431,25 @@ export const StepSchema = z
     CurveStepSchema,
     CubicStepSchema,
     BendStepSchema,
-    ArcStepSchema,
-    CirclePathStepSchema,
-    EllipsePathStepSchema,
+    ArcStepBaseSchema,
+    CirclePathStepBaseSchema,
+    EllipsePathStepBaseSchema,
     RectangleStepSchema,
     GeneratorStepSchema,
   ])
+  .superRefine((step, ctx) => {
+    if (step.kind === 'arc') {
+      refineArcStep(step, ctx);
+      return;
+    }
+    if (step.kind === 'circlePath') {
+      refinePartialAngles(step, ctx, 'circlePath');
+      return;
+    }
+    if (step.kind === 'ellipsePath') {
+      refinePartialAngles(step, ctx, 'ellipsePath');
+    }
+  })
   .describe('A single path action; the discriminator field is `kind`');
 
 /** Move step：移动游标但不绘制 */
@@ -398,6 +486,6 @@ export type IRGeneratorStep = z.infer<typeof GeneratorStepSchema>;
 
 /**
  * 路径上的一个动作（十二种 kind）
- * @description 十二种 kind：move / line / step（折角）/ cycle / curve / cubic / bend / arc / circlePath / ellipsePath / rectangle（矩形）/ generator（注册生成器）；`to` 字段支持 relative / relativeAccumulate 变体；除 move/cycle/rectangle 外可挂 `label?` 边标注
+ * @description 十二种 kind：move / line / fold（折角）/ cycle / curve / cubic / bend / arc / circlePath / ellipsePath / rectangle（矩形）/ generator（注册生成器）；`to` 字段支持 relative / relativeAccumulate 变体；除 move/cycle/rectangle 外可挂 `label?` 边标注
  */
 export type IRStep = z.infer<typeof StepSchema>;

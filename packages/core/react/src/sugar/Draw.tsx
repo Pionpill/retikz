@@ -91,8 +91,8 @@ export const Draw: FC<DrawProps> = props => {
       {steps.map((s, i) => {
         if (s.kind === 'cycle') return <Step key={i} kind="cycle" />;
         if (s.kind === 'move') return <Step key={i} kind="move" to={s.to} />;
-        if (s.kind === 'step')
-          return <Step key={i} kind="step" via={s.via} to={s.to} label={s.label} />;
+        if (s.kind === 'fold')
+          return <Step key={i} kind="fold" via={s.via} to={s.to} label={s.label} />;
         if (s.kind === 'curve')
           return <Step key={i} kind="curve" to={s.to} control={s.control} label={s.label} />;
         if (s.kind === 'cubic')

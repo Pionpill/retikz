@@ -132,7 +132,7 @@ describe('convertIRToReactNode', () => {
           type: 'path',
           children: [
             { type: 'step', kind: 'move', to: [0, 0] },
-            { type: 'step', kind: 'step', via: '-|', to: [10, 5] },
+            { type: 'step', kind: 'fold', via: '-|', to: [10, 5] },
           ],
         },
       ],
@@ -390,7 +390,7 @@ describe('convertIRToReactNode', () => {
             children: [
               { type: 'step', kind: 'move', to: [0, 0] },
               { type: 'step', kind: 'line', to: [10, 0], label: { text: 'L' } },
-              { type: 'step', kind: 'step', via: '-|', to: [20, 5], label: { text: 'F' } },
+              { type: 'step', kind: 'fold', via: '-|', to: [20, 5], label: { text: 'F' } },
               { type: 'step', kind: 'curve', control: [25, -5], to: [30, 0], label: { text: 'Q' } },
               {
                 type: 'step',
@@ -905,10 +905,10 @@ describe('convertIRToReactNode', () => {
   describe('能力补全阶段（alpha.7–9）新增形态 round-trip', () => {
     it('round-trips Node fill PaintSpec：linearGradient / radialGradient / pattern / image', () => {
       const fills = [
-        { type: 'linearGradient' as const, angle: 90, stops: [{ offset: 0, color: '#000' }, { offset: 1, color: '#fff' }] },
-        { type: 'radialGradient' as const, stops: [{ offset: 0, color: '#fff' }, { offset: 1, color: '#d33' }] },
-        { type: 'pattern' as const, shape: 'lines', color: '#08f', size: 8, rotation: 45 },
-        { type: 'image' as const, href: 'a.png', fit: 'cover' as const },
+        { kind: 'linearGradient' as const, angle: 90, stops: [{ offset: 0, color: '#000' }, { offset: 1, color: '#fff' }] },
+        { kind: 'radialGradient' as const, stops: [{ offset: 0, color: '#fff' }, { offset: 1, color: '#d33' }] },
+        { kind: 'pattern' as const, shape: 'lines', color: '#08f', size: 8, rotation: 45 },
+        { kind: 'image' as const, href: 'a.png', fit: 'cover' as const },
       ];
       for (const fill of fills) {
         const ir: IR = {

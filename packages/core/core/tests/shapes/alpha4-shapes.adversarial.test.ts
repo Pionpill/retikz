@@ -266,13 +266,13 @@ describe('[adversarial] scaleParams：角度/计数不该被缩', () => {
 // ════════════════ 攻击面 7：AnchorRefSchema 放宽副作用 ════════════════
 
 describe('[adversarial] anchor 放宽：未知 anchor 错误清晰度', () => {
-  const pathTo = (anchor: unknown, id: string): IR['children'][number] => ({
+  const pathTo = (anchor: string, id: string): IR['children'][number] => ({
     type: 'path',
     children: [
       { type: 'step', kind: 'move', to: [100, 100] },
       { type: 'step', kind: 'line', to: { id, anchor } },
     ],
-  } as IR['children'][number]);
+  });
 
   it('[adversarial] sector 给不认识的 anchor "tip-0"（star 专属）→ 错误应指明 shape+anchor', () => {
     let msg = '';
@@ -346,7 +346,7 @@ describe('[adversarial] boundaryPoint / AABB 数值稳定', () => {
 // ════════════════ 攻击面 10：收敛别名 × 交叉 ════════════════
 
 describe('[adversarial] 别名 × anchor / scale 交叉', () => {
-  it('[adversarial] diamond（→polygon 4/45）的 anchor "north" 应与 rect anchor 一致、不抛', () => {
+  it('[adversarial] diamond（→polygon 4/0）的 anchor "north" 应与 rect anchor 一致、不抛', () => {
     expect(() => compileToScene(scene([
       { type: 'node', id: 'd', position: [0, 0], text: 'X', shape: 'diamond' },
       { type: 'path', children: [{ type: 'step', kind: 'move', to: [100, 0] }, { type: 'step', kind: 'line', to: { id: 'd', anchor: 'north' } }] },

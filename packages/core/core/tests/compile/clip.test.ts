@@ -25,7 +25,7 @@ const clipResources = (resources: Array<SceneResource> | undefined): Array<ClipR
   (resources ?? []).filter((r): r is ClipResource => r.kind === 'clip');
 
 const grad: IRPaintSpec = {
-  type: 'linearGradient',
+  kind: 'linearGradient',
   angle: 90,
   stops: [
     { offset: 0, color: '#4f8' },

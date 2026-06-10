@@ -37,7 +37,7 @@ Zero-React, zero-DOM. `zod` is the only runtime dependency.
 | [`primitive/`](https://github.com/Pionpill/retikz/tree/main/packages/core/src/primitive) | Scene data model — render-target-agnostic primitives, resources, markers, and clipping |
 | [`compile/`](https://github.com/Pionpill/retikz/tree/main/packages/core/src/compile) | IR → Scene compiler — node layout, path resolution, style cascade, resource collection, layout |
 | [`parsers/`](https://github.com/Pionpill/retikz/tree/main/packages/core/src/parsers) | DSL → IR parsers — currently the Sugar `way` array and `target` strings |
-| [`shapes/`](https://github.com/Pionpill/retikz/tree/main/packages/core/src/shapes) / [`arrows/`](https://github.com/Pionpill/retikz/tree/main/packages/core/src/arrows) / [`patterns/`](https://github.com/Pionpill/retikz/tree/main/packages/core/src/patterns) / [`pathGenerators/`](https://github.com/Pionpill/retikz/tree/main/packages/core/src/pathGenerators) | v0.2 extension surfaces — custom shapes, arrows, pattern motifs, and path generators |
+| [`shapes/`](https://github.com/Pionpill/retikz/tree/main/packages/core/src/shapes) / [`arrows/`](https://github.com/Pionpill/retikz/tree/main/packages/core/src/arrows) / [`patterns/`](https://github.com/Pionpill/retikz/tree/main/packages/core/src/patterns) / [`path-generators/`](https://github.com/Pionpill/retikz/tree/main/packages/core/src/path-generators) | v0.2 extension surfaces — custom shapes, arrows, pattern motifs, and path generators |
 | [`index.ts`](https://github.com/Pionpill/retikz/blob/main/packages/core/src/index.ts) | Public API surface — every adapter must import from this file only |
 
 ### Recommended Reading Order
@@ -69,7 +69,7 @@ Walk inward from both ends: input contract (IR) first, then output contract (Sce
    [`parseWay`](https://github.com/Pionpill/retikz/blob/main/packages/core/core/src/parsers/way.ts) / [`parseTargetSugar`](https://github.com/Pionpill/retikz/blob/main/packages/core/core/src/parsers/target-sugar.ts) translate `<Draw way={[...]}>` and similar Sugar forms into IR. `@retikz/react` calls them inside its Sugar components.
 
 9. **Registry extension surfaces (optional)**<br />
-   [`shapes/`](https://github.com/Pionpill/retikz/tree/main/packages/core/src/shapes) / [`arrows/`](https://github.com/Pionpill/retikz/tree/main/packages/core/src/arrows) / [`patterns/`](https://github.com/Pionpill/retikz/tree/main/packages/core/src/patterns) / [`pathGenerators/`](https://github.com/Pionpill/retikz/tree/main/packages/core/src/pathGenerators): third-party packages should extend here instead of modifying core enums.
+   [`shapes/`](https://github.com/Pionpill/retikz/tree/main/packages/core/src/shapes) / [`arrows/`](https://github.com/Pionpill/retikz/tree/main/packages/core/src/arrows) / [`patterns/`](https://github.com/Pionpill/retikz/tree/main/packages/core/src/patterns) / [`path-generators/`](https://github.com/Pionpill/retikz/tree/main/packages/core/src/path-generators): third-party packages should extend here instead of modifying core enums.
 
 ### Constraints to Keep in Mind
 

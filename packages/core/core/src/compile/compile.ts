@@ -7,7 +7,7 @@ import { BUILTIN_ARROWS } from '../arrows';
 import type { ArrowDefinition } from '../arrows';
 import { BUILTIN_PATTERNS } from '../patterns';
 import type { PatternDefinition } from '../patterns';
-import type { PathGeneratorDefinition } from '../pathGenerators';
+import type { PathGeneratorDefinition } from '../path-generators';
 import type { CompositeDefinition } from '../composites';
 import {
   type CompileWarning,
@@ -21,7 +21,7 @@ import { createPaintRegistry } from './paint';
 import { createClipRegistry } from './clip';
 import { emitPathPrimitive, refPointOfTarget } from './path';
 import { resolvePosition } from './position';
-import { DEFAULT_PRECISION, makeRound } from './precision';
+import { DEFAULT_PRECISION, createRound } from './precision';
 import {
   applyTransformChain,
   computeScopeBoundingBox,
@@ -31,7 +31,7 @@ import {
 } from './scope';
 import {
   type StyleFrame,
-  buildStyleFrame,
+  createStyleFrame,
   resolveEffectivePath,
   resolveLabelDefault,
   resolveNodeStyle,
@@ -47,10 +47,14 @@ export { CompileWarningCode } from './constant';
  * @description coordinate / scope.id 入场临时占位等"无形状只有位置"句柄共享此结构，
  *   让后续 path target / `at.of` / `offset.of` / `polar.origin` 引用时 boundaryPoint 命中中心。
  */
-const zeroSizeRectAt = (id: string, [cx, cy]: IRPosition): NodeLayout => ({
+const zeroSizeRectAt = (
+  id: string,
+  [cx, cy]: IRPosition,
+  shapes: Record<string, ShapeDefinition>,
+): NodeLayout => ({
   id,
   shapeName: 'rectangle',
-  shapeDef: BUILTIN_SHAPES.rectangle,
+  shapeDef: shapes.rectangle,
   rect: { x: cx, y: cy, width: 0, height: 0, rotate: 0 },
   rotateDeg: 0,
   margin: 0,
@@ -59,15 +63,18 @@ const zeroSizeRectAt = (id: string, [cx, cy]: IRPosition): NodeLayout => ({
   align: 'middle',
   lineHeight: 0,
   fontSize: 0,
-  shapes: BUILTIN_SHAPES,
+  shapes,
 });
 
 /**
  * 把 coordinate 注册成 0×0 NodeLayout
  * @description 让后续 path target / `at.of` 引用时 boundaryPoint 命中中心，符合"占位无形状边界"语义
  */
-const coordinateAsLayout = (id: string, center: IRPosition): NodeLayout =>
-  zeroSizeRectAt(id, center);
+const coordinateAsLayout = (
+  id: string,
+  center: IRPosition,
+  shapes: Record<string, ShapeDefinition>,
+): NodeLayout => zeroSizeRectAt(id, center, shapes);
 
 /**
  * scope.id 入场时的临时占位 NodeLayout
@@ -78,10 +85,11 @@ const coordinateAsLayout = (id: string, center: IRPosition): NodeLayout =>
 const scopePlaceholderLayout = (
   id: string,
   chain: ReadonlyArray<Transform>,
+  shapes: Record<string, ShapeDefinition>,
 ): NodeLayout => {
   const globalOrigin: IRPosition =
     chain.length === 0 ? [0, 0] : applyTransformChain([0, 0], chain);
-  return zeroSizeRectAt(id, globalOrigin);
+  return zeroSizeRectAt(id, globalOrigin, shapes);
 };
 
 /** compileToScene 的可选参数 */
@@ -307,6 +315,7 @@ const scopeTransformWarnCode = (
     if (t.kind === 'offset-translate') return CompileWarningCode.OffsetBaseUnresolved;
     if (t.kind === 'at-translate') return CompileWarningCode.AtTargetUnresolved;
     if (t.kind === 'polar-translate') return CompileWarningCode.PolarOriginUnresolved;
+    if (t.kind === 'between-translate') return CompileWarningCode.UnresolvedNodeReference;
   }
   return CompileWarningCode.UnresolvedNodeReference;
 };
@@ -328,12 +337,12 @@ const formatDuplicateWarning = (info: DuplicateRegisterInfo): CompileWarning => 
 
 /**
  * IR → Scene 纯函数转换，所有 adapter 共享
- * @description Pass 1 递归处理 node / coordinate / scope，把 scope 树下沉为嵌套 GroupPrim；scope.transforms 中的 4 种 translate 变体按 lowerScopeTransforms 展平为 Cartesian transform；node 在 Scene primitive 树里是局部坐标 + GroupPrim transform 链、在 NameStack 中存全局坐标供其他节点 / path 引用。NameStack 用栈式 frame 管理命名空间：默认全局扁平、`<Scope localNamespace>` 推入子 frame；scope.id 始终在父 frame 注册（外部句柄）；id lookup 从栈顶向栈底 inside-out 搜索；同 frame 重复 id 触发 DUPLICATE_NODE_ID warn + 后定义覆盖前定义。Pass 2 解析 path 端点写 d 字符串，path primitive 发到 Pass 1 记录的对应容器；末端按 precision 折算 layout
+ * @description Pass 1 递归处理 node / coordinate / scope，把 scope 树下沉为嵌套 GroupPrim；scope.transforms 中的 5 种 translate 变体按 lowerScopeTransforms 展平为 Cartesian transform；node 在 Scene primitive 树里是局部坐标 + GroupPrim transform 链、在 NameStack 中存全局坐标供其他节点 / path 引用。NameStack 用栈式 frame 管理命名空间：默认全局扁平、`<Scope localNamespace>` 推入子 frame；scope.id 始终在父 frame 注册（外部句柄）；id lookup 从栈顶向栈底 inside-out 搜索；同 frame 重复 id 触发 DUPLICATE_NODE_ID warn + 后定义覆盖前定义。Pass 2 解析 path 端点写 d 字符串，path primitive 发到 Pass 1 记录的对应容器；末端按 precision 折算 layout
  */
 export const compileToScene = (ir: IR, options: CompileOptions = {}): Scene => {
   const measureText = options.measureText ?? fallbackMeasurer;
   const layoutPadding = options.padding ?? 10;
-  const round = makeRound(options.precision ?? DEFAULT_PRECISION);
+  const round = createRound(options.precision ?? DEFAULT_PRECISION);
   const nodeDistance = options.nodeDistance;
   const onWarn = options.onWarn ?? defaultWarnDispatcher;
 
@@ -343,6 +352,9 @@ export const compileToScene = (ir: IR, options: CompileOptions = {}): Scene => {
     maxDepth: options.maxCompositeDepth,
   });
 
+  // shape / arrow / pattern 三表策略一致：Record 注入（key 天然去重）→ 同名覆盖内置 warn + last-wins、
+  // 未注册名 throw（定位 / 布局类基元缺失无法继续）。与 composite（Array 注入、重名 throw、缺失 warn+skip）
+  // 的策略差异是有意的，理由见 lowerComposites JSDoc。
   // 有效 shape 表：内置 + 注入（同名注入覆盖内置）；覆盖内置经 onWarn 发 SHAPE_OVERRIDES_BUILTIN
   const effectiveShapes: Record<string, ShapeDefinition> = options.shapes
     ? { ...BUILTIN_SHAPES, ...options.shapes }
@@ -473,7 +485,7 @@ export const compileToScene = (ir: IR, options: CompileOptions = {}): Scene => {
 
   /**
    * 递归处理一组 IR child，把 node / coordinate 发到 sink、把本层 path 收集到 pathsAccumulator、scope 下沉为 GroupPrim
-   * @description **不**在内部 resolve pathsAccumulator——调用方负责在合适时机（scope 入口：bbox replaceLayout 之后 / popFrame 之前；顶层：所有处理结束后）调用 resolvePendingPaths。这样 scope.id 的 placeholder→real bbox 替换在本层 path 端点 lookup 之前完成，避免 "scope 内 path 自引用本 scope.id 拿到 placeholder" 的 latent bug，同时保留 ADR-02 的 "本层 path 在本层 frame 还在栈顶时 resolve" inside-out lookup 语义。
+   * @description **不**在内部 resolve pathsAccumulator——调用方负责在合适时机（scope 入口：bbox replaceLayout 之后 / popFrame 之前；顶层：所有处理结束后）调用 resolvePendingPaths。这样 scope.id 的 placeholder→real bbox 替换在本层 path 端点 lookup 之前完成，避免 "scope 内 path 自引用本 scope.id 拿到 placeholder" 的 latent bug，同时保留"本层 path 在本层 frame 还在栈顶时 resolve"的 inside-out lookup 语义。
    * @param children 当前层级的 IR child 数组
    * @param chain 从根到当前层级累积的 Cartesian-only transform 链
    * @param sink 当前层级 Scene primitive 落点（顶层 = primitives，scope 内 = GroupPrim.children）
@@ -534,17 +546,15 @@ export const compileToScene = (ir: IR, options: CompileOptions = {}): Scene => {
       } else if (child.type === 'coordinate') {
         const localCenter = resolvePosition(child.position, nameStack, nodeDistance, chain, refPointOfTarget);
         if (!localCenter) {
-          onWarn({
-            code: CompileWarningCode.PolarOriginUnresolved,
-            message: `Cannot resolve position for coordinate '${child.id}'; polar.origin or at.of may reference an undefined node`,
-            path: `${locatorPrefix}children[${i}].coordinate.position`,
-          });
+          // coordinate 与 node 同属"定义位置"的实体：位置不可解析时 fail-fast throw（下游引用会级联失败），
+          // 不像 path / scope.transform 那类"引用方"走 warn + 降级。此处只 throw、不再额外 onWarn——
+          // warn 后立即 throw 会让 onWarn 收集器记录一条永不产出 Scene 的死告警。
           throw new Error(
             `Cannot resolve position for coordinate ${child.id}; polar.origin or at.of may reference an undefined node`,
           );
         }
         const globalCenter = chain.length === 0 ? localCenter : applyTransformChain(localCenter, chain);
-        const coordLayout = coordinateAsLayout(child.id, globalCenter);
+        const coordLayout = coordinateAsLayout(child.id, globalCenter, effectiveShapes);
         nameStack.register(
           child.id,
           coordLayout,
@@ -554,11 +564,11 @@ export const compileToScene = (ir: IR, options: CompileOptions = {}): Scene => {
         layoutsAccumulator.push(coordLayout);
       } else if (child.type === 'scope') {
         const rawTransforms = child.transforms ?? [];
-        const loweredOwn = lowerScopeTransforms(rawTransforms, nameStack, nodeDistance);
+        const loweredOwn = lowerScopeTransforms(rawTransforms, nameStack, nodeDistance, refPointOfTarget);
         if (loweredOwn === null) {
           onWarn({
             code: scopeTransformWarnCode(child),
-            message: `Cannot resolve one of scope.transforms; referent (at.of / offset.of / polar.origin) is undefined or defined later in the IR`,
+            message: `Cannot resolve one of scope.transforms; referent (at.of / offset.of / polar.origin / between endpoints) is undefined or defined later in the IR`,
             path: `${locatorPrefix}children[${i}].scope.transforms`,
           });
           // 失败时退化为不应用 transform，继续处理子树以收集尽可能多的产物
@@ -569,10 +579,12 @@ export const compileToScene = (ir: IR, options: CompileOptions = {}): Scene => {
         // 此 register 是 register（走 duplicate 检测——与 node.id / coordinate.id / 兄弟 scope.id 冲突触发 warn）；
         // 后面子树完成后用 replaceLayout 覆盖 bbox 不再触发 warn（同一 scope.id 的 placeholder→real 接力不算冲突）
         const parentFrameDepth = nameStack.depth - 1;
+        let placeholderLayout: NodeLayout | undefined;
         if (child.id) {
+          placeholderLayout = scopePlaceholderLayout(child.id, innerChain, effectiveShapes);
           nameStack.register(
             child.id,
-            scopePlaceholderLayout(child.id, innerChain),
+            placeholderLayout,
             `${locatorPrefix}children[${i}].scope.id`,
           );
         }
@@ -593,16 +605,16 @@ export const compileToScene = (ir: IR, options: CompileOptions = {}): Scene => {
             `${locatorPrefix}children[${i}].scope.`,
             innerLayouts,
             innerPaths,
-            [...styleStack, buildStyleFrame(child)],
+            [...styleStack, createStyleFrame(child)],
           );
           // 子树 register 完毕，先用真 bbox 覆盖 placeholder（仍在本 scope frame 上下文），再 resolve 本 scope 内 paths
           if (child.id) {
             const bbox = computeScopeBoundingBox(innerLayouts);
             const fallbackOrigin: IRPosition =
               innerChain.length === 0 ? [0, 0] : applyTransformChain([0, 0], innerChain);
-            const bboxLayout = registerScopeAsLayout(child.id, bbox, fallbackOrigin);
+            const bboxLayout = registerScopeAsLayout(child.id, bbox, fallbackOrigin, effectiveShapes);
             // 用 replaceLayout 覆盖不触发 duplicate warn（placeholder → real bbox 是预期升级）
-            nameStack.replaceLayout(child.id, bboxLayout, parentFrameDepth);
+            nameStack.replaceLayout(child.id, bboxLayout, parentFrameDepth, placeholderLayout);
             // 嵌套 scope.id：把本层 synthetic bbox layout 合并进外层 layoutsAccumulator，
             // 让外层 scope.id 的 bbox 包含本层 bbox（外层 bbox 透传包内层 bbox 区域）
             layoutsAccumulator.push(bboxLayout);

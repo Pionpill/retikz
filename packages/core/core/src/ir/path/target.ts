@@ -49,7 +49,7 @@ export type IRNodeTarget = z.infer<typeof NodeTargetSchema>;
 export const RelativeTargetSchema = z
   .object({
     relative: z
-      .tuple([z.number(), z.number()])
+      .tuple([z.number().finite(), z.number().finite()])
       .describe('Relative offset (dx, dy)'),
   })
   .describe(
@@ -59,7 +59,7 @@ export const RelativeTargetSchema = z
 export const RelativeAccumulateTargetSchema = z
   .object({
     relativeAccumulate: z
-      .tuple([z.number(), z.number()])
+      .tuple([z.number().finite(), z.number().finite()])
       .describe('Accumulated relative offset (dx, dy)'),
   })
   .describe(

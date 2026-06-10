@@ -1,9 +1,9 @@
 ---
 title: Basic Concepts
-description: Start with retikz's foundational design: coordinates define the drawing context, and positioning normalizes different forms into points.
+description: Start with retikz's foundational design: coordinates define the drawing context, positioning normalizes different forms into points, and animation describes time-based changes.
 ---
 
-Basic Concepts is the first group under Concepts. It answers "where is a point, and how does retikz interpret that statement?" Read this before moving into the primitive model and primitive relations; for the DSL, IR, Scene, and renderer split, see Design Philosophy.
+Basic Concepts is the first group under Concepts. It answers "where is a point, how does retikz interpret that statement, and how does a figure change over time?" Read this before moving into the primitive model and primitive relations; for the DSL, IR, Scene, and renderer split, see Design Philosophy.
 
 ## What each page covers
 
@@ -11,6 +11,7 @@ Basic Concepts is the first group under Concepts. It answers "where is a point, 
 | --- | --- | --- |
 | Coordinate System | Cartesian as the first-class form, polar coordinates, user units, viewBox, and render size | You want to know where `[x, y]` lands, or how other coordinate forms eventually become Cartesian points |
 | Positioning | Cartesian, polar, relative placement, offsets, proportional points, and path-relative targets | You want to place nodes / helper points or send a path to a target |
+| Animation | Time-based changes on primitive properties, paths, and camera state | You want primitives to enter, blink, rotate, draw on, or control playback |
 
 ## In this section
 
@@ -22,5 +23,9 @@ Basic Concepts is the first group under Concepts. It answers "where is a point, 
   <LinkedCard href="/core/concepts/basic-concepts/position">
     <span className="font-semibold">Positioning</span>
     <span className="mt-1 text-center text-sm text-muted-foreground">Use one position vocabulary for nodes, helper points, and path targets</span>
+  </LinkedCard>
+  <LinkedCard href="/core/concepts/basic-concepts/animation">
+    <span className="font-semibold">Animation</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">Understand animation tracks, presets, playback controls, and static fallback</span>
   </LinkedCard>
 </div>

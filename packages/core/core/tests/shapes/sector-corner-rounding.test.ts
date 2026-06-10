@@ -16,8 +16,8 @@ import { describe, expect, it } from 'vitest';
 import { sector } from '../../src/shapes';
 import type { Rect } from '../../src/shapes';
 import type { Position } from '../../src/geometry/point';
-import { localToWorld, worldToLocal } from '../../src/geometry/_transform';
-import { sectorGeometry, sectorPolarPoint } from '../../src/shapes/_shared';
+import { localToWorld, worldToLocal } from '../../src/geometry/transform';
+import { sectorGeometry, sectorPolarPoint } from '../../src/shapes/shared';
 
 const round2 = (n: number): number => Math.round(n * 100) / 100;
 const identity = (n: number): number => n;
@@ -41,7 +41,7 @@ const mkRect = (x = 0, y = 0, w = 120, h = 120, rotate = 0): Rect => ({ x, y, wi
  */
 const referenceBoundaryHit = (rect: Rect, params: SectorParams, toward: Position): Position | undefined => {
   const geo = sectorGeometry(params);
-  const origin = localToWorld(rect, geo.centroidOffset);
+  const origin = localToWorld(rect, geo.boundaryOriginOffset);
   const worldToLocalFromApex = (w: Position): Position => {
     const fromCenter = worldToLocal(rect, w);
     return [fromCenter[0] - geo.apexOffset[0], fromCenter[1] - geo.apexOffset[1]];

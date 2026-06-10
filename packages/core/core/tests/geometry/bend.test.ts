@@ -4,8 +4,8 @@ import { bendControlPoints } from '../../src/geometry/bend';
 describe('bendControlPoints', () => {
   it("水平 chord，bend left 30° → 控制点 y 在 chord 上方（SVG y 向下，'上方' 即 y<0）", () => {
     const [c1, c2] = bendControlPoints([0, 0], [10, 0], 'left', 30);
-    // 1/3 / 2/3 处控制点；offset = chord × tan(15°) × 4/3
-    const offset = (10 * Math.tan((15 * Math.PI) / 180) * 4) / 3;
+    // 1/3 / 2/3 处控制点；offset =（chord/2）× tan(15°) × 4/3（apexOffset 为圆弧 sagitta）
+    const offset = (5 * Math.tan((15 * Math.PI) / 180) * 4) / 3;
     expect(c1[0]).toBeCloseTo(10 / 3, 6);
     expect(c1[1]).toBeCloseTo(-offset, 6);
     expect(c2[0]).toBeCloseTo(20 / 3, 6);
@@ -14,7 +14,7 @@ describe('bendControlPoints', () => {
 
   it("水平 chord，bend right 30° → 控制点 y 在 chord 下方（y>0）", () => {
     const [c1, c2] = bendControlPoints([0, 0], [10, 0], 'right', 30);
-    const offset = (10 * Math.tan((15 * Math.PI) / 180) * 4) / 3;
+    const offset = (5 * Math.tan((15 * Math.PI) / 180) * 4) / 3;
     expect(c1[1]).toBeCloseTo(offset, 6);
     expect(c2[1]).toBeCloseTo(offset, 6);
   });
@@ -50,13 +50,22 @@ describe('bendControlPoints', () => {
     expect(c2L).toEqual(c2R);
   });
 
-  it("90° 产生大但有限的控制点偏移（offset = chord × tan(45°) × 4/3）", () => {
+  it("90° 产生大但有限的控制点偏移（offset =（chord/2）× tan(45°) × 4/3）", () => {
     const [c1, c2] = bendControlPoints([0, 0], [10, 0], 'left', 90);
-    // tan(45°) = 1 → offset = 10 × 1 × 4/3 = 40/3 ≈ 13.33
-    expect(c1[1]).toBeCloseTo(-40 / 3, 6);
-    expect(c2[1]).toBeCloseTo(-40 / 3, 6);
+    // tan(45°) = 1 → offset = 5 × 1 × 4/3 = 20/3 ≈ 6.67
+    expect(c1[1]).toBeCloseTo(-20 / 3, 6);
+    expect(c2[1]).toBeCloseTo(-20 / 3, 6);
     expect(Number.isFinite(c1[1])).toBe(true);
     expect(Number.isFinite(c2[1])).toBe(true);
+  });
+
+  it("apex 偏移等于圆弧 sagitta：cubic t=0.5 处离弦 =（chord/2）× tan(bendAngle/2)", () => {
+    // 弦切角为 bendAngle 的圆弧，矢高 sagitta =（chord/2）× tan(bendAngle/2)；
+    // cubic 在 t=0.5 的法向偏移 = (3·c1 + 3·c2)/8 应精确命中该 apex（TikZ bend 语义）
+    const [c1, c2] = bendControlPoints([0, 0], [10, 0], 'left', 60);
+    const midY = (3 * c1[1] + 3 * c2[1]) / 8;
+    const sagitta = 5 * Math.tan((30 * Math.PI) / 180);
+    expect(midY).toBeCloseTo(-sagitta, 6);
   });
 
   it("180° 是几何退化点：tan(90°) → 极大值，控制点偏移 |y| > 1e10（用户应避免）", () => {

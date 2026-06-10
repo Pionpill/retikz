@@ -1,6 +1,7 @@
 import { type Rect, rect as rectOps } from '../geometry/rect';
 import type {
   IRAtPosition,
+  IRBetweenPosition,
   IROffsetPosition,
   IRPosition,
   IRTransform,
@@ -8,13 +9,14 @@ import type {
 } from '../ir';
 import type { Transform } from '../primitive';
 import { BUILTIN_SHAPES } from '../shapes';
+import type { ShapeDefinition } from '../shapes';
 import type { NameStack } from './name-stack';
 import type { NodeLayout } from './node';
-import { resolvePosition } from './position';
+import { type ResolveBetweenGlobal, resolvePosition } from './position';
 
 /**
- * 把 IR 6 变体 transforms 展平为 Scene 3 变体（Cartesian translate / rotate / scale）
- * @description 4 个 translate 变体（translate / polar-translate / at-translate / offset-translate）
+ * 把 IR 7 变体 transforms 展平为 Scene 3 变体（Cartesian translate / rotate / scale）
+ * @description 5 个 translate 变体（translate / polar-translate / at-translate / offset-translate / between-translate）
  *   各自构造对应 Position 字面量并调用 `resolvePosition` 拿到 Cartesian (x, y)，再写成 Cartesian translate；
  *   rotate / scale 直接透传。referent 未解析时返回 null（上游负责发 warn / throw）
  */
@@ -22,6 +24,7 @@ export const lowerScopeTransforms = (
   transforms: ReadonlyArray<IRTransform>,
   nameStack: NameStack,
   nodeDistance?: number,
+  resolveBetweenGlobal?: ResolveBetweenGlobal,
 ): Array<Transform> | null => {
   const out: Array<Transform> = [];
   for (const t of transforms) {
@@ -51,6 +54,13 @@ export const lowerScopeTransforms = (
           offset: t.offset ?? [0, 0],
         };
         const resolved = resolvePosition(off, nameStack, nodeDistance);
+        if (!resolved) return null;
+        out.push({ kind: 'translate', x: resolved[0], y: resolved[1] });
+        break;
+      }
+      case 'between-translate': {
+        const between: IRBetweenPosition = { between: t.between, t: t.t };
+        const resolved = resolvePosition(between, nameStack, nodeDistance, [], resolveBetweenGlobal);
         if (!resolved) return null;
         out.push({ kind: 'translate', x: resolved[0], y: resolved[1] });
         break;
@@ -162,7 +172,7 @@ export const inverseTransformChain = (
  *   scale 乘进 rect.width / height / margin——这样 path 端点的 boundary clip 取的是与 SVG `<g>`
  *   实际渲染一致的视觉尺寸 / 朝向，跨 / 入 / 出 rotate / scale scope 的 path 都贴节点视觉边界。
  *   非均匀 scale 与 rotate 在 chain 中混合时，按"累加 rotate + 分量相乘 scale"近似（uniform scale 精确，
- *   anisotropic + rotate 的剪切耦合不展开——alpha 阶段限制）。
+ *   anisotropic + rotate 的剪切耦合不展开——当前投影模型限制）。
  */
 export const projectLayoutToGlobal = (
   layout: NodeLayout,
@@ -185,11 +195,16 @@ export const projectLayoutToGlobal = (
     x: gx,
     y: gy,
     rotate: (layout.rect.rotate ?? 0) + rotateAccumRad,
-    width: layout.rect.width * scaleX,
-    height: layout.rect.height * scaleY,
+    width: layout.rect.width * Math.abs(scaleX),
+    height: layout.rect.height * Math.abs(scaleY),
   };
   const marginScale = Math.max(Math.abs(scaleX), Math.abs(scaleY));
-  return { ...layout, rect: globalRect, margin: layout.margin * marginScale };
+  return {
+    ...layout,
+    rect: globalRect,
+    rotateDeg: layout.rotateDeg + rotateAccumRad * (180 / Math.PI),
+    margin: layout.margin * marginScale,
+  };
 };
 
 /** scope bbox 计算结果：bbox 几何中心 + 尺寸（width/height ≥ 0；空 scope 退化为 0×0 占位时仍合法） */
@@ -253,13 +268,14 @@ export const registerScopeAsLayout = (
   id: string,
   bbox: ScopeBoundingBox | null,
   fallbackOrigin: IRPosition,
+  shapes: Record<string, ShapeDefinition> = BUILTIN_SHAPES,
 ): NodeLayout => {
   const box: ScopeBoundingBox =
     bbox ?? { x: fallbackOrigin[0], y: fallbackOrigin[1], width: 0, height: 0 };
   return {
     id,
     shapeName: 'rectangle',
-    shapeDef: BUILTIN_SHAPES.rectangle,
+    shapeDef: shapes.rectangle,
     rect: { x: box.x, y: box.y, width: box.width, height: box.height, rotate: 0 },
     rotateDeg: 0,
     margin: 0,
@@ -268,6 +284,6 @@ export const registerScopeAsLayout = (
     align: 'middle',
     lineHeight: 0,
     fontSize: 0,
-    shapes: BUILTIN_SHAPES,
+    shapes,
   };
 };

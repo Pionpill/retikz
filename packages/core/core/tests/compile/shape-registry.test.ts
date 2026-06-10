@@ -86,6 +86,37 @@ describe('Shape registry — injection (happy path)', () => {
     const scene = compileToScene(ir, { shapes: { chip: chipShape() } });
     expect(scene.primitives.filter(p => p.type === 'rect' || p.type === 'path')).toHaveLength(3);
   });
+
+  it('shape_emit_reused_primitive_is_cloned: 两个 node 不共享 shape 返回的同一 primitive', () => {
+    const cachedPrim: Extract<ScenePrimitive, { type: 'rect' }> = {
+      type: 'rect',
+      x: 0,
+      y: 0,
+      width: 10,
+      height: 10,
+    };
+    const cachedShape: ShapeDefinition = {
+      ...BUILTIN_SHAPES.rectangle,
+      *emit (): Iterable<ScenePrimitive> {
+        yield cachedPrim;
+      },
+    };
+    const ir: IR = {
+      version: 1,
+      type: 'scene',
+      children: [
+        { type: 'node', id: 'A', shape: 'cached', position: [0, 0] },
+        { type: 'node', id: 'B', shape: 'cached', position: [20, 0] },
+      ],
+    };
+    const scene = compileToScene(ir, { shapes: { cached: cachedShape } });
+    const rects = scene.primitives.filter(
+      (p): p is Extract<ScenePrimitive, { type: 'rect' }> => p.type === 'rect',
+    );
+    expect(rects).toHaveLength(2);
+    expect(rects[0]).not.toBe(rects[1]);
+    expect(rects.map(p => p.id)).toEqual(['A', 'B']);
+  });
 });
 
 describe('Shape registry — boundary', () => {
@@ -126,6 +157,30 @@ describe('Shape registry — boundary', () => {
     if (linePath?.type === 'path' && linePath.commands[0].kind === 'move') {
       expect(linePath.commands[0].to).toEqual([50, 50]);
     }
+  });
+
+  it('synthetic_layouts_use_effective_rectangle_shape: scope.id 自定义 anchor 走注入后的 rectangle', () => {
+    const sentinelRect: ShapeDefinition = {
+      ...BUILTIN_SHAPES.rectangle,
+      anchor: (rect, name) => (name === 'sentinel' ? [rect.x + 77, rect.y + 88] : BUILTIN_SHAPES.rectangle.anchor(rect, name, {})),
+    };
+    const ir: IR = {
+      version: 1,
+      type: 'scene',
+      children: [
+        { type: 'scope', id: 's', children: [{ type: 'node', id: 'inner', position: [0, 0], text: 'x' }] },
+        { type: 'path', children: [{ type: 'step', kind: 'move', to: [0, 0] }, { type: 'step', kind: 'line', to: { id: 's', anchor: 'sentinel' } }] },
+      ],
+    };
+    const scene = compileToScene(ir, {
+      shapes: { rectangle: sentinelRect },
+      onWarn: () => {},
+    });
+    const linePath = scene.primitives.find(
+      (p): p is Extract<ScenePrimitive, { type: 'path' }> => p.type === 'path' && !p.commands.some(c => c.kind === 'close'),
+    );
+    const line = linePath?.commands.find(c => c.kind === 'line');
+    expect(line?.to).toEqual([77, 88]);
   });
 });
 

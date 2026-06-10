@@ -3,7 +3,7 @@ title: Path
 description: Kernel 路径容器——`<Step>` 子节点序列定义折线 / 曲线 / 弧形，最少 2 个 step；Sugar 的 `<Draw>` 编译后就是它。
 ---
 
-`<Path>` 是底层路径容器：children 必须是若干 `<Step>`（至少 2 个），定义路径的 move / line / step（折角）/ cycle（闭合）/ curve / cubic / bend（曲线）/ arc / circlePath / ellipsePath（圆 / 椭圆）/ rectangle（矩形）等动作序列；另有 IR 级的 generator step（[路径生成器](/core/reference/extending/path-generator)）。日常连线用 `<Draw>` 更简洁，需要折角、闭合、曲线、自定义 stroke、不同 step kind 时回到 `<Path>`。
+`<Path>` 是底层路径容器：children 必须是若干 `<Step>`（至少 2 个），定义路径的 move / line / fold（折角）/ cycle（闭合）/ curve / cubic / bend（曲线）/ arc / circlePath / ellipsePath（圆 / 椭圆）/ rectangle（矩形）等动作序列；另有 IR 级的 generator step（[路径生成器](/core/reference/extending/path-generator)）。日常连线用 `<Draw>` 更简洁，需要折角、闭合、曲线、自定义 stroke、不同 step kind 时回到 `<Path>`。
 
 它最适合三类场景：一条 path 里有多个子路径（多次 `move`）、不同段要混用不同 `kind` / label / 控制点、或者你希望 JSX 结构和 IR `path.children` 几乎一一对应，方便调试和生成。
 
@@ -32,7 +32,7 @@ import { Path, Step } from '@retikz/react';
 </Path>
 ```
 
-`<Step>` 支持 11 种 kind——`move` / `line` 处理直线，`step` 走直角折角，`cycle` 闭合回起点，`curve` / `cubic` 画贝塞尔曲线，`bend` 是弧形简记（可带 out/in 角与自环），`arc` / `circlePath` / `ellipsePath` 以游标为圆心画弧 / 整圆 / 整椭圆，`rectangle` 画对角矩形，详见 [Step](/core/components/draw/step)。此外还有 IR 级的 `generator` step（外部曲线生成器，无 JSX DSL、走 IR 直传，见 [路径生成器](/core/reference/extending/path-generator)）。
+`<Step>` 支持 11 种 kind——`move` / `line` 处理直线，`fold` 走直角折角，`cycle` 闭合回起点，`curve` / `cubic` 画贝塞尔曲线，`bend` 是弧形简记（可带 out/in 角与自环），`arc` / `circlePath` / `ellipsePath` 以游标为圆心画弧 / 整圆 / 整椭圆，`rectangle` 画对角矩形，详见 [Step](/core/components/draw/step)。此外还有 IR 级的 `generator` step（外部曲线生成器，无 JSX DSL、走 IR 直传，见 [路径生成器](/core/reference/extending/path-generator)）。
 
 ## 例子
 
@@ -42,7 +42,7 @@ import { Path, Step } from '@retikz/react';
 
 ### 折角
 
-`<Step kind="step" via="-|" \| "\|-">` 在两端之间插一个直角拐点——流程图、UML 关系线刚需。下面这条 path 混合 `line` + 两种 `via` 折角：
+`<Step kind="fold" via="-|" \| "\|-">` 在两端之间插一个直角拐点——流程图、UML 关系线刚需。下面这条 path 混合 `line` + 两种 `via` 折角：
 
 <ComponentPreview name="path-fold" size="md" />
 
@@ -171,7 +171,7 @@ import { Path, Step } from '@retikz/react';
 | `rotate` | `number` | — | 整条 path 旋转角（度，绕包围盒中心） |
 | `scale` | `number \| { x, y }` | — | 整条 path 缩放（数字等比 / `{ x, y }` 非等比，绕包围盒中心） |
 | `marks` | `Array<{ pos, mark }>` | — | 沿路径标记：`pos∈[0,1]`、`mark.kind:'arrow'` + 已注册箭头名，朝向随该点切线 |
-| `children` | `Array<<Step>>` | — | 至少 2 个；首个非 `move` 时编译器会强制改成 `move`。`<Step>` 支持 `move` / `line` / `step`（折角）/ `cycle`（闭合）/ `curve` / `cubic`（贝塞尔曲线）/ `bend`（弧形简记，可带 out/in 角与自环）/ `arc` / `circlePath` / `ellipsePath`（圆 / 椭圆）/ `rectangle`（对角矩形）；IR 另有 `generator`（路径生成器，无 JSX DSL） |
+| `children` | `Array<<Step>>` | — | 至少 2 个；首个非 `move` 时编译器会强制改成 `move`。`<Step>` 支持 `move` / `line` / `fold`（折角）/ `cycle`（闭合）/ `curve` / `cubic`（贝塞尔曲线）/ `bend`（弧形简记，可带 out/in 角与自环）/ `arc` / `circlePath` / `ellipsePath`（圆 / 椭圆）/ `rectangle`（对角矩形）；IR 另有 `generator`（路径生成器，无 JSX DSL） |
 
 ## 相关
 

@@ -1,4 +1,4 @@
-import type { Position } from './point';
+import { type Position, point as pointOps } from './point';
 
 /*
  * 段几何采样工具：给边标注（step.label）算位置 / 切线。
@@ -26,10 +26,23 @@ export type SegmentSample = {
   tangent: Position;
 };
 
-const normalize = (v: Position): Position => {
-  const len = Math.hypot(v[0], v[1]);
-  if (len === 0) return [1, 0];
-  return [v[0] / len, v[1] / len];
+const sampleEllipseArc = (
+  center: Position,
+  rx: number,
+  ry: number,
+  startAngleDeg: number,
+  endAngleDeg: number,
+  t: number,
+): SegmentSample => {
+  const angleDeg = startAngleDeg + t * (endAngleDeg - startAngleDeg);
+  const rad = angleDeg * DEG_TO_RAD;
+  const cos = Math.cos(rad);
+  const sin = Math.sin(rad);
+  const sweepSign = endAngleDeg >= startAngleDeg ? 1 : -1;
+  return {
+    point: [center[0] + rx * cos, center[1] + ry * sin],
+    tangent: pointOps.normalize([-rx * sin * sweepSign, ry * cos * sweepSign]),
+  };
 };
 
 /** 直线段 from → to */
@@ -39,7 +52,7 @@ export const lineSegmentSample = (
   t: number,
 ): SegmentSample => ({
   point: [from[0] + (to[0] - from[0]) * t, from[1] + (to[1] - from[1]) * t],
-  tangent: normalize([to[0] - from[0], to[1] - from[1]]),
+  tangent: pointOps.normalize([to[0] - from[0], to[1] - from[1]]),
 });
 
 /**
@@ -59,7 +72,7 @@ export const quadSegmentSample = (
   ];
   const tx = 2 * u * (control[0] - from[0]) + 2 * t * (to[0] - control[0]);
   const ty = 2 * u * (control[1] - from[1]) + 2 * t * (to[1] - control[1]);
-  return { point, tangent: normalize([tx, ty]) };
+  return { point, tangent: pointOps.normalize([tx, ty]) };
 };
 
 /**
@@ -92,7 +105,7 @@ export const cubicSegmentSample = (
     3 * u * u * (c1[1] - from[1]) +
     6 * u * t * (c2[1] - c1[1]) +
     3 * t * t * (to[1] - c2[1]);
-  return { point, tangent: normalize([tx, ty]) };
+  return { point, tangent: pointOps.normalize([tx, ty]) };
 };
 
 /**
@@ -116,17 +129,7 @@ export const arcSegmentSample = (
   startAngleDeg: number,
   endAngleDeg: number,
   t: number,
-): SegmentSample => {
-  const angleDeg = startAngleDeg + t * (endAngleDeg - startAngleDeg);
-  const rad = angleDeg * DEG_TO_RAD;
-  const cos = Math.cos(rad);
-  const sin = Math.sin(rad);
-  const sweepSign = endAngleDeg >= startAngleDeg ? 1 : -1;
-  return {
-    point: [center[0] + radius * cos, center[1] + radius * sin],
-    tangent: normalize([-sin * sweepSign, cos * sweepSign]),
-  };
-};
+): SegmentSample => sampleEllipseArc(center, radius, radius, startAngleDeg, endAngleDeg, t);
 
 /** 椭圆弧段（参数角度数，与 ir/path arc 同约定）；点用 (rx·cos, ry·sin)，切线沿扫描方向 */
 export const ellipseArcSegmentSample = (
@@ -136,33 +139,14 @@ export const ellipseArcSegmentSample = (
   startAngleDeg: number,
   endAngleDeg: number,
   t: number,
-): SegmentSample => {
-  const angleDeg = startAngleDeg + t * (endAngleDeg - startAngleDeg);
-  const rad = angleDeg * DEG_TO_RAD;
-  const cos = Math.cos(rad);
-  const sin = Math.sin(rad);
-  const sweepSign = endAngleDeg >= startAngleDeg ? 1 : -1;
-  return {
-    point: [center[0] + rx * cos, center[1] + ry * sin],
-    tangent: normalize([-rx * sin * sweepSign, ry * cos * sweepSign]),
-  };
-};
+): SegmentSample => sampleEllipseArc(center, rx, ry, startAngleDeg, endAngleDeg, t);
 
 /** 整圆，从 0°(east) 开始，与 compile/path circlePath 输出方向（右→左→右，sweep=1）一致 */
 export const circleSegmentSample = (
   center: Position,
   radius: number,
   t: number,
-): SegmentSample => {
-  const angleDeg = t * 360;
-  const rad = angleDeg * DEG_TO_RAD;
-  const cos = Math.cos(rad);
-  const sin = Math.sin(rad);
-  return {
-    point: [center[0] + radius * cos, center[1] + radius * sin],
-    tangent: normalize([-sin, cos]),
-  };
-};
+): SegmentSample => sampleEllipseArc(center, radius, radius, 0, 360, t);
 
 /** 整椭圆，参数化 (rx·cos(2πt), ry·sin(2πt)) */
 export const ellipseSegmentSample = (
@@ -170,13 +154,4 @@ export const ellipseSegmentSample = (
   rx: number,
   ry: number,
   t: number,
-): SegmentSample => {
-  const angleDeg = t * 360;
-  const rad = angleDeg * DEG_TO_RAD;
-  const cos = Math.cos(rad);
-  const sin = Math.sin(rad);
-  return {
-    point: [center[0] + rx * cos, center[1] + ry * sin],
-    tangent: normalize([-rx * sin, ry * cos]),
-  };
-};
+): SegmentSample => sampleEllipseArc(center, rx, ry, 0, 360, t);

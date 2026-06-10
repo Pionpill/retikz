@@ -52,6 +52,3 @@ export const normalizeCompassAnchor = (name: string): CompassAnchorValue | undef
   if (CompassAnchorSet.has(name)) return name as CompassAnchorValue;
   return AnchorAliases[name as WebAnchorValue];
 };
-
-export const isCompassAnchorInput = (name: string): boolean =>
-  normalizeCompassAnchor(name) !== undefined;

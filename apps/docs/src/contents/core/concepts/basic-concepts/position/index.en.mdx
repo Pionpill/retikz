@@ -53,7 +53,7 @@ Six nodes around `O` at radius 80, every 60° from 0 to 300 — the canonical ra
 
 <ComponentPreview name="positioning-id-ref" size="xs" />
 
-The actual line endpoints are computed by retikz automatically — see [Anchors](/core/concepts/primitive-relations/anchors).
+The actual line endpoints are computed by retikz automatically — see [Primitive Relations](/core/concepts/core-concepts/primitive-relations).
 
 `<Node>` / `<Coordinate>` do not accept a bare node id as `position`, because "place this entity at another entity's center" is rarely the useful default. Use `{ direction, of, distance? }` for relational placement, or `{ of, offset }` for arbitrary 2D offsets. Both keep layout intent in the document instead of baking every coordinate up front.
 

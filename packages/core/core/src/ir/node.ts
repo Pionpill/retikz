@@ -11,7 +11,7 @@ import { TextBlockSchema } from './text';
 
 /**
  * 节点形状常量（用 const + ValueOf 派生，不用 TS enum）
- * @description rectangle 默认；几何语义：node 视觉边界包"text 矩形 + padding"；rectangle: 视觉=text；ellipse: rx=innerHalfW×√2,ry=innerHalfH×√2。circle 是 ellipse 等轴 preset 别名（`{ type:'ellipse', params:{ circumscribe:'equal' } }`，两轴 = 内框对角线半长 √(innerHalfW²+innerHalfH²)）；diamond 是 polygon 4 边形 45° preset 别名（`{ type:'polygon', params:{ sides:4, rotate:45 } }`）——circle / diamond 均保留为合法 shape 名向后兼容，编译期分别消解为 ellipse / polygon，不进 shape 注册表
+ * @description rectangle 默认；几何语义：node 视觉边界包"text 矩形 + padding"；rectangle: 视觉=text；ellipse: rx=innerHalfW×√2,ry=innerHalfH×√2。circle 是 ellipse 等轴 preset 别名（`{ type:'ellipse', params:{ circumscribe:'equal' } }`，两轴 = 内框对角线半长 √(innerHalfW²+innerHalfH²)）；diamond 是 polygon 4 边形 preset 别名（`{ type:'polygon', params:{ sides:4, rotate:0 } }`）——circle / diamond 均保留为合法 shape 名向后兼容，编译期分别消解为 ellipse / polygon，不进 shape 注册表
  */
 export const BuiltinShape = {
   Rectangle: 'rectangle',
@@ -154,11 +154,14 @@ export const NodeSchema = z
       ),
     rotate: z
       .number()
+      .finite()
       .optional()
       .describe(
         'Rotation in degrees around the node center; positive = clockwise (matches TikZ rotate=...)',
       ),
-    text: TextBlockSchema.optional(),
+    text: TextBlockSchema.optional().describe(
+      'Optional node text content; accepts a string, an array of lines, or styled text line objects. When omitted the node emits only its shape primitive; when present it participates in text measurement, node box sizing, and TextPrim emission.',
+    ),
     align: z
       .nativeEnum(NodeTextAlign)
       .optional()
@@ -212,17 +215,19 @@ export const NodeSchema = z
       .describe('Stroke opacity 0..1 (TikZ `draw opacity`); affects only the border.'),
     strokeWidth: z
       .number()
+      .finite()
+      .nonnegative()
       .optional()
       .describe('Border width in user units; defaults to 1 when omitted'),
     dashed: z
       .boolean()
       .optional()
-      .describe('Border style preset: dashed line (TikZ `dashed`); compiled to a default dash pattern. `dashArray` takes precedence.'),
+      .describe('Border style preset: dashed line (TikZ `dashed`); compiled to a default dash pattern. `dashPattern` takes precedence.'),
     dotted: z
       .boolean()
       .optional()
-      .describe('Border style preset: dotted line (TikZ `dotted`); compiled to a default dot pattern. `dashArray` and `dashed` take precedence.'),
-    dashArray: z
+      .describe('Border style preset: dotted line (TikZ `dotted`); compiled to a default dot pattern. `dashPattern` and `dashed` take precedence.'),
+    dashPattern: z
       .array(z.number().finite().nonnegative())
       .min(1)
       .optional()
@@ -327,6 +332,7 @@ export const NodeSchema = z
         'Explicit stacking order among sibling IR children. Higher draws on top. Omitted = 0 = source order. Sorting is stable: same zIndex keeps source order. Scoped per group (a node inside a scope only restacks within that scope).',
       ),
   })
+  .strict()
   .describe(
     'Node primitive: a positioned, optionally textual shape (rectangle / circle / ellipse / diamond)',
   );

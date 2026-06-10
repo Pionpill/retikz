@@ -45,7 +45,7 @@ describe('@retikz/vanilla mountSvg', () => {
           shape: 'rectangle',
           minimumWidth: 40,
           minimumHeight: 20,
-          fill: { type: 'linearGradient', stops: [{ offset: 0, color: '#f00' }, { offset: 1, color: '#00f' }] },
+          fill: { kind: 'linearGradient', stops: [{ offset: 0, color: '#f00' }, { offset: 1, color: '#00f' }] },
         },
       ],
     };

@@ -187,7 +187,7 @@ describe('step.label：覆盖各 step kind', () => {
             { type: 'step', kind: 'move', to: [0, 0] },
             {
               type: 'step',
-              kind: 'step',
+              kind: 'fold',
               via: '-|',
               to: [10, 5],
               label: { text: 'f' },
@@ -407,7 +407,7 @@ describe('label on line：keyword + 数值 t', () => {
   });
 });
 
-describe('label on fold (step kind="step")：N=2 段等 t 拼接、拐角恒在 t=0.5', () => {
+describe('label on fold (step kind="fold")：N=2 段等 t 拼接、拐角恒在 t=0.5', () => {
   /** via='-\|' from (0,0) to (40, 30) → corner (40, 0)；段长悬殊：段1 长 40，段 2 长 30 */
   const foldIR = (position: unknown): IR => ({
     version: 1,
@@ -419,7 +419,7 @@ describe('label on fold (step kind="step")：N=2 段等 t 拼接、拐角恒在 
           { type: 'step', kind: 'move', to: [0, 0] },
           {
             type: 'step',
-            kind: 'step',
+            kind: 'fold',
             via: '-|',
             to: [40, 30],
             label: { text: 'F', position: position as never },
@@ -472,7 +472,7 @@ describe('label on fold (step kind="step")：N=2 段等 t 拼接、拐角恒在 
             { type: 'step', kind: 'move', to: [0, 0] },
             {
               type: 'step',
-              kind: 'step',
+              kind: 'fold',
               via: '-|',
               to: [100, 1],
               label: { text: 'F', position: 0.5 },
@@ -982,7 +982,7 @@ describe('label.position adversarial：构造让实现挂的输入', () => {
             { type: 'step', kind: 'move', to: [0, 0] },
             {
               type: 'step',
-              kind: 'step',
+              kind: 'fold',
               via: '|-',
               to: [40, 30],
               label: { text: 'F', position: 0.5 },
@@ -1009,7 +1009,7 @@ describe('label.position adversarial：构造让实现挂的输入', () => {
             { type: 'step', kind: 'move', to: [0, 0] },
             {
               type: 'step',
-              kind: 'step',
+              kind: 'fold',
               via: '-|',
               to: [40, 30],
               label: { text: 'F', position: 0.500001 },

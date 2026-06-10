@@ -96,7 +96,7 @@ export type StyleChannel = 'node' | 'path' | 'label' | 'arrow';
 /**
  * Scope IR 类型——手写而非 z.infer 派生
  * @description ChildSchema 通过 z.lazy 延迟回灌，z.infer 推断 children 元素时拿不到精确的 IRNode | IRPath | IRCoordinate | IRScope union；手写让 children 类型显式表达递归 union。
- *   alpha.2 起 Scope 兼作样式默认值挂点：级联 graphic state（color + 跨类共享分项）+ 四通道 every-X 默认 + resetStyle 继承屏障。
+ *   Scope 兼作样式默认值挂点：级联 graphic state（color + 跨类共享分项）+ 四通道 every-X 默认 + resetStyle 继承屏障。
  */
 export type IRScope = {
   type: 'scope';
@@ -139,7 +139,7 @@ export const __registerChildSchema = (schema: z.ZodTypeAny): void => {
  * Scope schema：容器 + 局部 transform + 样式默认挂点
  * @description 直接 `z.object` 让 ChildSchema discriminatedUnion 能识别 `type` 鉴别字段；
  * children 字段内部用 z.lazy 引用 ChildSchema 实现递归，避免直接 `z.lazy(() => z.object(...))` 让外层 union 拒识 type。
- * alpha.2 加：① 级联 graphic state（color + stroke / fill / strokeWidth / opacity / fillOpacity / drawOpacity）；
+ * 支持：① 级联 graphic state（color + stroke / fill / strokeWidth / opacity / fillOpacity / drawOpacity）；
  * ② 四通道 every-X 默认（nodeDefault / pathDefault / labelDefault / arrowDefault）；③ resetStyle 继承屏障。
  */
 export const ScopeSchema = z
@@ -164,7 +164,7 @@ export const ScopeSchema = z
       .array(TransformSchema)
       .optional()
       .describe(
-        'Local transforms applied to all scope children; array order = application order (first element applied innermost, matching Scene `GroupPrim.transforms` / SVG transform list). Supports 6 variants; the 4 translate variants are lowered to Cartesian translate at compile time.',
+        'Local transforms applied to all scope children; array order = application order (first element applied innermost, matching Scene `GroupPrim.transforms` / SVG transform list). Supports 7 variants; the 5 translate variants are lowered to Cartesian translate at compile time.',
       ),
     color: z
       .string()
@@ -184,6 +184,8 @@ export const ScopeSchema = z
       .describe('Cascading default fill (CSS color or PaintSpec: gradient / pattern / image) for inner nodes and paths.'),
     strokeWidth: z
       .number()
+      .finite()
+      .nonnegative()
       .optional()
       .describe('Cascading default stroke width (user units) for inner nodes and paths.'),
     opacity: z
@@ -233,7 +235,7 @@ export const ScopeSchema = z
         'Explicit stacking order of this scope as a whole among its sibling IR children. Higher draws on top. Applies to the scope group as a single unit in the parent; does NOT affect how children stack inside the scope. Omitted = 0 = source order.',
       ),
     clip: ClipSpecSchema.optional().describe(
-      'Clip region (rect / circle / ellipse / polygon, in scope-local coords); when set, all children of this scope are clipped to it. Compiled into a renderer-agnostic ClipResource referenced via the group clipRef.',
+      'Clip region (rect / circle / ellipse / polygon, in scope-local coords); when set, node children of this scope are clipped to it. Compiled into a renderer-agnostic ClipResource referenced via the group clipRef. Known limitation: a path child of a scope that ALSO has transforms is currently emitted at the top level (its geometry is already resolved to global coords) and is therefore NOT clipped by this region; tracked for the local-coordinate path-compile rework.',
     ),
     meta: JsonObjectSchema.optional().describe(
       'Opaque provenance metadata carried by this element (e.g. a Tier 2 lowering tagging which datum / series / layer it came from). Provenance passthrough: preserved verbatim into the Scene primitive(s) this element emits, ignored by renderers, and never interpreted by the compiler — it does not affect layout, connection, style, or bounding box. Must be a JSON object (fully serializable). Not inherited across scopes; not part of the every-X style defaults.',
@@ -242,7 +244,7 @@ export const ScopeSchema = z
       .array(AnimationTrackSchema)
       .optional()
       .describe(
-        'Declarative timeline animation tracks for this scope as a whole (applied to its group). Each track animates one renderer-agnostic property over normalized time; the base value is the settled (animation-end) state. Carried verbatim into the emitted group primitive; renderers play them or render the static settled state with a diagnosable warning when unable. Does not affect layout / bounding box; not propagated to child elements; not part of the every-X style defaults.',
+        'Declarative timeline animation tracks for this scope as a whole (applied to its group). Each track animates one renderer-agnostic property over normalized time; the base value is the settled (animation-end) state. Carried verbatim into the emitted group primitive; renderers play them or render the static settled state with a diagnosable warning when unable. Does not affect layout / bounding box; not propagated to child elements; not part of the every-X style defaults. Known limitation: same as clip — path children of a scope that also has transforms are hoisted to the top level and do not receive these scope animations.',
       ),
     children: z
       .array(

@@ -4,6 +4,7 @@ import { type PolarPosition, polar } from './polar';
 export type Position = [number, number];
 
 const RAD_TO_DEG = 180 / Math.PI;
+const DEFAULT_EPSILON = 1e-9;
 
 /** 二维向量 / 坐标的基础运算工具集 */
 export const point = {
@@ -13,6 +14,26 @@ export const point = {
   sub: (a: Position, b: Position): Position => [a[0] - b[0], a[1] - b[1]],
   /** 等比缩放 a * k */
   scale: (a: Position, k: number): Position => [a[0] * k, a[1] * k],
+  /** 向量长度 */
+  length: (a: Position): number => Math.hypot(a[0], a[1]),
+  /** 归一化向量；零长度 / 极短向量回退到 fallback */
+  normalize: (
+    a: Position,
+    fallback: Position = [1, 0],
+    epsilon = DEFAULT_EPSILON,
+  ): Position => {
+    const len = Math.hypot(a[0], a[1]);
+    if (len < epsilon) return fallback;
+    return [a[0] / len, a[1] / len];
+  },
+  /** 把点 p 沿 target 方向移动 dist */
+  shiftToward: (p: Position, target: Position, dist: number): Position => {
+    if (dist === 0) return p;
+    const delta: Position = [target[0] - p[0], target[1] - p[1]];
+    const dir = point.normalize(delta, [0, 0]);
+    if (point.equal(dir, [0, 0])) return p;
+    return [p[0] + dir[0] * dist, p[1] + dir[1] * dist];
+  },
   /** 两点精确相等（不带容差） */
   equal: (a: Position, b: Position): boolean => a[0] === b[0] && a[1] === b[1],
   /** 笛卡尔 → 极坐标（angle ∈ (-180,180]，origin 默认 [0,0]） */

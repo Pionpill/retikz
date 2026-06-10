@@ -95,10 +95,10 @@ describe('Draw: 各 step kind 分派', () => {
     expect(steps[steps.length - 1]).toMatchObject({ kind: 'cycle' });
   });
 
-  it('折角算子 -| → kind=step + via', () => {
+  it('折角算子 -| → kind=fold + via', () => {
     const out = ir(<Draw way={['a', '-|', 'b']} />);
     const steps = (out.children[0] as { children: Array<{ kind: string; via?: string }> }).children;
-    expect(steps[1]).toMatchObject({ kind: 'step', via: '-|', to: { id: 'b' } });
+    expect(steps[1]).toMatchObject({ kind: 'fold', via: '-|', to: { id: 'b' } });
   });
 
   it('curve 算子 → kind=curve + control', () => {

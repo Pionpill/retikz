@@ -43,9 +43,9 @@ On a first read, remember three common jobs:
 
 Think of Scope as a "subdiagram container", not a plain div. Use it for geometry, local coordinates, and whole-group references; if you only want cleaner JSX, split the code with ordinary React components first.
 
-### The 6 transform variants
+### The 7 transform variants
 
-The 4 translate variants mirror the 4 `<Node position>` shapes (Cartesian / polar / direction-relative / offset) one-to-one.
+The 5 translate variants mirror the 5 `<Node position>` shapes (Cartesian / polar / direction-relative / offset / proportional between two endpoints) one-to-one.
 
 | kind | Fields | Semantics |
 |---|---|---|
@@ -53,6 +53,7 @@ The 4 translate variants mirror the 4 `<Node position>` shapes (Cartesian / pola
 | `polar-translate` | `{ origin?, angle, radius }` | Polar translation; `origin` accepts `id` / `[x, y]` / `PolarPosition`; defaults to origin point |
 | `at-translate` | `{ direction, of, distance? }` | Place scope at `distance` from referent node along `direction`; `distance` defaults to `<Layout nodeDistance>` |
 | `offset-translate` | `{ of, offset? }` | Scope origin = referent global position + `[dx, dy]`; `offset` defaults to `[0, 0]` |
+| `between-translate` | `{ between, t }` | Scope origin = proportional point between two endpoints; endpoints support coordinates / node references / offset / nested between |
 | `rotate` | `{ degrees, cx?, cy? }` | Rotate by degrees; `cx/cy` default to scope local origin |
 | `scale` | `{ x, y? }` | Scale; `y` defaults to `x` (uniform) |
 
@@ -83,6 +84,10 @@ At uses direction-relative (`direction` + referent + optional `distance`):
 Offset applies an arbitrary `[dx, dy]`:
 
 <ComponentPreview name="scope-offset-translate" size="xs" />
+
+Between places the scope at a proportional point between two endpoints:
+
+<ComponentPreview name="scope-between-translate" size="xs" />
 
 ### Rotate and scale
 
@@ -315,7 +320,7 @@ When `<Scope id="X">` is set, compile collects the axis-aligned **global boundin
 
 ### transforms lowering to Scene
 
-The 6 IR variants are uniformly flattened to 3 Scene variants (Cartesian translate / rotate / scale) at compile time, then lowered into `GroupPrim.transforms`:
+The 7 IR variants are uniformly flattened to 3 Scene variants (Cartesian translate / rotate / scale) at compile time, then lowered into `GroupPrim.transforms`:
 
 | IR shape | Compile handling | Scene shape |
 |---|---|---|
@@ -323,6 +328,7 @@ The 6 IR variants are uniformly flattened to 3 Scene variants (Cartesian transla
 | `polar-translate` | `resolvePosition` resolves origin global + (angle, radius) → Cartesian (x, y) | `translate(x, y)` |
 | `at-translate` | `resolvePosition` resolves referent global + direction + distance → Cartesian (x, y) | `translate(x, y)` |
 | `offset-translate` | `resolvePosition` resolves referent global + (dx, dy) → Cartesian (x, y) | `translate(x, y)` |
+| `between-translate` | `resolvePosition` resolves both endpoints globally and interpolates by `t` → Cartesian (x, y) | `translate(x, y)` |
 | `rotate` | Pass through | `rotate(degrees, cx, cy)` |
 | `scale` | Pass through | `scale(x, y)` |
 
@@ -358,7 +364,7 @@ Inner overrides outer; within one frame the typed default overrides the cascade.
 
 | Prop | Type | Default | Description |
 | --- | --- | --- | --- |
-| `transforms` | `Array<Transform>` | — | Local transform list, 6 variants; applied in array order (0-th first); flattening / lowering details in § How it works §「transforms lowering to Scene」 |
+| `transforms` | `Array<Transform>` | — | Local transform list, 7 variants; applied in array order (0-th first); flattening / lowering details in § How it works §「transforms lowering to Scene」 |
 | `children` | `ReactNode` | — | Scope children: `<Node>` / `<Path>` / `<Coordinate>` / nested `<Scope>` |
 | `id` | `string` | — | Optional scope reference id; when set, the **axis-aligned global bounding box** of all child layouts is registered as a synthetic rectangle layout into the **parent frame**; external code can reference it as `'X'` / `'X.<anchor>'` / `'X.<deg>'`; details in § How it works §「scope.id synthetic bbox」 |
 | `localNamespace` | `boolean` | `false` | Whether to create a local namespace: `true` pushes a child frame and isolates child ids from the outside; details in § How it works §「Namespace stack and lookup」 |
@@ -381,5 +387,5 @@ Inner overrides outer; within one frame the typed default overrides the cascade.
 ## Related
 
 - [Layout](/core/components/layout/overview): the outermost container that owns a scope
-- [Node](/core/components/node/overview): scope's most common children; node `position` 4 shapes mirror scope translate 4 variants one-to-one
+- [Node](/core/components/node/overview): scope's most common children; node `position` 5 shapes mirror scope translate 5 variants one-to-one
 - [Coordinate](/core/components/node/coordinate): named placeholder points inside a scope can be referenced from outside just like nodes

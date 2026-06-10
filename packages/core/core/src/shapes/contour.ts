@@ -1,6 +1,7 @@
 import type { Position } from '../geometry/point';
 import type { ContourCommand, LineSegment } from '../geometry/contour';
-import type { PathCommand } from '../primitive';
+import type { PathCommand, PathPrim } from '../primitive';
+import type { ShapeStyle } from './types';
 
 /**
  * 由顶点环构造闭合折线段序列（接缝顺序同顶点顺序）
@@ -59,3 +60,19 @@ export const contourToPathCommands = (
   });
   return out;
 };
+
+/** contour shape 共用的 path primitive 样式落地。 */
+export const contourToPathPrimitive = (
+  commands: Array<PathCommand>,
+  style: ShapeStyle,
+): PathPrim => ({
+  type: 'path',
+  commands,
+  fill: style.fill ?? 'transparent',
+  fillOpacity: style.fillOpacity,
+  stroke: style.stroke ?? 'currentColor',
+  strokeOpacity: style.strokeOpacity,
+  strokeWidth: style.strokeWidth ?? 1,
+  dashPattern: style.dashPattern,
+  opacity: style.opacity,
+});

@@ -1,9 +1,9 @@
 ---
-title: 锚点
-description: 节点 anchor 支持 CompassAnchor 与 WebAnchor，并可通过对象形态 Target 或字符串 shorthand 引用命名 / 角度 / 边上比例点 / offset。
+title: 图元关系
+description: 通过 anchor、边界、边上比例点与 margin 描述图元之间的稳定连接关系。
 ---
 
-锚点用来描述“连接线或参考点应该落在节点的哪个位置”：例如从节点右侧出线、贴到顶部边界，或把某个标注对齐到节点中心。每个 `<Node>` 在几何上都有一组可命名的锚点；方位命名分两层：`CompassAnchor` 是 canonical 名称，沿用 TikZ 风格；`WebAnchor` 是面向 Web / CSS 心智的输入别名，编译时会归一到对应的 `CompassAnchor`。
+图元关系描述“连接线或参考点应该落在节点的哪个位置”：例如从节点右侧出线、贴到顶部边界，或把某个标注对齐到节点中心。每个 `<Node>` 在几何上都有一组可命名的锚点；方位命名分两层：`CompassAnchor` 是 canonical 名称，沿用 TikZ 风格；`WebAnchor` 是面向 Web / CSS 心智的输入别名，编译时会归一到对应的 `CompassAnchor`。
 
 Path / Draw 引用节点时既能让 retikz 自动选边界点（最常见），也能用对象形态 `{ id, anchor?, offset? }` 锁死具体位置（写 JSX 时可用 `'A.north'` / `'A.top-left'` / `'A.30'` 字符串简写）。带 `id` 的 `<Scope>` 也会注册一个矩形边界，可用同样的 anchor 语法引用整组图元。
 

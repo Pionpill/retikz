@@ -22,7 +22,7 @@ type CascadeState = Pick<
 
 /**
  * 单层 scope 的样式 frame——compile 维护 frame 栈做 inside-out per-field 解析
- * @description 级联 graphic state + 四通道 every-X 默认 + resetStyle 屏障；从 IRScope 抽取（buildStyleFrame）
+ * @description 级联 graphic state + 四通道 every-X 默认 + resetStyle 屏障；从 IRScope 抽取（createStyleFrame）
  */
 export type StyleFrame = {
   /** 级联 graphic state（主色 + 跨类共享分项） */
@@ -53,7 +53,7 @@ const pickDefinedKeys = <T extends object>(src: T): Partial<T> => {
  * 从 IRScope 抽取样式 frame
  * @description 只摘样式相关字段（级联 graphic state + 四通道 + resetStyle）；transforms / id / localNamespace 与样式正交，不进 frame
  */
-export const buildStyleFrame = (scope: IRScope): StyleFrame => {
+export const createStyleFrame = (scope: IRScope): StyleFrame => {
   const cascade: CascadeState = {};
   if (scope.color !== undefined) cascade.color = scope.color;
   if (scope.stroke !== undefined) cascade.stroke = scope.stroke;

@@ -2,7 +2,8 @@ import { FoldStepVia } from '../../ir';
 import type { FoldStepViaValue, IRBetweenPosition, IRNodeTarget, IRPosition, IRTarget } from '../../ir';
 import type { IRBoundary } from '../../ir';
 import type { Transform } from '../../primitive';
-import { lerpPoint } from '../../geometry/_edge';
+import { lerpPoint } from '../../geometry/edge';
+import { point } from '../../geometry/point';
 import { resolveAnchor, resolveEdgePoint } from '../anchor-cache';
 import type { NameStack } from '../name-stack';
 import { boundaryPointOf } from '../node';
@@ -41,7 +42,7 @@ const addOffset = (base: IRPosition, offset: IRNodeTarget['offset']): IRPosition
  * @description 三态：`'A'`(auto) 节点中心；`'A.<anchor>'`/`'A.<deg>'` 显式锚点 refPoint=endpoint 位置不随邻居变。直接坐标/极坐标解析为笛卡尔。
  *   string id lookup 拿到的 layout 已是全局坐标——不走 scopeChain 投影；Position / Polar /
  *   At / Offset 字面量经 `resolvePosition(..., scopeChain)` 拿到当前 scope 局部坐标后
- *   `applyTransformChain` 投回全局。`scopeChain=[]` 等价 v0.1（恒等）。
+ *   `applyTransformChain` 投回全局。`scopeChain=[]` 时按恒等变换处理。
  */
 export const refPointOfTarget = (
   target: IRTarget,
@@ -125,13 +126,8 @@ export const clipForTarget = (
 
 /** 两个 IRPosition 两分量精确相等（未 round） */
 export const samePoint = (a: IRPosition | null, b: IRPosition | null): boolean =>
-  !!a && !!b && a[0] === b[0] && a[1] === b[1];
+  !!a && !!b && point.equal(a, b);
 
 /** 把 p 朝 target 方向移动 dist */
-export const shiftToward = (p: IRPosition, target: IRPosition, dist: number): IRPosition => {
-  const dx = target[0] - p[0];
-  const dy = target[1] - p[1];
-  const len = Math.sqrt(dx * dx + dy * dy);
-  if (len === 0 || dist === 0) return p;
-  return [p[0] + (dx / len) * dist, p[1] + (dy / len) * dist];
-};
+export const shiftToward = (p: IRPosition, target: IRPosition, dist: number): IRPosition =>
+  point.shiftToward(p, target, dist);

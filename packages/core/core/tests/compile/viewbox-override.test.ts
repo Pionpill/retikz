@@ -7,7 +7,7 @@
 import { describe, expect, it } from 'vitest';
 import { compileToScene } from '../../src/compile/compile';
 import { computeLayout } from '../../src/compile/layout';
-import { makeRound } from '../../src/compile/precision';
+import { createRound } from '../../src/compile/precision';
 import type { IR, IRChild } from '../../src';
 
 /** 一个尺寸固定、与文字度量无关的稳定内容节点（circle + minimumSize），落在给定中心 */
@@ -67,7 +67,7 @@ describe('IR 根含小数 viewBox 按精度 round', () => {
       height: 50.501,
     });
     const result = compileToScene(ir);
-    const r = makeRound(2);
+    const r = createRound(2);
     expect(result.layout).toEqual({
       x: r(-12.555),
       y: r(3.214),
@@ -84,7 +84,7 @@ describe('IR 根含小数 viewBox 按精度 round', () => {
       height: 50.5,
     });
     const result = compileToScene(ir, { precision: 0 });
-    const r = makeRound(0);
+    const r = createRound(0);
     expect(result.layout).toEqual({
       x: r(-12.7),
       y: r(3.4),
@@ -98,7 +98,7 @@ describe('IR 根无 viewBox 时回退自动算 layout', () => {
   it('空场景无 viewBox → 回退 computeLayout 兜底框', () => {
     const ir = scene([]);
     const result = compileToScene(ir);
-    expect(result.layout).toEqual(computeLayout([], 10, makeRound(2)));
+    expect(result.layout).toEqual(computeLayout([], 10, createRound(2)));
   });
 
   it('带内容无 viewBox → padding 影响 layout（回退行为，与既有一致）', () => {

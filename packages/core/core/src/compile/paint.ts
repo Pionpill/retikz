@@ -39,7 +39,7 @@ const lookupPatternDef = (
  *   emit 抛错 / 产非法原语都包成含 shape 名的清晰错（带 cause）。
  */
 const resolvePatternTile = (
-  spec: Extract<IRPaintSpec, { type: 'pattern' }>,
+  spec: Extract<IRPaintSpec, { kind: 'pattern' }>,
   effectivePatterns: Record<string, PatternDefinition>,
   round: (n: number) => number,
 ): ResolvedPatternTile => {
@@ -116,7 +116,7 @@ export const createPaintRegistry = (
       idByKey.set(key, id);
       const resource: SceneResource = { kind: 'paint', id, spec: fill };
       // pattern 资源 emit-in-compile：查表 + 调 emit 产 tile（同 spec → 1 资源 1 tile，因 dedup 已先于此）
-      if (fill.type === 'pattern') {
+      if (fill.kind === 'pattern') {
         resource.tile = resolvePatternTile(fill, effectivePatterns, round);
       }
       list.push(resource);

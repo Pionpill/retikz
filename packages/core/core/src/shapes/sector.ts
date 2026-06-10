@@ -1,16 +1,18 @@
 import { z } from 'zod';
-import { localToWorld } from '../geometry/_transform';
+import { localToWorld } from '../geometry/transform';
 import type { Position } from '../geometry/point';
 import type { Rect } from '../geometry/rect';
 import {
   type ContourSegment,
+  type FilletSolution,
   boundaryFromContour,
   contourCommands,
+  filletContour,
 } from '../geometry/contour';
 import type { ScenePrimitive } from '../primitive';
-import { contourToPathCommands } from './_contour';
+import { contourToPathCommands, contourToPathPrimitive } from './contour';
 import { defineShape } from './define';
-import { type SectorGeometry, sectorGeometry, sectorPolarPoint } from './_shared';
+import { type SectorGeometry, sectorGeometry, sectorPolarPoint } from './shared';
 
 /**
  * sector shape 的 per-instance params 类型
@@ -72,6 +74,30 @@ const sectorSegments = (rect: Rect, geo: SectorGeometry, params: SectorParams): 
   ];
 };
 
+const sectorGeometryCache = new WeakMap<SectorParams, SectorGeometry>();
+
+const getSectorGeometry = (params: SectorParams): SectorGeometry => {
+  const cached = sectorGeometryCache.get(params);
+  if (cached !== undefined) return cached;
+  const geo = sectorGeometry(params);
+  sectorGeometryCache.set(params, geo);
+  return geo;
+};
+
+const createSectorContour = (rect: Rect, params: SectorParams): {
+  geo: SectorGeometry;
+  segments: Array<ContourSegment>;
+  fillets: Array<FilletSolution>;
+} => {
+  const geo = getSectorGeometry(params);
+  const segments = sectorSegments(rect, geo, params);
+  return {
+    geo,
+    segments,
+    fillets: filletContour(segments, params.cornerRadius),
+  };
+};
+
 /**
  * sector 注册项：环楔（内外半径 + 起止角围成的可填充 2D 区域）
  * @description 四何函数共用 `sectorGeometry`（单一真源）：circumscribe 返回含圆心 + 内外弧的精确 AABB 半轴
@@ -98,7 +124,7 @@ export const sector = defineShape({
     endAngle: z
       .number()
       .finite()
-      .describe('End angle in degrees; swept counterclockwise in screen space from startAngle.'),
+      .describe('End angle in degrees; swept clockwise in screen space from startAngle.'),
     cornerRadius: z
       .number()
       .finite()
@@ -111,22 +137,21 @@ export const sector = defineShape({
     .refine(p => p.outerRadius > p.innerRadius, {
       message: 'outerRadius must be greater than innerRadius',
     }),
-  circumscribe: (_hw, _hh, params: SectorParams) => sectorGeometry(params).aabbHalfAxes,
+  circumscribe: (_hw, _hh, params: SectorParams) => getSectorGeometry(params).aabbHalfAxes,
   // position = 圆心 apex；AABB 中心相对 apex 的偏移 = −apexOffset（apexOffset 是 apex 相对 AABB 中心）
   circumscribeOffset: (params: SectorParams): Position => {
-    const { apexOffset } = sectorGeometry(params);
+    const { apexOffset } = getSectorGeometry(params);
     return [-apexOffset[0], -apexOffset[1]];
   },
   boundaryPoint: (rect: Rect, toward: Position, params: SectorParams): Position => {
-    const geo = sectorGeometry(params);
-    // rayOrigin = 质心（非圆心）：sector 圆心在轮廓边角上，质心才落在环楔内、向外射线必穿轮廓一次。
-    const centroidWorld = localToWorld(rect, geo.centroidOffset);
-    const segments = sectorSegments(rect, geo, params);
-    const hit = boundaryFromContour(segments, params.cornerRadius, centroidWorld, toward);
-    return hit ?? centroidWorld;
+    const { geo, segments, fillets } = createSectorContour(rect, params);
+    // rayOrigin 必须落在填充区域内；环形扇区的质心可能落入内孔。
+    const originWorld = localToWorld(rect, geo.boundaryOriginOffset);
+    const hit = boundaryFromContour(segments, params.cornerRadius, originWorld, toward, fillets);
+    return hit ?? originWorld;
   },
   anchor: (rect: Rect, name: string, params: SectorParams): Position | undefined => {
-    const geo = sectorGeometry(params);
+    const geo = getSectorGeometry(params);
     const { innerRadius, outerRadius } = params;
     const { start, end, mid } = geo.range;
     switch (name) {
@@ -148,22 +173,10 @@ export const sector = defineShape({
     }
   },
   *emit (rect: Rect, style, round, params: SectorParams): Iterable<ScenePrimitive> {
-    const geo = sectorGeometry(params);
     // 轮廓段（emit 收轴对齐 rect，rotate 由外层 group 施加）→ rounded-contour 命令 → path
-    const segments = sectorSegments(rect, geo, params);
-    const commands = contourToPathCommands(contourCommands(segments, params.cornerRadius), round);
-
-    yield {
-      type: 'path',
-      commands,
-      fill: style.fill ?? 'transparent',
-      fillOpacity: style.fillOpacity,
-      stroke: style.stroke ?? 'currentColor',
-      strokeOpacity: style.strokeOpacity,
-      strokeWidth: style.strokeWidth ?? 1,
-      dashPattern: style.dashPattern,
-      opacity: style.opacity,
-    };
+    const { segments, fillets } = createSectorContour(rect, params);
+    const commands = contourToPathCommands(contourCommands(segments, params.cornerRadius, fillets), round);
+    yield contourToPathPrimitive(commands, style);
   },
   // 半径 / cornerRadius 是长度，随几何均值因子缩；角度是方向，不缩。
   scaleParams: (params: SectorParams, sx: number, sy: number): SectorParams => {

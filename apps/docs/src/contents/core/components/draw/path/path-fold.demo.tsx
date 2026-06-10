@@ -15,9 +15,9 @@ const Demo: FC = () => (
     {/* 一条 path 混合 line + step：A -|→ B（折角）→ 直线到 C → |-→ A（折角闭回） */}
     <Path stroke="currentColor">
       <Step kind="move" to="a" />
-      <Step kind="step" via="-|" to="b" />
+      <Step kind="fold" via="-|" to="b" />
       <Step kind="line" to="c" />
-      <Step kind="step" via="|-" to="a" />
+      <Step kind="fold" via="|-" to="a" />
     </Path>
   </Layout>
 );

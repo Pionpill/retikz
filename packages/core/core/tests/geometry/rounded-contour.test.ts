@@ -233,6 +233,28 @@ describe('contourCommands passthrough（r=0 / 省略 / 负）', () => {
 });
 
 describe('boundaryFromContour', () => {
+  it('整圆弧在非起点方向仍可命中', () => {
+    const hit = boundaryFromContour(
+      [{ kind: 'arc', center: [0, 0], radius: 10, startAngle: 0, endAngle: 360 }],
+      undefined,
+      [0, 0],
+      [0, -20],
+    );
+    expect(hit).toBeDefined();
+    expect(hit![0]).toBeCloseTo(0, 6);
+    expect(hit![1]).toBeCloseTo(-10, 6);
+  });
+
+  it('巨大弧角度不会在 sweep 对齐时挂死', () => {
+    const hit = boundaryFromContour(
+      [{ kind: 'arc', center: [0, 0], radius: 10, startAngle: 1e308, endAngle: 1e308 + 720 }],
+      undefined,
+      [0, 0],
+      [20, 0],
+    );
+    expect(hit === undefined || Number.isFinite(hit[0])).toBe(true);
+  });
+
   it('rayOrigin = 中心，朝边中点命中原边（r=0）', () => {
     const hit = boundaryFromContour(squareSegments(), 0, [0, 0], [0, -100]);
     expect(hit).toBeDefined();

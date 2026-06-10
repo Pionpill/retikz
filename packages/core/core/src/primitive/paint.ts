@@ -6,7 +6,7 @@ import type { MarkerPrimitive } from './marker';
  * paint 属性取值词汇表（可用于 fill / stroke，不绑定单一属性）
  * @description 渲染无关：`string` 纯色（含 var() 由 adapter 走 inline style）；`{ kind:'resourceRef' }` 指向
  *   `Scene.resources` 里的 paint server（gradient / 后续 pattern·image）；`{ kind:'contextStroke' }` 继承所在元素描边
- *   （adapter → SVG context-stroke，alpha.8 arrow 用）。
+ *   （adapter → SVG context-stroke）。
  */
 export type PaintValue =
   | string

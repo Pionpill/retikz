@@ -30,8 +30,8 @@ export type LineStepProps = {
 
 /** Fold action：经一个直角中间点的折角段（TikZ `(A) -| (B)` / `(A) |- (B)`） */
 export type FoldStepProps = {
-  /** 折角 step 鉴别字面量（IR 端类型为 `IRFoldStep`，字面量沿用 `'step'`） */
-  kind: 'step';
+  /** 折角 step 鉴别字面量 */
+  kind: 'fold';
   /** 折角走向：`-|` 先水平后垂直；`|-` 先垂直后水平 */
   via: '-|' | '|-';
   /** 折角终点 */
@@ -178,7 +178,7 @@ export type RectangleStepProps = {
 
 /**
  * `<Step>` 组件的 props（11 种 step kind 的 discriminated union）
- * @description 十一种 kind：'move' / 'line'（默认） / 'step'（折角） / 'cycle'（闭合） / 'curve'（二次贝塞尔） / 'cubic'（三次贝塞尔） / 'bend'（弧形简记） / 'arc'（圆 / 椭圆弧段） / 'circlePath'（整圆 / 部分圆） / 'ellipsePath'（整椭圆 / 部分椭圆） / 'rectangle'（矩形）。除 'move' / 'cycle' / 'rectangle' 外均可挂 `label?: IRStepLabel`，等价于 sugar `<EdgeLabel>` child（prop 优先）。每个 kind 有对应 named type export，便于 wrapper / forwardRef / `Pick<>` 派生。
+ * @description 十一种 kind：'move' / 'line'（默认） / 'fold'（折角） / 'cycle'（闭合） / 'curve'（二次贝塞尔） / 'cubic'（三次贝塞尔） / 'bend'（弧形简记） / 'arc'（圆 / 椭圆弧段） / 'circlePath'（整圆 / 部分圆） / 'ellipsePath'（整椭圆 / 部分椭圆） / 'rectangle'（矩形）。除 'move' / 'cycle' / 'rectangle' 外均可挂 `label?: IRStepLabel`，等价于 sugar `<EdgeLabel>` child（prop 优先）。每个 kind 有对应 named type export，便于 wrapper / forwardRef / `Pick<>` 派生。
  */
 export type StepProps =
   | MoveStepProps

@@ -23,9 +23,15 @@ const SUPPORTED_ANCHOR_NAMES = [
 
 /** 纯数字识别 `A.30` / `A.-45` / `A.180.5` */
 const ANGLE_RE = /^-?\d+(\.\d+)?$/;
+const DECIMAL_NUMBER_RE = /^-?\d+\.\d+$/;
 
 /** 字符串节点 ref shorthand → NodeTarget 对象 */
 export const parseNodeTarget = (s: string): IRNodeTarget => {
+  if (DECIMAL_NUMBER_RE.test(s)) {
+    throw new Error(
+      `parseNodeTarget: '${s}' looks like a numeric coordinate; use [x, y] for coordinates or object form for ids containing '.'`,
+    );
+  }
   const dot = s.indexOf('.');
   const id = dot < 0 ? s : s.slice(0, dot);
   // 空 id（`''` / `'.north'`）fail-fast——否则产出 NodeTargetSchema 非法的 `{ id: '' }`，

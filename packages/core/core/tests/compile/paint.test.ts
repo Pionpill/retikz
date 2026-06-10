@@ -10,7 +10,7 @@ import type { RectPrim, ScenePrimitive } from '../../src/primitive';
 import { flattenPrims } from '../helpers/flatten';
 
 const grad: IRPaintSpec = {
-  type: 'linearGradient',
+  kind: 'linearGradient',
   angle: 90,
   stops: [
     { offset: 0, color: '#4f8' },
@@ -64,7 +64,7 @@ describe('去重 + 稳定 id', () => {
   });
 
   it('不同 gradient → 多条、不同 id', () => {
-    const grad2: IRPaintSpec = { type: 'radialGradient', stops: grad.stops };
+    const grad2: IRPaintSpec = { kind: 'radialGradient', stops: grad.stops };
     const ir: IR = {
       version: 1,
       type: 'scene',

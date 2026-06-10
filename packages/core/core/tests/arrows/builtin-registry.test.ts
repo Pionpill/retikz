@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { compileToScene } from '../../src/compile/compile';
 import type { CompileOptions, CompileWarning } from '../../src/compile/compile';
-import { BUILTIN_ARROWS } from '../../src/arrows';
+import { BUILTIN_ARROWS, defineArrow } from '../../src/arrows';
 import type { ArrowDefinition } from '../../src/arrows';
 import { PathSchema } from '../../src/ir';
 import type { IR } from '../../src/ir';
@@ -110,7 +110,7 @@ const markerPaint = (spec: ArrowEndSpec | undefined): string | undefined => {
 };
 
 /** 一个最小自定义 arrow：lineContactX=2、tipX 缺省（=baseSize 10）、emit 产单 path marker */
-const customArrow = (): ArrowDefinition => ({
+const customArrow = (): ArrowDefinition => defineArrow({
   lineContactX: 2,
   emit: ({ stroke }): Array<MarkerPrimitive> => [
     {

@@ -224,8 +224,8 @@ Most nodes only need `padding={N}`. Use `innerXSep` / `innerYSep` when horizonta
 
 Besides a plain color string, `fill` accepts a **PaintSpec object** — linear / radial gradient, pattern, or image. Identical PaintSpecs are deduplicated at compile time into a Scene resource table and rendered as a paint server inside SVG `<defs>`. `<Path fill>` supports it too.
 
-- Linear: `{ type: 'linearGradient', angle?, stops }` — `angle` in degrees (0 = left→right, 90 = top→bottom)
-- Radial: `{ type: 'radialGradient', center?, radius?, stops }` — `center` / `radius` in 0..1 relative units
+- Linear: `{ kind: 'linearGradient', angle?, stops }` — `angle` in degrees (0 = left→right, 90 = top→bottom)
+- Radial: `{ kind: 'radialGradient', center?, radius?, stops }` — `center` / `radius` in 0..1 relative units
 - `stops`: array of `{ offset (0..1), color, opacity? }`, at least 2; `color` may be `currentColor`
 
 <ComponentPreview name="node-paint" size="sm" />
@@ -236,8 +236,8 @@ A stop's `opacity` gives a "solid → transparent" fade; `color` set to `current
 
 `fill` also accepts **pattern** and **image**:
 
-- Pattern: `{ type:'pattern', shape:'lines'|'dots'|'grid', color?, background?, size?, lineWidth?, rotation? }` — `color` defaults to `currentColor`, `size` is the tile period, `rotation` rotates the whole pattern
-- Image: `{ type:'image', href, fit? }` — `href` is a URL (incl. data URI), `fit`: `cover` (default) / `contain` / `fill`
+- Pattern: `{ kind:'pattern', shape:'lines'|'dots'|'grid', color?, background?, size?, lineWidth?, rotation? }` — `color` defaults to `currentColor`, `size` is the tile period, `rotation` rotates the whole pattern
+- Image: `{ kind:'image', href, fit? }` — `href` is a URL (incl. data URI), `fit`: `cover` (default) / `contain` / `fill`
 
 <ComponentPreview name="node-pattern-image" size="sm" />
 
@@ -251,7 +251,7 @@ A stop's `opacity` gives a "solid → transparent" fade; `color` set to `current
 
 #### Border style
 
-`dashed` / `dotted` are presets; `dashArray` is an explicit dash/gap length sequence (priority: `dashArray` > `dashed` > `dotted`):
+`dashed` / `dotted` are presets; `dashPattern` is an explicit dash/gap length sequence (priority: `dashPattern` > `dashed` > `dotted`):
 
 <ComponentPreview name="node-stroke-style" size="xs" />
 
@@ -323,7 +323,7 @@ By default stacking = declaration order (SVG only honors paint order). `zIndex` 
 | `drawOpacity` | `number` | — | Stroke-only opacity 0..1 |
 | `dashed` | `boolean` | ? | Dashed border preset (`[4, 2]`) |
 | `dotted` | `boolean` | ? | Dotted border preset (`[1, 2]`) |
-| `dashArray` | `Array<number>` | ? | Explicit dash/gap lengths; highest priority |
+| `dashPattern` | `Array<number>` | ? | Explicit dash/gap lengths; highest priority |
 | `cornerRadius` | `number` | — | Migration-period top-level corner radius; only affects the default `rectangle`. Per-shape rounding goes in params: `shape={{ type, params:{ ..., cornerRadius } }}` (params wins) |
 | `minimumWidth` / `minimumHeight` | `number` | — | Floors the bbox dimensions |
 | `minimumSize` | `number` | — | Symmetric minimum-size alias; axis-specific fields take precedence |

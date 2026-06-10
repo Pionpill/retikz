@@ -3,7 +3,7 @@
  * @description 内置 shape 的注册项 + 第三方 shape 作者所需的类型 / helper。
  *   `circle` / `diamond` 不在注册表——均无独立几何，由 `normalizeShape` 在编译期消解为 preset：
  *   circle → ellipse 等轴（`{ type: 'ellipse', params: { circumscribe: 'equal' } }`）、
- *   diamond → polygon 4 边形 45°（`{ type: 'polygon', params: { sides: 4, rotate: 45 } }`）；
+ *   diamond → polygon 4 边形（`{ type: 'polygon', params: { sides: 4, rotate: 0 } }`）；
  *   registry key 类型据此把 `'circle'` / `'diamond'` 排除。
  */
 import type { BuiltinShapeName } from '../ir/node';
@@ -31,4 +31,4 @@ export type { ShapeDefinition, ShapeDefinitionInput, ShapeStyle } from './types'
 // 第三方 shape 作者所需 helper / 类型（提升为公开 API）
 export type { Rect } from '../geometry/rect';
 export type { Position } from '../geometry/point';
-export { worldToLocal, localToWorld } from '../geometry/_transform';
+export { worldToLocal, localToWorld } from '../geometry/transform';

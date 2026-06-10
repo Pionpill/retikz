@@ -87,6 +87,8 @@ export const PathSchema = z
       ),
     strokeWidth: z
       .number()
+      .finite()
+      .nonnegative()
       .optional()
       .describe('Stroke width in user units; defaults to 1 when omitted'),
     dashPattern: z

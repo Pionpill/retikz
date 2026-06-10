@@ -1,6 +1,6 @@
 ---
 title: Custom Arrows
-description: arrowDetail.shape is an open string; beyond the 8 built-ins, register any arrow with an ArrowDefinition — emit produces MarkerPrimitive geometry in local coordinates, and color follows the path stroke via contextStroke.
+description: arrowDetail.shape is an open string; beyond the 8 built-ins, register any arrow with defineArrow / ArrowDefinition — emit produces MarkerPrimitive geometry in local coordinates, and color follows the path stroke via contextStroke.
 ---
 
 `arrowDetail.shape` is an **open string**: beyond the 8 built-ins (`normal` / `open` / `stealth` / `openStealth` / `diamond` / `openDiamond` / `circle` / `openCircle`), you can register your own arrow tips. The registry mirrors the [shape registry](/core/reference/extending/shape-registry) — the 8 built-ins are themselves registry entries, with no special privileges.
@@ -15,7 +15,7 @@ Below registers a `bracket` — a TikZ Bracket-style hollow square bracket `[` (
 
 If you only want the minimum viable arrow, implement `lineContactX` and `emit` first; `baseSize`, `tipX`, `hollow`, `defaultLength`, and `defaultWidth` only tune the look.
 
-An `ArrowDefinition` is a plain object (not part of the IR, no serialization needed, can be returned by a factory):
+An `ArrowDefinition` is a plain object (not part of the IR, no serialization needed, can be returned by a factory); wrap it at the definition site with `defineArrow({...})` so custom arrows follow the same extension style as shapes, patterns, and path generators:
 
 | Field | Type | Default | Description |
 | --- | --- | --- | --- |

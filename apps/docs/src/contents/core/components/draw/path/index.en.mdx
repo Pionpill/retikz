@@ -3,7 +3,7 @@ title: Path
 description: Kernel path container — children are a sequence of `<Step>` (≥ 2) defining a polyline / curve / arc; `<Draw>` compiles down to this.
 ---
 
-`<Path>` is the low-level path container: children must be `<Step>` nodes (at least 2) defining a sequence of move / line / step (folded) / cycle (close) / curve / cubic / bend (curves) / arc / circlePath / ellipsePath (circle / ellipse) / rectangle actions; plus an IR-level generator step ([path generators](/core/reference/extending/path-generator)). For everyday connections `<Draw>` is shorter; reach for `<Path>` when you need folds, closes, curves, custom stroke, or different step kinds.
+`<Path>` is the low-level path container: children must be `<Step>` nodes (at least 2) defining a sequence of move / line / fold (right-angle) / cycle (close) / curve / cubic / bend (curves) / arc / circlePath / ellipsePath (circle / ellipse) / rectangle actions; plus an IR-level generator step ([path generators](/core/reference/extending/path-generator)). For everyday connections `<Draw>` is shorter; reach for `<Path>` when you need folds, closes, curves, custom stroke, or different step kinds.
 
 It is strongest in three cases: one path contains multiple subpaths (multiple `move`s), individual segments need different `kind` / label / control-point behavior, or you want the JSX structure to mirror IR `path.children` closely for debugging and generation.
 
@@ -32,7 +32,7 @@ import { Path, Step } from '@retikz/react';
 </Path>
 ```
 
-`<Step>` supports eleven kinds — `move` / `line` for straight segments, `step` for the right-angle fold, `cycle` to close back, `curve` / `cubic` for Bezier curves, `bend` as the arc shorthand (with out/in angles and self-loops), `arc` / `circlePath` / `ellipsePath` for arcs / full circles / full ellipses centered on the cursor, and `rectangle` for a diagonal rectangle. See [Step](/core/components/draw/step) for details. There is also an IR-level `generator` step (external curve generators, no JSX DSL, fed via IR — see [path generators](/core/reference/extending/path-generator)).
+`<Step>` supports eleven kinds — `move` / `line` for straight segments, `fold` for the right-angle fold, `cycle` to close back, `curve` / `cubic` for Bezier curves, `bend` as the arc shorthand (with out/in angles and self-loops), `arc` / `circlePath` / `ellipsePath` for arcs / full circles / full ellipses centered on the cursor, and `rectangle` for a diagonal rectangle. See [Step](/core/components/draw/step) for details. There is also an IR-level `generator` step (external curve generators, no JSX DSL, fed via IR — see [path generators](/core/reference/extending/path-generator)).
 
 ## Examples
 
@@ -42,7 +42,7 @@ import { Path, Step } from '@retikz/react';
 
 ### Folded (step)
 
-`<Step kind="step" via="-|" \| "\|-">` inserts a right-angle corner between cursor and target — essential for flow charts and UML relationships. Below is a path mixing `line` and both `via` directions:
+`<Step kind="fold" via="-|" \| "\|-">` inserts a right-angle corner between cursor and target — essential for flow charts and UML relationships. Below is a path mixing `line` and both `via` directions:
 
 <ComponentPreview name="path-fold" size="md" />
 
@@ -171,7 +171,7 @@ Besides the symmetric `bendDirection` + `bendAngle`, `<Step kind="bend">` accept
 | `rotate` | `number` | — | Whole-path rotation in degrees (around the bounding-box center) |
 | `scale` | `number \| { x, y }` | — | Whole-path scale (number = uniform / `{ x, y }` = non-uniform, around the bounding-box center) |
 | `marks` | `Array<{ pos, mark }>` | — | Marks along the path: `pos∈[0,1]`, `mark.kind:'arrow'` + a registered arrow name, oriented by the tangent at that point |
-| `children` | `Array<<Step>>` | — | At least 2; if the first isn't `move`, the compiler coerces it to `move`. `<Step>` supports `move` / `line` / `step` (folded) / `cycle` (close) / `curve` / `cubic` (Bezier) / `bend` (arc shorthand, with out/in angles and self-loops) / `arc` / `circlePath` / `ellipsePath` (circle / ellipse) / `rectangle` (diagonal rectangle); the IR also has `generator` (path generators, no JSX DSL) |
+| `children` | `Array<<Step>>` | — | At least 2; if the first isn't `move`, the compiler coerces it to `move`. `<Step>` supports `move` / `line` / `fold` (right-angle) / `cycle` (close) / `curve` / `cubic` (Bezier) / `bend` (arc shorthand, with out/in angles and self-loops) / `arc` / `circlePath` / `ellipsePath` (circle / ellipse) / `rectangle` (diagonal rectangle); the IR also has `generator` (path generators, no JSX DSL) |
 
 ## Related
 

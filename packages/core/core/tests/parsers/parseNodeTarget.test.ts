@@ -75,6 +75,11 @@ describe('parseNodeTarget 角度 anchor 模式（id.<deg>）', () => {
     expect(parseNodeTarget('A.0')).toEqual({ id: 'A', anchor: 0 });
     expect(parseNodeTarget('A.360')).toEqual({ id: 'A', anchor: 360 });
   });
+
+  it('纯数字小数字符串不按 id.angle 拆分', () => {
+    expect(() => parseNodeTarget('12.5')).toThrow(/numeric coordinate/);
+    expect(() => parseNodeTarget('.5')).toThrow(/empty node id/);
+  });
 });
 
 describe('parseNodeTarget dotted-id 限制（按第一个点切分）', () => {

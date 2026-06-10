@@ -1,11 +1,11 @@
 ---
 title: Custom Patterns
-description: pattern.shape is an open string; beyond the built-in lines / dots / grid, register any motif with a PatternDefinition — emit produces MarkerPrimitive geometry in tile-local coordinates (emit-in-compile) into a Scene resource, and the adapter materializes the <pattern>.
+description: pattern.shape is an open string; beyond the built-in lines / dots / grid, register any motif with definePattern / PatternDefinition — emit produces MarkerPrimitive geometry in tile-local coordinates (emit-in-compile) into a Scene resource, and the adapter materializes the <pattern>.
 ---
 
 In a `fill` `PaintSpec`, `pattern.shape` is an **open string**: beyond the three built-in motifs (`lines` hatching / `dots` / `grid`), you can register your own pattern. The registry mirrors the [shape registry](/core/reference/extending/shape-registry) / [custom arrows](/core/reference/extending/custom-arrow) — the 3 built-ins are themselves registry entries, with no special privilege.
 
-Registration goes through `CompileOptions.patterns` (in React, `<Layout patterns={...}>`): the IR's `fill={{ type:'pattern', shape:'...' }}` still only stores a string name; the motif geometry is injected here. Unregistered names throw at compile time (with the list of available names); overriding a built-in emits a `PATTERN_OVERRIDES_BUILTIN` warning.
+Registration goes through `CompileOptions.patterns` (in React, `<Layout patterns={...}>`): the IR's `fill={{ kind:'pattern', shape:'...' }}` still only stores a string name; the motif geometry is injected here. Unregistered names throw at compile time (with the list of available names); overriding a built-in emits a `PATTERN_OVERRIDES_BUILTIN` warning.
 
 ## Registering a motif
 
@@ -15,7 +15,7 @@ Below registers a `cross` motif, clearly distinct from the three built-ins:
 
 If you only want to get a pattern working first, implement `emit`; `defaultSize` just supplies the fallback period when `pattern.size` is omitted.
 
-A `PatternDefinition` is a plain object (not part of the IR, can be returned by a factory):
+A `PatternDefinition` is a plain object (not part of the IR, can be returned by a factory); wrap it at the definition site with `definePattern({...})` so custom patterns follow the same extension style as shapes, arrows, and path generators:
 
 | Field | Type | Default | Description |
 | --- | --- | --- | --- |

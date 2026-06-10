@@ -31,7 +31,7 @@ const resources: Array<SceneResource> = [
     kind: 'paint',
     id: 'paint-1',
     spec: {
-      type: 'linearGradient',
+      kind: 'linearGradient',
       stops: [
         { offset: 0, color: '#123' },
         { offset: 1, color: '#fed', opacity: 0.8 },

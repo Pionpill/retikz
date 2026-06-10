@@ -1,6 +1,7 @@
 import { z } from 'zod';
-import { localToWorld } from '../geometry/_transform';
+import { localToWorld } from '../geometry/transform';
 import type { Position } from '../geometry/point';
+import { normalizeCompassAnchor } from '../geometry/anchor';
 import { rect as rectOps } from '../geometry/rect';
 import type { Rect } from '../geometry/rect';
 import {
@@ -9,15 +10,14 @@ import {
   contourCommands,
 } from '../geometry/contour';
 import type { ScenePrimitive } from '../primitive';
-import { contourToPathCommands, verticesToSegments } from './_contour';
-import { asCompassAnchor } from './_shared';
+import { contourToPathCommands, contourToPathPrimitive, verticesToSegments } from './contour';
 import { defineShape } from './define';
 
 /**
  * polygon shape 的 per-instance params 类型
  * @description 由 paramsSchema z.infer 派生（单一来源 zod）；sides = 边数（≥3），rotate = 起始顶点自旋角（度，可选），
  *   cornerRadius = 顶点倒角半径（user units，可选，逐角夹紧）。
- *   diamond 收敛为此 shape 的 `{ sides: 4, rotate: 45 }` preset 别名。
+ *   diamond 收敛为此 shape 的 `{ sides: 4, rotate: 0 }` preset 别名。
  */
 type PolygonParams = {
   sides: number;
@@ -26,6 +26,7 @@ type PolygonParams = {
 };
 
 const DEG_TO_RAD = Math.PI / 180;
+const MAX_POLYGON_SIDES = 1024;
 
 /** 顶点角集合（度）：第 k 个顶点角 = rotate + k·(360/sides) */
 const vertexAngles = (params: PolygonParams): Array<number> => {
@@ -37,8 +38,14 @@ const vertexAngles = (params: PolygonParams): Array<number> => {
 };
 
 /** 顶点角的 |cos| 最大值（恒 >0，sides≥3 时至少一个顶点不在 ±y 轴上）；用于由 AABB 半宽反推外接半径 */
-const maxAbsCos = (params: PolygonParams): number =>
-  Math.max(...vertexAngles(params).map(a => Math.abs(Math.cos(a * DEG_TO_RAD))));
+const maxAbsCos = (params: PolygonParams): number => {
+  let max = 0;
+  for (const angle of vertexAngles(params)) {
+    const value = Math.abs(Math.cos(angle * DEG_TO_RAD));
+    if (value > max) max = value;
+  }
+  return max;
+};
 
 /**
  * 能容纳内框（半轴 hw/hh）的正 sides 边形外接圆半径
@@ -85,7 +92,7 @@ const polygonVertices = (rect: Rect, radius: number, params: PolygonParams): Arr
  *   （多边形关于中心对称，AABB 中心 = 形心 = node position）。命名 anchor 走外接 AABB 的 9 名 rect anchor（不随
  *   cornerRadius 移）；self-rotate（params.rotate）与 Node.rotate 叠加。scaleParams：cornerRadius 是长度随 scale
  *   缩（几何均值因子），sides 计数 / rotate 角度不缩。
- *   diamond ≡ `{ type: 'polygon', params: { sides: 4, rotate: 45 } }`，由 compile 规范化。
+ *   diamond ≡ `{ type: 'polygon', params: { sides: 4, rotate: 0 } }`，由 compile 规范化。
  */
 export const polygon = defineShape({
   paramsSchema: z.strictObject({
@@ -93,7 +100,8 @@ export const polygon = defineShape({
       .number()
       .int()
       .min(3)
-      .describe('Number of sides of the regular polygon (>= 3).'),
+      .max(MAX_POLYGON_SIDES)
+      .describe(`Number of sides of the regular polygon (3..${MAX_POLYGON_SIDES}).`),
     rotate: z
       .number()
       .finite()
@@ -111,8 +119,13 @@ export const polygon = defineShape({
   circumscribe: (hw, hh, params: PolygonParams) => {
     const radius = circumradiusFor(hw, hh, params);
     const angles = vertexAngles(params);
-    const halfWidth = Math.max(...angles.map(a => Math.abs(radius * Math.cos(a * DEG_TO_RAD))));
-    const halfHeight = Math.max(...angles.map(a => Math.abs(radius * Math.sin(a * DEG_TO_RAD))));
+    let halfWidth = 0;
+    let halfHeight = 0;
+    for (const angle of angles) {
+      const rad = angle * DEG_TO_RAD;
+      halfWidth = Math.max(halfWidth, Math.abs(radius * Math.cos(rad)));
+      halfHeight = Math.max(halfHeight, Math.abs(radius * Math.sin(rad)));
+    }
     return { halfWidth, halfHeight };
   },
   boundaryPoint: (rect: Rect, toward: Position, params: PolygonParams): Position => {
@@ -126,7 +139,7 @@ export const polygon = defineShape({
   },
   anchor: (rect: Rect, name: string, params: PolygonParams): Position | undefined => {
     void params;
-    const a = asCompassAnchor(name);
+    const a = normalizeCompassAnchor(name);
     return a ? rectOps.anchor(rect, a) : undefined;
   },
   *emit (rect: Rect, style, round, params: PolygonParams): Iterable<ScenePrimitive> {
@@ -135,17 +148,7 @@ export const polygon = defineShape({
     const verts = polygonVertices(rect, radius, params);
     const segments: Array<ContourSegment> = verticesToSegments(verts);
     const commands = contourToPathCommands(contourCommands(segments, params.cornerRadius), round);
-    yield {
-      type: 'path',
-      commands,
-      fill: style.fill ?? 'transparent',
-      fillOpacity: style.fillOpacity,
-      stroke: style.stroke ?? 'currentColor',
-      strokeOpacity: style.strokeOpacity,
-      strokeWidth: style.strokeWidth ?? 1,
-      dashPattern: style.dashPattern,
-      opacity: style.opacity,
-    };
+    yield contourToPathPrimitive(commands, style);
   },
   // sides 计数 / rotate 角度不缩（默认深缩会缩坏 sides）；cornerRadius 是长度，随 node scale 用几何均值因子缩。
   scaleParams: (params: PolygonParams, sx: number, sy: number): PolygonParams =>

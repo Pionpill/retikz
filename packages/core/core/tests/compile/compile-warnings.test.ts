@@ -26,6 +26,26 @@ describe('CompileOptions.onWarn', () => {
     expect(warnings[0].message).toContain('at least 2 steps');
   });
 
+  it('PATH_TOO_SHORT：首个绘制 step 缺少前驱位置时触发 warning', () => {
+    const ir = scene([
+      {
+        type: 'path',
+        children: [
+          { type: 'step', kind: 'line', to: [10, 0] },
+          { type: 'step', kind: 'line', to: [20, 0] },
+        ],
+      },
+    ]);
+    const warnings: Array<CompileWarning> = [];
+    compileToScene(ir, { onWarn: w => warnings.push(w) });
+    expect(warnings).toHaveLength(1);
+    expect(warnings[0]).toMatchObject({
+      code: 'PATH_TOO_SHORT',
+      path: 'children[0].path.children[0]',
+    });
+    expect(warnings[0].message).toContain('requires a previous position');
+  });
+
   it("UNRESOLVED_NODE_REFERENCE：step.to 引用未定义节点 id → warning + path locator 指向具体 step", () => {
     const ir = scene([
       {

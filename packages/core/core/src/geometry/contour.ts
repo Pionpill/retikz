@@ -1,5 +1,5 @@
-import { arcAngleInRange, rayArc } from './arc';
-import type { Position } from './point';
+import { arcAngleInRange, arcEndPoint, rayArc } from './arc';
+import { type Position, point } from './point';
 
 /*
  * 圆角轮廓模块：把「闭合有序段序列」(Line / Arc) 的每个接缝（角）替换为与两侧段相切、半径 r 的
@@ -60,32 +60,16 @@ export type ContourCommand =
     }
   | { kind: 'close' };
 
-/** 向量长度 */
-const length = (v: Position): number => Math.hypot(v[0], v[1]);
-
-/** 归一化（零向量回退 [1, 0]） */
-const normalize = (v: Position): Position => {
-  const len = length(v);
-  if (len < EPSILON) return [1, 0];
-  return [v[0] / len, v[1] / len];
-};
-
 /** 二维叉积 a × b */
 const cross = (a: Position, b: Position): number => a[0] * b[1] - a[1] * b[0];
 
-/** 点 + 角度（度）→ 圆周点 */
-const arcPoint = (center: Position, radius: number, angleDeg: number): Position => {
-  const rad = angleDeg * DEG_TO_RAD;
-  return [center[0] + Math.cos(rad) * radius, center[1] + Math.sin(rad) * radius];
-};
-
 /** 段起点 */
 const segmentStart = (seg: ContourSegment): Position =>
-  seg.kind === 'line' ? seg.from : arcPoint(seg.center, seg.radius, seg.startAngle);
+  seg.kind === 'line' ? seg.from : arcEndPoint(seg.center, seg.radius, seg.startAngle);
 
 /** 段终点 */
 const segmentEnd = (seg: ContourSegment): Position =>
-  seg.kind === 'line' ? seg.to : arcPoint(seg.center, seg.radius, seg.endAngle);
+  seg.kind === 'line' ? seg.to : arcEndPoint(seg.center, seg.radius, seg.endAngle);
 
 /**
  * 段在某端的「行进切线」单位向量
@@ -93,11 +77,11 @@ const segmentEnd = (seg: ContourSegment): Position =>
  *   arc 切线垂直于半径，方向随 counterClockwise 翻转（CW: (-sinθ, cosθ)，CCW: (sinθ, -cosθ)）。
  */
 const tangentAt = (seg: ContourSegment, atStart: boolean): Position => {
-  if (seg.kind === 'line') return normalize([seg.to[0] - seg.from[0], seg.to[1] - seg.from[1]]);
+  if (seg.kind === 'line') return point.normalize([seg.to[0] - seg.from[0], seg.to[1] - seg.from[1]]);
   const angleDeg = atStart ? seg.startAngle : seg.endAngle;
   const rad = angleDeg * DEG_TO_RAD;
   const sign = seg.counterClockwise ? -1 : 1;
-  return normalize([-Math.sin(rad) * sign, Math.cos(rad) * sign]);
+  return point.normalize([-Math.sin(rad) * sign, Math.cos(rad) * sign]);
 };
 
 /** arc 段的角跨度（带符号：CW 为正递增、CCW 为负），单位度 */
@@ -108,7 +92,7 @@ const arcSpan = (seg: ArcSegment): number => seg.endAngle - seg.startAngle;
  * @description tangentInPoint = 前段被裁短到此点（前段新终点）；tangentOutPoint = 后段从此点起（后段新起点）；
  *   filletArc 描述连接两切点的圆弧。clampedToZero=true 表示该角夹紧后 r→0，不倒角（保持尖角）。
  */
-type FilletSolution = {
+export type FilletSolution = {
   /** 前段切点（前段新终点） */
   tangentInPoint: Position;
   /** 后段切点（后段新起点） */
@@ -457,10 +441,10 @@ export const filletContour = (
 export const contourCommands = (
   segments: Array<ContourSegment>,
   cornerRadius?: number,
+  fillets: Array<FilletSolution> = filletContour(segments, cornerRadius),
 ): Array<ContourCommand> => {
   const n = segments.length;
   if (n === 0) return [];
-  const fillets = filletContour(segments, cornerRadius);
 
   // passthrough：原尖角轮廓
   if (fillets.length === 0) {
@@ -525,15 +509,15 @@ const emitSegmentBody = (
 
 /** 调整 endAngle 使「start→end」沿给定扫描方向（ccw: 递减 / 否则递增），保持裁剪后弧方向不变 */
 const alignSweep = (start: number, end: number, ccw: boolean): { start: number; end: number } => {
-  let e = end;
-  if (ccw) {
-    while (e > start) e -= 360;
-    while (e <= start - 360) e += 360;
-  } else {
-    while (e < start) e += 360;
-    while (e >= start + 360) e -= 360;
-  }
-  return { start, end: e };
+  const sweep = end - start;
+  if (sweep === 0) return { start, end: start };
+  if (Math.abs(sweep) === 360) return { start, end: start + (ccw ? -360 : 360) };
+
+  const normalized = ((sweep % 360) + 360) % 360;
+  const alignedSweep = ccw
+    ? normalized === 0 ? -360 : normalized - 360
+    : normalized === 0 ? 360 : normalized;
+  return { start, end: start + alignedSweep };
 };
 
 /**
@@ -547,14 +531,14 @@ export const boundaryFromContour = (
   cornerRadius: number | undefined,
   rayOrigin: Position,
   toward: Position,
+  fillets: Array<FilletSolution> = filletContour(segments, cornerRadius),
 ): Position | undefined => {
   const dirRaw: Position = [toward[0] - rayOrigin[0], toward[1] - rayOrigin[1]];
-  const dl = length(dirRaw);
+  const dl = point.length(dirRaw);
   if (dl < 1e-12) return undefined;
   const dir: Position = [dirRaw[0] / dl, dirRaw[1] / dl];
 
   const n = segments.length;
-  const fillets = filletContour(segments, cornerRadius);
   let best = Infinity;
 
   const considerLine = (a: Position, b: Position): void => {

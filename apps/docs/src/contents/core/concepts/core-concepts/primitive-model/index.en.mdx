@@ -1,5 +1,5 @@
 ---
-title: Node Model
+title: Primitive Model
 description: "Understand a retikz Node like a DOM box model: content, padding, shape, bounding box, boundary, and anchors."
 ---
 
@@ -69,7 +69,7 @@ Anchors are the stable points that a Node exposes to other primitives. Paths, po
 | Shape-specific | star tips, sector arc endpoints | Semantic points on complex shapes |
 | Edge proportion | `{ side: 'north', t: 0.25 }` | Tables, lanes, frame edges |
 
-Compass anchors go through the boundary surface; when `boundary="shape"`, compass anchors resolve against the visual bounding box rectangle. Numeric angle anchors call `boundaryPoint`, intersecting the selected boundary along a ray. Shape-specific anchors and edge proportion points always use the visual shape, regardless of `boundary`. For the full reference vocabulary, continue with [Anchors](/core/concepts/primitive-relations/anchors).
+Compass anchors go through the boundary surface; when `boundary="shape"`, compass anchors resolve against the visual bounding box rectangle. Numeric angle anchors call `boundaryPoint`, intersecting the selected boundary along a ray. Shape-specific anchors and edge proportion points always use the visual shape, regardless of `boundary`. For the full reference vocabulary, continue with [Primitive Relations](/core/concepts/core-concepts/primitive-relations).
 
 ## Padding And Margin
 

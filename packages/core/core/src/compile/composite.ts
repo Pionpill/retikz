@@ -36,6 +36,13 @@ const extractKey = (schema: CompositeDefinition['schema']): { namespace: string;
  *   查表 → `schema.parse(node)` 精确校验 + 强类型 → `expand` → 递归展开产物 fixpoint），否则 tier1（scope 递归
  *   children）。未注册 → `onWarn(COMPOSITE_NOT_REGISTERED)` + 跳过该节点（不进 Scene），继续编译其余；
  *   环 / 超 `maxDepth` → throw（死循环防护）。无 tier2 节点时等价于原样返回。
+ *
+ *   **注册表策略差异（有意，非疏漏）**：composite 以 `Array<CompositeDefinition>` 注入，可能重复，故重名
+ *   **throw**（结构上无法天然去重，撞名是调用方错误）；未注册走 **warn + skip**——composite 是高层节点，
+ *   缺对应包时跳过它仍能渲染其余图元，优雅降级优于整图崩。相对地，shape / arrow / pattern 以 `Record` 注入
+ *   （key 天然去重，无重名可言），同名覆盖内置走 **warn + last-wins**（覆盖是合法定制）；未注册名走 **throw**
+ *   ——这些是"定位 / 布局类"基元，节点引用了不存在的 shape 根本无法布局，必须 fail-fast。两类策略按"数据结构
+ *   + 语义分层"区分，不强行统一。
  */
 export const lowerComposites = (
   ir: IR,

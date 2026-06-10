@@ -9,7 +9,7 @@
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 import { compileToScene } from '../../src/compile/compile';
-import { definePathGenerator } from '../../src/pathGenerators';
+import { definePathGenerator } from '../../src/path-generators';
 import { JsonObjectSchema, PathSchema } from '../../src/ir';
 import type { IR } from '../../src/ir';
 import type { PathCommand, ScenePrimitive } from '../../src/primitive';

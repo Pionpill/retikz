@@ -1,0 +1,9 @@
+import type { ArrowDefinition } from './types';
+
+/**
+ * 定义一个 arrow 注册项
+ * @description 与 `defineShape` / `definePathGenerator` 对齐的定义点 helper；当前不做额外运行时校验，
+ *   只保留 `ArrowDefinition` 形态并让第三方扩展面写法一致。
+ * @returns 原样返回的 def（便于 `export const bracket = defineArrow({ ... })`）
+ */
+export const defineArrow = (def: ArrowDefinition): ArrowDefinition => def;

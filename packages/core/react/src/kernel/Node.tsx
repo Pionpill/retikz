@@ -74,12 +74,12 @@ export type NodeProps = HydrationEventProps & {
   drawOpacity?: number;
   /** 描边宽度 */
   strokeWidth?: number;
-  /** 描边虚线预设：等价于 dashArray={[4, 2]}；与 `dotted` / `dashArray` 优先级：dashArray > dashed > dotted */
+  /** 描边虚线预设：等价于 dashPattern={[4, 2]}；与 `dotted` / `dashPattern` 优先级：dashPattern > dashed > dotted */
   dashed?: boolean;
-  /** 描边点线预设：等价于 dashArray={[1, 2]} */
+  /** 描边点线预设：等价于 dashPattern={[1, 2]} */
   dotted?: boolean;
   /** 显式 dash pattern（如 [4, 2]）；优先级最高 */
-  dashArray?: IRNode['dashArray'];
+  dashPattern?: IRNode['dashPattern'];
   /** 圆角半径（user units）；只对 `rectangle` shape 生效。建议用形状 params 形式 `shape={{ type: 'rectangle', params: { cornerRadius } }}` */
   cornerRadius?: number;
   /** 最小 border 宽度（user units）；不足时撑开 bbox */

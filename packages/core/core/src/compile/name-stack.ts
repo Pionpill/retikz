@@ -124,8 +124,10 @@ export class NameStack {
    * @param id 要替换的 id（必须已在该 frame 注册过）
    * @param layout 新的 NodeLayout（覆盖旧值）
    * @param frameDepth 0 = 根 frame；通常传 scope 入场前的栈深 - 1
+   * @param expectedCurrent 可选的当前 layout 引用；传入后仅当 frame 中仍是该引用时才替换
+   * @returns true = 完成替换；false = 当前值已被后续 register 覆盖，未替换
    */
-  replaceLayout(id: string, layout: NodeLayout, frameDepth: number): void {
+  replaceLayout(id: string, layout: NodeLayout, frameDepth: number, expectedCurrent?: NodeLayout): boolean {
     if (this.currentPhase !== 'pass1') {
       throw new Error(
         `NameStack.replaceLayout('${id}'): only allowed during pass1; current phase is '${this.currentPhase}'`,
@@ -142,7 +144,9 @@ export class NameStack {
         `NameStack.replaceLayout('${id}'): id not previously registered in frame at depth ${frameDepth}`,
       );
     }
+    if (expectedCurrent !== undefined && targetFrame.get(id) !== expectedCurrent) return false;
     targetFrame.set(id, layout);
+    return true;
   }
 
   /**

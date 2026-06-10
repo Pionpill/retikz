@@ -1,5 +1,6 @@
 import type { Position } from '../geometry/point';
-import type { CompassAnchorValue } from '../geometry/anchor';
+import { arcEndPoint } from '../geometry/arc';
+import { normalizeCompassAnchor } from '../geometry/anchor';
 import type { Rect } from '../geometry/rect';
 import type { AtDirectionValue, IRAnimationTrack, IRBoundary, IRJsonObject, IRLabelDefault, IRLineSpec, IRNode, IRNodeLabel, IRPaintSpec, IRShapeRef, JsonValue } from '../ir';
 import { JsonObjectSchema } from '../ir';
@@ -7,8 +8,8 @@ import type { PaintResolver } from './paint';
 import type { GroupPrim, ScenePrimitive, TextLine, Transform } from '../primitive';
 import { BUILTIN_SHAPES } from '../shapes';
 import type { ShapeDefinition, ShapeStyle } from '../shapes';
-import { asCompassAnchor } from '../shapes/_shared';
 import type { NameStack } from './name-stack';
+import { DirectionVectorByAtDirection, LabelAnchorByAtDirection } from './direction';
 import { type ResolveBetweenGlobal, resolvePosition } from './position';
 import { toAlphabeticBaselineY } from './text-baseline';
 import type { FontSpec, TextMeasurer } from './text-metrics';
@@ -24,13 +25,13 @@ const EMPTY_SHAPE_PARAMS: IRJsonObject = {};
  * @description 裸 string → `{ type, params: {} }`；`{ type, params? }` → params 缺省补 `{}`；
  *   缺省（undefined）→ `{ type: 'rectangle', params: {} }`。`'circle'`（裸 string）消解为
  *   `{ type: 'ellipse', params: { circumscribe: 'equal' } }`——circle 无独立几何，是 ellipse 等轴 preset 别名。
- *   `'diamond'`（裸 string）消解为 `{ type: 'polygon', params: { sides: 4, rotate: 45 } }`——diamond 无独立几何，
- *   是 polygon 4 边形（自旋 45°）preset 别名。仅做形态归一，不查表 / 不校验。
+ *   `'diamond'`（裸 string）消解为 `{ type: 'polygon', params: { sides: 4, rotate: 0 } }`——diamond 无独立几何，
+ *   是 polygon 4 边形 preset 别名。仅做形态归一，不查表 / 不校验。
  */
 const normalizeShape = (shape: IRNode['shape']): { type: string; params: IRJsonObject } => {
   if (shape === undefined) return { type: 'rectangle', params: {} };
   if (shape === 'circle') return { type: 'ellipse', params: { circumscribe: 'equal' } };
-  if (shape === 'diamond') return { type: 'polygon', params: { sides: 4, rotate: 45 } };
+  if (shape === 'diamond') return { type: 'polygon', params: { sides: 4, rotate: 0 } };
   if (typeof shape === 'string') return { type: shape, params: {} };
   const ref: IRShapeRef = shape;
   return { type: ref.type, params: ref.params ?? {} };
@@ -124,13 +125,13 @@ const DASHED_PATTERN: Array<number> = [4, 2];
 /** dotted 预设：1 px 圆点 + 2 px 间隙 */
 const DOTTED_PATTERN: Array<number> = [1, 2];
 
-/** dashed / dotted / dashArray 优先级：dashArray > dashed > dotted */
-const resolveDashArray = (
-  dashArray: Array<number> | undefined,
+/** dashed / dotted / dashPattern 优先级：dashPattern > dashed > dotted */
+const resolveDashPattern = (
+  dashPattern: Array<number> | undefined,
   dashed: boolean | undefined,
   dotted: boolean | undefined,
 ): Array<number> | undefined => {
-  if (dashArray !== undefined) return dashArray;
+  if (dashPattern !== undefined) return dashPattern;
   if (dashed) return DASHED_PATTERN;
   if (dotted) return DOTTED_PATTERN;
   return undefined;
@@ -279,7 +280,7 @@ export const anchorOf = (
   name: string,
   boundary: IRBoundary | undefined = 'shape',
 ): Position => {
-  const compassAnchor = asCompassAnchor(name);
+  const compassAnchor = normalizeCompassAnchor(name);
   if (compassAnchor !== undefined) {
     // compass 方位名：'shape' 归一为 'rectangle'（走 AABB 矩形），其余按 boundary
     const compassBoundary = boundary === 'shape' ? 'rectangle' : boundary;
@@ -302,21 +303,6 @@ export const anchorOf = (
   return p;
 };
 
-/** 8 方向 label position → (anchorName, 单位向量)；above 视觉上方即 y 减小 */
-const LABEL_DIRECTION_MAP: Record<
-  AtDirectionValue,
-  { anchor: CompassAnchorValue; vec: [number, number] }
-> = {
-  above: { anchor: 'north', vec: [0, -1] },
-  below: { anchor: 'south', vec: [0, 1] },
-  left: { anchor: 'west', vec: [-1, 0] },
-  right: { anchor: 'east', vec: [1, 0] },
-  'above-left': { anchor: 'north-west', vec: [-Math.SQRT1_2, -Math.SQRT1_2] },
-  'above-right': { anchor: 'north-east', vec: [Math.SQRT1_2, -Math.SQRT1_2] },
-  'below-left': { anchor: 'south-west', vec: [-Math.SQRT1_2, Math.SQRT1_2] },
-  'below-right': { anchor: 'south-east', vec: [Math.SQRT1_2, Math.SQRT1_2] },
-};
-
 /**
  * 算 label 中心点（节点局部坐标系，未旋转）
  * @description 8 方向：节点对应 anchor 出发按单位向量 × distance 外推；数字角度：先取 angleBoundary 边界点再沿 (cos,sin) × distance 外推。
@@ -330,17 +316,15 @@ const labelBorderPoint = (layout: NodeLayout, label: NodeLabelLayout): Position 
   if (typeof label.position === 'number') {
     return angleBoundaryOf(aaLayout, label.position);
   }
-  const { anchor } = LABEL_DIRECTION_MAP[label.position];
-  return anchorOf(aaLayout, anchor);
+  return anchorOf(aaLayout, LabelAnchorByAtDirection[label.position]);
 };
 
 const labelCenter = (layout: NodeLayout, label: NodeLabelLayout): Position => {
   const [bx, by] = labelBorderPoint(layout, label);
   if (typeof label.position === 'number') {
-    const rad = (label.position * Math.PI) / 180;
-    return [bx + Math.cos(rad) * label.distance, by + Math.sin(rad) * label.distance];
+    return arcEndPoint([bx, by], label.distance, label.position);
   }
-  const { vec } = LABEL_DIRECTION_MAP[label.position];
+  const vec = DirectionVectorByAtDirection[label.position];
   return [bx + vec[0] * label.distance, by + vec[1] * label.distance];
 };
 
@@ -430,7 +414,7 @@ export const angleBoundaryOf = (
  * @description 文本度量 + padding 推内框半轴；按 shape 算外接边界（circle 取半对角线、ellipse ×√2、diamond ×2）；解析 position 为几何中心；rotate 度数转弧度。
  *   `scopeChain` 非空时 `resolvePosition` 返回**当前 scope 局部坐标**（relative position 在当前
  *   scope 局部度量），调用方负责后续 `projectLayoutToGlobal` / `applyTransformChain` 投回全局；
- *   笛卡尔字面量 `Position` 已在 scope 局部度量，行为延续 v0.1。
+ *   笛卡尔字面量 `Position` 已在 scope 局部度量，保持局部坐标语义。
  */
 export const layoutNode = (
   node: IRNode,
@@ -522,7 +506,7 @@ export const layoutNode = (
       // 行级 font 与块级合并：行级优先，没有走块级（透传 undefined）
       const lineFont = isObj ? spec.font : undefined;
       const font: FontSpec = {
-        size: lineFont?.size ?? fontSize,
+        size: lineFont?.size !== undefined ? lineFont.size * fontScale : fontSize,
         family: lineFont?.family ?? fontFamily,
         weight: lineFont?.weight ?? fontWeight,
         style: lineFont?.style ?? fontStyle,
@@ -537,7 +521,7 @@ export const layoutNode = (
         if (isObj) {
           if (spec.fill !== undefined) out.fill = spec.fill;
           if (spec.opacity !== undefined) out.opacity = spec.opacity;
-          if (lineFont?.size !== undefined) out.fontSize = lineFont.size;
+          if (lineFont?.size !== undefined) out.fontSize = lineFont.size * fontScale;
           if (lineFont?.family !== undefined) out.fontFamily = lineFont.family;
           if (lineFont?.weight !== undefined) out.fontWeight = lineFont.weight;
           if (lineFont?.style !== undefined) out.fontStyle = lineFont.style;
@@ -640,7 +624,7 @@ export const layoutNode = (
     stroke: node.stroke,
     strokeOpacity: node.drawOpacity,
     strokeWidth: node.strokeWidth,
-    dashPattern: resolveDashArray(node.dashArray, node.dashed, node.dotted),
+    dashPattern: resolveDashPattern(node.dashPattern, node.dashed, node.dotted),
     cornerRadius: node.cornerRadius,
     textColor: node.textColor,
     opacity: node.opacity,
@@ -705,6 +689,8 @@ export const labelExtentPoints = (layout: NodeLayout): Array<Position> => {
   return pts;
 };
 
+const cloneScenePrimitive = <T extends ScenePrimitive>(primitive: T): T => ({ ...primitive });
+
 export const emitNodePrimitives = (
   layout: NodeLayout,
   round: (n: number) => number,
@@ -719,7 +705,7 @@ export const emitNodePrimitives = (
       round,
       layout.shapeParams ?? EMPTY_SHAPE_PARAMS,
     ),
-  ];
+  ].map(cloneScenePrimitive);
   const inner: Array<ScenePrimitive> = [...shapePrims];
   if (layout.lines) {
     // align=start: x=中心-块半宽; align=end: x=中心+块半宽; align=middle: x=中心
@@ -791,7 +777,7 @@ export const emitNodePrimitives = (
         lineHeight: labLineHeight,
         fill: lab.textColor ?? 'currentColor',
         opacity: lab.opacity ?? layout.opacity,
-        measuredWidth: 0,
+        measuredWidth: round(lab.measuredWidth),
         measuredHeight: round(lab.fontSize),
       };
       const deg = resolveLabelRotateDeg(lab, lx, ly, cx, cy);

@@ -245,4 +245,26 @@ describe('Node multi-line text', () => {
     const t = findText(compileToScene(ir).primitives);
     expect(t?.measuredWidth).toBeCloseTo(66, 0);
   });
+
+  it('节点 scale 会同步缩放行级显式 font.size', () => {
+    const ir: IR = {
+      version: 1,
+      type: 'scene',
+      children: [
+        {
+          type: 'node',
+          id: 'A',
+          position: [0, 0],
+          scale: 2,
+          text: [
+            { text: 'scaled', font: { size: 14 } },
+            'plain',
+          ],
+        },
+      ],
+    };
+    const t = findText(compileToScene(ir).primitives);
+    expect(t?.fontSize).toBe(28);
+    expect(t?.lines[0]).toEqual({ text: 'scaled', fontSize: 28 });
+  });
 });

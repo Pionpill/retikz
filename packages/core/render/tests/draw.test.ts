@@ -680,7 +680,7 @@ describe('drawScene 渐变填充', () => {
           kind: 'paint',
           id: 'paint-1',
           spec: {
-            type: 'linearGradient',
+            kind: 'linearGradient',
             stops: [
               { offset: 0, color: '#f00' },
               { offset: 1, color: '#00f' },
@@ -716,7 +716,7 @@ describe('drawScene 渐变填充', () => {
           kind: 'paint',
           id: 'g',
           spec: {
-            type: 'linearGradient',
+            kind: 'linearGradient',
             angle: 90,
             stops: [
               { offset: 0, color: '#000' },
@@ -746,7 +746,7 @@ describe('drawScene 渐变填充', () => {
           kind: 'paint',
           id: 'r',
           spec: {
-            type: 'radialGradient',
+            kind: 'radialGradient',
             stops: [
               { offset: 0, color: '#fff' },
               { offset: 1, color: '#000' },
@@ -775,7 +775,7 @@ describe('drawScene 渐变填充', () => {
           kind: 'paint',
           id: 'g',
           spec: {
-            type: 'linearGradient',
+            kind: 'linearGradient',
             stops: [
               { offset: 0, color: '#ff0000', opacity: 0.5 },
               { offset: 1, color: '#0000ff' },
@@ -804,7 +804,7 @@ describe('drawScene 渐变填充', () => {
           kind: 'paint',
           id: 'g',
           spec: {
-            type: 'linearGradient',
+            kind: 'linearGradient',
             stops: [
               { offset: 0, color: 'darkorange', opacity: 1 },
               { offset: 1, color: 'darkorange', opacity: 0 },
@@ -1001,7 +1001,7 @@ describe('drawScene clip 裁剪', () => {
 describe('drawScene 图片填充', () => {
   const imageScene = (fit?: 'fill' | 'contain' | 'cover'): Scene => ({
     layout: { x: 0, y: 0, width: 200, height: 200 },
-    resources: [{ kind: 'paint', id: 'img', spec: { type: 'image', href: 'pic.png', ...(fit ? { fit } : {}) } }],
+    resources: [{ kind: 'paint', id: 'img', spec: { kind: 'image', href: 'pic.png', ...(fit ? { fit } : {}) } }],
     primitives: [{ type: 'rect', x: 0, y: 0, width: 200, height: 200, fill: { kind: 'resourceRef', id: 'img' } }],
   });
   const mockImage = { width: 100, height: 50 } as unknown as CanvasImageSource;
@@ -1082,7 +1082,7 @@ describe('drawScene 图案填充', () => {
       {
         kind: 'paint',
         id: 'pat',
-        spec: { type: 'pattern', shape: 'lines', size: 8 },
+        spec: { kind: 'pattern', shape: 'lines', size: 8 },
         tile: { size: 8, motif: tileMotif, ...tileExtra },
       },
     ],

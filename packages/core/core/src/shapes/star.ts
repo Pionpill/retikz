@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { localToWorld } from '../geometry/_transform';
+import { localToWorld } from '../geometry/transform';
 import type { Position } from '../geometry/point';
 import type { Rect } from '../geometry/rect';
 import {
@@ -8,7 +8,7 @@ import {
   contourCommands,
 } from '../geometry/contour';
 import type { ScenePrimitive } from '../primitive';
-import { contourToPathCommands, verticesToSegments } from './_contour';
+import { contourToPathCommands, contourToPathPrimitive, verticesToSegments } from './contour';
 import { defineShape } from './define';
 
 /**
@@ -166,17 +166,7 @@ export const star = defineShape({
     const verts = worldVertices(rect, geo);
     const segments: Array<ContourSegment> = verticesToSegments(verts);
     const commands = contourToPathCommands(contourCommands(segments, params.cornerRadius), round);
-    yield {
-      type: 'path',
-      commands,
-      fill: style.fill ?? 'transparent',
-      fillOpacity: style.fillOpacity,
-      stroke: style.stroke ?? 'currentColor',
-      strokeOpacity: style.strokeOpacity,
-      strokeWidth: style.strokeWidth ?? 1,
-      dashPattern: style.dashPattern,
-      opacity: style.opacity,
-    };
+    yield contourToPathPrimitive(commands, style);
   },
   // 半径 / cornerRadius 是长度（随 scale 协同放大，几何均值因子）；points 是计数、rotate 是角度——均不随 scale 缩。
   scaleParams: (params: StarParams, sx: number, sy: number): StarParams => {

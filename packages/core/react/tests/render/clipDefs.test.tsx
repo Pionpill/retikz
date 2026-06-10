@@ -100,7 +100,7 @@ describe('ClipDefs — 裁剪区物化为 clipPath', () => {
         kind: 'paint',
         id: 'paint-1',
         spec: {
-          type: 'linearGradient',
+          kind: 'linearGradient',
           stops: [
             { offset: 0, color: '#000' },
             { offset: 1, color: '#fff' },

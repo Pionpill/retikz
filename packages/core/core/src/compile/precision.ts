@@ -7,7 +7,7 @@ export const DEFAULT_PRECISION = 2;
  *   而 `JSON.stringify(-0) === '0'` 会让 Scene round-trip 在 `Object.is` 层失真（`-0 !== 0` 于 Object.is）。
  *   归一让序列化往返稳定；数值上 `-0 === 0`，渲染 / 计算无影响。
  */
-export const makeRound = (precision: number) => {
+export const createRound = (precision: number) => {
   const factor = 10 ** precision;
   return (n: number) => {
     const r = Math.round(n * factor) / factor;

@@ -119,21 +119,21 @@ describe('parseWay', () => {
     it("'-|' 在两个 target 之间产出 step 折角", () => {
       expect(parseWay(['A', '-|', 'B'])).toEqual([
         { type: 'step', kind: 'move', to: { id: 'A' } },
-        { type: 'step', kind: 'step', via: '-|', to: { id: 'B' } },
+        { type: 'step', kind: 'fold', via: '-|', to: { id: 'B' } },
       ]);
     });
 
     it("'|-' 同理，目标可以是任意 IRTarget 形态", () => {
       expect(parseWay(['A', '|-', [10, 5]])).toEqual([
         { type: 'step', kind: 'move', to: { id: 'A' } },
-        { type: 'step', kind: 'step', via: '|-', to: [10, 5] },
+        { type: 'step', kind: 'fold', via: '|-', to: [10, 5] },
       ]);
     });
 
     it('混合 line + 折角算子 + line：折角与邻居 line 互不干扰', () => {
       expect(parseWay(['A', '-|', 'B', [10, 0]])).toEqual([
         { type: 'step', kind: 'move', to: { id: 'A' } },
-        { type: 'step', kind: 'step', via: '-|', to: { id: 'B' } },
+        { type: 'step', kind: 'fold', via: '-|', to: { id: 'B' } },
         { type: 'step', kind: 'line', to: [10, 0] },
       ]);
     });
@@ -170,16 +170,20 @@ describe('parseWay', () => {
     it('cycle 可与 fold 算子混用', () => {
       expect(parseWay(['A', '-|', 'B', 'C', DrawWay.Cycle])).toEqual([
         { type: 'step', kind: 'move', to: { id: 'A' } },
-        { type: 'step', kind: 'step', via: '-|', to: { id: 'B' } },
+        { type: 'step', kind: 'fold', via: '-|', to: { id: 'B' } },
         { type: 'step', kind: 'line', to: { id: 'C' } },
         { type: 'step', kind: 'cycle' },
       ]);
     });
 
-    it('首项是 DrawWay.Cycle 时降级为 move 到 [0, 0]（容错）', () => {
-      const steps = parseWay([DrawWay.Cycle, 'B']);
-      expect(steps[0]).toEqual({ type: 'step', kind: 'move', to: [0, 0] });
-      expect(steps[1]).toEqual({ type: 'step', kind: 'line', to: { id: 'B' } });
+    it('首项是 DrawWay.Cycle 时直接抛错', () => {
+      expect(() => parseWay([DrawWay.Cycle, 'B'])).toThrow(/way\[0\] must be a target/);
+    });
+
+    it('首项是任意非 label 算子时也直接抛错', () => {
+      expect(() => parseWay(['-|', 'B'])).toThrow(/way\[0\] must be a target/);
+      expect(() => parseWay([{ curve: [1, 2] }, 'B'])).toThrow(/way\[0\] must be a target/);
+      expect(() => parseWay([{ circle: { radius: 5 } }, 'B'])).toThrow(/way\[0\] must be a target/);
     });
 
     it("裸字符串 'cycle' 不触发闭合——视作普通节点 id（与 DrawWay.Cycle 字面值刻意不同）", () => {
@@ -379,7 +383,7 @@ describe('parseWay', () => {
     it("'+1,0' 与折角算子混用：折角算子的 next target 也走 sugar", () => {
       expect(parseWay(['A', '-|', '+5,3'])).toEqual([
         { type: 'step', kind: 'move', to: { id: 'A' } },
-        { type: 'step', kind: 'step', via: '-|', to: { relative:[5, 3] } },
+        { type: 'step', kind: 'fold', via: '-|', to: { relative:[5, 3] } },
       ]);
     });
 
@@ -411,6 +415,14 @@ describe('parseWay', () => {
       ]);
     });
 
+    it('WayRelativeItem.type 拼写错误时直接抛错', () => {
+      const way = [
+        'A',
+        { position: [1, 0], type: 'retikz-keyword_relatvie' },
+      ] as unknown as Parameters<typeof parseWay>[0];
+      expect(() => parseWay(way)).toThrow(/WayRelativeItem\.type/);
+    });
+
     it('首项是 WayRelativeItem 时 move 的 to 也走 desugar', () => {
       expect(
         parseWay([{ position: [5, 0], type: DrawWay.Relative }, 'B']),
@@ -425,7 +437,7 @@ describe('parseWay', () => {
         parseWay(['A', '-|', { position: [5, 3], type: DrawWay.Accumulate }]),
       ).toEqual([
         { type: 'step', kind: 'move', to: { id: 'A' } },
-        { type: 'step', kind: 'step', via: '-|', to: { relativeAccumulate:[5, 3] } },
+        { type: 'step', kind: 'fold', via: '-|', to: { relativeAccumulate:[5, 3] } },
       ]);
     });
 
@@ -495,7 +507,7 @@ describe('parseWay', () => {
         { type: 'step', kind: 'move', to: { id: 'A' } },
         {
           type: 'step',
-          kind: 'step',
+          kind: 'fold',
           via: '-|',
           to: { id: 'B' },
           label: { text: 'f' },

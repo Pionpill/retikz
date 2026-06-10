@@ -25,21 +25,15 @@ export const coreSection: Array<Section> = [
         children: [
           { id: 'coordinate-system', label: 'core.coordinateSystem' },
           { id: 'position', label: 'core.positioning' },
-        ],
-      },
-      {
-        id: 'primitive-model',
-        label: 'core.primitiveModel',
-        children: [
-          { id: 'node-model', label: 'core.nodeModel' },
           { id: 'animation', label: 'core.animation' },
         ],
       },
       {
-        id: 'primitive-relations',
-        label: 'core.primitiveRelations',
+        id: 'core-concepts',
+        label: 'core.coreConcepts',
         children: [
-          { id: 'anchors', label: 'core.anchors' },
+          { id: 'primitive-model', label: 'core.primitiveModel' },
+          { id: 'primitive-relations', label: 'core.primitiveRelations' },
         ],
       },
     ],

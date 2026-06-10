@@ -8,6 +8,7 @@ import {
   type IRPosition,
 } from '../../ir';
 import type { ArrowDefinition, ArrowEmitContext } from '../../arrows';
+import { arcEndPoint, ellipseArcPoint } from '../../geometry/arc';
 import type { ArrowEndSpec, MarkerFill, MarkerPrimitive, PathCommand } from '../../primitive';
 import { validateMarkerPrimitives } from '../marker-prim';
 import { shiftToward } from './anchor';
@@ -321,20 +322,10 @@ const endpointOf = (cmd: PathCommand): IRPosition | null => {
     case 'quad':
     case 'cubic':
       return [cmd.to[0], cmd.to[1]];
-    case 'arc': {
-      const rad = (cmd.endAngle * Math.PI) / 180;
-      return [
-        cmd.center[0] + Math.cos(rad) * cmd.radius,
-        cmd.center[1] + Math.sin(rad) * cmd.radius,
-      ];
-    }
-    case 'ellipseArc': {
-      const rad = (cmd.endAngle * Math.PI) / 180;
-      return [
-        cmd.center[0] + Math.cos(rad) * cmd.radiusX,
-        cmd.center[1] + Math.sin(rad) * cmd.radiusY,
-      ];
-    }
+    case 'arc':
+      return arcEndPoint(cmd.center, cmd.radius, cmd.endAngle);
+    case 'ellipseArc':
+      return ellipseArcPoint(cmd.center, cmd.radiusX, cmd.radiusY, cmd.endAngle);
     case 'close':
       return null;
   }

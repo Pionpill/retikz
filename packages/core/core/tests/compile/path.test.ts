@@ -43,7 +43,7 @@ describe("compile path: 'step' 折角", () => {
           type: 'path',
           children: [
             { type: 'step', kind: 'move', to: [0, 0] },
-            { type: 'step', kind: 'step', via: '-|', to: [10, 5] },
+            { type: 'step', kind: 'fold', via: '-|', to: [10, 5] },
           ],
         },
       ],
@@ -76,7 +76,7 @@ describe("compile path: 'step' 折角", () => {
           type: 'path',
           children: [
             { type: 'step', kind: 'move', to: [0, 0] },
-            { type: 'step', kind: 'step', via: '|-', to: [10, 5] },
+            { type: 'step', kind: 'fold', via: '|-', to: [10, 5] },
           ],
         },
       ],
@@ -111,7 +111,7 @@ describe("compile path: 'step' 折角", () => {
           type: 'path',
           children: [
             { type: 'step', kind: 'move', to: [0, 0] },
-            { type: 'step', kind: 'step', via: '-|', to: [40, 30] },
+            { type: 'step', kind: 'fold', via: '-|', to: [40, 30] },
           ],
         },
       ],
@@ -139,7 +139,7 @@ describe("compile path: 'step' 折角", () => {
           type: 'path',
           children: [
             { type: 'step', kind: 'move', to: { id: 'A' } },
-            { type: 'step', kind: 'step', via: '-|', to: { id: 'B' } },
+            { type: 'step', kind: 'fold', via: '-|', to: { id: 'B' } },
           ],
         },
       ],
@@ -165,7 +165,7 @@ describe("compile path: 'step' 折角", () => {
           type: 'path',
           children: [
             { type: 'step', kind: 'move', to: { id: 'A' } },
-            { type: 'step', kind: 'step', via: '-|', to: { id: 'B' } },
+            { type: 'step', kind: 'fold', via: '-|', to: { id: 'B' } },
           ],
         },
       ],
@@ -188,7 +188,7 @@ describe("compile path: 'step' 折角", () => {
           type: 'path',
           children: [
             { type: 'step', kind: 'move', to: { id: 'A' } },
-            { type: 'step', kind: 'step', via: '|-', to: { id: 'B' } },
+            { type: 'step', kind: 'fold', via: '|-', to: { id: 'B' } },
           ],
         },
       ],
@@ -284,6 +284,55 @@ describe("compile path: 'cycle' 闭合", () => {
     // 三段独立：A→B、B→C、C→A，每段都 M 开头；不出现 close
     expect(commands.some(c => c.kind === 'close')).toBe(false);
     expect(commands.filter(c => c.kind === 'move')).toHaveLength(3);
+  });
+
+  it('arc 后显式 move 会切断 arc 留下的 penOverride，新 line 从 move.to 开始', () => {
+    const ir: IR = {
+      version: 1,
+      type: 'scene',
+      children: [
+        {
+          type: 'path',
+          children: [
+            { type: 'step', kind: 'move', to: [0, 0] },
+            { type: 'step', kind: 'arc', startAngle: 0, endAngle: 90, radius: 10 },
+            { type: 'step', kind: 'move', to: [20, 20] },
+            { type: 'step', kind: 'line', to: [30, 20] },
+          ],
+        },
+      ],
+    };
+    expect(findPathPrim(compileToScene(ir).primitives).commands).toEqual([
+      move([10, 0]),
+      arc([0, 0], 10, 0, 90),
+      move([20, 20]),
+      line([30, 20]),
+    ]);
+  });
+
+  it('arc 后 cycle 从 arc 终点闭合，不回退到上一条 to-bearing step', () => {
+    const ir: IR = {
+      version: 1,
+      type: 'scene',
+      children: [
+        {
+          type: 'path',
+          children: [
+            { type: 'step', kind: 'move', to: [0, 0] },
+            { type: 'step', kind: 'line', to: [20, 0] },
+            { type: 'step', kind: 'arc', startAngle: 0, endAngle: 90, radius: 10 },
+            { type: 'step', kind: 'cycle' },
+          ],
+        },
+      ],
+    };
+    expect(findPathPrim(compileToScene(ir).primitives).commands).toEqual([
+      move([0, 0]),
+      line([20, 0]),
+      move([30, 0]),
+      arc([20, 0], 10, 0, 90),
+      line([0, 0]),
+    ]);
   });
 });
 
@@ -649,7 +698,7 @@ describe('compile path: 多节点连线段独立 clip（bugfix tikz-from-ir.demo
           children: [
             { type: 'step', kind: 'move', to: [0, 0] },
             { type: 'step', kind: 'line', to: [10, 0] },
-            { type: 'step', kind: 'step', via: '-|', to: [20, 5] },
+            { type: 'step', kind: 'fold', via: '-|', to: [20, 5] },
           ],
         },
       ],
@@ -815,7 +864,8 @@ describe("compile path: 'bend'", () => {
         },
       ],
     };
-    const offset = (12 * Math.tan((15 * Math.PI) / 180) * 4) / 3;
+    // offset =（chord/2）× tan(15°) × 4/3（apexOffset 为圆弧 sagitta，chord=12 → 6）
+    const offset = (6 * Math.tan((15 * Math.PI) / 180) * 4) / 3;
     const r = (n: number) => Math.round(n * 100) / 100;
     expect(findPathPrim(compileToScene(ir).primitives).commands).toEqual([
       move([0, 0]),

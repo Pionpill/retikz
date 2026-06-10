@@ -34,7 +34,7 @@ import type {
   Transform,
 } from '../../primitive';
 import type { AssertEqual } from '../../types';
-import type { PathGeneratorDefinition } from '../../pathGenerators';
+import type { PathGeneratorDefinition } from '../../path-generators';
 import { CompileWarningCode } from '../constant';
 import type { CompileWarning } from '../constant';
 import type { NameStack } from '../name-stack';
@@ -117,7 +117,7 @@ const assertValidGeneratedCommand = (name: string, cmd: unknown): void => {
 /**
  * 语义 stroke 档位 → 数值（user units）
  * @description 对齐 TikZ 比例（thin=0.4pt→1=默认 strokeWidth）：ultraThin 0.25、veryThin 0.5、thin 1、semithick 1.5、thick 2、veryThick 3、ultraThick 4。显式 strokeWidth 覆盖 thickness。
- * `as const satisfies` + `AssertEqual` 双约束：加 IRPath['thickness'] 档位时漏写 TS 报错（字段表互锁，同 ADR-06 主题）
+ * `as const satisfies` + `AssertEqual` 双约束：加 IRPath['thickness'] 档位时漏写 TS 报错（字段表互锁）
  */
 const THICKNESS_TO_WIDTH = {
   ultraThin: 0.25,
@@ -146,7 +146,7 @@ export type EmitPathWarnHook = {
   /**
    * 该 path 所属 scope 的累积 Cartesian-only transform 链
    * @description step.to 内的 polar/at/offset 字面量按"当前 scope 局部度量 + 末端 apply chain"
-   *   投影回全局；顶层 path / 无 scope chain 时为 `[]`（恒等，等价 v0.1 行为）
+   *   投影回全局；顶层 path / 无 scope chain 时为 `[]`（恒等，全局坐标）
    */
   scopeChain?: ReadonlyArray<Transform>;
   /** fill 解析器（PaintSpec → resourceRef + 登记资源）；缺省时纯色透传、PaintSpec 退化为无填充 */
@@ -514,8 +514,12 @@ export const emitPathPrimitive = (
 
     const step = steps[i];
 
-    // move 自身不绘制；其 to 仅供下个绘制段的 findPrev 引用
-    if (step.kind === 'move') continue;
+    // move 自身不绘制；其 to 仅供下个绘制段的 findPrev 引用。
+    // 显式 move 开启新游标，必须切断 arc/circle/ellipse/rectangle/generator 留给下一绘制段的 penOverride。
+    if (step.kind === 'move') {
+      penOverride = null;
+      continue;
+    }
 
     if (step.kind === 'generator') {
       const generators = warnHook.effectivePathGenerators ?? {};
@@ -634,14 +638,17 @@ export const emitPathPrimitive = (
     }
 
     if (step.kind === 'cycle') {
+      const usedOverride = penOverride;
+      penOverride = null;
       const moveTo = lastMoveTo;
       const prev = findPrev();
-      if (!moveTo || !prev) continue; // 没 move/prev cycle 无意义
+      if (!moveTo || (!prev && !usedOverride)) continue; // 没 move/cursor cycle 无意义
       const moveAnchor = refPointOfTarget(moveTo, nameStack, scopeChain);
       if (!moveAnchor) return null;
 
-      const fromClip = clipForTarget(prev.step.to, moveAnchor, nameStack, scopeChain);
-      const toClip = clipForTarget(moveTo, prev.anchor, nameStack, scopeChain);
+      const fromClip =
+        usedOverride ?? (prev ? clipForTarget(prev.step.to, moveAnchor, nameStack, scopeChain) : null);
+      const toClip = clipForTarget(moveTo, fromClip ?? prev?.anchor ?? moveAnchor, nameStack, scopeChain);
       if (!fromClip || !toClip) return null;
 
       // 起点 == lastEnd 且终点 == subPathStart → close 收尾最干净
@@ -650,7 +657,7 @@ export const emitPathPrimitive = (
         continue;
       }
       // 否则段独立：重新 move 起点再 line 到终点（不再用 close，避免回到错误的 subPathStart）
-      startSegment(fromClip, isAutoBoundaryTarget(prev.step.to));
+      startSegment(fromClip, usedOverride === null && prev !== null && isAutoBoundaryTarget(prev.step.to));
       emitLine(toClip, isAutoBoundaryTarget(moveTo));
       continue;
     }
@@ -706,7 +713,14 @@ export const emitPathPrimitive = (
 
     // 其他 step 都需 prev（找 cursor 起点/圆心）；currAnchor 仅有 to 的 step 才需
     const prev = findPrev();
-    if (!prev) return null;
+    if (!prev) {
+      warn(
+        CompileWarningCode.PathTooShort,
+        `Step '${step.kind}' requires a previous position; the entire path is skipped`,
+        `children[${i}]`,
+      );
+      return null;
+    }
 
     if (step.kind === 'arc') {
       // 圆心：显式 center 优先，否则游标（上一 step anchor，向后兼容）
@@ -931,7 +945,7 @@ export const emitPathPrimitive = (
       continue;
     }
 
-    // step.kind === 'step' (fold)
+    // fold：经一个直角中间点拆成两段 line
     const corner = cornerOf(prev.anchor, currAnchor, step.via);
     const fromClip = usedOverride ?? clipForTarget(prev.step.to, corner, nameStack, scopeChain);
     const toClip = clipForTarget(step.to, corner, nameStack, scopeChain);

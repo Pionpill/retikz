@@ -200,6 +200,15 @@ describe('TransformSchema 各变体合法形态', () => {
     expect(parsed.success).toBe(true);
   });
 
+  it('between-translate 含两个端点和比例', () => {
+    const parsed = TransformSchema.safeParse({
+      kind: 'between-translate',
+      between: [[0, 0], { id: 'B' }],
+      t: 0.5,
+    });
+    expect(parsed.success).toBe(true);
+  });
+
   it('rotate 含 cx/cy', () => {
     const parsed = TransformSchema.safeParse({
       kind: 'rotate',
@@ -286,6 +295,23 @@ describe('TransformSchema 各变体拒绝缺字段', () => {
       kind: 'offset-translate',
       of: 'A',
       offset: [1, 2, 3],
+    });
+    expect(parsed.success).toBe(false);
+  });
+
+  it('between-translate 缺 t 拒绝', () => {
+    const parsed = TransformSchema.safeParse({
+      kind: 'between-translate',
+      between: [[0, 0], [10, 0]],
+    });
+    expect(parsed.success).toBe(false);
+  });
+
+  it('between-translate t 越界拒绝', () => {
+    const parsed = TransformSchema.safeParse({
+      kind: 'between-translate',
+      between: [[0, 0], [10, 0]],
+      t: 1.5,
     });
     expect(parsed.success).toBe(false);
   });

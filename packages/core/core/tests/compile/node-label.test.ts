@@ -273,6 +273,24 @@ describe('Node label', () => {
       expect(labelText.fontFamily).toBe('Inter');
     });
 
+    it('label TextPrim 写入真实 measuredWidth', () => {
+      const ir: IR = {
+        version: 1,
+        type: 'scene',
+        children: [
+          {
+            type: 'node',
+            id: 'A',
+            position: [0, 0],
+            text: 'A',
+            label: { text: 'foo', font: { size: 20 } },
+          },
+        ],
+      };
+      const labelText = findLabel(compileToScene(ir).primitives, 'foo')!;
+      expect(labelText.measuredWidth).toBeCloseTo(33, 1);
+    });
+
     it('label.textColor 缺省时继承 node.textColor', () => {
       const ir: IR = {
         version: 1,

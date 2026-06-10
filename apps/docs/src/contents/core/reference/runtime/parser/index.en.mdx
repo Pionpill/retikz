@@ -32,7 +32,7 @@ Parser reference covers the sugar parsing helpers exported by `@retikz/core`. Th
 | --- | --- | --- |
 | `IRTarget` / string shorthand | `move` / `line` | First item becomes move; later targets become line; strings pass through `parseTargetSugar` before entering IR |
 | `{ position, type }` | `relative` / `relativeAccumulate` target | TS-friendly relative offset object |
-| `DrawWay.Hv` / `DrawWay.Vh` | `kind: 'step'` | Merged with the next target into a folded step |
+| `DrawWay.Hv` / `DrawWay.Vh` | `kind: 'fold'` | Merged with the next target into a folded step |
 | `DrawWay.Cycle` | `kind: 'cycle'` | Closes the current subpath |
 | `{ curve }` | `kind: 'curve'` | Merged with the next target into a quadratic Bezier |
 | `{ cubic }` | `kind: 'cubic'` | Merged with the next target into a cubic Bezier |
