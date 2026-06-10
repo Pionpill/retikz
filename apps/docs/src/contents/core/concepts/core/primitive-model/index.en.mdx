@@ -75,6 +75,10 @@ Compass anchors go through the boundary surface; when `boundary="shape"`, compas
 
 Padding and margin are easy to confuse, but they live on different layers.
 
+<ComponentPreview name="padding-margin" size="sm" hideCode />
+
+On the left, padding sits between the content box and the shape, so the node grows; on the right, margin sits between the shape edge and the automatic path endpoint, so the node stays the same and the path stops short.
+
 | Prop | Changes | Result |
 | --- | --- | --- |
 | `padding` | Distance from content to shape | Shape grows, bounding box grows |
@@ -107,3 +111,20 @@ When a Node's geometry looks surprising, debug it in this order:
 6. Does the external reference need center, a compass anchor, or a shape-specific anchor?
 
 That sequence turns most "why is this node so large", "why did the line attach here", and "why is this anchor there" questions into smaller checks.
+
+## Further Reading
+
+<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+  <LinkedCard href="/core/concepts/core/primitive-relations">
+    <span className="font-semibold">Primitive Relations</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">Anchors, boundaries, and edge-proportional points — how primitives connect stably</span>
+  </LinkedCard>
+  <LinkedCard href="/core/components/node/overview">
+    <span className="font-semibold">Node</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">The Node component's full props, shapes, styling, and positioning</span>
+  </LinkedCard>
+  <LinkedCard href="/core/reference/extending/shape-registry">
+    <span className="font-semibold">Custom Shapes</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">Supply the bounding / ray / anchor / emit geometry answers to register a new shape</span>
+  </LinkedCard>
+</div>
