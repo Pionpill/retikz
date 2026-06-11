@@ -288,6 +288,23 @@ describe('Grid equivalence', () => {
       ).children,
     );
   });
+
+  // <Grid> 按参数改变产出的 Path 节点数（Tier2-ish 行为，锁定计数防回归）
+  const gridLineCount = (jsx: React.ReactNode): number => {
+    const children = ir(jsx).children;
+    return Array.isArray(children) ? children.length : 0;
+  };
+
+  it('showVertical/showHorizontal 控制方向、改变线数', () => {
+    expect(gridLineCount(<Grid corner1={[0, 0]} corner2={[2, 2]} step={1} />)).toBe(6); // 3 竖 + 3 横
+    expect(gridLineCount(<Grid corner1={[0, 0]} corner2={[2, 2]} step={1} showHorizontal={false} />)).toBe(3);
+    expect(gridLineCount(<Grid corner1={[0, 0]} corner2={[2, 2]} step={1} showVertical={false} />)).toBe(3);
+  });
+
+  it('includeBoundary 在不整除时补一条边界线', () => {
+    expect(gridLineCount(<Grid corner1={[0, 0]} corner2={[2.5, 2]} step={1} showHorizontal={false} />)).toBe(3); // x=0,1,2
+    expect(gridLineCount(<Grid corner1={[0, 0]} corner2={[2.5, 2]} step={1} showHorizontal={false} includeBoundary />)).toBe(4); // + x=2.5
+  });
 });
 
 describe('RegularPolygon equivalence', () => {
@@ -300,6 +317,22 @@ describe('RegularPolygon equivalence', () => {
           <Step kind="line" to={verts[1]} />
           <Step kind="line" to={verts[2]} />
           <Step kind="line" to={verts[3]} />
+          <Step kind="cycle" />
+        </Path>,
+      ).children,
+    );
+  });
+
+  it('sides=6（顶点数随 sides 变）', () => {
+    const verts = regularPolygonVertices([0, 0], 30, 30, 6, -90);
+    expect(verts).toHaveLength(6);
+    expect(ir(<RegularPolygon center={[0, 0]} radius={30} sides={6} />).children).toEqual(
+      ir(
+        <Path>
+          <Step kind="move" to={verts[0]} />
+          {verts.slice(1).map((v, i) => (
+            <Step key={i} kind="line" to={v} />
+          ))}
           <Step kind="cycle" />
         </Path>,
       ).children,
@@ -320,6 +353,23 @@ describe('Star equivalence', () => {
       </Path>,
     );
     expect(ir(<Star center={[0, 0]} outerRadius={30} innerRadius={12} points={5} />).children).toEqual(
+      hand.children,
+    );
+  });
+
+  it('points=6（顶点数随 points 变：2×points）', () => {
+    const verts = starVertices([0, 0], 30, 12, 6, -90);
+    expect(verts).toHaveLength(12);
+    const hand = ir(
+      <Path>
+        <Step kind="move" to={verts[0]} />
+        {verts.slice(1).map((v, i) => (
+          <Step key={i} kind="line" to={v} />
+        ))}
+        <Step kind="cycle" />
+      </Path>,
+    );
+    expect(ir(<Star center={[0, 0]} outerRadius={30} innerRadius={12} points={6} />).children).toEqual(
       hand.children,
     );
   });

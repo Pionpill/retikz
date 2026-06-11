@@ -105,6 +105,11 @@ export type GridProps = PathVisualProps & {
  * Grid sugar——展开为多条 `<Path>`（每条 move + line）和可选外边框 Path
  * @description 默认按范围左上角起算，显式给 origin/offset 时按基准点对齐；includeBoundary 会补范围边界线。
  *   普通视觉 prop 透传到内部线，major* 覆盖主网格线，border* 覆盖外边框。点位限 literal 笛卡尔。
+ *
+ *   分层备注（临时）：本组件按 step / includeBoundary / showVertical 等参数**改变产出的 Path 节点数**，
+ *   严格说属 Tier2 行为（算法生成、参数改变拓扑），现阶段为简便仍放 react sugar/。守门方式是
+ *   shapes.test.tsx 的等价性 + 计数测试（锁定展开结果）。后续方向：plot/Tier2 落地后迁出为 lowering 节点。
+ *   RegularPolygon / Star 同理（顶点数随 sides/points 变）。
  */
 export const Grid: FC<GridProps> = props => {
   let x0: number;
