@@ -40,11 +40,11 @@ Like the CSS box model, a Node is three nested frames from the inside out.
 
 - **Content box**: determined by `text` / children and `font` — the base size from text measurement.
 - **Inner frame**: the content box plus `innerXSep` / `innerYSep` (whose symmetric alias is `padding`), taken at least as large as `minimumWidth` / `minimumHeight` (or `minimumSize`). This is the base half-axes passed to the shape — for a rectangular node, it is the drawn shape.
-- **Outer frame**: the inner frame plus `outerSep` (whose symmetric alias is `margin`). It does not change the shape; it only pushes automatic path endpoints outward — the boundary connections ultimately stop at.
+- **Outer frame**: the inner frame plus `outerSep` (whose symmetric alias is `margin`). It does not change the shape; it leaves a `margin` gap outside the shape, marking where automatic path endpoints ultimately stop.
 
 <ComponentPreview name="node-frames" size="md" hideCode />
 
-The innermost gray block is the content box, the middle dashed ring is the inner frame (the rectangular node's shape), and the outermost dashed ring is the outer frame (the boundary connections stop at). The two gaps are `innerSep` (i.e. `padding`, between the content box and the shape, enlarging the shape) and `outerSep` (i.e. `margin`, between the shape and the boundary — the shape stays, the path endpoint just stops short).
+The innermost gray block is the content box, the middle dashed ring is the inner frame (the rectangular node's shape), and the outermost dashed ring is the outer frame (where automatic path endpoints stop). The two gaps are `innerSep` (i.e. `padding`, between the content box and the shape, enlarging the shape) and `outerSep` (i.e. `margin`, between the shape and the boundary — the shape stays, the path endpoint just stops short).
 
 The inner frame answers "how large must this node be at minimum" and is the starting point for all later geometry: the shape circumscribes it, and connections and anchors ultimately land on boundaries derived from it. Even an empty-text node has an inner frame — inner sep and minimum size keep it from collapsing to a point.
 
@@ -94,14 +94,14 @@ When a Node borrows another boundary, retikz lays that boundary over the current
 
 So the bounding box is the footprint rectangle used for layout and rendering, while the boundary is closer to a connection hit surface — neither is the drawn shell.
 
-## Anchors Are Reference Points
+## Anchors
 
 Anchors are the stable points that a Node exposes to other primitives. Paths, positioning, and labels can all use anchors to find a point on a node.
 
 | Anchor family | Examples | Best for |
 | --- | --- | --- |
 | Center | `center` | Alignment, rotation, radial relations |
-| Compass | `north`, `east`, `south west` | Common connections and layout |
+| Compass | `north`, `east`, `south-west` | Common connections and layout |
 | Angle | `35` / `{ angle: 35 }` | Intersecting a ray with the boundary |
 | Shape-specific | star tips, sector arc endpoints | Semantic points on complex shapes |
 | Edge proportion | `{ side: 'north', t: 0.25 }` | Tables, lanes, frame edges |
