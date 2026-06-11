@@ -41,10 +41,34 @@ const serializeNode = (node: SvgNode | string): string => {
   return `<${node.tag}${attrs}>${inner}</${node.tag}>`;
 };
 
+/** `renderToSvgString` 选项：文档构建项 + 根 `<svg>` 显示尺寸 */
+export type RenderToStringOptions = BuildDocumentOptions & {
+  /**
+   * 根 `<svg>` 的 `width` 属性（显示尺寸）
+   * @description 字符串 / SSR 路径无 framework adapter 写元素尺寸，故由本入口附；缺省不写、由 viewBox + CSS/容器定。
+   */
+  width?: number;
+  /** 根 `<svg>` 的 `height` 属性（同 `width`） */
+  height?: number;
+};
+
+/** 给根 `<svg>` 节点补 width/height（结构化写 attrs，避免对序列化后的字符串做正则后处理） */
+const withRootSize = (root: SvgNode, width?: number, height?: number): SvgNode => {
+  if (width === undefined && height === undefined) return root;
+  return {
+    ...root,
+    attrs: {
+      ...(width !== undefined ? { width } : {}),
+      ...(height !== undefined ? { height } : {}),
+      ...root.attrs,
+    },
+  };
+};
+
 /**
  * Scene → SVG 字符串（SSR / 构建期产出）
  * @description 逐字序列化 `buildSvgDocument` 的描述树——零名字转换（attrs 本就是 SVG 真名）。同 scene +
- *   同 idPrefix 产逐字一致的字符串（水合前置）。
+ *   同 idPrefix 产逐字一致的字符串（水合前置）。给定 `width`/`height` 时结构化写进根 `<svg>` attrs（不做字符串后处理）。
  */
-export const renderToSvgString = (scene: Scene, options: BuildDocumentOptions): string =>
-  serializeNode(buildSvgDocument(scene, options));
+export const renderToSvgString = (scene: Scene, options: RenderToStringOptions): string =>
+  serializeNode(withRootSize(buildSvgDocument(scene, options), options.width, options.height));

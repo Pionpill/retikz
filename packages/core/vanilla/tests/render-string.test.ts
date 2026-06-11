@@ -33,4 +33,15 @@ describe('@retikz/vanilla renderToSvgString', () => {
     const empty = { layout: { x: 0, y: 0, width: 10, height: 10 }, primitives: [] };
     expect(renderToSvgString(empty as never)).toMatch(/^<svg/);
   });
+
+  it('inject-size：给 width/height 时结构化写进根 <svg>（不做正则后处理），缺省不写', () => {
+    const scene = compileToScene(nodeIr);
+    // render 侧直接接受 width/height（W22：vanilla 不再正则注入）
+    const sized = svgRenderToString(scene, { idPrefix: 'r', width: 200, height: 100 });
+    expect(sized).toMatch(/^<svg width="200" height="100" viewBox=/);
+    // vanilla 透传到 render，输出与 render 逐字一致
+    expect(renderToSvgString(scene, { width: 200, height: 100 })).toBe(sized);
+    // 缺省时根 <svg> 不带 size（直接以 viewBox 开头；内层 rect 自带 width 不算）
+    expect(renderToSvgString(scene)).toMatch(/^<svg viewBox=/);
+  });
 });
