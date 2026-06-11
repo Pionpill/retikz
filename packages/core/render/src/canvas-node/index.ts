@@ -1,7 +1,7 @@
 import type { Buffer } from 'node:buffer';
 import type { Scene } from '@retikz/core';
 import { drawScene } from '../canvas/drawScene';
-import { sceneFitMatrix } from '../canvas/shared';
+import { createCssColorNormalizer, sceneFitMatrix } from '../canvas/shared';
 import type { DrawOptions } from '../canvas/types';
 
 export type CanvasNodeImageFormat = 'png' | 'jpeg' | 'webp';
@@ -72,21 +72,6 @@ const createOffscreenFactory =
     return canvas.getContext('2d');
   };
 
-const createCssColorResolver = (createCanvas: NapiCanvasModule['createCanvas']) => {
-  let scratch: CanvasRenderingContext2D | null | undefined;
-  return (color: string): string => {
-    if (scratch === undefined) scratch = createCanvas(1, 1).getContext('2d');
-    if (!scratch) return color;
-    scratch.fillStyle = '#000';
-    scratch.fillStyle = color;
-    const onBlack = scratch.fillStyle;
-    scratch.fillStyle = '#fff';
-    scratch.fillStyle = color;
-    const onWhite = scratch.fillStyle;
-    return onBlack === onWhite && typeof onBlack === 'string' ? onBlack : color;
-  };
-};
-
 const encodeCanvas = async (
   canvas: NapiCanvas,
   format: CanvasNodeImageFormat,
@@ -125,7 +110,7 @@ export const renderSceneToImage = async (scene: Scene, options: RenderSceneToIma
     defaultFontFamily: options.defaultFontFamily ?? 'sans-serif',
     currentColor: options.currentColor ?? '#000000',
     createOffscreen: options.createOffscreen ?? createOffscreenFactory(canvasApi.createCanvas),
-    resolveCssColor: options.resolveCssColor ?? createCssColorResolver(canvasApi.createCanvas),
+    resolveCssColor: options.resolveCssColor ?? createCssColorNormalizer(() => canvasApi.createCanvas(1, 1).getContext('2d')),
   });
 
   return encodeCanvas(canvas, format, options.quality);

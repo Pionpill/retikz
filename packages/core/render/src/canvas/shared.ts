@@ -27,3 +27,26 @@ export const sceneFitMatrix = (
     (offsetY - layout.y * scale) * devicePixelRatio,
   ];
 };
+
+/**
+ * 颜色归一器工厂：用 scratch 2D context 把任意 CSS 颜色经 `fillStyle` 往返规范成可解析串（渐变 stop 烘焙 alpha 用）
+ * @description 浏览器/napi 把 `fillStyle` 规范化后读回即得可解析串；非法色保留原值不变，用黑/白双哨兵探测、
+ *   不一致则退回原串。`makeScratchCtx` 懒建一次复用（浏览器端 `document.createElement('canvas')`、
+ *   node 端 `createCanvas(1,1)`）；返回 null（无 canvas 环境）时原样返回颜色。差异仅在 ctx 来源，故注入而非各写一份。
+ */
+export const createCssColorNormalizer = (
+  makeScratchCtx: () => CanvasRenderingContext2D | null,
+): ((color: string) => string) => {
+  let scratch: CanvasRenderingContext2D | null | undefined;
+  return (color: string): string => {
+    if (scratch === undefined) scratch = makeScratchCtx();
+    if (!scratch) return color;
+    scratch.fillStyle = '#000';
+    scratch.fillStyle = color;
+    const onBlack = scratch.fillStyle;
+    scratch.fillStyle = '#fff';
+    scratch.fillStyle = color;
+    const onWhite = scratch.fillStyle;
+    return onBlack === onWhite && typeof onBlack === 'string' ? onBlack : color;
+  };
+};
