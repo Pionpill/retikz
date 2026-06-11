@@ -1,6 +1,7 @@
 import type { Buffer } from 'node:buffer';
 import type { Scene } from '@retikz/core';
 import { drawScene } from '../canvas/drawScene';
+import { sceneFitMatrix } from '../canvas/shared';
 import type { DrawOptions } from '../canvas/types';
 
 export type CanvasNodeImageFormat = 'png' | 'jpeg' | 'webp';
@@ -86,26 +87,6 @@ const createCssColorResolver = (createCanvas: NapiCanvasModule['createCanvas']) 
   };
 };
 
-const setSceneTransform = (
-  ctx: CanvasRenderingContext2D,
-  scene: Scene,
-  width: number,
-  height: number,
-  devicePixelRatio: number,
-): void => {
-  const scale = Math.min(width / scene.layout.width, height / scene.layout.height);
-  const offsetX = (width - scene.layout.width * scale) / 2;
-  const offsetY = (height - scene.layout.height * scale) / 2;
-  ctx.setTransform(
-    devicePixelRatio * scale,
-    0,
-    0,
-    devicePixelRatio * scale,
-    (offsetX - scene.layout.x * scale) * devicePixelRatio,
-    (offsetY - scene.layout.y * scale) * devicePixelRatio,
-  );
-};
-
 const encodeCanvas = async (
   canvas: NapiCanvas,
   format: CanvasNodeImageFormat,
@@ -138,7 +119,7 @@ export const renderSceneToImage = async (scene: Scene, options: RenderSceneToIma
     ctx.fillStyle = options.background;
     ctx.fillRect(0, 0, bitmapWidth, bitmapHeight);
   }
-  setSceneTransform(ctx, scene, options.width, options.height, devicePixelRatio);
+  ctx.setTransform(...sceneFitMatrix(scene.layout, options.width, options.height, devicePixelRatio));
   drawScene(ctx, scene, {
     ...options,
     defaultFontFamily: options.defaultFontFamily ?? 'sans-serif',

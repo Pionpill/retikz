@@ -1,5 +1,6 @@
 import type { Scene } from '@retikz/core';
 import { drawScene } from './drawScene';
+import { sceneFitMatrix } from './shared';
 import type { RenderOptions } from './types';
 
 const getDevicePixelRatio = (options: RenderOptions): number => {
@@ -66,26 +67,6 @@ const normalizeCssColorViaCanvas = (color: string): string => {
   return onBlack === onWhite && typeof onBlack === 'string' ? onBlack : color;
 };
 
-const computeCanvasTransform = (
-  canvas: HTMLCanvasElement,
-  scene: Scene,
-  devicePixelRatio: number,
-): [number, number, number, number, number, number] => {
-  const cssWidth = canvas.width / devicePixelRatio;
-  const cssHeight = canvas.height / devicePixelRatio;
-  const scale = Math.min(cssWidth / scene.layout.width, cssHeight / scene.layout.height);
-  const offsetX = (cssWidth - scene.layout.width * scale) / 2;
-  const offsetY = (cssHeight - scene.layout.height * scale) / 2;
-  return [
-    devicePixelRatio * scale,
-    0,
-    0,
-    devicePixelRatio * scale,
-    (offsetX - scene.layout.x * scale) * devicePixelRatio,
-    (offsetY - scene.layout.y * scale) * devicePixelRatio,
-  ];
-};
-
 /** 将 Scene 渲染到 HTMLCanvasElement */
 export const renderToCanvas = (
   canvas: HTMLCanvasElement,
@@ -113,7 +94,7 @@ export const renderToCanvas = (
     ctx.clearRect(0, 0, canvas.width, canvas.height);
   }
 
-  ctx.setTransform(...computeCanvasTransform(canvas, scene, devicePixelRatio));
+  ctx.setTransform(...sceneFitMatrix(scene.layout, canvas.width / devicePixelRatio, canvas.height / devicePixelRatio, devicePixelRatio));
   drawScene(ctx, scene, {
     ...options,
     defaultFontFamily: options.defaultFontFamily ?? getCanvasDefaultFontFamily(canvas),
