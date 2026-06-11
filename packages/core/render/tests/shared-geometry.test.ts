@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { gradientLineFromAngle } from '../src/shared/gradient';
 import { parseHexColor } from '../src/shared/color';
+import { commandEndpoint } from '../src/shared/path-command';
 import { sceneFitMatrix } from '../src/canvas/shared';
 
 /**
@@ -42,6 +43,26 @@ describe('parseHexColor', () => {
   it('非 hex（rgb()/命名色）返回 null', () => {
     expect(parseHexColor('rgb(1, 2, 3)')).toBeNull();
     expect(parseHexColor('red')).toBeNull();
+  });
+});
+
+describe('commandEndpoint', () => {
+  it('line/move/quad/cubic 取 to', () => {
+    expect(commandEndpoint({ kind: 'line', to: [3, 4] })).toEqual([3, 4]);
+  });
+
+  it('arc 取极坐标末点', () => {
+    expect(commandEndpoint({ kind: 'arc', center: [0, 0], radius: 10, startAngle: 0, endAngle: 0 })).toEqual([10, 0]);
+  });
+
+  it('ellipseArc 按 radiusX/radiusY 取末点', () => {
+    const p = commandEndpoint({ kind: 'ellipseArc', center: [0, 0], radiusX: 10, radiusY: 5, startAngle: 0, endAngle: 90 });
+    expect(p?.[0]).toBeCloseTo(0);
+    expect(p?.[1]).toBeCloseTo(5);
+  });
+
+  it('close 无端点', () => {
+    expect(commandEndpoint({ kind: 'close' })).toBeNull();
   });
 });
 

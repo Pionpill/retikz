@@ -12,7 +12,7 @@ import type {
   TextPrim,
 } from '@retikz/core';
 import type { CanvasWarning, DrawOptions, UnsupportedCanvasFeature } from './types';
-import { gradientLineFromAngle, parseHexColor } from '../shared';
+import { commandEndpoint, gradientLineFromAngle, parseHexColor } from '../shared';
 import { DEG_TO_RAD, applyClip, applyTransform, buildPath, roundedRectPath } from './pathGeometry';
 import { applyPrimAnimations } from './animate';
 import { applySceneCamera } from './camera';
@@ -339,27 +339,6 @@ type Point = [number, number];
 const vecSub = (a: Point, b: Point): Point => [a[0] - b[0], a[1] - b[1]];
 
 const isZeroVec = (v: Point): boolean => v[0] === 0 && v[1] === 0;
-
-/** 取一个 PathCommand 末端 endpoint（与 core 同口径：arc/ellipseArc 取极坐标末点；close 无端点） */
-const commandEndpoint = (cmd: PathCommand): Point | null => {
-  switch (cmd.kind) {
-    case 'move':
-    case 'line':
-    case 'quad':
-    case 'cubic':
-      return [cmd.to[0], cmd.to[1]];
-    case 'arc': {
-      const rad = cmd.endAngle * DEG_TO_RAD;
-      return [cmd.center[0] + Math.cos(rad) * cmd.radius, cmd.center[1] + Math.sin(rad) * cmd.radius];
-    }
-    case 'ellipseArc': {
-      const rad = cmd.endAngle * DEG_TO_RAD;
-      return [cmd.center[0] + Math.cos(rad) * cmd.radiusX, cmd.center[1] + Math.sin(rad) * cmd.radiusY];
-    }
-    case 'close':
-      return null;
-  }
-};
 
 /**
  * 末端箭头定位：终点 + 入射切线角（指向终点的方向）
