@@ -1,13 +1,11 @@
 import type { Scene } from '@retikz/core';
 import { type PrimAnimationResolution, hitTest, renderToCanvas } from '@retikz/render/canvas';
 import {
-  type BuildContext,
   collectCanvasVisibleAnimationIds,
   createCanvasIdAnimationControls,
+  createContextBuilder,
   createHydrationController,
-  geometryOf,
   isCanvasAnimationIdVisible,
-  metaOf,
   withCanvasAnimationEventHandlers,
 } from '@retikz/render/hydration';
 import { type AnimationControls, type IdClockRegistry, createClock, createIdClockRegistry, prefersReducedMotion, sceneAnimationDurationMs, sceneHasAnimations, sceneHasAutoplayTrigger } from '@retikz/render/animation';
@@ -189,27 +187,25 @@ export const mountCanvas = (
     };
     // canvas 富 context：无逐元素 DOM（element=null），point 经 clientToScene 逆 meet-fit，动画 coarse（scene 级单时钟）。
     // 读 live currentScene / clock，update 后自动反映新图。
-    const buildContext: BuildContext = (event, id) => {
-      const mouse = event as MouseEvent;
-      return {
-        id,
-        meta: metaOf(currentScene, id),
-        renderer: 'canvas',
-        element: null,
-        root: canvas,
-        point: typeof mouse.clientX === 'number' ? clientToScene(mouse.clientX, mouse.clientY) : null,
-        geometry: geometryOf(currentScene, id),
-        // per-id 控制（缺省作用于命中元素）：读 live clock / registry，play/restart/seek 后确保时钟在跑并重绘
-        animation: createCanvasIdAnimationControls({
+    const buildContext = createContextBuilder({
+      renderer: 'canvas',
+      root: canvas,
+      scene: () => currentScene,
+      resolveElement: () => null, // canvas 无逐元素 DOM
+      resolvePoint: event => {
+        const mouse = event as MouseEvent;
+        return typeof mouse.clientX === 'number' ? clientToScene(mouse.clientX, mouse.clientY) : null;
+      },
+      // per-id 控制（缺省作用于命中元素）：读 live clock / registry，play/restart/seek 后确保时钟在跑并重绘
+      makeAnimation: id =>
+        createCanvasIdAnimationControls({
           registry,
           clockTime: () => clock?.time ?? 0,
           ensurePlaying: () => clock?.play(),
           renderFrame,
           defaultId: id,
         }),
-        scene: currentScene,
-      };
-    };
+    });
     const controller = createHydrationController(
       canvas,
       withCanvasAnimationEventHandlers(currentScene, hydrateOptions.handlers),

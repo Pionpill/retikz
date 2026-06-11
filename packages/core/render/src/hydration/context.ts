@@ -425,8 +425,11 @@ export type ContextSources = {
   renderer: 'svg' | 'canvas';
   /** figure 根（svg root / canvas） */
   root: Element;
-  /** 当前 Scene；缺省 → meta / geometry / scene 字段缺省、animation no-op（standalone 最小 context） */
-  scene?: Scene;
+  /**
+   * 当前 Scene；缺省 → meta / geometry / scene 字段缺省、animation no-op（standalone 最小 context）。
+   * 传 getter（`() => Scene`）支持 live scene——mount 后 `update()` 换图时每次命中读最新 Scene。
+   */
+  scene?: Scene | (() => Scene | undefined);
   /** 命中 DOM 元素定位（svg = closest；canvas = () => null） */
   resolveElement: (event: Event, id: string) => Element | null;
   /** 指针逆映射到 scene user units（非指针事件 → null） */
@@ -442,15 +445,18 @@ export type ContextSources = {
  */
 export const createContextBuilder = (sources: ContextSources): BuildContext => {
   const { renderer, root, scene, resolveElement, resolvePoint, makeAnimation } = sources;
-  return (event, id) => ({
-    id,
-    meta: scene ? metaOf(scene, id) : undefined,
-    renderer,
-    element: resolveElement(event, id),
-    root,
-    point: resolvePoint(event),
-    geometry: scene ? geometryOf(scene, id) : undefined,
-    animation: makeAnimation(id),
-    scene,
-  });
+  return (event, id) => {
+    const currentScene = typeof scene === 'function' ? scene() : scene;
+    return {
+      id,
+      meta: currentScene ? metaOf(currentScene, id) : undefined,
+      renderer,
+      element: resolveElement(event, id),
+      root,
+      point: resolvePoint(event),
+      geometry: currentScene ? geometryOf(currentScene, id) : undefined,
+      animation: makeAnimation(id),
+      scene: currentScene,
+    };
+  };
 };

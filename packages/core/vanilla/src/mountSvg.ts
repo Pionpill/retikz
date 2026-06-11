@@ -2,12 +2,10 @@ import type { Scene } from '@retikz/core';
 import { buildSvgDocument } from '@retikz/render/svg';
 import { type AnimationControls, bindWaapiDescriptors, prefersReducedMotion, sceneHasAnimations } from '@retikz/render/animation';
 import {
-  type BuildContext,
+  createContextBuilder,
   createHydrationController,
   createSvgAnimationControls,
-  geometryOf,
   locateSvg,
-  metaOf,
   resolvePointViaLayout,
   resolveSvgElement,
 } from '@retikz/render/hydration';
@@ -69,16 +67,13 @@ export const mountSvg = (container: Element, input: RenderInput, options: MountO
    *   `data-retikz-animation-owner` 双查 `getAnimations()` per-id 控制。
    */
   const hydrate = (hydrateOptions: HydrateOptions): HydrationHandle => {
-    const buildContext: BuildContext = (event, id) => ({
-      id,
-      meta: metaOf(currentScene, id),
+    const buildContext = createContextBuilder({
       renderer: 'svg',
-      element: resolveSvgElement(event),
       root,
-      point: resolvePointViaLayout(root, currentScene.layout)(event),
-      geometry: geometryOf(currentScene, id),
-      animation: createSvgAnimationControls(root, id),
-      scene: currentScene,
+      scene: () => currentScene,
+      resolveElement: resolveSvgElement,
+      resolvePoint: event => resolvePointViaLayout(root, currentScene.layout)(event),
+      makeAnimation: id => createSvgAnimationControls(root, id),
     });
     const controller = createHydrationController(root, hydrateOptions.handlers, locateSvg, buildContext);
     return { dispose: controller.dispose };
