@@ -152,16 +152,21 @@ const buildNodeFromProps = (props: NodeProps): IRChild => {
 
 /**
  * 扫描 Step children，把首个 <EdgeLabel> 翻译为 IRStepLabel
- * @description 非字符串 children 静默跳过；多个 <EdgeLabel> 取首个
+ * @description 非字符串 children 静默跳过；多个 <EdgeLabel> 取首个、其余 dev 下 warn（与水合重复 id 诊断一致）
  */
 const readEdgeLabel = (children: ReactNode): IRStepLabel | undefined => {
   let result: IRStepLabel | undefined;
   Children.forEach(children, child => {
-    if (result !== undefined) return;
     if (!isValidElement(child)) return;
     if (getDisplayName(child) !== TIKZ_EDGE_LABEL) return;
     const props = child.props as EdgeLabelProps;
     if (typeof props.children !== 'string') return;
+    if (result !== undefined) {
+      if (process.env.NODE_ENV !== 'production') {
+        console.warn('[retikz] <Step> 含多个 <EdgeLabel>，仅首个生效、其余被忽略。');
+      }
+      return;
+    }
     const out: IRStepLabel = { text: props.children };
     if (props.position !== undefined) out.position = props.position;
     if (props.side !== undefined) out.side = props.side;
