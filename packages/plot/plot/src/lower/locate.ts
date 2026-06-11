@@ -1,5 +1,5 @@
 import type { IRJsonObject } from '@retikz/core';
-import { type ExternalDatasets, type ExternalRow, type Mark, PlotCoordinate, type PlotSpec } from '../ir';
+import { type ExternalDatasets, type ExternalRow, type Mark, PlotCoordinate, PlotMark, type PlotSpec } from '../ir';
 import { type IntervalContext, buildIntervalContext, datumAnchor } from './anchor';
 import { type LowerPlotsOptions, prepareRows, resolveFrame } from './expand';
 import { resolveFieldPath } from './field';
@@ -50,10 +50,10 @@ export type PlotLocator = {
 
 /** 取某 mark 的 series 字段名（无则 undefined）；只有 line / interval / area 含 series */
 const seriesFieldOf = (mark: Mark): string | undefined =>
-  mark.type === 'line' || mark.type === 'interval' || mark.type === 'area' ? mark.series : undefined;
+  mark.type === PlotMark.Line || mark.type === PlotMark.Interval || mark.type === PlotMark.Area ? mark.series : undefined;
 
 /** datum-bearing mark（展成独立可见 Node 的 mark）：point / interval / sector */
-const isDatumBearing = (mark: Mark): boolean => mark.type === 'point' || mark.type === 'interval' || mark.type === 'sector';
+const isDatumBearing = (mark: Mark): boolean => mark.type === PlotMark.Point || mark.type === PlotMark.Interval || mark.type === PlotMark.Sector;
 
 /**
  * 用与 lowerPlots 同一份 spec + datasets + options 建 locator（复用 ADR-01 resolveFrame，投影单一真源）
@@ -107,7 +107,7 @@ export const createPlotLocator = (spec: PlotSpec, datasets: ExternalDatasets, op
   // 每 mark 的 IntervalContext 一次性建（interval mark 锚点需要；其余 mark undefined）——与 lowering 同源（#1）。
   const intervalContexts = new Map<number, IntervalContext>();
   const intervalContextOf = (markIndex: number, mark: Mark): IntervalContext | undefined => {
-    if (mark.type !== 'interval') return undefined;
+    if (mark.type !== PlotMark.Interval) return undefined;
     // interval 仅在 cartesian2D / polar2D 有几何（1D / ternary 已在 lowering fail-loud）；其它帧无 IntervalContext
     if (frame.type !== PlotCoordinate.Cartesian2D && frame.type !== PlotCoordinate.Polar2D) return undefined;
     const cached = intervalContexts.get(markIndex);

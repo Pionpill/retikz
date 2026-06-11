@@ -1,6 +1,6 @@
 import { type CompositeDefinition, type IRChild, type IRScope, defineComposite } from '@retikz/core';
 import type { ZodType } from 'zod';
-import { type AxisGuide, Cartesian1DOrientation, type Channel, type Coordinate, type ExternalDatasets, type ExternalRow, type Guide, type LegendChannelValue, type LegendGuide, type Mark, type OrdinalScale, type PlotColorSchemeValue, PlotCoordinate, PlotFieldType, type PlotFieldTypeValue, PlotGuide, PlotMark, PlotScale, type PlotScaleValue, type PlotSpec, PlotSpecSchema, type Scale } from '../ir';
+import { type AxisGuide, Cartesian1DOrientation, type Channel, type Coordinate, type ExternalDatasets, type ExternalRow, type Guide, type LegendChannelValue, type LegendGuide, type Mark, type OrdinalScale, PlotCoordinate, PlotFieldType, type PlotFieldTypeValue, PlotGuide, PlotMark, PlotScale, type PlotScaleValue, type PlotSpec, PlotSpecSchema, type QuantileColorScale, type QuantizeColorScale, type Scale, type ThresholdColorScale } from '../ir';
 import { channelValue, isFiniteNumber, resolveFieldPath } from './field';
 import { type GuideContext, type LegendEntry, type LegendInput, lowerCustomAxis, lowerGuide, lowerLegend } from './guide';
 import { DEFAULT_FONT_SIZE, type LegendReserve, type Margins, type Rect, computePlotArea, computePolarFrame, computeTernaryFrame } from './layout';
@@ -202,7 +202,7 @@ export const resolveFrame = (params: ResolveFrameParams): ResolvedFrame => {
     const out: Array<unknown> = [];
     for (const mark of node.marks) {
       // 堆叠柱的 y 域取累积上 / 下界（来自 stack transform），而非每段原值
-      if (stackAxis && mark.type === 'interval' && mark.arrangement === 'stack') {
+      if (stackAxis && mark.type === PlotMark.Interval && mark.arrangement === 'stack') {
         const y0Field = mark.y0Field ?? 'y0';
         const y1Field = mark.y1Field ?? 'y1';
         for (const row of rows) {
@@ -211,7 +211,7 @@ export const resolveFrame = (params: ResolveFrameParams): ResolvedFrame => {
         continue;
       }
       // sector mark 的角向域取累积界（来自 stack transform）：[0, total] → [startAngle, endAngle]
-      if (sectorAngle && mark.type === 'sector') {
+      if (sectorAngle && mark.type === PlotMark.Sector) {
         const startField = mark.startField ?? 'y0';
         const endField = mark.endField ?? 'y1';
         for (const row of rows) {
@@ -227,10 +227,10 @@ export const resolveFrame = (params: ResolveFrameParams): ResolvedFrame => {
     }
     // 柱 / 面积从 baseline 起：把 baseline 纳入域，保证连续域容得下 baseline（即便所有值同号）
     if (includeBaseline) {
-      if (node.marks.some(mark => mark.type === 'interval')) out.push(0);
+      if (node.marks.some(mark => mark.type === PlotMark.Interval)) out.push(0);
       // area 的回边贴 baseline（默认 0），把各 area 的 baseline 纳入值域，使 baseline 投影落在 range 内
       for (const mark of node.marks) {
-        if (mark.type === 'area') out.push(mark.baseline ?? 0);
+        if (mark.type === PlotMark.Area) out.push(mark.baseline ?? 0);
       }
     }
     return out;
@@ -755,10 +755,10 @@ const quantileAt = (sortedAscending: ReadonlyArray<number>, p: number): number =
  *   edges 是档间内部边界（长度 = binCount - 1）；colors 是各档色（range 显式则用、否则从 scheme 采）。
  */
 const discretizedBins = (
-  def: { type: string; range?: ReadonlyArray<string>; scheme?: PlotColorSchemeValue; count?: number; breakpoints?: ReadonlyArray<number>; domain?: readonly [number, number] },
+  def: QuantizeColorScale | ThresholdColorScale | QuantileColorScale,
   values: ReadonlyArray<number>,
 ): { colors: Array<string>; edges: Array<number> } => {
-  if (def.type === PlotScale.Threshold && def.breakpoints) {
+  if (def.type === PlotScale.Threshold) {
     const edges = [...def.breakpoints];
     const binCount = edges.length + 1;
     const colors = def.range ? [...def.range] : sampleSchemeColors(def.scheme, binCount);

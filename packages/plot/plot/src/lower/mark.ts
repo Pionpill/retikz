@@ -1,5 +1,5 @@
 import { type IRChild, type IRNode, type IRNodeDefault, type IRScope, type IRStep } from '@retikz/core';
-import { type ExternalRow, type IntervalMark, type Mark, PlotCoordinate } from '../ir';
+import { type ExternalRow, type IntervalMark, type Mark, PlotCoordinate, PlotMark } from '../ir';
 import { type Wedge, buildIntervalContext, datumAnchor, intervalRect, intervalWedge, sectorWedge } from './anchor';
 import { channelValue, compareByPath, isFiniteNumber, resolveFieldPath } from './field';
 import { type CartesianFrame, type CoordinateFrame, type PolarFrame, type PolarVertex, densifyPolarSegments, toPolarVertex } from './project';
@@ -83,7 +83,7 @@ const pointStyle = (fill: string): IRNodeDefault => ({
  * @description x/y 是唯一位置通道（坐标系决定其含义）；sector 无位置通道（角度来自累积界、半径常量）→ 不走此路径。
  */
 const resolveRolePosition = (mark: Mark, row: ExternalRow): [unknown, unknown] =>
-  mark.type === 'sector' ? [undefined, undefined] : [channelValue(mark.encoding.x, row), channelValue(mark.encoding.y, row)];
+  mark.type === PlotMark.Sector ? [undefined, undefined] : [channelValue(mark.encoding.x, row), channelValue(mark.encoding.y, row)];
 
 /** 柱 node 样式（rectangle + padding0 + 无描边，使 minimumWidth/Height 即真实柱尺寸） */
 const barStyle = (fill: string): IRNodeDefault => ({ shape: 'rectangle', padding: 0, strokeWidth: 0, fill });
@@ -248,7 +248,7 @@ const lowerIntervalPolar = (mark: IntervalMark, rows: Array<ExternalRow>, frame:
  *   sectorWedge 对缺字段 / 倒退返回 null，故在此显式校验保留旧行为。
  */
 const lowerSector = (mark: Mark, rows: Array<ExternalRow>, frame: PolarFrame, colorOf: ColorOf | undefined, markProvenance: MarkProvenance | undefined): IRScope | null => {
-  if (mark.type !== 'sector') return null;
+  if (mark.type !== PlotMark.Sector) return null;
   const startField = mark.startField ?? 'y0';
   const endField = mark.endField ?? 'y1';
   const placed: Array<{ color: string | undefined; node: IRNode }> = [];
@@ -314,7 +314,7 @@ const buildOutlinePoints = (mark: Mark, ordered: Array<ExternalRow>, frame: Coor
 
 /** 把一组行连成一条折线的 steps（上沿投影 + 可选闭合）；<2 点返回 null */
 const buildLineSteps = (mark: Mark, rows: Array<ExternalRow>, frame: CoordinateFrame, closed: boolean): Array<IRStep> | null =>
-  pointsToSteps(buildOutlinePoints(mark, orderRows(rows, mark.type === 'line' || mark.type === 'area' ? mark.order : undefined), frame, closed), closed);
+  pointsToSteps(buildOutlinePoints(mark, orderRows(rows, mark.type === PlotMark.Line || mark.type === PlotMark.Area ? mark.order : undefined), frame, closed), closed);
 
 /** 多系列 series 拆分通用：每条 series 一条 Path，provenance 开时绑 `<plotId>.series.<slug>` + Path.meta（series 原值） */
 type SeriesPathBuilder = (seriesRows: Array<ExternalRow>) => Array<IRStep> | null;
@@ -386,7 +386,7 @@ const assertColorConstantWithinSeries = (rows: Array<ExternalRow>, seriesField: 
  *   显式 series 与 color 字段并存且 color 在 series 内不恒定 → fail-loud。
  */
 const pathSeriesField = (mark: Mark, rows: Array<ExternalRow>): string | undefined => {
-  if (mark.type !== 'line' && mark.type !== 'area') return undefined;
+  if (mark.type !== PlotMark.Line && mark.type !== PlotMark.Area) return undefined;
   const colorField = mark.encoding.color?.field;
   if (mark.series) {
     if (colorField && colorField !== mark.series) assertColorConstantWithinSeries(rows, mark.series, colorField);
@@ -396,8 +396,8 @@ const pathSeriesField = (mark: Mark, rows: Array<ExternalRow>): string | undefin
 };
 
 /** 折线：单线（常量 color → stroke）或多系列（series 拆多线、各取系列色）（坐标系无关） */
-const lowerLine = (mark: Mark, rows: Array<ExternalRow>, frame: CoordinateFrame, colorOf: ColorOf | undefined, markProvenance: MarkProvenance | undefined): IRChild | null => {
-  if (mark.type !== 'line') return null;
+const lowerLine = (mark: Mark, rows: Array<ExternalRow>, frame: CoordinateFrame, colorOf: ColorOf | undefined, markProvenance: MarkProvenance | undefined): IRScope | null => {
+  if (mark.type !== PlotMark.Line) return null;
   const closed = mark.closed ?? false;
   // B/C：显式 series 优先；无 series 但有 categorical color 字段 → 隐式按 color 拆系列（产物等价显式 series）
   const seriesField = pathSeriesField(mark, rows);
@@ -435,8 +435,8 @@ const buildBaselinePoints = (mark: Mark, ordered: Array<ExternalRow>, frame: Coo
 
 /** 把一个 area 的上沿 + baseline 回边连成可填充 Path 的 steps；上沿 < 2 点返回 null */
 const buildAreaSteps = (mark: Mark, rows: Array<ExternalRow>, frame: CoordinateFrame, baseline: number): Array<IRStep> | null => {
-  const ordered = orderRows(rows, mark.type === 'area' ? mark.order : undefined);
-  const closed = mark.type === 'area' ? (mark.closed ?? false) : false;
+  const ordered = orderRows(rows, mark.type === PlotMark.Area ? mark.order : undefined);
+  const closed = mark.type === PlotMark.Area ? (mark.closed ?? false) : false;
   const top = buildOutlinePoints(mark, ordered, frame, closed);
   if (top.length < 2) return null;
   const bottom = buildBaselinePoints(mark, ordered, frame, baseline);
@@ -449,8 +449,8 @@ const buildAreaSteps = (mark: Mark, rows: Array<ExternalRow>, frame: CoordinateF
 };
 
 /** 面积：上沿折线 + baseline 回边闭合的可填充 Path（坐标系无关）；单系列或多系列（series 拆多面、各取系列色） */
-const lowerArea = (mark: Mark, rows: Array<ExternalRow>, frame: CoordinateFrame, colorOf: ColorOf | undefined, markProvenance: MarkProvenance | undefined): IRChild | null => {
-  if (mark.type !== 'area') return null;
+const lowerArea = (mark: Mark, rows: Array<ExternalRow>, frame: CoordinateFrame, colorOf: ColorOf | undefined, markProvenance: MarkProvenance | undefined): IRScope | null => {
+  if (mark.type !== PlotMark.Area) return null;
   const baseline = mark.baseline ?? AREA_BASELINE;
   // B/C：显式 series 优先；无 series 但有 categorical color 字段 → 隐式按 color 拆系列（产物等价显式 series）
   const seriesField = pathSeriesField(mark, rows);
@@ -483,7 +483,7 @@ const lowerArea = (mark: Mark, rows: Array<ExternalRow>, frame: CoordinateFrame,
 export const lowerMark = (mark: Mark, rows: Array<ExternalRow>, frame: CoordinateFrame, channels: MarkChannels = {}, markProvenance?: MarkProvenance): IRChild | null => {
   const { colorOf } = channels;
   // point / line / area 坐标系无关，经 frame.project（polar 连续角轴段内采样）投影
-  if (mark.type === 'point') return lowerPoint(mark, rows, frame, channels, markProvenance);
+  if (mark.type === PlotMark.Point) return lowerPoint(mark, rows, frame, channels, markProvenance);
   // 一维坐标系（cartesian1D / polar1D）本轮仅 point；line / area / interval / sector 无对应一维几何 → fail-loud（ADR-02 支持矩阵）
   if (frame.type === PlotCoordinate.Cartesian1D || frame.type === PlotCoordinate.Polar1D) {
     throw new Error(`lowerPlots: ${mark.type} mark is not supported under the ${frame.type} coordinate system (1D coordinates support point marks only this round)`);
@@ -496,21 +496,21 @@ export const lowerMark = (mark: Mark, rows: Array<ExternalRow>, frame: Coordinat
   if (frame.type === PlotCoordinate.Custom) {
     throw new Error(`lowerPlots: ${mark.type} mark is not supported under a custom coordinate system (custom coordinates support point marks only this round)`);
   }
-  if (mark.type === 'line') {
+  if (mark.type === PlotMark.Line) {
     const layer = lowerLine(mark, rows, frame, colorOf, markProvenance);
-    return layer === null ? null : attachMarkLayer(layer as IRScope, mark, markProvenance);
+    return layer === null ? null : attachMarkLayer(layer, mark, markProvenance);
   }
-  if (mark.type === 'area') {
+  if (mark.type === PlotMark.Area) {
     const layer = lowerArea(mark, rows, frame, colorOf, markProvenance);
-    return layer === null ? null : attachMarkLayer(layer as IRScope, mark, markProvenance);
+    return layer === null ? null : attachMarkLayer(layer, mark, markProvenance);
   }
   // polar：interval → sector（径向柱/玫瑰）、sector mark（饼图/环图）
   if (frame.type === PlotCoordinate.Polar2D) {
-    const layer = mark.type === 'interval' ? lowerIntervalPolar(mark, rows, frame, colorOf, markProvenance) : lowerSector(mark, rows, frame, colorOf, markProvenance);
+    const layer = mark.type === PlotMark.Interval ? lowerIntervalPolar(mark, rows, frame, colorOf, markProvenance) : lowerSector(mark, rows, frame, colorOf, markProvenance);
     return layer === null ? null : attachMarkLayer(layer, mark, markProvenance);
   }
   // sector mark 仅 polar；cartesian 下无意义
-  if (mark.type === 'sector') {
+  if (mark.type === PlotMark.Sector) {
     throw new Error('lowerPlots: sector mark is only valid under the polar2D coordinate system');
   }
   // interval 笛卡尔几何
