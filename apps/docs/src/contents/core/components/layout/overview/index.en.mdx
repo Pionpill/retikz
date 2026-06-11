@@ -107,9 +107,9 @@ import { Layout, RendererModeProvider } from '@retikz/react';
 | `renderer` | `'svg' \| 'canvas'` | `'svg'` | Render backend; when omitted, falls back to the nearest `RendererModeProvider` context value (prop > context > svg) |
 | `color` / `stroke` / `fill` / `strokeWidth` / `opacity` / `fillOpacity` / `drawOpacity` | same as [`<Scope>`](/core/components/layout/scope) | — | Whole-figure cascade graphic state; when set, wraps children in an implicit root `<Scope>` |
 | `nodeDefault` / `pathDefault` / `labelDefault` / `arrowDefault` | same as [`<Scope>`](/core/components/layout/scope) | — | Whole-figure every-X defaults (four channels); wraps the same implicit root scope |
-| `animate` | `boolean` | `true` | Whether to play animations; `false` renders the base static figure (no CSS/WAAPI, canvas skips rAF). See [Animation](/core/concepts/basic-concepts/animation) |
+| `animate` | `boolean` | `true` | Whether to play animations; `false` renders the base static figure (no CSS/WAAPI, canvas skips rAF). See [Animation](/core/components/animation/control) |
 | `snapshotAt` | `number` | — | Static-snapshot time (ms): freeze one frame at that instant (no playback), overrides `animate`; SSR poster frames / thumbnails |
-| `animations` | `Array<AnimationTrack>` | — | Scene-root (camera) animation tracks (`viewBox` channel), paired with [`cameraTo()`](/core/concepts/basic-concepts/animation) |
+| `animations` | `Array<AnimationTrack>` | — | Scene-root (camera) animation tracks (`viewBox` channel), paired with [`cameraTo()`](/core/components/animation/camera) |
 | `animationRef` | `Ref<AnimationControls \| null>` | — | Imperative animation handle out-port: receives `play` / `pause` / `seek` after mount (svg=WAAPI, canvas=rAF clock); `null` when there's no animation |
 | `easings` | `EasingRegistry` | — | Custom easing registry (name → cubic-bezier tuple / function). See [Custom Animation](/core/reference/extending/custom-animation) |
 | `animationProperties` | `AnimationPropertyRegistry` | — | Custom animation property-channel interpolators (e.g. `blur`); Canvas-only for now. See [Custom Animation](/core/reference/extending/custom-animation) |

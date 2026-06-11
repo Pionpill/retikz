@@ -22,7 +22,7 @@ export type ScopeProps = ScopeStyleProps & HydrationEventProps & {
   localNamespace?: boolean;
   /**
    * 局部 transform 列表；数组顺序应用（与 Scene `GroupPrim.transforms` / SVG transform list 一致）
-   * @description 支持 6 变体（translate / polar-translate / at-translate / offset-translate / rotate / scale）；4 个 translate 变体由 compile 阶段下沉为 Cartesian translate
+   * @description 支持 7 变体（translate / polar-translate / at-translate / offset-translate / between-translate / rotate / scale）；5 个 translate 变体由 compile 阶段下沉为 Cartesian translate
    */
   transforms?: Array<IRTransform>;
   /** 继承屏障：切外层对应通道继承（true 全切 / 数组按 'node'|'path'|'label'|'arrow' 切） */

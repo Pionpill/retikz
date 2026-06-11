@@ -1,0 +1,147 @@
+---
+title: 图元模型
+description: "像理解 DOM 盒模型一样理解 retikz Node：内容、padding、shape、外接框、boundary 与 anchor 如何分工。"
+---
+
+图元（primitive）是 retikz 里可被绘制和引用的最小单位。**图元模型**描述一个图元在几何上如何被搭起来——从内容、内框、shape，到外接框、boundary 与 anchor——使它能被测量、布局、连接和引用。它是一层抽象概念，不绑定某个具体组件。
+
+Node 是这套图元模型最常用的具体实现。你可以把它想成一个“会被连线识别的盒模型”：`position` 给出节点的语义参考点，文本测量、`innerXSep` / `innerYSep` 和最小尺寸先形成内框，shape 再把内框包成视觉外接框，boundary 和 anchor 决定路径从哪里接上来。
+
+## 模型解剖 Model Anatomy
+
+<ComponentPreview name="node-model-layers" size="md" hideCode />
+
+<ComponentAlert
+  type="tip"
+  title="这张图是演示性配置"
+  description="常规情况下 Node 是矩形图元模型，boundary 默认跟随 shape、两者重合。这里为了演示 shape 与 boundary 的多态，特意用了 ellipse 形状配 circle 连接面，把平时重叠的两层画开。"
+/>
+
+图里从内到外是这套 Node 的分层：最内是内容盒，往外依次是内框、shape 视觉轮廓、外接框、boundary，最外是 anchor。实际渲染时你通常只会看到橙色 shape；其余几层是编译与连线阶段使用的几何信息。
+
+| 层 | 由什么决定 | 影响什么 |
+| --- | --- | --- |
+| 内容盒<br />content box | `text` / children / font | 文本测量的基础尺寸 |
+| 内框<br />inner frame | 文本测量 + `innerXSep` / `innerYSep` + 最小尺寸 | 传给 shape 的基础半轴 |
+| 形状<br />shape | `shape.circumscribe` 与 `shape.emit` | 节点真正画出来的轮廓 |
+| 外接框<br />bounding box | shape 对内框的包围结果，不包含 `margin` | viewBox、布局占位、命中范围的基础 |
+| 连接面<br />boundary | `boundary`，默认跟随 shape | 自动连线贴到哪里 |
+| 锚点<br />anchor | compass / angle / shape-specific / edge point | 精确引用节点上的点 |
+
+读这张图的顺序也就是编译顺序：
+
+<ComponentPreview name="node-model-pipeline" size="xs" hideCode />
+
+外接框只包住 shape 的渲染结果，不含 `margin`——`margin` 是连线接入时额外留出的距离，只会让路径端点离 boundary 更远。
+
+## 内容盒与内框 Content Box & Inner Frame
+
+最内两层决定“这个节点至少要多大”。
+
+- **内容盒**：由 `text` / children 和 `font` 决定，是文本测量出的基础尺寸。
+- **内框**：在内容盒外加上 `innerXSep` / `innerYSep`（对称别名 `padding`），再与 `minimumWidth` / `minimumHeight`（或 `minimumSize`）取较大者，得到传给 shape 的基础半轴。
+
+空文本节点也有内框——inner sep 与最小尺寸保证它不会塌成一个点。内框是后续所有几何的起点：shape 拿它算外接框，连线与 anchor 最终都落在由它派生的边界上。
+
+## 形状 Shape
+
+shape 不是简单的 CSS border-radius。它是一套几何定义：给定内框半轴和参数后，shape 会回答“我要多大的外接框才能装下自己”，并负责画出最终的视觉轮廓。
+
+| shape 类型 | 尺寸来源 | 例子 |
+| --- | --- | --- |
+| 文本容器形状 | 文字 + padding + 最小尺寸 | rectangle、circle、ellipse、polygon、diamond |
+| 参数驱动形状 | shape params 自己决定几何 | sector、arc、star |
+
+文本容器形状更像按钮或 DOM 盒子：文字变长，节点会变大。参数驱动形状更像一个几何 glyph：半径、角度、尖角数量已经定义了大小，文本只是附着在它上面。
+
+## 外接框 Bounding Box
+
+外接框不是视觉轮廓本身，而是能包住视觉轮廓的矩形。复杂形状也会先被归约到这个矩形里，后续的 viewBox、布局和渲染裁剪都可以用统一模型处理。少数形状还会提供 `circumscribeOffset`，让 `position` 这个语义参考点和外接框中心分离，例如扇形以圆心定位，但外接框中心偏在扇形一侧。
+
+## 连接面 Boundary
+
+`boundary` 只回答一个问题：路径自动连接到这个 Node 时，端点应该贴到哪一层表面。
+
+默认情况下，`boundary="shape"`，自动路径端点会贴到视觉 shape 的边上。你也可以把五角星的连接面改成圆或矩形，让连线看起来更规整，但这不会改变星形本身，也不会改变它的外接框。
+
+借用其它 boundary 时，retikz 会把它套在当前 Node 的视觉外接框上，不会重新调用那个 boundary shape 的 `circumscribe`。例如 `boundary="circle"` 的半径来自当前外接框的长半轴；它可能伸出外接框，但仍然不参与布局占位。
+
+| 设置 | 改变什么 | 不改变什么 |
+| --- | --- | --- |
+| `shape` | 视觉轮廓、外接框、shape anchor | 节点中心语义 |
+| `boundary` | 自动连线端点、compass anchor 的连接面 | 节点视觉、外接框、布局占位 |
+| 单条边覆盖 boundary | 当前路径端点 | 节点默认设置 |
+
+因此，boundary 更接近“连接用的 hit surface”，不是“画出来的外壳”。
+
+## 锚点 Anchor
+
+Anchor 是 Node 暴露给其它图元引用的点。路径、定位和标签都可以通过 anchor 找到节点上的稳定位置。
+
+| anchor 类型 | 例子 | 适合用途 |
+| --- | --- | --- |
+| 中心点 | `center` | 对齐、旋转、放射关系 |
+| 方位点 | `north`、`east`、`south west` | 常规连线和布局 |
+| 角度点 | `35` / `{ angle: 35 }` | 沿射线找边界交点 |
+| shape 专属点 | star 的尖角、sector 的圆弧端点 | 复杂形状的语义连接 |
+| 边比例点 | `{ side: 'north', t: 0.25 }` | 表格、泳道、框图边缘定位 |
+
+方位点会经过 boundary 的连接面计算；当 `boundary="shape"` 时，方位点按视觉外接框的矩形方位解析。数字角度点走 `boundaryPoint`，会沿射线打到选定 boundary 上。shape 专属点和边比例点始终走视觉 shape，不受 `boundary` 改写。想系统理解引用语法时，可以继续看 [图元关系](/core/concepts/core/primitive-relations)。
+
+## 内边距与外边距 Padding & Margin
+
+padding 和 margin 经常被混在一起，但它们不在同一层。
+
+<ComponentPreview name="padding-margin" size="sm" hideCode />
+
+左边 padding 撑在内容盒与 shape 之间，节点随之变大；右边 margin 留在 shape 边缘与自动连线端点之间，节点不变、路径提前停。
+
+| 属性 | 改的是 | 结果 |
+| --- | --- | --- |
+| `padding` | 内容盒到 shape 的距离 | shape 变大，外接框也变大 |
+| `margin` | 自动连线端点到连接面的额外距离 | shape 不变，路径提前停下 |
+
+padding 是 Node 模型内部的一部分；margin 更像路径接入时的安全距离。
+
+## 和扩展形状的关系 Custom Shapes
+
+自定义 shape 本质上是在补齐这套 Node 模型需要的几何回答：
+
+| 几何回答 | 作用 |
+| --- | --- |
+| 外接框如何包住 shape | 让 Node 可以布局和进入 viewBox |
+| 射线打到哪里 | 让自动连线能贴边 |
+| 具名 anchor 在哪里 | 让外部图元能稳定引用 |
+| 如何 emit 成基础图元 | 让 SVG / Canvas 后端都能渲染 |
+
+也就是说，扩展 shape 不是只画一个多边形；它要让 Node 在“可测量、可连接、可引用、可渲染”这四件事上继续像普通 Node 一样工作。需要实现细节时再看 [自定义形状](/core/reference/extending/shape-registry)。
+
+## 读图顺序 Reading Order
+
+遇到一个 Node 的几何问题，可以按这个顺序判断：
+
+1. 它的中心点在哪里？
+2. 文本、padding 和最小尺寸给出了多大的基础盒？
+3. shape 如何把基础盒变成视觉轮廓？
+4. 外接框是否足够包住这个轮廓？
+5. 路径应该贴 shape 还是贴单独的 boundary？
+6. 外部引用需要的是 center、方位 anchor，还是 shape 专属 anchor？
+
+这个顺序能把“大多数节点为什么这么大、线为什么接到这里、某个 anchor 为什么在那里”拆成可定位的问题。
+
+## 延伸阅读 Further Reading
+
+<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+  <LinkedCard href="/core/concepts/core/primitive-relations">
+    <span className="font-semibold">图元关系</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">anchor、边界与边上比例点——图元之间如何稳定连接</span>
+  </LinkedCard>
+  <LinkedCard href="/core/components/node/overview">
+    <span className="font-semibold">Node</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">Node 组件的完整 props、形状、样式与定位用法</span>
+  </LinkedCard>
+  <LinkedCard href="/core/reference/extending/shape-registry">
+    <span className="font-semibold">自定义形状</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">补齐外接框 / 射线 / anchor / emit 这套几何回答，注册新 shape</span>
+  </LinkedCard>
+</div>

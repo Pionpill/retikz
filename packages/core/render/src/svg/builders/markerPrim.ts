@@ -1,6 +1,7 @@
 import type { MarkerFill, MarkerPathCommand, MarkerPrimitive } from '@retikz/core';
 import type { SvgNode } from '../types';
 import { buildPathD } from '../path-d-builder';
+import { buildTransform } from '../transform-builder';
 import { compact } from './attrs';
 
 /**
@@ -79,7 +80,9 @@ export const buildMarkerPrim = (prim: MarkerPrimitive): SvgNode => {
     case 'group':
       return {
         tag: 'g',
-        attrs: {},
+        attrs: compact({
+          transform: buildTransform(prim.transforms),
+        }),
         children: prim.children.map(child => buildMarkerPrim(child)),
       };
   }

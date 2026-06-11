@@ -12,6 +12,7 @@ import type {
   TextPrim,
 } from '@retikz/core';
 import type { CanvasWarning, DrawOptions, UnsupportedCanvasFeature } from './types';
+import { commandEndpoint, gradientLineFromAngle, parseHexColor } from '../shared';
 import { DEG_TO_RAD, applyClip, applyTransform, buildPath, roundedRectPath } from './pathGeometry';
 import { applyPrimAnimations } from './animate';
 import { applySceneCamera } from './camera';
@@ -85,14 +86,9 @@ type GradientSpec = Extract<IRPaintSpec, { kind: 'linearGradient' | 'radialGradi
  * @description 纯字符串解析（不依赖 ctx），命名色 / hsl 等返回 undefined 交由上层归一后重试。
  */
 const bakeAlpha = (color: string, opacity: number): string | undefined => {
-  const hex = /^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.exec(color);
-  if (hex) {
-    let h = hex[1];
-    if (h.length === 3) h = h[0] + h[0] + h[1] + h[1] + h[2] + h[2];
-    const r = parseInt(h.slice(0, 2), 16);
-    const g = parseInt(h.slice(2, 4), 16);
-    const b = parseInt(h.slice(4, 6), 16);
-    return `rgba(${r}, ${g}, ${b}, ${opacity})`;
+  const bytes = parseHexColor(color);
+  if (bytes) {
+    return `rgba(${bytes.r}, ${bytes.g}, ${bytes.b}, ${opacity})`;
   }
   const rgb = /^rgba?\(([^)]+)\)$/.exec(color);
   if (rgb) {
@@ -137,14 +133,12 @@ const buildGradient = (
 ): CanvasGradient => {
   let gradient: CanvasGradient;
   if (spec.kind === 'linearGradient') {
-    const rad = (spec.angle ?? 0) * DEG_TO_RAD;
-    const dx = Math.cos(rad);
-    const dy = Math.sin(rad);
+    const line = gradientLineFromAngle(spec.angle);
     gradient = ctx.createLinearGradient(
-      bbox.x + (0.5 - dx * 0.5) * bbox.w,
-      bbox.y + (0.5 - dy * 0.5) * bbox.h,
-      bbox.x + (0.5 + dx * 0.5) * bbox.w,
-      bbox.y + (0.5 + dy * 0.5) * bbox.h,
+      bbox.x + line.x1 * bbox.w,
+      bbox.y + line.y1 * bbox.h,
+      bbox.x + line.x2 * bbox.w,
+      bbox.y + line.y2 * bbox.h,
     );
   } else {
     const [cx, cy] = spec.center ?? [0.5, 0.5];
@@ -309,6 +303,8 @@ const drawText = (ctx: CanvasRenderingContext2D, p: TextPrim, options: DrawOptio
   ctx.font = buildFont(p.fontSize, p.fontFamily, p.fontWeight, p.fontStyle, options);
   ctx.textAlign = p.align === 'middle' ? 'center' : p.align;
   ctx.textBaseline = p.baseline;
+  // 确定 fill 基线：缺省 #000（与 SVG 文本省略 fill 时的默认黑一致），避免继承上一个 prim 残留的脏 fillStyle
+  ctx.fillStyle = '#000000';
   if (p.fill !== undefined && p.fill !== 'none') ctx.fillStyle = resolveColor(p.fill, options) ?? p.fill;
   const offset = firstLineDy(p);
   p.lines.forEach((line, index) => {
@@ -343,27 +339,6 @@ type Point = [number, number];
 const vecSub = (a: Point, b: Point): Point => [a[0] - b[0], a[1] - b[1]];
 
 const isZeroVec = (v: Point): boolean => v[0] === 0 && v[1] === 0;
-
-/** 取一个 PathCommand 末端 endpoint（与 core 同口径：arc/ellipseArc 取极坐标末点；close 无端点） */
-const commandEndpoint = (cmd: PathCommand): Point | null => {
-  switch (cmd.kind) {
-    case 'move':
-    case 'line':
-    case 'quad':
-    case 'cubic':
-      return [cmd.to[0], cmd.to[1]];
-    case 'arc': {
-      const rad = cmd.endAngle * DEG_TO_RAD;
-      return [cmd.center[0] + Math.cos(rad) * cmd.radius, cmd.center[1] + Math.sin(rad) * cmd.radius];
-    }
-    case 'ellipseArc': {
-      const rad = cmd.endAngle * DEG_TO_RAD;
-      return [cmd.center[0] + Math.cos(rad) * cmd.radiusX, cmd.center[1] + Math.sin(rad) * cmd.radiusY];
-    }
-    case 'close':
-      return null;
-  }
-};
 
 /**
  * 末端箭头定位：终点 + 入射切线角（指向终点的方向）

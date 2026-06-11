@@ -120,8 +120,8 @@ export const applyTransform = (ctx: CanvasRenderingContext2D, transform: Transfo
   }
 };
 
-/** 按裁剪形状构建路径并 ctx.clip()（坐标在 group 局部帧，须在 group transform 之后调用） */
-export const applyClip = (ctx: CanvasRenderingContext2D, shape: ClipShape): void => {
+/** 把裁剪形状构建为当前 ctx 路径（含 beginPath）；clip 填充与 hit-test 点测共用，避免形状 switch 两处漂移 */
+export const buildClipPath = (ctx: CanvasRenderingContext2D, shape: ClipShape): void => {
   ctx.beginPath();
   switch (shape.kind) {
     case 'rect':
@@ -138,5 +138,10 @@ export const applyClip = (ctx: CanvasRenderingContext2D, shape: ClipShape): void
       ctx.closePath();
       break;
   }
+};
+
+/** 按裁剪形状构建路径并 ctx.clip()（坐标在 group 局部帧，须在 group transform 之后调用） */
+export const applyClip = (ctx: CanvasRenderingContext2D, shape: ClipShape): void => {
+  buildClipPath(ctx, shape);
   ctx.clip();
 };

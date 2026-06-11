@@ -1,0 +1,18 @@
+---
+title: 镜头与编排
+description: cameraTo 动 scene 取景框实现推拉 / 平移（挂 <Layout>）；stagger 给一组动画依次叠加延迟，实现依次入场。
+---
+
+镜头与编排是**作用于整体、而非单个元素外观**的两类动画：`cameraTo` 动的是 scene 的取景框，`stagger` 调的是一组动画的起始时间。公共项与全部 preset 一览见 [总览](/core/components/animation)。
+
+## 镜头-cameraTo
+
+<ComponentPreview name="camera-to" size="md" />
+
+`cameraTo({ from, to })`：动 scene 的取景框 `[x, y, w, h]`，实现推拉 / 平移。挂在 `<Layout animations>`（镜头属 scene 根，不是某个元素）；起止取景都要显式给。
+
+## 编排-stagger
+
+<ComponentPreview name="stagger" size="sm" />
+
+`stagger(tracks, step)`：给一组 track 依次叠加 `delay`（0、step、2×step…），实现「依次入场」。它编排的是元素动画（[入场](/core/components/animation/entrance) / [强调与循环](/core/components/animation/emphasis)）的起始时间，本身不改变单个动画的形态。

@@ -1,5 +1,6 @@
 import type { Scene } from '@retikz/core';
 import { drawScene } from './drawScene';
+import { createCssColorNormalizer, sceneFitMatrix } from './shared';
 import type { RenderOptions } from './types';
 
 const getDevicePixelRatio = (options: RenderOptions): number => {
@@ -40,51 +41,10 @@ const createOffscreenContext = (width: number, height: number): CanvasRenderingC
   return el.getContext('2d');
 };
 
-/** 颜色归一专用的 1×1 离屏 ctx（懒建一次复用；无 document 环境为 null） */
-let colorScratchCtx: CanvasRenderingContext2D | null | undefined;
-const getColorScratchCtx = (): CanvasRenderingContext2D | null => {
-  if (colorScratchCtx === undefined) {
-    colorScratchCtx = typeof document === 'undefined' ? null : document.createElement('canvas').getContext('2d');
-  }
-  return colorScratchCtx;
-};
-
-/**
- * 用真实 canvas 把任意 CSS 颜色归一成 `#rrggbb` / `rgba(...)`（渐变 stop 烘焙 alpha 用）
- * @description 浏览器把 `fillStyle` 规范化后读回即得可解析串；非法色浏览器保留原值不变，用黑/白双哨兵探测、
- *   不一致则退回原串。无 canvas 环境（无 document）原样返回。
- */
-const normalizeCssColorViaCanvas = (color: string): string => {
-  const ctx = getColorScratchCtx();
-  if (!ctx) return color;
-  ctx.fillStyle = '#000';
-  ctx.fillStyle = color;
-  const onBlack = ctx.fillStyle;
-  ctx.fillStyle = '#fff';
-  ctx.fillStyle = color;
-  const onWhite = ctx.fillStyle;
-  return onBlack === onWhite && typeof onBlack === 'string' ? onBlack : color;
-};
-
-const computeCanvasTransform = (
-  canvas: HTMLCanvasElement,
-  scene: Scene,
-  devicePixelRatio: number,
-): [number, number, number, number, number, number] => {
-  const cssWidth = canvas.width / devicePixelRatio;
-  const cssHeight = canvas.height / devicePixelRatio;
-  const scale = Math.min(cssWidth / scene.layout.width, cssHeight / scene.layout.height);
-  const offsetX = (cssWidth - scene.layout.width * scale) / 2;
-  const offsetY = (cssHeight - scene.layout.height * scale) / 2;
-  return [
-    devicePixelRatio * scale,
-    0,
-    0,
-    devicePixelRatio * scale,
-    (offsetX - scene.layout.x * scale) * devicePixelRatio,
-    (offsetY - scene.layout.y * scale) * devicePixelRatio,
-  ];
-};
+/** 颜色归一器：1×1 离屏 ctx 往返规范 CSS 颜色（懒建一次复用；无 document 环境原样返回） */
+const normalizeCssColorViaCanvas = createCssColorNormalizer(() =>
+  typeof document === 'undefined' ? null : document.createElement('canvas').getContext('2d'),
+);
 
 /** 将 Scene 渲染到 HTMLCanvasElement */
 export const renderToCanvas = (
@@ -113,7 +73,7 @@ export const renderToCanvas = (
     ctx.clearRect(0, 0, canvas.width, canvas.height);
   }
 
-  ctx.setTransform(...computeCanvasTransform(canvas, scene, devicePixelRatio));
+  ctx.setTransform(...sceneFitMatrix(scene.layout, canvas.width / devicePixelRatio, canvas.height / devicePixelRatio, devicePixelRatio));
   drawScene(ctx, scene, {
     ...options,
     defaultFontFamily: options.defaultFontFamily ?? getCanvasDefaultFontFamily(canvas),

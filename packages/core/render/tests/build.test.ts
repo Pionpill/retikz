@@ -1,12 +1,14 @@
 import { describe, expect, it } from 'vitest';
 import type {
   GroupPrim,
+  MarkerPrimitive,
   PaintResource,
   RectPrim,
   ScenePrimitive,
   TextPrim,
 } from '@retikz/core';
 import { buildPrim } from '../src/svg/builders/prim';
+import { buildMarkerPrim } from '../src/svg/builders/markerPrim';
 import { buildPaintDef } from '../src/svg/builders/paintDefs';
 import { collectArrowSpecs } from '../src/svg/builders/arrowCollect';
 
@@ -92,6 +94,32 @@ describe('buildPrim —— primitive → SvgNode', () => {
     expect(() => buildPrim(group)).not.toThrow();
     const node = buildPrim(group);
     expect(node.children).toHaveLength(1);
+  });
+});
+
+describe('buildMarkerPrim —— marker primitive → SvgNode', () => {
+  it('marker-group-transform：group.transforms 应落到 SVG g.transform', () => {
+    const group: MarkerPrimitive = {
+      type: 'group',
+      transforms: [
+        { kind: 'translate', x: 2, y: 3 },
+        { kind: 'rotate', degrees: 45 },
+      ],
+      children: [
+        {
+          type: 'path',
+          commands: [
+            { kind: 'move', to: [0, 0] },
+            { kind: 'line', to: [1, 0] },
+          ],
+        },
+      ],
+    };
+    const node = buildMarkerPrim(group);
+    expect(node.tag).toBe('g');
+    expect(node.attrs.transform).toBe('translate(2 3) rotate(45)');
+    expect(node.children).toHaveLength(1);
+    expect((node.children as Array<{ tag: string }>)[0].tag).toBe('path');
   });
 });
 

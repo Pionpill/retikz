@@ -4,11 +4,12 @@
  *   origin 支点 ctx.translate/rotate/scale；pathDraw → stroke-dashoffset 揭示（dashPattern 覆盖 + lineDashOffset）；
  *   自定义通道 → 注册表 interpolate + applyCanvas，未注册 warn+skip。viewBox 是 scene 根镜头、不在元素级。
  */
-import { AnimationProperty, type PathCommand, type ScenePrimitive } from '@retikz/core';
+import { AnimationProperty, type ScenePrimitive } from '@retikz/core';
 import { classifyProperty, isAutoplayTrigger, primHasStroke, resolveTransformOrigin } from '../animation/channels';
 import { evaluateTrack } from '../animation/evaluate';
 import type { EasingRegistry } from '../animation/types';
 import type { AnimationPropertyRegistry } from '../animation/registry';
+import { commandEndpoint } from '../shared';
 import { DEG_TO_RAD } from './pathGeometry';
 
 /** 应用动画所需的子集选项 */
@@ -21,23 +22,6 @@ export type AnimateContext = {
 };
 
 const dist = (a: [number, number], b: [number, number]): number => Math.hypot(a[0] - b[0], a[1] - b[1]);
-
-/** 单条 PathCommand 末端 endpoint（弧用极坐标末点；close 无端点） */
-const commandEnd = (cmd: PathCommand): [number, number] | null => {
-  switch (cmd.kind) {
-    case 'move':
-    case 'line':
-    case 'quad':
-    case 'cubic':
-      return [cmd.to[0], cmd.to[1]];
-    case 'arc':
-      return [cmd.center[0] + Math.cos(cmd.endAngle * DEG_TO_RAD) * cmd.radius, cmd.center[1] + Math.sin(cmd.endAngle * DEG_TO_RAD) * cmd.radius];
-    case 'ellipseArc':
-      return [cmd.center[0] + Math.cos(cmd.endAngle * DEG_TO_RAD) * cmd.radiusX, cmd.center[1] + Math.sin(cmd.endAngle * DEG_TO_RAD) * cmd.radiusY];
-    case 'close':
-      return null;
-  }
-};
 
 /** 近似路径总弧长（pathDraw 揭示用）：path 累加弦长、arc 用弧长、rect/ellipse 用周长 */
 const approxLength = (prim: ScenePrimitive): number => {
@@ -54,10 +38,10 @@ const approxLength = (prim: ScenePrimitive): number => {
     if (cmd.kind === 'close') continue;
     if (cmd.kind === 'arc') {
       len += cmd.radius * Math.abs((cmd.endAngle - cmd.startAngle) * DEG_TO_RAD);
-      prev = commandEnd(cmd);
+      prev = commandEndpoint(cmd);
       continue;
     }
-    const end = commandEnd(cmd);
+    const end = commandEndpoint(cmd);
     if (end === null) continue;
     if (prev && cmd.kind !== 'move') len += dist(prev, end);
     prev = end;

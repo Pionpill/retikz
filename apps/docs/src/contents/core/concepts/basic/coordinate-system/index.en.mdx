@@ -1,0 +1,101 @@
+---
+title: Coordinate System
+description: "retikz uses screen-oriented 2D coordinates: Cartesian x grows right and y grows down, while polar coordinates derive a position from origin / angle / radius. Geometry is expressed in user units, then mapped through viewBox to the rendered size."
+---
+
+retikz first describes the geometric world inside the figure, then lets `<Layout>` display it. The two common coordinate forms are Cartesian `[x, y]` and polar `{ origin?, angle, radius }`.
+
+Cartesian coordinates are the first-class coordinate form. During compilation, polar coordinates, relative placement, offsets, and proportional points are all resolved into Cartesian points before bounds, anchors, and rendering are computed.
+
+Coordinates, line widths, spacing, and arrow sizes all use the same user units (the figure's internal length unit, not screen pixels); the physical size on the page comes from `width` / `height` together with `viewBox`.
+
+## Cartesian Coordinates
+
+Cartesian coordinates are written as `[x, y]`. Like SVG / Canvas, retikz uses screen coordinates: x grows to the right, and y grows downward. So `[120, 70]` means 120 units right and 70 units down from the origin.
+
+It helps to treat `[x, y]` as retikz's base coordinate shape: polar coordinates are not a separate rendering semantics, only another way to write a position. They eventually become an `[x, y]` point.
+
+<ComponentPreview name="coordinate-system" size="md" hideCode />
+
+When translating a math diagram or TikZ tutorial, the common rule is: "up" usually becomes negative y in retikz, for example `[0, -80]`.
+
+## Polar Coordinates
+
+Polar coordinates are written as `{ origin?, angle, radius }`: resolve the origin first, then move by a radius along an angle. They are useful for circular layouts, radial labels, placing elements around a node, or expressing a rotated offset from a local point.
+
+<ComponentPreview name="polar-coordinate" size="md" hideCode />
+
+| Field | Meaning |
+| --- | --- |
+| `origin` | Pole; defaults to `[0, 0]`, and may be a node id, Cartesian coordinate, or nested polar coordinate |
+| `angle` | Angle in degrees; `0°` points to +x |
+| `radius` | Distance in user units |
+
+Angles follow screen-coordinate direction: `0°` points right, `90°` points down, `180°` points left, and `270°` points up. This is not the y-up convention from math textbooks.
+
+```tsx
+<Node id="O" position={[0, 0]}>O</Node>
+<Node position={{ origin: 'O', angle: 45, radius: 80 }}>45°</Node>
+```
+
+`origin` can be nested to express chained offsets:
+
+```tsx
+// 40 units right of A, then 30 units down from that temporary point
+{ origin: { origin: 'A', angle: 0, radius: 40 }, angle: 90, radius: 30 }
+```
+
+## Which Form to Use
+
+| Goal | Prefer |
+| --- | --- |
+| Reproduce existing SVG / fixed sketch coordinates | `[x, y]` |
+| Circular, sector, or radial layouts | `{ origin, angle, radius }` |
+| Place around another primitive by side | `{ direction, of, distance? }` |
+| Apply arbitrary 2D offset from a base | `{ of, offset }` |
+| Place at a proportional point between two targets | `{ between: [A, B], t }` |
+
+This page explains the coordinate context; the full position vocabulary lives in [Positioning](/core/concepts/basic/position).
+
+## viewBox and Render Size
+
+`viewBox` decides which part of the user-unit world `<Layout>` sees; `width` / `height` decide how large that world appears on the page.
+
+<ComponentPreview name="viewbox" size="md" hideCode />
+
+The left side is the full user-unit world; the dashed frame is the window `viewBox` selects, which maps to the picture rendered at `width` / `height` on the right.
+
+| Item | Controls | Example |
+| --- | --- | --- |
+| `viewBox` | Internal coordinate range | `{ x: -40, y: -45, width: 260, height: 170 }` |
+| `width` / `height` | Rendered size in the page | `width={430}` / `height={230}` |
+| Auto bounds | Used when no `viewBox` is supplied; computed from visible primitives plus padding | The default for ordinary figures |
+
+Without an explicit `viewBox`, retikz computes layout bounds from visible Nodes / Paths / Groups and adds padding. `<Coordinate>` only names a point; it does not expand bounds by itself. If a far-away Coordinate has no visible primitive near it, the final view will not automatically grow to include that point.
+
+Most figures do not need a manual `viewBox`. Set it when you need a fixed coordinate context, multi-figure alignment, deliberate whitespace, or clipping.
+
+```tsx
+<Layout width={430} height={230} viewBox={{ x: -40, y: -45, width: 260, height: 170 }}>
+  {/* children */}
+</Layout>
+```
+
+`viewBox` is orthogonal to `width` / `height`: changing `width` / `height` only changes display scaling, not what `[x, y]` means. Changing `viewBox` changes which internal coordinates are visible.
+
+## Further Reading
+
+<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+  <LinkedCard href="/core/concepts/basic/position">
+    <span className="font-semibold">Positioning</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">Coordinates are just one position form; the full vocabulary of id refs, relative, offset, and proportional placement</span>
+  </LinkedCard>
+  <LinkedCard href="/core/concepts/core/primitive-relations">
+    <span className="font-semibold">Primitive Relations</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">Anchors, boundaries, and edge-proportional points — how primitives connect once coordinates settle</span>
+  </LinkedCard>
+  <LinkedCard href="/core/components/layout/overview">
+    <span className="font-semibold">Layout</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">The top-level container and compile entry that carries viewBox / width / height</span>
+  </LinkedCard>
+</div>

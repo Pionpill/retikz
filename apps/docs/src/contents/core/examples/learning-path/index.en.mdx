@@ -87,7 +87,7 @@ Add the `Fundamentals` gray mini button and the `Choose your path` sub-header be
 
 ### Step 3: side stacks — AtPosition tight stacking
 
-Add two independent stacks — 4 dodgerblue "required" buttons on the left, 2 legend buttons on the right (1 dodgerblue + 1 gray). Each column's **head** uses an absolute Cartesian first, and the rest use [AtPosition](/core/concepts/basic-concepts/position) `{ direction: 'below', of: 'prev-id' }` for tight stacking: set the spine first, then let the column grow downward on its own.
+Add two independent stacks — 4 dodgerblue "required" buttons on the left, 2 legend buttons on the right (1 dodgerblue + 1 gray). Each column's **head** uses an absolute Cartesian first, and the rest use [AtPosition](/core/concepts/basic/position) `{ direction: 'below', of: 'prev-id' }` for tight stacking: set the spine first, then let the column grow downward on its own.
 
 - `<Layout ... nodeDistance={41}>` sets the global node distance on the container
 - Each AtPosition node references the previous node's id, gluing them visually into a "color bar"
@@ -173,7 +173,7 @@ The final decoration layer demonstrates `dashPattern` / `arrow` at start / edge 
 | [Draw](/core/components/draw/overview)     | All 12 connectors (2 spine lines / 3 short sub-column lines / 2 quadratic merges / 1 recommended dashed / 2 short dashed / 2 red X) + stroke / strokeWidth / dashPattern / arrow | [2](#step-2-center-spine--2-draw-lines), [4](#step-4-5-path-buttons--curve-merge), [5](#step-5-decoration--dashed-recommended--short-dashed--red-x) |
 | [Way operators](/core/components/draw/way) | `{ curve }` infix → quadratic / `{ label }` infix → edge label / node id → auto border anchor                                                                                | [4](#step-4-5-path-buttons--curve-merge), [5](#step-5-decoration--dashed-recommended--short-dashed--red-x)                                          |
 | [Node](/core/components/node/overview)     | All 16 roadmap nodes (title / header / required / optional) — 4 variants factored into `RoadmapNode`                                                                         | [1](#step-1-title--roadmapnode-4-variants), [3](#step-3-side-stacks--atposition-tight-stacking)                                                     |
-| [AtPosition](/core/concepts/basic-concepts/position)   | Tight intra-stack stacking (`{ direction: 'below', of: prevId }` + global `nodeDistance`)                                                                                    | [3](#step-3-side-stacks--atposition-tight-stacking), [4](#step-4-5-path-buttons--curve-merge)                                                       |
+| [AtPosition](/core/concepts/basic/position)   | Tight intra-stack stacking (`{ direction: 'below', of: prevId }` + global `nodeDistance`)                                                                                    | [3](#step-3-side-stacks--atposition-tight-stacking), [4](#step-4-5-path-buttons--curve-merge)                                                       |
 
 ## Limitations
 
@@ -186,6 +186,6 @@ The final decoration layer demonstrates `dashPattern` / `arrow` at start / edge 
 
 ## Further reading
 
-- [Draw](/core/components/draw/overview) · [Way operators](/core/components/draw/way) · [Node](/core/components/node/overview) · [Positioning](/core/concepts/basic-concepts/position)
+- [Draw](/core/components/draw/overview) · [Way operators](/core/components/draw/way) · [Node](/core/components/node/overview) · [Positioning](/core/concepts/basic/position)
 - [Karl's Unit Circle](/core/examples/karl-circle) — another comprehensive example, this one on trigonometry geometry
 - Source: [AMAI-GmbH/AI-Expert-Roadmap](https://github.com/AMAI-GmbH/AI-Expert-Roadmap) (MIT License)

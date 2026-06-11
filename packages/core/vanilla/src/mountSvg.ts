@@ -2,23 +2,20 @@ import type { Scene } from '@retikz/core';
 import { buildSvgDocument } from '@retikz/render/svg';
 import { type AnimationControls, bindWaapiDescriptors, prefersReducedMotion, sceneHasAnimations } from '@retikz/render/animation';
 import {
-  type BuildContext,
+  createContextBuilder,
   createHydrationController,
   createSvgAnimationControls,
-  geometryOf,
   locateSvg,
-  metaOf,
   resolvePointViaLayout,
   resolveSvgElement,
 } from '@retikz/render/hydration';
 import { isFigure } from './builder/isFigure';
+import { DEFAULT_ID_PREFIX } from './constants';
 import { applyAttrs, svgNodeToDom } from './svgNodeToDom';
 import { toScene } from './toScene';
 import type { HydrateOptions, HydrationHandle, MountOptions, RenderInput, VanillaView } from './types';
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
-/** 默认资源 id 前缀（确定性）；多实例同页须经 `options.idPrefix` 显式区分 */
-const DEFAULT_ID_PREFIX = 'r';
 
 /**
  * 把 IR / Scene / Figure 挂成真实 SVG DOM（无框架浏览器 runtime）
@@ -70,16 +67,13 @@ export const mountSvg = (container: Element, input: RenderInput, options: MountO
    *   `data-retikz-animation-owner` 双查 `getAnimations()` per-id 控制。
    */
   const hydrate = (hydrateOptions: HydrateOptions): HydrationHandle => {
-    const buildContext: BuildContext = (event, id) => ({
-      id,
-      meta: metaOf(currentScene, id),
+    const buildContext = createContextBuilder({
       renderer: 'svg',
-      element: resolveSvgElement(event),
       root,
-      point: resolvePointViaLayout(root, currentScene.layout)(event),
-      geometry: geometryOf(currentScene, id),
-      animation: createSvgAnimationControls(root, id),
-      scene: currentScene,
+      scene: () => currentScene,
+      resolveElement: resolveSvgElement,
+      resolvePoint: event => resolvePointViaLayout(root, currentScene.layout)(event),
+      makeAnimation: id => createSvgAnimationControls(root, id),
     });
     const controller = createHydrationController(root, hydrateOptions.handlers, locateSvg, buildContext);
     return { dispose: controller.dispose };

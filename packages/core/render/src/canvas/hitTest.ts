@@ -1,5 +1,5 @@
 import type { ClipShape, Scene, ScenePrimitive } from '@retikz/core';
-import { DEG_TO_RAD, applyTransform, buildPath, roundedRectPath } from './pathGeometry';
+import { DEG_TO_RAD, applyTransform, buildClipPath, buildPath, roundedRectPath } from './pathGeometry';
 
 /** hitTest 命中点（Scene user units 坐标系） */
 export type HitPoint = {
@@ -90,22 +90,7 @@ const insideClip = (
   point: HitPoint,
 ): boolean => {
   if (shape === undefined) return true;
-  ctx.beginPath();
-  switch (shape.kind) {
-    case 'rect':
-      ctx.rect(shape.x, shape.y, shape.width, shape.height);
-      break;
-    case 'circle':
-      ctx.arc(shape.cx, shape.cy, shape.r, 0, Math.PI * 2);
-      break;
-    case 'ellipse':
-      ctx.ellipse(shape.cx, shape.cy, shape.rx, shape.ry, 0, 0, Math.PI * 2);
-      break;
-    case 'polygon':
-      shape.points.forEach((pt, i) => (i === 0 ? ctx.moveTo(pt[0], pt[1]) : ctx.lineTo(pt[0], pt[1])));
-      ctx.closePath();
-      break;
-  }
+  buildClipPath(ctx, shape);
   return ctx.isPointInPath(point.x, point.y);
 };
 

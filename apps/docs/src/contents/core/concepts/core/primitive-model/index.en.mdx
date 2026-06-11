@@ -1,0 +1,147 @@
+---
+title: Primitive Model
+description: "Understand a retikz Node like a DOM box model: content, padding, shape, bounding box, boundary, and anchors."
+---
+
+A primitive is the smallest drawable, referenceable unit in retikz. The **primitive model** describes how a primitive is built up geometrically — from content, inner frame, and shape, out to the bounding box, boundary, and anchors — so it can be measured, laid out, connected, and referenced. It is an abstraction, not tied to one specific component.
+
+Node is the most common concrete implementation of this model. Think of it as a box model that paths can recognize: `position` gives the semantic reference point; text measurement, `innerXSep` / `innerYSep`, and minimum size form the inner frame; shape wraps that frame into a visual bounding box; and boundary plus anchors decide where paths connect.
+
+## Anatomy of the Model
+
+<ComponentPreview name="node-model-layers" size="md" hideCode />
+
+<ComponentAlert
+  type="tip"
+  title="This figure uses a demo-only configuration"
+  description="By default a Node is a rectangular box model and boundary follows shape, so the two coincide. To show that shape and boundary are polymorphic, this figure uses an ellipse shape with a circle boundary, drawing the two normally-overlapping layers apart."
+/>
+
+From the inside out, the layers are: the content box innermost, then the inner frame, the shape outline, the bounding box, boundary, and finally the anchors. In real output you usually only see the orange shape; the other layers are geometry used by compile-time layout and connection logic.
+
+| Layer | Defined by | Affects |
+| --- | --- | --- |
+| Content box | `text` / children / font | Base text measurement |
+| Inner frame | Text measurement + `innerXSep` / `innerYSep` + minimum size | Base half-axes passed to the shape |
+| Shape | `shape.circumscribe` and `shape.emit` | The visible outline |
+| Bounding box | Shape enclosing the inner frame, excluding `margin` | Base for viewBox, layout footprint, and hit bounds |
+| Boundary | `boundary`, following shape by default | Where automatic connections attach |
+| Anchor | compass / angle / shape-specific / edge point | Precise points other primitives can reference |
+
+Reading the figure follows the compile order:
+
+<ComponentPreview name="node-model-pipeline" size="xs" hideCode />
+
+The bounding box encloses only the rendered shape, not `margin` — margin is extra clearance for connections that moves path endpoints farther from the boundary.
+
+## Content Box and Inner Frame
+
+The two innermost layers answer "how large must this node be at minimum."
+
+- **Content box**: determined by `text` / children and `font` — the base size from text measurement.
+- **Inner frame**: the content box plus `innerXSep` / `innerYSep` (whose symmetric alias is `padding`), taken at least as large as `minimumWidth` / `minimumHeight` (or `minimumSize`). This gives the base half-axes passed to the shape.
+
+Even an empty-text node has an inner frame — inner sep and minimum size keep it from collapsing to a point. The inner frame is the starting point for all later geometry: the shape circumscribes it, and connections and anchors ultimately land on boundaries derived from it.
+
+## Shape
+
+Shape is not just a CSS-like border radius. It is a geometry definition: given inner half-axes and params, it answers "how large must my enclosing box be?" and draws the final visual outline.
+
+| Shape family | Size source | Examples |
+| --- | --- | --- |
+| Text-container shapes | Text + padding + minimum size | rectangle, circle, ellipse, polygon, diamond |
+| Param-driven shapes | Shape params define the geometry | sector, arc, star |
+
+Text-container shapes behave like buttons or DOM boxes: longer text makes the node grow. Param-driven shapes behave more like geometric glyphs: radius, angle, and point count already define the size, and text is attached to that geometry.
+
+## Bounding Box
+
+The bounding box is not the visual outline itself. It is the rectangle that encloses the outline, so complex shapes can still participate in viewBox calculation, layout, and rendering with one shared model. A few shapes also provide `circumscribeOffset`, allowing the semantic `position` to differ from the bounding-box center. For example, a sector is positioned by its circle center, while its bounding box is offset toward the sector.
+
+## Boundary Is The Connection Surface
+
+`boundary` answers one question: when a path connects to this Node automatically, which surface should the endpoint attach to?
+
+By default, `boundary="shape"`, so automatic path endpoints attach to the visible shape edge. You can also give a star a circular or rectangular connection surface to make lines look more regular; the star itself and its bounding box do not change.
+
+When a Node borrows another boundary, retikz lays that boundary over the current Node's visual bounding box; it does not call the borrowed shape's `circumscribe` again. For example, `boundary="circle"` uses the longer half-axis of the current bounding box as its radius. It may extend beyond the footprint, but it still does not participate in layout.
+
+| Setting | Changes | Does not change |
+| --- | --- | --- |
+| `shape` | Visible outline, bounding box, shape anchors | Center semantics |
+| `boundary` | Automatic endpoints, compass anchor surface | Visual node, bounding box, layout footprint |
+| Per-edge boundary override | Current path endpoint | Node defaults |
+
+So boundary is closer to a connection hit surface than to the drawn shell.
+
+## Anchors Are Reference Points
+
+Anchors are the stable points that a Node exposes to other primitives. Paths, positioning, and labels can all use anchors to find a point on a node.
+
+| Anchor family | Examples | Best for |
+| --- | --- | --- |
+| Center | `center` | Alignment, rotation, radial relations |
+| Compass | `north`, `east`, `south west` | Common connections and layout |
+| Angle | `35` / `{ angle: 35 }` | Intersecting a ray with the boundary |
+| Shape-specific | star tips, sector arc endpoints | Semantic points on complex shapes |
+| Edge proportion | `{ side: 'north', t: 0.25 }` | Tables, lanes, frame edges |
+
+Compass anchors go through the boundary surface; when `boundary="shape"`, compass anchors resolve against the visual bounding box rectangle. Numeric angle anchors call `boundaryPoint`, intersecting the selected boundary along a ray. Shape-specific anchors and edge proportion points always use the visual shape, regardless of `boundary`. For the full reference vocabulary, continue with [Primitive Relations](/core/concepts/core/primitive-relations).
+
+## Padding And Margin
+
+Padding and margin are easy to confuse, but they live on different layers.
+
+<ComponentPreview name="padding-margin" size="sm" hideCode />
+
+On the left, padding sits between the content box and the shape, so the node grows; on the right, margin sits between the shape edge and the automatic path endpoint, so the node stays the same and the path stops short.
+
+| Prop | Changes | Result |
+| --- | --- | --- |
+| `padding` | Distance from content to shape | Shape grows, bounding box grows |
+| `margin` | Extra distance from connection surface to automatic path endpoint | Shape stays the same, path stops earlier |
+
+Padding is part of the Node model. Margin is more like clearance for incoming paths.
+
+## Relation To Custom Shapes
+
+A custom shape plugs into this same Node model by providing the geometry answers the compiler needs:
+
+| Geometry answer | Purpose |
+| --- | --- |
+| How the shape is enclosed | Lets the Node participate in layout and viewBox |
+| Where a ray hits the shape | Lets automatic paths attach to the edge |
+| Where named anchors live | Lets other primitives reference stable points |
+| How to emit primitives | Lets SVG and Canvas renderers draw it |
+
+In other words, extending a shape is not only drawing a polygon. The shape still needs to be measurable, connectable, referenceable, and renderable like any built-in Node. Read [Custom Shapes](/core/reference/extending/shape-registry) when you need the implementation contract.
+
+## Reading Order
+
+When a Node's geometry looks surprising, debug it in this order:
+
+1. Where is its center?
+2. How large is the base box from text, padding, and minimum size?
+3. How does shape turn that base box into a visible outline?
+4. Does the bounding box enclose that outline?
+5. Should paths attach to shape or a separate boundary?
+6. Does the external reference need center, a compass anchor, or a shape-specific anchor?
+
+That sequence turns most "why is this node so large", "why did the line attach here", and "why is this anchor there" questions into smaller checks.
+
+## Further Reading
+
+<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+  <LinkedCard href="/core/concepts/core/primitive-relations">
+    <span className="font-semibold">Primitive Relations</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">Anchors, boundaries, and edge-proportional points — how primitives connect stably</span>
+  </LinkedCard>
+  <LinkedCard href="/core/components/node/overview">
+    <span className="font-semibold">Node</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">The Node component's full props, shapes, styling, and positioning</span>
+  </LinkedCard>
+  <LinkedCard href="/core/reference/extending/shape-registry">
+    <span className="font-semibold">Custom Shapes</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">Supply the bounding / ray / anchor / emit geometry answers to register a new shape</span>
+  </LinkedCard>
+</div>

@@ -1,0 +1,141 @@
+---
+title: 定位
+description: retikz 的位置表达覆盖笛卡尔、极坐标、节点引用、相对定位、偏移定位、比例定位与相对 target，用于节点放置和路径目标解析。
+---
+
+retikz 使用一组统一的位置表达来描述实体放置与路径目标解析。`<Node>.position` / `<Coordinate>.position` 用于确定图元中心或引用点位置；`<Step>.to` / `<Draw>.way` 用于解析路径要连接或经过的目标。
+
+| 形态 | 类型 | 含义 | 用在哪 |
+| --- | --- | --- | --- |
+| 笛卡尔 | `[x, y]` | 直接给出画布坐标 | 节点位置、路径目标 |
+| 极坐标 | `{ origin?, angle, radius }` | 从极点按角度和半径推导位置 | 节点位置、路径目标 |
+| 节点引用 | `'node-id'` / `{ id, anchor?, offset? }` | 引用已命名节点或 Coordinate，并由路径自动贴边界；字符串是 React DSL 便捷写法 | **仅**路径目标（`Step.to` / way item） |
+| 相对定位 | `{ direction, of, distance? }` | 按方向和距离放在另一个节点 / Coordinate 周围 | 节点位置、Coordinate 位置 |
+| 偏移定位 | `{ of, offset }` | 基于节点、坐标或极坐标做二维偏移 | 节点位置、Coordinate 位置、路径目标 |
+| 比例定位 | `{ between: [A, B], t }` | 取 A 到 B 连线上的比例点；节点端点写 `{ id: 'a' }` | 节点位置、Coordinate 位置、路径目标 |
+| 相对 target | `{ relative }` / `{ relativeAccumulate }` 或 `'+x,y'` / `'++x,y'` | 基于上一段终点做相对偏移 | **仅**路径目标 |
+
+> [坐标系](/core/concepts/basic/coordinate-system)：x 向右，y 向下（与 SVG / Canvas 一致，与数学课本相反）。单位是 user units，不是像素，最终物理尺寸由 `<Layout>` 的 `width` / `height` 与编译得到的 layout bounds 决定。
+
+## 笛卡尔
+
+笛卡尔坐标是最直接的位置写法：`[x, y]` 表示画布上的一个点。x 向右增大，y 向下增大；因此 `[120, 40]` 表示从原点向右 120、向下 40。适合少量手工摆放、复刻已有 SVG 坐标，或作为其它定位表达的基准点。
+
+<ComponentPreview name="positioning-cartesian" size="xs" />
+
+## 极坐标
+
+极坐标用“从某个极点出发，沿某个角度走一段距离”来描述位置。它适合圆形布局、径向标注、围绕某个节点摆放一组元素，或表达“相对某点旋转偏移”的关系。
+
+`{ origin?, angle, radius }` 三个字段共同决定最终位置：
+
+| 字段 | 含义 |
+| --- | --- |
+| `origin` | 极点。可选，省略时为 `[0, 0]`；可传节点 id 字符串、笛卡尔坐标，**或嵌套的极坐标**（链式偏移） |
+| `angle` | 角度（度），逆时针为正 |
+| `radius` | 半径（user units） |
+
+<Comparison target="tikz" title="极坐标角度">
+
+`angle` 的正方向沿用 TikZ 习惯：度数制，逆时针为正。retikz 的屏幕坐标仍是 x 向右、y 向下，因此示例里的视觉方向会跟浏览器坐标系一致。
+
+</Comparison>
+
+下面 6 个节点以 `O` 为极点、半径 80、角度从 0 到 300 每 60° 一个，画出常见的圆形布局：
+
+<ComponentPreview name="positioning-polar" size="md" />
+
+`origin` 还可以**嵌套**——例如 `{ origin: { origin: 'a', angle: 0, radius: 30 }, angle: 90, radius: 20 }` 表示"从 a 向右 30 再向上 20"。这种链式表达在画径向 / 局部偏移时很顺手。
+
+## 节点 id 引用
+
+`<Step>` / `<Draw>` 的 target 还接受**字符串**，表示引用同一 `<Layout>` 内的节点 id。这是 React DSL 的便捷写法；需要指定 anchor、偏移或连接面时，用对象形式 `{ id, anchor?, offset?, boundary? }`：
+
+<ComponentPreview name="positioning-id-ref" size="xs" />
+
+线段的实际起止点由 retikz 自动算——见 [图元关系](/core/concepts/core/primitive-relations)。
+
+`<Node>` / `<Coordinate>` 不能直接把 `position` 写成节点 id，因为"把一个实体放在另一个实体中心"通常不是最有用的默认。要表达节点之间的关系，用 `{ direction, of, distance? }`；要表达任意二维偏移，用 `{ of, offset }`。这两种写法把布局意图留在文档里，比提前算好每个绝对坐标更容易维护。
+
+## 相对定位
+
+相对定位用 `{ direction, of, distance? }` 描述"把当前实体放到另一个实体的某个方向"。它适合流程图、概念图、局部排版：读代码时能直接看出 A 在 B 的上方 / 右侧，而不是反推两个绝对坐标的差值。
+
+```tsx
+<Node id="a" position={[0, 0]}>A</Node>
+<Node id="b" position={{ direction: 'right', of: 'a', distance: 80 }}>B</Node>
+```
+
+<ComponentPreview name="positioning-relative" size="md" />
+
+`direction` 接 8 个视觉方向：`above` / `below` / `left` / `right` / `above-left` / `above-right` / `below-left` / `below-right`。省略 `distance` 时走 `<Layout nodeDistance>`，再回退到默认值。
+
+## 偏移定位
+
+偏移定位用 `{ of, offset }` 表示"先解析一个基准点，再加 `[dx, dy]`"。`of` 可写节点 id、笛卡尔坐标或极坐标；`offset` 永远是二维用户单位偏移。
+
+```tsx
+<Node id="a" position={[0, 0]}>A</Node>
+<Node id="note" position={{ of: 'a', offset: [40, -24] }}>note</Node>
+```
+
+<ComponentPreview name="positioning-offset" size="sm" />
+
+它比相对定位更自由：当你要表达"A 右边 40、上方 24"这类非 8 方向关系时，用偏移定位更直接。
+
+## 比例定位
+
+比例定位取 A 到 B 连线上的比例点：`t = 0` 是 A，`t = 1` 是 B，`t = 0.5` 是中点。它适合在线段中点放标签、把辅助点放在两节点之间，或给 path 的某个 step 直接走到比例点。
+
+```tsx
+<Node id="a" position={[0, 0]}>A</Node>
+<Node id="b" position={[120, 0]}>B</Node>
+<Coordinate id="mid" position={{ between: [{ id: 'a' }, { id: 'b' }], t: 0.5 }} />
+```
+
+<ComponentPreview name="positioning-between" size="xs" />
+
+`between` 的两个端点是自包含的 absolute target：可用笛卡尔、极坐标、节点 / Coordinate 引用对象（`{ id: 'a' }`）、偏移定位，或继续嵌套 `{ between, t }`。它不接受 path-relative target（`relative` / `relativeAccumulate`），因为比例定位必须能独立解析。
+
+## 路径相对 target
+
+路径内部还支持只给 `<Step>.to` / `<Draw>.way` 使用的相对 target：`{ relative: [dx, dy] }` 从上一段终点临时偏移，但不更新累计基准；`{ relativeAccumulate: [dx, dy] }` 偏移后把新终点作为下一段基准。React sugar 里也可写 `'+10,0'` / `'++10,0'`。
+
+```tsx
+<Draw way={[[0, 0], { relativeAccumulate: [40, 0] }, { relativeAccumulate: [0, 30] }]} />
+```
+
+<ComponentPreview name="positioning-path-relative" size="sm" />
+
+它们只属于 path target，不用于 `<Node>.position` / `<Coordinate>.position`。如果要摆放实体，请用笛卡尔、极坐标、相对定位、偏移定位或比例定位。
+
+## 前向引用要求
+
+字符串引用、`origin: 'node-id'`、`of: 'node-id'`、`between` 端点里的 id 都要求**被引用实体先于引用方定义**（按 IR children 源码顺序）。实体 position 引用未定义 id 时，该实体无法解析；path target 引用未定义 id 时，该 path 无法正常输出，并会产生诊断。
+
+```tsx
+// ✅ b 引用 a，a 在前
+<Node id="a" position={[0, 0]}>A</Node>
+<Node id="b" position={{ origin: 'a', angle: 0, radius: 50 }}>B</Node>
+
+// ❌ a 引用 b，b 在 a 之后
+<Node id="a" position={{ origin: 'b', angle: 0, radius: 50 }}>A</Node>
+<Node id="b" position={[0, 0]}>B</Node>
+```
+
+## 延伸阅读
+
+<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+  <LinkedCard href="/core/concepts/basic/coordinate-system">
+    <span className="font-semibold">坐标系</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">位置表达背后的坐标模型：user units、x 右 y 下、viewBox 映射</span>
+  </LinkedCard>
+  <LinkedCard href="/core/concepts/core/primitive-relations">
+    <span className="font-semibold">图元关系</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">anchor、边界与边上比例点——path 如何自动贴边解析目标</span>
+  </LinkedCard>
+  <LinkedCard href="/core/reference/schema/placement">
+    <span className="font-semibold">定位 schema</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">position 各形态的字段速查与类型定义</span>
+  </LinkedCard>
+</div>

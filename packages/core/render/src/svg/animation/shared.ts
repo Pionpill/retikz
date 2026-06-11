@@ -7,8 +7,6 @@ import type { CubicBezier, EasingRegistry } from '../../animation/types';
 import { sampleColorOklch } from '../../animation/oklch';
 import { classifyProperty, primHasStroke, resolveTransformOrigin } from '../../animation/channels';
 
-export { classifyProperty, primHasStroke };
-
 /** CSS 直属通道 → SVG/CSS 属性名（opacity / fill / stroke / stroke-width） */
 export const cssPropertyName = (property: string): string =>
   property === AnimationProperty.StrokeWidth ? 'stroke-width' : property;

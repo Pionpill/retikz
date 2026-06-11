@@ -1,19 +1,7 @@
-import {
-  Children,
-  Fragment,
-  type ReactElement,
-  type ReactNode,
-  isValidElement,
-} from 'react';
+import { Children, Fragment, type ReactNode, isValidElement } from 'react';
 import type { ElementHandlers, HydrationHandler, HydrationHandlers } from '@retikz/render/hydration';
 import { EVENT_PROP_TO_NAME, type HydrationEventPropName } from './eventProps';
-
-/** 取 React 元素 type 上的 displayName；type 为字符串时直接返回（与 builder 同源识别 Kernel/Sugar 组件） */
-const getDisplayName = (element: ReactElement): string | undefined => {
-  const type = element.type as { displayName?: string } | string;
-  if (typeof type === 'string') return type;
-  return type.displayName;
-};
+import { getDisplayName } from './_displayNames';
 
 /** 从一个元素 props 读出 `on<Event>` handler，翻译成 RetikzEventValue → handler 的 ElementHandlers（无 handler 返回空对象） */
 const readElementHandlers = (props: Record<string, unknown>): ElementHandlers => {

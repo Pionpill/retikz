@@ -3,7 +3,7 @@ title: Layers
 description: "The three retikz expression layers: DSL for authors, IR for declaration and persistence, Scene for rendering."
 ---
 
-retikz turns the JSX DSL into IR first, then compiles IR into Scene. The DSL optimizes authoring, IR preserves what you intend to draw, and Scene preserves what a renderer needs to draw.
+retikz turns the DSL (React components or Vanilla JS) into IR first, then compiles IR into Scene. The DSL optimizes authoring, IR preserves what you intend to draw, and Scene preserves what a renderer needs to draw.
 
 <ComponentAlert
   type="tip"
@@ -17,7 +17,7 @@ retikz turns the JSX DSL into IR first, then compiles IR into Scene. The DSL opt
 
 | Layer | Role | Audience |
 | --- | --- | --- |
-| DSL | React component syntax, split into Kernel and Sugar | Everyday authors |
+| DSL | React component or Vanilla JS syntax, split into Kernel and Sugar | Everyday authors |
 | IR | JSON-serializable declaration model that preserves Node / Path / Step / Coordinate / Scope semantics | Users, LLMs, persistence, converters |
 | Scene | Render-target-neutral primitive list with measured text, paths, groups, and layout bounds | Renderers |
 
@@ -30,9 +30,24 @@ Why this matters in practice: use the DSL when authoring diagrams, use IR when s
 | Layer | Examples | Enters IR directly | Notes |
 | --- | --- | --- | --- |
 | Kernel | `<Layout>` / `<Scope>` / `<Node>` / `<Coordinate>` / `<Path>` / `<Step>` | Yes | One-to-one with IR nodes |
-| Sugar | `<Draw way={...}>`, `DrawWay.Cycle`, relative-coordinate strings | No | Synchronously expands to Kernel in the adapter |
+| Sugar | `<Draw way={...}>`, `DrawWay.Cycle`, relative-coordinate strings, <br />shape helpers like `<Circle>` / `<Rectangle>` / `<Grid>` / `<Star>` | No | Synchronously expands to Kernel in the adapter |
 
-Sugar adds no new capability. Anything drawn with `<Draw>` can also be written manually with `<Path>` + `<Step>`.
+Sugar adds no new capability. Anything drawn with `<Draw>` can also be written manually with `<Path>` + `<Step>`. The two snippets below compile to the same result:
+
+```tsx
+// Sugar: a one-line way array
+<Draw way={['a', 'b']} arrow="->" />
+```
+
+```tsx
+// Kernel: the first target in way becomes a move, the rest become line steps
+<Path arrow="->">
+  <Step kind="move" to="a" />
+  <Step to="b" />
+</Path>
+```
+
+`<Scope>` is Kernel too: it preserves grouping semantics in IR, lowers to a Scene `group`, and carries group-level behavior such as local transforms, clipping, style defaults, animation, and `zIndex`.
 
 ## Compile Chain
 
@@ -45,7 +60,15 @@ Sugar adds no new capability. Anything drawn with `<Draw>` can also be written m
 
 The adapter collects this JSX into IR. `@retikz/core` resolves positions, computes anchors, expands paths and bounds, then outputs Scene. In this example, `<Draw>` becomes a plain `path` node in IR.
 
-In v0.2, `<Scope>` is Kernel too: it preserves grouping semantics in IR, lowers to a Scene `group`, and carries group-level behavior such as local transforms, clipping, style defaults, and `zIndex`.
+`@retikz/core` compiles in two passes, then finalizes the Scene. The text on each arrow marks the intermediate product handed to the next stage:
+
+<ComponentPreview name="layers-compile" size="xs" hideCode />
+
+- **layout nodes**: resolve each node / coordinate position, measure text, compute the bounding box and anchors per shape, and register them by name.
+- **resolve paths**: nodes settle first so paths can look up their endpoints from the name table and expand into path commands (`d`) — exactly the dependency the `anchors` arrow stands for.
+- **fit bounds**: union every primitive's bounding box, add padding, round to precision, and produce the viewBox.
+
+If the IR contains Tier 2 composite nodes (such as plot's higher-level components), the compiler lowers them to Kernel first, then runs the chain above; see [Tier 2 composites](/core/concepts/design/composite) for details.
 
 ## Choosing a Layer
 
@@ -57,3 +80,41 @@ In v0.2, `<Scope>` is Kernel too: it preserves grouping semantics in IR, lowers 
 | Persistence, AI generation, or local patching | IR |
 
 Sugar expansion is called synchronously by the builder, so it must not depend on React hooks or async state. Start from [Schema Reference](/core/reference/schema); the IR root lives in [Scene](/core/reference/schema/scene), with fields split across Entity / Path / Placement.
+
+## Packages
+
+These three layers are split across four npm packages under `packages/core`, all built on top of `@retikz/core`. Solid arrows point to the primary build dependency; dashed arrows show that react / vanilla also depend on core directly.
+
+<ComponentPreview name="layers-packages" size="sm" hideCode />
+
+| Package | Responsibility | Depends on |
+| --- | --- | --- |
+| `@retikz/core` | IR / Scene / schema / geometry / parser | zod |
+| `@retikz/render` | Scene rendering: SVG / Canvas, hydration, animation | core |
+| `@retikz/react` | Kernel / Sugar JSX components, SVG / Canvas built in | core + render |
+| `@retikz/vanilla` | Framework-free runtime: mount / hydrate / animate / SSR | core + render |
+
+react / vanilla are adapters only: they collect the DSL into IR and hand rendering to render. All lower-level semantics come from core — they never build a parallel capability of their own.
+
+Most users install `@retikz/react` (or `@retikz/vanilla`), which pulls in core and render automatically. You only depend on `@retikz/core` directly when writing a custom renderer or reading/writing IR by hand.
+
+## Further Reading
+
+<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+  <LinkedCard href="/core/reference/schema">
+    <span className="font-semibold">Schema</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">Look up IR fields per entity: Node / Path / Step / Coordinate / Scope</span>
+  </LinkedCard>
+  <LinkedCard href="/core/concepts/design/composite">
+    <span className="font-semibold">Tier 2 Composites</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">How composites are registered, discriminated, and lowered</span>
+  </LinkedCard>
+  <LinkedCard href="/core/reference/renderer">
+    <span className="font-semibold">Renderer</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">How Scene renders to SVG / Canvas, and writing a custom renderer</span>
+  </LinkedCard>
+  <LinkedCard href="/core/components/draw/overview">
+    <span className="font-semibold">Draw</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">Draw connections, curves, shapes, and edge labels with the way array</span>
+  </LinkedCard>
+</div>

@@ -2,15 +2,12 @@ import { Draw, Layout, Node } from '@retikz/react';
 import type { FC } from 'react';
 
 const Demo: FC = () => (
-  <Layout width={620} height={190} style={{ maxWidth: '100%', height: 'auto' }}>
-    <Node id="dsl" position={[-230, -36]} stroke="none">
-      DSL
+  <Layout width={660} height={190} style={{ maxWidth: '100%', height: 'auto' }}>
+    <Node id="react_dsl" position={[-230, -24]} stroke="none">
+      React DSL
     </Node>
-    <Node id="kernel" position={[-230, 0]} stroke="none" textColor="gray">
-      Kernel / Sugar
-    </Node>
-    <Node id="author" position={[-230, 42]} stroke="none" textColor="gray">
-      authoring
+    <Node id="vanilla_dsl" position={[-230, 24]} stroke="none">
+      Vanilla DSL
     </Node>
 
     <Node id="ir" position={[-70, 0]} stroke="none">
@@ -27,22 +24,18 @@ const Demo: FC = () => (
       measured primitives
     </Node>
 
-    <Node id="svg" position={[250, -36]} stroke="none">
-      React + SVG
+    <Node id="svg" position={[250, -24]} stroke="none">
+      SVG renderer
     </Node>
-    <Node id="canvas" position={[250, 0]} stroke="none">
-      Canvas
-    </Node>
-    <Node id="native" position={[250, 36]} stroke="none">
-      Native / PDF
+    <Node id="canvas" position={[250, 24]} stroke="none">
+      Canvas (Node/SSR)
     </Node>
 
-    <Draw way={['dsl', 'ir']} arrow="->" />
-    <Draw way={['kernel', 'ir']} arrow="->" dashPattern={[4, 3]} />
+    <Draw way={['react_dsl', 'ir']} arrow="->" />
+    <Draw way={['vanilla_dsl', 'ir']} arrow="->" />
     <Draw way={['ir', 'scene']} arrow="->" />
     <Draw way={['scene', 'svg']} arrow="->" />
     <Draw way={['scene', 'canvas']} arrow="->" />
-    <Draw way={['scene', 'native']} arrow="->" />
     <Draw way={['ir', 'persist']} arrow="<->" dashPattern={[4, 3]} />
     <Draw way={['scene', 'layout']} arrow="->" dashPattern={[4, 3]} />
   </Layout>

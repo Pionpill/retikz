@@ -20,7 +20,8 @@ retikz 文档站，1 个页面 = **3 处同步改动**：内容（`contents/`）
 | 组件页 | `contents/<module>/components/**` | [`docs-doc-component`](../docs-doc-component/SKILL.md) |
 | 示例页 | `contents/<module>/examples/**` | [`docs-doc-example`](../docs-doc-example/SKILL.md) |
 | 分组落地页 | 带 children 的分组节点（`components/node`、`reference/schema` 等） | [`docs-doc-group`](../docs-doc-group/SKILL.md) |
-| 概念页 / 入口页 | `contents/<module>/concepts/**` / `introduction` / `get-start` | 本 skill 的「入口页 / 概念页例外」节 |
+| 概念页 | `contents/<module>/concepts/**` 叶子页 | [`docs-doc-concept`](../docs-doc-concept/SKILL.md) |
+| 入口页 | `introduction` / `get-start` | 本 skill 的「入口页例外」节 |
 | Reference 词典页 | `contents/<module>/reference/**` | 本 skill 的「Reference 词典页」节 |
 | 博客文章 | `contents/blog/**` | [`docs-doc-blog`](../docs-doc-blog/SKILL.md)（差异较大，blog skill 独立成体；通用规则仍继承本 skill） |
 | 文档评审 | 任意文档初稿 / 改稿 / demo 补充后 | [`docs-doc-review`](../docs-doc-review/SKILL.md) |
@@ -45,6 +46,15 @@ apps/docs/src/
 ```
 
 路由：`/:moduleId/:sectionId/:pageId(/:subPageId)?`。URL 段 == 目录段 == 数据节点 `id`，三处必须严格一致。
+
+## 路由 id 命名
+
+路由段（= 目录段 = 数据节点 `id`）**优先用单个英文单词**，让 URL 短、语义直白：`design` / `layers` / `composite` / `schema` / `runtime`。
+
+- **带 children 的分组 / section 节点尽量不要用 `-` 连字符**——它们是会被继续嵌套的路由前缀，连字符让 URL 越拼越碎、越长。现有 `basic-concepts` / `core-concepts` 就是反例，应收敛成一个词（如 `basics` / `model`）。
+- 只有**叶子页**（没有子路由）在一个词说不清时才允许连字符：`get-start` / `karl-circle` / `ohms-law-circuit` 可接受。
+- 单词要能反推内容，不为了凑单词造生僻缩写；拿不准时用更通用的上位词而不是堆词。
+- 已上线路由改名是 3 处联动（`data` + `contents` 目录 + 全仓站内 link）的破坏性变更，单独评估，别夹带进无关改动。
 
 ## 加叶子页面：完整步骤
 
@@ -141,6 +151,15 @@ GitHub URL 是这条规则的**例外**——它指向项目自家 repo，对用
 - 迁移/对照不改变正文主线，不在正文里写"对应 TikZ ..."这类散落句子
 - 只有页面主题本身就是 TikZ 迁移指南时，正文才可以直接讨论 TikZ
 
+## 图文结合，多配图
+
+**优先图文结合、提高配图密度**——能用图说清的就配图，别堆纯文字。文档站既是教材也是 retikz 的活体演示,图多 = 演示多,默认姿势是「一段讲解配一张图」而非「整页文字偶尔插图」:
+
+- 组件页：每个能力点 / 关键 prop 尽量配一个 `<ComponentPreview>` demo，而不是只用文字 + API 表描述
+- 概念 / 设计页：每个模型 / 流程 / 关系尽量配一张叙述图（详见 [`docs-doc-concept`](../docs-doc-concept/SKILL.md)）
+- 示例页：本就是累加式 demo，天然图文结合
+- 判断信号：一屏滚下去只有文字没有图，多半是漏画了
+
 ## 图示一律 retikz 自绘
 
 文档里的**所有可视化示例都用 retikz 自身绘制**——同级 `<name>.demo.tsx` + `<ComponentPreview name="..." />`。
@@ -195,10 +214,10 @@ GitHub URL 是这条规则的**例外**——它指向项目自家 repo，对用
 
 页面同时承担教程 + 字典时，先保证教程主线在 10 分钟内；额外查阅放 Reference / API / 子页。
 
-## 入口页 / 概念页例外
+## 入口页例外
 
 - **入口页**（`introduction`、`get-start`）有自己的章节布局（介绍 / 安装 / 步骤……），不强制走组件页的 5 段结构
-- **概念页**（`concepts/*`）按概念走子节，配 `<ComponentPreview hideCode>` 当叙述插图
+- **概念页**（`concepts/**` 叶子页）走 [`docs-doc-concept`](../docs-doc-concept/SKILL.md)：一概念一 H2、图文结合、按模块语境解释内部模型（不强行套 core 的 IR/Scene）、保持当前版本、延伸阅读 LinkedCard
 
 ## Reference 词典页 (`<ZodSchema>`)
 
@@ -322,6 +341,7 @@ GitHub URL 是这条规则的**例外**——它指向项目自家 repo，对用
 - **只加一边 i18n** —— `en` 由 `I18nResources = typeof zh` 类型反向约束，少一个 key 就编译失败
 - **`label` 写成 `'core/getStart'` 或 `'getStart'`** —— 必须是 `'<ns>.<key>'` 完整路径，`I18nKey` 类型会卡你
 - **改 `id` 不改目录** —— `id` 决定 URL 段、决定 mdx 加载路径、决定 sidebar 的 key，三者强耦合
+- **分组 / section id 用连字符** —— 带 children 的路由前缀优先单个英文单词（`basics` 而非 `basic-concepts`）；连字符只留给一个词说不清的叶子页
 - **写成连续的大段文字** —— 优先表格 / 示例 / 代码块；段落超过 3 行就拆
 - **写防御性 / 攻击性内容** —— "竞品做不到 / 我们更好"等段落直接删，正向表述自身能力即可
 - **普通用法页大段讲 IR 结构 / 字段** —— IR 是后端 / AI 用的隐藏层，正文说 DSL 即可；要看 IR 的用户点 `<ComponentPreview>` 的 IR tab

@@ -1,0 +1,100 @@
+---
+title: 强调与循环
+description: 强调动画吸引注意（colorShift / flash / blink / wiggle），循环动画持续播放（pulse / spin / loop），及它们展开成的 AnimationTrack JSON。
+---
+
+强调动画**吸引注意**——变色、闪烁、抖动；循环动画**持续播放**——脉冲、旋转、把任意 track 变成无限循环。它们都是元素动画，挂在 `<Node>` / `<Path>` / `<Scope>` 的 `animations` 上；公共项与全部 preset 一览见 [动画总览](/core/components/animation)。
+
+## 原理：iterations 与多关键帧
+
+这些 preset 和[入场](/core/components/animation/entrance#原理preset-展开成-animationtrack)一样产出 `AnimationTrack`（完整字段见入场页），区别在两点：
+
+- **多关键帧往返**：强调多用 `0 → 0.5 → 1` 三帧（如 `flash` 的 `1 → dim → 1`、`wiggle` 的 `0 → +a → −a → +a → 0`），末帧仍回到 base，所以一次播完元素停在原样。
+- **`iterations` 重复**：`flash` 默认重复 2 次、`wiggle` 3 次；`blink` / `pulse` / `spin` 用 `iterations: 'infinite'` 持续播。`loop` 则是把**别的 track** 套上 `iterations: 'infinite'`（再配 `direction`）的包装器。
+
+下面每节给出 demo、展开后的 track，以及专有项。
+
+## 变色-colorShift
+
+<ComponentPreview name="color-shift" size="xs" />
+
+`fill` / `stroke` 在 **oklch** 空间过渡（感知均匀、无灰带）。作用于**形状自身的填充 / 描边**，用在纯形状或路径上；带文字 label 的节点其形状已自带 fill，不随之变。
+
+```json
+{ "property": "fill", "keyframes": [{ "at": 0, "value": "gray" }, { "at": 1, "value": "tomato" }], "duration": 400, "easing": "ease-in-out" }
+```
+
+专有项：`from` / `to`（起止色，**均必填**——纯工厂取不到 base 色）、`channel`（`'fill'` / `'stroke'`，缺省 `'fill'`）。
+
+## 闪一下-flash
+
+<ComponentPreview name="flash" size="xs" />
+
+`opacity` 1→dim→1 闪一下，默认闪 2 次；末帧回 base，降级见完整图。
+
+```json
+{ "property": "opacity", "keyframes": [{ "at": 0, "value": 1 }, { "at": 0.5, "value": 0 }, { "at": 1, "value": 1 }], "iterations": 2, "duration": 300, "easing": "ease-in-out" }
+```
+
+专有项：`dim`（谷值不透明度，缺省 `0`）、`iterations`（闪烁次数，缺省 `2`）。
+
+## 持续闪烁-blink
+
+<ComponentPreview name="blink" size="xs" />
+
+无限版 `flash`（`opacity` 持续闪烁）。
+
+```json
+{ "property": "opacity", "keyframes": [{ "at": 0, "value": 1 }, { "at": 0.5, "value": 0 }, { "at": 1, "value": 1 }], "iterations": "infinite", "duration": 800, "easing": "ease-in-out" }
+```
+
+专有项：`dim`（谷值不透明度，缺省 `0`）、`iterations`（缺省 `'infinite'`）。
+
+## 抖动-wiggle
+
+<ComponentPreview name="wiggle" size="xs" />
+
+`rotate` 0→+a→−a→+a→0 左右抖动强调，绕几何中心。
+
+```json
+{ "property": "rotate", "keyframes": [{ "at": 0, "value": 0 }, { "at": 0.25, "value": 5 }, { "at": 0.5, "value": -5 }, { "at": 0.75, "value": 5 }, { "at": 1, "value": 0 }], "iterations": 3, "duration": 400, "easing": "ease-in-out" }
+```
+
+专有项：`angle`（抖动幅度，度，缺省 `5`）、`iterations`（缺省 `3`）、`origin`（旋转支点，缺省几何中心）。
+
+## 脉冲-pulse
+
+<ComponentPreview name="pulse" size="xs" />
+
+`scale` 1→peak→1 无限脉冲（强调 / 心跳）。
+
+```json
+{ "property": "scale", "keyframes": [{ "at": 0, "value": 1 }, { "at": 0.5, "value": 1.1 }, { "at": 1, "value": 1 }], "iterations": "infinite", "duration": 1000, "easing": "ease-in-out" }
+```
+
+专有项：`peak`（峰值缩放，缺省 `1.1`）、`origin`（缩放支点，缺省几何中心）。
+
+## 旋转-spin
+
+<ComponentPreview name="spin" size="xs" />
+
+`rotate` 0→360 无限匀速，绕几何中心——典型 loader。
+
+```json
+{ "property": "rotate", "keyframes": [{ "at": 0, "value": 0 }, { "at": 1, "value": 360 }], "iterations": "infinite", "duration": 1000, "easing": "linear" }
+```
+
+专有项：`origin`（旋转支点，缺省几何中心）。
+
+## 循环-loop
+
+<ComponentPreview name="loop" size="sm" />
+
+`loop(track, { direction })`：把任意一次性 track 包成无限循环；配 `direction: 'alternate'` 往返播。它不产新 track，而是给传入 track 叠加 `iterations` / `direction`：
+
+```json
+// loop(fadeIn()) —— 在 fadeIn 的 track 上叠加无限循环
+{ "property": "opacity", "keyframes": [{ "at": 0, "value": 0 }, { "at": 1, "value": 1 }], "duration": 400, "easing": "ease-out", "iterations": "infinite" }
+```
+
+专有项：`iterations`（缺省 `'infinite'`）、`direction`（如 `'alternate'`，往返播）。

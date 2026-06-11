@@ -1,0 +1,141 @@
+---
+title: Positioning
+description: Position expressions in retikz cover Cartesian, polar, node references, relative placement, offset placement, proportional placement, and relative targets for entity placement and path target resolution.
+---
+
+retikz uses a unified set of position expressions for entity placement and path target resolution. `<Node>.position` / `<Coordinate>.position` determine the center of a visible entity or reference point; `<Step>.to` / `<Draw>.way` resolve the targets that a path connects to or passes through.
+
+| Form | Type | Meaning | Where |
+| --- | --- | --- | --- |
+| Cartesian | `[x, y]` | Direct canvas coordinate | Node position, path target |
+| Polar | `{ origin?, angle, radius }` | Derive a position from a pole, angle, and radius | Node position, path target |
+| Node reference | `'node-id'` / `{ id, anchor?, offset? }` | Reference a named Node or Coordinate; paths auto-attach to the boundary. The string form is React DSL shorthand | **Path target only** (`Step.to` / way item) |
+| Relative placement | `{ direction, of, distance? }` | Place around another Node / Coordinate by direction and distance | Node position, Coordinate position |
+| Offset placement | `{ of, offset }` | Apply a 2D offset from a node, coordinate, or polar base | Node position, Coordinate position, path target |
+| Proportional placement | `{ between: [A, B], t }` | Take a proportional point along A → B; node endpoints use `{ id: 'a' }` | Node position, Coordinate position, path target |
+| Relative target | `{ relative }` / `{ relativeAccumulate }` or `'+x,y'` / `'++x,y'` | Offset from the previous segment endpoint | **Path target only** |
+
+> [Coordinate system](/core/concepts/basic/coordinate-system): x grows right, y grows down (matches SVG / Canvas; opposite of math textbooks). Units are user units, not pixels — final physical size depends on `<Layout>`'s `width` / `height` and the compiled layout bounds.
+
+## Cartesian
+
+Cartesian coordinates are the most direct form: `[x, y]` names a point on the canvas. x grows to the right and y grows downward, so `[120, 40]` means 120 units right and 40 units down from the origin. Use this for small hand-placed diagrams, reproducing existing SVG coordinates, or providing a base point for other position forms.
+
+<ComponentPreview name="positioning-cartesian" size="xs" />
+
+## Polar
+
+Polar coordinates describe a position as "start from a pole, follow an angle, then move by a radius." They are useful for circular layouts, radial labels, placing a group around a node, or expressing a rotated offset from some local point.
+
+`{ origin?, angle, radius }` resolves from these fields:
+
+| Field | Meaning |
+| --- | --- |
+| `origin` | Pole. Optional, defaults to `[0, 0]`; accepts node id string, Cartesian, **or a nested polar** (chained offset) |
+| `angle` | Degrees, counter-clockwise positive |
+| `radius` | Distance in user units |
+
+<Comparison target="tikz" title="Polar Angles">
+
+`angle` follows the TikZ convention: degrees, with counter-clockwise as the positive direction. retikz still uses screen coordinates (x right, y down), so examples render according to browser coordinates.
+
+</Comparison>
+
+Six nodes around `O` at radius 80, every 60° from 0 to 300 — the canonical radial layout:
+
+<ComponentPreview name="positioning-polar" size="md" />
+
+`origin` can be **nested** — e.g. `{ origin: { origin: 'a', angle: 0, radius: 30 }, angle: 90, radius: 20 }` means "30 right of a, then 20 up". Chained polar is handy for radial / local offsets.
+
+## Node id reference
+
+`<Step>` / `<Draw>` targets also accept a **string** to reference a node id inside the same `<Layout>`. This is React DSL shorthand; use the object form `{ id, anchor?, offset?, boundary? }` when you need an anchor, offset, or connection-surface override:
+
+<ComponentPreview name="positioning-id-ref" size="xs" />
+
+The actual line endpoints are computed by retikz automatically — see [Primitive Relations](/core/concepts/core/primitive-relations).
+
+`<Node>` / `<Coordinate>` do not accept a bare node id as `position`, because "place this entity at another entity's center" is rarely the useful default. Use `{ direction, of, distance? }` for relational placement, or `{ of, offset }` for arbitrary 2D offsets. Both keep layout intent in the document instead of baking every coordinate up front.
+
+## Relative Placement
+
+Relative placement uses `{ direction, of, distance? }` to say "place this entity in a direction from another entity." It is useful for flowcharts, concept maps, and local layout because the code states that B is to the right of A instead of making readers infer it from two absolute coordinates.
+
+```tsx
+<Node id="a" position={[0, 0]}>A</Node>
+<Node id="b" position={{ direction: 'right', of: 'a', distance: 80 }}>B</Node>
+```
+
+<ComponentPreview name="positioning-relative" size="md" />
+
+`direction` accepts 8 visual directions: `above` / `below` / `left` / `right` / `above-left` / `above-right` / `below-left` / `below-right`. When `distance` is omitted, retikz uses `<Layout nodeDistance>`, then falls back to the default.
+
+## Offset Placement
+
+Offset placement uses `{ of, offset }`: resolve a base point first, then add `[dx, dy]`. `of` may be a node id, Cartesian point, or polar position; `offset` is always a 2D user-unit offset.
+
+```tsx
+<Node id="a" position={[0, 0]}>A</Node>
+<Node id="note" position={{ of: 'a', offset: [40, -24] }}>note</Node>
+```
+
+<ComponentPreview name="positioning-offset" size="sm" />
+
+It is more flexible than directional placement. When you want "40 units right and 24 units up from A" rather than one of the 8 named directions, offset placement is the direct form.
+
+## Proportional Placement
+
+Proportional placement takes a point along A → B: `t = 0` is A, `t = 1` is B, and `t = 0.5` is the midpoint. Use it for mid-line labels, helper points between two nodes, or a path step that should land at a proportional point.
+
+```tsx
+<Node id="a" position={[0, 0]}>A</Node>
+<Node id="b" position={[120, 0]}>B</Node>
+<Coordinate id="mid" position={{ between: [{ id: 'a' }, { id: 'b' }], t: 0.5 }} />
+```
+
+<ComponentPreview name="positioning-between" size="xs" />
+
+The two `between` endpoints are self-contained absolute targets: Cartesian, polar, node / Coordinate reference objects (`{ id: 'a' }`), offset placement, or nested `{ between, t }`. They do not accept path-relative targets (`relative` / `relativeAccumulate`) because proportional placement must resolve independently.
+
+## Path-Relative Targets
+
+Paths also support relative targets that are only valid in `<Step>.to` / `<Draw>.way`: `{ relative: [dx, dy] }` offsets from the previous segment endpoint without updating the accumulated base; `{ relativeAccumulate: [dx, dy] }` offsets and then uses the new endpoint as the next base. React sugar may also use `'+10,0'` / `'++10,0'`.
+
+```tsx
+<Draw way={[[0, 0], { relativeAccumulate: [40, 0] }, { relativeAccumulate: [0, 30] }]} />
+```
+
+<ComponentPreview name="positioning-path-relative" size="sm" />
+
+These forms are path targets only; they are not valid for `<Node>.position` / `<Coordinate>.position`. For entity placement, use Cartesian, polar, relative placement, offset placement, or proportional placement.
+
+## Forward-reference requirement
+
+String references, `origin: 'node-id'`, `of: 'node-id'`, and ids inside `between` endpoints all require the **referenced entity to appear before the referrer** (in IR children source order). An unresolved entity position cannot be resolved; an unresolved path target prevents that path from being emitted normally and produces a diagnostic.
+
+```tsx
+// ✅ b references a, a defined first
+<Node id="a" position={[0, 0]}>A</Node>
+<Node id="b" position={{ origin: 'a', angle: 0, radius: 50 }}>B</Node>
+
+// ❌ a references b, but b is after a
+<Node id="a" position={{ origin: 'b', angle: 0, radius: 50 }}>A</Node>
+<Node id="b" position={[0, 0]}>B</Node>
+```
+
+## Further reading
+
+<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+  <LinkedCard href="/core/concepts/basic/coordinate-system">
+    <span className="font-semibold">Coordinate System</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">the coordinate model behind every position form: user units, x-right / y-down, viewBox mapping</span>
+  </LinkedCard>
+  <LinkedCard href="/core/concepts/core/primitive-relations">
+    <span className="font-semibold">Primitive Relations</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">anchors, boundaries, and edge-proportional points — how a path auto-attaches when resolving a target</span>
+  </LinkedCard>
+  <LinkedCard href="/core/reference/schema/placement">
+    <span className="font-semibold">Placement</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">schema field reference and type definitions for each position form</span>
+  </LinkedCard>
+</div>

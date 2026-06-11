@@ -20,16 +20,15 @@ export const coreSection: Array<Section> = [
         ],
       },
       {
-        id: 'basic-concepts',
+        id: 'basic',
         label: 'core.basicConcepts',
         children: [
           { id: 'coordinate-system', label: 'core.coordinateSystem' },
           { id: 'position', label: 'core.positioning' },
-          { id: 'animation', label: 'core.animation' },
         ],
       },
       {
-        id: 'core-concepts',
+        id: 'core',
         label: 'core.coreConcepts',
         children: [
           { id: 'primitive-model', label: 'core.primitiveModel' },
@@ -86,6 +85,16 @@ export const coreSection: Array<Section> = [
         label: 'core.helpers',
         children: [
           { id: 'grid', label: 'core.helpersGrid' },
+        ],
+      },
+      {
+        id: 'animation',
+        label: 'core.animation',
+        children: [
+          { id: 'entrance', label: 'core.animationEntrance' },
+          { id: 'emphasis', label: 'core.animationEmphasis' },
+          { id: 'camera', label: 'core.animationCamera' },
+          { id: 'control', label: 'core.animationControl' },
         ],
       },
     ],
