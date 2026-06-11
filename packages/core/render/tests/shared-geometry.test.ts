@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { gradientLineFromAngle } from '../src/shared/gradient';
+import { parseHexColor } from '../src/shared/color';
 import { sceneFitMatrix } from '../src/canvas/shared';
 
 /**
@@ -22,6 +23,25 @@ describe('gradientLineFromAngle', () => {
     expect(line.x2).toBeCloseTo(0.5);
     expect(line.y1).toBeCloseTo(0);
     expect(line.y2).toBeCloseTo(1);
+  });
+});
+
+describe('parseHexColor', () => {
+  it('hex6 逐通道解析为字节', () => {
+    expect(parseHexColor('#ff0000')).toEqual({ r: 255, g: 0, b: 0 });
+  });
+
+  it('hex3 展开为 hex6 再解析', () => {
+    expect(parseHexColor('#abc')).toEqual({ r: 0xaa, g: 0xbb, b: 0xcc });
+  });
+
+  it('前后空白被裁剪', () => {
+    expect(parseHexColor('  #000000  ')).toEqual({ r: 0, g: 0, b: 0 });
+  });
+
+  it('非 hex（rgb()/命名色）返回 null', () => {
+    expect(parseHexColor('rgb(1, 2, 3)')).toBeNull();
+    expect(parseHexColor('red')).toBeNull();
   });
 });
 

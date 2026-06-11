@@ -5,6 +5,8 @@
  *   解析支持 hex（#rgb / #rrggbb）/ rgb(a) / oklch(...)；无法解析的颜色串（命名色 / hsl）回退为两端点直插。
  */
 
+import { parseHexColor } from '../shared/color';
+
 /** 线性 sRGB 三元组（各 0..1） */
 type LinearRgb = { r: number; g: number; b: number };
 /** oklch 三元组：L 0..1、C ≥0、H 角度（度） */
@@ -20,14 +22,12 @@ const clamp01 = (n: number): number => (n < 0 ? 0 : n > 1 ? 1 : n);
 /** 解析 hex / rgb(a) 颜色串 → 线性 sRGB；无法解析返回 null */
 const parseToLinear = (color: string): LinearRgb | null => {
   const value = color.trim();
-  const hex = /^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.exec(value);
-  if (hex) {
-    let h = hex[1];
-    if (h.length === 3) h = h[0] + h[0] + h[1] + h[1] + h[2] + h[2];
+  const bytes = parseHexColor(value);
+  if (bytes) {
     return {
-      r: gammaToLinear(parseInt(h.slice(0, 2), 16) / 255),
-      g: gammaToLinear(parseInt(h.slice(2, 4), 16) / 255),
-      b: gammaToLinear(parseInt(h.slice(4, 6), 16) / 255),
+      r: gammaToLinear(bytes.r / 255),
+      g: gammaToLinear(bytes.g / 255),
+      b: gammaToLinear(bytes.b / 255),
     };
   }
   const rgb = /^rgba?\(([^)]+)\)$/.exec(value);

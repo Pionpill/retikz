@@ -12,7 +12,7 @@ import type {
   TextPrim,
 } from '@retikz/core';
 import type { CanvasWarning, DrawOptions, UnsupportedCanvasFeature } from './types';
-import { gradientLineFromAngle } from '../shared';
+import { gradientLineFromAngle, parseHexColor } from '../shared';
 import { DEG_TO_RAD, applyClip, applyTransform, buildPath, roundedRectPath } from './pathGeometry';
 import { applyPrimAnimations } from './animate';
 import { applySceneCamera } from './camera';
@@ -86,14 +86,9 @@ type GradientSpec = Extract<IRPaintSpec, { kind: 'linearGradient' | 'radialGradi
  * @description 纯字符串解析（不依赖 ctx），命名色 / hsl 等返回 undefined 交由上层归一后重试。
  */
 const bakeAlpha = (color: string, opacity: number): string | undefined => {
-  const hex = /^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.exec(color);
-  if (hex) {
-    let h = hex[1];
-    if (h.length === 3) h = h[0] + h[0] + h[1] + h[1] + h[2] + h[2];
-    const r = parseInt(h.slice(0, 2), 16);
-    const g = parseInt(h.slice(2, 4), 16);
-    const b = parseInt(h.slice(4, 6), 16);
-    return `rgba(${r}, ${g}, ${b}, ${opacity})`;
+  const bytes = parseHexColor(color);
+  if (bytes) {
+    return `rgba(${bytes.r}, ${bytes.g}, ${bytes.b}, ${opacity})`;
   }
   const rgb = /^rgba?\(([^)]+)\)$/.exec(color);
   if (rgb) {
