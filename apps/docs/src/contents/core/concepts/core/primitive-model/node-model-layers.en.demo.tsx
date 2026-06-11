@@ -31,23 +31,23 @@ const Demo: FC = () => (
     <Node id="anchor-s" position={[0, BOUNDARY_RADIUS]} shape="circle" padding={0} minimumSize={4} fill="dodgerblue" stroke="none" />
     <Node id="anchor-w" position={[-BOUNDARY_RADIUS, 0]} shape="circle" padding={0} minimumSize={4} fill="dodgerblue" stroke="none" />
 
-    <Node id="content-label" position={[-178, 4]} stroke="none" textColor="gray">
-      content box
-    </Node>
-    <Node id="padding-label" position={[-178, -64]} stroke="none" textColor="gray">
+    <Node id="padding-label" position={[-178, -58]} stroke="none" textColor="gray">
       padding
     </Node>
-    <Node id="shape-label" position={[178, -54]} stroke="none" textColor="darkorange">
+    <Node id="shape-label" position={[178, -58]} stroke="none" textColor="darkorange">
       shape
     </Node>
-    <Node id="bbox-label" position={[-178, 44]} stroke="none" textColor="gray">
+    <Node id="content-label" position={[-178, 0]} stroke="none" textColor="gray">
+      content box
+    </Node>
+    <Node id="anchor-label" position={[178, 0]} stroke="none" textColor="dodgerblue">
+      anchors
+    </Node>
+    <Node id="bbox-label" position={[-178, 58]} stroke="none" textColor="gray">
       bounding box
     </Node>
     <Node id="boundary-label" position={[178, 58]} stroke="none" textColor="dodgerblue">
       boundary
-    </Node>
-    <Node id="anchor-label" position={[178, 2]} stroke="none" textColor="dodgerblue">
-      anchors
     </Node>
 
     <Draw way={['content-label', 'content']} stroke="gray" arrow="->" />
