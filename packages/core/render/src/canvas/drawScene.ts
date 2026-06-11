@@ -12,6 +12,7 @@ import type {
   TextPrim,
 } from '@retikz/core';
 import type { CanvasWarning, DrawOptions, UnsupportedCanvasFeature } from './types';
+import { gradientLineFromAngle } from '../shared';
 import { DEG_TO_RAD, applyClip, applyTransform, buildPath, roundedRectPath } from './pathGeometry';
 import { applyPrimAnimations } from './animate';
 import { applySceneCamera } from './camera';
@@ -137,14 +138,12 @@ const buildGradient = (
 ): CanvasGradient => {
   let gradient: CanvasGradient;
   if (spec.kind === 'linearGradient') {
-    const rad = (spec.angle ?? 0) * DEG_TO_RAD;
-    const dx = Math.cos(rad);
-    const dy = Math.sin(rad);
+    const line = gradientLineFromAngle(spec.angle);
     gradient = ctx.createLinearGradient(
-      bbox.x + (0.5 - dx * 0.5) * bbox.w,
-      bbox.y + (0.5 - dy * 0.5) * bbox.h,
-      bbox.x + (0.5 + dx * 0.5) * bbox.w,
-      bbox.y + (0.5 + dy * 0.5) * bbox.h,
+      bbox.x + line.x1 * bbox.w,
+      bbox.y + line.y1 * bbox.h,
+      bbox.x + line.x2 * bbox.w,
+      bbox.y + line.y2 * bbox.h,
     );
   } else {
     const [cx, cy] = spec.center ?? [0.5, 0.5];
