@@ -31,23 +31,23 @@ const Demo: FC = () => (
     <Node id="anchor-s" position={[0, BOUNDARY_RADIUS]} shape="circle" padding={0} minimumSize={4} fill="dodgerblue" stroke="none" />
     <Node id="anchor-w" position={[-BOUNDARY_RADIUS, 0]} shape="circle" padding={0} minimumSize={4} fill="dodgerblue" stroke="none" />
 
-    <Node id="content-label" position={[-178, 4]} stroke="none" textColor="gray">
-      内容盒
+    <Node id="padding-label" position={[-178, -58]} stroke="none" textColor="gray">
+      {'内边距\npadding'}
     </Node>
-    <Node id="padding-label" position={[-178, -64]} stroke="none" textColor="gray">
-      padding
+    <Node id="shape-label" position={[178, -58]} stroke="none" textColor="darkorange">
+      {'形状\nshape'}
     </Node>
-    <Node id="shape-label" position={[178, -54]} stroke="none" textColor="darkorange">
-      shape
+    <Node id="content-label" position={[-178, 0]} stroke="none" textColor="gray">
+      {'内容盒\ncontent box'}
     </Node>
-    <Node id="bbox-label" position={[-178, 44]} stroke="none" textColor="gray">
-      外接框
+    <Node id="anchor-label" position={[178, 0]} stroke="none" textColor="dodgerblue">
+      {'锚点\nanchors'}
+    </Node>
+    <Node id="bbox-label" position={[-178, 58]} stroke="none" textColor="gray">
+      {'外接框\nbounding box'}
     </Node>
     <Node id="boundary-label" position={[178, 58]} stroke="none" textColor="dodgerblue">
-      boundary
-    </Node>
-    <Node id="anchor-label" position={[178, 2]} stroke="none" textColor="dodgerblue">
-      anchors
+      {'连接面\nboundary'}
     </Node>
 
     <Draw way={['content-label', 'content']} stroke="gray" arrow="->" />
