@@ -51,6 +51,41 @@ export type {
   BlinkOptions,
   WiggleOptions,
 } from '@retikz/core';
+// 透传 core 的 way 关键字常量与字面量类型，方便 vanilla 用户单包 import（与 react 对齐）
+export { DrawWay } from '@retikz/core';
+export type {
+  WayItem,
+  WayDSL,
+  WayCycle,
+  WayVia,
+  WayRelativeItem,
+  WayLabel,
+  WayLabelOp,
+} from '@retikz/core';
+// 结构化 Target / Anchor 对象形态：用户写对象 target 时有类型
+export type { IRNodeTarget, IRAnchorRef } from '@retikz/core';
+// 扩展面：自定义箭头 / pattern motif / 路径生成器注册——vanilla 用户单包 import 即可定义并注入
+export { defineArrow, definePattern, definePathGenerator } from '@retikz/core';
+export type {
+  ArrowDefinition,
+  ArrowEmitContext,
+  PatternDefinition,
+  PatternEmitContext,
+  MarkerPrimitive,
+  MarkerFill,
+  PathGeneratorDefinition,
+  PathGeneratorContext,
+  IRJsonObject,
+} from '@retikz/core';
+// 动画扩展类型（构造 mountCanvas 的 animationProperties / easings 用，re-export 自 render）
+export type {
+  AnimationPropertyDefinition,
+  AnimationPropertyRegistry,
+  CubicBezier,
+  EasingFn,
+  EasingRegistry,
+} from '@retikz/render/animation';
+
 export { figure } from './builder/figure';
 export { node } from './builder/node';
 export { draw } from './builder/draw';
