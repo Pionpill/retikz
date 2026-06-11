@@ -308,6 +308,8 @@ const drawText = (ctx: CanvasRenderingContext2D, p: TextPrim, options: DrawOptio
   ctx.font = buildFont(p.fontSize, p.fontFamily, p.fontWeight, p.fontStyle, options);
   ctx.textAlign = p.align === 'middle' ? 'center' : p.align;
   ctx.textBaseline = p.baseline;
+  // 确定 fill 基线：缺省 #000（与 SVG 文本省略 fill 时的默认黑一致），避免继承上一个 prim 残留的脏 fillStyle
+  ctx.fillStyle = '#000000';
   if (p.fill !== undefined && p.fill !== 'none') ctx.fillStyle = resolveColor(p.fill, options) ?? p.fill;
   const offset = firstLineDy(p);
   p.lines.forEach((line, index) => {
