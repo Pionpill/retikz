@@ -27,6 +27,54 @@ describe('Node multi-line text', () => {
     expect(t1?.measuredHeight).toBe(t2?.measuredHeight);
   });
 
+  it("字符串内的 '\\n' 是硬换行：text: 'a\\nb' 与 text: ['a','b'] 产出相同 lines", () => {
+    const str: IR = {
+      version: 1,
+      type: 'scene',
+      children: [{ type: 'node', id: 'A', position: [0, 0], text: 'a\nb' }],
+    };
+    const arr: IR = {
+      version: 1,
+      type: 'scene',
+      children: [{ type: 'node', id: 'A', position: [0, 0], text: ['a', 'b'] }],
+    };
+    const t1 = findText(compileToScene(str).primitives);
+    const t2 = findText(compileToScene(arr).primitives);
+    expect(t1?.lines).toEqual([{ text: 'a' }, { text: 'b' }]);
+    expect(t1?.lines).toEqual(t2?.lines);
+    expect(t1?.measuredHeight).toBe(t2?.measuredHeight);
+  });
+
+  it("行级 LineSpec 对象的 text 含 '\\n' 也硬拆，硬拆出的行继承该行样式", () => {
+    const ir: IR = {
+      version: 1,
+      type: 'scene',
+      children: [
+        {
+          type: 'node',
+          id: 'A',
+          position: [0, 0],
+          text: [{ text: 'a\nb', fill: 'red' }],
+        },
+      ],
+    };
+    const t = findText(compileToScene(ir).primitives);
+    expect(t?.lines).toEqual([
+      { text: 'a', fill: 'red' },
+      { text: 'b', fill: 'red' },
+    ]);
+  });
+
+  it("数组元素内的 '\\n' 也硬拆：['a\\nb','c'] → 三行", () => {
+    const ir: IR = {
+      version: 1,
+      type: 'scene',
+      children: [{ type: 'node', id: 'A', position: [0, 0], text: ['a\nb', 'c'] }],
+    };
+    const t = findText(compileToScene(ir).primitives);
+    expect(t?.lines).toEqual([{ text: 'a' }, { text: 'b' }, { text: 'c' }]);
+  });
+
   it("多行 text 的 measuredWidth = max(per-line width)，height = lines × lineHeight", () => {
     const ir: IR = {
       version: 1,
