@@ -56,7 +56,7 @@ Send the prompt below to the AI chat panel — the LLM will produce retikz IR / 
 
 ### Step 1 — Unit circle
 
-Minimal start — one circle centered at the origin. Use [Circle](/core/components/shapes/circle-ellipse) here: `center + radius` keeps the first step short, and it still expands to the same underlying Path / Step shape, but the code reads like “this is a circle— at a glance. `lineCap="round"` softens the line endpoints.
+Minimal start — one circle centered at the origin. Use [Circle](/core/components/shapes/circle-ellipse) here: `center + radius` keeps the first step short, and it still expands to the same underlying Path / Step shape, but the code reads like “this is a circle” at a glance. `lineCap="round"` softens the line endpoints.
 
 <ComponentPreview name="karl-circle-01-circle" size="lg" />
 
@@ -68,7 +68,7 @@ x and y axes use [Draw](/core/components/draw/overview) with `arrow="->"` to get
 
 ### Step 3 — Grid + ticks
 
-The background grid now uses [Grid](/core/components/helpers/grid) sugar, which expands to many lines for you. Ticks are also array-driven: a short segment plus a transparent [Node](/core/components/node/overview) per tick; the label sits **slightly offset** from its tick (x-axis labels nudged 10px left, y-axis labels 10px down) so they don't clash with the circle or axis lines, and the step reads like “give me a grid— instead of “assemble 10 lines.— 
+The background grid now uses [Grid](/core/components/helpers/grid) sugar, which expands to many lines for you. Ticks are also array-driven: a short segment plus a transparent [Node](/core/components/node/overview) per tick; the label sits **slightly offset** from its tick (x-axis labels nudged 10px left, y-axis labels 10px down) so they don't clash with the circle or axis lines, and the step reads like “give me a grid” instead of “assemble 10 lines.” 
 retikz coordinates are SVG pixels with y pointing downward — so "1 unit up" is written as `[0, -100]` (this example uses 100px = unit-circle radius as the length basis). The top-level `<Layout>` has no picture-level scale or y-flip, so math coordinates from the TikZ tutorial need their y manually negated.
 
 <ComponentPreview name="karl-circle-03-ticks" diffFrom="karl-circle-02-axes" size="lg" />
