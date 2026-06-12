@@ -805,6 +805,75 @@ export const changelog: Array<Release> = [
         ],
         subVersions: [
           {
+            version: 'alpha.9',
+            date: '2026-06-12',
+            summary: {
+              zh: '阶段二·Coordinates 坐标系族：把坐标 frame 从「2 通道」泛化成「N 通道角色」+ 位置 encoding 角色化（x/y 转可选、新增 a/b/c），落地一维坐标系族 `cartesian1D` / `polar1D` 与三元坐标系 `ternary2D`，并按坐标系校验 guide 维度（非法维度 fail-loud）；附自定义坐标系扩展点 `projectRoles` / `frameAlong`（实验性）。',
+              en: 'Stage 2 · Coordinates family: generalizes the coordinate frame from "2 channels" to "N channel roles" + role-based position encoding (x/y become optional, new a/b/c), lands the 1D coordinate family `cartesian1D` / `polar1D` and the ternary `ternary2D`, and validates guide dimensions per coordinate system (illegal dimensions fail loud); plus an experimental custom-coordinate extension point `projectRoles` / `frameAlong`.',
+            },
+            items: [
+              {
+                label: { zh: 'frame N 通道泛化 + 位置 encoding 角色化', en: 'frame N-channel generalization + role-based position encoding' },
+                content: {
+                  zh: '`CoordinateFrame` 写死 2 通道的 `project(primary, secondary)` 泛化成按角色序传值（cartesian1D/polar1D=1、cartesian2D/polar2D=2、ternary2D=3）;`PositionEncodingSchema` 的 x/y 转可选并新增 a/b/c 角色通道，必填角色集由坐标系在 lowering 校验（cartesian2D 需 x+y、cartesian1D 需单维、ternary2D 需 a/b/c，缺即 fail-loud）;cartesian / polar 现状零回归 [坐标系](/plot/grammar/coordinate)',
+                  en: '`CoordinateFrame`’s hardcoded 2-channel `project(primary, secondary)` is generalized to pass values by role order (cartesian1D/polar1D=1, cartesian2D/polar2D=2, ternary2D=3); `PositionEncodingSchema`’s x/y become optional with new a/b/c role channels, and the required role set is validated per coordinate system at lowering (cartesian2D needs x+y, cartesian1D a single axis, ternary2D a/b/c — missing fails loud); cartesian / polar have zero regression [Coordinates](/plot/grammar/coordinate)',
+                },
+              },
+              {
+                label: { zh: '一维坐标系族 cartesian1D / polar1D', en: '1D coordinate family cartesian1D / polar1D' },
+                content: {
+                  zh: '单位置通道的两种空间载体——`cartesian1D` 投影到一条直线、另一屏幕维塌缩到基线（rug / timeline，`orientation` 选轴向），`polar1D` 单角向通道落到固定半径圆周（环形 / 周期数据，`radius` 半径占比 + `startAngle` / `endAngle` 半环，复用 alpha.4 角向投影）;各配 1D 轴 / 角向 1D 轴 guide [坐标系](/plot/grammar/coordinate)',
+                  en: 'Two spatial carriers for a single position channel — `cartesian1D` projects onto a line with the other screen dimension collapsed to a baseline (rug / timeline, `orientation` picks the axis), `polar1D` maps a single angular channel onto a fixed-radius circle (ring / periodic data, `radius` ratio + `startAngle` / `endAngle` half-rings, reusing alpha.4 angular projection); each gets a 1D / angular-1D axis guide [Coordinates](/plot/grammar/coordinate)',
+                },
+              },
+              {
+                label: { zh: 'ternary2D 三元坐标系', en: 'ternary2D coordinate system' },
+                content: {
+                  zh: '三个连续通道 a/b/c 经重心坐标投影到等边三角内，自动按行归一化（容忍任意正值三元组，a+b+c≤0 或含负 fail-loud）;配三角轴 guide（三条边各一刻度轴 + 三向网格）;mark 矩阵本轮以 point 为主（三角内散点），未支持组合 fail-loud [坐标系](/plot/grammar/coordinate)',
+                  en: 'Three continuous channels a/b/c project via barycentric coordinates into an equilateral triangle, auto-normalized per row (any positive triple tolerated, a+b+c≤0 or negatives fail loud); a triangular-axis guide (one tick axis per edge + three-way grid); the mark matrix is point-first this round (in-triangle scatter), with unsupported combinations failing loud [Coordinates](/plot/grammar/coordinate)',
+                },
+              },
+              {
+                label: { zh: '自定义坐标系扩展点（实验性）', en: 'custom-coordinate extension point (experimental)' },
+                content: {
+                  zh: '坐标系开放为可注入工厂——IR 只存 `name` + `roles` + 数值参数，投影函数 `projectRoles` 经 `lowerPlots` 的 `coordinates` 选项运行时注入（不进 IR）;新增单 role 轴标架契约 `frameAlong`（曲线轴沿 role 报局部标架，缺则数值回落），为曲线轴 / 3D / 多 plot 组合留扩展缝 [坐标系](/plot/grammar/coordinate)',
+                  en: 'Coordinate systems open up to injectable factories — the IR stores only `name` + `roles` + numeric params, while the `projectRoles` projection function is injected at runtime via `lowerPlots`’ `coordinates` option (never in the IR); a single-role axis-frame contract `frameAlong` is added (a curved axis reports a local frame along its role, falling back to numeric when absent), leaving room for curved axes / 3D / multi-plot composition [Coordinates](/plot/grammar/coordinate)',
+                },
+              },
+            ],
+          },
+          {
+            version: 'alpha.8',
+            date: '2026-06-08',
+            summary: {
+              zh: '阶段二·高级 Scales + Legend：补连续色阶 sequential / diverging（continuous / temporal `color.field` 映射到色带）+ 离散化 scale quantize / threshold / quantile（连续 domain → 离散 color 档）;`GuideSchema` 升 discriminated union，由非位置 scale 派生 legend（纯函数估算布局 + 占位）。',
+              en: 'Stage 2 · advanced Scales + Legend: adds sequential / diverging continuous color scales (continuous / temporal `color.field` → color ramp) + quantize / threshold / quantile discretization scales (continuous domain → discrete color bins); `GuideSchema` becomes a discriminated union, deriving legends from non-position scales (pure-function estimated layout + reservation).',
+            },
+            items: [
+              {
+                label: { zh: '连续色阶 sequential / diverging', en: 'sequential / diverging continuous color scales' },
+                content: {
+                  zh: '`PlotScale` 新增连续颜色 scale，continuous / temporal `color.field` 经它映射到色带（sequential 单调、diverging 带中点）;配色用 `d3-scale-chromatic` 命名方案词表 + 可选 range 覆盖;了结 alpha.7 留下的 continuous color fail-loud 债。per-datum 着色仅 point / bar / sector，line / area + 连续 color 仍 fail-loud（无 path gradient）[比例尺](/plot/grammar/scale)',
+                  en: '`PlotScale` adds continuous color scales mapping continuous / temporal `color.field` onto a ramp (sequential monotone, diverging with a midpoint); palettes use a `d3-scale-chromatic` named-scheme vocabulary + an optional range override; this discharges the continuous-color fail-loud debt from alpha.7. Per-datum coloring is point / bar / sector only; line / area + continuous color still fails loud (no path gradient) [Scales](/plot/grammar/scale)',
+                },
+              },
+              {
+                label: { zh: '离散化 scale quantize / threshold / quantile', en: 'discretization scales quantize / threshold / quantile' },
+                content: {
+                  zh: '连续 domain → 离散 color 档：quantize 等宽分箱、threshold 自定义断点（强校验，断点须升序且 range 长度 = 断点数 + 1）、quantile 按数据分位分箱（只接受分箱数、不接受显式数值 domain）;复用连续色阶的 scheme / range 词表 [比例尺](/plot/grammar/scale)',
+                  en: 'Continuous domain → discrete color bins: quantize (equal-width bins), threshold (custom breakpoints, strictly validated — ascending and range length = breakpoints + 1), quantile (data-quantile bins, accepting only a bin count, not an explicit numeric domain); reuses the continuous scales’ scheme / range vocabulary [Scales](/plot/grammar/scale)',
+                },
+              },
+              {
+                label: { zh: 'legend guide', en: 'legend guide' },
+                content: {
+                  zh: '`GuideSchema` 升 `discriminatedUnion`（`PlotGuide` 加 `Legend`），legend 按 `channel` + 可选 `scale` 绑定，由对应非位置 scale 派生形态——ordinal/shape → 离散 swatch、sequential/diverging → 连续色带 ramp、quantize/threshold/quantile → 分箱 swatch、size → 梯度符号、opacity → 梯度透明度;纯函数估算布局（受无文字度量约束）+ 先估尺寸再决定 plotArea;显式 `Legend` 不抑制默认坐标轴 [图例](/plot/components/legend)',
+                  en: '`GuideSchema` becomes a `discriminatedUnion` (`PlotGuide` gains `Legend`), with legends bound by `channel` + optional `scale` and their form derived from the bound non-position scale — ordinal/shape → discrete swatches, sequential/diverging → a continuous ramp, quantize/threshold/quantile → binned swatches, size → graduated symbols, opacity → graduated transparency; pure-function estimated layout (under the no-text-measurement constraint) + sizing estimated before deciding the plot area; an explicit `Legend` does not suppress default axes [Legend](/plot/components/legend)',
+                },
+              },
+            ],
+          },
+          {
             version: 'alpha.7',
             date: '2026-06-08',
             summary: {
@@ -1069,6 +1138,61 @@ export const changelog: Array<Release> = [
         ],
         subVersions: [
           {
+            version: 'alpha.9',
+            date: '2026-06-12',
+            summary: {
+              zh: '随 plot lockstep 露出坐标系族表面：`<Plot coordinate>` 扩 `cartesian1D` / `polar1D` / `ternary2D`（字面量或对象配几何）、`<PointMark a b c>` 接三元分量、`<Plot coordinates={{...}}>` 注入自定义坐标系工厂（实验性）。',
+              en: 'Lockstep with plot, exposing the coordinate-family surface: `<Plot coordinate>` extends to `cartesian1D` / `polar1D` / `ternary2D` (literal or object-with-geometry), `<PointMark a b c>` binds ternary components, and `<Plot coordinates={{...}}>` injects custom-coordinate factories (experimental).',
+            },
+            items: [
+              {
+                label: { zh: '<Plot coordinate> 坐标系族', en: '`<Plot coordinate>` coordinate family' },
+                content: {
+                  zh: '`CoordinateInput` 扩 `cartesian1D` / `polar1D` / `ternary2D`（cartesian2D 仍为缺省态）;对象形态承载几何——cartesian1D `orientation` 轴向、polar1D 半径占比 + 角向区间、ternary2D 无额外配置;`buildPlotSpec` 据坐标系装配对应 IR + 1D / 角向 / 三角轴 guide [坐标系](/plot/grammar/coordinate)',
+                  en: '`CoordinateInput` extends to `cartesian1D` / `polar1D` / `ternary2D` (cartesian2D stays the default); the object form carries geometry — cartesian1D `orientation`, polar1D radius ratio + angular range, ternary2D no extra config; `buildPlotSpec` assembles the matching IR + 1D / angular / triangular axis guides per coordinate system [Coordinates](/plot/grammar/coordinate)',
+                },
+              },
+              {
+                label: { zh: '<PointMark> 角色通道 a/b/c', en: '`<PointMark>` role channels a/b/c' },
+                content: {
+                  zh: '`<PointMark>` 的 x/y 转可选并新增 `a` / `b` / `c` 三元分量 props（顶点朝上=a、右下=b、左下=c）;位置通道按坐标系取角色——1D / 2D 用 x/y、ternary2D 用 a/b/c，缺角色由 lowering 按坐标系 fail-loud 校验 [坐标系](/plot/grammar/coordinate)',
+                  en: '`<PointMark>`’s x/y become optional with new `a` / `b` / `c` ternary-component props (apex=a, bottom-right=b, bottom-left=c); position channels take roles per coordinate system — 1D / 2D use x/y, ternary2D uses a/b/c, with missing roles failing loud at lowering per coordinate system [Coordinates](/plot/grammar/coordinate)',
+                },
+              },
+              {
+                label: { zh: '自定义坐标系注入（实验性）', en: 'custom-coordinate injection (experimental)' },
+                content: {
+                  zh: '`<Plot coordinate={{ type: \'custom\', name }} coordinates={{ [name]: factory }}>` 注入投影工厂——IR 只存 name + roles + 数值参数，工厂是运行时函数、不进 IR;曲线轴吃 `frameAlong` 局部标架 [坐标系](/plot/grammar/coordinate)',
+                  en: '`<Plot coordinate={{ type: \'custom\', name }} coordinates={{ [name]: factory }}>` injects a projection factory — the IR holds only name + roles + numeric params, the factory is a runtime function and never enters the IR; curved axes consume the `frameAlong` local frame [Coordinates](/plot/grammar/coordinate)',
+                },
+              },
+            ],
+          },
+          {
+            version: 'alpha.8',
+            date: '2026-06-08',
+            summary: {
+              zh: '随 plot lockstep 露出 Scales + Legend 表面：新增 `<Legend>` 组件（按 channel 派生图例）+ continuous / temporal color 经 type-driven 自动派生连续色阶接入;修「有任何 guide 即不补默认轴」使 `<Legend>` 与默认坐标轴共存。',
+              en: 'Lockstep with plot, exposing the Scales + Legend surface: a new `<Legend>` component (legends derived by channel) + continuous / temporal color wired in via type-driven derivation of continuous scales; fixes "any guide suppresses default axes" so `<Legend>` coexists with default axes.',
+            },
+            items: [
+              {
+                label: { zh: '<Legend> 组件', en: '`<Legend>` component' },
+                content: {
+                  zh: '`<Legend channel scale title position orient tickCount tickLabels>` 声明图例，形态（swatch / 色带 / 分箱 / 梯度符号）据绑定 scale 类型自动选;`<Legend>` 不抑制默认坐标轴（与 `<Axis>` 区分），修复此前「有任何 guide 即清空默认轴」导致加图例丢 x/y 轴的 bug [图例](/plot/components/legend)',
+                  en: '`<Legend channel scale title position orient tickCount tickLabels>` declares a legend whose form (swatch / ramp / bins / graduated symbols) is auto-picked from the bound scale type; `<Legend>` does not suppress default axes (unlike `<Axis>`), fixing the prior bug where any guide cleared the default x/y axes when a legend was added [Legend](/plot/components/legend)',
+                },
+              },
+              {
+                label: { zh: '连续色阶 / 离散化入口', en: 'continuous-color / discretization entry' },
+                content: {
+                  zh: 'continuous / temporal `color` 字段经 type-driven 自动派生连续色阶（不再 fail-loud），离散化 scale 经 spec scale 接入;`buildPlotSpec` 不再把所有 color 绑死 ordinal [比例尺](/plot/grammar/scale)',
+                  en: 'A continuous / temporal `color` field auto-derives a continuous color scale via type-driven derivation (no longer fails loud), and discretization scales plug in via spec scales; `buildPlotSpec` no longer hardwires every color to ordinal [Scales](/plot/grammar/scale)',
+                },
+              },
+            ],
+          },
+          {
             version: 'alpha.7',
             date: '2026-06-08',
             summary: {
@@ -1234,6 +1358,47 @@ export const changelog: Array<Release> = [
           },
         ],
         subVersions: [
+          {
+            version: 'alpha.9',
+            date: '2026-06-12',
+            summary: {
+              zh: '随 plot lockstep：`renderPlot` 透过 Plot IR 渲染新坐标系族（cartesian1D / polar1D / ternary2D）与 1D / 三角轴 guide;自定义坐标系工厂经 `renderPlot(spec, data, { coordinates })` 选项注入（实验性）。',
+              en: 'Lockstep with plot: `renderPlot` renders the new coordinate family (cartesian1D / polar1D / ternary2D) and 1D / triangular axis guides through the Plot IR; custom-coordinate factories inject via the `renderPlot(spec, data, { coordinates })` option (experimental).',
+            },
+            items: [
+              {
+                label: { zh: '新坐标系族 SSR', en: 'new coordinate family SSR' },
+                content: {
+                  zh: '`renderPlot` 消费含 `cartesian1D` / `polar1D` / `ternary2D` 的 PlotSpec，零 DOM 出 SVG 字符串;一维 rug / timeline / 环形周期、三元散点均走同一份共享 lowering，与 react 面视觉一致 [坐标系](/plot/grammar/coordinate)',
+                  en: '`renderPlot` consumes a PlotSpec with `cartesian1D` / `polar1D` / `ternary2D`, emitting an SVG string with zero DOM; 1D rug / timeline / ring-periodic and ternary scatter all go through the same shared lowering, visually matching the React surface [Coordinates](/plot/grammar/coordinate)',
+                },
+              },
+              {
+                label: { zh: '自定义坐标系注入（实验性）', en: 'custom-coordinate injection (experimental)' },
+                content: {
+                  zh: '`renderPlot(spec, data, options)` 的 `options`（`LowerPlotsOptions`）加 `coordinates` 字段，注入自定义投影工厂（运行时函数、不进 IR），与 React 表面对等 [坐标系](/plot/grammar/coordinate)',
+                  en: '`renderPlot(spec, data, options)`’s `options` (`LowerPlotsOptions`) gains a `coordinates` field to inject custom projection factories (runtime functions, never in the IR), at parity with the React surface [Coordinates](/plot/grammar/coordinate)',
+                },
+              },
+            ],
+          },
+          {
+            version: 'alpha.8',
+            date: '2026-06-08',
+            summary: {
+              zh: '随 plot lockstep：`renderPlot` 透过 Plot IR 渲染连续色阶 / 离散化 scale 与 legend guide，估算布局后零 DOM SSR 出带图例的图。',
+              en: 'Lockstep with plot: `renderPlot` renders continuous / discretization color scales and legend guides through the Plot IR, emitting legend-bearing charts via estimated-layout zero-DOM SSR.',
+            },
+            items: [
+              {
+                label: { zh: 'Scales + Legend SSR', en: 'Scales + Legend SSR' },
+                content: {
+                  zh: '`renderPlot` 消费含连续色阶（sequential / diverging）/ 离散化 scale（quantize / threshold / quantile）/ `Legend` guide 的 PlotSpec，估算布局后 SSR 出带色带 / 分箱 / 符号图例的 SVG 字符串，与 react 面视觉一致、vanilla 侧零额外代码 [图例](/plot/components/legend)',
+                  en: '`renderPlot` consumes a PlotSpec with continuous (sequential / diverging) / discretization (quantize / threshold / quantile) color scales and a `Legend` guide, SSR-emitting an SVG string with ramp / binned / symbol legends after estimated layout, visually matching the React surface with zero extra code on the vanilla side [Legend](/plot/components/legend)',
+                },
+              },
+            ],
+          },
           {
             version: 'alpha.7',
             date: '2026-06-08',
