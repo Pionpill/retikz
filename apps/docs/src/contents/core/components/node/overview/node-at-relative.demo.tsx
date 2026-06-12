@@ -16,10 +16,10 @@ const Demo: FC = () => (
       shape="diamond"
       position={{ direction: 'below-right', of: 'C', distance: 70 }}
     >E</Node>
-    <Draw way={['A', 'B']} arrow="->" />
-    <Draw way={['B', 'C']} arrow="->" />
-    <Draw way={['B', 'D']} arrow="->" />
-    <Draw way={['C', 'E']} arrow="->" />
+    <Draw way={['A', 'B']} arrow="->" stroke="gray" />
+    <Draw way={['B', 'C']} arrow="->" stroke="gray" />
+    <Draw way={['B', 'D']} arrow="->" stroke="gray" />
+    <Draw way={['C', 'E']} arrow="->" stroke="gray" />
   </Layout>
 );
 

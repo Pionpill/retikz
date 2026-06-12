@@ -26,7 +26,7 @@ const Demo: FC = () => (
           <Node id={`src-${boundary}`} position={[x - 70, 65]}>
             {boundary}
           </Node>
-          <Draw way={[`src-${boundary}`, `star-${boundary}`]} arrow="->" />
+          <Draw way={[`src-${boundary}`, `star-${boundary}`]} arrow="->" stroke="darkorange" />
         </Fragment>
       );
     })}

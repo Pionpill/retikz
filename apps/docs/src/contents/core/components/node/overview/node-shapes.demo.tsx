@@ -26,11 +26,11 @@ const Demo: FC = () => (
     <Node id="hex" shape={{ type: 'polygon', params: { sides: 6 } }} position={[0, 110]}>
       polygon
     </Node>
-    <Draw way={['rect', 'hub']} arrow="->" />
-    <Draw way={['circ', 'hub']} arrow="->" />
-    <Draw way={['elli', 'hub']} arrow="->" />
-    <Draw way={['diam', 'hub']} arrow="->" />
-    <Draw way={['hex', 'hub']} arrow="->" />
+    <Draw way={['rect', 'hub']} arrow="->" stroke="gray" />
+    <Draw way={['circ', 'hub']} arrow="->" stroke="gray" />
+    <Draw way={['elli', 'hub']} arrow="->" stroke="gray" />
+    <Draw way={['diam', 'hub']} arrow="->" stroke="gray" />
+    <Draw way={['hex', 'hub']} arrow="->" stroke="gray" />
   </Layout>
 );
 

@@ -11,7 +11,7 @@ const Demo: FC = () => (
     <Node id="sym" position={[-70, 0]} padding={16}>padding=16</Node>
     <Node id="wide" position={[80, 0]} innerXSep={24} innerYSep={4}>button</Node>
     <Node id="outer" position={[220, 0]} outerSep={12}>outerSep=12</Node>
-    <Draw way={['outer', 'wide']} arrow="->" />
+    <Draw way={['outer', 'wide']} arrow="->" stroke="gray" />
   </Layout>
 );
 

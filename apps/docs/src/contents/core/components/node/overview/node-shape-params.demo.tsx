@@ -28,9 +28,9 @@ const Demo: FC = () => (
       position={[0, 90]}
       shape={{ type: 'arc', params: { radius: 48, startAngle: 20, endAngle: 160 } }}
     />
-    <Draw way={[{ id: 'wedge', anchor: 'outer-arc-mid' }, 'hub']} arrow="->" />
-    <Draw way={[{ id: 'badge', anchor: 'tip-0' }, 'hub']} arrow="->" />
-    <Draw way={['hub', 'curve']} arrow="->" />
+    <Draw way={[{ id: 'wedge', anchor: 'outer-arc-mid' }, 'hub']} arrow="->" stroke="gray" />
+    <Draw way={[{ id: 'badge', anchor: 'tip-0' }, 'hub']} arrow="->" stroke="gray" />
+    <Draw way={['hub', 'curve']} arrow="->" stroke="gray" />
   </Layout>
 );
 

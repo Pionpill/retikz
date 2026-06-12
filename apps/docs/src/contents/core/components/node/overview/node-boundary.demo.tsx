@@ -17,8 +17,8 @@ const Demo: FC = () => (
     />
     <Node id="a" position={[-130, -70]} />
     <Node id="b" position={[130, -70]} />
-    <Draw way={['a', 'star']} arrow="->" />
-    <Draw way={['b', { id: 'star', boundary: 'shape' }]} arrow="->" dashPattern={[4, 2]} />
+    <Draw way={['a', 'star']} arrow="->" stroke="darkorange" />
+    <Draw way={['b', { id: 'star', boundary: 'shape' }]} arrow="->" stroke="darkorange" dashPattern={[4, 2]} />
   </Layout>
 );
 

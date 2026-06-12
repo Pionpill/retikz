@@ -63,25 +63,13 @@ In addition to Cartesian / polar, `position` accepts **`{ direction, of, distanc
 
 #### Proportional positioning
 
-Since v0.2, `position` also accepts **`{ between, t }`**: place the node at a proportional point between two endpoints, with `t=0.5` as the midpoint. Endpoints may be node ids, coordinates, polar positions, offsets, or nested between positions; see [Coordinate](/core/components/node/coordinate) for a fuller midpoint-helper example.
+`position` also accepts **`{ between, t }`**: place the node at a proportional point between two endpoints, with `t=0.5` as the midpoint. Endpoints may be node ids, coordinates, polar positions, offsets, or nested between positions; see [Coordinate](/core/components/node/coordinate) for a fuller midpoint-helper example.
 
-### Node labels
+### Shapes
 
-`label` attaches extra text outside the node border. Single object or array form; `position` accepts the 8-direction enum or a numeric angle; `font` / `textColor` inherit from the node when omitted.
+A node's geometric shape drives its visual look and how edges clip to it.
 
-<Comparison target="tikz" title="Node Labels">
-
-`label={{ text: 'foo', position: 'above' }}` maps to TikZ `[label=above:foo]`; `position: 30` maps to `label=30:foo`.
-
-</Comparison>
-
-<ComponentPreview name="node-label-basic" size="xs" />
-
-`distance` controls how far the label is pushed outward from the node border, still in retikz user units. It defaults to `12`; for example, `position: 'above', distance: 20` places the label further above the node's top border.
-
-<ComponentPreview name="node-label-distance" size="xs" />
-
-### Shape polymorphism
+#### Shape polymorphism
 
 Shapes have two faces in retikz — drawn as a Path with sugar, or used as a Node boundary; see [Shapes](/core/components/shapes) for the full definition. This section covers the Node-shape side.
 
@@ -110,7 +98,7 @@ For each shape's parameters, anchors, and examples, see its shape page:
 
 `shape` also accepts registered names beyond the built-ins (hexagon / cylinder / cloud…) — any string passes schema validation, the definition is injected via `CompileOptions.shapes` / `<Layout shapes>`, and unregistered names throw at compile time. Parametric registered shapes pass their params through `{ type, params }`. See [Custom Shapes](/core/reference/extending/shape-registry).
 
-### Connection surface (boundary)
+#### Connection surface (boundary)
 
 By default, edges clip against the node's visual shape boundary. When you want edges to meet a different shape without changing the node's real footprint, set `boundary` to pick an independent "connection surface". The common case is concave shapes like stars and polygons — you keep the spiky look but want edges to arrive evenly as if meeting a circle, instead of diving into the notches.
 
@@ -136,11 +124,7 @@ In the example below the five-point star has `boundary="circle"`: the solid edge
 
 To override a target node's `boundary` for a single edge, set `boundary` on the path endpoint object — it affects only that one endpoint and takes the same values as the node's `boundary`. See the endpoint `boundary` notes on [Path](/core/components/draw/path).
 
-### Styling
-
-`fill` / `stroke` / `strokeWidth` / `padding` / `font` control per-node appearance:
-
-<ComponentPreview name="node-styled" size="xs" />
+### Text
 
 #### Font
 
@@ -195,6 +179,42 @@ Multi-line text combined with each shape — outer boundary follows the shape-sp
 
 <ComponentPreview name="node-multiline-shapes" size="xs" />
 
+### Node labels
+
+`label` attaches extra text outside the node border. Single object or array form; `position` accepts the 8-direction enum or a numeric angle; `font` / `textColor` inherit from the node when omitted.
+
+<Comparison target="tikz" title="Node Labels">
+
+`label={{ text: 'foo', position: 'above' }}` maps to TikZ `[label=above:foo]`; `position: 30` maps to `label=30:foo`.
+
+</Comparison>
+
+<ComponentPreview name="node-label-basic" size="xs" />
+
+`distance` controls how far the label is pushed outward from the node border, still in retikz user units. It defaults to `12`; for example, `position: 'above', distance: 20` places the label further above the node's top border.
+
+<ComponentPreview name="node-label-distance" size="xs" />
+
+#### Orientation
+
+`label.rotate` spins the label text around **its own center**: `'radial'` along the node-center → label-center direction, `'tangent'` is its tangent (radial + 90°), a number is an explicit angle (degrees); `keepUpright` flips it 180° when it would otherwise read upside-down. `rotate` only changes orientation, not the placement determined by `position` / `distance`.
+
+<ComponentPreview name="node-label-rotate" size="sm" />
+
+#### Pin
+
+`label.pin` adds a **leader line** from the node border to the label (TikZ `pin`): `pin: true` is a default thin solid line (inherits the label color); `pin: { stroke, strokeWidth, dashPattern }` customizes it; omitted / `false` = no leader. The label is still placed by `position` / `distance` — pin only adds the leader.
+
+<Comparison target="tikz" title="Pin">
+
+`label={{ text: 'foo', position: 'right', pin: true }}` maps to TikZ `[pin=right:foo]`.
+
+</Comparison>
+
+<ComponentPreview name="node-pin" size="md" />
+
+### Size & transforms
+
 #### Inner / outer sep
 
 Both **symmetric aliases** and **axis-specific** forms are supported. If both are provided, axis-specific fields win; otherwise retikz falls back to the symmetric alias, then to the default:
@@ -212,6 +232,32 @@ Most nodes only need `padding={N}`. Use `innerXSep` / `innerYSep` when horizonta
 
 </Comparison>
 
+#### Size constraints + scale
+
+- `cornerRadius` — corner radius. `rectangle` / `polygon` / `star` / `sector` support rounding (`ellipse` and the like do not) via their params: `shape={{ type:'polygon', params:{ sides:6, cornerRadius:8 } }}`, and likewise for `star` / `sector` / `rectangle`. The top-level `cornerRadius` only affects the default `rectangle` (params wins when both are set)
+- `minimumWidth` / `minimumHeight` / `minimumSize` — floor the bbox without shrinking natural text width
+- `scale` / `xScale` / `yScale` — uniform / per-axis scale; affects bbox, font size, padding, and path attachment
+
+<ComponentPreview name="node-size-constraints" size="xs" />
+
+#### Rotation
+
+`rotate` rotates around the node center; attached paths follow the new border:
+
+<ComponentPreview name="node-rotated" size="xs" />
+
+#### Stacking order (zIndex)
+
+By default stacking = declaration order (SVG only honors paint order). `zIndex` overrides it explicitly: higher draws on top, omitted = 0, ties keep declaration order; effective only among siblings at the same level (same scope / top level). For example, lift a highlighted node with `zIndex={10}` above all connecting paths without moving it to the end of the JSX. `<Path>` / `<Scope>` support `zIndex` too (a scope's `zIndex` positions the whole group among its siblings without affecting the relative stacking inside it).
+
+<ComponentPreview name="node-z-index" size="sm" />
+
+### Styling
+
+`fill` / `stroke` / `strokeWidth` and other style props control a node's appearance:
+
+<ComponentPreview name="node-styled" size="xs" />
+
 #### Colors / opacity
 
 - `textColor` — text color (block default; per-line `LineSpec.fill` still overrides)
@@ -222,7 +268,7 @@ Most nodes only need `padding={N}`. Use `innerXSep` / `innerYSep` when horizonta
 
 #### Gradient fill (Paint)
 
-Besides a plain color string, `fill` accepts a **PaintSpec object** — linear / radial gradient, pattern, or image. Identical PaintSpecs are deduplicated at compile time into a Scene resource table and rendered as a paint server inside SVG `<defs>`. `<Path fill>` supports it too.
+Besides a plain color string, `fill` accepts a **PaintSpec object** — linear / radial gradient, pattern, or image. Identical PaintSpecs are deduplicated automatically and rendered as a paint server inside SVG `<defs>`. `<Path fill>` supports it too.
 
 - Linear: `{ kind: 'linearGradient', angle?, stops }` — `angle` in degrees (0 = left→right, 90 = top→bottom)
 - Radial: `{ kind: 'radialGradient', center?, radius?, stops }` — `center` / `radius` in 0..1 relative units
@@ -255,50 +301,12 @@ A stop's `opacity` gives a "solid → transparent" fade; `color` set to `current
 
 <ComponentPreview name="node-stroke-style" size="xs" />
 
-#### Size constraints + scale
-
-- `cornerRadius` — corner radius. `rectangle` / `polygon` / `star` / `sector` support rounding (`ellipse` and the like do not) via their params: `shape={{ type:'polygon', params:{ sides:6, cornerRadius:8 } }}`, and likewise for `star` / `sector` / `rectangle`. The top-level `cornerRadius` is a migration-period form that only affects the default `rectangle` (params wins when both are set)
-- `minimumWidth` / `minimumHeight` / `minimumSize` — floor the bbox without shrinking natural text width
-- `scale` / `xScale` / `yScale` — uniform / per-axis scale; affects bbox, font size, padding, and path attachment
-
-<ComponentPreview name="node-size-constraints" size="xs" />
-
-#### Rotation
-
-`rotate` rotates around the node center; attached paths follow the new border:
-
-<ComponentPreview name="node-rotated" size="xs" />
-
-#### Stacking order (zIndex)
-
-By default stacking = declaration order (SVG only honors paint order). `zIndex` overrides it explicitly: higher draws on top, omitted = 0, ties keep declaration order; effective only among siblings at the same level (same scope / top level). For example, lift a highlighted node with `zIndex={10}` above all connecting paths without moving it to the end of the JSX. `<Path>` / `<Scope>` support `zIndex` too (a scope's `zIndex` positions the whole group among its siblings without affecting the relative stacking inside it).
-
-<ComponentPreview name="node-z-index" size="sm" />
-
-#### Label rotation
-
-`label.rotate` spins the label text around **its own center**: `'radial'` along the node-center → label-center direction, `'tangent'` is its tangent (radial + 90°), a number is an explicit angle (degrees); `keepUpright` flips it 180° when it would otherwise read upside-down. `rotate` only changes orientation, not the placement determined by `position` / `distance`.
-
-<ComponentPreview name="node-label-rotate" size="sm" />
-
-#### Pin
-
-`label.pin` adds a **leader line** from the node border to the label (TikZ `pin`): `pin: true` is a default thin solid line (inherits the label color); `pin: { stroke, strokeWidth, dashPattern }` customizes it; omitted / `false` = no leader. The label is still placed by `position` / `distance` — pin only adds the leader.
-
-<Comparison target="tikz" title="Pin">
-
-`label={{ text: 'foo', position: 'right', pin: true }}` maps to TikZ `[pin=right:foo]`.
-
-</Comparison>
-
-<ComponentPreview name="node-pin" size="md" />
-
 ## API Reference
 
 | Prop | Type | Default | Description |
 | --- | --- | --- | --- |
 | `id` | `string` | — | Unique identifier; referenced by `<Path>` / `<Draw>` |
-| `meta` | `Record<string, JSON value>` | — | Provenance metadata, passed through verbatim onto the Scene primitives this node emits; ignored by renderers and never part of layout / connection / style. Typically injected by a higher-level lowering (e.g. plot) to tag which datum / series / layer it came from, so an interaction layer can trace a hit primitive back to its source. Must be a JSON-serializable object |
+| `meta` | `Record<string, JSON value>` | — | Provenance metadata, passed through verbatim onto this node's rendered output; ignored by renderers and never part of layout / connection / style. Typically injected by a higher-level layer (e.g. plot) to tag which datum / series / layer it came from, so an interaction layer can trace a hit primitive back to its source. Must be a JSON-serializable object |
 | `shape` | `'rectangle' \| 'circle' \| 'ellipse' \| 'diamond' \| 'polygon' \| 'sector' \| 'arc' \| 'star' \| string`<br />`\| { type, params }` | `'rectangle'` | Node shape: bare string (parameterless / registered name) or `{ type, params }` (parametric shape); built-ins above, or registered via `<Layout shapes>` / `CompileOptions.shapes` |
 | `boundary` | `'shape' \| 'circle' \| string \| { type, params }` | `'shape'` | Connection surface: how edges meet this node and how compass anchors resolve, independent of the visual `shape`; `'shape'` = the visual shape itself, `'circle'` = a true circle (radius = larger AABB half-axis), other values borrow that shape's boundary. Never changes the node footprint; shape-specific anchors and edge proportional points still use the visual shape. Overridable per edge via the endpoint `boundary` field |
 | `position` | `[x, y] \| PolarPosition \| { direction, of, distance? } \| { of, offset } \| { between, t }` | — | Node center: Cartesian / polar / relative / offset / proportional placement; `of` accepts node id, Cartesian literal, or PolarPosition |
@@ -321,10 +329,10 @@ By default stacking = declaration order (SVG only honors paint order). `zIndex` 
 | `opacity` | `number` | — | Whole-node 0..1, applies to both shape and text |
 | `fillOpacity` | `number` | — | Fill-only opacity 0..1 |
 | `drawOpacity` | `number` | — | Stroke-only opacity 0..1 |
-| `dashed` | `boolean` | ? | Dashed border preset (`[4, 2]`) |
-| `dotted` | `boolean` | ? | Dotted border preset (`[1, 2]`) |
-| `dashPattern` | `Array<number>` | ? | Explicit dash/gap lengths; highest priority |
-| `cornerRadius` | `number` | — | Migration-period top-level corner radius; only affects the default `rectangle`. Per-shape rounding goes in params: `shape={{ type, params:{ ..., cornerRadius } }}` (params wins) |
+| `dashed` | `boolean` | — | Dashed border preset (`[4, 2]`) |
+| `dotted` | `boolean` | — | Dotted border preset (`[1, 2]`) |
+| `dashPattern` | `Array<number>` | — | Explicit dash/gap lengths; highest priority |
+| `cornerRadius` | `number` | — | Top-level corner radius; only affects the default `rectangle`. Per-shape rounding goes in params: `shape={{ type, params:{ ..., cornerRadius } }}` (params wins) |
 | `minimumWidth` / `minimumHeight` | `number` | — | Floors the bbox dimensions |
 | `minimumSize` | `number` | — | Symmetric minimum-size alias; axis-specific fields take precedence |
 | `scale` | `number` | `1` | Uniform scale (includes font, padding, path attachment) |

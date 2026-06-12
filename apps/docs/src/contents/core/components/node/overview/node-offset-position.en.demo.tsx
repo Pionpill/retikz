@@ -9,7 +9,7 @@ const Demo: FC = () => (
   <Layout width={320} height={180}>
     <Node id="B" position={[0, 0]}>b</Node>
     <Node id="A" position={{ of: 'B', offset: [80, 50] }}>a</Node>
-    <Draw way={['B', 'A']} arrow="->" />
+    <Draw way={['B', 'A']} arrow="->" stroke="gray" />
   </Layout>
 );
 
