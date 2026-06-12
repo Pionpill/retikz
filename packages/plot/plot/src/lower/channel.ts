@@ -1,4 +1,4 @@
-import { type ExternalRow, type LegendChannelValue, type Mark, PlotFieldType, type PlotFieldTypeValue, PlotScale, type PlotScaleValue, type PlotSpec, type ScalarValue, type SqrtScale } from '../ir';
+import { type ExternalRow, type LegendChannelValue, type Mark, PlotFieldType, type PlotFieldTypeValue, PlotMark, PlotScale, type PlotScaleValue, type PlotSpec, type ScalarValue, type SqrtScale } from '../ir';
 import { isFiniteNumber, resolveFieldPath } from './field';
 import { inferCategoryDomain, resolveLinearScale, resolveSqrtScale } from './scale';
 
@@ -52,7 +52,7 @@ export type SizeOf = (row: ExternalRow) => number | undefined;
 export const makeSizeResolver = (node: PlotSpec, rows: Array<ExternalRow>, fieldTypes: Map<string, PlotFieldTypeValue>): ((mark: Mark) => ChannelResolution<number> | undefined) => {
   const scaleByName = new Map(node.scales.map(scale => [scale.name, scale] as const));
   return (mark: Mark): ChannelResolution<number> | undefined => {
-    if (mark.type !== 'point') return undefined;
+    if (mark.type !== PlotMark.Point) return undefined;
     const channel = mark.encoding.size;
     if (!channel) return undefined;
     if (channel.value !== undefined) {
@@ -109,7 +109,7 @@ export type OpacityOf = (row: ExternalRow) => number | undefined;
  */
 export const makeOpacityResolver = (node: PlotSpec, rows: Array<ExternalRow>, fieldTypes: Map<string, PlotFieldTypeValue>): ((mark: Mark) => ChannelResolution<number> | undefined) => {
   return (mark: Mark): ChannelResolution<number> | undefined => {
-    if (mark.type !== 'point') return undefined;
+    if (mark.type !== PlotMark.Point) return undefined;
     const channel = mark.encoding.opacity;
     if (!channel) return undefined;
     if (channel.value !== undefined) {
@@ -149,7 +149,7 @@ export type ShapeOf = (row: ExternalRow) => string | undefined;
  */
 export const makeShapeResolver = (node: PlotSpec, rows: Array<ExternalRow>, fieldTypes: Map<string, PlotFieldTypeValue>): ((mark: Mark) => ChannelResolution<string> | undefined) => {
   return (mark: Mark): ChannelResolution<string> | undefined => {
-    if (mark.type !== 'point') return undefined;
+    if (mark.type !== PlotMark.Point) return undefined;
     const channel = mark.encoding.shape;
     if (!channel) return undefined;
     if (channel.value !== undefined) {

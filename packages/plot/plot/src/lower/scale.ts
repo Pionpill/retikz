@@ -40,7 +40,7 @@ import {
   interpolateViridis,
   schemeCategory10,
 } from 'd3-scale-chromatic';
-import { type BandScale, type DivergingColorScale, type FieldDef, type LogScale, type OrdinalScale, PlotColorScheme, type PlotColorSchemeValue, PlotFieldType, type PlotFieldTypeValue, PlotScale, type PlotScaleValue, type PointScale, type PowScale, type QuantileColorScale, type QuantizeColorScale, type ScalarValue, type Scale, type SequentialColorScale, type SqrtScale, type ThresholdColorScale, type TimeScale } from '../ir';
+import { type BandScale, type DivergingColorScale, type FieldDef, type LogScale, type Mark, type OrdinalScale, PlotColorScheme, type PlotColorSchemeValue, PlotFieldType, type PlotFieldTypeValue, PlotMark, PlotScale, type PlotScaleValue, type PointScale, type PowScale, type QuantileColorScale, type QuantizeColorScale, type ScalarValue, type Scale, type SequentialColorScale, type SqrtScale, type ThresholdColorScale, type TimeScale } from '../ir';
 import { isFiniteNumber } from './field';
 import { isIsoDateString } from './infer';
 
@@ -648,10 +648,10 @@ export const assertScaleFieldCompatible = (role: string, scaleType: PlotScaleVal
  * @description 柱 / 面积的 baseline 含 0，与对数 / 幂的结构冲突（log(0)=-∞）。命中即 fail-loud，
  *   提示改用 point / line（或将来的显式正 baseline 支持）。仅查值轴（cartesian=y、polar=radius）。
  */
-export const assertBaselineScaleCompatible = (valueScaleType: PlotScaleValue, marks: ReadonlyArray<{ type: string }>): void => {
+export const assertBaselineScaleCompatible = (valueScaleType: PlotScaleValue, marks: ReadonlyArray<Pick<Mark, 'type'>>): void => {
   const nonlinear = valueScaleType === PlotScale.Log || valueScaleType === PlotScale.Pow || valueScaleType === PlotScale.Sqrt;
   if (!nonlinear) return;
-  if (marks.some(mark => mark.type === 'interval' || mark.type === 'area')) {
+  if (marks.some(mark => mark.type === PlotMark.Interval || mark.type === PlotMark.Area)) {
     throw new Error(
       'nonlinear continuous scale (log/pow/sqrt) cannot be used with interval/area because their baseline includes 0; use point/line or wait for explicit positive baseline support',
     );

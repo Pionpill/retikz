@@ -1,0 +1,88 @@
+---
+title: 数据模型
+description: 给 <Plot> 一份数据行，再用 model 声明每个字段的测量类型——连续 / 分类 / 时间。类型一旦确定，比例尺怎么选、坐标轴怎么格式化、校验怎么做就都有了依据。
+---
+
+一张图分两半：**配置**（画什么——mark / 坐标系 / 比例尺）和**数据**（画哪些值）。retikz 把两者分开——数据**不进**图的配置（IR），编译时单独传入。这让同一份配置能复用到不同数据上。
+
+最简单的用法：把数据行数组交给 `<Plot data>`，mark 用字段名引用列。
+
+```tsx
+<Plot data={rows}>
+  <LineMark x="month" y="revenue" order="month" />
+</Plot>
+```
+
+字段名是**路径**，所以嵌套数据（如 MongoDB 文档 / 接口返回的 JSON）也能直接用：`x="user.address.city"` 会逐级取到叶子值。叶子必须是标量（字符串 / 数字 / 布尔 / 时间），不能是对象或数组。
+
+## 声明字段类型
+
+光有数据，retikz 不知道 `month` 是时间还是普通字符串、`revenue` 是连续数值还是分类。给一份 **model**（字段名 + 类型），它就全知道了——比例尺怎么选、坐标轴怎么格式化、校验怎么做，都由类型驱动。
+
+```tsx
+<Plot data={sales} model={[
+  { name: 'month',   type: 'temporal' },
+  { name: 'revenue', type: 'continuous' },
+]}>
+  <LineMark x="month" y="revenue" order="month" />
+</Plot>
+```
+
+字段类型（三类测量种类）：
+
+| 类型 | 含义 | 例子 |
+| --- | --- | --- |
+| `continuous` | 连续可度量数值 | 销量、价格、温度、占比 |
+| `categorical` | 离散类别 | 国家、颜色名、评级 |
+| `temporal` | 日期 / 时间 | 日期、时间戳 |
+
+**声明 model = 严格模式**：mark / transform 引用的每个数据字段都必须在 model 里列出，拼错字段名会**立刻报错**（而不是画出一张空图）。**不声明 model**：retikz 从数据抽样推断类型（数值→continuous、ISO 日期串 / `Date`→temporal、其余字符串→categorical），适合快速试画。
+
+**`type` 可选——部分声明**：字段类型可省略，只写 `{ name }`。这样该字段照样进严格模式 + 可移植契约（靠名字），但**类型留给数据推断**。适合「大部分字段一目了然、只有少数要点名」——只给数值枚举、奇葩日期格式这类需纠偏的字段写 `type`，其余留空：
+
+```tsx
+<Plot data={sales} model={[
+  { name: 'createdAt',  type: 'temporal' },    // 特殊格式，点名
+  { name: 'statusCode', type: 'categorical' }, // 数值枚举，点名
+  { name: 'revenue' },                          // 仅 name → 推断 continuous
+]}>
+  {/* … */}
+</Plot>
+```
+
+省略 `type` 的字段需到 lowering 时看数据才能定类型——要让 spec 不看数据就完全自描述（LLM 友好 / 完全可移植），还是把 `type` 填全。
+
+<ComponentAlert title="推断是尽力而为，model 才是契约" description="不声明 model（或字段省略 type）时类型靠抽样猜测：时间只认无歧义的 ISO 格式（YYYY-MM-DD、带时区的 ISO datetime，含空格分隔的 SQL 时间戳如 '2024-01-01 12:00:00Z'），'2024/01/01'、无时区时间、裸数字串不会被当成时间（按 categorical 处理）。要精确、要校验、要让 LLM 不看数据就懂字段，就声明 model 并填上 type。" />
+
+## 类型驱动的比例尺
+
+声明了 model，位置通道（x / y）**不必再手写比例尺**——retikz 按字段类型自动选：`continuous`→线性、`temporal`→时间轴、`categorical`→分类带。详细映射与覆盖规则见[比例尺](/plot/grammar/scale)。
+
+下面这张图没有写任何比例尺配置：`month` 是 temporal、`revenue` 是 continuous，轴全自动派生。
+
+<ComponentPreview name="data-model" sourceFiles={['data-model.data.ts']} />
+
+## 分类顺序：`order`
+
+`categorical` 字段默认按**数据出现顺序**排类别（轴、图例都跟着这个序）。想控制顺序——比如尺码该按 `S → M → L → XL`，而不是数据里碰巧出现的次序——给字段一个 `order`：
+
+```tsx
+<Plot data={rows} model={[
+  { name: 'size',  type: 'categorical', order: ['S', 'M', 'L', 'XL'] }, // 显式顺序
+  { name: 'grade', type: 'categorical', order: 'ascending' },           // 升序排序
+  { name: 'city',  type: 'categorical' },                               // 默认：按出现序
+]}>{/* … */}</Plot>
+```
+
+| `order` | 效果 |
+| --- | --- |
+| 不写 / `'data'` | 按数据出现序（默认） |
+| `'ascending'` / `'descending'` | 对类别排序：全数值按数值比，否则按字符串 |
+| `Array`（如 `['S','M','L']`） | 以数组为顺序；数据里有、数组没有的类别追加到末尾 |
+
+规则：
+
+- **挂在字段上，位置与颜色同序**：同一字段既作 x 轴（band）又作颜色（ordinal）时，两处类别顺序一致。
+- **只对 categorical 有效**：给 `continuous` / `temporal` 字段写 `order` 会**报错**（顺序对连续值 / 时间没有意义）。
+- **显式比例尺 domain 优先**：若比例尺自己写了 `domain`，以它为准，`order` 被忽略。
+- 写了**非默认** `order`（排序或显式数组）就表示「这个分类有序」——retikz 三类字段里没有「有序类别」专门类型，有序性靠这个参数表达。

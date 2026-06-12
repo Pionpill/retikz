@@ -5,6 +5,8 @@ description: "Draw a scatter plot with <PointMark>: one dot per row; the size ch
 
 `<PointMark>` draws one dot per data row. Bind `x` / `y` to position fields. Give `size` a numeric field and the dot radius maps to the value as a bubble chart; give `color` a categorical field and dots are tinted by category.
 
+Which position channels you bind depends on the [coordinate system](/plot/grammar/coordinate): 2D cartesian / polar use `x` / `y`, 1D (cartesian1D / polar1D) bind only `x`, and ternary (ternary2D) uses `a` / `b` / `c`. That's why `x` / `y` are optional — which ones are required, and whether a/b/c apply, is validated by the coordinate at compile time.
+
 ## Usage
 
 ```tsx
@@ -73,8 +75,11 @@ Give `shape` a categorical field and each category gets a glyph (default palette
 
 | Prop | Type | Default | Description |
 | --- | --- | --- | --- |
-| `x` | `string` | — | Field path bound to the x channel (angular under polar) |
-| `y` | `string` | — | Field path bound to the y channel (radial under polar) |
+| `x` | `string?` | — | Field bound to the x position channel (cartesian horizontal / polar angular / 1D single axis); required by cartesian·polar, unused by ternary |
+| `y` | `string?` | — | Field bound to the y position channel (cartesian vertical / polar radial); required by cartesian·polar, omitted by 1D / ternary |
+| `a` | `string?` | — | ternary2D a component field (top vertex); used with b / c for ternary scatter, auto-normalized |
+| `b` | `string?` | — | ternary2D b component field (bottom-right vertex) |
+| `c` | `string?` | — | ternary2D c component field (bottom-left vertex) |
 | `size` | `string?` | — | Numeric field: mapped to dot radius via a square-root scale (area-perceptual); negative values error |
 | `opacity` | `string?` | — | Continuous field: mapped to opacity via a clamped linear scale to `[min, 1]`; temporal / categorical fields error |
 | `shape` | `string?` | — | Categorical field: mapped to a glyph palette (circle / rectangle / diamond, cycled); continuous / temporal fields error |
@@ -84,4 +89,5 @@ Give `shape` a categorical field and each category gets a glyph (default palette
 ## Related
 
 - [LineMark](/plot/components/mark/line) — a trend line under the dots
+- [Coordinates](/plot/grammar/coordinate) — how PointMark draws a rug (cartesian1D) / ring (polar1D) / ternary scatter (ternary2D)
 - [Scales](/plot/grammar/scale) — the square-root scale size uses, and the continuous scale family

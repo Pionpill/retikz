@@ -45,7 +45,7 @@ const markBase = {
     .describe('Optional mark handle; reserved scope/anchor target (resolution deferred to alpha.5)'),
 };
 
-/** 位置 mark（point / line / interval / area）的 encoding：x / y 必填 + 样式 */
+/** 位置 mark（point / line / interval / area）的 encoding：x / y 可选（必填性下放 coordinate 级校验）+ 样式 */
 const positionalEncoding = { encoding: EncodingSchema };
 
 export const PointMarkSchema = z

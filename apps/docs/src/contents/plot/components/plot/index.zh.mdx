@@ -3,7 +3,7 @@ title: 图表容器
 description: <Plot> 是图表容器：接收裸数据与尺寸，装配 mark / guide 子组件，并通过 coordinate 选择平面或极坐标系。
 ---
 
-`<Plot>` 是所有图表的根容器。它接收 `data`（裸数据行数组）和显示尺寸，把内部的 `<LineMark>` / `<BarMark>` / `<SectorMark>` / `<Axis>` 等子组件装配成一张图。`coordinate` 选坐标系：缺省平面直角，`"polar2D"` 切极坐标。数据不进 IR，只在编译期注入。
+`<Plot>` 是所有图表的根容器。它接收 `data`（裸数据行数组）和显示尺寸，把内部的 `<LineMark>` / `<BarMark>` / `<SectorMark>` / `<Axis>` 等子组件装配成一张图。`coordinate` 选坐标系：缺省平面直角，可切极坐标（`"polar2D"`）、一维（`"cartesian1D"` / `"polar1D"`）或三元（`"ternary2D"`）。数据不进 IR，只在编译期注入。
 
 ## 用法
 
@@ -32,14 +32,17 @@ import { Plot, BarMark } from '@retikz/plot-react';
 
 <p className="text-sm text-muted-foreground">左：缺省 cartesian；右：仅加 <code>coordinate="polar2D"</code>。</p>
 
-`coordinate` 支持字符串简写和对象两种形态：
+`coordinate` 支持字符串简写和对象两种形态，覆盖坐标系族：
 
 ```tsx
-<Plot coordinate="polar2D">                                    {/* 全用默认值 */}
+<Plot coordinate="polar2D">                                    {/* 极坐标（饼 / 雷达 / 径向柱） */}
 <Plot coordinate={{ type: 'polar2D', innerRadius: 0.5 }}>      {/* 挖中心成环图 */}
+<Plot coordinate="cartesian1D">                                {/* 一维直线（rug / timeline） */}
+<Plot coordinate="polar1D">                                    {/* 一维圆周（周期数据） */}
+<Plot coordinate="ternary2D">                                  {/* 三元（重心坐标） */}
 ```
 
-polar 对象的 `innerRadius` / `startAngle` / `endAngle` 见 [坐标系](/plot/grammar/coordinate)。
+各坐标系的几何配置（polar 的 `innerRadius` / `startAngle` / `endAngle`、cartesian1D 的 `orientation`、polar1D 的 `radius` 等）与适用的 mark / 通道见 [坐标系](/plot/grammar/coordinate)。
 
 ## 入口形态
 
@@ -56,7 +59,7 @@ polar 对象的 `innerRadius` / `startAngle` / `endAngle` 见 [坐标系](/plot/
 | --- | --- | --- | --- |
 | `data` | `Array<Row>` | — | 裸数据行数组（组合 DSL 入口）；数据不进 IR |
 | `children` | `ReactNode` | — | mark / guide 子组件（组合 DSL 入口） |
-| `coordinate` | `'polar' \| { type: 'polar2D'; innerRadius?; startAngle?; endAngle? }` | cartesian | 坐标系：缺省平面直角；`"polar2D"` 简写或 polar 对象 |
+| `coordinate` | 见[坐标系](/plot/grammar/coordinate) | cartesian2D | 坐标系：`"polar2D"` / `"cartesian1D"` / `"polar1D"` / `"ternary2D"` 简写或对应对象配置；缺省平面直角 |
 | `scaleX` | `'linear' \| 'time' \| 'point' \| 'log' \| 'sqrt'` | `'linear'` | 连续 x scale 类型；含 `<BarMark>` 时强制 band，polar 下忽略。`log` / `sqrt` 仅 point / line（柱 / 面积 baseline 含 0，与之冲突会报错） |
 | `scaleY` | `'linear' \| 'log' \| 'sqrt'` | `'linear'` | 连续 y（值轴）scale 类型；polar 下忽略。`log` / `sqrt` 仅 point / line（柱 / 面积会报错）。`log` 要求数据为正、`sqrt` 要求非负 |
 | `bare` | `boolean?` | `false` | 只绘图、不出任何轴 / 网格；忽略 `<Axis>` |

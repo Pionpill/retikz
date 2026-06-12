@@ -26,15 +26,24 @@ export const ChannelSchema = z
 
 export const PositionEncodingSchema = z
   .object({
-    x: ChannelSchema.describe(
-      'Primary position channel (required); the coordinate system maps it to its first role — cartesian2D horizontal, polar2D angle. Its scale comes from the coordinate system',
+    x: ChannelSchema.optional().describe(
+      'Primary position role channel; optional at the schema level — whether it is required is decided per coordinate system (cartesian2D / polar2D need x, cartesian1D needs its single dimension), validated fail-loud during lowering. The coordinate maps it to its first role — cartesian2D horizontal, polar2D angle. Its scale comes from the coordinate system',
     ),
-    y: ChannelSchema.describe(
-      'Secondary position channel (required); the coordinate system maps it to its second role — cartesian2D vertical, polar2D radius. Its scale comes from the coordinate system',
+    y: ChannelSchema.optional().describe(
+      'Secondary position role channel; optional at the schema level — required by cartesian2D / polar2D, omitted by 1D coordinates, validated during lowering. The coordinate maps it to its second role — cartesian2D vertical, polar2D radius. Its scale comes from the coordinate system',
+    ),
+    a: ChannelSchema.optional().describe(
+      'Ternary a component channel (ternary2D only; top vertex = a 100%); optional at the schema level, required together with b / c under ternary2D and validated during lowering. Auto-normalized by a+b+c at the coordinate',
+    ),
+    b: ChannelSchema.optional().describe(
+      'Ternary b component channel (ternary2D only; bottom-right vertex = b 100%); optional at the schema level, required with a / c under ternary2D. Auto-normalized by a+b+c at the coordinate',
+    ),
+    c: ChannelSchema.optional().describe(
+      'Ternary c component channel (ternary2D only; bottom-left vertex = c 100%); optional at the schema level, required with a / b under ternary2D. Auto-normalized by a+b+c at the coordinate',
     ),
   })
   .describe(
-    'Positional channel bindings (x / y, both required); the coordinate system maps them to its roles — cartesian2D x→horizontal / y→vertical, polar2D x→angle / y→radius',
+    'Positional channel bindings (x / y for 1D-2D coordinates, a / b / c for ternary2D); all optional at the schema level — the coordinate system decides which position roles are required and validates fail-loud during lowering (cartesian2D / polar2D need x+y, cartesian1D needs one dimension, ternary2D needs a/b/c). cartesian2D maps x→horizontal / y→vertical, polar2D maps x→angle / y→radius',
   );
 
 export const StyleEncodingSchema = z
@@ -87,7 +96,7 @@ export const PointEncodingSchema = EncodingSchema.extend({
 
 /** 通道绑定：field（数据驱动）/ value（常量）二选一 */
 export type Channel = z.infer<typeof ChannelSchema>;
-/** 位置通道绑定（x / y / angle / radius；按坐标系角色解析） */
+/** 位置通道绑定（x / y / a / b / c；按坐标系角色解析，必填性下放 lowering） */
 export type PositionEncoding = z.infer<typeof PositionEncodingSchema>;
 /** 样式通道绑定（非位置视觉属性；当前仅 color） */
 export type StyleEncoding = z.infer<typeof StyleEncodingSchema>;

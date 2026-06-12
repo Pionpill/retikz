@@ -3,7 +3,7 @@ title: Axis
 description: Customize ticks, labels, and grid with <Axis>; dimension picks which dimension to decorate — cartesian x / y or polar angle / radius.
 ---
 
-`<Axis>` declares one axis. `dimension` picks which dimension it decorates: under cartesian it's `x` (horizontal) / `y` (vertical), under polar it's `angle` (angular) / `radius` (radial). The grid is a `grid` boolean prop, not a separate component.
+`<Axis>` declares one axis. `dimension` picks which dimension it decorates: under cartesian it's `x` (horizontal) / `y` (vertical), under polar it's `angle` (angular) / `radius` (radial), under ternary it's `a` / `b` / `c` (the three triangle edges). The dimension must match the current coordinate system — a wrong one errors (no silent empty axis). The grid is a `grid` boolean prop, not a separate component.
 
 Without any `<Axis>`, `<Plot>` adds default axes; once you list `<Axis>` explicitly, only the ones you list are drawn.
 
@@ -41,7 +41,7 @@ Under polar, use `dimension="angle"` (angular tick labels) and `dimension="radiu
 
 | Prop | Type | Default | Description |
 | --- | --- | --- | --- |
-| `dimension` | `'x' \| 'y' \| 'angle' \| 'radius'` | — | Which dimension to decorate: cartesian x / y, polar angle / radius |
+| `dimension` | `'x' \| 'y' \| 'angle' \| 'radius' \| 'a' \| 'b' \| 'c'` | — | Which dimension to decorate: cartesian x / y, polar angle / radius, ternary a / b / c (triangle edges); must match the coordinate's valid set or it errors |
 | `tickCount` | `number?` | default tick count | Target tick count; grid lines reuse the same ticks |
 | `tickLabels` | `boolean?` | `true` | Whether to render tick labels |
 | `grid` | `boolean?` | `false` | Draw grid lines aligned to this axis's ticks (concentric rings for polar radius) |

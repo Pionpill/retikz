@@ -122,16 +122,19 @@ Scale 不等于 coordinate system。Scale 处理单个维度的 domain / range /
 
 ### 3.5 CoordinateSystem
 
-CoordinateSystem 定义一组 scale 如何组合为局部坐标空间。
+CoordinateSystem 定义一组 scale 如何组合为局部坐标空间。**坐标系按空间几何命名（非 scale 类型）**——它是 scale-agnostic 的：任一坐标系的轴都可配任意 scale（linear / log / sqrt / time / band），命名只描述「空间是直线 / 平面 / 圆 / 三角」。
 
 首批可考虑：
 
 | 坐标系 | 通道 | 典型结果 |
 |---|---|---|
-| linear1D | x 或 t | rug、timeline、histogram 的一维底座 |
+| cartesian1D | x | rug、timeline、histogram 的一维底座（一维直线，scale 可 log/time 等） |
+| polar1D | angle | 环形 / 周期数据（钟面、星期轮）；一维圆周 |
 | cartesian2D | x / y | line、scatter、bar、area、heatmap、gantt |
 | polar2D | angle / radius | radar、rose、polar bar、pie、donut |
 | ternary2D | a / b / c | 三元图，约束三维投影到二维 |
+
+> 命名注：早期草拟过 `linear1D`，已改 `cartesian1D`——坐标系名描述空间几何而非 scale，「linear」错误暗示仅线性 scale（实际一维直线轴同样可配 log / time）。一维有直线（cartesian1D）/ 圆周（polar1D）两种载体，分别是 cartesian2D / polar2D 的降维。详见 alpha.9。
 
 CoordinateSystem 应被 Scope 化：每个 coordinate scope 有自己的 local range、clip、guide、transform，也可以选择共享外层 scale 或 data。
 
@@ -595,7 +598,7 @@ intent
 
 1. `cartesian2D`：连续 / 时间 / band scale。
 2. `polar2D`：angle / radius。
-3. `linear1D`：timeline / histogram 底座。
+3. `cartesian1D` / `polar1D`：rug / timeline / histogram 底座（直线）、环形 / 周期（圆周）。
 
 建议首批 mark：
 

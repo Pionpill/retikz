@@ -12,5 +12,6 @@ export type {
   LegendProps,
   BuildPlotSpecOptions,
   DslScaleX,
+  DslScaleY,
   CoordinateInput,
 } from './components';

@@ -144,4 +144,62 @@ describe('renderPlot 薄包装（SSR SVG 串）', () => {
     };
     expect(renderPlot(radialBarSpec, share, { width: 360, height: 360 })).toContain('<path');
   });
+
+  // alpha.9 ADR-04：1D / ternary 坐标系 PlotSpec → renderPlot 透传（vanilla 直接消费 core IR，与 react 对等）
+  const samples: ExternalDatasets = {
+    samples: [{ v: 1 }, { v: 5 }, { v: 9 }],
+  };
+
+  it('cartesian1D rug spec → SVG 含散点 glyph（<ellipse）', () => {
+    const rugSpec: PlotSpec = {
+      namespace: 'plot',
+      type: 'plot',
+      data: { reference: 'samples' },
+      scales: [{ type: 'linear', name: 'x' }],
+      coordinate: { type: 'cartesian1D', x: 'x' },
+      marks: [{ type: 'point', encoding: { x: { field: 'v' } } }],
+    };
+    const svg = renderPlot(rugSpec, samples, { width: 480, height: 120 });
+    expect(svg).toContain('<svg');
+    expect(svg).toContain('<ellipse');
+  });
+
+  it('polar1D 环形点 spec → SVG 含散点 glyph', () => {
+    const ringSpec: PlotSpec = {
+      namespace: 'plot',
+      type: 'plot',
+      data: { reference: 'hours' },
+      scales: [{ type: 'linear', name: 'a' }],
+      coordinate: { type: 'polar1D', angle: 'a', radius: 1, startAngle: 0, endAngle: 360 },
+      marks: [{ type: 'point', encoding: { x: { field: 'h' } } }],
+      guides: [{ type: 'axis', dimension: 'angle' }],
+    };
+    const svg = renderPlot(ringSpec, { hours: [{ h: 0 }, { h: 90 }, { h: 180 }, { h: 270 }] }, { width: 320, height: 320 });
+    expect(svg).toContain('<ellipse');
+  });
+
+  it('ternary2D 三元散点 spec → SVG 含散点 + 三角轴 path', () => {
+    const ternarySpec: PlotSpec = {
+      namespace: 'plot',
+      type: 'plot',
+      data: { reference: 'soils' },
+      scales: [{ type: 'ordinal', name: 'col' }],
+      coordinate: { type: 'ternary2D' },
+      marks: [{ type: 'point', encoding: { a: { field: 'sand' }, b: { field: 'silt' }, c: { field: 'clay' }, color: { field: 'region', scale: 'col' } } }],
+      guides: [
+        { type: 'axis', dimension: 'a' },
+        { type: 'axis', dimension: 'b' },
+        { type: 'axis', dimension: 'c' },
+      ],
+    };
+    const soils: ExternalDatasets = {
+      soils: [
+        { sand: 60, silt: 30, clay: 10, region: 'north' },
+        { sand: 20, silt: 50, clay: 30, region: 'south' },
+      ],
+    };
+    const svg = renderPlot(ternarySpec, soils, { width: 360, height: 360 });
+    expect(svg).toContain('<ellipse');
+    expect(svg).toContain('<path');
+  });
 });

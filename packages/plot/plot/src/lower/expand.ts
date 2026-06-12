@@ -1,12 +1,13 @@
 import { type CompositeDefinition, type IRChild, type IRScope, defineComposite } from '@retikz/core';
 import type { ZodType } from 'zod';
-import { type AxisGuide, type Channel, type ExternalDatasets, type ExternalRow, type Guide, type LegendChannelValue, type LegendGuide, type Mark, type OrdinalScale, type PlotColorSchemeValue, PlotCoordinate, PlotFieldType, type PlotFieldTypeValue, PlotGuide, PlotMark, PlotScale, type PlotScaleValue, type PlotSpec, PlotSpecSchema, type Scale } from '../ir';
+import { type AxisGuide, Cartesian1DOrientation, type Channel, type Coordinate, type ExternalDatasets, type ExternalRow, type Guide, type LegendChannelValue, type LegendGuide, type Mark, type OrdinalScale, PlotCoordinate, PlotFieldType, type PlotFieldTypeValue, PlotGuide, PlotMark, PlotScale, type PlotScaleValue, type PlotSpec, PlotSpecSchema, type QuantileColorScale, type QuantizeColorScale, type Scale, type ThresholdColorScale } from '../ir';
 import { channelValue, isFiniteNumber, resolveFieldPath } from './field';
-import { type GuideContext, type LegendEntry, type LegendInput, lowerGuide, lowerLegend } from './guide';
-import { DEFAULT_FONT_SIZE, type LegendReserve, type Margins, type Rect, computePlotArea, computePolarFrame } from './layout';
+import { type GuideContext, type LegendEntry, type LegendInput, lowerCustomAxis, lowerGuide, lowerLegend } from './guide';
+import { DEFAULT_FONT_SIZE, type LegendReserve, type Margins, type Rect, computePlotArea, computePolarFrame, computeTernaryFrame } from './layout';
 import { type ColorOf, lowerMark } from './mark';
 import { type ChannelResolution, type ScaleDescriptor, makeOpacityResolver, makeShapeResolver, makeSizeResolver } from './channel';
-import { type CoordinateFrame, createCartesianFrame, createPolarFrame } from './project';
+import { type CoordinateFrame, type CustomCoordinateFactory, type DimensionRole, createCartesian1DFrame, createCartesianFrame, createPolar1DFrame, createPolarFrame, createTernary2DFrame } from './project';
+import { REQUIRED_POSITION_CHANNELS, VALID_GUIDE_DIMENSIONS } from './coordinate-meta';
 import { type DatumIdRegistrar, type ProvenanceContext, createDatumIdRegistrar, rootMeta, tagSourceIndex } from './provenance';
 import { type CategoryOrder, type ColorScaleEvaluator, DEFAULT_TICK_COUNT, type TickSet, assertBaselineScaleCompatible, assertScaleFieldCompatible, deriveScale, inferCategoryDomain, orderedCategoryDomain, resolveDivergingColorScale, resolveLinearScale, resolveOrdinalScale, resolvePositionScale, resolveQuantileColorScale, resolveQuantizeColorScale, resolveSequentialColorScale, resolveSqrtScale, resolveThresholdColorScale, sampleSchemeColors, scaleTicks, toTimestamp } from './scale';
 import { assertAllValuesValid, collectFormatFields, normalizeRows, validateBoundData } from './coerce';
@@ -17,12 +18,15 @@ import { collectUserSourceFields, resolveFieldTypes } from './validate';
 /** 空刻度集（某维度无 axis 时给 GuideContext 的占位；实际不会被该维度的 guide 触达） */
 const EMPTY_TICKS: TickSet = { values: [], labels: [] };
 
+/** 三角轴共享刻度集（占比 0..1，标签为百分数）；三条 a/b/c 轴同域、本轮固定 5 档 */
+const TERNARY_TICKS: TickSet = { values: [0, 0.25, 0.5, 0.75, 1], labels: ['0', '25', '50', '75', '100'] };
+
 /**
  * guide 维度 → 定位角色：polar 下 x / angle 都归 angular、y / radius 都归 radial（hybrid 别名）；cartesian 下原样。
  * @description 唯一性检查须按角色（而非裸 dimension 串）判，否则 `dimension:'x'` 与 `'angle'` 会被当成两根轴静默叠画。
  */
 const axisRole = (dimension: string, coordinateType: string): string => {
-  if (coordinateType === PlotCoordinate.Polar2D) {
+  if (coordinateType === PlotCoordinate.Polar2D || coordinateType === PlotCoordinate.Polar1D) {
     if (dimension === 'angle' || dimension === 'x') return 'angular';
     if (dimension === 'radius' || dimension === 'y') return 'radial';
   }
@@ -55,6 +59,51 @@ const assertUniqueAxisDimension = (guides: Array<AxisGuide>, coordinateType: str
 const isAxisGuide = (guide: Guide): guide is AxisGuide => guide.type === PlotGuide.Axis;
 const isLegendGuide = (guide: Guide): guide is LegendGuide => guide.type === PlotGuide.Legend;
 
+/**
+ * 按坐标系合法集校验每根 axis guide 的 dimension（ADR-01，修 cross-review P2）
+ * @description 非法 dimension（如 cartesian 下 'angle'）从「静默丢弃 / 渲杂散轴线」改 fail-loud，给清晰错误。
+ */
+/** 坐标系标签（错误信息用）：custom 用 name，内建用 type */
+const coordinateLabel = (coordinate: Coordinate): string =>
+  coordinate.type === PlotCoordinate.Custom ? `custom coordinate "${coordinate.name}"` : `${coordinate.type} coordinate system`;
+
+/** 该坐标系合法 guide dimension 集：custom 取声明的 roles，内建查 coordinate-meta */
+const validGuideDimensionsOf = (coordinate: Coordinate): ReadonlyArray<string> =>
+  coordinate.type === PlotCoordinate.Custom ? coordinate.roles : VALID_GUIDE_DIMENSIONS[coordinate.type];
+
+/** 该坐标系必填位置角色集：custom 取声明的 roles，内建查 coordinate-meta */
+const requiredPositionChannelsOf = (coordinate: Coordinate): ReadonlyArray<'x' | 'y' | 'a' | 'b' | 'c'> =>
+  coordinate.type === PlotCoordinate.Custom ? coordinate.roles : REQUIRED_POSITION_CHANNELS[coordinate.type];
+
+const assertValidGuideDimensions = (coordinate: Coordinate, axisGuides: Array<AxisGuide>): void => {
+  const valid = validGuideDimensionsOf(coordinate);
+  for (const guide of axisGuides) {
+    if (!valid.includes(guide.dimension)) {
+      throw new Error(`lowerPlots: ${coordinateLabel(coordinate)} does not support axis dimension "${guide.dimension}" (valid dimensions: ${valid.join(', ')})`);
+    }
+  }
+};
+
+/**
+ * 按坐标系必填角色集校验每个位置 mark 的 encoding（ADR-01；x/y 转可选后必填性下放此处）
+ * @description sector 无位置通道（角度来自累积界）→ 跳过；其余 mark 缺任一必填角色通道 → fail-loud。
+ */
+const assertRequiredPositionChannels = (coordinate: Coordinate, marks: ReadonlyArray<Mark>): void => {
+  const required = requiredPositionChannelsOf(coordinate);
+  for (const mark of marks) {
+    if (mark.type === PlotMark.Sector) continue;
+    // 读可选位置通道（x/y/a/b/c）；encoding 是 zod object，按名读为 Channel | undefined（纯 JSON 字段，非 any 逃逸）
+    const encoding = mark.encoding as Record<string, Channel | undefined>;
+    for (const channel of required) {
+      if (encoding[channel] === undefined) {
+        throw new Error(
+          `lowerPlots: ${coordinateLabel(coordinate)} requires the "${channel}" position channel on ${mark.type} marks, but it is missing`,
+        );
+      }
+    }
+  }
+};
+
 /** 默认整图尺寸（user units）；尺寸是渲染选项、不进 IR */
 const DEFAULT_WIDTH = 480;
 const DEFAULT_HEIGHT = 300;
@@ -86,6 +135,11 @@ export type LowerPlotsOptions = {
   invalid?: 'skip' | 'error';
   /** 程序化字段解析逃生舱（运行时函数，不进 IR）：按字段名覆盖类型 + 自定义值解析；返回 undefined → 回退 model/推断 + 内置 coerce（ADR-04） */
   resolveField?: ResolveField;
+  /**
+   * 自定义坐标系工厂表（按 name 查；运行时函数，不进 IR）：spec 的 `coordinate: {type:'custom', name}` 据此解析投影。
+   * @description 实验性扩展点——让用户插入任意坐标系几何（曲线一维 / 拱形 x 轴等），无需给坐标系枚举塞成员、也不破坏 IR JSON 化（投影函数留这里，IR 只存 name + roles + 数值参数）。未注册 name → fail-loud。
+   */
+  coordinates?: Record<string, CustomCoordinateFactory>;
 };
 
 /** resolveFrame 产物：mark / guide 共用的投影帧 + 已下沉的网格 / 轴层（z-order 由 expand 编排） */
@@ -118,6 +172,8 @@ export type ResolveFrameParams = {
   margin?: Partial<Margins>;
   /** provenance 上下文（开 → guide 层带 `<plotId>.` id + 来源 meta；undefined → alpha.2 行为） */
   provenance?: ProvenanceContext;
+  /** 自定义坐标系工厂表（运行时函数，不进 IR）；coordinate {type:'custom', name} 据此解析投影 */
+  coordinates?: Record<string, CustomCoordinateFactory>;
 };
 
 /**
@@ -126,9 +182,13 @@ export type ResolveFrameParams = {
  *   抽成纯函数使 mark 下沉与 ADR-02 locator 共用同一投影（杜绝两套投影漂移）；产物与内联版等价。
  */
 export const resolveFrame = (params: ResolveFrameParams): ResolvedFrame => {
-  const { node, rows, fieldTypes, width, height, fontSize, margin, provenance } = params;
+  const { node, rows, fieldTypes, width, height, fontSize, margin, provenance, coordinates } = params;
   const coordinate = node.coordinate;
   const scaleByName = new Map(node.scales.map(scale => [scale.name, scale] as const));
+
+  // ADR-01 校验（建 frame 前）：guide 维度按坐标系合法集校验 + mark 必填位置角色校验，均 fail-loud。
+  assertValidGuideDimensions(coordinate, (node.guides ?? []).filter(isAxisGuide));
+  assertRequiredPositionChannels(coordinate, node.marks);
 
   // 收集某角色（位置 scale 名 + 通道角色）下所有 mark 的通道原始值（不预过滤）：
   //   连续 scale 内部过滤为有限数求 extent、分类 scale 按数据序去重推断 domain。
@@ -142,7 +202,7 @@ export const resolveFrame = (params: ResolveFrameParams): ResolvedFrame => {
     const out: Array<unknown> = [];
     for (const mark of node.marks) {
       // 堆叠柱的 y 域取累积上 / 下界（来自 stack transform），而非每段原值
-      if (stackAxis && mark.type === 'interval' && mark.arrangement === 'stack') {
+      if (stackAxis && mark.type === PlotMark.Interval && mark.arrangement === 'stack') {
         const y0Field = mark.y0Field ?? 'y0';
         const y1Field = mark.y1Field ?? 'y1';
         for (const row of rows) {
@@ -151,7 +211,7 @@ export const resolveFrame = (params: ResolveFrameParams): ResolvedFrame => {
         continue;
       }
       // sector mark 的角向域取累积界（来自 stack transform）：[0, total] → [startAngle, endAngle]
-      if (sectorAngle && mark.type === 'sector') {
+      if (sectorAngle && mark.type === PlotMark.Sector) {
         const startField = mark.startField ?? 'y0';
         const endField = mark.endField ?? 'y1';
         for (const row of rows) {
@@ -167,10 +227,10 @@ export const resolveFrame = (params: ResolveFrameParams): ResolvedFrame => {
     }
     // 柱 / 面积从 baseline 起：把 baseline 纳入域，保证连续域容得下 baseline（即便所有值同号）
     if (includeBaseline) {
-      if (node.marks.some(mark => mark.type === 'interval')) out.push(0);
+      if (node.marks.some(mark => mark.type === PlotMark.Interval)) out.push(0);
       // area 的回边贴 baseline（默认 0），把各 area 的 baseline 纳入值域，使 baseline 投影落在 range 内
       for (const mark of node.marks) {
-        if (mark.type === 'area') out.push(mark.baseline ?? 0);
+        if (mark.type === PlotMark.Area) out.push(mark.baseline ?? 0);
       }
     }
     return out;
@@ -325,6 +385,162 @@ export const resolveFrame = (params: ResolveFrameParams): ResolvedFrame => {
       const lowered = lowerGuide(guide, guideContext, provenance);
       if (lowered.gridLayer) gridLayers.push(lowered.gridLayer);
       if (lowered.axisLayer) axisLayers.push(lowered.axisLayer);
+    }
+  } else if (coordinate.type === PlotCoordinate.Cartesian1D) {
+    // cartesian1D：单维（x 角色）落直线，塌缩维取固定基线（horizontal=底、vertical=左）
+    const orientation = coordinate.orientation ?? Cartesian1DOrientation.Horizontal;
+    const horizontal = orientation === Cartesian1DOrientation.Horizontal;
+    const values = collectValues(xChannelOf, false, false);
+    const scaleDef = resolveScaleForRole('x', coordinate.x, xChannelOf, values);
+
+    const guides = node.guides ?? [];
+    const axisGuides = guides.filter(isAxisGuide);
+    assertUniqueAxisDimension(axisGuides, coordinate.type);
+    const axis = axisGuides.find(guide => guide.dimension === 'x');
+
+    // provisional range（满画布）求刻度 → 估 plotArea → setRange 收敛到绘图区
+    const provisional: [number, number] = horizontal ? [0, width] : [height, 0];
+    const scale = resolvePositionScale(scaleDef, values, provisional);
+    const ticks: TickSet | undefined = axis ? scale.ticks(axis.tickCount) : undefined;
+    const computed = computePlotArea(
+      width,
+      height,
+      {
+        hasXAxis: horizontal ? !!axis : false,
+        hasYAxis: horizontal ? false : !!axis,
+        xLabels: horizontal ? ticks?.labels ?? [] : [],
+        yLabels: horizontal ? [] : ticks?.labels ?? [],
+        legendReserve,
+      },
+      { fontSize, margin },
+    );
+    plotArea = computed.plotArea;
+    if (horizontal) scale.setRange([plotArea.x, plotArea.x + plotArea.width]);
+    else scale.setRange([plotArea.y + plotArea.height, plotArea.y]);
+    // 塌缩维基线：水平贴底边、垂直贴左边（rug 沿轴边缘惯例）
+    const baseline = horizontal ? plotArea.y + plotArea.height : plotArea.x;
+    frame = createCartesian1DFrame(scale, orientation, baseline);
+
+    // guide：单维直线轴（axisOrientation 覆盖屏幕方向；scale 同时放 projectX/projectY，未用侧忽略）
+    const guideContext: GuideContext = {
+      plotArea,
+      projectX: scale,
+      projectY: scale,
+      xTicks: horizontal ? ticks ?? EMPTY_TICKS : EMPTY_TICKS,
+      yTicks: horizontal ? EMPTY_TICKS : ticks ?? EMPTY_TICKS,
+      fontSize,
+      axisOrientation: horizontal ? 'horizontal' : 'vertical',
+    };
+    for (const guide of axisGuides) {
+      const lowered = lowerGuide(guide, guideContext, provenance);
+      if (lowered.gridLayer) gridLayers.push(lowered.gridLayer);
+      if (lowered.axisLayer) axisLayers.push(lowered.axisLayer);
+    }
+  } else if (coordinate.type === PlotCoordinate.Polar1D) {
+    // polar1D：单角向（angle 角色，x 别名）落固定半径圆周，复用 alpha.4 角向投影 + 角向轴
+    const radiusFraction = coordinate.radius ?? 1;
+    const startAngle = coordinate.startAngle ?? 0;
+    const endAngle = coordinate.endAngle ?? 360;
+    const angleValues = collectValues(xChannelOf, false, false);
+    const angleScaleDef = resolveScaleForRole('angle', coordinate.angle, xChannelOf, angleValues);
+
+    const guides = node.guides ?? [];
+    const axisGuides = guides.filter(isAxisGuide);
+    assertUniqueAxisDimension(axisGuides, coordinate.type);
+    const angularAxis = axisGuides.find(guide => guide.dimension === 'angle' || guide.dimension === 'x');
+
+    // 角向 scale range = [startAngle, endAngle]，与最终半径无关 → 先建取角向标签供 layout 留白
+    const angleScale = resolvePositionScale(angleScaleDef, angleValues, [startAngle, endAngle]);
+    const angularTicks: TickSet | undefined = angularAxis ? angleScale.ticks(angularAxis.tickCount) : undefined;
+    const layout = computePolarFrame(
+      width,
+      height,
+      { hasAngularAxis: !!(angularAxis && angularAxis.tickLabels !== false), angularLabels: angularTicks?.labels ?? [] },
+      { fontSize, margin },
+    );
+    const radius = radiusFraction * layout.outerRadius;
+    const continuousAngle =
+      angleScaleDef.type === PlotScale.Linear ||
+      angleScaleDef.type === PlotScale.Time ||
+      angleScaleDef.type === PlotScale.Log ||
+      angleScaleDef.type === PlotScale.Pow ||
+      angleScaleDef.type === PlotScale.Sqrt;
+    frame = createPolar1DFrame({ center: layout.center, radius, startAngle, endAngle, continuousAngle, primary: angleScale });
+
+    // guide：构造 PolarFrame（outerRadius=radius、innerRadius=0）复用 alpha.4 角向轴；secondary 角向轴不用、占位
+    const guidePolarFrame = createPolarFrame({
+      center: layout.center,
+      innerRadius: 0,
+      outerRadius: radius,
+      startAngle,
+      endAngle,
+      continuousAngle,
+      primary: angleScale,
+      secondary: angleScale,
+    });
+    const guideContext: GuideContext = {
+      plotArea: { x: 0, y: 0, width, height },
+      projectX: angleScale,
+      projectY: angleScale,
+      xTicks: angularTicks ?? EMPTY_TICKS,
+      yTicks: EMPTY_TICKS,
+      fontSize,
+      frame: guidePolarFrame,
+      angularTicks: angularTicks ?? EMPTY_TICKS,
+      radialTicks: EMPTY_TICKS,
+    };
+    for (const guide of axisGuides) {
+      const lowered = lowerGuide(guide, guideContext, provenance);
+      if (lowered.gridLayer) gridLayers.push(lowered.gridLayer);
+      if (lowered.axisLayer) axisLayers.push(lowered.axisLayer);
+    }
+  } else if (coordinate.type === PlotCoordinate.Ternary2D) {
+    // ternary2D：三连续分量 a/b/c 在 coordinate 内自动归一化 + 重心投影（无独立位置 scale）
+    const guides = node.guides ?? [];
+    const axisGuides = guides.filter(isAxisGuide);
+    assertUniqueAxisDimension(axisGuides, coordinate.type);
+    const hasAxis = axisGuides.length > 0;
+    const showAnyLabels = axisGuides.some(guide => guide.tickLabels !== false);
+    const layout = computeTernaryFrame(width, height, { hasAxis, labels: hasAxis && showAnyLabels ? TERNARY_TICKS.labels : [] }, { fontSize, margin });
+    frame = createTernary2DFrame(layout.vertices);
+
+    // 三角轴 guide：projectX/Y 用占位 position scale（三角轴几何走 ternaryVertices、不读位置 scale）
+    const placeholderScale = resolvePositionScale({ type: PlotScale.Linear, name: '__ternary', domain: [0, 1] }, [], [0, 1]);
+    const guideContext: GuideContext = {
+      plotArea: { x: 0, y: 0, width, height },
+      projectX: placeholderScale,
+      projectY: placeholderScale,
+      xTicks: EMPTY_TICKS,
+      yTicks: EMPTY_TICKS,
+      fontSize,
+      ternaryVertices: layout.vertices,
+      ternaryTicks: TERNARY_TICKS,
+    };
+    for (const guide of axisGuides) {
+      const lowered = lowerGuide(guide, guideContext, provenance);
+      if (lowered.gridLayer) gridLayers.push(lowered.gridLayer);
+      if (lowered.axisLayer) axisLayers.push(lowered.axisLayer);
+    }
+  } else if (coordinate.type === PlotCoordinate.Custom) {
+    // 自定义坐标系：投影由运行时工厂提供（IR 只有 name + roles + 数值参数）。本轮仅 point、无自动 guide。
+    const factory = coordinates?.[coordinate.name];
+    if (!factory) {
+      throw new Error(`lowerPlots: custom coordinate "${coordinate.name}" has no registered factory; pass it via lowerPlots options.coordinates (or <Plot coordinates>)`);
+    }
+    // 按角色取通道值的 picker（custom roles ∈ {x,y,a,b,c}）；供工厂建线性位置 scale
+    const pickRole = (role: DimensionRole) => (mark: Mark): Channel | undefined => (mark.type === PlotMark.Sector ? undefined : (mark.encoding as Record<string, Channel | undefined>)[role]);
+    const linearScaleFor = (role: DimensionRole, range: [number, number]) =>
+      resolvePositionScale({ type: PlotScale.Linear, name: `__custom_${role}` }, collectValues(pickRole(role), false, false), range);
+    frame = factory({ width, height, plotArea: { x: 0, y: 0, width, height }, fontSize, params: coordinate.params ?? {}, roles: coordinate.roles, linearScaleFor });
+    // 曲线轴：工厂回传 roleScales 时按维度画 path-aware 轴（沿投影采样）；无 roleScales 则不画
+    if (frame.type === PlotCoordinate.Custom) {
+      const axisGuides = (node.guides ?? []).filter(isAxisGuide);
+      assertUniqueAxisDimension(axisGuides, coordinate.type);
+      for (const guide of axisGuides) {
+        const lowered = lowerCustomAxis(frame, guide, fontSize, provenance);
+        if (lowered.gridLayer) gridLayers.push(lowered.gridLayer);
+        if (lowered.axisLayer) axisLayers.push(lowered.axisLayer);
+      }
     }
   } else {
     // cartesian2D：x/y 角色绑 x/y scale
@@ -539,10 +755,10 @@ const quantileAt = (sortedAscending: ReadonlyArray<number>, p: number): number =
  *   edges 是档间内部边界（长度 = binCount - 1）；colors 是各档色（range 显式则用、否则从 scheme 采）。
  */
 const discretizedBins = (
-  def: { type: string; range?: ReadonlyArray<string>; scheme?: PlotColorSchemeValue; count?: number; breakpoints?: ReadonlyArray<number>; domain?: readonly [number, number] },
+  def: QuantizeColorScale | ThresholdColorScale | QuantileColorScale,
   values: ReadonlyArray<number>,
 ): { colors: Array<string>; edges: Array<number> } => {
-  if (def.type === PlotScale.Threshold && def.breakpoints) {
+  if (def.type === PlotScale.Threshold) {
     const edges = [...def.breakpoints];
     const binCount = edges.length + 1;
     const colors = def.range ? [...def.range] : sampleSchemeColors(def.scheme, binCount);
@@ -907,6 +1123,7 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
     fontSize: options.fontSize ?? DEFAULT_FONT_SIZE,
     margin: options.margin,
     provenance,
+    coordinates: options.coordinates,
   });
 
   const resolveColor = makeColorResolver(node, rows, fieldTypes);

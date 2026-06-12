@@ -20,10 +20,19 @@ export type LineMarkProps = {
 
 /** <PointMark> props：散点图层，每行一个 glyph */
 export type PointMarkProps = {
-  /** 绑 x 位置通道的字段路径（polar 下坐标系重解释为角向值） */
-  x: string;
-  /** 绑 y 位置通道的字段路径（polar 下坐标系重解释为径向值） */
-  y: string;
+  /**
+   * 绑 x 位置通道的字段路径（polar 下坐标系重解释为角向值；cartesian1D / polar1D 单维亦用 x）。
+   * 可选：1D-2D 坐标系用 x/y、ternary2D 用 a/b/c；必填性由坐标系在 lowering 校验。
+   */
+  x?: string;
+  /** 绑 y 位置通道的字段路径（polar 下坐标系重解释为径向值；cartesian2D / polar2D 必填，1D 省略） */
+  y?: string;
+  /** ternary2D 的 a 分量字段（顶点朝上 = a 100%）；与 b / c 一起用于三元散点 */
+  a?: string;
+  /** ternary2D 的 b 分量字段（右下顶点 = b 100%） */
+  b?: string;
+  /** ternary2D 的 c 分量字段（左下顶点 = c 100%） */
+  c?: string;
   /** 颜色字段（→ color 通道 + 自动 ordinal 色 scale） */
   color?: string;
   /** 尺寸字段（数值）：→ size 通道，经 sqrt 半径 scale 映射成 glyph 半径（面积感知正确）；负值报错 */

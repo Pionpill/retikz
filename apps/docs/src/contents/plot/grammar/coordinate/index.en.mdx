@@ -1,9 +1,9 @@
 ---
 title: Coordinates
-description: The coordinate system decides how marks land on the canvas. The default is cartesian; switch to polar and the same spec becomes a pie, radar, or radial bar chart.
+description: The coordinate system decides how marks land on the canvas. The default is cartesian2D; switch to polar2D for pie / radar / radial bars, or use the 1D line / circle (cartesian1D / polar1D) and ternary (ternary2D) systems.
 ---
 
-The coordinate system is the final step `<Plot>` takes to map data values to canvas pixels. The default is cartesian: x goes right, y goes up. Change `coordinate` to `"polar2D"` and the same data with the same marks wraps around a center — bars become radial bars, lines become radar outlines, sectors form a pie.
+The coordinate system is the final step `<Plot>` takes to map data values to canvas pixels. The default is cartesian2D: x goes right, y goes up. Change `coordinate` to `"polar2D"` and the same data with the same marks wraps around a center — bars become radial bars, lines become radar outlines, sectors form a pie. Beyond these two 2D systems there are also **1D** (`cartesian1D` line / `polar1D` circle) and **ternary** (`ternary2D`) coordinates, covered below.
 
 ## One spec, two coordinate systems
 
@@ -73,6 +73,81 @@ The same polar coordinate system pairs with different marks to cover the common 
 An open `<LineMark>` under polar is a polar line plot: `x` as the angle, `y` as the radius, connected in `order`. Good for wind direction and cyclic data.
 
 <ComponentPreview name="coordinate-polar-line" sourceFiles={['coordinate-polar-line.data.ts']} />
+
+## 1D coordinates: line and circle
+
+Sometimes data has only one positional dimension — a list of sample values, the times of day events happened. A 1D coordinate system binds a single position channel; the other dimension either collapses to a baseline or wraps into a circle.
+
+| coordinate | Shape | Binding | Typical use |
+| --- | --- | --- | --- |
+| `"cartesian1D"` | Line | binds `x` only | rug ticks, timeline, 1D strip |
+| `"polar1D"` | Circle | binds `x` only (as the angle) | 24-hour clock, weekday wheel, cyclic data |
+
+1D coordinates are **scale-agnostic**: like a 2D axis they accept linear / log / time. Below, left is a `cartesian1D` rug (values land on one line), right is `polar1D` wrapping a day of event times into a circle.
+
+<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+  <ComponentPreview name="coordinate-rug" sourceFiles={['coordinate-rug.data.ts']} size="sm" />
+  <ComponentPreview name="coordinate-polar1d" sourceFiles={['coordinate-polar1d.data.ts']} size="sm" />
+</div>
+
+<p className="text-sm text-muted-foreground">Left: <code>cartesian1D</code> line rug; right: <code>polar1D</code> wrapping 24 hours around a circle.</p>
+
+`polar1D` takes an object form to set the circle radius fraction and angular range:
+
+```tsx
+<Plot coordinate={{ type: 'polar1D', radius: 0.8, startAngle: 180, endAngle: 360 }}>
+```
+
+This round 1D coordinates support `<PointMark>` only (rug ticks / circle points); bars, sectors, and the like have no 1D geometry and fail loudly rather than drawing something wrong.
+
+## Ternary coordinates: ternary2D
+
+`coordinate="ternary2D"` projects three components satisfying `a + b + c = constant` into an equilateral triangle — each vertex stands for one component at 100%. It fits compositions, mixtures, and vote shares where the three trade off against each other.
+
+The bindings switch to three channels `a` / `b` / `c` (no `x` / `y`). Each row is **auto-normalized**, so you can feed any positive triple directly (e.g. sand 60 / silt 30 / clay 10) without precomputing percentages; negative values or a sum of zero fail loudly.
+
+<ComponentPreview name="coordinate-ternary" sourceFiles={['coordinate-ternary.data.ts']} />
+
+Add `<Axis dimension="a" />` / `"b"` / `"c"` to draw the tick axis along each edge; all three together form the full triangle outline. Ternary coordinates this round are likewise `<PointMark>`-first (scatter inside the triangle).
+
+<ComponentAlert type="tip" title="Guide dimensions must match the coordinate" description="Each coordinate system only accepts its own dimensions: cartesian uses x / y, polar uses angle / radius, ternary uses a / b / c. A wrong dimension (e.g. <Axis dimension='angle'> under cartesian) fails loudly instead of silently drawing an empty axis." />
+
+## Custom coordinates (experimental)
+
+Every built-in coordinate is really just a *projection* — mapping position values to screen points. When the built-ins aren't enough, you can **write your own projection**: pass `<Plot>` a `coordinates` factory map and reference it from `coordinate` as `{ type: 'custom', name }`. The projection function stays at runtime (out of the IR, not serialized); the IR only holds the `name`, roles, and numeric params.
+
+The "bridge" coordinate below arches the x-axis into a parabola while y stays vertical — same regular grid, the x-axis shape is entirely decided by that projection function (set `archHeight` to 0 and it reverts to plain cartesian):
+
+```tsx
+import { createCustomFrame, type CustomCoordinateFactory } from '@retikz/plot';
+
+// Projection function: x along an arch, y vertical (supplied at runtime, not in the IR)
+const bridge: CustomCoordinateFactory = ctx => {
+  const xScale = ctx.linearScaleFor('x', [0, ctx.width]);
+  const yScale = ctx.linearScaleFor('y', [ctx.height - 30, 30]);
+  const archHeight = ctx.params.archHeight ?? 60;
+  const projectRoles = ([x, y]) => {
+    const sx = xScale.coordinate(x);
+    const t = sx / ctx.width;
+    return [sx, yScale.coordinate(y) - archHeight * (1 - (2 * t - 1) ** 2)];
+  };
+  // third arg options: roleScales lets the guide draw curved axes along the projection (x arches, y vertical); optional frameAlong gives exact axis tangents, otherwise sampled
+  return createCustomFrame(['x', 'y'], projectRoles, { roleScales: { x: xScale, y: yScale } });
+};
+
+// coordinate references the factory by name; coordinates passes the function (runtime, like data — not in the IR)
+<Plot data={grid} coordinate={{ type: 'custom', name: 'bridge', roles: ['x', 'y'], params: { archHeight: 60 } }} coordinates={{ bridge }}>
+  <PointMark x="x" y="y" />
+  <Axis dimension="x" />
+  <Axis dimension="y" />
+</Plot>
+```
+
+Axes are generic — once the factory returns `roleScales`, `<Axis dimension="x" />` **samples the projection densely to draw a curved x-axis** (arching here), with ticks landing at the scale's tick positions; the same routine works for any curve / circle / spiral. The factory may also return `frameAlong` — reporting the origin + tangent of a role's axis curve at a point — so ticks / labels are placed from the **exact** tangent; without it the tangent is estimated by sampling the projection.
+
+<ComponentPreview name="coordinate-custom-bridge" sourceFiles={['coordinate-custom-bridge.data.ts']} hideCode />
+
+<ComponentAlert type="warn" title="Advanced extension, point-only this round" description="Custom coordinates support PointMark only; curved axes work (the factory returns roleScales, optionally frameAlong for exact tangents) but there is no grid yet. 3D coordinates, multi-plot composition, and offset-along-normal are left for later." />
 
 <Comparison target="tikz" title="TikZ comparison">
 In TikZ, polar plots rely on PGFPlots' `polaraxis` environment (`\begin{polaraxis} ... \end{polaraxis}`); retikz folds it into a single `coordinate` switch on `<Plot>`, so marks aren't split into cartesian and polar variants.

@@ -1,6 +1,6 @@
 import type { Section } from './interface';
 
-/** plot module 的 sections + pages 树（顺序：简介 / 快速开始 / 图表 / 绘图 / 图形语法 / 参考） */
+/** plot module 的 sections + pages 树（顺序：简介 / 快速开始 / 图表 / 绘图 / 数据 / 图形语法 / 参考） */
 export const plotSection: Array<Section> = [
   {
     pages: [
@@ -34,10 +34,17 @@ export const plotSection: Array<Section> = [
     ],
   },
   {
+    id: 'data',
+    label: 'plot.data',
+    pages: [
+      { id: 'model', label: 'plot.dataModel' },
+      { id: 'processing', label: 'plot.dataProcessing' },
+    ],
+  },
+  {
     id: 'grammar',
     label: 'plot.grammar',
     pages: [
-      { id: 'data', label: 'plot.grammarData' },
       { id: 'scale', label: 'plot.grammarScale' },
       { id: 'coordinate', label: 'plot.grammarCoordinate' },
       { id: 'mark', label: 'plot.grammarMark' },

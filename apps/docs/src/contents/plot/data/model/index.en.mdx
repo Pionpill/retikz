@@ -1,0 +1,88 @@
+---
+title: Data Model
+description: Give <Plot> a set of rows, then declare each field's measurement type with a model — continuous / categorical / temporal. Once the type is fixed, scale selection, axis formatting, and validation all follow from it.
+---
+
+A chart has two halves: **config** (what to draw — marks / coordinate / scales) and **data** (which values). retikz keeps them apart — the data does **not** enter the chart config (the IR); it's supplied separately at compile time. That lets one config be reused across different datasets.
+
+The simplest form: hand a row array to `<Plot data>` and have marks reference columns by field name.
+
+```tsx
+<Plot data={rows}>
+  <LineMark x="month" y="revenue" order="month" />
+</Plot>
+```
+
+A field name is a **path**, so nested data (MongoDB documents, JSON from an API) works directly: `x="user.address.city"` drills to the leaf. The leaf must be a scalar (string / number / boolean / time) — not an object or array.
+
+## Declaring field types
+
+With data alone, retikz can't tell whether `month` is a time or a plain string, or whether `revenue` is continuous or categorical. Give it a **model** (field names + types) and it knows everything — how to pick scales, format axes, and validate — all driven by type.
+
+```tsx
+<Plot data={sales} model={[
+  { name: 'month',   type: 'temporal' },
+  { name: 'revenue', type: 'continuous' },
+]}>
+  <LineMark x="month" y="revenue" order="month" />
+</Plot>
+```
+
+Field types (three measurement kinds):
+
+| Type | Meaning | Examples |
+| --- | --- | --- |
+| `continuous` | continuous measurable number | sales, price, temperature, share |
+| `categorical` | discrete category | country, color name, rating |
+| `temporal` | date / time | dates, timestamps |
+
+**Declaring a model = strict mode**: every data field referenced by a mark / transform must be listed in the model; a misspelled field name **fails immediately** (instead of drawing an empty chart). **No model**: retikz infers types by sampling the data (number → continuous, ISO date string / `Date` → temporal, other strings → categorical), which is handy for quick drafts.
+
+**`type` is optional — partial models**: a field's type can be omitted, leaving just `{ name }`. The field still joins strict mode + the portable binding contract (by name), but its **type is left to inference**. Good for "most fields are obvious, only a few need pinning" — give `type` only to the numeric enums or odd date formats that need correcting, leave the rest bare:
+
+```tsx
+<Plot data={sales} model={[
+  { name: 'createdAt',  type: 'temporal' },    // special format, pinned
+  { name: 'statusCode', type: 'categorical' }, // numeric enum, pinned
+  { name: 'revenue' },                          // name only → inferred continuous
+]}>
+  {/* … */}
+</Plot>
+```
+
+Fields with `type` omitted need the data at lowering to determine their type — to keep a spec fully self-describing without the data (LLM-friendly / fully portable), fill `type` in.
+
+<ComponentAlert title="Inference is best-effort; the model is the contract" description="Without a model (or with a field's type omitted), types are guessed from samples: time is only recognized in unambiguous ISO form (YYYY-MM-DD, an ISO datetime with a timezone, including the space-separated SQL form like '2024-01-01 12:00:00Z') — '2024/01/01', timezone-less times, and bare numeric strings are not treated as time (they fall back to categorical). Declare a model and fill in type when you want precision, validation, or for an LLM to understand the fields without seeing the data." />
+
+## Type-driven scales
+
+With a model declared, positional channels (x / y) **no longer need an explicit scale** — retikz picks one from the field type: `continuous` → linear, `temporal` → time axis, `categorical` → band. See [Scales](/plot/grammar/scale) for the full mapping and override rules.
+
+The chart below declares no scale config at all: `month` is temporal, `revenue` is continuous — the axes are derived automatically.
+
+<ComponentPreview name="data-model" sourceFiles={['data-model.data.ts']} />
+
+## Category order: `order`
+
+A `categorical` field orders its categories by **data appearance** by default (axes and legends follow that order). To control it — sizes should read `S → M → L → XL`, not whatever order they happen to appear in the data — give the field an `order`:
+
+```tsx
+<Plot data={rows} model={[
+  { name: 'size',  type: 'categorical', order: ['S', 'M', 'L', 'XL'] }, // explicit order
+  { name: 'grade', type: 'categorical', order: 'ascending' },           // sorted ascending
+  { name: 'city',  type: 'categorical' },                               // default: appearance order
+]}>{/* … */}</Plot>
+```
+
+| `order` | Effect |
+| --- | --- |
+| omitted / `'data'` | data appearance order (default) |
+| `'ascending'` / `'descending'` | sort the categories: numeric when all numbers, else as strings |
+| `Array` (e.g. `['S','M','L']`) | the array is the order; categories present in the data but absent from the array are appended at the end |
+
+Rules:
+
+- **It lives on the field, so position and color share the order**: when the same field drives both the x-axis (band) and color (ordinal), both use the same category order.
+- **Only valid on `categorical`**: an `order` on a `continuous` / `temporal` field **throws** (order is meaningless for continuous values / time).
+- **An explicit scale `domain` wins**: if the scale declares its own `domain`, that takes precedence and `order` is ignored.
+- A **non-default** `order` (a sort or an explicit array) marks the field as ordered — retikz's three field types have no dedicated "ordered category" type; orderedness is expressed through this parameter.

@@ -300,7 +300,7 @@ export const QuantizeColorScaleSchema = z
       .int()
       .min(2)
       .optional()
-      .describe('Number of equal-width bins; omit to default to 5 at lowering. Ignored when range is given (range length is the bin count)'),
+      .describe('Number of equal-width bins; omit to default to 5 at lowering. When range is given, the bin count is range.length; if count is also given it must equal range.length, otherwise lowering fails loud'),
     scheme: z
       .nativeEnum(PlotColorScheme)
       .optional()
@@ -342,7 +342,7 @@ export const QuantileColorScaleSchema = z
       .int()
       .min(2)
       .optional()
-      .describe('Number of quantile bins; omit to default to 5 at lowering. Ignored when range is given (range length is the bin count)'),
+      .describe('Number of quantile bins; omit to default to 5 at lowering. When range is given, the bin count is range.length; if count is also given it must equal range.length, otherwise lowering fails loud'),
     scheme: z
       .nativeEnum(PlotColorScheme)
       .optional()

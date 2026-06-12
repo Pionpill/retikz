@@ -2,8 +2,11 @@ import type { FC } from 'react';
 
 /** <Axis> props：坐标轴配置；网格走 `grid` 布尔 prop（与 IR axis.grid 对应，非独立 <Grid> 组件） */
 export type AxisProps = {
-  /** 装饰哪个定位维度：cartesian 的 x（水平）/ y（垂直）；polar 的 angle（角向）/ radius（径向） */
-  dimension: 'x' | 'y' | 'angle' | 'radius';
+  /**
+   * 装饰哪个定位维度：cartesian 的 x（水平）/ y（垂直）；polar 的 angle（角向）/ radius（径向）；
+   * ternary 的 a / b / c（三角三边）。维度须匹配坐标系合法集，否则 lowering fail-loud。
+   */
+  dimension: 'x' | 'y' | 'angle' | 'radius' | 'a' | 'b' | 'c';
   /** 目标刻度数（缺省用默认刻度数）；网格线复用同刻度 */
   tickCount?: number;
   /** 是否出刻度标签；缺省 = true */
