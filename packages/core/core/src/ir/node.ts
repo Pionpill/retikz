@@ -160,7 +160,7 @@ export const NodeSchema = z
         'Rotation in degrees around the node center; positive = clockwise (matches TikZ rotate=...)',
       ),
     text: TextBlockSchema.optional().describe(
-      'Optional node text content; accepts a string, an array of lines, or styled text line objects. When omitted the node emits only its shape primitive; when present it participates in text measurement, node box sizing, and TextPrim emission.',
+      'Optional node text content; accepts a string, an array of lines, or styled text line objects. A literal newline ("\\n") inside any string is a hard line break, so one string with newlines renders as multiple lines. When omitted the node emits only its shape primitive; when present it participates in text measurement, node box sizing, and TextPrim emission.',
     ),
     align: z
       .nativeEnum(NodeTextAlign)
@@ -298,7 +298,7 @@ export const NodeSchema = z
       .nonnegative()
       .optional()
       .describe(
-        'Outer margin from border to path attachment point in user units; does NOT change the visible border. Falls back to `margin`.',
+        'Uniform outer offset (TikZ `outer sep`) around the node connection boundary, in user units. Applies to ALL border references — automatic edge endpoints AND explicit compass/angle anchors (e.g. `A.north`, `A.30`) — and is included in the node layout footprint / viewBox. Does NOT change the visible shape; center, shape-specific anchors, edge points, and label attachment stay on the visual shape. Default 0. Falls back to `margin`.',
       ),
     padding: z
       .number()
@@ -312,7 +312,7 @@ export const NodeSchema = z
       .nonnegative()
       .optional()
       .describe(
-        'Symmetric outer margin (alias for `outerSep`); axis-specific field takes precedence.',
+        'Symmetric outer offset, alias for `outerSep` (TikZ `outer sep`); the axis-specific `outerSep` field takes precedence.',
       ),
     font: FontSchema.optional().describe(
       'Font spec for the inner text label (family / size / weight / style); all fields optional, all fall back to renderer defaults.',

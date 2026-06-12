@@ -12,8 +12,9 @@
 import type { Side } from '../geometry/edge';
 import type { Position } from '../geometry/point';
 import type { IRBoundary, IRPosition } from '../ir';
-import { anchorOf, angleBoundaryOf } from './node';
+import { anchorOf, angleBoundaryOf, outerRectOf } from './node';
 import type { NodeLayout } from './node';
+import { normalizeCompassAnchor } from '../geometry/anchor';
 import { boundaryKey } from './boundary';
 
 /**
@@ -25,9 +26,18 @@ const cache = new WeakMap<NodeLayout, Map<string, IRPosition>>();
 /** 角度字符串识别：可选负号 + 数字 + 可选小数；与 parseTarget.ts 的 ANGLE_RE 同语义 */
 const ANGLE_RE = /^-?\d+(\.\d+)?$/;
 
+/** 把 layout 的 rect 换成外边界 AABB（外扩 outerSep）——border 类 anchor 在其上解析（ADR-07 §1） */
+const withOuterRect = (layout: NodeLayout): NodeLayout => ({
+  ...layout,
+  rect: outerRectOf(layout),
+});
+
 /**
  * 把 anchorName 解析到对应 shape 的 anchor / boundaryPoint 上
- * @description 数字字符串走 angleBoundaryOf；其余按标准方位 / shape-specific anchor 走 anchorOf；boundary 透传给两者
+ * @description 数字字符串走 angleBoundaryOf；其余按标准方位 / shape-specific anchor 走 anchorOf；boundary 透传给两者。
+ *   border 类 anchor（数字角度 + compass 方位名）按 outerSep 外推：在外扩 margin 的 rect（`outerRectOf`）上解析
+ *   （ADR-07 §1）。形状专属命名 anchor（tip-N / apex 等）恒走视觉 rect、不外扩（§3）。`center` 在 inflate 下
+ *   中心不变，走哪条路结果一致。
  */
 const computeAnchor = (
   layout: NodeLayout,
@@ -36,10 +46,13 @@ const computeAnchor = (
 ): IRPosition => {
   if (ANGLE_RE.test(anchorName)) {
     const angle = Number(anchorName);
-    return positionToIR(angleBoundaryOf(layout, angle, boundary));
+    return positionToIR(angleBoundaryOf(withOuterRect(layout), angle, boundary));
   }
-  // anchorOf 走 layout.shapeDef.anchor(rect, name)；shape 不认识的名字返回 undefined → anchorOf 抛 Unknown anchor。
-  // 调用方（parseNodeRef）通常已先按标准方位 anchor 集合校验内置 anchor 名合法性
+  if (normalizeCompassAnchor(anchorName) !== undefined) {
+    return positionToIR(anchorOf(withOuterRect(layout), anchorName, boundary));
+  }
+  // 形状专属命名 anchor：anchorOf 走 layout.shapeDef.anchor(rect, name)，shape 不认识的名字返回 undefined → 抛 Unknown anchor。
+  // 恒走视觉 rect（不外扩）；调用方（parseNodeRef）通常已先按标准方位 anchor 集合校验内置 anchor 名合法性
   return positionToIR(anchorOf(layout, anchorName, boundary));
 };
 

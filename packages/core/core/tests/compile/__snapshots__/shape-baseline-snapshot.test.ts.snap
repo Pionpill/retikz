@@ -3,10 +3,10 @@
 exports[`Shape baseline snapshot (byte-for-byte regression net) > rich multi-shape scene stays identical across the registry refactor 1`] = `
 {
   "layout": {
-    "height": 345.9028,
-    "width": 371.2494,
-    "x": -44.599,
-    "y": -35.9028,
+    "height": 352.7329,
+    "width": 371.9455,
+    "x": -45.2951,
+    "y": -42.7329,
   },
   "primitives": [
     {

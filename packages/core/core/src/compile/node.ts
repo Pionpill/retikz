@@ -249,6 +249,15 @@ const inflateRect = (r: Rect, m: number): Rect =>
     : { x: r.x, y: r.y, width: r.width + 2 * m, height: r.height + 2 * m, rotate: r.rotate };
 
 /**
+ * 视觉 rect 外扩 outerSep（margin）得到外边界 AABB
+ * @description = `inflateRect(layout.rect, layout.margin)`，中心不变、四向各 +margin。border 类
+ *   anchor（compass / 数字角度）解析与 bbox / viewBox / 布局占位都基于这层；视觉 emit / 裁剪 /
+ *   形状专属 anchor / edgePoint / label 附着点仍读 `layout.rect`（不外扩）。单一派生量，不另存字段。
+ *   （TikZ outer sep 对齐见 v0.3-beta.1 ADR-07。）
+ */
+export const outerRectOf = (layout: NodeLayout): Rect => inflateRect(layout.rect, layout.margin);
+
+/**
  * 取节点 shape 在 toward 方向的附着点（path 端点贴边用）
  * @description 走连接面（boundary）对应的 def.boundaryPoint；margin > 0 时先膨胀外接 Rect，让 path 在 border 外停 margin。
  *   boundary 缺省 = 'shape'（视觉形状自身），与改前行为一致。
@@ -270,10 +279,13 @@ export const boundaryPointOf = (
 
 /**
  * 取节点 shape 命名 anchor（center / north / east / north-east 等）
- * @description 不应用 margin——TikZ 语义中 explicit anchor 取视觉边界点不涉及 outer sep；用于 `'A.north'` 落点。
+ * @description 纯几何：在传入的 `layout.rect` 上求点，本体**不施加 outerSep（margin）**。outerSep 的
+ *   「border 外推」由调用方决定——`anchor-cache.ts` 的 compass 解析先把 rect 外扩 margin（`outerRectOf`）
+ *   再调本函数；`labelBorderPoint` 喂视觉 rect（label 附着点不含 margin）。这样 outer sep 只作用于
+ *   path / position 的 anchor 引用，不波及 label（详见 v0.3-beta.1 ADR-07 §1/§2）。
  *   compass（9 个 rect 方位名）走连接面 AABB：'shape' 时归一为 'rectangle'（矩形 AABB），其余按 boundary 解析。
  *   形状专属命名 anchor（tip-N / apex 等非 compass 名）恒走视觉形状自身，boundary 不影响。
- *   boundary 缺省 = 'shape'，与改前 compass 走 AABB 行为一致（原 shapeDef.anchor 内部也走 rect AABB）。
+ *   boundary 缺省 = 'shape'。
  */
 export const anchorOf = (
   layout: NodeLayout,
@@ -380,8 +392,8 @@ const resolveLabelRotateDeg = (
 
 /**
  * 取节点 shape 在指定角度方向的边界点
- * @description 角度是节点**局部坐标系**下的极角（度数：0°=局部 +x，90°=局部 +y）。layout.rect.rotate 把局部基绕中心旋转，得到世界系下的视觉方向；shape boundaryPoint 内部用 rotate-aware 投影，所以这里把局部 (cos, sin) 经 rect.rotate 旋转后加到中心当作世界系 toward 传入。不应用 margin（同 anchorOf）；用于 `'A.30'` 落点。
- *   boundary 缺省 = 'shape'（视觉形状自身），与改前行为一致。
+ * @description 角度是节点**局部坐标系**下的极角（度数：0°=局部 +x，90°=局部 +y）。layout.rect.rotate 把局部基绕中心旋转，得到世界系下的视觉方向；shape boundaryPoint 内部用 rotate-aware 投影，所以这里把局部 (cos, sin) 经 rect.rotate 旋转后加到中心当作世界系 toward 传入。本体**不施加 margin（同 anchorOf）**——outerSep 外推由 `anchor-cache.ts` 调用方喂 `outerRectOf` 实现；用于 `'A.30'` 落点。
+ *   boundary 缺省 = 'shape'（视觉形状自身）。
  */
 export const angleBoundaryOf = (
   layout: NodeLayout,
@@ -511,8 +523,12 @@ export const layoutNode = (
         weight: lineFont?.weight ?? fontWeight,
         style: lineFont?.style ?? fontStyle,
       };
-      const physical =
-        maxTextWidth !== undefined ? wrapText(text, font, maxTextWidth, measureText) : [text];
+      // '\n' 是硬换行：先把本逻辑行里的 '\n' 拆成多行（对齐 react children 拆行与直写 IR），
+      // 硬拆出的物理行继承本逻辑行样式，再各自按 maxTextWidth 折行
+      const hardLines = text.split('\n');
+      const physical = hardLines.flatMap(hardLine =>
+        maxTextWidth !== undefined ? wrapText(hardLine, font, maxTextWidth, measureText) : [hardLine],
+      );
       for (const ptext of physical) {
         const m = measureText(ptext, font);
         if (m.width > textWidth) textWidth = m.width;

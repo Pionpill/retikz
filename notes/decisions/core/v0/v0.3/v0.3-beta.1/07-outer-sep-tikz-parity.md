@@ -1,7 +1,8 @@
 # ADR-07：`outerSep` 对齐 TikZ outer sep——外推所有 border anchor 并计入布局占位
 
-- 状态：Proposed
+- 状态：Accepted
 - 决策日期：2026-06-11
+- 实现日期：2026-06-12（实现 + 测试 + 文档已完成并全绿；改动留工作树待人工提交——`compile/node.ts`、`ir/node.ts` 上有用户并行 WIP，无法干净分离故未代提交）
 - 关联：[v0.3-beta.1 roadmap](./roadmap.md) · **部分 supersede**：[v0.3-alpha.4 ADR-06 连接面](../v0.3-alpha.4/06-connection-surface.md)（其「不在范围 §连接面影响 outer sep / 间距 → 另案」即本 ADR） · 参照：[core-design.md §7 AI 友好](../../../../architecture/core-design.md)
 
 ## 背景
@@ -153,14 +154,18 @@ scope.draw({ way: ['A.north', 'B'], arrow: '->' }); // A.north 含 margin
 - `packages/core/core/src/compile/node.ts`（修改：新增 `outerRectOf` helper；`anchorOf` / `angleBoundaryOf` **本体不改**——由 `anchor-cache.ts` 调用方喂 outer-inflated layout；`labelBorderPoint` 不改）
 - `packages/core/core/src/compile/anchor-cache.ts`（修改：`computeAnchor` 对 compass / 角度走 `outerRectOf(layout)` 解析；cache key **无需纳入 m**，见待决策点）
 - `packages/core/core/src/compile/compile.ts`（修改：bbox 聚合 `:536` 处 push `outerRectOf(globalLayout)` 四角而非视觉 `rect` 四角；`labelExtentPoints` 已基于视觉附着点，不动）
-- `packages/core/core/src/compile/boundary.ts`（按需修改：dispatch 复用 inflate）
+- `packages/core/core/src/compile/scope.ts`（**实现期新增 scope**：`computeScopeBoundingBox` 同样 push `outerRectOf(layout)` 四角——scope.id bbox 与顶层 viewBox 同口径；不加则 scope 内含 margin 节点的 bbox 与 viewBox 不一致）
 - `packages/core/core/src/ir/node.ts`（修改：`outerSep` / `margin` describe）
-- `packages/core/core/tests/compile/node-*.test.ts` / `tests/compile/boundary*.test.ts` / `tests/compile/anchor*.test.ts`（新建 / 修改）
-- `packages/core/core/tests/compile/cross-test-parity*.test.ts`（修改 / 新建：TikZ outer sep parity）
-- `apps/docs/src/contents/core/concepts/core/primitive-model/index.{zh,en}.mdx`（修改：三节口径）
-- `apps/docs/src/contents/core/concepts/core/primitive-model/{node-frames,bbox-boundary}.*.demo.tsx`（按需修改标注）
+- `packages/core/core/tests/compile/node-outer-sep.test.ts`（新建：12 case 覆盖 4 象限）
+- `packages/core/core/tests/compile/shape-baseline-snapshot.test.ts` 的 `__snapshots__`（**实现期新增**：含 `outerSep:5` 旋转节点的回归快照 viewBox 随 footprint 计入 margin 更新；primitive 字节零变更，仅 layout 4 字段）
+- 文档（**实现期按用户指示扩到「概念 / 组件 / 扩展」全部相关页**，原 scope 仅列 primitive-model）：
+  - `apps/docs/.../concepts/core/primitive-model/index.{zh,en}.mdx`（模型解剖表 / 盒模型 / 外层边界口径）
+  - `apps/docs/.../concepts/core/primitive-relations/index.{zh,en}.mdx`（margin 节：显式锚点也吃 margin；center/边比例点/标签不吃）
+  - `apps/docs/.../components/node/overview/index.{zh,en}.mdx`（`outerSep`/`margin` prop 行 + margin vs padding 节）
+  - `apps/docs/.../reference/extending/shape-registry/index.{zh,en}.mdx`（boundaryPoint/anchor：rect 已由引擎外扩，自定义 shape 不处理 outer sep）
+- 未动：`compile/boundary.ts`（dispatch 无需改）；`cross-test-parity`（repo 无 TikZ 参考 harness，几何 parity 由 node-outer-sep.test.ts 以 TikZ 等价坐标断言；用户 WIP 的 vanilla cross-test-parity 未触碰）。
 
-偏离白名单需加条或开新 ADR。
+偏离白名单需加条或开新 ADR——上列「实现期新增」三项（scope.ts / snapshot / 扩展文档面）即本次追加，理由随条注明。
 
 ### 测试象限（≥ 9）
 

@@ -16,7 +16,7 @@ import {
 } from './constant';
 import { lowerComposites } from './composite';
 import { type DuplicateRegisterInfo, NameStack } from './name-stack';
-import { type NodeLayout, emitNodePrimitives, labelExtentPoints, layoutNode } from './node';
+import { type NodeLayout, emitNodePrimitives, labelExtentPoints, layoutNode, outerRectOf } from './node';
 import { createPaintRegistry } from './paint';
 import { createClipRegistry } from './clip';
 import { emitPathPrimitive, refPointOfTarget } from './path';
@@ -532,12 +532,14 @@ export const compileToScene = (ir: IR, options: CompileOptions = {}): Scene => {
           sink.push(prim);
           if (child.zIndex !== undefined) zIndexOf.set(prim, child.zIndex);
         }
-        // bbox 用全局坐标系下的 4 角点累积——scope 内 node 也参与顶层 layout 计算
+        // bbox 用全局坐标系下的 4 角点累积——scope 内 node 也参与顶层 layout 计算；
+        // node 含 outerSep（margin）时按外边界（rect + margin）入 bbox，与 viewBox 占位口径一致（ADR-07 §5）
+        const outerRect = outerRectOf(globalLayout);
         allPoints.push(
-          rectOps.anchor(globalLayout.rect, 'north-west'),
-          rectOps.anchor(globalLayout.rect, 'north-east'),
-          rectOps.anchor(globalLayout.rect, 'south-west'),
-          rectOps.anchor(globalLayout.rect, 'south-east'),
+          rectOps.anchor(outerRect, 'north-west'),
+          rectOps.anchor(outerRect, 'north-east'),
+          rectOps.anchor(outerRect, 'south-west'),
+          rectOps.anchor(outerRect, 'south-east'),
         );
         // label / pin 外接点也纳入 bbox——避免 label 超出 viewBox 被裁（与 step.label 进 bbox 一致）
         for (const p of labelExtentPoints(globalLayout)) allPoints.push(p);

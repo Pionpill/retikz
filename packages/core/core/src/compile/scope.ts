@@ -11,7 +11,7 @@ import type { Transform } from '../primitive';
 import { BUILTIN_SHAPES } from '../shapes';
 import type { ShapeDefinition } from '../shapes';
 import type { NameStack } from './name-stack';
-import type { NodeLayout } from './node';
+import { type NodeLayout, outerRectOf } from './node';
 import { type ResolveBetweenGlobal, resolvePosition } from './position';
 
 /**
@@ -236,12 +236,14 @@ export const computeScopeBoundingBox = (
   let maxX = -Infinity;
   let maxY = -Infinity;
   for (const layout of layouts) {
-    // 4 角点取 rotate-aware 投影后的全局坐标——rect.anchor 已包含 rect.rotate
+    // 4 角点取 rotate-aware 投影后的全局坐标——rect.anchor 已包含 rect.rotate；
+    // node 含 outerSep 时 scope bbox 也按外边界（rect + margin）算，与顶层 viewBox 口径一致（ADR-07 §5/§6）
+    const outerRect = outerRectOf(layout);
     const corners: ReadonlyArray<IRPosition> = [
-      rectOps.anchor(layout.rect, 'north-west'),
-      rectOps.anchor(layout.rect, 'north-east'),
-      rectOps.anchor(layout.rect, 'south-west'),
-      rectOps.anchor(layout.rect, 'south-east'),
+      rectOps.anchor(outerRect, 'north-west'),
+      rectOps.anchor(outerRect, 'north-east'),
+      rectOps.anchor(outerRect, 'south-west'),
+      rectOps.anchor(outerRect, 'south-east'),
     ];
     for (const [cx, cy] of corners) {
       if (cx < minX) minX = cx;
