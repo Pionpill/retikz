@@ -18,7 +18,7 @@ const Demo: FC = () => (
     >
       rounded
     </Node>
-    <Draw way={['r1', 'r2']} arrow="->" />
+    <Draw way={['r1', 'r2']} arrow="->" stroke="gray" />
   </Layout>
 );
 

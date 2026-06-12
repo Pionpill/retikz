@@ -18,7 +18,7 @@ const Demo: FC = () => (
     >
       hexagon
     </Node>
-    <Draw way={['hub', 'hex']} arrow="->" />
+    <Draw way={['hub', 'hex']} arrow="->" stroke="gray" />
   </Layout>
 );
 

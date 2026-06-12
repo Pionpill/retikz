@@ -16,8 +16,8 @@ const Demo: FC = () => (
     <Node id="dia" position={[130, 0]} shape="diamond" fill="seashell">
       diamond
     </Node>
-    <Draw way={['hex', 'hub']} arrow="->" />
-    <Draw way={['dia', 'hub']} arrow="->" />
+    <Draw way={['hex', 'hub']} arrow="->" stroke="gray" />
+    <Draw way={['dia', 'hub']} arrow="->" stroke="gray" />
   </Layout>
 );
 

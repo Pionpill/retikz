@@ -19,7 +19,7 @@ const Demo: FC = () => (
       }}
       fill="darkorange"
     />
-    <Draw way={['hub', { id: 'wedge', anchor: 'outer-arc-mid' }]} arrow="->" />
+    <Draw way={['hub', { id: 'wedge', anchor: 'outer-arc-mid' }]} arrow="->" stroke="gray" />
   </Layout>
 );
 

@@ -15,7 +15,9 @@ description: retikz 的几何形状——既是画一条 Path 的官方 Sugar，
 - 想要内置之外的 **Node 形状**（hexagon / cloud…）——注册到 [shape-registry](/core/reference/extending/shape-registry)；内置的 circle / sector / star 等就是它的官方实现。
 - 想画内置之外的**路径曲线 step**（parabola / sin-cos…）——走 [path-generator](/core/reference/extending/path-generator)。
 
-## 组成
+<ComponentPreview name="shapes-family" size="md" hideCode />
+
+## 职责一览
 
 | 形状 | 作为 Path（Sugar） | 作为 Node 形状 |
 | --- | --- | --- |
@@ -27,7 +29,7 @@ description: retikz 的几何形状——既是画一条 Path 的官方 Sugar，
 
 > 背景网格、参考线这类**一片规则线条**（而非单个闭合形状）不在这一组——见 [辅助](/core/components/helpers) 里的 `<Grid>`。
 
-## 进入入口
+## 章节内容
 
 <div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
   <LinkedCard href="/core/components/shapes/circle-ellipse">

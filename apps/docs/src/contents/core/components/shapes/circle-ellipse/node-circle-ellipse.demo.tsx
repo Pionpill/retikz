@@ -13,7 +13,7 @@ const Demo: FC = () => (
     <Node id="e" shape="ellipse" position={[90, 0]} fill="seashell">
       ellipse node
     </Node>
-    <Draw way={['c', 'e']} arrow="->" />
+    <Draw way={['c', 'e']} arrow="->" stroke="gray" />
   </Layout>
 );
 
