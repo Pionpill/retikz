@@ -43,6 +43,37 @@ export const changelog: Array<Release> = [
         ],
         subVersions: [
           {
+            version: 'beta.1',
+            date: '2026-06-12',
+            summary: {
+              zh: '收口 + 内部收敛：新增 Node Canvas 图片导出入口与 Canvas 动画触发桥；根 `<svg>` 的 width/height 结构化写入（去字符串正则注入）；修复 SVG marker group transform 与 canvas 文本缺省 fill；大量后端无关纯函数（颜色 / 适配矩阵 / clip / 渐变 / 几何）抽到 shared 并补锁定测试。',
+              en: 'Cleanup + internal consolidation: adds a Node Canvas image-export entry and a Canvas animation-trigger bridge; root `<svg>` width/height written structurally (no string-regex injection); fixes the SVG marker group transform and canvas default text fill; many backend-agnostic pure functions (color / fit matrix / clip / gradient / geometry) extracted to shared with lock tests.',
+            },
+            items: [
+              {
+                label: { zh: 'Canvas 图片导出 + 动画触发桥', en: 'Canvas image export + animation-trigger bridge' },
+                content: {
+                  zh: '新增 Node Canvas 图片导出入口；接通 Canvas 动画触发桥——交互触发的动画在 canvas 后端也能生效（此前仅 SVG 后端响应交互触发）。',
+                  en: 'Adds a Node Canvas image-export entry; wires up the Canvas animation-trigger bridge — interaction-triggered animations now fire on the canvas backend too (previously only the SVG backend responded to interactive triggers).',
+                },
+              },
+              {
+                label: { zh: 'marker / 文本 fill 回归修复', en: 'marker / text-fill regression fixes' },
+                content: {
+                  zh: '修复 SVG marker group transform（箭头标记定位偏移）；canvas 文本缺省 fill 改用确定黑色基线（此前依赖隐式继承，无显式 fill 时可能渲染异常）。',
+                  en: 'Fixes the SVG marker group transform (arrow marker positioning offset); canvas default text fill now uses a deterministic black baseline (previously relied on implicit inheritance and could render incorrectly without an explicit fill).',
+                },
+              },
+              {
+                label: { zh: '根 `<svg>` 结构化 width/height', en: 'structural root `<svg>` width/height' },
+                content: {
+                  zh: '根 `<svg>` 的 width/height 改为结构化写入，去掉字符串正则注入。',
+                  en: 'Root `<svg>` width/height is now written structurally, removing string-regex injection.',
+                },
+              },
+            ],
+          },
+          {
             version: 'alpha.5',
             date: '2026-06-07',
             summary: {
@@ -217,6 +248,30 @@ export const changelog: Array<Release> = [
         ],
         subVersions: [
           {
+            version: 'beta.1',
+            date: '2026-06-12',
+            summary: {
+              zh: '对齐 React 表达力：`Figure` 补 `mountCanvas` 交互挂载、`scope` 接 children 数组；index 补齐 `DrawWay` / 扩展面 / `way` 类型透传（对齐 React）。',
+              en: 'Parity with React: `Figure` gains `mountCanvas` interactive mounting and `scope` accepting a children array; the index re-exports `DrawWay` / extension surfaces / `way` types (parity with React).',
+            },
+            items: [
+              {
+                label: { zh: '`mountCanvas` 交互挂载 + `scope` children 数组', en: '`mountCanvas` interactive mount + `scope` children array' },
+                content: {
+                  zh: '`Figure` 新增 `mountCanvas` 交互挂载入口（canvas 后端接事件 / 动画触发）；`scope` 接受 children 数组。',
+                  en: '`Figure` adds a `mountCanvas` interactive mount entry (canvas backend wired for events / animation triggers); `scope` accepts a children array.',
+                },
+              },
+              {
+                label: { zh: '类型透传对齐 React', en: 'type re-export parity with React' },
+                content: {
+                  zh: 'index 补齐 `DrawWay` / 扩展面 / `way` 类型透传，与 React 包对齐。',
+                  en: 'The index re-exports `DrawWay` / extension surfaces / `way` types, aligning with the React package.',
+                },
+              },
+            ],
+          },
+          {
             version: 'alpha.5',
             date: '2026-06-07',
             summary: {
@@ -362,6 +417,30 @@ export const changelog: Array<Release> = [
           },
         ],
         subVersions: [
+          {
+            version: 'beta.1',
+            date: '2026-06-12',
+            summary: {
+              zh: 'API 收口：移除 `<Circle>` / `<Ellipse>` 的 `boundingBox` 别名 prop，统一用 `box`；一条 path 上出现多个 `EdgeLabel` 时 dev 下告警。0.x 不留别名，旧 `boundingBox` 需改名。',
+              en: 'API cleanup: removes the `boundingBox` alias prop on `<Circle>` / `<Ellipse>`, unifying on `box`; warns in dev when a single path carries multiple `EdgeLabel`s. As a 0.x release no alias is kept — old `boundingBox` must be renamed.',
+            },
+            items: [
+              {
+                label: { zh: '`boundingBox` 别名移除（breaking）', en: '`boundingBox` alias removed (breaking)' },
+                content: {
+                  zh: '`<Circle>` / `<Ellipse>` 去掉 `boundingBox` 别名 prop，只保留 `box`；旧 `boundingBox` 需改名为 `box` [Circle / Ellipse](/core/components/shapes/circle-ellipse)',
+                  en: '`<Circle>` / `<Ellipse>` drop the `boundingBox` alias prop, keeping only `box`; old `boundingBox` must be renamed to `box` [Circle / Ellipse](/core/components/shapes/circle-ellipse)',
+                },
+              },
+              {
+                label: { zh: '多 `EdgeLabel` dev 告警', en: 'multiple `EdgeLabel` dev warning' },
+                content: {
+                  zh: '一条 path 上出现多个 `EdgeLabel` 时 dev 下告警（仅首个生效）。',
+                  en: 'Warns in dev when a single path carries multiple `EdgeLabel`s (only the first applies).',
+                },
+              },
+            ],
+          },
           {
             version: 'alpha.5',
             date: '2026-06-07',
@@ -522,6 +601,51 @@ export const changelog: Array<Release> = [
           },
         ],
         subVersions: [
+          {
+            version: 'beta.1',
+            date: '2026-06-12',
+            summary: {
+              zh: 'v0.3 进入 beta：能力收口、对齐 TikZ 语义、批量内部收敛与 bug 修复，无新增大特性。`outerSep` 对齐 TikZ outer sep（外推所有 border anchor 并计入布局占位）；新增 `scope` `between` 平移与 `openStealth` 空心箭头；折角 step 判别值 `step`→`fold`；节点文本支持 `\\n` 硬换行。',
+              en: 'v0.3 enters beta: capability cleanup, TikZ-semantics alignment, batch internal consolidation and bug fixes, no new major features. `outerSep` aligns with TikZ outer sep (pushes every border anchor outward and counts it into layout); adds `scope` `between` translation and the `openStealth` hollow arrow; the fold step discriminator `step`→`fold`; node text supports `\\n` hard line breaks.',
+            },
+            items: [
+              {
+                label: { zh: 'outerSep 对齐 TikZ outer sep', en: 'outerSep aligns with TikZ outer sep' },
+                content: {
+                  zh: '`outerSep` 改为对齐 TikZ outer sep——把所有 border anchor 整体外推 `outerSep` 并计入布局占位（此前只外推连接点、不占布局空间）；节点外接框与相邻间距随之变化 [Node](/core/components/node/overview)',
+                  en: '`outerSep` now matches TikZ outer sep — every border anchor is pushed outward by `outerSep` and counted into layout (previously it only shifted connection points without reserving space); node bounding boxes and neighbor spacing change accordingly [Node](/core/components/node/overview)',
+                },
+              },
+              {
+                label: { zh: '折角 step 判别值 `step`→`fold`（breaking）', en: 'fold step discriminator `step`→`fold` (breaking)' },
+                content: {
+                  zh: '`FoldStep.kind` 判别值 `step`→`fold`（`<Step kind="fold" via="-|" | "|-">`）；`parseWay` / React `Step` / JSX round-trip 同步。0.x 不留旧值别名，旧 `kind="step"` 需改名 [Step](/core/components/draw/step)',
+                  en: 'The `FoldStep.kind` discriminator `step`→`fold` (`<Step kind="fold" via="-|" | "|-">`); `parseWay` / React `Step` / JSX round-trip updated. As a 0.x release no alias is kept — old `kind="step"` must be renamed [Step](/core/components/draw/step)',
+                },
+              },
+              {
+                label: { zh: '`scope` between 平移 + `openStealth` 箭头', en: '`scope` between translation + `openStealth` arrow' },
+                content: {
+                  zh: '`scope` 支持 `between` 平移定位（位置随两端点比例插值）；新增 `openStealth` 空心 stealth 箭头端点。',
+                  en: '`scope` gains `between` translation positioning (placed by proportional interpolation between two endpoints); a new `openStealth` hollow stealth arrow tip.',
+                },
+              },
+              {
+                label: { zh: '节点文本 `\\n` 硬换行', en: 'node text `\\n` hard line break' },
+                content: {
+                  zh: '节点文本支持 `\\n` 硬换行，与自动换行叠加生效。',
+                  en: 'Node text supports `\\n` hard line breaks, composing with automatic wrapping.',
+                },
+              },
+              {
+                label: { zh: '几何 / 编译回归批量修复', en: 'batch geometry / compile regression fixes' },
+                content: {
+                  zh: '修复 `bend` 弧形控制点曲率、内置 pattern 描边边缘半宽裁切、箭头外轮廓补偿、`colorShift` / `cameraTo` null 入参守卫；收紧弧形 step / IR 数值字段 schema 与 parser 静默错误。',
+                  en: 'Fixes `bend` arc control-point curvature, built-in pattern stroke edge half-width clipping, arrow outline compensation, and `colorShift` / `cameraTo` null-arg guards; tightens arc-step / IR numeric-field schemas and silent parser errors.',
+                },
+              },
+            ],
+          },
           {
             version: 'alpha.5',
             date: '2026-06-07',
