@@ -25,6 +25,13 @@ description: 笔画外壳、step 动作序列与 step 目标点
   opacity: '整路径不透明度 0..1，同时作用于描边与填充',
   fillOpacity: '填充不透明度 0..1，只影响闭合区域',
   drawOpacity: '描边不透明度 0..1，只影响描边',
+  id: '可选稳定 id：供其它元素 anchor 引用，也是水合事件绑定的挂点（带 id 才能给 path 绑 onClick 等 handler）',
+  meta: 'provenance 元数据：原样透传进本路径 emit 的 Scene 图元，renderer 忽略、不参与布局 / 样式；典型由 Tier 2 lowering 注入（标记来自哪个 datum / series / layer），须为 JSON 对象',
+  animations: '声明式动画 track 数组（关键帧 + 时长 / 缓动 / 触发器）；逐字段见结构组的动画 schema',
+  zIndex: '显式栈序：大者在上；缺省 0、同值保持声明顺序；只在同层子节点间生效',
+  rotate: '整条 path 旋转角（度，绕包围盒中心）',
+  scale: '整条 path 缩放（数字等比，或 `{ x, y }` 非等比，绕包围盒中心）',
+  marks: '沿路径放方向标记：每项 `{ pos, mark }`，`pos∈[0,1]`、`mark.kind:\'arrow\'` + 已注册箭头名，朝向随该点切线',
   children: 'step 动作序列；首项通常应是 `move`',
 }} />
 

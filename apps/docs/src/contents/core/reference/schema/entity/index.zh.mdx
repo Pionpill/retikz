@@ -45,6 +45,11 @@ description: 在 scene 中被命名的成员 —— Node 与 Coordinate
   margin: 'outerSep 的对称别名',
   font: '节点内文本的字体规格（family / size / weight / style，均可选）',
   label: '节点外围附加文本，单对象或数组',
+  boundary: '连接面：path 端点贴边与 compass / 角度锚点走哪条边界——`shape`（视觉形状自身，默认）/ `circle`（外接圆）/ 任意注册 shape 名 / `{ type, params }`；可被边端点的 `boundary` 单边覆盖，不改节点占位',
+  maxTextWidth: '文本自动换行的最大宽度（用户单位）；超出按词折行，缺省不自动换行',
+  meta: 'provenance 元数据：原样透传进本节点 emit 的 Scene 图元，renderer 忽略、不参与布局 / 连接 / 样式 / 包围盒；典型由 Tier 2 lowering 注入（标记来自哪个 datum / series / layer），须为 JSON 对象，不跨 scope 继承、不进 every-X 默认',
+  animations: '声明式动画 track 数组（关键帧 + 时长 / 缓动 / 触发器）；逐字段见结构组的动画 schema',
+  zIndex: '显式栈序：大者在上；缺省 0、同值保持声明顺序；只在同层子节点间生效',
 }} />
 
 <Comparison target="tikz" title="Node 字段对照">

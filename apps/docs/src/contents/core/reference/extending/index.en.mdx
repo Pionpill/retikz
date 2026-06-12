@@ -15,6 +15,7 @@ This group is about **extending** retikz: capabilities the built-in components d
 | Custom Arrows | Registering new arrow styles (`defineArrow` / `ArrowDefinition` + `CompileOptions.arrows`) | You need bracket / domain-specific end caps |
 | Custom Patterns | Registering new fill patterns (`definePattern` / `PatternDefinition` + `CompileOptions.patterns`) | You need cross / stripes / special motifs |
 | Path Generators | Registering new curve generators (`PathGeneratorDefinition` + `CompileOptions.pathGenerators`) | You need parabola / waves / custom curves |
+| Custom Animation | Registering new easing curves / animation property channels (`<Layout>`'s `easings` / `animationProperties`) | You need spring easing, blur, or other animation properties beyond the built-ins |
 
 ## In this section
 
@@ -34,5 +35,9 @@ This group is about **extending** retikz: capabilities the built-in components d
   <LinkedCard href="/core/reference/extending/path-generator">
     <span className="font-semibold">Path Generators</span>
     <span className="mt-1 text-center text-sm text-muted-foreground">Register / inject a PathGeneratorDefinition for custom curves</span>
+  </LinkedCard>
+  <LinkedCard href="/core/reference/extending/custom-animation">
+    <span className="font-semibold">Custom Animation</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">Register custom easing curves and animation property channels</span>
   </LinkedCard>
 </div>

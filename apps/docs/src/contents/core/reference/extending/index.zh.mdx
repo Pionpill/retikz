@@ -15,6 +15,7 @@ description: 扩展 retikz——为内置能力之外的需求注册新形状等
 | 自定义箭头 | 注册新的箭头样式（`defineArrow` / `ArrowDefinition` + `CompileOptions.arrows`） | 需要 bracket / 业务箭头等新端点样式 |
 | 自定义图案 | 注册新的填充图案（`definePattern` / `PatternDefinition` + `CompileOptions.patterns`） | 需要 cross / 条纹 / 特殊 motif |
 | 路径生成器 | 注册新的曲线生成器（`PathGeneratorDefinition` + `CompileOptions.pathGenerators`） | 需要 parabola / 波形 / 自定义曲线 |
+| 自定义动画 | 注册新的缓动曲线 / 动画属性通道（`<Layout>` 的 `easings` / `animationProperties`） | 需要 spring 缓动、blur 等内置之外的动画属性 |
 
 ## 章节内容
 
@@ -34,5 +35,9 @@ description: 扩展 retikz——为内置能力之外的需求注册新形状等
   <LinkedCard href="/core/reference/extending/path-generator">
     <span className="font-semibold">路径生成器</span>
     <span className="mt-1 text-center text-sm text-muted-foreground">注册 / 注入自定义曲线生成器的 PathGeneratorDefinition</span>
+  </LinkedCard>
+  <LinkedCard href="/core/reference/extending/custom-animation">
+    <span className="font-semibold">自定义动画</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">注册自定义缓动曲线与动画属性通道</span>
   </LinkedCard>
 </div>
