@@ -16,7 +16,7 @@ const Demo: FC = () => (
       shape={{ type: 'star', params: { points: 5, innerRadius: 16, outerRadius: 40 } }}
       fill="gold"
     />
-    <Draw way={['hub', { id: 'badge', anchor: 'tip-0' }]} arrow="->" />
+    <Draw way={['hub', { id: 'badge', anchor: 'tip-0' }]} arrow="->" stroke="gray" />
   </Layout>
 );
 
