@@ -65,7 +65,9 @@ notes/decisions/
 
 ### analysis/
 
-- [`tikz-gap-analysis.md`](./analysis/tikz-gap-analysis.md)：当前 Node / Path 能力对比 TikZ 的缺失项与优先级。
+- [`core-compare-analysis.md`](./analysis/core-compare-analysis.md)：core 底座横向对比（TikZ / D3 / Two.js / Mermaid / react-flow / Excalidraw / Vega）。
+- [`plot-compare-analysis.md`](./analysis/plot-compare-analysis.md)：`@retikz/plot` 横向对比（ggplot2 / Vega-Lite / Observable Plot / Highcharts / ECharts / Recharts）。
+- [`plot-rendering-performance.md`](./analysis/plot-rendering-performance.md)：plot 渲染性能分析。
 
 ## 写文档前先选生命周期
 

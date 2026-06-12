@@ -2,7 +2,7 @@
 
 > 写于 2026-05-26。承接 v0.2 已完成的 renderer-agnostic Scene 契约、Paint / clip 资源表、MarkerPrimitive、`viewBox` override 与 `compileToScene` 纯函数边界。
 >
-> 关联：[`v0 roadmap`](../roadmap.md) · [`v0.2 总计划`](../v0.2/roadmap.md) · [`架构 core-design.md §2.1 / §5 / §6`](../../../../architecture/core-design.md) · [`tikz-gap-analysis`](../../../../analysis/tikz-gap-analysis.md)
+> 关联：[`v0 roadmap`](../roadmap.md) · [`v0.2 总计划`](../v0.2/roadmap.md) · [`架构 core-design.md §2.1 / §5 / §6`](../../../../architecture/core-design.md) · [`core 底座对比分析`](../../../../analysis/core-compare-analysis.md)
 
 > 本文件记录 v0.3 的完整计划：renderer 架构拆分、`@retikz/vanilla`、水合、Tier 2 支撑（`@retikz/plot` 为首个消费者），以及 React 双渲染模式与 Canvas renderer MVP。
 >

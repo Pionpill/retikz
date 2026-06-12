@@ -41,7 +41,6 @@ retikz 是多渲染器库，authoring 层有两套对用户的入口——`@reti
 
 1. 功能描述（用户的一句话需求 + 关联的 v0 roadmap 条目）
 2. 关联的 TikZ 等价语义（如有）
-3. tikz-gap-analysis 中的优先级（P0 / P1 / P2）
 
 ## 输出
 
@@ -82,7 +81,7 @@ cp notes/decisions/core/_template.md notes/decisions/core/v<MAJOR>/v<MAJOR>.<MIN
 **叙述部分**：
 
 - 标题（`# ADR-NN：<一句话>`）
-- 状态 / 决策日期 / 关联（v0 roadmap / tikz-gap-analysis / core-design.md）
+- 状态 / 决策日期 / 关联（v0 roadmap / core-design.md）
 - 背景（现状 + 痛点 + TikZ 等价）
 - 决策（定稿方案：schema 草案 + DSL 表面 + 理由；只写最终采纳的做法，不列被否决的中间方案）
 - 待决策点（方案内部的小决策，越细越好）

@@ -54,7 +54,7 @@
 - v0.1 执行计划：[`v0.1/roadmap.md`](./v0.1/roadmap.md)
 - ADR：`notes/decisions/plot/`
 - core 路线与能力：[`core v0 roadmap`](../../core/v0/roadmap.md)
-- TikZ gap 分析：[`tikz-gap-analysis.md`](../../../analysis/tikz-gap-analysis.md)
+- 横向对比分析：[`plot-compare-analysis.md`](../../../analysis/plot-compare-analysis.md)
 
 本文件不再跟踪 alpha-by-alpha 细节。具体计划变化时，先改对应版本的 `v0.*/roadmap.md`；只有阶段主题或边界变化时，才更新本 roadmap。
 
