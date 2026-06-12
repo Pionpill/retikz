@@ -8,26 +8,29 @@ import { node } from './builder/node';
 import { scope } from './builder/scope';
 import type { ScopeBuilder } from './builder/scope';
 import type { Child, CoordinateConfig, DrawConfig, FigureConfig, ScopeConfig, Way } from './builder/types';
+import { mountCanvas } from './mountCanvas';
 import { mountSvg } from './mountSvg';
 import { renderToSvgString } from './renderToSvgString';
 import { toScene } from './toScene';
-import type { MountOptions, RenderToStringOptions, VanillaView } from './types';
+import type { CanvasView, MountCanvasOptions, MountOptions, RenderToStringOptions, VanillaView } from './types';
 
 /**
  * 命令式 builder 的装配产物 —— 唯一返回类型
  * @description hyperscript（`figure(config, children)`）与 fluent（`figure(config).node(...)`）都产它、可混用、`.ir` 一致。
- *   `.mount`/`.toSvgString`/`.toCanvas` 把 `this.ir`（IR，非 Figure）交底层 renderer；fluent 方法往内部 children 追加、链式返回 this。
+ *   `.mount`/`.mountCanvas`（交互式挂载）/`.toSvgString`/`.toCanvas`（一次性产出）把 `this.ir`（IR，非 Figure）交底层
+ *   renderer；fluent 方法往内部 children 追加、链式返回 this。
  */
 export type Figure = {
   readonly [FIGURE_BRAND]: true;
   readonly ir: IR;
   mount: (container: Element, options?: MountOptions) => VanillaView;
+  mountCanvas: (container: Element, options?: MountCanvasOptions) => CanvasView;
   toSvgString: (options?: RenderToStringOptions) => string;
   toCanvas: (canvas: HTMLCanvasElement, options?: RenderOptions) => void;
   node: (...args: Parameters<typeof node>) => Figure;
   draw: (way: Way, config?: DrawConfig) => Figure;
   coordinate: (id: string, config: CoordinateConfig) => Figure;
-  scope: (config: ScopeConfig, build: (s: ScopeBuilder) => void) => Figure;
+  scope: (config: ScopeConfig, arg: Array<Child> | ((s: ScopeBuilder) => void)) => Figure;
 };
 
 /** figure() 的内部入口：装配 Figure（持 config + children，方法闭包其上） */
@@ -51,6 +54,10 @@ export const createFigure = (config: FigureConfig, children: Array<Child>): Figu
     },
     mount(container, options) {
       return mountSvg(container, fig.ir, renderOptions(options));
+    },
+    mountCanvas(container, options) {
+      // 交互式 canvas 挂载（hydrate / update / clientToScene）；与 .mount 对称，把 figure config 并进 call-site 后交底层
+      return mountCanvas(container, fig.ir, renderOptions(options));
     },
     toSvgString(options) {
       return renderToSvgString(fig.ir, renderOptions(options));
@@ -77,8 +84,8 @@ export const createFigure = (config: FigureConfig, children: Array<Child>): Figu
       children.push(coordinate(id, coordConfig));
       return fig;
     },
-    scope(scopeConfig, build) {
-      children.push(scope(scopeConfig, build));
+    scope(scopeConfig, arg) {
+      children.push(scope(scopeConfig, arg));
       return fig;
     },
   };

@@ -12,7 +12,7 @@ export type ScopeBuilder = {
   node: (...args: Parameters<typeof node>) => ScopeBuilder;
   draw: (...args: Parameters<typeof draw>) => ScopeBuilder;
   coordinate: (...args: Parameters<typeof coordinate>) => ScopeBuilder;
-  scope: (config: ScopeConfig, build: (s: ScopeBuilder) => void) => ScopeBuilder;
+  scope: (config: ScopeConfig, arg: Array<Child> | ((s: ScopeBuilder) => void)) => ScopeBuilder;
 };
 
 const createScopeBuilder = (sink: Array<Child>): ScopeBuilder => {
@@ -29,8 +29,8 @@ const createScopeBuilder = (sink: Array<Child>): ScopeBuilder => {
       sink.push(coordinate(...args));
       return self;
     },
-    scope(config, build) {
-      sink.push(scope(config, build));
+    scope(config, arg) {
+      sink.push(scope(config, arg));
       return self;
     },
   };

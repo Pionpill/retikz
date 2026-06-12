@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { IR } from '@retikz/core';
-import { mountCanvas } from '../src';
+import { figure, mountCanvas, node } from '../src';
 
 /**
  * @retikz/vanilla mountCanvas（无框架 canvas 直挂，jsdom 环境）
@@ -97,5 +97,28 @@ describe('@retikz/vanilla mountCanvas', () => {
 
   it('mount-canvas-null-container：非 Element 容器 → 可诊断 throw', () => {
     expect(() => mountCanvas(null as never, idIr)).toThrow(/container/i);
+  });
+
+  // W17 / W23：Figure 也有交互式 mountCanvas，且 standalone mountCanvas 收 Figure 时 delegate 给它（与 mountSvg→figure.mount 对称）
+  it('figure-mountCanvas：Figure.mountCanvas 挂出交互式 CanvasView（hydrate / update / clientToScene）', () => {
+    const container = document.createElement('div');
+    const fig = figure({ width: 100, height: 100 }, [
+      node('a', { position: [0, 0], shape: 'rectangle', minimumWidth: 40, minimumHeight: 20, fill: '#0a0' }),
+    ]);
+    const view = fig.mountCanvas(container);
+    expect(view.root).toBeInstanceOf(HTMLCanvasElement);
+    expect(typeof view.hydrate).toBe('function');
+    expect(typeof view.clientToScene).toBe('function');
+    expect(container.querySelector('canvas')).toBe(view.root);
+  });
+
+  it('mount-canvas-figure-delegates：standalone mountCanvas 收 Figure → delegate figure.mountCanvas', () => {
+    const container = document.createElement('div');
+    const fig = figure({ width: 100, height: 100 }, [
+      node('a', { position: [0, 0], shape: 'rectangle', minimumWidth: 40, minimumHeight: 20 }),
+    ]);
+    const view = mountCanvas(container, fig);
+    expect(view.root).toBeInstanceOf(HTMLCanvasElement);
+    expect(container.querySelector('canvas')).toBe(view.root);
   });
 });

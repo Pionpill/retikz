@@ -22,7 +22,8 @@ const resolveDevicePixelRatio = (override: number | undefined): number => {
 
 /**
  * 把 IR / Scene / Figure 挂成真实 `<canvas>` DOM（无框架浏览器 runtime，对齐 `mountSvg`）
- * @description 收 IR 时 `toScene` compile、收 Scene 直用、收 Figure 解 `figure.ir`。位图按「名义显示尺寸」
+ * @description 收 `Figure` 时 delegate 给 `figure.mountCanvas`（与 mountSvg→`figure.mount` 对称）。收 IR 时
+ *   `toScene` compile、收 Scene 直用。位图按「名义显示尺寸」
  *   `width`/`height`（均为有限数值时）× dpr 开、否则回退内容边界；`renderToCanvas` 再把 Scene 内容 meet-fit
  *   进去（镜像 SVG `preserveAspectRatio=meet` + CanvasHost）。返回的 `CanvasView` 暴露 `hydrate`（hitTest 定位）
  *   与 `clientToScene`（逆 meet-fit 坐标映射）。DOM 仅在调用时惰性触碰，`import` 本模块不碰 DOM——守 SSR 导入安全。
@@ -32,6 +33,7 @@ export const mountCanvas = (
   input: RenderInput,
   options: MountCanvasOptions = {},
 ): CanvasView => {
+  if (isFigure(input)) return input.mountCanvas(container, options);
   if (typeof Element === 'undefined' || !(container instanceof Element)) {
     throw new Error('mountCanvas: container must be a DOM Element.');
   }
@@ -144,8 +146,7 @@ export const mountCanvas = (
     resetVisibleBridge();
   };
 
-  const initialScene = isFigure(input) ? input.ir : input;
-  renderInto(initialScene);
+  renderInto(input);
   container.appendChild(canvas);
 
   /**
