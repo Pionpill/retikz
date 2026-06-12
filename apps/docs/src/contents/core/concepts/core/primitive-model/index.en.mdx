@@ -24,15 +24,15 @@ From the inside out, the layers are: the content box innermost, then the inner f
 | Content box | `text` / children / font | Base text measurement |
 | Inner frame | Text measurement + `innerXSep` / `innerYSep` + minimum size | Base half-axes passed to the shape |
 | Shape | `shape.circumscribe` and `shape.emit` | The visible outline |
-| Bounding box | Shape enclosing the inner frame, excluding `margin` | Base for viewBox, layout footprint, and hit bounds |
-| Boundary | `boundary`, following shape by default | Where automatic connections attach |
+| Bounding box | Shape enclosing the inner frame (visual envelope, excludes `margin`) | Base for rendering/clipping; plus `margin` it becomes the layout footprint / viewBox |
+| Boundary | `boundary`, following shape by default | The surface border anchors attach to (automatic / compass / angle) |
 | Anchor | compass / angle / shape-specific / edge point | Precise points other primitives can reference |
 
 Reading the figure follows the compile order:
 
 <ComponentPreview name="node-model-pipeline" size="xs" hideCode />
 
-The bounding box encloses only the rendered shape, not `margin` — margin is extra clearance for connections that moves path endpoints farther from the boundary.
+The bounding box encloses only the rendered shape, not `margin`. `margin` (`outerSep`) is a uniform offset outside the connection boundary: it pushes **every border anchor** (automatic endpoints and explicit `.north` / `.30`) out by `margin`, and the node occupies that enlarged extent in viewBox / layout — the visible shape itself does not change (matching TikZ `outer sep`).
 
 ## Box Model
 
@@ -40,20 +40,20 @@ Like the CSS box model, a Node is three nested frames from the inside out.
 
 - **Content box**: determined by `text` / children and `font` — the base size from text measurement.
 - **Inner frame**: the content box plus `innerXSep` / `innerYSep` (whose symmetric alias is `padding`), taken at least as large as `minimumWidth` / `minimumHeight` (or `minimumSize`). This is the base half-axes passed to the shape — for a rectangular node, it is the drawn shape.
-- **Outer frame**: the inner frame plus `outerSep` (whose symmetric alias is `margin`). It does not change the shape; it leaves a `margin` gap outside the shape, marking where automatic path endpoints ultimately stop.
+- **Outer frame**: the inner frame plus `outerSep` (whose symmetric alias is `margin`). It does not change the visible shape; it pushes the node's connection/reference boundary out by `margin` — every border anchor (automatic endpoints and explicit ones like `.north`) lands on this ring, and the node's layout footprint / viewBox is measured from it too (matching TikZ `outer sep`).
 
 <ComponentPreview name="node-frames" size="md" hideCode />
 
-The innermost gray block is the content box, the middle dashed ring is the inner frame (the rectangular node's shape), and the outermost dashed ring is the outer frame (where automatic path endpoints stop). The two gaps are `innerSep` (i.e. `padding`, between the content box and the shape, enlarging the shape) and `outerSep` (i.e. `margin`, between the shape and the boundary — the shape stays, the path endpoint just stops short).
+The innermost gray block is the content box, the middle dashed ring is the inner frame (the rectangular node's shape), and the outermost dashed ring is the outer frame (the outer boundary where border anchors and path endpoints land). The two gaps are `innerSep` (i.e. `padding`, between the content box and the shape, enlarging the shape) and `outerSep` (i.e. `margin`, between the shape and the outer boundary — the shape stays, but anchors / path endpoints move out and the layout footprint includes it).
 
 The inner frame answers "how large must this node be at minimum" and is the starting point for all later geometry: the shape circumscribes it, and connections and anchors ultimately land on boundaries derived from it. Even an empty-text node has an inner frame — inner sep and minimum size keep it from collapsing to a point.
 
 | Prop | Changes | Result |
 | --- | --- | --- |
 | `padding` (innerSep) | Distance from content to shape | Shape grows, bounding box grows |
-| `margin` (outerSep) | Extra distance from shape to automatic path endpoint | Shape stays the same, path stops earlier |
+| `margin` (outerSep) | Uniform outer offset around the connection boundary (TikZ outer sep) | Shape stays the same; all border anchors and path endpoints move out, and the layout footprint includes margin |
 
-Padding is part of the Node model. Margin is more like clearance for incoming paths.
+Padding grows the shape itself; margin leaves the shape untouched and instead pushes the node's outer boundary (anchors / connections / footprint) outward — matching TikZ `outer sep`. It defaults to 0, so unset means zero effect.
 
 ## Shape
 
@@ -78,7 +78,7 @@ The bounding box and the boundary are both enclosing surfaces outside the shape,
 
 <ComponentPreview name="bbox-boundary" size="sm" hideCode />
 
-Both nodes are the same polygon shape (a hexagon) with the same inner frame (the innermost dashed rectangle) and bounding box (the gray dashed rectangle) — identical on both sides. On the left, `boundary="shape"` (the default), so automatic connections attach to the polygon edge; on the right, `boundary="circle"`, so they attach to the blue dashed circle instead — note it can extend past the bounding box. Changing boundary only moves where connections land — it leaves the shape, inner frame, and bounding box untouched.
+Both nodes are the same polygon shape (a hexagon) with the same inner frame (the innermost dashed rectangle) and bounding box (the gray dashed rectangle) — identical on both sides. On the left, `boundary="shape"` (the default), so automatic connections attach to the polygon edge; on the right, `boundary="circle"`, so they attach to the blue dashed circle instead — note it can extend past the bounding box. Changing boundary only moves the surface border anchors attach to — it leaves the shape, inner frame, bounding box, and layout footprint untouched.
 
 The **bounding box** is not the visual outline itself. It is the rectangle that encloses the outline, so complex shapes can still participate in viewBox calculation, layout, and rendering with one shared model. A few shapes also provide `circumscribeOffset`, allowing the semantic `position` to differ from the bounding-box center. For example, a sector is positioned by its circle center, while its bounding box is offset toward the sector.
 
@@ -89,10 +89,10 @@ When a Node borrows another boundary, retikz lays that boundary over the current
 | Setting | Changes | Does not change |
 | --- | --- | --- |
 | `shape` | Visible outline, bounding box, shape anchors | Center semantics |
-| `boundary` | Automatic endpoints, compass anchor surface | Visual node, bounding box, layout footprint |
+| `boundary` | The surface border anchors (automatic / compass / angle) attach to | Visual node, bounding box, layout footprint |
 | Per-edge boundary override | Current path endpoint | Node defaults |
 
-So the bounding box is the footprint rectangle used for layout and rendering, while the boundary is closer to a connection hit surface — neither is the drawn shell.
+So the bounding box is the visual envelope used for rendering (plus `margin` it becomes the layout footprint), while the boundary is closer to a connection hit surface — neither is the drawn shell. `outerSep` is orthogonal to boundary: the boundary sets the **shape** of the outer edge, `outerSep` sets **how far** it expands outward.
 
 ## Anchors
 

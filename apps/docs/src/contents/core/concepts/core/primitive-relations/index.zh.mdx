@@ -1,74 +1,55 @@
 ---
 title: 图元关系
-description: 通过 anchor、边界、边上比例点与 margin 描述图元之间的稳定连接关系。
+description: 接着图元模型，讲两个图元一旦连起来，端点如何落到对方几何上——动态贴边、锁定位置、组边界与 margin。
 ---
 
-图元关系描述“连接线或参考点应该落在节点的哪个位置”：例如从节点右侧出线、贴到顶部边界，或把某个标注对齐到节点中心。每个 `<Node>` 在几何上都有一组可命名的锚点；方位命名分两层：`CompassAnchor` 是 canonical 名称，沿用 TikZ 风格；`WebAnchor` 是面向 Web / CSS 心智的输入别名，编译时会归一到对应的 `CompassAnchor`。
+[图元模型](/core/concepts/core/primitive-model) 讲清了*单个*图元的几何：它有多大、暴露哪些锚点。图元关系接着讲*两个*图元之间的事——一条 path 引用另一个图元时，端点最终落到对方几何的哪个位置。
 
-Path / Draw 引用节点时既能让 retikz 自动选边界点（最常见），也能用对象形态 `{ id, anchor?, offset? }` 锁死具体位置（写 JSX 时可用 `'A.north'` / `'A.top-left'` / `'A.30'` 字符串简写）。带 `id` 的 `<Scope>` 也会注册一个矩形边界，可用同样的 anchor 语法引用整组图元。
+retikz 把这种连接的解析分成两种模式：
 
-## 方位锚点
+- **动态贴边（auto）**：只给目标 id，端点随两者相对方向自动选边。
+- **锁定位置（explicit）**：指定具体锚点，端点定死，不受相对方向影响。
 
-| CompassAnchor | 位置 |
-| --- | --- |
-| `center` | 节点几何中心 |
-| `north` / `south` / `east` / `west` | 上 / 下 / 右 / 左 4 个方位的边界点 |
-| `north-east` / `north-west` / `south-east` / `south-west` | 4 个对角方位的边界点 |
+## 动态贴边 vs 锁定位置
 
-内置四种 [`shape`](/core/components/node) 都遵守这套命名（按各自几何取对应位置）：
+先看两种模式的差别。下面左右两组几何完全相同，只是引用写法不同：
 
-| | rectangle | circle | ellipse | diamond |
-| --- | --- | --- | --- | --- |
-| `north` / 等 4 方位 | 边中点 | 圆周 4 方位 | 椭圆轴端 | 4 顶点 |
-| `north-east` / 等 4 对角 | 4 角 | 圆周 45° 处 | 椭圆参数 t=π/4 处 | 4 边中点 |
+<ComponentPreview name="relation-dynamic-vs-locked" size="md" hideCode />
 
-节点 `rotate` 时 9 个锚点跟着旋转。
+左组用纯 id（`'T'`），端点随来源方向分别贴到目标的 NW / SE 边；右组锁定到 `'T.north'`，无论来源在哪，端点都钉在上边中点。**默认优先 auto**——它让连线随布局自适应；只有要固定从某侧出线、做排版对齐或复刻已有图时才锁定。
 
-自定义 shape 的 anchor 行为由它的 `ShapeDefinition` 提供：推荐支持这 9 个标准方位 anchor，方便与内置形状互换；如果某个注册形状不支持某个 anchor，编译期会给出对应错误。见 [自定义形状](/core/reference/extending/shape-registry)。
+| 模式 | 写法 | 端点行为 | 适合 |
+| --- | --- | --- | --- |
+| 动态贴边 | `'T'` / `{ id: 'T' }` | 随相对方向选边 | 流程图、DAG、一般关系线 |
+| 锁定位置 | `'T.north'` / `{ id, anchor }` | 定死，不随方向变 | 固定出线侧、排版对齐、复刻图 |
 
-<Comparison target="tikz" title="锚点命名">
+## 自动连接 auto-attach
 
-`center` / `north` / `south` / `east` / `west` / `north-east` / `north-west` / `south-east` / `south-west` 沿用 TikZ 的常用 anchor 词汇，方便把节点关系从 LaTeX 图迁到 JSX 写法。
+纯 id 引用时（`<Step to="a">` / `<Draw way={['a', ...]}>`），retikz 在编译期调 `boundaryPoint`：从目标中心朝**邻居 step 方向**画射线，取与连接面（boundary）的交点作端点。所以端点取决于两个图元的相对位置——这正是"关系"的含义。
 
-</Comparison>
-
-也可以用更贴近 Web / CSS 方向词的 `WebAnchor`。无论写在对象形式 `{ id, anchor: 'top-left' }`，还是字符串 shorthand `'A.top-left'`，都会归一到上面的 canonical anchor：
-
-| WebAnchor | 等价 CompassAnchor |
-| --- | --- |
-| `top` / `bottom` / `right` / `left` | `north` / `south` / `east` / `west` |
-| `top-right` / `top-left` | `north-east` / `north-west` |
-| `bottom-right` / `bottom-left` | `south-east` / `south-west` |
-
-## 自动贴边界
-
-最常用：path 用纯 id 字符串引用节点时（`<Step to="a">` / `<Draw way={['a', ...]}>`），retikz 在 compile 阶段调 `boundaryPoint`——从节点中心向"邻居 step 方向"画射线，取与 border 的交点作为线段端点。
-
-下面 8 条 Draw 都是 `[外圈节点, 'Node']`——结果分别贴到中心节点的 N / S / E / W / NE / NW / SE / SW 边界附近：
+下面 8 条 Draw 都是 `[外圈节点, 'Node']`，端点分别贴到中心节点的 8 个方位：
 
 <ComponentPreview name="anchors-auto-attach" size="md" hideCode />
 
-选择原则：流程图、DAG 边、普通关系线默认只写节点 id，让 retikz 自动贴边；只有需要固定从某一侧出线、做排版对齐或复刻已有图时，才写显式 anchor / 角度。要让线离边框远一点，用 `margin`，不要为了留空隙把目标改成手算坐标。
+端点落在哪一层表面，由目标的 **boundary** 决定（默认跟随 shape）——boundary 怎么和 shape、外接框分工，见 [图元模型](/core/concepts/core/primitive-model)。要让线离边框远一点，用 `margin`（见下），不要为了留空隙把目标改成手算坐标。
 
-`<Scope id="cluster">` 会把子树的视觉外接框注册成一个可引用边界，外部 path 可以写 `'cluster'` / `'cluster.north'` / `'cluster.30'`。这适合给一组节点画外部连线；更细的命名空间和 bbox 行为见 [Scope](/core/components/layout/scope)。
+## 锁定连接：显式 anchor
 
-## 显式 anchor：对象形态（主契约）
-
-不想自动选边、要锁死某个具体位置？path target 用**对象形态** `{ id, anchor?, offset? }`——这是 core IR 的主契约（序列化 / LLM 生成 / JSON patch 都用对象）：
+要锁死某个具体位置，path target 用**对象形态** `{ id, anchor?, offset? }`——这是 core IR 的主契约（序列化 / LLM 生成 / JSON patch 都用对象）：
 
 | anchor 形态 | 含义 |
 | --- | --- |
-| 省略 anchor | `{ id: 'A' }`：自动贴边（同纯 id，**最常用**） |
-| 命名 anchor | `{ id: 'A', anchor: 'north' }` / `{ id: 'A', anchor: 'top' }`：标准方位 anchor 或其 Web 别名 |
-| 角度 anchor | `{ id: 'A', anchor: 30 }`：deg 角度方向的视觉边界点 |
-| 边上比例点 | `{ id: 'A', anchor: { side: 'north', t: 0.25 } }`：见下「边上比例点」 |
-| anchor + 偏移 | `{ id: 'A', anchor: 'west', offset: [-4, 0] }`：解析到 anchor / 边点后再加世界系 `[dx, dy]`（不随节点 rotate 旋转） |
+| 省略 anchor | `{ id: 'A' }`：动态贴边（同纯 id） |
+| 命名 anchor | `{ id: 'A', anchor: 'north' }`：标准方位或 Web 别名 |
+| 角度 anchor | `{ id: 'A', anchor: 30 }`：deg 方向的视觉边界点 |
+| 边上比例点 | `{ id: 'A', anchor: { side: 'north', t: 0.25 } }` |
+| anchor + 偏移 | `{ id: 'A', anchor: 'west', offset: [-4, 0] }`：解析到点后再加世界系 `[dx, dy]`（不随节点 rotate 旋转） |
 
-命名 / 角度 / 边上比例点 **位置定死**——不受邻居 step 方向影响（auto 模式才动态调整）。下面 8 条 Draw 用 8 个不同的命名 anchor 作端点：
+anchor 的命名规则和几何含义都在 [图元模型 · 锚点](/core/concepts/core/primitive-model)；这里只关心一点：命名 / 角度 / 边上比例点都**位置定死**，不受邻居 step 方向影响（只有 auto 模式才动态调整）。下面 8 条 Draw 用 8 个不同的命名 anchor 作端点：
 
 <ComponentPreview name="anchors-explicit" size="md" />
 
-### 字符串 shorthand（React DSL 便捷写法）
+### 字符串 shorthand
 
 写 JSX / Draw way 时可用字符串简写，React 层会 eager 解析成上面的对象（core IR 仍是对象形态）：
 
@@ -79,20 +60,39 @@ Path / Draw 引用节点时既能让 retikz 自动选边界点（最常见），
 | `'A.top-left'` | `{ id: 'A', anchor: 'north-west' }` |
 | `'A.30'` | `{ id: 'A', anchor: 30 }` |
 
-> **dotted-id 限制**：字符串 shorthand 按**第一个 `.`** 切分，所以 **id 含 `.` 时不能用 shorthand**——改写对象形态 `{ id: 'a.b', anchor: 'north' }`。`{ side, t }` 边上比例点也**只有对象形态**能表达。
->
-> **支持的 anchor 名**：上述 9 个标准方位 anchor，以及 `top` / `top-left` 等 Web 别名。`'text'` / `'base'` / `'mid'` 等文字基线 anchor 暂不属于公开 API。
+> **dotted-id 限制**：字符串按**第一个 `.`** 切分，所以 **id 含 `.` 时不能用 shorthand**——改写对象形态 `{ id: 'a.b', anchor: 'north' }`。`{ side, t }` 边上比例点也**只有对象形态**能表达。
 
-## 边上比例点 `{ side, t }`
+path target 还能写笛卡尔、极坐标、相对 / 偏移 / 比例定位等形态——完整目录见 [定位](/core/concepts/basic/position)。本页只覆盖"引用另一个图元"这一种。
 
-`{ side, t }` 取 shape **真实边界**某条边上从约定起点起 `t ∈ [0, 1]` 比例处——方向 north/south 西→东、east/west 北→南：rectangle 沿直边、circle / ellipse 沿该侧可见周长弧段、diamond 沿可见斜边。`{ side: 'west', t: 1/3 }` = 左边三等分点，`{ side: 'north', t: 0.5 }` = 上边中点（等于命名 `'north'`）。
+## 组连接：Scope 边界
 
-<ComponentPreview name="anchors-side-t" size="sm" />
+`<Scope id="cluster">` 把子树的视觉外接框注册成一个可引用边界，外部 path 用 `'cluster'` / `'cluster.north'` / `'cluster.30'` 引用——auto / 锁定两种模式同样适用，只是连接对象从单个节点换成一整组图元：
 
-## margin 让线"留呼吸"
+<ComponentPreview name="relation-scope" size="md" />
 
-`<Node margin={n}>`：border 不变，但 **auto 模式** 的 path 端点向外推 `n` user units——多节点流程图里 `margin={4}` 就够让连线不顶死 border。
+上图外部 `ext` 用纯 `'cluster'` 自动贴到朝它一侧的组边界，用 `'cluster.north'` 锁定到组的上边中点。适合给一组节点画外部连线；更细的命名空间和 bbox 行为见 [Scope](/core/components/layout/scope)。
+
+## margin：连接的呼吸距离
+
+`<Node margin={n}>` 不改视觉 border，但把节点的连接边界整体外推 `n` user units——**auto 端点和显式 border 锚点（`'A.east'` / `'A.30'`）都一致外移**，连线不顶死边框（对齐 TikZ `outer sep`）。多节点流程图里 `margin={4}` 通常就够。margin 在节点盒模型里的位置（与 padding 的分工）见 [图元模型](/core/concepts/core/primitive-model)。
 
 <ComponentPreview name="anchors-margin" size="xs" />
 
-注意：显式 anchor / 角度（`'A.east'` / `'A.30'`）取的是**视觉 border**，不应用 margin。如要把端点推得更远，加额外 padding 或显式坐标偏移。
+注意：只有 border 锚点（auto / compass / 角度）随 margin 外移；`center`、形状专属锚点、边上比例点 `{side,t}` 和标签附着点仍取**视觉 shape**、不吃 margin。要让连线在某处贴死视觉边，用这些点或显式坐标偏移。
+
+## 延伸阅读
+
+<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+  <LinkedCard href="/core/concepts/core/primitive-model">
+    <span className="font-semibold">图元模型</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">单个图元的内容、形状、边界与锚点如何分层</span>
+  </LinkedCard>
+  <LinkedCard href="/core/concepts/basic/position">
+    <span className="font-semibold">定位</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">path target 与实体放置的完整位置表达</span>
+  </LinkedCard>
+  <LinkedCard href="/core/components/layout/scope">
+    <span className="font-semibold">Scope</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">分组、命名空间与可引用的组边界</span>
+  </LinkedCard>
+</div>
