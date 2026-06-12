@@ -27,6 +27,11 @@
     "label": "Core",
     "introduction": "Introduction",
     "getStart": "Get Started",
+    "releases": "Releases",
+    "changelog": "Changelog",
+    "changelogV03": "v0.3",
+    "changelogV02": "v0.2",
+    "changelogV01": "v0.1",
     "components": "Components",
     "concepts": "Concepts",
     "layout": "Layout",
@@ -95,6 +100,9 @@
     "label": "Plot",
     "introduction": "Introduction",
     "getStart": "Get Started",
+    "releases": "Releases",
+    "changelog": "Changelog",
+    "changelogV01": "v0.1",
     "data": "Data",
     "dataModel": "Data Model",
     "dataProcessing": "Processing",
@@ -139,7 +147,6 @@
     "sourceCodeGuide": "Source Code Guide",
     "aiAssistedDevelopment": "AI-assisted development",
     "releases": "Releases",
-    "changelog": "Changelog",
     "versioning": "Versioning",
     "roadmap": "Roadmap"
   },
@@ -356,13 +363,8 @@
     "errorUnknown": "Request failed: {{message}}"
   },
   "changelog": {
-    "filterPackages": "Filter packages",
-    "groupCore": "Core",
-    "groupPlot": "Plot",
-    "groupOther": "Other",
     "inDevelopment": "In development",
     "prereleaseCount": "Expand {{count}} pre-release details",
-    "collapse": "Collapse pre-release details",
-    "emptyFilter": "Nothing matches the selected packages. Pick at least one package on the right."
+    "collapse": "Collapse pre-release details"
   }
 }

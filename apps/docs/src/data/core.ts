@@ -160,4 +160,19 @@ export const coreSection: Array<Section> = [
       },
     ],
   },
+  {
+    id: 'releases',
+    label: 'core.releases',
+    pages: [
+      {
+        id: 'changelog',
+        label: 'core.changelog',
+        children: [
+          { id: 'v0-3', label: 'core.changelogV03' },
+          { id: 'v0-2', label: 'core.changelogV02' },
+          { id: 'v0-1', label: 'core.changelogV01' },
+        ],
+      },
+    ],
+  },
 ];

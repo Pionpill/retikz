@@ -1,15 +1,15 @@
 import { BlogFrontmatter } from '@/components/shared/blog-frontmatter';
 import type { MdxFrontmatter } from '@/components/shared/mdx-content';
-import { ChangelogFilter, ChangelogView, changelogToMarkdown } from '@/components/shared/changelog';
+import { ChangelogOverview, ChangelogVersionDetail, changelogToMarkdown } from '@/components/shared/changelog';
 import { InlineMdx, MdxContent, MdxToc } from '@/components/shared/mdx-content';
-import { changelog, changelogPageDescription } from '@/data/changelog';
+import { changelogForModule, changelogPageDescription, changelogVersionSlug } from '@/data/changelog';
 import { getSectionsByModule } from '@/data/sections';
 import { buildDocPageLinks } from '@/lib/docLinks';
 import { cn } from '@/lib/utils';
 import { useAiChatStore } from '@/store/useAiChatStore';
 import { useTocStore } from '@/store/useTocStore';
 import type { FC, HTMLAttributes } from 'react';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { docPathSegments, isChangelogLocation, useDocLocation } from './docLocation';
 import { DocPageActions } from './DocPageActions';
@@ -43,8 +43,21 @@ export const DocPage: FC<DocPageProps> = props => {
   const { source, segments: sourceSegments, notFound, resolvedLang } = useMdxSource();
   const tocOpen = useTocStore(state => state.tocOpen);
 
-  /** changelog 页走数据驱动渲染,不走 mdx 管线 */
+  /** changelog 页走数据驱动渲染,不走 mdx 管线（releases/changelog 分组下的概览与各中版本详情子页） */
   const isChangelog = isChangelogLocation(loc);
+  const moduleId = loc?.moduleId;
+  /** 当前模块的 changelog 切片（core / plot 各取自己包组）；非 changelog 页为空 */
+  const changelogReleases = useMemo(
+    () => (isChangelog && moduleId ? changelogForModule(moduleId) : []),
+    [isChangelog, moduleId],
+  );
+  /** 分组节点本身（无 subPage）为精简概览；带 subPage 时按 slug 命中某中版本详情 */
+  const isChangelogOverview = isChangelog && loc?.subPageId == null;
+  const changelogVersion = useMemo(() => {
+    const sub = loc?.subPageId;
+    if (!isChangelog || !sub) return undefined;
+    return changelogReleases.find(release => changelogVersionSlug(release.minor) === sub);
+  }, [isChangelog, loc?.subPageId, changelogReleases]);
 
   const [frontmatter, setFrontmatter] = useState<MdxFrontmatter>({});
   /** 始终保留上一次非 null 的 source；过渡态时下游继续看见旧内容直至新 mdx 编译就绪 */
@@ -62,13 +75,15 @@ export const DocPage: FC<DocPageProps> = props => {
   const aiChatTitleKey = target?.label ?? null;
   useEffect(() => {
     if (!loc || !aiChatTitleKey) return;
-    const mdx = isChangelog ? changelogToMarkdown(changelog, aiChatLang) : stableSource;
+    const mdx = isChangelog
+      ? changelogToMarkdown(changelogVersion ? [changelogVersion] : changelogReleases, aiChatLang)
+      : stableSource;
     if (mdx == null) return;
     const title = String(t(aiChatTitleKey));
     const { rawUrl } = buildDocPageLinks(loc, aiChatLang);
     const path = `/${docPathSegments(loc).join('/')}`;
     setAiChatCurrentPage({ title, mdx, lang: aiChatLang, rawUrl, path });
-  }, [loc, aiChatTitleKey, stableSource, isChangelog, aiChatLang, t, setAiChatCurrentPage]);
+  }, [loc, aiChatTitleKey, stableSource, isChangelog, changelogReleases, changelogVersion, aiChatLang, t, setAiChatCurrentPage]);
   useEffect(
     () => () => {
       useAiChatStore.getState().setCurrentPage(null);
@@ -102,7 +117,9 @@ export const DocPage: FC<DocPageProps> = props => {
 
   const title = t(target.label);
   const description = isChangelog
-    ? changelogPageDescription[aiChatLang]
+    ? isChangelogOverview
+      ? changelogPageDescription[aiChatLang]
+      : null
     : typeof frontmatter.description === 'string'
       ? frontmatter.description
       : null;
@@ -139,12 +156,13 @@ export const DocPage: FC<DocPageProps> = props => {
           </header>
           <div className="[&_p]:[overflow-wrap:anywhere] [&_li]:[overflow-wrap:anywhere] [&_h1]:[overflow-wrap:anywhere] [&_h2]:[overflow-wrap:anywhere] [&_h3]:[overflow-wrap:anywhere] [&_h4]:[overflow-wrap:anywhere]">
             {isChangelog ? (
-              <>
-                <div className="mb-6 @[64rem]:hidden">
-                  <ChangelogFilter lang={aiChatLang} layout="bar" />
-                </div>
-                <ChangelogView />
-              </>
+              isChangelogOverview ? (
+                <ChangelogOverview releases={changelogReleases} moduleId={loc.moduleId} />
+              ) : changelogVersion ? (
+                <ChangelogVersionDetail release={changelogVersion} />
+              ) : (
+                <p className="text-sm text-muted-foreground">{t('common.contentPlaceholder', { title })}</p>
+              )
             ) : notFound ? (
               <p className="text-sm text-muted-foreground">{t('common.contentPlaceholder', { title })}</p>
             ) : (
@@ -167,7 +185,7 @@ export const DocPage: FC<DocPageProps> = props => {
             tocOpen ? 'translate-x-0' : 'pointer-events-none translate-x-2',
           )}
         >
-          {isChangelog ? <ChangelogFilter lang={aiChatLang} /> : stableSource != null ? <MdxToc source={stableSource} /> : null}
+          {isChangelog ? null : stableSource != null ? <MdxToc source={stableSource} /> : null}
         </div>
       </aside>
     </main>

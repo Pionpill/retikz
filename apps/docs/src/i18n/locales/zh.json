@@ -27,6 +27,11 @@
     "label": "核心",
     "introduction": "简介",
     "getStart": "快速开始",
+    "releases": "发布",
+    "changelog": "更新日志",
+    "changelogV03": "v0.3",
+    "changelogV02": "v0.2",
+    "changelogV01": "v0.1",
     "components": "组件",
     "concepts": "概念",
     "layout": "布局",
@@ -95,6 +100,9 @@
     "label": "绘图",
     "introduction": "简介",
     "getStart": "快速开始",
+    "releases": "发布",
+    "changelog": "更新日志",
+    "changelogV01": "v0.1",
     "data": "数据",
     "dataModel": "数据模型",
     "dataProcessing": "数据处理",
@@ -139,7 +147,6 @@
     "sourceCodeGuide": "源码指南",
     "aiAssistedDevelopment": "AI 辅助开发",
     "releases": "发布",
-    "changelog": "更新日志",
     "versioning": "版本策略",
     "roadmap": "路线图"
   },
@@ -356,13 +363,8 @@
     "errorUnknown": "请求失败：{{message}}"
   },
   "changelog": {
-    "filterPackages": "筛选包",
-    "groupCore": "核心",
-    "groupPlot": "绘图",
-    "groupOther": "其他",
     "inDevelopment": "开发中",
     "prereleaseCount": "展开 {{count}} 个预发布明细",
-    "collapse": "收起预发布明细",
-    "emptyFilter": "没有匹配所选包的内容,请在右侧勾选至少一个包。"
+    "collapse": "收起预发布明细"
   }
 }

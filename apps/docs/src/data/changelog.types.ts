@@ -66,9 +66,8 @@ export const PACKAGE_LABEL: Record<PackageId, Localized> = {
   docs: { zh: '文档站', en: 'Docs' },
 };
 
-/** 筛选 chips 的类别分组:core 基础设施 / plot 图表层 / other（文档站等非 npm 包） */
+/** 包的类别分组:core 基础设施 / plot 图表层 / other（文档站等非 npm 包）；用于把包映射到对应文档模块的 changelog 切片 */
 export type PackageGroup = {
-  /** i18n key 后缀(changelog.group<Id 首字母大写>) */
   id: 'core' | 'plot' | 'other';
   /** 该组按序包含的包标识 */
   members: ReadonlyArray<PackageId>;

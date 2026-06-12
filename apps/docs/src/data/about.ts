@@ -10,7 +10,6 @@ export const aboutSection: Array<Section> = [
     id: 'releases',
     label: 'about.releases',
     pages: [
-      { id: 'changelog', label: 'about.changelog' },
       { id: 'versioning', label: 'about.versioning' },
       { id: 'roadmap', label: 'about.roadmap' },
     ],

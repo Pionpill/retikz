@@ -60,4 +60,17 @@ export const plotSection: Array<Section> = [
       { id: 'lowering', label: 'plot.refLowering' },
     ],
   },
+  {
+    id: 'releases',
+    label: 'plot.releases',
+    pages: [
+      {
+        id: 'changelog',
+        label: 'plot.changelog',
+        children: [
+          { id: 'v0-1', label: 'plot.changelogV01' },
+        ],
+      },
+    ],
+  },
 ];

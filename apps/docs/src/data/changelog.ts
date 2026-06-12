@@ -1,9 +1,10 @@
-import type { Localized, Release } from './changelog.types';
+import type { Localized, PackageId, Release } from './changelog.types';
+import { PACKAGE_GROUPS } from './changelog.types';
 
-/** changelog 页副标题(替代原 mdx frontmatter description) */
+/** changelog 概览页副标题(替代原 mdx frontmatter description) */
 export const changelogPageDescription: Localized = {
-  zh: 'retikz 历版发布记录,按中版本聚合、倒序排列。左侧时间线标 stable 日期,右侧按包筛选;预发布默认折叠。',
-  en: 'retikz release history, grouped by minor version, newest first. Stable dates on the left timeline, filter by package on the right; pre-releases collapsed by default.',
+  zh: '本模块各中版本的发布记录,按版本倒序;点击任一版本查看该版本各包的详细变更。',
+  en: 'Release history for this module by minor version, newest first; click a version for that version’s detailed per-package changes.',
 };
 
 export const changelog: Array<Release> = [
@@ -901,7 +902,7 @@ export const changelog: Array<Release> = [
   },
 
   {
-    minor: 'plot-v0.1',
+    minor: 'v0.1',
     stableDate: null,
     packages: [
       {
@@ -1649,7 +1650,7 @@ export const changelog: Array<Release> = [
 
   {
     minor: 'v0.2',
-    stableDate: null,
+    stableDate: '2026-06-03',
     packages: [
       {
         pkg: '@retikz/core',
@@ -3205,68 +3206,29 @@ export const changelog: Array<Release> = [
       },
     ],
   },
-
-  {
-    minor: 'v0.0',
-    stableDate: '2025-04-30',
-    packages: [
-      {
-        pkg: '@retikz/core',
-        version: 'v0.0',
-        description: {
-          zh: '第一个公开版本系列,从 `rc.0` 迭代到 `rc.3`。只发了 React 单包,没有 IR 与跨框架架构。',
-          en: 'The first public series, iterating from `rc.0` through `rc.3`. A single React package — no IR, no cross-framework architecture.',
-        },
-        highlights: [
-          {
-            label: { zh: 'React 单包起点', en: 'Single React package' },
-            content: {
-              zh: '最初的 React 组件库形态,补齐箭头类型与竖向 way 类型、兼容 React 18',
-              en: 'The original React component library form — adds arrow / vertical way types and React 18 compatibility',
-            },
-          },
-        ],
-        subVersions: [
-          {
-            version: 'rc.0–rc.3',
-            date: '2025-04-30',
-            summary: {
-              zh: 'React 单包系列,补能力 + 兼容 React 18 + 修若干 bug。',
-              en: 'The single-package React series — adds capabilities, React 18 compatibility, and several bug fixes.',
-            },
-            items: [
-              {
-                label: { zh: '新增', en: 'Added' },
-                content: {
-                  zh: '箭头类型 `Circle`;竖向 way 类型 `|-|` / `-|-`',
-                  en: 'Arrow type `Circle`; vertical way types `|-|` / `-|-`',
-                },
-              },
-              {
-                label: { zh: '变更', en: 'Changed' },
-                content: {
-                  zh: '兼容 React 18',
-                  en: 'React 18 compatibility',
-                },
-              },
-              {
-                label: { zh: '修复', en: 'Fixed' },
-                content: {
-                  zh: '修复 way 转换 bug、`ScopeContext` 透传问题、若干 TypeScript 错误与告警,以及个别非功能性参数透传错误',
-                  en: 'Fixed a converted-way bug, `ScopeContext` propagation, various TypeScript errors / warnings, and non-functional prop forwarding regressions',
-                },
-              },
-              {
-                label: { zh: '移除', en: 'Removed' },
-                content: {
-                  zh: '构建产物移除对 `react/jsx-runtime` 的依赖',
-                  en: 'Dropped the `react/jsx-runtime` dependency from build output',
-                },
-              },
-            ],
-          },
-        ],
-      },
-    ],
-  },
 ];
+
+/** 文档模块 id → changelog 包组：core / plot 模块各对应同名包组 */
+const MODULE_GROUP = new Map<string, 'core' | 'plot' | 'other'>([
+  ['core', 'core'],
+  ['plot', 'plot'],
+]);
+
+/** 中版本号 → URL slug（`v0.3` → `v0-3`），概览页链接与详情页 subPage id 共用 */
+export const changelogVersionSlug = (minor: string): string => minor.replaceAll('.', '-');
+
+/** 包标识 → 所属包组 */
+const groupOfPackage = (pkg: PackageId): 'core' | 'plot' | 'other' | undefined =>
+  PACKAGE_GROUPS.find(group => group.members.includes(pkg))?.id;
+
+/**
+ * 按文档模块取 changelog 切片
+ * @description 过滤每个里程碑的 packages 到该模块所属包组，丢弃过滤后无包块的里程碑；不修改入参。未知模块返回空数组。
+ */
+export const changelogForModule = (moduleId: string): Array<Release> => {
+  const group = MODULE_GROUP.get(moduleId);
+  if (!group) return [];
+  return changelog
+    .map(release => ({ ...release, packages: release.packages.filter(block => groupOfPackage(block.pkg) === group) }))
+    .filter(release => release.packages.length > 0);
+};
