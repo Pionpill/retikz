@@ -1,6 +1,6 @@
 ---
 title: Primitive Relations
-description: Following the primitive model, this is what happens once two primitives connect — how the endpoint lands on the other's geometry, through dynamic attach, locked positions, group boundaries, and margin.
+description: "Following the primitive model: how two primitives connect — where endpoints land (dynamic attach / locked), margin clearance, line styles and routing, and group connections."
 ---
 
 The [primitive model](/core/concepts/core/primitive-model) covers the geometry of a *single* primitive: how big it is and which anchors it exposes. Primitive relations cover what happens *between two* primitives — when a path references another primitive, where its endpoint finally lands on the other's geometry.
@@ -14,26 +14,26 @@ retikz resolves such a connection in two modes:
 
 Start with the difference between the two modes. The two groups below have identical geometry — only the reference syntax differs:
 
-<ComponentPreview name="relation-dynamic-vs-locked" size="md" hideCode />
+<ComponentPreview name="relation-dynamic-vs-locked" size="sm" hideCode />
 
-The left group uses plain ids (`'T'`), so endpoints land on the target's NW / SE border by source direction; the right group locks to `'T.north'`, so endpoints pin to the top-edge midpoint no matter where the source is. **Prefer auto by default** — it lets connections adapt to the layout; lock only when a line must leave a specific side, align with a layout, or replicate an existing diagram.
+The left group uses plain ids (`'T'`), so endpoints land on the target's west / east border by source direction; the right group locks to `'T.north'`, so endpoints pin to the top-edge midpoint no matter where the source is. **Prefer auto by default** — it lets connections adapt to the layout; lock only when a line must leave a specific side, align with a layout, or replicate an existing diagram.
 
 | Mode | Syntax | Endpoint behavior | Best for |
 | --- | --- | --- | --- |
 | Dynamic attach | `'T'` / `{ id: 'T' }` | Picks a border by relative direction | Flowcharts, DAGs, ordinary relation lines |
 | Locked position | `'T.north'` / `{ id, anchor }` | Fixed, ignores direction | Fixed exit side, layout alignment, replicas |
 
-## Auto border attachment
+### Dynamic attach
 
 With a plain id reference (`<Step to="a">` or `<Draw way={['a', ...]}>`), retikz calls `boundaryPoint` at compile time: it casts a ray from the target center toward the **neighbor step's direction** and takes the intersection with the connection surface (boundary) as the endpoint. So the endpoint depends on the relative position of the two primitives — which is exactly what "relation" means.
 
-The 8 Draws below are all `[outerNode, 'Node']`, landing on the 8 directions of the center node:
+Each group below has 8 `[outerNode, center]` draws: the left center has a rectangle boundary, the right an ellipse boundary. Endpoints attach to each boundary — edges / corners for the rectangle, the corresponding perimeter point for the ellipse:
 
-<ComponentPreview name="anchors-auto-attach" size="md" hideCode />
+<ComponentPreview name="anchors-auto-attach" size="sm" hideCode />
 
 Which surface the endpoint lands on is decided by the target's **boundary** (following shape by default) — for how boundary, shape, and bounding box divide their roles, see the [primitive model](/core/concepts/core/primitive-model). To keep lines off the border, use `margin` (below) rather than replacing the target with hand-computed coordinates.
 
-## Locked connection: explicit anchor
+### Locked position
 
 To lock onto a specific position, a path target uses the **object form** `{ id, anchor?, offset? }` — this is the core IR contract (serialization / LLM generation / JSON patch all use objects):
 
@@ -45,40 +45,61 @@ To lock onto a specific position, a path target uses the **object form** `{ id, 
 | edge proportional | `{ id: 'A', anchor: { side: 'north', t: 0.25 } }` |
 | anchor + offset | `{ id: 'A', anchor: 'west', offset: [-4, 0] }`: resolve the point, then add a world-space `[dx, dy]` (not rotated by the node's `rotate`) |
 
-The anchor naming rules and geometric meanings all live in the [primitive model · anchors](/core/concepts/core/primitive-model); here only one thing matters: named / angle / edge-proportional anchors are **fixed in place**, unaffected by neighbor step direction (only auto mode adjusts dynamically). The 8 Draws below use 8 different named anchors as endpoints:
+The anchor naming rules and geometric meanings all live in the [primitive model · anchors](/core/concepts/core/primitive-model); here only one thing matters: named / angle / edge-proportional anchors are **fixed in place**, unaffected by neighbor step direction (only auto mode adjusts dynamically). The three groups below: rectangle / ellipse use generic compass anchors, while star uses its own `tip-N`:
 
-<ComponentPreview name="anchors-explicit" size="md" />
+<ComponentPreview name="anchors-explicit" size="sm" hideCode />
 
-### String shorthand
-
-In JSX / Draw way you may use a string shorthand; the React layer eager-parses it into the object form above (the core IR stays object-form):
-
-| shorthand | equivalent object |
-| --- | --- |
-| `'A'` | `{ id: 'A' }` |
-| `'A.north'` | `{ id: 'A', anchor: 'north' }` |
-| `'A.top-left'` | `{ id: 'A', anchor: 'north-west' }` |
-| `'A.30'` | `{ id: 'A', anchor: 30 }` |
-
-> **dotted-id limitation**: the string splits on the **first `.`**, so an **id containing `.` cannot use the shorthand** — write the object form `{ id: 'a.b', anchor: 'north' }`. The `{ side, t }` edge proportional point is **object-form only**.
+> **Compass anchors always use the box model**: named / angle anchors resolve on the node's **bounding-box rectangle (bbox)** by default. So on the ellipse hub, N/S/E/W land on the axis ends while the diagonals NE/NW/SE/SW land on the **bbox corners (outside the ellipse)** — unlike dynamic attach, which casts a ray against the real shape. To pin named anchors on the ellipse perimeter, set `boundary="ellipse"`.
+>
+> **Shape-specific anchors are the exception**: a star's `tip-N`, a sector's `apex` / `outer-arc-mid`, etc. are named points unique to that shape and always land on the **real geometry**, regardless of `boundary` (right group above).
 
 A path target can also be a Cartesian, polar, relative / offset / proportional position — see [positioning](/core/concepts/basic/position) for the full catalog. This page only covers "referencing another primitive".
 
-## Group connection: Scope boundary
-
-`<Scope id="cluster">` registers the visual bounding box of its subtree as a referenceable boundary, and outer paths reference it via `'cluster'` / `'cluster.north'` / `'cluster.30'` — both auto and locked modes apply, only the connection target changes from a single node to a whole group of primitives:
-
-<ComponentPreview name="relation-scope" size="md" />
-
-Above, the external `ext` uses plain `'cluster'` to auto-attach to the group boundary on its side, and `'cluster.north'` to lock onto the group's top-edge midpoint. This is useful for drawing outer connections to a whole group; namespace and bbox details live in [Scope](/core/components/layout/scope).
-
-## `margin` gives connections breathing room
+## Line clearance
 
 `<Node margin={n}>` leaves the visible border untouched but pushes the node's whole connection boundary outward by `n` user units — **auto endpoints and explicit border anchors (`'A.east'` / `'A.30'`) move out alike**, so lines don't touch the border directly (matching TikZ `outer sep`). In multi-node flowcharts `margin={4}` is usually enough. For where margin sits in the node box model (and how it divides from padding), see the [primitive model](/core/concepts/core/primitive-model).
 
-<ComponentPreview name="anchors-margin" size="xs" />
+<ComponentPreview name="anchors-margin" size="xs" hideCode />
 
-Note: only border anchors (auto / compass / angle) move out with `margin`; `center`, shape-specific anchors, edge-proportional points `{side,t}`, and label attachment still hit the **visual shape** and ignore `margin`. To keep a connection on the visible edge at some point, use those or an explicit coordinate offset.
+The three columns above are: no margin (touching the border), auto with margin (a border anchor → backs off into a gap), and `{side,t}` with margin (an edge point → still touches the visual border). Only border anchors (auto / compass / angle) move out with `margin`; `center`, shape-specific anchors, edge-proportional points `{side,t}`, and label attachment still hit the **visual shape** and ignore `margin`. To keep a connection on the visible edge at some point, use those or an explicit coordinate offset.
+
+`margin` also depends on the shape family: it applies to **text-container shapes** (rectangle / ellipse / polygon, sized by the inner frame) but not to **param-driven shapes** (star / sector, sized by params).
+
+<ComponentPreview name="margin-shapes" size="sm" hideCode />
+
+The ellipse and pentagon are rect-driven — `margin` inflates their connection boundary and the endpoint backs off into a gap; the star is param-driven (size from `outerRadius`), so `margin` only inflates the bounding box without changing the star boundary, and the endpoint still touches the real tip with no gap. For star / sector breathing room, use an explicit coordinate offset.
+
+## Lines and routing
+
+A connection isn't limited to a straight line. Here are three common styles between the same pair of endpoints — straight, curve, fold:
+
+<ComponentPreview name="connection-styles" size="xs" hideCode />
+
+`<Draw>`'s `way` supports more styles; for full syntax and params, see [Draw](/core/components/draw/overview):
+
+| Style | Syntax | Best for |
+| --- | --- | --- |
+| Line | `['a', 'b']` | Default, most common |
+| Fold | `'-\|'` / `'\|-'` | Right-angle routing |
+| Bend | `{ bend }` | Smooth detours, bidirectional edges |
+| Bézier | `{ curve }` / `{ cubic }` | Custom control points |
+| Arc / circle / ellipse | `{ arc }` etc. | Arc around the previous point |
+
+A target can also offset from the **previous endpoint**, sparing you absolute coordinates: `'+dx,dy'` (TikZ `+`, a temporary offset that doesn't advance the base) and `'++dx,dy'` (TikZ `++`, advances the base to the new point); the object forms are `{ relative }` / `{ relativeAccumulate }`. Below, consecutive `++` offsets walk a staircase from a:
+
+<ComponentPreview name="connection-relative" size="xs" hideCode />
+
+A connection target need not be a node, either. `<Coordinate>` declares a position-only, non-rendered named point that paths can reference just like a node — handy as a routing waypoint, an alignment reference, or a geometric midpoint. Below, a `via` coordinate is placed first, then the connection `['a', 'via', 'b']` routes through it:
+
+<ComponentPreview name="connection-coordinate" size="xs" hideCode />
+
+## Group connection
+
+`<Scope id="cluster">` registers the visual bounding box of its subtree as a referenceable boundary, and outer paths reference it via `'cluster'` / `'cluster.north'` / `'cluster.30'` — both auto and locked modes apply, only the connection target changes from a single node to a whole group of primitives:
+
+<ComponentPreview name="relation-scope" size="sm" hideCode />
+
+Above, the light-gray dashed outline is the cluster's bounding box; the external `ext` uses plain `'cluster'` to auto-attach to the boundary on its side, and `'cluster.north'` to lock onto the top-edge midpoint. This is useful for drawing outer connections to a whole group; namespace and bbox details live in [Scope](/core/components/layout/scope).
 
 ## Further Reading
 
