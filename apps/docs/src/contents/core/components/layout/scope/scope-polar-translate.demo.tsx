@@ -16,7 +16,7 @@ const Demo: FC = () => (
       <Node position={[0, 0]} shape="circle">1</Node>
       <Node position={[60, 0]} shape="circle">2</Node>
     </Scope>
-    <Node position={[0, 0]} shape="circle" padding={4} stroke="gray">hub</Node>
+    <Node position={[0, 0]} shape="circle" padding={4} stroke="gray" dashed>hub</Node>
   </Layout>
 );
 

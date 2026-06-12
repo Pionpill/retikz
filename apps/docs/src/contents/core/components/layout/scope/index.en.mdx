@@ -99,7 +99,7 @@ Between places the scope at a proportional point between two endpoints:
 
 A bare `polar-translate` only moves the scope's origin — it does **not** rotate the local frame, so animating its angle keeps the scope content's orientation fixed ("like a satellite drifting along the orbit"). To make the scope also self-rotate so its front always faces the center ("tidal lock"), chain a `rotate(angle + 180)`:
 
-<ComponentPreview name="scope-orbit-facing-hub" size="xl" />
+<ComponentPreview name="scope-orbit-facing-hub" size="md" />
 
 Chain application order: in `[t0, t1]` the **last** element is applied first (innermost), so `rotate` runs first to align local +x toward hub, then `polar-translate` pushes the origin to the orbital position. The `+ 180` flips scope's +x from "pointing outward" to "pointing at hub"; drop it to face outward (front away from center).
 
@@ -118,6 +118,8 @@ Child node ids register into the global nodeIndex by default, and outer path end
 Append `.<anchor>` / `.<deg>` to the id for the node's visual border point (computed on the global rect with accumulated rotate / scale):
 
 <ComponentPreview name="scope-anchor-cross" size="sm" />
+
+Note that compass anchors (`north` / `south-west`, the 8 directions) resolve on the node's **bounding box (AABB)** by default, not the shape outline — so on the circular `hub`, `south-west` lands at the bounding box's bottom-left corner, **outside** the circle; only the 4 edge midpoints (`north` / `east` / `south` / `west`) actually sit on the circle. To hug the shape outline itself, use an angle anchor `.<deg>` (e.g. `hub.225` for the south-west point on the circle), or set `boundary="circle"` so compass anchors follow the circle.
 
 ### scope.id: reference the scope as a whole
 

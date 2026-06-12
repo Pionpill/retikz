@@ -13,7 +13,7 @@ const Demo: FC = () => (
     <Scope transforms={[{ kind: 'scale', x: 2 }]}>
       <Node id="B" position={{ of: 'anchor', offset: [40, 0] }} shape="circle" padding={4}>B</Node>
     </Scope>
-    <Node id="B-ref" position={{ of: 'anchor', offset: [40, 64] }} shape="circle" padding={4} stroke="gray">B-ref</Node>
+    <Node id="B-ref" position={{ of: 'anchor', offset: [40, 64] }} shape="circle" padding={4} stroke="gray" dashed>B-ref</Node>
     <Draw way={['anchor', 'B']} arrow="->" stroke="gray" dashPattern={[4, 2]} />
     <Draw way={['anchor', 'B-ref']} arrow="->" stroke="gray" dashPattern={[4, 2]} />
   </Layout>

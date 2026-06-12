@@ -99,7 +99,7 @@ between 用两个端点的比例点落点：
 
 单 `polar-translate` 只平移 scope 原点、**不旋转**坐标系——动画过程 scope 内容朝向恒定，"像沿圆轨自由飘浮的卫星"。要让 scope 自身随轨道角度旋转（"潮汐锁定"，前方始终对准圆心），chain 一个 `rotate(angle + 180)`：
 
-<ComponentPreview name="scope-orbit-facing-hub" size="xl" />
+<ComponentPreview name="scope-orbit-facing-hub" size="md" />
 
 chain 应用顺序：数组 `[t0, t1]` 里 `t1` 先生效（innermost），所以先 `rotate` 把局部 +x 转到指向 hub 的方向，再 `polar-translate` 推到轨道位置。`+ 180` 让 scope 的 +x 从"指外"翻转到"指 hub"；想让 +x 指外（前方背离圆心），去掉 `+ 180` 即可。
 
@@ -118,6 +118,8 @@ scope 内 node id 默认注册到全局 nodeIndex，外部 path 端点 / `at.of`
 引用 id 后追加 `.<anchor>` / `.<deg>` 取节点视觉边界点（含累积 rotate / scale 后的全局边界）：
 
 <ComponentPreview name="scope-anchor-cross" size="sm" />
+
+注意 compass 方位锚（`north` / `south-west` 等 8 方位）默认取节点**外接矩形（AABB）**的边 / 角点，不是形状轮廓——所以圆形节点 `hub` 的 `south-west` 落在外接框左下角、在圆**外**；只有 `north` / `east` / `south` / `west` 4 个边中点正好压在圆周上。要贴形状轮廓本身，用角度锚 `.<deg>`（如 `hub.225` 取圆周上西南方向的点），或给节点设 `boundary="circle"` 让 compass 锚改走圆边界。
 
 ### scope.id：作为引用整体
 

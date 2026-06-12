@@ -11,44 +11,19 @@ import type { FC } from 'react';
  *   视觉验证：6 个标签都"低头看向 hub"——文字朝向随轨道角度连续变化。
  */
 const Demo: FC = () => (
-  <Layout width={420} height={420}>
-    <Node id="hub" position={[0, 0]} shape="circle" padding={6}>hub</Node>
-    <Scope transforms={[
-      { kind: 'polar-translate', origin: 'hub', angle: 0, radius: 140 },
-      { kind: 'rotate', degrees: 0 + 180 },
-    ]}>
-      <Node position={[0, 0]} minimumWidth={50} minimumHeight={22}>0°</Node>
-    </Scope>
-    <Scope transforms={[
-      { kind: 'polar-translate', origin: 'hub', angle: 60, radius: 140 },
-      { kind: 'rotate', degrees: 60 + 180 },
-    ]}>
-      <Node position={[0, 0]} minimumWidth={50} minimumHeight={22}>60°</Node>
-    </Scope>
-    <Scope transforms={[
-      { kind: 'polar-translate', origin: 'hub', angle: 120, radius: 140 },
-      { kind: 'rotate', degrees: 120 + 180 },
-    ]}>
-      <Node position={[0, 0]} minimumWidth={50} minimumHeight={22}>120°</Node>
-    </Scope>
-    <Scope transforms={[
-      { kind: 'polar-translate', origin: 'hub', angle: 180, radius: 140 },
-      { kind: 'rotate', degrees: 180 + 180 },
-    ]}>
-      <Node position={[0, 0]} minimumWidth={50} minimumHeight={22}>180°</Node>
-    </Scope>
-    <Scope transforms={[
-      { kind: 'polar-translate', origin: 'hub', angle: 240, radius: 140 },
-      { kind: 'rotate', degrees: 240 + 180 },
-    ]}>
-      <Node position={[0, 0]} minimumWidth={50} minimumHeight={22}>240°</Node>
-    </Scope>
-    <Scope transforms={[
-      { kind: 'polar-translate', origin: 'hub', angle: 300, radius: 140 },
-      { kind: 'rotate', degrees: 300 + 180 },
-    ]}>
-      <Node position={[0, 0]} minimumWidth={50} minimumHeight={22}>300°</Node>
-    </Scope>
+  <Layout width={300} height={300} style={{ maxWidth: '100%', height: 'auto' }}>
+    <Node id="hub" position={[0, 0]} stroke="none">hub</Node>
+    {[0, 60, 120, 180, 240, 300].map(angle => (
+      <Scope
+        key={angle}
+        transforms={[
+          { kind: 'polar-translate', origin: 'hub', angle, radius: 105 },
+          { kind: 'rotate', degrees: angle + 180 },
+        ]}
+      >
+        <Node position={[0, 0]} stroke="none">{`${angle}°`}</Node>
+      </Scope>
+    ))}
   </Layout>
 );
 
