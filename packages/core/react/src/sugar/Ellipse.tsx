@@ -23,8 +23,6 @@ export type EllipseProps = PathVisualProps &
   BoxAdjustmentProps & {
     /** Box input for fitting an ellipse. */
     box?: ShapeBox;
-    /** Alias of `box` for layout-style code. */
-    boundingBox?: ShapeBox;
     /** Partial closing mode when angles are present. */
     closed?: 'chord' | 'open' | 'sector';
   } & (
@@ -32,7 +30,6 @@ export type EllipseProps = PathVisualProps &
     | { center: IRTarget; diameterX: number; diameterY: number }
     | { corner1: [number, number]; corner2: [number, number] }
     | { box: ShapeBox }
-    | { boundingBox: ShapeBox }
   );
 
 const resolveEllipseByBox = (
@@ -59,8 +56,6 @@ export const Ellipse: FC<EllipseProps> = props => {
   let radiusY: number;
   if ('box' in props) {
     ({ center, radiusX, radiusY } = resolveEllipseByBox(props, 'Ellipse', props.box!));
-  } else if ('boundingBox' in props) {
-    ({ center, radiusX, radiusY } = resolveEllipseByBox(props, 'Ellipse', props.boundingBox!));
   } else if ('radiusX' in props) {
     center = requireXY(props.center, 'Ellipse', 'center');
     radiusX = props.radiusX;
@@ -79,7 +74,7 @@ export const Ellipse: FC<EllipseProps> = props => {
     [radiusX, radiusY] = boxSize(normalized).map(value => value / 2) as [number, number];
   } else {
     throw new Error(
-      '<Ellipse> needs one of { center, radiusX, radiusY }, { center, diameterX, diameterY }, { corner1, corner2 }, { box }, or { boundingBox }',
+      '<Ellipse> needs one of { center, radiusX, radiusY }, { center, diameterX, diameterY }, { corner1, corner2 }, or { box }',
     );
   }
 

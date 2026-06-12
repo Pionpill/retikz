@@ -26,8 +26,6 @@ export type CircleProps = PathVisualProps &
     fit?: 'contain' | 'cover';
     /** Box input for fitting a circle. */
     box?: ShapeBox;
-    /** Alias of `box` for layout-style code. */
-    boundingBox?: ShapeBox;
     /** Partial closing mode when angles are present. */
     closed?: 'chord' | 'open' | 'sector';
   } & (
@@ -36,7 +34,6 @@ export type CircleProps = PathVisualProps &
     | { from: [number, number]; to: [number, number] }
     | { corner1: [number, number]; corner2: [number, number] }
     | { box: ShapeBox }
-    | { boundingBox: ShapeBox }
   );
 
 const resolveCircleByBox = (
@@ -62,8 +59,6 @@ export const Circle: FC<CircleProps> = props => {
   let radius: number;
   if ('box' in props) {
     ({ center, radius } = resolveCircleByBox(props, 'Circle', props.box!));
-  } else if ('boundingBox' in props) {
-    ({ center, radius } = resolveCircleByBox(props, 'Circle', props.boundingBox!));
   } else if ('radius' in props) {
     center = props.center;
     radius = props.radius;
@@ -85,7 +80,7 @@ export const Circle: FC<CircleProps> = props => {
     radius = (fit === 'cover' ? Math.max(width, height) : Math.min(width, height)) / 2;
   } else {
     throw new Error(
-      '<Circle> needs one of { center, radius }, { center, diameter }, { from, to }, { corner1, corner2 }, { box }, or { boundingBox }',
+      '<Circle> needs one of { center, radius }, { center, diameter }, { from, to }, { corner1, corner2 }, or { box }',
     );
   }
 

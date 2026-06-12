@@ -28,7 +28,7 @@ const Demo: FC = () => (
     </Node>
 
     <Ellipse
-      boundingBox={{ origin: [304, 27], width: 56, height: 46 }}
+      box={{ origin: [304, 27], width: 56, height: 46 }}
       startAngle={210}
       endAngle={330}
       closed="sector"

@@ -49,11 +49,11 @@ describe('Circle equivalence', () => {
     );
   });
 
-  it('box / boundingBox fit', () => {
+  it('box fit（contain / cover；x/y 与 origin 两种 box 写法）', () => {
     expect(ir(<Circle box={{ x: 0, y: 0, width: 10, height: 4 }} />).children).toEqual(
       ir(<Circle center={[5, 2]} radius={2} />).children,
     );
-    expect(ir(<Circle boundingBox={{ origin: [0, 0], width: 10, height: 4 }} fit="cover" />).children).toEqual(
+    expect(ir(<Circle box={{ origin: [0, 0], width: 10, height: 4 }} fit="cover" />).children).toEqual(
       ir(<Circle center={[5, 2]} radius={5} />).children,
     );
   });
@@ -108,11 +108,11 @@ describe('Ellipse equivalence', () => {
     );
   });
 
-  it('box / boundingBox fit', () => {
+  it('box fit（x/y 与 origin 两种 box 写法）', () => {
     expect(ir(<Ellipse box={{ x: 0, y: 0, width: 20, height: 10 }} />).children).toEqual(
       ir(<Ellipse center={[10, 5]} radiusX={10} radiusY={5} />).children,
     );
-    expect(ir(<Ellipse boundingBox={{ origin: [2, 4], width: 20, height: 10 }} />).children).toEqual(
+    expect(ir(<Ellipse box={{ origin: [2, 4], width: 20, height: 10 }} />).children).toEqual(
       ir(<Ellipse center={[12, 9]} radiusX={10} radiusY={5} />).children,
     );
   });

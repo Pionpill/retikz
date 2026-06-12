@@ -22,7 +22,7 @@ import { Circle, Ellipse } from '@retikz/react';
 
 ### 例子
 
-最常见的是 `center + radius`。如果手上是一个矩形范围，也可以直接用 `corner1 + corner2`、`box` 或 `boundingBox`。
+最常见的是 `center + radius`。如果手上是一个矩形范围，也可以直接用 `corner1 + corner2` 或 `box`。
 
 | 写法 | 适合 |
 | --- | --- |
@@ -30,21 +30,21 @@ import { Circle, Ellipse } from '@retikz/react';
 | `{ center, diameter }` | 已知直径 |
 | `{ from, to }` | 直径两端点 |
 | `{ corner1, corner2 }` | 放进一个包围盒 |
-| `{ box }` / `{ boundingBox }` | 用 `x/y/origin + width + height` 直接描述矩形范围 |
+| `{ box }` | 用 `x/y/origin + width + height` 直接描述矩形范围 |
 | + `fit="contain" \| "cover"` | 让圆按范围内切或外接 |
 | + `inset` / `outset` | 在原范围基础上先收缩或扩展再绘制 |
 | + angles + `closed="sector"` | 画 1/4 圆、30° 圆这类连回圆心的残缺圆 |
 
 <ComponentPreview name="circle-basic" size="sm" />
 
-椭圆和圆很像，只是半径拆成了 `radiusX` 和 `radiusY`。它也支持 `corner1 + corner2`、`box` 和 `boundingBox`。
+椭圆和圆很像，只是半径拆成了 `radiusX` 和 `radiusY`。它也支持 `corner1 + corner2` 和 `box`。
 
 | 写法 | 适合 |
 | --- | --- |
 | `{ center, radiusX, radiusY }` | 已知中心和两个半轴 |
 | `{ center, diameterX, diameterY }` | 已知两个直径 |
 | `{ corner1, corner2 }` | 放进一个包围盒 |
-| `{ box }` / `{ boundingBox }` | 用 `x/y/origin + width + height` 直接描述矩形范围 |
+| `{ box }` | 用 `x/y/origin + width + height` 直接描述矩形范围 |
 | + `inset` / `outset` | 先收缩或扩展范围再画椭圆 |
 | + angles + `closed="sector"` | 画连回中心的部分椭圆 |
 
@@ -58,14 +58,14 @@ import { Circle, Ellipse } from '@retikz/react';
 | | `center` + `diameter` | 用圆心和直径画圆 |
 | | `from` + `to` | 用两点画圆 |
 | | `corner1` + `corner2` | 用包围盒画内切圆 |
-| | `box` / `boundingBox` | 用矩形范围描述圆，配合 `fit` / `inset` / `outset` |
+| | `box` | 用矩形范围描述圆，配合 `fit` / `inset` / `outset` |
 | | + `fit?` | `contain` 取内切，`cover` 取外接 |
 | | + `inset?` / `outset?` | 收缩或扩展 box 范围后再计算 |
 | | + angles (`startAngle` / `endAngle` / `sweepAngle`, any two) + `closed?` | 部分圆：`chord` / `sector` / `open` |
 | `<Ellipse>` | `center` + `radiusX` + `radiusY` | 用中心和两个半轴画椭圆 |
 | | `center` + `diameterX` + `diameterY` | 用中心和两个直径画椭圆 |
 | | `corner1` + `corner2` | 用包围盒画内切椭圆 |
-| | `box` / `boundingBox` | 用矩形范围描述椭圆，配合 `inset` / `outset` |
+| | `box` | 用矩形范围描述椭圆，配合 `inset` / `outset` |
 | | + `inset?` / `outset?` | 收缩或扩展 box 范围后再计算 |
 | | + angles + `closed?` | 部分椭圆：`chord` / `sector` / `open` |
 

@@ -22,7 +22,7 @@ import { Circle, Ellipse } from '@retikz/react';
 
 ### Examples
 
-The common form is `center + radius`. If you already have a rectangular area, you can also use `corner1 + corner2`, `box`, or `boundingBox`.
+The common form is `center + radius`. If you already have a rectangular area, you can also use `corner1 + corner2` or `box`.
 
 | Form | Best for |
 | --- | --- |
@@ -30,21 +30,21 @@ The common form is `center + radius`. If you already have a rectangular area, yo
 | `{ center, diameter }` | Known diameter |
 | `{ from, to }` | Diameter endpoints |
 | `{ corner1, corner2 }` | Fit inside a box |
-| `{ box }` / `{ boundingBox }` | Describe the box with `x/y/origin + width + height` |
+| `{ box }` | Describe the box with `x/y/origin + width + height` |
 | + `fit="contain" \| "cover"` | Fit the circle inside or outside the box |
 | + `inset` / `outset` | Shrink or expand the box before fitting |
 | + angles + `closed="sector"` | Draw a partial circle whose arc ends connect to the center |
 
 <ComponentPreview name="circle-basic" size="sm" />
 
-Ellipse works like Circle, but the radius is split into `radiusX` and `radiusY`. It also supports `corner1 + corner2`, `box`, and `boundingBox`.
+Ellipse works like Circle, but the radius is split into `radiusX` and `radiusY`. It also supports `corner1 + corner2` and `box`.
 
 | Form | Best for |
 | --- | --- |
 | `{ center, radiusX, radiusY }` | Known center and radii |
 | `{ center, diameterX, diameterY }` | Known diameters |
 | `{ corner1, corner2 }` | Fit inside a box |
-| `{ box }` / `{ boundingBox }` | Describe the box with `x/y/origin + width + height` |
+| `{ box }` | Describe the box with `x/y/origin + width + height` |
 | + `inset` / `outset` | Shrink or expand the box before fitting |
 | + angles + `closed="sector"` | Draw a partial ellipse whose arc ends connect to the center |
 
@@ -58,14 +58,14 @@ Ellipse works like Circle, but the radius is split into `radiusX` and `radiusY`.
 | | `center` + `diameter` | Circle from center and diameter |
 | | `from` + `to` | Circle from two points (diameter endpoints) |
 | | `corner1` + `corner2` | Largest circle inscribed in the box |
-| | `box` / `boundingBox` | Circle from a box, with `fit` / `inset` / `outset` |
+| | `box` | Circle from a box, with `fit` / `inset` / `outset` |
 | | + `fit?` | `contain` uses the shorter side, `cover` uses the longer side |
 | | + `inset?` / `outset?` | Shrink or expand the box before fitting |
 | | + angles (`startAngle` / `endAngle` / `sweepAngle`, any two) + `closed?` | Partial circle: `chord` / `sector` / `open` |
 | `<Ellipse>` | `center` + `radiusX` + `radiusY` | Ellipse from center and two radii |
 | | `center` + `diameterX` + `diameterY` | Ellipse from center and two diameters |
 | | `corner1` + `corner2` | Ellipse inscribed in the box |
-| | `box` / `boundingBox` | Ellipse from a box, with `inset` / `outset` |
+| | `box` | Ellipse from a box, with `inset` / `outset` |
 | | + `inset?` / `outset?` | Shrink or expand the box before fitting |
 | | + angles + `closed?` | Partial ellipse: `chord` / `sector` / `open` |
 
