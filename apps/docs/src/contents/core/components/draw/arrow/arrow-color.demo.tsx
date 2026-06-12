@@ -6,7 +6,7 @@ import type { FC } from 'react';
  * @description arrowDetail.color 把 marker 描边 / 实心填充改为指定颜色，覆盖默认的 context-stroke 继承；start / end 子对象的 color 字段同样支持单端 override
  */
 const Demo: FC = () => (
-  <Layout width={320} height={120}>
+  <Layout width={320} height={120} nodeDefault={{ stroke: 'gray', dashed: true }}>
     <Node id="a1" position={[0, 0]}>
       A
     </Node>

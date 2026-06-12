@@ -163,53 +163,37 @@ t 是沿整段的归一化参数，不同 kind 有不同参数化方式：
 | `'circlePath'` | 沿整圆 t∈[0, 1]：t=0 为 angle 0（+x），CCW 增长 | 圆周 90°（视觉下方） | 圆周 180°（-x） | 圆周 270°（视觉上方） |
 | `'ellipsePath'` | 同 circlePath：t=0 在 angle 0，CCW 增长 | 椭圆 90° 处 | 椭圆 180° 处（**非弧长中点**） | 椭圆 270° 处 |
 
-下面 8 个 demo 每种 kind 各演示一组 t——`t=0.25` / `'midway'` 两档对比，让 keyword=数值的语义糖关系与不同 kind 上 t 的几何含义一目了然。
+下面每种 kind 各一组 demo（`t=0.25` / `midway` 两档对比），印证表中的几何含义：
 
-##### Line
-
-直线段最直观：`t=0.25`、`midway`、`t=0.75` 分别落在段长的 1/4、中点和 3/4 处。
+**Line**
 
 <ComponentPreview name="edge-label-on-line" size="md" />
 
-##### Fold (step)
-
-折角段把 t 区间平均分给每一段折线；`midway` 固定落在拐角处，而不是按两段实际长度取视觉中点。
+**Fold (step)**
 
 <ComponentPreview name="edge-label-on-fold" size="sm" />
 
-##### Quadratic Bezier (curve)
-
-二次贝塞尔使用曲线参数 t；`midway` 是 Bezier t=0.5 的位置，不一定是视觉弧长的一半。
+**Quadratic Bezier (curve)**
 
 <ComponentPreview name="edge-label-on-curve" size="sm" />
 
-##### Cubic Bezier (cubic)
-
-三次贝塞尔同样按 Bezier 参数放置标注；两个控制点会同时影响 t 对应的位置和切线方向。
+**Cubic Bezier (cubic)**
 
 <ComponentPreview name="edge-label-on-cubic" size="sm" />
 
-##### Bend
-
-`bend` 会先展开成三次贝塞尔，因此标注位置规则与 cubic 一致。
+**Bend**
 
 <ComponentPreview name="edge-label-on-bend" size="sm" />
 
-##### Arc
-
-弧段按角度插值放置标注；`midway` 表示起始角度与终止角度的中间角。
+**Arc**
 
 <ComponentPreview name="edge-label-on-arc" />
 
-##### Circle (circlePath)
-
-整圆从 0° 位置开始绕一圈，数值 t 映射到圆周角度。
+**Circle (circlePath)**
 
 <ComponentPreview name="edge-label-on-circle" size="lg" />
 
-##### Ellipse (ellipsePath)
-
-整椭圆也按角度参数放置标注；这不是按椭圆弧长等分。
+**Ellipse (ellipsePath)**
 
 <ComponentPreview name="edge-label-on-ellipse" size="sm" />
 

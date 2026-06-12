@@ -7,12 +7,13 @@ import type { FC } from 'react';
  *   实线默认贴真实尖端、虚线 `boundary: 'circle'` 改贴外接圆。连接面由"边"决定，互不影响、也不改节点占位。
  */
 const Demo: FC = () => (
-  <Layout width={360} height={220}>
+  <Layout width={360} height={220} nodeDefault={{ stroke: 'gray', dashed: true }}>
     <Node
       id="star"
       position={[0, 0]}
       shape={{ type: 'star', params: { points: 5, innerRadius: 20, outerRadius: 50 } }}
       fill="gold"
+      stroke="none"
     />
     <Node id="a" position={[-130, 80]} />
     <Node id="b" position={[130, 80]} />

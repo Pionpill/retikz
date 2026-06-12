@@ -6,7 +6,7 @@ import type { FC } from 'react';
  * @description 等价 SVG 'Z'，三角形写完 3 条边后直接 cycle 一次结束，不用手动 line 回 A。
  */
 const Demo: FC = () => (
-  <Layout width={320} height={200}>
+  <Layout width={320} height={200} nodeDefault={{ stroke: 'gray', dashed: true }}>
     <Node id="a" position={[0, 0]}>
       A
     </Node>

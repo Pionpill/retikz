@@ -20,6 +20,14 @@ import { Path, Step } from '@retikz/react';
 </Path>
 ```
 
+`<Draw>` and `<Path>` are equivalent in expressiveness (`<Draw>` compiles to `<Path>`); reach for `<Draw>`'s single-line `way` array for everyday connections, and `<Path>` when you need an explicit Step sequence, multiple `move`s, or per-segment mixing of `kind` / label / control points:
+
+| | `<Draw>` | `<Path>` + `<Step>` |
+| --- | --- | --- |
+| Form | Single-line `way` array | Container + child nodes |
+| Expressiveness | Equivalent to Path (compile-expanded) | All Kernel capability |
+| Use when | 90% of connection cases | Explicit Step sequence, future extensions |
+
 ## Composition
 
 `<Path>` requires `<Step>` children (at least 2); if the first isn't `move`, the compiler coerces it to `move`:
@@ -174,16 +182,6 @@ Besides the symmetric `bendDirection` + `bendAngle`, `<Step kind="bend">` accept
 | `children` | `Array<<Step>>` | — | At least 2; if the first isn't `move`, the compiler coerces it to `move`. `<Step>` supports `move` / `line` / `fold` (right-angle) / `cycle` (close) / `curve` / `cubic` (Bezier) / `bend` (arc shorthand, with out/in angles and self-loops) / `arc` / `circlePath` / `ellipsePath` (circle / ellipse) / `rectangle` (diagonal rectangle); the IR also has `generator` (path generators, no JSX DSL) |
 
 ## Related
-
-### Path vs Draw
-
-| | `<Draw>` | `<Path>` + `<Step>` |
-| --- | --- | --- |
-| Form | Single-line `way` array | Container + child nodes |
-| Expressiveness | Equivalent to Path (compile-expanded) | All Kernel capability |
-| Use when | 90% of connection cases | Explicit Step sequence, future extensions |
-
-`<Draw>` compiles down to `<Path>`; tutorials should lead with `<Draw>` — `<Path>` is for users who want the underlying construct.
 
 - [Draw](/core/components/draw/overview): Sugar preferred for everyday connections
 - [Step](/core/components/draw/step): Complete field and kind reference for `<Path>` children

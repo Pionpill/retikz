@@ -2,7 +2,7 @@ import { Draw, Layout, Node } from '@retikz/react';
 import type { FC } from 'react';
 
 const Demo: FC = () => (
-  <Layout width={420} height={200}>
+  <Layout width={420} height={200} nodeDefault={{ stroke: 'gray', dashed: true }}>
     <Node id="A" position={[20, 30]}>a</Node>
     <Node id="B" position={[380, 150]}>b</Node>
     {/* Fold N=2：每段占 1/N=0.5 t 区间，拐角恒在 t=0.5（与段长无关）；

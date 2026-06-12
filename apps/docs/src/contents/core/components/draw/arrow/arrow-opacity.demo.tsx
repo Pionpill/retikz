@@ -6,7 +6,7 @@ import type { FC } from 'react';
  * @description path 实色描边、marker 0.5 opacity 视觉对照（区分于 path 整体 opacity）
  */
 const Demo: FC = () => (
-  <Layout width={320} height={80}>
+  <Layout width={320} height={80} nodeDefault={{ stroke: 'gray', dashed: true }}>
     <Node id="a" position={[0, 0]}>
       A
     </Node>

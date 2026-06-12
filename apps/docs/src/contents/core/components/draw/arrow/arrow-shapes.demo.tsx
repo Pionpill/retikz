@@ -21,7 +21,7 @@ const COL_X_RIGHT = 220;
 const COL_X_RIGHT_END = 340;
 
 const Demo: FC = () => (
-  <Layout width={400} height={220}>
+  <Layout width={400} height={220} nodeDefault={{ stroke: 'gray', dashed: true }}>
     {pairs.flatMap(([filled, hollow], row) => {
       const y = row * ROW_GAP;
       const elements = [

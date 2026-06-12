@@ -64,15 +64,11 @@ Draw has two curve families: `curve` / `cubic` / `bend` connect the previous tar
 
 <ComponentPreview name="draw-arc" size="sm" />
 
-### Shapes
-
-#### Circle
+### Full Circle / Ellipse
 
 `{ circle: { radius } }` draws a full circle around the previous item; the pen returns to the center.
 
 <ComponentPreview name="draw-circle" size="xs" />
-
-#### Ellipse
 
 `{ ellipse: { radiusX, radiusY } }` draws a full ellipse centered on the previous item.
 
@@ -88,7 +84,7 @@ Draw has two curve families: `curve` / `cubic` / `bend` connect the previous tar
 
 #### Position Rules
 
-`label.position` accepts seven keywords or a numeric `0..1` t. The geometry of t depends on step kind: line / fold use normalized path position, curve / cubic / bend use Bezier t, and arc / circle / ellipse use angular parametrization.
+`label.position` accepts seven keywords or a numeric `0..1` t. The geometry of t depends on step kind — line / fold use normalized path position, curves (curve / cubic / bend) use Bezier t, and arc / circle / ellipse use angular parametrization; see [Step §Geometric meaning of t](/core/components/draw/step#geometric-meaning-of-t-per-step-kind) for the full per-kind table and demos.
 
 Line segments are the most direct: `start` / `midway` / `end` land near the start, middle, and end of the segment.
 
@@ -97,30 +93,6 @@ Line segments are the most direct: `start` / `midway` / `end` land near the star
 Folded segments divide t evenly across the folded legs. `midway` lands on the corner, not at the visual midpoint by actual segment length.
 
 <ComponentPreview name="draw-label-fold" size="sm" />
-
-Quadratic Beziers use the curve parameter t. `midway` means Bezier t=0.5, which is not always halfway along the visible curve.
-
-<ComponentPreview name="draw-label-curve" size="sm" />
-
-Cubic Beziers also place labels by Bezier t; changing the control points changes both the position and tangent at that t.
-
-<ComponentPreview name="draw-label-cubic" size="sm" />
-
-`bend` expands to a cubic Bezier, so its label positioning follows the same rule as cubic.
-
-<ComponentPreview name="draw-label-bend" size="sm" />
-
-Arcs place labels by angle interpolation; `midway` means the middle angle between `startAngle` and `endAngle`.
-
-<ComponentPreview name="draw-label-arc" />
-
-Full circles start at the 0° position and traverse the circle; numeric t maps to the circular angle.
-
-<ComponentPreview name="draw-label-circle" size="lg" />
-
-Full ellipses also use angular parametrization, not equal divisions by ellipse arc length.
-
-<ComponentPreview name="draw-label-ellipse" size="sm" />
 
 ### Style
 

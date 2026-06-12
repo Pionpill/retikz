@@ -163,53 +163,37 @@ t is normalized along the whole segment; each kind has its own parametrization:
 | `'circlePath'` | Full circle t∈[0, 1]: t=0 at angle 0 (+x), CCW growth | 90° (visually down) | 180° (−x) | 270° (visually up) |
 | `'ellipsePath'` | Same as circlePath: t=0 at angle 0, CCW growth | Ellipse at 90° | Ellipse at 180° (**not** arc-length midpoint) | Ellipse at 270° |
 
-The eight demos below show one set of t markers per kind — `t=0.25` vs `'midway'` side-by-side — so the keyword-as-sugar relationship and the per-kind geometry of t are clear at a glance.
+One set of t markers per kind below (`t=0.25` vs `midway`), confirming the geometry in the table above:
 
-##### Line
-
-Straight segments are the most direct case: `t=0.25`, `midway`, and `t=0.75` land at one quarter, the midpoint, and three quarters of the segment length.
+**Line**
 
 <ComponentPreview name="edge-label-on-line" size="md" />
 
-##### Fold (step)
-
-Folded segments split the t interval evenly across the polyline legs; `midway` always lands on the corner, not on the visual midpoint by total leg length.
+**Fold (step)**
 
 <ComponentPreview name="edge-label-on-fold" size="sm" />
 
-##### Quadratic Bezier (curve)
-
-Quadratic Beziers use the curve parameter t. `midway` is Bezier t=0.5, which is not necessarily half of the visual arc length.
+**Quadratic Bezier (curve)**
 
 <ComponentPreview name="edge-label-on-curve" size="sm" />
 
-##### Cubic Bezier (cubic)
-
-Cubic Beziers also place labels by Bezier parameter; both control points affect the position and tangent for a given t.
+**Cubic Bezier (cubic)**
 
 <ComponentPreview name="edge-label-on-cubic" size="sm" />
 
-##### Bend
-
-`bend` is lowered to a cubic Bezier first, so its label-position rule is the same as cubic.
+**Bend**
 
 <ComponentPreview name="edge-label-on-bend" size="sm" />
 
-##### Arc
-
-Arcs place labels by angle interpolation; `midway` means the middle angle between start and end.
+**Arc**
 
 <ComponentPreview name="edge-label-on-arc" />
 
-##### Circle (circlePath)
-
-Full circles start at the 0° position and traverse the circle once; numeric t maps to a circular angle.
+**Circle (circlePath)**
 
 <ComponentPreview name="edge-label-on-circle" size="lg" />
 
-##### Ellipse (ellipsePath)
-
-Full ellipses also place labels by angle parameter; this is not equal spacing by ellipse arc length.
+**Ellipse (ellipsePath)**
 
 <ComponentPreview name="edge-label-on-ellipse" size="sm" />
 

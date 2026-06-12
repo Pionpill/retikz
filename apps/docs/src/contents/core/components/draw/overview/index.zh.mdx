@@ -64,15 +64,11 @@ Draw 里的曲线分两类：`curve` / `cubic` / `bend` 连接前后两个目标
 
 <ComponentPreview name="draw-arc" size="sm" />
 
-### 形状
-
-#### 整圆
+### 整圆 / 整椭圆
 
 `{ circle: { radius } }` 以上一项为圆心画整圆，画完画笔回到圆心。
 
 <ComponentPreview name="draw-circle" size="xs" />
-
-#### 整椭圆
 
 `{ ellipse: { radiusX, radiusY } }` 以上一项为中心画整椭圆。
 
@@ -88,7 +84,7 @@ Draw 里的曲线分两类：`curve` / `cubic` / `bend` 连接前后两个目标
 
 #### 位置规则
 
-`label.position` 接 7 个 keyword 或 `0..1` 数值 t。t 的几何含义随 step kind 变化；line / fold 按归一化路径位置，curve / cubic / bend 按 Bezier 参数，arc / circle / ellipse 按角度参数化。
+`label.position` 接 7 个 keyword 或 `0..1` 数值 t。t 的几何含义随 step kind 变化——直线 / 折角按归一化路径位置，曲线（curve / cubic / bend）按 Bezier 参数，弧 / 圆 / 椭圆按角度参数化；每种 kind 的完整对照表与逐一 demo 见 [Step §t 几何含义](/core/components/draw/step#t-在每种-step-kind-上的几何含义)。
 
 直线段最直观：`start` / `midway` / `end` 分别落在起点、中点和终点附近。
 
@@ -97,30 +93,6 @@ Draw 里的曲线分两类：`curve` / `cubic` / `bend` 连接前后两个目标
 折角段会把 t 平均分配给每一段折线；`midway` 固定落在拐角处，而不是按两段实际长度取视觉中点。
 
 <ComponentPreview name="draw-label-fold" size="sm" />
-
-二次贝塞尔使用曲线参数 t。`midway` 是 Bezier t=0.5 的位置，不一定是视觉弧长的一半。
-
-<ComponentPreview name="draw-label-curve" size="sm" />
-
-三次贝塞尔同样按 Bezier 参数放置标注；控制点变化会影响 t 对应的位置和切线方向。
-
-<ComponentPreview name="draw-label-cubic" size="sm" />
-
-`bend` 会先展开成三次贝塞尔，因此标注位置规则与 cubic 一致。
-
-<ComponentPreview name="draw-label-bend" size="sm" />
-
-弧段按角度插值放置标注；`midway` 表示起始角度与终止角度的中间角。
-
-<ComponentPreview name="draw-label-arc" />
-
-整圆从 0° 位置开始绕一圈，数值 t 映射到圆周角度。
-
-<ComponentPreview name="draw-label-circle" size="lg" />
-
-整椭圆也按角度参数放置标注；这不是按椭圆弧长等分。
-
-<ComponentPreview name="draw-label-ellipse" size="sm" />
 
 ### 样式
 

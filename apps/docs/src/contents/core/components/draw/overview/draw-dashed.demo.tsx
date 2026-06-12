@@ -6,7 +6,7 @@ import type { FC } from 'react';
  * @description 每行一个 stroke / strokeWidth / dashPattern 组合，左端 Node 当 row 标签，右端纯坐标终点。
  */
 const Demo: FC = () => (
-  <Layout width={420} height={200}>
+  <Layout width={420} height={200} nodeDefault={{ stroke: 'gray', dashed: true }}>
     <Node id="r1" position={[0, 0]} stroke="none">
       默认
     </Node>

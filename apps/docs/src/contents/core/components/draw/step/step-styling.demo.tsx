@@ -6,7 +6,7 @@ import type { FC } from 'react';
  * @description 样式都挂在父 <Path> 上整条共享；5 条 Path 同结构仅 stroke / strokeWidth / dashPattern 不同。
  */
 const Demo: FC = () => (
-  <Layout width={420} height={200}>
+  <Layout width={420} height={200} nodeDefault={{ stroke: 'gray', dashed: true }}>
     <Node id="r1" position={[0, 0]} stroke="none">
       默认
     </Node>

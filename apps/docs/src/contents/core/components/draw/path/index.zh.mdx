@@ -20,6 +20,14 @@ import { Path, Step } from '@retikz/react';
 </Path>
 ```
 
+`<Draw>` 与 `<Path>` 表达力等价（`<Draw>` 编译后就是 `<Path>`）；日常连线用 `<Draw>` 一行 way 数组更省，需要显式 Step 序列、多次 `move`、逐段混用 `kind` / label / 控制点时用 `<Path>`：
+
+| | `<Draw>` | `<Path>` + `<Step>` |
+| --- | --- | --- |
+| 写法 | 一行 way 数组 | 容器 + 子节点 |
+| 表达力 | 与 Path 等价（编译展开） | 全部 Kernel 能力 |
+| 适用 | 90% 连线场景 | 显式 Step 序列、未来扩展 |
+
 ## 组合
 
 `<Path>` 必须搭配 `<Step>` 子节点（至少 2 个）；首个非 `move` 时编译器会强制改成 `move`：
@@ -174,16 +182,6 @@ import { Path, Step } from '@retikz/react';
 | `children` | `Array<<Step>>` | — | 至少 2 个；首个非 `move` 时编译器会强制改成 `move`。`<Step>` 支持 `move` / `line` / `fold`（折角）/ `cycle`（闭合）/ `curve` / `cubic`（贝塞尔曲线）/ `bend`（弧形简记，可带 out/in 角与自环）/ `arc` / `circlePath` / `ellipsePath`（圆 / 椭圆）/ `rectangle`（对角矩形）；IR 另有 `generator`（路径生成器，无 JSX DSL） |
 
 ## 相关
-
-### 与 Draw 的取舍
-
-| | `<Draw>` | `<Path>` + `<Step>` |
-| --- | --- | --- |
-| 写法 | 一行 way 数组 | 容器 + 子节点 |
-| 表达力 | 与 Path 等价（编译展开） | 全部 Kernel 能力 |
-| 适用 | 90% 连线场景 | 显式 Step 序列、未来扩展 |
-
-`<Draw>` 由 `<Path>` 编译而成；写文档 / 教程时一律先讲 `<Draw>`，`<Path>` 是给"想看底层"的用户。
 
 - [Draw](/core/components/draw/overview)：日常连线优先使用的 Sugar
 - [Step](/core/components/draw/step)：`<Path>` 子节点的完整字段和 kind 说明
