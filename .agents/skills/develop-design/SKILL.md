@@ -47,13 +47,13 @@ retikz 是多渲染器库，authoring 层有两套对用户的入口——`@reti
 
 `notes/decisions/core/v<MAJOR>/v<MAJOR>.<MINOR>/v<MAJOR>.<MINOR>-<channel>.<N>/<NNNN>-<slug>.md`，状态 = Proposed。
 
-例：`notes/decisions/core/v0/v0.1/v0.1-alpha.5/01-some-feature.md`
+例：`notes/decisions/core/v0/v0.1/alpha.5/01-some-feature.md`
 
 ### 目录约定
 
 - **一级**：MAJOR 版本（`v0/` / `v1/`）
 - **二级**：MINOR 版本（`v0.1/` / `v0.2/`），该目录下的 `roadmap.md` 是 minor 总路线
-- **三级**：版本通道节点（`v0.1-alpha.5/` / `v0.1-beta.1/` / `v0.1-rc.1/` / `v0.1/` 表稳定），该目录下的 `roadmap.md` 是 milestone 执行路线
+- **三级**：版本通道节点（`alpha.5/` / `beta.1/` / `rc.1/` / `v0.1/` 表稳定），该目录下的 `roadmap.md` 是 milestone 执行路线
 - **PATCH 不开目录**：patch 仅修 bug、不写 ADR
 - **ADR 永久保留**：被新版决策覆盖时只标 `状态：Superseded by ADR-NN`，不删
 

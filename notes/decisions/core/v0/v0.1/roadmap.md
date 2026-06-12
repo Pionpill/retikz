@@ -10,12 +10,12 @@ v0.1 用来确认 retikz 的基础架构：core IR、Scene primitive、React DSL
 
 | Milestone | 主题 | 记录 |
 |---|---|---|
-| v0.1-alpha.4 | 节点关系层：`at` 相对定位、`Coordinate` 占位、Node label | [`v0.1-alpha.4/`](./v0.1-alpha.4/) |
-| v0.1-alpha.5 | alpha 收尾破坏性扩张：结构化 Scene primitive、StepLabel position、arrow detail、offset position | [`v0.1-alpha.5/`](./v0.1-alpha.5/) |
-| v0.1-beta.1 | 非破坏性优化与类型 / 注释 / 测试收口 | [`v0.1-beta.1/roadmap.md`](./v0.1-beta.1/roadmap.md) |
-| v0.1-beta.2 | 公开命名与 renderer-neutral 收口 | [`v0.1-beta.2/roadmap.md`](./v0.1-beta.2/roadmap.md) |
-| v0.1-rc.1 | 文档站与发布候选验收 | [`v0.1-rc.1/roadmap.md`](./v0.1-rc.1/roadmap.md) |
-| v0.1-rc.2 | 示例库与搜索体验 | [`v0.1-rc.2/roadmap.md`](./v0.1-rc.2/roadmap.md) |
+| v0.1-alpha.4 | 节点关系层：`at` 相对定位、`Coordinate` 占位、Node label | [`alpha.4/`](./alpha.4/) |
+| v0.1-alpha.5 | alpha 收尾破坏性扩张：结构化 Scene primitive、StepLabel position、arrow detail、offset position | [`alpha.5/`](./alpha.5/) |
+| v0.1-beta.1 | 非破坏性优化与类型 / 注释 / 测试收口 | [`beta.1/roadmap.md`](./beta.1/roadmap.md) |
+| v0.1-beta.2 | 公开命名与 renderer-neutral 收口 | [`beta.2/roadmap.md`](./beta.2/roadmap.md) |
+| v0.1-rc.1 | 文档站与发布候选验收 | [`rc.1/roadmap.md`](./rc.1/roadmap.md) |
+| v0.1-rc.2 | 示例库与搜索体验 | [`rc.2/roadmap.md`](./rc.2/roadmap.md) |
 
 ## ADR 约定
 

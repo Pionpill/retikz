@@ -197,7 +197,7 @@ Kernel 是用户能用的最底层 React 原语，与 IR 一一对应。约 5–
 | **是否持久化进 IR** | ❌ IR 构建时就展平为 Kernel | ✅ 高层节点形态进 IR |
 | **展开时机** | adapter builder 同步调用（React render 之前） | core `compileToScene` 内，via `lowerComposites` 钩子 |
 | **展开实现位置** | adapter（`packages/react/src/sugar/`）或 core parser（共享纯函数） | 独立 domain 包（`@retikz/plot` 等）提供 `lowerXxx: (ir) => ir` |
-| **core 是否认识** | 认识（kernel/sugar 都是 retikz 自家概念） | **不认识** —— core 看到 passthrough 节点（`IRChild` 的 open discriminator），由 `lowerComposites` 解释 |
+| **core 是否认识** | 认识（kernel/sugar 都是 retikz 自家概念） | **不认识** —— core 看到 passthrough 节点（`IRComposite`：`namespace` + `type` 两级路由），由 `lowerComposites` 据注册表解释 |
 | **跨 adapter 复用** | 弱（adapter-bound） | ✅ 强（所有 adapter 共享同一份 lowering） |
 | **典型例子** | `<Draw way={['A', '-\|', 'B']}>` / 字符串 `'+dx,dy'` / `cycle` 关键字 | `<Axis>` / `<Plot>` / `<Tree>` / `<Network>` |
 

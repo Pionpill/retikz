@@ -22,13 +22,13 @@ notes/decisions/
         ├── roadmap.md
         ├── v0.1/
         │   ├── roadmap.md
-        │   └── v0.1-beta.1/
+        │   └── beta.1/
         │       ├── roadmap.md
         │       ├── 01-xxx.md
         │       └── 02-xxx.md
         └── v0.2/
             ├── roadmap.md
-            └── v0.2-alpha.9/
+            └── alpha.9/
                 ├── roadmap.md
                 ├── 01-xxx.md
                 └── 02-xxx.md

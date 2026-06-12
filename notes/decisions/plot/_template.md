@@ -1,11 +1,11 @@
 # ADR-NN：<一句话标题>
 
 > 起新 ADR：`cp _template.md v<MAJOR>/v<MAJOR>.<MINOR>/v<MAJOR>.<MINOR>-<channel>.<N>/NN-<slug>.md`
-> 例：`cp _template.md v0/v0.1/v0.1-alpha.1/01-foo.md`
+> 例：`cp _template.md v0/v0.1/alpha.1/01-foo.md`
 > 目录约定：
 > - 一级 = MAJOR 版本号（`v0/` / `v1/`）
 > - 二级 = MINOR 版本号（`v0.1/` / `v0.2/`）
-> - 三级 = 版本通道节点（`v0.1-alpha.1/` / `v0.1-beta.1/` / `v0.1-rc.1/` / `v0.1/` 表稳定）
+> - 三级 = 版本通道节点（`alpha.1/` / `beta.1/` / `rc.1/` / `v0.1/` 表稳定）
 > - PATCH 不开目录（patch 仅修 bug，不写 ADR）
 > NN 是**按 milestone 重置**的两位数编号（目录已分组，编号无需全局唯一）。alpha.1 是 01-08，alpha.2 从 01 重新起计；跨 milestone 引用带前缀：`alpha.1 ADR-01`
 > slug 用 kebab-case

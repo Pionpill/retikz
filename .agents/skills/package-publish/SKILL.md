@@ -248,7 +248,7 @@ git tag: v0.3.0-alpha.x（已 push；plot 组为 plot-v<version>）
 
 刚发布的里程碑已封板，代码和测试是真源；bump 到下一开发版本前，把对应里程碑目录下已 `Accepted` 的 ADR 从“施工蓝图”压成“决策记录”。仍 `Proposed` 的 ADR 不动。
 
-目标目录示例：发 `0.3.0-alpha.3` → `notes/decisions/core/v0/v0.3/v0.3-alpha.3/*.md`；plot 同理在 `notes/decisions/plot/...`。
+目标目录示例：发 `0.3.0-alpha.3` → `notes/decisions/core/v0/v0.3/alpha.3/*.md`；plot 同理在 `notes/decisions/plot/...`。
 
 | 内容 | 处理 |
 | --- | --- |
