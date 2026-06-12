@@ -138,6 +138,9 @@ TODO.md
 local/
 index.html
 
+# 本地分析 / 报告产物，不入库
+notes/reports/
+
 temp.*
 superpowers/
 .superpowers/
