@@ -63,9 +63,9 @@ import { Node } from '@retikz/react';
 
 <ComponentPreview name="node-star" size="sm" />
 
-给 `params.cornerRadius` 一个正数会同时磨圆外凸尖角（tip）和内凹槽（notch），省略 / `0` 是硬角。倒角是连接感知的：朝某个尖角方向的连线端点会落在圆角弧上，而不是已被磨掉的尖角。
+给 `params.cornerRadius` 一个正数会同时磨圆外凸尖角（tip）和内凹槽（notch），省略 / `0` 是硬角。倒角是连接感知的：朝某个尖角方向**自动贴边**（不写 anchor）的连线端点会落在圆角弧上、停在尖角之前，而不是原始尖尖；显式连命名锚点 `tip-N` 则**仍落在原始尖角**（恒在逻辑顶点、不随倒角内移）。
 
-<ComponentPreview name="node-star-corner-radius" size="sm" />
+<ComponentPreview name="node-star-corner-radius" size="md" />
 
 除节点的 9 个标准 anchor（`north` / `center` …）外，星形还提供按几何命名的 anchor，可用 `{ id, anchor }` 精确连线：`tip-N`（第 N 个尖角）/ `notch-N`（第 N 个凹角）/ `center`。这些命名锚点固定在原始尖角 / 凹角的逻辑位置，不随 `cornerRadius` 内移。完整的 `<Node>` 属性见 [Node](/core/components/node/overview)。
 
