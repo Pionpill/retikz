@@ -14,10 +14,10 @@ const Demo: FC = () => (
     <Node id="E" position={{ direction: 'right', of: 'hub', distance: 110 }} shape="circle">East</Node>
     <Node id="W" position={{ direction: 'left', of: 'hub', distance: 110 }} shape="circle">West</Node>
     {/* Four paths converge at hub — visually meeting at a center point with no drawn shape */}
-    <Draw way={['N', 'hub']} arrow="->" />
-    <Draw way={['S', 'hub']} arrow="->" />
-    <Draw way={['E', 'hub']} arrow="->" />
-    <Draw way={['W', 'hub']} arrow="->" />
+    <Draw way={['N', 'hub']} arrow="->" stroke="gray" />
+    <Draw way={['S', 'hub']} arrow="->" stroke="gray" />
+    <Draw way={['E', 'hub']} arrow="->" stroke="gray" />
+    <Draw way={['W', 'hub']} arrow="->" stroke="gray" />
   </Layout>
 );
 

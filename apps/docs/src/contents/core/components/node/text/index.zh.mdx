@@ -3,7 +3,7 @@ title: Text
 description: 写在 <Node> 内部的"行级"标记组件——给一行单独覆盖 fill / opacity / font 样式；与字符串 children 平等参与 Node 多行布局。
 ---
 
-`<Text>` 是 Sugar——本身不渲染任何 DOM，编译期被 buildIR 识别后翻成 IRLineSpec 对象塞进 `<Node>` 的 `text` 数组。
+`<Text>` 是 Sugar——本身不渲染任何 DOM，编译期展开成 `<Node>` `text` 数组里的一行（LineSpec）。
 
 它和直接把 LineSpec 对象写进 `text` prop 是**等价**的两条路径：
 
@@ -14,7 +14,7 @@ description: 写在 <Node> 内部的"行级"标记组件——给一行单独覆
 
 > 块级属性（`align` / `lineHeight`）写在 `<Node>` 上；行级覆盖（`fill` / `opacity` / `font`）写在 `<Text>` 上。
 
-把 `<Text>` 理解成"给 Node 增加一整行带样式的文本"，不要把它当 HTML inline `<span>`。它不能在同一行里混多段颜色；需要多色说明时，把内容拆成多行，或改用多个独立 `<Node>`。
+<ComponentAlert type="warn" title="一个 Text 是一整行，不是 inline span" description="把它理解成给 Node 增加一整行带样式文本；同一行不能混多段颜色，需要多色时把内容拆成多行，或改用多个独立 Node。" />
 
 ## 用法
 
@@ -72,5 +72,5 @@ import { Node, Text } from '@retikz/react';
 
 ## 相关
 
-- [Node 多行文本](/core/components/node/overview)：块级 `text` / `align` / `lineHeight` 的用法
-- [Node 行级样式](/core/components/node/overview)：`text` 数组里直接混 LineSpec 对象的等价写法
+- [Node 多行文本](/core/components/node/overview#多行文本)：块级 `text` / `align` / `lineHeight` 的用法
+- [Node 行级样式](/core/components/node/overview#行级样式)：`text` 数组里直接混 LineSpec 对象的等价写法

@@ -3,7 +3,7 @@ title: Coordinate
 description: Placeholder node — names a point without drawing anything, so paths and `at.of` can reference it by id.
 ---
 
-`<Coordinate>` registers a named reference point in IR. Like `<Node>`, it can be targeted by paths and relative positioning, but it renders no visible shape or text; during compilation, only its `id` and position are registered in `nodeIndex` for downstream `<Path>` endpoints and `<Node>` `at.of` references.
+`<Coordinate>` registers a named reference point in IR. Like `<Node>`, it can be targeted by paths and relative positioning, but it renders no visible shape or text; during compilation, only its `id` and position are registered, for downstream `<Path>` endpoints and `<Node>` `at.of` references.
 
 ## Usage
 
@@ -19,18 +19,9 @@ import { Coordinate } from '@retikz/react';
 
 ### Why it exists
 
-Without `<Coordinate>`, anchoring "a named point" forces you to fake an empty `<Node>` with `stroke="transparent" fill="transparent"` — but an empty Node still:
+The plainest way to anchor "a named point" is to fake an empty `<Node>` with `stroke="transparent" fill="transparent"` — but an empty Node still takes up an invisible box sized by padding, enlarges the outer frame, and confuses AI / serialization round-trips ("real node or placeholder?").
 
-- Goes through layoutNode and gets a non-visible rect layout sized by padding
-- Participates in layout bounds expansion (enlarges the outer frame)
-- Confuses AI / codecs round-tripping IR ("real node vs invisible placeholder?")
-
-`<Coordinate>` makes "named point" a first-class concept:
-
-- Smallest IR shape (just `id` + `position`)
-- **Emits zero primitives** — no shape, no text
-- **Does not extend layout bounds** — far-away coordinates don't bloat the frame
-- Registers as a 0×0 rectangle layout in nodeIndex — `boundaryPoint` always returns the center, matching "no shape boundary" semantics
+`<Coordinate>` makes "named point" a first-class concept: the smallest possible shape (just `id` + `position`), draws nothing, and never enlarges the canvas. See [How it works](#how-it-works) for the placeholder semantics.
 
 <Comparison target="tikz" title="Coordinate Mapping">
 
@@ -60,8 +51,6 @@ Use `{ of, offset }` to derive one coordinate from another — drive the whole g
 
 <ComponentPreview name="coordinate-offset-chain" size="sm" />
 
-Debugging note: a Coordinate **does not** expand layout bounds. Registering a far-away coordinate alone will not make the canvas grow; an actual Node / Path primitive must land in that region for the final viewBox to cover it.
-
 ### Proportional partway positioning
 
 `{ between: [A, B], t }` takes a point along the A→B segment at proportion t (0..1) — `lerp(A, B, t)`, matching TikZ `($(A)!t!(B)$)`. Placing a "midpoint / one-third" point this way beats hand-computing coordinates and keeps the proportion as A / B move. Endpoints are a self-contained **AbsoluteTarget** (Cartesian / polar / node reference `{ id, anchor? }` / `{ of, offset }` / nested between — **excluding** path-relative). The same shape works in `<Coordinate position>` / `<Node position>` / `<Step to>`:
@@ -69,6 +58,16 @@ Debugging note: a Coordinate **does not** expand layout bounds. Registering a fa
 <ComponentPreview name="coordinate-between" size="xs" />
 
 > `t` is strict [0,1] (extrapolation not yet supported); when an endpoint references an undefined node, Coordinate / Node position resolution throws while a path `Step.to` warns and skips — the same as other positioning forms.
+
+## How it works
+
+> Optional for everyday use; revisit when you want to understand why a coordinate never enlarges the canvas and why all its anchors land at the center.
+
+Internally a Coordinate registers as a **0×0 point**, which gives three observable behaviors:
+
+- **Draws no primitive** — no shape, no text; it never appears in the rendered output.
+- **Never enlarges the canvas** — a far-away coordinate won't grow the final viewBox on its own; an actual `<Node>` / `<Path>` must land in that region for the canvas to cover it (a common gotcha when debugging placement).
+- **All anchors collapse to the center** — with zero size, directional anchors like `hub.north` / `hub.south` all equal the center point; use `<Node>` when you need directional anchors.
 
 ## API Reference
 
@@ -96,7 +95,7 @@ Rule of thumb: need a shape + text → `<Node>`; need only a reference point →
 
 - **Need a labelled point** → use `<Node>` with `label?`; coordinate has no text field
 - **Need a small visible dot** → use `<Node shape="circle">` with a small size; coordinate never draws
-- **Direction anchors** (`m.north`) → coordinate is a 0×0 placeholder, all anchors collapse to center; use `<Node>` if you need directional anchors
+- **Direction anchors** (`hub.north`) → a coordinate's anchors all collapse to the center; use `<Node>` for directional anchors
 
 - [Node](/core/components/node/overview): Nodes with shape and text
 - [Draw](/core/components/draw/overview): Everyday connections that can target coordinate ids

@@ -3,7 +3,7 @@ title: Coordinate
 description: 占位节点——命名一个点不画任何图形，给后续 path 和 node `at.of` 引用。
 ---
 
-`<Coordinate>` 用来在 IR 中登记一个可命名的引用点。它和 `<Node>` 一样可以被路径与相对定位引用，但不会在画面上渲染形状或文字；编译时只把 `id` 与位置注册进 `nodeIndex`，供后续 `<Path>` 端点和 `<Node>` 的 `at.of` 使用。
+`<Coordinate>` 用来在 IR 中登记一个可命名的引用点。它和 `<Node>` 一样可以被路径与相对定位引用，但不会在画面上渲染形状或文字；编译时只登记它的 `id` 与位置，供后续 `<Path>` 端点和 `<Node>` 的 `at.of` 引用。
 
 ## 用法
 
@@ -19,18 +19,9 @@ import { Coordinate } from '@retikz/react';
 
 ### 为什么需要它
 
-要在某处放一个引用点，不带 `<Coordinate>` 的话只能 fake 一个 `stroke="transparent" fill="transparent"` 的空 `<Node>`——但空 Node 仍然会：
+要在某处放一个引用点，最朴素的做法是 fake 一个 `stroke="transparent" fill="transparent"` 的空 `<Node>`——但空 Node 仍会按 padding 占一块不可见的方块、把外框撑大，AI / 序列化往返时也分不清它是真节点还是占位。
 
-- 走 layoutNode 流程，按 padding 撑出一个不可见的矩形 layout
-- 参与 layout bounds 扩展（让外框变大）
-- 让 AI / codec 反推时分不清"真节点 vs fake 占位"
-
-`<Coordinate>` 把"命名点"升级为一等概念：
-
-- IR 字段最少（只有 `id` + `position`）
-- **不发任何 primitive**——没有形状、没有文字
-- **不参与 layout bounds**——远端 coordinate 不会撑大画面
-- 在 nodeIndex 中以 0×0 矩形 layout 形式注册——boundaryPoint 始终返回中心，正好符合"无形状边界"语义
+`<Coordinate>` 把"命名点"做成一等概念：字段最少（只有 `id` + `position`）、不画任何东西、也不会撑大画布。背后的占位语义见 [技术原理](#技术原理)。
 
 <Comparison target="tikz" title="Coordinate 对照">
 
@@ -60,8 +51,6 @@ Coordinate 用 `{ of, offset }` 派生下一个 coordinate——靠一个根 coo
 
 <ComponentPreview name="coordinate-offset-chain" size="sm" />
 
-调试时记住：Coordinate **不会**撑开 layout bounds。只把一个远处坐标点注册出来，画布不会因此自动变大；必须有实际 Node / Path primitive 落在那片区域，最终 viewBox 才会覆盖过去。
-
 ### 比例 partway 定位
 
 `{ between: [A, B], t }` 在 A、B 两端点的连线上按比例 t（0..1）取点——`lerp(A, B, t)`，对应 TikZ `($(A)!t!(B)$)`。放"连线中点 / 1/3 处"的点比手算坐标更省、且随 A、B 移动自动保持比例。端点是**自包含 AbsoluteTarget**（笛卡尔 / 极坐标 / 节点引用 `{ id, anchor? }` / `{ of, offset }` / 嵌套 between，**不含** path-relative）。同一形态可用于 `<Coordinate position>` / `<Node position>` / `<Step to>`：
@@ -69,6 +58,16 @@ Coordinate 用 `{ of, offset }` 派生下一个 coordinate——靠一个根 coo
 <ComponentPreview name="coordinate-between" size="xs" />
 
 > `t` 严格 [0,1]（外插暂不支持）；端点引用未定义节点时，Coordinate / Node 位置解析失败抛错、path `Step.to` 发 warn 跳过——与其它定位形态同口径。
+
+## 技术原理
+
+> 上手阶段可跳过本节；想理解 coordinate 为何不撑大画布、anchor 为何都落在中心时再回来读。
+
+Coordinate 在内部以一个 **0×0 的点**登记，由此带来三条可观察行为：
+
+- **不画任何图元**——没有形状、没有文字，渲染产物里完全不出现。
+- **不撑大画布**——远处的 coordinate 不会让最终 viewBox 自动变大；必须有实际 `<Node>` / `<Path>` 落在那片区域，画布才覆盖过去（调试定位时常踩这点）。
+- **所有 anchor 退化为中心**——尺寸是 0，`hub.north` / `hub.south` 等方位 anchor 都等于中心点；需要方向 anchor 就改用 `<Node>`。
 
 ## API 参考
 
@@ -96,7 +95,7 @@ Coordinate 用 `{ of, offset }` 派生下一个 coordinate——靠一个根 coo
 
 - **要给点配文字标签** → 用 `<Node>` 加 `label?`，coordinate 不带文字字段
 - **要画一个圆点 / 标记位置** → 用 `<Node shape="circle">` + 小尺寸；coordinate 永远不画
-- **anchor 指向**（`m.north`）→ coordinate 是 0×0 占位，所有 anchor 都退化为中心；要用方向 anchor 还是用 `<Node>`
+- **anchor 指向**（`hub.north`）→ coordinate 所有 anchor 都退化为中心，要方向 anchor 用 `<Node>`
 
 - [Node](/core/components/node/overview)：有形状和文字的节点
 - [Draw](/core/components/draw/overview)：引用 coordinate id 的日常连线写法

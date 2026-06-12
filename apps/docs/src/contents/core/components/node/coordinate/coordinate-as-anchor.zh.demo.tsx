@@ -14,10 +14,10 @@ const Demo: FC = () => (
     <Node id="E" position={{ direction: 'right', of: 'hub', distance: 110 }} shape="circle">东</Node>
     <Node id="W" position={{ direction: 'left', of: 'hub', distance: 110 }} shape="circle">西</Node>
     {/* 4 条 path 终止在 hub——视觉上汇于中心点；hub 是 coordinate 不画形状 */}
-    <Draw way={['N', 'hub']} arrow="->" />
-    <Draw way={['S', 'hub']} arrow="->" />
-    <Draw way={['E', 'hub']} arrow="->" />
-    <Draw way={['W', 'hub']} arrow="->" />
+    <Draw way={['N', 'hub']} arrow="->" stroke="gray" />
+    <Draw way={['S', 'hub']} arrow="->" stroke="gray" />
+    <Draw way={['E', 'hub']} arrow="->" stroke="gray" />
+    <Draw way={['W', 'hub']} arrow="->" stroke="gray" />
   </Layout>
 );
 
