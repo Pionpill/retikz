@@ -1,5 +1,5 @@
 import * as IR from '@retikz/core';
-import type { ZodTypeAny } from 'zod';
+import type { ZodTypeAny, core } from 'zod';
 
 export type SchemaRegistryEntry = {
   schema: ZodTypeAny;
@@ -58,6 +58,6 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
 };
 
 /** 按 identity 反查注册表项（同一 Zod schema 实例必命中同一条目） */
-export function lookupSchema(schema: ZodTypeAny): SchemaRegistryEntry | undefined {
+export function lookupSchema(schema: core.$ZodType): SchemaRegistryEntry | undefined {
   return Object.values(SCHEMA_REGISTRY).find(e => e.schema === schema);
 }

@@ -96,7 +96,7 @@ export const AxisGuideSchema = z
       .literal(PlotGuide.Axis)
       .describe('Discriminator: a coordinate axis (axis line + ticks + tick labels, with optional aligned grid lines)'),
     dimension: z
-      .nativeEnum(GuideDimension)
+      .enum(GuideDimension)
       .describe(
         "Which positional dimension of the bound coordinate system this axis visualizes — not a fixed screen orientation. cartesian2D dimensions are 'x' (horizontal) / 'y' (vertical); other coordinate systems extend the set with their own (e.g. polar: radius / angle).",
       ),
@@ -138,7 +138,7 @@ export const LegendGuideSchema = z
       .literal(PlotGuide.Legend)
       .describe('Discriminator: a legend that visualizes a non-positional scale (color / size / opacity / shape) as swatches, a continuous color ramp, binned classes, or graduated symbols'),
     channel: z
-      .nativeEnum(LegendChannel)
+      .enum(LegendChannel)
       .describe(
         'Which non-positional encoding channel this legend visualizes; the legend form (swatches / continuous ramp / binned classes / graduated symbols) is chosen automatically from the type of the bound scale',
       ),
@@ -154,11 +154,11 @@ export const LegendGuideSchema = z
       .optional()
       .describe('Legend title rendered above the entries; omit for no title (automatic field-name title is not yet rendered)'),
     position: z
-      .nativeEnum(LegendPosition)
+      .enum(LegendPosition)
       .optional()
       .describe('Which side of the plot area the legend reserves a band on; omit = right (default applied during lowering)'),
     orient: z
-      .nativeEnum(LegendOrient)
+      .enum(LegendOrient)
       .optional()
       .describe('How legend entries are laid out; omit to derive from position (left/right -> vertical, top/bottom -> horizontal, applied during lowering)'),
     tickCount: z

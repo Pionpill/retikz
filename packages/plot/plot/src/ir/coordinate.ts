@@ -3,7 +3,7 @@ import type { ValueOf } from '@retikz/core';
 
 /**
  * 坐标系类型关键字（暴露给用户；成员值即 IR 判别串，裸字面量 `'cartesian2D'` 同样可用）
- * @description discriminated union 判别字段，成员里写 z.literal(PlotCoordinate.x)（不用 nativeEnum）；命名按空间几何 + 维度。
+ * @description discriminated union 判别字段，成员里写 z.literal(PlotCoordinate.x)（不用 z.enum）；命名按空间几何 + 维度。
  */
 export const PlotCoordinate = {
   /** 2D 笛卡尔空间（x 水平 / y 垂直） */
@@ -71,7 +71,7 @@ export const Cartesian1DSchema = z
     type: z.literal(PlotCoordinate.Cartesian1D).describe('Discriminator: 1D cartesian line; one position dimension, the other screen axis collapses to a fixed baseline'),
     x: z.string().min(1).optional().describe('Scale name for the single position dimension; omit to derive a default scale from the bound field type. Scale-agnostic — supports linear / log / sqrt / time / band'),
     orientation: z
-      .nativeEnum(Cartesian1DOrientation)
+      .enum(Cartesian1DOrientation)
       .optional()
       .describe('Axis orientation — horizontal lays the line along x (baseline at the bottom edge), vertical along y (baseline at the left edge); omit = horizontal (default applied during lowering)'),
   })
@@ -112,7 +112,7 @@ export const CustomCoordinateSchema = z
       .min(1)
       .describe('Position roles this coordinate consumes — which mark channels (x / y / a / b / c) it projects, in order; drives required-channel and guide-dimension validation'),
     params: z
-      .record(z.number().finite())
+      .record(z.string(), z.number().finite())
       .optional()
       .describe('JSON numeric parameters passed verbatim to the factory (e.g. archHeight); the projection function lives in the runtime factory, not here, keeping the IR serializable'),
   })

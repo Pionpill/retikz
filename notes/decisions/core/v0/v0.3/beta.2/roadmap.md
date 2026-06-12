@@ -8,4 +8,4 @@
 
 | # | 标题 | level | 工作量 | 状态 | 备注 |
 |---|---|---|---|---|---|
-| 1 | 升级 zod v3 → 最新版（v4） | internal | 中 | 📋 计划 | `pnpm-workspace.yaml` catalog 统一升级，core / plot 全量 zod schema 适配（v4 有 API 变更，留意 breaking）。**解锁 core 内置 `z.toJSONSchema()`**——零额外依赖即可产出喂 LLM 的 JSON Schema 契约，利好 [`eval`](../../../../../eval/design.md) 的 schema 导出（D2）与未来 MCP。 |
+| 1 | 升级 zod v3 → 最新版（v4） | internal | 中 | ✅ 完成 | catalog 升至 `^4.4.3`，core / plot / docs 全量适配（nativeEnum→enum、issue code 字面量、record 双参、docs walker 改 v4 内省 API）。**core 内置 `z.toJSONSchema()` 已解锁**——`SceneSchema` / `PlotSpecSchema` 导出能力有测试锁定，喂 [`eval`](../../../../../eval/design.md) schema 导出（D2）与未来 MCP。 |

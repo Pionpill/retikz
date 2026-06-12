@@ -12,7 +12,7 @@ export const PLOT_NAMESPACE = 'plot';
 
 /**
  * plot namespace 内的 composite 类型关键字（暴露给用户；成员值即 IR 判别串，裸 `'plot'` 同样可用）
- * @description discriminated union 判别字段，成员里写 z.literal(PlotComposite.x)（不用 nativeEnum）；后续加 axis / legend…
+ * @description discriminated union 判别字段，成员里写 z.literal(PlotComposite.x)（不用 z.enum）；后续加 axis / legend…
  */
 export const PlotComposite = {
   /** 顶层 grammar-of-graphics spec 节点 */

@@ -52,7 +52,7 @@ const AtTranslateSchema = z
       .literal('at-translate')
       .describe('Discriminator: direction-relative translate; mirrors AtPosition.'),
     direction: z
-      .nativeEnum(AtDirection)
+      .enum(AtDirection)
       .describe('Direction enum (8 values, shared with AtPosition.direction).'),
     of: z
       .string()

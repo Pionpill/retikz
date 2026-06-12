@@ -53,7 +53,7 @@ export const NodeLabelSchema = z
       .string()
       .describe('Label text content; rendered as a single line.'),
     position: z
-      .union([z.nativeEnum(AtDirection), z.number()])
+      .union([z.enum(AtDirection), z.number()])
       .optional()
       .describe(
         'Placement around the node border: 8-direction enum (above / right / above-left / ...) or numeric angle in degrees (`label=30:foo` for radial placement). Default `above`. Numeric uses the polar convention (0° = +x, 90° = +y, screen-down).',
@@ -163,7 +163,7 @@ export const NodeSchema = z
       'Optional node text content; accepts a string, an array of lines, or styled text line objects. A literal newline ("\\n") inside any string is a hard line break, so one string with newlines renders as multiple lines. When omitted the node emits only its shape primitive; when present it participates in text measurement, node box sizing, and TextPrim emission.',
     ),
     align: z
-      .nativeEnum(NodeTextAlign)
+      .enum(NodeTextAlign)
       .optional()
       .describe(
         'Multi-line text alignment within the text block; `left` / `center` / `right`. Defaults to `center` (matches TikZ).',

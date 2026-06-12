@@ -30,15 +30,15 @@
 
 ## 前置依赖
 
-- **「zod → 喂 LLM 的 JSON Schema 契约」导出尚未落地**（core-design §7 的设计意图，仓库暂无 `zod-to-json-schema` 痕迹）。eval 要测生成，先得有「喂给模型的 schema 契约」。
-- core 现为 **zod v3**（无内置 `toJSONSchema`）；**core beta.2 已计划升级 zod → v4**（见 [`v0.3 beta.2`](../decisions/core/v0/v0.3/beta.2/roadmap.md)），届时 core 可**零额外依赖**产出 JSON Schema → 利好把导出做进 core（见 D2）。
+- **「zod → 喂 LLM 的 JSON Schema 契约」导出尚未落地**（core-design §7 的设计意图）。eval 要测生成，先得有「喂给模型的 schema 契约」。
+- core 已升级 **zod v4**（见 [`v0.3 beta.2`](../decisions/core/v0/v0.3/beta.2/roadmap.md)），内置 `z.toJSONSchema` 可**零额外依赖**产出 JSON Schema；`SceneSchema` / `PlotSpecSchema` 的导出能力已有测试锁定 → 导出做进 core（见 D2）只剩封装工作。
 
 ## 首切定稿（L1 baseline · 端到端流水线）
 
 D1–D6 串成一条流水线：
 
 1. **语料**（D3）：手写自然语言种子 + 文档 demo 反推（改写成自然语言、不泄 IR 结构），按 core / plot × 难度档（单图元 / 组合 / 复杂图）组织，存 `apps/eval/corpus/`。
-2. **schema 契约**（D2）：core / plot 的 zod schema 转 JSON Schema 作 prompt 上下文——对齐 core beta.2 的 zod v4 内置 `toJSONSchema`，beta.2 前用 `zod-to-json-schema` 兜底。
+2. **schema 契约**（D2）：core / plot 的 zod schema 转 JSON Schema 作 prompt 上下文——直接用 zod v4 内置 `z.toJSONSchema`（已随 beta.2 升级落地）。
 3. **生成**（D4 + D6）：经 Vercel AI SDK（薄 adapter 隔离）对 1–2 个 provider，**自由生成、单发、不带 self-repair**；每条 prompt 跑 **K 次**。
 4. **打分**（D1）：每个产出过 **zod 校验 + `compileToScene`**，得 **zod 通过率 / compile 通过率** 两层 + 失败归因（按错误类型聚合）。
 5. **报告**（D5）：通过率按 类别 × 难度 × 模型 聚合，结果持久化到 `results/`，与基线 diff 标出回归。
@@ -52,7 +52,7 @@ D1–D6 串成一条流水线：
 ## 开放决策（随讨论补）
 
 - [x] **D1** 首切打分档 → **只 L1**（全自动客观回归基线；L2 / L3 后置）
-- [~] **D2** schema 导出归属 → 倾向 **(a) core 产出**，对齐 core beta.2 的 zod v4 升级（内置 `toJSONSchema`、零额外依赖），eval 消费；若 eval 在 beta.2 前起步，用 `zod-to-json-schema` 临时兜底。
+- [~] **D2** schema 导出归属 → 倾向 **(a) core 产出**，用 zod v4 内置 `z.toJSONSchema`（已随 beta.2 升级落地、零额外依赖），eval 消费。
 - [x] **D3** 语料 → **手写种子 + demo 反推 结合**：手写 = 真实自然语言用法；demo 反推 = 量大且**自带 known-good IR**（可复用为未来 L2 reference）。⚠️ demo 反推须改写成自然语言、**不直接描述 IR 结构**（避免泄题）。按 core / plot 两大类 × 难度档（单图元 / 组合 / 复杂图）组织，存 `apps/eval` 下 JSON/YAML。
 - [x] **D4** 生成驱动 → **A 自由生成（free-form），单发、不带 self-repair**。L1 真实信号在此（B 受限生成会把 L1 锁成必过）；B 留接 L2 / 生产模拟，self-repair（测自纠错）后置。多模型跨 1–2 vendor 起步。
 - [x] **D5** 报告 → 指标**拆两层**（zod 通过率 / compile 通过率）× 类别 × 难度 × 模型 + **失败归因**（按错误类型聚合）；**每 prompt 跑 K 次取通过率**（正视 LLM 非确定性，回归比通过率差值超噪声带、非逐字 diff）；回归追踪 = **(b) 持久化结果 + 基线 diff**（标回归项；不上 CI 门禁）。

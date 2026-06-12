@@ -99,7 +99,7 @@ export const FoldStepSchema = z
         'Folded right-angle segment from cursor to target through one intermediate point (TikZ `-|` / `|-`)',
       ),
     via: z
-      .nativeEnum(FoldStepVia)
+      .enum(FoldStepVia)
       .describe(
         'Folding direction: `-|` first horizontal then vertical; `|-` first vertical then horizontal',
       ),
@@ -222,21 +222,21 @@ const refineArcStep = (
   const hasRadiusY = step.radiusY !== undefined;
   if (hasRadius && (hasRadiusX || hasRadiusY)) {
     ctx.addIssue({
-      code: z.ZodIssueCode.custom,
+      code: 'custom',
       path: ['radius'],
       message: 'Arc step must use either radius or radiusX/radiusY, not both',
     });
   }
   if (!hasRadius && !(hasRadiusX && hasRadiusY)) {
     ctx.addIssue({
-      code: z.ZodIssueCode.custom,
+      code: 'custom',
       path: ['radius'],
       message: 'Arc step requires radius or both radiusX and radiusY',
     });
   }
   if (hasRadiusX !== hasRadiusY) {
     ctx.addIssue({
-      code: z.ZodIssueCode.custom,
+      code: 'custom',
       path: hasRadiusX ? ['radiusY'] : ['radiusX'],
       message: 'Arc step requires radiusX and radiusY together',
     });
@@ -252,14 +252,14 @@ const refinePartialAngles = (
   const hasEnd = step.endAngle !== undefined;
   if (hasStart !== hasEnd) {
     ctx.addIssue({
-      code: z.ZodIssueCode.custom,
+      code: 'custom',
       path: hasStart ? ['endAngle'] : ['startAngle'],
       message: `${kind} requires startAngle and endAngle together`,
     });
   }
   if (step.closed === 'closed' && (hasStart || hasEnd)) {
     ctx.addIssue({
-      code: z.ZodIssueCode.custom,
+      code: 'custom',
       path: ['closed'],
       message: `${kind} closed:'closed' is only valid without angles`,
     });

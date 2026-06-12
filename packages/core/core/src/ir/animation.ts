@@ -94,7 +94,7 @@ export type AnimationTriggerValue = ValueOf<typeof AnimationTrigger>;
 
 export const TriggerSchema = z
   .union([
-    z.nativeEnum(AnimationTrigger),
+    z.enum(AnimationTrigger),
     z.object({
       onEvent: z
         .string()
@@ -158,11 +158,11 @@ export const AnimationTrackSchema = z
       .optional()
       .describe('Total play count (WAAPI iterations): a positive number (may be fractional) or "infinite". Omitted = 1 = play once.'),
     direction: z
-      .nativeEnum(AnimationDirection)
+      .enum(AnimationDirection)
       .optional()
       .describe('Per-iteration playback direction (WAAPI / CSS animation-direction). Defaults to "normal".'),
     fill: z
-      .nativeEnum(AnimationFill)
+      .enum(AnimationFill)
       .optional()
       .describe(
         'Value held outside the active interval (WAAPI / CSS fill-mode). Defaults to "forwards" so the element settles at its base (end) state, matching the static-settled invariant.',
@@ -190,15 +190,15 @@ export const AnimationTrackSchema = z
       const path: Array<string | number> = ['keyframes', index, 'value'];
       if (track.property === AnimationProperty.ViewBox) {
         if (!Array.isArray(value) || value.length !== 4) {
-          ctx.addIssue({ code: z.ZodIssueCode.custom, path, message: 'viewBox keyframe value must be a 4-number array [x, y, w, h]' });
+          ctx.addIssue({ code: 'custom', path, message: 'viewBox keyframe value must be a 4-number array [x, y, w, h]' });
         }
       } else if (track.property === AnimationProperty.Fill || track.property === AnimationProperty.Stroke) {
         if (typeof value !== 'string') {
-          ctx.addIssue({ code: z.ZodIssueCode.custom, path, message: `${track.property} keyframe value must be a color string` });
+          ctx.addIssue({ code: 'custom', path, message: `${track.property} keyframe value must be a color string` });
         }
       } else if (numeric.has(track.property)) {
         if (typeof value !== 'number') {
-          ctx.addIssue({ code: z.ZodIssueCode.custom, path, message: `${track.property} keyframe value must be a number` });
+          ctx.addIssue({ code: 'custom', path, message: `${track.property} keyframe value must be a number` });
         }
       }
     });

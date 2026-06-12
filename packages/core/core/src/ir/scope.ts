@@ -124,14 +124,17 @@ export type IRScope = {
 
 // ChildSchema 在 scene.ts 中定义并通过 z.lazy 注入；让 scope.children 能在
 // ChildSchema 完成定义后才被实际触达（schema 层与文件层都不形成 hard 循环依赖）。
+/** scope 子节点 union——与 scene.ts 的 IRChild 同构（此处内联避免文件层循环依赖） */
+type ScopeChild = IRNode | IRPath | IRCoordinate | IRScope | IRComposite;
+
 /** schema 注册顺序：scene.ts import 时由 __registerChildSchema 一次性回灌；之后只读 */
-let childSchemaRef: z.ZodTypeAny | null = null;
+let childSchemaRef: z.ZodType<ScopeChild> | null = null;
 
 /**
  * 注册 ChildSchema 引用——由 scene.ts 在定义 ChildSchema 后调用一次
  * @description 解决 scope.children 用 ChildSchema 与 scene.ChildSchema discriminatedUnion 用 ScopeSchema 的双向依赖
  */
-export const __registerChildSchema = (schema: z.ZodTypeAny): void => {
+export const __registerChildSchema = (schema: z.ZodType<ScopeChild>): void => {
   childSchemaRef = schema;
 };
 

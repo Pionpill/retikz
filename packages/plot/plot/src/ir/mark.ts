@@ -4,7 +4,7 @@ import { EncodingSchema, PointEncodingSchema, StyleEncodingSchema } from './enco
 
 /**
  * mark 类型关键字（暴露给用户；成员值即 IR 判别串，裸字面量 `'point'` 同样可用）
- * @description discriminated union 判别字段，成员里写 z.literal(PlotMark.x)（不用 nativeEnum）；后续加 bar / area / sector / rule / text…
+ * @description discriminated union 判别字段，成员里写 z.literal(PlotMark.x)（不用 z.enum）；后续加 bar / area / sector / rule / text…
  */
 export const PlotMark = {
   /** 散点：每行一个 glyph */
@@ -83,7 +83,7 @@ export const IntervalMarkSchema = z
       .optional()
       .describe('Series field: split records into multiple bar series per distinct value'),
     arrangement: z
-      .nativeEnum(PlotArrangement)
+      .enum(PlotArrangement)
       .optional()
       .describe("How multiple series combine within one category: 'dodge' (side-by-side sub-bands; default when series is set) / 'stack' (cumulative, reading the stack-transform y0 / y1)"),
     y0Field: z

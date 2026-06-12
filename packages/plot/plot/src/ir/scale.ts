@@ -3,7 +3,7 @@ import type { ValueOf } from '@retikz/core';
 
 /**
  * scale 类型关键字（暴露给用户；成员值即 IR 判别串，裸字面量 `'linear'` 同样可用）
- * @description discriminated union 判别字段，成员里写 z.literal(PlotScale.x)（不用 nativeEnum）；后续加 ordinal / time…
+ * @description discriminated union 判别字段，成员里写 z.literal(PlotScale.x)（不用 z.enum）；后续加 ordinal / time…
  */
 export const PlotScale = {
   /** 连续线性映射 */
@@ -254,7 +254,7 @@ export const SequentialColorScaleSchema = z
       .optional()
       .describe('[min, max] input extent; omit to infer from the bound color field at lowering. Endpoints must be finite; min must be < max (rejected at lowering otherwise); temporal fields use a timestamp extent'),
     scheme: z
-      .nativeEnum(PlotColorScheme)
+      .enum(PlotColorScheme)
       .optional()
       .describe('Named color scheme to interpolate across the domain; omit to default to viridis at lowering. Overridden by range when both are given'),
     range: z
@@ -275,7 +275,7 @@ export const DivergingColorScaleSchema = z
       .optional()
       .describe('[low, mid, high] input extent around a meaningful midpoint; omit to infer [min, (min+max)/2, max] from the bound field at lowering. Endpoints must be finite; must satisfy low < mid < high (rejected at lowering otherwise)'),
     scheme: z
-      .nativeEnum(PlotColorScheme)
+      .enum(PlotColorScheme)
       .optional()
       .describe('Named diverging color scheme to interpolate around the midpoint; omit to default to rdbu at lowering. Overridden by range when both are given'),
     range: z
@@ -302,7 +302,7 @@ export const QuantizeColorScaleSchema = z
       .optional()
       .describe('Number of equal-width bins; omit to default to 5 at lowering. When range is given, the bin count is range.length; if count is also given it must equal range.length, otherwise lowering fails loud'),
     scheme: z
-      .nativeEnum(PlotColorScheme)
+      .enum(PlotColorScheme)
       .optional()
       .describe('Named color scheme sampled at count evenly spaced points to produce the discrete bin colors; omit to default to viridis at lowering. Overridden by range when both are given'),
     range: z
@@ -322,7 +322,7 @@ export const ThresholdColorScaleSchema = z
       .min(1)
       .describe('Strictly ascending finite breakpoints cutting the value range into breakpoints.length + 1 bins; required (a threshold scale has no default cut points). Ascending order is enforced at lowering'),
     scheme: z
-      .nativeEnum(PlotColorScheme)
+      .enum(PlotColorScheme)
       .optional()
       .describe('Named color scheme sampled at breakpoints.length + 1 evenly spaced points to produce the discrete bin colors; omit to default to viridis at lowering. Overridden by range when both are given'),
     range: z
@@ -344,7 +344,7 @@ export const QuantileColorScaleSchema = z
       .optional()
       .describe('Number of quantile bins; omit to default to 5 at lowering. When range is given, the bin count is range.length; if count is also given it must equal range.length, otherwise lowering fails loud'),
     scheme: z
-      .nativeEnum(PlotColorScheme)
+      .enum(PlotColorScheme)
       .optional()
       .describe('Named color scheme sampled at count evenly spaced points to produce the discrete bin colors; omit to default to viridis at lowering. Overridden by range when both are given'),
     range: z

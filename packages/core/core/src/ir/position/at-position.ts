@@ -22,7 +22,7 @@ export type AtDirectionValue = ValueOf<typeof AtDirection>;
 export const AtPositionSchema = z
   .object({
     direction: z
-      .nativeEnum(AtDirection)
+      .enum(AtDirection)
       .describe(
         'Direction from the referenced node toward this node, in visual convention (above = visually upward, screen y-).',
       ),

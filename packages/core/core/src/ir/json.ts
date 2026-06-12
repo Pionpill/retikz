@@ -28,7 +28,7 @@ export const JsonValueSchema: z.ZodType<JsonValue> = z.lazy(() =>
  *   可拦下非 JSON 输出（function / undefined 等）。core 公开供外部 refine。
  */
 export const JsonObjectSchema = z
-  .record(JsonValueSchema)
+  .record(z.string(), JsonValueSchema)
   .describe(
     'A JSON object: string keys mapping to recursive JSON values. Used as the params payload of a path generator step and as the runtime guard that the value is fully JSON-serializable. No maximum depth or size is enforced.',
   );

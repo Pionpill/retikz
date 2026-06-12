@@ -47,11 +47,11 @@ export const FieldDefSchema = z
       .min(1)
       .describe('Field name as referenced by encoding channels (a path accessor like "a.b.c")'),
     type: z
-      .nativeEnum(PlotFieldType)
+      .enum(PlotFieldType)
       .optional()
       .describe('Field measurement type; omit to infer from the bound dataset at lowering. When given, drives type-driven scale selection and guide formatting without seeing the data'),
     format: z
-      .nativeEnum(PlotFieldFormat)
+      .enum(PlotFieldFormat)
       .optional()
       .describe('Declarative built-in value-parsing format; each format binds to one measurement type and must be compatible with type (it also implies type when type is omitted). Omit for the built-in default coercion'),
     order: z
