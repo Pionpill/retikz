@@ -103,7 +103,7 @@ circumscribeOffset: (params) => {
 boundaryPoint: (rect: Rect, toward: Position, params: TParams) => Position;
 ```
 
-Called when a path attaches to a node boundary, and when numeric anchors such as `A.30` are resolved. It returns the point where the ray from the center toward `toward` hits the shape boundary, deciding where the line stops on the edge. Here `rect` **includes `rotate`**: use `worldToLocal` to enter local coordinates for the geometry, then `localToWorld` to return world coordinates.
+Called when a path attaches to a node boundary, and when numeric anchors such as `A.30` are resolved. It returns the point where the ray from the center toward `toward` hits the shape boundary, deciding where the line stops on the edge. Here `rect` **includes `rotate`**: use `worldToLocal` to enter local coordinates for the geometry, then `localToWorld` to return world coordinates. When the node sets `outerSep` (margin), the `rect` passed in is already expanded by the engine — just compute geometry on the given `rect`; you never handle outer sep yourself.
 
 ```ts
 // polygon: intersect the ray with the edges in local space, then map back to world
@@ -121,7 +121,7 @@ boundaryPoint: (rect, toward, params) => {
 anchor: (rect: Rect, name: string, params: TParams) => Position | undefined;
 ```
 
-Called when users write `A.north`, `A.center`, or a shape-specific anchor name. Return a coordinate for names the shape owns, or `undefined` for unknown names, which the compiler reports with the standard Unknown anchor error.
+Called when users write `A.north`, `A.center`, or a shape-specific anchor name. Return a coordinate for names the shape owns, or `undefined` for unknown names, which the compiler reports with the standard Unknown anchor error. Compass names (north/east…) are likewise resolved on the engine-expanded `rect` (including `outerSep`); shape-specific anchors always use the visual `rect`, without outer sep.
 
 ```ts
 // sector: exposes semantic anchors like apex / centroid / arc midpoints

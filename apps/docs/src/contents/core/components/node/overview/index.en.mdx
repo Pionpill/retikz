@@ -150,7 +150,7 @@ To override a target node's `boundary` for a single edge, set `boundary` on the 
 
 #### Multi-line text
 
-`text` accepts a string (one line) or an array of strings (one line each). `align` controls horizontal alignment within the text block (`'left'` / `'center'` (default) / `'right'`), and `lineHeight` controls vertical spacing between lines, defaulting to `font.size × 1.2`.
+`text` accepts a string or an array of strings (one line each). A `'\n'` inside a string is a hard line break, so a single string can render as multiple lines. `align` controls horizontal alignment within the text block (`'left'` / `'center'` (default) / `'right'`), and `lineHeight` controls vertical spacing between lines, defaulting to `font.size × 1.2`.
 
 <ComponentPreview name="node-multiline" size="xs" />
 
@@ -302,7 +302,7 @@ By default stacking = declaration order (SVG only honors paint order). `zIndex` 
 | `shape` | `'rectangle' \| 'circle' \| 'ellipse' \| 'diamond' \| 'polygon' \| 'sector' \| 'arc' \| 'star' \| string`<br />`\| { type, params }` | `'rectangle'` | Node shape: bare string (parameterless / registered name) or `{ type, params }` (parametric shape); built-ins above, or registered via `<Layout shapes>` / `CompileOptions.shapes` |
 | `boundary` | `'shape' \| 'circle' \| string \| { type, params }` | `'shape'` | Connection surface: how edges meet this node and how compass anchors resolve, independent of the visual `shape`; `'shape'` = the visual shape itself, `'circle'` = a true circle (radius = larger AABB half-axis), other values borrow that shape's boundary. Never changes the node footprint; shape-specific anchors and edge proportional points still use the visual shape. Overridable per edge via the endpoint `boundary` field |
 | `position` | `[x, y] \| PolarPosition \| { direction, of, distance? } \| { of, offset } \| { between, t }` | — | Node center: Cartesian / polar / relative / offset / proportional placement; `of` accepts node id, Cartesian literal, or PolarPosition |
-| `children` / `text` | `string \| Array<string>` | — | Visible label; string = one line, array = one element per line; `text` wins over `children` |
+| `children` / `text` | `string \| Array<string>` | — | Visible label; `'\n'` in a string is a hard line break, array = one element per line; `text` wins over `children` |
 | `align` | `'left' \| 'center' \| 'right'` | `'center'` | Horizontal alignment of lines within the multi-line text block |
 | `lineHeight` | `number` | `font.size × 1.2` | Line height of the multi-line block (user units) |
 | `maxTextWidth` | `number` | — | Wrap threshold (user units); text wraps past it (Western per word / CJK per char) and the box shrinks for short text; not a fixed paragraph width |
@@ -313,9 +313,9 @@ By default stacking = declaration order (SVG only honors paint order). `zIndex` 
 | `strokeWidth` | `number` | `1` | Border width (user units) |
 | `innerXSep` | `number` | — | Horizontal inner padding (text → left/right border); falls back to `padding` |
 | `innerYSep` | `number` | — | Vertical inner padding (text → top/bottom border); falls back to `padding` |
-| `outerSep` | `number` | — | Outer margin (border → path attachment point); falls back to `margin` |
+| `outerSep` | `number` | `0` | Uniform outer offset around the connection boundary (TikZ `outer sep`): applies to **all border anchors** (explicit `.north` / `.30` just like automatic endpoints) and is **included in the node layout footprint / viewBox**; does not change the visible shape; `center`, shape-specific anchors, edge points, and label attachment stay on the visible shape. Falls back to `margin` |
 | `padding` | `number` | `8` | Symmetric inner padding alias; axis-specific fields take precedence |
-| `margin` | `number` | `0` | Symmetric outer margin alias; `outerSep` takes precedence; **does not affect border position**, only path endpoints |
+| `margin` | `number` | `0` | Symmetric alias for `outerSep` (TikZ `outer sep`); `outerSep` takes precedence |
 | `font` | `{ family?, size?, weight?, style? }` | — | Font spec; nested object, all fields optional |
 | `textColor` | `string` | `currentColor` | Text color (block default; per-line override via `LineSpec.fill`) |
 | `opacity` | `number` | — | Whole-node 0..1, applies to both shape and text |
@@ -336,10 +336,10 @@ By default stacking = declaration order (SVG only honors paint order). `zIndex` 
 
 | | Affects | Visual effect |
 | --- | --- | --- |
-| `padding` | Distance from text to border | Border grows |
-| `margin` | Distance from border to path endpoint | Border unchanged; lines stop `margin` short |
+| `padding` | Distance from text to border | Visible shape grows |
+| `margin` | Uniform outer offset around the connection boundary (TikZ outer sep) | Visible shape unchanged; all border anchors and path endpoints move out by `margin`, and the node footprint includes `margin` |
 
-Use `margin` to give connecting lines breathing room in multi-node diagrams — keeps lines from touching the border directly.
+`padding` grows the node itself; `margin` leaves the visible shape untouched but pushes the node's whole connection/reference boundary out by `margin` (including explicit anchors like `.north`) and reserves that much extra space in layout — giving lines breathing room while matching TikZ `outer sep`. `margin` defaults to 0, so unset means zero effect.
 
 ## Related
 

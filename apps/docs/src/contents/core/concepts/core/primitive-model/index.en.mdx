@@ -92,7 +92,13 @@ When a Node borrows another boundary, retikz lays that boundary over the current
 | `boundary` | The surface border anchors (automatic / compass / angle) attach to | Visual node, bounding box, layout footprint |
 | Per-edge boundary override | Current path endpoint | Node defaults |
 
-So the bounding box is the visual envelope used for rendering (plus `margin` it becomes the layout footprint), while the boundary is closer to a connection hit surface — neither is the drawn shell. `outerSep` is orthogonal to boundary: the boundary sets the **shape** of the outer edge, `outerSep` sets **how far** it expands outward.
+So the bounding box is the visual envelope used for rendering (plus `margin` it becomes the layout footprint), while the boundary is closer to a connection hit surface — neither is the drawn shell.
+
+`outerSep` (`margin`) is orthogonal to boundary, and together they define the outer edge: **the boundary sets its shape** (hugging the shape, or borrowing circle / rectangle), while **`outerSep` sets how far the boundary sits from the node's interior**. In other words, `margin` is the knob for the gap between the boundary and the inner shape — turn it up and the boundary, together with every border anchor and automatic endpoint, moves uniformly away from the shape, wrapping the whole node in a ring of connection clearance; at the default 0 the boundary hugs the shape. That gap is exactly the `outerSep` ring in the [box model](#box-model) figure.
+
+<ComponentPreview name="margin-boundary-gap" size="md" hideCode />
+
+Each column nests three layers: the innermost gray block is the text area (content box), the solid currentColor outline is the shape (inner frame — what a rectangular node actually draws), the dashed ring is the boundary, and the gray dots are the compass anchors on it. Left and middle use the default `boundary="shape"`: the larger the `margin`, the farther the boundary and its anchors sit from the shape, while the shape and text area stay put. Right uses `boundary="circle"`: `margin` likewise pushes the boundary out from the shape (circle radius = longer half-axis + `margin`), but its outer **shape** is set by `boundary`. Middle and right share the same `margin` but differ in boundary — exactly the "`outerSep` sets how far, boundary sets the shape" split.
 
 ## Anchors
 
@@ -143,7 +149,7 @@ Custom shapes define their anchor behavior through `ShapeDefinition`. Supporting
 
 Edge-proportional `{ side, t }` takes the point at proportion `t ∈ [0, 1]` along an edge of the shape's **real boundary** — direction north/south west→east, east/west north→south: rectangle along the straight edge, circle / ellipse along that side's visible perimeter arc, diamond along the visible slanted edges. `{ side: 'west', t: 1/3 }` is the left edge's one-third point; `{ side: 'north', t: 0.5 }` is the top-edge midpoint (equals the named `'north'`).
 
-When resolving, compass anchors go through the boundary surface; when `boundary="shape"`, compass anchors resolve against the visual bounding box rectangle. Numeric angle anchors call `boundaryPoint`, intersecting the selected boundary along a ray. Shape-specific anchors and edge proportion points always use the visual shape, regardless of `boundary`.
+When resolving, compass and numeric angle anchors are **border anchors**: they go through the selected boundary surface and are then pushed out by `outerSep` — with `boundary="shape"` they land on the bounding box (including `outerSep`) rectangle direction, and angle anchors intersect the expanded boundary along a ray. `center`, shape-specific anchors, and edge proportion points always use the visual shape, taking neither `boundary` nor `outerSep`.
 
 For how these points are referenced by another primitive, and how connection endpoints resolve between auto and locked modes, continue with [Primitive Relations](/core/concepts/core/primitive-relations).
 

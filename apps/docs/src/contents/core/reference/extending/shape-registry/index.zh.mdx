@@ -103,7 +103,7 @@ circumscribeOffset: (params) => {
 boundaryPoint: (rect: Rect, toward: Position, params: TParams) => Position;
 ```
 
-路径连接节点边界、解析 `A.30` 这种数字角度时调用，决定线条停在形状边上的哪里——返回从中心朝 `toward` 的射线与形状边界的交点。这里的 `rect` **带 `rotate`**：先用 `worldToLocal` 进入局部坐标算几何，再用 `localToWorld` 转回世界坐标。
+路径连接节点边界、解析 `A.30` 这种数字角度时调用，决定线条停在形状边上的哪里——返回从中心朝 `toward` 的射线与形状边界的交点。这里的 `rect` **带 `rotate`**：先用 `worldToLocal` 进入局部坐标算几何，再用 `localToWorld` 转回世界坐标。节点设了 `outerSep`（margin）时，传入的 `rect` 已由引擎外扩好——你只管在给定 `rect` 上算几何，outer sep 不用自己处理。
 
 ```ts
 // polygon：射线在局部系与各边求交，再投回世界系
@@ -121,7 +121,7 @@ boundaryPoint: (rect, toward, params) => {
 anchor: (rect: Rect, name: string, params: TParams) => Position | undefined;
 ```
 
-用户写 `A.north`、`A.center` 或形状自定义锚点名时调用，决定命名锚点在哪里。认识的名字返回坐标，不认识就返回 `undefined`，由编译层统一报 Unknown anchor。
+用户写 `A.north`、`A.center` 或形状自定义锚点名时调用，决定命名锚点在哪里。认识的名字返回坐标，不认识就返回 `undefined`，由编译层统一报 Unknown anchor。compass 方位名（north/east…）同样在引擎外扩好的 `rect`（含 `outerSep`）上解析；形状专属锚点恒走视觉 `rect`，不含 outer sep。
 
 ```ts
 // sector：暴露 apex / centroid / 弧中点等语义锚点
