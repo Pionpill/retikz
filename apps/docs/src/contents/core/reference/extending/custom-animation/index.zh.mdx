@@ -24,7 +24,7 @@ description: 动画的缓动曲线与属性通道都开放——注册自定义 
 | cubic-bezier 四元组 | `[x1, y1, x2, y2]` | SVG（进 CSS `cubic-bezier()`）+ Canvas |
 | 缓动函数 | `(t: number) => number` | **仅 Canvas**；SVG 进不了 CSS → 退 `linear` 并告警 |
 
-`y` 可超出 `[0, 1]`（如 `1.56`）做回弹 / 越界效果。未注册的 easing 名 → 告警 + 退 `linear`。
+`y` 可超出 `[0, 1]`（如 `1.56`）做回弹 / 越界效果。未注册的 easing 名 → 退 `linear`（SVG 会告警，Canvas 静默退化）；无论哪种情况 track 照常播放，只是缓动退化为线性，不会退回静止态。
 
 ## 自定义属性通道（`animationProperties`）
 
@@ -49,4 +49,4 @@ description: 动画的缓动曲线与属性通道都开放——注册自定义 
 | 自定义 easing（函数） | ⚠️ 退 linear + 告警 | ✅ |
 | 自定义属性通道 | ⚠️ 告警 + 跳过 | ✅ |
 
-未注册的自定义 easing / property 一律**可诊断降级**：告警 + 该 track 退回 base 静止态，绝不丢图。
+未注册的自定义 easing / property 一律**可诊断降级**，绝不丢图，但两者降级方式不同：未注册 easing 只让缓动退回 `linear`（SVG 告警、Canvas 静默），track 照常播放；未注册 property 才会跳过该 track、退回 base 静止态（SVG / Canvas 均告警）。

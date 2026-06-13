@@ -58,7 +58,7 @@ description: arrow shape 是开放字符串；内置 8 种之外，用 defineArr
 
 <ComponentPreview name="custom-arrow-inherit" size="xs" />
 
-两条 Draw 用的是同一个 `bracket` 定义、没给箭头单独设色，括号颜色各自跟随 path 的 `stroke`。要钉死箭头色，给 `arrowDetail.color`（实心）或 `arrowDetail` 顶层 `color`（空心描边）即可。
+两条 Draw 用的是同一个 `bracket` 定义、没给箭头单独设色，括号颜色各自跟随 path 的 `stroke`。要钉死箭头色，看 shape 实心 / 空心：实心填充取 `arrowDetail.fill ?? color ?? contextStroke`——专属覆盖字段是 `fill`，缺省时再退 `color`、最后退 path 描边；空心描边取 `arrowDetail.color ?? contextStroke`（空心 shape 忽略 `fill`，由 `color` 主导描边、`lineWidth` 控粗）。
 
 <Comparison target="tikz" title="自定义箭头">
 

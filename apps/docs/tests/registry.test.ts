@@ -9,8 +9,8 @@ import {
 } from '@retikz/core';
 
 describe('SCHEMA_REGISTRY', () => {
-  it('contains 34 entries (19 primary + 11 step variants + 2 target variants + 2 arrow detail variants)', () => {
-    expect(Object.keys(SCHEMA_REGISTRY)).toHaveLength(34);
+  it('contains 35 entries (19 primary + 12 step variants + 2 target variants + 2 arrow detail variants)', () => {
+    expect(Object.keys(SCHEMA_REGISTRY)).toHaveLength(35);
   });
 
   it('each entry has non-empty schema / label / url', () => {

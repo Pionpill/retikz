@@ -11,6 +11,12 @@ description: Named members placed in a scene — Node and Coordinate
 
 <ZodSchema name="NodeSchema" />
 
+<Comparison target="tikz" title="Node field mapping">
+
+`drawOpacity` maps to TikZ `draw opacity`; `dashed` / `dotted` map to TikZ's dashed / dotted presets; the `{ text, position }` form of `label` maps to `[label=above:foo]` / `[label=30:foo]`.
+
+</Comparison>
+
 ## Coordinate
 
 `CoordinateSchema` requires an `id` (its whole purpose), never contributes to layout, and shares the node index with `Node`.

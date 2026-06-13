@@ -25,6 +25,11 @@ The `@retikz/core` compile layer turns JSON-serializable IR into a laid-out `Sce
 | `nodeDistance` | `number` | `1` | Default distance for `AtPosition` when `distance` is omitted |
 | `onWarn` | `(warning) => void` | dev: `console.warn`<br />production: silent | Collects recoverable compile-time warnings |
 | `shapes` | `Record<string, ShapeDefinition>` | `—` | Inject custom node shapes at runtime; overriding a built-in emits `SHAPE_OVERRIDES_BUILTIN`. See [Custom Shapes](/core/reference/extending/shape-registry) |
+| `arrows` | `Record<string, ArrowDefinition>` | `—` | Inject custom arrows at runtime; overriding a built-in emits `ARROW_OVERRIDES_BUILTIN`. See [Custom Arrows](/core/reference/extending/custom-arrow) |
+| `patterns` | `Record<string, PatternDefinition>` | `—` | Inject custom fill pattern motifs at runtime; overriding a built-in emits `PATTERN_OVERRIDES_BUILTIN`. See [Custom Patterns](/core/reference/extending/custom-pattern) |
+| `pathGenerators` | `Record<string, PathGeneratorDefinition>` | `—` | Inject custom curve generators at runtime; a generator step looks up by `name`, unregistered names throw at compile time. See [Path Generators](/core/reference/extending/path-generator) |
+| `composites` | `Array<CompositeDefinition>` | `—` | Inject Tier 2 composite expansion logic at runtime; the first compile pass expands composite nodes into Tier 1. Unregistered ones emit `COMPOSITE_NOT_REGISTERED` and the node is skipped |
+| `maxCompositeDepth` | `number` | `32` | Max depth for nested composite expansion (cycle / runaway-recursion guard); exceeding it or a cycle throws |
 
 ## Text Measuring
 
@@ -51,20 +56,26 @@ When `measureText` is omitted, `fallbackMeasurer` estimates width as `text.lengt
 | `message` | string | Human-readable English message |
 | `path` | string | IR locator, such as `children[3].path.children[1].to` |
 
-Current built-in codes:
+Current built-in codes (the machine-readable `CompileWarningCode` constant is publicly exported, so you can reference these as enum members instead of hardcoding strings):
 
 | Code | Meaning |
 | --- | --- |
 | `UNRESOLVED_NODE_REFERENCE` | A path or position references a missing node / coordinate |
-| `PATH_TOO_SHORT` | A path cannot form a valid drawn segment |
-| `ANCHOR_RESOLUTION_FAILED` | A node boundary attachment point cannot be resolved |
-| `OFFSET_BASE_UNRESOLVED` | `OffsetPosition.of` cannot be resolved |
+| `PATH_TOO_SHORT` | A path has fewer than 2 steps / lacks a previous endpoint, so it cannot form a valid drawn segment; the whole path is skipped |
+| `OFFSET_BASE_UNRESOLVED` | `OffsetPosition`'s base `of` cannot be resolved |
 | `POLAR_ORIGIN_UNRESOLVED` | `PolarPosition.origin` cannot be resolved |
 | `AT_TARGET_UNRESOLVED` | `AtPosition.of` cannot be resolved |
-| `RELATIVE_INITIAL_NO_PREV_END` | A relative target appears before there is a previous endpoint |
-| `BBOX_EXTREME_INPUT` | Bbox input is extreme and layout computation falls back |
+| `DUPLICATE_NODE_ID` | A duplicate id within the same namespace frame; the later definition overrides the earlier (last-wins) |
+| `SHAPE_OVERRIDES_BUILTIN` | A `CompileOptions.shapes` key overrides a built-in shape |
+| `ARROW_OVERRIDES_BUILTIN` | A `CompileOptions.arrows` key overrides a built-in arrow |
+| `PATTERN_OVERRIDES_BUILTIN` | A `CompileOptions.patterns` key overrides a built-in pattern |
+| `COMPOSITE_NOT_REGISTERED` | A composite node's `namespace.type` is not registered; the node is skipped |
+| `ANIMATION_INVALID_PROPERTY` | An animation track has an invalid property (e.g. a non-viewBox property at scene root); the track is dropped |
+| `ARC_MISSING_RADIUS` | An arc step lacks `radius` (circular) or both `radiusX` + `radiusY` (elliptical); the whole path is skipped |
+| `PARTIAL_ARC_NEEDS_BOTH_ANGLES` | `circlePath` / `ellipsePath` partial arcs need both `startAngle` and `endAngle`, otherwise treated as a full circle / ellipse |
+| `PARTIAL_ARC_CLOSED_INVALID` | A partial circle / ellipse (with angles) cannot use `closed:'closed'`; falls back to `'chord'` |
 
-Most warnings do not stop compilation. If a coordinate's own position cannot be resolved, compile emits a warning and then throws, because that breaks the contract for later references.
+Most warnings do not stop compilation. But when a coordinate's / node's own position cannot be resolved, compile **throws directly without emitting a warning** (deliberately: warning then throwing would leave the collector with a dead warning for a Scene that never gets produced), because it is a "position-defining" entity that breaks the contract for later references.
 
 ## Output
 
@@ -74,5 +85,7 @@ Most warnings do not stop compilation. If a coordinate's own position cannot be 
 | --- | --- | --- |
 | `primitives` | `Array<ScenePrimitive>` | Laid-out primitives, in render order |
 | `layout` | `Layout` | Scene bounds `{ x, y, width, height }` |
+| `resources?` | `Array<SceneResource>` | Renderer-agnostic resource table (gradient / pattern / clip paint servers); the adapter materializes them (SVG → `<defs>`). Omitted when there are none |
+| `animations?` | `Array<IRAnimationTrack>` | Scene-root (camera) timeline tracks (viewBox property), passed through from the IR root `animations`; omitted when there are none |
 
-If there are no bbox candidate points, `computeLayout` returns a `100×100` fallback layout.
+A custom renderer must consume `resources` and `animations`, otherwise gradients / clipping / camera animations are lost. If there are no bbox candidate points, `computeLayout` returns a `100×100` fallback layout.

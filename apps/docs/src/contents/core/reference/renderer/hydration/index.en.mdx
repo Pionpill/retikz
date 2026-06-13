@@ -90,15 +90,17 @@ const handle = view.hydrate({
 
 `handlers` is a `{ [id]: { eventName: handler } }` table; event names are `click` / `doubleClick` / `rightClick` / `pointerDown` / `pointerUp` / `pointerMove` / `pointerEnter` / `pointerLeave` / `wheel` (a one-to-one match with React's `on<Event>`, with the `on` prefix dropped and the first letter lowercased).
 
-After SSR, bind via the standalone `hydrate(root, options)` entry (the container already holds the SSR-injected `<svg>` string). To give context its meta / geometry / animation controls, pass `scene` (or `toScene(ir)`) in too; otherwise you get only the minimal context (below):
+After SSR, bind via the standalone `hydrate(root, options)` entry (the container already holds the SSR-injected `<svg>` string). `options` also accepts `renderer: 'svg' | 'canvas'` (defaults to `'svg'`), which decides how elements are located. To give context its meta / geometry / animation controls, pass `scene` (compiled from the IR via `@retikz/core`'s `compileToScene(ir)`) in too; otherwise you get only the minimal context (below):
 
 ```ts
+import { compileToScene } from '@retikz/core';
 import { hydrate, mountSvg } from '@retikz/vanilla';
 
 // the view from mountSvg / mountCanvas carries view.hydrate; context uses this view's Scene automatically
 mountSvg(container, ir).hydrate({ handlers: { box: { click: (event, context) => context.animation.restart() } } });
 
 // standalone hydration after SSR: pass scene for a rich context (meta / geometry / animation)
+const scene = compileToScene(ir);
 hydrate(root, { handlers, scene });
 ```
 

@@ -3,18 +3,20 @@ title: 场景
 description: IR 根 —— 一份 retikz 绘制的 JSON 化描述
 ---
 
-`SceneSchema` 是 IR 根节点。一张图序列化下来就是一个 Scene 对象，`children` 数组里放 node / path / coordinate 三种子节点。
+`SceneSchema` 是 IR 根节点。一张图序列化下来就是一个 Scene 对象，`children` 数组里放 Tier 1 的 node / path / coordinate / scope 四类子节点，外加带 `namespace` 的 Tier 2 composite 节点。
 
 <ZodSchema name="SceneSchema" description="retikz IR 顶层 scene：一份图的规范 JSON 表示。" descriptions={{
   version: 'IR 主版本号；schema 出现破坏性变更时才递增',
   type: '判别字段，标记该对象为 scene 根节点',
   children: 'scene 的顶层子节点列表；node 注册的 id 可被 path 引用',
+  viewBox: '显式视框 `{ x, y, width, height }`，覆盖自动算的布局范围（固定尺寸 / 裁剪 / 多图对齐）；设值后 Scene.layout 直接用它、忽略 padding；省略则自动取 AABB + padding',
+  animations: 'scene 级（镜头）时间轴动画 track 数组；`viewBox` 属性可动画化做缩放 / 平移。静态 `layout` 始终是末态（settled）取景，镜头动画不影响它',
 }} />
 
 <span id="child"></span>
 
 ## 子节点
 
-`ChildSchema` 是 scene 顶层子节点的联合类型，目前包含 node / path / coordinate 三类。
+`ChildSchema` 是 scene 顶层子节点的联合类型：Tier 1 按 `type` 判别的 node / path / coordinate / scope 四类，再并上带 `namespace` 的 Tier 2 composite 节点（精确字段校验在 compile 期由 lowering 用注册 schema 完成）。scope 与 composite 的逐字段 schema 不在本组单列。
 
-<ZodSchema name="ChildSchema" description="scene 顶层子节点：node、path 或 coordinate。" />
+<ZodSchema name="ChildSchema" description="scene 顶层子节点：Tier 1 的 node / path / coordinate / scope，或 Tier 2 的 composite。" />

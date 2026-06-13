@@ -14,14 +14,14 @@ description: 在 scene 中被命名的成员 —— Node 与 Coordinate
 <ZodSchema name="NodeSchema" description="节点图元：带位置、形状和可选文本的可引用实体。" descriptions={{
   type: '判别字段，标记此子节点为 node',
   id: '可选唯一 id；当其它 path 需要按字符串引用本 node 时必填',
-  shape: '节点形状名（开放字符串），默认 `rectangle`；内置 circle / ellipse / diamond 外接 text+padding，或经 `CompileOptions.shapes` 注册的扩展名（未注册名 compile 期报错）',
-  position: '节点内容盒中心点；笛卡尔 [x,y]、极坐标、或 `at`-风格相对定位',
+  shape: '节点形状：裸名字符串（无参，如 "rectangle"）或 `{ type, params }` ShapeRef（带 JSON params，如 `{ type:"sector", params:{ innerRadius, outerRadius, startAngle, endAngle } }`）；内置或经 `CompileOptions.shapes` 注册，未注册名 compile 期报错；默认 `rectangle`',
+  position: '节点内容盒中心点；笛卡尔 [x,y]、极坐标、`at`-风格相对定位（`{ direction, of, distance? }`）、偏移定位（`{ of, offset }`）、或比例定位（`{ between: [A, B], t }`）；非笛卡尔形态编译期解析',
   rotate: '绕节点中心顺时针旋转角度（°）',
   text: '节点内文本：纯字符串或多行 LineSpec 数组',
   align: '多行文本块内对齐，默认 `center`',
   lineHeight: '行高（用户单位）；未填时取 `font.size × 1.2`',
   color: '主色（TikZ color=）；stroke / fill / textColor 未单设则随它，并级联到内部文字与边 label',
-  fill: '形状背景色，任意 CSS color',
+  fill: '形状背景填充：任意 CSS color 字符串，或 PaintSpec（线性 / 径向渐变、pattern、image）',
   fillOpacity: '填充不透明度 0..1，只影响形状背景',
   stroke: '形状边框色，任意 CSS color，默认 currentColor',
   drawOpacity: '描边不透明度 0..1，只影响边框',
@@ -48,7 +48,7 @@ description: 在 scene 中被命名的成员 —— Node 与 Coordinate
   boundary: '连接面：path 端点贴边与 compass / 角度锚点走哪条边界——`shape`（视觉形状自身，默认）/ `circle`（外接圆）/ 任意注册 shape 名 / `{ type, params }`；可被边端点的 `boundary` 单边覆盖，不改节点占位',
   maxTextWidth: '文本自动换行的最大宽度（用户单位）；超出按词折行，缺省不自动换行',
   meta: 'provenance 元数据：原样透传进本节点 emit 的 Scene 图元，renderer 忽略、不参与布局 / 连接 / 样式 / 包围盒；典型由 Tier 2 lowering 注入（标记来自哪个 datum / series / layer），须为 JSON 对象，不跨 scope 继承、不进 every-X 默认',
-  animations: '声明式动画 track 数组（关键帧 + 时长 / 缓动 / 触发器）；逐字段见结构组的动画 schema',
+  animations: '声明式动画 track 数组（关键帧 + 时长 / 缓动 / 触发器）；用法与 preset 见动画组件文档',
   zIndex: '显式栈序：大者在上；缺省 0、同值保持声明顺序；只在同层子节点间生效',
 }} />
 
@@ -73,7 +73,7 @@ description: 在 scene 中被命名的成员 —— Node 与 Coordinate
 <ZodSchema name="CoordinateSchema" description="坐标占位：只注册 id 与位置，不渲染可见形状。" descriptions={{
   type: '判别字段，标记此子节点为 coordinate 占位',
   id: '必填唯一 id；coordinate 的全部意义就是被引用',
-  position: '坐标位置；笛卡尔 [x,y]、极坐标、或相对定位（`at` 风格）',
+  position: '坐标位置；笛卡尔 [x,y]、极坐标、`at`-风格相对定位、偏移定位（`{ of, offset }`）、或比例定位（`{ between: [A, B], t }`）；编译期解析',
 }} />
 
 <span id="nodelabel"></span>
@@ -89,6 +89,9 @@ description: 在 scene 中被命名的成员 —— Node 与 Coordinate
   textColor: '标签文字颜色，省略时使用 currentColor',
   opacity: '标签自身不透明度 0..1；会与节点 opacity 相乘',
   font: '标签字体覆盖；缺省字段继承父节点 font，再回退到渲染器默认',
+  rotate: '绕标签自身中心旋转文字：`none`（默认）水平 / `radial` 沿「节点中心→标签中心」方向 / `tangent`（radial + 90°）/ 数字角度（屏幕 y 向下：0=+x、90=+y）；只改文字朝向不改位置',
+  keepUpright: '为 true 时若旋转后文字会倒着读（偏离正立超 90°）则翻转 180°；默认 false（严格几何角度）',
+  pin: '从节点边界到标签画一条引线（TikZ `pin`）：`true` = 默认细实线；对象 = 带样式覆盖的引线（`stroke` / `strokeWidth` / `dashPattern`）；省略 / `false` = 无引线。标签位置不受影响',
 }} />
 
 <span id="textblock"></span>

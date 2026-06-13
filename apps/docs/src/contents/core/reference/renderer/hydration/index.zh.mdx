@@ -90,15 +90,17 @@ const handle = view.hydrate({
 
 `handlers` 是一张 `{ [id]: { 事件名: handler } }` 表，事件名用 `click` / `doubleClick` / `rightClick` / `pointerDown` / `pointerUp` / `pointerMove` / `pointerEnter` / `pointerLeave` / `wheel`（与 React 的 `on<事件>` 一一对应，去掉 `on` 前缀、首字母小写）。
 
-SSR 后用独立的 `hydrate(root, options)` 入口绑定（容器里已是 SSR 注入的 `<svg>` 字符串）。要让 context 拿到 meta / 几何 / 动画控制，把 `scene`（或 `toScene(ir)`）一并传入；不传则只给最小 context（见下）：
+SSR 后用独立的 `hydrate(root, options)` 入口绑定（容器里已是 SSR 注入的 `<svg>` 字符串）。`options` 里还可给 `renderer: 'svg' | 'canvas'`（缺省 `'svg'`）决定 element 定位口径。要让 context 拿到 meta / 几何 / 动画控制，把 `scene`（用 `@retikz/core` 的 `compileToScene(ir)` 从 IR 编译得到）一并传入；不传则只给最小 context（见下）：
 
 ```ts
+import { compileToScene } from '@retikz/core';
 import { hydrate, mountSvg } from '@retikz/vanilla';
 
 // mountSvg / mountCanvas 的 view 自带 view.hydrate，context 自动用本 view 的 Scene
 mountSvg(container, ir).hydrate({ handlers: { box: { click: (event, context) => context.animation.restart() } } });
 
 // SSR 后独立水合：传 scene 才得富 context（meta / 几何 / 动画）
+const scene = compileToScene(ir);
 hydrate(root, { handlers, scene });
 ```
 

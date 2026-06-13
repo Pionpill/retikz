@@ -10,7 +10,8 @@ Parser reference covers the sugar parsing helpers exported by `@retikz/core`. Th
 | API | Signature | Purpose |
 | --- | --- | --- |
 | `parseWay` | `(way: WayDSL) => Array<IRStep>` | Converts the `<Draw way={...}>` way array into path steps |
-| `parseTargetSugar` | `(input: unknown) => IRTarget` | Converts React DSL string shorthand into IR targets: `'+dx,dy'` / `'++dx,dy'` become relative offsets, and `'A.north'` / `'A.30'` become node target objects; returns other inputs unchanged |
+| `parseTargetSugar` | `(input: unknown) => IRTarget` | Converts React DSL string shorthand into IR targets: `'+dx,dy'` / `'++dx,dy'` become relative offsets, node ref strings delegate to `parseNodeTarget`; **non-string** input (Cartesian / polar / already-an-object) is returned unchanged. Note: invalid strings throw rather than passing through (e.g. `'+x,'`, unknown anchor, empty id, bare decimal string) |
+| `parseNodeTarget` | `(s: string) => IRNodeTarget` | Node ref string → NodeTarget object: `'A'`→`{id:'A'}`, `'A.north'`→named anchor, `'A.30'`→angle anchor; splits on the first `.`, so ids containing `.` or shape-specific anchors must use the object form; empty id / unknown anchor / bare decimal string throw |
 
 ## DrawWay
 
@@ -47,7 +48,7 @@ Parser reference covers the sugar parsing helpers exported by `@retikz/core`. Th
 | Rule | Behavior |
 | --- | --- |
 | Minimum length | Throws when `way.length < 2` |
-| First item | Must not be a label; if it is not a target, move falls back to `[0, 0]` |
+| First item | Must be a target (the move start); a label operator or any other operator at `way[0]` throws — no downgrade (the `[0,0]` fallback is the base semantics for a relative target used as the first item, not a downgrade for a leading operator) |
 | Target | First target becomes `move`; later targets become `line` |
 | fold / curve / cubic / bend | Must be followed by a target; consumes that next item |
 | arc / circle / ellipse | Uses the previous item as center; does not consume the next item |
@@ -59,7 +60,7 @@ Parser reference covers the sugar parsing helpers exported by `@retikz/core`. Th
 
 ## Relative Target Sugar
 
-`parseTargetSugar` only handles React DSL string shorthand. Non-string input is returned unchanged, so object targets such as `{ id, anchor? }`, `{ of, offset }`, and `{ between, t }` are not rewritten:
+`parseTargetSugar` only handles React DSL string shorthand. Non-string input is returned unchanged, so object targets such as `{ id, anchor? }`, `{ of, offset }`, and `{ between, t }` are not rewritten. Valid node ref / offset strings convert per the table below; invalid strings (e.g. `'+x,'`, unknown anchor, empty id, bare decimal string) throw:
 
 | Input | Output | Meaning |
 | --- | --- | --- |
@@ -69,7 +70,7 @@ Parser reference covers the sugar parsing helpers exported by `@retikz/core`. Th
 | `'node-id.north'` | `{ id: 'node-id', anchor: 'north' }` | Named anchor |
 | `'node-id.30'` | `{ id: 'node-id', anchor: 30 }` | Numeric-angle anchor |
 | `[10, 20]` | `[10, 20]` | Non-string input, returned unchanged |
-| `{ between: ['a', 'b'], t: 0.5 }` | `{ between: ['a', 'b'], t: 0.5 }` | Object target returned unchanged; compile resolves endpoints later |
+| `{ between: [{ id: 'a' }, { id: 'b' }], t: 0.5 }` | `{ between: [{ id: 'a' }, { id: 'b' }], t: 0.5 }` | Object target returned unchanged; compile resolves endpoints later |
 
 The regex accepts whitespace and negative numbers, such as `'+ -4, 8'` / `'++-4,8'`.
 

@@ -24,7 +24,7 @@ Two registered-value forms:
 | cubic-bezier tuple | `[x1, y1, x2, y2]` | SVG (becomes CSS `cubic-bezier()`) + Canvas |
 | easing function | `(t: number) => number` | **Canvas only**; can't enter CSS → falls back to `linear` with a warning |
 
-`y` may exceed `[0, 1]` (e.g. `1.56`) for overshoot / spring effects. An unregistered easing name → warns and falls back to `linear`.
+`y` may exceed `[0, 1]` (e.g. `1.56`) for overshoot / spring effects. An unregistered easing name → falls back to `linear` (SVG warns, Canvas degrades silently); either way the track still plays — only the easing degrades to linear, it does not fall back to the resting state.
 
 ## Custom property channel (`animationProperties`)
 
@@ -49,4 +49,4 @@ Two registered-value forms:
 | custom easing (function) | ⚠️ falls back to linear + warns | ✅ |
 | custom property channel | ⚠️ warns + skips | ✅ |
 
-Any unregistered custom easing / property degrades diagnosably: a warning plus the track falling back to the resting state — the figure is never dropped.
+Any unregistered custom easing / property degrades diagnosably and the figure is never dropped, but the two degrade differently: an unregistered easing only falls back to `linear` (SVG warns, Canvas silent) while the track still plays; only an unregistered property skips the track and falls back to the resting state (both SVG and Canvas warn).

@@ -11,22 +11,26 @@ Scene primitives are the output contract of `compileToScene`: after IR is laid o
 | --- | --- | --- |
 | `Scene` | `primitives` | Laid-out primitive array, in render order |
 | `Scene` | `layout` | Scene bounds `{ x, y, width, height }` |
+| `Scene` | `resources?` | Renderer-agnostic resource table `Array<SceneResource>` (gradient / pattern / clip paint servers); the adapter materializes them (SVG → `<defs>`). Omitted when there are none |
+| `Scene` | `animations?` | Scene-root (camera) timeline tracks `Array<IRAnimationTrack>` (viewBox property), passed through from the IR root `animations`. Omitted when there are none |
 | `Layout` | `x` / `y` | Top-left layout coordinate |
 | `Layout` | `width` / `height` | Layout size |
 
-`ScenePrimitive` is a union of five primitives: `RectPrim | EllipsePrim | TextPrim | PathPrim | GroupPrim`.
+`ScenePrimitive` is a union of five primitives: `RectPrim | EllipsePrim | TextPrim | PathPrim | GroupPrim`. A custom renderer must consume `resources` and `animations`, otherwise gradients / clipping / camera animations are lost.
 
 ## Shape Primitives
 
 | Primitive | Key fields | Notes |
 | --- | --- | --- |
 | `RectPrim` | `x` / `y` / `width` / `height` | Top-left positioned rectangle; `cornerRadius` maps to both rx and ry |
-| `EllipsePrim` | `cx` / `cy` / `rx` / `ry` | Center plus radii; circles use `rx === ry` |
+| `EllipsePrim` | `cx` / `cy` / `rx` / `ry` | Center plus radii; circles use `rx === ry`; `rotate?` rotates degrees around the center |
 | `TextPrim` | `x` / `y` / `lines` | Text block; `align` / `baseline` define anchor semantics |
-| `PathPrim` | `commands` | Structured path command array |
-| `GroupPrim` | `transforms` / `children` | Child primitives wrapped in structured transforms |
+| `PathPrim` | `commands` | Structured path command array; also `fillRule` (`nonzero` / `evenodd`), `strokeLinecap` (`butt` / `round` / `square`), `strokeLinejoin` (`miter` / `round` / `bevel`) |
+| `GroupPrim` | `transforms` / `children` | Child primitives wrapped in structured transforms; `clipRef?` points to a ClipResource in `Scene.resources`, clipping the whole group to that region when set |
 
-Shape primitives share common visual fields such as `fill`, `fillOpacity`, `stroke`, `strokeOpacity`, `strokeWidth`, `dashPattern`, and `opacity`. Not every primitive supports every field; for example, `TextPrim.fill` is text color.
+Every primitive carries the interaction-layer contract fields `id?` (stable anchor for `data-retikz-id` / hit-test), `meta?` (provenance metadata passed through from the IR element's `meta`; renderers ignore it, it never reaches the DOM), and `animations?` (timeline tracks; played when supported, otherwise the settled static state is rendered with a warning).
+
+Shape primitives share common visual fields such as `fill`, `fillOpacity`, `stroke`, `strokeOpacity`, `strokeWidth`, `dashPattern`, and `opacity`. The `fill` of `RectPrim` / `EllipsePrim` / `PathPrim` is a `PaintValue` (CSS color string / a paint server referencing the resource table / `contextStroke`), not just a string. Not every primitive supports every field; for example, `TextPrim.fill` (string only) is text color.
 
 ## Text
 
@@ -37,7 +41,7 @@ Shape primitives share common visual fields such as `fill`, `fillOpacity`, `stro
 | `TextPrim` | `lineHeight` | Vertical distance between adjacent lines |
 | `TextPrim` | `measuredWidth` / `measuredHeight` | Text block metrics computed during compile |
 | `TextLine` | `text` | Line content |
-| `TextLine` | `fontSize?` / `fill?` / `opacity?` | Per-line override; missing fields inherit from `TextPrim` |
+| `TextLine` | `fontSize?` / `fontFamily?` / `fontWeight?` / `fontStyle?` / `fill?` / `opacity?` | Per-line override; missing fields inherit from `TextPrim` |
 
 Renderers do not need to decide text layout again. They consume the anchor, line height, metrics, and line-level overrides in `TextPrim`.
 
@@ -52,22 +56,26 @@ Renderers do not need to decide text layout again. They consume the anchor, line
 | `quad` | `control` / `to` | Quadratic Bezier |
 | `cubic` | `control1` / `control2` / `to` | Cubic Bezier |
 | `arc` | `center` / `radius` / `startAngle` / `endAngle` / `counterClockwise?` | Circular arc, angles in degrees |
-| `ellipseArc` | `center` / `radiusX` / `radiusY` / `rotation?` / `startAngle` / `endAngle` | Elliptical arc |
+| `ellipseArc` | `center` / `radiusX` / `radiusY` / `rotation?` / `startAngle` / `endAngle` / `counterClockwise?` | Elliptical arc |
 | `close` | — | Close back to the latest move |
 
 Coordinates use user units. Angles follow the screen-coordinate convention: `0 = +x`, `90 = +y`.
 
 ## Arrows
 
-`PathPrim.arrowStart` / `arrowEnd` use `ArrowEndSpec`:
+`PathPrim.arrowStart` / `arrowEnd` use `ArrowEndSpec`. Note: all visual inputs (`scale` / `length` / `width` / `color` / `fill` / `lineWidth`) are **consumed during the compile resolve phase** and do **not** appear in this structure. What gets attached is a "resolved marker description" — internal geometry plus wrapper params; the adapter only **materializes** it (embeds it in a `<marker>` or draws it on Canvas), with no switch, no `emit` call, and no arrows-registry lookup:
 
-| Field | Notes |
-| --- | --- |
-| `shape` | Arrow shape, required |
-| `scale` / `length` / `width` | Size controls; renderers use defaults when omitted |
-| `color` / `fill` / `opacity` / `lineWidth` | Endpoint-level visual overrides |
+| Field | Type | Notes |
+| --- | --- | --- |
+| `shape` | `ArrowShapeName` | Shape name; rendering no longer depends on it after resolution — kept for identity / debugging |
+| `baseSize` | `number` | Marker viewBox side length; the adapter derives viewBox `0 0 baseSize baseSize` and refY = baseSize/2 |
+| `refX` | `number` | Line contact point (marker refX); hollow shapes already subtract lineWidth/2 during compile |
+| `markerWidth` | `number` | Resolved tip length = (`length ?? def.defaultLength`) × scale |
+| `markerHeight` | `number` | Resolved tip width = (`width ?? def.defaultWidth`) × scale |
+| `opacity?` | `number` | Marker element-level opacity 0..1; inherits the path opacity when omitted |
+| `marker` | `Array<MarkerPrimitive>` | `def.emit` output: internal geometry in the local baseSize coordinate space (`fill` limited to `string \| { kind:'contextStroke' }`) |
 
-The compile layer has already merged IR-level `arrowDetail` defaults with `start` / `end` overrides into endpoint specs. Renderers do not need to know the IR merge rule.
+The compile layer has already merged IR-level `arrowDetail` defaults with `start` / `end` overrides, looked up the effective arrow table, and called `def.emit` to produce the geometry. Renderers do not need to know the IR merge rule or recompute visual sizes.
 
 ## Transforms
 
