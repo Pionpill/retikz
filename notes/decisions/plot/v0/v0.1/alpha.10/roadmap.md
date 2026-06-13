@@ -33,8 +33,9 @@
 | ADR | 主题 | Level | 依赖 | 状态 |
 | --- | --- | --- | --- | --- |
 | [01](./01-plot-thin-container.md) | **退化 `<Plot>` 为薄容器**：移除 cartesian2D 默认轴注入、保留 scale/coord 推断、`bare` 去留、显式 `<Axis>`/`<Legend>` 仍生效；breaking + demo 迁移 | yellow | — | 草拟中 |
+| [02](./02-plot-composable.md) | **让 `<Plot>` 可被组合**：单 svg 多坐标信息图——PlotSpec 自描述尺寸 + plot lowering 暴露外部可见面板 anchor（bbox + plotArea，gated on id）；`<Plot>` 改可嵌入、直接作 core `<Layout>` 子组件（嵌入态不自渲染、lower 时处理）；**硬依赖 core-react 新机制「可嵌入 Tier2 in Layout」（另起 core 文档）**；组合 MVP 从 v0.5 前移 | red | 01 + core-react 机制 | 草拟中 |
 
-> 单 ADR milestone。装饰逻辑去向（保留供 v0.2 chart 复用）在 ADR-01 标明：本轮**移除注入但保留可复用的装饰函数**（不删能力、只是不再默认调用），v0.2 chart 直接复用。
+> 两 ADR 同一主题线：**Plot 作为容器的角色**。01 把 `<Plot>` 降成薄绘图块（角色单一），02 顺势让薄块「可被嵌入与组合」进同一张 svg。02 是组合 MVP（plot-design §7 L1+L2），从原 roadmap v0.5 前移——L1（自描述尺寸 + 可嵌入）不依赖 facet，可独立先行；v0.5 收口 facet 内多坐标 + series/datum 锚 + 相对摆位。装饰逻辑去向（供 v0.2 chart 复用）见 ADR-01。
 
 ## 待决策（ADR-01 起草前定）
 
@@ -44,11 +45,15 @@
 
 ## core 依赖
 
-无。本轮仅改 `@retikz/plot-react` 装配层行为，不碰 plot 核心 IR / lowering、不碰 core。
+- **ADR-01**：无。仅改 `@retikz/plot-react` 装配层行为，不碰 plot 核心 IR / lowering、不碰 core。
+- **ADR-02**：**改 plot 核心 IR + lowering**（PlotSpec 加 width/height、`expand` per-node 尺寸 + 外部可见面板 anchor，gated on id）+ `<Plot>` 改可嵌入 + **硬依赖 core-react 新机制「可嵌入 Tier2 in Layout」**（buildIR/Layout 收纳 Tier2 子组件贡献 composites + datasets，通用、不写死 plot，另起 core 文档）。不新增 plot 容器组件、不改 core IR schema。组合用 core `<Layout>` + `<Plot>` 作其子组件。
 
 ## 执行模式
 
-单 ADR + docs 同步。yellow 级按既有流程（无需红级多 LLM 评审，但 breaking 行为变更需 review 签字 + changelog）。
+- **ADR-01**：yellow 级，单 ADR + docs 同步（无需红级多 LLM 评审，但 breaking 行为变更需 review 签字 + changelog）。
+- **ADR-02**：**red 级**，进实现前需**外部 LLM 评审**（[v0.1 roadmap 排序原则](../roadmap.md)）+ review 签字；跨三包 lockstep + docs 同步。
+
+> milestone 定位已从「单 ADR / 仅 react 装配层」扩为「Plot 作为容器角色」双 ADR：01（薄容器，react-only/yellow）+ 02（可被组合，跨包/red）。两者主题连续、可分别按级别推进。
 
 ## ADR 约定
 
