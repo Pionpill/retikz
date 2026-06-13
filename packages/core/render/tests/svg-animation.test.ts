@@ -164,6 +164,23 @@ describe('静态截帧 {at:t}（烘焙 evaluateTrack 求值，不 emit 动画）
     expect(typeof g.style?.transform).toBe('string');
     expect(g.style?.transform).toContain('scale(');
   });
+
+  it('非自动播 track（trigger:manual）不参与截帧 → 停 base（settled），不被烘焙', () => {
+    const manualFade: IRAnimationTrack = { ...LINEAR_FADE, trigger: 'manual' };
+    const out = buildSvgFragment(scene([rect({ animations: [manualFade] })]), { idPrefix: 't', snapshotAt: 200 });
+    const r = findTag(out, 'rect')!;
+    expect(r.attrs.opacity).toBeUndefined(); // 未烘焙到中间值 0.5，保持 base
+  });
+
+  it('混合 load + manual 同元素：仅 load track 被烘焙', () => {
+    const manualGrow: IRAnimationTrack = { ...LINEAR_GROW, property: 'scaleX', trigger: 'manual' };
+    const out = buildSvgFragment(scene([rect({ animations: [LINEAR_FADE, manualGrow] })]), { idPrefix: 't', snapshotAt: 200 });
+    const r = findTag(out, 'rect')!;
+    expect(r.attrs.opacity).toBe(0.5); // load fade 被烘焙
+    // manual scaleX 不应产生 transform 包裹 <g>
+    const g = findTag(out, 'g');
+    expect(g === undefined || g.style?.transform === undefined).toBe(true);
+  });
 });
 
 describe('边界', () => {
