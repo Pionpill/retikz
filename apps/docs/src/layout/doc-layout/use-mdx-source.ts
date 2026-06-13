@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { Lang } from '@/i18n';
 import { LANGS } from '@/i18n';
-import { docPathSegments, useDocLocation } from './docLocation';
+import { docPathSegments, useDocLocation } from './doc-location';
 
 type MdxLoader = () => Promise<string>;
 

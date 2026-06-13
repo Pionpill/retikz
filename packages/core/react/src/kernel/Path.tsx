@@ -1,7 +1,7 @@
 import type { FC, ReactNode } from 'react';
 import type { IRPath } from '@retikz/core';
 import { TIKZ_PATH } from './_displayNames';
-import type { HydrationEventProps } from './eventProps';
+import type { HydrationEventProps } from './event-props';
 
 /** <Path> 组件的 props */
 export type PathProps = HydrationEventProps & {

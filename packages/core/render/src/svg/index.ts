@@ -19,7 +19,7 @@ export * from './serialize';
 // ============ renderer-neutral 几何 / 字符串工具（src 下扁平文件，本就与框架无关，多 renderer 共用） ============
 export { buildPathD } from './path-d-builder';
 export { buildTransform } from './transform-builder';
-export { formatViewBox } from './viewBox';
+export { formatViewBox } from './view-box';
 
 // ============ 动画播放（SVG 后端）：CSS @keyframes + WAAPI 描述类型 ============
 export * from './animation';

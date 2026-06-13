@@ -15,7 +15,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Separator } from '@/components/ui/separator';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { useAiChatStore } from '@/store/useAiChatStore';
+import { useAiChatStore } from '@/store/use-ai-chat-store';
 
 /** Example 页 Prompt 节 props——主 prompt（短摘要 + 可展开详情）+ 可选「发散思路」扩展列表 */
 export type ExamplePromptProps = {

@@ -1,7 +1,7 @@
 import type { I18nKey, Page, Section, SubPage } from '@/data/interface';
 import { getSectionsByModule } from '@/data/sections';
 import { useMemo } from 'react';
-import { docPathSegments, useDocLocation } from './docLocation';
+import { docPathSegments, useDocLocation } from './doc-location';
 
 export type LeafNode = {
   /** 路由 :sectionId 段；ungrouped 时为 null */

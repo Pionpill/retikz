@@ -1,4 +1,4 @@
-export * from './docLinks';
+export * from './doc-links';
 export * from './platform';
-export * from './schemaRegistry';
+export * from './schema-registry';
 export * from './utils';

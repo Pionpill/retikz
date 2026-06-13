@@ -7,7 +7,7 @@ import { Layout } from '@retikz/react';
 import { DemoRenderer } from '../../src/components/shared/component-preview/DemoRenderer';
 import { RendererModeButton } from '../../src/components/shared/component-preview/_parts';
 import { PanZoomToolbar } from '../../src/components/shared/component-preview/PanZoomToolbar';
-import { useComponentPreviewStore } from '../../src/store/useComponentPreviewStore';
+import { useComponentPreviewStore } from '../../src/store/use-component-preview-store';
 
 const Demo: FC = () => <Layout width={40} height={20} />;
 const noop = () => {};

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { type IR, parseWay } from '@retikz/core';
 
-import { irToVanillaCode } from '../src/components/shared/component-preview/irToVanillaCode';
+import { irToVanillaCode } from '../src/components/shared/component-preview/ir-to-vanilla-code';
 
 const ir = (children: IR['children'], viewBox?: IR['viewBox']): IR => ({
   version: 1,

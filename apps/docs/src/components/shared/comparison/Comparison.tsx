@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
-import { useComparisonStore } from '@/store/useComparisonStore';
+import { useComparisonStore } from '@/store/use-comparison-store';
 
 import { ComparisonTargetLabelKeys, type ComparisonTargetValue, isComparisonTarget } from './targets';
 

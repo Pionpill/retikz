@@ -3,9 +3,9 @@ import { type FC, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { useAiChatStore } from '@/store/useAiChatStore';
+import { useAiChatStore } from '@/store/use-ai-chat-store';
 import { PROVIDER_LABEL } from '../models';
-import { isBuiltInProviderId } from '@/store/useAiChatStore';
+import { isBuiltInProviderId } from '@/store/use-ai-chat-store';
 import type { CustomProvider } from '../providers/resolve';
 
 const LABEL_KEY = {

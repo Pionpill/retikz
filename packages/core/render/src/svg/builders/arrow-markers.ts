@@ -1,7 +1,7 @@
 import type { ArrowEndSpec } from '@retikz/core';
 import type { SvgNode } from '../types';
 import { compact } from './attrs';
-import { buildMarkerPrim } from './markerPrim';
+import { buildMarkerPrim } from './marker-prim';
 
 /**
  * 端点级已解析 marker spec → `<marker>` SvgNode

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { type PlotSpec, PlotSpecSchema } from '@retikz/plot';
-import { buildPlotSpec } from '../../src/components/buildPlotSpec';
+import { buildPlotSpec } from '../../src/components/build-plot-spec';
 import { Axis, Legend } from '../../src/components/guides';
 import { AreaMark, BarMark, LineMark, PointMark, SectorMark } from '../../src/components/marks';
 

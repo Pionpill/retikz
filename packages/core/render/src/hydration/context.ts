@@ -7,7 +7,7 @@
  *   Scene-派生字段（meta / geometry / scene）在无 scene 时缺省、animation 在无 runtime 时 no-op。
  */
 import type { IRJsonObject, Layout, Scene, ScenePrimitive } from '@retikz/core';
-import type { IdClockRegistry } from '../animation/idClock';
+import type { IdClockRegistry } from '../animation/id-clock';
 
 /**
  * handler 内的动画控制（缺省作用于命中元素，传 id 控别的元素）

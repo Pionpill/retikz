@@ -16,7 +16,7 @@ import {
   deriveTitleFromMessages,
   loadAllConversations,
   saveConversation,
-} from '@/layout/ai-chat/conversationsStorage';
+} from '@/layout/ai-chat/conversations-storage';
 
 /** 主视图 / 设置视图 / 历史会话列表视图 */
 type View = 'main' | 'settings' | 'history';

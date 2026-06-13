@@ -1,7 +1,7 @@
 import { type ReactElement } from 'react';
 import { describe, expect, it } from 'vitest';
 import type { ArrowEndSpec, MarkerPathCommand, MarkerPrimitive } from '@retikz/core';
-import { ArrowMarker } from '../../src/render/arrowMarkers';
+import { ArrowMarker } from '../../src/render/arrow-markers';
 
 type AnyEl = ReactElement<Record<string, unknown> & { children?: unknown }>;
 

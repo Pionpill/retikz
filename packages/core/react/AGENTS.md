@@ -16,9 +16,9 @@
   `<RegularPolygon>` `<Star>`）等——builder 同步展开为 Kernel，IR 完全等价
 - **桥接函数**：`convertReactNodeToIR`（buildIR 别名）/ `convertIRToReactNode`（unbuilder）
 - **渲染主路径（SVG）**：`@retikz/render/svg` 的 `buildSvgDocument(scene, …)` 产中性 `SvgNode` 描述树（含
-  `<defs>` / 按需 dedup 的 `<marker>` / paint / clip 资源），react 侧 `render/svgToReact.ts` 把 `SvgNode` 薄映射成
+  `<defs>` / 按需 dedup 的 `<marker>` / paint / clip 资源），react 侧 `render/svg-to-react.ts` 把 `SvgNode` 薄映射成
   React 元素 + `useId` 绑定 idPrefix。**Scene→SVG 的逻辑单一真源在 `@retikz/render/svg`，react 不在本地重做**
-- **渲染主路径（Canvas）**：`render/canvasHost.tsx` 把同一份 `Scene` 交给 render 层的 canvas 绘制 + hitTest
+- **渲染主路径（Canvas）**：`render/canvas-host.tsx` 把同一份 `Scene` 交给 render 层的 canvas 绘制 + hitTest
 - **水合 / 动画**：经 `@retikz/render/hydration`（事件委托、坐标映射）与 `@retikz/render/animation`（WAAPI 桥）接线
 
 不在这里：Tier 2（plot / graph 等）独立成包，core / react 都不知道它们存在。
@@ -42,8 +42,8 @@ src/
 ├── kernel/           # Kernel 组件 + builder/unbuilder（JSX ↔ IR）
 │   ├── Layout.tsx Node.tsx Path.tsx Step.tsx Text.tsx Coordinate.tsx Scope.tsx
 │   ├── builder.ts    # React 元素树 → IR（同步遍历 children）
-│   ├── collectHydrationHandlers.ts / eventProps.ts  # 水合：按 id 收集 on<Event> handler
-│   ├── rendererContext.ts / RendererModeProvider.tsx  # svg/canvas 双渲染模式
+│   ├── collect-hydration-handlers.ts / event-props.ts  # 水合：按 id 收集 on<Event> handler
+│   ├── renderer-context.ts / RendererModeProvider.tsx  # svg/canvas 双渲染模式
 │   ├── unbuilder.ts  # IR → React 元素树（带 key、不裹 Layout 外壳）
 │   ├── _displayNames.ts / _fields.ts  # 内部常量（_前缀 = 不导出）
 │   └── index.ts
@@ -53,12 +53,12 @@ src/
 │   ├── _shared.ts   # 形状 sugar 共用的几何 / box / 角度纯函数（_前缀 = 不导出）
 │   └── index.ts
 └── render/           # 浏览器渲染（唯一允许碰 DOM 的地方）
-    ├── svgToReact.ts        # 渲染主路径：render 层 SvgNode 描述树 → React 元素（薄映射 + idPrefix 绑定）
-    ├── canvasHost.tsx       # canvas 模式宿主：同一份 Scene 交 render 层绘制 + hitTest
+    ├── svg-to-react.ts      # 渲染主路径：render 层 SvgNode 描述树 → React 元素（薄映射 + idPrefix 绑定）
+    ├── canvas-host.tsx      # canvas 模式宿主：同一份 Scene 交 render 层绘制 + hitTest
     ├── browser-measurer.ts  # 浏览器端 measureText 实现（注入 compileToScene）
-    ├── viewBox.ts
-    └── renderPrim.tsx / path-d-builder.ts / transform-builder.ts / arrowMarkers.tsx / paintDefs.tsx / clipDefs.tsx
-        # 早期「直接把 ScenePrimitive 翻成 React」的渲染实现，主路径迁到 buildSvgDocument + svgToReact 后已不在
+    ├── view-box.ts
+    └── render-prim.tsx / path-d-builder.ts / transform-builder.ts / arrow-markers.tsx / paint-defs.tsx / clip-defs.tsx
+        # 早期「直接把 ScenePrimitive 翻成 React」的渲染实现，主路径迁到 buildSvgDocument + svg-to-react 后已不在
         # 主链上，仅部分测试仍引用，待单独清理；新增渲染逻辑不要往这些文件加，统一走 @retikz/render
 ```
 
@@ -84,7 +84,7 @@ src/
 - **输入是 `Scene`，不是 IR**——不要在 renderer 里重做 IR → Scene 编译；走 `compileToScene` 一次
 - **不做几何运算**——所有坐标 / anchor / bbox 在 `@retikz/core` 已算完
 - **SVG 主路径不在 react 本地拼 SVG**——SVG 描述树（含 `<defs>` / `<marker>` / paint / clip）由 `@retikz/render/svg`
-  的 `buildSvgDocument` 统一产出；`svgToReact.ts` 只做 `SvgNode → ReactElement` 薄映射 + idPrefix 绑定。
+  的 `buildSvgDocument` 统一产出；`svg-to-react.ts` 只做 `SvgNode → ReactElement` 薄映射 + idPrefix 绑定。
   想改 SVG 输出形态去改 `@retikz/render/svg`，不要在 react 这边另写一套翻译
 - **`browser-measurer.ts` 注入到 `compileToScene` 的 `measureText`**——服务端 / 测试环境换 fallback measurer，不要在 measurer 内部判 `typeof window`
 - **箭头 marker id 必须包含 idPrefix / 哈希**避免多 `<Layout>` 实例间冲突（dedup 与物化在 `@retikz/render/svg` 完成）

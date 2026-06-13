@@ -3,7 +3,7 @@ import type { FC } from 'react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router';
 
-import { parseHeadings } from './tocHeadings';
+import { parseHeadings } from './toc-headings';
 
 /** 顶部 sticky header h-12 (48px) + 留白 */
 const SCROLL_OFFSET = 64;

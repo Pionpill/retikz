@@ -1,7 +1,7 @@
 import { Layout, Scope } from '@retikz/react';
 import type { FC } from 'react';
 
-import { Battery, Rheostat, Switch, circuitShapes } from './circuitShapes';
+import { Battery, Rheostat, Switch, circuitShapes } from './circuit-shapes';
 import { Meter, circuitMeter } from './circuit-01-meters.meter';
 
 const INK = 'currentColor';

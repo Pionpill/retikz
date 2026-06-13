@@ -1,6 +1,6 @@
 import { type FC, type ReactNode } from 'react';
 
-import { type RendererMode, RendererModeContext } from './rendererContext';
+import { type RendererMode, RendererModeContext } from './renderer-context';
 
 export type RendererModeProviderProps = {
   /** 注入给子树 <Layout>（未显式写 `renderer` 时生效）的渲染目标 */

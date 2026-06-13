@@ -22,5 +22,5 @@ export {
 } from './runtime';
 export { isAutoplayTrigger } from './channels';
 export type { AnimationControls, ClockOptions } from './runtime';
-export { createIdClockRegistry } from './idClock';
-export type { IdClockRegistry } from './idClock';
+export { createIdClockRegistry } from './id-clock';
+export type { IdClockRegistry } from './id-clock';

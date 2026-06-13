@@ -1,6 +1,6 @@
 import type { Buffer } from 'node:buffer';
 import type { Scene } from '@retikz/core';
-import { drawScene } from '../canvas/drawScene';
+import { drawScene } from '../canvas/draw-scene';
 import { createCssColorNormalizer, sceneFitMatrix } from '../canvas/shared';
 import type { DrawOptions } from '../canvas/types';
 

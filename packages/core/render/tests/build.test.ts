@@ -8,9 +8,9 @@ import type {
   TextPrim,
 } from '@retikz/core';
 import { buildPrim } from '../src/svg/builders/prim';
-import { buildMarkerPrim } from '../src/svg/builders/markerPrim';
-import { buildPaintDef } from '../src/svg/builders/paintDefs';
-import { collectArrowSpecs } from '../src/svg/builders/arrowCollect';
+import { buildMarkerPrim } from '../src/svg/builders/marker-prim';
+import { buildPaintDef } from '../src/svg/builders/paint-defs';
+import { collectArrowSpecs } from '../src/svg/builders/arrow-collect';
 
 describe('buildPrim —— primitive → SvgNode', () => {
   it('prim-rect-to-node：rect → tag/kebab/SVG 真名属性，无 React camelCase', () => {

@@ -1,5 +1,5 @@
 import type { ClipShape, Scene, ScenePrimitive } from '@retikz/core';
-import { DEG_TO_RAD, applyTransform, buildClipPath, buildPath, roundedRectPath } from './pathGeometry';
+import { DEG_TO_RAD, applyTransform, buildClipPath, buildPath, roundedRectPath } from './path-geometry';
 
 /** hitTest 命中点（Scene user units 坐标系） */
 export type HitPoint = {

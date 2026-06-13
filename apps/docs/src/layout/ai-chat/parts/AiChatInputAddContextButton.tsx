@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 
 import { DocsSearchPanel } from '@/components/shared/docs-search';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { useAiChatStore } from '@/store/useAiChatStore';
+import { useAiChatStore } from '@/store/use-ai-chat-store';
 
 /** popover 内的 Command 紧凑变体：input h-9、item py-1.5、icon size-3.5 */
 const COMPACT_COMMAND_CLASS =

@@ -9,10 +9,10 @@ import {
   resolvePointViaLayout,
   resolveSvgElement,
 } from '@retikz/render/hydration';
-import { isFigure } from './builder/isFigure';
+import { isFigure } from './builder/is-figure';
 import { DEFAULT_ID_PREFIX } from './constants';
-import { applyAttrs, svgNodeToDom } from './svgNodeToDom';
-import { toScene } from './toScene';
+import { applyAttrs, svgNodeToDom } from './svg-node-to-dom';
+import { toScene } from './to-scene';
 import type { HydrateOptions, HydrationHandle, MountOptions, RenderInput, VanillaView } from './types';
 
 const SVG_NS = 'http://www.w3.org/2000/svg';

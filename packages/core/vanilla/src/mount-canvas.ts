@@ -10,8 +10,8 @@ import {
 } from '@retikz/render/hydration';
 import type { HydrationController } from '@retikz/render/hydration';
 import { type AnimationControls, type IdClockRegistry, createClock, createIdClockRegistry, prefersReducedMotion, sceneAnimationDurationMs, sceneHasAnimations, sceneHasAutoplayTrigger } from '@retikz/render/animation';
-import { isFigure } from './builder/isFigure';
-import { toScene } from './toScene';
+import { isFigure } from './builder/is-figure';
+import { toScene } from './to-scene';
 import type { CanvasView, HydrateOptions, MountCanvasOptions, RenderInput, ScenePoint } from './types';
 
 /** 设备像素比：取有限正数、否则回退 1（镜像 react CanvasHost） */

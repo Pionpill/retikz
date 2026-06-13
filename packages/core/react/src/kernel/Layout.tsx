@@ -37,12 +37,12 @@ import { buildSvgDocument } from '@retikz/render/svg';
 import { bindWaapiDescriptors, sceneHasAnimations } from '@retikz/render/animation';
 import type { AnimationControls, AnimationPropertyRegistry, EasingRegistry } from '@retikz/render/animation';
 import { buildIR, pickScopeStyle, wrapRootScope } from './builder';
-import { collectHydrationHandlers } from './collectHydrationHandlers';
-import { useRendererMode } from './rendererContext';
+import { collectHydrationHandlers } from './collect-hydration-handlers';
+import { useRendererMode } from './renderer-context';
 import type { ScopeStyleProps } from './_fields';
 import { browserMeasurer } from '../render/browser-measurer';
-import { CanvasHost } from '../render/canvasHost';
-import { svgToReact } from '../render/svgToReact';
+import { CanvasHost } from '../render/canvas-host';
+import { svgToReact } from '../render/svg-to-react';
 
 const styleFontFamily = (style: CSSProperties | undefined): string | undefined => {
   const fontFamily = style?.fontFamily;

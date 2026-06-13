@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 
 import { LANGS, type Lang } from '@/i18n';
-import { useThemeStore } from '@/store/useThemeStore';
+import { useThemeStore } from '@/store/use-theme-store';
 
 /** 顶栏 / 抽屉共享的动作集合：主题、语言、复制链接。 */
 export const useDocActions = () => {

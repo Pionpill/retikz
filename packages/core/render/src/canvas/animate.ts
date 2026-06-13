@@ -10,7 +10,7 @@ import { evaluateTrack } from '../animation/evaluate';
 import type { EasingRegistry } from '../animation/types';
 import type { AnimationPropertyRegistry } from '../animation/registry';
 import { commandEndpoint } from '../shared';
-import { DEG_TO_RAD } from './pathGeometry';
+import { DEG_TO_RAD } from './path-geometry';
 
 /** 应用动画所需的子集选项 */
 export type AnimateContext = {

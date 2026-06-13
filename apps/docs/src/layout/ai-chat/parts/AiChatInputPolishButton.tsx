@@ -2,7 +2,7 @@ import { Loader2, Wand2 } from 'lucide-react';
 import { type FC } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import { useAiChatStore } from '@/store/useAiChatStore';
+import { useAiChatStore } from '@/store/use-ai-chat-store';
 
 /**
  * Textarea 右上角的润色按钮

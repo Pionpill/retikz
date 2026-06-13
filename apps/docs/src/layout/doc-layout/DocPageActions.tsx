@@ -9,14 +9,14 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { buildAiUrl, buildDocPageLinks } from '@/lib/docLinks';
+import { buildAiUrl, buildDocPageLinks } from '@/lib/doc-links';
 import { ArrowLeft, ArrowRight, ArrowUpRight, ChevronDown, Copy, FileCode, Plug } from 'lucide-react';
 import { type FC, type ReactNode, useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router';
 import { toast } from 'sonner';
-import { useDocLocation } from './docLocation';
-import { usePageNavigation } from './usePageNavigation';
+import { useDocLocation } from './doc-location';
+import { usePageNavigation } from './use-page-navigation';
 
 export type DocPageActionsProps = {
   /** 当前页面 mdx 源码（用于"复制 markdown"） */

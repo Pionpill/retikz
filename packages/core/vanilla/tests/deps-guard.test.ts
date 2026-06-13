@@ -21,8 +21,8 @@ describe('@retikz/vanilla 架构守卫', () => {
   });
 
   it('no-renderer-core-duplication：经 @retikz/render/svg builder，不自写 Scene→SVG', () => {
-    const mountSrc = readSrc('mountSvg.ts');
-    const strSrc = readSrc('renderToSvgString.ts');
+    const mountSrc = readSrc('mount-svg.ts');
+    const strSrc = readSrc('render-to-svg-string.ts');
     expect(mountSrc).toMatch(/from ['"]@retikz\/render\/svg['"]/);
     expect(mountSrc).toMatch(/buildSvgDocument/);
     expect(strSrc).toMatch(/from ['"]@retikz\/render\/svg['"]/);

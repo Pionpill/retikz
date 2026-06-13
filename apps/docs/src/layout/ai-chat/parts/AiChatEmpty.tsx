@@ -3,9 +3,9 @@ import { useTranslation } from 'react-i18next';
 
 import { ChatGptIcon, ClaudeIcon, DeepSeekIcon } from '@/components/icons';
 import { Button } from '@/components/ui/button';
-import { buildAiUrl } from '@/lib/docLinks';
+import { buildAiUrl } from '@/lib/doc-links';
 import { cn } from '@/lib/utils';
-import { useAiChatStore } from '@/store/useAiChatStore';
+import { useAiChatStore } from '@/store/use-ai-chat-store';
 
 const DEEPLINK_BASES = {
   chatgpt: 'https://chatgpt.com/',

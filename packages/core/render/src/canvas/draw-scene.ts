@@ -13,7 +13,7 @@ import type {
 } from '@retikz/core';
 import type { CanvasWarning, DrawOptions, UnsupportedCanvasFeature } from './types';
 import { commandEndpoint, gradientLineFromAngle, parseHexColor } from '../shared';
-import { DEG_TO_RAD, applyClip, applyTransform, buildPath, roundedRectPath } from './pathGeometry';
+import { DEG_TO_RAD, applyClip, applyTransform, buildPath, roundedRectPath } from './path-geometry';
 import { applyPrimAnimations } from './animate';
 import { applySceneCamera } from './camera';
 

@@ -7,7 +7,7 @@ import { cn } from '@/lib/utils';
 
 import { RendererModeButton, ToolbarIconButton } from './_parts';
 import { type RendererMode, SIZE_KEYS, type SizeKey, type Transform } from './_shared';
-import { PAN_STEP, ZOOM_FACTOR, ZOOM_MAX, ZOOM_MIN } from './usePanZoom';
+import { PAN_STEP, ZOOM_FACTOR, ZOOM_MAX, ZOOM_MIN } from './use-pan-zoom';
 
 export type PanZoomToolbarProps = {
   transform: Transform;

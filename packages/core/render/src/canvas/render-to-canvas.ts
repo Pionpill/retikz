@@ -1,5 +1,5 @@
 import type { Scene } from '@retikz/core';
-import { drawScene } from './drawScene';
+import { drawScene } from './draw-scene';
 import { createCssColorNormalizer, sceneFitMatrix } from './shared';
 import type { RenderOptions } from './types';
 

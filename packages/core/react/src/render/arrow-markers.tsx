@@ -1,7 +1,7 @@
 import type { FC, ReactElement } from 'react';
 import type { ArrowEndSpec } from '@retikz/core';
 import { buildArrowMarker } from '@retikz/render/svg';
-import { svgToReact } from './svgToReact';
+import { svgToReact } from './svg-to-react';
 
 /** `<ArrowMarker>` 组件 props */
 export type ArrowMarkerProps = {

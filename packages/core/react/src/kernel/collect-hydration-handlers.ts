@@ -1,6 +1,6 @@
 import { Children, Fragment, type ReactNode, isValidElement } from 'react';
 import type { ElementHandlers, HydrationHandler, HydrationHandlers } from '@retikz/render/hydration';
-import { EVENT_PROP_TO_NAME, type HydrationEventPropName } from './eventProps';
+import { EVENT_PROP_TO_NAME, type HydrationEventPropName } from './event-props';
 import {
   TIKZ_COORDINATE,
   TIKZ_NODE,

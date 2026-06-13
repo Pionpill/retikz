@@ -20,8 +20,8 @@ import {
   renderHighlighted,
   renderSnippet,
   useSearchEntries,
-} from './searchEngine';
-import { type SearchIndex, loadSearchIndex } from './searchIndex';
+} from './search-engine';
+import { type SearchIndex, loadSearchIndex } from './search-index';
 
 /** Dialog（DocsSearch）和 popover（AI Add Context）共用的 cmdk 内部尺寸 / 颜色 token */
 const DEFAULT_COMMAND_CLASS =

@@ -1,7 +1,7 @@
 import { type ReactElement } from 'react';
 import { describe, expect, it } from 'vitest';
 import type { ArrowEndSpec, MarkerPrimitive, PathPrim } from '@retikz/core';
-import { renderPrim } from '../../src/render/renderPrim';
+import { renderPrim } from '../../src/render/render-prim';
 
 type AnyEl = ReactElement<Record<string, unknown> & { children?: unknown }>;
 

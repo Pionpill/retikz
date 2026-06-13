@@ -3,7 +3,7 @@ import { type FC, type KeyboardEvent, useCallback, useEffect, useRef } from 'rea
 import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/components/ui/button';
-import { useAiChatStore } from '@/store/useAiChatStore';
+import { useAiChatStore } from '@/store/use-ai-chat-store';
 
 import { AiChatInputAddContextButton } from './AiChatInputAddContextButton';
 import { AiChatInputAutoRepairPicker } from './AiChatInputAutoRepairPicker';

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { Release } from '@/data/changelog.types';
-import { changelogToMarkdown } from '@/components/shared/changelog/changelogToMarkdown';
+import { changelogToMarkdown } from '@/components/shared/changelog/changelog-to-markdown';
 
 const fixture: Array<Release> = [
   {

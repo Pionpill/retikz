@@ -1,8 +1,8 @@
 import { type ReactElement } from 'react';
 import { describe, expect, it } from 'vitest';
 import type { GroupPrim, SceneResource } from '@retikz/core';
-import { renderPrim } from '../../src/render/renderPrim';
-import { ClipDefs } from '../../src/render/clipDefs';
+import { renderPrim } from '../../src/render/render-prim';
+import { ClipDefs } from '../../src/render/clip-defs';
 
 type AnyEl = ReactElement<Record<string, unknown> & { children?: unknown }>;
 

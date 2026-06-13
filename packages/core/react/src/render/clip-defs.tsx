@@ -1,7 +1,7 @@
 import type { FC } from 'react';
 import type { SceneResource } from '@retikz/core';
 import { buildClipDef } from '@retikz/render/svg';
-import { svgToReact } from './svgToReact';
+import { svgToReact } from './svg-to-react';
 
 /**
  * Scene clip 资源 → `<clipPath>` 薄绑定层

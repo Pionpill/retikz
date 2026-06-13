@@ -10,9 +10,9 @@ import { modules } from './data/module';
 import { getSectionsByModule } from './data/sections';
 import { DocLayout, DocPage } from './layout/doc-layout';
 import { ViewLayout } from './layout/view-layout';
-import { useComponentPreviewStore } from './store/useComponentPreviewStore';
-import { useLayoutStore } from './store/useLayoutStore';
-import { useTocStore } from './store/useTocStore';
+import { useComponentPreviewStore } from './store/use-component-preview-store';
+import { useLayoutStore } from './store/use-layout-store';
+import { useTocStore } from './store/use-toc-store';
 
 /** section + 它的首页 → 完整 URL（无分组时跳过 sectionId 段） */
 const firstPageUrl = (moduleId: string, section: Section): string => {

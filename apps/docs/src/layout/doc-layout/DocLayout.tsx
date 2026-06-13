@@ -2,7 +2,7 @@ import type { FC } from 'react';
 import { Outlet } from 'react-router';
 
 import { cn } from '@/lib/utils';
-import { useLayoutStore } from '@/store/useLayoutStore';
+import { useLayoutStore } from '@/store/use-layout-store';
 
 import { AppSidebar } from './sidebar/AppSidebar';
 

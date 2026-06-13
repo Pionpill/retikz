@@ -6,7 +6,7 @@ import { modules } from '@/data/module';
 import { getSectionsByModule } from '@/data/sections';
 import type { Lang } from '@/i18n';
 
-import { type IndexedPage, type SearchIndex } from './searchIndex';
+import { type IndexedPage, type SearchIndex } from './search-index';
 
 /** 可被匹配的字段类型；优先级 label > description > heading > code */
 export type FieldKind = 'label' | 'description' | 'heading' | 'code';

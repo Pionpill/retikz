@@ -1,8 +1,8 @@
 import { type ReactElement } from 'react';
 import { describe, expect, it } from 'vitest';
 import type { RectPrim, SceneResource } from '@retikz/core';
-import { renderPrim } from '../../src/render/renderPrim';
-import { PaintDefs } from '../../src/render/paintDefs';
+import { renderPrim } from '../../src/render/render-prim';
+import { PaintDefs } from '../../src/render/paint-defs';
 
 type AnyEl = ReactElement<Record<string, unknown> & { children?: unknown }>;
 

@@ -1,7 +1,7 @@
 import { renderToSvgString as buildSvgString } from '@retikz/render/svg';
-import { isFigure } from './builder/isFigure';
+import { isFigure } from './builder/is-figure';
 import { DEFAULT_ID_PREFIX } from './constants';
-import { toScene } from './toScene';
+import { toScene } from './to-scene';
 import type { RenderInput, RenderToStringOptions } from './types';
 
 /**

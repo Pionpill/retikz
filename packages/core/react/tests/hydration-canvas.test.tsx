@@ -3,7 +3,7 @@ import { createRoot } from 'react-dom/client';
 import { act } from 'react-dom/test-utils';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { Layout, Node } from '../src';
-import { createGeometryContext } from './helpers/geometryContext';
+import { createGeometryContext } from './helpers/geometry-context';
 
 /**
  * 水合：Canvas 模式事件绑定（端到端）

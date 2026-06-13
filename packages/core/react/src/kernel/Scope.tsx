@@ -1,7 +1,7 @@
 import type { FC, ReactNode } from 'react';
 import type { IRScope, IRTransform } from '@retikz/core';
 import { TIKZ_SCOPE } from './_displayNames';
-import type { HydrationEventProps } from './eventProps';
+import type { HydrationEventProps } from './event-props';
 import type { ScopeStyleProps } from './_fields';
 
 /**

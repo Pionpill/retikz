@@ -1,7 +1,7 @@
 import type { Key, ReactElement } from 'react';
 import type { ScenePrimitive } from '@retikz/core';
 import { type BuildContext, buildPrim } from '@retikz/render/svg';
-import { svgToReact } from './svgToReact';
+import { svgToReact } from './svg-to-react';
 
 /**
  * 渲染上下文——容器侧把 marker id / paint·clip url 等「全 SVG 共享」的资源回调向下传

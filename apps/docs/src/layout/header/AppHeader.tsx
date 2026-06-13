@@ -8,7 +8,7 @@ import { MobileNav } from '../mobile/MobileNav';
 import { BrandLink } from './BrandLink';
 import { HeaderActions } from './HeaderActions';
 import { ModuleNav } from './ModuleNav';
-import { HeaderCompactContext } from './useHeaderCompact';
+import { HeaderCompactContext } from './use-header-compact';
 
 /** 紧凑模式像素阈值；与 Tailwind 命名断点 `@4xl/header:` (56rem) 对齐 */
 const COMPACT_THRESHOLD_PX = 896;

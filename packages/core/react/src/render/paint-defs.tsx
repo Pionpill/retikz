@@ -1,7 +1,7 @@
 import type { FC } from 'react';
 import type { SceneResource } from '@retikz/core';
 import { buildPaintDef } from '@retikz/render/svg';
-import { svgToReact } from './svgToReact';
+import { svgToReact } from './svg-to-react';
 
 /**
  * Scene paint 资源 → SVG paint server（gradient / pattern / image）薄绑定层

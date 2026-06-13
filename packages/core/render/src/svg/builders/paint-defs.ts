@@ -2,7 +2,7 @@ import type { IRPaintSpec, PaintResource, ResolvedPatternTile } from '@retikz/co
 import type { SvgNode } from '../types';
 import { gradientLineFromAngle } from '../../shared';
 import { compact } from './attrs';
-import { buildMarkerPrim } from './markerPrim';
+import { buildMarkerPrim } from './marker-prim';
 
 /** fit → SVG preserveAspectRatio（cover 为缺省） */
 const fitToPAR = (fit: 'fill' | 'contain' | 'cover' | undefined): string =>
