@@ -58,7 +58,7 @@ export type DrawOptions = {
   /**
    * 动画时刻（毫秒，绝对时间轴）
    * @description 给定时 drawScene 绘制该时刻的一帧（对每个 prim 的 animations 逐 track `evaluateTrack` 求值后应用）；
-   *   缺省（undefined）→ 渲染 base 静态图（与现状逐调用一致）。连续播放由 runtime（ADR-04）的 rAF 循环推进 time。
+   *   缺省（undefined）→ 渲染 base 静态图。连续播放由 runtime 的 rAF 循环推进 time。
    */
   time?: number;
   /**

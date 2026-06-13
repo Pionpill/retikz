@@ -61,6 +61,25 @@ describe('buildPrim —— primitive → SvgNode', () => {
     expect(t0.children[0]).toBe('a');
   });
 
+  it('prim-text-line-opacity：行级透明度落到 tspan 的 fill-opacity（非 opacity，浏览器对 tspan 不应用 opacity）', () => {
+    const text: TextPrim = {
+      type: 'text',
+      x: 0,
+      y: 0,
+      lines: [{ text: 'a', opacity: 0.5 }, { text: 'b' }],
+      fontSize: 12,
+      align: 'start',
+      baseline: 'top',
+      lineHeight: 10,
+      measuredWidth: 6,
+      measuredHeight: 20,
+    };
+    const node = buildPrim(text);
+    const [t0] = node.children as Array<{ attrs: Record<string, unknown> }>;
+    expect(t0.attrs['fill-opacity']).toBe(0.5);
+    expect('opacity' in t0.attrs).toBe(false);
+  });
+
   it('prim-group-transform-clip：group → g + transform + clip-path（url 经 clipRefUrl）', () => {
     const group: GroupPrim = {
       type: 'group',

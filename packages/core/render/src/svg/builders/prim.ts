@@ -159,7 +159,8 @@ const buildPrimRaw = (p: ScenePrimitive, context: BuildContext): SvgNode => {
               x: p.x,
               dy: i === 0 ? firstDy : p.lineHeight,
               fill: paintAttr(line.fill),
-              opacity: line.opacity,
+              // 浏览器对 <tspan> 不应用 opacity（非渲染组），用 fill-opacity 才能真正生效（Canvas 端经 globalAlpha 等效）
+              'fill-opacity': line.opacity,
               'font-size': line.fontSize,
               'font-family': line.fontFamily,
               'font-weight': line.fontWeight,

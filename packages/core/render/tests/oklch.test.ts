@@ -58,6 +58,36 @@ describe('色相 360° 环绕', () => {
   });
 });
 
+describe('alpha 通道', () => {
+  it('rgba() 端点的 alpha 被保留并插值（输出 #rrggbbaa）', () => {
+    const out = lerpColorOklch('rgba(0, 0, 0, 0.2)', 'rgba(0, 0, 0, 0.8)', 0.5);
+    // 中点 alpha = 0.5 → 0x80；颜色仍为黑
+    expect(out).toMatch(/^#[0-9a-f]{8}$/);
+    expect(out.slice(7, 9)).toBe('80');
+  });
+
+  it('不透明端点（alpha=1）输出 6 位 hex（不带 alpha）', () => {
+    expect(lerpColorOklch('#000000', '#ffffff', 0.5)).toMatch(/^#[0-9a-f]{6}$/);
+  });
+
+  it('#rrggbbaa 端点的 alpha 被解析并保留', () => {
+    const out = lerpColorOklch('#00000000', '#000000ff', 0);
+    expect(out.slice(7, 9)).toBe('00');
+  });
+
+  it('oklch(L C H / a) 的 alpha 被解析并保留', () => {
+    const out = lerpColorOklch('oklch(0.5 0.1 120 / 0.4)', 'oklch(0.5 0.1 120 / 0.4)', 0.5);
+    expect(out).toMatch(/^#[0-9a-f]{8}$/);
+    expect(out.slice(7, 9)).toBe('66'); // 0.4 × 255 ≈ 0x66
+  });
+
+  it('预采样同样保留并插值 alpha', () => {
+    const samples = sampleColorOklch('rgba(0,0,0,0)', 'rgba(0,0,0,1)', 4);
+    expect(samples[0].slice(7, 9)).toBe('00');
+    expect(samples[4]).toMatch(/^#[0-9a-f]{6}$/); // alpha=1 退回 6 位
+  });
+});
+
 describe('sampleColorOklch 预采样', () => {
   it('返回 segments+1 个采样，首项为 from', () => {
     const samples = sampleColorOklch('#000000', '#ffffff', 8);

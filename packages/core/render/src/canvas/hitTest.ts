@@ -26,14 +26,19 @@ export type HitTestOptions = {
   context2d?: CanvasRenderingContext2D;
 };
 
+/** 懒建并复用的离屏 2D context（无传入 context2d 时的兜底）：避免高频 pointermove 每次新建 canvas 的 GC 压力 */
+let fallbackContext: CanvasRenderingContext2D | null | undefined;
+
 /**
- * 解析 hitTest 用的 2D context：优先用调用方传入的 context2d，否则尝试自建离屏 canvas
+ * 解析 hitTest 用的 2D context：优先用调用方传入的 context2d，否则复用模块内懒建的离屏 canvas
  * @description 无传入且无 canvas 环境（如 SSR）时返回 null，hitTest 直接判定为无命中。
  */
 const resolveContext = (options: HitTestOptions | undefined): CanvasRenderingContext2D | null => {
   if (options?.context2d !== undefined) return options.context2d;
-  if (typeof document === 'undefined') return null;
-  return document.createElement('canvas').getContext('2d');
+  if (fallbackContext === undefined) {
+    fallbackContext = typeof document === 'undefined' ? null : document.createElement('canvas').getContext('2d');
+  }
+  return fallbackContext;
 };
 
 /** 在当前 context 上构建图元自身的填充 / 点测路径（transform 已由调用方压栈）；text 无路径返回 false */

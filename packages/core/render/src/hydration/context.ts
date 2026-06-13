@@ -161,13 +161,24 @@ const leafCorners = (prim: ScenePrimitive): Array<[number, number]> => {
         [prim.x + prim.width, prim.y + prim.height],
         [prim.x, prim.y + prim.height],
       ];
-    case 'ellipse':
-      return [
+    case 'ellipse': {
+      const corners: Array<[number, number]> = [
         [prim.cx - prim.rx, prim.cy - prim.ry],
         [prim.cx + prim.rx, prim.cy - prim.ry],
         [prim.cx + prim.rx, prim.cy + prim.ry],
         [prim.cx - prim.rx, prim.cy + prim.ry],
       ];
+      // 旋转椭圆：角点绕中心旋转后并集 bbox 才不偏小（与 hitTest 端的 rotate 处理一致）
+      if (!prim.rotate) return corners;
+      const rad = prim.rotate * DEG_TO_RAD;
+      const cos = Math.cos(rad);
+      const sin = Math.sin(rad);
+      return corners.map(([x, y]): [number, number] => {
+        const dx = x - prim.cx;
+        const dy = y - prim.cy;
+        return [prim.cx + dx * cos - dy * sin, prim.cy + dx * sin + dy * cos];
+      });
+    }
     case 'text': {
       const left = prim.align === 'middle' ? prim.x - prim.measuredWidth / 2 : prim.align === 'end' ? prim.x - prim.measuredWidth : prim.x;
       const top = prim.baseline === 'top' ? prim.y : prim.baseline === 'middle' ? prim.y - prim.measuredHeight / 2 : prim.y - prim.measuredHeight;
