@@ -157,8 +157,16 @@ const buildPreviewIR = (Component: FC): PreviewIR => {
   return { ir, width, height };
 };
 
-/** IR 是否含 Tier 2 composite（带 namespace）顶层节点——含则无法仅凭 IR 独立渲染（外部数据不在 IR 内），IR 视图复用 React 渲染 */
-const irHasComposite = (ir: IR): boolean => ir.children.some(child => 'namespace' in child);
+/** 节点（含子树）是否带 namespace（Tier 2 composite 标记）——composite 可嵌在 scope 下，故递归 */
+const nodeHasComposite = (node: unknown): boolean => {
+  if (typeof node !== 'object' || node === null) return false;
+  if ('namespace' in node) return true;
+  const children = (node as { children?: unknown }).children;
+  return Array.isArray(children) && children.some(nodeHasComposite);
+};
+
+/** IR 是否含 Tier 2 composite（带 namespace）节点——含则无法仅凭 IR 独立渲染（外部数据不在 IR 内），IR 视图复用 React 渲染 */
+const irHasComposite = (ir: IR): boolean => ir.children.some(nodeHasComposite);
 
 /** 节点（含 scope 递归子树）是否带 animations */
 const nodeHasAnimations = (node: unknown): boolean => {
