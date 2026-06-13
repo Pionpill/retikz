@@ -125,6 +125,17 @@ export const mountCanvas = (
     if (options.width !== undefined) canvas.style.width = `${options.width}px`;
     if (options.height !== undefined) canvas.style.height = `${options.height}px`;
     canvas.style.objectFit = 'contain';
+    // 截帧（snapshotAt 给定）：按该时刻烘焙一帧、不起 rAF（定格），覆盖 animate（镜像 react CanvasHost）。
+    // snapshotAt 来自 mount options、view 生命周期内恒定，故此分支下 clock / visible bridge 始终不建。
+    if (options.snapshotAt !== undefined) {
+      renderToCanvas(canvas, scene, {
+        devicePixelRatio: ratio,
+        time: options.snapshotAt,
+        easings: options.easings,
+        animationProperties: options.animationProperties,
+      });
+      return;
+    }
     // base 静态先画一帧；含动画且未降级时起 rAF 时钟逐帧重绘（共享时钟，per-track delay 在 evaluateTrack 内偏移）
     renderToCanvas(canvas, scene, { devicePixelRatio: ratio });
     clock?.dispose();
