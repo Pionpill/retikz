@@ -128,16 +128,22 @@ export const emitLabelPrimitive = (
     };
   }
 
-  // 非 sloped：锚点 + 文本块四角加进 bbox 候选（保守，避免裁掉）
+  // 非 sloped：按 align / baseline 求文本块的真实左右 / 上下边，再取四角加进 bbox 候选。
+  // 锚点居中对称取角会少覆盖半个宽 / 高——side='left'（align=end）文本完全在锚点左侧、
+  // side='above'（baseline=bottom）文本完全在锚点上方，长 label 会超出自动 viewBox 被裁。
   const halfW = measuredWidth / 2;
   const halfH = measuredHeight / 2;
+  const left = align === 'start' ? x : align === 'end' ? x - measuredWidth : x - halfW;
+  const right = align === 'start' ? x + measuredWidth : align === 'end' ? x : x + halfW;
+  const top = baseline === 'top' ? y : baseline === 'bottom' ? y - measuredHeight : y - halfH;
+  const bottom = baseline === 'top' ? y + measuredHeight : baseline === 'bottom' ? y : y + halfH;
   return {
     primitive: text,
     points: [
-      [x - halfW, y - halfH],
-      [x + halfW, y - halfH],
-      [x - halfW, y + halfH],
-      [x + halfW, y + halfH],
+      [left, top],
+      [right, top],
+      [left, bottom],
+      [right, bottom],
     ],
   };
 };

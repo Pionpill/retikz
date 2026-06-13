@@ -4,12 +4,9 @@ import type { ValueOf } from '../types';
 export const CompileWarningCode = {
   UnresolvedNodeReference: 'UNRESOLVED_NODE_REFERENCE',
   PathTooShort: 'PATH_TOO_SHORT',
-  AnchorResolutionFailed: 'ANCHOR_RESOLUTION_FAILED',
   OffsetBaseUnresolved: 'OFFSET_BASE_UNRESOLVED',
   PolarOriginUnresolved: 'POLAR_ORIGIN_UNRESOLVED',
   AtTargetUnresolved: 'AT_TARGET_UNRESOLVED',
-  RelativeInitialNoPrevEnd: 'RELATIVE_INITIAL_NO_PREV_END',
-  BboxExtremeInput: 'BBOX_EXTREME_INPUT',
   DuplicateNodeId: 'DUPLICATE_NODE_ID',
   ShapeOverridesBuiltin: 'SHAPE_OVERRIDES_BUILTIN',
   ArrowOverridesBuiltin: 'ARROW_OVERRIDES_BUILTIN',
@@ -18,6 +15,7 @@ export const CompileWarningCode = {
   AnimationInvalidProperty: 'ANIMATION_INVALID_PROPERTY',
   ArcMissingRadius: 'ARC_MISSING_RADIUS',
   PartialArcNeedsBothAngles: 'PARTIAL_ARC_NEEDS_BOTH_ANGLES',
+  PartialArcClosedInvalid: 'PARTIAL_ARC_CLOSED_INVALID',
 } as const;
 
 export type CompileWarningCodeValue =

@@ -48,14 +48,25 @@ import { type PathBaseProps, splitSubPathsForEndpointArrows } from './split';
 import { BUILTIN_ARROWS } from '../../arrows';
 
 /**
+ * referent（offset.of / polar.origin 的并集形态：节点 id 字符串 / `[x, y]` 字面量 / 嵌套 PolarPosition）里挖节点 id
+ * @description 裸字符串即节点 id（offset.of / polar.origin 的 string 分支语义）；其余交回 nodeRefId 递归。
+ */
+const referentNodeId = (ref: unknown): string | undefined =>
+  typeof ref === 'string' ? ref : nodeRefId(ref as IRTarget);
+
+/**
  * 目标里的一个代表性节点 id——给 UNRESOLVED_NODE_REFERENCE 诊断用
  * @description 对象 NodeTarget（`{ id, ... }`）直接取 id；between 比例点递归挖端点里第一个节点引用
- *   （端点未解析时整 between 失败，需照样报 unresolved 而非静默）；其余形态返回 undefined。
+ *   （端点未解析时整 between 失败，需照样报 unresolved 而非静默）；OffsetPosition（`{ of }`）/ PolarPosition
+ *   （`{ origin }`）递归挖其 referent——否则引用未定义节点时 refPoint 为 null 但 toId 为 undefined，整条 path
+ *   会被静默丢弃（零诊断）；直接坐标 / 极坐标无 origin 等形态返回 undefined。
  */
 const nodeRefId = (t: IRTarget): string | undefined => {
   if (typeof t !== 'object' || Array.isArray(t)) return undefined;
   if ('id' in t) return t.id;
   if ('between' in t) return nodeRefId(t.between[0]) ?? nodeRefId(t.between[1]);
+  if ('of' in t) return referentNodeId((t as { of: unknown }).of);
+  if ('origin' in t) return referentNodeId((t as { origin?: unknown }).origin);
   return undefined;
 };
 
@@ -496,7 +507,7 @@ export const emitPathPrimitive = (
     if (closed === 'sector') return 'sector';
     if (closed === 'closed') {
       warn(
-        'PARTIAL_ARC_CLOSED_INVALID',
+        CompileWarningCode.PartialArcClosedInvalid,
         "Partial circle/ellipse (with angles) cannot use closed:'closed'; falling back to 'chord'",
         `children[${idx}]`,
       );

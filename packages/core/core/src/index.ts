@@ -216,8 +216,9 @@ export type {
   TextMeasurer,
   CompileOptions,
   CompileWarning,
+  CompileWarningCodeValue,
 } from './compile';
-export { computeLayout, fallbackMeasurer, compileToScene } from './compile';
+export { computeLayout, fallbackMeasurer, compileToScene, CompileWarningCode, formatCompileWarning } from './compile';
 
 // Parsers
 export type {

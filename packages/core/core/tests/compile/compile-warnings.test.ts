@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { compileToScene } from '../../src/compile/compile';
+import { CompileWarningCode, formatCompileWarning } from '../../src';
 import type { CompileWarning, IR } from '../../src';
 
 const scene = (children: IR['children']): IR => ({
@@ -61,6 +62,41 @@ describe('CompileOptions.onWarn', () => {
     expect(warnings.some(w => w.code === 'UNRESOLVED_NODE_REFERENCE')).toBe(true);
     const unresolved = warnings.find(w => w.code === 'UNRESOLVED_NODE_REFERENCE');
     expect(unresolved!.path).toBe('children[0].path.children[0].to');
+    expect(unresolved!.message).toContain("'bogus'");
+  });
+
+  it("UNRESOLVED_NODE_REFERENCE：step.to 用 offset position { of } 引用未定义节点 → 不再静默丢弃", () => {
+    const ir = scene([
+      {
+        type: 'path',
+        children: [
+          { type: 'step', kind: 'move', to: { of: 'bogus', offset: [1, 1] } },
+          { type: 'step', kind: 'line', to: [10, 0] },
+        ],
+      },
+    ]);
+    const warnings: Array<CompileWarning> = [];
+    compileToScene(ir, { onWarn: w => warnings.push(w) });
+    const unresolved = warnings.find(w => w.code === 'UNRESOLVED_NODE_REFERENCE');
+    expect(unresolved).toBeDefined();
+    expect(unresolved!.path).toBe('children[0].path.children[0].to');
+    expect(unresolved!.message).toContain("'bogus'");
+  });
+
+  it("UNRESOLVED_NODE_REFERENCE：step.to 用 polar position { origin } 引用未定义节点 → 不再静默丢弃", () => {
+    const ir = scene([
+      {
+        type: 'path',
+        children: [
+          { type: 'step', kind: 'move', to: { origin: 'bogus', angle: 45, radius: 10 } },
+          { type: 'step', kind: 'line', to: [10, 0] },
+        ],
+      },
+    ]);
+    const warnings: Array<CompileWarning> = [];
+    compileToScene(ir, { onWarn: w => warnings.push(w) });
+    const unresolved = warnings.find(w => w.code === 'UNRESOLVED_NODE_REFERENCE');
+    expect(unresolved).toBeDefined();
     expect(unresolved!.message).toContain("'bogus'");
   });
 
@@ -142,5 +178,22 @@ describe('CompileOptions.onWarn 缺省行为', () => {
     ]);
     compileToScene(ir, { onWarn: () => {} });
     expect(consoleWarnSpy).not.toHaveBeenCalled();
+  });
+});
+
+describe('CompileWarningCode 收编与导出', () => {
+  it('PARTIAL_ARC_CLOSED_INVALID 已收编进 CompileWarningCode 并从包根导出', () => {
+    expect(CompileWarningCode.PartialArcClosedInvalid).toBe('PARTIAL_ARC_CLOSED_INVALID');
+  });
+
+  it('formatCompileWarning 从包根导出，可格式化为人类可读字符串', () => {
+    const msg = formatCompileWarning({
+      code: CompileWarningCode.UnresolvedNodeReference,
+      message: "references undefined node id 'x'",
+      path: 'children[0].to',
+    });
+    expect(msg).toContain('[retikz]');
+    expect(msg).toContain('UNRESOLVED_NODE_REFERENCE');
+    expect(msg).toContain('children[0].to');
   });
 });
