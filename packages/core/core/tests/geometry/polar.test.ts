@@ -1,5 +1,4 @@
 import { describe, expect, it } from 'vitest';
-import { point } from '../../src/geometry/point';
 import { polar } from '../../src/geometry/polar';
 
 describe('polar.toPosition 极坐标 → 笛卡尔', () => {
@@ -74,16 +73,16 @@ describe('polar.fromPosition 笛卡尔 → 极坐标', () => {
     expect(polar.fromPosition([-1, 0])).toEqual({ angle: 180, radius: 1 });
   });
 
-  it('与 point.toPolar 同一份实现', () => {
-    const sample: Array<[number, number]> = [
-      [1, 0],
-      [0, 1],
-      [-1, 0],
-      [3, 4],
-    ];
-    for (const p of sample) {
-      expect(polar.fromPosition(p)).toEqual(point.toPolar(p));
-    }
+  it('[0, -1] → angle=-90, radius=1', () => {
+    const p = polar.fromPosition([0, -1]);
+    expect(p.angle).toBe(-90);
+    expect(p.radius).toBe(1);
+  });
+
+  it('对角 [1, 1] → angle≈45, radius≈sqrt(2)', () => {
+    const p = polar.fromPosition([1, 1]);
+    expect(p.angle).toBeCloseTo(45);
+    expect(p.radius).toBeCloseTo(Math.SQRT2);
   });
 });
 
@@ -114,11 +113,35 @@ describe('polar.offsetFrom 从某点按极坐标偏移', () => {
   });
 });
 
-describe('polar.equal 是 point.equalPolar 的别名', () => {
-  it('委托到同一实现', () => {
+describe('polar.equal 跨坐标系相等判断', () => {
+  it('两个笛卡尔点完全相等', () => {
     expect(polar.equal([1, 2], [1, 2])).toBe(true);
+  });
+
+  it('笛卡尔 vs 极坐标：等价时相等', () => {
+    expect(polar.equal([1, 0], { angle: 0, radius: 1 })).toBe(true);
     expect(polar.equal([0, 1], { angle: 90, radius: 1 })).toBe(true);
-    expect(polar.equal([0.001, 0], [0.012, 0], 2)).toBe(false);
+  });
+
+  it('极坐标 vs 极坐标：先转笛卡尔再比较', () => {
+    expect(
+      polar.equal(
+        { angle: 45, radius: Math.SQRT2 },
+        { angle: 45, radius: Math.SQRT2 },
+      ),
+    ).toBe(true);
+  });
+
+  it('precision=2 下小差异被忽略', () => {
     expect(polar.equal([0.001, 0], [0.002, 0], 2)).toBe(true);
+  });
+
+  it('precision=2 下差异 ≥ 0.01 时不等', () => {
+    expect(polar.equal([0.001, 0], [0.012, 0], 2)).toBe(false);
+  });
+
+  it('precision 默认 = 2', () => {
+    expect(polar.equal([0.001, 0], [0.002, 0])).toBe(true);
+    expect(polar.equal([0.001, 0], [0.012, 0])).toBe(false);
   });
 });

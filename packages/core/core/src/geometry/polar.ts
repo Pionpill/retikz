@@ -1,4 +1,4 @@
-import { type Position, point } from './point';
+import type { Position } from './point';
 
 /*
  * 极坐标不直接参与几何计算——所有计算（intersection/bbox/boundaryPoint/Path 端点）都在笛卡尔下进行，
@@ -21,6 +21,7 @@ export type PolarPosition = {
 };
 
 const DEG_TO_RAD = Math.PI / 180;
+const RAD_TO_DEG = 180 / Math.PI;
 
 /** 极坐标 ↔ 笛卡尔转换工具集（polar 不参与几何计算，参与时先 toPosition） */
 export const polar = {
@@ -47,8 +48,11 @@ export const polar = {
       origin[1] + Math.sin(rad) * p.radius,
     ];
   },
-  /** 笛卡尔 → 极坐标（point.toPolar 别名，angle ∈ (-180,180]，origin 默认 [0,0]） */
-  fromPosition: (p: Position): PolarPosition => point.toPolar(p),
+  /** 笛卡尔 → 极坐标（angle ∈ (-180,180]，origin 默认 [0,0]） */
+  fromPosition: (p: Position): PolarPosition => ({
+    angle: Math.atan2(p[1], p[0]) * RAD_TO_DEG,
+    radius: Math.hypot(p[0], p[1]),
+  }),
   /** 在原点附近按极坐标偏移，返回结果点的世界笛卡尔坐标 */
   offsetFrom: (
     origin: Position,
@@ -61,7 +65,7 @@ export const polar = {
     ];
   },
 /**
- * 跨坐标系两点相同判断（point.equalPolar 别名）
+ * 跨坐标系两点相同判断
  * @description 极坐标先转笛卡尔再按 precision 四舍五入比较
  * @param precision 小数点后位数；默认 2
  */
@@ -69,5 +73,13 @@ export const polar = {
     a: Position | PolarPosition,
     b: Position | PolarPosition,
     precision = 2,
-  ): boolean => point.equalPolar(a, b, precision),
+  ): boolean => {
+    const aCart = Array.isArray(a) ? a : polar.toPosition(a);
+    const bCart = Array.isArray(b) ? b : polar.toPosition(b);
+    const factor = 10 ** precision;
+    return (
+      Math.round(aCart[0] * factor) === Math.round(bCart[0] * factor) &&
+      Math.round(aCart[1] * factor) === Math.round(bCart[1] * factor)
+    );
+  },
 };

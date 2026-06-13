@@ -333,6 +333,9 @@ importers:
 
   packages/core/core:
     dependencies:
+      '@retikz/math':
+        specifier: workspace:*
+        version: link:../../math/math
       zod:
         specifier: 'catalog:'
         version: 4.4.3
