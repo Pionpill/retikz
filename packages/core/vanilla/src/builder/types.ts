@@ -1,5 +1,6 @@
 import type {
   CompileOptions,
+  IRAnimationTrack,
   IRChild,
   IRCoordinate,
   IRNode,
@@ -28,14 +29,55 @@ export type ScopeConfig = Omit<IRScope, 'type' | 'children'>;
 export type Way = WayDSL;
 
 /**
+ * figure 根级级联样式默认（与 React `<Layout>` 顶层样式 props 对齐）
+ * @description 取 `IRScope` 的级联样式通道（graphic state + 四通道 every-X），**不含**容器 / 命名空间 / 变换 /
+ *   屏障 / 栈序 / 裁剪字段（那些挂在 figure 根上语义易混）。组 IR 时若任一字段携带样式指令，把根 children 包进
+ *   一层合成根 `<Scope>`，等价于用户手写一层根 scope；全缺省时不包，IR 形态逐字保持。
+ */
+export type FigureRootStyle = Pick<
+  IRScope,
+  | 'color'
+  | 'stroke'
+  | 'fill'
+  | 'strokeWidth'
+  | 'opacity'
+  | 'fillOpacity'
+  | 'drawOpacity'
+  | 'nodeDefault'
+  | 'pathDefault'
+  | 'labelDefault'
+  | 'arrowDefault'
+>;
+
+/** {@link FigureRootStyle} 的字段表——`figure.ts` 组 IR 时拣根样式 + 从 render options 剔除（IR-only 字段不下发） */
+export const FIGURE_ROOT_STYLE_FIELDS = [
+  'color',
+  'stroke',
+  'fill',
+  'strokeWidth',
+  'opacity',
+  'fillOpacity',
+  'drawOpacity',
+  'nodeDefault',
+  'pathDefault',
+  'labelDefault',
+  'arrowDefault',
+] as const satisfies ReadonlyArray<keyof FigureRootStyle>;
+
+/**
  * figure 的 config
- * @description `viewBox` → IR.viewBox（内容坐标系）；`width`/`height` → 根 `<svg>` 显示尺寸（adapter 职责）；
- *   `idPrefix` → SVG 资源 id 前缀；其余（measureText / shapes / arrows / patterns / pathGenerators /
- *   padding / precision / nodeDistance / onWarn）派生自 core `CompileOptions`、原样喂 compileToScene。
+ * @description `viewBox` → IR.viewBox（内容坐标系）；`animations` → IR 根 `animations`（镜头时间轴，配 cameraTo
+ *   preset）；`width`/`height` → 根 `<svg>` 显示尺寸（adapter 职责）；`idPrefix` → SVG 资源 id 前缀；根级级联样式
+ *   （color / nodeDefault / pathDefault / labelDefault / arrowDefault 等）按需包合成根 `<Scope>`；其余（measureText /
+ *   shapes / arrows / patterns / pathGenerators / padding / precision / nodeDistance / onWarn）派生自 core
+ *   `CompileOptions`、原样喂 compileToScene。
  */
 export type FigureConfig = {
   width?: number;
   height?: number;
   viewBox?: IRViewBox;
   idPrefix?: string;
-} & CompileOptions;
+  /** scene 根（镜头）时间轴动画 tracks（`viewBox` property，配 `cameraTo()` preset）；注入 IR 根 `animations` */
+  animations?: Array<IRAnimationTrack>;
+} & FigureRootStyle &
+  CompileOptions;

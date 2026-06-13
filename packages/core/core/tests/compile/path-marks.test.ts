@@ -90,6 +90,58 @@ describe('marks → 中段 marker primitive', () => {
   });
 });
 
+describe('marks → 中段 marker 随 strokeWidth 缩放（与端点箭头一致，TikZ 语义）', () => {
+  const markPathIR = (strokeWidth?: number): IR => ({
+    version: 1,
+    type: 'scene',
+    children: [
+      {
+        type: 'path',
+        ...(strokeWidth !== undefined ? { strokeWidth } : {}),
+        marks: [{ pos: 0.5, mark: { kind: 'arrow', shape: 'stealth' } }],
+        children: [
+          { type: 'step', kind: 'move', to: [0, 0] },
+          { type: 'step', kind: 'line', to: [10, 0] },
+        ],
+      },
+    ],
+  });
+
+  /** 取中段 mark group 的 scale.x（plain line path 无 rotate/scale 时唯一带 scale 的 group 即 mark group） */
+  const markScaleX = (ir: IR): number => {
+    const find = (list: ReadonlyArray<ScenePrimitive>): number | undefined => {
+      for (const p of list) {
+        if (p.type === 'group') {
+          const s = p.transforms?.find(t => t.kind === 'scale');
+          if (s && 'x' in s && typeof s.x === 'number') return s.x;
+          const inner = find(p.children);
+          if (inner !== undefined) return inner;
+        }
+      }
+      return undefined;
+    };
+    const x = find(compileToScene(ir).primitives);
+    if (x === undefined) throw new Error('no mark scale group found');
+    return x;
+  };
+
+  it('strokeWidth=2 的中段 mark scale ≈ strokeWidth=1 的 2 倍', () => {
+    const base = markScaleX(markPathIR(1));
+    const thick = markScaleX(markPathIR(2));
+    expect(thick / base).toBeCloseTo(2, 1);
+  });
+
+  it('strokeWidth=3 的中段 mark scale ≈ 基准的 3 倍', () => {
+    const base = markScaleX(markPathIR(1));
+    const thick = markScaleX(markPathIR(3));
+    expect(thick / base).toBeCloseTo(3, 1);
+  });
+
+  it('缺省 strokeWidth 等价于 strokeWidth=1（默认行为不变）', () => {
+    expect(markScaleX(markPathIR())).toBeCloseTo(markScaleX(markPathIR(1)), 5);
+  });
+});
+
 describe('段几何采样契约（marks 定向依赖的机器）', () => {
   it('直线段中点 tangent 沿线方向', () => {
     const s = lineSegmentSample([0, 0], [10, 0], 0.5);

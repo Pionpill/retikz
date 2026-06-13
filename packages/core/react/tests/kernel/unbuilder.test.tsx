@@ -442,7 +442,7 @@ describe('convertIRToReactNode', () => {
     });
   });
 
-  describe('alpha.3 P2：path 级视觉属性 round-trip', () => {
+  describe('path 级视觉属性 round-trip', () => {
     it('lineCap / lineJoin 双向保留', () => {
       const ir: IR = {
         version: CURRENT_IR_VERSION,
@@ -505,7 +505,7 @@ describe('convertIRToReactNode', () => {
     });
   });
 
-  describe('alpha.4/5 新增形态 round-trip', () => {
+  describe('扩展形态 round-trip', () => {
     it('round-trips AtPosition Node：{ direction, of, distance }', () => {
       const ir: IR = {
         version: CURRENT_IR_VERSION,
@@ -702,7 +702,7 @@ describe('convertIRToReactNode', () => {
       },
     );
 
-    it('round-trips IRTarget `relative` / `relativeAccumulate`（alpha.5 字段去缩写）', () => {
+    it('round-trips IRTarget `relative` / `relativeAccumulate`', () => {
       const ir: IR = {
         version: CURRENT_IR_VERSION,
         type: 'scene',
@@ -807,7 +807,7 @@ describe('convertIRToReactNode', () => {
       expect(buildIR(convertIRToReactNode(ir))).toEqual(ir);
     });
 
-    it('round-trips IRScope 样式继承字段（alpha.2）：级联 + 四通道 + resetStyle + node/path color + step label 样式', () => {
+    it('round-trips IRScope 样式继承字段：级联 + 四通道 + resetStyle + node/path color + step label 样式', () => {
       const ir: IR = {
         version: CURRENT_IR_VERSION,
         type: 'scene',
@@ -845,7 +845,7 @@ describe('convertIRToReactNode', () => {
       expect(buildIR(convertIRToReactNode(ir))).toEqual(ir);
     });
 
-    it('round-trips Coordinate 占位节点（alpha.4 ADR-02）', () => {
+    it('round-trips Coordinate 占位节点', () => {
       const ir: IR = {
         version: CURRENT_IR_VERSION,
         type: 'scene',
@@ -863,7 +863,7 @@ describe('convertIRToReactNode', () => {
       expect(buildIR(convertIRToReactNode(ir))).toEqual(ir);
     });
 
-    it('round-trips Node.label 单对象 + 数组形态（alpha.4 ADR-03）', () => {
+    it('round-trips Node.label 单对象 + 数组形态', () => {
       // 单对象
       const irSingle: IR = {
         version: CURRENT_IR_VERSION,
@@ -902,7 +902,7 @@ describe('convertIRToReactNode', () => {
     });
   });
 
-  describe('能力补全阶段（alpha.7–9）新增形态 round-trip', () => {
+  describe('补充能力新增形态 round-trip', () => {
     it('round-trips Node fill PaintSpec：linearGradient / radialGradient / pattern / image', () => {
       const fills = [
         { kind: 'linearGradient' as const, angle: 90, stops: [{ offset: 0, color: '#000' }, { offset: 1, color: '#fff' }] },

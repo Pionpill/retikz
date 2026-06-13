@@ -139,6 +139,12 @@ If a diagram looks clipped or has too much empty space, inspect **View Code → 
 | `style` | `CSSProperties` | — | Forwarded to the render root |
 | `idPrefix` | `string` | — | Overrides the `<defs>` resource id prefix; pass the same value to SSR output and client `<Layout>` to keep reference ids aligned |
 | `renderer` | `'svg' \| 'canvas'` | `'svg'` | Render backend; when omitted, falls back to the nearest `RendererModeProvider` context value (prop > context > svg) |
+| `nodeDistance` | `number` | `1` | Default distance for relative positioning (`position = { direction, of }`); a node's own `distance` wins |
+| `shapes` | `Record<string, ShapeDefinition>` | — | Runtime-injected custom shapes (forwarded to `CompileOptions.shapes`); overriding a built-in emits `SHAPE_OVERRIDES_BUILTIN`, an unregistered name throws at compile. See [Extending](/core/reference/extending/shape-registry) |
+| `arrows` | `Record<string, ArrowDefinition>` | — | Runtime-injected custom arrows (forwarded to `CompileOptions.arrows`); overriding a built-in emits `ARROW_OVERRIDES_BUILTIN`. See [Extending](/core/reference/extending/custom-arrow) |
+| `patterns` | `Record<string, PatternDefinition>` | — | Runtime-injected custom pattern motifs (forwarded to `CompileOptions.patterns`); overriding a built-in emits `PATTERN_OVERRIDES_BUILTIN`. See [Extending](/core/reference/extending/custom-pattern) |
+| `pathGenerators` | `Record<string, PathGeneratorDefinition>` | — | Runtime-injected custom path generators (forwarded to `CompileOptions.pathGenerators`); core ships no curves, an unregistered name throws at compile. See [Extending](/core/reference/extending/path-generator) |
+| `composites` | `Array<CompositeDefinition>` | — | Runtime-injected Tier 2 composite expansion logic (forwarded to `CompileOptions.composites`); expanded to Tier 1 in compile's first step, an unregistered namespace/type warns and is skipped |
 | `color` / `stroke` / `fill` / `strokeWidth` / `opacity` / `fillOpacity` / `drawOpacity` | same as [`<Scope>`](/core/components/layout/scope) | — | Whole-figure cascade graphic state; when set, wraps children in an implicit root `<Scope>` |
 | `nodeDefault` / `pathDefault` / `labelDefault` / `arrowDefault` | same as [`<Scope>`](/core/components/layout/scope) | — | Whole-figure every-X defaults (four channels); wraps the same implicit root scope |
 | `animate` | `boolean` | `true` | Whether to play animations; `false` renders the base static figure (no CSS/WAAPI, canvas skips rAF). See [Animation](/core/components/animation/control) |

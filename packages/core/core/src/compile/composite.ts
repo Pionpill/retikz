@@ -21,7 +21,7 @@ const extractKey = (schema: CompositeDefinition['schema']): { namespace: string;
   if (!(schema instanceof z.ZodObject)) {
     throw new Error('Composite schema must be a ZodObject extending CompositeBaseSchema.');
   }
-  const shape = schema.shape as Record<string, unknown>;
+  const shape = schema.shape;
   const namespace = shape.namespace;
   const type = shape.type;
   if (!(namespace instanceof z.ZodLiteral) || !(type instanceof z.ZodLiteral)) {

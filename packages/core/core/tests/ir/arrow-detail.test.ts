@@ -126,9 +126,9 @@ describe('PathSchema：arrowDetail 嵌入 + arrowShape 删除', () => {
     expect(ok.success).toBe(true);
   });
 
-  it("PathSchema 不再持有 arrowShape 字段（删字段、不静默吞）", () => {
-    // strict 模式下 arrowShape 会被拒；当前默认 strip 模式下字段被忽略但不进入 parsed
-    const parsed = PathSchema.parse({
+  it("PathSchema strict：未知字段（如已删除的 arrowShape）被拒，不静默吞", () => {
+    // PathSchema 现为 .strict()：未知 / 拼错 / 已删除字段直接校验失败，与 NodeSchema 一致
+    const result = PathSchema.safeParse({
       type: 'path',
       arrowShape: 'stealth',
       children: [
@@ -136,6 +136,6 @@ describe('PathSchema：arrowDetail 嵌入 + arrowShape 删除', () => {
         { type: 'step', kind: 'line', to: [10, 0] },
       ],
     });
-    expect((parsed as Record<string, unknown>).arrowShape).toBeUndefined();
+    expect(result.success).toBe(false);
   });
 });

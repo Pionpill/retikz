@@ -155,3 +155,33 @@ export const ellipseSegmentSample = (
   ry: number,
   t: number,
 ): SegmentSample => sampleEllipseArc(center, rx, ry, 0, 360, t);
+
+/**
+ * 矩形周长段：两对角 → 闭合周长上 t∈[0,1] 的点 / 切线
+ * @description 4 条边按 rectOutline 的顺时针绕向（y-down：左上→右上→右下→左下→闭合回左上）均分参数，
+ *   每条边占 1/4 t；切线 = 该边方向。忽略 cornerRadius（采尖角折线周长），mark 落在直边上精确、
+ *   贴近圆角处略偏轮廓——对中段 marking 足够。退化（零宽 / 零高）由 lineSegmentSample 的零切线回退兜底。
+ */
+export const rectPerimeterSample = (
+  from: Position,
+  to: Position,
+  t: number,
+): SegmentSample => {
+  const x0 = Math.min(from[0], to[0]);
+  const x1 = Math.max(from[0], to[0]);
+  const y0 = Math.min(from[1], to[1]);
+  const y1 = Math.max(from[1], to[1]);
+  // 与 rectOutline 同序 / 同向：左上 → 右上 → 右下 → 左下 → 闭合回左上
+  const corners: Array<Position> = [
+    [x0, y0],
+    [x1, y0],
+    [x1, y1],
+    [x0, y1],
+    [x0, y0],
+  ];
+  const clamped = t <= 0 ? 0 : t >= 1 ? 1 : t;
+  const scaled = clamped * 4;
+  const edge = Math.min(Math.floor(scaled), 3);
+  const localT = scaled - edge;
+  return lineSegmentSample(corners[edge], corners[edge + 1], localT);
+};

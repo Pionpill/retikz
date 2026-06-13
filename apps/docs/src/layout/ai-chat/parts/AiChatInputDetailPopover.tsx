@@ -3,7 +3,7 @@ import { type FC, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { useAiChatStore } from '@/store/useAiChatStore';
+import { useAiChatStore } from '@/store/use-ai-chat-store';
 
 /** 当前页 mdx 字符数 / 4 的粗略 tokens 估算 */
 const estimateTokens = (chars: number): number => Math.round(chars / 4);

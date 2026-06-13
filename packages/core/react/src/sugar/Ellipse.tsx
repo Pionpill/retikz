@@ -17,13 +17,13 @@ import {
   resolveAngles,
 } from './_shared';
 
-/** Ellipse sugar props. */
+/** Ellipse sugar 的 props */
 export type EllipseProps = PathVisualProps &
   AngleInput &
   BoxAdjustmentProps & {
-    /** Box input for fitting an ellipse. */
+    /** 用于拟合椭圆的 box 输入 */
     box?: ShapeBox;
-    /** Partial closing mode when angles are present. */
+    /** 给定角度时的局部闭合方式 */
     closed?: 'chord' | 'open' | 'sector';
   } & (
     | { center: IRTarget; radiusX: number; radiusY: number }
@@ -48,14 +48,14 @@ const resolveEllipseByBox = (
 };
 
 /**
- * Ellipse sugar - expands to a Path + ellipsePath step.
+ * Ellipse sugar——展开为 Path + ellipsePath step
  */
 export const Ellipse: FC<EllipseProps> = props => {
   let center: [number, number];
   let radiusX: number;
   let radiusY: number;
-  if ('box' in props) {
-    ({ center, radiusX, radiusY } = resolveEllipseByBox(props, 'Ellipse', props.box!));
+  if (props.box !== undefined) {
+    ({ center, radiusX, radiusY } = resolveEllipseByBox(props, 'Ellipse', props.box));
   } else if ('radiusX' in props) {
     center = requireXY(props.center, 'Ellipse', 'center');
     radiusX = props.radiusX;

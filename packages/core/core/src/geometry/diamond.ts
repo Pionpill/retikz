@@ -23,12 +23,19 @@ export type Diamond = {
   rotate?: number;
 };
 
-/** 菱形相关基础工具 */
+/**
+ * 菱形相关基础工具（独立几何原语）
+ * @description 注意：这是一套独立的菱形几何工具，**与 Node 的 diamond shape 不是同一条路径**——
+ *   后者已被 compile 规范化为 `polygon` preset（`{ sides: 4 }`），其 compass anchor 走外接 AABB 角。
+ *   本工具的 NE/NW/SE/SW anchor 取斜边中点（落在真实菱形边上），语义与 polygon 路径不同；
+ *   作为通用几何 API 保留，勿假设它与 Node diamond shape 行为一致。
+ */
 export const diamond = {
   /** 中心 */
   center: (d: Diamond): Position => [d.x, d.y],
   /** 点是否在菱形内（含边界，含旋转）；方程 |x|/halfA + |y|/halfB ≤ 1 */
   contains: (d: Diamond, p: Position): boolean => {
+    if (d.halfA === 0 || d.halfB === 0) return false; // 退化菱形（零半轴）：避免除零产 NaN
     const [lx, ly] = worldToLocal(d, p);
     return Math.abs(lx) / d.halfA + Math.abs(ly) / d.halfB <= 1 + 1e-9;
   },
@@ -75,6 +82,7 @@ export const diamond = {
  * @description 菱形方程 |x|/halfA + |y|/halfB = 1；沿方向 (lx,ly) 缩放 t 倍命中：t = 1 / (|lx|/halfA + |ly|/halfB)
  */
   boundaryPoint: (d: Diamond, toward: Position): Position => {
+    if (d.halfA === 0 || d.halfB === 0) return [d.x, d.y]; // 退化菱形（零半轴）：边界塌缩到中心，避免除零产 NaN
     const [lx, ly] = worldToLocal(d, toward);
     const denom = Math.abs(lx) / d.halfA + Math.abs(ly) / d.halfB;
     if (denom === 0) return [d.x, d.y];

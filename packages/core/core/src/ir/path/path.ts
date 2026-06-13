@@ -209,6 +209,7 @@ export const PathSchema = z
         'Sequence of step actions defining the path; the first should usually be a `move`',
       ),
   })
+  .strict()
   .describe(
     'A drawn path composed of a sequence of step actions (move / line / ...)',
   );

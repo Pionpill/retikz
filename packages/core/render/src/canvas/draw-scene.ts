@@ -1,0 +1,689 @@
+import type {
+  ArrowEndSpec,
+  IRPaintSpec,
+  MarkerFill,
+  MarkerPrimitive,
+  PaintValue,
+  PathCommand,
+  ResolvedPatternTile,
+  Scene,
+  ScenePrimitive,
+  SceneResource,
+  TextPrim,
+} from '@retikz/core';
+import type { CanvasWarning, DrawOptions, UnsupportedCanvasFeature } from './types';
+import { commandEndpoint, firstLineDy, gradientLineFromAngle, parseHexColor, pathControlPoints } from '../shared';
+import { DEG_TO_RAD, applyClip, applyTransform, buildPath, roundedRectPath } from './path-geometry';
+import { applyPrimAnimations } from './animate';
+import { applySceneCamera } from './camera';
+
+const warnUnsupported = (
+  options: DrawOptions,
+  feature: UnsupportedCanvasFeature,
+  message: string,
+): void => {
+  const warning: CanvasWarning = { feature, message };
+  if (options.warnUnsupported) {
+    options.warnUnsupported(warning);
+    return;
+  }
+  console.warn(`[retikz/canvas] ${message}`);
+};
+
+/**
+ * 解析颜色串：`currentColor` → `DrawOptions.currentColor`（缺省保持原串）
+ * @description canvas 不继承 CSS `color`，故主题色 `currentColor` 需显式解析；其余颜色原样返回。
+ */
+const resolveColor = (color: string | undefined, options: DrawOptions): string | undefined => {
+  if (color === 'currentColor' && options.currentColor !== undefined) return options.currentColor;
+  return color;
+};
+
+const withOpacity = (
+  ctx: CanvasRenderingContext2D,
+  opacity: number | undefined,
+  draw: () => void,
+): void => {
+  if (opacity === undefined) {
+    draw();
+    return;
+  }
+
+  ctx.save();
+  ctx.globalAlpha *= opacity;
+  draw();
+  ctx.restore();
+};
+
+const applyDash = (ctx: CanvasRenderingContext2D, dashPattern: Array<number> | undefined): void => {
+  ctx.setLineDash(dashPattern ?? []);
+};
+
+const applyStrokeStyle = (
+  ctx: CanvasRenderingContext2D,
+  stroke: string | undefined,
+  strokeWidth: number | undefined,
+  strokeOpacity: number | undefined,
+  dashPattern: Array<number> | undefined,
+  options: DrawOptions,
+): void => {
+  if (stroke !== undefined) ctx.strokeStyle = resolveColor(stroke, options) ?? stroke;
+  if (strokeWidth !== undefined) ctx.lineWidth = strokeWidth;
+  if (strokeOpacity !== undefined) ctx.globalAlpha *= strokeOpacity;
+  applyDash(ctx, dashPattern);
+};
+
+/** 被填充图元的包围盒（user units）；gradient/image 的 objectBoundingBox(0..1) 据此映射为绝对坐标 */
+type BBox = { x: number; y: number; w: number; h: number };
+
+/** Scene 资源按 id 索引（fill resourceRef 查表） */
+type ResourceMap = ReadonlyMap<string, SceneResource>;
+
+type GradientSpec = Extract<IRPaintSpec, { kind: 'linearGradient' | 'radialGradient' }>;
+
+/**
+ * 把 hex / rgb(a) 颜色乘上 alpha 转成 rgba 串；无法正则解析则返回 undefined
+ * @description 纯字符串解析（不依赖 ctx），命名色 / hsl 等返回 undefined 交由上层归一后重试。
+ */
+const bakeAlpha = (color: string, opacity: number): string | undefined => {
+  const bytes = parseHexColor(color);
+  if (bytes) {
+    return `rgba(${bytes.r}, ${bytes.g}, ${bytes.b}, ${opacity})`;
+  }
+  const rgb = /^rgba?\(([^)]+)\)$/.exec(color);
+  if (rgb) {
+    const parts = rgb[1].split(',').map(s => s.trim());
+    const a = parts.length > 3 ? parseFloat(parts[3]) : 1;
+    return `rgba(${parts[0]}, ${parts[1]}, ${parts[2]}, ${a * opacity})`;
+  }
+  return undefined;
+};
+
+/**
+ * 把 stop 的 opacity 烘焙进颜色（canvas addColorStop 无 stop-opacity）
+ * @description 先直接正则烘焙 hex / rgb；命名色 / hsl 等用宿主 `resolveCssColor` 归一成 hex / rgb 后再烘焙。
+ *   归一器缺省（无宿主）时按 best-effort 忽略 opacity（渐变退化纯色，与历史一致）。
+ */
+const applyStopAlpha = (
+  color: string,
+  opacity: number | undefined,
+  resolveCssColor: ((color: string) => string) | undefined,
+): string => {
+  if (opacity === undefined || opacity >= 1) return color;
+  const direct = bakeAlpha(color, opacity);
+  if (direct !== undefined) return direct;
+  const normalized = resolveCssColor?.(color);
+  if (normalized !== undefined && normalized !== color) {
+    const baked = bakeAlpha(normalized, opacity);
+    if (baked !== undefined) return baked;
+  }
+  return color;
+};
+
+/**
+ * 据 gradient spec + 被填充图元 bbox 构建 CanvasGradient
+ * @description objectBoundingBox(0..1) → 绝对坐标：linear 过中心沿 angle（polar，0=+x / 90=+y 屏幕下）取长度 1；
+ *   radial 圆形近似（canvas 不支持椭圆渐变）半径 = radius × max(w,h)（cover 观感）。stop 颜色解析 currentColor + 烘焙 opacity。
+ */
+const buildGradient = (
+  ctx: CanvasRenderingContext2D,
+  spec: GradientSpec,
+  bbox: BBox,
+  options: DrawOptions,
+): CanvasGradient => {
+  let gradient: CanvasGradient;
+  if (spec.kind === 'linearGradient') {
+    const line = gradientLineFromAngle(spec.angle);
+    gradient = ctx.createLinearGradient(
+      bbox.x + line.x1 * bbox.w,
+      bbox.y + line.y1 * bbox.h,
+      bbox.x + line.x2 * bbox.w,
+      bbox.y + line.y2 * bbox.h,
+    );
+  } else {
+    const [cx, cy] = spec.center ?? [0.5, 0.5];
+    const acx = bbox.x + cx * bbox.w;
+    const acy = bbox.y + cy * bbox.h;
+    gradient = ctx.createRadialGradient(acx, acy, 0, acx, acy, (spec.radius ?? 0.5) * Math.max(bbox.w, bbox.h));
+  }
+  for (const stop of spec.stops) {
+    gradient.addColorStop(
+      stop.offset,
+      applyStopAlpha(resolveColor(stop.color, options) ?? stop.color, stop.opacity, options.resolveCssColor),
+    );
+  }
+  return gradient;
+};
+
+const resolveFillStyle = (
+  ctx: CanvasRenderingContext2D,
+  fill: PaintValue | undefined,
+  stroke: string | undefined,
+  options: DrawOptions,
+  resources: ResourceMap,
+  bbox: BBox,
+): string | CanvasGradient | CanvasPattern | undefined => {
+  if (fill === undefined) return undefined;
+  if (typeof fill === 'string') return fill === 'none' ? undefined : resolveColor(fill, options);
+  if (fill.kind === 'contextStroke') return resolveColor(stroke, options) ?? String(ctx.strokeStyle);
+  const resource = resources.get(fill.id);
+  if (resource !== undefined && resource.kind === 'paint') {
+    const spec = resource.spec;
+    if (spec.kind === 'linearGradient' || spec.kind === 'radialGradient') {
+      return buildGradient(ctx, spec, bbox, options);
+    }
+    if (spec.kind === 'pattern' && resource.tile !== undefined) {
+      const pattern = buildPattern(ctx, resource.tile, options);
+      if (pattern !== undefined) return pattern;
+    }
+  }
+  warnUnsupported(options, 'paint', `Canvas renderer does not support paint resource "${fill.id}" yet; fill is skipped.`);
+  return undefined;
+};
+
+type ImageSpec = Extract<IRPaintSpec, { kind: 'image' }>;
+
+/** 取图片源的固有尺寸（HTMLImageElement 用 naturalWidth，其余回退 width/height） */
+const imageNaturalSize = (img: CanvasImageSource): { w: number; h: number } => {
+  const any = img as { naturalWidth?: number; naturalHeight?: number; width?: number; height?: number };
+  return { w: any.naturalWidth || any.width || 0, h: any.naturalHeight || any.height || 0 };
+};
+
+/**
+ * image paint server 填充：clip 到当前形状路径，按 fit 把图片放进 bbox 后 drawImage
+ * @description fill 拉伸铺满、contain 等比装入、cover（默认）等比覆盖；均居中。未提供 getImage → 降级告警；
+ *   已提供但未就绪（返回 null）→ 本帧静默跳过（加载完由调用方重绘）。
+ */
+const fillImage = (
+  ctx: CanvasRenderingContext2D,
+  spec: ImageSpec,
+  bbox: BBox,
+  fillOpacity: number | undefined,
+  options: DrawOptions,
+): void => {
+  const img = options.getImage?.(spec.href) ?? null;
+  if (img === null) {
+    if (options.getImage === undefined) {
+      warnUnsupported(options, 'paint', `Canvas renderer requires a getImage loader to render image paint "${spec.href}"; fill is skipped.`);
+    }
+    return;
+  }
+  ctx.save();
+  if (fillOpacity !== undefined) ctx.globalAlpha *= fillOpacity;
+  ctx.clip();
+  const { w: iw, h: ih } = imageNaturalSize(img);
+  const fit = spec.fit ?? 'cover';
+  if (fit === 'fill' || iw <= 0 || ih <= 0) {
+    ctx.drawImage(img, bbox.x, bbox.y, bbox.w, bbox.h);
+  } else {
+    const scale = fit === 'contain' ? Math.min(bbox.w / iw, bbox.h / ih) : Math.max(bbox.w / iw, bbox.h / ih);
+    const dw = iw * scale;
+    const dh = ih * scale;
+    ctx.drawImage(img, bbox.x + (bbox.w - dw) / 2, bbox.y + (bbox.h - dh) / 2, dw, dh);
+  }
+  ctx.restore();
+};
+
+const fillCurrentPath = (
+  ctx: CanvasRenderingContext2D,
+  fill: PaintValue | undefined,
+  stroke: string | undefined,
+  fillOpacity: number | undefined,
+  fillRule: CanvasFillRule | undefined,
+  options: DrawOptions,
+  resources: ResourceMap,
+  bbox: BBox,
+): void => {
+  if (fill !== undefined && typeof fill !== 'string' && fill.kind === 'resourceRef') {
+    const resource = resources.get(fill.id);
+    if (resource !== undefined && resource.kind === 'paint' && resource.spec.kind === 'image') {
+      fillImage(ctx, resource.spec, bbox, fillOpacity, options);
+      return;
+    }
+  }
+  const fillStyle = resolveFillStyle(ctx, fill, stroke, options, resources, bbox);
+  if (fillStyle === undefined) return;
+  if (fillOpacity !== undefined) {
+    ctx.save();
+    ctx.globalAlpha *= fillOpacity;
+  }
+  ctx.fillStyle = fillStyle;
+  ctx.fill(fillRule);
+  if (fillOpacity !== undefined) ctx.restore();
+};
+
+const strokeCurrentPath = (
+  ctx: CanvasRenderingContext2D,
+  stroke: string | undefined,
+  strokeOpacity: number | undefined,
+  strokeWidth: number | undefined,
+  dashPattern: Array<number> | undefined,
+  options: DrawOptions,
+): void => {
+  if (stroke === undefined || stroke === 'none') return;
+  if (strokeOpacity !== undefined) ctx.save();
+  applyStrokeStyle(ctx, stroke, strokeWidth, strokeOpacity, dashPattern, options);
+  ctx.stroke();
+  if (strokeOpacity !== undefined) ctx.restore();
+};
+
+const resolveFontFamily = (
+  fontFamily: string | undefined,
+  options: DrawOptions,
+): string => {
+  if (typeof fontFamily === 'string' && fontFamily.trim().length > 0) return fontFamily;
+  if (typeof options.defaultFontFamily === 'string' && options.defaultFontFamily.trim().length > 0) {
+    return options.defaultFontFamily;
+  }
+  return 'sans-serif';
+};
+
+const buildFont = (
+  fontSize: number,
+  fontFamily: string | undefined,
+  fontWeight: string | number | undefined,
+  fontStyle: string | undefined,
+  options: DrawOptions,
+): string =>
+  [
+    fontStyle,
+    fontWeight,
+    `${fontSize}px`,
+    resolveFontFamily(fontFamily, options),
+  ].filter(part => part !== undefined && part !== '').join(' ');
+
+const drawText = (ctx: CanvasRenderingContext2D, p: TextPrim, options: DrawOptions): void => {
+  ctx.font = buildFont(p.fontSize, p.fontFamily, p.fontWeight, p.fontStyle, options);
+  ctx.textAlign = p.align === 'middle' ? 'center' : p.align;
+  ctx.textBaseline = p.baseline;
+  // 确定 fill 基线：缺省 #000（与 SVG 文本省略 fill 时的默认黑一致），避免继承上一个 prim 残留的脏 fillStyle
+  ctx.fillStyle = '#000000';
+  if (p.fill !== undefined && p.fill !== 'none') ctx.fillStyle = resolveColor(p.fill, options) ?? p.fill;
+  const offset = firstLineDy(p);
+  p.lines.forEach((line, index) => {
+    const shouldRestore =
+      line.opacity !== undefined ||
+      line.fontSize !== undefined ||
+      line.fontFamily !== undefined ||
+      line.fontWeight !== undefined ||
+      line.fontStyle !== undefined ||
+      line.fill !== undefined;
+    if (shouldRestore) ctx.save();
+    if (line.opacity !== undefined) ctx.globalAlpha *= line.opacity;
+    if (line.fontSize !== undefined || line.fontFamily !== undefined || line.fontWeight !== undefined || line.fontStyle !== undefined) {
+      ctx.font = buildFont(
+        line.fontSize ?? p.fontSize,
+        line.fontFamily ?? p.fontFamily,
+        line.fontWeight ?? p.fontWeight,
+        line.fontStyle ?? p.fontStyle,
+        options,
+      );
+    }
+    if (line.fill !== undefined && line.fill !== 'none') ctx.fillStyle = resolveColor(line.fill, options) ?? line.fill;
+    if ((line.fill ?? p.fill) !== 'none') {
+      ctx.fillText(line.text, p.x, p.y + (index === 0 ? offset : offset + index * p.lineHeight));
+    }
+    if (shouldRestore) ctx.restore();
+  });
+};
+
+type Point = [number, number];
+
+const vecSub = (a: Point, b: Point): Point => [a[0] - b[0], a[1] - b[1]];
+
+const isZeroVec = (v: Point): boolean => v[0] === 0 && v[1] === 0;
+
+/**
+ * 末端箭头定位：终点 + 入射切线角（指向终点的方向）
+ * @description 带箭头的 path 末段恒为 line/cubic，故 cubic 用 to−control2、line/quad 退化为弦向；
+ *   arc/ellipseArc 不会作为带箭头 path 末段，统一退化为前一端点的弦向。无法判向则角度取 0。
+ */
+const endArrowPlacement = (
+  commands: ReadonlyArray<PathCommand>,
+): { vertex: Point; angle: number } | null => {
+  let lastIdx = -1;
+  for (let i = commands.length - 1; i >= 0; i--) {
+    if (commands[i].kind !== 'close') {
+      lastIdx = i;
+      break;
+    }
+  }
+  if (lastIdx < 0) return null;
+  const cmd = commands[lastIdx];
+  const vertex = commandEndpoint(cmd);
+  if (!vertex) return null;
+  let prevIdx = lastIdx - 1;
+  while (prevIdx >= 0 && commands[prevIdx].kind === 'close') prevIdx--;
+  const prev = prevIdx >= 0 ? commandEndpoint(commands[prevIdx]) : null;
+  let dir: Point | null = null;
+  if (cmd.kind === 'cubic') {
+    dir = vecSub(vertex, cmd.control2);
+    if (isZeroVec(dir)) dir = vecSub(vertex, cmd.control1);
+  } else if (cmd.kind === 'quad') {
+    dir = vecSub(vertex, cmd.control);
+  }
+  if ((dir === null || isZeroVec(dir)) && prev) dir = vecSub(vertex, prev);
+  const angle = dir !== null && !isZeroVec(dir) ? Math.atan2(dir[1], dir[0]) : 0;
+  return { vertex, angle };
+};
+
+/**
+ * 起点箭头定位：起点 + 离开切线角的反向（对应 SVG `orient="auto-start-reverse"`）
+ * @description 起点后首段恒为 line/cubic，cubic 用 control1−起点、line/quad 退化为弦向；无法判向则角度取 0。
+ */
+const startArrowPlacement = (
+  commands: ReadonlyArray<PathCommand>,
+): { vertex: Point; angle: number } | null => {
+  if (commands.length === 0) return null;
+  let baseIdx = commands.findIndex(c => c.kind === 'move');
+  if (baseIdx < 0) baseIdx = 0;
+  const vertex = commandEndpoint(commands[baseIdx]);
+  if (!vertex) return null;
+  let nextIdx = baseIdx + 1;
+  while (nextIdx < commands.length && commands[nextIdx].kind === 'close') nextIdx++;
+  const next = nextIdx < commands.length ? commands[nextIdx] : undefined;
+  let dir: Point | null = null;
+  if (next) {
+    if (next.kind === 'cubic') {
+      dir = vecSub(next.control1, vertex);
+      if (isZeroVec(dir)) dir = vecSub(next.control2, vertex);
+    } else if (next.kind === 'quad') {
+      dir = vecSub(next.control, vertex);
+    }
+    if (dir === null || isZeroVec(dir)) {
+      const nextPt = commandEndpoint(next);
+      if (nextPt) dir = vecSub(nextPt, vertex);
+    }
+  }
+  const angle = dir !== null && !isZeroVec(dir) ? Math.atan2(dir[1], dir[0]) + Math.PI : 0;
+  return { vertex, angle };
+};
+
+/** marker-local fill 取值 → canvas 颜色：contextStroke 解析为线的 stroke（缺省回退当前 strokeStyle） */
+const resolveMarkerFill = (
+  ctx: CanvasRenderingContext2D,
+  fill: MarkerFill | undefined,
+  pathStroke: string | undefined,
+  options: DrawOptions,
+): string | undefined => {
+  if (fill === undefined) return undefined;
+  if (typeof fill === 'string') return fill === 'none' ? undefined : resolveColor(fill, options);
+  return pathStroke ?? String(ctx.strokeStyle);
+};
+
+/** marker-local stroke 取值 → canvas 颜色：`{ kind:'contextStroke' }`（及 legacy `context-stroke` 关键字）解析为线的 stroke（缺省回退当前 strokeStyle） */
+const resolveMarkerStroke = (
+  ctx: CanvasRenderingContext2D,
+  stroke: MarkerFill | undefined,
+  pathStroke: string | undefined,
+  options: DrawOptions,
+): string | undefined => {
+  if (stroke === undefined) return undefined;
+  if (typeof stroke === 'string') {
+    if (stroke === 'none') return undefined;
+    if (stroke === 'context-stroke') return pathStroke ?? String(ctx.strokeStyle); // legacy 关键字兼容
+    return resolveColor(stroke, options) ?? stroke;
+  }
+  return pathStroke ?? String(ctx.strokeStyle); // { kind: 'contextStroke' }
+};
+
+const fillMarkerPath = (
+  ctx: CanvasRenderingContext2D,
+  fill: string | undefined,
+  fillOpacity: number | undefined,
+  fillRule: CanvasFillRule | undefined,
+): void => {
+  if (fill === undefined) return;
+  if (fillOpacity !== undefined) {
+    ctx.save();
+    ctx.globalAlpha *= fillOpacity;
+  }
+  ctx.fillStyle = fill;
+  ctx.fill(fillRule);
+  if (fillOpacity !== undefined) ctx.restore();
+};
+
+const strokeMarkerPath = (
+  ctx: CanvasRenderingContext2D,
+  stroke: string | undefined,
+  strokeOpacity: number | undefined,
+  strokeWidth: number | undefined,
+  dashPattern: Array<number> | undefined,
+): void => {
+  if (stroke === undefined) return;
+  if (strokeOpacity !== undefined) ctx.save();
+  ctx.strokeStyle = stroke;
+  if (strokeWidth !== undefined) ctx.lineWidth = strokeWidth;
+  if (strokeOpacity !== undefined) ctx.globalAlpha *= strokeOpacity;
+  applyDash(ctx, dashPattern);
+  ctx.stroke();
+  if (strokeOpacity !== undefined) ctx.restore();
+};
+
+/** 绘制单个 marker-local primitive（path/ellipse/rect/group 窄子集）；fill/stroke 的 contextStroke 解析为线色 */
+const drawMarkerPrim = (
+  ctx: CanvasRenderingContext2D,
+  prim: MarkerPrimitive,
+  pathStroke: string | undefined,
+  options: DrawOptions,
+): void => {
+  ctx.save();
+  switch (prim.type) {
+    case 'path':
+      buildPath(ctx, prim.commands);
+      if (prim.strokeLinecap !== undefined) ctx.lineCap = prim.strokeLinecap;
+      if (prim.strokeLinejoin !== undefined) ctx.lineJoin = prim.strokeLinejoin;
+      fillMarkerPath(ctx, resolveMarkerFill(ctx, prim.fill, pathStroke, options), prim.fillOpacity, prim.fillRule);
+      strokeMarkerPath(ctx, resolveMarkerStroke(ctx, prim.stroke, pathStroke, options), prim.strokeOpacity, prim.strokeWidth, prim.dashPattern);
+      break;
+    case 'ellipse':
+      if (prim.rotate) {
+        ctx.translate(prim.cx, prim.cy);
+        ctx.rotate(prim.rotate * DEG_TO_RAD);
+        ctx.translate(-prim.cx, -prim.cy);
+      }
+      ctx.beginPath();
+      ctx.ellipse(prim.cx, prim.cy, prim.rx, prim.ry, 0, 0, Math.PI * 2);
+      fillMarkerPath(ctx, resolveMarkerFill(ctx, prim.fill, pathStroke, options), prim.fillOpacity, undefined);
+      strokeMarkerPath(ctx, resolveMarkerStroke(ctx, prim.stroke, pathStroke, options), prim.strokeOpacity, prim.strokeWidth, prim.dashPattern);
+      break;
+    case 'rect':
+      roundedRectPath(ctx, prim.x, prim.y, prim.width, prim.height, prim.cornerRadius);
+      fillMarkerPath(ctx, resolveMarkerFill(ctx, prim.fill, pathStroke, options), prim.fillOpacity, undefined);
+      strokeMarkerPath(ctx, resolveMarkerStroke(ctx, prim.stroke, pathStroke, options), prim.strokeOpacity, prim.strokeWidth, prim.dashPattern);
+      break;
+    case 'group':
+      for (const transform of prim.transforms ?? []) applyTransform(ctx, transform);
+      for (const child of prim.children) drawMarkerPrim(ctx, child, pathStroke, options);
+      break;
+  }
+  ctx.restore();
+};
+
+/**
+ * pattern paint server 填充：离屏渲染 motif tile → ctx.createPattern('repeat')
+ * @description tile 已由 compile 解析（size / background / rotation / motif 几何）。motif 复用 drawMarkerPrim
+ *   画进 size×size 离屏 context；contextStroke / currentColor 走 options.currentColor（缺省黑）。rotation 经
+ *   pattern.setTransform 旋转。缺 createOffscreen 工厂返回 undefined（caller 据此降级告警）。
+ */
+const buildPattern = (
+  ctx: CanvasRenderingContext2D,
+  tile: ResolvedPatternTile,
+  options: DrawOptions,
+): CanvasPattern | undefined => {
+  const off = options.createOffscreen?.(tile.size, tile.size) ?? null;
+  if (off === null) return undefined;
+  if (tile.background !== undefined) {
+    off.fillStyle = tile.background;
+    off.fillRect(0, 0, tile.size, tile.size);
+  }
+  const motifColor = options.currentColor ?? '#000';
+  for (const prim of tile.motif) drawMarkerPrim(off, prim, motifColor, options);
+  const pattern = ctx.createPattern(off.canvas, 'repeat');
+  if (pattern === null) return undefined;
+  if (tile.rotation) {
+    const rad = tile.rotation * DEG_TO_RAD;
+    pattern.setTransform({ a: Math.cos(rad), b: Math.sin(rad), c: -Math.sin(rad), d: Math.cos(rad), e: 0, f: 0 });
+  }
+  return pattern;
+};
+
+/**
+ * 绘制端点箭头 marker：参考点 (refX, baseSize/2) 贴端点 V、沿切线旋转、按 markerUnits=strokeWidth 缩放
+ * @description 复刻 SVG `<marker>` 物化：viewBox `0 0 baseSize baseSize` 经 preserveAspectRatio=none 拉伸到
+ *   markerWidth×markerHeight，再乘 strokeWidth（markerUnits）。spec.opacity 叠加到 path opacity 上。
+ */
+const drawArrowMarker = (
+  ctx: CanvasRenderingContext2D,
+  spec: ArrowEndSpec,
+  vertex: Point,
+  angle: number,
+  strokeWidth: number,
+  pathStroke: string | undefined,
+  options: DrawOptions,
+): void => {
+  ctx.save();
+  if (spec.opacity !== undefined) ctx.globalAlpha *= spec.opacity;
+  // marker 在独立坐标系渲染（如 SVG defs marker），描边样式不继承 path 的 lineCap / lineJoin
+  ctx.lineCap = 'butt';
+  ctx.lineJoin = 'miter';
+  ctx.translate(vertex[0], vertex[1]);
+  ctx.rotate(angle);
+  ctx.scale(
+    (spec.markerWidth * strokeWidth) / spec.baseSize,
+    (spec.markerHeight * strokeWidth) / spec.baseSize,
+  );
+  ctx.translate(-spec.refX, -spec.baseSize / 2);
+  for (const prim of spec.marker) drawMarkerPrim(ctx, prim, pathStroke, options);
+  ctx.restore();
+};
+
+/** path commands 的轴对齐包围盒（曲线用控制点 / 弧用半径外接，gradient 映射够用；点集与 hydration 聚合几何共用 pathControlPoints） */
+const pathBBox = (commands: ReadonlyArray<PathCommand>): BBox => {
+  let minX = Infinity;
+  let minY = Infinity;
+  let maxX = -Infinity;
+  let maxY = -Infinity;
+  for (const [x, y] of pathControlPoints(commands)) {
+    if (x < minX) minX = x;
+    if (y < minY) minY = y;
+    if (x > maxX) maxX = x;
+    if (y > maxY) maxY = y;
+  }
+  if (minX > maxX) return { x: 0, y: 0, w: 0, h: 0 };
+  return { x: minX, y: minY, w: maxX - minX, h: maxY - minY };
+};
+
+const drawPrim = (
+  ctx: CanvasRenderingContext2D,
+  p: ScenePrimitive,
+  options: DrawOptions,
+  resources: ResourceMap,
+): void => {
+  ctx.save();
+  // 动画：把该 prim 的 tracks 在「有效时刻」应用到 ctx（transform / dash）并取覆盖后的 prim（opacity / 色 / 线宽）。
+  // per-id 虚拟时钟经 resolvePrimAnimation 折算各 id 的有效时刻 / 模式（skip=渲染 base）；缺省退回全局 time + 仅自动播。
+  if (p.animations !== undefined && p.animations.length > 0) {
+    const resolution = options.resolvePrimAnimation?.(p.id);
+    const primTime = resolution?.mode === 'at' ? resolution.time : options.time;
+    if (resolution?.mode !== 'skip' && primTime !== undefined) {
+      p = applyPrimAnimations(ctx, p, primTime, {
+        easings: options.easings,
+        animationProperties: options.animationProperties,
+        warn: message => warnUnsupported(options, 'animation', message),
+        includeNonAutoplay: resolution?.mode === 'at' ? resolution.includeNonAutoplay : false,
+      });
+    }
+  }
+  switch (p.type) {
+    case 'rect':
+      withOpacity(ctx, p.opacity, () => {
+        roundedRectPath(ctx, p.x, p.y, p.width, p.height, p.cornerRadius);
+        fillCurrentPath(ctx, p.fill, p.stroke, p.fillOpacity, undefined, options, resources, {
+          x: p.x,
+          y: p.y,
+          w: p.width,
+          h: p.height,
+        });
+        strokeCurrentPath(ctx, p.stroke, p.strokeOpacity, p.strokeWidth, p.dashPattern, options);
+      });
+      break;
+    case 'ellipse':
+      withOpacity(ctx, p.opacity, () => {
+        const shouldRestore = p.rotate !== undefined;
+        if (shouldRestore) ctx.save();
+        if (p.rotate) {
+          ctx.translate(p.cx, p.cy);
+          ctx.rotate(p.rotate * DEG_TO_RAD);
+          ctx.translate(-p.cx, -p.cy);
+        }
+        ctx.beginPath();
+        ctx.ellipse(p.cx, p.cy, p.rx, p.ry, 0, 0, Math.PI * 2);
+        fillCurrentPath(ctx, p.fill, p.stroke, p.fillOpacity, undefined, options, resources, {
+          x: p.cx - p.rx,
+          y: p.cy - p.ry,
+          w: 2 * p.rx,
+          h: 2 * p.ry,
+        });
+        strokeCurrentPath(ctx, p.stroke, p.strokeOpacity, p.strokeWidth, p.dashPattern, options);
+        if (shouldRestore) ctx.restore();
+      });
+      break;
+    case 'path':
+      withOpacity(ctx, p.opacity, () => {
+        buildPath(ctx, p.commands);
+        if (p.strokeLinecap !== undefined) ctx.lineCap = p.strokeLinecap;
+        if (p.strokeLinejoin !== undefined) ctx.lineJoin = p.strokeLinejoin;
+        fillCurrentPath(ctx, p.fill, p.stroke, p.fillOpacity, p.fillRule, options, resources, pathBBox(p.commands));
+        strokeCurrentPath(ctx, p.stroke, p.strokeOpacity, p.strokeWidth, p.dashPattern, options);
+        if (p.arrowStart || p.arrowEnd) {
+          const strokeWidth = p.strokeWidth ?? 1;
+          const pathStroke = resolveColor(p.stroke, options);
+          if (p.arrowStart) {
+            const placement = startArrowPlacement(p.commands);
+            if (placement) drawArrowMarker(ctx, p.arrowStart, placement.vertex, placement.angle, strokeWidth, pathStroke, options);
+          }
+          if (p.arrowEnd) {
+            const placement = endArrowPlacement(p.commands);
+            if (placement) drawArrowMarker(ctx, p.arrowEnd, placement.vertex, placement.angle, strokeWidth, pathStroke, options);
+          }
+        }
+      });
+      break;
+    case 'text':
+      withOpacity(ctx, p.opacity, () => drawText(ctx, p, options));
+      break;
+    case 'group':
+      ctx.save();
+      for (const transform of p.transforms ?? []) applyTransform(ctx, transform);
+      if (p.clipRef !== undefined) {
+        const clip = resources.get(p.clipRef);
+        if (clip !== undefined && clip.kind === 'clip') {
+          applyClip(ctx, clip.shape);
+        } else {
+          warnUnsupported(options, 'clip', `Canvas renderer: clip resource "${p.clipRef}" not found; clip is skipped.`);
+        }
+      }
+      for (const child of p.children) drawPrim(ctx, child, options, resources);
+      ctx.restore();
+      break;
+  }
+  ctx.restore();
+};
+
+/** 绘制已编译 Scene 到 Canvas 2D context */
+export const drawScene = (
+  ctx: CanvasRenderingContext2D,
+  scene: Scene,
+  options: DrawOptions = {},
+): void => {
+  const resources: ResourceMap = new Map((scene.resources ?? []).map(r => [r.id, r]));
+  // 镜头：给定 time 且 scene 根有 viewBox track 时，先叠一层取景变换（包住全部 prim）
+  const hasCamera = options.time !== undefined && (scene.animations ?? []).some(t => t.property === 'viewBox');
+  if (hasCamera) {
+    ctx.save();
+    applySceneCamera(ctx, scene, options.time as number, options.easings);
+  }
+  for (const primitive of scene.primitives) drawPrim(ctx, primitive, options, resources);
+  if (hasCamera) ctx.restore();
+};

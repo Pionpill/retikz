@@ -4,17 +4,17 @@ import { ChangelogOverview, ChangelogVersionDetail, changelogToMarkdown } from '
 import { InlineMdx, MdxContent, MdxToc, mdxHasToc } from '@/components/shared/mdx-content';
 import { changelogForModule, changelogPageDescription, changelogVersionSlug } from '@/data/changelog';
 import { getSectionsByModule } from '@/data/sections';
-import { buildDocPageLinks } from '@/lib/docLinks';
+import { buildDocPageLinks } from '@/lib/doc-links';
 import { cn } from '@/lib/utils';
-import { useAiChatStore } from '@/store/useAiChatStore';
-import { useTocStore } from '@/store/useTocStore';
+import { useAiChatStore } from '@/store/use-ai-chat-store';
+import { useTocStore } from '@/store/use-toc-store';
 import type { FC, HTMLAttributes } from 'react';
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { docPathSegments, isChangelogLocation, useDocLocation } from './docLocation';
+import { docPathSegments, isChangelogLocation, useDocLocation } from './doc-location';
 import { DocPageActions } from './DocPageActions';
 import { DocPageFooterNav } from './DocPageFooterNav';
-import { useMdxSource } from './useMdxSource';
+import { useMdxSource } from './use-mdx-source';
 
 export type DocPageProps = HTMLAttributes<HTMLDivElement>;
 

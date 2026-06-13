@@ -9,8 +9,7 @@ import { type HydrationContext, mountCanvas } from '../src';
  *   jsdom 无真实 canvas backend，故沿用 render 层 canvas-hittest 的做法——spy getContext 返回「几何忠实」的 2D
  *   context 充当原生 canvas 原语（记录子路径、射线法点测），mountCanvas / clientToScene / hitTest 的选择逻辑仍真实受测。
  *   canvas getBoundingClientRect 也 spy 出受限容器（letterbox）的显示盒，喂确定坐标。
- *   stub 阶段 clientToScene 直返 client 坐标、view.hydrate 空 dispose、不绑 listener → 命中 / 触发类断言此刻预期 fail；
- *   dispose 类断言预期 pass。
+ *   命中 / 触发类断言验证 client 坐标逆 fit 后 hitTest 命中正确 id、handler 被调用；dispose 后不再触发。
  */
 
 type Pt = [number, number];
@@ -397,6 +396,63 @@ describe('@retikz/vanilla mountCanvas 水合（坐标映射 + hitTest）', () =>
     view.root.dispatchEvent(new MouseEvent('click', { bubbles: true, clientX, clientY }));
 
     expect(rafSpy).toHaveBeenCalled();
+    container.remove();
+  });
+
+  it('on-event-animation-after-update：update 换入带 {onEvent} track 的 scene 后，已存活水合的 trigger 反映新图', () => {
+    const rafSpy = vi.fn(() => 1);
+    vi.stubGlobal('requestAnimationFrame', rafSpy);
+    vi.stubGlobal('cancelAnimationFrame', vi.fn());
+    // 初始 scene 无任何动画 track
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const view = mountCanvas(container, boxIr, { width: CSS_WIDTH, height: CSS_HEIGHT });
+    view.hydrate({ handlers: {} });
+
+    const { clientX, clientY } = sceneToClient(50, 50);
+    view.root.dispatchEvent(new MouseEvent('click', { bubbles: true, clientX, clientY }));
+    expect(rafSpy).not.toHaveBeenCalled(); // 旧图无 onEvent track → 点击不起时钟
+
+    // update 换入同 id 但带 {onEvent:click} 动画 track 的 scene
+    const animatedIr: IR = {
+      version: 1,
+      type: 'scene',
+      children: [
+        {
+          type: 'node',
+          id: 'box',
+          position: [SCENE_SIZE / 2, SCENE_SIZE / 2],
+          shape: 'rectangle',
+          minimumWidth: SCENE_SIZE,
+          minimumHeight: SCENE_SIZE,
+          fill: '#0a0',
+          animations: [
+            { property: 'opacity', keyframes: [{ at: 0, value: 0 }, { at: 1, value: 1 }], duration: 300, trigger: { onEvent: 'click' } },
+          ],
+        },
+      ],
+    };
+    view.update(animatedIr);
+    // 同一已存活水合，无需重新 hydrate；点击现应激活 per-id 时钟（rebind 反映新 onEvent track）
+    view.root.dispatchEvent(new MouseEvent('click', { bubbles: true, clientX, clientY }));
+    expect(rafSpy).toHaveBeenCalled();
+
+    container.remove();
+  });
+
+  it('dispose-view-detaches-hydration：view.dispose 后未手动 dispose 的水合也解绑、点击不再触发', () => {
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const view = mountCanvas(container, boxIr, { width: CSS_WIDTH, height: CSS_HEIGHT });
+    const onClick = vi.fn();
+    view.hydrate({ handlers: { box: { click: onClick } } });
+    const root = view.root;
+    view.dispose();
+
+    const { clientX, clientY } = sceneToClient(50, 50);
+    root.dispatchEvent(new MouseEvent('click', { bubbles: true, clientX, clientY }));
+    expect(onClick).not.toHaveBeenCalled();
+
     container.remove();
   });
 });

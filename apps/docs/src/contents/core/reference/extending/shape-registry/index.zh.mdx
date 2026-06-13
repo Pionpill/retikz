@@ -3,11 +3,11 @@ title: 自定义形状
 description: 通过 Shape Registry 注册新的节点形状；IR 里仍只保存形状名称，真正的绘制、边界和锚点逻辑在编译时通过 CompileOptions.shapes 提供。
 ---
 
-retikz 自带的 `rectangle` / `circle` / `ellipse` / `diamond` 也是通过 Shape Registry 注册出来的形状。也就是说，内置形状和你自己写的形状走同一套机制：给一个形状名，再提供它如何包住文字、如何计算边界、如何画出来。
+retikz 自带的 `rectangle` / `ellipse` / `sector` / `arc` / `polygon` / `star` 都是通过 Shape Registry 注册出来的形状（`circle` / `diamond` 不在注册表，是编译期 preset 别名：circle → `ellipse{ circumscribe:'equal' }`、diamond → `polygon{ sides:4, rotate:0 }`）。也就是说，内置注册形状和你自己写的形状走同一套机制：给一个形状名，再提供它如何包住文字、如何计算边界、如何画出来。
 
 第三方包（例如 `@retikz/shapes-flow` / `-uml` 之类）或宿主代码可以用同样的方式注册新形状，不需要修改 core。
 
-> 这里是参考层。日常写图只用内置形状看 [节点](/core/components/node/overview) 即可；需要 hexagon / cylinder / cloud 这类形状再来这里。
+> 这里是参考层。日常写图只用内置形状看 [节点](/core/components/node/overview) 即可；需要 cylinder / cloud 这类内置覆盖不到的形状再来这里（hexagon 已可用内置 `polygon{ sides:6 }` 表达）。
 
 ## 核心约束：IR 里的形状名永远是字符串
 

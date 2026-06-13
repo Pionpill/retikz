@@ -267,6 +267,7 @@ export const ScopeSchema = z
         'Scope children: nested nodes / paths / coordinates / scopes. Recursive via the parent ChildSchema (registered late to break the IRChild <-> IRScope cycle).',
       ),
   })
+  .strict()
   .describe(
     'Scope container: groups child IR elements, applies local transforms, and acts as a style-default anchor (cascading graphic state + every-X defaults + resetStyle barrier). Corresponds to TikZ `\\begin{scope}`.',
   );

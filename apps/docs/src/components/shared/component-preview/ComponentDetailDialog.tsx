@@ -17,11 +17,11 @@ import {
   alignClass,
   filterDiffByMode,
 } from './_shared';
-import { ANIM_PAUSE_ID, buildAnimationActions } from './animationActions';
+import { ANIM_PAUSE_ID, buildAnimationActions } from './animation-actions';
 import { PreviewActionBar } from './PreviewActionBar';
 import { DemoRenderer } from './DemoRenderer';
-import { useSourceViews } from './useSourceViews';
-import { usePanZoom } from './usePanZoom';
+import { useSourceViews } from './use-source-views';
+import { usePanZoom } from './use-pan-zoom';
 
 export type ComponentDetailDialogProps = {
   open: boolean;

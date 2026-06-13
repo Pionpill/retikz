@@ -5,10 +5,9 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { type HydrationContext, Layout, Node } from '../src';
 
 /**
- * ADR-01 水合：SVG 模式事件绑定（端到端）
+ * 水合：SVG 模式事件绑定（端到端）
  * @description <Layout renderer="svg"> 渲染真实 SVG（图元带 data-retikz-id）；点击该图元 DOM 应触发对应 id 的
  *   handler（经 collectHydrationHandlers 收集 → createHydrationController + locateSvg 根级委托绑定）。
- *   stub 阶段收集 / 接线未实装，断言此刻预期 fail。
  */
 
 beforeEach(() => {

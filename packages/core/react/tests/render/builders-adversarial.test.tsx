@@ -4,7 +4,7 @@ import { buildPathD } from '../../src/render/path-d-builder';
 import { buildTransform } from '../../src/render/transform-builder';
 
 /**
- * ADR-01 builder 层的破坏视角补强测试。
+ * builder 层的破坏视角补强测试。
  * 关注点：构造让 builder 挂掉 / 输出错的输入，以及"未来扩展 kind"的防御行为
  */
 

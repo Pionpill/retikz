@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { NodeSchema, PathSchema, ScopeSchema, TargetSchema } from '../../src/ir';
+import { CoordinateSchema, NodeSchema, PathSchema, ScopeSchema, TargetSchema } from '../../src/ir';
 
 describe('IR numeric constraints', () => {
   it('node/path/scope strokeWidth 拒绝非有限数和负数', () => {
@@ -27,5 +27,31 @@ describe('IR numeric constraints', () => {
     expect(NodeSchema.safeParse({ type: 'node', position: [0, 0], strokeWidth: 0, rotate: -45 }).success).toBe(true);
     expect(PathSchema.safeParse({ type: 'path', strokeWidth: 0, children: [{ type: 'step', kind: 'move', to: [0, 0] }, { type: 'step', kind: 'line', to: { relative: [1, -1] } }] }).success).toBe(true);
     expect(ScopeSchema.safeParse({ type: 'scope', strokeWidth: 0, children: [] }).success).toBe(true);
+  });
+
+  it('bend step 的 bendAngle 限定开区间 (-180, 180)：±180 被拒、179 接受', () => {
+    const bendPath = (bendAngle: number): boolean =>
+      PathSchema.safeParse({
+        type: 'path',
+        children: [
+          { type: 'step', kind: 'move', to: [0, 0] },
+          { type: 'step', kind: 'bend', to: [10, 0], bendDirection: 'left', bendAngle },
+        ],
+      }).success;
+    expect(bendPath(180)).toBe(false);
+    expect(bendPath(-180)).toBe(false);
+    expect(bendPath(179)).toBe(true);
+  });
+
+  it('Path / Coordinate / Scope 现为 strict：未知 / 拼错字段被拒（与 Node 一致）', () => {
+    expect(
+      PathSchema.safeParse({
+        type: 'path',
+        bogus: 1,
+        children: [{ type: 'step', kind: 'move', to: [0, 0] }, { type: 'step', kind: 'line', to: [1, 1] }],
+      }).success,
+    ).toBe(false);
+    expect(CoordinateSchema.safeParse({ type: 'coordinate', id: 'c', position: [0, 0], bogus: 1 }).success).toBe(false);
+    expect(ScopeSchema.safeParse({ type: 'scope', children: [], bogus: 1 }).success).toBe(false);
   });
 });

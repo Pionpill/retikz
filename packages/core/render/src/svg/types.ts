@@ -3,7 +3,7 @@ import type { PropertiesHyphen, SvgPropertiesHyphen } from 'csstype';
 /**
  * SVG 结构 / 几何属性表（手工维护，用 SVG 真实拼写）
  * @description 键名一律用 SVG 真名：几何 / defs 属性裸 SVG 本就是 camelCase（`viewBox` / `refX` /
- *   `markerWidth`...），故照写。`data-*` 留水合挂点（本版不填值）。
+ *   `markerWidth`...），故照写。`data-*` 是水合挂点（如 `data-retikz-id`）。
  */
 export type SvgStructuralAttrs = {
   /** 元素 id（marker / clipPath / paint server 等被 `url(#id)` 引用） */
@@ -50,7 +50,7 @@ export type SvgStructuralAttrs = {
   patternUnits?: string;
   patternContentUnits?: string;
   patternTransform?: string;
-  /** 水合挂点（本版只留结构口，不填值；alpha.4 由 builder 从 Scene 稳定 id 写入） */
+  /** 水合挂点：builder 从 Scene 稳定 id 写入 `data-retikz-id`（命中定位 / per-id 动画用） */
   [k: `data-${string}`]: string | number | undefined;
 };
 
@@ -58,8 +58,8 @@ export type SvgStructuralAttrs = {
  * SVG 呈现属性表（kebab SVG 真名，值放宽到 `string | number`）
  * @description 手工小表（retikz 实际只用 ~20 个）。**不直接用 `csstype` 的 `SvgPropertiesHyphen` 作值类型**：
  *   csstype 把 SVG 呈现属性按 CSS 语义收得过死——`font-size` 等不收纯 number（SVG attribute 接受数字）、
- *   `dominant-baseline` 不含 SVG 专有值 `text-before-edge` / `text-after-edge`。故手工放宽（对应 ADR 待决策点
- *   「结构表维护烦则退化、强类型靠 builder 读 Scene 那端守」）。`csstype` 仍用于 `SvgStyle`（inline style）。
+ *   `dominant-baseline` 不含 SVG 专有值 `text-before-edge` / `text-after-edge`。故手工放宽，强类型靠 builder
+ *   读 Scene 那端守。`csstype` 仍用于 `SvgStyle`（inline style）。
  */
 export type SvgPresentationAttrs = {
   fill?: string;

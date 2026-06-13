@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { compileToScene } from '../../src/compile/compile';
 import { ASCENT_FACTOR, DESCENT_FACTOR } from '../../src/compile/text-baseline';
+import type { TextMeasurer } from '../../src';
 import type { IR } from '../../src/ir';
 import type { GroupPrim, ScenePrimitive, TextPrim } from '../../src/primitive';
 
@@ -317,6 +318,51 @@ describe('step.label：layout 把标签纳入 bbox', () => {
     // 不假设 padding 具体值，只验 layout y 上界包住 label 上沿
     // label y < 0；measuredHeight ≈ 16；layout.y ≤ label.y - measuredHeight/2 - padding
     expect(scene.layout.y).toBeLessThan(-10);
+  });
+
+  // C5：bbox 候选点按 align / baseline 取真实文本框，而非锚点居中对称（否则少覆盖半宽/半高）
+  describe('label bbox 按 align/baseline 覆盖真实文本框', () => {
+    const fixed: TextMeasurer = () => ({ width: 200, height: 20 });
+
+    it("side='left'（align=end）：文本完全在锚点左侧，layout 左界覆盖整宽（非半宽）", () => {
+      const ir: IR = {
+        version: 1,
+        type: 'scene',
+        children: [
+          {
+            type: 'path',
+            children: [
+              { type: 'step', kind: 'move', to: [0, 0] },
+              { type: 'step', kind: 'line', to: [100, 0], label: { text: 'long label', side: 'left' } },
+            ],
+          },
+        ],
+      };
+      const scene = compileToScene(ir, { measureText: fixed });
+      // 锚点 x = 50 - 4(offset) = 46；align=end → 文本左沿 = 46 - 200 = -154。
+      // 旧实现按半宽对称（左沿仅 46 - 100 = -54）会把长 label 裁掉。
+      expect(scene.layout.x).toBeLessThanOrEqual(-154);
+    });
+
+    it("side='above'（baseline=bottom）：文本完全在锚点上方，layout 上界覆盖整高（非半高）", () => {
+      const ir: IR = {
+        version: 1,
+        type: 'scene',
+        children: [
+          {
+            type: 'path',
+            children: [
+              { type: 'step', kind: 'move', to: [0, 0] },
+              { type: 'step', kind: 'line', to: [100, 0], label: { text: 'tall', side: 'above' } },
+            ],
+          },
+        ],
+      };
+      const scene = compileToScene(ir, { measureText: fixed });
+      // 锚点 y = 0 - 4(offset) = -4；baseline=bottom → 文本顶沿 = -4 - 20 = -24。
+      // 旧实现按半高对称（顶沿仅 -4 - 10 = -14）会把高 label 裁掉。
+      expect(scene.layout.y).toBeLessThanOrEqual(-24);
+    });
   });
 });
 

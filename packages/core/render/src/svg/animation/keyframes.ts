@@ -6,7 +6,7 @@
 import { AnimationProperty, type IRAnimationTrack, type Scene, type ScenePrimitive } from '@retikz/core';
 import type { SvgAttrs, SvgNode, SvgStyle } from '../types';
 import type { EasingRegistry } from '../../animation/types';
-import { classifyProperty, primHasStroke, resolveTransformOrigin } from '../../animation/channels';
+import { classifyProperty, isAutoplayTrigger, primHasStroke, resolveTransformOrigin } from '../../animation/channels';
 import { evaluateTrack } from '../../animation/evaluate';
 import { type WaapiDescriptor, buildWaapiDescriptor } from './waapi';
 import {
@@ -138,7 +138,7 @@ export const createSvgAnimationCollector = (options: SvgAnimationOptions): SvgAn
     let setupAttrs: SvgAttrs = {};
     for (const track of tracks) {
       if (classifyProperty(track.property) === 'transform') continue;
-      const expanded = expandTrack(track, prim);
+      const expanded = expandTrack(track, prim, options.easings, onWarn);
       if ('skip' in expanded) {
         onWarn(`SVG animation: skipped track on "${track.property}" (${expanded.skip}); rendering base.`);
         continue;
@@ -164,7 +164,7 @@ export const createSvgAnimationCollector = (options: SvgAnimationOptions): SvgAn
     // 2) transform 通道：各包一层 `<g>`
     for (const track of tracks) {
       if (classifyProperty(track.property) !== 'transform') continue;
-      const expanded = expandTrack(track, prim);
+      const expanded = expandTrack(track, prim, options.easings, onWarn);
       if ('skip' in expanded) {
         onWarn(`SVG animation: skipped track on "${track.property}" (${expanded.skip}); rendering base.`);
         continue;
@@ -219,6 +219,7 @@ export const createSvgAnimationCollector = (options: SvgAnimationOptions): SvgAn
     // 1) 元素级通道（css 直属 + pathDraw）→ 静态属性
     const staticAttrs: SvgAttrs = {};
     for (const track of tracks) {
+      if (!isAutoplayTrigger(track)) continue; // 仅自动播 track 参与截帧，交互触发的留 base（settled）
       const cls = classifyProperty(track.property);
       if (cls === 'transform' || cls === 'viewBox') continue;
       if (cls === 'custom') {
@@ -247,6 +248,7 @@ export const createSvgAnimationCollector = (options: SvgAnimationOptions): SvgAn
 
     // 2) transform 通道：各包一层带静态 transform 的 `<g>`
     for (const track of tracks) {
+      if (!isAutoplayTrigger(track)) continue;
       if (classifyProperty(track.property) !== 'transform') continue;
       const result = evaluateTrack(track, snapshotAt, { easings: options.easings });
       if (!result) continue;
@@ -260,7 +262,7 @@ export const createSvgAnimationCollector = (options: SvgAnimationOptions): SvgAn
     if (snapshotAt === undefined || !tracks || tracks.length === 0) return children;
     let current = children;
     for (const track of tracks) {
-      if (track.property !== 'viewBox') continue;
+      if (track.property !== 'viewBox' || !isAutoplayTrigger(track)) continue;
       const result = evaluateTrack(track, snapshotAt, { easings: options.easings });
       if (!result) continue;
       const [vx, vy, vw, vh] = result.value as Array<number>;

@@ -17,7 +17,7 @@ description: 笔画外壳、step 动作序列与 step 目标点
   dashPattern: 'dash/gap 长度序列（如 [4, 2]），省略 = 实线',
   arrow: '路径箭头方向：省略 / `none` 无箭头；`->` 末端；`<-` 起端；`<->` 双端',
   arrowDetail: '箭头详细配置（shape / scale / length / width / color / fill / opacity / lineWidth + 可选 start/end 子对象逐字段 merge）',
-  fill: '闭合区域填充色；省略 = 无填充；与 `cycle` step 配合产生封闭形状',
+  fill: '闭合区域填充：任意 CSS color 字符串，或 PaintSpec（线性 / 径向渐变、pattern、image）；省略 = 无填充；与 `cycle` step 配合产生封闭形状',
   fillRule: '自交 / 嵌套子路径填充规则；`nonzero`（默认）方向缠绕，`evenodd` 交错',
   lineCap: '描边端点形状：`butt` 默认 / `round` / `square`',
   lineJoin: '描边拐角形状：`miter` 默认 / `round` / `bevel`',
@@ -27,7 +27,7 @@ description: 笔画外壳、step 动作序列与 step 目标点
   drawOpacity: '描边不透明度 0..1，只影响描边',
   id: '可选稳定 id：供其它元素 anchor 引用，也是水合事件绑定的挂点（带 id 才能给 path 绑 onClick 等 handler）',
   meta: 'provenance 元数据：原样透传进本路径 emit 的 Scene 图元，renderer 忽略、不参与布局 / 样式；典型由 Tier 2 lowering 注入（标记来自哪个 datum / series / layer），须为 JSON 对象',
-  animations: '声明式动画 track 数组（关键帧 + 时长 / 缓动 / 触发器）；逐字段见结构组的动画 schema',
+  animations: '声明式动画 track 数组（关键帧 + 时长 / 缓动 / 触发器）；用法与 preset 见动画组件文档',
   zIndex: '显式栈序：大者在上；缺省 0、同值保持声明顺序；只在同层子节点间生效',
   rotate: '整条 path 旋转角（度，绕包围盒中心）',
   scale: '整条 path 缩放（数字等比，或 `{ x, y }` 非等比，绕包围盒中心）',
@@ -118,8 +118,11 @@ description: 笔画外壳、step 动作序列与 step 目标点
   type: '判别字段，标记本节点为 path step',
   kind: '动作种类：`bend` —— 简记弧形：按方向 + 角度生成贝塞尔近似',
   to: '弧形段的目标点',
-  bendDirection: '弧形偏转方向（相对 from→to 弦的视觉左 / 右）',
-  bendAngle: '弯曲角度（°），默认 30',
+  bendDirection: '弧形偏转方向（相对 from→to 弦的视觉左 / 右），可选；给 bendDirection/bendAngle 出对称弧，或给 outAngle/inAngle 出非对称曲线 / 自环（同时给时 out/in 优先）',
+  bendAngle: '弯曲角度（°），默认 30；限 (-180, 180)',
+  outAngle: '起点出射角（°，TikZ `out=`）；与 inAngle 配合定起点控制点方向，给了 out/in 则优先于 bendDirection/bendAngle',
+  inAngle: '终点入射角（°，TikZ `in=`）；与 outAngle 配合定终点控制点方向',
+  looseness: '曲线松紧因子（TikZ `looseness=`），默认约 1；越大控制点越往外推、曲线越松；from==to 时还缩放默认自环尺寸',
   label: '边标注：附在本段上的文字标签',
 }} />
 
@@ -180,6 +183,19 @@ description: 笔画外壳、step 动作序列与 step 目标点
   cornerRadius: '四角同圆角半径；缺省直角，compile clamp 到边长一半',
 }} />
 
+<span id="generator"></span>
+
+### 生成器
+
+<ZodSchema name="GeneratorStepSchema" description="生成器动作：委托一个注册的 path generator（parabola / sin 等）产出子路径；core 不内置任何曲线 generator。" descriptions={{
+  type: '判别字段，标记本节点为 path step',
+  kind: '动作种类：`generator` —— 把本段委托给 CompileOptions.pathGenerators 里按 `name` 查到的生成器，编译期把 from / to / params 变成底层 path 命令',
+  name: '注册的生成器名；编译期对照 CompileOptions.pathGenerators 解析，未注册名 compile 期报错（错误会列可用名）。IR 只存字符串，生成器函数运行时注入、不进 IR',
+  to: '可选终点（作为段末传给生成器）；纯参数化曲线（闭环 / 定长波形等）不需要终点时可省略',
+  params: '传给生成器的 JSON 参数对象（须为纯 JSON 对象，由 JsonObjectSchema 校验）；生成器自身用 paramsSchema 校验形态。generator targetParams 列出的顶层 key 会先把节点目标解析为世界坐标再运行',
+  label: '边标注：附在生成段上的文字标签',
+}} />
+
 <span id="steplabel"></span>
 
 ## 边标注
@@ -211,9 +227,9 @@ description: 笔画外壳、step 动作序列与 step 目标点
 
 ## 目标点
 
-`TargetSchema` 是路径端点的 union：笛卡尔 / 极坐标 / 节点引用对象 `{ id, anchor?, offset? }` / 偏移定位 `{ of, offset }` / 比例定位 `{ between, t }` / 相对偏移（relative / relativeAccumulate）。字符串节点 id 是 React DSL 的便捷写法，会在进入 IR 前解析成对象：
+`TargetSchema` 是路径端点的 union：笛卡尔 / 极坐标 / 节点引用对象 `{ id, anchor?, offset?, boundary? }` / 偏移定位 `{ of, offset }` / 比例定位 `{ between, t }` / 相对偏移（relative / relativeAccumulate）。节点引用对象里 `boundary?` 单边覆盖本端点贴向的连接面（缺省取节点自身 `boundary`，默认 `shape`）；`anchor?` 缺省时自动贴边裁剪。字符串节点 id 是 React DSL 的便捷写法，会在进入 IR 前解析成对象：
 
-<ZodSchema name="TargetSchema" description="路径目标点：支持笛卡尔、极坐标、节点引用对象、偏移定位、比例定位和相对偏移；字符串 shorthand 只存在于 React DSL。" />
+<ZodSchema name="TargetSchema" description="路径目标点：支持笛卡尔、极坐标、节点引用对象 `{ id, anchor?, offset?, boundary? }`、偏移定位、比例定位和相对偏移；字符串 shorthand 只存在于 React DSL。" />
 
 比例定位的完整端点约束见 [定位参考](/core/reference/schema/placement#betweenposition)：`between` 两端必须是自包含端点，不接收 path-relative。
 
@@ -256,7 +272,7 @@ description: 笔画外壳、step 动作序列与 step 目标点
 `Path.arrowDetail` 字段的 schema —— 顶层 8 视觉字段（与 `ArrowEndDetail` 共享）+ 可选 `start` / `end` 子对象。`start` / `end` 与顶层默认逐字段 merge：缺省字段继承顶层、已填字段 override。
 
 <ZodSchema name="ArrowDetailSchema" description="路径级箭头视觉配置：顶层默认加可选起末端覆盖。" descriptions={{
-  shape: '箭头形状：normal / open / stealth / openStealth / diamond / openDiamond / circle / openCircle，默认 stealth',
+  shape: '箭头形状名（开放字符串）：内置 8 种 normal / open / stealth / openStealth / diamond / openDiamond / circle / openCircle，或经 `CompileOptions.arrows` 注册的扩展名（未注册名 compile 期报错）；默认 stealth',
   scale: '等比缩放因子（默认 1），乘到 length / width 之后',
   length: '尖长（user units，沿 path 方向），默认 6',
   width: '尖宽（user units，垂直 path 方向），默认 6',
@@ -275,7 +291,7 @@ description: 笔画外壳、step 动作序列与 step 目标点
 `start` / `end` 子对象的 schema —— 与 ArrowDetail 同字段集减去 `start` / `end` 字段自身（不递归）：
 
 <ZodSchema name="ArrowEndDetailSchema" description="单个箭头端点的视觉覆盖配置，不递归包含 start / end。" descriptions={{
-  shape: '箭头形状（缺省时继承顶层；顶层也缺省时回退 stealth）',
+  shape: '箭头形状名（开放字符串，含 `CompileOptions.arrows` 扩展名）；缺省时继承顶层，顶层也缺省时回退 stealth',
   scale: '等比缩放因子',
   length: '尖长（user units）',
   width: '尖宽（user units）',

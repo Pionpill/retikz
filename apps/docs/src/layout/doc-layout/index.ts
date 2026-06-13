@@ -1,3 +1,3 @@
 export { DocLayout } from './DocLayout';
 export { DocPage } from './DocPage';
-export * from './docLocation';
+export * from './doc-location';

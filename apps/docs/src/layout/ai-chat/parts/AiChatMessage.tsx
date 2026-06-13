@@ -15,7 +15,7 @@ import {
   ContextMenuTrigger,
 } from '@/components/ui/context-menu';
 import { cn } from '@/lib/utils';
-import { useAiChatStore } from '@/store/useAiChatStore';
+import { useAiChatStore } from '@/store/use-ai-chat-store';
 import type { ChatMessage } from '../providers/types';
 import { RetikzPreview, type RetikzPreviewFormat, RetikzPreviewPending } from './RetikzPreview';
 

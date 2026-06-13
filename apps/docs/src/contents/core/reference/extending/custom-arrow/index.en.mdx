@@ -58,7 +58,7 @@ The `ArrowEmitContext` passed to `emit`:
 
 <ComponentPreview name="custom-arrow-inherit" size="xs" />
 
-Both Draws use the same `bracket` definition and set no arrow-specific color, so each bracket follows its path's `stroke`. To pin the arrow color, set `arrowDetail.color` (solid) or the top-level `arrowDetail` `color` (hollow stroke).
+Both Draws use the same `bracket` definition and set no arrow-specific color, so each bracket follows its path's `stroke`. To pin the arrow color, mind whether the shape is solid or hollow: a solid fill resolves to `arrowDetail.fill ?? color ?? contextStroke` — the dedicated override is `fill`, falling back to `color` and then the path stroke; a hollow stroke resolves to `arrowDetail.color ?? contextStroke` (hollow shapes ignore `fill` — `color` drives the stroke and `lineWidth` its width).
 
 <Comparison target="tikz" title="Custom arrows">
 

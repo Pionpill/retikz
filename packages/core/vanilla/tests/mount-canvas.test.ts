@@ -99,7 +99,7 @@ describe('@retikz/vanilla mountCanvas', () => {
     expect(() => mountCanvas(null as never, idIr)).toThrow(/container/i);
   });
 
-  // W17 / W23：Figure 也有交互式 mountCanvas，且 standalone mountCanvas 收 Figure 时 delegate 给它（与 mountSvg→figure.mount 对称）
+  // Figure 也有交互式 mountCanvas，且 standalone mountCanvas 收 Figure 时 delegate 给它（与 mountSvg→figure.mount 对称）
   it('figure-mountCanvas：Figure.mountCanvas 挂出交互式 CanvasView（hydrate / update / clientToScene）', () => {
     const container = document.createElement('div');
     const fig = figure({ width: 100, height: 100 }, [

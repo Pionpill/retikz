@@ -139,6 +139,12 @@ import { Layout, RendererModeProvider } from '@retikz/react';
 | `style` | `CSSProperties` | — | 透传到渲染根元素 |
 | `idPrefix` | `string` | — | 覆盖 `<defs>` 资源 id 前缀；SSR 输出和客户端 `<Layout>` 传同一值时可保持引用 id 一致 |
 | `renderer` | `'svg' \| 'canvas'` | `'svg'` | 渲染后端；缺省时回退最近 `RendererModeProvider` 的 context 值（prop > context > svg） |
+| `nodeDistance` | `number` | `1` | 节点相对定位（`position = { direction, of }`）的默认距离，节点自带 `distance` 优先 |
+| `shapes` | `Record<string, ShapeDefinition>` | — | 运行时注入的自定义 shape（透传 `CompileOptions.shapes`）；同名覆盖内置发 `SHAPE_OVERRIDES_BUILTIN`，未注册名编译期报错。见 [扩展](/core/reference/extending/shape-registry) |
+| `arrows` | `Record<string, ArrowDefinition>` | — | 运行时注入的自定义 arrow（透传 `CompileOptions.arrows`）；同名覆盖内置发 `ARROW_OVERRIDES_BUILTIN`。见 [扩展](/core/reference/extending/custom-arrow) |
+| `patterns` | `Record<string, PatternDefinition>` | — | 运行时注入的自定义 pattern motif（透传 `CompileOptions.patterns`）；同名覆盖内置发 `PATTERN_OVERRIDES_BUILTIN`。见 [扩展](/core/reference/extending/custom-pattern) |
+| `pathGenerators` | `Record<string, PathGeneratorDefinition>` | — | 运行时注入的自定义 path generator（透传 `CompileOptions.pathGenerators`）；core 不内置曲线，未注册名编译期报错。见 [扩展](/core/reference/extending/path-generator) |
+| `composites` | `Array<CompositeDefinition>` | — | 运行时注入的 Tier 2 composite 展开逻辑（透传 `CompileOptions.composites`）；compile 第一步展开成 Tier 1，未注册 namespace/type 警告并跳过 |
 | `color` / `stroke` / `fill` / `strokeWidth` / `opacity` / `fillOpacity` / `drawOpacity` | 同 [`<Scope>`](/core/components/layout/scope) | — | 全图级联 graphic state；设值则把 children 包进隐式根 `<Scope>` |
 | `nodeDefault` / `pathDefault` / `labelDefault` / `arrowDefault` | 同 [`<Scope>`](/core/components/layout/scope) | — | 全图 every-X 默认样式（四通道）；同上挂隐式根 scope |
 | `animate` | `boolean` | `true` | 是否播放动画；`false` 渲染 base 静态图（不 emit CSS/WAAPI、canvas 不起 rAF）。见 [动画](/core/components/animation/control) |

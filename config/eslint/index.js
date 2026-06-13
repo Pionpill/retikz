@@ -16,7 +16,7 @@ const languageOptions = {
 
 const eslintConfig = [
     {
-        name: '@fx-data-agent-web/ignore',
+        name: '@retikz/ignore',
         ignores: [
             '**/node_modules/**',
             '**/build/**',
@@ -30,7 +30,7 @@ const eslintConfig = [
         ],
     },
     {
-        name: '@fx-data-agent-web/javascript',
+        name: '@retikz/javascript',
         files: ['**/*.{js,jsx,ts,tsx}'],
         languageOptions,
         plugins: {
@@ -42,7 +42,7 @@ const eslintConfig = [
         },
     },
     {
-        name: '@fx-data-agent-web/typescript',
+        name: '@retikz/typescript',
         files: ['**/*.{ts,tsx}'],
         languageOptions: {
             ...languageOptions,
@@ -61,7 +61,7 @@ const eslintConfig = [
         },
     },
     {
-        name: '@fx-data-agent-web/react',
+        name: '@retikz/react',
         files: ['**/*.{jsx,tsx}'],
         languageOptions,
         plugins: {

@@ -24,7 +24,7 @@ description: trigger 决定何时播（load / visible / manual / onEvent），an
 const ref = useRef<AnimationControls | null>(null);
 
 <Layout animationRef={ref}>
-  <Node animations={[{ ...spin(), trigger: 'manual' }]} />
+  <Node position={[0, 0]} animations={[{ ...spin(), trigger: 'manual' }]} />
 </Layout>
 <button onClick={() => ref.current?.play()}>播放</button>
 ```
@@ -35,19 +35,21 @@ const ref = useRef<AnimationControls | null>(null);
 
 **何时不播**（三者殊途同归到静止态，见 [总览](/core/components/animation) 的提示）：传 `animate={false}`、用户系统开了「减少动态效果」（`prefers-reduced-motion`）、或后端不支持动画。降级时**不报错、不丢图**，渲染完整静止图并给一条可诊断告警。
 
+例外：`prefers-reduced-motion` 的降级目前只在 vanilla 与 React Canvas 路径生效；**React + SVG（默认 renderer）路径当前不检查 `prefers-reduced-motion`**，开了「减少动态效果」时默认用法下仍会播放，需降级时请显式传 `animate={false}` 或改用 Canvas。
+
 各后端能力：**SVG** 支持全部 trigger；**Canvas** 也支持 `load` / `manual` / `visible` / `{ onEvent }`，实现机制是单个 rAF 时钟 + per-id 虚拟时钟。Canvas 不支持逐 track 独立时间线；同一 id 下多条非自动播 track 会一起跟随该 id 的本地时钟。
 
 ## 静态截帧（`snapshotAt`）
 
-给 `<Layout snapshotAt={毫秒}>`（或 `renderToSvgString(ir, { snapshotAt })` / `mountSvg(…, { snapshotAt })`）→ 渲染**定格在该时刻的一帧**：不播放、不 emit 动画，把每条 track 在该时刻的值烘焙成静态属性 / transform。用于 SSR 海报帧、缩略图、社交卡片预览。
+给 `<Layout snapshotAt={毫秒}>`（或 `renderToSvgString(ir, { snapshotAt })` / `mountSvg(…, { snapshotAt })`）→ 渲染**定格在该时刻的一帧**：不播放、不 emit 动画，把**自动播 track**（`trigger: 'load'` / 缺省）在该时刻的值烘焙成静态属性 / transform。用于 SSR 海报帧、缩略图、社交卡片预览。
 
 <ComponentPreview name="snapshot" size="xs" />
 
 ```tsx
 // grow（0→1，300ms）定格在 150ms ≈ 半大
 <Layout snapshotAt={150}>
-  <Node animations={[grow({ duration: 300 })]}>150ms</Node>
+  <Node position={[0, 0]} animations={[grow({ duration: 300 })]}>150ms</Node>
 </Layout>
 ```
 
-`snapshotAt ≥ 时长` → settled 终态（= base 完整图）；`snapshotAt` 覆盖 `animate`。SVG 复用同一套 `evaluateTrack` 求值引擎，故截帧与播放中的同一时刻逐帧一致；Canvas 按该时刻画一帧、不起 rAF。
+`snapshotAt ≥ 时长` → settled 终态（= base 完整图）；`snapshotAt` 覆盖 `animate`。交互触发的 track（`manual` / `visible` / `{ onEvent }`）在静态帧里**不参与定格**、停在 base（settled）——海报代表「加载后、尚未发生任何交互」的样子，两后端一致。SVG 复用同一套 `evaluateTrack` 求值引擎，故截帧与播放中的同一时刻逐帧一致；Canvas 按该时刻画一帧、不起 rAF。

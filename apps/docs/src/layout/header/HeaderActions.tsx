@@ -23,13 +23,13 @@ import {
 import { Separator } from '@/components/ui/separator';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
-import { useComparisonStore } from '@/store/useComparisonStore';
-import { useComponentPreviewStore } from '@/store/useComponentPreviewStore';
-import { useLayoutStore } from '@/store/useLayoutStore';
-import { useTocStore } from '@/store/useTocStore';
+import { useComparisonStore } from '@/store/use-comparison-store';
+import { useComponentPreviewStore } from '@/store/use-component-preview-store';
+import { useLayoutStore } from '@/store/use-layout-store';
+import { useTocStore } from '@/store/use-toc-store';
 
-import { AUTHOR_GITHUB_URL, GITHUB_URL, TIKZ_DOCS_URL, useDocActions } from './useDocActions';
-import { useHeaderCompact } from './useHeaderCompact';
+import { AUTHOR_GITHUB_URL, GITHUB_URL, TIKZ_DOCS_URL, useDocActions } from './use-doc-actions';
+import { useHeaderCompact } from './use-header-compact';
 
 // TooltipTrigger 默认即 `<button>`，直接套 buttonVariants；不用 `<Button asChild>` 包，避免 React 18 下 asChild → 自定义函数组件 ref 转发不到，触发不到 Popper 锚点
 const triggerClass = cn(buttonVariants({ variant: 'ghost', size: 'icon' }), 'size-7 cursor-pointer rounded-sm');

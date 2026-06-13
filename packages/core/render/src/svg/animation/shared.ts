@@ -93,16 +93,23 @@ const asColor = (value: unknown): string => (typeof value === 'string' ? value :
 export const expandTrack = (
   track: IRAnimationTrack,
   prim: ScenePrimitive,
+  registry: EasingRegistry | undefined,
+  onWarn: (message: string) => void,
 ): ExpandedTrack | ExpandSkip => {
   const cls = classifyProperty(track.property);
   if (cls === 'custom') return { skip: `custom property "${track.property}" has no built-in SVG mapping` };
   if (cls === 'pathDraw' && !primHasStroke(prim)) return { skip: 'pathDraw requires a stroked element' };
 
+  // keyframe 级 easing → CSS animation-timing-function（落在「本帧 → 下一帧」段，与 IR kf.easing「本段缓动」语义一致）。
+  // 非颜色通道逐帧透传；颜色通道在 oklch 预采样成 linear 子段（段内 easing 暂按 linear 近似，见下）。
+  const ease = (kf: IRAnimationTrack['keyframes'][number]): { easing?: string } =>
+    kf.easing !== undefined ? { easing: easingToCss(kf.easing, registry, onWarn) } : {};
+
   if (cls === 'css') {
     const cssProperty = cssPropertyName(track.property);
     const isColor = track.property === AnimationProperty.Fill || track.property === AnimationProperty.Stroke;
     if (!isColor) {
-      return { cssProperty, frames: track.keyframes.map(kf => ({ offset: kf.at, value: String(asNumber(kf.value)) })) };
+      return { cssProperty, frames: track.keyframes.map(kf => ({ offset: kf.at, value: String(asNumber(kf.value)), ...ease(kf) })) };
     }
     // 颜色：相邻 keyframe 段在 oklch 预采样成多帧
     const frames: Array<ExpandedFrame> = [];
@@ -124,7 +131,7 @@ export const expandTrack = (
     const origin = resolveTransformOrigin(prim, track.origin);
     return {
       cssProperty: 'transform',
-      frames: track.keyframes.map(kf => ({ offset: kf.at, value: transformValue(track.property, asNumber(kf.value)) })),
+      frames: track.keyframes.map(kf => ({ offset: kf.at, value: transformValue(track.property, asNumber(kf.value)), ...ease(kf) })),
       ...(origin ? { transformOrigin: `${origin[0]}px ${origin[1]}px` } : {}),
     };
   }
@@ -133,7 +140,7 @@ export const expandTrack = (
     // stroke-dashoffset 1→0 揭示（value 0..1 → offset 1-value），pathLength=1 归一化弧长
     return {
       cssProperty: 'stroke-dashoffset',
-      frames: track.keyframes.map(kf => ({ offset: kf.at, value: String(1 - asNumber(kf.value)) })),
+      frames: track.keyframes.map(kf => ({ offset: kf.at, value: String(1 - asNumber(kf.value)), ...ease(kf) })),
       setupAttrs: { pathLength: 1, 'stroke-dasharray': 1 },
     };
   }

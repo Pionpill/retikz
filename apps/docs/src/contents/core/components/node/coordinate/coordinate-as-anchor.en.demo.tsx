@@ -3,11 +3,11 @@ import type { FC } from 'react';
 
 /**
  * `<Coordinate>` as a named virtual anchor
- * @description hub is an invisible center; four nodes `at.of='hub'` lay out symmetrically and all paths terminate at hub — without a coordinate every node/path would duplicate `[0, 0]`.
+ * @description hub is an invisible center; four nodes use `position={{ of: 'hub', ... }}` to lay out symmetrically and all paths terminate at hub — without a coordinate every node/path would duplicate `[0, 0]`.
  */
 const Demo: FC = () => (
   <Layout width={340} height={220}>
-    {/* Named virtual center — invisible, but the four `at.of` references all rely on it */}
+    {/* Named virtual center — invisible, but the four `of` references all rely on it */}
     <Coordinate id="hub" position={[0, 0]} />
     <Node id="N" position={{ direction: 'above', of: 'hub', distance: 65 }}>North</Node>
     <Node id="S" position={{ direction: 'below', of: 'hub', distance: 65 }}>South</Node>

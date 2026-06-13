@@ -552,7 +552,7 @@ describe('buildIR', () => {
       expect(scope).not.toHaveProperty('transforms');
     });
 
-    it('<Node color> 主色透传到 IR（alpha.2）', () => {
+    it('<Node color> 主色透传到 IR', () => {
       const ir = buildIR(<Node id="A" position={[0, 0]} color="blue">A</Node>);
       expect(ir.children[0]).toMatchObject({ type: 'node', color: 'blue' });
     });
@@ -562,7 +562,7 @@ describe('buildIR', () => {
       expect(ir.children[0]).toMatchObject({ type: 'node', cornerRadius: 8 });
     });
 
-    it('<Path color> 主色透传到 IR（alpha.2）', () => {
+    it('<Path color> 主色透传到 IR', () => {
       const ir = buildIR(
         <Path color="crimson">
           <Step kind="move" to="A" />
@@ -572,7 +572,7 @@ describe('buildIR', () => {
       expect(ir.children[0]).toMatchObject({ type: 'path', color: 'crimson' });
     });
 
-    it('<Scope> 样式字段透传：级联 graphic state + 四通道 every-X + resetStyle（alpha.2）', () => {
+    it('<Scope> 样式字段透传：级联 graphic state + 四通道 every-X + resetStyle', () => {
       const ir = buildIR(
         <Scope
           color="blue"
@@ -598,7 +598,7 @@ describe('buildIR', () => {
       });
     });
 
-    it('<Step label> textColor / opacity / font 透传到 IR step.label（alpha.2）', () => {
+    it('<Step label> textColor / opacity / font 透传到 IR step.label', () => {
       const ir = buildIR(
         <Path>
           <Step kind="move" to="A" />
@@ -730,6 +730,102 @@ describe('buildIR', () => {
       expect(ir.children.map(c => (c as { id?: string }).id)).toEqual([
         'grid1', 'grid2', 'circle', 'tick3',
       ]);
+    });
+  });
+
+  describe('Fragment 穿透：Path step / Node text / EdgeLabel', () => {
+    it('<Path> 内 Fragment 包多个 Step → 全部平铺、不报 "requires at least 2"', () => {
+      const ir = buildIR(
+        <Path>
+          <Fragment>
+            <Step kind="move" to={[0, 0]} />
+            <Step kind="line" to={[10, 0]} />
+          </Fragment>
+        </Path>,
+      );
+      const path = ir.children[0] as { type: string; children: Array<{ kind: string }> };
+      expect(path.type).toBe('path');
+      expect(path.children.map(s => s.kind)).toEqual(['move', 'line']);
+    });
+
+    it('<Path> 内条件三元返回不同 Fragment 组 → 命中分支的 Step 全部收集', () => {
+      const cond: boolean = [1].length > 0;
+      const ir = buildIR(
+        <Path>
+          {cond ? (
+            <>
+              <Step kind="move" to={[0, 0]} />
+              <Step kind="line" to={[1, 0]} />
+              <Step kind="line" to={[2, 0]} />
+            </>
+          ) : (
+            <>
+              <Step kind="move" to={[0, 0]} />
+              <Step kind="line" to={[9, 9]} />
+            </>
+          )}
+        </Path>,
+      );
+      const path = ir.children[0] as { children: Array<{ kind: string; to?: unknown }> };
+      expect(path.children.map(s => s.kind)).toEqual(['move', 'line', 'line']);
+    });
+
+    it('<Path> 内嵌套 Fragment 包 Step → 递归展开', () => {
+      const ir = buildIR(
+        <Path>
+          <Fragment>
+            <Fragment>
+              <Step kind="move" to={[0, 0]} />
+            </Fragment>
+            <Step kind="line" to={[5, 5]} />
+          </Fragment>
+        </Path>,
+      );
+      const path = ir.children[0] as { children: Array<{ kind: string }> };
+      expect(path.children.map(s => s.kind)).toEqual(['move', 'line']);
+    });
+
+    it('<Node> 文本内 Fragment 包多段文本 → 行被收集，不丢段', () => {
+      const ir = buildIR(
+        <Node id="A" position={[0, 0]}>
+          <Fragment>
+            {'line1'}
+            {'\n'}
+            {'line2'}
+          </Fragment>
+        </Node>,
+      );
+      expect(ir.children[0]).toMatchObject({ type: 'node', text: ['line1', 'line2'] });
+    });
+
+    it('<Node> 文本内 Fragment 包 <Text> styled-line → 独立成行', () => {
+      const ir = buildIR(
+        <Node id="A" position={[0, 0]}>
+          <Fragment>
+            <Text fill="red">red</Text>
+            <Text>plain</Text>
+          </Fragment>
+        </Node>,
+      );
+      expect(ir.children[0]).toMatchObject({
+        type: 'node',
+        text: [{ text: 'red', fill: 'red' }, 'plain'],
+      });
+    });
+
+    it('<Step> 内 Fragment 包 <EdgeLabel> → label 被识别', () => {
+      const ir = buildIR(
+        <Path>
+          <Step kind="move" to={[0, 0]} />
+          <Step kind="line" to={[10, 0]}>
+            <Fragment>
+              <EdgeLabel>mid</EdgeLabel>
+            </Fragment>
+          </Step>
+        </Path>,
+      );
+      const path = ir.children[0] as { children: Array<{ kind: string; label?: { text: string } }> };
+      expect(path.children[1].label).toEqual({ text: 'mid' });
     });
   });
 });

@@ -61,6 +61,8 @@ import { Node } from '@retikz/react';
 | --- | --- | --- |
 | star | `{ points, innerRadius, outerRadius, rotate? }` | Star with alternating inner / outer radii |
 
+> Node `star` constraints: `points` is an integer ≥ 3, and `outerRadius` must be > `innerRadius` (a compile-time refine throws otherwise). Note the minimums differ from the Sugar `<Star>`, which allows `points ≥ 2`.
+
 <ComponentPreview name="node-star" size="sm" />
 
 Give `params.cornerRadius` a positive number to round both the outer tips and the inner notches at once; omitting it or `0` keeps sharp corners. The rounding is connection-aware: an **auto-clipped** endpoint (no explicit anchor) aimed at a tip lands on the fillet arc, stopping short of the original point — whereas an explicit `tip-N` named anchor still resolves to the original sharp tip (fixed at the logical vertex, never moving inward with the fillet).
@@ -83,7 +85,7 @@ Besides the node's 9 standard anchors (`north` / `center` …), the star provide
 
 `<Star>` computes `points * 2` vertices: outer vertices land on `outerRadius`, and inner vertices land on `innerRadius`. The default `innerRatio` is `0.5`, so the inner radius is half of the outer radius. `rotate` changes the starting angle of the first outer vertex; by default one outer point faces upward, and in screen coordinates positive angles rotate clockwise.
 
-`<Node shape="star">` shares the same geometry as `<Star>`; the only difference is that the former is a node with a boundary that connections can snap to.
+`<Node shape="star">` shares the same star geometry as `<Star>` (the former is a node with a boundary that connections can snap to), but the `rotate` baseline differs by 90°: Node `star` `rotate:0` already points a tip up, whereas the Sugar `<Star>` needs `rotate:-90` for a tip up (`<Star>` defaults to `-90`). The two only align visually at their respective defaults; offset by 90° when you set `rotate` explicitly. The Sugar `<Star>` also allows `points ≥ 2`, while Node `star` requires `points ≥ 3`.
 
 ## Related
 

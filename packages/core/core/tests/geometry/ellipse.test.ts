@@ -8,6 +8,16 @@ import { flattenPrims } from '../helpers/flatten';
 
 const e: Ellipse = { x: 0, y: 0, rx: 10, ry: 5 };
 
+describe('ellipse 退化（零半轴）不产 NaN', () => {
+  const degenerate: Ellipse = { x: 1, y: 2, rx: 0, ry: 5 };
+  it('contains → false（不除零产 NaN）', () => {
+    expect(ellipse.contains(degenerate, [1, 2])).toBe(false);
+  });
+  it('boundaryPoint → 塌缩到中心', () => {
+    expect(ellipse.boundaryPoint(degenerate, [5, 5])).toEqual([1, 2]);
+  });
+});
+
 const findByType = <T extends ScenePrimitive['type']>(
   prims: Array<ScenePrimitive>,
   type: T,

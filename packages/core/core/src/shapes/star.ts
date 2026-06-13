@@ -27,6 +27,7 @@ type StarParams = {
 };
 
 const DEG_TO_RAD = Math.PI / 180;
+const MAX_STAR_POINTS = 1024;
 
 /**
  * star 派生几何（circumscribe / boundaryPoint / anchor / emit 单一真源）
@@ -104,7 +105,8 @@ export const star = defineShape({
         .number()
         .int()
         .min(3)
-        .describe('Number of star points (>= 3).'),
+        .max(MAX_STAR_POINTS)
+        .describe(`Number of star points (3..${MAX_STAR_POINTS}); capped to bound vertex count (mirrors polygon sides).`),
       innerRadius: z
         .number()
         .finite()

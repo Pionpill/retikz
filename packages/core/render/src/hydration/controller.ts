@@ -20,10 +20,10 @@ const collectUsedEvents = (handlers: HydrationHandlers): Set<RetikzEventValue> =
   return used;
 };
 
-/** 命中 id 但调用方未提供 buildContext 时的最小 context（renderer 兜底 svg；animation no-op） */
-const minimalContext = (root: EventTarget, id: string): HydrationContext => ({
+/** 命中 id 但调用方未提供 buildContext 时的最小 context（renderer 按实际后端传入；animation no-op） */
+const minimalContext = (root: EventTarget, id: string, renderer: 'svg' | 'canvas'): HydrationContext => ({
   id,
-  renderer: 'svg',
+  renderer,
   element: null,
   root: root as Element,
   point: null,
@@ -38,11 +38,12 @@ const invoke = (
   event: Event,
   root: EventTarget,
   buildContext: BuildContext | undefined,
+  renderer: 'svg' | 'canvas',
 ): void => {
   if (id === null || !Object.hasOwn(handlers, id)) return;
   const handler: ElementHandlers[RetikzEventValue] = handlers[id][name];
   if (handler === undefined) return;
-  const context = buildContext ? buildContext(event, id) : minimalContext(root, id);
+  const context = buildContext ? buildContext(event, id) : minimalContext(root, id, renderer);
   handler(event, context);
 };
 
@@ -63,12 +64,14 @@ const hasContains = (target: EventTarget): target is Node =>
  *   命中 id 后恒以 `handler(event, buildContext(event, id))` 调用——`context` 永远传入（绝不 undefined）。
  *   `buildContext` 由各 runtime（vanilla / react）提供，携 Scene / renderer / 动画句柄构造富 context；省略时退回
  *   最小 context（id + root，meta / geometry / scene 缺省、animation no-op），现有 `(event) => …` handler 忽略 context 照常。
+ *   `renderer` 指明实际后端（缺省 svg）：仅在退回最小 context 时用于如实填 `context.renderer`，Canvas 路径应传 `'canvas'`。
  */
 export const createHydrationController = (
   root: EventTarget,
   handlers: HydrationHandlers,
   locate: Locate,
   buildContext?: BuildContext,
+  renderer: 'svg' | 'canvas' = 'svg',
 ): HydrationController => {
   const used = collectUsedEvents(handlers);
   const teardowns: Array<() => void> = [];
@@ -81,7 +84,7 @@ export const createHydrationController = (
   // 直接委托的事件（enter/leave 除外，它们走 pointermove 合成）：locate(event) → 查 handler → 调用。
   for (const name of used) {
     if (name === RetikzEvent.PointerEnter || name === RetikzEvent.PointerLeave) continue;
-    listen(EVENT_DOM_TYPE[name], event => invoke(handlers, locate(event), name, event, root, buildContext));
+    listen(EVENT_DOM_TYPE[name], event => invoke(handlers, locate(event), name, event, root, buildContext, renderer));
   }
 
   // enter/leave 合成：仅当注册表里有 enter 或 leave handler 时，才挂 pointermove + 离开整图监听。
@@ -97,8 +100,8 @@ export const createHydrationController = (
       if (currentId === lastHitId) return;
       const previousId = lastHitId;
       lastHitId = currentId;
-      if (previousId !== null) invoke(handlers, previousId, RetikzEvent.PointerLeave, event, root, buildContext);
-      if (currentId !== null) invoke(handlers, currentId, RetikzEvent.PointerEnter, event, root, buildContext);
+      if (previousId !== null) invoke(handlers, previousId, RetikzEvent.PointerLeave, event, root, buildContext, renderer);
+      if (currentId !== null) invoke(handlers, currentId, RetikzEvent.PointerEnter, event, root, buildContext, renderer);
     });
 
     // 离开整图：清空命中态、把 lastHitId 的 leave 补一次（同样先清状态再 invoke）。
@@ -106,7 +109,7 @@ export const createHydrationController = (
       if (lastHitId === null) return;
       const previousId = lastHitId;
       lastHitId = null;
-      invoke(handlers, previousId, RetikzEvent.PointerLeave, event, root, buildContext);
+      invoke(handlers, previousId, RetikzEvent.PointerLeave, event, root, buildContext, renderer);
     };
     // pointerleave 不冒泡、只在指针真正离开 root 时触发——最干净的「离开整图」信号。
     listen('pointerleave', leaveWhole);

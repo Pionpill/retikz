@@ -34,6 +34,7 @@ export const CoordinateSchema = z
         'Coordinate position; Cartesian [x, y], polar, relative-to-another-node (`at`-style), offset from a base point (`{ of, offset }` form), or between two endpoints (`{ between: [A, B], t }`). Resolved at compile time.',
       ),
   })
+  .strict()
   .describe(
     'Coordinate placeholder: a named point with no visual; usable as a target for paths and as an anchor for relative positioning. Mirrors TikZ `\\coordinate (id) at (...);`',
   );

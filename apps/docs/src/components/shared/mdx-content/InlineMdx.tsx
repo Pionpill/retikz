@@ -10,7 +10,7 @@ import remarkGfm from 'remark-gfm';
 import { cn } from '@/lib/utils';
 
 import { mdxComponents } from './components';
-import { escapeBareJsxTriggers } from './escapeBareJsxTriggers';
+import { escapeBareJsxTriggers } from './escape-bare-jsx-triggers';
 
 const runtime = {
   jsx: jsxRuntime.jsx,

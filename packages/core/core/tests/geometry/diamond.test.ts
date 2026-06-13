@@ -9,6 +9,16 @@ describe('diamond.center', () => {
   });
 });
 
+describe('diamond 退化（零半轴）不产 NaN', () => {
+  const degenerate: Diamond = { x: 1, y: 2, halfA: 0, halfB: 5 };
+  it('contains → false（不除零产 NaN）', () => {
+    expect(diamond.contains(degenerate, [1, 2])).toBe(false);
+  });
+  it('boundaryPoint → 塌缩到中心', () => {
+    expect(diamond.boundaryPoint(degenerate, [5, 5])).toEqual([1, 2]);
+  });
+});
+
 describe('diamond.contains', () => {
   it('中心 / 4 顶点在内', () => {
     expect(diamond.contains(d, [0, 0])).toBe(true);

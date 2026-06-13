@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import type { ObjectField, SchemaRepr, TypeRepr } from './types';
-import { lookupSchema } from '@/lib/schemaRegistry';
+import { lookupSchema } from '@/lib/schema-registry';
 
 /** walker 通行的 schema 类型：v4 里 shape / options / element / unwrap 给出的都是 core 类型，classic 是其子类型 */
 type AnySchema = z.core.$ZodType;

@@ -235,6 +235,31 @@ describe('Node 尺寸约束 (alpha.2)', () => {
     const r = findRect(ir);
     expect(r!.width).toBeGreaterThan(10);
   });
+
+  // C6：minimum 随 scale 缩 + floor 外接框（而非内框）
+  it('minimum 随 scale 缩放：minimumSize=50 + scale=2 → bbox 100', () => {
+    const ir: IR = {
+      version: 1,
+      type: 'scene',
+      children: [{ type: 'node', position: [0, 0], minimumSize: 50, scale: 2 }],
+    };
+    // 旧实现 minimum 不乘 scale → 仍 50；现 50×2 = 100
+    expect(findRect(ir)?.width).toBe(100);
+    expect(findRect(ir)?.height).toBe(100);
+  });
+
+  it('minimum floor 外接框而非内框：ellipse minimumSize=100 → 直径 100（非 √2 倍）', () => {
+    const ir: IR = {
+      version: 1,
+      type: 'scene',
+      children: [{ type: 'node', position: [0, 0], shape: { type: 'ellipse' }, minimumSize: 100 }],
+    };
+    const e = findEllipse(ir);
+    // 旧实现把 100 floor 进内框半轴(50)，circumscribe 再 ×√2 → rx≈70.7（直径≈141）；
+    // 现 floor 外接框 → rx=ry=50（直径 100）
+    expect(e?.rx).toBeCloseTo(50, 6);
+    expect(e?.ry).toBeCloseTo(50, 6);
+  });
 });
 
 describe('Node 缩放 (alpha.2)', () => {

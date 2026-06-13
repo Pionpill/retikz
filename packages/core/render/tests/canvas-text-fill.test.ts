@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { Scene } from '@retikz/core';
-import { drawScene } from '../src/canvas/drawScene';
+import { drawScene } from '../src/canvas/draw-scene';
 
 /**
  * canvas 文本 fill 基线：缺省 fill 的文本必须用确定黑色（与 SVG 省略 fill 的默认一致），

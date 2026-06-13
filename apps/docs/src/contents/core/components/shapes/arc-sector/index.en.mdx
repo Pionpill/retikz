@@ -149,6 +149,8 @@ For the full `<Node>` props see [Node](/core/components/node/overview).
 
 The sector's `cornerRadius` (user units) rounds the four wedge corners; omitted / `0` = sharp corners, clamped per corner. Named anchors such as `apex` / `*-arc-mid` do not move with it.
 
+> Node sector constraint: `outerRadius` must be > `innerRadius` (`innerRadius:0` is a solid slice); a compile-time refine throws otherwise.
+
 ## How it works
 
 > Optional for everyday use; revisit when angle direction or closing behavior looks surprising.

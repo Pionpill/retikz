@@ -7,6 +7,7 @@ import { compileToScene } from '../../src/compile/compile';
 import { NodeSchema, ShapeRefSchema } from '../../src/ir';
 import type { IR } from '../../src/ir';
 import { arc, polygon, sector, star } from '../../src/shapes';
+import { normalizeAngularRange } from '../../src/shapes/shared';
 import type { ScenePrimitive } from '../../src/primitive';
 import { flattenPrims } from '../helpers/flatten';
 
@@ -76,16 +77,66 @@ describe('[adversarial] 几何极端：角度环绕死循环 / DoS', () => {
     expect(() => compileNode({ shape: { type: 'sector', params: { innerRadius: 0, outerRadius: 0, startAngle: 0, endAngle: 90 } } })).toThrow();
   });
 
-  it('[adversarial] star points=10000 → 20000 顶点，不卡死且产闭合 path', () => {
+  it('[adversarial] star points 上限 1024：满额产 2048 顶点闭合 path 且不卡死', () => {
     const start = performance.now();
     const compiled = compileNode({
-      shape: { type: 'star', params: { points: 10000, innerRadius: 5, outerRadius: 10 } },
+      shape: { type: 'star', params: { points: 1024, innerRadius: 5, outerRadius: 10 } },
     });
     const ms = performance.now() - start;
     const path = findByType(compiled.primitives, 'path');
     expect(path).toBeDefined();
-    expect(path!.commands.length).toBe(20000 + 1); // 20000 vertices + close
+    expect(path!.commands.length).toBe(2048 + 1); // 2×points 顶点 + close
     expect(ms).toBeLessThan(2000);
+  });
+
+  it('[adversarial] star points 超上限（>1024）被 schema 拒，防顶点数无界拖死编译', () => {
+    expect(() =>
+      compileNode({
+        shape: { type: 'star', params: { points: 100000, innerRadius: 5, outerRadius: 10 } },
+      }),
+    ).toThrow();
+  });
+
+  it('[adversarial] normalizeAngularRange 把跨度钳到 ≤360（巨角不枚举海量轴向点）', () => {
+    expect(normalizeAngularRange(0, 90).end).toBe(90); // 正常跨度不变
+    expect(normalizeAngularRange(0, 720).end).toBe(360); // 720 折成整圆 360
+    expect(normalizeAngularRange(10, 410).end).toBe(370); // 400 跨度钳到 10+360
+    expect(normalizeAngularRange(0, 1e8).end).toBe(360); // 巨角钳到 360
+  });
+
+  it('[G3] ellipse 节点 compass diagonal 落真实周长（与 TikZ 一致，非 AABB 角）', () => {
+    const compiled = compileToScene(
+      scene([
+        { type: 'node', id: 'e', position: [0, 0], shape: { type: 'ellipse' }, minimumSize: 40 },
+        {
+          type: 'path',
+          children: [
+            { type: 'step', kind: 'move', to: { id: 'e', anchor: 'north-east' } },
+            { type: 'step', kind: 'line', to: [200, -200] },
+          ],
+        },
+      ]),
+    );
+    const path = findByType(compiled.primitives, 'path');
+    const move = path!.commands[0];
+    // minimumSize=40 floor 外接框 → rx=ry=20；north-east 真实周长点 =(20/√2, −20/√2)≈(14.14, −14.14)；
+    // 旧实现（AABB 角）会是 (20, −20)
+    expect(move.kind).toBe('move');
+    if (move.kind === 'move') {
+      expect(move.to[0]).toBeCloseTo(20 / Math.SQRT2, 1);
+      expect(move.to[1]).toBeCloseTo(-20 / Math.SQRT2, 1);
+    }
+  });
+
+  it('[adversarial] arc boundaryPoint 随 toward 变（不再恒取弧中点）', () => {
+    // 上半圆弧 0°→180°（AABB 中心在原点）；朝 +x / −x 连线应贴弧的不同端
+    const rect = { x: 0, y: 0, width: 20, height: 10 };
+    const params = { radius: 10, startAngle: 0, endAngle: 180 };
+    const towardStart = arc.boundaryPoint(rect, [100, 0], params);
+    const towardEnd = arc.boundaryPoint(rect, [-100, 0], params);
+    expect(towardStart[0]).toBeGreaterThan(0); // 靠 start(0°) 端
+    expect(towardEnd[0]).toBeLessThan(0); // 靠 end(180°) 端
+    expect(towardStart[0]).not.toBeCloseTo(towardEnd[0], 3); // 两方向落点不同
   });
 
   // outerRadius=1e308（.finite() 放行）→ AABB 半轴 5e307 仍 finite，但 layout 聚合 rect 四角

@@ -253,7 +253,7 @@ const inflateRect = (r: Rect, m: number): Rect =>
  * @description = `inflateRect(layout.rect, layout.margin)`，中心不变、四向各 +margin。border 类
  *   anchor（compass / 数字角度）解析与 bbox / viewBox / 布局占位都基于这层；视觉 emit / 裁剪 /
  *   形状专属 anchor / edgePoint / label 附着点仍读 `layout.rect`（不外扩）。单一派生量，不另存字段。
- *   （TikZ outer sep 对齐见 v0.3-beta.1 ADR-07。）
+ *   （对齐 TikZ outer sep 语义。）
  */
 export const outerRectOf = (layout: NodeLayout): Rect => inflateRect(layout.rect, layout.margin);
 
@@ -282,8 +282,8 @@ export const boundaryPointOf = (
  * @description 纯几何：在传入的 `layout.rect` 上求点，本体**不施加 outerSep（margin）**。outerSep 的
  *   「border 外推」由调用方决定——`anchor-cache.ts` 的 compass 解析先把 rect 外扩 margin（`outerRectOf`）
  *   再调本函数；`labelBorderPoint` 喂视觉 rect（label 附着点不含 margin）。这样 outer sep 只作用于
- *   path / position 的 anchor 引用，不波及 label（详见 v0.3-beta.1 ADR-07 §1/§2）。
- *   compass（9 个 rect 方位名）走连接面 AABB：'shape' 时归一为 'rectangle'（矩形 AABB），其余按 boundary 解析。
+ *   path / position 的 anchor 引用，不波及 label。
+ *   compass（9 个 rect 方位名）：默认连接面先走视觉 shape 自身 compass（ellipse/circle 落真实周长、polygon/rect 落 AABB，与 TikZ 一致），shape 未实现则回退 AABB 矩形；显式 boundary 按其解析。
  *   形状专属命名 anchor（tip-N / apex 等非 compass 名）恒走视觉形状自身，boundary 不影响。
  *   boundary 缺省 = 'shape'。
  */
@@ -294,10 +294,29 @@ export const anchorOf = (
 ): Position => {
   const compassAnchor = normalizeCompassAnchor(name);
   if (compassAnchor !== undefined) {
-    // compass 方位名：'shape' 归一为 'rectangle'（走 AABB 矩形），其余按 boundary
-    const compassBoundary = boundary === 'shape' ? 'rectangle' : boundary;
+    // compass 方位名：默认连接面（'shape'）先走视觉 shape 自身 compass——ellipse/circle 落真实周长、
+    // rectangle/polygon 落 AABB（与 TikZ 一致）；shape 未实现 compass（star/sector/arc 返回 undefined）
+    // 回退外接 AABB 矩形。显式 boundary 指定时按该连接面解析。
+    if (boundary === 'shape') {
+      const own = layout.shapeDef.anchor(
+        layout.rect,
+        compassAnchor,
+        layout.shapeParams ?? EMPTY_SHAPE_PARAMS,
+      );
+      if (own !== undefined) return own;
+      const fallback = resolveBoundary(
+        'rectangle',
+        layout.shapeDef,
+        layout.rect,
+        layout.shapeParams ?? EMPTY_SHAPE_PARAMS,
+        layout.shapes,
+      );
+      const p = fallback.def.anchor(fallback.rect, compassAnchor, fallback.params);
+      if (p === undefined) throw new Error(`Unknown anchor '${name}' for shape '${layout.shapeName}'`);
+      return p;
+    }
     const { def, rect, params } = resolveBoundary(
-      compassBoundary,
+      boundary,
       layout.shapeDef,
       layout.rect,
       layout.shapeParams ?? EMPTY_SHAPE_PARAMS,
@@ -548,19 +567,21 @@ export const layoutNode = (
     textHeight = lines.length * lineHeight;
   }
 
-  // 内框半轴：text 半宽 + sep（保证至少 sep 大小，空文本节点也有最小尺寸）
-  // minimumWidth/Height (axis-specific) 覆盖 minimumSize (对称别名)
-  const minW = node.minimumWidth ?? node.minimumSize ?? 0;
-  const minH = node.minimumHeight ?? node.minimumSize ?? 0;
-  const innerHalfW = Math.max(textWidth / 2 + xSep, xSep, minW / 2);
-  const innerHalfH = Math.max(textHeight / 2 + ySep, ySep, minH / 2);
+  // 内框半轴：text 半宽 + sep（保证至少 sep 大小，空文本节点也有最小尺寸）。minimum 不进内框——见下方对外接框 floor。
+  const innerHalfW = Math.max(textWidth / 2 + xSep, xSep);
+  const innerHalfH = Math.max(textHeight / 2 + ySep, ySep);
 
   // 外接边界（bounding rect）半轴：内框半轴经 shape.circumscribe 派生
-  const { halfWidth: boundsHalfW, halfHeight: boundsHalfH } = shapeDef.circumscribe(
-    innerHalfW,
-    innerHalfH,
-    shapeParams,
-  );
+  const circumscribed = shapeDef.circumscribe(innerHalfW, innerHalfH, shapeParams);
+
+  // minimum 尺寸（TikZ 语义）：floor 外接框（bounding box）而非内框，且随 scale 缩（与 sep / text / fontSize 同口径，
+  // minimumWidth→sx、minimumHeight→sy）。minimumWidth/Height 覆盖 minimumSize（对称别名）。inner-driven shape
+  // （rectangle/ellipse/polygon）emit 按 floor 后的 rect 重建、恰好填满；params-radius-driven shape（sector/star/arc）
+  // glyph 由半径定、minimum 仅预留 bbox 空间不缩放 glyph。
+  const minHalfW = ((node.minimumWidth ?? node.minimumSize ?? 0) * sx) / 2;
+  const minHalfH = ((node.minimumHeight ?? node.minimumSize ?? 0) * sy) / 2;
+  const boundsHalfW = Math.max(circumscribed.halfWidth, minHalfW);
+  const boundsHalfH = Math.max(circumscribed.halfHeight, minHalfH);
 
   const rotateDeg = node.rotate ?? 0;
   const center = resolvePosition(node.position, nameStack, nodeDistance, scopeChain, resolveBetweenGlobal);

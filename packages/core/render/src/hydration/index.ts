@@ -12,7 +12,7 @@ export type {
 } from './events';
 export type { HydrationController } from './controller';
 export { createHydrationController } from './controller';
-export { locateSvg } from './locateSvg';
+export { locateSvg } from './locate-svg';
 export type {
   HydrationContext,
   HydrationAnimationControls,
@@ -38,4 +38,4 @@ export {
   collectCanvasVisibleAnimationIds,
   isCanvasAnimationIdVisible,
   withCanvasAnimationEventHandlers,
-} from './canvasAnimationTriggers';
+} from './canvas-animation-triggers';

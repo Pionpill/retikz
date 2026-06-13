@@ -12,8 +12,8 @@ import {
 import { Skeleton } from '@/components/ui/skeleton';
 import { MarkdownInline } from '@/components/shared/inline-markdown';
 import { cn } from '@/lib/utils';
-import { useAiChatStore } from '@/store/useAiChatStore';
-import type { Conversation } from '../conversationsStorage';
+import { useAiChatStore } from '@/store/use-ai-chat-store';
+import type { Conversation } from '../conversations-storage';
 
 /**
  * AI 历史会话列表视图

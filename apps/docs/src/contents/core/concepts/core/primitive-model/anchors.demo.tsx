@@ -37,12 +37,12 @@ const STAR_C = { x: -130, y: 88, ro: 34, ri: 14 };
 const STAR: Array<[number, number]> = Array.from({ length: 10 }, (_unused, j): [number, number] => polar(STAR_C.x, STAR_C.y, j % 2 === 0 ? STAR_C.ro : STAR_C.ri, -90 + j * 36));
 const TIPS = [0, 2, 4, 6, 8].map(j => STAR[j]);
 
-const SEC = { x: 0, y: 110, ro: 44, a: -150, b: -30 };
+const SEC = { x: 0, y: 110, ro: 44, ri: 0, a: -150, b: -30 };
 const SECTOR_TIPS: Array<[number, number]> = [
   [SEC.x, SEC.y], // apex
-  polar(SEC.x, SEC.y, SEC.ro, SEC.a), // outer-arc start
   polar(SEC.x, SEC.y, SEC.ro, (SEC.a + SEC.b) / 2), // outer-arc-mid
-  polar(SEC.x, SEC.y, SEC.ro, SEC.b), // outer-arc end
+  polar(SEC.x, SEC.y, (SEC.ri + SEC.ro) / 2, SEC.a), // start-edge-mid
+  polar(SEC.x, SEC.y, (SEC.ri + SEC.ro) / 2, SEC.b), // end-edge-mid
 ];
 
 const ARC = { x: 150, y: 104, r: 36, a: -150, b: -30 };
@@ -100,7 +100,7 @@ const Demo: FC = () => (
       <Circle key={`sec-${i}`} center={[x, y]} radius={3} fill="dodgerblue" stroke="none" />
     ))}
     <Node id="tsec" position={[SEC.x, 140]} {...TITLE} font={FONT}>
-      sector · apex / outer-arc
+      sector · apex / arc-mid / edge-mid
     </Node>
 
     {/* 第二排 · arc：start / arc-mid / end */}

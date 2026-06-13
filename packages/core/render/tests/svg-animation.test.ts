@@ -48,6 +48,19 @@ describe('Happy：load CSS + 交互 WAAPI + camera', () => {
     expect(css).toContain(`.${r.attrs.class}`);
   });
 
+  it('keyframe 级 easing → @keyframes 内逐帧 animation-timing-function（非颜色通道，与 Canvas 一致）', () => {
+    const t: IRAnimationTrack = {
+      property: 'opacity',
+      keyframes: [{ at: 0, value: 0, easing: 'ease-in' }, { at: 1, value: 1 }],
+      duration: 400,
+      trigger: 'load',
+    };
+    const out = buildSvgFragment(scene([rect({ animations: [t] })]), { idPrefix: 't' });
+    const css = String(findTag(out, 'style')!.children![0]);
+    // 旧实现丢弃 kf.easing；现逐帧透传为 CSS timing-function
+    expect(css).toContain('animation-timing-function:ease-in');
+  });
+
   it('transform track（scaleY + origin south）→ wrapper <g> + transform-origin + @keyframes scale', () => {
     const out = buildSvgFragment(scene([rect({ animations: [GROW_UP] })]), { idPrefix: 't' });
     const g = findTag(out, 'g')!;
@@ -150,6 +163,23 @@ describe('静态截帧 {at:t}（烘焙 evaluateTrack 求值，不 emit 动画）
     const g = findTag(out, 'g')!;
     expect(typeof g.style?.transform).toBe('string');
     expect(g.style?.transform).toContain('scale(');
+  });
+
+  it('非自动播 track（trigger:manual）不参与截帧 → 停 base（settled），不被烘焙', () => {
+    const manualFade: IRAnimationTrack = { ...LINEAR_FADE, trigger: 'manual' };
+    const out = buildSvgFragment(scene([rect({ animations: [manualFade] })]), { idPrefix: 't', snapshotAt: 200 });
+    const r = findTag(out, 'rect')!;
+    expect(r.attrs.opacity).toBeUndefined(); // 未烘焙到中间值 0.5，保持 base
+  });
+
+  it('混合 load + manual 同元素：仅 load track 被烘焙', () => {
+    const manualGrow: IRAnimationTrack = { ...LINEAR_GROW, property: 'scaleX', trigger: 'manual' };
+    const out = buildSvgFragment(scene([rect({ animations: [LINEAR_FADE, manualGrow] })]), { idPrefix: 't', snapshotAt: 200 });
+    const r = findTag(out, 'rect')!;
+    expect(r.attrs.opacity).toBe(0.5); // load fade 被烘焙
+    // manual scaleX 不应产生 transform 包裹 <g>
+    const g = findTag(out, 'g');
+    expect(g === undefined || g.style?.transform === undefined).toBe(true);
   });
 });
 

@@ -3,11 +3,11 @@ title: Custom Shapes
 description: Register new node shapes through the Shape Registry; the IR still stores only the shape name, while drawing, boundary, and anchor logic is supplied at compile time through CompileOptions.shapes.
 ---
 
-The built-in `rectangle` / `circle` / `ellipse` / `diamond` shapes are registered through the same Shape Registry. In other words, built-in shapes and custom shapes use the same mechanism: give the shape a name, then provide how it wraps text, how its boundary is found, and how it is drawn.
+The built-in `rectangle` / `ellipse` / `sector` / `arc` / `polygon` / `star` shapes are all registered through the same Shape Registry (`circle` / `diamond` are not in the registry — they are compile-time preset aliases: circle → `ellipse{ circumscribe:'equal' }`, diamond → `polygon{ sides:4, rotate:0 }`). In other words, registered built-in shapes and custom shapes use the same mechanism: give the shape a name, then provide how it wraps text, how its boundary is found, and how it is drawn.
 
 A third-party package (`@retikz/shapes-flow` / `-uml`, etc.) or host code can register new shapes the same way, without modifying core.
 
-> This is the reference layer. For everyday figures the built-in shapes are covered on [Node](/core/components/node/overview); reach here when you need a hexagon / cylinder / cloud.
+> This is the reference layer. For everyday figures the built-in shapes are covered on [Node](/core/components/node/overview); reach here when you need a cylinder / cloud or other shapes the built-ins don't cover (hexagon is already expressible via the built-in `polygon{ sides:6 }`).
 
 ## Core constraint: `shape` in the IR is always a string
 

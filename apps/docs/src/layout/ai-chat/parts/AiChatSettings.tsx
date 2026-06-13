@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
-import { useAiChatStore } from '@/store/useAiChatStore';
+import { useAiChatStore } from '@/store/use-ai-chat-store';
 import { DEFAULT_BASE_URLS, PROVIDER_LABEL } from '../models';
 import type { CustomProvider } from '../providers/resolve';
 import type { ProviderId } from '../providers/types';

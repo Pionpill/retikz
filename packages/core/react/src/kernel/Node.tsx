@@ -13,7 +13,7 @@ import type {
   PolarPosition,
 } from '@retikz/core';
 import { TIKZ_NODE } from './_displayNames';
-import type { HydrationEventProps } from './eventProps';
+import type { HydrationEventProps } from './event-props';
 
 /** <Node> 组件的 props */
 export type NodeProps = HydrationEventProps & {

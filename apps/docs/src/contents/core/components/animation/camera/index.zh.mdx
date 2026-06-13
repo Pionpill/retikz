@@ -9,10 +9,24 @@ description: cameraTo 动 scene 取景框实现推拉 / 平移（挂 <Layout>）
 
 <ComponentPreview name="camera-to" size="md" />
 
-`cameraTo({ from, to })`：动 scene 的取景框 `[x, y, w, h]`，实现推拉 / 平移。挂在 `<Layout animations>`（镜头属 scene 根，不是某个元素）；起止取景都要显式给。
+`cameraTo({ from, to })`：动 scene 的取景框 `[x, y, w, h]`，实现推拉 / 平移。挂在 `<Layout animations>`（镜头属 scene 根，不是某个元素）；起止取景都要显式给。默认 `duration` 800ms、`easing` `ease-in-out`，与其他公共项一样可覆盖。
+
+展开后是一条 `viewBox` 通道的 track：
+
+```json
+{
+  "property": "viewBox",
+  "keyframes": [
+    { "at": 0, "value": [0, 0, 100, 100] },
+    { "at": 1, "value": [25, 25, 50, 50] }
+  ],
+  "duration": 800,
+  "easing": "ease-in-out"
+}
+```
 
 ## 编排-stagger
 
 <ComponentPreview name="stagger" size="sm" />
 
-`stagger(tracks, step)`：给一组 track 依次叠加 `delay`（0、step、2×step…），实现「依次入场」。它编排的是元素动画（[入场](/core/components/animation/entrance) / [强调与循环](/core/components/animation/emphasis)）的起始时间，本身不改变单个动画的形态。
+`stagger(tracks, stepMs, startMs = 0)`：把一组 track 的 `delay` **统一改写为 `startMs + i×stepMs`**（覆盖各 track 原有 `delay`），实现「依次入场」。第三参 `startMs` 缺省 0，是整组的起始偏移。它编排的是元素动画（[入场](/core/components/animation/entrance) / [强调与循环](/core/components/animation/emphasis)）的起始时间，本身不改变单个动画的形态。

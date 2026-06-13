@@ -86,7 +86,7 @@ import { Node } from '@retikz/react';
 
 ### Examples
 
-The boundary circumscribes "text + padding": `circle` takes the circle that fits the text, `ellipse` takes the circumscribed ellipse (each axis × √2). These two shapes take **no extra parameters**.
+The boundary circumscribes "text + padding": `circle` takes the circle that fits the text, `ellipse` takes the circumscribed ellipse (each axis × √2). The bare strings `"circle"` / `"ellipse"` need no extra parameters; `ellipse` also has one optional param `circumscribe` (`'proportional'` (default, each axis × √2) / `'equal'` (isotropic, radius = half the inner box diagonal)), and `circle` is exactly the `circumscribe:'equal'` preset of `ellipse`.
 
 <ComponentPreview name="node-circle-ellipse" size="sm" />
 
@@ -96,8 +96,8 @@ Connection endpoints snap to the circle / ellipse edge, and the node's 9 standar
 
 | `shape` | Boundary | Parameters |
 | --- | --- | --- |
-| `"circle"` | Circle circumscribing the text (= equal-axis `ellipse` preset) | None |
-| `"ellipse"` | Circumscribed ellipse, each axis × √2 | None |
+| `"circle"` | Circle circumscribing the text (= the `circumscribe:'equal'` preset of `ellipse`) | None |
+| `"ellipse"` or `{ type:'ellipse', params }` | Circumscribed ellipse | `circumscribe?`: `'proportional'` (default, each axis × √2) / `'equal'` (isotropic, radius = half the inner box diagonal) |
 
 ## How it works
 
@@ -105,20 +105,20 @@ Connection endpoints snap to the circle / ellipse edge, and the node's 9 standar
 
 ### Some forms pass points through, others compute first (sugar)
 
-Some `<Circle>` / `<Ellipse>` forms pass the point directly to the underlying Path, so they accept node ids, polar points, or plain `[x, y]` coordinates:
+`<Circle>`'s `center` passes the point directly to the underlying Path, so it accepts node ids, polar points, or plain `[x, y]` coordinates:
 
 ```tsx
 <Circle center="A" radius={24} />
-<Ellipse corner1="A" corner2="B" />
 ```
 
-Other forms must compute a midpoint, size, or bounding box in React first. These forms only accept literal `[x, y]` coordinates:
+Other forms must compute a midpoint, size, or bounding box in React first, so they only accept literal `[x, y]` coordinates — all of `<Ellipse>`'s point inputs (including `center` / `corner1` / `corner2`), plus `<Circle>`'s `from` / `to` / `corner1` / `corner2`:
 
 ```tsx
 <Circle from={[-40, 0]} to={[40, 0]} />
+<Ellipse corner1={[-40, -20]} corner2={[40, 20]} />
 ```
 
-Passing a node id to a computed form throws an error instead of guessing a result.
+Passing a node id to a computed `<Circle>` form throws an error; `<Ellipse>`'s corner branch is currently unchecked, so a non-`[x, y]` input computes to NaN — always pass literal coordinates.
 
 ### Partial shapes have three closing modes (sugar)
 

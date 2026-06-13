@@ -13,7 +13,7 @@ import remarkGfm from 'remark-gfm';
 import remarkMdxFrontmatter from 'remark-mdx-frontmatter';
 
 import { Skeleton } from '@/components/ui/skeleton';
-import { DemoLocationContext } from '@/components/shared/component-preview/demoLocationContext';
+import { DemoLocationContext } from '@/components/shared/component-preview/demo-location-context';
 
 import { mdxComponents } from './components';
 

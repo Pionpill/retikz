@@ -1,7 +1,7 @@
 import { type FC, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import { SCHEMA_REGISTRY } from '@/lib/schemaRegistry';
+import { SCHEMA_REGISTRY } from '@/lib/schema-registry';
 
 import { RenderTable } from './RenderTable';
 import { RenderType } from './RenderType';

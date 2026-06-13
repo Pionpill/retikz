@@ -1,5 +1,5 @@
 /**
- * <Layout> 顶层级联样式 props 测试（ADR-01 v0.2-beta.2：隐式根 Scope）
+ * <Layout> 顶层级联样式 props 测试（隐式根 Scope）
  * @description Layout 设级联样式 props（color / stroke / nodeDefault / pathDefault / labelDefault / ...）时把
  *   children 包进合成根 `<Scope>`，编译产物 = 用户手写一层根 `<Scope>` 的同一 IR。覆盖：
  *   - happy：node / path / label 各通道继承 + 主色级联
@@ -156,7 +156,7 @@ describe('边界：无样式 / 空 children / 单通道', () => {
 
   it('layout_empty_object_default_no_wrap：空对象 default（nodeDefault={{}}）不携带样式指令 → 不包合成 scope', () => {
     const children = <Node id="A" position={[0, 0]}>A</Node>;
-    // 空对象 default 是 no-op，不应无谓包一层空 scope 改变 IR 拓扑（ADR：避免无谓的空 scope）
+    // 空对象 default 是 no-op，不应无谓包一层空 scope 改变 IR 拓扑（避免无谓的空 scope）
     const emptyDefaults = layoutIR(
       { nodeDefault: {}, pathDefault: {}, labelDefault: {}, arrowDefault: {} },
       children,

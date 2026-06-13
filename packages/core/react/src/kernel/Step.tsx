@@ -52,7 +52,7 @@ export type CycleStepProps = {
 export type CurveStepProps = {
   /** 二次贝塞尔 step 鉴别字面量 */
   kind: 'curve';
-  /** 控制点（alpha.3 仅支持笛卡尔 `[x, y]`） */
+  /** 控制点（仅支持笛卡尔 `[x, y]`） */
   control: IRControlPoint;
   /** 曲线终点 */
   to: DslTarget;

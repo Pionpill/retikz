@@ -1,6 +1,6 @@
 /**
  * 动画 runtime 基建（DOM / rAF；vanilla + react 共用）
- * @description ADR-04 的可复用底座：rAF 时钟（Canvas 逐帧驱动）、`prefers-reduced-motion` 判定、scene 是否
+ * @description 可复用底座：rAF 时钟（Canvas 逐帧驱动）、`prefers-reduced-motion` 判定、scene 是否
  *   含动画 / 总时长、SVG 交互 track 的 WAAPI 桥（读 `data-retikz-anim` → `element.animate` + 按 trigger 接驱动）。
  *   纯 runtime（触 DOM），与 evaluate/oklch 等纯数学分开；缺 rAF / IntersectionObserver / element.animate 的环境
  *   （SSR / 老浏览器）优雅退化。
@@ -232,8 +232,15 @@ export const bindWaapiDescriptors = (root: Element): AnimationControls => {
         observer.observe(element);
         observers.push(observer);
       } else if (typeof trigger === 'object') {
+        // 复用单个 Animation：每次事件 cancel + play 从头重播，避免每次触发新建并无界堆积
+        let animation: Animation | undefined;
         const handler = (): void => {
-          const animation = animate();
+          if (animation) {
+            animation.cancel();
+            animation.play();
+            return;
+          }
+          animation = animate();
           if (animation) animations.push(animation);
         };
         element.addEventListener(trigger.onEvent, handler);

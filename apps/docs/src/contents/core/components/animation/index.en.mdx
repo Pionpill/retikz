@@ -8,12 +8,12 @@ Animation transitions a static figure **from one look to another over time**: fa
 ```tsx
 import { Layout, Node, fadeIn, scaleIn } from '@retikz/react';
 
-<Node animations={[fadeIn(), scaleIn()]}>hi</Node>
+<Node position={[0, 0]} animations={[fadeIn(), scaleIn()]}>hi</Node>
 ```
 
-`animations` attaches to `<Node>` / `<Path>` / `<Scope>` (element animation) and `<Layout>` (camera). An element can carry several; they don't interfere. Every preset accepts the common options `{ duration, delay, easing, trigger }`; some add their own (`scaleIn.from` / `slideIn.axis,offset` / `growUp.origin` / `pulse.peak` …).
+`animations` attaches to `<Node>` / `<Path>` / `<Scope>` (element animation) and `<Layout>` (camera). An element can carry several; they don't interfere. Apart from the `loop` wrapper and the `stagger` choreographer, every preset accepts the common options `{ duration, delay, easing, trigger }`; some add their own (`scaleIn.from` / `slideIn.axis,offset` / `growUp.origin` / `pulse.peak` …).
 
-<ComponentAlert title="Last frame = resting state, so it degrades" description="An intro animation's final frame is the element's normal look (fadeIn's last frame = fully opaque). So environments without animation support, users who prefer reduced motion, or animate={false} simply render that resting state — you see the complete final figure, not the possibly-transparent starting point." />
+<ComponentAlert title="Last frame = resting state, so it degrades" description="An intro animation's final frame is the element's normal look (fadeIn's last frame = fully opaque). So environments without animation support, users who prefer reduced motion, or animate={false} simply render that resting state — you see the complete final figure, not the possibly-transparent starting point. Exception: the React + SVG (default renderer) path currently does not respond to prefers-reduced-motion and still plays under reduced motion; only vanilla and React Canvas degrade on it." />
 
 ## All animations
 

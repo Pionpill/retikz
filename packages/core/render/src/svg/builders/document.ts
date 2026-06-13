@@ -1,12 +1,12 @@
 import type { ArrowEndSpec, Scene, ScenePrimitive } from '@retikz/core';
 import type { SvgNode } from '../types';
 import type { EasingRegistry } from '../../animation/types';
-import { formatViewBox } from '../viewBox';
+import { formatViewBox } from '../view-box';
 import { type BuildContext, buildPrim } from './prim';
-import { buildPaintDef } from './paintDefs';
-import { buildClipDef } from './clipDefs';
-import { buildArrowMarker } from './arrowMarkers';
-import { collectArrowSpecs, hashKey, stableSpecKey } from './arrowCollect';
+import { buildPaintDef } from './paint-defs';
+import { buildClipDef } from './clip-defs';
+import { buildArrowMarker } from './arrow-markers';
+import { collectArrowSpecs, hashKey, stableSpecKey } from './arrow-collect';
 import { createSvgAnimationCollector } from '../animation/keyframes';
 
 /** `buildSvgDocument` / `buildSvgFragment` 选项 */

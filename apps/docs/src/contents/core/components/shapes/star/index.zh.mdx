@@ -61,6 +61,8 @@ import { Node } from '@retikz/react';
 | --- | --- | --- |
 | star | `{ points, innerRadius, outerRadius, rotate? }` | 内外半径交替的星形 |
 
+> Node `star` 的约束：`points` 为 ≥3 的整数，`outerRadius` 必须 > `innerRadius`（违反编译期 refine 报错）。注意与 Sugar `<Star>` 的最小值不同——`<Star>` 允许 `points ≥ 2`。
+
 <ComponentPreview name="node-star" size="sm" />
 
 给 `params.cornerRadius` 一个正数会同时磨圆外凸尖角（tip）和内凹槽（notch），省略 / `0` 是硬角。倒角是连接感知的：朝某个尖角方向**自动贴边**（不写 anchor）的连线端点会落在圆角弧上、停在尖角之前，而不是原始尖尖；显式连命名锚点 `tip-N` 则**仍落在原始尖角**（恒在逻辑顶点、不随倒角内移）。
@@ -83,7 +85,7 @@ import { Node } from '@retikz/react';
 
 `<Star>` 会先计算 `points * 2` 个顶点：外点落在 `outerRadius` 上，内点落在 `innerRadius` 上。默认 `innerRatio` 是 `0.5`，也就是内半径为外半径的一半。`rotate` 改变第一个外点的起始角度；默认起始角让一个外点朝上，在屏幕坐标里正角度顺时针旋转。
 
-`<Node shape="star">` 与 `<Star>` 几何一致，区别只是前者是有边界、可连线的节点。
+`<Node shape="star">` 与 `<Star>` 几何形状一致（前者是有边界、可连线的节点），但 `rotate` 基准差 90°：Node star `rotate:0` 就让一个尖角朝上，而 Sugar `<Star>` 须 `rotate:-90` 才尖角朝上（`<Star>` 缺省即 `-90`）。两者只在各自缺省值下视觉对齐；显式给 `rotate` 时记得换算这 90°。Sugar `<Star>` 还允许 `points ≥ 2`，Node star 要求 `points ≥ 3`。
 
 ## 相关
 

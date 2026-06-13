@@ -1,5 +1,5 @@
 /**
- * 自定义 property 插值器注册表（兑现 ADR-01 预留口）
+ * 自定义 property 插值器注册表
  * @description 内置通道（opacity/fill/stroke/strokeWidth/transform/pathDraw/viewBox）由各后端内建处理；
  *   自定义通道（如 blur）由用户经 `RenderOptions.animationProperties` 注册：`interpolate` 喂 evaluateTrack 求值、
  *   `applyCanvas` 把值落到 ctx。未注册的自定义 property → 后端 warn + skip（渲染 base）。

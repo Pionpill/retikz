@@ -6,7 +6,7 @@ import { ChatGptIcon, ClaudeIcon, DeepSeekIcon } from '@/components/icons';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
-import { useAiChatStore } from '@/store/useAiChatStore';
+import { useAiChatStore } from '@/store/use-ai-chat-store';
 import { MODEL_CHOICES, PROVIDER_LABEL } from '../models';
 import { PROVIDER_IDS, type ProviderId } from '../providers/types';
 import { isBuiltInProviderId } from '../providers/resolve';

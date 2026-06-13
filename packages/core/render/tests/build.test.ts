@@ -8,9 +8,9 @@ import type {
   TextPrim,
 } from '@retikz/core';
 import { buildPrim } from '../src/svg/builders/prim';
-import { buildMarkerPrim } from '../src/svg/builders/markerPrim';
-import { buildPaintDef } from '../src/svg/builders/paintDefs';
-import { collectArrowSpecs } from '../src/svg/builders/arrowCollect';
+import { buildMarkerPrim } from '../src/svg/builders/marker-prim';
+import { buildPaintDef } from '../src/svg/builders/paint-defs';
+import { collectArrowSpecs } from '../src/svg/builders/arrow-collect';
 
 describe('buildPrim —— primitive → SvgNode', () => {
   it('prim-rect-to-node：rect → tag/kebab/SVG 真名属性，无 React camelCase', () => {
@@ -59,6 +59,25 @@ describe('buildPrim —— primitive → SvgNode', () => {
     expect(t1.attrs.dy).toBe(10);
     expect(t2.attrs.dy).toBe(10);
     expect(t0.children[0]).toBe('a');
+  });
+
+  it('prim-text-line-opacity：行级透明度落到 tspan 的 fill-opacity（非 opacity，浏览器对 tspan 不应用 opacity）', () => {
+    const text: TextPrim = {
+      type: 'text',
+      x: 0,
+      y: 0,
+      lines: [{ text: 'a', opacity: 0.5 }, { text: 'b' }],
+      fontSize: 12,
+      align: 'start',
+      baseline: 'top',
+      lineHeight: 10,
+      measuredWidth: 6,
+      measuredHeight: 20,
+    };
+    const node = buildPrim(text);
+    const [t0] = node.children as Array<{ attrs: Record<string, unknown> }>;
+    expect(t0.attrs['fill-opacity']).toBe(0.5);
+    expect('opacity' in t0.attrs).toBe(false);
   });
 
   it('prim-group-transform-clip：group → g + transform + clip-path（url 经 clipRefUrl）', () => {

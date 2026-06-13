@@ -4,6 +4,7 @@ import type { Scene } from '@retikz/core';
 import {
   type HydrationContext,
   type HydrationHandlers,
+  createClockAnimationControls,
   createContextBuilder,
   createHydrationController,
   createSvgAnimationControls,
@@ -87,6 +88,19 @@ describe('geometryOf（同 id 全部图元并集 bbox）', () => {
     };
     const geometry = geometryOf(scene, 'g');
     expect(geometry?.bbox).toEqual({ x: 100, y: 0, width: 10, height: 10 });
+  });
+
+  it('旋转椭圆 → 角点绕中心旋转后聚合 bbox（不偏小）', () => {
+    const scene: Scene = {
+      layout: { x: 0, y: 0, width: 100, height: 100 },
+      primitives: [{ type: 'ellipse', id: 'e', cx: 50, cy: 50, rx: 20, ry: 10, rotate: 90 }],
+    };
+    const geometry = geometryOf(scene, 'e');
+    // 旋转 90° 后，原本横向 rx=20 → 纵向，ry=10 → 横向：bbox 宽 20、高 40
+    expect(geometry?.bbox.x).toBeCloseTo(40, 6);
+    expect(geometry?.bbox.y).toBeCloseTo(30, 6);
+    expect(geometry?.bbox.width).toBeCloseTo(20, 6);
+    expect(geometry?.bbox.height).toBeCloseTo(40, 6);
   });
 
   it('无匹配 id → undefined', () => {
@@ -213,7 +227,56 @@ describe('最小 context 降级（控制器无 buildContext）', () => {
     expect(received?.id).toBe('m');
     expect(received?.element).toBeNull();
     expect(received?.meta).toBeUndefined();
+    expect(received?.renderer).toBe('svg'); // 缺省后端
     expect(() => received?.animation.play()).not.toThrow();
     controller.dispose();
+  });
+
+  it('传入 renderer=canvas → 最小 context 如实填 canvas（不再硬编码 svg）', () => {
+    const { root, element } = setupRoot();
+    let received: HydrationContext | undefined;
+    const handlers: HydrationHandlers = { m: { click: (_event, context) => { received = context; } } };
+    const controller = createHydrationController(root, handlers, locateSvg, undefined, 'canvas');
+
+    const event = new Event('click', { bubbles: true });
+    Object.defineProperty(event, 'target', { value: element, configurable: true });
+    element.dispatchEvent(event);
+
+    expect(received?.renderer).toBe('canvas');
+    controller.dispose();
+  });
+});
+
+describe('createClockAnimationControls（scene 级 coarse 降级）', () => {
+  const makeClock = () => ({ play: vi.fn(), pause: vi.fn(), seek: vi.fn() });
+
+  it('stop 落 settled 末态：seek 到远超时长处再 pause（不只是 pause 定格当前帧）', () => {
+    const clock = makeClock();
+    createClockAnimationControls(clock).stop();
+    expect(clock.seek).toHaveBeenCalledTimes(1);
+    // seek 时刻须远超任何有限动画时长（fill-forward 到末态）
+    expect(clock.seek.mock.calls[0][0]).toBeGreaterThan(1e12);
+    expect(clock.pause).toHaveBeenCalledTimes(1);
+  });
+
+  it('restart 走 seek(0)+play；play/pause/seek 透传', () => {
+    const clock = makeClock();
+    const controls = createClockAnimationControls(clock);
+    controls.restart();
+    expect(clock.seek).toHaveBeenCalledWith(0);
+    expect(clock.play).toHaveBeenCalledTimes(1);
+    controls.seek(120);
+    expect(clock.seek).toHaveBeenLastCalledWith(120);
+  });
+
+  it('无时钟 → no-op（各操作不抛）', () => {
+    const controls = createClockAnimationControls(undefined);
+    expect(() => {
+      controls.play();
+      controls.pause();
+      controls.restart();
+      controls.stop();
+      controls.seek(0);
+    }).not.toThrow();
   });
 });

@@ -3,12 +3,12 @@ import { createRoot } from 'react-dom/client';
 import { act } from 'react-dom/test-utils';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { Layout, Node } from '../src';
-import { createGeometryContext } from './helpers/geometryContext';
+import { createGeometryContext } from './helpers/geometry-context';
 
 /**
- * ADR-01 水合：renderer 双模事件等价（roadmap 验收硬指标）
+ * 水合：renderer 双模事件等价
  * @description 同一 <Node id onClick> 在 renderer="svg" 与 renderer="canvas" 下点击同一逻辑位置 →
- *   同一 spy 触发（同一注册表 + 同一分发，定位层不同）。stub 阶段接线未实装，断言此刻预期 fail。
+ *   同一 spy 触发（同一注册表 + 同一分发，定位层不同）。
  */
 
 const SIZE = 200;

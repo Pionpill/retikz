@@ -7,7 +7,8 @@
  *   Scene-派生字段（meta / geometry / scene）在无 scene 时缺省、animation 在无 runtime 时 no-op。
  */
 import type { IRJsonObject, Layout, Scene, ScenePrimitive } from '@retikz/core';
-import type { IdClockRegistry } from '../animation/idClock';
+import type { IdClockRegistry } from '../animation/id-clock';
+import { pathControlPoints } from '../shared/path-command';
 
 /**
  * handler 内的动画控制（缺省作用于命中元素，传 id 控别的元素）
@@ -161,13 +162,24 @@ const leafCorners = (prim: ScenePrimitive): Array<[number, number]> => {
         [prim.x + prim.width, prim.y + prim.height],
         [prim.x, prim.y + prim.height],
       ];
-    case 'ellipse':
-      return [
+    case 'ellipse': {
+      const corners: Array<[number, number]> = [
         [prim.cx - prim.rx, prim.cy - prim.ry],
         [prim.cx + prim.rx, prim.cy - prim.ry],
         [prim.cx + prim.rx, prim.cy + prim.ry],
         [prim.cx - prim.rx, prim.cy + prim.ry],
       ];
+      // 旋转椭圆：角点绕中心旋转后并集 bbox 才不偏小（与 hitTest 端的 rotate 处理一致）
+      if (!prim.rotate) return corners;
+      const rad = prim.rotate * DEG_TO_RAD;
+      const cos = Math.cos(rad);
+      const sin = Math.sin(rad);
+      return corners.map(([x, y]): [number, number] => {
+        const dx = x - prim.cx;
+        const dy = y - prim.cy;
+        return [prim.cx + dx * cos - dy * sin, prim.cy + dx * sin + dy * cos];
+      });
+    }
     case 'text': {
       const left = prim.align === 'middle' ? prim.x - prim.measuredWidth / 2 : prim.align === 'end' ? prim.x - prim.measuredWidth : prim.x;
       const top = prim.baseline === 'top' ? prim.y : prim.baseline === 'middle' ? prim.y - prim.measuredHeight / 2 : prim.y - prim.measuredHeight;
@@ -178,38 +190,9 @@ const leafCorners = (prim: ScenePrimitive): Array<[number, number]> => {
         [left, top + prim.measuredHeight],
       ];
     }
-    case 'path': {
-      const points: Array<[number, number]> = [];
-      for (const command of prim.commands) {
-        switch (command.kind) {
-          case 'move':
-          case 'line':
-            points.push(command.to);
-            break;
-          case 'quad':
-            points.push(command.control, command.to);
-            break;
-          case 'cubic':
-            points.push(command.control1, command.control2, command.to);
-            break;
-          case 'arc':
-            points.push(
-              [command.center[0] - command.radius, command.center[1] - command.radius],
-              [command.center[0] + command.radius, command.center[1] + command.radius],
-            );
-            break;
-          case 'ellipseArc':
-            points.push(
-              [command.center[0] - command.radiusX, command.center[1] - command.radiusY],
-              [command.center[0] + command.radiusX, command.center[1] + command.radiusY],
-            );
-            break;
-          case 'close':
-            break;
-        }
-      }
-      return points;
-    }
+    case 'path':
+      // path 叶子用控制点松包围（足够作聚合几何）；与 drawScene pathBBox 同口径，共用 pathControlPoints
+      return pathControlPoints(prim.commands);
     default:
       return [];
   }
@@ -303,9 +286,15 @@ export const createSvgAnimationControls = (root: Element, defaultId: string): Hy
 /** scene 级时钟句柄（rAF 共享时钟） */
 type ClockHandle = { play: () => void; pause: () => void; seek: (timeMs: number) => void } | undefined;
 
+/** stop 落 settled 用的 seek 时刻：远超任何有限动画时长，使 evaluateTrack fill-forward 到末态 */
+const SETTLED_SEEK_MS = Number.MAX_SAFE_INTEGER;
+
 /**
  * Canvas coarse 动画控制：作用于 scene 级单 rAF 时钟（id 参数忽略）
- * @description per-id 控制不可用（无登记表）时的降级；restart 走 `seek(0)+play`、stop 走 `pause`。无时钟 → no-op。
+ * @description per-id 控制不可用（无登记表）时的降级；restart 走 `seek(0)+play`。无时钟 → no-op。
+ *   `stop` 落 **settled 末态**（与 SVG `finish` / per-id `stop` 一致，非定格当前帧）：scene 级时钟无 per-id
+ *   skip 机制，故 seek 到远超任何有限动画时长处让各 track fill-forward 到末态，再 pause 定格。无限循环动画无
+ *   settled 末态（与 SVG `finish` 同样语义未定），会落在循环某相位。
  */
 export const createClockAnimationControls = (clock: ClockHandle): HydrationAnimationControls => {
   if (!clock) return noopAnimationControls;
@@ -316,7 +305,10 @@ export const createClockAnimationControls = (clock: ClockHandle): HydrationAnima
       clock.seek(0);
       clock.play();
     },
-    stop: () => clock.pause(),
+    stop: () => {
+      clock.seek(SETTLED_SEEK_MS);
+      clock.pause();
+    },
     seek: timeMs => clock.seek(timeMs),
   };
 };

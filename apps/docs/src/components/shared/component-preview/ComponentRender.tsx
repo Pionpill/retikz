@@ -5,8 +5,8 @@ import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { cn } from '@/lib/utils';
-import { useAiChatStore } from '@/store/useAiChatStore';
-import { useComponentPreviewStore } from '@/store/useComponentPreviewStore';
+import { useAiChatStore } from '@/store/use-ai-chat-store';
+import { useComponentPreviewStore } from '@/store/use-component-preview-store';
 
 import { HighlightedCode } from '../highlight-code';
 import { CopyButton, SourceViewBar, ToolbarIconButton } from './_parts';
@@ -24,13 +24,13 @@ import {
   filterDiffByMode,
   sizeClass,
 } from './_shared';
-import { ANIM_PAUSE_ID, buildAnimationActions } from './animationActions';
+import { ANIM_PAUSE_ID, buildAnimationActions } from './animation-actions';
 import { PreviewActionBar } from './PreviewActionBar';
 import { ComponentDetailDialog } from './ComponentDetailDialog';
 import { DemoRenderer } from './DemoRenderer';
 import { PanZoomToolbar } from './PanZoomToolbar';
-import { useSourceViews } from './useSourceViews';
-import { usePanZoom } from './usePanZoom';
+import { useSourceViews } from './use-source-views';
+import { usePanZoom } from './use-pan-zoom';
 
 export type { ComponentRenderSource } from './_shared';
 

@@ -5,8 +5,8 @@
  *   （如 `document.ts` 走 `./arrowCollect`），不属于公开 API。
  */
 export * from './prim';
-export * from './markerPrim';
-export * from './paintDefs';
-export * from './clipDefs';
-export * from './arrowMarkers';
+export * from './marker-prim';
+export * from './paint-defs';
+export * from './clip-defs';
+export * from './arrow-markers';
 export * from './document';

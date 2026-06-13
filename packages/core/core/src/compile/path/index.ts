@@ -17,6 +17,7 @@ import {
   foldSegmentSample,
   lineSegmentSample,
   quadSegmentSample,
+  rectPerimeterSample,
 } from '../../geometry/segment';
 import type {
   IRPath,
@@ -29,6 +30,8 @@ import { JsonObjectSchema } from '../../ir';
 import type {
   ArrowEndSpec,
   GroupPrim,
+  MarkerFill,
+  MarkerPrimitive,
   PathCommand,
   ScenePrimitive,
   Transform,
@@ -48,14 +51,25 @@ import { type PathBaseProps, splitSubPathsForEndpointArrows } from './split';
 import { BUILTIN_ARROWS } from '../../arrows';
 
 /**
+ * referent（offset.of / polar.origin 的并集形态：节点 id 字符串 / `[x, y]` 字面量 / 嵌套 PolarPosition）里挖节点 id
+ * @description 裸字符串即节点 id（offset.of / polar.origin 的 string 分支语义）；其余交回 nodeRefId 递归。
+ */
+const referentNodeId = (ref: unknown): string | undefined =>
+  typeof ref === 'string' ? ref : nodeRefId(ref as IRTarget);
+
+/**
  * 目标里的一个代表性节点 id——给 UNRESOLVED_NODE_REFERENCE 诊断用
  * @description 对象 NodeTarget（`{ id, ... }`）直接取 id；between 比例点递归挖端点里第一个节点引用
- *   （端点未解析时整 between 失败，需照样报 unresolved 而非静默）；其余形态返回 undefined。
+ *   （端点未解析时整 between 失败，需照样报 unresolved 而非静默）；OffsetPosition（`{ of }`）/ PolarPosition
+ *   （`{ origin }`）递归挖其 referent——否则引用未定义节点时 refPoint 为 null 但 toId 为 undefined，整条 path
+ *   会被静默丢弃（零诊断）；直接坐标 / 极坐标无 origin 等形态返回 undefined。
  */
 const nodeRefId = (t: IRTarget): string | undefined => {
   if (typeof t !== 'object' || Array.isArray(t)) return undefined;
   if ('id' in t) return t.id;
   if ('between' in t) return nodeRefId(t.between[0]) ?? nodeRefId(t.between[1]);
+  if ('of' in t) return referentNodeId((t as { of: unknown }).of);
+  if ('origin' in t) return referentNodeId((t as { origin?: unknown }).origin);
   return undefined;
 };
 
@@ -217,17 +231,41 @@ const buildPathTransforms = (
  * 把已物化的 arrow marker（局部 baseSize 坐标系，尖端 +x）按路径切线定向放到采样点
  * @description marker 局部系：viewBox `0 0 baseSize baseSize`，参考点 (refX, baseSize/2)，尖端朝 +x。
  *   GroupPrim transforms 数组语义 array[0] 最外层（最后 apply），故链 = translate(point) ∘ rotate(tangentDeg)
- *   ∘ scale(markerWidth/baseSize, markerHeight/baseSize) ∘ translate(-refX, -baseSize/2)：先把参考点移到原点、
- *   缩放到目标尺寸、绕切线角旋转、平移到采样点。marker 几何（`MarkerPrimitive[]`）是 ScenePrimitive 的结构子集，直接作 children。
+ *   ∘ scale(markerWidth·strokeWidth/baseSize, markerHeight·strokeWidth/baseSize) ∘ translate(-refX, -baseSize/2)：
+ *   先把参考点移到原点、缩放到目标尺寸、绕切线角旋转、平移到采样点。缩放含 strokeWidth 因子，与端点箭头
+ *   （SVG markerUnits=strokeWidth / Canvas 同口径 ×strokeWidth）一致——中段 mark 随线宽缩放（TikZ 语义）。
+ *
+ *   marker 几何拍平进 Scene 作 children：marker 窄子集结构上是 ScenePrimitive 子集，唯一差异是 fill/stroke 可为
+ *   `{ kind: 'contextStroke' }`。端点箭头物化成真正的 `<marker>` 时 contextStroke 由 renderer 继承引用方描边；
+ *   但中段 mark 是独立 Scene group，已无引用上下文可继承，故在此把 contextStroke 解析成 path 的实际描边色
+ *   （contextStroke 字符串单位 = path 的已解析 stroke）。
  */
+const resolveMarkerContextFill = (value: MarkerFill, contextStroke: string): string =>
+  typeof value === 'string' ? value : contextStroke;
+
+/** marker 图元 → Scene 图元：结构同构，仅把 fill/stroke 的 contextStroke 解析成具体描边色（递归 group） */
+const markerPrimToScene = (prim: MarkerPrimitive, contextStroke: string): ScenePrimitive => {
+  if (prim.type === 'group') {
+    return { ...prim, children: prim.children.map(c => markerPrimToScene(c, contextStroke)) };
+  }
+  // marker 窄子集 ⊂ Scene 图元（见上）；解析 contextStroke 后即合法 Scene 图元，cast 作用域仅此一处
+  return {
+    ...prim,
+    ...(prim.fill !== undefined && { fill: resolveMarkerContextFill(prim.fill, contextStroke) }),
+    ...(prim.stroke !== undefined && { stroke: resolveMarkerContextFill(prim.stroke, contextStroke) }),
+  } as ScenePrimitive;
+};
+
 const buildMarkMarkerGroup = (
   spec: ArrowEndSpec,
   sample: SegmentSample,
+  strokeWidth: number,
   round: (n: number) => number,
+  contextStroke: string,
 ): GroupPrim => {
   const angleDeg = (Math.atan2(sample.tangent[1], sample.tangent[0]) * 180) / Math.PI;
-  const sx = spec.markerWidth / spec.baseSize;
-  const sy = spec.markerHeight / spec.baseSize;
+  const sx = (spec.markerWidth * strokeWidth) / spec.baseSize;
+  const sy = (spec.markerHeight * strokeWidth) / spec.baseSize;
   const refY = spec.baseSize / 2;
   const transforms: Array<Transform> = [
     { kind: 'translate', x: round(sample.point[0]), y: round(sample.point[1]) },
@@ -235,7 +273,7 @@ const buildMarkMarkerGroup = (
     { kind: 'scale', x: round(sx), y: round(sy) },
     { kind: 'translate', x: round(-spec.refX), y: round(-refY) },
   ];
-  return { type: 'group', transforms, children: [...spec.marker] };
+  return { type: 'group', transforms, children: spec.marker.map(p => markerPrimToScene(p, contextStroke)) };
 };
 
 /**
@@ -496,7 +534,7 @@ export const emitPathPrimitive = (
     if (closed === 'sector') return 'sector';
     if (closed === 'closed') {
       warn(
-        'PARTIAL_ARC_CLOSED_INVALID',
+        CompileWarningCode.PartialArcClosedInvalid,
         "Partial circle/ellipse (with angles) cannot use closed:'closed'; falling back to 'chord'",
         `children[${idx}]`,
       );
@@ -651,6 +689,9 @@ export const emitPathPrimitive = (
       const toClip = clipForTarget(moveTo, fromClip ?? prev?.anchor ?? moveAnchor, nameStack, scopeChain);
       if (!fromClip || !toClip) return null;
 
+      // 闭合段是 fromClip→toClip 的直线（无论走 close 还是 move+line）；登记采样器供中段 marks（cycle 无 label）
+      segmentSamplers.push(t => lineSegmentSample(fromClip, toClip, t));
+
       // 起点 == lastEnd 且终点 == subPathStart → close 收尾最干净
       if (samePoint(fromClip, lastEnd) && samePoint(toClip, subPathStart)) {
         emitClose();
@@ -706,6 +747,8 @@ export const emitPathPrimitive = (
       const ry0 = Math.min(fromPt[1], toPt[1]);
       const ry1 = Math.max(fromPt[1], toPt[1]);
       points.push([rx0, ry0], [rx1, ry0], [rx1, ry1], [rx0, ry1]);
+      // 周长采样器供中段 marks（沿矩形四边均分；忽略 cornerRadius）
+      segmentSamplers.push(t => rectPerimeterSample(fromPt, toPt, t));
       // 后续 step 从矩形起点续
       if (rectStart) penOverride = rectStart;
       continue;
@@ -989,7 +1032,7 @@ export const emitPathPrimitive = (
       const localT = scaled - segIdx;
       const sample = segmentSamplers[segIdx](pos === 1 ? 1 : localT);
       const spec = resolveMarkArrowSpec(mark, effectiveArrows, round);
-      markPrims.push(buildMarkMarkerGroup(spec, sample, round));
+      markPrims.push(buildMarkMarkerGroup(spec, sample, strokeWidth, round, baseProps.stroke ?? 'currentColor'));
       // marker 落点纳入 bbox（保守取采样点；marker 自身尺寸相对小，端点已足够避免被裁）
       points.push(sample.point);
     }

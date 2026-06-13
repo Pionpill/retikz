@@ -1,7 +1,7 @@
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 import { InlineMdx } from '@/components/shared/mdx-content/InlineMdx';
-import { escapeBareJsxTriggers } from '@/components/shared/mdx-content/escapeBareJsxTriggers';
+import { escapeBareJsxTriggers } from '@/components/shared/mdx-content/escape-bare-jsx-triggers';
 
 describe('escapeBareJsxTriggers', () => {
   it('代码段外裸 `<` 转义成 `\\<`（保留行为）', () => {

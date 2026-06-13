@@ -12,7 +12,7 @@ description: retikz 的几何形状——既是画一条 Path 的官方 Sugar，
 
 **两侧都对扩展开放**：
 
-- 想要内置之外的 **Node 形状**（hexagon / cloud…）——注册到 [shape-registry](/core/reference/extending/shape-registry)；内置的 circle / sector / star 等就是它的官方实现。
+- 想要内置之外的 **Node 形状**（hexagon / cloud…）——注册到 [shape-registry](/core/reference/extending/shape-registry)；注册表里的内置项是 rectangle / ellipse / sector / arc / polygon / star（circle / diamond 是编译期 preset 别名，不在注册表）。
 - 想画内置之外的**路径曲线 step**（parabola / sin-cos…）——走 [path-generator](/core/reference/extending/path-generator)。
 
 <ComponentPreview name="shapes-family" size="md" hideCode />
@@ -24,8 +24,8 @@ description: retikz 的几何形状——既是画一条 Path 的官方 Sugar，
 | Circle / Ellipse | `<Circle>` · `<Ellipse>` | `shape="circle"` · `"ellipse"` |
 | Arc / Sector | `<Arc>` · `<Sector>` | `shape="sector"` · `"arc"`（带 params） |
 | Rectangle | `<Rectangle>` | 默认 / `shape="rectangle"` |
-| Polygon | `<RegularPolygon>` | `shape="polygon"` · `"diamond"` |
-| Star | `<Star>` | `shape="star"`（带 params） |
+| Polygon | `<RegularPolygon>` | `shape={{ type:'polygon', params }}`（带 params）· `"diamond"` |
+| Star | `<Star>` | `shape={{ type:'star', params }}`（带 params） |
 
 > 背景网格、参考线这类**一片规则线条**（而非单个闭合形状）不在这一组——见 [辅助](/core/components/helpers) 里的 `<Grid>`。
 

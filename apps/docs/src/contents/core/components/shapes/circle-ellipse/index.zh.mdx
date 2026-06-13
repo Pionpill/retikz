@@ -31,7 +31,7 @@ import { Circle, Ellipse } from '@retikz/react';
 | `{ from, to }` | 直径两端点 |
 | `{ corner1, corner2 }` | 放进一个包围盒 |
 | `{ box }` | 用 `x/y/origin + width + height` 直接描述矩形范围 |
-| + `fit="contain" \| "cover"` | 让圆按范围内切或外接 |
+| + `fit="contain" \| "cover"` | 让圆取范围短边之半（内切）或长边之半 |
 | + `inset` / `outset` | 在原范围基础上先收缩或扩展再绘制 |
 | + angles + `closed="sector"` | 画 1/4 圆、30° 圆这类连回圆心的残缺圆 |
 
@@ -59,7 +59,7 @@ import { Circle, Ellipse } from '@retikz/react';
 | | `from` + `to` | 用两点画圆 |
 | | `corner1` + `corner2` | 用包围盒画内切圆 |
 | | `box` | 用矩形范围描述圆，配合 `fit` / `inset` / `outset` |
-| | + `fit?` | `contain` 取内切，`cover` 取外接 |
+| | + `fit?` | `contain` 取短边之半（内切），`cover` 取长边之半 |
 | | + `inset?` / `outset?` | 收缩或扩展 box 范围后再计算 |
 | | + angles (`startAngle` / `endAngle` / `sweepAngle`, any two) + `closed?` | 部分圆：`chord` / `sector` / `open` |
 | `<Ellipse>` | `center` + `radiusX` + `radiusY` | 用中心和两个半轴画椭圆 |
@@ -86,7 +86,7 @@ import { Node } from '@retikz/react';
 
 ### 例子
 
-边界自动外接「文字 + padding」：`circle` 取能容纳文字的外接圆，`ellipse` 取外接椭圆（各轴 × √2）。这两个形状**不需要额外参数**。
+边界自动外接「文字 + padding」：`circle` 取能容纳文字的外接圆，`ellipse` 取外接椭圆（各轴 × √2）。裸字符串 `"circle"` / `"ellipse"` 无需额外参数即可用；`ellipse` 另有一个可选参数 `circumscribe`（`'proportional'`（默认，各轴 × √2）/ `'equal'`（等轴，半径取内框对角线之半）），`circle` 即 `ellipse` 的 `circumscribe:'equal'` 预设。
 
 <ComponentPreview name="node-circle-ellipse" size="sm" />
 
@@ -96,8 +96,8 @@ import { Node } from '@retikz/react';
 
 | `shape` | 边界 | 参数 |
 | --- | --- | --- |
-| `"circle"` | 能容纳文字的外接圆（= `ellipse` 等轴预设） | 无 |
-| `"ellipse"` | 外接椭圆，各轴 × √2 | 无 |
+| `"circle"` | 能容纳文字的外接圆（= `ellipse` 的 `circumscribe:'equal'` 预设） | 无 |
+| `"ellipse"` 或 `{ type:'ellipse', params }` | 外接椭圆 | `circumscribe?`：`'proportional'`（默认，各轴 × √2）/ `'equal'`（等轴，半径取内框对角线之半） |
 
 ## 技术原理
 
@@ -105,20 +105,20 @@ import { Node } from '@retikz/react';
 
 ### 有些写法直接透传点，有些写法要先计算（Sugar）
 
-`<Circle>` / `<Ellipse>` 的一些写法直接把点交给底层 `Path`，可以用节点 id、极坐标点或普通 `[x, y]` 坐标：
+`<Circle>` 的 `center` 直接把点交给底层 `Path`，可以用节点 id、极坐标点或普通 `[x, y]` 坐标：
 
 ```tsx
 <Circle center="A" radius={24} />
-<Ellipse corner1="A" corner2="B" />
 ```
 
-另外一些写法要先在 React 里算出圆心、尺寸或边界，所以只接受字面量 `[x, y]` 坐标：
+另外一些写法要先在 React 里算出圆心、尺寸或边界，所以只接受字面量 `[x, y]` 坐标——`<Ellipse>` 的所有点输入（含 `center` / `corner1` / `corner2`）都属此类，`<Circle>` 的 `from` / `to` / `corner1` / `corner2` 也是：
 
 ```tsx
 <Circle from={[-40, 0]} to={[40, 0]} />
+<Ellipse corner1={[-40, -20]} corner2={[40, 20]} />
 ```
 
-把节点 id 传给这类需要先计算的写法时，组件会直接报错，不会替你猜结果。
+把节点 id 传给这类需要先计算的写法时，`<Circle>` 会直接报错；`<Ellipse>` 的 corner 分支目前不做校验，传非 `[x, y]` 会算出 NaN，务必传字面量坐标。
 
 ### 部分圆有三种闭合方式（Sugar）
 

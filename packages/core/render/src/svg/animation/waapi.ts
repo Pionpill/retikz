@@ -1,7 +1,7 @@
 /**
  * 交互触发 track → WAAPI descriptor（runtime 消费的纯 JSON 数据）
  * @description `visible` / `manual` / `{onEvent}` 的 track 在 SSR 字符串里不自播；descriptor 挂到元素
- *   `data-retikz-anim`，runtime（ADR-04）读它调 `element.animate(keyframes, timing)` 并按 trigger 接驱动。
+ *   `data-retikz-anim`，runtime 读它调 `element.animate(keyframes, timing)` 并按 trigger 接驱动。
  */
 import type { IRAnimationTrack } from '@retikz/core';
 import type { EasingRegistry } from '../../animation/types';

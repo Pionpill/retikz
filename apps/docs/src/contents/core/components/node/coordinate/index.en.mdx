@@ -1,9 +1,9 @@
 ---
 title: Coordinate
-description: Placeholder node — names a point without drawing anything, so paths and `at.of` can reference it by id.
+description: Placeholder node — names a point without drawing anything, so paths and relative positioning (`{ of }`) can reference it by id.
 ---
 
-`<Coordinate>` registers a named reference point in IR. Like `<Node>`, it can be targeted by paths and relative positioning, but it renders no visible shape or text; during compilation, only its `id` and position are registered, for downstream `<Path>` endpoints and `<Node>` `at.of` references.
+`<Coordinate>` registers a named reference point in IR. Like `<Node>`, it can be targeted by paths and relative positioning, but it renders no visible shape or text; during compilation, only its `id` and position are registered, for downstream `<Path>` endpoints and `<Node position>` relative / offset references (`{ of }`).
 
 ## Usage
 
@@ -15,7 +15,7 @@ import { Coordinate } from '@retikz/react';
 <Coordinate id="hub" position={[0, 0]} />
 ```
 
-`position` accepts the same four forms as `<Node>`: Cartesian `[x, y]` / polar `{ angle, radius, origin? }` / relative `{ direction, of, distance? }` / offset `{ of, offset }`.
+`position` accepts the same five forms as `<Node>`: Cartesian `[x, y]` / polar `{ angle, radius, origin? }` / relative `{ direction, of, distance? }` / offset `{ of, offset }` / proportional `{ between, t }`.
 
 ### Why it exists
 
@@ -37,7 +37,7 @@ The most common pattern: name a virtual center, then have multiple nodes positio
 
 <ComponentPreview name="coordinate-as-anchor" size="md" />
 
-The four nodes above all use `at.of='hub'` to reference the same hub; moving hub moves the whole arrangement. Without a coordinate, each `at.of` would have to be replaced with absolute coordinates and each path would need `[0, 0]` literals — repetitive and unrenameable.
+The four nodes above all use `position={{ of: 'hub', ... }}` to reference the same hub; moving hub moves the whole arrangement. Without a coordinate, each `of` would have to be replaced with absolute coordinates and each path would need `[0, 0]` literals — repetitive and unrenameable.
 
 ### Named junction for path convergence
 
@@ -86,7 +86,7 @@ Internally a Coordinate registers as a **0×0 point**, which gives three observa
 | Participates in layout bounds | ❌ | ✅ |
 | Registered in nodeIndex | ✅ | ✅ |
 | Referenced as path target | ✅ | ✅ |
-| Referenced via `at.of` | ✅ | ✅ |
+| Referenced via relative / offset (`{ of }`) | ✅ | ✅ |
 | Required `id` | ✅ | optional |
 
 Rule of thumb: need a shape + text → `<Node>`; need only a reference point → `<Coordinate>`.

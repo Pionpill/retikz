@@ -2,14 +2,14 @@ import type { FC, ReactElement, ReactNode } from 'react';
 import { createElement, isValidElement, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import { docPathSegments, useDocLocation } from '@/layout/doc-layout/docLocation';
+import { docPathSegments, useDocLocation } from '@/layout/doc-layout/doc-location';
 import type { IR } from '@retikz/core';
 import { Layout, Scope, convertReactNodeToIR } from '@retikz/react';
 
 import { ComponentRender } from './ComponentRender';
 import { RawSvgFrame } from './DemoRenderer';
-import { useDemoSegments } from './demoLocationContext';
-import { irToVanillaCode } from './irToVanillaCode';
+import { useDemoSegments } from './demo-location-context';
+import { irToVanillaCode } from './ir-to-vanilla-code';
 import {
   type AlignKey,
   type ComponentRenderSource,

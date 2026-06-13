@@ -99,7 +99,7 @@ Boundary lines are still grid lines, so they use the normal or major-line style.
 | `majorDashPattern` | `Array<number>` | — | Major-line dash and gap sequence |
 | `majorLineCap` | `'butt' \| 'round' \| 'square'` | — | Major-line endpoint shape |
 | `majorLineJoin` | `'miter' \| 'round' \| 'bevel'` | — | Major-line corner shape |
-| `majorThickness` | `PathThickness` | — | Major-line semantic stroke preset |
+| `majorThickness` | `'ultraThin' \| 'veryThin' \| 'thin' \| 'semithick' \| 'thick' \| 'veryThick' \| 'ultraThick'` | — | Major-line semantic stroke preset |
 | `majorOpacity` | `number` | — | Major-line whole-path opacity |
 | `majorDrawOpacity` | `number` | — | Major-line stroke opacity |
 
@@ -117,7 +117,7 @@ Boundary lines are still grid lines, so they use the normal or major-line style.
 | `borderDashPattern` | `Array<number>` | — | Border dash and gap sequence |
 | `borderLineCap` | `'butt' \| 'round' \| 'square'` | — | Border endpoint shape |
 | `borderLineJoin` | `'miter' \| 'round' \| 'bevel'` | — | Border corner shape |
-| `borderThickness` | `PathThickness` | — | Border semantic stroke preset |
+| `borderThickness` | `'ultraThin' \| 'veryThin' \| 'thin' \| 'semithick' \| 'thick' \| 'veryThick' \| 'ultraThick'` | — | Border semantic stroke preset |
 | `borderFill` | `string \| PaintSpec` | — | Fill for the closed border path |
 | `borderFillRule` | `'nonzero' \| 'evenodd'` | — | Border fill rule |
 | `borderOpacity` | `number` | — | Border whole-path opacity |
@@ -127,6 +127,6 @@ Boundary lines are still grid lines, so they use the normal or major-line style.
 
 ## Related
 
-- [Shapes](/core/components/shapes/circle-ellipse): circles, ellipses, sectors, rectangles, regular polygons, and stars
+- [Circle / Ellipse](/core/components/shapes/circle-ellipse): circles, ellipses, semicircles, and chords
 - [Draw](/core/components/draw/overview): `<Draw>` and the other connection shortcuts
 - [Path](/core/components/draw/path): the lower-level path capability Grid expands to

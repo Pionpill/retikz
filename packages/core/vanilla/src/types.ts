@@ -21,7 +21,7 @@ export type CommonOptions = {
   height?: number;
   /**
    * 是否播放动画（缺省 true）；`false` → 渲染 base 静态图（不 emit CSS/WAAPI、Canvas 不起 rAF）
-   * @description runtime 据 `{animate:false}` 或 `prefers-reduced-motion` 走静态路径（ADR-01「三事一路」）。
+   * @description runtime 据 `{animate:false}` 或 `prefers-reduced-motion` 走静态路径，不起任何动画。
    */
   animate?: boolean;
   /**
@@ -42,7 +42,7 @@ export type VanillaView = {
   readonly root: SVGSVGElement;
   /** 整图重渲染（原地复用 `root`，清子节点 + 重设 root attrs + 重物化），不承诺局部 patch */
   update: (next: RenderInput) => void;
-  /** 卸载：移除 `root`、置 view 失效（再调 `update` 抛、`dispose` noop） */
+  /** 卸载：解绑本 view 上未手动 dispose 的水合、移除 `root`、置 view 失效（再调 `update` 抛、`dispose` noop） */
   dispose: () => void;
   /**
    * 绑定 handler 到本 view 的 `<svg>`（locateSvg 定位）；handler 收 `(event, context)` 富上下文

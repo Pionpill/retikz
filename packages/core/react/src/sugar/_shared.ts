@@ -1,7 +1,7 @@
 import type { PathProps } from '../kernel/Path';
 
 /**
- * Shared visual props for sugar components.
+ * sugar 组件共用的视觉 props
  */
 export type PathVisualProps = Omit<PathProps, 'children'>;
 
@@ -30,7 +30,7 @@ const PATH_VISUAL_KEYS = [
 ] as const satisfies ReadonlyArray<keyof PathVisualProps>;
 
 /**
- * Pick visual props from sugar props and pass them to the underlying Path.
+ * 从 sugar props 拣出视觉 props 透传给底层 `<Path>`
  *
  * @description `id` / `meta` / `animations` 透传给底层 `<Path>`：id 是水合挂点（让 emit 的 Scene 图元带
  *   `data-retikz-id`，事件 handler 才能定位），meta / animations 是 path 级 IR 字段。事件 `on<Event>` props
@@ -47,7 +47,7 @@ export const pickPathVisual = (props: object): PathVisualProps => {
 
 const DEG = Math.PI / 180;
 
-/** Point-like inputs that must be literal [x, y] coordinates. */
+/** 校验点输入必须是字面 [x, y] 坐标 */
 export const requireXY = (
   value: unknown,
   sugarName: string,
@@ -66,13 +66,13 @@ export const requireXY = (
   );
 };
 
-/** Two-point midpoint. */
+/** 两点中点 */
 export const midpoint = (
   a: [number, number],
   b: [number, number],
 ): [number, number] => [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2];
 
-/** Box input for sugar shapes. */
+/** sugar 形状的 box 输入 */
 export type ShapeBox =
   | {
       x: number;
@@ -86,13 +86,13 @@ export type ShapeBox =
       height: number;
     };
 
-/** Box expansion / contraction controls. */
+/** box 的扩张 / 收缩控制 */
 export type BoxAdjustmentProps = {
   inset?: number;
   outset?: number;
 };
 
-/** Normalized box coordinates. */
+/** 归一化后的 box 坐标 */
 export type NormalizedShapeBox = {
   left: number;
   top: number;
@@ -100,7 +100,7 @@ export type NormalizedShapeBox = {
   bottom: number;
 };
 
-/** Convert a box object into normalized edges. */
+/** 把 box 对象转成归一化的四边 */
 export const normalizeShapeBox = (
   value: ShapeBox,
   sugarName: string,
@@ -119,7 +119,7 @@ export const normalizeShapeBox = (
   };
 };
 
-/** Convert two opposite corners into normalized edges. */
+/** 把两个对角点转成归一化的四边 */
 export const normalizeCornerBox = (
   corner1: [number, number],
   corner2: [number, number],
@@ -130,7 +130,7 @@ export const normalizeCornerBox = (
   bottom: Math.max(corner1[1], corner2[1]),
 });
 
-/** Apply inset / outset to a normalized box. */
+/** 对归一化 box 施加 inset / outset */
 export const adjustShapeBox = (
   box: NormalizedShapeBox,
   props: BoxAdjustmentProps,
@@ -156,19 +156,19 @@ export const adjustShapeBox = (
   return adjusted;
 };
 
-/** Box center. */
+/** box 中心 */
 export const boxCenter = (box: NormalizedShapeBox): [number, number] => [
   (box.left + box.right) / 2,
   (box.top + box.bottom) / 2,
 ];
 
-/** Box size. */
+/** box 尺寸 */
 export const boxSize = (box: NormalizedShapeBox): [number, number] => [
   box.right - box.left,
   box.bottom - box.top,
 ];
 
-/** Polar angle to Cartesian point for an axis-aligned ellipse/circle. */
+/** 轴对齐椭圆 / 圆上由极角求笛卡尔点 */
 export const polarXY = (
   center: [number, number],
   radiusX: number,
@@ -179,7 +179,7 @@ export const polarXY = (
   center[1] + Math.sin(angleDeg * DEG) * radiusY,
 ];
 
-/** Regular polygon vertices on an axis-aligned ellipse. */
+/** 轴对齐椭圆上的正多边形顶点 */
 export const regularPolygonVertices = (
   center: [number, number],
   radiusX: number,
@@ -194,7 +194,7 @@ export const regularPolygonVertices = (
   return out;
 };
 
-/** Star vertices on a circle. */
+/** 圆上的星形顶点 */
 export const starVertices = (
   center: [number, number],
   outerRadius: number,
@@ -211,14 +211,14 @@ export const starVertices = (
   return out;
 };
 
-/** Angle inputs shared by circle / ellipse / arc sugars. */
+/** circle / ellipse / arc 等 sugar 共用的角度输入 */
 export type AngleInput = {
   startAngle?: number;
   endAngle?: number;
   sweepAngle?: number;
 };
 
-/** Resolve a two-angle specification. */
+/** 解析两角规格（startAngle / endAngle / sweepAngle 任取两个） */
 export const resolveAngles = (
   input: AngleInput,
   sugarName: string,

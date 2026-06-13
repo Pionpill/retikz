@@ -10,7 +10,7 @@ import { evaluateTrack } from '../animation/evaluate';
 import type { EasingRegistry } from '../animation/types';
 import type { AnimationPropertyRegistry } from '../animation/registry';
 import { commandEndpoint } from '../shared';
-import { DEG_TO_RAD } from './pathGeometry';
+import { DEG_TO_RAD } from './path-geometry';
 
 /** 应用动画所需的子集选项 */
 export type AnimateContext = {
@@ -117,9 +117,13 @@ export const applyPrimAnimations = (
         break;
       }
       case AnimationProperty.PathDraw: {
+        const v = asNumber(value);
+        // 完全揭示（settled）时不加 dash override，渲染完整 base 描边——approxLength 对曲线低估时，
+        // dashPattern=[len] 会让真实弧长尾部 (len, trueLen] 落进 gap、留永久缺口；v≥1 直接走 base 即可。
+        if (v >= 1) break;
         const len = approxLength(prim);
         overrides.dashPattern = [len];
-        ctx.lineDashOffset = len * (1 - asNumber(value));
+        ctx.lineDashOffset = len * (1 - v);
         break;
       }
     }

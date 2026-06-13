@@ -108,13 +108,13 @@ Anchors are the stable points that a Node exposes to other primitives. Paths, po
 | --- | --- | --- |
 | Center | `center` | Alignment, rotation, radial relations |
 | Compass | `north`, `east`, `south-west` | Common connections and layout |
-| Angle | `35` / `{ angle: 35 }` | Intersecting a ray with the boundary |
+| Angle | `'A.35'` / `{ id: 'A', anchor: 35 }` | Intersecting a ray with the boundary |
 | Shape-specific | star tips, sector arc endpoints | Semantic points on complex shapes |
 | Edge proportion | `{ side: 'north', t: 0.25 }` | Tables, lanes, frame edges |
 
 <ComponentPreview name="anchors" size="lg" hideCode />
 
-The top row uses the most common rectangle: on the left, the eight fixed compass anchors (plus `center`); on the right, an angle anchor (`A.30`, a ray cast at 30° onto the boundary) and an edge-proportion anchor (`{ side: 'north', t: 0.25 }`, a quarter of the way along the north edge, west→east). The bottom row shows several non-rectangular shapes that carry their own shape-specific points: a star's `tip-N` points (it also has `notch-N`), a sector's `apex` and `outer-arc` ends / mid, and an arc's `start` / `arc-mid` / `end`. These are referenced in object form, e.g. `{ id: 'A', anchor: 'tip-0' }`.
+The top row uses the most common rectangle: on the left, the eight fixed compass anchors (plus `center`); on the right, an angle anchor (`A.30`, a ray cast at 30° onto the boundary) and an edge-proportion anchor (`{ side: 'north', t: 0.25 }`, a quarter of the way along the north edge, west→east). The bottom row shows several non-rectangular shapes that carry their own shape-specific points: a star's `tip-N` points (it also has `notch-N`), a sector's `apex` / `centroid` / `outer-arc-mid` / `inner-arc-mid` / `start-edge-mid` / `end-edge-mid`, and an arc's `start` / `arc-mid` / `end`. These are referenced in object form, e.g. `{ id: 'A', anchor: 'tip-0' }`.
 
 Compass anchors have two name sets: `CompassAnchor` is the canonical, TikZ-style vocabulary; `WebAnchor` is the Web / CSS-friendly input alias set, normalized to the matching `CompassAnchor` at compile time.
 
@@ -124,12 +124,12 @@ Compass anchors have two name sets: `CompassAnchor` is the canonical, TikZ-style
 | `north` / `south` / `east` / `west` | The 4 cardinal border points |
 | `north-east` / `north-west` / `south-east` / `south-west` | The 4 diagonal border points |
 
-The four built-in [`shape`](/core/components/node) types share this naming (each picks the geometric equivalent):
+The built-in [`shape`](/core/components/node) types share this naming, but the connection surface resolves in two families: circle / ellipse land on the real curve, while every other shape (including the polygon-preset diamond, plus star / sector / arc which have no compass of their own) lands on the corresponding direction of the visual bounding box (AABB) — matching TikZ taking a polygon's compass anchors on its bbox:
 
-| | rectangle | circle | ellipse | diamond |
+| | rectangle | circle | ellipse | diamond (polygon) |
 | --- | --- | --- | --- | --- |
-| `north` & 4 cardinals | Edge midpoints | Circle perimeter | Ellipse axis ends | The 4 vertices |
-| `north-east` & 4 diagonals | The 4 corners | Perimeter at 45° | Ellipse parametric t=π/4 | Side midpoints |
+| `north` & 4 cardinals | Edge midpoints (= AABB edge midpoints) | Circle perimeter | Ellipse axis ends | AABB edge midpoints |
+| `north-east` & 4 diagonals | The 4 corners | Perimeter at 45° | Ellipse parametric t=π/4 | AABB corners |
 
 When a node has `rotate`, all 9 anchors rotate with it. `WebAnchor` aliases normalize as follows:
 

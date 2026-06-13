@@ -24,8 +24,8 @@ export type MarkerPathPrim = {
   fillOpacity?: number;
   /** 填充规则：`nonzero`（默认）/ `evenodd`（环形 / 孔洞场景） */
   fillRule?: 'nonzero' | 'evenodd';
-  /** 描边色（纯色 CSS / `context-stroke` 由 adapter 映射） */
-  stroke?: string;
+  /** 描边色：纯色 CSS 或 `{ kind: 'contextStroke' }`（继承所在元素描边）；与 fill 同词汇，core 不持 SVG 裸关键字 */
+  stroke?: MarkerFill;
   /** 描边透明度 0~1 */
   strokeOpacity?: number;
   /** 描边宽度（marker 局部坐标） */
@@ -94,8 +94,8 @@ export type MarkerEllipsePrim = {
   fill?: MarkerFill;
   /** 填充透明度 0~1 */
   fillOpacity?: number;
-  /** 描边色 */
-  stroke?: string;
+  /** 描边色：纯色 CSS 或 `{ kind: 'contextStroke' }` */
+  stroke?: MarkerFill;
   /** 描边透明度 0~1 */
   strokeOpacity?: number;
   /** 描边宽度 */
@@ -123,8 +123,8 @@ export type MarkerRectPrim = {
   fill?: MarkerFill;
   /** 填充透明度 0~1 */
   fillOpacity?: number;
-  /** 描边色 */
-  stroke?: string;
+  /** 描边色：纯色 CSS 或 `{ kind: 'contextStroke' }` */
+  stroke?: MarkerFill;
   /** 描边透明度 0~1 */
   strokeOpacity?: number;
   /** 描边宽度 */

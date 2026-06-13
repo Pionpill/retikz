@@ -7,7 +7,7 @@ description: Academic illustration example — sin / cos / tan geometry for a 30
 
 This is the final figure from the [TikZ tutorial](https://tikz.dev/tutorial) — "Karl teaching his daughter trigonometry": a unit circle plus the sin / cos / tan geometry around a 30° angle.
 
-The page breaks it into 7 accumulative steps. From a single naked circle each step adds one visible element and one retikz capability — by the end you have the full figure and have also seen the three most beginner-friendly v0.2 sugars: [Circle](/core/components/shapes/circle-ellipse) / [Grid](/core/components/helpers/grid) / [Sector](/core/components/shapes/circle-ellipse). They shorten the hand-written Path / Step pieces, while [Draw](/core/components/draw/overview) / [Coordinate](/core/components/node/coordinate) / [Node](/core/components/node/overview) keep building the full figure, plus polar positions, multi-Draw coordination, and multi-line / multi-color Node text.
+The page breaks it into 7 accumulative steps. From a single naked circle each step adds one visible element and one retikz capability — by the end you have the full figure and have also seen the three most beginner-friendly sugars: [Circle](/core/components/shapes/circle-ellipse) / [Grid](/core/components/helpers/grid) / [Sector](/core/components/shapes/arc-sector). They shorten the hand-written Path / Step pieces, while [Draw](/core/components/draw/overview) / [Coordinate](/core/components/node/coordinate) / [Node](/core/components/node/overview) keep building the full figure, plus polar positions, multi-Draw coordination, and multi-line / multi-color Node text.
 
 <ComponentPreview name="karl-circle-07-info" size="lg" />
 
@@ -18,7 +18,7 @@ If you are coming from TikZ, watch four differences in this page: retikz coordin
 Send the prompt below to the AI chat panel — the LLM will produce retikz IR / JSX for this figure directly. For variants (different angle, colors, radius), edit the prompt inside the chat panel after sending and resend.
 
 <ExamplePrompt
-  short="**Draw a 30° angle sin / cos / tan geometry diagram**: unit circle + axes with arrows + ticks (−1, −1/2, 1/2, 1) + green-filled wedge + red / dodgerblue / darkorange function lines + a right-hand multi-color info box."
+  short="**Draw a 30° angle sin / cos / tan geometry diagram**: unit circle + axes with arrows + ticks (−1, −1/2, 1/2, 1) + green-stroked wedge + red / dodgerblue / darkorange function lines + a right-hand multi-color info box."
   detailed={`**Draw the unit-circle trigonometry diagram**
 
 **Geometry**
@@ -37,7 +37,7 @@ Send the prompt below to the AI chat panel — the LLM will produce retikz IR / 
 
 **Colors**
 
-- Wedge: light-green fill, dark-green stroke
+- Wedge: lightgray fill, green stroke
 - sin: red, cos: dodgerblue, tan: darkorange
 
 **Labels**
@@ -75,15 +75,15 @@ retikz coordinates are SVG pixels with y pointing downward — so "1 unit up" is
 
 ### Step 4 — 30° wedge + α label
 
-The wedge is the trickiest step. Use [Sector](/core/components/shapes/circle-ellipse) here: it starts from the center, draws the arc, and closes back to the center, so the intent reads more directly than a hand-written `arc` + `line` path, and it is easier for a first-time reader to remember as one clear API.
+The wedge is the trickiest step. Use [Sector](/core/components/shapes/arc-sector) here: it starts from the center, draws the arc, and closes back to the center, so the intent reads more directly than a hand-written `arc` + `line` path, and it is easier for a first-time reader to remember as one clear API.
 
-The α label is a [Node](/core/components/node/overview) at a polar position (`{ angle, radius }`) — `polar(15, 0.22)` places it visually centered in the wedge.
+The α label is a [Node](/core/components/node/overview) at a polar position (`{ angle, radius }`) — `{ angle: -15, radius: 22 }` places it visually centered in the wedge (a negative angle points toward the top of the screen).
 
 <ComponentPreview name="karl-circle-04-wedge" diffFrom="karl-circle-03-ticks" size="lg" />
 
 ### Step 5 — sin α red line + cos α dodgerblue line
 
-`sin` drops from (30°, 100px) vertically to the x-axis; `cos` goes from that foot back to the origin. Both use [Draw](/core/components/draw/overview), with a `{ label: { text, side } }` operator threaded into the `way` array to attach an edge label. `thickness="veryThick"` is a semantic stroke preset — saves having to pick a numeric width.
+`sin` drops from (30°, 100px) vertically to the x-axis; `cos` goes from that foot back to the origin. Both use [Draw](/core/components/draw/overview), with a `{ label: { text, side } }` operator threaded into the `way` array to attach an edge label. `thickness="thick"` is a semantic stroke preset — saves having to pick a numeric width.
 
 Note: the original TikZ uses `(30:1cm |- x axis)` to express "horizontal projection of (30°, 1cm) onto the x-axis" directly. retikz has no projection target yet — geometrically that equals (cos30°, 0), so we hand-compute the coordinate.
 
@@ -101,7 +101,7 @@ The pattern here — multiple [Draw](/core/components/draw/overview)s coordinati
 
 Finally, a colored info card on the right. The [Node](/core/components/node/overview) `text` prop takes an array of lines — **each entry can be a string or `{ text, fill }`**, the latter switching color for that line. Visual grouping comes from alternating "colored formula line + default-color caption line"; we don't insert empty `''` separators because they inflate `textHeight` (counted as a full lineHeight) while empty `tspan` `dy` advance is inconsistent across browsers, leaving a visible empty strip below the text.
 
-`shape="rectangle"` + `cornerRadius` + `align="left"` packs the lines into a left-aligned rounded card; `stroke="#d4d4d4"` + `dashed` add a light-gray dashed border (no fill, visible in both light and dark themes). Note: in-line span coloring (multiple colors within a single line) is not supported yet — only whole-line color switches. See Limitations.
+`shape="rectangle"` + `cornerRadius` + `align="left"` packs the lines into a left-aligned rounded card; `stroke="lightgray"` + `dashed` add a light-gray dashed border (no fill, visible in both light and dark themes). Note: in-line span coloring (multiple colors within a single line) is not supported yet — only whole-line color switches. See Limitations.
 
 <ComponentPreview name="karl-circle-07-info" diffFrom="karl-circle-06-tan" size="lg" />
 
@@ -110,7 +110,7 @@ Finally, a colored info card on the right. The [Node](/core/components/node/over
 | Component | Role in this example | Main steps |
 | --- | --- | --- |
 | [Circle](/core/components/shapes/circle-ellipse) | Unit circle | [1](#step-1--unit-circle), [3](#step-3--grid--ticks), [4](#step-4--30-wedge--α-label) |
-| [Sector](/core/components/shapes/circle-ellipse) | 30° wedge | [4](#step-4--30-wedge--α-label), [5](#step-5--sin-α-red-line--cos-α-dodgerblue-line), [6](#step-6--tan-α-darkorange-line--auxiliary-ray) |
+| [Sector](/core/components/shapes/arc-sector) | 30° wedge | [4](#step-4--30-wedge--α-label), [5](#step-5--sin-α-red-line--cos-α-dodgerblue-line), [6](#step-6--tan-α-darkorange-line--auxiliary-ray) |
 | [Grid](/core/components/helpers/grid) | Background grid | [3](#step-3--grid--ticks) |
 | [Draw](/core/components/draw/overview) | Axes + tick marks + sin/cos/tan colored lines + auxiliary ray | [2](#step-2--axes--endpoint-labels--named-anchors), [3](#step-3--grid--ticks), [5](#step-5--sin-α-red-line--cos-α-dodgerblue-line), [6](#step-6--tan-α-darkorange-line--auxiliary-ray) |
 | [Node](/core/components/node/overview) | Axis-end labels + tick text + α label + right info box | [2](#step-2--axes--endpoint-labels--named-anchors), [3](#step-3--grid--ticks), [4](#step-4--30-wedge--α-label), [7](#step-7--right-hand-multi-color-info-box) |

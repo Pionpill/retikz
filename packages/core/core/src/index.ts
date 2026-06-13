@@ -20,6 +20,7 @@ export {
   MoveStepSchema,
   LineStepSchema,
   FoldStepSchema,
+  FoldStepVia,
   CycleStepSchema,
   CurveStepSchema,
   CubicStepSchema,
@@ -40,6 +41,8 @@ export {
   TextBlockSchema,
   LineSpecSchema,
   PathSchema,
+  PathScaleSchema,
+  ArrowMarkSchema,
   ArrowDetailSchema,
   ArrowEndDetailSchema,
   ScopeSchema,
@@ -74,6 +77,7 @@ export type {
   IRMoveStep,
   IRLineStep,
   IRFoldStep,
+  FoldStepViaValue,
   IRCycleStep,
   IRCurveStep,
   IRCubicStep,
@@ -94,6 +98,8 @@ export type {
   IRLineSpec,
   IRTextBlock,
   IRPath,
+  IRPathScale,
+  IRArrowMark,
   IRScope,
   IRComposite,
   IRNodeDefault,
@@ -106,6 +112,7 @@ export type {
   IRPolarTranslateTransform,
   IRAtTranslateTransform,
   IROffsetTranslateTransform,
+  IRBetweenTranslateTransform,
   IRRotateTransform,
   IRScaleTransform,
   IRChild,
@@ -216,8 +223,9 @@ export type {
   TextMeasurer,
   CompileOptions,
   CompileWarning,
+  CompileWarningCodeValue,
 } from './compile';
-export { computeLayout, fallbackMeasurer, compileToScene } from './compile';
+export { computeLayout, fallbackMeasurer, compileToScene, CompileWarningCode, formatCompileWarning } from './compile';
 
 // Parsers
 export type {

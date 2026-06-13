@@ -25,6 +25,11 @@ description: IR 到 Scene 的编译入口、布局选项、文字度量与 warni
 | `nodeDistance` | `number` | `1` | `AtPosition` 未写 `distance` 时使用的默认距离 |
 | `onWarn` | `(warning) => void` | dev: `console.warn`<br />production: silent | 收集可恢复的编译期 warning |
 | `shapes` | `Record<string, ShapeDefinition>` | `—` | 运行时注入自定义 node shape；同名覆盖内置发 `SHAPE_OVERRIDES_BUILTIN`。见 [自定义形状](/core/reference/extending/shape-registry) |
+| `arrows` | `Record<string, ArrowDefinition>` | `—` | 运行时注入自定义箭头；同名覆盖内置发 `ARROW_OVERRIDES_BUILTIN`。见 [自定义箭头](/core/reference/extending/custom-arrow) |
+| `patterns` | `Record<string, PatternDefinition>` | `—` | 运行时注入自定义填充图案 motif；同名覆盖内置发 `PATTERN_OVERRIDES_BUILTIN`。见 [自定义图案](/core/reference/extending/custom-pattern) |
+| `pathGenerators` | `Record<string, PathGeneratorDefinition>` | `—` | 运行时注入自定义曲线生成器；generator step 按 `name` 查表，未注册编译期 throw。见 [路径生成器](/core/reference/extending/path-generator) |
+| `composites` | `Array<CompositeDefinition>` | `—` | 运行时注入 Tier 2 composite 展开逻辑；编译第一步把 composite 节点展开成 Tier 1，未注册发 `COMPOSITE_NOT_REGISTERED` 并跳过该节点 |
+| `maxCompositeDepth` | `number` | `32` | composite 嵌套展开的最大深度（防环 / 防失控递归），超限或成环 throw |
 
 ## 文字度量
 
@@ -51,20 +56,26 @@ type TextMeasurer = (text: string, font: FontSpec) => TextMetrics;
 | `message` | string | 英文人类可读消息 |
 | `path` | string | IR locator，例如 `children[3].path.children[1].to` |
 
-当前内置 code：
+当前内置 code（机器可读常量 `CompileWarningCode` 已公开导出，可按枚举引用而非硬编码字符串）：
 
 | Code | 含义 |
 | --- | --- |
 | `UNRESOLVED_NODE_REFERENCE` | 路径或位置引用了不存在的节点 / coordinate |
-| `PATH_TOO_SHORT` | path 无法形成有效绘制段 |
-| `ANCHOR_RESOLUTION_FAILED` | 节点边界挂接点无法解析 |
-| `OFFSET_BASE_UNRESOLVED` | OffsetPosition 的 `of` 无法解析 |
+| `PATH_TOO_SHORT` | path 不足 2 步 / 缺前一终点，无法形成有效绘制段，整条 path 跳过 |
+| `OFFSET_BASE_UNRESOLVED` | OffsetPosition 的基准 `of` 无法解析 |
 | `POLAR_ORIGIN_UNRESOLVED` | PolarPosition 的 `origin` 无法解析 |
 | `AT_TARGET_UNRESOLVED` | AtPosition 的 `of` 无法解析 |
-| `RELATIVE_INITIAL_NO_PREV_END` | relative target 出现在没有前一终点的位置 |
-| `BBOX_EXTREME_INPUT` | bbox 输入极端，layout 计算降级 |
+| `DUPLICATE_NODE_ID` | 同一命名空间帧内重复 id；后定义覆盖先定义（last-wins） |
+| `SHAPE_OVERRIDES_BUILTIN` | `CompileOptions.shapes` 同名 key 覆盖了内置 shape |
+| `ARROW_OVERRIDES_BUILTIN` | `CompileOptions.arrows` 同名 key 覆盖了内置箭头 |
+| `PATTERN_OVERRIDES_BUILTIN` | `CompileOptions.patterns` 同名 key 覆盖了内置图案 |
+| `COMPOSITE_NOT_REGISTERED` | composite 节点的 `namespace.type` 未注册，跳过该节点 |
+| `ANIMATION_INVALID_PROPERTY` | 动画 track 的 property 非法（如 scene-root 非 viewBox 属性），该 track 丢弃 |
+| `ARC_MISSING_RADIUS` | arc step 缺 `radius`（圆）或 `radiusX`+`radiusY`（椭圆），整条 path 跳过 |
+| `PARTIAL_ARC_NEEDS_BOTH_ANGLES` | circlePath / ellipsePath 部分弧需同时给 `startAngle` 与 `endAngle`，否则按完整圆 / 椭圆处理 |
+| `PARTIAL_ARC_CLOSED_INVALID` | 带角度的部分圆 / 椭圆不能用 `closed:'closed'`，退回 `'chord'` |
 
-大多数 warning 不会中断编译；coordinate 自身位置无法解析时会先触发 warning，然后抛错，因为它会破坏后续引用合同。
+大多数 warning 不会中断编译。但 coordinate / node 自身位置无法解析时**直接抛错、不发 warning**（源码刻意如此：warn 后立即 throw 会让收集器记录一条永不产出 Scene 的死告警），因为它属于「定义位置」的实体，会破坏后续引用合同。
 
 ## 输出
 
@@ -74,5 +85,7 @@ type TextMeasurer = (text: string, font: FontSpec) => TextMetrics;
 | --- | --- | --- |
 | `primitives` | `Array<ScenePrimitive>` | 已布局图元，顺序就是渲染顺序 |
 | `layout` | `Layout` | 场景边界 `{ x, y, width, height }` |
+| `resources?` | `Array<SceneResource>` | 渲染无关资源表（渐变 / pattern / clip 等 paint server）；adapter 物化（SVG → `<defs>`）。无资源时省略 |
+| `animations?` | `Array<IRAnimationTrack>` | scene 根（镜头）时间轴动画 tracks（viewBox property），从 IR 根 animations 透传；无则省略 |
 
-如果没有任何 bbox 候选点，`computeLayout` 返回 `100×100` 的兜底 layout。
+自定义 renderer 必须消费 `resources` 与 `animations`，否则会丢渐变 / 裁剪 / 镜头动画。如果没有任何 bbox 候选点，`computeLayout` 返回 `100×100` 的兜底 layout。

@@ -6,10 +6,10 @@
  * `figure`/`node`/`draw`/`coordinate`/`scope` 是命令式 builder：用具名图元 + 自定义 shape 构图、产同一份 IR。
  * 模块顶层不触碰任何 DOM 全局——`import` 在纯 Node 下安全。
  */
-export { renderToSvgString } from './renderToSvgString';
-export { mountSvg } from './mountSvg';
+export { renderToSvgString } from './render-to-svg-string';
+export { mountSvg } from './mount-svg';
 export { hydrate } from './hydrate';
-export { mountCanvas } from './mountCanvas';
+export { mountCanvas } from './mount-canvas';
 // 透传 render 层水合 runtime 类型，方便 vanilla 用户单包 import（事件名 / 注册表 / handler context 类型）
 export type {
   RetikzEventValue,
@@ -100,6 +100,7 @@ export type {
   CoordinateConfig,
   ScopeConfig,
   FigureConfig,
+  FigureRootStyle,
   Way,
 } from './builder/types';
 export type {

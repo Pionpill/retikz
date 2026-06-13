@@ -26,7 +26,7 @@ const cache = new WeakMap<NodeLayout, Map<string, IRPosition>>();
 /** 角度字符串识别：可选负号 + 数字 + 可选小数；与 parseTarget.ts 的 ANGLE_RE 同语义 */
 const ANGLE_RE = /^-?\d+(\.\d+)?$/;
 
-/** 把 layout 的 rect 换成外边界 AABB（外扩 outerSep）——border 类 anchor 在其上解析（ADR-07 §1） */
+/** 把 layout 的 rect 换成外边界 AABB（外扩 outerSep）——border 类 anchor（compass / 数字角度）在其上解析 */
 const withOuterRect = (layout: NodeLayout): NodeLayout => ({
   ...layout,
   rect: outerRectOf(layout),
@@ -35,8 +35,8 @@ const withOuterRect = (layout: NodeLayout): NodeLayout => ({
 /**
  * 把 anchorName 解析到对应 shape 的 anchor / boundaryPoint 上
  * @description 数字字符串走 angleBoundaryOf；其余按标准方位 / shape-specific anchor 走 anchorOf；boundary 透传给两者。
- *   border 类 anchor（数字角度 + compass 方位名）按 outerSep 外推：在外扩 margin 的 rect（`outerRectOf`）上解析
- *   （ADR-07 §1）。形状专属命名 anchor（tip-N / apex 等）恒走视觉 rect、不外扩（§3）。`center` 在 inflate 下
+ *   border 类 anchor（数字角度 + compass 方位名）按 outerSep 外推：在外扩 margin 的 rect（`outerRectOf`）上解析。
+ *   形状专属命名 anchor（tip-N / apex 等）恒走视觉 rect、不外扩。`center` 在 inflate 下
  *   中心不变，走哪条路结果一致。
  */
 const computeAnchor = (
