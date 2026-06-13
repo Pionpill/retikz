@@ -185,8 +185,10 @@ export const BendStepSchema = z
     bendAngle: z
       .number()
       .finite()
+      .gt(-180)
+      .lt(180)
       .optional()
-      .describe('Bend angle in degrees; default 30 (matches TikZ `bend left` without explicit angle)'),
+      .describe('Bend angle in degrees; default 30 (matches TikZ `bend left` without explicit angle). Restricted to (-180, 180): at ±180 the chord-tangent term tan(angle/2) diverges and control points blow up.'),
     outAngle: z
       .number()
       .finite()
