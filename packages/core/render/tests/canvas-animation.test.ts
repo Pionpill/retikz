@@ -56,6 +56,15 @@ describe('Happy：drawScene({time}) 应用通道', () => {
     expect(ctx.lineDashOffset).toBeCloseTo(5); // len*(1-0.5)
   });
 
+  it('pathDraw v=1（settled）→ 不加 [len] dash override（避免曲线弧长低估留永久缺口）', () => {
+    const path: PathPrim = { type: 'path', commands: [{ kind: 'move', to: [0, 0] }, { kind: 'line', to: [10, 0] }], stroke: '#000' };
+    const draw: IRAnimationTrack = { property: 'pathDraw', keyframes: [{ at: 0, value: 0 }, { at: 1, value: 1 }], duration: 400 };
+    const ctx = createCtx();
+    drawScene(ctx, scene([{ ...path, animations: [draw] }]), { time: 400 }); // 末时刻 v=1
+    const dash = argsOf(ctx, 'setLineDash').find(a => Array.isArray(a[0]) && (a[0] as Array<number>).length === 1);
+    expect(dash).toBeUndefined();
+  });
+
   it('自定义 property → 注册 def 的 applyCanvas 被调', () => {
     const apply = vi.fn();
     const def: AnimationPropertyDefinition = { interpolate: (a, b, t) => (a as number) + ((b as number) - (a as number)) * t, applyCanvas: apply };
@@ -125,6 +134,23 @@ describe('交互', () => {
     drawScene(ctx, scene([rect()], [camera]), { time: 400 });
     expect(argsOf(ctx, 'scale')).toContainEqual([2, 2]);
     expect(argsOf(ctx, 'translate')).toContainEqual([-50, -50]);
+  });
+
+  it('camera：非自动播（manual）镜头不随共享时钟自动播（与 SVG 一致，按 trigger 过滤）', () => {
+    const camera: IRAnimationTrack = { property: 'viewBox', trigger: 'manual', keyframes: [{ at: 0, value: [0, 0, 100, 100] }, { at: 1, value: [25, 25, 50, 50] }], duration: 400 };
+    const ctx = createCtx();
+    drawScene(ctx, scene([rect()], [camera]), { time: 400 });
+    expect(argsOf(ctx, 'scale')).not.toContainEqual([2, 2]); // manual 镜头不自动叠取景
+  });
+
+  it('camera：多条自动播 viewBox track 逐层叠加（非只取首个）', () => {
+    const camA: IRAnimationTrack = { property: 'viewBox', keyframes: [{ at: 0, value: [0, 0, 100, 100] }, { at: 1, value: [0, 0, 50, 50] }], duration: 400 };
+    const camB: IRAnimationTrack = { property: 'viewBox', keyframes: [{ at: 0, value: [0, 0, 100, 100] }, { at: 1, value: [0, 0, 50, 100] }], duration: 400 };
+    const ctx = createCtx();
+    drawScene(ctx, scene([rect()], [camA, camB]), { time: 400 });
+    // camA → scale(2,2)；camB → scale(2,1)；两条都被施加（旧实现只取首个）
+    expect(argsOf(ctx, 'scale')).toContainEqual([2, 2]);
+    expect(argsOf(ctx, 'scale')).toContainEqual([2, 1]);
   });
 });
 

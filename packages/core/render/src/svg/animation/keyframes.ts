@@ -138,7 +138,7 @@ export const createSvgAnimationCollector = (options: SvgAnimationOptions): SvgAn
     let setupAttrs: SvgAttrs = {};
     for (const track of tracks) {
       if (classifyProperty(track.property) === 'transform') continue;
-      const expanded = expandTrack(track, prim);
+      const expanded = expandTrack(track, prim, options.easings, onWarn);
       if ('skip' in expanded) {
         onWarn(`SVG animation: skipped track on "${track.property}" (${expanded.skip}); rendering base.`);
         continue;
@@ -164,7 +164,7 @@ export const createSvgAnimationCollector = (options: SvgAnimationOptions): SvgAn
     // 2) transform 通道：各包一层 `<g>`
     for (const track of tracks) {
       if (classifyProperty(track.property) !== 'transform') continue;
-      const expanded = expandTrack(track, prim);
+      const expanded = expandTrack(track, prim, options.easings, onWarn);
       if ('skip' in expanded) {
         onWarn(`SVG animation: skipped track on "${track.property}" (${expanded.skip}); rendering base.`);
         continue;

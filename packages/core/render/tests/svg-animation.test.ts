@@ -48,6 +48,19 @@ describe('Happy：load CSS + 交互 WAAPI + camera', () => {
     expect(css).toContain(`.${r.attrs.class}`);
   });
 
+  it('keyframe 级 easing → @keyframes 内逐帧 animation-timing-function（非颜色通道，与 Canvas 一致）', () => {
+    const t: IRAnimationTrack = {
+      property: 'opacity',
+      keyframes: [{ at: 0, value: 0, easing: 'ease-in' }, { at: 1, value: 1 }],
+      duration: 400,
+      trigger: 'load',
+    };
+    const out = buildSvgFragment(scene([rect({ animations: [t] })]), { idPrefix: 't' });
+    const css = String(findTag(out, 'style')!.children![0]);
+    // 旧实现丢弃 kf.easing；现逐帧透传为 CSS timing-function
+    expect(css).toContain('animation-timing-function:ease-in');
+  });
+
   it('transform track（scaleY + origin south）→ wrapper <g> + transform-origin + @keyframes scale', () => {
     const out = buildSvgFragment(scene([rect({ animations: [GROW_UP] })]), { idPrefix: 't' });
     const g = findTag(out, 'g')!;
