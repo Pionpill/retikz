@@ -1411,6 +1411,30 @@ export const changelog: Array<Release> = [
         ],
         subVersions: [
           {
+            version: 'alpha.10',
+            date: '2026-06-13',
+            summary: {
+              zh: '退化 `<Plot>` 为薄容器：移除 cartesian2D 默认轴注入，保留 scale / coordinate / color 推断；装饰逻辑抽成可复用纯函数 `decorateDefaultGuides`（留给 v0.2 `<Chart>`）。⚠️ alpha 间 breaking——组合 DSL 不写 `<Axis>` 不再自动出 x/y 轴。',
+              en: 'Degrade `<Plot>` to a thin container: removes the cartesian2D default-axis injection while keeping scale / coordinate / color inference; the decoration logic is extracted into a reusable pure function `decorateDefaultGuides` (reserved for a v0.2 `<Chart>`). ⚠️ breaking between alphas — the composition DSL no longer auto-draws x/y axes when no `<Axis>` is written.',
+            },
+            items: [
+              {
+                label: { zh: '薄 <Plot>：移除默认轴注入（BREAKING）', en: 'Thin `<Plot>`: default-axis injection removed (BREAKING)' },
+                content: {
+                  zh: 'cartesian2D 组合 DSL 不再自动补 x/y 轴 + y 网格——`<Plot>` 只画你显式列出的 `<Axis>` / `<Legend>`，`bare` 与 scale / coordinate 推断不变。迁移：补 `<Axis dimension="x" />` / `<Axis dimension="y" grid />` [坐标轴](/plot/components/axis)',
+                  en: 'The cartesian2D composition DSL no longer auto-adds x/y axes + y grid — `<Plot>` draws only the `<Axis>` / `<Legend>` you list; `bare` and scale / coordinate inference are unchanged. Migration: add `<Axis dimension="x" />` / `<Axis dimension="y" grid />` [Axis](/plot/components/axis)',
+                },
+              },
+              {
+                label: { zh: 'decorateDefaultGuides 抽出（留 v0.2 chart）', en: '`decorateDefaultGuides` extracted (for v0.2 chart)' },
+                content: {
+                  zh: '默认轴 / 网格补齐逻辑抽成框架无关纯函数（PlotSpec 进出）：cartesian2D 且无显式 axis 时前置 x 轴 + y 轴（带网格）。薄 `<Plot>` 本身不调用，留给上层 `<Chart>`（v0.2）复用——能力不丢、将来不重写。',
+                  en: 'The default-axis / grid logic is extracted into a framework-agnostic pure function (PlotSpec in/out): for cartesian2D with no explicit axis it prepends an x axis + y axis (with grid). Thin `<Plot>` does not call it; it is reserved for a v0.2 `<Chart>` to reuse — capability kept, no future rewrite.',
+                },
+              },
+            ],
+          },
+          {
             version: 'alpha.9',
             date: '2026-06-12',
             summary: {

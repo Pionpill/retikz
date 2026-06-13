@@ -43,6 +43,14 @@ const allKinds = (layer: IRScope): Array<IRStep['kind']> => pathsOf(layer).flatM
 /** 取某 step 的 to 点（move/line 等带 to 的） */
 const stepTo = (step: IRStep): [number, number] => (step as { to: [number, number] }).to;
 
+/** 把轴层那条 path 拆成 [from,to] 段对（首段 = 辐条轴线，其余 = 刻度短线） */
+const segmentsOfAxis = (axisLayer: IRScope): Array<[[number, number], [number, number]]> => {
+  const steps = pathsOf(axisLayer).flatMap(p => p.children);
+  const segments: Array<[[number, number], [number, number]]> = [];
+  for (let i = 0; i + 1 < steps.length; i += 2) segments.push([stepTo(steps[i]), stepTo(steps[i + 1])]);
+  return segments;
+};
+
 /**
  * 外层 plot scope 子层粗分类：mark 层 = point/sector 的 nodeDefault.shape 层，或 line/area 的 pathDefault.strokeWidth 层
  * （guide 层的 pathDefault 只有 stroke / drawOpacity，无 strokeWidth）。z-order = [...gridLayers, ...markLayers, ...axisLayers]。
@@ -177,21 +185,45 @@ describe('lowerPlots polar guide — radial axis (ADR-04)', () => {
   });
 
   it('radial_axis_default_spoke_along_start_angle', () => {
-    // startAngle 默认 0（+x）→ 辐条沿圆心向右：轴线终点 x > 圆心 x、y ≈ 圆心 y
+    // startAngle 默认 0（+x）→ 辐条轴线沿圆心向右：两端共 y、x 跨度 > 0
     const outer = expandOf(radialSpec([{ type: 'axis', dimension: 'radius' }]), { d: radialRows }, opts);
     const { children, markIndex } = layersOf(outer);
     const axisLayer = children.slice(markIndex + 1).find(isScope) as IRScope;
-    const linePoints = pathsOf(axisLayer)
-      .flatMap(p => p.children)
-      .filter(step => step.kind === 'move' || step.kind === 'line')
-      .map(stepTo);
-    // 辐条端点应共 y（沿 0° 水平），且 x 跨度 > 0
-    const ys = linePoints.map(p => p[1]);
-    const xs = linePoints.map(p => p[0]);
-    const minY = Math.min(...ys);
-    const maxY = Math.max(...ys);
-    expect(maxY - minY).toBeLessThan(1); // 近似同 y（沿 +x 辐条）
-    expect(Math.max(...xs) - Math.min(...xs)).toBeGreaterThan(0);
+    const [axisLine] = segmentsOfAxis(axisLayer); // 首段 = 辐条轴线
+    const [from, to] = axisLine;
+    expect(Math.abs(to[1] - from[1])).toBeLessThan(1); // 近似同 y（沿 +x 辐条）
+    expect(Math.abs(to[0] - from[0])).toBeGreaterThan(0);
+  });
+
+  // 刻度垂直于辐条（与 cartesian / angular 一致）：辐条沿 0°（水平）→ 刻度竖直
+  it('radial_axis_ticks_perpendicular_to_spoke', () => {
+    const outer = expandOf(radialSpec([{ type: 'axis', dimension: 'radius' }]), { d: radialRows }, opts);
+    const { children, markIndex } = layersOf(outer);
+    const axisLayer = children.slice(markIndex + 1).find(isScope) as IRScope;
+    const [, ...tickSegments] = segmentsOfAxis(axisLayer);
+    expect(tickSegments.length).toBeGreaterThan(0);
+    for (const [from, to] of tickSegments) {
+      expect(Math.abs(to[0] - from[0])).toBeLessThan(1e-6); // Δx≈0：竖直
+      expect(Math.abs(to[1] - from[1])).toBeGreaterThan(0); // Δy≠0
+    }
+  });
+
+  // 刻度不沿辐条越出内 / 外端点（修：首尾刻度曾各多出 AXIS_TICK_LENGTH/2）
+  it('radial_axis_ticks_do_not_overshoot_spoke_endpoints', () => {
+    const outer = expandOf(radialSpec([{ type: 'axis', dimension: 'radius' }]), { d: radialRows }, opts);
+    const { children, markIndex } = layersOf(outer);
+    const axisLayer = children.slice(markIndex + 1).find(isScope) as IRScope;
+    const [axisLine, ...tickSegments] = segmentsOfAxis(axisLayer);
+    // 辐条沿 +x：刻度点的 x 必落在轴线 [innerX, outerX] 内
+    const innerX = Math.min(axisLine[0][0], axisLine[1][0]);
+    const outerX = Math.max(axisLine[0][0], axisLine[1][0]);
+    const eps = 1e-6;
+    for (const segment of tickSegments) {
+      for (const point of segment) {
+        expect(point[0]).toBeGreaterThanOrEqual(innerX - eps);
+        expect(point[0]).toBeLessThanOrEqual(outerX + eps);
+      }
+    }
   });
 
   it('radial_axis_tick_labels_present', () => {

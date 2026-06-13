@@ -40,7 +40,7 @@ describe('<Plot data>{marks} 组合 DSL（ADR-08）', () => {
         <PointMark x="month" y="revenue" />
       </Plot>,
     );
-    // 等价 spec 须带 DSL 默认 guides（x 轴 + y 轴带网格），否则轴/网格几何对不上
+    // 薄 Plot DSL 不补默认 guides，等价 spec 也无 guides
     const equivalentSpec: PlotSpec = {
       namespace: 'plot',
       type: 'plot',
@@ -54,24 +54,32 @@ describe('<Plot data>{marks} 组合 DSL（ADR-08）', () => {
         { type: 'line', order: 'month', encoding: { x: { field: 'month' }, y: { field: 'revenue' } } },
         { type: 'point', encoding: { x: { field: 'month' }, y: { field: 'revenue' } } },
       ],
-      guides: [
-        { type: 'axis', dimension: 'x' },
-        { type: 'axis', dimension: 'y', grid: true },
-      ],
+      guides: [],
     };
     const viaSpec = renderToStaticMarkup(<Plot spec={equivalentSpec} data={{ __plot: rows }} width={480} height={300} />);
     expect(geometry(viaDsl)).toEqual(geometry(viaSpec));
   });
 
-  // ADR-05：默认出轴 / bare
-  it('dsl_default_renders_axis：默认 <Plot> 渲出轴线 + 刻度文字', () => {
+  // alpha.10：薄 Plot 默认不出轴；显式 <Axis> 才渲轴文字
+  it('dsl_no_axis_no_text：薄 <Plot> 无 <Axis> → 渲 path 但不出刻度文字', () => {
     const svg = renderToStaticMarkup(
       <Plot data={rows} width={480} height={300}>
         <LineMark x="month" y="revenue" order="month" />
       </Plot>,
     );
     expect(svg).toContain('<path');
-    // 刻度标签文字（如 revenue 域内的数字）渲为 <text>
+    expect(svg).not.toContain('<text');
+  });
+
+  it('dsl_explicit_axis_renders_text：显式 <Axis> → 渲出刻度文字', () => {
+    const svg = renderToStaticMarkup(
+      <Plot data={rows} width={480} height={300}>
+        <LineMark x="month" y="revenue" order="month" />
+        <Axis dimension="x" />
+        <Axis dimension="y" grid />
+      </Plot>,
+    );
+    expect(svg).toContain('<path');
     expect(svg).toContain('<text');
   });
 
@@ -127,7 +135,7 @@ describe('<Plot data>{marks} 组合 DSL（ADR-08）', () => {
     expect(svg).toMatch(/<rect/);
   });
 
-  it('scalex_time_renders：scaleX time 折线端到端', () => {
+  it('scalex_time_renders：scaleX time 折线 + 显式 x 轴端到端（时间刻度标签）', () => {
     const trend = [
       { date: '2024-01-01', v: 1 },
       { date: '2024-06-01', v: 3 },
@@ -136,6 +144,7 @@ describe('<Plot data>{marks} 组合 DSL（ADR-08）', () => {
     const svg = renderToStaticMarkup(
       <Plot data={trend} width={480} height={300} scaleX="time">
         <LineMark x="date" y="v" order="date" />
+        <Axis dimension="x" />
       </Plot>,
     );
     expect(svg).toContain('<path');

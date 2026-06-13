@@ -1,4 +1,4 @@
-import { BarMark, Plot } from '@retikz/plot-react';
+import { Axis, BarMark, Plot } from '@retikz/plot-react';
 import type { FC } from 'react';
 
 import { temperature } from './coordinate-cartesian.data';
@@ -7,6 +7,8 @@ import { temperature } from './coordinate-cartesian.data';
 const Demo: FC = () => (
   <Plot data={temperature} width={360} height={220} style={{ maxWidth: '100%', height: 'auto' }}>
     <BarMark x="month" y="value" color="month" />
+    <Axis dimension="x" />
+    <Axis dimension="y" grid />
   </Plot>
 );
 

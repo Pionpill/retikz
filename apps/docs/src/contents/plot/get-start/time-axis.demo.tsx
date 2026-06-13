@@ -1,4 +1,4 @@
-import { LineMark, Plot } from '@retikz/plot-react';
+import { Axis, LineMark, Plot } from '@retikz/plot-react';
 import type { FC } from 'react';
 
 import { visits } from './time-axis.data';
@@ -7,6 +7,8 @@ import { visits } from './time-axis.data';
 const Demo: FC = () => (
   <Plot data={visits} width={360} height={200} scaleX="time" style={{ maxWidth: '100%', height: 'auto' }}>
     <LineMark x="date" y="value" order="date" />
+    <Axis dimension="x" />
+    <Axis dimension="y" grid />
   </Plot>
 );
 

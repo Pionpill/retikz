@@ -5,7 +5,7 @@ description: Customize ticks, labels, and grid with <Axis>; dimension picks whic
 
 `<Axis>` declares one axis. `dimension` picks which dimension it decorates: under cartesian it's `x` (horizontal) / `y` (vertical), under polar it's `angle` (angular) / `radius` (radial), under ternary it's `a` / `b` / `c` (the three triangle edges). The dimension must match the current coordinate system — a wrong one errors (no silent empty axis). The grid is a `grid` boolean prop, not a separate component.
 
-Without any `<Axis>`, `<Plot>` adds default axes; once you list `<Axis>` explicitly, only the ones you list are drawn.
+`<Plot>` is a thin container and draws no axes on its own — without `<Axis>` there are no axes, and only the `<Axis>` you list get drawn.
 
 ## Usage
 

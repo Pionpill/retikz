@@ -1,4 +1,4 @@
-import { BarMark, Plot } from '@retikz/plot-react';
+import { Axis, BarMark, Plot } from '@retikz/plot-react';
 import type { FC } from 'react';
 
 import { sales } from './bar-grouped.data';
@@ -7,6 +7,8 @@ import { sales } from './bar-grouped.data';
 const Demo: FC = () => (
   <Plot data={sales} width={360} height={220} style={{ maxWidth: '100%', height: 'auto' }}>
     <BarMark x="quarter" y="revenue" series="product" />
+    <Axis dimension="x" />
+    <Axis dimension="y" grid />
   </Plot>
 );
 

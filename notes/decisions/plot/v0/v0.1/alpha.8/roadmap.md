@@ -43,7 +43,7 @@
 
 - **categorical → 离散 size / opacity 档**（D1：连续→size 已在 alpha.7，离散档需求驱动）→ 顺延
 - **symlog**（log 跨零/负值兜底）+ **L2 显式正 baseline 的 log 柱/面积** → 需求驱动（alpha.7 顺延项，延续）
-- **theme 层 auto-guide**（声明通道即自动出 legend / 默认调色板 token）→ alpha.14 Theme
+- **theme 层 auto-guide**（声明通道即自动出 legend / 默认调色板 token）→ alpha.15 Theme
 - **legend 交互**（hover 高亮 / 点击筛选）→ v0.3 交互线（依赖 core 水合，非 authoring）
 - **legend 测量驱动自适应**（标签防重叠 / 宽度自适应 / 旋转）→ 结构上限，不做（plot-design §13.1）
 - **自定义通道注册表对外开放** → 另立里程碑（plot-design §11「先内置，后开放自定义」，延续 alpha.7 边界）

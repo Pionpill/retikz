@@ -1,4 +1,4 @@
-import { Legend, Plot, PointMark } from '@retikz/plot-react';
+import { Axis, Legend, Plot, PointMark } from '@retikz/plot-react';
 import type { FC } from 'react';
 
 import { cities } from './legend.data';
@@ -18,6 +18,8 @@ const Demo: FC = () => (
   >
     <PointMark x="lng" y="lat" size="pop" />
     <Legend channel="size" position="bottom" title="Population" />
+    <Axis dimension="x" />
+    <Axis dimension="y" grid />
   </Plot>
 );
 

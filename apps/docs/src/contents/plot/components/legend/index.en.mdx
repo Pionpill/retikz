@@ -9,7 +9,7 @@ description: "Visualize non-positional channels (color / size / opacity / shape)
 
 For a legend to explain a channel, that channel must first have a data-driven scale. So bind a field to the channel on `<PointMark>` (`color="region"` / `size="pop"`), then add `<Legend channel="..." />`. Continuous fields (continuous color ramps, size gradients) also need `model` to declare the field type, otherwise they are treated as categorical.
 
-Adding `<Legend>` does **not** remove the default x / y axes — legend and axes coexist. Only writing an explicit `<Axis>` overrides a default axis.
+`<Legend>` and `<Axis>` are independent: adding `<Legend>` only controls the legend, while axes come from the `<Axis>` you write explicitly (`<Plot>` draws none on its own).
 
 ## Usage
 
@@ -29,11 +29,11 @@ import { Plot, PointMark, Legend } from '@retikz/plot-react';
 
 ### Categorical color swatches
 
-`color` bound to a categorical field → an ordinal color scale, one swatch per category. Note the default x / y axes are still there.
+`color` bound to a categorical field → an ordinal color scale, one swatch per category. The x / y axes come from explicit `<Axis>`.
 
 <ComponentPreview name="legend-color-swatch" sourceFiles={['legend.data.ts']} />
 
-<p className="text-sm text-muted-foreground">One swatch per region; the legend sits in the reserved band on the right, default axes kept.</p>
+<p className="text-sm text-muted-foreground">One swatch per region; the legend sits in the reserved band on the right; x / y axes drawn by explicit `<Axis>`.</p>
 
 ### Continuous color ramp
 
