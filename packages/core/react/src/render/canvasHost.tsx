@@ -212,7 +212,9 @@ export const CanvasHost: FC<CanvasHostProps> = props => {
       clockRef.current = null;
       assignRef(animationRef, null);
     };
-  }, [animate, snapshotAt, animationRef, animationProperties, className, easings, height, renderTick, scene, style, width]);
+    // className / style 不参与依赖：effect 不读取它们（仅 JSX 应用到 <canvas>），把内联 style={{...}} 的
+    // 每次新引用纳入依赖会让本 effect 每次父渲染都 dispose+重建 rAF 时钟、动画从头重播。
+  }, [animate, snapshotAt, animationRef, animationProperties, easings, height, renderTick, scene, width]);
 
   useEffect(() => {
     const canvas = ref.current;

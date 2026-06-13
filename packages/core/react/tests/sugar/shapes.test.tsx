@@ -338,6 +338,24 @@ describe('RegularPolygon equivalence', () => {
       ).children,
     );
   });
+
+  it('显式 rotate 只烘焙进顶点、不再透传给 Path（不二次旋转）', () => {
+    const verts = regularPolygonVertices([0, 0], 30, 30, 4, 30);
+    const out = ir(<RegularPolygon center={[0, 0]} radius={30} sides={4} rotate={30} />);
+    expect(out.children).toEqual(
+      ir(
+        <Path>
+          <Step kind="move" to={verts[0]} />
+          <Step kind="line" to={verts[1]} />
+          <Step kind="line" to={verts[2]} />
+          <Step kind="line" to={verts[3]} />
+          <Step kind="cycle" />
+        </Path>,
+      ).children,
+    );
+    // 关键：底层 IRPath 不携带 rotate（否则会绕包围盒中心再转一次 → 总计约 60°）
+    expect((out.children[0] as { rotate?: number }).rotate).toBeUndefined();
+  });
 });
 
 describe('Star equivalence', () => {
@@ -372,5 +390,39 @@ describe('Star equivalence', () => {
     expect(ir(<Star center={[0, 0]} outerRadius={30} innerRadius={12} points={6} />).children).toEqual(
       hand.children,
     );
+  });
+
+  it('显式 rotate 只烘焙进顶点、不再透传给 Path（不二次旋转）', () => {
+    const verts = starVertices([0, 0], 30, 12, 5, 30);
+    const hand = ir(
+      <Path>
+        <Step kind="move" to={verts[0]} />
+        {verts.slice(1).map((v, i) => (
+          <Step key={i} kind="line" to={v} />
+        ))}
+        <Step kind="cycle" />
+      </Path>,
+    );
+    const out = ir(<Star center={[0, 0]} outerRadius={30} innerRadius={12} points={5} rotate={30} />);
+    expect(out.children).toEqual(hand.children);
+    expect((out.children[0] as { rotate?: number }).rotate).toBeUndefined();
+  });
+
+  it('id / animations 透传给底层 Path（水合挂点 + path 级动画）', () => {
+    const out = ir(
+      <Star
+        id="s1"
+        center={[0, 0]}
+        outerRadius={30}
+        innerRadius={12}
+        points={5}
+        animations={[
+          { property: 'opacity', duration: 100, keyframes: [{ at: 0, value: 0 }, { at: 1, value: 1 }] },
+        ]}
+      />,
+    );
+    const path = out.children[0] as { id?: string; animations?: unknown };
+    expect(path.id).toBe('s1');
+    expect(path.animations).toHaveLength(1);
   });
 });

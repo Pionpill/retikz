@@ -1,7 +1,13 @@
 import { Children, Fragment, type ReactNode, isValidElement } from 'react';
 import type { ElementHandlers, HydrationHandler, HydrationHandlers } from '@retikz/render/hydration';
 import { EVENT_PROP_TO_NAME, type HydrationEventPropName } from './eventProps';
-import { getDisplayName } from './_displayNames';
+import {
+  TIKZ_COORDINATE,
+  TIKZ_NODE,
+  TIKZ_PATH,
+  TIKZ_SCOPE,
+  getDisplayName,
+} from './_displayNames';
 
 /** 从一个元素 props 读出 `on<Event>` handler，翻译成 RetikzEventValue → handler 的 ElementHandlers（无 handler 返回空对象） */
 const readElementHandlers = (props: Record<string, unknown>): ElementHandlers => {
@@ -49,9 +55,12 @@ const mergeElement = (
 
 /**
  * 与 `readSceneChildren` 同源遍历 children，按各元素自身的 id 收 handler
- * @description 穿透 `Fragment`、对函数式（Sugar）组件递归其同步展开结果（与 builder 一致），但 id + handler props
- *   始终读自**元素自身**——Sugar 把 `id` / `on<Event>` 写在 Sugar 元素上（不向展开后的 Kernel 透传），故归属
- *   仍落到承载该 id 的挂点。非元素 / 非 id 元素静默跳过。
+ * @description 与 builder 的 `readSceneChildren` 逐分支对齐：穿透 `Fragment`；`<Scope>` 是容器，递归其 children
+ *   捕获内层 id-bearing 元素；`<Node>` / `<Path>` / `<Coordinate>` 是叶子（children 为 Step / Text / Label，无事件
+ *   挂点），不递归；其余函数式组件视为 Sugar / wrapper，同步展开后递归（覆盖带 displayName 的自定义 wrapper）。
+ *   id + handler props 始终读自**元素自身**——Sugar 的 `on<Event>` 写在 Sugar 元素上（不向展开后的 Kernel 透传），
+ *   `id` 则经 pickPathVisual 透传给底层挂点，故事件归属与挂点 id 一致；展开后的内层元素无 handler、不重复注册。
+ *   非元素静默跳过。
  */
 const visit = (registry: HydrationHandlers, children: ReactNode): void => {
   Children.forEach(children, child => {
@@ -63,13 +72,20 @@ const visit = (registry: HydrationHandlers, children: ReactNode): void => {
     }
     const handlers = readElementHandlers(props);
     mergeElement(registry, props.id, handlers);
-    // Sugar（函数式组件）：递归其同步展开，捕获展开后可能新增的 id-bearing Kernel 元素（与 builder 同源）。
-    // Kernel marker（Node / Path / Coordinate / Scope）自身不渲染、无需展开。
     const name = getDisplayName(child);
-    if (
-      name === undefined &&
-      typeof child.type === 'function'
-    ) {
+    switch (name) {
+      case TIKZ_SCOPE:
+        // 容器：递归子级（与 builder 的 buildScopeFromProps → readSceneChildren 同源）。
+        visit(registry, props.children as ReactNode);
+        return;
+      case TIKZ_NODE:
+      case TIKZ_PATH:
+      case TIKZ_COORDINATE:
+        // Kernel 叶子：children 是 Step / Text / Label，无事件挂点，不递归。
+        return;
+    }
+    // 其余函数式组件（Sugar / 自定义 wrapper）：同步展开后递归，捕获展开后的 id-bearing Kernel 元素。
+    if (typeof child.type === 'function') {
       const expanded = (child.type as (props: unknown) => ReactNode)(props);
       visit(registry, expanded);
     }

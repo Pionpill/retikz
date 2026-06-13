@@ -6,6 +6,9 @@ import type { PathProps } from '../kernel/Path';
 export type PathVisualProps = Omit<PathProps, 'children'>;
 
 const PATH_VISUAL_KEYS = [
+  'id',
+  'meta',
+  'animations',
   'color',
   'stroke',
   'strokeWidth',
@@ -26,7 +29,13 @@ const PATH_VISUAL_KEYS = [
   'marks',
 ] as const satisfies ReadonlyArray<keyof PathVisualProps>;
 
-/** Pick visual props from sugar props and pass them to the underlying Path. */
+/**
+ * Pick visual props from sugar props and pass them to the underlying Path.
+ *
+ * @description `id` / `meta` / `animations` 透传给底层 `<Path>`：id 是水合挂点（让 emit 的 Scene 图元带
+ *   `data-retikz-id`，事件 handler 才能定位），meta / animations 是 path 级 IR 字段。事件 `on<Event>` props
+ *   不在此白名单——它们留在 sugar 元素上，由 collectHydrationHandlers 读取并按同一 id 归挂。
+ */
 export const pickPathVisual = (props: object): PathVisualProps => {
   const src = props as Record<string, unknown>;
   const out: Record<string, unknown> = {};

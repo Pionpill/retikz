@@ -33,8 +33,9 @@ export const Star: FC<StarProps> = props => {
   const rotate = props.rotate ?? DEFAULT_ROTATE;
   const verts = starVertices(center, outerRadius, innerRadius, points, rotate);
 
+  // rotate 已烘焙进顶点坐标；不能再经 pickPathVisual 透传给 <Path>（会绕包围盒中心二次旋转）。
   return (
-    <Path {...pickPathVisual(props)}>
+    <Path {...pickPathVisual({ ...props, rotate: undefined })}>
       <Step kind="move" to={verts[0]} />
       {verts.slice(1).map((v, i) => (
         <Step key={i} kind="line" to={v} />

@@ -1,13 +1,12 @@
 import { Fragment } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { Circle, Node, Path, Step, collectHydrationHandlers } from '../src';
+import { Circle, Node, Path, Scope, Step, collectHydrationHandlers } from '../src';
 
 /**
- * ADR-01 水合：collectHydrationHandlers（与 buildIR 同源遍历，按 id 收 handler）
- * @description 穿透 Fragment、展开 Sugar 后按各元素 id 把 on<Event> props 收成
+ * 水合：collectHydrationHandlers（与 buildIR 同源遍历，按 id 收 handler）
+ * @description 穿透 Fragment、递归 Scope 子级、展开 Sugar / wrapper 后按各元素 id 把 on<Event> props 收成
  *   `{ [id]: { click, ... } }`（on<Event> → RetikzEventValue 去 on 前缀首字母小写）。
  *   无 id 带 handler → dev warn + 跳过；重复 id → dev warn + 合并/后覆盖。
- *   stub 阶段 collectHydrationHandlers 恒返回 {}，下列断言此刻预期 fail。
  */
 
 afterEach(() => {
@@ -111,6 +110,34 @@ describe('collectHydrationHandlers', () => {
       pointerLeave: onPointerLeave,
       wheel: onWheel,
     });
+  });
+
+  it('Scope 内元素：递归 Scope 子级收集 handler（不被容器吞掉）', () => {
+    const clickA = vi.fn();
+    const clickB = vi.fn();
+    const handlers = collectHydrationHandlers(
+      <Scope>
+        <Node id="a" position={[0, 0]} onClick={clickA} />
+        <Scope>
+          <Node id="b" position={[2, 0]} onClick={clickB} />
+        </Scope>
+      </Scope>,
+    );
+
+    expect(handlers.a.click).toBe(clickA);
+    expect(handlers.b.click).toBe(clickB);
+  });
+
+  it('Sugar handler 不重复注册：展开后内层 Path 携带同 id 但无 handler', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    const click = vi.fn();
+    const handlers = collectHydrationHandlers(
+      <Circle id="ring" center={[0, 0]} radius={1} onClick={click} />,
+    );
+
+    expect(handlers.ring.click).toBe(click);
+    // 内层展开的 Path 虽透传了 id="ring"，但无 handler → 不触发重复 id warn
+    expect(warn).not.toHaveBeenCalled();
   });
 
   it('Path id 透传 + handler：<Path id onClick> 收成 { e1: { click } }', () => {
