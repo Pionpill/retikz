@@ -231,8 +231,9 @@ const buildPathTransforms = (
  * 把已物化的 arrow marker（局部 baseSize 坐标系，尖端 +x）按路径切线定向放到采样点
  * @description marker 局部系：viewBox `0 0 baseSize baseSize`，参考点 (refX, baseSize/2)，尖端朝 +x。
  *   GroupPrim transforms 数组语义 array[0] 最外层（最后 apply），故链 = translate(point) ∘ rotate(tangentDeg)
- *   ∘ scale(markerWidth/baseSize, markerHeight/baseSize) ∘ translate(-refX, -baseSize/2)：先把参考点移到原点、
- *   缩放到目标尺寸、绕切线角旋转、平移到采样点。
+ *   ∘ scale(markerWidth·strokeWidth/baseSize, markerHeight·strokeWidth/baseSize) ∘ translate(-refX, -baseSize/2)：
+ *   先把参考点移到原点、缩放到目标尺寸、绕切线角旋转、平移到采样点。缩放含 strokeWidth 因子，与端点箭头
+ *   （SVG markerUnits=strokeWidth / Canvas 同口径 ×strokeWidth）一致——中段 mark 随线宽缩放（TikZ 语义）。
  *
  *   marker 几何拍平进 Scene 作 children：marker 窄子集结构上是 ScenePrimitive 子集，唯一差异是 fill/stroke 可为
  *   `{ kind: 'contextStroke' }`。端点箭头物化成真正的 `<marker>` 时 contextStroke 由 renderer 继承引用方描边；
@@ -258,12 +259,13 @@ const markerPrimToScene = (prim: MarkerPrimitive, contextStroke: string): SceneP
 const buildMarkMarkerGroup = (
   spec: ArrowEndSpec,
   sample: SegmentSample,
+  strokeWidth: number,
   round: (n: number) => number,
   contextStroke: string,
 ): GroupPrim => {
   const angleDeg = (Math.atan2(sample.tangent[1], sample.tangent[0]) * 180) / Math.PI;
-  const sx = spec.markerWidth / spec.baseSize;
-  const sy = spec.markerHeight / spec.baseSize;
+  const sx = (spec.markerWidth * strokeWidth) / spec.baseSize;
+  const sy = (spec.markerHeight * strokeWidth) / spec.baseSize;
   const refY = spec.baseSize / 2;
   const transforms: Array<Transform> = [
     { kind: 'translate', x: round(sample.point[0]), y: round(sample.point[1]) },
@@ -1030,7 +1032,7 @@ export const emitPathPrimitive = (
       const localT = scaled - segIdx;
       const sample = segmentSamplers[segIdx](pos === 1 ? 1 : localT);
       const spec = resolveMarkArrowSpec(mark, effectiveArrows, round);
-      markPrims.push(buildMarkMarkerGroup(spec, sample, round, baseProps.stroke ?? 'currentColor'));
+      markPrims.push(buildMarkMarkerGroup(spec, sample, strokeWidth, round, baseProps.stroke ?? 'currentColor'));
       // marker 落点纳入 bbox（保守取采样点；marker 自身尺寸相对小，端点已足够避免被裁）
       points.push(sample.point);
     }
