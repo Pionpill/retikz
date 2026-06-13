@@ -8,6 +8,7 @@
  */
 import type { IRJsonObject, Layout, Scene, ScenePrimitive } from '@retikz/core';
 import type { IdClockRegistry } from '../animation/id-clock';
+import { pathControlPoints } from '../shared/path-command';
 
 /**
  * handler 内的动画控制（缺省作用于命中元素，传 id 控别的元素）
@@ -189,38 +190,9 @@ const leafCorners = (prim: ScenePrimitive): Array<[number, number]> => {
         [left, top + prim.measuredHeight],
       ];
     }
-    case 'path': {
-      const points: Array<[number, number]> = [];
-      for (const command of prim.commands) {
-        switch (command.kind) {
-          case 'move':
-          case 'line':
-            points.push(command.to);
-            break;
-          case 'quad':
-            points.push(command.control, command.to);
-            break;
-          case 'cubic':
-            points.push(command.control1, command.control2, command.to);
-            break;
-          case 'arc':
-            points.push(
-              [command.center[0] - command.radius, command.center[1] - command.radius],
-              [command.center[0] + command.radius, command.center[1] + command.radius],
-            );
-            break;
-          case 'ellipseArc':
-            points.push(
-              [command.center[0] - command.radiusX, command.center[1] - command.radiusY],
-              [command.center[0] + command.radiusX, command.center[1] + command.radiusY],
-            );
-            break;
-          case 'close':
-            break;
-        }
-      }
-      return points;
-    }
+    case 'path':
+      // path 叶子用控制点松包围（足够作聚合几何）；与 drawScene pathBBox 同口径，共用 pathControlPoints
+      return pathControlPoints(prim.commands);
     default:
       return [];
   }

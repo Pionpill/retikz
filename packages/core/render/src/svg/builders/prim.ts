@@ -3,6 +3,7 @@ import type { SvgNode, SvgStyle } from '../types';
 import { buildPathD } from '../path-d-builder';
 import { buildTransform } from '../transform-builder';
 import { compact } from './attrs';
+import { firstLineDy } from '../../shared';
 
 type DominantBaseline = 'text-before-edge' | 'central' | 'text-after-edge' | 'alphabetic';
 
@@ -140,17 +141,8 @@ const buildPrimRaw = (p: ScenePrimitive, context: BuildContext): SvgNode => {
       );
     }
     case 'text': {
-      // 多行块整体垂直对齐：把首行 dy 推算成块在 (x, y) 上正确 baseline 对齐
-      // middle: 中心对齐 → 首行上推 (n-1)/2 × lineHeight
-      // top / alphabetic: 块顶对齐 → 首行 dy=0
-      // bottom: 块底对齐 → 首行上推 (n-1) × lineHeight
-      const n = p.lines.length;
-      const firstDy =
-        p.baseline === 'middle'
-          ? (-(n - 1) / 2) * p.lineHeight
-          : p.baseline === 'bottom'
-            ? -(n - 1) * p.lineHeight
-            : 0;
+      // 多行块整体垂直对齐：首行 dy 由 firstLineDy 据 baseline 推算（与 Canvas 共用），其余行逐行 lineHeight
+      const firstDy = firstLineDy(p);
       const children: Array<SvgNode> = p.lines.map((line, i) =>
         withStyle(
           {

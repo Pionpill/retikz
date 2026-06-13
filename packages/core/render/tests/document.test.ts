@@ -103,3 +103,34 @@ describe('buildSvgDocument —— 交互', () => {
     expect(b1).not.toContain('retikz-paint-a-');
   });
 });
+
+describe('renderToSvgString —— 尺寸注入', () => {
+  const sized = (): Scene => ({ primitives: [], layout });
+
+  it('给定 width/height → 根 <svg> 写入显示尺寸属性', () => {
+    const out = renderToSvgString(sized(), { idPrefix: 's', width: 320, height: 240 });
+    expect(out).toMatch(/^<svg\b/);
+    expect(out).toContain('width="320"');
+    expect(out).toContain('height="240"');
+  });
+
+  it('只给 width → 仅注入 width，不注入 height 属性', () => {
+    const out = renderToSvgString(sized(), { idPrefix: 's', width: 320 });
+    expect(out).toContain('width="320"');
+    expect(out).not.toMatch(/\bheight="/);
+  });
+
+  it('缺省 width/height → 不写显示尺寸属性，viewBox 仍由 scene.layout 决定', () => {
+    const out = renderToSvgString(sized(), { idPrefix: 's' });
+    expect(out).not.toMatch(/\bwidth="/);
+    expect(out).not.toMatch(/\bheight="/);
+    expect(out).toContain('viewBox="0 0 10 10"');
+  });
+
+  it('viewBox 始终源自 scene.layout，不被显示尺寸覆盖', () => {
+    const out = renderToSvgString(sized(), { idPrefix: 's', width: 999, height: 888 });
+    expect(out).toContain('viewBox="0 0 10 10"');
+    expect(out).toContain('width="999"');
+    expect(out).toContain('height="888"');
+  });
+});

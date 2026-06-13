@@ -12,7 +12,7 @@ import type {
   TextPrim,
 } from '@retikz/core';
 import type { CanvasWarning, DrawOptions, UnsupportedCanvasFeature } from './types';
-import { commandEndpoint, gradientLineFromAngle, parseHexColor } from '../shared';
+import { commandEndpoint, firstLineDy, gradientLineFromAngle, parseHexColor, pathControlPoints } from '../shared';
 import { DEG_TO_RAD, applyClip, applyTransform, buildPath, roundedRectPath } from './path-geometry';
 import { applyPrimAnimations } from './animate';
 import { applySceneCamera } from './camera';
@@ -266,13 +266,6 @@ const strokeCurrentPath = (
   ctx.stroke();
   if (strokeOpacity !== undefined) ctx.restore();
 };
-
-const firstLineDy = (text: TextPrim): number =>
-  text.baseline === 'middle'
-    ? (-(text.lines.length - 1) / 2) * text.lineHeight
-    : text.baseline === 'bottom'
-      ? -(text.lines.length - 1) * text.lineHeight
-      : 0;
 
 const resolveFontFamily = (
   fontFamily: string | undefined,
@@ -565,44 +558,17 @@ const drawArrowMarker = (
   ctx.restore();
 };
 
-/** path commands 的轴对齐包围盒（曲线用控制点 / 弧用半径外接，gradient 映射够用） */
+/** path commands 的轴对齐包围盒（曲线用控制点 / 弧用半径外接，gradient 映射够用；点集与 hydration 聚合几何共用 pathControlPoints） */
 const pathBBox = (commands: ReadonlyArray<PathCommand>): BBox => {
   let minX = Infinity;
   let minY = Infinity;
   let maxX = -Infinity;
   let maxY = -Infinity;
-  const add = (x: number, y: number): void => {
+  for (const [x, y] of pathControlPoints(commands)) {
     if (x < minX) minX = x;
     if (y < minY) minY = y;
     if (x > maxX) maxX = x;
     if (y > maxY) maxY = y;
-  };
-  for (const c of commands) {
-    switch (c.kind) {
-      case 'move':
-      case 'line':
-        add(c.to[0], c.to[1]);
-        break;
-      case 'quad':
-        add(c.control[0], c.control[1]);
-        add(c.to[0], c.to[1]);
-        break;
-      case 'cubic':
-        add(c.control1[0], c.control1[1]);
-        add(c.control2[0], c.control2[1]);
-        add(c.to[0], c.to[1]);
-        break;
-      case 'arc':
-        add(c.center[0] - c.radius, c.center[1] - c.radius);
-        add(c.center[0] + c.radius, c.center[1] + c.radius);
-        break;
-      case 'ellipseArc':
-        add(c.center[0] - c.radiusX, c.center[1] - c.radiusY);
-        add(c.center[0] + c.radiusX, c.center[1] + c.radiusY);
-        break;
-      case 'close':
-        break;
-    }
   }
   if (minX > maxX) return { x: 0, y: 0, w: 0, h: 0 };
   return { x: minX, y: minY, w: maxX - minX, h: maxY - minY };

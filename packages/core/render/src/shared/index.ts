@@ -5,3 +5,4 @@
 export * from './color';
 export * from './gradient';
 export * from './path-command';
+export * from './text';
