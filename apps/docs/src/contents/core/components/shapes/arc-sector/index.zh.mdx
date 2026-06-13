@@ -149,6 +149,8 @@ import { Node } from '@retikz/react';
 
 sector 的 `cornerRadius`（用户单位）给环楔四角倒角，省略 / `0` = 硬角，逐角夹紧；`apex` / `*-arc-mid` 等命名锚点不随它移动。
 
+> Node sector 约束：`outerRadius` 必须 > `innerRadius`（`innerRadius:0` 为实心扇片），违反编译期 refine 报错。
+
 ## 技术原理
 
 > 日常使用可以跳过本节；只有在角度方向或闭合方式不符合预期时再回来读。

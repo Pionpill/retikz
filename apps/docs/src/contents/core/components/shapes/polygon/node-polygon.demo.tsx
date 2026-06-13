@@ -3,7 +3,7 @@ import type { FC } from 'react';
 
 /**
  * 多边形 / 菱形 节点
- * @description shape={{ type:'polygon', params:{ sides } }}：能容纳文字的正多边形外接圆；diamond = polygon{ sides:4, rotate:45 } 预设。
+ * @description shape={{ type:'polygon', params:{ sides } }}：能容纳文字的正多边形外接圆；diamond = polygon{ sides:4, rotate:0 } 预设。
  */
 const Demo: FC = () => (
   <Layout width={400} height={170}>

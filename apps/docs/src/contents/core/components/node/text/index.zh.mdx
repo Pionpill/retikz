@@ -59,7 +59,7 @@ import { Node, Text } from '@retikz/react';
 
 | 属性 | 类型 | 默认值 | 描述 |
 | --- | --- | --- | --- |
-| `children` | `string` | — | 行内容；必须是单字符串（其它子项忽略） |
+| `children` | `string \| number` | — | 行内容；单个字符串或数字（数字按文本渲染）；其它子项忽略 |
 | `fill` | `string` | — | 行颜色覆盖；不填走 Node `textColor` 块级默认 |
 | `opacity` | `number` | — | 单行透明度 0~1 |
 | `font` | `{ family?, size?, weight?, style? }` | — | 行级字体覆盖；缺字段继承 Node 块级 `font` |
@@ -67,7 +67,7 @@ import { Node, Text } from '@retikz/react';
 ### 限制
 
 - **只能放在 `<Node>` 里**：放到 `<Layout>` 顶层会被静默忽略。
-- **children 必须是字符串**：嵌套元素或表达式不行。这是 Node 多行块的语义——一行就是一行。
+- **children 必须是字符串或数字**：嵌套元素或其它类型不行（数字按文本渲染）。这是 Node 多行块的语义——一行就是一行。
 - **块级属性不能行级覆盖**：`align` / `lineHeight` 只能写在 `<Node>` 上。
 
 ## 相关

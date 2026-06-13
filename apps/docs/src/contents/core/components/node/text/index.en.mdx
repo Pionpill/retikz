@@ -59,7 +59,7 @@ These two nodes compile to identical output:
 
 | Prop | Type | Default | Description |
 | --- | --- | --- | --- |
-| `children` | `string` | — | Line content; must be a single string (other child types are ignored) |
+| `children` | `string \| number` | — | Line content; a single string or number (numbers render as text); other child types are ignored |
 | `fill` | `string` | — | Per-line color override; falls back to Node `textColor` block default |
 | `opacity` | `number` | — | Per-line opacity 0..1 |
 | `font` | `{ family?, size?, weight?, style? }` | — | Per-line font override; missing fields inherit Node block-level `font` |
@@ -67,7 +67,7 @@ These two nodes compile to identical output:
 ### Constraints
 
 - **Must live inside `<Node>`**: a `<Text>` placed at the top level under `<Layout>` is silently ignored.
-- **`children` must be a string**: nested elements or expressions are not supported. A line is a line.
+- **`children` must be a string or number**: nested elements or other types are not supported (numbers render as text). A line is a line.
 - **Block-level props can't be overridden**: `align` / `lineHeight` only go on `<Node>`.
 
 ## Related

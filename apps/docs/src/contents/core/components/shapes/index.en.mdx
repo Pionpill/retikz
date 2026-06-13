@@ -12,7 +12,7 @@ Each shape page documents both faces as two self-contained halves: "As a Path sh
 
 **Both sides are open to extension:**
 
-- For Node shapes beyond the built-ins (hexagon / cloud…) — register them with the [shape-registry](/core/reference/extending/shape-registry); the built-in circle / sector / star are its official implementations.
+- For Node shapes beyond the built-ins (hexagon / cloud…) — register them with the [shape-registry](/core/reference/extending/shape-registry); the built-in registry entries are rectangle / ellipse / sector / arc / polygon / star (circle / diamond are compile-time preset aliases, not in the registry).
 - For path curve steps beyond the built-ins (parabola / sin-cos…) — use the [path-generator](/core/reference/extending/path-generator).
 
 <ComponentPreview name="shapes-family" size="md" hideCode />
@@ -24,8 +24,8 @@ Each shape page documents both faces as two self-contained halves: "As a Path sh
 | Circle / Ellipse | `<Circle>` · `<Ellipse>` | `shape="circle"` · `"ellipse"` |
 | Arc / Sector | `<Arc>` · `<Sector>` | `shape="sector"` · `"arc"` (params) |
 | Rectangle | `<Rectangle>` | default / `shape="rectangle"` |
-| Polygon | `<RegularPolygon>` | `shape="polygon"` · `"diamond"` |
-| Star | `<Star>` | `shape="star"` (params) |
+| Polygon | `<RegularPolygon>` | `shape={{ type:'polygon', params }}` (params) · `"diamond"` |
+| Star | `<Star>` | `shape={{ type:'star', params }}` (params) |
 
 > Background grids and reference lines — **a field of regular lines** rather than a single closed shape — are not in this group; see `<Grid>` under [Helpers](/core/components/helpers).
 

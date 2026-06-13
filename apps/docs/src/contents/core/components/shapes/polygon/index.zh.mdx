@@ -3,7 +3,7 @@ title: Polygon
 description: 正多边形——既能画一条 Path（Sugar），也能作为节点的正多边形 / 菱形边界。
 ---
 
-正多边形（等边等角）有两副面孔：用 `<RegularPolygon>` 画一个等边多边形轮廓（Sugar），或用 `shape={{ type:'polygon', params:{ sides } }}` 让节点带上正多边形边界。`diamond` 就是 `polygon{ sides:4, rotate:45 }` 的预设。完整定义见 [形状](/core/components/shapes)。要画一个多边形框，用 Sugar；要一个可连接、可标注的多边形节点，用 `<Node shape>`。
+正多边形（等边等角）有两副面孔：用 `<RegularPolygon>` 画一个等边多边形轮廓（Sugar），或用 `shape={{ type:'polygon', params:{ sides } }}` 让节点带上正多边形边界。`diamond` 就是 `polygon{ sides:4, rotate:0 }` 的预设。完整定义见 [形状](/core/components/shapes)。要画一个多边形框，用 Sugar；要一个可连接、可标注的多边形节点，用 `<Node shape>`。
 
 ## 作为 Path 图形（Sugar）
 
@@ -36,7 +36,7 @@ import { RegularPolygon } from '@retikz/react';
 | --- | --- | --- |
 | `<RegularPolygon>` | `center` + `radius` + `sides` | 通过外接半径和边数确定正多边形 |
 | | `center` + `sideLength` + `sides` | 通过边长和边数确定正多边形 |
-| | + `rotate?` | 整体起始角 |
+| | + `rotate?` | 整体起始角；缺省 `-90`（一个顶点朝上） |
 
 ## 作为 Node 形状
 
@@ -55,7 +55,7 @@ import { Node } from '@retikz/react';
 
 ### 例子
 
-`diamond` 是 4 边、旋转 45° 的预设，可直接写裸字符串 `shape="diamond"`，等价于 `{ type:'polygon', params:{ sides:4, rotate:45 } }`。
+`diamond` 是 4 边、顶点落在上下左右四个方向的预设，可直接写裸字符串 `shape="diamond"`，等价于 `{ type:'polygon', params:{ sides:4, rotate:0 } }`。
 
 <ComponentPreview name="node-polygon" size="sm" />
 
@@ -70,7 +70,7 @@ import { Node } from '@retikz/react';
 | `shape` | 边界 | 参数 |
 | --- | --- | --- |
 | `{ type: 'polygon', params }` | 能容纳文字的正多边形外接圆 | `sides`（≥3） / `rotate?` / `cornerRadius?` |
-| `"diamond"` | = `polygon{ sides:4, rotate:45 }` 预设 | 无 |
+| `"diamond"` | = `polygon{ sides:4, rotate:0 }` 预设 | 无 |
 
 `cornerRadius`（用户单位）给每个顶点倒角，省略 / `0` = 直角，逐角夹紧到不自交的最大半径。
 
@@ -84,7 +84,7 @@ import { Node } from '@retikz/react';
 
 ### diamond 是 polygon 的预设
 
-`<Node shape="diamond">` 在编译期规范化为 `polygon{ sides:4, rotate:45 }`——一个旋转 45° 的正方形外接框。它对非正方形文字框是正方形（而非拉伸菱形）；裸字符串 `"diamond"` 和带参 `{ type:'polygon', params:{ sides:4, rotate:45 } }` 等价。
+`<Node shape="diamond">` 在编译期规范化为 `polygon{ sides:4, rotate:0 }`——4 个顶点落在上下左右四个方向（`rotate:0` 下顶点起始角即 0°，按 `360/4` 均布到 0° / 90° / 180° / 270°），得到一个菱形。若要正置的方形需写 `rotate:45`。它对非正方形文字框仍是正菱形（而非拉伸）；裸字符串 `"diamond"` 和带参 `{ type:'polygon', params:{ sides:4, rotate:0 } }` 等价。
 
 ## 相关
 
