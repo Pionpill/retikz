@@ -138,8 +138,9 @@ TODO.md
 local/
 index.html
 
-# 本地分析 / 报告产物，不入库
+# 本地分析 / 报告 / 计划产物，不入库
 notes/reports/
+notes/plans/
 
 temp.*
 superpowers/
@@ -153,3 +154,6 @@ apps/docs/public/llms.txt
 # blog 文章转外站发布的手抄中间产物（见 .agents/skills/docs-blog-converter）
 .markdown/
 .git-rewrite
+
+# eval 运行产物（报告不入库，目录结构靠 .gitkeep 保留）
+apps/eval/results/*.md

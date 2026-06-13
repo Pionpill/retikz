@@ -1,0 +1,27 @@
+{
+  "name": "@retikz/eval",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "retikz eval: LLM-generated IR accuracy harness (L1 structural validity baseline).",
+  "scripts": {
+    "eval": "tsx src/index.ts",
+    "lint": "eslint .",
+    "test": "vitest",
+    "test:run": "vitest run"
+  },
+  "dependencies": {
+    "@ai-sdk/anthropic": "catalog:",
+    "@ai-sdk/deepseek": "catalog:",
+    "@ai-sdk/openai": "catalog:",
+    "@retikz/core": "workspace:*",
+    "ai": "catalog:",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@types/node": "catalog:",
+    "tsx": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  }
+}
