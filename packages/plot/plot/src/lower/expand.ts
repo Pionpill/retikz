@@ -1,5 +1,4 @@
-import { type CompositeDefinition, type IRChild, type IRScope, defineComposite } from '@retikz/core';
-import type { ZodType } from 'zod';
+import { type CompositeDefinition, type IRChild, type IRNode, type IRScope, defineComposite } from '@retikz/core';
 import { type AxisGuide, Cartesian1DOrientation, type Channel, type Coordinate, type ExternalDatasets, type ExternalRow, type Guide, type LegendChannelValue, type LegendGuide, type Mark, type OrdinalScale, PlotCoordinate, PlotFieldType, type PlotFieldTypeValue, PlotGuide, PlotMark, PlotScale, type PlotScaleValue, type PlotSpec, PlotSpecSchema, type QuantileColorScale, type QuantizeColorScale, type Scale, type ThresholdColorScale } from '../ir';
 import { channelValue, isFiniteNumber, resolveFieldPath } from './field';
 import { type GuideContext, type LegendEntry, type LegendInput, lowerCustomAxis, lowerGuide, lowerLegend } from './guide';
@@ -1070,8 +1069,9 @@ export const prepareRows = (
  *   root id → Scope.id（plot-design §8.1）；provenance 开 → 外层 Scope + 各层 / datum 带来源 meta + `<plotId>.` 内部 id。
  */
 const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPlotsOptions): IRChild => {
-  const width = options.width ?? DEFAULT_WIDTH;
-  const height = options.height ?? DEFAULT_HEIGHT;
+  // 自描述尺寸（ADR-02 L1-a）：节点自带 width/height 优先（组合时各面板本性尺寸），缺省回退全局选项、再回退默认
+  const width = node.width ?? options.width ?? DEFAULT_WIDTH;
+  const height = node.height ?? options.height ?? DEFAULT_HEIGHT;
   // 绘图区尺寸是 scale range / 投影的单一来源；非有限或非正数会一路污染出 cx="NaN" 等坏坐标——入口抛清晰错误
   if (!Number.isFinite(width) || width <= 0) {
     throw new Error(`lowerPlots: width must be a positive finite number, got ${width}`);
@@ -1159,10 +1159,29 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
   // z-order：所有网格层 → marks → 所有轴层 → legend（网格垫底、坐标轴压顶不被数据盖、legend 在预留带最上）
   const children: Array<IRChild> = [...gridLayers, ...markLayers, ...axisLayers, ...legendLayers];
 
-  const base: IRScope = node.id
-    ? { type: 'scope', id: node.id, localNamespace: true, children }
-    : { type: 'scope', localNamespace: true, children };
-  return provenance ? { ...base, meta: rootMeta(provenance.dataReference) } : base;
+  // 无 id：结构逐字不变（单图零回归）——root = localNamespace 内容 scope（+ provenance meta）
+  if (node.id === undefined) {
+    const base: IRScope = { type: 'scope', localNamespace: true, children };
+    return provenance ? { ...base, meta: rootMeta(provenance.dataReference) } : base;
+  }
+
+  // 有 id（ADR-02 L1-b）：外层 panel scope（id、非 localNamespace → 面板 bbox 注册父帧、外部可见）
+  //   ⊃ [ 内层 localNamespace 内容 scope（封内部 datum/series id、承 provenance meta）, plotArea 不可见 carrier ]。
+  // 让面板 bbox `<plotId>` 与绘图区 `<plotId>.plotArea` 都落在 localNamespace 之外、外部兄弟可锚（组合连线）。
+  const inner: IRScope = { type: 'scope', localNamespace: true, children };
+  const innerContent: IRScope = provenance ? { ...inner, meta: rootMeta(provenance.dataReference) } : inner;
+  // plotArea 精确矩形 carrier：几何 = 扣除轴 / legend 后的绘图区；opacity 0 不可见，仅登记 bbox 锚
+  const plotAreaCarrier: IRNode = {
+    type: 'node',
+    id: `${node.id}.plotArea`,
+    position: [plotArea.x + plotArea.width / 2, plotArea.y + plotArea.height / 2],
+    shape: 'rectangle',
+    minimumWidth: plotArea.width,
+    minimumHeight: plotArea.height,
+    padding: 0,
+    opacity: 0,
+  };
+  return { type: 'scope', id: node.id, children: [innerContent, plotAreaCarrier] };
 };
 
 /**
@@ -1174,10 +1193,7 @@ export const lowerPlots = (
   options: LowerPlotsOptions = {},
 ): Array<CompositeDefinition> => [
   defineComposite({
-    // coordinate 的 startAngle/endAngle/innerRadius 带 .default()，使 schema 的 _input ≠ _output（默认值前后差），
-    // 与 core `CompositeDefinition.schema: ZodType<T>`（要求 input=output=T）的不变性冲突；expand 只消费 _output（= PlotSpec），
-    // 故按输出类型收窄 schema（运行时 parse 仍正常填默认，纯类型层修不变性）。
-    schema: PlotSpecSchema as ZodType<PlotSpec>,
+    schema: PlotSpecSchema,
     expand: (node: PlotSpec) => expandPlot(node, datasets, options),
   }),
 ];

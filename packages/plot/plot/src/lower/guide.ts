@@ -241,8 +241,9 @@ const lowerRadialAxis = (guide: AxisGuide, ctx: GuideContext, frame: PolarFrame,
   const scale = frame.secondary;
   const baseAngle = frame.startAngle;
   const showLabels = guide.tickLabels !== false;
-  // 辐条径向单位向量（沿辐条方向），刻度短线沿此方向画（短径向 dash，保证整条轴 + 刻度共线）
-  const radial: [number, number] = [Math.cos(baseAngle * DEG_TO_RAD), Math.sin(baseAngle * DEG_TO_RAD)];
+  // 辐条切向单位向量（垂直于辐条）；刻度短线与标签沿此方向朝一侧（-tangent）偏移，与 cartesian / angular 轴一致。
+  // 不沿辐条方向画刻度——否则首尾刻度会沿辐条越出内 / 外圆端点（各多出半个刻度长）。
+  const tangent: [number, number] = [-Math.sin(baseAngle * DEG_TO_RAD), Math.cos(baseAngle * DEG_TO_RAD)];
 
   // ---- 轴层 ----
   const axisLine: Segment = [
@@ -252,10 +253,7 @@ const lowerRadialAxis = (guide: AxisGuide, ctx: GuideContext, frame: PolarFrame,
   const tickSegments: Array<Segment> = ticks.values.map(value => {
     const radius = scale.coordinate(value);
     const point = polarPoint(frame.center, baseAngle, radius);
-    return [
-      [point[0] - (radial[0] * AXIS_TICK_LENGTH) / 2, point[1] - (radial[1] * AXIS_TICK_LENGTH) / 2],
-      [point[0] + (radial[0] * AXIS_TICK_LENGTH) / 2, point[1] + (radial[1] * AXIS_TICK_LENGTH) / 2],
-    ];
+    return [point, [point[0] - tangent[0] * AXIS_TICK_LENGTH, point[1] - tangent[1] * AXIS_TICK_LENGTH]];
   });
   const linePath = segmentsToPath([axisLine, ...tickSegments]);
   const labels: Array<IRNode> = showLabels
@@ -263,8 +261,7 @@ const lowerRadialAxis = (guide: AxisGuide, ctx: GuideContext, frame: PolarFrame,
         const radius = scale.coordinate(value);
         const point = polarPoint(frame.center, baseAngle, radius);
         const text = ticks.labels[index];
-        // 标签沿切向（垂直于辐条）一侧偏移，避开辐条与刻度
-        const tangent: [number, number] = [-radial[1], radial[0]];
+        // 标签在刻度外侧（与刻度同侧、沿 -tangent），偏移 = 刻度长 + gap + 半字高
         const offset = AXIS_TICK_LENGTH + AXIS_LABEL_GAP + fontSize / 2;
         const position: [number, number] = [point[0] - tangent[0] * offset, point[1] - tangent[1] * offset];
         return { type: 'node', position, text };

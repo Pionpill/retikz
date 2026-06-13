@@ -1,6 +1,6 @@
 # plot v0 Roadmap
 
-> 更新于 2026-06-07。本文件记录 `@retikz/plot` 的总体路线。**v0.1 承载整套图形语法（GoG 8 组件）**，分阶段一（alpha.1–5 基础架构，已完成）+ 阶段二（alpha.6–14 完善语法）；交互 / 动画 / 性能等能力轴留 v0.1 之后。alpha 级执行细节见 `v0.1/roadmap.md`。
+> 更新于 2026-06-07。本文件记录 `@retikz/plot` 的总体路线。**v0.1 承载整套图形语法（GoG 8 组件）**，分阶段一（alpha.1–5 基础架构，已完成）+ 阶段二（alpha.6–9 / 11–15 完善语法；alpha.10 为插入的绑定层 milestone、非 GoG）；交互 / 动画 / 性能等能力轴留 v0.1 之后。alpha 级执行细节见 `v0.1/roadmap.md`。
 > 具体执行计划放在同目录 `v0.*/roadmap.md`，设计决策放在 `notes/decisions/plot/`，里程碑详情以 [`plot-design.md §13`](../../../architecture/plot-design.md) 为准。
 
 ## 定位
@@ -18,7 +18,7 @@
 **v0.1 承载整套图形语法**（GoG 8 组件，除交互 / 动画）。它分两阶段，**都在 v0.1 的 alpha 线**——不另起 v0.6+ minor（我们 v0.2 都未发，语法完善是继续在 v0.1 出 alpha）：
 
 - **阶段一 · 基础架构搭建（v0.1 alpha.1–5，✅ 已完成）**：验证 8 段管线 / lowering / 坐标系抽象 / anchor·scope 等**架构能力端到端成立**，并搭起 6 个语法组件（Data / Aesthetics / Geometry / Statistics / Scales / Coordinates）的**最小骨架**（2 个二维坐标系、position + 基础 color、基础 mark）。是「搭骨架」，不求语法完备。
-- **阶段二 · 完善图形语法（v0.1 alpha.6–14）**：在已验证的架构上**补全全部 8 组件**——含两个全新组件 **Facets / Theme**。
+- **阶段二 · 完善图形语法（v0.1 alpha.6–9 / 11–15）**：在已验证的架构上**补全全部 8 组件**——含两个全新组件 **Facets / Theme**。（**alpha.10 为 2026-06-13 插入的绑定层 milestone**「退化 Plot 为薄容器」、非 GoG 组件，故语法 milestone 顺延 11–15。）
 - **v0.1 发布 = 图形语法完整**。
 
 **v0.1 之后 · 能力轴 minor**（**不属图形语法**，按 core 能力 gating 排，版本号待定）：
@@ -44,9 +44,9 @@
 | **Facets** 分面 | facet（复用 core `Scope`） | — | **全新：分面小多图** |
 | **Theme** 主题样式 | theme | — | **全新：标题 / 字体 / 背景 / 网格 / 图例外观 / 调色板** |
 
-阶段二把 8 组件按依赖拆成 **alpha.6–14**（薄片拆，每 alpha 一个可渲染薄片，延续「纵向薄片 + 三包 lockstep」）——**每个 alpha 具体做什么见内层 [v0.1/roadmap](./v0.1/roadmap.md) Milestones**（本外层只到版本 / 组件粒度，不复述 alpha 细节）。
+阶段二把 8 组件按依赖拆成 **alpha.6–9 / 11–15**（薄片拆，每 alpha 一个可渲染薄片，延续「纵向薄片 + 三包 lockstep」）——**每个 alpha 具体做什么见内层 [v0.1/roadmap](./v0.1/roadmap.md) Milestones**（本外层只到版本 / 组件粒度，不复述 alpha 细节）。
 
-> 📌 v0.1 共 14 alpha、是个大 minor，到首发布路较长，之后走 beta / rc 收口；若需中途预览发布（如 alpha.8「核心语法预览」）可另切，不影响本线。
+> 📌 v0.1 共 15 alpha（含 alpha.10 绑定层）、是个大 minor，到首发布路较长，之后走 beta / rc 收口；若需中途预览发布（如 alpha.8「核心语法预览」）可另切，不影响本线。
 
 ## 参考来源
 

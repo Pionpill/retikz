@@ -1,4 +1,4 @@
-import { AreaMark, Plot } from '@retikz/plot-react';
+import { AreaMark, Axis, Plot } from '@retikz/plot-react';
 import type { FC } from 'react';
 
 import { activity } from './area-basic.data';
@@ -7,6 +7,8 @@ import { activity } from './area-basic.data';
 const Demo: FC = () => (
   <Plot data={activity} width={360} height={220} style={{ maxWidth: '100%', height: 'auto' }}>
     <AreaMark x="day" y="users" order="day" />
+    <Axis dimension="x" />
+    <Axis dimension="y" grid />
   </Plot>
 );
 

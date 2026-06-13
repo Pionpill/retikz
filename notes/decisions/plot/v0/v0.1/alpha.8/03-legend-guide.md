@@ -119,7 +119,7 @@ export type ScaleDescriptor = {
 
 ## 不在本 ADR 范围
 
-- **legend 自动派生**（声明通道即自动出）→ alpha.14 theme auto-guide。
+- **legend 自动派生**（声明通道即自动出）→ alpha.15 theme auto-guide。
 - **legend 交互**（hover 高亮 / 点击筛选）→ v0.3 交互线（依赖 core 水合）。
 - **测量驱动自适应**（标签防重叠 / 宽度自适应 / 旋转）→ 结构上限，不做（plot-design §13.1）。
 - **reference line / band 等其它 guide** → 后续（本轮只 axis + legend）。

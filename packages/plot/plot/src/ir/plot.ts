@@ -48,6 +48,20 @@ export const PlotSpecSchema = CompositeBaseSchema.extend({
   scales: z
     .array(ScaleSchema)
     .describe('Named scales; referenced by coordinate (and by non-positional channels in later versions)'),
+  width: z
+    .number()
+    .positive()
+    .optional()
+    .describe(
+      "The panel's intrinsic width in user units, used as the plot area sizing basis when this node is composed alongside others. Omit to fall back to the lowerPlots global width, then the built-in default.",
+    ),
+  height: z
+    .number()
+    .positive()
+    .optional()
+    .describe(
+      "The panel's intrinsic height in user units, used as the plot area sizing basis when this node is composed alongside others. Omit to fall back to the lowerPlots global height, then the built-in default.",
+    ),
   coordinate: CoordinateSchema.describe('The coordinate system; owns positional scale bindings (alpha.1: cartesian2D only)'),
   marks: z.array(MarkSchema).min(1).describe('Mark layers, drawn in array order (stable z-order)'),
   guides: z

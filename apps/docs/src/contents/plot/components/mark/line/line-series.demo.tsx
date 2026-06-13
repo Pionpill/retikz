@@ -1,4 +1,4 @@
-import { LineMark, Plot } from '@retikz/plot-react';
+import { Axis, LineMark, Plot } from '@retikz/plot-react';
 import type { FC } from 'react';
 
 import { climate } from './line-series.data';
@@ -7,6 +7,8 @@ import { climate } from './line-series.data';
 const Demo: FC = () => (
   <Plot data={climate} width={360} height={220} style={{ maxWidth: '100%', height: 'auto' }}>
     <LineMark x="month" y="temp" series="city" order="month" />
+    <Axis dimension="x" />
+    <Axis dimension="y" grid />
   </Plot>
 );
 

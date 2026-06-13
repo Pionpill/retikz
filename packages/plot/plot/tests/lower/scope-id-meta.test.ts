@@ -22,9 +22,17 @@ const expandOf = (spec: PlotSpec, datasets: Datasets, options?: LowerPlotsOption
   return def.expand(spec) as IRScope;
 };
 
-/** 取第一个 mark 图层 scope（无 guides 时即外层 plot scope 的第一个子 scope） */
+/**
+ * plot lowered 的「内容 scope」（承 mark/guide 层 + provenance meta 的 localNamespace scope）。
+ * ADR-02 L1-b：带 id 的 plot → 外层 panel scope（id、非 localNamespace）⊃ 内层内容 scope；
+ *   无 id → outer 自身即内容 scope。本 helper 抹平两形态，供下方按内容层断言。
+ */
+const contentScope = (outer: IRScope): IRScope =>
+  outer.id !== undefined && outer.localNamespace !== true ? (outer.children[0] as IRScope) : outer;
+
+/** 取第一个 mark 图层 scope（内容 scope 的第一个子 scope） */
 const firstLayer = (spec: PlotSpec, datasets: Datasets, options?: LowerPlotsOptions): IRScope =>
-  expandOf(spec, datasets, options).children[0] as IRScope;
+  contentScope(expandOf(spec, datasets, options)).children[0] as IRScope;
 
 /** 递归收集 IRChild 树里所有带 meta 的元素（id 一并带出，便于断言） */
 const collectMeta = (child: IRChild, out: Array<{ type: string; id?: string; meta: unknown }> = []): Array<{ type: string; id?: string; meta: unknown }> => {
@@ -93,12 +101,17 @@ const pointSpec = (over: { id?: string } = {}): PlotSpec =>
 // =====================================================================
 describe('ADR-01 id/meta — happy path', () => {
   it('root_id_to_scope_id', () => {
-    // <Plot id="sales"> + provenance:true → 外层 scope.id='sales' + localNamespace + meta {source:'plot',dataReference:'sales'}
+    // ADR-02 L1-b：<Plot id="sales"> + provenance:true → 外层 panel scope.id='sales'（非 localNamespace、面板 bbox 句柄）
+    //   ⊃ 内层 localNamespace 内容 scope（承 meta {source:'plot',dataReference:'sales'}）+ plotArea carrier
     const outer = expandOf(barSpec({ id: 'sales' }), { sales: SALES }, { ...opts, provenance: true });
     expect(outer.type).toBe('scope');
     expect(outer.id).toBe('sales');
-    expect(outer.localNamespace).toBe(true);
-    expect(outer.meta).toEqual({ source: 'plot', dataReference: 'sales' });
+    expect(outer.localNamespace).toBeUndefined();
+    const inner = outer.children[0] as IRScope;
+    expect(inner.localNamespace).toBe(true);
+    expect(inner.meta).toEqual({ source: 'plot', dataReference: 'sales' });
+    // plotArea carrier 句柄外部可见（localNamespace 之外）
+    expect(outer.children.some(c => (c as { id?: string }).id === 'sales.plotArea')).toBe(true);
   });
 
   it('mark_layer_id_meta', () => {

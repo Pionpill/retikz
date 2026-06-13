@@ -103,7 +103,7 @@ export const PlotScale = {
 ## 不在本 ADR 范围
 
 - **离散 size / opacity 档**（D1）→ 顺延需求驱动（本轮离散化只输出 color）。
-- **bin transform**（数据层分箱产新字段）→ alpha.11 Statistics（与 scale 层离散化正交：transform 改数据、scale 改映射）。
+- **bin transform**（数据层分箱产新字段）→ alpha.12 Statistics（与 scale 层离散化正交：transform 改数据、scale 改映射）。
 - **React 离散化 scale 显式表面 / `<ColorScale>` DSL** → 顺延。
 - **legend 分箱 swatch 渲染** → [ADR-03](./03-legend-guide.md)。
 

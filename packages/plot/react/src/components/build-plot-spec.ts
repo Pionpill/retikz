@@ -111,7 +111,7 @@ export type BuildPlotSpecOptions = {
   model?: DataModel;
 };
 
-/** 无任何 <Axis> 子组件时填充的默认 guide：x 轴 + y 轴（y 带网格，横线读数值、不过密） */
+/** 默认 guide（供 decorateDefaultGuides 复用，薄 <Plot> 本身不补）：x 轴 + y 轴（y 带网格，横线读数值、不过密） */
 const DEFAULT_GUIDES: ReadonlyArray<Guide> = [
   { type: PlotGuide.Axis, dimension: 'x' },
   { type: PlotGuide.Axis, dimension: 'y', grid: true },
@@ -347,7 +347,7 @@ const toPolarConfig = (coordinate: CoordinateInput | undefined): PolarConfig | u
  * @description 纯函数：从 children 收集 mark + guide + transform；按 coordinate（cartesian / polar）推断 scale 类型、
  *   装配 stack transform、自动建坐标系绑定（用户不写）。cartesian：x band/linear/time/point、y linear；
  *   polar：角向 sector→linear / bar→band / 闭合 line→point / 否则 linear，径向 linear。
- *   guide 规则：bare → 无；无 <Axis> → cartesian 默认全套（polar 默认无）；写了 <Axis> → 显式所得。
+ *   guide 规则（alpha.10 薄 Plot）：bare → 无；否则 = 显式 <Axis>/<Legend> 所得（不补默认轴）。默认轴交 <Chart>/decorateDefaultGuides。
  *   产出须等价于手写 PlotSpec（仿 core Sugar = Kernel 等价性）。data 不进 IR，仅存 reference
  */
 export const buildPlotSpec = (children: ReactNode, dataRef: string, options: BuildPlotSpecOptions = {}): PlotSpec => {
@@ -400,14 +400,11 @@ export const buildPlotSpec = (children: ReactNode, dataRef: string, options: Bui
   }
   if (collected.colored) scales.push(buildColorScale(collected.colorFields, options.model));
 
-  // 仅 cartesian2D 自动补全 x/y 默认轴；其它坐标系（polar / 1D / ternary）的专门轴需用户显式声明
-  const defaultGuides: ReadonlyArray<Guide> = coordKind === 'cartesian2D' ? DEFAULT_GUIDES : [];
-  // 默认 axes 合并按 guide type 分判（ADR-03 决策 ⑦，修 P1）：
-  //   显式 <Axis> 抑制默认 axes（用户接管坐标轴）；<Legend> 不抑制默认 axes（图例与默认轴共存）。
-  //   即：仅当用户未声明任何显式 Axis 时才补默认 axes，无论是否有 Legend。收集到的 Legend 始终保留。
+  // alpha.10 薄 Plot：不补默认轴——用户显式 <Axis>/<Legend> 才有 guides，bare 连显式也不要。
+  //   开箱即用的默认轴 / 网格交给上层 <Chart>（v0.2，复用 decorateDefaultGuides）。
   const explicitAxes = collected.guides.filter(guide => guide.type === PlotGuide.Axis);
   const legends = collected.guides.filter(guide => guide.type === PlotGuide.Legend);
-  const guides: Array<Guide> = options.bare ? [] : [...(explicitAxes.length > 0 ? explicitAxes : defaultGuides), ...legends];
+  const guides: Array<Guide> = options.bare ? [] : [...explicitAxes, ...legends];
 
   return {
     namespace: PLOT_NAMESPACE,
@@ -419,4 +416,16 @@ export const buildPlotSpec = (children: ReactNode, dataRef: string, options: Bui
     marks: collected.marks,
     guides,
   };
+};
+
+/**
+ * 给薄 <Plot> 产物补默认坐标轴：cartesian2D 且无任何显式 axis 时，前置 x 轴 + y 轴（带网格）。
+ * @description 框架无关纯函数（PlotSpec 进出），供上层 <Chart>（v0.2）复用——薄 <Plot> 本身不调用。
+ *   非 cartesian2D（polar / 1D / ternary）的专门轴仍需显式声明，原样返回；已有显式 <Axis> 时不补。
+ */
+export const decorateDefaultGuides = (spec: PlotSpec): PlotSpec => {
+  if (spec.coordinate.type !== PlotCoordinate.Cartesian2D) return spec;
+  const guides = spec.guides ?? [];
+  if (guides.some(guide => guide.type === PlotGuide.Axis)) return spec;
+  return { ...spec, guides: [...DEFAULT_GUIDES, ...guides] };
 };
