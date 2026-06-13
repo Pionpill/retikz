@@ -39,7 +39,7 @@ Backend capability: **SVG** supports every trigger; **Canvas** supports `load` /
 
 ## Static snapshot (`snapshotAt`)
 
-Pass `<Layout snapshotAt={ms}>` (or `renderToSvgString(ir, { snapshotAt })` / `mountSvg(…, { snapshotAt })`) to render **a single frame frozen at that time**: no playback, no emitted animation — each track's value at that instant is baked into static attributes / transforms. Use it for SSR poster frames, thumbnails, social-card previews.
+Pass `<Layout snapshotAt={ms}>` (or `renderToSvgString(ir, { snapshotAt })` / `mountSvg(…, { snapshotAt })`) to render **a single frame frozen at that time**: no playback, no emitted animation — the value of each **autoplay track** (`trigger: 'load'` / omitted) at that instant is baked into static attributes / transforms. Use it for SSR poster frames, thumbnails, social-card previews.
 
 <ComponentPreview name="snapshot" size="xs" />
 
@@ -50,4 +50,4 @@ Pass `<Layout snapshotAt={ms}>` (or `renderToSvgString(ir, { snapshotAt })` / `m
 </Layout>
 ```
 
-`snapshotAt ≥ duration` → the settled state (= the full base figure); `snapshotAt` overrides `animate`. SVG reuses the same `evaluateTrack` engine, so a snapshot matches the same instant during playback frame-for-frame; Canvas paints one frame at that time without starting a rAF loop.
+`snapshotAt ≥ duration` → the settled state (= the full base figure); `snapshotAt` overrides `animate`. Interaction-triggered tracks (`manual` / `visible` / `{ onEvent }`) are **not frozen** in a static frame — they stay at base (settled), since a poster represents "after load, before any interaction has happened"; both backends agree. SVG reuses the same `evaluateTrack` engine, so a snapshot matches the same instant during playback frame-for-frame; Canvas paints one frame at that time without starting a rAF loop.

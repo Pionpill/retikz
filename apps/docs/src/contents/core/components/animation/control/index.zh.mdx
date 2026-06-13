@@ -39,7 +39,7 @@ const ref = useRef<AnimationControls | null>(null);
 
 ## 静态截帧（`snapshotAt`）
 
-给 `<Layout snapshotAt={毫秒}>`（或 `renderToSvgString(ir, { snapshotAt })` / `mountSvg(…, { snapshotAt })`）→ 渲染**定格在该时刻的一帧**：不播放、不 emit 动画，把每条 track 在该时刻的值烘焙成静态属性 / transform。用于 SSR 海报帧、缩略图、社交卡片预览。
+给 `<Layout snapshotAt={毫秒}>`（或 `renderToSvgString(ir, { snapshotAt })` / `mountSvg(…, { snapshotAt })`）→ 渲染**定格在该时刻的一帧**：不播放、不 emit 动画，把**自动播 track**（`trigger: 'load'` / 缺省）在该时刻的值烘焙成静态属性 / transform。用于 SSR 海报帧、缩略图、社交卡片预览。
 
 <ComponentPreview name="snapshot" size="xs" />
 
@@ -50,4 +50,4 @@ const ref = useRef<AnimationControls | null>(null);
 </Layout>
 ```
 
-`snapshotAt ≥ 时长` → settled 终态（= base 完整图）；`snapshotAt` 覆盖 `animate`。SVG 复用同一套 `evaluateTrack` 求值引擎，故截帧与播放中的同一时刻逐帧一致；Canvas 按该时刻画一帧、不起 rAF。
+`snapshotAt ≥ 时长` → settled 终态（= base 完整图）；`snapshotAt` 覆盖 `animate`。交互触发的 track（`manual` / `visible` / `{ onEvent }`）在静态帧里**不参与定格**、停在 base（settled）——海报代表「加载后、尚未发生任何交互」的样子，两后端一致。SVG 复用同一套 `evaluateTrack` 求值引擎，故截帧与播放中的同一时刻逐帧一致；Canvas 按该时刻画一帧、不起 rAF。
