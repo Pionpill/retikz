@@ -512,7 +512,7 @@ const emitSegmentBody = (
 };
 
 /** 调整 endAngle 使「start→end」沿给定扫描方向（ccw: 递减 / 否则递增），保持裁剪后弧方向不变 */
-const alignSweep = (start: number, end: number, ccw: boolean): { start: number; end: number } => {
+export const alignSweep = (start: number, end: number, ccw: boolean): { start: number; end: number } => {
   const sweep = end - start;
   if (sweep === 0) return { start, end: start };
   if (Math.abs(sweep) === 360) return { start, end: start + (ccw ? -360 : 360) };

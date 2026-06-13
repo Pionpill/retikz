@@ -9,3 +9,7 @@ export * from './bend';
 export * from './arc';
 export * from './segment';
 export * from './contour';
+export { EDGE_ENDS, lerpPoint, edgeAngleDeg, polylineViaVertex } from './edge';
+export type { Side } from './edge';
+export { localToWorld, worldToLocal } from './transform';
+export type { CenteredShape } from './transform';

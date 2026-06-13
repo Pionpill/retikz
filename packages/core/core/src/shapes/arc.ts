@@ -20,14 +20,15 @@ type ArcParams = {
   close?: boolean;
 };
 
-/** arc 的派生几何：圆心局部系 AABB + 圆心相对 AABB 中心偏移 */
-const arcGeometry = (
-  params: ArcParams,
-): {
+/** arc 的派生几何类型：圆心局部系 AABB + 圆心相对 AABB 中心偏移 */
+type ArcGeometry = {
   range: { start: number; end: number; mid: number };
   aabbHalfAxes: { halfWidth: number; halfHeight: number };
   centerOffset: Position;
-} => {
+};
+
+/** arc 的派生几何：圆心局部系 AABB + 圆心相对 AABB 中心偏移 */
+const computeArcGeometry = (params: ArcParams): ArcGeometry => {
   const { radius } = params;
   const range = normalizeAngularRange(params.startAngle, params.endAngle);
   const center: Position = [0, 0];
@@ -49,6 +50,17 @@ const arcGeometry = (
     aabbHalfAxes: { halfWidth: (maxX - minX) / 2, halfHeight: (maxY - minY) / 2 },
     centerOffset: [-aabbCenter[0], -aabbCenter[1]],
   };
+};
+
+/** params → 派生几何的 WeakMap 缓存（同 sector：同一 params 实例多次取几何只算一次，纯性能、行为不变） */
+const arcGeometryCache = new WeakMap<ArcParams, ArcGeometry>();
+
+const arcGeometry = (params: ArcParams): ArcGeometry => {
+  const cached = arcGeometryCache.get(params);
+  if (cached !== undefined) return cached;
+  const geo = computeArcGeometry(params);
+  arcGeometryCache.set(params, geo);
+  return geo;
 };
 
 /** 圆心局部点（相对圆心）→ 世界系（+centerOffset 到相对 AABB 中心后经 rect 投影） */
