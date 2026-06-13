@@ -25,6 +25,7 @@ export const ellipse = {
   center: (e: Ellipse): Position => [e.x, e.y],
   /** 判断点是否在椭圆内（含边界，考虑旋转） */
   contains: (e: Ellipse, p: Position): boolean => {
+    if (e.rx === 0 || e.ry === 0) return false; // 退化椭圆（零半轴）：避免除零产 NaN
     const [lx, ly] = worldToLocal(e, p);
     return (lx * lx) / (e.rx * e.rx) + (ly * ly) / (e.ry * e.ry) <= 1;
   },
@@ -74,6 +75,7 @@ export const ellipse = {
  * @description 椭圆方程 (x/rx)² + (y/ry)² = 1；沿 (lx,ly) 缩放 t 倍命中 t = 1 / √((lx/rx)² + (ly/ry)²)
  */
   boundaryPoint: (e: Ellipse, toward: Position): Position => {
+    if (e.rx === 0 || e.ry === 0) return [e.x, e.y]; // 退化椭圆（零半轴）：边界塌缩到中心，避免除零产 NaN
     const [lx, ly] = worldToLocal(e, toward);
     if (lx === 0 && ly === 0) return [e.x, e.y];
     const a = lx / e.rx;

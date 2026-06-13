@@ -120,7 +120,8 @@ const fractionAlong = (seg: ContourSegment, p: Position, fromStart: boolean): nu
     const ex = seg.to[0] - seg.from[0];
     const ey = seg.to[1] - seg.from[1];
     const len2 = ex * ex + ey * ey;
-    if (len2 < EPSILON) return 0;
+    // len2 是平方长度，阈值取 EPSILON²，使等效长度阈值与 EPSILON（线性）量纲一致
+    if (len2 < EPSILON * EPSILON) return 0;
     // p 在 from→to 上的参数 t；fromStart 量「占整段比例」、否则量「自 to 反向的比例」
     const t = ((p[0] - seg.from[0]) * ex + (p[1] - seg.from[1]) * ey) / len2;
     return fromStart ? t : 1 - t;

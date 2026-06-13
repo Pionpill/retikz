@@ -29,6 +29,7 @@ export const diamond = {
   center: (d: Diamond): Position => [d.x, d.y],
   /** 点是否在菱形内（含边界，含旋转）；方程 |x|/halfA + |y|/halfB ≤ 1 */
   contains: (d: Diamond, p: Position): boolean => {
+    if (d.halfA === 0 || d.halfB === 0) return false; // 退化菱形（零半轴）：避免除零产 NaN
     const [lx, ly] = worldToLocal(d, p);
     return Math.abs(lx) / d.halfA + Math.abs(ly) / d.halfB <= 1 + 1e-9;
   },
@@ -75,6 +76,7 @@ export const diamond = {
  * @description 菱形方程 |x|/halfA + |y|/halfB = 1；沿方向 (lx,ly) 缩放 t 倍命中：t = 1 / (|lx|/halfA + |ly|/halfB)
  */
   boundaryPoint: (d: Diamond, toward: Position): Position => {
+    if (d.halfA === 0 || d.halfB === 0) return [d.x, d.y]; // 退化菱形（零半轴）：边界塌缩到中心，避免除零产 NaN
     const [lx, ly] = worldToLocal(d, toward);
     const denom = Math.abs(lx) / d.halfA + Math.abs(ly) / d.halfB;
     if (denom === 0) return [d.x, d.y];

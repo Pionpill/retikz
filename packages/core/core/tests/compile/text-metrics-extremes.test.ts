@@ -19,6 +19,11 @@ describe('fallbackMeasurer 边界', () => {
     expect(() => fallbackMeasurer('x', { size: NaN })).toThrow(/NaN/);
   });
 
+  it('Infinity size → 抛错（非有限输入不放进 Scene）', () => {
+    expect(() => fallbackMeasurer('x', { size: Infinity })).toThrow(/Infinity/);
+    expect(() => fallbackMeasurer('x', { size: Infinity })).toThrow(/finite/);
+  });
+
   it('多 codepoint emoji 文本：按 length（UTF-16 code unit）算宽——已知不准，但不应崩', () => {
     // '👨‍👩‍👧' 由多 codepoint 组成，length 远大于 1 视觉字符
     const res = fallbackMeasurer('👨‍👩‍👧', { size: 10 });
