@@ -81,7 +81,7 @@ export const TargetSchema = z
     'Path endpoint: Cartesian [x, y], polar position, node target object ({ id, anchor?, offset? }), relative offset object ({ relative } / { relativeAccumulate }), offset position ({ of, offset } mirroring TikZ `calc`), or between position ({ between: [A, B], t } proportional point) — all resolved at compile time. Node id string shorthand is React DSL only (parsed to a node target object before reaching the IR).',
   );
 
-/** 路径端点：直接坐标 [x, y]、极坐标、节点 id 字符串、相对偏移对象 */
+/** 路径端点：直接坐标 [x, y] / 极坐标 / NodeTarget 对象 `{ id, anchor?, offset? }` / 相对偏移对象 / offset / between；裸节点 id 字符串仅 React DSL，解析为 NodeTarget 后才进 IR */
 export type IRTarget = z.infer<typeof TargetSchema>;
 
 /** 相对前一 step 终点的偏移；不更新 prevEnd（TikZ `(+x, +y)`） */

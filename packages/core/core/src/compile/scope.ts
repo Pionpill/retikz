@@ -152,9 +152,8 @@ export const inverseTransformChain = (
     } else {
       const sy = t.y ?? t.x;
       if (t.x === 0 || sy === 0) {
-        // scale 0 不可逆——退化为 (0, 0) 防 NaN
-        // schema 层不强制拒 scale=0（zod 3 discriminatedUnion 不支持 .refine），
-        // 仅 ScaleSchema describe 提醒用户避坑；运行时退化为 (0, 0) 防 NaN
+        // scale 0 不可逆——退化为 (0, 0) 防 NaN（兜底手搓 IR 绕过 schema 的退化输入）；
+        // ScaleSchema describe 已提醒用户避坑，此处运行时再守一道
         x = 0;
         y = 0;
         continue;

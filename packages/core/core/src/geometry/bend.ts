@@ -33,7 +33,7 @@ const DEFAULT_LOOSENESS = 1;
 /** self-loop（from==to）默认环大小（user units，受 looseness 缩放） */
 const DEFAULT_LOOP_SIZE = 1;
 
-/** 直边 cubic 控制点距离系数（chord 的几分之一） */
+/** 直边 cubic 控制点距离系数（chord 的几分之一）；retikz 取 1/3，TikZ 默认 looseness 对应 ≈0.3915，本库简化为 1/3 */
 const OUTIN_DISTANCE_FACTOR = 1 / 3;
 
 /** 角度（度）转单位方向向量（0°=+x，90°=+y screen-down，与 IR 角度约定一致） */

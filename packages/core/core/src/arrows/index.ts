@@ -96,6 +96,8 @@ export const BUILTIN_ARROWS: Record<BuiltinArrowName, ArrowDefinition> = {
   },
   openCircle: {
     hollow: true,
+    // baseSize 10、圆心 cx=5；lineContactX=0.75 是路径线与圆相接处（距圆心 0.75）；
+    // rx=ry=4.25 = cx 5 − lineContactX 0.75，使圆的近端边正落在接触点上
     lineContactX: 0.75,
     emit: ctx => [
       {

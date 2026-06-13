@@ -183,7 +183,7 @@ const targetOf = (item: WayItem): IRTarget | null => {
 
 /**
  * way 数组 → IRStep 序列
- * @description 首元素始终 move（way[0] 是算子时降级到原点 [0,0]）；后续元素按各自规则：target/RelItem→line；Cycle→cycle；-|/|- 与下一项合并 fold；curve/cubic/bend 与下一项合并；arc/circle/ellipse 单独成 step；label 算子修饰下一段。连续 label/末尾 label/cycle 上的 label 抛错。纯函数，各框架 adapter Sugar 组件复用
+ * @description 首元素必须是 move 目标（way[0] 是算子 / label 算子时抛错，不降级）；后续元素按各自规则：target/RelItem→line；Cycle→cycle；-|/|- 与下一项合并 fold；curve/cubic/bend 与下一项合并；arc/circle/ellipse 单独成 step；label 算子修饰下一段。连续 label/末尾 label/cycle 上的 label 抛错。纯函数，各框架 adapter Sugar 组件复用
  */
 export const parseWay = (way: WayDSL): Array<IRStep> => {
   if (way.length < 2) {

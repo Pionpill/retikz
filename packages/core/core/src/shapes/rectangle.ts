@@ -65,8 +65,8 @@ export const rectangle = defineShape({
   *emit (r, style, round, params: RectangleParams): Iterable<ScenePrimitive> {
     const halfW = r.width / 2;
     const halfH = r.height / 2;
-    // params.cornerRadius 优先；顶层 Node.cornerRadius（经 style.cornerRadius）迁移期回退
-    const cornerRadius = params.cornerRadius ?? style.cornerRadius;
+    // compile 已把顶层 Node.cornerRadius 合进 params（见 compile/node.ts），故与 boundaryPoint 一致只读 params.cornerRadius
+    const cornerRadius = params.cornerRadius;
     yield {
       type: 'rect',
       x: round(r.x - halfW),
