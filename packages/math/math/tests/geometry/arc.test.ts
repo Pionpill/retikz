@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import {
+  arcAngleInRange,
   arcBoundingPoints,
   arcEndPoint,
+  rayArc,
 } from '../../src/geometry/arc';
 
 /*
@@ -119,5 +121,35 @@ describe('arcBoundingPoints 弧 bbox 极值候选点', () => {
     expect(containsPoint(pts, [-10, 0])).toBe(true);
     expect(containsPoint(pts, [10, 0])).toBe(true);
     expect(containsPoint(pts, [0, 10])).toBe(true); // 90°
+  });
+});
+
+describe('arcAngleInRange', () => {
+  it('含端点、区间外为假、整圆恒真', () => {
+    expect(arcAngleInRange(0, 90, 45)).toBe(true);
+    expect(arcAngleInRange(0, 90, 0)).toBe(true); // 起点
+    expect(arcAngleInRange(0, 90, 90)).toBe(true); // 终点
+    expect(arcAngleInRange(0, 90, 135)).toBe(false);
+    expect(arcAngleInRange(0, 360, 200)).toBe(true); // 整圆
+  });
+});
+
+describe('rayArc', () => {
+  it('射线穿过整圆：两个正向参数，升序', () => {
+    const hits = rayArc([-5, 0], [1, 0], [0, 0], 2, 0, 360);
+    expect(hits.length).toBe(2);
+    expect(hits[0]).toBeCloseTo(3, 9); // 命中 x=-2
+    expect(hits[1]).toBeCloseTo(7, 9); // 命中 x=2
+  });
+
+  it('未命中（射线离圆心 > 半径）返回空', () => {
+    expect(rayArc([0, 5], [1, 0], [0, 0], 2, 0, 360)).toEqual([]);
+  });
+
+  it('角度过滤：仅保留落在弧区间内的交点', () => {
+    // 圆周交点角度 0(x=2，在 [0,90]) 与 180(x=-2，区间外) → 只留 x=2（s=7）
+    const hits = rayArc([-5, 0], [1, 0], [0, 0], 2, 0, 90);
+    expect(hits.length).toBe(1);
+    expect(hits[0]).toBeCloseTo(7, 9);
   });
 });

@@ -24,8 +24,10 @@ describe('point 向量运算', () => {
     expect(point.shiftToward([0, 0], [10, 0], 3)).toEqual([3, 0]);
     expect(point.shiftToward([0, 0], [0, 0], 3)).toEqual([0, 0]);
   });
-  it('lerp 线性插值', () => {
+  it('lerp 线性插值（含 t=0/t=1 端点）', () => {
     const r: Position = lerp([0, 0], [10, 20], 0.5);
     expect(r).toEqual([5, 10]);
+    expect(lerp([2, 3], [10, 20], 0)).toEqual([2, 3]); // t=0 → a
+    expect(lerp([2, 3], [10, 20], 1)).toEqual([10, 20]); // t=1 → b
   });
 });
