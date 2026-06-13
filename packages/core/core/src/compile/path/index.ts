@@ -17,6 +17,7 @@ import {
   foldSegmentSample,
   lineSegmentSample,
   quadSegmentSample,
+  rectPerimeterSample,
 } from '../../geometry/segment';
 import type {
   IRPath,
@@ -662,6 +663,9 @@ export const emitPathPrimitive = (
       const toClip = clipForTarget(moveTo, fromClip ?? prev?.anchor ?? moveAnchor, nameStack, scopeChain);
       if (!fromClip || !toClip) return null;
 
+      // 闭合段是 fromClip→toClip 的直线（无论走 close 还是 move+line）；登记采样器供中段 marks（cycle 无 label）
+      segmentSamplers.push(t => lineSegmentSample(fromClip, toClip, t));
+
       // 起点 == lastEnd 且终点 == subPathStart → close 收尾最干净
       if (samePoint(fromClip, lastEnd) && samePoint(toClip, subPathStart)) {
         emitClose();
@@ -717,6 +721,8 @@ export const emitPathPrimitive = (
       const ry0 = Math.min(fromPt[1], toPt[1]);
       const ry1 = Math.max(fromPt[1], toPt[1]);
       points.push([rx0, ry0], [rx1, ry0], [rx1, ry1], [rx0, ry1]);
+      // 周长采样器供中段 marks（沿矩形四边均分；忽略 cornerRadius）
+      segmentSamplers.push(t => rectPerimeterSample(fromPt, toPt, t));
       // 后续 step 从矩形起点续
       if (rectStart) penOverride = rectStart;
       continue;
