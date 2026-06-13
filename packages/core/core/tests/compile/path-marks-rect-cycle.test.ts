@@ -28,6 +28,63 @@ const findMarkPoint = (prims: ReadonlyArray<ScenePrimitive>): [number, number] |
   return undefined;
 };
 
+/** 递归找第一个 ellipse 图元（openCircle mark 物化为 ellipse） */
+const findEllipse = (
+  prims: ReadonlyArray<ScenePrimitive>,
+): Extract<ScenePrimitive, { type: 'ellipse' }> | undefined => {
+  for (const p of prims) {
+    if (p.type === 'ellipse') return p;
+    if (p.type === 'group') {
+      const inner = findEllipse(p.children);
+      if (inner) return inner;
+    }
+  }
+  return undefined;
+};
+
+describe('G4：中段 mark 空心箭头的 contextStroke 拍平进 Scene 时解析为 path 描边色', () => {
+  it('openCircle mark：嵌入 Scene 的 ellipse stroke = path 实际描边（非 {contextStroke} / 非裸 context-stroke）', () => {
+    const ir: IR = {
+      version: 1,
+      type: 'scene',
+      children: [
+        {
+          type: 'path',
+          stroke: 'red',
+          marks: [{ pos: 0.5, mark: { kind: 'arrow', shape: 'openCircle' } }],
+          children: [
+            { type: 'step', kind: 'move', to: [0, 0] },
+            { type: 'step', kind: 'line', to: [100, 0] },
+          ],
+        },
+      ],
+    };
+    const ellipse = findEllipse(compileToScene(ir).primitives);
+    expect(ellipse).toBeDefined();
+    // contextStroke 在独立 Scene group 里无引用上下文 → 解析为 path 的已解析描边色
+    expect(ellipse!.stroke).toBe('red');
+  });
+
+  it('path 无显式 stroke → mark contextStroke 解析为 currentColor', () => {
+    const ir: IR = {
+      version: 1,
+      type: 'scene',
+      children: [
+        {
+          type: 'path',
+          marks: [{ pos: 0.5, mark: { kind: 'arrow', shape: 'openCircle' } }],
+          children: [
+            { type: 'step', kind: 'move', to: [0, 0] },
+            { type: 'step', kind: 'line', to: [100, 0] },
+          ],
+        },
+      ],
+    };
+    const ellipse = findEllipse(compileToScene(ir).primitives);
+    expect(ellipse!.stroke).toBe('currentColor');
+  });
+});
+
 describe('rectPerimeterSample（矩形周长采样，CW from 左上）', () => {
   const from: [number, number] = [0, 0];
   const to: [number, number] = [40, 20];

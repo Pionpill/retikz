@@ -15,6 +15,17 @@ const markerFillToSvg = (fill: MarkerFill | undefined): string => {
   return 'context-stroke';
 };
 
+/**
+ * marker stroke 取值 → SVG stroke 属性值
+ * @description 纯色字符串直传；`{ kind:'contextStroke' }` → `context-stroke`（继承所在元素描边）；
+ *   省略 → undefined（compact 丢弃，SVG stroke 缺省 none）。
+ */
+const markerStrokeToSvg = (stroke: MarkerFill | undefined): string | undefined => {
+  if (stroke === undefined) return undefined;
+  if (typeof stroke === 'string') return stroke;
+  return 'context-stroke';
+};
+
 /** marker-local path 命令序列 → SVG `d` 字符串（复用主 path 的 `buildPathD`） */
 const markerCommandsToD = (commands: ReadonlyArray<MarkerPathCommand>): string =>
   buildPathD(commands);
@@ -34,7 +45,7 @@ export const buildMarkerPrim = (prim: MarkerPrimitive): SvgNode => {
           fill: markerFillToSvg(prim.fill),
           'fill-opacity': prim.fillOpacity,
           'fill-rule': prim.fillRule,
-          stroke: prim.stroke,
+          stroke: markerStrokeToSvg(prim.stroke),
           'stroke-opacity': prim.strokeOpacity,
           'stroke-width': prim.strokeWidth,
           'stroke-dasharray': prim.dashPattern?.join(' '),
@@ -52,7 +63,7 @@ export const buildMarkerPrim = (prim: MarkerPrimitive): SvgNode => {
           ry: prim.ry,
           fill: markerFillToSvg(prim.fill),
           'fill-opacity': prim.fillOpacity,
-          stroke: prim.stroke,
+          stroke: markerStrokeToSvg(prim.stroke),
           'stroke-opacity': prim.strokeOpacity,
           'stroke-width': prim.strokeWidth,
           'stroke-dasharray': prim.dashPattern?.join(' '),
@@ -71,7 +82,7 @@ export const buildMarkerPrim = (prim: MarkerPrimitive): SvgNode => {
           ry: prim.cornerRadius,
           fill: markerFillToSvg(prim.fill),
           'fill-opacity': prim.fillOpacity,
-          stroke: prim.stroke,
+          stroke: markerStrokeToSvg(prim.stroke),
           'stroke-opacity': prim.strokeOpacity,
           'stroke-width': prim.strokeWidth,
           'stroke-dasharray': prim.dashPattern?.join(' '),

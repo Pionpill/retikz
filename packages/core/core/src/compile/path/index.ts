@@ -30,6 +30,8 @@ import { JsonObjectSchema } from '../../ir';
 import type {
   ArrowEndSpec,
   GroupPrim,
+  MarkerFill,
+  MarkerPrimitive,
   PathCommand,
   ScenePrimitive,
   Transform,
@@ -230,12 +232,34 @@ const buildPathTransforms = (
  * @description marker 局部系：viewBox `0 0 baseSize baseSize`，参考点 (refX, baseSize/2)，尖端朝 +x。
  *   GroupPrim transforms 数组语义 array[0] 最外层（最后 apply），故链 = translate(point) ∘ rotate(tangentDeg)
  *   ∘ scale(markerWidth/baseSize, markerHeight/baseSize) ∘ translate(-refX, -baseSize/2)：先把参考点移到原点、
- *   缩放到目标尺寸、绕切线角旋转、平移到采样点。marker 几何（`MarkerPrimitive[]`）是 ScenePrimitive 的结构子集，直接作 children。
+ *   缩放到目标尺寸、绕切线角旋转、平移到采样点。
+ *
+ *   marker 几何拍平进 Scene 作 children：marker 窄子集结构上是 ScenePrimitive 子集，唯一差异是 fill/stroke 可为
+ *   `{ kind: 'contextStroke' }`。端点箭头物化成真正的 `<marker>` 时 contextStroke 由 renderer 继承引用方描边；
+ *   但中段 mark 是独立 Scene group，已无引用上下文可继承，故在此把 contextStroke 解析成 path 的实际描边色
+ *   （contextStroke 字符串单位 = path 的已解析 stroke）。
  */
+const resolveMarkerContextFill = (value: MarkerFill, contextStroke: string): string =>
+  typeof value === 'string' ? value : contextStroke;
+
+/** marker 图元 → Scene 图元：结构同构，仅把 fill/stroke 的 contextStroke 解析成具体描边色（递归 group） */
+const markerPrimToScene = (prim: MarkerPrimitive, contextStroke: string): ScenePrimitive => {
+  if (prim.type === 'group') {
+    return { ...prim, children: prim.children.map(c => markerPrimToScene(c, contextStroke)) };
+  }
+  // marker 窄子集 ⊂ Scene 图元（见上）；解析 contextStroke 后即合法 Scene 图元，cast 作用域仅此一处
+  return {
+    ...prim,
+    ...(prim.fill !== undefined && { fill: resolveMarkerContextFill(prim.fill, contextStroke) }),
+    ...(prim.stroke !== undefined && { stroke: resolveMarkerContextFill(prim.stroke, contextStroke) }),
+  } as ScenePrimitive;
+};
+
 const buildMarkMarkerGroup = (
   spec: ArrowEndSpec,
   sample: SegmentSample,
   round: (n: number) => number,
+  contextStroke: string,
 ): GroupPrim => {
   const angleDeg = (Math.atan2(sample.tangent[1], sample.tangent[0]) * 180) / Math.PI;
   const sx = spec.markerWidth / spec.baseSize;
@@ -247,7 +271,7 @@ const buildMarkMarkerGroup = (
     { kind: 'scale', x: round(sx), y: round(sy) },
     { kind: 'translate', x: round(-spec.refX), y: round(-refY) },
   ];
-  return { type: 'group', transforms, children: [...spec.marker] };
+  return { type: 'group', transforms, children: spec.marker.map(p => markerPrimToScene(p, contextStroke)) };
 };
 
 /**
@@ -1006,7 +1030,7 @@ export const emitPathPrimitive = (
       const localT = scaled - segIdx;
       const sample = segmentSamplers[segIdx](pos === 1 ? 1 : localT);
       const spec = resolveMarkArrowSpec(mark, effectiveArrows, round);
-      markPrims.push(buildMarkMarkerGroup(spec, sample, round));
+      markPrims.push(buildMarkMarkerGroup(spec, sample, round, baseProps.stroke ?? 'currentColor'));
       // marker 落点纳入 bbox（保守取采样点；marker 自身尺寸相对小，端点已足够避免被裁）
       points.push(sample.point);
     }

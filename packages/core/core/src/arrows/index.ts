@@ -106,7 +106,7 @@ export const BUILTIN_ARROWS: Record<BuiltinArrowName, ArrowDefinition> = {
         cy: 5,
         rx: 4.25,
         ry: 4.25,
-        stroke: typeof ctx.stroke === 'string' ? ctx.stroke : 'context-stroke',
+        stroke: typeof ctx.stroke === 'string' ? ctx.stroke : { kind: 'contextStroke' },
         strokeWidth: ctx.lineWidth,
       },
     ],

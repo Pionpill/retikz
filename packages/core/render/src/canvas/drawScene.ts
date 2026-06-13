@@ -418,16 +418,20 @@ const resolveMarkerFill = (
   return pathStroke ?? String(ctx.strokeStyle);
 };
 
-/** marker-local stroke 取值 → canvas 颜色：`context-stroke` 解析为线的 stroke（缺省回退当前 strokeStyle） */
+/** marker-local stroke 取值 → canvas 颜色：`{ kind:'contextStroke' }`（及 legacy `context-stroke` 关键字）解析为线的 stroke（缺省回退当前 strokeStyle） */
 const resolveMarkerStroke = (
   ctx: CanvasRenderingContext2D,
-  stroke: string | undefined,
+  stroke: MarkerFill | undefined,
   pathStroke: string | undefined,
   options: DrawOptions,
 ): string | undefined => {
-  if (stroke === undefined || stroke === 'none') return undefined;
-  if (stroke === 'context-stroke') return pathStroke ?? String(ctx.strokeStyle);
-  return resolveColor(stroke, options) ?? stroke;
+  if (stroke === undefined) return undefined;
+  if (typeof stroke === 'string') {
+    if (stroke === 'none') return undefined;
+    if (stroke === 'context-stroke') return pathStroke ?? String(ctx.strokeStyle); // legacy 关键字兼容
+    return resolveColor(stroke, options) ?? stroke;
+  }
+  return pathStroke ?? String(ctx.strokeStyle); // { kind: 'contextStroke' }
 };
 
 const fillMarkerPath = (
