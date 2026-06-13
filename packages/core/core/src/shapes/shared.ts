@@ -14,15 +14,16 @@ type AngularRange = {
 };
 
 /**
- * 规范化起止角：保证 end ≥ start（end<start 时加 360° 直至 ≥ start），并给出中分角
+ * 规范化起止角：保证 start ≤ end ≤ start+360（end<start 时加 360°、跨度>360° 钳到 360°），并给出中分角
  * @description 角度沿屏幕系（角度递增=CW）从 start 扫到 end；end<start 视为跨过 360°，与 polar / geometry/arc 约定一致。
  *   end<start 时一次性加上 360°·k（k 为使 end ≥ start 的最小非负整数），O(1) 闭式计算——
  *   避免 while 循环在巨型角度（如 1e308 浮点 end+360===end 卡死、1e9 退化成数百万次迭代）下挂死。
- *   end 已 ≥ start 时 ceil((start−end)/360) ≤ 0，k 取 0、end 不变（语义与原逐次加法等价）。
+ *   再把跨度钳到 ≤360°：sweep≥360° 视觉即整圆，超出部分冗余；钳定同时防住巨角（如 endAngle=1e8）
+ *   让下游 arcBoundingPoints 枚举海量 90°·k 轴向极值点。
  */
 export const normalizeAngularRange = (startAngle: number, endAngle: number): AngularRange => {
   const k = Math.max(0, Math.ceil((startAngle - endAngle) / 360));
-  const end = endAngle + 360 * k;
+  const end = Math.min(endAngle + 360 * k, startAngle + 360);
   return { start: startAngle, end, mid: (startAngle + end) / 2 };
 };
 

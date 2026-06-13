@@ -253,7 +253,7 @@ const inflateRect = (r: Rect, m: number): Rect =>
  * @description = `inflateRect(layout.rect, layout.margin)`，中心不变、四向各 +margin。border 类
  *   anchor（compass / 数字角度）解析与 bbox / viewBox / 布局占位都基于这层；视觉 emit / 裁剪 /
  *   形状专属 anchor / edgePoint / label 附着点仍读 `layout.rect`（不外扩）。单一派生量，不另存字段。
- *   （TikZ outer sep 对齐见 v0.3-beta.1 ADR-07。）
+ *   （对齐 TikZ outer sep 语义。）
  */
 export const outerRectOf = (layout: NodeLayout): Rect => inflateRect(layout.rect, layout.margin);
 
@@ -282,7 +282,7 @@ export const boundaryPointOf = (
  * @description 纯几何：在传入的 `layout.rect` 上求点，本体**不施加 outerSep（margin）**。outerSep 的
  *   「border 外推」由调用方决定——`anchor-cache.ts` 的 compass 解析先把 rect 外扩 margin（`outerRectOf`）
  *   再调本函数；`labelBorderPoint` 喂视觉 rect（label 附着点不含 margin）。这样 outer sep 只作用于
- *   path / position 的 anchor 引用，不波及 label（详见 v0.3-beta.1 ADR-07 §1/§2）。
+ *   path / position 的 anchor 引用，不波及 label。
  *   compass（9 个 rect 方位名）：默认连接面先走视觉 shape 自身 compass（ellipse/circle 落真实周长、polygon/rect 落 AABB，与 TikZ 一致），shape 未实现则回退 AABB 矩形；显式 boundary 按其解析。
  *   形状专属命名 anchor（tip-N / apex 等非 compass 名）恒走视觉形状自身，boundary 不影响。
  *   boundary 缺省 = 'shape'。

@@ -25,6 +25,7 @@ export const lowerScopeTransforms = (
   nameStack: NameStack,
   nodeDistance?: number,
   resolveBetweenGlobal?: ResolveBetweenGlobal,
+  onUnresolved?: (failed: IRTransform) => void,
 ): Array<Transform> | null => {
   const out: Array<Transform> = [];
   for (const t of transforms) {
@@ -36,7 +37,10 @@ export const lowerScopeTransforms = (
         const polar: PolarPosition = { angle: t.angle, radius: t.radius };
         if (t.origin !== undefined) polar.origin = t.origin;
         const resolved = resolvePosition(polar, nameStack, nodeDistance);
-        if (!resolved) return null;
+        if (!resolved) {
+          onUnresolved?.(t);
+          return null;
+        }
         out.push({ kind: 'translate', x: resolved[0], y: resolved[1] });
         break;
       }
@@ -44,7 +48,10 @@ export const lowerScopeTransforms = (
         const at: IRAtPosition = { direction: t.direction, of: t.of };
         if (t.distance !== undefined) at.distance = t.distance;
         const resolved = resolvePosition(at, nameStack, nodeDistance);
-        if (!resolved) return null;
+        if (!resolved) {
+          onUnresolved?.(t);
+          return null;
+        }
         out.push({ kind: 'translate', x: resolved[0], y: resolved[1] });
         break;
       }
@@ -54,14 +61,20 @@ export const lowerScopeTransforms = (
           offset: t.offset ?? [0, 0],
         };
         const resolved = resolvePosition(off, nameStack, nodeDistance);
-        if (!resolved) return null;
+        if (!resolved) {
+          onUnresolved?.(t);
+          return null;
+        }
         out.push({ kind: 'translate', x: resolved[0], y: resolved[1] });
         break;
       }
       case 'between-translate': {
         const between: IRBetweenPosition = { between: t.between, t: t.t };
         const resolved = resolvePosition(between, nameStack, nodeDistance, [], resolveBetweenGlobal);
-        if (!resolved) return null;
+        if (!resolved) {
+          onUnresolved?.(t);
+          return null;
+        }
         out.push({ kind: 'translate', x: resolved[0], y: resolved[1] });
         break;
       }
@@ -236,7 +249,7 @@ export const computeScopeBoundingBox = (
   let maxY = -Infinity;
   for (const layout of layouts) {
     // 4 角点取 rotate-aware 投影后的全局坐标——rect.anchor 已包含 rect.rotate；
-    // node 含 outerSep 时 scope bbox 也按外边界（rect + margin）算，与顶层 viewBox 口径一致（ADR-07 §5/§6）
+    // node 含 outerSep 时 scope bbox 也按外边界（rect + margin）算，与顶层 viewBox 口径一致
     const outerRect = outerRectOf(layout);
     const corners: ReadonlyArray<IRPosition> = [
       rectOps.anchor(outerRect, 'north-west'),

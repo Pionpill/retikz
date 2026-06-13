@@ -1,5 +1,5 @@
 import { rect as rectOps } from '../geometry/rect';
-import type { IR, IRAnimationTrack, IRChild, IRPath, IRPosition, IRScope } from '../ir';
+import type { IR, IRAnimationTrack, IRChild, IRPath, IRPosition, IRTransform } from '../ir';
 import type { GroupPrim, Scene, ScenePrimitive, Transform } from '../primitive';
 import { BUILTIN_SHAPES } from '../shapes';
 import type { ShapeDefinition } from '../shapes';
@@ -306,18 +306,18 @@ type PendingPath = {
   zIndex?: number;
 };
 
-/** scope.transforms 解析失败时根据失败成因映射的 warn code */
-const scopeTransformWarnCode = (
-  scope: IRScope,
-): CompileWarning['code'] => {
-  // 取首个 translate 变体的 kind 决定 warn code（多个都失败时只报第一种成因）
-  for (const t of scope.transforms ?? []) {
-    if (t.kind === 'offset-translate') return CompileWarningCode.OffsetBaseUnresolved;
-    if (t.kind === 'at-translate') return CompileWarningCode.AtTargetUnresolved;
-    if (t.kind === 'polar-translate') return CompileWarningCode.PolarOriginUnresolved;
-    if (t.kind === 'between-translate') return CompileWarningCode.UnresolvedNodeReference;
+/** 据**实际解析失败**的那个 transform 的成因映射 warn code（由 lowerScopeTransforms 的 onUnresolved 回调给出） */
+const transformWarnCode = (failed: IRTransform | undefined): CompileWarning['code'] => {
+  switch (failed?.kind) {
+    case 'offset-translate':
+      return CompileWarningCode.OffsetBaseUnresolved;
+    case 'at-translate':
+      return CompileWarningCode.AtTargetUnresolved;
+    case 'polar-translate':
+      return CompileWarningCode.PolarOriginUnresolved;
+    default:
+      return CompileWarningCode.UnresolvedNodeReference;
   }
-  return CompileWarningCode.UnresolvedNodeReference;
 };
 
 /** 把 DuplicateRegisterInfo 翻成 CompileWarning（含可读 message + 双 IR locator） */
@@ -533,7 +533,7 @@ export const compileToScene = (ir: IR, options: CompileOptions = {}): Scene => {
           if (child.zIndex !== undefined) zIndexOf.set(prim, child.zIndex);
         }
         // bbox 用全局坐标系下的 4 角点累积——scope 内 node 也参与顶层 layout 计算；
-        // node 含 outerSep（margin）时按外边界（rect + margin）入 bbox，与 viewBox 占位口径一致（ADR-07 §5）
+        // node 含 outerSep（margin）时按外边界（rect + margin）入 bbox，与 viewBox 占位口径一致
         const outerRect = outerRectOf(globalLayout);
         allPoints.push(
           rectOps.anchor(outerRect, 'north-west'),
@@ -566,10 +566,13 @@ export const compileToScene = (ir: IR, options: CompileOptions = {}): Scene => {
         layoutsAccumulator.push(coordLayout);
       } else if (child.type === 'scope') {
         const rawTransforms = child.transforms ?? [];
-        const loweredOwn = lowerScopeTransforms(rawTransforms, nameStack, nodeDistance, refPointOfTarget);
+        let failedTransform: IRTransform | undefined;
+        const loweredOwn = lowerScopeTransforms(rawTransforms, nameStack, nodeDistance, refPointOfTarget, t => {
+          failedTransform = t;
+        });
         if (loweredOwn === null) {
           onWarn({
-            code: scopeTransformWarnCode(child),
+            code: transformWarnCode(failedTransform),
             message: `Cannot resolve one of scope.transforms; referent (at.of / offset.of / polar.origin / between endpoints) is undefined or defined later in the IR`,
             path: `${locatorPrefix}children[${i}].scope.transforms`,
           });

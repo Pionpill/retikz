@@ -181,6 +181,30 @@ describe('CompileOptions.onWarn 缺省行为', () => {
   });
 });
 
+describe('scope.transforms warn code 指向真正失败的那个 transform', () => {
+  it('前一个 translate 变体解析成功、后一个失败 → 报后者的成因 code（非首个变体）', () => {
+    const ir = scene([
+      { type: 'node', id: 'A', position: [0, 0], text: 'A' },
+      {
+        type: 'scope',
+        transforms: [
+          // polar-translate 引用已存在的 A → 解析成功
+          { kind: 'polar-translate', origin: 'A', angle: 0, radius: 1 },
+          // offset-translate 引用未定义节点 → 真正失败的那个
+          { kind: 'offset-translate', of: 'missing', offset: [0, 0] },
+        ],
+        children: [],
+      },
+    ]);
+    const warnings: Array<CompileWarning> = [];
+    compileToScene(ir, { onWarn: w => warnings.push(w) });
+    const w = warnings.find(x => x.path.endsWith('.scope.transforms'));
+    expect(w).toBeDefined();
+    // 旧实现取首个 translate 变体 → 误报 POLAR_ORIGIN_UNRESOLVED；现报实际失败的 offset
+    expect(w!.code).toBe('OFFSET_BASE_UNRESOLVED');
+  });
+});
+
 describe('CompileWarningCode 收编与导出', () => {
   it('PARTIAL_ARC_CLOSED_INVALID 已收编进 CompileWarningCode 并从包根导出', () => {
     expect(CompileWarningCode.PartialArcClosedInvalid).toBe('PARTIAL_ARC_CLOSED_INVALID');

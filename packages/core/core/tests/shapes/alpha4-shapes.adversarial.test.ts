@@ -7,6 +7,7 @@ import { compileToScene } from '../../src/compile/compile';
 import { NodeSchema, ShapeRefSchema } from '../../src/ir';
 import type { IR } from '../../src/ir';
 import { arc, polygon, sector, star } from '../../src/shapes';
+import { normalizeAngularRange } from '../../src/shapes/shared';
 import type { ScenePrimitive } from '../../src/primitive';
 import { flattenPrims } from '../helpers/flatten';
 
@@ -94,6 +95,13 @@ describe('[adversarial] 几何极端：角度环绕死循环 / DoS', () => {
         shape: { type: 'star', params: { points: 100000, innerRadius: 5, outerRadius: 10 } },
       }),
     ).toThrow();
+  });
+
+  it('[adversarial] normalizeAngularRange 把跨度钳到 ≤360（巨角不枚举海量轴向点）', () => {
+    expect(normalizeAngularRange(0, 90).end).toBe(90); // 正常跨度不变
+    expect(normalizeAngularRange(0, 720).end).toBe(360); // 720 折成整圆 360
+    expect(normalizeAngularRange(10, 410).end).toBe(370); // 400 跨度钳到 10+360
+    expect(normalizeAngularRange(0, 1e8).end).toBe(360); // 巨角钳到 360
   });
 
   it('[G3] ellipse 节点 compass diagonal 落真实周长（与 TikZ 一致，非 AABB 角）', () => {
