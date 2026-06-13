@@ -1,4 +1,3 @@
-import { rayArc } from './arc';
 import { DEFAULT_EPSILON, type Position, point } from './point';
 
 /** 两条无限直线（各由两点定）的交点；平行 / 共线返回 null */
@@ -13,7 +12,7 @@ const lineLine = (a1: Position, a2: Position, b1: Position, b2: Position): Posit
   return [a1[0] + da[0] * t, a1[1] + da[1] * t];
 };
 
-/** 直线（origin + 方向 dir，dir 不必单位化）∩ 圆，返回 0/1/2 交点 */
+/** 直线（origin + 方向 dir，dir 不必单位化）∩ 圆，返回 0/1/2 交点；切线（disc≈0）返回 2 个重合点，调用方自判 */
 const lineCircle = (origin: Position, dir: Position, center: Position, radius: number): Array<Position> => {
   const ox = origin[0] - center[0];
   const oy = origin[1] - center[1];
@@ -31,7 +30,7 @@ const lineCircle = (origin: Position, dir: Position, center: Position, radius: n
   return out;
 };
 
-/** 圆 ∩ 圆，返回 0/1/2 交点（重合 / 内含 / 相离返回空） */
+/** 圆 ∩ 圆，返回 0/1/2 交点（重合 / 内含 / 相离返回空）；外 / 内切（disc≈0）返回 2 个重合点，调用方自判 */
 const circleCircle = (cA: Position, rA: number, cB: Position, rB: number): Array<Position> => {
   const dx = cB[0] - cA[0];
   const dy = cB[1] - cA[1];
@@ -61,5 +60,9 @@ const segmentSegment = (a1: Position, a2: Position, b1: Position, b2: Position):
   return [a1[0] + da[0] * t, a1[1] + da[1] * t];
 };
 
-/** 求交原语集（line / circle / segment）；ray∩arc 见 `arc` 模块（此处转出便于统一入口） */
-export const intersect = { lineLine, lineCircle, circleCircle, segmentSegment, rayArc };
+/**
+ * 求交原语集（line / circle / segment），统一返回点（`Position | null` / `Array<Position>`）。
+ * @description ray∩arc 不并入本集——`rayArc` 返回的是沿射线的标量参数 `Array<number>`（命中距离），
+ *   语义与点返回不一致，且 contour 等调用方需要该标量找最近命中；故 `rayArc` 仅从 `./arc` 模块导出。
+ */
+export const intersect = { lineLine, lineCircle, circleCircle, segmentSegment };

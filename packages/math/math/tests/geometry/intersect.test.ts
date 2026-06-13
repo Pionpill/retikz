@@ -26,8 +26,4 @@ describe('intersect', () => {
     expect(intersect.segmentSegment([0, 0], [1, 1], [2, 2], [3, 3])).toBeNull(); // 共线不重叠
     expect(intersect.segmentSegment([0, 0], [1, 0], [2, 0], [3, 0])).toBeNull(); // 共线
   });
-  it('rayArc 转出可用', () => {
-    const hits = intersect.rayArc([-5, 0], [1, 0], [0, 0], 2, 0, 360);
-    expect(hits.length).toBe(2);
-  });
 });

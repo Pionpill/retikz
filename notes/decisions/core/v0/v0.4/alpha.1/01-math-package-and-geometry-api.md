@@ -32,7 +32,7 @@
 | `point.ts` | `Position`、`DEFAULT_EPSILON`、`point`（add/sub/scale/dot/cross/length/normalize/shiftToward/equal）、`lerp` |
 | `transform.ts` | `CenteredShape`、`localToWorld`、`worldToLocal` |
 | `arc.ts` | arcEndPoint / arcAngleInRange / rayArc / ellipseArcPoint / arcBoundingPoints / ellipseArcBoundingPoints |
-| `intersect.ts` | `intersect`（lineLine / lineCircle / circleCircle / segmentSegment / rayArc 转出） |
+| `intersect.ts` | `intersect`（lineLine / lineCircle / circleCircle / segmentSegment）；`rayArc` 留 `arc` 模块 |
 | `triangle.ts` | `Circle` 类型、`triangle`（incircle / circumcircle） |
 | `polygon.ts` | `polygon`（containsPoint） |
 | `hull.ts` | `convexHull` |
@@ -49,7 +49,8 @@
   - `lineCircle(origin,dir,center,radius): Array<Position>`——0/1/2 交点。
   - `circleCircle(cA,rA,cB,rB): Array<Position>`——0/1/2 交点（重合 / 内含 / 相离 → 空）。
   - `segmentSegment(a1,a2,b1,b2): Position | null`——**首切简化**：真交叉返回交点；平行 / 共线（含重叠）/ 不相交 → `null`（共线重叠区间留后续按需升级判别式，见 roadmap 待决）。
-  - `rayArc` 从 `arc` 转出进 `intersect`，统一求交入口。
+  - `rayArc`（ray∩arc）**不并入 `intersect`**：它返回沿射线的标量参数 `Array<number>`（命中距离），与 intersect 的点返回语义不一致，且 contour 等调用方需要该标量找最近命中——仅从 `arc` 模块导出。
+  - `lineCircle` / `circleCircle` 的切线（disc≈0）返回 2 个重合点，调用方自判（不特判 1 点）。
 - **triangle**（新能力，退化返回 `null`）：
   - `circumcircle(a,b,c): Circle | null`——外接圆；三点共线（面积 / 行列式 ≈0）→ `null`。
   - `incircle(a,b,c): Circle | null`——内切圆，incenter = 对边长加权顶点、radius = 面积 / 半周长；共线 → `null`。

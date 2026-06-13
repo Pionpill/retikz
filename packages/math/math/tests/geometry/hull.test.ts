@@ -13,4 +13,9 @@ describe('convexHull（Andrew monotone chain，CCW，不含共线中间点）', 
   it('少于 3 点原样（排序去重后）返回', () => {
     expect(convexHull([[1, 1], [0, 0]])).toEqual([[0, 0], [1, 1]]);
   });
+  it('空 / 全重复 / 全共线退化', () => {
+    expect(convexHull([])).toEqual([]);
+    expect(convexHull([[1, 1], [1, 1], [1, 1]])).toEqual([[1, 1]]); // 去重 → 单点
+    expect(convexHull([[0, 0], [1, 0], [2, 0], [3, 0]])).toEqual([[0, 0], [3, 0]]); // 全共线 → 两端点
+  });
 });
