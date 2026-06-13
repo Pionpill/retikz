@@ -66,6 +66,7 @@ const useDocShortcuts = () => {
   const { t } = useTranslation();
   const tocOpen = useTocStore(state => state.tocOpen);
   const setTocOpen = useTocStore(state => state.setTocOpen);
+  const hasToc = useTocStore(state => state.hasToc);
   const toggleLayout = useLayoutStore(s => s.toggleLayout);
   const togglePreviewHideCode = useComponentPreviewStore(s => s.toggleHideCode);
   const togglePreviewIsExpand = useComponentPreviewStore(s => s.toggleIsExpand);
@@ -76,8 +77,9 @@ const useDocShortcuts = () => {
   }, [t]);
 
   const handleToggleToc = useCallback(() => {
+    if (!hasToc) return;
     setTocOpen(!tocOpen);
-  }, [tocOpen, setTocOpen]);
+  }, [hasToc, tocOpen, setTocOpen]);
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {

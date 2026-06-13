@@ -1,7 +1,7 @@
 import { BlogFrontmatter } from '@/components/shared/blog-frontmatter';
 import type { MdxFrontmatter } from '@/components/shared/mdx-content';
 import { ChangelogOverview, ChangelogVersionDetail, changelogToMarkdown } from '@/components/shared/changelog';
-import { InlineMdx, MdxContent, MdxToc } from '@/components/shared/mdx-content';
+import { InlineMdx, MdxContent, MdxToc, mdxHasToc } from '@/components/shared/mdx-content';
 import { changelogForModule, changelogPageDescription, changelogVersionSlug } from '@/data/changelog';
 import { getSectionsByModule } from '@/data/sections';
 import { buildDocPageLinks } from '@/lib/docLinks';
@@ -42,6 +42,7 @@ export const DocPage: FC<DocPageProps> = props => {
 
   const { source, segments: sourceSegments, notFound, resolvedLang } = useMdxSource();
   const tocOpen = useTocStore(state => state.tocOpen);
+  const setHasToc = useTocStore(state => state.setHasToc);
 
   /** changelog 页走数据驱动渲染,不走 mdx 管线（releases/changelog 分组下的概览与各中版本详情子页） */
   const isChangelog = isChangelogLocation(loc);
@@ -69,6 +70,15 @@ export const DocPage: FC<DocPageProps> = props => {
     setStableSegments(sourceSegments);
   }
 
+  /** 当前页是否有右栏目录内容：changelog 页无目录，mdx 页需含 h1-h3。无内容时右栏不渲染、不占位 */
+  const hasToc = useMemo(
+    () => !isChangelog && stableSource != null && mdxHasToc(stableSource),
+    [isChangelog, stableSource],
+  );
+  useEffect(() => {
+    setHasToc(hasToc);
+  }, [hasToc, setHasToc]);
+
   // 把当前页 mdx + 元信息推给 AI 聊天面板（Sheet 打开时按当前页作为 context）
   const setAiChatCurrentPage = useAiChatStore(s => s.setCurrentPage);
   const aiChatLang: 'zh' | 'en' = (i18n.resolvedLanguage ?? 'zh').startsWith('en') ? 'en' : 'zh';
@@ -87,6 +97,7 @@ export const DocPage: FC<DocPageProps> = props => {
   useEffect(
     () => () => {
       useAiChatStore.getState().setCurrentPage(null);
+      useTocStore.getState().setHasToc(false);
     },
     [],
   );
@@ -172,22 +183,24 @@ export const DocPage: FC<DocPageProps> = props => {
           <DocPageFooterNav />
         </div>
       </div>
-      <aside
-        aria-hidden={!tocOpen}
-        className={cn(
-          '@[64rem]:block hidden shrink-0 overflow-clip transition-all duration-300 ease-out px-4',
-          tocOpen ? 'w-75 opacity-100' : 'w-0 opacity-0',
-        )}
-      >
-        <div
+      {hasToc && stableSource != null && (
+        <aside
+          aria-hidden={!tocOpen}
           className={cn(
-            'sticky top-20 transition-all duration-300 ease-out',
-            tocOpen ? 'translate-x-0' : 'pointer-events-none translate-x-2',
+            '@[64rem]:block hidden shrink-0 overflow-clip transition-all duration-300 ease-out px-4',
+            tocOpen ? 'w-75 opacity-100' : 'w-0 opacity-0',
           )}
         >
-          {isChangelog ? null : stableSource != null ? <MdxToc source={stableSource} /> : null}
-        </div>
-      </aside>
+          <div
+            className={cn(
+              'sticky top-20 transition-all duration-300 ease-out',
+              tocOpen ? 'translate-x-0' : 'pointer-events-none translate-x-2',
+            )}
+          >
+            <MdxToc source={stableSource} />
+          </div>
+        </aside>
+      )}
     </main>
   );
 };

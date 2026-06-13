@@ -44,6 +44,8 @@ export const HeaderActions: FC = () => {
   const { theme, handleToggleTheme, handleCycleLang, handleCopyLink } = useDocActions();
   const tocOpen = useTocStore(state => state.tocOpen);
   const setTocOpen = useTocStore(state => state.setTocOpen);
+  /** 当前页无目录内容时隐藏 TOC 开关（右栏不占位，开关无意义） */
+  const hasToc = useTocStore(state => state.hasToc);
   const layout = useLayoutStore(s => s.layout);
   const toggleLayout = useLayoutStore(s => s.toggleLayout);
   const previewHideCode = useComponentPreviewStore(s => s.hideCode);
@@ -142,14 +144,16 @@ export const HeaderActions: FC = () => {
                 {t('view.groupLabel')}
               </DropdownMenuLabel>
               <DropdownMenuGroup>
-                <DropdownMenuCheckboxItem checked={tocOpen} onCheckedChange={setTocOpen}>
-                  {t('toc.outline')}
-                  {!compact && (
-                    <DropdownMenuShortcut>
-                      <Shortcut keys={['mod', 'alt', 'B']} className="tracking-normal" />
-                    </DropdownMenuShortcut>
-                  )}
-                </DropdownMenuCheckboxItem>
+                {hasToc && (
+                  <DropdownMenuCheckboxItem checked={tocOpen} onCheckedChange={setTocOpen}>
+                    {t('toc.outline')}
+                    {!compact && (
+                      <DropdownMenuShortcut>
+                        <Shortcut keys={['mod', 'alt', 'B']} className="tracking-normal" />
+                      </DropdownMenuShortcut>
+                    )}
+                  </DropdownMenuCheckboxItem>
+                )}
                 <DropdownMenuCheckboxItem checked={layout === 'centered'} onCheckedChange={toggleLayout}>
                   {t('common.layoutCentered')}
                   {!compact && (
