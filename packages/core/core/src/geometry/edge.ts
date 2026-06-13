@@ -1,5 +1,8 @@
+import { lerp } from '@retikz/math';
 import type { CompassAnchorValue } from './anchor';
 import type { Position } from './point';
+
+export { lerp as lerpPoint } from '@retikz/math';
 
 /** 边上比例点 `{ side, t }` 的四个 side（north/south/east/west） */
 export type Side = 'north' | 'south' | 'east' | 'west';
@@ -15,12 +18,6 @@ export const EDGE_ENDS = {
   east: ['north-east', 'south-east'],
   west: ['north-west', 'south-west'],
 } as const satisfies Record<Side, readonly [CompassAnchorValue, CompassAnchorValue]>;
-
-/** 线性插值 a + (b − a)·t */
-export const lerpPoint = (a: Position, b: Position, t: number): Position => [
-  a[0] + (b[0] - a[0]) * t,
-  a[1] + (b[1] - a[1]) * t,
-];
 
 /**
  * circle / ellipse 周长弧段：side 的局部参数角 θ(t)，单位度
@@ -50,4 +47,4 @@ export const polylineViaVertex = (
   vertex: Position,
   p1: Position,
   t: number,
-): Position => (t <= 0.5 ? lerpPoint(p0, vertex, t * 2) : lerpPoint(vertex, p1, (t - 0.5) * 2));
+): Position => (t <= 0.5 ? lerp(p0, vertex, t * 2) : lerp(vertex, p1, (t - 0.5) * 2));

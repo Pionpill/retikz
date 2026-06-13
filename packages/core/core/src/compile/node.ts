@@ -1,5 +1,5 @@
 import type { Position } from '../geometry/point';
-import { arcEndPoint } from '../geometry/arc';
+import { arcEndPoint } from '@retikz/math';
 import { normalizeCompassAnchor } from '../geometry/anchor';
 import type { Rect } from '../geometry/rect';
 import type { AtDirectionValue, IRAnimationTrack, IRBoundary, IRJsonObject, IRLabelDefault, IRLineSpec, IRNode, IRNodeLabel, IRPaintSpec, IRShapeRef, JsonValue } from '../ir';

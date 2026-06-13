@@ -8,7 +8,7 @@
  *   - round-trip（nested params IR）+ zod 错误两类；
  *   - scaleParams：node scale 只缩半径、不缩角度。
  *
- *   角度约定（与 polar.ts / geometry/arc 一致，SVG y-down）：
+ *   角度约定（与 polar.ts / @retikz/math arc 一致，SVG y-down）：
  *     point = [cx + r·cosθ, cy + r·sinθ]，0°=+x(east)，90°=+y(屏幕下方)，180°=-x，270°=-y(屏幕上方)。
  *
  *   注：涉及 circumscribe / emit / boundaryPoint / anchor 真实几何的 case 此刻 fail

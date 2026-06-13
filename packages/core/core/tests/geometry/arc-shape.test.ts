@@ -4,7 +4,7 @@
  *   开放描边弧（close:false）vs 闭合弓形（close:true）；round-trip + zod 错误；
  *   scaleParams：node scale 只缩 radius、不缩角度。
  *
- *   角度约定（与 polar.ts / geometry/arc 一致，SVG y-down）：
+ *   角度约定（与 polar.ts / @retikz/math arc 一致，SVG y-down）：
  *     point = [cx + r·cosθ, cy + r·sinθ]，0°=+x，90°=+y(屏幕下方)。
  *
  *   注：涉及 emit 真实几何的 case 此刻 fail（arc.ts emit 仍是占位 stub，实现 Agent 填）——预期。

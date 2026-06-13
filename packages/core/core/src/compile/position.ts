@@ -1,5 +1,5 @@
 import type { IRAtPosition, IRBetweenPosition, IROffsetPosition, IRPosition, PolarPosition } from '../ir';
-import { arcEndPoint } from '../geometry/arc';
+import { arcEndPoint } from '@retikz/math';
 import type { Transform } from '../primitive';
 import { DirectionVectorByAtDirection } from './direction';
 import type { NameStack } from './name-stack';

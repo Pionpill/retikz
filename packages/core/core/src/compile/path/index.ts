@@ -3,7 +3,7 @@ import {
   arcEndPoint,
   ellipseArcBoundingPoints,
   ellipseArcPoint,
-} from '../../geometry/arc';
+} from '@retikz/math';
 import { bendControlPoints, outInControlPoints } from '../../geometry/bend';
 import { rectOutline } from '../../geometry/rect';
 import type { PaintResolver } from '../paint';
