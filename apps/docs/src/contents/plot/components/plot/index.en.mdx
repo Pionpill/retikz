@@ -21,23 +21,15 @@ import { Axis, BarMark, Plot } from '@retikz/plot-react';
 
 `width × height` is the outer box including axes and tick labels. Children only declare field mappings, never pixel coordinates.
 
-### When to use
-
-`<Plot>` is a **low-level container**: it compiles declarative children into a chart, but does not add batteries-included decoration for you.
-
-- **It does**: collect marks (`<LineMark>` / `<PointMark>` / `<BarMark>` / `<SectorMark>` / `<AreaMark>`); infer scales (band / linear / time / log…) and the coordinate system from fields; collect the `<Axis>` / `<Legend>` you write; compile and render.
-- **It does not**: draw axes / grid / legend automatically — write `<Axis>` for axes; `bare` drops even explicit decoration and margins.
+`<Plot>` is a **low-level container**: it collects marks, infers scales and the coordinate system from fields, collects the `<Axis>` / `<Legend>` you write, then compiles and renders — but it doesn't draw axes / grid / legend for you. Write `<Axis>` for axes; `bare` drops even explicit decoration and margins.
 
 ## Examples
 
-### Switching coordinate systems
+### Axes
 
 `coordinate` is a chart-level switch — for the same `children`, the default is cartesian and adding `"polar2D"` makes it polar. Marks aren't split into two variants; the coordinate system decides the geometry.
 
-<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
-  <ComponentPreview name="plot-cartesian" sourceFiles={['plot-cartesian.data.ts']} size="sm" />
-  <ComponentPreview name="plot-polar" sourceFiles={['plot-cartesian.data.ts']} size="sm" />
-</div>
+<ComponentPreview name="plot-coordinate" sourceFiles={['plot-cartesian.data.ts']} size="md" />
 
 <p className="text-sm text-muted-foreground">Left: default cartesian; right: only <code>coordinate="polar2D"</code> added.</p>
 
@@ -61,6 +53,32 @@ See [Coordinates](/plot/grammar/coordinate) for each system's geometry options (
 | --- | --- | --- |
 | Composition DSL | `data` (raw array) + `children` | Declare marks / guides in JSX (the common case) |
 | Spec entry | `spec` (built PlotSpec) + `data` (dataset table) | Feed a persisted / AI-generated spec directly |
+
+## How it works
+
+> Optional for everyday use; revisit when you want to understand how `<Plot>` is compiled, or when you write / generate the low-level IR directly.
+
+`<Plot>` draws nothing on its own. It first assembles its children (marks / guides / coordinate) into a **PlotSpec** — a high-level Tier 2 IR (fully JSON-serializable; data is not part of it). At compile time, **lowering** turns that PlotSpec into `@retikz/core`'s Tier 1 IR (`<Scope>` / `<Node>` / `<Path>`), which core then compiles into a Scene for the renderer. The spec entry skips assembly and feeds a PlotSpec directly.
+
+Lowering isn't private to `<Plot>`: it's registered as a **composite** in core's compile pipeline. Core expands any PlotSpec node through it, the same way it handles every high-level node — upper layers add no parallel rendering path.
+
+### Each lowering step
+
+Data enters lowering alongside the PlotSpec and becomes Tier 1 step by step:
+
+| Step | Input | Output |
+| --- | --- | --- |
+| Resolve data | dataset via `data.reference` + `model` / `fieldMap` | normalized rows (type inference, renaming, transforms) |
+| Infer scales | fields bound to each channel + coordinate | band / linear / time / log… scales and the projection frame |
+| Mark → layer | each `<LineMark>` / `<BarMark>` … | one core `<Scope>` layer (of `<Node>` / `<Path>`) |
+| Axis / grid / legend → layer | explicit `<Axis>` / `<Legend>` | grid, axis, and legend layers (each a `<Scope>`) |
+| Order z-index | all layers above | grid at the bottom → marks → axes → legend |
+
+Every layer is wrapped in one isolated-namespace `<Scope>`, so each chart's internal ids (datum / series) never collide.
+
+### Composable panels
+
+When the PlotSpec carries an `id` (spec entry or generated IR), lowering wraps an extra **externally visible** panel `<Scope>`: the panel bbox is registered as `<plotId>` and the drawing area as `<plotId>.plotArea`, both placed outside the isolated namespace. Sibling nodes can anchor to them to connect or annotate — letting you compose several charts into one figure.
 
 ## API
 
