@@ -68,6 +68,8 @@ See [Coordinates](/plot/grammar/coordinate) for each system's geometry options (
 | --- | --- | --- | --- |
 | `data` | `Array<Row>` | — | Raw data rows (composition DSL entry); data never enters the IR |
 | `children` | `ReactNode` | — | Mark / guide children (composition DSL entry) |
+| `model` | `DataModel` | — | Data model (field names + types): enables strict validation and type-driven scale / guide derivation; see [Data Model](/plot/data/model) |
+| `fieldMap` | `Record<string, string>` | — | Logical field name → actual path in the data (requires `model`); renames only, no value transform; see [Processing](/plot/data/processing) |
 | `coordinate` | see [Coordinates](/plot/grammar/coordinate) | cartesian2D | Coordinate system: `"polar2D"` / `"cartesian1D"` / `"polar1D"` / `"ternary2D"` shorthand or the matching object; cartesian2D by default |
 | `scaleX` | `'linear' \| 'time' \| 'point' \| 'log' \| 'sqrt'` | `'linear'` | Continuous x scale type; forced to band with `<BarMark>`, ignored under polar. `log` / `sqrt` are point / line only (interval / area baselines include 0 and will error) |
 | `scaleY` | `'linear' \| 'log' \| 'sqrt'` | `'linear'` | Continuous y (value-axis) scale type; ignored under polar. `log` / `sqrt` are point / line only (interval / area will error). `log` requires positive data, `sqrt` requires non-negative |
@@ -78,8 +80,12 @@ See [Coordinates](/plot/grammar/coordinate) for each system's geometry options (
 | `margin` | `{ top?; right?; bottom?; left? }` | — | Override the surrounding padding |
 | `spec` | `PlotSpec` | — | Spec entry: a prebuilt Plot IR root (mutually exclusive with `children`) |
 
+In addition, `renderer` / `className` / `style` pass through to the underlying `<Layout>` — picking the render backend, an extra class name, and inline styles respectively.
+
 ## Related
 
 - [Coordinates](/plot/grammar/coordinate) — the polar switch and channel roles
 - [Marks](/plot/components/mark) — line / point / bar / sector / area
 - [Axis](/plot/components/axis) — ticks, labels, grid, polar dimensions
+- [Data Model](/plot/data/model) — `model` field types and type-driven derivation
+- [Processing](/plot/data/processing) — `fieldMap`, validation, custom parsing

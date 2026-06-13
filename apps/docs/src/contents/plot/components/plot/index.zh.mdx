@@ -68,6 +68,8 @@ import { Axis, BarMark, Plot } from '@retikz/plot-react';
 | --- | --- | --- | --- |
 | `data` | `Array<Row>` | — | 裸数据行数组（组合 DSL 入口）；数据不进 IR |
 | `children` | `ReactNode` | — | mark / guide 子组件（组合 DSL 入口） |
+| `model` | `DataModel` | — | 数据模型（字段名 + 类型）：声明则启用 strict 校验与 type-driven scale / guide 派生；详见[数据模型](/plot/data/model) |
+| `fieldMap` | `Record<string, string>` | — | 逻辑字段名 → 数据里的实际路径（需配合 `model`）；只改名、不变换值；详见[数据处理](/plot/data/processing) |
 | `coordinate` | 见[坐标系](/plot/grammar/coordinate) | cartesian2D | 坐标系：`"polar2D"` / `"cartesian1D"` / `"polar1D"` / `"ternary2D"` 简写或对应对象配置；缺省平面直角 |
 | `scaleX` | `'linear' \| 'time' \| 'point' \| 'log' \| 'sqrt'` | `'linear'` | 连续 x scale 类型；含 `<BarMark>` 时强制 band，polar 下忽略。`log` / `sqrt` 仅 point / line（柱 / 面积 baseline 含 0，与之冲突会报错） |
 | `scaleY` | `'linear' \| 'log' \| 'sqrt'` | `'linear'` | 连续 y（值轴）scale 类型；polar 下忽略。`log` / `sqrt` 仅 point / line（柱 / 面积会报错）。`log` 要求数据为正、`sqrt` 要求非负 |
@@ -78,8 +80,12 @@ import { Axis, BarMark, Plot } from '@retikz/plot-react';
 | `margin` | `{ top?; right?; bottom?; left? }` | — | 覆盖四周留白 |
 | `spec` | `PlotSpec` | — | spec 入口：已构造好的 Plot IR 根（与 `children` 二选一） |
 
+此外 `renderer` / `className` / `style` 透传给底层 `<Layout>`，分别选渲染后端、附加类名、内联样式。
+
 ## 相关
 
 - [坐标系](/plot/grammar/coordinate) —— polar 开关与角色映射
 - [图元](/plot/components/mark) —— 折线 / 散点 / 柱 / 扇形 / 面积
 - [坐标轴](/plot/components/axis) —— 刻度、标签、网格、polar 维度
+- [数据模型](/plot/data/model) —— `model` 字段类型与 type-driven 派生
+- [数据处理](/plot/data/processing) —— `fieldMap`、校验、自定义解析
