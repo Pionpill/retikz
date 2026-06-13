@@ -22,6 +22,7 @@ pnpm --filter @retikz/eval eval
 - `ANTHROPIC_API_KEY` —— 填了即可用（权威默认模型 `claude-opus-4-8`）
 - `OPENAI_API_KEY` + `EVAL_OPENAI_MODEL` —— openai 须同时设 key 与显式模型 id 才启用
 - `DEEPSEEK_API_KEY` + `EVAL_DEEPSEEK_MODEL` —— 同上
+- `EVAL_<P>_BASE_URL` —— 覆盖该家端点（代理 / 网关 / 兼容端点），缺省走官方端点（`EVAL_ANTHROPIC_BASE_URL` / `EVAL_OPENAI_BASE_URL` / `EVAL_DEEPSEEK_BASE_URL`）
 - `EVAL_K` —— 每条 prompt 跑几次（默认 1，须 >=1 整数，非法 fail fast）
 - `EVAL_ANTHROPIC_MODEL` —— 覆盖 anthropic 模型 id
 

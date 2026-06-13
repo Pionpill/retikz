@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { PROVIDERS, availableProviderIds } from '../../src/llm/registry';
+import { PROVIDERS, availableProviderIds, createClients } from '../../src/llm/registry';
 
 const ENV = [
   'ANTHROPIC_API_KEY',
@@ -7,6 +7,7 @@ const ENV = [
   'DEEPSEEK_API_KEY',
   'EVAL_OPENAI_MODEL',
   'EVAL_DEEPSEEK_MODEL',
+  'EVAL_ANTHROPIC_BASE_URL',
 ];
 
 describe('provider registry gating', () => {
@@ -45,5 +46,12 @@ describe('provider registry gating', () => {
     process.env.OPENAI_API_KEY = 'x';
     process.env.EVAL_OPENAI_MODEL = 'gpt-x';
     expect(availableProviderIds()).toEqual(['openai']);
+  });
+
+  it('设了 EVAL_<P>_BASE_URL 仍能构造 client（不发请求，仅验证 baseURL 注入不报错）', () => {
+    process.env.ANTHROPIC_API_KEY = 'x';
+    process.env.EVAL_ANTHROPIC_BASE_URL = 'https://proxy.example.com/v1';
+    const clients = createClients();
+    expect(clients.map((c) => c.id)).toEqual(['anthropic:claude-opus-4-8']);
   });
 });
