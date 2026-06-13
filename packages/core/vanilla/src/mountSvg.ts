@@ -35,6 +35,8 @@ export const mountSvg = (container: Element, input: RenderInput, options: MountO
   const animate = options.animate !== false && !prefersReducedMotion();
   let animationControls: AnimationControls | undefined;
   let currentScene: Scene;
+  // 存活水合的解绑句柄：view.dispose 时统一解绑（未手动 dispose 的水合也随 view 卸载干净）
+  const liveHydrationDisposers = new Set<() => void>();
 
   const renderInto = (next: RenderInput): void => {
     if (isFigure(next)) {
@@ -76,7 +78,12 @@ export const mountSvg = (container: Element, input: RenderInput, options: MountO
       makeAnimation: id => createSvgAnimationControls(root, id),
     });
     const controller = createHydrationController(root, hydrateOptions.handlers, locateSvg, buildContext);
-    return { dispose: controller.dispose };
+    const dispose = (): void => {
+      controller.dispose();
+      liveHydrationDisposers.delete(dispose);
+    };
+    liveHydrationDisposers.add(dispose);
+    return { dispose };
   };
 
   let disposed = false;
@@ -90,6 +97,8 @@ export const mountSvg = (container: Element, input: RenderInput, options: MountO
     dispose() {
       if (disposed) return;
       disposed = true;
+      // 统一解绑未手动 dispose 的水合（与文档「解绑水合」一致），再清动画 / 移除 root
+      for (const disposeHydration of [...liveHydrationDisposers]) disposeHydration();
       animationControls?.dispose();
       root.remove();
     },

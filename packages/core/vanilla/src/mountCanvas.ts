@@ -8,6 +8,7 @@ import {
   isCanvasAnimationIdVisible,
   withCanvasAnimationEventHandlers,
 } from '@retikz/render/hydration';
+import type { HydrationController } from '@retikz/render/hydration';
 import { type AnimationControls, type IdClockRegistry, createClock, createIdClockRegistry, prefersReducedMotion, sceneAnimationDurationMs, sceneHasAnimations, sceneHasAutoplayTrigger } from '@retikz/render/animation';
 import { isFigure } from './builder/isFigure';
 import { toScene } from './toScene';
@@ -49,6 +50,12 @@ export const mountCanvas = (
   let visibleTeardown: (() => void) | undefined;
 
   let currentScene: Scene;
+
+  // 存活的水合：onEvent 触发的 handler 表按「绑定时的 scene」合成（新增 / 移除的 onEvent track 决定注册哪些
+  // listener），update 换图后必须按新 scene 重建、否则陈旧；view.dispose 时统一解绑全部未手动 dispose 的水合。
+  // 每条带 rebind（按新 scene 重绑）与 unbind（解绑当前 controller，捕获各自 locate / buildContext）。
+  type LiveHydration = { rebind: () => void; unbind: () => void };
+  const liveHydrations = new Set<LiveHydration>();
 
   /** 把全局帧时刻折算成单个 prim 的动画解析（per-id）：stop→渲染 base；否则按有效时刻 + 是否含非自动播 track */
   const resolvePrim = (id: string | undefined, globalTime: number): PrimAnimationResolution =>
@@ -96,14 +103,24 @@ export const mountCanvas = (
     if (!animate || !sceneHasAnimations(currentScene)) return;
     const ids = collectCanvasVisibleAnimationIds(currentScene);
     if (ids.size === 0 || typeof window === 'undefined') return;
-    const schedule = (): void => activateVisibleTracks();
+    // scroll / resize 高频触发：经 rAF 合帧——同一帧内多次事件只跑一次 activateVisibleTracks（去抖到下一帧）
+    let scheduledRaf: number | undefined;
+    const runScheduled = (): void => {
+      scheduledRaf = undefined;
+      activateVisibleTracks();
+    };
+    const schedule = (): void => {
+      if (scheduledRaf !== undefined) return;
+      scheduledRaf = window.requestAnimationFrame(runScheduled);
+    };
     window.addEventListener('scroll', schedule, true);
     window.addEventListener('resize', schedule);
-    const raf = window.requestAnimationFrame(schedule);
+    // 挂载即测一次相交（首帧），与 scroll/resize 同走合帧调度
+    schedule();
     visibleTeardown = () => {
       window.removeEventListener('scroll', schedule, true);
       window.removeEventListener('resize', schedule);
-      window.cancelAnimationFrame(raf);
+      if (scheduledRaf !== undefined) window.cancelAnimationFrame(scheduledRaf);
     };
   };
 
@@ -218,13 +235,30 @@ export const mountCanvas = (
           defaultId: id,
         }),
     });
-    const controller = createHydrationController(
-      canvas,
-      withCanvasAnimationEventHandlers(currentScene, hydrateOptions.handlers),
-      locate,
-      buildContext,
-    );
-    return { dispose: controller.dispose };
+    const userHandlers = hydrateOptions.handlers;
+    // onEvent 动画 handler 表按当下 scene 合成（决定注册哪些 listener）；update 换图后经 rebindHydrations 重建。
+    const bind = (): HydrationController =>
+      createHydrationController(canvas, withCanvasAnimationEventHandlers(currentScene, userHandlers), locate, buildContext);
+    let controller = bind();
+    const live: LiveHydration = {
+      rebind: () => {
+        controller.dispose();
+        controller = bind();
+      },
+      unbind: () => controller.dispose(),
+    };
+    liveHydrations.add(live);
+    return {
+      dispose: () => {
+        live.unbind();
+        liveHydrations.delete(live);
+      },
+    };
+  };
+
+  /** update 换 scene 后按新 scene 重建存活水合的 onEvent 动画 handler 表（新增 / 移除的 onEvent track 即时反映） */
+  const rebindHydrations = (): void => {
+    for (const live of liveHydrations) live.rebind();
   };
 
   return {
@@ -232,12 +266,17 @@ export const mountCanvas = (
     update(next) {
       if (disposed) throw new Error('mountCanvas: view already disposed.');
       renderInto(next);
+      // renderInto 已换 currentScene；按新 scene 重建存活水合，使 onEvent 动画 trigger 反映新图
+      rebindHydrations();
     },
     dispose() {
       if (disposed) return;
       disposed = true;
       visibleTeardown?.();
       clock?.dispose();
+      // 统一解绑未手动 dispose 的水合（兑现 CanvasView.dispose「解绑水合」语义）
+      for (const live of liveHydrations) live.unbind();
+      liveHydrations.clear();
       canvas.remove();
     },
     hydrate,

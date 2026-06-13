@@ -4,7 +4,7 @@ import type { IR } from '@retikz/core';
 import { mountCanvas, mountSvg, renderToSvgString } from '../src';
 
 /**
- * ADR-04 runtime 播放控制（jsdom）：mountSvg load→CSS 自播 / 交互→WAAPI 桥；mountCanvas rAF 时钟 + trigger；
+ * runtime 播放控制（jsdom）：mountSvg load→CSS 自播 / 交互→WAAPI 桥；mountCanvas rAF 时钟 + trigger；
  *   {animate:false} + prefers-reduced-motion 降级；view.animation 句柄。
  */
 
@@ -115,5 +115,27 @@ describe('mountCanvas 动画', () => {
     const view = mountCanvas(document.createElement('div'), plainIr, { width: 100, height: 100 });
     expect(rafSpy).not.toHaveBeenCalled();
     expect(view.animation).toBeUndefined();
+  });
+});
+
+describe('mountCanvas visible-trigger 监听合帧', () => {
+  const visibleIr: IR = {
+    version: 1,
+    type: 'scene',
+    children: [{ type: 'node', id: 'a', position: [0, 0], shape: 'rectangle', minimumWidth: 40, minimumHeight: 20, fill: '#0a0', animations: [{ property: 'opacity', keyframes: [{ at: 0, value: 0 }, { at: 1, value: 1 }], duration: 300, trigger: 'visible' }] }],
+  };
+
+  it('scroll/resize 高频事件 → 经 rAF 合帧（一帧内多次只排一个 rAF）', () => {
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    // visible-only scene 不自动起播放时钟；挂载会排一帧首测相交
+    mountCanvas(container, visibleIr, { width: 100, height: 100 });
+    const baseline = rafSpy.mock.calls.length;
+    // 同一帧内（rafSpy 不真回调，已排的 rAF 不会清空）连发多次 scroll/resize → 不应再排新 rAF
+    window.dispatchEvent(new Event('scroll'));
+    window.dispatchEvent(new Event('scroll'));
+    window.dispatchEvent(new Event('resize'));
+    expect(rafSpy.mock.calls.length).toBe(baseline);
+    container.remove();
   });
 });

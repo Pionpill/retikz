@@ -100,6 +100,7 @@ export type {
   CoordinateConfig,
   ScopeConfig,
   FigureConfig,
+  FigureRootStyle,
   Way,
 } from './builder/types';
 export type {

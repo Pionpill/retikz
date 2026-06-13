@@ -4,8 +4,8 @@ import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 
 /**
- * @retikz/vanilla 架构守卫（alpha.1 骨架即测，node 环境）
- * @description 钉死 ADR-03 的三条不可越界：仅依赖 core/render（无 react）、不复制 Scene→SVG 内核、
+ * @retikz/vanilla 架构守卫（node 环境）
+ * @description 钉死三条不可越界：仅依赖 core/render（无 react）、不复制 Scene→SVG 内核、
  *   作 SSR 门面必须「导入不触 DOM」（无 document 的 Node 下 import + renderToSvgString 不炸）。
  */
 const here = path.dirname(fileURLToPath(import.meta.url));

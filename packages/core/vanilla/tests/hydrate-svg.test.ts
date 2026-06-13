@@ -6,7 +6,7 @@ import { type HydrationContext, hydrate, mountSvg, renderToSvgString } from '../
 /**
  * @retikz/vanilla hydrate（SVG 水合，jsdom 环境）
  * @description mountSvg / SSR 先渲染出含 data-retikz-id 的图，hydrate 再把 handler 经根级 closest 委托绑回图元。
- *   stub 阶段 hydrate 恒返回空 dispose、不绑任何 listener，故触发类断言此刻预期 fail；dispose 类断言预期 pass。
+ *   触发类断言验证命中图元后 handler 被调用；dispose 后再触发不再调用。
  */
 
 /** 带可点击图元 id 的最小 IR（矩形 Node，便于 SVG 输出有 data-retikz-id 挂点） */
@@ -130,6 +130,22 @@ describe('@retikz/vanilla hydrate（SVG 水合）', () => {
     const target = findById(view.root, 'a');
     expect(target).not.toBeNull();
     target!.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    expect(onClick).not.toHaveBeenCalled();
+
+    container.remove();
+  });
+
+  it('view-dispose-detaches-hydration：view.dispose 后未手动 dispose 的水合也解绑、点击不再触发', () => {
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const view = mountSvg(container, idIr);
+    const onClick = vi.fn();
+    view.hydrate({ handlers: { a: { click: onClick } } });
+    const root = view.root;
+    view.dispose();
+
+    // root 已移除；即便再派发事件也不触发（listener 随 view.dispose 解绑）
+    root.dispatchEvent(new MouseEvent('click', { bubbles: true }));
     expect(onClick).not.toHaveBeenCalled();
 
     container.remove();

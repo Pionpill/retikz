@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import type { IRAnimationTrack } from '@retikz/core';
 import { coordinate } from '../src/builder/coordinate';
 import { draw } from '../src/builder/draw';
 import { figure } from '../src/builder/figure';
@@ -40,6 +41,39 @@ describe('@retikz/vanilla figure() — IR 装配', () => {
 
   it('figure-no-config：figure() 全空 → 空 scene', () => {
     expect(figure().ir).toEqual({ version: 1, type: 'scene', children: [] });
+  });
+
+  it('figure-root-animations：config.animations → IR 根 animations（镜头时间轴）', () => {
+    const track: IRAnimationTrack = { property: 'viewBox', keyframes: [{ at: 0, value: 0 }, { at: 1, value: 1 }], duration: 300 };
+    const fig = figure({ animations: [track] }, [node('a', { position: [0, 0] })]);
+    expect(fig.ir.animations).toEqual([track]);
+    // 无根样式 → children 不被包进合成根 scope
+    expect(fig.ir.children).toEqual([node('a', { position: [0, 0] })]);
+  });
+
+  it('figure-root-style：根级级联样式 → children 包进一层合成根 <Scope>（透传样式字段）', () => {
+    const fig = figure({ color: 'red', nodeDefault: { fill: '#eee' } }, [
+      node('a', { position: [0, 0] }),
+      node('b', { position: [1, 0] }),
+    ]);
+    expect(fig.ir.children).toEqual([
+      {
+        type: 'scope',
+        color: 'red',
+        nodeDefault: { fill: '#eee' },
+        children: [node('a', { position: [0, 0] }), node('b', { position: [1, 0] })],
+      },
+    ]);
+  });
+
+  it('figure-root-style-empty-default：空对象 default 不携带样式指令 → 不包合成 scope', () => {
+    const fig = figure({ nodeDefault: {} }, [node('a', { position: [0, 0] })]);
+    expect(fig.ir.children).toEqual([node('a', { position: [0, 0] })]);
+  });
+
+  it('figure-root-style-falsy-scalar：strokeWidth=0 是有意义样式 → 仍包合成 scope', () => {
+    const fig = figure({ strokeWidth: 0 }, [node('a', { position: [0, 0] })]);
+    expect(fig.ir.children[0]).toMatchObject({ type: 'scope', strokeWidth: 0 });
   });
 
   it('figure-children-first：figure(children) 省略 config 直接传子节点，等价 figure({}, children)', () => {
