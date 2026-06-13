@@ -7,6 +7,14 @@ export const aboutSection: Array<Section> = [
     ],
   },
   {
+    id: 'blog',
+    label: 'about.blog',
+    pages: [
+      { id: 'core-philosophy', label: 'about.blogCorePhilosophy' },
+      { id: 'origin', label: 'about.blogOrigin' },
+    ],
+  },
+  {
     id: 'releases',
     label: 'about.releases',
     pages: [

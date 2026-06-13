@@ -12,7 +12,6 @@ export type ModuleEntry = {
 export const modules: Array<ModuleEntry> = [
   { id: 'core', label: 'core.label', version: 'v0.3 beta' },
   { id: 'plot', label: 'plot.label', version: 'v0.1 alpha' },
-  { id: 'blog', label: 'blog.label' },
   { id: 'about', label: 'about.label' },
 ];
 

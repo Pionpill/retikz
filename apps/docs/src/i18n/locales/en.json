@@ -130,11 +130,6 @@
     "refLowering": "Lowering"
   },
   "blog": {
-    "label": "Blog",
-    "design": "Design Philosophy",
-    "journey": "Development Journey",
-    "journeyOrigin": "Origins of retikz",
-    "designCorePhilosophy": "Core Philosophy of retikz",
     "notTranslatedYet": "This article is not yet translated; the Chinese version is shown below",
     "exportMarkdownCopy": "Copy Markdown",
     "exportMarkdownDownload": "Download .md",
@@ -144,6 +139,9 @@
   "about": {
     "label": "About",
     "overview": "Overview",
+    "blog": "Blog",
+    "blogCorePhilosophy": "Core Philosophy of retikz",
+    "blogOrigin": "Origins of retikz",
     "developer": "Developer",
     "sourceCodeGuide": "Source Code Guide",
     "aiAssistedDevelopment": "AI-assisted development",
