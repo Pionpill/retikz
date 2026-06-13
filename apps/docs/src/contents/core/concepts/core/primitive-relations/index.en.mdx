@@ -49,7 +49,9 @@ The anchor naming rules and geometric meanings all live in the [primitive model 
 
 <ComponentPreview name="anchors-explicit" size="sm" hideCode />
 
-> **Compass anchors always use the box model**: named / angle anchors resolve on the node's **bounding-box rectangle (bbox)** by default. So on the ellipse hub, N/S/E/W land on the axis ends while the diagonals NE/NW/SE/SW land on the **bbox corners (outside the ellipse)** — unlike dynamic attach, which casts a ray against the real shape. To pin named anchors on the ellipse perimeter, set `boundary="ellipse"`.
+> **Named compass anchors use the box model**: named compass anchors resolve on the node's **bounding-box rectangle (bbox)** by default (circle / ellipse are the exception — they land on the real curve). So on a polygon hub, the diagonals NE/NW/SE/SW land on the **bbox corners (outside the shape)** — unlike dynamic attach, which casts a ray against the real shape. To pin named anchors on a different connection surface, set `boundary` explicitly.
+>
+> **Angle anchors use the real shape**: a numeric angle anchor (`{ id, anchor: 30 }` / `'A.30'`) casts a ray in that direction onto the **real shape boundary** (then expanded by `margin` / `outerSep`), unlike the bbox resolution of named compass anchors.
 >
 > **Shape-specific anchors are the exception**: a star's `tip-N`, a sector's `apex` / `outer-arc-mid`, etc. are named points unique to that shape and always land on the **real geometry**, regardless of `boundary` (right group above).
 

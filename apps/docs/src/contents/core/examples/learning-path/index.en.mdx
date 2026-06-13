@@ -47,7 +47,7 @@ Send the prompt below to the AI chat panel — the LLM will produce retikz IR / 
 - 1 red \`#ff0000\` X: two 4px-wide diagonals`}
   extensions={[
   'Swap the path buttons: replace the 5 path buttons with your team’s career tracks (e.g. "Frontend / Backend / Fullstack / DevOps / SRE"), keeping the rest of the layout.',
-  'Add more sections: add an "Advanced" dodgerblue stack below the Required column, connected to Choose with an orthogonal step (fold) connector.',
+  'Add more sections: add an "Advanced" dodgerblue stack below the Required column, connected to Choose with an orthogonal fold connector.',
   'Render a dark-mode variant: switch the background to dark, brighten the teals and dim the grays, invert the text colors, and render a second copy.',
   ]}
   />
@@ -162,7 +162,7 @@ The final decoration layer demonstrates `dashPattern` / `arrow` at start / edge 
 />
 ```
 
-`arrow="<-"` puts the arrow at the **start** instead of the end — here the start (251.88, 359.77) sits above Deep Learning, so the arrow points "go to Deep Learning." `{ label: 'recommended' }` is a prefix operator that modifies the **next** segment — it lands on the first curve's midpoint (default `position: 'midway'` + `side: 'above'`).
+`arrow="<-"` puts the arrow at the **start** instead of the end — here the start (251.88, 359.77) sits above Deep Learning, so the arrow points "go to Deep Learning." `{ label: 'recommended' }` is an infix operator that modifies the **next** segment — it lands on the first curve's midpoint (default `position: 'midway'` + `side: 'above'`).
 
 <ComponentPreview name="learning-path-05-dashed" diffFrom="learning-path-04-paths" size="xxl" />
 
@@ -182,7 +182,7 @@ The final decoration layer demonstrates `dashPattern` / `arrow` at start / edge 
 | Math y-up axis | 🚧 Planned | scaling itself works via a Scope `scale` transform, but [`<Layout>`](/core/components/layout) has no y-up switch yet (a negative `y` scale flips text too); this example uses intro.svg's raw pixel coordinates |
 | Node hyperlinks | 🚧 Planned | [`<Node>`](/core/components/node/overview) doesn't accept `href` today, so intro.svg's `<a xlink:href>` wrappers are lost (visible but not clickable); wrap externally in `<a>` or render a separate link list |
 | Node drop shadow | 🚧 Planned | [`<Node>`](/core/components/node/overview) has no shadow support yet, so the duplicated-rect drop shadow is omitted |
-| Curve arrow shrink along chord | 🚧 Planned | arrow shrink currently shortens along the chord, so arrows on `curve` / `cubic` drift a few pixels off the border (`line` / `step` unaffected); tangent-direction shrink is on the roadmap |
+| Curve arrow shrink along chord | 🚧 Planned | arrow shrink currently shortens along the chord, so arrows on `curve` / `cubic` drift a few pixels off the border (`line` / `fold` unaffected); tangent-direction shrink is on the roadmap |
 
 ## Further reading
 

@@ -49,7 +49,9 @@ anchor 的命名规则和几何含义都在 [图元模型 · 锚点](/core/conce
 
 <ComponentPreview name="anchors-explicit" size="sm" hideCode />
 
-> **方位 anchor 永远走盒模型**：命名 / 角度 anchor 默认在节点**外接框矩形**（bbox）上解析。所以椭圆 hub 上 N/S/E/W 落在轴端、对角 NE/NW/SE/SW 落在 **bbox 角（在椭圆外）**——这跟动态贴边不同（后者射线打真实形状）。想让命名 anchor 贴椭圆周长，显式 `boundary="ellipse"`。
+> **命名方位 anchor 走盒模型**：命名 compass anchor 默认在节点**外接框矩形**（bbox）上解析（圆 / 椭圆例外，落真实曲线）。所以多边形 hub 上 NE/NW/SE/SW 落在 **bbox 角（在形状外）**——这跟动态贴边不同（后者射线打真实形状）。想让命名 anchor 贴别的连接面，显式 `boundary`。
+>
+> **角度 anchor 走真实形状**：数字角度 anchor（`{ id, anchor: 30 }` / `'A.30'`）沿该方向射线打到**真实形状边界**（再按 `margin` / `outerSep` 外扩），与命名 compass 的 bbox 解析不同。
 >
 > **形状专属 anchor 例外**：star 的 `tip-N`、sector 的 `apex` / `outer-arc-mid` 等是该 shape 独有的命名点，恒落在**真实形状**上、不受 boundary 影响（上图右）。
 
