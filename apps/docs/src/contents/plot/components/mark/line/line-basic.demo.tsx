@@ -1,4 +1,4 @@
-import { LineMark, Plot } from '@retikz/plot-react';
+import { Axis, LineMark, Plot } from '@retikz/plot-react';
 import type { FC } from 'react';
 
 import { revenue } from './line-basic.data';
@@ -7,6 +7,8 @@ import { revenue } from './line-basic.data';
 const Demo: FC = () => (
   <Plot data={revenue} width={360} height={220} style={{ maxWidth: '100%', height: 'auto' }}>
     <LineMark x="month" y="revenue" order="month" />
+    <Axis dimension="x" />
+    <Axis dimension="y" grid />
   </Plot>
 );
 

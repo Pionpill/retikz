@@ -3,21 +3,30 @@ title: Plot
 description: "<Plot> is the chart container: it takes raw data and a size, assembles mark / guide children, and picks a cartesian or polar coordinate system via coordinate."
 ---
 
-`<Plot>` is the root container for every chart. It takes `data` (an array of raw rows) and a display size, and assembles its `<LineMark>` / `<BarMark>` / `<SectorMark>` / `<Axis>` children into a chart. `coordinate` picks the coordinate system: cartesian2D by default, plus polar (`"polar2D"`), 1D (`"cartesian1D"` / `"polar1D"`), and ternary (`"ternary2D"`). Data never enters the IR; it's injected at compile time.
+`<Plot>` is the root container for every chart. It takes `data` (an array of raw rows) and a display size, and assembles its `<LineMark>` / `<BarMark>` / `<SectorMark>` / `<Axis>` children into a chart. `coordinate` picks the coordinate system: cartesian2D by default, plus polar (`"polar2D"`), 1D (`"cartesian1D"` / `"polar1D"`), and ternary (`"ternary2D"`). Data never enters the IR; it's injected at compile time. `<Plot>` is a **thin container**: it draws no axes or grid on its own — axes come from the `<Axis>` you declare (scales and the coordinate system are still inferred automatically).
 
 ## Usage
 
 ```tsx
-import { Plot, BarMark } from '@retikz/plot-react';
+import { Axis, BarMark, Plot } from '@retikz/plot-react';
 ```
 
 ```tsx
 <Plot data={revenue} width={360} height={220}>
   <BarMark x="quarter" y="value" />
+  <Axis dimension="x" />
+  <Axis dimension="y" grid />
 </Plot>
 ```
 
 `width × height` is the outer box including axes and tick labels. Children only declare field mappings, never pixel coordinates.
+
+### When to use
+
+`<Plot>` is a **low-level container**: it compiles declarative children into a chart, but does not add batteries-included decoration for you.
+
+- **It does**: collect marks (`<LineMark>` / `<PointMark>` / `<BarMark>` / `<SectorMark>` / `<AreaMark>`); infer scales (band / linear / time / log…) and the coordinate system from fields; collect the `<Axis>` / `<Legend>` you write; compile and render.
+- **It does not**: draw axes / grid / legend automatically — write `<Axis>` for axes; `bare` drops even explicit decoration and margins.
 
 ## Examples
 

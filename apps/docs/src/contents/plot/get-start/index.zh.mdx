@@ -38,6 +38,8 @@ const sales = [
 ```tsx
 <Plot data={sales} width={360} height={200}>
   <LineMark x="month" y="revenue" order="month" />
+  <Axis dimension="x" />
+  <Axis dimension="y" grid />
 </Plot>
 ```
 
@@ -49,6 +51,8 @@ const sales = [
 <Plot data={sales} width={360} height={200}>
   <LineMark x="month" y="revenue" order="month" />
   <PointMark x="month" y="revenue" />
+  <Axis dimension="x" />
+  <Axis dimension="y" grid />
 </Plot>
 ```
 
@@ -56,12 +60,12 @@ const sales = [
 
 - `data` 是裸数据行数组，字段值必须能转成有限数字。
 - `<LineMark>` / `<PointMark>` 只声明字段映射，不直接写像素坐标。
-- 无显式 `<Axis>` 时，`<Plot>` 默认画 x/y 轴和 y 网格。
+- `<Plot>` 是薄容器、自己不画轴——上面的 `<Axis dimension="x" />` 和 `<Axis dimension="y" grid />` 才显式声明了 x/y 轴和 y 网格。
 - 代码面板里的 IR tab 展示的是 `<Plot>` 装配出的 Plot IR；数据仍然单独传入。
 
 ## 常用开关
 
-显式写任意 `<Axis>` 后，默认轴不再自动补齐；你列什么就画什么。
+`<Plot>` 只画你列出的 `<Axis>`；`<Axis>` 上可调刻度数 / 标签 / 网格：
 
 ```tsx
 <Plot data={sales} width={360} height={200}>

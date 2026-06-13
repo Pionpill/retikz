@@ -17,7 +17,7 @@ const spec: PlotSpec = {
     { type: 'line', order: 'month', encoding: { x: { field: 'month' }, y: { field: 'revenue' } } },
     { type: 'point', encoding: { x: { field: 'month' }, y: { field: 'revenue' } } },
   ],
-  // 与 React 端 <Plot> 默认一致：x/y 轴 + y 网格（组合 DSL 无 <Axis> 时自动填这套）
+  // x/y 轴 + y 网格：vanilla 在 spec 里显式列出（React 端薄 <Plot> 同样需显式 <Axis>，不自动补）
   guides: [
     { type: 'axis', dimension: 'x' },
     { type: 'axis', dimension: 'y', grid: true },

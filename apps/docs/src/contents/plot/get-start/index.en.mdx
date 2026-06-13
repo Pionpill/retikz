@@ -38,6 +38,8 @@ const sales = [
 ```tsx
 <Plot data={sales} width={360} height={200}>
   <LineMark x="month" y="revenue" order="month" />
+  <Axis dimension="x" />
+  <Axis dimension="y" grid />
 </Plot>
 ```
 
@@ -49,6 +51,8 @@ Marks inside the same `<Plot>` share the same coordinate system and scales. Add 
 <Plot data={sales} width={360} height={200}>
   <LineMark x="month" y="revenue" order="month" />
   <PointMark x="month" y="revenue" />
+  <Axis dimension="x" />
+  <Axis dimension="y" grid />
 </Plot>
 ```
 
@@ -56,12 +60,12 @@ Keep these 4 rules in mind:
 
 - `data` is a plain row array, and mapped field values must become finite numbers.
 - `<LineMark>` / `<PointMark>` declare field mappings, not pixel coordinates.
-- With no explicit `<Axis>`, `<Plot>` draws x/y axes plus a y grid by default.
+- `<Plot>` is a thin container and draws no axes on its own — the `<Axis dimension="x" />` and `<Axis dimension="y" grid />` above declare the x/y axes and y grid explicitly.
 - The IR tab in the code panel shows the Plot IR assembled by `<Plot>`; data is still supplied separately.
 
 ## Common Switches
 
-Once you write any `<Axis>`, the defaults are not filled in. What you list is what gets drawn.
+`<Plot>` draws only the `<Axis>` you list; each `<Axis>` can tune tick count, labels, and grid:
 
 ```tsx
 <Plot data={sales} width={360} height={200}>

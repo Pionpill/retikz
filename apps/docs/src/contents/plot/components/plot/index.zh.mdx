@@ -3,21 +3,30 @@ title: 图表容器
 description: <Plot> 是图表容器：接收裸数据与尺寸，装配 mark / guide 子组件，并通过 coordinate 选择平面或极坐标系。
 ---
 
-`<Plot>` 是所有图表的根容器。它接收 `data`（裸数据行数组）和显示尺寸，把内部的 `<LineMark>` / `<BarMark>` / `<SectorMark>` / `<Axis>` 等子组件装配成一张图。`coordinate` 选坐标系：缺省平面直角，可切极坐标（`"polar2D"`）、一维（`"cartesian1D"` / `"polar1D"`）或三元（`"ternary2D"`）。数据不进 IR，只在编译期注入。
+`<Plot>` 是所有图表的根容器。它接收 `data`（裸数据行数组）和显示尺寸，把内部的 `<LineMark>` / `<BarMark>` / `<SectorMark>` / `<Axis>` 等子组件装配成一张图。`coordinate` 选坐标系：缺省平面直角，可切极坐标（`"polar2D"`）、一维（`"cartesian1D"` / `"polar1D"`）或三元（`"ternary2D"`）。数据不进 IR，只在编译期注入。`<Plot>` 是**薄容器**：自己不画坐标轴 / 网格，轴由你显式的 `<Axis>` 声明（scale 与坐标系仍自动推断）。
 
 ## 用法
 
 ```tsx
-import { Plot, BarMark } from '@retikz/plot-react';
+import { Axis, BarMark, Plot } from '@retikz/plot-react';
 ```
 
 ```tsx
 <Plot data={revenue} width={360} height={220}>
   <BarMark x="quarter" y="value" />
+  <Axis dimension="x" />
+  <Axis dimension="y" grid />
 </Plot>
 ```
 
 `width × height` 是含坐标轴与刻度标签的外框。子组件只声明字段映射，不写像素坐标。
+
+### 何时使用
+
+`<Plot>` 是**底层容器**：把声明式子组件编译成一张图，但不替你做开箱即用的装饰。
+
+- **会做**：收集 mark（`<LineMark>` / `<PointMark>` / `<BarMark>` / `<SectorMark>` / `<AreaMark>`）；从字段推断 scale（band / linear / time / log…）与坐标系；收集你显式写的 `<Axis>` / `<Legend>`；编译并渲染。
+- **不会做**：自动出坐标轴 / 网格 / 图例——要轴就显式写 `<Axis>`；`bare` 则连显式装饰和边距都不要。
 
 ## 例子
 
