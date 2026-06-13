@@ -44,6 +44,37 @@ export const changelog: Array<Release> = [
         ],
         subVersions: [
           {
+            version: 'beta.2',
+            date: '2026-06-13',
+            summary: {
+              zh: '动画双端一致性收口：SVG 与 Canvas 在 pathDraw 估长、镜头 track 过滤、keyframe 段内 easing、静态截帧口径与 stop 末态上对齐；行级透明度改用 fill-opacity，oklch 颜色保留 alpha 通道。',
+              en: 'Dual-backend animation consistency: SVG and Canvas now align on pathDraw length estimation, camera-track filtering, per-keyframe easing, snapshot semantics, and stop end-state; per-line opacity switches to fill-opacity and oklch colors keep their alpha channel.',
+            },
+            items: [
+              {
+                label: { zh: '动画双端语义对齐（D1–D5）', en: 'Dual-backend animation alignment (D1–D5)' },
+                content: {
+                  zh: 'Canvas pathDraw 播完撤销 dash override（曲线不再永久缺口）；Canvas 镜头按 `isAutoplayTrigger` 过滤并遍历全部 viewBox track（不再只取首个、不再无视 trigger）；SVG 产帧兑现 keyframe 级 `easing`；行级 `opacity` 改用 `fill-opacity`（`<tspan>` 透明度在 SVG 端生效）。',
+                  en: 'Canvas pathDraw drops the dash override once settled (curves no longer keep a permanent gap); Canvas camera filters by `isAutoplayTrigger` and iterates every viewBox track (no longer only the first, no longer ignoring trigger); SVG frame generation honors per-keyframe `easing`; per-line `opacity` switches to `fill-opacity` so `<tspan>` opacity applies on SVG.',
+                },
+              },
+              {
+                label: { zh: '静态截帧仅烘焙自动播 track（D4）', en: 'Snapshot bakes only autoplay tracks (D4)' },
+                content: {
+                  zh: '`snapshotAt` 静态截帧改为只烘焙自动播（`load` / 缺省）track，交互触发的 `manual` / `visible` / `{onEvent}` 留在 base（settled），与 Canvas 口径统一——海报代表「加载后、尚未交互」的样子。',
+                  en: '`snapshotAt` now bakes only autoplay (`load` / default) tracks; interaction-triggered `manual` / `visible` / `{onEvent}` stay at base (settled), matching Canvas — a poster represents "after load, before any interaction".',
+                },
+              },
+              {
+                label: { zh: 'Canvas coarse stop 落 settled', en: 'Canvas coarse stop settles' },
+                content: {
+                  zh: 'scene 级降级动画控制的 `stop` 由「pause 定格当前帧」改为推进到末态再 pause，与 SVG `finish` / per-id `stop` 一致；oklch 颜色插值保留 rgba alpha（带透明度的颜色动画不再退化为不透明）。',
+                  en: 'The scene-level fallback `stop` now advances to the end state then pauses (instead of freezing the current frame), matching SVG `finish` / per-id `stop`; oklch interpolation keeps rgba alpha (color animations with transparency no longer degrade to opaque).',
+                },
+              },
+            ],
+          },
+          {
             version: 'beta.1',
             date: '2026-06-12',
             summary: {
@@ -249,6 +280,37 @@ export const changelog: Array<Release> = [
         ],
         subVersions: [
           {
+            version: 'beta.2',
+            date: '2026-06-13',
+            summary: {
+              zh: '对齐 React 与收口：`mountCanvas` 落地 `snapshotAt` 定格截帧；onEvent 水合随 `view.update()` 重建（换图后触发不再陈旧）、`dispose` 统一解绑水合；`FigureConfig` 补根级 `animations` 与级联样式默认；visible-trigger 的 scroll / resize 改 rAF 合帧去抖。',
+              en: 'Parity with React and cleanup: `mountCanvas` implements `snapshotAt` freeze-frame; onEvent hydration rebuilds on `view.update()` (triggers no longer stale after a scene swap) and `dispose` unbinds hydrations uniformly; `FigureConfig` gains root-level `animations` and cascading style defaults; visible-trigger scroll / resize now coalesce via rAF.',
+            },
+            items: [
+              {
+                label: { zh: 'mountCanvas snapshotAt 截帧', en: 'mountCanvas snapshotAt freeze-frame' },
+                content: {
+                  zh: '`mountCanvas` 支持 `snapshotAt`：按该时刻烘焙一帧、不起 rAF（镜像 React CanvasHost / SVG 口径）。',
+                  en: '`mountCanvas` supports `snapshotAt`: bakes one frame at that instant without starting an rAF loop (mirroring React CanvasHost / SVG).',
+                },
+              },
+              {
+                label: { zh: 'onEvent 随 update 重建 + dispose 解绑', en: 'onEvent rebinds on update + dispose unbinds' },
+                content: {
+                  zh: 'canvas 存活水合登记，`view.update()` 换图后按新 scene 重建 onEvent 动画 handler 表（新增 / 移除的 onEvent track 即时反映）；`view.dispose()` 统一解绑全部未手动 dispose 的水合。',
+                  en: 'Canvas registers live hydrations; `view.update()` rebuilds the onEvent animation handler table against the new scene (added / removed onEvent tracks take effect immediately); `view.dispose()` unbinds every not-yet-disposed hydration.',
+                },
+              },
+              {
+                label: { zh: 'FigureConfig 根级 animations + 样式默认', en: 'FigureConfig root animations + style defaults' },
+                content: {
+                  zh: '`FigureConfig` 增根级 `animations`（镜头动画 preset 可接根）与根级级联样式默认（`wrapRootScope`），与 React `<Layout>` 对齐；visible-trigger 的 scroll / resize 监听改 rAF 合帧。',
+                  en: '`FigureConfig` adds root-level `animations` (camera presets can attach to the root) and root cascading style defaults (`wrapRootScope`), matching React `<Layout>`; visible-trigger scroll / resize listeners now coalesce via rAF.',
+                },
+              },
+            ],
+          },
+          {
             version: 'beta.1',
             date: '2026-06-12',
             summary: {
@@ -418,6 +480,30 @@ export const changelog: Array<Release> = [
           },
         ],
         subVersions: [
+          {
+            version: 'beta.2',
+            date: '2026-06-13',
+            summary: {
+              zh: '水合与收集修复：`<Scope>` 内元素、形状 Sugar 的事件在常见写法下不再静默失效；`<Path>` / `<Node>` 的 children 收集穿透 `React.Fragment`（条件渲染不再丢段或误报）；显式 rotate 不再二次旋转，canvas 换图正确重渲。',
+              en: 'Hydration and collection fixes: events on elements inside `<Scope>` and on shape Sugar no longer silently fail in common usage; `<Path>` / `<Node>` child collection penetrates `React.Fragment` (conditional rendering no longer drops segments or misreports); explicit rotate is no longer double-applied, and canvas re-renders correctly on scene swap.',
+            },
+            items: [
+              {
+                label: { zh: '水合事件收集修复', en: 'Hydration event collection fixes' },
+                content: {
+                  zh: '修复 `<Scope>` 内元素与形状 Sugar（Circle / Rectangle / Star 等）挂的 `on<Event>` 在常见写法下被静默丢弃的问题；id / animations 经 Sugar 正确透传到底层 Kernel 节点。',
+                  en: 'Fixes `on<Event>` handlers on elements inside `<Scope>` and on shape Sugar (Circle / Rectangle / Star, …) being silently dropped in common usage; id / animations now pass through Sugar to the underlying Kernel node correctly.',
+                },
+              },
+              {
+                label: { zh: 'Fragment 穿透收集', en: 'Fragment-penetrating collection' },
+                content: {
+                  zh: '`readPathChildren` / Node 文本 / EdgeLabel 收集与 `readSceneChildren` 一致透明展开 `React.Fragment` 并同步展开函数组件——`<Path>{cond ? <>…</> : <>…</>}</Path>` 等条件渲染不再丢段或误报「requires at least 2 <Step>」。',
+                  en: 'Path / Node-text / EdgeLabel collection now transparently expands `React.Fragment` (and synchronously expands function components) like `readSceneChildren` — `<Path>{cond ? <>…</> : <>…</>}</Path>` and similar conditional rendering no longer drops segments or misreports "requires at least 2 <Step>".',
+                },
+              },
+            ],
+          },
           {
             version: 'beta.1',
             date: '2026-06-12',
@@ -602,6 +688,44 @@ export const changelog: Array<Release> = [
           },
         ],
         subVersions: [
+          {
+            version: 'beta.2',
+            date: '2026-06-13',
+            summary: {
+              zh: 'beta.2 行为对齐与收口：中段 mark 随 `strokeWidth` 缩放（与端点箭头统一 TikZ 语义）并支持 rectangle / cycle 段；compass anchor 按 shape 区分（圆 / 椭圆贴曲线、其余落 AABB，与 TikZ 一致）；minimum 尺寸改 TikZ 语义（随 scale 缩 + floor 外接框）；schema 收紧（Path / Coordinate / Scope strict、`bendAngle` 限 (-180,180)）；升级 zod v4。',
+              en: 'beta.2 behavior alignment and cleanup: mid-path marks scale with `strokeWidth` (unified with endpoint arrows, TikZ semantics) and support rectangle / cycle segments; compass anchors resolve per shape (circle / ellipse on the curve, others on the AABB, matching TikZ); minimum size uses TikZ semantics (scales with scale + floors to the bounding box); tighter schema (Path / Coordinate / Scope strict, `bendAngle` limited to (-180,180)); upgraded to zod v4.',
+            },
+            items: [
+              {
+                label: { zh: '中段 marks：strokeWidth 缩放 + rectangle/cycle 段', en: 'Mid-path marks: strokeWidth scaling + rectangle/cycle segments' },
+                content: {
+                  zh: '中段 `marks` 尺寸随路径 `strokeWidth` 缩放，与端点箭头同口径（TikZ 语义）；marks 现可落在 rectangle / cycle 段上。',
+                  en: 'Mid-path `marks` scale with the path `strokeWidth`, consistent with endpoint arrows (TikZ semantics); marks can now sit on rectangle / cycle segments.',
+                },
+              },
+              {
+                label: { zh: 'compass anchor 按 shape 区分', en: 'Per-shape compass anchors' },
+                content: {
+                  zh: 'compass 方位 anchor 改按各 shape 解析：圆 / 椭圆落真实曲线，polygon / diamond / star / sector / arc 落视觉 AABB（含 outerSep），与 TikZ 一致；角度 anchor 仍打真实形状边界。',
+                  en: 'Compass anchors resolve per shape: circle / ellipse land on the real curve, polygon / diamond / star / sector / arc on the visual AABB (incl. outerSep), matching TikZ; angle anchors still hit the real shape boundary.',
+                },
+              },
+              {
+                label: { zh: 'minimum 尺寸 TikZ 语义', en: 'minimum size TikZ semantics' },
+                content: {
+                  zh: '`minimum` 尺寸改 TikZ 语义：随 `scale` 缩放、并 floor 到外接框，不再是固定下限。',
+                  en: '`minimum` size now follows TikZ semantics: scales with `scale` and floors to the bounding box, rather than a fixed lower bound.',
+                },
+              },
+              {
+                label: { zh: '几何 / schema 收口', en: 'Geometry / schema cleanup' },
+                content: {
+                  zh: 'star `points` 上限 1024（防失控）；arc boundaryPoint 投影取最近点；contour fillet 改相对容差；marker stroke 结构化、中段 mark 的 contextStroke 落 Scene 时解析为实际描边色；Path / Coordinate / Scope schema 收紧为 strict，`bendAngle` 限定开区间 (-180,180)；升级 zod v3→v4。',
+                  en: 'star `points` capped at 1024 (runaway guard); arc boundaryPoint projects to the nearest point; contour fillet uses relative tolerance; marker stroke is structured and a mid-path mark’s contextStroke resolves to the actual stroke color when emitted to the Scene; Path / Coordinate / Scope schemas tightened to strict, `bendAngle` limited to the open interval (-180,180); upgraded zod v3→v4.',
+                },
+              },
+            ],
+          },
           {
             version: 'beta.1',
             date: '2026-06-12',
@@ -821,6 +945,30 @@ export const changelog: Array<Release> = [
           },
         ],
         subVersions: [
+          {
+            version: 'beta.2',
+            date: '2026-06-13',
+            summary: {
+              zh: '文档大修：按全量文档审阅订正 60+ 处与实现不一致（极坐标方向、between / shape 端点形态、scope transform 应用顺序、compass / 角度 anchor 解析面、schema 字段与变体、CompileOptions / warning code 等）；changelog 改按模块分组（概览列表 + 版本详情）；补全 reference 的 0.3 schema 字段与扩展落地页。',
+              en: 'Docs overhaul: a full doc review corrected 60+ mismatches with the implementation (polar angle direction, between / shape endpoint forms, scope transform order, compass / angle anchor resolution surface, schema fields and variants, CompileOptions / warning codes, …); the changelog is regrouped by module (overview list + per-version detail); reference 0.3 schema fields and extension landing pages are completed.',
+            },
+            items: [
+              {
+                label: { zh: '全量文档审阅订正', en: 'Full doc-review corrections' },
+                content: {
+                  zh: '逐页对照实现订正 60+ 条：高危「照抄会报错 / 行为相反」（极坐标方向、`between` 端点须 `{id}`、diamond 预设 `rotate:0`、scope transform array[0] 最外层、ArrowEndSpec 已解析字段、`way[0]` 抛错、`compileToScene` 替换不存在的 `toScene` 等）+ 内容过期 / 缺失（API 表缺字段、schema zh 覆盖、CompileOptions / warning code 全列）+ zh/en 同步。',
+                  en: 'Page-by-page corrections against the implementation, 60+ items: high-risk "copy-paste errors / inverted behavior" (polar direction, `between` endpoints need `{id}`, diamond preset `rotate:0`, scope transform array[0] outermost, resolved ArrowEndSpec fields, `way[0]` throws, `compileToScene` replacing the non-existent `toScene`, …) plus stale / missing content (API-table fields, schema zh overrides, full CompileOptions / warning-code lists) plus zh/en sync.',
+                },
+              },
+              {
+                label: { zh: 'changelog 按模块分组', en: 'Changelog regrouped by module' },
+                content: {
+                  zh: 'changelog 改为按模块分组，提供概览列表与逐版本详情；补全 reference 的 0.3 schema 字段表与扩展（custom shape / arrow / pattern / path-generator）落地页。',
+                  en: 'The changelog is regrouped by module with an overview list and per-version detail; reference 0.3 schema tables and the extension (custom shape / arrow / pattern / path-generator) landing pages are completed.',
+                },
+              },
+            ],
+          },
           {
             version: 'alpha.4',
             date: '2026-06-07',
