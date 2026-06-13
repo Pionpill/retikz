@@ -492,7 +492,7 @@ const readSceneChildren = (children: ReactNode): Array<IRChild> => {
  * 拣出真正携带样式指令的根样式字段
  * @description 在 `pickDefined`（仅取 `!== undefined`）基础上，再剔除**空对象的四通道 default**
  *   （`nodeDefault={{}}` / `pathDefault={{}}` 等）——空 default 不携带任何样式指令，留着只会让 `<Layout>`
- *   无谓地包一层空合成 `<Scope>`、改变 IR / Scene 拓扑却无视觉差异（违背 ADR「避免无谓的空 scope」）。
+ *   无谓地包一层空合成 `<Scope>`、改变 IR / Scene 拓扑却无视觉差异（避免无谓的空 scope）。
  *   标量通道的 falsy-但-defined 值（`strokeWidth={0}` / `opacity={0}`）是有意义的样式、保留。
  */
 export const pickScopeStyle = (style: ScopeStyleProps): Partial<ScopeStyleProps> => {
