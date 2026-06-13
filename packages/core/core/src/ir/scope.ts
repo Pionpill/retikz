@@ -34,10 +34,13 @@ export const NodeDefaultSchema = NodeSchema.omit({
 
 /**
  * every path 默认样式 schema
- * @description 从 PathSchema 派生，排除 type / children / arrow / arrowDetail（arrow 走独立 arrowDefault 通道，免双入口）
+ * @description 从 PathSchema 派生，排除实例专属字段（type / id / children）与 arrow / arrowDetail
+ *   （arrow 走独立 arrowDefault 通道，免双入口）。id 是实例水合挂点，作默认会被 stamp 到 scope 内每条 path
+ *   造成挂点冲突，故与 NodeDefault 一致排除。
  */
 export const PathDefaultSchema = PathSchema.omit({
   type: true,
+  id: true,
   children: true,
   arrow: true,
   arrowDetail: true,

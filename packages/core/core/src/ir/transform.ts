@@ -9,9 +9,10 @@ const TranslateSchema = z
     kind: z
       .literal('translate')
       .describe('Discriminator: Cartesian translate (the 3-variant Scene transform shape).'),
-    x: z.number().describe('Cartesian x translation in user units.'),
+    x: z.number().finite().describe('Cartesian x translation in user units.'),
     y: z
       .number()
+      .finite()
       .describe('Cartesian y translation in user units (screen y-down).'),
   })
   .describe(
