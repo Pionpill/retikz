@@ -3,7 +3,7 @@ title: Path
 description: Kernel 路径容器——`<Step>` 子节点序列定义折线 / 曲线 / 弧形，最少 2 个 step；Sugar 的 `<Draw>` 编译后就是它。
 ---
 
-`<Path>` 是底层路径容器：children 必须是若干 `<Step>`（至少 2 个），定义路径的 move / line / step（折角）/ cycle（闭合）/ curve / cubic / bend（曲线）/ arc / circlePath / ellipsePath（圆 / 椭圆）/ rectangle（矩形）等动作序列；另有 IR 级的 generator step（[路径生成器](/core/reference/extending/path-generator)）。日常连线用 `<Draw>` 更简洁，需要折角、闭合、曲线、自定义 stroke、不同 step kind 时回到 `<Path>`。
+`<Path>` 是底层路径容器：children 必须是若干 `<Step>`（至少 2 个），定义路径的 move / line / fold（折角）/ cycle（闭合）/ curve / cubic / bend（曲线）/ arc / circlePath / ellipsePath（圆 / 椭圆）/ rectangle（矩形）等动作序列；另有 IR 级的 generator step（[路径生成器](/core/reference/extending/path-generator)）。日常连线用 `<Draw>` 更简洁，需要折角、闭合、曲线、自定义 stroke、不同 step kind 时回到 `<Path>`。
 
 它最适合三类场景：一条 path 里有多个子路径（多次 `move`）、不同段要混用不同 `kind` / label / 控制点、或者你希望 JSX 结构和 IR `path.children` 几乎一一对应，方便调试和生成。
 
@@ -20,6 +20,15 @@ import { Path, Step } from '@retikz/react';
 </Path>
 ```
 
+`<Draw>` 编译后就是 `<Path>`，覆盖日常连线的 step / 折角 / 曲线 / 弧形需求；但 `<Path>` 还多出 `color` / `rotate` / `scale` / `marks` / `id` / `meta` / `animations` 等元素级能力，`<Draw>` 不暴露这些。日常连线用 `<Draw>` 一行 way 数组更省，需要显式 Step 序列、多次 `move`、逐段混用 `kind` / label / 控制点，或要用上述 Path 专属能力时用 `<Path>`：
+
+| | `<Draw>` | `<Path>` + `<Step>` |
+| --- | --- | --- |
+| 写法 | 一行 way 数组 | 容器 + 子节点 |
+| step / 曲线 / 折角 / 弧形 | 支持 | 支持 |
+| `color` / `rotate` / `scale` / `marks` / `id` / `meta` / `animations` | 不暴露 | 支持 |
+| 适用 | 90% 连线场景 | 显式 Step 序列、元素级能力 |
+
 ## 组合
 
 `<Path>` 必须搭配 `<Step>` 子节点（至少 2 个）；首个非 `move` 时编译器会强制改成 `move`：
@@ -32,7 +41,7 @@ import { Path, Step } from '@retikz/react';
 </Path>
 ```
 
-`<Step>` 支持 11 种 kind——`move` / `line` 处理直线，`step` 走直角折角，`cycle` 闭合回起点，`curve` / `cubic` 画贝塞尔曲线，`bend` 是弧形简记（可带 out/in 角与自环），`arc` / `circlePath` / `ellipsePath` 以游标为圆心画弧 / 整圆 / 整椭圆，`rectangle` 画对角矩形，详见 [Step](/core/components/draw/step)。此外还有 IR 级的 `generator` step（外部曲线生成器，无 JSX DSL、走 IR 直传，见 [路径生成器](/core/reference/extending/path-generator)）。
+`<Step>` 支持 11 种 kind——`move` / `line` 处理直线，`fold` 走直角折角，`cycle` 闭合回起点，`curve` / `cubic` 画贝塞尔曲线，`bend` 是弧形简记（可带 out/in 角与自环），`arc` / `circlePath` / `ellipsePath` 以游标为圆心画弧 / 整圆 / 整椭圆，`rectangle` 画对角矩形，详见 [Step](/core/components/draw/step)。此外还有 IR 级的 `generator` step（外部曲线生成器，无 JSX DSL、走 IR 直传，见 [路径生成器](/core/reference/extending/path-generator)）。
 
 ## 例子
 
@@ -42,7 +51,7 @@ import { Path, Step } from '@retikz/react';
 
 ### 折角
 
-`<Step kind="step" via="-|" \| "\|-">` 在两端之间插一个直角拐点——流程图、UML 关系线刚需。下面这条 path 混合 `line` + 两种 `via` 折角：
+`<Step kind="fold" via="-|" \| "\|-">` 在两端之间插一个直角拐点——流程图、UML 关系线刚需。下面这条 path 混合 `line` + 两种 `via` 折角：
 
 <ComponentPreview name="path-fold" size="md" />
 
@@ -60,7 +69,24 @@ import { Path, Step } from '@retikz/react';
 
 ### 箭头
 
-`arrow` 控制方向（`'->'` / `'<-'` / `'<->'` / `'none'`），`arrowDetail` 一个对象统管全部视觉规格（shape / scale / length / width / color / fill / opacity / lineWidth）+ 可选 `start` / `end` 起末分别配置。详细规则、7 种内置 shape、起末 merge、颜色 / 缩放 / 半透明配置以及完整 API 参考见 **[Arrow](/core/components/draw/arrow)** 专页。
+`arrow` 控制方向（`'->'` / `'<-'` / `'<->'` / `'none'`），`arrowDetail` 一个对象统管全部视觉规格（shape / scale / length / width / color / fill / opacity / lineWidth）+ 可选 `start` / `end` 起末分别配置。详细规则、8 种内置 shape、起末 merge、颜色 / 缩放 / 半透明配置以及完整 API 参考见 **[Arrow](/core/components/draw/arrow)** 专页。
+
+### 端点连接面（boundary）
+
+端点引用节点时（`{ id }` 对象形态，或 way 里的 id），可加 `boundary` 字段，**只对这一个端点**覆盖目标节点的 [`boundary`](/core/components/node/overview)（连接面）。取值与节点 `boundary` 同形：`'shape'`（视觉形状自身）/ `'circle'`（真圆）/ 任意注册 shape 名 / `{ type, params }`。
+
+```tsx
+<Path arrow="->">
+  <Step kind="move" to="a" />
+  <Step kind="line" to={{ id: 'star', boundary: 'shape' }} />
+</Path>
+```
+
+`boundary` 只在"连接面有意义"的地方生效：端点自动贴边（未显式给 `anchor`）以及该端点的 compass / 角度锚点。在没有方向引用的场合——`between` 端点、`offset` 的 `of`、节点中心——它是 no-op。节点默认连接面写在 [`<Node boundary>`](/core/components/node/overview)，端点 `boundary` 是单边覆盖。
+
+下例同一五角星（未设节点 `boundary`），两条边各自在端点选连接面：实线默认贴真实尖端，虚线 `boundary="circle"` 改贴外接圆——连接面由边自己决定。
+
+<ComponentPreview name="path-boundary" size="sm" />
 
 ### 样式
 
@@ -126,7 +152,7 @@ import { Path, Step } from '@retikz/react';
 
 #### 中段标记（marks）
 
-`marks` 沿路径放方向标记：每项 `{ pos, mark }`，`pos ∈ [0, 1]`（越界 schema 拒），`mark` 首批为 `{ kind: 'arrow', shape, ... }`（复用已注册箭头名 + 视觉子集，见 [自定义箭头](/core/reference/extending/custom-arrow)），**朝向由该点切线决定**（不是固定方向）。直线 / 贝塞尔 / 弧段都按切线定向。
+`marks` 沿路径放方向标记：每项 `{ pos, mark }`，`pos ∈ [0, 1]`（越界 schema 拒），`mark` 首批为 `{ kind: 'arrow', shape, ... }`（复用已注册箭头名 + 视觉子集，见 [自定义箭头](/core/reference/extending/custom-arrow)），**朝向由该点切线决定**（不是固定方向）。直线 / 贝塞尔 / 弧段都按切线定向。尺寸与端点箭头同口径**随 `strokeWidth` 缩放**（TikZ 语义）：线越粗、标记越大。
 
 <ComponentPreview name="path-marks" size="xs" />
 
@@ -134,6 +160,8 @@ import { Path, Step } from '@retikz/react';
 
 | 属性 | 类型 | 默认值 | 描述 |
 | --- | --- | --- | --- |
+| `id` | `string` | — | 可选稳定 id：供其它元素 anchor 引用，也是[水合](/core/reference/hydration)事件绑定的挂点（带 `id` 才能给 path 绑 `onClick` 等 handler） |
+| `meta` | `Record<string, JSON 值>` | — | provenance 元数据：原样透传进本路径 emit 的 Scene 图元，renderer 忽略、不参与布局 / 样式；典型由 plot 等高层 lowering 注入（标记来自哪个 datum / series / layer），供交互层命中后反查来源。须为 JSON 可序列化对象 |
 | `color` | `string` | — | 主色（TikZ `color=`）；`stroke` / 箭头 / step label 未单设则随它（跟主色不跟 `stroke`） |
 | `stroke` | `string` | `currentColor` | 描边色 |
 | `strokeWidth` | `number` | `1` | 描边宽度 |
@@ -152,19 +180,10 @@ import { Path, Step } from '@retikz/react';
 | `rotate` | `number` | — | 整条 path 旋转角（度，绕包围盒中心） |
 | `scale` | `number \| { x, y }` | — | 整条 path 缩放（数字等比 / `{ x, y }` 非等比，绕包围盒中心） |
 | `marks` | `Array<{ pos, mark }>` | — | 沿路径标记：`pos∈[0,1]`、`mark.kind:'arrow'` + 已注册箭头名，朝向随该点切线 |
-| `children` | `Array<<Step>>` | — | 至少 2 个；首个非 `move` 时编译器会强制改成 `move`。`<Step>` 支持 `move` / `line` / `step`（折角）/ `cycle`（闭合）/ `curve` / `cubic`（贝塞尔曲线）/ `bend`（弧形简记，可带 out/in 角与自环）/ `arc` / `circlePath` / `ellipsePath`（圆 / 椭圆）/ `rectangle`（对角矩形）；IR 另有 `generator`（路径生成器，无 JSX DSL） |
+| `animations` | `Array<AnimationTrack>` | — | 时间轴动画 tracks，透传进本 path emit 的图元，renderer 播放或降级静态；见 [动画](/core/components/animation/control) |
+| `children` | `Array<<Step>>` | — | 至少 2 个；首个非 `move` 时编译器会强制改成 `move`。`<Step>` 支持 `move` / `line` / `fold`（折角）/ `cycle`（闭合）/ `curve` / `cubic`（贝塞尔曲线）/ `bend`（弧形简记，可带 out/in 角与自环）/ `arc` / `circlePath` / `ellipsePath`（圆 / 椭圆）/ `rectangle`（对角矩形）；IR 另有 `generator`（路径生成器，无 JSX DSL） |
 
 ## 相关
-
-### 与 Draw 的取舍
-
-| | `<Draw>` | `<Path>` + `<Step>` |
-| --- | --- | --- |
-| 写法 | 一行 way 数组 | 容器 + 子节点 |
-| 表达力 | 与 Path 等价（编译展开） | 全部 Kernel 能力 |
-| 适用 | 90% 连线场景 | 显式 Step 序列、未来扩展 |
-
-`<Draw>` 由 `<Path>` 编译而成；写文档 / 教程时一律先讲 `<Draw>`，`<Path>` 是给"想看底层"的用户。
 
 - [Draw](/core/components/draw/overview)：日常连线优先使用的 Sugar
 - [Step](/core/components/draw/step)：`<Path>` 子节点的完整字段和 kind 说明

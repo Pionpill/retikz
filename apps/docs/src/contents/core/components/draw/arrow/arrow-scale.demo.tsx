@@ -6,7 +6,7 @@ import type { FC } from 'react';
  * @description scale 乘到 length × width 之后（length=10, scale=1.5 → markerWidth 15）。三行对照：默认（scale 缺省）/ scale=1.5 / length=14, width=10
  */
 const Demo: FC = () => (
-  <Layout width={320} height={140}>
+  <Layout width={320} height={140} nodeDefault={{ stroke: 'gray', dashed: true }}>
     <Node id="a1" position={[0, 0]}>
       A
     </Node>

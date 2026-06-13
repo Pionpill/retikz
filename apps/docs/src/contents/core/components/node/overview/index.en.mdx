@@ -23,21 +23,7 @@ import { Node } from '@retikz/react';
 
 <ComponentPreview name="node-basic" size="xs" />
 
-Choose the form by the role in the diagram: flowchart nodes usually use the default rectangle + `padding`; plain text labels use `stroke="none"` / `fill="none"`; button-like nodes add `roundedCorners` + `minimumWidth`; annotation cards fit multi-line `text` + `align="left"`; and if you only need a reference point with no visible shape, use [Coordinate](/core/components/node/coordinate) instead.
-
-### Shape polymorphism
-
-`shape` picks the visual shape: `'rectangle'` (default) / `'circle'` / `'ellipse'` / `'diamond'`, or a custom shape name registered via `<Layout shapes>` / `CompileOptions.shapes`. Any shape works as an attachable target — connecting lines clip to that shape's boundary automatically:
-
-<ComponentPreview name="node-shapes" size="sm" />
-
-> Each shape's outer boundary contains "text rectangle + padding":
-> - rectangle: boundary = inner rect
-> - circle: circumscribed, radius = √(innerHalfW² + innerHalfH²)
-> - ellipse: circumscribed, rx = innerHalfW × √2, ry = innerHalfH × √2
-> - diamond: circumscribed, halfA = 2 × innerHalfW, halfB = 2 × innerHalfH
-
-`shape` also accepts registered names beyond the built-ins (hexagon / cylinder / cloud…) — any string passes schema validation, the definition is injected via `CompileOptions.shapes` / `<Layout shapes>`, and unregistered names throw at compile time. See [Custom Shapes](/core/reference/extending/shape-registry).
+Choose the form by the role in the diagram: flowchart nodes usually use the default rectangle + `padding`; plain text labels use `stroke="none"` / `fill="none"`; button-like nodes add `cornerRadius` + `minimumWidth`; annotation cards fit multi-line `text` + `align="left"`; and if you only need a reference point with no visible shape, use [Coordinate](/core/components/node/coordinate) instead.
 
 ### Positioning
 
@@ -59,7 +45,7 @@ In addition to Cartesian / polar, `position` accepts **`{ direction, of, distanc
 
 #### Offset positioning
 
-`position` also accepts **`{ of, offset }`** — an arbitrary `(dx, dy)` offset from a base point. Use offset whenever the 8-direction + scalar-distance `at` form can't express what you want (e.g. "A right 30 down 10").
+`position` also accepts **`{ of, offset }`** — an arbitrary `(dx, dy)` offset from a base point. Use offset whenever the 8-direction + scalar-distance relative form can't express what you want (e.g. "A right 30 down 10").
 
 - `of` is the base point in three shapes (matching `PolarPosition.origin`):
   - string id — references a named node / coordinate (forward references rejected)
@@ -77,29 +63,68 @@ In addition to Cartesian / polar, `position` accepts **`{ direction, of, distanc
 
 #### Proportional positioning
 
-Since v0.2, `position` also accepts **`{ between, t }`**: place the node at a proportional point between two endpoints, with `t=0.5` as the midpoint. Endpoints may be node ids, coordinates, polar positions, offsets, or nested between positions; see [Coordinate](/core/components/node/coordinate) for a fuller midpoint-helper example.
+`position` also accepts **`{ between, t }`**: place the node at a proportional point between two endpoints, with `t=0.5` as the midpoint. Endpoints may be node ids, coordinates, polar positions, offsets, or nested between positions; see [Coordinate](/core/components/node/coordinate) for a fuller midpoint-helper example.
 
-### Node labels
+### Shapes
 
-`label` attaches extra text outside the node border. Single object or array form; `position` accepts the 8-direction enum or a numeric angle; `font` / `textColor` inherit from the node when omitted.
+A node's geometric shape drives its visual look and how edges clip to it.
 
-<Comparison target="tikz" title="Node Labels">
+#### Shape polymorphism
 
-`label={{ text: 'foo', position: 'above' }}` maps to TikZ `[label=above:foo]`; `position: 30` maps to `label=30:foo`.
+Shapes have two faces in retikz — drawn as a Path with sugar, or used as a Node boundary; see [Shapes](/core/components/shapes) for the full definition. This section covers the Node-shape side.
 
-</Comparison>
+`shape` picks the visual shape in two forms:
 
-<ComponentPreview name="node-label-basic" size="xs" />
+- **Bare string** (parameterless shapes): `'rectangle'` (default) / `'circle'` / `'ellipse'` / `'diamond'`, or a custom name with no required params registered via `<Layout shapes>` / `CompileOptions.shapes`.
+- **`{ type, params }` object** (parametric shapes): when a shape needs extra geometry (sides / inner & outer radii / start & end angles…), pick it with `type` and pass the params. `polygon` / `sector` / `arc` / `star` have required params and **must** use `{ type, params }` — a bare string like `shape="polygon"` throws at compile time because the param validation fails.
 
-`distance` controls how far the label is pushed outward from the node border, still in retikz user units. It defaults to `12`; for example, `position: 'above', distance: 20` places the label further above the node's top border.
+Either way, the node works as an attachable target — connecting lines clip to that shape's boundary automatically.
 
-<ComponentPreview name="node-label-distance" size="xs" />
+Shapes split into two families by where their size comes from: **text-container shapes** (rectangle / circle / ellipse / polygon / diamond) wrap "text + padding" and are sized by the text; **params-driven geometric shapes** (sector / arc / star) are sized by radii / angles, independent of the text, and work as attachable graphic glyphs.
 
-### Styling
+<ComponentPreview name="node-shapes" size="md" />
 
-`fill` / `stroke` / `strokeWidth` / `padding` / `font` control per-node appearance:
+<ComponentPreview name="node-shape-params" size="md" />
 
-<ComponentPreview name="node-styled" size="xs" />
+For each shape's parameters, anchors, and examples, see its shape page:
+
+| shape | form | docs |
+| --- | --- | --- |
+| rectangle | default / `'rectangle'` | [Rectangle](/core/components/shapes/rectangle) |
+| circle / ellipse | `'circle'` / `'ellipse'` | [Circle / Ellipse](/core/components/shapes/circle-ellipse) |
+| sector / arc | `{ type:'sector' \| 'arc', params }` | [Arc / Sector](/core/components/shapes/arc-sector) |
+| polygon / diamond | `{ type:'polygon', params }` / `'diamond'` | [Polygon](/core/components/shapes/polygon) |
+| star | `{ type:'star', params }` | [Star](/core/components/shapes/star) |
+
+`shape` also accepts registered names beyond the built-ins (hexagon / cylinder / cloud…) — any string passes schema validation, the definition is injected via `CompileOptions.shapes` / `<Layout shapes>`, and unregistered names throw at compile time. Parametric registered shapes pass their params through `{ type, params }`. See [Custom Shapes](/core/reference/extending/shape-registry).
+
+#### Connection surface (boundary)
+
+By default, edges clip against the node's visual shape boundary. When you want edges to meet a different shape without changing the node's real footprint, set `boundary` to pick an independent "connection surface". The common case is concave shapes like stars and polygons — you keep the spiky look but want edges to arrive evenly as if meeting a circle, instead of diving into the notches.
+
+`boundary` takes the same forms as `shape`. The four parameter-free values below are the common ones; any registered shape can also be borrowed:
+
+| Value | Connection surface | Effect |
+| --- | --- | --- |
+| `'shape'` (default) | The visual shape itself | Edges clip to the real outline — stars / polygons land on tips or dive into notches |
+| `'circle'` | A true circle, radius = the node's larger bounding-box half-axis | Edges meet it evenly all around, unaffected by notches / rotation |
+| `'rectangle'` | The bounding box (AABB) | Edges clip to the horizontal / vertical box sides |
+| `'ellipse'` | An ellipse matching the AABB aspect ratio | Edges clip to the ellipse, stretched with the aspect ratio |
+| Registered shape name / `{ type, params }` | Borrows that shape's boundary over the node's bounding box | Borrowing parametric shapes (`polygon` / `star`…) needs explicit params; auto-fitting size to the AABB is out of scope |
+
+The same five-point star set to four surfaces, each with one edge clipping in from the lower-left at 45° — `shape` lands on the real star outline (innermost), `rectangle` reaches the bounding-box corner (outermost), and `circle` / `ellipse` sit in between (close together for a near-square node). A diagonal is needed to tell them apart: on a vertical / horizontal axis an inscribed ellipse always meets the rectangle at the same point and the circle takes the larger half-axis, so the three coincide there:
+
+<ComponentPreview name="node-boundary-surfaces" size="sm" />
+
+The connection surface **never changes the node footprint**: bounding box, visual shape, and layout position stay the same — it only changes where edges clip and how compass anchors resolve. Shape-specific anchors (such as a star's `tip-0`) and edge proportional points always resolve against the visual shape, regardless of `boundary`.
+
+In the example below the five-point star has `boundary="circle"`: the solid edge clips to the circumscribing circle by default, while the dashed edge with `boundary="shape"` on its endpoint clips to the real tip instead.
+
+<ComponentPreview name="node-boundary" size="sm" />
+
+To override a target node's `boundary` for a single edge, set `boundary` on the path endpoint object — it affects only that one endpoint and takes the same values as the node's `boundary`. See the endpoint `boundary` notes on [Path](/core/components/draw/path).
+
+### Text
 
 #### Font
 
@@ -109,7 +134,7 @@ Since v0.2, `position` also accepts **`{ between, t }`**: place the node at a pr
 
 #### Multi-line text
 
-`text` accepts a string (one line) or an array of strings (one line each). `align` controls horizontal alignment within the text block (`'left'` / `'center'` (default) / `'right'`), and `lineHeight` controls vertical spacing between lines, defaulting to `font.size × 1.2`.
+`text` accepts a string or an array of strings (one line each). A `'\n'` inside a string is a hard line break, so a single string can render as multiple lines. `align` controls horizontal alignment within the text block (`'left'` / `'center'` (default) / `'right'`), and `lineHeight` controls vertical spacing between lines, defaulting to `font.size × 1.2`.
 
 <ComponentPreview name="node-multiline" size="xs" />
 
@@ -150,9 +175,45 @@ Each line can override `fill` / `opacity` / `font` (any subset of family / size 
 
 > Block-level `align` / `lineHeight` cannot be overridden per line — they apply to the whole multi-line block.
 
-Multi-line text combined with each shape — outer boundary follows the shape-specific circumscription (circle / ellipse / diamond):
+Multi-line text combined with each shape — outer boundary follows the shape-specific circumscription (circle / ellipse / polygon):
 
 <ComponentPreview name="node-multiline-shapes" size="xs" />
+
+### Node labels
+
+`label` attaches extra text outside the node border. Single object or array form; `position` accepts the 8-direction enum (default `'above'`) or a numeric angle; `font` / `textColor` inherit from the node when omitted, and `opacity` controls the label's own opacity (0..1, multiplied with the node `opacity`).
+
+<Comparison target="tikz" title="Node Labels">
+
+`label={{ text: 'foo', position: 'above' }}` maps to TikZ `[label=above:foo]`; `position: 30` maps to `label=30:foo`.
+
+</Comparison>
+
+<ComponentPreview name="node-label-basic" size="xs" />
+
+`distance` controls how far the label is pushed outward from the node border, still in retikz user units. It defaults to `12`; for example, `position: 'above', distance: 20` places the label further above the node's top border.
+
+<ComponentPreview name="node-label-distance" size="xs" />
+
+#### Orientation
+
+`label.rotate` spins the label text around **its own center**: `'radial'` along the node-center → label-center direction, `'tangent'` is its tangent (radial + 90°), a number is an explicit angle (degrees); `keepUpright` flips it 180° when it would otherwise read upside-down. `rotate` only changes orientation, not the placement determined by `position` / `distance`.
+
+<ComponentPreview name="node-label-rotate" size="sm" />
+
+#### Pin
+
+`label.pin` adds a **leader line** from the node border to the label (TikZ `pin`): `pin: true` is a default thin solid line (inherits the label color); `pin: { stroke, strokeWidth, dashPattern }` customizes it; omitted / `false` = no leader. The label is still placed by `position` / `distance` — pin only adds the leader.
+
+<Comparison target="tikz" title="Pin">
+
+`label={{ text: 'foo', position: 'right', pin: true }}` maps to TikZ `[pin=right:foo]`.
+
+</Comparison>
+
+<ComponentPreview name="node-pin" size="md" />
+
+### Size & transforms
 
 #### Inner / outer sep
 
@@ -171,52 +232,9 @@ Most nodes only need `padding={N}`. Use `innerXSep` / `innerYSep` when horizonta
 
 </Comparison>
 
-#### Colors / opacity
-
-- `textColor` — text color (block default; per-line `LineSpec.fill` still overrides)
-- `opacity` — whole-node 0..1 (applies to shape + text)
-- `fillOpacity` / `drawOpacity` — fill-only / stroke-only opacity
-
-<ComponentPreview name="node-color-opacity" size="xs" />
-
-#### Gradient fill (Paint)
-
-Besides a plain color string, `fill` accepts a **PaintSpec object** — linear / radial gradient, pattern, or image. Identical PaintSpecs are deduplicated at compile time into a Scene resource table and rendered as a paint server inside SVG `<defs>`. `<Path fill>` supports it too.
-
-- Linear: `{ type: 'linearGradient', angle?, stops }` — `angle` in degrees (0 = left→right, 90 = top→bottom)
-- Radial: `{ type: 'radialGradient', center?, radius?, stops }` — `center` / `radius` in 0..1 relative units
-- `stops`: array of `{ offset (0..1), color, opacity? }`, at least 2; `color` may be `currentColor`
-
-<ComponentPreview name="node-paint" size="sm" />
-
-A stop's `opacity` gives a "solid → transparent" fade; `color` set to `currentColor` makes the gradient follow the element's `color` and react to theme changes:
-
-<ComponentPreview name="node-paint-stops" size="sm" />
-
-`fill` also accepts **pattern** and **image**:
-
-- Pattern: `{ type:'pattern', shape:'lines'|'dots'|'grid', color?, background?, size?, lineWidth?, rotation? }` — `color` defaults to `currentColor`, `size` is the tile period, `rotation` rotates the whole pattern
-- Image: `{ type:'image', href, fit? }` — `href` is a URL (incl. data URI), `fit`: `cover` (default) / `contain` / `fill`
-
-<ComponentPreview name="node-pattern-image" size="sm" />
-
-`href` takes any external image URL (http(s)) or a data URI; `fit` controls how the image maps into the shape box — the same external landscape image (`picsum.photos`, 320×200) under all three fits in a square box:
-
-<ComponentPreview name="node-image-fit" size="sm" />
-
-> `fit` is computed against the normalized shape box: it matches CSS `object-fit` for square boxes; for strongly non-square boxes cover/contain are approximate (against the normalized square, not the true aspect ratio). When the source and box share a shape (both square / both landscape) the three fits look identical.
->
-> Image fill renders via a runtime `<image href>`, so external URLs load on the browser side; inlining for SSR / PNG export is deferred.
-
-#### Border style
-
-`dashed` / `dotted` are presets; `dashArray` is an explicit dash/gap length sequence (priority: `dashArray` > `dashed` > `dotted`):
-
-<ComponentPreview name="node-stroke-style" size="xs" />
-
 #### Size constraints + scale
 
-- `roundedCorners` — corner radius (only on `rectangle` shape)
+- `cornerRadius` — corner radius. `rectangle` / `polygon` / `star` / `sector` support rounding (`ellipse` and the like do not) via their params: `shape={{ type:'polygon', params:{ sides:6, cornerRadius:8 } }}`, and likewise for `star` / `sector` / `rectangle`. The top-level `cornerRadius` only affects the `rectangle` shape (default or explicit `'rectangle'`), and only merges when params don't already set `cornerRadius` (params wins when both are set)
 - `minimumWidth` / `minimumHeight` / `minimumSize` — floor the bbox without shrinking natural text width
 - `scale` / `xScale` / `yScale` — uniform / per-axis scale; affects bbox, font size, padding, and path attachment
 
@@ -234,32 +252,65 @@ By default stacking = declaration order (SVG only honors paint order). `zIndex` 
 
 <ComponentPreview name="node-z-index" size="sm" />
 
-#### Label rotation
+### Styling
 
-`label.rotate` spins the label text around **its own center**: `'radial'` along the node-center → label-center direction, `'tangent'` is its tangent (radial + 90°), a number is an explicit angle (degrees); `keepUpright` flips it 180° when it would otherwise read upside-down. `rotate` only changes orientation, not the placement determined by `position` / `distance`.
+`fill` / `stroke` / `strokeWidth` and other style props control a node's appearance:
 
-<ComponentPreview name="node-label-rotate" size="sm" />
+<ComponentPreview name="node-styled" size="xs" />
 
-#### Pin
+#### Colors / opacity
 
-`label.pin` adds a **leader line** from the node border to the label (TikZ `pin`): `pin: true` is a default thin solid line (inherits the label color); `pin: { stroke, strokeWidth, dashPattern }` customizes it; omitted / `false` = no leader. The label is still placed by `position` / `distance` — pin only adds the leader.
+- `textColor` — text color (block default; per-line `LineSpec.fill` still overrides)
+- `opacity` — whole-node 0..1 (applies to shape + text)
+- `fillOpacity` / `drawOpacity` — fill-only / stroke-only opacity
 
-<Comparison target="tikz" title="Pin">
+<ComponentPreview name="node-color-opacity" size="xs" />
 
-`label={{ text: 'foo', position: 'right', pin: true }}` maps to TikZ `[pin=right:foo]`.
+#### Gradient fill (Paint)
 
-</Comparison>
+Besides a plain color string, `fill` accepts a **PaintSpec object** — linear / radial gradient, pattern, or image. Identical PaintSpecs are deduplicated automatically and rendered as a paint server inside SVG `<defs>`. `<Path fill>` supports it too.
 
-<ComponentPreview name="node-pin" size="md" />
+- Linear: `{ kind: 'linearGradient', angle?, stops }` — `angle` in degrees (0 = left→right, 90 = top→bottom)
+- Radial: `{ kind: 'radialGradient', center?, radius?, stops }` — `center` / `radius` in 0..1 relative units
+- `stops`: array of `{ offset (0..1), color, opacity? }`, at least 2; `color` may be `currentColor`
+
+<ComponentPreview name="node-paint" size="sm" />
+
+A stop's `opacity` gives a "solid → transparent" fade; `color` set to `currentColor` makes the gradient follow the element's `color` and react to theme changes:
+
+<ComponentPreview name="node-paint-stops" size="sm" />
+
+`fill` also accepts **pattern** and **image**:
+
+- Pattern: `{ kind:'pattern', shape:'lines'|'dots'|'grid', color?, background?, size?, lineWidth?, rotation? }` — `color` defaults to `currentColor`, `size` is the tile period, `rotation` rotates the whole pattern
+- Image: `{ kind:'image', href, fit? }` — `href` is a URL (incl. data URI), `fit`: `cover` (default) / `contain` / `fill`
+
+<ComponentPreview name="node-pattern-image" size="sm" />
+
+`href` takes any external image URL (http(s)) or a data URI; `fit` controls how the image maps into the shape box — the same external landscape image (`picsum.photos`, 320×200) under all three fits in a square box:
+
+<ComponentPreview name="node-image-fit" size="sm" />
+
+> `fit` is computed against the normalized shape box: it matches CSS `object-fit` for square boxes; for strongly non-square boxes cover/contain are approximate (against the normalized square, not the true aspect ratio). When the source and box share a shape (both square / both landscape) the three fits look identical.
+>
+> Image fill renders via a runtime `<image href>`, so external URLs load on the browser side; inlining for SSR / PNG export is deferred.
+
+#### Border style
+
+`dashed` / `dotted` are presets; `dashPattern` is an explicit dash/gap length sequence (priority: `dashPattern` > `dashed` > `dotted`):
+
+<ComponentPreview name="node-stroke-style" size="xs" />
 
 ## API Reference
 
 | Prop | Type | Default | Description |
 | --- | --- | --- | --- |
 | `id` | `string` | — | Unique identifier; referenced by `<Path>` / `<Draw>` |
-| `shape` | `'rectangle' \| 'circle' \| 'ellipse' \| 'diamond' \| string` | `'rectangle'` | Node shape; one of the 4 built-ins or a custom shape name registered via `<Layout shapes>` / `CompileOptions.shapes` |
+| `meta` | `Record<string, JSON value>` | — | Provenance metadata, passed through verbatim onto this node's rendered output; ignored by renderers and never part of layout / connection / style. Typically injected by a higher-level layer (e.g. plot) to tag which datum / series / layer it came from, so an interaction layer can trace a hit primitive back to its source. Must be a JSON-serializable object |
+| `shape` | `'rectangle' \| 'circle' \| 'ellipse' \| 'diamond' \| string`<br />`\| { type, params }` | `'rectangle'` | Node shape: a bare string is allowed only for shapes with no required params (`rectangle` / `circle` / `ellipse` / `diamond` / param-free registered names); `polygon` / `sector` / `arc` / `star` and other parametric shapes must use `{ type, params }` (a bare string throws at compile time); built-ins above, or registered via `<Layout shapes>` / `CompileOptions.shapes` |
+| `boundary` | `'shape' \| 'circle' \| string \| { type, params }` | `'shape'` | Connection surface: how edges meet this node and how compass anchors resolve, independent of the visual `shape`; `'shape'` = the visual shape itself, `'circle'` = a true circle (radius = larger AABB half-axis), other values borrow that shape's boundary. Never changes the node footprint; shape-specific anchors and edge proportional points still use the visual shape. Overridable per edge via the endpoint `boundary` field |
 | `position` | `[x, y] \| PolarPosition \| { direction, of, distance? } \| { of, offset } \| { between, t }` | — | Node center: Cartesian / polar / relative / offset / proportional placement; `of` accepts node id, Cartesian literal, or PolarPosition |
-| `children` / `text` | `string \| Array<string>` | — | Visible label; string = one line, array = one element per line; `text` wins over `children` |
+| `children` / `text` | `string \| Array<string \| LineSpec>` | — | Visible label; `'\n'` in a string is a hard line break, array = one element per line; array elements may mix `LineSpec` objects (`{ text, fill?, opacity?, font? }`) for per-line overrides; `text` wins over `children` |
 | `align` | `'left' \| 'center' \| 'right'` | `'center'` | Horizontal alignment of lines within the multi-line text block |
 | `lineHeight` | `number` | `font.size × 1.2` | Line height of the multi-line block (user units) |
 | `maxTextWidth` | `number` | — | Wrap threshold (user units); text wraps past it (Western per word / CJK per char) and the box shrinks for short text; not a fixed paragraph width |
@@ -270,33 +321,34 @@ By default stacking = declaration order (SVG only honors paint order). `zIndex` 
 | `strokeWidth` | `number` | `1` | Border width (user units) |
 | `innerXSep` | `number` | — | Horizontal inner padding (text → left/right border); falls back to `padding` |
 | `innerYSep` | `number` | — | Vertical inner padding (text → top/bottom border); falls back to `padding` |
-| `outerSep` | `number` | — | Outer margin (border → path attachment point); falls back to `margin` |
+| `outerSep` | `number` | `0` | Uniform outer offset around the connection boundary (TikZ `outer sep`): applies to **all border anchors** (explicit `.north` / `.30` just like automatic endpoints) and is **included in the node layout footprint / viewBox**; does not change the visible shape; `center`, shape-specific anchors, edge points, and label attachment stay on the visible shape. Falls back to `margin` |
 | `padding` | `number` | `8` | Symmetric inner padding alias; axis-specific fields take precedence |
-| `margin` | `number` | `0` | Symmetric outer margin alias; `outerSep` takes precedence; **does not affect border position**, only path endpoints |
+| `margin` | `number` | `0` | Symmetric alias for `outerSep` (TikZ `outer sep`); `outerSep` takes precedence |
 | `font` | `{ family?, size?, weight?, style? }` | — | Font spec; nested object, all fields optional |
 | `textColor` | `string` | `currentColor` | Text color (block default; per-line override via `LineSpec.fill`) |
 | `opacity` | `number` | — | Whole-node 0..1, applies to both shape and text |
 | `fillOpacity` | `number` | — | Fill-only opacity 0..1 |
 | `drawOpacity` | `number` | — | Stroke-only opacity 0..1 |
-| `dashed` | `boolean` | ? | Dashed border preset (`[4, 2]`) |
-| `dotted` | `boolean` | ? | Dotted border preset (`[1, 2]`) |
-| `dashArray` | `Array<number>` | ? | Explicit dash/gap lengths; highest priority |
-| `roundedCorners` | `number` | — | Corner radius (only on `rectangle` shape) |
+| `dashed` | `boolean` | — | Dashed border preset (`[4, 2]`) |
+| `dotted` | `boolean` | — | Dotted border preset (`[1, 2]`) |
+| `dashPattern` | `Array<number>` | — | Explicit dash/gap lengths; highest priority |
+| `cornerRadius` | `number` | — | Top-level corner radius; only affects the `rectangle` shape (default or explicit `'rectangle'`), and only merges when params don't set `cornerRadius`. Per-shape rounding goes in params: `shape={{ type, params:{ ..., cornerRadius } }}` (params wins) |
 | `minimumWidth` / `minimumHeight` | `number` | — | Floors the bbox dimensions |
 | `minimumSize` | `number` | — | Symmetric minimum-size alias; axis-specific fields take precedence |
 | `scale` | `number` | `1` | Uniform scale (includes font, padding, path attachment) |
 | `xScale` / `yScale` | `number` | — | Per-axis scale; takes precedence over `scale` |
 | `zIndex` | `number` (integer) | `0` | Explicit stacking order: higher draws on top; ties keep declaration order; effective only among siblings at the same level |
-| `label` | `NodeLabel \| Array<NodeLabel>` | — | Extra label(s) attached to the node border; single object or array; `position` accepts the 8-direction enum or a numeric angle, `distance` defaults to 12, `font` / `textColor` inherit from the node; `rotate` (`'none'` / `'radial'` / `'tangent'` / a number of degrees) + `keepUpright` control label spin; `pin` (`true` default line / `{ stroke, strokeWidth, dashPattern }` styled / omitted = none) draws a leader |
+| `label` | `NodeLabel \| Array<NodeLabel>` | — | Extra label(s) attached to the node border; single object or array; `position` accepts the 8-direction enum (default `'above'`) or a numeric angle, `distance` defaults to 12, `font` / `textColor` inherit from the node, `opacity` controls the label's own opacity 0..1; `rotate` (`'none'` / `'radial'` / `'tangent'` / a number of degrees) + `keepUpright` control label spin; `pin` (`true` default line / `{ stroke, strokeWidth, dashPattern }` styled / omitted = none) draws a leader |
+| `animations` | `Array<AnimationTrack>` | — | Timeline animation tracks: each track animates one renderer-agnostic property, base = the animation end state; passed through onto the Scene primitive for the renderer to play or degrade to static. Not part of layout. See [Animation](/core/components/animation/control) |
 
 ### margin vs padding
 
 | | Affects | Visual effect |
 | --- | --- | --- |
-| `padding` | Distance from text to border | Border grows |
-| `margin` | Distance from border to path endpoint | Border unchanged; lines stop `margin` short |
+| `padding` | Distance from text to border | Visible shape grows |
+| `margin` | Uniform outer offset around the connection boundary (TikZ outer sep) | Visible shape unchanged; all border anchors and path endpoints move out by `margin`, and the node footprint includes `margin` |
 
-Use `margin` to give connecting lines breathing room in multi-node diagrams — keeps lines from touching the border directly.
+`padding` grows the node itself; `margin` leaves the visible shape untouched but pushes the node's whole connection/reference boundary out by `margin` (including explicit anchors like `.north`) and reserves that much extra space in layout — giving lines breathing room while matching TikZ `outer sep`. `margin` defaults to 0, so unset means zero effect.
 
 ## Related
 

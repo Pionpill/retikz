@@ -5,7 +5,7 @@ description: Sugar component — a way array threads through nodes, coordinates,
 
 `<Draw>` is the default entry point for most connections. It accepts a `way` array and expands targets, folds, cycles, curves, shapes, and edge labels into Kernel `<Path>` + `<Step>`. Stroke, fill, arrow, and opacity props match `<Path>`.
 
-Choosing rule: use `<Draw>` for ordinary relationship lines, flowchart edges, and arrowed connections; switch to `<Path>` + `<Step>` when you need multiple `move`s, precise per-segment `kind` control, or IR-close debugging; use the **shape sugar** below to draw a single geometric shape (circle / rectangle / sector, etc.); use [Grid](/core/components/shapes/grid) for background reference lines. Work with IR directly only at AI / persistence boundaries.
+Choosing rule: use `<Draw>` for ordinary relationship lines, flowchart edges, and arrowed connections; switch to `<Path>` + `<Step>` when you need multiple `move`s, precise per-segment `kind` control, or IR-close debugging; use the **shape sugar** below to draw a single geometric shape (circle / rectangle / sector, etc.); use [Grid](/core/components/helpers/grid) for background reference lines. Work with IR directly only at AI / persistence boundaries.
 
 ## Usage
 
@@ -64,15 +64,11 @@ Draw has two curve families: `curve` / `cubic` / `bend` connect the previous tar
 
 <ComponentPreview name="draw-arc" size="sm" />
 
-### Shapes
-
-#### Circle
+### Full Circle / Ellipse
 
 `{ circle: { radius } }` draws a full circle around the previous item; the pen returns to the center.
 
 <ComponentPreview name="draw-circle" size="xs" />
-
-#### Ellipse
 
 `{ ellipse: { radiusX, radiusY } }` draws a full ellipse centered on the previous item.
 
@@ -88,7 +84,7 @@ Draw has two curve families: `curve` / `cubic` / `bend` connect the previous tar
 
 #### Position Rules
 
-`label.position` accepts seven keywords or a numeric `0..1` t. The geometry of t depends on step kind: line / fold use normalized path position, curve / cubic / bend use Bezier t, and arc / circle / ellipse use angular parametrization.
+`label.position` accepts seven keywords or a numeric `0..1` t. The geometry of t depends on step kind — line / fold use normalized path position, curves (curve / cubic / bend) use Bezier t, and arc / circle / ellipse use angular parametrization; see [Step §Geometric meaning of t](/core/components/draw/step#geometric-meaning-of-t-per-step-kind) for the full per-kind table and demos.
 
 Line segments are the most direct: `start` / `midway` / `end` land near the start, middle, and end of the segment.
 
@@ -97,30 +93,6 @@ Line segments are the most direct: `start` / `midway` / `end` land near the star
 Folded segments divide t evenly across the folded legs. `midway` lands on the corner, not at the visual midpoint by actual segment length.
 
 <ComponentPreview name="draw-label-fold" size="sm" />
-
-Quadratic Beziers use the curve parameter t. `midway` means Bezier t=0.5, which is not always halfway along the visible curve.
-
-<ComponentPreview name="draw-label-curve" size="sm" />
-
-Cubic Beziers also place labels by Bezier t; changing the control points changes both the position and tangent at that t.
-
-<ComponentPreview name="draw-label-cubic" size="sm" />
-
-`bend` expands to a cubic Bezier, so its label positioning follows the same rule as cubic.
-
-<ComponentPreview name="draw-label-bend" size="sm" />
-
-Arcs place labels by angle interpolation; `midway` means the middle angle between `startAngle` and `endAngle`.
-
-<ComponentPreview name="draw-label-arc" />
-
-Full circles start at the 0° position and traverse the circle; numeric t maps to the circular angle.
-
-<ComponentPreview name="draw-label-circle" size="lg" />
-
-Full ellipses also use angular parametrization, not equal divisions by ellipse arc length.
-
-<ComponentPreview name="draw-label-ellipse" size="sm" />
 
 ### Style
 
@@ -161,7 +133,7 @@ Full ellipses also use angular parametrization, not equal divisions by ellipse a
 | `<RegularPolygon>` | regular polygon |
 | `<Star>` | star |
 
-One-line forms for circles, rectangles, sectors, Grid, and similar helpers now live under the [Shapes](/core/components/shapes) group. They still expand to `<Path>` / `<Step>` and share the same visual props as `<Draw>` / `<Path>`. See [Geometry](/core/components/shapes/circle-ellipse) for geometric shapes and [Grid](/core/components/shapes/grid) for regular reference lines.
+One-line forms for circles, rectangles, and sectors live under the [Shapes](/core/components/shapes) group, while background line fields like Grid live under [Helpers](/core/components/helpers). They still expand to `<Path>` / `<Step>` and share the same visual props as `<Draw>` / `<Path>`. See [Geometry](/core/components/shapes/circle-ellipse) for geometric shapes and [Grid](/core/components/helpers/grid) for regular reference lines.
 
 ## API Reference
 
@@ -169,7 +141,7 @@ One-line forms for circles, rectangles, sectors, Grid, and similar helpers now l
 
 | Prop | Type | Default | Description |
 | --- | --- | --- | --- |
-| `way` | `Array<WayItem>` | — | At least 2 items; first is always `move`, rest become `line` / `step` / `cycle` and related actions based on item form |
+| `way` | `Array<WayItem>` | — | At least 2 items; first is always `move`, rest become `line` / `fold` / `cycle` and related actions based on item form |
 | `stroke` | `string` | `currentColor` | Stroke color |
 | `strokeWidth` | `number` | `1` | Stroke width |
 | `dashPattern` | `Array<number>` | — | Dash / gap length sequence, for example `[4, 2]` |
@@ -208,9 +180,12 @@ One-line forms for circles, rectangles, sectors, Grid, and similar helpers now l
 
 | Field | Type | Default | Description |
 | --- | --- | --- | --- |
-| `text` | `string` | — | Label text |
-| `position` | `StepLabelPosition \| number` | `'midway'` | Keyword or numeric `0..1` t value |
-| `side` | `'above' \| 'below'` | `'above'` | Which side of the line to place the text on |
+| `text` | `string` | — | Label text (single line) |
+| `position` | one of 7 keywords or `number` (0..1) | `'midway'` | Normalized position t along the segment; keywords are sugar for t (at-start=0 / very-near-start=0.125 / near-start=0.25 / midway=0.5 / near-end=0.75 / very-near-end=0.875 / at-end=1) |
+| `side` | `'above' \| 'below' \| 'left' \| 'right' \| 'sloped'` | `'above'` | Offset side relative to segment direction; `sloped` rotates along the tangent |
+| `textColor` | `string` | — | Label text color; falls back to scope `labelDefault` → host path master color → currentColor |
+| `opacity` | `number` | — | Label-only opacity 0..1; multiplied with the owning path opacity |
+| `font` | `object` | — | Label font overrides (family / size / weight / style) |
 
 ## Related
 
@@ -218,4 +193,5 @@ One-line forms for circles, rectangles, sectors, Grid, and similar helpers now l
 - [Path](/core/components/draw/path): the Kernel container Draw expands to and the full stroke field set
 - [Step](/core/components/draw/step): the Kernel step semantics behind each Draw segment
 - [Arrow](/core/components/draw/arrow): Arrow shape, size, color, and per-end overrides
-- [Shapes](/core/components/shapes): shortcut forms such as Circle / Ellipse / Arc / Sector / Rectangle / Grid / RegularPolygon / Star
+- [Shapes](/core/components/shapes): geometric shortcut forms such as Circle / Ellipse / Arc / Sector / Rectangle / RegularPolygon / Star
+- [Helpers](/core/components/helpers): background reference lines such as Grid

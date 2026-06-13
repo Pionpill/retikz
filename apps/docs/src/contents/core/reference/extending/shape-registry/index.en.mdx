@@ -3,11 +3,11 @@ title: Custom Shapes
 description: Register new node shapes through the Shape Registry; the IR still stores only the shape name, while drawing, boundary, and anchor logic is supplied at compile time through CompileOptions.shapes.
 ---
 
-The built-in `rectangle` / `circle` / `ellipse` / `diamond` shapes are registered through the same Shape Registry. In other words, built-in shapes and custom shapes use the same mechanism: give the shape a name, then provide how it wraps text, how its boundary is found, and how it is drawn.
+The built-in `rectangle` / `ellipse` / `sector` / `arc` / `polygon` / `star` shapes are all registered through the same Shape Registry (`circle` / `diamond` are not in the registry — they are compile-time preset aliases: circle → `ellipse{ circumscribe:'equal' }`, diamond → `polygon{ sides:4, rotate:0 }`). In other words, registered built-in shapes and custom shapes use the same mechanism: give the shape a name, then provide how it wraps text, how its boundary is found, and how it is drawn.
 
 A third-party package (`@retikz/shapes-flow` / `-uml`, etc.) or host code can register new shapes the same way, without modifying core.
 
-> This is the reference layer. For everyday figures the built-in shapes are covered on [Node](/core/components/node/overview); reach here when you need a hexagon / cylinder / cloud.
+> This is the reference layer. For everyday figures the built-in shapes are covered on [Node](/core/components/node/overview); reach here when you need a cylinder / cloud or other shapes the built-ins don't cover (hexagon is already expressible via the built-in `polygon{ sides:6 }`).
 
 ## Core constraint: `shape` in the IR is always a string
 
@@ -15,9 +15,11 @@ A third-party package (`@retikz/shapes-flow` / `-uml`, etc.) or host code can re
 
 The actual shape definition is called `ShapeDefinition`. It contains functions, so it **never enters the IR**. Instead, those functions are passed to retikz at compile time through `CompileOptions.shapes`. Schema validation only checks that `shape` is a non-empty string; if the name is not registered, the error is thrown during **compile**, with the available shape names listed.
 
+`node.shape` also accepts a nested form `{ type, params }`: `type` is the shape name and `params` is a plain JSON parameter object (e.g. a sector's `{ innerRadius, outerRadius, startAngle, endAngle }`), which is equally safe in the IR. A bare string `'rectangle'` is equivalent to `{ type: 'rectangle', params: {} }` — both forms are identical for parameterless shapes. At compile time the params are first validated by the shape's own `paramsSchema`, then by a JSON guard, and finally passed to each computation function below.
+
 ## ShapeDefinition
 
-A custom shape answers four questions. retikz already handles text measurement, style merging, rotation grouping, and final rendering; the shape author only describes the geometry and drawing behavior that is specific to that shape.
+A custom shape is built from four required methods (`circumscribe` / `boundaryPoint` / `anchor` / `emit`) plus a `paramsSchema`, with a few optional hooks (`circumscribeOffset` / `edgePoint` / `scaleParams`). retikz already handles text measurement, style merging, rotation grouping, and final rendering; the shape author only describes the geometry and drawing behavior that is specific to that shape.
 
 Read the core types in the table like this:
 
@@ -25,12 +27,190 @@ Read the core types in the table like this:
 - `Position` is a point coordinate, shaped as `[x, y]`.
 - `ScenePrimitive` is a low-level drawing primitive passed to the renderer, such as `path`, `rect`, or `ellipse`.
 
-| Method | Parameters and return value | Role |
+Every computation function receives a final, **already-validated** `params` argument (parameterless shapes receive `{}` and may ignore it). `paramsSchema` declares the shape of those params: use `z.strictObject({})` for parameterless shapes (rejects extra fields), or a concrete schema for parametric ones. Each method is described below (the ones marked “optional” are optional hooks; the other four are required).
+
+A `ShapeDefinition` is just a plain object: one `paramsSchema` plus a set of computation functions, with no inheritance or registration ceremony. Wrap it at the definition site with `defineShape<TParams>()` to get type safety — the parameter type `TParams` inferred from `paramsSchema` flows into the final `params` of every function; the registry actually stores the form with `TParams` erased to `IRJsonObject` (so `TParams` in the signatures below means “the parameter type inferred from `paramsSchema`”).
+
+| Method | Purpose | Required · Optional |
 | --- | --- | --- |
-| `circumscribe`<br />`(innerHalfW, innerHalfH) => { halfWidth, halfHeight }` | `innerHalfW` / `innerHalfH`: half-width and half-height already occupied by text and padding.<br />`halfWidth` / `halfHeight`: half-width and half-height required by the outer shape. | Called during node layout. It answers “how large must the outer rectangle be to contain the content and padding”. A diamond usually expands it; a rectangle usually returns it unchanged. |
-| `boundaryPoint`<br />`(rect, toward) => Position` | `rect`: the node's outer rectangle.<br />`toward`: the target point seen from the node center.<br />Return value: the point where the ray from the center toward `toward` hits the shape boundary. | Called when a path attaches to a node boundary, and when numeric anchors such as `A.30` are resolved. It decides where the line should stop on the shape edge. |
-| `anchor`<br />`(rect, name) => Position \| undefined` | `rect`: the node's outer rectangle.<br />`name`: an anchor name such as `north`, `south east`, or `center`.<br />Return value: a coordinate for known anchors, or `undefined` for names this shape does not own. | Called when users write `A.north`, `A.center`, or a custom anchor name. Unknown anchors are reported by the compiler with the standard Unknown anchor error. |
-| `emit`<br />`(rect, style, round) => Iterable<ScenePrimitive>` | `rect`: the node's outer rectangle.<br />`style`: merged fill, stroke, opacity, and related style values.<br />`round`: a helper that keeps coordinate precision consistent.<br />Return value: one or more primitives to draw. | Called when compiling the visible node body. Simple shapes often return one path or rect; complex shapes can return several primitives, such as an outer frame plus two vertical bars. |
+| `paramsSchema` | zod schema for the shape params, validates `shape.params` at compile time | Required |
+| `circumscribe` | derives the bounding-box half-axes that enclose the whole shape from the content half-axes | Required |
+| `circumscribeOffset` | offset of the bbox center relative to `position` (when the reference point ≠ bbox center) | Optional |
+| `boundaryPoint` | intersection of the ray from the center toward `toward` with the boundary | Required |
+| `anchor` | world coordinate of a named anchor; `undefined` for unknown names | Required |
+| `edgePoint` | the point at a 0..1 ratio along a given edge | Optional |
+| `emit` | the primitives to draw in axis-aligned space | Required |
+| `scaleParams` | how a node scale applies to params | Optional |
+
+Each method is given below with its full signature and an example.
+
+### paramsSchema
+
+```ts
+paramsSchema: z.ZodType<TParams>;
+```
+
+A zod schema for the shape params, used to validate `shape.params` at compile time. Use `z.strictObject({})` for parameterless shapes (rejects extra fields); the validated output is also run through a JSON guard so it stays serializable and safe to keep in the IR.
+
+```ts
+paramsSchema: z.strictObject({
+  innerRadius: z.number().finite().nonnegative(),
+  outerRadius: z.number().finite().positive(),
+  startAngle: z.number().finite(),
+  endAngle: z.number().finite(),
+}),
+```
+
+### circumscribe
+
+```ts
+circumscribe: (
+  innerHalfWidth: number,
+  innerHalfHeight: number,
+  params: TParams,
+) => { halfWidth: number; halfHeight: number };
+```
+
+Called during node layout to answer “how large must the outer rectangle be to contain text and padding”. `innerHalfWidth` / `innerHalfHeight` are the half-width and half-height already occupied by text and padding; the return value must be the **exact bounding-box (AABB) half-axes that enclose the full shape** — the compiler accumulates the viewBox and bbox only from those four corners. A rectangle returns them unchanged, a circle takes the diagonal half-length on both axes, a diamond expands.
+
+```ts
+// circle: equal axes, the inner box's diagonal half-length
+circumscribe: (hw, hh) => {
+  const r = Math.hypot(hw, hh);
+  return { halfWidth: r, halfHeight: r };
+},
+```
+
+### circumscribeOffset (optional)
+
+```ts
+circumscribeOffset?: (params: TParams) => Position;
+```
+
+Implemented when a shape's semantic reference point ≠ its bounding-box center — e.g. a sector positioned by its arc center, which often lies outside the shape. It returns the offset of the bounding-box center relative to the node `position`, so the compiler places the rect at `position + offset`: the bbox / viewBox tightly contains the shape while `position` stays on the semantic reference point. Defaults to `[0, 0]` (bounding-box center is the position).
+
+```ts
+// sector: position sits on the arc-center apex, the bbox center is offset to one side
+circumscribeOffset: (params) => {
+  const { apexOffset } = sectorGeometry(params);
+  return [-apexOffset[0], -apexOffset[1]];
+},
+```
+
+### boundaryPoint
+
+```ts
+boundaryPoint: (rect: Rect, toward: Position, params: TParams) => Position;
+```
+
+Called when a path attaches to a node boundary, and when numeric anchors such as `A.30` are resolved. It returns the point where the ray from the center toward `toward` hits the shape boundary, deciding where the line stops on the edge. Here `rect` **includes `rotate`**: use `worldToLocal` to enter local coordinates for the geometry, then `localToWorld` to return world coordinates. When the node sets `outerSep` (margin), the `rect` passed in is already expanded by the engine — just compute geometry on the given `rect`; you never handle outer sep yourself.
+
+```ts
+// polygon: intersect the ray with the edges in local space, then map back to world
+boundaryPoint: (rect, toward, params) => {
+  const radius = circumradiusFromRect(rect, params);
+  const localToward = worldToLocal(rect, toward);
+  const hit = polygonBoundaryLocal(radius, params, localToward);
+  return localToWorld(rect, hit);
+},
+```
+
+### anchor
+
+```ts
+anchor: (rect: Rect, name: string, params: TParams) => Position | undefined;
+```
+
+Called when users write `A.north`, `A.center`, or a shape-specific anchor name. Return a coordinate for names the shape owns, or `undefined` for unknown names, which the compiler reports with the standard Unknown anchor error. Compass names (north/east…) are likewise resolved on the engine-expanded `rect` (including `outerSep`); shape-specific anchors always use the visual `rect`, without outer sep.
+
+```ts
+// sector: exposes semantic anchors like apex / centroid / arc midpoints
+anchor: (rect, name, params) => {
+  const geo = sectorGeometry(params);
+  switch (name) {
+    case 'apex':
+    case 'center':
+      return toWorld(rect, geo, [0, 0]);
+    case 'centroid':
+      return localToWorld(rect, geo.centroidOffset);
+    default:
+      return undefined;
+  }
+},
+```
+
+### edgePoint (optional)
+
+```ts
+edgePoint?: (
+  rect: Rect,
+  side: 'north' | 'south' | 'east' | 'west',
+  t: number,
+  params: TParams,
+) => Position;
+```
+
+Called for proportional edge points (`{ side, t }`): `side` is `north` / `south` / `east` / `west`, and `t` is a 0..1 ratio along that edge. The built-in shapes implement it; shapes that don't will throw at compile time when a proportional point is requested. Same coordinate semantics as `anchor` — `rect` includes `rotate`.
+
+```ts
+// rectangle: reuse the rect geometry layer directly
+edgePoint: (rect, side, t) => rectOps.edgePoint(rect, side, t),
+```
+
+### emit
+
+```ts
+emit: (
+  rect: Rect,
+  style: ShapeStyle,
+  round: (n: number) => number,
+  params: TParams,
+) => Iterable<ScenePrimitive>;
+```
+
+Called when compiling the visible node body; returns one or more primitives to draw. Note that `rect` here is **axis-aligned** (`rotate` is applied later by the compiler through an outer group), so just draw the shape around the center as if on ordinary graph paper. Use `round` for consistent coordinate precision, and forward the fill, stroke, opacity, and related fields from `style`. Simple shapes return one path or rect; complex shapes can return several primitives.
+
+```ts
+// polygon: connect the sides vertices into a closed path, forwarding style fields
+*emit(rect, style, round, params) {
+  const verts = polygonVertices(rect, circumradiusFromRect(rect, params), params);
+  const commands = verts.map((v, i) => ({
+    kind: i === 0 ? 'move' : 'line',
+    to: [round(v[0]), round(v[1])],
+  }));
+  commands.push({ kind: 'close' });
+  yield {
+    type: 'path',
+    commands,
+    fill: style.fill ?? 'transparent',
+    stroke: style.stroke ?? 'currentColor',
+    strokeWidth: style.strokeWidth ?? 1,
+    opacity: style.opacity,
+  };
+},
+```
+
+### scaleParams (optional)
+
+```ts
+scaleParams?: (params: TParams, sx: number, sy: number) => TParams;
+```
+
+Called when a node sets `scale` / `xScale` / `yScale`, deciding how the scale applies to params. By default the compiler deep-scales **every** numeric leaf in params — correct for pure length params (radii), but wrong for angles and counts such as `sides` / `points`. **Shapes with angle or count params must implement it**, scaling only length quantities and leaving angles and counts untouched.
+
+```ts
+// sector: scale only the radii, leave the angles alone
+scaleParams: (params, sx, sy) => {
+  const factor = Math.sqrt(sx * sy);
+  return {
+    ...params,
+    innerRadius: params.innerRadius * factor,
+    outerRadius: params.outerRadius * factor,
+  };
+},
+// polygon: sides is a count, rotate is an angle, return params unchanged
+scaleParams: (params) => params,
+```
 
 <ComponentAlert
   type="warn"
@@ -43,33 +223,37 @@ Numeric angles (`A.30`) do not need a separate hook. Once a shape implements `bo
 ## Injection: CompileOptions.shapes
 
 ```ts
-import { compileToScene, type ShapeDefinition } from '@retikz/core';
+import { compileToScene, defineShape, type ShapeDefinition } from '@retikz/core';
 import { worldToLocal, localToWorld } from '@retikz/core';
+import { z } from 'zod';
 
 // a factory is just a plain function: pass parameters in, return a ShapeDefinition
-const createPolygonShape = (sides: number): ShapeDefinition => ({
-  circumscribe: (hw, hh) => {
-    const r = Math.hypot(hw, hh);
-    return { halfWidth: r, halfHeight: r };
-  },
-  boundaryPoint: (rect, toward) => {
-    /* map toward to local coordinates first, then intersect the ray with polygon edges */
-  },
-  anchor: (rect, name) => (name === 'center' ? [rect.x, rect.y] : undefined),
-  *emit(rect, style, round) {
-    yield {
-      type: 'path',
-      commands: [/* n vertices + close */],
-      fill: style.fill ?? 'transparent',
-      fillOpacity: style.fillOpacity,
-      stroke: style.stroke ?? 'currentColor',
-      strokeOpacity: style.strokeOpacity,
-      strokeWidth: style.strokeWidth ?? 1,
-      dashPattern: style.dashPattern,
-      opacity: style.opacity,
-    };
-  },
-});
+// defineShape gives definition-site type safety: the paramsSchema output type flows into every function's params
+const createPolygonShape = (sides: number): ShapeDefinition =>
+  defineShape({
+    paramsSchema: z.strictObject({}), // parameterless shape
+    circumscribe: (hw, hh) => {
+      const r = Math.hypot(hw, hh);
+      return { halfWidth: r, halfHeight: r };
+    },
+    boundaryPoint: (rect, toward) => {
+      /* map toward to local coordinates first, then intersect the ray with polygon edges */
+    },
+    anchor: (rect, name) => (name === 'center' ? [rect.x, rect.y] : undefined),
+    *emit(rect, style, round) {
+      yield {
+        type: 'path',
+        commands: [/* n vertices + close */],
+        fill: style.fill ?? 'transparent',
+        fillOpacity: style.fillOpacity,
+        stroke: style.stroke ?? 'currentColor',
+        strokeOpacity: style.strokeOpacity,
+        strokeWidth: style.strokeWidth ?? 1,
+        dashPattern: style.dashPattern,
+        opacity: style.opacity,
+      };
+    },
+  });
 
 // the IR only writes shape: 'hexagon'; options supply the concrete definition
 const scene = compileToScene(ir, { shapes: { hexagon: createPolygonShape(6) } });
@@ -90,6 +274,12 @@ In React, pass the same `shapes` table to `<Layout>`:
 A factory like `createPolygonShape(n)` is just a plain function returning a `ShapeDefinition`. The example below injects a regular hexagon; when the two nodes are connected, the path endpoints stop on the actual hexagon boundary instead of the node center:
 
 <ComponentPreview name="custom-shape" size="sm" />
+
+### Parametric shape: params go through nested params
+
+The factory above bakes the side count into a closure, so each side count needs its own registered name. By writing the parameter into `params` instead of a factory closure, a single registered shape `ngon` can produce different variants through `{ type, params }` — `{ sides: 3 }` is a triangle, `{ sides: 5 }` a pentagon, `{ sides: 6 }` a hexagon — and the parameter is persisted in the IR (a bare string can only express parameterless shapes). Every computation function receives the already-validated `params` as its last argument, and the geometry is driven uniformly by `params.sides`. The rightmost node is a hexagon with `scale={2}`: `scaleParams` returns params unchanged, so a count like `sides` is not corrupted by the node `scale` — only the node size grows while the side count stays 6:
+
+<ComponentPreview name="ngon" size="sm" />
 
 ### Multiple primitives: a subroutine box
 
@@ -113,7 +303,9 @@ When writing a third-party shape, check these points first:
 - `boundaryPoint` handles the case where `toward` is exactly the center; choosing a fixed default direction is common.
 - `boundaryPoint` and `anchor` use `worldToLocal` before local geometry when rotation is involved, then `localToWorld` when returning world coordinates.
 - `anchor` only handles names it owns; unknown names return `undefined` so the compiler can throw the standard error.
-- `emit` uses the provided `round` for coordinates and dimensions, and forwards relevant style fields where possible: `fillOpacity` / `strokeOpacity` / `dashPattern` / `opacity` / `roundedCorners`.
+- `emit` uses the provided `round` for coordinates and dimensions, and forwards relevant style fields where possible: `fillOpacity` / `strokeOpacity` / `dashPattern` / `opacity` / `cornerRadius`.
+- Implement `scaleParams` when params carry angles or counts (a sector's angles, a polygon's `sides`, a star's `points`); scale only length quantities, otherwise the default scaling corrupts angles and counts.
+- Implement `circumscribeOffset` for shapes whose geometric reference point differs from the bounding-box center (e.g. a sector positioned by its center), so the bbox tightly contains the shape while `position` stays on the semantic point.
 
 ## Overriding built-ins and unknown names
 
@@ -122,4 +314,4 @@ When writing a third-party shape, check these points first:
 
 ## Public helpers
 
-`@retikz/core` exports for third-party shape authors: `ShapeDefinition` / `ShapeStyle` / `BUILTIN_SHAPES` / `BuiltinShapeName` / `Rect` / `Position` / `worldToLocal` / `localToWorld`.
+`@retikz/core` exports for third-party shape authors: `defineShape` / `ShapeDefinition` / `ShapeStyle` / `BUILTIN_SHAPES` / `BuiltinShapeName` / `Rect` / `Position` / `worldToLocal` / `localToWorld`.

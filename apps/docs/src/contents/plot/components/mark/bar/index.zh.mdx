@@ -1,0 +1,43 @@
+---
+title: 柱
+description: 用 <BarMark> 画柱状图：分类 x 轴、从基线起的矩形，支持分组与堆叠多系列。
+---
+
+`<BarMark>` 把每行数据画成一根柱：`x` 绑**分类字段**（`<Plot>` 自动用 band 比例尺，把每个类别分到等宽的一段），`y` 绑数值字段，柱从基线 `0` 画到该值。
+
+<ComponentPreview name="bar-basic" sourceFiles={['bar-basic.data.ts']} />
+
+## 多系列：分组与堆叠
+
+给 `series` 指定一个字段，数据就按它拆成多个系列，每个系列自动取一种颜色。柱默认**并排**（dodge）——同一类别下的各系列挤在一格里横向排开：
+
+<ComponentPreview name="bar-grouped" sourceFiles={['bar-grouped.data.ts']} />
+
+<p className="text-sm text-muted-foreground">同一季度的 A / B 两系列并排。</p>
+
+加上 `stack`，多系列改为**累叠**——后一个系列从前一个的顶端接着往上画。堆叠需要的累积区间由 `<Plot>` 自动算好，你只声明 `stack`：
+
+<ComponentPreview name="bar-stacked" sourceFiles={['bar-stacked.data.ts']} />
+
+<p className="text-sm text-muted-foreground">同一季度的 A / B 两系列上下累叠，柱顶是合计。</p>
+
+## 极坐标：径向柱
+
+把 `<Plot coordinate="polar2D">` 一开，同一个 `<BarMark>` 自动变成径向柱——角向是类别（自动 band），径向是值，柱从圆心向外长。不需要换组件，也不用改字段绑定。
+
+<ComponentPreview name="bar-radial" sourceFiles={['bar-radial.data.ts']} />
+
+<p className="text-sm text-muted-foreground">同一份 BarMark，仅加 <code>coordinate="polar2D"</code> 即成径向柱。</p>
+
+## API
+
+| prop | 类型 | 说明 |
+| --- | --- | --- |
+| `x` | `string` | 绑 x 通道的字段路径（分类，自动 band 比例尺） |
+| `y` | `string` | 绑 y 通道的字段路径（数值，决定柱高） |
+| `series` | `string?` | 系列字段：按它拆多系列；省略为单系列 |
+| `stack` | `boolean?` | 多系列时改为堆叠；省略时多系列并排（dodge） |
+| `color` | `string?` | 颜色字段；省略时取 `series`。分类字段 → ordinal；连续 / 时间字段需 `model` 声明 → 自动 sequential 色阶（viridis），按 datum 着色 |
+| `id` | `string?` | 可选句柄（预留，暂不解析） |
+
+<ComponentAlert title="颜色默认跟随 series" description="给了 series 没给 color 时，颜色字段默认就是 series——分几个系列就配几种颜色。需要按另一个字段上色时再单独写 color。" />

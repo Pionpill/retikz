@@ -28,7 +28,7 @@ const RoadmapNode: FC<RoadmapNodeProps> = ({ id, position, variant = 'required',
       id={id}
       position={position}
       shape="rectangle"
-      roundedCorners={hasBox ? 4.5 : 0}
+      cornerRadius={hasBox ? 4.5 : 0}
       fill={fill}
       stroke={hasBox ? NODE_STROKE : 'none'}
       strokeWidth={hasBox ? 0.5 : 0}

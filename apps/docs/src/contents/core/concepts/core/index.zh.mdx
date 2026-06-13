@@ -1,0 +1,26 @@
+---
+title: 核心概念
+description: 从图元本身与图元之间的关系理解 retikz：先看图元模型，再看图元关系。
+---
+
+核心概念回答两个问题：一个图元由什么构成，以及图元之间如何建立稳定的几何引用。图元模型关注 `Node` 这类可见对象本身；图元关系关注锚点、边界和路径如何把对象连接起来。
+
+## 职责一览
+
+| 章节 | 主题 | 适合什么时候读 |
+| --- | --- | --- |
+| 图元模型 | 内容盒、padding、shape、外接框、boundary 与 anchor | 想理解节点为什么这么大、线为什么接到这里、形状如何参与布局 |
+| 图元关系 | 动态贴边、锁定位置、组边界和 margin | 想控制连接线从节点哪一侧出发、落到哪里、留多少空隙 |
+
+## 章节内容
+
+<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+  <LinkedCard href="/core/concepts/core/primitive-model">
+    <span className="font-semibold">图元模型</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">理解节点的内容、形状、边界与锚点如何分层协作</span>
+  </LinkedCard>
+  <LinkedCard href="/core/concepts/core/primitive-relations">
+    <span className="font-semibold">图元关系</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">理解路径如何引用图元，并落到稳定的几何位置</span>
+  </LinkedCard>
+</div>

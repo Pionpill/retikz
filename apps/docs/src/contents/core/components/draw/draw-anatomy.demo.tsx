@@ -8,7 +8,7 @@ import type { FC } from 'react';
  *   纯技术 label，单文件共用。
  */
 const Demo: FC = () => (
-  <Layout width={620} height={260}>
+  <Layout width={620} height={260} nodeDefault={{ stroke: 'gray', dashed: true }}>
     {/* 主体：A→B→C 一条 Draw */}
     <Node id="aNode" position={[-200, -30]}>
       A

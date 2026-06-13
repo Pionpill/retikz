@@ -6,7 +6,7 @@ import { Link, useLocation, useNavigate } from 'react-router';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
-import { modules } from '@/data/module';
+import { modules, resolveModule } from '@/data/module';
 
 import { AppSidebar } from '../doc-layout/sidebar/AppSidebar';
 
@@ -24,6 +24,8 @@ export const MobileNav: FC = () => {
     const first = pathname.split('/').filter(Boolean)[0];
     return modules.some(m => m.id === first) ? first : modules[0]?.id;
   }, [pathname]);
+  const activeModule = resolveModule(pathname);
+  const brandSuffix = activeModule?.version ? activeModule.id : 'doc';
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -50,10 +52,12 @@ export const MobileNav: FC = () => {
               className="flex items-center gap-2 text-foreground hover:opacity-80 transition-opacity"
               aria-label="retikz home"
             >
-              <span className="text-base font-semibold tracking-tight">ReTikZ.doc</span>
-              <span className="rounded border border-border px-1.5 py-0.5 text-[10px] leading-none text-muted-foreground font-normal">
-                {t('common.versionTag')}
-              </span>
+              <span className="text-base font-semibold tracking-tight">retikz.{brandSuffix}</span>
+              {activeModule?.version && (
+                <span className="rounded border border-border px-1.5 py-0.5 text-[10px] leading-none text-muted-foreground font-normal">
+                  {activeModule.version}
+                </span>
+              )}
             </Link>
           </SheetTitle>
           <ToggleGroup

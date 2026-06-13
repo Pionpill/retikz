@@ -1,0 +1,93 @@
+---
+title: PointMark
+description: "Draw a scatter plot with <PointMark>: one dot per row; the size channel maps a number to radius for bubbles, color tints by a categorical field."
+---
+
+`<PointMark>` draws one dot per data row. Bind `x` / `y` to position fields. Give `size` a numeric field and the dot radius maps to the value as a bubble chart; give `color` a categorical field and dots are tinted by category.
+
+Which position channels you bind depends on the [coordinate system](/plot/grammar/coordinate): 2D cartesian / polar use `x` / `y`, 1D (cartesian1D / polar1D) bind only `x`, and ternary (ternary2D) uses `a` / `b` / `c`. That's why `x` / `y` are optional — which ones are required, and whether a/b/c apply, is validated by the coordinate at compile time.
+
+## Usage
+
+```tsx
+import { Plot, PointMark } from '@retikz/plot-react';
+```
+
+```tsx
+<Plot data={cities}>
+  <PointMark x="lng" y="lat" />
+</Plot>
+```
+
+Scatter often overlays a line — draw `<LineMark>` first, then layer `<PointMark>` on the same data to mark each observation.
+
+## Examples
+
+### Basic scatter
+
+Bind `x` / `y`; one dot per row.
+
+<ComponentPreview name="point-basic" sourceFiles={['point-scatter.data.ts']} />
+
+### Bubbles
+
+Give `size` a numeric field and the radius maps to the value. Radius uses a square-root scale so a dot's **area** is proportional to the data — small values stay visible, large ones don't blow up.
+
+<ComponentPreview name="point-bubble" sourceFiles={['point-scatter.data.ts']} />
+
+<p className="text-sm text-muted-foreground">Dot size encodes the pop field; area is proportional to value.</p>
+
+### Categorical color
+
+Give `color` a categorical field and each dot is tinted by category (per-datum coloring).
+
+<ComponentPreview name="point-color" sourceFiles={['point-scatter.data.ts']} />
+
+<p className="text-sm text-muted-foreground">Each dot colored by region.</p>
+
+### Continuous color
+
+Give `color` a continuous numeric field and dots take their color by value — a sequential color scale (viridis by default) maps low to high along one color band. Coloring is still per datum, as with categorical color.
+
+A continuous field needs a `model` to declare its type; without one, `color` is treated as categorical and a continuous field errors — either declare the field as `continuous` in `model`, or use a categorical field instead.
+
+<ComponentPreview name="point-color-continuous" sourceFiles={['point-scatter.data.ts']} />
+
+<p className="text-sm text-muted-foreground">Color by the continuous pop value, auto viridis ramp.</p>
+
+### Opacity
+
+Give `opacity` a continuous field and the opacity maps linearly to `[min, 1]` (the lower bound keeps small values visible). Useful for fading low-value points in dense overlap.
+
+<ComponentPreview name="point-opacity" sourceFiles={['point-scatter.data.ts']} />
+
+<p className="text-sm text-muted-foreground">Opacity encodes the pop field.</p>
+
+### Shape
+
+Give `shape` a categorical field and each category gets a glyph (default palette circle / rectangle / diamond, cycled). Use shape to tell categories apart in black-and-white print, or when color is already taken.
+
+<ComponentPreview name="point-shape" sourceFiles={['point-scatter.data.ts']} />
+
+<p className="text-sm text-muted-foreground">One glyph per region.</p>
+
+## API
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `x` | `string?` | — | Field bound to the x position channel (cartesian horizontal / polar angular / 1D single axis); required by cartesian·polar, unused by ternary |
+| `y` | `string?` | — | Field bound to the y position channel (cartesian vertical / polar radial); required by cartesian·polar, omitted by 1D / ternary |
+| `a` | `string?` | — | ternary2D a component field (top vertex); used with b / c for ternary scatter, auto-normalized |
+| `b` | `string?` | — | ternary2D b component field (bottom-right vertex) |
+| `c` | `string?` | — | ternary2D c component field (bottom-left vertex) |
+| `size` | `string?` | — | Numeric field: mapped to dot radius via a square-root scale (area-perceptual); negative values error |
+| `opacity` | `string?` | — | Continuous field: mapped to opacity via a clamped linear scale to `[min, 1]`; temporal / categorical fields error |
+| `shape` | `string?` | — | Categorical field: mapped to a glyph palette (circle / rectangle / diamond, cycled); continuous / temporal fields error |
+| `color` | `string?` | — | Color field, colored per datum: categorical → auto ordinal color scale; continuous / temporal needs a `model` declaration → auto sequential color scale (viridis) |
+| `id` | `string?` | — | Optional handle (reserved, not yet resolved) |
+
+## Related
+
+- [LineMark](/plot/components/mark/line) — a trend line under the dots
+- [Coordinates](/plot/grammar/coordinate) — how PointMark draws a rug (cartesian1D) / ring (polar1D) / ternary scatter (ternary2D)
+- [Scales](/plot/grammar/scale) — the square-root scale size uses, and the continuous scale family

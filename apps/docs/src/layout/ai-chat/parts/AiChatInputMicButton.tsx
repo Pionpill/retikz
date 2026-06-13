@@ -3,7 +3,7 @@ import { type FC, useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { cn } from '@/lib/utils';
-import { useAiChatStore } from '@/store/useAiChatStore';
+import { useAiChatStore } from '@/store/use-ai-chat-store';
 
 /** Web Speech API 的最小类型 —— 不同浏览器命名不同，TS lib 也没默认带 */
 type SpeechRecognitionResult = {

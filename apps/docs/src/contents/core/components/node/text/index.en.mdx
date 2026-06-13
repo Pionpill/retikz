@@ -3,7 +3,7 @@ title: Text
 description: Per-line marker component inside <Node> — overrides fill / opacity / font for a single line; participates equally with string children in Node's multi-line layout.
 ---
 
-`<Text>` is Sugar — it renders nothing on its own. At buildIR time it is recognized and lowered to an `IRLineSpec` object inside `<Node>`'s `text` array.
+`<Text>` is Sugar — it renders nothing on its own. At compile time it expands into one line (a LineSpec) inside `<Node>`'s `text` array.
 
 It's an **equivalent** alternative to writing LineSpec objects directly into the `text` prop:
 
@@ -14,7 +14,7 @@ It's an **equivalent** alternative to writing LineSpec objects directly into the
 
 > Block-level props (`align` / `lineHeight`) go on `<Node>`; per-line overrides (`fill` / `opacity` / `font`) go on `<Text>`.
 
-Think of `<Text>` as "add one styled line to a Node", not as an HTML inline `<span>`. It cannot mix several colors inside the same line; for multi-color explanations, split the content into separate lines or use multiple independent `<Node>`s.
+<ComponentAlert type="warn" title="A Text is one whole line, not an inline span" description="Think of it as adding one styled line to a Node; it can't mix several colors within a single line — split the content into separate lines or use multiple independent Nodes for that." />
 
 ## Usage
 
@@ -59,7 +59,7 @@ These two nodes compile to identical output:
 
 | Prop | Type | Default | Description |
 | --- | --- | --- | --- |
-| `children` | `string` | — | Line content; must be a single string (other child types are ignored) |
+| `children` | `string \| number` | — | Line content; a single string or number (numbers render as text); other child types are ignored |
 | `fill` | `string` | — | Per-line color override; falls back to Node `textColor` block default |
 | `opacity` | `number` | — | Per-line opacity 0..1 |
 | `font` | `{ family?, size?, weight?, style? }` | — | Per-line font override; missing fields inherit Node block-level `font` |
@@ -67,10 +67,10 @@ These two nodes compile to identical output:
 ### Constraints
 
 - **Must live inside `<Node>`**: a `<Text>` placed at the top level under `<Layout>` is silently ignored.
-- **`children` must be a string**: nested elements or expressions are not supported. A line is a line.
+- **`children` must be a string or number**: nested elements or other types are not supported (numbers render as text). A line is a line.
 - **Block-level props can't be overridden**: `align` / `lineHeight` only go on `<Node>`.
 
 ## Related
 
-- [Node multi-line text](/core/components/node/overview): block-level `text` / `align` / `lineHeight`
-- [Node per-line styling](/core/components/node/overview): equivalent in-array `LineSpec` form
+- [Node multi-line text](/core/components/node/overview#multi-line-text): block-level `text` / `align` / `lineHeight`
+- [Node per-line styling](/core/components/node/overview#per-line-styling): equivalent in-array `LineSpec` form

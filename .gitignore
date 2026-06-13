@@ -138,6 +138,9 @@ TODO.md
 local/
 index.html
 
+# 本地分析 / 报告产物，不入库
+notes/reports/
+
 temp.*
 superpowers/
 .superpowers/
@@ -147,6 +150,6 @@ apps/docs/public/llms.txt
 
 .VSCodeCounter
 
-# blog 文章转外站发布的手抄中间产物（见 .agents/skills/docs-blog-conventor）
+# blog 文章转外站发布的手抄中间产物（见 .agents/skills/docs-blog-converter）
 .markdown/
 .git-rewrite

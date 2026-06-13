@@ -1,0 +1,140 @@
+---
+title: 来源与锚点
+description: 一张 plot 下沉成纯几何后，来源信息（哪行数据 / 哪条 series / 哪一层）就丢了。打开 provenance 让每个图元带上可追溯的来源标签，并给低基数结构生成可连接的锚点。
+---
+
+`<Plot>` 在渲染前会先把高层图表「下沉」成底层的纯几何节点——一个柱子最终只是一个矩形，渲染器并不知道它来自哪行数据、属于哪条 series。大多数时候这没问题。但当你想把某个图元连回它的原始数据（未来的交互命中、或从图外连一条标注线到某个数据点）时，就需要在下沉时把这些来源信息**保留**下来。
+
+retikz 用两条互补的通道做这件事，都默认关闭、零开销：
+
+- **`id`（可连接句柄）**——给下沉后的元素起一个稳定的名字，让它能被路径连接、被 locator 寻址。有命名空间成本，所以高基数的逐数据点 id 是 opt-in 的。
+- **`meta`（来源标签）**——随图元一起带进 Scene 的一段不透明数据；渲染器完全忽略它，由交互层 / 工具按需读取。零命名空间成本。
+
+两条通道都通过 `lowerPlots` / `<Plot>` 的选项开启。
+
+## 打开 provenance
+
+所有选项都挂在 `lowerPlots(datasets, options)` 上；用 `<Plot>` 组件时，同名 props 会直接转发过去。
+
+```tsx
+import { Layout } from '@retikz/react';
+import { lowerPlots } from '@retikz/plot';
+
+const datasets = { sales: [{ q: 'Q1', v: 120 }, { q: 'Q2', v: 90 }] };
+
+<Layout
+  compileOptions={{
+    composites: lowerPlots(datasets, {
+      provenance: true,        // 总开关：写层 / series meta + 合成 <plotId>. 内部 id
+      datumProvenance: true,   // 每个数据点 Node 再写一份 per-datum meta
+      datumIdField: 'q',       // 把 q 字段的值绑成 <plotId>.datum.<q> 的可连接 id
+    }),
+  }}
+>
+  {/* <Plot> spec … */}
+</Layout>
+```
+
+| 选项 | 类型 | 默认 | 说明 |
+| --- | --- | --- | --- |
+| `provenance` | `boolean?` | `false` | 总开关。关 → 下沉产物与未开时**逐字节相同**（零开销）。开 → 写各层 / series 的 meta，并为内部元素合成 `<plotId>.` 命名 id |
+| `datumProvenance` | `boolean?` | `false` | 给每个数据点 Node 写一份 per-datum meta（`O(行数)` 体积）。开它会**自动开启** `provenance` |
+| `datumIdField` | `string?` | 省略 | 数据字段名：把该字段的值绑成 `<plotId>.datum.<值>` 的 Node id，让单个数据点可被连接。字段缺失 / 值重复都会**抛出明确错误**（不静默吞掉）。设它同样会自动开启 `provenance` |
+
+只设 `datumProvenance` 或 `datumIdField` 而不写 `provenance` 也可以——它们都蕴含 `provenance`。
+
+<ComponentAlert title="默认零开销" description="三个选项全不设时，下沉产物与之前完全一致——没有任何新增的 meta 或 id key，渲染输出也不变。provenance 是按需付费的能力。" />
+
+## id：连接句柄
+
+id 是底层「连接」机制的钥匙——一个有 id 的元素可以被路径 step 引用、被 locator 按地址定位。下沉时各层级的命名规则：
+
+| 元素 | 合成的 id |
+| --- | --- |
+| 整个 plot（root） | 你给 `<Plot>` 的 `id`（这个 id **始终**生效，不需要开 provenance） |
+| 每个 mark 图层 | 用户给了 `mark.id` → `<plotId>.<markId>`；否则 `<plotId>.mark.<序号>` |
+| 每条 series（仅 line / area） | `<plotId>.series.<series 值>` |
+| 单个数据点（需 `datumIdField`） | `<plotId>.datum.<字段值>` |
+| 坐标轴 / 网格层 | 用户 `guide.id`（仅轴层）→ `<plotId>.<guideId>`；否则 `<plotId>.<axis\|grid>.<维度>` |
+
+这里有一条重要边界：plot 的 root 是一个 **local namespace**（局部命名空间）。这意味着 `<plotId>.mark.0`、`.series.north` 这些**内部 id 不会逃出 plot**——它们只在 plot 内部可见，用于 plot 内部连接和 locator 寻址。
+
+- **对外组合**只通过 plot 的 **root id**：外部的标注 / 连接线连到整张图，而不是图里的某个子元素。
+- **从图外直接连到子元素**（比如从外面连到 `sales.series.north`）需要一套「导出锚点」机制，这是后续 v0.5 跨域组合的能力，当前不支持。
+
+## meta：来源标签
+
+meta 是随图元带进 Scene 的来源信息，渲染器不会读它、它不进 DOM、也不影响布局或包围盒。它的消费者是交互层和工具链——比如未来命中一个图元后，读它的 meta 就能反查出「这是 `sales` 第 5 行、interval mark」。
+
+开 `provenance` 后各层级写入的 meta：
+
+- **root**：`{ source: 'plot', dataReference }`
+- **mark 层**：`{ source: 'plot', layer: 'mark', mark, markIndex }`
+- **series（line / area）**：写在每条 series 的 Path 上，额外带 `series`
+- **坐标轴 / 网格层**：`{ source: 'plot', layer: 'axis' | 'grid', dimension }`
+- **数据点**（开 `datumProvenance` 后，仅 point / interval / sector）：见下
+
+### per-datum meta 与序号语义
+
+每个数据点的 meta 形如：
+
+```ts
+{
+  source: 'plot',
+  dataReference: 'sales',
+  mark: 'interval',
+  markIndex: 0,
+  transformedIndex: 3,   // 渲染顺序里的位置
+  sourceIndex: 5,        // 回指原始数据集的行号（尽力而为）
+  series: 'north',       // 若该 mark 绑了 series
+}
+```
+
+这里两个序号要分清，因为下沉前会先跑 transform（如排序、堆叠），行序会变：
+
+| 字段 | 含义 |
+| --- | --- |
+| `transformedIndex` | transform **之后**的位置，等于实际渲染顺序。**始终存在** |
+| `sourceIndex` | 回指**原始数据集**里的行号。尽力而为——排序只是重排、能保留原序；但堆叠等会派生新行的 transform 可能无法回指单一源行，这种情况省略而不伪造 |
+
+series 的 id 与 meta 只在 line / area 上有结构落点（每条 series 是一条 Path）；point / interval / sector 没有 series 子结构，它们的 series 值由 per-datum meta 携带。
+
+## locator：把逻辑地址算回位置
+
+有了来源信息还不够——你常常要反过来：给一个逻辑地址（「第 3 个数据点」「north 这条 series」），算出它在画布上的位置。`createPlotLocator` 就做这件正向解析，而且**不需要**事先把每个数据点都注册成具名节点，所以万级散点也不会撑爆 IR。
+
+```ts
+import { createPlotLocator } from '@retikz/plot';
+
+const spec = buildPlotSpec(/* … */);
+const datasets = { sales: [{ q: 'Q1', v: 120 }, { q: 'Q2', v: 90 }] };
+
+// 用与 lowerPlots 完全相同的 spec + 数据 + 选项构造（保证投影一致）
+const locator = createPlotLocator(spec, datasets, { width: 480, height: 300 });
+
+locator.datum(1);
+// → { position: [x, y], meta: { source: 'plot', mark: 'interval', markIndex: 0, transformedIndex: 1, … } }
+
+locator.series('north');
+// → { position: <该 series 所有已渲染点的质心>, meta: { …, series: 'north' } }
+
+locator.resolve('sales.datum.0');   // 点路径串解析
+locator.datum(999);                 // 越界 → null
+```
+
+三个方法都返回 `{ position, meta, id? }` 或 `null`：
+
+| 方法 | 作用 |
+| --- | --- |
+| `datum(transformedIndex)` | 按渲染序号解析单个数据点的锚点，`O(1)` |
+| `series(value)` | 按 series 值解析其区域锚点（所有已渲染成员的质心） |
+| `resolve(address)` | 解析 `<plotId>.datum.<i>` / `<plotId>.series.<值>` 点路径串；不匹配 → `null` |
+
+`resolve` 的地址是**索引 / 值地址**——`datum.<transformedIndex>`（渲染序号）和 `series.<值>`，**不是**绑定在节点上的 `id`（那个 `<plotId>.datum.<slug>` 句柄是给 core 连接用的，在 `ResolvedAnchor.id` 里返回，slug 不可逆、不拿来 resolve）。series 值会做字符串归一，所以数值 series（`series.5`）也能寻址；但**值里含 `.`** 的 series 无法经 resolve 寻址（地址按 `.` 切分），这类请直接用 `series(value)`。`series()` 对任何带 series 字段的 mark（line / area / interval）都可用——上面「series 结构落点只在 line/area」说的是 *lowering 里 id/meta 的宿主*，不限制 `series()` 求质心。
+
+两条关键保证：
+
+- `datum(i).position` **等于** lowering 实际摆放第 `i` 行那个节点的位置——两者共用同一份锚点计算，不会漂移。
+- **没被渲染的数据点返回 `null`**：投影无效或被下沉跳过的行，locator 同样返回 `null`，与「没渲染就不可命中」保持一致。
+
+`meta` 始终按需合成——即使你没开 `datumProvenance`，locator 也会给出同构的 meta，所以零 IR 代价就能拿到来源信息。`id` 只在该元素确实绑了具名 id（命中 `datumIdField`）时才回填。

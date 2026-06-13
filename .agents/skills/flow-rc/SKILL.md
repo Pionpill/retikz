@@ -66,7 +66,7 @@ rc 的核心判断：外部用户能不能从 npm 安装、照着文档写出稳
 
 ```bash
 git status --short
-node -e "const fs=require('node:fs'); for (const p of ['packages/core/package.json','packages/react/package.json']) { const j=JSON.parse(fs.readFileSync(p,'utf8')); console.log(j.name, j.version); }"
+node -e "const fs=require('node:fs'); for (const p of ['core/core','core/render','core/react','core/vanilla']) { const j=JSON.parse(fs.readFileSync(`packages/${p}/package.json`,'utf8')); console.log(j.name, j.version); }"  // core 组 4 包 lockstep；plot 组换 plot/{plot,react,vanilla}
 ```
 
 如果工作区不干净，先识别已有改动归属，不覆盖用户改动。
@@ -118,16 +118,16 @@ pnpm test
 文档改动：
 
 ```bash
+pnpm --filter @retikz/docs exec tsc --noEmit
 pnpm --filter @retikz/docs build
 ```
 
 包改动：
 
 ```bash
-pnpm --filter @retikz/core build
-pnpm --filter @retikz/react build
-pnpm --filter @retikz/core publish --dry-run --access public --tag next
-pnpm --filter @retikz/react publish --dry-run --access public --tag next
+# core 组 4 包按依赖序 build + dry-run（plot 组同理；rc 用 --tag next）
+for p in core render vanilla react; do pnpm --filter @retikz/$p build; done
+for p in core render vanilla react; do pnpm --filter @retikz/$p publish --dry-run --no-git-checks --access public --tag next --registry https://registry.npmjs.org/; done
 ```
 
 源码污染检查：

@@ -1,0 +1,63 @@
+---
+title: AreaMark
+description: "Draw area charts with <AreaMark>: a top line and a baseline enclose a filled region; under polar with baseline 0 that's a filled radar."
+---
+
+`<AreaMark>` adds a return edge to a line: the top edge is the line connecting `x` / `y`, the bottom edge sticks to `baseline` (default `0`), and the two enclose a fillable region (always closed by the return edge). Switch to a polar coordinate system with `baseline` `0`, and the return edge collapses to the center, so the region fills from the center out to the outline — a filled radar.
+
+## Usage
+
+```tsx
+import { Plot, AreaMark } from '@retikz/plot-react';
+```
+
+```tsx
+<Plot data={activity}>
+  <AreaMark x="day" y="users" order="day" />
+</Plot>
+```
+
+`x` / `y` bind the position fields, `order` decides the top edge's connection order. The bottom defaults to `0`; set `baseline` for a different floor.
+
+## Examples
+
+### Basic area
+
+The top line and a baseline of `0` enclose a filled region — good for emphasizing the "volume" of a cumulative quantity or trend.
+
+<ComponentPreview name="area-basic" sourceFiles={['area-basic.data.ts']} />
+
+### Filled radar
+
+`<Plot coordinate="polar2D">` with `<AreaMark closed />`: dimensions spread evenly along the angular axis and values map to the radius to form the top edge; the return edge sticks to `baseline`. With the default `baseline` of `0` the return edge collapses to the center, so the area fills from the center out to the outline — a filled radar. `closed` makes the top edge walk chords (no arc sampling on a continuous angular axis, a straight outline). For a plain wireframe outline use [`<LineMark closed />`](/plot/components/mark/line); add `fill` to it for a filled radar too.
+
+<ComponentPreview name="area-radar" sourceFiles={['area-radar.data.ts']} />
+
+<p className="text-sm text-muted-foreground">With baseline 0 the return edge collapses to the center; the area fills outward into a filled radar.</p>
+
+### Multiple series (split by color)
+
+Set `series` to a field and the data splits into multiple areas. With no `series`, giving `color` a categorical field also splits — equivalent to writing `series`; the `color` field must be categorical (continuous / temporal fields error).
+
+<ComponentPreview name="area-color-split" sourceFiles={['area-color-split.data.ts']} />
+
+<p className="text-sm text-muted-foreground">Just <code>color="site"</code>, no <code>series</code>, splits into two areas by site.</p>
+
+## API
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `x` | `string` | — | Field path for the x channel (angular under polar) |
+| `y` | `string` | — | Field path for the y channel (radial under polar) |
+| `order` | `string?` | data order | Field driving the top edge's connection order |
+| `baseline` | `number?` | `0` | Baseline value the return edge sticks to |
+| `closed` | `boolean?` | `false` | Top edge walks chords, no arc sampling on a continuous angular axis (straight outline); the area is always closed and filled by the baseline return edge |
+| `series` | `string?` | — | Series field: split into multiple areas; omit for a single area |
+| `color` | `string?` | `series` | Color field (categorical, auto ordinal color scale); with no explicit `series` it implicitly splits into one area per category; falls back to `series`. Continuous / temporal fields error (sequential color scales come later) |
+| `id` | `string?` | — | Optional handle (reserved, not yet resolved) |
+
+## Related
+
+- [LineMark](/plot/components/mark/line) — `<LineMark closed />` is a wireframe radar
+- [Coordinates](/plot/grammar/coordinate) — the polar switch and channel roles
+- [SectorMark](/plot/components/mark/sector) — pie / donut charts

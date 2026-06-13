@@ -1,0 +1,65 @@
+---
+title: Animation
+description: Keyframe nodes, paths, and the camera over time with named presets — intro, emphasis, loop, camera, and stagger — written declaratively and degrading gracefully; the last frame is the resting state, and a preset equals an underlying AnimationTrack.
+---
+
+Animation transitions a static figure **from one look to another over time**: fade in, draw a line, scale up, spin, shift color, pan the camera. You don't hand-write keyframes — call a **preset factory** (`fadeIn()` / `spin()` …) to get an animation descriptor and attach it to an element's `animations` array.
+
+```tsx
+import { Layout, Node, fadeIn, scaleIn } from '@retikz/react';
+
+<Node position={[0, 0]} animations={[fadeIn(), scaleIn()]}>hi</Node>
+```
+
+`animations` attaches to `<Node>` / `<Path>` / `<Scope>` (element animation) and `<Layout>` (camera). An element can carry several; they don't interfere. Apart from the `loop` wrapper and the `stagger` choreographer, every preset accepts the common options `{ duration, delay, easing, trigger }`; some add their own (`scaleIn.from` / `slideIn.axis,offset` / `growUp.origin` / `pulse.peak` …).
+
+<ComponentAlert title="Last frame = resting state, so it degrades" description="An intro animation's final frame is the element's normal look (fadeIn's last frame = fully opaque). So environments without animation support, users who prefer reduced motion, or animate={false} simply render that resting state — you see the complete final figure, not the possibly-transparent starting point. Exception: the React + SVG (default renderer) path currently does not respond to prefers-reduced-motion and still plays under reduced motion; only vanilla and React Canvas degrade on it." />
+
+## All animations
+
+| Animation | Family | Channel | What it does |
+| --- | --- | --- | --- |
+| `fadeIn` | intro | opacity | fade in (0→1) |
+| `drawOn` | intro | pathDraw | stroke draws along the path |
+| `scaleIn` | intro | scale | pop in from slightly small (0.8→1) |
+| `grow` | intro | scale | grow from nothing (0→1) |
+| `growUp` | intro | scaleY | grow from baseline (bars) |
+| `slideIn` | intro | translateX/Y | slide in from an offset |
+| `colorShift` | emphasis | fill / stroke | color transition (oklch lerp) |
+| `flash` | emphasis | opacity | flash once (2× by default) |
+| `blink` | emphasis | opacity | continuous blink (infinite) |
+| `wiggle` | emphasis | rotate | rock left/right (3× by default) |
+| `pulse` | loop | scale | pulsing scale (infinite) |
+| `spin` | loop | rotate | steady rotation (infinite, loader) |
+| `loop` | loop | any | turn any track into an infinite loop |
+| `cameraTo` | camera | viewBox | pan / zoom the camera (on `<Layout>`) |
+| `stagger` | choreography | — | add increasing delay across a group |
+
+Each preset's runnable demo is split across four pages by family: [Intro](/core/components/animation/entrance), [Emphasis & Loop](/core/components/animation/emphasis), [Camera & Stagger](/core/components/animation/camera), and [Triggers & Control](/core/components/animation/control).
+
+## preset ↔ AnimationTrack
+
+A preset is just a shorthand for an underlying `AnimationTrack` (property + keyframes + timing), and the two are **fully equivalent**: `fadeIn()` expands to one `opacity` track from 0 to 1, `spin()` to an infinite `rotate` 0→360 track. A preset introduces nothing a track can't express — it only names a common keyframe combination and hands you a factory.
+
+Switch any demo's code panel to the IR / Vanilla tab on the [Intro](/core/components/animation/entrance) / [Emphasis & Loop](/core/components/animation/emphasis) pages to see the preset expanded into its raw track — the same shape animation takes inside the IR when persisted or AI-generated.
+
+## In this section
+
+<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+  <LinkedCard href="/core/components/animation/entrance">
+    <span className="font-semibold">Intro</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">fadeIn / scaleIn / grow / growUp / slideIn / drawOn</span>
+  </LinkedCard>
+  <LinkedCard href="/core/components/animation/emphasis">
+    <span className="font-semibold">Emphasis & Loop</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">colorShift / flash / blink / wiggle and pulse / spin / loop</span>
+  </LinkedCard>
+  <LinkedCard href="/core/components/animation/camera">
+    <span className="font-semibold">Camera & Stagger</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">cameraTo pan / zoom and stagger one-by-one entrance</span>
+  </LinkedCard>
+  <LinkedCard href="/core/components/animation/control">
+    <span className="font-semibold">Triggers & Control</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">trigger, imperative handle, degradation, and static snapshot</span>
+  </LinkedCard>
+</div>

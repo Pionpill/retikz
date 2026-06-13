@@ -3,9 +3,9 @@ title: Introduction
 description: An AI-native general-purpose drawing library — React components for figures, JSON IR for persistence, direct LLM generation and editing.
 ---
 
-retikz **is not yet another chart library**. It's a drawing foundation that re-designs "diagrams as a way to describe ideas" around an AI-native workflow.
+`@retikz/core` is retikz's **graphics foundation**: not yet another chart library, but the low-level graphics contract designed for AI-native workflows, turning “diagrams as a way to describe ideas” into a stable, validated, renderable structure.
 
-It brings a mature vocabulary of nodes, paths, and anchors into the browser, expressed as React components; the underlying JSON IR acts as the shared data contract between human-authored JSX, LLM-generated JSON, and renderers for SVG / Canvas / PDF / native targets.
+It brings a mature vocabulary of nodes, paths, and anchors into the browser, expressed as React components; the underlying JSON IR acts as the shared data contract between human-authored JSX, LLM-generated JSON, the currently supported SVG / Canvas renderers, and future PDF / native targets.
 
 ## A Minimal Example
 
@@ -13,9 +13,22 @@ This diagram does one small thing: it places two named nodes, then uses one arro
 
 <ComponentPreview name="minimal-example" size="xs" />
 
+## Two Core Concepts
+
+`@retikz/core` has a simple mental model: first describe **what each primitive is**, then describe **the connections and geometry between primitives**.
+
+| Core capability | Carried by | What it solves |
+| --- | --- | --- |
+| **Primitive model** | `Node` | Describes a visible object itself: shape, text, fill, stroke, size, position, and anchors that other elements can reference. |
+| **Primitive relationships** | `Path` / `Step` | Describes connections and geometry between objects: start point, end point, intermediate actions, and how arrows or edge labels are organized along the path. |
+
+That means you do not have to start by picking a “flowchart”, “UML”, or “chart” template. Place the important objects as named `Node`s, then use `Path` to draw connections, dependencies, flow, or annotation relationships between them. Higher-level domain packages are mostly ways to organize these two lower-level capabilities in bulk.
+
 ## Current Version
 
-The current v0.2 surface focuses on **general primitives plus extensible drawing semantics**: named nodes, reference points, path actions, arrows, edge labels, multi-line text, Scope grouping / local transforms / style inheritance, plus gradient / pattern / image fills and registries for shapes, arrows, patterns, and path generators. Charting, flow layout, codecs, and additional framework adapters remain domain-package or future integration directions, not core `@retikz/react` APIs.
+The current v0.3 surface focuses on **a graphics foundation plus multi-renderer runtime support**: `@retikz/core` provides named nodes, reference points, path actions, arrows, edge labels, Scope grouping / local transforms / style inheritance, plus gradient / pattern / image fills, registrable shapes, and timeline animation; `@retikz/render` owns the SVG / Canvas backends; `@retikz/react` and `@retikz/vanilla` provide the React DSL and framework-free runtime / SSR.
+
+This stage is already in beta hardening: the focus is documentation demos, SVG / Canvas parity tests, server-side export, package size, and public API cleanup. Chart semantics, automatic layout, codecs, and additional framework adapters remain domain-package or future integration directions rather than responsibilities that `@retikz/core` should absorb directly.
 
 ## AI-First
 
@@ -56,28 +69,44 @@ Hard rule: **Sugar introduces no new capabilities** — anything Sugar can expre
 
 The Kernel stays deliberately restrained: `<Layout>`, `<Scope>`, `<Node>`, `<Coordinate>`, `<Path>`, and `<Step>`. It is still general enough to compose most 2D relationship diagrams. Sugar such as `<Draw>` / `<Text>` improves authoring ergonomics, but still lowers back to the same Kernel IR.
 
-v0.2 pushes composition further: `<Scope>` moves, rotates, scales, or styles a group of primitives; Paint and registries make fills, shapes, arrows, and path generators extensible without baking charting or layout algorithms into core.
-
 | Category | Composed from Kernel | Where |
 | --- | --- | --- |
 | **Flow charts / DAG** | Node + Step + Anchor + external layout algorithms | Domain packages |
 | **Charts** | Step + Path + Node + data binding | `@retikz/plot` direction |
-| **UML / topology / mind maps** | Same Kernel, different layout & styling | Domain packages |
+| **UML / networks / mind maps** | Same Kernel, different layout & styling | Domain packages |
 | **Anything custom** | Write Kernel JSX directly | Your app |
 
 **You compose at the primitive layer.** Shape, connection, anchor, label — all expressed directly in geometry / path vocabulary: drawing a curve from a bar to a side annotation, or a labeled curve between two nodes, is as natural as drawing two more primitives.
 
 A domain package is a thin layer of data binding, layout algorithms, and default styling on top of the Kernel; the underlying structure, persistence, and AI surface stay identical across domains. The current release keeps core focused on primitives first, instead of baking charting or layout algorithms into the base package too early.
 
-## Framework-Agnostic, React Today
+## Package Relationships
 
-retikz follows a **core + thin per-framework adapter** architecture: every framework shares the same IR, the same `compileToScene` compiler, and the same Scene contract; an adapter only translates Scene primitives into that framework's element type — typically tens of lines of code.
+retikz ships as four packages, layered from the framework-agnostic base up to the user-facing entry points:
+
+<ComponentPreview name="package-graph" size="md" hideCode />
+
+Solid lines are the main build chain — packages on the right build on those on the left; dashed lines mark that `@retikz/react` / `@retikz/vanilla` also consume `@retikz/core`'s IR directly. All four ship at the same version.
+
+| Package | Role | Depends on |
+| --- | --- | --- |
+| `@retikz/core` | IR, the `compileToScene` compiler, the Scene contract; zero React / zero DOM | `zod` |
+| `@retikz/render` | Render backends: `./svg` (Scene → SVG descriptor / string), `./canvas` (Scene → Canvas 2D) | core |
+| `@retikz/react` | React adapter: build IR with JSX, pick the svg / canvas backend via `<Layout renderer>` | core · render |
+| `@retikz/vanilla` | Framework-free runtime / SSR: mount to the DOM or emit an SVG string, plus an imperative builder | core · render |
+
+`@retikz/render` lifts the SVG render core out of `@retikz/react` and merges it with the new Canvas backend into a standalone package; neither `@retikz/react` nor `@retikz/vanilla` maintains its own rendering logic — they just compose render's backends.
+
+## Framework-Agnostic, Shared IR
+
+retikz follows a **core + runtime / adapter** architecture: the React DSL, framework-free runtime, and future framework adapters share the same IR, the same `compileToScene` compiler, and the same Scene contract; upper layers only handle authoring ergonomics, lifecycle, and renderer selection.
 
 | Role | Purpose | Status |
 | --- | --- | --- |
-| `@retikz/core` | IR + Scene compiler; zero React / zero DOM | ✅ Current v0.2 line |
-| `@retikz/react` | React adapter (peerDep: react) | ✅ Current v0.2 line |
-| `@retikz/vue` / `svelte` / `solid` …<br />`@retikz/ssr` / `canvas` / `native` … | Other framework / target adapters | ⏳ Community / later |
+| `@retikz/core` / `@retikz/render` | Framework-agnostic IR + compiler + render backends | ✅ Current line |
+| `@retikz/react` | React adapter (peerDep: react) | ✅ Current line |
+| `@retikz/vanilla` | Framework-free runtime / SSR | ✅ Current line |
+| `@retikz/vue` / `svelte` / `native` … | Other framework / target adapters | ⏳ Community / later |
 
 **Architecturally retikz isn't tied to any framework — the IR is universal; DSLs may legitimately differ between frameworks.** A diagram you draw today with `@retikz/react` produces an IR that any future adapter can render unchanged.
 
@@ -89,8 +118,8 @@ retikz's naming, path actions, and anchor model are direct tributes to LaTeX's T
 | --- | --- | --- |
 | Runtime | LaTeX compiler | Browser / Node |
 | Syntax | `\node` `\draw` | `<Node>` `<Draw>` |
-| Output | PDF / SVG | SVG / Canvas / PDF / Native |
-| Interactivity | None | React events & state |
+| Output | PDF / SVG | SVG / Canvas; PDF / Native planned |
+| Interactivity | None | React / runtime events |
 | Persistence | `.tex` source | JSON IR |
 
 IR ↔ TikZ source conversion belongs to a future codec direction: the goal is to edit in the browser and still fit into a LaTeX workflow, or migrate existing TikZ figures from `.tex` files into retikz IR / React.
@@ -114,8 +143,8 @@ Concrete scenarios:
 
 | Option | Best fit | Strengths | Limits |
 | --- | --- | --- | --- |
-| `@retikz/core` | Relational diagrams, flow charts, concept maps, AI-generated / AI-edited figures | Named nodes, path actions, anchors, and JSON IR; good at describing relationships between elements and at persistence / local edits | Not a built-in chart-template library; complex layout, data binding, and chart semantics belong in future domain packages |
-| Traditional chart libraries | Dataset-driven statistical charts, dashboards, business reports | Mature chart types, axes, legends, tooltips, and data mapping out of the box | Better at mapping data to charts than at freely composing nodes, paths, annotations, and arbitrary geometric relationships |
-| Raw SVG / `<svg>` | Hand-tuned individual graphics or static exported assets | Native platform primitive, direct, no extra abstraction | No node naming, path semantics, or anchor system; relationship lines, boundary attachment, and later edits require manual coordinate management |
+| `@retikz/core` | Relationship diagrams, concept maps, AI figures | Node / Path / anchor + JSON IR | No built-in chart templates |
+| Traditional chart libraries | Statistical charts, dashboards, reports | Mature chart types and data mapping | Weaker at free geometry composition |
+| Raw SVG / `<svg>` | Hand-tuned graphics, static assets | Native and direct | Relationships, anchors, and edits are manual |
 
 Long term, `@retikz/core` is the foundation for higher-level domain components and packages. Core itself stays focused on general primitives, the IR contract, and compilation.

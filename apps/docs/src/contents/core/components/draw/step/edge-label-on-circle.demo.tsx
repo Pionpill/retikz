@@ -2,7 +2,7 @@ import { Layout, Node, Path, Step } from '@retikz/react';
 import type { FC } from 'react';
 
 const Demo: FC = () => (
-  <Layout width={300} height={300}>
+  <Layout width={300} height={300} nodeDefault={{ stroke: 'gray', dashed: true }}>
     <Node id="center" position={[150, 150]} stroke="none">
       ·
     </Node>

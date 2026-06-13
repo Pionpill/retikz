@@ -5,7 +5,7 @@ description: retikz follows Semantic Versioning with pre-release channels. 0.x i
 
 retikz follows Semantic Versioning 2.0.0: versions read as `MAJOR.MINOR.PATCH`, optionally tagged `-alpha.x` / `-beta.x` / `-rc.x`.
 
-The current repository version is `0.2.0-rc.1`. That means v0.2 is in rc validation: public APIs are frozen, and only compatible bug fixes, docs completion, installation acceptance, and release-note cleanup should land. The previous stable line is `0.1.0`.
+The current repository version is `0.3.0-beta.1`. That means v0.3 is in beta hardening: the renderer/runtime split is implemented, and work focuses on parity fixes, tests, docs, packaging, and the final API surface before rc. The previous stable line is `0.1.0`.
 
 ## Segment meanings
 
@@ -15,7 +15,7 @@ The current repository version is `0.2.0-rc.1`. That means v0.2 is in rc validat
 | MINOR | Backward-compatible new capability | Upgrade freely |
 | PATCH | Backward-compatible bug fix | Upgrade freely |
 
-`@retikz/core` and `@retikz/react` normally share the same version and **ship together** — unless release notes say otherwise, users should not need to upgrade one without the other.
+Tier 1 packages (`@retikz/core`, `@retikz/render`, `@retikz/react`, and `@retikz/vanilla`) normally share the same version and **ship together**. Unless release notes say otherwise, users should not need to upgrade one without the others.
 
 ## 0.x vs 1.x
 
@@ -30,10 +30,10 @@ Breaking changes before `1.0.0` **do not force a MAJOR bump**, but the changelog
 
 | Channel | Format | Main content | Main driver | Suitable for |
 | --- | --- | --- | --- | --- |
-| alpha | `0.2.0-alpha.x` | New features / new IR fields / API reshaping (schema in flux, IR unstable) | **Human-designed + AI-implemented** | Exploration / feedback |
-| beta | `0.2.0-beta.x` | Performance / readability / refactoring / test hardening / docs completion; final breaking renames are still allowed | **Human-led optimization and refactoring** | Integration testing |
-| rc | `0.2.0-rc.x` | Public API frozen; compatible bug fixes, docs, installation acceptance, and release notes only | Human-led | Pre-production rehearsal |
-| stable | `0.2.0` | Under SemVer; normal PATCH / MINOR / MAJOR cadence | — | Production |
+| alpha | `0.3.0-alpha.x` | New features / new IR fields / API reshaping (schema in flux, IR unstable) | **Human-designed + AI-implemented** | Exploration / feedback |
+| beta | `0.3.0-beta.x` | Performance / readability / refactoring / test hardening / docs completion; final breaking renames are still allowed | **Human-led optimization and refactoring** | Integration testing |
+| rc | `0.3.0-rc.x` | Public API frozen; compatible bug fixes, docs, installation acceptance, and release notes only | Human-led | Pre-production rehearsal |
+| stable | `0.3.0` | Under SemVer; normal PATCH / MINOR / MAJOR cadence | — | Production |
 
 Channels move forward only: alpha → beta → rc → stable. There's no rollback.
 
@@ -49,6 +49,8 @@ rc narrows the work again: public APIs no longer break, and npm uses the `next` 
 | --- | --- | --- |
 | `@retikz/react` | `react` / `react-dom` | `>=18` |
 | `@retikz/core` | (none) | — |
+| `@retikz/render` | `@napi-rs/canvas` (optional, Node export only) | catalog-managed |
+| `@retikz/vanilla` | (none) | — |
 
 Bumping React's major version usually ships as a MINOR; we only bump MAJOR when the new React version is incompatible with our old API.
 

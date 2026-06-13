@@ -1,0 +1,288 @@
+import type { Scene } from '@retikz/core';
+import { type PrimAnimationResolution, hitTest, renderToCanvas } from '@retikz/render/canvas';
+import {
+  collectCanvasVisibleAnimationIds,
+  createCanvasIdAnimationControls,
+  createContextBuilder,
+  createHydrationController,
+  isCanvasAnimationIdVisible,
+  withCanvasAnimationEventHandlers,
+} from '@retikz/render/hydration';
+import type { HydrationController } from '@retikz/render/hydration';
+import { type AnimationControls, type IdClockRegistry, createClock, createIdClockRegistry, prefersReducedMotion, sceneAnimationDurationMs, sceneHasAnimations, sceneHasAutoplayTrigger } from '@retikz/render/animation';
+import { isFigure } from './builder/is-figure';
+import { toScene } from './to-scene';
+import type { CanvasView, HydrateOptions, MountCanvasOptions, RenderInput, ScenePoint } from './types';
+
+/** 设备像素比：取有限正数、否则回退 1（镜像 react CanvasHost） */
+const resolveDevicePixelRatio = (override: number | undefined): number => {
+  if (typeof override === 'number' && Number.isFinite(override) && override > 0) return override;
+  const ratio = globalThis.devicePixelRatio;
+  return typeof ratio === 'number' && Number.isFinite(ratio) && ratio > 0 ? ratio : 1;
+};
+
+/**
+ * 把 IR / Scene / Figure 挂成真实 `<canvas>` DOM（无框架浏览器 runtime，对齐 `mountSvg`）
+ * @description 收 `Figure` 时 delegate 给 `figure.mountCanvas`（与 mountSvg→`figure.mount` 对称）。收 IR 时
+ *   `toScene` compile、收 Scene 直用。位图按「名义显示尺寸」
+ *   `width`/`height`（均为有限数值时）× dpr 开、否则回退内容边界；`renderToCanvas` 再把 Scene 内容 meet-fit
+ *   进去（镜像 SVG `preserveAspectRatio=meet` + CanvasHost）。返回的 `CanvasView` 暴露 `hydrate`（hitTest 定位）
+ *   与 `clientToScene`（逆 meet-fit 坐标映射）。DOM 仅在调用时惰性触碰，`import` 本模块不碰 DOM——守 SSR 导入安全。
+ */
+export const mountCanvas = (
+  container: Element,
+  input: RenderInput,
+  options: MountCanvasOptions = {},
+): CanvasView => {
+  if (isFigure(input)) return input.mountCanvas(container, options);
+  if (typeof Element === 'undefined' || !(container instanceof Element)) {
+    throw new Error('mountCanvas: container must be a DOM Element.');
+  }
+
+  const canvas = document.createElement('canvas');
+  const ratio = resolveDevicePixelRatio(options.devicePixelRatio);
+  // 动画总关：{animate:false} 或 prefers-reduced-motion → 不起 rAF、只画 base 静态
+  const animate = options.animate !== false && !prefersReducedMotion();
+  let clock: AnimationControls | undefined;
+  // per-id 虚拟时钟登记表：ctx.animation 的 per-id 控制经它给各 id 叠加独立 offset / pause / active / stop
+  const registry: IdClockRegistry = createIdClockRegistry();
+  let visibleActivated = new Set<string>();
+  let visibleTeardown: (() => void) | undefined;
+
+  let currentScene: Scene;
+
+  // 存活的水合：onEvent 触发的 handler 表按「绑定时的 scene」合成（新增 / 移除的 onEvent track 决定注册哪些
+  // listener），update 换图后必须按新 scene 重建、否则陈旧；view.dispose 时统一解绑全部未手动 dispose 的水合。
+  // 每条带 rebind（按新 scene 重绑）与 unbind（解绑当前 controller，捕获各自 locate / buildContext）。
+  type LiveHydration = { rebind: () => void; unbind: () => void };
+  const liveHydrations = new Set<LiveHydration>();
+
+  /** 把全局帧时刻折算成单个 prim 的动画解析（per-id）：stop→渲染 base；否则按有效时刻 + 是否含非自动播 track */
+  const resolvePrim = (id: string | undefined, globalTime: number): PrimAnimationResolution =>
+    id !== undefined && registry.isStopped(id)
+      ? { mode: 'skip' }
+      : { mode: 'at', time: registry.timeFor(id, globalTime), includeNonAutoplay: registry.isActive(id) };
+
+  /** 按当前时钟时刻 + per-id 登记表立即重绘一帧（per-id pause / stop 即时反映） */
+  const renderFrame = (): void => {
+    const time = clock?.time ?? 0;
+    renderToCanvas(canvas, currentScene, {
+      devicePixelRatio: ratio,
+      time,
+      easings: options.easings,
+      animationProperties: options.animationProperties,
+      resolvePrimAnimation: id => resolvePrim(id, time),
+    });
+  };
+
+  const ensureClockPlaying = (): void => {
+    clock?.play();
+  };
+
+  /** Canvas visible trigger：按 canvas client rect 与 id 聚合 bbox 相交激活一次 */
+  const activateVisibleTracks = (): void => {
+    const ids = collectCanvasVisibleAnimationIds(currentScene);
+    if (ids.size === 0) return;
+    let changed = false;
+    for (const id of ids) {
+      if (visibleActivated.has(id)) continue;
+      if (!isCanvasAnimationIdVisible(canvas, currentScene, id)) continue;
+      registry.restart(id, clock?.time ?? 0);
+      visibleActivated.add(id);
+      changed = true;
+    }
+    if (!changed) return;
+    ensureClockPlaying();
+    renderFrame();
+  };
+
+  const resetVisibleBridge = (): void => {
+    visibleActivated = new Set<string>();
+    visibleTeardown?.();
+    visibleTeardown = undefined;
+    if (!animate || !sceneHasAnimations(currentScene)) return;
+    const ids = collectCanvasVisibleAnimationIds(currentScene);
+    if (ids.size === 0 || typeof window === 'undefined') return;
+    // scroll / resize 高频触发：经 rAF 合帧——同一帧内多次事件只跑一次 activateVisibleTracks（去抖到下一帧）
+    let scheduledRaf: number | undefined;
+    const runScheduled = (): void => {
+      scheduledRaf = undefined;
+      activateVisibleTracks();
+    };
+    const schedule = (): void => {
+      if (scheduledRaf !== undefined) return;
+      scheduledRaf = window.requestAnimationFrame(runScheduled);
+    };
+    window.addEventListener('scroll', schedule, true);
+    window.addEventListener('resize', schedule);
+    // 挂载即测一次相交（首帧），与 scroll/resize 同走合帧调度
+    schedule();
+    visibleTeardown = () => {
+      window.removeEventListener('scroll', schedule, true);
+      window.removeEventListener('resize', schedule);
+      if (scheduledRaf !== undefined) window.cancelAnimationFrame(scheduledRaf);
+    };
+  };
+
+  const renderInto = (next: RenderInput): void => {
+    if (isFigure(next)) {
+      throw new Error('mountCanvas: view.update does not accept a Figure; pass figure.ir instead.');
+    }
+    const scene = toScene(next, options);
+    currentScene = scene;
+    const hasNominalSize =
+      typeof options.width === 'number' &&
+      Number.isFinite(options.width) &&
+      typeof options.height === 'number' &&
+      Number.isFinite(options.height);
+    const bitmapWidth = hasNominalSize ? (options.width as number) : scene.layout.width;
+    const bitmapHeight = hasNominalSize ? (options.height as number) : scene.layout.height;
+    canvas.width = Math.max(1, Math.round(bitmapWidth * ratio));
+    canvas.height = Math.max(1, Math.round(bitmapHeight * ratio));
+    if (options.width !== undefined) canvas.style.width = `${options.width}px`;
+    if (options.height !== undefined) canvas.style.height = `${options.height}px`;
+    canvas.style.objectFit = 'contain';
+    // 截帧（snapshotAt 给定）：按该时刻烘焙一帧、不起 rAF（定格），覆盖 animate（镜像 react CanvasHost）。
+    // snapshotAt 来自 mount options、view 生命周期内恒定，故此分支下 clock / visible bridge 始终不建。
+    if (options.snapshotAt !== undefined) {
+      renderToCanvas(canvas, scene, {
+        devicePixelRatio: ratio,
+        time: options.snapshotAt,
+        easings: options.easings,
+        animationProperties: options.animationProperties,
+      });
+      return;
+    }
+    // base 静态先画一帧；含动画且未降级时起 rAF 时钟逐帧重绘（共享时钟，per-track delay 在 evaluateTrack 内偏移）
+    renderToCanvas(canvas, scene, { devicePixelRatio: ratio });
+    clock?.dispose();
+    clock = undefined;
+    if (animate && sceneHasAnimations(scene)) {
+      clock = createClock({
+        durationMs: sceneAnimationDurationMs(scene),
+        onFrame: time =>
+          renderToCanvas(canvas, currentScene, {
+            devicePixelRatio: ratio,
+            time,
+            easings: options.easings,
+            animationProperties: options.animationProperties,
+            resolvePrimAnimation: id => resolvePrim(id, time),
+          }),
+      });
+      if (sceneHasAutoplayTrigger(scene)) clock.play();
+    }
+    resetVisibleBridge();
+  };
+
+  renderInto(input);
+  container.appendChild(canvas);
+
+  /**
+   * 把指针的 client 像素坐标逆 meet-fit 映射成 Scene user units
+   * @description meet-fit 正向（CSS 显示盒内，镜像 renderToCanvas / CanvasHost，dpr 在 client→CSS 这步已无关）：
+   *   `scale = min(cssWidth/layout.width, cssHeight/layout.height)`；`offset = (cssSize − layout.size·scale)/2`
+   *   居中 letterbox；`cssX = offset.x + (sceneX − layout.x)·scale`。此处求逆——读 `canvas.getBoundingClientRect()`
+   *   把 client 坐标降到 canvas 局部 CSS 像素，再去 letterbox offset、除 scale、加 layout origin。落在 letterbox
+   *   黑边外的点会得到 layout 区域外坐标，交由 `hitTest` 自然判为无命中（不在此截断）。
+   */
+  const clientToScene = (clientX: number, clientY: number): ScenePoint => {
+    const { layout } = currentScene;
+    const rect = canvas.getBoundingClientRect();
+    const scale = Math.min(rect.width / layout.width, rect.height / layout.height);
+    const offsetX = (rect.width - layout.width * scale) / 2;
+    const offsetY = (rect.height - layout.height * scale) / 2;
+    const contentX = clientX - rect.left - offsetX;
+    const contentY = clientY - rect.top - offsetY;
+    return { x: contentX / scale + layout.x, y: contentY / scale + layout.y };
+  };
+
+  let disposed = false;
+
+  /**
+   * canvas 水合：把 handler 经 hitTest 定位绑到 `<canvas>`
+   * @description canvas 无逐图元 DOM，`locate(event)` = client 坐标经 `clientToScene` 逆 meet-fit 成 Scene 点
+   *   （落 letterbox 黑边 → null、不命中），再 `hitTest(currentScene, point, { context2d })` 返回命中图元 id。
+   *   `context2d` 用 canvas 自己的 2D context（生产真实；测试 spy 的 harness context 经 `getContext('2d')` 返回）
+   *   作几何重建 + 原生点测的载体。绑定经 `createHydrationController`（根级委托 + enter/leave 合成 + dispose）。
+   */
+  const hydrate = (hydrateOptions: HydrateOptions): { dispose: () => void } => {
+    const context2d = canvas.getContext('2d') ?? undefined;
+    const locate = (event: Event): string | null => {
+      const scenePoint = clientToScene((event as MouseEvent).clientX, (event as MouseEvent).clientY);
+      // hitTest 把点测点表达在 Scene user units / 各图元局部帧、自管 group transform 栈；live canvas context
+      // 经 renderToCanvas 后残留 meet-fit transform，须先归一到 identity 再点测，否则路径被二次缩放偏移。
+      context2d?.setTransform(1, 0, 0, 1, 0, 0);
+      return hitTest(currentScene, scenePoint, { context2d });
+    };
+    // canvas 富 context：无逐元素 DOM（element=null），point 经 clientToScene 逆 meet-fit，动画 coarse（scene 级单时钟）。
+    // 读 live currentScene / clock，update 后自动反映新图。
+    const buildContext = createContextBuilder({
+      renderer: 'canvas',
+      root: canvas,
+      scene: () => currentScene,
+      resolveElement: () => null, // canvas 无逐元素 DOM
+      resolvePoint: event => {
+        const mouse = event as MouseEvent;
+        return typeof mouse.clientX === 'number' ? clientToScene(mouse.clientX, mouse.clientY) : null;
+      },
+      // per-id 控制（缺省作用于命中元素）：读 live clock / registry，play/restart/seek 后确保时钟在跑并重绘
+      makeAnimation: id =>
+        createCanvasIdAnimationControls({
+          registry,
+          clockTime: () => clock?.time ?? 0,
+          ensurePlaying: () => clock?.play(),
+          renderFrame,
+          defaultId: id,
+        }),
+    });
+    const userHandlers = hydrateOptions.handlers;
+    // onEvent 动画 handler 表按当下 scene 合成（决定注册哪些 listener）；update 换图后经 rebindHydrations 重建。
+    const bind = (): HydrationController =>
+      createHydrationController(canvas, withCanvasAnimationEventHandlers(currentScene, userHandlers), locate, buildContext);
+    let controller = bind();
+    const live: LiveHydration = {
+      rebind: () => {
+        controller.dispose();
+        controller = bind();
+      },
+      unbind: () => controller.dispose(),
+    };
+    liveHydrations.add(live);
+    return {
+      dispose: () => {
+        live.unbind();
+        liveHydrations.delete(live);
+      },
+    };
+  };
+
+  /** update 换 scene 后按新 scene 重建存活水合的 onEvent 动画 handler 表（新增 / 移除的 onEvent track 即时反映） */
+  const rebindHydrations = (): void => {
+    for (const live of liveHydrations) live.rebind();
+  };
+
+  return {
+    root: canvas,
+    update(next) {
+      if (disposed) throw new Error('mountCanvas: view already disposed.');
+      renderInto(next);
+      // renderInto 已换 currentScene；按新 scene 重建存活水合，使 onEvent 动画 trigger 反映新图
+      rebindHydrations();
+    },
+    dispose() {
+      if (disposed) return;
+      disposed = true;
+      visibleTeardown?.();
+      clock?.dispose();
+      // 统一解绑未手动 dispose 的水合（兑现 CanvasView.dispose「解绑水合」语义）
+      for (const live of liveHydrations) live.unbind();
+      liveHydrations.clear();
+      canvas.remove();
+    },
+    hydrate,
+    clientToScene,
+    get animation() {
+      return clock;
+    },
+  };
+};

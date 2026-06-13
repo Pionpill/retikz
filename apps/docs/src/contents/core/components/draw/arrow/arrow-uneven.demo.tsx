@@ -6,7 +6,7 @@ import type { FC } from 'react';
  * @description 顶层 arrowDetail 留空、start / end 子对象各自只填 shape；compile 把两端解析为 2 个独立 spec、TikZ 容器按 detail hash 注入 2 个 marker defs
  */
 const Demo: FC = () => (
-  <Layout width={320} height={80}>
+  <Layout width={320} height={80} nodeDefault={{ stroke: 'gray', dashed: true }}>
     <Node id="a" position={[0, 0]}>
       A
     </Node>

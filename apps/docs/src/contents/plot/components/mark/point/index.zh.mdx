@@ -1,0 +1,93 @@
+---
+title: 散点
+description: 用 <PointMark> 画散点图：每行一个点；size 通道按数值映射半径成气泡图，color 按分类字段着色。
+---
+
+`<PointMark>` 为每行数据画一个点。`x` / `y` 绑位置字段。给 `size` 一个数值字段，点半径按值映射成气泡图；给 `color` 一个分类字段，点按类别着色。
+
+绑哪些位置通道由[坐标系](/plot/grammar/coordinate)决定：cartesian / polar 二维用 `x` / `y`，一维（cartesian1D / polar1D）只绑 `x`，三元（ternary2D）改用 `a` / `b` / `c`。所以 `x` / `y` 都是可选的——缺哪个、要不要 a/b/c，由坐标系在编译期校验。
+
+## 用法
+
+```tsx
+import { Plot, PointMark } from '@retikz/plot-react';
+```
+
+```tsx
+<Plot data={cities}>
+  <PointMark x="lng" y="lat" />
+</Plot>
+```
+
+散点常和折线叠加——同一份数据先画 `<LineMark>` 再叠 `<PointMark>` 标出每个观测点。
+
+## 例子
+
+### 基础散点
+
+`x` / `y` 绑字段，每行一个点。
+
+<ComponentPreview name="point-basic" sourceFiles={['point-scatter.data.ts']} />
+
+### 气泡图
+
+给 `size` 一个数值字段，点半径按值映射。半径走平方根 scale，让点的**面积**正比于数据——小值不会缩到看不见、大值也不会过分夸张。
+
+<ComponentPreview name="point-bubble" sourceFiles={['point-scatter.data.ts']} />
+
+<p className="text-sm text-muted-foreground">点的大小编码 pop 字段，面积正比于值。</p>
+
+### 分类着色
+
+给 `color` 一个分类字段，每个点按类别取色（按 datum 着色）。
+
+<ComponentPreview name="point-color" sourceFiles={['point-scatter.data.ts']} />
+
+<p className="text-sm text-muted-foreground">按 region 给每个点上色。</p>
+
+### 连续着色
+
+给 `color` 一个连续数值字段，点按值取色——自动套上 sequential 色阶（默认 viridis），小值到大值连成一道色带。和分类着色一样按 datum 着色。
+
+连续字段要靠 `model` 声明字段类型；不声明时 `color` 一律当分类处理，连续字段会报错——要么用 `model` 声明该字段为 `continuous`，要么换一个分类字段。
+
+<ComponentPreview name="point-color-continuous" sourceFiles={['point-scatter.data.ts']} />
+
+<p className="text-sm text-muted-foreground">按 pop 连续值取色，自动 viridis 色带。</p>
+
+### 透明度
+
+给 `opacity` 一个连续字段，不透明度按值线性映射到 `[最小值, 1]`（最小值有下界，避免全透明看不见）。叠点密集时低值更淡。
+
+<ComponentPreview name="point-opacity" sourceFiles={['point-scatter.data.ts']} />
+
+<p className="text-sm text-muted-foreground">不透明度编码 pop 字段。</p>
+
+### 形状
+
+给 `shape` 一个分类字段，每个类别取一种 glyph（默认调色板 circle / rectangle / diamond 循环）。黑白打印或已用掉颜色时，用形状区分类别。
+
+<ComponentPreview name="point-shape" sourceFiles={['point-scatter.data.ts']} />
+
+<p className="text-sm text-muted-foreground">按 region 给每类一种形状。</p>
+
+## API
+
+| 属性 | 类型 | 默认值 | 描述 |
+| --- | --- | --- | --- |
+| `x` | `string?` | — | 绑 x 位置通道字段（cartesian 水平 / polar 角向 / 一维单维）；cartesian·polar 必填，ternary 不用 |
+| `y` | `string?` | — | 绑 y 位置通道字段（cartesian 垂直 / polar 径向）；cartesian·polar 必填，一维 / ternary 省略 |
+| `a` | `string?` | — | ternary2D 的 a 分量字段（顶点）；与 b / c 一起画三元散点，自动归一化 |
+| `b` | `string?` | — | ternary2D 的 b 分量字段（右下顶点） |
+| `c` | `string?` | — | ternary2D 的 c 分量字段（左下顶点） |
+| `size` | `string?` | — | 尺寸字段（数值）：经平方根 scale 映射成点半径（面积感知）；负值会报错 |
+| `opacity` | `string?` | — | 不透明度字段（连续）：经 clamp linear scale 映射到 `[最小值, 1]`；时间 / 分类字段会报错 |
+| `shape` | `string?` | — | 形状字段（分类）：按类别映射到 glyph 调色板（circle / rectangle / diamond 循环）；连续 / 时间字段会报错 |
+| `color` | `string?` | — | 颜色字段，按 datum 着色：分类字段 → 自动 ordinal 色 scale；连续 / 时间字段需 `model` 声明 → 自动 sequential 色阶（viridis） |
+| `id` | `string?` | — | 可选句柄（预留，暂不解析） |
+
+## 相关
+
+- [折线](/plot/components/mark/line) —— 叠在散点下连成趋势线
+- [坐标系](/plot/grammar/coordinate) —— rug（cartesian1D）/ 环形（polar1D）/ 三元散点（ternary2D）用 PointMark 的写法
+- [比例尺](/plot/grammar/scale) —— size 用的平方根 scale 与连续 scale 家族

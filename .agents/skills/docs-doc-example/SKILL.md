@@ -1,6 +1,6 @@
 ---
 name: docs-doc-example
-description: retikz 示例类文档（apps/docs/src/contents/<module>/examples/**/*.mdx）的页面结构规范——以经典 / 实用图表为载体循序渐进教读者用 retikz 能力。固定 6 段（引言含 hero / Prompt / 过程 / 能力 / 限制 / 扩展阅读）、过程节 step 用 H3 进 TOC、demo 累加式拼搭、命名 <id>-NN-<theme>.demo.tsx、多文件 demo 拆子文件（步内 <主demo名>.<subName>.tsx 随 diffFrom 自动 diff / 共享件独立命名 / 子文件不带 .demo）、Prompt 节用 ExamplePrompt 组件（只读 + markdown + 复制/发送双按钮）。本 skill 只覆盖示例页特有规则；通用规则（三处协同、双语、写作风格、Comparison、宽度、阅读时间等）见 docs-doc-principle。retikz 专用。
+description: retikz 示例页规范：`apps/docs/src/contents/<module>/examples/**` 的 6 段结构、累加式 step demo、Prompt/能力/限制/扩展阅读写法、多文件 demo 与 diff 约定。通用文档规则见 docs-doc-principle。retikz 专用。
 ---
 
 # 示例类文档写法
@@ -31,52 +31,16 @@ description: retikz 示例类文档（apps/docs/src/contents/<module>/examples/*
 
 ## 单页骨架（6 段固定）
 
-```mdx
----
-title: <example 名>
-description: <一句话：建什么图 + 主要教什么能力>
----
-
-## 引言
-<2-3 句：本例目的、读者会学到什么、原图出处链接（如有）>
-
-<ComponentPreview name="<id>-NN-<last-theme>" />   ← hero（复用最后一个 step 的 demo）
-
-## Prompt
-
-<ExamplePrompt
-  short="..."          ← markdown，最小概括（默认显示）
-  detailed={`...`}     ← markdown，完整 prompt（左下角「详细内容」按钮展开后替换 short 展示）
-/>
-
-## 过程
-
-### Step 1：<主题>
-<2-3 句讲解；本 step 引入的关键能力以 markdown link 跳到 components/ 对应页>
-<ComponentPreview name="<id>-01-<theme>" />
-
-### Step 2 ...
-... (累加，平铺，### 进 TOC——每个 step 都能从右侧目录跳转)
-
-## 能力
-| 组件 | 在本例中扮演的角色 | 主要 step |
+| 顺序 | section | 要点 |
 | --- | --- | --- |
-| [Path](.../draw/path) | 单位圆主体 + 扇形 | 1, 4 |
-| ...
+| 1 | `## 引言` | frontmatter 后 2-3 句说明目的；hero 复用最后一个 step demo |
+| 2 | `## Prompt` | 用 `<ExamplePrompt short="..." detailed={...} />` |
+| 3 | `## 过程` | 每步 `### Step N：<主题>`，累加式 `<ComponentPreview>`，H3 进 TOC |
+| 4 | `## 能力` | 组件 link + 在图中角色 + step 锚链接 |
+| 5 | `## 限制` | 只列本例触到的 gap；为空可省略 |
+| 6 | `## 扩展阅读` | 进阶、优化、相关组件/概念；无合适内容可省略 |
 
-## 限制
-| 能力 / 限制 | 计划 | 现状 / 兜底 |
-| --- | --- | --- |
-| grid 算子 | 🚧 未来支持 | `.map()` 手画兜底 |
-| inline LaTeX 数学排版 | ❌ 不支持 | 纯文本兜底 |
-
-## 扩展阅读
-- 更多扩展点（自定义箭头 / 图案 / 路径生成器…）/ 进阶 / 优化（如封装专门 tier 组件）/ 相关组件 / 概念 / sister example
-```
-
-**6 段顺序固定**，缺哪段都不行——除非：
-- 限制 全部为空可整节省略
-- 扩展阅读 没合适内容可整节省略
+`title` / `description` 仍写在 frontmatter；正文不要再写 H1。
 
 ## Step 内部 4 行骨架
 
@@ -101,30 +65,7 @@ description: <一句话：建什么图 + 主要教什么能力>
 | 颜色字面值 | demo 里的 `stroke` / `fill` / `bg` 等 **必须用字面量颜色**——优先命名色，默认用 `darkorange` 做强调；只有一张图里需要两个以上并列示例，或明确要做对比时才用 `dodgerblue`；若同图已经用了 `darkorange` + `dodgerblue` 仍需要第三个强调色，再用 `darkviolet`。`red` / `green` 只保留给错误 / 成功语义，灰阶只保留 `gray` / `lightgray` / `dimgray`，并尽量不用 `black` / `white`；只有需要精确对齐时才用 hex / oklch。不能用 `var(--border)` / `var(--background)` 等 CSS 自定义属性。预览工具条可下载 SVG，CSS var 在新上下文里无定义 → fallback 成黑，下载后图变样 |
 | DSL 选择 | **默认用 Sugar `<Draw way={[...]}>`，不用 Kernel `<Path><Step /></Path>`**。`way` 数组 1 行就能表达 line / curve / cubic / bend / step (fold) / cycle / label，比 Kernel 的多行 children 更短、与 components/draw/* 例子风格一致。例外：示例**本身**就是教 `<Path>` / `<Step>` Kernel 用法、或需要 fill + 闭合（`DrawWay.Cycle`）的填充形状 |
 
-### 累加式的代价与好处
-
-每个 step 的 demo 都包含之前所有内容，最后一个 demo 最肥（基本是完整图）。代价是**代码会复制**——但好处更大：
-
-- 读者点开任意 step 的"查看源码"，拿到的就是该阶段的**可运行完整版本**，可直接复制改造
-- ComponentPreview 视觉上呈现"图在生长"，比"每 step 一个孤立小图"更有教学感
-- 简单例子无需把 helpers 拆到独立模块——每个 demo 自包含；体量大 / 跨步复用基础设施的复杂例子改用「多文件 demo」（见下）
-
-### 命名示例
-
-karl-circle 一页的 demo 文件清单（7 step 中粒度）：
-
-```
-karl-circle-01-circle.demo.tsx          # 单位圆
-karl-circle-02-axes.demo.tsx            # + 坐标轴 + 端点 label + 命名锚
-karl-circle-03-ticks.demo.tsx           # + 刻度 + 网格
-karl-circle-04-wedge.demo.tsx           # + 30° 扇形 + α label
-karl-circle-05-sin-cos.demo.tsx         # + sin / cos 红蓝线（label `sin α` / `cos α` 是通用数学符号，不分 zh/en）
-karl-circle-06-tan.demo.tsx             # + tan 橙线 + 辅助射线（label `tan α = sin α / cos α` 同上）
-karl-circle-07-info.zh.demo.tsx         # + 右侧信息框（含「即 π/6 弧度」等本地化散文，分 zh）
-karl-circle-07-info.en.demo.tsx         # 同上 en
-```
-
-引言 hero 直接 `<ComponentPreview name="karl-circle-07-info" />`，最后一个 step 的 ComponentPreview 同样 name——一份 demo 用两次。
+累加式意味着代码会复制，但读者在任意 step 打开源码都能拿到可运行完整版本；复杂例子再用多文件 demo 分担体量。
 
 ## 多文件 demo（子文件 + 自动 diff）
 
@@ -137,6 +78,7 @@ karl-circle-07-info.en.demo.tsx         # 同上 en
 
 - 子文件是**纯源码**（不渲染），用普通 `.tsx` / `.ts`，**不要带 `.demo.tsx`**——带了会被当成可渲染 demo（要求 default 导出 FC、并去算 IR）。
 - 步内子文件以**所属步的主 demo 名**为前缀，`<subName>` 在各步间保持稳定（如各步都叫 `.elements.tsx`），这是自动 diff 配对的钥匙。
+- **造的数据集**用专门的 `<主demo名>.data.ts` 子文件（多数据集 `<主demo名>.<dataset>.data.ts`），有专属 Database 图标——通用约定见 [`docs-doc-principle`](../docs-doc-principle/SKILL.md)「demo 的数据文件」。
 
 ### 渐进式例子的子文件 = 自包含快照
 
@@ -165,52 +107,11 @@ karl-circle-07-info.en.demo.tsx         # 同上 en
 每个示例页都有一个 `## Prompt` 节，让读者：
 1. 看到「这张图用一段自然语言怎么说」
 2. 一键发送站内 AI 对话面板预填 prompt 跑 LLM
-3. 或一键复制带 retikz 上下文的可移植 prompt，粘到任意外部 AI 工具（Claude Code / Cursor / ChatGPT 等）
+3. 或一键复制带 retikz 上下文的可移植 prompt，粘到任意外部 AI 工具
 
-### 形态：`<ExamplePrompt>` 组件
+### 形态：`<ExamplePrompt>`
 
-```mdx
-## Prompt
-
-<ExamplePrompt
-  short="**画 30° 角下 sin / cos / tan 几何关系示意图**：单位圆 + 带箭头坐标轴 + 刻度 + 绿色填充扇形 + 红/蓝/橙三色函数线 + 右侧多色信息说明框。"
-  detailed={`**绘制单位圆三角函数示意图**
-
-**几何**
-
-- 单位圆 r = 1cm
-- 坐标轴 -1.5 → 1.5，带箭头
-- 刻度：x 轴 [-1, -1/2, 1]，y 轴 [-1, -1/2, 1/2, 1]
-- 30° 扇形（以原点为圆心、半径 0.3cm）
-
-**函数线**
-
-- sin α 红色：从 (cos30°, sin30°) 垂直到 x 轴
-- cos α 蓝色：投影点 → 原点
-- tan α 橙色：从 (1, 0) 竖到 (1, tan30°)
-
-**颜色**
-
-- 扇形：浅绿填充 + 深绿描边
-- sin: red, cos: dodgerblue, tan: darkorange
-
-**标注**
-
-- α 在扇形内（极坐标 15°, 0.22cm）
-- 三条线各自带函数名 label
-- 右侧多行信息框，每行单独着色`}
-/>
-```
-
-### UI 行为
-
-`<ExamplePrompt>` 是**只读**展示，不允许就地编辑（要改 prompt 在 AI 对话面板里改 / 复制后改）：
-
-- **默认显示 `short`**（markdown 渲染）
-- **左下角「详细内容 ⌄」**按钮——有 `detailed` 时才出现，点开把内容切换为 `detailed`（markdown 渲染），再点收起
-- **右下角两个按钮**：
-  - **「复制」**——把当前可见的 prompt **前置一段 retikz 上下文**（站点 llms.txt URL + `@retikz/react` / `@retikz/core` 用法提示）后写入剪贴板。用户粘到外部 AI 工具时即使无 retikz 训练数据也能正确响应
-  - **「发送到 AI 对话」**——调 `useAiChatStore.setOpen + fillDraftAndFocus`，把当前可见内容（**不带**外部上下文头——站内 system prompt 已注入）推到聊天面板输入区由用户自行 send
+`<ExamplePrompt>` 只读，默认显示 `short`；有 `detailed` 时可展开。按钮行为由组件负责：复制时加 retikz 外部上下文，发送到站内 AI 时只填当前 prompt。
 
 ### Prompt 写作要点
 
@@ -218,62 +119,24 @@ karl-circle-07-info.en.demo.tsx         # 同上 en
 - **`detailed`**：markdown，3-7 个分类（如「几何」/「颜色」/「标注」/「文字」），分类标题用 `**bold**`，每类下 bullet 列表 ≤ 5 行
 - **避免**给精确坐标——让 LLM 有发挥空间。给意图 + 约束，不给坐标
 - **`detailed` 可省略**——简单 example 单 `short` 即可
-- 双语：zh.mdx 与 en.mdx 各自写一份 `short` / `detailed`——两边语义对齐，不强求逐字翻译
+- 双语：index.zh.mdx 与 index.en.mdx 各自写一份 `short` / `detailed`——两边语义对齐，不强求逐字翻译
 - Prompt 内容**不要列 retikz 组件清单**（如「用 Path / Step / Draw / Node」）——这种限定 LLM 用什么 API 反而压表达空间；复制按钮的上下文头已经提示 AI 可用任意 `@retikz/*` API + 让它查 llms.txt，文档化任何具体能力都是反模式
 
 ## 能力节
 
-`## 能力` 节用 3 列表格汇总本例用到了哪些组件、各自在图里扮演什么角色、主要出现在哪个 step：
+`## 能力` 用 3 列表格：`组件`（markdown link 到 components 页）/ `在本例中扮演的角色` / `主要 step`（`[N](#slug)` 跳 H3）。
 
-```mdx
-## 能力
-
-| 组件 | 在本例中扮演的角色 | 主要 step |
-| --- | --- | --- |
-| [Path](/core/components/draw/path) | 单位圆主体 + 30° 扇形 | [1](#步骤-1画单位圆), [4](#步骤-4画-30-扇形--α-标签) |
-| [Draw](/core/components/draw/overview) | 坐标轴 + sin/cos/tan 三色线 | [2](#步骤-2加坐标轴--端点标签--命名锚), [5](#步骤-5sin-α-红线--cos-α-蓝线), [6](#步骤-6tan-α-橙线--辅助射线) |
-| [Node](/core/components/node/overview) | 轴端点 label + 刻度文字 + α 标签 + 信息框 | [2](#步骤-2加坐标轴--端点标签--命名锚), [3](#步骤-3加网格--刻度), [4](#步骤-4画-30-扇形--α-标签), [7](#步骤-7右侧多色信息说明框) |
-| [Coordinate](/core/components/node/coordinate) | 命名 x/y 轴端点 + tan 交点 t | [2](#步骤-2加坐标轴--端点标签--命名锚), [6](#步骤-6tan-α-橙线--辅助射线) |
-```
-
-两条强约束：
-
-- **第一列**必须是 markdown link 跳到对应 `components/` 页——示例页面定位是 showcase + 教学，跳走查 API 是天然动作
-- **第三列**每个 step 数字必须是页内锚链接，跳到「过程」节里对应 H3——读者从「能力」反查"这个组件在第几步出现"时一键跳过去，比让他自己滚屏找快得多
-
-锚 slug = rehype-slug 对 H3 标题文本运行 [github-slugger](https://github.com/Flet/github-slugger) 的输出。中文 / 含 + - / 全角符号的 H3，slug 不直观；写之前用一行 node 跑一遍：
+中文或含符号 H3 的 slug 用 github-slugger 算，不手写猜：
 
 ```bash
 cd apps/docs && node -e "import('github-slugger').then(({default: S}) => { const s = new S(); console.log(s.slug('步骤 4：画 30° 扇形 + α 标签')); })"
-# => 步骤-4画-30-扇形--α-标签
 ```
-
-要点：
-
-- 全角冒号 `：`、`+`、`°`、em-dash `—`、半角冒号 `:` 一律被剥掉
-- 空格 ` ` → `-`；被剥掉的标点周围的空格仍各自变 `-`，所以 ` + ` 会变成 `--`（两个连字符）
-- 中文字符、希腊字母（`α`）、半角连字符 `-` 都保留
 
 ## 限制 节
 
-示例图中**用 retikz 实现不了 / 实现得绕**的能力沉到这一节（zh 标题用「限制」，en 用「Limitations」），用**表格**呈现，与正文分离不打断教学节奏：
+`## 限制` 只列本例触到的“做不了 / 做得绕”的 gap；为空省略。表格列固定：`能力 / 限制`、`计划`、`现状 / 兜底`。
 
-```mdx
-## 限制
-
-| 能力 / 限制 | 计划 | 现状 / 兜底 |
-| --- | --- | --- |
-| `grid` 算子 | 🚧 未来支持 | 用 `.map()` 手画 5 横 5 竖 |
-| 投影 target（`(A \|- B)`） | 🚧 未来支持 | 手算 `cm(cos30, 0)` |
-| 电路专用组件库 | ❌ 不支持 | 本例符号只是自定义形状，不适合大规模电路编辑器 |
-| 电阻画法拆成路径生成器 | 🔧 优化方案 | 当前画在 shape emit 里，可改用路径生成器 / 专门组件 |
-```
-
-- **计划列**三类取值：🚧 **未来支持**（已在 roadmap）/ ❌ **不支持**（明确不做）/ 🔧 **优化方案**（能做、但本例为聚焦主题没做，指出更优做法）
-- **现状 / 兜底列**写当前状态以及本例怎么绕过
-- 表格 cell 里出现 `|` 必须转义成 `\|`（如 `(A \|- B)`）
-- 没有触到任何 gap 时整节省略
-- 不要把与本例无关的 roadmap 塞进来；也不要写"未来支持的话代码会简化成 XXX"——简化方案不属于教程本身
+`计划` 只用三类：🚧 未来支持 / ❌ 不支持 / 🔧 优化方案。表格 cell 内 `|` 转义为 `\|`。
 
 ## 扩展阅读 节
 
@@ -304,41 +167,18 @@ cd apps/docs && node -e "import('github-slugger').then(({default: S}) => { const
 
 ## Draw way 速查
 
-示例 demo 写 edge 时不要嵌 `<Path><Step kind="...">` —— 用 `<Draw way={[...]}>`。way 数组各 step kind 的 sugar 写法：
+示例 demo 写 edge 默认用 `<Draw way={[...]}>`，不要嵌 `<Path><Step /></Path>`。速查：
 
-```tsx
-import { Draw, DrawWay } from '@retikz/react';
+| 需求 | way 形态 |
+| --- | --- |
+| 直线 | `['A', 'B']` |
+| 折角 | `['A', '|-', 'B']` / `['A', '-|', 'B']` |
+| 二次 / 三次曲线 | `['A', { curve: [cx, cy] }, 'B']` / `{ cubic: [[c1x,c1y],[c2x,c2y]] }` |
+| bend | `['A', { bend: 'right', angle: 45 }, 'B']` |
+| label | `['A', { label: 'midway' }, 'B']` 或 `{ label: { text, position, side } }` |
+| 闭合填充 | `['A', 'B', 'C', DrawWay.Cycle]` |
 
-// 直线: 直接放两个 target
-<Draw way={['A', 'B']} arrow="->" />
-
-// 折角（fold）: '-|' = 先横后竖 / '|-' = 先竖后横
-<Draw way={['A', '|-', 'B']} arrow="->" />
-
-// 二次贝塞尔（curve）: { curve: [cx, cy] } infix
-<Draw way={['A', { curve: [50, -30] }, 'B']} arrow="->" />
-
-// 三次贝塞尔（cubic）: { cubic: [[c1x, c1y], [c2x, c2y]] }
-<Draw way={['A', { cubic: [[40, -20], [60, 30]] }, 'B']} arrow="->" />
-
-// 弧形简记（bend）: { bend: 'left' | 'right', angle?: number }
-<Draw way={['A', { bend: 'right', angle: 45 }, 'B']} arrow="->" />
-
-// 边标注 label: { label: 'text' } 或 { label: { text, position, side } } infix（修饰下一段）
-<Draw way={['A', { label: 'midway' }, 'B']} arrow="->" />
-
-// 多段串联: 串多个 infix 算子，每个修饰下一段
-<Draw way={[
-  'A',
-  { curve: [40, -30] }, [80, -10],   // 第 1 段 quadratic
-  { curve: [60, 40] }, 'B',          // 第 2 段 quadratic，端点 auto-clip 到 B 边框
-]} arrow="->" />
-
-// 闭合（filled）: DrawWay.Cycle 闭回起点
-<Draw way={['A', 'B', 'C', DrawWay.Cycle]} fill="#ff0" />
-```
-
-**端点写 node id 字符串** —— retikz 编译期自动按"toward 方向射线"算 border 锚点；写裸坐标会让箭头偏离节点边框。
+端点优先写 node id 字符串，编译期自动按 toward 方向裁到节点边框；裸坐标不会 auto-clip。
 
 ## 常见错误（示例页特有）
 

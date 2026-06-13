@@ -1,0 +1,114 @@
+---
+title: Get Started
+description: Install the plot React entry and build a line + scatter chart with local data, axes, and a grid.
+---
+
+## Install
+
+In React projects, the plot entry package is `@retikz/plot-react`. It brings `@retikz/plot` and the underlying retikz dependencies with it; your app still provides the React peer dependencies.
+
+<PackageManagerInstall packages="@retikz/plot-react react react-dom" />
+
+## Final Result
+
+This chart draws the same monthly revenue data with two mark layers: a line for the trend and points for each observation. `<Plot>` infers linear scales and a cartesian2D coordinate system, and when no explicit `<Axis>` children are present it adds x/y axes plus a y grid.
+
+<ComponentPreview name="line-scatter" sourceFiles={['line-scatter.data.ts']} />
+
+## Build It Step By Step
+
+### 1. Prepare plain rows
+
+Data is a plain array of objects. It does not enter the IR and does not need a special wrapper. Field names are referenced later through the mark `x` / `y` props.
+
+```ts
+const sales = [
+  { month: 0, revenue: 10 },
+  { month: 1, revenue: 14 },
+  { month: 2, revenue: 9 },
+  { month: 3, revenue: 18 },
+  { month: 4, revenue: 15 },
+];
+```
+
+### 2. Draw the trend with `<Plot>` and `<LineMark>`
+
+`<Plot>` receives the data and display size; `<LineMark>` declares which fields feed the x and y channels. `order="month"` connects points by month, so the line stays stable if row order changes.
+
+```tsx
+<Plot data={sales} width={360} height={200}>
+  <LineMark x="month" y="revenue" order="month" />
+</Plot>
+```
+
+### 3. Add `<PointMark>`
+
+Marks inside the same `<Plot>` share the same coordinate system and scales. Add a `<PointMark>` to show each observation on top of the line.
+
+```tsx
+<Plot data={sales} width={360} height={200}>
+  <LineMark x="month" y="revenue" order="month" />
+  <PointMark x="month" y="revenue" />
+</Plot>
+```
+
+Keep these 4 rules in mind:
+
+- `data` is a plain row array, and mapped field values must become finite numbers.
+- `<LineMark>` / `<PointMark>` declare field mappings, not pixel coordinates.
+- With no explicit `<Axis>`, `<Plot>` draws x/y axes plus a y grid by default.
+- The IR tab in the code panel shows the Plot IR assembled by `<Plot>`; data is still supplied separately.
+
+## Common Switches
+
+Once you write any `<Axis>`, the defaults are not filled in. What you list is what gets drawn.
+
+```tsx
+<Plot data={sales} width={360} height={200}>
+  <LineMark x="month" y="revenue" order="month" />
+  <Axis dimension="y" grid tickCount={5} />
+</Plot>
+```
+
+Use `bare` when you only want the data marks, with no axes or grid:
+
+```tsx
+<Plot data={sales} width={360} height={200} bare>
+  <LineMark x="month" y="revenue" order="month" />
+</Plot>
+```
+
+`width × height` is the outer box including axes and tick labels. When labels need more room, tune the text size with `fontSize` and override whitespace with `margin`:
+
+```tsx
+<Plot data={sales} width={360} height={200} fontSize={12} margin={{ left: 48 }}>
+  <LineMark x="month" y="revenue" order="month" />
+</Plot>
+```
+
+## Time Axis
+
+When x is a date, pass `<Plot scaleX="time">` — ticks land on time boundaries like whole months / years, and labels are formatted as time. The date field can be an ISO string or a millisecond timestamp.
+
+<ComponentPreview name="time-axis" sourceFiles={['time-axis.data.ts']} />
+
+## Next
+
+<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+  <LinkedCard href="/plot/components/plot">
+    <span className="font-semibold">Plot</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">Learn the spec entry, data entry, and render options</span>
+  </LinkedCard>
+  <LinkedCard href="/plot/components/mark">
+    <span className="font-semibold">Mark</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">Continue with line, point, and shared coordinates</span>
+  </LinkedCard>
+  <LinkedCard href="/plot/components/axis">
+    <span className="font-semibold">Axis</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">Customize ticks, labels, grids, and bare plots</span>
+  </LinkedCard>
+  <LinkedCard href="/plot/data/model">
+    <span className="font-semibold">Data</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">Understand why data stays outside Plot IR</span>
+  </LinkedCard>
+</div>

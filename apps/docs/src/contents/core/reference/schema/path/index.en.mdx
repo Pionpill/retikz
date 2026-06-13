@@ -59,6 +59,10 @@ A `path` is the outer container for a drawn line. Its `children` field is an ord
 
 <ZodSchema name="RectangleStepSchema" />
 
+### Generator
+
+<ZodSchema name="GeneratorStepSchema" />
+
 ## StepLabel
 
 `StepLabelSchema` is shared by every drawn step except move and cycle. It describes edge-label text, position along the segment, and offset side.
@@ -73,7 +77,7 @@ A `path` is the outer container for a drawn line. Its `children` field is an ord
 
 ## Target
 
-`TargetSchema` is the union for path endpoints: Cartesian / polar / node target object `{ id, anchor?, offset? }` / offset placement `{ of, offset }` / proportional placement `{ between, t }` / relative offsets (relative / relativeAccumulate). Node id strings are React DSL shorthand and are parsed into objects before reaching the IR:
+`TargetSchema` is the union for path endpoints: Cartesian / polar / node target object `{ id, anchor?, offset?, boundary? }` / offset placement `{ of, offset }` / proportional placement `{ between, t }` / relative offsets (relative / relativeAccumulate). In the node target object, `boundary?` overrides the connection surface this single endpoint clips to (defaults to the node's own `boundary`, i.e. `shape`); `anchor?` auto-clips to the boundary when omitted. Node id strings are React DSL shorthand and are parsed into objects before reaching the IR:
 
 <ZodSchema name="TargetSchema" />
 
@@ -86,6 +90,22 @@ For the endpoint rules of proportional placement, see [Placement](/core/referenc
 ### RelativeAccumulate
 
 <ZodSchema name="RelativeAccumulateTargetSchema" />
+
+<Comparison target="tikz" title="Path / Step field mapping">
+
+| IR field | TikZ equivalent |
+| --- | --- |
+| `lineCap` / `lineJoin` | `line cap` / `line join` |
+| `thickness` | `ultra thin` … `ultra thick` |
+| `drawOpacity` | `draw opacity` |
+| `kind: 'fold'` | `-\|` / `\|-` |
+| `kind: 'cycle'` | `cycle` |
+| `kind: 'bend'` | `to[bend left=N]` / `to[bend right=N]` |
+| `kind: 'arc'` | `arc[start angle=…, end angle=…, radius=…]` |
+| `kind: 'circlePath'` / `kind: 'ellipsePath'` | `circle[radius=…]` / `ellipse[x radius=…, y radius=…]` |
+| `relative` / `relativeAccumulate` | `(+x, +y)` / `(++x, ++y)` |
+
+</Comparison>
 
 ## ArrowDetail
 

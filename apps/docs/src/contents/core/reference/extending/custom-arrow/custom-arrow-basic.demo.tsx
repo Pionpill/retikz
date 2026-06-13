@@ -1,4 +1,4 @@
-import type { ArrowDefinition } from '@retikz/core';
+import { defineArrow } from '@retikz/core';
 import { Draw, Layout, Node } from '@retikz/react';
 import type { FC } from 'react';
 
@@ -7,7 +7,7 @@ import type { FC } from 'react';
  * 几何在局部 baseSize=10 坐标系（viewBox 0 0 10 10）；hollow:true → 框架丢 fill、用描边、lineContactX 自动减 lineWidth/2。
  * stroke 取 ctx.stroke（无 color override 时为 contextStroke，跟随 path 描边色）。
  */
-const bracket: ArrowDefinition = {
+const bracket = defineArrow({
   hollow: true,
   lineContactX: 2,
   tipX: 8,
@@ -26,7 +26,7 @@ const bracket: ArrowDefinition = {
       strokeWidth: lineWidth,
     },
   ],
-};
+});
 
 const Demo: FC = () => (
   <Layout width={320} height={70} arrows={{ bracket }}>

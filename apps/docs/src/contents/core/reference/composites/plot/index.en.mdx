@@ -1,0 +1,25 @@
+---
+title: Plotting
+description: "@retikz/plot is the first Tier 2 domain package built on the composite mechanism — it declares charts as a Plot IR that lowers to core primitives; see the dedicated Plot module for full usage."
+---
+
+The previous page covered the composite **mechanism**: core provides the registration surface and the expansion pipeline, but ships no high-level nodes of its own. `@retikz/plot` is the first **Tier 2 domain package** built on that mechanism — retikz's charting layer.
+
+It declares "a chart" as a **Plot IR** (coordinate system, scales, which field becomes a point or a line), feeds the data in separately, then lets `lowerPlots` — the concrete implementation of core's `lowerComposites` hook — expand the IR + data into core `node` / `path`, handed to the existing renderers. Core knows nothing about chart types; all of plot's semantics live in this standalone package.
+
+`@retikz/plot-react` wraps it into a single `<Plot>` component:
+
+```tsx
+import { LineMark, Plot, PointMark } from '@retikz/plot-react';
+
+<Plot data={sales} width={360} height={200}>
+  <LineMark x="month" y="revenue" order="month" />
+  <PointMark x="month" y="revenue" />
+</Plot>;
+```
+
+Three packages each own one slice: `@retikz/plot` (Plot IR + `lowerPlots`), `@retikz/plot-react` (the `<Plot>` component + composition DSL), and `@retikz/plot-vanilla` (`renderPlot` for SSR strings).
+
+<ComponentAlert title="Just a concrete example of composites" description="This page points at plot as a real example of the composite mechanism. The full usage — marks, scales, coordinate systems, IR/data decoupling, SSR, plotting from fetched data — lives in the dedicated Plot module; start from its introduction." />
+
+For the full docs, see the [Plot module · Introduction](/plot/introduction).

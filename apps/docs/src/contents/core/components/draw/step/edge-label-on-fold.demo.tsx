@@ -2,7 +2,7 @@ import { Layout, Node, Path, Step } from '@retikz/react';
 import type { FC } from 'react';
 
 const Demo: FC = () => (
-  <Layout width={420} height={200}>
+  <Layout width={420} height={200} nodeDefault={{ stroke: 'gray', dashed: true }}>
     <Node id="a" position={[20, 30]}>
       A
     </Node>
@@ -14,7 +14,7 @@ const Demo: FC = () => (
     <Path stroke="currentColor" arrow="->">
       <Step kind="move" to="a" />
       <Step
-        kind="step"
+        kind="fold"
         via="-|"
         to="b"
         label={{ text: "'-|' t=0.5 (corner)", position: 0.5 }}
@@ -23,7 +23,7 @@ const Demo: FC = () => (
     <Path stroke="currentColor" arrow="->" dashPattern={[3, 3]}>
       <Step kind="move" to="a" />
       <Step
-        kind="step"
+        kind="fold"
         via="|-"
         to="b"
         label={{ text: "'|-' t=0.5 (corner)", position: 0.5, side: 'below' }}

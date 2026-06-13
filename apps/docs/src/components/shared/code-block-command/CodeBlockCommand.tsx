@@ -1,6 +1,6 @@
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { type PkgManager, usePkgManagerStore } from '@/store/usePkgManagerStore';
+import { type PkgManager, usePkgManagerStore } from '@/store/use-pkg-manager-store';
 import { Check, Copy, Terminal } from 'lucide-react';
 import { type FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 

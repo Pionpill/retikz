@@ -1,0 +1,120 @@
+---
+title: 分层
+description: retikz 的三层表达模型：DSL 给人写，IR 用于声明与持久化，Scene 用于渲染。
+---
+
+retikz 把用户写下的 DSL（React 组件或 Vanilla JS 写法）先转成 IR，再编译成 Scene。DSL 负责书写体验，IR 保留“你想画什么”，Scene 只保留“渲染器应该画什么”。
+
+<ComponentAlert
+  type="tip"
+  title="首次阅读可以先跳过"
+  description="本章主要解释 retikz 的底层构建链路；如果你只是想先画出一张图，可以先读快速开始和组件文档，需要理解 IR / Scene 边界时再回来。"
+/>
+
+<ComponentPreview name="layers-pipeline" size="sm" hideCode />
+
+## 三层模型
+
+| 层 | 作用 | 面向谁 |
+| --- | --- | --- |
+| DSL | React 组件或 Vanilla JS 写法，分为 Kernel 与 Sugar | 日常作者 |
+| IR | JSON 可序列化的声明结构，保留 Node / Path / Step / Coordinate / Scope 语义 | 用户、LLM、持久化、转换器 |
+| Scene | 渲染目标无关的 primitive 列表，包含测量后的文本、路径、group、layout bounds | renderer |
+
+IR 是公开契约；Scene 是 renderer 输入。正常写图时不需要手写 Scene。
+
+为什么用户需要知道这三层：日常写图看 DSL；要把图存进数据库、发给 LLM 修改、做 JSON Patch 或跨端渲染时看 IR；只有写 renderer / 调试测量结果时才看 Scene。
+
+## Kernel 与 Sugar
+
+| 层 | 例子 | 是否直接进 IR | 说明 |
+| --- | --- | --- | --- |
+| Kernel | `<Layout>` / `<Scope>` / `<Node>` / `<Coordinate>` / `<Path>` / `<Step>` | 是 | 与 IR 节点一一对应 |
+| Sugar | `<Draw way={...}>`、`DrawWay.Cycle`、相对坐标字符串、<br />`<Circle>` / `<Rectangle>` / `<Grid>` / `<Star>` 等形状组件 | 否 | adapter 同步展开为 Kernel |
+
+Sugar 不引入新能力。能用 `<Draw>` 画出来的图，也能用 `<Path>` + `<Step>` 手写出来。下面两段编译结果完全一致：
+
+```tsx
+// Sugar：一行 way 数组
+<Draw way={['a', 'b']} arrow="->" />
+```
+
+```tsx
+// Kernel：way 的第一个目标展开成 move，其余展开成 line
+<Path arrow="->">
+  <Step kind="move" to="a" />
+  <Step to="b" />
+</Path>
+```
+
+`<Scope>` 也属于 Kernel：它在 IR 中保留分组语义，编译到 Scene 时下沉为 `group`，并承载局部 transform、clip、样式默认值、动画和 `zIndex` 等组级行为。
+
+## 编译链路
+
+```tsx
+<Layout>
+  <Node id="a" position={[0, 0]}>A</Node>
+  <Draw way={['a', [80, 0]]} />
+</Layout>
+```
+
+这段 JSX 会被 adapter 收集成 IR，`@retikz/core` 再负责解析 position、计算 anchor、展开路径与边界，最后输出 Scene。上例中的 `<Draw>` 会在 IR 中成为普通 `path` 节点。
+
+`@retikz/core` 分两趟编译，再收尾输出 Scene。图中箭头上的文字标注了每一趟交给下一趟的中间产物：
+
+<ComponentPreview name="layers-compile" size="xs" hideCode />
+
+- **layout nodes**：解析每个 node / coordinate 的坐标，度量文字，按形状算出包围盒与锚点，登记进命名表。
+- **resolve paths**：节点先就位，路径才能从命名表查到端点，展开成路径命令（`d`）；这正是箭头上 `anchors` 代表的依赖。
+- **fit bounds**：合并所有图元的包围盒，加 padding 并按精度 round，得到 viewBox。
+
+如果 IR 里有 Tier 2 的 composite 节点（如 plot 的高层组件），编译会先把它们下沉成 Kernel，再走上面这条链路；细节见[复合](/core/concepts/design/composite)。
+
+## 选择建议
+
+| 场景 | 推荐 |
+| --- | --- |
+| 普通连线、流程图边、带箭头路径 | `<Draw>` |
+| 需要逐段控制 move / line / cycle / curve | `<Path>` + `<Step>` |
+| 需要最接近 IR 的测试或转换器输出 | Kernel |
+| 需要持久化、AI 生成或局部修改图 | IR |
+
+Sugar 的展开逻辑由 builder 同步调用，不能依赖 React hooks 或异步状态。完整 IR schema 从 [结构参考](/core/reference/schema) 进入；IR 根见 [Scene](/core/reference/schema/scene)，字段细分见 Entity / Path / Placement。
+
+## 包结构
+
+这三层能力被拆进 `packages/core` 下的四个 npm 包，全部以 `@retikz/core` 为底座。实线指向主要构建依赖，虚线表示 react / vanilla 也直接依赖 core。
+
+<ComponentPreview name="layers-packages" size="sm" hideCode />
+
+| 包 | 职责 | 依赖 |
+| --- | --- | --- |
+| `@retikz/core` | IR / Scene / schema / geometry / parser | zod |
+| `@retikz/render` | Scene 渲染：SVG / Canvas、hydration、animation | core |
+| `@retikz/react` | Kernel / Sugar JSX 组件，内置 SVG / Canvas | core + render |
+| `@retikz/vanilla` | 框架无关运行时：mount / hydrate / 动画 / SSR | core + render |
+
+react / vanilla 只做 adapter：把 DSL 收集成 IR、把渲染交给 render，所有底层语义都来自 core，不另造平行能力。
+
+普通用户装 `@retikz/react`（或 `@retikz/vanilla`）即可，它会自动带上 core 与 render；只有写自定义渲染器或直接读写 IR 时，才单独依赖 `@retikz/core`。
+
+## 延伸阅读
+
+<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+  <LinkedCard href="/core/reference/schema">
+    <span className="font-semibold">结构</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">查 IR 各实体的字段：Node / Path / Step / Coordinate / Scope</span>
+  </LinkedCard>
+  <LinkedCard href="/core/concepts/design/composite">
+    <span className="font-semibold">复合</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">理解 Tier 2 composite 的注册、判别与 lowering 展开</span>
+  </LinkedCard>
+  <LinkedCard href="/core/reference/renderer">
+    <span className="font-semibold">渲染器</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">了解 Scene 如何渲染成 SVG / Canvas，以及自定义渲染器</span>
+  </LinkedCard>
+  <LinkedCard href="/core/components/draw/overview">
+    <span className="font-semibold">Draw</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">用 way 数组画连线、曲线、形状与边标注</span>
+  </LinkedCard>
+</div>

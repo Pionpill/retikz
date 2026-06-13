@@ -1,0 +1,61 @@
+---
+title: SectorMark
+description: 'Draw pie and donut charts with <SectorMark> — under a polar coordinate system, the angle value field is accumulated into sectors automatically.'
+---
+
+`<SectorMark>` draws one sector per data row, with each sector's angular size coming from the value field bound to `angle`. It only makes sense under a polar coordinate system, so `<Plot>` must have `coordinate="polar2D"`. The start and end angles of each sector are **accumulated automatically** by `<Plot>` — you give values, not angles.
+
+## Usage
+
+```tsx
+import { Plot, SectorMark } from '@retikz/plot-react';
+```
+
+```tsx
+<Plot data={share} coordinate="polar2D">
+  <SectorMark angle="value" color="label" />
+</Plot>
+```
+
+`angle` binds the value field (how big each sector is); `color` binds the categorical field (the color of each slice). `coordinate="polar2D"` is required — there's no "sector" geometry under cartesian.
+
+## Examples
+
+### Pie
+
+The simplest case: `angle` is the value field, `color` is the category. Sectors are laid head to tail in data order to fill the full circle.
+
+<ComponentPreview name="sector-pie" sourceFiles={['sector-pie.data.ts']} />
+
+### Donut
+
+A donut is a pie with the center carved out. The hole is controlled by `<Plot>`'s polar `innerRadius` (a fraction `0..1` of the outer radius), not by `<SectorMark>` — it's coordinate-system geometry and applies to all sectors equally.
+
+<ComponentPreview name="sector-donut" sourceFiles={['sector-pie.data.ts']} />
+
+<p className="text-sm text-muted-foreground">Same data with <code>innerRadius: 0.6</code> on the polar config becomes a donut.</p>
+
+## How it works
+
+> Optional for everyday use; revisit when you want to understand where the sector angles come from.
+
+`<SectorMark>` has built-in **accumulation**: the `angle` you provide is each row's "share value", but a sector needs a `[start, end]` pair of bounds. When assembling the spec, `<Plot>` adds an accumulation step (the same convention as `<BarMark stack>` auto-wiring a stack) that prefix-sums the share values into contiguous angular bounds, then hands them to the sector geometry. So the DSL surface exposes only one `angle` value field — no transform to write, no angles to precompute.
+
+When `series` is set, accumulation segments by series order; otherwise it follows data order.
+
+## API
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `angle` | `string` | — | Angular value field path; accumulated into each sector's start/end angle |
+| `color` | `string?` | `angle` field | Color field, colored per datum: categorical → ordinal; continuous / temporal needs a `model` declaration → auto sequential color scale (viridis). Defaults to coloring by the `angle` field |
+| `series` | `string?` | — | Series field: segments accumulation by its order; defaults to data order |
+| `id` | `string?` | — | Optional handle (reserved, not yet resolved) |
+
+<ComponentAlert title="Polar only" description="<SectorMark> only has geometric meaning under <Plot coordinate='polar2D'>; there are no sectors under cartesian." />
+
+## Related
+
+- [Coordinates](/plot/grammar/coordinate) — the polar switch and innerRadius / angle range
+- [BarMark](/plot/components/mark/bar) — radial bars under polar are another round chart
+- [AreaMark](/plot/components/mark/area) — closed lines / filled radar

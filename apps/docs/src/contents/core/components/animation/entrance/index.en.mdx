@@ -1,0 +1,103 @@
+---
+title: Intro
+description: Intro animations play once on load to bring an element into view — fadeIn / scaleIn / grow / growUp / slideIn / drawOn, and the AnimationTrack JSON they expand into.
+---
+
+Intro animations **play once on load**, bringing an element from a transparent / offset / shrunk state to its final look. They are element animations attached to a `<Node>` / `<Path>` / `<Scope>`'s `animations`; for the common options and the full preset table, see the [Animation overview](/core/components/animation). Each demo below replays when you open this page / switch tabs.
+
+## How it works: a preset expands into an AnimationTrack
+
+Every preset is a factory for an `AnimationTrack` — call it and you get a JSON track to attach to `animations`. A track describes "keyframes of one property channel over normalized time `[0, 1]`, plus WAAPI-style timing":
+
+```ts
+type AnimationTrack = {
+  property: string;            // channel: opacity / scale / scaleX|Y / rotate / translateX|Y / fill / stroke / pathDraw …
+  keyframes: Array<{
+    at: number;                // normalized time 0..1, decoupled from duration; sorted ascending by at
+    value: JsonValue;          // the ABSOLUTE display value at that time (not a delta): number / color string / [x,y,w,h], narrowed by property
+    easing?: string | [number, number, number, number]; // per-segment easing, overrides the track level
+  }>;
+  duration: number;            // one-iteration duration in ms (> 0)
+  delay?: number;              // delay before first iteration (ms)
+  easing?: string | [number, number, number, number]; // track-level easing, defaults to linear
+  iterations?: number | 'infinite';  // play count, defaults to 1
+  direction?: 'normal' | 'reverse' | 'alternate' | 'alternate-reverse'; // defaults to normal
+  fill?: 'none' | 'forwards' | 'backwards' | 'both';   // value outside the active interval, defaults to forwards
+  trigger?: 'load' | 'visible' | 'manual' | { onEvent: string };  // defaults to load
+  origin?: string | [number, number]; // pivot for scale / scaleX|Y / rotate, defaults to the geometric center
+};
+```
+
+Key convention: **the last frame (`at: 1`) equals the element's base (resting) state** — so ignoring the animation renders the complete final figure, which is exactly what [degradation](/core/components/animation/control#degradation) relies on. A preset introduces nothing a track can't express; its output is **field-for-field equal to a hand-written track**, and the common options `{ duration, delay, easing, trigger }` override each preset's defaults. Each section below gives the demo, its expanded track, and its specific options.
+
+## fadeIn
+
+<ComponentPreview name="fade-in" size="xs" />
+
+Opacity 0→1, the most common entrance.
+
+```json
+{ "property": "opacity", "keyframes": [{ "at": 0, "value": 0 }, { "at": 1, "value": 1 }], "duration": 400, "easing": "ease-out" }
+```
+
+No specific options — common options only.
+
+## scaleIn
+
+<ComponentPreview name="scale-in" size="xs" />
+
+Uniform scale `from`→1, popping in around a pivot.
+
+```json
+{ "property": "scale", "keyframes": [{ "at": 0, "value": 0.8 }, { "at": 1, "value": 1 }], "duration": 400, "easing": "ease-out" }
+```
+
+Specific options: `from` (starting scale, defaults to `0.8`; the last frame is always `1` = base), `origin` (scale pivot, defaults to the geometric center).
+
+## grow
+
+<ComponentPreview name="grow" size="xs" />
+
+The `from: 0` alias of `scaleIn`, growing from nothing.
+
+```json
+{ "property": "scale", "keyframes": [{ "at": 0, "value": 0 }, { "at": 1, "value": 1 }], "duration": 400, "easing": "ease-out" }
+```
+
+Specific options: `origin` (same as `scaleIn`).
+
+## growUp
+
+<ComponentPreview name="grow-up" size="sm" />
+
+`scaleY` 0→1 with the pivot at the **bottom edge** (`origin: 'south'`) — bars growing from the baseline.
+
+```json
+{ "property": "scaleY", "keyframes": [{ "at": 0, "value": 0 }, { "at": 1, "value": 1 }], "origin": "south", "duration": 500, "easing": "ease-out" }
+```
+
+Specific options: `origin` (defaults to `'south'`, the bottom-edge midpoint; can be any named anchor or `[x, y]`).
+
+## slideIn
+
+<ComponentPreview name="slide-in" size="xs" />
+
+`translateX|Y` `offset`→0, sliding back to place from an offset.
+
+```json
+{ "property": "translateX", "keyframes": [{ "at": 0, "value": -20 }, { "at": 1, "value": 0 }], "duration": 400, "easing": "ease-out" }
+```
+
+Specific options: `axis` (`'x'`→`translateX` / `'y'`→`translateY`, defaults to `'x'`), `offset` (starting shift, defaults to `-20`; the last frame is always `0` = base).
+
+## drawOn
+
+<ComponentPreview name="draw-on" size="sm" />
+
+`pathDraw` 0→1, the stroke drawing progressively along the path; only for **stroked** `<Path>` / shapes.
+
+```json
+{ "property": "pathDraw", "keyframes": [{ "at": 0, "value": 0 }, { "at": 1, "value": 1 }], "duration": 600, "easing": "ease-in-out" }
+```
+
+No specific options — common options only.

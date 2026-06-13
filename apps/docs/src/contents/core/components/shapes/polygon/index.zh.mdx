@@ -1,0 +1,94 @@
+---
+title: Polygon
+description: 正多边形——既能画一条 Path（Sugar），也能作为节点的正多边形 / 菱形边界。
+---
+
+正多边形（等边等角）有两副面孔：用 `<RegularPolygon>` 画一个等边多边形轮廓（Sugar），或用 `shape={{ type:'polygon', params:{ sides } }}` 让节点带上正多边形边界。`diamond` 就是 `polygon{ sides:4, rotate:0 }` 的预设。完整定义见 [形状](/core/components/shapes)。要画一个多边形框，用 Sugar；要一个可连接、可标注的多边形节点，用 `<Node shape>`。
+
+## 作为 Path 图形（Sugar）
+
+`<RegularPolygon>` 在指定位置画一个等边多边形，展开成底层 `<Path>`。
+
+### 用法
+
+```tsx
+import { RegularPolygon } from '@retikz/react';
+```
+
+```tsx
+<RegularPolygon center={[0, 0]} radius={36} sides={6} />
+```
+
+### 例子
+
+`<RegularPolygon>` 用外接半径或边长确定大小。`sides` 至少为 `3`，`rotate` 可以调整整体朝向。
+
+| 写法 | 适合 |
+| --- | --- |
+| `{ center, radius, sides }` | 已知外接半径 |
+| `{ center, sideLength, sides }` | 已知边长 |
+
+<ComponentPreview name="regular-polygon-basic" size="xs" />
+
+### API 参考
+
+| 组件 | 组合 | 含义 |
+| --- | --- | --- |
+| `<RegularPolygon>` | `center` + `radius` + `sides` | 通过外接半径和边数确定正多边形 |
+| | `center` + `sideLength` + `sides` | 通过边长和边数确定正多边形 |
+| | + `rotate?` | 整体起始角；缺省 `-90`（一个顶点朝上） |
+
+## 作为 Node 形状
+
+当你要的是一个多边形**节点**（装文字、被连线引用）而不是一条线时，给 `<Node>` 设 `shape={{ type:'polygon', params }}`。边界取能容纳「文字 + padding」的正多边形外接圆，尺寸由文字驱动。
+
+### 用法
+
+```tsx
+import { Node } from '@retikz/react';
+```
+
+```tsx
+<Node shape={{ type: 'polygon', params: { sides: 6 } }}>label</Node>
+<Node shape="diamond">label</Node>
+```
+
+### 例子
+
+`diamond` 是 4 边、顶点落在上下左右四个方向的预设，可直接写裸字符串 `shape="diamond"`，等价于 `{ type:'polygon', params:{ sides:4, rotate:0 } }`。
+
+<ComponentPreview name="node-polygon" size="sm" />
+
+给 `params.cornerRadius` 一个正数就能把每个顶点磨成圆角，省略或 `0` 是直角。倒角是连接感知的：连线端点会落在圆角弧上，而不是已经被磨掉的尖角。
+
+<ComponentPreview name="node-polygon-corner-radius" size="sm" />
+
+连线端点贴多边形边，节点的 9 个标准 anchor（`north` / `center` …）照常可用。完整的 `<Node>` 属性见 [Node](/core/components/node/overview)。
+
+### API 参考
+
+| `shape` | 边界 | 参数 |
+| --- | --- | --- |
+| `{ type: 'polygon', params }` | 能容纳文字的正多边形外接圆 | `sides`（≥3） / `rotate?` / `cornerRadius?` |
+| `"diamond"` | = `polygon{ sides:4, rotate:0 }` 预设 | 无 |
+
+`cornerRadius`（用户单位）给每个顶点倒角，省略 / `0` = 直角，逐角夹紧到不自交的最大半径。
+
+## 技术原理
+
+> 日常使用可以跳过本节；只有在点位报错或旋转方向不符合预期时再回来读。
+
+### 正多边形先计算顶点（Sugar）
+
+`<RegularPolygon>` 会先根据中心、半径或边长计算所有顶点，然后展开成一条闭合 Path。`rotate` 改的是第一个顶点的起始角度，而不是 SVG transform。
+
+### diamond 是 polygon 的预设
+
+`<Node shape="diamond">` 在编译期规范化为 `polygon{ sides:4, rotate:0 }`——4 个顶点落在上下左右四个方向（`rotate:0` 下顶点起始角即 0°，按 `360/4` 均布到 0° / 90° / 180° / 270°），得到一个菱形。若要正置的方形需写 `rotate:45`。它对非正方形文字框仍是正菱形（而非拉伸）；裸字符串 `"diamond"` 和带参 `{ type:'polygon', params:{ sides:4, rotate:0 } }` 等价。
+
+## 相关
+
+- [Node](/core/components/node/overview)：多边形节点的完整属性
+- [Rectangle](../rectangle)：矩形与圆角矩形
+- [Star](../star)：内外半径交替的星形
+- [Shapes](/core/components/shapes)：形状分组入口与完整定义

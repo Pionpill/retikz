@@ -1,0 +1,101 @@
+---
+title: 坐标系
+description: retikz 使用面向屏幕的二维坐标：笛卡尔坐标 x 向右、y 向下，极坐标从 origin 按 angle / radius 推导位置；所有几何长度先用 user units 表达，再由 viewBox 映射到最终渲染尺寸。
+---
+
+retikz 的坐标先描述“图里的几何世界”，再交给 `<Layout>` 显示出来。常用坐标有两类：直接给 `[x, y]` 的笛卡尔坐标，以及从某个 origin 出发按 `angle` / `radius` 推出来的极坐标。
+
+笛卡尔坐标系是一等公民：编译阶段会把极坐标、相对定位、偏移和比例点等其它位置表达先解析成笛卡尔点，再继续计算边界、锚点和渲染结果。
+
+你写的坐标、线宽、间距、箭头尺寸都使用同一套 user units（图内部的长度单位，不是屏幕像素）；页面上看到的物理大小由 `width` / `height` 和 `viewBox` 一起决定。
+
+## 笛卡尔坐标
+
+笛卡尔坐标写成 `[x, y]`。retikz 跟 SVG / Canvas 一样使用屏幕坐标：x 向右增大，y 向下增大。因此 `[120, 70]` 表示从原点向右 120、向下 70。
+
+把 `[x, y]` 当成 retikz 的基础坐标形态会更容易理解后续规则：极坐标不是独立渲染语义，它只是另一种写位置的方式，最终仍会落成一个 `[x, y]` 点。
+
+<ComponentPreview name="coordinate-system" size="md" hideCode />
+
+如果你在照着数学图或 TikZ 教程改写，常见规则是：数学里的“向上”在 retikz 里通常要写成负 y，例如 `[0, -80]`。
+
+## 极坐标
+
+极坐标写成 `{ origin?, angle, radius }`：先解析 origin，再沿某个角度走一段半径。它适合圆形布局、径向标注、围绕某个节点摆一圈元素，或表达“从这个点旋转偏移一段距离”。
+
+<ComponentPreview name="polar-coordinate" size="md" hideCode />
+
+| 字段 | 含义 |
+| --- | --- |
+| `origin` | 极点；省略时为 `[0, 0]`，也可以是节点 id、笛卡尔坐标或嵌套极坐标 |
+| `angle` | 角度，单位是度；`0°` 指向 +x |
+| `radius` | 半径，单位是 user units |
+
+角度跟随屏幕坐标方向：`0°` 向右，`90°` 向下，`180°` 向左，`270°` 向上。也就是说，它不是数学课本里“90° 向上”的 y-up 坐标系。
+
+```tsx
+<Node id="O" position={[0, 0]}>O</Node>
+<Node position={{ origin: 'O', angle: 45, radius: 80 }}>45°</Node>
+```
+
+`origin` 可以嵌套，用来表达链式偏移：
+
+```tsx
+// 从 A 向右 40，再从这个临时点向下 30
+{ origin: { origin: 'A', angle: 0, radius: 40 }, angle: 90, radius: 30 }
+```
+
+## 怎么选择
+
+| 目标 | 优先写法 |
+| --- | --- |
+| 复刻已有 SVG / 固定草图 | `[x, y]` |
+| 圆环、扇形、放射状布局 | `{ origin, angle, radius }` |
+| 放在另一个图元上下左右 | `{ direction, of, distance? }` |
+| 从某个点做任意二维偏移 | `{ of, offset }` |
+| 放在两点之间的比例位置 | `{ between: [A, B], t }` |
+
+坐标系页只讲坐标语境；完整的位置表达见 [定位](/core/concepts/basic/position)。
+
+## viewBox 和显示尺寸
+
+`viewBox` 决定 `<Layout>` 看到哪一块 user-unit 世界；`width` / `height` 决定这块世界在页面上显示多大。
+
+<ComponentPreview name="viewbox" size="md" hideCode />
+
+左边是完整的 user units 世界，虚线框是 `viewBox` 选中的窗口，它被映射成右边按 `width` / `height` 渲染的画面。
+
+| 项 | 控制什么 | 例子 |
+| --- | --- | --- |
+| `viewBox` | 内部坐标范围 | `{ x: -40, y: -45, width: 260, height: 170 }` |
+| `width` / `height` | 页面里的渲染尺寸 | `width={430}` / `height={230}` |
+| 自动 bounds | 未传 `viewBox` 时，由可见图元加 padding 算出 | 普通图默认用它 |
+
+没有显式 `viewBox` 时，retikz 会根据可见 Node / Path / Group 算出 layout bounds，再加 padding。`<Coordinate>` 只是命名点，不会自己撑大 bounds；如果远处只有一个 Coordinate，没有可见图元落在那里，画面不会自动扩过去。
+
+大多数图不用手写 `viewBox`。当你需要固定坐标语境、对齐多张图、故意留白或裁剪时，再把它写出来。
+
+```tsx
+<Layout width={430} height={230} viewBox={{ x: -40, y: -45, width: 260, height: 170 }}>
+  {/* children */}
+</Layout>
+```
+
+`viewBox` 和 `width` / `height` 是正交的：改 `width` / `height` 只改变显示缩放，不改变 `[x, y]` 的含义；改 `viewBox` 才会改变哪片内部坐标被看见。
+
+## 延伸阅读
+
+<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+  <LinkedCard href="/core/concepts/basic/position">
+    <span className="font-semibold">定位</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">坐标只是位置的一种；节点引用、相对、偏移、比例点等完整位置表达</span>
+  </LinkedCard>
+  <LinkedCard href="/core/concepts/core/primitive-relations">
+    <span className="font-semibold">图元关系</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">anchor、边界与边上比例点——坐标落定后图元之间如何稳定连接</span>
+  </LinkedCard>
+  <LinkedCard href="/core/components/layout/overview">
+    <span className="font-semibold">Layout</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">承载 viewBox / width / height 的顶层容器与编译入口</span>
+  </LinkedCard>
+</div>

@@ -1,3 +1,3 @@
-export { ChangelogView } from './ChangelogView';
-export { ChangelogFilter } from './ChangelogFilter';
-export { changelogToMarkdown } from './changelogToMarkdown';
+export { ChangelogOverview } from './ChangelogOverview';
+export { ChangelogVersionDetail } from './ChangelogVersionDetail';
+export { changelogToMarkdown } from './changelog-to-markdown';

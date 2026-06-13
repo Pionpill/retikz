@@ -2,7 +2,7 @@ import { Draw, Layout, Node } from '@retikz/react';
 import type { FC } from 'react';
 
 const Demo: FC = () => (
-  <Layout width={520} height={220}>
+  <Layout width={520} height={220} nodeDefault={{ stroke: 'gray', dashed: true }}>
     <Node id="a" position={[0, 0]} shape="diamond">
       ?
     </Node>

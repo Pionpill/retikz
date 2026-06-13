@@ -5,7 +5,7 @@ import type { FC } from 'react';
  * scope.id 基础引用：scope 内 3 节点合成 bbox，外部 path 用 'cluster.<anchor>' 指到 bbox 视觉边界
  * @description external 在最左侧；右侧 `<Scope id="cluster" translate(220, 0)>` 内 3 节点呈三角排列——
  *   外部两条 path 分别引用 `cluster.north`（bbox 顶边中点）与 `cluster.east`（bbox 右边中点），
- *   端点贴 cluster 整体视觉边界而非单个 node。
+ *   端点贴 cluster 整体视觉边界而非单个 node。灰虚线框标出 cluster bbox，让"作为整体的边界"可见。
  */
 const Demo: FC = () => (
   <Layout width={560} height={180}>
@@ -15,6 +15,12 @@ const Demo: FC = () => (
       <Node id="B" position={[80, 0]}>B</Node>
       <Node id="C" position={[40, 60]}>C</Node>
     </Scope>
+    {/* cluster bbox 灰虚线框：把 scope.id 作为整体的视觉边界画出来 */}
+    <Draw
+      way={['cluster.north-west', 'cluster.north-east', 'cluster.south-east', 'cluster.south-west', 'cluster.north-west']}
+      stroke="gray"
+      dashPattern={[4, 3]}
+    />
     <Draw way={['external', 'cluster.north']} arrow="->" />
     <Draw way={['external', 'cluster.east']} arrow="->" />
   </Layout>

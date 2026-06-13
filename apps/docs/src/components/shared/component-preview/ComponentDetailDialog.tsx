@@ -1,5 +1,5 @@
 import { X } from 'lucide-react';
-import { type FC, type ReactNode, useEffect, useRef, useState } from 'react';
+import { type FC, Fragment, type ReactNode, type Ref, useRef, useState } from 'react';
 
 import { Dialog, DialogClose, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable';
@@ -7,9 +7,21 @@ import { cn } from '@/lib/utils';
 
 import { HighlightedCode } from '../highlight-code';
 import type { ComponentRenderSource } from './ComponentRender';
-import { CopyButton, SourceFileMenu, ToolbarIconButton, ViewToggle } from './_parts';
-import { type AlignKey, type SourceView, alignClass, filterDiffByMode } from './_shared';
-import { usePanZoom } from './usePanZoom';
+import { CopyButton, RendererModeButton, SourceViewBar, ToolbarIconButton } from './_parts';
+import {
+  type AlignKey,
+  type PreviewAction,
+  type PreviewActionContext,
+  type PreviewOverlay,
+  type RendererMode,
+  alignClass,
+  filterDiffByMode,
+} from './_shared';
+import { ANIM_PAUSE_ID, buildAnimationActions } from './animation-actions';
+import { PreviewActionBar } from './PreviewActionBar';
+import { DemoRenderer } from './DemoRenderer';
+import { useSourceViews } from './use-source-views';
+import { usePanZoom } from './use-pan-zoom';
 
 export type ComponentDetailDialogProps = {
   open: boolean;
@@ -20,6 +32,18 @@ export type ComponentDetailDialogProps = {
   /** 代码区视图集合；缺省 / 双字段都空时退化为单 panel 仅显示渲染区 */
   source?: ComponentRenderSource;
   align: AlignKey;
+  /** 当前渲染目标 */
+  rendererMode: RendererMode;
+  /** 切换当前渲染目标 */
+  toggleRendererMode: () => void;
+  /** 交互式 demo：真渲染 `<Component/>`，隐藏 svg/canvas 切换 */
+  interactive?: boolean;
+  /** demo 含动画：装配内置动画工具（重播 / 播放暂停 / 停止） */
+  animated?: boolean;
+  /** 自定义动作按钮 */
+  actions?: Array<PreviewAction>;
+  /** 渲染区内常驻浮层 */
+  overlays?: Array<PreviewOverlay>;
   /** 当前 React 源码文件序号，与卡片内源码面板共享 */
   sourceFileIndex: number;
   /** 切换 React 源码文件时同步回卡片层 */
@@ -40,10 +64,14 @@ const DOT_PATTERN_STYLE: React.CSSProperties = {
 type DialogDemoPaneProps = {
   align: AlignKey;
   children: ReactNode;
+  /** 渲染区 DOM ref（供动画工具 getAnimations） */
+  paneRef?: Ref<HTMLDivElement>;
+  /** 左上角动作栏（重播 / 播放暂停 / 停止 …），渲染在 relative 容器内 */
+  actionBar?: ReactNode;
 };
 
 const DialogDemoPane: FC<DialogDemoPaneProps> = props => {
-  const { align, children } = props;
+  const { align, children, paneRef, actionBar } = props;
   const { isDragging, transformStyle, beginDrag } = usePanZoom();
   const dragCursor = isDragging ? 'cursor-grabbing' : 'cursor-grab';
   return (
@@ -57,8 +85,13 @@ const DialogDemoPane: FC<DialogDemoPaneProps> = props => {
       onMouseDown={beginDrag(true)}
       onTouchStart={beginDrag(true)}
     >
+      {actionBar}
       <div
-        className={cn('flex items-center justify-center', !isDragging && 'transition-transform duration-150')}
+        ref={paneRef}
+        className={cn(
+          'flex items-center justify-center [&>canvas]:max-h-full [&>canvas]:max-w-full [&>svg]:max-h-full [&>svg]:max-w-full',
+          !isDragging && 'transition-transform duration-150',
+        )}
         style={{ transform: transformStyle }}
       >
         {children}
@@ -73,50 +106,45 @@ const DialogDemoPane: FC<DialogDemoPaneProps> = props => {
  *   仅一个视图存在时不出 React/IR toggle；两视图都缺（如 hideCode demo）时退化为单 panel 仅渲染区
  */
 export const ComponentDetailDialog: FC<ComponentDetailDialogProps> = props => {
-  const { open, onOpenChange, name, Component, source, align, sourceFileIndex, onSourceFileIndexChange } = props;
-  const reactFiles =
-    source?.reactFiles !== undefined && source.reactFiles.length > 0
-      ? source.reactFiles
-      : (source?.react ?? '').length > 0
-        ? [{ filename: `${name}.demo.tsx`, code: source?.react ?? '', diff: source?.reactDiff }]
-        : [];
-  const hasReact = reactFiles.length > 0;
-  const irSource = source?.ir ?? '';
-  const hasIr = irSource.length > 0;
-  const hasCode = hasReact || hasIr;
-  const showViewToggle = hasReact && hasIr;
+  const { open, onOpenChange, name, Component, source, align, rendererMode, toggleRendererMode, interactive, animated = false, actions, overlays, sourceFileIndex, onSourceFileIndexChange } = props;
+  // 视图 / 文件 / 复制走共享 hook（与卡片同源推导）；view 状态本 Dialog 独立、fileIndex 经 prop 与卡片共享
+  const { views, view, setView, files, activeFileIndex, activeFile, render: activeRender, copied, handleCopy } =
+    useSourceViews(source, sourceFileIndex);
+  const hasCode = views.length > 0;
 
-  // Dialog 自己的视图 / copied 状态——和外部卡完全独立
-  const [view, setView] = useState<SourceView>(hasReact ? 'react' : 'ir');
-  const [copied, setCopied] = useState(false);
-  const copyTimerRef = useRef<number | null>(null);
-
-  useEffect(() => {
-    return () => {
-      if (copyTimerRef.current !== null) window.clearTimeout(copyTimerRef.current);
-    };
-  }, []);
-
-  const effectiveView: SourceView = hasReact && hasIr ? view : hasReact ? 'react' : 'ir';
-  const activeSourceFileIndex = Math.min(sourceFileIndex, Math.max(reactFiles.length - 1, 0));
-  const activeSourceFile = reactFiles.at(activeSourceFileIndex);
-  const reactSource = activeSourceFile?.code ?? '';
-  const activeDiff = activeSourceFile?.diff;
-
-  // Copy 用的是真实 React / IR 源码；displayedCode 在 React 视图下有 reactDiff 时切换为 'added' 模式过滤后的内容
-  // Dialog 暂不出 diff mode 切换，固定 'added'（与卡片默认一致——教学场景优先看新增）
-  const copyCode = effectiveView === 'ir' ? irSource : reactSource;
-  const displayedDiff =
-    effectiveView === 'react' && activeDiff !== undefined ? filterDiffByMode(activeDiff, 'added') : null;
-  const displayedCode = displayedDiff?.code ?? copyCode;
-  const displayedLineKinds = displayedDiff?.lineKinds;
-
-  const handleCopy = () => {
-    void navigator.clipboard.writeText(copyCode);
-    setCopied(true);
-    if (copyTimerRef.current !== null) window.clearTimeout(copyTimerRef.current);
-    copyTimerRef.current = window.setTimeout(() => setCopied(false), 3000);
+  // 动作 / 浮层（Dialog 独立的 replay nonce / toolState / renderPane ref）
+  const [replayNonce, setReplayNonce] = useState(0);
+  const [toolState, setToolState] = useState<Record<string, boolean>>({});
+  const paneRef = useRef<HTMLDivElement>(null);
+  const actionCtx: PreviewActionContext = {
+    replay: () => setReplayNonce(n => n + 1),
+    rendererMode,
+    get renderPane() {
+      return paneRef.current;
+    },
+    active: id => toolState[id] ?? false,
+    setActive: (id, on) => setToolState(prev => ({ ...prev, [id]: on ?? !prev[id] })),
   };
+  const allActions: Array<PreviewAction> = [
+    ...(animated ? buildAnimationActions(toolState[ANIM_PAUSE_ID] ?? false) : []),
+    ...(actions ?? []),
+  ];
+  const actionBar = <PreviewActionBar actions={allActions} ctx={actionCtx} alwaysVisible />;
+  const overlayNodes = (overlays ?? []).map(o => <Fragment key={o.id}>{o.render(actionCtx)}</Fragment>);
+  // 渲染内容包 keyed Fragment：重播时重挂
+  const demoContent = (
+    <Fragment key={replayNonce}>
+      {activeRender ? activeRender(rendererMode) : <DemoRenderer Component={Component} rendererMode={rendererMode} interactive={interactive} />}
+    </Fragment>
+  );
+
+  const activeCode = activeFile?.code ?? '';
+  const activeLang = activeFile?.lang ?? 'tsx';
+  const activeDiff = activeFile?.diff;
+  // Dialog 暂不出 diff mode 切换，固定 'added'（与卡片默认一致——教学场景优先看新增）；任意视图均可带 diff
+  const displayedDiff = activeDiff !== undefined ? filterDiffByMode(activeDiff, 'added') : null;
+  const displayedCode = displayedDiff?.code ?? activeCode;
+  const displayedLineKinds = displayedDiff?.lineKinds;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -127,17 +155,20 @@ export const ComponentDetailDialog: FC<ComponentDetailDialogProps> = props => {
       >
         <header className="flex shrink-0 items-center justify-between border-b px-4 py-2">
           <DialogTitle className="font-mono text-sm font-normal text-muted-foreground">{name}</DialogTitle>
-          <DialogClose asChild>
-            <ToolbarIconButton label="Close">
-              <X className="size-4" />
-            </ToolbarIconButton>
-          </DialogClose>
+          <div className="flex items-center gap-1">
+            <RendererModeButton rendererMode={rendererMode} onToggle={toggleRendererMode} />
+            <DialogClose asChild>
+              <ToolbarIconButton label="Close">
+                <X className="size-4" />
+              </ToolbarIconButton>
+            </DialogClose>
+          </div>
         </header>
         {hasCode ? (
           <ResizablePanelGroup direction="horizontal" className="min-h-0 flex-1">
             <ResizablePanel defaultSize={60} minSize={30} maxSize={85}>
-              <DialogDemoPane align={align}>
-                <Component />
+              <DialogDemoPane align={align} paneRef={paneRef} actionBar={<>{actionBar}{overlayNodes}</>}>
+                {demoContent}
               </DialogDemoPane>
             </ResizablePanel>
             <ResizableHandle withHandle />
@@ -145,21 +176,21 @@ export const ComponentDetailDialog: FC<ComponentDetailDialogProps> = props => {
               <div className="flex h-full min-w-0 flex-col bg-muted/30">
                 <div className="flex shrink-0 items-center justify-between gap-2 border-b p-1 px-2">
                   <div className="flex min-w-0 flex-1 items-center gap-1">
-                    {effectiveView === 'react' ? (
-                      <SourceFileMenu
-                        files={reactFiles}
-                        activeIndex={activeSourceFileIndex}
-                        onChange={onSourceFileIndexChange}
-                      />
-                    ) : null}
-                    {showViewToggle ? <ViewToggle view={effectiveView} onChange={setView} /> : null}
+                    <SourceViewBar
+                      views={views}
+                      view={view}
+                      onViewChange={setView}
+                      files={files}
+                      activeFileIndex={activeFileIndex}
+                      onFileChange={onSourceFileIndexChange}
+                    />
                   </div>
                   <CopyButton copied={copied} onCopy={handleCopy} />
                 </div>
                 {/* `[&_pre]:!text-xs` 用 ! 覆盖 react-syntax-highlighter 主题注入的 inline font-size */}
                 <div className="min-h-0 flex-1 overflow-auto [&_code]:!text-sm [&_pre]:!text-xs">
                   <HighlightedCode
-                    lang={effectiveView === 'ir' ? 'json' : 'tsx'}
+                    lang={activeLang}
                     code={displayedCode}
                     showLineNumbers
                     lineKinds={displayedLineKinds}
@@ -170,8 +201,8 @@ export const ComponentDetailDialog: FC<ComponentDetailDialogProps> = props => {
           </ResizablePanelGroup>
         ) : (
           <div className="min-h-0 flex-1">
-            <DialogDemoPane align={align}>
-              <Component />
+            <DialogDemoPane align={align} paneRef={paneRef} actionBar={<>{actionBar}{overlayNodes}</>}>
+              {demoContent}
             </DialogDemoPane>
           </div>
         )}

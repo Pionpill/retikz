@@ -1,13 +1,15 @@
-import { BUILTIN_SHAPES, type ShapeDefinition } from '@retikz/core';
+import { BUILTIN_SHAPES, type ShapeDefinition, defineShape } from '@retikz/core';
 import { Layout, Node } from '@retikz/react';
+import { z } from 'zod';
 import type { FC } from 'react';
 
 /**
  * 多 primitive 自定义 shape：子程序框（外框 + 左右两道竖条）
  * @description emit 返回 Iterable<ScenePrimitive>——一个 shape 出 3 个 primitive（rect body + 2 条 path 竖条）；
- *   circumscribe / boundaryPoint / anchor 直接复用内置 rectangle（外框即矩形）。纯技术 label，单文件双语共用。
+ *   circumscribe / boundaryPoint / anchor 直接复用内置 rectangle（外框即矩形）。无参形状用 z.strictObject({})。
  */
-const subroutine: ShapeDefinition = {
+const subroutine: ShapeDefinition = defineShape({
+  paramsSchema: z.strictObject({}),
   circumscribe: BUILTIN_SHAPES.rectangle.circumscribe,
   boundaryPoint: BUILTIN_SHAPES.rectangle.boundaryPoint,
   anchor: BUILTIN_SHAPES.rectangle.anchor,
@@ -32,7 +34,7 @@ const subroutine: ShapeDefinition = {
       height: round(rect.height),
       fill: style.fill ?? 'transparent',
       fillOpacity: style.fillOpacity,
-      cornerRadius: style.roundedCorners,
+      cornerRadius: style.cornerRadius,
       ...sharedStrokeStyle,
     };
     yield {
@@ -52,7 +54,7 @@ const subroutine: ShapeDefinition = {
       ...sharedStrokeStyle,
     };
   },
-};
+});
 
 const Demo: FC = () => (
   <Layout width={320} height={130} shapes={{ subroutine }}>

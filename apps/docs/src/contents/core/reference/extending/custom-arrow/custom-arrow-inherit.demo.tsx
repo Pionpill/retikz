@@ -1,4 +1,4 @@
-import type { ArrowDefinition } from '@retikz/core';
+import { defineArrow } from '@retikz/core';
 import { Draw, Layout } from '@retikz/react';
 import type { FC } from 'react';
 
@@ -7,7 +7,7 @@ import type { FC } from 'react';
  * 无 color override 时 ctx.stroke = contextStroke，物化为 SVG context-stroke——
  * 同一个 bracket 定义用在不同描边色的 path 上，括号自动跟随各自的 stroke（主题反应不冻结）。
  */
-const bracket: ArrowDefinition = {
+const bracket = defineArrow({
   hollow: true,
   lineContactX: 2,
   tipX: 8,
@@ -26,7 +26,7 @@ const bracket: ArrowDefinition = {
       strokeWidth: lineWidth,
     },
   ],
-};
+});
 
 const Demo: FC = () => (
   <Layout width={320} height={90} arrows={{ bracket }}>

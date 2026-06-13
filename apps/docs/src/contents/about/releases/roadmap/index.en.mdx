@@ -1,38 +1,37 @@
 ---
 title: Roadmap
-description: retikz's current and near-future roadmap: v0.2 rc validation, v0.3 renderer/runtime split, v0.4 incremental-rendering candidates, and v1+ domain packages.
+description: "retikz's current and near-future roadmap: v0.3 beta hardening, v0.3 rc validation, v0.4 incremental-rendering candidates, and v1+ domain packages."
 ---
 
-The roadmap is a **goal list, not a promise** — it adjusts with community feedback and maintainer bandwidth. Concrete releases land by version in the [Changelog](/about/releases/changelog).
+The roadmap is a **goal list, not a promise** — it adjusts with community feedback and maintainer bandwidth. Concrete releases land by version in the [Changelog](/core/releases/changelog).
 
 ## Now
 
-**v0.2.0-rc.1** — release-candidate validation.
+**v0.3.0-beta.1** — beta hardening before rc.
 
 | Item | Status |
 | --- | --- |
-| v0.2 core capabilities | ✅ Complete |
-| Public API | ✅ Frozen |
-| Installation / docs / release notes | ⏳ In rc validation |
+| Renderer/runtime split | ✅ Complete |
+| Public API | ⏳ Beta review |
+| Parity / docs / packaging | ⏳ In beta hardening |
 
-## Short term: v0.2.0 stable
+## Short term: v0.3.0 rc
 
-Turn the rc line into the stable release.
+Turn the beta line into a release candidate.
 
 | Goal | Content |
 | --- | --- |
-| API freeze | No new components, props, IR fields, or public exports |
+| API freeze | No new components, props, IR fields, or public exports after rc starts |
 | Installation acceptance | npm package, type exports, examples, and docs links all work |
 | Release notes | Changelog, versioning notes, and migration hints stay aligned |
 
-## Mid term: v0.3 renderer / runtime
+## Current v0.3 shape
 
-Split Scene output and runtime responsibilities into clearer layers.
+Scene output and runtime responsibilities are split into clearer Tier 1 packages.
 
 | Goal | Content |
 | --- | --- |
-| `@retikz/svg` | Scene / resources → SVG |
-| `@retikz/canvas` | Scene → Canvas 2D |
+| `@retikz/render` | SVG string render, Canvas 2D draw, hydration helpers, animation runtime, optional Node image export |
 | `@retikz/vanilla` | Framework-free mounting and SSR entry points |
 | `@retikz/react` | Unified `renderer="svg"` / `renderer="canvas"` entry |
 | Hydration | Stable ids + event-binding semantics |

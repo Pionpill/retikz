@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { MarkdownInline } from '@/components/shared/inline-markdown';
 import { cn } from '@/lib/utils';
-import { useAiChatStore } from '@/store/useAiChatStore';
+import { useAiChatStore } from '@/store/use-ai-chat-store';
 import { AiChatConversation } from './parts/AiChatConversation';
 import { AiChatEmpty } from './parts/AiChatEmpty';
 import { AiChatHelpDialog } from './parts/AiChatHelpDialog';

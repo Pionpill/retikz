@@ -1,0 +1,132 @@
+---
+title: Grid
+description: Use Grid for guide lines, graph paper, and reference lines, with major lines, borders, and alignment controls.
+---
+
+`<Grid>` is sugar for regular guide lines. Give it a range and a step, and it expands to multiple `<Path>` elements: horizontal lines, vertical lines, optional major lines, and an optional outer border are all drawn with the underlying path system.
+
+Use it for background grids, graph paper, guide lines, or a single direction of repeated lines. Single closed shapes such as circles, rectangles, and stars live in the [Shapes](/core/components/shapes) group; `Grid` draws a field of regular lines that works as a backdrop, so it lives in the [Helpers](/core/components/helpers) group.
+
+## Usage
+
+```tsx
+import { Grid } from '@retikz/react';
+```
+
+```tsx
+<Grid corner1={[20, 20]} corner2={[260, 150]} step={20} stroke="lightgray" />
+```
+
+### When to use
+
+| Scenario | Recommended form |
+| --- | --- |
+| Plain background grid | `corner1` + `corner2` + `step` |
+| Known center and size | `center` + `width` + `height` + `step` |
+| Different x / y spacing | `xStep` + `yStep` |
+| Horizontal-only or vertical-only lines | `showHorizontal` / `showVertical` |
+| Emphasize every few lines | `majorEvery` + `majorStroke` / `majorStrokeWidth` |
+| Add a frame around the grid | `border` + `border*` |
+
+## Examples
+
+### Basic grid
+
+The most common form: give a range and a step, and you get a background grid.
+
+<ComponentPreview name="grid-basic" size="sm" />
+
+### One direction only
+
+Sometimes you only need horizontal dividers or vertical guides. Turn the other direction off. `majorEvery` can promote every Nth line into a major line.
+
+<ComponentPreview name="grid-lines" size="sm" />
+
+### Alignment, boundaries, and border
+
+`origin` controls the alignment base; `includeBoundary` adds range edge lines; `border` draws a separate outer frame.
+
+<ComponentPreview name="grid-origin" size="sm" />
+
+## How it works
+
+> Optional for everyday use; revisit this section when you are debugging stacking, boundary lines, or major-line order.
+
+### Grid expands to Path
+
+`<Grid>` does not add a new low-level primitive. It computes all x / y coordinates that need lines, then creates one `<Path>` for each line. When `border` is enabled, the border is another closed `<Path>`.
+
+That means regular path visual props work on grid lines, including `stroke`, `strokeWidth`, `dashPattern`, `opacity`, and `zIndex`. Major lines override the base line style with `major*` props, while the outer border uses `border*` props.
+
+### Alignment starts from origin
+
+By default, the grid starts from the top-left corner of the range. When `origin` is set, lines are spaced outward from that base point; `offset` shifts the phase on top of `origin`.
+
+`includeBoundary` does not change the step. It only adds extra edge lines at the range boundaries, which is useful when the range is not evenly divisible by the step.
+
+### Border is not the same as boundary lines
+
+Boundary lines are still grid lines, so they use the normal or major-line style. The border is a separate closed path with its own `borderStroke`, `borderStrokeWidth`, `borderDashPattern`, `borderPadding`, and related props.
+
+`borderPadding` expands the border outward. By default, grid lines still stop at the original range; set `clipToBorder` when you want the lines to extend to the border.
+
+## API Reference
+
+### Range and spacing
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `corner1` + `corner2` | `[number, number]` | — | Grid range from two opposite corners |
+| `center` + `width` + `height` | `[number, number]` + `number` | — | Grid range from center and size |
+| `step` | `number` | — | Shared step for both axes |
+| `xStep` | `number` | — | x-axis step; overrides `step` |
+| `yStep` | `number` | — | y-axis step; overrides `step` |
+| `showVertical` | `boolean` | `true` | Whether to draw vertical lines |
+| `showHorizontal` | `boolean` | `true` | Whether to draw horizontal lines |
+| `origin` | `[number, number]` | top-left of range | Grid alignment base point |
+| `offset` | `[number, number]` | `[0, 0]` | Phase offset added to `origin` |
+| `includeBoundary` | `boolean` | `false` | Add range boundary lines when the range is not divisible by the step |
+
+### Major lines
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `majorEvery` | `number` | — | Use major-line style every N lines |
+| `majorOffset` | `number` | `0` | Offset for major-line counting |
+| `majorColor` | `string` | — | Major-line `color` |
+| `majorStroke` | `string` | — | Major-line stroke |
+| `majorStrokeWidth` | `number` | — | Major-line stroke width |
+| `majorDashPattern` | `Array<number>` | — | Major-line dash and gap sequence |
+| `majorLineCap` | `'butt' \| 'round' \| 'square'` | — | Major-line endpoint shape |
+| `majorLineJoin` | `'miter' \| 'round' \| 'bevel'` | — | Major-line corner shape |
+| `majorThickness` | `'ultraThin' \| 'veryThin' \| 'thin' \| 'semithick' \| 'thick' \| 'veryThick' \| 'ultraThick'` | — | Major-line semantic stroke preset |
+| `majorOpacity` | `number` | — | Major-line whole-path opacity |
+| `majorDrawOpacity` | `number` | — | Major-line stroke opacity |
+
+### Border
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `border` | `boolean` | `false` | Whether to draw an outer border |
+| `borderPadding` | `number` | `0` | Distance between the border and the grid range |
+| `borderRenderOrder` | `'before' \| 'after'` | `'after'` | Whether the border is drawn before or after the grid lines |
+| `clipToBorder` | `boolean` | `false` | Whether grid lines extend to the border |
+| `borderColor` | `string` | — | Border `color` |
+| `borderStroke` | `string` | — | Border stroke |
+| `borderStrokeWidth` | `number` | — | Border stroke width |
+| `borderDashPattern` | `Array<number>` | — | Border dash and gap sequence |
+| `borderLineCap` | `'butt' \| 'round' \| 'square'` | — | Border endpoint shape |
+| `borderLineJoin` | `'miter' \| 'round' \| 'bevel'` | — | Border corner shape |
+| `borderThickness` | `'ultraThin' \| 'veryThin' \| 'thin' \| 'semithick' \| 'thick' \| 'veryThick' \| 'ultraThick'` | — | Border semantic stroke preset |
+| `borderFill` | `string \| PaintSpec` | — | Fill for the closed border path |
+| `borderFillRule` | `'nonzero' \| 'evenodd'` | — | Border fill rule |
+| `borderOpacity` | `number` | — | Border whole-path opacity |
+| `borderFillOpacity` | `number` | — | Border fill opacity |
+| `borderDrawOpacity` | `number` | — | Border stroke opacity |
+| `borderZIndex` | `number` | — | Border stacking order |
+
+## Related
+
+- [Circle / Ellipse](/core/components/shapes/circle-ellipse): circles, ellipses, semicircles, and chords
+- [Draw](/core/components/draw/overview): `<Draw>` and the other connection shortcuts
+- [Path](/core/components/draw/path): the lower-level path capability Grid expands to

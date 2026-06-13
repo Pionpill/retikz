@@ -12,9 +12,9 @@ const Demo: FC = () => (
     <Coordinate id="junction" position={[0, 0]} />
     <Node id="out" position={[110, 0]} shape="diamond">merged</Node>
     {/* Two lines first reach junction, then merge into out */}
-    <Draw way={['A', 'junction']} />
-    <Draw way={['B', 'junction']} />
-    <Draw way={['junction', 'out']} arrow="->" />
+    <Draw way={['A', 'junction']} stroke="gray" />
+    <Draw way={['B', 'junction']} stroke="gray" />
+    <Draw way={['junction', 'out']} arrow="->" stroke="gray" />
   </Layout>
 );
 

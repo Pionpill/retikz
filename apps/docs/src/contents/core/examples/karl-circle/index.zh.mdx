@@ -7,7 +7,7 @@ description: 学术 / 教材类绘图示例——30° 角下 sin / cos / tan 的
 
 这是 [TikZ 入门教程](https://tikz.dev/tutorial) 最后那张「Karl 给女儿讲三角函数」的图：单位圆 + 30° 角下 sin / cos / tan 的几何关系示意。
 
-本页把它拆成 7 个累加 step：从一个孤零零的圆开始，每步加一点东西、对应学一点 retikz 能力——结束时既得到完整图，也顺手看完了 v0.2 里最适合新手上手的三个 sugar：[Circle](/core/components/shapes/circle-ellipse) / [Grid](/core/components/shapes/grid) / [Sector](/core/components/shapes/circle-ellipse)。它们把原本要手写的 Path / Step 片段压短了，后面的 [Draw](/core/components/draw/overview) / [Coordinate](/core/components/node/coordinate) / [Node](/core/components/node/overview) 则继续把完整图拼起来，顺带练到极坐标、多 Draw 协同、Node 多行多色文本等高频技巧。
+本页把它拆成 7 个累加 step：从一个孤零零的圆开始，每步加一点东西、对应学一点 retikz 能力——结束时既得到完整图，也顺手看完了最适合新手上手的三个 sugar：[Circle](/core/components/shapes/circle-ellipse) / [Grid](/core/components/helpers/grid) / [Sector](/core/components/shapes/arc-sector)。它们把原本要手写的 Path / Step 片段压短了，后面的 [Draw](/core/components/draw/overview) / [Coordinate](/core/components/node/coordinate) / [Node](/core/components/node/overview) 则继续把完整图拼起来，顺带练到极坐标、多 Draw 协同、Node 多行多色文本等高频技巧。
 
 <ComponentPreview name="karl-circle-07-info" size="lg" />
 
@@ -18,7 +18,7 @@ description: 学术 / 教材类绘图示例——30° 角下 sin / cos / tan 的
 下面这段 prompt 一键发到 AI 对话面板，由 LLM 直接产出 retikz IR / JSX 复现本图。需要变体（改角度、改颜色、改半径等）发送后在聊天面板里改 prompt 重发即可。
 
 <ExamplePrompt
-  short="**画 30° 角下 sin / cos / tan 几何关系示意图**：单位圆 + 带箭头坐标轴 + 刻度（−1, −1/2, 1/2, 1）+ 绿色填充扇形 + 红/蓝/橙三色函数线 + 右侧多色信息说明框。"
+  short="**画 30° 角下 sin / cos / tan 几何关系示意图**：单位圆 + 带箭头坐标轴 + 刻度（−1, −1/2, 1/2, 1）+ 绿色描边扇形 + 红/蓝/橙三色函数线 + 右侧多色信息说明框。"
   detailed={`**绘制单位圆三角函数示意图**
 
 **几何**
@@ -37,7 +37,7 @@ description: 学术 / 教材类绘图示例——30° 角下 sin / cos / tan 的
 
 **颜色**
 
-- 扇形：浅绿填充 + 深绿描边
+- 扇形：浅灰填充（lightgray）+ 绿色描边（green）
 - sin: red, cos: dodgerblue, tan: darkorange
 
 **标注**
@@ -68,7 +68,7 @@ x 轴和 y 轴用 [Draw](/core/components/draw/overview) 配 `arrow="->"` 一键
 
 ### 步骤 3：加网格 + 刻度
 
-背景网格现在直接用 [Grid](/core/components/shapes/grid) sugar；它会展开成多条线，不再需要手写 5 横 5 竖，所以新手读起来更像“我要一张网格背景”，而不是“我要拼 10 条线”。刻度同样靠数组遍历，每条短线配一个无背景的 [Node](/core/components/node/overview)；label 位置在 tick 基础上**轻微偏移**（x 轴左偏 10px / y 轴下偏 10px），避开圆周线与轴线交叠。
+背景网格现在直接用 [Grid](/core/components/helpers/grid) sugar；它会展开成多条线，不再需要手写 5 横 5 竖，所以新手读起来更像“我要一张网格背景”，而不是“我要拼 10 条线”。刻度同样靠数组遍历，每条短线配一个无背景的 [Node](/core/components/node/overview)；label 位置在 tick 基础上**轻微偏移**（x 轴左偏 10px / y 轴下偏 10px），避开圆周线与轴线交叠。
 
 retikz 坐标统一是 SVG 像素，y 向下为正——所以「向上 1 单位」写成 `[0, -100]`（本例取 100px = 单位圆半径作为长度基准）。顶层 `<Layout>` 不接 picture-level scale + 不翻 y，TikZ 教程里的数学坐标得手动给 y 加负号。
 
@@ -76,15 +76,15 @@ retikz 坐标统一是 SVG 像素，y 向下为正——所以「向上 1 单位
 
 ### 步骤 4：画 30° 扇形 + α 标签
 
-扇形现在直接用 [Sector](/core/components/shapes/circle-ellipse) sugar。它会从圆心出发、画弧、再闭合回圆心，所以这一步比手写 `arc` + `line` 更接近“画一个扇形”的直觉，也更适合刚接触 retikz 的读者先记住一个清楚的 API。
+扇形现在直接用 [Sector](/core/components/shapes/arc-sector) sugar。它会从圆心出发、画弧、再闭合回圆心，所以这一步比手写 `arc` + `line` 更接近“画一个扇形”的直觉，也更适合刚接触 retikz 的读者先记住一个清楚的 API。
 
-α 文字标签用 [Node](/core/components/node/overview) 配极坐标位置（`{ angle, radius }`）——`polar(15, 0.22)` 把它放在扇形的视觉中央。
+α 文字标签用 [Node](/core/components/node/overview) 配极坐标位置（`{ angle, radius }`）——`{ angle: -15, radius: 22 }` 把它放在扇形的视觉中央（角度负、朝屏幕上方）。
 
 <ComponentPreview name="karl-circle-04-wedge" diffFrom="karl-circle-03-ticks" size="lg" />
 
 ### 步骤 5：sin α 红线 + cos α 蓝线
 
-sin 是 (30°, 100px) 垂直落到 x 轴；cos 是落点回原点。两段都靠 [Draw](/core/components/draw/overview)，way 数组里中间插一个 `{ label: { text, side } }` 算子给段挂边标注。`thickness="veryThick"` 是语义 stroke 档位，省得写具体像素值。
+sin 是 (30°, 100px) 垂直落到 x 轴；cos 是落点回原点。两段都靠 [Draw](/core/components/draw/overview)，way 数组里中间插一个 `{ label: { text, side } }` 算子给段挂边标注。`thickness="thick"` 是语义 stroke 档位，省得写具体像素值。
 
 注：原 TikZ 用 `(30:1cm |- x axis)` 直接表达"30°,1cm 点与 x 轴的投影交点"。retikz 暂无投影 target，几何上等于 (cos30°, 0)，手算坐标喂进去。
 
@@ -102,7 +102,7 @@ tan 线从 (1, 0) 垂直到 (1, tan30°)。原图用 TikZ 的 named path + inter
 
 最后加一个图右侧的彩色说明框。[Node](/core/components/node/overview) 的 `text` prop 接字符串数组，**每行可以是 string 或 `{ text, fill }`**——后者让该行单独换色。视觉分组靠「彩色公式行 + 默认色注释行」的交替表达，不再额外加空行间隔（空 `''` 行会让 textHeight 把 lineHeight 算进盒高、但 SVG 渲染上空 tspan 的 dy 在浏览器间不稳，外框会撑出明显的下边空白）。
 
-`shape="rectangle"` + `roundedCorners` + `align="left"` 把它装成一个左对齐的圆角卡片，`stroke="#d4d4d4"` + `dashed` 加一圈浅灰虚线外框（无填充，主题切换都看得见）。注意行内片段着色（同一行里某几个词换色）目前不支持，只能整行换色——见「已知限制」。
+`shape="rectangle"` + `cornerRadius` + `align="left"` 把它装成一个左对齐的圆角卡片，`stroke="lightgray"` + `dashed` 加一圈浅灰虚线外框（无填充，主题切换都看得见）。注意行内片段着色（同一行里某几个词换色）目前不支持，只能整行换色——见「已知限制」。
 
 <ComponentPreview name="karl-circle-07-info" diffFrom="karl-circle-06-tan" size="lg" />
 
@@ -111,8 +111,8 @@ tan 线从 (1, 0) 垂直到 (1, tan30°)。原图用 TikZ 的 named path + inter
 | 组件 | 在本例中扮演的角色 | 主要 step |
 | --- | --- | --- |
 | [Circle](/core/components/shapes/circle-ellipse) | 单位圆 | [1](#步骤-1画单位圆), [3](#步骤-3加网格--刻度), [4](#步骤-4画-30-扇形--α-标签) |
-| [Sector](/core/components/shapes/circle-ellipse) | 30° 扇形 | [4](#步骤-4画-30-扇形--α-标签), [5](#步骤-5sin-α-红线--cos-α-蓝线), [6](#步骤-6tan-α-橙线--辅助射线) |
-| [Grid](/core/components/shapes/grid) | 背景网格 | [3](#步骤-3加网格--刻度) |
+| [Sector](/core/components/shapes/arc-sector) | 30° 扇形 | [4](#步骤-4画-30-扇形--α-标签), [5](#步骤-5sin-α-红线--cos-α-蓝线), [6](#步骤-6tan-α-橙线--辅助射线) |
+| [Grid](/core/components/helpers/grid) | 背景网格 | [3](#步骤-3加网格--刻度) |
 | [Draw](/core/components/draw/overview) | 坐标轴 + 刻度短线 + sin/cos/tan 三色线 + 辅助射线 | [2](#步骤-2加坐标轴--端点标签--命名锚), [3](#步骤-3加网格--刻度), [5](#步骤-5sin-α-红线--cos-α-蓝线), [6](#步骤-6tan-α-橙线--辅助射线) |
 | [Node](/core/components/node/overview) | 轴端 label + 刻度文字 + α 标签 + 右侧信息框 | [2](#步骤-2加坐标轴--端点标签--命名锚), [3](#步骤-3加网格--刻度), [4](#步骤-4画-30-扇形--α-标签), [7](#步骤-7右侧多色信息说明框) |
 | [Coordinate](/core/components/node/coordinate) | 命名 x/y 轴端点 + tan 交点 t | [2](#步骤-2加坐标轴--端点标签--命名锚), [6](#步骤-6tan-α-橙线--辅助射线) |
@@ -130,4 +130,4 @@ tan 线从 (1, 0) 垂直到 (1, tan30°)。原图用 TikZ 的 named path + inter
 ## 扩展阅读
 
 - [Path](/core/components/draw/path) · [Step](/core/components/draw/step) · [Draw](/core/components/draw/overview) · [Node](/core/components/node/overview) · [Coordinate](/core/components/node/coordinate)
-- [定位](/core/concepts/positioning) · [锚点](/core/concepts/anchors)
+- [定位](/core/concepts/basic/position) · [图元关系](/core/concepts/core/primitive-relations)

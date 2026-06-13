@@ -6,7 +6,7 @@ import type { FC } from 'react';
  * 自环是 out/in 的最大价值场景（状态机自跳转），对称 bend 画不出。
  */
 const Demo: FC = () => (
-  <Layout width={320} height={150}>
+  <Layout width={320} height={150} nodeDefault={{ stroke: 'gray', dashed: true }}>
     <Node id="S" position={[50, 90]} shape="circle">
       S
     </Node>

@@ -1,23 +1,35 @@
 ---
 title: Shapes
-description: 用更短的 JSX 写法表达常见图形，底层仍会展开成 Kernel 组件。
+description: retikz 的几何形状——既是画一条 Path 的官方 Sugar，也是 Node 默认支持的边界形状。
 ---
 
-这里展示的内容，都是把常见绘图意图写短：比如一行画圆、一行画网格、用数组描述一条连线。它们在实现上属于一类便捷写法，会在 React 包里展开成 `<Path>`、`<Step>`、`<Draw>` 这类 Kernel / Sugar 组合。
+形状（圆、椭圆、弧、扇形、矩形、多边形、星形）是 retikz 的一类几何原语，有**两副面孔**：
 
-`<Draw>` 也属于这类便捷写法，但它太常用了，所以单独放在 [绘制](/core/components/draw/overview) 分组里，不在这里重复展开。
+- **作为 Path 图形（Sugar）**——`<Circle>` `<Sector>` 这类组件是官方提供的一组形状快捷写法，在指定位置画一条形状线、展开成底层 `<Path>`。它们让你不必为常见图形手写 Path / Step。
+- **作为 Node 形状**——`<Node shape="circle">` 让节点以该形状为边界：能装文字、能被 `<Path>` / `<Draw>` 用 id 引用、连线端点自动贴边。
 
-## 组成
+每个形状页把这两副面孔分两大块写全：先「作为 Path 图形」，再「作为 Node 形状」。简单说：要画一条形状线，用 Sugar；要一个可连接、可标注的形状节点，用 `<Node shape>`。
 
-| 页面 | 类型 | 职责 | 适合场景 |
-| --- | --- | --- | --- |
-| Circle / Ellipse | Shapes | 圆、椭圆、半圆和弓形 | 想从中心、半径、直径或包围盒快速画圆形 |
-| Arc / Sector | Shapes | 弧线、扇形和空心扇形 | 想表达角度范围、扇区高亮或环形片段 |
-| Rectangle / Polygon | Shapes | 矩形、圆角矩形和规则多边形 | 想画四边形或等边多边形，不想手写顶点 |
-| Star | Shapes | 内外半径交替的星形 | 想画评分星、强调标记或装饰性多角形 |
-| Grid | Shapes | 网格、辅助线、边框、主次线 | 想画一张网格或一组规则参考线 |
+**两侧都对扩展开放**：
 
-## 进入入口
+- 想要内置之外的 **Node 形状**（hexagon / cloud…）——注册到 [shape-registry](/core/reference/extending/shape-registry)；注册表里的内置项是 rectangle / ellipse / sector / arc / polygon / star（circle / diamond 是编译期 preset 别名，不在注册表）。
+- 想画内置之外的**路径曲线 step**（parabola / sin-cos…）——走 [path-generator](/core/reference/extending/path-generator)。
+
+<ComponentPreview name="shapes-family" size="md" hideCode />
+
+## 职责一览
+
+| 形状 | 作为 Path（Sugar） | 作为 Node 形状 |
+| --- | --- | --- |
+| Circle / Ellipse | `<Circle>` · `<Ellipse>` | `shape="circle"` · `"ellipse"` |
+| Arc / Sector | `<Arc>` · `<Sector>` | `shape="sector"` · `"arc"`（带 params） |
+| Rectangle | `<Rectangle>` | 默认 / `shape="rectangle"` |
+| Polygon | `<RegularPolygon>` | `shape={{ type:'polygon', params }}`（带 params）· `"diamond"` |
+| Star | `<Star>` | `shape={{ type:'star', params }}`（带 params） |
+
+> 背景网格、参考线这类**一片规则线条**（而非单个闭合形状）不在这一组——见 [辅助](/core/components/helpers) 里的 `<Grid>`。
+
+## 章节内容
 
 <div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
   <LinkedCard href="/core/components/shapes/circle-ellipse">
@@ -28,16 +40,16 @@ description: 用更短的 JSX 写法表达常见图形，底层仍会展开成 K
     <span className="font-semibold">Arc / Sector</span>
     <span className="mt-1 text-center text-sm text-muted-foreground">弧线、扇形和空心扇形</span>
   </LinkedCard>
-  <LinkedCard href="/core/components/shapes/rectangle-polygon">
-    <span className="font-semibold">Rectangle / Polygon</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">矩形、圆角矩形和规则多边形</span>
+  <LinkedCard href="/core/components/shapes/rectangle">
+    <span className="font-semibold">Rectangle</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">矩形、圆角矩形（节点默认形状）</span>
+  </LinkedCard>
+  <LinkedCard href="/core/components/shapes/polygon">
+    <span className="font-semibold">Polygon</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">正多边形与菱形</span>
   </LinkedCard>
   <LinkedCard href="/core/components/shapes/star">
     <span className="font-semibold">Star</span>
     <span className="mt-1 text-center text-sm text-muted-foreground">内外半径交替的星形</span>
-  </LinkedCard>
-  <LinkedCard href="/core/components/shapes/grid">
-    <span className="font-semibold">Grid</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">背景网格、参考线、边框和主次线</span>
   </LinkedCard>
 </div>

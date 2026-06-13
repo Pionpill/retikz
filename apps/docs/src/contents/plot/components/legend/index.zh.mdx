@@ -1,0 +1,70 @@
+---
+title: 图例
+description: "用 <Legend> 把非位置通道（颜色 / 尺寸 / 透明度 / 形状）可视化成图例；channel 选可视化哪个通道，形态据 scale 类型自动选。"
+---
+
+`<Legend>` 是 scale 的可视化身。坐标轴（`<Axis>`）解释 x / y 这两个位置通道；图例解释剩下的非位置通道——`color`（颜色）、`size`（尺寸）、`opacity`（透明度）、`shape`（形状）。两者并列，都是图表的 guide。
+
+`channel` 选图例解释哪个通道。它长什么样**不用你填**——形态据该通道绑定的 scale 类型自动选：分类色 → 一类一色块（swatch）；连续色 → 平滑色带（ramp）+ 刻度；分箱色 → 每档一块 + 区间标签；尺寸 → 几档代表大小的圈（梯度符号）。
+
+图例要解释某个通道，**该通道必须先有数据驱动的 scale**。也就是说先在 `<PointMark>` 上把字段绑到通道（`color="region"` / `size="pop"`），再加 `<Legend channel="..." />`。连续字段（连续色 ramp、尺寸梯度）还要靠 `model` 声明字段类型，否则当分类处理。
+
+加 `<Legend>` **不会**让默认 x / y 轴消失——图例和坐标轴共存。只有显式写 `<Axis>` 才会覆盖默认轴。
+
+## 用法
+
+```tsx
+import { Plot, PointMark, Legend } from '@retikz/plot-react';
+```
+
+```tsx
+<Plot data={cities}>
+  <PointMark x="lng" y="lat" color="region" size="pop" />
+  <Legend channel="color" />
+  <Legend channel="size" position="bottom" />
+</Plot>
+```
+
+## 例子
+
+### 分类色 swatch
+
+`color` 绑分类字段 → 自动 ordinal 色 scale，图例每个类别一个色块。注意默认 x / y 轴仍在。
+
+<ComponentPreview name="legend-color-swatch" sourceFiles={['legend.data.ts']} />
+
+<p className="text-sm text-muted-foreground">每个 region 一块色，图例落在右侧预留带，默认坐标轴保留。</p>
+
+### 连续色 ramp
+
+`color` 绑连续数值字段（靠 `model` 声明为 `continuous`）→ 自动 sequential 色阶，图例是一道平滑色带 + 刻度。`tickCount` 提示刻度数。
+
+<ComponentPreview name="legend-color-ramp" sourceFiles={['legend.data.ts']} />
+
+<p className="text-sm text-muted-foreground">连续值连成一道色带，旁边标几个刻度值。</p>
+
+### 尺寸梯度符号
+
+`size` 绑连续字段 → 半径走平方根 scale，图例取几档代表大小画成圈 + 值（梯度符号）。`position="bottom"` 把图例放到底部。
+
+<ComponentPreview name="legend-size" sourceFiles={['legend.data.ts']} />
+
+<p className="text-sm text-muted-foreground">几档代表大小标出尺寸到值的对应，图例摆在底部。</p>
+
+## API
+
+| 属性 | 类型 | 默认值 | 描述 |
+| --- | --- | --- | --- |
+| `channel` | `'color' \| 'size' \| 'opacity' \| 'shape'` | — | 图例解释哪个非位置通道；形态据绑定 scale 类型自动选 |
+| `scale` | `string?` | — | 消歧 scale name：同通道被多个 scale 驱动时指定；省略 = 该通道唯一 scale |
+| `title` | `string?` | 无 | 图例标题（渲染在条目上方）；省略则不画标题 |
+| `position` | `'right' \| 'left' \| 'top' \| 'bottom'` | `'right'` | 图例所在边（在该边预留带宽放图例） |
+| `orient` | `'vertical' \| 'horizontal'` | 按 `position` | 条目排布方向；左右默认 vertical、上下默认 horizontal |
+| `tickCount` | `number?` | 默认刻度数 | 连续色带刻度数提示；离散图例忽略 |
+| `tickLabels` | `boolean?` | `true` | 是否出 swatch / 刻度旁标签 |
+
+## 相关
+
+- [坐标轴](/plot/components/axis) —— 解释 x / y 位置通道的 guide
+- [比例尺](/plot/grammar/scale) —— 图例形态由通道的 scale 类型决定
+- [散点](/plot/components/mark/point) —— color / size / shape 通道的绑定

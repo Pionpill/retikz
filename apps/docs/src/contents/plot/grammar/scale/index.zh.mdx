@@ -1,0 +1,103 @@
+---
+title: 比例尺
+description: 比例尺（scale）把数据值映射成视觉量——位置、长度、半径。每个通道都过一个 scale，类型按字段自动选，也可显式指定 linear / log / sqrt 等。
+---
+
+比例尺决定「数据值 → 视觉量」怎么算。位置通道（`x` / `y`）的值要变成画布坐标、`size` 通道的值要变成半径——中间都隔着一个 scale。`<Plot>` 会按字段类型自动选 scale，常见图表不用手写；需要对数轴、平方根轴时再用 `scaleX` / `scaleY` 覆盖。
+
+## 按字段类型派生
+
+声明了字段测量类型后，位置通道（x / y）的默认 scale 直接由类型决定：
+
+| 字段类型 | 位置默认 scale |
+| --- | --- |
+| `continuous` | `linear` |
+| `temporal` | `time` |
+| `categorical` | `band` |
+
+显式写的 `scaleX` / `scaleY` 永远优先；若与字段类型明显冲突（把 `categorical` 配到线性轴、`temporal` 配到分类带）会报清晰错误，而不是画出无意义的图。字段类型怎么声明见[数据模型](/plot/data/model)。
+
+## scale 类型
+
+| 类型 | 用于 | 说明 |
+| --- | --- | --- |
+| `linear` | 连续数值 | 等距线性映射（默认） |
+| `log` | 跨数量级的正数 | 对数映射；仅 point / line |
+| `sqrt` | 面积感知 | 平方根映射；仅 point / line（`size` 通道默认用它） |
+| `pow` | 自定义幂 | 幂映射（需 `exponent`，写完整 spec 用） |
+| `time` | 日期 / 时间 | 时间轴，刻度落人类可读边界 |
+| `band` / `point` | 分类 | 类别等分（柱）/ 落等距点（分类折线） |
+| `ordinal` | 分类 → 颜色 | 离散类别各取一色（多系列着色） |
+| `sequential` | 连续值 → 颜色 | 单方向色带（低→高），连续 / 时间字段着色 |
+| `diverging` | 带中点的量 → 颜色 | 两侧异色、中点淡，盈亏 / 偏离均值 |
+| `quantize` | 连续值 → 离散色档 | 等宽切档，每档一色（分级地图） |
+| `threshold` | 连续值 → 离散色档 | 自定义断点切档（业务阈值 / 告警） |
+| `quantile` | 连续值 → 离散色档 | 数据分位切档，抗偏斜 |
+
+## 线性 vs 对数
+
+数据跨多个数量级时，线性轴把小值全压在底部。换成对数轴（`scaleY="log"`），每个数量级占等高，小值也看得清。两张图喂的是同一份逐年用户量。
+
+<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+  <ComponentPreview name="scale-linear" sourceFiles={['scale-continuous.data.ts']} size="sm" />
+  <ComponentPreview name="scale-log" sourceFiles={['scale-continuous.data.ts']} size="sm" />
+</div>
+
+<p className="text-sm text-muted-foreground">左：缺省 linear，前几年贴底；右：仅加 <code>scaleY="log"</code>，跨度铺开。</p>
+
+## 平方根
+
+`scaleY="sqrt"` 按平方根映射，弱化大值的视觉夸张；它也是 `size` 通道（散点半径）的默认 scale，让半径的**面积**正比于数据。
+
+<ComponentPreview name="scale-sqrt" sourceFiles={['scale-continuous.data.ts']} />
+
+## 只作用 point / line
+
+`log` / `pow` / `sqrt` 只能用在散点和折线上。柱状图、面积图从 0 基线起算，而 0 在对数 / 幂轴上没有定义——给柱 / 面积配非线性 scale 会直接报错，提示改用 point / line。
+
+<ComponentAlert type="warn" title="非线性 scale 的取值范围" description="log 要求数据全为正、sqrt 要求非负；越界的值无法投影。显式写了含非法边界的 domain 会在编译期报错。" />
+
+## 颜色 scale
+
+上面的 scale 都把值映射成**位置 / 长度 / 半径**；颜色是另一类输出。位置 scale 由 `x` / `y` 通道消费，颜色 scale 由 `color` 通道消费——两条线互不干扰。把颜色 scale 解释给读者看是[图例](/plot/components/legend)的活。
+
+| 类型 | 用于 | 输出 |
+| --- | --- | --- |
+| `ordinal` | 分类字段 | 每个类别离散取一色（多系列、分类着色） |
+| `sequential` | 连续 / 时间字段 | 单方向色带：低→高沿一条渐变取色（连续着色主力） |
+| `diverging` | 带意义中点的量 | 两侧异色、中点淡：盈亏、偏离均值 |
+
+连续与发散色阶的配色走**命名 scheme**——一组预设色带名，可序列化、可由 AI 生成。sequential 常用 `viridis`（默认）/ `blues` / `greens` / `magma` 等；diverging 常用 `rdbu`（默认）/ `brbg` / `spectral` 等。需要自定义端点颜色时用 `range` 覆盖 scheme。
+
+把 `color` 绑一个连续数值字段，`<Plot>` 自动派生 sequential（默认 viridis）；分类字段则走 ordinal。连续色编码只对按 datum 着色的图元成立（散点 / 柱 / 扇形）；折线、面积是整条 path 着色，同一条线沿程颜色不恒定，绑连续 color 会报错。
+
+<ComponentAlert title="连续色需声明字段类型" description="React 下连续 color 字段要靠 model 声明为 continuous 才会派生 sequential；不声明时 color 一律当分类，连续字段会报错。diverging 与自定义 scheme 目前经完整 spec 的 scales 配置。" />
+
+## 离散化 / 分箱色阶
+
+sequential 是**连续**色带（平滑渐变）。但很多场景要把连续量切成**有限几档、每档一色**——分级地图、阈值告警、抗偏斜分箱。这三种需求对应三种离散化色阶，区别只在「按什么切档」：
+
+| 类型 | 切档依据 | 用途 |
+| --- | --- | --- |
+| `quantize` | domain 等宽切 `count` 段 | 分级统计地图风（choropleth）、均匀分布的连续量 |
+| `threshold` | 用户给的断点（`breakpoints`） | 业务阈值 / 告警（`<60` 红、`60–80` 黄、`≥80` 绿） |
+| `quantile` | 数据分位，每档样本数约等 | 数据偏斜 / 抗离群 |
+
+每档的颜色复用上面的命名 scheme——从一条连续色带上等距采 N 个点得到 N 个离散色（如 `scheme: 'blues'` 采 5 档）；也可用 `range` 直接给一组颜色覆盖 scheme，`range` 的长度即档数。
+
+<ComponentPreview name="scale-quantize" sourceFiles={['scale-discretization.data.ts']} />
+
+<p className="text-sm text-muted-foreground">quantize 5 档：连续 density 等宽切 5 段，每档取 blues 上的一个采样色。</p>
+
+几条要记住的约束：
+
+- **threshold 断点必须严格升序**；档数 = 断点数 + 1，所以给 `range` 时长度要等于 `breakpoints.length + 1`（如 `[60, 80]` 配 3 色）。
+- **quantize / quantile 的 `count` 默认 5**；只给 `range`（省 `count`）时档数 = `range` 长度；`count` 与 `range` 同时显式给且长度不一致会报错。
+- **quantile 不读显式数值 domain**——分位边界纯由数据定，写了 `domain` 也会被静默忽略（不报错）。
+- 和连续色一样，离散化色**只对按 datum 着色的图元成立**（散点 / 柱 / 扇形）；折线、面积是整条 path 着色，绑离散化 color 会报错。
+
+<ComponentAlert title="离散化色阶暂无 React 自动入口" description="本轮 quantize / threshold / quantile 不会从字段类型自动派生，属显式高级用法——经完整 spec 的 scales 配置（<Plot spec={...} />）或 vanilla IR 直接写。React 自动派生目前只做连续 sequential。" />
+
+## 显式指定
+
+`scaleX` / `scaleY` 是 `<Plot>` 上的简写，覆盖默认选型。要调对数底、幂指数等更细参数时，写完整 spec 的 `scales`（见 Reference）。

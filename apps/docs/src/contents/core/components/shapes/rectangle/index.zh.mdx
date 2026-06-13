@@ -1,0 +1,90 @@
+---
+title: Rectangle
+description: 矩形——既能画一条 Path（Sugar），也是节点默认的矩形边界。
+---
+
+矩形是 retikz 里最常用的形状，有两副面孔：用 `<Rectangle>` 画一个矩形轮廓（Sugar），或直接用 `<Node>`——**节点默认就是矩形边界**。完整定义见 [形状](/core/components/shapes)。要画一个矩形框，用 Sugar；要一个矩形节点（装文字、连线），直接用 `<Node>`。
+
+## 作为 Path 图形（Sugar）
+
+`<Rectangle>` 在指定位置画一个矩形，展开成底层 `<Path>`。适合已知两个角、中心尺寸或从一个角向外展开的场景。
+
+### 用法
+
+```tsx
+import { Rectangle } from '@retikz/react';
+```
+
+```tsx
+<Rectangle corner1={[-40, -20]} corner2={[40, 20]} cornerRadius={6} />
+```
+
+### 例子
+
+`<Rectangle>` 可以直接给两个角，也可以从中心和尺寸算出四个角。`cornerRadius` 用来画圆角。
+
+| 写法 | 适合 |
+| --- | --- |
+| `{ corner1, corner2 }` | 已知两个对角 |
+| `{ center, width, height }` | 已知中心和尺寸 |
+| `{ center, side }` | 正方形 |
+| `{ corner1, width, height }` | 从一个角向右下展开 |
+
+<ComponentPreview name="rectangle-basic" size="sm" />
+
+### API 参考
+
+| 组件 | 组合 | 含义 |
+| --- | --- | --- |
+| `<Rectangle>` | `corner1` + `corner2` | 通过两个对角确定矩形 |
+| | `center` + `width` + `height` | 通过中心和宽高确定矩形 |
+| | `center` + `side` | 通过中心和边长确定正方形 |
+| | `corner1` + `width` + `height` | 通过一个角和宽高确定矩形 |
+| | + `cornerRadius?` | 圆角矩形（会限制到边长的一半以内） |
+
+## 作为 Node 形状
+
+`<Node>` 不写 `shape` 时就是矩形，边界包住「文字 + padding」、尺寸由文字内容驱动。流程图节点几乎都是这种。
+
+### 用法
+
+```tsx
+import { Node } from '@retikz/react';
+```
+
+```tsx
+<Node>label</Node>
+<Node shape={{ type: 'rectangle', params: { cornerRadius: 10 } }}>rounded</Node>
+```
+
+### 例子
+
+圆角既可以用顶层 `cornerRadius`，也可以写成 `shape={{ type:'rectangle', params:{ cornerRadius } }}`（两者并存时 params 优先）。倒角是连接感知的：连线端点会落在圆角弧上，而不是已被磨掉的尖角。
+
+<ComponentPreview name="node-rectangle" size="sm" />
+
+连线端点贴矩形边，节点的 9 个标准 anchor（`north` / `center` …）照常可用。完整的 `<Node>` 属性见 [Node](/core/components/node/overview)。
+
+### API 参考
+
+| `shape` | 边界 | 参数 |
+| --- | --- | --- |
+| 缺省 / `"rectangle"` | 包住「文字 + padding」的内框 | `cornerRadius?`（圆角半径） |
+
+## 技术原理
+
+> 日常使用可以跳过本节；只有在点位报错，或想理解 Sugar 与 Node 的区别时再回来读。
+
+### 矩形可以透传点位（Sugar）
+
+`<Rectangle>` 的 `corner1 + corner2` 写法可以把点位交给底层 Path，因此能引用节点 id。需要组件先计算尺寸的写法，例如 `center + width + height`，只接受 `[x, y]` 字面量坐标。
+
+### Sugar 和 Node 是两条路
+
+`<Rectangle>` 展开成一条闭合 `<Path>`，是纯图形；`<Node>`（默认矩形）则是一个有边界的节点，边界由文字内框外接得到、可被连线贴边。要一个能装文字又能连线的矩形，用 `<Node>` 而不是 `<Rectangle>`。
+
+## 相关
+
+- [Node](/core/components/node/overview)：矩形节点的完整属性
+- [Polygon](../polygon)：正多边形与菱形
+- [Shapes](/core/components/shapes)：形状分组入口与完整定义

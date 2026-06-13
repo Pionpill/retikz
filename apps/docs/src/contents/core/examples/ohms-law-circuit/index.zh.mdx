@@ -1,6 +1,6 @@
 ---
 title: "欧姆定律电路"
-description: "高中物理欧姆定律实验电路示例：用自定义形状、Scope 复制和折角连线，从元件一步步搭出完整电路图"
+description: "高中物理欧姆定律实验电路示例：用自定义形状、Scope 复制和横平竖直的拐角连线，从元件一步步搭出完整电路图"
 ---
 
 ## 引言
@@ -92,7 +92,7 @@ description: "高中物理欧姆定律实验电路示例：用自定义形状、
 
 ### 步骤 5：用折角连成闭合回路
 
-元件就位后，用 [Draw](/core/components/draw/overview) 把它们依次连起来：电源顶端 → 开关 → 电流表 → R1 → 沿右侧竖线下来 → R2 → 滑动变阻器 → 回到电源底端。导线全走横平竖直的折角（`|- -|`），并引用元件端点而不是手猜坐标。
+元件就位后，用 [Draw](/core/components/draw/overview) 把它们依次连起来：电源顶端 → 开关 → 电流表 → R1 → 沿右侧竖线下来 → R2 → 滑动变阻器 → 回到电源底端。导线走横平竖直的拐角：在 `way` 数组里直接给出显式拐点坐标（如 `[160, 200]`、`[1040, 200]`），两端引用元件端点（`{ id, anchor }`）而不是手猜坐标——本例没有用 `|-` / `-|` 折角算子，而是手摆拐点连成直线段。
 
 <ComponentPreview
   name="ohms-law-circuit-05-main-loop"
@@ -119,7 +119,7 @@ description: "高中物理欧姆定律实验电路示例：用自定义形状、
 | [Layout](/core/components/layout/overview) | 固定 1280 x 760 视图，让所有 demo 共用同一套坐标系 | [1](#步骤-1把电表做成自定义形状), [2](#步骤-2平铺其余自定义符号), [3](#步骤-3将元件放到电路位置) |
 | [Scope](/core/components/layout/scope) | 统一样式默认值，并把测量单元平移复制复用 | [4](#步骤-4用-scope-组合并复用测量单元) |
 | [Node](/core/components/node/overview) | 承载电表、电源、开关、电阻、滑动变阻器和文字标注 | [1](#步骤-1把电表做成自定义形状), [3](#步骤-3将元件放到电路位置), [4](#步骤-4用-scope-组合并复用测量单元), [6](#步骤-6标注元件) |
-| [Draw](/core/components/draw/overview) | 用折线接出测量单元、用折角连成主回路 | [4](#步骤-4用-scope-组合并复用测量单元), [5](#步骤-5用折角连成闭合回路) |
+| [Draw](/core/components/draw/overview) | 用折线接出测量单元、用显式拐点连成主回路 | [4](#步骤-4用-scope-组合并复用测量单元), [5](#步骤-5用折角连成闭合回路) |
 | [ShapeDefinition](/core/reference/extending/shape-registry) | 把电表、电源、开关、电阻和滑动变阻器做成有固定端点的自定义形状 | [1](#步骤-1把电表做成自定义形状), [2](#步骤-2平铺其余自定义符号) |
 
 ## 限制
@@ -134,6 +134,6 @@ description: "高中物理欧姆定律实验电路示例：用自定义形状、
 
 - **更多扩展点**：除自定义形状（[Shape Registry](/core/reference/extending/shape-registry)）外，retikz 还开放了[自定义箭头](/core/reference/extending/custom-arrow)、[自定义图案](/core/reference/extending/custom-pattern)、[自定义路径生成器](/core/reference/extending/path-generator)。
 - **进阶 / 优化**：本页只是一个使用用例；反复画这类电路时，把它封装成专门的（更高 tier 的）组件，既能减少重复代码，也能精简 IR 持久化的内容。
-- **让 AI 更懂图**：在 IR 里给节点 / 路径补上 `description` 等元数据，能让 AI 更准确地理解图的语义内容。
-- **相关组件 / 概念**：[Node](/core/components/node/overview) / [Scope](/core/components/layout/scope) / [Draw](/core/components/draw/overview)，以及[定位](/core/concepts/positioning)（E 标签用到的 `of` 关系定位）。
+- **让 AI 更懂图**：在 IR 里给节点 / 路径的 `meta` 字段补上语义元数据，能让 AI 更准确地理解图的语义内容。
+- **相关组件 / 概念**：[Node](/core/components/node/overview) / [Scope](/core/components/layout/scope) / [Draw](/core/components/draw/overview)，以及[定位](/core/concepts/basic/position)（E 标签用到的 `of` 关系定位）。
 - [Karl 单位圆](/core/examples/karl-circle) - 另一个由多种基础组件拼成完整图的示例。

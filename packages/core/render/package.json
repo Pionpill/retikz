@@ -1,0 +1,115 @@
+{
+  "name": "@retikz/render",
+  "version": "0.3.0-beta.3",
+  "description": "retikz renderers: Scene to SVG (descriptor / string) and Canvas 2D. Subpath exports per backend (./svg, ./canvas).",
+  "type": "module",
+  "author": "Pionpill",
+  "homepage": "https://pionpill.github.io/retikz/",
+  "keywords": [
+    "tikz",
+    "diagram",
+    "svg",
+    "canvas",
+    "renderer",
+    "visualization"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Pionpill/retikz.git",
+    "directory": "packages/core/render"
+  },
+  "bugs": {
+    "url": "https://github.com/Pionpill/retikz/issues"
+  },
+  "sideEffects": false,
+  "exports": {
+    "./svg": {
+      "types": "./src/svg/index.ts",
+      "default": "./src/svg/index.ts"
+    },
+    "./canvas": {
+      "types": "./src/canvas/index.ts",
+      "default": "./src/canvas/index.ts"
+    },
+    "./canvas-node": {
+      "types": "./src/canvas-node/index.ts",
+      "default": "./src/canvas-node/index.ts"
+    },
+    "./hydration": {
+      "types": "./src/hydration/index.ts",
+      "default": "./src/hydration/index.ts"
+    },
+    "./animation": {
+      "types": "./src/animation/index.ts",
+      "default": "./src/animation/index.ts"
+    }
+  },
+  "publishConfig": {
+    "exports": {
+      "./svg": {
+        "types": "./dist/lib/svg/index.d.ts",
+        "import": "./dist/es/svg/index.js",
+        "require": "./dist/lib/svg/index.cjs",
+        "default": "./dist/es/svg/index.js"
+      },
+      "./canvas": {
+        "types": "./dist/lib/canvas/index.d.ts",
+        "import": "./dist/es/canvas/index.js",
+        "require": "./dist/lib/canvas/index.cjs",
+        "default": "./dist/es/canvas/index.js"
+      },
+      "./canvas-node": {
+        "types": "./dist/lib/canvas-node/index.d.ts",
+        "import": "./dist/es/canvas-node/index.js",
+        "require": "./dist/lib/canvas-node/index.cjs",
+        "default": "./dist/es/canvas-node/index.js"
+      },
+      "./hydration": {
+        "types": "./dist/lib/hydration/index.d.ts",
+        "import": "./dist/es/hydration/index.js",
+        "require": "./dist/lib/hydration/index.cjs",
+        "default": "./dist/es/hydration/index.js"
+      },
+      "./animation": {
+        "types": "./dist/lib/animation/index.d.ts",
+        "import": "./dist/es/animation/index.js",
+        "require": "./dist/lib/animation/index.cjs",
+        "default": "./dist/es/animation/index.js"
+      }
+    }
+  },
+  "files": [
+    "LICENSE",
+    "README.md",
+    "dist/**/*"
+  ],
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "lint": "eslint .",
+    "preview": "vite preview",
+    "test": "vitest",
+    "test:run": "vitest run"
+  },
+  "dependencies": {
+    "@retikz/core": "workspace:*",
+    "csstype": "catalog:"
+  },
+  "peerDependencies": {
+    "@napi-rs/canvas": "catalog:"
+  },
+  "peerDependenciesMeta": {
+    "@napi-rs/canvas": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@types/node": "catalog:",
+    "typescript": "catalog:",
+    "vite": "catalog:",
+    "vite-plugin-dts": "catalog:",
+    "vitest": "catalog:",
+    "zod": "catalog:"
+  }
+}

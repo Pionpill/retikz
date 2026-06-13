@@ -7,7 +7,7 @@ import type { FC } from 'react';
  */
 const Demo: FC = () => (
   <Layout width={560} height={120}>
-    <Node position={[0, 0]} shape="circle" padding={4} stroke="gray">0</Node>
+    <Node position={[0, 0]} shape="circle" padding={4} stroke="gray" dashed>0</Node>
     <Scope transforms={[{ kind: 'translate', x: 140, y: 0 }]}>
       <Node position={[0, 0]} shape="circle" padding={4}>outer</Node>
       <Scope transforms={[{ kind: 'translate', x: 140, y: 0 }]}>

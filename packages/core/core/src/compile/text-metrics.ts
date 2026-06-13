@@ -1,0 +1,45 @@
+/** 字体规格：传给 TextMeasurer 的最小信息 */
+export type FontSpec = {
+  /** 字体族；不填走 fallback "sans-serif" */
+  family?: string;
+  /** 字号（user units） */
+  size: number;
+  /** 字重；可以是 'normal' / 'bold' / 100~900 数字等 */
+  weight?: string | number;
+  /** 字形：normal / italic / oblique */
+  style?: 'normal' | 'italic' | 'oblique';
+};
+
+/** 文字度量结果：宽高 + 可选的基线 ascent/descent */
+export type TextMetrics = {
+  /** 文本宽度（user units） */
+  width: number;
+  /** 文本高度（user units），通常 ≈ ascent + descent */
+  height: number;
+  /** 基线以上的高度；不一定所有 measurer 都返回 */
+  ascent?: number;
+  /** 基线以下的深度；不一定所有 measurer 都返回 */
+  descent?: number;
+};
+
+/**
+ * 文字度量函数接口（编译期由 adapter 注入）
+ * @description @retikz/react: canvas measureText；@retikz/ssr: opentype.js/fontkit；@retikz/render/canvas: ctx.measureText
+ */
+export type TextMeasurer = (text: string, font: FontSpec) => TextMetrics;
+
+/**
+ * 默认 fallback 度量：基于平均字宽估算，不准但保证可运行
+ * @description size=0 → 退化返回 (0, 0)（与 text='' 一致）；负 size 或非有限（NaN / Infinity）size → throw（非法输入早 fail，避免 NaN / Infinity 传播到 Scene）
+ */
+export const fallbackMeasurer: TextMeasurer = (text, font) => {
+  if (!Number.isFinite(font.size) || font.size < 0) {
+    throw new Error(
+      `fallbackMeasurer: invalid font.size '${font.size}'; must be a non-negative finite number`,
+    );
+  }
+  return {
+    width: text.length * font.size * 0.55,
+    height: font.size * 1.2,
+  };
+};

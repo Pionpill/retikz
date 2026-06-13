@@ -3,7 +3,7 @@ import { type FC } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { GitHubIcon } from '@/components/icons';
-import { COMPARISON_TARGETS, ComparisonTargetLabelKeys } from '@/components/shared/comparison';
+import { ComparisonTargetLabelKeys, ComparisonTargetList } from '@/components/shared/comparison';
 import { Shortcut } from '@/components/shared/shortcut';
 import { buttonVariants } from '@/components/ui/button';
 import {
@@ -23,14 +23,13 @@ import {
 import { Separator } from '@/components/ui/separator';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
-import { useComparisonStore } from '@/store/useComparisonStore';
-import { useComponentPreviewStore } from '@/store/useComponentPreviewStore';
-import { useLayoutStore } from '@/store/useLayoutStore';
-import { useTocStore } from '@/store/useTocStore';
+import { useComparisonStore } from '@/store/use-comparison-store';
+import { useComponentPreviewStore } from '@/store/use-component-preview-store';
+import { useLayoutStore } from '@/store/use-layout-store';
+import { useTocStore } from '@/store/use-toc-store';
 
-import { isChangelogLocation, useDocLocation } from '@/layout/doc-layout/docLocation';
-import { AUTHOR_GITHUB_URL, GITHUB_URL, TIKZ_DOCS_URL, useDocActions } from './useDocActions';
-import { useHeaderCompact } from './useHeaderCompact';
+import { AUTHOR_GITHUB_URL, GITHUB_URL, TIKZ_DOCS_URL, useDocActions } from './use-doc-actions';
+import { useHeaderCompact } from './use-header-compact';
 
 // TooltipTrigger 默认即 `<button>`，直接套 buttonVariants；不用 `<Button asChild>` 包，避免 React 18 下 asChild → 自定义函数组件 ref 转发不到，触发不到 Popper 锚点
 const triggerClass = cn(buttonVariants({ variant: 'ghost', size: 'icon' }), 'size-7 cursor-pointer rounded-sm');
@@ -45,16 +44,18 @@ export const HeaderActions: FC = () => {
   const { theme, handleToggleTheme, handleCycleLang, handleCopyLink } = useDocActions();
   const tocOpen = useTocStore(state => state.tocOpen);
   const setTocOpen = useTocStore(state => state.setTocOpen);
-  /** changelog 页右栏是包筛选而非 TOC,toggle 标签随之改 */
-  const isChangelog = isChangelogLocation(useDocLocation());
+  /** 当前页无目录内容时隐藏 TOC 开关（右栏不占位，开关无意义） */
+  const hasToc = useTocStore(state => state.hasToc);
   const layout = useLayoutStore(s => s.layout);
   const toggleLayout = useLayoutStore(s => s.toggleLayout);
   const previewHideCode = useComponentPreviewStore(s => s.hideCode);
   const previewIsExpand = useComponentPreviewStore(s => s.isExpand);
   const previewDragEnabled = useComponentPreviewStore(s => s.dragEnabled);
+  const previewRendererMode = useComponentPreviewStore(s => s.rendererMode);
   const togglePreviewHideCode = useComponentPreviewStore(s => s.toggleHideCode);
   const togglePreviewIsExpand = useComponentPreviewStore(s => s.toggleIsExpand);
   const togglePreviewDragEnabled = useComponentPreviewStore(s => s.toggleDragEnabled);
+  const togglePreviewRendererMode = useComponentPreviewStore(s => s.toggleRendererMode);
   const comparisonTargets = useComparisonStore(s => s.visibleTargets);
   const setComparisonTargetVisible = useComparisonStore(s => s.setTargetVisible);
 
@@ -145,14 +146,16 @@ export const HeaderActions: FC = () => {
                 {t('view.groupLabel')}
               </DropdownMenuLabel>
               <DropdownMenuGroup>
-                <DropdownMenuCheckboxItem checked={tocOpen} onCheckedChange={setTocOpen}>
-                  {isChangelog ? t('changelog.filterPackages') : t('toc.outline')}
-                  {!compact && (
-                    <DropdownMenuShortcut>
-                      <Shortcut keys={['mod', 'alt', 'B']} className="tracking-normal" />
-                    </DropdownMenuShortcut>
-                  )}
-                </DropdownMenuCheckboxItem>
+                {hasToc && (
+                  <DropdownMenuCheckboxItem checked={tocOpen} onCheckedChange={setTocOpen}>
+                    {t('toc.outline')}
+                    {!compact && (
+                      <DropdownMenuShortcut>
+                        <Shortcut keys={['mod', 'alt', 'B']} className="tracking-normal" />
+                      </DropdownMenuShortcut>
+                    )}
+                  </DropdownMenuCheckboxItem>
+                )}
                 <DropdownMenuCheckboxItem checked={layout === 'centered'} onCheckedChange={toggleLayout}>
                   {t('common.layoutCentered')}
                   {!compact && (
@@ -167,6 +170,13 @@ export const HeaderActions: FC = () => {
                 {t('preview.groupLabel')}
               </DropdownMenuLabel>
               <DropdownMenuGroup>
+                <DropdownMenuCheckboxItem
+                  checked={previewRendererMode === 'canvas'}
+                  onCheckedChange={togglePreviewRendererMode}
+                >
+                  {t('preview.renderMode')}
+                  <DropdownMenuShortcut>{previewRendererMode.toUpperCase()}</DropdownMenuShortcut>
+                </DropdownMenuCheckboxItem>
                 <DropdownMenuCheckboxItem checked={previewHideCode} onCheckedChange={togglePreviewHideCode}>
                   {t('preview.hideAllCode')}
                   {!compact && (
@@ -191,7 +201,7 @@ export const HeaderActions: FC = () => {
               <DropdownMenuSub>
                 <DropdownMenuSubTrigger inset>{t('comparison.groupLabel')}</DropdownMenuSubTrigger>
                 <DropdownMenuSubContent className="w-44">
-                  {COMPARISON_TARGETS.map(target => (
+                  {ComparisonTargetList.map(target => (
                     <DropdownMenuCheckboxItem
                       key={target}
                       checked={comparisonTargets[target]}

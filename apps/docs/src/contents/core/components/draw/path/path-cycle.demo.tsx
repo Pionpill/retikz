@@ -6,7 +6,7 @@ import type { FC } from 'react';
  * @description A -> B -> C -> D -> cycle 回 A，比手动 line 回起点少一个端点声明。
  */
 const Demo: FC = () => (
-  <Layout width={360} height={180}>
+  <Layout width={360} height={180} nodeDefault={{ stroke: 'gray', dashed: true }}>
     <Node id="a" position={[0, 0]}>
       A
     </Node>

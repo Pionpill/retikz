@@ -28,7 +28,7 @@ const Demo: FC = () => (
     </Node>
 
     <Circle
-      boundingBox={{ origin: [300, 24], width: 52, height: 52 }}
+      box={{ origin: [300, 24], width: 52, height: 52 }}
       fit="cover"
       startAngle={210}
       endAngle={330}

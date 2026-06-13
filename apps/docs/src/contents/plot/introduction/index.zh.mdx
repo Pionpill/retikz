@@ -1,0 +1,56 @@
+---
+title: 简介
+description: retikz 的图表层：用 Plot IR 描述图表语义，把数据单独传入，再下沉成 core 图元渲染。
+---
+
+`@retikz/plot` 是建在 core 之上的 Tier 2 图表层。core 负责通用图元、路径和渲染目标无关的编译；plot 负责把「数据字段如何映射到图形」这件事整理成一份可持久化、可校验的图表规格。
+
+它适合需要把结构化数据画成图表、又希望保留 retikz 的 IR / AI / 多渲染器能力的场景。当前版本先把最小闭环打通：线性比例尺、二维笛卡尔坐标、折线与散点、坐标轴和网格。
+
+## core + 图形语法
+
+<ComponentPreview name="plot-grammar-parts" size="md" hideCode />
+
+plot 的本质是 **core + 图形语法**。core 提供最终能渲染的节点、路径、Scope 和 Scene；plot 不另造一套渲染器，而是在 core 之上增加“字段如何变成图形”的语法层。
+
+| 部分 | 实现里对应什么 | 作用 |
+| --- | --- | --- |
+| **图形语法** | `marks`、`encoding`、`scales`、`coordinate`、`guides`；React 侧是 `<LineMark>` / `<PointMark>` / `<Axis>` | 绘图指导思想：先声明“哪个字段映射到哪个视觉通道”，再由 scale、coordinate 和 guide 决定如何落到画布 |
+| **数据** | `data.reference` + 可选 `model` 指向外部数据集；lowering 时把每一行解析成 `x` / `y` 数据通道 | 保存真实数据和字段模型；数据值不进入 IR，字段路径通过 `field` 解析，常量通过 `value` 进入通道 |
+| **`@retikz/plot`** | `PlotSpecSchema`、`buildPlotSpec`、`lowerPlots`、`renderPlot`、`<Plot>` | 逻辑封装：校验 PlotSpec、补默认 linear scale / cartesian2D / Axis、计算 domain / ticks / projector，并把结果下沉成 core IR |
+
+## Plot IR 居中
+
+<ComponentPreview name="plot-ir-centric" size="md" hideCode />
+
+Plot 的中心不是一份巨大的数据表，而是一份描述图表语义的 Plot IR。组件、手写 spec 或 AI 都先形成同一份 IR；真实数据在下沉时才和 IR 汇合，经 `lowerPlots` 变成 core 能理解的节点与路径。
+
+## 三块一起工作
+
+一张 plot 图不会把数据塞进 IR。IR 只描述「画什么」，真实数据在渲染时单独传入。
+
+| 部分 | 是什么 | 职责 |
+| --- | --- | --- |
+| **Plot IR** | JSON 可序列化的配置 | 记录 mark、scale、coordinate、axis 与字段绑定 |
+| **数据** | 外部数据集 | 提供具体数值；不进入 IR，避免配置随数据量膨胀 |
+| **lowerPlots** | 下沉函数 | 把 Plot IR + 数据转成 core 能渲染的节点和路径 |
+
+React 用户通常不需要手写整份 IR。`@retikz/plot-react` 的 `<Plot>` 会从 `<LineMark>`、`<PointMark>`、`<Axis>` 这些子组件同步装配出 Plot IR；想直接从程序或 AI 生成 IR 时，也可以用 `<Plot spec={spec} data={{ sales }} />`。
+
+## 包职责
+
+plot 拆成三包，是为了让「图表语义」和「框架入口」分开：
+
+| 包 | 职责 | 典型入口 |
+| --- | --- | --- |
+| `@retikz/plot` | Plot IR schema、数据下沉与核心算法 | `lowerPlots(datasets)` |
+| `@retikz/plot-react` | React 组合 DSL 与 `<Plot>` 包装 | `<Plot data={rows}>...</Plot>` |
+| `@retikz/plot-vanilla` | 无框架 / SSR 渲染入口 | `renderPlot(spec, data, options)` |
+
+无论从 React 组件、手写 spec，还是 vanilla 入口开始，最后都会走同一份 Plot IR 和同一条 lowering 路径。
+
+## 当前能力
+
+<ComponentAlert title="v0.1 alpha.4" description="当前 plot 支持 linear / band / point / time / ordinal(颜色) scale，cartesian2D 与 polar2D 两套坐标系，PointMark / LineMark / BarMark / SectorMark / AreaMark（含 dodge / stack 多系列与 closed 雷达），Axis 坐标轴（x / y / angle / radius）+ 网格，以及 sort / stack transform——React 与 Vanilla 两套包都覆盖。位置通道只有 x / y、由坐标系重解释；legend、tooltip 与事件交互仍在后续版本。" />
+
+如果你是第一次使用 plot，先从快速开始走一遍本地数据的折线 + 散点图，再回来看这里的 IR / 数据 / lowering 分工会更顺。

@@ -13,7 +13,7 @@ const Demo: FC = () => (
     <Scope transforms={[{ kind: 'rotate', degrees: 90 }]}>
       <Node id="B" position={{ direction: 'right', of: 'A', distance: 60 }} shape="circle" padding={4}>B</Node>
     </Scope>
-    <Node id="B-ref" position={{ direction: 'right', of: 'A', distance: 60 }} shape="circle" padding={4} stroke="gray">B-ref</Node>
+    <Node id="B-ref" position={{ direction: 'right', of: 'A', distance: 60 }} shape="circle" padding={4} stroke="gray" dashed>B-ref</Node>
     <Draw way={['A', 'B']} arrow="->" stroke="gray" dashPattern={[4, 2]} />
     <Draw way={['A', 'B-ref']} arrow="->" stroke="gray" dashPattern={[4, 2]} />
   </Layout>

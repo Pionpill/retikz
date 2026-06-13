@@ -22,19 +22,19 @@ notes/decisions/
         ├── roadmap.md
         ├── v0.1/
         │   ├── roadmap.md
-        │   └── v0.1-beta.1/
+        │   └── beta.1/
         │       ├── roadmap.md
         │       ├── 01-xxx.md
         │       └── 02-xxx.md
         └── v0.2/
             ├── roadmap.md
-            └── v0.2-alpha.9/
+            └── alpha.9/
                 ├── roadmap.md
                 ├── 01-xxx.md
                 └── 02-xxx.md
 ```
 
-- 一级能力域：`core/` 承载 `@retikz/core` 以及强依赖 core 的 `@retikz/react`、SVG / Canvas adapter、文档运行时等决策；未来 `plot/` 承载 `@retikz/plot` 及其强相关内容。
+- 一级能力域：`core/` 承载 `@retikz/core` 以及强依赖 core 的 `@retikz/render`（SVG / Canvas 后端）、`@retikz/react`、`@retikz/vanilla`、文档运行时等决策；`plot/` 承载 `@retikz/plot`（Tier 2 图表层）及其强相关内容。
 - `v0/roadmap.md`：major 总路线。
 - `v0/v0.1/roadmap.md`：minor 总路线。
 - `v0/v0.1/<milestone>/roadmap.md`：milestone 路线 / TODO / 验收记录，替代旧的独立 plan 文件。
@@ -52,17 +52,22 @@ notes/decisions/
 ### architecture/
 
 - [`core-design.md`](./architecture/core-design.md)：retikz 总架构设计，包含分层模型、IR、Scene、AI 友好原则、跨平台策略。
+- [`plot-design.md`](./architecture/plot-design.md)：`@retikz/plot`（Tier 2 图表层）架构设计——grammar of graphics、Plot IR、lowering 管线。
 
 ### decisions/
 
 - [`core/v0/roadmap.md`](./decisions/core/v0/roadmap.md)：core v0 总路线。
 - [`core/v0/v0.1/roadmap.md`](./decisions/core/v0/v0.1/roadmap.md)：core v0.1 路线与 milestone 索引。
 - [`core/v0/v0.2/roadmap.md`](./decisions/core/v0/v0.2/roadmap.md)：core v0.2 路线与已完成 alpha / beta 跟踪。
+- [`core/v0/v0.3/roadmap.md`](./decisions/core/v0/v0.3/roadmap.md)：core v0.3 路线（renderer 拆分 + `@retikz/render` / `@retikz/vanilla` + 水合 + Tier 2 支撑 + 动画）。
+- [`plot/v0/roadmap.md`](./decisions/plot/v0/roadmap.md) / [`plot/v0/v0.1/roadmap.md`](./decisions/plot/v0/v0.1/roadmap.md)：`@retikz/plot`（Tier 2）路线与 milestone 索引。
 - ADR 模板：[`core/_template.md`](./decisions/core/_template.md)。
 
 ### analysis/
 
-- [`tikz-gap-analysis.md`](./analysis/tikz-gap-analysis.md)：当前 Node / Path 能力对比 TikZ 的缺失项与优先级。
+- [`core-compare-analysis.md`](./analysis/core-compare-analysis.md)：core 底座横向对比（TikZ / D3 / Two.js / Mermaid / react-flow / Excalidraw / Vega）。
+- [`plot-compare-analysis.md`](./analysis/plot-compare-analysis.md)：`@retikz/plot` 横向对比（ggplot2 / Vega-Lite / Observable Plot / Highcharts / ECharts / Recharts）。
+- [`plot-rendering-performance.md`](./analysis/plot-rendering-performance.md)：plot 渲染性能分析。
 
 ## 写文档前先选生命周期
 

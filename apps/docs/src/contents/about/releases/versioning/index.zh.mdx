@@ -5,7 +5,7 @@ description: retikz 用语义化版本（SemVer），三段加预发布通道。
 
 retikz 遵循 Semantic Versioning 2.0.0：版本号写作 `MAJOR.MINOR.PATCH`，必要时附预发布标签 `-alpha.x` / `-beta.x` / `-rc.x`。
 
-当前仓库版本是 `0.2.0-rc.1`。这表示 v0.2 已进入 rc 验收窗口：公开 API 冻结，只接受兼容 bug fix、文档补齐、安装验收与发布说明收敛。上一条稳定线是 `0.1.0`。
+当前仓库版本是 `0.3.0-beta.1`。这表示 v0.3 已进入 beta 加固窗口：renderer/runtime 拆分已经落地，当前重点是 parity 修复、测试、文档、打包与 rc 前的最终 API 面收口。上一条稳定线是 `0.1.0`。
 
 ## 三段含义
 
@@ -15,7 +15,7 @@ retikz 遵循 Semantic Versioning 2.0.0：版本号写作 `MAJOR.MINOR.PATCH`，
 | MINOR | 向下兼容的新能力 | 直接升 |
 | PATCH | 向下兼容的 bug fix | 直接升 |
 
-`@retikz/core` 与 `@retikz/react` 默认共享同一版号、**同步发布**——除非发布说明特别写明，否则用户不需要单独升级其中一个包。
+Tier 1 包（`@retikz/core`、`@retikz/render`、`@retikz/react`、`@retikz/vanilla`）默认共享同一版号、**同步发布**。除非发布说明特别写明，否则用户不需要单独升级其中一个包。
 
 ## 0.x 与 1.x 的差别
 
@@ -30,10 +30,10 @@ retikz 遵循 Semantic Versioning 2.0.0：版本号写作 `MAJOR.MINOR.PATCH`，
 
 | 通道 | 形如 | 主要内容 | 主要执行 | 适合 |
 | --- | --- | --- | --- | --- |
-| alpha | `0.2.0-alpha.x` | 新功能 / 新 IR 字段 / API 形态重塑（schema 仍在重塑、IR 不稳） | **人工设计 + AI 实现** | 探索 / 反馈 |
-| beta | `0.2.0-beta.x` | 性能 / 可读性 / 重构 / 测试加固 / 文档完善；允许最后一轮破坏性命名调整 | **人工主导优化与重构** | 集成验证 |
-| rc | `0.2.0-rc.x` | 公开 API 冻结；只做兼容 bug 修复、文档、安装验收与发布说明 | 人工主导 | 生产前演练 |
-| 稳定 | `0.2.0` | 进入 SemVer 守护，按 PATCH / MINOR / MAJOR 节奏迭代 | — | 生产 |
+| alpha | `0.3.0-alpha.x` | 新功能 / 新 IR 字段 / API 形态重塑（schema 仍在重塑、IR 不稳） | **人工设计 + AI 实现** | 探索 / 反馈 |
+| beta | `0.3.0-beta.x` | 性能 / 可读性 / 重构 / 测试加固 / 文档完善；允许最后一轮破坏性命名调整 | **人工主导优化与重构** | 集成验证 |
+| rc | `0.3.0-rc.x` | 公开 API 冻结；只做兼容 bug 修复、文档、安装验收与发布说明 | 人工主导 | 生产前演练 |
+| 稳定 | `0.3.0` | 进入 SemVer 守护，按 PATCH / MINOR / MAJOR 节奏迭代 | — | 生产 |
 
 通道升级是单向的：alpha → beta → rc → stable，不会回退。
 
@@ -49,6 +49,8 @@ rc 阶段再收窄一层——公开 API 不再破坏，npm dist-tag 使用 `nex
 | --- | --- | --- |
 | `@retikz/react` | `react` / `react-dom` | `>=18` |
 | `@retikz/core` | （无） | — |
+| `@retikz/render` | `@napi-rs/canvas`（仅 Node 导出入口可选） | catalog 管理 |
+| `@retikz/vanilla` | （无） | — |
 
 升 React 主版本通常发 MINOR；只有当新版本不兼容老 API 时才升 MAJOR。
 

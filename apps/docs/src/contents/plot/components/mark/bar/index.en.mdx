@@ -1,0 +1,43 @@
+---
+title: BarMark
+description: "Draw bar charts with <BarMark>: a categorical x axis, rectangles from a baseline, with grouped and stacked multi-series."
+---
+
+`<BarMark>` draws one bar per data row: `x` binds a **categorical field** (`<Plot>` automatically uses a band scale, giving each category an equal-width slot), `y` binds a numeric field, and the bar runs from baseline `0` to that value.
+
+<ComponentPreview name="bar-basic" sourceFiles={['bar-basic.data.ts']} />
+
+## Multi-series: grouped and stacked
+
+Set `series` to a field and the data splits into one series per distinct value, each picking up its own color. Bars are **side by side** (dodge) by default — the series within one category share the slot:
+
+<ComponentPreview name="bar-grouped" sourceFiles={['bar-grouped.data.ts']} />
+
+<p className="text-sm text-muted-foreground">Series A / B side by side within each quarter.</p>
+
+Add `stack` to switch to **cumulative** bars — each series picks up where the previous one ended. `<Plot>` works out the cumulative bounds for you; you only declare `stack`:
+
+<ComponentPreview name="bar-stacked" sourceFiles={['bar-stacked.data.ts']} />
+
+<p className="text-sm text-muted-foreground">Series A / B stacked within each quarter; the bar top is the total.</p>
+
+## Polar: radial bars
+
+Turn on `<Plot coordinate="polar2D">` and the same `<BarMark>` becomes a radial bar — the angular axis is the category (auto band), the radial axis is the value, and bars grow outward from the center. No new component, no change to the field bindings.
+
+<ComponentPreview name="bar-radial" sourceFiles={['bar-radial.data.ts']} />
+
+<p className="text-sm text-muted-foreground">The same BarMark with only <code>coordinate="polar2D"</code> added becomes a radial bar.</p>
+
+## API
+
+| prop | type | description |
+| --- | --- | --- |
+| `x` | `string` | Field path for the x channel (categorical, auto band scale) |
+| `y` | `string` | Field path for the y channel (numeric, drives bar height) |
+| `series` | `string?` | Series field: split into multiple series; omit for single series |
+| `stack` | `boolean?` | Stack the series; omit for side-by-side (dodge) |
+| `color` | `string?` | Color field; falls back to `series`. Categorical → ordinal; continuous / temporal needs a `model` declaration → auto sequential color scale (viridis), colored per datum |
+| `id` | `string?` | Optional handle (reserved, not yet resolved) |
+
+<ComponentAlert title="Color follows series by default" description="When series is set but color is not, the color field defaults to series — one color per series. Set color explicitly only when you want to paint by a different field." />

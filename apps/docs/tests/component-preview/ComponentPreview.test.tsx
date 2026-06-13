@@ -5,7 +5,7 @@ import { beforeAll, describe, expect, it } from 'vitest';
 
 import i18n from '@/i18n';
 import { ComponentPreview } from '@/components/shared/component-preview/ComponentPreview';
-import { DemoLocationContext } from '@/components/shared/component-preview/demoLocationContext';
+import { DemoLocationContext } from '@/components/shared/component-preview/demo-location-context';
 
 /**
  * 切页失步误报回归：旧 MDX 内容在过渡窗口里仍挂载，而实时路由已指向新页。

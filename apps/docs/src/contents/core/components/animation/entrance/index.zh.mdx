@@ -1,0 +1,103 @@
+---
+title: 入场
+description: 入场动画在加载时播一次，把元素从无到有带出来——fadeIn / scaleIn / grow / growUp / slideIn / drawOn，及它们展开成的 AnimationTrack JSON。
+---
+
+入场动画在**页面加载时播一次**，把元素从透明 / 偏移 / 缩小状态带到最终样子。它们都是元素动画，挂在 `<Node>` / `<Path>` / `<Scope>` 的 `animations` 上；公共项与全部 preset 一览见 [动画总览](/core/components/animation)。下面每个 demo 切到本页 / 切 Tab 时会重播。
+
+## 原理：preset 展开成 AnimationTrack
+
+每个 preset 都是 `AnimationTrack` 的工厂——调用即得一条 JSON track，挂到 `animations` 上。track 描述「某个属性通道在归一化时间 `[0, 1]` 上的关键帧 + WAAPI 风格的时序」：
+
+```ts
+type AnimationTrack = {
+  property: string;            // 动画通道：opacity / scale / scaleX|Y / rotate / translateX|Y / fill / stroke / pathDraw …
+  keyframes: Array<{
+    at: number;                // 归一化时间 0..1，与 duration 解耦；按 at 升序
+    value: JsonValue;          // 该时刻的「绝对展示值」（不是增量）：数字 / 颜色串 / [x,y,w,h]，按 property narrow
+    easing?: string | [number, number, number, number]; // 段级缓动，覆盖 track 级
+  }>;
+  duration: number;            // 单次迭代时长（毫秒，> 0）
+  delay?: number;              // 起播延迟（毫秒）
+  easing?: string | [number, number, number, number]; // track 级缓动，缺省 linear
+  iterations?: number | 'infinite';  // 播放次数，缺省 1
+  direction?: 'normal' | 'reverse' | 'alternate' | 'alternate-reverse'; // 缺省 normal
+  fill?: 'none' | 'forwards' | 'backwards' | 'both';   // 活动区间外取值，缺省 forwards
+  trigger?: 'load' | 'visible' | 'manual' | { onEvent: string };  // 缺省 load
+  origin?: string | [number, number]; // scale / scaleX|Y / rotate 的支点，缺省几何中心
+};
+```
+
+关键约定：**末帧（`at: 1`）= 元素 base（静止）态**——所以忽略动画时渲染的就是完整成品图，这正是[降级](/core/components/animation/control#降级)的依据。preset 不引入任何 track 表达不了的能力，产出**逐字段等于手写 track**；公共项 `{ duration, delay, easing, trigger }` 都可覆盖各 preset 的默认。下面每节给出 demo、它展开后的 track，以及专有项。
+
+## 渐入-fadeIn
+
+<ComponentPreview name="fade-in" size="xs" />
+
+透明度 0→1，最常用的入场。
+
+```json
+{ "property": "opacity", "keyframes": [{ "at": 0, "value": 0 }, { "at": 1, "value": 1 }], "duration": 400, "easing": "ease-out" }
+```
+
+无专有项，只接公共项。
+
+## 缩放入场-scaleIn
+
+<ComponentPreview name="scale-in" size="xs" />
+
+均匀缩放 `from`→1，绕支点弹入。
+
+```json
+{ "property": "scale", "keyframes": [{ "at": 0, "value": 0.8 }, { "at": 1, "value": 1 }], "duration": 400, "easing": "ease-out" }
+```
+
+专有项：`from`（起始缩放，缺省 `0.8`，末帧恒为 `1` = base）、`origin`（缩放支点，缺省几何中心）。
+
+## 放大入场-grow
+
+<ComponentPreview name="grow" size="xs" />
+
+`scaleIn` 的 `from: 0` 别名，从无到有放大。
+
+```json
+{ "property": "scale", "keyframes": [{ "at": 0, "value": 0 }, { "at": 1, "value": 1 }], "duration": 400, "easing": "ease-out" }
+```
+
+专有项：`origin`（同 `scaleIn`）。
+
+## 向上生长-growUp
+
+<ComponentPreview name="grow-up" size="sm" />
+
+`scaleY` 0→1，支点在**底边**（`origin: 'south'`）——柱状图从基线长出。
+
+```json
+{ "property": "scaleY", "keyframes": [{ "at": 0, "value": 0 }, { "at": 1, "value": 1 }], "origin": "south", "duration": 500, "easing": "ease-out" }
+```
+
+专有项：`origin`（缺省 `'south'` 底边中点；可改成命名 anchor 或 `[x, y]`）。
+
+## 滑入-slideIn
+
+<ComponentPreview name="slide-in" size="xs" />
+
+`translateX|Y` `offset`→0，从偏移位置滑回原位。
+
+```json
+{ "property": "translateX", "keyframes": [{ "at": 0, "value": -20 }, { "at": 1, "value": 0 }], "duration": 400, "easing": "ease-out" }
+```
+
+专有项：`axis`（`'x'`→`translateX` / `'y'`→`translateY`，缺省 `'x'`）、`offset`（起始位移，缺省 `-20`，末帧恒为 `0` = base）。
+
+## 描边画出-drawOn
+
+<ComponentPreview name="draw-on" size="sm" />
+
+`pathDraw` 0→1，描边沿路径逐渐画出；仅对**有描边**的 `<Path>` / 形状有效。
+
+```json
+{ "property": "pathDraw", "keyframes": [{ "at": 0, "value": 0 }, { "at": 1, "value": 1 }], "duration": 600, "easing": "ease-in-out" }
+```
+
+无专有项，只接公共项。

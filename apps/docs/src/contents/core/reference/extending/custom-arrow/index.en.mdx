@@ -1,9 +1,9 @@
 ---
 title: Custom Arrows
-description: arrowDetail.shape is an open string; beyond the 7 built-ins, register any arrow with an ArrowDefinition — emit produces MarkerPrimitive geometry in local coordinates, and color follows the path stroke via contextStroke.
+description: arrowDetail.shape is an open string; beyond the 8 built-ins, register any arrow with defineArrow / ArrowDefinition — emit produces MarkerPrimitive geometry in local coordinates, and color follows the path stroke via contextStroke.
 ---
 
-`arrowDetail.shape` is an **open string**: beyond the 7 built-ins (`normal` / `open` / `stealth` / `diamond` / `openDiamond` / `circle` / `openCircle`), you can register your own arrow tips. The registry mirrors the [shape registry](/core/reference/extending/shape-registry) — the 7 built-ins are themselves registry entries, with no special privileges.
+`arrowDetail.shape` is an **open string**: beyond the 8 built-ins (`normal` / `open` / `stealth` / `openStealth` / `diamond` / `openDiamond` / `circle` / `openCircle`), you can register your own arrow tips. The registry mirrors the [shape registry](/core/reference/extending/shape-registry) — the 8 built-ins are themselves registry entries, with no special privileges.
 
 Registration goes through `CompileOptions.arrows` (in React that's `<Layout arrows={...}>`): the IR still only stores a string name in `arrowDetail.shape`; the geometry is injected here. An unregistered name throws at compile time (with the list of available names); overriding a built-in name emits an `ARROW_OVERRIDES_BUILTIN` warning.
 
@@ -15,7 +15,7 @@ Below registers a `bracket` — a TikZ Bracket-style hollow square bracket `[` (
 
 If you only want the minimum viable arrow, implement `lineContactX` and `emit` first; `baseSize`, `tipX`, `hollow`, `defaultLength`, and `defaultWidth` only tune the look.
 
-An `ArrowDefinition` is a plain object (not part of the IR, no serialization needed, can be returned by a factory):
+An `ArrowDefinition` is a plain object (not part of the IR, no serialization needed, can be returned by a factory); wrap it at the definition site with `defineArrow({...})` so custom arrows follow the same extension style as shapes, patterns, and path generators:
 
 | Field | Type | Default | Description |
 | --- | --- | --- | --- |
@@ -26,6 +26,7 @@ An `ArrowDefinition` is a plain object (not part of the IR, no serialization nee
 | `hollow` | `boolean` | `false` | Hollow: the framework drops `fill`, lets `color` drive the stroke, and enables `lineWidth` |
 | `defaultLength` | `number` | `6` | Default tip length (fallback for `length`, user units) |
 | `defaultWidth` | `number` | `6` | Default tip width (fallback for `width`, user units) |
+| `outerInset` | `number` | hollow `lineWidth/2`, solid `0` | Extra outer-edge inset for endpoints auto-clipped to a Node boundary. Custom hollow arrows can set it explicitly when `lineWidth/2` is not precise enough |
 
 Visual fields `length` / `width` / `scale` / `opacity` are handled uniformly by the framework (`markerWidth = (length ?? defaultLength) × scale`); `hollow` / `lineWidth` / the actual geometry are left to the `def`.
 
@@ -57,7 +58,7 @@ The `ArrowEmitContext` passed to `emit`:
 
 <ComponentPreview name="custom-arrow-inherit" size="xs" />
 
-Both Draws use the same `bracket` definition and set no arrow-specific color, so each bracket follows its path's `stroke`. To pin the arrow color, set `arrowDetail.color` (solid) or the top-level `arrowDetail` `color` (hollow stroke).
+Both Draws use the same `bracket` definition and set no arrow-specific color, so each bracket follows its path's `stroke`. To pin the arrow color, mind whether the shape is solid or hollow: a solid fill resolves to `arrowDetail.fill ?? color ?? contextStroke` — the dedicated override is `fill`, falling back to `color` and then the path stroke; a hollow stroke resolves to `arrowDetail.color ?? contextStroke` (hollow shapes ignore `fill` — `color` drives the stroke and `lineWidth` its width).
 
 <Comparison target="tikz" title="Custom arrows">
 

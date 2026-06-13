@@ -1,0 +1,23 @@
+---
+title: 辅助
+description: 画在主体图形周围的辅助元素——背景网格、参考线等成片的规则线条。
+---
+
+这一组放**辅助绘制**用的元素：它们不是图里的主角，而是衬在主体周围帮你定位和参照的东西，比如一整片背景网格或一组等距参考线。
+
+和 [形状](/core/components/shapes) 的区别：形状是单个闭合几何体（一个圆、一个扇形），可以当节点连线；辅助元素是**成片的线条**，整体作为背景，不参与连接。它们底层同样展开成 `<Path>`，共用一套描边 / 虚线 / 层级属性。
+
+## 职责一览
+
+| 组件 | 类型 | 职责 | 适合场景 |
+| --- | --- | --- | --- |
+| Grid | Sugar | 背景网格、参考线、主次线和外边框 | 想画坐标纸、背景网格或一组规则参考线 |
+
+## 章节内容
+
+<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+  <LinkedCard href="/core/components/helpers/grid">
+    <span className="font-semibold">Grid</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">背景网格、参考线、边框和主次线</span>
+  </LinkedCard>
+</div>

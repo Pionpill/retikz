@@ -11,9 +11,30 @@ export const coreSection: Array<Section> = [
     id: 'concepts',
     label: 'core.concepts',
     pages: [
-      { id: 'positioning', label: 'core.positioning' },
-      { id: 'anchors', label: 'core.anchors' },
-      { id: 'layers', label: 'core.layers' },
+      {
+        id: 'design',
+        label: 'core.design',
+        children: [
+          { id: 'layers', label: 'core.layers' },
+          { id: 'composite', label: 'core.refComposite' },
+        ],
+      },
+      {
+        id: 'basic',
+        label: 'core.basicConcepts',
+        children: [
+          { id: 'coordinate-system', label: 'core.coordinateSystem' },
+          { id: 'position', label: 'core.positioning' },
+        ],
+      },
+      {
+        id: 'core',
+        label: 'core.coreConcepts',
+        children: [
+          { id: 'primitive-model', label: 'core.primitiveModel' },
+          { id: 'primitive-relations', label: 'core.primitiveRelations' },
+        ],
+      },
     ],
   },
   {
@@ -54,20 +75,28 @@ export const coreSection: Array<Section> = [
         children: [
           { id: 'circle-ellipse', label: 'core.shapesCircleEllipse' },
           { id: 'arc-sector', label: 'core.shapesArcSector' },
-          { id: 'rectangle-polygon', label: 'core.shapesRectanglePolygon' },
+          { id: 'rectangle', label: 'core.shapesRectangle' },
+          { id: 'polygon', label: 'core.shapesPolygon' },
           { id: 'star', label: 'core.shapesStar' },
-          { id: 'grid', label: 'core.shapesGrid' },
         ],
       },
-    ],
-  },
-  {
-    id: 'examples',
-    label: 'core.examples',
-    pages: [
-      { id: 'karl-circle', label: 'core.examplesKarlCircle' },
-      { id: 'learning-path', label: 'core.examplesLearningPath' },
-      { id: 'ohms-law-circuit', label: 'core.examplesOhmsLawCircuit' },
+      {
+        id: 'helpers',
+        label: 'core.helpers',
+        children: [
+          { id: 'grid', label: 'core.helpersGrid' },
+        ],
+      },
+      {
+        id: 'animation',
+        label: 'core.animation',
+        children: [
+          { id: 'entrance', label: 'core.animationEntrance' },
+          { id: 'emphasis', label: 'core.animationEmphasis' },
+          { id: 'camera', label: 'core.animationCamera' },
+          { id: 'control', label: 'core.animationControl' },
+        ],
+      },
     ],
   },
   {
@@ -82,6 +111,14 @@ export const coreSection: Array<Section> = [
           { id: 'custom-arrow', label: 'core.refCustomArrow' },
           { id: 'custom-pattern', label: 'core.refCustomPattern' },
           { id: 'path-generator', label: 'core.refPathGenerator' },
+          { id: 'custom-animation', label: 'core.refCustomAnimation' },
+        ],
+      },
+      {
+        id: 'composites',
+        label: 'core.refComposites',
+        children: [
+          { id: 'plot', label: 'core.refPlot' },
         ],
       },
       {
@@ -95,12 +132,45 @@ export const coreSection: Array<Section> = [
         ],
       },
       {
+        id: 'renderer',
+        label: 'core.refRenderer',
+        children: [
+          { id: 'svg', label: 'core.refRendererSvg' },
+          { id: 'canvas', label: 'core.refRendererCanvas' },
+          { id: 'hydration', label: 'core.refHydration' },
+        ],
+      },
+      {
         id: 'runtime',
         label: 'core.refRuntime',
         children: [
           { id: 'compile', label: 'core.refCompile' },
           { id: 'scene-primitive', label: 'core.refScenePrimitive' },
           { id: 'parser', label: 'core.refParser' },
+        ],
+      },
+    ],
+  },
+  {
+    id: 'examples',
+    label: 'core.examples',
+    pages: [
+      { id: 'karl-circle', label: 'core.examplesKarlCircle' },
+      { id: 'learning-path', label: 'core.examplesLearningPath' },
+      { id: 'ohms-law-circuit', label: 'core.examplesOhmsLawCircuit' },
+    ],
+  },
+  {
+    id: 'releases',
+    label: 'core.releases',
+    pages: [
+      {
+        id: 'changelog',
+        label: 'core.changelog',
+        children: [
+          { id: 'v0-3', label: 'core.changelogV03' },
+          { id: 'v0-2', label: 'core.changelogV02' },
+          { id: 'v0-1', label: 'core.changelogV01' },
         ],
       },
     ],

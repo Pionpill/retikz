@@ -18,6 +18,6 @@
     "target": "ESNext",
     "lib": ["ESNext"]
   },
-  "include": ["packages/*/src", "apps/*/src"],
+  "include": ["packages/*/*/src", "apps/*/src"],
   "exclude": ["node_modules"]
 }

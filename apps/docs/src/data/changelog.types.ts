@@ -42,12 +42,38 @@ export type Release = {
 };
 
 /** 全部可能的包标识(筛选 chips 由数据中实际出现者派生) */
-export const PACKAGE_IDS = ['@retikz/core', '@retikz/react', 'docs'] as const;
+export const PACKAGE_IDS = [
+  '@retikz/core',
+  '@retikz/render',
+  '@retikz/react',
+  '@retikz/vanilla',
+  '@retikz/plot',
+  '@retikz/plot-react',
+  '@retikz/plot-vanilla',
+  'docs',
+] as const;
 export type PackageId = (typeof PACKAGE_IDS)[number];
 
 /** 包标识 → 展示名(多数包名两语一致,docs 例外) */
 export const PACKAGE_LABEL: Record<PackageId, Localized> = {
   '@retikz/core': { zh: '@retikz/core', en: '@retikz/core' },
+  '@retikz/render': { zh: '@retikz/render', en: '@retikz/render' },
   '@retikz/react': { zh: '@retikz/react', en: '@retikz/react' },
+  '@retikz/vanilla': { zh: '@retikz/vanilla', en: '@retikz/vanilla' },
+  '@retikz/plot': { zh: '@retikz/plot', en: '@retikz/plot' },
+  '@retikz/plot-react': { zh: '@retikz/plot-react', en: '@retikz/plot-react' },
+  '@retikz/plot-vanilla': { zh: '@retikz/plot-vanilla', en: '@retikz/plot-vanilla' },
   docs: { zh: '文档站', en: 'Docs' },
 };
+
+/** 包的类别分组:core 基础设施 / plot 图表层 / other（文档站等非 npm 包）；用于把包映射到对应文档模块的 changelog 切片 */
+export type PackageGroup = {
+  id: 'core' | 'plot' | 'other';
+  /** 该组按序包含的包标识 */
+  members: ReadonlyArray<PackageId>;
+};
+export const PACKAGE_GROUPS: ReadonlyArray<PackageGroup> = [
+  { id: 'core', members: ['@retikz/core', '@retikz/render', '@retikz/react', '@retikz/vanilla'] },
+  { id: 'plot', members: ['@retikz/plot', '@retikz/plot-react', '@retikz/plot-vanilla'] },
+  { id: 'other', members: ['docs'] },
+];

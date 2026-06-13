@@ -1,0 +1,377 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Shape baseline snapshot (byte-for-byte regression net) > rich multi-shape scene stays identical across the registry refactor 1`] = `
+{
+  "layout": {
+    "height": 352.7329,
+    "width": 371.9455,
+    "x": -45.2951,
+    "y": -42.7329,
+  },
+  "primitives": [
+    {
+      "children": [
+        {
+          "cornerRadius": 3,
+          "dashPattern": undefined,
+          "fill": "lightblue",
+          "fillOpacity": 0.8,
+          "height": 32.8,
+          "opacity": undefined,
+          "stroke": "navy",
+          "strokeOpacity": undefined,
+          "strokeWidth": 2,
+          "type": "rect",
+          "width": 46.8,
+          "x": -23.4,
+          "y": -16.4,
+        },
+        {
+          "align": "middle",
+          "baseline": "alphabetic",
+          "fill": "currentColor",
+          "fontFamily": undefined,
+          "fontSize": 14,
+          "fontStyle": undefined,
+          "fontWeight": undefined,
+          "lineHeight": 16.8,
+          "lines": [
+            {
+              "text": "Rect",
+            },
+          ],
+          "measuredHeight": 16.8,
+          "measuredWidth": 30.8,
+          "opacity": undefined,
+          "type": "text",
+          "x": 0,
+          "y": 4.2,
+        },
+      ],
+      "id": "r",
+      "transforms": [
+        {
+          "cx": 0,
+          "cy": 0,
+          "degrees": 30,
+          "kind": "rotate",
+        },
+      ],
+      "type": "group",
+    },
+    {
+      "children": [
+        {
+          "cx": 120,
+          "cy": 0,
+          "dashPattern": undefined,
+          "fill": "pink",
+          "fillOpacity": undefined,
+          "opacity": undefined,
+          "rx": 20.2332,
+          "ry": 20.2332,
+          "stroke": "currentColor",
+          "strokeOpacity": undefined,
+          "strokeWidth": 1,
+          "type": "ellipse",
+        },
+        {
+          "align": "middle",
+          "baseline": "alphabetic",
+          "fill": "currentColor",
+          "fontFamily": undefined,
+          "fontSize": 14,
+          "fontStyle": undefined,
+          "fontWeight": undefined,
+          "lineHeight": 16.8,
+          "lines": [
+            {
+              "text": "C",
+            },
+          ],
+          "measuredHeight": 16.8,
+          "measuredWidth": 7.7,
+          "opacity": undefined,
+          "type": "text",
+          "x": 120,
+          "y": 4.2,
+        },
+      ],
+      "id": "c",
+      "type": "group",
+    },
+    {
+      "children": [
+        {
+          "cx": 240,
+          "cy": 0,
+          "dashPattern": undefined,
+          "fill": "transparent",
+          "fillOpacity": undefined,
+          "opacity": undefined,
+          "rx": 76.6504,
+          "ry": 23.1931,
+          "stroke": "currentColor",
+          "strokeOpacity": undefined,
+          "strokeWidth": 1,
+          "type": "ellipse",
+        },
+        {
+          "align": "middle",
+          "baseline": "alphabetic",
+          "fill": "currentColor",
+          "fontFamily": undefined,
+          "fontSize": 14,
+          "fontStyle": undefined,
+          "fontWeight": undefined,
+          "lineHeight": 16.8,
+          "lines": [
+            {
+              "text": "ellipse text",
+            },
+          ],
+          "measuredHeight": 16.8,
+          "measuredWidth": 92.4,
+          "opacity": undefined,
+          "type": "text",
+          "x": 240,
+          "y": 4.2,
+        },
+      ],
+      "id": "e",
+      "type": "group",
+    },
+    {
+      "children": [
+        {
+          "commands": [
+            {
+              "kind": "move",
+              "to": [
+                28.25,
+                120,
+              ],
+            },
+            {
+              "kind": "line",
+              "to": [
+                0,
+                148.25,
+              ],
+            },
+            {
+              "kind": "line",
+              "to": [
+                -28.25,
+                120,
+              ],
+            },
+            {
+              "kind": "line",
+              "to": [
+                0,
+                91.75,
+              ],
+            },
+            {
+              "kind": "close",
+            },
+          ],
+          "dashPattern": undefined,
+          "fill": "transparent",
+          "fillOpacity": undefined,
+          "opacity": undefined,
+          "stroke": "currentColor",
+          "strokeOpacity": undefined,
+          "strokeWidth": 1,
+          "type": "path",
+        },
+        {
+          "align": "middle",
+          "baseline": "alphabetic",
+          "fill": "currentColor",
+          "fontFamily": undefined,
+          "fontSize": 14,
+          "fontStyle": undefined,
+          "fontWeight": undefined,
+          "lineHeight": 16.8,
+          "lines": [
+            {
+              "text": "D",
+            },
+          ],
+          "measuredHeight": 16.8,
+          "measuredWidth": 7.7,
+          "opacity": undefined,
+          "type": "text",
+          "x": 0,
+          "y": 124.2,
+        },
+      ],
+      "id": "d",
+      "transforms": [
+        {
+          "cx": 0,
+          "cy": 120,
+          "degrees": 15,
+          "kind": "rotate",
+        },
+      ],
+      "type": "group",
+    },
+    {
+      "children": [
+        {
+          "cornerRadius": undefined,
+          "dashPattern": undefined,
+          "fill": "transparent",
+          "fillOpacity": undefined,
+          "height": 49.6,
+          "opacity": undefined,
+          "stroke": "currentColor",
+          "strokeOpacity": undefined,
+          "strokeWidth": 1,
+          "type": "rect",
+          "width": 54.5,
+          "x": 92.75,
+          "y": 95.2,
+        },
+        {
+          "align": "middle",
+          "baseline": "alphabetic",
+          "fill": "currentColor",
+          "fontFamily": undefined,
+          "fontSize": 14,
+          "fontStyle": undefined,
+          "fontWeight": undefined,
+          "lineHeight": 16.8,
+          "lines": [
+            {
+              "text": "line1",
+            },
+            {
+              "text": "line2",
+            },
+          ],
+          "measuredHeight": 33.6,
+          "measuredWidth": 38.5,
+          "opacity": undefined,
+          "type": "text",
+          "x": 120,
+          "y": 115.8,
+        },
+        {
+          "align": "middle",
+          "baseline": "alphabetic",
+          "fill": "currentColor",
+          "fontFamily": undefined,
+          "fontSize": 14,
+          "fontStyle": undefined,
+          "fontWeight": undefined,
+          "lineHeight": 16.8,
+          "lines": [
+            {
+              "text": "tag",
+            },
+          ],
+          "measuredHeight": 14,
+          "measuredWidth": 23.1,
+          "opacity": undefined,
+          "type": "text",
+          "x": 120,
+          "y": 87.4,
+        },
+      ],
+      "id": "p",
+      "type": "group",
+    },
+    {
+      "commands": [
+        {
+          "kind": "move",
+          "to": [
+            32.7935,
+            0,
+          ],
+        },
+        {
+          "kind": "line",
+          "to": [
+            99.7668,
+            0,
+          ],
+        },
+      ],
+      "dashPattern": undefined,
+      "fill": "none",
+      "fillOpacity": undefined,
+      "fillRule": undefined,
+      "opacity": undefined,
+      "stroke": "currentColor",
+      "strokeLinecap": undefined,
+      "strokeLinejoin": undefined,
+      "strokeOpacity": undefined,
+      "strokeWidth": 1,
+      "type": "path",
+    },
+    {
+      "commands": [
+        {
+          "kind": "move",
+          "to": [
+            7.3116,
+            92.7126,
+          ],
+        },
+        {
+          "kind": "line",
+          "to": [
+            240,
+            23.1931,
+          ],
+        },
+      ],
+      "dashPattern": undefined,
+      "fill": "none",
+      "fillOpacity": undefined,
+      "fillRule": undefined,
+      "opacity": undefined,
+      "stroke": "currentColor",
+      "strokeLinecap": undefined,
+      "strokeLinejoin": undefined,
+      "strokeOpacity": undefined,
+      "strokeWidth": 1,
+      "type": "path",
+    },
+    {
+      "commands": [
+        {
+          "kind": "move",
+          "to": [
+            137.5225,
+            10.1166,
+          ],
+        },
+        {
+          "kind": "line",
+          "to": [
+            300,
+            300,
+          ],
+        },
+      ],
+      "dashPattern": undefined,
+      "fill": "none",
+      "fillOpacity": undefined,
+      "fillRule": undefined,
+      "opacity": undefined,
+      "stroke": "currentColor",
+      "strokeLinecap": undefined,
+      "strokeLinejoin": undefined,
+      "strokeOpacity": undefined,
+      "strokeWidth": 1,
+      "type": "path",
+    },
+  ],
+}
+`;

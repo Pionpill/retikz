@@ -1,29 +1,38 @@
 import { Ban, BotMessageSquare, ChevronsDownUp, ChevronsUpDown, Diff, Minus, Plus, X } from 'lucide-react';
-import { type FC, useEffect, useRef, useState } from 'react';
+import { type FC, Fragment, type ReactNode, useRef, useState } from 'react';
 
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { cn } from '@/lib/utils';
-import { useAiChatStore } from '@/store/useAiChatStore';
-import { useComponentPreviewStore } from '@/store/useComponentPreviewStore';
+import { useAiChatStore } from '@/store/use-ai-chat-store';
+import { useComponentPreviewStore } from '@/store/use-component-preview-store';
 
 import { HighlightedCode } from '../highlight-code';
-import { CopyButton, SourceFileMenu, ToolbarIconButton, ViewToggle } from './_parts';
+import { CopyButton, SourceViewBar, ToolbarIconButton } from './_parts';
 import {
   type AlignKey,
-  type ComponentSourceFile,
+  type ComponentRenderSource,
   type DiffMode,
+  type PreviewAction,
+  type PreviewActionContext,
+  type PreviewOverlay,
+  type RendererMode,
   type SizeKey,
-  type SourceView,
   type UnifiedDiff,
   alignClass,
   filterDiffByMode,
   sizeClass,
 } from './_shared';
+import { ANIM_PAUSE_ID, buildAnimationActions } from './animation-actions';
+import { PreviewActionBar } from './PreviewActionBar';
 import { ComponentDetailDialog } from './ComponentDetailDialog';
+import { DemoRenderer } from './DemoRenderer';
 import { PanZoomToolbar } from './PanZoomToolbar';
-import { usePanZoom } from './usePanZoom';
+import { useSourceViews } from './use-source-views';
+import { usePanZoom } from './use-pan-zoom';
+
+export type { ComponentRenderSource } from './_shared';
 
 /**
  * 反查最近的前置 heading：从当前节点出发往左找兄弟，找不到就上一层继续
@@ -61,22 +70,6 @@ const COLLAPSED_CODE_MAX_H = '[&_pre]:max-h-[15rem] [&_pre]:overflow-y-auto';
 /** 触发「展开/收起」按钮的最小行数门槛 */
 const COLLAPSE_THRESHOLD_LINES = 10;
 
-/**
- * 已解析好的代码视图集合
- * @description react / ir 任一字段非空则该视图可见；两者都空（或 source 缺省）时整段代码面板不渲染。
- *   仅有一个视图时不出 React/IR toggle；teaser「View Code」流仅在 react 视图存在且行数超阈值时触发
- */
-export type ComponentRenderSource = {
-  react?: string;
-  reactFiles?: Array<ComponentSourceFile>;
-  ir?: string;
-  /**
-   * 相比 baseline 的 unified diff（current 与 baseline 删除行交织后的展示代码 + 每行 kind）
-   * @description 仅在 React 视图 + 展开态下喂给 HighlightedCode：替换展示代码为 unified 版本、按 kind 给行加 `+`/`-` 字符与背景；teaser 折叠态 / IR 视图 / hideCode 跳过。Copy 始终复制真实 React 源码，不带 diff 装饰
-   */
-  reactDiff?: UnifiedDiff;
-};
-
 export type ComponentRenderProps = {
   /** demo 标识（仅用于 Dialog header 显示） */
   name: string;
@@ -91,6 +84,14 @@ export type ComponentRenderProps = {
   componentClassName?: string;
   /** 是否显示右侧工具条的 Ask AI 按钮，默认 true；在 AI 面板内（如 RetikzPreview）渲染时关掉避免自指 */
   showAskAi?: boolean;
+  /** 交互式 demo（含 hooks / 异步）：真渲染 `<Component/>`，隐藏 svg/canvas 切换；IR / Vanilla 视图由调用方置空后自动消失 */
+  interactive?: boolean;
+  /** demo 含动画：自动装配内置动画工具（重播 / 播放暂停 / 停止）到左上角动作栏 */
+  animated?: boolean;
+  /** 自定义动作按钮（追加在内置工具之后，渲染在左上角动作栏） */
+  actions?: Array<PreviewAction>;
+  /** 渲染区内常驻浮层（如未来的 FPS 监视器面板） */
+  overlays?: Array<PreviewOverlay>;
 };
 
 /**
@@ -98,36 +99,33 @@ export type ComponentRenderProps = {
  * @description 不接触 demo 文件加载、AST 解析或 IR 派生——那些由调用方（`ComponentPreview` 走 glob、`RetikzPreview` 走 source string）准备好后喂进来
  */
 export const ComponentRender: FC<ComponentRenderProps> = props => {
-  const { name, Component, source, align = 'center', size = 'md', componentClassName, showAskAi = true } = props;
-  const reactFiles =
-    source?.reactFiles !== undefined && source.reactFiles.length > 0
-      ? source.reactFiles
-      : (source?.react ?? '').length > 0
-        ? [{ filename: `${name}.demo.tsx`, code: source?.react ?? '', diff: source?.reactDiff }]
-        : [];
-  const hasReact = reactFiles.length > 0;
-  const hasIr = (source?.ir ?? '').length > 0;
-  const hasCode = hasReact || hasIr;
-
+  const { name, Component, source, align = 'center', size = 'md', componentClassName, showAskAi = true, interactive, animated = false, actions, overlays } =
+    props;
   // 局部状态用 `boolean | undefined`：undefined 跟随全局默认；用户单卡操作过一次后本地选择胜出
   const [localIsCodeVisible, setLocalIsCodeVisible] = useState<boolean | undefined>(undefined);
-  // view 仅在双视图时由用户控制；单视图情境下 effectiveView 派生兜底，避免在 effect 里同步 setState
-  const [view, setView] = useState<SourceView>('react');
   const [sourceFileIndex, setSourceFileIndex] = useState(0);
   const [localIsExpanded, setLocalIsExpanded] = useState<boolean | undefined>(undefined);
-  // diff 模式默认 'added'（有 reactDiff 数据时）；用户选过一次后 localDiffMode 胜出。
+  // diff 模式默认 'added'（有 diff 数据时）；用户选过一次后 localDiffMode 胜出。
   // 偏好 added/removed 优先于 full：full unified（current + 删除行交织）阅读噪声大，教学场景只看新增 / 只看删除更直观
   const [localDiffMode, setLocalDiffMode] = useState<DiffMode | undefined>(undefined);
-  const [copied, setCopied] = useState(false);
-  const timerRef = useRef<number | null>(null);
+  // 视图选择 + 当前视图文件 + 复制：统一走 useSourceViews（与 Dialog 共用同一份推导，任意视图都能多文件 + diff）
+  const { views, view, setView, files, activeFileIndex, activeFile, render: activeRender, copied, handleCopy } =
+    useSourceViews(source, sourceFileIndex);
+  const hasCode = views.length > 0;
   // 卡内 drag 默认关闭：local 为 undefined 时跟随全局；单卡点过 Hand 后本地胜出
   const [localDragEnabled, setLocalDragEnabled] = useState<boolean | undefined>(undefined);
+  // 卡内 svg/canvas 切换只作用于本卡：local 为 undefined 时跟随全局默认（Header 菜单设），单卡切过一次后本地胜出
+  const [localRendererMode, setLocalRendererMode] = useState<RendererMode | undefined>(undefined);
   // 用户在 PanZoomToolbar 切了 size 之后本地胜出；未切时跟随 prop 的 size
   const [localSize, setLocalSize] = useState<SizeKey | undefined>(undefined);
   const effectiveSize = localSize ?? size;
   // 工具条 pinned：移动端没 hover，靠 tap preview 区域 toggle
   const [toolbarPinned, setToolbarPinned] = useState(false);
   const [isMaximized, setIsMaximized] = useState(false);
+  // 重播：bump nonce → keyed Fragment 重挂渲染子树（CSS @keyframes / canvas rAF / WAAPI 重置）
+  const [replayNonce, setReplayNonce] = useState(0);
+  // per-card 工具开关态（播放暂停、未来性能监视器等 toggle 类工具）
+  const [toolState, setToolState] = useState<Record<string, boolean>>({});
   const { transform, isDragging, panBy, zoomBy, resetTransform, isTransformed, transformStyle, beginDrag } =
     usePanZoom();
   // outer card ref：Ask AI 时反查最近前置 heading 拼 prompt 用
@@ -141,58 +139,38 @@ export const ComponentRender: FC<ComponentRenderProps> = props => {
   const globalHideCode = useComponentPreviewStore(s => s.hideCode);
   const globalIsExpand = useComponentPreviewStore(s => s.isExpand);
   const globalDragEnabled = useComponentPreviewStore(s => s.dragEnabled);
+  const globalRendererMode = useComponentPreviewStore(s => s.rendererMode);
   const isCodeVisible = localIsCodeVisible ?? globalHideCode;
   const isExpanded = localIsExpanded ?? globalIsExpand;
   const dragEnabled = localDragEnabled ?? globalDragEnabled;
+  const rendererMode = localRendererMode ?? globalRendererMode;
+  // 单卡 svg/canvas 切换写本地 override，不动全局 store → 只影响当前卡
+  const toggleRendererMode = () => setLocalRendererMode(rendererMode === 'svg' ? 'canvas' : 'svg');
 
-  useEffect(() => {
-    return () => {
-      if (timerRef.current !== null) window.clearTimeout(timerRef.current);
-    };
-  }, []);
+  // 当前文件的真实源码 / 语言 / diff（任意视图均可带 diff，不再限 React）
+  const activeCode = activeFile?.code ?? '';
+  const activeLang = activeFile?.lang ?? 'tsx';
+  const activeDiff = activeFile?.diff;
 
-  const activeSourceFileIndex = Math.min(sourceFileIndex, Math.max(reactFiles.length - 1, 0));
-  const activeSourceFile = reactFiles.at(activeSourceFileIndex);
-  const reactSource = activeSourceFile?.code ?? '';
-  const activeDiff = activeSourceFile?.diff;
-  const irSource = source?.ir ?? '';
-
-  // 单视图情境派生兜底：仅 ir 时 view 当前值无意义，effectiveView 强制返回 ir；React/IR toggle 只在双视图时渲染，所以 setView 也只能在双视图时被触发
-  const effectiveView: SourceView = hasReact && hasIr ? view : hasReact ? 'react' : 'ir';
-
-  // teaser 判定基于 react 源码行数（IR 通常更长但不是用户期望的"概览"内容）
-  const reactLineCount = reactSource.split('\n').length;
-  const reactHasMoreLines = reactLineCount > PREVIEW_MAX_LINES;
-  const reactPreview = reactSource.split('\n').slice(0, PREVIEW_MAX_LINES).join('\n');
-  const usesTeaser = hasReact && reactHasMoreLines;
+  // teaser 判定基于当前文件行数（初始 view=react，展示首几行 + View Code）
+  const codeLineCount = activeCode.split('\n').length;
+  const codeHasMoreLines = codeLineCount > PREVIEW_MAX_LINES;
+  const codePreview = activeCode.split('\n').slice(0, PREVIEW_MAX_LINES).join('\n');
+  const usesTeaser = hasCode && codeHasMoreLines;
   const showFull = !usesTeaser || isCodeVisible;
 
-  // Copy 用的源码：始终是真实 React / IR 源码，与 diff 视觉装饰解耦
-  const copyCode = effectiveView === 'ir' ? irSource : reactSource;
   // 默认 'added'：有 diff 数据 → 默认只看新增；用户在下拉里改过 mode 后 local 胜出
-  const hasReactDiff = activeDiff !== undefined;
-  const diffMode: DiffMode = localDiffMode ?? (hasReactDiff ? 'added' : 'off');
-  // 展示代码：React 视图 + 展开态 + 有数据 + mode != off → 按 mode 过滤 unified diff；其余情况维持原行为
+  const hasActiveDiff = activeDiff !== undefined;
+  const diffMode: DiffMode = localDiffMode ?? (hasActiveDiff ? 'added' : 'off');
+  // 展开态 + 有 diff + mode≠off → 按 mode 过滤 unified diff（任意视图）
   const displayedDiff: UnifiedDiff | null =
-    effectiveView === 'react' && showFull && activeDiff !== undefined && diffMode !== 'off'
-      ? filterDiffByMode(activeDiff, diffMode)
-      : null;
-  const fullCode = effectiveView === 'ir' ? irSource : (displayedDiff?.code ?? reactSource);
-  const fullLang = effectiveView === 'ir' ? 'json' : 'tsx';
-  const displayedCode = showFull ? fullCode : reactPreview;
-  const displayedLang = showFull ? fullLang : 'tsx';
+    showFull && activeDiff !== undefined && diffMode !== 'off' ? filterDiffByMode(activeDiff, diffMode) : null;
+  const displayedCode = showFull ? (displayedDiff?.code ?? activeCode) : codePreview;
+  const displayedLang = activeLang;
   const displayedLineCount = displayedCode.split('\n').length;
   const displayedLineKinds = displayedDiff?.lineKinds;
-  // 右侧工具条 diff 下拉仅在 React 视图 + 展开态 + 有数据时出
-  const showDiffPicker = hasReactDiff && effectiveView === 'react' && showFull;
-
-  // 复制内容跟随当前视图（IR 模式复制 IR JSON，React 模式复制真实源码——即便当下显示的是 unified diff）
-  const handleCopy = () => {
-    void navigator.clipboard.writeText(copyCode);
-    setCopied(true);
-    if (timerRef.current !== null) window.clearTimeout(timerRef.current);
-    timerRef.current = window.setTimeout(() => setCopied(false), 3000);
-  };
+  // 右侧工具条 diff 下拉：展开态 + 有 diff 数据时出（任意视图）
+  const showDiffPicker = hasActiveDiff && showFull;
 
   const handleHideAll = () => {
     setLocalIsCodeVisible(false);
@@ -200,12 +178,29 @@ export const ComponentRender: FC<ComponentRenderProps> = props => {
     setView('react');
   };
 
-  /**
-   * 下载当前渲染图。目前 retikz 只输出 SVG，所以直接序列化 SVG → blob → 触发 anchor 点击。
-   * @todo 等渲染管线支持 canvas / WebGPU 后台后，把这里改成多格式 picker（SVG / PNG / JPEG / WebP），
-   *   PNG/JPEG 走 `new Image() + canvas.drawImage` 路径（注意外部字体 / CSS var 在 canvas 里的 fallback）
-   */
-  const handleDownload = () => {
+  const downloadBlob = (blob: Blob, fileName: string) => {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = fileName;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
+  const downloadDataUrl = (dataUrl: string, fileName: string) => {
+    const [header = '', payload = ''] = dataUrl.split(',');
+    const mimeType = header.match(/^data:([^;]+)/)?.[1] ?? 'application/octet-stream';
+    const binary = window.atob(payload);
+    const bytes = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) {
+      bytes[i] = binary.charCodeAt(i);
+    }
+    downloadBlob(new Blob([bytes], { type: mimeType }), fileName);
+  };
+
+  const downloadSvg = () => {
     const svg = renderPaneRef.current?.querySelector('svg');
     if (!svg) return;
     let svgSource = new XMLSerializer().serializeToString(svg);
@@ -213,17 +208,39 @@ export const ComponentRender: FC<ComponentRenderProps> = props => {
     if (!/\sxmlns=/.test(svgSource)) {
       svgSource = svgSource.replace(/<svg\b/, '<svg xmlns="http://www.w3.org/2000/svg"');
     }
-    const blob = new Blob([`<?xml version="1.0" encoding="UTF-8"?>\n${svgSource}`], {
-      type: 'image/svg+xml;charset=utf-8',
-    });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${name || 'retikz'}.svg`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    downloadBlob(
+      new Blob([`<?xml version="1.0" encoding="UTF-8"?>\n${svgSource}`], {
+        type: 'image/svg+xml;charset=utf-8',
+      }),
+      `${name || 'retikz'}.svg`,
+    );
+  };
+
+  const downloadCanvas = () => {
+    const canvas = renderPaneRef.current?.querySelector('canvas');
+    if (!canvas) return;
+    try {
+      const fileName = `${name || 'retikz'}.png`;
+      if (typeof canvas.toBlob === 'function') {
+        canvas.toBlob(blob => {
+          if (!blob) return;
+          downloadBlob(blob, fileName);
+        }, 'image/png');
+        return;
+      }
+      downloadDataUrl(canvas.toDataURL('image/png'), fileName);
+    } catch {
+      // canvas 可能因跨域图片被标记为 tainted，此时浏览器会阻止导出
+    }
+  };
+
+  /** 下载当前渲染图：SVG 模式导出 `.svg`，Canvas 模式导出 `.png`。 */
+  const handleDownload = () => {
+    if (rendererMode === 'canvas') {
+      downloadCanvas();
+      return;
+    }
+    downloadSvg();
   };
 
   const handleAskAi = () => {
@@ -237,7 +254,21 @@ export const ComponentRender: FC<ComponentRenderProps> = props => {
   };
 
   const cardDragCursor = dragEnabled ? (isDragging ? 'cursor-grabbing' : 'cursor-grab') : '';
-  const showViewToggle = hasReact && hasIr;
+
+  // 动作 / 浮层共享上下文：每次渲染重建（active 读当前 toolState、renderPane 用 getter 取最新 ref）
+  const actionCtx: PreviewActionContext = {
+    replay: () => setReplayNonce(n => n + 1),
+    rendererMode,
+    get renderPane() {
+      return renderPaneRef.current;
+    },
+    active: id => toolState[id] ?? false,
+    setActive: (id, on) => setToolState(prev => ({ ...prev, [id]: on ?? !prev[id] })),
+  };
+  // 有效动作 = 内置工具（含动画时的重播/播放暂停/停止）∪ 自定义 actions
+  const builtinActions = animated ? buildAnimationActions(toolState[ANIM_PAUSE_ID] ?? false) : [];
+  const allActions: Array<PreviewAction> = [...builtinActions, ...(actions ?? [])];
+  const overlayNodes: Array<ReactNode> = (overlays ?? []).map(o => <Fragment key={o.id}>{o.render(actionCtx)}</Fragment>);
 
   return (
     <div ref={containerRef} className="my-6 overflow-hidden rounded-xl border">
@@ -258,15 +289,22 @@ export const ComponentRender: FC<ComponentRenderProps> = props => {
         <div
           ref={renderPaneRef}
           className={cn(
-            // [&>svg]:max-w-full + max-h-full：让 demo 的 SVG 自动按 viewBox aspect 缩进
-            // 父框，不超出宽 / 高；TikZ 自身 width/height 属性只是 intrinsic 上限，CSS max 收紧
-            'flex items-center justify-center max-w-full max-h-full [&>svg]:max-w-full [&>svg]:max-h-full',
+            // SVG / Canvas 都按父框收紧，不超出宽 / 高；TikZ 自身 width/height 只是 intrinsic 上限
+            'flex items-center justify-center max-w-full max-h-full [&>canvas]:max-w-full [&>canvas]:max-h-full [&>svg]:max-w-full [&>svg]:max-h-full',
             !isDragging && 'transition-transform duration-150',
           )}
           style={{ transform: transformStyle }}
         >
-          <Component />
+          <Fragment key={replayNonce}>
+            {activeRender ? (
+              activeRender(rendererMode)
+            ) : (
+              <DemoRenderer Component={Component} rendererMode={rendererMode} interactive={interactive} />
+            )}
+          </Fragment>
         </div>
+        <PreviewActionBar actions={allActions} ctx={actionCtx} pinned={toolbarPinned} />
+        {overlayNodes}
         <PanZoomToolbar
           transform={transform}
           isTransformed={isTransformed}
@@ -279,6 +317,8 @@ export const ComponentRender: FC<ComponentRenderProps> = props => {
           size={effectiveSize}
           onSizeChange={setLocalSize}
           onDownload={handleDownload}
+          rendererMode={rendererMode}
+          toggleRendererMode={toggleRendererMode}
           pinned={toolbarPinned}
         />
       </div>
@@ -288,14 +328,14 @@ export const ComponentRender: FC<ComponentRenderProps> = props => {
             <>
               <div className="flex items-center justify-between p-1 px-2">
                 <div className="flex min-w-0 flex-1 items-center gap-1">
-                  {effectiveView === 'react' ? (
-                    <SourceFileMenu
-                      files={reactFiles}
-                      activeIndex={activeSourceFileIndex}
-                      onChange={setSourceFileIndex}
-                    />
-                  ) : null}
-                  {showViewToggle ? <ViewToggle view={view} onChange={setView} /> : null}
+                  <SourceViewBar
+                    views={views}
+                    view={view}
+                    onViewChange={setView}
+                    files={files}
+                    activeFileIndex={activeFileIndex}
+                    onFileChange={setSourceFileIndex}
+                  />
                 </div>
                 {/* 工具条上每个按钮用 native title 而非 radix Tooltip + asChild：
                    项目 React 18.2 下 shadcn Button / DropdownMenuTrigger / TooltipTrigger 都是 FC 不 forwardRef，
@@ -409,7 +449,13 @@ export const ComponentRender: FC<ComponentRenderProps> = props => {
         Component={Component}
         source={source}
         align={align}
-        sourceFileIndex={activeSourceFileIndex}
+        rendererMode={rendererMode}
+        toggleRendererMode={toggleRendererMode}
+        interactive={interactive}
+        animated={animated}
+        actions={actions}
+        overlays={overlays}
+        sourceFileIndex={activeFileIndex}
         onSourceFileIndexChange={setSourceFileIndex}
       />
     </div>

@@ -1,0 +1,56 @@
+---
+title: Introduction
+description: "retikz's charting layer: describe chart semantics with Plot IR, supply data separately, then lower into core primitives for rendering."
+---
+
+`@retikz/plot` is the Tier 2 charting layer built on top of core. Core handles general primitives, paths, and render-neutral compilation; plot organizes how data fields become visual marks into a serializable, validated chart specification.
+
+It is for cases where you want to draw structured data as charts while keeping retikz's IR, AI, and multi-renderer workflow. The current version focuses on the smallest useful loop: linear scales, a 2D cartesian coordinate system, line and point marks, axes, and gridlines.
+
+## Core + Graphic Grammar
+
+<ComponentPreview name="plot-grammar-parts" size="md" hideCode />
+
+plot is essentially **core + graphic grammar**. Core provides the renderable nodes, paths, scopes, and Scene contract; plot does not create a separate renderer. It adds a grammar layer above core for describing how data fields become visual marks.
+
+| Part | In the implementation | Role |
+| --- | --- | --- |
+| **Graphic grammar** | `marks`, `encoding`, `scales`, `coordinate`, `guides`; in React, `<LineMark>` / `<PointMark>` / `<Axis>` | The drawing idea: declare which field maps to which visual channel, then let scales, coordinates, and guides place it on the canvas |
+| **data** | `data.reference` + optional `model` point to an external dataset; lowering resolves each row into `x` / `y` data channels | Holds real values and field declarations; values stay outside IR, field paths enter channels through `field`, and constants enter through `value` |
+| **`@retikz/plot`** | `PlotSpecSchema`, `buildPlotSpec`, `lowerPlots`, `renderPlot`, `<Plot>` | The logic wrapper: validates PlotSpec, fills default linear scale / cartesian2D / Axis, computes domains / ticks / projectors, and lowers the result to core IR |
+
+## Plot IR at the Center
+
+<ComponentPreview name="plot-ir-centric" size="md" hideCode />
+
+The center of plot is not a large data table; it is a Plot IR document that describes chart semantics. Components, handwritten specs, and AI output all converge on that IR. The real data joins only during lowering, where `lowerPlots` turns the spec + data into core nodes and paths.
+
+## Three parts
+
+A plot chart does not put the dataset into the IR. The IR says what to draw; the actual data is supplied at render time.
+
+| Part | What it is | Responsibility |
+| --- | --- | --- |
+| **Plot IR** | JSON-serializable config | Stores marks, scales, coordinate, axes, and field bindings |
+| **Data** | External dataset | Supplies the actual values; never enters the IR, so config size does not grow with row count |
+| **lowerPlots** | Lowering function | Turns Plot IR + Data into core nodes and paths |
+
+React users usually do not need to write the whole IR by hand. `@retikz/plot-react`'s `<Plot>` assembles Plot IR synchronously from child components such as `<LineMark>`, `<PointMark>`, and `<Axis>`; when a program or AI generates the spec directly, you can render it with `<Plot spec={spec} data={{ sales }} />`.
+
+## Packages
+
+plot is split into three packages so chart semantics and framework entrypoints stay separate:
+
+| Package | Responsibility | Typical entry |
+| --- | --- | --- |
+| `@retikz/plot` | Plot IR schemas, data lowering, and core algorithms | `lowerPlots(datasets)` |
+| `@retikz/plot-react` | React composition DSL and the `<Plot>` wrapper | `<Plot data={rows}>...</Plot>` |
+| `@retikz/plot-vanilla` | Framework-free / SSR rendering entry | `renderPlot(spec, data, options)` |
+
+Whether you start from React components, a handwritten spec, or the vanilla entry, the chart goes through the same Plot IR and the same lowering path.
+
+## Current Stage
+
+<ComponentAlert title="v0.1 alpha.4" description="The current plot layer supports linear / band / point / time / ordinal(color) scales, cartesian2D and polar2D coordinates, PointMark / LineMark / BarMark / SectorMark / AreaMark (with dodge / stack multi-series and closed radar), Axis guides (x / y / angle / radius) with grid, and sort / stack transforms — across both the React and Vanilla packages. Positional channels are just x / y, reinterpreted by the coordinate system; legend, tooltip, and event interactions are still planned for later versions." />
+
+If this is your first time using plot, start with Get Started and build the local-data line + scatter chart first. The IR / data / lowering split will read more naturally after that.

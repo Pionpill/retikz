@@ -1,0 +1,57 @@
+---
+title: SVG
+description: retikz's default renderer — paints the Scene as a vector DOM where every primitive is a real SVG node; also offers SSR / build-time string output.
+---
+
+> This is the reference layer, not component docs; to draw, start from [Components](/core/components/layout).
+
+SVG is retikz's default renderer. It paints the compiled figure as a real `<svg>` DOM: every node and path is an element on the page, hit-testable by CSS, grabbable by selectors, readable by accessibility tools. Vector output stays crisp at any zoom and suits the vast majority of charts and diagrams — use it unless you have hundreds of primitives or need frequent repaints.
+
+## How to use it
+
+**React** — `<Layout>` defaults to SVG, so `renderer` is optional:
+
+```tsx
+import { Layout, Node } from '@retikz/react';
+
+<Layout renderer="svg">      {/* renderer="svg" is the default; you can omit it */}
+  <Node id="a">hello</Node>
+</Layout>
+```
+
+**Vanilla (browser)** — `mountSvg` mounts the figure as DOM; the returned view exposes `root` (the `<svg>`) and `dispose`:
+
+```ts
+import { mountSvg } from '@retikz/vanilla';
+
+const view = mountSvg(container, ir);
+// view.root is the <svg>; view.update(next) re-renders; view.dispose() unmounts
+```
+
+**Vanilla (SSR / build-time)** — `renderToSvgString` returns an HTML string without touching the DOM, so it runs in Node:
+
+```ts
+import { renderToSvgString } from '@retikz/vanilla';
+
+const svg = renderToSvgString(ir);   // '<svg ...>...</svg>', drop it into HTML
+```
+
+All three entries accept a compiled `Scene`, an `IR` to compile, or a `Figure` from the imperative builder.
+
+## Adding interaction to an SVG figure
+
+SVG primitives carry the element `id` when rendered (as a `data-retikz-id` attribute), so the client can bind event handlers back to them — see [Hydration](/core/reference/renderer/hydration).
+
+<ComponentAlert title="Low-level descriptor layer (for custom integrations)" description="@retikz/render/svg exposes a renderer-agnostic descriptor layer: buildSvgDocument / buildSvgFragment produce an SvgNode tree, and renderToSvgString serializes it. Reach for this when wiring SVG descriptors into another framework or controlling serialization yourself; ordinary usage only needs the three entries above." />
+
+## SVG or Canvas
+
+| | SVG | Canvas |
+| --- | --- | --- |
+| Output | Vector DOM nodes | Raster bitmap |
+| Scaling | Crisp at any zoom | Bound by resolution |
+| CSS / selectors | Every primitive hit-testable | One opaque canvas |
+| Many primitives | Slows as nodes pile up | Immediate mode stays steady |
+| Default | Yes | Explicit `renderer="canvas"` |
+
+Use SVG (the default) for a modest number of primitives, crisp vectors, or CSS interaction; switch to [Canvas](/core/reference/renderer/canvas) for hundreds of primitives or frequent repaints. Both render the same Scene, look identical, and share the exact same hydration code — switch any time.

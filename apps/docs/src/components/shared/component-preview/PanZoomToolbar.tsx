@@ -5,9 +5,9 @@ import { Separator } from '@/components/ui/separator';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { cn } from '@/lib/utils';
 
-import { ToolbarIconButton } from './_parts';
-import { SIZE_KEYS, type SizeKey, type Transform } from './_shared';
-import { PAN_STEP, ZOOM_FACTOR, ZOOM_MAX, ZOOM_MIN } from './usePanZoom';
+import { RendererModeButton, ToolbarIconButton } from './_parts';
+import { type RendererMode, SIZE_KEYS, type SizeKey, type Transform } from './_shared';
+import { PAN_STEP, ZOOM_FACTOR, ZOOM_MAX, ZOOM_MIN } from './use-pan-zoom';
 
 export type PanZoomToolbarProps = {
   transform: Transform;
@@ -21,8 +21,12 @@ export type PanZoomToolbarProps = {
   /** 当前 size 档位（受控）+ 切换回调；用户在工具条里改完后由父级 ComponentRender 落到 sizeClass */
   size: SizeKey;
   onSizeChange: (next: SizeKey) => void;
-  /** 下载当前渲染图（目前仅支持 SVG；未来通过 canvas 转 PNG / JPEG 再开多格式） */
+  /** 下载当前渲染图：SVG 模式下载 SVG，Canvas 模式下载 PNG */
   onDownload: () => void;
+  /** 当前渲染目标 */
+  rendererMode: RendererMode;
+  /** 切换当前渲染目标 */
+  toggleRendererMode: () => void;
   /**
    * 强制可见（覆盖 hover-only 默认）；移动端没有 hover，由父级通过 tap 切换 pinned 真值。
    * 未指定时沿用原 group-hover/focus-within 显示规则
@@ -53,10 +57,12 @@ export const PanZoomToolbar: FC<PanZoomToolbarProps> = props => {
     size,
     onSizeChange,
     onDownload,
+    rendererMode,
+    toggleRendererMode,
     pinned,
   } = props;
+  const downloadLabel = rendererMode === 'canvas' ? 'Download PNG' : 'Download SVG';
   const isSmallPreview = size === 'xs' || size === 'sm';
-
   return (
     <div
       className={cn(
@@ -97,6 +103,7 @@ export const PanZoomToolbar: FC<PanZoomToolbarProps> = props => {
         <ToolbarIconButton label="Zoom out" disabled={transform.scale <= ZOOM_MIN} onClick={() => zoomBy(1 / ZOOM_FACTOR)}>
           <ZoomOut className="size-3.5" />
         </ToolbarIconButton>
+        {/* 小预览（xs/sm）无 d-pad，Reset 放底排；md+ 的 Reset 在上方 d-pad 中心 */}
         {isSmallPreview && (
           <ToolbarIconButton label="Reset" disabled={!isTransformed} onClick={resetTransform}>
             <RotateCcw className="size-3.5" />
@@ -109,22 +116,19 @@ export const PanZoomToolbar: FC<PanZoomToolbarProps> = props => {
         >
           <Hand className="size-3.5" />
         </ToolbarIconButton>
+        {/* 非小预览但视口 < md（d-pad 隐藏）：底排补 Reset */}
         {!isSmallPreview && (
-          <ToolbarIconButton
-            label="Reset"
-            disabled={!isTransformed}
-            onClick={resetTransform}
-            className="md:hidden"
-          >
+          <ToolbarIconButton label="Reset" disabled={!isTransformed} onClick={resetTransform} className="md:hidden">
             <RotateCcw className="size-3.5" />
           </ToolbarIconButton>
         )}
-        <ToolbarIconButton label="Download SVG" onClick={onDownload}>
+        <ToolbarIconButton label={downloadLabel} title={downloadLabel} onClick={onDownload}>
           <Download className="size-3.5" />
         </ToolbarIconButton>
         <ToolbarIconButton label="Maximize" onClick={onMaximize} className="hidden md:inline-flex">
           <Maximize2 className="size-3.5" />
         </ToolbarIconButton>
+        <RendererModeButton rendererMode={rendererMode} onToggle={toggleRendererMode} />
       </div>
       <Separator className="w-full" />
       <ToggleGroup

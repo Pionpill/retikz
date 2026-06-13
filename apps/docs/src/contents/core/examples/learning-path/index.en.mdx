@@ -47,7 +47,7 @@ Send the prompt below to the AI chat panel — the LLM will produce retikz IR / 
 - 1 red \`#ff0000\` X: two 4px-wide diagonals`}
   extensions={[
   'Swap the path buttons: replace the 5 path buttons with your team’s career tracks (e.g. "Frontend / Backend / Fullstack / DevOps / SRE"), keeping the rest of the layout.',
-  'Add more sections: add an "Advanced" dodgerblue stack below the Required column, connected to Choose with an orthogonal step (fold) connector.',
+  'Add more sections: add an "Advanced" dodgerblue stack below the Required column, connected to Choose with an orthogonal fold connector.',
   'Render a dark-mode variant: switch the background to dark, brighten the teals and dim the grays, invert the text colors, and render a second copy.',
   ]}
   />
@@ -87,7 +87,7 @@ Add the `Fundamentals` gray mini button and the `Choose your path` sub-header be
 
 ### Step 3: side stacks — AtPosition tight stacking
 
-Add two independent stacks — 4 dodgerblue "required" buttons on the left, 2 legend buttons on the right (1 dodgerblue + 1 gray). Each column's **head** uses an absolute Cartesian first, and the rest use [AtPosition](/core/concepts/positioning) `{ direction: 'below', of: 'prev-id' }` for tight stacking: set the spine first, then let the column grow downward on its own.
+Add two independent stacks — 4 dodgerblue "required" buttons on the left, 2 legend buttons on the right (1 dodgerblue + 1 gray). Each column's **head** uses an absolute Cartesian first, and the rest use [AtPosition](/core/concepts/basic/position) `{ direction: 'below', of: 'prev-id' }` for tight stacking: set the spine first, then let the column grow downward on its own.
 
 - `<Layout ... nodeDistance={41}>` sets the global node distance on the container
 - Each AtPosition node references the previous node's id, gluing them visually into a "color bar"
@@ -162,7 +162,7 @@ The final decoration layer demonstrates `dashPattern` / `arrow` at start / edge 
 />
 ```
 
-`arrow="<-"` puts the arrow at the **start** instead of the end — here the start (251.88, 359.77) sits above Deep Learning, so the arrow points "go to Deep Learning." `{ label: 'recommended' }` is a prefix operator that modifies the **next** segment — it lands on the first curve's midpoint (default `position: 'midway'` + `side: 'above'`).
+`arrow="<-"` puts the arrow at the **start** instead of the end — here the start (251.88, 359.77) sits above Deep Learning, so the arrow points "go to Deep Learning." `{ label: 'recommended' }` is an infix operator that modifies the **next** segment — it lands on the first curve's midpoint (default `position: 'midway'` + `side: 'above'`).
 
 <ComponentPreview name="learning-path-05-dashed" diffFrom="learning-path-04-paths" size="xxl" />
 
@@ -173,7 +173,7 @@ The final decoration layer demonstrates `dashPattern` / `arrow` at start / edge 
 | [Draw](/core/components/draw/overview)     | All 12 connectors (2 spine lines / 3 short sub-column lines / 2 quadratic merges / 1 recommended dashed / 2 short dashed / 2 red X) + stroke / strokeWidth / dashPattern / arrow | [2](#step-2-center-spine--2-draw-lines), [4](#step-4-5-path-buttons--curve-merge), [5](#step-5-decoration--dashed-recommended--short-dashed--red-x) |
 | [Way operators](/core/components/draw/way) | `{ curve }` infix → quadratic / `{ label }` infix → edge label / node id → auto border anchor                                                                                | [4](#step-4-5-path-buttons--curve-merge), [5](#step-5-decoration--dashed-recommended--short-dashed--red-x)                                          |
 | [Node](/core/components/node/overview)     | All 16 roadmap nodes (title / header / required / optional) — 4 variants factored into `RoadmapNode`                                                                         | [1](#step-1-title--roadmapnode-4-variants), [3](#step-3-side-stacks--atposition-tight-stacking)                                                     |
-| [AtPosition](/core/concepts/positioning)   | Tight intra-stack stacking (`{ direction: 'below', of: prevId }` + global `nodeDistance`)                                                                                    | [3](#step-3-side-stacks--atposition-tight-stacking), [4](#step-4-5-path-buttons--curve-merge)                                                       |
+| [AtPosition](/core/concepts/basic/position)   | Tight intra-stack stacking (`{ direction: 'below', of: prevId }` + global `nodeDistance`)                                                                                    | [3](#step-3-side-stacks--atposition-tight-stacking), [4](#step-4-5-path-buttons--curve-merge)                                                       |
 
 ## Limitations
 
@@ -182,10 +182,10 @@ The final decoration layer demonstrates `dashPattern` / `arrow` at start / edge 
 | Math y-up axis | 🚧 Planned | scaling itself works via a Scope `scale` transform, but [`<Layout>`](/core/components/layout) has no y-up switch yet (a negative `y` scale flips text too); this example uses intro.svg's raw pixel coordinates |
 | Node hyperlinks | 🚧 Planned | [`<Node>`](/core/components/node/overview) doesn't accept `href` today, so intro.svg's `<a xlink:href>` wrappers are lost (visible but not clickable); wrap externally in `<a>` or render a separate link list |
 | Node drop shadow | 🚧 Planned | [`<Node>`](/core/components/node/overview) has no shadow support yet, so the duplicated-rect drop shadow is omitted |
-| Curve arrow shrink along chord | 🚧 Planned | arrow shrink currently shortens along the chord, so arrows on `curve` / `cubic` drift a few pixels off the border (`line` / `step` unaffected); tangent-direction shrink is on the roadmap |
+| Curve arrow shrink along chord | 🚧 Planned | arrow shrink currently shortens along the chord, so arrows on `curve` / `cubic` drift a few pixels off the border (`line` / `fold` unaffected); tangent-direction shrink is on the roadmap |
 
 ## Further reading
 
-- [Draw](/core/components/draw/overview) · [Way operators](/core/components/draw/way) · [Node](/core/components/node/overview) · [Positioning](/core/concepts/positioning)
+- [Draw](/core/components/draw/overview) · [Way operators](/core/components/draw/way) · [Node](/core/components/node/overview) · [Positioning](/core/concepts/basic/position)
 - [Karl's Unit Circle](/core/examples/karl-circle) — another comprehensive example, this one on trigonometry geometry
 - Source: [AMAI-GmbH/AI-Expert-Roadmap](https://github.com/AMAI-GmbH/AI-Expert-Roadmap) (MIT License)

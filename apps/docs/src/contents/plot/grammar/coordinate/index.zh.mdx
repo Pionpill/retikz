@@ -1,0 +1,154 @@
+---
+title: 坐标系
+description: 坐标系决定 mark 怎么落到画布上。默认平面直角（cartesian2D），切到极坐标（polar2D）即成饼图 / 雷达 / 径向柱；还有一维直线 / 圆周（cartesian1D / polar1D）与三元（ternary2D）。
+---
+
+坐标系是 `<Plot>` 把数据值放到画布像素的最后一步。缺省是平面直角坐标系（cartesian2D）：x 向右、y 向上。把 `coordinate` 改成 `"polar2D"`，同一份数据、同一批 mark 就绕中心铺开——柱变成径向柱、折线变成雷达、扇形拼成饼图。除这两个二维坐标系外，还有**一维**（`cartesian1D` 直线 / `polar1D` 圆周）和**三元**（`ternary2D`）坐标系，见后文。
+
+## 一份 spec，两种坐标系
+
+下面两张图喂的是**同一份月度温度数据、同一个 `<BarMark>`**，唯一区别是第二张多了 `coordinate="polar2D"`。坐标系是图表级开关，不是 mark 级——你不用换组件，也不用改字段绑定。
+
+<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+  <ComponentPreview name="coordinate-cartesian" sourceFiles={['coordinate-cartesian.data.ts']} size="sm" />
+  <ComponentPreview name="coordinate-polar-bar" sourceFiles={['coordinate-cartesian.data.ts']} size="sm" />
+</div>
+
+<p className="text-sm text-muted-foreground">左：缺省 cartesian 普通柱；右：仅加 <code>coordinate="polar2D"</code> 即成径向柱。</p>
+
+## x / y 在 polar 下的角色
+
+cartesian 下 x 是水平、y 是垂直。切到 polar 后这对通道**换了几何含义**，但绑定写法不变：
+
+| 通道 | cartesian | polar |
+| --- | --- | --- |
+| `x` | 水平位置 | 角向（绕圈的角度） |
+| `y` | 垂直位置 | 径向（离中心的距离） |
+
+所以画极坐标图时你照常写 `x` / `y`，由坐标系决定它们落成角度还是半径。位置通道永远只有 `x` / `y`，没有单独的 angle/radius 通道——这样同一份 spec 能在不同坐标系间复用，也不存在「为某坐标系选错通道」的可能。
+
+## polar 配置项
+
+`coordinate="polar2D"` 是简写，等价于一个全用默认值的 polar 配置。要调角度区间或挖中心空洞时，传对象形态：
+
+```tsx
+<Plot coordinate={{ type: 'polar2D', innerRadius: 0.5, startAngle: 0, endAngle: 360 }}>
+```
+
+| 字段 | 类型 | 默认 | 说明 |
+| --- | --- | --- | --- |
+| `innerRadius` | `number?` | `0` | 内半径占外半径的比例 `0..1`；`0` 是实心饼，`> 0` 挖出中心空洞成环图 |
+| `startAngle` | `number?` | `0` | 角向起始角（度） |
+| `endAngle` | `number?` | `360` | 角向终止角（度）；与 `startAngle` 一起决定铺满整圈还是半圈扇形 |
+
+## polar 能画什么
+
+同一个 polar 坐标系搭不同 mark，覆盖常见的环形图表。
+
+### 径向柱
+
+`<BarMark>` 在 polar 下自动成径向柱：角向是类别（自动 band），径向是值。换坐标系即可，无需新组件。
+
+<ComponentPreview name="coordinate-polar-bar" sourceFiles={['coordinate-cartesian.data.ts']} />
+
+### 饼图与环图
+
+`<SectorMark>` 按 `angle` 值字段自动累积成扇区角界。加 `innerRadius` 就从饼图变环图。
+
+<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+  <ComponentPreview name="coordinate-pie" sourceFiles={['coordinate-pie.data.ts']} size="sm" />
+  <ComponentPreview name="coordinate-donut" sourceFiles={['coordinate-pie.data.ts']} size="sm" />
+</div>
+
+<p className="text-sm text-muted-foreground">左：饼图；右：同数据加 <code>innerRadius: 0.55</code> 成环图。</p>
+
+### 雷达
+
+`<LineMark closed />` 把末点回连首点，闭合成多边形轮廓——在 polar 下就是雷达图。各维度沿角向均布，值映射到半径。
+
+<ComponentPreview name="coordinate-radar" sourceFiles={['coordinate-radar.data.ts']} />
+
+### 极坐标折线
+
+不闭合的 `<LineMark>` 在 polar 下就是极坐标折线：`x` 当角向、`y` 当径向，按 `order` 连点。适合风向、周期类数据。
+
+<ComponentPreview name="coordinate-polar-line" sourceFiles={['coordinate-polar-line.data.ts']} />
+
+## 一维坐标系：直线与圆周
+
+有时数据只有一个位置维度——一串采样值、一天里的事件时刻。这时用一维坐标系：只绑一个位置通道，另一维要么塌缩成基线，要么绕成圆。
+
+| coordinate | 形状 | 绑定 | 典型用途 |
+| --- | --- | --- | --- |
+| `"cartesian1D"` | 直线 | 只绑 `x` | rug 刻记、timeline、一维散布 |
+| `"polar1D"` | 圆周 | 只绑 `x`（作角向） | 24 小时钟面、星期轮等周期数据 |
+
+一维坐标系**与 scale 无关**：和二维轴一样能配 linear / log / time。下面左边是 `cartesian1D` rug（值落一条轴线），右边是 `polar1D` 把一天的事件时刻绕成圆。
+
+<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+  <ComponentPreview name="coordinate-rug" sourceFiles={['coordinate-rug.data.ts']} size="sm" />
+  <ComponentPreview name="coordinate-polar1d" sourceFiles={['coordinate-polar1d.data.ts']} size="sm" />
+</div>
+
+<p className="text-sm text-muted-foreground">左：<code>cartesian1D</code> 直线 rug；右：<code>polar1D</code> 24 小时绕圆。</p>
+
+`polar1D` 用对象形态可调圆周半径占比与角向区间：
+
+```tsx
+<Plot coordinate={{ type: 'polar1D', radius: 0.8, startAngle: 180, endAngle: 360 }}>
+```
+
+本轮一维坐标系只支持 `<PointMark>`（rug 刻记 / 圆周点）；柱、扇形等在一维没有对应几何，会直接报错而非画出怪图。
+
+## 三元坐标系：ternary2D
+
+`coordinate="ternary2D"` 把满足 `a + b + c = 常量` 的三个分量投影到等边三角形内——三个顶点各代表一个分量占 100%。适合成分配比、得票分布这类「三者此消彼长」的数据。
+
+绑定换成 `a` / `b` / `c` 三个通道（不再是 `x` / `y`）。各行**自动归一化**，所以你可以直接喂任意正值三元组（如砂 60 / 粉 30 / 黏 10），不必先算成百分比；含负值或三者和为 0 会报错。
+
+<ComponentPreview name="coordinate-ternary" sourceFiles={['coordinate-ternary.data.ts']} />
+
+加 `<Axis dimension="a" />` / `"b"` / `"c"` 画出三条边的刻度轴；三条一起就是完整三角外框。三元坐标系本轮同样以 `<PointMark>`（三角内散点）为主。
+
+<ComponentAlert type="tip" title="guide 维度要匹配坐标系" description="每个坐标系只认自己的维度：cartesian 用 x / y、polar 用 angle / radius、ternary 用 a / b / c。给错维度（如 cartesian 下写 <Axis dimension='angle'>）会直接报错，不会静默画出空轴。" />
+
+## 自定义坐标系（实验性）
+
+内建坐标系本质都是「投影」——把位置值映射成屏幕点。内建的不够用时，你可以**自己写投影**：`<Plot>` 接一个 `coordinates` 工厂表，`coordinate` 用 `{ type: 'custom', name }` 引用它。投影函数留在运行时（不进 IR、不可序列化），IR 只存 `name` + 角色 + 数值参数。
+
+下面的「桥」坐标系把 x 轴拱成抛物线、y 仍竖直——同一份规则网格，x 轴形态完全由那个投影函数决定（把 `archHeight` 改成 0 就退回普通直角）：
+
+```tsx
+import { createCustomFrame, type CustomCoordinateFactory } from '@retikz/plot';
+
+// 投影函数：x 沿拱、y 竖直偏移（运行时给、不进 IR）
+const bridge: CustomCoordinateFactory = ctx => {
+  const xScale = ctx.linearScaleFor('x', [0, ctx.width]);
+  const yScale = ctx.linearScaleFor('y', [ctx.height - 30, 30]);
+  const archHeight = ctx.params.archHeight ?? 60;
+  const projectRoles = ([x, y]) => {
+    const sx = xScale.coordinate(x);
+    const t = sx / ctx.width;
+    return [sx, yScale.coordinate(y) - archHeight * (1 - (2 * t - 1) ** 2)];
+  };
+  // 第三个参数 options：roleScales 让 guide 沿投影画曲线轴（x 轴随拱弯、y 轴竖直）；可选 frameAlong 给精确轴切向，省略则数值采样估算
+  return createCustomFrame(['x', 'y'], projectRoles, { roleScales: { x: xScale, y: yScale } });
+};
+
+// coordinate 引用工厂名，coordinates 传函数（与 data 一样属运行时、不进 IR）
+<Plot data={grid} coordinate={{ type: 'custom', name: 'bridge', roles: ['x', 'y'], params: { archHeight: 60 } }} coordinates={{ bridge }}>
+  <PointMark x="x" y="y" />
+  <Axis dimension="x" />
+  <Axis dimension="y" />
+</Plot>
+```
+
+坐标轴是通用的——回传 `roleScales` 后，`<Axis dimension="x" />` 会沿投影**密采样画出弯曲的 x 轴**（这里随拱起伏），刻度自动落在 scale 刻度处；同一套画法对任意曲线 / 圆 / 螺旋都成立。工厂还可选回传 `frameAlong`——报某角色轴曲线在某点的原点 + 切向，刻度 / 标签据此**精确**摆放；不回传则沿投影数值采样估算切向。
+
+<ComponentPreview name="coordinate-custom-bridge" sourceFiles={['coordinate-custom-bridge.data.ts']} hideCode />
+
+<ComponentAlert type="warn" title="进阶扩展，本轮仅 point" description="自定义坐标系当前只支持 PointMark；曲线轴可画（工厂回传 roleScales、可选 frameAlong 给精确切向）但暂无网格。三维坐标系、多 plot 组合、沿法向偏移留作后续。" />
+
+<Comparison target="tikz" title="TikZ 对照">
+TikZ 里极坐标靠 PGFPlots 的 `polaraxis` 环境（`\begin{polaraxis} ... \end{polaraxis}`）切换；retikz 把它收成 `<Plot>` 的一个 `coordinate` 开关，mark 不分平面 / 极坐标两套。
+</Comparison>

@@ -3,7 +3,7 @@ title: Path
 description: Kernel path container — children are a sequence of `<Step>` (≥ 2) defining a polyline / curve / arc; `<Draw>` compiles down to this.
 ---
 
-`<Path>` is the low-level path container: children must be `<Step>` nodes (at least 2) defining a sequence of move / line / step (folded) / cycle (close) / curve / cubic / bend (curves) / arc / circlePath / ellipsePath (circle / ellipse) / rectangle actions; plus an IR-level generator step ([path generators](/core/reference/extending/path-generator)). For everyday connections `<Draw>` is shorter; reach for `<Path>` when you need folds, closes, curves, custom stroke, or different step kinds.
+`<Path>` is the low-level path container: children must be `<Step>` nodes (at least 2) defining a sequence of move / line / fold (right-angle) / cycle (close) / curve / cubic / bend (curves) / arc / circlePath / ellipsePath (circle / ellipse) / rectangle actions; plus an IR-level generator step ([path generators](/core/reference/extending/path-generator)). For everyday connections `<Draw>` is shorter; reach for `<Path>` when you need folds, closes, curves, custom stroke, or different step kinds.
 
 It is strongest in three cases: one path contains multiple subpaths (multiple `move`s), individual segments need different `kind` / label / control-point behavior, or you want the JSX structure to mirror IR `path.children` closely for debugging and generation.
 
@@ -20,6 +20,15 @@ import { Path, Step } from '@retikz/react';
 </Path>
 ```
 
+`<Draw>` compiles down to `<Path>` and covers everyday step / fold / curve / arc connections; but `<Path>` additionally exposes element-level capabilities — `color` / `rotate` / `scale` / `marks` / `id` / `meta` / `animations` — that `<Draw>` does not. Reach for `<Draw>`'s single-line `way` array for everyday connections, and `<Path>` when you need an explicit Step sequence, multiple `move`s, per-segment mixing of `kind` / label / control points, or any of those Path-only capabilities:
+
+| | `<Draw>` | `<Path>` + `<Step>` |
+| --- | --- | --- |
+| Form | Single-line `way` array | Container + child nodes |
+| step / curve / fold / arc | Yes | Yes |
+| `color` / `rotate` / `scale` / `marks` / `id` / `meta` / `animations` | Not exposed | Yes |
+| Use when | 90% of connection cases | Explicit Step sequence, element-level capability |
+
 ## Composition
 
 `<Path>` requires `<Step>` children (at least 2); if the first isn't `move`, the compiler coerces it to `move`:
@@ -32,7 +41,7 @@ import { Path, Step } from '@retikz/react';
 </Path>
 ```
 
-`<Step>` supports eleven kinds — `move` / `line` for straight segments, `step` for the right-angle fold, `cycle` to close back, `curve` / `cubic` for Bezier curves, `bend` as the arc shorthand (with out/in angles and self-loops), `arc` / `circlePath` / `ellipsePath` for arcs / full circles / full ellipses centered on the cursor, and `rectangle` for a diagonal rectangle. See [Step](/core/components/draw/step) for details. There is also an IR-level `generator` step (external curve generators, no JSX DSL, fed via IR — see [path generators](/core/reference/extending/path-generator)).
+`<Step>` supports eleven kinds — `move` / `line` for straight segments, `fold` for the right-angle fold, `cycle` to close back, `curve` / `cubic` for Bezier curves, `bend` as the arc shorthand (with out/in angles and self-loops), `arc` / `circlePath` / `ellipsePath` for arcs / full circles / full ellipses centered on the cursor, and `rectangle` for a diagonal rectangle. See [Step](/core/components/draw/step) for details. There is also an IR-level `generator` step (external curve generators, no JSX DSL, fed via IR — see [path generators](/core/reference/extending/path-generator)).
 
 ## Examples
 
@@ -40,9 +49,9 @@ import { Path, Step } from '@retikz/react';
 
 <ComponentPreview name="path-basic" size="xs" />
 
-### Folded (step)
+### Fold
 
-`<Step kind="step" via="-|" \| "\|-">` inserts a right-angle corner between cursor and target — essential for flow charts and UML relationships. Below is a path mixing `line` and both `via` directions:
+`<Step kind="fold" via="-|" \| "\|-">` inserts a right-angle corner between cursor and target — essential for flow charts and UML relationships. Below is a path mixing `line` and both `via` directions:
 
 <ComponentPreview name="path-fold" size="md" />
 
@@ -60,7 +69,24 @@ import { Path, Step } from '@retikz/react';
 
 ### Arrows
 
-`arrow` picks direction (`'->'` / `'<-'` / `'<->'` / `'none'`); `arrowDetail` is a single object covering every visual spec (shape / scale / length / width / color / fill / opacity / lineWidth) plus optional `start` / `end` sub-objects for per-end overrides. The full reference — seven built-in shapes, per-end merge semantics, color / sizing / opacity, and the complete API table — lives on the **[Arrow](/core/components/draw/arrow)** page.
+`arrow` picks direction (`'->'` / `'<-'` / `'<->'` / `'none'`); `arrowDetail` is a single object covering every visual spec (shape / scale / length / width / color / fill / opacity / lineWidth) plus optional `start` / `end` sub-objects for per-end overrides. The full reference — eight built-in shapes, per-end merge semantics, color / sizing / opacity, and the complete API table — lives on the **[Arrow](/core/components/draw/arrow)** page.
+
+### Endpoint connection surface (boundary)
+
+When an endpoint references a node (the `{ id }` object form, or an id inside a way), you can add a `boundary` field to override the target node's [`boundary`](/core/components/node/overview) (connection surface) **for that endpoint only**. It takes the same forms as the node's `boundary`: `'shape'` (the visual shape itself) / `'circle'` (a true circle) / any registered shape name / `{ type, params }`.
+
+```tsx
+<Path arrow="->">
+  <Step kind="move" to="a" />
+  <Step kind="line" to={{ id: 'star', boundary: 'shape' }} />
+</Path>
+```
+
+`boundary` only applies where a connection surface is meaningful: endpoint auto-clip (no explicit `anchor`) and that endpoint's compass / angle anchor. In direction-less reference contexts — `between` endpoints, an `offset` `of`, a node center — it is a no-op. A node's default connection surface lives on [`<Node boundary>`](/core/components/node/overview); the endpoint `boundary` is the per-edge override.
+
+Below, two edges target the same five-pointed star (no node `boundary` set) and each picks its connection surface at the endpoint: the solid edge clips to the real tips by default, the dashed edge uses `boundary="circle"` to clip to the circumscribed circle — the surface is decided per edge.
+
+<ComponentPreview name="path-boundary" size="sm" />
 
 ### Styling
 
@@ -126,7 +152,7 @@ Besides the symmetric `bendDirection` + `bendAngle`, `<Step kind="bend">` accept
 
 #### Mid-path marks
 
-`marks` places directional marks along the path: each `{ pos, mark }` has `pos ∈ [0, 1]` (out-of-range rejected by the schema), and `mark` is initially `{ kind: 'arrow', shape, ... }` (a registered arrow name + visual subset, see [Custom Arrows](/core/reference/extending/custom-arrow)), **oriented by the tangent at that point** (not a fixed direction). Lines, Béziers, and arcs are all tangent-oriented.
+`marks` places directional marks along the path: each `{ pos, mark }` has `pos ∈ [0, 1]` (out-of-range rejected by the schema), and `mark` is initially `{ kind: 'arrow', shape, ... }` (a registered arrow name + visual subset, see [Custom Arrows](/core/reference/extending/custom-arrow)), **oriented by the tangent at that point** (not a fixed direction). Lines, Béziers, and arcs are all tangent-oriented. Their size **scales with `strokeWidth`** (TikZ semantics, same as endpoint arrows): the thicker the line, the larger the mark.
 
 <ComponentPreview name="path-marks" size="xs" />
 
@@ -134,10 +160,12 @@ Besides the symmetric `bendDirection` + `bendAngle`, `<Step kind="bend">` accept
 
 | Prop | Type | Default | Description |
 | --- | --- | --- | --- |
+| `id` | `string` | — | Optional stable id: lets other elements anchor to the path and serves as the attach point for [hydration](/core/reference/hydration) event binding (a path needs an `id` before you can bind `onClick` and friends) |
+| `meta` | `Record<string, JSON value>` | — | Provenance metadata, passed through verbatim onto the Scene primitives this path emits; ignored by renderers and never part of layout / style. Typically injected by a higher-level lowering (e.g. plot) to tag which datum / series / layer it came from, so an interaction layer can trace a hit primitive back to its source. Must be a JSON-serializable object |
 | `color` | `string` | — | Master color (TikZ `color=`); `stroke` / arrow / step label default to it unless individually set (follows the master color, not `stroke`) |
 | `stroke` | `string` | `currentColor` | Stroke color |
 | `strokeWidth` | `number` | `1` | Stroke width |
-| `dashPattern` | `Array<number>` | ? | Dash/gap lengths in user units (e.g. `[4, 2]`) |
+| `dashPattern` | `Array<number>` | — | Dash/gap lengths in user units (e.g. `[4, 2]`) |
 | `lineCap` | `'butt' \| 'round' \| 'square'` | `'butt'` | Stroke endpoint shape |
 | `lineJoin` | `'miter' \| 'round' \| 'bevel'` | `'miter'` | Stroke corner shape |
 | `thickness` | `'ultraThin' \| 'veryThin' \| 'thin' \| 'semithick' \| 'thick' \| 'veryThick' \| 'ultraThick'` | — | Semantic stroke preset (`thin = 1`); explicit `strokeWidth` always wins |
@@ -152,19 +180,10 @@ Besides the symmetric `bendDirection` + `bendAngle`, `<Step kind="bend">` accept
 | `rotate` | `number` | — | Whole-path rotation in degrees (around the bounding-box center) |
 | `scale` | `number \| { x, y }` | — | Whole-path scale (number = uniform / `{ x, y }` = non-uniform, around the bounding-box center) |
 | `marks` | `Array<{ pos, mark }>` | — | Marks along the path: `pos∈[0,1]`, `mark.kind:'arrow'` + a registered arrow name, oriented by the tangent at that point |
-| `children` | `Array<<Step>>` | — | At least 2; if the first isn't `move`, the compiler coerces it to `move`. `<Step>` supports `move` / `line` / `step` (folded) / `cycle` (close) / `curve` / `cubic` (Bezier) / `bend` (arc shorthand, with out/in angles and self-loops) / `arc` / `circlePath` / `ellipsePath` (circle / ellipse) / `rectangle` (diagonal rectangle); the IR also has `generator` (path generators, no JSX DSL) |
+| `animations` | `Array<AnimationTrack>` | — | Timeline animation tracks, passed through onto the primitives this path emits; renderers play them or fall back to static. See [Animation](/core/components/animation/control) |
+| `children` | `Array<<Step>>` | — | At least 2; if the first isn't `move`, the compiler coerces it to `move`. `<Step>` supports `move` / `line` / `fold` (right-angle) / `cycle` (close) / `curve` / `cubic` (Bezier) / `bend` (arc shorthand, with out/in angles and self-loops) / `arc` / `circlePath` / `ellipsePath` (circle / ellipse) / `rectangle` (diagonal rectangle); the IR also has `generator` (path generators, no JSX DSL) |
 
 ## Related
-
-### Path vs Draw
-
-| | `<Draw>` | `<Path>` + `<Step>` |
-| --- | --- | --- |
-| Form | Single-line `way` array | Container + child nodes |
-| Expressiveness | Equivalent to Path (compile-expanded) | All Kernel capability |
-| Use when | 90% of connection cases | Explicit Step sequence, future extensions |
-
-`<Draw>` compiles down to `<Path>`; tutorials should lead with `<Draw>` — `<Path>` is for users who want the underlying construct.
 
 - [Draw](/core/components/draw/overview): Sugar preferred for everyday connections
 - [Step](/core/components/draw/step): Complete field and kind reference for `<Path>` children

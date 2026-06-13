@@ -3,12 +3,12 @@ title: Scene
 description: The top-level IR root — a JSON-serializable description of one retikz drawing
 ---
 
-`SceneSchema` is the IR root. Every drawing serializes down to one Scene object whose `children` array holds nodes, paths, and coordinate placeholders.
+`SceneSchema` is the IR root. Every drawing serializes down to one Scene object whose `children` array holds the four Tier 1 children — nodes, paths, coordinate placeholders, and scopes — plus Tier 2 composite nodes that carry a `namespace`.
 
 <ZodSchema name="SceneSchema" />
 
 ## Child
 
-`ChildSchema` is the union for top-level scene children. It currently includes node, path, and coordinate children.
+`ChildSchema` is the union for top-level scene children: the four Tier 1 variants discriminated by `type` — node, path, coordinate, and scope — plus Tier 2 composite nodes that carry a `namespace` (their precise fields are validated at compile time by the registered lowering schema). The per-field schemas for scope and composite are not listed separately in this group.
 
 <ZodSchema name="ChildSchema" />

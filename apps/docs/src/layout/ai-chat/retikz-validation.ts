@@ -18,7 +18,7 @@ export type RetikzBlockValidation = {
 export const formatZodError = (err: ZodError): string => {
   const issues = err.issues.slice(0, 3).map(issue => {
     const path = issue.path
-      .map((segment, idx) => (typeof segment === 'number' ? `[${segment}]` : idx === 0 ? segment : `.${segment}`))
+      .map((segment, idx) => (typeof segment === 'number' ? `[${segment}]` : idx === 0 ? String(segment) : `.${String(segment)}`))
       .join('');
     return path ? `${path}: ${issue.message}` : issue.message;
   });
