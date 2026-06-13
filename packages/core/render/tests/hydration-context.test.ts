@@ -4,6 +4,7 @@ import type { Scene } from '@retikz/core';
 import {
   type HydrationContext,
   type HydrationHandlers,
+  createClockAnimationControls,
   createContextBuilder,
   createHydrationController,
   createSvgAnimationControls,
@@ -243,5 +244,39 @@ describe('最小 context 降级（控制器无 buildContext）', () => {
 
     expect(received?.renderer).toBe('canvas');
     controller.dispose();
+  });
+});
+
+describe('createClockAnimationControls（scene 级 coarse 降级）', () => {
+  const makeClock = () => ({ play: vi.fn(), pause: vi.fn(), seek: vi.fn() });
+
+  it('stop 落 settled 末态：seek 到远超时长处再 pause（不只是 pause 定格当前帧）', () => {
+    const clock = makeClock();
+    createClockAnimationControls(clock).stop();
+    expect(clock.seek).toHaveBeenCalledTimes(1);
+    // seek 时刻须远超任何有限动画时长（fill-forward 到末态）
+    expect(clock.seek.mock.calls[0][0]).toBeGreaterThan(1e12);
+    expect(clock.pause).toHaveBeenCalledTimes(1);
+  });
+
+  it('restart 走 seek(0)+play；play/pause/seek 透传', () => {
+    const clock = makeClock();
+    const controls = createClockAnimationControls(clock);
+    controls.restart();
+    expect(clock.seek).toHaveBeenCalledWith(0);
+    expect(clock.play).toHaveBeenCalledTimes(1);
+    controls.seek(120);
+    expect(clock.seek).toHaveBeenLastCalledWith(120);
+  });
+
+  it('无时钟 → no-op（各操作不抛）', () => {
+    const controls = createClockAnimationControls(undefined);
+    expect(() => {
+      controls.play();
+      controls.pause();
+      controls.restart();
+      controls.stop();
+      controls.seek(0);
+    }).not.toThrow();
   });
 });

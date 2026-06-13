@@ -286,9 +286,15 @@ export const createSvgAnimationControls = (root: Element, defaultId: string): Hy
 /** scene 级时钟句柄（rAF 共享时钟） */
 type ClockHandle = { play: () => void; pause: () => void; seek: (timeMs: number) => void } | undefined;
 
+/** stop 落 settled 用的 seek 时刻：远超任何有限动画时长，使 evaluateTrack fill-forward 到末态 */
+const SETTLED_SEEK_MS = Number.MAX_SAFE_INTEGER;
+
 /**
  * Canvas coarse 动画控制：作用于 scene 级单 rAF 时钟（id 参数忽略）
- * @description per-id 控制不可用（无登记表）时的降级；restart 走 `seek(0)+play`、stop 走 `pause`。无时钟 → no-op。
+ * @description per-id 控制不可用（无登记表）时的降级；restart 走 `seek(0)+play`。无时钟 → no-op。
+ *   `stop` 落 **settled 末态**（与 SVG `finish` / per-id `stop` 一致，非定格当前帧）：scene 级时钟无 per-id
+ *   skip 机制，故 seek 到远超任何有限动画时长处让各 track fill-forward 到末态，再 pause 定格。无限循环动画无
+ *   settled 末态（与 SVG `finish` 同样语义未定），会落在循环某相位。
  */
 export const createClockAnimationControls = (clock: ClockHandle): HydrationAnimationControls => {
   if (!clock) return noopAnimationControls;
@@ -299,7 +305,10 @@ export const createClockAnimationControls = (clock: ClockHandle): HydrationAnima
       clock.seek(0);
       clock.play();
     },
-    stop: () => clock.pause(),
+    stop: () => {
+      clock.seek(SETTLED_SEEK_MS);
+      clock.pause();
+    },
     seek: timeMs => clock.seek(timeMs),
   };
 };
