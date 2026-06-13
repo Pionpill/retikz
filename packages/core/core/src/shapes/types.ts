@@ -23,7 +23,8 @@ export type ShapeStyle = {
 /**
  * 一个 shape 的参数化可注册定义（定义点 typed 形态）
  * @description plain object（factory 友好：`createPolygonShape(6)` 这类普通函数返回它即可）；含函数与
- *   `paramsSchema`，**不进 IR**，走 `CompileOptions.shapes` 运行时注入。内置 4 shape 也是注册项（无内置特权）。
+ *   `paramsSchema`，**不进 IR**，走 `CompileOptions.shapes` 运行时注入。内置 shape（rectangle / ellipse /
+ *   sector / arc / polygon / star，circle / diamond 为 preset 别名）也是注册项（无内置特权）。
  *   每个计算函数末位收 per-instance `params`（类型由 `paramsSchema.parse` 在编译期保证），无参形状用
  *   `z.strictObject({})` 并忽略 `params`。
  *
@@ -58,11 +59,17 @@ export type ShapeDefinitionInput<TParams extends IRJsonObject> = {
   circumscribeOffset?: (params: TParams) => Position;
   /** 中心 → toward 射线 ∩ 边界（rect 带 rotate）；params 喂参数化边界。 */
   boundaryPoint: (rect: Rect, toward: Position, params: TParams) => Position;
-  /** 命名 anchor 世界坐标；shape 不认识的名字返回 `undefined`（调用方据此抛清晰错误）。 */
+  /**
+   * 命名 anchor 世界坐标；shape 不认识的名字返回 `undefined`（调用方据此抛清晰错误）。
+   * @description compass 方位名（north / south / ... / center）的约定（与 TikZ 一致）：默认连接面下 compile 先调本函数，
+   *   shape 返回真实形状上的点即采用（如 ellipse 落真实周长、polygon 落外接 AABB）；返回 `undefined` 则 compile
+   *   回退到外接 AABB 矩形。故 shape 作者可只实现 shape 专属命名 anchor（tip-N / apex 等），compass 名交回退即可；
+   *   要让 compass 贴真实形状边界（圆 / 椭圆类）才需自行处理 compass。
+   */
   anchor: (rect: Rect, name: string, params: TParams) => Position | undefined;
   /**
    * 边上比例点：side 真实边界从约定起点起 t∈[0,1] 处（轴对齐空间求出后由 layout 投回世界系）。
-   * @description 可选——内置 4 shape 必实现，不实现的 shape 收到 `{ side, t }` 时编译期（resolveEdgePoint）抛明确错。
+   * @description 可选——目前仅 rectangle / ellipse 实现；未实现的 shape（polygon / sector / arc / star）收到 `{ side, t }` 时编译期（resolveEdgePoint）抛明确错。
    *   与 `anchor` 同坐标语义：收**带 rotate 的 Rect**，自行用 worldToLocal/localToWorld 处理旋转。
    */
   edgePoint?: (

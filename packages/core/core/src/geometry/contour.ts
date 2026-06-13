@@ -298,10 +298,11 @@ const solveFillet = (segA: ContourSegment, segB: ContourSegment, r: number): Fil
       const tInPt = tangentPointOn(segA, cand, radius);
       const tOutPt = tangentPointOn(segB, cand, radius);
       if (!tInPt || !tOutPt) continue;
-      // 圆心须真实距两段 == radius
+      // 圆心须真实距两段 == radius；相对容差（按 radius / 坐标量级缩放），避免大坐标（1e5+）下浮点抵消误差超固定 1e-6 而误拒合法候选
+      const tol = 1e-6 * Math.max(1, radius, Math.abs(corner[0]), Math.abs(corner[1]));
       const dA = distanceToAny(segA, cand);
       const dB = distanceToAny(segB, cand);
-      if (Math.abs(dA - radius) > 1e-6 || Math.abs(dB - radius) > 1e-6) continue;
+      if (Math.abs(dA - radius) > tol || Math.abs(dB - radius) > tol) continue;
       const inFrac = fractionAlong(segA, tInPt, false); // 从 segA 终点反向量（剩余比例）
       const outFrac = fractionAlong(segB, tOutPt, true); // 从 segB 起点正向量
       // 切点须在段上、且不超过段中点（≤0.5）——每段被两端接缝共享，各占≤半段则两端 fillet 不重叠
@@ -411,7 +412,9 @@ const tangentPointOn = (seg: ContourSegment, filletCenter: Position, radius: num
       best = cand;
     }
   }
-  return bestErr <= 1e-6 ? best : undefined;
+  // 相对容差（按 radius / 坐标量级缩放），与 attempt 的圆心距判据同口径，避免大坐标下误拒
+  const tol = 1e-6 * Math.max(1, radius, Math.abs(filletCenter[0]), Math.abs(filletCenter[1]));
+  return bestErr <= tol ? best : undefined;
 };
 
 /**

@@ -283,7 +283,7 @@ export const boundaryPointOf = (
  *   「border 外推」由调用方决定——`anchor-cache.ts` 的 compass 解析先把 rect 外扩 margin（`outerRectOf`）
  *   再调本函数；`labelBorderPoint` 喂视觉 rect（label 附着点不含 margin）。这样 outer sep 只作用于
  *   path / position 的 anchor 引用，不波及 label（详见 v0.3-beta.1 ADR-07 §1/§2）。
- *   compass（9 个 rect 方位名）走连接面 AABB：'shape' 时归一为 'rectangle'（矩形 AABB），其余按 boundary 解析。
+ *   compass（9 个 rect 方位名）：默认连接面先走视觉 shape 自身 compass（ellipse/circle 落真实周长、polygon/rect 落 AABB，与 TikZ 一致），shape 未实现则回退 AABB 矩形；显式 boundary 按其解析。
  *   形状专属命名 anchor（tip-N / apex 等非 compass 名）恒走视觉形状自身，boundary 不影响。
  *   boundary 缺省 = 'shape'。
  */
@@ -294,10 +294,29 @@ export const anchorOf = (
 ): Position => {
   const compassAnchor = normalizeCompassAnchor(name);
   if (compassAnchor !== undefined) {
-    // compass 方位名：'shape' 归一为 'rectangle'（走 AABB 矩形），其余按 boundary
-    const compassBoundary = boundary === 'shape' ? 'rectangle' : boundary;
+    // compass 方位名：默认连接面（'shape'）先走视觉 shape 自身 compass——ellipse/circle 落真实周长、
+    // rectangle/polygon 落 AABB（与 TikZ 一致）；shape 未实现 compass（star/sector/arc 返回 undefined）
+    // 回退外接 AABB 矩形。显式 boundary 指定时按该连接面解析。
+    if (boundary === 'shape') {
+      const own = layout.shapeDef.anchor(
+        layout.rect,
+        compassAnchor,
+        layout.shapeParams ?? EMPTY_SHAPE_PARAMS,
+      );
+      if (own !== undefined) return own;
+      const fallback = resolveBoundary(
+        'rectangle',
+        layout.shapeDef,
+        layout.rect,
+        layout.shapeParams ?? EMPTY_SHAPE_PARAMS,
+        layout.shapes,
+      );
+      const p = fallback.def.anchor(fallback.rect, compassAnchor, fallback.params);
+      if (p === undefined) throw new Error(`Unknown anchor '${name}' for shape '${layout.shapeName}'`);
+      return p;
+    }
     const { def, rect, params } = resolveBoundary(
-      compassBoundary,
+      boundary,
       layout.shapeDef,
       layout.rect,
       layout.shapeParams ?? EMPTY_SHAPE_PARAMS,

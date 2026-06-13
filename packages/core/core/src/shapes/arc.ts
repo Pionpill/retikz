@@ -1,11 +1,13 @@
 import { z } from 'zod';
 import { arcBoundingPoints, arcEndPoint } from '../geometry/arc';
-import { localToWorld } from '../geometry/transform';
+import { localToWorld, worldToLocal } from '../geometry/transform';
 import type { Position } from '../geometry/point';
 import type { Rect } from '../geometry/rect';
 import type { PathCommand, ScenePrimitive } from '../primitive';
 import { defineShape } from './define';
 import { normalizeAngularRange } from './shared';
+
+const RAD_TO_DEG = 180 / Math.PI;
 
 /**
  * arc shape 的 per-instance params 类型
@@ -92,10 +94,21 @@ export const arc = defineShape({
     const { centerOffset } = arcGeometry(params);
     return [-centerOffset[0], -centerOffset[1]];
   },
-  boundaryPoint: (rect: Rect, _toward: Position, params: ArcParams): Position => {
+  boundaryPoint: (rect: Rect, toward: Position, params: ArcParams): Position => {
     const geo = arcGeometry(params);
-    // 弧无 2D 内部（开放曲线）；以弧中点作附着点兜底
-    return arcLocalToWorld(rect, geo.centerOffset, arcEndPoint([0, 0], params.radius, geo.range.mid));
+    const { radius } = params;
+    const { start, end } = geo.range;
+    // 弧无 2D 内部（开放曲线）：把 toward 投到弧的圆心局部系求角，clamp 进 [start, end]，取弧上最近点作附着点
+    // （优于恒取弧中点——反方向连线不再穿过整条弧）。
+    const local = worldToLocal(rect, toward);
+    const fx = local[0] - geo.centerOffset[0];
+    const fy = local[1] - geo.centerOffset[1];
+    let theta = Math.atan2(fy, fx) * RAD_TO_DEG;
+    while (theta < start) theta += 360;
+    while (theta >= start + 360) theta -= 360;
+    // theta 落在跨度内直接用；落在 [end, start+360) 缺口里则 clamp 到角向更近的端点
+    const angle = theta <= end ? theta : theta - end <= start + 360 - theta ? end : start;
+    return arcLocalToWorld(rect, geo.centerOffset, arcEndPoint([0, 0], radius, angle));
   },
   anchor: (rect: Rect, name: string, params: ArcParams): Position | undefined => {
     const geo = arcGeometry(params);

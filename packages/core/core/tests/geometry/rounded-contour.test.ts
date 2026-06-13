@@ -22,6 +22,23 @@ const squareSegments = (): Array<ContourSegment> => [
   { kind: 'line', from: [-10, 10], to: [-10, -10] },
 ];
 
+describe('filletContour 大坐标相对容差（G6）', () => {
+  it('坐标量级 1e6 的斜边方形仍解出 fillet，不因绝对容差误拒塌成尖角', () => {
+    const off = 1e6;
+    // 旋转 45° 的方形（斜边，offset 求交易受大坐标浮点抵消影响），CW 绕向
+    const diamond: Array<ContourSegment> = [
+      { kind: 'line', from: [off, off - 20], to: [off + 20, off] },
+      { kind: 'line', from: [off + 20, off], to: [off, off + 20] },
+      { kind: 'line', from: [off, off + 20], to: [off - 20, off] },
+      { kind: 'line', from: [off - 20, off], to: [off, off - 20] },
+    ];
+    const fillets = filletContour(diamond, 4);
+    expect(fillets.length).toBe(4);
+    expect(fillets.every(f => !f.clampedToZero)).toBe(true);
+    expect(fillets.every(f => f.radius > 0)).toBe(true);
+  });
+});
+
 describe('rayArc：射线 ∩ 圆弧 + 角度区间过滤', () => {
   it('命中区间内的弧', () => {
     // 单位圆右半弧 [-90,90]，从原点朝 +x → 命中 [1,0]
