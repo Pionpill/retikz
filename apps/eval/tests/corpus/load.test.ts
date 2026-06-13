@@ -28,9 +28,21 @@ describe('loadCorpus', () => {
   it('加载内置 core 语料且每条过 schema', () => {
     const url = new URL('../../corpus/core.json', import.meta.url);
     const corpus = loadCorpus(url);
-    expect(corpus.length).toBeGreaterThanOrEqual(6);
+    expect(corpus.length).toBeGreaterThanOrEqual(24);
     for (const item of corpus) {
       expect(CorpusPromptSchema.safeParse(item).success).toBe(true);
     }
+  });
+
+  it('语料覆盖全部四个难度档', () => {
+    const corpus = loadCorpus(new URL('../../corpus/core.json', import.meta.url));
+    const tiers = new Set(corpus.map((c) => c.difficulty));
+    expect(tiers).toEqual(new Set(['single', 'composite', 'complex', 'advanced']));
+  });
+
+  it('语料 id 无重复', () => {
+    const corpus = loadCorpus(new URL('../../corpus/core.json', import.meta.url));
+    const ids = corpus.map((c) => c.id);
+    expect(new Set(ids).size).toBe(ids.length);
   });
 });

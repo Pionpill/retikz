@@ -12,6 +12,36 @@
     "prompt": "在画布中心放一个圆形节点，里面写字母 A。"
   },
   {
+    "id": "core-single-03",
+    "category": "core",
+    "difficulty": "single",
+    "prompt": "画一个红色填充的椭圆，里面写「开始」两个字。"
+  },
+  {
+    "id": "core-single-04",
+    "category": "core",
+    "difficulty": "single",
+    "prompt": "画一个菱形判断框，里面写「是否继续？」。"
+  },
+  {
+    "id": "core-single-05",
+    "category": "core",
+    "difficulty": "single",
+    "prompt": "画一个虚线边框的矩形，里面写「草稿」。"
+  },
+  {
+    "id": "core-single-06",
+    "category": "core",
+    "difficulty": "single",
+    "prompt": "画一个旋转了 45 度的正方形。"
+  },
+  {
+    "id": "core-single-07",
+    "category": "core",
+    "difficulty": "single",
+    "prompt": "画一条从左到右、末端带箭头的水平直线。"
+  },
+  {
     "id": "core-composite-01",
     "category": "core",
     "difficulty": "composite",
@@ -24,15 +54,165 @@
     "prompt": "上下排布三个节点，依次写 1、2、3，相邻节点之间用直线连起来。"
   },
   {
+    "id": "core-composite-03",
+    "category": "core",
+    "difficulty": "composite",
+    "prompt": "画两个圆，用一条两端都带箭头的线连接，并在线的中间写「双向」。"
+  },
+  {
+    "id": "core-composite-04",
+    "category": "core",
+    "difficulty": "composite",
+    "prompt": "画一个矩形，并在它的右上角附近放一个小标签写「new」。"
+  },
+  {
+    "id": "core-composite-05",
+    "category": "core",
+    "difficulty": "composite",
+    "prompt": "画节点 A 和节点 B，用一条向上拱起的弧线从 A 连到 B。"
+  },
+  {
+    "id": "core-composite-06",
+    "category": "core",
+    "difficulty": "composite",
+    "prompt": "画一个三角形，填充浅蓝色。"
+  },
+  {
+    "id": "core-composite-07",
+    "category": "core",
+    "difficulty": "composite",
+    "prompt": "画两个矩形左右并排，中间用一条带「调用」文字的箭头连接。"
+  },
+  {
+    "id": "core-composite-08",
+    "category": "core",
+    "difficulty": "composite",
+    "prompt": "画一个圆，并在它的右半边叠加一段加粗的圆弧作为高亮。"
+  },
+  {
+    "id": "core-composite-09",
+    "category": "core",
+    "difficulty": "composite",
+    "prompt": "画上下两个节点，用一条先向下再向右拐的直角折线（带箭头）把上面的连到下面的。"
+  },
+  {
     "id": "core-complex-01",
     "category": "core",
     "difficulty": "complex",
-    "prompt": "画一个简单的流程图：开始节点、一个处理节点、一个判断节点和结束节点，用带箭头的连线把它们按流程顺序连接起来。"
+    "prompt": "画一个流程图：开始、处理、判断、结束四个节点从上到下排列，用带箭头的连线依次连接。"
   },
   {
     "id": "core-complex-02",
     "category": "core",
     "difficulty": "complex",
-    "prompt": "画一个 2x2 的网格，四个格子各是一个方形节点，分别写 A、B、C、D，并在水平和垂直相邻的格子之间画连线。"
+    "prompt": "画一个 2x2 的网格，四个方形节点分别写 A、B、C、D，水平和垂直相邻的格子之间画连线。"
+  },
+  {
+    "id": "core-complex-03",
+    "category": "core",
+    "difficulty": "complex",
+    "prompt": "画一棵三层的二叉树：1 个根节点在上，下面 2 个子节点，再下面 4 个叶子节点，父子之间用连线连接。"
+  },
+  {
+    "id": "core-complex-04",
+    "category": "core",
+    "difficulty": "complex",
+    "prompt": "画一个有向图：4 个圆形节点摆成方形，用 5 条带箭头的边把它们连成一个环并加一条对角捷径。"
+  },
+  {
+    "id": "core-complex-05",
+    "category": "core",
+    "difficulty": "complex",
+    "prompt": "画一个组织结构图：顶部一个写「CEO」的节点，下面并排三个部门节点，用连线从 CEO 连到每个部门。"
+  },
+  {
+    "id": "core-complex-06",
+    "category": "core",
+    "difficulty": "complex",
+    "prompt": "画两个左右相交的圆（韦恩图），左圆标 A、右圆标 B。"
+  },
+  {
+    "id": "core-complex-07",
+    "category": "core",
+    "difficulty": "complex",
+    "prompt": "画一个状态机：三个圆形状态分别写 S0、S1、S2，用带文字标签的箭头表示它们之间的转移。"
+  },
+  {
+    "id": "core-complex-08",
+    "category": "core",
+    "difficulty": "complex",
+    "prompt": "画一条水平时间线：一条横轴，上面均匀分布四个节点，每个节点下方标注一个事件名。"
+  },
+  {
+    "id": "core-complex-09",
+    "category": "core",
+    "difficulty": "complex",
+    "prompt": "画一个星形网络拓扑：中心一个写「Router」的节点，四周四个终端节点，各用一条线连到中心。"
+  },
+  {
+    "id": "core-complex-10",
+    "category": "core",
+    "difficulty": "complex",
+    "prompt": "画一个两列的流程：左列从上到下两个步骤，右列从上到下两个步骤，用一条横跨两列的箭头表示从左列到右列的交接。"
+  },
+  {
+    "id": "core-advanced-01",
+    "category": "core",
+    "difficulty": "advanced",
+    "prompt": "画一个带分支的流程图：开始节点连到一个判断框；判断为「是」时向右连到处理 A，为「否」时向下连到处理 B；两条分支最后都汇合到同一个结束节点；判断的两条出边分别标注「是」和「否」。"
+  },
+  {
+    "id": "core-advanced-02",
+    "category": "core",
+    "difficulty": "advanced",
+    "prompt": "画一个确定有限自动机：三个圆形状态，起始状态上带一个自环并标注输入字符，状态之间用带标签的弯曲箭头表示转移，接受状态用同心双圈表示。"
+  },
+  {
+    "id": "core-advanced-03",
+    "category": "core",
+    "difficulty": "advanced",
+    "prompt": "画一棵四层的满二叉树，每个子节点分别画在父节点的左下方和右下方，父子之间连线，整体呈对称的金字塔形。"
+  },
+  {
+    "id": "core-advanced-04",
+    "category": "core",
+    "difficulty": "advanced",
+    "prompt": "画一个嵌套分组：外层一个虚线框代表「系统」，框内并排两个子模块框，每个子模块框里再各放两个小组件节点；把整个内层的两个子模块作为一组整体旋转一个小角度。"
+  },
+  {
+    "id": "core-advanced-05",
+    "category": "core",
+    "difficulty": "advanced",
+    "prompt": "画一个横向的渐变色条，从左到右由浅到深线性过渡，并在色条上方居中写一个标题。"
+  },
+  {
+    "id": "core-advanced-06",
+    "category": "core",
+    "difficulty": "advanced",
+    "prompt": "画一个五个节点的有向图，其中有两对节点之间是双向关系，用两条分别向不同侧拱起的弯曲箭头表示来回方向以避免重叠，部分边上标注数字权重。"
+  },
+  {
+    "id": "core-advanced-07",
+    "category": "core",
+    "difficulty": "advanced",
+    "prompt": "画一个甘特图风格的排布（不要坐标轴）：三行任务，每行一个长度不同的横向矩形条，三行的起止位置依次错开以体现先后，每行左侧标注任务名。"
+  },
+  {
+    "id": "core-advanced-08",
+    "category": "core",
+    "difficulty": "advanced",
+    "prompt": "画一个实体关系图片段：左右两个实体矩形，中间一个菱形表示它们的关系，实体与菱形之间连线，并在连线上分别标注基数 1 和 N。"
+  },
+  {
+    "id": "core-advanced-09",
+    "category": "core",
+    "difficulty": "advanced",
+    "prompt": "画一个图例：三个并排的小方块分别用斜线、网点、网格三种填充图案，每个方块右侧标注它代表的含义。"
+  },
+  {
+    "id": "core-advanced-10",
+    "category": "core",
+    "difficulty": "advanced",
+    "prompt": "用基本图形组合画一座房子：一个正方形作墙，墙顶上一个三角形作屋顶，墙上一个竖着的小矩形作门，再加一个小方块作窗户。"
   }
 ]
