@@ -17,7 +17,7 @@ import { Scope } from '@retikz/react';
 </Scope>
 ```
 
-A `<Scope></Scope>` with no props and no children → compile emits no Scene primitive; any non-empty field → a `GroupPrim` is emitted, no empty-container overhead.
+If the scope subtree produces any primitive, or the scope carries one of `transforms` / `id` / `clip` → a `GroupPrim` is emitted; otherwise (no subtree output and none of those three) it is pruned and emits no Scene primitive, with no empty-container overhead. A scope that only sets style defaults / `meta` but whose subtree produces nothing is pruned too.
 
 ### When to use Scope
 
@@ -39,7 +39,7 @@ On a first read, remember three common jobs:
 
 ## Composition
 
-`<Scope>` children can be `<Node>`, `<Coordinate>`, `<Path>`, or nested `<Scope>`. Scope does not draw a shape by itself; it becomes a Scene group only when it carries a transform / clip / style default / `id` or other meaningful field.
+`<Scope>` children can be `<Node>`, `<Coordinate>`, `<Path>`, or nested `<Scope>`. Scope does not draw a shape by itself; it becomes a Scene group when its subtree produces any primitive, or when it carries one of `transforms` / `id` / `clip` (a scope with only style defaults / `meta` and no subtree output is pruned).
 
 Think of Scope as a "subdiagram container", not a plain div. Use it for geometry, local coordinates, and whole-group references; if you only want cleaner JSX, split the code with ordinary React components first.
 
@@ -57,7 +57,7 @@ The 5 translate variants mirror the 5 `<Node position>` shapes (Cartesian / pola
 | `rotate` | `{ degrees, cx?, cy? }` | Rotate by degrees; `cx/cy` default to scope local origin |
 | `scale` | `{ x, y? }` | Scale; `y` defaults to `x` (uniform) |
 
-Array order is application order — the 0-th entry takes effect first (innermost). `transforms: [translate, rotate]` means translate then rotate; compile flattening / lowering details are in § How it works §「transforms lowering to Scene」.
+Array order is application order — the 0-th entry is the outermost (applied last to the local point) and the last entry is the innermost (applied first), matching SVG transform-list semantics. `transforms: [translate, rotate]` is equivalent to SVG `transform="translate(...) rotate(...)"`: rotate applies first, translate last; compile flattening / lowering details are in § How it works §「transforms lowering to Scene」.
 
 <Comparison target="tikz" title="Scope mapping">
 
@@ -334,7 +334,7 @@ The 7 IR variants are uniformly flattened to 3 Scene variants (Cartesian transla
 | `rotate` | Pass through | `rotate(degrees, cx, cy)` |
 | `scale` | Pass through | `scale(x, y)` |
 
-The `transforms` array is applied in order — 0-th first (innermost), matching SVG `transform="t1 t2 t3"` / Scene `GroupPrim.transforms`. `transforms: [translate, rotate]` is equivalent to SVG `transform="translate(...) rotate(...)"`: translate first, then rotate.
+The `transforms` array is applied in order — 0-th is the outermost (applied last to the local point), the last is the innermost (applied first), matching SVG `transform="t0 t1 t2"` / Scene `GroupPrim.transforms`. `transforms: [translate, rotate]` is equivalent to SVG `transform="translate(...) rotate(...)"`: rotate applies to the local point first, then translate.
 
 External nodeIndex sees node layouts already in **global coordinates** (compile has projected through the chain); where a path primitive inside a scope lands depends on that scope's transform chain: in a **transform-free scope** the path is backfilled into that scope's `GroupPrim.children`, preserving declaration order relative to sibling nodes; in a **transformed scope** the endpoints are already global, so the path is still hoisted to the top-level `primitives` (not into the GroupPrim, to avoid double application of the transform), and its cross-frame z-order does not fully match IR order (a known limitation).
 
@@ -366,14 +366,14 @@ Inner overrides outer; within one frame the typed default overrides the cascade.
 
 | Prop | Type | Default | Description |
 | --- | --- | --- | --- |
-| `transforms` | `Array<Transform>` | — | Local transform list, 7 variants; applied in array order (0-th first); flattening / lowering details in § How it works §「transforms lowering to Scene」 |
+| `transforms` | `Array<Transform>` | — | Local transform list, 7 variants; applied in array order (0-th outermost, last innermost, matching SVG transform-list); flattening / lowering details in § How it works §「transforms lowering to Scene」 |
 | `children` | `ReactNode` | — | Scope children: `<Node>` / `<Path>` / `<Coordinate>` / nested `<Scope>` |
 | `id` | `string` | — | Optional scope reference id; when set, the **axis-aligned global bounding box** of all child layouts is registered as a synthetic rectangle layout into the **parent frame**; external code can reference it as `'X'` / `'X.<anchor>'` / `'X.<deg>'`; details in § How it works §「scope.id synthetic bbox」 |
 | `localNamespace` | `boolean` | `false` | Whether to create a local namespace: `true` pushes a child frame and isolates child ids from the outside; details in § How it works §「Namespace stack and lookup」 |
 | `meta` | `Record<string, JSON value>` | — | Provenance metadata, passed through verbatim onto the `GroupPrim` this scope emits; ignored by renderers, never part of layout, and **not propagated to children**. Typically injected by a higher-level lowering (e.g. plot) to tag the series / layer. Must be a JSON-serializable object |
 | `color` | `string` | — | Cascading master color; inner stroke / fill / text / arrow / label default to it |
 | `stroke` | `string` | — | Cascading default stroke color (shared sub-field) |
-| `fill` | `string` | — | Cascading default fill color |
+| `fill` | `string \| PaintSpec` | — | Cascading default fill (CSS color or PaintSpec: gradient / pattern / image) |
 | `strokeWidth` | `number` | — | Cascading default stroke width |
 | `opacity` | `number` | — | Cascading default whole-element opacity 0–1 (replaces, not compounds) |
 | `fillOpacity` | `number` | — | Cascading default fill opacity 0–1 |
@@ -385,6 +385,7 @@ Inner overrides outer; within one frame the typed default overrides the cascade.
 | `resetStyle` | `boolean \| Array` | `false` | Inheritance barrier: cut outer channels; details in § How it works §「Style inheritance resolution」 |
 | `zIndex` | `number` (integer) | `0` | Explicit stacking order: positions the scope as a whole (its GroupPrim) among its siblings without affecting the relative stacking inside it; higher draws on top, ties keep declaration order |
 | `clip` | `ClipSpec` | — | Clip region (rect / circle / ellipse / polygon, scope-local coords); clips every child of the scope |
+| `animations` | `Array<AnimationTrack>` | — | Timeline animation tracks applied to the scope as a whole (its GroupPrim); not propagated to children, not part of layout. See [Animation](/core/components/animation/control) |
 
 ## Related
 
