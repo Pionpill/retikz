@@ -180,9 +180,12 @@ One-line forms for circles, rectangles, and sectors live under the [Shapes](/cor
 
 | Field | Type | Default | Description |
 | --- | --- | --- | --- |
-| `text` | `string` | — | Label text |
-| `position` | `StepLabelPosition \| number` | `'midway'` | Keyword or numeric `0..1` t value |
-| `side` | `'above' \| 'below'` | `'above'` | Which side of the line to place the text on |
+| `text` | `string` | — | Label text (single line) |
+| `position` | one of 7 keywords or `number` (0..1) | `'midway'` | Normalized position t along the segment; keywords are sugar for t (at-start=0 / very-near-start=0.125 / near-start=0.25 / midway=0.5 / near-end=0.75 / very-near-end=0.875 / at-end=1) |
+| `side` | `'above' \| 'below' \| 'left' \| 'right' \| 'sloped'` | `'above'` | Offset side relative to segment direction; `sloped` rotates along the tangent |
+| `textColor` | `string` | — | Label text color; falls back to scope `labelDefault` → host path master color → currentColor |
+| `opacity` | `number` | — | Label-only opacity 0..1; multiplied with the owning path opacity |
+| `font` | `object` | — | Label font overrides (family / size / weight / style) |
 
 ## Related
 

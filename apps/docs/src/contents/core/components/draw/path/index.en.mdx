@@ -20,13 +20,14 @@ import { Path, Step } from '@retikz/react';
 </Path>
 ```
 
-`<Draw>` and `<Path>` are equivalent in expressiveness (`<Draw>` compiles to `<Path>`); reach for `<Draw>`'s single-line `way` array for everyday connections, and `<Path>` when you need an explicit Step sequence, multiple `move`s, or per-segment mixing of `kind` / label / control points:
+`<Draw>` compiles down to `<Path>` and covers everyday step / fold / curve / arc connections; but `<Path>` additionally exposes element-level capabilities — `color` / `rotate` / `scale` / `marks` / `id` / `meta` / `animations` — that `<Draw>` does not. Reach for `<Draw>`'s single-line `way` array for everyday connections, and `<Path>` when you need an explicit Step sequence, multiple `move`s, per-segment mixing of `kind` / label / control points, or any of those Path-only capabilities:
 
 | | `<Draw>` | `<Path>` + `<Step>` |
 | --- | --- | --- |
 | Form | Single-line `way` array | Container + child nodes |
-| Expressiveness | Equivalent to Path (compile-expanded) | All Kernel capability |
-| Use when | 90% of connection cases | Explicit Step sequence, future extensions |
+| step / curve / fold / arc | Yes | Yes |
+| `color` / `rotate` / `scale` / `marks` / `id` / `meta` / `animations` | Not exposed | Yes |
+| Use when | 90% of connection cases | Explicit Step sequence, element-level capability |
 
 ## Composition
 
@@ -48,7 +49,7 @@ import { Path, Step } from '@retikz/react';
 
 <ComponentPreview name="path-basic" size="xs" />
 
-### Folded (step)
+### Fold
 
 `<Step kind="fold" via="-|" \| "\|-">` inserts a right-angle corner between cursor and target — essential for flow charts and UML relationships. Below is a path mixing `line` and both `via` directions:
 
@@ -68,7 +69,7 @@ import { Path, Step } from '@retikz/react';
 
 ### Arrows
 
-`arrow` picks direction (`'->'` / `'<-'` / `'<->'` / `'none'`); `arrowDetail` is a single object covering every visual spec (shape / scale / length / width / color / fill / opacity / lineWidth) plus optional `start` / `end` sub-objects for per-end overrides. The full reference — seven built-in shapes, per-end merge semantics, color / sizing / opacity, and the complete API table — lives on the **[Arrow](/core/components/draw/arrow)** page.
+`arrow` picks direction (`'->'` / `'<-'` / `'<->'` / `'none'`); `arrowDetail` is a single object covering every visual spec (shape / scale / length / width / color / fill / opacity / lineWidth) plus optional `start` / `end` sub-objects for per-end overrides. The full reference — eight built-in shapes, per-end merge semantics, color / sizing / opacity, and the complete API table — lives on the **[Arrow](/core/components/draw/arrow)** page.
 
 ### Endpoint connection surface (boundary)
 
@@ -164,7 +165,7 @@ Besides the symmetric `bendDirection` + `bendAngle`, `<Step kind="bend">` accept
 | `color` | `string` | — | Master color (TikZ `color=`); `stroke` / arrow / step label default to it unless individually set (follows the master color, not `stroke`) |
 | `stroke` | `string` | `currentColor` | Stroke color |
 | `strokeWidth` | `number` | `1` | Stroke width |
-| `dashPattern` | `Array<number>` | ? | Dash/gap lengths in user units (e.g. `[4, 2]`) |
+| `dashPattern` | `Array<number>` | — | Dash/gap lengths in user units (e.g. `[4, 2]`) |
 | `lineCap` | `'butt' \| 'round' \| 'square'` | `'butt'` | Stroke endpoint shape |
 | `lineJoin` | `'miter' \| 'round' \| 'bevel'` | `'miter'` | Stroke corner shape |
 | `thickness` | `'ultraThin' \| 'veryThin' \| 'thin' \| 'semithick' \| 'thick' \| 'veryThick' \| 'ultraThick'` | — | Semantic stroke preset (`thin = 1`); explicit `strokeWidth` always wins |
@@ -179,6 +180,7 @@ Besides the symmetric `bendDirection` + `bendAngle`, `<Step kind="bend">` accept
 | `rotate` | `number` | — | Whole-path rotation in degrees (around the bounding-box center) |
 | `scale` | `number \| { x, y }` | — | Whole-path scale (number = uniform / `{ x, y }` = non-uniform, around the bounding-box center) |
 | `marks` | `Array<{ pos, mark }>` | — | Marks along the path: `pos∈[0,1]`, `mark.kind:'arrow'` + a registered arrow name, oriented by the tangent at that point |
+| `animations` | `Array<AnimationTrack>` | — | Timeline animation tracks, passed through onto the primitives this path emits; renderers play them or fall back to static. See [Animation](/core/components/animation/control) |
 | `children` | `Array<<Step>>` | — | At least 2; if the first isn't `move`, the compiler coerces it to `move`. `<Step>` supports `move` / `line` / `fold` (right-angle) / `cycle` (close) / `curve` / `cubic` (Bezier) / `bend` (arc shorthand, with out/in angles and self-loops) / `arc` / `circlePath` / `ellipsePath` (circle / ellipse) / `rectangle` (diagonal rectangle); the IR also has `generator` (path generators, no JSX DSL) |
 
 ## Related

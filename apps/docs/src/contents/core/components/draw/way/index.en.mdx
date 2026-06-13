@@ -60,7 +60,7 @@ These raw literals follow TikZ path syntax: `(A) -| (B)` / `(A) |- (B)`. `'-|'` 
 | Cartesian | `[120, 0]` | Literal coordinate |
 | Polar | `{ origin: 'a', angle: 60, radius: 80 }` | Polar coordinate; see [Positioning](/core/concepts/basic/position) |
 | Offset placement | `{ of: 'a', offset: [10, 5] }` | Base + `(dx, dy)`, same offset form as `<Node position>` |
-| Proportional placement | `{ between: ['a', 'b'], t: 0.5 }` | Proportional point along A → B |
+| Proportional placement | `{ between: [{ id: 'a' }, { id: 'b' }], t: 0.5 }` | Proportional point along A → B |
 | Relative | `{ position: [10, 0], type: DrawWay.Relative }` or `'+10,0'` | Offset from the previous step endpoint without updating prevEnd |
 | Accumulate | `{ position: [10, 0], type: DrawWay.Accumulate }` or `'++10,0'` | Offset from the previous step endpoint and update prevEnd |
 | Fold operator | `'-\|'` / `'\|-'` | Turn previous-to-next into a folded segment |

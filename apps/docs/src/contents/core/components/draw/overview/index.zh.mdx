@@ -182,9 +182,12 @@ Draw 里的曲线分两类：`curve` / `cubic` / `bend` 连接前后两个目标
 
 | 字段 | 类型 | 默认值 | 描述 |
 | --- | --- | --- | --- |
-| `text` | `string` | — | 标注文本 |
-| `position` | `StepLabelPosition \| number` | `'midway'` | keyword 或 `0..1` 的 t 值 |
-| `side` | `'above' \| 'below'` | `'above'` | 文本放在线的哪一侧 |
+| `text` | `string` | — | 标注文本（单行） |
+| `position` | 7 keyword 之一 或 `number`（0..1） | `'midway'` | 段上归一化位置 t；keyword 是 t 的语义糖（at-start=0 / very-near-start=0.125 / near-start=0.25 / midway=0.5 / near-end=0.75 / very-near-end=0.875 / at-end=1） |
+| `side` | `'above' \| 'below' \| 'left' \| 'right' \| 'sloped'` | `'above'` | 文本相对段方向的偏移侧；`sloped` 沿切线旋转贴线 |
+| `textColor` | `string` | — | 标签文字色；缺省回退 scope `labelDefault` → 宿主 path 主色 → currentColor |
+| `opacity` | `number` | — | 标签独立透明度 0..1；与所属 path opacity 相乘 |
+| `font` | `object` | — | 标签字体覆盖（family / size / weight / style） |
 
 ## 相关
 

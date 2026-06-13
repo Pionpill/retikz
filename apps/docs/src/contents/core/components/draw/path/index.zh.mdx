@@ -20,13 +20,14 @@ import { Path, Step } from '@retikz/react';
 </Path>
 ```
 
-`<Draw>` 与 `<Path>` 表达力等价（`<Draw>` 编译后就是 `<Path>`）；日常连线用 `<Draw>` 一行 way 数组更省，需要显式 Step 序列、多次 `move`、逐段混用 `kind` / label / 控制点时用 `<Path>`：
+`<Draw>` 编译后就是 `<Path>`，覆盖日常连线的 step / 折角 / 曲线 / 弧形需求；但 `<Path>` 还多出 `color` / `rotate` / `scale` / `marks` / `id` / `meta` / `animations` 等元素级能力，`<Draw>` 不暴露这些。日常连线用 `<Draw>` 一行 way 数组更省，需要显式 Step 序列、多次 `move`、逐段混用 `kind` / label / 控制点，或要用上述 Path 专属能力时用 `<Path>`：
 
 | | `<Draw>` | `<Path>` + `<Step>` |
 | --- | --- | --- |
 | 写法 | 一行 way 数组 | 容器 + 子节点 |
-| 表达力 | 与 Path 等价（编译展开） | 全部 Kernel 能力 |
-| 适用 | 90% 连线场景 | 显式 Step 序列、未来扩展 |
+| step / 曲线 / 折角 / 弧形 | 支持 | 支持 |
+| `color` / `rotate` / `scale` / `marks` / `id` / `meta` / `animations` | 不暴露 | 支持 |
+| 适用 | 90% 连线场景 | 显式 Step 序列、元素级能力 |
 
 ## 组合
 
@@ -68,7 +69,7 @@ import { Path, Step } from '@retikz/react';
 
 ### 箭头
 
-`arrow` 控制方向（`'->'` / `'<-'` / `'<->'` / `'none'`），`arrowDetail` 一个对象统管全部视觉规格（shape / scale / length / width / color / fill / opacity / lineWidth）+ 可选 `start` / `end` 起末分别配置。详细规则、7 种内置 shape、起末 merge、颜色 / 缩放 / 半透明配置以及完整 API 参考见 **[Arrow](/core/components/draw/arrow)** 专页。
+`arrow` 控制方向（`'->'` / `'<-'` / `'<->'` / `'none'`），`arrowDetail` 一个对象统管全部视觉规格（shape / scale / length / width / color / fill / opacity / lineWidth）+ 可选 `start` / `end` 起末分别配置。详细规则、8 种内置 shape、起末 merge、颜色 / 缩放 / 半透明配置以及完整 API 参考见 **[Arrow](/core/components/draw/arrow)** 专页。
 
 ### 端点连接面（boundary）
 
@@ -179,6 +180,7 @@ import { Path, Step } from '@retikz/react';
 | `rotate` | `number` | — | 整条 path 旋转角（度，绕包围盒中心） |
 | `scale` | `number \| { x, y }` | — | 整条 path 缩放（数字等比 / `{ x, y }` 非等比，绕包围盒中心） |
 | `marks` | `Array<{ pos, mark }>` | — | 沿路径标记：`pos∈[0,1]`、`mark.kind:'arrow'` + 已注册箭头名，朝向随该点切线 |
+| `animations` | `Array<AnimationTrack>` | — | 时间轴动画 tracks，透传进本 path emit 的图元，renderer 播放或降级静态；见 [动画](/core/components/animation/control) |
 | `children` | `Array<<Step>>` | — | 至少 2 个；首个非 `move` 时编译器会强制改成 `move`。`<Step>` 支持 `move` / `line` / `fold`（折角）/ `cycle`（闭合）/ `curve` / `cubic`（贝塞尔曲线）/ `bend`（弧形简记，可带 out/in 角与自环）/ `arc` / `circlePath` / `ellipsePath`（圆 / 椭圆）/ `rectangle`（对角矩形）；IR 另有 `generator`（路径生成器，无 JSX DSL） |
 
 ## 相关
