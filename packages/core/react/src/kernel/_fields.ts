@@ -86,7 +86,7 @@ void _assertPathFieldsCheck;
 
 /**
  * IRScope 纯透传字段表（除 type / children 特化字段外）
- * @description 含 alpha.1 容器字段（id / localNamespace / transforms）+ alpha.2 样式默认字段
+ * @description 含容器字段（id / localNamespace / transforms）+ 样式默认字段
  *   （级联 graphic state + 四通道 every-X + resetStyle）；同 NODE_FIELDS 互锁防漂移，builder / unbuilder 共用
  */
 export const SCOPE_FIELDS = [
@@ -122,7 +122,7 @@ void _assertScopeFieldsCheck;
  * Scope 级联样式 props 子集——`<Scope>` 与 `<Layout>` 共用同一份定义，避免两处漂移
  * @description 取 IRScope 的「级联样式」通道（graphic state + 四通道 every-X），**不含**容器 / 命名空间 /
  *   局部变换语义字段（`id` / `localNamespace` / `transforms` / `resetStyle` / `zIndex` / `clip`）——这些挂在
- *   顶层 `<Layout>` 上要么无意义、要么语义易混（详 ADR-01 v0.2-beta.2「暴露哪些 Scope props」）。
+ *   顶层 `<Layout>` 上要么无意义、要么语义易混，故不在此暴露。
  *   `<Layout>` 设任一字段时把 children 包进合成根 `<Scope>`，编译产物 = 用户手写一层根 `<Scope>` 的同一 IR。
  */
 export type ScopeStyleProps = {

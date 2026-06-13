@@ -1,5 +1,5 @@
 /**
- * <Layout> 顶层级联样式 props 测试（ADR-01 v0.2-beta.2：隐式根 Scope）
+ * <Layout> 顶层级联样式 props 测试（隐式根 Scope）
  * @description Layout 设级联样式 props（color / stroke / nodeDefault / pathDefault / labelDefault / ...）时把
  *   children 包进合成根 `<Scope>`，编译产物 = 用户手写一层根 `<Scope>` 的同一 IR。覆盖：
  *   - happy：node / path / label 各通道继承 + 主色级联

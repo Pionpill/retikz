@@ -46,6 +46,28 @@ import {
 // NODE_FIELDS / PATH_FIELDS / pickDefined 抽到 _fields.ts 与 unbuilder 共享
 
 /**
+ * 判定一个函数 type 是否为 React class 组件
+ * @description React class 组件原型上带 `isReactComponent` 标记；据此区分，避免把 class 当普通函数直接调用
+ */
+const isClassComponent = (type: unknown): boolean =>
+  typeof type === 'function' &&
+  (type as { prototype?: { isReactComponent?: unknown } }).prototype?.isReactComponent !== undefined;
+
+/** 取元素 type 的可读名称用于诊断信息（函数 / class 取 displayName 或 name，其余回退 String） */
+const componentLabel = (type: unknown): string => {
+  if (typeof type === 'string') return type;
+  if (typeof type === 'function') {
+    const fn = type as { displayName?: string; name?: string };
+    return fn.displayName ?? fn.name ?? 'Unknown';
+  }
+  if (type !== null && typeof type === 'object') {
+    const obj = type as { displayName?: string };
+    return obj.displayName ?? 'Unknown';
+  }
+  return String(type);
+};
+
+/**
  * 把 <Text> 元素的 props + children 串解析为 IRLineSpec 对象形式
  * @description children 接受 string / number（number 当文本，对齐 React 渲染）；其它类型静默跳过此 <Text> 元素
  */
@@ -75,7 +97,8 @@ const textElementToLineSpec = (el: ReactElement): IRLineSpec | undefined => {
  * @description 顺序遍历，维护一个当前行文本缓冲：字符串首段 append、每遇 `'\n'` flush 成一行并起新行；
  *   number 当文本 append（与相邻 inline 同一行拼接，不另起行）；boolean / null / undefined 跳过（React 渲染为空）；
  *   `<Text>` 元素先 flush 缓冲再独立成一行（保留 styled-line 行为）；数组沿用同一缓冲递归（相邻 inline 跨数组项也拼接）；
- *   其它类型跳过；遍历结束 flush 残余缓冲
+ *   `React.Fragment` 透明展开其 children（沿用同一缓冲，与裸数组同义）；其余函数式组件同步调用后递归其返回值
+ *   （与 `readSceneChildren` 一致，让条件分支返回的 `<Text>` 段不被静默丢弃）；其它类型跳过；遍历结束 flush 残余缓冲
  */
 const collectChildLines = (children: unknown): Array<IRLineSpec> => {
   const out: Array<IRLineSpec> = [];
@@ -108,11 +131,21 @@ const collectChildLines = (children: unknown): Array<IRLineSpec> => {
       for (const c of node) visit(c);
       return;
     }
-    if (isValidElement(node) && getDisplayName(node) === TIKZ_TEXT) {
-      const spec = textElementToLineSpec(node);
-      if (spec !== undefined) {
-        flush();
-        out.push(spec);
+    if (isValidElement(node)) {
+      if (node.type === Fragment) {
+        visit((node.props as { children?: ReactNode }).children);
+        return;
+      }
+      if (getDisplayName(node) === TIKZ_TEXT) {
+        const spec = textElementToLineSpec(node);
+        if (spec !== undefined) {
+          flush();
+          out.push(spec);
+        }
+        return;
+      }
+      if (typeof node.type === 'function') {
+        visit((node.type as (p: unknown) => ReactNode)(node.props));
       }
     }
   };
@@ -152,26 +185,40 @@ const buildNodeFromProps = (props: NodeProps): IRChild => {
 
 /**
  * 扫描 Step children，把首个 <EdgeLabel> 翻译为 IRStepLabel
- * @description 非字符串 children 静默跳过；多个 <EdgeLabel> 取首个、其余 dev 下 warn（与水合重复 id 诊断一致）
+ * @description 非字符串 children 静默跳过；多个 <EdgeLabel> 取首个、其余 dev 下 warn（与水合重复 id 诊断一致）；
+ *   `React.Fragment` 透明展开 children、其余函数式组件同步调用后递归其返回值（与 `readSceneChildren` 一致），
+ *   让条件分支返回的 `<EdgeLabel>` 也能被发现
  */
 const readEdgeLabel = (children: ReactNode): IRStepLabel | undefined => {
   let result: IRStepLabel | undefined;
-  Children.forEach(children, child => {
-    if (!isValidElement(child)) return;
-    if (getDisplayName(child) !== TIKZ_EDGE_LABEL) return;
-    const props = child.props as EdgeLabelProps;
-    if (typeof props.children !== 'string') return;
-    if (result !== undefined) {
-      if (process.env.NODE_ENV !== 'production') {
-        console.warn('[retikz] <Step> 含多个 <EdgeLabel>，仅首个生效、其余被忽略。');
+  const visit = (node: ReactNode): void => {
+    Children.forEach(node, child => {
+      if (!isValidElement(child)) return;
+      if (child.type === Fragment) {
+        visit((child.props as { children?: ReactNode }).children);
+        return;
       }
-      return;
-    }
-    const out: IRStepLabel = { text: props.children };
-    if (props.position !== undefined) out.position = props.position;
-    if (props.side !== undefined) out.side = props.side;
-    result = out;
-  });
+      if (getDisplayName(child) !== TIKZ_EDGE_LABEL) {
+        if (typeof child.type === 'function') {
+          visit((child.type as (p: unknown) => ReactNode)(child.props));
+        }
+        return;
+      }
+      const props = child.props as EdgeLabelProps;
+      if (typeof props.children !== 'string') return;
+      if (result !== undefined) {
+        if (process.env.NODE_ENV !== 'production') {
+          console.warn('[retikz] <Step> 含多个 <EdgeLabel>，仅首个生效、其余被忽略。');
+        }
+        return;
+      }
+      const out: IRStepLabel = { text: props.children };
+      if (props.position !== undefined) out.position = props.position;
+      if (props.side !== undefined) out.side = props.side;
+      result = out;
+    });
+  };
+  visit(children);
   return result;
 };
 
@@ -192,13 +239,19 @@ const resolveStepLabel = (props: LabelableStepProps): IRStepLabel | undefined =>
 
 /**
  * 扫描 <Path> children 收集 <Step> 序列
- * @description 至少 2 段（例外：单个自包含 rectangle step 自带两对角，可独立成 path）；首段不是 move 时强制改为 move；cycle/arc/circlePath/ellipsePath 首段降级到 (0,0)
+ * @description 至少 2 段（例外：单个自包含 rectangle step 自带两对角，可独立成 path）；首段不是 move 时强制改为 move；cycle/arc/circlePath/ellipsePath 首段降级到 (0,0)；
+ *   `React.Fragment` 透明展开 children、其余函数式组件同步调用后递归其返回值（与 `readSceneChildren` 一致），
+ *   让 `{cond ? <>...</> : <>...</>}` 等条件分支返回的多个 `<Step>` 平铺进同一序列、不被静默丢弃
  */
 const readPathChildren = (children: ReactNode): Array<IRStep> => {
   const out: Array<IRStep> = [];
-  Children.forEach(children, child => {
-    if (!isValidElement(child)) return;
-    if (getDisplayName(child) !== TIKZ_STEP) return;
+  const visitStep = (child: ReactElement): void => {
+    if (getDisplayName(child) !== TIKZ_STEP) {
+      if (typeof child.type === 'function') {
+        visit((child.type as (p: unknown) => ReactNode)(child.props));
+      }
+      return;
+    }
     const props = child.props as StepProps;
     const kind = props.kind ?? 'line';
     if (kind === 'cycle') {
@@ -331,7 +384,18 @@ const readPathChildren = (children: ReactNode): Array<IRStep> => {
     };
     if (label) step.label = label;
     out.push(step);
-  });
+  };
+  const visit = (node: ReactNode): void => {
+    Children.forEach(node, child => {
+      if (!isValidElement(child)) return;
+      if (child.type === Fragment) {
+        visit((child.props as { children?: ReactNode }).children);
+        return;
+      }
+      visitStep(child);
+    });
+  };
+  visit(children);
   // rectangle 自带 from/to 两对角、不依赖游标，单独成 path 合法；不抛错、也不被下方 move 替换
   const soloSelfContained = out.length === 1 && out[0].kind === 'rectangle';
   if (out.length < 2 && !soloSelfContained) {
@@ -339,14 +403,10 @@ const readPathChildren = (children: ReactNode): Array<IRStep> => {
   }
   if (!soloSelfContained && out[0].kind !== 'move') {
     const first = out[0];
-    const fallbackTo: IRTarget =
-      first.kind === 'cycle' ||
-      first.kind === 'arc' ||
-      first.kind === 'circlePath' ||
-      first.kind === 'ellipsePath' ||
-      first.kind === 'generator'
-        ? [0, 0]
-        : first.to;
+    // 无显式终点的首段（cycle / arc / circlePath / ellipsePath 等不带 `to`）降级到原点 (0,0)；
+    // 带 `to` 的首段（line / fold / curve / cubic / bend）保留其终点
+    const firstTo = 'to' in first ? first.to : undefined;
+    const fallbackTo: IRTarget = firstTo ?? [0, 0];
     out[0] = { type: 'step', kind: 'move', to: fallbackTo };
   }
   return out;
@@ -405,10 +465,24 @@ const readSceneChildren = (children: ReactNode): Array<IRChild> => {
         return;
     }
     if (typeof child.type === 'function') {
+      // class 组件有 render 方法在原型上；当函数直接调用会抛难懂的 TypeError，提前给出清晰错误
+      if (isClassComponent(child.type)) {
+        throw new Error(
+          `[retikz] <Layout> children 含类组件 <${componentLabel(child.type)}>。Kernel / Sugar 组件必须是函数组件——把它改写成函数组件，或在其内部返回 Kernel JSX。`,
+        );
+      }
       const expanded = (child.type as (p: unknown) => ReactNode)(child.props);
       for (const ir of readSceneChildren(expanded)) {
         out.push(ir);
       }
+      return;
+    }
+    // 走到这里说明是 react adapter 不认识的元素：宿主标签（'div' 等字符串 type）、memo / forwardRef /
+    // context Provider 等包装组件（type 是对象，不是函数）。它们不会产出 IR，静默丢弃会让用户图元莫名缺失——dev 下提示
+    if (process.env.NODE_ENV !== 'production') {
+      console.warn(
+        `[retikz] <Layout> children 含无法识别的元素 <${componentLabel(child.type)}>，已忽略。只有 Kernel 组件（Node / Path / Coordinate / Scope）、Sugar 函数组件、以及 React.Fragment 会被翻译进 IR；memo / forwardRef / Context.Provider 等包装组件不被穿透。`,
+      );
     }
   });
   return out;

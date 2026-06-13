@@ -49,6 +49,14 @@ const styleFontFamily = (style: CSSProperties | undefined): string | undefined =
   return typeof fontFamily === 'string' && fontFamily.trim().length > 0 ? fontFamily : undefined;
 };
 
+/** 同一条诊断消息进程内只 `console.warn` 一次，避免组件重复 render 时刷屏 */
+const warnedMessages = new Set<string>();
+const warnOnce = (message: string): void => {
+  if (warnedMessages.has(message)) return;
+  warnedMessages.add(message);
+  console.warn(message);
+};
+
 const withDefaultFontFamily = (
   measureText: TextMeasurer,
   defaultFontFamily: string | undefined,
@@ -104,7 +112,7 @@ export type LayoutProps = ScopeStyleProps & {
   /**
    * 是否播放动画（缺省 true）；`false` → 渲染 base 静态图（不 emit CSS/WAAPI）
    * @description SVG 模式：`load` track 经内联 `<style>` CSS 自播、交互 track 经 WAAPI 桥按 trigger 驱动；
-   *   `animate={false}` 走 settled 静态（ADR-01「三事一路」）。
+   *   `animate={false}` 走 settled 静态。
    */
   animate?: boolean;
   /**
@@ -241,13 +249,17 @@ export const Layout: FC<LayoutProps> = props => {
   // 渲染目标：显式 prop > 祖先 RendererModeProvider 注入的 context > 默认 svg（hook 必须无条件调用）
   const contextRenderer = useRendererMode();
   const renderer = rendererProp ?? contextRenderer ?? 'svg';
-  const scopeStyle: ScopeStyleProps = { color, stroke, fill, strokeWidth, opacity, fillOpacity, drawOpacity, nodeDefault, pathDefault, labelDefault, arrowDefault };
+  const scopeStyle: ScopeStyleProps = useMemo(
+    () => ({ color, stroke, fill, strokeWidth, opacity, fillOpacity, drawOpacity, nodeDefault, pathDefault, labelDefault, arrowDefault }),
+    [color, stroke, fill, strokeWidth, opacity, fillOpacity, drawOpacity, nodeDefault, pathDefault, labelDefault, arrowDefault],
+  );
   const hasScopeStyle = Object.keys(pickScopeStyle(scopeStyle)).length > 0;
 
   // ir prop 已是完整 IR，再叠根样式语义不清——dev 警告 + 忽略样式（prod 静默兼容）
-  // 在 render 体内直接 warn（React 官方诊断惯例）：dev-only、生产被 process.env 剥除，不影响产物
+  // 在 render 体内直接 warn（React 官方诊断惯例，且 SSR / 静态渲染也能命中——effect 在那里不跑）；
+  // warnOnce 进程级去重，避免重复 render 刷屏；dev-only、生产被 process.env 剥除，不影响产物
   if (process.env.NODE_ENV !== 'production' && irFromProp !== undefined && hasScopeStyle) {
-    console.warn(
+    warnOnce(
       '[retikz] <Layout>：同时提供 `ir` 与级联样式 props（color / nodeDefault / pathDefault 等）时，样式 props 被忽略——`ir` 已是完整 IR。请把根样式写进 IR 根的 `<Scope>` 节点，或改用 children。',
     );
   }
@@ -255,12 +267,12 @@ export const Layout: FC<LayoutProps> = props => {
   // 性能边界：children 模式下 `children` 每次 render 都是新引用，本 memo 几乎不命中 → 每 render 重跑 buildIR + compileToScene。
   // 频繁重渲染且图较大时，建议改用持久化的 `ir` prop（irFromProp 引用稳定，memo 才有效）。
   const ir = useMemo(() => {
-    const base = irFromProp ?? buildIR(wrapRootScope(children, { color, stroke, fill, strokeWidth, opacity, fillOpacity, drawOpacity, nodeDefault, pathDefault, labelDefault, arrowDefault }));
+    const base = irFromProp ?? buildIR(wrapRootScope(children, scopeStyle));
     // viewBox prop 注入 IR 根（显式 > IR 内置）；prop 缺省时保留 base 自带的 viewBox
     const withViewBox = viewBox !== undefined ? { ...base, viewBox } : base;
     // animations prop 注入 IR 根（镜头，cameraTo）；缺省保留 base 自带
     return rootAnimations !== undefined ? { ...withViewBox, animations: rootAnimations } : withViewBox;
-  }, [irFromProp, children, viewBox, rootAnimations, color, stroke, fill, strokeWidth, opacity, fillOpacity, drawOpacity, nodeDefault, pathDefault, labelDefault, arrowDefault]);
+  }, [irFromProp, children, viewBox, rootAnimations, scopeStyle]);
   const defaultFontFamily = styleFontFamily(style);
   const measureText = useMemo(
     () => withDefaultFontFamily(browserMeasurer, defaultFontFamily),

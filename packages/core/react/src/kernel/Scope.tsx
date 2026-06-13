@@ -11,13 +11,16 @@ import type { ScopeStyleProps } from './_fields';
  */
 export type ScopeProps = ScopeStyleProps & HydrationEventProps & {
   /**
-   * 可选 scope 引用 id；设值则注册一个 synthetic bbox 节点到父 namespace frame
-   * @description 设值则注册一个 synthetic bbox 节点到父 namespace frame，供外部 path / position 引用 scope 整体（注册行为尚未启用）
+   * 可选 scope 引用 id；设值则注册一个 synthetic rectangle bbox 节点到父 namespace frame
+   * @description 该 bbox 节点供外部 path / position 把整个 scope 当矩形 referent 引用
+   *   （`scope.id` / `scope.id.<anchor>` / `scope.id.<deg>` 走与普通 rectangle Node 一致的 anchor 取值）；
+   *   始终注册在父 frame，不受 `localNamespace` 影响——它是 scope 对外的句柄
    */
   id?: string;
   /**
    * 是否创建本地命名空间；true 时子节点 id 不向父 frame 传播（外部不可见）
-   * @description 命名空间隔离行为尚未启用，字段提前暴露以保持 IR ↔ JSX 双向稳定
+   * @description compile 进入本 scope 时 push 一个独立 namespace frame，子节点 id 只在本 frame 可见、
+   *   出场即弹出；外部无法引用子节点 id（`scope.id` 句柄仍在父 frame 可见，不受影响）
    */
   localNamespace?: boolean;
   /**

@@ -6,7 +6,7 @@ import { ArrowMarker } from '../../src/render/arrowMarkers';
 type AnyEl = ReactElement<Record<string, unknown> & { children?: unknown }>;
 
 /**
- * Arrow marker 物化对抗回归（ADR-01 emit-in-compile）
+ * Arrow marker 物化对抗回归（marker 在 compile 阶段 emit）
  * @description 坏 ArrowEndSpec（NaN refX / Infinity baseSize / text 注入）已由 compile 运行时栅栏在源头拦下
  *   （见 core 侧 builtin-registry.adversarial），react 作纯物化层不重复兜底。这里保留 marker 几何里 arc /
  *   ellipseArc 命令的物化回归——`MarkerPathCommand` 与 Scene `PathCommand` 同词汇，react 复用 buildPathD

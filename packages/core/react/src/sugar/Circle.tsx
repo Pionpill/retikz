@@ -18,15 +18,15 @@ import {
   resolveAngles,
 } from './_shared';
 
-/** Circle sugar props. */
+/** Circle sugar 的 props */
 export type CircleProps = PathVisualProps &
   AngleInput &
   BoxAdjustmentProps & {
-    /** Fit a circle to the box with either the shortest or longest side. */
+    /** 按 box 拟合圆时取最短边（contain）还是最长边（cover） */
     fit?: 'contain' | 'cover';
-    /** Box input for fitting a circle. */
+    /** 用于拟合圆的 box 输入 */
     box?: ShapeBox;
-    /** Partial closing mode when angles are present. */
+    /** 给定角度时的局部闭合方式 */
     closed?: 'chord' | 'open' | 'sector';
   } & (
     | { center: IRTarget; radius: number }
@@ -52,13 +52,13 @@ const resolveCircleByBox = (
 };
 
 /**
- * Circle sugar - expands to a Path + circlePath step.
+ * Circle sugar——展开为 Path + circlePath step
  */
 export const Circle: FC<CircleProps> = props => {
   let center: IRTarget;
   let radius: number;
-  if ('box' in props) {
-    ({ center, radius } = resolveCircleByBox(props, 'Circle', props.box!));
+  if (props.box !== undefined) {
+    ({ center, radius } = resolveCircleByBox(props, 'Circle', props.box));
   } else if ('radius' in props) {
     center = props.center;
     radius = props.radius;

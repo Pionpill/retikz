@@ -135,9 +135,9 @@ const assertNever = (x: never): never => {
 /** 单个 IR child → 对应 Kernel element；走 discriminated union 穷举 */
 const childToElement = (child: IRChild, key: number): ReactNode => {
   if ('namespace' in child) {
-    // tier2 composite → JSX 暂不支持（authoring 通道见 ADR-02）；IR→React 仅覆盖 Tier 1
+    // tier2 composite 还原成 JSX 暂不支持；IR→React 仅覆盖 Tier 1（Node / Path / Coordinate / Scope / Step）
     throw new Error(
-      `convertIRToReactNode: Tier 2 composite '${child.namespace}.${child.type}' → JSX is not supported yet (see ADR-02 <Composite> channel).`,
+      `convertIRToReactNode: Tier 2 composite '${child.namespace}.${child.type}' cannot be converted back to JSX; only Tier 1 IR children are supported.`,
     );
   }
   switch (child.type) {

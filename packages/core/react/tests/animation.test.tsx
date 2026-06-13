@@ -9,7 +9,7 @@ import { Layout, Node, cameraTo, fadeIn, spin } from '../src';
 import { convertReactNodeToIR } from '../src';
 
 /**
- * ADR-04 runtime（react，jsdom）：SVG load track → 内联 <style> 自播；交互 track → WAAPI 桥；animate={false} 静态。
+ * 动画 runtime（react，jsdom）：SVG load track → 内联 <style> 自播；交互 track → WAAPI 桥；animate={false} 静态。
  */
 let animateSpy: ReturnType<typeof vi.fn>;
 let rafSpy: ReturnType<typeof vi.fn>;
