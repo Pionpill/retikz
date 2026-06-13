@@ -548,19 +548,21 @@ export const layoutNode = (
     textHeight = lines.length * lineHeight;
   }
 
-  // 内框半轴：text 半宽 + sep（保证至少 sep 大小，空文本节点也有最小尺寸）
-  // minimumWidth/Height (axis-specific) 覆盖 minimumSize (对称别名)
-  const minW = node.minimumWidth ?? node.minimumSize ?? 0;
-  const minH = node.minimumHeight ?? node.minimumSize ?? 0;
-  const innerHalfW = Math.max(textWidth / 2 + xSep, xSep, minW / 2);
-  const innerHalfH = Math.max(textHeight / 2 + ySep, ySep, minH / 2);
+  // 内框半轴：text 半宽 + sep（保证至少 sep 大小，空文本节点也有最小尺寸）。minimum 不进内框——见下方对外接框 floor。
+  const innerHalfW = Math.max(textWidth / 2 + xSep, xSep);
+  const innerHalfH = Math.max(textHeight / 2 + ySep, ySep);
 
   // 外接边界（bounding rect）半轴：内框半轴经 shape.circumscribe 派生
-  const { halfWidth: boundsHalfW, halfHeight: boundsHalfH } = shapeDef.circumscribe(
-    innerHalfW,
-    innerHalfH,
-    shapeParams,
-  );
+  const circumscribed = shapeDef.circumscribe(innerHalfW, innerHalfH, shapeParams);
+
+  // minimum 尺寸（TikZ 语义）：floor 外接框（bounding box）而非内框，且随 scale 缩（与 sep / text / fontSize 同口径，
+  // minimumWidth→sx、minimumHeight→sy）。minimumWidth/Height 覆盖 minimumSize（对称别名）。inner-driven shape
+  // （rectangle/ellipse/polygon）emit 按 floor 后的 rect 重建、恰好填满；params-radius-driven shape（sector/star/arc）
+  // glyph 由半径定、minimum 仅预留 bbox 空间不缩放 glyph。
+  const minHalfW = ((node.minimumWidth ?? node.minimumSize ?? 0) * sx) / 2;
+  const minHalfH = ((node.minimumHeight ?? node.minimumSize ?? 0) * sy) / 2;
+  const boundsHalfW = Math.max(circumscribed.halfWidth, minHalfW);
+  const boundsHalfH = Math.max(circumscribed.halfHeight, minHalfH);
 
   const rotateDeg = node.rotate ?? 0;
   const center = resolvePosition(node.position, nameStack, nodeDistance, scopeChain, resolveBetweenGlobal);
