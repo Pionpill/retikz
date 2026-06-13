@@ -33,7 +33,7 @@ lowerPlots(datasets, { fieldMaps: { sales: { quarter: 'period', share: 'ratio' }
 // encoding x="quarter"（逻辑）→ 物理路径 'period' → resolveFieldPath(row, 'period')
 ```
 
-解析：物理路径 = `fieldMaps[ref]?.[logical] ?? logical`（缺省恒等）。**映射值只允许非空路径串**（支持 `a.b.c`）——不支持函数、不支持数组展开、不做计算（值变换留 alpha.11 transform/derive）。
+解析：物理路径 = `fieldMaps[ref]?.[logical] ?? logical`（缺省恒等）。**映射值只允许非空路径串**（支持 `a.b.c`）——不支持函数、不支持数组展开、不做计算（值变换留 alpha.12 transform/derive）。
 
 **`fieldMaps` 校验（fail-loud）**：
 - **仅在声明 `model` 时可用**（评审 P1）：无 `model` 却传 fieldMaps → throw（无逻辑字段契约，改名无所指）；
@@ -73,7 +73,7 @@ retikz「数据不进 IR、外部数据是任意可嵌套 JS」（plot-design §
 | 嵌套对象路径 `a.b.c` | `resolveFieldPath` 逐段解析到标量叶子 ✓（已支持） |
 | 字段缺失（异构文档某行没该字段） | 路径 → `undefined` → coerce → null/NaN → **跳过该 datum**，不报错（异构文档常态） |
 | 叶子是非标量（object / array） | coerce 判为非法 → **跳过**，**绝不 `String(obj)`**（ingest 归一化是唯一 coerce 点，order / compare 也读 canonical，根治 `"[object Object]"` 脏值） |
-| 路径中途穿过数组（`items.price`，items 是数组） | 返回 `undefined` → 跳过；**数组 unwind / flatten 不在 alpha.6**（属 transform，alpha.11），不静默瞎猜、文档明示「需先 flatten」 |
+| 路径中途穿过数组（`items.price`，items 是数组） | 返回 `undefined` → 跳过；**数组 unwind / flatten 不在 alpha.6**（属 transform，alpha.12），不静默瞎猜、文档明示「需先 flatten」 |
 | 同字段跨文档 JS 类型不一（schemaless） | 按 resolved `FieldType` coerce：能强制则用、不能则跳过（需求 3 的本质） |
 | strict 模式下大量被跳过 | 可选 `validateData`（见待决策点）抽样校验、fail-loud 提示「字段缺失 / 非标量 / 类型不符比例过高」，把「静默空图」变「明确报错」 |
 
@@ -125,7 +125,7 @@ React / vanilla 具体 API（评审 P1，当前 `Plot.tsx` 只显式转发列举
 
 ## 不在本 ADR 范围
 
-- **值变换函数**（逻辑字段 = 物理字段的计算式）→ transform / derive（alpha.11），`fieldMaps` 只改名。
+- **值变换函数**（逻辑字段 = 物理字段的计算式）→ transform / derive（alpha.12），`fieldMaps` 只改名。
 - **type-driven scale 选型 / 类型↔scale 校验** → ADR-03。
 - **远程 / 流式数据源、大数据采样** → 后续。
 - **运行时响应式换源（不重 lower）** → v0.1 之后交互/性能轴。
