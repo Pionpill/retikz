@@ -1,0 +1,38 @@
+[
+  {
+    "id": "core-single-01",
+    "category": "core",
+    "difficulty": "single",
+    "prompt": "画一个写着 Hello 的矩形节点。"
+  },
+  {
+    "id": "core-single-02",
+    "category": "core",
+    "difficulty": "single",
+    "prompt": "在画布中心放一个圆形节点，里面写字母 A。"
+  },
+  {
+    "id": "core-composite-01",
+    "category": "core",
+    "difficulty": "composite",
+    "prompt": "画两个矩形节点，左边写 A、右边写 B，用一条带箭头的直线从 A 指向 B。"
+  },
+  {
+    "id": "core-composite-02",
+    "category": "core",
+    "difficulty": "composite",
+    "prompt": "上下排布三个节点，依次写 1、2、3，相邻节点之间用直线连起来。"
+  },
+  {
+    "id": "core-complex-01",
+    "category": "core",
+    "difficulty": "complex",
+    "prompt": "画一个简单的流程图：开始节点、一个处理节点、一个判断节点和结束节点，用带箭头的连线把它们按流程顺序连接起来。"
+  },
+  {
+    "id": "core-complex-02",
+    "category": "core",
+    "difficulty": "complex",
+    "prompt": "画一个 2x2 的网格，四个格子各是一个方形节点，分别写 A、B、C、D，并在水平和垂直相邻的格子之间画连线。"
+  }
+]
