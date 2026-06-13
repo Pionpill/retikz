@@ -3251,8 +3251,8 @@ export const changelog: Array<Release> = [
           {
             label: { zh: 'Arrow 专页与 Blog', en: 'Arrow page + Blog' },
             content: {
-              zh: '新增 Arrow 专页讲箭头 shape / 颜色 / 异形 / 缩放;`/blog/` 设计 / 历程两 section 上线',
-              en: 'A dedicated Arrow page on shape / color / heterogeneous ends / scale; the `/blog/` design / journey sections go live',
+              zh: '新增 Arrow 专页讲箭头 shape / 颜色 / 异形 / 缩放;`/about/blog/` 博客内容上线',
+              en: 'A dedicated Arrow page on shape / color / heterogeneous ends / scale; the `/about/blog/` posts go live',
             },
           },
         ],
@@ -3327,8 +3327,8 @@ export const changelog: Array<Release> = [
               {
                 label: { zh: 'Blog 分区上线', en: 'Blog section' },
                 content: {
-                  zh: '`/blog/` 新增设计 / 历程两 section,首发 `core-philosophy` 与 `origin` 两篇中英正文',
-                  en: 'New `/blog/` with design / journey sub-sections; ships `core-philosophy` and `origin` as the first two zh + en posts',
+                  zh: '`/about/blog/` 博客分组上线,首发 `core-philosophy` 与 `origin` 两篇中英正文',
+                  en: 'New `/about/blog/` posts; ships `core-philosophy` and `origin` as the first two zh + en posts',
                 },
               },
             ],
