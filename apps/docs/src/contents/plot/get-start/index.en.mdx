@@ -11,7 +11,7 @@ In React projects, the plot entry package is `@retikz/plot-react`. It brings `@r
 
 ## Final Result
 
-This chart draws the same monthly revenue data with two mark layers: a line for the trend and points for each observation. `<Plot>` infers linear scales and a cartesian2D coordinate system, and when no explicit `<Axis>` children are present it adds x/y axes plus a y grid.
+This chart draws the same monthly revenue data with two mark layers: a line for the trend and points for each observation. `<Plot>` infers linear scales and a cartesian2D coordinate system; the x/y axes and y grid come from the explicit `<Axis>` children.
 
 <ComponentPreview name="line-scatter" sourceFiles={['line-scatter.data.ts']} />
 
@@ -34,6 +34,8 @@ const sales = [
 ### 2. Draw the trend with `<Plot>` and `<LineMark>`
 
 `<Plot>` receives the data and display size; `<LineMark>` declares which fields feed the x and y channels. `order="month"` connects points by month, so the line stays stable if row order changes.
+
+`<Plot>` is a thin container and draws no axes itself: to see axes you add `<Axis>` explicitly — `dimension` picks the x / y dimension, and `grid` adds gridlines for that dimension. Below, the y axis carries a grid and the x axis does not.
 
 ```tsx
 <Plot data={sales} width={360} height={200}>
