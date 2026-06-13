@@ -5,7 +5,7 @@
   "type": "module",
   "description": "retikz eval: LLM-generated IR accuracy harness (L1 structural validity baseline).",
   "scripts": {
-    "eval": "tsx src/index.ts",
+    "eval": "tsx --env-file-if-exists=.env src/index.ts",
     "lint": "eslint .",
     "test": "vitest",
     "test:run": "vitest run"
