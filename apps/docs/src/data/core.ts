@@ -100,15 +100,6 @@ export const coreSection: Array<Section> = [
     ],
   },
   {
-    id: 'examples',
-    label: 'core.examples',
-    pages: [
-      { id: 'karl-circle', label: 'core.examplesKarlCircle' },
-      { id: 'learning-path', label: 'core.examplesLearningPath' },
-      { id: 'ohms-law-circuit', label: 'core.examplesOhmsLawCircuit' },
-    ],
-  },
-  {
     id: 'reference',
     label: 'core.reference',
     pages: [
@@ -158,6 +149,15 @@ export const coreSection: Array<Section> = [
           { id: 'parser', label: 'core.refParser' },
         ],
       },
+    ],
+  },
+  {
+    id: 'examples',
+    label: 'core.examples',
+    pages: [
+      { id: 'karl-circle', label: 'core.examplesKarlCircle' },
+      { id: 'learning-path', label: 'core.examplesLearningPath' },
+      { id: 'ohms-law-circuit', label: 'core.examplesOhmsLawCircuit' },
     ],
   },
   {
