@@ -1,4 +1,4 @@
-import { Fragment } from 'react';
+import { type FC, Fragment, forwardRef, memo } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { Circle, Node, Path, Scope, Step, collectHydrationHandlers } from '../src';
 
@@ -150,5 +150,69 @@ describe('collectHydrationHandlers', () => {
     );
 
     expect(handlers.e1.click).toBe(click);
+  });
+
+  describe('带 displayName 的 wrapper 组件展开行为', () => {
+    it('普通函数 wrapper（带自定义 displayName）：同步展开 → 内层 Kernel 的 handler 按 id 收集', () => {
+      const click = vi.fn();
+      const Wrapper: FC = () => <Node id="inner" position={[0, 0]} onClick={click} />;
+      Wrapper.displayName = 'MyWrapper';
+
+      const handlers = collectHydrationHandlers(<Wrapper />);
+
+      expect(handlers.inner.click).toBe(click);
+    });
+
+    it('函数 wrapper 自身挂 id + handler 时，wrapper 元素自身的 handler 也按其 id 收集（展开前先读自身）', () => {
+      const outer = vi.fn();
+      const inner = vi.fn();
+      const Wrapper: FC<{ id?: string; onClick?: typeof outer }> = () => (
+        <Node id="inner" position={[0, 0]} onClick={inner} />
+      );
+      Wrapper.displayName = 'MyWrapper';
+
+      const handlers = collectHydrationHandlers(<Wrapper id="outer" onClick={outer} />);
+
+      // wrapper 元素自身（id="outer"）的 handler 与展开后内层（id="inner"）的 handler 各自按 id 收集
+      expect(handlers.outer.click).toBe(outer);
+      expect(handlers.inner.click).toBe(inner);
+    });
+
+    it('memo wrapper（type 为对象、非函数）：不被穿透展开 → 内层 handler 不被收集（静默跳过）', () => {
+      const click = vi.fn();
+      const Inner: FC = () => <Node id="inner" position={[0, 0]} onClick={click} />;
+      Inner.displayName = 'Inner';
+      const Memoized = memo(Inner);
+      Memoized.displayName = 'MemoWrapper';
+
+      const handlers = collectHydrationHandlers(<Memoized />);
+
+      // memo 的 type 是对象不是函数，collect 不调用它展开 → 内层 id="inner" 的 handler 收不到
+      expect(handlers).toEqual({});
+    });
+
+    it('memo wrapper 自身挂 id + handler：wrapper 元素自身的 handler 仍按其 id 收集（不依赖展开）', () => {
+      const onClick = vi.fn();
+      const Inner: FC = () => <Node id="inner" position={[0, 0]} />;
+      Inner.displayName = 'Inner';
+      const Memoized = memo<{ id?: string; onClick?: typeof onClick }>(Inner);
+      Memoized.displayName = 'MemoWrapper';
+
+      const handlers = collectHydrationHandlers(<Memoized id="outer" onClick={onClick} />);
+
+      // 自身 handler 读自元素 props（与是否能展开无关）；内层不展开故不出现
+      expect(handlers.outer.click).toBe(onClick);
+      expect(handlers).not.toHaveProperty('inner');
+    });
+
+    it('forwardRef wrapper（type 为对象、非函数）：不被穿透展开 → 内层 handler 不被收集（静默跳过）', () => {
+      const click = vi.fn();
+      const Forwarded = forwardRef<unknown>(() => <Node id="inner" position={[0, 0]} onClick={click} />);
+      Forwarded.displayName = 'ForwardWrapper';
+
+      const handlers = collectHydrationHandlers(<Forwarded />);
+
+      expect(handlers).toEqual({});
+    });
   });
 });
