@@ -1,6 +1,6 @@
 {
   "name": "@retikz/core",
-  "version": "0.3.0-beta.2",
+  "version": "0.3.0-beta.3",
   "description": "retikz core: framework-agnostic IR, scene compiler, schemas, geometry, and parsers.",
   "type": "module",
   "author": "Pionpill",
