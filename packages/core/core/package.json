@@ -1,6 +1,6 @@
 {
   "name": "@retikz/core",
-  "version": "0.3.0-beta.3",
+  "version": "0.4.0-alpha.1",
   "description": "retikz core: framework-agnostic IR, scene compiler, schemas, geometry, and parsers.",
   "type": "module",
   "author": "Pionpill",
@@ -56,6 +56,7 @@
     "test:run": "vitest run"
   },
   "dependencies": {
+    "@retikz/math": "workspace:*",
     "zod": "catalog:"
   },
   "devDependencies": {

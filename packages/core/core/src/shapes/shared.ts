@@ -1,4 +1,4 @@
-import { arcBoundingPoints, arcEndPoint } from '../geometry/arc';
+import { arcBoundingPoints, arcEndPoint } from '@retikz/math';
 import type { Position } from '../geometry/point';
 
 const DEG_TO_RAD = Math.PI / 180;

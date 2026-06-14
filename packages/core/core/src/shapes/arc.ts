@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { arcBoundingPoints, arcEndPoint } from '../geometry/arc';
+import { arcBoundingPoints, arcEndPoint } from '@retikz/math';
 import { localToWorld, worldToLocal } from '../geometry/transform';
 import type { Position } from '../geometry/point';
 import type { Rect } from '../geometry/rect';

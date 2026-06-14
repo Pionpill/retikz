@@ -1,0 +1,36 @@
+---
+title: 计算几何
+description: "@retikz/math——零依赖纯计算几何包：向量、仿射、求交、圆、凸包，core 的计算底座。"
+---
+
+`@retikz/math` 是 retikz 的**零依赖纯计算几何**包：向量运算、仿射变换、arc 原语、求交、三角形内外接圆、点在多边形、凸包。全是纯函数 + 普通 `Position = [number, number]` 数组，不写 class、零 IR、零 zod、零运行时依赖。
+
+`@retikz/core` 依赖它做底层计算。常用原语（`Position` / `point` / `lerp` / `localToWorld` / `worldToLocal`）**已由 `@retikz/core` re-export**——日常画图直接用 core 即可，不必单独安装 math。需要 core 没有转出的能力（求交、内外接圆、凸包等）时，再直接依赖 `@retikz/math`。
+
+> 这里是参考层，不是组件文档；写图请从 [组件](/core/components/layout) 开始。
+
+## 安装
+
+```bash
+pnpm add @retikz/math
+```
+
+## 职责一览
+
+| 主题 | 职责 | 何时查阅 |
+| --- | --- | --- |
+| [几何原语](/core/reference/math/primitives) | 向量运算 / 仿射变换 / lerp / arc 端点与 bbox | 算点、向量、坐标变换、弧线端点 |
+| [几何算法](/core/reference/math/algorithms) | 求交、三角形内外接圆、点在多边形、凸包 | core 未转出的高阶计算（求交、包络等） |
+
+## 章节内容
+
+<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+  <LinkedCard href="/core/reference/math/primitives">
+    <span className="font-semibold">几何原语</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">Position / point 向量运算 / lerp / 仿射变换 / arc 原语</span>
+  </LinkedCard>
+  <LinkedCard href="/core/reference/math/algorithms">
+    <span className="font-semibold">几何算法</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">求交 / 三角形内外接圆 / 点在多边形 / 凸包</span>
+  </LinkedCard>
+</div>

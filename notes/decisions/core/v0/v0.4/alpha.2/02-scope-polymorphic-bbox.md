@@ -2,25 +2,25 @@
 
 - 状态：Draft / 候选（v0.4 讨论工作区，未拍板成正式 milestone ADR）
 - 记录日期：2026-06-13
-- 关联：[v0.4 路线讨论](./roadmap.md) · [core v0.2-alpha.1 ADR-03 scope-id-bbox（本能力的矩形版前身）](../v0.2/alpha.1/03-scope-id-bounding-box.md) · [core v0.2-alpha.3 ShapeRegistry（precondition）](../v0.2/alpha.3/01-shape-registry.md) · [plot v0.1-alpha.10 ADR-02 可被组合（首个消费方）](../../../plot/v0/v0.1/alpha.10/02-plot-composable.md) · [plot-design §7 多坐标组合](../../../../architecture/plot-design.md)
-> ⚠️ Draft：本文件是 v0.4 候选方向的设计 note，记录方向 / 边界 / 取舍；正式启动走 brainstorm → spec → plan（[v0.4 roadmap 约定](./roadmap.md)）。
+- 关联：[v0.4 路线讨论](../roadmap.md) · [core v0.2-alpha.1 ADR-03 scope-id-bbox（本能力的矩形版前身）](../../v0.2/alpha.1/03-scope-id-bounding-box.md) · [core v0.2-alpha.3 ShapeRegistry（precondition）](../../v0.2/alpha.3/01-shape-registry.md) · [plot v0.1-alpha.10 ADR-02 可被组合（首个消费方）](../../../../plot/v0/v0.1/alpha.10/02-plot-composable.md) · [plot-design §7 多坐标组合](../../../../../architecture/plot-design.md)
+> ⚠️ Draft：本文件是 v0.4 候选方向的设计 note，记录方向 / 边界 / 取舍；正式启动走 brainstorm → spec → plan（[v0.4 roadmap 约定](../roadmap.md)）。
 
 ## 背景
 
-`scope.id` 设值时，core 在父 namespace frame 注册一个 synthetic `NodeLayout` 作 bbox 锚（[v0.2-alpha.1 ADR-03](../v0.2/alpha.1/03-scope-id-bounding-box.md)），外部可 `name.north` / `name.30` / 画线到其边界——对应 TikZ `local bounding box=name`。
+`scope.id` 设值时，core 在父 namespace frame 注册一个 synthetic `NodeLayout` 作 bbox 锚（[v0.2-alpha.1 ADR-03](../../v0.2/alpha.1/03-scope-id-bounding-box.md)），外部可 `name.north` / `name.30` / 画线到其边界——对应 TikZ `local bounding box=name`。
 
 但该 ADR **把包络形状写死为 rectangle**，并明确把「非矩形包络」deferred（ADR-03 line 33 / 38）：
 
 > - line 33：「v0.2 alpha.1 只 rectangle，自定义 boundingShape（circle / ellipse 包络）**待 ShapeRegistry 落地后另开 ADR**。」
 > - line 38：「scope.id 自定义 boundingShape（rectangle 以外）→ ShapeRegistry 落地后另开 ADR。」
 
-**precondition 现已满足**：ShapeRegistry 于 [v0.2-alpha.3](../v0.2/alpha.3/01-shape-registry.md) 落地。本 note 即承接该 deferred 项。
+**precondition 现已满足**：ShapeRegistry 于 [v0.2-alpha.3](../../v0.2/alpha.3/01-shape-registry.md) 落地。本 note 即承接该 deferred 项。
 
 ## 动机（为什么 v0.4 要做）
 
-直接需求来自 [plot ADR-02「让 `<Plot>` 可被组合」](../../../plot/v0/v0.1/alpha.10/02-plot-composable.md)：单 svg 多坐标信息图（如放射状布局、venn 圈、气泡、polar 面板）里，连接线 / 标注要落在面板的**真实形状边界**——圆形面板要圆周锚点、polar 图要圆/扇锚点。矩形 AABB 锚点会落在形状外的角上，连线穿空。
+直接需求来自 [plot ADR-02「让 `<Plot>` 可被组合」](../../../../plot/v0/v0.1/alpha.10/02-plot-composable.md)：单 svg 多坐标信息图（如放射状布局、venn 圈、气泡、polar 面板）里，连接线 / 标注要落在面板的**真实形状边界**——圆形面板要圆周锚点、polar 图要圆/扇锚点。矩形 AABB 锚点会落在形状外的角上，连线穿空。
 
-但这是**纯 core 纵向底座能力**（机制 / 引擎 / 契约），符合 [v0.4 切分原则](./roadmap.md)「core 0.4 只做纵向底座深化」：core 提供「scope 包络可多态」的机制，plot / 任意 Tier2 复用，core 不关心「圆形面板」这种横向成品。
+但这是**纯 core 纵向底座能力**（机制 / 引擎 / 契约），符合 [v0.4 切分原则](../roadmap.md)「core 0.4 只做纵向底座深化」：core 提供「scope 包络可多态」的机制，plot / 任意 Tier2 复用，core 不关心「圆形面板」这种横向成品。
 
 ## 方向：`scope.id` 的 synthetic layout 包络形状可多态，经 ShapeRegistry 解析，anchor 走对应 shape 的同一路径
 

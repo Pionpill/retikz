@@ -6,7 +6,6 @@ export * from './ellipse';
 export * from './diamond';
 export * from './polar';
 export * from './bend';
-export * from './arc';
 export * from './segment';
 export * from './contour';
 export { EDGE_ENDS, lerpPoint, edgeAngleDeg, polylineViaVertex } from './edge';

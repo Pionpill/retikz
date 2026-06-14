@@ -94,7 +94,10 @@
     "refRenderer": "Renderer",
     "refRendererSvg": "SVG",
     "refRendererCanvas": "Canvas",
-    "refHydration": "Hydration"
+    "refHydration": "Hydration",
+    "refMath": "Math",
+    "refMathPrimitives": "Primitives",
+    "refMathAlgorithms": "Algorithms"
   },
   "plot": {
     "label": "Plot",

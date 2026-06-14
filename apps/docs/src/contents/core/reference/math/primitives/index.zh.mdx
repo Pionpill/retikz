@@ -1,0 +1,86 @@
+---
+title: 几何原语
+description: Position / CenteredShape 类型，point 向量运算、lerp、仿射变换与 arc 端点 / bbox 原语的完整签名。
+---
+
+`@retikz/math` 的基础计算原语。其中 `Position` / `point` / `lerp` / `localToWorld` / `worldToLocal` 也由 `@retikz/core` re-export，两处导入等价：
+
+```ts
+import { point, lerp, localToWorld } from '@retikz/math';
+// 或（这几个 core 已转出）
+import { point, lerp, localToWorld } from '@retikz/core';
+```
+
+## 类型
+
+```ts
+/** 笛卡尔坐标点 [x, y] */
+type Position = [number, number];
+
+/** 几何计算默认容差（朴素实现，绘图量级够用） */
+const DEFAULT_EPSILON = 1e-9;
+
+/** 「中心 + 可选旋转」形状契约，供仿射变换使用 */
+type CenteredShape = {
+  x: number;        // 中心 x
+  y: number;        // 中心 y
+  rotate?: number;  // 绕中心旋转弧度；省略 / 0 = 不旋转
+};
+```
+
+## point 向量运算
+
+```ts
+point.add        (a: Position, b: Position): Position   // a + b
+point.sub        (a: Position, b: Position): Position   // a − b
+point.scale      (a: Position, k: number): Position     // a × k
+point.dot        (a: Position, b: Position): number     // 点积 a·b
+point.cross      (a: Position, b: Position): number     // 二维叉积 a×b（标量）
+point.length     (a: Position): number                  // 模长 |a|
+point.equal      (a: Position, b: Position): boolean    // 精确相等（不带容差）
+point.normalize  (a: Position, fallback?: Position, epsilon?: number): Position
+point.shiftToward(p: Position, target: Position, dist: number): Position
+```
+
+| 函数 | 参数 / 行为 |
+| --- | --- |
+| `normalize` | `fallback` 零长向量的回退值，默认 `[1, 0]`；`epsilon` 判零阈值，默认 `DEFAULT_EPSILON` |
+| `shiftToward` | 把 `p` 沿 `p→target` 的单位方向移动 `dist`；`dist=0` 或 `p===target` 时原样返回 `p` |
+
+## lerp 线性插值
+
+```ts
+lerp(a: Position, b: Position, t: number): Position;  // a + (b − a)·t
+```
+
+`t=0` 取 `a`，`t=1` 取 `b`；`t` 不做 clamp，可超出 `[0, 1]` 外推。
+
+## 仿射变换
+
+```ts
+localToWorld(shape: CenteredShape, local: Position): Position;  // 本地（中心为原点）→ 世界
+worldToLocal(shape: CenteredShape, world: Position): Position;  // 世界 → 本地（localToWorld 的逆）
+```
+
+`shape.rotate` 省略 / 为 0 时退化为纯平移；非零时绕中心按右手系旋转。
+
+## arc 原语
+
+角度约定：SVG **y 向下**，`0°=+x`、`90°=+y`（视觉向下）、角度递增 = 屏幕顺时针。
+
+```ts
+arcEndPoint(center: Position, radius: number, angleDeg: number): Position;       // 圆周上该角度的点
+ellipseArcPoint(center: Position, rx: number, ry: number, angleDeg: number): Position;  // 椭圆周参数点
+
+// 角度是否落在弧 [startDeg, endDeg] 内（含端点，带容差）
+arcAngleInRange(startDeg: number, endDeg: number, angleDeg: number, toleranceDeg?: number): boolean;
+
+// 射线 ∩ 圆弧；返回沿射线的正向参数（升序）。dir 须为单位向量
+rayArc(origin: Position, dir: Position, center: Position, radius: number, startDeg: number, endDeg: number, tolerance?: number): Array<number>;
+
+// 弧 / 椭圆弧 bbox 的极值候选点（端点 + 区间内 90°·k 方向点）
+arcBoundingPoints(center: Position, radius: number, startDeg: number, endDeg: number): Array<Position>;
+ellipseArcBoundingPoints(center: Position, rx: number, ry: number, startDeg: number, endDeg: number): Array<Position>;
+```
+
+<ComponentAlert title="rayArc 返回参数不是点" description="rayArc 返回沿射线的标量距离数组（命中点 = origin + s·dir），便于取最近命中；与 algorithms 里返回坐标点的 intersect.* 不同。" />

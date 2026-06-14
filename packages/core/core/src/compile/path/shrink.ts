@@ -8,7 +8,7 @@ import {
   type IRPosition,
 } from '../../ir';
 import type { ArrowDefinition, ArrowEmitContext } from '../../arrows';
-import { arcEndPoint, ellipseArcPoint } from '../../geometry/arc';
+import { arcEndPoint, ellipseArcPoint } from '@retikz/math';
 import type { ArrowEndSpec, MarkerFill, MarkerPrimitive, PathCommand } from '../../primitive';
 import { validateMarkerPrimitives } from '../marker-prim';
 import { shiftToward } from './anchor';

@@ -1,0 +1,72 @@
+---
+title: Algorithms
+description: Full signatures for intersections, triangle in/circumcircles, point-in-polygon, and convex hull — not re-exported by core; import from @retikz/math.
+---
+
+These are higher-level computations `@retikz/core` does **not** re-export; import them directly from `@retikz/math`:
+
+```ts
+import { intersect, triangle, polygon, convexHull } from '@retikz/math';
+```
+
+Degenerate inputs do not throw: intersections return `null` / `[]`, triangle circles return `null` on degeneracy. Tolerance is the naive `DEFAULT_EPSILON = 1e-9` (types in [Primitives](/core/reference/math/primitives)).
+
+## Types
+
+```ts
+/** Circle: center + radius */
+type Circle = { center: Position; radius: number };
+```
+
+## intersect
+
+Returns **points**: a single hit as `Position | null`, multiple as `Array<Position>`.
+
+```ts
+// two infinite lines (each by two points); parallel / collinear → null
+intersect.lineLine(a1: Position, a2: Position, b1: Position, b2: Position): Position | null;
+
+// two segments; disjoint / parallel / collinear (incl. overlap) → null
+intersect.segmentSegment(a1: Position, a2: Position, b1: Position, b2: Position): Position | null;
+
+// line (origin + direction dir, dir need not be unit) ∩ circle; 0 / 2 hits
+intersect.lineCircle(origin: Position, dir: Position, center: Position, radius: number): Array<Position>;
+
+// circle ∩ circle; disjoint / contained / coincident → []
+intersect.circleCircle(cA: Position, rA: number, cB: Position, rB: number): Array<Position>;
+```
+
+| Function | Returns / degeneracy |
+| --- | --- |
+| `lineLine` | the intersection `Position`; parallel or collinear → `null` |
+| `segmentSegment` | the crossing point; disjoint / parallel / collinear (incl. overlap) → `null` (no collinear-overlap interval in this first cut) |
+| `lineCircle` | 0 (disjoint) or 2 hits; tangency returns 2 coincident points |
+| `circleCircle` | 2 hits; disjoint / contained / coincident → `[]`; tangency returns 2 coincident points |
+
+For ray ∩ arc use [`rayArc`](/core/reference/math/primitives) (in Primitives; returns parameters, not points).
+
+## triangle
+
+Returns `Circle`; collinear vertices (area ≈ 0) → `null`.
+
+```ts
+triangle.circumcircle(a: Position, b: Position, c: Position): Circle | null;  // circumcircle (through all three vertices)
+triangle.incircle(a: Position, b: Position, c: Position): Circle | null;      // incircle (tangent to all three sides)
+```
+
+## point-in-polygon
+
+```ts
+// ray-casting even-odd rule; vertices in order, convex or concave, any winding
+polygon.containsPoint(vertices: Array<Position>, p: Position): boolean;
+```
+
+**Boundary points are undefined** (handle on-boundary cases yourself); fewer than 3 vertices returns `false`.
+
+## convexHull
+
+```ts
+convexHull(points: Array<Position>): Array<Position>;
+```
+
+Andrew's monotone chain; returns **CCW vertices** with **collinear middle points dropped**; for fewer than 3 points or all-collinear input, returns the sorted, de-duplicated endpoints.

@@ -92,7 +92,7 @@ export type RectOutlineOp =
  * 矩形 outline：两对角 → 顺时针 path 算子序列
  * @description from/to 任意顺序，归一化 (x0,y0)=min、(x1,y1)=max。直角 = 4 line + close（起点左上 (x0,y0)）；
  *   圆角 = 4 line + 4 quarter-arc + close（起点 (x0+r, y0)）。cornerRadius clamp 到 min(w,h)/2。
- *   角度约定同 geometry/arc（y-down：0=+x, 90=+y/下, 180=-x, 270=-y/上）。
+ *   角度约定同 @retikz/math arc（y-down：0=+x, 90=+y/下, 180=-x, 270=-y/上）。
  */
 export const rectOutline = (
   from: Position,

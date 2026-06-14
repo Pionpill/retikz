@@ -1,12 +1,11 @@
-import { arcAngleInRange, arcEndPoint, rayArc } from './arc';
-import { type Position, point } from './point';
+import { type Position, arcAngleInRange, arcEndPoint, intersect, point, rayArc } from '@retikz/math';
 
 /*
  * 圆角轮廓模块：把「闭合有序段序列」(Line / Arc) 的每个接缝（角）替换为与两侧段相切、半径 r 的
  * fillet 圆弧，并支持沿倒角后轮廓发射线求交（连接面感知倒角）。供 polygon / star / sector / rectangle
  * 四形状共享：形状只描述自己的轮廓段，fillet + emit + boundary 全委托此模块。
  *
- * 角度约定与 geometry/arc、ir/path arc 一致（SVG y-down）：0=+x、90=+y(视觉下)、角度递增=屏幕顺时针(CW)。
+ * 角度约定与 @retikz/math arc、ir/path arc 一致（SVG y-down）：0=+x、90=+y(视觉下)、角度递增=屏幕顺时针(CW)。
  * Arc 段 counterClockwise=false（缺省）时从 startAngle 递增扫到 endAngle，true 时递减扫。
  *
  * 内 / 外侧与 sweep 方向：fillet 不区分「形状语义的凸 / 凹」，只看两段在接缝处的转向叉积符号——
@@ -184,60 +183,6 @@ const offsetSegmentAlt = (seg: ArcSegment, r: number): Offset => ({
   radius: seg.radius + r,
 });
 
-/** 直线 ∩ 直线（各以 point + dir 表示），返回交点或 undefined（平行） */
-const intersectLineLine = (a: Offset & { kind: 'line' }, b: Offset & { kind: 'line' }): Position | undefined => {
-  const det = cross(a.dir, b.dir);
-  if (Math.abs(det) < EPSILON) return undefined;
-  const dx = b.point[0] - a.point[0];
-  const dy = b.point[1] - a.point[1];
-  const t = (dx * b.dir[1] - dy * b.dir[0]) / det;
-  return [a.point[0] + a.dir[0] * t, a.point[1] + a.dir[1] * t];
-};
-
-/** 直线（point+dir）∩ 圆（center,radius），返回交点列（0/1/2 个） */
-const intersectLineCircle = (
-  line: Offset & { kind: 'line' },
-  circle: Offset & { kind: 'circle' },
-): Array<Position> => {
-  const ox = line.point[0] - circle.center[0];
-  const oy = line.point[1] - circle.center[1];
-  const ux = line.dir[0];
-  const uy = line.dir[1];
-  const b = 2 * (ox * ux + oy * uy);
-  const c = ox * ox + oy * oy - circle.radius * circle.radius;
-  const disc = b * b - 4 * c;
-  if (disc < 0) return [];
-  const sq = Math.sqrt(disc);
-  const out: Array<Position> = [];
-  for (const t of [(-b - sq) / 2, (-b + sq) / 2]) {
-    out.push([line.point[0] + ux * t, line.point[1] + uy * t]);
-  }
-  return out;
-};
-
-/** 圆 ∩ 圆，返回交点列（0/1/2 个） */
-const intersectCircleCircle = (
-  a: Offset & { kind: 'circle' },
-  b: Offset & { kind: 'circle' },
-): Array<Position> => {
-  const dx = b.center[0] - a.center[0];
-  const dy = b.center[1] - a.center[1];
-  const d = Math.hypot(dx, dy);
-  if (d < EPSILON || d > a.radius + b.radius + EPSILON || d < Math.abs(a.radius - b.radius) - EPSILON) {
-    return [];
-  }
-  const aa = (a.radius * a.radius - b.radius * b.radius + d * d) / (2 * d);
-  const h2 = a.radius * a.radius - aa * aa;
-  const h = h2 > 0 ? Math.sqrt(h2) : 0;
-  const mx = a.center[0] + (aa * dx) / d;
-  const my = a.center[1] + (aa * dy) / d;
-  const rx = (-dy * h) / d;
-  const ry = (dx * h) / d;
-  return [
-    [mx + rx, my + ry],
-    [mx - rx, my - ry],
-  ];
-};
 
 /** 点到直线（无限延长）的有符号垂足点 */
 const footOnLine = (p: Position, base: Position, dir: Position): Position => {
@@ -270,14 +215,14 @@ const solveFillet = (segA: ContourSegment, segB: ContourSegment, r: number): Fil
     const candidates: Array<Position> = [];
     const pushIntersections = (oa: Offset, ob: Offset): void => {
       if (oa.kind === 'line' && ob.kind === 'line') {
-        const p = intersectLineLine(oa, ob);
+        const p = intersect.lineLine(oa.point, [oa.point[0] + oa.dir[0], oa.point[1] + oa.dir[1]], ob.point, [ob.point[0] + ob.dir[0], ob.point[1] + ob.dir[1]]);
         if (p) candidates.push(p);
       } else if (oa.kind === 'line' && ob.kind === 'circle') {
-        candidates.push(...intersectLineCircle(oa, ob));
+        candidates.push(...intersect.lineCircle(oa.point, oa.dir, ob.center, ob.radius));
       } else if (oa.kind === 'circle' && ob.kind === 'line') {
-        candidates.push(...intersectLineCircle(ob, oa));
+        candidates.push(...intersect.lineCircle(ob.point, ob.dir, oa.center, oa.radius));
       } else if (oa.kind === 'circle' && ob.kind === 'circle') {
-        candidates.push(...intersectCircleCircle(oa, ob));
+        candidates.push(...intersect.circleCircle(oa.center, oa.radius, ob.center, ob.radius));
       }
     };
     pushIntersections(offA, offB);
