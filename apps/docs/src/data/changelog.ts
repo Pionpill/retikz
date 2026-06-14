@@ -44,6 +44,23 @@ export const changelog: Array<Release> = [
         ],
         subVersions: [
           {
+            version: 'rc.1',
+            date: '2026-06-14',
+            summary: {
+              zh: '候选发布：公开 API 冻结（IR schema 字段名 / 导出名 / 函数签名 / 公开 type 自此不再破坏性变更）。自 beta.2 起 core 组 src 零功能改动，进入发布候选。',
+              en: 'Release candidate: the public API freezes here (IR schema field names / exports / function signatures / public types take no breaking changes from now). No functional source change across the core group since beta.2 — this is the release candidate.',
+            },
+            items: [
+              {
+                label: { zh: 'API 冻结', en: 'API freeze' },
+                content: {
+                  zh: '自 rc 起公开 API 冻结；后续到 0.3.0 stable 只接 bug fix，不再改 schema 字段 / 导出名 / 函数签名。',
+                  en: 'From rc onward the public API is frozen; only bug fixes land until 0.3.0 stable — no more schema field / export / signature changes.',
+                },
+              },
+            ],
+          },
+          {
             version: 'beta.2',
             date: '2026-06-13',
             summary: {
@@ -280,6 +297,23 @@ export const changelog: Array<Release> = [
         ],
         subVersions: [
           {
+            version: 'rc.1',
+            date: '2026-06-14',
+            summary: {
+              zh: '候选发布：公开 API 冻结（IR schema 字段名 / 导出名 / 函数签名 / 公开 type 自此不再破坏性变更）。自 beta.2 起 core 组 src 零功能改动，进入发布候选。',
+              en: 'Release candidate: the public API freezes here (IR schema field names / exports / function signatures / public types take no breaking changes from now). No functional source change across the core group since beta.2 — this is the release candidate.',
+            },
+            items: [
+              {
+                label: { zh: 'API 冻结', en: 'API freeze' },
+                content: {
+                  zh: '自 rc 起公开 API 冻结；后续到 0.3.0 stable 只接 bug fix，不再改 schema 字段 / 导出名 / 函数签名。',
+                  en: 'From rc onward the public API is frozen; only bug fixes land until 0.3.0 stable — no more schema field / export / signature changes.',
+                },
+              },
+            ],
+          },
+          {
             version: 'beta.2',
             date: '2026-06-13',
             summary: {
@@ -480,6 +514,23 @@ export const changelog: Array<Release> = [
           },
         ],
         subVersions: [
+          {
+            version: 'rc.1',
+            date: '2026-06-14',
+            summary: {
+              zh: '候选发布：公开 API 冻结（IR schema 字段名 / 导出名 / 函数签名 / 公开 type 自此不再破坏性变更）。自 beta.2 起 core 组 src 零功能改动，进入发布候选。',
+              en: 'Release candidate: the public API freezes here (IR schema field names / exports / function signatures / public types take no breaking changes from now). No functional source change across the core group since beta.2 — this is the release candidate.',
+            },
+            items: [
+              {
+                label: { zh: 'API 冻结', en: 'API freeze' },
+                content: {
+                  zh: '自 rc 起公开 API 冻结；后续到 0.3.0 stable 只接 bug fix，不再改 schema 字段 / 导出名 / 函数签名。',
+                  en: 'From rc onward the public API is frozen; only bug fixes land until 0.3.0 stable — no more schema field / export / signature changes.',
+                },
+              },
+            ],
+          },
           {
             version: 'beta.2',
             date: '2026-06-13',
@@ -688,6 +739,23 @@ export const changelog: Array<Release> = [
           },
         ],
         subVersions: [
+          {
+            version: 'rc.1',
+            date: '2026-06-14',
+            summary: {
+              zh: '候选发布：公开 API 冻结（IR schema 字段名 / 导出名 / 函数签名 / 公开 type 自此不再破坏性变更）。自 beta.2 起 core 组 src 零功能改动，进入发布候选。',
+              en: 'Release candidate: the public API freezes here (IR schema field names / exports / function signatures / public types take no breaking changes from now). No functional source change across the core group since beta.2 — this is the release candidate.',
+            },
+            items: [
+              {
+                label: { zh: 'API 冻结', en: 'API freeze' },
+                content: {
+                  zh: '自 rc 起公开 API 冻结；后续到 0.3.0 stable 只接 bug fix，不再改 schema 字段 / 导出名 / 函数签名。',
+                  en: 'From rc onward the public API is frozen; only bug fixes land until 0.3.0 stable — no more schema field / export / signature changes.',
+                },
+              },
+            ],
+          },
           {
             version: 'beta.2',
             date: '2026-06-13',
