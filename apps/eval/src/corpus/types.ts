@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { AssertionSchema } from '../assert/types';
 
 /** 语料类别：骨架只覆盖 core；plot 后置 */
 export const CorpusCategory = ['core'] as const;
@@ -19,6 +20,7 @@ export const CorpusPromptSchema = z.object({
   category: z.enum(CorpusCategory),
   difficulty: z.enum(CorpusDifficulty),
   prompt: z.string().min(1),
+  assertions: z.array(AssertionSchema).optional(),
 });
 
 export type CorpusPrompt = z.infer<typeof CorpusPromptSchema>;

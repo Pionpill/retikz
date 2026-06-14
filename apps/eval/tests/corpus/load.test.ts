@@ -13,6 +13,20 @@ describe('CorpusPromptSchema', () => {
     expect(ok.success).toBe(true);
   });
 
+  it('接受带 assertions 的条目并保留字段', () => {
+    const parsed = CorpusPromptSchema.parse({
+      id: 'core-single-01',
+      category: 'core',
+      difficulty: 'single',
+      prompt: '画一个写着 Hello 的矩形节点。',
+      assertions: [
+        { kind: 'textPresent', text: 'Hello' },
+        { kind: 'primitiveCount', primitive: 'rect', op: '>=', value: 1 },
+      ],
+    });
+    expect(parsed.assertions?.length).toBe(2);
+  });
+
   it('拒绝非法 difficulty', () => {
     const bad = CorpusPromptSchema.safeParse({
       id: 'x',
