@@ -7,7 +7,7 @@
 retikz 是受 LaTeX TikZ 启发的 TypeScript 绘图库：用组件 / JSON IR 描述节点、路径、箭头等图元，编译成 renderer-agnostic 的 Scene，再交给 SVG / Canvas 等后端渲染。
 
 - Monorepo：pnpm workspace，glob 为 `packages/*/*` + `apps/*`
-- Tier 1：`packages/core/{core,render,react,vanilla}`
+- Tier 1：`packages/core/{core,render,react,vanilla}`；其下零依赖纯计算底座 `packages/core/math`（`@retikz/math`，被 core 依赖、同 core 组 lockstep）
 - Tier 2：`packages/plot/{plot,react,vanilla}`，通过 core 的 composite / lowering 能力接入
 - 文档站：`apps/docs`，线上 <https://pionpill.github.io/retikz/>
 - 架构背景：`notes/architecture/core-design.md`
@@ -184,6 +184,6 @@ Sugar vs Tier 2 判断：展开后是否无法 1:1 反推？是否涉及布局 /
 ## 子目录指针
 
 - `apps/docs/AGENTS.md`：文档站结构、路由、MDX / demo / i18n 协作
-- `packages/core/AGENTS.md`：core / render / react / vanilla 版本 lockstep 与 Tier 1 分组规则
+- `packages/core/AGENTS.md`：math / core / render / react / vanilla 版本 lockstep 与 Tier 1 分组规则
 - `packages/core/core/AGENTS.md`：IR、Scene 编译、几何、schema、registry
 - `packages/core/react/AGENTS.md`：React adapter、Kernel / Sugar、renderer、hydration
