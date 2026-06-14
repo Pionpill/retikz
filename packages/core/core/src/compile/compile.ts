@@ -619,8 +619,11 @@ export const compileToScene = (ir: IR, options: CompileOptions = {}): Scene => {
             const fallbackOrigin: IRPosition =
               innerChain.length === 0 ? [0, 0] : applyTransformChain([0, 0], innerChain);
             let bboxLayout: NodeLayout;
+            // boundingShape 与 Node shape 同形态：名字字符串或 { type, params }；MVP 只取形状名（params 暂未用）
             const boundingShape = child.boundingShape;
-            if (boundingShape === 'circle') {
+            const boundingShapeName =
+              typeof boundingShape === 'string' ? boundingShape : boundingShape?.type;
+            if (boundingShapeName === 'circle') {
               bboxLayout = registerScopeCircleLayout(
                 child.id,
                 collectScopeCornerPoints(innerLayouts),
@@ -628,10 +631,10 @@ export const compileToScene = (ir: IR, options: CompileOptions = {}): Scene => {
                 effectiveShapes,
               );
             } else {
-              if (boundingShape !== undefined && boundingShape !== 'rectangle') {
+              if (boundingShapeName !== undefined && boundingShapeName !== 'rectangle') {
                 onWarn({
                   code: CompileWarningCode.UnsupportedBoundingShape,
-                  message: `Unsupported scope boundingShape '${boundingShape}'; falling back to rectangle. Supported: 'rectangle', 'circle'.`,
+                  message: `Unsupported scope boundingShape '${boundingShapeName}'; falling back to rectangle. Supported: 'rectangle', 'circle'.`,
                   path: `${locatorPrefix}children[${i}].scope.boundingShape`,
                 });
               }

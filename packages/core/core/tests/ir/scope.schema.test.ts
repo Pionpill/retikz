@@ -80,6 +80,19 @@ describe('ScopeSchema 合法形态', () => {
     }
   });
 
+  it('scope 接受 boundingShape 的 ShapeRef 对象形态（{ type, params }，同 Node shape）', () => {
+    const parsed = ScopeSchema.safeParse({
+      type: 'scope',
+      id: 's',
+      boundingShape: { type: 'circle' },
+      children: [],
+    });
+    expect(parsed.success).toBe(true);
+    if (parsed.success) {
+      expect(parsed.data.boundingShape).toEqual({ type: 'circle' });
+    }
+  });
+
   it('scope 缺省 boundingShape 仍合法且字段为 undefined', () => {
     const parsed = ScopeSchema.safeParse({ type: 'scope', children: [] });
     expect(parsed.success).toBe(true);

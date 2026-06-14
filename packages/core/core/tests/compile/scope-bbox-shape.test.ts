@@ -116,6 +116,36 @@ describe('scope boundingShape="circle" 集成测试', () => {
     expect(end![0]).toBeGreaterThan(0);
   });
 
+  it('circle_object_form：boundingShape={ type:"circle" } 与字符串 "circle" 等价（同 Node shape 形态）', () => {
+    const makeIr = (bs: string | { type: string }) =>
+      scene([
+        {
+          type: 'scope',
+          id: 'g',
+          boundingShape: bs,
+          children: [
+            { type: 'node', id: 'A', position: [0, 0], text: '' },
+            { type: 'node', id: 'B', position: [80, 0], text: '' },
+            { type: 'node', id: 'C', position: [40, 60], text: '' },
+          ],
+        },
+        {
+          type: 'path',
+          children: [
+            { type: 'step', kind: 'move', to: [300, 30] },
+            { type: 'step', kind: 'line', to: { id: 'g', anchor: 'east' } },
+          ],
+        },
+      ]);
+    const warnings: Array<CompileWarning> = [];
+    const strEnd = lineTo(topPath(compileToScene(makeIr('circle')).primitives));
+    const objEnd = lineTo(
+      topPath(compileToScene(makeIr({ type: 'circle' }), { onWarn: w => warnings.push(w) }).primitives),
+    );
+    expect(warnings.filter(w => w.code === 'UNSUPPORTED_BOUNDING_SHAPE')).toHaveLength(0);
+    expect(objEnd).toEqual(strEnd);
+  });
+
   it('circle_envelope_mec_distance：scope.east 距 MEC 中心的距离约等于 MEC radius', () => {
     // 用 0×0 的 node（无 measureText 默认 0 尺寸），3 个角点即为 node 中心点
     const nodePositions: Array<[number, number]> = [
