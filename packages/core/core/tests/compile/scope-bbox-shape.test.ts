@@ -2,7 +2,8 @@
  * scope.id boundingShape 圆形包络测试
  * @description `<Scope id=... boundingShape="circle">` 应把 scope 的 synthetic layout 注册为
  *   最小外接圆（ellipse + circumscribe:'equal'），anchor/boundary 走既有 ellipse 路径。
- *   缺省 boundingShape（矩形 AABB）逐字不变；未知 boundingShape → warn + rectangle 回退。
+ *   缺省 boundingShape（矩形 AABB）逐字不变。boundingShape 是受控枚举（'rectangle' | 'circle'），
+ *   枚举外的值由 schema 在 parse 边界拒绝，compile 不再做运行时回退 warn。
  */
 import { describe, expect, it } from 'vitest';
 import { compileToScene } from '../../src/compile/compile';
@@ -114,36 +115,6 @@ describe('scope boundingShape="circle" 集成测试', () => {
     expect(end).toBeDefined();
     // 从 east 方向入射，x 应 > 0（MEC 中心偏右侧）
     expect(end![0]).toBeGreaterThan(0);
-  });
-
-  it('circle_object_form：boundingShape={ type:"circle" } 与字符串 "circle" 等价（同 Node shape 形态）', () => {
-    const makeIr = (bs: string | { type: string }) =>
-      scene([
-        {
-          type: 'scope',
-          id: 'g',
-          boundingShape: bs,
-          children: [
-            { type: 'node', id: 'A', position: [0, 0], text: '' },
-            { type: 'node', id: 'B', position: [80, 0], text: '' },
-            { type: 'node', id: 'C', position: [40, 60], text: '' },
-          ],
-        },
-        {
-          type: 'path',
-          children: [
-            { type: 'step', kind: 'move', to: [300, 30] },
-            { type: 'step', kind: 'line', to: { id: 'g', anchor: 'east' } },
-          ],
-        },
-      ]);
-    const warnings: Array<CompileWarning> = [];
-    const strEnd = lineTo(topPath(compileToScene(makeIr('circle')).primitives));
-    const objEnd = lineTo(
-      topPath(compileToScene(makeIr({ type: 'circle' }), { onWarn: w => warnings.push(w) }).primitives),
-    );
-    expect(warnings.filter(w => w.code === 'UNSUPPORTED_BOUNDING_SHAPE')).toHaveLength(0);
-    expect(objEnd).toEqual(strEnd);
   });
 
   it('circle_envelope_mec_distance：scope.east 距 MEC 中心的距离约等于 MEC radius', () => {
@@ -276,75 +247,12 @@ describe('scope boundingShape 缺省（矩形 AABB）向后兼容', () => {
         ],
       },
     ]);
-    const warnings: Array<CompileWarning> = [];
     const endDefault = lineTo(topPath(compileToScene(irDefault).primitives));
-    const endExplicit = lineTo(topPath(compileToScene(irExplicit, { onWarn: w => warnings.push(w) }).primitives));
+    const endExplicit = lineTo(topPath(compileToScene(irExplicit).primitives));
     expect(endDefault).toBeDefined();
     expect(endExplicit).toBeDefined();
-    expect(warnings.filter(w => w.code === 'UNSUPPORTED_BOUNDING_SHAPE')).toHaveLength(0);
     // x 坐标应非常接近（同一矩形 AABB east）
     expect(Math.abs(endDefault![0] - endExplicit![0])).toBeLessThan(1);
-  });
-});
-
-describe('scope boundingShape 未知值 → warn + rectangle 回退', () => {
-  it('unsupported_polygon_warns：boundingShape="polygon" → UNSUPPORTED_BOUNDING_SHAPE warn', () => {
-    const ir = scene([
-      {
-        type: 'scope',
-        id: 'g',
-        boundingShape: 'polygon',
-        children: [
-          { type: 'node', id: 'A', position: [0, 0], text: '' },
-          { type: 'node', id: 'B', position: [60, 0], text: '' },
-        ],
-      },
-      {
-        type: 'path',
-        children: [
-          { type: 'step', kind: 'move', to: [300, 0] },
-          { type: 'step', kind: 'line', to: { id: 'g', anchor: 'east' } },
-        ],
-      },
-    ]);
-    const warnings: Array<CompileWarning> = [];
-    const compiled = compileToScene(ir, { onWarn: w => warnings.push(w) });
-    const unsupportedWarns = warnings.filter(w => w.code === 'UNSUPPORTED_BOUNDING_SHAPE');
-    expect(unsupportedWarns).toHaveLength(1);
-    expect(unsupportedWarns[0].message).toContain('polygon');
-    // 回退到矩形 AABB：east x 应 > 30
-    const end = lineTo(topPath(compiled.primitives));
-    expect(end).toBeDefined();
-    expect(end![0]).toBeGreaterThan(30);
-  });
-
-  it('unsupported_polygon_fallback_rectangle：warn 回退后 layout = 矩形 AABB（与无 boundingShape 结果一致）', () => {
-    const makeIr = (boundingShape?: string) =>
-      scene([
-        {
-          type: 'scope',
-          id: 'g',
-          ...(boundingShape !== undefined ? { boundingShape } : {}),
-          children: [
-            { type: 'node', id: 'A', position: [0, 0], text: '' },
-            { type: 'node', id: 'B', position: [80, 0], text: '' },
-          ],
-        },
-        {
-          type: 'path',
-          children: [
-            { type: 'step', kind: 'move', to: [300, 0] },
-            { type: 'step', kind: 'line', to: { id: 'g', anchor: 'north' } },
-          ],
-        },
-      ]);
-    const endDefault = lineTo(topPath(compileToScene(makeIr()).primitives));
-    const endPolygon = lineTo(topPath(compileToScene(makeIr('polygon'), { onWarn: () => {} }).primitives));
-    expect(endDefault).toBeDefined();
-    expect(endPolygon).toBeDefined();
-    // 矩形回退：north anchor 两者应一致
-    expect(Math.abs(endDefault![0] - endPolygon![0])).toBeLessThan(1);
-    expect(Math.abs(endDefault![1] - endPolygon![1])).toBeLessThan(1);
   });
 });
 

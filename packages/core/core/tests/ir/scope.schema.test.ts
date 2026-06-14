@@ -80,16 +80,16 @@ describe('ScopeSchema 合法形态', () => {
     }
   });
 
-  it('scope 接受 boundingShape 的 ShapeRef 对象形态（{ type, params }，同 Node shape）', () => {
+  it('scope 接受 boundingShape="rectangle"', () => {
     const parsed = ScopeSchema.safeParse({
       type: 'scope',
       id: 's',
-      boundingShape: { type: 'circle' },
+      boundingShape: 'rectangle',
       children: [],
     });
     expect(parsed.success).toBe(true);
     if (parsed.success) {
-      expect(parsed.data.boundingShape).toEqual({ type: 'circle' });
+      expect(parsed.data.boundingShape).toBe('rectangle');
     }
   });
 
@@ -147,6 +147,24 @@ describe('ScopeSchema 拒绝非法形态', () => {
     const parsed = ScopeSchema.safeParse({
       type: 'scope',
       boundingShape: 123,
+      children: [],
+    });
+    expect(parsed.success).toBe(false);
+  });
+
+  it('boundingShape 为枚举外字符串（polygon）拒绝', () => {
+    const parsed = ScopeSchema.safeParse({
+      type: 'scope',
+      boundingShape: 'polygon',
+      children: [],
+    });
+    expect(parsed.success).toBe(false);
+  });
+
+  it('boundingShape 为 ShapeRef 对象形态拒绝（已收敛为枚举，不再接受 { type, params }）', () => {
+    const parsed = ScopeSchema.safeParse({
+      type: 'scope',
+      boundingShape: { type: 'circle' },
       children: [],
     });
     expect(parsed.success).toBe(false);

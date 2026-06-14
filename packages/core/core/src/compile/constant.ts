@@ -16,7 +16,6 @@ export const CompileWarningCode = {
   ArcMissingRadius: 'ARC_MISSING_RADIUS',
   PartialArcNeedsBothAngles: 'PARTIAL_ARC_NEEDS_BOTH_ANGLES',
   PartialArcClosedInvalid: 'PARTIAL_ARC_CLOSED_INVALID',
-  UnsupportedBoundingShape: 'UNSUPPORTED_BOUNDING_SHAPE',
 } as const;
 
 export type CompileWarningCodeValue =

@@ -143,7 +143,7 @@ bbox compute timing / nesting rules / which layouts contribute are in § How it 
 
 <ComponentPreview name="scope-bounding-shape" size="sm" />
 
-Currently `'rectangle'` (default) and `'circle'` are supported; other values (`'polygon'` / `'ellipse'`, …) are not yet — compile emits an `UNSUPPORTED_BOUNDING_SHAPE` warning and falls back to rectangle.
+`boundingShape` is a controlled enum: only `'rectangle'` (default) and `'circle'` are accepted — the schema rejects any other value at parse time. `'polygon'` / `'ellipse'` are deferred because each needs its own minimal-enclosing algorithm; this is intentionally a closed set rather than the open shape reference Node `shape` / `boundary` use.
 
 ### Relative positioning inside a scope
 
@@ -317,7 +317,7 @@ When `<Scope id="X">` is set, compile collects the **global point set** of all c
 | **Not counted in bbox** | Path endpoints (move / line `to`) — matches TikZ `local bounding box`'s default |
 | **Register location** | **Parent frame** (not affected by its own `localNamespace`) — scope.id is the external handle |
 | **Shape** | Default synthetic rectangle `NodeLayout` with `rect.rotate=0` (axis-aligned); with `boundingShape='circle'` it's an ellipse(`circumscribe:'equal'`) form whose rect is the MEC's square bounding box |
-| **boundingShape** | Optional envelope shape: omitted / `'rectangle'` = AABB; `'circle'` = minimal enclosing circle of the subtree point set (consumes `@retikz/math`'s `minimalEnclosingCircle`); unsupported values warn + fall back to rectangle. `polygon` / `ellipse` deferred |
+| **boundingShape** | Optional envelope shape — a **controlled enum** (`'rectangle'` \| `'circle'`), not an open shape reference like Node `shape` / `boundary`: omitted / `'rectangle'` = AABB; `'circle'` = minimal enclosing circle of the subtree point set (consumes `@retikz/math`'s `minimalEnclosingCircle`). Other values are rejected by the schema at parse time. `polygon` / `ellipse` deferred (each needs its own minimal-enclosing algorithm) |
 | **As anchor referent** | All 9 named anchors plus numeric angles share the rect anchor path — `'X.north'` / `'X.30'` / no-suffix uses `boundaryPoint` clip |
 | **As polar / at / offset referent** | Resolves to bbox center, same as a normal rectangle node |
 | **Nesting** | Each scope.id keeps its own bbox — outer bbox covers all inner layouts; inner bbox covers only its own subtree |
@@ -378,7 +378,7 @@ Inner overrides outer; within one frame the typed default overrides the cascade.
 | `transforms` | `Array<Transform>` | — | Local transform list, 7 variants; applied in array order (0-th outermost, last innermost, matching SVG transform-list); flattening / lowering details in § How it works §「transforms lowering to Scene」 |
 | `children` | `ReactNode` | — | Scope children: `<Node>` / `<Path>` / `<Coordinate>` / nested `<Scope>` |
 | `id` | `string` | — | Optional scope reference id; when set, the **axis-aligned global bounding box** of all child layouts is registered as a synthetic rectangle layout into the **parent frame**; external code can reference it as `'X'` / `'X.<anchor>'` / `'X.<deg>'`; details in § How it works §「scope.id synthetic bbox」 |
-| `boundingShape` | `string \| { type, params }` | `'rectangle'` | Envelope shape of the scope.id handle (same form as Node `shape`): default rectangle AABB; `'circle'` takes the subtree's minimal enclosing circle (anchors / connections land on the circle, suits round / polar panels); other values not yet supported, warn + fall back to rectangle. See § Examples §「Scope boundary polymorphism」 |
+| `boundingShape` | `'rectangle' \| 'circle'` | `'rectangle'` | Envelope shape of the scope.id handle — a controlled enum (not the open shape reference Node `shape` uses): default rectangle AABB; `'circle'` takes the subtree's minimal enclosing circle (anchors / connections land on the circle, suits round / polar panels). Other values are rejected by the schema. See § Examples §「Scope boundary polymorphism」 |
 | `localNamespace` | `boolean` | `false` | Whether to create a local namespace: `true` pushes a child frame and isolates child ids from the outside; details in § How it works §「Namespace stack and lookup」 |
 | `meta` | `Record<string, JSON value>` | — | Provenance metadata, passed through verbatim onto the `GroupPrim` this scope emits; ignored by renderers, never part of layout, and **not propagated to children**. Typically injected by a higher-level lowering (e.g. plot) to tag the series / layer. Must be a JSON-serializable object |
 | `color` | `string` | — | Cascading master color; inner stroke / fill / text / arrow / label default to it |
