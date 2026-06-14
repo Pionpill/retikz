@@ -10,7 +10,7 @@ export type ModuleEntry = {
 
 /** 文档站当前可切换的子包列表（后续按模块新增条目） */
 export const modules: Array<ModuleEntry> = [
-  { id: 'core', label: 'core.label', version: 'v0.3 beta' },
+  { id: 'core', label: 'core.label', version: 'v0.4 alpha' },
   { id: 'plot', label: 'plot.label', version: 'v0.1 alpha' },
   { id: 'blog', label: 'blog.label' },
   { id: 'about', label: 'about.label' },
