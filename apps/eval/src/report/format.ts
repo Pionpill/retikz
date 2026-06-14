@@ -44,20 +44,61 @@ const failureSection = (report: Report): Array<string> => {
   ];
 };
 
+const l2Section = (report: Report): Array<string> => {
+  const { l2, assertionFailures } = report;
+  if (l2.reached === 0) return [];
+  const kindRows = Object.entries(l2.byKind).map(
+    ([k, v]) => `| ${k} | ${v.total} | ${pct(v.total === 0 ? 0 : v.passed / v.total)} |`,
+  );
+  const shown = assertionFailures.slice(0, MAX_FAILURE_ROWS);
+  const failRows = shown.map(
+    (f) => `| ${f.promptId} | ${f.model} | ${f.kIndex} | ${f.kind} | ${cell(f.actual)} |`,
+  );
+  const more =
+    assertionFailures.length > shown.length
+      ? [`> 另有 ${assertionFailures.length - shown.length} 条断言失败未列出。`, '']
+      : [];
+  return [
+    '## L2 语义断言',
+    '',
+    `- 候选级通过率（全部断言通过）：**${pct(l2.candidatePassRate)}**（${l2.reached} 候选到达 L2，${l2.skipped} 跳过）`,
+    `- 断言级通过率：**${pct(l2.assertionPassRate)}**（${l2.assertionsPassed}/${l2.assertionsTotal}）`,
+    '',
+    '### 按断言类型',
+    '',
+    '| kind | 断言数 | 通过率 |',
+    '| --- | ---: | ---: |',
+    ...kindRows,
+    '',
+    ...(failRows.length > 0
+      ? [
+          '### 断言失败明细',
+          '',
+          '| promptId | model | k | kind | 实测 |',
+          '| --- | --- | ---: | --- | --- |',
+          ...failRows,
+          '',
+          ...more,
+        ]
+      : []),
+  ];
+};
+
 export type FormatOptions = { generatedAt: string };
 
 /** 把 Report 渲染成可读 + 可 diff 的 markdown 报告 */
 export const formatMarkdown = (report: Report, options: FormatOptions): string =>
   [
-    '# retikz eval · L1 结构有效性报告',
+    '# retikz eval · 结构有效性(L1) + 语义断言(L2) 报告',
     '',
     `> 生成时间：${options.generatedAt} · 样本总数：${report.total}`,
     '',
-    '## 总览',
+    '## 总览（L1）',
     '',
     `- zod 通过率：**${pct(report.overall.zodPassRate)}**`,
     `- compile 通过率：**${pct(report.overall.compilePassRate)}**`,
     '',
+    ...l2Section(report),
     '## 分组',
     '',
     ratesTable('按模型', report.byModel),
