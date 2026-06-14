@@ -59,4 +59,39 @@ describe('aggregate', () => {
     expect(r.failures).toHaveLength(1);
     expect(r.failures[0]).toEqual({ promptId: 'c2', model: 'b', kIndex: 1, stage: 'compile', reason: 'boom' });
   });
+
+  it('L2：算候选级/断言级/按 kind 通过率 + 断言失败明细', () => {
+    const r = aggregate([
+      rec({
+        l2: {
+          total: 2,
+          passed: 2,
+          results: [
+            { kind: 'textPresent', pass: true, actual: '' },
+            { kind: 'primitiveCount', pass: true, actual: '' },
+          ],
+        },
+      }),
+      rec({
+        promptId: 'c2',
+        l2: {
+          total: 2,
+          passed: 1,
+          results: [
+            { kind: 'textPresent', pass: true, actual: '' },
+            { kind: 'primitiveCount', pass: false, actual: 'rect=0' },
+          ],
+        },
+      }),
+      rec({ l2: null }),
+    ]);
+    expect(r.l2.reached).toBe(2);
+    expect(r.l2.skipped).toBe(1);
+    expect(r.l2.candidatePassRate).toBe(0.5); // 1/2 候选全过
+    expect(r.l2.assertionPassRate).toBe(0.75); // 3/4 断言过
+    expect(r.l2.byKind.primitiveCount).toEqual({ passed: 1, total: 2 });
+    expect(r.assertionFailures).toHaveLength(1);
+    expect(r.assertionFailures[0]?.actual).toBe('rect=0');
+    expect(r.assertionFailures[0]?.promptId).toBe('c2');
+  });
 });
