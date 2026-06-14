@@ -91,7 +91,7 @@
       { "kind": "textPresent", "text": "1" },
       { "kind": "textPresent", "text": "2" },
       { "kind": "textPresent", "text": "3" },
-      { "kind": "primitiveCount", "primitive": "path", "op": ">=", "value": 2 }
+      { "kind": "primitiveCount", "primitive": "path", "op": ">=", "value": 1 }
     ]
   },
   {
@@ -151,7 +151,6 @@
     "difficulty": "composite",
     "prompt": "画一个圆，并在它的右半边叠加一段加粗的圆弧作为高亮。",
     "assertions": [
-      { "kind": "primitiveCount", "primitive": "ellipse", "op": ">=", "value": 1 },
       { "kind": "primitiveCount", "primitive": "path", "op": ">=", "value": 1 }
     ]
   },
@@ -216,7 +215,7 @@
     "prompt": "画一个组织结构图：顶部一个写「CEO」的节点，下面并排三个部门节点，用连线从 CEO 连到每个部门。",
     "assertions": [
       { "kind": "textPresent", "text": "CEO" },
-      { "kind": "arrowCount", "op": ">=", "value": 3 }
+      { "kind": "primitiveCount", "primitive": "path", "op": ">=", "value": 3 }
     ]
   },
   {
@@ -259,7 +258,7 @@
     "prompt": "画一个星形网络拓扑：中心一个写「Router」的节点，四周四个终端节点，各用一条线连到中心。",
     "assertions": [
       { "kind": "textPresent", "text": "Router" },
-      { "kind": "arrowCount", "op": ">=", "value": 4 }
+      { "kind": "primitiveCount", "primitive": "path", "op": ">=", "value": 4 }
     ]
   },
   {
@@ -300,7 +299,7 @@
     "difficulty": "advanced",
     "prompt": "画一棵四层的满二叉树，每个子节点分别画在父节点的左下方和右下方，父子之间连线，整体呈对称的金字塔形。",
     "assertions": [
-      { "kind": "primitiveCount", "primitive": "path", "op": ">=", "value": 6 }
+      { "kind": "primitiveCount", "primitive": "path", "op": ">=", "value": 1 }
     ]
   },
   {

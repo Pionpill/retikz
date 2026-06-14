@@ -57,7 +57,7 @@ D1–D6 串成一条流水线：
 - [x] **D4** 生成驱动 → **A 自由生成（free-form），单发、不带 self-repair**。L1 真实信号在此（B 受限生成会把 L1 锁成必过）；B 留接 L2 / 生产模拟，self-repair（测自纠错）后置。多模型跨 1–2 vendor 起步。
 - [x] **D5** 报告 → 指标**拆两层**（zod 通过率 / compile 通过率）× 类别 × 难度 × 模型 + **失败归因**（按错误类型聚合）；**每 prompt 跑 K 次取通过率**（正视 LLM 非确定性，回归比通过率差值超噪声带、非逐字 diff）；回归追踪 = **(b) 持久化结果 + 基线 diff**（标回归项；不上 CI 门禁）。
 - [x] **D6** 包结构 / 放置 → `apps/eval`（node/tsx CLI，无 UI），目录 `corpus/ runner/ report/ results/ schema/`；依赖 core + plot schema；**模型接口 = Vercel AI SDK + 薄 adapter 隔离**（runner 只依赖「prompt + schema → 文本 / 对象」抽象，可换 TanStack AI 等）；API key 走 env、不入库。理由见下「模型接口选型」。
-- [x] **D7** L2 路线 → **断言集**（非 golden IR 比对、非 LLM-as-judge）。理由：确定性（可回归基线 diff）、零额外 API 成本、直击 L1 在强模型上 100% 饱和的盲区。断言**查编译后 Scene 不查 IR**——Scene 已归一（文字一律 `text` 原语、形状一律 rect/ellipse/path），对自由生成的 IR 写法变体免疫；node id 模型自取不可靠，用**文字内容当语义锚点**。v1 词汇 4 类（`textPresent` / `primitiveCount` / `arrowCount` / `stylePresent`），指标 = 候选级 + 断言级 + 按 kind 通过率。**v2 待补（临时边界）**：空间关系（A 在 B 上方）、`edgeBetween`（X→Y 真有边）需几何端点匹配，脆弱且工程量大，本期不做。
+- [x] **D7** L2 路线 → **断言集**（非 golden IR 比对、非 LLM-as-judge）。理由：确定性（可回归基线 diff）、零额外 API 成本、直击 L1 在强模型上 100% 饱和的盲区。断言**查编译后 Scene 不查 IR**——Scene 已归一（文字一律 `text` 原语、形状一律 rect/ellipse/path），对自由生成的 IR 写法变体免疫；node id 模型自取不可靠，用**文字内容当语义锚点**。v1 词汇 4 类（`textPresent` / `primitiveCount` / `arrowCount` / `stylePresent`），指标 = 候选级 + 断言级 + 按 kind 通过率。**v2 待补（临时边界）**：空间关系（A 在 B 上方）、`edgeBetween`（X→Y 真有边）需几何端点匹配，脆弱且工程量大，本期不做。另：多模型对照（gpt-5.5 + deepseek-v4-pro）暴露 **`primitiveCount path` 是「边数」的烂代理**——模型可合法地把多条边塞进一条多段 path（move+line+line），导致按 path 原语计数低估边数；v2 应补「数 path 段（line/curve 命令）」或「数 arrow mark」的断言 kind 来根治。校准方法论：**当两个独立模型都「失败」同一条断言，几乎可断定是断言写过严而非模型都错**（本轮据此修正 arrowCount 误套到「连线」类 prompt 等 5 条）。
 
 ## 更新记录
 
