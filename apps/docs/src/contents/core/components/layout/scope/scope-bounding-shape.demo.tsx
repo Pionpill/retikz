@@ -3,14 +3,11 @@ import type { FC } from 'react';
 
 /**
  * scope.id boundingShape='circle'：synthetic 包络取子树最小外接圆，连线落圆周而非矩形角
- * @description 右侧 `<Scope id="cluster" boundingShape="circle">` 内 3 节点；灰虚线用 12 个角度锚
- *   `cluster.0 … cluster.330` 描出圆形包络；外部两条 path 引用 `cluster.west` / `cluster.north`，
- *   端点贴**圆周**。缺省 / boundingShape="rectangle" 时这些点会落在外接矩形边上。
+ * @description 右侧 `<Scope id="cluster" boundingShape="circle">` 内 3 节点；灰虚线用密集角度锚
+ *   （每 10°）描出**圆形**包络；外部两条 path 引用 `cluster.west` / `cluster.north`，端点贴圆周。
+ *   缺省 / boundingShape="rectangle" 时这些点会落在外接矩形边上。
  */
-const RING = [
-  'cluster.0', 'cluster.30', 'cluster.60', 'cluster.90', 'cluster.120', 'cluster.150',
-  'cluster.180', 'cluster.210', 'cluster.240', 'cluster.270', 'cluster.300', 'cluster.330', 'cluster.0',
-];
+const RING = [...Array.from({ length: 36 }, (_, i) => `cluster.${i * 10}`), 'cluster.0'];
 
 const Demo: FC = () => (
   <Layout width={560} height={220}>
