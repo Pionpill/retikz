@@ -5,10 +5,11 @@ description: 'retikz 源码导览：core / render / React / vanilla 四个官方
 
 适合想读懂 retikz 实现、贡献代码、或为新框架写 adapter 的人。
 
-retikz 的官方仓库当前发布四个 core 相关包：
+retikz 的官方仓库当前发布五个 core 相关包：
 
 | 包 | 角色 | 当前状态 |
 | --- | --- | --- |
+| [`@retikz/math`](https://github.com/Pionpill/retikz/tree/main/packages/core/math) | 零依赖纯计算几何（向量 / 仿射 / arc / 求交 / 圆 / 凸包）；core 的计算底座，被 core 依赖 | 官方维护 |
 | [`@retikz/core`](https://github.com/Pionpill/retikz/tree/main/packages/core/core) | IR schema、几何工具、parser 与 Scene 编译器；零 React、零 DOM | 官方维护 |
 | [`@retikz/render`](https://github.com/Pionpill/retikz/tree/main/packages/core/render) | renderer-neutral 的 Scene 输出层：SVG descriptor / string、Canvas 2D、水合 helper 与动画 runtime 工具 | 官方维护 |
 | [`@retikz/react`](https://github.com/Pionpill/retikz/tree/main/packages/core/react) | React adapter：JSX 组件编译成 IR，再通过 SVG 或 Canvas 渲染 | 官方维护 |
@@ -32,44 +33,44 @@ Vue / Svelte / Solid / Native adapter 仍属于后续或社区扩展面；但 IR
 
 | 模块 | 职责 |
 | --- | --- |
-| [`ir/`](https://github.com/Pionpill/retikz/tree/main/packages/core/src/ir) | IR schema（zod）——position / node / coordinate / path / step / scope / paint / clip / scene 全部 zod 定义 |
-| [`geometry/`](https://github.com/Pionpill/retikz/tree/main/packages/core/src/geometry) | 纯函数几何工具——rect / circle / ellipse / diamond / polar / arc / bend / segment |
-| [`primitive/`](https://github.com/Pionpill/retikz/tree/main/packages/core/src/primitive) | Scene 数据模型——渲染目标无关的图元、资源表、marker 与 clip |
-| [`compile/`](https://github.com/Pionpill/retikz/tree/main/packages/core/src/compile) | IR → Scene 编译器——节点布局、路径解析、样式级联、资源收集、layout 计算 |
-| [`parsers/`](https://github.com/Pionpill/retikz/tree/main/packages/core/src/parsers) | DSL → IR 解析器——目前覆盖 Sugar `way` 数组与 target 字符串 |
-| [`shapes/`](https://github.com/Pionpill/retikz/tree/main/packages/core/src/shapes) / [`arrows/`](https://github.com/Pionpill/retikz/tree/main/packages/core/src/arrows) / [`patterns/`](https://github.com/Pionpill/retikz/tree/main/packages/core/src/patterns) / [`path-generators/`](https://github.com/Pionpill/retikz/tree/main/packages/core/src/path-generators) | v0.2 扩展面——自定义形状、箭头、图案 motif 与路径生成器 |
-| [`index.ts`](https://github.com/Pionpill/retikz/blob/main/packages/core/src/index.ts) | 公开 API surface——所有 adapter 只能 import 这一个文件 |
+| [`ir/`](https://github.com/Pionpill/retikz/tree/main/packages/core/core/src/ir) | IR schema（zod）——position / node / coordinate / path / step / scope / paint / clip / scene 全部 zod 定义 |
+| [`geometry/`](https://github.com/Pionpill/retikz/tree/main/packages/core/core/src/geometry) | 形状 / 边界几何——rect / circle / ellipse / diamond / polar / contour / bend / segment；向量 / 仿射 / arc / 求交等纯计算原语已下沉 [`@retikz/math`](https://github.com/Pionpill/retikz/tree/main/packages/core/math)，core 从其 re-export |
+| [`primitive/`](https://github.com/Pionpill/retikz/tree/main/packages/core/core/src/primitive) | Scene 数据模型——渲染目标无关的图元、资源表、marker 与 clip |
+| [`compile/`](https://github.com/Pionpill/retikz/tree/main/packages/core/core/src/compile) | IR → Scene 编译器——节点布局、路径解析、样式级联、资源收集、layout 计算 |
+| [`parsers/`](https://github.com/Pionpill/retikz/tree/main/packages/core/core/src/parsers) | DSL → IR 解析器——目前覆盖 Sugar `way` 数组与 target 字符串 |
+| [`shapes/`](https://github.com/Pionpill/retikz/tree/main/packages/core/core/src/shapes) / [`arrows/`](https://github.com/Pionpill/retikz/tree/main/packages/core/core/src/arrows) / [`patterns/`](https://github.com/Pionpill/retikz/tree/main/packages/core/core/src/patterns) / [`path-generators/`](https://github.com/Pionpill/retikz/tree/main/packages/core/core/src/path-generators) | v0.2 扩展面——自定义形状、箭头、图案 motif 与路径生成器 |
+| [`index.ts`](https://github.com/Pionpill/retikz/blob/main/packages/core/core/src/index.ts) | 公开 API surface——所有 adapter 只能 import 这一个文件 |
 
 ### 推荐阅读顺序
 
 按数据流向：先看输入契约（IR）、再看输出契约（Scene），最后看连接两者的 `compile`。
 
-1. **[`src/index.ts`](https://github.com/Pionpill/retikz/blob/main/packages/core/src/index.ts) ——公开 API**<br />
+1. **[`src/index.ts`](https://github.com/Pionpill/retikz/blob/main/packages/core/core/src/index.ts) ——公开 API**<br />
    翻一遍 named re-export 清单。`@retikz/core` 对外暴露什么、不暴露什么，这里就是契约面；adapter 只能 import 这一个文件。
 
-2. **[`ir/scene.ts`](https://github.com/Pionpill/retikz/blob/main/packages/core/src/ir/scene.ts) ——IR 顶层**<br />
+2. **[`ir/scene.ts`](https://github.com/Pionpill/retikz/blob/main/packages/core/core/src/ir/scene.ts) ——IR 顶层**<br />
    `SceneSchema = { version, type: 'scene', children: ChildSchema[] }`；`ChildSchema` 是 node / path / coordinate / scope 的 discriminated union。
 
-3. **[`ir/node.ts`](https://github.com/Pionpill/retikz/blob/main/packages/core/src/ir/node.ts) + [`ir/path/`](https://github.com/Pionpill/retikz/tree/main/packages/core/src/ir/path) + [`ir/position/`](https://github.com/Pionpill/retikz/tree/main/packages/core/src/ir/position) ——IR 字段**<br />
+3. **[`ir/node.ts`](https://github.com/Pionpill/retikz/blob/main/packages/core/core/src/ir/node.ts) + [`ir/path/`](https://github.com/Pionpill/retikz/tree/main/packages/core/core/src/ir/path) + [`ir/position/`](https://github.com/Pionpill/retikz/tree/main/packages/core/core/src/ir/position) ——IR 字段**<br />
    只看 zod schema 与 `.describe(...)`。每个 `.describe` 是 LLM 工具调用的契约——读 schema 同时读字段语义。
 
-4. **[`primitive/scene.ts`](https://github.com/Pionpill/retikz/blob/main/packages/core/src/primitive/scene.ts) + 同目录 prim 文件 ——Scene 输出**<br />
+4. **[`primitive/scene.ts`](https://github.com/Pionpill/retikz/blob/main/packages/core/core/src/primitive/scene.ts) + 同目录 prim 文件 ——Scene 输出**<br />
    `Scene = { primitives, layout, resources? }`。Primitive 与 resource 是渲染目标无关的最大公约子集，所有 adapter 消费的就是这个；禁止 SVG-only / Canvas-only 特性。
 
-5. **[`geometry/`](https://github.com/Pionpill/retikz/tree/main/packages/core/src/geometry) ——几何基础**<br />
-   纯函数 + plain data，无 class。先看 [`point`](https://github.com/Pionpill/retikz/blob/main/packages/core/src/geometry/point.ts) / [`rect`](https://github.com/Pionpill/retikz/blob/main/packages/core/src/geometry/rect.ts) / [`polar`](https://github.com/Pionpill/retikz/blob/main/packages/core/src/geometry/polar.ts)；[`arc`](https://github.com/Pionpill/retikz/blob/main/packages/core/src/geometry/arc.ts) / [`bend`](https://github.com/Pionpill/retikz/blob/main/packages/core/src/geometry/bend.ts) / [`segment`](https://github.com/Pionpill/retikz/blob/main/packages/core/src/geometry/segment.ts) 在 path 编译时用到。
+5. **几何基础**<br />
+   纯函数 + plain data，无 class。纯计算原语（向量 / 仿射 / `arc` / 求交 / 圆 / 凸包）在独立包 [`@retikz/math`](https://github.com/Pionpill/retikz/tree/main/packages/core/math)，core 从其 re-export；core 的 [`geometry/`](https://github.com/Pionpill/retikz/tree/main/packages/core/core/src/geometry) 保留带业务语义的形状 / 边界几何（[`rect`](https://github.com/Pionpill/retikz/blob/main/packages/core/core/src/geometry/rect.ts) / [`polar`](https://github.com/Pionpill/retikz/blob/main/packages/core/core/src/geometry/polar.ts) / [`contour`](https://github.com/Pionpill/retikz/blob/main/packages/core/core/src/geometry/contour.ts) 等），path 编译时用到。
 
-6. **[`compile/compile.ts`](https://github.com/Pionpill/retikz/blob/main/packages/core/src/compile/compile.ts) ——编译入口**<br />
+6. **[`compile/compile.ts`](https://github.com/Pionpill/retikz/blob/main/packages/core/core/src/compile/compile.ts) ——编译入口**<br />
    `compileToScene(ir, options): Scene`。主线是递归处理 children、布局节点与 scope、解析路径、收集 paint / clip / marker 资源。读完它就知道 IR 是怎么落到 Scene 的。
 
-7. **[`compile/node.ts`](https://github.com/Pionpill/retikz/blob/main/packages/core/src/compile/node.ts) / [`path/`](https://github.com/Pionpill/retikz/tree/main/packages/core/src/compile/path) / [`position.ts`](https://github.com/Pionpill/retikz/blob/main/packages/core/src/compile/position.ts) ——子编译器**<br />
-   按需深入：节点布局 / 路径步进 / 位置解析三个独立文件。[`text-metrics.ts`](https://github.com/Pionpill/retikz/blob/main/packages/core/src/compile/text-metrics.ts) 提供 fallback 度量，adapter 可注入更准的版本。
+7. **[`compile/node.ts`](https://github.com/Pionpill/retikz/blob/main/packages/core/core/src/compile/node.ts) / [`path/`](https://github.com/Pionpill/retikz/tree/main/packages/core/core/src/compile/path) / [`position.ts`](https://github.com/Pionpill/retikz/blob/main/packages/core/core/src/compile/position.ts) ——子编译器**<br />
+   按需深入：节点布局 / 路径步进 / 位置解析三个独立文件。[`text-metrics.ts`](https://github.com/Pionpill/retikz/blob/main/packages/core/core/src/compile/text-metrics.ts) 提供 fallback 度量，adapter 可注入更准的版本。
 
-8. **[`parsers/`](https://github.com/Pionpill/retikz/tree/main/packages/core/src/parsers) ——Sugar 入口（可选）**<br />
+8. **[`parsers/`](https://github.com/Pionpill/retikz/tree/main/packages/core/core/src/parsers) ——Sugar 入口（可选）**<br />
    [`parseWay`](https://github.com/Pionpill/retikz/blob/main/packages/core/core/src/parsers/way.ts) / [`parseTargetSugar`](https://github.com/Pionpill/retikz/blob/main/packages/core/core/src/parsers/target-sugar.ts)：把 `<Draw way={[...]}>` 这种 Sugar 形态翻译为 IR。`@retikz/react` 在 Sugar 组件内部调用它们。
 
 9. **注册扩展面（可选）**<br />
-   [`shapes/`](https://github.com/Pionpill/retikz/tree/main/packages/core/src/shapes) / [`arrows/`](https://github.com/Pionpill/retikz/tree/main/packages/core/src/arrows) / [`patterns/`](https://github.com/Pionpill/retikz/tree/main/packages/core/src/patterns) / [`path-generators/`](https://github.com/Pionpill/retikz/tree/main/packages/core/src/path-generators)：第三方包扩展能力时优先看这里，而不是改 core 内置枚举。
+   [`shapes/`](https://github.com/Pionpill/retikz/tree/main/packages/core/core/src/shapes) / [`arrows/`](https://github.com/Pionpill/retikz/tree/main/packages/core/core/src/arrows) / [`patterns/`](https://github.com/Pionpill/retikz/tree/main/packages/core/core/src/patterns) / [`path-generators/`](https://github.com/Pionpill/retikz/tree/main/packages/core/core/src/path-generators)：第三方包扩展能力时优先看这里，而不是改 core 内置枚举。
 
 ### 阅读约束
 
@@ -89,35 +90,35 @@ Vue / Svelte / Solid / Native adapter 仍属于后续或社区扩展面；但 IR
 
 | 模块 | 职责 |
 | --- | --- |
-| [`kernel/`](https://github.com/Pionpill/retikz/tree/main/packages/react/src/kernel) | Kernel JSX 组件——`<Layout>` / `<Node>` / `<Path>` / `<Step>` / `<Text>` / `<Coordinate>` / `<Scope>`，加 `builder`（JSX → IR）与 `unbuilder`（IR → JSX）桥 |
-| [`sugar/`](https://github.com/Pionpill/retikz/tree/main/packages/react/src/sugar) | Sugar JSX 组件——`<Draw way={[...]}>`、`<EdgeLabel>` 与形状 sugar；编译期展开为 Kernel，不引入新能力 |
-| [`render/`](https://github.com/Pionpill/retikz/tree/main/packages/react/src/render) | Scene → SVG element——`renderPrim`、`paintDefs`、`clipDefs`、`arrowMarkers`、`browser-measurer`、SVG viewBox 格式化 |
-| [`index.ts`](https://github.com/Pionpill/retikz/blob/main/packages/react/src/index.ts) | 公开 API surface——Kernel + Sugar 组件 + `convertReactNodeToIR` / `convertIRToReactNode` 桥 |
+| [`kernel/`](https://github.com/Pionpill/retikz/tree/main/packages/core/react/src/kernel) | Kernel JSX 组件——`<Layout>` / `<Node>` / `<Path>` / `<Step>` / `<Text>` / `<Coordinate>` / `<Scope>`，加 `builder`（JSX → IR）与 `unbuilder`（IR → JSX）桥 |
+| [`sugar/`](https://github.com/Pionpill/retikz/tree/main/packages/core/react/src/sugar) | Sugar JSX 组件——`<Draw way={[...]}>`、`<EdgeLabel>` 与形状 sugar；编译期展开为 Kernel，不引入新能力 |
+| [`render/`](https://github.com/Pionpill/retikz/tree/main/packages/core/react/src/render) | Scene → SVG element——`renderPrim`、`paintDefs`、`clipDefs`、`arrowMarkers`、`browser-measurer`、SVG viewBox 格式化 |
+| [`index.ts`](https://github.com/Pionpill/retikz/blob/main/packages/core/react/src/index.ts) | 公开 API surface——Kernel + Sugar 组件 + `convertReactNodeToIR` / `convertIRToReactNode` 桥 |
 
 ### 推荐阅读顺序
 
-1. **[`src/index.ts`](https://github.com/Pionpill/retikz/blob/main/packages/react/src/index.ts) ——公开 API**<br />
+1. **[`src/index.ts`](https://github.com/Pionpill/retikz/blob/main/packages/core/react/src/index.ts) ——公开 API**<br />
    先看暴露了什么 Kernel / Sugar 组件、什么类型、什么桥接函数。core 的 `WayDSL` 等常量在这里透传一份，方便单包 import。
 
-2. **[`kernel/Layout.tsx`](https://github.com/Pionpill/retikz/blob/main/packages/react/src/kernel/Layout.tsx) ——顶层编排**<br />
+2. **[`kernel/Layout.tsx`](https://github.com/Pionpill/retikz/blob/main/packages/core/react/src/kernel/Layout.tsx) ——顶层编排**<br />
    `<Layout>` 是整条管线的入口：children → `buildIR` → `compileToScene` → `renderPrim` → `<svg>`。把这一个文件读懂，整个 adapter 的形状就有了。
 
-3. **[`kernel/builder.ts`](https://github.com/Pionpill/retikz/blob/main/packages/react/src/kernel/builder.ts) ——JSX → IR**<br />
-   按 child 的 displayName 分派到 IRNode / IRPath / IRStep / IRScope 等构造，是 JSX 与 IR 的桥。同目录的 [`unbuilder.ts`](https://github.com/Pionpill/retikz/blob/main/packages/react/src/kernel/unbuilder.ts) 走反方向（IR → React element 树），用于编辑器 / AI 工作流"喂 IR 显示组件"。
+3. **[`kernel/builder.ts`](https://github.com/Pionpill/retikz/blob/main/packages/core/react/src/kernel/builder.ts) ——JSX → IR**<br />
+   按 child 的 displayName 分派到 IRNode / IRPath / IRStep / IRScope 等构造，是 JSX 与 IR 的桥。同目录的 [`unbuilder.ts`](https://github.com/Pionpill/retikz/blob/main/packages/core/react/src/kernel/unbuilder.ts) 走反方向（IR → React element 树），用于编辑器 / AI 工作流"喂 IR 显示组件"。
 
-4. **[`kernel/Node.tsx`](https://github.com/Pionpill/retikz/blob/main/packages/react/src/kernel/Node.tsx) / [`Path.tsx`](https://github.com/Pionpill/retikz/blob/main/packages/react/src/kernel/Path.tsx) / [`Step.tsx`](https://github.com/Pionpill/retikz/blob/main/packages/react/src/kernel/Step.tsx) 等 ——Kernel 组件**<br />
+4. **[`kernel/Node.tsx`](https://github.com/Pionpill/retikz/blob/main/packages/core/react/src/kernel/Node.tsx) / [`Path.tsx`](https://github.com/Pionpill/retikz/blob/main/packages/core/react/src/kernel/Path.tsx) / [`Step.tsx`](https://github.com/Pionpill/retikz/blob/main/packages/core/react/src/kernel/Step.tsx) 等 ——Kernel 组件**<br />
    这些组件本身不渲染——只是声明 displayName，把 props 传给 `builder`。读懂一个就读懂全部。
 
-5. **[`render/renderPrim.tsx`](https://github.com/Pionpill/retikz/blob/main/packages/react/src/render/renderPrim.tsx) ——Scene → SVG element**<br />
+5. **[`render/renderPrim.tsx`](https://github.com/Pionpill/retikz/blob/main/packages/core/react/src/render/renderPrim.tsx) ——Scene → SVG element**<br />
    按 primitive `type` 分派出 `<rect>` / `<ellipse>` / `<text>` / `<path>` / `<g>`；paint / clip / marker 资源由同目录的 defs 组件物化。换框架时，这一层是主要重写面。
 
-6. **[`render/browser-measurer.ts`](https://github.com/Pionpill/retikz/blob/main/packages/react/src/render/browser-measurer.ts) ——文字度量注入**<br />
+6. **[`render/browser-measurer.ts`](https://github.com/Pionpill/retikz/blob/main/packages/core/react/src/render/browser-measurer.ts) ——文字度量注入**<br />
    基于 canvas `measureText` 提供 `TextMeasurer`，通过 `CompileOptions.measureText` 注入到 `compileToScene`。SSR 无 document 时自动回退到 core 的 `fallbackMeasurer`。
 
-7. **[`sugar/Draw.tsx`](https://github.com/Pionpill/retikz/blob/main/packages/react/src/sugar/Draw.tsx) ——Sugar 展开**<br />
+7. **[`sugar/Draw.tsx`](https://github.com/Pionpill/retikz/blob/main/packages/core/react/src/sugar/Draw.tsx) ——Sugar 展开**<br />
    `<Draw way={[...]}>` 在组件内部调 [`parseWay`](https://github.com/Pionpill/retikz/blob/main/packages/core/core/src/parsers/way.ts)（来自 core）拿到 step 数组，再渲染 Kernel `<Path><Step/></Path>`。Sugar 不引入新能力，全部展开为 Kernel。
 
-8. **[`sugar/`](https://github.com/Pionpill/retikz/tree/main/packages/react/src/sugar) 的形状组件（可选）**<br />
+8. **[`sugar/`](https://github.com/Pionpill/retikz/tree/main/packages/core/react/src/sugar) 的形状组件（可选）**<br />
    `<Circle>` / `<Ellipse>` / `<Arc>` / `<Sector>` / `<Rectangle>` / `<Grid>` / `<RegularPolygon>` / `<Star>` 也是 Sugar：它们把常见几何形写法展开为等价 `<Path>`。
 
 ### 写新 adapter 时的对应关系
@@ -137,19 +138,19 @@ Vue / Svelte / Solid / Native adapter 仍属于后续或社区扩展面；但 IR
 
 | 想查什么 | 看哪里 |
 | --- | --- |
-| IR 顶层结构 | [`core/ir/scene.ts`](https://github.com/Pionpill/retikz/blob/main/packages/core/src/ir/scene.ts) |
-| 节点字段 | [`core/ir/node.ts`](https://github.com/Pionpill/retikz/blob/main/packages/core/src/ir/node.ts) |
-| Path / Step 类型 | [`core/ir/path/`](https://github.com/Pionpill/retikz/tree/main/packages/core/src/ir/path) |
-| 极坐标 / 相对定位 | [`core/ir/position/`](https://github.com/Pionpill/retikz/tree/main/packages/core/src/ir/position) |
-| Scene primitive 类型 | [`core/primitive/scene.ts`](https://github.com/Pionpill/retikz/blob/main/packages/core/src/primitive/scene.ts) |
-| 编译流水线 | [`core/compile/compile.ts`](https://github.com/Pionpill/retikz/blob/main/packages/core/src/compile/compile.ts) |
-| 文字度量接口 | [`core/compile/text-metrics.ts`](https://github.com/Pionpill/retikz/blob/main/packages/core/src/compile/text-metrics.ts) |
-| boundaryPoint / anchor | [`core/geometry/rect.ts`](https://github.com/Pionpill/retikz/blob/main/packages/core/src/geometry/rect.ts) 等 |
-| core 公开 API | [`core/src/index.ts`](https://github.com/Pionpill/retikz/blob/main/packages/core/src/index.ts) |
-| React 顶层管道 | [`react/kernel/Layout.tsx`](https://github.com/Pionpill/retikz/blob/main/packages/react/src/kernel/Layout.tsx) |
-| JSX → IR 桥 | [`react/kernel/builder.ts`](https://github.com/Pionpill/retikz/blob/main/packages/react/src/kernel/builder.ts) |
-| Scene → SVG element | [`react/render/renderPrim.tsx`](https://github.com/Pionpill/retikz/blob/main/packages/react/src/render/renderPrim.tsx) |
-| react 公开 API | [`react/src/index.ts`](https://github.com/Pionpill/retikz/blob/main/packages/react/src/index.ts) |
+| IR 顶层结构 | [`core/ir/scene.ts`](https://github.com/Pionpill/retikz/blob/main/packages/core/core/src/ir/scene.ts) |
+| 节点字段 | [`core/ir/node.ts`](https://github.com/Pionpill/retikz/blob/main/packages/core/core/src/ir/node.ts) |
+| Path / Step 类型 | [`core/ir/path/`](https://github.com/Pionpill/retikz/tree/main/packages/core/core/src/ir/path) |
+| 极坐标 / 相对定位 | [`core/ir/position/`](https://github.com/Pionpill/retikz/tree/main/packages/core/core/src/ir/position) |
+| Scene primitive 类型 | [`core/primitive/scene.ts`](https://github.com/Pionpill/retikz/blob/main/packages/core/core/src/primitive/scene.ts) |
+| 编译流水线 | [`core/compile/compile.ts`](https://github.com/Pionpill/retikz/blob/main/packages/core/core/src/compile/compile.ts) |
+| 文字度量接口 | [`core/compile/text-metrics.ts`](https://github.com/Pionpill/retikz/blob/main/packages/core/core/src/compile/text-metrics.ts) |
+| boundaryPoint / anchor | [`core/geometry/rect.ts`](https://github.com/Pionpill/retikz/blob/main/packages/core/core/src/geometry/rect.ts) 等 |
+| core 公开 API | [`core/src/index.ts`](https://github.com/Pionpill/retikz/blob/main/packages/core/core/src/index.ts) |
+| React 顶层管道 | [`react/kernel/Layout.tsx`](https://github.com/Pionpill/retikz/blob/main/packages/core/react/src/kernel/Layout.tsx) |
+| JSX → IR 桥 | [`react/kernel/builder.ts`](https://github.com/Pionpill/retikz/blob/main/packages/core/react/src/kernel/builder.ts) |
+| Scene → SVG element | [`react/render/renderPrim.tsx`](https://github.com/Pionpill/retikz/blob/main/packages/core/react/src/render/renderPrim.tsx) |
+| react 公开 API | [`react/src/index.ts`](https://github.com/Pionpill/retikz/blob/main/packages/core/react/src/index.ts) |
 
 ## 相关阅读
 
