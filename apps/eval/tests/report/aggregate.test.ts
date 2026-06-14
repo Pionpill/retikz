@@ -10,6 +10,7 @@ const rec = (over: Partial<RunRecord>): RunRecord => ({
   kIndex: 0,
   zodOk: true,
   compileOk: true,
+  l2: null,
   ...over,
 });
 

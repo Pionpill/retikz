@@ -4,8 +4,8 @@ import { formatMarkdown } from '../../src/report/format';
 import { type RunRecord } from '../../src/run';
 
 const records: Array<RunRecord> = [
-  { promptId: 'c1', category: 'core', difficulty: 'single', model: 'anthropic:claude-opus-4-8', kIndex: 0, zodOk: true, compileOk: true },
-  { promptId: 'c2', category: 'core', difficulty: 'complex', model: 'anthropic:claude-opus-4-8', kIndex: 0, zodOk: false, compileOk: false, failure: { stage: 'zod', reason: 'bad version' } },
+  { promptId: 'c1', category: 'core', difficulty: 'single', model: 'anthropic:claude-opus-4-8', kIndex: 0, zodOk: true, compileOk: true, l2: null },
+  { promptId: 'c2', category: 'core', difficulty: 'complex', model: 'anthropic:claude-opus-4-8', kIndex: 0, zodOk: false, compileOk: false, failure: { stage: 'zod', reason: 'bad version' }, l2: null },
 ];
 
 describe('formatMarkdown', () => {
@@ -29,7 +29,7 @@ describe('formatMarkdown', () => {
 
   it('无失败时不渲染明细段', () => {
     const ok: Array<RunRecord> = [
-      { promptId: 'c1', category: 'core', difficulty: 'single', model: 'm', kIndex: 0, zodOk: true, compileOk: true },
+      { promptId: 'c1', category: 'core', difficulty: 'single', model: 'm', kIndex: 0, zodOk: true, compileOk: true, l2: null },
     ];
     const md = formatMarkdown(aggregate(ok), { generatedAt: 't' });
     expect(md).not.toContain('失败明细');
