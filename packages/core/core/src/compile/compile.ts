@@ -24,10 +24,12 @@ import { resolvePosition } from './position';
 import { DEFAULT_PRECISION, createRound } from './precision';
 import {
   applyTransformChain,
+  collectScopeCornerPoints,
   computeScopeBoundingBox,
   lowerScopeTransforms,
   projectLayoutToGlobal,
   registerScopeAsLayout,
+  registerScopeCircleLayout,
 } from './scope';
 import {
   type StyleFrame,
@@ -614,10 +616,27 @@ export const compileToScene = (ir: IR, options: CompileOptions = {}): Scene => {
           );
           // 子树 register 完毕，先用真 bbox 覆盖 placeholder（仍在本 scope frame 上下文），再 resolve 本 scope 内 paths
           if (child.id) {
-            const bbox = computeScopeBoundingBox(innerLayouts);
             const fallbackOrigin: IRPosition =
               innerChain.length === 0 ? [0, 0] : applyTransformChain([0, 0], innerChain);
-            const bboxLayout = registerScopeAsLayout(child.id, bbox, fallbackOrigin, effectiveShapes);
+            let bboxLayout: NodeLayout;
+            const boundingShape = child.boundingShape;
+            if (boundingShape === 'circle') {
+              bboxLayout = registerScopeCircleLayout(
+                child.id,
+                collectScopeCornerPoints(innerLayouts),
+                fallbackOrigin,
+                effectiveShapes,
+              );
+            } else {
+              if (boundingShape !== undefined && boundingShape !== 'rectangle') {
+                onWarn({
+                  code: CompileWarningCode.UnsupportedBoundingShape,
+                  message: `Unsupported scope boundingShape '${boundingShape}'; falling back to rectangle. Supported: 'rectangle', 'circle'.`,
+                  path: `${locatorPrefix}children[${i}].scope.boundingShape`,
+                });
+              }
+              bboxLayout = registerScopeAsLayout(child.id, computeScopeBoundingBox(innerLayouts), fallbackOrigin, effectiveShapes);
+            }
             // 用 replaceLayout 覆盖不触发 duplicate warn（placeholder → real bbox 是预期升级）
             nameStack.replaceLayout(child.id, bboxLayout, parentFrameDepth, placeholderLayout);
             // 嵌套 scope.id：把本层 synthetic bbox layout 合并进外层 layoutsAccumulator，
