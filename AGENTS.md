@@ -43,6 +43,8 @@ pnpm --filter <pkg> exec tsc --noEmit
 pnpm lint
 ```
 
+改完**任何文件**（含 AI / subagent 用 Write / Edit 直接写入的 `.ts` / `.json` / 配置等）都要先跑 `eslint --fix` 规范化再提交：手写 / 工具写入的内容常不符合仓库格式（缩进、import 排序、对象多行展开等），**禁止提交未经 eslint 格式化的文件**。
+
 类型检查只用 `tsc --noEmit`。不要运行会 emit 的 `tsc` / `tsc -b`，根 tsconfig 会把 `.js` / `.d.ts` / `.d.ts.map` 洒进 `src/`。若已污染，清掉源码树下生成物后再继续。
 
 ESLint / TS 报错都要修干净；不要用 `eslint-disable`、`@ts-ignore`、`as any` 绕过，确实不可避时必须写最小作用域和原因。

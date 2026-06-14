@@ -1,6 +1,6 @@
 import path from 'path';
-import { defineConfig } from 'vitest/config';
 import dts from 'vite-plugin-dts';
+import { defineConfig } from 'vitest/config';
 import pkg from './package.json' with { type: 'json' };
 
 const runtimeDeps = [...Object.keys((pkg as { dependencies?: Record<string, string> }).dependencies ?? {})];

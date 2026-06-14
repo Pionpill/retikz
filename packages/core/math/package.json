@@ -5,22 +5,61 @@
   "type": "module",
   "author": "Pionpill",
   "homepage": "https://pionpill.github.io/retikz/",
-  "keywords": ["geometry", "computational-geometry", "tikz"],
+  "keywords": [
+    "geometry",
+    "computational-geometry",
+    "tikz"
+  ],
   "license": "MIT",
-  "repository": { "type": "git", "url": "git+https://github.com/Pionpill/retikz.git", "directory": "packages/core/math" },
-  "bugs": { "url": "https://github.com/Pionpill/retikz/issues" },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Pionpill/retikz.git",
+    "directory": "packages/core/math"
+  },
+  "bugs": {
+    "url": "https://github.com/Pionpill/retikz/issues"
+  },
   "sideEffects": false,
   "main": "./src/index.ts",
   "module": "./src/index.ts",
   "types": "./src/index.ts",
-  "exports": { ".": { "types": "./src/index.ts", "default": "./src/index.ts" } },
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "default": "./src/index.ts"
+    }
+  },
   "publishConfig": {
     "main": "dist/lib/index.cjs",
     "module": "dist/es/index.js",
     "types": "dist/lib/index.d.ts",
-    "exports": { ".": { "types": "./dist/lib/index.d.ts", "import": "./dist/es/index.js", "require": "./dist/lib/index.cjs", "default": "./dist/es/index.js" } }
+    "exports": {
+      ".": {
+        "types": "./dist/lib/index.d.ts",
+        "import": "./dist/es/index.js",
+        "require": "./dist/lib/index.cjs",
+        "default": "./dist/es/index.js"
+      }
+    }
   },
-  "files": ["LICENSE", "README.md", "dist/**/*"],
-  "scripts": { "dev": "vite", "build": "vite build", "lint": "eslint .", "preview": "vite preview", "test": "vitest", "test:run": "vitest run" },
-  "devDependencies": { "@types/node": "catalog:", "typescript": "catalog:", "vite": "catalog:", "vite-plugin-dts": "catalog:", "vitest": "catalog:" }
+  "files": [
+    "LICENSE",
+    "README.md",
+    "dist/**/*"
+  ],
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "lint": "eslint .",
+    "preview": "vite preview",
+    "test": "vitest",
+    "test:run": "vitest run"
+  },
+  "devDependencies": {
+    "@types/node": "catalog:",
+    "typescript": "catalog:",
+    "vite": "catalog:",
+    "vite-plugin-dts": "catalog:",
+    "vitest": "catalog:"
+  }
 }
