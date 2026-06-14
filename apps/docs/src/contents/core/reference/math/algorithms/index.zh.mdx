@@ -1,0 +1,72 @@
+---
+title: 几何算法
+description: 求交、三角形内 / 外接圆、点在多边形、凸包的完整签名——core 未转出，直接从 @retikz/math 导入。
+---
+
+这些是 `@retikz/core` **未** re-export 的高阶计算，直接从 `@retikz/math` 导入：
+
+```ts
+import { intersect, triangle, polygon, convexHull } from '@retikz/math';
+```
+
+退化输入不抛错：求交返回 `null` / `[]`，三角形圆退化返回 `null`。容差为朴素 `DEFAULT_EPSILON = 1e-9`（类型见[几何原语](/core/reference/math/primitives)）。
+
+## 类型
+
+```ts
+/** 圆：圆心 + 半径 */
+type Circle = { center: Position; radius: number };
+```
+
+## intersect 求交
+
+返回**点**：单交点用 `Position | null`，可能多解用 `Array<Position>`。
+
+```ts
+// 两条无限直线（各由两点定）；平行 / 共线 → null
+intersect.lineLine(a1: Position, a2: Position, b1: Position, b2: Position): Position | null;
+
+// 两线段；不相交 / 平行 / 共线（含重叠）→ null
+intersect.segmentSegment(a1: Position, a2: Position, b1: Position, b2: Position): Position | null;
+
+// 直线（origin + 方向 dir，dir 不必单位化）∩ 圆；0 / 2 个交点
+intersect.lineCircle(origin: Position, dir: Position, center: Position, radius: number): Array<Position>;
+
+// 圆 ∩ 圆；相离 / 内含 / 重合 → []
+intersect.circleCircle(cA: Position, rA: number, cB: Position, rB: number): Array<Position>;
+```
+
+| 函数 | 返回 / 退化 |
+| --- | --- |
+| `lineLine` | 交点 `Position`；平行或共线 → `null` |
+| `segmentSegment` | 真交叉的交点；不相交 / 平行 / 共线（含重叠）→ `null`（首切不细分共线重叠区间） |
+| `lineCircle` | 0 个（相离）或 2 个交点；相切时返回 2 个重合点 |
+| `circleCircle` | 2 个交点；相离 / 内含 / 重合 → `[]`；相切时返回 2 个重合点 |
+
+射线 ∩ 圆弧用 [`rayArc`](/core/reference/math/primitives)（在原语页，返回参数而非点）。
+
+## triangle 三角形圆
+
+返回 `Circle`；三点共线（面积≈0）→ `null`。
+
+```ts
+triangle.circumcircle(a: Position, b: Position, c: Position): Circle | null;  // 外接圆（过三顶点）
+triangle.incircle(a: Position, b: Position, c: Position): Circle | null;      // 内切圆（与三边相切）
+```
+
+## polygon 点在多边形
+
+```ts
+// ray-casting 奇偶规则；顶点按序，不要求凹凸 / 绕向
+polygon.containsPoint(vertices: Array<Position>, p: Position): boolean;
+```
+
+**边界点结果未定义**（落边界由调用方处理）；顶点数 < 3 返回 `false`。
+
+## convexHull 凸包
+
+```ts
+convexHull(points: Array<Position>): Array<Position>;
+```
+
+Andrew monotone chain，返回 **CCW 顺序**顶点、**剔除共线中间点**；点数 < 3 或全共线时返回排序去重后的端点。

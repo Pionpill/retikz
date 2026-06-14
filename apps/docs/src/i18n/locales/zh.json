@@ -94,7 +94,10 @@
     "refRenderer": "渲染器",
     "refRendererSvg": "SVG",
     "refRendererCanvas": "Canvas",
-    "refHydration": "水合"
+    "refHydration": "水合",
+    "refMath": "计算几何",
+    "refMathPrimitives": "几何原语",
+    "refMathAlgorithms": "几何算法"
   },
   "plot": {
     "label": "绘图",

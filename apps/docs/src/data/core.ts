@@ -149,6 +149,14 @@ export const coreSection: Array<Section> = [
           { id: 'parser', label: 'core.refParser' },
         ],
       },
+      {
+        id: 'math',
+        label: 'core.refMath',
+        children: [
+          { id: 'primitives', label: 'core.refMathPrimitives' },
+          { id: 'algorithms', label: 'core.refMathAlgorithms' },
+        ],
+      },
     ],
   },
   {

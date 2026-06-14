@@ -1,0 +1,86 @@
+---
+title: Primitives
+description: The Position / CenteredShape types and full signatures for point vector math, lerp, affine transforms, and arc endpoint / bbox primitives.
+---
+
+The base compute primitives of `@retikz/math`. Of these, `Position` / `point` / `lerp` / `localToWorld` / `worldToLocal` are also re-exported by `@retikz/core`; the two imports are equivalent:
+
+```ts
+import { point, lerp, localToWorld } from '@retikz/math';
+// or (core already re-exports these)
+import { point, lerp, localToWorld } from '@retikz/core';
+```
+
+## Types
+
+```ts
+/** Cartesian point [x, y] */
+type Position = [number, number];
+
+/** Default geometry tolerance (naive, fine at drawing scale) */
+const DEFAULT_EPSILON = 1e-9;
+
+/** "Center + optional rotation" shape contract, used by affine transforms */
+type CenteredShape = {
+  x: number;        // center x
+  y: number;        // center y
+  rotate?: number;  // rotation in radians about the center; omitted / 0 = no rotation
+};
+```
+
+## point vector math
+
+```ts
+point.add        (a: Position, b: Position): Position   // a + b
+point.sub        (a: Position, b: Position): Position   // a − b
+point.scale      (a: Position, k: number): Position     // a × k
+point.dot        (a: Position, b: Position): number     // dot product a·b
+point.cross      (a: Position, b: Position): number     // 2D cross product a×b (scalar)
+point.length     (a: Position): number                  // magnitude |a|
+point.equal      (a: Position, b: Position): boolean    // exact equality (no tolerance)
+point.normalize  (a: Position, fallback?: Position, epsilon?: number): Position
+point.shiftToward(p: Position, target: Position, dist: number): Position
+```
+
+| Function | Params / behavior |
+| --- | --- |
+| `normalize` | `fallback` is returned for a zero-length vector, default `[1, 0]`; `epsilon` is the zero threshold, default `DEFAULT_EPSILON` |
+| `shiftToward` | moves `p` along the `p→target` unit direction by `dist`; returns `p` unchanged when `dist=0` or `p===target` |
+
+## lerp
+
+```ts
+lerp(a: Position, b: Position, t: number): Position;  // a + (b − a)·t
+```
+
+`t=0` returns `a`, `t=1` returns `b`; `t` is not clamped and may extrapolate outside `[0, 1]`.
+
+## Affine transforms
+
+```ts
+localToWorld(shape: CenteredShape, local: Position): Position;  // local (centered at origin) → world
+worldToLocal(shape: CenteredShape, world: Position): Position;  // world → local (inverse of localToWorld)
+```
+
+When `shape.rotate` is omitted / 0 it degenerates to pure translation; otherwise it rotates about the center (right-handed).
+
+## Arc primitives
+
+Angle convention: SVG **y-down**, `0°=+x`, `90°=+y` (visually down), increasing angle = clockwise on screen.
+
+```ts
+arcEndPoint(center: Position, radius: number, angleDeg: number): Position;       // point on the circle at the angle
+ellipseArcPoint(center: Position, rx: number, ry: number, angleDeg: number): Position;  // parametric point on the ellipse
+
+// whether an angle lies in the arc [startDeg, endDeg] (inclusive, with tolerance)
+arcAngleInRange(startDeg: number, endDeg: number, angleDeg: number, toleranceDeg?: number): boolean;
+
+// ray ∩ arc; returns forward ray-parameters (ascending). dir must be a unit vector
+rayArc(origin: Position, dir: Position, center: Position, radius: number, startDeg: number, endDeg: number, tolerance?: number): Array<number>;
+
+// candidate extreme points for the (elliptical-)arc bbox (endpoints + 90°·k directions inside the range)
+arcBoundingPoints(center: Position, radius: number, startDeg: number, endDeg: number): Array<Position>;
+ellipseArcBoundingPoints(center: Position, rx: number, ry: number, startDeg: number, endDeg: number): Array<Position>;
+```
+
+<ComponentAlert title="rayArc returns parameters, not points" description="rayArc returns an array of scalar distances along the ray (hit point = origin + s·dir), handy for picking the nearest hit — unlike intersect.* in Algorithms, which return coordinate points." />
