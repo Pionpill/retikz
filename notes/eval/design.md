@@ -15,7 +15,7 @@
 | 档 | 测什么 | 客观性 / 成本 | 状态 |
 |---|---|---|---|
 | **L1 结构有效性** | 生成 IR 过 zod 校验？`compileToScene` 不报错？ | 全自动、客观、便宜 | ✅ **首切锚定** |
-| **L2 语义正确性** | 结果符合 prompt 意图？（golden IR 比对 / 断言集 / LLM-as-judge） | 半主观、中 | 后置（首切不做） |
+| **L2 语义正确性** | 结果符合 prompt 意图？走**断言集**（查编译后 Scene） | 确定性、零额外成本、中 | ✅ **断言 baseline 落地（v1：4 类确定性断言）** |
 | **L3 视觉保真** | 渲染成图 → 与 golden 图 diff / vision 评分 | 最贵 | 后置 |
 
 > **L1-only 的一个简化收益**：L1 不需要 golden 输出——只要 prompt + 元数据，成功 = 过 zod + compile。语料因此从「prompt → 期望」退化成「一组带类别 / 难度标签的 prompt」，攒起来快得多。
@@ -57,7 +57,9 @@ D1–D6 串成一条流水线：
 - [x] **D4** 生成驱动 → **A 自由生成（free-form），单发、不带 self-repair**。L1 真实信号在此（B 受限生成会把 L1 锁成必过）；B 留接 L2 / 生产模拟，self-repair（测自纠错）后置。多模型跨 1–2 vendor 起步。
 - [x] **D5** 报告 → 指标**拆两层**（zod 通过率 / compile 通过率）× 类别 × 难度 × 模型 + **失败归因**（按错误类型聚合）；**每 prompt 跑 K 次取通过率**（正视 LLM 非确定性，回归比通过率差值超噪声带、非逐字 diff）；回归追踪 = **(b) 持久化结果 + 基线 diff**（标回归项；不上 CI 门禁）。
 - [x] **D6** 包结构 / 放置 → `apps/eval`（node/tsx CLI，无 UI），目录 `corpus/ runner/ report/ results/ schema/`；依赖 core + plot schema；**模型接口 = Vercel AI SDK + 薄 adapter 隔离**（runner 只依赖「prompt + schema → 文本 / 对象」抽象，可换 TanStack AI 等）；API key 走 env、不入库。理由见下「模型接口选型」。
+- [x] **D7** L2 路线 → **断言集**（非 golden IR 比对、非 LLM-as-judge）。理由：确定性（可回归基线 diff）、零额外 API 成本、直击 L1 在强模型上 100% 饱和的盲区。断言**查编译后 Scene 不查 IR**——Scene 已归一（文字一律 `text` 原语、形状一律 rect/ellipse/path），对自由生成的 IR 写法变体免疫；node id 模型自取不可靠，用**文字内容当语义锚点**。v1 词汇 4 类（`textPresent` / `primitiveCount` / `arrowCount` / `stylePresent`），指标 = 候选级 + 断言级 + 按 kind 通过率。**v2 待补（临时边界）**：空间关系（A 在 B 上方）、`edgeBetween`（X→Y 真有边）需几何端点匹配，脆弱且工程量大，本期不做。
 
 ## 更新记录
 
 - **2026-06-12**：建档，框定打分阶梯 + 设计轴 + 开放决策；当日 brainstorm 把 **D1–D6 首切定稿**（L1 baseline，自由生成单发 + 持久化基线 diff + Vercel AI SDK）。
+- **2026-06-14**：L1 baseline 落地后扩 core 语料至 36 条（含 advanced 档）；定 **D7 = L2 走断言集**并落地 v1（4 类确定性断言查编译后 Scene，候选级/断言级/按 kind 通过率 + 失败明细进报告，零 core 改动）；v2 空间/关系断言留待后续。
