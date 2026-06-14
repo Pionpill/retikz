@@ -120,6 +120,7 @@ export type IRScope = {
   resetStyle?: boolean | Array<StyleChannel>;
   zIndex?: number;
   clip?: IRClipSpec;
+  boundingShape?: string;
   meta?: IRJsonObject;
   animations?: Array<IRAnimationTrack>;
   children: Array<IRNode | IRPath | IRCoordinate | IRScope | IRComposite>;
@@ -243,6 +244,12 @@ export const ScopeSchema = z
     clip: ClipSpecSchema.optional().describe(
       'Clip region (rect / circle / ellipse / polygon, in scope-local coords); when set, node children of this scope are clipped to it. Compiled into a renderer-agnostic ClipResource referenced via the group clipRef. Known limitation: a path child of a scope that ALSO has transforms is currently emitted at the top level (its geometry is already resolved to global coords) and is therefore NOT clipped by this region; tracked for the local-coordinate path-compile rework.',
     ),
+    boundingShape: z
+      .string()
+      .optional()
+      .describe(
+        "Shape name for the synthetic bounding envelope of this scope's `id` layout (same vocabulary as Node `shape`, e.g. 'circle'). Omitted defaults to 'rectangle' (axis-aligned bbox). Lets external refs/anchors land on the real shape boundary.",
+      ),
     meta: JsonObjectSchema.optional().describe(
       'Opaque provenance metadata carried by this element (e.g. a Tier 2 lowering tagging which datum / series / layer it came from). Provenance passthrough: preserved verbatim into the Scene primitive(s) this element emits, ignored by renderers, and never interpreted by the compiler — it does not affect layout, connection, style, or bounding box. Must be a JSON object (fully serializable). Not inherited across scopes; not part of the every-X style defaults.',
     ),

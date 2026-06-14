@@ -34,6 +34,8 @@ export type ScopeProps = ScopeStyleProps & HydrationEventProps & {
   zIndex?: IRScope['zIndex'];
   /** 裁剪区（rect / circle / ellipse / polygon，scope 局部坐标）；设值则裁剪 scope 内全部子元素 */
   clip?: IRScope['clip'];
+  /** scope id 注册的 synthetic 包络形状名（与 Node shape 同词表，如 'circle'）；缺省为 'rectangle'（AABB） */
+  boundingShape?: string;
   /** provenance 元数据：原样透传进本 scope emit 的 GroupPrim，renderer 忽略、不参与布局、不下传子元素；典型由 Tier 2 lowering 注入（标记 series / layer 层）。须为 JSON 可序列化对象 */
   meta?: IRScope['meta'];
   /** 时间轴动画 tracks（作用于 scope group；raw track）：透传进 emit 的 GroupPrim，renderer 播放或降级到静态。不参与布局、不下传子元素 */
