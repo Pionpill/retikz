@@ -26,7 +26,7 @@
 
 详 [`ADR-01`](./01-math-package-and-geometry-api.md)。要点：
 
-- scaffold `packages/math/math`（package.json 零依赖 / tsconfig / vite.config external 守卫 `?? {}` / index）。
+- scaffold `packages/core/math`（package.json 零依赖 / tsconfig / vite.config external 守卫 `?? {}` / index）。
 - `geometry/` 七模块：`point`（向量 + `dot`/`cross` 新增 + `shiftToward` + `lerp`，迁自 core point/edge）、`transform`（迁自 core）、`arc`（全文件迁自 core）、`intersect`（contour 私有求交提出 + `segmentSegment` 新增；`rayArc` 留 `arc` 模块、不并入——返回标量参数语义不同）、`triangle`（incircle/circumcircle 新增）、`polygon.containsPoint`（新增）、`hull.convexHull`（新增）。
 - 返回形态（ADR-01 决策 4）：`lineLine`/`segmentSegment` → `Position | null`；`lineCircle`/`circleCircle` → `Array<Position>`；`triangle.*` 退化 → `null`。
 - 每模块 TDD 单测；退化 case（平行 / 相切 / 共线 / 零长 / 三点共线 / hull 共线剔除）。现成库（kld / robust-predicates）仅作正确性参考、不进依赖。

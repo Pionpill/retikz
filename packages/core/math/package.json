@@ -7,7 +7,7 @@
   "homepage": "https://pionpill.github.io/retikz/",
   "keywords": ["geometry", "computational-geometry", "tikz"],
   "license": "MIT",
-  "repository": { "type": "git", "url": "git+https://github.com/Pionpill/retikz.git", "directory": "packages/math/math" },
+  "repository": { "type": "git", "url": "git+https://github.com/Pionpill/retikz.git", "directory": "packages/core/math" },
   "bugs": { "url": "https://github.com/Pionpill/retikz/issues" },
   "sideEffects": false,
   "main": "./src/index.ts",
