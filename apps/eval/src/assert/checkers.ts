@@ -3,9 +3,9 @@ import { type Assertion, type AssertionResult } from './types';
 import { allText, flattenPrimitives } from './primitives';
 
 type Result = Pick<AssertionResult, 'pass' | 'actual'>;
-type Checker<K extends Assertion['kind']> = (
+type Checker<TKind extends Assertion['kind']> = (
   scene: Scene,
-  assertion: Extract<Assertion, { kind: K }>,
+  assertion: Extract<Assertion, { kind: TKind }>,
 ) => Result;
 
 const cmp = (a: number, op: '==' | '>=' | '<=' | '>' | '<', b: number): boolean => {
@@ -61,4 +61,4 @@ export const CHECKERS = {
   primitiveCount,
   arrowCount,
   stylePresent,
-} satisfies { [K in Assertion['kind']]: Checker<K> };
+} satisfies { [TKind in Assertion['kind']]: Checker<TKind> };
