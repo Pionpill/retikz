@@ -63,6 +63,79 @@ PGFPlots is to TikZ as Tier 2 is to retikz's Tier 1: charts (PGFPlots' `axis` en
 
 </Comparison>
 
+## Embeddable Tier 2: writing Tier 2 components inside `<Layout>`
+
+Above we covered how a Tier 2 *node* lowers to Tier 1. This section covers an adjacent problem: when you want to write several Tier 2 *React components* (such as a future `<Plot>`) inside one `<Layout>`, collected into a single figure, how does each one's high-level node and expand logic get into that figure's compile.
+
+```tsx
+<Layout width={800} height={600}>
+  <Panel id="a" x={40} y={40} data={salesA} />
+  <Panel id="b" x={420} y={60} data={salesB} />
+  <Path from={{ id: 'a', anchor: 'east' }} to={{ id: 'b', anchor: 'west' }} />
+</Layout>
+```
+
+The catch: `<Panel>` is an ordinary React component, and rendering it would run its own hooks. But `<Layout>` builds its IR by **statically walking the component tree and reading props** — it does not render child components. Calling `<Panel>` during that static walk would fire its `useId` / `useMemo` outside React's render pass, corrupting the host's hook order and crashing on re-render / language switch. So `<Layout>` must obtain the node and expand logic a component contributes **without rendering it — by statically reading its props**.
+
+### The adapter: domain provides, core defines the interface
+
+core defines only one TS interface, `EmbeddableTier2Adapter`, and knows no specific domain (plot / flow / table each implement their own adapter; core never imports them):
+
+```ts
+type EmbeddableTier2Adapter<TProps> = {
+  displayName: string; // matches the component's displayName
+  namespace: string;   // = composite namespace; core groups contributions by it
+  contribute: (props: TProps) => {
+    node: IRChild;                       // the composite node placed into the scene (adapter may self-wrap a translate <Scope> for placement)
+    datasets: Record<string, unknown>;   // external data by reference key — **does not enter IR**
+    makeComposites: (mergedDatasets: Record<string, unknown>) => Array<CompositeDefinition>;
+  };
+};
+```
+
+`contribute` must be a **pure function**: no hooks, no rendering. It statically turns element props into one contribution — a composite `node` (enters IR and lowers via the mechanism above), a `datasets` map (external data, kept out of IR), and a `makeComposites` (which, given the merged datasets, produces that domain's composite expand logic).
+
+### A static marker makes it zero-config
+
+The domain attaches two static properties to the component so that `<Layout><Panel/></Layout>` works with no config:
+
+```ts
+Panel.isTier2Embeddable = true;
+Panel.embeddableAdapter = {
+  /* ...EmbeddableTier2Adapter... */
+};
+```
+
+`<Layout>`'s two static traversal chains (the IR builder and the hydration-handler collector) detect the `isTier2Embeddable` marker, call `adapter.contribute(props)` once, push `node` into the IR, and record `{ namespace, datasets, makeComposites }` — **all without rendering the component**. The component's render function runs only when it is used **standalone** (not inside `<Layout>`).
+
+### Layout aggregates contributions
+
+After collecting every contribution, `<Layout>` groups them by `namespace`:
+
+| Step | Behavior |
+| --- | --- |
+| Merge datasets | `datasets` of the same namespace merge into one; the same `reference` appearing twice **must be the same object identity**, otherwise it fails loud |
+| Call makeComposites | called once per namespace with the merged datasets, producing that domain's composites |
+| Assemble | results across namespaces concat, then merge with the user's explicit `composites` prop, all fed to compile |
+
+In other words, embeddable Tier 2 wires the lowering path above into `<Layout>`'s declarative surface: composites solve "how a Tier 2 *node* lowers", while the embeddable adapter solves "how a Tier 2 *component* delivers that node and its expand logic into a shared `<Layout>`". Data always stays out of IR and is injected at compile through composites — exactly like the `composites` prop, and like how `<Plot>` works standalone.
+
+<ComponentPreview name="embeddable-flow" size="sm" hideCode />
+
+In the figure, `<Panel/>` props are **read statically** (the component is not rendered) into `contribute`, which yields `node` (enters IR), `datasets` (dashed, kept out of IR), and `makeComposites`; `<Layout>` aggregates by namespace and feeds compile.
+
+### Escape hatch: the `embeddables` prop
+
+The static marker is the primary path. `<Layout embeddables={[adapter]}>` is an optional escape hatch — pass an explicit `Array<EmbeddableTier2Adapter>` that matches child components by `displayName` and **overrides** the static marker. Use it for test injection, explicit control, or domains that did not attach the static marker.
+
+### Boundaries
+
+- **core hard-codes no domain**: core provides only this generic mechanism; plot / flow / table each provide their own adapter, and core never imports them.
+- **Data stays out of IR**: `datasets` is kept out of IR and injected at compile through composites — exactly like the `composites` prop.
+- **No IR schema change**: this is a core react-layer mechanism; the composite node and expand pipeline already exist.
+
+<ComponentAlert type="tip" title="First-class plot embedding is coming" description="This section describes core's generic mechanism and adapter contract. Attaching displayName + adapter to <Plot>, and embed props like x / y / width / height, are implemented on the plot side and not yet in place — so <Layout><Plot/></Layout> cannot run today. The <Panel> above is illustrative only, showing the contract a domain author implements." />
+
 ## Further reading
 
 <div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -73,6 +146,10 @@ PGFPlots is to TikZ as Tier 2 is to retikz's Tier 1: charts (PGFPlots' `axis` en
   <LinkedCard href="/core/reference/extending">
     <span className="font-semibold">Extending</span>
     <span className="mt-1 text-center text-sm text-muted-foreground">composites join shape / arrow / pattern / generator as registrable surfaces</span>
+  </LinkedCard>
+  <LinkedCard href="/core/components/layout/overview">
+    <span className="font-semibold">Layout</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">the container that aggregates embeddable Tier 2 contributions — composites / embeddables props</span>
   </LinkedCard>
   <LinkedCard href="/plot/introduction">
     <span className="font-semibold">@retikz/plot</span>

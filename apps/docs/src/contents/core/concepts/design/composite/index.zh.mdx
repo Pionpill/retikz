@@ -63,6 +63,79 @@ PGFPlots 之于 TikZ ≈ Tier 2 之于 retikz Tier 1：图表（PGFPlots 的 `ax
 
 </Comparison>
 
+## 可嵌入 Tier2：把 Tier2 组件写进 `<Layout>`
+
+上面讲的是「一个 Tier2 *节点* 怎么下沉成 Tier 1」。这一节讲一个相邻问题：当你想把多个 Tier2 *React 组件*（如未来的 `<Plot>`）写进同一个 `<Layout>`、收进同一张图时，它们各自的高层节点和展开逻辑怎么进到这张图的 compile。
+
+```tsx
+<Layout width={800} height={600}>
+  <Panel id="a" x={40} y={40} data={salesA} />
+  <Panel id="b" x={420} y={60} data={salesB} />
+  <Path from={{ id: 'a', anchor: 'east' }} to={{ id: 'b', anchor: 'west' }} />
+</Layout>
+```
+
+难点是：`<Panel>` 是个普通 React 组件，直接渲染它会跑它自己的 hooks。而 `<Layout>` 的 IR 构建是**静态遍历组件树读 props**、不渲染子组件——若在这趟静态遍历里调用 `<Panel>`，它的 `useId` / `useMemo` 会在 React 渲染流程之外触发，污染宿主的 hook 顺序，重渲染 / 切换语言时崩溃。所以 `<Layout>` 必须**不渲染组件、只静态读它的 props** 就拿到它要贡献的节点和展开逻辑。
+
+### 适配器：domain 提供，core 定接口
+
+core 只定义一个 TS 接口 `EmbeddableTier2Adapter`，不认识任何具体 domain（plot / flow / table 各自实现自己的 adapter，core 从不 import 它们）：
+
+```ts
+type EmbeddableTier2Adapter<TProps> = {
+  displayName: string; // 匹配组件 displayName
+  namespace: string;   // = composite namespace，core 据此分组贡献
+  contribute: (props: TProps) => {
+    node: IRChild;                       // 放进 scene 的 composite 节点（adapter 可自裹 translate <Scope> 摆位）
+    datasets: Record<string, unknown>;   // 按 reference 键的外部数据，**不进 IR**
+    makeComposites: (mergedDatasets: Record<string, unknown>) => Array<CompositeDefinition>;
+  };
+};
+```
+
+`contribute` 必须是**纯函数**：不能调 hooks、不能渲染。它把元素 props 静态翻成一份贡献——一个 composite `node`（进 IR，走上文的 lowering 展开）、一份 `datasets`（外部数据，留在 IR 之外）、一个 `makeComposites`（拿到合并后的 datasets 产出该 domain 的 composite 展开逻辑）。
+
+### 静态标记让它零配置
+
+domain 在组件上挂两个静态属性，让 `<Layout><Panel/></Layout>` 零配置可用：
+
+```ts
+Panel.isTier2Embeddable = true;
+Panel.embeddableAdapter = {
+  /* ...EmbeddableTier2Adapter... */
+};
+```
+
+`<Layout>` 的两条静态遍历链路（构建 IR 的遍历、收集水合 handler 的遍历）命中 `isTier2Embeddable` 标记时，调一次 `adapter.contribute(props)`、把 `node` 收进 IR、记下 `{ namespace, datasets, makeComposites }`——**全程不渲染该组件**。组件的渲染函数只在它**单独使用**（不在 `<Layout>` 里）时才跑。
+
+### Layout 汇总贡献
+
+`<Layout>` 收齐所有贡献后，按 `namespace` 分组：
+
+| 步骤 | 行为 |
+| --- | --- |
+| 合并 datasets | 同 namespace 的 `datasets` 并成一份；同一 `reference` 在两处出现时**必须是同一对象引用**，否则 fail-loud |
+| 调 makeComposites | 每个 namespace 用合并后的 datasets 调一次，得到该 domain 的 composite |
+| 拼装 | 各 namespace 的结果 concat，再与用户显式 `composites` prop 合并，一起交 compile |
+
+也就是说，可嵌入 Tier2 把上文的 lowering 链路接到了 `<Layout>` 的声明式表面：composite 解决「Tier2 *节点* 怎么下沉」，可嵌入 adapter 解决「Tier2 *组件* 怎么把这个节点和它的展开逻辑交进共享的 `<Layout>`」。数据始终留在 IR 之外，在 compile 期经 composite 注入——和 `composites` prop、和 `<Plot>` 单独使用时的做法一致。
+
+<ComponentPreview name="embeddable-flow" size="sm" hideCode />
+
+图中 `<Panel/>` props 被**静态读取**（不渲染组件）进 `contribute`，产出 `node`（进 IR）、`datasets`（虚线，留在 IR 之外）、`makeComposites`；`<Layout>` 按 namespace 汇总后并入 compile。
+
+### 逃生舱：`embeddables` prop
+
+静态标记是主路径。`<Layout embeddables={[adapter]}>` 是可选逃生舱——传一个显式的 `Array<EmbeddableTier2Adapter>`，按 `displayName` 匹配子组件并**覆盖**静态标记。用于测试注入、显式控制、或没挂静态标记的 domain。
+
+### 约束
+
+- **core 不写死任何 domain**：core 只提供这套通用机制；plot / flow / table 各自提供 adapter，core 从不 import 它们。
+- **数据不进 IR**：`datasets` 留在 IR 之外，在 compile 期经 composite 注入——和 `composites` prop 一致。
+- **无 IR schema 改动**：这是 core react 层的机制，composite 节点和展开管线都已存在。
+
+<ComponentAlert type="tip" title="plot 的一等嵌入即将到来" description="本节描述的是 core 的通用机制与 adapter 契约。把 displayName + adapter 挂到 <Plot> 上、以及 x / y / width / height 等嵌入 props，由 plot 侧实现、尚未就位——所以 <Layout><Plot/></Layout> 暂时还不能直接运行。上面的 <Panel> 仅作示意，展示 domain 作者要实现的契约。" />
+
 ## 延伸阅读
 
 <div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -73,6 +146,10 @@ PGFPlots 之于 TikZ ≈ Tier 2 之于 retikz Tier 1：图表（PGFPlots 的 `ax
   <LinkedCard href="/core/reference/extending">
     <span className="font-semibold">扩展</span>
     <span className="mt-1 text-center text-sm text-muted-foreground">composite 与 shape / arrow / pattern / generator 同属可注册扩展面</span>
+  </LinkedCard>
+  <LinkedCard href="/core/components/layout/overview">
+    <span className="font-semibold">Layout</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">汇总可嵌入 Tier2 贡献的容器：composites / embeddables prop</span>
   </LinkedCard>
   <LinkedCard href="/plot/introduction">
     <span className="font-semibold">@retikz/plot</span>

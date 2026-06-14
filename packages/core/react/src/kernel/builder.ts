@@ -21,6 +21,11 @@ import type { CoordinateProps } from './Coordinate';
 import type { NodeProps } from './Node';
 import type { PathProps } from './Path';
 import { Scope, type ScopeProps } from './Scope';
+import {
+  type EmbeddableContributionRecord,
+  type EmbeddableTier2Adapter,
+  resolveEmbeddableAdapter,
+} from './embeddable';
 import type { StepProps } from './Step';
 import type { TextProps } from './Text';
 import type { EdgeLabelProps } from '../sugar/EdgeLabel';
@@ -419,11 +424,20 @@ const buildCoordinateFromProps = (props: CoordinateProps): IRChild => ({
   position: props.position,
 });
 
-/** `<Scope>` props → IRScope；样式 / 容器字段走 SCOPE_FIELDS 透传，children 递归扫描走 readSceneChildren */
-const buildScopeFromProps = (props: ScopeProps): IRScope => ({
+/**
+ * buildIR 递归扫描期透传的可嵌入贡献累加上下文
+ * @description contributions 在整棵树共享同一数组、跨 scope 平铺收集；embeddables 为显式注入的适配器列表（逃生舱 / 测试）
+ */
+type BuildContext = {
+  contributions: Array<EmbeddableContributionRecord>;
+  embeddables?: ReadonlyArray<EmbeddableTier2Adapter>;
+};
+
+/** `<Scope>` props → IRScope；样式 / 容器字段走 SCOPE_FIELDS 透传，children 递归扫描走 readSceneChildren（透传贡献上下文） */
+const buildScopeFromProps = (props: ScopeProps, ctx?: BuildContext): IRScope => ({
   type: 'scope',
   ...pickDefined(props, SCOPE_FIELDS),
-  children: readSceneChildren(props.children),
+  children: readSceneChildren(props.children, ctx),
 });
 
 /** `<Path>` props → IRChild；step 序列由 readPathChildren 收集 */
@@ -437,14 +451,14 @@ const buildPathFromProps = (props: PathProps): IRChild => ({
  * 扫描 <TikZ> 直接 children
  * @description Kernel marker（Node / Path / Coordinate）走对应 typed builder；React.Fragment 递归展开 children；其余函数式组件视为 Sugar，同步调用拿 Kernel JSX 递归展开；非函数静默跳过。`as` cast 仅在此顶层一次——子函数全走 typed signature
  */
-const readSceneChildren = (children: ReactNode): Array<IRChild> => {
+const readSceneChildren = (children: ReactNode, ctx?: BuildContext): Array<IRChild> => {
   const out: Array<IRChild> = [];
   Children.forEach(children, child => {
     if (!isValidElement(child)) return;
     // React.Fragment：透明容器，递归解开 children 让 .map() 内 <>...</> 平铺到 TikZ 子级
     if (child.type === Fragment) {
       const fragChildren = (child.props as { children?: ReactNode }).children;
-      for (const ir of readSceneChildren(fragChildren)) {
+      for (const ir of readSceneChildren(fragChildren, ctx)) {
         out.push(ir);
       }
       return;
@@ -461,7 +475,7 @@ const readSceneChildren = (children: ReactNode): Array<IRChild> => {
         out.push(buildCoordinateFromProps(child.props as CoordinateProps));
         return;
       case TIKZ_SCOPE:
-        out.push(buildScopeFromProps(child.props as ScopeProps));
+        out.push(buildScopeFromProps(child.props as ScopeProps, ctx));
         return;
     }
     if (typeof child.type === 'function') {
@@ -471,8 +485,21 @@ const readSceneChildren = (children: ReactNode): Array<IRChild> => {
           `[retikz] <Layout> children 含类组件 <${componentLabel(child.type)}>。Kernel / Sugar 组件必须是函数组件——把它改写成函数组件，或在其内部返回 Kernel JSX。`,
         );
       }
+      // 可嵌入 Tier2：经 adapter 静态贡献 IR 节点 + datasets + composites 工厂；不调用组件本身（避免 hook / 副作用）。
+      // resolveEmbeddableAdapter 在「标记但缺 adapter」时 fail-loud throw（即便 ctx 缺省的公开 buildIR 路径也会抛）
+      const adapter = resolveEmbeddableAdapter(child.type, getDisplayName(child), ctx?.embeddables);
+      if (adapter) {
+        const contribution = adapter.contribute(child.props);
+        out.push(contribution.node);
+        ctx?.contributions.push({
+          namespace: adapter.namespace,
+          datasets: contribution.datasets,
+          makeComposites: contribution.makeComposites,
+        });
+        return;
+      }
       const expanded = (child.type as (p: unknown) => ReactNode)(child.props);
-      for (const ir of readSceneChildren(expanded)) {
+      for (const ir of readSceneChildren(expanded, ctx)) {
         out.push(ir);
       }
       return;
@@ -521,11 +548,20 @@ export const wrapRootScope = (children: ReactNode, style: ScopeStyleProps): Reac
 };
 
 /**
- * 把 <TikZ> 的 children 同步翻译为 IR
- * @description 纯函数，不依赖 effect/state；render 阶段即可直接使用
+ * buildIR + 收集可嵌入 Tier2 贡献（Layout 用）；公开 buildIR 丢弃 contributions、签名不变
+ * @description 在递归扫描期透传共享累加上下文，可嵌入子组件经 adapter 贡献 IR 节点同时把 datasets / composites 工厂平铺收集到 contributions
  */
-export const buildIR = (children: ReactNode): IR => ({
-  version: CURRENT_IR_VERSION,
-  type: 'scene',
-  children: readSceneChildren(children),
-});
+export const buildIRWithContributions = (
+  children: ReactNode,
+  embeddables?: ReadonlyArray<EmbeddableTier2Adapter>,
+): { ir: IR; contributions: Array<EmbeddableContributionRecord> } => {
+  const contributions: Array<EmbeddableContributionRecord> = [];
+  const sceneChildren = readSceneChildren(children, { contributions, embeddables });
+  return { ir: { version: CURRENT_IR_VERSION, type: 'scene', children: sceneChildren }, contributions };
+};
+
+/**
+ * 把 <TikZ> 的 children 同步翻译为 IR
+ * @description 纯函数，不依赖 effect/state；render 阶段即可直接使用；委托 buildIRWithContributions 并丢弃贡献
+ */
+export const buildIR = (children: ReactNode): IR => buildIRWithContributions(children).ir;

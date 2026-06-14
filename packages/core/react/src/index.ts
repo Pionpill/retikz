@@ -7,8 +7,14 @@
  * 渲染管道：buildIR → compileToScene → renderPrim → SVG
  */
 
-export { Layout, Node, Path, Step, Text, Coordinate, Scope, RendererModeProvider, useRendererMode, collectHydrationHandlers } from './kernel';
+export { Layout, Node, Path, Step, Text, Coordinate, Scope, RendererModeProvider, useRendererMode, collectHydrationHandlers, isEmbeddableMarked, resolveEmbeddableAdapter } from './kernel';
 export type { RendererMode, RendererModeProviderProps, HydrationEventProps } from './kernel';
+export type {
+  EmbeddableDatasets,
+  EmbeddableContribution,
+  EmbeddableTier2Adapter,
+  EmbeddableContributionRecord,
+} from './kernel';
 // 透传 render 层水合 runtime 类型，方便 react 用户单包 import（事件名 / 注册表 / handler context 类型）
 export type {
   RetikzEventValue,
@@ -145,5 +151,7 @@ export type {
 
 // React 节点 ↔ IR 桥接：buildIR 内部名保留，对外以 convertReactNodeToIR 暴露（命名 pattern 给后续多框架 adapter 留位）
 export { buildIR as convertReactNodeToIR } from './kernel/builder';
+// buildIR + 收集可嵌入 Tier2 贡献（Layout 用）；公开签名与 convertReactNodeToIR 一致、额外返回 contributions
+export { buildIRWithContributions } from './kernel/builder';
 // IR JSON → Kernel element 树（带 key、不裹 TikZ/Fragment 外壳）；Sugar 不可逆——只产 <Node/>/<Path/>/<Step/> 三件套
 export { convertIRToReactNode } from './kernel/unbuilder';

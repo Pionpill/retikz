@@ -145,6 +145,7 @@ import { Layout, RendererModeProvider } from '@retikz/react';
 | `patterns` | `Record<string, PatternDefinition>` | — | 运行时注入的自定义 pattern motif（透传 `CompileOptions.patterns`）；同名覆盖内置发 `PATTERN_OVERRIDES_BUILTIN`。见 [扩展](/core/reference/extending/custom-pattern) |
 | `pathGenerators` | `Record<string, PathGeneratorDefinition>` | — | 运行时注入的自定义 path generator（透传 `CompileOptions.pathGenerators`）；core 不内置曲线，未注册名编译期报错。见 [扩展](/core/reference/extending/path-generator) |
 | `composites` | `Array<CompositeDefinition>` | — | 运行时注入的 Tier 2 composite 展开逻辑（透传 `CompileOptions.composites`）；compile 第一步展开成 Tier 1，未注册 namespace/type 警告并跳过 |
+| `embeddables` | `Array<EmbeddableTier2Adapter>` | — | 可选逃生舱：显式注入可嵌入 Tier 2 adapter；主路径是组件静态标记，按 displayName 匹配并覆盖标记。见 [复合](/core/concepts/design/composite#可嵌入-tier2把-tier2-组件写进-layout) |
 | `color` / `stroke` / `fill` / `strokeWidth` / `opacity` / `fillOpacity` / `drawOpacity` | 同 [`<Scope>`](/core/components/layout/scope) | — | 全图级联 graphic state；设值则把 children 包进隐式根 `<Scope>` |
 | `nodeDefault` / `pathDefault` / `labelDefault` / `arrowDefault` | 同 [`<Scope>`](/core/components/layout/scope) | — | 全图 every-X 默认样式（四通道）；同上挂隐式根 scope |
 | `animate` | `boolean` | `true` | 是否播放动画；`false` 渲染 base 静态图（不 emit CSS/WAAPI、canvas 不起 rAF）。见 [动画](/core/components/animation/control) |
