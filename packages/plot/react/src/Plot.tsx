@@ -105,7 +105,11 @@ const resolvePlotRuntime = (
   } else {
     // DSL 入口：model 经 buildPlotSpec 注入 data.model **并改走 type-driven 派生**（省略 AUTO 位置 scale 绑定，
     // 否则 model 的 temporal/nominal 不会派生 time/band、甚至被当显式 linear 校验）。扁平 fieldMap 映射到数据集名。
-    spec = buildPlotSpec(props.children, dataRef, { coordinate: props.coordinate, model: props.model });
+    spec = buildPlotSpec(props.children, dataRef, {
+      coordinate: props.coordinate,
+      model: props.model,
+      deferPositionScaleInference: props.model === undefined,
+    });
     datasets = { [dataRef]: props.data };
     if (props.fieldMap) effectiveFieldMaps = { [dataRef]: props.fieldMap };
   }

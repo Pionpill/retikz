@@ -98,6 +98,11 @@ export type BuildPlotSpecOptions = {
   coordinate?: CoordinateInput;
   /** 数据模型（字段类型）：声明则进 data.model，并对未显式 <Scale> 的位置维度走 type-driven 派生 */
   model?: DataModel;
+  /**
+   * 延迟位置 scale 推断：省略未显式声明的位置 scale 绑定，让 lowering 按实际数据字段类型派生。
+   * @description 供 `<Plot data>` 入口使用；直接调用 buildPlotSpec 时缺省保持旧的 AUTO linear/band 行为。
+   */
+  deferPositionScaleInference?: boolean;
 };
 
 /** 默认 guide（供 decorateDefaultGuides 复用，薄 <Plot> 本身不补）：x 轴 + y 轴（y 带网格，横线读数值、不过密） */
@@ -400,16 +405,16 @@ export const buildPlotSpec = (children: ReactNode, dataRef: string, options: Bui
   const coordKind = coordinateTypeOf(options.coordinate);
   const explicitScales = collectExplicitScales(collected.scales, coordKind);
 
-  // 有 model 且未显式声明 <Scale> 的维度 → 省略 AUTO 绑定，交给 expand 的 type-driven 派生。
-  // 无 model → 沿用 AUTO 绑定 + 默认推断（向后兼容，存量 DSL 无 model 走此路）。
-  const hasModel = options.model !== undefined;
+  // 有 model 或 Plot 入口要求延迟推断时，未显式声明 <Scale> 的维度省略 AUTO 绑定，交给 expand 按字段类型派生。
+  // 直接调用 buildPlotSpec 且无 model 时，沿用 AUTO 绑定 + 默认推断（向后兼容）。
+  const shouldDeferPositionScales = options.model !== undefined || options.deferPositionScaleInference === true;
   let coordinate: Coordinate;
   let scales: Array<PlotScaleSpec>;
   if (coordKind === 'polar2D') {
     const polar = toPolarConfig(options.coordinate) as PolarConfig;
     const angleScale = buildAngleScale(collected, explicitScales.angle);
     const radiusScale = buildPositionScale(AUTO_RADIUS, explicitScales.radius ?? 'linear');
-    coordinate = hasModel
+    coordinate = shouldDeferPositionScales
       ? {
           type: PlotCoordinate.Polar2D,
           ...(explicitScales.angle !== undefined ? { angle: AUTO_ANGLE } : {}),
@@ -420,17 +425,17 @@ export const buildPlotSpec = (children: ReactNode, dataRef: string, options: Bui
         }
       : { type: PlotCoordinate.Polar2D, angle: AUTO_ANGLE, radius: AUTO_RADIUS, startAngle: polar.startAngle, endAngle: polar.endAngle, innerRadius: polar.innerRadius };
     scales = [
-      ...(!hasModel || explicitScales.angle !== undefined ? [angleScale] : []),
-      ...(!hasModel || explicitScales.radius !== undefined ? [radiusScale] : []),
+      ...(!shouldDeferPositionScales || explicitScales.angle !== undefined ? [angleScale] : []),
+      ...(!shouldDeferPositionScales || explicitScales.radius !== undefined ? [radiusScale] : []),
     ];
   } else if (coordKind === 'cartesian1D') {
     // 单维直线：orientation 取对象配置；单一位置 scale 可由 <Scale dimension="x"> 覆盖（rug 默认 linear、timeline 可 time）
     const orientation = typeof options.coordinate === 'object' && options.coordinate.type === 'cartesian1D' ? options.coordinate.orientation : undefined;
     const xScale = buildCartesianXScale(false, explicitScales.x);
-    coordinate = hasModel
+    coordinate = shouldDeferPositionScales
       ? { type: PlotCoordinate.Cartesian1D, ...(explicitScales.x !== undefined ? { x: AUTO_X } : {}), ...(orientation !== undefined ? { orientation } : {}) }
       : { type: PlotCoordinate.Cartesian1D, x: AUTO_X, ...(orientation !== undefined ? { orientation } : {}) };
-    scales = !hasModel || explicitScales.x !== undefined ? [xScale] : [];
+    scales = !shouldDeferPositionScales || explicitScales.x !== undefined ? [xScale] : [];
   } else if (coordKind === 'polar1D') {
     // 单角向圆周：半径占比 + 角向区间取对象配置；角向 scale 默认 linear（无 model；周期连续量）
     const cfg = typeof options.coordinate === 'object' && options.coordinate.type === 'polar1D' ? options.coordinate : undefined;
@@ -440,8 +445,8 @@ export const buildPlotSpec = (children: ReactNode, dataRef: string, options: Bui
       ...(cfg?.endAngle !== undefined ? { endAngle: cfg.endAngle } : {}),
     };
     const angleScale = buildPositionScale(AUTO_ANGLE, explicitScales.angle ?? 'linear');
-    coordinate = hasModel ? { type: PlotCoordinate.Polar1D, ...(explicitScales.angle !== undefined ? { angle: AUTO_ANGLE } : {}), ...geom } : { type: PlotCoordinate.Polar1D, angle: AUTO_ANGLE, ...geom };
-    scales = !hasModel || explicitScales.angle !== undefined ? [angleScale] : [];
+    coordinate = shouldDeferPositionScales ? { type: PlotCoordinate.Polar1D, ...(explicitScales.angle !== undefined ? { angle: AUTO_ANGLE } : {}), ...geom } : { type: PlotCoordinate.Polar1D, angle: AUTO_ANGLE, ...geom };
+    scales = !shouldDeferPositionScales || explicitScales.angle !== undefined ? [angleScale] : [];
   } else if (coordKind === 'ternary2D') {
     // 三元：coordinate 内自动归一化，无独立位置 scale
     coordinate = { type: PlotCoordinate.Ternary2D };
@@ -455,7 +460,7 @@ export const buildPlotSpec = (children: ReactNode, dataRef: string, options: Bui
   } else {
     const xScale = buildCartesianXScale(collected.hasBar, explicitScales.x);
     const yScale = buildCartesianYScale(explicitScales.y);
-    coordinate = hasModel
+    coordinate = shouldDeferPositionScales
       ? {
           type: PlotCoordinate.Cartesian2D,
           ...(explicitScales.x !== undefined ? { x: AUTO_X } : {}),
@@ -463,8 +468,8 @@ export const buildPlotSpec = (children: ReactNode, dataRef: string, options: Bui
         }
       : { type: PlotCoordinate.Cartesian2D, x: AUTO_X, y: AUTO_Y };
     scales = [
-      ...(!hasModel || explicitScales.x !== undefined ? [xScale] : []),
-      ...(!hasModel || explicitScales.y !== undefined ? [yScale] : []),
+      ...(!shouldDeferPositionScales || explicitScales.x !== undefined ? [xScale] : []),
+      ...(!shouldDeferPositionScales || explicitScales.y !== undefined ? [yScale] : []),
     ];
   }
   if (collected.colored) scales.push(buildColorScale(collected.colorFields, options.model));

@@ -83,6 +83,24 @@ describe('<Plot data>{marks} 组合 DSL（ADR-08）', () => {
     expect(svg).toContain('<text');
   });
 
+  it('dsl_line_categorical_x_infers_point_scale：字符串 x 字段折线自动渲染', () => {
+    const quarterly = [
+      { quarter: 'Q1', revenue: 18 },
+      { quarter: 'Q2', revenue: 24 },
+      { quarter: 'Q3', revenue: 15 },
+      { quarter: 'Q4', revenue: 30 },
+    ];
+    const svg = renderToStaticMarkup(
+      <Plot data={quarterly} width={480} height={300}>
+        <LineMark x="quarter" y="revenue" order="quarter" />
+        <Axis dimension="x" />
+        <Axis dimension="y" grid />
+      </Plot>,
+    );
+    expect(svg).toMatch(/<path[^>]+d="M [^"]+ L [^"]+"/);
+    expect(svg).toContain('Q1');
+  });
+
   // ADR-07：<BarMark> / <Scale>
   it('barmark_renders_rect：<BarMark> 渲出矩形', () => {
     const svg = renderToStaticMarkup(

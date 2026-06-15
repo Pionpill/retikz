@@ -21,6 +21,15 @@ describe('buildPlotSpec model → type-driven 派生（alpha.6 ADR-03，评审 P
     expect(spec.scales.length).toBeGreaterThan(0);
   });
 
+  it('延迟位置 scale 推断时省略 AUTO 绑定（交给 lower 按数据派生）', () => {
+    const spec = buildPlotSpec(<LineMark x="month" y="revenue" />, '__plot', {
+      deferPositionScaleInference: true,
+    });
+    expect(spec.coordinate).toEqual({ type: 'cartesian2D' });
+    expect(spec.scales).toEqual([]);
+    expect(spec.data).toEqual({ reference: '__plot' });
+  });
+
   it('有 model（nominal x）端到端 spec 合法', () => {
     const spec = buildPlotSpec(<LineMark x="cat" y="revenue" />, '__plot', {
       model: [{ name: 'cat', type: 'categorical' }, { name: 'revenue', type: 'continuous' }],

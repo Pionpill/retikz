@@ -21,7 +21,7 @@ import { Axis, BarMark, Plot } from '@retikz/plot-react';
 
 `width × height` is the outer box including axes and tick labels. Children only declare field mappings, never pixel coordinates.
 
-`<Plot>` is a **low-level container**: it collects marks, infers scales and the coordinate system from fields, collects the `<Axis>` / `<Legend>` / `<Scale>` you write, then compiles and renders — but it doesn't draw axes / grid / legend for you. Write `<Axis>` for axes; omit guide children when you only want data marks.
+`<Plot>` is a **low-level container**: it collects marks, infers continuous / categorical / temporal scales from data values, collects the `<Axis>` / `<Legend>` / `<Scale>` you write, then compiles and renders — but it doesn't draw axes / grid / legend for you. Write `<Axis>` for axes; omit guide children when you only want data marks.
 
 ## Examples
 
@@ -29,15 +29,19 @@ import { Axis, BarMark, Plot } from '@retikz/plot-react';
 
 One parent `<Layout>` can contain several `<Plot>` panels. Each chart uses its own `width` / `height` for the outer box, then `transforms` positions that panel inside the parent canvas.
 
-<ComponentPreview name="plot-coordinate" sourceFiles={['plot-cartesian.data.ts']} size="md" />
+<ComponentPreview name="plot-panels" sourceFiles={['plot-cartesian.data.ts']} size="md" />
 
-<p className="text-sm text-muted-foreground">Left: one cartesian Plot panel; right: another Plot panel inside the same Layout.</p>
+<p className="text-sm text-muted-foreground">Left: a cartesian line chart; right: a cartesian bar chart inside the same Layout.</p>
 
 `width` / `height` still describe each chart's own outer box; the parent `<Layout>` size only controls the combined canvas.
 
 ### Coordinates
 
-`coordinate` decides how one `<Plot>` projects data internally. It defaults to `cartesian2D`; the same data can switch to `polar2D`, like the right panel above, to become radial bars.
+`coordinate` decides how one `<Plot>` projects data internally. It defaults to `cartesian2D`; the same data can switch to `polar2D` to become radial bars.
+
+<ComponentPreview name="plot-coordinate" sourceFiles={['plot-cartesian.data.ts']} size="md" />
+
+<p className="text-sm text-muted-foreground">Left: cartesian bars; right: the same data as polar2D radial bars.</p>
 
 `coordinate` accepts a string shorthand or an object, covering the coordinate family:
 
@@ -53,7 +57,7 @@ See [Coordinates](/plot/grammar/coordinate) for each system's geometry options (
 
 ### Explicit Scales
 
-Default scales come from fields and mark types. For dates, log axes, or square-root axes, add a `<Scale>` child to set one coordinate dimension.
+Default scales come from field values and mark types: numbers use continuous axes, ordinary strings use categorical positions, and ISO dates use time axes. To force dates, log axes, or square-root axes, add a `<Scale>` child to set one coordinate dimension.
 
 <ComponentPreview name="plot-scale" sourceFiles={['plot-extra.data.ts']} size="sm" />
 
