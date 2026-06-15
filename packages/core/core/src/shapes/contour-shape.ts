@@ -61,9 +61,6 @@ const worldSegments = (rect: Rect, params: ContourParams): Array<ContourSegment>
  *   实现路径，仅顶点来源不同：polygon 由 rect+sides 推导，contour 直接取 params.points）。命名 anchor 返回
  *   undefined → compile 回退外接 AABB rect；boundaryPoint（指向式）精确命中轮廓。scaleParams：points 是长度
  *   按轴各向异性缩，cornerRadius 是长度按几何均值因子缩（同 polygon）。
- *
- *   NOTE: 当前为 ADR-03 spec 阶段的 STUB 实现——仅满足类型与 schema，真实几何（自动居中 / emit /
- *   boundaryPoint / fillet）由后续 implement 阶段委托轮廓引擎落地。
  */
 export const contour = defineShape({
   paramsSchema: z.strictObject({
