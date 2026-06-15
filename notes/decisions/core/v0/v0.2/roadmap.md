@@ -278,7 +278,7 @@ Scope 直接挂 Node 样式属性（与 `nodeDefault` / `pathDefault` 配合）�
 - [x] v0.2.0-beta.1（2026-05-24 完工：优化窗口 + 最后破坏性清理 6 TODO 全 ✅——TODO-4 **BREAKING 删 `<TikZ>` alias**（export/dev warn/AST 白名单/system prompt/RetikzPreview/4 测试迁移/mdx 描述）；TODO-2 修 unbuilder path round-trip 漏 rotate/scale/marks（改 `pickDefined(PATH_FIELDS)`）+ 补 paint/clip/between/marks 覆盖；TODO-3 makeRound -0 归一；TODO-1 注释去"历史 SVG"；TODO-5 discriminator 约定写进 AGENTS；TODO-6 schema 字段名审查无改。Stage 2 独立 Opus 等价性+收益审计无 BLOCKING；core 1564 / react 286 / docs 全绿；详 [`v0.2-beta.1.md`](./beta.1/roadmap.md)）
 - [x] v0.2.0-beta.2（2026-06-01 完工：**`<Layout>` 顶层级联样式（隐式根 Scope）**——ADR-01 有意破例在 beta 接新功能 props：`LayoutProps` 加 `ScopeStyleProps` 11 字段（`color` / `stroke` / `fill` / `strokeWidth` / `opacity` / `fillOpacity` / `drawOpacity` + 四通道 default），设值时把 children 包进合成根 `<Scope>`，编译产物 = 手写根 `<Scope>` 同一 IR；复用 `IRScope` / compile cascade，**core 零改动**；`_fields.ts` 抽共享 `ScopeStyleProps` + `SCOPE_STYLE_FIELDS` 互锁，`Scope.tsx` 复用；`wrapRootScope` / `pickScopeStyle` 落 builder（空对象 default 不包空 scope）；与 `ir` prop 并用 dev warn + 忽略；Adversarial 无 BLOCKING（W1 空对象修 + 测；W2/W3 评估保留）；ComponentPreview IR 面板复刻隐式 scope；react 302 / docs 74 全绿；ADR-01 Accepted）
 - [x] v0.2.0-rc.1（2026-06-02 发布：**候选发布 + 公开 API 冻结**——自 rc 起 IR schema 字段名 / 公开导出名 / 函数签名 / 公开 type / 组件名冻结，只接 bug fix 到 0.2.0 stable；自 beta.2 起 core/react src 零功能改动，rc.1 为纯阶段里程碑；core/react 同版 publish `--tag next`，versionTag → `v0.2 rc`）
-- [ ] v0.2.0
+- [x] v0.2.0（2026-06-03 发布：**0.2.0 正式版 / stable**——自 rc.1 起 core/react src 零功能改动（中间仅 docs demo 切页失步 bug fix），公开 API 冻结如期兑现；`stableDate` 落 2026-06-03，versionTag → `v0.2`（去 channel），打 tag `v0.2.0`；core/react 同版 publish 走默认 `latest`）
 
 ## 与 v0.1 衔接
 

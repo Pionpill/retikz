@@ -133,7 +133,8 @@ export const DocPageActions: FC<DocPageActionsProps> = props => {
             <span className="hidden sm:inline">{t('page.copyPage')}</span>
           </Button>
           <ButtonGroupSeparator />
-          <DropdownMenu>
+          {/* modal={false}：同 HeaderActions，避免 body[data-scroll-locked] 破坏窗口级 sticky 顶栏（页面下滑时点开会把 header 顶出视口） */}
+          <DropdownMenu modal={false}>
             <Button asChild variant="secondary" size="icon" className="h-8 w-7 cursor-pointer">
               <DropdownMenuTrigger aria-label={t('page.openInGroup')}>
                 <ChevronDown className="size-3.5" />

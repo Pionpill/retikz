@@ -15,7 +15,7 @@ import { AiChatSettings } from './parts/AiChatSettings';
 /**
  * AI 聊天面板内容（与容器无关，由调用方决定 sizing context）
  * @description 桌面 ViewLayout 把它放进 ResizablePanel 内的 sticky h-screen aside；
- *   移动 ViewLayout 把它放进 bottom Sheet 的 h-[80vh] 容器。组件本身只负责
+ *   移动 ViewLayout 把它放进 bottom Sheet 的 h-dvh（全高）容器。组件本身只负责
  *   内部布局：`flex h-full flex-col`。
  *
  *   单层顶栏：左侧动态会话标题（点击 inline 改名）+ 右侧 [+ New] / History / Settings / X。

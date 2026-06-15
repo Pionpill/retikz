@@ -6,6 +6,7 @@
     "searchHint": "搜索文档",
     "pageCount": "{{count}} 页",
     "notFound": "页面不存在：/{{section}}/{{page}}",
+    "versionTag": "v0.3",
     "contentPlaceholder": "{{title}} —— 该文档暂未提供正文。",
     "github": "GitHub",
     "githubRepo": "Pionpill/retikz",
@@ -132,11 +133,6 @@
     "refLowering": "下沉"
   },
   "blog": {
-    "label": "博客",
-    "design": "设计理念",
-    "journey": "开发历程",
-    "journeyOrigin": "retikz 的起点",
-    "designCorePhilosophy": "retikz 核心理念",
     "notTranslatedYet": "本文尚未提供英文版，以下为中文原文",
     "exportMarkdownCopy": "复制 Markdown",
     "exportMarkdownDownload": "下载 .md",
@@ -146,6 +142,9 @@
   "about": {
     "label": "关于",
     "overview": "总览",
+    "blog": "博客",
+    "blogCorePhilosophy": "retikz 核心理念",
+    "blogOrigin": "retikz 的起点",
     "developer": "开发者",
     "sourceCodeGuide": "源码指南",
     "aiAssistedDevelopment": "AI 辅助开发",
