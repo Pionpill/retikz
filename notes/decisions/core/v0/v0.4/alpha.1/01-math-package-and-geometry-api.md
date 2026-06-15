@@ -79,7 +79,7 @@
 
 - core 如何接入 math、公开面 re-export、arc / contour 消费方改线——[ADR-02](./02-core-pure-geometry-sink.md)。
 - `point.toPolar` / `equalPolar` 移除——[ADR-03](./03-point-polar-surface-fix.md)。
-- `curve/`（贝塞尔）、`matrix/`（伪三维）、`bend.ts` 下沉、形状 `contains`/`boundaryPoint` 下沉——roadmap 已列后置。
+- `curve/`（贝塞尔）、`matrix/`（伪三维）、`bend.ts` 下沉、形状 `contains`/`boundaryPoint` 下沉——roadmap 已列后置。（更新：`curve/` 已于 2026-06-15 人工拍板提前到 [alpha.3 ADR-02](../alpha.3/02-smooth-curve-through-points.md) 开启，承载 Catmull-Rom → cubic；其余仍后置。）
 
 ---
 
