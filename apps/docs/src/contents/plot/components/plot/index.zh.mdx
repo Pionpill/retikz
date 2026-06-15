@@ -25,15 +25,19 @@ import { Axis, BarMark, Plot } from '@retikz/plot-react';
 
 ## 例子
 
-### 坐标轴
+### 面板组合
 
-`coordinate` 是图表级开关——同一份 `children`，缺省是 cartesian，加 `"polar2D"` 即极坐标。mark 不分两套，坐标系决定几何。
+同一个父级 `<Layout>` 可以放多张 `<Plot>`。每张图用自己的 `width` / `height` 决定外框，再用 `transforms` 在父画布中摆位。
 
 <ComponentPreview name="plot-coordinate" sourceFiles={['plot-cartesian.data.ts']} size="md" />
 
-<p className="text-sm text-muted-foreground">左：缺省 cartesian；右：仅加 <code>coordinate="polar2D"</code>。</p>
+<p className="text-sm text-muted-foreground">左：一张 cartesian Plot 面板；右：同一个 Layout 里的另一张 Plot 面板。</p>
 
-这个示例把两张 `<Plot>` 放进同一个 `<Layout>`。`width` / `height` 仍是每张图自己的外框尺寸；`transforms` 负责把这张图在父级画布里摆到目标位置。
+`width` / `height` 仍是每张图自己的外框尺寸；父级 `<Layout>` 的尺寸只决定整张组合图的画布。
+
+### 坐标系
+
+`coordinate` 决定单张 `<Plot>` 内部怎么投影数据。缺省是 `cartesian2D`；同一份数据也可以切到 `polar2D`，就像上面右侧面板那样变成径向柱图。
 
 `coordinate` 支持字符串简写和对象两种形态，覆盖坐标系族：
 
@@ -47,14 +51,36 @@ import { Axis, BarMark, Plot } from '@retikz/plot-react';
 
 各坐标系的几何配置（polar 的 `innerRadius` / `startAngle` / `endAngle`、cartesian1D 的 `orientation`、polar1D 的 `radius` 等）与适用的 mark / 通道见 [坐标系](/plot/grammar/coordinate)。
 
-## 入口形态
+### 显式比例尺
+
+默认 scale 来自字段和 mark 类型。遇到日期、对数轴或平方根轴时，在 `<Plot>` 里写 `<Scale>` 子组件指定某个维度。
+
+<ComponentPreview name="plot-scale" sourceFiles={['plot-extra.data.ts']} size="sm" />
+
+<p className="text-sm text-muted-foreground">这里把 x 维度声明为 time scale，坐标轴刻度按时间边界格式化。</p>
+
+### 数据模型与字段映射
+
+真实数据的字段名经常和图表里的逻辑字段名不同。声明 `model` 后，`fieldMap` 可以把逻辑字段映射到真实数据路径；mark 仍然只引用逻辑名。
+
+<ComponentPreview name="plot-field-map" sourceFiles={['plot-extra.data.ts']} size="sm" />
+
+<p className="text-sm text-muted-foreground">数据里是 period / amount，图里仍写 date / visits。</p>
+
+### 入口形态
 
 `<Plot>` 有两条入口，按是否传 `spec` 分流：
 
 | 入口 | 必填 | 适用 |
 | --- | --- | --- |
-| 组合 DSL | `data`（裸数组）+ `children` | 手写 JSX 声明 mark / guide（最常用） |
+| 组合 DSL | `data`（裸数组）+ `children` | 手写 JSX 声明 mark / guide / scale（最常用） |
 | spec 入口 | `spec`（已构造 PlotSpec）+ `data`（数据集表） | 持久化 / AI 生成的完整 spec 直喂 |
+
+当图表配置来自持久化 JSON 或 AI 生成结果时，可以直接传 `spec`。数据仍然单独通过 `data` 表注入，不写进 PlotSpec。
+
+<ComponentPreview name="plot-spec-entry" sourceFiles={['plot-cartesian.data.ts']} size="sm" />
+
+<p className="text-sm text-muted-foreground">spec 入口跳过 JSX 子组件收集，直接把 PlotSpec 交给 lowering。</p>
 
 ## 技术原理
 

@@ -25,15 +25,19 @@ import { Axis, BarMark, Plot } from '@retikz/plot-react';
 
 ## Examples
 
-### Axes
+### Panel Composition
 
-`coordinate` is a chart-level switch — for the same `children`, the default is cartesian and adding `"polar2D"` makes it polar. Marks aren't split into two variants; the coordinate system decides the geometry.
+One parent `<Layout>` can contain several `<Plot>` panels. Each chart uses its own `width` / `height` for the outer box, then `transforms` positions that panel inside the parent canvas.
 
 <ComponentPreview name="plot-coordinate" sourceFiles={['plot-cartesian.data.ts']} size="md" />
 
-<p className="text-sm text-muted-foreground">Left: default cartesian; right: only <code>coordinate="polar2D"</code> added.</p>
+<p className="text-sm text-muted-foreground">Left: one cartesian Plot panel; right: another Plot panel inside the same Layout.</p>
 
-This example places two `<Plot>` panels inside one `<Layout>`. `width` / `height` still describe each chart's own outer box; `transforms` positions that chart inside the parent canvas.
+`width` / `height` still describe each chart's own outer box; the parent `<Layout>` size only controls the combined canvas.
+
+### Coordinates
+
+`coordinate` decides how one `<Plot>` projects data internally. It defaults to `cartesian2D`; the same data can switch to `polar2D`, like the right panel above, to become radial bars.
 
 `coordinate` accepts a string shorthand or an object, covering the coordinate family:
 
@@ -47,14 +51,36 @@ This example places two `<Plot>` panels inside one `<Layout>`. `width` / `height
 
 See [Coordinates](/plot/grammar/coordinate) for each system's geometry options (polar's `innerRadius` / `startAngle` / `endAngle`, cartesian1D's `orientation`, polar1D's `radius`, …) and which marks / channels apply.
 
-## Entry forms
+### Explicit Scales
+
+Default scales come from fields and mark types. For dates, log axes, or square-root axes, add a `<Scale>` child to set one coordinate dimension.
+
+<ComponentPreview name="plot-scale" sourceFiles={['plot-extra.data.ts']} size="sm" />
+
+<p className="text-sm text-muted-foreground">The x dimension uses a time scale, so axis ticks format as time boundaries.</p>
+
+### Data Models And Field Maps
+
+Real data often uses field names that differ from the chart's logical names. With `model` declared, `fieldMap` maps logical fields to the actual data paths; marks still reference the logical names.
+
+<ComponentPreview name="plot-field-map" sourceFiles={['plot-extra.data.ts']} size="sm" />
+
+<p className="text-sm text-muted-foreground">The data rows use period / amount; the chart still writes date / visits.</p>
+
+### Entry Forms
 
 `<Plot>` has two entries, dispatched by whether `spec` is passed:
 
 | Entry | Required | Use |
 | --- | --- | --- |
-| Composition DSL | `data` (raw array) + `children` | Declare marks / guides in JSX (the common case) |
+| Composition DSL | `data` (raw array) + `children` | Declare marks / guides / scales in JSX (the common case) |
 | Spec entry | `spec` (built PlotSpec) + `data` (dataset table) | Feed a persisted / AI-generated spec directly |
+
+When chart configuration comes from persisted JSON or an AI-generated result, pass `spec` directly. Data is still injected separately through the `data` table, not written into the PlotSpec.
+
+<ComponentPreview name="plot-spec-entry" sourceFiles={['plot-cartesian.data.ts']} size="sm" />
+
+<p className="text-sm text-muted-foreground">The spec entry skips JSX child collection and sends the PlotSpec straight to lowering.</p>
 
 ## How it works
 
