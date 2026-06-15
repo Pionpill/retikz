@@ -1,3 +1,4 @@
+import { minimalEnclosingCircle } from '@retikz/math';
 import { type Rect, rect as rectOps } from '../geometry/rect';
 import type {
   IRAtPosition,
@@ -231,6 +232,23 @@ export type ScopeBoundingBox = {
   height: number;
 };
 
+/** 收集一组 NodeLayout 的全局 4 角点（rotate-aware outerRect 四角），供 AABB / MEC 等包络复用 */
+export const collectScopeCornerPoints = (
+  layouts: ReadonlyArray<NodeLayout>,
+): Array<IRPosition> => {
+  const points: Array<IRPosition> = [];
+  for (const layout of layouts) {
+    const outerRect = outerRectOf(layout);
+    points.push(
+      rectOps.anchor(outerRect, 'north-west'),
+      rectOps.anchor(outerRect, 'north-east'),
+      rectOps.anchor(outerRect, 'south-west'),
+      rectOps.anchor(outerRect, 'south-east'),
+    );
+  }
+  return points;
+};
+
 /**
  * 收集一组 NodeLayout 的全局 axis-aligned bounding box
  * @description 每个 layout 的 4 角点已是全局坐标系（Pass 1 累积 chain apply 后），
@@ -243,33 +261,14 @@ export const computeScopeBoundingBox = (
   layouts: ReadonlyArray<NodeLayout>,
 ): ScopeBoundingBox | null => {
   if (layouts.length === 0) return null;
-  let minX = Infinity;
-  let minY = Infinity;
-  let maxX = -Infinity;
-  let maxY = -Infinity;
-  for (const layout of layouts) {
-    // 4 角点取 rotate-aware 投影后的全局坐标——rect.anchor 已包含 rect.rotate；
-    // node 含 outerSep 时 scope bbox 也按外边界（rect + margin）算，与顶层 viewBox 口径一致
-    const outerRect = outerRectOf(layout);
-    const corners: ReadonlyArray<IRPosition> = [
-      rectOps.anchor(outerRect, 'north-west'),
-      rectOps.anchor(outerRect, 'north-east'),
-      rectOps.anchor(outerRect, 'south-west'),
-      rectOps.anchor(outerRect, 'south-east'),
-    ];
-    for (const [cx, cy] of corners) {
-      if (cx < minX) minX = cx;
-      if (cy < minY) minY = cy;
-      if (cx > maxX) maxX = cx;
-      if (cy > maxY) maxY = cy;
-    }
+  let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+  for (const [cx, cy] of collectScopeCornerPoints(layouts)) {
+    if (cx < minX) minX = cx;
+    if (cy < minY) minY = cy;
+    if (cx > maxX) maxX = cx;
+    if (cy > maxY) maxY = cy;
   }
-  return {
-    x: (minX + maxX) / 2,
-    y: (minY + maxY) / 2,
-    width: maxX - minX,
-    height: maxY - minY,
-  };
+  return { x: (minX + maxX) / 2, y: (minY + maxY) / 2, width: maxX - minX, height: maxY - minY };
 };
 
 /**
@@ -295,6 +294,37 @@ export const registerScopeAsLayout = (
     margin: 0,
     textWidth: box.width,
     textHeight: box.height,
+    align: 'middle',
+    lineHeight: 0,
+    fontSize: 0,
+    shapes,
+  };
+};
+
+/**
+ * 用 scope id + 子树点集的最小外接圆构造 synthetic circle NodeLayout
+ * @description 复用 ellipse + circumscribe:'equal' 的既有圆形 anchor/boundary 路径（与 `<Node shape="circle">` 一致），
+ *   零新 anchor 代码。空点集 / MEC 退化时落 fallbackOrigin 的 0 半径占位。
+ */
+export const registerScopeCircleLayout = (
+  id: string,
+  cornerPoints: ReadonlyArray<IRPosition>,
+  fallbackOrigin: IRPosition,
+  shapes: Record<string, ShapeDefinition> = BUILTIN_SHAPES,
+): NodeLayout => {
+  const mec = cornerPoints.length > 0 ? minimalEnclosingCircle([...cornerPoints]) : null;
+  const center: IRPosition = mec ? [mec.center[0], mec.center[1]] : fallbackOrigin;
+  const diameter = mec ? mec.radius * 2 : 0;
+  return {
+    id,
+    shapeName: 'ellipse',
+    shapeDef: shapes.ellipse,
+    shapeParams: { circumscribe: 'equal' },
+    rect: { x: center[0], y: center[1], width: diameter, height: diameter, rotate: 0 },
+    rotateDeg: 0,
+    margin: 0,
+    textWidth: diameter,
+    textHeight: diameter,
     align: 'middle',
     lineHeight: 0,
     fontSize: 0,

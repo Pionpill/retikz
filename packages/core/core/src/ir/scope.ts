@@ -10,6 +10,23 @@ import { type IRNode, NodeSchema } from './node';
 import { type IRPath, PathSchema } from './path';
 import { ArrowDetailSchema } from './path/arrow';
 import { type IRTransform, TransformSchema } from './transform';
+import type { ValueOf } from '../types';
+
+/**
+ * scope.id synthetic 包络形状（受控枚举）
+ * @description 'rectangle'（轴对齐外接矩形 AABB，默认）/ 'circle'（最小外接圆 Welzl）。
+ *   与 Node `shape` / `boundary` 的开放 shape 系统不同：把任意子树点集包进某形状需要逐形状的
+ *   "最小外接 X" 算法，无法走 ShapeRegistry 借用任意已注册 shape，故为闭集枚举而非开放 shape 引用。
+ */
+export const ScopeBoundingShape = {
+  /** 轴对齐外接矩形（默认） */
+  Rectangle: 'rectangle',
+  /** 最小外接圆 */
+  Circle: 'circle',
+} as const;
+
+/** scope 包络形状名联合（'rectangle' | 'circle'） */
+export type ScopeBoundingShapeValue = ValueOf<typeof ScopeBoundingShape>;
 
 // ===========================================================================
 // every-X 四通道默认 schema —— 各从对应元素 schema `.omit()` 派生（单一真源，禁手抄）
@@ -120,6 +137,7 @@ export type IRScope = {
   resetStyle?: boolean | Array<StyleChannel>;
   zIndex?: number;
   clip?: IRClipSpec;
+  boundingShape?: ScopeBoundingShapeValue;
   meta?: IRJsonObject;
   animations?: Array<IRAnimationTrack>;
   children: Array<IRNode | IRPath | IRCoordinate | IRScope | IRComposite>;
@@ -243,6 +261,12 @@ export const ScopeSchema = z
     clip: ClipSpecSchema.optional().describe(
       'Clip region (rect / circle / ellipse / polygon, in scope-local coords); when set, node children of this scope are clipped to it. Compiled into a renderer-agnostic ClipResource referenced via the group clipRef. Known limitation: a path child of a scope that ALSO has transforms is currently emitted at the top level (its geometry is already resolved to global coords) and is therefore NOT clipped by this region; tracked for the local-coordinate path-compile rework.',
     ),
+    boundingShape: z
+      .enum(ScopeBoundingShape)
+      .optional()
+      .describe(
+        "Shape of the synthetic bounding envelope for this scope's `id` layout. Controlled enum: 'rectangle' (axis-aligned bbox, default) or 'circle' (minimal enclosing circle). Unlike Node `shape` / `boundary`, this is a closed set, not an open shape reference — enclosing an arbitrary point set requires a per-shape minimal-enclosing algorithm, so it does not borrow from the shape registry. Lets external refs/anchors land on the real envelope boundary.",
+      ),
     meta: JsonObjectSchema.optional().describe(
       'Opaque provenance metadata carried by this element (e.g. a Tier 2 lowering tagging which datum / series / layer it came from). Provenance passthrough: preserved verbatim into the Scene primitive(s) this element emits, ignored by renderers, and never interpreted by the compiler — it does not affect layout, connection, style, or bounding box. Must be a JSON object (fully serializable). Not inherited across scopes; not part of the every-X style defaults.',
     ),

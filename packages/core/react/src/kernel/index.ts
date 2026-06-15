@@ -4,6 +4,7 @@ export * from './Path';
 export * from './Step';
 export * from './Text';
 export * from './Coordinate';
+export * from './embeddable';
 export * from './Scope';
 export * from './renderer-context';
 export * from './RendererModeProvider';

@@ -5,3 +5,4 @@ export * from './intersect';
 export * from './triangle';
 export * from './polygon';
 export * from './hull';
+export * from './enclose';

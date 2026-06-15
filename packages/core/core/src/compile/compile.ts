@@ -1,5 +1,6 @@
 import { rect as rectOps } from '../geometry/rect';
 import type { IR, IRAnimationTrack, IRChild, IRPath, IRPosition, IRTransform } from '../ir';
+import { ScopeBoundingShape } from '../ir';
 import type { GroupPrim, Scene, ScenePrimitive, Transform } from '../primitive';
 import { BUILTIN_SHAPES } from '../shapes';
 import type { ShapeDefinition } from '../shapes';
@@ -24,10 +25,12 @@ import { resolvePosition } from './position';
 import { DEFAULT_PRECISION, createRound } from './precision';
 import {
   applyTransformChain,
+  collectScopeCornerPoints,
   computeScopeBoundingBox,
   lowerScopeTransforms,
   projectLayoutToGlobal,
   registerScopeAsLayout,
+  registerScopeCircleLayout,
 } from './scope';
 import {
   type StyleFrame,
@@ -614,10 +617,21 @@ export const compileToScene = (ir: IR, options: CompileOptions = {}): Scene => {
           );
           // 子树 register 完毕，先用真 bbox 覆盖 placeholder（仍在本 scope frame 上下文），再 resolve 本 scope 内 paths
           if (child.id) {
-            const bbox = computeScopeBoundingBox(innerLayouts);
             const fallbackOrigin: IRPosition =
               innerChain.length === 0 ? [0, 0] : applyTransformChain([0, 0], innerChain);
-            const bboxLayout = registerScopeAsLayout(child.id, bbox, fallbackOrigin, effectiveShapes);
+            let bboxLayout: NodeLayout;
+            // boundingShape 是受控枚举（'rectangle' | 'circle'）；非法值已被 schema 在 parse 边界拒绝，
+            // 此处 'circle' 走最小外接圆，其余（含缺省 / 'rectangle'）走 AABB
+            if (child.boundingShape === ScopeBoundingShape.Circle) {
+              bboxLayout = registerScopeCircleLayout(
+                child.id,
+                collectScopeCornerPoints(innerLayouts),
+                fallbackOrigin,
+                effectiveShapes,
+              );
+            } else {
+              bboxLayout = registerScopeAsLayout(child.id, computeScopeBoundingBox(innerLayouts), fallbackOrigin, effectiveShapes);
+            }
             // 用 replaceLayout 覆盖不触发 duplicate warn（placeholder → real bbox 是预期升级）
             nameStack.replaceLayout(child.id, bboxLayout, parentFrameDepth, placeholderLayout);
             // 嵌套 scope.id：把本层 synthetic bbox layout 合并进外层 layoutsAccumulator，

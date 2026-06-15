@@ -36,8 +36,9 @@ import {
 import { buildSvgDocument } from '@retikz/render/svg';
 import { bindWaapiDescriptors, sceneHasAnimations } from '@retikz/render/animation';
 import type { AnimationControls, AnimationPropertyRegistry, EasingRegistry } from '@retikz/render/animation';
-import { buildIR, pickScopeStyle, wrapRootScope } from './builder';
+import { buildIRWithContributions, pickScopeStyle, wrapRootScope } from './builder';
 import { collectHydrationHandlers } from './collect-hydration-handlers';
+import type { EmbeddableContributionRecord, EmbeddableTier2Adapter } from './embeddable';
 import { useRendererMode } from './renderer-context';
 import type { ScopeStyleProps } from './_fields';
 import { browserMeasurer } from '../render/browser-measurer';
@@ -73,6 +74,47 @@ const withDefaultFontFamily = (
 const assignRef = <T,>(ref: Ref<T> | undefined, value: T): void => {
   if (typeof ref === 'function') ref(value);
   else if (ref) (ref as MutableRefObject<T>).current = value;
+};
+
+/**
+ * 按 namespace 分组合并可嵌入贡献，产出 composite 定义列表
+ * @description 同 namespace 的 datasets 合并成一份（同一 reference 出现多次必须是同一对象引用，否则 fail-loud），
+ *   每组调一次 makeComposites(mergedDatasets)，组间 concat。不同 namespace 的 reference 天然不互相干扰。
+ */
+const aggregateEmbeddableComposites = (
+  contributions: ReadonlyArray<EmbeddableContributionRecord>,
+): Array<CompositeDefinition> => {
+  // 按 namespace 分组（保持首次出现顺序）：merged 合并 datasets，maker 取该组任一 makeComposites（同 namespace 等价）
+  const order: Array<string> = [];
+  const groups = new Map<
+    string,
+    { merged: Record<string, unknown>; maker: (merged: Record<string, unknown>) => Array<CompositeDefinition> }
+  >();
+  for (const contribution of contributions) {
+    const { namespace, datasets, makeComposites } = contribution;
+    let group = groups.get(namespace);
+    if (group === undefined) {
+      group = { merged: {}, maker: makeComposites };
+      groups.set(namespace, group);
+      order.push(namespace);
+    }
+    for (const ref of Object.keys(datasets)) {
+      // 同 namespace 内同一 reference 复用必须指向同一对象引用，否则共享语义崩坏——fail-loud
+      if (ref in group.merged && group.merged[ref] !== datasets[ref]) {
+        throw new Error(
+          `[retikz] <Layout>: 数据集 reference "${ref}" 在同一 namespace "${namespace}" 的多个可嵌入贡献中指向不同对象引用——共享同源数据请复用同一 data 对象。`,
+        );
+      }
+      group.merged[ref] = datasets[ref];
+    }
+  }
+  const out: Array<CompositeDefinition> = [];
+  for (const namespace of order) {
+    const group = groups.get(namespace);
+    if (group === undefined) continue;
+    out.push(...group.maker(group.merged));
+  }
+  return out;
 };
 
 /**
@@ -187,6 +229,12 @@ export type LayoutProps = ScopeStyleProps & {
    *   未注册 namespace/type → 警告并跳过。展开始终在 core，不在 React 层。
    */
   composites?: Array<CompositeDefinition>;
+  /**
+   * 可选：显式注入的可嵌入 Tier2 适配器列表（逃生舱）
+   * @description 主路径是子组件静态属性（Component.isTier2Embeddable + embeddableAdapter）自动识别；
+   *   本 prop 用于测试注入 / 显式控制 / 未挂静态属性的 domain。按 adapter.displayName 匹配子组件，覆盖静态属性。
+   */
+  embeddables?: Array<EmbeddableTier2Adapter>;
 };
 
 /**
@@ -243,7 +291,7 @@ const useSvgRootBinding = (
  *   `@retikz/render/svg`，react 只做 `SvgNode→ReactElement` 薄映射 + `useId` 绑定。
  */
 export const Layout: FC<LayoutProps> = props => {
-  const { ir: irFromProp, children, width, height, viewBox, className, style, renderer: rendererProp, animate: animateProp, snapshotAt, animationRef, animations: rootAnimations, easings, animationProperties, idPrefix, nodeDistance, shapes, arrows, patterns, pathGenerators, composites, handlers } = props;
+  const { ir: irFromProp, children, width, height, viewBox, className, style, renderer: rendererProp, animate: animateProp, snapshotAt, animationRef, animations: rootAnimations, easings, animationProperties, idPrefix, nodeDistance, shapes, arrows, patterns, pathGenerators, composites, embeddables, handlers } = props;
   const animate = animateProp !== false;
   const { color, stroke, fill, strokeWidth, opacity, fillOpacity, drawOpacity, nodeDefault, pathDefault, labelDefault, arrowDefault } = props;
   // 渲染目标：显式 prop > 祖先 RendererModeProvider 注入的 context > 默认 svg（hook 必须无条件调用）
@@ -266,21 +314,34 @@ export const Layout: FC<LayoutProps> = props => {
 
   // 性能边界：children 模式下 `children` 每次 render 都是新引用，本 memo 几乎不命中 → 每 render 重跑 buildIR + compileToScene。
   // 频繁重渲染且图较大时，建议改用持久化的 `ir` prop（irFromProp 引用稳定，memo 才有效）。
+  // ir prop 模式无 children 遍历（贡献为空）；children 模式经 buildIRWithContributions 同源收集 IR + 可嵌入贡献
+  const built = useMemo(
+    () =>
+      irFromProp !== undefined
+        ? { ir: irFromProp, contributions: [] as Array<EmbeddableContributionRecord> }
+        : buildIRWithContributions(wrapRootScope(children, scopeStyle), embeddables),
+    [irFromProp, children, scopeStyle, embeddables],
+  );
   const ir = useMemo(() => {
-    const base = irFromProp ?? buildIR(wrapRootScope(children, scopeStyle));
+    const base = built.ir;
     // viewBox prop 注入 IR 根（显式 > IR 内置）；prop 缺省时保留 base 自带的 viewBox
     const withViewBox = viewBox !== undefined ? { ...base, viewBox } : base;
     // animations prop 注入 IR 根（镜头，cameraTo）；缺省保留 base 自带
     return rootAnimations !== undefined ? { ...withViewBox, animations: rootAnimations } : withViewBox;
-  }, [irFromProp, children, viewBox, rootAnimations, scopeStyle]);
+  }, [built, viewBox, rootAnimations]);
+  // 可嵌入贡献按 namespace 聚合成 composite 定义，再拼接用户显式 composites（用户优先级后置、可覆盖语义由 compile 决定）
+  const aggregatedComposites = useMemo(() => {
+    const fromEmbeddables = aggregateEmbeddableComposites(built.contributions);
+    return composites !== undefined ? [...fromEmbeddables, ...composites] : fromEmbeddables;
+  }, [built.contributions, composites]);
   const defaultFontFamily = styleFontFamily(style);
   const measureText = useMemo(
     () => withDefaultFontFamily(browserMeasurer, defaultFontFamily),
     [defaultFontFamily],
   );
   const scene = useMemo(
-    () => compileToScene(ir, { measureText, nodeDistance, shapes, arrows, patterns, pathGenerators, composites }),
-    [ir, measureText, nodeDistance, shapes, arrows, patterns, pathGenerators, composites],
+    () => compileToScene(ir, { measureText, nodeDistance, shapes, arrows, patterns, pathGenerators, composites: aggregatedComposites }),
+    [ir, measureText, nodeDistance, shapes, arrows, patterns, pathGenerators, aggregatedComposites],
   );
 
   // useId 返回 ":r0:" 含冒号；SVG `url(#id)` 对冒号兼容性差，剥成纯字母数字。caller 显式 idPrefix 优先（SSR 水合对齐）
@@ -293,8 +354,8 @@ export const Layout: FC<LayoutProps> = props => {
 
   // 水合 handler 注册表：JSX 模式从 children 同源收集，`ir` prop 模式用 `handlers` prop（无 children 可收集）
   const resolvedHandlers = useMemo(
-    () => (irFromProp !== undefined ? (handlers ?? {}) : collectHydrationHandlers(children)),
-    [irFromProp, handlers, children],
+    () => (irFromProp !== undefined ? (handlers ?? {}) : collectHydrationHandlers(children, embeddables)),
+    [irFromProp, handlers, children, embeddables],
   );
 
   // svg root 的 callback ref——水合控制器（createHydrationController + locateSvg）+ 交互动画 WAAPI 桥绑定的 figure root

@@ -137,6 +137,14 @@ scope.id 也可作为 `polar.origin` / `at.of` / `offset.of` referent（取 bbox
 
 bbox 计算时机 / 嵌套规则 / 哪些 layout 参与详见 § 技术原理 §「scope.id synthetic bbox」。
 
+### scope 边界多态
+
+`boundingShape` 让 scope.id 句柄按指定形状取包络，而非默认的轴对齐矩形（AABB）。缺省 / `'rectangle'` 逐字不变；`'circle'` 取子树点集的**最小外接圆**——`cluster.<anchor>` / `cluster.<deg>` 与连线端点都落在**圆周**上，适合圆形 / polar 面板的连接：
+
+<ComponentPreview name="scope-bounding-shape" size="sm" />
+
+`boundingShape` 是受控枚举：只接受 `'rectangle'`（默认）与 `'circle'`，枚举外的值由 schema 在 parse 边界直接拒绝。`'polygon'` / `'ellipse'` 缓做（各需独立的最小外接算法）；这是有意设计为闭集，而非 Node `shape` / `boundary` 那种开放 shape 引用。
+
 ### scope 内相对定位
 
 scope 内 node / coordinate / path step.to 用 polar / at / offset 时，referent 取全局、relative 跟着当前 scope rotate / scale 走：
@@ -300,7 +308,7 @@ scope 内 `<Node>` / `<Coordinate>` / `<Path>` `Step.to` 使用 `PolarPosition` 
 
 ### scope.id synthetic bbox
 
-`<Scope id="X">` 设值后，compile 在 Pass 1 子树结束时收集子树**全部** layout（node / coordinate / 嵌套 scope.id bbox）的轴对齐**全局 bounding box**，注册为一条 `rectangle` synthetic `NodeLayout`（id = `X`）到**父 namespace frame**。
+`<Scope id="X">` 设值后，compile 在 Pass 1 子树结束时收集子树**全部** layout（node / coordinate / 嵌套 scope.id bbox）的全局点集，注册一条 synthetic `NodeLayout`（id = `X`）到**父 namespace frame**：缺省 / `boundingShape='rectangle'` 取轴对齐 AABB（`rectangle` 形态）；`boundingShape='circle'` 取点集**最小外接圆**（`ellipse` + `circumscribe:'equal'` 形态，圆心 + 半径来自 MEC）。
 
 | 项 | 行为 |
 |---|---|
@@ -308,7 +316,8 @@ scope 内 `<Node>` / `<Coordinate>` / `<Path>` `Step.to` 使用 `PolarPosition` 
 | **bbox 输入** | 子树全部 `NodeLayout` 的 4 角点（含累积 rotate / scale 后的全局坐标）求轴对齐 AABB |
 | **不计入 bbox** | path 走线端点（move / line `to`）—— 与 TikZ `local bounding box` 默认一致 |
 | **注册位置** | **父 frame**（不受自身 `localNamespace` 影响）——scope.id 是外部句柄 |
-| **形态** | synthetic rectangle `NodeLayout`，`rect.rotate=0`（轴对齐） |
+| **形态** | 默认 synthetic rectangle `NodeLayout`，`rect.rotate=0`（轴对齐）；`boundingShape='circle'` 时为 ellipse(`circumscribe:'equal'`) 形态、rect 为 MEC 的正方外接框 |
+| **boundingShape** | 可选包络形状——**受控枚举**（`'rectangle'` \| `'circle'`），非 Node `shape` / `boundary` 那种开放 shape 引用：缺省 / `'rectangle'` = AABB；`'circle'` = 子树点集最小外接圆（消费 `@retikz/math` 的 `minimalEnclosingCircle`）；枚举外的值由 schema 在 parse 边界拒绝。`polygon` / `ellipse` 缓做（各需独立的最小外接算法） |
 | **作为 anchor referent** | 9 个命名 anchor + 数字角度都走共享的 rect anchor 路径——`'X.north'` / `'X.30'` / 无后缀走 `boundaryPoint` clip |
 | **作为 polar / at / offset referent** | 取 bbox 中心，与普通 rectangle 节点一致 |
 | **嵌套** | 每层 scope.id 各算各的 bbox——外层 bbox 含全部内层 layout；内层 bbox 仅含自己子树 |
@@ -369,6 +378,7 @@ compile 维护一个 style frame 栈，进入每层 scope 压一帧，每个元�
 | `transforms` | `Array<Transform>` | — | 局部 transform 列表，7 变体；数组顺序应用（第 0 个最外层、最后一个最内层，同 SVG transform list）；展平 / 下沉细节详见 § 技术原理 §「transforms 展平到 Scene」 |
 | `children` | `ReactNode` | — | scope 内子元素：`<Node>` / `<Path>` / `<Coordinate>` / 嵌套 `<Scope>` |
 | `id` | `string` | — | 可选 scope 引用 id；设值后 scope 子树全部 layout 的**轴对齐全局 bbox** 注册为 synthetic rectangle layout 到**父 frame**；外部可用 `'X'` / `'X.<anchor>'` / `'X.<deg>'` 引用，详见 § 技术原理 §「scope.id synthetic bbox」 |
+| `boundingShape` | `'rectangle' \| 'circle'` | `'rectangle'` | scope.id 句柄的包络形状——受控枚举（非 Node `shape` 那种开放 shape 引用）：缺省矩形 AABB；`'circle'` 取子树最小外接圆（anchor / 连线落圆周，适合圆形 / polar 面板）；枚举外的值由 schema 拒绝。详见 § 例子 §「scope 边界多态」 |
 | `localNamespace` | `boolean` | `false` | 是否创建本地命名空间：`true` 时 scope 推一个子 frame，内部 id 与外部隔离；详见 § 技术原理 §「命名空间栈与 lookup」 |
 | `meta` | `Record<string, JSON 值>` | — | provenance 元数据：原样透传进本 scope emit 的 `GroupPrim`，renderer 忽略、不参与布局、**不下传子元素**；典型由 plot 等高层 lowering 注入（标记 series / layer 层）。须为 JSON 可序列化对象 |
 | `color` | `string` | — | 级联主色；内部 stroke / fill / 文字 / 箭头 / 标注未单设则随它 |

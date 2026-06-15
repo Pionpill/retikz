@@ -1,6 +1,6 @@
 # core v0.4 设计note：scope 多态 bounding shape —— `scope.id` 包络支持矩形之外的 circle / ellipse / polygon
 
-- 状态：Draft / 候选（v0.4 讨论工作区，未拍板成正式 milestone ADR）
+- 状态：Accepted（MVP = rectangle + circle，2026-06-14 实现中；polygon / ellipse 缓做。详见下「实现决策」）
 - 记录日期：2026-06-13
 - 关联：[v0.4 路线讨论](../roadmap.md) · [core v0.2-alpha.1 ADR-03 scope-id-bbox（本能力的矩形版前身）](../../v0.2/alpha.1/03-scope-id-bounding-box.md) · [core v0.2-alpha.3 ShapeRegistry（precondition）](../../v0.2/alpha.3/01-shape-registry.md) · [plot v0.1-alpha.10 ADR-02 可被组合（首个消费方）](../../../../plot/v0/v0.1/alpha.10/02-plot-composable.md) · [plot-design §7 多坐标组合](../../../../../architecture/plot-design.md)
 > ⚠️ Draft：本文件是 v0.4 候选方向的设计 note，记录方向 / 边界 / 取舍；正式启动走 brainstorm → spec → plan（[v0.4 roadmap 约定](../roadmap.md)）。
@@ -51,6 +51,19 @@
 - **包络算法选型**：circle = 最小外接圆（Welzl）？ellipse = 轴对齐 vs 最小面积？polygon = 凸包够用还是要 concave？倾向 MVP：circle=最小外接圆、polygon=凸包、ellipse 缓做。均落 `@retikz/math`。
 - **与候选 A `@retikz/math` 的依赖方向**：core 是否反向依赖 math？v0.4-A 拍板「math 不反依赖 core」，但 core 消费 math 是正向、允许；需确认 math 首切范围含外接圆 / 凸包（A 首切已列「三角形内切 / 外接圆、凸包」，吻合）。
 - **padding / inset**：包络是否支持外扩 padding（连线留白）？TikZ `local bounding box` 无，但组合标注常要。
+
+## 实现决策（2026-06-14，alpha.2 MVP）
+
+直接实现（用户授权，末尾 review）。基于代码核验收敛待议：
+
+- **MVP 范围 = `rectangle`（现状不变）+ `circle`（最小外接圆）**。`polygon` / `ellipse` **本轮缓做**：
+  - `polygon`：内置 `polygon` shape 是**正多边形**（`sides` 参数），无法承载任意凸包顶点；需新增「显式顶点凸多边形」ShapeDefinition（自带 anchor/boundaryPoint），是独立一坨，另起。
+  - `ellipse`：缺「轴对齐外接椭圆」算法（math 无），ADR 本就「缓做」。
+- **字段形态**：`boundingShape?: string`，取值同 Node `shape` 词汇（`rectangle` / `circle` / …）；缺省 → rectangle，逐字回退现状。**padding 本轮不做**（待议保留）。
+- **circle 落地**：synthetic layout 用 `shapeName:'ellipse'` + `shapeParams:{ circumscribe:'equal' }` + 正方 `rect`（中心 = MEC 圆心、边长 = 2·半径）；anchor/boundaryPoint 走与 `<Node shape="circle">` **完全一致**的既有路径，零新 anchor 代码。
+- **包络点集**：复用现状 `computeScopeBoundingBox` 的子树各 layout outerRect 四角点集；rectangle → AABB（不变），circle → 该点集的最小外接圆。
+- **math 接线**：core→math 正向依赖（已定）。math **新增 `minimalEnclosingCircle`（Welzl）**——现有仅三点 `triangle.circumcircle`，不足以求点集 MEC。
+- **未支持的 boundingShape**（polygon/ellipse/未知名）：compile **warn + 回退 rectangle**，前向兼容、不报错。
 
 ## 不在本 note 范围
 

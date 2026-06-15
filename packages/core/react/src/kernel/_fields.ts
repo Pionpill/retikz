@@ -107,6 +107,7 @@ export const SCOPE_FIELDS = [
   'resetStyle',
   'zIndex',
   'clip',
+  'boundingShape',
   'meta',
   'animations',
 ] as const satisfies ReadonlyArray<keyof IRScope>;

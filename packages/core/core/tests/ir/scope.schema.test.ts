@@ -66,6 +66,40 @@ describe('ScopeSchema 合法形态', () => {
     });
     expect(parsed.success).toBe(true);
   });
+
+  it('scope 接受 boundingShape 字段且值得以保留', () => {
+    const parsed = ScopeSchema.safeParse({
+      type: 'scope',
+      id: 's',
+      boundingShape: 'circle',
+      children: [],
+    });
+    expect(parsed.success).toBe(true);
+    if (parsed.success) {
+      expect(parsed.data.boundingShape).toBe('circle');
+    }
+  });
+
+  it('scope 接受 boundingShape="rectangle"', () => {
+    const parsed = ScopeSchema.safeParse({
+      type: 'scope',
+      id: 's',
+      boundingShape: 'rectangle',
+      children: [],
+    });
+    expect(parsed.success).toBe(true);
+    if (parsed.success) {
+      expect(parsed.data.boundingShape).toBe('rectangle');
+    }
+  });
+
+  it('scope 缺省 boundingShape 仍合法且字段为 undefined', () => {
+    const parsed = ScopeSchema.safeParse({ type: 'scope', children: [] });
+    expect(parsed.success).toBe(true);
+    if (parsed.success) {
+      expect(parsed.data.boundingShape).toBeUndefined();
+    }
+  });
 });
 
 describe('ScopeSchema 拒绝非法形态', () => {
@@ -105,6 +139,33 @@ describe('ScopeSchema 拒绝非法形态', () => {
     const parsed = ScopeSchema.safeParse({
       type: 'scope',
       children: [{ type: 'bogus', foo: 1 }],
+    });
+    expect(parsed.success).toBe(false);
+  });
+
+  it('boundingShape 为非字符串（数字）拒绝', () => {
+    const parsed = ScopeSchema.safeParse({
+      type: 'scope',
+      boundingShape: 123,
+      children: [],
+    });
+    expect(parsed.success).toBe(false);
+  });
+
+  it('boundingShape 为枚举外字符串（polygon）拒绝', () => {
+    const parsed = ScopeSchema.safeParse({
+      type: 'scope',
+      boundingShape: 'polygon',
+      children: [],
+    });
+    expect(parsed.success).toBe(false);
+  });
+
+  it('boundingShape 为 ShapeRef 对象形态拒绝（已收敛为枚举，不再接受 { type, params }）', () => {
+    const parsed = ScopeSchema.safeParse({
+      type: 'scope',
+      boundingShape: { type: 'circle' },
+      children: [],
     });
     expect(parsed.success).toBe(false);
   });

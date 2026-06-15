@@ -1,7 +1,7 @@
 # core v0.4 设计note：可嵌入 Tier2 in `<Layout>` —— buildIR 经注册表静态识别 Tier2 composite 子组件、Layout 汇总贡献的 datasets + composites 并入 compile
 
-- 状态：Draft / 候选（v0.4 讨论工作区，未拍板成正式 milestone ADR）
-- 记录日期：2026-06-13
+- 状态：Accepted MVP（2026-06-15 人工签字：适配器注册形态 = 组件静态属性；启动实现）
+- 记录日期：2026-06-13（2026-06-15 人工签字升级）
 - 关联：[v0.4 路线讨论](../roadmap.md) · [plot v0.1-alpha.10 ADR-02 可被组合（首个消费方 / 硬依赖本文档）](../../../../plot/v0/v0.1/alpha.10/02-plot-composable.md) · [core v0.3-alpha.2 ADR-01 Tier2 支持（composite 展开机制）](../../v0.3/alpha.2/01-tier2-support.md) · [core-design.md §7 AI 一等公民](../../../../../architecture/core-design.md) · [plot-design §7 多坐标组合](../../../../../architecture/plot-design.md)
 > ⚠️ Draft：本文件是 v0.4 候选方向的设计 note，由 AI 起草、记录机制方向 / 边界 / 取舍；API 名 / 注册形态 / 测试象限为 **AI 建议稿**，正式启动走 brainstorm → spec → plan + 多 LLM 评估、人工拍板后才升级为正式 milestone ADR（[v0.4 roadmap 约定](../roadmap.md)）。RED 级，进实现前必走外部 LLM 评审。
 
@@ -106,7 +106,7 @@ import { Plot, LineMark, BarMark, Axis } from '@retikz/plot-react';
 
 > 评估后多数已收敛（见各条「评估 #N」）；下列保留项待人工最终签字。
 
-- **适配器注册形态（评估 #4，唯一核心待签字项）**：MVP 拍板 = **组件静态属性**——plot-react 在 `<Plot>` 挂 `Plot.isTier2Embeddable = true` + `Plot.embeddableAdapter = {...}`，core 遍历命中函数组件时读这两个静态属性，使 `<Layout><Plot/></Layout>` **零配置直接可用**（与 authoring 示例一致）、无 import 副作用全局表。`<Layout embeddables={[adapter]}>` 显式 prop 作**可选逃生舱**（测试注入 / 显式控制 / 未挂静态属性的 domain），非 MVP 必需。示例已与 MVP 对齐、不再悬空；仍待人工签字。
+- **适配器注册形态（评估 #4）✅ 2026-06-15 人工签字**：MVP = **组件静态属性**——plot-react 在 `<Plot>` 挂 `Plot.isTier2Embeddable = true` + `Plot.embeddableAdapter = {...}`，core 遍历命中函数组件时读这两个静态属性，使 `<Layout><Plot/></Layout>` **零配置直接可用**（与 authoring 示例一致）、无 import 副作用全局表。`<Layout embeddables={[adapter]}>` 显式 prop 作**可选逃生舱**（测试注入 / 显式控制 / 未挂静态属性的 domain），非 MVP 必需。签字落地：本机制按此实现。
 - **贡献累加器（评估 #5 已收敛）**：公开 `buildIR(): IR` 不变，新增内部 `buildIRWithContributions(): { ir, contributions }`，累加器是其局部态、不引入隐藏全局态、可测。
 - **数据 ref 合并（评估 #3 已收敛）**：core 只做「同 ref 必须同一对象引用、否则 fail-loud」的机械检测；ref 语义（默认 = 面板 id、共享走 dataRef）归 domain adapter，core 不懂 ref 语义。
 - **分组 / 跨 domain composites（评估 #2 已收敛）**：adapter 带 `namespace`，core 按 namespace 分组——组内 datasets 合并、makeComposites 调一次，组间 concat。
