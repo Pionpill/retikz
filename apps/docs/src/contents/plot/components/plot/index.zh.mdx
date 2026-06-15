@@ -33,6 +33,8 @@ import { Axis, BarMark, Plot } from '@retikz/plot-react';
 
 <p className="text-sm text-muted-foreground">左：缺省 cartesian；右：仅加 <code>coordinate="polar2D"</code>。</p>
 
+这个示例把两张 `<Plot>` 放进同一个 `<Layout>`。`width` / `height` 仍是每张图自己的外框尺寸；`transforms` 负责把这张图在父级画布里摆到目标位置。
+
 `coordinate` 支持字符串简写和对象两种形态，覆盖坐标系族：
 
 ```tsx
@@ -94,6 +96,9 @@ import { Axis, BarMark, Plot } from '@retikz/plot-react';
 | `bare` | `boolean?` | `false` | 只绘图、不出任何轴 / 网格；忽略 `<Axis>` |
 | `width` | `number` | — | 外框宽度（含轴与标签） |
 | `height` | `number` | — | 外框高度（含轴与标签） |
+| `transforms` | `Array<IRTransform>` | — | 面板级变换；放在父级 `<Layout>` 里组合多张图时常用于平移摆位 |
+| `zIndex` | `number` | `0` | 面板在父级层级中的绘制顺序 |
+| `clip` | `IRClipSpec` | — | 面板级裁剪区域 |
 | `fontSize` | `number?` | — | 刻度标签字号 |
 | `margin` | `{ top?; right?; bottom?; left? }` | — | 覆盖四周留白 |
 | `spec` | `PlotSpec` | — | spec 入口：已构造好的 Plot IR 根（与 `children` 二选一） |

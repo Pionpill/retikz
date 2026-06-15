@@ -33,6 +33,8 @@ import { Axis, BarMark, Plot } from '@retikz/plot-react';
 
 <p className="text-sm text-muted-foreground">Left: default cartesian; right: only <code>coordinate="polar2D"</code> added.</p>
 
+This example places two `<Plot>` panels inside one `<Layout>`. `width` / `height` still describe each chart's own outer box; `transforms` positions that chart inside the parent canvas.
+
 `coordinate` accepts a string shorthand or an object, covering the coordinate family:
 
 ```tsx
@@ -94,6 +96,9 @@ When the PlotSpec carries an `id` (spec entry or generated IR), lowering wraps a
 | `bare` | `boolean?` | `false` | Draw only the data, no axes / grid; ignores `<Axis>` |
 | `width` | `number` | — | Outer width (including axes and labels) |
 | `height` | `number` | — | Outer height (including axes and labels) |
+| `transforms` | `Array<IRTransform>` | — | Panel-level transforms; commonly used to position multiple charts inside a parent `<Layout>` |
+| `zIndex` | `number` | `0` | Draw order for the panel inside its parent |
+| `clip` | `IRClipSpec` | — | Panel-level clipping region |
 | `fontSize` | `number?` | — | Tick label font size |
 | `margin` | `{ top?; right?; bottom?; left? }` | — | Override the surrounding padding |
 | `spec` | `PlotSpec` | — | Spec entry: a prebuilt Plot IR root (mutually exclusive with `children`) |

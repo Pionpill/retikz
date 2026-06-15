@@ -1,10 +1,13 @@
 import type { FC, ReactNode } from 'react';
-import { type EmbeddableTier2Adapter, Layout, type LayoutProps } from '@retikz/react';
+import { type EmbeddableContribution, type EmbeddableTier2Adapter, Layout, type LayoutProps, type ScopeProps } from '@retikz/react';
 import { type DataModel, type ExternalDatasets, type ExternalRow, type LowerPlotsOptions, type PlotSpec, PlotSpecSchema, lowerPlots } from '@retikz/plot';
 import { type CoordinateInput, type DslScaleX, type DslScaleY, buildPlotSpec } from './components';
 
+/** <Plot> 作为 Layout 子面板时可直接承接的 core scope 属性 */
+export type PlotPanelProps = Pick<ScopeProps, 'transforms' | 'zIndex' | 'clip'>;
+
 /** <Plot> 两条入口共享的展示 props + lowerPlots 选项 */
-export type PlotCommonProps = Pick<LayoutProps, 'width' | 'height' | 'className' | 'style' | 'renderer'> & LowerPlotsOptions;
+export type PlotCommonProps = Pick<LayoutProps, 'width' | 'height' | 'className' | 'style' | 'renderer'> & PlotPanelProps & LowerPlotsOptions;
 
 /** spec 入口（薄包装）：给已构造好的完整 PlotSpec + 数据集表 */
 export type PlotSpecProps = PlotCommonProps & {
@@ -82,6 +85,19 @@ const withIntrinsicSize = (spec: PlotSpec, width: number | undefined, height: nu
   ...(spec.height === undefined && height !== undefined ? { height } : {}),
 });
 
+const wrapPanelScope = (node: PlotSpec, props: PlotPanelProps): EmbeddableContribution['node'] => {
+  const { transforms, zIndex, clip } = props;
+  if (transforms === undefined && zIndex === undefined && clip === undefined) return node;
+  const scope: EmbeddableContribution['node'] = {
+    type: 'scope',
+    ...(transforms !== undefined ? { transforms } : {}),
+    ...(zIndex !== undefined ? { zIndex } : {}),
+    ...(clip !== undefined ? { clip } : {}),
+    children: [node],
+  };
+  return scope;
+};
+
 const resolvePlotRuntime = (
   props: PlotProps,
   options: { embedded?: boolean } = {},
@@ -111,7 +127,7 @@ const plotEmbeddableAdapter: EmbeddableTier2Adapter<PlotProps> = {
   contribute: props => {
     const { spec, datasets, lowerOptions } = resolvePlotRuntime(props, { embedded: true });
     return {
-      node: spec,
+      node: wrapPanelScope(spec, props),
       datasets,
       makeComposites: mergedDatasets => lowerPlots(mergedDatasets as ExternalDatasets, lowerOptions),
     };
@@ -134,7 +150,7 @@ export const Plot: EmbeddablePlotComponent = props => {
 
   return (
     <Layout
-      ir={{ version: 1, type: 'scene', children: [spec] }}
+      ir={{ version: 1, type: 'scene', children: [wrapPanelScope(spec, props)] }}
       composites={lowerPlots(datasets, lowerOptions)}
       width={width}
       height={height}
