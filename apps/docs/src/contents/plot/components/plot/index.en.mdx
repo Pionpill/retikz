@@ -21,7 +21,7 @@ import { Axis, BarMark, Plot } from '@retikz/plot-react';
 
 `width × height` is the outer box including axes and tick labels. Children only declare field mappings, never pixel coordinates.
 
-`<Plot>` is a **low-level container**: it collects marks, infers scales and the coordinate system from fields, collects the `<Axis>` / `<Legend>` you write, then compiles and renders — but it doesn't draw axes / grid / legend for you. Write `<Axis>` for axes; `bare` drops even explicit decoration and margins.
+`<Plot>` is a **low-level container**: it collects marks, infers scales and the coordinate system from fields, collects the `<Axis>` / `<Legend>` you write, then compiles and renders — but it doesn't draw axes / grid / legend for you. Write `<Axis>` for axes; omit guide children when you only want data marks.
 
 ## Examples
 
@@ -93,7 +93,6 @@ When the PlotSpec carries an `id` (spec entry or generated IR), lowering wraps a
 | `coordinate` | see [Coordinates](/plot/grammar/coordinate) | cartesian2D | Coordinate system: `"polar2D"` / `"cartesian1D"` / `"polar1D"` / `"ternary2D"` shorthand or the matching object; cartesian2D by default |
 | `scaleX` | `'linear' \| 'time' \| 'point' \| 'log' \| 'sqrt'` | `'linear'` | Continuous x scale type; forced to band with `<BarMark>`, ignored under polar. `log` / `sqrt` are point / line only (interval / area baselines include 0 and will error) |
 | `scaleY` | `'linear' \| 'log' \| 'sqrt'` | `'linear'` | Continuous y (value-axis) scale type; ignored under polar. `log` / `sqrt` are point / line only (interval / area will error). `log` requires positive data, `sqrt` requires non-negative |
-| `bare` | `boolean?` | `false` | Draw only the data, no axes / grid; ignores `<Axis>` |
 | `width` | `number` | — | Outer width (including axes and labels) |
 | `height` | `number` | — | Outer height (including axes and labels) |
 | `transforms` | `Array<IRTransform>` | — | Panel-level transforms; commonly used to position multiple charts inside a parent `<Layout>` |

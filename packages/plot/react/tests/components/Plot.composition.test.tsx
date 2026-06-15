@@ -83,33 +83,6 @@ describe('<Plot data>{marks} 组合 DSL（ADR-08）', () => {
     expect(svg).toContain('<text');
   });
 
-  it('dsl_bare_equals_alpha1_geometry：bare 几何等价于无 guides 的 spec 入口（plot area = 整图）', () => {
-    const viaBare = renderToStaticMarkup(
-      <Plot data={rows} width={480} height={300} bare>
-        <LineMark x="month" y="revenue" order="month" />
-        <PointMark x="month" y="revenue" />
-      </Plot>,
-    );
-    const bareSpec: PlotSpec = {
-      namespace: 'plot',
-      type: 'plot',
-      data: { reference: '__plot' },
-      scales: [
-        { type: 'linear', name: '__x' },
-        { type: 'linear', name: '__y' },
-      ],
-      coordinate: { type: 'cartesian2D', x: '__x', y: '__y' },
-      marks: [
-        { type: 'line', order: 'month', encoding: { x: { field: 'month' }, y: { field: 'revenue' } } },
-        { type: 'point', encoding: { x: { field: 'month' }, y: { field: 'revenue' } } },
-      ],
-    };
-    const viaSpec = renderToStaticMarkup(<Plot spec={bareSpec} data={{ __plot: rows }} width={480} height={300} />);
-    expect(geometry(viaBare)).toEqual(geometry(viaSpec));
-    // bare 不出轴文字
-    expect(viaBare).not.toContain('<text');
-  });
-
   // ADR-07：<BarMark> / scaleX
   it('barmark_renders_rect：<BarMark> 渲出矩形', () => {
     const svg = renderToStaticMarkup(

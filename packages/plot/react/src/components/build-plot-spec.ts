@@ -97,10 +97,8 @@ export type CoordinateInput =
       params?: Record<string, number>;
     };
 
-/** buildPlotSpec 选项：bare 开关 + 连续 x scale 类型 + 坐标系选择 */
+/** buildPlotSpec 选项：连续 x/y scale 类型 + 坐标系选择 */
 export type BuildPlotSpecOptions = {
-  /** 总开关：不出 guide（plot area = 整图），忽略 <Axis> */
-  bare?: boolean;
   /** 连续 x scale 类型（缺省 linear；含 <BarMark> 时强制 band，忽略此项；polar 下忽略） */
   scaleX?: DslScaleX;
   /** 连续 y（值轴）scale 类型（缺省 linear；polar 下忽略）；log / sqrt 仅 point/line（柱/面积 fail-loud） */
@@ -347,7 +345,7 @@ const toPolarConfig = (coordinate: CoordinateInput | undefined): PolarConfig | u
  * @description 纯函数：从 children 收集 mark + guide + transform；按 coordinate（cartesian / polar）推断 scale 类型、
  *   装配 stack transform、自动建坐标系绑定（用户不写）。cartesian：x band/linear/time/point、y linear；
  *   polar：角向 sector→linear / bar→band / 闭合 line→point / 否则 linear，径向 linear。
- *   guide 规则（alpha.10 薄 Plot）：bare → 无；否则 = 显式 <Axis>/<Legend> 所得（不补默认轴）。默认轴交 <Chart>/decorateDefaultGuides。
+ *   guide 规则：薄 Plot 只保留显式 <Axis>/<Legend>（不补默认轴）。默认轴交 <Chart>/decorateDefaultGuides。
  *   产出须等价于手写 PlotSpec（仿 core Sugar = Kernel 等价性）。data 不进 IR，仅存 reference
  */
 export const buildPlotSpec = (children: ReactNode, dataRef: string, options: BuildPlotSpecOptions = {}): PlotSpec => {
@@ -400,11 +398,11 @@ export const buildPlotSpec = (children: ReactNode, dataRef: string, options: Bui
   }
   if (collected.colored) scales.push(buildColorScale(collected.colorFields, options.model));
 
-  // alpha.10 薄 Plot：不补默认轴——用户显式 <Axis>/<Legend> 才有 guides，bare 连显式也不要。
+  // 薄 Plot：不补默认轴——用户显式 <Axis>/<Legend> 才有 guides。
   //   开箱即用的默认轴 / 网格交给上层 <Chart>（v0.2，复用 decorateDefaultGuides）。
   const explicitAxes = collected.guides.filter(guide => guide.type === PlotGuide.Axis);
   const legends = collected.guides.filter(guide => guide.type === PlotGuide.Legend);
-  const guides: Array<Guide> = options.bare ? [] : [...explicitAxes, ...legends];
+  const guides: Array<Guide> = [...explicitAxes, ...legends];
 
   return {
     namespace: PLOT_NAMESPACE,

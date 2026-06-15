@@ -21,7 +21,7 @@ import { Axis, BarMark, Plot } from '@retikz/plot-react';
 
 `width × height` 是含坐标轴与刻度标签的外框。子组件只声明字段映射，不写像素坐标。
 
-`<Plot>` 是**底层容器**：它收集 mark、从字段推断 scale 与坐标系、收集你显式写的 `<Axis>` / `<Legend>`，再编译渲染；但不替你自动出坐标轴 / 网格 / 图例——要轴就显式写 `<Axis>`，`bare` 则连显式装饰和边距都不要。
+`<Plot>` 是**底层容器**：它收集 mark、从字段推断 scale 与坐标系、收集你显式写的 `<Axis>` / `<Legend>`，再编译渲染；但不替你自动出坐标轴 / 网格 / 图例——要轴就显式写 `<Axis>`，只画数据时就不要写 guide 子组件。
 
 ## 例子
 
@@ -93,7 +93,6 @@ import { Axis, BarMark, Plot } from '@retikz/plot-react';
 | `coordinate` | 见[坐标系](/plot/grammar/coordinate) | cartesian2D | 坐标系：`"polar2D"` / `"cartesian1D"` / `"polar1D"` / `"ternary2D"` 简写或对应对象配置；缺省平面直角 |
 | `scaleX` | `'linear' \| 'time' \| 'point' \| 'log' \| 'sqrt'` | `'linear'` | 连续 x scale 类型；含 `<BarMark>` 时强制 band，polar 下忽略。`log` / `sqrt` 仅 point / line（柱 / 面积 baseline 含 0，与之冲突会报错） |
 | `scaleY` | `'linear' \| 'log' \| 'sqrt'` | `'linear'` | 连续 y（值轴）scale 类型；polar 下忽略。`log` / `sqrt` 仅 point / line（柱 / 面积会报错）。`log` 要求数据为正、`sqrt` 要求非负 |
-| `bare` | `boolean?` | `false` | 只绘图、不出任何轴 / 网格；忽略 `<Axis>` |
 | `width` | `number` | — | 外框宽度（含轴与标签） |
 | `height` | `number` | — | 外框高度（含轴与标签） |
 | `transforms` | `Array<IRTransform>` | — | 面板级变换；放在父级 `<Layout>` 里组合多张图时常用于平移摆位 |

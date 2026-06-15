@@ -102,7 +102,7 @@ describe('buildPlotSpec 装配（ADR-08 / ADR-05）', () => {
     expect(() => PlotSpecSchema.parse(spec)).toThrow();
   });
 
-  // alpha.10：薄 Plot guide 装配（无默认 / 显式 / bare）
+  // alpha.10：薄 Plot guide 装配（无默认 / 显式）
   it('dsl_no_axis_no_guides：无 <Axis> → guides 为空（薄 Plot 不补默认轴）', () => {
     const spec = buildPlotSpec(<LineMark x="m" y="r" />, '__plot');
     expect(spec.guides).toEqual([]);
@@ -141,23 +141,6 @@ describe('buildPlotSpec 装配（ADR-08 / ADR-05）', () => {
       '__plot',
     );
     expect(spec.guides).toEqual([{ type: 'axis', dimension: 'y', grid: true }]);
-  });
-
-  it('dsl_bare_empty_guides：bare → guides:[]', () => {
-    const spec = buildPlotSpec(<LineMark x="m" y="r" />, '__plot', { bare: true });
-    expect(spec.guides).toEqual([]);
-  });
-
-  it('dsl_bare_ignores_axis：bare 优先，忽略 <Axis>', () => {
-    const spec = buildPlotSpec(
-      <>
-        <LineMark x="m" y="r" />
-        <Axis dimension="x" />
-      </>,
-      '__plot',
-      { bare: true },
-    );
-    expect(spec.guides).toEqual([]);
   });
 
   it('dsl_built_guides_pass_schema：默认装配产物过 PlotSpecSchema', () => {
@@ -216,18 +199,6 @@ describe('buildPlotSpec legend 装配（ADR-03 alpha.8）', () => {
     );
     const legend = (spec.guides ?? []).find(guide => guide.type === 'legend');
     expect(legend).toEqual({ type: 'legend', channel: 'size', scale: '__size', title: 'Population', position: 'left', orient: 'vertical', tickCount: 4, tickLabels: false });
-  });
-
-  it('legend_bare_suppressed：bare → guides 为空（含 legend）', () => {
-    const spec = buildPlotSpec(
-      <>
-        <PointMark x="lon" y="lat" color="kind" />
-        <Legend channel="color" />
-      </>,
-      '__plot',
-      { bare: true },
-    );
-    expect(spec.guides).toEqual([]);
   });
 
   it('legend_built_pass_schema：legend 装配产物过 PlotSpecSchema', () => {

@@ -16,7 +16,6 @@ export type PlotSpecProps = PlotCommonProps & {
   /** 外部数据集表（data.reference 按名查）；数据不进 IR，编译期经 lowerPlots 注入 */
   data: ExternalDatasets;
   children?: never;
-  bare?: never;
 };
 
 /** 组合 DSL 入口：给裸数据行 + <LineMark>/<PointMark>/<Axis> 子组件 */
@@ -30,8 +29,6 @@ export type PlotDslProps = PlotCommonProps & {
   model?: DataModel;
   /** 逻辑字段 → 物理数据路径（扁平，单数据集）；需 model；内部映射到固定数据集名 */
   fieldMap?: Record<string, string>;
-  /** 总开关：什么都不出（无轴无网格、plot area = 整图），只绘图 = alpha.1 行为；忽略任何 <Axis> */
-  bare?: boolean;
   /** 连续 x scale 类型（缺省 linear；含 <BarMark> 时强制 band，忽略此项；polar 下忽略） */
   scaleX?: DslScaleX;
   /** 连续 y（值轴）scale 类型（缺省 linear；polar 下忽略）；log / sqrt 仅 point/line（柱/面积 fail-loud） */
@@ -112,7 +109,7 @@ const resolvePlotRuntime = (
   } else {
     // DSL 入口：model 经 buildPlotSpec 注入 data.model **并改走 type-driven 派生**（省略 AUTO 位置 scale 绑定，
     // 否则 model 的 temporal/nominal 不会派生 time/band、甚至被当显式 linear 校验）。扁平 fieldMap 映射到数据集名。
-    spec = buildPlotSpec(props.children, dataRef, { bare: props.bare, scaleX: props.scaleX, scaleY: props.scaleY, coordinate: props.coordinate, model: props.model });
+    spec = buildPlotSpec(props.children, dataRef, { scaleX: props.scaleX, scaleY: props.scaleY, coordinate: props.coordinate, model: props.model });
     datasets = { [dataRef]: props.data };
     if (props.fieldMap) effectiveFieldMaps = { [dataRef]: props.fieldMap };
   }
