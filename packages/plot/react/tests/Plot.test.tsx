@@ -1,9 +1,9 @@
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 import { ZodError } from 'zod';
-import { Layout } from '@retikz/react';
+import { Layout, Scope } from '@retikz/react';
 import { type ExternalDatasets, type PlotSpec, lowerPlots } from '@retikz/plot';
-import { Plot } from '../src';
+import { Axis, BarMark, Plot } from '../src';
 
 const spec: PlotSpec = {
   namespace: 'plot',
@@ -27,6 +27,13 @@ const data: ExternalDatasets = {
     { month: 2, revenue: 9 },
   ],
 };
+
+const revenue = [
+  { quarter: 'Q1', value: 18 },
+  { quarter: 'Q2', value: 24 },
+  { quarter: 'Q3', value: 15 },
+  { quarter: 'Q4', value: 30 },
+];
 
 /** 抽出 SVG 里所有点 glyph（circle 节点渲染为 ellipse）的 cx,cy 与 path 的 d（与资源 id 无关，作几何等价比较） */
 const geometry = (svg: string) => {
@@ -75,5 +82,31 @@ describe('<Plot spec data> 薄包装', () => {
       />,
     );
     expect(geometry(viaPlot)).toEqual(geometry(viaLayout));
+  });
+
+  it('可以作为可嵌入 Tier 2 子组件放进同一个 <Layout>', () => {
+    const svg = renderToStaticMarkup(
+      <Layout width={580} height={260}>
+        <Scope transforms={[{ kind: 'translate', x: 0, y: 20 }]}>
+          <Plot data={revenue} width={300} height={220}>
+            <BarMark x="quarter" y="value" color="quarter" />
+            <Axis dimension="x" />
+            <Axis dimension="y" grid />
+          </Plot>
+        </Scope>
+        <Scope transforms={[{ kind: 'translate', x: 320, y: 0 }]}>
+          <Plot data={revenue} width={260} height={260} coordinate="polar2D">
+            <BarMark x="quarter" y="value" color="quarter" />
+            <Axis dimension="angle" />
+            <Axis dimension="radius" grid />
+          </Plot>
+        </Scope>
+      </Layout>,
+    );
+
+    expect(svg).toContain('<svg');
+    expect(svg.match(/<svg/g)).toHaveLength(1);
+    expect(svg).toContain('<path');
+    expect(svg).toContain('<rect');
   });
 });

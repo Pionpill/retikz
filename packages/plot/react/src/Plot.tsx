@@ -1,5 +1,5 @@
 import type { FC, ReactNode } from 'react';
-import { Layout, type LayoutProps } from '@retikz/react';
+import { type EmbeddableTier2Adapter, Layout, type LayoutProps } from '@retikz/react';
 import { type DataModel, type ExternalDatasets, type ExternalRow, type LowerPlotsOptions, type PlotSpec, PlotSpecSchema, lowerPlots } from '@retikz/plot';
 import { type CoordinateInput, type DslScaleX, type DslScaleY, buildPlotSpec } from './components';
 
@@ -43,34 +43,99 @@ export type PlotProps = PlotSpecProps | PlotDslProps;
 /** 组合 DSL 内部固定的数据集名（用户不可见） */
 const DSL_DATA_REF = '__plot';
 
-/**
- * Plot 组件（两条入口同名分流）
- * @description 给 spec → 薄包装直接渲染；给 children → builder 装配成 PlotSpec 再渲染。
- *   两路都把 spec 包成 scene、经 lowerPlots 注入数据后交 <Layout>；data 不进 IR
- */
-export const Plot: FC<PlotProps> = props => {
-  const { width, height, className, style, renderer, fontSize, margin, provenance, datumProvenance, datumIdField, fieldMaps, validateData, resolveField, invalid, coordinates } = props;
+const embeddedDataRefs = new WeakMap<Array<ExternalRow>, string>();
+let embeddedDataRefSeed = 0;
 
+const embeddedDataRefFor = (rows: Array<ExternalRow>): string => {
+  const existing = embeddedDataRefs.get(rows);
+  if (existing !== undefined) return existing;
+  const next = `${DSL_DATA_REF}_${embeddedDataRefSeed}`;
+  embeddedDataRefSeed += 1;
+  embeddedDataRefs.set(rows, next);
+  return next;
+};
+
+const lowerPlotOptionsOf = (
+  props: PlotProps,
+  effectiveFieldMaps: LowerPlotsOptions['fieldMaps'],
+): LowerPlotsOptions => {
+  const { width, height, fontSize, margin, provenance, datumProvenance, datumIdField, validateData, resolveField, invalid, coordinates } = props;
+  return {
+    width,
+    height,
+    fontSize,
+    margin,
+    provenance,
+    datumProvenance,
+    datumIdField,
+    fieldMaps: effectiveFieldMaps,
+    validateData,
+    resolveField,
+    invalid,
+    coordinates,
+  };
+};
+
+const withIntrinsicSize = (spec: PlotSpec, width: number | undefined, height: number | undefined): PlotSpec => ({
+  ...spec,
+  ...(spec.width === undefined && width !== undefined ? { width } : {}),
+  ...(spec.height === undefined && height !== undefined ? { height } : {}),
+});
+
+const resolvePlotRuntime = (
+  props: PlotProps,
+  options: { embedded?: boolean } = {},
+): { spec: PlotSpec; datasets: ExternalDatasets; lowerOptions: LowerPlotsOptions } => {
+  const dataRef = options.embedded && !props.spec ? embeddedDataRefFor(props.data) : DSL_DATA_REF;
   let spec: PlotSpec;
   let datasets: ExternalDatasets;
-  let effectiveFieldMaps = fieldMaps;
+  let effectiveFieldMaps = props.fieldMaps;
   if (props.spec) {
     spec = props.spec;
     datasets = props.data;
   } else {
     // DSL 入口：model 经 buildPlotSpec 注入 data.model **并改走 type-driven 派生**（省略 AUTO 位置 scale 绑定，
-    // 否则 model 的 temporal/nominal 不会派生 time/band、甚至被当显式 linear 校验）。扁平 fieldMap 映射到固定数据集名。
-    spec = buildPlotSpec(props.children, DSL_DATA_REF, { bare: props.bare, scaleX: props.scaleX, scaleY: props.scaleY, coordinate: props.coordinate, model: props.model });
-    datasets = { [DSL_DATA_REF]: props.data };
-    if (props.fieldMap) effectiveFieldMaps = { [DSL_DATA_REF]: props.fieldMap };
+    // 否则 model 的 temporal/nominal 不会派生 time/band、甚至被当显式 linear 校验）。扁平 fieldMap 映射到数据集名。
+    spec = buildPlotSpec(props.children, dataRef, { bare: props.bare, scaleX: props.scaleX, scaleY: props.scaleY, coordinate: props.coordinate, model: props.model });
+    datasets = { [dataRef]: props.data };
+    if (props.fieldMap) effectiveFieldMaps = { [dataRef]: props.fieldMap };
   }
   // 入口校验：非法 spec（缺判别字段等）抛清晰 ZodError，而非落到 core 内部崩
-  const validated = PlotSpecSchema.parse(spec);
+  const validated = PlotSpecSchema.parse(withIntrinsicSize(spec, props.width, props.height));
+  return { spec: validated, datasets, lowerOptions: lowerPlotOptionsOf(props, effectiveFieldMaps) };
+};
+
+const plotEmbeddableAdapter: EmbeddableTier2Adapter<PlotProps> = {
+  displayName: 'Plot',
+  namespace: 'plot',
+  contribute: props => {
+    const { spec, datasets, lowerOptions } = resolvePlotRuntime(props, { embedded: true });
+    return {
+      node: spec,
+      datasets,
+      makeComposites: mergedDatasets => lowerPlots(mergedDatasets as ExternalDatasets, lowerOptions),
+    };
+  },
+};
+
+type EmbeddablePlotComponent = FC<PlotProps> & {
+  isTier2Embeddable?: true;
+  embeddableAdapter?: EmbeddableTier2Adapter<PlotProps>;
+};
+
+/**
+ * Plot 组件（两条入口同名分流）
+ * @description 给 spec → 薄包装直接渲染；给 children → builder 装配成 PlotSpec 再渲染。
+ *   两路都把 spec 包成 scene、经 lowerPlots 注入数据后交 <Layout>；data 不进 IR
+ */
+export const Plot: EmbeddablePlotComponent = props => {
+  const { width, height, className, style, renderer } = props;
+  const { spec, datasets, lowerOptions } = resolvePlotRuntime(props);
 
   return (
     <Layout
-      ir={{ version: 1, type: 'scene', children: [validated] }}
-      composites={lowerPlots(datasets, { width, height, fontSize, margin, provenance, datumProvenance, datumIdField, fieldMaps: effectiveFieldMaps, validateData, resolveField, invalid, coordinates })}
+      ir={{ version: 1, type: 'scene', children: [spec] }}
+      composites={lowerPlots(datasets, lowerOptions)}
       width={width}
       height={height}
       className={className}
@@ -79,3 +144,7 @@ export const Plot: FC<PlotProps> = props => {
     />
   );
 };
+
+Plot.displayName = 'Plot';
+Plot.isTier2Embeddable = true;
+Plot.embeddableAdapter = plotEmbeddableAdapter;
