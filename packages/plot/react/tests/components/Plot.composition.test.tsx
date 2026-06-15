@@ -1,7 +1,7 @@
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 import type { PlotSpec } from '@retikz/plot';
-import { AreaMark, Axis, BarMark, LineMark, Plot, PointMark, SectorMark } from '../../src';
+import { AreaMark, Axis, BarMark, LineMark, Plot, PointMark, Scale, SectorMark } from '../../src';
 
 const rows = [
   { month: 0, revenue: 10 },
@@ -83,7 +83,7 @@ describe('<Plot data>{marks} 组合 DSL（ADR-08）', () => {
     expect(svg).toContain('<text');
   });
 
-  // ADR-07：<BarMark> / scaleX
+  // ADR-07：<BarMark> / <Scale>
   it('barmark_renders_rect：<BarMark> 渲出矩形', () => {
     const svg = renderToStaticMarkup(
       <Plot data={rows} width={480} height={300}>
@@ -108,15 +108,16 @@ describe('<Plot data>{marks} 组合 DSL（ADR-08）', () => {
     expect(svg).toMatch(/<rect/);
   });
 
-  it('scalex_time_renders：scaleX time 折线 + 显式 x 轴端到端（时间刻度标签）', () => {
+  it('scale_time_renders：time x scale 折线 + 显式 x 轴端到端（时间刻度标签）', () => {
     const trend = [
       { date: '2024-01-01', v: 1 },
       { date: '2024-06-01', v: 3 },
       { date: '2024-12-01', v: 2 },
     ];
     const svg = renderToStaticMarkup(
-      <Plot data={trend} width={480} height={300} scaleX="time">
+      <Plot data={trend} width={480} height={300}>
         <LineMark x="date" y="v" order="date" />
+        <Scale dimension="x" type="time" />
         <Axis dimension="x" />
       </Plot>,
     );

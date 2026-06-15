@@ -3,6 +3,7 @@ import { type PlotSpec, PlotSpecSchema } from '@retikz/plot';
 import { buildPlotSpec, decorateDefaultGuides } from '../../src/components/build-plot-spec';
 import { Axis, Legend } from '../../src/components/guides';
 import { AreaMark, BarMark, LineMark, PointMark, SectorMark } from '../../src/components/marks';
+import { Scale } from '../../src/components/scales';
 
 describe('buildPlotSpec model → type-driven 派生（alpha.6 ADR-03，评审 P1）', () => {
   it('有 model 时省略 AUTO 位置 scale 绑定（交给 expand 派生）', () => {
@@ -25,6 +26,21 @@ describe('buildPlotSpec model → type-driven 派生（alpha.6 ADR-03，评审 P
       model: [{ name: 'cat', type: 'categorical' }, { name: 'revenue', type: 'continuous' }],
     });
     expect(() => PlotSpecSchema.parse(spec)).not.toThrow();
+  });
+
+  it('显式 <Scale> 可覆盖 model 的单个位置维度，其余维度继续派生', () => {
+    const spec = buildPlotSpec(
+      <>
+        <LineMark x="month" y="revenue" />
+        <Scale dimension="x" type="time" />
+      </>,
+      '__plot',
+      {
+        model: [{ name: 'month', type: 'temporal' }, { name: 'revenue', type: 'continuous' }],
+      },
+    );
+    expect(spec.coordinate).toEqual({ type: 'cartesian2D', x: '__x' });
+    expect(spec.scales).toEqual([{ type: 'time', name: '__x' }]);
   });
 });
 
@@ -213,7 +229,7 @@ describe('buildPlotSpec legend 装配（ADR-03 alpha.8）', () => {
   });
 });
 
-describe('buildPlotSpec ADR-07（BarMark / color / series / stack / scaleX）', () => {
+describe('buildPlotSpec ADR-07（BarMark / color / series / stack / Scale）', () => {
   it('barmark_equivalence_band_x', () => {
     const spec = buildPlotSpec(<BarMark x="month" y="revenue" />, '__plot');
     const expected: PlotSpec = {
@@ -257,21 +273,72 @@ describe('buildPlotSpec ADR-07（BarMark / color / series / stack / scaleX）', 
     expect(spec.transform).toEqual([{ kind: 'stack', x: 'month', y: 'revenue', groupBy: 'product' }]);
   });
 
-  it('scalex_time', () => {
-    const spec = buildPlotSpec(<LineMark x="date" y="v" />, '__plot', { scaleX: 'time' });
+  it('scale_x_time', () => {
+    const spec = buildPlotSpec(
+      <>
+        <LineMark x="date" y="v" />
+        <Scale dimension="x" type="time" />
+      </>,
+      '__plot',
+    );
     expect(spec.scales[0]).toEqual({ type: 'time', name: '__x' });
   });
 
-  it('scalex_log_sqrt', () => {
-    expect(buildPlotSpec(<LineMark x="d" y="v" />, '__plot', { scaleX: 'log' }).scales[0]).toEqual({ type: 'log', name: '__x' });
-    expect(buildPlotSpec(<LineMark x="d" y="v" />, '__plot', { scaleX: 'sqrt' }).scales[0]).toEqual({ type: 'sqrt', name: '__x' });
+  it('scale_x_log_sqrt', () => {
+    expect(
+      buildPlotSpec(
+        <>
+          <LineMark x="d" y="v" />
+          <Scale dimension="x" type="log" />
+        </>,
+        '__plot',
+      ).scales[0],
+    ).toEqual({ type: 'log', name: '__x' });
+    expect(
+      buildPlotSpec(
+        <>
+          <LineMark x="d" y="v" />
+          <Scale dimension="x" type="sqrt" />
+        </>,
+        '__plot',
+      ).scales[0],
+    ).toEqual({ type: 'sqrt', name: '__x' });
   });
 
-  it('scaley_log_sqrt_on_value_axis', () => {
-    // scaleY 作用于值轴（__y，scales[1]）；缺省 linear
+  it('scale_y_log_sqrt_on_value_axis', () => {
+    // <Scale dimension="y"> 作用于值轴（__y，scales[1]）；缺省 linear
     expect(buildPlotSpec(<LineMark x="d" y="v" />, '__plot').scales[1]).toEqual({ type: 'linear', name: '__y' });
-    expect(buildPlotSpec(<LineMark x="d" y="v" />, '__plot', { scaleY: 'log' }).scales[1]).toEqual({ type: 'log', name: '__y' });
-    expect(buildPlotSpec(<PointMark x="d" y="v" />, '__plot', { scaleY: 'sqrt' }).scales[1]).toEqual({ type: 'sqrt', name: '__y' });
+    expect(
+      buildPlotSpec(
+        <>
+          <LineMark x="d" y="v" />
+          <Scale dimension="y" type="log" />
+        </>,
+        '__plot',
+      ).scales[1],
+    ).toEqual({ type: 'log', name: '__y' });
+    expect(
+      buildPlotSpec(
+        <>
+          <PointMark x="d" y="v" />
+          <Scale dimension="y" type="sqrt" />
+        </>,
+        '__plot',
+      ).scales[1],
+    ).toEqual({ type: 'sqrt', name: '__y' });
+  });
+
+  it('scale_duplicate_alias_rejected', () => {
+    expect(() =>
+      buildPlotSpec(
+        <>
+          <LineMark x="d" y="v" />
+          <Scale dimension="x" type="time" />
+          <Scale dimension="x" type="linear" />
+        </>,
+        '__plot',
+      ),
+    ).toThrow(/duplicate scale/);
   });
 
   it('line_series_color_eq_series', () => {
@@ -368,6 +435,21 @@ describe('buildPlotSpec ADR-05（polar coordinate / sector / area / closed / ang
       coordinate: { type: 'polar2D', startAngle: -90, endAngle: 90 },
     });
     expect(spec.coordinate).toMatchObject({ type: 'polar2D', startAngle: -90, endAngle: 90, innerRadius: 0 });
+  });
+
+  it('polar_explicit_scale_dimensions：angle / radius 维度分别落到 __angle / __radius', () => {
+    const spec = buildPlotSpec(
+      <>
+        <LineMark x="theta" y="r" order="theta" />
+        <Scale dimension="angle" type="point" />
+        <Scale dimension="radius" type="log" />
+      </>,
+      '__plot',
+      { coordinate: 'polar2D' },
+    );
+    expect(spec.scales[0]).toEqual({ type: 'point', name: '__angle' });
+    expect(spec.scales[1]).toEqual({ type: 'log', name: '__radius' });
+    expect(spec.coordinate).toMatchObject({ type: 'polar2D', angle: '__angle', radius: '__radius' });
   });
 
   it('radar_equivalence：<LineMark closed> + polar → closed line + point 角向', () => {

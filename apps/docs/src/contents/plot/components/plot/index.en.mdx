@@ -3,7 +3,7 @@ title: Plot
 description: "<Plot> is the chart container: it takes raw data and a size, assembles mark / guide children, and picks a cartesian or polar coordinate system via coordinate."
 ---
 
-`<Plot>` is the root container for every chart. It takes `data` (an array of raw rows) and a display size, and assembles its `<LineMark>` / `<BarMark>` / `<SectorMark>` / `<Axis>` children into a chart. `coordinate` picks the coordinate system: cartesian2D by default, plus polar (`"polar2D"`), 1D (`"cartesian1D"` / `"polar1D"`), and ternary (`"ternary2D"`). Data never enters the IR; it's injected at compile time. `<Plot>` is a **thin container**: it draws no axes or grid on its own — axes come from the `<Axis>` you declare (scales and the coordinate system are still inferred automatically).
+`<Plot>` is the root container for every chart. It takes `data` (an array of raw rows) and a display size, and assembles its `<LineMark>` / `<BarMark>` / `<SectorMark>` / `<Axis>` / `<Scale>` children into a chart. `coordinate` picks the coordinate system: cartesian2D by default, plus polar (`"polar2D"`), 1D (`"cartesian1D"` / `"polar1D"`), and ternary (`"ternary2D"`). Data never enters the IR; it's injected at compile time. `<Plot>` is a **thin container**: it draws no axes or grid on its own — axes come from the `<Axis>` you declare (scales and the coordinate system are still inferred automatically, or overridden with `<Scale>`).
 
 ## Usage
 
@@ -21,7 +21,7 @@ import { Axis, BarMark, Plot } from '@retikz/plot-react';
 
 `width × height` is the outer box including axes and tick labels. Children only declare field mappings, never pixel coordinates.
 
-`<Plot>` is a **low-level container**: it collects marks, infers scales and the coordinate system from fields, collects the `<Axis>` / `<Legend>` you write, then compiles and renders — but it doesn't draw axes / grid / legend for you. Write `<Axis>` for axes; omit guide children when you only want data marks.
+`<Plot>` is a **low-level container**: it collects marks, infers scales and the coordinate system from fields, collects the `<Axis>` / `<Legend>` / `<Scale>` you write, then compiles and renders — but it doesn't draw axes / grid / legend for you. Write `<Axis>` for axes; omit guide children when you only want data marks.
 
 ## Examples
 
@@ -87,12 +87,10 @@ When the PlotSpec carries an `id` (spec entry or generated IR), lowering wraps a
 | Prop | Type | Default | Description |
 | --- | --- | --- | --- |
 | `data` | `Array<Row>` | — | Raw data rows (composition DSL entry); data never enters the IR |
-| `children` | `ReactNode` | — | Mark / guide children (composition DSL entry) |
+| `children` | `ReactNode` | — | Mark / guide / scale children (composition DSL entry) |
 | `model` | `DataModel` | — | Data model (field names + types): enables strict validation and type-driven scale / guide derivation; see [Data Model](/plot/data/model) |
 | `fieldMap` | `Record<string, string>` | — | Logical field name → actual path in the data (requires `model`); renames only, no value transform; see [Processing](/plot/data/processing) |
 | `coordinate` | see [Coordinates](/plot/grammar/coordinate) | cartesian2D | Coordinate system: `"polar2D"` / `"cartesian1D"` / `"polar1D"` / `"ternary2D"` shorthand or the matching object; cartesian2D by default |
-| `scaleX` | `'linear' \| 'time' \| 'point' \| 'log' \| 'sqrt'` | `'linear'` | Continuous x scale type; forced to band with `<BarMark>`, ignored under polar. `log` / `sqrt` are point / line only (interval / area baselines include 0 and will error) |
-| `scaleY` | `'linear' \| 'log' \| 'sqrt'` | `'linear'` | Continuous y (value-axis) scale type; ignored under polar. `log` / `sqrt` are point / line only (interval / area will error). `log` requires positive data, `sqrt` requires non-negative |
 | `width` | `number` | — | Outer width (including axes and labels) |
 | `height` | `number` | — | Outer height (including axes and labels) |
 | `transforms` | `Array<IRTransform>` | — | Panel-level transforms; commonly used to position multiple charts inside a parent `<Layout>` |

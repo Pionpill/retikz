@@ -3,7 +3,7 @@ title: 图表容器
 description: <Plot> 是图表容器：接收裸数据与尺寸，装配 mark / guide 子组件，并通过 coordinate 选择平面或极坐标系。
 ---
 
-`<Plot>` 是所有图表的根容器。它接收 `data`（裸数据行数组）和显示尺寸，把内部的 `<LineMark>` / `<BarMark>` / `<SectorMark>` / `<Axis>` 等子组件装配成一张图。`coordinate` 选坐标系：缺省平面直角，可切极坐标（`"polar2D"`）、一维（`"cartesian1D"` / `"polar1D"`）或三元（`"ternary2D"`）。数据不进 IR，只在编译期注入。`<Plot>` 是**薄容器**：自己不画坐标轴 / 网格，轴由你显式的 `<Axis>` 声明（scale 与坐标系仍自动推断）。
+`<Plot>` 是所有图表的根容器。它接收 `data`（裸数据行数组）和显示尺寸，把内部的 `<LineMark>` / `<BarMark>` / `<SectorMark>` / `<Axis>` / `<Scale>` 等子组件装配成一张图。`coordinate` 选坐标系：缺省平面直角，可切极坐标（`"polar2D"`）、一维（`"cartesian1D"` / `"polar1D"`）或三元（`"ternary2D"`）。数据不进 IR，只在编译期注入。`<Plot>` 是**薄容器**：自己不画坐标轴 / 网格，轴由你显式的 `<Axis>` 声明（scale 与坐标系仍自动推断，也可用 `<Scale>` 覆盖）。
 
 ## 用法
 
@@ -21,7 +21,7 @@ import { Axis, BarMark, Plot } from '@retikz/plot-react';
 
 `width × height` 是含坐标轴与刻度标签的外框。子组件只声明字段映射，不写像素坐标。
 
-`<Plot>` 是**底层容器**：它收集 mark、从字段推断 scale 与坐标系、收集你显式写的 `<Axis>` / `<Legend>`，再编译渲染；但不替你自动出坐标轴 / 网格 / 图例——要轴就显式写 `<Axis>`，只画数据时就不要写 guide 子组件。
+`<Plot>` 是**底层容器**：它收集 mark、从字段推断 scale 与坐标系、收集你显式写的 `<Axis>` / `<Legend>` / `<Scale>`，再编译渲染；但不替你自动出坐标轴 / 网格 / 图例——要轴就显式写 `<Axis>`，只画数据时就不要写 guide 子组件。
 
 ## 例子
 
@@ -87,12 +87,10 @@ import { Axis, BarMark, Plot } from '@retikz/plot-react';
 | 属性 | 类型 | 默认值 | 描述 |
 | --- | --- | --- | --- |
 | `data` | `Array<Row>` | — | 裸数据行数组（组合 DSL 入口）；数据不进 IR |
-| `children` | `ReactNode` | — | mark / guide 子组件（组合 DSL 入口） |
+| `children` | `ReactNode` | — | mark / guide / scale 子组件（组合 DSL 入口） |
 | `model` | `DataModel` | — | 数据模型（字段名 + 类型）：声明则启用 strict 校验与 type-driven scale / guide 派生；详见[数据模型](/plot/data/model) |
 | `fieldMap` | `Record<string, string>` | — | 逻辑字段名 → 数据里的实际路径（需配合 `model`）；只改名、不变换值；详见[数据处理](/plot/data/processing) |
 | `coordinate` | 见[坐标系](/plot/grammar/coordinate) | cartesian2D | 坐标系：`"polar2D"` / `"cartesian1D"` / `"polar1D"` / `"ternary2D"` 简写或对应对象配置；缺省平面直角 |
-| `scaleX` | `'linear' \| 'time' \| 'point' \| 'log' \| 'sqrt'` | `'linear'` | 连续 x scale 类型；含 `<BarMark>` 时强制 band，polar 下忽略。`log` / `sqrt` 仅 point / line（柱 / 面积 baseline 含 0，与之冲突会报错） |
-| `scaleY` | `'linear' \| 'log' \| 'sqrt'` | `'linear'` | 连续 y（值轴）scale 类型；polar 下忽略。`log` / `sqrt` 仅 point / line（柱 / 面积会报错）。`log` 要求数据为正、`sqrt` 要求非负 |
 | `width` | `number` | — | 外框宽度（含轴与标签） |
 | `height` | `number` | — | 外框高度（含轴与标签） |
 | `transforms` | `Array<IRTransform>` | — | 面板级变换；放在父级 `<Layout>` 里组合多张图时常用于平移摆位 |

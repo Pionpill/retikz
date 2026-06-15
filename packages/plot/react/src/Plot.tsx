@@ -1,7 +1,7 @@
 import type { FC, ReactNode } from 'react';
 import { type EmbeddableContribution, type EmbeddableTier2Adapter, Layout, type LayoutProps, type ScopeProps } from '@retikz/react';
 import { type DataModel, type ExternalDatasets, type ExternalRow, type LowerPlotsOptions, type PlotSpec, PlotSpecSchema, lowerPlots } from '@retikz/plot';
-import { type CoordinateInput, type DslScaleX, type DslScaleY, buildPlotSpec } from './components';
+import { type CoordinateInput, buildPlotSpec } from './components';
 
 /** <Plot> 作为 Layout 子面板时可直接承接的 core scope 属性 */
 export type PlotPanelProps = Pick<ScopeProps, 'transforms' | 'zIndex' | 'clip'>;
@@ -29,10 +29,6 @@ export type PlotDslProps = PlotCommonProps & {
   model?: DataModel;
   /** 逻辑字段 → 物理数据路径（扁平，单数据集）；需 model；内部映射到固定数据集名 */
   fieldMap?: Record<string, string>;
-  /** 连续 x scale 类型（缺省 linear；含 <BarMark> 时强制 band，忽略此项；polar 下忽略） */
-  scaleX?: DslScaleX;
-  /** 连续 y（值轴）scale 类型（缺省 linear；polar 下忽略）；log / sqrt 仅 point/line（柱/面积 fail-loud） */
-  scaleY?: DslScaleY;
   /** 坐标系：缺省 cartesian2D；"polar2D" 简写或 polar2D 对象配置（innerRadius / startAngle / endAngle） */
   coordinate?: CoordinateInput;
 };
@@ -109,7 +105,7 @@ const resolvePlotRuntime = (
   } else {
     // DSL 入口：model 经 buildPlotSpec 注入 data.model **并改走 type-driven 派生**（省略 AUTO 位置 scale 绑定，
     // 否则 model 的 temporal/nominal 不会派生 time/band、甚至被当显式 linear 校验）。扁平 fieldMap 映射到数据集名。
-    spec = buildPlotSpec(props.children, dataRef, { scaleX: props.scaleX, scaleY: props.scaleY, coordinate: props.coordinate, model: props.model });
+    spec = buildPlotSpec(props.children, dataRef, { coordinate: props.coordinate, model: props.model });
     datasets = { [dataRef]: props.data };
     if (props.fieldMap) effectiveFieldMaps = { [dataRef]: props.fieldMap };
   }
