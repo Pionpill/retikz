@@ -222,6 +222,8 @@ git push
 git push origin v0.3.0-alpha.4
 ```
 
+push 完成后不要再手动合并 `main -> next` 或 `next -> next-core / next-plot`。分支回灌由 `.github/workflows/branch-sync.yml` 自动开 PR：`main` 更新后开 `main -> next`，`next` 更新后开 `next -> next-core` 与 `next -> next-plot`；冲突和 CI 失败在 PR 中处理。
+
 **OTP 临发临用**：
 
 - OTP 30s 时效；拿到新码后立刻跑 publish 循环，不要先做其它命令。
