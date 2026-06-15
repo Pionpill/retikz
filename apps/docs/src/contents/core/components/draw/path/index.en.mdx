@@ -41,7 +41,7 @@ import { Path, Step } from '@retikz/react';
 </Path>
 ```
 
-`<Step>` supports eleven kinds — `move` / `line` for straight segments, `fold` for the right-angle fold, `cycle` to close back, `curve` / `cubic` for Bezier curves, `bend` as the arc shorthand (with out/in angles and self-loops), `arc` / `circlePath` / `ellipsePath` for arcs / full circles / full ellipses centered on the cursor, and `rectangle` for a diagonal rectangle. See [Step](/core/components/draw/step) for details. There is also an IR-level `generator` step (external curve generators, no JSX DSL, fed via IR — see [path generators](/core/reference/extending/path-generator)).
+`<Step>` supports twelve kinds — `move` / `line` for straight segments, `fold` for the right-angle fold, `cycle` to close back, `curve` / `cubic` for Bezier curves, `bend` as the arc shorthand (with out/in angles and self-loops), `smooth` for a smooth curve through a list of points, `arc` / `circlePath` / `ellipsePath` for arcs / full circles / full ellipses centered on the cursor, and `rectangle` for a diagonal rectangle. See [Step](/core/components/draw/step) for details. There is also an IR-level `generator` step (external curve generators, no JSX DSL, fed via IR — see [path generators](/core/reference/extending/path-generator)).
 
 ## Examples
 
@@ -156,6 +156,22 @@ Besides the symmetric `bendDirection` + `bendAngle`, `<Step kind="bend">` accept
 
 <ComponentPreview name="path-marks" size="xs" />
 
+#### Rounded corners (roundedCorners)
+
+`roundedCorners` rounds every **line↔line joint** of the path with a tangent arc of the same radius — handy for flowcharts, routing, and polyline connections where you want soft corners instead of sharp ones. Omitted = sharp corners everywhere (behavior unchanged). The first / last endpoint stays sharp; a joint whose neighbor is a curve / arc / Bézier / fold stays sharp too. When the radius is too large it is **clamped per joint** to what the adjacent segment lengths allow. After a `cycle` close, the closing joint is rounded as well.
+
+<ComponentPreview name="path-rounded-corners" size="sm" />
+
+`roundedCorners` changes the **path geometry** — it pulls the joint vertices back and inserts a tangent arc, so it affects the bounding box, arc length, `marks` / label normalization, and connection-point resolution. This is distinct from `lineJoin`, which only styles the **stroke render** while the path centerline stays a sharp fold. The contrast below uses a very thick stroke: the top path uses `lineJoin="round"` (only the stroke is rounded, the centerline stays sharp), the bottom uses `roundedCorners` (the centerline itself is an arc):
+
+<ComponentPreview name="path-rounded-vs-linejoin" size="sm" />
+
+<Comparison target="tikz" title="roundedCorners">
+
+`roundedCorners` maps to the TikZ path option `rounded corners=<r>`, one radius governing every eligible corner of the path.
+
+</Comparison>
+
 ## API Reference
 
 | Prop | Type | Default | Description |
@@ -167,7 +183,8 @@ Besides the symmetric `bendDirection` + `bendAngle`, `<Step kind="bend">` accept
 | `strokeWidth` | `number` | `1` | Stroke width |
 | `dashPattern` | `Array<number>` | — | Dash/gap lengths in user units (e.g. `[4, 2]`) |
 | `lineCap` | `'butt' \| 'round' \| 'square'` | `'butt'` | Stroke endpoint shape |
-| `lineJoin` | `'miter' \| 'round' \| 'bevel'` | `'miter'` | Stroke corner shape |
+| `lineJoin` | `'miter' \| 'round' \| 'bevel'` | `'miter'` | Stroke corner shape (visual only, geometry unchanged) |
+| `roundedCorners` | `number` (≥0) | — | Geometric corner radius: rounds every line↔line joint with a tangent arc, changing the path geometry (distinct from `lineJoin`); non-line joints stay sharp, clamped per joint to the segment lengths; omitted = sharp corners |
 | `thickness` | `'ultraThin' \| 'veryThin' \| 'thin' \| 'semithick' \| 'thick' \| 'veryThick' \| 'ultraThick'` | — | Semantic stroke preset (`thin = 1`); explicit `strokeWidth` always wins |
 | `arrow` | `'none' \| '->' \| '<-' \| '<->'` | — | Path-level arrow direction (see [Arrow](/core/components/draw/arrow)) |
 | `arrowDetail` | `ArrowDetail` object | — | Arrow visual config; fields documented on [Arrow](/core/components/draw/arrow) |
@@ -181,7 +198,7 @@ Besides the symmetric `bendDirection` + `bendAngle`, `<Step kind="bend">` accept
 | `scale` | `number \| { x, y }` | — | Whole-path scale (number = uniform / `{ x, y }` = non-uniform, around the bounding-box center) |
 | `marks` | `Array<{ pos, mark }>` | — | Marks along the path: `pos∈[0,1]`, `mark.kind:'arrow'` + a registered arrow name, oriented by the tangent at that point |
 | `animations` | `Array<AnimationTrack>` | — | Timeline animation tracks, passed through onto the primitives this path emits; renderers play them or fall back to static. See [Animation](/core/components/animation/control) |
-| `children` | `Array<<Step>>` | — | At least 2; if the first isn't `move`, the compiler coerces it to `move`. `<Step>` supports `move` / `line` / `fold` (right-angle) / `cycle` (close) / `curve` / `cubic` (Bezier) / `bend` (arc shorthand, with out/in angles and self-loops) / `arc` / `circlePath` / `ellipsePath` (circle / ellipse) / `rectangle` (diagonal rectangle); the IR also has `generator` (path generators, no JSX DSL) |
+| `children` | `Array<<Step>>` | — | At least 2; if the first isn't `move`, the compiler coerces it to `move`. `<Step>` supports `move` / `line` / `fold` (right-angle) / `cycle` (close) / `curve` / `cubic` (Bezier) / `bend` (arc shorthand, with out/in angles and self-loops) / `smooth` (smooth curve through points) / `arc` / `circlePath` / `ellipsePath` (circle / ellipse) / `rectangle` (diagonal rectangle); the IR also has `generator` (path generators, no JSX DSL) |
 
 ## Related
 
