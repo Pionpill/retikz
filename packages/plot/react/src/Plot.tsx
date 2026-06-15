@@ -7,7 +7,7 @@ import { type CoordinateInput, type DslScaleX, type DslScaleY, buildPlotSpec } f
 export type PlotPanelProps = Pick<ScopeProps, 'transforms' | 'zIndex' | 'clip'>;
 
 /** <Plot> 两条入口共享的展示 props + lowerPlots 选项 */
-export type PlotCommonProps = Pick<LayoutProps, 'width' | 'height' | 'className' | 'style' | 'renderer'> & PlotPanelProps & LowerPlotsOptions;
+export type PlotCommonProps = Pick<LayoutProps, 'className' | 'style' | 'renderer'> & PlotPanelProps & LowerPlotsOptions;
 
 /** spec 入口（薄包装）：给已构造好的完整 PlotSpec + 数据集表 */
 export type PlotSpecProps = PlotCommonProps & {
