@@ -23,6 +23,11 @@ export type PathProps = HydrationEventProps & {
   lineCap?: IRPath['lineCap'];
   /** 拐点形状（TikZ `line join`）：`'miter'`（默认 / 尖角）/ `'round'`（圆角）/ `'bevel'`（切角） */
   lineJoin?: IRPath['lineJoin'];
+  /**
+   * 折线拐角几何圆角半径（TikZ `rounded corners=`）
+   * @description 对每个 line↔line 接缝插切圆弧、改路径几何（区别于 lineJoin 仅描边）；curve / arc / bezier / fold 接缝保持尖；按相邻段长 clamp；省略 = 尖角
+   */
+  roundedCorners?: IRPath['roundedCorners'];
   /** 语义 stroke 档位（TikZ `ultra thin` … `ultra thick`）；显式 `strokeWidth` 始终优先 */
   thickness?: IRPath['thickness'];
   /**

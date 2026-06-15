@@ -58,6 +58,17 @@ describe('buildIR', () => {
     expect(ir.children[2]).toMatchObject({ type: 'scope', animations: [fade] });
   });
 
+  it('roundedCorners prop 透传进 Path 的 IR', () => {
+    const ir = buildIR(
+      <Path roundedCorners={8}>
+        <Step kind="move" to={[0, 0]} />
+        <Step kind="line" to={[10, 0]} />
+        <Step kind="line" to={[10, 10]} />
+      </Path>,
+    );
+    expect(ir.children[0]).toMatchObject({ type: 'path', roundedCorners: 8 });
+  });
+
   it("children 字符串带 '\\n' 自动拆成多行数组", () => {
     const ir = buildIR(
       <Node id="A" position={[0, 0]}>{'Line 1\nLine 2'}</Node>,
