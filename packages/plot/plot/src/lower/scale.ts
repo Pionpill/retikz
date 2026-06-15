@@ -47,6 +47,9 @@ import { isIsoDateString } from './infer';
 /** 默认目标刻度数（d3 ticks 的提示值，非硬约束——实际数量按 nice 区间取整定） */
 export const DEFAULT_TICK_COUNT = 5;
 
+/** 默认 Plot 分类调色板：来自 d3-scale-chromatic schemeCategory10 */
+export const DEFAULT_PLOT_COLORS = [...schemeCategory10];
+
 /** band scale 默认柱间缝（占 step 比例）；柱状图普遍带窄缝，比 d3 原始默认 0 友好 */
 const DEFAULT_BAND_PADDING_INNER = 0.1;
 
@@ -190,7 +193,7 @@ export const resolveOrdinalScale = (
   values: Array<unknown>,
 ): ((value: string | number) => string) => {
   const domain = def?.domain ?? inferCategoryDomain(values);
-  const range = def?.range ?? [...schemeCategory10];
+  const range = def?.range ?? DEFAULT_PLOT_COLORS;
   const scale = scaleOrdinal<string | number, string>().domain(domain).range(range);
   return value => scale(value);
 };
