@@ -19,9 +19,11 @@ alpha.3 是 v0.4「纵向底座深化」的 **core 几何 / 路径能力增量**
 
 | # | 子项 | 代号 / 来源 | ADR | 状态 |
 |---|---|---|---|---|
-| B1 | 任意折线圆角 `roundedCorners` | B1 | [ADR-01](./01-polyline-rounded-corners.md) | Proposed（实现契约齐 + 多 LLM 评审已合并；待人工说「进实现」） |
-| B2 | 过点平滑曲线 `smooth` step | B2 | [ADR-02](./02-smooth-curve-through-points.md) | Proposed（实现契约齐 + 多 LLM 评审已合并；待人工说「进实现」） |
-| S | 任意轮廓 `contour` shape | plot → core 跨包请求 | [ADR-03](./03-core-contour-shape.md) | Proposed（实现契约齐；plot 侧消费归 plot alpha.11） |
+| B1 | 任意折线圆角 `roundedCorners` | B1 | [ADR-01](./01-polyline-rounded-corners.md) | **已实现 + 文档同步**（spec 17 例 + 实现全绿；待人工 review / wrapup 翻 Accepted） |
+| B2 | 过点平滑曲线 `smooth` step | B2 | [ADR-02](./02-smooth-curve-through-points.md) | **已实现 + 文档同步**（math curve 5 例 + compile 15 例全绿；待人工 review / wrapup） |
+| S | 任意轮廓 `contour` shape | plot → core 跨包请求 | [ADR-03](./03-core-contour-shape.md) | **已实现 + 文档同步**（shape 14 例全绿；plot 侧消费归 plot alpha.11；待人工 review / wrapup） |
+
+> 进度（2026-06-16）：三 ADR 均按 develop-implement Spec-First TDD 落地——每项「🚧 spec 测试 → ✨ 实现」两段提交，core/math/react/vanilla 全套测试 + 全包 tsc + 全仓 lint 全绿，docs（zh/en + demo + i18n）已同步。剩余：可选 develop-test 对抗加固；develop-wrapup（封板翻 Accepted + ADR 压缩）留发布前。**未 push**。
 
 三子项相对独立、可并行实现，但都触 / 复用 `geometry/contour.ts`：**B1 修改**它（加开放折线 seam 支持），**B2 不碰**它（曲线走 math `curve/`），**S 只读**它（闭合顶点环走现有闭合路径）。并行时 B1 的 contour.ts 改动须保证闭合 seam 语义不回退（S 与现有 polygon/rectangle 依赖之）。B2 的纯曲线算法（Catmull-Rom → cubic）落 `@retikz/math` 的 `curve/` 子模块（roadmap A 原列「后置」，2026-06-15 人工拍板提前；见 ADR-02）。
 
