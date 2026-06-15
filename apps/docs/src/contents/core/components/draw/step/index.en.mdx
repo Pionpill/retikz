@@ -1,9 +1,9 @@
 ---
 title: Step
-description: Path's child node — one step = one action (move / line / fold / cycle close / curve / cubic / bend / arc / circlePath / ellipsePath / rectangle); `to` accepts node id / Cartesian / polar / offset / proportional placement / relative offsets; only valid as a direct child of `<Path>`.
+description: Path's child node — one step = one action (move / line / fold / cycle close / curve / cubic / bend / smooth / arc / circlePath / ellipsePath / rectangle); `to` accepts node id / Cartesian / polar / offset / proportional placement / relative offsets; only valid as a direct child of `<Path>`.
 ---
 
-`<Step>` describes a single path action: `move` lifts the pen, `line` draws a straight line, `fold` folds through a single right-angle corner, `cycle` closes the path, `curve` / `cubic` / `bend` draw curves of various shapes, `arc` / `circlePath` / `ellipsePath` use the cursor as the center to draw an arc / full circle / full ellipse, and `rectangle` draws an axis-aligned rectangle from two opposite corners. It is **only** valid as a direct child of `<Path>`; placed elsewhere it is silently ignored.
+`<Step>` describes a single path action: `move` lifts the pen, `line` draws a straight line, `fold` folds through a single right-angle corner, `cycle` closes the path, `curve` / `cubic` / `bend` draw curves of various shapes, `smooth` draws a smooth curve through a list of points, `arc` / `circlePath` / `ellipsePath` use the cursor as the center to draw an arc / full circle / full ellipse, and `rectangle` draws an axis-aligned rectangle from two opposite corners. It is **only** valid as a direct child of `<Path>`; placed elsewhere it is silently ignored.
 
 Use this table to pick a `kind` first:
 
@@ -11,6 +11,7 @@ Use this table to pick a `kind` first:
 | --- | --- | --- | --- | --- |
 | `move` | Yes | No | Yes | No |
 | `line` / `fold` / `curve` / `cubic` / `bend` | Yes | Yes | Yes | Yes |
+| `smooth` | No (uses `points`) | Yes | To the last `points` entry | Yes |
 | `cycle` | No | Yes | Back to subpath start | No |
 | `arc` | No | Yes | To arc endpoint | Yes |
 | `circlePath` / `ellipsePath` | No | Yes | Back to circle / ellipse center | Yes |
@@ -68,6 +69,18 @@ The path below draws A→B with one `move` + `line`, then lifts the pen with ano
 `kind="bend"` is shorthand for an arced connection: say whether the segment bends left or right while looking from start to end, plus an angle. The compiler computes control points and lowers it to a cubic Bezier. `bendDirection` is the visual left/right relative to the from→to path; `bendAngle` defaults to 30:
 
 <ComponentPreview name="step-bend" size="md" />
+
+### Smooth curve through points (smooth)
+
+`kind="smooth"` draws a smooth curve **through a list of points** — no need to hand-compute Bézier control points for each segment when drawing a data polyline, a streamline, or a free curve. It takes no `to`; instead it takes `points`: the current **cursor is the implicit first knot**, the curve starts at the cursor and passes through each point in `points` in order, and the cursor ends at the last point (so a preceding `move` or other step must set the cursor, otherwise compilation errors). It is compiled to a chain of cubic Béziers via centripetal Catmull-Rom. Below, the same set of points drawn as `smooth` (steelblue) versus a point-to-point `line` polyline (gray):
+
+<ComponentPreview name="step-smooth" size="sm" />
+
+`tension` tunes the curve's slackness (TikZ `tension`): the default 1 is the standard centripetal Catmull-Rom, `<1` pulls the curve tauter (closer to a polyline), and `>1` makes it loopier. Whatever the value, the curve always passes through every point — only the per-segment tangent length changes:
+
+<ComponentPreview name="step-smooth-tension" size="sm" />
+
+<ComponentAlert title="Vanilla form" description="Vanilla has no smooth token in the way grammar yet; in vanilla, author smooth as an IR object inside path children: { type: 'step', kind: 'smooth', points: [...], tension }. The Vanilla tab of the code view below shows this form." />
 
 ### Offset positioning
 
@@ -212,6 +225,7 @@ One set of t markers per kind below (`t=0.25` vs `midway`), confirming the geome
 | `kind="curve"` | `.. controls (B) ..` |
 | `kind="cubic"` | `.. controls (B) and (C) ..` |
 | `kind="bend"` | `to[bend left=N]` / `to[bend right=N]` |
+| `kind="smooth"` | `plot[smooth, tension=…] coordinates {…}` |
 | `{ of, offset }` target | `calc` library syntax `($(of) + (dx, dy)$)` |
 | `{ relative }` / `{ relativeAccumulate }` | `(+x, +y)` / `(++x, ++y)` |
 | `kind="arc"` | `arc[start angle=…, end angle=…, radius=…]` |
@@ -224,13 +238,15 @@ One set of t markers per kind below (`t=0.25` vs `midway`), confirming the geome
 
 | Prop | Type | Default | Description |
 | --- | --- | --- | --- |
-| `kind` | `'move' \| 'line' \| 'fold' \| 'cycle' \| 'curve' \| 'cubic' \| 'bend' \| 'arc' \| 'circlePath' \| 'ellipsePath' \| 'rectangle'` | `'line'` | See the "Eleven kinds" table below; IR also has `generator`, without React `<Step>` DSL |
+| `kind` | `'move' \| 'line' \| 'fold' \| 'cycle' \| 'curve' \| 'cubic' \| 'bend' \| 'smooth' \| 'arc' \| 'circlePath' \| 'ellipsePath' \| 'rectangle'` | `'line'` | See the "Twelve kinds" table below; IR also has `generator`, without React `<Step>` DSL |
 | `via` | `'-\|' \| '\|-'` | — | Required for `kind="fold"`: `-\|` horizontal-then-vertical; `\|-` vertical-then-horizontal |
 | `from` | `IRTarget` | — | Required only for `kind="rectangle"`: one rectangle corner |
 | `to` | `IRTarget` | — | Not used for `kind="cycle"` / `'arc'` / `'circlePath'` / `'ellipsePath'`; required for `kind="rectangle"` and other cursor-advancing kinds. Target: node id, Cartesian `[x, y]`, polar object, offset object `{ of, offset }`, proportional placement `{ between, t }`, relative-offset object `{ relative }` / `{ relativeAccumulate }`, or sugar string `'+dx,dy'` / `'++dx,dy'` |
 | `control` | `[number, number]` | — | Required for `kind="curve"`: single control point of the quadratic Bezier |
 | `control1` | `[number, number]` | — | Required for `kind="cubic"`: first control point (shapes start tangent) |
 | `control2` | `[number, number]` | — | Required for `kind="cubic"`: second control point (shapes end tangent) |
+| `points` | `Array<IRTarget>` (≥1) | — | Required for `kind="smooth"`: the points the curve passes through after the cursor, in order. The cursor is the implicit first knot; a single point = one segment; the cursor ends at the last point. Element form is the same as `to` |
+| `tension` | `number` (>0) | `1` | Optional for `kind="smooth"`: tangent-length multiplier (TikZ `tension`); default 1 (standard centripetal Catmull-Rom), `<1` tauter, `>1` loopier |
 | `bendDirection` | `'left' \| 'right'` | — | Optional for `kind="bend"`: visual left / right relative to from→to direction; pairs with `bendAngle` for a symmetric bend. **`outAngle` / `inAngle` take precedence** and this is ignored when they are given |
 | `bendAngle` | `number` | `30` | Optional for `kind="bend"`: bend angle in degrees, restricted to (-180, 180) |
 | `outAngle` | `number` | — | Optional for `kind="bend"`: out-angle at the start (degrees, TikZ `out=`); pairs with `inAngle` for an asymmetric curve / self-loop, taking precedence over `bendDirection` / `bendAngle` |
@@ -246,7 +262,7 @@ One set of t markers per kind below (`t=0.25` vs `midway`), confirming the geome
 | `cornerRadius` | `number` | — | Optional for `kind="rectangle"`: corner radius |
 | `label` | `IRStepLabel` | — | Edge label (works on every kind except `'move'` / `'cycle'` / `'rectangle'`): `{ text, position?, side?, textColor?, opacity?, font? }`; equivalent sugar form `<Step><EdgeLabel>…</EdgeLabel></Step>`, prop wins on conflict |
 
-### Eleven kinds
+### Twelve kinds
 
 | kind | Behavior | Path analogue |
 | --- | --- | --- |
@@ -257,6 +273,7 @@ One set of t markers per kind below (`t=0.25` vs `midway`), confirming the geome
 | `'curve'` | Quadratic Bezier (one control point) | path "Q" |
 | `'cubic'` | Cubic Bezier (two control points) | path "C" |
 | `'bend'` | Arc shorthand (direction + angle), lowered to cubic | path "C" |
+| `'smooth'` | Smooth curve through cursor + `points`, lowered to a cubic chain | path "C"×N |
 | `'arc'` | Cursor as center; arc by start / end angle + radius | path "A" |
 | `'circlePath'` | Cursor as center; full circle, pen returns to center | path "A"×2 |
 | `'ellipsePath'` | Cursor as center; full ellipse, pen returns to center | path "A"×2 |

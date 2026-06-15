@@ -182,6 +182,7 @@ const isWayRepresentableStep = (step: IRStep): boolean => {
       return isWayCirclePathStep(step);
     case 'ellipsePath':
       return isWayEllipsePathStep(step);
+    case 'smooth':
     case 'rectangle':
     case 'generator':
       return false;
