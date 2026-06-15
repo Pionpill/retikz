@@ -54,6 +54,7 @@
     "shapesRectangle": "Rectangle",
     "shapesPolygon": "Polygon",
     "shapesStar": "Star",
+    "shapesContour": "Contour",
     "helpers": "辅助",
     "helpersGrid": "Grid",
     "basicConcepts": "基础概念",
