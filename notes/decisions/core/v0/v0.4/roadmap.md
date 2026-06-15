@@ -30,18 +30,18 @@ core 0.4 只做**纵向底座深化（机制 / 引擎 / 契约）**；**横向�
 
 ## alpha 里程碑拆分
 
-> 候选方向（上表）按 alpha milestone 落地拆分；每个 milestone 下的子项各自走 brainstorm → spec → plan。**alpha.1（math）设计已拍板、进入 plan**——它是 scope-bbox / B 的共同前置，故排首位；**alpha.2 两篇（embeddable / scope-bbox）为先期 Draft 设计 note**（未拍板、RED、进实现前走外部 LLM 评审），其中 scope-bbox 实现依赖 alpha.1 的 math。「待排」= 方向已定但未定具体 alpha。
+> 候选方向（上表）按 alpha milestone 落地拆分；每个 milestone 下的子项各自走 brainstorm → spec → plan。**alpha.1（math）已实现并发布**——它是 scope-bbox / B 的共同前置，故排首位；**alpha.2 两篇（embeddable / scope-bbox）已 Accepted MVP 并实现、随 alpha.2 发布**，其中 scope-bbox 实现依赖 alpha.1 的 math。「待排」= 方向已定但未定具体 alpha。
 
 | milestone | 子项 | 候选 | 文档 | 状态 |
 | --- | --- | --- | --- | --- |
-| alpha.1 | `@retikz/math` + core 纯几何下沉 | A | [ADR-01/02/03](./alpha.1/roadmap.md) | Accepted（拆 3 ADR，待实现） |
-| alpha.2 | 可嵌入 Tier2 in `<Layout>` ∥ scope 多态 bounding shape | Tier2 机制 / H | [ADR-01](./alpha.2/01-embeddable-tier2-in-layout.md) · [ADR-02](./alpha.2/02-scope-polymorphic-bbox.md) | Draft / 待人工签字 + 外部评审（两任务并列；H 依赖 alpha.1 math） |
+| alpha.1 | `@retikz/math` + core 纯几何下沉 | A | [ADR-01/02/03](./alpha.1/roadmap.md) | 已发布（3 ADR Accepted，已实现，0.4.0-alpha.1） |
+| alpha.2 | 可嵌入 Tier2 in `<Layout>` ∥ scope 多态 bounding shape | Tier2 机制 / H | [ADR-01](./alpha.2/01-embeddable-tier2-in-layout.md) · [ADR-02](./alpha.2/02-scope-polymorphic-bbox.md) | 已发布（两 ADR Accepted MVP，已实现，0.4.0-alpha.2；H 依赖 alpha.1 math） |
 | alpha.3 | 路径补强（圆角 B1 + 平滑曲线 B2） | B | — | 暂定，消费 A（下「后续讨论结论 · B」） |
 | alpha.4 | Scene 视觉（z-index + shadow + blend） | F | — | 暂定，视余量（下「后续讨论结论 · F」） |
 | 靠后（alpha.5+） | 数学公式 `@retikz/tex` | E | — | 方向已定（下「后续讨论结论 · E」），靠后 |
 | 暂不 | 交互行为 / 跨框架 runtime / 伪三维 | C / G / P3D | — | ⏸（P3D 详见下文「伪三维视角层」） |
 
-**建议实现顺序**：alpha.1 **A（math 底座）** → alpha.2 **scope 多态 bbox（消费 A）+ 可嵌入 Tier2**（待人工签字 + 外部评审）→ alpha.3 **B（路径补强，消费 A）** → alpha.4 **F（Scene 视觉，独立、视余量）**；**E（tex）靠后**（alpha.5+）。（D eval 已交其他分支，不在本路线）
+**建议实现顺序**：alpha.1 **A（math 底座）** → alpha.2 **scope 多态 bbox（消费 A）+ 可嵌入 Tier2**（已实现发布）→ alpha.3 **B（路径补强，消费 A）** → alpha.4 **F（Scene 视觉，独立、视余量）**；**E（tex）靠后**（alpha.5+）。（D eval 已交其他分支，不在本路线）
 
 依赖约束：
 
