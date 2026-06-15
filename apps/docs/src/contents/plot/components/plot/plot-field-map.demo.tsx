@@ -1,7 +1,7 @@
 import type { FC } from 'react';
 import { Axis, LineMark, Plot } from '@retikz/plot-react';
 
-import { renamedVisits } from './plot-extra.data';
+import { renamedVisits } from './plot-field-map.data';
 
 const Demo: FC = () => (
   <Plot

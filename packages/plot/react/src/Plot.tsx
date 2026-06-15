@@ -9,8 +9,13 @@ export type PlotPanelProps = Pick<ScopeProps, 'transforms' | 'zIndex' | 'clip'>;
 /** <Plot> 两条入口共享的展示 props + lowerPlots 选项 */
 export type PlotCommonProps = Pick<LayoutProps, 'className' | 'style' | 'renderer'> & PlotPanelProps & LowerPlotsOptions;
 
+export type PlotColorProps = {
+  /** 默认颜色数组：分类 color scale 的 range；无 color 编码的 mark 按图层序取色，`currentColor` 表示继承当前文字颜色 */
+  colors?: Array<string>;
+};
+
 /** spec 入口（薄包装）：给已构造好的完整 PlotSpec + 数据集表 */
-export type PlotSpecProps = PlotCommonProps & {
+export type PlotSpecProps = PlotCommonProps & PlotColorProps & {
   /** 已构造好的 Plot IR 根节点（手写 / 生成） */
   spec: PlotSpec;
   /** 外部数据集表（data.reference 按名查）；数据不进 IR，编译期经 lowerPlots 注入 */
@@ -19,7 +24,7 @@ export type PlotSpecProps = PlotCommonProps & {
 };
 
 /** 组合 DSL 入口：给裸数据行 + <LineMark>/<PointMark>/<Axis> 子组件 */
-export type PlotDslProps = PlotCommonProps & {
+export type PlotDslProps = PlotCommonProps & PlotColorProps & {
   spec?: never;
   /** 裸数据行数组；内部包成单数据集注入，不进 IR */
   data: Array<ExternalRow>;
@@ -78,6 +83,11 @@ const withIntrinsicSize = (spec: PlotSpec, width: number | undefined, height: nu
   ...(spec.height === undefined && height !== undefined ? { height } : {}),
 });
 
+const withPlotColors = (spec: PlotSpec, colors: Array<string> | undefined): PlotSpec => ({
+  ...spec,
+  ...(colors !== undefined ? { colors } : {}),
+});
+
 const wrapPanelScope = (node: PlotSpec, props: PlotPanelProps): EmbeddableContribution['node'] => {
   const { transforms, zIndex, clip } = props;
   if (transforms === undefined && zIndex === undefined && clip === undefined) return node;
@@ -100,7 +110,7 @@ const resolvePlotRuntime = (
   let datasets: ExternalDatasets;
   let effectiveFieldMaps = props.fieldMaps;
   if (props.spec) {
-    spec = props.spec;
+    spec = withPlotColors(props.spec, props.colors);
     datasets = props.data;
   } else {
     // DSL 入口：model 经 buildPlotSpec 注入 data.model **并改走 type-driven 派生**（省略 AUTO 位置 scale 绑定，
@@ -108,6 +118,7 @@ const resolvePlotRuntime = (
     spec = buildPlotSpec(props.children, dataRef, {
       coordinate: props.coordinate,
       model: props.model,
+      colors: props.colors,
       deferPositionScaleInference: props.model === undefined,
     });
     datasets = { [dataRef]: props.data };

@@ -248,6 +248,9 @@ importers:
       cmdk:
         specifier: 'catalog:'
         version: 1.1.1(@types/react-dom@18.2.25)(@types/react@18.2.79)(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
+      d3-scale-chromatic:
+        specifier: 'catalog:'
+        version: 3.1.0
       github-slugger:
         specifier: 'catalog:'
         version: 2.0.0
@@ -318,6 +321,9 @@ importers:
       '@tailwindcss/vite':
         specifier: 'catalog:'
         version: 4.2.4(vite@8.0.10(@types/node@25.6.0)(esbuild@0.28.1)(jiti@2.6.1)(tsx@4.22.4)(yaml@2.8.4))
+      '@types/d3-scale-chromatic':
+        specifier: 'catalog:'
+        version: 3.1.0
       '@types/mdx':
         specifier: 'catalog:'
         version: 2.0.13

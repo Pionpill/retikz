@@ -19,7 +19,7 @@ import { Axis, BarMark, Plot } from '@retikz/plot-react';
 </Plot>
 ```
 
-`width × height` is the outer box including axes and tick labels. Children only declare field mappings, never pixel coordinates.
+`width × height` is the outer box including axes and tick labels. Children only declare field mappings, never pixel coordinates. `colors` overrides the default palette, which starts as d3's `schemeCategory10`; use `'currentColor'` in the array when a layer should keep the inherited core color.
 
 `<Plot>` is a **low-level container**: it collects marks, infers continuous / categorical / temporal scales from data values, collects the `<Axis>` / `<Legend>` / `<Scale>` you write, then compiles and renders — but it doesn't draw axes / grid / legend for you. Write `<Axis>` for axes; omit guide children when you only want data marks.
 
@@ -55,21 +55,29 @@ One parent `<Layout>` can contain several `<Plot>` panels. Each chart uses its o
 
 See [Coordinates](/plot/grammar/coordinate) for each system's geometry options (polar's `innerRadius` / `startAngle` / `endAngle`, cartesian1D's `orientation`, polar1D's `radius`, …) and which marks / channels apply.
 
-### Explicit Scales
+### Scales
 
-Default scales come from field values and mark types: numbers use continuous axes, ordinary strings use categorical positions, and ISO dates use time axes. To force dates, log axes, or square-root axes, add a `<Scale>` child to set one coordinate dimension.
+Default scales come from field values and mark types: numbers use continuous axes, ordinary strings use categorical positions, and ISO dates use time axes. To request log or square-root axes, add a `<Scale>` child to set one coordinate dimension.
 
-<ComponentPreview name="plot-scale" sourceFiles={['plot-extra.data.ts']} size="sm" />
+<ComponentPreview name="plot-scale" sourceFiles={['plot-scale.data.ts']} size="md" />
 
-<p className="text-sm text-muted-foreground">The x dimension uses a time scale, so axis ticks format as time boundaries.</p>
+<p className="text-sm text-muted-foreground">Left: the default linear y axis compresses early points near the bottom; right: an explicit log y axis spreads the same exponential data evenly.</p>
 
-### Data Models And Field Maps
+### Data Models
 
 Real data often uses field names that differ from the chart's logical names. With `model` declared, `fieldMap` maps logical fields to the actual data paths; marks still reference the logical names.
 
-<ComponentPreview name="plot-field-map" sourceFiles={['plot-extra.data.ts']} size="sm" />
+<ComponentPreview name="plot-field-map" sourceFiles={['plot-field-map.data.ts']} size="sm" />
 
 <p className="text-sm text-muted-foreground">The data rows use period / amount; the chart still writes date / visits.</p>
+
+### Color Palettes
+
+`colors` controls the default palette for one `<Plot>`. When omitted, Plot uses d3's `schemeCategory10`; when provided, categorical `color` channels use it as their range, and marks without a `color` encoding use it by layer order.
+
+<ComponentPreview name="plot-colors" sourceFiles={['plot-cartesian.data.ts']} size="md" />
+
+<p className="text-sm text-muted-foreground">Left: the default schemeCategory10; right: the same data with d3-scale-chromatic's schemeTableau10.</p>
 
 ### Entry Forms
 
@@ -121,6 +129,7 @@ When the PlotSpec carries an `id` (spec entry or generated IR), lowering wraps a
 | `model` | `DataModel` | — | Data model (field names + types): enables strict validation and type-driven scale / guide derivation; see [Data Model](/plot/data/model) |
 | `fieldMap` | `Record<string, string>` | — | Logical field name → actual path in the data (requires `model`); renames only, no value transform; see [Processing](/plot/data/processing) |
 | `coordinate` | see [Coordinates](/plot/grammar/coordinate) | cartesian2D | Coordinate system: `"polar2D"` / `"cartesian1D"` / `"polar1D"` / `"ternary2D"` shorthand or the matching object; cartesian2D by default |
+| `colors` | `Array<string>` | `schemeCategory10` | Default palette. Categorical color scales use it as their range; marks without a color encoding use it by layer order and cycle when needed. Use `'currentColor'` to keep the inherited core color |
 | `width` | `number` | — | Outer width (including axes and labels) |
 | `height` | `number` | — | Outer height (including axes and labels) |
 | `transforms` | `Array<IRTransform>` | — | Panel-level transforms; commonly used to position multiple charts inside a parent `<Layout>` |

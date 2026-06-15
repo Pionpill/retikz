@@ -98,6 +98,8 @@ export type BuildPlotSpecOptions = {
   coordinate?: CoordinateInput;
   /** 数据模型（字段类型）：声明则进 data.model，并对未显式 <Scale> 的位置维度走 type-driven 派生 */
   model?: DataModel;
+  /** 默认颜色数组：分类 color scale 的 range；无 color 编码的 mark 按图层序取色，`currentColor` 表示继承当前文字颜色 */
+  colors?: Array<string>;
   /**
    * 延迟位置 scale 推断：省略未显式声明的位置 scale 绑定，让 lowering 按实际数据字段类型派生。
    * @description 供 `<Plot data>` 入口使用；直接调用 buildPlotSpec 时缺省保持旧的 AUTO linear/band 行为。
@@ -276,7 +278,7 @@ const collectInto = (children: ReactNode, into: Collected): void => {
  * @description 无 model 时一律 ordinal（运行时按推断当分类调色；连续字段会在 lowering fail-loud，提示声明 model 或显式色阶）。
  *   显式 scheme / diverging / midpoint 经 vanilla IR 全量可用，React 自动表面仅派生默认 sequential。
  */
-const buildColorScale = (colorFields: Array<string>, model: DataModel | undefined): PlotScaleSpec => {
+const buildColorScale = (colorFields: Array<string>, model: DataModel | undefined, colors: Array<string> | undefined): PlotScaleSpec => {
   if (model !== undefined) {
     const typeByField = new Map(model.map(field => [field.name, field.type] as const));
     const anyContinuous = colorFields.some(field => {
@@ -285,7 +287,7 @@ const buildColorScale = (colorFields: Array<string>, model: DataModel | undefine
     });
     if (anyContinuous) return { type: PlotScale.Sequential, name: AUTO_COLOR };
   }
-  return { type: PlotScale.Ordinal, name: AUTO_COLOR };
+  return { type: PlotScale.Ordinal, name: AUTO_COLOR, ...(colors !== undefined ? { range: colors } : {}) };
 };
 
 const buildPositionScale = (name: string, type: PositionScaleType): PlotScaleSpec => {
@@ -472,7 +474,7 @@ export const buildPlotSpec = (children: ReactNode, dataRef: string, options: Bui
       ...(!shouldDeferPositionScales || explicitScales.y !== undefined ? [yScale] : []),
     ];
   }
-  if (collected.colored) scales.push(buildColorScale(collected.colorFields, options.model));
+  if (collected.colored) scales.push(buildColorScale(collected.colorFields, options.model, options.colors));
 
   // 薄 Plot：不补默认轴——用户显式 <Axis>/<Legend> 才有 guides。
   //   开箱即用的默认轴 / 网格交给上层 <Chart>（v0.2，复用 decorateDefaultGuides）。
@@ -486,6 +488,7 @@ export const buildPlotSpec = (children: ReactNode, dataRef: string, options: Bui
     data: options.model ? { reference: dataRef, model: options.model } : { reference: dataRef },
     ...(collected.transforms.length > 0 ? { transform: collected.transforms } : {}),
     scales,
+    ...(options.colors !== undefined ? { colors: options.colors } : {}),
     coordinate,
     marks: collected.marks,
     guides,

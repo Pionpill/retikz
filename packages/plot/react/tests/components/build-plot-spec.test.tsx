@@ -262,6 +262,13 @@ describe('buildPlotSpec ADR-07（BarMark / color / series / stack / Scale）', (
     expect(spec.marks[0]?.encoding.color).toEqual({ field: 'continent', scale: '__color' });
   });
 
+  it('plot_colors_builds_palette_and_ordinal_range', () => {
+    const colors = ['#2563eb', '#f97316', 'currentColor'];
+    const spec = buildPlotSpec(<PointMark x="gdp" y="life" color="continent" />, '__plot', { colors });
+    expect(spec.colors).toEqual(colors);
+    expect(spec.scales).toContainEqual({ type: 'ordinal', name: '__color', range: colors });
+  });
+
   it('no_color_no_ordinal_scale', () => {
     const spec = buildPlotSpec(<PointMark x="m" y="r" />, '__plot');
     expect(spec.scales.some(s => s.type === 'ordinal')).toBe(false);
