@@ -131,6 +131,14 @@ export const PathSchema = z
       .describe(
         'Stroke corner shape (`miter` / `round` / `bevel`; matches TikZ `line join`). Default `miter` (sharp corner); `round` rounds the join; `bevel` cuts the corner flat.',
       ),
+    roundedCorners: z
+      .number()
+      .finite()
+      .nonnegative()
+      .optional()
+      .describe(
+        'Geometric corner radius (TikZ `rounded corners=`) applied to every line-to-line joint of the path. This rounds the path GEOMETRY (pulls the joint vertices back and inserts a tangent arc) — distinct from `lineJoin` which only styles the stroke render. Joints touching a curve / arc / bezier / fold segment stay sharp. Per-joint radius is clamped to what the adjacent segment lengths allow. Omitted = sharp corners (current behavior, unchanged).',
+      ),
     thickness: z
       .enum([
         'ultraThin',
