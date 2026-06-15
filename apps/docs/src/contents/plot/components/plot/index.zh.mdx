@@ -1,9 +1,9 @@
 ---
 title: 图表容器
-description: <Plot> 是图表容器：接收裸数据与尺寸，装配 mark / guide 子组件，并通过 coordinate 选择平面或极坐标系。
+description: <Plot> 是图表容器：接收裸数据与尺寸，装配 mark / guide / scale 子组件，并在编译期下沉到 core 图元。
 ---
 
-`<Plot>` 是所有图表的根容器。它接收 `data`（裸数据行数组）和显示尺寸，把内部的 `<LineMark>` / `<BarMark>` / `<SectorMark>` / `<Axis>` / `<Scale>` 等子组件装配成一张图。`coordinate` 选坐标系：缺省平面直角，可切极坐标（`"polar2D"`）、一维（`"cartesian1D"` / `"polar1D"`）或三元（`"ternary2D"`）。数据不进 IR，只在编译期注入。`<Plot>` 是**薄容器**：自己不画坐标轴 / 网格，轴由你显式的 `<Axis>` 声明（scale 与坐标系仍自动推断，也可用 `<Scale>` 覆盖）。
+`<Plot>` 是 plot 体系的容器组件：它接收 `data`（裸数据行数组）和显示尺寸，收集内部的 `<LineMark>` / `<BarMark>` / `<SectorMark>` / `<Axis>` / `<Scale>` 等子组件，编译期再装配成 PlotSpec 并下沉到 core。数据不写进 IR，只在 lowering 时注入。`<Plot>` 自己不画坐标轴、网格或图例；这些 guide 由你显式声明，scale 会自动推断，也可以用 `<Scale>` 覆盖；坐标系默认 `cartesian2D`，可用 `coordinate` 切换。
 
 ## 用法
 
@@ -19,25 +19,13 @@ import { Axis, BarMark, Plot } from '@retikz/plot-react';
 </Plot>
 ```
 
-`width × height` 是含坐标轴与刻度标签的外框。子组件只声明字段映射，不写像素坐标。`colors` 会覆盖默认调色板；省略时使用 d3 的 `schemeCategory10`。数组里写 `'currentColor'` 表示该层保持 core 继承色。
-
-`<Plot>` 是**底层容器**：它收集 mark、按数据值推断连续 / 分类 / 时间 scale、收集你显式写的 `<Axis>` / `<Legend>` / `<Scale>`，再编译渲染；但不替你自动出坐标轴 / 网格 / 图例——要轴就显式写 `<Axis>`，只画数据时就不要写 guide 子组件。
+`width × height` 是整张图的外框，包含绘图区、坐标轴和刻度标签。子组件只声明字段映射与 guide，不写像素坐标；如果只想画数据层，可以省略 `<Axis>` / `<Legend>` 这类 guide 子组件。
 
 ## 例子
 
-### 面板组合
-
-同一个父级 `<Layout>` 可以放多张 `<Plot>`。每张图用自己的 `width` / `height` 决定外框，再用 `transforms` 在父画布中摆位。
-
-<ComponentPreview name="plot-panels" sourceFiles={['plot-cartesian.data.ts']} size="md" />
-
-<p className="text-sm text-muted-foreground">左：cartesian 折线图；右：同一个 Layout 里的 cartesian 柱状图。</p>
-
-`width` / `height` 仍是每张图自己的外框尺寸；父级 `<Layout>` 的尺寸只决定整张组合图的画布。
-
 ### 坐标系
 
-`coordinate` 决定单张 `<Plot>` 内部怎么投影数据。缺省是 `cartesian2D`；同一份数据也可以切到 `polar2D`，变成径向柱图。
+`coordinate` 决定单张 `<Plot>` 内部怎么投影数据。缺省是 `cartesian2D`；同一份数据也可以切到 `polar2D`，在另一套坐标系下解释同样的字段映射。
 
 <ComponentPreview name="plot-coordinate" sourceFiles={['plot-cartesian.data.ts']} size="md" />
 
@@ -57,27 +45,37 @@ import { Axis, BarMark, Plot } from '@retikz/plot-react';
 
 ### 比例尺
 
-默认 scale 来自字段值和 mark 类型：数字走连续轴，普通字符串走分类位置，ISO 日期走时间轴。需要对数轴或平方根轴时，在 `<Plot>` 里写 `<Scale>` 子组件指定某个维度。
+默认 scale 来自字段值和 mark 类型：数字走连续轴，普通字符串走分类位置，ISO 日期走时间轴。需要对数轴、平方根轴或手动 domain 时，在 `<Plot>` 里写 `<Scale>` 子组件覆盖对应维度。
 
 <ComponentPreview name="plot-scale" sourceFiles={['plot-scale.data.ts']} size="md" />
 
 <p className="text-sm text-muted-foreground">左：默认 linear y 轴，前几个点挤在底部；右：显式 log y 轴，同一组指数级数据被均匀展开。</p>
 
+### 颜色系
+
+`colors` 控制整张 `<Plot>` 的默认颜色数组。省略时使用 d3 的 `schemeCategory10`；传入自己的数组后，分类 `color` 通道会把它作为 range，没有 `color` 编码的 mark 也会按图层顺序取色，超过数组长度后循环。数组里写 `'currentColor'` 表示该层保持 core 继承色。
+
+<ComponentPreview name="plot-colors" sourceFiles={['plot-cartesian.data.ts']} size="md" />
+
+<p className="text-sm text-muted-foreground">左：默认 schemeCategory10；右：同一份数据改用 d3-scale-chromatic 的 schemeTableau10。</p>
+
 ### 数据模型
 
-真实数据的字段名经常和图表里的逻辑字段名不同。声明 `model` 后，`fieldMap` 可以把逻辑字段映射到真实数据路径；mark 仍然只引用逻辑名。
+真实数据的字段名经常和图表里的逻辑字段名不同。`model` 声明图表需要的逻辑字段及类型，`fieldMap` 再把这些逻辑字段映射到真实数据路径；mark 始终引用逻辑名。
 
 <ComponentPreview name="plot-field-map" sourceFiles={['plot-field-map.data.ts']} size="sm" />
 
 <p className="text-sm text-muted-foreground">数据里是 period / amount，图里仍写 date / visits。</p>
 
-### 颜色系
+### 面板组合
 
-`colors` 控制整张 `<Plot>` 的默认颜色数组。省略时使用 d3 的 `schemeCategory10`；传入自己的数组后，分类 `color` 通道会把它作为 range，没有 `color` 编码的 mark 也会按图层顺序取色。
+同一个父级 `<Layout>` 可以放多张 `<Plot>`。每张图用自己的 `width` / `height` 决定外框，再用 `transforms` 在父画布中摆位；父级只负责承载和组合，不参与子图的 scale 推断。
 
-<ComponentPreview name="plot-colors" sourceFiles={['plot-cartesian.data.ts']} size="md" />
+<ComponentPreview name="plot-panels" sourceFiles={['plot-cartesian.data.ts']} size="md" />
 
-<p className="text-sm text-muted-foreground">左：默认 schemeCategory10；右：同一份数据改用 d3-scale-chromatic 的 schemeTableau10。</p>
+<p className="text-sm text-muted-foreground">左：cartesian 折线图；右：同一个 Layout 里的 cartesian 柱状图。</p>
+
+`width` / `height` 仍是每张图自己的外框尺寸；父级 `<Layout>` 的尺寸只决定整张组合图的画布。
 
 ### 入口形态
 
@@ -86,9 +84,9 @@ import { Axis, BarMark, Plot } from '@retikz/plot-react';
 | 入口 | 必填 | 适用 |
 | --- | --- | --- |
 | 组合 DSL | `data`（裸数组）+ `children` | 手写 JSX 声明 mark / guide / scale（最常用） |
-| spec 入口 | `spec`（已构造 PlotSpec）+ `data`（数据集表） | 持久化 / AI 生成的完整 spec 直喂 |
+| spec 入口 | `spec`（已构造 PlotSpec）+ `data`（数据集表） | 持久化 / 外部生成的完整 spec 直喂 |
 
-当图表配置来自持久化 JSON 或 AI 生成结果时，可以直接传 `spec`。数据仍然单独通过 `data` 表注入，不写进 PlotSpec。
+当图表配置来自持久化 JSON 或外部生成结果时，可以直接传 `spec`。数据仍然单独通过 `data` 表注入，不写进 PlotSpec。
 
 <ComponentPreview name="plot-spec-entry" sourceFiles={['plot-cartesian.data.ts']} size="sm" />
 
@@ -98,7 +96,7 @@ import { Axis, BarMark, Plot } from '@retikz/plot-react';
 
 > 上手阶段可跳过本节；想理解 `<Plot>` 怎么被编译，或要直接写 / 生成底层 IR 时再回来读。
 
-`<Plot>` 自己不画任何图元。它先把 children（mark / guide / coordinate）装配成一棵 **PlotSpec**——Tier 2 的高层 IR（全 JSON 可序列化，数据不在其中）；编译期再经 **lowering** 把 PlotSpec 下沉成 `@retikz/core` 的 Tier 1 IR（`<Scope>` / `<Node>` / `<Path>`），最后由 core 编译成 Scene 交给 renderer。spec 入口跳过装配，直接喂 PlotSpec。
+`<Plot>` 自己不画任何图元。组合入口会先把 children（mark / guide / scale / coordinate）装配成一棵 **PlotSpec**——Tier 2 的高层 IR（全 JSON 可序列化，数据不在其中）；编译期再经 **lowering** 把 PlotSpec 下沉成 `@retikz/core` 的 Tier 1 IR（`<Scope>` / `<Node>` / `<Path>`），最后由 core 编译成 Scene 交给 renderer。spec 入口跳过装配，直接喂 PlotSpec。
 
 下沉不是 `<Plot>` 私有逻辑，而是注册进 core 编译管线的一个 **composite**：core 见到 PlotSpec 节点就调用它的展开函数，与 core 处理任何高层节点同源——上层不另造平行渲染。
 
