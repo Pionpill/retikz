@@ -10,7 +10,7 @@ export const changelogPageDescription: Localized = {
 export const changelog: Array<Release> = [
   {
     minor: 'v0.3',
-    stableDate: null,
+    stableDate: '2026-06-15',
     packages: [
       {
         pkg: '@retikz/render',
@@ -43,6 +43,23 @@ export const changelog: Array<Release> = [
           },
         ],
         subVersions: [
+          {
+            version: 'rc.1',
+            date: '2026-06-14',
+            summary: {
+              zh: '候选发布：公开 API 冻结（IR schema 字段名 / 导出名 / 函数签名 / 公开 type 自此不再破坏性变更）。自 beta.2 起 core 组 src 零功能改动，进入发布候选。',
+              en: 'Release candidate: the public API freezes here (IR schema field names / exports / function signatures / public types take no breaking changes from now). No functional source change across the core group since beta.2 — this is the release candidate.',
+            },
+            items: [
+              {
+                label: { zh: 'API 冻结', en: 'API freeze' },
+                content: {
+                  zh: '自 rc 起公开 API 冻结；后续到 0.3.0 stable 只接 bug fix，不再改 schema 字段 / 导出名 / 函数签名。',
+                  en: 'From rc onward the public API is frozen; only bug fixes land until 0.3.0 stable — no more schema field / export / signature changes.',
+                },
+              },
+            ],
+          },
           {
             version: 'beta.2',
             date: '2026-06-13',
@@ -280,6 +297,23 @@ export const changelog: Array<Release> = [
         ],
         subVersions: [
           {
+            version: 'rc.1',
+            date: '2026-06-14',
+            summary: {
+              zh: '候选发布：公开 API 冻结（IR schema 字段名 / 导出名 / 函数签名 / 公开 type 自此不再破坏性变更）。自 beta.2 起 core 组 src 零功能改动，进入发布候选。',
+              en: 'Release candidate: the public API freezes here (IR schema field names / exports / function signatures / public types take no breaking changes from now). No functional source change across the core group since beta.2 — this is the release candidate.',
+            },
+            items: [
+              {
+                label: { zh: 'API 冻结', en: 'API freeze' },
+                content: {
+                  zh: '自 rc 起公开 API 冻结；后续到 0.3.0 stable 只接 bug fix，不再改 schema 字段 / 导出名 / 函数签名。',
+                  en: 'From rc onward the public API is frozen; only bug fixes land until 0.3.0 stable — no more schema field / export / signature changes.',
+                },
+              },
+            ],
+          },
+          {
             version: 'beta.2',
             date: '2026-06-13',
             summary: {
@@ -480,6 +514,23 @@ export const changelog: Array<Release> = [
           },
         ],
         subVersions: [
+          {
+            version: 'rc.1',
+            date: '2026-06-14',
+            summary: {
+              zh: '候选发布：公开 API 冻结（IR schema 字段名 / 导出名 / 函数签名 / 公开 type 自此不再破坏性变更）。自 beta.2 起 core 组 src 零功能改动，进入发布候选。',
+              en: 'Release candidate: the public API freezes here (IR schema field names / exports / function signatures / public types take no breaking changes from now). No functional source change across the core group since beta.2 — this is the release candidate.',
+            },
+            items: [
+              {
+                label: { zh: 'API 冻结', en: 'API freeze' },
+                content: {
+                  zh: '自 rc 起公开 API 冻结；后续到 0.3.0 stable 只接 bug fix，不再改 schema 字段 / 导出名 / 函数签名。',
+                  en: 'From rc onward the public API is frozen; only bug fixes land until 0.3.0 stable — no more schema field / export / signature changes.',
+                },
+              },
+            ],
+          },
           {
             version: 'beta.2',
             date: '2026-06-13',
@@ -688,6 +739,23 @@ export const changelog: Array<Release> = [
           },
         ],
         subVersions: [
+          {
+            version: 'rc.1',
+            date: '2026-06-14',
+            summary: {
+              zh: '候选发布：公开 API 冻结（IR schema 字段名 / 导出名 / 函数签名 / 公开 type 自此不再破坏性变更）。自 beta.2 起 core 组 src 零功能改动，进入发布候选。',
+              en: 'Release candidate: the public API freezes here (IR schema field names / exports / function signatures / public types take no breaking changes from now). No functional source change across the core group since beta.2 — this is the release candidate.',
+            },
+            items: [
+              {
+                label: { zh: 'API 冻结', en: 'API freeze' },
+                content: {
+                  zh: '自 rc 起公开 API 冻结；后续到 0.3.0 stable 只接 bug fix，不再改 schema 字段 / 导出名 / 函数签名。',
+                  en: 'From rc onward the public API is frozen; only bug fixes land until 0.3.0 stable — no more schema field / export / signature changes.',
+                },
+              },
+            ],
+          },
           {
             version: 'beta.2',
             date: '2026-06-13',
@@ -3275,8 +3343,8 @@ export const changelog: Array<Release> = [
           {
             label: { zh: 'Arrow 专页与 Blog', en: 'Arrow page + Blog' },
             content: {
-              zh: '新增 Arrow 专页讲箭头 shape / 颜色 / 异形 / 缩放;`/blog/` 设计 / 历程两 section 上线',
-              en: 'A dedicated Arrow page on shape / color / heterogeneous ends / scale; the `/blog/` design / journey sections go live',
+              zh: '新增 Arrow 专页讲箭头 shape / 颜色 / 异形 / 缩放;`/about/blog/` 博客内容上线',
+              en: 'A dedicated Arrow page on shape / color / heterogeneous ends / scale; the `/about/blog/` posts go live',
             },
           },
         ],
@@ -3351,8 +3419,8 @@ export const changelog: Array<Release> = [
               {
                 label: { zh: 'Blog 分区上线', en: 'Blog section' },
                 content: {
-                  zh: '`/blog/` 新增设计 / 历程两 section,首发 `core-philosophy` 与 `origin` 两篇中英正文',
-                  en: 'New `/blog/` with design / journey sub-sections; ships `core-philosophy` and `origin` as the first two zh + en posts',
+                  zh: '`/about/blog/` 博客分组上线,首发 `core-philosophy` 与 `origin` 两篇中英正文',
+                  en: 'New `/about/blog/` posts; ships `core-philosophy` and `origin` as the first two zh + en posts',
                 },
               },
             ],

@@ -149,14 +149,14 @@ export const DocPage: FC<DocPageProps> = props => {
                 {target.extra}
               </div>
             </div>
-            {loc.moduleId === 'blog' && (
+            {loc.sectionId === 'blog' && (
               <BlogFrontmatter
                 date={typeof frontmatter.date === 'string' ? frontmatter.date : undefined}
                 tags={Array.isArray(frontmatter.tags) ? (frontmatter.tags as Array<string>) : undefined}
               />
             )}
             {description && <InlineMdx source={description} className="text-muted-foreground" />}
-            {loc.moduleId === 'blog' && resolvedLang && resolvedLang !== i18n.resolvedLanguage && (
+            {loc.sectionId === 'blog' && resolvedLang && resolvedLang !== i18n.resolvedLanguage && (
               <div
                 role="alert"
                 className="w-full rounded-md border border-amber-500/50 bg-amber-500/10 px-4 py-2 text-sm text-amber-900 dark:text-amber-200"
