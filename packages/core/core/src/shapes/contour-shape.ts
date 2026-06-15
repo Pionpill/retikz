@@ -1,7 +1,15 @@
 import { z } from 'zod';
+import { point } from '../geometry/point';
 import type { Position } from '../geometry/point';
+import { localToWorld } from '../geometry/transform';
 import type { Rect } from '../geometry/rect';
+import {
+  type ContourSegment,
+  boundaryFromContour,
+  contourCommands,
+} from '../geometry/contour';
 import type { ScenePrimitive } from '../primitive';
+import { contourToPathCommands, contourToPathPrimitive, verticesToSegments } from './contour';
 import { defineShape } from './define';
 
 /**
@@ -16,6 +24,34 @@ type ContourParams = {
 };
 
 export type { ContourParams };
+
+/** 点集 AABB 的 [minX, minY, maxX, maxY] */
+const aabbOf = (points: Array<Position>): [number, number, number, number] => {
+  let minX = Infinity;
+  let minY = Infinity;
+  let maxX = -Infinity;
+  let maxY = -Infinity;
+  for (const [x, y] of points) {
+    if (x < minX) minX = x;
+    if (y < minY) minY = y;
+    if (x > maxX) maxX = x;
+    if (y > maxY) maxY = y;
+  }
+  return [minX, minY, maxX, maxY];
+};
+
+/** 点集 AABB 中心；core 据此自动居中（每顶点减去它，使几何中心落到 Node position） */
+const aabbCenterOf = (points: Array<Position>): Position => {
+  const [minX, minY, maxX, maxY] = aabbOf(points);
+  return [(minX + maxX) / 2, (minY + maxY) / 2];
+};
+
+/** 顶点环 → 自动居中（减 AABB 中心）→ 经 rect 投世界系 → 闭合折线段 */
+const worldSegments = (rect: Rect, params: ContourParams): Array<ContourSegment> => {
+  const center = aabbCenterOf(params.points);
+  const verts = params.points.map(p => localToWorld(rect, point.sub(p, center)));
+  return verticesToSegments(verts);
+};
 
 /**
  * contour 注册项：吃任意闭合顶点环的几何驱动 shape（可圆角、可连接 Node）
@@ -46,22 +82,25 @@ export const contour = defineShape({
         'Uniform per-vertex fillet radius in user units; 0 / omitted = sharp corners. Clamped per corner to the largest non-self-intersecting fillet.',
       ),
   }),
+  // 几何驱动：AABB 半轴由 points 算（平移不变，自动居中无需调用方预居中）；rect 中心维持在 position。
   circumscribe: (innerHalfWidth, innerHalfHeight, params: ContourParams) => {
     void innerHalfWidth;
     void innerHalfHeight;
-    void params;
-    return { halfWidth: 0, halfHeight: 0 };
+    const [minX, minY, maxX, maxY] = aabbOf(params.points);
+    return { halfWidth: (maxX - minX) / 2, halfHeight: (maxY - minY) / 2 };
   },
+  // 自动居中收在 emit / boundaryPoint 内部（减 AABB 中心），rect 仍中心在 position。
   circumscribeOffset: (params: ContourParams): Position => {
     void params;
     return [0, 0];
   },
   boundaryPoint: (rect: Rect, toward: Position, params: ContourParams): Position => {
-    void rect;
-    void toward;
-    void params;
-    throw new Error('contour not implemented');
+    const segments = worldSegments(rect, params);
+    const center: Position = [rect.x, rect.y];
+    const hit = boundaryFromContour(segments, params.cornerRadius, center, toward);
+    return hit ?? center;
   },
+  // compass 名交回退（compile 回退到外接 AABB rect）；曲边块上没有有意义的真·命名方位。
   anchor: (rect: Rect, name: string, params: ContourParams): Position | undefined => {
     void rect;
     void name;
@@ -69,16 +108,13 @@ export const contour = defineShape({
     return undefined;
   },
   *emit (rect: Rect, style, round, params: ContourParams): Iterable<ScenePrimitive> {
-    void rect;
-    void style;
-    void round;
-    void params;
-    if (false as boolean) yield undefined as never;
-    throw new Error('contour not implemented');
+    const segments = worldSegments(rect, params);
+    const commands = contourToPathCommands(contourCommands(segments, params.cornerRadius), round);
+    yield contourToPathPrimitive(commands, style);
   },
-  scaleParams: (params: ContourParams, sx: number, sy: number): ContourParams => {
-    void sx;
-    void sy;
-    return params;
-  },
+  // points 是长度（按轴各向异性缩）；cornerRadius 是长度（几何均值因子，同 polygon）。
+  scaleParams: (params: ContourParams, sx: number, sy: number): ContourParams => ({
+    points: params.points.map(([x, y]): Position => [x * sx, y * sy]),
+    ...(params.cornerRadius === undefined ? {} : { cornerRadius: params.cornerRadius * Math.sqrt(sx * sy) }),
+  }),
 });
