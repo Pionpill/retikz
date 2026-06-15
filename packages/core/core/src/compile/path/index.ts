@@ -1,6 +1,7 @@
 import {
   arcBoundingPoints,
   arcEndPoint,
+  curve,
   ellipseArcBoundingPoints,
   ellipseArcPoint,
 } from '@retikz/math';
@@ -938,9 +939,57 @@ export const emitPathPrimitive = (
     }
 
     if (step.kind === 'smooth') {
-      // 实现期替换：knots = [prev.anchor, ...resolve(step.points)]；
-      // 调 @retikz/math curve.catmullRomToCubic(knots, step.tension ?? 1) → emit 为 cubic 链，cursor 推进到末点。
-      throw new Error('smooth step not implemented');
+      // arc/circle/ellipse 留下的 penOverride 决定起点；普通 prev 用 boundary clip 朝首个 through-point 收口
+      const usedOverride = penOverride;
+
+      // 各 through-point resolve 成世界坐标（relative/relativeAccumulate 已被 normalizeRelativeTargets 预解析为局部 tuple）
+      const resolved: Array<IRPosition> = [];
+      let resolveFailed = false;
+      for (let k = 0; k < step.points.length; k++) {
+        const pt = step.points[k];
+        const r = refPointOfTarget(pt, nameStack, scopeChain);
+        if (!r) {
+          const ptId = nodeRefId(pt);
+          if (ptId !== undefined) {
+            warn(
+              CompileWarningCode.UnresolvedNodeReference,
+              `Smooth step point references undefined node id '${ptId}'; the entire path is skipped`,
+              `children[${i}].points[${k}]`,
+            );
+          }
+          resolveFailed = true;
+          break;
+        }
+        resolved.push(r);
+      }
+      if (resolveFailed) return null;
+
+      // 首 knot = 当前游标：penOverride 优先，否则 prev.step.to 朝首个 through-point boundary clip
+      const fromClip =
+        usedOverride ?? clipForTarget(prev.step.to, resolved[0], nameStack, scopeChain);
+      if (!fromClip) return null;
+
+      // knots = [游标, ...through-points]；centripetal Catmull-Rom 转 cubic 段链
+      const knots: Array<IRPosition> = [fromClip, ...resolved];
+      const segs = curve.catmullRomToCubic(knots, step.tension ?? 1);
+
+      startSegment(fromClip, usedOverride === null && isAutoBoundaryTarget(prev.step.to));
+      for (const seg of segs) emitCubic(seg.control1, seg.control2, seg.to);
+
+      // label 沿生成 cubic 链按贝塞尔参数定位：把 t∈[0,1] 分摊到 N 段，落第 ⌊t·N⌋ 段、段内 = 余数（与中段 marks 同款便宜模型）
+      collectLabel(step, t => {
+        const segCount = segs.length;
+        const scaled = t * segCount;
+        const segIdx = Math.min(Math.floor(scaled), segCount - 1);
+        const localT = t === 1 ? 1 : scaled - segIdx;
+        const from = segIdx === 0 ? fromClip : segs[segIdx - 1].to;
+        const seg = segs[segIdx];
+        return cubicSegmentSample(from, seg.control1, seg.control2, seg.to, localT);
+      });
+
+      // 游标推进到末点；后续 hasTo 段从此续接
+      penOverride = readCursor();
+      continue;
     }
 
     const currAnchor = anchors[i];

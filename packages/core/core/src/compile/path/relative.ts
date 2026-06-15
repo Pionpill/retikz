@@ -47,12 +47,38 @@ export const normalizeRelativeTargets = (
       continue;
     }
     if (step.kind === 'smooth') {
-      out.push(step);
-      // smooth 用 `points`（非 `to`，min(1) 保证非空）。relative/relativeAccumulate 点的归一化由实现期落地；
-      // 此处先原样透传。prevEnd 推进到末点（多数曲线收于 points 末项）。
-      const last = step.points[step.points.length - 1];
-      const pos = refPointOfTarget(last, nameStack, scopeChain);
-      if (pos) prevEnd = pos;
+      // smooth 用 `points`（非 `to`，min(1) 保证非空）。逐点归一化 relative/relativeAccumulate：
+      // 与 to 字段同款——relative（`+`）不推进 prevEnd、relativeAccumulate（`++`）推进；绝对点直接推进。
+      const normalizedPoints: Array<IRTarget> = [];
+      for (const original of step.points) {
+        let resolvedPt: IRTarget = original;
+        let updatePrevEnd = true;
+        if (typeof original === 'object' && !Array.isArray(original) && 'relative' in original) {
+          const refGlobal = prevEnd ?? [0, 0];
+          const refLocal =
+            scopeChain.length === 0 ? refGlobal : inverseTransformChain(refGlobal, scopeChain);
+          resolvedPt = [refLocal[0] + original.relative[0], refLocal[1] + original.relative[1]];
+          updatePrevEnd = false;
+        } else if (
+          typeof original === 'object' &&
+          !Array.isArray(original) &&
+          'relativeAccumulate' in original
+        ) {
+          const refGlobal = prevEnd ?? [0, 0];
+          const refLocal =
+            scopeChain.length === 0 ? refGlobal : inverseTransformChain(refGlobal, scopeChain);
+          resolvedPt = [
+            refLocal[0] + original.relativeAccumulate[0],
+            refLocal[1] + original.relativeAccumulate[1],
+          ];
+        }
+        normalizedPoints.push(resolvedPt);
+        if (updatePrevEnd) {
+          const pos = refPointOfTarget(resolvedPt, nameStack, scopeChain);
+          if (pos) prevEnd = pos;
+        }
+      }
+      out.push({ ...step, points: normalizedPoints });
       continue;
     }
     if (step.kind === 'generator') {
