@@ -3,11 +3,8 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 import { CompositeBaseSchema, type CompositeDefinition, defineComposite } from '@retikz/core';
-import {
-  type EmbeddableTier2Adapter,
-  buildIRWithContributions,
-  collectHydrationHandlers,
-} from '../../src';
+import { type EmbeddableTier2Adapter, collectHydrationHandlers } from '../../src';
+import { buildIRWithContributions } from '../../src/kernel/builder';
 import { Layout } from '../../src/kernel/Layout';
 
 /**

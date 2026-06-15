@@ -85,6 +85,21 @@ retikz 一次发包 = **3 处同步改动 + 用户确认 + npm publish**。
 
 如果用户没说清楚版本号或变更点，**停下来问**，不要瞎猜。
 
+**版本连续性硬校验（必做）**：定目标版本前先查 npm 上该组的最新已发布版本，确认目标版本是它的**合法下一步**，不允许跳号 / 回退 / 错乱。
+
+```bash
+# 查本组某包 npm 上所有版本（core 组查 @retikz/core，plot 组查 @retikz/plot）
+npm view @retikz/core versions --registry=https://registry.npmjs.org/
+npm view @retikz/core dist-tags --registry=https://registry.npmjs.org/
+```
+
+判定规则（设 npm 最新预发布为 `X.Y.Z-alpha.N`）：
+
+- 合法下一步只有两类：**同段递增** `...-alpha.(N+1)`，或**升段** `...-beta.1` / `...-rc.1` / 正式版 `X.Y.Z`（升段后计数从 `.1` 重新开始）。
+- 例：npm 最新是 `alpha.10` → 目标只能是 `alpha.11` 或 `beta.1`（及更高段）。出现 `alpha.10`（重发）、`alpha.12`（跳号）、`alpha.9`（回退）等一律**停下来向用户确认**，不允许默默发出。
+- 仓库 `package.json` 里的预 bump 版本（阶段 6.2 留下的开发版）只是开发起点，**不等于** npm 上的已发布版本；以 npm 实际版本为基准做连续性判断，避免把开发占位版本当成已发布版本。
+- 升段（alpha→beta→rc→正式）属设计节奏决策，即使版本号本身连续，也要确认用户确实要在本次发布升段，而非继续 alpha。
+
 ### 阶段 2 — working tree 改动
 
 按下面顺序做（可并行的并行做）。
@@ -306,6 +321,7 @@ git tag: v0.3.0-alpha.x（已 push；plot 组为 plot-v<version>）
 | catalog 改动后 lockfile 漂移 | 跑 `pnpm install` |
 | 未经授权 commit / tag / push / publish | 严格等当前对话明确授权 |
 | tag 指向旧版本 commit | 改版本 → 验证 → commit → 确认 HEAD 版本 → tag → publish |
+| 目标版本相对 npm 最新跳号 / 回退 / 重发 | 阶段 1 先 `npm view <pkg> versions` 比对；非「同段 +1」或「升段从 .1」时停下来向用户确认 |
 | 还在改旧 changelog mdx / `<Update>` | changelog 入口是 `apps/docs/src/data/changelog.ts` |
 | registry 指到镜像 | login / dry-run / publish 都显式带 `--registry=https://registry.npmjs.org/` |
 | OTP 过期或限流 | 见阶段 5；新码立刻发，`EOTP` 后停下换码，`E429` 等冷却 |
@@ -322,6 +338,7 @@ git tag: v0.3.0-alpha.x（已 push；plot 组为 plot-v<version>）
 
 走完阶段 3 后、给用户审阅前最后过一遍：
 
+- [ ] 目标版本已对 npm 最新版本做连续性校验（同段 +1 或升段从 .1；跳号 / 回退 / 重发已向用户确认）
 - [ ] `packages/<pkg>/package.json` 版本号正确
 - [ ] 目标版本号已进入 working tree；阶段 5 tag 前必须确认它已经进入 HEAD
 - [ ] 同组所有包版本号一致（core 组 4 包 / plot 组 3 包 lockstep）
