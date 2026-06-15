@@ -1,9 +1,9 @@
 # core v0.4 设计note：可嵌入 Tier2 in `<Layout>` —— buildIR 经注册表静态识别 Tier2 composite 子组件、Layout 汇总贡献的 datasets + composites 并入 compile
 
-- 状态：Accepted MVP（2026-06-15 人工签字：适配器注册形态 = 组件静态属性；启动实现）
+- 状态：Accepted MVP（2026-06-15 人工签字：适配器注册形态 = 组件静态属性；已实现，待 changelog 封口）
 - 记录日期：2026-06-13（2026-06-15 人工签字升级）
 - 关联：[v0.4 路线讨论](../roadmap.md) · [plot v0.1-alpha.10 ADR-02 可被组合（首个消费方 / 硬依赖本文档）](../../../../plot/v0/v0.1/alpha.10/02-plot-composable.md) · [core v0.3-alpha.2 ADR-01 Tier2 支持（composite 展开机制）](../../v0.3/alpha.2/01-tier2-support.md) · [core-design.md §7 AI 一等公民](../../../../../architecture/core-design.md) · [plot-design §7 多坐标组合](../../../../../architecture/plot-design.md)
-> ⚠️ Draft：本文件是 v0.4 候选方向的设计 note，由 AI 起草、记录机制方向 / 边界 / 取舍；API 名 / 注册形态 / 测试象限为 **AI 建议稿**，正式启动走 brainstorm → spec → plan + 多 LLM 评估、人工拍板后才升级为正式 milestone ADR（[v0.4 roadmap 约定](../roadmap.md)）。RED 级，进实现前必走外部 LLM 评审。
+> 本文件原为 v0.4 候选方向设计 note；2026-06-15 经人工签字与实现落地后升级为 alpha.2 MVP 决策记录。plot 侧 `<Plot>` adapter 接线仍归 plot ADR-02。
 
 ## 背景
 
@@ -102,11 +102,11 @@ import { Plot, LineMark, BarMark, Axis } from '@retikz/plot-react';
 
 **vanilla 对等**（lockstep）：vanilla 无 JSX，组合直接用既有 builder 造同一棵 core scene IR（plot 节点 + translate `<Scope>` + 标注）+ `composites: lowerPlots(datasets)` 交 core vanilla scene 渲染——**共同真源 = core IR**。react 的「可嵌入适配器」是 React 专属糖，vanilla 直接组装 IR，二者产出同一棵 core IR、不漂移。可选薄 `composePlots` builder deferred。
 
-## 关键待决点 🔻
+## 实现决策
 
-> 评估后多数已收敛（见各条「评估 #N」）；下列保留项待人工最终签字。
+评估 findings 已在实现前收敛；以下是 alpha.2 MVP 的最终取舍。
 
-- **适配器注册形态（评估 #4）✅ 2026-06-15 人工签字**：MVP = **组件静态属性**——plot-react 在 `<Plot>` 挂 `Plot.isTier2Embeddable = true` + `Plot.embeddableAdapter = {...}`，core 遍历命中函数组件时读这两个静态属性，使 `<Layout><Plot/></Layout>` **零配置直接可用**（与 authoring 示例一致）、无 import 副作用全局表。`<Layout embeddables={[adapter]}>` 显式 prop 作**可选逃生舱**（测试注入 / 显式控制 / 未挂静态属性的 domain），非 MVP 必需。签字落地：本机制按此实现。
+- **适配器注册形态（评估 #4）✅ 2026-06-15 人工签字**：MVP = **组件静态属性**——domain 组件挂 `Component.isTier2Embeddable = true` + `Component.embeddableAdapter = {...}`，core 遍历命中函数组件时读这两个静态属性，使 `<Layout><Plot/></Layout>` 这类 authoring 表面可以零配置接入；无 import 副作用全局表。`<Layout embeddables={[adapter]}>` 显式 prop 作**可选逃生舱**（测试注入 / 显式控制 / 未挂静态属性的 domain），按 `displayName` 匹配并覆盖静态属性。
 - **贡献累加器（评估 #5 已收敛）**：公开 `buildIR(): IR` 不变，新增内部 `buildIRWithContributions(): { ir, contributions }`，累加器是其局部态、不引入隐藏全局态、可测。
 - **数据 ref 合并（评估 #3 已收敛）**：core 只做「同 ref 必须同一对象引用、否则 fail-loud」的机械检测；ref 语义（默认 = 面板 id、共享走 dataRef）归 domain adapter，core 不懂 ref 语义。
 - **分组 / 跨 domain composites（评估 #2 已收敛）**：adapter 带 `namespace`，core 按 namespace 分组——组内 datasets 合并、makeComposites 调一次，组间 concat。
@@ -138,7 +138,7 @@ import { Plot, LineMark, BarMark, Axis } from '@retikz/plot-react';
 - **`@retikz/plot-react`（下游，归 plot ADR-02 L2-a，非本文档 scope）**：`<Plot>` 挂 displayName + 提供 adapter；`PlotDslProps` 增 `id`/`dataRef`/`x`/`y`/`width`/`height`。
 - **跨 domain**：flow / table 等任意 Tier2 提供各自 adapter 即可嵌入 `<Layout>`。
 - **文档站**：core 侧补「Layout 收纳可嵌入 Tier2」机制说明；plot 侧组合页（ADR-02 scope）。
-- **公开 API**：新增 `EmbeddableTier2Adapter` 接口 + 注册入口——additive。
+- **公开 API**：新增 `EmbeddableTier2Adapter` 接口 + `<Layout embeddables>` 逃生舱——additive；`buildIRWithContributions` 保持内部入口，不作为包顶层公开 API。
 
 ## 不在本文档范围
 
@@ -148,14 +148,14 @@ import { Plot, LineMark, BarMark, Axis } from '@retikz/plot-react';
 - **非矩形面板包络 anchor**——[core v0.4 scope 多态 bounding shape](./02-scope-polymorphic-bbox.md)，独立。
 - **series / datum 级 anchor**——依赖 datum locator，ADR-02 roadmap。
 
-## 实现契约草案 🔻（AI 建议稿，待人工 + 多 LLM 评审定稿）
+## 落地契约
 
-> 本段是正式 milestone ADR 的种子，**非定稿**。正式启动时按 [`develop-design`](../../../../../../.agents/skills/develop-design/SKILL.md) 填齐 Schema 改动表 / 文件 scope / 测试象限（≥9 或按 milestone 放宽），并经多 LLM 评估。
+以下契约已在 alpha.2 MVP 中落地；最终行为以代码、测试与文档站为准。
 
 - **Level**：`red`（动 core-react `kernel/{builder,Layout}` + `index.ts` 导出 + 新公开接口；跨 core/plot）。
 - **Schema 改动**：core IR schema 无（react 层机制，非 IR）。新增 TS 接口 `EmbeddableTier2Adapter`（react 层类型，非 zod）。
-- **文件 scope（草案）**：`core/react/src/kernel/builder.ts`（改）· `core/react/src/kernel/collect-hydration-handlers.ts`（改，评估 #1）· `core/react/src/kernel/Layout.tsx`（改）· `core/react/src/kernel/`（新增 adapter 接口 / `isTier2Embeddable` 标记 / 解析）· `core/react/src/index.ts`（导出）· `core/react/tests/**`（新增）· `apps/docs/**`（core 机制说明）。
-- **测试方向（草案，正式 ADR 拆象限）**：
+- **文件 scope**：`packages/core/react/src/kernel/builder.ts`（改）· `packages/core/react/src/kernel/collect-hydration-handlers.ts`（改，评估 #1）· `packages/core/react/src/kernel/Layout.tsx`（改）· `packages/core/react/src/kernel/embeddable.ts`（新增 adapter 接口 / `isTier2Embeddable` 标记 / 解析）· `packages/core/react/src/index.ts`（导出公开类型与 helper，不导出 `buildIRWithContributions`）· `packages/core/react/tests/**`（新增）· `apps/docs/**`（core 机制说明）。
+- **测试方向**：
   - happy：单个可嵌入 Tier2 子组件被静态收集成 IR 节点 + 贡献；两个子组件 datasets 各自合并、composites 汇总；嵌入产出与 L2-g 手写 IR 等价。
   - 边界：零可嵌入子组件（纯 kernel children）行为逐字不变；显式 `composites` prop 与汇总贡献并存合并。
   - 错误路径：同 ref 不同对象引用 → fail-loud（评估 #3）；挂 `isTier2Embeddable` 标记但无 adapter → fail-loud（不静默当 Sugar，评估 #6）。
@@ -169,12 +169,12 @@ import { Plot, LineMark, BarMark, Axis } from '@retikz/plot-react';
 1. **#1 漏第二条遍历链路**：`collect-hydration-handlers.ts:88` 的 `visit` 与 buildIR 同源、同样对函数组件 `(child.type)(props)` 同步调用 → `Layout.tsx:296` 仍会调 `<Plot>` 触发 hooks、复现崩溃。已加文件 scope + 机制第 2 步「两条链路都改」+ 测试守卫。（核实：读 `collect-hydration-handlers.ts` 确认 `visit` 同步调用函数组件。）
 2. **#2 缺 namespace 分组键**：adapter 接口加 `namespace`，core 按它分组、makeComposites 每组只调一次。
 3. **#3 同 ref 冲突检测不可执行**：契约改为「同 ref 必须同一对象引用」（不做内容比对），可执行可测。
-4. **#4 注册形态 vs 零配置示例冲突**：拍板 MVP = 组件静态属性（零配置），`<Layout embeddables>` 显式 prop 作逃生舱；示例与 MVP 对齐。仍待人工签字。
+4. **#4 注册形态 vs 零配置示例冲突**：已由人工拍板 MVP = 组件静态属性（零配置），`<Layout embeddables>` 显式 prop 作逃生舱；示例与 MVP 对齐。
 5. **#5 buildIR 返回值破公开 API**：保留 `buildIR` / `convertReactNodeToIR(): IR`，新增内部 `buildIRWithContributions`。
 6. **#6 缺 Tier2 标记**：定义独立 `isTier2Embeddable` 标记，有标记缺 adapter → fail-loud。
 
 评审整体认可方向（能力放 core-react、静态 adapter 贡献 IR + datasets + composites，优于 plot 自建 `<Figure>`）。三条核心补强：第二条遍历链路（handler）、adapter 分组 key、公开 buildIR API 兼容边界。
 
-## 下一步
+## 收尾状态
 
-正式启动时走 brainstorm → spec → plan，**人工对「适配器注册形态」最终签字**（MVP 已倾向组件静态属性），落 v0.4 某 alpha milestone 的正式 ADR（红级），与 plot ADR-02 定稿同步推进。本机制就位前，plot 组合用 ADR-02 L2-g fallback。
+alpha.2 的 core-react 机制已落地并通过测试。plot 侧 `<Plot>` 嵌入态仍按 plot ADR-02 L2-a 接入；本 ADR 不追踪 plot 包实现。
