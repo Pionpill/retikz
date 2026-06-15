@@ -1,0 +1,101 @@
+name: Branch Sync
+
+on:
+  push:
+    branches:
+      - main
+      - next
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  main-to-next:
+    if: github.ref_name == 'main'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create sync PR
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+          HEAD_BRANCH: main
+          BASE_BRANCH: next
+          PR_TITLE: "chore: sync main into next"
+          PR_BODY: "Automated branch sync after main was updated. Merge this PR to propagate stable release or hotfix commits into next."
+        run: |
+          set -euo pipefail
+
+          total_commits="$(gh api "repos/${REPO}/compare/${BASE_BRANCH}...${HEAD_BRANCH}" --jq '.total_commits')"
+          if [ "${total_commits}" = "0" ]; then
+            echo "No commits to sync from ${HEAD_BRANCH} to ${BASE_BRANCH}."
+            exit 0
+          fi
+
+          existing_pr="$(gh pr list \
+            --repo "${REPO}" \
+            --base "${BASE_BRANCH}" \
+            --head "${HEAD_BRANCH}" \
+            --state open \
+            --json number \
+            --jq '.[0].number // empty')"
+
+          if [ -n "${existing_pr}" ]; then
+            echo "Sync PR already exists: #${existing_pr}"
+            exit 0
+          fi
+
+          gh pr create \
+            --repo "${REPO}" \
+            --base "${BASE_BRANCH}" \
+            --head "${HEAD_BRANCH}" \
+            --title "${PR_TITLE}" \
+            --body "${PR_BODY}"
+
+  next-to-downstream:
+    if: github.ref_name == 'next'
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        base:
+          - next-core
+          - next-plot
+    steps:
+      - name: Create sync PR
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+          HEAD_BRANCH: next
+          BASE_BRANCH: ${{ matrix.base }}
+          PR_TITLE: "chore: sync next into ${{ matrix.base }}"
+          PR_BODY: "Automated branch sync after next was updated. Merge this PR to propagate integrated changes into the downstream working branch."
+        run: |
+          set -euo pipefail
+
+          total_commits="$(gh api "repos/${REPO}/compare/${BASE_BRANCH}...${HEAD_BRANCH}" --jq '.total_commits')"
+          if [ "${total_commits}" = "0" ]; then
+            echo "No commits to sync from ${HEAD_BRANCH} to ${BASE_BRANCH}."
+            exit 0
+          fi
+
+          existing_pr="$(gh pr list \
+            --repo "${REPO}" \
+            --base "${BASE_BRANCH}" \
+            --head "${HEAD_BRANCH}" \
+            --state open \
+            --json number \
+            --jq '.[0].number // empty')"
+
+          if [ -n "${existing_pr}" ]; then
+            echo "Sync PR already exists: #${existing_pr}"
+            exit 0
+          fi
+
+          gh pr create \
+            --repo "${REPO}" \
+            --base "${BASE_BRANCH}" \
+            --head "${HEAD_BRANCH}" \
+            --title "${PR_TITLE}" \
+            --body "${PR_BODY}"
