@@ -297,7 +297,7 @@ export {
 
 // Shapes (Shape Registry 扩展面：第三方 shape 注入 + 内置注册项 + 作者所需 helper)
 export type { ShapeDefinition, ShapeDefinitionInput, ShapeStyle } from './shapes';
-export { BUILTIN_SHAPES, defineShape, worldToLocal, localToWorld } from './shapes';
+export { BUILTIN_SHAPES, contour, defineShape, worldToLocal, localToWorld } from './shapes';
 
 // Arrows (Arrow Registry 扩展面：第三方 arrow 注入 + 内置注册项)
 export type { ArrowDefinition, ArrowEmitContext } from './arrows';
