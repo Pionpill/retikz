@@ -8,7 +8,7 @@ import { type ChannelResolution, type ScaleDescriptor, makeOpacityResolver, make
 import { type CoordinateFrame, type CustomCoordinateFactory, type DimensionRole, createCartesian1DFrame, createCartesianFrame, createPolar1DFrame, createPolarFrame, createTernary2DFrame } from './project';
 import { REQUIRED_POSITION_CHANNELS, VALID_GUIDE_DIMENSIONS } from './coordinate-meta';
 import { type DatumIdRegistrar, type ProvenanceContext, createDatumIdRegistrar, rootMeta, tagSourceIndex } from './provenance';
-import { type CategoryOrder, type ColorScaleEvaluator, DEFAULT_TICK_COUNT, type TickSet, assertBaselineScaleCompatible, assertScaleFieldCompatible, deriveScale, inferCategoryDomain, orderedCategoryDomain, resolveDivergingColorScale, resolveLinearScale, resolveOrdinalScale, resolvePositionScale, resolveQuantileColorScale, resolveQuantizeColorScale, resolveSequentialColorScale, resolveSqrtScale, resolveThresholdColorScale, sampleSchemeColors, scaleTicks, toTimestamp } from './scale';
+import { type CategoryOrder, type ColorScaleEvaluator, DEFAULT_PLOT_COLORS, DEFAULT_TICK_COUNT, type TickSet, assertBaselineScaleCompatible, assertScaleFieldCompatible, deriveScale, inferCategoryDomain, orderedCategoryDomain, resolveDivergingColorScale, resolveLinearScale, resolveOrdinalScale, resolvePositionScale, resolveQuantileColorScale, resolveQuantizeColorScale, resolveSequentialColorScale, resolveSqrtScale, resolveThresholdColorScale, sampleSchemeColors, scaleTicks, toTimestamp } from './scale';
 import { assertAllValuesValid, collectFormatFields, normalizeRows, validateBoundData } from './coerce';
 import { applyTransforms } from './transform';
 import { type ResolveField, applyFieldResolver } from './resolve';
@@ -38,6 +38,16 @@ const axisRole = (dimension: string, coordinateType: string): string => {
  */
 const xChannelOf = (mark: Mark): Channel | undefined => (mark.type === PlotMark.Sector ? undefined : mark.encoding.x);
 const yChannelOf = (mark: Mark): Channel | undefined => (mark.type === PlotMark.Sector ? undefined : mark.encoding.y);
+
+const defaultColorOf = (node: PlotSpec, markIndex: number): string => {
+  const colors = node.colors ?? DEFAULT_PLOT_COLORS;
+  return colors[markIndex % colors.length];
+};
+
+const withPlotColorRange = (def: OrdinalScale | undefined, colors: ReadonlyArray<string> | undefined, name: string): OrdinalScale | undefined => {
+  if (colors === undefined || def?.range !== undefined) return def;
+  return { ...(def ?? { type: PlotScale.Ordinal, name }), range: [...colors] };
+};
 
 /**
  * 一根定位角色只画一根轴：重复同角色的 axis（含 hybrid 别名 x≡angle / y≡radius）→ 抛清晰错误。
@@ -692,7 +702,7 @@ const makeColorResolver = (node: PlotSpec, rows: Array<ExternalRow>, fieldTypes:
     if (order !== undefined && order !== 'data' && ordinalDef?.domain === undefined) {
       ordinalDef = { ...(ordinalDef ?? { type: PlotScale.Ordinal, name: `__color_${field}` }), domain: orderedCategoryDomain(colorValues, order) };
     }
-    const ordinal = resolveOrdinalScale(ordinalDef, colorValues);
+    const ordinal = resolveOrdinalScale(withPlotColorRange(ordinalDef, node.colors, `__color_${field}`), colorValues);
     return row => {
       const value = resolveFieldPath(row, field);
       return typeof value === 'string' || typeof value === 'number' ? ordinal(value) : undefined;
@@ -894,8 +904,9 @@ const resolveColorLegend = (
   // ordinal 离散 swatch：每类别一色块 + 类别标签
   const colorValues = field !== undefined ? rows.map(row => resolveFieldPath(row, field)) : [];
   const ordinalDef = def.type === PlotScale.Ordinal ? def : undefined;
-  const domain = ordinalDef?.domain ?? inferCategoryDomain(colorValues);
-  const ordinal = resolveOrdinalScale(ordinalDef, colorValues);
+  const paletteOrdinalDef = withPlotColorRange(ordinalDef, node.colors, def.name);
+  const domain = paletteOrdinalDef?.domain ?? inferCategoryDomain(colorValues);
+  const ordinal = resolveOrdinalScale(paletteOrdinalDef, colorValues);
   const entries: Array<LegendEntry> = domain.map((category): LegendEntry => ({ label: showLabels ? String(category) : '', color: ordinal(category) }));
   return { ...baseInput, form: 'swatch', title, entries };
 };
@@ -1142,7 +1153,19 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
   // provenance 开 → 传 markProvenance（plotId / markIndex / datum 开关 + 共享 registerDatumId），各层 / datum 绑 id + 来源 meta
   const markLayers: Array<IRChild> = node.marks
     .map((mark, markIndex) =>
-      lowerMark(mark, rows, frame, { colorOf: resolveColor(mark), sizeOf: resolveSize(mark)?.of, opacityOf: resolveOpacity(mark)?.of, shapeOf: resolveShape(mark)?.of }, provenance ? { context: provenance, markIndex, registerDatumId } : undefined),
+      lowerMark(
+        mark,
+        rows,
+        frame,
+        {
+          colorOf: resolveColor(mark),
+          defaultColor: defaultColorOf(node, markIndex),
+          sizeOf: resolveSize(mark)?.of,
+          opacityOf: resolveOpacity(mark)?.of,
+          shapeOf: resolveShape(mark)?.of,
+        },
+        provenance ? { context: provenance, markIndex, registerDatumId } : undefined,
+      ),
     )
     .filter((layer): layer is IRChild => layer !== null);
 

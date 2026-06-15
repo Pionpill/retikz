@@ -14,9 +14,9 @@ import {
   PlotGuide,
   PlotMark,
   PlotScale,
+  type Scale as PlotScaleSpec,
   type PlotSpec,
   PlotTransform,
-  type Scale,
   type Transform,
 } from '@retikz/plot';
 import { Axis, type AxisProps, Legend, type LegendProps } from './guides';
@@ -32,6 +32,7 @@ import {
   SectorMark,
   type SectorMarkProps,
 } from './marks';
+import { type PositionScaleType, Scale, type ScaleDimension, type ScaleProps } from './scales';
 
 /** 自动建的 scale 名（用户不可见；需要显式 scale 配置时后续再加 <Scale>） */
 const AUTO_X = '__x';
@@ -39,12 +40,6 @@ const AUTO_Y = '__y';
 const AUTO_ANGLE = '__angle';
 const AUTO_RADIUS = '__radius';
 const AUTO_COLOR = '__color';
-
-/** <Plot scaleX> 可选的连续 x scale 类型（柱状自动 band，故此处不含 band）；log / sqrt 仅 point/line（lowering L1 守卫） */
-export type DslScaleX = 'linear' | 'time' | 'point' | 'log' | 'sqrt';
-
-/** <Plot scaleY> 可选的连续 y（值轴）scale 类型；log / sqrt 仅 point/line（柱/面积 baseline 0 与之冲突，lowering fail-loud） */
-export type DslScaleY = 'linear' | 'log' | 'sqrt';
 
 /**
  * <Plot coordinate> 入口形态：字符串简写或对象配置；缺省 cartesian2D
@@ -97,18 +92,25 @@ export type CoordinateInput =
       params?: Record<string, number>;
     };
 
-/** buildPlotSpec 选项：bare 开关 + 连续 x scale 类型 + 坐标系选择 */
+/** buildPlotSpec 选项：坐标系选择 + 数据模型 */
 export type BuildPlotSpecOptions = {
-  /** 总开关：不出 guide（plot area = 整图），忽略 <Axis> */
-  bare?: boolean;
-  /** 连续 x scale 类型（缺省 linear；含 <BarMark> 时强制 band，忽略此项；polar 下忽略） */
-  scaleX?: DslScaleX;
-  /** 连续 y（值轴）scale 类型（缺省 linear；polar 下忽略）；log / sqrt 仅 point/line（柱/面积 fail-loud） */
-  scaleY?: DslScaleY;
+  /** PlotSpec id：作为整张图的外部 anchor 句柄 */
+  id?: string;
+  /** PlotSpec intrinsic width：组合场景下每张 plot 自描述面板宽度 */
+  width?: number;
+  /** PlotSpec intrinsic height：组合场景下每张 plot 自描述面板高度 */
+  height?: number;
   /** 坐标系选择（缺省 cartesian2D）；"polar2D" 或 polar2D 对象配置 */
   coordinate?: CoordinateInput;
-  /** 数据模型（字段类型）：声明则进 data.model，并改由 type-driven 派生位置 scale（省略 AUTO 绑定，scaleX / scaleY 让位给 model） */
+  /** 数据模型（字段类型）：声明则进 data.model，并对未显式 <Scale> 的位置维度走 type-driven 派生 */
   model?: DataModel;
+  /** 默认颜色数组：分类 color scale 的 range；无 color 编码的 mark 按图层序取色，`currentColor` 表示继承当前文字颜色 */
+  colors?: Array<string>;
+  /**
+   * 延迟位置 scale 推断：省略未显式声明的位置 scale 绑定，让 lowering 按实际数据字段类型派生。
+   * @description 供 `<Plot data>` 入口使用；直接调用 buildPlotSpec 时缺省保持旧的 AUTO linear/band 行为。
+   */
+  deferPositionScaleInference?: boolean;
 };
 
 /** 默认 guide（供 decorateDefaultGuides 复用，薄 <Plot> 本身不补）：x 轴 + y 轴（y 带网格，横线读数值、不过密） */
@@ -122,6 +124,8 @@ type Collected = {
   marks: Array<Mark>;
   guides: Array<Guide>;
   transforms: Array<Transform>;
+  /** 显式声明的位置 scale */
+  scales: Array<ScaleProps>;
   /** 是否有 mark 用了颜色（→ 需自动色 scale） */
   colored: boolean;
   /** 用到的 color 字段名集合（→ 配 model 时按字段类型派生 sequential / ordinal） */
@@ -267,6 +271,9 @@ const collectInto = (children: ReactNode, into: Collected): void => {
         ...(tickCount !== undefined ? { tickCount } : {}),
         ...(tickLabels !== undefined ? { tickLabels } : {}),
       });
+    } else if (child.type === Scale) {
+      const { dimension, type } = child.props as ScaleProps;
+      into.scales.push({ dimension, type });
     }
   });
 };
@@ -277,7 +284,7 @@ const collectInto = (children: ReactNode, into: Collected): void => {
  * @description 无 model 时一律 ordinal（运行时按推断当分类调色；连续字段会在 lowering fail-loud，提示声明 model 或显式色阶）。
  *   显式 scheme / diverging / midpoint 经 vanilla IR 全量可用，React 自动表面仅派生默认 sequential。
  */
-const buildColorScale = (colorFields: Array<string>, model: DataModel | undefined): Scale => {
+const buildColorScale = (colorFields: Array<string>, model: DataModel | undefined, colors: Array<string> | undefined): PlotScaleSpec => {
   if (model !== undefined) {
     const typeByField = new Map(model.map(field => [field.name, field.type] as const));
     const anyContinuous = colorFields.some(field => {
@@ -286,35 +293,84 @@ const buildColorScale = (colorFields: Array<string>, model: DataModel | undefine
     });
     if (anyContinuous) return { type: PlotScale.Sequential, name: AUTO_COLOR };
   }
-  return { type: PlotScale.Ordinal, name: AUTO_COLOR };
+  return { type: PlotScale.Ordinal, name: AUTO_COLOR, ...(colors !== undefined ? { range: colors } : {}) };
 };
 
-/** cartesian x scale 类型：含 <BarMark> → band；否则按 scaleX（缺省 linear） */
-const buildCartesianXScale = (hasBar: boolean, scaleX: DslScaleX | undefined): Scale => {
+const buildPositionScale = (name: string, type: PositionScaleType): PlotScaleSpec => {
+  if (type === 'time') return { type: PlotScale.Time, name };
+  if (type === 'point') return { type: PlotScale.Point, name };
+  if (type === 'log') return { type: PlotScale.Log, name };
+  if (type === 'sqrt') return { type: PlotScale.Sqrt, name };
+  return { type: PlotScale.Linear, name };
+};
+
+/** cartesian x scale 类型：含 <BarMark> → band；否则按 <Scale dimension="x"> 或缺省 linear */
+const buildCartesianXScale = (hasBar: boolean, explicit: PositionScaleType | undefined): PlotScaleSpec => {
+  if (hasBar && explicit !== undefined) {
+    throw new Error('buildPlotSpec: <BarMark> requires a band x scale; omit <Scale dimension="x" /> for automatic band inference');
+  }
   if (hasBar) return { type: PlotScale.Band, name: AUTO_X };
-  if (scaleX === 'time') return { type: PlotScale.Time, name: AUTO_X };
-  if (scaleX === 'point') return { type: PlotScale.Point, name: AUTO_X };
-  if (scaleX === 'log') return { type: PlotScale.Log, name: AUTO_X };
-  if (scaleX === 'sqrt') return { type: PlotScale.Sqrt, name: AUTO_X };
-  return { type: PlotScale.Linear, name: AUTO_X };
+  return buildPositionScale(AUTO_X, explicit ?? 'linear');
 };
 
-/** cartesian y（值轴）scale 类型：按 scaleY（缺省 linear）；log / sqrt 由 lowering L1 守住仅 point/line */
-const buildCartesianYScale = (scaleY: DslScaleY | undefined): Scale => {
-  if (scaleY === 'log') return { type: PlotScale.Log, name: AUTO_Y };
-  if (scaleY === 'sqrt') return { type: PlotScale.Sqrt, name: AUTO_Y };
-  return { type: PlotScale.Linear, name: AUTO_Y };
-};
+/** cartesian y（值轴）scale 类型：按 <Scale dimension="y"> 或缺省 linear；log / sqrt 由 lowering L1 守住仅 point/line */
+const buildCartesianYScale = (explicit: PositionScaleType | undefined): PlotScaleSpec => buildPositionScale(AUTO_Y, explicit ?? 'linear');
 
 /**
  * polar 角向 scale 类型推断：sector → linear（连续累积角界）；bar → band（径向柱分类）；
  *   闭合 line（雷达）→ point（类别落等距点）；否则 linear（极坐标折线）
  */
-const buildAngleScale = (collected: Collected): Scale => {
+const buildAngleScale = (collected: Collected, explicit: PositionScaleType | undefined): PlotScaleSpec => {
+  if (collected.hasBar && explicit !== undefined) {
+    throw new Error('buildPlotSpec: <BarMark> in polar coordinates requires a band angle scale; omit <Scale dimension="angle" /> for automatic band inference');
+  }
+  if (collected.hasSector && explicit !== undefined && explicit !== 'linear') {
+    throw new Error('buildPlotSpec: <SectorMark> requires a linear angle scale; omit <Scale dimension="angle" /> or use type="linear"');
+  }
+  if (explicit !== undefined) return buildPositionScale(AUTO_ANGLE, explicit);
   if (collected.hasSector) return { type: PlotScale.Linear, name: AUTO_ANGLE };
   if (collected.hasBar) return { type: PlotScale.Band, name: AUTO_ANGLE };
   if (collected.hasClosedLine) return { type: PlotScale.Point, name: AUTO_ANGLE };
   return { type: PlotScale.Linear, name: AUTO_ANGLE };
+};
+
+type ScaleRole = 'x' | 'y' | 'angle' | 'radius';
+
+type ExplicitScaleMap = Partial<Record<ScaleRole, PositionScaleType>>;
+
+const validScaleDimensionsOf = (coordKind: ReturnType<typeof coordinateTypeOf>): ReadonlyArray<ScaleDimension> => {
+  if (coordKind === 'cartesian2D') return ['x', 'y'];
+  if (coordKind === 'polar2D') return ['angle', 'radius', 'x', 'y'];
+  if (coordKind === 'cartesian1D') return ['x'];
+  if (coordKind === 'polar1D') return ['angle', 'x'];
+  return [];
+};
+
+const scaleRoleOf = (dimension: ScaleDimension, coordKind: ReturnType<typeof coordinateTypeOf>): ScaleRole | undefined => {
+  if (coordKind === 'cartesian2D') return dimension === 'x' || dimension === 'y' ? dimension : undefined;
+  if (coordKind === 'polar2D') {
+    if (dimension === 'angle' || dimension === 'x') return 'angle';
+    return 'radius';
+  }
+  if (coordKind === 'cartesian1D') return dimension === 'x' ? 'x' : undefined;
+  if (coordKind === 'polar1D') return dimension === 'angle' || dimension === 'x' ? 'angle' : undefined;
+  return undefined;
+};
+
+const collectExplicitScales = (declared: Array<ScaleProps>, coordKind: ReturnType<typeof coordinateTypeOf>): ExplicitScaleMap => {
+  const out: ExplicitScaleMap = {};
+  const valid = validScaleDimensionsOf(coordKind);
+  for (const scale of declared) {
+    const role = scaleRoleOf(scale.dimension, coordKind);
+    if (role === undefined) {
+      throw new Error(`buildPlotSpec: ${coordKind} coordinate system does not support scale dimension "${scale.dimension}" (valid dimensions: ${valid.join(', ') || 'none'})`);
+    }
+    if (out[role] !== undefined) {
+      throw new Error(`buildPlotSpec: duplicate scale for "${role}" role (dimension "${scale.dimension}")`);
+    }
+    out[role] = scale.type;
+  }
+  return out;
 };
 
 /** polar coordinate IR 的角向区间 / 内半径默认值（与 Polar2DSchema 的 .default() 一致，buildPlotSpec 即填满，等价手写无需再补） */
@@ -347,33 +403,47 @@ const toPolarConfig = (coordinate: CoordinateInput | undefined): PolarConfig | u
  * @description 纯函数：从 children 收集 mark + guide + transform；按 coordinate（cartesian / polar）推断 scale 类型、
  *   装配 stack transform、自动建坐标系绑定（用户不写）。cartesian：x band/linear/time/point、y linear；
  *   polar：角向 sector→linear / bar→band / 闭合 line→point / 否则 linear，径向 linear。
- *   guide 规则（alpha.10 薄 Plot）：bare → 无；否则 = 显式 <Axis>/<Legend> 所得（不补默认轴）。默认轴交 <Chart>/decorateDefaultGuides。
+ *   guide 规则：薄 Plot 只保留显式 <Axis>/<Legend>（不补默认轴）。默认轴交 <Chart>/decorateDefaultGuides。
  *   产出须等价于手写 PlotSpec（仿 core Sugar = Kernel 等价性）。data 不进 IR，仅存 reference
  */
 export const buildPlotSpec = (children: ReactNode, dataRef: string, options: BuildPlotSpecOptions = {}): PlotSpec => {
-  const collected: Collected = { marks: [], guides: [], transforms: [], colored: false, colorFields: [], hasBar: false, hasSector: false, hasClosedLine: false };
+  const collected: Collected = { marks: [], guides: [], transforms: [], scales: [], colored: false, colorFields: [], hasBar: false, hasSector: false, hasClosedLine: false };
   collectInto(children, collected);
 
   const coordKind = coordinateTypeOf(options.coordinate);
+  const explicitScales = collectExplicitScales(collected.scales, coordKind);
 
-  // 有 model → 位置 scale 交给 expand 的 type-driven 派生：省略 AUTO 绑定 + 不预生成位置 scale（scaleX 让位给 model）。
-  // 无 model → 沿用原 AUTO 绑定 + 推断（向后兼容，存量 DSL 无 model 走此路）。
-  const hasModel = options.model !== undefined;
+  // 有 model 或 Plot 入口要求延迟推断时，未显式声明 <Scale> 的维度省略 AUTO 绑定，交给 expand 按字段类型派生。
+  // 直接调用 buildPlotSpec 且无 model 时，沿用 AUTO 绑定 + 默认推断（向后兼容）。
+  const shouldDeferPositionScales = options.model !== undefined || options.deferPositionScaleInference === true;
   let coordinate: Coordinate;
-  let scales: Array<Scale>;
+  let scales: Array<PlotScaleSpec>;
   if (coordKind === 'polar2D') {
     const polar = toPolarConfig(options.coordinate) as PolarConfig;
-    coordinate = hasModel
-      ? { type: PlotCoordinate.Polar2D, startAngle: polar.startAngle, endAngle: polar.endAngle, innerRadius: polar.innerRadius }
+    const angleScale = buildAngleScale(collected, explicitScales.angle);
+    const radiusScale = buildPositionScale(AUTO_RADIUS, explicitScales.radius ?? 'linear');
+    coordinate = shouldDeferPositionScales
+      ? {
+          type: PlotCoordinate.Polar2D,
+          ...(explicitScales.angle !== undefined ? { angle: AUTO_ANGLE } : {}),
+          ...(explicitScales.radius !== undefined ? { radius: AUTO_RADIUS } : {}),
+          startAngle: polar.startAngle,
+          endAngle: polar.endAngle,
+          innerRadius: polar.innerRadius,
+        }
       : { type: PlotCoordinate.Polar2D, angle: AUTO_ANGLE, radius: AUTO_RADIUS, startAngle: polar.startAngle, endAngle: polar.endAngle, innerRadius: polar.innerRadius };
-    scales = hasModel ? [] : [buildAngleScale(collected), { type: PlotScale.Linear, name: AUTO_RADIUS }];
+    scales = [
+      ...(!shouldDeferPositionScales || explicitScales.angle !== undefined ? [angleScale] : []),
+      ...(!shouldDeferPositionScales || explicitScales.radius !== undefined ? [radiusScale] : []),
+    ];
   } else if (coordKind === 'cartesian1D') {
-    // 单维直线：orientation 取对象配置；单一位置 scale 复用 scaleX 推断（rug 默认 linear、timeline 可 time）
+    // 单维直线：orientation 取对象配置；单一位置 scale 可由 <Scale dimension="x"> 覆盖（rug 默认 linear、timeline 可 time）
     const orientation = typeof options.coordinate === 'object' && options.coordinate.type === 'cartesian1D' ? options.coordinate.orientation : undefined;
-    coordinate = hasModel
-      ? { type: PlotCoordinate.Cartesian1D, ...(orientation !== undefined ? { orientation } : {}) }
+    const xScale = buildCartesianXScale(false, explicitScales.x);
+    coordinate = shouldDeferPositionScales
+      ? { type: PlotCoordinate.Cartesian1D, ...(explicitScales.x !== undefined ? { x: AUTO_X } : {}), ...(orientation !== undefined ? { orientation } : {}) }
       : { type: PlotCoordinate.Cartesian1D, x: AUTO_X, ...(orientation !== undefined ? { orientation } : {}) };
-    scales = hasModel ? [] : [buildCartesianXScale(false, options.scaleX)];
+    scales = !shouldDeferPositionScales || explicitScales.x !== undefined ? [xScale] : [];
   } else if (coordKind === 'polar1D') {
     // 单角向圆周：半径占比 + 角向区间取对象配置；角向 scale 默认 linear（无 model；周期连续量）
     const cfg = typeof options.coordinate === 'object' && options.coordinate.type === 'polar1D' ? options.coordinate : undefined;
@@ -382,8 +452,9 @@ export const buildPlotSpec = (children: ReactNode, dataRef: string, options: Bui
       ...(cfg?.startAngle !== undefined ? { startAngle: cfg.startAngle } : {}),
       ...(cfg?.endAngle !== undefined ? { endAngle: cfg.endAngle } : {}),
     };
-    coordinate = hasModel ? { type: PlotCoordinate.Polar1D, ...geom } : { type: PlotCoordinate.Polar1D, angle: AUTO_ANGLE, ...geom };
-    scales = hasModel ? [] : [{ type: PlotScale.Linear, name: AUTO_ANGLE }];
+    const angleScale = buildPositionScale(AUTO_ANGLE, explicitScales.angle ?? 'linear');
+    coordinate = shouldDeferPositionScales ? { type: PlotCoordinate.Polar1D, ...(explicitScales.angle !== undefined ? { angle: AUTO_ANGLE } : {}), ...geom } : { type: PlotCoordinate.Polar1D, angle: AUTO_ANGLE, ...geom };
+    scales = !shouldDeferPositionScales || explicitScales.angle !== undefined ? [angleScale] : [];
   } else if (coordKind === 'ternary2D') {
     // 三元：coordinate 内自动归一化，无独立位置 scale
     coordinate = { type: PlotCoordinate.Ternary2D };
@@ -395,23 +466,38 @@ export const buildPlotSpec = (children: ReactNode, dataRef: string, options: Bui
     coordinate = { type: PlotCoordinate.Custom, name: custom.name, roles: custom.roles, ...(custom.params !== undefined ? { params: custom.params } : {}) };
     scales = [];
   } else {
-    coordinate = hasModel ? { type: PlotCoordinate.Cartesian2D } : { type: PlotCoordinate.Cartesian2D, x: AUTO_X, y: AUTO_Y };
-    scales = hasModel ? [] : [buildCartesianXScale(collected.hasBar, options.scaleX), buildCartesianYScale(options.scaleY)];
+    const xScale = buildCartesianXScale(collected.hasBar, explicitScales.x);
+    const yScale = buildCartesianYScale(explicitScales.y);
+    coordinate = shouldDeferPositionScales
+      ? {
+          type: PlotCoordinate.Cartesian2D,
+          ...(explicitScales.x !== undefined ? { x: AUTO_X } : {}),
+          ...(explicitScales.y !== undefined ? { y: AUTO_Y } : {}),
+        }
+      : { type: PlotCoordinate.Cartesian2D, x: AUTO_X, y: AUTO_Y };
+    scales = [
+      ...(!shouldDeferPositionScales || explicitScales.x !== undefined ? [xScale] : []),
+      ...(!shouldDeferPositionScales || explicitScales.y !== undefined ? [yScale] : []),
+    ];
   }
-  if (collected.colored) scales.push(buildColorScale(collected.colorFields, options.model));
+  if (collected.colored) scales.push(buildColorScale(collected.colorFields, options.model, options.colors));
 
-  // alpha.10 薄 Plot：不补默认轴——用户显式 <Axis>/<Legend> 才有 guides，bare 连显式也不要。
+  // 薄 Plot：不补默认轴——用户显式 <Axis>/<Legend> 才有 guides。
   //   开箱即用的默认轴 / 网格交给上层 <Chart>（v0.2，复用 decorateDefaultGuides）。
   const explicitAxes = collected.guides.filter(guide => guide.type === PlotGuide.Axis);
   const legends = collected.guides.filter(guide => guide.type === PlotGuide.Legend);
-  const guides: Array<Guide> = options.bare ? [] : [...explicitAxes, ...legends];
+  const guides: Array<Guide> = [...explicitAxes, ...legends];
 
   return {
     namespace: PLOT_NAMESPACE,
     type: PlotComposite.Plot,
+    ...(options.id !== undefined ? { id: options.id } : {}),
     data: options.model ? { reference: dataRef, model: options.model } : { reference: dataRef },
     ...(collected.transforms.length > 0 ? { transform: collected.transforms } : {}),
     scales,
+    ...(options.colors !== undefined ? { colors: options.colors } : {}),
+    ...(options.width !== undefined ? { width: options.width } : {}),
+    ...(options.height !== undefined ? { height: options.height } : {}),
     coordinate,
     marks: collected.marks,
     guides,

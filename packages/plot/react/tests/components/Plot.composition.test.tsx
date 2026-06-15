@@ -1,7 +1,7 @@
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 import type { PlotSpec } from '@retikz/plot';
-import { AreaMark, Axis, BarMark, LineMark, Plot, PointMark, SectorMark } from '../../src';
+import { AreaMark, Axis, BarMark, LineMark, Plot, PointMark, Scale, SectorMark } from '../../src';
 
 const rows = [
   { month: 0, revenue: 10 },
@@ -83,34 +83,25 @@ describe('<Plot data>{marks} 组合 DSL（ADR-08）', () => {
     expect(svg).toContain('<text');
   });
 
-  it('dsl_bare_equals_alpha1_geometry：bare 几何等价于无 guides 的 spec 入口（plot area = 整图）', () => {
-    const viaBare = renderToStaticMarkup(
-      <Plot data={rows} width={480} height={300} bare>
-        <LineMark x="month" y="revenue" order="month" />
-        <PointMark x="month" y="revenue" />
+  it('dsl_line_categorical_x_infers_point_scale：字符串 x 字段折线自动渲染', () => {
+    const quarterly = [
+      { quarter: 'Q1', revenue: 18 },
+      { quarter: 'Q2', revenue: 24 },
+      { quarter: 'Q3', revenue: 15 },
+      { quarter: 'Q4', revenue: 30 },
+    ];
+    const svg = renderToStaticMarkup(
+      <Plot data={quarterly} width={480} height={300}>
+        <LineMark x="quarter" y="revenue" order="quarter" />
+        <Axis dimension="x" />
+        <Axis dimension="y" grid />
       </Plot>,
     );
-    const bareSpec: PlotSpec = {
-      namespace: 'plot',
-      type: 'plot',
-      data: { reference: '__plot' },
-      scales: [
-        { type: 'linear', name: '__x' },
-        { type: 'linear', name: '__y' },
-      ],
-      coordinate: { type: 'cartesian2D', x: '__x', y: '__y' },
-      marks: [
-        { type: 'line', order: 'month', encoding: { x: { field: 'month' }, y: { field: 'revenue' } } },
-        { type: 'point', encoding: { x: { field: 'month' }, y: { field: 'revenue' } } },
-      ],
-    };
-    const viaSpec = renderToStaticMarkup(<Plot spec={bareSpec} data={{ __plot: rows }} width={480} height={300} />);
-    expect(geometry(viaBare)).toEqual(geometry(viaSpec));
-    // bare 不出轴文字
-    expect(viaBare).not.toContain('<text');
+    expect(svg).toMatch(/<path[^>]+d="M [^"]+ L [^"]+"/);
+    expect(svg).toContain('Q1');
   });
 
-  // ADR-07：<BarMark> / scaleX
+  // ADR-07：<BarMark> / <Scale>
   it('barmark_renders_rect：<BarMark> 渲出矩形', () => {
     const svg = renderToStaticMarkup(
       <Plot data={rows} width={480} height={300}>
@@ -135,15 +126,16 @@ describe('<Plot data>{marks} 组合 DSL（ADR-08）', () => {
     expect(svg).toMatch(/<rect/);
   });
 
-  it('scalex_time_renders：scaleX time 折线 + 显式 x 轴端到端（时间刻度标签）', () => {
+  it('scale_time_renders：time x scale 折线 + 显式 x 轴端到端（时间刻度标签）', () => {
     const trend = [
       { date: '2024-01-01', v: 1 },
       { date: '2024-06-01', v: 3 },
       { date: '2024-12-01', v: 2 },
     ];
     const svg = renderToStaticMarkup(
-      <Plot data={trend} width={480} height={300} scaleX="time">
+      <Plot data={trend} width={480} height={300}>
         <LineMark x="date" y="v" order="date" />
+        <Scale dimension="x" type="time" />
         <Axis dimension="x" />
       </Plot>,
     );

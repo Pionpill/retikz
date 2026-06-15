@@ -76,7 +76,7 @@ describe('lowerPlots (ADR-06)', () => {
     expect(layer.children).toHaveLength(3);
     // 样式上提：circle / fill 在图层 nodeDefault，不重复写在每个 node
     expect(layer.nodeDefault?.shape).toBe('circle');
-    expect(layer.nodeDefault?.fill).toBe('currentColor');
+    expect(layer.nodeDefault?.fill).toBe(schemeCategory10[0]);
     // 每个 node 是裸的（只有 type + position，无 shape/fill）
     expect(layer.children.every(c => (c as IRNode).shape === undefined)).toBe(true);
     expect((layer.children[0] as IRNode).position).toEqual([0, 240]);
@@ -248,7 +248,7 @@ describe('lowerPlots interval/bar (ADR-02)', () => {
     expect(layer.nodeDefault?.shape).toBe('rectangle');
     expect(layer.nodeDefault?.padding).toBe(0);
     expect(layer.nodeDefault?.strokeWidth).toBe(0);
-    expect(layer.nodeDefault?.fill).toBe('currentColor');
+    expect(layer.nodeDefault?.fill).toBe(schemeCategory10[0]);
     // 每个 node 裸（只有 type/position/minimumWidth/minimumHeight，无 shape）
     expect(layer.children.every(c => (c as IRNode).shape === undefined)).toBe(true);
   });

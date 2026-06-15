@@ -2,6 +2,7 @@ import type { IRNode, IRPath, IRScope } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 import { type PlotSpec, PlotSpecSchema } from '../../src/ir';
 import { type LowerPlotsOptions, lowerPlots } from '../../src/lower/expand';
+import { DEFAULT_PLOT_COLORS } from '../../src/lower/scale';
 
 const cartOpts: LowerPlotsOptions = { width: 480, height: 300 };
 
@@ -91,6 +92,79 @@ describe('color × series · B/C 收口（alpha.7 ADR-03）', () => {
     const spec = specOf({ type: 'point', encoding: { x: { field: 't' }, y: { field: 'v' }, color: { field: 'city', scale: 'col' } } });
     const nodes = collectNodes(firstLayer(spec, { d: SERIES_DATA }));
     expect(nodes).toHaveLength(4); // 每行一点，按 city 分色（子 Scope），不拆 path
+  });
+});
+
+describe('plot colors default palette', () => {
+  it('mark_without_color_uses_scheme_category_10_by_default', () => {
+    const spec = PlotSpecSchema.parse({
+      namespace: 'plot',
+      type: 'plot',
+      data: { reference: 'd' },
+      scales: [
+        { type: 'band', name: 'x' },
+        { type: 'linear', name: 'y' },
+      ],
+      coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
+      marks: [
+        { type: 'line', order: 'x', encoding: { x: { field: 'x' }, y: { field: 'y' } } },
+        { type: 'interval', encoding: { x: { field: 'x' }, y: { field: 'y' } } },
+      ],
+    });
+    const root = expandOf(spec, { d: [{ x: 'A', y: 1 }, { x: 'B', y: 2 }] });
+    const [lineLayer, barLayerNode] = root.children as Array<IRScope>;
+    expect(lineLayer.pathDefault?.stroke).toBe(DEFAULT_PLOT_COLORS[0]);
+    expect(barLayerNode.nodeDefault?.fill).toBe(DEFAULT_PLOT_COLORS[1]);
+  });
+
+  it('mark_without_color_uses_plot_palette_by_layer_index', () => {
+    const spec = PlotSpecSchema.parse({
+      namespace: 'plot',
+      type: 'plot',
+      data: { reference: 'd' },
+      colors: ['#2563eb', '#f97316', 'currentColor'],
+      scales: [
+        { type: 'band', name: 'x' },
+        { type: 'linear', name: 'y' },
+      ],
+      coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
+      marks: [
+        { type: 'line', order: 'x', encoding: { x: { field: 'x' }, y: { field: 'y' } } },
+        { type: 'interval', encoding: { x: { field: 'x' }, y: { field: 'y' } } },
+        { type: 'point', encoding: { x: { field: 'x' }, y: { field: 'y' } } },
+      ],
+    });
+    const root = expandOf(spec, { d: [{ x: 'A', y: 1 }, { x: 'B', y: 2 }] });
+    const [lineLayer, barLayerNode, pointLayer] = root.children as Array<IRScope>;
+    expect(lineLayer.pathDefault?.stroke).toBe('#2563eb');
+    expect(barLayerNode.nodeDefault?.fill).toBe('#f97316');
+    expect(pointLayer.nodeDefault?.fill).toBe('currentColor');
+  });
+
+  it('categorical_color_uses_plot_palette_as_ordinal_range', () => {
+    const spec = PlotSpecSchema.parse({
+      namespace: 'plot',
+      type: 'plot',
+      data: { reference: 'd' },
+      colors: ['#2563eb', '#f97316'],
+      scales: [
+        { type: 'linear', name: 'x' },
+        { type: 'linear', name: 'y' },
+        { type: 'ordinal', name: 'col' },
+      ],
+      coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
+      marks: [{ type: 'point', encoding: { x: { field: 'x' }, y: { field: 'y' }, color: { field: 'city', scale: 'col' } } }],
+    });
+    const layer = firstLayer(spec, {
+      d: [
+        { x: 0, y: 1, city: 'A' },
+        { x: 1, y: 2, city: 'B' },
+        { x: 2, y: 3, city: 'C' },
+      ],
+    });
+    const colorScopes = layer.children as Array<IRScope>;
+    expect(colorScopes.map(scope => scope.nodeDefault?.fill)).toEqual(['#2563eb', '#f97316']);
+    expect(colorScopes.map(scope => scope.children.length)).toEqual([2, 1]);
   });
 });
 
