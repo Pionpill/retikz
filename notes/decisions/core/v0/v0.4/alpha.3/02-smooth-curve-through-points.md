@@ -51,7 +51,7 @@ export const SmoothStepSchema = z
   );
 
 // compile/path/index.ts —— smooth 分支
-//   knots = [cursor, ...resolve(points)]；knots.length < 2（即无前置 cursor）→ 编译报错
+//   knots = [cursor, ...resolve(points)]；无前置 cursor（smooth 作首 step）→ 走既有缺笔位路径：跳过该 path + PATH_TOO_SHORT 警告（与 line/curve 作首 step 一致，可诊断、不静默产错）
 //   调 @retikz/math curve.catmullRomToCubic(knots, tension ?? 1) → Array<{control1, control2, to}>
 //   emit 为既有 cubic PathCommand；cursor 推进到 points 末项
 ```
@@ -66,7 +66,7 @@ export const SmoothStepSchema = z
 
 > 以下均已 2026-06-15 人工签字，列此留审计 trail，封板时并入「决策」。
 
-- **cursor 与 points 关系**：**已拍板 = cursor 作第一个 knot**——曲线从当前 cursor 起、依次穿过 `points`。`points` min=1，末 cursor = `points` 末项，**不另暴露 `to`**（冗余）。smooth 作首 step（无前置 cursor）→ 编译报错。
+- **cursor 与 points 关系**：**已拍板 = cursor 作第一个 knot**——曲线从当前 cursor 起、依次穿过 `points`。`points` min=1，末 cursor = `points` 末项，**不另暴露 `to`**（冗余）。smooth 作首 step（无前置 cursor）→ 走既有缺笔位路径：跳过该 path + `PATH_TOO_SHORT` 警告（与 `line`/`curve` 作首 step 一致，codebase 现状口径，可诊断）。
 - **tension 字段与默认**：**已拍板 = 暴露 `tension?: number`（positive），默认 1**（标准 centripetal Catmull-Rom）。
 - **样条算法**：**已拍板 = centripetal Catmull-Rom（α=0.5）→ 精确转 cubic**。选 centripetal 而非 uniform / chordal：uniform 在点距不均时产 cusp / 自交回环，chordal 过冲；centripetal 无此病、是过点光滑曲线的稳健默认。Hobby 算法留后续（见「不在本 ADR 范围」）。
 - **端点条件**：开放曲线两端用单侧切线（端点 knot 的切线取其唯一相邻段方向）。闭合（smooth + cycle 的周期样条）留后续。
@@ -206,7 +206,7 @@ const fig = figure([
 
 - `reject-empty-points`：`points: []`（违反 min(1)）→ schema 拒绝。
 - `reject-bad-tension`：`tension <= 0` / 非有限 → schema 拒绝；`points` 含非法 Target → schema 拒绝。
-- `smooth-without-cursor`：smooth 作 path 首 step（无前置 move/step，cursor 未定义）→ 编译报错（消息指明 smooth 需前置 cursor）。
+- `smooth-without-cursor`：smooth 作 path 首 step（无前置 move/step，cursor 未定义）→ 跳过该 path 且发 `PATH_TOO_SHORT` 警告（与 `line`/`curve` 作首 step 一致的可诊断缺笔位行为）。
 
 **交互（≥ 2）**：
 
