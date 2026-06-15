@@ -46,6 +46,15 @@ export const normalizeRelativeTargets = (
       // 自包含形状；prevEnd 不变（rectangle 用自身 from/to，不推进相对游标）
       continue;
     }
+    if (step.kind === 'smooth') {
+      out.push(step);
+      // smooth 用 `points`（非 `to`，min(1) 保证非空）。relative/relativeAccumulate 点的归一化由实现期落地；
+      // 此处先原样透传。prevEnd 推进到末点（多数曲线收于 points 末项）。
+      const last = step.points[step.points.length - 1];
+      const pos = refPointOfTarget(last, nameStack, scopeChain);
+      if (pos) prevEnd = pos;
+      continue;
+    }
     if (step.kind === 'generator') {
       out.push(step);
       // generator 产段终点要等编译期 generate 才知；预处理阶段以 step.to 近似推进 prevEnd（多数曲线收于 to），

@@ -350,6 +350,7 @@ export const emitPathPrimitive = (
     | { kind: 'circlePath' }
     | { kind: 'ellipsePath' }
     | { kind: 'rectangle' }
+    | { kind: 'smooth' }
     | { kind: 'generator' }
   >;
   const hasTo = (s: IRStep): s is StepWithTo =>
@@ -358,6 +359,7 @@ export const emitPathPrimitive = (
     s.kind !== 'circlePath' &&
     s.kind !== 'ellipsePath' &&
     s.kind !== 'rectangle' &&
+    s.kind !== 'smooth' &&
     s.kind !== 'generator';
 
   // 每个 step 的几何参考点（节点中心/直接坐标）；无 to 的 step kind 给 null
@@ -933,6 +935,12 @@ export const emitPathPrimitive = (
       collectLabel(step, t => ellipseSegmentSample(center, rx, ry, t));
       penOverride = center;
       continue;
+    }
+
+    if (step.kind === 'smooth') {
+      // 实现期替换：knots = [prev.anchor, ...resolve(step.points)]；
+      // 调 @retikz/math curve.catmullRomToCubic(knots, step.tension ?? 1) → emit 为 cubic 链，cursor 推进到末点。
+      throw new Error('smooth step not implemented');
     }
 
     const currAnchor = anchors[i];
