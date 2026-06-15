@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { ZodError } from 'zod';
 import { Layout } from '@retikz/react';
 import { type ExternalDatasets, type PlotSpec, lowerPlots } from '@retikz/plot';
-import { Axis, BarMark, Plot } from '../src';
+import { Axis, BarMark, LineMark, Plot } from '../src';
 
 const spec: PlotSpec = {
   namespace: 'plot',
@@ -87,12 +87,12 @@ describe('<Plot spec data> 薄包装', () => {
   it('可以作为可嵌入 Tier 2 子组件放进同一个 <Layout>', () => {
     const svg = renderToStaticMarkup(
       <Layout width={580} height={260}>
-        <Plot data={revenue} width={300} height={220} transforms={[{ kind: 'translate', x: 0, y: 20 }]}>
+        <Plot id="cartesianPanel" data={revenue} width={300} height={220} x={0} y={20}>
           <BarMark x="quarter" y="value" color="quarter" />
           <Axis dimension="x" />
           <Axis dimension="y" grid />
         </Plot>
-        <Plot data={revenue} width={260} height={260} coordinate="polar2D" transforms={[{ kind: 'translate', x: 320, y: 0 }]}>
+        <Plot id="polarPanel" data={revenue} width={260} height={260} coordinate="polar2D" x={320} y={0}>
           <BarMark x="quarter" y="value" color="quarter" />
           <Axis dimension="angle" />
           <Axis dimension="radius" grid />
@@ -105,6 +105,8 @@ describe('<Plot spec data> 薄包装', () => {
     expect(svg).toContain('<path');
     expect(svg).toContain('<rect');
     expect(svg).toContain('transform="translate(320 0)"');
+    expect(svg).toContain('cartesianPanel');
+    expect(svg).toContain('polarPanel.plotArea');
   });
 
   it('单独渲染时也承接面板 transforms', () => {
@@ -118,5 +120,24 @@ describe('<Plot spec data> 薄包装', () => {
 
     expect(svg).toContain('<svg');
     expect(svg).toContain('transform="translate(10 20)"');
+  });
+
+  it('嵌入态默认使用 id 作为 DSL 数据集引用，显式 dataRef 可共享数据源', () => {
+    const svg = renderToStaticMarkup(
+      <Layout width={580} height={260}>
+        <Plot id="leftPanel" dataRef="shared" data={revenue} width={300} height={220} x={0} y={20}>
+          <BarMark x="quarter" y="value" />
+          <Axis dimension="x" />
+        </Plot>
+        <Plot id="rightPanel" dataRef="shared" data={revenue} width={260} height={220} x={320} y={20}>
+          <LineMark x="quarter" y="value" order="quarter" />
+          <Axis dimension="x" />
+        </Plot>
+      </Layout>,
+    );
+
+    expect(svg.match(/<svg/g)).toHaveLength(1);
+    expect(svg).toContain('leftPanel.plotArea');
+    expect(svg).toContain('rightPanel.plotArea');
   });
 });

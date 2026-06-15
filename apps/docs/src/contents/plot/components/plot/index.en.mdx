@@ -69,7 +69,7 @@ Real data often uses field names that differ from the chart's logical names. `mo
 
 ### Panel Composition
 
-One parent `<Layout>` can contain several `<Plot>` panels. Each chart uses its own `width` / `height` for the outer box, then `transforms` positions that panel inside the parent canvas; the parent only carries and composes panels, without participating in each chart's scale inference.
+One parent `<Layout>` can contain several `<Plot>` panels. Each chart uses its own `width` / `height` for the outer box, then `x` / `y` or `transforms` positions that panel inside the parent canvas; the parent only carries and composes panels, without participating in each chart's scale inference.
 
 <ComponentPreview name="plot-panels" sourceFiles={['plot-cartesian.data.ts']} size="md" />
 
@@ -128,9 +128,12 @@ When the PlotSpec carries an `id` (spec entry or generated IR), lowering wraps a
 | `fieldMap` | `Record<string, string>` | — | Logical field name → actual path in the data (requires `model`); renames only, no value transform; see [Processing](/plot/data/processing) |
 | `coordinate` | see [Coordinates](/plot/grammar/coordinate) | cartesian2D | Coordinate system: `"polar2D"` / `"cartesian1D"` / `"polar1D"` / `"ternary2D"` shorthand or the matching object; cartesian2D by default |
 | `colors` | `Array<string>` | `schemeCategory10` | Default palette. Categorical color scales use it as their range; marks without a color encoding use it by layer order and cycle when needed. Use `'currentColor'` to keep the inherited core color |
-| `width` | `number` | — | Outer width (including axes and labels) |
-| `height` | `number` | — | Outer height (including axes and labels) |
-| `transforms` | `Array<IRTransform>` | — | Panel-level transforms; commonly used to position multiple charts inside a parent `<Layout>` |
+| `id` | `string` | — | Panel id: written to PlotSpec.id as an external anchor handle; in embedded DSL mode it is also the default dataset reference when `dataRef` is omitted |
+| `dataRef` | `string` | — | Dataset reference name for the DSL entry; set the same value on multiple plots to share one data source |
+| `width` | `number` | — | Outer width (including axes and labels); also written as the PlotSpec intrinsic width |
+| `height` | `number` | — | Outer height (including axes and labels); also written as the PlotSpec intrinsic height |
+| `x` / `y` | `number` | — | Panel top-left position inside a parent `<Layout>`; converted to an outer `translate` |
+| `transforms` | `Array<IRTransform>` | — | Panel-level transforms; can be combined with `x` / `y` for finer placement |
 | `zIndex` | `number` | `0` | Draw order for the panel inside its parent |
 | `clip` | `IRClipSpec` | — | Panel-level clipping region |
 | `fontSize` | `number?` | — | Tick label font size |

@@ -1078,6 +1078,37 @@ export const changelog: Array<Release> = [
         ],
         subVersions: [
           {
+            version: 'alpha.10',
+            date: '2026-06-13',
+            summary: {
+              zh: 'Plot 容器封板配套：`PlotSpec` 增自描述 `width` / `height` 与默认调色板 `colors`，lowering 可在有 `id` 时暴露外部可见的面板 bbox 与 `plotArea` anchor，支撑同一 core `<Layout>` 中组合多张 plot。',
+              en: 'Plot-container wrap-up support: `PlotSpec` adds intrinsic `width` / `height` and a default `colors` palette, and lowering can expose an externally visible panel bbox plus `plotArea` anchor when `id` is present, enabling multiple plots inside one core `<Layout>`.',
+            },
+            items: [
+              {
+                label: { zh: 'PlotSpec 自描述尺寸', en: 'PlotSpec intrinsic size' },
+                content: {
+                  zh: '`PlotSpec.width` / `height` 描述单张 plot 面板自己的外框尺寸；缺省仍回退到 `lowerPlots` 全局选项，单图路径保持兼容。组合场景里每个 plot 可按自己的尺寸计算 plotArea / margin / guide。',
+                  en: '`PlotSpec.width` / `height` describe each plot panel’s own outer box; when omitted they still fall back to the global `lowerPlots` options, keeping single-plot behavior compatible. In composition each plot can compute its own plotArea / margins / guides from its own size.',
+                },
+              },
+              {
+                label: { zh: '面板 anchor 与 plotArea carrier', en: 'Panel anchors and plotArea carrier' },
+                content: {
+                  zh: '当 `PlotSpec.id` 存在时，lowering 会外包一层可见面板 Scope（`<plotId>`）并生成不可见矩形 carrier（`<plotId>.plotArea`），供同级 core `Path` / `Node` 连接和标注；无 id 的普通单图结构不变。',
+                  en: 'When `PlotSpec.id` is present, lowering wraps an externally visible panel Scope (`<plotId>`) and emits an invisible rectangle carrier (`<plotId>.plotArea`) for sibling core `Path` / `Node` connectors and annotations; ordinary single plots without an id keep the old root shape.',
+                },
+              },
+              {
+                label: { zh: '默认调色板 colors', en: 'Default palette colors' },
+                content: {
+                  zh: '`PlotSpec.colors` 控制默认调色板：分类 color scale 缺 range 时使用它，无 color 编码的 mark 按图层序取色；缺省为 d3 `schemeCategory10`。',
+                  en: '`PlotSpec.colors` controls the default palette: categorical color scales use it when no range is specified, and marks without a color encoding pick by layer order; the default is d3 `schemeCategory10`.',
+                },
+              },
+            ],
+          },
+          {
             version: 'alpha.9',
             date: '2026-06-12',
             summary: {
@@ -1414,15 +1445,15 @@ export const changelog: Array<Release> = [
             version: 'alpha.10',
             date: '2026-06-13',
             summary: {
-              zh: '退化 `<Plot>` 为薄容器：移除 cartesian2D 默认轴注入，保留 scale / coordinate / color 推断；装饰逻辑抽成可复用纯函数 `decorateDefaultGuides`（留给 v0.2 `<Chart>`）。⚠️ alpha 间 breaking——组合 DSL 不写 `<Axis>` 不再自动出 x/y 轴。',
-              en: 'Degrade `<Plot>` to a thin container: removes the cartesian2D default-axis injection while keeping scale / coordinate / color inference; the decoration logic is extracted into a reusable pure function `decorateDefaultGuides` (reserved for a v0.2 `<Chart>`). ⚠️ breaking between alphas — the composition DSL no longer auto-draws x/y axes when no `<Axis>` is written.',
+              zh: '退化 `<Plot>` 为薄容器并让它可嵌入 core `<Layout>`：移除 cartesian2D 默认轴注入，保留 scale / coordinate / color 推断；装饰逻辑抽成 `decorateDefaultGuides`（留给 v0.2 `<Chart>`）；新增 `<Scale>`、`colors`、面板 `id` / `dataRef` / `x` / `y`。⚠️ alpha 间 breaking——不写 `<Axis>` 不再自动出 x/y 轴，`bare` / `scaleX` / `scaleY` 删除。',
+              en: 'Degrade `<Plot>` to a thin container and make it embeddable inside core `<Layout>`: removes the cartesian2D default-axis injection while keeping scale / coordinate / color inference; extracts `decorateDefaultGuides` (reserved for a v0.2 `<Chart>`); adds `<Scale>`, `colors`, and panel `id` / `dataRef` / `x` / `y`. ⚠️ breaking between alphas — no `<Axis>` means no auto x/y axes, and `bare` / `scaleX` / `scaleY` are removed.',
             },
             items: [
               {
                 label: { zh: '薄 <Plot>：移除默认轴注入（BREAKING）', en: 'Thin `<Plot>`: default-axis injection removed (BREAKING)' },
                 content: {
-                  zh: 'cartesian2D 组合 DSL 不再自动补 x/y 轴 + y 网格——`<Plot>` 只画你显式列出的 `<Axis>` / `<Legend>`，`bare` 与 scale / coordinate 推断不变。迁移：补 `<Axis dimension="x" />` / `<Axis dimension="y" grid />` [坐标轴](/plot/components/axis)',
-                  en: 'The cartesian2D composition DSL no longer auto-adds x/y axes + y grid — `<Plot>` draws only the `<Axis>` / `<Legend>` you list; `bare` and scale / coordinate inference are unchanged. Migration: add `<Axis dimension="x" />` / `<Axis dimension="y" grid />` [Axis](/plot/components/axis)',
+                  zh: 'cartesian2D 组合 DSL 不再自动补 x/y 轴 + y 网格——`<Plot>` 只画你显式列出的 `<Axis>` / `<Legend>`；scale / coordinate 推断不变，`bare` 删除。迁移：补 `<Axis dimension="x" />` / `<Axis dimension="y" grid />`，并移除 `bare` [坐标轴](/plot/components/axis)',
+                  en: 'The cartesian2D composition DSL no longer auto-adds x/y axes + y grid — `<Plot>` draws only the `<Axis>` / `<Legend>` you list; scale / coordinate inference is unchanged, and `bare` is removed. Migration: add `<Axis dimension="x" />` / `<Axis dimension="y" grid />`, and remove `bare` [Axis](/plot/components/axis)',
                 },
               },
               {
@@ -1430,6 +1461,27 @@ export const changelog: Array<Release> = [
                 content: {
                   zh: '默认轴 / 网格补齐逻辑抽成框架无关纯函数（PlotSpec 进出）：cartesian2D 且无显式 axis 时前置 x 轴 + y 轴（带网格）。薄 `<Plot>` 本身不调用，留给上层 `<Chart>`（v0.2）复用——能力不丢、将来不重写。',
                   en: 'The default-axis / grid logic is extracted into a framework-agnostic pure function (PlotSpec in/out): for cartesian2D with no explicit axis it prepends an x axis + y axis (with grid). Thin `<Plot>` does not call it; it is reserved for a v0.2 `<Chart>` to reuse — capability kept, no future rewrite.',
+                },
+              },
+              {
+                label: { zh: '<Scale> 子组件替代 scaleX / scaleY', en: '`<Scale>` child replaces scaleX / scaleY' },
+                content: {
+                  zh: '`<Scale dimension="x|y|angle|radius" type="linear|time|point|log|sqrt" />` 作为声明式子组件覆盖位置 scale；`scaleX` / `scaleY` 从 `<Plot>` props 删除，polar 下可用 angle/radius 或 x/y 别名 [比例尺](/plot/grammar/scale)',
+                  en: '`<Scale dimension="x|y|angle|radius" type="linear|time|point|log|sqrt" />` declaratively overrides position scales; `scaleX` / `scaleY` are removed from `<Plot>` props, with angle/radius or x/y aliases under polar [Scales](/plot/grammar/scale)',
+                },
+              },
+              {
+                label: { zh: '多 Plot 面板组合', en: 'Multi-plot panel composition' },
+                content: {
+                  zh: '`<Plot>` 可作为可嵌入 Tier 2 子组件放进同一个 core `<Layout>`；每张图用 `width` / `height` 自描述尺寸，用 `x` / `y` 或 `transforms` 摆位，`id` 作为外部 anchor 句柄，`dataRef` 可共享数据源 [图表容器](/plot/components/plot)',
+                  en: '`<Plot>` can now act as an embeddable Tier 2 child inside one core `<Layout>`; each panel uses `width` / `height` as its intrinsic size, `x` / `y` or `transforms` for placement, `id` as its external anchor handle, and `dataRef` for shared datasets [Plot](/plot/components/plot)',
+                },
+              },
+              {
+                label: { zh: 'Plot 级默认调色板', en: 'Plot-level default palette' },
+                content: {
+                  zh: '`colors` 控制一张 `<Plot>` 的默认调色板：分类 color scale 用它作 range，无 color 编码的 mark 按图层序取色；缺省为 d3 `schemeCategory10`。',
+                  en: '`colors` controls one `<Plot>`’s default palette: categorical color scales use it as their range, and marks without a color encoding pick by layer order; the default is d3 `schemeCategory10`.',
                 },
               },
             ],

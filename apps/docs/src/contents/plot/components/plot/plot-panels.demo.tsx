@@ -6,12 +6,12 @@ import { revenue } from './plot-cartesian.data';
 
 const Demo: FC = () => (
   <Layout width={620} height={250} style={{ maxWidth: '100%', height: 'auto' }}>
-    <Plot data={revenue} width={300} height={220} transforms={[{ kind: 'translate', x: 0, y: 20 }]}>
+    <Plot data={revenue} width={300} height={220} x={0} y={20}>
       <LineMark x="quarter" y="value" order="quarter" />
       <Axis dimension="x" />
       <Axis dimension="y" grid />
     </Plot>
-    <Plot data={revenue} width={300} height={220} transforms={[{ kind: 'translate', x: 320, y: 20 }]}>
+    <Plot data={revenue} width={300} height={220} x={320} y={20}>
       <BarMark x="quarter" y="value" />
       <Axis dimension="x" />
       <Axis dimension="y" grid />

@@ -69,7 +69,7 @@ import { Axis, BarMark, Plot } from '@retikz/plot-react';
 
 ### 面板组合
 
-同一个父级 `<Layout>` 可以放多张 `<Plot>`。每张图用自己的 `width` / `height` 决定外框，再用 `transforms` 在父画布中摆位；父级只负责承载和组合，不参与子图的 scale 推断。
+同一个父级 `<Layout>` 可以放多张 `<Plot>`。每张图用自己的 `width` / `height` 决定外框，再用 `x` / `y` 或 `transforms` 在父画布中摆位；父级只负责承载和组合，不参与子图的 scale 推断。
 
 <ComponentPreview name="plot-panels" sourceFiles={['plot-cartesian.data.ts']} size="md" />
 
@@ -128,9 +128,12 @@ import { Axis, BarMark, Plot } from '@retikz/plot-react';
 | `fieldMap` | `Record<string, string>` | — | 逻辑字段名 → 数据里的实际路径（需配合 `model`）；只改名、不变换值；详见[数据处理](/plot/data/processing) |
 | `coordinate` | 见[坐标系](/plot/grammar/coordinate) | cartesian2D | 坐标系：`"polar2D"` / `"cartesian1D"` / `"polar1D"` / `"ternary2D"` 简写或对应对象配置；缺省平面直角 |
 | `colors` | `Array<string>` | `schemeCategory10` | 默认调色板。分类颜色 scale 会把它作为 range；没有颜色编码的 mark 按图层顺序取色，超过后循环。写 `'currentColor'` 表示保持 core 继承色 |
-| `width` | `number` | — | 外框宽度（含轴与标签） |
-| `height` | `number` | — | 外框高度（含轴与标签） |
-| `transforms` | `Array<IRTransform>` | — | 面板级变换；放在父级 `<Layout>` 里组合多张图时常用于平移摆位 |
+| `id` | `string` | — | 面板 id：写入 PlotSpec.id，作为外部 anchor 句柄；嵌入态未显式 `dataRef` 时也作为默认数据集引用 |
+| `dataRef` | `string` | — | DSL 入口的数据集引用名；多张 Plot 共享同一数据源时可显式设为同名 |
+| `width` | `number` | — | 外框宽度（含轴与标签）；也写入 PlotSpec 自描述尺寸 |
+| `height` | `number` | — | 外框高度（含轴与标签）；也写入 PlotSpec 自描述尺寸 |
+| `x` / `y` | `number` | — | 父级 `<Layout>` 内的面板左上角位置；会转成外层 `translate` |
+| `transforms` | `Array<IRTransform>` | — | 面板级变换；与 `x` / `y` 可叠加，常用于更细摆位 |
 | `zIndex` | `number` | `0` | 面板在父级层级中的绘制顺序 |
 | `clip` | `IRClipSpec` | — | 面板级裁剪区域 |
 | `fontSize` | `number?` | — | 刻度标签字号 |

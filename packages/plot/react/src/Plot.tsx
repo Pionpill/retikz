@@ -4,7 +4,12 @@ import { type DataModel, type ExternalDatasets, type ExternalRow, type LowerPlot
 import { type CoordinateInput, buildPlotSpec } from './components';
 
 /** <Plot> 作为 Layout 子面板时可直接承接的 core scope 属性 */
-export type PlotPanelProps = Pick<ScopeProps, 'transforms' | 'zIndex' | 'clip'>;
+export type PlotPanelProps = Pick<ScopeProps, 'transforms' | 'zIndex' | 'clip'> & {
+  /** 面板左上角 x（user units）；会转成外层 Scope translate，适合 Layout 内多 plot 绝对摆位 */
+  x?: number;
+  /** 面板左上角 y（user units）；会转成外层 Scope translate，适合 Layout 内多 plot 绝对摆位 */
+  y?: number;
+};
 
 /** <Plot> 两条入口共享的展示 props + lowerPlots 选项 */
 export type PlotCommonProps = Pick<LayoutProps, 'className' | 'style' | 'renderer'> & PlotPanelProps & LowerPlotsOptions;
@@ -26,6 +31,10 @@ export type PlotSpecProps = PlotCommonProps & PlotColorProps & {
 /** 组合 DSL 入口：给裸数据行 + <LineMark>/<PointMark>/<Axis> 子组件 */
 export type PlotDslProps = PlotCommonProps & PlotColorProps & {
   spec?: never;
+  /** 面板 id：写入 PlotSpec.id，作为外部 anchor 句柄；嵌入态未显式 dataRef 时也作为默认数据集引用 */
+  id?: string;
+  /** 嵌入态/DSL 入口的数据集引用名；多 plot 共享同一数据源时可显式设成同名 */
+  dataRef?: string;
   /** 裸数据行数组；内部包成单数据集注入，不进 IR */
   data: Array<ExternalRow>;
   /** mark / guide 子组件（<LineMark> / <PointMark> / <BarMark> / <SectorMark> / <AreaMark> / <Axis>） */
@@ -89,11 +98,15 @@ const withPlotColors = (spec: PlotSpec, colors: Array<string> | undefined): Plot
 });
 
 const wrapPanelScope = (node: PlotSpec, props: PlotPanelProps): EmbeddableContribution['node'] => {
-  const { transforms, zIndex, clip } = props;
-  if (transforms === undefined && zIndex === undefined && clip === undefined) return node;
+  const { x, y, transforms, zIndex, clip } = props;
+  const panelTransforms =
+    x !== undefined || y !== undefined
+      ? ([{ kind: 'translate', x: x ?? 0, y: y ?? 0 }, ...(transforms ?? [])] as NonNullable<ScopeProps['transforms']>)
+      : transforms;
+  if (panelTransforms === undefined && zIndex === undefined && clip === undefined) return node;
   const scope: EmbeddableContribution['node'] = {
     type: 'scope',
-    ...(transforms !== undefined ? { transforms } : {}),
+    ...(panelTransforms !== undefined ? { transforms: panelTransforms } : {}),
     ...(zIndex !== undefined ? { zIndex } : {}),
     ...(clip !== undefined ? { clip } : {}),
     children: [node],
@@ -105,7 +118,7 @@ const resolvePlotRuntime = (
   props: PlotProps,
   options: { embedded?: boolean } = {},
 ): { spec: PlotSpec; datasets: ExternalDatasets; lowerOptions: LowerPlotsOptions } => {
-  const dataRef = options.embedded && !props.spec ? embeddedDataRefFor(props.data) : DSL_DATA_REF;
+  const dataRef = !props.spec ? props.dataRef ?? (options.embedded && props.id !== undefined ? props.id : options.embedded ? embeddedDataRefFor(props.data) : DSL_DATA_REF) : DSL_DATA_REF;
   let spec: PlotSpec;
   let datasets: ExternalDatasets;
   let effectiveFieldMaps = props.fieldMaps;
@@ -116,6 +129,9 @@ const resolvePlotRuntime = (
     // DSL 入口：model 经 buildPlotSpec 注入 data.model **并改走 type-driven 派生**（省略 AUTO 位置 scale 绑定，
     // 否则 model 的 temporal/nominal 不会派生 time/band、甚至被当显式 linear 校验）。扁平 fieldMap 映射到数据集名。
     spec = buildPlotSpec(props.children, dataRef, {
+      id: props.id,
+      width: props.width,
+      height: props.height,
       coordinate: props.coordinate,
       model: props.model,
       colors: props.colors,

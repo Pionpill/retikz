@@ -94,6 +94,12 @@ export type CoordinateInput =
 
 /** buildPlotSpec 选项：坐标系选择 + 数据模型 */
 export type BuildPlotSpecOptions = {
+  /** PlotSpec id：作为整张图的外部 anchor 句柄 */
+  id?: string;
+  /** PlotSpec intrinsic width：组合场景下每张 plot 自描述面板宽度 */
+  width?: number;
+  /** PlotSpec intrinsic height：组合场景下每张 plot 自描述面板高度 */
+  height?: number;
   /** 坐标系选择（缺省 cartesian2D）；"polar2D" 或 polar2D 对象配置 */
   coordinate?: CoordinateInput;
   /** 数据模型（字段类型）：声明则进 data.model，并对未显式 <Scale> 的位置维度走 type-driven 派生 */
@@ -485,10 +491,13 @@ export const buildPlotSpec = (children: ReactNode, dataRef: string, options: Bui
   return {
     namespace: PLOT_NAMESPACE,
     type: PlotComposite.Plot,
+    ...(options.id !== undefined ? { id: options.id } : {}),
     data: options.model ? { reference: dataRef, model: options.model } : { reference: dataRef },
     ...(collected.transforms.length > 0 ? { transform: collected.transforms } : {}),
     scales,
     ...(options.colors !== undefined ? { colors: options.colors } : {}),
+    ...(options.width !== undefined ? { width: options.width } : {}),
+    ...(options.height !== undefined ? { height: options.height } : {}),
     coordinate,
     marks: collected.marks,
     guides,
