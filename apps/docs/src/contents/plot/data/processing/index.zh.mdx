@@ -1,6 +1,6 @@
 ---
 title: 数据处理
-description: 把真实数据接进来并信得过：字段不同名给 fieldMap、非默认格式用声明式 format 或 resolveField 兜底、脏数据用 validateData / invalid 校验。
+description: 把真实数据接进来并信得过：字段不同名给 fieldMap，特殊格式用 format 或 resolveField 解析，脏数据用 validateData / invalid 校验。
 ---
 
 [数据模型](/plot/data/model)声明了字段**是什么**；这页讲怎么把真实世界的数据**接进来**——换源、解析、校验。三件事都以声明了 model 为前提。
@@ -11,7 +11,13 @@ description: 把真实数据接进来并信得过：字段不同名给 fieldMap�
 
 ### 同名同类型
 
-字段名 / 类型一致时，直接换 `data` 就能重新出图，配置一行不用动。
+最轻量的换源方式是保持同一份字段契约：新旧数据都叫 `month` / `revenue`，并且 `month` 仍然是时间、`revenue` 仍然是连续数值。这时 mark、轴、比例尺、颜色、排序和校验都不用改，只替换 `<Plot data>`。
+
+这适合后端接口版本稳定、只切换筛选条件 / 时间范围 / 环境数据的场景。比如同一个销售图，可以在「实际值」和「预测值」之间切换；只要字段契约不变，图表配置就能复用。
+
+<ComponentPreview name="processing-same" sourceFiles={['processing-same.data.ts']} />
+
+如果字段名换了，进入下一节用 `fieldMap`；如果字段名没换但存储格式变了（例如 ISO 日期变成 `YYYY/MM/DD`），看后面的「解析格式」。
 
 ### 字段名不同：`fieldMap`
 
@@ -27,15 +33,29 @@ description: 把真实数据接进来并信得过：字段不同名给 fieldMap�
 
 `fieldMap` 只做改名（值不变换，计算交给 transform）；它必须配合 model 使用——没有 model 就没有「逻辑字段」可映射。
 
+下面两张图共用同一份逻辑配置：左图数据字段已经叫 `month` / `revenue`，右图数据来自另一套接口，实际字段叫 `period` / `amount`，用 `fieldMap` 接回同一个 model。
+
+<ComponentPreview name="processing-source" sourceFiles={['processing-source.data.ts']} />
+
 ### 存储格式不同但类型相同
 
 同一个 `temporal` 字段，数据里是 `Date` 对象、ISO 字符串还是毫秒时间戳，都能正确读；`continuous` 字段是数字还是规范的数字串（`"120"`）也都认。无需任何额外配置。非默认的存储格式（如 `'2024/01/01'`、epoch 秒、`'50%'`）走下面的解析。
 
-## 解析非默认格式
+下面右图故意混用了 `Date`、epoch 毫秒、ISO 字符串，以及数字 / 数字串。因为字段类型仍然是 `temporal` + `continuous`，同一份 model 就能完成规范化。
+
+<ComponentPreview name="processing-storage" sourceFiles={['processing-storage.data.ts']} />
+
+## 解析格式
 
 内置解析只认固定形态：`temporal` 收 `Date` / 毫秒 / 严格 ISO，`continuous` 收数字 / 严格数字串。词表外的格式需要你点名怎么解析——常见格式用声明式 `format`，真正任意的逻辑用 `resolveField` 兜底。
 
-### 声明式格式：`format`
+| 场景 | 写法 | 进 IR |
+| --- | --- | --- |
+| 默认格式 | 只写 `type` / 省略解析 | 是 |
+| 常见非默认格式 | 在 `model` 字段上写 `format` | 是 |
+| 任意运行时逻辑 | 给 `<Plot>` 写 `resolveField` | 否，函数只在运行时使用 |
+
+### format
 
 碰上 `'2024/01/01'`、epoch 秒、`'50%'` 这类常见的非默认格式，不必动用函数——给字段一个声明式 `format`，它**进 IR、可序列化、LLM 也能生成**：
 
@@ -46,6 +66,10 @@ description: 把真实数据接进来并信得过：字段不同名给 fieldMap�
   { name: 'ratio',     type: 'continuous', format: 'percent' },     // '50%' → 0.5
 ]}>{/* … */}</Plot>
 ```
+
+下面的右图用同一组业务字段接入报表数据：日期是 `YYYY/MM/DD`，比例是百分比字符串。`format` 把它们先规范化，再交给时间轴和线性轴。
+
+<ComponentPreview name="processing-format" sourceFiles={['processing-format.data.ts']} />
 
 可选的 `format`（每个绑定一种类型）：
 
@@ -65,7 +89,7 @@ description: 把真实数据接进来并信得过：字段不同名给 fieldMap�
 - `slashDate` 只认严格 `YYYY/MM/DD`；`DD/MM/YYYY`、`MM/DD/YYYY` 这类有地区歧义的布局不收（避免同一串在不同环境解析成不同日期）。
 - 解析优先级：`resolveField` 的 `parse` > 声明式 `format` > 内置默认。
 
-### 自定义解析：`resolveField`
+### resolveField
 
 碰上词表外的**任意格式**（如 `'2024Q1'` 季度串、自定义分隔符）或想**强制某字段当某类型**（数值枚举当 `categorical`）时，给 `resolveField` 一个函数——它**不进 IR**（是运行时选项，和 `fieldMap` 同层），按字段名返回「类型覆盖 + 可选自定义解析器」：
 
@@ -84,16 +108,25 @@ description: 把真实数据接进来并信得过：字段不同名给 fieldMap�
 </Plot>
 ```
 
+下面这个例子把 `'2026Q1'` 这样的季度字符串解析成季度首日时间戳。它不属于内置 `format` 词表，所以用 `resolveField` 给 `quarter` 字段补一段运行时解析逻辑。
+
+<ComponentPreview name="processing-resolve" sourceFiles={['processing-resolve.data.ts']} />
+
 规则：
 
 - 返回 `{ type }` 覆盖该字段类型（优先级高于 model 与推断）；返回 `{ parse }` 用自定义解析器把原始值转成规范值（`temporal`/`continuous` 返数字、`categorical` 返字符串/数字），返 `undefined` 跳过该值。
 - **只给 `parse` 不给 `type`** 时，类型沿用 model 声明——所以 `parse` 单独出现**必须有 model**（无 model 时类型来源不清，会报错）。
 - `resolveField` **不绕过 strict**：声明了 model，引用未列出的字段照样报错——它只覆盖类型/解析，不能把拼错字段洗成合法字段。
+- 第二参提供 `{ dataReference, physicalPath, declaredType }`，同名字段接不同数据源、或配合 `fieldMap` 时，可以按数据源和实际路径分支。
 - 因为是函数、不可序列化，`resolveField` 适合手写代码的逃生舱；要 spec 完全可移植 / LLM 友好，优先用 model 的声明式 `type` / `format`。
 
 ## 校验脏数据
 
 文档型 / 异构数据常有缺字段、类型不一的行。retikz 的处理是**跳过、不伪造、不静默画错**：
+
+下面右图里 `Feb` 是无法解析的字符串、`Mar` 缺值、`May` 是 `null`。默认 `invalid="skip"` 会跳过这些柱；开发或数据准入时，再打开校验让它们直接报错。
+
+<ComponentPreview name="processing-invalid" sourceFiles={['processing-invalid.data.ts']} />
 
 | 情形 | 行为 |
 | --- | --- |
@@ -102,6 +135,14 @@ description: 把真实数据接进来并信得过：字段不同名给 fieldMap�
 | 同类型不同存储格式 | 自动转换（见上「换数据源」） |
 | 字段是 `bigint`（如数据库 int64） | 自动转 number（仅安全整数；超出范围按非法处理） |
 | 路径中途是数组（需展开） | 暂不支持自动展开，请先在数据层 flatten |
+
+校验选项按“多严格”选择：
+
+| 配置 | 检查方式 | 适合场景 |
+| --- | --- | --- |
+| 默认 / `invalid="skip"` | 不报错，非法点跳过 | 生产图容忍少量脏数据 |
+| `validateData` | 抽样检查绑定字段 | 开发期排查空图 / 字段映射错误 |
+| `invalid="error"` | 全量检查参与字段 | 数据准入、测试、需要 fail-loud 的图 |
 
 默认「跳过」可能让你对着一张空图摸不着头脑。打开 `validateData` 让 retikz **抽样**校验、有问题直接报错，并指出**哪个字段、多少非法 / 缺失**（如 `field "x": 3/100 invalid`），把「为什么图是空的」变成明确提示：
 
