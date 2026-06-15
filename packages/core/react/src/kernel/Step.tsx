@@ -177,8 +177,26 @@ export type RectangleStepProps = {
 };
 
 /**
- * `<Step>` 组件的 props（11 种 step kind 的 discriminated union）
- * @description 十一种 kind：'move' / 'line'（默认） / 'fold'（折角） / 'cycle'（闭合） / 'curve'（二次贝塞尔） / 'cubic'（三次贝塞尔） / 'bend'（弧形简记） / 'arc'（圆 / 椭圆弧段） / 'circlePath'（整圆 / 部分圆） / 'ellipsePath'（整椭圆 / 部分椭圆） / 'rectangle'（矩形）。除 'move' / 'cycle' / 'rectangle' 外均可挂 `label?: IRStepLabel`，等价于 sugar `<EdgeLabel>` child（prop 优先）。每个 kind 有对应 named type export，便于 wrapper / forwardRef / `Pick<>` 派生。
+ * Smooth action：过当前游标 + `points` 的平滑曲线（TikZ `plot[smooth]` / Hobby 风格）
+ * @description 游标为隐式首 knot，曲线依次穿过 `points` 每个点；编译期经 centripetal Catmull-Rom 转成 cubic 链。
+ *   需前置 step 设游标；游标终于 `points` 末项。`tension` 缺省 1（标准 centripetal CR），<1 更紧、>1 更鼓。
+ */
+export type SmoothStepProps = {
+  /** 平滑曲线 step 鉴别字面量 */
+  kind: 'smooth';
+  /** 游标之后依次穿过的点（顺序敏感）；单点 = 一段曲线，游标终于末点 */
+  points: Array<DslTarget>;
+  /** 切线长度乘子（TikZ `tension`）；缺省 1，<1 更紧、>1 更鼓 */
+  tension?: number;
+  /** 边标注，沿生成 cubic 按贝塞尔参数定位 */
+  label?: IRStepLabel;
+  /** sugar 形态 */
+  children?: ReactNode;
+};
+
+/**
+ * `<Step>` 组件的 props（12 种 step kind 的 discriminated union）
+ * @description 十二种 kind：'move' / 'line'（默认） / 'fold'（折角） / 'cycle'（闭合） / 'curve'（二次贝塞尔） / 'cubic'（三次贝塞尔） / 'bend'（弧形简记） / 'arc'（圆 / 椭圆弧段） / 'circlePath'（整圆 / 部分圆） / 'ellipsePath'（整椭圆 / 部分椭圆） / 'rectangle'（矩形） / 'smooth'（过点平滑曲线）。除 'move' / 'cycle' / 'rectangle' 外均可挂 `label?: IRStepLabel`，等价于 sugar `<EdgeLabel>` child（prop 优先）；'smooth' 用 `points` 而非 `to`。每个 kind 有对应 named type export，便于 wrapper / forwardRef / `Pick<>` 派生。
  */
 export type StepProps =
   | MoveStepProps
@@ -191,7 +209,8 @@ export type StepProps =
   | ArcStepProps
   | CirclePathStepProps
   | EllipsePathStepProps
-  | RectangleStepProps;
+  | RectangleStepProps
+  | SmoothStepProps;
 
 /**
  * Step 是 DSL 标记组件——本身不渲染
