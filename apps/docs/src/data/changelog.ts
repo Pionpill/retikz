@@ -107,6 +107,37 @@ export const changelog: Array<Release> = [
         ],
         subVersions: [
           {
+            version: 'alpha.4',
+            date: '2026-06-16',
+            summary: {
+              zh: '新增图元级视觉效果 `shadow`（投影）与 `blendMode`（混合模式）：作用于 Node 主形状 / Path 主路径（含端点箭头），renderer-agnostic 编译期透传。',
+              en: 'New element-level visual effects `shadow` and `blendMode`: applied to a Node’s shape / a Path’s main path (including endpoint arrows), passed through at compile time and renderer-agnostic.',
+            },
+            items: [
+              {
+                label: { zh: 'shadow（投影）', en: 'shadow' },
+                content: {
+                  zh: '`IRNode` / `IRPath` 新增 `shadow`：预设字符串（`sm`/`md`/`lg`/`xl`/`2xl`/`none`）或对象 `{ preset?, offsetX?, offsetY?, blur?, color?, opacity? }`，显式字段覆盖 preset；编译期经 `resolveShadow` 展开为 canonical `DropShadow`。根自动 layout 纳入阴影外溢，避免被根 viewBox / 画布裁切。',
+                  en: '`IRNode` / `IRPath` gain `shadow`: a preset string (`sm`/`md`/`lg`/`xl`/`2xl`/`none`) or object `{ preset?, offsetX?, offsetY?, blur?, color?, opacity? }`, explicit fields overriding the preset; compiled via `resolveShadow` into a canonical `DropShadow`. Root auto-layout now includes the shadow’s overflow so it is not clipped by the root viewBox / canvas.',
+                },
+              },
+              {
+                label: { zh: 'blendMode（混合模式）', en: 'blendMode' },
+                content: {
+                  zh: '`IRNode` / `IRPath` 新增 `blendMode`：W3C 16 个分离混合模式闭集枚举（`normal` / `multiply` / `screen` / …）；元素与其下方已绘内容按 W3C 公式混合，扁平场景三端一致；`normal` / 省略逐字不变。',
+                  en: '`IRNode` / `IRPath` gain `blendMode`: a closed enum of the 16 W3C separable modes (`normal` / `multiply` / `screen` / …); the element blends with the content drawn beneath it via the W3C formulas, consistent across backends on flat scenes; `normal` / omitted is byte-for-byte unchanged.',
+                },
+              },
+              {
+                label: { zh: '作用范围 = 图元级', en: 'Scope = element-level' },
+                content: {
+                  zh: '两者均跟随图元主几何 + Path 端点箭头；Node 的文字 / 标签 / 引脚是独立图元，不带效果。新增 `DropShadow` 类型与 `ShadowPreset` / `BlendMode` 常量导出，全部 optional / additive，缺省零回归。',
+                  en: 'Both follow the primitive’s main geometry plus a Path’s endpoint arrows; a Node’s text / label / pin are separate primitives and stay unaffected. Exports a `DropShadow` type and `ShadowPreset` / `BlendMode` constants; all optional / additive with zero regression when omitted.',
+                },
+              },
+            ],
+          },
+          {
             version: 'alpha.3',
             date: '2026-06-16',
             summary: {
@@ -181,6 +212,41 @@ export const changelog: Array<Release> = [
         ],
       },
       {
+        pkg: '@retikz/render',
+        version: 'v0.4',
+        description: {
+          zh: '渲染端落地 Scene 视觉效果：SVG / Canvas 两端把 `shadow` / `blendMode` 翻译成各自原生能力，并校准跨后端视觉口径。',
+          en: 'The renderers land Scene visual effects: SVG and Canvas translate `shadow` / `blendMode` to native capabilities and calibrate the cross-backend visual contract.',
+        },
+        highlights: [],
+        subVersions: [
+          {
+            version: 'alpha.4',
+            date: '2026-06-16',
+            summary: {
+              zh: 'shadow → SVG `<feDropShadow>` filter / Canvas `ctx.shadow*`；blendMode → SVG `mix-blend-mode` / Canvas `globalCompositeOperation`；并修跨后端裁剪与口径校准。',
+              en: 'shadow → SVG `<feDropShadow>` filter / Canvas `ctx.shadow*`; blendMode → SVG `mix-blend-mode` / Canvas `globalCompositeOperation`; plus cross-backend clipping & calibration fixes.',
+            },
+            items: [
+              {
+                label: { zh: 'shadow 两端落地', en: 'shadow on both backends' },
+                content: {
+                  zh: 'SVG 去重注册 `<filter><feDropShadow>`，filter region 取 `userSpaceOnUse` + 整 viewBox（修复细线 / 大 blur 投影被默认 objectBoundingBox 区域裁切）；Canvas `withShadow` set `ctx.shadow*` 并按当前 transform 校准，`opacity` 烘焙进 color alpha。',
+                  en: 'SVG registers a deduped `<filter><feDropShadow>` with its region set to `userSpaceOnUse` + the full viewBox (fixing thin-line / large-blur shadows clipped by the default objectBoundingBox region); Canvas `withShadow` sets `ctx.shadow*` calibrated to the current transform, baking `opacity` into the color alpha.',
+                },
+              },
+              {
+                label: { zh: 'blendMode 两端落地', en: 'blendMode on both backends' },
+                content: {
+                  zh: 'SVG emit `style="mix-blend-mode:…"`（不引 isolation 分组）/ Canvas set `globalCompositeOperation`；扁平场景两端像素近似一致（含跨端 parity 测试）。',
+                  en: 'SVG emits `style="mix-blend-mode:…"` (no isolation group) / Canvas sets `globalCompositeOperation`; flat scenes match pixel-wise across backends (with a cross-backend parity test).',
+                },
+              },
+            ],
+          },
+        ],
+      },
+      {
         pkg: '@retikz/react',
         version: 'v0.4',
         description: {
@@ -189,6 +255,23 @@ export const changelog: Array<Release> = [
         },
         highlights: [],
         subVersions: [
+          {
+            version: 'alpha.4',
+            date: '2026-06-16',
+            summary: {
+              zh: '`<Node>` / `<Path>` / `<Draw>` 透传 `shadow` / `blendMode`（与 core 同一份 schema）。',
+              en: '`<Node>` / `<Path>` / `<Draw>` pass through `shadow` / `blendMode` (the same schema as core).',
+            },
+            items: [
+              {
+                label: { zh: 'shadow / blendMode props', en: 'shadow / blendMode props' },
+                content: {
+                  zh: '`<Node>` / `<Path>` 新增 `shadow` / `blendMode` props；`<Draw>` sugar 同步透传。',
+                  en: '`<Node>` / `<Path>` gain `shadow` / `blendMode` props; the `<Draw>` sugar passes them through too.',
+                },
+              },
+            ],
+          },
           {
             version: 'alpha.3',
             date: '2026-06-16',
@@ -226,6 +309,34 @@ export const changelog: Array<Release> = [
                 content: {
                   zh: 'Tier2 组件（如 plot）可直接作 `<Layout>` 子节点，经 `EmbeddableTier2Adapter` 贡献 IR；core-react builder + hydration 汇总。',
                   en: 'Tier2 components (e.g. plot) can sit directly under `<Layout>`, contributing IR via an `EmbeddableTier2Adapter`; the core-react builder + hydration gather them.',
+                },
+              },
+            ],
+          },
+        ],
+      },
+      {
+        pkg: '@retikz/vanilla',
+        version: 'v0.4',
+        description: {
+          zh: 'Vanilla DSL 跟进 core v0.4：`node` / `draw` config 经 `Omit<IR*>` 自动获得 `shadow` / `blendMode`，与 react 同一份 schema。',
+          en: 'The vanilla DSL follows core v0.4: `node` / `draw` config get `shadow` / `blendMode` automatically via `Omit<IR*>`, the same schema as react.',
+        },
+        highlights: [],
+        subVersions: [
+          {
+            version: 'alpha.4',
+            date: '2026-06-16',
+            summary: {
+              zh: '`node` / `draw` config 可直接写 `shadow` / `blendMode`（预设 / 对象 / 枚举），无需额外 API。',
+              en: '`node` / `draw` config can write `shadow` / `blendMode` directly (preset / object / enum), with no extra API.',
+            },
+            items: [
+              {
+                label: { zh: 'shadow / blendMode 自动派生', en: 'shadow / blendMode auto-derived' },
+                content: {
+                  zh: '`shadow`（如 `md` 预设）/ `blendMode`（如 `multiply`）经 `Omit<IRNode>` / `Omit<IRPath>` 从 `@retikz/core` 透传，开箱即用，零新代码。',
+                  en: '`shadow` (e.g. the `md` preset) / `blendMode` (e.g. `multiply`) flow from `@retikz/core` via `Omit<IRNode>` / `Omit<IRPath>` — out of the box, zero new code.',
                 },
               },
             ],
