@@ -1,4 +1,4 @@
-import { Plot, SectorMark } from '@retikz/plot-react';
+import { BarMark, Plot } from '@retikz/plot-react';
 import type { FC } from 'react';
 
 import { share } from './coordinate-pie.data';
@@ -12,7 +12,7 @@ const Demo: FC = () => (
     coordinate={{ type: 'polar2D', innerRadius: 0.55 }}
     style={{ maxWidth: '100%', height: 'auto' }}
   >
-    <SectorMark angle="value" color="label" />
+    <BarMark angle="value" color="label" />
   </Plot>
 );
 

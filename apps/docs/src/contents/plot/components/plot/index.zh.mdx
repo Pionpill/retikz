@@ -3,7 +3,7 @@ title: 图表容器
 description: <Plot> 是图表容器：接收裸数据与尺寸，装配 mark / guide / scale 子组件，并在编译期下沉到 core 图元。
 ---
 
-`<Plot>` 是 plot 体系的容器组件：它接收 `data`（裸数据行数组）和显示尺寸，收集内部的 `<LineMark>` / `<BarMark>` / `<SectorMark>` / `<Axis>` / `<Scale>` 等子组件，编译期再装配成 PlotSpec 并下沉到 core。数据不写进 IR，只在 lowering 时注入。`<Plot>` 自己不画坐标轴、网格或图例；这些 guide 由你显式声明，scale 会自动推断，也可以用 `<Scale>` 覆盖；坐标系默认 `cartesian2D`，可用 `coordinate` 切换。
+`<Plot>` 是 plot 体系的容器组件：它接收 `data`（裸数据行数组）和显示尺寸，收集内部的 `<LineMark>` / `<BarMark>` / `<AreaMark>` / `<Axis>` / `<Scale>` 等子组件，编译期再装配成 PlotSpec 并下沉到 core。数据不写进 IR，只在 lowering 时注入。`<Plot>` 自己不画坐标轴、网格或图例；这些 guide 由你显式声明，scale 会自动推断，也可以用 `<Scale>` 覆盖；坐标系默认 `cartesian2D`，可用 `coordinate` 切换。
 
 ## 用法
 

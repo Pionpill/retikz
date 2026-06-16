@@ -53,7 +53,7 @@ cartesian 下 `x` 是水平、`y` 是垂直。polar 下这两个通道改成几�
 
 ### 饼图与环图
 
-`<SectorMark>` 按 `angle` 值字段自动累积成扇区角界。加 `innerRadius` 就从饼图变环图。
+`<BarMark angle="value" />` 按 `angle` 值字段自动累积成扇区角界。加 `innerRadius` 就从饼图变环图。
 
 <div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
   <ComponentPreview name="coordinate-pie" sourceFiles={['coordinate-pie.data.ts']} size="sm" />
@@ -77,4 +77,3 @@ cartesian 下 `x` 是水平、`y` 是垂直。polar 下这两个通道改成几�
 <Comparison target="tikz" title="TikZ 对照">
 TikZ 里极坐标靠 PGFPlots 的 `polaraxis` 环境（`\begin{polaraxis} ... \end{polaraxis}`）切换；retikz 把它收成 `<Plot>` 的一个 `coordinate` 开关，mark 不分平面 / 极坐标两套。
 </Comparison>
-

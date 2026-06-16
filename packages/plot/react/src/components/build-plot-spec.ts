@@ -39,8 +39,6 @@ import {
   type RibbonMarkProps,
   RuleMark,
   type RuleMarkProps,
-  SectorMark,
-  type SectorMarkProps,
   TextMark,
   type TextMarkProps,
 } from './marks';
@@ -157,7 +155,7 @@ type Collected = {
   hasBar: boolean;
   /** 是否有 <RectMark>（heatmap → x / y 双轴强制 band scale） */
   hasRect: boolean;
-  /** 是否有 <SectorMark>（→ 角向 linear scale） */
+  /** True when <BarMark angle> uses sector lowering (angle scale must be linear). */
   hasSector: boolean;
   /** 是否有闭合 <LineMark>（雷达 → 角向 point scale） */
   hasClosedLine: boolean;
@@ -311,10 +309,31 @@ const collectInto = (children: ReactNode, into: Collected): void => {
       recordResolveLabel(into, id, props.resolveLabel);
     } else if (child.type === BarMark) {
       const props = child.props as BarMarkProps;
-      const { x, y, color, series, stack, id } = props;
+      const { x, y, angle, color, series, stack, id } = props;
+      if (angle !== undefined) {
+        if (x !== undefined || y !== undefined || stack !== undefined) {
+          throw new Error('buildPlotSpec: <BarMark angle> is the polar pie/donut form; do not mix it with x/y/stack');
+        }
+        into.transforms.push({
+          kind: PlotTransform.Stack,
+          y: angle,
+          ...(series !== undefined ? { groupBy: series } : {}),
+        });
+        const colorEnc = colorChannel(color, series) ?? colorChannel(angle, undefined);
+        into.marks.push({
+          type: PlotMark.Sector,
+          ...(id !== undefined ? { id } : {}),
+          encoding: { ...colorEnc },
+        });
+        into.hasSector = true;
+        recordColor(into, colorEnc);
+        return;
+      }
+      if (x === undefined || y === undefined) {
+        throw new Error('buildPlotSpec: <BarMark> requires x and y, or use angle for the polar pie/donut form');
+      }
       const colorEnc = colorChannel(color, series);
       const markLabel = buildMarkLabel(props);
-      // series + stack → 堆叠（装配 stack transform，x/y/groupBy 与 mark 对齐）；series 无 stack → dodge
       let arrangement: PlotArrangementValue | undefined;
       if (series !== undefined && stack) {
         arrangement = PlotArrangement.Stack;
@@ -333,23 +352,6 @@ const collectInto = (children: ReactNode, into: Collected): void => {
       into.hasBar = true;
       recordColor(into, colorEnc);
       recordResolveLabel(into, id, props.resolveLabel);
-    } else if (child.type === SectorMark) {
-      const { angle, color, series, id } = child.props as SectorMarkProps;
-      // 内建自动累积：装单链 stack transform（无分组 x，按 series 排序或数据序）；sector mark 读 y0/y1 为角界
-      into.transforms.push({
-        kind: PlotTransform.Stack,
-        y: angle,
-        ...(series !== undefined ? { groupBy: series } : {}),
-      });
-      // 颜色缺省按 angle 值字段本身分类上色（饼图每片一色）；lowering 的角向域读累积界 y0/y1，不经 encoding，故 encoding 仅承载 color
-      const colorEnc = colorChannel(color, series) ?? colorChannel(angle, undefined);
-      into.marks.push({
-        type: PlotMark.Sector,
-        ...(id !== undefined ? { id } : {}),
-        encoding: { ...colorEnc },
-      });
-      into.hasSector = true;
-      recordColor(into, colorEnc);
     } else if (child.type === AreaMark) {
       const props = child.props as AreaMarkProps;
       const { x, y, order, series, baseline, closed, color, id } = props;
@@ -507,7 +509,7 @@ const buildAngleScale = (collected: Collected, explicit: PositionScaleType | und
     throw new Error('buildPlotSpec: <BarMark> in polar coordinates requires a band angle scale; omit <Scale dimension="angle" /> for automatic band inference');
   }
   if (collected.hasSector && explicit !== undefined && explicit !== 'linear') {
-    throw new Error('buildPlotSpec: <SectorMark> requires a linear angle scale; omit <Scale dimension="angle" /> or use type="linear"');
+    throw new Error('buildPlotSpec: <BarMark angle> requires a linear angle scale; omit <Scale dimension="angle" /> or use type="linear"');
   }
   if (explicit !== undefined) return buildPositionScale(AUTO_ANGLE, explicit);
   if (collected.hasSector) return { type: PlotScale.Linear, name: AUTO_ANGLE };
@@ -593,6 +595,9 @@ export const buildPlotSpec = (children: ReactNode, dataRef: string, options: Bui
   collectInto(children, collected);
 
   const coordKind = coordinateTypeOf(options.coordinate);
+  if (collected.hasSector && coordKind !== 'polar2D') {
+    throw new Error('buildPlotSpec: <BarMark angle> is only valid under coordinate="polar2D"');
+  }
   const explicitScales = collectExplicitScales(collected.scales, coordKind);
 
   // 有 model 或 Plot 入口要求延迟推断时，未显式声明 <Scale> 的维度省略 AUTO 绑定，交给 expand 按字段类型派生。

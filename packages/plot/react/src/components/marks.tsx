@@ -66,31 +66,21 @@ export type PointMarkProps = DatumLabelProps & {
   id?: string;
 };
 
-/** <BarMark> props：柱状图层，从 baseline 到值的矩形（cartesian 下 x 自动 band；polar 下自动成径向柱、角向自动 band） */
+/** <BarMark> props: bar / sector layer. x/y draws bars; angle draws auto-accumulated pie/donut sectors. */
 export type BarMarkProps = DatumLabelProps & {
-  /** 绑 x 位置通道的字段路径（分类，自动 band scale；polar 下作角向类别） */
-  x: string;
-  /** 绑 y 位置通道的字段路径（数值；polar 下作径向值） */
-  y: string;
-  /** 颜色字段（→ color 通道 + 自动 ordinal 色 scale）；缺省取 series */
+  /** Field path bound to the x position channel; omit when using angle. */
+  x?: string;
+  /** Field path bound to the y position channel; omit when using angle. */
+  y?: string;
+  /** Value field for polar pie / donut slices; auto-accumulated into sector angle bounds. */
+  angle?: string;
+  /** Color field; defaults to series. In angle form, missing color/series falls back to the angle field. */
   color?: string;
-  /** 系列字段：拆成多组柱；缺省单系列 */
+  /** Series field: groups x/y bars, or orders/colors angle slices. */
   series?: string;
-  /** 多系列时是否堆叠（true=stack，自动装配 stack transform）；否则并排（dodge） */
+  /** Whether multi-series bars stack; cannot be combined with angle. */
   stack?: boolean;
-  /** 可选 mark 句柄（预留 scope/anchor，解析留 alpha.5） */
-  id?: string;
-};
-
-/** <SectorMark> props：扇形图层（饼 / 环），按 angle 值字段自动累积成角界 */
-export type SectorMarkProps = {
-  /** 角向值字段：内建自动累积成 [起角, 止角]（同 <BarMark stack> 约定，DSL 层不暴露 transform） */
-  angle: string;
-  /** 颜色字段（→ color 通道 + 自动 ordinal 色 scale）；缺省取 angle 字段本身分类上色 */
-  color?: string;
-  /** 系列字段：累积时按其排序分段；缺省按数据顺序 */
-  series?: string;
-  /** 可选 mark 句柄（预留 scope/anchor，解析留 alpha.5） */
+  /** Optional mark handle. */
   id?: string;
 };
 
@@ -167,13 +157,6 @@ export const PointMark: FC<PointMarkProps> = () => null;
  * @description 配置载体：不进 React render 栈、不渲染（返回 null），由 <Plot> 同步内省其 type + props 装配进 PlotSpec
  */
 export const BarMark: FC<BarMarkProps> = () => null;
-
-/**
- * 扇形（饼 / 环）图层声明组件
- * @description 配置载体：不进 React render 栈、不渲染（返回 null），由 <Plot> 同步内省其 props 装配进 PlotSpec；
- *   内建自动累积——同步装配 stack transform（无分组单链）+ sector mark 读累积界为角度
- */
-export const SectorMark: FC<SectorMarkProps> = () => null;
 
 /**
  * 面积图层声明组件

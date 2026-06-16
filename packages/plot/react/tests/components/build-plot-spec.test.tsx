@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { type PlotSpec, PlotSpecSchema } from '@retikz/plot';
 import { buildPlotSpec, decorateDefaultGuides } from '../../src/components/build-plot-spec';
 import { Axis, Legend } from '../../src/components/guides';
-import { AreaMark, BarMark, LineMark, PointMark, RectMark, RuleMark, SectorMark } from '../../src/components/marks';
+import { AreaMark, BarMark, LineMark, PointMark, RectMark, RuleMark } from '../../src/components/marks';
 import { Scale } from '../../src/components/scales';
 
 describe('buildPlotSpec model → type-driven 派生（alpha.6 ADR-03，评审 P1）', () => {
@@ -438,8 +438,8 @@ describe('buildPlotSpec ADR-05（polar coordinate / sector / area / closed / ang
     expect(spec).toEqual(expected);
   });
 
-  it('pie_equivalence：coordinate="polar2D" + <SectorMark> → polar2D + linear 角向 + stack transform + sector mark', () => {
-    const spec = buildPlotSpec(<SectorMark angle="value" color="label" />, '__plot', { coordinate: 'polar2D' });
+  it('pie_equivalence：coordinate="polar2D" + <BarMark angle> → polar2D + linear 角向 + stack transform + sector mark', () => {
+    const spec = buildPlotSpec(<BarMark angle="value" color="label" />, '__plot', { coordinate: 'polar2D' });
     const expected: PlotSpec = {
       namespace: 'plot',
       type: 'plot',
@@ -458,19 +458,19 @@ describe('buildPlotSpec ADR-05（polar coordinate / sector / area / closed / ang
   });
 
   it('pie_color_defaults_to_angle_field：未给 color → 按 angle 值字段分类上色', () => {
-    const spec = buildPlotSpec(<SectorMark angle="value" />, '__plot', { coordinate: 'polar2D' });
+    const spec = buildPlotSpec(<BarMark angle="value" />, '__plot', { coordinate: 'polar2D' });
     expect(spec.marks[0]).toEqual({ type: 'sector', encoding: { color: { field: 'value', scale: '__color' } } });
     expect(spec.transform).toEqual([{ kind: 'stack', y: 'value' }]);
   });
 
-  it('sector_series_orders_stack：<SectorMark series> → stack transform 带 groupBy', () => {
-    const spec = buildPlotSpec(<SectorMark angle="value" series="label" />, '__plot', { coordinate: 'polar2D' });
+  it('sector_series_orders_stack：<BarMark series> → stack transform 带 groupBy', () => {
+    const spec = buildPlotSpec(<BarMark angle="value" series="label" />, '__plot', { coordinate: 'polar2D' });
     expect(spec.transform).toEqual([{ kind: 'stack', y: 'value', groupBy: 'label' }]);
     expect(spec.marks[0]).toEqual({ type: 'sector', encoding: { color: { field: 'label', scale: '__color' } } });
   });
 
   it('donut_inner_radius：coordinate 对象 innerRadius → 进 IR', () => {
-    const spec = buildPlotSpec(<SectorMark angle="value" color="label" />, '__plot', {
+    const spec = buildPlotSpec(<BarMark angle="value" color="label" />, '__plot', {
       coordinate: { type: 'polar2D', innerRadius: 0.5 },
     });
     expect(spec.coordinate).toEqual({
@@ -484,7 +484,7 @@ describe('buildPlotSpec ADR-05（polar coordinate / sector / area / closed / ang
   });
 
   it('polar_angle_range_object：startAngle / endAngle 进 IR（半圆等）', () => {
-    const spec = buildPlotSpec(<SectorMark angle="value" />, '__plot', {
+    const spec = buildPlotSpec(<BarMark angle="value" />, '__plot', {
       coordinate: { type: 'polar2D', startAngle: -90, endAngle: 90 },
     });
     expect(spec.coordinate).toMatchObject({ type: 'polar2D', startAngle: -90, endAngle: 90, innerRadius: 0 });
@@ -537,7 +537,7 @@ describe('buildPlotSpec ADR-05（polar coordinate / sector / area / closed / ang
   it('polar_explicit_axis：写 <Axis dimension="angle"/> → guides 含该轴', () => {
     const spec = buildPlotSpec(
       <>
-        <SectorMark angle="value" />
+        <BarMark angle="value" />
         <Axis dimension="angle" />
       </>,
       '__plot',
@@ -563,7 +563,7 @@ describe('buildPlotSpec ADR-05（polar coordinate / sector / area / closed / ang
   });
 
   it('polar_default_no_guides：polar 缺省不画轴（与 cartesian 默认全套相对）', () => {
-    const spec = buildPlotSpec(<SectorMark angle="value" />, '__plot', { coordinate: 'polar2D' });
+    const spec = buildPlotSpec(<BarMark angle="value" />, '__plot', { coordinate: 'polar2D' });
     expect(spec.guides).toEqual([]);
   });
 
@@ -574,7 +574,7 @@ describe('buildPlotSpec ADR-05（polar coordinate / sector / area / closed / ang
   });
 
   it('all_polar_products_pass_schema：polar 装配产物全过 PlotSpecSchema', () => {
-    expect(() => PlotSpecSchema.parse(buildPlotSpec(<SectorMark angle="v" color="l" />, '__plot', { coordinate: 'polar2D' }))).not.toThrow();
+    expect(() => PlotSpecSchema.parse(buildPlotSpec(<BarMark angle="v" color="l" />, '__plot', { coordinate: 'polar2D' }))).not.toThrow();
     expect(() => PlotSpecSchema.parse(buildPlotSpec(<BarMark x="m" y="a" color="m" />, '__plot', { coordinate: 'polar2D' }))).not.toThrow();
     expect(() => PlotSpecSchema.parse(buildPlotSpec(<LineMark x="d" y="v" closed />, '__plot', { coordinate: 'polar2D' }))).not.toThrow();
     expect(() =>
@@ -701,7 +701,7 @@ describe('decorateDefaultGuides（薄 Plot 装饰函数，PlotSpec 进出、框�
   });
 
   it('decorate_noop_polar：非 cartesian2D（polar）→ 原样返回，不补轴', () => {
-    const polar = buildPlotSpec(<SectorMark angle="value" />, '__plot', { coordinate: 'polar2D' });
+    const polar = buildPlotSpec(<BarMark angle="value" />, '__plot', { coordinate: 'polar2D' });
     expect(decorateDefaultGuides(polar).guides).toEqual([]);
   });
 

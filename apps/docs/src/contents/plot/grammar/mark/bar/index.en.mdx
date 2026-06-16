@@ -1,6 +1,6 @@
 ---
 title: BarMark
-description: "Draw bar charts with <BarMark>: a categorical x axis, rectangles from a baseline, with grouped and stacked multi-series."
+description: "Draw bars, radial bars, pies, and donuts with <BarMark>: x/y describes interval bars, while angle describes accumulated polar sectors."
 ---
 
 `<BarMark>` draws one bar per data row: `x` binds a **categorical field** (`<Plot>` automatically uses a band scale, giving each category an equal-width slot), `y` binds a numeric field, and the bar runs from baseline `0` to that value.
@@ -21,7 +21,9 @@ Add `stack` to switch to **cumulative** bars — each series picks up where the 
 
 <p className="text-sm text-muted-foreground">Series A / B stacked within each quarter; the bar top is the total.</p>
 
-## Polar: radial bars
+## Polar
+
+### Radial bars
 
 Turn on `<Plot coordinate="polar2D">` and the same `<BarMark>` becomes a radial bar — the angular axis is the category (auto band), the radial axis is the value, and bars grow outward from the center. No new component, no change to the field bindings.
 
@@ -29,15 +31,29 @@ Turn on `<Plot coordinate="polar2D">` and the same `<BarMark>` becomes a radial 
 
 <p className="text-sm text-muted-foreground">The same BarMark with only <code>coordinate="polar2D"</code> added becomes a radial bar.</p>
 
+### Pie and donut
+
+`<BarMark angle="value" />` uses the same bar mark for polar proportion sectors. `angle` binds the share-value field, and `<Plot>` accumulates it into contiguous angular bounds automatically. Add `innerRadius` to turn the pie into a donut.
+
+<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+  <ComponentPreview name="bar-pie" sourceFiles={['bar-pie.data.ts']} size="sm" />
+  <ComponentPreview name="bar-donut" sourceFiles={['bar-pie.data.ts']} size="sm" />
+</div>
+
+<p className="text-sm text-muted-foreground">Left: <code>angle</code> accumulates into a pie; right: the same data with <code>innerRadius: 0.6</code> becomes a donut.</p>
+
 ## API
 
 | prop | type | description |
 | --- | --- | --- |
-| `x` | `string` | Field path for the x channel (categorical, auto band scale) |
-| `y` | `string` | Field path for the y channel (numeric, drives bar height) |
+| `x` | `string?` | Field path for the x channel (categorical, auto band scale); use with `y` for bars / radial bars |
+| `y` | `string?` | Field path for the y channel (numeric, drives bar height / radial length); use with `x` |
+| `angle` | `string?` | Polar pie / donut form: share-value field, automatically accumulated into sector angular bounds; cannot be mixed with `x` / `y` / / `stack` |
 | `series` | `string?` | Series field: split into multiple series; omit for single series |
 | `stack` | `boolean?` | Stack the series; omit for side-by-side (dodge) |
 | `color` | `string?` | Color field; falls back to `series`. Categorical → ordinal; continuous / temporal needs a `model` declaration → auto sequential color scale (viridis), colored per datum |
 | `id` | `string?` | Optional handle (reserved, not yet resolved) |
 
 <ComponentAlert title="Color follows series by default" description="When series is set but color is not, the color field defaults to series — one color per series. Set color explicitly only when you want to paint by a different field." />
+
+<ComponentAlert title="angle is polar-only" description="When angle is set, Plot must use coordinate='polar2D'. Use x/y for ordinary bars and radial bars; use angle for pies and donuts." />

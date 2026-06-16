@@ -1,7 +1,7 @@
-import { Plot, SectorMark } from '@retikz/plot-react';
+import { BarMark, Plot } from '@retikz/plot-react';
 import type { FC } from 'react';
 
-import { traffic } from './sector-pie.data';
+import { traffic } from './bar-pie.data';
 
 /** 环图：同饼图，给 coordinate 配 innerRadius 挖出中心空洞 */
 const Demo: FC = () => (
@@ -12,7 +12,7 @@ const Demo: FC = () => (
     coordinate={{ type: 'polar2D', innerRadius: 0.6 }}
     style={{ maxWidth: '100%', height: 'auto' }}
   >
-    <SectorMark angle="value" color="source" />
+    <BarMark angle="value" color="source" />
   </Plot>
 );
 

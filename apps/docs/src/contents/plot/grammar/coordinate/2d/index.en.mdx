@@ -53,7 +53,7 @@ The same polar coordinate system pairs with different marks to cover common roun
 
 ### Pie And Donut
 
-`<SectorMark>` accumulates the `angle` value field into sector angular bounds. Add `innerRadius` to turn a pie into a donut.
+`<BarMark angle="value" />` accumulates the `angle` value field into sector angular bounds. Add `innerRadius` to turn a pie into a donut.
 
 <div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
   <ComponentPreview name="coordinate-pie" sourceFiles={['coordinate-pie.data.ts']} size="sm" />
@@ -77,4 +77,3 @@ An open `<LineMark>` under polar is a polar line plot: `x` as angle, `y` as radi
 <Comparison target="tikz" title="TikZ comparison">
 In TikZ, polar plots rely on PGFPlots' `polaraxis` environment (`\begin{polaraxis} ... \end{polaraxis}`); retikz folds it into a single `coordinate` switch on `<Plot>`, so marks are not split into cartesian and polar variants.
 </Comparison>
-

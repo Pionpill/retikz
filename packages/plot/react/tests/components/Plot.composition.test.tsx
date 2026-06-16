@@ -1,7 +1,7 @@
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 import type { PlotSpec } from '@retikz/plot';
-import { AreaMark, Axis, BarMark, LineMark, Plot, PointMark, Scale, SectorMark } from '../../src';
+import { AreaMark, Axis, BarMark, LineMark, Plot, PointMark, Scale } from '../../src';
 
 const rows = [
   { month: 0, revenue: 10 },
@@ -150,10 +150,10 @@ describe('<Plot data>{marks} 组合 DSL（ADR-08）', () => {
     { label: 'C', value: 20 },
   ];
 
-  it('polar_pie_renders：<Plot coordinate="polar2D"><SectorMark/> 渲出扇形 path 不崩', () => {
+  it('polar_pie_renders：<Plot coordinate="polar2D"><BarMark angle/> 渲出扇形 path 不崩', () => {
     const svg = renderToStaticMarkup(
       <Plot data={share} coordinate="polar2D" width={360} height={360}>
-        <SectorMark angle="value" color="label" />
+        <BarMark angle="value" color="label" />
       </Plot>,
     );
     expect(svg).toContain('<svg');
@@ -163,7 +163,7 @@ describe('<Plot data>{marks} 组合 DSL（ADR-08）', () => {
   it('polar_donut_renders：coordinate 对象 innerRadius 渲染不崩', () => {
     const svg = renderToStaticMarkup(
       <Plot data={share} coordinate={{ type: 'polar2D', innerRadius: 0.5 }} width={360} height={360}>
-        <SectorMark angle="value" color="label" />
+        <BarMark angle="value" color="label" />
       </Plot>,
     );
     expect(svg).toContain('<path');
@@ -227,7 +227,7 @@ describe('<Plot data>{marks} 组合 DSL（ADR-08）', () => {
   it('polar_dsl_matches_spec_geometry：polar DSL 与等价手写 spec 渲染几何一致', () => {
     const viaDsl = renderToStaticMarkup(
       <Plot data={share} coordinate="polar2D" width={360} height={360}>
-        <SectorMark angle="value" color="label" />
+        <BarMark angle="value" color="label" />
       </Plot>,
     );
     const equivalentSpec: PlotSpec = {
