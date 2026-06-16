@@ -1,11 +1,6 @@
 /**
- * ADR-02 Scene blend mode — Node blendMode 测试象限。
- *
- * 行为断言（resolved blendMode 出现在几何图元上）当前 FAIL：compile 尚未透传 blendMode，
- * 属预期红态。schema accept/reject 与 round-trip 当前 PASS。
- *
- * 跨端像素 parity（blend-cross-backend-parity：两重叠图元 + 上层 multiply，SVG 光栅 vs Canvas
- * 像素近似一致）属 render-layer 断言，留 render 测试，本文件不覆盖。
+ * Node blend mode 编译测试：blendMode 解析后落到 shape emit 的几何图元上。
+ * 跨端像素 parity 属 render-layer 断言，留 render 测试。
  */
 import { describe, expect, it } from 'vitest';
 import { compileToScene } from '../../src/compile/compile';

@@ -1,10 +1,6 @@
 /**
- * ADR-01 Scene drop shadow — Path shadow 测试象限。
- *
- * 行为断言（resolved shadow 出现在主 PathPrim 上）当前 FAIL：compile 尚未透传 shadow，
- * 属预期红态。schema accept/reject 与 round-trip 当前 PASS。
- *
- * 渲染层三端一致 / 跨端像素 parity 留 render 测试。
+ * Path drop shadow 编译测试：shadow 解析后落到主 PathPrim 上。
+ * 渲染层一致性 / 跨端像素 parity 留 render 测试。
  */
 import { describe, expect, it } from 'vitest';
 import { compileToScene } from '../../src/compile/compile';

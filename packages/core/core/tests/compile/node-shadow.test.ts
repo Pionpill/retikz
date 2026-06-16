@@ -1,12 +1,6 @@
 /**
- * ADR-01 Scene drop shadow — Node shape shadow 测试象限。
- *
- * 行为断言（已解析 shadow 出现在几何图元上）当前 FAIL：compile 尚未透传 shadow，
- * 属预期红态（Spec Writer 阶段只接 schema / IR / primitive 字段，不接 compile）。
- * schema accept/reject 与 round-trip 当前 PASS。
- *
- * 渲染层断言（SVG feDropShadow / Canvas ctx.shadow* 三端一致、跨端像素 parity）
- * 留 render 测试，本文件不覆盖。
+ * Node shape drop shadow 编译测试：shadow 解析后落到 shape emit 的几何图元上。
+ * 渲染层断言（SVG feDropShadow / Canvas ctx.shadow*、跨端像素 parity）留 render 测试。
  */
 import { describe, expect, it } from 'vitest';
 import { compileToScene } from '../../src/compile/compile';

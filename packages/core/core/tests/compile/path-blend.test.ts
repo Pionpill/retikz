@@ -1,9 +1,5 @@
 /**
- * ADR-02 Scene blend mode — Path blendMode 测试象限。
- *
- * 行为断言（resolved blendMode 出现在主 PathPrim 上）当前 FAIL：compile 尚未透传 blendMode，
- * 属预期红态。schema accept/reject 与 round-trip 当前 PASS。
- *
+ * Path blend mode 编译测试：blendMode 解析后落到主 PathPrim 上。
  * 跨端像素 parity 留 render 测试。
  */
 import { describe, expect, it } from 'vitest';
