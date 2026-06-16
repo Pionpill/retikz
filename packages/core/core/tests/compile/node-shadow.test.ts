@@ -29,6 +29,8 @@ const findByType = <T extends ScenePrimitive['type']>(
 const compileNode = (n: Record<string, unknown>): ReturnType<typeof compileToScene> =>
   compileToScene(scene([{ type: 'node', position: [0, 0], ...n }]), silent);
 
+const bottomOf = (layout: { y: number; height: number }): number => layout.y + layout.height;
+
 // ════════════════ Happy ════════════════
 
 describe('[shadow] Happy', () => {
@@ -171,6 +173,29 @@ describe('[shadow] 交互', () => {
     const rect = findByType(compiled.primitives, 'rect');
     expect(rect!.opacity).toBe(0.6);
     expect(rect!.shadow).toEqual(SHADOW_PRESETS.md);
+  });
+
+  it('shadow-expands-auto-layout：无显式 viewBox 时，Node shadow 外溢纳入 Scene.layout', () => {
+    const plain = compileNode({ shape: 'rectangle', text: 'x' });
+    const shadowed = compileNode({
+      shape: 'rectangle',
+      text: 'x',
+      shadow: { offsetX: 0, offsetY: 20, blur: 10 },
+    });
+    expect(bottomOf(shadowed.layout)).toBeGreaterThan(bottomOf(plain.layout) + 25);
+  });
+
+  it('explicit-viewbox-keeps-fixed-crop：显式 viewBox 不被 Node shadow 自动扩展', () => {
+    const compiled = compileToScene(
+      {
+        version: 1,
+        type: 'scene',
+        viewBox: { x: -1, y: -2, width: 3, height: 4 },
+        children: [{ type: 'node', position: [0, 0], shape: 'rectangle', text: 'x', shadow: 'lg' }],
+      },
+      silent,
+    );
+    expect(compiled.layout).toEqual({ x: -1, y: -2, width: 3, height: 4 });
   });
 });
 

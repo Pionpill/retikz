@@ -3,6 +3,7 @@ import type { SvgNode, SvgStyle } from '../types';
 import { buildPathD } from '../path-d-builder';
 import { buildTransform } from '../transform-builder';
 import { compact } from './attrs';
+import { shadowHash } from './shadow-defs';
 import { firstLineDy } from '../../shared';
 
 type DominantBaseline = 'text-before-edge' | 'central' | 'text-after-edge' | 'alphabetic';
@@ -96,12 +97,20 @@ const mergeBlendStyle = (
   return { ...(style ?? {}), 'mix-blend-mode': blendMode };
 };
 
-/** DropShadow → `filter="url(#id)"` 值（缺省 shadowIdFor 时回退裸 hash id） */
+/**
+ * DropShadow → `filter="url(#id)"` 值
+ * @description 缺省 `shadowIdFor`（粒度化调用 `buildPrim` 而非走整文档装配）时回退到「内容寻址」裸 id
+ *   `retikz-shadow-<hash>`（同 paint / clip 回退口径：不带实例前缀的稳定 id）。这样独立调用方只要自行用同口径
+ *   emit 对应 `<filter>` def，引用即生效；不同 shadow 得不同 hash（不会塌成一个 id）。整文档路径恒由
+ *   `context.shadowIdFor` 注入带前缀 id 并配套 defs。
+ */
 const shadowFilterRef = (
   shadow: DropShadow | undefined,
   shadowIdFor: ((shadow: DropShadow) => string) | undefined,
 ): string | undefined =>
-  shadow ? `url(#${shadowIdFor ? shadowIdFor(shadow) : 'retikz-shadow'})` : undefined;
+  shadow
+    ? `url(#${shadowIdFor ? shadowIdFor(shadow) : `retikz-shadow-${shadowHash(shadow)}`})`
+    : undefined;
 
 /**
  * Scene primitive → `SvgNode`

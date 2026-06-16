@@ -27,6 +27,8 @@ const ATTR_KEBAB_TO_CAMEL: Record<string, string> = {
   'clip-path': 'clipPath',
   'marker-start': 'markerStart',
   'marker-end': 'markerEnd',
+  'flood-color': 'floodColor',
+  'flood-opacity': 'floodOpacity',
 };
 
 /** 单个属性键 → React prop 名：呈现属性查表，结构属性 / `data-*` 原样 */

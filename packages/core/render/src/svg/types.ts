@@ -51,6 +51,8 @@ export type SvgStructuralAttrs = {
   patternContentUnits?: string;
   patternTransform?: string;
   // —— filter / feDropShadow ——
+  /** filter region 坐标系（`userSpaceOnUse` 取 viewBox 区域，避免默认 objectBoundingBox 裁掉投影） */
+  filterUnits?: string;
   dx?: number | string;
   stdDeviation?: number | string;
   /** 水合挂点：builder 从 Scene 稳定 id 写入 `data-retikz-id`（命中定位 / per-id 动画用） */

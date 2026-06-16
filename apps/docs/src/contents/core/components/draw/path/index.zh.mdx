@@ -193,7 +193,7 @@ import { Path, Step } from '@retikz/react';
 | `opacity` | `number` | — | 整 path 透明度 0~1（同时作用于 stroke 与 fill） |
 | `fillOpacity` | `number` | — | 仅 fill 透明度 0~1 |
 | `drawOpacity` | `number` | — | 仅 stroke 透明度 0~1 |
-| `shadow` | `'sm' \| 'md' \| 'lg' \| 'xl' \| '2xl' \| 'none' \| { preset?, offsetX?, offsetY?, blur?, color?, opacity? }` | — | 主路径投影：预设字符串或对象；只作用于主路径，不作用于标记 / 端点箭头。详见 [视觉效果](/core/components/effects) |
+| `shadow` | `'sm' \| 'md' \| 'lg' \| 'xl' \| '2xl' \| 'none' \| { preset?, offsetX?, offsetY?, blur?, color?, opacity? }` | — | 主路径投影：预设字符串或对象；图元级，端点箭头随主路径一起投影。详见 [视觉效果](/core/components/effects) |
 | `blendMode` | `'normal' \| 'multiply' \| 'screen' \| ...`（16 个 W3C 分离模式） | `'normal'` | 主路径与其下方已绘内容的混合模式；只作用于主路径。详见 [视觉效果](/core/components/effects) |
 | `zIndex` | `number`（整数） | `0` | 显式栈序：大者在上；同值保持声明顺序；只在同层子节点间生效 |
 | `rotate` | `number` | — | 整条 path 旋转角（度，绕包围盒中心） |

@@ -33,6 +33,8 @@ const compilePath = (extra: Record<string, unknown>): ReturnType<typeof compileT
     silent,
   );
 
+const bottomOf = (layout: { y: number; height: number }): number => layout.y + layout.height;
+
 // ════════════════ Happy ════════════════
 
 describe('[path-shadow] Happy', () => {
@@ -116,7 +118,9 @@ describe('[path-shadow] 错误路径（schema 拒）', () => {
 // ════════════════ 交互 ════════════════
 
 describe('[path-shadow] 交互', () => {
-  it('path-arrow-not-inherited：带 arrow 的 path + shadow → endpoint arrow spec 不带 shadow', () => {
+  // 注：仅断言 arrow spec 对象本身不冗余携带 shadow 字段（效果挂在 PathPrim 上）。渲染时端点箭头随主路径
+  // 一起被 shadow / blend 牵连（SVG 元素级 filter / Canvas 同一绘制过程），属正确跨端语义，见 render 层测试。
+  it('path-arrow-spec-no-shadow-field：带 arrow 的 path + shadow → endpoint arrow spec 不冗余带 shadow 字段', () => {
     const prim = findPathPrim(compilePath({ stroke: 'steelblue', arrow: '->', shadow: 'md' }).primitives);
     expect(prim.shadow).toEqual(SHADOW_PRESETS.md);
     expect(prim.arrowEnd).toBeDefined();
@@ -127,6 +131,12 @@ describe('[path-shadow] 交互', () => {
     const prim = findPathPrim(compilePath({ opacity: 0.6, shadow: 'md' }).primitives);
     expect(prim.opacity).toBe(0.6);
     expect(prim.shadow).toEqual(SHADOW_PRESETS.md);
+  });
+
+  it('shadow-expands-auto-layout：无显式 viewBox 时，Path shadow 外溢纳入 Scene.layout', () => {
+    const plain = compilePath({});
+    const shadowed = compilePath({ shadow: { offsetX: 0, offsetY: 20, blur: 10 } });
+    expect(bottomOf(shadowed.layout)).toBeGreaterThan(bottomOf(plain.layout) + 25);
   });
 });
 

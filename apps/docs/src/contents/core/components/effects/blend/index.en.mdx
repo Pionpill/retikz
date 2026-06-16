@@ -3,7 +3,7 @@ title: Blend
 description: Element-level blend mode — blends the primary geometry with the content already drawn beneath it via the 16 W3C separable formulas, consistent across backends and stackable.
 ---
 
-`blendMode` is an element-level visual-effect prop you can set directly on `<Node>` and `<Path>`. It applies only to the element's **primary geometry** (the Node shape, the Path main path) — not text, labels, pins, marks, or endpoint arrows. It is renderer-agnostic: SVG and Canvas each translate it to native capabilities with the same result.
+`blendMode` is an element-level visual-effect prop you can set directly on `<Node>` and `<Path>`. It applies to **the primitive itself** — the Node shape, the Path main path (including its endpoint arrows). A Node's text / label / pin are separate primitives and are not blended. It is renderer-agnostic: SVG and Canvas each translate it to native capabilities with the same result.
 
 ## Usage
 
@@ -45,7 +45,7 @@ With two or more overlapping elements, set `blendMode` on the upper one to see t
 
 | Prop | Type | Default | Description |
 | --- | --- | --- | --- |
-| `blendMode` | `'normal' \| 'multiply' \| 'screen' \| 'overlay' \| 'darken' \| 'lighten' \| 'color-dodge' \| 'color-burn' \| 'hard-light' \| 'soft-light' \| 'difference' \| 'exclusion' \| 'hue' \| 'saturation' \| 'color' \| 'luminosity'` | `'normal'` | How the primary geometry blends with the content drawn beneath it (the 16 W3C separable modes); omitted / `'normal'` = ordinary source-over. Element-level — not text / label / marks / arrows |
+| `blendMode` | `'normal' \| 'multiply' \| 'screen' \| 'overlay' \| 'darken' \| 'lighten' \| 'color-dodge' \| 'color-burn' \| 'hard-light' \| 'soft-light' \| 'difference' \| 'exclusion' \| 'hue' \| 'saturation' \| 'color' \| 'luminosity'` | `'normal'` | How the primary geometry blends with the content drawn beneath it (the 16 W3C separable modes); omitted / `'normal'` = ordinary source-over. Element-level: a Node's text / label / pin (separate primitives) are not blended; a Path's endpoint arrows blend with the main path |
 
 ## Related
 

@@ -3,7 +3,7 @@ title: 混合
 description: 图元级混合模式（blendMode）——让主几何与其下方已绘内容按 W3C 16 个分离公式混合，三端一致、可叠加。
 ---
 
-`blendMode` 是图元级的视觉效果属性，`<Node>` 和 `<Path>` 都能直接写。它只作用于元素的**主几何**（Node 的 shape、Path 的主路径），不碰文字、标签、引脚、标记或端点箭头。它是 renderer 无关的：SVG 与 Canvas 两端各自翻译成原生能力，结果一致。
+`blendMode` 是图元级的视觉效果属性，`<Node>` 和 `<Path>` 都能直接写。它作用于**该图元本身**——Node 的 shape、Path 的主路径（含其端点箭头）。Node 的文字 / 标签 / 引脚是独立图元，不参与混合。它是 renderer 无关的：SVG 与 Canvas 两端各自翻译成原生能力，结果一致。
 
 ## 用法
 
@@ -45,7 +45,7 @@ import { Node, Path, Step } from '@retikz/react';
 
 | 属性 | 类型 | 默认值 | 描述 |
 | --- | --- | --- | --- |
-| `blendMode` | `'normal' \| 'multiply' \| 'screen' \| 'overlay' \| 'darken' \| 'lighten' \| 'color-dodge' \| 'color-burn' \| 'hard-light' \| 'soft-light' \| 'difference' \| 'exclusion' \| 'hue' \| 'saturation' \| 'color' \| 'luminosity'` | `'normal'` | 主几何与其下方已绘内容的混合模式（W3C 16 个分离模式）；省略 / `'normal'` = 普通叠放。元素级，不作用于文字 / 标签 / 标记 / 箭头 |
+| `blendMode` | `'normal' \| 'multiply' \| 'screen' \| 'overlay' \| 'darken' \| 'lighten' \| 'color-dodge' \| 'color-burn' \| 'hard-light' \| 'soft-light' \| 'difference' \| 'exclusion' \| 'hue' \| 'saturation' \| 'color' \| 'luminosity'` | `'normal'` | 主几何与其下方已绘内容的混合模式（W3C 16 个分离模式）；省略 / `'normal'` = 普通叠放。图元级：Node 文字 / 标签 / 引脚（独立图元）不参与；Path 端点箭头随主路径一起混合 |
 
 ## 相关
 

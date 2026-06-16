@@ -105,7 +105,7 @@ const buildDefs = (scene: Scene, idPrefix: string): SvgNode | undefined => {
   }
   for (const r of paintResources) children.push(buildPaintDef(r, paintIdFor(r.id)));
   for (const r of clipResources) children.push(buildClipDef(r, clipIdFor(r.id)));
-  for (const s of uniqueShadows.values()) children.push(buildShadowDef(s, shadowIdFor(s)));
+  for (const s of uniqueShadows.values()) children.push(buildShadowDef(s, shadowIdFor(s), scene.layout));
   return { tag: 'defs', attrs: {}, children };
 };
 

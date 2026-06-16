@@ -104,9 +104,46 @@ const bakeAlpha = (color: string, opacity: number): string | undefined => {
 /** shadow color 缺省（半透明黑）；compile 通常已补，渲染端再兜一层 */
 const DEFAULT_SHADOW_COLOR = 'rgba(0,0,0,0.5)';
 
+type CanvasShadowStyle = { offsetX: number; offsetY: number; blur: number };
+
+/**
+ * 把 shadow 的 user-unit 口径映射到 Canvas shadow* 属性。
+ * @description Canvas shadowOffset / shadowBlur 不会稳定跟随当前变换；这里显式读取 CTM，让预览缩放 / camera
+ *   下的投影尺寸继续贴近 SVG 的 user-space filter 口径。无 getTransform 的宿主保持旧行为。
+ */
+const resolveCanvasShadowStyle = (
+  ctx: CanvasRenderingContext2D,
+  shadow: DropShadow,
+): CanvasShadowStyle => {
+  const offsetX = shadow.offsetX ?? 0;
+  const offsetY = shadow.offsetY ?? 0;
+  const blur = shadow.blur ?? 0;
+  const getTransform = (ctx as { getTransform?: () => DOMMatrix | undefined }).getTransform;
+  if (typeof getTransform !== 'function') {
+    return { offsetX, offsetY, blur };
+  }
+
+  const transform = getTransform.call(ctx);
+  if (transform === undefined) {
+    return { offsetX, offsetY, blur };
+  }
+
+  const scaleX = Math.hypot(transform.a, transform.b);
+  const scaleY = Math.hypot(transform.c, transform.d);
+  const blurScale = Math.sqrt(scaleX * scaleY);
+  const calibratedBlurScale =
+    Number.isFinite(blurScale) && blurScale > 0 ? blurScale : 1;
+
+  return {
+    offsetX: transform.a * offsetX + transform.c * offsetY,
+    offsetY: transform.b * offsetX + transform.d * offsetY,
+    blur: blur * calibratedBlurScale,
+  };
+};
+
 /**
  * 用已解析 DropShadow 包裹一段绘制：set `ctx.shadow*`、draw、restore
- * @description `shadowBlur = blur`（renderer 近似对齐口径）；`opacity`（若给）经 bakeAlpha 相乘到 color 有效 alpha。
+ * @description `blur` / offset 按当前 Canvas transform 校准到 shadow*；`opacity`（若给）经 bakeAlpha 相乘到 color 有效 alpha。
  *   无 shadow → 直接 draw（逐字不变）。
  */
 const withShadow = (
@@ -119,9 +156,10 @@ const withShadow = (
     return;
   }
   ctx.save();
-  ctx.shadowOffsetX = shadow.offsetX ?? 0;
-  ctx.shadowOffsetY = shadow.offsetY ?? 0;
-  ctx.shadowBlur = shadow.blur ?? 0;
+  const canvasShadow = resolveCanvasShadowStyle(ctx, shadow);
+  ctx.shadowOffsetX = canvasShadow.offsetX;
+  ctx.shadowOffsetY = canvasShadow.offsetY;
+  ctx.shadowBlur = canvasShadow.blur;
   const color = shadow.color ?? DEFAULT_SHADOW_COLOR;
   ctx.shadowColor =
     shadow.opacity !== undefined ? (bakeAlpha(color, shadow.opacity) ?? color) : color;

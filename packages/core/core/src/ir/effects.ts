@@ -46,7 +46,7 @@ export const DropShadowSchema = z
       .nonnegative()
       .optional()
       .describe(
-        'Shadow blur radius in user units (overrides preset); 0 = hard-edged. SVG stdDeviation = blur / 2, Canvas shadowBlur = blur.',
+        'Shadow blur radius in user units (overrides preset); 0 = hard-edged. Renderers calibrate it to their native shadow APIs.',
       ),
     color: z
       .string()
