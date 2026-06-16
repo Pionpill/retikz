@@ -147,7 +147,7 @@ const bridge: CustomCoordinateFactory = ctx => {
 
 <ComponentPreview name="coordinate-custom-bridge" sourceFiles={['coordinate-custom-bridge.data.ts']} hideCode />
 
-<ComponentAlert type="warn" title="进阶扩展，本轮仅 point" description="自定义坐标系当前只支持 PointMark；曲线轴可画（工厂回传 roleScales、可选 frameAlong 给精确切向）但暂无网格。三维坐标系、多 plot 组合、沿法向偏移留作后续。" />
+<ComponentAlert type="warn" title="进阶扩展" description="自定义坐标系默认只支持 PointMark；若工厂回传 projectCell（把一个正交 cell 投影成几何），interval 等区间类 mark 也能落地——曲线坐标系下投成 contour（弯边柱），柱仍是可连接 Node。曲线轴可画（工厂回传 roleScales、可选 frameAlong 给精确切向）但暂无网格。三维坐标系、多 plot 组合、沿法向偏移留作后续。" />
 
 <Comparison target="tikz" title="TikZ 对照">
 TikZ 里极坐标靠 PGFPlots 的 `polaraxis` 环境（`\begin{polaraxis} ... \end{polaraxis}`）切换；retikz 把它收成 `<Plot>` 的一个 `coordinate` 开关，mark 不分平面 / 极坐标两套。

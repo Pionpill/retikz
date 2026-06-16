@@ -1,8 +1,8 @@
 import { type IRChild, type IRNode, type IRNodeDefault, type IRScope, type IRStep } from '@retikz/core';
 import { type ExternalRow, type IntervalMark, type Mark, PlotCoordinate, PlotMark } from '../ir';
-import { type Wedge, buildIntervalContext, datumAnchor, intervalRect, intervalWedge, sectorWedge } from './anchor';
+import { type IntervalContext, buildIntervalContext, datumAnchor, markCell } from './anchor';
 import { channelValue, compareByPath, isFiniteNumber, resolveFieldPath } from './field';
-import { type CartesianFrame, type CoordinateFrame, type PolarFrame, type PolarVertex, densifyPolarSegments, toPolarVertex } from './project';
+import { type Cell, type CellGeometry, type CoordinateFrame, type PolarVertex, densifyPolarSegments, toPolarVertex } from './project';
 import {
   type DatumIdRegistrar,
   type ProvenanceContext,
@@ -157,118 +157,140 @@ const lowerPoint = (mark: Mark, rows: Array<ExternalRow>, frame: CoordinateFrame
   return attachMarkLayer(layer, mark, markProvenance);
 };
 
-/** 把一组「已就位 node + 其颜色」收成图层（有 color 分子 Scope、无则单层 nodeDefault） */
-const barLayer = (placed: Array<{ color: string | undefined; node: IRNode }>, colorOf?: ColorOf, defaultColor = DEFAULT_FILL): IRScope =>
-  colorOf ? colorGroupedScope(placed, barStyle) : { type: 'scope', nodeDefault: barStyle(defaultColor), children: placed.map(p => p.node) };
+/** sector / contour node 样式（shape 自带几何，padding0 + 无描边，纯填充） */
+const shapeStyle = (fill: string): IRNodeDefault => ({ padding: 0, strokeWidth: 0, fill });
 
-/**
- * 笛卡尔区间柱：plain / dodge / stack 统一一条摆放路径（intervalRect 单一真源；locator 同源 datumAnchor）
- * @description ctx 一次性建（buildIntervalContext），逐行调 intervalRect 取 position + width + height。
- *   stacked 缺 y0/y1 在此显式 fail loud（保留旧行为）——intervalRect 对缺字段返回 null，故必须在调用前校验。
- *   series 值（dodge / stack 都可带）写进 datum meta 的 series。
- */
-const lowerInterval = (mark: IntervalMark, rows: Array<ExternalRow>, frame: CartesianFrame, colorOf: ColorOf | undefined, defaultColor: string | undefined, markProvenance: MarkProvenance | undefined): IRScope | null => {
-  const ctx = buildIntervalContext(mark, frame, rows);
-  const placed: Array<{ color: string | undefined; node: IRNode }> = [];
-  for (let transformedIndex = 0; transformedIndex < rows.length; transformedIndex++) {
-    const row = rows[transformedIndex];
-    // 堆叠柱缺 y0/y1 fail loud（intervalRect 对缺字段静默 null，故在此显式校验保留旧行为）
-    if (ctx.stacked) {
-      const y0Field = mark.y0Field ?? 'y0';
-      const y1Field = mark.y1Field ?? 'y1';
-      const v0 = resolveFieldPath(row, y0Field);
-      const v1 = resolveFieldPath(row, y1Field);
-      if (!isFiniteNumber(v0) || !isFiniteNumber(v1)) {
-        throw new Error(`lowerPlots: stacked interval requires numeric ${y0Field} / ${y1Field} fields (run the stack transform first)`);
-      }
-    }
-    const rect = intervalRect(mark, row, frame, ctx);
-    if (!rect) continue;
-    const base: IRNode = { type: 'node', position: rect.position, minimumWidth: rect.width, minimumHeight: rect.height };
-    const seriesValue = mark.series ? resolveFieldPath(row, mark.series) : undefined;
-    const node = decorateDatum(base, row, transformedIndex, mark.type, markProvenance, seriesValue);
-    placed.push({ color: colorOf?.(row), node });
-  }
-  return placed.length === 0 ? null : barLayer(placed, colorOf, defaultColor);
+/** 某 geometry kind 对应的 node 样式工厂（rect → 矩形 barStyle；sector / contour → shapeStyle） */
+const styleForGeometry = (kind: CellGeometry['kind']): ((fill: string) => IRNodeDefault) => (kind === 'rect' ? barStyle : shapeStyle);
+
+/** 把一组「已就位 node + 其颜色」收成图层（有 color 分子 Scope、无则单层 nodeDefault；样式按 geometry kind 选） */
+const cellLayer = (
+  placed: Array<{ color: string | undefined; node: IRNode }>,
+  kind: CellGeometry['kind'],
+  colorOf: ColorOf | undefined,
+  defaultColor = DEFAULT_FILL,
+): IRScope => {
+  const styleFor = styleForGeometry(kind);
+  return colorOf ? colorGroupedScope(placed, styleFor) : { type: 'scope', nodeDefault: styleFor(defaultColor), children: placed.map(p => p.node) };
 };
 
-/** sector node 样式（sector shape 自带几何，padding0 + 无描边，纯填充环楔） */
-const sectorStyle = (fill: string): IRNodeDefault => ({ padding: 0, strokeWidth: 0, fill });
-
-/** 用环楔几何建 sector Node（半径 swap 保 outerRadius>innerRadius；position = 圆心） */
-const sectorNode = (wedge: Wedge): IRNode => ({
-  type: 'node',
-  position: wedge.center,
-  shape: {
-    type: 'sector',
-    params: {
-      innerRadius: Math.min(wedge.innerRadius, wedge.outerRadius),
-      outerRadius: Math.max(wedge.innerRadius, wedge.outerRadius),
-      startAngle: wedge.startAngle,
-      endAngle: wedge.endAngle,
-    },
-  },
-});
-
-/** 把一组「已就位 sector node + 其颜色」收成图层（有 color 分子 Scope、无则单层 nodeDefault） */
-const sectorLayer = (placed: Array<{ color: string | undefined; node: IRNode }>, colorOf?: ColorOf, defaultColor = DEFAULT_FILL): IRScope =>
-  colorOf ? colorGroupedScope(placed, sectorStyle) : { type: 'scope', nodeDefault: sectorStyle(defaultColor), children: placed.map(p => p.node) };
-
-/**
- * interval 在 polar 下 → sector（径向柱 / 玫瑰）；intervalWedge 单一真源（locator 同源 datumAnchor）
- * @description ctx 一次性建，逐行调 intervalWedge 取环楔几何，再 sectorNode 建 Node。
- *   stacked 缺 y0/y1 在此显式 fail loud（intervalWedge 对缺字段返回 null，故调用前校验保留旧行为）。
- */
-const lowerIntervalPolar = (mark: IntervalMark, rows: Array<ExternalRow>, frame: PolarFrame, colorOf: ColorOf | undefined, defaultColor: string | undefined, markProvenance: MarkProvenance | undefined): IRScope | null => {
-  const ctx = buildIntervalContext(mark, frame, rows);
-  const placed: Array<{ color: string | undefined; node: IRNode }> = [];
-  for (let transformedIndex = 0; transformedIndex < rows.length; transformedIndex++) {
-    const row = rows[transformedIndex];
-    if (ctx.stacked) {
-      const y0Field = mark.y0Field ?? 'y0';
-      const y1Field = mark.y1Field ?? 'y1';
-      const v0 = resolveFieldPath(row, y0Field);
-      const v1 = resolveFieldPath(row, y1Field);
-      if (!isFiniteNumber(v0) || !isFiniteNumber(v1)) {
-        throw new Error(`lowerPlots: stacked interval requires numeric ${y0Field} / ${y1Field} fields (run the stack transform first)`);
-      }
-    }
-    const wedge = intervalWedge(mark, row, frame, ctx);
-    if (!wedge) continue;
-    const seriesValue = ctx.seriesField ? resolveFieldPath(row, ctx.seriesField) : undefined;
-    const node = decorateDatum(sectorNode(wedge), row, transformedIndex, mark.type, markProvenance, seriesValue);
-    placed.push({ color: colorOf?.(row), node });
+/** 点集 AABB 中心（contour Node.position = 顶点环 AABB 中心，与 core contour shape 自动居中同源） */
+const aabbCenterOf = (points: Array<[number, number]>): [number, number] => {
+  let minX = Infinity;
+  let minY = Infinity;
+  let maxX = -Infinity;
+  let maxY = -Infinity;
+  for (const [x, y] of points) {
+    if (x < minX) minX = x;
+    if (y < minY) minY = y;
+    if (x > maxX) maxX = x;
+    if (y > maxY) maxY = y;
   }
-  return placed.length === 0 ? null : sectorLayer(placed, colorOf, defaultColor);
+  return [(minX + maxX) / 2, (minY + maxY) / 2];
 };
 
 /**
- * sector mark（饼图 / 环图）：读 transform 派生的累积角界，半径常量满铺（sectorWedge 单一真源）
- * @description 缺累积界字段（未跑 stack transform）或累积界倒退（段值为负）→ 抛清晰错误（fail loud，与堆叠 interval 同）。
- *   sectorWedge 对缺字段 / 倒退返回 null，故在此显式校验保留旧行为。
+ * CellGeometry → core Node（统一装配，替换旧三分支）
+ * @description rect → Node{position, minimumWidth, minimumHeight}（与旧 lowerInterval 逐字段等价）；
+ *   sector → Node{position:center, shape:sector}（半径 swap 保 outer>inner，与旧 sectorNode 逐字段等价）；
+ *   contour → Node{position: 顶点 AABB 中心, shape:contour{points}}（core 据 points AABB 自动居中，position 对齐几何中心）。
  */
-const lowerSector = (mark: Mark, rows: Array<ExternalRow>, frame: PolarFrame, colorOf: ColorOf | undefined, defaultColor: string | undefined, markProvenance: MarkProvenance | undefined): IRScope | null => {
-  if (mark.type !== PlotMark.Sector) return null;
+const cellGeometryNode = (geometry: CellGeometry): IRNode => {
+  if (geometry.kind === 'rect') {
+    return { type: 'node', position: geometry.position, minimumWidth: geometry.width, minimumHeight: geometry.height };
+  }
+  if (geometry.kind === 'sector') {
+    return {
+      type: 'node',
+      position: geometry.center,
+      shape: {
+        type: 'sector',
+        params: {
+          innerRadius: Math.min(geometry.innerRadius, geometry.outerRadius),
+          outerRadius: Math.max(geometry.innerRadius, geometry.outerRadius),
+          startAngle: geometry.startAngle,
+          endAngle: geometry.endAngle,
+        },
+      },
+    };
+  }
+  return {
+    type: 'node',
+    position: aabbCenterOf(geometry.points),
+    shape: { type: 'contour', params: { points: geometry.points } },
+  };
+};
+
+/** 堆叠 interval 缺 y0/y1 fail-loud（cell 对缺字段静默 null，故在装配前显式校验保留旧行为） */
+const assertStackedFields = (mark: IntervalMark, row: ExternalRow): void => {
+  const y0Field = mark.y0Field ?? 'y0';
+  const y1Field = mark.y1Field ?? 'y1';
+  const v0 = resolveFieldPath(row, y0Field);
+  const v1 = resolveFieldPath(row, y1Field);
+  if (!isFiniteNumber(v0) || !isFiniteNumber(v1)) {
+    throw new Error(`lowerPlots: stacked interval requires numeric ${y0Field} / ${y1Field} fields (run the stack transform first)`);
+  }
+};
+
+/** sector mark 缺累积界 / 倒退 fail-loud（cell 对缺字段 / 倒退静默 null，故在装配前显式校验保留旧行为） */
+const assertSectorFields = (mark: Mark, row: ExternalRow): void => {
+  if (mark.type !== PlotMark.Sector) return;
   const startField = mark.startField ?? 'y0';
   const endField = mark.endField ?? 'y1';
+  const v0 = resolveFieldPath(row, startField);
+  const v1 = resolveFieldPath(row, endField);
+  if (!isFiniteNumber(v0) || !isFiniteNumber(v1)) {
+    throw new Error(`lowerPlots: sector mark requires numeric ${startField} / ${endField} cumulative bounds (run the stack transform first)`);
+  }
+  // 累积界倒退（段值为负）→ 角度跨 0、扇片比例失真且数据被静默歪曲；饼/环扇片不能为负，fail loud
+  if (v1 < v0) {
+    throw new Error(`lowerPlots: sector mark requires non-negative values (cumulative bound ${endField}=${v1} < ${startField}=${v0}); pie / donut slices cannot be negative`);
+  }
+};
+
+/**
+ * cell 类 mark 某行的 series 值（写进 datum meta；保旧逐字段行为）
+ * @description sector mark 无 series → undefined；cartesian interval 取 mark.series（stacked 也带）；polar interval
+ *   取 ctx.seriesField（stacked 下为 undefined，与旧 lowerIntervalPolar 一致）。两者非堆叠时等值（buildIntervalContext
+ *   非堆叠时 ctx.seriesField = mark.series），仅堆叠分叉——按 frame.type 取以维持 byte-equality。
+ */
+const cellSeriesValue = (mark: Mark, row: ExternalRow, frame: CoordinateFrame, ctx: IntervalContext | undefined): unknown => {
+  if (mark.type !== PlotMark.Interval) return undefined;
+  const field = frame.type === PlotCoordinate.Cartesian2D ? mark.series : ctx?.seriesField;
+  return field ? resolveFieldPath(row, field) : undefined;
+};
+
+/**
+ * cell 类 mark（interval / sector）单路径下沉：算 cell → frame.projectCell → CellGeometry → 装配 Node
+ * @description 收敛旧 lowerInterval / lowerIntervalPolar / lowerSector 三分支——判断挪进坐标系（frame.projectCell
+ *   产 rect / sector / contour），mark 侧零分叉。stacked / sector 缺字段在装配前 fail-loud（保留旧行为）；装配样式
+ *   按 geometry kind 选（rect → 矩形 barStyle、sector / contour → shapeStyle）。无可绘制图元返回 null。
+ *   frame.projectCell 由调用方 lowerMark 保证存在；同一 mark 全行 geometry kind 一致（取末个就位行 kind）。
+ */
+const lowerCells = (
+  mark: Mark,
+  rows: Array<ExternalRow>,
+  frame: CoordinateFrame,
+  projectCell: (cell: Cell) => CellGeometry,
+  ctx: IntervalContext | undefined,
+  colorOf: ColorOf | undefined,
+  defaultColor: string | undefined,
+  markProvenance: MarkProvenance | undefined,
+): IRScope | null => {
   const placed: Array<{ color: string | undefined; node: IRNode }> = [];
+  let kind: CellGeometry['kind'] | undefined;
   for (let transformedIndex = 0; transformedIndex < rows.length; transformedIndex++) {
     const row = rows[transformedIndex];
-    const v0 = resolveFieldPath(row, startField);
-    const v1 = resolveFieldPath(row, endField);
-    if (!isFiniteNumber(v0) || !isFiniteNumber(v1)) {
-      throw new Error(`lowerPlots: sector mark requires numeric ${startField} / ${endField} cumulative bounds (run the stack transform first)`);
-    }
-    // 累积界倒退（段值为负）→ 角度跨 0、扇片比例失真且数据被静默歪曲；饼/环扇片不能为负，fail loud
-    if (v1 < v0) {
-      throw new Error(`lowerPlots: sector mark requires non-negative values (cumulative bound ${endField}=${v1} < ${startField}=${v0}); pie / donut slices cannot be negative`);
-    }
-    const wedge = sectorWedge(mark, row, frame);
-    if (!wedge) continue;
-    const node = decorateDatum(sectorNode(wedge), row, transformedIndex, mark.type, markProvenance, undefined);
+    if (mark.type === PlotMark.Sector) assertSectorFields(mark, row);
+    else if (ctx?.stacked && mark.type === PlotMark.Interval) assertStackedFields(mark, row);
+    const cell = markCell(mark, row, frame, ctx);
+    if (!cell) continue;
+    const geometry = projectCell(cell);
+    kind = geometry.kind;
+    const node = decorateDatum(cellGeometryNode(geometry), row, transformedIndex, mark.type, markProvenance, cellSeriesValue(mark, row, frame, ctx));
     placed.push({ color: colorOf?.(row), node });
   }
-  return placed.length === 0 ? null : sectorLayer(placed, colorOf, defaultColor);
+  return placed.length === 0 || kind === undefined ? null : cellLayer(placed, kind, colorOf, defaultColor);
 };
 
 /** area mark 的默认 baseline（回边贴的值；cartesian = y 基线、polar = 径向内界方向） */
@@ -473,6 +495,14 @@ const lowerArea = (mark: Mark, rows: Array<ExternalRow>, frame: CoordinateFrame,
 };
 
 /**
+ * 坐标系不支持某 mark 的统一 fail-loud 文案（含 mark.type / frame.type，便于定位）
+ * @description line / area 在非 2D 坐标系、cell 类 mark 在无 projectCell 的坐标系（1D / ternary / 未实现的 custom）共用。
+ *   custom 帧 type='custom'，文案「under the custom coordinate system」天然含「custom coordinate」。
+ */
+const failLoudMessage = (markType: string, frameType: string): string =>
+  `lowerPlots: ${markType} mark is not supported under the ${frameType} coordinate system (this coordinate system does not provide the geometry for ${markType} marks this round)`;
+
+/**
  * 把一个 mark + 数据行下沉成一个图层 Scope
  * @description **原则：尽可能用 Scope 承载共享信息，把每个 Node / Path 压到最小，以减小生成的 core IR 体积。**
  *   一个 mark 会展成 N 个图元（N = 数据点数），任何能提到图层的东西——样式、默认值、共享上下文——都别逐元素重复写。
@@ -482,38 +512,29 @@ const lowerArea = (mark: Mark, rows: Array<ExternalRow>, frame: CoordinateFrame,
  */
 export const lowerMark = (mark: Mark, rows: Array<ExternalRow>, frame: CoordinateFrame, channels: MarkChannels = {}, markProvenance?: MarkProvenance): IRChild | null => {
   const { colorOf, defaultColor } = channels;
-  // point / line / area 坐标系无关，经 frame.project（polar 连续角轴段内采样）投影
+  // point 坐标系无关，经 frame.project（polar 连续角轴段内采样）投影
   if (mark.type === PlotMark.Point) return lowerPoint(mark, rows, frame, channels, markProvenance);
-  // 一维坐标系（cartesian1D / polar1D）本轮仅 point；line / area / interval / sector 无对应一维几何 → fail-loud（ADR-02 支持矩阵）
-  if (frame.type === PlotCoordinate.Cartesian1D || frame.type === PlotCoordinate.Polar1D) {
-    throw new Error(`lowerPlots: ${mark.type} mark is not supported under the ${frame.type} coordinate system (1D coordinates support point marks only this round)`);
-  }
-  // ternary2D 本轮仅 point；line / area 顺延、interval / sector fail-loud（ADR-03 支持矩阵）
-  if (frame.type === PlotCoordinate.Ternary2D) {
-    throw new Error(`lowerPlots: ${mark.type} mark is not supported under the ternary2D coordinate system (ternary supports point marks only this round)`);
-  }
-  // 自定义坐标系（custom）本轮仅支持 point（投影任意、line/area/interval/sector 几何未定）→ fail-loud
-  if (frame.type === PlotCoordinate.Custom) {
-    throw new Error(`lowerPlots: ${mark.type} mark is not supported under a custom coordinate system (custom coordinates support point marks only this round)`);
-  }
-  if (mark.type === PlotMark.Line) {
-    const layer = lowerLine(mark, rows, frame, colorOf, defaultColor, markProvenance);
+
+  // line / area 仅 cartesian2D / polar2D 有上沿 / 回边几何；其余坐标系（1D / ternary / custom）本轮 fail-loud
+  if (mark.type === PlotMark.Line || mark.type === PlotMark.Area) {
+    if (frame.type !== PlotCoordinate.Cartesian2D && frame.type !== PlotCoordinate.Polar2D) {
+      throw new Error(failLoudMessage(mark.type, frame.type));
+    }
+    const layer = mark.type === PlotMark.Line ? lowerLine(mark, rows, frame, colorOf, defaultColor, markProvenance) : lowerArea(mark, rows, frame, colorOf, defaultColor, markProvenance);
     return layer === null ? null : attachMarkLayer(layer, mark, markProvenance);
   }
-  if (mark.type === PlotMark.Area) {
-    const layer = lowerArea(mark, rows, frame, colorOf, defaultColor, markProvenance);
-    return layer === null ? null : attachMarkLayer(layer, mark, markProvenance);
-  }
-  // polar：interval → sector（径向柱/玫瑰）、sector mark（饼图/环图）
-  if (frame.type === PlotCoordinate.Polar2D) {
-    const layer = mark.type === PlotMark.Interval ? lowerIntervalPolar(mark, rows, frame, colorOf, defaultColor, markProvenance) : lowerSector(mark, rows, frame, colorOf, defaultColor, markProvenance);
-    return layer === null ? null : attachMarkLayer(layer, mark, markProvenance);
-  }
-  // sector mark 仅 polar；cartesian 下无意义
-  if (mark.type === PlotMark.Sector) {
+
+  // 此后只剩 cell 类 mark（interval / sector）：判断挪进坐标系——须实现 projectCell 才支持（cartesian → rect、
+  //   polar → sector、曲线 / 自定义 frame → contour）；无 projectCell（1D / ternary / 未实现的 custom）→ fail-loud。
+  // sector mark 仅 polar；非 polar（含已有 projectCell 的 cartesian）下无意义，先给精确提示。
+  if (mark.type === PlotMark.Sector && frame.type !== PlotCoordinate.Polar2D) {
     throw new Error('lowerPlots: sector mark is only valid under the polar2D coordinate system');
   }
-  // interval 笛卡尔几何
-  const layer = lowerInterval(mark, rows, frame, colorOf, defaultColor, markProvenance);
+  if (frame.projectCell === undefined) {
+    throw new Error(failLoudMessage(mark.type, frame.type));
+  }
+  // interval 需 IntervalContext（buildIntervalContext 仅 cartesian / polar 帧有 primary scale 概念）；sector 无 ctx
+  const ctx = mark.type === PlotMark.Interval && (frame.type === PlotCoordinate.Cartesian2D || frame.type === PlotCoordinate.Polar2D) ? buildIntervalContext(mark, frame, rows) : undefined;
+  const layer = lowerCells(mark, rows, frame, frame.projectCell, ctx, colorOf, defaultColor, markProvenance);
   return layer === null ? null : attachMarkLayer(layer, mark, markProvenance);
 };
