@@ -23,6 +23,10 @@ export type DrawProps = {
   lineJoin?: IRPath['lineJoin'];
   /** 折线 line-line 接缝几何圆角半径（TikZ `rounded corners=`，改几何，区别于 `lineJoin`） */
   roundedCorners?: IRPath['roundedCorners'];
+  /** 投影：预设字符串（`'sm'`…`'2xl'`）或 `{ preset?, offsetX?, offsetY?, blur?, color?, opacity? }`（显式字段覆盖 preset） */
+  shadow?: IRPath['shadow'];
+  /** 混合模式（CSS `mix-blend-mode`）：与下方已绘内容按 W3C 分离公式混合 */
+  blendMode?: IRPath['blendMode'];
   /** 语义 stroke 档位（TikZ `ultra thin` … `ultra thick`）；显式 `strokeWidth` 始终优先 */
   thickness?: IRPath['thickness'];
   /**
@@ -62,6 +66,8 @@ export const Draw: FC<DrawProps> = props => {
     lineCap,
     lineJoin,
     roundedCorners,
+    shadow,
+    blendMode,
     thickness,
     arrow,
     arrowDetail,
@@ -82,6 +88,8 @@ export const Draw: FC<DrawProps> = props => {
       lineCap={lineCap}
       lineJoin={lineJoin}
       roundedCorners={roundedCorners}
+      shadow={shadow}
+      blendMode={blendMode}
       thickness={thickness}
       arrow={arrow}
       arrowDetail={arrowDetail}

@@ -329,6 +329,8 @@ Line 2`}</Node>
 | `opacity` | `number` | — | 整节点 0~1，同时作用于 shape + text |
 | `fillOpacity` | `number` | — | 仅填充透明 0~1 |
 | `drawOpacity` | `number` | — | 仅描边透明 0~1 |
+| `shadow` | `'sm' \| 'md' \| 'lg' \| 'xl' \| '2xl' \| 'none' \| { preset?, offsetX?, offsetY?, blur?, color?, opacity? }` | — | 形状投影：预设字符串或对象；只作用于 shape，不作用于文字 / 标签。详见 [视觉效果](/core/components/effects) |
+| `blendMode` | `'normal' \| 'multiply' \| 'screen' \| ...`（16 个 W3C 分离模式） | `'normal'` | 形状与其下方已绘内容的混合模式；只作用于 shape。详见 [视觉效果](/core/components/effects) |
 | `dashed` | `boolean` | — | 虚线预设（`[4, 2]`） |
 | `dotted` | `boolean` | — | 点线预设（`[1, 2]`） |
 | `dashPattern` | `Array<number>` | — | 显式 dash/gap 长度序列；优先级最高 |
@@ -339,7 +341,7 @@ Line 2`}</Node>
 | `xScale` / `yScale` | `number` | — | 分轴缩放，优先于 `scale` |
 | `zIndex` | `number`（整数） | `0` | 显式栈序：大者在上；同值保持声明顺序；只在同层子节点间生效 |
 | `label` | `NodeLabel \| Array<NodeLabel>` | — | 边挂标签；单对象或数组；`position` 接 8 方向枚举（缺省 `'above'`）或数字角度，`distance` 缺省 12，`font` / `textColor` 缺省继承 node，`opacity` 单独控制标签 0~1；`rotate`（`'none'` / `'radial'` / `'tangent'` / 数字度数）+ `keepUpright` 控制标签自旋；`pin`（`true` 默认线 / `{ stroke, strokeWidth, dashPattern }` 带样式 / 省略无引线）画引线 |
-| `animations` | `Array<AnimationTrack>` | — | 时间轴动画 tracks：每条 track 动一个 renderer 无关 property，base = 动画终态；透传进 Scene 图元，renderer 播放或降级到静态。不参与布局。见 [动画](/core/components/animation/control) |
+| `animations` | `Array<AnimationTrack>` | — | 时间轴动画 tracks：每条 track 动一个 renderer 无关 property，base = 动画终态；透传进 Scene 图元，renderer 播放或降级到静态。不参与布局。见 [动画](/core/components/effects/animation) |
 
 ### margin 与 padding 的区别
 

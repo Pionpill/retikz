@@ -1,7 +1,7 @@
 import { rect as rectOps } from '../geometry/rect';
 import type { IR, IRAnimationTrack, IRChild, IRPath, IRPosition, IRTransform } from '../ir';
 import { ScopeBoundingShape } from '../ir';
-import type { GroupPrim, Scene, ScenePrimitive, Transform } from '../primitive';
+import type { DropShadow, GroupPrim, Scene, ScenePrimitive, Transform } from '../primitive';
 import { BUILTIN_SHAPES } from '../shapes';
 import type { ShapeDefinition } from '../shapes';
 import { BUILTIN_ARROWS } from '../arrows';
@@ -41,6 +41,7 @@ import {
 } from './style';
 import { type TextMeasurer, fallbackMeasurer } from './text-metrics';
 import { computeLayout } from './layout';
+import { resolveShadow } from './effects';
 
 export type { CompileWarning } from './constant';
 export { CompileWarningCode } from './constant';
@@ -78,6 +79,48 @@ const coordinateAsLayout = (
   center: IRPosition,
   shapes: Record<string, ShapeDefinition>,
 ): NodeLayout => zeroSizeRectAt(id, center, shapes);
+
+/** shadow 是视觉效果，不改变锚点 / scope bbox；这里只把它的外溢纳入根自动 layout，避免根 viewBox 裁剪 */
+const shadowOverflowPoints = (
+  points: ReadonlyArray<IRPosition>,
+  shadow: DropShadow | undefined,
+): Array<IRPosition> => {
+  if (shadow === undefined || points.length === 0) return [];
+
+  let minX = Infinity;
+  let minY = Infinity;
+  let maxX = -Infinity;
+  let maxY = -Infinity;
+  for (const [x, y] of points) {
+    if (x < minX) minX = x;
+    if (y < minY) minY = y;
+    if (x > maxX) maxX = x;
+    if (y > maxY) maxY = y;
+  }
+
+  const dx = shadow.offsetX ?? 0;
+  const dy = shadow.offsetY ?? 0;
+  const blur = shadow.blur ?? 0;
+  const left = blur + Math.max(0, -dx);
+  const right = blur + Math.max(0, dx);
+  const top = blur + Math.max(0, -dy);
+  const bottom = blur + Math.max(0, dy);
+  return [
+    [minX - left, minY - top],
+    [maxX + right, minY - top],
+    [minX - left, maxY + bottom],
+    [maxX + right, maxY + bottom],
+  ];
+};
+
+const pushLayoutPoints = (
+  target: Array<IRPosition>,
+  points: ReadonlyArray<IRPosition>,
+  shadow?: DropShadow,
+): void => {
+  for (const p of points) target.push(p);
+  for (const p of shadowOverflowPoints(points, shadow)) target.push(p);
+};
 
 /**
  * scope.id 入场时的临时占位 NodeLayout
@@ -478,7 +521,7 @@ export const compileToScene = (ir: IR, options: CompileOptions = {}): Scene => {
           }
         }
         if (result) {
-          for (const p of result.points) allPoints.push(p);
+          pushLayoutPoints(allPoints, result.points, resolveShadow(item.path.shadow));
         }
       }
     } finally {
@@ -538,12 +581,13 @@ export const compileToScene = (ir: IR, options: CompileOptions = {}): Scene => {
         // bbox 用全局坐标系下的 4 角点累积——scope 内 node 也参与顶层 layout 计算；
         // node 含 outerSep（margin）时按外边界（rect + margin）入 bbox，与 viewBox 占位口径一致
         const outerRect = outerRectOf(globalLayout);
-        allPoints.push(
+        const nodePoints: Array<IRPosition> = [
           rectOps.anchor(outerRect, 'north-west'),
           rectOps.anchor(outerRect, 'north-east'),
           rectOps.anchor(outerRect, 'south-west'),
           rectOps.anchor(outerRect, 'south-east'),
-        );
+        ];
+        pushLayoutPoints(allPoints, nodePoints, globalLayout.shadow);
         // label / pin 外接点也纳入 bbox——避免 label 超出 viewBox 被裁（与 step.label 进 bbox 一致）
         for (const p of labelExtentPoints(globalLayout)) allPoints.push(p);
         // 把 node layout 加进 layoutsAccumulator，供上层 scope.id bbox 计算

@@ -75,4 +75,6 @@ export const contourToPathPrimitive = (
   strokeWidth: style.strokeWidth ?? 1,
   dashPattern: style.dashPattern,
   opacity: style.opacity,
+  shadow: style.shadow,
+  blendMode: style.blendMode,
 });

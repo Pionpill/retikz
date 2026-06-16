@@ -98,6 +98,10 @@ export type NodeProps = HydrationEventProps & {
   textColor?: string;
   /** 整节点透明度 0~1（同时作用于 shape 与 text） */
   opacity?: number;
+  /** 主形状投影（仅作用于 shape 几何，不含 text / label / pin）；预设字符串（`sm`/`md`/`lg`/`xl`/`2xl`/`none`）或对象 `{ preset?, offsetX?, offsetY?, blur?, color?, opacity? }`（显式字段覆盖 preset） */
+  shadow?: IRNode['shadow'];
+  /** 主形状混合模式（与下方已绘内容混合，W3C 分离模式）；不含 text / label / pin。省略 / `normal` = 普通 source-over */
+  blendMode?: IRNode['blendMode'];
   /**
    * 节点附属标签——TikZ `[label=above:foo]` 同义
    * @description 单对象或数组；每条 label 接 `text` / `position?` / `distance?` / 样式继承；`position` 接 8 方向枚举或数字角度（`label=30:foo` 等价 `position: 30`），缺省 'above'，distance 缺省 12

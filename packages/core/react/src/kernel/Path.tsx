@@ -50,6 +50,10 @@ export type PathProps = HydrationEventProps & {
   fillOpacity?: IRPath['fillOpacity'];
   /** 仅 stroke 透明度 0~1（TikZ `draw opacity`） */
   drawOpacity?: IRPath['drawOpacity'];
+  /** 主路径投影（仅作用于主 PathPrim，不含 step label / marks / endpoint arrows）；预设字符串或对象（显式字段覆盖 preset） */
+  shadow?: IRPath['shadow'];
+  /** 主路径混合模式（与下方已绘内容混合，W3C 分离模式）；不含 step label / marks / arrows。省略 / `normal` = 普通 source-over */
+  blendMode?: IRPath['blendMode'];
   /** 显式栈序：大者在上；缺省 0 = 声明顺序；同值稳定保序；只在同层子节点间生效 */
   zIndex?: IRPath['zIndex'];
   /**

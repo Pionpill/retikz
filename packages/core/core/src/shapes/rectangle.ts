@@ -81,6 +81,8 @@ export const rectangle = defineShape({
       dashPattern: style.dashPattern,
       cornerRadius: cornerRadius !== undefined ? round(cornerRadius) : undefined,
       opacity: style.opacity,
+      shadow: style.shadow,
+      blendMode: style.blendMode,
     };
   },
   scaleParams: (params: RectangleParams, sx: number, sy: number): RectangleParams =>
