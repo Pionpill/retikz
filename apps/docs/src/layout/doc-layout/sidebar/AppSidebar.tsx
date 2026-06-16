@@ -58,7 +58,7 @@ export const AppSidebar: FC<AppSidebarProps> = props => {
         'relative flex flex-col',
         !className &&
           [
-            'sticky top-14 hidden h-[calc(100vh-3.5rem)] w-[250px] shrink-0 lg:flex',
+            'sticky top-14 hidden h-[calc(100vh-3.5rem)] w-55 shrink-0 lg:flex',
             'after:pointer-events-none after:absolute after:right-0 after:top-0 after:h-full after:w-px',
             'after:bg-border',
             'after:[mask-image:linear-gradient(to_bottom,transparent_0%,black_15%,black_85%,transparent_100%)]',
