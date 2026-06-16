@@ -66,21 +66,25 @@ export type PointMarkProps = DatumLabelProps & {
   id?: string;
 };
 
-/** <BarMark> props: bar / sector layer. x/y draws bars; angle draws auto-accumulated pie/donut sectors. */
+/** <BarMark> props：柱状/扇区图层；cartesian 中 x/y 画柱，polar 中 x/y 画径向柱，angle 画自动累积的饼/环扇区 */
 export type BarMarkProps = DatumLabelProps & {
-  /** Field path bound to the x position channel; omit when using angle. */
+  /** 绑 x 位置通道的字段路径（分类，自动 band scale；polar 下作角向类别）；histogram 连续 x 区间柱用 x0/x1 取代 */
   x?: string;
-  /** Field path bound to the y position channel; omit when using angle. */
+  /** 绑 y 位置通道的字段路径（数值；polar 下作径向值；histogram 下作箱高度 binValue） */
   y?: string;
-  /** Value field for polar pie / donut slices; auto-accumulated into sector angle bounds. */
+  /** polar 饼图 / 环图的份额值字段；设置后按该字段自动累积成扇区角界，并下沉为 sector 几何 */
   angle?: string;
-  /** Color field; defaults to series. In angle form, missing color/series falls back to the angle field. */
+  /** histogram 连续 x 区间柱下界字段（如 bin 的 binStart）；与 x1 配对，设则走连续 x linear scale（不强制 band，无需 x） */
+  x0?: string;
+  /** histogram 连续 x 区间柱上界字段（如 bin 的 binEnd）；与 x0 配对 */
+  x1?: string;
+  /** 颜色字段（→ color 通道 + 自动 ordinal 色 scale）；缺省取 series */
   color?: string;
-  /** Series field: groups x/y bars, or orders/colors angle slices. */
+  /** 系列字段：拆成多组柱；缺省单系列 */
   series?: string;
-  /** Whether multi-series bars stack; cannot be combined with angle. */
+  /** 多系列时是否堆叠（true=stack，自动装配 stack transform）；否则并排（dodge） */
   stack?: boolean;
-  /** Optional mark handle. */
+  /** 可选 mark 句柄（预留 scope/anchor，解析留 alpha.5） */
   id?: string;
 };
 

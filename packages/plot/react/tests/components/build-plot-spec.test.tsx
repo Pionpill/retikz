@@ -4,6 +4,7 @@ import { buildPlotSpec, decorateDefaultGuides } from '../../src/components/build
 import { Axis, Legend } from '../../src/components/guides';
 import { AreaMark, BarMark, LineMark, PointMark, RectMark, RuleMark } from '../../src/components/marks';
 import { Scale } from '../../src/components/scales';
+import { Transform } from '../../src/components/transform';
 
 describe('buildPlotSpec model → type-driven 派生（alpha.6 ADR-03，评审 P1）', () => {
   it('有 model 时省略 AUTO 位置 scale 绑定（交给 expand 派生）', () => {
@@ -463,7 +464,7 @@ describe('buildPlotSpec ADR-05（polar coordinate / sector / area / closed / ang
     expect(spec.transform).toEqual([{ kind: 'stack', y: 'value' }]);
   });
 
-  it('sector_series_orders_stack：<BarMark series> → stack transform 带 groupBy', () => {
+  it('sector_series_orders_stack：<BarMark angle series> → stack transform 带 groupBy', () => {
     const spec = buildPlotSpec(<BarMark angle="value" series="label" />, '__plot', { coordinate: 'polar2D' });
     expect(spec.transform).toEqual([{ kind: 'stack', y: 'value', groupBy: 'label' }]);
     expect(spec.marks[0]).toEqual({ type: 'sector', encoding: { color: { field: 'label', scale: '__color' } } });
@@ -812,6 +813,104 @@ describe('buildPlotSpec rule 装配（alpha.11 ADR-03）', () => {
         <RuleMark y={80} color="crimson" />
         <RuleMark y={70} yTo={90} color="amber" />
         <RuleMark x="date" extentField="a" extentToField="b" />
+      </>,
+      '__plot',
+    );
+    expect(() => PlotSpecSchema.parse(spec)).not.toThrow();
+  });
+});
+
+describe('buildPlotSpec alpha.12（<Transform> / bin / aggregate / histogram x0x1）', () => {
+  it('transform_bin_declared_to_ir', () => {
+    const spec = buildPlotSpec(
+      <>
+        <Transform kind="bin" field="measurement" count={20} />
+        <BarMark x0="binStart" x1="binEnd" y="binValue" />
+      </>,
+      '__plot',
+    );
+    expect(spec.transform).toEqual([{ kind: 'bin', field: 'measurement', count: 20 }]);
+  });
+
+  it('bar_x0x1_histogram_continuous_x_not_band', () => {
+    const spec = buildPlotSpec(
+      <>
+        <Transform kind="bin" field="m" step={5} />
+        <BarMark x0="binStart" x1="binEnd" y="binValue" />
+      </>,
+      '__plot',
+    );
+    const mark = spec.marks[0];
+    expect(mark).toMatchObject({ type: 'interval', x0Field: 'binStart', x1Field: 'binEnd' });
+    if (mark.type !== 'interval') throw new Error('expected interval mark');
+    // histogram：仅 y 高度通道、无 encoding.x
+    expect(mark.encoding.y).toEqual({ field: 'binValue' });
+    expect(mark.encoding.x).toBeUndefined();
+    // 连续 x linear scale（非 band）
+    expect(spec.scales).toContainEqual({ type: 'linear', name: '__x' });
+    expect(spec.scales.find(s => s.name === '__x')?.type).not.toBe('band');
+  });
+
+  it('transform_aggregate_declared_to_ir', () => {
+    const spec = buildPlotSpec(
+      <>
+        <Transform kind="aggregate" groupBy={['region']} reduce="sum" field="revenue" as="totalRevenue" />
+        <BarMark x="region" y="totalRevenue" />
+      </>,
+      '__plot',
+    );
+    expect(spec.transform).toEqual([{ kind: 'aggregate', groupBy: ['region'], reduce: 'sum', field: 'revenue', as: 'totalRevenue' }]);
+    // 普通分类柱（x band）
+    expect(spec.marks[0]).toMatchObject({ type: 'interval', encoding: { x: { field: 'region' }, y: { field: 'totalRevenue' } } });
+  });
+
+  it('plot_transforms_option_direct_pass', () => {
+    const spec = buildPlotSpec(<BarMark x="region" y="total" />, '__plot', {
+      transforms: [{ kind: 'aggregate', groupBy: ['region'], reduce: 'sum', field: 'revenue', as: 'total' }],
+    });
+    expect(spec.transform).toEqual([{ kind: 'aggregate', groupBy: ['region'], reduce: 'sum', field: 'revenue', as: 'total' }]);
+  });
+
+  it('explicit_stack_suppresses_auto_stack_no_double', () => {
+    // 显式 <Transform kind="stack"> 存在时，<BarMark stack> 的 auto-stack 不再注入（B4 去重）
+    const spec = buildPlotSpec(
+      <>
+        <Transform kind="stack" x="month" y="revenue" groupBy="product" />
+        <BarMark x="month" y="revenue" series="product" stack />
+      </>,
+      '__plot',
+    );
+    const stacks = (spec.transform ?? []).filter(t => t.kind === 'stack');
+    expect(stacks).toHaveLength(1);
+    // mark 仍标记为 stack 排布（读 y0/y1）
+    expect(spec.marks[0]).toMatchObject({ type: 'interval', arrangement: 'stack' });
+  });
+
+  it('options_transforms_with_stack_suppresses_auto_stack', () => {
+    const spec = buildPlotSpec(<BarMark x="month" y="revenue" series="product" stack />, '__plot', {
+      transforms: [{ kind: 'stack', x: 'month', y: 'revenue', groupBy: 'product' }],
+    });
+    expect((spec.transform ?? []).filter(t => t.kind === 'stack')).toHaveLength(1);
+  });
+
+  it('transform_order_explicit_before_auto_stack', () => {
+    // aggregate（显式）在前、无显式 stack → auto-stack 补在后
+    const spec = buildPlotSpec(
+      <>
+        <Transform kind="aggregate" groupBy={['month', 'product']} reduce="sum" field="revenue" as="total" />
+        <BarMark x="month" y="total" series="product" stack />
+      </>,
+      '__plot',
+    );
+    expect(spec.transform?.[0]).toMatchObject({ kind: 'aggregate' });
+    expect(spec.transform?.[1]).toMatchObject({ kind: 'stack' });
+  });
+
+  it('alpha12 装配产物过 PlotSpecSchema', () => {
+    const spec = buildPlotSpec(
+      <>
+        <Transform kind="bin" field="m" count={10} />
+        <BarMark x0="binStart" x1="binEnd" y="binValue" />
       </>,
       '__plot',
     );

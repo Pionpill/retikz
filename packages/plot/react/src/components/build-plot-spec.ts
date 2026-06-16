@@ -43,6 +43,7 @@ import {
   type TextMarkProps,
 } from './marks';
 import { type PositionScaleType, Scale, type ScaleDimension, type ScaleProps } from './scales';
+import { Transform as TransformComponent, type TransformProps } from './transform';
 
 /** 自动建的 scale 名（用户不可见；需要显式 scale 配置时后续再加 <Scale>） */
 const AUTO_X = '__x';
@@ -114,6 +115,11 @@ export type BuildPlotSpecOptions = {
   coordinate?: CoordinateInput;
   /** 数据模型（字段类型）：声明则进 data.model，并对未显式 <Scale> 的位置维度走 type-driven 派生 */
   model?: DataModel;
+  /**
+   * 直传数据 transform IR（拼到 <Transform> 收集结果之前、自动装配 stack 之前）；与 <Transform> 声明组件共用同一管线。
+   * @description 程序化构造 spec 时完全掌控 transform 顺序的入口；含 stack 时同样抑制 mark auto-stack（B4 去重）。
+   */
+  transforms?: Array<Transform>;
   /** 默认颜色数组：分类 color scale 的 range；无 color 编码的 mark 按图层序取色，`currentColor` 表示继承当前文字颜色 */
   colors?: Array<string>;
   /**
@@ -142,7 +148,10 @@ export const resolveLabelOf = (spec: PlotSpec): ResolveLabelMap | undefined => r
 type Collected = {
   marks: Array<Mark>;
   guides: Array<Guide>;
+  /** 显式 transform（<Transform> 声明组件收集，按声明序） */
   transforms: Array<Transform>;
+  /** mark-prop 自动装配的 stack（<BarMark stack> / <BarMark angle>）；显式 stack 存在时抑制（B4 去重） */
+  autoStacks: Array<Transform>;
   /** 显式声明的位置 scale */
   scales: Array<ScaleProps>;
   /** 按 mark id 收集的运行时 resolveLabel（不进 IR；ADR-04） */
@@ -155,7 +164,7 @@ type Collected = {
   hasBar: boolean;
   /** 是否有 <RectMark>（heatmap → x / y 双轴强制 band scale） */
   hasRect: boolean;
-  /** True when <BarMark angle> uses sector lowering (angle scale must be linear). */
+  /** 是否有 <BarMark angle> 饼/环图入口（→ 角向 linear scale） */
   hasSector: boolean;
   /** 是否有闭合 <LineMark>（雷达 → 角向 point scale） */
   hasClosedLine: boolean;
@@ -309,16 +318,18 @@ const collectInto = (children: ReactNode, into: Collected): void => {
       recordResolveLabel(into, id, props.resolveLabel);
     } else if (child.type === BarMark) {
       const props = child.props as BarMarkProps;
-      const { x, y, angle, color, series, stack, id } = props;
+      const { x, y, angle, x0, x1, color, series, stack, id } = props;
       if (angle !== undefined) {
-        if (x !== undefined || y !== undefined || stack !== undefined) {
-          throw new Error('buildPlotSpec: <BarMark angle> is the polar pie/donut form; do not mix it with x/y/stack');
+        if (y !== undefined || x !== undefined || x0 !== undefined || x1 !== undefined || stack !== undefined) {
+          throw new Error('buildPlotSpec: <BarMark angle> is the polar pie/donut form; do not mix it with x/y/x0/x1/stack');
         }
-        into.transforms.push({
+        // 内建自动累积：装单链 stack transform（无分组 x，按 series 排序或数据序）；sector mark 读 y0/y1 为角界
+        into.autoStacks.push({
           kind: PlotTransform.Stack,
           y: angle,
           ...(series !== undefined ? { groupBy: series } : {}),
         });
+        // 颜色缺省按 angle 值字段本身分类上色；给 series 时优先按 series 上色，保持多片分组语义
         const colorEnc = colorChannel(color, series) ?? colorChannel(angle, undefined);
         into.marks.push({
           type: PlotMark.Sector,
@@ -329,15 +340,24 @@ const collectInto = (children: ReactNode, into: Collected): void => {
         recordColor(into, colorEnc);
         return;
       }
-      if (x === undefined || y === undefined) {
-        throw new Error('buildPlotSpec: <BarMark> requires x and y, or use angle for the polar pie/donut form');
+      if (y === undefined) {
+        throw new Error('buildPlotSpec: <BarMark> requires y, or use angle for the polar pie/donut form');
       }
       const colorEnc = colorChannel(color, series);
       const markLabel = buildMarkLabel(props);
+      // histogram 连续 x 区间柱：x0/x1 → x0Field/x1Field（连续 x linear scale，不强制 band）；无 encoding.x
+      const histogram = x0 !== undefined && x1 !== undefined;
+      if ((x0 === undefined) !== (x1 === undefined)) {
+        throw new Error('buildPlotSpec: <BarMark> x0 / x1 must be set together for continuous-interval bars');
+      }
+      if (!histogram && x === undefined) {
+        throw new Error('buildPlotSpec: <BarMark> requires x for categorical bars, or x0/x1 for continuous-interval bars');
+      }
+      // series + stack → 堆叠（装配 stack transform，x/y/groupBy 与 mark 对齐）；series 无 stack → dodge
       let arrangement: PlotArrangementValue | undefined;
       if (series !== undefined && stack) {
         arrangement = PlotArrangement.Stack;
-        into.transforms.push({ kind: PlotTransform.Stack, x, y, groupBy: series });
+        into.autoStacks.push({ kind: PlotTransform.Stack, x, y, groupBy: series });
       } else if (series !== undefined) {
         arrangement = PlotArrangement.Dodge;
       }
@@ -346,10 +366,13 @@ const collectInto = (children: ReactNode, into: Collected): void => {
         ...(id !== undefined ? { id } : {}),
         ...(series !== undefined ? { series } : {}),
         ...(arrangement !== undefined ? { arrangement } : {}),
+        ...(histogram ? { x0Field: x0, x1Field: x1 } : {}),
         ...(markLabel !== undefined ? { label: markLabel } : {}),
-        encoding: { x: { field: x }, y: { field: y }, ...colorEnc },
+        // histogram：仅 y（高度），x 来自 x0/x1 区间；普通柱：x（分类 band）+ y（值）
+        encoding: histogram ? { y: { field: y }, ...colorEnc } : { x: { field: x }, y: { field: y }, ...colorEnc },
       });
-      into.hasBar = true;
+      // histogram 走连续 x（linear），不强制 band；普通 / 堆叠 / 并排柱强制 band x
+      if (!histogram) into.hasBar = true;
       recordColor(into, colorEnc);
       recordResolveLabel(into, id, props.resolveLabel);
     } else if (child.type === AreaMark) {
@@ -452,6 +475,9 @@ const collectInto = (children: ReactNode, into: Collected): void => {
     } else if (child.type === Scale) {
       const { dimension, type } = child.props as ScaleProps;
       into.scales.push({ dimension, type });
+    } else if (child.type === TransformComponent) {
+      // 通用 <Transform kind="..."> 声明：props 即 IR transform op（按声明序进 spec.transform）
+      into.transforms.push(child.props as TransformProps);
     }
   });
 };
@@ -501,7 +527,7 @@ const buildCartesianYScale = (hasRect: boolean, explicit: PositionScaleType | un
 };
 
 /**
- * polar 角向 scale 类型推断：sector → linear（连续累积角界）；bar → band（径向柱分类）；
+ * polar 角向 scale 类型推断：BarMark angle → linear（连续累积角界）；BarMark x/y → band（径向柱分类）；
  *   闭合 line（雷达）→ point（类别落等距点）；否则 linear（极坐标折线）
  */
 const buildAngleScale = (collected: Collected, explicit: PositionScaleType | undefined): PlotScaleSpec => {
@@ -591,8 +617,13 @@ const toPolarConfig = (coordinate: CoordinateInput | undefined): PolarConfig | u
  *   产出须等价于手写 PlotSpec（仿 core Sugar = Kernel 等价性）。data 不进 IR，仅存 reference
  */
 export const buildPlotSpec = (children: ReactNode, dataRef: string, options: BuildPlotSpecOptions = {}): PlotSpec => {
-  const collected: Collected = { marks: [], guides: [], transforms: [], scales: [], resolveLabels: {}, colored: false, colorFields: [], hasBar: false, hasRect: false, hasSector: false, hasClosedLine: false };
+  const collected: Collected = { marks: [], guides: [], transforms: [], autoStacks: [], scales: [], resolveLabels: {}, colored: false, colorFields: [], hasBar: false, hasRect: false, hasSector: false, hasClosedLine: false };
   collectInto(children, collected);
+
+  // transform 装配序：<Plot transforms> 直传 → <Transform> 收集 → auto-stack（仅当无显式 stack 时补，B4 去重）
+  const explicitTransforms: Array<Transform> = [...(options.transforms ?? []), ...collected.transforms];
+  const hasExplicitStack = explicitTransforms.some(transform => transform.kind === PlotTransform.Stack);
+  const transforms: Array<Transform> = hasExplicitStack ? explicitTransforms : [...explicitTransforms, ...collected.autoStacks];
 
   const coordKind = coordinateTypeOf(options.coordinate);
   if (collected.hasSector && coordKind !== 'polar2D') {
@@ -680,7 +711,7 @@ export const buildPlotSpec = (children: ReactNode, dataRef: string, options: Bui
     type: PlotComposite.Plot,
     ...(options.id !== undefined ? { id: options.id } : {}),
     data: options.model ? { reference: dataRef, model: options.model } : { reference: dataRef },
-    ...(collected.transforms.length > 0 ? { transform: collected.transforms } : {}),
+    ...(transforms.length > 0 ? { transform: transforms } : {}),
     scales,
     ...(options.colors !== undefined ? { colors: options.colors } : {}),
     ...(options.width !== undefined ? { width: options.width } : {}),

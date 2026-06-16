@@ -5,5 +5,7 @@ export { Axis, Legend } from './guides';
 export type { AxisProps, LegendProps } from './guides';
 export { Scale } from './scales';
 export type { ScaleProps, ScaleDimension, PositionScaleType } from './scales';
+export { Transform } from './transform';
+export type { TransformProps } from './transform';
 export { buildPlotSpec, resolveLabelOf } from './build-plot-spec';
 export type { BuildPlotSpecOptions, CoordinateInput, ResolveLabelMap } from './build-plot-spec';
