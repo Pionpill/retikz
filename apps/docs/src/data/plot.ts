@@ -31,17 +31,6 @@ export const plotSection: Array<Section> = [
           { id: 'channel', label: 'plot.dataChannel' },
         ],
       },
-      { id: 'scale', label: 'plot.grammarScale' },
-      {
-        id: 'coordinate',
-        label: 'plot.grammarCoordinate',
-        children: [
-          { id: '2d', label: 'plot.grammarCoordinate2d' },
-          { id: '1d', label: 'plot.grammarCoordinate1d' },
-          { id: 'ternary', label: 'plot.grammarCoordinateTernary' },
-          { id: 'custom', label: 'plot.grammarCoordinateCustom' },
-        ],
-      },
       {
         id: 'mark',
         label: 'plot.grammarMark',
@@ -55,6 +44,17 @@ export const plotSection: Array<Section> = [
           { id: 'rule', label: 'plot.compRuleMark' },
           { id: 'text', label: 'plot.compTextMark' },
           { id: 'ribbon', label: 'plot.compRibbonMark' },
+        ],
+      },
+      { id: 'scale', label: 'plot.grammarScale' },
+      {
+        id: 'coordinate',
+        label: 'plot.grammarCoordinate',
+        children: [
+          { id: '2d', label: 'plot.grammarCoordinate2d' },
+          { id: '1d', label: 'plot.grammarCoordinate1d' },
+          { id: 'ternary', label: 'plot.grammarCoordinateTernary' },
+          { id: 'custom', label: 'plot.grammarCoordinateCustom' },
         ],
       },
       {
