@@ -1,5 +1,6 @@
 import type { ArrowShapeName } from '../ir/path/arrow';
 import type { IRAnimationTrack } from '../ir/animation';
+import type { BlendModeValue, DropShadow } from '../ir/effects';
 import type { IRJsonObject } from '../ir/json';
 import type { MarkerPrimitive } from './marker';
 import type { PaintValue } from './paint';
@@ -159,4 +160,8 @@ export type PathPrim = {
   arrowEnd?: ArrowEndSpec;
   /** 整体透明度 0~1 */
   opacity?: number;
+  /** 投影：解析后对象（preset 已展开 + 显式覆盖合并）；undefined = 无投影 */
+  shadow?: DropShadow;
+  /** 混合模式：解析后值；undefined / normal = 普通 source-over */
+  blendMode?: BlendModeValue;
 };

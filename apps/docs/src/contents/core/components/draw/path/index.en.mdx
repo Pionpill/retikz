@@ -193,11 +193,13 @@ Besides the symmetric `bendDirection` + `bendAngle`, `<Step kind="bend">` accept
 | `opacity` | `number` | — | Whole-path opacity 0..1 (multiplies onto stroke and fill) |
 | `fillOpacity` | `number` | — | Fill-only opacity 0..1 |
 | `drawOpacity` | `number` | — | Stroke-only opacity 0..1 |
+| `shadow` | `'sm' \| 'md' \| 'lg' \| 'xl' \| '2xl' \| 'none' \| { preset?, offsetX?, offsetY?, blur?, color?, opacity? }` | — | Drop shadow on the main path: preset string or object; element-level, endpoint arrows cast a shadow together with the main path. See [Visual Effects](/core/components/effects) |
+| `blendMode` | `'normal' \| 'multiply' \| 'screen' \| ...` (16 W3C separable modes) | `'normal'` | How the main path blends with content beneath it; element-level, endpoint arrows blend with the main path. See [Visual Effects](/core/components/effects) |
 | `zIndex` | `number` (integer) | `0` | Explicit stacking order: higher draws on top; ties keep declaration order; effective only among siblings at the same level |
 | `rotate` | `number` | — | Whole-path rotation in degrees (around the bounding-box center) |
 | `scale` | `number \| { x, y }` | — | Whole-path scale (number = uniform / `{ x, y }` = non-uniform, around the bounding-box center) |
 | `marks` | `Array<{ pos, mark }>` | — | Marks along the path: `pos∈[0,1]`, `mark.kind:'arrow'` + a registered arrow name, oriented by the tangent at that point |
-| `animations` | `Array<AnimationTrack>` | — | Timeline animation tracks, passed through onto the primitives this path emits; renderers play them or fall back to static. See [Animation](/core/components/animation/control) |
+| `animations` | `Array<AnimationTrack>` | — | Timeline animation tracks, passed through onto the primitives this path emits; renderers play them or fall back to static. See [Animation](/core/components/effects/animation) |
 | `children` | `Array<<Step>>` | — | At least 2; if the first isn't `move`, the compiler coerces it to `move`. `<Step>` supports `move` / `line` / `fold` (right-angle) / `cycle` (close) / `curve` / `cubic` (Bezier) / `bend` (arc shorthand, with out/in angles and self-loops) / `smooth` (smooth curve through points) / `arc` / `circlePath` / `ellipsePath` (circle / ellipse) / `rectangle` (diagonal rectangle); the IR also has `generator` (path generators, no JSX DSL) |
 
 ## Related

@@ -1,4 +1,4 @@
-import type { ArrowEndSpec, Scene, ScenePrimitive } from '@retikz/core';
+import type { ArrowEndSpec, DropShadow, Scene, ScenePrimitive } from '@retikz/core';
 import type { SvgNode } from '../types';
 import type { EasingRegistry } from '../../animation/types';
 import { formatViewBox } from '../view-box';
@@ -7,6 +7,7 @@ import { buildPaintDef } from './paint-defs';
 import { buildClipDef } from './clip-defs';
 import { buildArrowMarker } from './arrow-markers';
 import { collectArrowSpecs, hashKey, stableSpecKey } from './arrow-collect';
+import { buildShadowDef, collectShadows, shadowHash, stableShadowKey } from './shadow-defs';
 import { createSvgAnimationCollector } from '../animation/keyframes';
 
 /** `buildSvgDocument` / `buildSvgFragment` 选项 */
@@ -41,20 +42,24 @@ const makeContext = (
   arrowMarkerIdFor: (spec: ArrowEndSpec) => string;
   paintIdFor: (id: string) => string;
   clipIdFor: (id: string) => string;
+  shadowIdFor: (shadow: DropShadow) => string;
 } => {
   const arrowMarkerIdFor = (spec: ArrowEndSpec): string =>
     `retikz-arrow-${idPrefix}-${hashKey(stableSpecKey(spec))}`;
   const paintIdFor = (id: string): string => `retikz-paint-${idPrefix}-${id}`;
   const clipIdFor = (id: string): string => `retikz-clip-${idPrefix}-${id}`;
+  const shadowIdFor = (shadow: DropShadow): string => `retikz-shadow-${idPrefix}-${shadowHash(shadow)}`;
   return {
     context: {
       arrowMarkerIdFor,
       paintRefUrl: (id: string) => `url(#${paintIdFor(id)})`,
       clipRefUrl: (id: string) => `url(#${clipIdFor(id)})`,
+      shadowIdFor,
     },
     arrowMarkerIdFor,
     paintIdFor,
     clipIdFor,
+    shadowIdFor,
   };
 };
 
@@ -68,14 +73,30 @@ const dedupArrowSpecs = (prims: ReadonlyArray<ScenePrimitive>): Map<string, Arro
   return uniqueByKey;
 };
 
-/** 组装 `<defs>` 子节点（arrow marker → paint → clip）；无任何资源时返回 undefined（不产空 `<defs>`） */
+/** 收集 + 按 stableShadowKey dedup shadow（保持首次出现顺序） */
+const dedupShadows = (prims: ReadonlyArray<ScenePrimitive>): Map<string, DropShadow> => {
+  const uniqueByKey = new Map<string, DropShadow>();
+  for (const s of collectShadows(prims)) {
+    const k = stableShadowKey(s);
+    if (!uniqueByKey.has(k)) uniqueByKey.set(k, s);
+  }
+  return uniqueByKey;
+};
+
+/** 组装 `<defs>` 子节点（arrow marker → paint → clip → shadow filter）；无任何资源时返回 undefined（不产空 `<defs>`） */
 const buildDefs = (scene: Scene, idPrefix: string): SvgNode | undefined => {
-  const { arrowMarkerIdFor, paintIdFor, clipIdFor } = makeContext(idPrefix);
+  const { arrowMarkerIdFor, paintIdFor, clipIdFor, shadowIdFor } = makeContext(idPrefix);
   const uniqueByKey = dedupArrowSpecs(scene.primitives);
+  const uniqueShadows = dedupShadows(scene.primitives);
   const resources = scene.resources ?? [];
   const paintResources = resources.filter(r => r.kind === 'paint');
   const clipResources = resources.filter(r => r.kind === 'clip');
-  if (uniqueByKey.size === 0 && paintResources.length === 0 && clipResources.length === 0) {
+  if (
+    uniqueByKey.size === 0 &&
+    uniqueShadows.size === 0 &&
+    paintResources.length === 0 &&
+    clipResources.length === 0
+  ) {
     return undefined;
   }
   const children: Array<SvgNode> = [];
@@ -84,6 +105,7 @@ const buildDefs = (scene: Scene, idPrefix: string): SvgNode | undefined => {
   }
   for (const r of paintResources) children.push(buildPaintDef(r, paintIdFor(r.id)));
   for (const r of clipResources) children.push(buildClipDef(r, clipIdFor(r.id)));
+  for (const s of uniqueShadows.values()) children.push(buildShadowDef(s, shadowIdFor(s), scene.layout));
   return { tag: 'defs', attrs: {}, children };
 };
 

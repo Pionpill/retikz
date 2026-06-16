@@ -51,6 +51,7 @@ import { type EffectiveArrows, applyArrowShrinks, endpointArrows, resolveMarkArr
 import { type PathBaseProps, splitSubPathsForEndpointArrows } from './split';
 import { BUILTIN_ARROWS } from '../../arrows';
 import { applyRoundedCorners, sampleRoundedCommands } from './rounded-corners';
+import { resolveShadow } from '../effects';
 
 /**
  * referent（offset.of / polar.origin 的并集形态：节点 id 字符串 / `[x, y]` 字面量 / 嵌套 PolarPosition）里挖节点 id
@@ -1108,6 +1109,8 @@ export const emitPathPrimitive = (
     opacity: path.opacity,
     fillOpacity: path.fillOpacity,
     strokeOpacity: path.drawOpacity,
+    shadow: resolveShadow(path.shadow),
+    blendMode: path.blendMode,
   };
 
   const effectiveArrows = warnHook.effectiveArrows ?? BUILTIN_ARROWS;

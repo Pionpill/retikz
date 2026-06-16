@@ -47,6 +47,8 @@ describe('Draw: 基础展开', () => {
         lineCap="round"
         lineJoin="bevel"
         roundedCorners={6}
+        shadow="md"
+        blendMode="multiply"
         thickness="thick"
         arrow="<->"
         arrowDetail={{ shape: 'stealth' }}
@@ -66,6 +68,8 @@ describe('Draw: 基础展开', () => {
       lineCap: 'round',
       lineJoin: 'bevel',
       roundedCorners: 6,
+      shadow: 'md',
+      blendMode: 'multiply',
       thickness: 'thick',
       arrow: '<->',
       arrowDetail: { shape: 'stealth' },

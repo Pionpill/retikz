@@ -4,6 +4,8 @@ import { normalizeCompassAnchor } from '../geometry/anchor';
 import type { Rect } from '../geometry/rect';
 import type { AtDirectionValue, IRAnimationTrack, IRBoundary, IRJsonObject, IRLabelDefault, IRLineSpec, IRNode, IRNodeLabel, IRPaintSpec, IRShapeRef, JsonValue } from '../ir';
 import { JsonObjectSchema } from '../ir';
+import type { BlendModeValue, DropShadow } from '../ir/effects';
+import { resolveShadow } from './effects';
 import type { PaintResolver } from './paint';
 import type { GroupPrim, ScenePrimitive, TextLine, Transform } from '../primitive';
 import { BUILTIN_SHAPES } from '../shapes';
@@ -204,6 +206,10 @@ export type NodeLayout = {
   textColor?: string;
   /** 整节点透明度 0~1（同时挂 shape 与 text primitive） */
   opacity?: number;
+  /** 已解析的主形状投影（compile 已展开 preset + 显式覆盖）；仅挂 shape 几何图元，不挂 text */
+  shadow?: DropShadow;
+  /** 主形状混合模式（与下方已绘内容混合）；仅挂 shape 几何图元，不挂 text */
+  blendMode?: BlendModeValue;
   /**
    * 已解析的 label 列表
    * @description IR 层 `Node.label` 标准化：position 默认 'above'、distance 默认 DEFAULT_LABEL_DISTANCE、font 从 Node 继承
@@ -665,6 +671,8 @@ export const layoutNode = (
     cornerRadius: node.cornerRadius,
     textColor: node.textColor,
     opacity: node.opacity,
+    shadow: resolveShadow(node.shadow),
+    blendMode: node.blendMode,
     labels,
     boundary: node.boundary,
     meta: node.meta,
@@ -683,6 +691,8 @@ const toShapeStyle = (layout: NodeLayout, resolveFill: PaintResolver): ShapeStyl
   dashPattern: layout.dashPattern,
   cornerRadius: layout.cornerRadius,
   opacity: layout.opacity,
+  shadow: layout.shadow,
+  blendMode: layout.blendMode,
 });
 
 /**

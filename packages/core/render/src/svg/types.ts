@@ -50,6 +50,11 @@ export type SvgStructuralAttrs = {
   patternUnits?: string;
   patternContentUnits?: string;
   patternTransform?: string;
+  // —— filter / feDropShadow ——
+  /** filter region 坐标系（`userSpaceOnUse` 取 viewBox 区域，避免默认 objectBoundingBox 裁掉投影） */
+  filterUnits?: string;
+  dx?: number | string;
+  stdDeviation?: number | string;
   /** 水合挂点：builder 从 Scene 稳定 id 写入 `data-retikz-id`（命中定位 / per-id 动画用） */
   [k: `data-${string}`]: string | number | undefined;
 };
@@ -84,6 +89,12 @@ export type SvgPresentationAttrs = {
   'clip-path'?: string;
   'marker-start'?: string;
   'marker-end'?: string;
+  /** drop shadow 滤镜引用（`url(#shadowId)`，指向去重注册的 `<filter><feDropShadow></filter>`） */
+  filter?: string;
+  /** feDropShadow flood-color（阴影颜色） */
+  'flood-color'?: string;
+  /** feDropShadow flood-opacity（阴影不透明度，相乘到有效 alpha） */
+  'flood-opacity'?: number | string;
 };
 
 /** `SvgNode.attrs` 类型：呈现属性（kebab SVG 真名）+ 手工结构表 */
@@ -115,7 +126,9 @@ export type SvgTag =
   | 'radialGradient'
   | 'pattern'
   | 'image'
-  | 'stop';
+  | 'stop'
+  | 'filter'
+  | 'feDropShadow';
 
 /**
  * framework-neutral SVG 描述节点（`@retikz/render/svg` 的核心产物）

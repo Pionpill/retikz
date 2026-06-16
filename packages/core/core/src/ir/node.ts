@@ -2,6 +2,7 @@ import { z } from 'zod';
 import type { ValueOf } from '../types';
 import { AnimationTrackSchema } from './animation';
 import { BoundarySchema } from './boundary';
+import { BlendMode, DropShadowSchema, ShadowPreset } from './effects';
 import { FontSchema } from './font';
 import { JsonObjectSchema } from './json';
 import { PaintSpecSchema } from './paint';
@@ -279,6 +280,18 @@ export const NodeSchema = z
       .max(1)
       .optional()
       .describe('Whole-node opacity 0..1; applies uniformly to shape and text.'),
+    shadow: z
+      .union([z.enum(ShadowPreset), DropShadowSchema])
+      .optional()
+      .describe(
+        'Drop shadow on the node’s primary shape geometry only (not its text / label / pin). A preset keyword (`sm`/`md`/`lg`/`xl`/`2xl`/`none`), or an object `{ preset?, offsetX?, offsetY?, blur?, color?, opacity? }` where explicit fields override the preset. Renderer-agnostic (feDropShadow / ctx.shadow*).',
+      ),
+    blendMode: z
+      .enum(BlendMode)
+      .optional()
+      .describe(
+        'How the node’s primary shape geometry blends with the content already drawn beneath it (W3C separable blend modes); maps to CSS mix-blend-mode (SVG) and ctx.globalCompositeOperation (Canvas). Omitted / `normal` = ordinary source-over. Does not affect the node text / label / pin.',
+      ),
     innerXSep: z
       .number()
       .nonnegative()

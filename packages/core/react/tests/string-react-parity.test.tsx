@@ -58,6 +58,7 @@ const scene: Scene = {
       fill: 'var(--brand)',
       stroke: 'var(--outline)',
       strokeWidth: 2,
+      shadow: { offsetX: 1, offsetY: 2, blur: 4, color: '#000', opacity: 0.25 },
     },
     {
       type: 'group',
@@ -118,11 +119,20 @@ describe('string-react-parity', () => {
     const marker = defsChildren.find(c => c.type === 'marker');
     const gradient = defsChildren.find(c => c.type === 'linearGradient');
     const clipPath = defsChildren.find(c => c.type === 'clipPath');
+    const filter = defsChildren.find(c => c.type === 'filter');
     expect(marker).toBeDefined();
     expect(gradient?.props.id).toBe('retikz-paint-parity-paint-1');
     expect(clipPath?.props.id).toBe('retikz-clip-parity-clip-1');
+    expect(filter).toBeDefined();
     expect(svgString).toContain('id="retikz-paint-parity-paint-1"');
     expect(svgString).toContain('id="retikz-clip-parity-clip-1"');
+    expect(svgString).toContain('flood-color="#000"');
+    expect(svgString).toContain('flood-opacity="0.25"');
+
+    const dropShadow = elementChildren(filter as AnyElement)[0];
+    expect(dropShadow.type).toBe('feDropShadow');
+    expect(dropShadow.props.floodColor).toBe('#000');
+    expect(dropShadow.props.floodOpacity).toBe(0.25);
 
     const group = findChild(svgElement, 'g');
     expect(group.props.clipPath).toBe('url(#retikz-clip-parity-clip-1)');
