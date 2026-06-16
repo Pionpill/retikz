@@ -2,7 +2,7 @@
 
 > 写于 2026-06-16。承接 [v0.4 roadmap 候选 F「Scene 视觉效果」](../roadmap.md#f--scene-视觉效果2026-06-13-方向)（2026-06-13 拍板「首切 = z-index / 层模型 + shadow + blend mode」）。
 >
-> 关联：[`v0.4 roadmap`](../roadmap.md) · [`ADR-01 drop shadow`](./01-scene-drop-shadow.md)（Draft）· [`ADR-02 blend mode`](./02-blend-mode.md)（Draft）· `primitive/scene.ts`（Scene 契约红线）· `shapes/types.ts`（`ShapeStyle`）
+> 关联：[`v0.4 roadmap`](../roadmap.md) · [`ADR-01 drop shadow`](./01-scene-drop-shadow.md)（Accepted）· [`ADR-02 blend mode`](./02-blend-mode.md)（Accepted）· `primitive/scene.ts`（Scene 契约红线）· `shapes/types.ts`（`ShapeStyle`）
 
 ## 定位
 
@@ -23,8 +23,8 @@ alpha.4 是 v0.4「纵向底座深化」里的 **Scene 视觉层增量**：给 S
 
 | # | 子项 | 代号 | ADR | 状态 |
 |---|---|---|---|---|
-| F1 | drop shadow（投影） | F | [ADR-01](./01-scene-drop-shadow.md) | Proposed（实现契约齐 + 多 LLM 评审已合并；待人工说「进实现」） |
-| F2 | blend mode（混合模式） | F | [ADR-02](./02-blend-mode.md) | Proposed（实现契约齐 + 多 LLM 评审已合并；待人工说「进实现」） |
+| F1 | drop shadow（投影） | F | [ADR-01](./01-scene-drop-shadow.md) | ✅ Accepted（已实现 + 文档 + changelog；跨后端裁剪/校准修复 + Contract Auditor 对账完成） |
+| F2 | blend mode（混合模式） | F | [ADR-02](./02-blend-mode.md) | ✅ Accepted（已实现 + 文档 + changelog；跨端 parity 指令级断言 + Contract Auditor 对账完成） |
 
 两子项独立、可并行；共享同一条接线骨架（`ShapeStyle` / 各 drawable primitive 加字段 → compile 透传 → SVG `buildPrimRaw` / Canvas `drawPrim` 翻译）。
 

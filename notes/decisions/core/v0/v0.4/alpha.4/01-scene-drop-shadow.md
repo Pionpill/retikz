@@ -1,6 +1,6 @@
 # ADR-01：Scene drop shadow（投影）—— 图元级 renderer-agnostic 阴影
 
-- 状态：Proposed
+- 状态：Accepted（2026-06-16 完工）
 - 决策日期：2026-06-16
 - 关联：[v0.4-alpha.4 roadmap](./roadmap.md) · [v0.4 roadmap 候选 F](../roadmap.md) · [core-design.md §7 AI 一等公民](../../../../../architecture/core-design.md) · `primitive/scene.ts`（Scene 契约）· `shapes/types.ts`（`ShapeStyle`）· `render/svg/builders/prim.ts` · `render/canvas/draw-scene.ts` · [ADR-02 blend mode（同享接线骨架）](./02-blend-mode.md)
 
@@ -65,7 +65,7 @@ shadow: z.union([z.enum(ShadowPreset), DropShadowSchema]).optional().describe(
 
 **已拍板决策**（折合上一轮人工签字 + 本轮收敛）：
 
-1. **作用范围 = 仅 element 级、且只作用于元素的主几何图元**。Node `shadow` → shape emit 出的几何图元（`RectPrim` / `EllipsePrim` / `PathPrim`）；Path `shadow` → 主 `PathPrim`。**不作用于** Node 的 text / label / pin，也**不作用于** Path 的 step label / marks / endpoint arrows，也不动 `GroupPrim`、不经 `IRScope` 级联。理由：这些是「附属标注 / 独立图元」，对它们投影既非常见诉求、又会把 effect 推向「整元素 = 一组图元」的 group 级语义（已划归延后）。「整元素（含标注 / 箭头）统一投影」= 延后的 group/scope 级工作。
+1. **作用范围 = 仅 element 级、跟随图元本身（主几何 + 其上端点箭头）**。Node `shadow` → shape emit 出的几何图元（`RectPrim` / `EllipsePrim` / `PathPrim`）；Path `shadow` → 主 `PathPrim`，**含其端点箭头**（SVG `marker-start/end` 落在被 `filter` 的同一 `<path>` 元素上 / Canvas 在同一绘制过程内画箭头——两端原生即把效果带到箭头，强行剥离反而需要把 marker 拆成独立元素、且观感更怪）。**不作用于** Node 的 text / label / pin、Path 的 step label，这些是**独立图元**（各自 `TextPrim` 等），自然不带效果；也不动 `GroupPrim`、不经 `IRScope` 级联。「整元素（含独立标注）统一投影」= 延后的 group/scope 级工作。
 2. **字段命名** = `offsetX` / `offsetY` / `blur` / `color` / `opacity`（renderer-agnostic 直白名，贴 Canvas 命名）。
 3. **color 默认** = `rgba(0,0,0,0.5)`（半透明黑）；`opacity`（若给）**相乘**到 color 的有效 alpha 上。
 4. **blur 语义** = user-units 模糊半径；renderer 近似对齐（SVG `stdDeviation = blur/2`、Canvas `shadowBlur = blur`），精确常量实现期按快照微调（「可诊断近似」口径，同动画 pathDraw 估长先例）。
@@ -111,9 +111,11 @@ const fig = figure([
 
 ## 影响
 
-- **附属图元继承语义**（关键）：shadow 只跟随主几何（Node shape / Path 主路径）；Node text / label / pin、Path step label / marks / endpoint arrows **不继承**。文档须并排写清，避免用户期待「整张卡片含文字一起投影」。
+- **附属图元继承语义**（关键）：shadow 跟随图元本身——Node shape、Path 主路径（**含端点箭头**）。Node 的 text / label / pin、Path 的 step label 是**独立图元**，不继承。文档须并排写清：端点箭头随主路径一起投影，但「整张卡片含文字一起投影」做不到（那是 group 级）。
 - **与 `opacity` / `clip` 区分**：shadow 是新增投影，不改 opacity / clip 语义；三者可叠加。
 - **renderer**：SVG 新增 shadow filter-defs（仿 `paint-defs.ts` 去重注册）+ `buildPrimRaw` 各几何 case emit `filter=`；Canvas `drawPrim` 包 `withShadow`。
+- **视觉外溢纳入根 auto-layout**（实现期定，本 ADR 追记）：shadow 是视觉效果、不改锚点 / scope bbox，但其 offset+blur 会溢出图元包围盒。`compile/compile.ts` 的根 auto-layout 把每个带 shadow 图元的外溢角点纳入计算（`shadowOverflowPoints`），避免投影被根 viewBox / 画布裁掉。显式 layout 不受影响。
+- **SVG filter region = `userSpaceOnUse` + 整 viewBox**（实现期定，本 ADR 追记）：默认 `objectBoundingBox` `-10%/120%` 会按被引用元素包围盒裁剪——直线 / 细 path 的包围盒退化为零宽 / 零高（120%×0≈0）会把投影整段裁没，小图元上 offset+blur 超 10% 也被切边。一个 filter 跨不同尺寸元素共享去重，故区域统一取 scene viewBox（与 Canvas 无区域裁剪口径对齐）。
 - **对外 API**：新增 `shadow` prop / IR 字段 + `DropShadow` 公开类型，optional / additive，无 breaking。
 - **文档站**：shadow 双语说明 + demo（附属图元继承说明、三端一致性、blur 近似注脚）。
 
@@ -166,7 +168,7 @@ const fig = figure([
 
 **错误路径（≥2）**：`reject-nonfinite-offset`（offsetX=NaN/Inf → 拒）；`reject-bad-opacity`（opacity>1/<0 → 拒）；`reject-unknown-preset`（`shadow="huge"` → 拒）；`reject-object-without-preset-or-offsets`（`{ color:'red' }`（无 preset 又无 offsetX/Y）→ refine 拒）。
 
-**交互（≥2）**：`shadow-text-not-inherited`（Node 带 text + shadow → text 的 `TextPrim` **不带** shadow，仅 shape 图元带）；`path-arrow-not-inherited`（带 `arrow` 的 path + shadow → endpoint arrow 的 marker primitive 不带 shadow）；`shadow-with-opacity`（shadow + 元素 opacity 共存，互不吞没）。
+**交互（≥2）**：`shadow-text-not-inherited`（Node 带 text + shadow → text 的 `TextPrim` **不带** shadow，仅 shape 图元带；text 是独立图元）；`path-arrow-spec-no-shadow-field`（带 `arrow` 的 path + shadow → endpoint arrow spec 对象不冗余携带 shadow 字段；效果挂在 `PathPrim` 上，渲染时箭头随主路径一起被滤镜，见 render 层测试）；`shadow-with-opacity`（shadow + 元素 opacity 共存，互不吞没）。
 
 **round-trip（≥1）**：含 shadow 的 IRNode / IRPath JSON 往返 parse 深等。
 

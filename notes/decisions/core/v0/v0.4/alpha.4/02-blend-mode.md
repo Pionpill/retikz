@@ -1,6 +1,6 @@
 # ADR-02：Scene blend mode（混合模式）—— 图元级 renderer-agnostic 混合
 
-- 状态：Proposed
+- 状态：Accepted（2026-06-16 完工）
 - 决策日期：2026-06-16
 - 关联：[v0.4-alpha.4 roadmap](./roadmap.md) · [v0.4 roadmap 候选 F](../roadmap.md) · [core-design.md §7 AI 一等公民](../../../../../architecture/core-design.md) · `primitive/scene.ts`（Scene 契约）· [ADR-01 drop shadow（同享接线骨架）](./01-scene-drop-shadow.md)
 
@@ -39,7 +39,7 @@ blendMode: z.enum(BlendMode).optional().describe(
 
 1. **枚举 = 全 16 个分离模式**（含 `normal`），用 const-object enum（`BlendMode` 大驼峰常量 + `z.enum`，对齐 `DrawWay` 惯例）；`normal` 保留为显式值（= 省略，便于显式覆盖）。
 2. **字段名 = `blendMode`**。
-3. **作用范围 = 仅 element 级、且只作用于元素主几何图元**（同 [ADR-01](./01-scene-drop-shadow.md)）：Node `blendMode` → shape 几何图元；Path → 主 `PathPrim`。**不**作用于 text / label / pin / step label / marks / arrows，不动 `GroupPrim`、不经 `IRScope` 级联。
+3. **作用范围 = 仅 element 级、跟随图元本身（主几何 + 其上端点箭头）**（同 [ADR-01](./01-scene-drop-shadow.md)）：Node `blendMode` → shape 几何图元；Path → 主 `PathPrim`，**含其端点箭头**（SVG `mix-blend-mode` 是元素级、Canvas 同一绘制过程，两端原生即把箭头一起混合）。**不**作用于 text / label / pin / step label 这些独立图元，不动 `GroupPrim`、不经 `IRScope` 级联。
 4. **跨端一致语义（解红线冲突，见下「跨端语义」）**。
 5. **Node 支持**：三端原生（已实测），无降级分支。
 
@@ -48,7 +48,7 @@ blendMode: z.enum(BlendMode).optional().describe(
 定义 IR 语义为：**`blendMode` 让该图元与「同一 Scene 内在它之前绘制的全部内容（accumulated backdrop）」按 W3C 分离公式混合**。
 
 - **首切 element 级、不引入额外 isolation**：SVG 端 emit `mix-blend-mode` 时**不**额外包裹 isolation group（`isolation:isolate`），故其 backdrop = 当前 stacking context 内已绘内容；Canvas 端 `globalCompositeOperation` 的 backdrop = 当前 canvas 已绘内容。扁平 Scene（无嵌套隔离）下两者 backdrop 相同 → **混合结果两端一致**（W3C 公式相同）。
-- **可测口径**：两个重叠图元、上图元 `blendMode='multiply'`，SVG 光栅化结果与 Canvas 结果做像素对比，断言**逐像素近似一致**（容差吸收抗锯齿 / gamma），见测试象限 `blend-cross-backend-parity`。
+- **可测口径**：两个重叠图元、上图元 `blendMode='multiply'`。Canvas 端用真实 `@napi-rs/canvas` 光栅化、断言交叠区中心像素被 multiply 压暗；SVG 端因 node 测试环境无 SVG 光栅器，退一步断言**emit 出相同的 blend 指令**（`mix-blend-mode:multiply`，与 Canvas GCO 同源、W3C 公式相同 → 结果等价）。见测试象限 `blend-cross-backend-parity`。待引入 SVG 光栅器后可升级为两端逐像素对比。
 - **划归延后的分歧面**：嵌套 group 的 isolation（SVG stacking-context 隔离 vs Canvas 全局合成在「成组后再与外部混合」上的差异）只在 **group / scope 级混合**出现——而 group 级本就划归延后（见「不在本 ADR 范围」）。故 element 级首切**不破红线**：扁平场景两端一致且可测，分歧面随 group 级一并延后。
 
 理由：
@@ -78,7 +78,7 @@ const fig = figure([
 
 ## 影响
 
-- **附属图元继承语义**：blendMode 只跟随主几何（同 shadow）；text / 标注 / marks / arrows 不继承。文档写清。
+- **附属图元继承语义**：blendMode 跟随图元本身——主几何 + Path 端点箭头（同 shadow）；text / label / pin / step label 这些独立图元不继承。文档写清。
 - **跨端 isolation 差异**：element 级扁平场景两端一致（可测）；嵌套隔离差异随 group 级延后——文档须说明「首切为 element-与-backdrop 混合，组级隔离后续」。
 - **renderer**：SVG `buildPrimRaw` 各几何 case emit `style="mix-blend-mode:…"`；Canvas `drawPrim` 包 `withBlend`（set `globalCompositeOperation`、draw 后 restore `'source-over'`）。
 - **对外 API**：新增 `blendMode` prop / IR 字段 + `BlendMode` 公开常量，optional / additive，无 breaking。
