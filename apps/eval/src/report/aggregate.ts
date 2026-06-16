@@ -99,10 +99,12 @@ const summarizeL2 = (
     assertionsPassed += l2.passed;
     if (l2.passed === l2.total) candidatePass += 1;
     for (const a of l2.results) {
-      const bucket = byKind[a.kind] ?? { passed: 0, total: 0 };
+      if (!Object.hasOwn(byKind, a.kind)) {
+        byKind[a.kind] = { passed: 0, total: 0 };
+      }
+      const bucket = byKind[a.kind];
       bucket.total += 1;
       if (a.pass) bucket.passed += 1;
-      byKind[a.kind] = bucket;
       if (!a.pass) {
         assertionFailures.push({
           promptId: r.promptId,

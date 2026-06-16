@@ -1,6 +1,7 @@
 import {
   arcBoundingPoints,
   arcEndPoint,
+  curve,
   ellipseArcBoundingPoints,
   ellipseArcPoint,
 } from '@retikz/math';
@@ -49,6 +50,7 @@ import { applyTransformChain } from '../scope';
 import { type EffectiveArrows, applyArrowShrinks, endpointArrows, resolveMarkArrowSpec } from './shrink';
 import { type PathBaseProps, splitSubPathsForEndpointArrows } from './split';
 import { BUILTIN_ARROWS } from '../../arrows';
+import { applyRoundedCorners, sampleRoundedCommands } from './rounded-corners';
 
 /**
  * referent（offset.of / polar.origin 的并集形态：节点 id 字符串 / `[x, y]` 字面量 / 嵌套 PolarPosition）里挖节点 id
@@ -349,6 +351,7 @@ export const emitPathPrimitive = (
     | { kind: 'circlePath' }
     | { kind: 'ellipsePath' }
     | { kind: 'rectangle' }
+    | { kind: 'smooth' }
     | { kind: 'generator' }
   >;
   const hasTo = (s: IRStep): s is StepWithTo =>
@@ -357,6 +360,7 @@ export const emitPathPrimitive = (
     s.kind !== 'circlePath' &&
     s.kind !== 'ellipsePath' &&
     s.kind !== 'rectangle' &&
+    s.kind !== 'smooth' &&
     s.kind !== 'generator';
 
   // 每个 step 的几何参考点（节点中心/直接坐标）；无 to 的 step kind 给 null
@@ -393,6 +397,14 @@ export const emitPathPrimitive = (
   };
 
   const commands: Array<PathCommand> = [];
+  /**
+   * 与 commands 一一对应的来源 step kind（roundedCorners 倒角用：判定接缝两侧是否均为 line step）
+   * @description 由 emit* 闭包按当前 `currentStepKind` 同步 push；fold 产两条 line 但记 'fold'（接缝保持尖），
+   *   cycle 的 close 记 'cycle'，rectangle / generator 等记各自 kind。
+   */
+  const provenance: Array<string> = [];
+  /** 主循环每轮置为当前 step.kind，emit* 据此打 provenance 标 */
+  let currentStepKind = '';
   const points: Array<IRPosition> = [];
   let lastEnd: IRPosition | null = null;
   let subPathStart: IRPosition | null = null;
@@ -424,6 +436,7 @@ export const emitPathPrimitive = (
     noteEndpointSource(sourceAutoBoundary);
     const rp = roundPoint(p);
     commands.push({ kind: 'move', to: [rp[0], rp[1]] });
+    provenance.push(currentStepKind);
     points.push(p);
     subPathStart = p;
     lastEnd = p;
@@ -432,11 +445,13 @@ export const emitPathPrimitive = (
     noteEndpointSource(sourceAutoBoundary);
     const rp = roundPoint(p);
     commands.push({ kind: 'line', to: [rp[0], rp[1]] });
+    provenance.push(currentStepKind);
     points.push(p);
     lastEnd = p;
   };
   const emitClose = () => {
     commands.push({ kind: 'close' });
+    provenance.push(currentStepKind);
     lastEnd = subPathStart;
   };
   const emitQuad = (control: IRPosition, p: IRPosition, sourceAutoBoundary = false) => {
@@ -448,6 +463,7 @@ export const emitPathPrimitive = (
       control: [rc[0], rc[1]],
       to: [rp[0], rp[1]],
     });
+    provenance.push(currentStepKind);
     // 曲线视觉范围不超过控制点+端点凸包
     points.push(control);
     points.push(p);
@@ -469,6 +485,7 @@ export const emitPathPrimitive = (
       control2: [rc2[0], rc2[1]],
       to: [rp[0], rp[1]],
     });
+    provenance.push(currentStepKind);
     // 控制点纳入 bbox（保守，实际 bezier 包络小于凸包）
     points.push(c1);
     points.push(c2);
@@ -490,6 +507,7 @@ export const emitPathPrimitive = (
       startAngle,
       endAngle,
     });
+    provenance.push(currentStepKind);
     // 弧端点入 bbox；arc 极值候选（90°·k 轴向点）由各 compile 分支单独 push
     points.push(arcEndPoint(center, radius, endAngle));
     lastEnd = arcEndPoint(center, radius, endAngle);
@@ -511,6 +529,7 @@ export const emitPathPrimitive = (
       startAngle,
       endAngle,
     });
+    provenance.push(currentStepKind);
     // 椭圆弧终点：未旋转椭圆 polar 投影
     const endPt: IRPosition = [
       center[0] + Math.cos((endAngle * Math.PI) / 180) * radiusX,
@@ -551,6 +570,7 @@ export const emitPathPrimitive = (
     }
 
     const step = steps[i];
+    currentStepKind = step.kind;
 
     // move 自身不绘制；其 to 仅供下个绘制段的 findPrev 引用。
     // 显式 move 开启新游标，必须切断 arc/circle/ellipse/rectangle/generator 留给下一绘制段的 penOverride。
@@ -918,6 +938,60 @@ export const emitPathPrimitive = (
       continue;
     }
 
+    if (step.kind === 'smooth') {
+      // arc/circle/ellipse 留下的 penOverride 决定起点；普通 prev 用 boundary clip 朝首个 through-point 收口
+      const usedOverride = penOverride;
+
+      // 各 through-point resolve 成世界坐标（relative/relativeAccumulate 已被 normalizeRelativeTargets 预解析为局部 tuple）
+      const resolved: Array<IRPosition> = [];
+      let resolveFailed = false;
+      for (let k = 0; k < step.points.length; k++) {
+        const pt = step.points[k];
+        const r = refPointOfTarget(pt, nameStack, scopeChain);
+        if (!r) {
+          const ptId = nodeRefId(pt);
+          if (ptId !== undefined) {
+            warn(
+              CompileWarningCode.UnresolvedNodeReference,
+              `Smooth step point references undefined node id '${ptId}'; the entire path is skipped`,
+              `children[${i}].points[${k}]`,
+            );
+          }
+          resolveFailed = true;
+          break;
+        }
+        resolved.push(r);
+      }
+      if (resolveFailed) return null;
+
+      // 首 knot = 当前游标：penOverride 优先，否则 prev.step.to 朝首个 through-point boundary clip
+      const fromClip =
+        usedOverride ?? clipForTarget(prev.step.to, resolved[0], nameStack, scopeChain);
+      if (!fromClip) return null;
+
+      // knots = [游标, ...through-points]；centripetal Catmull-Rom 转 cubic 段链
+      const knots: Array<IRPosition> = [fromClip, ...resolved];
+      const segs = curve.catmullRomToCubic(knots, step.tension ?? 1);
+
+      startSegment(fromClip, usedOverride === null && isAutoBoundaryTarget(prev.step.to));
+      for (const seg of segs) emitCubic(seg.control1, seg.control2, seg.to);
+
+      // label 沿生成 cubic 链按贝塞尔参数定位：把 t∈[0,1] 分摊到 N 段，落第 ⌊t·N⌋ 段、段内 = 余数（与中段 marks 同款便宜模型）
+      collectLabel(step, t => {
+        const segCount = segs.length;
+        const scaled = t * segCount;
+        const segIdx = Math.min(Math.floor(scaled), segCount - 1);
+        const localT = t === 1 ? 1 : scaled - segIdx;
+        const from = segIdx === 0 ? fromClip : segs[segIdx - 1].to;
+        const seg = segs[segIdx];
+        return cubicSegmentSample(from, seg.control1, seg.control2, seg.to, localT);
+      });
+
+      // 游标推进到末点；后续 hasTo 段从此续接
+      penOverride = readCursor();
+      continue;
+    }
+
     const currAnchor = anchors[i];
     if (!currAnchor) return null;
 
@@ -928,7 +1002,9 @@ export const emitPathPrimitive = (
 
     if (step.kind === 'line') {
       const fromClip = usedOverride ?? clipForTarget(prev.step.to, currAnchor, nameStack, scopeChain);
-      const toClip = clipForTarget(step.to, prev.anchor, nameStack, scopeChain);
+      // toClip 的 toward = 本段实际起点：自包含前驱（arc/smooth/rectangle…）留下 penOverride 时取游标，
+      // 否则取 prev.anchor（node→node 的中心向语义，等价、不变）。修：smooth/arc 后接 line→node 朝错方向裁剪。
+      const toClip = clipForTarget(step.to, usedOverride ?? prev.anchor, nameStack, scopeChain);
       if (!fromClip || !toClip) return null;
       startSegment(fromClip, usedOverride === null && isAutoBoundaryTarget(prev.step.to));
       emitLine(toClip, isAutoBoundaryTarget(step.to));
@@ -957,18 +1033,20 @@ export const emitPathPrimitive = (
       continue;
     }
     if (step.kind === 'bend') {
+      // 起点参考：自包含前驱留 penOverride 时取游标，否则 prev.anchor（node→node 中心向，不变）
+      const fromRef = usedOverride ?? prev.anchor;
       // out/in 角（任一给定）优先于 bendDirection 对称弯；都缺则按 bendDirection 对称弯，仍缺则默认 left 弯
       const [c1, c2] =
         step.outAngle !== undefined || step.inAngle !== undefined
           ? outInControlPoints(
-              prev.anchor,
+              fromRef,
               currAnchor,
               step.outAngle ?? 0,
               step.inAngle ?? 180,
               step.looseness,
             )
           : bendControlPoints(
-              prev.anchor,
+              fromRef,
               currAnchor,
               step.bendDirection ?? 'left',
               step.bendAngle ?? 30,
@@ -988,8 +1066,8 @@ export const emitPathPrimitive = (
       continue;
     }
 
-    // fold：经一个直角中间点拆成两段 line
-    const corner = cornerOf(prev.anchor, currAnchor, step.via);
+    // fold：经一个直角中间点拆成两段 line。起点参考同 line/bend：penOverride 优先（自包含前驱后），否则 prev.anchor
+    const corner = cornerOf(usedOverride ?? prev.anchor, currAnchor, step.via);
     const fromClip = usedOverride ?? clipForTarget(prev.step.to, corner, nameStack, scopeChain);
     const toClip = clipForTarget(step.to, corner, nameStack, scopeChain);
     if (!fromClip || !toClip) return null;
@@ -997,6 +1075,21 @@ export const emitPathPrimitive = (
     emitLine(corner);
     emitLine(toClip, isAutoBoundaryTarget(step.to));
     collectLabel(step, t => foldSegmentSample(fromClip, corner, toClip, t));
+  }
+
+  // 折线几何圆角（ADR-01 `roundedCorners`）：编译期对 line step ↔ line step 内接缝插切圆弧。
+  // 在 shrink / split / marks 之前作用于已 emit 的 commands（在未变换几何上）——故 marks 弧长、arrow shrink、
+  // rotate/scale 外层 group 都自动落在倒角后几何上（顺序硬契约）。缺省 / 0 → commands 逐字不变。
+  let roundedCommands = false;
+  if (path.roundedCorners !== undefined && path.roundedCorners > 0) {
+    const before = commands.length;
+    const next = applyRoundedCorners(commands, provenance, path.roundedCorners, round);
+    // 原地替换 commands 内容（下游 applyArrowShrinks / split 直接消费此数组）
+    if (next.length !== before || next.some((c, k) => c !== commands[k])) {
+      commands.length = 0;
+      commands.push(...next);
+      roundedCommands = true;
+    }
   }
 
   // strokeWidth 解析：显式 strokeWidth > thickness 档位 > 默认 1
@@ -1026,11 +1119,16 @@ export const emitPathPrimitive = (
   if (path.marks && path.marks.length > 0 && segmentSamplers.length > 0) {
     const segCount = segmentSamplers.length;
     for (const { pos, mark } of path.marks) {
-      // pos·N 落第 segIdx 段（pos=1 收口落末段尾），段内参数 = 余数
-      const scaled = pos * segCount;
-      const segIdx = Math.min(Math.floor(scaled), segCount - 1);
-      const localT = scaled - segIdx;
-      const sample = segmentSamplers[segIdx](pos === 1 ? 1 : localT);
+      // 倒角后：沿倒角后 commands 按总弧长重定位（接缝几何 + 总弧长已变 → 落点 / 切线与尖角不同，ADR-01）。
+      // 未倒角：保持原便宜模型——pos·N 落第 segIdx 段（pos=1 收口落末段尾），段内参数 = 余数。
+      const sample = roundedCommands
+        ? sampleRoundedCommands(commands, pos)
+        : (() => {
+            const scaled = pos * segCount;
+            const segIdx = Math.min(Math.floor(scaled), segCount - 1);
+            const localT = scaled - segIdx;
+            return segmentSamplers[segIdx](pos === 1 ? 1 : localT);
+          })();
       const spec = resolveMarkArrowSpec(mark, effectiveArrows, round);
       markPrims.push(buildMarkMarkerGroup(spec, sample, strokeWidth, round, baseProps.stroke ?? 'currentColor'));
       // marker 落点纳入 bbox（保守取采样点；marker 自身尺寸相对小，端点已足够避免被裁）

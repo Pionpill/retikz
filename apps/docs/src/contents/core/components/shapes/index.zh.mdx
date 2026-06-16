@@ -3,7 +3,7 @@ title: Shapes
 description: retikz 的几何形状——既是画一条 Path 的官方 Sugar，也是 Node 默认支持的边界形状。
 ---
 
-形状（圆、椭圆、弧、扇形、矩形、多边形、星形）是 retikz 的一类几何原语，有**两副面孔**：
+形状（圆、椭圆、弧、扇形、矩形、多边形、星形、任意轮廓）是 retikz 的一类几何原语，大多有**两副面孔**：
 
 - **作为 Path 图形（Sugar）**——`<Circle>` `<Sector>` 这类组件是官方提供的一组形状快捷写法，在指定位置画一条形状线、展开成底层 `<Path>`。它们让你不必为常见图形手写 Path / Step。
 - **作为 Node 形状**——`<Node shape="circle">` 让节点以该形状为边界：能装文字、能被 `<Path>` / `<Draw>` 用 id 引用、连线端点自动贴边。
@@ -12,7 +12,7 @@ description: retikz 的几何形状——既是画一条 Path 的官方 Sugar，
 
 **两侧都对扩展开放**：
 
-- 想要内置之外的 **Node 形状**（hexagon / cloud…）——注册到 [shape-registry](/core/reference/extending/shape-registry)；注册表里的内置项是 rectangle / ellipse / sector / arc / polygon / star（circle / diamond 是编译期 preset 别名，不在注册表）。
+- 想要内置之外的 **Node 形状**（hexagon / cloud…）——注册到 [shape-registry](/core/reference/extending/shape-registry)；注册表里的内置项是 rectangle / ellipse / sector / arc / polygon / star / contour（circle / diamond 是编译期 preset 别名，不在注册表）。
 - 想画内置之外的**路径曲线 step**（parabola / sin-cos…）——走 [path-generator](/core/reference/extending/path-generator)。
 
 <ComponentPreview name="shapes-family" size="md" hideCode />
@@ -26,6 +26,7 @@ description: retikz 的几何形状——既是画一条 Path 的官方 Sugar，
 | Rectangle | `<Rectangle>` | 默认 / `shape="rectangle"` |
 | Polygon | `<RegularPolygon>` | `shape={{ type:'polygon', params }}`（带 params）· `"diamond"` |
 | Star | `<Star>` | `shape={{ type:'star', params }}`（带 params） |
+| Contour | —（用 `<Path>` 画线） | `shape={{ type:'contour', params }}`（任意顶点环） |
 
 > 背景网格、参考线这类**一片规则线条**（而非单个闭合形状）不在这一组——见 [辅助](/core/components/helpers) 里的 `<Grid>`。
 
@@ -51,5 +52,9 @@ description: retikz 的几何形状——既是画一条 Path 的官方 Sugar，
   <LinkedCard href="/core/components/shapes/star">
     <span className="font-semibold">Star</span>
     <span className="mt-1 text-center text-sm text-muted-foreground">内外半径交替的星形</span>
+  </LinkedCard>
+  <LinkedCard href="/core/components/shapes/contour">
+    <span className="font-semibold">Contour</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">任意闭合顶点环的可连接节点</span>
   </LinkedCard>
 </div>

@@ -8,6 +8,7 @@
  */
 import type { BuiltinShapeName } from '../ir/node';
 import { arc } from './arc';
+import { contour } from './contour-shape';
 import { defineShape } from './define';
 import { ellipse } from './ellipse';
 import { polygon } from './polygon';
@@ -17,16 +18,17 @@ import { star } from './star';
 import type { ShapeDefinition } from './types';
 
 /** 内置 shape 注册项（circle / diamond 已收为 preset，不占独立项）；与 `CompileOptions.shapes` 合并时被同名注入覆盖 */
-export const BUILTIN_SHAPES: Record<Exclude<BuiltinShapeName, 'circle' | 'diamond'> | 'sector' | 'arc' | 'polygon' | 'star', ShapeDefinition> = {
+export const BUILTIN_SHAPES: Record<Exclude<BuiltinShapeName, 'circle' | 'diamond'> | 'sector' | 'arc' | 'polygon' | 'star' | 'contour', ShapeDefinition> = {
   rectangle,
   ellipse,
   sector,
   arc,
   polygon,
   star,
+  contour,
 };
 
-export { rectangle, ellipse, polygon, sector, arc, star, defineShape };
+export { rectangle, ellipse, polygon, sector, arc, star, contour, defineShape };
 export type { ShapeDefinition, ShapeDefinitionInput, ShapeStyle } from './types';
 // 第三方 shape 作者所需 helper / 类型（提升为公开 API）
 export type { Rect } from '../geometry/rect';

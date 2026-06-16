@@ -41,7 +41,7 @@ import { Path, Step } from '@retikz/react';
 </Path>
 ```
 
-`<Step>` 支持 11 种 kind——`move` / `line` 处理直线，`fold` 走直角折角，`cycle` 闭合回起点，`curve` / `cubic` 画贝塞尔曲线，`bend` 是弧形简记（可带 out/in 角与自环），`arc` / `circlePath` / `ellipsePath` 以游标为圆心画弧 / 整圆 / 整椭圆，`rectangle` 画对角矩形，详见 [Step](/core/components/draw/step)。此外还有 IR 级的 `generator` step（外部曲线生成器，无 JSX DSL、走 IR 直传，见 [路径生成器](/core/reference/extending/path-generator)）。
+`<Step>` 支持 12 种 kind——`move` / `line` 处理直线，`fold` 走直角折角，`cycle` 闭合回起点，`curve` / `cubic` 画贝塞尔曲线，`bend` 是弧形简记（可带 out/in 角与自环），`smooth` 画穿过点列的平滑曲线，`arc` / `circlePath` / `ellipsePath` 以游标为圆心画弧 / 整圆 / 整椭圆，`rectangle` 画对角矩形，详见 [Step](/core/components/draw/step)。此外还有 IR 级的 `generator` step（外部曲线生成器，无 JSX DSL、走 IR 直传，见 [路径生成器](/core/reference/extending/path-generator)）。
 
 ## 例子
 
@@ -156,6 +156,22 @@ import { Path, Step } from '@retikz/react';
 
 <ComponentPreview name="path-marks" size="xs" />
 
+#### 折线圆角（roundedCorners）
+
+`roundedCorners` 给整条 path 的每个 **line↔line 内拐角**倒一个半径相同的圆角弧——画流程图、布线、折线连接时把硬尖角磨圆。缺省 / 省略 = 全尖角（行为不变）。首点 / 末点保持尖；接缝一侧是曲线 / 弧 / 贝塞尔 / 折角（`fold`）时该接缝也保持尖。半径过大时按相邻段长**逐拐角夹紧**到可行最大值。`cycle` 闭合后，闭合接缝也参与倒圆。
+
+<ComponentPreview name="path-rounded-corners" size="sm" />
+
+`roundedCorners` 改的是**路径几何**——它把拐角顶点回退并插入一段相切圆弧，因此影响包围盒、弧长、路径级 `marks` 的归一化定位和连接点解析。这和 `lineJoin` 是两码事：`lineJoin` 只改**描边视觉**，路径中心线仍是尖折。（注：step 边标注 `label` 当前仍定位在该 step 自身线段上，不随接缝倒角缩短重算。）下例用很粗的描边对照——上方 `lineJoin="round"`（只磨描边、中心线仍尖），下方 `roundedCorners`（中心线本身就是圆弧）：
+
+<ComponentPreview name="path-rounded-vs-linejoin" size="sm" />
+
+<Comparison target="tikz" title="roundedCorners">
+
+`roundedCorners` 对应 TikZ 的路径选项 `rounded corners=<r>`，一个半径管全路径所有合格拐角。
+
+</Comparison>
+
 ## API 参考
 
 | 属性 | 类型 | 默认值 | 描述 |
@@ -167,7 +183,8 @@ import { Path, Step } from '@retikz/react';
 | `strokeWidth` | `number` | `1` | 描边宽度 |
 | `dashPattern` | `Array<number>` | — | dash/gap 长度序列（如 `[4, 2]`） |
 | `lineCap` | `'butt' \| 'round' \| 'square'` | `'butt'` | 描边端点形状 |
-| `lineJoin` | `'miter' \| 'round' \| 'bevel'` | `'miter'` | 描边拐点形状 |
+| `lineJoin` | `'miter' \| 'round' \| 'bevel'` | `'miter'` | 描边拐点形状（仅视觉，不改几何） |
+| `roundedCorners` | `number`（≥0） | — | 几何圆角半径：把每个 line↔line 内拐角倒成相切圆弧，改路径几何（区别于 `lineJoin`）；非 line 接缝保持尖，逐拐角按段长夹紧；省略 = 尖角 |
 | `thickness` | `'ultraThin' \| 'veryThin' \| 'thin' \| 'semithick' \| 'thick' \| 'veryThick' \| 'ultraThick'` | — | 语义 stroke 档位（`thin = 1`）；显式 `strokeWidth` 始终优先 |
 | `arrow` | `'none' \| '->' \| '<-' \| '<->'` | — | 路径级箭头方向（详见 [Arrow](/core/components/draw/arrow)） |
 | `arrowDetail` | `ArrowDetail` 对象 | — | 箭头视觉详细配置；字段详见 [Arrow](/core/components/draw/arrow) |
@@ -181,7 +198,7 @@ import { Path, Step } from '@retikz/react';
 | `scale` | `number \| { x, y }` | — | 整条 path 缩放（数字等比 / `{ x, y }` 非等比，绕包围盒中心） |
 | `marks` | `Array<{ pos, mark }>` | — | 沿路径标记：`pos∈[0,1]`、`mark.kind:'arrow'` + 已注册箭头名，朝向随该点切线 |
 | `animations` | `Array<AnimationTrack>` | — | 时间轴动画 tracks，透传进本 path emit 的图元，renderer 播放或降级静态；见 [动画](/core/components/animation/control) |
-| `children` | `Array<<Step>>` | — | 至少 2 个；首个非 `move` 时编译器会强制改成 `move`。`<Step>` 支持 `move` / `line` / `fold`（折角）/ `cycle`（闭合）/ `curve` / `cubic`（贝塞尔曲线）/ `bend`（弧形简记，可带 out/in 角与自环）/ `arc` / `circlePath` / `ellipsePath`（圆 / 椭圆）/ `rectangle`（对角矩形）；IR 另有 `generator`（路径生成器，无 JSX DSL） |
+| `children` | `Array<<Step>>` | — | 至少 2 个；首个非 `move` 时编译器会强制改成 `move`。`<Step>` 支持 `move` / `line` / `fold`（折角）/ `cycle`（闭合）/ `curve` / `cubic`（贝塞尔曲线）/ `bend`（弧形简记，可带 out/in 角与自环）/ `smooth`（过点平滑曲线）/ `arc` / `circlePath` / `ellipsePath`（圆 / 椭圆）/ `rectangle`（对角矩形）；IR 另有 `generator`（路径生成器，无 JSX DSL） |
 
 ## 相关
 

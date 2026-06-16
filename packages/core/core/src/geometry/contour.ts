@@ -363,17 +363,36 @@ const tangentPointOn = (seg: ContourSegment, filletCenter: Position, radius: num
 };
 
 /**
- * 对闭合轮廓的每个接缝做 fillet，返回 fillet 解算列表（与接缝一一对应，下标 i = 段 i 终点接段 (i+1)%n 起点）
+ * 对轮廓的每个接缝做 fillet，返回 fillet 解算列表（与接缝一一对应，下标 i = 段 i 终点接段下一段起点）
  * @description cornerRadius 省略 / ≤0 → 返回空数组（调用方据此 passthrough 原段序列）。arc-arc 接缝抛错。
+ *   closed（缺省 true）= 闭合轮廓，含首尾环绕接缝（下标 n-1 = 段 n-1 终点接段 0 起点）；
+ *   closed=false = 开放折线，只倒内部接缝（下标 0..n-2），末位补一个 clampedToZero 占位使返回长度恒 = n，
+ *   下游 contourCommands / boundaryFromContour 据 clampedToZero 跳过该「不存在的」环绕缝。
  */
 export const filletContour = (
   segments: Array<ContourSegment>,
   cornerRadius?: number,
+  closed = true,
 ): Array<FilletSolution> => {
   if (cornerRadius === undefined || cornerRadius <= 0 || segments.length < 2) return [];
   const n = segments.length;
   const out: Array<FilletSolution> = [];
   for (let i = 0; i < n; i++) {
+    // 开放折线无环绕接缝：末段（i=n-1）后没有「下一段」，置 clampedToZero 占位（不倒、保持尖末点）
+    if (!closed && i === n - 1) {
+      const corner = segmentEnd(segments[i]);
+      out.push({
+        tangentInPoint: corner,
+        tangentOutPoint: corner,
+        center: corner,
+        radius: 0,
+        startAngle: 0,
+        endAngle: 0,
+        counterClockwise: false,
+        clampedToZero: true,
+      });
+      continue;
+    }
     const segA = segments[i];
     const segB = segments[(i + 1) % n];
     out.push(solveFillet(segA, segB, cornerRadius));
@@ -390,8 +409,10 @@ export const filletContour = (
 export const contourCommands = (
   segments: Array<ContourSegment>,
   cornerRadius?: number,
-  fillets: Array<FilletSolution> = filletContour(segments, cornerRadius),
+  fillets?: Array<FilletSolution>,
+  closed = true,
 ): Array<ContourCommand> => {
+  fillets = fillets ?? filletContour(segments, cornerRadius, closed);
   const n = segments.length;
   if (n === 0) return [];
 
@@ -402,7 +423,7 @@ export const contourCommands = (
       if (i === 0) cmds.push({ kind: 'move', to: segmentStart(seg) });
       emitSegmentBody(seg, segmentStart(seg), segmentEnd(seg), cmds);
     });
-    cmds.push({ kind: 'close' });
+    if (closed) cmds.push({ kind: 'close' });
     return cmds;
   }
 
@@ -410,6 +431,7 @@ export const contourCommands = (
   // 段 i 的有效起点 = 上一接缝 fillet 出点（若该接缝未夹零），有效终点 = 本接缝 fillet 入点
   for (let i = 0; i < n; i++) {
     const seg = segments[i];
+    // 开放折线 i=0 无「上一接缝」（环绕缝在 filletContour 已置 clampedToZero 占位），故起点 = 段原起点
     const prevFillet = fillets[(i - 1 + n) % n];
     const thisFillet = fillets[i];
     const start = prevFillet.clampedToZero ? segmentStart(seg) : prevFillet.tangentOutPoint;
@@ -427,7 +449,7 @@ export const contourCommands = (
       });
     }
   }
-  cmds.push({ kind: 'close' });
+  if (closed) cmds.push({ kind: 'close' });
   return cmds;
 };
 

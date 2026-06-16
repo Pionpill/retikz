@@ -1,9 +1,9 @@
 ---
 title: Math
-description: "@retikz/math — a zero-dependency pure computational geometry package: vectors, affine, intersections, circles, hull. The compute base under core."
+description: "@retikz/math — a zero-dependency pure computational geometry package: vectors, affine, intersections, circles, hull, splines. The compute base under core."
 ---
 
-`@retikz/math` is retikz's **zero-dependency pure computational geometry** package: vector math, affine transforms, arc primitives, intersections, triangle in/circumcircles, point-in-polygon, and convex hull. Everything is a pure function over plain `Position = [number, number]` arrays — no classes, no IR, no zod, no runtime dependencies.
+`@retikz/math` is retikz's **zero-dependency pure computational geometry** package: vector math, affine transforms, arc primitives, intersections, triangle in/circumcircles, point-in-polygon, convex hull, and splines. Everything is a pure function over plain `Position = [number, number]` arrays — no classes, no IR, no zod, no runtime dependencies.
 
 `@retikz/core` depends on it for low-level computation. The common primitives (`Position` / `point` / `lerp` / `localToWorld` / `worldToLocal`) are **re-exported by `@retikz/core`** — for everyday drawing just use core; you don't need to install math separately. Depend on `@retikz/math` directly when you need capabilities core does not re-export (intersections, in/circumcircles, hull, …).
 
@@ -20,7 +20,7 @@ pnpm add @retikz/math
 | Topic | Responsibility | Reach for it when |
 | --- | --- | --- |
 | [Primitives](/core/reference/math/primitives) | Vector math / affine transforms / lerp / arc endpoints & bbox | Computing points, vectors, coordinate transforms, arc endpoints |
-| [Algorithms](/core/reference/math/algorithms) | Intersections, triangle in/circumcircles, point-in-polygon, hull | Higher-level compute core doesn't re-export (intersections, envelopes…) |
+| [Algorithms](/core/reference/math/algorithms) | Intersections, triangle in/circumcircles, point-in-polygon, hull, splines | Higher-level compute core doesn't re-export (intersections, envelopes, smooth curves…) |
 
 ## In this section
 
@@ -31,6 +31,6 @@ pnpm add @retikz/math
   </LinkedCard>
   <LinkedCard href="/core/reference/math/algorithms">
     <span className="font-semibold">Algorithms</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">Intersections / triangle in/circumcircles / point-in-polygon / hull</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">Intersections / triangle in/circumcircles / point-in-polygon / hull / splines</span>
   </LinkedCard>
 </div>

@@ -396,6 +396,36 @@ export const RectangleStepSchema = z
   })
   .describe('Rectangle action: closed axis-aligned rectangle (optionally rounded) drawn between two opposite corners.');
 
+export const SmoothStepSchema = z
+  .object({
+    type: z.literal('step').describe('Discriminator marking this as a path step node'),
+    kind: z
+      .literal('smooth')
+      .describe(
+        'Smooth curve (TikZ `plot[smooth]` / Hobby style) passing through the current cursor as the first knot and then each point in `points`, in order. Compiled at build time to a chain of cubic Bezier commands via centripetal Catmull-Rom. Requires a preceding step to set the cursor; the cursor ends at the last point.',
+      ),
+    points: z
+      .array(TargetSchema)
+      .min(1)
+      .describe(
+        'Through-points after the cursor, in order; the curve passes through each. The current cursor is the implicit first knot, so a single point yields one segment. The cursor ends at the last point.',
+      ),
+    tension: z
+      .number()
+      .positive()
+      .finite()
+      .optional()
+      .describe(
+        'Tangent-length multiplier controlling curve slackness (TikZ `tension`); omitted = 1 (standard centripetal Catmull-Rom). <1 pulls the curve tauter (straighter), >1 makes it loopier.',
+      ),
+    label: StepLabelSchema.optional().describe(
+      'Edge label attached to the generated curve; positioned along the produced cubic commands by Bezier parameter (same as curve / cubic step labels).',
+    ),
+  })
+  .describe(
+    'Smooth action: a curve passing through the cursor and the given points, compiled to cubic Beziers.',
+  );
+
 export const GeneratorStepSchema = z
   .object({
     type: z.literal('step').describe('Discriminator marking this as a path step node'),
@@ -437,6 +467,7 @@ export const StepSchema = z
     CirclePathStepBaseSchema,
     EllipsePathStepBaseSchema,
     RectangleStepSchema,
+    SmoothStepSchema,
     GeneratorStepSchema,
   ])
   .superRefine((step, ctx) => {
@@ -483,11 +514,13 @@ export type IRCirclePathStep = z.infer<typeof CirclePathStepSchema>;
 export type IREllipsePathStep = z.infer<typeof EllipsePathStepSchema>;
 /** Rectangle step：两对角定义的轴对齐矩形（可圆角） */
 export type IRRectangleStep = z.infer<typeof RectangleStepSchema>;
+/** Smooth step：过 cursor + points 的平滑曲线，编译成 cubic 链 */
+export type IRSmoothStep = z.infer<typeof SmoothStepSchema>;
 /** Generator step：按 name 调注册的 path generator 产 sub-path（params 为 JSON 对象） */
 export type IRGeneratorStep = z.infer<typeof GeneratorStepSchema>;
 
 /**
- * 路径上的一个动作（十二种 kind）
- * @description 十二种 kind：move / line / fold（折角）/ cycle / curve / cubic / bend / arc / circlePath / ellipsePath / rectangle（矩形）/ generator（注册生成器）；`to` 字段支持 relative / relativeAccumulate 变体；除 move/cycle/rectangle 外可挂 `label?` 边标注
+ * 路径上的一个动作（十三种 kind）
+ * @description 十三种 kind：move / line / fold（折角）/ cycle / curve / cubic / bend / arc / circlePath / ellipsePath / rectangle（矩形）/ smooth（过点平滑曲线）/ generator（注册生成器）；`to` 字段支持 relative / relativeAccumulate 变体；除 move/cycle/rectangle/smooth 外可挂 `label?` 边标注（smooth 用 `points` 而非 `to`，自身亦可挂 `label?`）
  */
 export type IRStep = z.infer<typeof StepSchema>;

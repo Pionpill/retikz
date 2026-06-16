@@ -7,7 +7,7 @@ import type { FC } from 'react';
  *   左侧灰标点出两副面相，下排一条灰箭头示意 Node 形状可被连接。caption / 行标用 stroke/fill none 的灰字。
  */
 const Demo: FC = () => (
-  <Layout width={560} height={240}>
+  <Layout width={660} height={240}>
     {/* 行标 */}
     <Node id="rowPath" position={[-235, -55]} stroke="none" fill="none" textColor="gray" font={{ size: 12 }}>
       Path 线
@@ -38,6 +38,14 @@ const Demo: FC = () => (
       shape={{ type: 'star', params: { points: 5, innerRadius: 11, outerRadius: 26 } }}
       fill="gold"
     />
+    <Node
+      id="ncontour"
+      position={[275, 55]}
+      shape={{ type: 'contour', params: { points: [[-26, 24], [26, 16], [26, -24], [-26, -24]], cornerRadius: 5 } }}
+      fill="lavender"
+    >
+      轮廓
+    </Node>
     <Draw way={['nc', 'nr']} arrow="->" stroke="gray" />
   </Layout>
 );

@@ -43,6 +43,7 @@ export type Release = {
 
 /** 全部可能的包标识(筛选 chips 由数据中实际出现者派生) */
 export const PACKAGE_IDS = [
+  '@retikz/math',
   '@retikz/core',
   '@retikz/render',
   '@retikz/react',
@@ -56,6 +57,7 @@ export type PackageId = (typeof PACKAGE_IDS)[number];
 
 /** 包标识 → 展示名(多数包名两语一致,docs 例外) */
 export const PACKAGE_LABEL: Record<PackageId, Localized> = {
+  '@retikz/math': { zh: '@retikz/math', en: '@retikz/math' },
   '@retikz/core': { zh: '@retikz/core', en: '@retikz/core' },
   '@retikz/render': { zh: '@retikz/render', en: '@retikz/render' },
   '@retikz/react': { zh: '@retikz/react', en: '@retikz/react' },
@@ -73,7 +75,7 @@ export type PackageGroup = {
   members: ReadonlyArray<PackageId>;
 };
 export const PACKAGE_GROUPS: ReadonlyArray<PackageGroup> = [
-  { id: 'core', members: ['@retikz/core', '@retikz/render', '@retikz/react', '@retikz/vanilla'] },
+  { id: 'core', members: ['@retikz/math', '@retikz/core', '@retikz/render', '@retikz/react', '@retikz/vanilla'] },
   { id: 'plot', members: ['@retikz/plot', '@retikz/plot-react', '@retikz/plot-vanilla'] },
   { id: 'other', members: ['docs'] },
 ];

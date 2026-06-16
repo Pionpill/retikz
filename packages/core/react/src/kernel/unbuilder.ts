@@ -109,6 +109,15 @@ const stepToElement = (step: IRStep, key: number): ReactNode => {
       ...(step.cornerRadius !== undefined && { cornerRadius: step.cornerRadius }),
     });
   }
+  if (step.kind === 'smooth') {
+    return createElement(Step, {
+      key,
+      kind: 'smooth',
+      points: step.points,
+      ...(step.tension !== undefined && { tension: step.tension }),
+      ...(step.label !== undefined && { label: step.label }),
+    });
+  }
   if (step.kind === 'move') {
     return createElement(Step, { key, kind: 'move', to: step.to });
   }
