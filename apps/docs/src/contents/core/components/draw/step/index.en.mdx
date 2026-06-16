@@ -72,7 +72,7 @@ The path below draws A→B with one `move` + `line`, then lifts the pen with ano
 
 ### Smooth curve through points (smooth)
 
-`kind="smooth"` draws a smooth curve **through a list of points** — no need to hand-compute Bézier control points for each segment when drawing a data polyline, a streamline, or a free curve. It takes no `to`; instead it takes `points`: the current **cursor is the implicit first knot**, the curve starts at the cursor and passes through each point in `points` in order, and the cursor ends at the last point (so a preceding `move` or other step must set the cursor, otherwise compilation errors). It is compiled to a chain of cubic Béziers via centripetal Catmull-Rom. Below, the same set of points drawn as `smooth` (steelblue) versus a point-to-point `line` polyline (gray):
+`kind="smooth"` draws a smooth curve **through a list of points** — no need to hand-compute Bézier control points for each segment when drawing a data polyline, a streamline, or a free curve. It takes no `to`; instead it takes `points`: the current **cursor is the implicit first knot**, the curve starts at the cursor and passes through each point in `points` in order, and the cursor ends at the last point (so a preceding `move` or other step must set the cursor, otherwise the path is skipped with a `PATH_TOO_SHORT` warning, same as `line` / `curve` as the first step). It is compiled to a chain of cubic Béziers via centripetal Catmull-Rom. Below, the same set of points drawn as `smooth` (steelblue) versus a point-to-point `line` polyline (gray):
 
 <ComponentPreview name="step-smooth" size="sm" />
 

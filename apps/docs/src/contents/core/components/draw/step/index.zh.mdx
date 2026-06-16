@@ -72,7 +72,7 @@ import { Path, Step } from '@retikz/react';
 
 ### 过点平滑曲线（smooth）
 
-`kind="smooth"` 画一条**穿过一串点**的光滑曲线——画数据折线、流线、自由曲线时不必手算每段贝塞尔控制点。它不用 `to`，改用 `points`：当前**游标是隐式的第一个 knot**，曲线从游标起、依次穿过 `points` 里每个点，游标终于末点（所以前面要先有一个 `move` 或别的 step 设游标，否则编译报错）。编译期用 centripetal Catmull-Rom 转成三次贝塞尔链。下例同一组点，蓝色是 `smooth`、灰色是逐点 `line` 折线：
+`kind="smooth"` 画一条**穿过一串点**的光滑曲线——画数据折线、流线、自由曲线时不必手算每段贝塞尔控制点。它不用 `to`，改用 `points`：当前**游标是隐式的第一个 knot**，曲线从游标起、依次穿过 `points` 里每个点，游标终于末点（所以前面要先有一个 `move` 或别的 step 设游标，否则该 path 被跳过并发 `PATH_TOO_SHORT` 警告，与 `line` / `curve` 作首段一致）。编译期用 centripetal Catmull-Rom 转成三次贝塞尔链。下例同一组点，蓝色是 `smooth`、灰色是逐点 `line` 折线：
 
 <ComponentPreview name="step-smooth" size="sm" />
 
