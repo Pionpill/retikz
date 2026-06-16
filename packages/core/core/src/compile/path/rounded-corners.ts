@@ -113,28 +113,31 @@ export const applyRoundedCorners = (
     const cmdEnd = i;
     const run: LineRun = { start, lineEnds, cmdStart, cmdEnd };
 
-    // run 后是否紧跟 cycle 的 close，且闭回 run 起点、闭合接缝两侧均 line step → 闭合 contour
+    // run 后是否紧跟 cycle 的 close、且 run 起点由前一条 move 给出（close 闭回该 move 起点 == run.start）→ 闭合 contour
     const closeIdx = i;
     const closedByCycle =
       closeIdx < commands.length &&
       commands[closeIdx].kind === 'close' &&
       provenance[closeIdx] === 'cycle' &&
       lineEnds.length >= 2 &&
-      samePoint(lineEnds[lineEnds.length - 1], start) === false &&
-      // run 起点由前一条 move 命令给出（close 闭回该 move 起点 == run.start）
       prev.kind === 'move';
 
-    if (run.lineEnds.length >= 2 && closedByCycle) {
-      // 闭合 contour：段序列含环绕缝（lastEnd → start）
+    if (closedByCycle) {
+      // 闭合 contour 段序列：用户已显式 line 回起点（lastEnd == start）则末段本身即环绕缝，不再追加零长度段；
+      // 否则补一条 lastEnd → start 的环绕缝。两种写法（隐式 cycle / 显式 line 回起点 + cycle）都倒首尾接缝。
+      const lastEnd = lineEnds[lineEnds.length - 1];
       const segs = runSegments(run);
-      segs.push({ kind: 'line', from: lineEnds[lineEnds.length - 1], to: start });
-      const fillets = filletContour(segs, radius, true);
-      const rounded = contourCommands(segs, radius, fillets, true);
-      // contourCommands 闭合版自带 move + close；替换 run 的 move（out 末尾）+ line 命令 + 这条 close
-      out.pop(); // 去掉原 move（contourCommands 会重发 move）
-      for (const rc of rounded) out.push(contourToPathCommand(rc, round));
-      i = closeIdx + 1; // 跳过被吸收的 close
-      continue;
+      if (!samePoint(lastEnd, start)) segs.push({ kind: 'line', from: lastEnd, to: start });
+      // 需 ≥3 段才是可倒角的闭合多边形；退化（如 A→B→A）落开放分支处理
+      if (segs.length >= 3) {
+        const fillets = filletContour(segs, radius, true);
+        const rounded = contourCommands(segs, radius, fillets, true);
+        // contourCommands 闭合版自带 move + close；替换 run 的 move（out 末尾）+ line 命令 + 这条 close
+        out.pop(); // 去掉原 move（contourCommands 会重发 move）
+        for (const rc of rounded) out.push(contourToPathCommand(rc, round));
+        i = closeIdx + 1; // 跳过被吸收的 close
+        continue;
+      }
     }
 
     if (run.lineEnds.length >= 2) {

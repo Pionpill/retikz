@@ -244,6 +244,26 @@ describe('smooth step：交互', () => {
     const markCount = compileToScene(withMark, silent).primitives.length;
     expect(markCount).toBeGreaterThan(baseCount);
   });
+
+  it('smooth → line 到 Node：line 朝 smooth 末点方向裁剪目标边界（非 smooth 前位置）', () => {
+    // 回归：smooth 不属 hasTo，prev.anchor 仍指 smooth 前的 move；line 终点须朝 smooth 末点 [100,0] 裁剪
+    // T 右边界（x>0），而非朝 move 起点 [-100,0] 裁到左边界（x<0）。
+    const ir: IR = scene([
+      { type: 'node', id: 'T', position: [0, 0], minimumSize: 20 },
+      {
+        type: 'path',
+        children: [
+          { type: 'step', kind: 'move', to: [-100, 0] },
+          { type: 'step', kind: 'smooth', points: [[100, 0]] },
+          { type: 'step', kind: 'line', to: { id: 'T' } },
+        ],
+      } as never,
+    ]);
+    const commands = findPathPrim(compileToScene(ir, silent).primitives).commands;
+    const last = commands[commands.length - 1];
+    expect(last.kind).toBe('line');
+    if (last.kind === 'line') expect(last.to[0]).toBeGreaterThan(0);
+  });
 });
 
 describe('smooth step：JSON round-trip', () => {

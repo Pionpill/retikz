@@ -1002,7 +1002,9 @@ export const emitPathPrimitive = (
 
     if (step.kind === 'line') {
       const fromClip = usedOverride ?? clipForTarget(prev.step.to, currAnchor, nameStack, scopeChain);
-      const toClip = clipForTarget(step.to, prev.anchor, nameStack, scopeChain);
+      // toClip 的 toward = 本段实际起点：自包含前驱（arc/smooth/rectangle…）留下 penOverride 时取游标，
+      // 否则取 prev.anchor（node→node 的中心向语义，等价、不变）。修：smooth/arc 后接 line→node 朝错方向裁剪。
+      const toClip = clipForTarget(step.to, usedOverride ?? prev.anchor, nameStack, scopeChain);
       if (!fromClip || !toClip) return null;
       startSegment(fromClip, usedOverride === null && isAutoBoundaryTarget(prev.step.to));
       emitLine(toClip, isAutoBoundaryTarget(step.to));
@@ -1031,18 +1033,20 @@ export const emitPathPrimitive = (
       continue;
     }
     if (step.kind === 'bend') {
+      // 起点参考：自包含前驱留 penOverride 时取游标，否则 prev.anchor（node→node 中心向，不变）
+      const fromRef = usedOverride ?? prev.anchor;
       // out/in 角（任一给定）优先于 bendDirection 对称弯；都缺则按 bendDirection 对称弯，仍缺则默认 left 弯
       const [c1, c2] =
         step.outAngle !== undefined || step.inAngle !== undefined
           ? outInControlPoints(
-              prev.anchor,
+              fromRef,
               currAnchor,
               step.outAngle ?? 0,
               step.inAngle ?? 180,
               step.looseness,
             )
           : bendControlPoints(
-              prev.anchor,
+              fromRef,
               currAnchor,
               step.bendDirection ?? 'left',
               step.bendAngle ?? 30,
@@ -1062,8 +1066,8 @@ export const emitPathPrimitive = (
       continue;
     }
 
-    // fold：经一个直角中间点拆成两段 line
-    const corner = cornerOf(prev.anchor, currAnchor, step.via);
+    // fold：经一个直角中间点拆成两段 line。起点参考同 line/bend：penOverride 优先（自包含前驱后），否则 prev.anchor
+    const corner = cornerOf(usedOverride ?? prev.anchor, currAnchor, step.via);
     const fromClip = usedOverride ?? clipForTarget(prev.step.to, corner, nameStack, scopeChain);
     const toClip = clipForTarget(step.to, corner, nameStack, scopeChain);
     if (!fromClip || !toClip) return null;

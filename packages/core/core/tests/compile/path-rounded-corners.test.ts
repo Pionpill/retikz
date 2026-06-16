@@ -64,6 +64,22 @@ describe('roundedCorners happy：折线 line-line 内拐角倒圆', () => {
     for (const a of arcs) expect(a.radius).toBe(1);
   });
 
+  it('显式 line 回起点 + cycle → 起点接缝也倒（与隐式 cycle 等价闭合，回归 WARNING-3）', () => {
+    // move A→line B→line C→line A→cycle：用户显式画回起点再 cycle，是有效闭合写法；
+    // 三角形 3 顶点应全倒（含起点 A 接缝）→ 3 段 arc + close（修前 A 接缝按开放 run 保持尖，只 2 段）。
+    const ir = pathWith(
+      { roundedCorners: 1 },
+      { type: 'step', kind: 'move', to: [0, 0] },
+      { type: 'step', kind: 'line', to: [10, 0] },
+      { type: 'step', kind: 'line', to: [10, 10] },
+      { type: 'step', kind: 'line', to: [0, 0] },
+      { type: 'step', kind: 'cycle' },
+    );
+    const cmds = findPathPrim(compileToScene(ir, silent).primitives).commands;
+    expect(cmds.filter(c => c.kind === 'arc')).toHaveLength(3);
+    expect(cmds[cmds.length - 1]).toEqual(close());
+  });
+
   it('折线 + cycle 闭合 → 闭合接缝也倒（等价闭合 contour，所有拐角倒圆）', () => {
     const ir = pathWith(
       { roundedCorners: 1 },
