@@ -32,6 +32,8 @@ export const NODE_FIELDS = [
   'yScale',
   'textColor',
   'opacity',
+  'shadow',
+  'blendMode',
   'innerXSep',
   'innerYSep',
   'outerSep',
@@ -76,6 +78,8 @@ export const PATH_FIELDS = [
   'rotate',
   'scale',
   'marks',
+  'shadow',
+  'blendMode',
 ] as const satisfies ReadonlyArray<keyof IRPath>;
 
 type _PathFieldsCheck = AssertEqual<

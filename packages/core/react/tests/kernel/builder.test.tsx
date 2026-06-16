@@ -58,6 +58,31 @@ describe('buildIR', () => {
     expect(ir.children[2]).toMatchObject({ type: 'scope', animations: [fade] });
   });
 
+  it('shadow / blendMode prop 透传进 Node / Path 的 IR（预设字符串 + 对象）', () => {
+    const ir = buildIR(
+      <Fragment>
+        <Node id="A" position={[0, 0]} shape="rectangle" shadow="md" blendMode="multiply" />
+        <Path id="p" shadow={{ offsetX: 1, offsetY: 1, blur: 2, color: '#000' }} blendMode="screen">
+          <Step kind="move" to={[0, 0]} />
+          <Step kind="line" to={[10, 0]} />
+        </Path>
+      </Fragment>,
+    );
+    expect(ir.children[0]).toMatchObject({ type: 'node', id: 'A', shadow: 'md', blendMode: 'multiply' });
+    expect(ir.children[1]).toMatchObject({
+      type: 'path',
+      id: 'p',
+      shadow: { offsetX: 1, offsetY: 1, blur: 2, color: '#000' },
+      blendMode: 'screen',
+    });
+  });
+
+  it('未设 shadow / blendMode → IR 不含该字段', () => {
+    const ir = buildIR(<Node id="A" position={[0, 0]} shape="rectangle" />);
+    expect(ir.children[0]).not.toHaveProperty('shadow');
+    expect(ir.children[0]).not.toHaveProperty('blendMode');
+  });
+
   it('roundedCorners prop 透传进 Path 的 IR', () => {
     const ir = buildIR(
       <Path roundedCorners={8}>
