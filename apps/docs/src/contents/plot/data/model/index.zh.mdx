@@ -3,7 +3,9 @@ title: 数据模型
 description: 给 <Plot> 一份数据行，再用 model 声明字段契约：字段名、测量类型、可选解析格式与分类顺序。类型一旦确定，比例尺、坐标轴、图例和校验都有了依据。
 ---
 
-一张图分两半：**配置**（画什么——mark / 坐标系 / 比例尺）和**数据**（画哪些值）。retikz 把两者分开——数据**不进**图的配置（IR），编译时单独传入。这让同一份配置能复用到不同数据上。
+一张图有两类输入：**配置**（画什么——mark / 坐标系 / 比例尺）和**数据**（画哪些值）。retikz 把两者分开：数据**不进**图的配置（IR），而是在编译时单独传入。这让同一份配置可以复用到不同数据上。
+
+<ComponentAlert title="为什么数据不进 IR？" description="数据通常比图表配置大得多；把每行数据塞进 IR 会让 JSON 与持久化内容迅速膨胀，难以 diff、复用和维护。配置与数据也天然解耦：IR 只描述图怎么画，数据在编译时按 model 接入；只要字段契约能对应，同一份配置就可以切换到另一份数据源。" />
 
 最简单的用法：把数据行数组交给 `<Plot data>`，mark 用字段名引用列。
 
@@ -17,26 +19,17 @@ description: 给 <Plot> 一份数据行，再用 model 声明字段契约：字�
 
 ## 声明字段类型
 
-光有数据，retikz 不知道 `month` 是时间还是普通字符串、`revenue` 是连续数值还是分类。给一份 **model**，它就知道这些字段的契约——比例尺怎么选、坐标轴怎么格式化、图例怎么派生、校验怎么做，都由字段类型驱动。
+字段类型通过 `<Plot model>` 声明。`model` 是字段契约：`month` 是时间还是普通字符串、`revenue` 是连续数值还是分类，都会影响比例尺选择、坐标轴格式、图例派生和数据校验。未声明 `model` 时，retikz 会按数据样本**自动推断字段类型**。
 
-```tsx
-<Plot data={sales} model={[
-  { name: 'month',   type: 'temporal' },
-  { name: 'revenue', type: 'continuous' },
-]}>
-  <LineMark x="month" y="revenue" order="month" />
-</Plot>
-```
+字段类型与默认推断：
 
-字段类型（三类测量种类）：
+| 类型 | 含义 | 例子 | 默认推断与显式声明场景 |
+| --- | --- | --- | --- |
+| `continuous` | 连续可度量数值 | 销量、价格、温度 | 默认：样本值是 number<br />显式：数值枚举、编号、状态码要当分类处理 |
+| `temporal` | 日期 / 时间 | 日期、时间戳 | 默认：`Date` 或无歧义 ISO 日期 / 时间字符串<br />显式：非默认日期格式、无时区时间 |
+| `categorical` | 离散类别 | 国家、颜色名、评级 | 默认：其余字符串 / 布尔值等离散值<br />显式：需要固定分类顺序或控制轴与图例顺序 |
 
-| 类型 | 含义 | 例子 |
-| --- | --- | --- |
-| `continuous` | 连续可度量数值 | 销量、价格、温度、占比 |
-| `categorical` | 离散类别 | 国家、颜色名、评级 |
-| `temporal` | 日期 / 时间 | 日期、时间戳 |
-
-每个字段声明可以包含这些配置：
+想覆盖默认推断、解析非默认格式，或让配置脱离数据也能自描述时，就自定义 `model`。每个字段声明可以包含这些配置：
 
 | 字段 | 作用 |
 | --- | --- |
@@ -45,9 +38,15 @@ description: 给 <Plot> 一份数据行，再用 model 声明字段契约：字�
 | `format` | 声明式解析格式，如 `slashDate` / `percent`；详见[数据处理](/plot/data/processing) |
 | `order` | 分类字段的类别顺序；只对 `categorical` 有效 |
 
-**声明 model = 严格模式**：mark / transform 引用的每个数据字段都必须在 model 里列出，拼错字段名会**立刻报错**（而不是画出一张空图）。这里的引用不只包括 `x` / `y`，也包括 `a` / `b` / `c`、`color`、`series`、mark 的 `order`、点图的 `size` / `opacity` / `shape`，以及 transform 输入字段。**不声明 model**：retikz 从数据抽样推断类型（数值→continuous、ISO 日期串 / `Date`→temporal、其余字符串→categorical），适合快速试画。
+下面的左右对比使用同一份漏斗数据：左图不声明 `model`，数值 `stage` 被推断成连续 x 轴；右图把 `stage` 声明为分类字段，并用 `format: 'percent'` 把百分比字符串解析成连续数值。
 
-**`type` 可选——部分声明**：字段类型可省略，只写 `{ name }`。这样该字段照样进严格模式 + 可移植契约（靠名字），但**类型留给数据推断**。适合「大部分字段一目了然、只有少数要点名」——数值枚举这类需纠偏的字段写 `type`，非默认日期 / 百分比这类存储格式写 `format`，其余留空：
+<ComponentPreview name="data-model-custom" sourceFiles={['data-model-custom.data.ts']} />
+
+**声明 model = 严格模式**：mark / transform 引用的每个数据字段都必须在 model 里列出，拼错字段名会**立刻报错**，而不是画出一张空图。这里的引用不只包括 `x` / `y`，也包括 `a` / `b` / `c`、`color`、`series`、mark 的 `order`、点图的 `size` / `opacity` / `shape`，以及 transform 输入字段。
+
+不声明 `model` 时，字段类型走上面的默认推断，适合快速试画。
+
+**`type` 可选——部分声明**：字段类型可省略，只写 `{ name }`。这样该字段仍然进入严格模式，也保留可移植的字段契约；只有类型留给数据推断。适合「大部分字段一目了然、只有少数要点名」的场景：数值枚举写 `type`，非默认日期 / 百分比写 `format`，其余留空。
 
 ```tsx
 <Plot data={sales} model={[
@@ -59,29 +58,25 @@ description: 给 <Plot> 一份数据行，再用 model 声明字段契约：字�
 </Plot>
 ```
 
-省略 `type` 的字段需到 lowering 时看数据才能定类型；写了 `format` 的字段由格式蕴含类型，例如 `format: 'percent'` 会把字段当作 `continuous`。要让 spec 不看数据就完全自描述（LLM 友好 / 完全可移植），还是把 `type` 或 `format` 填清楚。
+省略 `type` 的字段要到 lowering 时看数据才能定类型；写了 `format` 的字段由格式蕴含类型，例如 `format: 'percent'` 会把字段当作 `continuous`。如果要让 spec 不看数据也完全自描述（LLM 友好 / 完全可移植），就把 `type` 或 `format` 填清楚。
 
 <ComponentAlert title="推断是尽力而为，model 才是契约" description="不声明 model（或字段省略 type / format）时类型靠抽样猜测：时间只认无歧义的 ISO 格式（YYYY-MM-DD、带时区的 ISO datetime，含空格分隔的 SQL 时间戳如 '2024-01-01 12:00:00Z'），'2024/01/01'、无时区时间、裸数字串不会被当成时间。要精确、要校验、要让 LLM 不看数据就懂字段，就声明 model；非默认存储格式再加 format 或 resolveField。" />
 
 ## 类型驱动的比例尺
 
-声明了 model，位置通道（x / y，以及 ternary 的 a / b / c）**不必再手写比例尺**——retikz 按字段类型自动选：`continuous`→线性、`temporal`→时间轴、`categorical`→分类带。颜色通道也会受字段类型影响：填了 `type` 的连续 / 时间字段派生连续色阶，分类字段派生离散颜色。详细映射与覆盖规则见[比例尺](/plot/grammar/scale)。
+声明了字段类型后，位置通道（x / y，以及 ternary 的 a / b / c）**不必再手写比例尺**：retikz 按类型自动选，`continuous`→线性、`temporal`→时间轴、`categorical`→分类带。颜色通道同样受字段类型影响：连续 / 时间字段派生连续色阶，分类字段派生离散颜色。详细映射与覆盖规则见[比例尺](/plot/grammar/scale)。
 
-下面这张图没有写任何比例尺配置：`month` 是 temporal、`revenue` 是 continuous，轴全自动派生。
+下面三张图都没有写任何比例尺配置：`continuous` 字段派生线性轴，`temporal` 字段派生时间轴，`categorical` 字段派生分类带轴。
 
-<ComponentPreview name="data-model" sourceFiles={['data-model.data.ts']} />
+<ComponentPreview name="data-model" size="xxxl" sourceFiles={['data-model.data.ts']} />
 
 ## 分类顺序：`order`
 
-`categorical` 字段默认按**数据出现顺序**排类别（轴、图例都跟着这个序）。想控制顺序——比如尺码该按 `S → M → L → XL`，而不是数据里碰巧出现的次序——给字段一个 `order`：
+`categorical` 字段默认按**数据出现顺序**排类别，轴和图例都会跟着这个顺序。想控制顺序——比如尺码该按 `S → M → L → XL`，而不是数据里碰巧出现的次序——给字段一个 `order`：
 
-```tsx
-<Plot data={rows} model={[
-  { name: 'size',  type: 'categorical', order: ['S', 'M', 'L', 'XL'] }, // 显式顺序
-  { name: 'grade', type: 'categorical', order: 'ascending' },           // 升序排序
-  { name: 'city',  type: 'categorical' },                               // 默认：按出现序
-]}>{/* … */}</Plot>
-```
+下面两张图使用同一份尺码数据：左图按数据出现序显示，右图通过 `order` 固定为业务顺序 `S → M → L → XL`。
+
+<ComponentPreview name="data-model-order" sourceFiles={['data-model-order.data.ts']} />
 
 | `order` | 效果 |
 | --- | --- |
@@ -98,4 +93,4 @@ description: 给 <Plot> 一份数据行，再用 model 声明字段契约：字�
 
 ## 下一步
 
-model 只声明字段契约；真实数据接入时还会遇到字段名不同、日期 / 百分比格式不同、脏数据需要报错等问题。继续看[数据处理](/plot/data/processing)：那里覆盖 `fieldMap`、`format`、`resolveField`、`validateData` 与 `invalid`。
+model 只声明字段契约；接入真实数据时，还会遇到字段名不同、日期 / 百分比格式不同、脏数据需要报错等问题。继续看[数据处理](/plot/data/processing)：那里覆盖 `fieldMap`、`format`、`resolveField`、`validateData` 与 `invalid`。

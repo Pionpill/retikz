@@ -1,13 +1,18 @@
 // @retikz/plot-react public API barrel.
 export { Plot } from './Plot';
 export type { PlotProps, PlotSpecProps, PlotDslProps, PlotPanelProps } from './Plot';
-export { BarMark, LineMark, PointMark, SectorMark, AreaMark, Axis, Legend, Scale, buildPlotSpec } from './components';
+export { BarMark, LineMark, PointMark, SectorMark, AreaMark, RectMark, RuleMark, TextMark, RibbonMark, Axis, Legend, Scale, buildPlotSpec, resolveLabelOf } from './components';
 export type {
   BarMarkProps,
   LineMarkProps,
   PointMarkProps,
   SectorMarkProps,
   AreaMarkProps,
+  RectMarkProps,
+  RuleMarkProps,
+  TextMarkProps,
+  RibbonMarkProps,
+  DatumLabelProps,
   AxisProps,
   LegendProps,
   ScaleProps,
@@ -15,4 +20,5 @@ export type {
   PositionScaleType,
   BuildPlotSpecOptions,
   CoordinateInput,
+  ResolveLabelMap,
 } from './components';

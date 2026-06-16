@@ -2,6 +2,8 @@ import { type FC, useEffect, useRef, useState } from 'react';
 
 import { DocsSearch } from '@/components/shared/docs-search';
 import { ButtonGroup } from '@/components/ui/button-group';
+import { cn } from '@/lib/utils';
+import { useLayoutStore } from '@/store/use-layout-store';
 
 import { AiChatTrigger } from '../ai-chat';
 import { MobileNav } from '../mobile/MobileNav';
@@ -28,8 +30,9 @@ const COMPACT_THRESHOLD_PX = 896;
  *   注入 `compact: boolean`，portal 子树用 `useHeaderCompact()` 读取后条件渲染
  */
 const AppHeader: FC = () => {
-  const ref = useRef<HTMLElement>(null);
+  const ref = useRef<HTMLDivElement>(null);
   const [compact, setCompact] = useState(false);
+  const layout = useLayoutStore(s => s.layout);
 
   useEffect(() => {
     const el = ref.current;
@@ -45,21 +48,26 @@ const AppHeader: FC = () => {
 
   return (
     <HeaderCompactContext.Provider value={compact}>
-      <header
-        ref={ref}
-        className="@container/header sticky top-0 z-40 flex h-14 shrink-0 items-center gap-3 border-b bg-background/95 px-4 backdrop-blur @4xl/header:gap-6 @4xl/header:px-6"
-      >
-        <div className="flex min-w-0 flex-1 basis-0 items-center gap-3 @4xl/header:gap-6">
-          <MobileNav />
-          <BrandLink />
-          <ModuleNav />
-        </div>
-        <div className="flex min-w-0 shrink-0 items-center justify-end gap-2 @4xl/header:flex-1 @4xl/header:basis-0 @4xl/header:gap-1">
-          <ButtonGroup>
-            <AiChatTrigger />
-            <DocsSearch />
-          </ButtonGroup>
-          <HeaderActions />
+      <header className="sticky top-0 z-40 shrink-0 border-b bg-background/95 backdrop-blur">
+        <div
+          ref={ref}
+          className={cn(
+            '@container/header flex h-14 w-full items-center gap-3 px-4 @4xl/header:gap-6 @4xl/header:px-6',
+            layout === 'centered' && 'mx-auto max-w-[1440px]',
+          )}
+        >
+          <div className="flex min-w-0 flex-1 basis-0 items-center gap-3 @4xl/header:gap-6">
+            <MobileNav />
+            <BrandLink />
+            <ModuleNav />
+          </div>
+          <div className="flex min-w-0 shrink-0 items-center justify-end gap-2 @4xl/header:flex-1 @4xl/header:basis-0 @4xl/header:gap-1">
+            <ButtonGroup>
+              <AiChatTrigger />
+              <DocsSearch />
+            </ButtonGroup>
+            <HeaderActions />
+          </div>
         </div>
       </header>
     </HeaderCompactContext.Provider>

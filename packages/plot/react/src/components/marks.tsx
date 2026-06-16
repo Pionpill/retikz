@@ -1,7 +1,28 @@
 import type { FC } from 'react';
+import type { ExternalRow } from '@retikz/plot';
+
+/**
+ * priority-1 宿主 datum label 扁平 props（ADR-04）：给位置 mark（point / bar / line / area）加 datum 标签
+ * @description label 顶层 string 默认按字段解析（装成 IR label.content 的 field）；labelFormat 进 IR（d3-format / d3-time-format 串）；
+ *   labelPosition / labelDistance / labelPin 摊进 core NodeLabelSchema；resolveLabel 是运行时逃生舱（不进 IR、按 mark id 经 options 注入，需配 id）。
+ */
+export type DatumLabelProps = {
+  /** datum 标签内容字段名（→ IR label.content.field；优先级低于 resolveLabel、高于无）；缺省不挂标签 */
+  label?: string;
+  /** 标签格式串（d3-format 数值 / d3-time-format 时间，进 IR）；仅与 label 字段同用 */
+  labelFormat?: string;
+  /** 标签相对宿主 Node 边框方位：8 方向枚举或数字角度（度）；缺省 above（对齐 core NodeLabelSchema.position） */
+  labelPosition?: 'above' | 'below' | 'left' | 'right' | 'above-left' | 'above-right' | 'below-left' | 'below-right' | number;
+  /** 标签离宿主边框距离（user units）；缺省 12（对齐 core NodeLabelSchema.distance） */
+  labelDistance?: number;
+  /** 从宿主边框拉引线到标签（core leader）；缺省 false */
+  labelPin?: boolean;
+  /** 完全自定义标签逃生舱（运行时函数，不进 IR；最高优先，覆盖 label/labelFormat）；需配 mark id 经 options 注入 */
+  resolveLabel?: (row: ExternalRow) => string;
+};
 
 /** <LineMark> props：折线图层，按 order（缺省按数据顺序）连点 */
-export type LineMarkProps = {
+export type LineMarkProps = DatumLabelProps & {
   /** 绑 x 位置通道的字段路径（polar 下坐标系重解释为角向值） */
   x: string;
   /** 绑 y 位置通道的字段路径（polar 下坐标系重解释为径向值） */
@@ -19,7 +40,7 @@ export type LineMarkProps = {
 };
 
 /** <PointMark> props：散点图层，每行一个 glyph */
-export type PointMarkProps = {
+export type PointMarkProps = DatumLabelProps & {
   /**
    * 绑 x 位置通道的字段路径（polar 下坐标系重解释为角向值；cartesian1D / polar1D 单维亦用 x）。
    * 可选：1D-2D 坐标系用 x/y、ternary2D 用 a/b/c；必填性由坐标系在 lowering 校验。
@@ -46,7 +67,7 @@ export type PointMarkProps = {
 };
 
 /** <BarMark> props：柱状图层，从 baseline 到值的矩形（cartesian 下 x 自动 band；polar 下自动成径向柱、角向自动 band） */
-export type BarMarkProps = {
+export type BarMarkProps = DatumLabelProps & {
   /** 绑 x 位置通道的字段路径（分类，自动 band scale；polar 下作角向类别） */
   x: string;
   /** 绑 y 位置通道的字段路径（数值；polar 下作径向值） */
@@ -74,7 +95,7 @@ export type SectorMarkProps = {
 };
 
 /** <AreaMark> props：面积图层（上沿折线 ↔ baseline 围成可填充区域；polar 下闭合成填充雷达） */
-export type AreaMarkProps = {
+export type AreaMarkProps = DatumLabelProps & {
   /** 绑 x 位置通道的字段路径（polar 下坐标系重解释为角向值） */
   x: string;
   /** 绑 y 位置通道的字段路径（polar 下坐标系重解释为径向值） */
@@ -88,6 +109,42 @@ export type AreaMarkProps = {
   /** 末点回连首点闭合成多边形（polar 下即填充雷达）；缺省 false */
   closed?: boolean;
   /** 颜色字段（categorical，自动 ordinal 色 scale）：无显式 series 时按此字段隐式拆多个面；缺省取 series。连续 / 时间字段报错 */
+  color?: string;
+  /** 可选 mark 句柄（预留 scope/anchor，解析留 alpha.5） */
+  id?: string;
+};
+
+/**
+ * <RuleMark> props：参考标注图层（阈值线 / 容差带）。取向由给 x（竖直）还是 y（水平）决定，二选一。
+ * @description 扁平 props：数字 → IR 常量 value、字符串 → IR field（per-datum）。只给下界（x / y）→ line；
+ *   配上界（xTo 与 x 配对 / yTo 与 y 配对）→ band [lo,hi]。extent 给对侧维起止字段截成部分长度。
+ */
+export type RuleMarkProps = {
+  /** 竖直 rule 的常量轴绑定（x=const 跨满 y 域）：数字 → 常量 value、字符串 → 字段 field（每行一条） */
+  x?: number | string;
+  /** 水平 rule 的常量轴绑定（y=const 跨满 x 域）：数字 → 常量 value、字符串 → 字段 field（每行一条） */
+  y?: number | string;
+  /** 竖直 band 上界（与 x 配对 → x∈[x,xTo] 填充带）：数字 → 常量、字符串 → 字段；缺 → line */
+  xTo?: number | string;
+  /** 水平 band 上界（与 y 配对 → y∈[y,yTo] 填充带）：数字 → 常量、字符串 → 字段；缺 → line */
+  yTo?: number | string;
+  /** 对侧维部分长度起点字段（与 extentToField 成对）；缺 → 满铺对侧轴域 */
+  extentField?: string;
+  /** 对侧维部分长度终点字段（与 extentField 成对）；缺 → 满铺对侧轴域 */
+  extentToField?: string;
+  /** 颜色：数字 / 颜色串常量 → value（line→stroke / band→fill）；字段名 → field（per-datum 按色分组） */
+  color?: string;
+  /** 可选 mark 句柄（预留 scope/anchor，解析留 alpha.5） */
+  id?: string;
+};
+
+/** <RectMark> props：矩形格图层（heatmap），x / y 均分类（双 band），值经 color 通道映射成格子填充 */
+export type RectMarkProps = {
+  /** 绑 x 位置通道的字段路径（分类，自动 band scale，定格宽） */
+  x: string;
+  /** 绑 y 位置通道的字段路径（分类，自动 band scale，定格高） */
+  y: string;
+  /** 颜色字段（→ color 通道 + 自动色 scale）：值映射成格子填充；连续字段配 model 时自动派生 sequential 色阶。缺省纯网格（回退默认填充） */
   color?: string;
   /** 可选 mark 句柄（预留 scope/anchor，解析留 alpha.5） */
   id?: string;
@@ -123,3 +180,92 @@ export const SectorMark: FC<SectorMarkProps> = () => null;
  * @description 配置载体：不进 React render 栈、不渲染（返回 null），由 <Plot> 同步内省其 props 装配进 PlotSpec
  */
 export const AreaMark: FC<AreaMarkProps> = () => null;
+
+/**
+ * 矩形格（heatmap）图层声明组件
+ * @description 配置载体：不进 React render 栈、不渲染（返回 null），由 <Plot> 同步内省其 props 装配进 PlotSpec；
+ *   x / y 双 band 由 build-plot-spec 自动推断（heatmap 双轴分类定格），值经 color 通道映射成格子填充
+ */
+export const RectMark: FC<RectMarkProps> = () => null;
+
+/**
+ * 参考标注（阈值线 / 容差带）图层声明组件
+ * @description 配置载体：不进 React render 栈、不渲染（返回 null），由 <Plot> 同步内省其 props 装配进 PlotSpec；
+ *   数字 → IR value 常量、字符串 → IR field；取向 / band 上界 / extent 配对的校验在 build-plot-spec fail-loud
+ */
+export const RuleMark: FC<RuleMarkProps> = () => null;
+
+/**
+ * <TextMark> props：自由文本图层（priority-2 兜底，ADR-04）。无宿主、投影同 point、新建带 text 的 core Node。
+ * @description 标注另一 mark 的 datum 请优先用该 mark 的 label 通道（priority-1）；本组件用于无宿主的自由浮动文本 / 注解。
+ *   x / y / text / color 顶层 string 默认按字段解析；dx / dy 是相对锚点的像素级微调逃生舱（首选用宿主 label 的 position/distance）。
+ */
+export type TextMarkProps = {
+  /** 绑 x 位置通道的字段路径（polar 下坐标系重解释为角向值；与 point 同源投影） */
+  x?: string;
+  /** 绑 y 位置通道的字段路径（polar 下坐标系重解释为径向值） */
+  y?: string;
+  /** ternary2D 的 a 分量字段 */
+  a?: string;
+  /** ternary2D 的 b 分量字段 */
+  b?: string;
+  /** ternary2D 的 c 分量字段 */
+  c?: string;
+  /** 文本内容字段名（装成 IR encoding.text.field；默认按字段解析）；自由文本必填内容 */
+  text: string;
+  /** 文本格式串（d3-format 数值 / d3-time-format 时间，进 IR）；仅与 text 字段同用 */
+  format?: string;
+  /** 文本颜色字段（color 通道 + 自动 ordinal 色 scale；落 Node textColor 按色分子 Scope） */
+  color?: string;
+  /** 相对锚点水平微调（user units，正 = 右）；逃生舱，首选用宿主 label position/distance */
+  dx?: number;
+  /** 相对锚点垂直微调（user units，正 = 屏幕下）；逃生舱 */
+  dy?: number;
+  /** 完全自定义文本逃生舱（运行时函数，不进 IR；最高优先，覆盖 text/format）；需配 mark id 经 options 注入 */
+  resolveLabel?: (row: ExternalRow) => string;
+  /** 可选 mark 句柄（预留 scope/anchor；resolveLabel 注入也按此 id 命中） */
+  id?: string;
+};
+
+/**
+ * 自由文本图层声明组件（priority-2 兜底，ADR-04）
+ * @description 配置载体：不进 React render 栈、不渲染（返回 null），由 <Plot> 同步内省其 props 装配进 PlotSpec；
+ *   投影同 point（坐标系无关），新建带 text 的 core Node。标注别的 mark 的 datum 优先用该 mark 的 label 通道
+ */
+export const TextMark: FC<TextMarkProps> = () => null;
+
+/**
+ * <RibbonMark> props：流带图层（sankey / alluvial 流量），每行一条源 → 目标的可填充 cubic 曲带（ADR-05）。
+ * @description 扁平 props：端点拆成 sourceX/sourceY/targetX/targetY 顶层字段串（经坐标系投影），value 字段 → 带宽。
+ *   布局（节点排布 / 流量堆叠）不在本体——sourceX/Y、targetX/Y、value 须由 transform / 预处理算好写回数据；
+ *   连接不同 facet 的 node-id 跨 scope 端点后续（见 ADR-05 不在范围）。
+ */
+export type RibbonMarkProps = {
+  /** 源端 x 位置通道字段（经坐标系投影成屏幕点） */
+  sourceX: string;
+  /** 源端 y 位置通道字段 */
+  sourceY: string;
+  /** 目标端 x 位置通道字段 */
+  targetX: string;
+  /** 目标端 y 位置通道字段 */
+  targetY: string;
+  /** 流量字段：经合成 width 线性 scale 映射成源端带宽 */
+  value: string;
+  /** 目标端宽度字段：缺省 = 与源端等宽（等宽带）；给定 → 喇叭带 */
+  endWidth?: string;
+  /** cubic 控制点沿主轴外推比例 0..1（0=准直、大=更 S）；缺省 0.5 */
+  curvature?: number;
+  /** 主轴取向：horizontal 出入切向沿 x、半宽沿 y（左右流）；vertical 反之；缺省 horizontal */
+  orientation?: 'horizontal' | 'vertical';
+  /** 颜色字段（→ color 通道 + 自动 ordinal 色 scale）；缺省按图层序取默认色 */
+  color?: string;
+  /** 可选 mark 句柄（预留 scope/anchor，解析留 alpha.5） */
+  id?: string;
+};
+
+/**
+ * 流带（sankey / alluvial）图层声明组件（ADR-05）
+ * @description 配置载体：不进 React render 栈、不渲染（返回 null），由 <Plot> 同步内省其扁平 props 装配进 PlotSpec；
+ *   扁平 sourceX/Y、targetX/Y → 嵌套 IR source/target 字段对端点，value → 带宽。布局需预处理（本体只画带）
+ */
+export const RibbonMark: FC<RibbonMarkProps> = () => null;

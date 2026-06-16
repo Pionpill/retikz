@@ -3,7 +3,9 @@ title: Data Model
 description: Give <Plot> a set of rows, then declare a field contract with model: field names, measurement types, optional parsing formats, and category order. Once the type is fixed, scales, axes, legends, and validation all follow from it.
 ---
 
-A chart has two halves: **config** (what to draw — marks / coordinate / scales) and **data** (which values). retikz keeps them apart — the data does **not** enter the chart config (the IR); it's supplied separately at compile time. That lets one config be reused across different datasets.
+A chart has two inputs: **config** (what to draw — marks / coordinate / scales) and **data** (which values). retikz keeps them apart: data does **not** enter the chart config (the IR); it is supplied separately at compile time. That lets one config be reused across different datasets.
+
+<ComponentAlert title="Why data stays out of the IR" description="Data is usually much larger than the chart config. Embedding every row into the IR would make JSON and persisted artifacts bulky, hard to diff, and hard to maintain. Config and data are naturally separate: the IR describes how to draw, while data is supplied at compile time through the model; as long as the field contract lines up, the same config can run against another data source." />
 
 The simplest form: hand a row array to `<Plot data>` and have marks reference columns by field name.
 
@@ -17,26 +19,17 @@ A field name is a **path**, so nested data (MongoDB documents, JSON from an API)
 
 ## Declaring field types
 
-With data alone, retikz can't tell whether `month` is a time or a plain string, or whether `revenue` is continuous or categorical. Give it a **model** and it knows the field contract — how to pick scales, format axes, derive legends, and validate — all driven by field type.
+Declare field types through `<Plot model>`. The `model` is the field contract: whether `month` is time or a plain string, and whether `revenue` is continuous or categorical, affects scale selection, axis formatting, legend derivation, and validation. When `model` is omitted, retikz **infers field types** from data samples.
 
-```tsx
-<Plot data={sales} model={[
-  { name: 'month',   type: 'temporal' },
-  { name: 'revenue', type: 'continuous' },
-]}>
-  <LineMark x="month" y="revenue" order="month" />
-</Plot>
-```
+Field types and default inference:
 
-Field types (three measurement kinds):
+| Type | Meaning | Examples | Default inference and explicit declarations |
+| --- | --- | --- | --- |
+| `continuous` | continuous measurable numbers | sales, price, temperature | Default: sample values are numbers<br />Declare: numeric enums, ids, or status codes should behave as categories |
+| `temporal` | date / time values | dates, timestamps | Default: `Date` or unambiguous ISO date / datetime strings<br />Declare: non-default date formats or timezone-less times |
+| `categorical` | discrete categories | countries, color names, ratings | Default: other strings / booleans and discrete values<br />Declare: category order, axes, or legends need fixed ordering |
 
-| Type | Meaning | Examples |
-| --- | --- | --- |
-| `continuous` | continuous measurable number | sales, price, temperature, share |
-| `categorical` | discrete category | country, color name, rating |
-| `temporal` | date / time | dates, timestamps |
-
-Each field declaration can contain:
+Customize `model` when you need to override inference, parse non-default storage formats, or make the config self-describing without the data. Each field declaration can contain:
 
 | Field | Purpose |
 | --- | --- |
@@ -45,9 +38,15 @@ Each field declaration can contain:
 | `format` | declarative parsing format, such as `slashDate` / `percent`; see [Processing](/plot/data/processing) |
 | `order` | category order for categorical fields |
 
-**Declaring a model = strict mode**: every data field referenced by a mark / transform must be listed in the model; a misspelled field name **fails immediately** (instead of drawing an empty chart). References include not only `x` / `y`, but also `a` / `b` / `c`, `color`, `series`, a mark's `order`, point `size` / `opacity` / `shape`, and transform input fields. **No model**: retikz infers types by sampling the data (number → continuous, ISO date string / `Date` → temporal, other strings → categorical), which is handy for quick drafts.
+The side-by-side demo below uses one funnel dataset. The left chart has no `model`, so numeric `stage` is inferred as a continuous x axis. The right chart declares `stage` as categorical, and parses percent strings into continuous values with `format: 'percent'`.
 
-**`type` is optional — partial models**: a field's type can be omitted, leaving just `{ name }`. The field still joins strict mode + the portable binding contract (by name), but its **type is left to inference**. Good for "most fields are obvious, only a few need pinning" — give `type` to numeric enums that need correcting, use `format` for non-default dates / percentages, and leave the rest bare:
+<ComponentPreview name="data-model-custom" sourceFiles={['data-model-custom.data.ts']} />
+
+**Declaring a model = strict mode**: every data field referenced by a mark / transform must be listed in the model; a misspelled field name **fails immediately** instead of drawing an empty chart. References include not only `x` / `y`, but also `a` / `b` / `c`, `color`, `series`, a mark's `order`, point `size` / `opacity` / `shape`, and transform input fields.
+
+With no `model`, field types follow the default inference rules above, which is handy for quick drafts.
+
+**`type` is optional — partial models**: a field's type can be omitted, leaving just `{ name }`. The field still joins strict mode and keeps a portable field contract; only its type is left to inference. This is useful when most fields are obvious and only a few need pinning: give `type` to numeric enums, use `format` for non-default dates / percentages, and leave the rest bare.
 
 ```tsx
 <Plot data={sales} model={[
@@ -59,29 +58,25 @@ Each field declaration can contain:
 </Plot>
 ```
 
-Fields with `type` omitted need the data at lowering to determine their type; fields with `format` get their type from the format, so `format: 'percent'` is treated as `continuous`. To keep a spec fully self-describing without the data (LLM-friendly / fully portable), fill in `type` or `format`.
+Fields with `type` omitted need the data at lowering to determine their type. Fields with `format` get their type from the format, so `format: 'percent'` is treated as `continuous`. To keep a spec fully self-describing without the data (LLM-friendly / fully portable), fill in `type` or `format`.
 
 <ComponentAlert title="Inference is best-effort; the model is the contract" description="Without a model (or with a field's type / format omitted), types are guessed from samples: time is only recognized in unambiguous ISO form (YYYY-MM-DD, an ISO datetime with a timezone, including the space-separated SQL form like '2024-01-01 12:00:00Z') — '2024/01/01', timezone-less times, and bare numeric strings are not treated as time. Declare a model when you want precision, validation, or for an LLM to understand the fields without seeing the data; add format or resolveField for non-default storage formats." />
 
 ## Type-driven scales
 
-With a model declared, positional channels (x / y, and ternary a / b / c) **no longer need an explicit scale** — retikz picks one from the field type: `continuous` → linear, `temporal` → time axis, `categorical` → band. Color channels are also affected by field type: fields with explicit continuous / temporal types derive continuous color ramps, while categorical fields derive discrete color. See [Scales](/plot/grammar/scale) for the full mapping and override rules.
+Once field types are declared, positional channels (x / y, and ternary a / b / c) **no longer need an explicit scale**: retikz picks one from the field type, `continuous` → linear, `temporal` → time axis, `categorical` → band. Color channels follow the same field types: continuous / temporal fields derive continuous color ramps, while categorical fields derive discrete color. See [Scales](/plot/grammar/scale) for the full mapping and override rules.
 
-The chart below declares no scale config at all: `month` is temporal, `revenue` is continuous — the axes are derived automatically.
+The three charts below declare no scale config at all: `continuous` fields derive linear axes, `temporal` fields derive time axes, and `categorical` fields derive band axes.
 
-<ComponentPreview name="data-model" sourceFiles={['data-model.data.ts']} />
+<ComponentPreview name="data-model" size="xxxl" sourceFiles={['data-model.data.ts']} />
 
 ## Category order: `order`
 
-A `categorical` field orders its categories by **data appearance** by default (axes and legends follow that order). To control it — sizes should read `S → M → L → XL`, not whatever order they happen to appear in the data — give the field an `order`:
+A `categorical` field orders its categories by **data appearance** by default; axes and legends follow that order. To control it — sizes should read `S → M → L → XL`, not whatever order they happen to appear in the data — give the field an `order`:
 
-```tsx
-<Plot data={rows} model={[
-  { name: 'size',  type: 'categorical', order: ['S', 'M', 'L', 'XL'] }, // explicit order
-  { name: 'grade', type: 'categorical', order: 'ascending' },           // sorted ascending
-  { name: 'city',  type: 'categorical' },                               // default: appearance order
-]}>{/* … */}</Plot>
-```
+The two charts below use the same size data. The left chart follows data appearance order; the right chart fixes the business order `S → M → L → XL`.
+
+<ComponentPreview name="data-model-order" sourceFiles={['data-model-order.data.ts']} />
 
 | `order` | Effect |
 | --- | --- |
@@ -98,4 +93,4 @@ Rules:
 
 ## Next Step
 
-The model declares the field contract; real-world data still brings renamed fields, date / percent storage formats, and dirty values that should fail loudly. Continue with [Processing](/plot/data/processing) for `fieldMap`, `format`, `resolveField`, `validateData`, and `invalid`.
+The model declares the field contract. Real-world data still brings renamed fields, date / percent storage formats, and dirty values that should fail loudly. Continue with [Processing](/plot/data/processing) for `fieldMap`, `format`, `resolveField`, `validateData`, and `invalid`.

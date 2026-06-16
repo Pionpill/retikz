@@ -202,4 +202,228 @@ describe('renderPlot 薄包装（SSR SVG 串）', () => {
     expect(svg).toContain('<ellipse');
     expect(svg).toContain('<path');
   });
+
+  // alpha.11 ADR-02：rect heatmap spec → renderPlot 透传（vanilla 不改 src，纯 spec 驱动出每格 <rect>）
+  it('rect-vanilla-ssr-heatmap：双 band heatmap spec → SVG 含每格 <rect> + 填充色', () => {
+    const heatmap: ExternalDatasets = {
+      heat: [
+        { rk: 'r0', ck: 'c0', v: 1 },
+        { rk: 'r0', ck: 'c1', v: 5 },
+        { rk: 'r1', ck: 'c0', v: 9 },
+        { rk: 'r1', ck: 'c1', v: 3 },
+      ],
+    };
+    const heatmapSpec: PlotSpec = {
+      namespace: 'plot',
+      type: 'plot',
+      data: { reference: 'heat', model: [{ name: 'rk', type: 'categorical' }, { name: 'ck', type: 'categorical' }, { name: 'v', type: 'continuous' }] },
+      scales: [
+        { type: 'band', name: 'rk' },
+        { type: 'band', name: 'ck' },
+        { type: 'sequential', name: 'heat', domain: [0, 9] },
+      ],
+      coordinate: { type: 'cartesian2D', x: 'rk', y: 'ck' },
+      marks: [{ type: 'rect', encoding: { x: { field: 'rk' }, y: { field: 'ck' }, color: { field: 'v', scale: 'heat' } } }],
+    };
+    const svg = renderPlot(heatmapSpec, heatmap, { width: 360, height: 360 });
+    expect(svg).toContain('<svg');
+    // 每格一个 <rect>（4 格）；填充色由 sequential 色阶 per-datum 取
+    expect((svg.match(/<rect/g) ?? []).length).toBeGreaterThanOrEqual(4);
+    expect(svg).toMatch(/fill="[^"]+"/);
+  });
+
+  it('rect 缺 color heatmap spec → SVG 含 <rect>（纯网格透传不崩）', () => {
+    const grid: ExternalDatasets = {
+      grid: [
+        { day: 'Mon', hour: 'AM' },
+        { day: 'Mon', hour: 'PM' },
+        { day: 'Tue', hour: 'AM' },
+      ],
+    };
+    const gridSpec: PlotSpec = {
+      namespace: 'plot',
+      type: 'plot',
+      data: { reference: 'grid' },
+      scales: [
+        { type: 'band', name: 'day' },
+        { type: 'band', name: 'hour' },
+      ],
+      coordinate: { type: 'cartesian2D', x: 'day', y: 'hour' },
+      marks: [{ type: 'rect', encoding: { x: { field: 'day' }, y: { field: 'hour' } } }],
+    };
+    expect(renderPlot(gridSpec, grid, { width: 320, height: 320 })).toMatch(/<rect/);
+  });
+
+  // ADR-03：rule mark（参考线 + 参考带）SSR——vanilla 无代码改动，纯 spec 驱动端到端产出
+  it('rule line + band spec → SVG 含参考线（<path>）与参考带（<rect> fill）', () => {
+    const scores: ExternalDatasets = {
+      scores: [
+        { name: 'A', score: 60 },
+        { name: 'B', score: 85 },
+        { name: 'C', score: 92 },
+      ],
+    };
+    const ruleSpec: PlotSpec = {
+      namespace: 'plot',
+      type: 'plot',
+      data: { reference: 'scores' },
+      scales: [
+        { type: 'band', name: 'x' },
+        { type: 'linear', name: 'y' },
+      ],
+      coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
+      marks: [
+        { type: 'interval', encoding: { x: { field: 'name' }, y: { field: 'score' } } },
+        // 容差带 y∈[70,90]（band → projectCell rect，amber 填充）
+        { type: 'rule', yTo: 90, encoding: { y: { value: 70 }, color: { value: 'amber' } } },
+        // 及格线 y=60（line → core Path，crimson 描边）
+        { type: 'rule', encoding: { y: { value: 60 }, color: { value: 'crimson' } } },
+      ],
+    };
+    const svg = renderPlot(ruleSpec, scores, { width: 480, height: 300 });
+    expect(svg).toContain('<svg');
+    // band → <rect> 含 amber 填充；line → <path> 含 crimson 描边
+    expect(svg).toMatch(/<rect[^>]*fill="amber"/);
+    expect(svg).toMatch(/<path[^>]*stroke="crimson"/);
+  });
+
+  it('per-datum rule（field 多线 + color field）SSR → 多条参考线', () => {
+    const limits: ExternalDatasets = {
+      limits: [
+        { threshold: 30, category: 'low' },
+        { threshold: 60, category: 'mid' },
+        { threshold: 90, category: 'high' },
+      ],
+    };
+    const perDatumSpec: PlotSpec = {
+      namespace: 'plot',
+      type: 'plot',
+      data: { reference: 'limits', model: [{ name: 'threshold', type: 'continuous' }, { name: 'category', type: 'categorical' }] },
+      scales: [
+        { type: 'linear', name: 'y' },
+        { type: 'ordinal', name: 'c' },
+      ],
+      coordinate: { type: 'cartesian2D', y: 'y' },
+      marks: [{ type: 'rule', encoding: { y: { field: 'threshold' }, color: { field: 'category', scale: 'c' } } }],
+    };
+    const svg = renderPlot(perDatumSpec, limits, { width: 480, height: 300 });
+    // 3 行 → 3 条参考线（per-datum field）
+    expect((svg.match(/<path/g) ?? []).length).toBeGreaterThanOrEqual(3);
+  });
+
+  // ADR-04：text mark / datum label SSR（vanilla 源码无改动，纯 spec 驱动贯通三包）
+  it('vanilla-label-ssr 宿主 label：interval label → <text> 元素 + 标签内容串', () => {
+    const labelSpec: PlotSpec = {
+      namespace: 'plot',
+      type: 'plot',
+      data: { reference: 'sales' },
+      scales: [
+        { type: 'band', name: 'x' },
+        { type: 'linear', name: 'y' },
+      ],
+      coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
+      marks: [
+        {
+          type: 'interval',
+          label: { content: { field: 'revenue', format: ',.0f' }, position: 'above', distance: 6 },
+          encoding: { x: { field: 'month' }, y: { field: 'revenue' } },
+        },
+      ],
+    };
+    const svg = renderPlot(labelSpec, data, { width: 480, height: 300 });
+    expect(svg).toMatch(/<rect/);
+    expect(svg).toContain('<text');
+    // 标签内容（千分位格式后整数）出现在 SVG 文本里
+    expect(svg).toContain('>10<');
+    expect(svg).toContain('>14<');
+  });
+
+  it('vanilla-label-ssr 自由 TextMark：text mark → <text> 元素 + 字段值串', () => {
+    const textSpec: PlotSpec = {
+      namespace: 'plot',
+      type: 'plot',
+      data: { reference: 'labels' },
+      scales: [
+        { type: 'linear', name: 'x' },
+        { type: 'linear', name: 'y' },
+      ],
+      coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
+      marks: [{ type: 'text', encoding: { x: { field: 'px' }, y: { field: 'py' }, text: { field: 'label' } } }],
+    };
+    const labels: ExternalDatasets = {
+      labels: [
+        { px: 1, py: 2, label: 'alpha' },
+        { px: 3, py: 4, label: 'beta' },
+      ],
+    };
+    const svg = renderPlot(textSpec, labels, { width: 480, height: 300 });
+    expect(svg).toContain('<text');
+    expect(svg).toContain('alpha');
+    expect(svg).toContain('beta');
+  });
+
+  // ADR-05：ribbon mark（sankey / alluvial 流带）SSR——vanilla 无代码改动，纯 spec 驱动贯通三包
+  it('ribbon-vanilla-ssr-svg：流带 spec → SVG 含可填充 path（cubic C 命令围合带）', () => {
+    const flows: ExternalDatasets = {
+      flows: [
+        { sx: 1, sy: 8, tx: 9, ty: 7, amount: 10, cat: 'A' },
+        { sx: 1, sy: 3, tx: 9, ty: 2, amount: 6, cat: 'B' },
+      ],
+    };
+    const ribbonSpec: PlotSpec = {
+      namespace: 'plot',
+      type: 'plot',
+      data: { reference: 'flows' },
+      scales: [
+        { type: 'linear', name: 'xs' },
+        { type: 'linear', name: 'ys' },
+        { type: 'ordinal', name: 'color' },
+      ],
+      coordinate: { type: 'cartesian2D', x: 'xs', y: 'ys' },
+      marks: [
+        {
+          type: 'ribbon',
+          source: { x: { field: 'sx' }, y: { field: 'sy' } },
+          target: { x: { field: 'tx' }, y: { field: 'ty' } },
+          value: 'amount',
+          encoding: { color: { field: 'cat', scale: 'color' } },
+        },
+      ],
+    };
+    const svg = renderPlot(ribbonSpec, flows, { width: 480, height: 300 });
+    expect(svg).toContain('<svg');
+    expect(svg).toContain('<path');
+    // 流带长边由 cubic Bézier（SVG C / c 命令）描出 → 验证曲带几何落地
+    expect(svg).toMatch(/d="[^"]*[Cc][^"]*"/);
+    // 两条流分两色填充
+    expect(svg).toMatch(/fill="[^"]+"/);
+  });
+
+  it('ribbon flared band（endWidth）SSR → SVG 含 path（喇叭带透传不崩）', () => {
+    const flows: ExternalDatasets = {
+      flows: [{ sx: 1, sy: 5, tx: 9, ty: 5, amount: 10, end: 4 }],
+    };
+    const flaredSpec: PlotSpec = {
+      namespace: 'plot',
+      type: 'plot',
+      data: { reference: 'flows' },
+      scales: [
+        { type: 'linear', name: 'xs' },
+        { type: 'linear', name: 'ys' },
+      ],
+      coordinate: { type: 'cartesian2D', x: 'xs', y: 'ys' },
+      marks: [
+        {
+          type: 'ribbon',
+          source: { x: { field: 'sx' }, y: { field: 'sy' } },
+          target: { x: { field: 'tx' }, y: { field: 'ty' } },
+          value: 'amount',
+          endWidth: 'end',
+          curvature: 0.2,
+          encoding: {},
+        },
+      ],
+    };
+    expect(renderPlot(flaredSpec, flows, { width: 480, height: 300 })).toContain('<path');
+  });
 });

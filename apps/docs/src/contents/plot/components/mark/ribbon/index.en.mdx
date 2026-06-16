@@ -1,0 +1,43 @@
+---
+title: RibbonMark
+description: Use <RibbonMark> to draw sankey / alluvial flow bands — one fillable curved band per record from a source to a target endpoint, width driven by the flow value.
+---
+
+`<RibbonMark>` draws each record as a **band with width**: it curves from a source endpoint (`sourceX` / `sourceY`) to a target endpoint (`targetX` / `targetY`), with two cubic-curve long edges and straight end caps enclosing a fillable region. The `value` field maps through a built-in width scale to the band width. This is the primitive for sankey and alluvial flow diagrams.
+
+The band defaults to `orientation="horizontal"`: the entry / exit tangents run along the horizontal axis and the half-width along the vertical axis, giving a clean left-to-right flow (vertical end caps). The width gradates smoothly from the source end to the target end (`value` at the source, `endWidth` at the target). Set `orientation="vertical"` to flow top-down with half-width along the horizontal axis.
+
+<ComponentPreview name="ribbon-basic" sourceFiles={['ribbon-basic.data.ts']} />
+
+<p className="text-sm text-muted-foreground">Two-column alluvial: left sources → right destinations, width by value, colored by channel.</p>
+
+## Endpoints are field pairs
+
+Both ends of the band are **field pairs** — `sourceX` / `sourceY` for the source, `targetX` / `targetY` for the target — projected through the coordinate system into screen points just like `<LineMark>` / `<PointMark>`. The width, the four corners, and the curve control points are all derived from these two projected endpoints.
+
+| prop | type | description |
+| --- | --- | --- |
+| `sourceX` | `string` | Source x field (projected through the coordinate system) |
+| `sourceY` | `string` | Source y field |
+| `targetX` | `string` | Target x field |
+| `targetY` | `string` | Target y field |
+| `value` | `string` | Flow field: mapped through a synthesized linear scale to the source-end width |
+| `endWidth` | `string?` | Target-end width field; omitted → equal width to the source end |
+| `curvature` | `number?` | Curve tension 0..1 (0 = near-straight, larger = more S-shaped); default 0.5 |
+| `orientation` | `'horizontal' \| 'vertical'?` | Main axis: entry / exit tangents run along it, half-width along the perpendicular; default `horizontal` |
+| `color` | `string?` | Color field (→ color channel + automatic ordinal color scale) |
+| `id` | `string?` | Optional handle (reserved, not yet resolved) |
+
+## Flared bands and curvature
+
+Give `endWidth` to let the target end use an independent width — the band **gradates smoothly** from the source width to the target width along its length, forming a flared shape (common when a sankey node's inbound width differs from its outbound width). `curvature` tunes the S-shape tension of the two long edges:
+
+<ComponentPreview name="ribbon-flared" sourceFiles={['ribbon-flared.data.ts']} />
+
+<p className="text-sm text-muted-foreground">endWidth gives the target end an independent width (flared band), curvature=0.6 deepens the bend.</p>
+
+## Layout is a preprocessing step
+
+<ComponentAlert title="Ribbon only draws the band, not the layout" description="Where nodes sit, how multiple flows stack, how crossings are minimized — those are sankey layout algorithms, not part of <RibbonMark>. Each record's sourceX/Y, targetX/Y, and value must be computed ahead of time (or produced by a later layout transform) and written back into the data; <RibbonMark> only consumes those pre-computed positions and widths." />
+
+This round endpoints are always field pairs within the same coordinate system; connecting named nodes across different sub-plots (facet / inset) is a later capability. Ribbon supports the `cartesian2D` coordinate system only this round.

@@ -1,6 +1,6 @@
 import { BlogFrontmatter } from '@/components/shared/blog-frontmatter';
-import type { MdxFrontmatter } from '@/components/shared/mdx-content';
 import { ChangelogOverview, ChangelogVersionDetail, changelogToMarkdown } from '@/components/shared/changelog';
+import type { MdxFrontmatter } from '@/components/shared/mdx-content';
 import { InlineMdx, MdxContent, MdxToc, mdxHasToc } from '@/components/shared/mdx-content';
 import { changelogForModule, changelogPageDescription, changelogVersionSlug } from '@/data/changelog';
 import { getSectionsByModule } from '@/data/sections';
@@ -93,7 +93,17 @@ export const DocPage: FC<DocPageProps> = props => {
     const { rawUrl } = buildDocPageLinks(loc, aiChatLang);
     const path = `/${docPathSegments(loc).join('/')}`;
     setAiChatCurrentPage({ title, mdx, lang: aiChatLang, rawUrl, path });
-  }, [loc, aiChatTitleKey, stableSource, isChangelog, changelogReleases, changelogVersion, aiChatLang, t, setAiChatCurrentPage]);
+  }, [
+    loc,
+    aiChatTitleKey,
+    stableSource,
+    isChangelog,
+    changelogReleases,
+    changelogVersion,
+    aiChatLang,
+    t,
+    setAiChatCurrentPage,
+  ]);
   useEffect(
     () => () => {
       useAiChatStore.getState().setCurrentPage(null);
@@ -136,9 +146,9 @@ export const DocPage: FC<DocPageProps> = props => {
       : null;
 
   return (
-    <main className={cn('@container flex min-w-0 flex-1 w-full p-4 sm:p-6', className)} {...resProps}>
-      <div className="flex min-w-0 flex-1 justify-center">
-        <div className="flex min-w-0 max-w-180 flex-1 flex-col gap-6">
+    <main className={cn('@container flex min-w-0 flex-1 w-full', className)} {...resProps}>
+      <div className="flex min-w-0 flex-1 justify-center p-6">
+        <div className="flex min-w-0 max-w-200 flex-1 flex-col gap-6">
           <header className="flex flex-col items-start w-full justify-between gap-2">
             <div className="flex w-full items-start justify-between gap-3">
               <h1 className="scroll-m-24 min-w-0 flex-1 text-2xl @[40rem]:text-3xl font-semibold tracking-tight">
@@ -187,8 +197,8 @@ export const DocPage: FC<DocPageProps> = props => {
         <aside
           aria-hidden={!tocOpen}
           className={cn(
-            '@[64rem]:block hidden shrink-0 overflow-clip transition-all duration-300 ease-out px-4',
-            tocOpen ? 'w-75 opacity-100' : 'w-0 opacity-0',
+            '@[64rem]:block hidden shrink-0 overflow-clip transition-all duration-300 ease-out',
+            tocOpen ? 'w-55 opacity-100' : 'w-0 opacity-0',
           )}
         >
           <div
