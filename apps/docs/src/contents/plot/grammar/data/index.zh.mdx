@@ -1,9 +1,9 @@
 ---
 title: 数据
-description: 数据语法负责把外部数据源对齐到 Plot 可以消费的字段模型，并在编译前完成字段名、类型和解析规则的统一。
+description: 数据语法负责把外部数据源对齐到 Plot 可以消费的字段模型，并在编译前完成字段名、类型、解析规则与通道绑定。
 ---
 
-Plot 的数据不进入 IR。配置描述“要读哪些字段、字段是什么类型、需要怎样解析”，真实数据在编译时传入；这样同一份图形语法可以复用到不同数据源上。
+Plot 的数据不进入 IR。配置描述“要读哪些字段、字段是什么类型、需要怎样解析、绑定到哪些视觉通道”，真实数据在编译时传入；这样同一份图形语法可以复用到不同数据源上。
 
 ## 章节内容
 
@@ -15,6 +15,10 @@ Plot 的数据不进入 IR。配置描述“要读哪些字段、字段是什么
   <LinkedCard href="/plot/grammar/data/processing">
     <strong>数据处理</strong>
     <span>在数据进入 Plot 前处理字段名、存储格式、自定义解析函数与复用方式。</span>
+  </LinkedCard>
+  <LinkedCard href="/plot/grammar/data/channel">
+    <strong>数据通道</strong>
+    <span>把字段或常量绑定到 x、y、color、size、text 等视觉通道。</span>
   </LinkedCard>
 </div>
 

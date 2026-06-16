@@ -1,0 +1,52 @@
+---
+title: Data Channels
+description: Data channels describe how fields or constants enter visual channels such as x, y, color, size, and text; React props expand into Plot IR encoding internally.
+---
+
+The data model says what fields are. Data processing says how real data gets in. Data channels say **where fields are used**. In React there is no separate `<Encoding>` component; channels are usually written directly as mark props.
+
+```tsx
+<PointMark x="gdp" y="life" color="region" size="population" />
+<TextMark x="gdp" y="life" text="abbr" />
+```
+
+Internally, that becomes the mark's `encoding`: `x` and `y` are positional channels, `color` and `size` are visual channels, and `text` is the text-content channel.
+
+## Fields To Channels
+
+<ComponentPreview name="data-channel" sourceFiles={['data-channel.data.ts']} />
+
+One row can feed several channels at once: `gdp` controls horizontal position, `life` controls vertical position, `region` controls color, `population` controls point radius, and `abbr` controls the text label. Plot first resolves field values, then derives scales from field types and explicit scale configuration.
+
+## Channel Types
+
+| Type | Channels | Meaning |
+| --- | --- | --- |
+| Position | `x` / `y` | Main position channels for one- and two-dimensional coordinates; polar coordinates reinterpret them as angle / radius |
+| Ternary position | `a` / `b` / `c` | The three components of a ternary coordinate, normalized by their sum during lowering |
+| Visual | `color` / `size` / `opacity` / `shape` | Control color, point radius, opacity, or point shape; field types usually derive the default scale |
+| Text | `text` / `label` | Text content for `TextMark`, or datum labels attached to another mark |
+| Order and series | `order` / `series` | Not part of the `encoding` object, but still field-driven; used for line order, multi-series splitting, or grouping |
+
+## Fields And Constants
+
+In the React DSL, strings usually mean field names:
+
+```tsx
+<PointMark x="gdp" y="life" color="region" />
+```
+
+Some channels also accept constants. `RuleMark` is the clearest example:
+
+```tsx
+<RuleMark y={80} color="crimson" />
+```
+
+In IR, fields become `{ field: 'gdp' }`, while constants become `{ value: 80 }`. A channel must choose exactly one: field-driven or constant.
+
+## Scale And Coordinate
+
+Channels only say “which value to read”. Scales map values into drawing space or visual attributes. Coordinates interpret the roles of positional channels. For example, the same `x="quarter"` and `y="value"` means horizontal category + vertical value under `cartesian2D`, but angular category + radial value under `polar2D`.
+
+Continue with [Scales](/plot/grammar/scale) to see how field types derive scales, or [Coordinates](/plot/grammar/coordinate) to see how position channels are reinterpreted.
+

@@ -28,6 +28,7 @@ export const plotSection: Array<Section> = [
         children: [
           { id: 'model', label: 'plot.dataModel' },
           { id: 'processing', label: 'plot.dataProcessing' },
+          { id: 'channel', label: 'plot.dataChannel' },
         ],
       },
       { id: 'scale', label: 'plot.grammarScale' },
