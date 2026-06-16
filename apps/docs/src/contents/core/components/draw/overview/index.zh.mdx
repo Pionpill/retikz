@@ -34,6 +34,8 @@ Draw 里的曲线分两类：`curve` / `cubic` / `bend` 连接前后两个目标
 | `{ bend }` | 只指定向左 / 向右弯和角度，由编译器算控制点 | 两节点之间的快捷弧形连线 |
 | `{ arc }` | 以上一点为圆心，按角度和半径画圆弧 | 角度标注、圆周片段、几何示意 |
 
+> 还有一类**过点平滑曲线**——穿过一串点的光滑曲线（centripetal Catmull-Rom）。它是 `<Step kind="smooth">` 的专属能力，不是 `way` 算子（`way` 是"上一项→下一项"的点对 infix，承载不了多点曲线），故只在 `<Path>` / `<Step>` 里用。见 [Step §平滑曲线](/core/components/draw/step)。
+
 #### 二次贝塞尔
 
 `{ curve: [cx, cy] }` 等价 `<Step kind="curve">`。它从前一个目标点画到后一个目标点，中间用一个控制点决定弯曲方向和幅度。控制点越远，曲线被拉得越明显。
@@ -148,7 +150,8 @@ Draw 里的曲线分两类：`curve` / `cubic` / `bend` 连接前后两个目标
 | `strokeWidth` | `number` | `1` | 描边宽度 |
 | `dashPattern` | `Array<number>` | — | dash / gap 长度序列，如 `[4, 2]` |
 | `lineCap` | `'butt' \| 'round' \| 'square'` | `'butt'` | 描边端点形状 |
-| `lineJoin` | `'miter' \| 'round' \| 'bevel'` | `'miter'` | 描边拐点形状 |
+| `lineJoin` | `'miter' \| 'round' \| 'bevel'` | `'miter'` | 描边拐点形状（仅视觉，不改几何） |
+| `roundedCorners` | `number` | — | 折线 line-line 接缝**几何**圆角半径（TikZ `rounded corners=`）；改路径几何，区别于 `lineJoin`。详见 [Path §圆角](/core/components/draw/path) |
 | `thickness` | `'ultraThin' \| 'veryThin' \| 'thin' \| 'semithick' \| 'thick' \| 'veryThick' \| 'ultraThick'` | — | 语义化 stroke 档位；显式 `strokeWidth` 优先 |
 | `arrow` | `'none' \| '->' \| '<-' \| '<->'` | — | 路径级箭头方向 |
 | `arrowDetail` | `{ shape?, scale?, length?, width?, color?, fill?, opacity?, lineWidth?, start?, end? }` | — | 箭头详细配置；详见 [Arrow](/core/components/draw/arrow) |

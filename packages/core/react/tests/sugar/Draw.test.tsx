@@ -46,6 +46,7 @@ describe('Draw: 基础展开', () => {
         dashPattern={[4, 2]}
         lineCap="round"
         lineJoin="bevel"
+        roundedCorners={6}
         thickness="thick"
         arrow="<->"
         arrowDetail={{ shape: 'stealth' }}
@@ -64,6 +65,7 @@ describe('Draw: 基础展开', () => {
       dashPattern: [4, 2],
       lineCap: 'round',
       lineJoin: 'bevel',
+      roundedCorners: 6,
       thickness: 'thick',
       arrow: '<->',
       arrowDetail: { shape: 'stealth' },

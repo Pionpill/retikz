@@ -34,6 +34,8 @@ Draw has two curve families: `curve` / `cubic` / `bend` connect the previous tar
 | `{ bend }` | Direction + angle shorthand; control points are computed for you | Quick curved links between two nodes |
 | `{ arc }` | Circular arc around the previous point by angles and radius | Angle marks, circle fragments, geometry diagrams |
 
+> There is also a **smooth curve through points** — a smooth curve passing through a list of points (centripetal Catmull-Rom). It is a `<Step kind="smooth">`-only capability, not a `way` operator (`way` is a "previous → next" pairwise infix and cannot carry a multi-point curve), so use it inside `<Path>` / `<Step>`. See [Step §Smooth](/core/components/draw/step).
+
 #### Quadratic Bezier
 
 `{ curve: [cx, cy] }` is equivalent to `<Step kind="curve">`. It draws from the previous target to the next target, using one control point to set the bend direction and strength. The farther the control point is, the more strongly the curve is pulled.
@@ -146,7 +148,8 @@ One-line forms for circles, rectangles, and sectors live under the [Shapes](/cor
 | `strokeWidth` | `number` | `1` | Stroke width |
 | `dashPattern` | `Array<number>` | — | Dash / gap length sequence, for example `[4, 2]` |
 | `lineCap` | `'butt' \| 'round' \| 'square'` | `'butt'` | Stroke endpoint shape |
-| `lineJoin` | `'miter' \| 'round' \| 'bevel'` | `'miter'` | Stroke corner shape |
+| `lineJoin` | `'miter' \| 'round' \| 'bevel'` | `'miter'` | Stroke corner shape (visual only, geometry unchanged) |
+| `roundedCorners` | `number` | — | **Geometric** corner radius for line-to-line joints (TikZ `rounded corners=`); changes the path geometry, unlike `lineJoin`. See [Path §Rounded corners](/core/components/draw/path) |
 | `thickness` | `'ultraThin' \| 'veryThin' \| 'thin' \| 'semithick' \| 'thick' \| 'veryThick' \| 'ultraThick'` | — | Semantic stroke preset; explicit `strokeWidth` wins |
 | `arrow` | `'none' \| '->' \| '<-' \| '<->'` | — | Path-level arrow direction |
 | `arrowDetail` | `{ shape?, scale?, length?, width?, color?, fill?, opacity?, lineWidth?, start?, end? }` | — | Detailed arrow configuration; see [Arrow](/core/components/draw/arrow) |

@@ -19,8 +19,10 @@ export type DrawProps = {
   dashPattern?: IRPath['dashPattern'];
   /** 端点形状（TikZ `line cap`） */
   lineCap?: IRPath['lineCap'];
-  /** 拐点形状（TikZ `line join`） */
+  /** 拐点形状（TikZ `line join`，仅描边视觉） */
   lineJoin?: IRPath['lineJoin'];
+  /** 折线 line-line 接缝几何圆角半径（TikZ `rounded corners=`，改几何，区别于 `lineJoin`） */
+  roundedCorners?: IRPath['roundedCorners'];
   /** 语义 stroke 档位（TikZ `ultra thin` … `ultra thick`）；显式 `strokeWidth` 始终优先 */
   thickness?: IRPath['thickness'];
   /**
@@ -59,6 +61,7 @@ export const Draw: FC<DrawProps> = props => {
     dashPattern,
     lineCap,
     lineJoin,
+    roundedCorners,
     thickness,
     arrow,
     arrowDetail,
@@ -78,6 +81,7 @@ export const Draw: FC<DrawProps> = props => {
       dashPattern={dashPattern}
       lineCap={lineCap}
       lineJoin={lineJoin}
+      roundedCorners={roundedCorners}
       thickness={thickness}
       arrow={arrow}
       arrowDetail={arrowDetail}
