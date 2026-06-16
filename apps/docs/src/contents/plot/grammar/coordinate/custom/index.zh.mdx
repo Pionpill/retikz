@@ -1,0 +1,45 @@
+---
+title: 自定义坐标系
+description: 自定义坐标系把投影函数留在运行时：IR 只保存工厂名、角色和参数，lowering 时通过 coordinates 选项注入实际投影。
+---
+
+内建坐标系本质都是投影：把位置值映射成屏幕点。内建形态不够时，可以自己写投影函数：`<Plot>` 接一个 `coordinates` 工厂表，`coordinate` 用 `{ type: 'custom', name }` 引用它。
+
+投影函数是运行时逻辑，不进 IR，也不可 JSON 序列化。IR 只保存 `name`、`roles` 和数值参数；真正的函数在 React props 或 vanilla `renderPlot` options 里注入。
+
+## 桥坐标系
+
+下面的「桥」坐标系把 x 轴拱成抛物线，y 仍竖直。同一份规则网格，x 轴形态完全由投影函数决定；把 `archHeight` 改成 0 就退回普通直角。
+
+```tsx
+import { createCustomFrame, type CustomCoordinateFactory } from '@retikz/plot';
+
+const bridge: CustomCoordinateFactory = ctx => {
+  const xScale = ctx.linearScaleFor('x', [0, ctx.width]);
+  const yScale = ctx.linearScaleFor('y', [ctx.height - 30, 30]);
+  const archHeight = ctx.params.archHeight ?? 60;
+  const projectRoles = ([x, y]) => {
+    const sx = xScale.coordinate(x);
+    const t = sx / ctx.width;
+    return [sx, yScale.coordinate(y) - archHeight * (1 - (2 * t - 1) ** 2)];
+  };
+  return createCustomFrame(['x', 'y'], projectRoles, { roleScales: { x: xScale, y: yScale } });
+};
+
+<Plot data={grid} coordinate={{ type: 'custom', name: 'bridge', roles: ['x', 'y'], params: { archHeight: 60 } }} coordinates={{ bridge }}>
+  <PointMark x="x" y="y" />
+  <Axis dimension="x" />
+  <Axis dimension="y" />
+</Plot>
+```
+
+<ComponentPreview name="coordinate-custom-bridge" sourceFiles={['coordinate-custom-bridge.data.ts']} hideCode />
+
+## 轴与局部标架
+
+坐标轴是通用的。工厂回传 `roleScales` 后，`<Axis dimension="x" />` 会沿投影密采样画出弯曲的 x 轴，刻度自动落在 scale 刻度处。工厂还可选回传 `frameAlong`，给某个角色轴在某点的原点和切向，让刻度 / 标签按精确切向摆放；不回传时会按采样估算。
+
+## 限制
+
+<ComponentAlert type="warn" title="进阶扩展" description="自定义坐标系默认只支持 PointMark；若工厂回传 projectCell（把一个正交 cell 投影成几何），interval 等区间类 mark 也能落地。曲线轴可画，但暂无网格。三维坐标系、多 plot 组合、沿法向偏移留作后续。" />
+

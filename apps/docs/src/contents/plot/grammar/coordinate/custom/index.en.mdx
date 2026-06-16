@@ -1,0 +1,45 @@
+---
+title: Custom Coordinates
+description: Custom coordinates keep projection functions at runtime: the IR stores only the factory name, roles, and params, while lowering injects the actual projection through coordinates options.
+---
+
+Every built-in coordinate is a projection: it maps position values to screen points. When the built-ins are not enough, write your own projection function: pass `<Plot>` a `coordinates` factory map, then reference it from `coordinate` as `{ type: 'custom', name }`.
+
+The projection function is runtime logic. It never enters the IR and cannot be serialized as JSON. The IR stores only `name`, `roles`, and numeric params; the actual function is injected through React props or vanilla `renderPlot` options.
+
+## Bridge Coordinate
+
+The "bridge" coordinate below arches the x-axis into a parabola while y stays vertical. The same regular grid gets its x-axis shape entirely from the projection function; set `archHeight` to 0 and it falls back to plain cartesian.
+
+```tsx
+import { createCustomFrame, type CustomCoordinateFactory } from '@retikz/plot';
+
+const bridge: CustomCoordinateFactory = ctx => {
+  const xScale = ctx.linearScaleFor('x', [0, ctx.width]);
+  const yScale = ctx.linearScaleFor('y', [ctx.height - 30, 30]);
+  const archHeight = ctx.params.archHeight ?? 60;
+  const projectRoles = ([x, y]) => {
+    const sx = xScale.coordinate(x);
+    const t = sx / ctx.width;
+    return [sx, yScale.coordinate(y) - archHeight * (1 - (2 * t - 1) ** 2)];
+  };
+  return createCustomFrame(['x', 'y'], projectRoles, { roleScales: { x: xScale, y: yScale } });
+};
+
+<Plot data={grid} coordinate={{ type: 'custom', name: 'bridge', roles: ['x', 'y'], params: { archHeight: 60 } }} coordinates={{ bridge }}>
+  <PointMark x="x" y="y" />
+  <Axis dimension="x" />
+  <Axis dimension="y" />
+</Plot>
+```
+
+<ComponentPreview name="coordinate-custom-bridge" sourceFiles={['coordinate-custom-bridge.data.ts']} hideCode />
+
+## Axes And Local Frames
+
+Axes are generic. Once the factory returns `roleScales`, `<Axis dimension="x" />` samples the projection densely to draw the curved x-axis, with ticks landing at scale tick positions. The factory may also return `frameAlong`, reporting the origin and tangent of a role axis at a point, so ticks / labels can use the exact tangent; without it, the tangent is estimated by sampling.
+
+## Limits
+
+<ComponentAlert type="warn" title="Advanced extension" description="Custom coordinates support PointMark by default; if the factory returns projectCell (projecting an orthogonal cell into geometry), interval and other cell-shaped marks can also work. Curved axes can be drawn, but grids are not available yet. 3D coordinates, multi-plot composition, and offset-along-normal are left for later." />
+

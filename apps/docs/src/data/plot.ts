@@ -18,6 +18,7 @@ export const plotSection: Array<Section> = [
     label: 'plot.components',
     pages: [
       { id: 'plot', label: 'plot.compPlot' },
+      { id: 'axis', label: 'plot.compAxis' },
       {
         id: 'mark',
         label: 'plot.compMark',
@@ -33,7 +34,6 @@ export const plotSection: Array<Section> = [
           { id: 'ribbon', label: 'plot.compRibbonMark' },
         ],
       },
-      { id: 'axis', label: 'plot.compAxis' },
       { id: 'legend', label: 'plot.compLegend' },
     ],
   },
@@ -50,7 +50,16 @@ export const plotSection: Array<Section> = [
     label: 'plot.grammar',
     pages: [
       { id: 'scale', label: 'plot.grammarScale' },
-      { id: 'coordinate', label: 'plot.grammarCoordinate' },
+      {
+        id: 'coordinate',
+        label: 'plot.grammarCoordinate',
+        children: [
+          { id: '2d', label: 'plot.grammarCoordinate2d' },
+          { id: '1d', label: 'plot.grammarCoordinate1d' },
+          { id: 'ternary', label: 'plot.grammarCoordinateTernary' },
+          { id: 'custom', label: 'plot.grammarCoordinateCustom' },
+        ],
+      },
       { id: 'mark', label: 'plot.grammarMark' },
       { id: 'guide', label: 'plot.grammarGuide' },
       { id: 'provenance', label: 'plot.grammarProvenance' },
