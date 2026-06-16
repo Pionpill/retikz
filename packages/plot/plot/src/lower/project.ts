@@ -7,6 +7,30 @@ import type { PositionScale } from './scale';
 export const RETIKZ_POLAR_SEGMENT_SAMPLES = 16;
 
 /**
+ * 正交 cell（scale 输出空间的一段 primary 带 × 一段 secondary 区间）
+ * @description 区间类 mark（interval / sector / rect）的坐标系无关描述：cartesian primary=x 像素带 [lo,hi]、
+ *   secondary=y 像素 [base,value]；polar primary=角度带 [start°,end°]、secondary=半径 [inner,outer]。
+ *   frame.projectCell 把它投影成 CellGeometry。区间端点不要求有序（投影方各自处理方向 / swap）。
+ */
+export type Cell = {
+  /** primary 输出区间（cartesian=x 像素带 [lo,hi]；polar=角度带 [start°,end°]） */
+  primary: [number, number];
+  /** secondary 输出区间（cartesian=y 像素 [base,value]；polar=半径 [inner,outer]） */
+  secondary: [number, number];
+};
+
+/**
+ * frame 投影 cell 的产物：闭式快路（rect / sector）⊕ contour 兜底（判别 union）
+ * @description cartesian → rect（轴对齐矩形）、polar → sector（环楔），皆 O(1) 闭式参数；曲线 / 自定义 frame
+ *   经自身投影把四边密采样成 contour 顶点环。mark 侧据 kind 统一装配 core Node（rect→rectangle、sector→sector、
+ *   contour→contour shape），不再按坐标系分叉。
+ */
+export type CellGeometry =
+  | { kind: 'rect'; position: [number, number]; width: number; height: number }
+  | { kind: 'sector'; center: [number, number]; innerRadius: number; outerRadius: number; startAngle: number; endAngle: number }
+  | { kind: 'contour'; points: Array<[number, number]> };
+
+/**
  * 坐标系位置角色：mark 按 frame.roles 序从 encoding 取对应通道值喂 projectRoles
  * @description cartesian=[x,y]、polar=[angle,radius]、cartesian1D=[x]、polar1D=[angle]、ternary=[a,b,c]。
  *   值对齐 IR GuideDimension 字面量，但位置角色是 frame 内部类型、guide dimension 是 IR 字段（各自管类型）。
@@ -49,6 +73,8 @@ export type CartesianFrame = {
   project: (primaryValue: unknown, secondaryValue: unknown) => [number, number] | null;
   /** N 通道投影：按 roles 序传值（[x, y]），内部委托 project；任一非有限 → null */
   projectRoles: (values: ReadonlyArray<unknown>) => [number, number] | null;
+  /** 正交 cell → 轴对齐矩形（闭式快路）：position = 两区间中点、width/height = 区间跨度 */
+  projectCell: (cell: Cell) => CellGeometry;
 };
 
 /** 极坐标帧：primary = angle（度，range = [startAngle, endAngle]）、secondary = radius（user units，range = [innerRadius, outerRadius]） */
@@ -79,6 +105,8 @@ export type PolarFrame = {
   projectRoles: (values: ReadonlyArray<unknown>) => [number, number] | null;
   /** 把已映射的极坐标对 (θ 度, r user units) 换算成屏幕点（段内采样反投影用；非有限 → null） */
   projectPolar: (thetaDeg: number, radius: number) => [number, number] | null;
+  /** 正交 cell → 环楔（闭式快路）：center = frame.center、角度带 = primary、半径带 = secondary */
+  projectCell: (cell: Cell) => CellGeometry;
 };
 
 /** 度 → 弧度 */
@@ -99,6 +127,16 @@ export const createCartesianFrame = (primary: PositionScale, secondary: Position
     secondary,
     project,
     projectRoles: values => project(values[0], values[1]),
+    projectCell: cell => {
+      const [px0, px1] = cell.primary;
+      const [sy0, sy1] = cell.secondary;
+      return {
+        kind: 'rect',
+        position: [(px0 + px1) / 2, (sy0 + sy1) / 2],
+        width: Math.abs(px1 - px0),
+        height: Math.abs(sy1 - sy0),
+      };
+    },
   };
 };
 
@@ -153,6 +191,14 @@ export const createPolarFrame = (input: PolarFrameSpec): PolarFrame => {
     project,
     projectRoles: values => project(values[0], values[1]),
     projectPolar,
+    projectCell: cell => ({
+      kind: 'sector',
+      center: input.center,
+      innerRadius: cell.secondary[0],
+      outerRadius: cell.secondary[1],
+      startAngle: cell.primary[0],
+      endAngle: cell.primary[1],
+    }),
   };
 };
 
@@ -172,6 +218,8 @@ export type Cartesian1DFrame = {
   project: (primaryValue: unknown, secondaryValue: unknown) => [number, number] | null;
   /** N 通道投影：roles 长度 1，传 [value] → horizontal [scale(v), baseline] / vertical [baseline, scale(v)]；非有限 → null */
   projectRoles: (values: ReadonlyArray<unknown>) => [number, number] | null;
+  /** 1D 坐标系无 2D 正交 cell 概念，不实现 projectCell（cell 类 mark fail-loud；声明可选以统一 union 访问） */
+  projectCell?: undefined;
 };
 
 /** 一维极坐标帧（圆周）：单一角向 scale 落固定半径圆周（半径常量、角度编码值） */
@@ -198,6 +246,8 @@ export type Polar1DFrame = {
   project: (primaryValue: unknown, secondaryValue: unknown) => [number, number] | null;
   /** N 通道投影：roles 长度 1，传 [angleValue] → projectPolar(angleScale(angleValue), radius)；非有限 → null */
   projectRoles: (values: ReadonlyArray<unknown>) => [number, number] | null;
+  /** 1D 坐标系无 2D 正交 cell 概念，不实现 projectCell（cell 类 mark fail-loud；声明可选以统一 union 访问） */
+  projectCell?: undefined;
 };
 
 /** 建一维笛卡尔帧：单 scale + 轴向 + 塌缩维基线（horizontal → [scale(v), baseline]、vertical → [baseline, scale(v)]） */
@@ -277,6 +327,8 @@ export type Ternary2DFrame = {
   project: (primaryValue: unknown, secondaryValue: unknown) => [number, number] | null;
   /** N 通道投影：roles 长度 3，传 [a, b, c] → 归一化 + 重心坐标屏幕点；非有限 → null（跳过）、含负 / 和≤0 → throw（fail-loud） */
   projectRoles: (values: ReadonlyArray<unknown>) => [number, number] | null;
+  /** 三元坐标无 2D 正交 cell 概念，不实现 projectCell（cell 类 mark fail-loud；声明可选以统一 union 访问） */
+  projectCell?: undefined;
 };
 
 /**
@@ -341,6 +393,12 @@ export type CustomFrame = {
    * 曲线轴优先用它取精确切向；不回传 → guide 对 projectRoles 数值差分回落（现状行为）。
    */
   frameAlong?: (role: DimensionRole, values: ReadonlyArray<unknown>) => AxisFrame | null;
+  /**
+   * 正交 cell → CellGeometry（工厂可选回传，alpha.11 ADR-01）：实现了才支持 cell 类 mark（interval / sector / rect）。
+   * @description 曲线 / 自定义 frame 自行把 cell 四边经自身几何投影密采样成 contour（用引擎 helper densifyCellContour）；
+   *   不回传 → cell 类 mark 在该坐标系 fail-loud（无引擎自动兜底——「输出空间→屏幕」后段映射只有 frame 自己有）。
+   */
+  projectCell?: (cell: Cell) => CellGeometry;
 };
 
 /** createCustomFrame 选项（alpha.9 ADR-05）：roleScales 让 guide 画曲线轴、frameAlong 给精确切向；均可选 */
@@ -349,6 +407,8 @@ export type CreateCustomFrameOptions = {
   roleScales?: Partial<Record<DimensionRole, PositionScale>>;
   /** 某角色轴曲线局部标架；曲线轴优先用其切向，省略 → guide 数值差分回落 */
   frameAlong?: (role: DimensionRole, values: ReadonlyArray<unknown>) => AxisFrame | null;
+  /** 正交 cell → CellGeometry；实现了才支持 cell 类 mark（interval / sector），省略 → cell 类 mark fail-loud */
+  projectCell?: (cell: Cell) => CellGeometry;
 };
 
 /**
@@ -366,6 +426,7 @@ export const createCustomFrame = (
   projectRoles,
   ...(options?.roleScales !== undefined ? { roleScales: options.roleScales } : {}),
   ...(options?.frameAlong !== undefined ? { frameAlong: options.frameAlong } : {}),
+  ...(options?.projectCell !== undefined ? { projectCell: options.projectCell } : {}),
 });
 
 /**
@@ -428,5 +489,48 @@ export const densifyPolarSegments = (frame: PolarFrame, vertices: ReadonlyArray<
       if (point) points.push(point);
     }
   }
+  return points;
+};
+
+/** densifyCellContour 选项：标记哪条位置轴是曲线（曲边每边 N 段，直边每边 1 段） */
+export type DensifyCellContourOptions = {
+  /** primary 轴是否曲线（沿 primary 走的两条边按 N 段密采样；false → 每边 1 段） */
+  curvedPrimary?: boolean;
+  /** secondary 轴是否曲线（沿 secondary 走的两条边按 N 段密采样；false → 每边 1 段） */
+  curvedSecondary?: boolean;
+};
+
+/**
+ * 正交 cell 四边密采样成闭合 contour 顶点环（供曲线 / 自定义 frame 在自身 projectCell 内调用）
+ * @description 四角 = (p0,s0)→(p1,s0)→(p1,s1)→(p0,s1) 逆/顺时针绕一圈。沿 primary 走的边（底 / 顶）与沿
+ *   secondary 走的边（右 / 左）各按对应轴是否曲线选段数：曲边 RETIKZ_POLAR_SEGMENT_SAMPLES 段、直边 1 段。
+ *   projectFn 把「输出空间 (primary, secondary)」映成屏幕点（只有 frame 自己知道后段映射）；非有限点跳过。
+ *   每条边只产「不含起点的中间点 + 终点」，避免相邻边重复顶点；首尾天然闭合（contour shape 隐式闭合，不重复首点）。
+ */
+export const densifyCellContour = (
+  cell: Cell,
+  projectFn: (primary: number, secondary: number) => [number, number] | null,
+  options?: DensifyCellContourOptions,
+): Array<[number, number]> => {
+  const [p0, p1] = cell.primary;
+  const [s0, s1] = cell.secondary;
+  const primarySegments = options?.curvedPrimary ? RETIKZ_POLAR_SEGMENT_SAMPLES + 1 : 1;
+  const secondarySegments = options?.curvedSecondary ? RETIKZ_POLAR_SEGMENT_SAMPLES + 1 : 1;
+  const points: Array<[number, number]> = [];
+  // 沿某条边在 (primary, secondary) 输出空间线性走，逐点投影；只推「不含起点」的中间点 + 终点
+  const walk = (from: [number, number], to: [number, number], segments: number): void => {
+    for (let step = 1; step <= segments; step += 1) {
+      const t = step / segments;
+      const primary = from[0] + (to[0] - from[0]) * t;
+      const secondary = from[1] + (to[1] - from[1]) * t;
+      const point = projectFn(primary, secondary);
+      if (point) points.push(point);
+    }
+  };
+  // 底边（s0，primary p0→p1）→ 右边（p1，secondary s0→s1）→ 顶边（s1，primary p1→p0）→ 左边（p0，secondary s1→s0）
+  walk([p0, s0], [p1, s0], primarySegments);
+  walk([p1, s0], [p1, s1], secondarySegments);
+  walk([p1, s1], [p0, s1], primarySegments);
+  walk([p0, s1], [p0, s0], secondarySegments);
   return points;
 };

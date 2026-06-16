@@ -118,7 +118,8 @@ const pushLayoutPoints = (
   points: ReadonlyArray<IRPosition>,
   shadow?: DropShadow,
 ): void => {
-  target.push(...points, ...shadowOverflowPoints(points, shadow));
+  for (const p of points) target.push(p);
+  for (const p of shadowOverflowPoints(points, shadow)) target.push(p);
 };
 
 /**

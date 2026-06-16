@@ -41,13 +41,29 @@
 | v0.1-alpha.8  | **高级 Scales + Legend**      | **color gradient**（sequential / diverging）+ quantize / threshold / quantile 离散化 scale；**legend** guide（由非位置 scale 派生 + 布局）。〔opacity/shape 已前移 alpha.7〕                                                                               | [`alpha.8/`](./alpha.8/roadmap.md)（3 ADR 全部实现 + Accepted） |
 | v0.1-alpha.9  | **Coordinates 坐标系统**        | **一维坐标系族**（**cartesian1D** 直线：rug / timeline / histogram 底座；**polar1D** 圆周：环形 / 周期数据，复用 alpha.4 角向投影）+ **ternary2D**（a+b+c=1 重心投影，取 continuous 字段自归一化；proportion 已并入 continuous）；1D / 角向 1D / 三角轴 guide；guide dimension 按坐标系校验（拒非法维度）。**地图坐标不进 plot**（§2 独立 domain）；**3D gating 于 core 三维坐标**       | [`alpha.9/`](./alpha.9/roadmap.md)（4 ADR 全部实现 + Accepted） |
 | v0.1-alpha.10 | **绑定层：退化 Plot 为薄容器**（非 GoG，2026-06-13 插入） | `<Plot>` 退化：移除 cartesian2D 默认轴注入、保留 scale/coordinate 推断、装饰抽成可复用纯函数（留 v0.2 chart）；显式 `<Axis>`/`<Legend>` 仍生效；⚠️ alpha 间 breaking + demo 迁移 | [`alpha.10/`](./alpha.10/roadmap.md) |
-| v0.1-alpha.11 | **Geometry 基础**               | mark 补 **rect**（heatmap 格）+ **rule**（参考 / 阈值线）+ **text**（datum label）+ **ribbon**（sankey / alluvial 流量、跨 scope connector）                                                                                                                     | 待建                                                                   |
+| v0.1-alpha.11 | **Geometry 基础**               | mark 补 **rect**（heatmap 格）+ **rule**（参考 / 阈值线）+ **text**（datum label）+ **ribbon**（sankey / alluvial 流量、跨 scope connector）。并落地**区间类几何的坐标系无关下沉**（interval / rect / sector 共用，含曲线 / 自定义坐标系）——契约与决策见表后「区间几何下沉」备注。**依赖 core 补 `contour` shape**（core 已实现 contour shape）。契约与决策见表后「区间几何下沉」备注 | [`alpha.11/`](./alpha.11/roadmap.md)（5 ADR 全部实现 + Accepted） |
 | v0.1-alpha.12 | **Statistics 基础**             | `transform` 补 **bin / histogram** + **aggregate**（sum / mean / count / min / max）+ **normalize**（百分比堆叠）+ **derive interval**（字段算 start/end）+ **jitter**                                                                                           | 待建                                                                   |
 | v0.1-alpha.13 | **Statistics 进阶 + stat-geom** | **density**（KDE）+ **smooth / 回归** + **quartile**；配对几何 **boxplot / density-area**（geom×stat 成对落地）；sector **padAngle / explode·pull**（backlog 收口）                                                                                              | 待建                                                                   |
 | v0.1-alpha.14 | **Facets 分面**                 | 按字段拆多 coordinate scope（小多图）；scale 共享 / 独立；统一轴 / 网格 / 间距；**复用 core `Scope`**（不自建容器，见 [plot-design §7](../../../../architecture/plot-design.md)）                                                                                | 待建                                                                   |
 | v0.1-alpha.15 | **Theme 主题样式**              | 标题 / 字体 / 背景 / 网格线 / 图例外观；调色板（categorical / sequential / diverging）；默认样式 token；series / sector 配色。`theme` 模块（[plot-design §11.1](../../../../architecture/plot-design.md)）                                                       | 待建                                                                   |
 
-> 阶段二依赖链：alpha.9 ternary ← alpha.6 proportion；alpha.8 legend ← alpha.7 非位置 scale（size/opacity/shape/color 全在 alpha.7 就位）+ alpha.8 gradient；alpha.13 boxplot ← alpha.12/13 stat。
+> 阶段二依赖链：alpha.9 ternary ← alpha.6 proportion；alpha.8 legend ← alpha.7 非位置 scale（size/opacity/shape/color 全在 alpha.7 就位）+ alpha.8 gradient；alpha.13 boxplot ← alpha.12/13 stat；**alpha.11 任意坐标系区间几何 ← core `contour` shape（ADR `ADR-core-contour-shape.md`，已送 core 分支，gate 于 core 落地）**。
+
+> **区间几何下沉（alpha.11 决策，2026-06-16）**：区间类 mark（interval / rect / sector）的几何 = 把数据空间正交 cell `[u0,u1]×[v0,v1]` 经坐标系投影成边界。**分级在输出、统一在机制**：
+>
+> - **保留 cartesian2D 矩形 + polar2D 扇形作「闭式快路」**，不是因为历史惯性，而是它们对各自坐标系**严格更优**——sector 是精确弧（contour 走 points-only 会退成 faceted 折线 + IR 膨胀 + 丢精确弧）、rectangle 有精确 `edgePoint` / compass anchor、两者皆 O(1) params。强行全统一到 contour 是用更差路径换无收益的「统一」，否决。
+> - **不在 mark 里写 `if cartesian … else if polar …`**（那是 plot-design §8.3 否决的路线 (ii)，N_mark×M_coord 矩阵，即现状 `mark.ts:488-498` fail-loud 的来源）。把「投影后是不是闭式 shape」的判断**挪进坐标系声明**——每个坐标系最懂自己的投影：
+>
+> ```ts
+> type CellProjection =
+>   | { kind: 'shape'; ref: IRShapeRef }            // 闭式快路：cartesian2D→rectangle、polar2D→sector
+>   | { kind: 'contour'; points: Array<Position> }; // 兜底：任意曲线 / 自定义轴，密采样边界
+> // CoordinateFrame.projectCell?(cell): CellProjection —— 不实现 → 引擎默认 frame.project 密采样 4 边成 contour
+> ```
+>
+> - **mark 侧 lowering 单路径**：拿 `CellProjection`，`shape` 建 `Node + shape ref`、`contour` 建 `Node + contour shape`；interval / rect / sector 共用这一条，不再各写坐标系分支。
+> - **加新坐标系 O(1)**：声明闭式走快路、不声明自动 contour 兜底，杜绝「加坐标系要给一批 mark 补特判 / fail-loud」。
+> - **代价（已认）**：contour 兜底是 O(顶点) IR、命名 compass anchor 退化到 AABB（`boundaryPoint` 指向式连接仍精确）；圆角逐顶点 fillet、由 plot 控制顶点存在性。详见 core `ADR-core-contour-shape.md` 待决策点。
 > beta / rc 收尾（类型 / 注释 / 测试收口、文档站、发布候选）待 alpha.15 收敛后参照 core 节奏再排。v0.1 共 15 alpha（含 alpha.10 绑定层），是大 minor；若需中途预览发布（如 alpha.8「核心语法预览」）可另切。
 
 ## 后续打磨 backlog（alpha.5 后排期）

@@ -1,7 +1,7 @@
 import type { FC, ReactNode } from 'react';
 import { type EmbeddableContribution, type EmbeddableTier2Adapter, Layout, type LayoutProps, type ScopeProps } from '@retikz/react';
 import { type DataModel, type ExternalDatasets, type ExternalRow, type LowerPlotsOptions, type PlotSpec, PlotSpecSchema, lowerPlots } from '@retikz/plot';
-import { type CoordinateInput, buildPlotSpec } from './components';
+import { type CoordinateInput, type ResolveLabelMap, buildPlotSpec, resolveLabelOf } from './components';
 
 /** <Plot> 作为 Layout 子面板时可直接承接的 core scope 属性 */
 export type PlotPanelProps = Pick<ScopeProps, 'transforms' | 'zIndex' | 'clip'> & {
@@ -68,8 +68,11 @@ const embeddedDataRefFor = (rows: Array<ExternalRow>): string => {
 const lowerPlotOptionsOf = (
   props: PlotProps,
   effectiveFieldMaps: LowerPlotsOptions['fieldMaps'],
+  collectedResolveLabel: ResolveLabelMap | undefined,
 ): LowerPlotsOptions => {
-  const { width, height, fontSize, margin, provenance, datumProvenance, datumIdField, validateData, resolveField, invalid, coordinates } = props;
+  const { width, height, fontSize, margin, provenance, datumProvenance, datumIdField, validateData, resolveField, resolveLabel, invalid, coordinates } = props;
+  // DSL 入口 <TextMark resolveLabel> / <BarMark resolveLabel> 收集的 per-mark 函数，与显式 props.resolveLabel 合并（显式优先）
+  const mergedResolveLabel = collectedResolveLabel !== undefined || resolveLabel !== undefined ? { ...collectedResolveLabel, ...resolveLabel } : undefined;
   return {
     width,
     height,
@@ -81,6 +84,7 @@ const lowerPlotOptionsOf = (
     fieldMaps: effectiveFieldMaps,
     validateData,
     resolveField,
+    resolveLabel: mergedResolveLabel,
     invalid,
     coordinates,
   };
@@ -122,6 +126,8 @@ const resolvePlotRuntime = (
   let spec: PlotSpec;
   let datasets: ExternalDatasets;
   let effectiveFieldMaps = props.fieldMaps;
+  // DSL 入口 buildPlotSpec 旁路收集的 per-mark resolveLabel（运行时函数、不进 IR）；spec 入口由 props.resolveLabel 直接给
+  let collectedResolveLabel: ResolveLabelMap | undefined;
   if (props.spec) {
     spec = withPlotColors(props.spec, props.colors);
     datasets = props.data;
@@ -137,12 +143,13 @@ const resolvePlotRuntime = (
       colors: props.colors,
       deferPositionScaleInference: props.model === undefined,
     });
+    collectedResolveLabel = resolveLabelOf(spec);
     datasets = { [dataRef]: props.data };
     if (props.fieldMap) effectiveFieldMaps = { [dataRef]: props.fieldMap };
   }
   // 入口校验：非法 spec（缺判别字段等）抛清晰 ZodError，而非落到 core 内部崩
   const validated = PlotSpecSchema.parse(withIntrinsicSize(spec, props.width, props.height));
-  return { spec: validated, datasets, lowerOptions: lowerPlotOptionsOf(props, effectiveFieldMaps) };
+  return { spec: validated, datasets, lowerOptions: lowerPlotOptionsOf(props, effectiveFieldMaps, collectedResolveLabel) };
 };
 
 const plotEmbeddableAdapter: EmbeddableTier2Adapter<PlotProps> = {

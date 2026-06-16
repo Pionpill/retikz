@@ -1,0 +1,69 @@
+---
+title: 数据标签
+description: 给图加文本标签：柱顶数值、散点品类名走宿主 mark 的 label；无宿主的自由文本用 <TextMark>。
+---
+
+把数据值或任意文字直接写在图上有两条路：标注**另一个 mark 的数据点**（柱顶数值、散点品类名）优先给那个 mark 加 `label`；标注**无宿主的自由文本**（注解、说明）才用独立 `<TextMark>`。两者都走与散点相同的投影，坐标系无关。
+
+## 柱顶数值标签
+
+给 `<BarMark>`（或 `<PointMark>` / `<LineMark>` / `<AreaMark>`）一个 `label` 字段，标签就挂在每根柱的边框上方，位置由 `labelPosition` / `labelDistance` 控制——无需第二个 mark。`labelFormat` 按数值格式串输出（千分位、小数位等）。
+
+<ComponentPreview name="text-label" sourceFiles={['text-label.data.ts']} />
+
+<p className="text-sm text-muted-foreground">label="revenue" 挂宿主柱 Node 的 label；labelFormat=",.0f" → 千分位整数；labelPosition / labelDistance 走边框相对定位。</p>
+
+`label` 顶层写字段名（默认按字段解析）。位置与离距对齐节点标签语义：`labelPosition` 取 8 方向（`above` / `right` / `above-left` …）或数字角度，`labelDistance` 是离边框的距离。
+
+## 自由文本
+
+没有宿主的浮动文本用 `<TextMark>`：它在投影点新建一个带文本的节点，几何与散点完全一致。`dx` / `dy` 是相对锚点的像素级微调。
+
+<ComponentPreview name="text-free" sourceFiles={['text-free.data.ts']} />
+
+<p className="text-sm text-muted-foreground">TextMark x/y 投影同 point，text="label" 取字段值；dy=-12 上移避免压住散点。</p>
+
+## 自定义内容
+
+标签内容有四档优先级，从高到低：
+
+| 来源 | 进 IR | 说明 |
+| --- | --- | --- |
+| `resolveLabel` | 否 | 运行时函数，完全自定义模板拼接；最高优先 |
+| `labelFormat` / `format` | 是 | 套在字段值上的格式串（数值 / 时间） |
+| `label` / `text` 字段 | 是 | 取该行字段值转字符串 |
+| 常量串 | 是 | 所有行同一标签 |
+
+`resolveLabel` 是运行时逃生舱：`field` / `format` 表达不了的拼接（如 `月份: 营收`）走它。它是函数、不进 IR，需要给 mark 配 `id` 才能在运行时注入。
+
+<ComponentPreview name="text-resolve" sourceFiles={['text-label.data.ts']} />
+
+<p className="text-sm text-muted-foreground">resolveLabel 运行时拼接每行标签，覆盖 label/format；不进 IR，故 IR 视图只见 label 声明。</p>
+
+## API
+
+宿主 label（加在 `<BarMark>` / `<PointMark>` / `<LineMark>` / `<AreaMark>` 上）：
+
+| prop | 类型 | 说明 |
+| --- | --- | --- |
+| `label` | `string?` | 标签内容字段名（默认按字段解析）；缺省不挂标签 |
+| `labelFormat` | `string?` | 数值 / 时间格式串；仅与 `label` 同用 |
+| `labelPosition` | `8 方向 \| number?` | 相对边框方位或数字角度；缺省 `above` |
+| `labelDistance` | `number?` | 离边框距离（user units）；缺省 12 |
+| `labelPin` | `boolean?` | 从边框拉引线到标签；缺省 false |
+| `resolveLabel` | `(row) => string?` | 运行时模板逃生舱（不进 IR，需配 `id`）；覆盖 `label` / `labelFormat` |
+
+独立 `<TextMark>`（自由文本）：
+
+| prop | 类型 | 说明 |
+| --- | --- | --- |
+| `x` / `y` | `string?` | 位置字段（投影同 point；polar 下重解释为角向 / 径向） |
+| `a` / `b` / `c` | `string?` | ternary2D 的三分量字段 |
+| `text` | `string` | 文本内容字段名（必填） |
+| `format` | `string?` | 数值 / 时间格式串；仅与 `text` 字段同用 |
+| `color` | `string?` | 文本颜色字段（按类别上色，落节点文本色） |
+| `dx` / `dy` | `number?` | 相对锚点的像素级微调逃生舱；首选用宿主 label 的 position / distance |
+| `resolveLabel` | `(row) => string?` | 运行时模板逃生舱（不进 IR，需配 `id`）；覆盖 `text` / `format` |
+| `id` | `string?` | 可选句柄；`resolveLabel` 注入也按此 id 命中 |
+
+<ComponentAlert title="优先挂宿主、无宿主才新建" description="标注另一个 mark 的数据点请优先给那个 mark 加 label（标签是宿主图元的一部分，复用边框定位与引线，IR 不随标签增长）。<TextMark> 只用于无宿主的自由浮动文本。两套别混。" />
