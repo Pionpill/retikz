@@ -341,7 +341,7 @@ A stop's `opacity` gives a "solid → transparent" fade; `color` set to `current
 | `xScale` / `yScale` | `number` | — | Per-axis scale; takes precedence over `scale` |
 | `zIndex` | `number` (integer) | `0` | Explicit stacking order: higher draws on top; ties keep declaration order; effective only among siblings at the same level |
 | `label` | `NodeLabel \| Array<NodeLabel>` | — | Extra label(s) attached to the node border; single object or array; `position` accepts the 8-direction enum (default `'above'`) or a numeric angle, `distance` defaults to 12, `font` / `textColor` inherit from the node, `opacity` controls the label's own opacity 0..1; `rotate` (`'none'` / `'radial'` / `'tangent'` / a number of degrees) + `keepUpright` control label spin; `pin` (`true` default line / `{ stroke, strokeWidth, dashPattern }` styled / omitted = none) draws a leader |
-| `animations` | `Array<AnimationTrack>` | — | Timeline animation tracks: each track animates one renderer-agnostic property, base = the animation end state; passed through onto the Scene primitive for the renderer to play or degrade to static. Not part of layout. See [Animation](/core/components/animation/control) |
+| `animations` | `Array<AnimationTrack>` | — | Timeline animation tracks: each track animates one renderer-agnostic property, base = the animation end state; passed through onto the Scene primitive for the renderer to play or degrade to static. Not part of layout. See [Animation](/core/components/effects/animation) |
 
 ### margin vs padding
 

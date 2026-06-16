@@ -199,7 +199,7 @@ Besides the symmetric `bendDirection` + `bendAngle`, `<Step kind="bend">` accept
 | `rotate` | `number` | — | Whole-path rotation in degrees (around the bounding-box center) |
 | `scale` | `number \| { x, y }` | — | Whole-path scale (number = uniform / `{ x, y }` = non-uniform, around the bounding-box center) |
 | `marks` | `Array<{ pos, mark }>` | — | Marks along the path: `pos∈[0,1]`, `mark.kind:'arrow'` + a registered arrow name, oriented by the tangent at that point |
-| `animations` | `Array<AnimationTrack>` | — | Timeline animation tracks, passed through onto the primitives this path emits; renderers play them or fall back to static. See [Animation](/core/components/animation/control) |
+| `animations` | `Array<AnimationTrack>` | — | Timeline animation tracks, passed through onto the primitives this path emits; renderers play them or fall back to static. See [Animation](/core/components/effects/animation) |
 | `children` | `Array<<Step>>` | — | At least 2; if the first isn't `move`, the compiler coerces it to `move`. `<Step>` supports `move` / `line` / `fold` (right-angle) / `cycle` (close) / `curve` / `cubic` (Bezier) / `bend` (arc shorthand, with out/in angles and self-loops) / `smooth` (smooth curve through points) / `arc` / `circlePath` / `ellipsePath` (circle / ellipse) / `rectangle` (diagonal rectangle); the IR also has `generator` (path generators, no JSX DSL) |
 
 ## Related

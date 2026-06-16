@@ -395,7 +395,7 @@ compile 维护一个 style frame 栈，进入每层 scope 压一帧，每个元�
 | `resetStyle` | `boolean \| Array` | `false` | 继承屏障：切外层对应通道；详见 § 技术原理 §「样式继承解析」 |
 | `zIndex` | `number`（整数） | `0` | 显式栈序：作用于 scope 整体（其 GroupPrim）在父层的位置，不影响 scope 内部子元素相对栈序；大者在上、同值保持声明顺序 |
 | `clip` | `ClipSpec` | — | 裁剪区（rect / circle / ellipse / polygon，scope 局部坐标）；裁 scope 内全部子元素 |
-| `animations` | `Array<AnimationTrack>` | — | 作用于 scope 整体（其 GroupPrim）的时间轴动画 tracks；不下传子元素、不参与布局。见 [动画](/core/components/animation/control) |
+| `animations` | `Array<AnimationTrack>` | — | 作用于 scope 整体（其 GroupPrim）的时间轴动画 tracks；不下传子元素、不参与布局。见 [动画](/core/components/effects/animation) |
 
 ## 相关
 

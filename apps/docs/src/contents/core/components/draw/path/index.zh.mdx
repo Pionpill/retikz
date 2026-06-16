@@ -199,7 +199,7 @@ import { Path, Step } from '@retikz/react';
 | `rotate` | `number` | — | 整条 path 旋转角（度，绕包围盒中心） |
 | `scale` | `number \| { x, y }` | — | 整条 path 缩放（数字等比 / `{ x, y }` 非等比，绕包围盒中心） |
 | `marks` | `Array<{ pos, mark }>` | — | 沿路径标记：`pos∈[0,1]`、`mark.kind:'arrow'` + 已注册箭头名，朝向随该点切线 |
-| `animations` | `Array<AnimationTrack>` | — | 时间轴动画 tracks，透传进本 path emit 的图元，renderer 播放或降级静态；见 [动画](/core/components/animation/control) |
+| `animations` | `Array<AnimationTrack>` | — | 时间轴动画 tracks，透传进本 path emit 的图元，renderer 播放或降级静态；见 [动画](/core/components/effects/animation) |
 | `children` | `Array<<Step>>` | — | 至少 2 个；首个非 `move` 时编译器会强制改成 `move`。`<Step>` 支持 `move` / `line` / `fold`（折角）/ `cycle`（闭合）/ `curve` / `cubic`（贝塞尔曲线）/ `bend`（弧形简记，可带 out/in 角与自环）/ `smooth`（过点平滑曲线）/ `arc` / `circlePath` / `ellipsePath`（圆 / 椭圆）/ `rectangle`（对角矩形）；IR 另有 `generator`（路径生成器，无 JSX DSL） |
 
 ## 相关

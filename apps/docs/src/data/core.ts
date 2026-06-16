@@ -91,15 +91,10 @@ export const coreSection: Array<Section> = [
       {
         id: 'effects',
         label: 'core.effects',
-      },
-      {
-        id: 'animation',
-        label: 'core.animation',
         children: [
-          { id: 'entrance', label: 'core.animationEntrance' },
-          { id: 'emphasis', label: 'core.animationEmphasis' },
-          { id: 'camera', label: 'core.animationCamera' },
-          { id: 'control', label: 'core.animationControl' },
+          { id: 'shadow', label: 'core.effectsShadow' },
+          { id: 'blend', label: 'core.effectsBlend' },
+          { id: 'animation', label: 'core.effectsAnimation' },
         ],
       },
     ],

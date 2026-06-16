@@ -341,7 +341,7 @@ Line 2`}</Node>
 | `xScale` / `yScale` | `number` | — | 分轴缩放，优先于 `scale` |
 | `zIndex` | `number`（整数） | `0` | 显式栈序：大者在上；同值保持声明顺序；只在同层子节点间生效 |
 | `label` | `NodeLabel \| Array<NodeLabel>` | — | 边挂标签；单对象或数组；`position` 接 8 方向枚举（缺省 `'above'`）或数字角度，`distance` 缺省 12，`font` / `textColor` 缺省继承 node，`opacity` 单独控制标签 0~1；`rotate`（`'none'` / `'radial'` / `'tangent'` / 数字度数）+ `keepUpright` 控制标签自旋；`pin`（`true` 默认线 / `{ stroke, strokeWidth, dashPattern }` 带样式 / 省略无引线）画引线 |
-| `animations` | `Array<AnimationTrack>` | — | 时间轴动画 tracks：每条 track 动一个 renderer 无关 property，base = 动画终态；透传进 Scene 图元，renderer 播放或降级到静态。不参与布局。见 [动画](/core/components/animation/control) |
+| `animations` | `Array<AnimationTrack>` | — | 时间轴动画 tracks：每条 track 动一个 renderer 无关 property，base = 动画终态；透传进 Scene 图元，renderer 播放或降级到静态。不参与布局。见 [动画](/core/components/effects/animation) |
 
 ### margin 与 padding 的区别
 
