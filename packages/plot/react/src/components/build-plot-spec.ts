@@ -202,6 +202,10 @@ const recordResolveLabel = (into: Collected, id: string | undefined, resolveLabe
   into.resolveLabels[id] = resolveLabel;
 };
 
+/** Axis.scale 只适用于真实位置 scale 维度；ternary a/b/c 没有独立 Scale 声明 */
+const isScaleDimension = (dimension: AxisProps['dimension']): dimension is ScaleDimension =>
+  dimension === 'x' || dimension === 'y' || dimension === 'angle' || dimension === 'radius';
+
 /** 把 x/y 字段装成位置 encoding（x/y 是唯一位置通道；polar 下坐标系把 x→angle、y→radius 重解释） */
 const positionEncoding = (x: string, y: string): Pick<Encoding, 'x' | 'y'> => ({
   x: { field: x },
@@ -416,7 +420,13 @@ const collectInto = (children: ReactNode, into: Collected): void => {
     } else if (child.type === RuleMark) {
       collectRule(child.props as RuleMarkProps, into);
     } else if (child.type === Axis) {
-      const { dimension, tickCount, tickLabels, grid, id } = child.props as AxisProps;
+      const { dimension, scale, tickCount, tickLabels, grid, id } = child.props as AxisProps;
+      if (scale !== undefined) {
+        if (!isScaleDimension(dimension)) {
+          throw new Error(`buildPlotSpec: <Axis dimension="${dimension}" scale> is not supported; axis scale shortcuts only apply to x/y/angle/radius dimensions`);
+        }
+        into.scales.push({ dimension, type: scale });
+      }
       into.guides.push({
         type: PlotGuide.Axis,
         dimension,

@@ -248,6 +248,33 @@ describe('buildPlotSpec legend 装配（ADR-03 alpha.8）', () => {
   });
 });
 
+describe('buildPlotSpec Axis scale shortcut', () => {
+  it('builds the same dimension scale as <Scale>', () => {
+    const spec = buildPlotSpec(
+      <>
+        <LineMark x="m" y="r" />
+        <Axis dimension="y" scale="log" />
+      </>,
+      '__plot',
+    );
+    expect(spec.scales[1]).toEqual({ type: 'log', name: '__y' });
+    expect(spec.guides).toEqual([{ type: 'axis', dimension: 'y' }]);
+  });
+
+  it('does not apply to ternary a/b/c axes', () => {
+    expect(() =>
+      buildPlotSpec(
+        <>
+          <PointMark a="a" b="b" c="c" />
+          <Axis dimension="a" scale="linear" />
+        </>,
+        '__plot',
+        { coordinate: 'ternary2D' },
+      ),
+    ).toThrow(/axis scale shortcuts|x\/y\/angle\/radius/i);
+  });
+});
+
 describe('buildPlotSpec ADR-07（BarMark / color / series / stack / Scale）', () => {
   it('barmark_equivalence_band_x', () => {
     const spec = buildPlotSpec(<BarMark x="month" y="revenue" />, '__plot');

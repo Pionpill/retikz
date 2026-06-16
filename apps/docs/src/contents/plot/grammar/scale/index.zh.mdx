@@ -5,6 +5,8 @@ description: 比例尺（scale）把数据值映射成视觉量——位置、�
 
 比例尺决定「数据值 → 视觉量」怎么算。位置通道（`x` / `y`，polar 下对应 `angle` / `radius`）的值要变成画布坐标、`size` 通道的值要变成半径——中间都隔着一个 scale。`<Plot>` 会按字段类型自动选 scale，常见图表不用手写；需要对数轴、平方根轴或时间轴时，用 `<Scale dimension="..." type="..." />` 覆盖对应维度。
 
+坐标轴是最常见的比例尺配置入口，也可以直接写 `<Axis dimension="y" scale="log" />`。它只是在装配时补一条同维度的 scale 声明，最终仍然是「scale 负责映射、axis 负责显示刻度」的分层。
+
 ## 按字段类型派生
 
 声明了字段测量类型后，位置通道（x / y）的默认 scale 直接由类型决定：
@@ -110,4 +112,15 @@ sequential 是**连续**色带（平滑渐变）。但很多场景要把连续�
 </Plot>
 ```
 
-polar 图里用 `dimension="angle"` / `dimension="radius"`，也可用 `x` / `y` 作为别名。要调对数底、幂指数等更细参数时，写完整 spec 的 `scales`（见 Reference）。
+polar 图里用 `dimension="angle"` / `dimension="radius"`，也可用 `x` / `y` 作为别名。
+
+也可以把最常用的位置 scale 写在对应坐标轴上：
+
+```tsx
+<Plot data={rows}>
+  <LineMark x="date" y="value" order="date" />
+  <Axis dimension="x" scale="time" />
+</Plot>
+```
+
+`Axis.scale` 只支持 `linear` / `time` / `point` / `log` / `sqrt` 这类 React 位置 scale 快捷类型；要调对数底、幂指数等更细参数时，仍然写完整 spec 的 `scales`。

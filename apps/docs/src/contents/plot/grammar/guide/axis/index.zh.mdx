@@ -5,7 +5,7 @@ description: 用 <Axis> 定制刻度、标签和网格；dimension 选择装饰�
 
 `<Axis>` 声明一条坐标轴。`dimension` 选它装饰哪个维度：cartesian 下是 `x`（水平）/ `y`（垂直），polar 下是 `angle`（角向）/ `radius`（径向），ternary 下是 `a` / `b` / `c`（三角三边）。维度须匹配当前坐标系，给错会报错（不静默画空轴）。网格走 `grid` 布尔属性，不是单独的组件。
 
-`<Plot>` 是薄容器、自己不画轴——不写 `<Axis>` 就没有轴，你列出哪些 `<Axis>` 就画哪些。
+`<Plot>` 是薄容器、自己不画轴——不写 `<Axis>` 就没有轴，你列出哪些 `<Axis>` 就画哪些。若只是想给某个轴换成对数、时间或平方根比例尺，也可以在同一个 `<Axis>` 上写 `scale`，不用再额外放一个 `<Scale>`。
 
 ## 用法
 
@@ -17,7 +17,7 @@ import { Plot, Axis } from '@retikz/plot-react';
 <Plot data={revenue}>
   <LineMark x="month" y="revenue" order="month" />
   <Axis dimension="x" />
-  <Axis dimension="y" grid tickCount={5} />
+  <Axis dimension="y" scale="log" grid tickCount={5} />
 </Plot>
 ```
 
@@ -42,6 +42,7 @@ polar 下用 `dimension="angle"`（角向刻度标签）和 `dimension="radius"`
 | 属性 | 类型 | 默认值 | 描述 |
 | --- | --- | --- | --- |
 | `dimension` | `'x' \| 'y' \| 'angle' \| 'radius' \| 'a' \| 'b' \| 'c'` | — | 装饰哪个维度：cartesian 的 x / y，polar 的 angle / radius，ternary 的 a / b / c（三角三边）；须匹配坐标系合法集、否则报错 |
+| `scale` | `'linear' \| 'time' \| 'point' \| 'log' \| 'sqrt'` | 自动派生 | 位置 scale 快捷类型；等价于同维度的 `<Scale dimension="..." type="..." />`，仅适用于 x / y / angle / radius |
 | `tickCount` | `number?` | 默认刻度数 | 目标刻度数；网格线复用同刻度 |
 | `tickLabels` | `boolean?` | `true` | 是否出刻度标签 |
 | `grid` | `boolean?` | `false` | 是否画对齐本轴刻度的网格线（polar radius 即同心环） |

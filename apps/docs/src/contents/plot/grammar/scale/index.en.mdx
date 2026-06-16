@@ -5,6 +5,8 @@ description: A scale maps a data value to a visual quantity — position, length
 
 A scale decides how a data value becomes a visual quantity. Position channels (`x` / `y`, or `angle` / `radius` under polar) turn into canvas coordinates, the `size` channel turns into a radius — each goes through a scale. `<Plot>` auto-picks a scale from the field type, so common charts need none by hand; add `<Scale dimension="..." type="..." />` when you want a log, square-root, or time axis.
 
+Because axes are the most common place to configure positional scales, you can also write `<Axis dimension="y" scale="log" />`. It only adds the same-dimension scale declaration during assembly; the layers stay separated: scales map values, axes display ticks.
+
 ## Derived from the field type
 
 Once a field's measurement type is declared, the default scale for a positional channel (x / y) follows directly from it:
@@ -110,4 +112,15 @@ A few constraints to keep in mind:
 </Plot>
 ```
 
-Under polar, use `dimension="angle"` / `dimension="radius"`; `x` / `y` aliases are also accepted. For finer control — log base, power exponent — write the full spec `scales` (see Reference).
+Under polar, use `dimension="angle"` / `dimension="radius"`; `x` / `y` aliases are also accepted.
+
+You can put the common positional scale directly on the axis:
+
+```tsx
+<Plot data={rows}>
+  <LineMark x="date" y="value" order="date" />
+  <Axis dimension="x" scale="time" />
+</Plot>
+```
+
+`Axis.scale` supports the React positional shortcuts `linear` / `time` / `point` / `log` / `sqrt`. For finer control — log base, power exponent — write the full spec `scales`.
