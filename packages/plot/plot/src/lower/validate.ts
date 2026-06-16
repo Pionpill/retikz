@@ -8,7 +8,9 @@ const addChannelField = (fields: Set<string>, channel: Channel | undefined): voi
 
 /**
  * 收集 plot spec 里所有「用户源字段」（引用外部数据集的逻辑字段）
- * @description 含 encoding `x`/`y`/`a`/`b`/`c`/`color` 的 field + mark `order`/`series` + transform 输入（`Sort.field` / `Stack.x`/`y`/`groupBy`）；
+ * @description 含 encoding `x`/`y`/`a`/`b`/`c`/`color` 的 field + mark `order`/`series` + ribbon source/target/value/endWidth
+ *   + datum label 内容（位置 mark `label.content.field`、TextMark `encoding.text.field`）+ rule band 上界 string `xTo`/`yTo`
+ *   + rule `extentField`/`extentToField` + transform 输入（`Sort.field` / `Stack.x`/`y`/`groupBy`）；
  *   **排除**常量 `value` 通道与派生/输出字段（`Stack.startField`/`endField`、mark `y0Field`/`y1Field`、sector `startField`/`endField`）。
  *   仅这些字段参与 model strict 校验与类型解析。位置角色按坐标系不同取 x/y（1D-2D）或 a/b/c（ternary）。
  */
@@ -43,6 +45,17 @@ export const collectUserSourceFields = (spec: PlotSpec): Set<string> => {
     }
     if (mark.type === PlotMark.Line || mark.type === PlotMark.Interval || mark.type === PlotMark.Area) {
       if (mark.series !== undefined) fields.add(mark.series);
+    }
+    // alpha.11：priority-1 datum label 的内容字段（位置 mark 的 label.content）+ TextMark 的 text 内容字段——
+    //   均引用外部数据、须进 model strict 校验 + fieldMap / format / 归一化（否则静默读原始路径、空文本）
+    if ('label' in mark && mark.label?.content.field !== undefined) fields.add(mark.label.content.field);
+    if (mark.type === PlotMark.Text && mark.encoding.text.field !== undefined) fields.add(mark.encoding.text.field);
+    // alpha.11：rule band 上界（string = field）+ extent 部分长度字段——同样是用户源字段
+    if (mark.type === PlotMark.Rule) {
+      if (typeof mark.xTo === 'string') fields.add(mark.xTo);
+      if (typeof mark.yTo === 'string') fields.add(mark.yTo);
+      if (mark.extentField !== undefined) fields.add(mark.extentField);
+      if (mark.extentToField !== undefined) fields.add(mark.extentToField);
     }
   }
   for (const transform of spec.transform ?? []) {
