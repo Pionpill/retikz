@@ -45,7 +45,7 @@ With no `series`, giving `color` a categorical field also splits the line into o
 
 ### Radar
 
-`<Plot coordinate="polar2D">` with `<LineMark closed />`: the last point connects back to the first into a wireframe polygon, dimensions spread evenly along the angular axis and values map to the radius — a wireframe radar. For a filled radar use [`<AreaMark closed />`](/plot/components/mark/area).
+`<Plot coordinate="polar2D">` with `<LineMark closed />`: the last point connects back to the first into a wireframe polygon, dimensions spread evenly along the angular axis and values map to the radius — a wireframe radar. For a filled radar use [`<AreaMark closed />`](/plot/grammar/mark/area).
 
 <ComponentPreview name="line-radar" sourceFiles={['line-radar.data.ts']} />
 
@@ -65,6 +65,6 @@ With no `series`, giving `color` a categorical field also splits the line into o
 
 ## Related
 
-- [PointMark](/plot/components/mark/point) — overlay markers on each observation
-- [AreaMark](/plot/components/mark/area) — filled lines / filled radar
+- [PointMark](/plot/grammar/mark/point) — overlay markers on each observation
+- [AreaMark](/plot/grammar/mark/area) — filled lines / filled radar
 - [Coordinates](/plot/grammar/coordinate) — the polar switch and channel roles

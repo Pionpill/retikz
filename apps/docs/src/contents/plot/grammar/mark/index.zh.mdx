@@ -1,0 +1,21 @@
+---
+title: 图元
+description: 图元决定每条数据记录或记录集合生成什么形状；字段映射、比例尺和坐标系共同决定这些形状最终落在哪里。
+---
+
+Mark 是图形语法里的几何层。它只声明“用什么图形表达数据”，不直接写像素坐标；位置、颜色、大小等视觉通道由字段映射驱动，再交给 scale 和 coordinate 解释。
+
+## 图元类型
+
+<div className="grid gap-3 sm:grid-cols-2">
+  <LinkedCard href="/plot/grammar/mark/line"><strong>折线</strong><span>按顺序连接数据点，适合趋势、路径和雷达线框。</span></LinkedCard>
+  <LinkedCard href="/plot/grammar/mark/point"><strong>散点</strong><span>把每条记录画成点，可映射颜色、大小、透明度和形状。</span></LinkedCard>
+  <LinkedCard href="/plot/grammar/mark/bar"><strong>柱</strong><span>从基线延伸到数值，支持分组、堆叠和径向柱。</span></LinkedCard>
+  <LinkedCard href="/plot/grammar/mark/sector"><strong>扇形</strong><span>用于饼图、环图和角度占比。</span></LinkedCard>
+  <LinkedCard href="/plot/grammar/mark/area"><strong>面积</strong><span>在折线与基线之间填充区域，也可表达填充雷达。</span></LinkedCard>
+  <LinkedCard href="/plot/grammar/mark/rect"><strong>矩形</strong><span>用二维分类或连续区间组成网格、热力图。</span></LinkedCard>
+  <LinkedCard href="/plot/grammar/mark/rule"><strong>规则线</strong><span>绘制阈值线、参考线、区间边界。</span></LinkedCard>
+  <LinkedCard href="/plot/grammar/mark/text"><strong>文本</strong><span>把字段值或固定文案作为数据标注放进图中。</span></LinkedCard>
+  <LinkedCard href="/plot/grammar/mark/ribbon"><strong>带状图元</strong><span>表达两条边界之间的带状区域或流向。</span></LinkedCard>
+</div>
+

@@ -1510,8 +1510,8 @@ export const changelog: Array<Release> = [
               {
                 label: { zh: 'legend guide', en: 'legend guide' },
                 content: {
-                  zh: '`GuideSchema` 升 `discriminatedUnion`（`PlotGuide` 加 `Legend`），legend 按 `channel` + 可选 `scale` 绑定，由对应非位置 scale 派生形态——ordinal/shape → 离散 swatch、sequential/diverging → 连续色带 ramp、quantize/threshold/quantile → 分箱 swatch、size → 梯度符号、opacity → 梯度透明度;纯函数估算布局（受无文字度量约束）+ 先估尺寸再决定 plotArea;显式 `Legend` 不抑制默认坐标轴 [图例](/plot/components/legend)',
-                  en: '`GuideSchema` becomes a `discriminatedUnion` (`PlotGuide` gains `Legend`), with legends bound by `channel` + optional `scale` and their form derived from the bound non-position scale — ordinal/shape → discrete swatches, sequential/diverging → a continuous ramp, quantize/threshold/quantile → binned swatches, size → graduated symbols, opacity → graduated transparency; pure-function estimated layout (under the no-text-measurement constraint) + sizing estimated before deciding the plot area; an explicit `Legend` does not suppress default axes [Legend](/plot/components/legend)',
+                  zh: '`GuideSchema` 升 `discriminatedUnion`（`PlotGuide` 加 `Legend`），legend 按 `channel` + 可选 `scale` 绑定，由对应非位置 scale 派生形态——ordinal/shape → 离散 swatch、sequential/diverging → 连续色带 ramp、quantize/threshold/quantile → 分箱 swatch、size → 梯度符号、opacity → 梯度透明度;纯函数估算布局（受无文字度量约束）+ 先估尺寸再决定 plotArea;显式 `Legend` 不抑制默认坐标轴 [图例](/plot/grammar/guide/legend)',
+                  en: '`GuideSchema` becomes a `discriminatedUnion` (`PlotGuide` gains `Legend`), with legends bound by `channel` + optional `scale` and their form derived from the bound non-position scale — ordinal/shape → discrete swatches, sequential/diverging → a continuous ramp, quantize/threshold/quantile → binned swatches, size → graduated symbols, opacity → graduated transparency; pure-function estimated layout (under the no-text-measurement constraint) + sizing estimated before deciding the plot area; an explicit `Legend` does not suppress default axes [Legend](/plot/grammar/guide/legend)',
                 },
               },
             ],
@@ -1829,8 +1829,8 @@ export const changelog: Array<Release> = [
               {
                 label: { zh: '薄 <Plot>：移除默认轴注入（BREAKING）', en: 'Thin `<Plot>`: default-axis injection removed (BREAKING)' },
                 content: {
-                  zh: 'cartesian2D 组合 DSL 不再自动补 x/y 轴 + y 网格——`<Plot>` 只画你显式列出的 `<Axis>` / `<Legend>`；scale / coordinate 推断不变，`bare` 删除。迁移：补 `<Axis dimension="x" />` / `<Axis dimension="y" grid />`，并移除 `bare` [坐标轴](/plot/components/axis)',
-                  en: 'The cartesian2D composition DSL no longer auto-adds x/y axes + y grid — `<Plot>` draws only the `<Axis>` / `<Legend>` you list; scale / coordinate inference is unchanged, and `bare` is removed. Migration: add `<Axis dimension="x" />` / `<Axis dimension="y" grid />`, and remove `bare` [Axis](/plot/components/axis)',
+                  zh: 'cartesian2D 组合 DSL 不再自动补 x/y 轴 + y 网格——`<Plot>` 只画你显式列出的 `<Axis>` / `<Legend>`；scale / coordinate 推断不变，`bare` 删除。迁移：补 `<Axis dimension="x" />` / `<Axis dimension="y" grid />`，并移除 `bare` [坐标轴](/plot/grammar/guide/axis)',
+                  en: 'The cartesian2D composition DSL no longer auto-adds x/y axes + y grid — `<Plot>` draws only the `<Axis>` / `<Legend>` you list; scale / coordinate inference is unchanged, and `bare` is removed. Migration: add `<Axis dimension="x" />` / `<Axis dimension="y" grid />`, and remove `bare` [Axis](/plot/grammar/guide/axis)',
                 },
               },
               {
@@ -1905,8 +1905,8 @@ export const changelog: Array<Release> = [
               {
                 label: { zh: '<Legend> 组件', en: '`<Legend>` component' },
                 content: {
-                  zh: '`<Legend channel scale title position orient tickCount tickLabels>` 声明图例，形态（swatch / 色带 / 分箱 / 梯度符号）据绑定 scale 类型自动选;`<Legend>` 不抑制默认坐标轴（与 `<Axis>` 区分），修复此前「有任何 guide 即清空默认轴」导致加图例丢 x/y 轴的 bug [图例](/plot/components/legend)',
-                  en: '`<Legend channel scale title position orient tickCount tickLabels>` declares a legend whose form (swatch / ramp / bins / graduated symbols) is auto-picked from the bound scale type; `<Legend>` does not suppress default axes (unlike `<Axis>`), fixing the prior bug where any guide cleared the default x/y axes when a legend was added [Legend](/plot/components/legend)',
+                  zh: '`<Legend channel scale title position orient tickCount tickLabels>` 声明图例，形态（swatch / 色带 / 分箱 / 梯度符号）据绑定 scale 类型自动选;`<Legend>` 不抑制默认坐标轴（与 `<Axis>` 区分），修复此前「有任何 guide 即清空默认轴」导致加图例丢 x/y 轴的 bug [图例](/plot/grammar/guide/legend)',
+                  en: '`<Legend channel scale title position orient tickCount tickLabels>` declares a legend whose form (swatch / ramp / bins / graduated symbols) is auto-picked from the bound scale type; `<Legend>` does not suppress default axes (unlike `<Axis>`), fixing the prior bug where any guide cleared the default x/y axes when a legend was added [Legend](/plot/grammar/guide/legend)',
                 },
               },
               {
@@ -2143,8 +2143,8 @@ export const changelog: Array<Release> = [
               {
                 label: { zh: 'Scales + Legend SSR', en: 'Scales + Legend SSR' },
                 content: {
-                  zh: '`renderPlot` 消费含连续色阶（sequential / diverging）/ 离散化 scale（quantize / threshold / quantile）/ `Legend` guide 的 PlotSpec，估算布局后 SSR 出带色带 / 分箱 / 符号图例的 SVG 字符串，与 react 面视觉一致、vanilla 侧零额外代码 [图例](/plot/components/legend)',
-                  en: '`renderPlot` consumes a PlotSpec with continuous (sequential / diverging) / discretization (quantize / threshold / quantile) color scales and a `Legend` guide, SSR-emitting an SVG string with ramp / binned / symbol legends after estimated layout, visually matching the React surface with zero extra code on the vanilla side [Legend](/plot/components/legend)',
+                  zh: '`renderPlot` 消费含连续色阶（sequential / diverging）/ 离散化 scale（quantize / threshold / quantile）/ `Legend` guide 的 PlotSpec，估算布局后 SSR 出带色带 / 分箱 / 符号图例的 SVG 字符串，与 react 面视觉一致、vanilla 侧零额外代码 [图例](/plot/grammar/guide/legend)',
+                  en: '`renderPlot` consumes a PlotSpec with continuous (sequential / diverging) / discretization (quantize / threshold / quantile) color scales and a `Legend` guide, SSR-emitting an SVG string with ramp / binned / symbol legends after estimated layout, visually matching the React surface with zero extra code on the vanilla side [Legend](/plot/grammar/guide/legend)',
                 },
               },
             ],

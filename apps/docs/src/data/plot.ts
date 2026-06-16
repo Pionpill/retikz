@@ -1,6 +1,6 @@
 import type { Section } from './interface';
 
-/** plot module 的 sections + pages 树（顺序：简介 / 快速开始 / 图表 / 绘图 / 数据 / 图形语法 / 参考） */
+/** plot module sections + pages tree. */
 export const plotSection: Array<Section> = [
   {
     pages: [
@@ -16,12 +16,34 @@ export const plotSection: Array<Section> = [
   {
     id: 'components',
     label: 'plot.components',
+    pages: [{ id: 'plot', label: 'plot.compPlot' }],
+  },
+  {
+    id: 'grammar',
+    label: 'plot.grammar',
     pages: [
-      { id: 'plot', label: 'plot.compPlot' },
-      { id: 'axis', label: 'plot.compAxis' },
+      {
+        id: 'data',
+        label: 'plot.data',
+        children: [
+          { id: 'model', label: 'plot.dataModel' },
+          { id: 'processing', label: 'plot.dataProcessing' },
+        ],
+      },
+      { id: 'scale', label: 'plot.grammarScale' },
+      {
+        id: 'coordinate',
+        label: 'plot.grammarCoordinate',
+        children: [
+          { id: '2d', label: 'plot.grammarCoordinate2d' },
+          { id: '1d', label: 'plot.grammarCoordinate1d' },
+          { id: 'ternary', label: 'plot.grammarCoordinateTernary' },
+          { id: 'custom', label: 'plot.grammarCoordinateCustom' },
+        ],
+      },
       {
         id: 'mark',
-        label: 'plot.compMark',
+        label: 'plot.grammarMark',
         children: [
           { id: 'line', label: 'plot.compLineMark' },
           { id: 'point', label: 'plot.compPointMark' },
@@ -34,34 +56,14 @@ export const plotSection: Array<Section> = [
           { id: 'ribbon', label: 'plot.compRibbonMark' },
         ],
       },
-      { id: 'legend', label: 'plot.compLegend' },
-    ],
-  },
-  {
-    id: 'data',
-    label: 'plot.data',
-    pages: [
-      { id: 'model', label: 'plot.dataModel' },
-      { id: 'processing', label: 'plot.dataProcessing' },
-    ],
-  },
-  {
-    id: 'grammar',
-    label: 'plot.grammar',
-    pages: [
-      { id: 'scale', label: 'plot.grammarScale' },
       {
-        id: 'coordinate',
-        label: 'plot.grammarCoordinate',
+        id: 'guide',
+        label: 'plot.grammarGuide',
         children: [
-          { id: '2d', label: 'plot.grammarCoordinate2d' },
-          { id: '1d', label: 'plot.grammarCoordinate1d' },
-          { id: 'ternary', label: 'plot.grammarCoordinateTernary' },
-          { id: 'custom', label: 'plot.grammarCoordinateCustom' },
+          { id: 'axis', label: 'plot.compAxis' },
+          { id: 'legend', label: 'plot.compLegend' },
         ],
       },
-      { id: 'mark', label: 'plot.grammarMark' },
-      { id: 'guide', label: 'plot.grammarGuide' },
       { id: 'provenance', label: 'plot.grammarProvenance' },
     ],
   },
@@ -80,9 +82,7 @@ export const plotSection: Array<Section> = [
       {
         id: 'changelog',
         label: 'plot.changelog',
-        children: [
-          { id: 'v0-1', label: 'plot.changelogV01' },
-        ],
+        children: [{ id: 'v0-1', label: 'plot.changelogV01' }],
       },
     ],
   },

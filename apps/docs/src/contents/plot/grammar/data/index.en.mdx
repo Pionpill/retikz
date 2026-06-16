@@ -1,0 +1,20 @@
+---
+title: Data
+description: Data grammar aligns external datasets with the fields Plot consumes, and normalizes field names, types, and parsing rules before compilation.
+---
+
+Plot data does not enter IR. The configuration describes which fields to read, what types they have, and how they should be parsed; the actual dataset is passed at compile time. That keeps one grammar reusable across multiple data sources.
+
+## Topics
+
+<div className="grid gap-3 sm:grid-cols-2">
+  <LinkedCard href="/plot/grammar/data/model">
+    <strong>Data Model</strong>
+    <span>Declare field types, formatters, category order, and the default inference rules.</span>
+  </LinkedCard>
+  <LinkedCard href="/plot/grammar/data/processing">
+    <strong>Data Processing</strong>
+    <span>Handle field names, storage formats, custom parsing functions, and reusable processing logic before data reaches Plot.</span>
+  </LinkedCard>
+</div>
+

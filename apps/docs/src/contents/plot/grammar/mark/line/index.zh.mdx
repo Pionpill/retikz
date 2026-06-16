@@ -45,7 +45,7 @@ import { Plot, LineMark } from '@retikz/plot-react';
 
 ### 雷达
 
-`<Plot coordinate="polar2D">` 加 `<LineMark closed />`：末点回连首点闭合成线框多边形，各维度沿角向均布、值映射到半径——线框版雷达。想要带填充的雷达用 [`<AreaMark closed />`](/plot/components/mark/area)。
+`<Plot coordinate="polar2D">` 加 `<LineMark closed />`：末点回连首点闭合成线框多边形，各维度沿角向均布、值映射到半径——线框版雷达。想要带填充的雷达用 [`<AreaMark closed />`](/plot/grammar/mark/area)。
 
 <ComponentPreview name="line-radar" sourceFiles={['line-radar.data.ts']} />
 
@@ -65,6 +65,6 @@ import { Plot, LineMark } from '@retikz/plot-react';
 
 ## 相关
 
-- [散点](/plot/components/mark/point) —— 叠在折线上标出每个观测点
-- [面积](/plot/components/mark/area) —— 带填充的折线 / 填充雷达
+- [散点](/plot/grammar/mark/point) —— 叠在折线上标出每个观测点
+- [面积](/plot/grammar/mark/area) —— 带填充的折线 / 填充雷达
 - [坐标系](/plot/grammar/coordinate) —— polar 开关与角色映射

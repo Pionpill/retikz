@@ -29,7 +29,7 @@ import { Plot, AreaMark } from '@retikz/plot-react';
 
 ### 填充雷达
 
-`<Plot coordinate="polar2D">` 下的 `<AreaMark closed />`：各维度沿角向均布、值映射到半径连成上沿，回边贴 `baseline`；`baseline` 缺省 `0` 时回边收到圆心，区域从圆心填到外沿即填充雷达。`closed` 让上沿走弦（连续角轴下不采样弯弧、保持直边轮廓）。想要纯线框轮廓用 [`<LineMark closed />`](/plot/components/mark/line)，给它叠 `fill` 也能得到填充雷达。
+`<Plot coordinate="polar2D">` 下的 `<AreaMark closed />`：各维度沿角向均布、值映射到半径连成上沿，回边贴 `baseline`；`baseline` 缺省 `0` 时回边收到圆心，区域从圆心填到外沿即填充雷达。`closed` 让上沿走弦（连续角轴下不采样弯弧、保持直边轮廓）。想要纯线框轮廓用 [`<LineMark closed />`](/plot/grammar/mark/line)，给它叠 `fill` 也能得到填充雷达。
 
 <ComponentPreview name="area-radar" sourceFiles={['area-radar.data.ts']} />
 
@@ -58,6 +58,6 @@ import { Plot, AreaMark } from '@retikz/plot-react';
 
 ## 相关
 
-- [折线](/plot/components/mark/line) —— `<LineMark closed />` 是线框雷达
+- [折线](/plot/grammar/mark/line) —— `<LineMark closed />` 是线框雷达
 - [坐标系](/plot/grammar/coordinate) —— polar 开关与角色映射
-- [扇形](/plot/components/mark/sector) —— 饼图 / 环图
+- [扇形](/plot/grammar/mark/sector) —— 饼图 / 环图

@@ -35,7 +35,7 @@ description: 给 <Plot> 一份数据行，再用 model 声明字段契约：字�
 | --- | --- |
 | `name` | 逻辑字段名，也是 mark / transform 引用的名字 |
 | `type` | 测量类型；省略时从数据推断 |
-| `format` | 声明式解析格式，如 `slashDate` / `percent`；详见[数据处理](/plot/data/processing) |
+| `format` | 声明式解析格式，如 `slashDate` / `percent`；详见[数据处理](/plot/grammar/data/processing) |
 | `order` | 分类字段的类别顺序；只对 `categorical` 有效 |
 
 下面的左右对比使用同一份漏斗数据：左图不声明 `model`，数值 `stage` 被推断成连续 x 轴；右图把 `stage` 声明为分类字段，并用 `format: 'percent'` 把百分比字符串解析成连续数值。
@@ -93,4 +93,4 @@ description: 给 <Plot> 一份数据行，再用 model 声明字段契约：字�
 
 ## 下一步
 
-model 只声明字段契约；接入真实数据时，还会遇到字段名不同、日期 / 百分比格式不同、脏数据需要报错等问题。继续看[数据处理](/plot/data/processing)：那里覆盖 `fieldMap`、`format`、`resolveField`、`validateData` 与 `invalid`。
+model 只声明字段契约；接入真实数据时，还会遇到字段名不同、日期 / 百分比格式不同、脏数据需要报错等问题。继续看[数据处理](/plot/grammar/data/processing)：那里覆盖 `fieldMap`、`format`、`resolveField`、`validateData` 与 `invalid`。
