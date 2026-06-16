@@ -118,7 +118,7 @@
     "grammarGuide": "Guides",
     "grammarProvenance": "Provenance & Anchors",
     "components": "Plots",
-    "compPlot": "Plot",
+    "compPlot": "Container",
     "compMark": "Marks",
     "compLineMark": "LineMark",
     "compPointMark": "PointMark",

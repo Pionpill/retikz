@@ -48,6 +48,13 @@ export const PlotSpecSchema = CompositeBaseSchema.extend({
   scales: z
     .array(ScaleSchema)
     .describe('Named scales; referenced by coordinate (and by non-positional channels in later versions)'),
+  colors: z
+    .array(z.string().min(1))
+    .min(1)
+    .optional()
+    .describe(
+      'Default plot color palette; omit to use d3-scale-chromatic schemeCategory10. Categorical color scales use it as their range; marks without a color encoding use colors[markIndex % colors.length]. Use "currentColor" to keep the inherited core color.',
+    ),
   width: z
     .number()
     .positive()

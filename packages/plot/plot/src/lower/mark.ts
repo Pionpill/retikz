@@ -21,7 +21,7 @@ import { inferCategoryDomain } from './scale';
  * @description color 适用所有 mark；size / opacity / shape 仅 PointMark（per-datum node 属性）。
  *   由 expand 据各通道 resolver 构造、整包传入，避免逐个位置参数（易错序）。
  */
-export type MarkChannels = { colorOf?: ColorOf; sizeOf?: SizeOf; opacityOf?: OpacityOf; shapeOf?: ShapeOf };
+export type MarkChannels = { colorOf?: ColorOf; defaultColor?: string; sizeOf?: SizeOf; opacityOf?: OpacityOf; shapeOf?: ShapeOf };
 
 /** 散点 glyph 默认直径（user units，已补偿 circle 外接） */
 const POINT_SIZE = 10;
@@ -129,7 +129,7 @@ const attachMarkLayer = (layer: IRScope, mark: Mark, markProvenance: MarkProvena
 
 /** 散点：每行一个 circle Node（坐标系无关，经 frame.project 投影） */
 const lowerPoint = (mark: Mark, rows: Array<ExternalRow>, frame: CoordinateFrame, channels: MarkChannels, markProvenance: MarkProvenance | undefined): IRChild | null => {
-  const { colorOf, sizeOf, opacityOf, shapeOf } = channels;
+  const { colorOf, defaultColor = DEFAULT_FILL, sizeOf, opacityOf, shapeOf } = channels;
   const placed: Array<{ color: string | undefined; node: IRNode }> = [];
   for (let transformedIndex = 0; transformedIndex < rows.length; transformedIndex++) {
     const row = rows[transformedIndex];
@@ -152,14 +152,14 @@ const lowerPoint = (mark: Mark, rows: Array<ExternalRow>, frame: CoordinateFrame
   if (placed.length === 0) return null;
   // 无 color：单图层，样式上提到 nodeDefault（守 alpha.1 结构）；有 color：每色一子 Scope
   const layer: IRScope = !colorOf
-    ? { type: 'scope', nodeDefault: pointStyle(DEFAULT_FILL), children: placed.map(p => p.node) }
+    ? { type: 'scope', nodeDefault: pointStyle(defaultColor), children: placed.map(p => p.node) }
     : colorGroupedScope(placed, pointStyle);
   return attachMarkLayer(layer, mark, markProvenance);
 };
 
 /** 把一组「已就位 node + 其颜色」收成图层（有 color 分子 Scope、无则单层 nodeDefault） */
-const barLayer = (placed: Array<{ color: string | undefined; node: IRNode }>, colorOf?: ColorOf): IRScope =>
-  colorOf ? colorGroupedScope(placed, barStyle) : { type: 'scope', nodeDefault: barStyle(DEFAULT_FILL), children: placed.map(p => p.node) };
+const barLayer = (placed: Array<{ color: string | undefined; node: IRNode }>, colorOf?: ColorOf, defaultColor = DEFAULT_FILL): IRScope =>
+  colorOf ? colorGroupedScope(placed, barStyle) : { type: 'scope', nodeDefault: barStyle(defaultColor), children: placed.map(p => p.node) };
 
 /**
  * 笛卡尔区间柱：plain / dodge / stack 统一一条摆放路径（intervalRect 单一真源；locator 同源 datumAnchor）
@@ -167,7 +167,7 @@ const barLayer = (placed: Array<{ color: string | undefined; node: IRNode }>, co
  *   stacked 缺 y0/y1 在此显式 fail loud（保留旧行为）——intervalRect 对缺字段返回 null，故必须在调用前校验。
  *   series 值（dodge / stack 都可带）写进 datum meta 的 series。
  */
-const lowerInterval = (mark: IntervalMark, rows: Array<ExternalRow>, frame: CartesianFrame, colorOf: ColorOf | undefined, markProvenance: MarkProvenance | undefined): IRScope | null => {
+const lowerInterval = (mark: IntervalMark, rows: Array<ExternalRow>, frame: CartesianFrame, colorOf: ColorOf | undefined, defaultColor: string | undefined, markProvenance: MarkProvenance | undefined): IRScope | null => {
   const ctx = buildIntervalContext(mark, frame, rows);
   const placed: Array<{ color: string | undefined; node: IRNode }> = [];
   for (let transformedIndex = 0; transformedIndex < rows.length; transformedIndex++) {
@@ -189,7 +189,7 @@ const lowerInterval = (mark: IntervalMark, rows: Array<ExternalRow>, frame: Cart
     const node = decorateDatum(base, row, transformedIndex, mark.type, markProvenance, seriesValue);
     placed.push({ color: colorOf?.(row), node });
   }
-  return placed.length === 0 ? null : barLayer(placed, colorOf);
+  return placed.length === 0 ? null : barLayer(placed, colorOf, defaultColor);
 };
 
 /** sector node 样式（sector shape 自带几何，padding0 + 无描边，纯填充环楔） */
@@ -211,15 +211,15 @@ const sectorNode = (wedge: Wedge): IRNode => ({
 });
 
 /** 把一组「已就位 sector node + 其颜色」收成图层（有 color 分子 Scope、无则单层 nodeDefault） */
-const sectorLayer = (placed: Array<{ color: string | undefined; node: IRNode }>, colorOf?: ColorOf): IRScope =>
-  colorOf ? colorGroupedScope(placed, sectorStyle) : { type: 'scope', nodeDefault: sectorStyle(DEFAULT_FILL), children: placed.map(p => p.node) };
+const sectorLayer = (placed: Array<{ color: string | undefined; node: IRNode }>, colorOf?: ColorOf, defaultColor = DEFAULT_FILL): IRScope =>
+  colorOf ? colorGroupedScope(placed, sectorStyle) : { type: 'scope', nodeDefault: sectorStyle(defaultColor), children: placed.map(p => p.node) };
 
 /**
  * interval 在 polar 下 → sector（径向柱 / 玫瑰）；intervalWedge 单一真源（locator 同源 datumAnchor）
  * @description ctx 一次性建，逐行调 intervalWedge 取环楔几何，再 sectorNode 建 Node。
  *   stacked 缺 y0/y1 在此显式 fail loud（intervalWedge 对缺字段返回 null，故调用前校验保留旧行为）。
  */
-const lowerIntervalPolar = (mark: IntervalMark, rows: Array<ExternalRow>, frame: PolarFrame, colorOf: ColorOf | undefined, markProvenance: MarkProvenance | undefined): IRScope | null => {
+const lowerIntervalPolar = (mark: IntervalMark, rows: Array<ExternalRow>, frame: PolarFrame, colorOf: ColorOf | undefined, defaultColor: string | undefined, markProvenance: MarkProvenance | undefined): IRScope | null => {
   const ctx = buildIntervalContext(mark, frame, rows);
   const placed: Array<{ color: string | undefined; node: IRNode }> = [];
   for (let transformedIndex = 0; transformedIndex < rows.length; transformedIndex++) {
@@ -239,7 +239,7 @@ const lowerIntervalPolar = (mark: IntervalMark, rows: Array<ExternalRow>, frame:
     const node = decorateDatum(sectorNode(wedge), row, transformedIndex, mark.type, markProvenance, seriesValue);
     placed.push({ color: colorOf?.(row), node });
   }
-  return placed.length === 0 ? null : sectorLayer(placed, colorOf);
+  return placed.length === 0 ? null : sectorLayer(placed, colorOf, defaultColor);
 };
 
 /**
@@ -247,7 +247,7 @@ const lowerIntervalPolar = (mark: IntervalMark, rows: Array<ExternalRow>, frame:
  * @description 缺累积界字段（未跑 stack transform）或累积界倒退（段值为负）→ 抛清晰错误（fail loud，与堆叠 interval 同）。
  *   sectorWedge 对缺字段 / 倒退返回 null，故在此显式校验保留旧行为。
  */
-const lowerSector = (mark: Mark, rows: Array<ExternalRow>, frame: PolarFrame, colorOf: ColorOf | undefined, markProvenance: MarkProvenance | undefined): IRScope | null => {
+const lowerSector = (mark: Mark, rows: Array<ExternalRow>, frame: PolarFrame, colorOf: ColorOf | undefined, defaultColor: string | undefined, markProvenance: MarkProvenance | undefined): IRScope | null => {
   if (mark.type !== PlotMark.Sector) return null;
   const startField = mark.startField ?? 'y0';
   const endField = mark.endField ?? 'y1';
@@ -268,7 +268,7 @@ const lowerSector = (mark: Mark, rows: Array<ExternalRow>, frame: PolarFrame, co
     const node = decorateDatum(sectorNode(wedge), row, transformedIndex, mark.type, markProvenance, undefined);
     placed.push({ color: colorOf?.(row), node });
   }
-  return placed.length === 0 ? null : sectorLayer(placed, colorOf);
+  return placed.length === 0 ? null : sectorLayer(placed, colorOf, defaultColor);
 };
 
 /** area mark 的默认 baseline（回边贴的值；cartesian = y 基线、polar = 径向内界方向） */
@@ -396,7 +396,7 @@ const pathSeriesField = (mark: Mark, rows: Array<ExternalRow>): string | undefin
 };
 
 /** 折线：单线（常量 color → stroke）或多系列（series 拆多线、各取系列色）（坐标系无关） */
-const lowerLine = (mark: Mark, rows: Array<ExternalRow>, frame: CoordinateFrame, colorOf: ColorOf | undefined, markProvenance: MarkProvenance | undefined): IRScope | null => {
+const lowerLine = (mark: Mark, rows: Array<ExternalRow>, frame: CoordinateFrame, colorOf: ColorOf | undefined, defaultColor: string | undefined, markProvenance: MarkProvenance | undefined): IRScope | null => {
   if (mark.type !== PlotMark.Line) return null;
   const closed = mark.closed ?? false;
   // B/C：显式 series 优先；无 series 但有 categorical color 字段 → 隐式按 color 拆系列（产物等价显式 series）
@@ -415,7 +415,7 @@ const lowerLine = (mark: Mark, rows: Array<ExternalRow>, frame: CoordinateFrame,
   const steps = buildLineSteps(mark, rows, frame, closed);
   if (!steps) return null;
   const colorValue = mark.encoding.color?.value;
-  const stroke = colorValue !== undefined ? String(colorValue) : DEFAULT_FILL;
+  const stroke = colorValue !== undefined ? String(colorValue) : defaultColor ?? DEFAULT_FILL;
   return { type: 'scope', pathDefault: { stroke, strokeWidth: LINE_STROKE_WIDTH }, children: [{ type: 'path', children: steps }] };
 };
 
@@ -449,7 +449,7 @@ const buildAreaSteps = (mark: Mark, rows: Array<ExternalRow>, frame: CoordinateF
 };
 
 /** 面积：上沿折线 + baseline 回边闭合的可填充 Path（坐标系无关）；单系列或多系列（series 拆多面、各取系列色） */
-const lowerArea = (mark: Mark, rows: Array<ExternalRow>, frame: CoordinateFrame, colorOf: ColorOf | undefined, markProvenance: MarkProvenance | undefined): IRScope | null => {
+const lowerArea = (mark: Mark, rows: Array<ExternalRow>, frame: CoordinateFrame, colorOf: ColorOf | undefined, defaultColor: string | undefined, markProvenance: MarkProvenance | undefined): IRScope | null => {
   if (mark.type !== PlotMark.Area) return null;
   const baseline = mark.baseline ?? AREA_BASELINE;
   // B/C：显式 series 优先；无 series 但有 categorical color 字段 → 隐式按 color 拆系列（产物等价显式 series）
@@ -468,7 +468,7 @@ const lowerArea = (mark: Mark, rows: Array<ExternalRow>, frame: CoordinateFrame,
   const steps = buildAreaSteps(mark, rows, frame, baseline);
   if (!steps) return null;
   const colorValue = mark.encoding.color?.value;
-  const fill = colorValue !== undefined ? String(colorValue) : DEFAULT_FILL;
+  const fill = colorValue !== undefined ? String(colorValue) : defaultColor ?? DEFAULT_FILL;
   return { type: 'scope', pathDefault: { fill }, children: [{ type: 'path', children: steps }] };
 };
 
@@ -481,7 +481,7 @@ const lowerArea = (mark: Mark, rows: Array<ExternalRow>, frame: CoordinateFrame,
  *   datum id 走 markProvenance.registerDatumId（plot 级共享 seen、跨 mark 查重）。
  */
 export const lowerMark = (mark: Mark, rows: Array<ExternalRow>, frame: CoordinateFrame, channels: MarkChannels = {}, markProvenance?: MarkProvenance): IRChild | null => {
-  const { colorOf } = channels;
+  const { colorOf, defaultColor } = channels;
   // point / line / area 坐标系无关，经 frame.project（polar 连续角轴段内采样）投影
   if (mark.type === PlotMark.Point) return lowerPoint(mark, rows, frame, channels, markProvenance);
   // 一维坐标系（cartesian1D / polar1D）本轮仅 point；line / area / interval / sector 无对应一维几何 → fail-loud（ADR-02 支持矩阵）
@@ -497,16 +497,16 @@ export const lowerMark = (mark: Mark, rows: Array<ExternalRow>, frame: Coordinat
     throw new Error(`lowerPlots: ${mark.type} mark is not supported under a custom coordinate system (custom coordinates support point marks only this round)`);
   }
   if (mark.type === PlotMark.Line) {
-    const layer = lowerLine(mark, rows, frame, colorOf, markProvenance);
+    const layer = lowerLine(mark, rows, frame, colorOf, defaultColor, markProvenance);
     return layer === null ? null : attachMarkLayer(layer, mark, markProvenance);
   }
   if (mark.type === PlotMark.Area) {
-    const layer = lowerArea(mark, rows, frame, colorOf, markProvenance);
+    const layer = lowerArea(mark, rows, frame, colorOf, defaultColor, markProvenance);
     return layer === null ? null : attachMarkLayer(layer, mark, markProvenance);
   }
   // polar：interval → sector（径向柱/玫瑰）、sector mark（饼图/环图）
   if (frame.type === PlotCoordinate.Polar2D) {
-    const layer = mark.type === PlotMark.Interval ? lowerIntervalPolar(mark, rows, frame, colorOf, markProvenance) : lowerSector(mark, rows, frame, colorOf, markProvenance);
+    const layer = mark.type === PlotMark.Interval ? lowerIntervalPolar(mark, rows, frame, colorOf, defaultColor, markProvenance) : lowerSector(mark, rows, frame, colorOf, defaultColor, markProvenance);
     return layer === null ? null : attachMarkLayer(layer, mark, markProvenance);
   }
   // sector mark 仅 polar；cartesian 下无意义
@@ -514,6 +514,6 @@ export const lowerMark = (mark: Mark, rows: Array<ExternalRow>, frame: Coordinat
     throw new Error('lowerPlots: sector mark is only valid under the polar2D coordinate system');
   }
   // interval 笛卡尔几何
-  const layer = lowerInterval(mark, rows, frame, colorOf, markProvenance);
+  const layer = lowerInterval(mark, rows, frame, colorOf, defaultColor, markProvenance);
   return layer === null ? null : attachMarkLayer(layer, mark, markProvenance);
 };

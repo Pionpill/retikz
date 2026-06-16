@@ -76,10 +76,10 @@ const sales = [
 </Plot>
 ```
 
-只想画数据、不画轴和网格时，用 `bare`：
+只想画数据、不画轴和网格时，不写 `<Axis>`：
 
 ```tsx
-<Plot data={sales} width={360} height={200} bare>
+<Plot data={sales} width={360} height={200}>
   <LineMark x="month" y="revenue" order="month" />
 </Plot>
 ```
@@ -94,7 +94,7 @@ const sales = [
 
 ## 时间轴
 
-x 是日期时，给 `<Plot scaleX="time">`——刻度会落在整月 / 整年这样的时间边界上，标签也按时间格式化。日期字段可以是 ISO 字符串或毫秒时间戳。
+x 是日期时，给这条维度加 `<Scale dimension="x" type="time" />`——刻度会落在整月 / 整年这样的时间边界上，标签也按时间格式化。日期字段可以是 ISO 字符串或毫秒时间戳。
 
 <ComponentPreview name="time-axis" sourceFiles={['time-axis.data.ts']} />
 
@@ -111,7 +111,7 @@ x 是日期时，给 `<Plot scaleX="time">`——刻度会落在整月 / 整年�
   </LinkedCard>
   <LinkedCard href="/plot/components/axis">
     <span className="font-semibold">Axis</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">定制刻度、标签、网格和裸图模式</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">定制刻度、标签、网格和显式坐标轴</span>
   </LinkedCard>
   <LinkedCard href="/plot/data/model">
     <span className="font-semibold">Data</span>

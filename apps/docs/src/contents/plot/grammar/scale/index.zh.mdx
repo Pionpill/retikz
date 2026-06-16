@@ -3,7 +3,7 @@ title: 比例尺
 description: 比例尺（scale）把数据值映射成视觉量——位置、长度、半径。每个通道都过一个 scale，类型按字段自动选，也可显式指定 linear / log / sqrt 等。
 ---
 
-比例尺决定「数据值 → 视觉量」怎么算。位置通道（`x` / `y`）的值要变成画布坐标、`size` 通道的值要变成半径——中间都隔着一个 scale。`<Plot>` 会按字段类型自动选 scale，常见图表不用手写；需要对数轴、平方根轴时再用 `scaleX` / `scaleY` 覆盖。
+比例尺决定「数据值 → 视觉量」怎么算。位置通道（`x` / `y`，polar 下对应 `angle` / `radius`）的值要变成画布坐标、`size` 通道的值要变成半径——中间都隔着一个 scale。`<Plot>` 会按字段类型自动选 scale，常见图表不用手写；需要对数轴、平方根轴或时间轴时，用 `<Scale dimension="..." type="..." />` 覆盖对应维度。
 
 ## 按字段类型派生
 
@@ -15,7 +15,7 @@ description: 比例尺（scale）把数据值映射成视觉量——位置、�
 | `temporal` | `time` |
 | `categorical` | `band` |
 
-显式写的 `scaleX` / `scaleY` 永远优先；若与字段类型明显冲突（把 `categorical` 配到线性轴、`temporal` 配到分类带）会报清晰错误，而不是画出无意义的图。字段类型怎么声明见[数据模型](/plot/data/model)。
+显式写的 `<Scale>` 优先于自动派生；若与字段类型明显冲突（把 `categorical` 配到线性轴、`temporal` 配到分类带）会报清晰错误，而不是画出无意义的图。字段类型怎么声明见[数据模型](/plot/data/model)。
 
 ## scale 类型
 
@@ -36,18 +36,18 @@ description: 比例尺（scale）把数据值映射成视觉量——位置、�
 
 ## 线性 vs 对数
 
-数据跨多个数量级时，线性轴把小值全压在底部。换成对数轴（`scaleY="log"`），每个数量级占等高，小值也看得清。两张图喂的是同一份逐年用户量。
+数据跨多个数量级时，线性轴把小值全压在底部。换成对数轴（`<Scale dimension="y" type="log" />`），每个数量级占等高，小值也看得清。两张图喂的是同一份逐年用户量。
 
 <div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
   <ComponentPreview name="scale-linear" sourceFiles={['scale-continuous.data.ts']} size="sm" />
   <ComponentPreview name="scale-log" sourceFiles={['scale-continuous.data.ts']} size="sm" />
 </div>
 
-<p className="text-sm text-muted-foreground">左：缺省 linear，前几年贴底；右：仅加 <code>scaleY="log"</code>，跨度铺开。</p>
+<p className="text-sm text-muted-foreground">左：缺省 linear，前几年贴底；右：仅加 <code>{'<Scale dimension="y" type="log" />'}</code>，跨度铺开。</p>
 
 ## 平方根
 
-`scaleY="sqrt"` 按平方根映射，弱化大值的视觉夸张；它也是 `size` 通道（散点半径）的默认 scale，让半径的**面积**正比于数据。
+`<Scale dimension="y" type="sqrt" />` 按平方根映射，弱化大值的视觉夸张；它也是 `size` 通道（散点半径）的默认 scale，让半径的**面积**正比于数据。
 
 <ComponentPreview name="scale-sqrt" sourceFiles={['scale-continuous.data.ts']} />
 
@@ -100,4 +100,14 @@ sequential 是**连续**色带（平滑渐变）。但很多场景要把连续�
 
 ## 显式指定
 
-`scaleX` / `scaleY` 是 `<Plot>` 上的简写，覆盖默认选型。要调对数底、幂指数等更细参数时，写完整 spec 的 `scales`（见 Reference）。
+`<Scale>` 是 `<Plot>` 的声明式子组件，覆盖对应坐标维度的默认选型：
+
+```tsx
+<Plot data={rows}>
+  <LineMark x="date" y="value" order="date" />
+  <Scale dimension="x" type="time" />
+  <Axis dimension="x" />
+</Plot>
+```
+
+polar 图里用 `dimension="angle"` / `dimension="radius"`，也可用 `x` / `y` 作为别名。要调对数底、幂指数等更细参数时，写完整 spec 的 `scales`（见 Reference）。

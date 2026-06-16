@@ -23,6 +23,7 @@
     "class-variance-authority": "catalog:",
     "clsx": "catalog:",
     "cmdk": "catalog:",
+    "d3-scale-chromatic": "catalog:",
     "github-slugger": "catalog:",
     "i18next": "catalog:",
     "i18next-browser-languagedetector": "catalog:",
@@ -48,6 +49,7 @@
   },
   "devDependencies": {
     "@tailwindcss/vite": "catalog:",
+    "@types/d3-scale-chromatic": "catalog:",
     "@types/mdx": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",

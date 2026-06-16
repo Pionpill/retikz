@@ -76,10 +76,10 @@ Keep these 4 rules in mind:
 </Plot>
 ```
 
-Use `bare` when you only want the data marks, with no axes or grid:
+Omit `<Axis>` when you only want the data marks, with no axes or grid:
 
 ```tsx
-<Plot data={sales} width={360} height={200} bare>
+<Plot data={sales} width={360} height={200}>
   <LineMark x="month" y="revenue" order="month" />
 </Plot>
 ```
@@ -94,7 +94,7 @@ Use `bare` when you only want the data marks, with no axes or grid:
 
 ## Time Axis
 
-When x is a date, pass `<Plot scaleX="time">` — ticks land on time boundaries like whole months / years, and labels are formatted as time. The date field can be an ISO string or a millisecond timestamp.
+When x is a date, add `<Scale dimension="x" type="time" />` for that dimension — ticks land on time boundaries like whole months / years, and labels are formatted as time. The date field can be an ISO string or a millisecond timestamp.
 
 <ComponentPreview name="time-axis" sourceFiles={['time-axis.data.ts']} />
 
@@ -111,7 +111,7 @@ When x is a date, pass `<Plot scaleX="time">` — ticks land on time boundaries 
   </LinkedCard>
   <LinkedCard href="/plot/components/axis">
     <span className="font-semibold">Axis</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">Customize ticks, labels, grids, and bare plots</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">Customize ticks, labels, grids, and explicit axes</span>
   </LinkedCard>
   <LinkedCard href="/plot/data/model">
     <span className="font-semibold">Data</span>
