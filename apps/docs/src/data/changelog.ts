@@ -17,7 +17,7 @@ export const changelog: Array<Release> = [
         version: 'v0.4',
         description: {
           zh: '新包：零依赖纯计算几何（向量 / 仿射 / arc 原语 / 求交 / 三角形内外接圆 / 点在多边形 / 凸包 / 最小外接圆 / 曲线）。纯函数 + 普通对象，零 IR、零 zod、不写 class；被 core 正向依赖、与 core 组同 lockstep。',
-          en: 'New package: zero-dependency pure computational geometry (vectors / affine / arc primitives / intersections / triangle in-&-circumcircle / point-in-polygon / convex hull / minimal enclosing circle / curves). Pure functions + plain objects, zero IR / zod / classes; depended on by core, lockstep with the core group.',
+          en: 'New zero-dependency pure-geometry package: vectors / affine / arc / intersections / triangle in-&-circumcircle / point-in-polygon / convex hull / min enclosing circle / curves. No IR / zod / class.',
         },
         highlights: [
           {
@@ -87,7 +87,7 @@ export const changelog: Array<Release> = [
         version: 'v0.4',
         description: {
           zh: 'v0.4 纵向底座深化：纯几何下沉 `@retikz/math`、Tier2 可嵌入机制、path 文法补强（折线圆角 + 过点平滑曲线）、任意轮廓 contour shape。',
-          en: 'v0.4 deepens the vertical base: pure geometry sinks to `@retikz/math`, an embeddable-Tier2 mechanism, path-grammar reinforcement (rounded corners + smooth-through-points), and an arbitrary-contour shape.',
+          en: 'v0.4 deepens the base: pure geometry sinks to `@retikz/math`, an embeddable-Tier2 mechanism, path-grammar reinforcement (rounded corners + smooth-through-points), plus an arbitrary-contour shape.',
         },
         highlights: [
           {
