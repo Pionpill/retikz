@@ -592,7 +592,7 @@ const lowerRibbon = (mark: RibbonMark, rows: Array<ExternalRow>, frame: Coordina
     if (!(halfSource > 1e-9) && !(halfTarget > 1e-9)) continue;
     const endpoints = ribbonEndpoints(mark, row, frame);
     if (endpoints === null) continue;
-    const geometry = ribbonBandGeometry(endpoints.source, endpoints.target, halfSource, halfTarget, curvature);
+    const geometry = ribbonBandGeometry(endpoints.source, endpoints.target, halfSource, halfTarget, curvature, mark.orientation ?? 'horizontal');
     if (geometry === null) continue;
     const steps: Array<IRStep> = [
       { type: 'step', kind: 'move', to: geometry.sourceTop },

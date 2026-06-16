@@ -16,6 +16,7 @@ type RibbonIR = {
   value?: string;
   endWidth?: string;
   curvature?: number;
+  orientation?: string;
   encoding?: { color?: { field?: string; scale?: string } };
 };
 
@@ -42,11 +43,18 @@ describe('ribbon-react-sugar-assembles-ir', () => {
     expect(spec.scales.some(s => s.name === '__color')).toBe(true);
   });
 
-  it('无 endWidth / curvature → 不写顶层字段（等宽带、默认 curvature 由 lowering 兜底）', () => {
+  it('无 endWidth / curvature / orientation → 不写顶层字段（等宽带、默认 curvature / horizontal 由 lowering 兜底）', () => {
     const spec = buildPlotSpec(<RibbonMark sourceX="sx" sourceY="sy" targetX="tx" targetY="ty" value="amount" />, '__plot', { deferPositionScaleInference: true });
     const mark = spec.marks[0] as RibbonIR;
     expect(mark).not.toHaveProperty('endWidth');
     expect(mark).not.toHaveProperty('curvature');
+    expect(mark).not.toHaveProperty('orientation');
+  });
+
+  it('orientation → 透传顶层字段', () => {
+    const spec = buildPlotSpec(<RibbonMark sourceX="sx" sourceY="sy" targetX="tx" targetY="ty" value="amount" orientation="vertical" />, '__plot', { deferPositionScaleInference: true });
+    expect((spec.marks[0] as RibbonIR).orientation).toBe('vertical');
+    expect(() => PlotSpecSchema.parse(spec)).not.toThrow();
   });
 
   it('id → mark.id 句柄', () => {

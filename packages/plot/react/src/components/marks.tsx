@@ -255,6 +255,8 @@ export type RibbonMarkProps = {
   endWidth?: string;
   /** cubic 控制点沿主轴外推比例 0..1（0=准直、大=更 S）；缺省 0.5 */
   curvature?: number;
+  /** 主轴取向：horizontal 出入切向沿 x、半宽沿 y（左右流）；vertical 反之；缺省 horizontal */
+  orientation?: 'horizontal' | 'vertical';
   /** 颜色字段（→ color 通道 + 自动 ordinal 色 scale）；缺省按图层序取默认色 */
   color?: string;
   /** 可选 mark 句柄（预留 scope/anchor，解析留 alpha.5） */

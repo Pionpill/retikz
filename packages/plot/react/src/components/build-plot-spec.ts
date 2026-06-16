@@ -398,7 +398,7 @@ const collectInto = (children: ReactNode, into: Collected): void => {
       into.hasRect = true;
       recordColor(into, colorEnc);
     } else if (child.type === RibbonMark) {
-      const { sourceX, sourceY, targetX, targetY, value, endWidth, curvature, color, id } = child.props as RibbonMarkProps;
+      const { sourceX, sourceY, targetX, targetY, value, endWidth, curvature, orientation, color, id } = child.props as RibbonMarkProps;
       // 扁平端点 props → 嵌套 IR source/target 字段对；color 走 colorChannel（无 series）
       const colorEnc = colorChannel(color, undefined);
       into.marks.push({
@@ -409,6 +409,7 @@ const collectInto = (children: ReactNode, into: Collected): void => {
         value,
         ...(endWidth !== undefined ? { endWidth } : {}),
         ...(curvature !== undefined ? { curvature } : {}),
+        ...(orientation !== undefined ? { orientation } : {}),
         encoding: { ...colorEnc },
       });
       recordColor(into, colorEnc);

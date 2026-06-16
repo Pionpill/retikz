@@ -35,6 +35,7 @@ const RibbonMarkSchema = z.object({
   width: z.string().min(1).optional(),          // 可选独立宽度 scale 名（默认合成线性 scale）
   endWidth: z.string().min(1).optional(),       // 可选「目标端宽度」字段：缺省 = 与源端等宽（等宽带）
   curvature: z.number().min(0).max(1).optional(), // S 形张力 0..1（控制点沿主轴外推比例），默认 0.5
+  orientation: z.enum(RibbonOrientation).optional(), // 主轴取向：出/入切向沿该轴、半宽沿垂向；默认 horizontal
   // …markBase（id / 样式 encoding）
 });
 
@@ -48,10 +49,12 @@ const RibbonEndpointSchema = z.object({
 每行 lower 成可填充 Path（与 `buildAreaSteps` 同形，长边换 cubic）：
 
 ```ts
-// 源端中心 S=(sx,sy) 宽 ws、目标端中心 T=(tx,ty) 宽 wt；半宽法向偏移得四角：
+// 源端中心 S=(sx,sy) 宽 ws、目标端中心 T=(tx,ty) 宽 wt；半宽沿 orientation 垂向 normal 偏移得四角：
 //   S_top / S_bot（源端封口两角）、T_top / T_bot（目标端封口两角）
-// 上边界 S_top → T_top：cubic，控制点沿「源→目标主轴方向」按 curvature 外推（水平 sankey 出 S 形）
-// 下边界 T_bot → S_bot：cubic，反向对称
+// orientation（默认 horizontal）：horizontal → mainUnit=(1,0)、normal=(0,1)、Δmain=T.x−S.x；
+//   vertical → mainUnit=(0,1)、normal=(1,0)、Δmain=T.y−S.y。出 / 入切向沿 mainUnit，不再随「源→目标弦」歪斜。
+// 上边界 S_top → T_top：cubic，控制点沿 mainUnit 按 curvature×Δmain 外推（topControl1=S_top+e、topControl2=T_top−e）
+// 下边界 T_bot → S_bot：cubic，反向对称（bottomControl1=T_bot−e、bottomControl2=S_bot+e）
 // move(S_top) → cubic(到 T_top) → line(T_bot)[目标封口] → cubic(到 S_bot) → cycle[源封口自动闭合]
 const steps: Array<IRStep> = [
   { type: 'step', kind: 'move', to: S_top },
@@ -79,8 +82,8 @@ const steps: Array<IRStep> = [
 > ribbon 不确定性最大，以下逐条摊开真实未定项。带明确倾向的是实现窗口内可拍板项；真正悬而未决的标注「→ 倾向推迟」。
 
 - **端点 schema 形态（`RibbonEndpointSchema`）**：单一形态 `{ x: Channel, y: Channel }`（字段对，经坐标投影）。倾向：直接 `z.object({ x, y })`，无 union / refine——node id 端点已划出范围，端点形态收敛为字段对，无须互斥判别。
-- **半宽法向方向怎么取**：等宽直带的法向 = 主轴方向逆时针转 90°；但源宽≠目标宽 + 弯曲时，端封口法向应取**该端切向的法向**（源端用源处切向、目标端用目标处切向），否则封口会斜。倾向：封口法向 = 端点切向法向（cubic 起末切向由控制点方向给出），保证封口垂直于流向。本轮先按「源→目标弦方向的法向」近似（直带精确、弯带轻微偏差），精确端切向法向列为后续优化。
-- **curvature 控制点的具体公式**：水平 sankey 经典做法（d3 `sankeyLinkHorizontal`）= 控制点在主轴中点、保持端点 y。倾向：control1 = S 沿「源→目标主轴分量」外推 `curvature × Δmain`、control2 = T 反向外推，纯水平时退化成 d3 的 S 形；`curvature=0` → 控制点贴端点 ≈ 准直带。alluvial（垂直堆叠 + 水平流）同公式换主轴。**主轴怎么判定**（看坐标系 / 看源目标位移分量）→ 倾向：本轮取「源→目标位移的主分量」自动判主轴，不暴露 prop。
+- **半宽法向方向怎么取**（已定，alpha.11 评审修正）：半宽沿 **orientation 垂向 normal**（horizontal → (0,1)、vertical → (1,0)），**不再用「源→目标弦方向」的法向**——弦法向在对角流（源/目标几乎竖直对齐而水平跨度小）时会让封口歪斜、半宽朝向错，评审判定为「流带丑」的病根。改用 orientation 垂向后封口始终沿垂向（水平流竖直封口、竖直流水平封口），干净的 sankey / alluvial 形态。精确端切向法向（弯带封口完全垂直于端切向）仍列为后续优化。
+- **curvature 控制点的具体公式 + 主轴判定**（已定，alpha.11 评审修正）：外推沿 orientation 主轴 `mainUnit × (curvature × Δmain)`（Δmain = 目标减源在主轴上的有符号分量），control1 = S 端 + e、control2 = T 端 − e；`curvature=0` → 控制点贴端点 ≈ 准直带。纯水平流 S=(0,100)→T=(200,100) curvature=0.5 时 control.x = 100、封口竖直，与现有水平测试一致。**主轴不再「按源→目标位移自动判定」**（自动判定在对角流下选错主轴 → 流带歪斜），改为暴露 `orientation: 'horizontal' | 'vertical'` prop，**默认 horizontal**（sankey / alluvial 左右流的常态）。
 - **宽度沿程变化（源宽 ≠ 目标宽）**：`endWidth` 字段缺省 = 等宽带（源宽铺到目标）；给定 = 目标端用 `endWidth` 经同一 width scale 算独立宽度，带子呈喇叭形（sankey 节点入边宽 ≠ 出边宽的常见情形）。倾向：支持，且是纯几何加法（四角各用各端半宽），不引入布局。
 - **value=0 / 退化带**：`value` 投影出的带宽 < ε（零宽）→ 跳过该行（返回 null，与 area 上沿 <2 点、interval 零高一致）。倾向：零宽跳过，fail-loud 留给「字段缺失 / 非有限」。
 
@@ -97,6 +100,7 @@ const steps: Array<IRStep> = [
   source: { x: { field: 'sourceX' }, y: { field: 'sourceY' } },
   target: { x: { field: 'targetX' }, y: { field: 'targetY' } },
   value: 'amount',                 // → 带宽（width scale）
+  orientation: 'horizontal',       // 出/入切向沿水平轴、半宽沿垂向（缺省，可省）
   // 可选：width / endWidth / curvature / id / encoding
   encoding: { color: { field: 'category', scale: 'cat' } },
 }
@@ -114,6 +118,7 @@ const steps: Array<IRStep> = [
     targetX="targetX"
     targetY="targetY"
     value="amount"            // → 带宽（width scale）
+    orientation="horizontal"  // 出/入切向沿水平轴、半宽沿垂向（缺省，可省）
     color="category"          // → color 通道 + 自动 ordinal 色 scale
   />
 </Plot>
@@ -139,9 +144,9 @@ const steps: Array<IRStep> = [
 
 三包 lockstep 全补（`@retikz/plot` IR/lowering + `@retikz/plot-react` sugar；`@retikz/plot-vanilla` 无代码改动）：
 
-- **Plot IR（`@retikz/plot`）**：`ir/mark.ts` 加 `RibbonMarkSchema` + `RibbonEndpointSchema`（单一 `{ x, y }` 字段对，无 union/refine） + `PlotMark.Ribbon` 成员 + 并入 `MarkSchema` 判别 union；新 `RibbonMark` / `RibbonEndpoint` 派生类型。
+- **Plot IR（`@retikz/plot`）**：`ir/mark.ts` 加 `RibbonMarkSchema` + `RibbonEndpointSchema`（单一 `{ x, y }` 字段对，无 union/refine） + `RibbonOrientation` const enum + `RibbonMarkSchema.orientation`（`z.enum(RibbonOrientation).optional()`，默认 horizontal）+ `PlotMark.Ribbon` 成员 + 并入 `MarkSchema` 判别 union；新 `RibbonMark` / `RibbonEndpoint` / `RibbonOrientationValue` 派生类型。
 - **lowering（`@retikz/plot`）**：`lower/mark.ts` 加 `lowerRibbon`（每行 → 一条可填充 Path，长边 cubic、端点统一字段投影），并入 `lowerMark` 路由；`lower/anchor.ts` 视需要加 ribbon 端点几何辅助（四角 / 法向 / 控制点计算的单一真源）。
-- **React sugar（`@retikz/plot-react`）**：`components/marks.tsx` 加 `RibbonMark`（返回 null 的 FC）+ `RibbonMarkProps`（扁平 props：`sourceX`/`sourceY`/`targetX`/`targetY`/`value`/`width`/`endWidth`/`curvature`/`color`/`id`）；`components/build-plot-spec.ts` 的 `collectInto` 加 `child.type === RibbonMark` 分支（扁平 props → 嵌套 `{ type:'ribbon', source:{x:{field},y:{field}}, target:{…}, value, … }` IR）；`components/index.ts` + `src/index.ts` barrel 补 `RibbonMark` / `RibbonMarkProps` 导出。
+- **React sugar（`@retikz/plot-react`）**：`components/marks.tsx` 加 `RibbonMark`（返回 null 的 FC）+ `RibbonMarkProps`（扁平 props：`sourceX`/`sourceY`/`targetX`/`targetY`/`value`/`width`/`endWidth`/`curvature`/`orientation`/`color`/`id`）；`components/build-plot-spec.ts` 的 `collectInto` 加 `child.type === RibbonMark` 分支（扁平 props → 嵌套 `{ type:'ribbon', source:{x:{field},y:{field}}, target:{…}, value, orientation, … }` IR）；`components/index.ts` + `src/index.ts` barrel 补 `RibbonMark` / `RibbonMarkProps` 导出。
 - **vanilla（`@retikz/plot-vanilla`）**：`renderPlot` mark 无关、纯 spec 驱动（`PlotSpecSchema.parse` → `lowerPlots` → `compileToScene` → `renderToSvgString`），**无代码改动**；交付 = vanilla SSR 测试 + docs demo 证明 ribbon spec 端到端出图。
 - **依赖 core**：消费 core `cubic` step（`step.ts`）+ `cycle` / `line` / `move` step，**仅消费、不改 core**。
 - **datumAnchor / locator**：ribbon 一行一带，datum 锚点取**带中线中点**（源中心 ↔ 目标中心连线中点），供命中 / 标注；`datumAnchor`（`anchor.ts:195`）加 ribbon 分支。
@@ -152,7 +157,7 @@ const steps: Array<IRStep> = [
 
 - **node id 端点 / 跨 scope ribbon connector**（连接不同 facet / inset 的具名 core node）：ribbon 四角 / 法向 / cubic 控制点都需要端点的**已解析屏幕坐标**，而 `{ node }` 端点在 plot lowering 期还没坐标（id 只有 core compile 期解析），仅产 core `NodeTarget` 不足以算半宽偏移与四角几何。正确做法是**core 级高阶 path / shape 在 compile 期解析坐标后再生成曲带**，或另起 ADR 处理。这是评审 BLOCKING 的降级结论：v1 ribbon 只支持字段端点；node id 跨 scope connector 作为后续方向。
 - **sankey 布局算法**（节点排布 / 流量堆叠顺序 / 交叉最小化）：归 **Statistics / 独立 layout**（alpha.12+）。ribbon mark 只消费布局产物（已算好的源/目标位置 + 宽度），不自带布局。这是本 ADR 最重要的范围切割——业界（D3 / G2 / Observable）皆布局与画带解耦，retikz 同。
-- **精确端切向法向封口**（弯带封口完全垂直于端切向）：本轮用弦法向近似，精确版后续优化。
+- **精确端切向法向封口**（弯带封口完全垂直于端切向）：本轮半宽沿 orientation 垂向（封口沿固定垂向，不随端切向），精确端切向法向版后续优化。
 - **alluvial 的「flow 分组堆叠」语义**（多条流在同一 stage 节点处按比例堆叠）：依赖布局产物，随布局推迟。
 - **曲线 / 极坐标 / 三元坐标系下的 ribbon**：本轮端点字段来源走通用 `frame.projectRoles`，几何（cubic 控制点）按笛卡尔屏幕空间算；非笛卡尔坐标下的曲带形态（如极坐标 chord diagram）顺延。
 - **整带 shape anchor / 沿带 label 定位**：ribbon 连接靠端点锚点；整带作为可连接 shape（任意方向 anchor）不做，沿带 label 走 core step `label?`（cubic 自带 label 支持）后续按需。
@@ -185,6 +190,8 @@ const steps: Array<IRStep> = [
 | `ir/mark.ts` | 加 | `RibbonMarkSchema.width` | `z.string().min(1).optional()` | 合成线性 | 可选独立 width scale 名；缺省合成一条线性 scale |
 | `ir/mark.ts` | 加 | `RibbonMarkSchema.endWidth` | `z.string().min(1).optional()` | = value | 可选目标端宽度字段；缺省 = 与源端等宽（等宽带） |
 | `ir/mark.ts` | 加 | `RibbonMarkSchema.curvature` | `z.number().min(0).max(1).optional()` | `0.5` | cubic 控制点沿主轴外推比例（0=准直、大=更 S） |
+| `ir/mark.ts` | 加 | `RibbonOrientation` | const object enum（`Horizontal`/`Vertical`）+ `ValueOf` 派生 | — | 流带主轴取向枚举（出/入切向沿该轴、半宽沿垂向） |
+| `ir/mark.ts` | 加 | `RibbonMarkSchema.orientation` | `z.enum(RibbonOrientation).optional()` | `horizontal` | 主轴取向：出/入切向沿该轴、半宽沿垂向；默认 horizontal |
 | `ir/mark.ts` | 加 | `markBase` 字段 | `id` 等共享 | — | 复用现有 `markBase`（mark 句柄） |
 | `ir/mark.ts` | 改 | `MarkSchema` | discriminatedUnion 加 `RibbonMarkSchema` | — | mark union 并入 ribbon |
 | `ir/mark.ts` | 加 | `RibbonMark` / `RibbonEndpoint` | `z.infer<...>` | — | 派生类型（中文 JSDoc） |
@@ -216,11 +223,15 @@ const steps: Array<IRStep> = [
 - `ribbon-field-endpoints-fillable-path`：源/目标字段端点 → 投影四角 → 一条 `move/cubic/line/cubic/cycle` 可填充 Path，cubic 控制点按 curvature 外推
 - `ribbon-equal-width`：无 `endWidth` → 源宽 = 目标宽（四角法向半宽相等），矩形化直带几何正确
 - `ribbon-react-sugar-assembles-ir`（plot-react）：`<RibbonMark sourceX targetX … value color>` 扁平 props → `collectInto` 装配出正确嵌套 ribbon IR（`source/target` 为 `{ x:{field}, y:{field} }`、`value`、color encoding）
+- `ribbon-orientation-default-horizontal-vertical-caps`：默认 horizontal 对角流封口竖直、四角半宽沿 y、出/入切向沿 x（取代旧弦法向歪斜）
+- `ribbon-orientation-vertical-flow-along-y`：`orientation='vertical'` → 半宽沿 x、外推沿 y、封口水平
 
 **边界（≥2）**：
 - `ribbon-zero-width-skip`：value 投影带宽 < ε → 跳过该行（null），不产退化 Path
 - `ribbon-flared-end-width`：给 `endWidth` → 目标端独立半宽，喇叭带四角取值正确
 - `ribbon-curvature-zero`：`curvature=0` → 控制点贴端点（准直带）
+- `ribbon-width-gradient-midpoint-between-source-and-target`：喇叭带四角 + 上/下边界控制点按各端半宽偏移 → 宽度沿程从 2·halfSource 平滑渐变到 2·halfTarget
+- `ribbon-orientation-invalid-rejected`（schema）：`orientation` 非 horizontal/vertical → schema 拒绝
 
 **错误路径（≥2）**：
 - `ribbon-endpoint-missing-xy-reject`：端点缺 `x` 或 `y` → schema 拒绝

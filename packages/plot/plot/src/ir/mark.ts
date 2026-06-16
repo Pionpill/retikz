@@ -44,6 +44,20 @@ export const PlotArrangement = {
 /** 多系列柱组合方式 */
 export type PlotArrangementValue = ValueOf<typeof PlotArrangement>;
 
+/**
+ * 流带主轴取向关键字（暴露给用户；裸 `'horizontal'` / `'vertical'` 同样可用）
+ * @description 决定 ribbon 的出 / 入切向与四角半宽方向：horizontal 出入沿 x（半宽沿 y），vertical 出入沿 y（半宽沿 x）。
+ */
+export const RibbonOrientation = {
+  /** 水平流：出 / 入切向沿 x，半宽沿 y（sankey 左右流） */
+  Horizontal: 'horizontal',
+  /** 竖直流：出 / 入切向沿 y，半宽沿 x（自上而下流） */
+  Vertical: 'vertical',
+} as const;
+
+/** 流带主轴取向 */
+export type RibbonOrientationValue = ValueOf<typeof RibbonOrientation>;
+
 /** 各 mark 变体共享的基础字段（可选 id 句柄）；encoding 各 mark 自带（位置 mark 用 EncodingSchema、sector 用 StyleEncodingSchema） */
 const markBase = {
   id: z
@@ -250,6 +264,10 @@ export const RibbonMarkSchema = z
       .max(1)
       .optional()
       .describe('Cubic control-point extrapolation ratio along the main axis (0 = near-straight, larger = more S-shaped); default 0.5'),
+    orientation: z
+      .enum(RibbonOrientation)
+      .optional()
+      .describe('Main-axis orientation; the entry / exit tangents run along this axis and the band half-width is taken along the perpendicular axis (horizontal → flow left-right, vertical → flow top-down); default horizontal'),
     ...markBase,
     encoding: StyleEncodingSchema,
   })

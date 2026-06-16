@@ -434,9 +434,22 @@ describe('MarkSchema (ADR-05)', () => {
       width: 'w',
       endWidth: 'end',
       curvature: 0.3,
+      orientation: 'vertical',
       encoding: { color: { field: 'cat', scale: 'c' } },
     };
     expect(MarkSchema.parse(m)).toEqual(m);
+  });
+
+  it('mark_ribbon_orientation_default_undefined', () => {
+    // orientation 可选；缺省解析为 undefined（lowering 兜底 horizontal）
+    const parsed = MarkSchema.parse({ type: 'ribbon', source: { x: { field: 'sx' }, y: { field: 'sy' } }, target: { x: { field: 'tx' }, y: { field: 'ty' } }, value: 'amount', encoding: {} });
+    expect((parsed as { orientation?: string }).orientation).toBeUndefined();
+  });
+
+  it('mark_ribbon_orientation_invalid_rejected', () => {
+    expect(() =>
+      MarkSchema.parse({ type: 'ribbon', source: { x: { field: 'sx' }, y: { field: 'sy' } }, target: { x: { field: 'tx' }, y: { field: 'ty' } }, value: 'amount', orientation: 'diagonal', encoding: {} }),
+    ).toThrow();
   });
 
   it('mark_ribbon_union_discriminates', () => {

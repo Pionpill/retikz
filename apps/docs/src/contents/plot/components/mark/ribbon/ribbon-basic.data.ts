@@ -4,8 +4,8 @@
  * <RibbonMark> 只消费这些已算好的位置 + 宽度，不自带 sankey 布局算法。
  */
 export const flows: Array<Record<string, string | number>> = [
-  { source: 'Desktop', target: 'Signup', sourceX: 0, sourceY: 80, targetX: 10, targetY: 78, value: 50, channel: 'Desktop' },
-  { source: 'Desktop', target: 'Bounce', sourceX: 0, sourceY: 80, targetX: 10, targetY: 28, value: 30, channel: 'Desktop' },
-  { source: 'Mobile', target: 'Signup', sourceX: 0, sourceY: 26, targetX: 10, targetY: 78, value: 18, channel: 'Mobile' },
-  { source: 'Mobile', target: 'Bounce', sourceX: 0, sourceY: 26, targetX: 10, targetY: 28, value: 34, channel: 'Mobile' },
+  { source: 'Desktop', target: 'Signup', sourceX: 0, sourceY: 80, targetX: 160, targetY: 78, value: 50, channel: 'Desktop' },
+  { source: 'Desktop', target: 'Bounce', sourceX: 0, sourceY: 80, targetX: 160, targetY: 28, value: 30, channel: 'Desktop' },
+  { source: 'Mobile', target: 'Signup', sourceX: 0, sourceY: 26, targetX: 160, targetY: 78, value: 18, channel: 'Mobile' },
+  { source: 'Mobile', target: 'Bounce', sourceX: 0, sourceY: 26, targetX: 160, targetY: 28, value: 34, channel: 'Mobile' },
 ];

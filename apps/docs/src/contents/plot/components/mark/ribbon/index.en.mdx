@@ -5,6 +5,8 @@ description: Use <RibbonMark> to draw sankey / alluvial flow bands — one filla
 
 `<RibbonMark>` draws each record as a **band with width**: it curves from a source endpoint (`sourceX` / `sourceY`) to a target endpoint (`targetX` / `targetY`), with two cubic-curve long edges and straight end caps enclosing a fillable region. The `value` field maps through a built-in width scale to the band width. This is the primitive for sankey and alluvial flow diagrams.
 
+The band defaults to `orientation="horizontal"`: the entry / exit tangents run along the horizontal axis and the half-width along the vertical axis, giving a clean left-to-right flow (vertical end caps). The width gradates smoothly from the source end to the target end (`value` at the source, `endWidth` at the target). Set `orientation="vertical"` to flow top-down with half-width along the horizontal axis.
+
 <ComponentPreview name="ribbon-basic" sourceFiles={['ribbon-basic.data.ts']} />
 
 <p className="text-sm text-muted-foreground">Two-column alluvial: left sources → right destinations, width by value, colored by channel.</p>
@@ -22,12 +24,13 @@ Both ends of the band are **field pairs** — `sourceX` / `sourceY` for the sour
 | `value` | `string` | Flow field: mapped through a synthesized linear scale to the source-end width |
 | `endWidth` | `string?` | Target-end width field; omitted → equal width to the source end |
 | `curvature` | `number?` | Curve tension 0..1 (0 = near-straight, larger = more S-shaped); default 0.5 |
+| `orientation` | `'horizontal' \| 'vertical'?` | Main axis: entry / exit tangents run along it, half-width along the perpendicular; default `horizontal` |
 | `color` | `string?` | Color field (→ color channel + automatic ordinal color scale) |
 | `id` | `string?` | Optional handle (reserved, not yet resolved) |
 
 ## Flared bands and curvature
 
-Give `endWidth` to let the target end use an independent width — the band tapers from the source width to the target width, forming a flared shape (common when a sankey node's inbound width differs from its outbound width). `curvature` tunes the S-shape tension of the two long edges:
+Give `endWidth` to let the target end use an independent width — the band **gradates smoothly** from the source width to the target width along its length, forming a flared shape (common when a sankey node's inbound width differs from its outbound width). `curvature` tunes the S-shape tension of the two long edges:
 
 <ComponentPreview name="ribbon-flared" sourceFiles={['ribbon-flared.data.ts']} />
 

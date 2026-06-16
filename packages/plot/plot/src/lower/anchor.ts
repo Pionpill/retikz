@@ -1,4 +1,4 @@
-import { type Channel, type ExternalRow, type IntervalMark, type Mark, PlotCoordinate, PlotMark, type RectMark, type RibbonMark } from '../ir';
+import { type Channel, type ExternalRow, type IntervalMark, type Mark, PlotCoordinate, PlotMark, type RectMark, type RibbonMark, type RibbonOrientationValue } from '../ir';
 import { channelValue, isFiniteNumber, resolveFieldPath } from './field';
 import type { CartesianFrame, Cell, CellGeometry, CoordinateFrame, DimensionRole, PolarFrame } from './project';
 import { inferCategoryDomain } from './scale';
@@ -273,31 +273,38 @@ export const ribbonEndpoints = (mark: RibbonMark, row: ExternalRow, frame: Coord
 };
 
 /**
- * 由源 / 目标中心 + 各端半宽 + curvature 算出一条带的四角与上 / 下边界 cubic 控制点（lowering / locator 单一真源）
- * @description 半宽法向取「源→目标弦方向」的法向（本轮弦法向近似，精确端切向法向列为后续；见 ADR-05 不在范围）：
- *   弦单位向量 u = (T−S)/|T−S|、法向 n = (−u.y, u.x)；S_top = S + halfSource·n、S_bot = S − halfSource·n、
- *   T_top = T + halfTarget·n、T_bot = T − halfTarget·n。上 / 下边界 cubic 控制点沿弦主轴分量按 curvature 外推
- *   （control1 在源端沿 +u、control2 在目标端沿 −u，幅度 = curvature × Δmain），纯水平 sankey 退化成 d3 S 形；
- *   curvature=0 → 控制点贴端点（准直带）。退化（源目标重合，|T−S|<ε）→ null（零长带跳过）。
+ * 由源 / 目标中心 + 各端半宽 + curvature + orientation 算出一条带的四角与上 / 下边界 cubic 控制点（lowering / locator 单一真源）
+ * @description 出 / 入切向沿 orientation 轴（horizontal → 主轴 (1,0)、垂向 (0,1)；vertical → 主轴 (0,1)、垂向 (1,0)），
+ *   半宽沿垂向 normal：S_top = S + halfSource·normal、S_bot = S − halfSource·normal、T_top / T_bot 同理（各取本端半宽）。
+ *   外推向量 e = mainUnit × (curvature × Δmain)（Δmain = 目标减源在主轴上的有符号分量）；上边界 S_top→T_top 控制点
+ *   topControl1 = S_top + e、topControl2 = T_top − e，下边界 T_bot→S_bot 控制点 bottomControl1 = T_bot − e、
+ *   bottomControl2 = S_bot + e。出 / 入切向沿主轴 → 干净的左右（水平）/ 上下（竖直）流；宽度沿程从 2·halfSource
+ *   平滑渐变到 2·halfTarget（四角 + 控制点皆按各端半宽偏移）。退化（源目标重合，|T−S|<ε）→ null（零长带跳过）。
  */
-export const ribbonBandGeometry = (source: [number, number], target: [number, number], halfSource: number, halfTarget: number, curvature: number): RibbonBandGeometry | null => {
-  const dx = target[0] - source[0];
-  const dy = target[1] - source[1];
-  const length = Math.hypot(dx, dy);
-  if (!(length > 1e-9)) return null;
-  const ux = dx / length;
-  const uy = dy / length;
-  // 弦法向（逆时针 90°）
-  const nx = -uy;
-  const ny = ux;
-  const sourceTop: [number, number] = [source[0] + halfSource * nx, source[1] + halfSource * ny];
-  const sourceBottom: [number, number] = [source[0] - halfSource * nx, source[1] - halfSource * ny];
-  const targetTop: [number, number] = [target[0] + halfTarget * nx, target[1] + halfTarget * ny];
-  const targetBottom: [number, number] = [target[0] - halfTarget * nx, target[1] - halfTarget * ny];
-  // 主轴外推幅度：沿弦方向 curvature × 弦长（control1 从源端 +u 推、control2 从目标端 −u 推）
-  const reach = curvature * length;
-  const ex = ux * reach;
-  const ey = uy * reach;
+export const ribbonBandGeometry = (
+  source: [number, number],
+  target: [number, number],
+  halfSource: number,
+  halfTarget: number,
+  curvature: number,
+  orientation: RibbonOrientationValue,
+): RibbonBandGeometry | null => {
+  if (!(Math.hypot(target[0] - source[0], target[1] - source[1]) > 1e-9)) return null;
+  // 主轴单位 + 垂向（半宽方向）：horizontal → main=(1,0) normal=(0,1)；vertical → main=(0,1) normal=(1,0)
+  const horizontal = orientation === 'horizontal';
+  const mainX = horizontal ? 1 : 0;
+  const mainY = horizontal ? 0 : 1;
+  const normalX = horizontal ? 0 : 1;
+  const normalY = horizontal ? 1 : 0;
+  const sourceTop: [number, number] = [source[0] + halfSource * normalX, source[1] + halfSource * normalY];
+  const sourceBottom: [number, number] = [source[0] - halfSource * normalX, source[1] - halfSource * normalY];
+  const targetTop: [number, number] = [target[0] + halfTarget * normalX, target[1] + halfTarget * normalY];
+  const targetBottom: [number, number] = [target[0] - halfTarget * normalX, target[1] - halfTarget * normalY];
+  // 外推向量：沿主轴 curvature × 有符号主轴位移（Δmain）
+  const deltaMain = (target[0] - source[0]) * mainX + (target[1] - source[1]) * mainY;
+  const reach = curvature * deltaMain;
+  const ex = mainX * reach;
+  const ey = mainY * reach;
   return {
     sourceTop,
     sourceBottom,
@@ -306,7 +313,7 @@ export const ribbonBandGeometry = (source: [number, number], target: [number, nu
     // 上边界 S_top→T_top
     topControl1: [sourceTop[0] + ex, sourceTop[1] + ey],
     topControl2: [targetTop[0] - ex, targetTop[1] - ey],
-    // 下边界 T_bot→S_bot（反向：control1 在目标端 −u、control2 在源端 +u）
+    // 下边界 T_bot→S_bot（反向：control1 在目标端 −e、control2 在源端 +e）
     bottomControl1: [targetBottom[0] - ex, targetBottom[1] - ey],
     bottomControl2: [sourceBottom[0] + ex, sourceBottom[1] + ey],
   };

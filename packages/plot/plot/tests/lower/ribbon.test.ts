@@ -221,6 +221,58 @@ describe('lowerRibbon field endpoints (ADR-05)', () => {
     const anchor = datumAnchor(ribbonMark(), { sx: 0, sy: 100, amount: 10 }, frame); // tx/ty 缺失
     expect(anchor).toBeNull();
   });
+
+  // ── orientation 取向（默认 horizontal）─────────────────────
+  it('ribbon-orientation-default-horizontal-vertical-caps', () => {
+    // 默认 horizontal：对角流 S=(0,0)→T=(200,80)，半宽沿 y（normal=(0,1)）→ 封口竖直、四角 x 与端点同
+    const rows = [{ sx: 0, sy: 0, tx: 200, ty: 80, amount: 10 }];
+    const steps = pathsOf(lowerMark(ribbonMark(), rows, identityFrame()) as IRScope)[0].children;
+    // 源端封口两角：x = 0（与源同 x，半宽不偏 x）、y = 0 ± 20
+    expect(steps[0].to).toEqual([0, 20]); // S_top
+    expect(steps[3].to).toEqual([0, -20]); // S_bot
+    // 目标端封口两角：x = 200（与目标同 x）、y = 80 ± 20
+    expect(steps[1].to).toEqual([200, 100]); // T_top
+    expect(steps[2].to).toEqual([200, 60]); // T_bot
+  });
+
+  it('ribbon-orientation-default-horizontal-tangent-along-x', () => {
+    // 对角流默认 horizontal：外推沿主轴 x（Δmain = 200），control1/2 仅偏 x，封口切向水平
+    const rows = [{ sx: 0, sy: 0, tx: 200, ty: 80, amount: 10 }];
+    const cubics = cubicSteps(pathsOf(lowerMark(ribbonMark(), rows, identityFrame()) as IRScope)[0]);
+    // reach = 0.5 * 200 = 100；topControl1 = S_top + (100,0) = (100, 20)
+    expect(cubics[0].control1[0]).toBeCloseTo(100, 6);
+    expect(cubics[0].control1[1]).toBeCloseTo(20, 6); // y 不变（出切向沿 x）
+  });
+
+  it('ribbon-orientation-vertical-flow-along-y', () => {
+    // vertical：主轴 (0,1)、半宽沿 x（normal=(1,0)）。S=(50,0)→T=(60,200)，Δmain=200
+    const rows = [{ sx: 50, sy: 0, tx: 60, ty: 200, amount: 10 }];
+    const steps = pathsOf(lowerMark(ribbonMark({ orientation: 'vertical' }), rows, identityFrame()) as IRScope)[0].children;
+    // 源端封口两角：y = 0（与源同 y）、x = 50 ± 20
+    expect(steps[0].to).toEqual([70, 0]); // S_top (x+20)
+    expect(steps[3].to).toEqual([30, 0]); // S_bot (x-20)
+    // 目标端封口两角：y = 200、x = 60 ± 20
+    expect(steps[1].to).toEqual([80, 200]); // T_top
+    expect(steps[2].to).toEqual([40, 200]); // T_bot
+    // 外推沿 y：control1 = S_top + (0, 100)
+    const cubics = cubicSteps(pathsOf(lowerMark(ribbonMark({ orientation: 'vertical' }), rows, identityFrame()) as IRScope)[0]);
+    expect(cubics[0].control1[1]).toBeCloseTo(100, 6);
+    expect(cubics[0].control1[0]).toBeCloseTo(70, 6); // x 不变（出切向沿 y）
+  });
+
+  it('ribbon-width-gradient-midpoint-between-source-and-target', () => {
+    // 喇叭带宽度沿程渐变：源半宽 20、目标半宽 10；带边界中点处半宽应在两者之间（曲线在 t=0.5 的法向半宽 ≈ 15）
+    const rows = [{ sx: 0, sy: 100, tx: 200, ty: 100, amount: 10, end: 5 }];
+    const steps = pathsOf(lowerMark(ribbonMark({ endWidth: 'end' }), rows, identityFrame()) as IRScope)[0].children;
+    const sourceHalf = Math.abs((steps[0].to as [number, number])[1] - 100); // 20
+    const targetHalf = Math.abs((steps[1].to as [number, number])[1] - 100); // 10
+    expect(sourceHalf).toBeCloseTo(20, 6);
+    expect(targetHalf).toBeCloseTo(10, 6);
+    // 上 / 下边界 cubic 控制点也按各端半宽偏移（topControl1 = S_top + e、bottomControl2 = S_bot + e），保证沿程平滑过渡
+    const cubics = cubicSteps(pathsOf(lowerMark(ribbonMark({ endWidth: 'end' }), rows, identityFrame()) as IRScope)[0]);
+    expect(cubics[0].control1[1]).toBeCloseTo(120, 6); // S_top.y（源半宽 20）
+    expect(cubics[0].control2[1]).toBeCloseTo(110, 6); // T_top.y（目标半宽 10）
+  });
 });
 
 describe('lowerRibbon integration + schema (ADR-05)', () => {
