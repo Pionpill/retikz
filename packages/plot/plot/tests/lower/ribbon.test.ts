@@ -1,0 +1,306 @@
+import type { IRScope } from '@retikz/core';
+import { describe, expect, it } from 'vitest';
+import { type PlotSpec, PlotSpecSchema, type RibbonMark } from '../../src/ir';
+import { type LowerPlotsOptions, lowerPlots } from '../../src/lower/expand';
+import { lowerMark } from '../../src/lower/mark';
+import { datumAnchor } from '../../src/lower/anchor';
+import { createCartesianFrame } from '../../src/lower/project';
+import type { PositionScale } from '../../src/lower/scale';
+
+/**
+ * ADR-05（alpha.11）：ribbon mark（sankey / alluvial 流带）下沉契约测试。
+ * 验证字段端点四角可填充 cubic Path、等宽 / 喇叭带 endWidth、curvature 0/0.5 主轴外推、零宽 / 缺 value 跳过、
+ * 负 value fail-loud、端点缺 x/y schema 拒绝、datum 中线锚点、cartesian-only fail-loud。
+ */
+
+type Datasets = Record<string, Array<Record<string, unknown>>>;
+
+type CubicStep = { type: 'step'; kind: 'cubic'; to: [number, number]; control1: [number, number]; control2: [number, number] };
+type RibbonStep = { kind: string; to?: [number, number]; control1?: [number, number]; control2?: [number, number] };
+type RibbonPath = { type: 'path'; children: Array<RibbonStep>; pathDefault?: { fill?: string } };
+
+const WIDTH = 400;
+const HEIGHT = 400;
+const opts: LowerPlotsOptions = { width: WIDTH, height: HEIGHT };
+
+const expandOf = (spec: PlotSpec, datasets: Datasets, options: LowerPlotsOptions = opts): IRScope => {
+  const [def] = lowerPlots(datasets, options);
+  return def.expand(spec) as IRScope;
+};
+
+/** 取第一个 mark 图层（expand 产物 child[0]，无 id 时即内容 scope 的 child[0]） */
+const firstLayer = (spec: PlotSpec, datasets: Datasets, options: LowerPlotsOptions = opts): IRScope =>
+  expandOf(spec, datasets, options).children[0] as IRScope;
+
+/** 收集图层内所有 ribbon path */
+const pathsOf = (layer: IRScope): Array<RibbonPath> => {
+  const out: Array<RibbonPath> = [];
+  const walk = (children: ReadonlyArray<unknown>): void => {
+    for (const child of children) {
+      const node = child as { type?: string; children?: ReadonlyArray<unknown> };
+      if (node.type === 'path') out.push(node as unknown as RibbonPath);
+      else if (node.type === 'scope' && node.children) walk(node.children);
+    }
+  };
+  walk(layer.children);
+  return out;
+};
+
+/**
+ * 恒等映射的连续 linear PositionScale 桩（domain == range；coordinate(v)=v）。
+ * 用直坐标 frame 使端点投影 = 原始字段值，几何断言可直接对数据值算。
+ */
+const identityScale = (): PositionScale => {
+  let r: [number, number] = [0, WIDTH];
+  return {
+    coordinate: (value: unknown) => (typeof value === 'number' && Number.isFinite(value) ? value : NaN),
+    get bandwidth() {
+      return 0;
+    },
+    ticks: () => ({ values: [], labels: [] }),
+    range: () => [r[0], r[1]],
+    setRange: next => {
+      r = [next[0], next[1]];
+    },
+  };
+};
+
+const identityFrame = () => createCartesianFrame(identityScale(), identityScale());
+
+/** ribbon mark 工厂：一条流，source/target 字段对 + value（可选 endWidth / curvature / color） */
+const ribbonMark = (over: Partial<RibbonMark> = {}): RibbonMark => ({
+  type: 'ribbon',
+  source: { x: { field: 'sx' }, y: { field: 'sy' } },
+  target: { x: { field: 'tx' }, y: { field: 'ty' } },
+  value: 'amount',
+  encoding: {},
+  ...over,
+});
+
+const stepKinds = (path: RibbonPath): Array<string> => path.children.map(s => s.kind);
+const cubicSteps = (path: RibbonPath): Array<CubicStep> => path.children.filter((s): s is CubicStep => s.kind === 'cubic');
+
+describe('lowerRibbon field endpoints (ADR-05)', () => {
+  // ── Happy path ──────────────────────────────────────────
+  it('ribbon-field-endpoints-fillable-path', () => {
+    // 水平流：S=(0,100) → T=(200,100)，amount=10（域 max）→ 源端半宽 = RIBBON_MAX_WIDTH/2 = 20
+    const rows = [{ sx: 0, sy: 100, tx: 200, ty: 100, amount: 10 }];
+    const layer = lowerMark(ribbonMark(), rows, identityFrame()) as IRScope;
+    const paths = pathsOf(layer);
+    expect(paths).toHaveLength(1);
+    // 可填充围合结构：move → cubic → line → cubic → cycle
+    expect(stepKinds(paths[0])).toEqual(['move', 'cubic', 'line', 'cubic', 'cycle']);
+    const steps = paths[0].children;
+    // 源端封口两角（move 起点 = S_top，最后 cubic 终点 = S_bot）：水平流弦法向竖直，半宽 20 → y 100±20
+    expect(steps[0].to).toEqual([0, 120]);
+    expect(steps[3].to).toEqual([0, 80]);
+    // 目标端封口两角（首 cubic 终点 = T_top、line 终点 = T_bot）：x=200、y 100±20
+    expect(steps[1].to).toEqual([200, 120]);
+    expect(steps[2].to).toEqual([200, 80]);
+  });
+
+  it('ribbon-equal-width', () => {
+    // 无 endWidth → 源宽 = 目标宽；amount=10=域 max → 半宽 20，四角法向半宽相等（喇叭度 0）
+    const rows = [{ sx: 0, sy: 100, tx: 200, ty: 100, amount: 10 }];
+    const steps = pathsOf(lowerMark(ribbonMark(), rows, identityFrame()) as IRScope)[0].children;
+    const sourceHalf = Math.abs((steps[0].to as [number, number])[1] - 100); // S_top.y - centerY
+    const targetHalf = Math.abs((steps[1].to as [number, number])[1] - 100); // T_top.y - centerY
+    expect(sourceHalf).toBeCloseTo(20, 6);
+    expect(targetHalf).toBeCloseTo(20, 6);
+  });
+
+  it('ribbon-curvature-default-extrapolates-along-main-axis', () => {
+    // 默认 curvature 0.5、水平弦长 200 → reach = 0.5*200 = 100；上边界 cubic control1.x = S_top.x + 100 = 100
+    const rows = [{ sx: 0, sy: 100, tx: 200, ty: 100, amount: 10 }];
+    const cubics = cubicSteps(pathsOf(lowerMark(ribbonMark(), rows, identityFrame()) as IRScope)[0]);
+    expect(cubics[0].control1[0]).toBeCloseTo(100, 6); // S_top.x + reach
+    expect(cubics[0].control2[0]).toBeCloseTo(100, 6); // T_top.x - reach
+  });
+
+  // ── 边界 ───────────────────────────────────────────────
+  it('ribbon-flared-end-width', () => {
+    // endWidth 给独立字段：source amount=10（半宽 20）、target end=5（半宽 10）→ 喇叭带四角半宽各异
+    const rows = [{ sx: 0, sy: 100, tx: 200, ty: 100, amount: 10, end: 5 }];
+    const steps = pathsOf(lowerMark(ribbonMark({ endWidth: 'end' }), rows, identityFrame()) as IRScope)[0].children;
+    expect(Math.abs((steps[0].to as [number, number])[1] - 100)).toBeCloseTo(20, 6); // 源端半宽
+    expect(Math.abs((steps[1].to as [number, number])[1] - 100)).toBeCloseTo(10, 6); // 目标端半宽
+  });
+
+  it('ribbon-curvature-zero-near-straight', () => {
+    // curvature=0 → reach=0、控制点贴端点（control == 对应封口角）
+    const rows = [{ sx: 0, sy: 100, tx: 200, ty: 100, amount: 10 }];
+    const cubics = cubicSteps(pathsOf(lowerMark(ribbonMark({ curvature: 0 }), rows, identityFrame()) as IRScope)[0]);
+    expect(cubics[0].control1).toEqual([0, 120]); // = S_top
+    expect(cubics[0].control2).toEqual([200, 120]); // = T_top
+  });
+
+  it('ribbon-zero-width-skip', () => {
+    // value=0 → 半宽 0（< ε）→ 跳过该行，无 path（单行全跳 → layer null）
+    const rows = [{ sx: 0, sy: 100, tx: 200, ty: 100, amount: 0 }];
+    expect(lowerMark(ribbonMark(), rows, identityFrame())).toBeNull();
+  });
+
+  it('ribbon-nonfinite-value-skip', () => {
+    // value 缺失 / 非有限 → 跳过该行（与 point null 跳过同语义），保留有效行
+    const rows = [
+      { sx: 0, sy: 100, tx: 200, ty: 100 }, // amount 缺失
+      { sx: 0, sy: 50, tx: 200, ty: 50, amount: 10 },
+    ];
+    const paths = pathsOf(lowerMark(ribbonMark(), rows, identityFrame()) as IRScope);
+    expect(paths).toHaveLength(1);
+  });
+
+  it('ribbon-coincident-endpoints-skip', () => {
+    // 源 / 目标重合（零弦长）→ 无法定法向 → 跳过该行
+    const rows = [{ sx: 50, sy: 50, tx: 50, ty: 50, amount: 10 }];
+    expect(lowerMark(ribbonMark(), rows, identityFrame())).toBeNull();
+  });
+
+  // ── 错误路径 ───────────────────────────────────────────
+  it('ribbon-negative-value-fail-loud', () => {
+    const rows = [{ sx: 0, sy: 100, tx: 200, ty: 100, amount: -3 }];
+    expect(() => lowerMark(ribbonMark(), rows, identityFrame())).toThrow(/non-negative/);
+  });
+
+  it('ribbon-named-width-scale-unsupported-fail-loud', () => {
+    const rows = [{ sx: 0, sy: 100, tx: 200, ty: 100, amount: 10 }];
+    expect(() => lowerMark(ribbonMark({ width: 'w' }), rows, identityFrame())).toThrow(/width scale/);
+  });
+
+  // ── color 分组 ─────────────────────────────────────────
+  it('ribbon-color-field-groups-by-fill', () => {
+    // 两行不同 category → 按色分两子 Scope（各 pathDefault.fill），IR 体积 O(色数)
+    const spec = PlotSpecSchema.parse({
+      namespace: 'plot',
+      type: 'plot',
+      data: { reference: 'flows' },
+      coordinate: { type: 'cartesian2D', x: 'xs', y: 'ys' },
+      scales: [
+        { type: 'linear', name: 'xs' },
+        { type: 'linear', name: 'ys' },
+        { type: 'ordinal', name: '__color' },
+      ],
+      marks: [ribbonMark({ encoding: { color: { field: 'cat', scale: '__color' } } })],
+    });
+    const flows = [
+      { sx: 0, sy: 100, tx: 200, ty: 100, amount: 10, cat: 'A' },
+      { sx: 0, sy: 200, tx: 200, ty: 200, amount: 6, cat: 'B' },
+    ];
+    const layer = firstLayer(spec, { flows });
+    const fills = new Set(layer.children.map(c => (c as IRScope).pathDefault?.fill));
+    expect(fills.size).toBe(2);
+  });
+
+  // ── datum 锚点 ─────────────────────────────────────────
+  it('ribbon-datum-anchor-midline', () => {
+    // 锚点 = 源中心↔目标中心连线中点；locator 与 lowering 同源
+    const frame = identityFrame();
+    const anchor = datumAnchor(ribbonMark(), { sx: 0, sy: 100, tx: 200, ty: 100, amount: 10 }, frame);
+    expect(anchor).toEqual([100, 100]);
+  });
+
+  it('ribbon-datum-anchor-null-when-endpoint-missing', () => {
+    const frame = identityFrame();
+    const anchor = datumAnchor(ribbonMark(), { sx: 0, sy: 100, amount: 10 }, frame); // tx/ty 缺失
+    expect(anchor).toBeNull();
+  });
+});
+
+describe('lowerRibbon integration + schema (ADR-05)', () => {
+  const flowSpec = (over: Partial<RibbonMark> = {}): PlotSpec =>
+    PlotSpecSchema.parse({
+      namespace: 'plot',
+      type: 'plot',
+      data: { reference: 'flows' },
+      coordinate: { type: 'cartesian2D', x: 'xs', y: 'ys' },
+      scales: [
+        { type: 'linear', name: 'xs' },
+        { type: 'linear', name: 'ys' },
+      ],
+      marks: [ribbonMark(over)],
+    });
+
+  it('ribbon-full-pipeline-emits-fillable-band', () => {
+    const flows = [{ sx: 1, sy: 1, tx: 9, ty: 4, amount: 10 }];
+    const paths = pathsOf(firstLayer(flowSpec(), { flows }));
+    expect(paths).toHaveLength(1);
+    expect(stepKinds(paths[0])).toEqual(['move', 'cubic', 'line', 'cubic', 'cycle']);
+  });
+
+  it('ribbon-endpoints-enter-axis-domain', () => {
+    // target.x=9 是 x 域 max；经默认 layout 投影后所有四角 x ∈ [plotArea]，无越界 NaN
+    const flows = [{ sx: 1, sy: 1, tx: 9, ty: 4, amount: 10 }];
+    const steps = pathsOf(firstLayer(flowSpec(), { flows }))[0].children;
+    for (const step of steps) {
+      if (step.to) {
+        expect(Number.isFinite(step.to[0])).toBe(true);
+        expect(Number.isFinite(step.to[1])).toBe(true);
+      }
+    }
+  });
+
+  // schema reject：端点缺 x / y
+  it('ribbon-endpoint-missing-xy-reject', () => {
+    expect(() =>
+      PlotSpecSchema.parse({
+        namespace: 'plot',
+        type: 'plot',
+        data: { reference: 'd' },
+        coordinate: { type: 'cartesian2D' },
+        scales: [],
+        marks: [{ type: 'ribbon', source: { x: { field: 'sx' } }, target: { x: { field: 'tx' }, y: { field: 'ty' } }, value: 'amount', encoding: {} }],
+      }),
+    ).toThrow();
+  });
+
+  it('ribbon-missing-value-reject', () => {
+    expect(() =>
+      PlotSpecSchema.parse({
+        namespace: 'plot',
+        type: 'plot',
+        data: { reference: 'd' },
+        coordinate: { type: 'cartesian2D' },
+        scales: [],
+        marks: [{ type: 'ribbon', source: { x: { field: 'sx' }, y: { field: 'sy' } }, target: { x: { field: 'tx' }, y: { field: 'ty' } }, encoding: {} }],
+      }),
+    ).toThrow();
+  });
+
+  it('ribbon-curvature-out-of-range-reject', () => {
+    expect(() =>
+      PlotSpecSchema.parse({
+        namespace: 'plot',
+        type: 'plot',
+        data: { reference: 'd' },
+        coordinate: { type: 'cartesian2D' },
+        scales: [],
+        marks: [ribbonMark({ curvature: 2 })],
+      }),
+    ).toThrow();
+  });
+
+  it('ribbon-json-round-trip', () => {
+    const m = ribbonMark({ id: 'flow', endWidth: 'end', curvature: 0.3, encoding: { color: { field: 'cat', scale: 'c' } } });
+    expect(PlotSpecSchema.parse(JSON.parse(JSON.stringify(flowSpec()))).marks[0].type).toBe('ribbon');
+    // 直接 mark round trip
+    const parsed = JSON.parse(JSON.stringify(m));
+    expect(parsed).toEqual(m);
+  });
+
+  // 坐标系矩阵：ribbon 仅 cartesian2D
+  it('ribbon-polar-fail-loud', () => {
+    const spec = PlotSpecSchema.parse({
+      namespace: 'plot',
+      type: 'plot',
+      data: { reference: 'flows' },
+      coordinate: { type: 'polar2D', angle: 'a', radius: 'r' },
+      scales: [
+        { type: 'linear', name: 'a' },
+        { type: 'linear', name: 'r' },
+      ],
+      marks: [ribbonMark()],
+    });
+    const flows = [{ sx: 1, sy: 1, tx: 9, ty: 4, amount: 10 }];
+    expect(() => expandOf(spec, { flows })).toThrow(/not supported under the polar2D/);
+  });
+});

@@ -15,7 +15,15 @@ const addChannelField = (fields: Set<string>, channel: Channel | undefined): voi
 export const collectUserSourceFields = (spec: PlotSpec): Set<string> => {
   const fields = new Set<string>();
   for (const mark of spec.marks) {
-    if (mark.type !== PlotMark.Sector) {
+    // ribbon 位置来自 source / target 字段对 + value 流量字段（非 encoding.x/y）：均为用户源字段
+    if (mark.type === PlotMark.Ribbon) {
+      addChannelField(fields, mark.source.x);
+      addChannelField(fields, mark.source.y);
+      addChannelField(fields, mark.target.x);
+      addChannelField(fields, mark.target.y);
+      fields.add(mark.value);
+      if (mark.endWidth !== undefined) fields.add(mark.endWidth);
+    } else if (mark.type !== PlotMark.Sector) {
       addChannelField(fields, mark.encoding.x);
       addChannelField(fields, mark.encoding.y);
       // ternary a/b/c 位置角色通道同样是用户源字段：须进 model strict 校验 + 归一化 coerce（不漏过数据契约）

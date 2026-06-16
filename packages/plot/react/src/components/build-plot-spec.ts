@@ -35,6 +35,8 @@ import {
   type PointMarkProps,
   RectMark,
   type RectMarkProps,
+  RibbonMark,
+  type RibbonMarkProps,
   RuleMark,
   type RuleMarkProps,
   SectorMark,
@@ -394,6 +396,21 @@ const collectInto = (children: ReactNode, into: Collected): void => {
         encoding: { ...positionEncoding(x, y), ...colorEnc },
       });
       into.hasRect = true;
+      recordColor(into, colorEnc);
+    } else if (child.type === RibbonMark) {
+      const { sourceX, sourceY, targetX, targetY, value, endWidth, curvature, color, id } = child.props as RibbonMarkProps;
+      // 扁平端点 props → 嵌套 IR source/target 字段对；color 走 colorChannel（无 series）
+      const colorEnc = colorChannel(color, undefined);
+      into.marks.push({
+        type: PlotMark.Ribbon,
+        ...(id !== undefined ? { id } : {}),
+        source: { x: { field: sourceX }, y: { field: sourceY } },
+        target: { x: { field: targetX }, y: { field: targetY } },
+        value,
+        ...(endWidth !== undefined ? { endWidth } : {}),
+        ...(curvature !== undefined ? { curvature } : {}),
+        encoding: { ...colorEnc },
+      });
       recordColor(into, colorEnc);
     } else if (child.type === RuleMark) {
       collectRule(child.props as RuleMarkProps, into);

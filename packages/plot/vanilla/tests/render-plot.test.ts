@@ -361,4 +361,69 @@ describe('renderPlot 薄包装（SSR SVG 串）', () => {
     expect(svg).toContain('alpha');
     expect(svg).toContain('beta');
   });
+
+  // ADR-05：ribbon mark（sankey / alluvial 流带）SSR——vanilla 无代码改动，纯 spec 驱动贯通三包
+  it('ribbon-vanilla-ssr-svg：流带 spec → SVG 含可填充 path（cubic C 命令围合带）', () => {
+    const flows: ExternalDatasets = {
+      flows: [
+        { sx: 1, sy: 8, tx: 9, ty: 7, amount: 10, cat: 'A' },
+        { sx: 1, sy: 3, tx: 9, ty: 2, amount: 6, cat: 'B' },
+      ],
+    };
+    const ribbonSpec: PlotSpec = {
+      namespace: 'plot',
+      type: 'plot',
+      data: { reference: 'flows' },
+      scales: [
+        { type: 'linear', name: 'xs' },
+        { type: 'linear', name: 'ys' },
+        { type: 'ordinal', name: 'color' },
+      ],
+      coordinate: { type: 'cartesian2D', x: 'xs', y: 'ys' },
+      marks: [
+        {
+          type: 'ribbon',
+          source: { x: { field: 'sx' }, y: { field: 'sy' } },
+          target: { x: { field: 'tx' }, y: { field: 'ty' } },
+          value: 'amount',
+          encoding: { color: { field: 'cat', scale: 'color' } },
+        },
+      ],
+    };
+    const svg = renderPlot(ribbonSpec, flows, { width: 480, height: 300 });
+    expect(svg).toContain('<svg');
+    expect(svg).toContain('<path');
+    // 流带长边由 cubic Bézier（SVG C / c 命令）描出 → 验证曲带几何落地
+    expect(svg).toMatch(/d="[^"]*[Cc][^"]*"/);
+    // 两条流分两色填充
+    expect(svg).toMatch(/fill="[^"]+"/);
+  });
+
+  it('ribbon flared band（endWidth）SSR → SVG 含 path（喇叭带透传不崩）', () => {
+    const flows: ExternalDatasets = {
+      flows: [{ sx: 1, sy: 5, tx: 9, ty: 5, amount: 10, end: 4 }],
+    };
+    const flaredSpec: PlotSpec = {
+      namespace: 'plot',
+      type: 'plot',
+      data: { reference: 'flows' },
+      scales: [
+        { type: 'linear', name: 'xs' },
+        { type: 'linear', name: 'ys' },
+      ],
+      coordinate: { type: 'cartesian2D', x: 'xs', y: 'ys' },
+      marks: [
+        {
+          type: 'ribbon',
+          source: { x: { field: 'sx' }, y: { field: 'sy' } },
+          target: { x: { field: 'tx' }, y: { field: 'ty' } },
+          value: 'amount',
+          endWidth: 'end',
+          curvature: 0.2,
+          encoding: {},
+        },
+      ],
+    };
+    expect(renderPlot(flaredSpec, flows, { width: 480, height: 300 })).toContain('<path');
+  });
 });

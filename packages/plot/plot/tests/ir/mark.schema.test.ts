@@ -417,4 +417,62 @@ describe('MarkSchema (ADR-05)', () => {
     const parsed = MarkSchema.parse({ type: 'sector', label: { content: { value: 'x' } }, encoding: { color: { field: 'label' } } });
     expect((parsed as { label?: unknown }).label).toBeUndefined();
   });
+
+  // alpha.11 ADR-05：ribbon(sankey / alluvial 流带) mark
+  it('mark_ribbon_minimal_valid', () => {
+    const m = { type: 'ribbon', source: { x: { field: 'sx' }, y: { field: 'sy' } }, target: { x: { field: 'tx' }, y: { field: 'ty' } }, value: 'amount', encoding: {} };
+    expect(MarkSchema.parse(m)).toEqual(m);
+  });
+
+  it('mark_ribbon_full_options_valid', () => {
+    const m = {
+      type: 'ribbon',
+      id: 'flow',
+      source: { x: { field: 'sx' }, y: { field: 'sy' } },
+      target: { x: { field: 'tx' }, y: { field: 'ty' } },
+      value: 'amount',
+      width: 'w',
+      endWidth: 'end',
+      curvature: 0.3,
+      encoding: { color: { field: 'cat', scale: 'c' } },
+    };
+    expect(MarkSchema.parse(m)).toEqual(m);
+  });
+
+  it('mark_ribbon_union_discriminates', () => {
+    const parsed = MarkSchema.parse({ type: 'ribbon', source: { x: { field: 'sx' }, y: { field: 'sy' } }, target: { x: { field: 'tx' }, y: { field: 'ty' } }, value: 'amount', endWidth: 'e', encoding: {} });
+    expect(parsed.type).toBe('ribbon');
+    expect((parsed as { endWidth?: string }).endWidth).toBe('e');
+  });
+
+  it('mark_ribbon_endpoint_missing_y_rejected', () => {
+    expect(() => MarkSchema.parse({ type: 'ribbon', source: { x: { field: 'sx' } }, target: { x: { field: 'tx' }, y: { field: 'ty' } }, value: 'amount', encoding: {} })).toThrow();
+  });
+
+  it('mark_ribbon_missing_value_rejected', () => {
+    expect(() => MarkSchema.parse({ type: 'ribbon', source: { x: { field: 'sx' }, y: { field: 'sy' } }, target: { x: { field: 'tx' }, y: { field: 'ty' } }, encoding: {} })).toThrow();
+  });
+
+  it('mark_ribbon_empty_value_rejected', () => {
+    expect(() => MarkSchema.parse({ type: 'ribbon', source: { x: { field: 'sx' }, y: { field: 'sy' } }, target: { x: { field: 'tx' }, y: { field: 'ty' } }, value: '', encoding: {} })).toThrow();
+  });
+
+  it('mark_ribbon_curvature_out_of_range_rejected', () => {
+    expect(() => MarkSchema.parse({ type: 'ribbon', source: { x: { field: 'sx' }, y: { field: 'sy' } }, target: { x: { field: 'tx' }, y: { field: 'ty' } }, value: 'amount', curvature: 1.5, encoding: {} })).toThrow();
+  });
+
+  it('mark_ribbon_typo_type_rejected', () => {
+    expect(() => MarkSchema.parse({ type: 'rbbon', source: { x: { field: 'sx' }, y: { field: 'sy' } }, target: { x: { field: 'tx' }, y: { field: 'ty' } }, value: 'amount', encoding: {} })).toThrow();
+  });
+
+  it('mark_ribbon_strips_label', () => {
+    // label 仅位置 mark；ribbon 非 strict zod 剥离
+    const parsed = MarkSchema.parse({ type: 'ribbon', label: { content: { value: 'x' } }, source: { x: { field: 'sx' }, y: { field: 'sy' } }, target: { x: { field: 'tx' }, y: { field: 'ty' } }, value: 'amount', encoding: {} });
+    expect((parsed as { label?: unknown }).label).toBeUndefined();
+  });
+
+  it('mark_ribbon_json_round_trip', () => {
+    const m = { type: 'ribbon', id: 'f', source: { x: { field: 'sx' }, y: { field: 'sy' } }, target: { x: { field: 'tx' }, y: { field: 'ty' } }, value: 'amount', endWidth: 'end', curvature: 0.5, encoding: { color: { field: 'cat', scale: 'c' } } };
+    expect(MarkSchema.parse(JSON.parse(JSON.stringify(m)))).toEqual(m);
+  });
 });

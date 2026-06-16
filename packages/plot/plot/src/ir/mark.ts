@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import type { ValueOf } from '@retikz/core';
-import { EncodingSchema, MarkLabelSchema, PointEncodingSchema, StyleEncodingSchema, TextEncodingSchema } from './encoding';
+import { ChannelSchema, EncodingSchema, MarkLabelSchema, PointEncodingSchema, StyleEncodingSchema, TextEncodingSchema } from './encoding';
 
 /**
  * mark 类型关键字（暴露给用户；成员值即 IR 判别串，裸字面量 `'point'` 同样可用）
@@ -23,6 +23,8 @@ export const PlotMark = {
   Rule: 'rule',
   /** 文本：自由文本兜底；datum label 首选挂宿主 mark 的 label 通道，无宿主才用本 mark 新建 Node */
   Text: 'text',
+  /** 流带：两端点集合之间的可填充 cubic 曲带（sankey / alluvial 流量；端点为字段对，经坐标系投影） */
+  Ribbon: 'ribbon',
 } as const;
 
 /** mark 类型 */
@@ -216,8 +218,45 @@ export const TextMarkSchema = z
     'Text mark: a standalone free-text label placed at each record (same projection as point), emitting a core Node carrying text. For labelling another mark’s datum prefer that mark’s label channel',
   );
 
+export const RibbonEndpointSchema = z
+  .object({
+    x: ChannelSchema.describe('Field-pair endpoint primary position channel (projected through the coordinate system)'),
+    y: ChannelSchema.describe('Field-pair endpoint secondary position channel (projected through the coordinate system)'),
+  })
+  .describe('One ribbon endpoint: an { x, y } field pair projected through the coordinate system into a screen point');
+
+export const RibbonMarkSchema = z
+  .object({
+    type: z.literal(PlotMark.Ribbon).describe('Discriminator: a fillable cubic flow band between two endpoint sets'),
+    source: RibbonEndpointSchema.describe('Source endpoint (the band start, projected to a screen point)'),
+    target: RibbonEndpointSchema.describe('Target endpoint (the band end, projected to a screen point)'),
+    value: z
+      .string()
+      .min(1)
+      .describe('Flow magnitude field; mapped through a width scale to the source-end band width (user units)'),
+    width: z
+      .string()
+      .min(1)
+      .optional()
+      .describe('Optional independent width-scale name; omitted → a default linear scale is synthesized from the value extent'),
+    endWidth: z
+      .string()
+      .min(1)
+      .optional()
+      .describe('Optional target-end width field; omitted → equal width to the source end (a straight-width band rather than a flared one)'),
+    curvature: z
+      .number()
+      .min(0)
+      .max(1)
+      .optional()
+      .describe('Cubic control-point extrapolation ratio along the main axis (0 = near-straight, larger = more S-shaped); default 0.5'),
+    ...markBase,
+    encoding: StyleEncodingSchema,
+  })
+  .describe('Ribbon mark: one fillable cubic band per record between a source and target field-pair endpoint, width driven by the value field; consumes pre-computed layout positions (sankey / alluvial layout is out of scope). Uses style-only encoding (color); positions come from the source / target field pairs');
+
 export const MarkSchema = z
-  .discriminatedUnion('type', [PointMarkSchema, LineMarkSchema, IntervalMarkSchema, SectorMarkSchema, AreaMarkSchema, RectMarkSchema, RuleMarkSchema, TextMarkSchema])
+  .discriminatedUnion('type', [PointMarkSchema, LineMarkSchema, IntervalMarkSchema, SectorMarkSchema, AreaMarkSchema, RectMarkSchema, RuleMarkSchema, TextMarkSchema, RibbonMarkSchema])
   .describe('Mark union; text is a standalone free-text label (datum labels prefer a positional mark label channel)');
 
 /** point mark */
@@ -236,5 +275,9 @@ export type RectMark = z.infer<typeof RectMarkSchema>;
 export type RuleMark = z.infer<typeof RuleMarkSchema>;
 /** text(自由文本兜底；datum label 首选挂宿主 mark label) mark */
 export type TextMark = z.infer<typeof TextMarkSchema>;
-/** mark（point / line / interval / sector / area / rect / rule / text） */
+/** ribbon 一端：字段对端点（经坐标系投影成屏幕点） */
+export type RibbonEndpoint = z.infer<typeof RibbonEndpointSchema>;
+/** ribbon(sankey / alluvial 流带) mark */
+export type RibbonMark = z.infer<typeof RibbonMarkSchema>;
+/** mark（point / line / interval / sector / area / rect / rule / text / ribbon） */
 export type Mark = z.infer<typeof MarkSchema>;

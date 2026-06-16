@@ -1,6 +1,6 @@
 import { type IRChild, type IRNode, type IRNodeDefault, type IRNodeLabel, type IRScope, type IRStep } from '@retikz/core';
-import { type ExternalRow, type IntervalMark, type Mark, PlotCoordinate, PlotMark, type RuleMark, type TextMark } from '../ir';
-import { type IntervalContext, buildIntervalContext, datumAnchor, markCell, roleValues } from './anchor';
+import { type ExternalRow, type IntervalMark, type Mark, PlotCoordinate, PlotMark, type RibbonMark, type RuleMark, type TextMark } from '../ir';
+import { type IntervalContext, RIBBON_DEFAULT_CURVATURE, buildIntervalContext, datumAnchor, markCell, ribbonBandGeometry, ribbonEndpoints, roleValues } from './anchor';
 import { channelValue, compareByPath, isFiniteNumber, resolveFieldPath } from './field';
 import { type CartesianFrame, type Cell, type CellGeometry, type CoordinateFrame, type PolarFrame, type PolarVertex, densifyPolarSegments, toPolarVertex } from './project';
 import {
@@ -86,7 +86,7 @@ const pointStyle = (fill: string): IRNodeDefault => ({
  * @description x/y 是唯一位置通道（坐标系决定其含义）；sector 无位置通道（角度来自累积界、半径常量）→ 不走此路径。
  */
 const resolveRolePosition = (mark: Mark, row: ExternalRow): [unknown, unknown] =>
-  mark.type === PlotMark.Sector ? [undefined, undefined] : [channelValue(mark.encoding.x, row), channelValue(mark.encoding.y, row)];
+  mark.type === PlotMark.Sector || mark.type === PlotMark.Ribbon ? [undefined, undefined] : [channelValue(mark.encoding.x, row), channelValue(mark.encoding.y, row)];
 
 /** 柱 node 样式（rectangle + padding0 + 无描边，使 minimumWidth/Height 即真实柱尺寸） */
 const barStyle = (fill: string): IRNodeDefault => ({ shape: 'rectangle', padding: 0, strokeWidth: 0, fill });
@@ -535,6 +535,93 @@ const lowerArea = (mark: Mark, rows: Array<ExternalRow>, frame: CoordinateFrame,
   return { type: 'scope', pathDefault: { fill }, children: [{ type: 'path', children: steps }] };
 };
 
+/** ribbon 最大带宽（user units）：合成 width 线性 scale 的 range 上界（value 域 max → 此宽） */
+const RIBBON_MAX_WIDTH = 40;
+
+/**
+ * 合成 ribbon 的 value → 半宽（user units）映射：线性 [0, maxValue] → [0, RIBBON_MAX_WIDTH/2]
+ * @description 默认合成线性 scale（ADR-05 width 缺省）；域上界取所有行 value / endWidth 的有限最大绝对值。
+ *   全零 / 无有限值 → 上界 0（所有带零宽跳过）。返回 value → 半宽（半宽 = 全宽 / 2，供四角法向偏移）。
+ */
+const ribbonHalfWidthOf = (mark: RibbonMark, rows: Array<ExternalRow>): ((value: number) => number) => {
+  let maxValue = 0;
+  const consider = (raw: unknown): void => {
+    if (isFiniteNumber(raw) && Math.abs(raw) > maxValue) maxValue = Math.abs(raw);
+  };
+  for (const row of rows) {
+    consider(resolveFieldPath(row, mark.value));
+    if (mark.endWidth !== undefined) consider(resolveFieldPath(row, mark.endWidth));
+  }
+  const halfMax = RIBBON_MAX_WIDTH / 2;
+  return value => (maxValue > 0 ? (value / maxValue) * halfMax : 0);
+};
+
+/** ribbon 一行的 value（流量）：非有限 / 缺失 → null（跳过该行）；负值 → fail-loud（负流不静默歪曲） */
+const ribbonValueOf = (row: ExternalRow, field: string): number | null => {
+  const raw = resolveFieldPath(row, field);
+  if (!isFiniteNumber(raw)) return null;
+  if (raw < 0) {
+    throw new Error(`lowerPlots: ribbon mark requires non-negative ${field} (got ${raw}); negative flow cannot be drawn as a band width`);
+  }
+  return raw;
+};
+
+/**
+ * 流带（ribbon mark）下沉：每行 → 一条可填充 cubic 曲带 Path（坐标系无关端点投影 + 屏幕空间几何）
+ * @description 端点为字段对，经 frame.projectRoles 投影成屏幕中心点；value → 源端半宽、endWidth（缺省 = value）→
+ *   目标端半宽（合成线性 width scale）；ribbonBandGeometry 算四角 + 上 / 下边界 cubic 控制点（弦法向 + curvature 主轴外推）。
+ *   steps：move(S_top) → cubic(T_top) → line(T_bot)[目标封口] → cubic(S_bot) → cycle[源封口闭合]。
+ *   零宽（半宽 < ε）/ 端点非有限 / 源目标重合 → 跳过该行；value 负 → fail-loud。color 字段按色分子 Scope 上提 fill。
+ *   width 具名 scale（mark.width）v1 不支持（见 ADR-05 不在范围）→ fail-loud；缺省合成线性 scale。
+ */
+const lowerRibbon = (mark: RibbonMark, rows: Array<ExternalRow>, frame: CoordinateFrame, colorOf: ColorOf | undefined, defaultColor: string | undefined): IRScope | null => {
+  if (mark.width !== undefined) {
+    throw new Error(`lowerPlots: ribbon mark named width scale "${mark.width}" is not supported this round; omit width for a synthesized linear scale`);
+  }
+  const halfWidthOf = ribbonHalfWidthOf(mark, rows);
+  const curvature = mark.curvature ?? RIBBON_DEFAULT_CURVATURE;
+  const placed: Array<{ color: string | undefined; steps: Array<IRStep> }> = [];
+  for (const row of rows) {
+    const value = ribbonValueOf(row, mark.value);
+    if (value === null) continue;
+    const endValue = mark.endWidth !== undefined ? ribbonValueOf(row, mark.endWidth) : value;
+    if (endValue === null) continue;
+    const halfSource = halfWidthOf(value);
+    const halfTarget = halfWidthOf(endValue);
+    // 零宽（源端半宽 < ε）跳过：退化带无可填充区域（与 area 上沿 < 2 点、interval 零高一致）
+    if (!(halfSource > 1e-9)) continue;
+    const endpoints = ribbonEndpoints(mark, row, frame);
+    if (endpoints === null) continue;
+    const geometry = ribbonBandGeometry(endpoints.source, endpoints.target, halfSource, halfTarget, curvature);
+    if (geometry === null) continue;
+    const steps: Array<IRStep> = [
+      { type: 'step', kind: 'move', to: geometry.sourceTop },
+      { type: 'step', kind: 'cubic', to: geometry.targetTop, control1: geometry.topControl1, control2: geometry.topControl2 },
+      { type: 'step', kind: 'line', to: geometry.targetBottom },
+      { type: 'step', kind: 'cubic', to: geometry.sourceBottom, control1: geometry.bottomControl1, control2: geometry.bottomControl2 },
+      { type: 'step', kind: 'cycle' },
+    ];
+    placed.push({ color: colorOf?.(row), steps });
+  }
+  if (placed.length === 0) return null;
+  // 无 color field：单层 pathDefault.fill（取常量 color value 或默认）；有 color field：按色分子 Scope 上提 fill（IR 体积 O(色数)）
+  if (!colorOf) {
+    const colorValue = mark.encoding.color?.value;
+    const fill = colorValue !== undefined ? String(colorValue) : defaultColor ?? DEFAULT_FILL;
+    return { type: 'scope', pathDefault: { fill }, children: placed.map(p => ({ type: 'path', children: p.steps })) };
+  }
+  const groups = new Map<string, Array<IRChild>>();
+  for (const { color, steps } of placed) {
+    const fill = color ?? DEFAULT_FILL;
+    const path: IRChild = { type: 'path', children: steps };
+    const bucket = groups.get(fill);
+    if (bucket) bucket.push(path);
+    else groups.set(fill, [path]);
+  }
+  const children: Array<IRChild> = [...groups].map(([fill, paths]) => ({ type: 'scope', pathDefault: { fill }, children: paths }));
+  return { type: 'scope', children };
+};
+
 /** rule 描边宽度（参考线；与 line mark 同宽，视觉一致） */
 const RULE_STROKE_WIDTH = LINE_STROKE_WIDTH;
 
@@ -806,6 +893,16 @@ export const lowerMark = (mark: Mark, rows: Array<ExternalRow>, frame: Coordinat
       throw new Error(failLoudMessage(mark.type, frame.type));
     }
     const layer = mark.type === PlotMark.Line ? lowerLine(mark, rows, frame, colorOf, defaultColor, markProvenance) : lowerArea(mark, rows, frame, colorOf, defaultColor, markProvenance);
+    return layer === null ? null : attachMarkLayer(layer, mark, markProvenance);
+  }
+
+  // ribbon（流带）：每行一条可填充 cubic 曲带 Path；端点字段对经 frame.projectRoles 投影、几何按笛卡尔屏幕空间算，
+  //   本轮仅 cartesian2D（非笛卡尔曲带形态如极坐标 chord 顺延，见 ADR-05 不在范围），其余坐标系 fail-loud
+  if (mark.type === PlotMark.Ribbon) {
+    if (frame.type !== PlotCoordinate.Cartesian2D) {
+      throw new Error(failLoudMessage(mark.type, frame.type));
+    }
+    const layer = lowerRibbon(mark, rows, frame, colorOf, defaultColor);
     return layer === null ? null : attachMarkLayer(layer, mark, markProvenance);
   }
 

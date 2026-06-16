@@ -1,4 +1,4 @@
-import { type Channel, type ExternalRow, type IntervalMark, type Mark, PlotCoordinate, PlotMark, type RectMark } from '../ir';
+import { type Channel, type ExternalRow, type IntervalMark, type Mark, PlotCoordinate, PlotMark, type RectMark, type RibbonMark } from '../ir';
 import { channelValue, isFiniteNumber, resolveFieldPath } from './field';
 import type { CartesianFrame, Cell, CellGeometry, CoordinateFrame, DimensionRole, PolarFrame } from './project';
 import { inferCategoryDomain } from './scale';
@@ -9,7 +9,8 @@ import { inferCategoryDomain } from './scale';
  *   sector 无位置通道（角度来自累积界）→ undefined。
  */
 export const channelForRole = (mark: Mark, role: DimensionRole): Channel | undefined => {
-  if (mark.type === PlotMark.Sector) return undefined;
+  // sector / ribbon 无 encoding.x/y 位置通道（sector 角度来自累积界；ribbon 端点来自 source/target 字段对）→ undefined
+  if (mark.type === PlotMark.Sector || mark.type === PlotMark.Ribbon) return undefined;
   switch (role) {
     case 'x':
     case 'angle':
@@ -233,6 +234,84 @@ export const markCell = (mark: Mark, row: ExternalRow, frame: CoordinateFrame, c
   return null;
 };
 
+/** ribbon 默认 cubic 控制点沿主轴外推比例（curvature 缺省；0=准直、1=最 S）；与 d3 sankeyLinkHorizontal 0.5 同序 */
+export const RIBBON_DEFAULT_CURVATURE = 0.5;
+
+/** ribbon 一行投影出的两端中心屏幕点（source / target 各经 frame.projectRoles）；任一端非有限 → null */
+export type RibbonEndpoints = { source: [number, number]; target: [number, number] };
+
+/** ribbon 一条带的几何：四角（封口两端各两点）+ 上 / 下边界 cubic 控制点（lowering 与 locator 单一真源） */
+export type RibbonBandGeometry = {
+  /** 源端封口上角（S_top） */
+  sourceTop: [number, number];
+  /** 源端封口下角（S_bot） */
+  sourceBottom: [number, number];
+  /** 目标端封口上角（T_top） */
+  targetTop: [number, number];
+  /** 目标端封口下角（T_bot） */
+  targetBottom: [number, number];
+  /** 上边界 cubic（S_top→T_top）首控制点 */
+  topControl1: [number, number];
+  /** 上边界 cubic（S_top→T_top）末控制点 */
+  topControl2: [number, number];
+  /** 下边界 cubic（T_bot→S_bot）首控制点 */
+  bottomControl1: [number, number];
+  /** 下边界 cubic（T_bot→S_bot）末控制点 */
+  bottomControl2: [number, number];
+};
+
+/** 取 ribbon 一行某端点（source / target 字段对）经 frame.projectRoles 投影出的屏幕中心点；非有限 → null */
+export const ribbonEndpointPoint = (endpoint: { x: Channel; y: Channel }, row: ExternalRow, frame: CoordinateFrame): [number, number] | null =>
+  frame.projectRoles([channelValue(endpoint.x, row), channelValue(endpoint.y, row)]);
+
+/** 取 ribbon 一行源 / 目标两端中心点（任一端非有限 → null，整行跳过） */
+export const ribbonEndpoints = (mark: RibbonMark, row: ExternalRow, frame: CoordinateFrame): RibbonEndpoints | null => {
+  const source = ribbonEndpointPoint(mark.source, row, frame);
+  const target = ribbonEndpointPoint(mark.target, row, frame);
+  if (source === null || target === null) return null;
+  return { source, target };
+};
+
+/**
+ * 由源 / 目标中心 + 各端半宽 + curvature 算出一条带的四角与上 / 下边界 cubic 控制点（lowering / locator 单一真源）
+ * @description 半宽法向取「源→目标弦方向」的法向（本轮弦法向近似，精确端切向法向列为后续；见 ADR-05 不在范围）：
+ *   弦单位向量 u = (T−S)/|T−S|、法向 n = (−u.y, u.x)；S_top = S + halfSource·n、S_bot = S − halfSource·n、
+ *   T_top = T + halfTarget·n、T_bot = T − halfTarget·n。上 / 下边界 cubic 控制点沿弦主轴分量按 curvature 外推
+ *   （control1 在源端沿 +u、control2 在目标端沿 −u，幅度 = curvature × Δmain），纯水平 sankey 退化成 d3 S 形；
+ *   curvature=0 → 控制点贴端点（准直带）。退化（源目标重合，|T−S|<ε）→ null（零长带跳过）。
+ */
+export const ribbonBandGeometry = (source: [number, number], target: [number, number], halfSource: number, halfTarget: number, curvature: number): RibbonBandGeometry | null => {
+  const dx = target[0] - source[0];
+  const dy = target[1] - source[1];
+  const length = Math.hypot(dx, dy);
+  if (!(length > 1e-9)) return null;
+  const ux = dx / length;
+  const uy = dy / length;
+  // 弦法向（逆时针 90°）
+  const nx = -uy;
+  const ny = ux;
+  const sourceTop: [number, number] = [source[0] + halfSource * nx, source[1] + halfSource * ny];
+  const sourceBottom: [number, number] = [source[0] - halfSource * nx, source[1] - halfSource * ny];
+  const targetTop: [number, number] = [target[0] + halfTarget * nx, target[1] + halfTarget * ny];
+  const targetBottom: [number, number] = [target[0] - halfTarget * nx, target[1] - halfTarget * ny];
+  // 主轴外推幅度：沿弦方向 curvature × 弦长（control1 从源端 +u 推、control2 从目标端 −u 推）
+  const reach = curvature * length;
+  const ex = ux * reach;
+  const ey = uy * reach;
+  return {
+    sourceTop,
+    sourceBottom,
+    targetTop,
+    targetBottom,
+    // 上边界 S_top→T_top
+    topControl1: [sourceTop[0] + ex, sourceTop[1] + ey],
+    topControl2: [targetTop[0] - ex, targetTop[1] - ey],
+    // 下边界 T_bot→S_bot（反向：control1 在目标端 −u、control2 在源端 +u）
+    bottomControl1: [targetBottom[0] - ex, targetBottom[1] - ey],
+    bottomControl2: [sourceBottom[0] + ex, sourceBottom[1] + ey],
+  };
+};
+
 /**
  * 某 mark 的某行 → 锚点屏幕位置（locator 与 lowering 共享的单一几何真源）
  * @description 返回 [x, y] | null（null = 该行未被渲染 / 被跳过，命中预演与实际渲染一致）。
@@ -245,6 +324,11 @@ export const datumAnchor = (mark: Mark, row: ExternalRow, frame: CoordinateFrame
     if (frame.projectCell === undefined) return null;
     const cell = markCell(mark, row, frame, ctx);
     return cell ? cellGeometryAnchor(frame.projectCell(cell)) : null;
+  }
+  // ribbon：一行一带，锚点取带中线中点（源中心 ↔ 目标中心连线中点），与 lowering 同源；任一端非有限 → null
+  if (mark.type === PlotMark.Ribbon) {
+    const endpoints = ribbonEndpoints(mark, row, frame);
+    return endpoints ? [(endpoints.source[0] + endpoints.target[0]) / 2, (endpoints.source[1] + endpoints.target[1]) / 2] : null;
   }
   // point / line / area：按 frame.roles 序投影该行顶点（坐标系无关，1 / 2 / 3 通道统一走 projectRoles）
   return frame.projectRoles(roleValues(mark, row, frame));

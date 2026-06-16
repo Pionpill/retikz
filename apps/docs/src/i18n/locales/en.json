@@ -128,6 +128,7 @@
     "compRectMark": "RectMark",
     "compRuleMark": "RuleMark",
     "compTextMark": "Data Labels",
+    "compRibbonMark": "RibbonMark",
     "compAxis": "Axis",
     "compLegend": "Legend",
     "examples": "Charts",

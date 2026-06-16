@@ -30,6 +30,7 @@ export const plotSection: Array<Section> = [
           { id: 'rect', label: 'plot.compRectMark' },
           { id: 'rule', label: 'plot.compRuleMark' },
           { id: 'text', label: 'plot.compTextMark' },
+          { id: 'ribbon', label: 'plot.compRibbonMark' },
         ],
       },
       { id: 'axis', label: 'plot.compAxis' },

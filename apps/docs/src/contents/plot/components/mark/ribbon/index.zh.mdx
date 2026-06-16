@@ -1,0 +1,40 @@
+---
+title: 流带
+description: 用 <RibbonMark> 画 sankey / alluvial 流带：每行一条从源端到目标端的可填充曲带，宽度随流量变化。
+---
+
+`<RibbonMark>` 把每行数据画成一条**有宽度的流带**：从源端点（`sourceX` / `sourceY`）弯到目标端点（`targetX` / `targetY`），两条长边是 cubic 曲线、两端是直线封口，围成一个可填充区域。`value` 字段经内建宽度比例尺映射成带宽。这是画 sankey、alluvial 流量图的基础图元。
+
+<ComponentPreview name="ribbon-basic" sourceFiles={['ribbon-basic.data.ts']} />
+
+<p className="text-sm text-muted-foreground">两列 alluvial：左侧来源 → 右侧去向，带宽随 value，channel 分组上色。</p>
+
+## 端点是字段对
+
+流带的两端都是**字段对**——`sourceX` / `sourceY` 给源端、`targetX` / `targetY` 给目标端，和 `<LineMark>` / `<PointMark>` 一样经坐标系投影成屏幕点。带宽、四角、曲线控制点都由这两个已投影的端点算出。
+
+| prop | 类型 | 说明 |
+| --- | --- | --- |
+| `sourceX` | `string` | 源端 x 字段（经坐标系投影） |
+| `sourceY` | `string` | 源端 y 字段 |
+| `targetX` | `string` | 目标端 x 字段 |
+| `targetY` | `string` | 目标端 y 字段 |
+| `value` | `string` | 流量字段：经合成线性比例尺映射成源端带宽 |
+| `endWidth` | `string?` | 目标端宽度字段；缺省 = 与源端等宽 |
+| `curvature` | `number?` | 曲线张力 0..1（0 = 准直、大 = 更 S）；缺省 0.5 |
+| `color` | `string?` | 颜色字段（→ color 通道 + 自动序数色阶） |
+| `id` | `string?` | 可选句柄（预留，暂不解析） |
+
+## 喇叭带与曲率
+
+给 `endWidth` 让目标端用独立宽度——带子从源宽过渡到目标宽，呈喇叭形（sankey 节点入边宽 ≠ 出边宽的常见情形）。`curvature` 调两条长边的 S 形张力：
+
+<ComponentPreview name="ribbon-flared" sourceFiles={['ribbon-flared.data.ts']} />
+
+<p className="text-sm text-muted-foreground">endWidth 给目标端独立宽度（喇叭带），curvature=0.6 加大弯曲。</p>
+
+## 布局需预处理
+
+<ComponentAlert title="流带只画带，不算布局" description="节点排在哪、多条流怎么堆叠、交叉怎么最小化——这些是 sankey 布局算法，不在 <RibbonMark> 里。每行的 sourceX/Y、targetX/Y、value 须由你预先算好（或后续的布局 transform 产出）写回数据，<RibbonMark> 只消费这些已算好的位置 + 宽度。" />
+
+本轮端点统一是同一坐标系内的字段对；连接不同子图（facet / inset）的具名 node、跨 scope 连线属于后续能力。流带本轮仅支持 `cartesian2D` 坐标系。

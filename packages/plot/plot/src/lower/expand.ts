@@ -36,8 +36,14 @@ const axisRole = (dimension: string, coordinateType: string): string => {
  * 取 mark 的 x / y 位置通道；sector 无位置通道（角度来自累积界、半径常量）→ undefined
  * @description schema 已保证位置 mark 必填 x/y、sector 用样式-only 编码，故此处仅按 type 区分取值。
  */
-const xChannelOf = (mark: Mark): Channel | undefined => (mark.type === PlotMark.Sector ? undefined : mark.encoding.x);
-const yChannelOf = (mark: Mark): Channel | undefined => (mark.type === PlotMark.Sector ? undefined : mark.encoding.y);
+const xChannelOf = (mark: Mark): Channel | undefined =>
+  mark.type === PlotMark.Sector ? undefined : mark.type === PlotMark.Ribbon ? mark.source.x : mark.encoding.x;
+const yChannelOf = (mark: Mark): Channel | undefined =>
+  mark.type === PlotMark.Sector ? undefined : mark.type === PlotMark.Ribbon ? mark.source.y : mark.encoding.y;
+
+/** ribbon 的 target 端通道（source 端走 x/yChannelOf；两端都须纳入位置 scale 域，否则 target 投影越界） */
+const ribbonTargetChannelOf = (mark: Mark, role: 'x' | 'y'): Channel | undefined =>
+  mark.type === PlotMark.Ribbon ? (role === 'x' ? mark.target.x : mark.target.y) : undefined;
 
 const defaultColorOf = (node: PlotSpec, markIndex: number): string => {
   const colors = node.colors ?? DEFAULT_PLOT_COLORS;
@@ -103,6 +109,8 @@ const assertRequiredPositionChannels = (coordinate: Coordinate, marks: ReadonlyA
     if (mark.type === PlotMark.Sector) continue;
     // rule 取向由 encoding.x XOR y 决定（绑一个、缺一个），不满足坐标系的「x+y 全必填」；其取向校验在 lowerRule fail-loud
     if (mark.type === PlotMark.Rule) continue;
+    // ribbon 位置来自 source / target 字段对（非 encoding.x/y）；端点缺失校验在 lowerRibbon fail-loud
+    if (mark.type === PlotMark.Ribbon) continue;
     // 读可选位置通道（x/y/a/b/c）；encoding 是 zod object，按名读为 Channel | undefined（纯 JSON 字段，非 any 逃逸）
     const encoding = mark.encoding as Record<string, Channel | undefined>;
     for (const channel of required) {
@@ -216,9 +224,20 @@ export const resolveFrame = (params: ResolveFrameParams): ResolvedFrame => {
     includeBaseline: boolean,
     stackAxis: boolean,
     sectorAngle = false,
+    ribbonRole?: 'x' | 'y',
   ): Array<unknown> => {
     const out: Array<unknown> = [];
     for (const mark of node.marks) {
+      // ribbon 两端都进位置 scale 域：source 端走 pick（= source.x/y），target 端单独收（否则 target 投影越界）
+      if (ribbonRole !== undefined && mark.type === PlotMark.Ribbon) {
+        const sourceChannel = pick(mark);
+        const targetChannel = ribbonTargetChannelOf(mark, ribbonRole);
+        for (const row of rows) {
+          if (sourceChannel !== undefined) out.push(channelValue(sourceChannel, row));
+          if (targetChannel !== undefined) out.push(channelValue(targetChannel, row));
+        }
+        continue;
+      }
       // 堆叠柱的 y 域取累积上 / 下界（来自 stack transform），而非每段原值
       if (stackAxis && mark.type === PlotMark.Interval && mark.arrangement === 'stack') {
         const y0Field = mark.y0Field ?? 'y0';
@@ -561,9 +580,9 @@ export const resolveFrame = (params: ResolveFrameParams): ResolvedFrame => {
       }
     }
   } else {
-    // cartesian2D：x/y 角色绑 x/y scale
-    const xValues = collectValues(xChannelOf, false, false);
-    const yValues = collectValues(yChannelOf, true, true);
+    // cartesian2D：x/y 角色绑 x/y scale（ribbon 两端字段对都进域）
+    const xValues = collectValues(xChannelOf, false, false, false, 'x');
+    const yValues = collectValues(yChannelOf, true, true, false, 'y');
     const xScaleDef = resolveScaleForRole('x', coordinate.x, xChannelOf, xValues);
     const yScaleDef = resolveScaleForRole('y', coordinate.y, yChannelOf, yValues);
     // L1：y 是 cartesian 的值轴；非线性连续 scale + interval/area（baseline 0）→ fail-loud

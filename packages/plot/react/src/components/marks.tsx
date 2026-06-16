@@ -233,3 +233,37 @@ export type TextMarkProps = {
  *   投影同 point（坐标系无关），新建带 text 的 core Node。标注别的 mark 的 datum 优先用该 mark 的 label 通道
  */
 export const TextMark: FC<TextMarkProps> = () => null;
+
+/**
+ * <RibbonMark> props：流带图层（sankey / alluvial 流量），每行一条源 → 目标的可填充 cubic 曲带（ADR-05）。
+ * @description 扁平 props：端点拆成 sourceX/sourceY/targetX/targetY 顶层字段串（经坐标系投影），value 字段 → 带宽。
+ *   布局（节点排布 / 流量堆叠）不在本体——sourceX/Y、targetX/Y、value 须由 transform / 预处理算好写回数据；
+ *   连接不同 facet 的 node-id 跨 scope 端点后续（见 ADR-05 不在范围）。
+ */
+export type RibbonMarkProps = {
+  /** 源端 x 位置通道字段（经坐标系投影成屏幕点） */
+  sourceX: string;
+  /** 源端 y 位置通道字段 */
+  sourceY: string;
+  /** 目标端 x 位置通道字段 */
+  targetX: string;
+  /** 目标端 y 位置通道字段 */
+  targetY: string;
+  /** 流量字段：经合成 width 线性 scale 映射成源端带宽 */
+  value: string;
+  /** 目标端宽度字段：缺省 = 与源端等宽（等宽带）；给定 → 喇叭带 */
+  endWidth?: string;
+  /** cubic 控制点沿主轴外推比例 0..1（0=准直、大=更 S）；缺省 0.5 */
+  curvature?: number;
+  /** 颜色字段（→ color 通道 + 自动 ordinal 色 scale）；缺省按图层序取默认色 */
+  color?: string;
+  /** 可选 mark 句柄（预留 scope/anchor，解析留 alpha.5） */
+  id?: string;
+};
+
+/**
+ * 流带（sankey / alluvial）图层声明组件（ADR-05）
+ * @description 配置载体：不进 React render 栈、不渲染（返回 null），由 <Plot> 同步内省其扁平 props 装配进 PlotSpec；
+ *   扁平 sourceX/Y、targetX/Y → 嵌套 IR source/target 字段对端点，value → 带宽。布局需预处理（本体只画带）
+ */
+export const RibbonMark: FC<RibbonMarkProps> = () => null;
