@@ -1,5 +1,6 @@
 import { type Channel, type DataModel, type ExternalRow, type PlotFieldTypeValue, PlotMark, type PlotSpec, PlotTransform } from '../ir';
 import { inferFieldType } from './infer';
+import { aggregateOutputField, binOutputFields } from './transform';
 
 /** 把一个通道的 field 路径（若有）加入集合（常量 value 通道无 field，跳过） */
 const addChannelField = (fields: Set<string>, channel: Channel | undefined): void => {
@@ -58,16 +59,34 @@ export const collectUserSourceFields = (spec: PlotSpec): Set<string> => {
       if (mark.extentToField !== undefined) fields.add(mark.extentToField);
     }
   }
+  // transform 输入字段进 strict 集；派生输出字段名先收集，最后统一剔除（即便被 mark encoding 引用）
+  const derivedOutputs = new Set<string>();
   for (const transform of spec.transform ?? []) {
     if (transform.kind === PlotTransform.Sort) {
       fields.add(transform.field);
-      continue;
+    } else if (transform.kind === PlotTransform.Stack) {
+      fields.add(transform.y);
+      if (transform.x !== undefined) fields.add(transform.x);
+      if (transform.groupBy !== undefined) fields.add(transform.groupBy);
+      derivedOutputs.add(transform.startField ?? 'y0');
+      derivedOutputs.add(transform.endField ?? 'y1');
+    } else if (transform.kind === PlotTransform.Bin) {
+      // 输入：被分箱字段 + 被规约字段；输出（start/end/value）剔除
+      fields.add(transform.field);
+      if (transform.reduceField !== undefined) fields.add(transform.reduceField);
+      const out = binOutputFields(transform);
+      derivedOutputs.add(out.startField);
+      derivedOutputs.add(out.endField);
+      derivedOutputs.add(out.valueField);
+    } else {
+      // aggregate —— 输入：groupBy 各键 + 被规约字段；输出（as）剔除
+      for (const key of transform.groupBy) fields.add(key);
+      if (transform.field !== undefined) fields.add(transform.field);
+      derivedOutputs.add(aggregateOutputField(transform));
     }
-    // stack（当前判别联合仅 sort / stack；新增 transform 时在此补分支）
-    fields.add(transform.y);
-    if (transform.x !== undefined) fields.add(transform.x);
-    if (transform.groupBy !== undefined) fields.add(transform.groupBy);
   }
+  // 派生输出字段（transform 产出、用户 model 不会声明）不进 strict 集——即便被 mark encoding / x0Field 等引用
+  for (const derived of derivedOutputs) fields.delete(derived);
   return fields;
 };
 

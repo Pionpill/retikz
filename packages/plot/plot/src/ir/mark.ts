@@ -124,11 +124,21 @@ export const IntervalMarkSchema = z
       .min(1)
       .optional()
       .describe('Upper-bound field for stacked bars (matches the stack transform endField; default "y1"). Only read when arrangement = stack'),
+    x0Field: z
+      .string()
+      .min(1)
+      .optional()
+      .describe('Continuous x-interval lower-bound field (histogram: reads the bin transform binStart); mutually exclusive with the band primary — when set the bar primary spans [coord(x0), coord(x1)] instead of the band bandwidth'),
+    x1Field: z
+      .string()
+      .min(1)
+      .optional()
+      .describe('Continuous x-interval upper-bound field (histogram: reads the bin transform binEnd); pairs with x0Field'),
     ...markBase,
     ...positionalLabel,
     ...positionalEncoding,
   })
-  .describe('Interval mark: bar from baseline (0) to the value; width taken from the band scale');
+  .describe('Interval mark: bar from baseline (0) to the value; width taken from the band scale (or from x0Field / x1Field for continuous-interval histogram bars)');
 
 export const SectorMarkSchema = z
   .object({

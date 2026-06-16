@@ -10,6 +10,7 @@ import {
   markLayerId,
   markLayerMeta,
   readSourceIndex,
+  readSourceIndices,
   seriesPathMeta,
   slug,
 } from './provenance';
@@ -108,7 +109,8 @@ const decorateDatum = (
   const { context, markIndex, registerDatumId } = markProvenance;
   const decorated: IRNode = { ...node };
   if (context.datumProvenance) {
-    decorated.meta = datumMeta(context, markType, markIndex, transformedIndex, readSourceIndex(row), seriesValue);
+    // 改行数 transform 输出行带组级 SOURCE_INDICES（源行集合）→ 组级 provenance；否则单源行 sourceIndex
+    decorated.meta = datumMeta(context, markType, markIndex, transformedIndex, readSourceIndex(row), seriesValue, readSourceIndices(row));
   }
   const datumId = registerDatumId?.(row);
   if (datumId !== undefined) decorated.id = datumId;

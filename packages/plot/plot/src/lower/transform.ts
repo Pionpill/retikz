@@ -1,10 +1,19 @@
-import { type ExternalRow, PlotTransform, type SortTransform, type StackTransform, type Transform } from '../ir';
+import { scaleLinear } from 'd3-scale';
+import { type AggregateTransform, type BinTransform, type ExternalRow, PlotTransform, type SortTransform, type StackTransform, type Transform } from '../ir';
 import { compareByPath, isFiniteNumber, resolveFieldPath } from './field';
+import { SOURCE_INDICES, readSourceIndex } from './provenance';
 import { inferCategoryDomain } from './scale';
 
 /** 默认堆叠下 / 上界输出字段名（与 IntervalMark 的 y0Field / y1Field 默认对齐） */
 const DEFAULT_START_FIELD = 'y0';
 const DEFAULT_END_FIELD = 'y1';
+
+/** bin 默认输出字段名（与 IntervalMark 的 x0Field / x1Field 消费方对齐） */
+const DEFAULT_BIN_START_FIELD = 'binStart';
+const DEFAULT_BIN_END_FIELD = 'binEnd';
+const DEFAULT_BIN_VALUE_FIELD = 'binValue';
+/** bin 默认目标箱数（无策略时） */
+const DEFAULT_BIN_COUNT = 10;
 
 /** 稳定排序：按字段升 / 降序（等键保持原序，JS Array.sort 稳定） */
 const applySort = (rows: Array<ExternalRow>, op: SortTransform): Array<ExternalRow> => {
@@ -63,9 +72,173 @@ const applyStack = (rows: Array<ExternalRow>, op: StackTransform): Array<Externa
   });
 };
 
+/** bin 的输出字段名（单一真源，validate 剔除派生字段时复用） */
+export const binOutputFields = (op: BinTransform): { startField: string; endField: string; valueField: string } => ({
+  startField: op.startField ?? DEFAULT_BIN_START_FIELD,
+  endField: op.endField ?? DEFAULT_BIN_END_FIELD,
+  valueField: op.valueField ?? DEFAULT_BIN_VALUE_FIELD,
+});
+
+/** aggregate 的输出字段名（as 缺省 = count → 'count'、否则 reduce + 首字母大写 field；单一真源，validate 复用） */
+export const aggregateOutputField = (op: AggregateTransform): string => {
+  if (op.as !== undefined) return op.as;
+  if (op.reduce === 'count') return 'count';
+  const field = op.field ?? '';
+  return `${op.reduce}${field.charAt(0).toUpperCase()}${field.slice(1)}`;
+};
+
+/** 一组数值规约（count 不走此函数；空 / 无有限值 → 0，对齐空箱 / 空组 valueField=0 约定） */
+const reduceValues = (reduce: 'sum' | 'mean' | 'min' | 'max', values: Array<number>): number => {
+  if (values.length === 0) return 0;
+  if (reduce === 'sum') return values.reduce((a, b) => a + b, 0);
+  if (reduce === 'mean') return values.reduce((a, b) => a + b, 0) / values.length;
+  if (reduce === 'min') return Math.min(...values);
+  return Math.max(...values);
+};
+
+/** 取一组行某字段的有限数值（非有限跳过；规约只看有限值，与 isFiniteNumber 守卫一致） */
+const finiteValuesOf = (rows: Array<ExternalRow>, field: string): Array<number> => {
+  const out: Array<number> = [];
+  for (const row of rows) {
+    const value = resolveFieldPath(row, field);
+    if (isFiniteNumber(value)) out.push(value);
+  }
+  return out;
+};
+
+/** 取一组行的源行索引集合（best-effort，仅 provenance 开 / 源行已 tagSourceIndex 时非空） */
+const sourceIndicesOf = (rows: Array<ExternalRow>): Array<number> => {
+  const out: Array<number> = [];
+  for (const row of rows) {
+    const index = readSourceIndex(row);
+    if (index !== undefined) out.push(index);
+  }
+  return out;
+};
+
+/** 给改行数 transform 的输出行打组级源序标记（组内有源索引才打，保 provenance 关时默认产物逐字节等价） */
+const withGroupProvenance = (row: ExternalRow, members: Array<ExternalRow>): ExternalRow => {
+  const indices = sourceIndicesOf(members);
+  return indices.length > 0 ? { ...row, [SOURCE_INDICES]: indices } : row;
+};
+
+/** 由策略算分箱边界（升序 edge 数组，N 条边 = N-1 个箱）；三策略互斥、全缺默认 count */
+const binEdges = (op: BinTransform, values: Array<number>): Array<number> => {
+  const strategies = [op.count !== undefined, op.step !== undefined, op.thresholds !== undefined].filter(Boolean).length;
+  if (strategies > 1) {
+    throw new Error('lowerPlots: bin transform strategies count / step / thresholds are mutually exclusive; set at most one');
+  }
+  const [observedMin, observedMax] = values.length > 0 ? [Math.min(...values), Math.max(...values)] : [0, 0];
+  const [domainMin, domainMax] = op.extent ?? [observedMin, observedMax];
+
+  // thresholds：显式内部边界 + extent 端点补齐 → K+1 箱
+  if (op.thresholds !== undefined) {
+    const interior = [...op.thresholds].sort((a, b) => a - b);
+    return [domainMin, ...interior, domainMax];
+  }
+  // step：从下界按固定箱宽平铺到覆盖上界
+  if (op.step !== undefined) {
+    const edges = [domainMin];
+    let edge = domainMin;
+    // 退化（min===max）→ 单箱 [min, min+step]
+    while (edge < domainMax - 1e-9) {
+      edge += op.step;
+      edges.push(edge);
+    }
+    if (edges.length < 2) edges.push(domainMin + op.step);
+    return edges;
+  }
+  // count（默认）：nice 域后等分成 count 箱
+  const count = op.count ?? DEFAULT_BIN_COUNT;
+  const nice = op.nice ?? true;
+  let [lo, hi] = [domainMin, domainMax];
+  if (nice && op.extent === undefined) {
+    [lo, hi] = scaleLinear().domain([domainMin, domainMax]).nice(count).domain() as [number, number];
+  }
+  if (hi - lo < 1e-12) hi = lo + 1; // 退化域（单值 / 全等）→ 给一个单位宽，避免零宽箱
+  const width = (hi - lo) / count;
+  return Array.from({ length: count + 1 }, (_, i) => lo + i * width);
+};
+
+/**
+ * bin：连续 field 分箱 → 每箱一行（含空箱），携 [start, end] 边界 + 箱内规约值 + 箱代表值（field 中点）
+ * @description 改行数（N 观测 → M 箱）。边界三策略互斥（thresholds > step > count，全缺默认 count 10、nice 对齐）；
+ *   半开 [edge_i, edge_{i+1})、末箱含上界；reduce=count → 频数，sum/mean/min/max → 对 reduceField 规约（空箱 / 空组值 0）。
+ *   provenance 开时给每箱输出行打组级源序标记（SOURCE_INDICES = 该箱命中的源行索引集合）。
+ */
+const applyBin = (rows: Array<ExternalRow>, op: BinTransform): Array<ExternalRow> => {
+  if (op.reduce !== undefined && op.reduce !== 'count' && op.reduceField === undefined) {
+    throw new Error(`lowerPlots: bin transform reduce "${op.reduce}" requires reduceField (the numeric field reduced per bin)`);
+  }
+  if (rows.length === 0) return [];
+  const { startField, endField, valueField } = binOutputFields(op);
+  const reduce = op.reduce ?? 'count';
+  // 落箱依据：field 的有限观测值
+  const observed = finiteValuesOf(rows, op.field);
+  const edges = binEdges(op, observed);
+  const binCount = edges.length - 1;
+  // 每行落箱：edge_i ≤ v < edge_{i+1}，末箱含上界
+  const buckets: Array<Array<ExternalRow>> = Array.from({ length: binCount }, () => []);
+  for (const row of rows) {
+    const value = resolveFieldPath(row, op.field);
+    if (!isFiniteNumber(value)) continue;
+    let index = -1;
+    for (let i = 0; i < binCount; i++) {
+      const lo = edges[i];
+      const hi = edges[i + 1];
+      if (value >= lo && (value < hi || (i === binCount - 1 && value <= hi))) {
+        index = i;
+        break;
+      }
+    }
+    if (index >= 0) buckets[index].push(row);
+  }
+  return buckets.map((members, i) => {
+    const start = edges[i];
+    const end = edges[i + 1];
+    const value = reduce === 'count' ? members.length : members.length === 0 ? 0 : reduceValues(reduce, finiteValuesOf(members, op.reduceField as string));
+    const out: ExternalRow = { [startField]: start, [endField]: end, [valueField]: value, [op.field]: (start + end) / 2 };
+    return withGroupProvenance(out, members);
+  });
+};
+
+/**
+ * aggregate：按 groupBy 全键分组 + 组内规约 → 每组一行（携组键 + 规约值）
+ * @description 改行数（N 行 → M 组）。组按首次出现序稳定；count 不需 field，sum/mean/min/max 缺 field → fail-loud。
+ *   输出行携 groupBy 各键原值（下游位置编码读组标识）+ as 规约值；provenance 开时打组级源序标记。
+ */
+const applyAggregate = (rows: Array<ExternalRow>, op: AggregateTransform): Array<ExternalRow> => {
+  if (op.reduce !== 'count' && op.field === undefined) {
+    throw new Error(`lowerPlots: aggregate transform reduce "${op.reduce}" requires field (the numeric field reduced per group)`);
+  }
+  const as = aggregateOutputField(op);
+  // 复合键分组：稳定按首次出现序；key = groupBy 各字段值的 JSON 串
+  const order: Array<string> = [];
+  const groups = new Map<string, Array<ExternalRow>>();
+  for (const row of rows) {
+    const keyValues = op.groupBy.map(field => resolveFieldPath(row, field));
+    const key = JSON.stringify(keyValues.map(v => (v === undefined ? null : v)));
+    const bucket = groups.get(key);
+    if (bucket) bucket.push(row);
+    else {
+      order.push(key);
+      groups.set(key, [row]);
+    }
+  }
+  return order.map(key => {
+    const members = groups.get(key) as Array<ExternalRow>;
+    const first = members[0];
+    const value = op.reduce === 'count' ? members.length : reduceValues(op.reduce, finiteValuesOf(members, op.field as string));
+    // 组键原样携带（取组内首行的键值，组内同键恒等）
+    const carried: ExternalRow = {};
+    for (const field of op.groupBy) carried[field] = resolveFieldPath(first, field);
+    return withGroupProvenance({ ...carried, [as]: value }, members);
+  });
+};
+
 /**
  * 按声明顺序折叠应用一串 transform（rows → rows）
- * @description 纯函数：每个 op 行进行→行出（stack 仅追加标量字段），数据值不进 IR。空 / 省略 → 原样返回。
+ * @description 纯函数：sort / stack 保行数（仅追加标量字段），bin / aggregate 改行数（N → M）；数据值不进 IR。空 / 省略 → 原样返回。
  */
 export const applyTransforms = (rows: Array<ExternalRow>, ops?: Array<Transform>): Array<ExternalRow> => {
   if (!ops || ops.length === 0) return rows;
@@ -75,6 +248,10 @@ export const applyTransforms = (rows: Array<ExternalRow>, ops?: Array<Transform>
         return applySort(acc, op);
       case PlotTransform.Stack:
         return applyStack(acc, op);
+      case PlotTransform.Bin:
+        return applyBin(acc, op);
+      case PlotTransform.Aggregate:
+        return applyAggregate(acc, op);
     }
   }, rows);
 };

@@ -363,6 +363,66 @@ describe('datumAnchor 三态与 CellGeometry 同源', () => {
   });
 });
 
+// ── alpha.12 ADR-01：histogram 连续 x 区间柱（interval x0Field / x1Field）──────────────────
+describe('interval x0Field / x1Field → 连续 x 区间柱（histogram）', () => {
+  const histogramMark = (): IntervalMark => ({
+    type: 'interval',
+    x0Field: 'binStart',
+    x1Field: 'binEnd',
+    encoding: { y: { field: 'binValue' } },
+  });
+
+  it('x0x1_primary_is_continuous_interval_not_band', () => {
+    // 连续 x scale（bandwidth 0）：primary cell = [coord(binStart), coord(binEnd)]、紧贴排列、宽随箱边
+    const mark = histogramMark();
+    const rows = [{ binStart: 0, binEnd: 2, binValue: 5 }, { binStart: 2, binEnd: 4, binValue: 3 }];
+    const frame = createCartesianFrame(linearStub([0, 10], [0, 200], 0), linearStub([0, 10], [200, 0]));
+    const nodes = nodesOf(lowerMark(mark, rows, frame) as IRScope);
+    expect(nodes).toHaveLength(2);
+    // coord(0)=0, coord(2)=40, coord(4)=80 → 宽 40 各；中心 20 / 60；紧贴（node0 右 = node1 左）
+    expect(nodes[0].minimumWidth).toBeCloseTo(40, 9);
+    expect(nodes[1].minimumWidth).toBeCloseTo(40, 9);
+    expect((nodes[0].position as [number, number])[0]).toBeCloseTo(20, 9);
+    expect((nodes[1].position as [number, number])[0]).toBeCloseTo(60, 9);
+    // secondary 高度 = coord(0)..coord(binValue)：bar0 = |200-100|=100、bar1 = |200-140|=60
+    expect(nodes[0].minimumHeight).toBeCloseTo(100, 9);
+    expect(nodes[1].minimumHeight).toBeCloseTo(60, 9);
+  });
+
+  it('x0x1_unequal_width_bins_follow_edges', () => {
+    // 不等宽箱（thresholds 派生）：宽随各自箱边
+    const mark = histogramMark();
+    const rows = [{ binStart: 0, binEnd: 1, binValue: 2 }, { binStart: 1, binEnd: 5, binValue: 4 }];
+    const frame = createCartesianFrame(linearStub([0, 10], [0, 200], 0), linearStub([0, 10], [200, 0]));
+    const nodes = nodesOf(lowerMark(mark, rows, frame) as IRScope);
+    // coord(1)-coord(0)=20、coord(5)-coord(1)=80
+    expect(nodes[0].minimumWidth).toBeCloseTo(20, 9);
+    expect(nodes[1].minimumWidth).toBeCloseTo(80, 9);
+  });
+
+  it('x0x1_histogram_end_to_end_renders_continuous_bars', () => {
+    // 经 lowerPlots：bin transform + interval x0/x1（连续 x linear scale）→ 紧贴直方柱，可 compile
+    const spec = PlotSpecSchema.parse({
+      namespace: 'plot',
+      type: 'plot',
+      data: { reference: 'd' },
+      transform: [{ kind: 'bin', field: 'm', step: 2, reduce: 'count' }],
+      coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
+      scales: [
+        { type: 'linear', name: 'x' },
+        { type: 'linear', name: 'y' },
+      ],
+      marks: [{ type: 'interval', x0Field: 'binStart', x1Field: 'binEnd', encoding: { y: { field: 'binValue' } } }],
+    });
+    const rows = [{ m: 0 }, { m: 1 }, { m: 3 }, { m: 5 }];
+    const layer = firstLayer(spec, { d: rows }, cartOpts);
+    const nodes = nodesOf(layer);
+    // step 2、域 [0,5] → 箱 [0,2),[2,4),[4,6] → 3 箱（含空箱可能）；至少有柱、且可编译
+    expect(nodes.length).toBeGreaterThanOrEqual(1);
+    expect(() => compileToScene({ version: 1, type: 'scene', children: [layer] })).not.toThrow();
+  });
+});
+
 // ── fail-loud：无 2D 正交 cell 概念的坐标系（1D / ternary / 无 projectCell 的 custom）─────
 describe('cell 类 mark 在无 projectCell 坐标系 fail-loud', () => {
   it('interval_1d_fails_loud', () => {

@@ -163,6 +163,56 @@ describe('collectUserSourceFields — 用户源字段集（ADR-01）', () => {
     const userFields = collectUserSourceFields(spec);
     expect(() => resolveFieldTypes([{ name: 'month' }, { name: 'revenue' }], [{ month: 1, revenue: 2, note: 'x' }], userFields)).toThrow(/unknown field/i);
   });
+
+  // alpha.12 ADR-01：bin / aggregate 输入字段进、派生输出字段不进
+  it('bin_inputs_in_outputs_out', () => {
+    const spec = buildSpec({
+      transform: [{ kind: 'bin', field: 'measurement', reduce: 'sum', reduceField: 'weight' }],
+      marks: [{ type: 'interval', x0Field: 'binStart', x1Field: 'binEnd', encoding: { y: { field: 'binValue' } } }],
+    });
+    const fields = collectUserSourceFields(spec);
+    // 输入字段进
+    expect(fields.has('measurement')).toBe(true);
+    expect(fields.has('weight')).toBe(true);
+    // 派生输出字段不进（即便被 mark 的 encoding.y / x0Field / x1Field 引用）
+    expect(fields.has('binStart')).toBe(false);
+    expect(fields.has('binEnd')).toBe(false);
+    expect(fields.has('binValue')).toBe(false);
+  });
+
+  it('bin_custom_output_fields_not_collected', () => {
+    const spec = buildSpec({
+      transform: [{ kind: 'bin', field: 'm', startField: 'lo', endField: 'hi', valueField: 'n' }],
+      marks: [{ type: 'interval', x0Field: 'lo', x1Field: 'hi', encoding: { y: { field: 'n' } } }],
+    });
+    const fields = collectUserSourceFields(spec);
+    expect(fields.has('m')).toBe(true);
+    expect(fields.has('lo')).toBe(false);
+    expect(fields.has('hi')).toBe(false);
+    expect(fields.has('n')).toBe(false);
+  });
+
+  it('aggregate_inputs_in_output_out', () => {
+    const spec = buildSpec({
+      transform: [{ kind: 'aggregate', groupBy: ['region', 'product'], reduce: 'sum', field: 'revenue', as: 'total' }],
+      marks: [{ type: 'interval', encoding: { x: { field: 'region' }, y: { field: 'total' } } }],
+    });
+    const fields = collectUserSourceFields(spec);
+    expect(fields.has('region')).toBe(true);
+    expect(fields.has('product')).toBe(true);
+    expect(fields.has('revenue')).toBe(true);
+    // 派生输出字段 as 不进（即便被 encoding.y 引用）
+    expect(fields.has('total')).toBe(false);
+  });
+
+  it('aggregate_default_as_not_collected', () => {
+    const spec = buildSpec({
+      transform: [{ kind: 'aggregate', groupBy: ['region'], reduce: 'sum', field: 'revenue' }],
+      marks: [{ type: 'interval', encoding: { x: { field: 'region' }, y: { field: 'sumRevenue' } } }],
+    });
+    const fields = collectUserSourceFields(spec);
+    expect(fields.has('sumRevenue')).toBe(false);
+  });
 });
 
 describe('resolveFieldTypes — 类型解析 + strict 校验（ADR-01）', () => {

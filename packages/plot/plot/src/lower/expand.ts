@@ -111,9 +111,12 @@ const assertRequiredPositionChannels = (coordinate: Coordinate, marks: ReadonlyA
     if (mark.type === PlotMark.Rule) continue;
     // ribbon 位置来自 source / target 字段对（非 encoding.x/y）；端点缺失校验在 lowerRibbon fail-loud
     if (mark.type === PlotMark.Ribbon) continue;
+    // histogram 连续 x 区间柱：x 位置来自 x0Field / x1Field（非 encoding.x），故豁免 'x' 必填（仍要 y 作高度）
+    const histogramInterval = mark.type === PlotMark.Interval && mark.x0Field !== undefined && mark.x1Field !== undefined;
     // 读可选位置通道（x/y/a/b/c）；encoding 是 zod object，按名读为 Channel | undefined（纯 JSON 字段，非 any 逃逸）
     const encoding = mark.encoding as Record<string, Channel | undefined>;
     for (const channel of required) {
+      if (histogramInterval && channel === 'x') continue;
       if (encoding[channel] === undefined) {
         throw new Error(
           `lowerPlots: ${coordinateLabel(coordinate)} requires the "${channel}" position channel on ${mark.type} marks, but it is missing`,
@@ -225,9 +228,17 @@ export const resolveFrame = (params: ResolveFrameParams): ResolvedFrame => {
     stackAxis: boolean,
     sectorAngle = false,
     ribbonRole?: 'x' | 'y',
+    intervalXInterval = false,
   ): Array<unknown> => {
     const out: Array<unknown> = [];
     for (const mark of node.marks) {
+      // histogram 连续 x 区间柱：x 域取 x0Field / x1Field 的箱边（无 encoding.x），否则域漏掉末箱上界
+      if (intervalXInterval && mark.type === PlotMark.Interval && mark.x0Field !== undefined && mark.x1Field !== undefined) {
+        for (const row of rows) {
+          out.push(resolveFieldPath(row, mark.x0Field), resolveFieldPath(row, mark.x1Field));
+        }
+        continue;
+      }
       // ribbon 两端都进位置 scale 域：source 端走 pick（= source.x/y），target 端单独收（否则 target 投影越界）
       if (ribbonRole !== undefined && mark.type === PlotMark.Ribbon) {
         const sourceChannel = pick(mark);
@@ -580,8 +591,8 @@ export const resolveFrame = (params: ResolveFrameParams): ResolvedFrame => {
       }
     }
   } else {
-    // cartesian2D：x/y 角色绑 x/y scale（ribbon 两端字段对都进域）
-    const xValues = collectValues(xChannelOf, false, false, false, 'x');
+    // cartesian2D：x/y 角色绑 x/y scale（ribbon 两端字段对都进域；histogram interval 取 x0/x1 箱边进域）
+    const xValues = collectValues(xChannelOf, false, false, false, 'x', true);
     const yValues = collectValues(yChannelOf, true, true, false, 'y');
     const xScaleDef = resolveScaleForRole('x', coordinate.x, xChannelOf, xValues);
     const yScaleDef = resolveScaleForRole('y', coordinate.y, yChannelOf, yValues);

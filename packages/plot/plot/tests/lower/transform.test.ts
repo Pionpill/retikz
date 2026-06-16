@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { ExternalRow } from '../../src/ir';
 import { applyTransforms } from '../../src/lower/transform';
+import { readSourceIndices, tagSourceIndex } from '../../src/lower/provenance';
 
 const SALES: Array<ExternalRow> = [
   { month: 'Jan', product: 'A', revenue: 3 },
@@ -99,5 +100,173 @@ describe('applyTransforms (ADR-03)', () => {
     ]);
     const janB = out.find(r => r.month === 'Jan' && r.product === 'B');
     expect(janB).toMatchObject({ y0: 0, y1: 5 });
+  });
+});
+
+// alpha.12 ADR-01：bin（连续分箱，改行数）
+describe('applyBin (alpha.12 ADR-01)', () => {
+  // [0,10] 域、count 10 → 10 个等宽箱（含空箱），值落箱：0,1,2,8,9,10
+  const GAPPED: Array<ExternalRow> = [{ m: 0 }, { m: 1 }, { m: 2 }, { m: 8 }, { m: 9 }, { m: 10 }];
+
+  it('bin_count_histogram_exact_bins_and_empty', () => {
+    const out = applyTransforms(GAPPED, [{ kind: 'bin', field: 'm', count: 10, reduce: 'count' }]);
+    // 恰 10 箱（count:N → N 个箱，含空箱）
+    expect(out.length).toBe(10);
+    // 域 [0,10]（min/max 已 nice）、等宽 1、紧贴排列
+    expect(out[0]).toMatchObject({ binStart: 0, binEnd: 1 });
+    expect(out[9]).toMatchObject({ binStart: 9, binEnd: 10 });
+    for (let i = 0; i < out.length - 1; i++) expect(out[i].binEnd).toBe(out[i + 1].binStart);
+    // 频数：[1,1,1,0,0,0,0,0,1,2]（10 落最后一箱，含上界）
+    expect(out.map(r => r.binValue)).toEqual([1, 1, 1, 0, 0, 0, 0, 0, 1, 2]);
+    // 空箱仍产行、binValue=0
+    expect(out[4]).toMatchObject({ binStart: 4, binEnd: 5, binValue: 0 });
+  });
+
+  it('bin_step_strategy_tiles_from_lower_bound', () => {
+    const rows = [{ m: 0 }, { m: 3 }, { m: 7 }, { m: 10 }];
+    const out = applyTransforms(rows, [{ kind: 'bin', field: 'm', step: 5 }]);
+    // [0,5),[5,10] → 2 箱（last 含上界）；count: 0,3 → bin0=2；7,10 → bin1=2
+    expect(out.length).toBe(2);
+    expect(out[0]).toMatchObject({ binStart: 0, binEnd: 5, binValue: 2 });
+    expect(out[1]).toMatchObject({ binStart: 5, binEnd: 10, binValue: 2 });
+  });
+
+  it('bin_thresholds_strategy_k_plus_one_bins', () => {
+    const rows = [{ m: 5 }, { m: 15 }, { m: 25 }, { m: 35 }];
+    // K=3 thresholds + extent [0,40] 端点补齐 → edges [0,10,20,30,40] → 4 箱
+    const out = applyTransforms(rows, [{ kind: 'bin', field: 'm', thresholds: [10, 20, 30], extent: [0, 40] }]);
+    expect(out.length).toBe(4);
+    expect(out.map(r => [r.binStart, r.binEnd])).toEqual([[0, 10], [10, 20], [20, 30], [30, 40]]);
+    expect(out.map(r => r.binValue)).toEqual([1, 1, 1, 1]);
+  });
+
+  it('bin_reduce_sum_mean_min_max', () => {
+    const rows = [{ m: 1, w: 10 }, { m: 2, w: 20 }, { m: 8, w: 5 }];
+    const sum = applyTransforms(rows, [{ kind: 'bin', field: 'm', step: 5, reduce: 'sum', reduceField: 'w' }]);
+    // [0,5): w 10,20 → 30；[5,10]: w 5 → 5
+    expect(sum.map(r => r.binValue)).toEqual([30, 5]);
+    const mean = applyTransforms(rows, [{ kind: 'bin', field: 'm', step: 5, reduce: 'mean', reduceField: 'w' }]);
+    expect(mean.map(r => r.binValue)).toEqual([15, 5]);
+    const min = applyTransforms(rows, [{ kind: 'bin', field: 'm', step: 5, reduce: 'min', reduceField: 'w' }]);
+    expect(min.map(r => r.binValue)).toEqual([10, 5]);
+    const max = applyTransforms(rows, [{ kind: 'bin', field: 'm', step: 5, reduce: 'max', reduceField: 'w' }]);
+    expect(max.map(r => r.binValue)).toEqual([20, 5]);
+  });
+
+  it('bin_custom_output_fields', () => {
+    // step 从域下界（观测 min = 0）平铺 → [0,5]
+    const out = applyTransforms([{ m: 0 }], [{ kind: 'bin', field: 'm', step: 5, startField: 'lo', endField: 'hi', valueField: 'n' }]);
+    expect(out[0]).toMatchObject({ lo: 0, hi: 5, n: 1 });
+    expect(out[0]).not.toHaveProperty('binStart');
+  });
+
+  it('bin_empty_data_produces_no_bins', () => {
+    expect(applyTransforms([], [{ kind: 'bin', field: 'm', count: 10 }])).toEqual([]);
+  });
+
+  it('bin_single_value_does_not_crash', () => {
+    const out = applyTransforms([{ m: 5 }], [{ kind: 'bin', field: 'm', count: 4 }]);
+    expect(out.length).toBeGreaterThanOrEqual(1);
+    expect(out.every(r => typeof r.binStart === 'number' && typeof r.binEnd === 'number')).toBe(true);
+    // 唯一观测计入某箱、总频数 1
+    expect(out.reduce((acc, r) => acc + (r.binValue as number), 0)).toBe(1);
+  });
+
+  it('bin_reduce_sum_missing_reduceField_fail_loud', () => {
+    expect(() => applyTransforms([{ m: 1 }], [{ kind: 'bin', field: 'm', step: 5, reduce: 'sum' }])).toThrow(/reduceField/);
+  });
+
+  it('bin_conflicting_strategy_fail_loud', () => {
+    expect(() => applyTransforms([{ m: 1 }], [{ kind: 'bin', field: 'm', count: 5, step: 2 }])).toThrow(/mutually exclusive|strateg/i);
+  });
+
+  it('bin_group_level_provenance_source_indices', () => {
+    // 分箱产 datum 的 provenance 指向源行集合（组级），而非单 sourceIndex
+    const tagged = tagSourceIndex([{ m: 0 }, { m: 1 }, { m: 8 }]); // source idx 0,1,2
+    const out = applyTransforms(tagged, [{ kind: 'bin', field: 'm', step: 5 }]);
+    // [0,5): 源行 0,1；[5,10]: 源行 2
+    expect(readSourceIndices(out[0])).toEqual([0, 1]);
+    expect(readSourceIndices(out[1])).toEqual([2]);
+  });
+});
+
+// alpha.12 ADR-01：aggregate（分组聚合，改行数）
+describe('applyAggregate (alpha.12 ADR-01)', () => {
+  const ORDERS: Array<ExternalRow> = [
+    { region: 'N', product: 'A', revenue: 3 },
+    { region: 'N', product: 'B', revenue: 5 },
+    { region: 'S', product: 'A', revenue: 2 },
+    { region: 'S', product: 'A', revenue: 4 },
+  ];
+
+  it('aggregate_groupby_sum', () => {
+    const out = applyTransforms(ORDERS, [{ kind: 'aggregate', groupBy: ['region'], reduce: 'sum', field: 'revenue', as: 'total' }]);
+    expect(out.length).toBe(2);
+    expect(out[0]).toMatchObject({ region: 'N', total: 8 });
+    expect(out[1]).toMatchObject({ region: 'S', total: 6 });
+  });
+
+  it('aggregate_default_as_name', () => {
+    const out = applyTransforms(ORDERS, [{ kind: 'aggregate', groupBy: ['region'], reduce: 'sum', field: 'revenue' }]);
+    // as 缺省 = reduce + 首字母大写 field
+    expect(out[0]).toMatchObject({ region: 'N', sumRevenue: 8 });
+  });
+
+  it('aggregate_multikey_composite', () => {
+    const out = applyTransforms(ORDERS, [{ kind: 'aggregate', groupBy: ['region', 'product'], reduce: 'sum', field: 'revenue', as: 't' }]);
+    // 复合键：N/A, N/B, S/A
+    expect(out.length).toBe(3);
+    expect(out).toEqual([
+      expect.objectContaining({ region: 'N', product: 'A', t: 3 }),
+      expect.objectContaining({ region: 'N', product: 'B', t: 5 }),
+      expect.objectContaining({ region: 'S', product: 'A', t: 6 }),
+    ]);
+  });
+
+  it('aggregate_count_no_field', () => {
+    const out = applyTransforms(ORDERS, [{ kind: 'aggregate', groupBy: ['region'], reduce: 'count' }]);
+    // count 默认 as = 'count'、值 = 组行数
+    expect(out[0]).toMatchObject({ region: 'N', count: 2 });
+    expect(out[1]).toMatchObject({ region: 'S', count: 2 });
+  });
+
+  it('aggregate_mean_min_max', () => {
+    const mean = applyTransforms(ORDERS, [{ kind: 'aggregate', groupBy: ['region'], reduce: 'mean', field: 'revenue', as: 'v' }]);
+    expect(mean[0].v).toBe(4); // N: (3+5)/2
+    expect(mean[1].v).toBe(3); // S: (2+4)/2
+    const min = applyTransforms(ORDERS, [{ kind: 'aggregate', groupBy: ['region'], reduce: 'min', field: 'revenue', as: 'v' }]);
+    expect(min.map(r => r.v)).toEqual([3, 2]);
+    const max = applyTransforms(ORDERS, [{ kind: 'aggregate', groupBy: ['region'], reduce: 'max', field: 'revenue', as: 'v' }]);
+    expect(max.map(r => r.v)).toEqual([5, 4]);
+  });
+
+  it('aggregate_changes_row_count', () => {
+    const out = applyTransforms(ORDERS, [{ kind: 'aggregate', groupBy: ['region'], reduce: 'count' }]);
+    expect(out.length).not.toBe(ORDERS.length);
+    expect(out.length).toBe(2);
+  });
+
+  it('aggregate_missing_field_fail_loud', () => {
+    expect(() => applyTransforms(ORDERS, [{ kind: 'aggregate', groupBy: ['region'], reduce: 'sum' }])).toThrow(/field/);
+  });
+
+  it('aggregate_group_level_provenance_source_indices', () => {
+    const tagged = tagSourceIndex(ORDERS); // 0,1,2,3
+    const out = applyTransforms(tagged, [{ kind: 'aggregate', groupBy: ['region'], reduce: 'sum', field: 'revenue', as: 't' }]);
+    expect(readSourceIndices(out[0])).toEqual([0, 1]); // N
+    expect(readSourceIndices(out[1])).toEqual([2, 3]); // S
+  });
+
+  // 交互：aggregate（改行数）后接 stack（保行数）
+  it('aggregate_then_stack_chain', () => {
+    const out = applyTransforms(ORDERS, [
+      { kind: 'aggregate', groupBy: ['region', 'product'], reduce: 'sum', field: 'revenue', as: 'total' },
+      { kind: 'stack', x: 'region', y: 'total', groupBy: 'product' },
+    ]);
+    // 聚合 → N/A=3,N/B=5,S/A=6；按 region stack：N: A[0,3] B[3,8]；S: A[0,6]
+    const na = out.find(r => r.region === 'N' && r.product === 'A');
+    const nb = out.find(r => r.region === 'N' && r.product === 'B');
+    expect(na).toMatchObject({ y0: 0, y1: 3 });
+    expect(nb).toMatchObject({ y0: 3, y1: 8 });
   });
 });

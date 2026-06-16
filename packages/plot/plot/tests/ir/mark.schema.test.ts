@@ -73,6 +73,16 @@ describe('MarkSchema (ADR-05)', () => {
     expect(() => MarkSchema.parse({ type: 'interval', arrangement: 'pile', encoding: { x: { field: 'm' }, y: { field: 'r' } } })).toThrow();
   });
 
+  // alpha.12 ADR-01：histogram 连续 x 区间柱（x0Field / x1Field）
+  it('mark_interval_x0x1_histogram_valid', () => {
+    const m = { type: 'interval', x0Field: 'binStart', x1Field: 'binEnd', encoding: { x: { field: 'binStart' }, y: { field: 'binValue' } } };
+    expect(MarkSchema.parse(m)).toEqual(m);
+  });
+
+  it('mark_interval_x0field_empty_rejected', () => {
+    expect(() => MarkSchema.parse({ type: 'interval', x0Field: '', encoding: { x: { field: 'm' }, y: { field: 'r' } } })).toThrow();
+  });
+
   it('mark_line_series_valid', () => {
     const m = { type: 'line', series: 'city', order: 't', encoding: { x: { field: 't' }, y: { field: 'v' } } };
     expect(MarkSchema.parse(m)).toEqual(m);

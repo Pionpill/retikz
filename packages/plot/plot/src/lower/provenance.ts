@@ -16,6 +16,19 @@ export const readSourceIndex = (row: ExternalRow): number | undefined => {
 };
 
 /**
+ * 组级源序标记（alpha.12）：改行数 transform（bin / aggregate）给每个输出行打 `row[SOURCE_INDICES]=[...]`
+ * @description 聚合 / 分箱产出的一行代表一组源行，故其 provenance 是「源行索引集合」而非单 sourceIndex。
+ *   Symbol 键不进 JSON、不被 resolveFieldPath 看见；仅在源行已 tagSourceIndex（provenance 开）时由 transform 填充。
+ */
+export const SOURCE_INDICES = Symbol('retikz.plot.sourceIndices');
+
+/** 读一行的组级源序标记（未打标记 → undefined）；bin / aggregate 输出行的组级 provenance */
+export const readSourceIndices = (row: ExternalRow): Array<number> | undefined => {
+  const value: unknown = Reflect.get(row, SOURCE_INDICES);
+  return Array.isArray(value) && value.every((v): v is number => typeof v === 'number') ? value : undefined;
+};
+
+/**
  * 给每行打源序标记（仅 provenance 开时调用，避免默认产物/行为变化）
  * @description object spread 拷贝可枚举 symbol 属性，故 transform 管线后标记仍在；resolveFieldPath / JSON 都忽略它。
  */
@@ -90,6 +103,7 @@ export const datumMeta = (
   transformedIndex: number,
   sourceIndex: number | undefined,
   series: unknown,
+  sourceIndices?: Array<number>,
 ): IRJsonObject => {
   const meta: IRJsonObject = {
     source: PLOT_SOURCE,
@@ -98,7 +112,9 @@ export const datumMeta = (
     markIndex,
     transformedIndex,
   };
-  if (sourceIndex !== undefined) meta.sourceIndex = sourceIndex;
+  // 改行数 transform（bin / aggregate）产出的 datum 代表一组源行 → 组级 sourceIndices（数组）；否则单 sourceIndex
+  if (sourceIndices !== undefined && sourceIndices.length > 0) meta.sourceIndices = [...sourceIndices];
+  else if (sourceIndex !== undefined) meta.sourceIndex = sourceIndex;
   if (series !== undefined) meta.series = toJsonValue(series);
   return meta;
 };

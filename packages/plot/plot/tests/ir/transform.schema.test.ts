@@ -73,3 +73,97 @@ describe('TransformSchema (ADR-03)', () => {
     expect(() => TransformSchema.parse({ kind: 'stack' })).toThrow();
   });
 });
+
+describe('BinTransformSchema (alpha.12 ADR-01)', () => {
+  it('bin_count_strategy_valid', () => {
+    const t = { kind: 'bin', field: 'measurement', count: 20, reduce: 'count' };
+    expect(TransformSchema.parse(t)).toEqual(t);
+  });
+
+  it('bin_step_strategy_valid', () => {
+    const t = { kind: 'bin', field: 'x', step: 5 };
+    expect(TransformSchema.parse(t)).toEqual(t);
+  });
+
+  it('bin_thresholds_strategy_valid', () => {
+    const t = { kind: 'bin', field: 'x', thresholds: [10, 20, 30] };
+    expect(TransformSchema.parse(t)).toEqual(t);
+  });
+
+  it('bin_full_form_valid', () => {
+    const t = {
+      kind: 'bin',
+      field: 'measurement',
+      count: 10,
+      extent: [0, 100] as [number, number],
+      nice: false,
+      reduce: 'mean',
+      reduceField: 'weight',
+      startField: 'lo',
+      endField: 'hi',
+      valueField: 'avg',
+    };
+    expect(TransformSchema.parse(t)).toEqual(t);
+  });
+
+  it('bin_minimal_valid', () => {
+    const t = { kind: 'bin', field: 'measurement' };
+    expect(TransformSchema.parse(t)).toEqual(t);
+  });
+
+  it('bin_missing_field_rejected', () => {
+    expect(() => TransformSchema.parse({ kind: 'bin', count: 10 })).toThrow();
+  });
+
+  it('bin_count_non_integer_rejected', () => {
+    expect(() => TransformSchema.parse({ kind: 'bin', field: 'x', count: 3.5 })).toThrow();
+  });
+
+  it('bin_step_non_positive_rejected', () => {
+    expect(() => TransformSchema.parse({ kind: 'bin', field: 'x', step: 0 })).toThrow();
+  });
+
+  it('bin_bad_reduce_rejected', () => {
+    expect(() => TransformSchema.parse({ kind: 'bin', field: 'x', reduce: 'median' })).toThrow();
+  });
+
+  it('bin_json_roundtrip_equivalent', () => {
+    const t = { kind: 'bin', field: 'measurement', thresholds: [1, 2, 3], reduce: 'sum', reduceField: 'w' };
+    const round = TransformSchema.parse(JSON.parse(JSON.stringify(t)));
+    expect(round).toEqual(t);
+  });
+});
+
+describe('AggregateTransformSchema (alpha.12 ADR-01)', () => {
+  it('aggregate_sum_valid', () => {
+    const t = { kind: 'aggregate', groupBy: ['region'], reduce: 'sum', field: 'revenue', as: 'totalRevenue' };
+    expect(TransformSchema.parse(t)).toEqual(t);
+  });
+
+  it('aggregate_count_valid', () => {
+    const t = { kind: 'aggregate', groupBy: ['region', 'product'], reduce: 'count' };
+    expect(TransformSchema.parse(t)).toEqual(t);
+  });
+
+  it('aggregate_missing_groupby_rejected', () => {
+    expect(() => TransformSchema.parse({ kind: 'aggregate', reduce: 'sum', field: 'r' })).toThrow();
+  });
+
+  it('aggregate_empty_groupby_rejected', () => {
+    expect(() => TransformSchema.parse({ kind: 'aggregate', groupBy: [], reduce: 'sum', field: 'r' })).toThrow();
+  });
+
+  it('aggregate_groupby_non_array_rejected', () => {
+    expect(() => TransformSchema.parse({ kind: 'aggregate', groupBy: 'region', reduce: 'sum', field: 'r' })).toThrow();
+  });
+
+  it('aggregate_bad_reduce_rejected', () => {
+    expect(() => TransformSchema.parse({ kind: 'aggregate', groupBy: ['r'], reduce: 'median', field: 'x' })).toThrow();
+  });
+
+  it('aggregate_json_roundtrip_equivalent', () => {
+    const t = { kind: 'aggregate', groupBy: ['region'], reduce: 'mean', field: 'revenue' };
+    const round = TransformSchema.parse(JSON.parse(JSON.stringify(t)));
+    expect(round).toEqual(t);
+  });
+});

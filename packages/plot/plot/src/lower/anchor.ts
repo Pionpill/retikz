@@ -83,6 +83,13 @@ const seriesIndexOf = (ctx: IntervalContext, row: ExternalRow): number => {
  *   → 子带 [center−bw/2+index·subWidth, +subWidth]（cartesian subCenter±subWidth/2 与此等价）。center 非有限 → null。
  */
 const intervalPrimaryBand = (mark: IntervalMark, row: ExternalRow, frame: CartesianFrame | PolarFrame, ctx: IntervalContext): [number, number] | null => {
+  // histogram 连续 x 区间柱（仅 cartesian2D）：primary = [coord(x0), coord(x1)] 连续区间、紧贴排列、宽随箱边（不用 band bandwidth）
+  if (frame.type === PlotCoordinate.Cartesian2D && mark.x0Field !== undefined && mark.x1Field !== undefined) {
+    const lo = frame.primary.coordinate(resolveFieldPath(row, mark.x0Field));
+    const hi = frame.primary.coordinate(resolveFieldPath(row, mark.x1Field));
+    if (!Number.isFinite(lo) || !Number.isFinite(hi)) return null;
+    return lo <= hi ? [lo, hi] : [hi, lo];
+  }
   const center = frame.primary.coordinate(channelValue(mark.encoding.x, row));
   if (!Number.isFinite(center)) return null;
   if (ctx.seriesField !== undefined) {
