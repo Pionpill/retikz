@@ -1,0 +1,104 @@
+---
+title: Visual Effects
+description: Element-level drop shadow and blend mode — applied to a Node shape / Path main path, consistent across backends and stackable.
+---
+
+`shadow` and `blendMode` are two element-level visual-effect props you can set directly on `<Node>` and `<Path>`. They apply only to the element's **primary geometry** (the Node shape, the Path main path) — not text, labels, pins, marks, or endpoint arrows. Both are renderer-agnostic: SVG and Canvas each translate them to native capabilities with the same result.
+
+## Usage
+
+```tsx
+import { Node, Path, Step } from '@retikz/react';
+```
+
+```tsx
+<Node shape="rectangle" fill="white" shadow="md" />
+
+<Node shape="circle" fill="magenta" blendMode="multiply" />
+```
+
+## Examples
+
+### Drop shadow
+
+`shadow` adds a drop shadow to the primary geometry. The two writings are two ways of filling the same field.
+
+#### Presets
+
+The simplest form is a Tailwind-style preset string: `'sm'` / `'md'` / `'lg'` / `'xl'` / `'2xl'` / `'none'`. Larger steps push the shadow farther and softer. `'none'` means an explicit no-shadow (equivalent to omitting it).
+
+<ComponentPreview name="shadow-presets" size="sm" />
+
+<span style={{ color: '#888' }}>The same white card at five preset steps.</span>
+
+#### Object form
+
+For precise control, use an object `{ preset?, offsetX?, offsetY?, blur?, color?, opacity? }`:
+
+- With a `preset`, that step is the **default base**, and any field you also set overrides it field by field — `{ preset: 'md', color: '#3b82f6' }` is "md's offset and blur, recolored".
+- Without a `preset`, you must give `offsetX` + `offsetY` yourself (fully explicit).
+
+Priority is always: **explicit field > preset > default**. The default color is translucent black `rgba(0,0,0,0.5)`; `opacity` (when given) multiplies onto the color's effective alpha.
+
+<ComponentPreview name="shadow-object" size="sm" />
+
+<span style={{ color: '#888' }}>Left: preset + recolor (md base, blue); right: a fully explicit shadow on a Path main path.</span>
+
+#### Primary geometry only
+
+`shadow` lands only on the element's primary geometry: the Node shape, the Path main path. A Node's text / label / pin, and a Path's marks / endpoint arrows, get **no** shadow. There is no "lift the whole card including its text" — this is an element-level effect, not a group-level one.
+
+<ComponentPreview name="shadow-primary-only" size="sm" />
+
+<span style={{ color: '#888' }}>The shadow lands on the rectangle; text and label have none.</span>
+
+<ComponentAlert title="Blur is a diagnosable approximation" description="blur is a blur radius in user units, approximated per backend (SVG stdDeviation = blur / 2, Canvas shadowBlur = blur), not pixel-exact. blur=0 is a hard edge." />
+
+### Blend mode
+
+`blendMode` blends the primary geometry with the **content already drawn beneath it** using the W3C separable formulas: `multiply` darkens, `screen` lightens, `overlay` boosts contrast, and so on. The value is one of the 16 W3C separable modes:
+
+`normal` / `multiply` / `screen` / `overlay` / `darken` / `lighten` / `color-dodge` / `color-burn` / `hard-light` / `soft-light` / `difference` / `exclusion` / `hue` / `saturation` / `color` / `luminosity`.
+
+Omitted or `'normal'` = ordinary source-over, unchanged.
+
+#### Overlapping colors
+
+With two or more overlapping elements, set `blendMode` on the upper one to see the blend in the overlap. `multiply` darkens the overlap over a light backdrop:
+
+<ComponentPreview name="blend-multiply" size="sm" />
+
+<span style={{ color: '#888' }}>Three overlapping circles, upper ones multiply — colors multiply darker where they overlap.</span>
+
+`screen` does the opposite, lightening the overlap over a dark backdrop:
+
+<ComponentPreview name="blend-screen" size="sm" />
+
+<span style={{ color: '#888' }}>Two circles screened over a dark backdrop — overlaps lighten and add.</span>
+
+<ComponentAlert title="First cut is element-level blending" description="blendMode applies to a single element, blending it with content drawn before it in the same Scene, without introducing an extra isolation group. On flat scenes, SVG and Canvas agree; isolation differences in nested groups belong to group-level blending, which is not yet supported." />
+
+## API Reference
+
+`shadow` and `blendMode` are shared style props on `<Node>` and `<Path>`, written the same way on both.
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `shadow` | `'sm' \| 'md' \| 'lg' \| 'xl' \| '2xl' \| 'none'`<br />`\| { preset?, offsetX?, offsetY?, blur?, color?, opacity? }` | — | Drop shadow on the primary geometry: a preset string, or an object (preset seeds defaults, explicit fields override; without a preset you must give offsetX + offsetY). Priority: explicit > preset > default; color defaults to `rgba(0,0,0,0.5)`, `opacity` multiplies onto the color alpha. Follows the primary geometry only — not text / label / marks / arrows |
+| `blendMode` | `'normal' \| 'multiply' \| 'screen' \| 'overlay' \| 'darken' \| 'lighten' \| 'color-dodge' \| 'color-burn' \| 'hard-light' \| 'soft-light' \| 'difference' \| 'exclusion' \| 'hue' \| 'saturation' \| 'color' \| 'luminosity'` | `'normal'` | How the primary geometry blends with the content drawn beneath it (the 16 W3C separable modes); omitted / `'normal'` = ordinary source-over. Element-level — not text / label / marks / arrows |
+
+### shadow object fields
+
+| Field | Type | Default | Description |
+| --- | --- | --- | --- |
+| `preset` | `'sm' \| 'md' \| 'lg' \| 'xl' \| '2xl' \| 'none'` | — | Tailwind-style step seeding offsetX / offsetY / blur / color as defaults; explicit fields override it |
+| `offsetX` | `number` | `0` (from preset) | Horizontal offset (user units) |
+| `offsetY` | `number` | from preset | Vertical offset (user units, positive = downward) |
+| `blur` | `number` (≥0) | from preset | Blur radius (user units); `0` = hard edge |
+| `color` | `string` | `rgba(0,0,0,0.5)` | Shadow color, any CSS color |
+| `opacity` | `number` (0–1) | — | Shadow opacity, multiplied onto the color's effective alpha |
+
+## Related
+
+- [Node](/core/components/node/overview): full props for a node
+- [Path](/core/components/draw/path): full props for a path

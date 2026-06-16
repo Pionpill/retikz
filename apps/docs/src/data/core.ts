@@ -89,6 +89,10 @@ export const coreSection: Array<Section> = [
         ],
       },
       {
+        id: 'effects',
+        label: 'core.effects',
+      },
+      {
         id: 'animation',
         label: 'core.animation',
         children: [

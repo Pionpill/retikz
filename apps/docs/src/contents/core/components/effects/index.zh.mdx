@@ -1,0 +1,104 @@
+---
+title: 视觉效果
+description: 图元级的投影（shadow）与混合模式（blendMode）——作用于 Node 形状 / Path 主路径，三端一致、可叠加。
+---
+
+`shadow` 与 `blendMode` 是两个图元级的视觉效果属性，`<Node>` 和 `<Path>` 都能直接写。它们只作用于元素的**主几何**（Node 的 shape、Path 的主路径），不碰文字、标签、引脚、标记或端点箭头。两者都是 renderer 无关的：SVG 与 Canvas 两端各自翻译成原生能力，结果一致。
+
+## 用法
+
+```tsx
+import { Node, Path, Step } from '@retikz/react';
+```
+
+```tsx
+<Node shape="rectangle" fill="white" shadow="md" />
+
+<Node shape="circle" fill="magenta" blendMode="multiply" />
+```
+
+## 例子
+
+### 投影 shadow
+
+`shadow` 给主几何加一层 drop shadow。两种写法是同一个字段的两种填法。
+
+#### 预设档位
+
+最简写法是 Tailwind 风格的预设字符串：`'sm'` / `'md'` / `'lg'` / `'xl'` / `'2xl'` / `'none'`。档位越大，投影越远、越柔。`'none'` 表示显式无阴影（等价于不写）。
+
+<ComponentPreview name="shadow-presets" size="sm" />
+
+<span style={{ color: '#888' }}>同一张白卡分设五个预设档位。</span>
+
+#### 对象写法
+
+需要精确控制时，用对象 `{ preset?, offsetX?, offsetY?, blur?, color?, opacity? }`：
+
+- 给了 `preset`，就以该档位为**默认基底**，任意同时出现的字段逐项覆盖——`{ preset: 'md', color: '#3b82f6' }` 就是「md 的位移和模糊 + 换个颜色」的快捷调色。
+- 不给 `preset`，则必须自定 `offsetX` + `offsetY`（完整显式）。
+
+优先级始终是：**显式字段 > preset > 默认**。颜色默认是半透明黑 `rgba(0,0,0,0.5)`；给了 `opacity` 会相乘到颜色的有效 alpha 上。
+
+<ComponentPreview name="shadow-object" size="sm" />
+
+<span style={{ color: '#888' }}>左：preset 调色（md 基底 + 蓝色）；右：Path 主路径的完整显式投影。</span>
+
+#### 只跟随主几何
+
+`shadow` 只落在元素的主几何上：Node 的 shape、Path 的主路径。Node 的文字 / 标签 / 引脚，以及 Path 的标记 / 端点箭头**不带**投影。需要「整张卡片连文字一起浮起」时，本字段做不到——它是图元级、不是组级效果。
+
+<ComponentPreview name="shadow-primary-only" size="sm" />
+
+<span style={{ color: '#888' }}>shadow 落在矩形上；text 与 label 不带投影。</span>
+
+<ComponentAlert title="blur 是可诊断近似" description="blur 是用户单位的模糊半径，两端各自近似对齐（SVG stdDeviation = blur / 2、Canvas shadowBlur = blur），不追求逐像素一致。blur=0 为硬边。" />
+
+### 混合模式 blendMode
+
+`blendMode` 让主几何与它**下方已经画好的内容**按 W3C 分离公式混合：`multiply` 压暗、`screen` 提亮、`overlay` 增强对比……取值是 16 个 W3C 分离模式之一：
+
+`normal` / `multiply` / `screen` / `overlay` / `darken` / `lighten` / `color-dodge` / `color-burn` / `hard-light` / `soft-light` / `difference` / `exclusion` / `hue` / `saturation` / `color` / `luminosity`。
+
+省略或 `'normal'` = 普通叠放（source-over），逐字不变。
+
+#### 叠色
+
+两个或多个重叠图元，给上层设 `blendMode` 就在重叠处看到混合效果。`multiply` 在浅底上把重叠处压暗：
+
+<ComponentPreview name="blend-multiply" size="sm" />
+
+<span style={{ color: '#888' }}>三个重叠圆，上层 multiply——重叠处颜色相乘变暗。</span>
+
+`screen` 反过来在深底上把重叠处提亮：
+
+<ComponentPreview name="blend-screen" size="sm" />
+
+<span style={{ color: '#888' }}>深底上两个圆 screen——重叠处提亮叠加。</span>
+
+<ComponentAlert title="首切为元素级混合" description="blendMode 作用于单个图元，让它与同一 Scene 内在它之前绘制的内容混合，不引入额外的 isolation 分组。扁平场景下 SVG 与 Canvas 两端结果一致；嵌套分组的隔离差异属于组级混合，暂未支持。" />
+
+## API 参考
+
+`shadow` 与 `blendMode` 是 `<Node>` 与 `<Path>` 共有的样式属性，写法一致。
+
+| 属性 | 类型 | 默认值 | 描述 |
+| --- | --- | --- | --- |
+| `shadow` | `'sm' \| 'md' \| 'lg' \| 'xl' \| '2xl' \| 'none'`<br />`\| { preset?, offsetX?, offsetY?, blur?, color?, opacity? }` | — | 主几何投影：预设字符串，或对象（preset 出默认 + 显式字段覆盖；无 preset 须给 offsetX + offsetY）。优先级：显式 > preset > 默认；color 默认 `rgba(0,0,0,0.5)`，`opacity` 相乘到 color alpha。只跟随主几何，不作用于文字 / 标签 / 标记 / 箭头 |
+| `blendMode` | `'normal' \| 'multiply' \| 'screen' \| 'overlay' \| 'darken' \| 'lighten' \| 'color-dodge' \| 'color-burn' \| 'hard-light' \| 'soft-light' \| 'difference' \| 'exclusion' \| 'hue' \| 'saturation' \| 'color' \| 'luminosity'` | `'normal'` | 主几何与其下方已绘内容的混合模式（W3C 16 个分离模式）；省略 / `'normal'` = 普通叠放。元素级，不作用于文字 / 标签 / 标记 / 箭头 |
+
+### shadow 对象字段
+
+| 字段 | 类型 | 默认值 | 描述 |
+| --- | --- | --- | --- |
+| `preset` | `'sm' \| 'md' \| 'lg' \| 'xl' \| '2xl' \| 'none'` | — | Tailwind 风格档位，作为 offsetX / offsetY / blur / color 的默认基底；显式字段覆盖之 |
+| `offsetX` | `number` | `0`（preset 提供） | 水平位移（用户单位） |
+| `offsetY` | `number` | preset 提供 | 垂直位移（用户单位，正值向下） |
+| `blur` | `number`（≥0） | preset 提供 | 模糊半径（用户单位）；`0` = 硬边 |
+| `color` | `string` | `rgba(0,0,0,0.5)` | 阴影颜色，任意 CSS 颜色 |
+| `opacity` | `number`（0~1） | — | 阴影不透明度，相乘到 color 的有效 alpha 上 |
+
+## 相关
+
+- [Node](/core/components/node/overview)：节点的完整属性
+- [Path](/core/components/draw/path)：路径的完整属性
