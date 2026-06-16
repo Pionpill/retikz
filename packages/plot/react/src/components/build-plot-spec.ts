@@ -3,8 +3,10 @@ import {
   type Coordinate,
   type DataModel,
   type Encoding,
+  type ExternalRow,
   type Guide,
   type Mark,
+  type MarkLabel,
   PLOT_NAMESPACE,
   PlotArrangement,
   type PlotArrangementValue,
@@ -17,6 +19,7 @@ import {
   type Scale as PlotScaleSpec,
   type PlotSpec,
   PlotTransform,
+  type TextChannel,
   type Transform,
 } from '@retikz/plot';
 import { Axis, type AxisProps, Legend, type LegendProps } from './guides';
@@ -25,6 +28,7 @@ import {
   type AreaMarkProps,
   BarMark,
   type BarMarkProps,
+  type DatumLabelProps,
   LineMark,
   type LineMarkProps,
   PointMark,
@@ -35,6 +39,8 @@ import {
   type RuleMarkProps,
   SectorMark,
   type SectorMarkProps,
+  TextMark,
+  type TextMarkProps,
 } from './marks';
 import { type PositionScaleType, Scale, type ScaleDimension, type ScaleProps } from './scales';
 
@@ -123,6 +129,15 @@ const DEFAULT_GUIDES: ReadonlyArray<Guide> = [
   { type: PlotGuide.Axis, dimension: 'y', grid: true },
 ];
 
+/** 运行时 datum label 解析器（ADR-04）：按 mark id 映射「行 → 自定义标签串」（不进 IR，经 lowerPlots options 注入） */
+export type ResolveLabelMap = Record<string, (row: ExternalRow) => string>;
+
+/** buildPlotSpec 收集的 resolveLabel 旁路：以返回的 PlotSpec 为键，供 resolvePlotRuntime 取出注入 options（不进 IR） */
+const resolveLabelBySpec = new WeakMap<PlotSpec, ResolveLabelMap>();
+
+/** 取某 PlotSpec 经 buildPlotSpec 收集的 resolveLabel 运行时表（无则 undefined） */
+export const resolveLabelOf = (spec: PlotSpec): ResolveLabelMap | undefined => resolveLabelBySpec.get(spec);
+
 /** 收集过程的可变累加器 */
 type Collected = {
   marks: Array<Mark>;
@@ -130,6 +145,8 @@ type Collected = {
   transforms: Array<Transform>;
   /** 显式声明的位置 scale */
   scales: Array<ScaleProps>;
+  /** 按 mark id 收集的运行时 resolveLabel（不进 IR；ADR-04） */
+  resolveLabels: ResolveLabelMap;
   /** 是否有 mark 用了颜色（→ 需自动色 scale） */
   colored: boolean;
   /** 用到的 color 字段名集合（→ 配 model 时按字段类型派生 sequential / ordinal） */
@@ -155,6 +172,32 @@ const recordColor = (into: Collected, colorEnc: { color: { field: string; scale:
   if (!colorEnc) return;
   into.colored = true;
   into.colorFields.push(colorEnc.color.field);
+};
+
+/**
+ * 把位置 mark 的扁平 label* props 装成 IR MarkLabel（priority-1 宿主 datum label，ADR-04）
+ * @description label 顶层 string 默认按字段（content.field）；labelFormat 进 IR；labelPosition / labelDistance / labelPin
+ *   摊进对齐 core NodeLabelSchema 的字段。无 label 字段 → undefined（不挂标签）。
+ */
+const buildMarkLabel = (props: DatumLabelProps): MarkLabel | undefined => {
+  const { label, labelFormat, labelPosition, labelDistance, labelPin } = props;
+  if (label === undefined) return undefined;
+  const content: TextChannel = { field: label, ...(labelFormat !== undefined ? { format: labelFormat } : {}) };
+  return {
+    content,
+    ...(labelPosition !== undefined ? { position: labelPosition } : {}),
+    ...(labelDistance !== undefined ? { distance: labelDistance } : {}),
+    ...(labelPin ? { pin: true } : {}),
+  };
+};
+
+/** 收集某 mark 的运行时 resolveLabel（不进 IR）：仅在配了 mark id 时按 id 注册，否则无从命中（与 ADR-04 注入点一致） */
+const recordResolveLabel = (into: Collected, id: string | undefined, resolveLabel: ((row: ExternalRow) => string) | undefined): void => {
+  if (resolveLabel === undefined) return;
+  if (id === undefined) {
+    throw new Error('buildPlotSpec: resolveLabel needs a mark id to be injected at runtime; set the mark id prop');
+  }
+  into.resolveLabels[id] = resolveLabel;
 };
 
 /** 把 x/y 字段装成位置 encoding（x/y 是唯一位置通道；polar 下坐标系把 x→angle、y→radius 重解释） */
@@ -220,25 +263,32 @@ const collectInto = (children: ReactNode, into: Collected): void => {
       return;
     }
     if (child.type === LineMark) {
-      const { x, y, order, series, color, closed, id } = child.props as LineMarkProps;
+      const props = child.props as LineMarkProps;
+      const { x, y, order, series, color, closed, id } = props;
       const colorEnc = colorChannel(color, series);
+      const markLabel = buildMarkLabel(props);
       into.marks.push({
         type: PlotMark.Line,
         ...(id !== undefined ? { id } : {}),
         ...(order !== undefined ? { order } : {}),
         ...(series !== undefined ? { series } : {}),
         ...(closed ? { closed: true } : {}),
+        ...(markLabel !== undefined ? { label: markLabel } : {}),
         encoding: { ...positionEncoding(x, y), ...colorEnc },
       });
       recordColor(into, colorEnc);
+      recordResolveLabel(into, id, props.resolveLabel);
       if (closed) into.hasClosedLine = true;
     } else if (child.type === PointMark) {
-      const { x, y, a, b, c, color, size, opacity, shape, id } = child.props as PointMarkProps;
+      const props = child.props as PointMarkProps;
+      const { x, y, a, b, c, color, size, opacity, shape, id } = props;
       const colorEnc = colorChannel(color, undefined);
+      const markLabel = buildMarkLabel(props);
       // 位置通道按坐标系角色：cartesian1D-2D / polar 用 x/y、ternary 用 a/b/c；缺角色由 lowering 按坐标系校验
       into.marks.push({
         type: PlotMark.Point,
         ...(id !== undefined ? { id } : {}),
+        ...(markLabel !== undefined ? { label: markLabel } : {}),
         encoding: {
           ...(x !== undefined ? { x: { field: x } } : {}),
           ...(y !== undefined ? { y: { field: y } } : {}),
@@ -252,9 +302,12 @@ const collectInto = (children: ReactNode, into: Collected): void => {
         },
       });
       recordColor(into, colorEnc);
+      recordResolveLabel(into, id, props.resolveLabel);
     } else if (child.type === BarMark) {
-      const { x, y, color, series, stack, id } = child.props as BarMarkProps;
+      const props = child.props as BarMarkProps;
+      const { x, y, color, series, stack, id } = props;
       const colorEnc = colorChannel(color, series);
+      const markLabel = buildMarkLabel(props);
       // series + stack → 堆叠（装配 stack transform，x/y/groupBy 与 mark 对齐）；series 无 stack → dodge
       let arrangement: PlotArrangementValue | undefined;
       if (series !== undefined && stack) {
@@ -268,10 +321,12 @@ const collectInto = (children: ReactNode, into: Collected): void => {
         ...(id !== undefined ? { id } : {}),
         ...(series !== undefined ? { series } : {}),
         ...(arrangement !== undefined ? { arrangement } : {}),
+        ...(markLabel !== undefined ? { label: markLabel } : {}),
         encoding: { x: { field: x }, y: { field: y }, ...colorEnc },
       });
       into.hasBar = true;
       recordColor(into, colorEnc);
+      recordResolveLabel(into, id, props.resolveLabel);
     } else if (child.type === SectorMark) {
       const { angle, color, series, id } = child.props as SectorMarkProps;
       // 内建自动累积：装单链 stack transform（无分组 x，按 series 排序或数据序）；sector mark 读 y0/y1 为角界
@@ -290,8 +345,10 @@ const collectInto = (children: ReactNode, into: Collected): void => {
       into.hasSector = true;
       recordColor(into, colorEnc);
     } else if (child.type === AreaMark) {
-      const { x, y, order, series, baseline, closed, color, id } = child.props as AreaMarkProps;
+      const props = child.props as AreaMarkProps;
+      const { x, y, order, series, baseline, closed, color, id } = props;
       const colorEnc = colorChannel(color, series);
+      const markLabel = buildMarkLabel(props);
       into.marks.push({
         type: PlotMark.Area,
         ...(id !== undefined ? { id } : {}),
@@ -299,10 +356,34 @@ const collectInto = (children: ReactNode, into: Collected): void => {
         ...(series !== undefined ? { series } : {}),
         ...(baseline !== undefined ? { baseline } : {}),
         ...(closed ? { closed: true } : {}),
+        ...(markLabel !== undefined ? { label: markLabel } : {}),
         encoding: { ...positionEncoding(x, y), ...colorEnc },
       });
       recordColor(into, colorEnc);
+      recordResolveLabel(into, id, props.resolveLabel);
       if (closed) into.hasClosedLine = true;
+    } else if (child.type === TextMark) {
+      const { x, y, a, b, c, text, format, color, dx, dy, id } = child.props as TextMarkProps;
+      const colorEnc = colorChannel(color, undefined);
+      const content: TextChannel = { field: text, ...(format !== undefined ? { format } : {}) };
+      // text 几何同 point：x/y/a/b/c 摊进 encoding、text 内容通道必填、dx/dy 落 mark 顶层；不进 interval fail-loud 网
+      into.marks.push({
+        type: PlotMark.Text,
+        ...(id !== undefined ? { id } : {}),
+        ...(dx !== undefined ? { dx } : {}),
+        ...(dy !== undefined ? { dy } : {}),
+        encoding: {
+          ...(x !== undefined ? { x: { field: x } } : {}),
+          ...(y !== undefined ? { y: { field: y } } : {}),
+          ...(a !== undefined ? { a: { field: a } } : {}),
+          ...(b !== undefined ? { b: { field: b } } : {}),
+          ...(c !== undefined ? { c: { field: c } } : {}),
+          text: content,
+          ...colorEnc,
+        },
+      });
+      recordColor(into, colorEnc);
+      recordResolveLabel(into, id, (child.props as TextMarkProps).resolveLabel);
     } else if (child.type === RectMark) {
       const { x, y, color, id } = child.props as RectMarkProps;
       // rect 无 series（网格无堆叠 / 并排）；color 直走 colorChannel（无 series 缺省）
@@ -480,7 +561,7 @@ const toPolarConfig = (coordinate: CoordinateInput | undefined): PolarConfig | u
  *   产出须等价于手写 PlotSpec（仿 core Sugar = Kernel 等价性）。data 不进 IR，仅存 reference
  */
 export const buildPlotSpec = (children: ReactNode, dataRef: string, options: BuildPlotSpecOptions = {}): PlotSpec => {
-  const collected: Collected = { marks: [], guides: [], transforms: [], scales: [], colored: false, colorFields: [], hasBar: false, hasRect: false, hasSector: false, hasClosedLine: false };
+  const collected: Collected = { marks: [], guides: [], transforms: [], scales: [], resolveLabels: {}, colored: false, colorFields: [], hasBar: false, hasRect: false, hasSector: false, hasClosedLine: false };
   collectInto(children, collected);
 
   const coordKind = coordinateTypeOf(options.coordinate);
@@ -561,7 +642,7 @@ export const buildPlotSpec = (children: ReactNode, dataRef: string, options: Bui
   const legends = collected.guides.filter(guide => guide.type === PlotGuide.Legend);
   const guides: Array<Guide> = [...explicitAxes, ...legends];
 
-  return {
+  const spec: PlotSpec = {
     namespace: PLOT_NAMESPACE,
     type: PlotComposite.Plot,
     ...(options.id !== undefined ? { id: options.id } : {}),
@@ -575,6 +656,9 @@ export const buildPlotSpec = (children: ReactNode, dataRef: string, options: Bui
     marks: collected.marks,
     guides,
   };
+  // 旁路记录 resolveLabel（运行时函数、不进 IR）：resolvePlotRuntime 据返回的 spec 取出注入 lowerPlots options
+  if (Object.keys(collected.resolveLabels).length > 0) resolveLabelBySpec.set(spec, collected.resolveLabels);
+  return spec;
 };
 
 /**

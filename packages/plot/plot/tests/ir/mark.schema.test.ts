@@ -369,4 +369,52 @@ describe('MarkSchema (ADR-05)', () => {
     const m = { type: 'rule', id: 'tol', yTo: 'hi', extentField: 'a', extentToField: 'b', encoding: { y: { field: 'lo' }, color: { field: 'cat', scale: 'c' } } };
     expect(MarkSchema.parse(JSON.parse(JSON.stringify(m)))).toEqual(m);
   });
+
+  // alpha.11 ADR-04：text mark + 位置 mark label
+  it('mark_text_union_discriminates', () => {
+    const parsed = MarkSchema.parse({ type: 'text', encoding: { x: { field: 'px' }, y: { field: 'py' }, text: { field: 'label' } } });
+    expect(parsed.type).toBe('text');
+  });
+
+  it('mark_text_dx_dy_valid', () => {
+    const m = { type: 'text', dx: 4, dy: -8, encoding: { x: { field: 'px' }, y: { field: 'py' }, text: { value: 'lbl' } } };
+    expect(MarkSchema.parse(m)).toEqual(m);
+  });
+
+  it('mark_text_missing_text_channel_rejected', () => {
+    expect(() => MarkSchema.parse({ type: 'text', encoding: { x: { field: 'px' }, y: { field: 'py' } } })).toThrow();
+  });
+
+  it('mark_text_channel_both_rejected', () => {
+    expect(() => MarkSchema.parse({ type: 'text', encoding: { x: { field: 'px' }, y: { field: 'py' }, text: { field: 'a', value: 'b' } } })).toThrow();
+  });
+
+  it('mark_text_typo_type_rejected', () => {
+    expect(() => MarkSchema.parse({ type: 'txt', encoding: { x: { field: 'px' }, y: { field: 'py' }, text: { field: 'a' } } })).toThrow();
+  });
+
+  it('mark_text_json_round_trip', () => {
+    const m = { type: 'text', id: 't', dx: 2, dy: 3, encoding: { x: { field: 'px' }, y: { field: 'py' }, text: { field: 'label', format: ',.0f' }, color: { value: '#333' } } };
+    expect(MarkSchema.parse(JSON.parse(JSON.stringify(m)))).toEqual(m);
+  });
+
+  it('mark_interval_label_valid', () => {
+    const m = { type: 'interval', label: { content: { field: 'revenue', format: ',.0f' }, position: 'above', distance: 6, pin: true }, encoding: { x: { field: 'month' }, y: { field: 'revenue' } } };
+    expect(MarkSchema.parse(m)).toEqual(m);
+  });
+
+  it('mark_point_label_numeric_position_valid', () => {
+    const m = { type: 'point', label: { content: { value: 'x' }, position: 30 }, encoding: { x: { field: 'px' }, y: { field: 'py' } } };
+    expect(MarkSchema.parse(m)).toEqual(m);
+  });
+
+  it('mark_label_content_neither_rejected', () => {
+    expect(() => MarkSchema.parse({ type: 'interval', label: { content: {} }, encoding: { x: { field: 'm' }, y: { field: 'r' } } })).toThrow();
+  });
+
+  it('mark_sector_strips_label', () => {
+    // label 仅位置 mark（point/line/interval/area）；sector 非 strict zod 剥离
+    const parsed = MarkSchema.parse({ type: 'sector', label: { content: { value: 'x' } }, encoding: { color: { field: 'label' } } });
+    expect((parsed as { label?: unknown }).label).toBeUndefined();
+  });
 });

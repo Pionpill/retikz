@@ -310,4 +310,55 @@ describe('renderPlot 薄包装（SSR SVG 串）', () => {
     // 3 行 → 3 条参考线（per-datum field）
     expect((svg.match(/<path/g) ?? []).length).toBeGreaterThanOrEqual(3);
   });
+
+  // ADR-04：text mark / datum label SSR（vanilla 源码无改动，纯 spec 驱动贯通三包）
+  it('vanilla-label-ssr 宿主 label：interval label → <text> 元素 + 标签内容串', () => {
+    const labelSpec: PlotSpec = {
+      namespace: 'plot',
+      type: 'plot',
+      data: { reference: 'sales' },
+      scales: [
+        { type: 'band', name: 'x' },
+        { type: 'linear', name: 'y' },
+      ],
+      coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
+      marks: [
+        {
+          type: 'interval',
+          label: { content: { field: 'revenue', format: ',.0f' }, position: 'above', distance: 6 },
+          encoding: { x: { field: 'month' }, y: { field: 'revenue' } },
+        },
+      ],
+    };
+    const svg = renderPlot(labelSpec, data, { width: 480, height: 300 });
+    expect(svg).toMatch(/<rect/);
+    expect(svg).toContain('<text');
+    // 标签内容（千分位格式后整数）出现在 SVG 文本里
+    expect(svg).toContain('>10<');
+    expect(svg).toContain('>14<');
+  });
+
+  it('vanilla-label-ssr 自由 TextMark：text mark → <text> 元素 + 字段值串', () => {
+    const textSpec: PlotSpec = {
+      namespace: 'plot',
+      type: 'plot',
+      data: { reference: 'labels' },
+      scales: [
+        { type: 'linear', name: 'x' },
+        { type: 'linear', name: 'y' },
+      ],
+      coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
+      marks: [{ type: 'text', encoding: { x: { field: 'px' }, y: { field: 'py' }, text: { field: 'label' } } }],
+    };
+    const labels: ExternalDatasets = {
+      labels: [
+        { px: 1, py: 2, label: 'alpha' },
+        { px: 3, py: 4, label: 'beta' },
+      ],
+    };
+    const svg = renderPlot(textSpec, labels, { width: 480, height: 300 });
+    expect(svg).toContain('<text');
+    expect(svg).toContain('alpha');
+    expect(svg).toContain('beta');
+  });
 });

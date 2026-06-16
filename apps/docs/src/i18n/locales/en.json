@@ -127,6 +127,7 @@
     "compAreaMark": "AreaMark",
     "compRectMark": "RectMark",
     "compRuleMark": "RuleMark",
+    "compTextMark": "Data Labels",
     "compAxis": "Axis",
     "compLegend": "Legend",
     "examples": "Charts",

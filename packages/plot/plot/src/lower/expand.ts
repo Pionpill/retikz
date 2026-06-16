@@ -1,9 +1,9 @@
 import { type CompositeDefinition, type IRChild, type IRNode, type IRScope, defineComposite } from '@retikz/core';
 import { type AxisGuide, Cartesian1DOrientation, type Channel, type Coordinate, type ExternalDatasets, type ExternalRow, type Guide, type LegendChannelValue, type LegendGuide, type Mark, type OrdinalScale, PlotCoordinate, PlotFieldType, type PlotFieldTypeValue, PlotGuide, PlotMark, PlotScale, type PlotScaleValue, type PlotSpec, PlotSpecSchema, type QuantileColorScale, type QuantizeColorScale, type Scale, type ThresholdColorScale } from '../ir';
-import { channelValue, isFiniteNumber, resolveFieldPath } from './field';
+import { type ResolveLabel, channelValue, isFiniteNumber, labelOf, resolveFieldPath } from './field';
 import { type GuideContext, type LegendEntry, type LegendInput, lowerCustomAxis, lowerGuide, lowerLegend } from './guide';
 import { DEFAULT_FONT_SIZE, type LegendReserve, type Margins, type Rect, computePlotArea, computePolarFrame, computeTernaryFrame } from './layout';
-import { type ColorOf, lowerMark } from './mark';
+import { type ColorOf, type LabelOf, lowerMark } from './mark';
 import { type ChannelResolution, type ScaleDescriptor, makeOpacityResolver, makeShapeResolver, makeSizeResolver } from './channel';
 import { type CoordinateFrame, type CustomCoordinateFactory, type DimensionRole, createCartesian1DFrame, createCartesianFrame, createPolar1DFrame, createPolarFrame, createTernary2DFrame } from './project';
 import { REQUIRED_POSITION_CHANNELS, VALID_GUIDE_DIMENSIONS } from './coordinate-meta';
@@ -146,6 +146,13 @@ export type LowerPlotsOptions = {
   invalid?: 'skip' | 'error';
   /** 程序化字段解析逃生舱（运行时函数，不进 IR）：按字段名覆盖类型 + 自定义值解析；返回 undefined → 回退 model/推断 + 内置 coerce（ADR-04） */
   resolveField?: ResolveField;
+  /**
+   * datum label 内容逃生舱（运行时函数，不进 IR；ADR-04 text mark）：按 mark id 映射的「行 → 完全自定义标签串」。
+   * @description 优先级最高（resolveLabel > field+format > value），覆盖该 mark 的 label / text 内容声明。
+   *   按 mark id 取（宿主 mark 的 priority-1 label / 独立 TextMark 的 priority-2 text 共用）；未命中的 mark 走声明层 field/value/format。
+   *   不进 PlotSpec，故不破坏 IR JSON 可序列化。
+   */
+  resolveLabel?: Record<string, ResolveLabel>;
   /**
    * 自定义坐标系工厂表（按 name 查；运行时函数，不进 IR）：spec 的 `coordinate: {type:'custom', name}` 据此解析投影。
    * @description 实验性扩展点——让用户插入任意坐标系几何（曲线一维 / 拱形 x 轴等），无需给坐标系枚举塞成员、也不破坏 IR JSON 化（投影函数留这里，IR 只存 name + roles + 数值参数）。未注册 name → fail-loud。
@@ -713,6 +720,24 @@ const makeColorResolver = (node: PlotSpec, rows: Array<ExternalRow>, fieldTypes:
 };
 
 /**
+ * 解析某 mark 的 label / text 内容 → 行→标签串（ADR-04）
+ * @description 内容来源：位置 mark 的 `label.content`（priority-1）或 TextMark 的 `encoding.text`（priority-2）；
+ *   无内容声明的 mark → undefined（不挂 label / 不产文本）。format 分派按 content.field 的 fieldType（temporal 走时间格式、数值走 d3-format）。
+ *   运行时 resolveLabel[markId] 注入（最高优先、不进 IR）；mark 无 id 时无法命中 resolveLabel，仅走声明层。
+ */
+const makeLabelResolver = (fieldTypes: Map<string, PlotFieldTypeValue>, resolveLabel: Record<string, ResolveLabel> | undefined): ((mark: Mark) => LabelOf | undefined) => {
+  return (mark: Mark): LabelOf | undefined => {
+    const content = mark.type === PlotMark.Text ? mark.encoding.text : 'label' in mark ? mark.label?.content : undefined;
+    const runtime = mark.id !== undefined ? resolveLabel?.[mark.id] : undefined;
+    if (content === undefined && runtime === undefined) return undefined;
+    const fieldType = content?.field !== undefined ? fieldTypes.get(content.field) : undefined;
+    // content 缺省（仅 resolveLabel 命中）时用空内容占位通道：labelOf 内 resolveLabel 优先生效
+    const effectiveContent = content ?? { value: '' };
+    return (row: ExternalRow) => labelOf(effectiveContent, row, fieldType, runtime);
+  };
+};
+
+/**
  * 收集所有 mark 在某非位置通道上的字段 descriptor（size / opacity / shape）
  * @description resolver 双产出的 descriptor 注册到 channel → descriptor 表；同通道多 mark 取首个有 descriptor 的
  *   （legend 据 scale name 消歧留待多 scale 场景，alpha.8 这三通道用合成默认 scale，不暴露具名）。
@@ -1143,6 +1168,7 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
   const resolveSize = makeSizeResolver(node, rows, fieldTypes);
   const resolveOpacity = makeOpacityResolver(node, rows, fieldTypes);
   const resolveShape = makeShapeResolver(node, rows, fieldTypes);
+  const resolveLabelOf = makeLabelResolver(fieldTypes, options.resolveLabel);
 
   // plot 级 datum id 登记器：datumIdField + plotId 在时建一份，线穿全 mark——跨 mark 共享 seen，
   // 两 datum-bearing mark（point + bar）撞同 `<plotId>.datum.<value>` 即 fail loud（#2）。
@@ -1165,6 +1191,7 @@ const expandPlot = (node: PlotSpec, datasets: ExternalDatasets, options: LowerPl
           sizeOf: resolveSize(mark)?.of,
           opacityOf: resolveOpacity(mark)?.of,
           shapeOf: resolveShape(mark)?.of,
+          labelOf: resolveLabelOf(mark),
         },
         provenance ? { context: provenance, markIndex, registerDatumId } : undefined,
       ),

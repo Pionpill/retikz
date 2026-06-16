@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import type { ValueOf } from '@retikz/core';
-import { EncodingSchema, PointEncodingSchema, StyleEncodingSchema } from './encoding';
+import { EncodingSchema, MarkLabelSchema, PointEncodingSchema, StyleEncodingSchema, TextEncodingSchema } from './encoding';
 
 /**
  * mark 类型关键字（暴露给用户；成员值即 IR 判别串，裸字面量 `'point'` 同样可用）
@@ -21,6 +21,8 @@ export const PlotMark = {
   Rect: 'rect',
   /** 参考标注：沿一个位置维度取常量（单值 → 线、[lo,hi] → 填充带），跨满对侧轴域（阈值线 / 容差带） */
   Rule: 'rule',
+  /** 文本：自由文本兜底；datum label 首选挂宿主 mark 的 label 通道，无宿主才用本 mark 新建 Node */
+  Text: 'text',
 } as const;
 
 /** mark 类型 */
@@ -52,8 +54,13 @@ const markBase = {
 /** 位置 mark（point / line / interval / area）的 encoding：x / y 可选（必填性下放 coordinate 级校验）+ 样式 */
 const positionalEncoding = { encoding: EncodingSchema };
 
+/** 位置 mark 的可选 datum label（priority-1 宿主路径）：lowering 时挂到该 mark 每个 datum Node 的 label */
+const positionalLabel = {
+  label: MarkLabelSchema.optional().describe('priority-1 datum label: lowered onto each datum Node.label (core border-relative placement)'),
+};
+
 export const PointMarkSchema = z
-  .object({ type: z.literal(PlotMark.Point).describe('Discriminator: one glyph per record'), ...markBase, encoding: PointEncodingSchema })
+  .object({ type: z.literal(PlotMark.Point).describe('Discriminator: one glyph per record'), ...markBase, ...positionalLabel, encoding: PointEncodingSchema })
   .describe('Point mark: scatter / dot; supports an optional size channel (glyph radius)');
 
 export const LineMarkSchema = z
@@ -74,6 +81,7 @@ export const LineMarkSchema = z
       .optional()
       .describe('Connect the last point back to the first, closing the line into a polygon; under polar this yields a radar outline. Default false'),
     ...markBase,
+    ...positionalLabel,
     ...positionalEncoding,
   })
   .describe('Line mark: connects records in order');
@@ -101,6 +109,7 @@ export const IntervalMarkSchema = z
       .optional()
       .describe('Upper-bound field for stacked bars (matches the stack transform endField; default "y1"). Only read when arrangement = stack'),
     ...markBase,
+    ...positionalLabel,
     ...positionalEncoding,
   })
   .describe('Interval mark: bar from baseline (0) to the value; width taken from the band scale');
@@ -146,6 +155,7 @@ export const AreaMarkSchema = z
       .optional()
       .describe('Connect the last point back to the first, closing the outline into a polygon; under polar this yields a filled radar. Default false'),
     ...markBase,
+    ...positionalLabel,
     ...positionalEncoding,
   })
   .describe('Area mark: fillable region between the value outline and a baseline (area chart / filled radar)');
@@ -186,9 +196,29 @@ export const RuleMarkSchema = z
   })
   .describe('Rule mark: a constant-position reference. Bind x (vertical) or y (horizontal); field → per-datum, value → constant. Give only the lower bound for a line; pair it with xTo / yTo for a filled band [lo,hi]. Use extentField / extentToField for partial-length spans');
 
+export const TextMarkSchema = z
+  .object({
+    type: z.literal(PlotMark.Text).describe('Discriminator: a standalone free-text label with no host datum, positioned like a point'),
+    dx: z
+      .number()
+      .finite()
+      .optional()
+      .describe('Fine-tuning horizontal offset (user units) from the projected anchor; positive = right. Prefer label position/distance; dx is an escape hatch. Default 0'),
+    dy: z
+      .number()
+      .finite()
+      .optional()
+      .describe('Fine-tuning vertical offset (user units) from the projected anchor; positive = screen-down. Prefer label position/distance. Default 0'),
+    ...markBase,
+    encoding: TextEncodingSchema,
+  })
+  .describe(
+    'Text mark: a standalone free-text label placed at each record (same projection as point), emitting a core Node carrying text. For labelling another mark’s datum prefer that mark’s label channel',
+  );
+
 export const MarkSchema = z
-  .discriminatedUnion('type', [PointMarkSchema, LineMarkSchema, IntervalMarkSchema, SectorMarkSchema, AreaMarkSchema, RectMarkSchema, RuleMarkSchema])
-  .describe('Mark union; extensible to text in later alphas');
+  .discriminatedUnion('type', [PointMarkSchema, LineMarkSchema, IntervalMarkSchema, SectorMarkSchema, AreaMarkSchema, RectMarkSchema, RuleMarkSchema, TextMarkSchema])
+  .describe('Mark union; text is a standalone free-text label (datum labels prefer a positional mark label channel)');
 
 /** point mark */
 export type PointMark = z.infer<typeof PointMarkSchema>;
@@ -204,5 +234,7 @@ export type AreaMark = z.infer<typeof AreaMarkSchema>;
 export type RectMark = z.infer<typeof RectMarkSchema>;
 /** rule(参考线 / 阈值线 / 容差带) mark */
 export type RuleMark = z.infer<typeof RuleMarkSchema>;
-/** mark（point / line / interval / sector / area / rect / rule） */
+/** text(自由文本兜底；datum label 首选挂宿主 mark label) mark */
+export type TextMark = z.infer<typeof TextMarkSchema>;
+/** mark（point / line / interval / sector / area / rect / rule / text） */
 export type Mark = z.infer<typeof MarkSchema>;

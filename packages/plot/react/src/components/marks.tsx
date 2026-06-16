@@ -1,7 +1,28 @@
 import type { FC } from 'react';
+import type { ExternalRow } from '@retikz/plot';
+
+/**
+ * priority-1 宿主 datum label 扁平 props（ADR-04）：给位置 mark（point / bar / line / area）加 datum 标签
+ * @description label 顶层 string 默认按字段解析（装成 IR label.content 的 field）；labelFormat 进 IR（d3-format / d3-time-format 串）；
+ *   labelPosition / labelDistance / labelPin 摊进 core NodeLabelSchema；resolveLabel 是运行时逃生舱（不进 IR、按 mark id 经 options 注入，需配 id）。
+ */
+export type DatumLabelProps = {
+  /** datum 标签内容字段名（→ IR label.content.field；优先级低于 resolveLabel、高于无）；缺省不挂标签 */
+  label?: string;
+  /** 标签格式串（d3-format 数值 / d3-time-format 时间，进 IR）；仅与 label 字段同用 */
+  labelFormat?: string;
+  /** 标签相对宿主 Node 边框方位：8 方向枚举或数字角度（度）；缺省 above（对齐 core NodeLabelSchema.position） */
+  labelPosition?: 'above' | 'below' | 'left' | 'right' | 'above-left' | 'above-right' | 'below-left' | 'below-right' | number;
+  /** 标签离宿主边框距离（user units）；缺省 12（对齐 core NodeLabelSchema.distance） */
+  labelDistance?: number;
+  /** 从宿主边框拉引线到标签（core leader）；缺省 false */
+  labelPin?: boolean;
+  /** 完全自定义标签逃生舱（运行时函数，不进 IR；最高优先，覆盖 label/labelFormat）；需配 mark id 经 options 注入 */
+  resolveLabel?: (row: ExternalRow) => string;
+};
 
 /** <LineMark> props：折线图层，按 order（缺省按数据顺序）连点 */
-export type LineMarkProps = {
+export type LineMarkProps = DatumLabelProps & {
   /** 绑 x 位置通道的字段路径（polar 下坐标系重解释为角向值） */
   x: string;
   /** 绑 y 位置通道的字段路径（polar 下坐标系重解释为径向值） */
@@ -19,7 +40,7 @@ export type LineMarkProps = {
 };
 
 /** <PointMark> props：散点图层，每行一个 glyph */
-export type PointMarkProps = {
+export type PointMarkProps = DatumLabelProps & {
   /**
    * 绑 x 位置通道的字段路径（polar 下坐标系重解释为角向值；cartesian1D / polar1D 单维亦用 x）。
    * 可选：1D-2D 坐标系用 x/y、ternary2D 用 a/b/c；必填性由坐标系在 lowering 校验。
@@ -46,7 +67,7 @@ export type PointMarkProps = {
 };
 
 /** <BarMark> props：柱状图层，从 baseline 到值的矩形（cartesian 下 x 自动 band；polar 下自动成径向柱、角向自动 band） */
-export type BarMarkProps = {
+export type BarMarkProps = DatumLabelProps & {
   /** 绑 x 位置通道的字段路径（分类，自动 band scale；polar 下作角向类别） */
   x: string;
   /** 绑 y 位置通道的字段路径（数值；polar 下作径向值） */
@@ -74,7 +95,7 @@ export type SectorMarkProps = {
 };
 
 /** <AreaMark> props：面积图层（上沿折线 ↔ baseline 围成可填充区域；polar 下闭合成填充雷达） */
-export type AreaMarkProps = {
+export type AreaMarkProps = DatumLabelProps & {
   /** 绑 x 位置通道的字段路径（polar 下坐标系重解释为角向值） */
   x: string;
   /** 绑 y 位置通道的字段路径（polar 下坐标系重解释为径向值） */
@@ -173,3 +194,42 @@ export const RectMark: FC<RectMarkProps> = () => null;
  *   数字 → IR value 常量、字符串 → IR field；取向 / band 上界 / extent 配对的校验在 build-plot-spec fail-loud
  */
 export const RuleMark: FC<RuleMarkProps> = () => null;
+
+/**
+ * <TextMark> props：自由文本图层（priority-2 兜底，ADR-04）。无宿主、投影同 point、新建带 text 的 core Node。
+ * @description 标注另一 mark 的 datum 请优先用该 mark 的 label 通道（priority-1）；本组件用于无宿主的自由浮动文本 / 注解。
+ *   x / y / text / color 顶层 string 默认按字段解析；dx / dy 是相对锚点的像素级微调逃生舱（首选用宿主 label 的 position/distance）。
+ */
+export type TextMarkProps = {
+  /** 绑 x 位置通道的字段路径（polar 下坐标系重解释为角向值；与 point 同源投影） */
+  x?: string;
+  /** 绑 y 位置通道的字段路径（polar 下坐标系重解释为径向值） */
+  y?: string;
+  /** ternary2D 的 a 分量字段 */
+  a?: string;
+  /** ternary2D 的 b 分量字段 */
+  b?: string;
+  /** ternary2D 的 c 分量字段 */
+  c?: string;
+  /** 文本内容字段名（装成 IR encoding.text.field；默认按字段解析）；自由文本必填内容 */
+  text: string;
+  /** 文本格式串（d3-format 数值 / d3-time-format 时间，进 IR）；仅与 text 字段同用 */
+  format?: string;
+  /** 文本颜色字段（color 通道 + 自动 ordinal 色 scale；落 Node textColor 按色分子 Scope） */
+  color?: string;
+  /** 相对锚点水平微调（user units，正 = 右）；逃生舱，首选用宿主 label position/distance */
+  dx?: number;
+  /** 相对锚点垂直微调（user units，正 = 屏幕下）；逃生舱 */
+  dy?: number;
+  /** 完全自定义文本逃生舱（运行时函数，不进 IR；最高优先，覆盖 text/format）；需配 mark id 经 options 注入 */
+  resolveLabel?: (row: ExternalRow) => string;
+  /** 可选 mark 句柄（预留 scope/anchor；resolveLabel 注入也按此 id 命中） */
+  id?: string;
+};
+
+/**
+ * 自由文本图层声明组件（priority-2 兜底，ADR-04）
+ * @description 配置载体：不进 React render 栈、不渲染（返回 null），由 <Plot> 同步内省其 props 装配进 PlotSpec；
+ *   投影同 point（坐标系无关），新建带 text 的 core Node。标注别的 mark 的 datum 优先用该 mark 的 label 通道
+ */
+export const TextMark: FC<TextMarkProps> = () => null;

@@ -1,6 +1,6 @@
-import { type IRChild, type IRNode, type IRNodeDefault, type IRScope, type IRStep } from '@retikz/core';
-import { type ExternalRow, type IntervalMark, type Mark, PlotCoordinate, PlotMark, type RuleMark } from '../ir';
-import { type IntervalContext, buildIntervalContext, datumAnchor, markCell } from './anchor';
+import { type IRChild, type IRNode, type IRNodeDefault, type IRNodeLabel, type IRScope, type IRStep } from '@retikz/core';
+import { type ExternalRow, type IntervalMark, type Mark, PlotCoordinate, PlotMark, type RuleMark, type TextMark } from '../ir';
+import { type IntervalContext, buildIntervalContext, datumAnchor, markCell, roleValues } from './anchor';
 import { channelValue, compareByPath, isFiniteNumber, resolveFieldPath } from './field';
 import { type CartesianFrame, type Cell, type CellGeometry, type CoordinateFrame, type PolarFrame, type PolarVertex, densifyPolarSegments, toPolarVertex } from './project';
 import {
@@ -21,7 +21,10 @@ import { inferCategoryDomain } from './scale';
  * @description color 适用所有 mark；size / opacity / shape 仅 PointMark（per-datum node 属性）。
  *   由 expand 据各通道 resolver 构造、整包传入，避免逐个位置参数（易错序）。
  */
-export type MarkChannels = { colorOf?: ColorOf; defaultColor?: string; sizeOf?: SizeOf; opacityOf?: OpacityOf; shapeOf?: ShapeOf };
+export type MarkChannels = { colorOf?: ColorOf; defaultColor?: string; sizeOf?: SizeOf; opacityOf?: OpacityOf; shapeOf?: ShapeOf; labelOf?: LabelOf };
+
+/** 行 → 标签串（text 内容通道 + 可选 format + 运行时 resolveLabel 解析结果；undefined = 该行无内容、跳过 / 不挂 label）。由 expand 据 content/fieldTypes/resolveLabel 构造 */
+export type LabelOf = (row: ExternalRow) => string | undefined;
 
 /** 散点 glyph 默认直径（user units，已补偿 circle 外接） */
 const POINT_SIZE = 10;
@@ -113,6 +116,24 @@ const decorateDatum = (
 };
 
 /**
+ * priority-1 宿主 label：若位置 mark 带 `label` 且该行解析出内容，给 datum Node 填 core NodeLabelSchema
+ * @description 零新建 Node：position / distance / pin 直接落 core label（边框相对定位 + 引线由 core 负责）。
+ *   labelOf(row) 解析（resolveLabel > field+format > value）出 undefined 时该行不挂 label（内容缺失跳过语义）。
+ */
+const attachDatumLabel = (node: IRNode, mark: Mark, row: ExternalRow, labelOf: LabelOf | undefined): IRNode => {
+  if (labelOf === undefined || !('label' in mark) || mark.label === undefined) return node;
+  const text = labelOf(row);
+  if (text === undefined) return node;
+  const label: IRNodeLabel = {
+    text,
+    ...(mark.label.position !== undefined ? { position: mark.label.position } : {}),
+    ...(mark.label.distance !== undefined ? { distance: mark.label.distance } : {}),
+    ...(mark.label.pin ? { pin: true } : {}),
+  };
+  return { ...node, label };
+};
+
+/**
  * 给图层外层 Scope 挂 layer id + meta（provenance 开时）；关 → 原样返回
  * @description point / interval / sector 的可见 datum 层：id 走 `<plotId>.<markId|mark.idx>`、meta 走 layer:mark。
  */
@@ -129,7 +150,7 @@ const attachMarkLayer = (layer: IRScope, mark: Mark, markProvenance: MarkProvena
 
 /** 散点：每行一个 circle Node（坐标系无关，经 frame.project 投影） */
 const lowerPoint = (mark: Mark, rows: Array<ExternalRow>, frame: CoordinateFrame, channels: MarkChannels, markProvenance: MarkProvenance | undefined): IRChild | null => {
-  const { colorOf, defaultColor = DEFAULT_FILL, sizeOf, opacityOf, shapeOf } = channels;
+  const { colorOf, defaultColor = DEFAULT_FILL, sizeOf, opacityOf, shapeOf, labelOf } = channels;
   const placed: Array<{ color: string | undefined; node: IRNode }> = [];
   for (let transformedIndex = 0; transformedIndex < rows.length; transformedIndex++) {
     const row = rows[transformedIndex];
@@ -146,7 +167,7 @@ const lowerPoint = (mark: Mark, rows: Array<ExternalRow>, frame: CoordinateFrame
     if (opacity !== undefined) base.opacity = opacity;
     const shape = shapeOf?.(row);
     if (shape !== undefined) base.shape = shape;
-    const node = decorateDatum(base, row, transformedIndex, mark.type, markProvenance, undefined);
+    const node = attachDatumLabel(decorateDatum(base, row, transformedIndex, mark.type, markProvenance, undefined), mark, row, labelOf);
     placed.push({ color: colorOf?.(row), node });
   }
   if (placed.length === 0) return null;
@@ -290,6 +311,7 @@ const lowerCells = (
   colorOf: ColorOf | undefined,
   defaultColor: string | undefined,
   markProvenance: MarkProvenance | undefined,
+  labelOf: LabelOf | undefined,
 ): IRScope | null => {
   const placed: Array<{ color: string | undefined; node: IRNode }> = [];
   let kind: CellGeometry['kind'] | undefined;
@@ -301,7 +323,12 @@ const lowerCells = (
     if (!cell) continue;
     const geometry = projectCell(cell);
     kind = geometry.kind;
-    const node = decorateDatum(cellGeometryNode(geometry), row, transformedIndex, mark.type, markProvenance, cellSeriesValue(mark, row, frame, ctx));
+    const node = attachDatumLabel(
+      decorateDatum(cellGeometryNode(geometry), row, transformedIndex, mark.type, markProvenance, cellSeriesValue(mark, row, frame, ctx)),
+      mark,
+      row,
+      labelOf,
+    );
     placed.push({ color: colorOf?.(row), node });
   }
   return placed.length === 0 || kind === undefined ? null : cellLayer(placed, kind, colorOf, defaultColor);
@@ -717,6 +744,38 @@ const lowerRule = (
   return { type: 'scope', pathDefault: { strokeWidth: RULE_STROKE_WIDTH }, children };
 };
 
+/** 自由文本 node 样式（无 shape 边框：padding0 + 无描边 + textColor 上提到子 Scope；色走文本而非 fill） */
+const textStyle = (textColor: string): IRNodeDefault => ({ padding: 0, strokeWidth: 0, textColor });
+
+/**
+ * priority-2 兜底：无宿主自由文本 → 每行投影成带 `text` 的 core Node（镜像 lowerPoint 装配，坐标系无关）
+ * @description 位置走 datumAnchor（point 同源 frame.projectRoles，坐标系无关）；text 内容 labelOf 解析（缺失跳过）；
+ *   dx/dy 仅作锚点像素级微调逃生舱（首选用 label 的 position/distance，这里无宿主故落 Node.text）。
+ *   color 复用 colorGroupedScope，但文本色走子 Scope nodeDefault 的 textColor（非 fill）。
+ */
+const lowerText = (mark: TextMark, rows: Array<ExternalRow>, frame: CoordinateFrame, channels: MarkChannels, markProvenance: MarkProvenance | undefined): IRChild | null => {
+  const { colorOf, defaultColor = DEFAULT_FILL, labelOf } = channels;
+  const dx = mark.dx ?? 0;
+  const dy = mark.dy ?? 0;
+  const placed: Array<{ color: string | undefined; node: IRNode }> = [];
+  for (let transformedIndex = 0; transformedIndex < rows.length; transformedIndex++) {
+    const row = rows[transformedIndex];
+    const point = frame.projectRoles(roleValues(mark, row, frame));
+    if (!point) continue;
+    const text = labelOf?.(row);
+    if (text === undefined) continue;
+    const position: [number, number] = dx === 0 && dy === 0 ? point : [point[0] + dx, point[1] + dy];
+    const base: IRNode = { type: 'node', position, text };
+    const node = decorateDatum(base, row, transformedIndex, mark.type, markProvenance, undefined);
+    placed.push({ color: colorOf?.(row), node });
+  }
+  if (placed.length === 0) return null;
+  const layer: IRScope = !colorOf
+    ? { type: 'scope', nodeDefault: textStyle(defaultColor), children: placed.map(p => p.node) }
+    : colorGroupedScope(placed, textStyle);
+  return attachMarkLayer(layer, mark, markProvenance);
+};
+
 /**
  * 坐标系不支持某 mark 的统一 fail-loud 文案（含 mark.type / frame.type，便于定位）
  * @description line / area 在非 2D 坐标系、cell 类 mark 在无 projectCell 的坐标系（1D / ternary / 未实现的 custom）共用。
@@ -734,9 +793,12 @@ const failLoudMessage = (markType: string, frameType: string): string =>
  *   datum id 走 markProvenance.registerDatumId（plot 级共享 seen、跨 mark 查重）。
  */
 export const lowerMark = (mark: Mark, rows: Array<ExternalRow>, frame: CoordinateFrame, channels: MarkChannels = {}, markProvenance?: MarkProvenance): IRChild | null => {
-  const { colorOf, defaultColor } = channels;
+  const { colorOf, defaultColor, labelOf } = channels;
   // point 坐标系无关，经 frame.project（polar 连续角轴段内采样）投影
   if (mark.type === PlotMark.Point) return lowerPoint(mark, rows, frame, channels, markProvenance);
+
+  // text（priority-2 兜底自由文本）坐标系无关，与 point 同源 frame.projectRoles 投影；不进 interval fail-loud 网
+  if (mark.type === PlotMark.Text) return lowerText(mark, rows, frame, channels, markProvenance);
 
   // line / area 仅 cartesian2D / polar2D 有上沿 / 回边几何；其余坐标系（1D / ternary / custom）本轮 fail-loud
   if (mark.type === PlotMark.Line || mark.type === PlotMark.Area) {
@@ -774,6 +836,6 @@ export const lowerMark = (mark: Mark, rows: Array<ExternalRow>, frame: Coordinat
   }
   // interval 需 IntervalContext（buildIntervalContext 仅 cartesian / polar 帧有 primary scale 概念）；sector 无 ctx
   const ctx = mark.type === PlotMark.Interval && (frame.type === PlotCoordinate.Cartesian2D || frame.type === PlotCoordinate.Polar2D) ? buildIntervalContext(mark, frame, rows) : undefined;
-  const layer = lowerCells(mark, rows, frame, frame.projectCell, ctx, colorOf, defaultColor, markProvenance);
+  const layer = lowerCells(mark, rows, frame, frame.projectCell, ctx, colorOf, defaultColor, markProvenance, labelOf);
   return layer === null ? null : attachMarkLayer(layer, mark, markProvenance);
 };

@@ -127,6 +127,7 @@
     "compAreaMark": "面积",
     "compRectMark": "矩形格",
     "compRuleMark": "参考标注",
+    "compTextMark": "数据标签",
     "compAxis": "坐标轴",
     "compLegend": "图例",
     "examples": "图表",
