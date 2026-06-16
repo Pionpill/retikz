@@ -569,7 +569,7 @@ const ribbonValueOf = (row: ExternalRow, field: string): number | null => {
 /**
  * 流带（ribbon mark）下沉：每行 → 一条可填充 cubic 曲带 Path（坐标系无关端点投影 + 屏幕空间几何）
  * @description 端点为字段对，经 frame.projectRoles 投影成屏幕中心点；value → 源端半宽、endWidth（缺省 = value）→
- *   目标端半宽（合成线性 width scale）；ribbonBandGeometry 算四角 + 上 / 下边界 cubic 控制点（弦法向 + curvature 主轴外推）。
+ *   目标端半宽（合成线性 width scale）；ribbonBandGeometry 算四角 + 上 / 下边界 cubic 控制点（半宽沿 orientation 垂向、curvature 沿 orientation 主轴外推，默认 horizontal）。
  *   steps：move(S_top) → cubic(T_top) → line(T_bot)[目标封口] → cubic(S_bot) → cycle[源封口闭合]。
  *   零宽（半宽 < ε）/ 端点非有限 / 源目标重合 → 跳过该行；value 负 → fail-loud。color 字段按色分子 Scope 上提 fill。
  *   width 具名 scale（mark.width）v1 不支持（见 ADR-05 不在范围）→ fail-loud；缺省合成线性 scale。

@@ -1,6 +1,6 @@
 # ADR-05：ribbon mark——「源/目标/宽度 → 可填充曲带 Path」的几何 primitive，端点为字段对（经坐标系投影）；sankey 布局明确划出范围
 
-- 状态：Proposed
+- 状态：Accepted
 - 决策日期：2026-06-16
 - 关联：[alpha.11 roadmap](./roadmap.md)「ribbon mark」· [plot v0.1 roadmap](../roadmap.md) · [plot-design.md §3.7 ribbon / §7 scope 组合 / §8.1 可连接性](../../../../../architecture/plot-design.md) · [ADR-01 区间几何投影](./01-cell-geometry-projection.md)（contour 围合思路同源）· core [step.ts cubic / curve / bend](../../../../../../packages/core/core/src/ir/path/step.ts)
 

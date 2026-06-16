@@ -1,6 +1,6 @@
 # ADR-02：rect mark——双维 band 正交 cell 的 heatmap 格，复用 ADR-01 `projectCell` 几何 + sequential color 取值
 
-- 状态：Proposed
+- 状态：Accepted
 - 决策日期：2026-06-16
 - 关联：[alpha.11 roadmap](./roadmap.md) · [alpha.11 ADR-01：cell-geometry-projection](./01-cell-geometry-projection.md) · [plot v0.1 roadmap](../roadmap.md) · [plot-design.md §3.7 mark 表（rect=二维格子区域 heatmap） / §8.3 mark 几何 × coordinate / §8.1 可连接性](../../../../../architecture/plot-design.md)
 

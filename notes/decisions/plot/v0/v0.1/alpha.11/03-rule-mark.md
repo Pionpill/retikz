@@ -1,6 +1,6 @@
 # ADR-03：rule mark——数据驱动的常量位置参考标注，line 形态下沉 core `Path`、band 形态复用 ADR-01 `projectCell`；与 reference-line guide 划清「数据 vs scale 派生」分工
 
-- 状态：Proposed
+- 状态：Accepted
 - 决策日期：2026-06-16
 - 关联：[plot v0.1 roadmap](../roadmap.md)「Geometry 基础」 · [alpha.11 roadmap](./roadmap.md) · [plot-design.md §3.7 mark 表 rule / §3.9 guide / §3.10 layer](../../../../../architecture/plot-design.md) · 同 milestone [ADR-01 区间几何投影](./01-cell-geometry-projection.md)
 

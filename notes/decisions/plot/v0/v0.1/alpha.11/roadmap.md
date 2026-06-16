@@ -7,11 +7,11 @@
 
 | ADR | 主题 | 状态 |
 | --- | --- | --- |
-| [01](./01-cell-geometry-projection.md) | 区间类几何投影契约：`frame.projectCell` + `CellGeometry`（rect / sector / contour），闭式快路零行为变化；坐标系须实现 `projectCell` 才支持 cell 类 mark，曲线坐标系经自身 `projectCell` 出 contour（无引擎自动兜底） | Proposed |
-| [02](./02-rect-mark.md) | **rect** mark（heatmap 格，双维 band cell，消费 ADR-01 契约；v1 仅 cartesian2D） | Proposed |
-| [03](./03-rule-mark.md) | **rule** mark（参考 / 阈值线；定为 mark、非 guide） | Proposed |
-| [04](./04-text-mark.md) | **text** mark（datum label，下沉 core Node 带 text） | Proposed |
-| [05](./05-ribbon-mark.md) | **ribbon** mark（sankey / alluvial 流带几何；v1 字段端点，node-id 跨 scope 后置） | Proposed |
+| [01](./01-cell-geometry-projection.md) | 区间类几何投影契约：`frame.projectCell` + `CellGeometry`（rect / sector / contour），闭式快路零行为变化；坐标系须实现 `projectCell` 才支持 cell 类 mark，曲线坐标系经自身 `projectCell` 出 contour（无引擎自动兜底） | Accepted |
+| [02](./02-rect-mark.md) | **rect** mark（heatmap 格，双维 band cell，消费 ADR-01 契约；v1 仅 cartesian2D） | Accepted |
+| [03](./03-rule-mark.md) | **rule** mark（参考 / 阈值线；定为 mark、非 guide） | Accepted |
+| [04](./04-text-mark.md) | **text** mark（datum label，下沉 core Node 带 text） | Accepted |
+| [05](./05-ribbon-mark.md) | **ribbon** mark（sankey / alluvial 流带几何；v1 字段端点，node-id 跨 scope 后置） | Accepted |
 
 ## 三包 lockstep
 

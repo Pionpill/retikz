@@ -1,6 +1,6 @@
 # ADR-04：text mark——datum label 数据标签，优先挂宿主 Node.label、兜底新建带 `text` 的核心 Node
 
-- 状态：Proposed
+- 状态：Accepted
 - 决策日期：2026-06-16
 - 关联：[plot v0.1 roadmap](../roadmap.md) · [alpha.11 roadmap](./roadmap.md) · [plot-design.md §3.6 通道 / §3.7 mark 表（text=数据标签 label）](../../../../../architecture/plot-design.md) · [alpha.11 ADR-01：cell 几何投影](./01-cell-geometry-projection.md)（同 milestone，投影路径参照）
 

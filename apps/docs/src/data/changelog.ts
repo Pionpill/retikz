@@ -1375,8 +1375,8 @@ export const changelog: Array<Release> = [
             version: 'alpha.11',
             date: '2026-06-16',
             summary: {
-              zh: 'Geometry 基础（IR / lowering 视角）：区间几何下沉重构为坐标系无关的 `frame.projectCell(cell)` 契约（闭式 rect / sector 快路 ⊕ contour 兜底，曲线轴出可连接柱），并新增 rect / rule / text / ribbon 四个 mark——heatmap 双 band 格、参考 / 阈值线与 band 区域、datum label 文本、sankey / alluvial 流带。',
-              en: 'Geometry foundation (IR / lowering view): refactors interval geometry into a coordinate-agnostic `frame.projectCell(cell)` contract (closed-form rect / sector fast paths ⊕ contour fallback, with connectable bars on curved axes), and adds four marks — rect / rule / text / ribbon — heatmap double-band cells, reference / threshold lines and band regions, datum-label text, and sankey / alluvial ribbons.',
+              zh: 'Geometry 基础（IR / lowering 视角）：区间几何下沉重构为坐标系无关的 `frame.projectCell(cell)` 契约（闭式 rect / sector 快路 ⊕ contour 兜底，曲线坐标系在其 `projectCell` 就绪时出可连接柱），并新增 rect / rule / text / ribbon 四个 mark——heatmap 双 band 格、参考 / 阈值线与 band 区域、datum label 文本、sankey / alluvial 流带。',
+              en: 'Geometry foundation (IR / lowering view): refactors interval geometry into a coordinate-agnostic `frame.projectCell(cell)` contract (closed-form rect / sector fast paths ⊕ contour fallback, with connectable bars on curved systems once their `projectCell` is provided), and adds four marks — rect / rule / text / ribbon — heatmap double-band cells, reference / threshold lines and band regions, datum-label text, and sankey / alluvial ribbons.',
             },
             items: [
               {

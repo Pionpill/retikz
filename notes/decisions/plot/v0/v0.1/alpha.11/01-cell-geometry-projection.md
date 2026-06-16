@@ -1,6 +1,6 @@
 # ADR-01：区间类几何投影契约——`frame.projectCell` 统一 interval / sector / 曲线轴下沉，闭式快路 ⊕ contour 兜底
 
-- 状态：Proposed
+- 状态：Accepted
 - 决策日期：2026-06-16
 - 关联：[plot v0.1 roadmap](../roadmap.md)「区间几何下沉」备注 · [alpha.11 roadmap](./roadmap.md) · [plot-design.md §8.3 mark 几何 × coordinate / §8.1 可连接性](../../../../../architecture/plot-design.md) · [core ADR：contour shape](../../../../core/v0/v0.4/alpha.3/03-core-contour-shape.md)（已实现）
 
@@ -135,7 +135,7 @@ Plot IR（`ir/**`）**无改动**——`projectCell` / `Cell` / `CellGeometry` �
 |---|---|---|---|---|
 | `packages/plot/plot/src/lower/project.ts` | 加 | `Cell` | `{ primary:[number,number]; secondary:[number,number] }` | 正交 cell（scale 输出空间区间） |
 | `packages/plot/plot/src/lower/project.ts` | 加 | `CellGeometry` | `{kind:'rect',...} \| {kind:'sector',...} \| {kind:'contour', points}` | frame 投影 cell 的产物判别 union |
-| `packages/plot/plot/src/lower/project.ts` | 加 | `CoordinateFrame.projectCell?` | `(cell: Cell) => CellGeometry` | cartesian/polar 实现；缺省 → 通用密采样器出 contour |
+| `packages/plot/plot/src/lower/project.ts` | 加 | `CoordinateFrame.projectCell?` | `(cell: Cell) => CellGeometry` | cartesian/polar 实现；未实现 → cell 类 mark fail-loud（无引擎自动兜底）。contour 由曲线 frame 自身 projectCell 内调 densifyCellContour 产出 |
 
 ### 文件 scope
 
