@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { type PlotSpec, PlotSpecSchema } from '@retikz/plot';
 import { buildPlotSpec, decorateDefaultGuides } from '../../src/components/build-plot-spec';
 import { Axis, Legend } from '../../src/components/guides';
-import { AreaMark, BarMark, LineMark, PointMark, RectMark, SectorMark } from '../../src/components/marks';
+import { AreaMark, BarMark, LineMark, PointMark, RectMark, RuleMark, SectorMark } from '../../src/components/marks';
 import { Scale } from '../../src/components/scales';
 
 describe('buildPlotSpec model → type-driven 派生（alpha.6 ADR-03，评审 P1）', () => {
@@ -717,6 +717,77 @@ describe('buildPlotSpec rect mark（ADR-02 heatmap 双 band）', () => {
 
   it('rect 装配产物过 PlotSpecSchema', () => {
     const spec = buildPlotSpec(<RectMark x="rowKey" y="colKey" color="value" />, '__plot');
+    expect(() => PlotSpecSchema.parse(spec)).not.toThrow();
+  });
+});
+
+describe('buildPlotSpec rule 装配（alpha.11 ADR-03）', () => {
+  it('rulemark-constant：数字 → value（line），常量 color → value', () => {
+    const spec = buildPlotSpec(<RuleMark y={80} color="crimson" />, '__plot');
+    expect(spec.marks[0]).toEqual({ type: 'rule', encoding: { y: { value: 80 }, color: { value: 'crimson' } } });
+  });
+
+  it('rulemark-field：字符串 → field（per-datum line），color field → AUTO_COLOR', () => {
+    const spec = buildPlotSpec(<RuleMark y="threshold" color="category" />, '__plot');
+    expect(spec.marks[0]).toEqual({ type: 'rule', encoding: { y: { field: 'threshold' }, color: { field: 'category', scale: '__color' } } });
+    // per-datum color field → 自动色 scale
+    expect(spec.scales.some(scale => scale.name === '__color')).toBe(true);
+  });
+
+  it('rulemark-band：给 yTo → band（数字常量上界）', () => {
+    const spec = buildPlotSpec(<RuleMark y={70} yTo={90} color="amber" />, '__plot');
+    expect(spec.marks[0]).toEqual({ type: 'rule', yTo: 90, encoding: { y: { value: 70 }, color: { value: 'amber' } } });
+  });
+
+  it('rulemark-band-field：字符串上界 → field band', () => {
+    const spec = buildPlotSpec(<RuleMark y="lo" yTo="hi" />, '__plot');
+    expect(spec.marks[0]).toEqual({ type: 'rule', yTo: 'hi', encoding: { y: { field: 'lo' } } });
+  });
+
+  it('rulemark-orientation-vertical：绑 x → 竖直 rule（encoding.x）', () => {
+    const spec = buildPlotSpec(<RuleMark x={5} />, '__plot');
+    expect(spec.marks[0]).toEqual({ type: 'rule', encoding: { x: { value: 5 } } });
+  });
+
+  it('rulemark-extent：透传 extent 字段', () => {
+    const spec = buildPlotSpec(<RuleMark x="date" extentField="rowLo" extentToField="rowHi" />, '__plot');
+    expect(spec.marks[0]).toEqual({ type: 'rule', extentField: 'rowLo', extentToField: 'rowHi', encoding: { x: { field: 'date' } } });
+  });
+
+  it('rulemark-vertical-band-xTo：绑 x + xTo → band', () => {
+    const spec = buildPlotSpec(<RuleMark x={2} xTo={5} />, '__plot');
+    expect(spec.marks[0]).toEqual({ type: 'rule', xTo: 5, encoding: { x: { value: 2 } } });
+  });
+
+  it('rulemark-orientation-conflict：x 与 y 皆给 → fail-loud', () => {
+    expect(() => buildPlotSpec(<RuleMark x={1} y={2} />, '__plot')).toThrow(/exactly one of x|both|neither/i);
+  });
+
+  it('rulemark-orientation-missing：x 与 y 皆缺 → fail-loud', () => {
+    expect(() => buildPlotSpec(<RuleMark />, '__plot')).toThrow(/exactly one of x|both|neither/i);
+  });
+
+  it('rulemark-bound-mismatch：绑 x 却给 yTo → fail-loud', () => {
+    expect(() => buildPlotSpec(<RuleMark x={5} yTo={10} />, '__plot')).toThrow(/yTo|match the bound dimension|xTo/i);
+  });
+
+  it('rulemark-bound-mismatch-y：绑 y 却给 xTo → fail-loud', () => {
+    expect(() => buildPlotSpec(<RuleMark y={5} xTo={10} />, '__plot')).toThrow(/xTo|match the bound dimension|yTo/i);
+  });
+
+  it('rulemark-extent-unpaired：仅 extentField → fail-loud', () => {
+    expect(() => buildPlotSpec(<RuleMark x="date" extentField="lo" />, '__plot')).toThrow(/extentField|extentToField|together/i);
+  });
+
+  it('rule 装配产物过 PlotSpecSchema', () => {
+    const spec = buildPlotSpec(
+      <>
+        <RuleMark y={80} color="crimson" />
+        <RuleMark y={70} yTo={90} color="amber" />
+        <RuleMark x="date" extentField="a" extentToField="b" />
+      </>,
+      '__plot',
+    );
     expect(() => PlotSpecSchema.parse(spec)).not.toThrow();
   });
 });

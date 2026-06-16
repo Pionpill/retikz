@@ -93,6 +93,30 @@ export type AreaMarkProps = {
   id?: string;
 };
 
+/**
+ * <RuleMark> props：参考标注图层（阈值线 / 容差带）。取向由给 x（竖直）还是 y（水平）决定，二选一。
+ * @description 扁平 props：数字 → IR 常量 value、字符串 → IR field（per-datum）。只给下界（x / y）→ line；
+ *   配上界（xTo 与 x 配对 / yTo 与 y 配对）→ band [lo,hi]。extent 给对侧维起止字段截成部分长度。
+ */
+export type RuleMarkProps = {
+  /** 竖直 rule 的常量轴绑定（x=const 跨满 y 域）：数字 → 常量 value、字符串 → 字段 field（每行一条） */
+  x?: number | string;
+  /** 水平 rule 的常量轴绑定（y=const 跨满 x 域）：数字 → 常量 value、字符串 → 字段 field（每行一条） */
+  y?: number | string;
+  /** 竖直 band 上界（与 x 配对 → x∈[x,xTo] 填充带）：数字 → 常量、字符串 → 字段；缺 → line */
+  xTo?: number | string;
+  /** 水平 band 上界（与 y 配对 → y∈[y,yTo] 填充带）：数字 → 常量、字符串 → 字段；缺 → line */
+  yTo?: number | string;
+  /** 对侧维部分长度起点字段（与 extentToField 成对）；缺 → 满铺对侧轴域 */
+  extentField?: string;
+  /** 对侧维部分长度终点字段（与 extentField 成对）；缺 → 满铺对侧轴域 */
+  extentToField?: string;
+  /** 颜色：数字 / 颜色串常量 → value（line→stroke / band→fill）；字段名 → field（per-datum 按色分组） */
+  color?: string;
+  /** 可选 mark 句柄（预留 scope/anchor，解析留 alpha.5） */
+  id?: string;
+};
+
 /** <RectMark> props：矩形格图层（heatmap），x / y 均分类（双 band），值经 color 通道映射成格子填充 */
 export type RectMarkProps = {
   /** 绑 x 位置通道的字段路径（分类，自动 band scale，定格宽） */
@@ -142,3 +166,10 @@ export const AreaMark: FC<AreaMarkProps> = () => null;
  *   x / y 双 band 由 build-plot-spec 自动推断（heatmap 双轴分类定格），值经 color 通道映射成格子填充
  */
 export const RectMark: FC<RectMarkProps> = () => null;
+
+/**
+ * 参考标注（阈值线 / 容差带）图层声明组件
+ * @description 配置载体：不进 React render 栈、不渲染（返回 null），由 <Plot> 同步内省其 props 装配进 PlotSpec；
+ *   数字 → IR value 常量、字符串 → IR field；取向 / band 上界 / extent 配对的校验在 build-plot-spec fail-loud
+ */
+export const RuleMark: FC<RuleMarkProps> = () => null;

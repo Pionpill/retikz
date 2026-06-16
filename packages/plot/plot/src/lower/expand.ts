@@ -101,6 +101,8 @@ const assertRequiredPositionChannels = (coordinate: Coordinate, marks: ReadonlyA
   const required = requiredPositionChannelsOf(coordinate);
   for (const mark of marks) {
     if (mark.type === PlotMark.Sector) continue;
+    // rule 取向由 encoding.x XOR y 决定（绑一个、缺一个），不满足坐标系的「x+y 全必填」；其取向校验在 lowerRule fail-loud
+    if (mark.type === PlotMark.Rule) continue;
     // 读可选位置通道（x/y/a/b/c）；encoding 是 zod object，按名读为 Channel | undefined（纯 JSON 字段，非 any 逃逸）
     const encoding = mark.encoding as Record<string, Channel | undefined>;
     for (const channel of required) {

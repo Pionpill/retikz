@@ -289,4 +289,84 @@ describe('MarkSchema (ADR-05)', () => {
     const m = { type: 'rect', id: 'heat', encoding: { x: { field: 'r' }, y: { field: 'c' }, color: { field: 'v', scale: 'heat' } } };
     expect(MarkSchema.parse(JSON.parse(JSON.stringify(m)))).toEqual(m);
   });
+
+  // alpha.11 ADR-03：rule(参考线 / 阈值带) mark
+  it('mark_rule_horizontal_constant_valid', () => {
+    const m = { type: 'rule', encoding: { y: { value: 80 }, color: { value: 'crimson' } } };
+    expect(MarkSchema.parse(m)).toEqual(m);
+  });
+
+  it('mark_rule_vertical_field_valid', () => {
+    const m = { type: 'rule', encoding: { x: { field: 'date' } } };
+    expect(MarkSchema.parse(m)).toEqual(m);
+  });
+
+  it('mark_rule_per_datum_field_color_valid', () => {
+    const m = { type: 'rule', encoding: { y: { field: 'threshold' }, color: { field: 'category', scale: 'c' } } };
+    expect(MarkSchema.parse(m)).toEqual(m);
+  });
+
+  it('mark_rule_extent_pair_valid', () => {
+    const m = { type: 'rule', extentField: 'rowLo', extentToField: 'rowHi', encoding: { x: { field: 'date' } } };
+    expect(MarkSchema.parse(m)).toEqual(m);
+  });
+
+  it('mark_rule_band_constant_yTo_valid', () => {
+    const m = { type: 'rule', yTo: 90, encoding: { y: { value: 70 }, color: { value: 'amber' } } };
+    expect(MarkSchema.parse(m)).toEqual(m);
+  });
+
+  it('mark_rule_band_field_yTo_valid', () => {
+    const m = { type: 'rule', yTo: 'hi', encoding: { y: { field: 'lo' } } };
+    expect(MarkSchema.parse(m)).toEqual(m);
+  });
+
+  it('mark_rule_band_xTo_valid', () => {
+    const m = { type: 'rule', xTo: 5, encoding: { x: { value: 2 } } };
+    expect(MarkSchema.parse(m)).toEqual(m);
+  });
+
+  it('mark_rule_minimal_omits_optionals', () => {
+    // xTo / yTo / extent 省略：schema 不写入默认值，仅解析通过（line 形态由 lowering 判别）
+    const m = { type: 'rule', encoding: { y: { value: 50 } } };
+    const parsed = MarkSchema.parse(m);
+    expect(parsed).not.toHaveProperty('yTo');
+    expect(parsed).not.toHaveProperty('xTo');
+    expect(parsed).not.toHaveProperty('extentField');
+  });
+
+  it('mark_rule_with_id_valid', () => {
+    const m = { type: 'rule', id: 'avg', encoding: { y: { value: 80 } } };
+    expect(MarkSchema.parse(m)).toEqual(m);
+  });
+
+  it('mark_rule_union_discriminates', () => {
+    const parsed = MarkSchema.parse({ type: 'rule', yTo: 90, encoding: { y: { value: 70 } } });
+    expect(parsed.type).toBe('rule');
+    expect((parsed as { yTo?: number }).yTo).toBe(90);
+  });
+
+  it('mark_rule_empty_extent_field_rejected', () => {
+    expect(() => MarkSchema.parse({ type: 'rule', extentField: '', encoding: { x: { value: 5 } } })).toThrow();
+  });
+
+  it('mark_rule_empty_string_yTo_rejected', () => {
+    // yTo string 须 min(1)：空串非法
+    expect(() => MarkSchema.parse({ type: 'rule', yTo: '', encoding: { y: { value: 70 } } })).toThrow();
+  });
+
+  it('mark_rule_typo_type_rejected', () => {
+    expect(() => MarkSchema.parse({ type: 'rul', encoding: { y: { value: 80 } } })).toThrow();
+  });
+
+  it('mark_rule_strips_size', () => {
+    // size 仅 PointMark：rule encoding 非 strict zod 剥离
+    const parsed = MarkSchema.parse({ type: 'rule', encoding: { y: { value: 80 }, size: { field: 'p' } } });
+    expect((parsed.encoding as { size?: unknown }).size).toBeUndefined();
+  });
+
+  it('mark_rule_json_round_trip', () => {
+    const m = { type: 'rule', id: 'tol', yTo: 'hi', extentField: 'a', extentToField: 'b', encoding: { y: { field: 'lo' }, color: { field: 'cat', scale: 'c' } } };
+    expect(MarkSchema.parse(JSON.parse(JSON.stringify(m)))).toEqual(m);
+  });
 });

@@ -19,6 +19,8 @@ export const PlotMark = {
   Area: 'area',
   /** 矩形格：x / y 均分类（双 band）围成的固定网格 cell，值经 color 通道映射（heatmap / 混淆矩阵 / 日历热图） */
   Rect: 'rect',
+  /** 参考标注：沿一个位置维度取常量（单值 → 线、[lo,hi] → 填充带），跨满对侧轴域（阈值线 / 容差带） */
+  Rule: 'rule',
 } as const;
 
 /** mark 类型 */
@@ -158,9 +160,35 @@ export const RectMarkSchema = z
     'Rect mark: heatmap grid cell sized bandwidth_x × bandwidth_y; the value is mapped to fill via the color channel. Both x and y must resolve to band scales (required-ness and the band constraint are validated during lowering)',
   );
 
+export const RuleMarkSchema = z
+  .object({
+    type: z.literal(PlotMark.Rule).describe('Discriminator: a constant-position reference mark (line for a single value, band for a [lo,hi] interval) spanning the opposite axis domain'),
+    yTo: z
+      .union([z.number(), z.string().min(1)])
+      .optional()
+      .describe('Horizontal band upper bound along y: number → constant, string → per-datum field. Present (paired with encoding.y as the lower bound) turns a horizontal rule into a filled band y∈[y,yTo]; omit → a single line'),
+    xTo: z
+      .union([z.number(), z.string().min(1)])
+      .optional()
+      .describe('Vertical band upper bound along x: number → constant, string → per-datum field. Present (paired with encoding.x as the lower bound) turns a vertical rule into a filled band x∈[x,xTo]; omit → a single line'),
+    extentField: z
+      .string()
+      .min(1)
+      .optional()
+      .describe('Per-datum partial-length rule/band: field giving the span start along the opposite axis (omit → span the full opposite domain). Pairs with extentToField'),
+    extentToField: z
+      .string()
+      .min(1)
+      .optional()
+      .describe('Per-datum partial-length rule/band: field giving the span end along the opposite axis (omit → span the full opposite domain). Pairs with extentField'),
+    ...markBase,
+    ...positionalEncoding,
+  })
+  .describe('Rule mark: a constant-position reference. Bind x (vertical) or y (horizontal); field → per-datum, value → constant. Give only the lower bound for a line; pair it with xTo / yTo for a filled band [lo,hi]. Use extentField / extentToField for partial-length spans');
+
 export const MarkSchema = z
-  .discriminatedUnion('type', [PointMarkSchema, LineMarkSchema, IntervalMarkSchema, SectorMarkSchema, AreaMarkSchema, RectMarkSchema])
-  .describe('Mark union; extensible to rule / text in later alphas');
+  .discriminatedUnion('type', [PointMarkSchema, LineMarkSchema, IntervalMarkSchema, SectorMarkSchema, AreaMarkSchema, RectMarkSchema, RuleMarkSchema])
+  .describe('Mark union; extensible to text in later alphas');
 
 /** point mark */
 export type PointMark = z.infer<typeof PointMarkSchema>;
@@ -174,5 +202,7 @@ export type SectorMark = z.infer<typeof SectorMarkSchema>;
 export type AreaMark = z.infer<typeof AreaMarkSchema>;
 /** rect(heatmap 格) mark */
 export type RectMark = z.infer<typeof RectMarkSchema>;
-/** mark（point / line / interval / sector / area / rect） */
+/** rule(参考线 / 阈值线 / 容差带) mark */
+export type RuleMark = z.infer<typeof RuleMarkSchema>;
+/** mark（point / line / interval / sector / area / rect / rule） */
 export type Mark = z.infer<typeof MarkSchema>;

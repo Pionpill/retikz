@@ -31,6 +31,8 @@ import {
   type PointMarkProps,
   RectMark,
   type RectMarkProps,
+  RuleMark,
+  type RuleMarkProps,
   SectorMark,
   type SectorMarkProps,
 } from './marks';
@@ -161,6 +163,54 @@ const positionEncoding = (x: string, y: string): Pick<Encoding, 'x' | 'y'> => ({
   y: { field: y },
 });
 
+/** rule 扁平 prop → IR 位置通道：数字 → 常量 value、字符串 → 字段 field */
+const ruleChannel = (value: number | string): { value: number } | { field: string } => (typeof value === 'number' ? { value } : { field: value });
+
+/**
+ * 把 <RuleMark> 扁平 props 装配进 rule IR（取向 / band 上界 / extent / color 校验 fail-loud）
+ * @description 取向由给 x（竖直）还是 y（水平）决定，二选一（皆给 / 皆缺 → fail-loud）；
+ *   band 上界 xTo 须配 x、yTo 须配 y（不匹配 / 单飞 → fail-loud）；extent 须成对（单设 → fail-loud）。
+ *   常量 rule（x/y 为数字）→ color 作 value 常量；per-datum rule（x/y 为字段串）→ color 作 field（AUTO_COLOR）。
+ */
+const collectRule = (props: RuleMarkProps, into: Collected): void => {
+  const { x, y, xTo, yTo, extentField, extentToField, color, id } = props;
+  const hasX = x !== undefined;
+  const hasY = y !== undefined;
+  if (hasX === hasY) {
+    throw new Error('buildPlotSpec: <RuleMark> must bind exactly one of x (vertical) or y (horizontal); set one, not both / neither');
+  }
+  if (hasX && yTo !== undefined) {
+    throw new Error('buildPlotSpec: <RuleMark> binds x (vertical) but sets yTo; the band upper bound must match the bound dimension (use xTo)');
+  }
+  if (hasY && xTo !== undefined) {
+    throw new Error('buildPlotSpec: <RuleMark> binds y (horizontal) but sets xTo; the band upper bound must match the bound dimension (use yTo)');
+  }
+  if ((extentField === undefined) !== (extentToField === undefined)) {
+    throw new Error('buildPlotSpec: <RuleMark> extentField / extentToField must be set together (a partial-length span needs both start and end)');
+  }
+  // 常量 rule（数字常量轴）→ color 作 value；per-datum（字段串）→ color 作 field（AUTO_COLOR）
+  const constantRule = typeof (hasX ? x : y) === 'number';
+  let colorEnc: { color: { value: string } | { field: string; scale: string } } | undefined;
+  if (color !== undefined) {
+    colorEnc = constantRule ? { color: { value: color } } : { color: { field: color, scale: AUTO_COLOR } };
+  }
+  const positional = hasX ? { x: ruleChannel(x) } : { y: ruleChannel(y as number | string) };
+  const upper = hasX ? (xTo !== undefined ? { xTo } : {}) : yTo !== undefined ? { yTo } : {};
+  into.marks.push({
+    type: PlotMark.Rule,
+    ...(id !== undefined ? { id } : {}),
+    ...upper,
+    ...(extentField !== undefined ? { extentField } : {}),
+    ...(extentToField !== undefined ? { extentToField } : {}),
+    encoding: { ...positional, ...colorEnc },
+  });
+  // 仅 per-datum color（field）需自动色 scale；常量 color value 直落 IR，不进色 scale
+  if (colorEnc && 'field' in colorEnc.color) {
+    into.colored = true;
+    into.colorFields.push(colorEnc.color.field);
+  }
+};
+
 /** 递归收集 mark / guide / transform：认 mark/guide 组件，穿透 Fragment，忽略其它节点 */
 const collectInto = (children: ReactNode, into: Collected): void => {
   Children.forEach(children, child => {
@@ -264,6 +314,8 @@ const collectInto = (children: ReactNode, into: Collected): void => {
       });
       into.hasRect = true;
       recordColor(into, colorEnc);
+    } else if (child.type === RuleMark) {
+      collectRule(child.props as RuleMarkProps, into);
     } else if (child.type === Axis) {
       const { dimension, tickCount, tickLabels, grid, id } = child.props as AxisProps;
       into.guides.push({

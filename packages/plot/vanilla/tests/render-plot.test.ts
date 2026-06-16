@@ -253,4 +253,61 @@ describe('renderPlot 薄包装（SSR SVG 串）', () => {
     };
     expect(renderPlot(gridSpec, grid, { width: 320, height: 320 })).toMatch(/<rect/);
   });
+
+  // ADR-03：rule mark（参考线 + 参考带）SSR——vanilla 无代码改动，纯 spec 驱动端到端产出
+  it('rule line + band spec → SVG 含参考线（<path>）与参考带（<rect> fill）', () => {
+    const scores: ExternalDatasets = {
+      scores: [
+        { name: 'A', score: 60 },
+        { name: 'B', score: 85 },
+        { name: 'C', score: 92 },
+      ],
+    };
+    const ruleSpec: PlotSpec = {
+      namespace: 'plot',
+      type: 'plot',
+      data: { reference: 'scores' },
+      scales: [
+        { type: 'band', name: 'x' },
+        { type: 'linear', name: 'y' },
+      ],
+      coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
+      marks: [
+        { type: 'interval', encoding: { x: { field: 'name' }, y: { field: 'score' } } },
+        // 容差带 y∈[70,90]（band → projectCell rect，amber 填充）
+        { type: 'rule', yTo: 90, encoding: { y: { value: 70 }, color: { value: 'amber' } } },
+        // 及格线 y=60（line → core Path，crimson 描边）
+        { type: 'rule', encoding: { y: { value: 60 }, color: { value: 'crimson' } } },
+      ],
+    };
+    const svg = renderPlot(ruleSpec, scores, { width: 480, height: 300 });
+    expect(svg).toContain('<svg');
+    // band → <rect> 含 amber 填充；line → <path> 含 crimson 描边
+    expect(svg).toMatch(/<rect[^>]*fill="amber"/);
+    expect(svg).toMatch(/<path[^>]*stroke="crimson"/);
+  });
+
+  it('per-datum rule（field 多线 + color field）SSR → 多条参考线', () => {
+    const limits: ExternalDatasets = {
+      limits: [
+        { threshold: 30, category: 'low' },
+        { threshold: 60, category: 'mid' },
+        { threshold: 90, category: 'high' },
+      ],
+    };
+    const perDatumSpec: PlotSpec = {
+      namespace: 'plot',
+      type: 'plot',
+      data: { reference: 'limits', model: [{ name: 'threshold', type: 'continuous' }, { name: 'category', type: 'categorical' }] },
+      scales: [
+        { type: 'linear', name: 'y' },
+        { type: 'ordinal', name: 'c' },
+      ],
+      coordinate: { type: 'cartesian2D', y: 'y' },
+      marks: [{ type: 'rule', encoding: { y: { field: 'threshold' }, color: { field: 'category', scale: 'c' } } }],
+    };
+    const svg = renderPlot(perDatumSpec, limits, { width: 480, height: 300 });
+    // 3 行 → 3 条参考线（per-datum field）
+    expect((svg.match(/<path/g) ?? []).length).toBeGreaterThanOrEqual(3);
+  });
 });
