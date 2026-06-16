@@ -87,14 +87,14 @@ const fig = figure([
 - 半径过大 clamp
 - 非 line 接缝（curve / arc / fold）保持尖角
 - schema 拒绝非法半径
-- 与 marks/label 弧长、rotate/scale 的交互
+- 与 marks 弧长、rotate/scale 的交互（step `label` 定位见「不在本 ADR 范围」）
 
 具体 case 拆分见「实现契约 § 测试象限」。
 
 ## 影响
 
 - **现有代码**：`PathSchema` 加字段（additive）；`compile/path/index.ts` 折线编译路径加 fillet 分支；`geometry/contour.ts` 扩展开放 seam 序列支持（现有闭合调用方 rectangle/polygon/star 行为不变——开放支持是新增入口，不改闭合语义）。
-- **与 `lineJoin` 区分**：`roundedCorners` 改**几何**（端点回退 + 插弧 → 影响 bbox / 弧长 / `marks`·label 归一化参数 / 填充区 / 连接点解析）；`lineJoin` 只改**描边视觉**。文档须并排说明、给「几何圆角 vs 描边 round join」对照，避免误用。
+- **与 `lineJoin` 区分**：`roundedCorners` 改**几何**（端点回退 + 插弧 → 影响 bbox / 弧长 / 路径级 `marks` 归一化参数 / 填充区 / 连接点解析）；`lineJoin` 只改**描边视觉**。文档须并排说明、给「几何圆角 vs 描边 round join」对照，避免误用。（step `label` 的倒角后重定位见「不在本 ADR 范围」。）
 - **文档站**：`<Path>` 页加 `roundedCorners` prop（API 表 + 双语说明 + demo：折线圆角 vs 尖角、与 `lineJoin:round` 对照）。
 - **对外 API**：react `<Path>` 加 `roundedCorners` prop；vanilla `DrawConfig` 加 `roundedCorners`。均 optional、additive，无 breaking。
 
@@ -104,6 +104,7 @@ const fig = figure([
 - **path 中途 `sharp corners` / `rounded corners` 切换**（TikZ 支持）——需 per-段开关状态机，推迟。
 - **曲线-直线 / 弧-直线接缝倒角**——依赖切点求解，`contour.ts` 现拒绝 arc-arc 倒角，推迟。
 - **fold 接缝倒角**——本轮 fold 保持尖角（待决策点已拍板），倒角留后续。
+- **step `label` 随倒角几何重定位**——本轮路径级 `marks` 已按倒角后弧长重采样；但 step 边标注（`label`）在编译期逐 step 产出、定位在该 step 自身的（未缩短）线段上，不随接缝倒角缩短重算。视觉影响小（缩短对称、中点几乎不动），但近拐角的 label 会贴在原尖角侧。完整「label 跟随倒角几何」需把 label 产出推迟到倒角之后并按 step→倒角后命令映射重采样，留后续。
 - **过点平滑曲线**——[ADR-02](./02-smooth-curve-through-points.md)。
 - **装饰 motif**（波浪 / 花括号 / 弹簧）——roadmap B4，归 extension，另议。
 
@@ -165,7 +166,7 @@ const fig = figure([
 
 - `mixed-curve-joint-stays-sharp`：接缝一侧为 `curve` / `arc` / `cubic` / `bend` → 该接缝保持尖角，同路径其余 line-line 接缝仍倒。
 - `fold-joint-stays-sharp`：路径含 `fold` step → fold 相关接缝保持尖角（待决策点拍板：fold 不参与）。
-- `marks-arclength-recompute`：`roundedCorners` + path `marks`（pos∈[0,1]）/ step `label` → mark/label 按倒角后新弧长重定位、落在倒角后几何上（验证决策声明的「影响 marks/label 归一化参数」真被实现）。
+- `marks-arclength-recompute`：`roundedCorners` + path `marks`（pos∈[0,1]）→ mark 按倒角后新弧长重定位、落在倒角后几何上（验证「影响路径级 marks 归一化参数」真被实现）。step `label` 的倒角后重定位见「不在本 ADR 范围」，首切不在此验证。
 - `rounded-with-rotate-scale`：`roundedCorners` + path 级 `rotate` / `scale` → 几何圆角先算、再随 path 变换，结果正确。
 
 ### 依赖的现有元素

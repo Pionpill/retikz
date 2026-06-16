@@ -162,7 +162,7 @@ import { Path, Step } from '@retikz/react';
 
 <ComponentPreview name="path-rounded-corners" size="sm" />
 
-`roundedCorners` 改的是**路径几何**——它把拐角顶点回退并插入一段相切圆弧，因此影响包围盒、弧长、`marks` / label 的归一化定位和连接点解析。这和 `lineJoin` 是两码事：`lineJoin` 只改**描边视觉**，路径中心线仍是尖折。下例用很粗的描边对照——上方 `lineJoin="round"`（只磨描边、中心线仍尖），下方 `roundedCorners`（中心线本身就是圆弧）：
+`roundedCorners` 改的是**路径几何**——它把拐角顶点回退并插入一段相切圆弧，因此影响包围盒、弧长、路径级 `marks` 的归一化定位和连接点解析。这和 `lineJoin` 是两码事：`lineJoin` 只改**描边视觉**，路径中心线仍是尖折。（注：step 边标注 `label` 当前仍定位在该 step 自身线段上，不随接缝倒角缩短重算。）下例用很粗的描边对照——上方 `lineJoin="round"`（只磨描边、中心线仍尖），下方 `roundedCorners`（中心线本身就是圆弧）：
 
 <ComponentPreview name="path-rounded-vs-linejoin" size="sm" />
 
