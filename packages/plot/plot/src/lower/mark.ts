@@ -2,7 +2,7 @@ import { type IRChild, type IRNode, type IRNodeDefault, type IRScope, type IRSte
 import { type ExternalRow, type IntervalMark, type Mark, PlotCoordinate, PlotMark } from '../ir';
 import { type IntervalContext, buildIntervalContext, datumAnchor, markCell } from './anchor';
 import { channelValue, compareByPath, isFiniteNumber, resolveFieldPath } from './field';
-import { type Cell, type CellGeometry, type CoordinateFrame, type PolarVertex, densifyPolarSegments, toPolarVertex } from './project';
+import { type CartesianFrame, type Cell, type CellGeometry, type CoordinateFrame, type PolarVertex, densifyPolarSegments, toPolarVertex } from './project';
 import {
   type DatumIdRegistrar,
   type ProvenanceContext,
@@ -245,6 +245,20 @@ const assertSectorFields = (mark: Mark, row: ExternalRow): void => {
   // 累积界倒退（段值为负）→ 角度跨 0、扇片比例失真且数据被静默歪曲；饼/环扇片不能为负，fail loud
   if (v1 < v0) {
     throw new Error(`lowerPlots: sector mark requires non-negative values (cumulative bound ${endField}=${v1} < ${startField}=${v0}); pie / donut slices cannot be negative`);
+  }
+};
+
+/**
+ * rect mark 的双 band 校验：cartesian2D 下 x / y 都必须是 band scale（取 bandwidth 当格宽/高）
+ * @description secondary（y）非 band（bandwidth ≤ 0，连续 linear / time）→ fail-loud，明确指明 y 须 band；
+ *   primary（x）非 band 同样无网格语义，一并校验。无 band → 格塌成零尺寸、heatmap 无意义，不静默出怪图。
+ */
+const assertRectBands = (frame: CartesianFrame): void => {
+  if (!(frame.primary.bandwidth > 0)) {
+    throw new Error('lowerPlots: rect mark requires a band x scale (x must be categorical to size the heatmap cell width); use a band scale on x');
+  }
+  if (!(frame.secondary.bandwidth > 0)) {
+    throw new Error('lowerPlots: rect mark requires a band y scale (y must be categorical to size the heatmap cell height); use a band scale on y');
   }
 };
 
@@ -524,11 +538,18 @@ export const lowerMark = (mark: Mark, rows: Array<ExternalRow>, frame: Coordinat
     return layer === null ? null : attachMarkLayer(layer, mark, markProvenance);
   }
 
-  // 此后只剩 cell 类 mark（interval / sector）：判断挪进坐标系——须实现 projectCell 才支持（cartesian → rect、
+  // 此后只剩 cell 类 mark（interval / sector / rect）：判断挪进坐标系——须实现 projectCell 才支持（cartesian → rect、
   //   polar → sector、曲线 / 自定义 frame → contour）；无 projectCell（1D / ternary / 未实现的 custom）→ fail-loud。
   // sector mark 仅 polar；非 polar（含已有 projectCell 的 cartesian）下无意义，先给精确提示。
   if (mark.type === PlotMark.Sector && frame.type !== PlotCoordinate.Polar2D) {
     throw new Error('lowerPlots: sector mark is only valid under the polar2D coordinate system');
+  }
+  // rect（v1）仅 cartesian2D 有双 band cell 构造；其余坐标系（polar 虽有 projectCell 但无 rect cell 构造、1D / ternary / custom）→ fail-loud
+  if (mark.type === PlotMark.Rect) {
+    if (frame.type !== PlotCoordinate.Cartesian2D) {
+      throw new Error(failLoudMessage(mark.type, frame.type));
+    }
+    assertRectBands(frame);
   }
   if (frame.projectCell === undefined) {
     throw new Error(failLoudMessage(mark.type, frame.type));

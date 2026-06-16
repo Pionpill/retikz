@@ -202,4 +202,55 @@ describe('renderPlot 薄包装（SSR SVG 串）', () => {
     expect(svg).toContain('<ellipse');
     expect(svg).toContain('<path');
   });
+
+  // alpha.11 ADR-02：rect heatmap spec → renderPlot 透传（vanilla 不改 src，纯 spec 驱动出每格 <rect>）
+  it('rect-vanilla-ssr-heatmap：双 band heatmap spec → SVG 含每格 <rect> + 填充色', () => {
+    const heatmap: ExternalDatasets = {
+      heat: [
+        { rk: 'r0', ck: 'c0', v: 1 },
+        { rk: 'r0', ck: 'c1', v: 5 },
+        { rk: 'r1', ck: 'c0', v: 9 },
+        { rk: 'r1', ck: 'c1', v: 3 },
+      ],
+    };
+    const heatmapSpec: PlotSpec = {
+      namespace: 'plot',
+      type: 'plot',
+      data: { reference: 'heat', model: [{ name: 'rk', type: 'categorical' }, { name: 'ck', type: 'categorical' }, { name: 'v', type: 'continuous' }] },
+      scales: [
+        { type: 'band', name: 'rk' },
+        { type: 'band', name: 'ck' },
+        { type: 'sequential', name: 'heat', domain: [0, 9] },
+      ],
+      coordinate: { type: 'cartesian2D', x: 'rk', y: 'ck' },
+      marks: [{ type: 'rect', encoding: { x: { field: 'rk' }, y: { field: 'ck' }, color: { field: 'v', scale: 'heat' } } }],
+    };
+    const svg = renderPlot(heatmapSpec, heatmap, { width: 360, height: 360 });
+    expect(svg).toContain('<svg');
+    // 每格一个 <rect>（4 格）；填充色由 sequential 色阶 per-datum 取
+    expect((svg.match(/<rect/g) ?? []).length).toBeGreaterThanOrEqual(4);
+    expect(svg).toMatch(/fill="[^"]+"/);
+  });
+
+  it('rect 缺 color heatmap spec → SVG 含 <rect>（纯网格透传不崩）', () => {
+    const grid: ExternalDatasets = {
+      grid: [
+        { day: 'Mon', hour: 'AM' },
+        { day: 'Mon', hour: 'PM' },
+        { day: 'Tue', hour: 'AM' },
+      ],
+    };
+    const gridSpec: PlotSpec = {
+      namespace: 'plot',
+      type: 'plot',
+      data: { reference: 'grid' },
+      scales: [
+        { type: 'band', name: 'day' },
+        { type: 'band', name: 'hour' },
+      ],
+      coordinate: { type: 'cartesian2D', x: 'day', y: 'hour' },
+      marks: [{ type: 'rect', encoding: { x: { field: 'day' }, y: { field: 'hour' } } }],
+    };
+    expect(renderPlot(gridSpec, grid, { width: 320, height: 320 })).toMatch(/<rect/);
+  });
 });

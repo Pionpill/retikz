@@ -125,6 +125,7 @@
     "compBarMark": "BarMark",
     "compSectorMark": "SectorMark",
     "compAreaMark": "AreaMark",
+    "compRectMark": "RectMark",
     "compAxis": "Axis",
     "compLegend": "Legend",
     "examples": "Charts",

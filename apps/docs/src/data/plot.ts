@@ -27,6 +27,7 @@ export const plotSection: Array<Section> = [
           { id: 'bar', label: 'plot.compBarMark' },
           { id: 'sector', label: 'plot.compSectorMark' },
           { id: 'area', label: 'plot.compAreaMark' },
+          { id: 'rect', label: 'plot.compRectMark' },
         ],
       },
       { id: 'axis', label: 'plot.compAxis' },

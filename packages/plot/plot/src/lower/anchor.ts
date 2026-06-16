@@ -1,4 +1,4 @@
-import { type Channel, type ExternalRow, type IntervalMark, type Mark, PlotCoordinate, PlotMark } from '../ir';
+import { type Channel, type ExternalRow, type IntervalMark, type Mark, PlotCoordinate, PlotMark, type RectMark } from '../ir';
 import { channelValue, isFiniteNumber, resolveFieldPath } from './field';
 import type { CartesianFrame, Cell, CellGeometry, CoordinateFrame, DimensionRole, PolarFrame } from './project';
 import { inferCategoryDomain } from './scale';
@@ -164,6 +164,22 @@ export const sectorCell = (mark: Mark, row: ExternalRow, frame: PolarFrame): Cel
   return { primary: [startAngle, endAngle], secondary: [frame.innerRadius, frame.outerRadius] };
 };
 
+/**
+ * 矩形格（rect mark，heatmap）某行 → 双 band 正交 cell（lowering 摆放与 locator 锚点的共享单一真源）
+ * @description primary = x band 带 [xCenter − bw_x/2, xCenter + bw_x/2]、secondary = y band 带
+ *   [yCenter − bw_y/2, yCenter + bw_y/2]，bw_x / bw_y 取 frame.primary / frame.secondary 的 bandwidth。
+ *   中心非有限（缺类别 / 非 band scale 取不到中心）→ null（跳过该格，与 interval 跳过守卫一致）。
+ *   secondary 非 band（bandwidth ≤ 0）的 fail-loud 由 mark.ts 调用前显式校验保留（cell 仅做几何）。
+ */
+export const rectCell = (mark: RectMark, row: ExternalRow, frame: CartesianFrame): Cell | null => {
+  const xCenter = frame.primary.coordinate(channelValue(mark.encoding.x, row));
+  const yCenter = frame.secondary.coordinate(channelValue(mark.encoding.y, row));
+  if (!Number.isFinite(xCenter) || !Number.isFinite(yCenter)) return null;
+  const halfX = frame.primary.bandwidth / 2;
+  const halfY = frame.secondary.bandwidth / 2;
+  return { primary: [xCenter - halfX, xCenter + halfX], secondary: [yCenter - halfY, yCenter + halfY] };
+};
+
 /** 点集 AABB 中心（contour 锚点 = 顶点环 AABB 中心，与 core contour shape 自动居中同源） */
 const aabbCenterOf = (points: Array<[number, number]>): [number, number] => {
   let minX = Infinity;
@@ -196,7 +212,7 @@ export const cellGeometryAnchor = (geometry: CellGeometry): [number, number] => 
 
 /**
  * 某 mark 的某行 → cell（坐标系相关）；非 cell 类 mark / 退化行 → null
- * @description sector → sectorCell（polar）；interval → cartesian / polar cell；其余 mark → null（非 cell 类）。
+ * @description sector → sectorCell（polar）；interval → cartesian / polar cell；rect → cartesian 双 band cell；其余 mark → null（非 cell 类）。
  *   cell 类 mark 在无对应正交 cell 的坐标系（1D / ternary / 无 projectCell 的 custom）返回 null，由 mark.ts fail-loud。
  */
 export const markCell = (mark: Mark, row: ExternalRow, frame: CoordinateFrame, ctx?: IntervalContext): Cell | null => {
@@ -210,6 +226,10 @@ export const markCell = (mark: Mark, row: ExternalRow, frame: CoordinateFrame, c
     if (frame.type === PlotCoordinate.Polar2D) return intervalCellPolar(mark, row, frame, ctx);
     return null;
   }
+  if (mark.type === PlotMark.Rect) {
+    if (frame.type !== PlotCoordinate.Cartesian2D) return null;
+    return rectCell(mark, row, frame);
+  }
   return null;
 };
 
@@ -221,7 +241,7 @@ export const markCell = (mark: Mark, row: ExternalRow, frame: CoordinateFrame, c
  *   坐标系无 projectCell（1D / ternary / 无 projectCell 的 custom）→ cell 类 mark 无锚点（null，lowerMark 已 fail-loud）。
  */
 export const datumAnchor = (mark: Mark, row: ExternalRow, frame: CoordinateFrame, ctx?: IntervalContext): [number, number] | null => {
-  if (mark.type === PlotMark.Sector || mark.type === PlotMark.Interval) {
+  if (mark.type === PlotMark.Sector || mark.type === PlotMark.Interval || mark.type === PlotMark.Rect) {
     if (frame.projectCell === undefined) return null;
     const cell = markCell(mark, row, frame, ctx);
     return cell ? cellGeometryAnchor(frame.projectCell(cell)) : null;

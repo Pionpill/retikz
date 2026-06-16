@@ -29,6 +29,8 @@ import {
   type LineMarkProps,
   PointMark,
   type PointMarkProps,
+  RectMark,
+  type RectMarkProps,
   SectorMark,
   type SectorMarkProps,
 } from './marks';
@@ -132,6 +134,8 @@ type Collected = {
   colorFields: Array<string>;
   /** 是否有 <BarMark>（→ 角向轴强制 band scale） */
   hasBar: boolean;
+  /** 是否有 <RectMark>（heatmap → x / y 双轴强制 band scale） */
+  hasRect: boolean;
   /** 是否有 <SectorMark>（→ 角向 linear scale） */
   hasSector: boolean;
   /** 是否有闭合 <LineMark>（雷达 → 角向 point scale） */
@@ -249,6 +253,17 @@ const collectInto = (children: ReactNode, into: Collected): void => {
       });
       recordColor(into, colorEnc);
       if (closed) into.hasClosedLine = true;
+    } else if (child.type === RectMark) {
+      const { x, y, color, id } = child.props as RectMarkProps;
+      // rect 无 series（网格无堆叠 / 并排）；color 直走 colorChannel（无 series 缺省）
+      const colorEnc = colorChannel(color, undefined);
+      into.marks.push({
+        type: PlotMark.Rect,
+        ...(id !== undefined ? { id } : {}),
+        encoding: { ...positionEncoding(x, y), ...colorEnc },
+      });
+      into.hasRect = true;
+      recordColor(into, colorEnc);
     } else if (child.type === Axis) {
       const { dimension, tickCount, tickLabels, grid, id } = child.props as AxisProps;
       into.guides.push({
@@ -304,17 +319,23 @@ const buildPositionScale = (name: string, type: PositionScaleType): PlotScaleSpe
   return { type: PlotScale.Linear, name };
 };
 
-/** cartesian x scale 类型：含 <BarMark> → band；否则按 <Scale dimension="x"> 或缺省 linear */
-const buildCartesianXScale = (hasBar: boolean, explicit: PositionScaleType | undefined): PlotScaleSpec => {
-  if (hasBar && explicit !== undefined) {
-    throw new Error('buildPlotSpec: <BarMark> requires a band x scale; omit <Scale dimension="x" /> for automatic band inference');
+/** cartesian x scale 类型：含 <BarMark> 或 <RectMark> → band；否则按 <Scale dimension="x"> 或缺省 linear */
+const buildCartesianXScale = (forceBand: boolean, explicit: PositionScaleType | undefined): PlotScaleSpec => {
+  if (forceBand && explicit !== undefined) {
+    throw new Error('buildPlotSpec: <BarMark> / <RectMark> requires a band x scale; omit <Scale dimension="x" /> for automatic band inference');
   }
-  if (hasBar) return { type: PlotScale.Band, name: AUTO_X };
+  if (forceBand) return { type: PlotScale.Band, name: AUTO_X };
   return buildPositionScale(AUTO_X, explicit ?? 'linear');
 };
 
-/** cartesian y（值轴）scale 类型：按 <Scale dimension="y"> 或缺省 linear；log / sqrt 由 lowering L1 守住仅 point/line */
-const buildCartesianYScale = (explicit: PositionScaleType | undefined): PlotScaleSpec => buildPositionScale(AUTO_Y, explicit ?? 'linear');
+/** cartesian y（值轴）scale 类型：含 <RectMark>（heatmap 双 band）→ band；否则按 <Scale dimension="y"> 或缺省 linear；log / sqrt 由 lowering L1 守住仅 point/line */
+const buildCartesianYScale = (hasRect: boolean, explicit: PositionScaleType | undefined): PlotScaleSpec => {
+  if (hasRect && explicit !== undefined) {
+    throw new Error('buildPlotSpec: <RectMark> requires a band y scale; omit <Scale dimension="y" /> for automatic band inference');
+  }
+  if (hasRect) return { type: PlotScale.Band, name: AUTO_Y };
+  return buildPositionScale(AUTO_Y, explicit ?? 'linear');
+};
 
 /**
  * polar 角向 scale 类型推断：sector → linear（连续累积角界）；bar → band（径向柱分类）；
@@ -407,7 +428,7 @@ const toPolarConfig = (coordinate: CoordinateInput | undefined): PolarConfig | u
  *   产出须等价于手写 PlotSpec（仿 core Sugar = Kernel 等价性）。data 不进 IR，仅存 reference
  */
 export const buildPlotSpec = (children: ReactNode, dataRef: string, options: BuildPlotSpecOptions = {}): PlotSpec => {
-  const collected: Collected = { marks: [], guides: [], transforms: [], scales: [], colored: false, colorFields: [], hasBar: false, hasSector: false, hasClosedLine: false };
+  const collected: Collected = { marks: [], guides: [], transforms: [], scales: [], colored: false, colorFields: [], hasBar: false, hasRect: false, hasSector: false, hasClosedLine: false };
   collectInto(children, collected);
 
   const coordKind = coordinateTypeOf(options.coordinate);
@@ -466,8 +487,8 @@ export const buildPlotSpec = (children: ReactNode, dataRef: string, options: Bui
     coordinate = { type: PlotCoordinate.Custom, name: custom.name, roles: custom.roles, ...(custom.params !== undefined ? { params: custom.params } : {}) };
     scales = [];
   } else {
-    const xScale = buildCartesianXScale(collected.hasBar, explicitScales.x);
-    const yScale = buildCartesianYScale(explicitScales.y);
+    const xScale = buildCartesianXScale(collected.hasBar || collected.hasRect, explicitScales.x);
+    const yScale = buildCartesianYScale(collected.hasRect, explicitScales.y);
     coordinate = shouldDeferPositionScales
       ? {
           type: PlotCoordinate.Cartesian2D,

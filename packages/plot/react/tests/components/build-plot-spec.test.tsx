@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { type PlotSpec, PlotSpecSchema } from '@retikz/plot';
 import { buildPlotSpec, decorateDefaultGuides } from '../../src/components/build-plot-spec';
 import { Axis, Legend } from '../../src/components/guides';
-import { AreaMark, BarMark, LineMark, PointMark, SectorMark } from '../../src/components/marks';
+import { AreaMark, BarMark, LineMark, PointMark, RectMark, SectorMark } from '../../src/components/marks';
 import { Scale } from '../../src/components/scales';
 
 describe('buildPlotSpec model → type-driven 派生（alpha.6 ADR-03，评审 P1）', () => {
@@ -681,5 +681,42 @@ describe('decorateDefaultGuides（薄 Plot 装饰函数，PlotSpec 进出、框�
   it('decorate_pass_schema：装饰产物过 PlotSpecSchema', () => {
     const decorated = decorateDefaultGuides(buildPlotSpec(<LineMark x="m" y="r" />, '__plot'));
     expect(() => PlotSpecSchema.parse(decorated)).not.toThrow();
+  });
+});
+
+describe('buildPlotSpec rect mark（ADR-02 heatmap 双 band）', () => {
+  it('rect-react-build-plot-spec：扁平 props → rect IR + 双 band 推断', () => {
+    const spec = buildPlotSpec(<RectMark x="rowKey" y="colKey" color="value" />, '__plot');
+    expect(spec.marks).toEqual([
+      { type: 'rect', encoding: { x: { field: 'rowKey' }, y: { field: 'colKey' }, color: { field: 'value', scale: '__color' } } },
+    ]);
+    // hasRect → x / y 双轴强制 band scale
+    expect(spec.scales).toContainEqual({ type: 'band', name: '__x' });
+    expect(spec.scales).toContainEqual({ type: 'band', name: '__y' });
+    expect(spec.coordinate).toEqual({ type: 'cartesian2D', x: '__x', y: '__y' });
+  });
+
+  it('rect 缺 color → 纯网格（无 color 编码），仍双 band', () => {
+    const spec = buildPlotSpec(<RectMark x="day" y="hour" />, '__plot');
+    expect(spec.marks[0]).toEqual({ type: 'rect', encoding: { x: { field: 'day' }, y: { field: 'hour' } } });
+    expect(spec.scales).toContainEqual({ type: 'band', name: '__x' });
+    expect(spec.scales).toContainEqual({ type: 'band', name: '__y' });
+  });
+
+  it('rect + 显式 <Scale dimension="y"> → fail-loud（y 由 heatmap 强制 band）', () => {
+    expect(() =>
+      buildPlotSpec(
+        <>
+          <RectMark x="rowKey" y="colKey" color="value" />
+          <Scale dimension="y" type="linear" />
+        </>,
+        '__plot',
+      ),
+    ).toThrow(/band y scale/i);
+  });
+
+  it('rect 装配产物过 PlotSpecSchema', () => {
+    const spec = buildPlotSpec(<RectMark x="rowKey" y="colKey" color="value" />, '__plot');
+    expect(() => PlotSpecSchema.parse(spec)).not.toThrow();
   });
 });

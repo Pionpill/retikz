@@ -248,4 +248,45 @@ describe('MarkSchema (ADR-05)', () => {
     const parsed = MarkSchema.parse({ type: 'interval', encoding: { x: { field: 'c' }, y: { field: 'v' }, shape: { field: 'cat' } } });
     expect((parsed.encoding as { shape?: unknown }).shape).toBeUndefined();
   });
+
+  // alpha.11 ADR-02：rect(heatmap) mark
+  it('mark_rect_with_color_valid', () => {
+    const m = { type: 'rect', encoding: { x: { field: 'rowKey' }, y: { field: 'colKey' }, color: { field: 'value', scale: 'heat' } } };
+    expect(MarkSchema.parse(m)).toEqual(m);
+  });
+
+  it('mark_rect_without_color_valid', () => {
+    // 缺 color → 纯网格（值映射可选）；x / y 必填性 + band 约束下放 lowering，schema 仅解析通过
+    const m = { type: 'rect', encoding: { x: { field: 'day' }, y: { field: 'hour' } } };
+    expect(MarkSchema.parse(m)).toEqual(m);
+  });
+
+  it('mark_rect_with_id_valid', () => {
+    const m = { type: 'rect', id: 'heat', encoding: { x: { field: 'r' }, y: { field: 'c' } } };
+    expect(MarkSchema.parse(m)).toEqual(m);
+  });
+
+  it('mark_rect_missing_encoding_rejected', () => {
+    expect(() => MarkSchema.parse({ type: 'rect' })).toThrow();
+  });
+
+  it('mark_rect_typo_type_rejected', () => {
+    expect(() => MarkSchema.parse({ type: 'rekt', encoding: { x: { field: 'r' }, y: { field: 'c' } } })).toThrow();
+  });
+
+  it('mark_rect_union_discriminates', () => {
+    const parsed = MarkSchema.parse({ type: 'rect', encoding: { x: { field: 'r' }, y: { field: 'c' } } });
+    expect(parsed.type).toBe('rect');
+  });
+
+  it('mark_rect_strips_size', () => {
+    // size 仅 PointMark：rect encoding 非 strict zod 剥离
+    const parsed = MarkSchema.parse({ type: 'rect', encoding: { x: { field: 'r' }, y: { field: 'c' }, size: { field: 'p' } } });
+    expect((parsed.encoding as { size?: unknown }).size).toBeUndefined();
+  });
+
+  it('mark_rect_json_round_trip', () => {
+    const m = { type: 'rect', id: 'heat', encoding: { x: { field: 'r' }, y: { field: 'c' }, color: { field: 'v', scale: 'heat' } } };
+    expect(MarkSchema.parse(JSON.parse(JSON.stringify(m)))).toEqual(m);
+  });
 });

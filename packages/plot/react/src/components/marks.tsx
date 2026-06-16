@@ -93,6 +93,18 @@ export type AreaMarkProps = {
   id?: string;
 };
 
+/** <RectMark> props：矩形格图层（heatmap），x / y 均分类（双 band），值经 color 通道映射成格子填充 */
+export type RectMarkProps = {
+  /** 绑 x 位置通道的字段路径（分类，自动 band scale，定格宽） */
+  x: string;
+  /** 绑 y 位置通道的字段路径（分类，自动 band scale，定格高） */
+  y: string;
+  /** 颜色字段（→ color 通道 + 自动色 scale）：值映射成格子填充；连续字段配 model 时自动派生 sequential 色阶。缺省纯网格（回退默认填充） */
+  color?: string;
+  /** 可选 mark 句柄（预留 scope/anchor，解析留 alpha.5） */
+  id?: string;
+};
+
 /**
  * 折线图层声明组件
  * @description 配置载体：不进 React render 栈、不渲染（返回 null），由 <Plot> 同步内省其 type + props 装配进 PlotSpec
@@ -123,3 +135,10 @@ export const SectorMark: FC<SectorMarkProps> = () => null;
  * @description 配置载体：不进 React render 栈、不渲染（返回 null），由 <Plot> 同步内省其 props 装配进 PlotSpec
  */
 export const AreaMark: FC<AreaMarkProps> = () => null;
+
+/**
+ * 矩形格（heatmap）图层声明组件
+ * @description 配置载体：不进 React render 栈、不渲染（返回 null），由 <Plot> 同步内省其 props 装配进 PlotSpec；
+ *   x / y 双 band 由 build-plot-spec 自动推断（heatmap 双轴分类定格），值经 color 通道映射成格子填充
+ */
+export const RectMark: FC<RectMarkProps> = () => null;

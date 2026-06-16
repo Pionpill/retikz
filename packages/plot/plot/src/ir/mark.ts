@@ -17,6 +17,8 @@ export const PlotMark = {
   Sector: 'sector',
   /** 面积：上沿折线 ↔ baseline 围成的可填充区域（面积图 / 填充雷达） */
   Area: 'area',
+  /** 矩形格：x / y 均分类（双 band）围成的固定网格 cell，值经 color 通道映射（heatmap / 混淆矩阵 / 日历热图） */
+  Rect: 'rect',
 } as const;
 
 /** mark 类型 */
@@ -146,8 +148,18 @@ export const AreaMarkSchema = z
   })
   .describe('Area mark: fillable region between the value outline and a baseline (area chart / filled radar)');
 
+export const RectMarkSchema = z
+  .object({
+    type: z.literal(PlotMark.Rect).describe('Discriminator: a 2D grid cell spanning one band on each axis (heatmap)'),
+    ...markBase,
+    ...positionalEncoding,
+  })
+  .describe(
+    'Rect mark: heatmap grid cell sized bandwidth_x × bandwidth_y; the value is mapped to fill via the color channel. Both x and y must resolve to band scales (required-ness and the band constraint are validated during lowering)',
+  );
+
 export const MarkSchema = z
-  .discriminatedUnion('type', [PointMarkSchema, LineMarkSchema, IntervalMarkSchema, SectorMarkSchema, AreaMarkSchema])
+  .discriminatedUnion('type', [PointMarkSchema, LineMarkSchema, IntervalMarkSchema, SectorMarkSchema, AreaMarkSchema, RectMarkSchema])
   .describe('Mark union; extensible to rule / text in later alphas');
 
 /** point mark */
@@ -160,5 +172,7 @@ export type IntervalMark = z.infer<typeof IntervalMarkSchema>;
 export type SectorMark = z.infer<typeof SectorMarkSchema>;
 /** area(面积图 / 填充雷达) mark */
 export type AreaMark = z.infer<typeof AreaMarkSchema>;
-/** mark（point / line / interval / sector / area） */
+/** rect(heatmap 格) mark */
+export type RectMark = z.infer<typeof RectMarkSchema>;
+/** mark（point / line / interval / sector / area / rect） */
 export type Mark = z.infer<typeof MarkSchema>;

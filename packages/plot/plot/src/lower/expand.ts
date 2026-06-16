@@ -638,12 +638,12 @@ const makeColorResolver = (node: PlotSpec, rows: Array<ExternalRow>, fieldTypes:
     const field = channel.field;
     const colorFieldType = fieldTypes.get(field);
     // 连续 / temporal color（alpha.8）：经 sequential / diverging 连续色阶或 quantize / threshold / quantile 离散化色阶 per-datum 取色。
-    //   按 datum 取色仅 point / bar(interval) / sector 成立；line / area 是 path 级整体图元，
+    //   按 datum 取色仅 point / bar(interval) / sector / rect(heatmap) 成立；line / area 是 path 级整体图元，
     //   一条线沿程渐变 / 分箱不做 → fail-loud（守 mark 边界，承 alpha.7 ADR-03）。
     if (colorFieldType === PlotFieldType.Continuous || colorFieldType === PlotFieldType.Temporal) {
       if (mark.type === PlotMark.Line || mark.type === PlotMark.Area) {
         throw new Error(
-          `lowerPlots: continuous/temporal color field "${field}" is not supported on ${mark.type} marks (path-level glyph colored per series); continuous color applies to point / bar / sector only`,
+          `lowerPlots: continuous/temporal color field "${field}" is not supported on ${mark.type} marks (path-level glyph colored per series); continuous color applies to point / bar / sector / rect only`,
         );
       }
       if (channel.scale === undefined) {
