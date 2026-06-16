@@ -3,6 +3,7 @@ export * from './font';
 export * from './json';
 export * from './animation';
 export * from './paint';
+export * from './effects';
 export * from './clip';
 export * from './text';
 export * from './path';

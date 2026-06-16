@@ -1,6 +1,7 @@
 import type { z } from 'zod';
 import type { Position } from '../geometry/point';
 import type { Rect } from '../geometry/rect';
+import type { BlendModeValue, DropShadow } from '../ir/effects';
 import type { IRJsonObject } from '../ir/json';
 import type { PaintValue, ScenePrimitive } from '../primitive';
 
@@ -18,6 +19,10 @@ export type ShapeStyle = {
   dashPattern?: Array<number>;
   cornerRadius?: number;
   opacity?: number;
+  /** 投影：解析后对象（compile 已把预设展开 + 显式字段覆盖合并；缺省无投影） */
+  shadow?: DropShadow;
+  /** 混合模式：解析后值（compile 透传；缺省 / normal 等价普通 source-over） */
+  blendMode?: BlendModeValue;
 };
 
 /**

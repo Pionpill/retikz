@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { AnimationTrackSchema } from '../animation';
+import { BlendMode, DropShadowSchema, ShadowPreset } from '../effects';
 import { JsonObjectSchema } from '../json';
 import { PaintSpecSchema } from '../paint';
 import { ArrowDetailSchema, ArrowEndDetailSchema } from './arrow';
@@ -159,6 +160,18 @@ export const PathSchema = z
       .max(1)
       .optional()
       .describe('Whole-path opacity 0..1; multiplies onto stroke and fill.'),
+    shadow: z
+      .union([z.enum(ShadowPreset), DropShadowSchema])
+      .optional()
+      .describe(
+        'Drop shadow on the path’s primary geometry only (the main PathPrim; not its step labels / marks / endpoint arrows). A preset keyword (`sm`/`md`/`lg`/`xl`/`2xl`/`none`), or an object `{ preset?, offsetX?, offsetY?, blur?, color?, opacity? }` where explicit fields override the preset. Renderer-agnostic (feDropShadow / ctx.shadow*).',
+      ),
+    blendMode: z
+      .enum(BlendMode)
+      .optional()
+      .describe(
+        'How the path’s primary geometry blends with the content already drawn beneath it (W3C separable blend modes); maps to CSS mix-blend-mode (SVG) and ctx.globalCompositeOperation (Canvas). Omitted / `normal` = ordinary source-over. Does not affect step labels / marks / endpoint arrows.',
+      ),
     fillOpacity: z
       .number()
       .min(0)
