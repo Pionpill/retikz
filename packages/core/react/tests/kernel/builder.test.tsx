@@ -58,6 +58,17 @@ describe('buildIR', () => {
     expect(ir.children[2]).toMatchObject({ type: 'scope', animations: [fade] });
   });
 
+  it('roundedCorners prop 透传进 Path 的 IR', () => {
+    const ir = buildIR(
+      <Path roundedCorners={8}>
+        <Step kind="move" to={[0, 0]} />
+        <Step kind="line" to={[10, 0]} />
+        <Step kind="line" to={[10, 10]} />
+      </Path>,
+    );
+    expect(ir.children[0]).toMatchObject({ type: 'path', roundedCorners: 8 });
+  });
+
   it("children 字符串带 '\\n' 自动拆成多行数组", () => {
     const ir = buildIR(
       <Node id="A" position={[0, 0]}>{'Line 1\nLine 2'}</Node>,
@@ -245,6 +256,50 @@ describe('buildIR', () => {
       </Path>,
     );
     expect(fromSugar).toEqual(fromKernel);
+  });
+
+  it('<Step kind="smooth"> → IR smooth step（points sugar 解析、tension / label 透传）', () => {
+    const ir = buildIR(
+      <Path stroke="steelblue">
+        <Step kind="move" to="A" />
+        <Step kind="smooth" points={['B', 'C', [4, 1]]} tension={1.2}>
+          <EdgeLabel>flow</EdgeLabel>
+        </Step>
+      </Path>,
+    );
+    expect(ir.children).toEqual([
+      expect.objectContaining({
+        type: 'path',
+        children: [
+          { type: 'step', kind: 'move', to: { id: 'A' } },
+          {
+            type: 'step',
+            kind: 'smooth',
+            points: [{ id: 'B' }, { id: 'C' }, [4, 1]],
+            tension: 1.2,
+            label: { text: 'flow' },
+          },
+        ],
+      }),
+    ]);
+  });
+
+  it('<Step kind="smooth"> 省略 tension / label：IR 仅含 points', () => {
+    const ir = buildIR(
+      <Path>
+        <Step kind="move" to={[0, 0]} />
+        <Step kind="smooth" points={[[10, 0], [10, 10]]} />
+      </Path>,
+    );
+    const path = ir.children[0] as { children: Array<unknown> };
+    expect(path.children[1]).toEqual({
+      type: 'step',
+      kind: 'smooth',
+      points: [
+        [10, 0],
+        [10, 10],
+      ],
+    });
   });
 
   it('<Draw way={[..., { bend }, ...]}> 等价于 Kernel bend step（含 / 不含 angle 两种）', () => {

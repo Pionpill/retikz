@@ -375,6 +375,18 @@ const readPathChildren = (children: ReactNode): Array<IRStep> => {
       out.push(step);
       return;
     }
+    if (kind === 'smooth') {
+      const p = props as Extract<StepProps, { kind: 'smooth' }>;
+      const step: Extract<IRStep, { kind: 'smooth' }> = {
+        type: 'step',
+        kind: 'smooth',
+        points: p.points.map(parseTargetSugar),
+      };
+      if (p.tension !== undefined) step.tension = p.tension;
+      if (label) step.label = label;
+      out.push(step);
+      return;
+    }
     if (kind === 'move') {
       const p = props as Extract<StepProps, { kind: 'move' }>;
       out.push({ type: 'step', kind: 'move', to: parseTargetSugar(p.to) });

@@ -46,6 +46,41 @@ export const normalizeRelativeTargets = (
       // 自包含形状；prevEnd 不变（rectangle 用自身 from/to，不推进相对游标）
       continue;
     }
+    if (step.kind === 'smooth') {
+      // smooth 用 `points`（非 `to`，min(1) 保证非空）。逐点归一化 relative/relativeAccumulate：
+      // 与 to 字段同款——relative（`+`）不推进 prevEnd、relativeAccumulate（`++`）推进；绝对点直接推进。
+      const normalizedPoints: Array<IRTarget> = [];
+      for (const original of step.points) {
+        let resolvedPt: IRTarget = original;
+        let updatePrevEnd = true;
+        if (typeof original === 'object' && !Array.isArray(original) && 'relative' in original) {
+          const refGlobal = prevEnd ?? [0, 0];
+          const refLocal =
+            scopeChain.length === 0 ? refGlobal : inverseTransformChain(refGlobal, scopeChain);
+          resolvedPt = [refLocal[0] + original.relative[0], refLocal[1] + original.relative[1]];
+          updatePrevEnd = false;
+        } else if (
+          typeof original === 'object' &&
+          !Array.isArray(original) &&
+          'relativeAccumulate' in original
+        ) {
+          const refGlobal = prevEnd ?? [0, 0];
+          const refLocal =
+            scopeChain.length === 0 ? refGlobal : inverseTransformChain(refGlobal, scopeChain);
+          resolvedPt = [
+            refLocal[0] + original.relativeAccumulate[0],
+            refLocal[1] + original.relativeAccumulate[1],
+          ];
+        }
+        normalizedPoints.push(resolvedPt);
+        if (updatePrevEnd) {
+          const pos = refPointOfTarget(resolvedPt, nameStack, scopeChain);
+          if (pos) prevEnd = pos;
+        }
+      }
+      out.push({ ...step, points: normalizedPoints });
+      continue;
+    }
     if (step.kind === 'generator') {
       out.push(step);
       // generator 产段终点要等编译期 generate 才知；预处理阶段以 step.to 近似推进 prevEnd（多数曲线收于 to），

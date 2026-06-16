@@ -78,6 +78,7 @@ export const coreSection: Array<Section> = [
           { id: 'rectangle', label: 'core.shapesRectangle' },
           { id: 'polygon', label: 'core.shapesPolygon' },
           { id: 'star', label: 'core.shapesStar' },
+          { id: 'contour', label: 'core.shapesContour' },
         ],
       },
       {

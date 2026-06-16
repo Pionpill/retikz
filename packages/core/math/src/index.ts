@@ -4,3 +4,4 @@
  *   纯函数 + 普通对象 / Position 数组，零 IR、零 zod、不写 class。
  */
 export * from './geometry';
+export * from './curve';

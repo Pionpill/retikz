@@ -3,7 +3,7 @@ title: Shapes
 description: retikz's geometric shapes — both the official sugar for drawing a Path and the boundary shapes a Node supports by default.
 ---
 
-Shapes (circle, ellipse, arc, sector, rectangle, polygon, star) are a family of geometric primitives in retikz, with **two faces**:
+Shapes (circle, ellipse, arc, sector, rectangle, polygon, star, arbitrary contour) are a family of geometric primitives in retikz, most with **two faces**:
 
 - **As a Path shape (sugar)** — components like `<Circle>` and `<Sector>` are the official set of shape shortcuts; they draw a shape line at a position and expand to an underlying `<Path>`. They save you from hand-writing Path / Step for common shapes.
 - **As a Node shape** — `<Node shape="circle">` bounds a node by that shape: it holds text, is referenceable by `<Path>` / `<Draw>` through its id, and snaps connection endpoints to its edge.
@@ -12,7 +12,7 @@ Each shape page documents both faces as two self-contained halves: "As a Path sh
 
 **Both sides are open to extension:**
 
-- For Node shapes beyond the built-ins (hexagon / cloud…) — register them with the [shape-registry](/core/reference/extending/shape-registry); the built-in registry entries are rectangle / ellipse / sector / arc / polygon / star (circle / diamond are compile-time preset aliases, not in the registry).
+- For Node shapes beyond the built-ins (hexagon / cloud…) — register them with the [shape-registry](/core/reference/extending/shape-registry); the built-in registry entries are rectangle / ellipse / sector / arc / polygon / star / contour (circle / diamond are compile-time preset aliases, not in the registry).
 - For path curve steps beyond the built-ins (parabola / sin-cos…) — use the [path-generator](/core/reference/extending/path-generator).
 
 <ComponentPreview name="shapes-family" size="md" hideCode />
@@ -26,6 +26,7 @@ Each shape page documents both faces as two self-contained halves: "As a Path sh
 | Rectangle | `<Rectangle>` | default / `shape="rectangle"` |
 | Polygon | `<RegularPolygon>` | `shape={{ type:'polygon', params }}` (params) · `"diamond"` |
 | Star | `<Star>` | `shape={{ type:'star', params }}` (params) |
+| Contour | — (draw with `<Path>`) | `shape={{ type:'contour', params }}` (arbitrary vertex ring) |
 
 > Background grids and reference lines — **a field of regular lines** rather than a single closed shape — are not in this group; see `<Grid>` under [Helpers](/core/components/helpers).
 
@@ -51,5 +52,9 @@ Each shape page documents both faces as two self-contained halves: "As a Path sh
   <LinkedCard href="/core/components/shapes/star">
     <span className="font-semibold">Star</span>
     <span className="mt-1 text-center text-sm text-muted-foreground">Alternating inner / outer radius stars</span>
+  </LinkedCard>
+  <LinkedCard href="/core/components/shapes/contour">
+    <span className="font-semibold">Contour</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">Connectable node from an arbitrary closed vertex ring</span>
   </LinkedCard>
 </div>

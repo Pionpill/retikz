@@ -9,6 +9,232 @@ export const changelogPageDescription: Localized = {
 
 export const changelog: Array<Release> = [
   {
+    minor: 'v0.4',
+    stableDate: null,
+    packages: [
+      {
+        pkg: '@retikz/math',
+        version: 'v0.4',
+        description: {
+          zh: '新包：零依赖纯计算几何（向量 / 仿射 / arc 原语 / 求交 / 三角形内外接圆 / 点在多边形 / 凸包 / 最小外接圆 / 曲线）。纯函数 + 普通对象，零 IR、零 zod、不写 class；被 core 正向依赖、与 core 组同 lockstep。',
+          en: 'New package: zero-dependency pure computational geometry (vectors / affine / arc primitives / intersections / triangle in-&-circumcircle / point-in-polygon / convex hull / minimal enclosing circle / curves). Pure functions + plain objects, zero IR / zod / classes; depended on by core, lockstep with the core group.',
+        },
+        highlights: [
+          {
+            label: { zh: '纯几何 API', en: 'Pure geometry API' },
+            content: {
+              zh: '命名空间风格 `point` / `transform` / `arc` / `intersect` / `triangle` / `polygon` / `convexHull` / `enclose`；core 几何的单一真源（`Position` / `DEFAULT_EPSILON` 迁此）。',
+              en: 'Namespace-style `point` / `transform` / `arc` / `intersect` / `triangle` / `polygon` / `convexHull` / `enclose`; the single source of truth for core geometry (`Position` / `DEFAULT_EPSILON` moved here).',
+            },
+          },
+        ],
+        subVersions: [
+          {
+            version: 'alpha.3',
+            date: '2026-06-16',
+            summary: {
+              zh: '开 `curve/` 子模块：`catmullRomToCubic`（centripetal Catmull-Rom → cubic 贝塞尔），供 core 的 smooth step 编译过点平滑曲线。',
+              en: 'Opens the `curve/` submodule: `catmullRomToCubic` (centripetal Catmull-Rom → cubic Bézier), powering core’s smooth step.',
+            },
+            items: [
+              {
+                label: { zh: 'curve.catmullRomToCubic', en: 'curve.catmullRomToCubic' },
+                content: {
+                  zh: '给一串 knot + tension，返回 N−1 段 cubic（精确过每个 knot）；centripetal (α=0.5) 参数化，点距不均也无 cusp / 自交。',
+                  en: 'Given knots + tension, returns N−1 cubic segments (exactly through each knot); centripetal (α=0.5) parameterization avoids cusps / self-loops on uneven spacing.',
+                },
+              },
+            ],
+          },
+          {
+            version: 'alpha.2',
+            date: '2026-06-15',
+            summary: {
+              zh: '新增 `minimalEnclosingCircle`（Welzl）——点集最小外接圆，供 core scope 的 circle 包络。',
+              en: 'Adds `minimalEnclosingCircle` (Welzl) — the minimal enclosing circle of a point set, powering core’s circle scope envelope.',
+            },
+            items: [
+              {
+                label: { zh: 'minimalEnclosingCircle', en: 'minimalEnclosingCircle' },
+                content: {
+                  zh: '`enclose` 命名空间下的 MEC，复用 `triangle.circumcircle`；退化（空 / 单点 / 两点 / 共线）有定义。',
+                  en: 'MEC under the `enclose` namespace, reusing `triangle.circumcircle`; degenerate cases (empty / single / two / collinear) are well-defined.',
+                },
+              },
+            ],
+          },
+          {
+            version: 'alpha.1',
+            date: '2026-06-14',
+            summary: {
+              zh: '新建 `@retikz/math` 包：core 纯几何（向量 / 仿射 / arc 原语 / 私有求交）下沉至此，新增三角形内外接圆 / 点在多边形 / 凸包等能力。',
+              en: 'New `@retikz/math` package: core’s pure geometry (vectors / affine / arc primitives / private intersections) sinks here, plus new triangle in-&-circumcircle / point-in-polygon / convex hull.',
+            },
+            items: [
+              {
+                label: { zh: '零依赖几何底座', en: 'Zero-dependency geometry base' },
+                content: {
+                  zh: '`geometry/` 首切：`point` / `transform` / `arc` / `intersect` / `triangle` / `polygon` / `hull`；纯函数、JSON 友好、可独立测试。',
+                  en: 'First cut of `geometry/`: `point` / `transform` / `arc` / `intersect` / `triangle` / `polygon` / `hull`; pure, JSON-friendly, independently testable.',
+                },
+              },
+            ],
+          },
+        ],
+      },
+      {
+        pkg: '@retikz/core',
+        version: 'v0.4',
+        description: {
+          zh: 'v0.4 纵向底座深化：纯几何下沉 `@retikz/math`、Tier2 可嵌入机制、path 文法补强（折线圆角 + 过点平滑曲线）、任意轮廓 contour shape。',
+          en: 'v0.4 deepens the vertical base: pure geometry sinks to `@retikz/math`, an embeddable-Tier2 mechanism, path-grammar reinforcement (rounded corners + smooth-through-points), and an arbitrary-contour shape.',
+        },
+        highlights: [
+          {
+            label: { zh: '路径补强', en: 'Path reinforcement' },
+            content: {
+              zh: '`<Path roundedCorners>` 折线几何圆角；`smooth` step 过点平滑曲线；两者编译期只产既有 PathCommand，renderer 零改动。',
+              en: '`<Path roundedCorners>` geometric corner rounding; a `smooth` step for curves through points; both compile to existing PathCommands only, with no renderer change.',
+            },
+          },
+          {
+            label: { zh: 'contour shape', en: 'contour shape' },
+            content: {
+              zh: '任意闭合顶点环作 Node 形状，自动按 AABB 中心居中，经 `boundaryPoint` 与 rectangle / sector 同等可连接。',
+              en: 'An arbitrary closed vertex ring as a Node shape, auto-centered on its AABB center, as connectable as rectangle / sector via `boundaryPoint`.',
+            },
+          },
+        ],
+        subVersions: [
+          {
+            version: 'alpha.3',
+            date: '2026-06-16',
+            summary: {
+              zh: 'path 文法补强 + contour shape：折线圆角 `roundedCorners`、过点平滑曲线 `smooth` step、任意轮廓 `contour` 注册 shape。',
+              en: 'Path-grammar reinforcement + contour shape: `roundedCorners`, a `smooth` step, and a registered `contour` shape.',
+            },
+            items: [
+              {
+                label: { zh: 'roundedCorners（折线圆角）', en: 'roundedCorners' },
+                content: {
+                  zh: '`PathSchema` 新增 `roundedCorners`：把折线相邻 line 段接缝倒成相切圆弧（TikZ `rounded corners=`），改路径几何（区别于仅描边的 `lineJoin`），半径按段长 clamp，闭合 cycle 倒首尾接缝。',
+                  en: '`PathSchema` gains `roundedCorners`: rounds line-to-line joints into tangent arcs (TikZ `rounded corners=`), changing path geometry (unlike stroke-only `lineJoin`); radius clamps to segment length, and a closing `cycle` rounds the wrap-around joint.',
+                },
+              },
+              {
+                label: { zh: 'smooth step（过点平滑曲线）', en: 'smooth step' },
+                content: {
+                  zh: '新增第 13 个 step kind `smooth`：从当前 cursor 起依次穿过 `points`（首 knot = cursor），`tension` 默认 1，编译为 cubic 贝塞尔（算法在 `@retikz/math` curve/）。',
+                  en: 'A 13th step kind `smooth`: passes through the cursor (first knot) then each of `points`, `tension` defaulting to 1, compiled to cubic Béziers (algorithm in `@retikz/math` curve/).',
+                },
+              },
+              {
+                label: { zh: 'contour shape', en: 'contour shape' },
+                content: {
+                  zh: '新增 builtin 参数化 shape `contour`（`points` + 可选 `cornerRadius`）；IR 零 schema 改动（走开放 `ShapeRefSchema.type`），复用 contour 轮廓引擎，命名 anchor 回退 AABB、`boundaryPoint` 精确。',
+                  en: 'A new builtin parametric shape `contour` (`points` + optional `cornerRadius`); zero IR schema change (open `ShapeRefSchema.type`), reusing the contour engine — compass anchors fall back to AABB, `boundaryPoint` is exact.',
+                },
+              },
+            ],
+          },
+          {
+            version: 'alpha.2',
+            date: '2026-06-15',
+            summary: {
+              zh: 'scope 多态包络：`<Scope boundingShape>` 支持 `circle`（子树点集最小外接圆），连线 / anchor 落圆周；缺省 `rectangle` 行为不变。',
+              en: 'Polymorphic scope envelope: `<Scope boundingShape>` supports `circle` (minimal enclosing circle of the subtree), so connections / anchors land on the circle; the default `rectangle` is unchanged.',
+            },
+            items: [
+              {
+                label: { zh: 'scope boundingShape=circle', en: 'scope boundingShape=circle' },
+                content: {
+                  zh: '`scope.id` synthetic layout 可用圆形包络（消费 `@retikz/math` 的 MEC）；anchor / boundaryPoint 走与 `<Node shape="circle">` 一致路径，零新 anchor 代码。polygon / ellipse 缓做。',
+                  en: 'A `scope.id` synthetic layout can use a circular envelope (consuming `@retikz/math`’s MEC); anchor / boundaryPoint reuse the `<Node shape="circle">` path with no new anchor code. polygon / ellipse deferred.',
+                },
+              },
+            ],
+          },
+          {
+            version: 'alpha.1',
+            date: '2026-06-14',
+            summary: {
+              zh: '纯几何下沉 `@retikz/math` 并 re-export（公开面不变）；`point.toPolar` / `point.equalPolar` 移除，能力迁入 `polar`。',
+              en: 'Pure geometry sinks to `@retikz/math` and is re-exported (public surface unchanged); `point.toPolar` / `point.equalPolar` are removed, folded into `polar`.',
+            },
+            items: [
+              {
+                label: { zh: 'geometry 单一真源迁 math', en: 'geometry single source to math' },
+                content: {
+                  zh: 'core `geometry/` 的向量 / 仿射 / arc 原语 / 私有求交下沉 `@retikz/math`，core 改 re-export；依赖方向 core → math，「两个几何的家」消除。',
+                  en: 'core `geometry/` vectors / affine / arc primitives / private intersections sink to `@retikz/math`, with core re-exporting; dependency points core → math, ending the “two homes for geometry”.',
+                },
+              },
+              {
+                label: { zh: 'point 公开面收口', en: 'point surface cleanup' },
+                content: {
+                  zh: '移除 `point.toPolar` / `point.equalPolar`（直角坐标对象上挂极坐标语义易误用）；极坐标换算并入 `polar.fromPosition` / `polar.equal`。',
+                  en: 'Removes `point.toPolar` / `point.equalPolar` (polar semantics on a Cartesian object invited misuse); polar conversion folds into `polar.fromPosition` / `polar.equal`.',
+                },
+              },
+            ],
+          },
+        ],
+      },
+      {
+        pkg: '@retikz/react',
+        version: 'v0.4',
+        description: {
+          zh: 'React adapter 跟进 core v0.4：`<Step kind="smooth">` 与 `<Draw>` / `<Path>` 的 `roundedCorners`，以及 `<Layout>` 可嵌入 Tier2 子组件。',
+          en: 'The React adapter follows core v0.4: `<Step kind="smooth">` and `roundedCorners` on `<Draw>` / `<Path>`, plus embeddable Tier2 children in `<Layout>`.',
+        },
+        highlights: [],
+        subVersions: [
+          {
+            version: 'alpha.3',
+            date: '2026-06-16',
+            summary: {
+              zh: '`<Step kind="smooth">` 过点平滑曲线；`<Draw>` / `<Path>` 暴露 `roundedCorners`。',
+              en: '`<Step kind="smooth">` for smooth curves; `<Draw>` / `<Path>` expose `roundedCorners`.',
+            },
+            items: [
+              {
+                label: { zh: '<Step kind="smooth">', en: '<Step kind="smooth">' },
+                content: {
+                  zh: '新增 smooth step prop（`points` / `tension` / `label`），与 `curve` / `cubic` / `bend` 同为一等曲线 step。',
+                  en: 'New smooth step props (`points` / `tension` / `label`), a first-class curve step alongside `curve` / `cubic` / `bend`.',
+                },
+              },
+              {
+                label: { zh: 'roundedCorners 透传', en: 'roundedCorners passthrough' },
+                content: {
+                  zh: '`<Path roundedCorners>` 与 `<Draw roundedCorners>` 均可用（vanilla `draw` config 经 `Omit<IRPath>` 自动支持）。',
+                  en: '`<Path roundedCorners>` and `<Draw roundedCorners>` both work (vanilla `draw` config supports it automatically via `Omit<IRPath>`).',
+                },
+              },
+            ],
+          },
+          {
+            version: 'alpha.2',
+            date: '2026-06-15',
+            summary: {
+              zh: '`<Layout>` 支持嵌入 Tier2 子组件：可嵌入适配器以组件静态属性注册，`<Layout>` 汇总后并入 compile，`embeddables` prop 作显式逃生舱。',
+              en: '`<Layout>` can embed Tier2 children: an embeddable adapter is registered as a component static property, gathered by `<Layout>` into compile, with an `embeddables` prop as an explicit escape hatch.',
+            },
+            items: [
+              {
+                label: { zh: '可嵌入 Tier2 in <Layout>', en: 'Embeddable Tier2 in <Layout>' },
+                content: {
+                  zh: 'Tier2 组件（如 plot）可直接作 `<Layout>` 子节点，经 `EmbeddableTier2Adapter` 贡献 IR；core-react builder + hydration 汇总。',
+                  en: 'Tier2 components (e.g. plot) can sit directly under `<Layout>`, contributing IR via an `EmbeddableTier2Adapter`; the core-react builder + hydration gather them.',
+                },
+              },
+            ],
+          },
+        ],
+      },
+    ],
+  },
+  {
     minor: 'v0.3',
     stableDate: '2026-06-15',
     packages: [

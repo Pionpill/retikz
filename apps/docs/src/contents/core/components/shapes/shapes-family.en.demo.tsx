@@ -8,7 +8,7 @@ import type { FC } from 'react';
  *   on the bottom row hints that Node shapes are connectable. Captions / row labels use gray stroke/fill-none text.
  */
 const Demo: FC = () => (
-  <Layout width={560} height={240}>
+  <Layout width={660} height={240}>
     {/* Row labels */}
     <Node id="rowPath" position={[-235, -55]} stroke="none" fill="none" textColor="gray" font={{ size: 12 }}>
       Path line
@@ -39,6 +39,14 @@ const Demo: FC = () => (
       shape={{ type: 'star', params: { points: 5, innerRadius: 11, outerRadius: 26 } }}
       fill="gold"
     />
+    <Node
+      id="ncontour"
+      position={[275, 55]}
+      shape={{ type: 'contour', params: { points: [[-26, 24], [26, 16], [26, -24], [-26, -24]], cornerRadius: 5 } }}
+      fill="lavender"
+    >
+      contour
+    </Node>
     <Draw way={['nc', 'nr']} arrow="->" stroke="gray" />
   </Layout>
 );

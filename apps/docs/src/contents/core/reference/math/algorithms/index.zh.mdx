@@ -1,12 +1,12 @@
 ---
 title: 几何算法
-description: 求交、三角形内 / 外接圆、点在多边形、凸包的完整签名——core 未转出，直接从 @retikz/math 导入。
+description: 求交、三角形内 / 外接圆、点在多边形、凸包、样条曲线的完整签名——core 未转出，直接从 @retikz/math 导入。
 ---
 
 这些是 `@retikz/core` **未** re-export 的高阶计算，直接从 `@retikz/math` 导入：
 
 ```ts
-import { intersect, triangle, polygon, convexHull } from '@retikz/math';
+import { intersect, triangle, polygon, convexHull, curve } from '@retikz/math';
 ```
 
 退化输入不抛错：求交返回 `null` / `[]`，三角形圆退化返回 `null`。容差为朴素 `DEFAULT_EPSILON = 1e-9`（类型见[几何原语](/core/reference/math/primitives)）。
@@ -70,3 +70,18 @@ convexHull(points: Array<Position>): Array<Position>;
 ```
 
 Andrew monotone chain，返回 **CCW 顺序**顶点、**剔除共线中间点**；点数 < 3 或全共线时返回排序去重后的端点。
+
+## curve 过点平滑曲线
+
+给一串 knot，返回一条**穿过每个 knot** 的三次贝塞尔段链——`<Step kind="smooth">` 的底层算法。用 centripetal Catmull-Rom（α=0.5）：点距不均时不产生 cusp / 自交回环。
+
+```ts
+// 一段三次贝塞尔：两控制点 + 终点（起点为上一段终点 / 首段为第一个 knot）
+type CubicSegment = { control1: Position; control2: Position; to: Position };
+
+// centripetal Catmull-Rom：穿过 knots 的 cubic 段链
+// 至少 2 个 knot；返回 knots.length - 1 段，段[i].to 严格命中 knots[i+1]（过点）
+curve.catmullRomToCubic(knots: Array<Position>, tension: number): Array<CubicSegment>;
+```
+
+`tension` 为切线长度乘子（TikZ `tension`）：`1` 标准、`<1` 更紧、`>1` 更鼓。开放曲线两端用单侧切线（端点 knot 复制相邻端点）；重合 knot 的间距回退到 `DEFAULT_EPSILON` 防除零，输出始终有限。`knots.length < 2` 返回 `[]`。

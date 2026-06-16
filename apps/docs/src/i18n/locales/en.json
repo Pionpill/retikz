@@ -54,6 +54,7 @@
     "shapesRectangle": "Rectangle",
     "shapesPolygon": "Polygon",
     "shapesStar": "Star",
+    "shapesContour": "Contour",
     "helpers": "Helpers",
     "helpersGrid": "Grid",
     "basicConcepts": "Basic Concepts",

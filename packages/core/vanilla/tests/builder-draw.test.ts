@@ -33,6 +33,12 @@ describe('@retikz/vanilla draw()', () => {
     expect(p.children).toEqual(parseWay(way));
   });
 
+  it('draw-rounded-corners：roundedCorners 透传进 path IR', () => {
+    const p = draw([[0, 0], [10, 0], [10, 10]], { roundedCorners: 8 });
+    if (p.type !== 'path') throw new Error('unreachable');
+    expect(p.roundedCorners).toBe(8);
+  });
+
   it('draw-no-config：draw(way) 无 config 也合法', () => {
     const p = draw(['a', 'b']);
     expect(p).toEqual({ type: 'path', children: parseWay(['a', 'b']) });
