@@ -1,6 +1,6 @@
 # ADR-01：任意折线几何圆角 —— `<Path>` 的 `roundedCorners`
 
-- 状态：Proposed
+- 状态：Accepted（2026-06-16 收尾：折线圆角 `roundedCorners` 已实现 + 文档同步 + 两轮多 LLM 评审/对账通过；step `label` 倒角后重定位延后，见「不在本 ADR 范围」）
 - 决策日期：2026-06-15
 - 关联：[v0.4-alpha.3 roadmap](./roadmap.md) · [v0.4 roadmap 候选 B](../roadmap.md#b--路径补强2026-06-12-拍板) · [core-design.md §7 AI 一等公民](../../../../../architecture/core-design.md) · core `geometry/contour.ts`（`filletContour` / `contourCommands`）· `ir/path/path.ts`（`PathSchema`）· `compile/path/index.ts`
 

@@ -2,7 +2,7 @@
 
 > 起源：跨包能力请求（plot → core，2026-06-15）。原作为仓库根独立 note 提出，现迁入本 milestone 为 **alpha.3 ADR-03**，与路径补强（[ADR-01](./01-polyline-rounded-corners.md) / [ADR-02](./02-smooth-curve-through-points.md)）一并实现——三者共享 core `geometry/contour.ts` 轮廓引擎（ADR-01 扩开放折线 seam，ADR-03 复用闭合顶点环路径，互不冲突）。
 
-- 状态：Proposed
+- 状态：Accepted（2026-06-16 收尾：builtin `contour` shape 已实现 + 文档同步 + 评审/对账通过；自动按 AABB 中心居中、compass anchor 回退 AABB、`boundaryPoint` 精确。plot 侧消费归 plot alpha.11）
 - 决策日期：2026-06-15
 - 发起方：plot（Tier 2），消费方需求见 [plot v0.1 roadmap alpha.11](../../../../plot/v0/v0.1/roadmap.md)
 - 关联：[alpha.3 roadmap](./roadmap.md) · [alpha.3 ADR-01 任意折线圆角（同享 contour fillet 引擎）](./01-polyline-rounded-corners.md) · [plot-design §8.3 mark 几何 × coordinate](../../../../../architecture/plot-design.md) · [plot-design §8.1 id 绑定与可连接性](../../../../../architecture/plot-design.md) · core `geometry/contour.ts` · core `shapes/polygon.ts`

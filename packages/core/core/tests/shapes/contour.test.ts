@@ -6,10 +6,6 @@
  *   - 错误：points<3 / 非有限顶点 schema 拒绝、params 偷渡函数编译期拦；
  *   - 交互：Node rotate / 各向异性 scale / boundaryPoint 连接 / compass anchor 回退 AABB；
  *   - JSON round-trip：{type:'contour', params} 经 NodeSchema 序列化往返等价。
- *
- *   NOTE: 行为类 case（emit / boundaryPoint / fillet / 自动居中 / scale 几何）当前为 STUB（contour 抛
- *   'contour not implemented'）→ 预期 FAIL，待 implement 阶段落地真实几何后转绿；schema-reject 与
- *   round-trip case 当前即应 PASS。
  */
 import { describe, expect, it } from 'vitest';
 import { compileToScene } from '../../src/compile/compile';

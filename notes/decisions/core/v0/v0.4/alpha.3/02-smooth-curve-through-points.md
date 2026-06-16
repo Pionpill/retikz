@@ -1,6 +1,6 @@
 # ADR-02：过点平滑曲线 —— `<Path>` 的 `smooth` step
 
-- 状态：Proposed
+- 状态：Accepted（2026-06-16 收尾：`smooth` step + `@retikz/math` `curve/` 已实现 + 文档同步 + 评审/对账通过；cursor-less smooth = 跳过 path + `PATH_TOO_SHORT` 警告，codebase 一致口径）
 - 决策日期：2026-06-15
 - 关联：[v0.4-alpha.3 roadmap](./roadmap.md) · [v0.4 roadmap 候选 B](../roadmap.md#b--路径补强2026-06-12-拍板) · [core-design.md §7 AI 一等公民](../../../../../architecture/core-design.md) · [alpha.1 ADR-01 `@retikz/math`](../alpha.1/01-math-package-and-geometry-api.md)（`curve/` 子模块原「后置」，2026-06-15 人工拍板提前到本 milestone 开启）· `ir/path/step.ts`（`StepSchema`）· `path-generators/`（generator 机制）
 
