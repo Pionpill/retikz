@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import type { ValueOf } from '@retikz/core';
-import { EncodingSchema, PointEncodingSchema, StyleEncodingSchema } from './encoding';
+import { ChannelSchema, EncodingSchema, MarkLabelSchema, PointEncodingSchema, StyleEncodingSchema, TextEncodingSchema } from './encoding';
 
 /**
  * mark 类型关键字（暴露给用户；成员值即 IR 判别串，裸字面量 `'point'` 同样可用）
@@ -17,6 +17,14 @@ export const PlotMark = {
   Sector: 'sector',
   /** 面积：上沿折线 ↔ baseline 围成的可填充区域（面积图 / 填充雷达） */
   Area: 'area',
+  /** 矩形格：x / y 均分类（双 band）围成的固定网格 cell，值经 color 通道映射（heatmap / 混淆矩阵 / 日历热图） */
+  Rect: 'rect',
+  /** 参考标注：沿一个位置维度取常量（单值 → 线、[lo,hi] → 填充带），跨满对侧轴域（阈值线 / 容差带） */
+  Rule: 'rule',
+  /** 文本：自由文本兜底；datum label 首选挂宿主 mark 的 label 通道，无宿主才用本 mark 新建 Node */
+  Text: 'text',
+  /** 流带：两端点集合之间的可填充 cubic 曲带（sankey / alluvial 流量；端点为字段对，经坐标系投影） */
+  Ribbon: 'ribbon',
 } as const;
 
 /** mark 类型 */
@@ -36,6 +44,20 @@ export const PlotArrangement = {
 /** 多系列柱组合方式 */
 export type PlotArrangementValue = ValueOf<typeof PlotArrangement>;
 
+/**
+ * 流带主轴取向关键字（暴露给用户；裸 `'horizontal'` / `'vertical'` 同样可用）
+ * @description 决定 ribbon 的出 / 入切向与四角半宽方向：horizontal 出入沿 x（半宽沿 y），vertical 出入沿 y（半宽沿 x）。
+ */
+export const RibbonOrientation = {
+  /** 水平流：出 / 入切向沿 x，半宽沿 y（sankey 左右流） */
+  Horizontal: 'horizontal',
+  /** 竖直流：出 / 入切向沿 y，半宽沿 x（自上而下流） */
+  Vertical: 'vertical',
+} as const;
+
+/** 流带主轴取向 */
+export type RibbonOrientationValue = ValueOf<typeof RibbonOrientation>;
+
 /** 各 mark 变体共享的基础字段（可选 id 句柄）；encoding 各 mark 自带（位置 mark 用 EncodingSchema、sector 用 StyleEncodingSchema） */
 const markBase = {
   id: z
@@ -48,8 +70,13 @@ const markBase = {
 /** 位置 mark（point / line / interval / area）的 encoding：x / y 可选（必填性下放 coordinate 级校验）+ 样式 */
 const positionalEncoding = { encoding: EncodingSchema };
 
+/** 位置 mark 的可选 datum label（priority-1 宿主路径）：lowering 时挂到该 mark 每个 datum Node 的 label */
+const positionalLabel = {
+  label: MarkLabelSchema.optional().describe('priority-1 datum label: lowered onto each datum Node.label (core border-relative placement)'),
+};
+
 export const PointMarkSchema = z
-  .object({ type: z.literal(PlotMark.Point).describe('Discriminator: one glyph per record'), ...markBase, encoding: PointEncodingSchema })
+  .object({ type: z.literal(PlotMark.Point).describe('Discriminator: one glyph per record'), ...markBase, ...positionalLabel, encoding: PointEncodingSchema })
   .describe('Point mark: scatter / dot; supports an optional size channel (glyph radius)');
 
 export const LineMarkSchema = z
@@ -70,6 +97,7 @@ export const LineMarkSchema = z
       .optional()
       .describe('Connect the last point back to the first, closing the line into a polygon; under polar this yields a radar outline. Default false'),
     ...markBase,
+    ...positionalLabel,
     ...positionalEncoding,
   })
   .describe('Line mark: connects records in order');
@@ -97,6 +125,7 @@ export const IntervalMarkSchema = z
       .optional()
       .describe('Upper-bound field for stacked bars (matches the stack transform endField; default "y1"). Only read when arrangement = stack'),
     ...markBase,
+    ...positionalLabel,
     ...positionalEncoding,
   })
   .describe('Interval mark: bar from baseline (0) to the value; width taken from the band scale');
@@ -142,13 +171,111 @@ export const AreaMarkSchema = z
       .optional()
       .describe('Connect the last point back to the first, closing the outline into a polygon; under polar this yields a filled radar. Default false'),
     ...markBase,
+    ...positionalLabel,
     ...positionalEncoding,
   })
   .describe('Area mark: fillable region between the value outline and a baseline (area chart / filled radar)');
 
+export const RectMarkSchema = z
+  .object({
+    type: z.literal(PlotMark.Rect).describe('Discriminator: a 2D grid cell spanning one band on each axis (heatmap)'),
+    ...markBase,
+    ...positionalEncoding,
+  })
+  .describe(
+    'Rect mark: heatmap grid cell sized bandwidth_x × bandwidth_y; the value is mapped to fill via the color channel. Both x and y must resolve to band scales (required-ness and the band constraint are validated during lowering)',
+  );
+
+export const RuleMarkSchema = z
+  .object({
+    type: z.literal(PlotMark.Rule).describe('Discriminator: a constant-position reference mark (line for a single value, band for a [lo,hi] interval) spanning the opposite axis domain'),
+    yTo: z
+      .union([z.number(), z.string().min(1)])
+      .optional()
+      .describe('Horizontal band upper bound along y: number → constant, string → per-datum field. Present (paired with encoding.y as the lower bound) turns a horizontal rule into a filled band y∈[y,yTo]; omit → a single line'),
+    xTo: z
+      .union([z.number(), z.string().min(1)])
+      .optional()
+      .describe('Vertical band upper bound along x: number → constant, string → per-datum field. Present (paired with encoding.x as the lower bound) turns a vertical rule into a filled band x∈[x,xTo]; omit → a single line'),
+    extentField: z
+      .string()
+      .min(1)
+      .optional()
+      .describe('Per-datum partial-length rule/band: field giving the span start along the opposite axis (omit → span the full opposite domain). Pairs with extentToField'),
+    extentToField: z
+      .string()
+      .min(1)
+      .optional()
+      .describe('Per-datum partial-length rule/band: field giving the span end along the opposite axis (omit → span the full opposite domain). Pairs with extentField'),
+    ...markBase,
+    ...positionalEncoding,
+  })
+  .describe('Rule mark: a constant-position reference. Bind x (vertical) or y (horizontal); field → per-datum, value → constant. Give only the lower bound for a line; pair it with xTo / yTo for a filled band [lo,hi]. Use extentField / extentToField for partial-length spans');
+
+export const TextMarkSchema = z
+  .object({
+    type: z.literal(PlotMark.Text).describe('Discriminator: a standalone free-text label with no host datum, positioned like a point'),
+    dx: z
+      .number()
+      .finite()
+      .optional()
+      .describe('Fine-tuning horizontal offset (user units) from the projected anchor; positive = right. Prefer label position/distance; dx is an escape hatch. Default 0'),
+    dy: z
+      .number()
+      .finite()
+      .optional()
+      .describe('Fine-tuning vertical offset (user units) from the projected anchor; positive = screen-down. Prefer label position/distance. Default 0'),
+    ...markBase,
+    encoding: TextEncodingSchema,
+  })
+  .describe(
+    'Text mark: a standalone free-text label placed at each record (same projection as point), emitting a core Node carrying text. For labelling another mark’s datum prefer that mark’s label channel',
+  );
+
+export const RibbonEndpointSchema = z
+  .object({
+    x: ChannelSchema.describe('Field-pair endpoint primary position channel (projected through the coordinate system)'),
+    y: ChannelSchema.describe('Field-pair endpoint secondary position channel (projected through the coordinate system)'),
+  })
+  .describe('One ribbon endpoint: an { x, y } field pair projected through the coordinate system into a screen point');
+
+export const RibbonMarkSchema = z
+  .object({
+    type: z.literal(PlotMark.Ribbon).describe('Discriminator: a fillable cubic flow band between two endpoint sets'),
+    source: RibbonEndpointSchema.describe('Source endpoint (the band start, projected to a screen point)'),
+    target: RibbonEndpointSchema.describe('Target endpoint (the band end, projected to a screen point)'),
+    value: z
+      .string()
+      .min(1)
+      .describe('Flow magnitude field; mapped through a width scale to the source-end band width (user units)'),
+    width: z
+      .string()
+      .min(1)
+      .optional()
+      .describe('Optional independent width-scale name; omitted → a default linear scale is synthesized from the value extent'),
+    endWidth: z
+      .string()
+      .min(1)
+      .optional()
+      .describe('Optional target-end width field; omitted → equal width to the source end (a straight-width band rather than a flared one)'),
+    curvature: z
+      .number()
+      .min(0)
+      .max(1)
+      .optional()
+      .describe('Cubic control-point extrapolation ratio along the main axis (0 = near-straight, larger = more S-shaped); default 0.5'),
+    orientation: z
+      .enum(RibbonOrientation)
+      .optional()
+      .describe('Main-axis orientation; the entry / exit tangents run along this axis and the band half-width is taken along the perpendicular axis (horizontal → flow left-right, vertical → flow top-down); default horizontal'),
+    ...markBase,
+    encoding: StyleEncodingSchema,
+  })
+  .describe('Ribbon mark: one fillable cubic band per record between a source and target field-pair endpoint, width driven by the value field; consumes pre-computed layout positions (sankey / alluvial layout is out of scope). Uses style-only encoding (color); positions come from the source / target field pairs');
+
 export const MarkSchema = z
-  .discriminatedUnion('type', [PointMarkSchema, LineMarkSchema, IntervalMarkSchema, SectorMarkSchema, AreaMarkSchema])
-  .describe('Mark union; extensible to rule / text in later alphas');
+  .discriminatedUnion('type', [PointMarkSchema, LineMarkSchema, IntervalMarkSchema, SectorMarkSchema, AreaMarkSchema, RectMarkSchema, RuleMarkSchema, TextMarkSchema, RibbonMarkSchema])
+  .describe('Mark union; text is a standalone free-text label (datum labels prefer a positional mark label channel)');
 
 /** point mark */
 export type PointMark = z.infer<typeof PointMarkSchema>;
@@ -160,5 +287,15 @@ export type IntervalMark = z.infer<typeof IntervalMarkSchema>;
 export type SectorMark = z.infer<typeof SectorMarkSchema>;
 /** area(面积图 / 填充雷达) mark */
 export type AreaMark = z.infer<typeof AreaMarkSchema>;
-/** mark（point / line / interval / sector / area） */
+/** rect(heatmap 格) mark */
+export type RectMark = z.infer<typeof RectMarkSchema>;
+/** rule(参考线 / 阈值线 / 容差带) mark */
+export type RuleMark = z.infer<typeof RuleMarkSchema>;
+/** text(自由文本兜底；datum label 首选挂宿主 mark label) mark */
+export type TextMark = z.infer<typeof TextMarkSchema>;
+/** ribbon 一端：字段对端点（经坐标系投影成屏幕点） */
+export type RibbonEndpoint = z.infer<typeof RibbonEndpointSchema>;
+/** ribbon(sankey / alluvial 流带) mark */
+export type RibbonMark = z.infer<typeof RibbonMarkSchema>;
+/** mark（point / line / interval / sector / area / rect / rule / text / ribbon） */
 export type Mark = z.infer<typeof MarkSchema>;

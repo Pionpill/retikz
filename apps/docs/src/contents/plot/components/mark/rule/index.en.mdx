@@ -1,0 +1,69 @@
+---
+title: RuleMark
+description: Draw reference / threshold lines and tolerance bands with <RuleMark> — a constant along one axis, spanning the opposite axis domain.
+---
+
+`<RuleMark>` draws a reference annotation at a constant position in data space: bind `y` for a **horizontal line** (`y=const`, spanning the x domain), bind `x` for a **vertical line** (`x=const`, spanning the y domain). A number gives a single constant; a field name gives one per row (per-datum). It sits alongside `<BarMark>` / `<PointMark>` and joins the draw order within the same coordinate system.
+
+## Threshold line
+
+The most common use: overlay a threshold line on a scatter / bar chart. `y={60}` is a numeric constant, drawing a horizontal line across the full x domain.
+
+<ComponentPreview name="rule-threshold" sourceFiles={['rule-threshold.data.ts']} />
+
+<p className="text-sm text-muted-foreground">y=60 pass line, spanning the x domain; a numeric constant → a single line.</p>
+
+## Tolerance band
+
+Add an upper bound `yTo` to turn the line into a **filled band** `y∈[y, yTo]` — for tolerance ranges, acceptance bands, highlighted regions. A band is a fillable region; declare it first then overlay the data so the points sit on top.
+
+<ComponentPreview name="rule-band" sourceFiles={['rule-threshold.data.ts']} />
+
+<p className="text-sm text-muted-foreground">Horizontal tolerance band y∈[60,80], spanning the x domain; an upper bound yTo → a filled region.</p>
+
+`xTo` mirrors `yTo`: with `x` bound, use `xTo` for a vertical band. The upper bound must match the bound dimension — binding `x` but setting `yTo` (or vice versa) throws.
+
+## One per row
+
+When `y` is a **field name** rather than a number, it is data-driven: one horizontal rule per row. Add a `color` field to color them by category.
+
+<ComponentPreview name="rule-per-datum" sourceFiles={['rule-per-datum.data.ts']} />
+
+<p className="text-sm text-muted-foreground">y bound to the threshold field → one line per row; color bound to tier categorizes them.</p>
+
+## Orientation and form
+
+| What you give | Orientation | Form |
+| --- | --- | --- |
+| `y` (number / field) | horizontal (spans x domain) | line |
+| `x` (number / field) | vertical (spans y domain) | line |
+| `y` + `yTo` | horizontal | band `y∈[y,yTo]` |
+| `x` + `xTo` | vertical | band `x∈[x,xTo]` |
+
+Number → constant, string → field. Exactly one of `x` / `y` is required: giving both or neither throws.
+
+## Partial length
+
+By default a line / band spans the full opposite axis domain. Give a pair `extentField` / `extentToField` (start / end fields along the opposite axis) to clip it to a segment / partial band — like a time cursor in a Gantt chart. Both must be set together; setting only one throws.
+
+## Polar
+
+Under `coordinate="polar2D"` the orientation is reinterpreted:
+
+- Bind `y` (constant radius) → a constant-radius **reference ring** (arc / full circle, by angular domain); add `yTo` → an **annular band**.
+- Bind `x` (constant angle) → a **radial reference line** (inner to outer); add `xTo` → a **sector wedge**.
+
+## API
+
+| prop | type | description |
+| --- | --- | --- |
+| `y` | `number \| string?` | Constant axis of a horizontal rule: number → constant, string → field (one per row). Exclusive with `x` |
+| `x` | `number \| string?` | Constant axis of a vertical rule: number → constant, string → field (one per row). Exclusive with `y` |
+| `yTo` | `number \| string?` | Horizontal band upper bound (paired with `y` → `y∈[y,yTo]`); omit for a line |
+| `xTo` | `number \| string?` | Vertical band upper bound (paired with `x` → `x∈[x,xTo]`); omit for a line |
+| `extentField` | `string?` | Partial-length span start field along the opposite axis (paired with `extentToField`); omit to span the full domain |
+| `extentToField` | `string?` | Partial-length span end field along the opposite axis (paired with `extentField`); omit to span the full domain |
+| `color` | `string?` | Constant rule → a color string (line stroke / band fill); per-datum → a field name colored by category |
+| `id` | `string?` | Optional handle (reserved, not resolved yet) |
+
+<ComponentAlert title="Bind exactly one orientation" description="<RuleMark> must bind exactly one of x or y; giving both / neither, or an upper bound that does not match the bound dimension (binding x but setting yTo), throws. This round lines support cartesian2D / polar2D, and bands support coordinate systems that provide projectCell (cartesian2D / polar2D); other coordinate systems throw." />

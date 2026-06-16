@@ -125,6 +125,44 @@ describe('collectUserSourceFields — 用户源字段集（ADR-01）', () => {
     });
     expect(collectUserSourceFields(spec).has('red')).toBe(false);
   });
+
+  it('collect_label_and_text_content_fields_alpha11', () => {
+    // 位置 mark 的 priority-1 datum label 内容字段 + TextMark 的 text 内容字段都进用户源集（alpha.11 P1 回归）
+    const spec = buildSpec({
+      marks: [
+        { type: 'interval', label: { content: { field: 'lbl' } }, encoding: { x: { field: 'month' }, y: { field: 'revenue' } } },
+        { type: 'text', encoding: { x: { field: 'month' }, y: { field: 'revenue' }, text: { field: 'note' } } },
+      ],
+    });
+    const fields = collectUserSourceFields(spec);
+    expect(fields.has('lbl')).toBe(true);
+    expect(fields.has('note')).toBe(true);
+  });
+
+  it('collect_rule_band_and_extent_fields_alpha11', () => {
+    // rule band 上界 string（field）+ extent 字段进用户源集；数字常量上界不作字段
+    const spec = buildSpec({
+      marks: [
+        { type: 'rule', encoding: { y: { field: 'lo' } }, yTo: 'hi', extentField: 'a', extentToField: 'b' },
+        { type: 'rule', encoding: { y: { value: 70 } }, yTo: 90 },
+      ],
+    });
+    const fields = collectUserSourceFields(spec);
+    expect(fields.has('lo')).toBe(true);
+    expect(fields.has('hi')).toBe(true);
+    expect(fields.has('a')).toBe(true);
+    expect(fields.has('b')).toBe(true);
+    expect(fields.has('90')).toBe(false);
+  });
+
+  it('text_field_enters_strict_model_alpha11', () => {
+    // 声明 model 时，TextMark text 引用的字段必须列入 model，否则 fail-loud（P1：之前被绕过、静默空文本）
+    const spec = buildSpec({
+      marks: [{ type: 'text', encoding: { x: { field: 'month' }, y: { field: 'revenue' }, text: { field: 'note' } } }],
+    });
+    const userFields = collectUserSourceFields(spec);
+    expect(() => resolveFieldTypes([{ name: 'month' }, { name: 'revenue' }], [{ month: 1, revenue: 2, note: 'x' }], userFields)).toThrow(/unknown field/i);
+  });
 });
 
 describe('resolveFieldTypes — 类型解析 + strict 校验（ADR-01）', () => {

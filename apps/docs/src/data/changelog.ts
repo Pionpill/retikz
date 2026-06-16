@@ -1483,6 +1483,51 @@ export const changelog: Array<Release> = [
         ],
         subVersions: [
           {
+            version: 'alpha.11',
+            date: '2026-06-16',
+            summary: {
+              zh: 'Geometry 基础（IR / lowering 视角）：区间几何下沉重构为坐标系无关的 `frame.projectCell(cell)` 契约（闭式 rect / sector 快路 ⊕ contour 兜底，曲线坐标系在其 `projectCell` 就绪时出可连接柱），并新增 rect / rule / text / ribbon 四个 mark——heatmap 双 band 格、参考 / 阈值线与 band 区域、datum label 文本、sankey / alluvial 流带。',
+              en: 'Geometry foundation (IR / lowering view): refactors interval geometry into a coordinate-agnostic `frame.projectCell(cell)` contract (closed-form rect / sector fast paths ⊕ contour fallback, with connectable bars on curved systems once their `projectCell` is provided), and adds four marks — rect / rule / text / ribbon — heatmap double-band cells, reference / threshold lines and band regions, datum-label text, and sankey / alluvial ribbons.',
+            },
+            items: [
+              {
+                label: { zh: 'projectCell 区间几何投影契约', en: 'projectCell interval-geometry contract' },
+                content: {
+                  zh: '把 interval / sector 的下沉重构成单路径「正交 cell → `frame.projectCell(cell)` → 装配 core Node」：判断「投影后是否闭式 shape」挪进坐标系——cartesian2D 出 rect、polar2D 出 sector（闭式快路，产物与重构前逐字节等价），曲线 / 自定义坐标系经自身 `projectCell` 把四边密采样成 contour 顶点环兜底，仍是可连接 Node（守 §8.1）;无 `projectCell` 的坐标系（1D / ternary / 无 cell 概念的 custom）对 cell 类 mark fail-loud，无引擎自动兜底。mark 侧零分支，加坐标系收敛为「实现一个 `projectCell`」 [坐标系](/plot/grammar/coordinate)',
+                  en: 'Refactors interval / sector lowering into a single path "orthogonal cell → `frame.projectCell(cell)` → assemble core Node": the "is the projection a closed-form shape" decision moves into the coordinate system — cartesian2D emits rect, polar2D emits sector (closed-form fast paths, byte-for-byte equal to the pre-refactor output), while curved / custom systems densify the four edges into a contour vertex ring via their own `projectCell`, still a connectable Node (per §8.1); systems without `projectCell` (1D / ternary / custom with no cell concept) fail loud for cell marks, with no engine auto-fallback. Marks gain no branching, and adding a coordinate system collapses to "implement one `projectCell`" [Coordinates](/plot/grammar/coordinate)',
+                },
+              },
+              {
+                label: { zh: 'rect mark：双 band heatmap 格', en: 'rect mark: double-band heatmap cell' },
+                content: {
+                  zh: '新增 `RectMarkSchema` / `PlotMark.Rect` 并入 mark union：x / y 双 band 围成 `bandwidth_x × bandwidth_y` 固定格子（heatmap / 混淆矩阵 / 日历热图），值经 color 通道（通常 sequential 色阶）映射成填充。几何完全复用 `projectCell`（cartesian2D 出 rect 快路），与 interval 共享装配单路径;缺 color 回退默认填充（纯网格），y 非 band scale fail-loud，v1 仅 cartesian2D（其余坐标系无 cell 构造即 fail-loud） [比例尺](/plot/grammar/scale)',
+                  en: 'Adds `RectMarkSchema` / `PlotMark.Rect` to the mark union: x / y double bands form a fixed `bandwidth_x × bandwidth_y` cell (heatmap / confusion matrix / calendar heatmap), the value mapped to fill via the color channel (typically a sequential scale). Geometry fully reuses `projectCell` (cartesian2D rect fast path), sharing the single assembly path with interval; a missing color falls back to the default fill (plain grid), a non-band y scale fails loud, and v1 is cartesian2D only (other systems fail loud without a cell construction) [Scales](/plot/grammar/scale)',
+                },
+              },
+              {
+                label: { zh: 'rule mark：参考 / 阈值线 + band 区域', en: 'rule mark: reference / threshold line + band region' },
+                content: {
+                  zh: '新增 `RuleMarkSchema` / `PlotMark.Rule`：数据驱动的常量位置参考标注，绑 x（竖直）或 y（水平）之一、`field` per-datum / `value` 常量。两种形态——单值 → line（1D 线，下沉 core `Path`，跨满对侧轴域）、给 `xTo` / `yTo` 上界 → band（`[lo,hi]` 区间填充区域，复用 `projectCell`：cartesian 出 rect / polar 出环带 / 曲线出 contour，可连接 Node）;`extentField` / `extentToField` 截断为部分长度。reference-line / band guide 本轮不引入，其角色由 rule mark 承接 [图元](/plot/grammar/mark)',
+                  en: 'Adds `RuleMarkSchema` / `PlotMark.Rule`: a data-driven constant-position reference, binding x (vertical) or y (horizontal), `field` per-datum / `value` constant. Two forms — a single value → line (1D, lowered to core `Path`, spanning the opposite axis domain), and an `xTo` / `yTo` upper bound → band (a `[lo,hi]` filled region reusing `projectCell`: cartesian rect / polar ring band / curved contour, a connectable Node); `extentField` / `extentToField` clip to a partial length. Reference-line / band guides are not introduced this round — that role is carried by the rule mark [Marks](/plot/grammar/mark)',
+                },
+              },
+              {
+                label: { zh: 'text mark / datum label：宿主 label 优先', en: 'text mark / datum label: host label first' },
+                content: {
+                  zh: '新增 `PlotMark.Text` + 文本内容通道 `field` / `value` / `format`（格式串进 IR）+ 运行时 `resolveLabel(row)` 逃生舱（不进 IR、经 options 注入，覆盖任意模板）。下沉优先级链：datum label 首选挂宿主位置 mark（point / interval …）的 core `Node.label`（复用 core 边框相对定位 + distance + 引线 pin，零新建 Node），无宿主才由 `<TextMark>` 兜底新建带 `text` 的核心 Node;位置投影与 point 同源（`frame.projectRoles`，坐标系无关） [图元](/plot/grammar/mark)',
+                  en: 'Adds `PlotMark.Text` + a text-content channel `field` / `value` / `format` (format string in the IR) + a runtime `resolveLabel(row)` escape hatch (never in the IR, injected via options, covering arbitrary templates). Lowering priority chain: a datum label first attaches to the host positional mark’s (point / interval …) core `Node.label` (reusing core border-relative placement + distance + leader pin, zero new Node), and only when host-less does `<TextMark>` fall back to a new core Node carrying `text`; position projection is point-shared (`frame.projectRoles`, coordinate-agnostic) [Marks](/plot/grammar/mark)',
+                },
+              },
+              {
+                label: { zh: 'ribbon mark：sankey / alluvial 流带', en: 'ribbon mark: sankey / alluvial ribbon' },
+                content: {
+                  zh: '新增 `RibbonMarkSchema` / `PlotMark.Ribbon`：关系类几何「源 / 目标 / 宽度 → 可填充 cubic 曲带」，每行一条流下沉成一条 core `Path`（与 area 同构、长边换 cubic 精确切向、`move → 上边界 → 封口 → 下边界 → cycle` 围合）。端点为字段对 `{ x, y }`，经当前 scope `frame.projectRoles` 投影出屏幕坐标算半宽法向偏移 / 四角 / 控制点;`value` → 带宽、`endWidth` 喇叭形、`curvature` 控 S 形。布局（sankey 节点排布 / 堆叠 / 跨 scope connector）明确解耦、推后续 [图元](/plot/grammar/mark)',
+                  en: 'Adds `RibbonMarkSchema` / `PlotMark.Ribbon`: the relational geometry "source / target / width → a fillable cubic ribbon", each row lowering to one core `Path` (isomorphic to area, long edges swapped to cubic with exact tangents, enclosed via `move → top edge → cap → bottom edge → cycle`). Endpoints are field pairs `{ x, y }` projected to screen coordinates through the current scope’s `frame.projectRoles` to compute half-width normals / corners / control points; `value` → ribbon width, `endWidth` → a flared band, `curvature` → S-shape tension. Layout (sankey node placement / stacking / cross-scope connectors) is explicitly decoupled and deferred [Marks](/plot/grammar/mark)',
+                },
+              },
+            ],
+          },
+          {
             version: 'alpha.10',
             date: '2026-06-13',
             summary: {
@@ -1847,6 +1892,44 @@ export const changelog: Array<Release> = [
         ],
         subVersions: [
           {
+            version: 'alpha.11',
+            date: '2026-06-16',
+            summary: {
+              zh: 'Geometry 基础（React 组件视角）：随 plot lockstep 露出四个新 mark 组件 `<RectMark>` / `<RuleMark>` / `<TextMark>` / `<RibbonMark>`（扁平 string props，与 `<BarMark>` 同风格），并给位置 mark（point / interval …）加可选 `label` prop 直接标注 datum。',
+              en: 'Geometry foundation (React component view): lockstep with plot, exposing four new mark components `<RectMark>` / `<RuleMark>` / `<TextMark>` / `<RibbonMark>` (flat string props, same style as `<BarMark>`), and adding an optional `label` prop on positional marks (point / interval …) to annotate a datum directly.',
+            },
+            items: [
+              {
+                label: { zh: '<RectMark> heatmap 组件', en: '`<RectMark>` heatmap component' },
+                content: {
+                  zh: '`<RectMark x y color />` 扁平 props 声明双 band heatmap 格（x / y 分类、值 `color` 映射成填充）;`buildPlotSpec` 装配 rect IR 并据 `hasRect` 把 cartesian y 也强制 band（仿 `hasBar` 强制 x band），与显式 `<Scale dimension="y">` 冲突时 fail-loud;缺 `color` 出纯网格、连续值字段配 model 自动派生 sequential 色阶 [图元](/plot/grammar/mark)',
+                  en: '`<RectMark x y color />` flat props declare a double-band heatmap cell (x / y categorical, the value `color` mapped to fill); `buildPlotSpec` assembles the rect IR and, on `hasRect`, forces cartesian y to band too (mirroring `hasBar` forcing x band), failing loud if it conflicts with an explicit `<Scale dimension="y">`; a missing `color` yields a plain grid, and a continuous value field with a model auto-derives a sequential scale [Marks](/plot/grammar/mark)',
+                },
+              },
+              {
+                label: { zh: '<RuleMark> 参考 / 阈值线组件', en: '`<RuleMark>` reference / threshold component' },
+                content: {
+                  zh: '`<RuleMark>` 声明常量位置参考标注：绑 `x`（竖直）或 `y`（水平）之一、字段名 per-datum 或常量值;只给下界 → 一条线（跨满对侧轴域），配 `xTo` / `yTo` 上界 → `[lo,hi]` band 填充区域;`extentField` / `extentToField` 截成部分长度。装配进 rule IR，line / band 由是否给上界判别 [图元](/plot/grammar/mark)',
+                  en: '`<RuleMark>` declares a constant-position reference: bind `x` (vertical) or `y` (horizontal), per-datum field name or constant value; a lower bound alone → a single line (spanning the opposite axis domain), paired with an `xTo` / `yTo` upper bound → a `[lo,hi]` filled band; `extentField` / `extentToField` clip to a partial length. It assembles into rule IR, with line / band discriminated by whether an upper bound is given [Marks](/plot/grammar/mark)',
+                },
+              },
+              {
+                label: { zh: '<TextMark> + 位置 mark label prop', en: '`<TextMark>` + positional-mark label prop' },
+                content: {
+                  zh: '`<TextMark>` 声明自由文本兜底（位置投影与 `<PointMark>` 同源 + 必填 `text` 内容通道 field / value / format）;首选路径是给位置 mark 加可选 `label` prop——`<BarMark label>` / `<PointMark label>` 把文本挂宿主 datum 的 core `Node.label`（方位 / distance / 引线 pin 由 core 负责，零新建 Node）;运行时 `resolveLabel(row)` 经 options 注入做任意模板，不进 IR [图元](/plot/grammar/mark)',
+                  en: '`<TextMark>` declares the free-text fallback (point-shared position projection + a required `text` content channel field / value / format); the preferred path is an optional `label` prop on positional marks — `<BarMark label>` / `<PointMark label>` attach text to the host datum’s core `Node.label` (orientation / distance / leader pin handled by core, zero new Node); a runtime `resolveLabel(row)` injected via options handles arbitrary templates, never in the IR [Marks](/plot/grammar/mark)',
+                },
+              },
+              {
+                label: { zh: '<RibbonMark> 流带组件', en: '`<RibbonMark>` ribbon component' },
+                content: {
+                  zh: '`<RibbonMark source target value>` 声明 sankey / alluvial 流带：`source` / `target` 各是一组 `{ x, y }` 字段对（经坐标系投影成屏幕端点）、`value` 字段经 width scale 算带宽、可选 `endWidth` 喇叭形 + `curvature` 控 S 形。装配进 ribbon IR，每行下沉一条可填充 cubic 曲带 Path;布局算法解耦、不在组件内 [图元](/plot/grammar/mark)',
+                  en: '`<RibbonMark source target value>` declares a sankey / alluvial ribbon: `source` / `target` are each a `{ x, y }` field pair (projected to screen endpoints by the coordinate system), `value` is sized to ribbon width via a width scale, with optional `endWidth` flare + `curvature` S-shape control. It assembles into ribbon IR, each row lowering to one fillable cubic ribbon Path; the layout algorithm is decoupled and not in the component [Marks](/plot/grammar/mark)',
+                },
+              },
+            ],
+          },
+          {
             version: 'alpha.10',
             date: '2026-06-13',
             summary: {
@@ -2112,6 +2195,30 @@ export const changelog: Array<Release> = [
           },
         ],
         subVersions: [
+          {
+            version: 'alpha.11',
+            date: '2026-06-16',
+            summary: {
+              zh: 'Geometry 基础（SSR 视角）：`renderPlot` 透过 Plot IR 自动渲染四个新 mark（rect / rule / text / ribbon）与曲线坐标系 contour 柱——vanilla 侧零额外代码，纯 spec 驱动，SSR 出含 heatmap / 参考线 / band / datum label / sankey 流带的 SVG 字符串。',
+              en: 'Geometry foundation (SSR view): `renderPlot` automatically renders the four new marks (rect / rule / text / ribbon) and contour bars on curved coordinate systems through the Plot IR — zero extra code on the vanilla side, purely spec-driven, SSR-emitting an SVG string with heatmaps / reference lines / bands / datum labels / sankey ribbons.',
+            },
+            items: [
+              {
+                label: { zh: '新 mark SSR（零额外代码）', en: 'new-mark SSR (zero extra code)' },
+                content: {
+                  zh: '`renderPlot(spec, datasets)` 消费含 `rect` / `rule` / `text` / `ribbon` 的 PlotSpec，经共享 lowering + core 编译零 DOM 出 SVG 字符串——vanilla 不改 `src/` 代码：`renderPlot` mark 无关、纯 spec 驱动，新 mark 经 IR + lowering 自动渲染（heatmap 每格 `<rect>`、参考线 / band、datum label 文本、sankey cubic 曲带），与 react 面视觉一致 [图元](/plot/grammar/mark)',
+                  en: '`renderPlot(spec, datasets)` consumes a PlotSpec with `rect` / `rule` / `text` / `ribbon`, emitting an SVG string with zero DOM through shared lowering + core compile — vanilla changes no `src/` code: `renderPlot` is mark-agnostic and purely spec-driven, so new marks render automatically through IR + lowering (per-cell `<rect>` heatmap, reference lines / bands, datum-label text, sankey cubic ribbons), visually matching the React surface [Marks](/plot/grammar/mark)',
+                },
+              },
+              {
+                label: { zh: '曲线坐标系 contour 柱 SSR', en: 'curved-coordinate contour bars SSR' },
+                content: {
+                  zh: '区间几何下沉重构后，`renderPlot` 在曲线 / 自定义坐标系（其 `frame.projectCell` 就绪时）下把 interval / rect / rule band 出成 contour 顶点环 Node，SSR 渲染成可填充多边形且仍可被同级 core `Path` / `Node` 连接;cartesian / polar 闭式快路产物零回归 [坐标系](/plot/grammar/coordinate)',
+                  en: 'After the interval-geometry refactor, `renderPlot` emits interval / rect / rule bands as contour vertex-ring Nodes on curved / custom coordinate systems (when their `frame.projectCell` is ready), SSR-rendering fillable polygons that remain connectable by sibling core `Path` / `Node`; the cartesian / polar closed-form fast paths have zero regression [Coordinates](/plot/grammar/coordinate)',
+                },
+              },
+            ],
+          },
           {
             version: 'alpha.9',
             date: '2026-06-12',

@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { AtDirection } from '@retikz/core';
 import { ScalarValueSchema } from './data';
 
 export const ChannelSchema = z
@@ -94,6 +95,37 @@ export const PointEncodingSchema = EncodingSchema.extend({
   shape: ShapeChannelSchema.optional().describe('Optional shape channel: categorical field → glyph shape via the built-in palette, or a constant shape name'),
 }).describe('PointMark encoding: positional + color + optional size / opacity / shape (PointMark-only channels, not in the shared style encoding)');
 
+export const TextChannelSchema = z
+  .object({
+    field: z.string().min(1).optional().describe('Data path whose row value becomes the label string; mutually exclusive with value'),
+    value: z.string().min(1).optional().describe('Constant label string for every datum (mutually exclusive with field)'),
+    format: z
+      .string()
+      .min(1)
+      .optional()
+      .describe(
+        'Optional JSON-safe format string (d3-format for numeric fields / d3-time-format for temporal fields) applied to the field value before stringification; only meaningful together with field. A runtime resolveLabel(row) escape hatch (injected via options, never in the IR) overrides this for fully custom templates',
+      ),
+  })
+  .refine(c => (c.field === undefined) !== (c.value === undefined), { message: 'text channel must set exactly one of `field` or `value`' })
+  .describe('Text content channel: field → per-datum label string / value → a constant label / format → format string for a numeric or temporal field');
+
+export const MarkLabelSchema = z
+  .object({
+    content: TextChannelSchema.describe('Label content channel (field / value / format)'),
+    position: z
+      .union([z.enum(AtDirection), z.number()])
+      .optional()
+      .describe('Placement around the host datum node border: 8-direction enum or numeric angle (degrees); mirrors core NodeLabelSchema.position. Default above'),
+    distance: z.number().nonnegative().optional().describe('Gap between the host node border and the label center (user units); mirrors core NodeLabelSchema.distance. Default 12'),
+    pin: z.boolean().optional().describe('Draw a leader line from the host node border to the label (core NodeLabelSchema.pin). Default false'),
+  })
+  .describe('Datum label attached to a positional mark: lowered onto each datum Node.label (core border-relative placement), the preferred path over a standalone TextMark');
+
+export const TextEncodingSchema = EncodingSchema.extend({
+  text: TextChannelSchema.describe('Required label content channel for the standalone TextMark fallback: field / value / format'),
+}).describe('TextMark encoding: positional + color + the required text content channel (standalone free-text fallback)');
+
 /** 通道绑定：field（数据驱动）/ value（常量）二选一 */
 export type Channel = z.infer<typeof ChannelSchema>;
 /** 位置通道绑定（x / y / a / b / c；按坐标系角色解析，必填性下放 lowering） */
@@ -110,3 +142,9 @@ export type OpacityChannel = z.infer<typeof OpacityChannelSchema>;
 export type ShapeChannel = z.infer<typeof ShapeChannelSchema>;
 /** PointMark 专属通道绑定（位置 + 样式 + 可选 size / opacity / shape） */
 export type PointEncoding = z.infer<typeof PointEncodingSchema>;
+/** text 内容通道绑定（field 字段值转串 / value 常量串 / format 格式串） */
+export type TextChannel = z.infer<typeof TextChannelSchema>;
+/** 宿主 datum label 配置（对齐 core NodeLabelSchema 的 position / distance / pin + 内容通道） */
+export type MarkLabel = z.infer<typeof MarkLabelSchema>;
+/** TextMark 专属通道绑定（位置 + 样式 + 必填 text 内容通道；兜底自由文本） */
+export type TextEncoding = z.infer<typeof TextEncodingSchema>;
