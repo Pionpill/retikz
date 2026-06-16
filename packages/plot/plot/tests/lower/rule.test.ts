@@ -138,6 +138,12 @@ describe('rule cartesian line 几何', () => {
     const layer = lowerMark(mark, [{}], cartFrame()) as IRScope;
     expect((layer.pathDefault as { stroke?: string }).stroke).toBe('crimson');
   });
+
+  it('constant-rule-with-color-field-fail-loud', () => {
+    // 常量 rule（单条 full-span）+ color 字段 = 一条线配 N 色，语义矛盾 → fail-loud（不静默塌成 row0 色）
+    const mark: RuleMark = { type: 'rule', encoding: { y: { value: 80 }, color: { field: 'cat', scale: '__color' } } };
+    expect(() => lowerMark(mark, [{ cat: 'a' }, { cat: 'b' }], cartFrame())).toThrow(/constant rule|color field/i);
+  });
 });
 
 // ── happy path：cartesian band → projectCell rect ───────────────────────────────────────

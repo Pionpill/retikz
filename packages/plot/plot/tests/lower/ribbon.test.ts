@@ -135,9 +135,26 @@ describe('lowerRibbon field endpoints (ADR-05)', () => {
   });
 
   it('ribbon-zero-width-skip', () => {
-    // value=0 → 半宽 0（< ε）→ 跳过该行，无 path（单行全跳 → layer null）
+    // value=0 且无 endWidth → 两端半宽皆 0（< ε）→ 跳过该行，无 path（单行全跳 → layer null）
     const rows = [{ sx: 0, sy: 100, tx: 200, ty: 100, amount: 0 }];
     expect(lowerMark(ribbonMark(), rows, identityFrame())).toBeNull();
+  });
+
+  it('ribbon-single-end-zero-renders-triangle', () => {
+    // 源宽 > 0、endWidth=0 → 喇叭收成尖点的三角带，有可填充面积 → 不跳过（W1：仅两端皆零才跳）
+    const rows = [{ sx: 0, sy: 100, tx: 200, ty: 100, amount: 10, end: 0 }];
+    const paths = pathsOf(lowerMark(ribbonMark({ endWidth: 'end' }), rows, identityFrame()) as IRScope);
+    expect(paths).toHaveLength(1);
+    // 目标端封口两角重合（半宽 0）
+    const steps = paths[0].children;
+    expect(steps[1].to).toEqual([200, 100]);
+    expect(steps[2].to).toEqual([200, 100]);
+  });
+
+  it('ribbon-both-ends-zero-skip', () => {
+    // 两端半宽皆 0（value=0 且 endWidth=0）→ 无可填充面积 → 跳过
+    const rows = [{ sx: 0, sy: 100, tx: 200, ty: 100, amount: 0, end: 0 }];
+    expect(lowerMark(ribbonMark({ endWidth: 'end' }), rows, identityFrame())).toBeNull();
   });
 
   it('ribbon-nonfinite-value-skip', () => {

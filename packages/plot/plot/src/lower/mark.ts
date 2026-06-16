@@ -588,8 +588,8 @@ const lowerRibbon = (mark: RibbonMark, rows: Array<ExternalRow>, frame: Coordina
     if (endValue === null) continue;
     const halfSource = halfWidthOf(value);
     const halfTarget = halfWidthOf(endValue);
-    // 零宽（源端半宽 < ε）跳过：退化带无可填充区域（与 area 上沿 < 2 点、interval 零高一致）
-    if (!(halfSource > 1e-9)) continue;
+    // 仅当两端半宽皆 < ε（带无可填充面积）才跳过；单端为零是合法喇叭三角（与 area 上沿 < 2 点、interval 零高同口径）
+    if (!(halfSource > 1e-9) && !(halfTarget > 1e-9)) continue;
     const endpoints = ribbonEndpoints(mark, row, frame);
     if (endpoints === null) continue;
     const geometry = ribbonBandGeometry(endpoints.source, endpoints.target, halfSource, halfTarget, curvature);
@@ -779,6 +779,12 @@ const lowerRule = (
   markProvenance: MarkProvenance | undefined,
 ): IRScope | null => {
   const orientation = ruleOrientation(mark);
+  // 常量 rule（单条 full-span）+ color 字段 = 一条线配 N 色，语义矛盾 → fail-loud（改常量色 value 或绑 per-datum 位置字段）
+  if (isRuleConstant(mark, orientation) && mark.encoding.color?.field !== undefined) {
+    throw new Error(
+      `lowerPlots: a constant rule (single full-span line) cannot use a per-datum color field "${mark.encoding.color.field}"; use a constant color value, or bind a per-datum position field`,
+    );
+  }
   const band = isRuleBand(mark, orientation);
   const effectiveRows = ruleRows(mark, rows, orientation);
 
@@ -927,6 +933,11 @@ export const lowerMark = (mark: Mark, rows: Array<ExternalRow>, frame: Coordinat
       throw new Error(failLoudMessage(mark.type, frame.type));
     }
     assertRectBands(frame);
+  }
+  // interval（v1）需 primary band scale 构建 IntervalContext（仅 cartesian2D / polar2D）；其余坐标系
+  //   （含已有 projectCell 的 custom）无 band context → fail-loud，不静默产空层（守「无 cell 构造即 fail-loud」）
+  if (mark.type === PlotMark.Interval && frame.type !== PlotCoordinate.Cartesian2D && frame.type !== PlotCoordinate.Polar2D) {
+    throw new Error(failLoudMessage(mark.type, frame.type));
   }
   if (frame.projectCell === undefined) {
     throw new Error(failLoudMessage(mark.type, frame.type));

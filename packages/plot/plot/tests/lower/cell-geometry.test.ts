@@ -10,6 +10,7 @@ import {
   type Cell,
   RETIKZ_POLAR_SEGMENT_SAMPLES,
   createCartesianFrame,
+  createCustomFrame,
   createPolarFrame,
   densifyCellContour,
 } from '../../src/lower/project';
@@ -237,6 +238,16 @@ describe('densifyCellContour + 曲线 frame → contour 全链路', () => {
     // 顶 / 底边确实弯曲（中段点 y 偏离直线连接）
     const mid = points[Math.floor((RETIKZ_POLAR_SEGMENT_SAMPLES + 1) / 2)];
     expect(Math.abs(mid[1] - 200)).toBeGreaterThan(1e-6);
+  });
+
+  it('interval_on_real_custom_frame_fail_loud', () => {
+    // 真 type:'custom' frame（即便带 projectCell）无 primary band scale 构建 IntervalContext →
+    //   fail-loud，不静默产空层（守「无 cell 构造即 fail-loud、无引擎自动兜底」）
+    const custom = createCustomFrame(['x', 'y'], values => [Number(values[0]), Number(values[1])], {
+      projectCell: (cell: Cell) => ({ kind: 'contour', points: densifyCellContour(cell, (p, s) => [p, s], { curvedPrimary: false, curvedSecondary: false }) }),
+    });
+    const mark = firstIntervalMark(intervalMarkSpec());
+    expect(() => lowerMark(mark, [{ m: 2, v: 3 }], custom)).toThrow(/not supported|interval|custom/i);
   });
 
   it('curved_frame_interval_lowers_to_contour_nodes', () => {
