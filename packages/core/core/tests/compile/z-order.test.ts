@@ -232,6 +232,7 @@ describe('compile transformed scope 内 path 仍被 hoist 到顶层末尾', () =
     const hoisted = result.primitives[0];
     expect(hoisted).toMatchInlineSnapshot(`
       {
+        "blendMode": undefined,
         "commands": [
           {
             "kind": "move",
@@ -253,6 +254,7 @@ describe('compile transformed scope 内 path 仍被 hoist 到顶层末尾', () =
         "fillOpacity": undefined,
         "fillRule": undefined,
         "opacity": undefined,
+        "shadow": undefined,
         "stroke": "currentColor",
         "strokeLinecap": undefined,
         "strokeLinejoin": undefined,

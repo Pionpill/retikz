@@ -163,6 +163,8 @@ export const arc = defineShape({
       strokeWidth: style.strokeWidth ?? 1,
       dashPattern: style.dashPattern,
       opacity: style.opacity,
+      shadow: style.shadow,
+      blendMode: style.blendMode,
     };
   },
   scaleParams: (params: ArcParams, sx: number, sy: number): ArcParams => ({
